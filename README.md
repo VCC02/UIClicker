@@ -1,0 +1,2 @@
+# UIClicker
+UI automation
