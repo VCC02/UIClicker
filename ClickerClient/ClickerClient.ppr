@@ -1,0 +1,362 @@
+{
+    Copyright (C) 2022 VCC
+    creation date: Jul 2022
+    initial release date: 26 Jul 2022
+
+    author: VCC
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"),
+    to deal in the Software without restriction, including without limitation
+    the rights to use, copy, modify, merge, publish, distribute, sublicense,
+    and/or sell copies of the Software, and to permit persons to whom the
+    Software is furnished to do so, subject to the following conditions:
+    The above copyright notice and this permission notice shall be included
+    in all copies or substantial portions of the Software.
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+    IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+    DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+    TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
+    OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+}
+
+library ClickerClient;
+
+{$H+}
+{$IFDEF FPC}
+  //{$MODE Delphi}
+{$ENDIF}
+
+uses
+  Interfaces, Windows, SysUtils, Classes, Controls, Forms, ShellAPI,
+  DllUtils, InMemFileSystem, ClickerActionsClient, ClickerUtils, ClickerTemplates;
+
+
+var
+  InMemFS: TInMemFileSystem = nil;
+  FRemoteAddress: string;
+
+
+type
+  TExHandler = class
+    procedure CustomExceptionHandler(Sender: TObject; E: Exception);
+  end;
+
+var
+  FExHandler: TExHandler;
+
+
+procedure TExHandler.CustomExceptionHandler(Sender: TObject; E: Exception);
+var
+  ClName, EMsg: string;
+  ExceptionLog: TStringList;
+  LogPath: string;
+begin
+  try
+    ClName := Sender.ClassName;
+  except
+    ClName := '';
+  end;
+
+  try
+    EMsg := E.Message;
+  except
+    EMsg := '';
+  end;
+
+  try
+    ExceptionLog := TStringList.Create;
+    try
+      ExceptionLog.Add(DateTimeToStr(Now));
+      ExceptionLog.Add('Custom exception: ' + EMsg);
+      ExceptionLog.Add('Class: ' + ClName);
+
+      LogPath := ExtractFilePath(ParamStr(0)) + 'ClickerClientExceptions.txt';
+      ExceptionLog.Add('This file was saved as: ' + LogPath);
+      ExceptionLog.SaveToFile(LogPath);
+
+      LogPath := '"' + LogPath + '"';
+      ShellExecute(0, 'open', 'C:\Windows\Notepad.exe', PChar(LogPath), '', SW_SHOW);
+
+      //MessageBox(0, PChar(ExceptionLog.Text), 'Clicker', MB_ICONERROR);  //the application crashes after displaying the MessageBox, so the MessageBox is closed
+    finally
+      ExceptionLog.Free;
+    end;
+  except
+    on EE: Exception do
+      MessageBox(0, PChar('Ex on custom exception: ' + EE.Message), 'Clicker', MB_ICONERROR);
+  end;
+end;
+
+
+//see https://wiki.freepascal.org/Logging_exceptions
+procedure CatchUnhandledException(Obj: TObject; Addr: Pointer; FrameCount: LongInt; Frames: PPointer);
+var
+  Msg: string;
+  i: Integer;
+  ExceptionLog: TStringList;
+  LogPath: string;
+begin
+  try //use another try..excempt, just in case parsing the stack would raise more exceptions
+    Msg := 'Unhandled exception at adddr $' + SysBacktraceStr(Addr) + ':' + #13#10;
+
+    if Obj is Exception then
+      Msg := Msg + Exception(Obj).ClassName + ' : ' + Exception(Obj).Message
+    else
+      Msg := Msg + 'Exception object '  + Exception(Obj).ClassName + ' is not class Exception.';
+
+    Msg := Msg + #13#10;
+    Msg := Msg + BacktraceStrFunc(Addr) + #13#10;
+
+    for i := 0 to FrameCount - 1 do
+      Msg := Msg + BacktraceStrFunc(Frames[i]) + #13#10;
+
+    ExceptionLog := TStringList.Create;
+    try
+      ExceptionLog.Add(DateTimeToStr(Now));
+      ExceptionLog.Add('Unhandled exception: ' + Msg);
+
+      LogPath := ExtractFilePath(ParamStr(0)) + 'ClickerClientUnhandledExceptions.txt';
+      ExceptionLog.Add('This file was saved as: ' + LogPath);
+      ExceptionLog.SaveToFile(LogPath);
+
+      LogPath := '"' + LogPath + '"';
+      ShellExecute(0, 'open', 'C:\Windows\Notepad.exe', PChar(LogPath), '', SW_SHOW);
+
+      //MessageBox(0, PChar(Msg), 'Clicker', MB_ICONERROR);
+    finally
+      ExceptionLog.Free;
+    end;
+  except
+  end;
+end;
+
+
+procedure InitClickerClient; cdecl;
+begin
+  InMemFS := TInMemFileSystem.Create;
+  FRemoteAddress := 'http://127.0.0.1:5444/';
+
+  ExceptProc := @CatchUnhandledException;
+  FExHandler := TExHandler.Create;  /////////////////////////// probably, it will have to be freed
+  Application.Initialize;
+  Application.OnException := FExHandler.CustomExceptionHandler;
+end;
+
+
+procedure DoneClickerClient; cdecl;
+begin
+  FreeAndNil(InMemFS);
+end;
+
+
+procedure SetServerAddress(AAddress: Pointer); cdecl;
+begin
+  SetPointedContentToString(@string(PWideChar(AAddress))[1], FRemoteAddress);
+end;
+
+
+function GetServerAddress(AResponse: Pointer): Integer; cdecl;
+begin
+  try
+    Result := SetPointedContentFromString(FRemoteAddress, AResponse);
+  except
+    on E: Exception do
+      Result := SetPointedContentFromString(E.Message, AResponse);
+  end;
+end;
+
+
+function TestConnectionToServer(AResponse: Pointer): Integer; cdecl;
+var
+  Response: string;
+begin
+  try
+    Response := SendTextRequestToServer(FRemoteAddress + CRECmd_TestConnection);
+    Result := SetPointedContentFromString(Response, AResponse);
+  except
+    on E: Exception do
+      Result := SetPointedContentFromString(E.Message, AResponse);
+  end;
+end;
+
+
+function CreateNewTemplateStr(ATemplateFileName: string): Integer;
+begin
+  if InMemFS = nil then
+  begin
+    Result := -1;
+    Exit;
+  end;
+
+  if InMemFS.FileExistsInMem(ATemplateFileName) then
+  begin
+    Result := 1;   /////////////////// ToDo: define some constants for standard responses
+    Exit;
+  end;
+
+  InMemFS.SaveFileToMem(ATemplateFileName, nil, 0);
+  Result := 0; //0 means ok
+end;
+
+
+//Creates a new template file, in dll's in-mem file system.
+//This template (after being filled in) will have to be sent to server and executed there.
+function CreateNewTemplate(ATemplateFileName: Pointer): Integer; cdecl;
+var
+  TemplateFileName: string;
+begin
+  SetPointedContentToString(@string(PWideChar(ATemplateFileName))[1], TemplateFileName);
+  Result := CreateNewTemplateStr(TemplateFileName);
+end;
+
+
+procedure AddActionToTemplate(ATemplateFileName: string; AClkAction: TClkActionRec);
+var
+  ClkActions: TClkActionsRecArr;
+  MemStream: TMemoryStream;
+  n: Integer;
+begin
+  if not InMemFS.FileExistsInMem(ATemplateFileName) then   Exit;
+    CreateNewTemplateStr(ATemplateFileName);
+
+  MemStream := TMemoryStream.Create;
+  try
+    InMemFS.LoadFileFromMemToStream(ATemplateFileName, MemStream);
+    MemStream.Position := 0;
+
+    GetTemplateContentFromMemoryStream(ClkActions, MemStream);
+
+    n := Length(ClkActions);
+    SetLength(ClkActions, n + 1);
+    CopyActionContent(AClkAction, ClkActions[n]);
+
+    GetTemplateContentAsMemoryStream(ClkActions, MemStream);
+    InMemFS.SaveFileToMem(ATemplateFileName, MemStream.Memory, MemStream.Size);
+  finally
+    MemStream.Free;
+  end;
+end;
+
+
+function AddClickActionToTemplate(ATemplateFileName: Pointer;
+
+                                  AActionName: Pointer;
+                                  AAction: Byte;
+                                  AActionTimeout: Integer; //ms
+                                  AActionEnabled: Boolean;
+                                  AActionCondition: Pointer
+
+                                  ): Integer; cdecl;
+var
+  TemplateFileName: string;
+  ActionName: string;
+  ActionCondition: string;
+  TempAction: TClkActionRec;
+begin
+  if InMemFS = nil then
+  begin
+    Result := -1;
+    Exit;
+  end;
+
+  SetPointedContentToString(@string(PWideChar(ATemplateFileName))[1], TemplateFileName);
+  SetPointedContentToString(@string(PWideChar(AActionName))[1], ActionName);
+  SetPointedContentToString(@string(PWideChar(AActionCondition))[1], ActionCondition);
+
+  TempAction.ActionOptions.ActionName := ActionName;
+  TempAction.ActionOptions.Action := TClkAction(AAction);
+  TempAction.ActionOptions.ActionTimeout := AActionTimeout;
+  TempAction.ActionOptions.ActionEnabled := AActionEnabled;
+  TempAction.ActionOptions.ActionCondition := ActionCondition;
+
+  //click stuff   ////////////////////////////// all these should be read from params
+  TempAction.ClickOptions.XClickPointReference := xrefLeft;
+  TempAction.ClickOptions.YClickPointReference := yrefTop;
+  TempAction.ClickOptions.XClickPointVar := '';
+  TempAction.ClickOptions.YClickPointVar := '';
+  TempAction.ClickOptions.XOffset := '3';
+  TempAction.ClickOptions.YOffset := '3';
+  TempAction.ClickOptions.MouseButton := mbLeft;
+  TempAction.ClickOptions.ClickWithCtrl := False;
+  TempAction.ClickOptions.ClickWithAlt := False;
+  TempAction.ClickOptions.ClickWithShift := False;
+  TempAction.ClickOptions.ClickWithDoubleClick := False;
+  TempAction.ClickOptions.Count := 1;
+  TempAction.ClickOptions.LeaveMouse := False;
+  TempAction.ClickOptions.MoveWithoutClick := False;
+  TempAction.ClickOptions.ClickType := CClickType_Click;
+  TempAction.ClickOptions.XClickPointReferenceDest := xrefLeft;
+  TempAction.ClickOptions.YClickPointReferenceDest := yrefTop;
+  TempAction.ClickOptions.XClickPointVarDest := '';
+  TempAction.ClickOptions.YClickPointVarDest := '';
+  TempAction.ClickOptions.XOffsetDest := '3';
+  TempAction.ClickOptions.YOffsetDest := '3';
+
+  AddActionToTemplate(TemplateFileName, TempAction);
+  Result := 0;
+end;
+
+
+function AddExecAppActionToTemplate(ATemplateFileName: Pointer;
+
+                                    AActionName: Pointer;
+                                    AAction: Byte;
+                                    AActionTimeout: Integer; //ms
+                                    AActionEnabled: Boolean;
+                                    AActionCondition: Pointer
+
+                                   ): Integer; cdecl;
+var
+  TemplateFileName: string;
+  ActionName: string;
+  ActionCondition: string;
+  TempAction: TClkActionRec;
+begin
+  if InMemFS = nil then
+  begin
+    Result := -1;
+    Exit;
+  end;
+
+  SetPointedContentToString(@string(PWideChar(ATemplateFileName))[1], TemplateFileName);
+  SetPointedContentToString(@string(PWideChar(AActionName))[1], ActionName);
+  SetPointedContentToString(@string(PWideChar(AActionCondition))[1], ActionCondition);
+
+  TempAction.ActionOptions.ActionName := ActionName;
+  TempAction.ActionOptions.Action := TClkAction(AAction);
+  TempAction.ActionOptions.ActionTimeout := AActionTimeout;
+  TempAction.ActionOptions.ActionEnabled := AActionEnabled;
+  TempAction.ActionOptions.ActionCondition := ActionCondition;
+
+  //exec app stuff   ////////////////////////////// all these should be read from params
+  TempAction.ExecAppOptions.PathToApp := 'dummy_path';
+  TempAction.ExecAppOptions.AppStdIn := '';
+  TempAction.ExecAppOptions.CurrentDir := '';
+  TempAction.ExecAppOptions.ListOfParams := '';
+  TempAction.ExecAppOptions.UseInheritHandles := uihNo;
+  TempAction.ExecAppOptions.WaitForApp := False;
+
+  AddActionToTemplate(TemplateFileName, TempAction);
+  Result := 0;
+end;
+
+
+exports
+  InitClickerClient,
+  DoneClickerClient,
+  SetServerAddress,
+  GetServerAddress,
+  TestConnectionToServer,
+  CreateNewTemplate,
+  AddClickActionToTemplate,
+  AddExecAppActionToTemplate;
+
+  //AddFindControlActionToTemplate(TemplateName, Action);
+  //AddFontProfileToFindControlAction(TemplateName, ActionIndex, Profile);
+
+begin
+  ClientLastError := '';
+end.
+

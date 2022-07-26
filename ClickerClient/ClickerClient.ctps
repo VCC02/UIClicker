@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectSession>
+    <PathDelim Value="\"/>
+    <Version Value="12"/>
+    <BuildModes Active="Default"/>
+    <Units>
+      <Unit>
+        <Filename Value="ClickerClient.ppr"/>
+        <FRMtype Value="0"/>
+        <IsPartOfProject Value="True"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="0"/>
+        <WindowIndex Value="0"/>
+        <CursorPos X="82" Y="10"/>
+        <UsageCount Value="45"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\ClickerActionsClient.pas"/>
+        <EditorIndex Value="-1"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="61"/>
+        <CursorPos X="28" Y="82"/>
+        <UsageCount Value="45"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\ClickerUtils.pas"/>
+        <EditorIndex Value="-1"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="64"/>
+        <CursorPos X="26" Y="75"/>
+        <UsageCount Value="45"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\ClickerTemplates.pas"/>
+        <EditorIndex Value="-1"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="28"/>
+        <CursorPos X="21" Y="33"/>
+        <UsageCount Value="45"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\InMemFileSystem.pas"/>
+        <EditorIndex Value="-1"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="547"/>
+        <CursorPos X="32" Y="554"/>
+        <UsageCount Value="44"/>
+      </Unit>
+      <Unit>
+        <Filename Value="DllUtils.pas"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="1"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="25"/>
+        <CursorPos X="3" Y="12"/>
+        <UsageCount Value="39"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="C:\codetyphon\typhon\lcl\controls.pp"/>
+        <FRMtype Value="0"/>
+        <UnitName Value="Controls"/>
+        <EditorIndex Value="-1"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="177"/>
+        <CursorPos X="25" Y="196"/>
+        <UsageCount Value="8"/>
+      </Unit>
+      <Unit>
+        <Filename Value="C:\codetyphon\typhon\lcl\forms.pp"/>
+        <FRMtype Value="0"/>
+        <UnitName Value="Forms"/>
+        <EditorIndex Value="-1"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="2297"/>
+        <CursorPos X="16" Y="2312"/>
+        <UsageCount Value="8"/>
+      </Unit>
+      <Unit>
+        <Filename Value="C:\codetyphon\typhon\lcl\include\application.inc"/>
+        <FRMtype Value="0"/>
+        <EditorIndex Value="-1"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="476"/>
+        <CursorPos X="58" Y="484"/>
+        <UsageCount Value="8"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\MiscUtils\InMemFileSystem.pas"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="-1"/>
+        <WindowIndex Value="-1"/>
+        <TopLine Value="-1"/>
+        <CursorPos X="-1" Y="-1"/>
+        <UsageCount Value="21"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\ClickerUtils\ClickerActionsClient.pas"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="-1"/>
+        <WindowIndex Value="-1"/>
+        <TopLine Value="-1"/>
+        <CursorPos X="-1" Y="-1"/>
+        <UsageCount Value="20"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\ClickerUtils\ClickerUtils.pas"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="-1"/>
+        <WindowIndex Value="-1"/>
+        <TopLine Value="-1"/>
+        <CursorPos X="-1" Y="-1"/>
+        <UsageCount Value="20"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\ClickerUtils\ClickerTemplates.pas"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="-1"/>
+        <WindowIndex Value="-1"/>
+        <TopLine Value="-1"/>
+        <CursorPos X="-1" Y="-1"/>
+        <UsageCount Value="20"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\ClickerUtils\ClickerIniFiles.pas"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="-1"/>
+        <WindowIndex Value="-1"/>
+        <TopLine Value="-1"/>
+        <CursorPos X="-1" Y="-1"/>
+        <UsageCount Value="20"/>
+        <DefaultSyntaxHighlighter Value="Delphi"/>
+      </Unit>
+    </Units>
+    <JumpHistory HistoryIndex="27">
+      <Position>
+        <Filename Value="ClickerClient.ppr"/>
+        <Caret Line="9" Column="43"/>
+      </Position>
+      <Position>
+        <Filename Value="ClickerClient.ppr"/>
+        <Caret Line="155" Column="52" TopLine="140"/>
+      </Position>
+      <Position>
+        <Filename Value="ClickerClient.ppr"/>
+        <Caret Line="143" Column="50" TopLine="134"/>
+      </Position>
+      <Position>
+        <Filename Value="ClickerClient.ppr"/>
+        <Caret Line="156" Column="60" TopLine="127"/>
+      </Position>
+      <Position>
+        <Filename Value="ClickerClient.ppr"/>
+        <Caret Line="158" Column="62" TopLine="126"/>
+      </Position>
+      <Position>
+        <Filename Value="ClickerClient.ppr"/>
+        <Caret Line="161" Column="45" TopLine="140"/>
+      </Position>
+      <Position>
+        <Filename Value="ClickerClient.ppr"/>
+        <Caret Line="184" Column="13" TopLine="176"/>
+      </Position>
+      <Position>
+        <Filename Value="ClickerClient.ppr"/>
+        <Caret Line="187" Column="18" TopLine="177"/>
+      </Position>
+      <Position>
+        <Filename Value="ClickerClient.ppr"/>
+        <Caret Line="82" Column="20" TopLine="72"/>
+      </Position>
+      <Position>
+        <Filename Value="ClickerClient.ppr"/>
+        <Caret Line="78" Column="25" TopLine="68"/>
+      </Position>
+      <Position>
+        <Filename Value="ClickerClient.ppr"/>
+        <Caret Line="102" Column="42" TopLine="94"/>
+      </Position>
+      <Position>
+        <Filename Value="ClickerClient.ppr"/>
+        <Caret Line="9" Column="53" TopLine="4"/>
+      </Position>
+      <Position>
+        <Filename Value="ClickerClient.ppr"/>
+        <Caret Line="158" Column="65" TopLine="136"/>
+      </Position>
+      <Position>
+        <Filename Value="ClickerClient.ppr"/>
+        <Caret Line="5" Column="5"/>
+      </Position>
+      <Position>
+        <Filename Value="ClickerClient.ppr"/>
+        <Caret Line="157" Column="23" TopLine="146"/>
+      </Position>
+      <Position>
+        <Filename Value="ClickerClient.ppr"/>
+        <Caret Line="296" Column="25" TopLine="283"/>
+      </Position>
+      <Position>
+        <Filename Value="ClickerClient.ppr"/>
+        <Caret Line="177" Column="52" TopLine="162"/>
+      </Position>
+      <Position>
+        <Filename Value="ClickerClient.ppr"/>
+        <Caret Line="143" Column="44" TopLine="127"/>
+      </Position>
+      <Position>
+        <Filename Value="ClickerClient.ppr"/>
+        <Caret Line="126" Column="30" TopLine="115"/>
+      </Position>
+      <Position>
+        <Filename Value="ClickerClient.ppr"/>
+        <Caret Line="137" Column="22" TopLine="126"/>
+      </Position>
+      <Position>
+        <Filename Value="ClickerClient.ppr"/>
+        <Caret Line="134" Column="55" TopLine="123"/>
+      </Position>
+      <Position>
+        <Filename Value="ClickerClient.ppr"/>
+        <Caret Line="113" Column="63" TopLine="105"/>
+      </Position>
+      <Position>
+        <Filename Value="ClickerClient.ppr"/>
+        <Caret Line="119" Column="55" TopLine="114"/>
+      </Position>
+      <Position>
+        <Filename Value="ClickerClient.ppr"/>
+        <Caret Line="15" Column="34" TopLine="4"/>
+      </Position>
+      <Position>
+        <Filename Value="ClickerClient.ppr"/>
+        <Caret Line="317" Column="48" TopLine="279"/>
+      </Position>
+      <Position>
+        <Filename Value="ClickerClient.ppr"/>
+        <Caret Line="332" Column="36" TopLine="315"/>
+      </Position>
+      <Position>
+        <Filename Value="DllUtils.pas"/>
+        <Caret Line="12" Column="3" TopLine="25"/>
+      </Position>
+      <Position>
+        <Filename Value="ClickerClient.ppr"/>
+        <Caret Line="10" Column="64"/>
+      </Position>
+    </JumpHistory>
+    <RunParams>
+      <FormatVersion Value="2"/>
+      <Modes ActiveMode=""/>
+    </RunParams>
+  </ProjectSession>
+</CONFIG>

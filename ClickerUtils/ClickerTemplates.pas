@@ -1,0 +1,867 @@
+{
+    Copyright (C) 2022 VCC
+    creation date: Dec 2019
+    initial release date: 26 Jul 2022
+
+    author: VCC
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"),
+    to deal in the Software without restriction, including without limitation
+    the rights to use, copy, modify, merge, publish, distribute, sublicense,
+    and/or sell copies of the Software, and to permit persons to whom the
+    Software is furnished to do so, subject to the following conditions:
+    The above copyright notice and this permission notice shall be included
+    in all copies or substantial portions of the Software.
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+    IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+    DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+    TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
+    OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+}
+
+unit ClickerTemplates;
+
+{$mode ObjFPC}{$H+}
+
+interface
+
+uses
+  Classes, SysUtils, ClickerUtils, ACSClickerIniFiles;
+
+
+procedure LoadTemplateToCustomActions_V1(Ini: TACSClkIniReadonlyFile; var ACustomACSActions: TClkActionsRecArr);
+procedure LoadTemplateToCustomActions_V2(Ini: TACSClkIniReadonlyFile; var ACustomACSActions: TClkActionsRecArr);
+
+//procedure SaveTemplateWithCustomActions_V1(Fnm: string; ACustomACSActions: TClkActionsRecArr); //not used anymore
+procedure SaveTemplateWithCustomActionsToStringList_V2(AStringList: TStringList; var ACustomACSActions: TClkActionsRecArr);
+procedure CopyActionContent(ASrc, ADest: TClkActionRec);
+procedure GetTemplateContentAsMemoryStream(var ATemplateContent: TClkActionsRecArr; AFileContentMem: TMemoryStream);
+procedure GetTemplateContentFromMemoryStream(var ACustomACSActions: TClkActionsRecArr; AFileContentMem: TMemoryStream);
+
+{
+ What V2 does better than V1:
+   - Template files (*.clktmpl) can be easily diff'ed as text
+   - Only the used action types are saved per action, although the structure contains all action types. This reduces the overall file size.
+   - The code is easier to read.
+   - V2 allows copy-paste operations using the same ini format as *.clktmpl files.
+}
+
+
+implementation
+
+
+uses
+  Controls, Graphics;
+
+
+function ActionAsStringToTClkAction(ActionAsString: string): TClkAction;
+var
+  i: TClkAction;
+begin
+  Result := acClick; //default
+
+  for i := Low(TClkAction) to High(TClkAction) do
+    if ActionAsString = CClkActionStr[i] then
+    begin
+      Result := i;
+      Exit;
+    end;
+end;
+
+
+procedure AdjustListOfVarEvalBeforeCount(var ASetVarOptions: TClkSetVarOptions);   //required to update old lists to the new structure
+var
+  i, n1, n2: Integer;
+begin
+  n1 := 0;
+  n2 := 0;
+  for i := 1 to Length(ASetVarOptions.ListOfVarNames) - 1 do    //yes, 1 to n - 1
+    if (ASetVarOptions.ListOfVarNames[i] = #13) and
+       (ASetVarOptions.ListOfVarNames[i + 1] = #10) then
+      Inc(n1);
+
+  for i := 1 to Length(ASetVarOptions.ListOfVarEvalBefore) - 1 do    //yes, 1 to n - 1
+    if (ASetVarOptions.ListOfVarEvalBefore[i] = #13) and
+       (ASetVarOptions.ListOfVarEvalBefore[i + 1] = #10) then
+      Inc(n2);
+
+  if n2 < n1 then
+    for i := n2 to n1 - 1 do
+      ASetVarOptions.ListOfVarEvalBefore := ASetVarOptions.ListOfVarEvalBefore + '0' + #13#10;
+end;
+
+
+procedure LoadTemplateToCustomActions_V1(Ini: TACSClkIniReadonlyFile; var ACustomACSActions: TClkActionsRecArr);
+var
+  IterationStr: string;
+  SectionIndex: Integer;
+  i: Integer;
+begin
+  for i := 0 to Length(ACustomACSActions) - 1 do
+  begin
+    IterationStr := IntToStr(i);
+
+    SectionIndex := Ini.GetSectionIndex('Actions.ActionOptions');
+    ACustomACSActions[i].ActionOptions.ActionName := Ini.ReadString(SectionIndex, 'ActionName_' + IterationStr, 'ActionName_' + IterationStr);
+    ACustomACSActions[i].ActionOptions.Action := ActionAsStringToTClkAction(Ini.ReadString(SectionIndex, 'Action_' + IterationStr, CClkActionStr[acClick]));
+    ACustomACSActions[i].ActionOptions.ActionTimeout := Ini.ReadInteger(SectionIndex, 'ActionTimeout_' + IterationStr, 0);
+    ACustomACSActions[i].ActionOptions.ActionEnabled := Ini.ReadBool(SectionIndex, 'ActionEnabled_' + IterationStr, True);
+    ACustomACSActions[i].ActionOptions.ActionCondition := StringReplace(Ini.ReadString(SectionIndex, 'ActionCondition_' + IterationStr, ''), #4#5, #13#10, [rfReplaceAll]);
+
+    SectionIndex := Ini.GetSectionIndex('Actions.ClickOptions');
+    ACustomACSActions[i].ClickOptions.XClickPointReference := TXClickPointReference(Ini.ReadInteger(SectionIndex, 'XOffsetReference_' + IterationStr, Ord(xrefLeft)));
+    ACustomACSActions[i].ClickOptions.YClickPointReference := TYClickPointReference(Ini.ReadInteger(SectionIndex, 'YOffsetReference_' + IterationStr, Ord(yrefTop)));
+    ACustomACSActions[i].ClickOptions.XClickPointVar := Ini.ReadString(SectionIndex, 'XClickPointVar_' + IterationStr, '$Control_Left$');
+    ACustomACSActions[i].ClickOptions.YClickPointVar := Ini.ReadString(SectionIndex, 'YClickPointVar_' + IterationStr, '$Control_Top$');
+    ACustomACSActions[i].ClickOptions.XOffset := Ini.ReadString(SectionIndex, 'XOffset_' + IterationStr, '0');
+    ACustomACSActions[i].ClickOptions.YOffset := Ini.ReadString(SectionIndex, 'YOffset_' + IterationStr, '0');
+    ACustomACSActions[i].ClickOptions.MouseButton := TMouseButton(Ini.ReadInteger(SectionIndex, 'MouseButton_' + IterationStr, 0));
+    ACustomACSActions[i].ClickOptions.ClickWithCtrl := Ini.ReadBool(SectionIndex, 'ClickWithCtrl_' + IterationStr, False);
+    ACustomACSActions[i].ClickOptions.ClickWithAlt := Ini.ReadBool(SectionIndex, 'ClickWithAlt_' + IterationStr, False);
+    ACustomACSActions[i].ClickOptions.ClickWithShift := Ini.ReadBool(SectionIndex, 'ClickWithShift_' + IterationStr, False);
+    ACustomACSActions[i].ClickOptions.ClickWithDoubleClick := Ini.ReadBool(SectionIndex, 'ClickWithDoubleClick_' + IterationStr, False);
+    ACustomACSActions[i].ClickOptions.LeaveMouse := Ini.ReadBool(SectionIndex, 'LeaveMouse_' + IterationStr, False);
+    ACustomACSActions[i].ClickOptions.MoveWithoutClick := Ini.ReadBool(SectionIndex, 'MoveWithoutClick_' + IterationStr, False);
+    ACustomACSActions[i].ClickOptions.Count := Ini.ReadInteger('Actions.MultiClickOptions', 'Count_' + IterationStr, 0);   //this field is saved in a different section
+    ACustomACSActions[i].ClickOptions.ClickType := Ini.ReadInteger(SectionIndex, 'ClickType_' + IterationStr, 0);
+    ACustomACSActions[i].ClickOptions.XClickPointReferenceDest := TXClickPointReference(Ini.ReadInteger(SectionIndex, 'XOffsetReferenceDest_' + IterationStr, Ord(xrefLeft)));
+    ACustomACSActions[i].ClickOptions.YClickPointReferenceDest := TYClickPointReference(Ini.ReadInteger(SectionIndex, 'YOffsetReferenceDest_' + IterationStr, Ord(yrefTop)));
+    ACustomACSActions[i].ClickOptions.XClickPointVarDest := Ini.ReadString(SectionIndex, 'XClickPointVarDest_' + IterationStr, '$Control_Left$');
+    ACustomACSActions[i].ClickOptions.YClickPointVarDest := Ini.ReadString(SectionIndex, 'YClickPointVarDest_' + IterationStr, '$Control_Top$');
+    ACustomACSActions[i].ClickOptions.XOffsetDest := Ini.ReadString(SectionIndex, 'XOffsetDest_' + IterationStr, '0');
+    ACustomACSActions[i].ClickOptions.YOffsetDest := Ini.ReadString(SectionIndex, 'YOffsetDest_' + IterationStr, '0');
+
+    SectionIndex := Ini.GetSectionIndex('Actions.ExecAppOptions');
+    ACustomACSActions[i].ExecAppOptions.PathToApp := Ini.ReadString(SectionIndex, 'PathToApp_' + IterationStr, '');
+    ACustomACSActions[i].ExecAppOptions.ListOfParams := StringReplace(Ini.ReadString(SectionIndex, 'ListOfParams_' + IterationStr, ''), #4#5, #13#10, [rfReplaceAll]);
+    ACustomACSActions[i].ExecAppOptions.WaitForApp := Ini.ReadBool(SectionIndex, 'WaitForApp_' + IterationStr, False);
+
+    SectionIndex := Ini.GetSectionIndex('Actions.FindControlOptions');
+    ACustomACSActions[i].FindControlOptions.MatchCriteria.WillMatchText := Ini.ReadBool(SectionIndex, 'MatchCriteria.WillMatchText_' + IterationStr, True);
+    ACustomACSActions[i].FindControlOptions.MatchCriteria.WillMatchClassName := Ini.ReadBool(SectionIndex, 'MatchCriteria.WillMatchClassName_' + IterationStr, True);
+    ACustomACSActions[i].FindControlOptions.MatchCriteria.WillMatchBitmapText := Ini.ReadBool(SectionIndex, 'MatchCriteria.WillMatchBitmapText_' + IterationStr, False);
+    ACustomACSActions[i].FindControlOptions.MatchCriteria.WillMatchBitmapFiles := Ini.ReadBool(SectionIndex, 'MatchCriteria.WillMatchBitmapFiles_' + IterationStr, False);
+    ACustomACSActions[i].FindControlOptions.MatchCriteria.SearchForControlMode := TSearchForControlMode(Ini.ReadInteger(SectionIndex, 'MatchCriteria.SearchForControlMode_' + IterationStr, Ord(sfcmGenGrid)));
+
+    ACustomACSActions[i].FindControlOptions.AllowToFail := Ini.ReadBool(SectionIndex, 'AllowToFail_' + IterationStr, False);
+    ACustomACSActions[i].FindControlOptions.WaitForControlToGoAway := Ini.ReadBool(SectionIndex, 'WaitForControlToGoAway_' + IterationStr, False);
+
+    ACustomACSActions[i].FindControlOptions.MatchText := Ini.ReadString(SectionIndex, 'MatchText_' + IterationStr, 'ComponentText_' + IterationStr);
+    ACustomACSActions[i].FindControlOptions.MatchClassName := Ini.ReadString(SectionIndex, 'MatchClassName_' + IterationStr, 'ComponentClassName_' + IterationStr);
+    ACustomACSActions[i].FindControlOptions.MatchTextSeparator := Ini.ReadString(SectionIndex, 'MatchTextSeparator_' + IterationStr, '');
+    ACustomACSActions[i].FindControlOptions.MatchClassNameSeparator := Ini.ReadString(SectionIndex, 'MatchClassNameSeparator_' + IterationStr, '');
+
+    if Length(ACustomACSActions[i].FindControlOptions.MatchBitmapText) = 0 then  //version 1 did not support multiple font settings
+      SetLength(ACustomACSActions[i].FindControlOptions.MatchBitmapText, 1);
+    ACustomACSActions[i].FindControlOptions.MatchBitmapText[0].ForegroundColor := Ini.ReadString(SectionIndex, 'MatchBitmapText.ForegroundColor_' + IterationStr, '000000');
+    ACustomACSActions[i].FindControlOptions.MatchBitmapText[0].BackgroundColor := Ini.ReadString(SectionIndex, 'MatchBitmapText.BackgroundColor_' + IterationStr, 'FFFFFF');
+    ACustomACSActions[i].FindControlOptions.MatchBitmapText[0].FontName := Ini.ReadString(SectionIndex, 'MatchBitmapText.FontName_' + IterationStr, 'Tahoma');
+    ACustomACSActions[i].FindControlOptions.MatchBitmapText[0].FontSize := Ini.ReadInteger(SectionIndex, 'MatchBitmapText.FontSize_' + IterationStr, 8);
+    ACustomACSActions[i].FindControlOptions.MatchBitmapText[0].Bold := Ini.ReadBool(SectionIndex, 'MatchBitmapText.Bold_' + IterationStr, False);
+    ACustomACSActions[i].FindControlOptions.MatchBitmapText[0].Italic := Ini.ReadBool(SectionIndex, 'MatchBitmapText.Italic_' + IterationStr, False);
+    ACustomACSActions[i].FindControlOptions.MatchBitmapText[0].Underline := Ini.ReadBool(SectionIndex, 'MatchBitmapText.Underline_' + IterationStr, False);
+    ACustomACSActions[i].FindControlOptions.MatchBitmapText[0].StrikeOut := Ini.ReadBool(SectionIndex, 'MatchBitmapText.StrikeOut_' + IterationStr, False);
+    ACustomACSActions[i].FindControlOptions.MatchBitmapText[0].FontQuality := TFontQuality(Ini.ReadInteger(SectionIndex, 'MatchBitmapText.FontQuality_' + IterationStr, Integer(fqDefault)));
+    ACustomACSActions[i].FindControlOptions.MatchBitmapText[0].FontQualityUsesReplacement := Ini.ReadBool(SectionIndex, 'MatchBitmapText.FontQualityUsesReplacement_' + IterationStr, False);
+    ACustomACSActions[i].FindControlOptions.MatchBitmapText[0].FontQualityReplacement := Ini.ReadString(SectionIndex, 'MatchBitmapText.FontQualityReplacement_' + IterationStr, '$MyFontQuality$');
+    ACustomACSActions[i].FindControlOptions.MatchBitmapText[0].ProfileName := Ini.ReadString(SectionIndex, 'MatchBitmapText.ProfileName_' + IterationStr, 'Default');
+
+    ACustomACSActions[i].FindControlOptions.MatchBitmapFiles := StringReplace(Ini.ReadString(SectionIndex, 'MatchBitmapFiles_' + IterationStr, ''), #4#5, #13#10, [rfReplaceAll]);
+
+    ACustomACSActions[i].FindControlOptions.ColorError := Ini.ReadString(SectionIndex, 'ColorError_' + IterationStr, '0');
+    ACustomACSActions[i].FindControlOptions.AllowedColorErrorCount := Ini.ReadString(SectionIndex, 'AllowedColorErrorCount_' + IterationStr, '0');
+    ACustomACSActions[i].FindControlOptions.MatchBitmapAlgorithm := TMatchBitmapAlgorithm(Ini.ReadInteger(SectionIndex, 'MatchBitmapAlgorithm_' + IterationStr, Integer(mbaBruteForce)));
+    ACustomACSActions[i].FindControlOptions.MatchBitmapAlgorithmSettings.XMultipleOf := Ini.ReadInteger(SectionIndex, 'MatchBitmapAlgorithm_Grid_XMultipleOf' + IterationStr, 1);
+    ACustomACSActions[i].FindControlOptions.MatchBitmapAlgorithmSettings.YMultipleOf := Ini.ReadInteger(SectionIndex, 'MatchBitmapAlgorithm_Grid_YMultipleOf' + IterationStr, 1);
+    ACustomACSActions[i].FindControlOptions.MatchBitmapAlgorithmSettings.XOffset := Ini.ReadInteger(SectionIndex, 'MatchBitmapAlgorithm_Grid_XOffset' + IterationStr, 0);
+    ACustomACSActions[i].FindControlOptions.MatchBitmapAlgorithmSettings.YOffset := Ini.ReadInteger(SectionIndex, 'MatchBitmapAlgorithm_Grid_YOffset' + IterationStr, 0);
+
+    ACustomACSActions[i].FindControlOptions.InitialRectange.Left := Ini.ReadString(SectionIndex, 'InitialRectange.Left_' + IterationStr, '$Control_Left$');
+    ACustomACSActions[i].FindControlOptions.InitialRectange.Top := Ini.ReadString(SectionIndex, 'InitialRectange.Top_' + IterationStr, '$Control_Top$');
+    ACustomACSActions[i].FindControlOptions.InitialRectange.Right := Ini.ReadString(SectionIndex, 'InitialRectange.Right_' + IterationStr, '$Control_Right$');
+    ACustomACSActions[i].FindControlOptions.InitialRectange.Bottom := Ini.ReadString(SectionIndex, 'InitialRectange.Bottom_' + IterationStr, '$Control_Bottom$');
+    ACustomACSActions[i].FindControlOptions.UseWholeScreen := Ini.ReadBool(SectionIndex, 'UseWholeScreen_' + IterationStr, True);
+    ACustomACSActions[i].FindControlOptions.InitialRectange.LeftOffset := Ini.ReadString(SectionIndex, 'InitialRectange.LeftOffset_' + IterationStr, '0');
+    ACustomACSActions[i].FindControlOptions.InitialRectange.TopOffset := Ini.ReadString(SectionIndex, 'InitialRectange.TopOffset_' + IterationStr, '0');
+    ACustomACSActions[i].FindControlOptions.InitialRectange.RightOffset := Ini.ReadString(SectionIndex, 'InitialRectange.RightOffset_' + IterationStr, '0');
+    ACustomACSActions[i].FindControlOptions.InitialRectange.BottomOffset := Ini.ReadString(SectionIndex, 'InitialRectange.BottomOffset_' + IterationStr, '0');
+
+    ACustomACSActions[i].FindControlOptions.StartSearchingWithCachedControl := Ini.ReadBool(SectionIndex, 'StartSearchingWithCachedControl_' + IterationStr, False);
+    ACustomACSActions[i].FindControlOptions.CachedControlLeft := Ini.ReadString(SectionIndex, 'CachedControlLeft_' + IterationStr, '');
+    ACustomACSActions[i].FindControlOptions.CachedControlTop := Ini.ReadString(SectionIndex, 'CachedControlTop_' + IterationStr, '');
+
+    SectionIndex := Ini.GetSectionIndex('Actions.SetTextOptions');
+    ACustomACSActions[i].SetTextOptions.Text := Ini.ReadString(SectionIndex, 'Text_' + IterationStr, '');
+    ACustomACSActions[i].SetTextOptions.ControlType := TClkSetTextControlType(Ini.ReadInteger(SectionIndex, 'ControlType_' + IterationStr, Integer(stEditBox)));
+
+    SectionIndex := Ini.GetSectionIndex('Actions.CallTemplateOptions');
+    ACustomACSActions[i].CallTemplateOptions.TemplateFileName := Ini.ReadString(SectionIndex, 'TemplateFileName_' + IterationStr, '');
+    ACustomACSActions[i].CallTemplateOptions.ListOfCustomVarsAndValues := StringReplace(Ini.ReadString(SectionIndex, 'ListOfCustomVarsAndValues_' + IterationStr, ''), #4#5, #13#10, [rfReplaceAll]);
+    ACustomACSActions[i].CallTemplateOptions.CallOnlyIfCondition := Ini.ReadBool(SectionIndex, 'CallOnlyIfCondition_' + IterationStr, False);
+    ACustomACSActions[i].CallTemplateOptions.CallOnlyIfConditionVarName := Ini.ReadString(SectionIndex, 'CallOnlyIfConditionVarName_' + IterationStr, '');
+    ACustomACSActions[i].CallTemplateOptions.CallOnlyIfConditionVarValue := Ini.ReadString(SectionIndex, 'CallOnlyIfConditionVarValue_' + IterationStr, '');
+    ACustomACSActions[i].CallTemplateOptions.EvaluateBeforeCalling := Ini.ReadBool(SectionIndex, 'EvaluateBeforeCalling_' + IterationStr, False);
+
+    SectionIndex := Ini.GetSectionIndex('Actions.SleepOptions');
+    ACustomACSActions[i].SleepOptions.Value := Ini.ReadString(SectionIndex, 'Value_' + IterationStr, '1');
+
+    SectionIndex := Ini.GetSectionIndex('Actions.SetVarOptions');
+    ACustomACSActions[i].SetVarOptions.ListOfVarNames := StringReplace(Ini.ReadString(SectionIndex, 'ListOfVarNames_' + IterationStr, ''), #4#5, #13#10, [rfReplaceAll]);
+    ACustomACSActions[i].SetVarOptions.ListOfVarValues := StringReplace(Ini.ReadString(SectionIndex, 'ListOfVarValues_' + IterationStr, ''), #4#5, #13#10, [rfReplaceAll]);
+    ACustomACSActions[i].SetVarOptions.ListOfVarEvalBefore := StringReplace(Ini.ReadString(SectionIndex, 'ListOfVarEvalBefore_' + IterationStr, ''), #4#5, #13#10, [rfReplaceAll]);
+
+    AdjustListOfVarEvalBeforeCount(ACustomACSActions[i].SetVarOptions);
+  end;
+end;
+
+
+procedure LoadAction_Options(Ini: TACSClkIniReadonlyFile; SectionIndex: Integer; var AActionOptions: TClkActionOptions);
+begin
+  AActionOptions.ActionName := Ini.ReadString(SectionIndex, 'ActionName', 'ActionName' + IntToStr(SectionIndex));
+  AActionOptions.Action := ActionAsStringToTClkAction(Ini.ReadString(SectionIndex, 'Action', CClkActionStr[acClick]));
+  AActionOptions.ActionTimeout := Ini.ReadInteger(SectionIndex, 'ActionTimeout', 0);
+  AActionOptions.ActionEnabled := Ini.ReadBool(SectionIndex, 'ActionEnabled', True);
+  AActionOptions.ActionCondition := FastReplace_45ToReturn(Ini.ReadString(SectionIndex, 'ActionCondition', ''));
+end;
+
+
+procedure LoadAction_Breakpoint(Ini: TACSClkIniReadonlyFile; SectionIndex: Integer; var AActionBreakPoint: TActionBreakPoint);
+begin
+  AActionBreakPoint.Exists := Ini.ReadBool(SectionIndex, 'BreakpointExists', False);
+  AActionBreakPoint.Enabled := Ini.ReadBool(SectionIndex, 'BreakpointEnabled', True);
+  AActionBreakPoint.Condition := FastReplace_45ToReturn(Ini.ReadString(SectionIndex, 'BreakpointCondition', ''));
+end;
+
+
+procedure LoadAction_Click(Ini: TACSClkIniReadonlyFile; SectionIndex: Integer; var AClickOptions: TClkClickOptions);
+begin
+  AClickOptions.XClickPointReference := TXClickPointReference(Ini.ReadInteger(SectionIndex, 'XOffsetReference', Ord(xrefLeft)));
+  AClickOptions.YClickPointReference := TYClickPointReference(Ini.ReadInteger(SectionIndex, 'YOffsetReference', Ord(yrefTop)));
+  AClickOptions.XClickPointVar := Ini.ReadString(SectionIndex, 'XClickPointVar', '$Control_Left$');
+  AClickOptions.YClickPointVar := Ini.ReadString(SectionIndex, 'YClickPointVar', '$Control_Top$');
+  AClickOptions.XOffset := Ini.ReadString(SectionIndex, 'XOffset', '0');
+  AClickOptions.YOffset := Ini.ReadString(SectionIndex, 'YOffset', '0');
+  AClickOptions.MouseButton := TMouseButton(Ini.ReadInteger(SectionIndex, 'MouseButton', 0));
+  AClickOptions.ClickWithCtrl := Ini.ReadBool(SectionIndex, 'ClickWithCtrl', False);
+  AClickOptions.ClickWithAlt := Ini.ReadBool(SectionIndex, 'ClickWithAlt', False);
+  AClickOptions.ClickWithShift := Ini.ReadBool(SectionIndex, 'ClickWithShift', False);
+  AClickOptions.ClickWithDoubleClick := Ini.ReadBool(SectionIndex, 'ClickWithDoubleClick', False);
+  AClickOptions.LeaveMouse := Ini.ReadBool(SectionIndex, 'LeaveMouse', False);
+  AClickOptions.MoveWithoutClick := Ini.ReadBool(SectionIndex, 'MoveWithoutClick', False);
+  AClickOptions.Count := Ini.ReadInteger(SectionIndex, 'Count', 0);
+  AClickOptions.ClickType := Ini.ReadInteger(SectionIndex, 'ClickType', 0);
+  AClickOptions.XClickPointReferenceDest := TXClickPointReference(Ini.ReadInteger(SectionIndex, 'XOffsetReferenceDest', Ord(xrefLeft)));
+  AClickOptions.YClickPointReferenceDest := TYClickPointReference(Ini.ReadInteger(SectionIndex, 'YOffsetReferenceDest', Ord(yrefTop)));
+  AClickOptions.XClickPointVarDest := Ini.ReadString(SectionIndex, 'XClickPointVarDest', '$Control_Left$');
+  AClickOptions.YClickPointVarDest := Ini.ReadString(SectionIndex, 'YClickPointVarDest', '$Control_Top$');
+  AClickOptions.XOffsetDest := Ini.ReadString(SectionIndex, 'XOffsetDest', '0');
+  AClickOptions.YOffsetDest := Ini.ReadString(SectionIndex, 'YOffsetDest', '0');
+end;
+
+
+procedure LoadAction_ExecApp(Ini: TACSClkIniReadonlyFile; SectionIndex: Integer; var AExecAppOptions: TClkExecAppOptions);
+begin
+  AExecAppOptions.PathToApp := Ini.ReadString(SectionIndex, 'PathToApp', '');
+  AExecAppOptions.ListOfParams := FastReplace_45ToReturn(Ini.ReadString(SectionIndex, 'ListOfParams', ''));
+  AExecAppOptions.WaitForApp := Ini.ReadBool(SectionIndex, 'WaitForApp', False);
+  AExecAppOptions.AppStdIn := Ini.ReadString(SectionIndex, 'AppStdIn', '');
+  AExecAppOptions.CurrentDir := Ini.ReadString(SectionIndex, 'CurrentDir', '');
+  AExecAppOptions.UseInheritHandles := TExecAppUseInheritHandles(Ini.ReadInteger(SectionIndex, 'UseInheritHandles', Ord(uihOnlyWithStdInOut)));
+end;
+
+
+procedure LoadAction_FindControl(Ini: TACSClkIniReadonlyFile; SectionIndex: Integer; var AFindControlOptions: TClkFindControlOptions);
+var
+  i, n: Integer;
+  Indent: string;
+begin
+  AFindControlOptions.MatchCriteria.WillMatchText := Ini.ReadBool(SectionIndex, 'MatchCriteria.WillMatchText', True);
+  AFindControlOptions.MatchCriteria.WillMatchClassName := Ini.ReadBool(SectionIndex, 'MatchCriteria.WillMatchClassName', True);
+  AFindControlOptions.MatchCriteria.WillMatchBitmapText := Ini.ReadBool(SectionIndex, 'MatchCriteria.WillMatchBitmapText', False);
+  AFindControlOptions.MatchCriteria.WillMatchBitmapFiles := Ini.ReadBool(SectionIndex, 'MatchCriteria.WillMatchBitmapFiles', False);
+  AFindControlOptions.MatchCriteria.SearchForControlMode := TSearchForControlMode(Ini.ReadInteger(SectionIndex, 'MatchCriteria.SearchForControlMode', Ord(sfcmGenGrid)));
+
+  AFindControlOptions.AllowToFail := Ini.ReadBool(SectionIndex, 'AllowToFail', False);
+  AFindControlOptions.WaitForControlToGoAway := Ini.ReadBool(SectionIndex, 'WaitForControlToGoAway', False);
+
+  AFindControlOptions.MatchText := Ini.ReadString(SectionIndex, 'MatchText', 'ComponentText');
+  AFindControlOptions.MatchClassName := Ini.ReadString(SectionIndex, 'MatchClassName', 'ComponentClassName');
+  AFindControlOptions.MatchTextSeparator := Ini.ReadString(SectionIndex, 'MatchTextSeparator', '');
+  AFindControlOptions.MatchClassNameSeparator := Ini.ReadString(SectionIndex, 'MatchClassNameSeparator', '');
+
+  if Ini.ReadString(SectionIndex, 'MatchBitmapTextArr', '') = '1' then
+  begin
+    n := Ini.ReadInteger(SectionIndex, 'MatchBitmapText_Count', 1); //set default length to 1
+    SetLength(AFindControlOptions.MatchBitmapText, n);
+
+    for i := 0 to n - 1 do
+    begin
+      Indent := 'MatchBitmapText[' + IntToStr(i) + '].';
+
+      AFindControlOptions.MatchBitmapText[i].ForegroundColor := Ini.ReadString(SectionIndex, Indent + 'ForegroundColor', '000000');
+      AFindControlOptions.MatchBitmapText[i].BackgroundColor := Ini.ReadString(SectionIndex, Indent + 'BackgroundColor', 'FFFFFF');
+      AFindControlOptions.MatchBitmapText[i].FontName := Ini.ReadString(SectionIndex, Indent + 'FontName', 'Tahoma');
+      AFindControlOptions.MatchBitmapText[i].FontSize := Ini.ReadInteger(SectionIndex, Indent + 'FontSize', 8);
+      AFindControlOptions.MatchBitmapText[i].Bold := Ini.ReadBool(SectionIndex, Indent + 'Bold', False);
+      AFindControlOptions.MatchBitmapText[i].Italic := Ini.ReadBool(SectionIndex, Indent + 'Italic', False);
+      AFindControlOptions.MatchBitmapText[i].Underline := Ini.ReadBool(SectionIndex, Indent + 'Underline', False);
+      AFindControlOptions.MatchBitmapText[i].StrikeOut := Ini.ReadBool(SectionIndex, Indent + 'StrikeOut', False);
+      AFindControlOptions.MatchBitmapText[i].FontQuality := TFontQuality(Ini.ReadInteger(SectionIndex, Indent + 'FontQuality', Integer(fqDefault)));
+      AFindControlOptions.MatchBitmapText[i].FontQualityUsesReplacement := Ini.ReadBool(SectionIndex, Indent + 'FontQualityUsesReplacement', False);
+      AFindControlOptions.MatchBitmapText[i].FontQualityReplacement := Ini.ReadString(SectionIndex, Indent + 'FontQualityReplacement', '$MyFontQuality$');
+      AFindControlOptions.MatchBitmapText[i].ProfileName := Ini.ReadString(SectionIndex, Indent + 'ProfileName', 'Default');
+    end;
+  end
+  else
+  begin  //old BMPText format, where there is only one font setting
+    if Length(AFindControlOptions.MatchBitmapText) = 0 then
+      SetLength(AFindControlOptions.MatchBitmapText, 1);
+
+    AFindControlOptions.MatchBitmapText[0].ForegroundColor := Ini.ReadString(SectionIndex, 'MatchBitmapText.ForegroundColor', '000000');
+    AFindControlOptions.MatchBitmapText[0].BackgroundColor := Ini.ReadString(SectionIndex, 'MatchBitmapText.BackgroundColor', 'FFFFFF');
+    AFindControlOptions.MatchBitmapText[0].FontName := Ini.ReadString(SectionIndex, 'MatchBitmapText.FontName', 'Tahoma');
+    AFindControlOptions.MatchBitmapText[0].FontSize := Ini.ReadInteger(SectionIndex, 'MatchBitmapText.FontSize', 8);
+    AFindControlOptions.MatchBitmapText[0].Bold := Ini.ReadBool(SectionIndex, 'MatchBitmapText.Bold', False);
+    AFindControlOptions.MatchBitmapText[0].Italic := Ini.ReadBool(SectionIndex, 'MatchBitmapText.Italic', False);
+    AFindControlOptions.MatchBitmapText[0].Underline := Ini.ReadBool(SectionIndex, 'MatchBitmapText.Underline', False);
+    AFindControlOptions.MatchBitmapText[0].StrikeOut := Ini.ReadBool(SectionIndex, 'MatchBitmapText.StrikeOut', False);
+    AFindControlOptions.MatchBitmapText[0].FontQuality := TFontQuality(Ini.ReadInteger(SectionIndex, 'MatchBitmapText.FontQuality', Integer(fqDefault)));
+    AFindControlOptions.MatchBitmapText[0].FontQualityUsesReplacement := Ini.ReadBool(SectionIndex, 'MatchBitmapText.FontQualityUsesReplacement', False);
+    AFindControlOptions.MatchBitmapText[0].FontQualityReplacement := Ini.ReadString(SectionIndex, 'MatchBitmapText.FontQualityReplacement', '$MyFontQuality$');
+    AFindControlOptions.MatchBitmapText[0].ProfileName := Ini.ReadString(SectionIndex, 'MatchBitmapText.ProfileName', 'Default');
+  end;
+
+  AFindControlOptions.MatchBitmapFiles := FastReplace_45ToReturn(Ini.ReadString(SectionIndex, 'MatchBitmapFiles', ''));
+
+  AFindControlOptions.ColorError := Ini.ReadString(SectionIndex, 'ColorError', '0');
+  AFindControlOptions.AllowedColorErrorCount := Ini.ReadString(SectionIndex, 'AllowedColorErrorCount', '0');
+  AFindControlOptions.MatchBitmapAlgorithm := TMatchBitmapAlgorithm(Ini.ReadInteger(SectionIndex, 'MatchBitmapAlgorithm', Integer(mbaBruteForce)));
+  AFindControlOptions.MatchBitmapAlgorithmSettings.XMultipleOf := Ini.ReadInteger(SectionIndex, 'MatchBitmapAlgorithm_Grid_XMultipleOf', 1);
+  AFindControlOptions.MatchBitmapAlgorithmSettings.YMultipleOf := Ini.ReadInteger(SectionIndex, 'MatchBitmapAlgorithm_Grid_YMultipleOf', 1);
+  AFindControlOptions.MatchBitmapAlgorithmSettings.XOffset := Ini.ReadInteger(SectionIndex, 'MatchBitmapAlgorithm_Grid_XOffset', 0);
+  AFindControlOptions.MatchBitmapAlgorithmSettings.YOffset := Ini.ReadInteger(SectionIndex, 'MatchBitmapAlgorithm_Grid_YOffset', 0);
+
+  AFindControlOptions.InitialRectange.Left := Ini.ReadString(SectionIndex, 'InitialRectange.Left', '$Control_Left$');
+  AFindControlOptions.InitialRectange.Top := Ini.ReadString(SectionIndex, 'InitialRectange.Top', '$Control_Top$');
+  AFindControlOptions.InitialRectange.Right := Ini.ReadString(SectionIndex, 'InitialRectange.Right', '$Control_Right$');
+  AFindControlOptions.InitialRectange.Bottom := Ini.ReadString(SectionIndex, 'InitialRectange.Bottom', '$Control_Bottom$');
+  AFindControlOptions.UseWholeScreen := Ini.ReadBool(SectionIndex, 'UseWholeScreen', True);
+  AFindControlOptions.InitialRectange.LeftOffset := Ini.ReadString(SectionIndex, 'InitialRectange.LeftOffset', '0');
+  AFindControlOptions.InitialRectange.TopOffset := Ini.ReadString(SectionIndex, 'InitialRectange.TopOffset', '0');
+  AFindControlOptions.InitialRectange.RightOffset := Ini.ReadString(SectionIndex, 'InitialRectange.RightOffset', '0');
+  AFindControlOptions.InitialRectange.BottomOffset := Ini.ReadString(SectionIndex, 'InitialRectange.BottomOffset', '0');
+
+  AFindControlOptions.StartSearchingWithCachedControl := Ini.ReadBool(SectionIndex, 'StartSearchingWithCachedControl', False);
+  AFindControlOptions.CachedControlLeft := Ini.ReadString(SectionIndex, 'CachedControlLeft', '');
+  AFindControlOptions.CachedControlTop := Ini.ReadString(SectionIndex, 'CachedControlTop', '');
+end;
+
+
+procedure LoadAction_SetControlText(Ini: TACSClkIniReadonlyFile; SectionIndex: Integer; var ASetTextOptions: TClkSetTextOptions);
+begin
+  ASetTextOptions.Text := Ini.ReadString(SectionIndex, 'Text', '');
+  ASetTextOptions.ControlType := TClkSetTextControlType(Ini.ReadInteger(SectionIndex, 'ControlType', Integer(stEditBox)));
+end;
+
+
+procedure LoadAction_CallTemplate(Ini: TACSClkIniReadonlyFile; SectionIndex: Integer; var ACallTemplateOptions: TClkCallTemplateOptions);
+begin
+  ACallTemplateOptions.TemplateFileName := Ini.ReadString(SectionIndex, 'TemplateFileName', '');
+  ACallTemplateOptions.ListOfCustomVarsAndValues := FastReplace_45ToReturn(Ini.ReadString(SectionIndex, 'ListOfCustomVarsAndValues', ''));
+  ACallTemplateOptions.CallOnlyIfCondition := Ini.ReadBool(SectionIndex, 'CallOnlyIfCondition', False);
+  ACallTemplateOptions.CallOnlyIfConditionVarName := Ini.ReadString(SectionIndex, 'CallOnlyIfConditionVarName', '');
+  ACallTemplateOptions.CallOnlyIfConditionVarValue := Ini.ReadString(SectionIndex, 'CallOnlyIfConditionVarValue', '');
+  ACallTemplateOptions.EvaluateBeforeCalling := Ini.ReadBool(SectionIndex, 'EvaluateBeforeCalling', False);
+end;
+
+
+procedure LoadAction_Sleep(Ini: TACSClkIniReadonlyFile; SectionIndex: Integer; var ASleepOptions: TClkSleepOptions);
+begin
+  ASleepOptions.Value := Ini.ReadString(SectionIndex, 'Value', '1');
+end;
+
+
+procedure LoadAction_SetVar(Ini: TACSClkIniReadonlyFile; SectionIndex: Integer; var ASetVarOptions: TClkSetVarOptions);
+begin
+  ASetVarOptions.ListOfVarNames := FastReplace_45ToReturn(Ini.ReadString(SectionIndex, 'ListOfVarNames', ''));
+  ASetVarOptions.ListOfVarValues := FastReplace_45ToReturn(Ini.ReadString(SectionIndex, 'ListOfVarValues', ''));
+  ASetVarOptions.ListOfVarEvalBefore := FastReplace_45ToReturn(Ini.ReadString(SectionIndex, 'ListOfVarEvalBefore', ''));
+  AdjustListOfVarEvalBeforeCount(ASetVarOptions);
+end;
+
+
+procedure LoadTemplateToCustomActions_V2(Ini: TACSClkIniReadonlyFile; var ACustomACSActions: TClkActionsRecArr);
+var
+  IterationStr: string;
+  SectionIndex: Integer;
+  i: Integer;
+begin
+  for i := 0 to Length(ACustomACSActions) - 1 do
+  begin
+    IterationStr := IntToStr(i);
+    SectionIndex := Ini.GetSectionIndex('Action_' + IterationStr);
+
+    LoadAction_Options(Ini, SectionIndex, ACustomACSActions[i].ActionOptions);
+    LoadAction_Breakpoint(Ini, SectionIndex, ACustomACSActions[i].ActionBreakPoint);
+
+    case ACustomACSActions[i].ActionOptions.Action of
+      acClick: LoadAction_Click(Ini, SectionIndex, ACustomACSActions[i].ClickOptions);
+      acExecApp: LoadAction_ExecApp(Ini, SectionIndex, ACustomACSActions[i].ExecAppOptions);
+      acFindControl:    LoadAction_FindControl(Ini, SectionIndex, ACustomACSActions[i].FindControlOptions);
+      acFindSubControl: LoadAction_FindControl(Ini, SectionIndex, ACustomACSActions[i].FindControlOptions);
+      acSetControlText: LoadAction_SetControlText(Ini, SectionIndex, ACustomACSActions[i].SetTextOptions);
+      acCallTemplate: LoadAction_CallTemplate(Ini, SectionIndex, ACustomACSActions[i].CallTemplateOptions);
+      acSleep: LoadAction_Sleep(Ini, SectionIndex, ACustomACSActions[i].SleepOptions);
+      acSetVar: LoadAction_SetVar(Ini, SectionIndex, ACustomACSActions[i].SetVarOptions);
+    end;
+  end;
+end;
+
+
+//This might be fast, but the content is hard to diff. Better use V2.    V1 will not be updated to the new features.
+{procedure SaveTemplateWithCustomActions_V1(Fnm: string; ACustomACSActions: TClkActionsRecArr);
+var
+  i: Integer;
+  AStringList: TStringList;   //much faster than T(Mem)IniFile
+  IterationStr: string;
+begin
+  AStringList := TStringList.Create;
+  try
+    AStringList.Add('[Actions]');
+    AStringList.Add('Count=' + IntToStr(Length(ACustomACSActions)));
+
+    AStringList.Add('');
+    AStringList.Add('[Actions.ActionOptions]');
+
+    for i := 0 to Length(ACustomACSActions) - 1 do
+    begin
+      IterationStr := IntToStr(i);
+      AStringList.Add('ActionName_' + IterationStr + '=' + ACustomACSActions[i].ActionOptions.ActionName);
+      AStringList.Add('Action_' + IterationStr + '=' + CACSActionStr[ACustomACSActions[i].ActionOptions.Action]);
+      AStringList.Add('ActionTimeout_' + IterationStr + '=' + IntToStr(ACustomACSActions[i].ActionOptions.ActionTimeout));
+      AStringList.Add('ActionEnabled_' + IterationStr + '=' + IntToStr(Ord(ACustomACSActions[i].ActionOptions.ActionEnabled)));
+      AStringList.Add('ActionCondition_' + IterationStr + '=' + StringReplace(ACustomACSActions[i].ActionOptions.ActionCondition, #13#10, #4#5, [rfReplaceAll]));
+    end;
+
+    AStringList.Add('');
+    AStringList.Add('[Actions.ClickOptions]');
+
+    for i := 0 to Length(ACustomACSActions) - 1 do
+    begin
+      IterationStr := IntToStr(i);
+      AStringList.Add('XOffsetReference_' + IterationStr + '=' + IntToStr(Ord(ACustomACSActions[i].ClickOptions.XClickPointReference)));
+      AStringList.Add('YOffsetReference_' + IterationStr + '=' + IntToStr(Ord(ACustomACSActions[i].ClickOptions.YClickPointReference)));
+      AStringList.Add('XClickPointVar_' + IterationStr + '=' + ACustomACSActions[i].ClickOptions.XClickPointVar);
+      AStringList.Add('YClickPointVar_' + IterationStr + '=' + ACustomACSActions[i].ClickOptions.YClickPointVar);
+      AStringList.Add('XOffset_' + IterationStr + '=' + ACustomACSActions[i].ClickOptions.XOffset);
+      AStringList.Add('YOffset_' + IterationStr + '=' + ACustomACSActions[i].ClickOptions.YOffset);
+
+      AStringList.Add('MouseButton_' + IterationStr + '=' + IntToStr(Ord(ACustomACSActions[i].ClickOptions.MouseButton)));
+      AStringList.Add('ClickWithCtrl_' + IterationStr + '=' + IntToStr(Ord(ACustomACSActions[i].ClickOptions.ClickWithCtrl)));
+      AStringList.Add('ClickWithAlt_' + IterationStr + '=' + IntToStr(Ord(ACustomACSActions[i].ClickOptions.ClickWithAlt)));
+      AStringList.Add('ClickWithShift_' + IterationStr + '=' + IntToStr(Ord(ACustomACSActions[i].ClickOptions.ClickWithShift)));
+      AStringList.Add('ClickWithDoubleClick_' + IterationStr + '=' + IntToStr(Ord(ACustomACSActions[i].ClickOptions.ClickWithDoubleClick)));
+      AStringList.Add('LeaveMouse_' + IterationStr + '=' + IntToStr(Ord(ACustomACSActions[i].ClickOptions.LeaveMouse)));
+      AStringList.Add('MoveWithoutClick_' + IterationStr + '=' + IntToStr(Ord(ACustomACSActions[i].ClickOptions.MoveWithoutClick)));
+
+      AStringList.Add('ClickType_' + IterationStr + '=' + IntToStr(ACustomACSActions[i].ClickOptions.ClickType));
+      AStringList.Add('XOffsetReferenceDest_' + IterationStr + '=' + IntToStr(Ord(ACustomACSActions[i].ClickOptions.XClickPointReferenceDest)));
+      AStringList.Add('YOffsetReferenceDest_' + IterationStr + '=' + IntToStr(Ord(ACustomACSActions[i].ClickOptions.YClickPointReferenceDest)));
+      AStringList.Add('XClickPointVarDest_' + IterationStr + '=' + ACustomACSActions[i].ClickOptions.XClickPointVarDest);
+      AStringList.Add('YClickPointVarDest_' + IterationStr + '=' + ACustomACSActions[i].ClickOptions.YClickPointVarDest);
+      AStringList.Add('XOffsetDest_' + IterationStr + '=' + ACustomACSActions[i].ClickOptions.XOffsetDest);
+      AStringList.Add('YOffsetDest_' + IterationStr + '=' + ACustomACSActions[i].ClickOptions.YOffsetDest);
+    end;
+
+    AStringList.Add('');
+    AStringList.Add('[Actions.MultiClickOptions]');
+
+    for i := 0 to Length(ACustomACSActions) - 1 do
+    begin
+      IterationStr := IntToStr(i);
+      AStringList.Add('Count_' + IterationStr + '=' + IntToStr(ACustomACSActions[i].ClickOptions.Count));
+    end;
+
+    AStringList.Add('');
+    AStringList.Add('[Actions.ExecAppOptions]');
+
+    for i := 0 to Length(ACustomACSActions) - 1 do
+    begin
+      IterationStr := IntToStr(i);
+      AStringList.Add('PathToApp_' + IterationStr + '=' + ACustomACSActions[i].ExecAppOptions.PathToApp);
+      AStringList.Add('ListOfParams_' + IterationStr + '=' + StringReplace(ACustomACSActions[i].ExecAppOptions.ListOfParams, #13#10, #4#5, [rfReplaceAll]));
+      AStringList.Add('WaitForApp_' + IterationStr + '=' + IntToStr(Ord(ACustomACSActions[i].ExecAppOptions.WaitForApp)));
+    end;
+
+    AStringList.Add('');
+    AStringList.Add('[Actions.FindControlOptions]');
+
+    for i := 0 to Length(ACustomACSActions) - 1 do
+    begin
+      IterationStr := IntToStr(i);
+      AStringList.Add('MatchCriteria.WillMatchText_' + IterationStr + '=' + IntToStr(Ord(ACustomACSActions[i].FindControlOptions.MatchCriteria.WillMatchText)));
+      AStringList.Add('MatchCriteria.WillMatchClassName_' + IterationStr + '=' + IntToStr(Ord(ACustomACSActions[i].FindControlOptions.MatchCriteria.WillMatchClassName)));
+      AStringList.Add('MatchCriteria.WillMatchBitmapText_' + IterationStr + '=' + IntToStr(Ord(ACustomACSActions[i].FindControlOptions.MatchCriteria.WillMatchBitmapText)));
+      AStringList.Add('MatchCriteria.WillMatchBitmapFiles_' + IterationStr + '=' + IntToStr(Ord(ACustomACSActions[i].FindControlOptions.MatchCriteria.WillMatchBitmapFiles)));
+      AStringList.Add('MatchCriteria.SearchForControlMode_' + IterationStr + '=' + IntToStr(Ord(ACustomACSActions[i].FindControlOptions.MatchCriteria.SearchForControlMode)));
+      AStringList.Add('MatchText_' + IterationStr + '=' + ACustomACSActions[i].FindControlOptions.MatchText);
+      AStringList.Add('MatchClassName_' + IterationStr + '=' + ACustomACSActions[i].FindControlOptions.MatchClassName);
+      AStringList.Add('MatchTextSeparator_' + IterationStr + '=' + ACustomACSActions[i].FindControlOptions.MatchTextSeparator);
+      AStringList.Add('MatchClassNameSeparator_' + IterationStr + '=' + ACustomACSActions[i].FindControlOptions.MatchClassNameSeparator);
+      AStringList.Add('AllowToFail_' + IterationStr + '=' + IntToStr(Ord(ACustomACSActions[i].FindControlOptions.AllowToFail)));
+      AStringList.Add('WaitForControlToGoAway_' + IterationStr + '=' + IntToStr(Ord(ACustomACSActions[i].FindControlOptions.WaitForControlToGoAway)));
+
+      AStringList.Add('MatchBitmapText.ForegroundColor_' + IterationStr + '=' + ACustomACSActions[i].FindControlOptions.MatchBitmapText.ForegroundColor);
+      AStringList.Add('MatchBitmapText.BackgroundColor_' + IterationStr + '=' + ACustomACSActions[i].FindControlOptions.MatchBitmapText.BackgroundColor);
+      AStringList.Add('MatchBitmapText.FontName_' + IterationStr + '=' + ACustomACSActions[i].FindControlOptions.MatchBitmapText.FontName);
+      AStringList.Add('MatchBitmapText.FontSize_' + IterationStr + '=' + IntToStr(ACustomACSActions[i].FindControlOptions.MatchBitmapText.FontSize));
+      AStringList.Add('MatchBitmapText.Bold_' + IterationStr + '=' + IntToStr(Ord(ACustomACSActions[i].FindControlOptions.MatchBitmapText.Bold)));
+      AStringList.Add('MatchBitmapText.Italic_' + IterationStr + '=' + IntToStr(Ord(ACustomACSActions[i].FindControlOptions.MatchBitmapText.Italic)));
+      AStringList.Add('MatchBitmapText.Underline_' + IterationStr + '=' + IntToStr(Ord(ACustomACSActions[i].FindControlOptions.MatchBitmapText.Underline)));
+      AStringList.Add('MatchBitmapText.StrikeOut_' + IterationStr + '=' + IntToStr(Ord(ACustomACSActions[i].FindControlOptions.MatchBitmapText.StrikeOut)));
+      AStringList.Add('MatchBitmapText.FontQuality_' + IterationStr + '=' + IntToStr(Ord(ACustomACSActions[i].FindControlOptions.MatchBitmapText.FontQuality)));
+      AStringList.Add('MatchBitmapText.FontQualityUsesReplacement_' + IterationStr + '=' + IntToStr(Ord(ACustomACSActions[i].FindControlOptions.MatchBitmapText.FontQualityUsesReplacement)));
+      AStringList.Add('MatchBitmapText.FontQualityReplacement_' + IterationStr + '=' + ACustomACSActions[i].FindControlOptions.MatchBitmapText.FontQualityReplacement);
+
+      AStringList.Add('MatchBitmapFiles_' + IterationStr + '=' + StringReplace(ACustomACSActions[i].FindControlOptions.MatchBitmapFiles, #13#10, #4#5, [rfReplaceAll]));
+
+      AStringList.Add('ColorError_' + IterationStr + '=' + ACustomACSActions[i].FindControlOptions.ColorError);
+      AStringList.Add('AllowedColorErrorCount_' + IterationStr + '=' + ACustomACSActions[i].FindControlOptions.AllowedColorErrorCount);
+      AStringList.Add('MatchBitmapAlgorithm_' + IterationStr + '=' + IntToStr(Ord(ACustomACSActions[i].FindControlOptions.MatchBitmapAlgorithm)));
+      AStringList.Add('MatchBitmapAlgorithm_Grid_XMultipleOf' + IterationStr + '=' + IntToStr(Ord(ACustomACSActions[i].FindControlOptions.MatchBitmapAlgorithmSettings.XMultipleOf)));
+      AStringList.Add('MatchBitmapAlgorithm_Grid_YMultipleOf' + IterationStr + '=' + IntToStr(Ord(ACustomACSActions[i].FindControlOptions.MatchBitmapAlgorithmSettings.YMultipleOf)));
+      AStringList.Add('MatchBitmapAlgorithm_Grid_XOffset' + IterationStr + '=' + IntToStr(Ord(ACustomACSActions[i].FindControlOptions.MatchBitmapAlgorithmSettings.XOffset)));
+      AStringList.Add('MatchBitmapAlgorithm_Grid_YOffset' + IterationStr + '=' + IntToStr(Ord(ACustomACSActions[i].FindControlOptions.MatchBitmapAlgorithmSettings.YOffset)));
+
+      AStringList.Add('InitialRectange.Left_' + IterationStr + '=' + ACustomACSActions[i].FindControlOptions.InitialRectange.Left);
+      AStringList.Add('InitialRectange.Top_' + IterationStr + '=' + ACustomACSActions[i].FindControlOptions.InitialRectange.Top);
+      AStringList.Add('InitialRectange.Right_' + IterationStr + '=' + ACustomACSActions[i].FindControlOptions.InitialRectange.Right);
+      AStringList.Add('InitialRectange.Bottom_' + IterationStr + '=' + ACustomACSActions[i].FindControlOptions.InitialRectange.Bottom);
+      AStringList.Add('UseWholeScreen_' + IterationStr + '=' + IntToStr(Ord(ACustomACSActions[i].FindControlOptions.UseWholeScreen)));
+      AStringList.Add('InitialRectange.LeftOffset_' + IterationStr + '=' + ACustomACSActions[i].FindControlOptions.InitialRectange.LeftOffset);
+      AStringList.Add('InitialRectange.TopOffset_' + IterationStr + '=' + ACustomACSActions[i].FindControlOptions.InitialRectange.TopOffset);
+      AStringList.Add('InitialRectange.RightOffset_' + IterationStr + '=' + ACustomACSActions[i].FindControlOptions.InitialRectange.RightOffset);
+      AStringList.Add('InitialRectange.BottomOffset_' + IterationStr + '=' + ACustomACSActions[i].FindControlOptions.InitialRectange.BottomOffset);
+    end;
+
+    AStringList.Add('');
+    AStringList.Add('[Actions.SetTextOptions]');
+
+    for i := 0 to Length(ACustomACSActions) - 1 do
+    begin
+      IterationStr := IntToStr(i);
+      AStringList.Add('Text_' + IterationStr + '=' + ACustomACSActions[i].SetTextOptions.Text);
+      AStringList.Add('ControlType_' + IterationStr + '=' + IntToStr(Ord(ACustomACSActions[i].SetTextOptions.ControlType)));
+    end;
+
+    AStringList.Add('');
+    AStringList.Add('[Actions.CallTemplateOptions]');
+
+    for i := 0 to Length(ACustomACSActions) - 1 do
+    begin
+      IterationStr := IntToStr(i);
+      AStringList.Add('TemplateFileName_' + IterationStr + '=' + ACustomACSActions[i].CallTemplateOptions.TemplateFileName);
+      AStringList.Add('ListOfCustomVarsAndValues_' + IterationStr + '=' + StringReplace(ACustomACSActions[i].CallTemplateOptions.ListOfCustomVarsAndValues, #13#10, #4#5, [rfReplaceAll]));
+      AStringList.Add('CallOnlyIfCondition_' + IterationStr + '=' + IntToStr(Ord(ACustomACSActions[i].CallTemplateOptions.CallOnlyIfCondition)));
+      AStringList.Add('CallOnlyIfConditionVarName_' + IterationStr + '=' + ACustomACSActions[i].CallTemplateOptions.CallOnlyIfConditionVarName);
+      AStringList.Add('CallOnlyIfConditionVarValue_' + IterationStr + '=' + ACustomACSActions[i].CallTemplateOptions.CallOnlyIfConditionVarValue);
+      AStringList.Add('EvaluateBeforeCalling_' + IterationStr + '=' + IntToStr(Ord(ACustomACSActions[i].CallTemplateOptions.EvaluateBeforeCalling)));
+    end;
+
+    AStringList.Add('');
+    AStringList.Add('[Actions.SleepOptions]');
+
+    for i := 0 to Length(ACustomACSActions) - 1 do
+    begin
+      IterationStr := IntToStr(i);
+      AStringList.Add('Value_' + IterationStr + '=' + ACustomACSActions[i].SleepOptions.Value);
+      //
+    end;
+
+    AStringList.Add('');
+    AStringList.Add('[Actions.SetVarOptions]');
+
+    for i := 0 to Length(ACustomACSActions) - 1 do
+    begin
+      IterationStr := IntToStr(i);
+      AStringList.Add('ListOfVarNames_' + IterationStr + '=' + StringReplace(ACustomACSActions[i].SetVarOptions.ListOfVarNames, #13#10, #4#5, [rfReplaceAll]));
+      AStringList.Add('ListOfVarValues_' + IterationStr + '=' + StringReplace(ACustomACSActions[i].SetVarOptions.ListOfVarValues, #13#10, #4#5, [rfReplaceAll]));
+      AStringList.Add('ListOfVarEvalBefore_' + IterationStr + '=' + StringReplace(ACustomACSActions[i].SetVarOptions.ListOfVarEvalBefore, #13#10, #4#5, [rfReplaceAll]));
+    end;
+
+    AStringList.SaveToFile(Fnm);
+  finally
+    AStringList.Free;
+  end;
+end;}
+
+
+procedure AddActionOptionsToStringList(var AActionOptions: TClkActionOptions; AStringList: TStringList);
+begin
+  AStringList.Add('ActionName=' + AActionOptions.ActionName);
+  AStringList.Add('Action=' + CClkActionStr[AActionOptions.Action]);
+  AStringList.Add('ActionTimeout=' + IntToStr(AActionOptions.ActionTimeout));
+  AStringList.Add('ActionEnabled=' + IntToStr(Ord(AActionOptions.ActionEnabled)));
+  AStringList.Add('ActionCondition=' + FastReplace_ReturnTo45(AActionOptions.ActionCondition));
+end;
+
+
+procedure AddActionBreakpointToStringList(var AActionBreakpoint: TActionBreakPoint; AStringList: TStringList);
+begin
+  AStringList.Add('BreakpointExists=' + IntToStr(Ord(AActionBreakpoint.Exists)));
+  AStringList.Add('BreakpointEnabled=' + IntToStr(Ord(AActionBreakpoint.Enabled)));
+  AStringList.Add('BreakpointCondition=' + FastReplace_ReturnTo45(AActionBreakpoint.Condition));
+end;
+
+
+procedure AddAction_ClickToStringList(var AActionClickOptions: TClkClickOptions; AStringList: TStringList);
+begin
+  AStringList.Add('XOffsetReference=' + IntToStr(Ord(AActionClickOptions.XClickPointReference)));
+  AStringList.Add('YOffsetReference=' + IntToStr(Ord(AActionClickOptions.YClickPointReference)));
+  AStringList.Add('XClickPointVar=' + AActionClickOptions.XClickPointVar);
+  AStringList.Add('YClickPointVar=' + AActionClickOptions.YClickPointVar);
+  AStringList.Add('XOffset=' + AActionClickOptions.XOffset);
+  AStringList.Add('YOffset=' + AActionClickOptions.YOffset);
+
+  AStringList.Add('MouseButton=' + IntToStr(Ord(AActionClickOptions.MouseButton)));
+  AStringList.Add('ClickWithCtrl=' + IntToStr(Ord(AActionClickOptions.ClickWithCtrl)));
+  AStringList.Add('ClickWithAlt=' + IntToStr(Ord(AActionClickOptions.ClickWithAlt)));
+  AStringList.Add('ClickWithShift=' + IntToStr(Ord(AActionClickOptions.ClickWithShift)));
+  AStringList.Add('ClickWithDoubleClick=' + IntToStr(Ord(AActionClickOptions.ClickWithDoubleClick)));
+  AStringList.Add('LeaveMouse=' + IntToStr(Ord(AActionClickOptions.LeaveMouse)));
+  AStringList.Add('MoveWithoutClick=' + IntToStr(Ord(AActionClickOptions.MoveWithoutClick)));
+  AStringList.Add('Count=' + IntToStr(AActionClickOptions.Count));
+
+  AStringList.Add('ClickType=' + IntToStr(AActionClickOptions.ClickType));
+  AStringList.Add('XOffsetReferenceDest=' + IntToStr(Ord(AActionClickOptions.XClickPointReferenceDest)));
+  AStringList.Add('YOffsetReferenceDest=' + IntToStr(Ord(AActionClickOptions.YClickPointReferenceDest)));
+  AStringList.Add('XClickPointVarDest=' + AActionClickOptions.XClickPointVarDest);
+  AStringList.Add('YClickPointVarDest=' + AActionClickOptions.YClickPointVarDest);
+  AStringList.Add('XOffsetDest=' + AActionClickOptions.XOffsetDest);
+  AStringList.Add('YOffsetDest=' + AActionClickOptions.YOffsetDest);
+end;
+
+
+procedure AddAction_ExecAppToStringList(var AActionExecAppOptions: TClkExecAppOptions; AStringList: TStringList);
+begin
+  AStringList.Add('PathToApp=' + AActionExecAppOptions.PathToApp);
+  AStringList.Add('ListOfParams=' + FastReplace_ReturnTo45(AActionExecAppOptions.ListOfParams));
+  AStringList.Add('WaitForApp=' + IntToStr(Ord(AActionExecAppOptions.WaitForApp)));
+  AStringList.Add('AppStdIn=' + AActionExecAppOptions.AppStdIn);
+  AStringList.Add('CurrentDir=' + AActionExecAppOptions.CurrentDir);
+  AStringList.Add('UseInheritHandles' + IntToStr(Ord(AActionExecAppOptions.UseInheritHandles)));
+end;
+
+
+procedure AddAction_FindControlToStringList(var AActionFindControlOptions: TClkFindControlOptions; AStringList: TStringList);
+var
+  i: Integer;
+  Indent: string;
+begin
+  AStringList.Add('MatchCriteria.WillMatchText=' + IntToStr(Ord(AActionFindControlOptions.MatchCriteria.WillMatchText)));
+  AStringList.Add('MatchCriteria.WillMatchClassName=' + IntToStr(Ord(AActionFindControlOptions.MatchCriteria.WillMatchClassName)));
+  AStringList.Add('MatchCriteria.WillMatchBitmapText=' + IntToStr(Ord(AActionFindControlOptions.MatchCriteria.WillMatchBitmapText)));
+  AStringList.Add('MatchCriteria.WillMatchBitmapFiles=' + IntToStr(Ord(AActionFindControlOptions.MatchCriteria.WillMatchBitmapFiles)));
+  AStringList.Add('MatchCriteria.SearchForControlMode=' + IntToStr(Ord(AActionFindControlOptions.MatchCriteria.SearchForControlMode)));
+  AStringList.Add('MatchText=' + AActionFindControlOptions.MatchText);
+  AStringList.Add('MatchClassName=' + AActionFindControlOptions.MatchClassName);
+  AStringList.Add('MatchTextSeparator=' + AActionFindControlOptions.MatchTextSeparator);
+  AStringList.Add('MatchClassNameSeparator=' + AActionFindControlOptions.MatchClassNameSeparator);
+  AStringList.Add('AllowToFail=' + IntToStr(Ord(AActionFindControlOptions.AllowToFail)));
+  AStringList.Add('WaitForControlToGoAway=' + IntToStr(Ord(AActionFindControlOptions.WaitForControlToGoAway)));
+
+  AStringList.Add('MatchBitmapTextArr=1'); //'1' means that MatchBitmapText has array support
+  AStringList.Add('MatchBitmapText_Count=' + IntToStr(Length(AActionFindControlOptions.MatchBitmapText)));
+
+  for i := 0 to Length(AActionFindControlOptions.MatchBitmapText) - 1 do
+  begin
+    Indent := 'MatchBitmapText[' + IntToStr(i) + '].';
+
+    AStringList.Add(Indent + 'ForegroundColor=' + AActionFindControlOptions.MatchBitmapText[i].ForegroundColor);
+    AStringList.Add(Indent + 'BackgroundColor=' + AActionFindControlOptions.MatchBitmapText[i].BackgroundColor);
+    AStringList.Add(Indent + 'FontName=' + AActionFindControlOptions.MatchBitmapText[i].FontName);
+    AStringList.Add(Indent + 'FontSize=' + IntToStr(AActionFindControlOptions.MatchBitmapText[i].FontSize));
+    AStringList.Add(Indent + 'Bold=' + IntToStr(Ord(AActionFindControlOptions.MatchBitmapText[i].Bold)));
+    AStringList.Add(Indent + 'Italic=' + IntToStr(Ord(AActionFindControlOptions.MatchBitmapText[i].Italic)));
+    AStringList.Add(Indent + 'Underline=' + IntToStr(Ord(AActionFindControlOptions.MatchBitmapText[i].Underline)));
+    AStringList.Add(Indent + 'StrikeOut=' + IntToStr(Ord(AActionFindControlOptions.MatchBitmapText[i].StrikeOut)));
+    AStringList.Add(Indent + 'FontQuality=' + IntToStr(Ord(AActionFindControlOptions.MatchBitmapText[i].FontQuality)));
+    AStringList.Add(Indent + 'FontQualityUsesReplacement=' + IntToStr(Ord(AActionFindControlOptions.MatchBitmapText[i].FontQualityUsesReplacement)));
+    AStringList.Add(Indent + 'FontQualityReplacement=' + AActionFindControlOptions.MatchBitmapText[i].FontQualityReplacement);
+    AStringList.Add(Indent + 'ProfileName=' + AActionFindControlOptions.MatchBitmapText[i].ProfileName);
+  end;
+
+  AStringList.Add('MatchBitmapFiles=' + FastReplace_ReturnTo45(AActionFindControlOptions.MatchBitmapFiles));
+
+  AStringList.Add('ColorError=' + AActionFindControlOptions.ColorError);
+  AStringList.Add('AllowedColorErrorCount=' + AActionFindControlOptions.AllowedColorErrorCount);
+  AStringList.Add('MatchBitmapAlgorithm=' + IntToStr(Ord(AActionFindControlOptions.MatchBitmapAlgorithm)));
+  AStringList.Add('MatchBitmapAlgorithm_Grid_XMultipleOf=' + IntToStr(Ord(AActionFindControlOptions.MatchBitmapAlgorithmSettings.XMultipleOf)));
+  AStringList.Add('MatchBitmapAlgorithm_Grid_YMultipleOf=' + IntToStr(Ord(AActionFindControlOptions.MatchBitmapAlgorithmSettings.YMultipleOf)));
+  AStringList.Add('MatchBitmapAlgorithm_Grid_XOffset=' + IntToStr(Ord(AActionFindControlOptions.MatchBitmapAlgorithmSettings.XOffset)));
+  AStringList.Add('MatchBitmapAlgorithm_Grid_YOffset=' + IntToStr(Ord(AActionFindControlOptions.MatchBitmapAlgorithmSettings.YOffset)));
+
+  AStringList.Add('InitialRectange.Left=' + AActionFindControlOptions.InitialRectange.Left);
+  AStringList.Add('InitialRectange.Top=' + AActionFindControlOptions.InitialRectange.Top);
+  AStringList.Add('InitialRectange.Right=' + AActionFindControlOptions.InitialRectange.Right);
+  AStringList.Add('InitialRectange.Bottom=' + AActionFindControlOptions.InitialRectange.Bottom);
+  AStringList.Add('UseWholeScreen=' + IntToStr(Ord(AActionFindControlOptions.UseWholeScreen)));
+  AStringList.Add('InitialRectange.LeftOffset=' + AActionFindControlOptions.InitialRectange.LeftOffset);
+  AStringList.Add('InitialRectange.TopOffset=' + AActionFindControlOptions.InitialRectange.TopOffset);
+  AStringList.Add('InitialRectange.RightOffset=' + AActionFindControlOptions.InitialRectange.RightOffset);
+  AStringList.Add('InitialRectange.BottomOffset=' + AActionFindControlOptions.InitialRectange.BottomOffset);
+
+  AStringList.Add('StartSearchingWithCachedControl=' + IntToStr(Ord(AActionFindControlOptions.StartSearchingWithCachedControl)));
+  AStringList.Add('CachedControlLeft=' + AActionFindControlOptions.CachedControlLeft);
+  AStringList.Add('CachedControlTop=' + AActionFindControlOptions.CachedControlTop);
+end;
+
+
+procedure AddAction_SetControlTextToStringList(var AActionSetTextOptions: TClkSetTextOptions; AStringList: TStringList);
+begin
+  AStringList.Add('Text=' + AActionSetTextOptions.Text);
+  AStringList.Add('ControlType=' + IntToStr(Ord(AActionSetTextOptions.ControlType)));
+end;
+
+
+procedure AddAction_CallTemplateToStringList(var AActionCallTemplateOptions: TClkCallTemplateOptions; AStringList: TStringList);
+begin
+  AStringList.Add('TemplateFileName=' + AActionCallTemplateOptions.TemplateFileName);
+  AStringList.Add('ListOfCustomVarsAndValues=' + FastReplace_ReturnTo45(AActionCallTemplateOptions.ListOfCustomVarsAndValues));
+  AStringList.Add('CallOnlyIfCondition=' + IntToStr(Ord(AActionCallTemplateOptions.CallOnlyIfCondition)));
+  AStringList.Add('CallOnlyIfConditionVarName=' + AActionCallTemplateOptions.CallOnlyIfConditionVarName);
+  AStringList.Add('CallOnlyIfConditionVarValue=' + AActionCallTemplateOptions.CallOnlyIfConditionVarValue);
+  AStringList.Add('EvaluateBeforeCalling=' + IntToStr(Ord(AActionCallTemplateOptions.EvaluateBeforeCalling)));
+end;
+
+
+procedure AddAction_SleepToStringList(var AActionSleepOptions: TClkSleepOptions; AStringList: TStringList);
+begin
+  AStringList.Add('Value=' + AActionSleepOptions.Value);
+end;
+
+
+procedure AddAction_SetVarToStringList(var AActionSetVarOptions: TClkSetVarOptions; AStringList: TStringList);
+begin
+  AStringList.Add('ListOfVarNames=' + FastReplace_ReturnTo45(AActionSetVarOptions.ListOfVarNames));
+  AStringList.Add('ListOfVarValues=' + FastReplace_ReturnTo45(AActionSetVarOptions.ListOfVarValues));
+  AStringList.Add('ListOfVarEvalBefore=' + FastReplace_ReturnTo45(AActionSetVarOptions.ListOfVarEvalBefore));
+end;
+
+
+procedure AddActionContentToStringList(var AAction: TClkActionRec; AStringList: TStringList);
+begin
+  case AAction.ActionOptions.Action of
+    acClick: AddAction_ClickToStringList(AAction.ClickOptions, AStringList);
+    acExecApp: AddAction_ExecAppToStringList(AAction.ExecAppOptions, AStringList);
+    acFindControl:    AddAction_FindControlToStringList(AAction.FindControlOptions, AStringList);
+    acFindSubControl: AddAction_FindControlToStringList(AAction.FindControlOptions, AStringList);
+    acSetControlText: AddAction_SetControlTextToStringList(AAction.SetTextOptions, AStringList);
+    acCallTemplate: AddAction_CallTemplateToStringList(AAction.CallTemplateOptions, AStringList);
+    acSleep: AddAction_SleepToStringList(AAction.SleepOptions, AStringList);
+    acSetVar: AddAction_SetVarToStringList(AAction.SetVarOptions, AStringList);
+  end;
+end;
+
+
+procedure SaveTemplateWithCustomActionsToStringList_V2(AStringList: TStringList; var ACustomACSActions: TClkActionsRecArr);
+var
+  i: Integer;
+  IterationStr: string;
+begin
+  AStringList.Add('[Actions]');
+  AStringList.Add('Count=' + IntToStr(Length(ACustomACSActions)));
+  AStringList.Add('Version=2'); // .clktmpl format version
+
+  AStringList.Add('');
+
+  for i := 0 to Length(ACustomACSActions) - 1 do
+  begin
+    IterationStr := IntToStr(i);
+    AStringList.Add('[Action_' + IterationStr + ']');
+
+    AddActionOptionsToStringList(ACustomACSActions[i].ActionOptions, AStringList);
+    AddActionBreakpointToStringList(ACustomACSActions[i].ActionBreakPoint, AStringList);
+    AddActionContentToStringList(ACustomACSActions[i], AStringList);
+
+    AStringList.Add('');
+  end;
+end;
+
+
+procedure CopyActionContent(ASrc, ADest: TClkActionRec);
+var
+  i: Integer;
+begin             //Substructures, which do not contain pointers, can be directly, copied. The others have to be manually copied.
+  ADest.ActionDebuggingStatus := ASrc.ActionDebuggingStatus;
+  ADest.ActionStatus := ASrc.ActionStatus;
+  ADest.ActionSkipped := ASrc.ActionSkipped;
+  ADest.ActionOptions := ASrc.ActionOptions;
+  ADest.ClickOptions := ASrc.ClickOptions;
+  ADest.ExecAppOptions := ASrc.ExecAppOptions;
+  //ADest.FindControlOptions := ASrc.FindControlOptions;   //this cannot be directly assigned, because it contains a dynamic array
+  ADest.SetTextOptions := ASrc.SetTextOptions;
+  ADest.CallTemplateOptions := ASrc.CallTemplateOptions;
+  ADest.SleepOptions := ASrc.SleepOptions;
+  ADest.SetVarOptions := ASrc.SetVarOptions;
+
+  ADest.FindControlOptions.MatchCriteria := ASrc.FindControlOptions.MatchCriteria;
+  ADest.FindControlOptions.AllowToFail := ASrc.FindControlOptions.AllowToFail;
+  ADest.FindControlOptions.MatchText := ASrc.FindControlOptions.MatchText;
+  ADest.FindControlOptions.MatchClassName := ASrc.FindControlOptions.MatchClassName;
+  ADest.FindControlOptions.MatchTextSeparator := ASrc.FindControlOptions.MatchTextSeparator;
+  ADest.FindControlOptions.MatchClassNameSeparator := ASrc.FindControlOptions.MatchClassNameSeparator;
+  //ADest.FindControlOptions.MatchBitmapText: TACSFindControlMatchBitmapTextArr;      //this cannot be directly assigned, it's an array
+  ADest.FindControlOptions.MatchBitmapFiles := ASrc.FindControlOptions.MatchBitmapFiles;
+  ADest.FindControlOptions.MatchBitmapAlgorithm := ASrc.FindControlOptions.MatchBitmapAlgorithm;
+  ADest.FindControlOptions.MatchBitmapAlgorithmSettings := ASrc.FindControlOptions.MatchBitmapAlgorithmSettings;
+  ADest.FindControlOptions.InitialRectange := ASrc.FindControlOptions.InitialRectange;
+  ADest.FindControlOptions.UseWholeScreen := ASrc.FindControlOptions.UseWholeScreen;
+  ADest.FindControlOptions.ColorError := ASrc.FindControlOptions.ColorError;
+  ADest.FindControlOptions.AllowedColorErrorCount := ASrc.FindControlOptions.AllowedColorErrorCount;
+  ADest.FindControlOptions.WaitForControlToGoAway := ASrc.FindControlOptions.WaitForControlToGoAway;
+
+  SetLength(ASrc.FindControlOptions.MatchBitmapText, Length(ADest.FindControlOptions.MatchBitmapText));
+
+  for i := 0 to Length(ADest.FindControlOptions.MatchBitmapText) - 1 do
+    ADest.FindControlOptions.MatchBitmapText := ASrc.FindControlOptions.MatchBitmapText;
+end;
+
+
+procedure GetTemplateContentAsMemoryStream(var ATemplateContent: TClkActionsRecArr; AFileContentMem: TMemoryStream);
+var
+  FileContentStr: TStringList;
+begin
+  FileContentStr := TStringList.Create;
+  try
+    SaveTemplateWithCustomActionsToStringList_V2(FileContentStr, ATemplateContent);
+    FileContentStr.SaveToStream(AFileContentMem);
+  finally
+    FileContentStr.Free;
+  end;
+end;
+
+
+procedure GetTemplateContentFromMemoryStream(var ACustomACSActions: TClkActionsRecArr; AFileContentMem: TMemoryStream);
+var
+  FileContentStr: TStringList;
+  Ini: TACSClkIniReadonlyFile;
+begin
+  FileContentStr := TStringList.Create;
+  try
+    AFileContentMem.Position := 0;
+    Ini := TACSClkIniReadonlyFile.Create(AFileContentMem);
+    try
+      LoadTemplateToCustomActions_V2(Ini, ACustomACSActions);
+    finally
+      Ini.Free;
+    end;
+  finally
+    FileContentStr.Free;
+  end;
+end;
+
+end.
+
