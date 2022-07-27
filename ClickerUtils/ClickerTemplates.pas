@@ -28,7 +28,7 @@ unit ClickerTemplates;
 interface
 
 uses
-  Classes, SysUtils, ClickerUtils, ClickerIniFiles;
+  Classes, SysUtils, ClickerUtils, ClickerIniFiles, Math;
 
 
 procedure LoadTemplateToCustomActions_V1(Ini: TClkIniReadonlyFile; var ACustomActions: TClkActionsRecArr);
@@ -172,7 +172,7 @@ begin
 
     ACustomActions[i].FindControlOptions.ColorError := Ini.ReadString(SectionIndex, 'ColorError_' + IterationStr, '0');
     ACustomActions[i].FindControlOptions.AllowedColorErrorCount := Ini.ReadString(SectionIndex, 'AllowedColorErrorCount_' + IterationStr, '0');
-    ACustomActions[i].FindControlOptions.MatchBitmapAlgorithm := TMatchBitmapAlgorithm(Ini.ReadInteger(SectionIndex, 'MatchBitmapAlgorithm_' + IterationStr, Integer(mbaBruteForce)));
+    ACustomActions[i].FindControlOptions.MatchBitmapAlgorithm := TMatchBitmapAlgorithm(Min(Ini.ReadInteger(SectionIndex, 'MatchBitmapAlgorithm_' + IterationStr, Integer(mbaBruteForce)), Integer(High(TMatchBitmapAlgorithm))));
     ACustomActions[i].FindControlOptions.MatchBitmapAlgorithmSettings.XMultipleOf := Ini.ReadInteger(SectionIndex, 'MatchBitmapAlgorithm_Grid_XMultipleOf' + IterationStr, 1);
     ACustomActions[i].FindControlOptions.MatchBitmapAlgorithmSettings.YMultipleOf := Ini.ReadInteger(SectionIndex, 'MatchBitmapAlgorithm_Grid_YMultipleOf' + IterationStr, 1);
     ACustomActions[i].FindControlOptions.MatchBitmapAlgorithmSettings.XOffset := Ini.ReadInteger(SectionIndex, 'MatchBitmapAlgorithm_Grid_XOffset' + IterationStr, 0);
@@ -237,13 +237,13 @@ end;
 
 procedure LoadAction_Click(Ini: TClkIniReadonlyFile; SectionIndex: Integer; var AClickOptions: TClkClickOptions);
 begin
-  AClickOptions.XClickPointReference := TXClickPointReference(Ini.ReadInteger(SectionIndex, 'XOffsetReference', Ord(xrefLeft)));
-  AClickOptions.YClickPointReference := TYClickPointReference(Ini.ReadInteger(SectionIndex, 'YOffsetReference', Ord(yrefTop)));
+  AClickOptions.XClickPointReference := TXClickPointReference(Min(Ini.ReadInteger(SectionIndex, 'XOffsetReference', Ord(xrefLeft)), Integer(High(TXClickPointReference))));
+  AClickOptions.YClickPointReference := TYClickPointReference(Min(Ini.ReadInteger(SectionIndex, 'YOffsetReference', Ord(yrefTop)), Integer(High(TYClickPointReference))));
   AClickOptions.XClickPointVar := Ini.ReadString(SectionIndex, 'XClickPointVar', '$Control_Left$');
   AClickOptions.YClickPointVar := Ini.ReadString(SectionIndex, 'YClickPointVar', '$Control_Top$');
   AClickOptions.XOffset := Ini.ReadString(SectionIndex, 'XOffset', '0');
   AClickOptions.YOffset := Ini.ReadString(SectionIndex, 'YOffset', '0');
-  AClickOptions.MouseButton := TMouseButton(Ini.ReadInteger(SectionIndex, 'MouseButton', 0));
+  AClickOptions.MouseButton := TMouseButton(Min(Ini.ReadInteger(SectionIndex, 'MouseButton', 0), Integer(High(TMouseButton))));
   AClickOptions.ClickWithCtrl := Ini.ReadBool(SectionIndex, 'ClickWithCtrl', False);
   AClickOptions.ClickWithAlt := Ini.ReadBool(SectionIndex, 'ClickWithAlt', False);
   AClickOptions.ClickWithShift := Ini.ReadBool(SectionIndex, 'ClickWithShift', False);
@@ -252,8 +252,8 @@ begin
   AClickOptions.MoveWithoutClick := Ini.ReadBool(SectionIndex, 'MoveWithoutClick', False);
   AClickOptions.Count := Ini.ReadInteger(SectionIndex, 'Count', 0);
   AClickOptions.ClickType := Ini.ReadInteger(SectionIndex, 'ClickType', 0);
-  AClickOptions.XClickPointReferenceDest := TXClickPointReference(Ini.ReadInteger(SectionIndex, 'XOffsetReferenceDest', Ord(xrefLeft)));
-  AClickOptions.YClickPointReferenceDest := TYClickPointReference(Ini.ReadInteger(SectionIndex, 'YOffsetReferenceDest', Ord(yrefTop)));
+  AClickOptions.XClickPointReferenceDest := TXClickPointReference(Min(Ini.ReadInteger(SectionIndex, 'XOffsetReferenceDest', Ord(xrefLeft)), Integer(High(TXClickPointReference)) ));
+  AClickOptions.YClickPointReferenceDest := TYClickPointReference(Min(Ini.ReadInteger(SectionIndex, 'YOffsetReferenceDest', Ord(yrefTop)), Integer(High(TYClickPointReference)) ));
   AClickOptions.XClickPointVarDest := Ini.ReadString(SectionIndex, 'XClickPointVarDest', '$Control_Left$');
   AClickOptions.YClickPointVarDest := Ini.ReadString(SectionIndex, 'YClickPointVarDest', '$Control_Top$');
   AClickOptions.XOffsetDest := Ini.ReadString(SectionIndex, 'XOffsetDest', '0');
@@ -268,7 +268,7 @@ begin
   AExecAppOptions.WaitForApp := Ini.ReadBool(SectionIndex, 'WaitForApp', False);
   AExecAppOptions.AppStdIn := Ini.ReadString(SectionIndex, 'AppStdIn', '');
   AExecAppOptions.CurrentDir := Ini.ReadString(SectionIndex, 'CurrentDir', '');
-  AExecAppOptions.UseInheritHandles := TExecAppUseInheritHandles(Ini.ReadInteger(SectionIndex, 'UseInheritHandles', Ord(uihOnlyWithStdInOut)));
+  AExecAppOptions.UseInheritHandles := TExecAppUseInheritHandles(Min(Ini.ReadInteger(SectionIndex, 'UseInheritHandles', Ord(uihOnlyWithStdInOut)), Integer(High(TExecAppUseInheritHandles))));
 end;
 
 
@@ -281,7 +281,7 @@ begin
   AFindControlOptions.MatchCriteria.WillMatchClassName := Ini.ReadBool(SectionIndex, 'MatchCriteria.WillMatchClassName', True);
   AFindControlOptions.MatchCriteria.WillMatchBitmapText := Ini.ReadBool(SectionIndex, 'MatchCriteria.WillMatchBitmapText', False);
   AFindControlOptions.MatchCriteria.WillMatchBitmapFiles := Ini.ReadBool(SectionIndex, 'MatchCriteria.WillMatchBitmapFiles', False);
-  AFindControlOptions.MatchCriteria.SearchForControlMode := TSearchForControlMode(Ini.ReadInteger(SectionIndex, 'MatchCriteria.SearchForControlMode', Ord(sfcmGenGrid)));
+  AFindControlOptions.MatchCriteria.SearchForControlMode := TSearchForControlMode(Min(Ini.ReadInteger(SectionIndex, 'MatchCriteria.SearchForControlMode', Ord(sfcmGenGrid)), Integer(High(TSearchForControlMode))));
 
   AFindControlOptions.AllowToFail := Ini.ReadBool(SectionIndex, 'AllowToFail', False);
   AFindControlOptions.WaitForControlToGoAway := Ini.ReadBool(SectionIndex, 'WaitForControlToGoAway', False);
@@ -308,7 +308,7 @@ begin
       AFindControlOptions.MatchBitmapText[i].Italic := Ini.ReadBool(SectionIndex, Indent + 'Italic', False);
       AFindControlOptions.MatchBitmapText[i].Underline := Ini.ReadBool(SectionIndex, Indent + 'Underline', False);
       AFindControlOptions.MatchBitmapText[i].StrikeOut := Ini.ReadBool(SectionIndex, Indent + 'StrikeOut', False);
-      AFindControlOptions.MatchBitmapText[i].FontQuality := TFontQuality(Ini.ReadInteger(SectionIndex, Indent + 'FontQuality', Integer(fqDefault)));
+      AFindControlOptions.MatchBitmapText[i].FontQuality := TFontQuality(Min(Ini.ReadInteger(SectionIndex, Indent + 'FontQuality', Integer(fqDefault)), Integer(High(TFontQuality))));
       AFindControlOptions.MatchBitmapText[i].FontQualityUsesReplacement := Ini.ReadBool(SectionIndex, Indent + 'FontQualityUsesReplacement', False);
       AFindControlOptions.MatchBitmapText[i].FontQualityReplacement := Ini.ReadString(SectionIndex, Indent + 'FontQualityReplacement', '$MyFontQuality$');
       AFindControlOptions.MatchBitmapText[i].ProfileName := Ini.ReadString(SectionIndex, Indent + 'ProfileName', 'Default');
@@ -327,7 +327,7 @@ begin
     AFindControlOptions.MatchBitmapText[0].Italic := Ini.ReadBool(SectionIndex, 'MatchBitmapText.Italic', False);
     AFindControlOptions.MatchBitmapText[0].Underline := Ini.ReadBool(SectionIndex, 'MatchBitmapText.Underline', False);
     AFindControlOptions.MatchBitmapText[0].StrikeOut := Ini.ReadBool(SectionIndex, 'MatchBitmapText.StrikeOut', False);
-    AFindControlOptions.MatchBitmapText[0].FontQuality := TFontQuality(Ini.ReadInteger(SectionIndex, 'MatchBitmapText.FontQuality', Integer(fqDefault)));
+    AFindControlOptions.MatchBitmapText[0].FontQuality := TFontQuality(Min(Ini.ReadInteger(SectionIndex, 'MatchBitmapText.FontQuality', Integer(fqDefault)), Integer(High(TFontQuality))));
     AFindControlOptions.MatchBitmapText[0].FontQualityUsesReplacement := Ini.ReadBool(SectionIndex, 'MatchBitmapText.FontQualityUsesReplacement', False);
     AFindControlOptions.MatchBitmapText[0].FontQualityReplacement := Ini.ReadString(SectionIndex, 'MatchBitmapText.FontQualityReplacement', '$MyFontQuality$');
     AFindControlOptions.MatchBitmapText[0].ProfileName := Ini.ReadString(SectionIndex, 'MatchBitmapText.ProfileName', 'Default');
@@ -337,7 +337,7 @@ begin
 
   AFindControlOptions.ColorError := Ini.ReadString(SectionIndex, 'ColorError', '0');
   AFindControlOptions.AllowedColorErrorCount := Ini.ReadString(SectionIndex, 'AllowedColorErrorCount', '0');
-  AFindControlOptions.MatchBitmapAlgorithm := TMatchBitmapAlgorithm(Ini.ReadInteger(SectionIndex, 'MatchBitmapAlgorithm', Integer(mbaBruteForce)));
+  AFindControlOptions.MatchBitmapAlgorithm := TMatchBitmapAlgorithm(Min(Ini.ReadInteger(SectionIndex, 'MatchBitmapAlgorithm', Integer(mbaBruteForce)), Integer(High(TMatchBitmapAlgorithm))));
   AFindControlOptions.MatchBitmapAlgorithmSettings.XMultipleOf := Ini.ReadInteger(SectionIndex, 'MatchBitmapAlgorithm_Grid_XMultipleOf', 1);
   AFindControlOptions.MatchBitmapAlgorithmSettings.YMultipleOf := Ini.ReadInteger(SectionIndex, 'MatchBitmapAlgorithm_Grid_YMultipleOf', 1);
   AFindControlOptions.MatchBitmapAlgorithmSettings.XOffset := Ini.ReadInteger(SectionIndex, 'MatchBitmapAlgorithm_Grid_XOffset', 0);
@@ -362,7 +362,7 @@ end;
 procedure LoadAction_SetControlText(Ini: TClkIniReadonlyFile; SectionIndex: Integer; var ASetTextOptions: TClkSetTextOptions);
 begin
   ASetTextOptions.Text := Ini.ReadString(SectionIndex, 'Text', '');
-  ASetTextOptions.ControlType := TClkSetTextControlType(Ini.ReadInteger(SectionIndex, 'ControlType', Integer(stEditBox)));
+  ASetTextOptions.ControlType := TClkSetTextControlType(Min(Ini.ReadInteger(SectionIndex, 'ControlType', Integer(stEditBox)), Integer(High(TClkSetTextControlType))));
 end;
 
 
