@@ -121,6 +121,11 @@ function GetCompInfoAtPoint(ARemoteAddress: string; X, Y: Integer): string;
 function RecordComponentOnServer(ARemoteAddress: string; AHandle: THandle; AComponentContent: TMemoryStream): string;
 
 
+procedure GetListOfUsedFilesFromLoadedTemplate(var AClkActions: TClkActionsRecArr; AListOfFiles: TStringList);
+function SendMissingFilesToServer(ARemoteAddress: string; var AClkActions: TClkActionsRecArr): string;
+function SetClientTemplateInServer(ARemoteAddress, AFileName: string; var AClkActions: TClkActionsRecArr; AStackLevel: Integer; ASendFileOnly: Boolean = False): string;
+
+
 var
   GeneralConnectTimeout: Integer;  //using a global var for this timeout, instead of passing it through all functions
   GeneralClosingApp: Boolean;      //same as GeneralConnectTimeout. This var is set by a form, on destroy.
@@ -129,7 +134,7 @@ implementation
 
 
 uses
-  IdHTTP, Forms, ClickerTemplates;
+  IdHTTP, Forms, ClickerTemplates, InMemFileSystem;
 
 
 {TClientThread}
@@ -468,6 +473,129 @@ begin
                                        CREParam_StackLevel + '=0' + '&' +
                                        CREParam_Handle + '=' + IntToStr(AHandle),
                                        AComponentContent);
+end;
+
+
+
+//==============================================================================
+//list of bmp files for now, but it can include all other files, which have to be sent to server
+procedure GetListOfUsedFilesFromLoadedTemplate(var AClkActions: TClkActionsRecArr; AListOfFiles: TStringList);
+var
+  i, j: Integer;
+  TempStringList: TStringList;
+begin
+  for i := 0 to Length(AClkActions) - 1 do
+    if AClkActions[i].ActionOptions.Action in [acFindControl, acFindSubControl] then
+    begin
+      TempStringList := TStringList.Create;
+      try
+        TempStringList.Text := AClkActions[i].FindControlOptions.MatchBitmapFiles;
+
+        for j := 0 to TempStringList.Count - 1 do
+          AListOfFiles.Add(TempStringList.Strings[j]);
+      finally
+        TempStringList.Free;
+      end;
+    end;
+end;
+
+
+procedure AddHashesToFileNames(AListOfFiles, AListOfFilesWithHashes: TStringList);
+var
+  i: Integer;
+  Fnm, Hash: string;
+begin
+  for i := 0 to AListOfFiles.Count - 1 do
+  begin
+    Fnm := AListOfFiles.Strings[i];
+
+    if FileExists(Fnm) then
+      Hash := GetFileHash(Fnm)
+    else
+      Hash := '';
+
+    AListOfFilesWithHashes.Add(AListOfFiles.Strings[i] + CDefaultInMemFileNameHashSeparator + Hash);
+  end;
+end;
+
+
+//Sends this template and the bitmaps it might use.s
+function SendMissingFilesToServer(ARemoteAddress: string; var AClkActions: TClkActionsRecArr): string;
+var
+  ListOfUsedFiles, ListOfUsedFilesWithHashes, FileExistenceOnServer: TStringList;
+  Link: string;
+  i: Integer;
+  FileContent: TMemoryStream;
+begin
+  ListOfUsedFiles := TStringList.Create;
+  ListOfUsedFilesWithHashes := TStringList.Create;
+  FileExistenceOnServer := TStringList.Create;
+  try
+    GetListOfUsedFilesFromLoadedTemplate(AClkActions, ListOfUsedFiles);
+    AddHashesToFileNames(ListOfUsedFiles, ListOfUsedFilesWithHashes);
+
+    Result := GetFileExistenceOnServer(ARemoteAddress, ListOfUsedFiles, FileExistenceOnServer, True);
+    if Result = '' then
+      for i := 0 to FileExistenceOnServer.Count - 1 do
+        if FileExistenceOnServer[i] = '0' then
+        begin
+          Link := ARemoteAddress + CRECmd_SendFileToServer + '?' +
+                                   CREParam_FileName + '=' + ListOfUsedFiles.Strings[i];
+
+          FileContent := TMemoryStream.Create;
+          try
+            if FileExists(ListOfUsedFiles.Strings[i]) then
+            begin
+              FileContent.LoadFromFile(ListOfUsedFiles.Strings[i]);
+              FileContent.Position := 0;
+              Result := Result + 'Sending file: ' + ListOfUsedFiles.Strings[i] + ' -> ' +
+                                 SendFileToServer(Link, FileContent) + #13#10;
+            end
+            else
+              Result := Result + 'Cannot send non-existent file: ' + ListOfUsedFiles.Strings[i];
+          finally
+            FileContent.Free;
+          end;
+        end;
+  finally
+    ListOfUsedFiles.Free;
+    ListOfUsedFilesWithHashes.Free;
+    FileExistenceOnServer.Free;
+  end;
+end;
+
+
+function SetClientTemplateInServer(ARemoteAddress, AFileName: string; var AClkActions: TClkActionsRecArr; AStackLevel: Integer; ASendFileOnly: Boolean = False): string;
+var
+  Hash: string;
+  FileContentMem: TMemoryStream;
+  FileNameWithHash: string;
+begin
+  Result := '';
+
+  FileContentMem := TMemoryStream.Create;
+  try
+    GetTemplateContentAsMemoryStream(AClkActions, FileContentMem);
+
+    SetLength(Hash, FileContentMem.Size);
+    FileContentMem.Position := 0;
+    FileContentMem.Read(Hash[1], FileContentMem.Size);
+  finally
+    FileContentMem.Free;
+  end;
+
+  FileNameWithHash := AFileName + CDefaultInMemFileNameHashSeparator + Hash;
+  if not GetFileExistenceOnServer(ARemoteAddress, FileNameWithHash, True) then
+  begin
+    Result := SendTemplateContentToServer(ARemoteAddress, AFileName, AClkActions); //////////////// GetTemplateContentAsMemoryStream is called again in here
+    if Pos(CREResp_ReceivedFile, Result) = 0 then
+      Exit;
+  end;
+
+  if ASendFileOnly then
+    Exit;
+
+  Result := SendLoadTemplateInExecListRequest(ARemoteAddress, AFileName, AStackLevel);  //should return CREResp_TemplateLoaded for success
 end;
 
 

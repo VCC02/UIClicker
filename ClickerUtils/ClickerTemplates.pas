@@ -392,6 +392,18 @@ begin
 end;
 
 
+procedure LoadAction_WindowOperations(Ini: TClkIniReadonlyFile; SectionIndex: Integer; var AWindowOperationsOptions: TClkWindowOperations);
+begin
+  AWindowOperationsOptions.Operation := TWindowOperation(Min(Ini.ReadInteger(SectionIndex, 'WindowOperation', Integer(woBringToFront)), Integer(High(TWindowOperation))));
+  AWindowOperationsOptions.NewX := Ini.ReadString(SectionIndex, 'NewX', '');
+  AWindowOperationsOptions.NewY := Ini.ReadString(SectionIndex, 'NewY', '');
+  AWindowOperationsOptions.NewWidth := Ini.ReadString(SectionIndex, 'NewWidth', '');
+  AWindowOperationsOptions.NewHeight := Ini.ReadString(SectionIndex, 'NewHeight', '');
+  AWindowOperationsOptions.NewPositionEabled := Ini.ReadBool(SectionIndex, 'NewPositionEabled', False);
+  AWindowOperationsOptions.NewSizeEabled := Ini.ReadBool(SectionIndex, 'NewSizeEabled', False);
+end;
+
+
 procedure LoadTemplateToCustomActions_V2(Ini: TClkIniReadonlyFile; var ACustomActions: TClkActionsRecArr);
 var
   IterationStr: string;
@@ -415,6 +427,7 @@ begin
       acCallTemplate: LoadAction_CallTemplate(Ini, SectionIndex, ACustomActions[i].CallTemplateOptions);
       acSleep: LoadAction_Sleep(Ini, SectionIndex, ACustomActions[i].SleepOptions);
       acSetVar: LoadAction_SetVar(Ini, SectionIndex, ACustomActions[i].SetVarOptions);
+      acWindowOperations: LoadAction_WindowOperations(Ini, SectionIndex, ACustomActions[i].WindowOperationsOptions);
     end;
   end;
 end;
@@ -751,6 +764,18 @@ begin
 end;
 
 
+procedure AddAction_WindowOperationsToStringList(var AActionWindowOperationsOptions: TClkWindowOperations; AStringList: TStringList);
+begin
+  AStringList.Add('WindowOperation=' + IntToStr(Ord(AActionWindowOperationsOptions.Operation)));
+  AStringList.Add('NewX=' + AActionWindowOperationsOptions.NewX);
+  AStringList.Add('NewY=' + AActionWindowOperationsOptions.NewY);
+  AStringList.Add('NewWidth=' + AActionWindowOperationsOptions.NewWidth);
+  AStringList.Add('NewHeight=' + AActionWindowOperationsOptions.NewHeight);
+  AStringList.Add('NewPositionEabled=' + IntToStr(Ord(AActionWindowOperationsOptions.NewPositionEabled)));
+  AStringList.Add('NewSizeEabled=' + IntToStr(Ord(AActionWindowOperationsOptions.NewSizeEabled)));
+end;
+
+
 procedure AddActionContentToStringList(var AAction: TClkActionRec; AStringList: TStringList);
 begin
   case AAction.ActionOptions.Action of
@@ -762,6 +787,7 @@ begin
     acCallTemplate: AddAction_CallTemplateToStringList(AAction.CallTemplateOptions, AStringList);
     acSleep: AddAction_SleepToStringList(AAction.SleepOptions, AStringList);
     acSetVar: AddAction_SetVarToStringList(AAction.SetVarOptions, AStringList);
+    acWindowOperations: AddAction_WindowOperationsToStringList(AAction.WindowOperationsOptions, AStringList);
   end;
 end;
 
@@ -806,6 +832,7 @@ begin             //Substructures, which do not contain pointers, can be directl
   ADest.CallTemplateOptions := ASrc.CallTemplateOptions;
   ADest.SleepOptions := ASrc.SleepOptions;
   ADest.SetVarOptions := ASrc.SetVarOptions;
+  ADest.WindowOperationsOptions := ASrc.WindowOperationsOptions;
 
   ADest.FindControlOptions.MatchCriteria := ASrc.FindControlOptions.MatchCriteria;
   ADest.FindControlOptions.AllowToFail := ASrc.FindControlOptions.AllowToFail;

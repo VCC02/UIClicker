@@ -41,9 +41,11 @@ uses
 
 
 type
-  TClkAction = (acClick, acExecApp, acFindControl, acFindSubControl, acSetControlText, acCallTemplate, acSleep, acSetVar);
+  TClkAction = (acClick, acExecApp, acFindControl, acFindSubControl, acSetControlText, acCallTemplate, acSleep, acSetVar, acWindowOperations);
   TClkSetTextControlType = (stEditBox, stComboBox, stKeystrokes);
   TSearchForControlMode = (sfcmGenGrid, sfcmEnumWindows, sfcmFindWindow);
+  TWindowOperation = (woBringToFront, woMoveResize, woClose);
+                      //SetForegroundWindow, SetWindowPos, WM_CLOSE
 
   TActionDebuggingStatus = (adsNone, adsPrev, adsCurrent, adsNext);
   TActionStatus = (asNotStarted, asFailed, asSuccessful, asInProgress, asAllowedFailed);
@@ -56,7 +58,7 @@ type
   TOnGetSelectedCompFromRemoteWin = function: THandle of object;
 
 const
-  CClkActionStr: array[Low(TClkAction)..High(TClkAction)] of string = ('Click', 'ExecApp', 'FindControl', 'FindSubControl', 'SetControlText', 'CallTemplate', 'Sleep', 'SetVar');
+  CClkActionStr: array[Low(TClkAction)..High(TClkAction)] of string = ('Click', 'ExecApp', 'FindControl', 'FindSubControl', 'SetControlText', 'CallTemplate', 'Sleep', 'SetVar', 'WindowOperations');
 
   CClickType_Click = 0;
   CClickType_DoubleClick = 1;
@@ -193,6 +195,12 @@ type
     ListOfVarEvalBefore: string;
   end;
 
+  TClkWindowOperations = record
+    Operation: TWindowOperation;
+    NewX, NewY, NewWidth, NewHeight: string;
+    NewPositionEabled, NewSizeEabled: Boolean;
+  end;
+
   TActionBreakPoint = record
     Exists: Boolean; //when False, the action has no breakpoint
     Enabled: Boolean;
@@ -213,6 +221,7 @@ type
     CallTemplateOptions: TClkCallTemplateOptions;
     SleepOptions: TClkSleepOptions;
     SetVarOptions: TClkSetVarOptions;
+    WindowOperationsOptions: TClkWindowOperations;
   end;
 
   TClkActionsRecArr = array of TClkActionRec;
