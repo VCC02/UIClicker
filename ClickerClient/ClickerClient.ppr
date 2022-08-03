@@ -36,6 +36,7 @@ uses
 var
   InMemFS: TInMemFileSystem = nil;
   FRemoteAddress: string;
+  FAllVarReplacements: TStringList;
 
 
 type
@@ -137,6 +138,7 @@ procedure InitClickerClient; cdecl;
 begin
   InMemFS := TInMemFileSystem.Create;
   FRemoteAddress := 'http://127.0.0.1:5444/';
+  FAllVarReplacements := TStringList.Create;
 
   ExceptProc := @CatchUnhandledException;
   FExHandler := TExHandler.Create;  /////////////////////////// probably, it will have to be freed
@@ -148,6 +150,7 @@ end;
 procedure DoneClickerClient; cdecl;
 begin
   FreeAndNil(InMemFS);
+  FreeAndNil(FAllVarReplacements);
 end;
 
 
@@ -218,7 +221,7 @@ var
   MemStream: TMemoryStream;
   n: Integer;
 begin
-  if not InMemFS.FileExistsInMem(ATemplateFileName) then   Exit;
+  if not InMemFS.FileExistsInMem(ATemplateFileName) then
     CreateNewTemplateStr(ATemplateFileName);
 
   MemStream := TMemoryStream.Create;
@@ -343,6 +346,86 @@ begin
 end;
 
 
+
+function ExecuteRemoteActionAtIndex(AActionIndex, AStackLevel: Integer; AVarReplacements: TStringList): Boolean;
+const
+  CUsesInMemFiles: array[Boolean] of string = (CREParam_FileLocation_ValueDisk, CREParam_FileLocation_ValueMem);
+var
+  Th: TClientThread;
+  ServerResponse: string;
+begin
+  Result := False;
+
+  Th := TClientThread.Create(True);   //without using thread, the client blocks both this UI and the server's UI, because it doesn't read  - some sort of deadlock
+  try
+    Th.ConnectTimeout := GeneralConnectTimeout;
+    Th.Link := FRemoteAddress + CRECmd_ExecuteCommandAtIndex + '?' +
+                                CREParam_ActionIdx + '=' + IntToStr(AActionIndex) + '&' +
+                                CREParam_StackLevel + '=' + IntToStr(AStackLevel) + '&' +
+                                CREParam_IsDebugging + '=' + IntToStr(Ord(False)) + '&' +
+                                CREParam_FileLocation + '= ' + CUsesInMemFiles[False]; //this should come from a class field
+    Th.Start;
+
+    WaitForServerResponse(Th);
+
+    ServerResponse := FastReplace_87ToReturn(Th.Result);
+
+    if (Trim(ServerResponse) = '') or (Pos('$Control_Class$', ServerResponse) = 0) then // uses '$Control_Class$' as a way to find out if the result is a valid list of variables
+      AVarReplacements.Values['$ServerResponse$'] := ServerResponse
+    else
+      AVarReplacements.Text := ServerResponse;
+
+    Result := AVarReplacements.Values[CREResp_RemoteExecResponseVar] = '1';
+  finally
+    Th.Free;
+  end;
+end;
+
+
+function ExecuteActionAtIndex(AActionIndex, AStackLevel: Integer): Boolean; cdecl;
+begin
+  Result := ExecuteRemoteActionAtIndex(AActionIndex, AStackLevel, FAllVarReplacements);
+end;
+
+
+function PrepareFilesInServer(ATemplateFileName: Pointer): Integer; cdecl;
+const
+  CStackLevel: Integer = 0;  //Load only the main file. The others should be automatically handled by server.
+var
+  TemplateFileName: string;
+  ClkActions: TClkActionsRecArr;
+  MemStream: TMemoryStream;
+begin
+  Result := -1;
+
+  SetPointedContentToString(@string(PWideChar(ATemplateFileName))[1], TemplateFileName);
+  if TemplateFileName = '' then
+    Exit;
+
+  if GetServerFileExpectancy(FRemoteAddress) = CREResp_FileExpectancy_ValueFromClient then
+  begin
+    //Should send template and other files to server...
+    if not InMemFS.FileExistsInMem(TemplateFileName) then
+      CreateNewTemplateStr(TemplateFileName);
+
+    MemStream := TMemoryStream.Create;
+    try
+      InMemFS.LoadFileFromMemToStream(TemplateFileName, MemStream);
+      MemStream.Position := 0;
+
+      GetTemplateContentFromMemoryStream(ClkActions, MemStream);
+
+      SetClientTemplateInServer(FRemoteAddress, TemplateFileName, ClkActions, CStackLevel);
+      SendMissingFilesToServer(FRemoteAddress, ClkActions);
+
+      Result := 0;
+    finally
+      MemStream.Free;
+    end;
+  end;
+end;
+
+
 exports
   InitClickerClient,
   DoneClickerClient,
@@ -351,11 +434,13 @@ exports
   TestConnectionToServer,
   CreateNewTemplate,
   AddClickActionToTemplate,
-  AddExecAppActionToTemplate;
+  AddExecAppActionToTemplate,
 
   //AddFindControlActionToTemplate(TemplateName, Action);
   //AddFontProfileToFindControlAction(TemplateName, ActionIndex, Profile);
 
+  PrepareFilesInServer,
+  ExecuteActionAtIndex;
 begin
   ClientLastError := '';
 end.
