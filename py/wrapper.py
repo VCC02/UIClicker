@@ -26,7 +26,8 @@ import ctypes.wintypes  #without importing wintypes, python crashes when calling
 from ctypes.wintypes import LPCSTR, LPCWSTR, BYTE, BOOLEAN, LARGE_INTEGER
 DllHandle = ctypes.CDLL("..\\ClickerClient\\ClickerClient.dll")  #CDLL is used for cdecl.   WinDLL is used for stdcall (and uses WINFUNCTYPE).
 
-CMaxSharedStringLength = 10 * 1048576; #10MB 
+CMaxSharedStringLength = 10 * 1048576; #10MB
+
 
 InitClickerClientProto = ctypes.CFUNCTYPE(None)
 InitClickerClientParams = ()
@@ -36,167 +37,155 @@ DoneClickerClientProto = ctypes.CFUNCTYPE(None)
 DoneClickerClientParams = ()
 DoneClickerClient = DoneClickerClientProto(("DoneClickerClient", DllHandle), DoneClickerClientParams)
 
-SetServerAddressFunc = None
-def GetSetServerAddressAddress():
+
+def GetSetServerAddress():
     #SetServerAddressProto = ctypes.CFUNCTYPE(None, ctypes.c_char_p) #the SetServerAddress function returns void
     SetServerAddressProto = ctypes.CFUNCTYPE(None, LPCWSTR)
     SetServerAddressParams = (1, "AAddress", 0),
-    SetServerAddressFunc = SetServerAddressProto(("SetServerAddress", DllHandle), SetServerAddressParams)
-    return SetServerAddressFunc
-    
-def SetServerAddress(Address):
-    try:
-        #buffer = ctypes.create_string_buffer(10 * 1048576) #(CMaxSharedStringLength)
-        #ctypes.memset(ctypes.addressof(buffer[0]), ctypes.addressof(Address[0]), len(Address) + 1)  #### not working
-        #AddressPtr = buffer[0] #ctypes.c_char_p(buffer[0])  #address of first byte in the buffer
-        #SetServerAddressFunc(AddressPtr)
-        SetServerAddressFunc(Address)  #sending PWideChar, and converting to ANSI at dll
-        return 'OK'
-    except:
-        return 'AV on SetServerAddress'
+    SetServerAddressFuncRes = SetServerAddressProto(("SetServerAddress", DllHandle), SetServerAddressParams)
+    return SetServerAddressFuncRes
 
-TestConnectionToServerFunc = None
-def GetTestConnectionToServerAddress():
-  TestConnectionToServerProto = ctypes.CFUNCTYPE(LARGE_INTEGER, ctypes.c_char_p)
-  TestConnectionToServerParams = (1, "AResponse", 0),
-  TestConnectionToServerFunc = TestConnectionToServerProto(("TestConnectionToServer", DllHandle), TestConnectionToServerParams)
-  return TestConnectionToServerFunc
-
-def TestConnectionToServer():
-    try:
-        buffer = ctypes.create_string_buffer(10 * 1048576) # #(CMaxSharedStringLength)
-        ResponsePtr = buffer[0] #ctypes.c_char_p(buffer[0])  #address of first byte in the buffer
-        RespLen = TestConnectionToServerFunc(ResponsePtr)
-        
-        Response = ctypes.string_at(ResponsePtr, RespLen)
-        return Response
-    except:
-        return 'AV on TestConnectionToServer'
-        
-        
-GetServerAddressFunc = None
+       
 def GetGetServerAddress():
   GetServerAddressProto = ctypes.CFUNCTYPE(LARGE_INTEGER, ctypes.c_char_p)
   GetServerAddressParams = (1, "AResponse", 0),
-  GetServerAddressFunc = GetServerAddressProto(("GetServerAddress", DllHandle), GetServerAddressParams)
-  return GetServerAddressFunc
+  GetServerAddressFuncRes = GetServerAddressProto(("GetServerAddress", DllHandle), GetServerAddressParams)
+  return GetServerAddressFuncRes
 
-def GetServerAddress():
-    try:
-        buffer = ctypes.create_string_buffer(10 * 1048576) # #(CMaxSharedStringLength)
-        ResponsePtr = buffer[0] #ctypes.c_char_p(buffer[0])  #address of first byte in the buffer
-        RespLen = GetServerAddressFunc(ResponsePtr)
-        
-        Response = ctypes.string_at(ResponsePtr, RespLen)
-        return Response
-    except:
-        return 'AV on GetServerAddress'
-    
 
-CreateNewTemplateFunc = None
+def GetTestConnectionToServerAddress():
+  TestConnectionToServerProto = ctypes.CFUNCTYPE(LARGE_INTEGER, ctypes.c_char_p)
+  TestConnectionToServerParams = (1, "AResponse", 0),
+  TestConnectionToServerFuncRes = TestConnectionToServerProto(("TestConnectionToServer", DllHandle), TestConnectionToServerParams)
+  return TestConnectionToServerFuncRes
+
+
 def GetCreateNewTemplate():
     CreateNewTemplateProto = ctypes.CFUNCTYPE(LARGE_INTEGER, LPCWSTR)
     CreateNewTemplateParams = (1, "ATemplateFileName", 0),
-    CreateNewTemplateFunc = CreateNewTemplateProto(("CreateNewTemplate", DllHandle), CreateNewTemplateParams)
-    return CreateNewTemplateFunc
+    CreateNewTemplateFuncRes = CreateNewTemplateProto(("CreateNewTemplate", DllHandle), CreateNewTemplateParams)
+    return CreateNewTemplateFuncRes
     
-def CreateNewTemplate(ATemplateFileName):
-    try:
-        CreateInMemFileResult = CreateNewTemplateFunc(ATemplateFileName)  #sending PWideChar, and converting to ANSI at dll
-        return CreateInMemFileResult
-    except:
-        return 'AV on CreateNewTemplate'
         
-        
-AddClickActionToTemplateFunc = None
 def GetAddClickActionToTemplate():
     AddClickActionToTemplateProto = ctypes.CFUNCTYPE(LARGE_INTEGER, LPCWSTR, LPCWSTR, BYTE, LARGE_INTEGER, BOOLEAN, LPCWSTR)
     AddClickActionToTemplateParams = (1, "ATemplateFileName", 0), (1, "AActionName", 0), (1, "AAction", 0), (1, "AActionTimeout", 0), (1, "AActionEnabled", 0), (1, "AActionCondition", 0),
-    AddClickActionToTemplateFunc = AddClickActionToTemplateProto(("AddClickActionToTemplate", DllHandle), AddClickActionToTemplateParams)
-    return AddClickActionToTemplateFunc
-    
-def AddClickActionToTemplate(ATemplateFileName, AActionName, AAction, AActionTimeout, AActionEnabled, AActionCondition):
-    try:
-        AddClickActionToTemplateResult = AddClickActionToTemplateFunc(ATemplateFileName, AActionName, AAction, AActionTimeout, AActionEnabled, AActionCondition)  #sending PWideChar, and converting to ANSI at dll
-        return AddClickActionToTemplateResult
-    except:
-        return 'AV on AddClickActionToTemplate'
-        
-        
-AddExecAppActionToTemplateFunc = None
+    AddClickActionToTemplateFuncRes = AddClickActionToTemplateProto(("AddClickActionToTemplate", DllHandle), AddClickActionToTemplateParams)
+    return AddClickActionToTemplateFuncRes
+
+       
 def GetAddExecAppActionToTemplate():
     AddExecAppActionToTemplateProto = ctypes.CFUNCTYPE(LARGE_INTEGER, LPCWSTR, LPCWSTR, BYTE, LARGE_INTEGER, BOOLEAN, LPCWSTR)
     AddExecAppActionToTemplateParams = (1, "ATemplateFileName", 0), (1, "AActionName", 0), (1, "AAction", 0), (1, "AActionTimeout", 0), (1, "AActionEnabled", 0), (1, "AActionCondition", 0),
-    AddExecAppActionToTemplateFunc = AddExecAppActionToTemplateProto(("AddExecAppActionToTemplate", DllHandle), AddExecAppActionToTemplateParams)
-    return AddExecAppActionToTemplateFunc
-    
-def AddExecAppActionToTemplate(ATemplateFileName, AActionName, AAction, AActionTimeout, AActionEnabled, AActionCondition):
-    try:
-        AddExecAppActionToTemplateResult = AddExecAppActionToTemplateFunc(ATemplateFileName, AActionName, AAction, AActionTimeout, AActionEnabled, AActionCondition)  #sending PWideChar, and converting to ANSI at dll
-        return AddExecAppActionToTemplateResult
-    except:
-        return 'AV on AddExecAppActionToTemplate'
+    AddExecAppActionToTemplateFuncRes = AddExecAppActionToTemplateProto(("AddExecAppActionToTemplate", DllHandle), AddExecAppActionToTemplateParams)
+    return AddExecAppActionToTemplateFuncRes
 
-
-PrepareFilesInServerFunc = None
+        
 def GetPrepareFilesInServer():
     PrepareFilesInServerProto = ctypes.CFUNCTYPE(LARGE_INTEGER, LPCWSTR)
     PrepareFilesInServerParams = (1, "ATemplateFileName", 0),
-    PrepareFilesInServerFunc = PrepareFilesInServerProto(("PrepareFilesInServer", DllHandle), PrepareFilesInServerParams)
-    return PrepareFilesInServerFunc
+    PrepareFilesInServerFuncRes = PrepareFilesInServerProto(("PrepareFilesInServer", DllHandle), PrepareFilesInServerParams)
+    return PrepareFilesInServerFuncRes
+   
+        
+class TDllFunctions:
+    def __init__(self):
+        self.SetServerAddressFunc = GetSetServerAddress()
+        self.GetServerAddressFunc = GetGetServerAddress()
+        self.TestConnectionToServerFunc = GetTestConnectionToServerAddress()
+        self.CreateNewTemplateFunc = GetCreateNewTemplate()
+        self.AddClickActionToTemplateFunc = GetAddClickActionToTemplate()
+        self.AddExecAppActionToTemplateFunc = GetAddExecAppActionToTemplate()
+        self.PrepareFilesInServerFunc = GetPrepareFilesInServer()
+        
+        
+    def SetServerAddress(self, Address):
+        try:
+            self.SetServerAddressFunc(Address)  #sending PWideChar, and converting to ANSI at dll
+            return 'OK'
+        except:
+            return 'AV on SetServerAddress'
+            
     
-def PrepareFilesInServer(ATemplateFileName):
-    try:
-        PrepareFilesInServerResult = PrepareFilesInServerFunc(ATemplateFileName)  #sending PWideChar, and converting to ANSI at dll
-        return PrepareFilesInServerResult
-    except:
-        return 'AV on PrepareFilesInServer'
+    def GetServerAddress(self):
+        try:
+            buffer = ctypes.create_string_buffer(10 * 1048576) # #(CMaxSharedStringLength)
+            ResponsePtr = buffer[0] #ctypes.c_char_p(buffer[0])  #address of first byte in the buffer
+            RespLen = self.GetServerAddressFunc(ResponsePtr)
+            
+            Response = ctypes.string_at(ResponsePtr, RespLen)
+            return Response
+        except:
+            return 'AV on GetServerAddress'
+            
+            
+    def TestConnectionToServer(self):
+        try:
+            buffer = ctypes.create_string_buffer(10 * 1048576) # #(CMaxSharedStringLength)
+            ResponsePtr = buffer[0] #ctypes.c_char_p(buffer[0])  #address of first byte in the buffer
+            RespLen = self.TestConnectionToServerFunc(ResponsePtr)
+            
+            Response = ctypes.string_at(ResponsePtr, RespLen)
+            return Response
+        except:
+            return 'AV on TestConnectionToServer'
+    
+    
+    def CreateNewTemplate(self, ATemplateFileName):
+        try:
+            CreateInMemFileResult = self.CreateNewTemplateFunc(ATemplateFileName)  #sending PWideChar, and converting to ANSI at dll
+            return CreateInMemFileResult
+        except:
+            return 'AV on CreateNewTemplate'
+    
+    
+    def AddClickActionToTemplate(self, ATemplateFileName, AActionName, AAction, AActionTimeout, AActionEnabled, AActionCondition):
+        try:
+            AddClickActionToTemplateResult = self.AddClickActionToTemplateFunc(ATemplateFileName, AActionName, AAction, AActionTimeout, AActionEnabled, AActionCondition)  #sending PWideChar, and converting to ANSI at dll
+            return AddClickActionToTemplateResult
+        except:
+            return 'AV on AddClickActionToTemplate'
+    
+    
+    def AddExecAppActionToTemplate(self, ATemplateFileName, AActionName, AAction, AActionTimeout, AActionEnabled, AActionCondition):
+        try:
+            AddExecAppActionToTemplateResult = self.AddExecAppActionToTemplateFunc(ATemplateFileName, AActionName, AAction, AActionTimeout, AActionEnabled, AActionCondition)  #sending PWideChar, and converting to ANSI at dll
+            return AddExecAppActionToTemplateResult
+        except:
+            return 'AV on AddExecAppActionToTemplate'
+    
+    
+    def PrepareFilesInServer(self, ATemplateFileName):
+        try:
+            PrepareFilesInServerResult = self.PrepareFilesInServerFunc(ATemplateFileName)  #sending PWideChar, and converting to ANSI at dll
+            return PrepareFilesInServerResult
+        except:
+            return 'AV on PrepareFilesInServer'
         
         
-TestConnectionToServerFunc = GetTestConnectionToServerAddress()
-TestConnectionResult = TestConnectionToServer()  #add a call, to avoid being garbage collected, or what ever happens
-
-GetServerAddressFunc = GetGetServerAddress()
-GetServerAddressResult = GetServerAddress()  #add a call, to avoid being garbage collected, or what ever happens
-
-SetServerAddressFunc = GetSetServerAddressAddress()
-SetServerAddressResult = SetServerAddress('http://127.0.0.1:5444/')  #add a call, to avoid being garbage collected, or what ever happens
-
-CreateNewTemplateFunc = GetCreateNewTemplate()
-CreateNewTemplateResult = CreateNewTemplate('dummy.clktmpl')  #if called before InitClickerClient, it returns -1, because the internal in-mem file system, is not created yet
-
-AddClickActionToTemplateFunc = GetAddClickActionToTemplate()
-AddClickActionToTemplateResult = AddClickActionToTemplate('dummy.clktmpl', 'First', 0, 0, True, 'abc') #if called before InitClickerClient, it returns -1, because the internal in-mem file system, is not created yet
-
-AddExecAppActionToTemplateFunc = GetAddExecAppActionToTemplate()
-AddExecAppActionToTemplateResult = AddExecAppActionToTemplate('dummy.clktmpl', 'Second', 0, 0, True, 'abc') #if called before InitClickerClient, it returns -1, because the internal in-mem file system, is not created yet
-
-PrepareFilesInServerFunc = GetPrepareFilesInServer()
-PrepareFilesInServerResult = PrepareFilesInServer('dummy.clktmpl');
-
-
 InitClickerClient()
+DllFuncs = TDllFunctions()
 
-print("TestConnectionToServer: ", TestConnectionToServer())
+print("TestConnectionToServer: ", DllFuncs.TestConnectionToServer())
 
-print("GetServerAddress: ", GetServerAddress())
+print("GetServerAddress: ", DllFuncs.GetServerAddress())
 
-print("SetServerAddress: ", SetServerAddress('http://192.168.3.102:5444/'))
-print("GetServerAddress: ", GetServerAddress())
-print("TestConnectionToServer after setting wrong address: ", TestConnectionToServer())
+print("SetServerAddress: ", DllFuncs.SetServerAddress('http://192.168.3.102:5444/'))
+print("GetServerAddress: ", DllFuncs.GetServerAddress())
+print("TestConnectionToServer after setting wrong address: ", DllFuncs.TestConnectionToServer())
 
-print("SetServerAddress: ", SetServerAddress('http://127.0.0.1:5444/'))
-print("GetServerAddress: ", GetServerAddress())
-print("TestConnectionToServer after setting a working address: ", TestConnectionToServer())
+print("SetServerAddress: ", DllFuncs.SetServerAddress('http://127.0.0.1:5444/'))
+print("GetServerAddress: ", DllFuncs.GetServerAddress())
+print("TestConnectionToServer after setting a working address: ", DllFuncs.TestConnectionToServer())
 
-print("CreateNewTemplate: ", CreateNewTemplate('VerifyClicking.clktmpl')) #creates a new template in dll's in-mem file system
-print("CreateNewTemplate: ", CreateNewTemplate('VerifyClicking.clktmpl')) #the second call returns 1, because the file already exists
+print("CreateNewTemplate: ", DllFuncs.CreateNewTemplate('VerifyClicking.clktmpl')) #creates a new template in dll's in-mem file system
+print("CreateNewTemplate: ", DllFuncs.CreateNewTemplate('VerifyClicking.clktmpl')) #the second call returns 1, because the file already exists
 
-print("AddClickActionToTemplate: ", AddClickActionToTemplate('VerifyClicking.clktmpl', 'First', 0, 0, True, '$a$==$b$'))
+print("AddClickActionToTemplate: ", DllFuncs.AddClickActionToTemplate('VerifyClicking.clktmpl', 'First', 0, 0, True, '$a$==$b$'))
 
-print("AddExecAppActionToTemplate: ", AddExecAppActionToTemplate('VerifyClicking.clktmpl', 'Second', 0, 0, True, '$a$==$b$'))
+print("AddExecAppActionToTemplate: ", DllFuncs.AddExecAppActionToTemplate('VerifyClicking.clktmpl', 'Second', 0, 0, True, '$a$==$b$'))
 
-print("PrepareFilesInServer", PrepareFilesInServer('VerifyClicking.clktmpl'))
+print("PrepareFilesInServer", DllFuncs.PrepareFilesInServer('VerifyClicking.clktmpl'))
 
 
 DoneClickerClient()
