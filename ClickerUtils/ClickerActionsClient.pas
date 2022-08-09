@@ -100,6 +100,10 @@ const
   CREResp_ClassParam = 'Class';
   CREResp_ScreenWidth = 'ScreenWidth';
   CREResp_ScreenHeight = 'ScreenHeight';
+  CREResp_CompLeft = 'CompLeft';
+  CREResp_CompTop = 'CompTop';
+  CREResp_CompWidth = 'CompWidth';
+  CREResp_CompHeight = 'CompHeight';
 
 
 function WaitForServerResponse(ATh: TClientThread; ACallAppProcMsg: Boolean = True): Boolean; //used for requests with custom waiting
