@@ -73,24 +73,38 @@ def GetCreateNewTemplate():
     
         
 def GetAddClickActionToTemplate():
-    AddClickActionToTemplateProto = ctypes.CFUNCTYPE(LARGE_INTEGER, LPCWSTR, LPCWSTR, BYTE, LARGE_INTEGER, BOOLEAN, LPCWSTR)
-    AddClickActionToTemplateParams = (1, "ATemplateFileName", 0), (1, "AActionName", 0), (1, "AAction", 0), (1, "AActionTimeout", 0), (1, "AActionEnabled", 0), (1, "AActionCondition", 0),
+    AddClickActionToTemplateProto = ctypes.CFUNCTYPE(LARGE_INTEGER, LPCWSTR, LPCWSTR, LARGE_INTEGER, BOOLEAN, LPCWSTR)
+    AddClickActionToTemplateParams = (1, "ATemplateFileName", 0), (1, "AActionName", 0), (1, "AActionTimeout", 0), (1, "AActionEnabled", 0), (1, "AActionCondition", 0),
     AddClickActionToTemplateFuncRes = AddClickActionToTemplateProto(("AddClickActionToTemplate", DllHandle), AddClickActionToTemplateParams)
     return AddClickActionToTemplateFuncRes
 
        
 def GetAddExecAppActionToTemplate():
-    AddExecAppActionToTemplateProto = ctypes.CFUNCTYPE(LARGE_INTEGER, LPCWSTR, LPCWSTR, BYTE, LARGE_INTEGER, BOOLEAN, LPCWSTR)
-    AddExecAppActionToTemplateParams = (1, "ATemplateFileName", 0), (1, "AActionName", 0), (1, "AAction", 0), (1, "AActionTimeout", 0), (1, "AActionEnabled", 0), (1, "AActionCondition", 0),
+    AddExecAppActionToTemplateProto = ctypes.CFUNCTYPE(LARGE_INTEGER, LPCWSTR, LPCWSTR, LARGE_INTEGER, BOOLEAN, LPCWSTR)
+    AddExecAppActionToTemplateParams = (1, "ATemplateFileName", 0), (1, "AActionName", 0), (1, "AActionTimeout", 0), (1, "AActionEnabled", 0), (1, "AActionCondition", 0),
     AddExecAppActionToTemplateFuncRes = AddExecAppActionToTemplateProto(("AddExecAppActionToTemplate", DllHandle), AddExecAppActionToTemplateParams)
     return AddExecAppActionToTemplateFuncRes
 
         
 def GetPrepareFilesInServer():
-    PrepareFilesInServerProto = ctypes.CFUNCTYPE(LARGE_INTEGER, LPCWSTR)
-    PrepareFilesInServerParams = (1, "ATemplateFileName", 0),
+    PrepareFilesInServerProto = ctypes.CFUNCTYPE(LARGE_INTEGER, LPCWSTR, ctypes.c_char_p)
+    PrepareFilesInServerParams = (1, "ATemplateFileName", 0), (1, "AResponse", 0),
     PrepareFilesInServerFuncRes = PrepareFilesInServerProto(("PrepareFilesInServer", DllHandle), PrepareFilesInServerParams)
     return PrepareFilesInServerFuncRes
+
+
+def GetGetListOfFilesFromClientInMem():
+    GetListOfFilesFromClientInMemProto = ctypes.CFUNCTYPE(LARGE_INTEGER, ctypes.c_char_p)
+    GetListOfFilesFromClientInMemParams = (1, "AResponse", 0),
+    GetListOfFilesFromClientInMemFuncRes = GetListOfFilesFromClientInMemProto(("GetListOfFilesFromClientInMem", DllHandle), GetListOfFilesFromClientInMemParams)
+    return GetListOfFilesFromClientInMemFuncRes
+    
+
+def GetGetTemplateContentFromClientInMemAsString():
+    GetTemplateContentFromClientInMemAsStringProto = ctypes.CFUNCTYPE(LARGE_INTEGER, LPCWSTR, ctypes.c_char_p)
+    GetTemplateContentFromClientInMemAsStringParams = (1, "ATemplateFileName", 0), (1, "AResponse", 0),
+    GetTemplateContentFromClientInMemAsStringFuncRes = GetTemplateContentFromClientInMemAsStringProto(("GetTemplateContentFromClientInMemAsString", DllHandle), GetTemplateContentFromClientInMemAsStringParams)
+    return GetTemplateContentFromClientInMemAsStringFuncRes
    
         
 class TDllFunctions:
@@ -105,6 +119,8 @@ class TDllFunctions:
         self.AddClickActionToTemplateFunc = GetAddClickActionToTemplate()
         self.AddExecAppActionToTemplateFunc = GetAddExecAppActionToTemplate()
         self.PrepareFilesInServerFunc = GetPrepareFilesInServer()
+        self.GetListOfFilesFromClientInMemFunc = GetGetListOfFilesFromClientInMem()
+        self.GetTemplateContentFromClientInMemAsStringFunc = GetGetTemplateContentFromClientInMemAsString()
         
     def InitClickerClient(self):
         try:
@@ -161,17 +177,17 @@ class TDllFunctions:
             return 'AV on CreateNewTemplate'
     
     
-    def AddClickActionToTemplate(self, ATemplateFileName, AActionName, AAction, AActionTimeout, AActionEnabled, AActionCondition):
+    def AddClickActionToTemplate(self, ATemplateFileName, AActionName, AActionTimeout, AActionEnabled, AActionCondition):
         try:
-            AddClickActionToTemplateResult = self.AddClickActionToTemplateFunc(ATemplateFileName, AActionName, AAction, AActionTimeout, AActionEnabled, AActionCondition)  #sending PWideChar, and converting to ANSI at dll
+            AddClickActionToTemplateResult = self.AddClickActionToTemplateFunc(ATemplateFileName, AActionName, AActionTimeout, AActionEnabled, AActionCondition)  #sending PWideChar, and converting to ANSI at dll
             return AddClickActionToTemplateResult
         except:
             return 'AV on AddClickActionToTemplate'
     
     
-    def AddExecAppActionToTemplate(self, ATemplateFileName, AActionName, AAction, AActionTimeout, AActionEnabled, AActionCondition):
+    def AddExecAppActionToTemplate(self, ATemplateFileName, AActionName, AActionTimeout, AActionEnabled, AActionCondition):
         try:
-            AddExecAppActionToTemplateResult = self.AddExecAppActionToTemplateFunc(ATemplateFileName, AActionName, AAction, AActionTimeout, AActionEnabled, AActionCondition)  #sending PWideChar, and converting to ANSI at dll
+            AddExecAppActionToTemplateResult = self.AddExecAppActionToTemplateFunc(ATemplateFileName, AActionName, AActionTimeout, AActionEnabled, AActionCondition)  #sending PWideChar, and converting to ANSI at dll
             return AddExecAppActionToTemplateResult
         except:
             return 'AV on AddExecAppActionToTemplate'
@@ -179,12 +195,38 @@ class TDllFunctions:
     
     def PrepareFilesInServer(self, ATemplateFileName):
         try:
-            PrepareFilesInServerResult = self.PrepareFilesInServerFunc(ATemplateFileName)  #sending PWideChar, and converting to ANSI at dll
-            return PrepareFilesInServerResult
+            buffer = ctypes.create_string_buffer(10 * 1048576) # #(CMaxSharedStringLength)
+            ResponsePtr = buffer[0] #ctypes.c_char_p(buffer[0])  #address of first byte in the buffer
+            RespLen = self.PrepareFilesInServerFunc(ATemplateFileName, ResponsePtr)  #sending PWideChar, and converting to ANSI at dll
+            
+            Response = ctypes.string_at(ResponsePtr, RespLen)
+            return Response
         except:
             return 'AV on PrepareFilesInServer'
-        
-        
+            
+    def GetListOfFilesFromClientInMem(self):
+        try:
+            buffer = ctypes.create_string_buffer(10 * 1048576) # #(CMaxSharedStringLength)
+            ResponsePtr = buffer[0] #ctypes.c_char_p(buffer[0])  #address of first byte in the buffer
+            RespLen = self.GetListOfFilesFromClientInMemFunc(ResponsePtr)
+            
+            Response = ctypes.string_at(ResponsePtr, RespLen)
+            return Response.decode('utf-8')
+        except:
+            return 'AV on GetListOfFilesFromClientInMem'
+
+
+    def GetTemplateContentFromClientInMemAsString(self, ATemplateFileName):
+        try:
+            buffer = ctypes.create_string_buffer(10 * 1048576) # #(CMaxSharedStringLength)
+            ResponsePtr = buffer[0] #ctypes.c_char_p(buffer[0])  #address of first byte in the buffer
+            RespLen = self.GetTemplateContentFromClientInMemAsStringFunc(ATemplateFileName, ResponsePtr)  #sending PWideChar, and converting to ANSI at dll
+            
+            Response = ctypes.string_at(ResponsePtr, RespLen)
+            return Response.decode('utf-8')
+        except:
+            return 'AV on GetTemplateContentFromClientInMemAsString'
+
 DllFuncs = TDllFunctions()
 
 print("InitClickerClient: ", DllFuncs.InitClickerClient())
@@ -204,11 +246,15 @@ try:
     print("CreateNewTemplate: ", DllFuncs.CreateNewTemplate('VerifyClicking.clktmpl')) #creates a new template in dll's in-mem file system
     print("CreateNewTemplate: ", DllFuncs.CreateNewTemplate('VerifyClicking.clktmpl')) #the second call returns 1, because the file already exists
     
-    print("AddClickActionToTemplate: ", DllFuncs.AddClickActionToTemplate('VerifyClicking.clktmpl', 'First', 0, 0, True, '$a$==$b$'))
+    print("AddClickActionToTemplate: ", DllFuncs.AddClickActionToTemplate('VerifyClicking.clktmpl', 'First', 0, True, '$a$==$b$'))
     
-    print("AddExecAppActionToTemplate: ", DllFuncs.AddExecAppActionToTemplate('VerifyClicking.clktmpl', 'Second', 0, 0, True, '$a$==$b$'))
+    print("AddExecAppActionToTemplate: ", DllFuncs.AddExecAppActionToTemplate('VerifyClicking.clktmpl', 'Second', 0, True, '$a$==$b$'))
     
-    print("PrepareFilesInServer", DllFuncs.PrepareFilesInServer('VerifyClicking.clktmpl'))
+    print("PrepareFilesInServer: ", DllFuncs.PrepareFilesInServer('VerifyClicking.clktmpl'))
+    
+    print("GetListOfFilesFromClientInMem: ", DllFuncs.GetListOfFilesFromClientInMem())
+    
+    #print("GetTemplateContentFromClientInMemAsString: ", DllFuncs.GetTemplateContentFromClientInMemAsString('VerifyClicking.clktmpl'))
 finally:
     print("DoneClickerClient", DllFuncs.DoneClickerClient())
 
