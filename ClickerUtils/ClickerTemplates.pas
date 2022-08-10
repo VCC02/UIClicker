@@ -36,7 +36,7 @@ procedure LoadTemplateToCustomActions_V2(Ini: TClkIniReadonlyFile; var ACustomAc
 
 //procedure SaveTemplateWithCustomActions_V1(Fnm: string; ACustomActions: TClkActionsRecArr); //not used anymore
 procedure SaveTemplateWithCustomActionsToStringList_V2(AStringList: TStringList; var ACustomActions: TClkActionsRecArr);
-procedure CopyActionContent(ASrc, ADest: TClkActionRec);
+procedure CopyActionContent(ASrc: TClkActionRec; var ADest: TClkActionRec);
 procedure GetTemplateContentAsMemoryStream(var ATemplateContent: TClkActionsRecArr; AFileContentMem: TMemoryStream);
 procedure GetTemplateContentFromMemoryStream(var ACustomActions: TClkActionsRecArr; AFileContentMem: TMemoryStream);
 
@@ -408,8 +408,11 @@ procedure LoadTemplateToCustomActions_V2(Ini: TClkIniReadonlyFile; var ACustomAc
 var
   IterationStr: string;
   SectionIndex: Integer;
-  i: Integer;
+  i, n: Integer;
 begin
+  n := Ini.ReadInteger('Actions', 'Count', 0);
+  SetLength(ACustomActions, n);
+
   for i := 0 to Length(ACustomActions) - 1 do
   begin
     IterationStr := IntToStr(i);
@@ -817,7 +820,7 @@ begin
 end;
 
 
-procedure CopyActionContent(ASrc, ADest: TClkActionRec);
+procedure CopyActionContent(ASrc: TClkActionRec; var ADest: TClkActionRec);
 var
   i: Integer;
 begin             //Substructures, which do not contain pointers, can be directly, copied. The others have to be manually copied.
