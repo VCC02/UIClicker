@@ -29,14 +29,19 @@ DllHandle = ctypes.CDLL("..\\ClickerClient\\ClickerClient.dll")  #CDLL is used f
 CMaxSharedStringLength = 10 * 1048576; #10MB
 
 
-InitClickerClientProto = ctypes.CFUNCTYPE(None)
-InitClickerClientParams = ()
-InitClickerClient = InitClickerClientProto(("InitClickerClient", DllHandle), InitClickerClientParams)
+def GetInitClickerClient():
+    InitClickerClientProto = ctypes.CFUNCTYPE(None)
+    InitClickerClientParams = ()
+    InitClickerClientFuncRes = InitClickerClientProto(("InitClickerClient", DllHandle), InitClickerClientParams)
+    return InitClickerClientFuncRes
 
-DoneClickerClientProto = ctypes.CFUNCTYPE(None)
-DoneClickerClientParams = ()
-DoneClickerClient = DoneClickerClientProto(("DoneClickerClient", DllHandle), DoneClickerClientParams)
 
+def GetDoneClickerClient():
+    DoneClickerClientProto = ctypes.CFUNCTYPE(None)
+    DoneClickerClientParams = ()
+    DoneClickerClientFuncRes = DoneClickerClientProto(("DoneClickerClient", DllHandle), DoneClickerClientParams)
+    return DoneClickerClientFuncRes
+ 
 
 def GetSetServerAddress():
     #SetServerAddressProto = ctypes.CFUNCTYPE(None, ctypes.c_char_p) #the SetServerAddress function returns void
@@ -47,17 +52,17 @@ def GetSetServerAddress():
 
        
 def GetGetServerAddress():
-  GetServerAddressProto = ctypes.CFUNCTYPE(LARGE_INTEGER, ctypes.c_char_p)
-  GetServerAddressParams = (1, "AResponse", 0),
-  GetServerAddressFuncRes = GetServerAddressProto(("GetServerAddress", DllHandle), GetServerAddressParams)
-  return GetServerAddressFuncRes
+    GetServerAddressProto = ctypes.CFUNCTYPE(LARGE_INTEGER, ctypes.c_char_p)
+    GetServerAddressParams = (1, "AResponse", 0),
+    GetServerAddressFuncRes = GetServerAddressProto(("GetServerAddress", DllHandle), GetServerAddressParams)
+    return GetServerAddressFuncRes
 
 
 def GetTestConnectionToServerAddress():
-  TestConnectionToServerProto = ctypes.CFUNCTYPE(LARGE_INTEGER, ctypes.c_char_p)
-  TestConnectionToServerParams = (1, "AResponse", 0),
-  TestConnectionToServerFuncRes = TestConnectionToServerProto(("TestConnectionToServer", DllHandle), TestConnectionToServerParams)
-  return TestConnectionToServerFuncRes
+    TestConnectionToServerProto = ctypes.CFUNCTYPE(LARGE_INTEGER, ctypes.c_char_p)
+    TestConnectionToServerParams = (1, "AResponse", 0),
+    TestConnectionToServerFuncRes = TestConnectionToServerProto(("TestConnectionToServer", DllHandle), TestConnectionToServerParams)
+    return TestConnectionToServerFuncRes
 
 
 def GetCreateNewTemplate():
@@ -90,6 +95,9 @@ def GetPrepareFilesInServer():
         
 class TDllFunctions:
     def __init__(self):
+        self.InitClickerClientFunc = GetInitClickerClient()
+        self.DoneClickerClientFunc = GetDoneClickerClient()
+        
         self.SetServerAddressFunc = GetSetServerAddress()
         self.GetServerAddressFunc = GetGetServerAddress()
         self.TestConnectionToServerFunc = GetTestConnectionToServerAddress()
@@ -98,6 +106,20 @@ class TDllFunctions:
         self.AddExecAppActionToTemplateFunc = GetAddExecAppActionToTemplate()
         self.PrepareFilesInServerFunc = GetPrepareFilesInServer()
         
+    def InitClickerClient(self):
+        try:
+            self.InitClickerClientFunc()
+            return 'OK'
+        except:
+            return 'AV on InitClickerClient'
+    
+    
+    def DoneClickerClient(self):
+        try:
+            self.DoneClickerClientFunc()
+            return 'OK'
+        except:
+            return 'AV on DoneClickerClient'
         
     def SetServerAddress(self, Address):
         try:
@@ -163,29 +185,31 @@ class TDllFunctions:
             return 'AV on PrepareFilesInServer'
         
         
-InitClickerClient()
 DllFuncs = TDllFunctions()
 
-print("TestConnectionToServer: ", DllFuncs.TestConnectionToServer())
+print("InitClickerClient: ", DllFuncs.InitClickerClient())
+try:
+    print("TestConnectionToServer: ", DllFuncs.TestConnectionToServer())
+    
+    print("GetServerAddress: ", DllFuncs.GetServerAddress())
+    
+    print("SetServerAddress: ", DllFuncs.SetServerAddress('http://192.168.3.102:5444/'))
+    print("GetServerAddress: ", DllFuncs.GetServerAddress())
+    print("TestConnectionToServer after setting wrong address: ", DllFuncs.TestConnectionToServer())
+    
+    print("SetServerAddress: ", DllFuncs.SetServerAddress('http://127.0.0.1:5444/'))
+    print("GetServerAddress: ", DllFuncs.GetServerAddress())
+    print("TestConnectionToServer after setting a working address: ", DllFuncs.TestConnectionToServer())
+    
+    print("CreateNewTemplate: ", DllFuncs.CreateNewTemplate('VerifyClicking.clktmpl')) #creates a new template in dll's in-mem file system
+    print("CreateNewTemplate: ", DllFuncs.CreateNewTemplate('VerifyClicking.clktmpl')) #the second call returns 1, because the file already exists
+    
+    print("AddClickActionToTemplate: ", DllFuncs.AddClickActionToTemplate('VerifyClicking.clktmpl', 'First', 0, 0, True, '$a$==$b$'))
+    
+    print("AddExecAppActionToTemplate: ", DllFuncs.AddExecAppActionToTemplate('VerifyClicking.clktmpl', 'Second', 0, 0, True, '$a$==$b$'))
+    
+    print("PrepareFilesInServer", DllFuncs.PrepareFilesInServer('VerifyClicking.clktmpl'))
+finally:
+    print("DoneClickerClient", DllFuncs.DoneClickerClient())
 
-print("GetServerAddress: ", DllFuncs.GetServerAddress())
 
-print("SetServerAddress: ", DllFuncs.SetServerAddress('http://192.168.3.102:5444/'))
-print("GetServerAddress: ", DllFuncs.GetServerAddress())
-print("TestConnectionToServer after setting wrong address: ", DllFuncs.TestConnectionToServer())
-
-print("SetServerAddress: ", DllFuncs.SetServerAddress('http://127.0.0.1:5444/'))
-print("GetServerAddress: ", DllFuncs.GetServerAddress())
-print("TestConnectionToServer after setting a working address: ", DllFuncs.TestConnectionToServer())
-
-print("CreateNewTemplate: ", DllFuncs.CreateNewTemplate('VerifyClicking.clktmpl')) #creates a new template in dll's in-mem file system
-print("CreateNewTemplate: ", DllFuncs.CreateNewTemplate('VerifyClicking.clktmpl')) #the second call returns 1, because the file already exists
-
-print("AddClickActionToTemplate: ", DllFuncs.AddClickActionToTemplate('VerifyClicking.clktmpl', 'First', 0, 0, True, '$a$==$b$'))
-
-print("AddExecAppActionToTemplate: ", DllFuncs.AddExecAppActionToTemplate('VerifyClicking.clktmpl', 'Second', 0, 0, True, '$a$==$b$'))
-
-print("PrepareFilesInServer", DllFuncs.PrepareFilesInServer('VerifyClicking.clktmpl'))
-
-
-DoneClickerClient()
