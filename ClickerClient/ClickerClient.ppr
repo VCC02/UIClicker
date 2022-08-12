@@ -29,7 +29,7 @@ library ClickerClient;
 {$ENDIF}
 
 uses
-  Interfaces, Windows, SysUtils, Classes, Controls, Forms, ShellAPI,
+  Interfaces, Windows, SysUtils, Classes, Controls, Forms, ShellAPI, Graphics,
   DllUtils, InMemFileSystem, ClickerActionsClient, ClickerUtils, ClickerTemplates;
 
 
@@ -40,6 +40,85 @@ var
 
 
 type
+  TClkClickOptionsAPI = record
+    XClickPointReference: TXClickPointReference;
+    YClickPointReference: TYClickPointReference;
+    XClickPointVar: PWideChar;
+    YClickPointVar: PWideChar;
+    XOffset, YOffset: PWideChar;
+    MouseButton: TMouseButton;
+    ClickWithCtrl: Boolean;
+    ClickWithAlt: Boolean;
+    ClickWithShift: Boolean;
+    ClickWithDoubleClick: Boolean;
+    Count: LongInt;
+    LeaveMouse: Boolean;
+    MoveWithoutClick: Boolean;
+    ClickType: LongInt;    //see CClickType_Click and CClickType_DoubleClick
+    XClickPointReferenceDest: TXClickPointReference;
+    YClickPointReferenceDest: TYClickPointReference;
+    XClickPointVarDest: PWideChar;
+    YClickPointVarDest: PWideChar;
+    XOffsetDest, YOffsetDest: PWideChar;
+  end;
+
+  PClkClickOptionsAPI = ^TClkClickOptionsAPI;
+
+
+  TClkExecAppOptionsAPI = record
+    PathToApp: PWideChar;
+    ListOfParams: PWideChar;
+    WaitForApp: Boolean;
+    AppStdIn: PWideChar;
+    CurrentDir: PWideChar;
+    UseInheritHandles: TExecAppUseInheritHandles;
+  end;
+
+  PClkExecAppOptionsAPI = ^TClkExecAppOptionsAPI;
+
+
+  TClkFindControlOptionsAPI = record
+    MatchCriteria: TClkFindControlMatchCriteria;
+    AllowToFail: Boolean;
+    MatchText: PWideChar;
+    MatchClassName: PWideChar;
+    MatchTextSeparator: PWideChar;
+    MatchClassNameSeparator: PWideChar;
+    MatchBitmapText: Pointer; //TClkFindControlMatchBitmapTextArr;
+    MatchBitmapFiles: PWideChar;
+    MatchBitmapAlgorithm: TMatchBitmapAlgorithm;
+    MatchBitmapAlgorithmSettings: TMatchBitmapAlgorithmSettings;
+    InitialRectange: TRectString;
+    UseWholeScreen: Boolean;
+    ColorError: PWideChar;
+    AllowedColorErrorCount: PWideChar;
+    WaitForControlToGoAway: Boolean;
+    StartSearchingWithCachedControl: Boolean;
+    CachedControlLeft: PWideChar;
+    CachedControlTop: PWideChar;
+  end;
+
+  PClkFindControlOptionsAPI = ^TClkFindControlOptionsAPI;
+
+
+  TClkFindControlMatchBitmapTextAPI = record
+    ForegroundColor: PWideChar;
+    BackgroundColor: PWideChar;
+    FontName: PWideChar;
+    FontSize: LongInt;
+    Bold: Boolean;
+    Italic: Boolean;
+    Underline: Boolean;
+    StrikeOut: Boolean;
+    FontQuality: TFontQuality;
+    FontQualityUsesReplacement: Boolean;
+    FontQualityReplacement: PWideChar;
+    ProfileName: PWideChar;
+  end;
+
+  PClkFindControlMatchBitmapTextAPI = ^TClkFindControlMatchBitmapTextAPI;
+
+
   TExHandler = class
     procedure CustomExceptionHandler(Sender: TObject; E: Exception);
   end;
@@ -160,7 +239,7 @@ begin
 end;
 
 
-function GetServerAddress(AResponse: Pointer): Integer; cdecl;
+function GetServerAddress(AResponse: Pointer): LongInt; cdecl;
 begin
   try
     Result := SetPointedContentFromString(FRemoteAddress, AResponse);
@@ -171,7 +250,7 @@ begin
 end;
 
 
-function TestConnectionToServer(AResponse: Pointer): Integer; cdecl;
+function TestConnectionToServer(AResponse: Pointer): LongInt; cdecl;
 var
   Response: string;
 begin
@@ -206,7 +285,7 @@ end;
 
 //Creates a new template file, in dll's in-mem file system.
 //This template (after being filled in) will have to be sent to server and executed there.
-function CreateNewTemplate(ATemplateFileName: Pointer): Integer; cdecl;
+function CreateNewTemplate(ATemplateFileName: Pointer): LongInt; cdecl;
 var
   TemplateFileName: string;
 begin
@@ -247,11 +326,13 @@ end;
 function AddClickActionToTemplate(ATemplateFileName: Pointer;
 
                                   AActionName: Pointer;
-                                  AActionTimeout: Integer; //ms
+                                  AActionTimeout: LongInt; //ms
                                   AActionEnabled: Boolean;
-                                  AActionCondition: Pointer
+                                  AActionCondition: Pointer;
 
-                                  ): Integer; cdecl;
+                                  AClickOptions: PClkClickOptionsAPI
+
+                                  ): LongInt; cdecl;
 var
   TemplateFileName: string;
   ActionName: string;
@@ -274,28 +355,28 @@ begin
   TempAction.ActionOptions.ActionEnabled := AActionEnabled;
   TempAction.ActionOptions.ActionCondition := ActionCondition;
 
-  //click stuff   ////////////////////////////// all these should be read from params
-  TempAction.ClickOptions.XClickPointReference := xrefLeft;
-  TempAction.ClickOptions.YClickPointReference := yrefTop;
-  TempAction.ClickOptions.XClickPointVar := '';
-  TempAction.ClickOptions.YClickPointVar := '';
-  TempAction.ClickOptions.XOffset := '3';
-  TempAction.ClickOptions.YOffset := '3';
-  TempAction.ClickOptions.MouseButton := mbLeft;
-  TempAction.ClickOptions.ClickWithCtrl := False;
-  TempAction.ClickOptions.ClickWithAlt := False;
-  TempAction.ClickOptions.ClickWithShift := False;
-  TempAction.ClickOptions.ClickWithDoubleClick := False;
-  TempAction.ClickOptions.Count := 1;
-  TempAction.ClickOptions.LeaveMouse := False;
-  TempAction.ClickOptions.MoveWithoutClick := False;
-  TempAction.ClickOptions.ClickType := CClickType_Click;
-  TempAction.ClickOptions.XClickPointReferenceDest := xrefLeft;
-  TempAction.ClickOptions.YClickPointReferenceDest := yrefTop;
-  TempAction.ClickOptions.XClickPointVarDest := '';
-  TempAction.ClickOptions.YClickPointVarDest := '';
-  TempAction.ClickOptions.XOffsetDest := '3';
-  TempAction.ClickOptions.YOffsetDest := '3';
+  //click stuff
+  TempAction.ClickOptions.XClickPointReference := AClickOptions^.XClickPointReference; //xrefLeft;
+  TempAction.ClickOptions.YClickPointReference := AClickOptions^.YClickPointReference; //yrefTop;
+  SetPointedContentToString(@string(PWideChar(AClickOptions^.XClickPointVar))[1], TempAction.ClickOptions.XClickPointVar);
+  SetPointedContentToString(@string(PWideChar(AClickOptions^.YClickPointVar))[1], TempAction.ClickOptions.YClickPointVar);
+  SetPointedContentToString(@string(PWideChar(AClickOptions^.XOffset))[1], TempAction.ClickOptions.XOffset);
+  SetPointedContentToString(@string(PWideChar(AClickOptions^.YOffset))[1], TempAction.ClickOptions.YOffset);
+  TempAction.ClickOptions.MouseButton := AClickOptions^.MouseButton;
+  TempAction.ClickOptions.ClickWithCtrl := AClickOptions^.ClickWithCtrl;
+  TempAction.ClickOptions.ClickWithAlt := AClickOptions^.ClickWithAlt;
+  TempAction.ClickOptions.ClickWithShift := AClickOptions^.ClickWithShift;
+  TempAction.ClickOptions.ClickWithDoubleClick := AClickOptions^.ClickWithDoubleClick;
+  TempAction.ClickOptions.Count := AClickOptions^.Count;
+  TempAction.ClickOptions.LeaveMouse := AClickOptions^.LeaveMouse;
+  TempAction.ClickOptions.MoveWithoutClick := AClickOptions^.MoveWithoutClick;
+  TempAction.ClickOptions.ClickType := AClickOptions^.ClickType;
+  TempAction.ClickOptions.XClickPointReferenceDest := AClickOptions^.XClickPointReferenceDest;
+  TempAction.ClickOptions.YClickPointReferenceDest := AClickOptions^.YClickPointReferenceDest;
+  SetPointedContentToString(@string(PWideChar(AClickOptions^.XClickPointVarDest))[1], TempAction.ClickOptions.XClickPointVarDest);
+  SetPointedContentToString(@string(PWideChar(AClickOptions^.YClickPointVarDest))[1], TempAction.ClickOptions.YClickPointVarDest);
+  SetPointedContentToString(@string(PWideChar(AClickOptions^.XOffsetDest))[1], TempAction.ClickOptions.XOffsetDest);
+  SetPointedContentToString(@string(PWideChar(AClickOptions^.YOffsetDest))[1], TempAction.ClickOptions.YOffsetDest);
 
   AddActionToTemplate(TemplateFileName, TempAction);
   Result := 0;
@@ -305,11 +386,13 @@ end;
 function AddExecAppActionToTemplate(ATemplateFileName: Pointer;
 
                                     AActionName: Pointer;
-                                    AActionTimeout: Integer; //ms
+                                    AActionTimeout: LongInt; //ms
                                     AActionEnabled: Boolean;
-                                    AActionCondition: Pointer
+                                    AActionCondition: Pointer;
 
-                                   ): Integer; cdecl;
+                                    AExecAppOptions: PClkExecAppOptionsAPI
+
+                                   ): LongInt; cdecl;
 var
   TemplateFileName: string;
   ActionName: string;
@@ -332,18 +415,194 @@ begin
   TempAction.ActionOptions.ActionEnabled := AActionEnabled;
   TempAction.ActionOptions.ActionCondition := ActionCondition;
 
-  //exec app stuff   ////////////////////////////// all these should be read from params
-  TempAction.ExecAppOptions.PathToApp := 'dummy_path';
-  TempAction.ExecAppOptions.AppStdIn := '';
-  TempAction.ExecAppOptions.CurrentDir := '';
-  TempAction.ExecAppOptions.ListOfParams := '';
-  TempAction.ExecAppOptions.UseInheritHandles := uihNo;
-  TempAction.ExecAppOptions.WaitForApp := False;
+  //exec app stuff
+  SetPointedContentToString(@string(PWideChar(AExecAppOptions^.PathToApp))[1], TempAction.ExecAppOptions.PathToApp);
+  SetPointedContentToString(@string(PWideChar(AExecAppOptions^.ListOfParams))[1], TempAction.ExecAppOptions.ListOfParams);
+  TempAction.ExecAppOptions.WaitForApp := AExecAppOptions^.WaitForApp;
+  SetPointedContentToString(@string(PWideChar(AExecAppOptions^.AppStdIn))[1], TempAction.ExecAppOptions.AppStdIn);
+  SetPointedContentToString(@string(PWideChar(AExecAppOptions^.CurrentDir))[1], TempAction.ExecAppOptions.CurrentDir);
+  TempAction.ExecAppOptions.UseInheritHandles := AExecAppOptions^.UseInheritHandles;
 
   AddActionToTemplate(TemplateFileName, TempAction);
   Result := 0;
 end;
 
+
+function Add_FindControl_ActionToTemplate(ATemplateFileName: Pointer;
+
+                                        AActionName: Pointer;
+                                        AAction: TClkAction;
+                                        AActionTimeout: LongInt; //ms
+                                        AActionEnabled: Boolean;
+                                        AActionCondition: Pointer;
+
+                                        AFindControlOptions: PClkFindControlOptionsAPI
+
+                                       ): LongInt;
+var
+  TemplateFileName: string;
+  ActionName: string;
+  ActionCondition: string;
+  TempAction: TClkActionRec;
+begin
+  if InMemFS = nil then
+  begin
+    Result := -1;
+    Exit;
+  end;
+
+  SetPointedContentToString(@string(PWideChar(ATemplateFileName))[1], TemplateFileName);
+  SetPointedContentToString(@string(PWideChar(AActionName))[1], ActionName);
+  SetPointedContentToString(@string(PWideChar(AActionCondition))[1], ActionCondition);
+
+  TempAction.ActionOptions.ActionName := ActionName;
+  TempAction.ActionOptions.Action := AAction;
+  TempAction.ActionOptions.ActionTimeout := AActionTimeout;
+  TempAction.ActionOptions.ActionEnabled := AActionEnabled;
+  TempAction.ActionOptions.ActionCondition := ActionCondition;
+
+  //find control stuff
+  TempAction.FindControlOptions.MatchCriteria.WillMatchText := AFindControlOptions^.MatchCriteria.WillMatchText;
+  TempAction.FindControlOptions.MatchCriteria.WillMatchClassName := AFindControlOptions^.MatchCriteria.WillMatchClassName;
+  TempAction.FindControlOptions.MatchCriteria.WillMatchBitmapText := AFindControlOptions^.MatchCriteria.WillMatchBitmapText;
+  TempAction.FindControlOptions.MatchCriteria.WillMatchBitmapFiles := AFindControlOptions^.MatchCriteria.WillMatchBitmapFiles;
+  TempAction.FindControlOptions.MatchCriteria.SearchForControlMode := AFindControlOptions^.MatchCriteria.SearchForControlMode;
+
+  TempAction.FindControlOptions.AllowToFail := AFindControlOptions^.AllowToFail;
+  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.MatchText))[1], TempAction.FindControlOptions.MatchText);
+  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.MatchClassName))[1], TempAction.FindControlOptions.MatchClassName);
+  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.MatchTextSeparator))[1], TempAction.FindControlOptions.MatchTextSeparator);
+  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.MatchClassNameSeparator))[1], TempAction.FindControlOptions.MatchClassNameSeparator);
+  SetLength(TempAction.FindControlOptions.MatchBitmapText, 0);
+  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.MatchBitmapFiles))[1], TempAction.FindControlOptions.MatchBitmapFiles);
+  TempAction.FindControlOptions.MatchBitmapAlgorithm := AFindControlOptions^.MatchBitmapAlgorithm;
+
+  TempAction.FindControlOptions.MatchBitmapAlgorithmSettings := AFindControlOptions^.MatchBitmapAlgorithmSettings;
+  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.InitialRectange.Left))[1], TempAction.FindControlOptions.InitialRectange.Left);
+  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.InitialRectange.Top))[1], TempAction.FindControlOptions.InitialRectange.Top);
+  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.InitialRectange.Right))[1], TempAction.FindControlOptions.InitialRectange.Right);
+  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.InitialRectange.Bottom))[1], TempAction.FindControlOptions.InitialRectange.Bottom);
+  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.InitialRectange.LeftOffset))[1], TempAction.FindControlOptions.InitialRectange.LeftOffset);
+  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.InitialRectange.TopOffset))[1], TempAction.FindControlOptions.InitialRectange.TopOffset);
+  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.InitialRectange.RightOffset))[1], TempAction.FindControlOptions.InitialRectange.RightOffset);
+  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.InitialRectange.BottomOffset))[1], TempAction.FindControlOptions.InitialRectange.BottomOffset);
+
+  TempAction.FindControlOptions.UseWholeScreen := AFindControlOptions^.UseWholeScreen;
+  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.ColorError))[1], TempAction.FindControlOptions.ColorError);
+  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.AllowedColorErrorCount))[1], TempAction.FindControlOptions.AllowedColorErrorCount);
+  TempAction.FindControlOptions.WaitForControlToGoAway := AFindControlOptions^.WaitForControlToGoAway;
+  TempAction.FindControlOptions.StartSearchingWithCachedControl := AFindControlOptions^.StartSearchingWithCachedControl;
+  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.CachedControlLeft))[1], TempAction.FindControlOptions.CachedControlLeft);
+  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.CachedControlTop))[1], TempAction.FindControlOptions.CachedControlTop);
+
+  AddActionToTemplate(TemplateFileName, TempAction);
+  Result := 0;
+end;
+
+
+function AddFindControlActionToTemplate(ATemplateFileName: Pointer;
+
+                                        AActionName: Pointer;
+                                        AActionTimeout: LongInt; //ms
+                                        AActionEnabled: Boolean;
+                                        AActionCondition: Pointer;
+
+                                        AFindControlOptions: PClkFindControlOptionsAPI
+
+                                       ): LongInt; cdecl;
+begin
+  Result := Add_FindControl_ActionToTemplate(ATemplateFileName, AActionName, acFindControl, AActionTimeout, AActionEnabled, AActionCondition, AFindControlOptions);
+end;
+
+
+function AddFindSubControlActionToTemplate(ATemplateFileName: Pointer;
+
+                                           AActionName: Pointer;
+                                           AActionTimeout: LongInt; //ms
+                                           AActionEnabled: Boolean;
+                                           AActionCondition: Pointer;
+
+                                           AFindControlOptions: PClkFindControlOptionsAPI
+
+                                          ): LongInt; cdecl;
+begin
+  Result := Add_FindControl_ActionToTemplate(ATemplateFileName, AActionName, acFindSubControl, AActionTimeout, AActionEnabled, AActionCondition, AFindControlOptions);
+end;
+
+
+function AddFontProfileToFindSubControlActionInTemplate(ATemplateFileName: string; ActionIndex: Integer; AFindControlMatchBitmapText: TClkFindControlMatchBitmapText): Integer;
+var
+  ClkActions: TClkActionsRecArr;
+  MemStream: TMemoryStream;
+  n: Integer;
+begin
+  Result := 0;
+  if not InMemFS.FileExistsInMem(ATemplateFileName) then
+    CreateNewTemplateStr(ATemplateFileName);
+
+  MemStream := TMemoryStream.Create;
+  try
+    InMemFS.LoadFileFromMemToStream(ATemplateFileName, MemStream);
+    MemStream.Position := 0;
+
+    GetTemplateContentFromMemoryStream(ClkActions, MemStream);
+
+    if (ActionIndex < 0) or (ActionIndex > Length(ClkActions) - 1) then
+    begin
+      Result := -2;
+      Exit;
+    end;
+
+    n := Length(ClkActions[ActionIndex].FindControlOptions.MatchBitmapText);
+    SetLength(ClkActions[ActionIndex].FindControlOptions.MatchBitmapText, n + 1);
+    ClkActions[ActionIndex].FindControlOptions.MatchBitmapText[n] := AFindControlMatchBitmapText;
+
+    MemStream.Clear;
+    GetTemplateContentAsMemoryStream(ClkActions, MemStream);
+    InMemFS.SaveFileToMem(ATemplateFileName, MemStream.Memory, MemStream.Size);
+  finally
+    MemStream.Free;
+  end;
+end;
+
+
+function AddFontProfileToFindSubControlAction(ATemplateFileName: Pointer;
+                                              AActionIndex: LongInt;
+                                              AFindControlMatchBitmapText: PClkFindControlMatchBitmapTextAPI
+                                             ): LongInt; cdecl;
+var
+  TemplateFileName: string;
+  FindControlMatchBitmapText: TClkFindControlMatchBitmapText;
+begin
+  if InMemFS = nil then
+  begin
+    Result := -1;
+    Exit;
+  end;
+
+  SetPointedContentToString(@string(PWideChar(ATemplateFileName))[1], TemplateFileName);
+
+  if not InMemFS.FileExistsInMem(TemplateFileName) then
+  begin
+    Result := -1;
+    Exit;
+  end;
+
+  SetPointedContentToString(@string(PWideChar(AFindControlMatchBitmapText^.ForegroundColor))[1], FindControlMatchBitmapText.ForegroundColor);
+  SetPointedContentToString(@string(PWideChar(AFindControlMatchBitmapText^.BackgroundColor))[1], FindControlMatchBitmapText.BackgroundColor);
+  SetPointedContentToString(@string(PWideChar(AFindControlMatchBitmapText^.FontName))[1], FindControlMatchBitmapText.FontName);
+  FindControlMatchBitmapText.FontSize := AFindControlMatchBitmapText^.FontSize;
+  FindControlMatchBitmapText.Bold := AFindControlMatchBitmapText^.Bold;
+  FindControlMatchBitmapText.Italic := AFindControlMatchBitmapText^.Italic;
+  FindControlMatchBitmapText.Underline := AFindControlMatchBitmapText^.Underline;
+  FindControlMatchBitmapText.StrikeOut := AFindControlMatchBitmapText^.StrikeOut;
+  FindControlMatchBitmapText.FontQuality := AFindControlMatchBitmapText^.FontQuality;
+  FindControlMatchBitmapText.FontQualityUsesReplacement := AFindControlMatchBitmapText^.FontQualityUsesReplacement;
+  SetPointedContentToString(@string(PWideChar(AFindControlMatchBitmapText^.FontQualityReplacement))[1], FindControlMatchBitmapText.FontQualityReplacement);
+  SetPointedContentToString(@string(PWideChar(AFindControlMatchBitmapText^.ProfileName))[1], FindControlMatchBitmapText.ProfileName);
+
+  Result := AddFontProfileToFindSubControlActionInTemplate(TemplateFileName, AActionIndex, FindControlMatchBitmapText);
+end;
 
 
 function ExecuteRemoteActionAtIndex(AActionIndex, AStackLevel: Integer; AVarReplacements: TStringList): Boolean;
@@ -381,7 +640,7 @@ begin
 end;
 
 
-function PrepareFilesInServer(ATemplateFileName, AResponse: Pointer): Integer; cdecl;
+function PrepareFilesInServer(ATemplateFileName, AResponse: Pointer): LongInt; cdecl;
 const
   CStackLevel: Integer = 0;  //Load only the main file. The others should be automatically handled by server.
 var
@@ -428,13 +687,13 @@ begin
 end;
 
 
-function ExecuteActionAtIndex(AActionIndex, AStackLevel: Integer): Boolean; cdecl;
+function ExecuteActionAtIndex(AActionIndex, AStackLevel: LongInt): Boolean; cdecl;
 begin
   Result := ExecuteRemoteActionAtIndex(AActionIndex, AStackLevel, FAllVarReplacements);
 end;
 
 
-function GetListOfFilesFromClientInMem(AResponse: Pointer): Integer; cdecl;
+function GetListOfFilesFromClientInMem(AResponse: Pointer): LongInt; cdecl;
 var
   ListOfFiles: TStringList;
 begin
@@ -453,7 +712,7 @@ begin
 end;
 
 
-function GetTemplateContentFromClientInMemAsString(ATemplateFileName, AResponse: Pointer): Integer; cdecl;
+function GetTemplateContentFromClientInMemAsString(ATemplateFileName, AResponse: Pointer): LongInt; cdecl;
 var
   FileContent: TStringList;
   TemplateFileName: string;
@@ -499,9 +758,11 @@ exports
   CreateNewTemplate,
   AddClickActionToTemplate,
   AddExecAppActionToTemplate,
+  AddFindControlActionToTemplate,
+  AddFindSubControlActionToTemplate,
 
-  //AddFindControlActionToTemplate(TemplateName, Action);
-  //AddFontProfileToFindControlAction(TemplateName, ActionIndex, Profile);
+
+  AddFontProfileToFindSubControlAction,
 
   PrepareFilesInServer,
   ExecuteActionAtIndex,

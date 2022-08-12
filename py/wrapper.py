@@ -23,7 +23,10 @@
 import sys
 import ctypes
 import ctypes.wintypes  #without importing wintypes, python crashes when calling functions like TestConnectionToServerFunc
-from ctypes.wintypes import LPCSTR, LPCWSTR, BYTE, BOOLEAN, LARGE_INTEGER
+from ctypes.wintypes import LPCSTR, LPCWSTR, BYTE, BOOLEAN, LONG
+from UIClickerTypes import *
+from UIClickerTypes import TClickOptions
+
 DllHandle = ctypes.CDLL("..\\ClickerClient\\ClickerClient.dll")  #CDLL is used for cdecl.   WinDLL is used for stdcall (and uses WINFUNCTYPE).
 
 CMaxSharedStringLength = 10 * 1048576; #10MB
@@ -52,56 +55,70 @@ def GetSetServerAddress():
 
        
 def GetGetServerAddress():
-    GetServerAddressProto = ctypes.CFUNCTYPE(LARGE_INTEGER, ctypes.c_char_p)
+    GetServerAddressProto = ctypes.CFUNCTYPE(LONG, ctypes.c_char_p)
     GetServerAddressParams = (1, "AResponse", 0),
     GetServerAddressFuncRes = GetServerAddressProto(("GetServerAddress", DllHandle), GetServerAddressParams)
     return GetServerAddressFuncRes
 
 
 def GetTestConnectionToServerAddress():
-    TestConnectionToServerProto = ctypes.CFUNCTYPE(LARGE_INTEGER, ctypes.c_char_p)
+    TestConnectionToServerProto = ctypes.CFUNCTYPE(LONG, ctypes.c_char_p)
     TestConnectionToServerParams = (1, "AResponse", 0),
     TestConnectionToServerFuncRes = TestConnectionToServerProto(("TestConnectionToServer", DllHandle), TestConnectionToServerParams)
     return TestConnectionToServerFuncRes
 
 
 def GetCreateNewTemplate():
-    CreateNewTemplateProto = ctypes.CFUNCTYPE(LARGE_INTEGER, LPCWSTR)
+    CreateNewTemplateProto = ctypes.CFUNCTYPE(LONG, LPCWSTR)
     CreateNewTemplateParams = (1, "ATemplateFileName", 0),
     CreateNewTemplateFuncRes = CreateNewTemplateProto(("CreateNewTemplate", DllHandle), CreateNewTemplateParams)
     return CreateNewTemplateFuncRes
     
         
 def GetAddClickActionToTemplate():
-    AddClickActionToTemplateProto = ctypes.CFUNCTYPE(LARGE_INTEGER, LPCWSTR, LPCWSTR, LARGE_INTEGER, BOOLEAN, LPCWSTR)
-    AddClickActionToTemplateParams = (1, "ATemplateFileName", 0), (1, "AActionName", 0), (1, "AActionTimeout", 0), (1, "AActionEnabled", 0), (1, "AActionCondition", 0),
+    AddClickActionToTemplateProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, LPCWSTR, LONG, BOOLEAN, LPCWSTR, PClickOptions)
+    AddClickActionToTemplateParams = (1, "ATemplateFileName", 0), (1, "AActionName", 0), (1, "AActionTimeout", 0), (1, "AActionEnabled", 0), (1, "AActionCondition", 0), (1, "AClickOptions", 0),
     AddClickActionToTemplateFuncRes = AddClickActionToTemplateProto(("AddClickActionToTemplate", DllHandle), AddClickActionToTemplateParams)
     return AddClickActionToTemplateFuncRes
 
-       
+
 def GetAddExecAppActionToTemplate():
-    AddExecAppActionToTemplateProto = ctypes.CFUNCTYPE(LARGE_INTEGER, LPCWSTR, LPCWSTR, LARGE_INTEGER, BOOLEAN, LPCWSTR)
-    AddExecAppActionToTemplateParams = (1, "ATemplateFileName", 0), (1, "AActionName", 0), (1, "AActionTimeout", 0), (1, "AActionEnabled", 0), (1, "AActionCondition", 0),
+    AddExecAppActionToTemplateProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, LPCWSTR, LONG, BOOLEAN, LPCWSTR, PExecAppOptions)
+    AddExecAppActionToTemplateParams = (1, "ATemplateFileName", 0), (1, "AActionName", 0), (1, "AActionTimeout", 0), (1, "AActionEnabled", 0), (1, "AActionCondition", 0), (1, "AExecAppOptions", 0),
     AddExecAppActionToTemplateFuncRes = AddExecAppActionToTemplateProto(("AddExecAppActionToTemplate", DllHandle), AddExecAppActionToTemplateParams)
     return AddExecAppActionToTemplateFuncRes
 
-        
+
+def GetAddFindControlActionToTemplate():
+    AddFindControlActionToTemplateProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, LPCWSTR, LONG, BOOLEAN, LPCWSTR, PFindControlOptions)
+    AddFindControlActionToTemplateParams = (1, "ATemplateFileName", 0), (1, "AActionName", 0), (1, "AActionTimeout", 0), (1, "AActionEnabled", 0), (1, "AActionCondition", 0), (1, "AFindControlOptions", 0),
+    AddFindControlActionToTemplateFuncRes = AddFindControlActionToTemplateProto(("AddFindControlActionToTemplate", DllHandle), AddFindControlActionToTemplateParams)
+    return AddFindControlActionToTemplateFuncRes
+    
+    
+def GetAddFontProfileToFindSubControlAction():
+    AddFontProfileToFindSubControlActionProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, LONG, PClkFindControlMatchBitmapText)
+    AddFontProfileToFindSubControlActionParams = (1, "ATemplateFileName", 0), (1, "AActionIndex", 0), (1, "AFindControlMatchBitmapText", 0),
+    AddFontProfileToFindSubControlActionFuncRes = AddFontProfileToFindSubControlActionProto(("AddFontProfileToFindSubControlAction", DllHandle), AddFontProfileToFindSubControlActionParams)
+    return AddFontProfileToFindSubControlActionFuncRes
+
+
 def GetPrepareFilesInServer():
-    PrepareFilesInServerProto = ctypes.CFUNCTYPE(LARGE_INTEGER, LPCWSTR, ctypes.c_char_p)
+    PrepareFilesInServerProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, ctypes.c_char_p)
     PrepareFilesInServerParams = (1, "ATemplateFileName", 0), (1, "AResponse", 0),
     PrepareFilesInServerFuncRes = PrepareFilesInServerProto(("PrepareFilesInServer", DllHandle), PrepareFilesInServerParams)
     return PrepareFilesInServerFuncRes
 
 
 def GetGetListOfFilesFromClientInMem():
-    GetListOfFilesFromClientInMemProto = ctypes.CFUNCTYPE(LARGE_INTEGER, ctypes.c_char_p)
+    GetListOfFilesFromClientInMemProto = ctypes.CFUNCTYPE(LONG, ctypes.c_char_p)
     GetListOfFilesFromClientInMemParams = (1, "AResponse", 0),
     GetListOfFilesFromClientInMemFuncRes = GetListOfFilesFromClientInMemProto(("GetListOfFilesFromClientInMem", DllHandle), GetListOfFilesFromClientInMemParams)
     return GetListOfFilesFromClientInMemFuncRes
-    
+
 
 def GetGetTemplateContentFromClientInMemAsString():
-    GetTemplateContentFromClientInMemAsStringProto = ctypes.CFUNCTYPE(LARGE_INTEGER, LPCWSTR, ctypes.c_char_p)
+    GetTemplateContentFromClientInMemAsStringProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, ctypes.c_char_p)
     GetTemplateContentFromClientInMemAsStringParams = (1, "ATemplateFileName", 0), (1, "AResponse", 0),
     GetTemplateContentFromClientInMemAsStringFuncRes = GetTemplateContentFromClientInMemAsStringProto(("GetTemplateContentFromClientInMemAsString", DllHandle), GetTemplateContentFromClientInMemAsStringParams)
     return GetTemplateContentFromClientInMemAsStringFuncRes
@@ -116,8 +133,13 @@ class TDllFunctions:
         self.GetServerAddressFunc = GetGetServerAddress()
         self.TestConnectionToServerFunc = GetTestConnectionToServerAddress()
         self.CreateNewTemplateFunc = GetCreateNewTemplate()
+        
         self.AddClickActionToTemplateFunc = GetAddClickActionToTemplate()
         self.AddExecAppActionToTemplateFunc = GetAddExecAppActionToTemplate()
+        self.AddFindControlActionToTemplateFunc = GetAddFindControlActionToTemplate()
+        
+        self.AddFontProfileToFindSubControlActionFunc = GetAddFontProfileToFindSubControlAction()
+        
         self.PrepareFilesInServerFunc = GetPrepareFilesInServer()
         self.GetListOfFilesFromClientInMemFunc = GetGetListOfFilesFromClientInMem()
         self.GetTemplateContentFromClientInMemAsStringFunc = GetGetTemplateContentFromClientInMemAsString()
@@ -177,21 +199,37 @@ class TDllFunctions:
             return 'AV on CreateNewTemplate'
     
     
-    def AddClickActionToTemplate(self, ATemplateFileName, AActionName, AActionTimeout, AActionEnabled, AActionCondition):
+    def AddClickActionToTemplate(self, ATemplateFileName, AActionName, AActionTimeout, AActionEnabled, AActionCondition, AClickOptions):
         try:
-            AddClickActionToTemplateResult = self.AddClickActionToTemplateFunc(ATemplateFileName, AActionName, AActionTimeout, AActionEnabled, AActionCondition)  #sending PWideChar, and converting to ANSI at dll
+            AddClickActionToTemplateResult = self.AddClickActionToTemplateFunc(ATemplateFileName, AActionName, AActionTimeout, AActionEnabled, AActionCondition, AClickOptions)  #sending PWideChar, and converting to ANSI at dll
             return AddClickActionToTemplateResult
         except:
             return 'AV on AddClickActionToTemplate'
     
     
-    def AddExecAppActionToTemplate(self, ATemplateFileName, AActionName, AActionTimeout, AActionEnabled, AActionCondition):
+    def AddExecAppActionToTemplate(self, ATemplateFileName, AActionName, AActionTimeout, AActionEnabled, AActionCondition, AExecAppOptions):
         try:
-            AddExecAppActionToTemplateResult = self.AddExecAppActionToTemplateFunc(ATemplateFileName, AActionName, AActionTimeout, AActionEnabled, AActionCondition)  #sending PWideChar, and converting to ANSI at dll
+            AddExecAppActionToTemplateResult = self.AddExecAppActionToTemplateFunc(ATemplateFileName, AActionName, AActionTimeout, AActionEnabled, AActionCondition, AExecAppOptions)  #sending PWideChar, and converting to ANSI at dll
             return AddExecAppActionToTemplateResult
         except:
             return 'AV on AddExecAppActionToTemplate'
-    
+
+
+    def AddFindControlActionToTemplate(self, ATemplateFileName, AActionName, AActionTimeout, AActionEnabled, AActionCondition, AFindControlOptions):
+        try:
+            AddFindControlActionToTemplateResult = self.AddFindControlActionToTemplateFunc(ATemplateFileName, AActionName, AActionTimeout, AActionEnabled, AActionCondition, AFindControlOptions)  #sending PWideChar, and converting to ANSI at dll
+            return AddFindControlActionToTemplateResult
+        except:
+            return 'AV on AddFindControlActionToTemplate'
+            
+            
+    def AddFontProfileToFindSubControlAction(self, ATemplateFileName, AActionIndex, AFindControlMatchBitmapText):
+        try:
+            AddFontProfileToFindSubControlActionResult = self.AddFontProfileToFindSubControlActionFunc(ATemplateFileName, AActionIndex, AFindControlMatchBitmapText)  #sending PWideChar, and converting to ANSI at dll
+            return AddFontProfileToFindSubControlActionResult
+        except:
+            return 'AV on AddFontProfileToFindSubControlAction'
+
     
     def PrepareFilesInServer(self, ATemplateFileName):
         try:
@@ -246,9 +284,44 @@ try:
     print("CreateNewTemplate: ", DllFuncs.CreateNewTemplate('VerifyClicking.clktmpl')) #creates a new template in dll's in-mem file system
     print("CreateNewTemplate: ", DllFuncs.CreateNewTemplate('VerifyClicking.clktmpl')) #the second call returns 1, because the file already exists
     
-    print("AddClickActionToTemplate: ", DllFuncs.AddClickActionToTemplate('VerifyClicking.clktmpl', 'First', 0, True, '$a$==$b$'))
+    ClickOptions = GetDefaultClickOptions()
+    ClickOptions.XClickPointReference = TXClickPointReference.xrefVar
+    ClickOptions.YClickPointReference = TYClickPointReference.yrefVar
+    ClickOptions.XClickPointVar = '$SrcLeft$'
+    ClickOptions.YClickPointVar = '$SrcTop$'
+    ClickOptions.XOffset = '$XOffset$'
+    ClickOptions.YOffset = '$YOffset$'
+    print("AddClickActionToTemplate: ", DllFuncs.AddClickActionToTemplate('VerifyClicking.clktmpl', 'First', 0, True, '$a$==$b$', ctypes.byref(ClickOptions)))
     
-    print("AddExecAppActionToTemplate: ", DllFuncs.AddExecAppActionToTemplate('VerifyClicking.clktmpl', 'Second', 0, True, '$a$==$b$'))
+    ExecAppOptions = GetDefaultExecAppOptions()
+    ExecAppOptions.PathToApp = 'C:\\Windows\\Notepad.exe'
+    ExecAppOptions.ListOfParams = 'SomeUnknownFile.txt'
+    ExecAppOptions.WaitForApp = True
+    ExecAppOptions.AppStdIn = 'NothingHere'
+    ExecAppOptions.CurrentDir = 'C:\\Windows'
+    ExecAppOptions.UseInheritHandles = TExecAppUseInheritHandles.uihYes
+    print("AddExecAppActionToTemplate: ", DllFuncs.AddExecAppActionToTemplate('VerifyClicking.clktmpl', 'Second', 0, True, '$a$==$b$', ctypes.byref(ExecAppOptions)))
+    
+    FindControlOptions = GetDefaultFindControlOptions()
+    print("AddFindControlActionToTemplate: ", DllFuncs.AddFindControlActionToTemplate('VerifyClicking.clktmpl', 'Third', 0, True, '$a$<>$b$', ctypes.byref(FindControlOptions)))
+    
+    
+    MatchBitmapText = GetDefaultMatchBitmapText()
+    print("AddFontProfileToFindSubControlAction: ", DllFuncs.AddFontProfileToFindSubControlAction('VerifyClicking.clktmpl', 2, ctypes.byref(MatchBitmapText)))
+    
+    MatchBitmapText.ForegroundColor = 'FF8800'
+    MatchBitmapText.BackgroundColor = '223344'
+    MatchBitmapText.FontName = 'Segoe UI'
+    MatchBitmapText.FontSize = 9
+    MatchBitmapText.Bold = True
+    MatchBitmapText.Italic = True
+    MatchBitmapText.Underline = False
+    MatchBitmapText.StrikeOut = True
+    MatchBitmapText.FontQuality = TFontQuality.fqCleartype
+    MatchBitmapText.FontQualityUsesReplacement = True
+    MatchBitmapText.FontQualityReplacement = '$TheQuality'
+    MatchBitmapText.ProfileName = 'Second profile'
+    print("AddFontProfileToFindSubControlAction: ", DllFuncs.AddFontProfileToFindSubControlAction('VerifyClicking.clktmpl', 2, ctypes.byref(MatchBitmapText)))
     
     print("PrepareFilesInServer: ", DllFuncs.PrepareFilesInServer('VerifyClicking.clktmpl'))
     

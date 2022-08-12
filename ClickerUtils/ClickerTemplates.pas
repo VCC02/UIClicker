@@ -853,6 +853,10 @@ begin             //Substructures, which do not contain pointers, can be directl
   ADest.FindControlOptions.AllowedColorErrorCount := ASrc.FindControlOptions.AllowedColorErrorCount;
   ADest.FindControlOptions.WaitForControlToGoAway := ASrc.FindControlOptions.WaitForControlToGoAway;
 
+  ADest.FindControlOptions.StartSearchingWithCachedControl := ASrc.FindControlOptions.StartSearchingWithCachedControl;
+  ADest.FindControlOptions.CachedControlLeft := ASrc.FindControlOptions.CachedControlLeft;
+  ADest.FindControlOptions.CachedControlTop := ASrc.FindControlOptions.CachedControlTop;
+
   SetLength(ASrc.FindControlOptions.MatchBitmapText, Length(ADest.FindControlOptions.MatchBitmapText));
 
   for i := 0 to Length(ADest.FindControlOptions.MatchBitmapText) - 1 do

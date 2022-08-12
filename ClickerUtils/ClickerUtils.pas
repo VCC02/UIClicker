@@ -61,7 +61,7 @@ const
   CClkActionStr: array[Low(TClkAction)..High(TClkAction)] of string = ('Click', 'ExecApp', 'FindControl', 'FindSubControl', 'SetControlText', 'CallTemplate', 'Sleep', 'SetVar', 'WindowOperations');
 
   CClickType_Click = 0;
-  CClickType_DoubleClick = 1;
+  CClickType_Drag = 1;
 
 
 type
@@ -90,7 +90,7 @@ type
     Count: Integer;
     LeaveMouse: Boolean;
     MoveWithoutClick: Boolean;
-    ClickType: Integer;    //see CClickType_Click and CClickType_DoubleClick
+    ClickType: Integer;    //see CClickType_Click and CClickType_Drag
     XClickPointReferenceDest: TXClickPointReference;
     YClickPointReferenceDest: TYClickPointReference;
     XClickPointVarDest: string;
