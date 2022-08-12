@@ -365,6 +365,30 @@ begin
 end;
 
 
+procedure SetBasicActionOptions(ATemplateFileName: Pointer;
+                                AActionName: Pointer;
+                                Action: TClkAction;
+                                AActionTimeout: LongInt; //ms
+                                AActionEnabled: Boolean;
+                                AActionCondition: Pointer;
+                                var ATempAction: TClkActionRec;
+                                var TemplateFileName: string);
+var
+  ActionName: string;
+  ActionCondition: string;
+begin
+  SetPointedContentToString(@string(PWideChar(ATemplateFileName))[1], TemplateFileName);
+  SetPointedContentToString(@string(PWideChar(AActionName))[1], ActionName);
+  SetPointedContentToString(@string(PWideChar(AActionCondition))[1], ActionCondition);
+
+  ATempAction.ActionOptions.ActionName := ActionName;
+  ATempAction.ActionOptions.Action := Action;
+  ATempAction.ActionOptions.ActionTimeout := AActionTimeout;
+  ATempAction.ActionOptions.ActionEnabled := AActionEnabled;
+  ATempAction.ActionOptions.ActionCondition := ActionCondition;
+end;
+
+
 function AddClickActionToTemplate(ATemplateFileName: Pointer;
 
                                   AActionName: Pointer;
@@ -377,8 +401,6 @@ function AddClickActionToTemplate(ATemplateFileName: Pointer;
                                   ): LongInt; cdecl;
 var
   TemplateFileName: string;
-  ActionName: string;
-  ActionCondition: string;
   TempAction: TClkActionRec;
 begin
   if InMemFS = nil then
@@ -387,15 +409,7 @@ begin
     Exit;
   end;
 
-  SetPointedContentToString(@string(PWideChar(ATemplateFileName))[1], TemplateFileName);
-  SetPointedContentToString(@string(PWideChar(AActionName))[1], ActionName);
-  SetPointedContentToString(@string(PWideChar(AActionCondition))[1], ActionCondition);
-
-  TempAction.ActionOptions.ActionName := ActionName;
-  TempAction.ActionOptions.Action := acClick;
-  TempAction.ActionOptions.ActionTimeout := AActionTimeout;
-  TempAction.ActionOptions.ActionEnabled := AActionEnabled;
-  TempAction.ActionOptions.ActionCondition := ActionCondition;
+  SetBasicActionOptions(ATemplateFileName, AActionName, acClick, AActionTimeout, AActionEnabled, AActionCondition, TempAction, TemplateFileName);
 
   //click stuff
   TempAction.ClickOptions.XClickPointReference := AClickOptions^.XClickPointReference; //xrefLeft;
@@ -437,8 +451,6 @@ function AddExecAppActionToTemplate(ATemplateFileName: Pointer;
                                    ): LongInt; cdecl;
 var
   TemplateFileName: string;
-  ActionName: string;
-  ActionCondition: string;
   TempAction: TClkActionRec;
 begin
   if InMemFS = nil then
@@ -447,15 +459,7 @@ begin
     Exit;
   end;
 
-  SetPointedContentToString(@string(PWideChar(ATemplateFileName))[1], TemplateFileName);
-  SetPointedContentToString(@string(PWideChar(AActionName))[1], ActionName);
-  SetPointedContentToString(@string(PWideChar(AActionCondition))[1], ActionCondition);
-
-  TempAction.ActionOptions.ActionName := ActionName;
-  TempAction.ActionOptions.Action := acExecApp;
-  TempAction.ActionOptions.ActionTimeout := AActionTimeout;
-  TempAction.ActionOptions.ActionEnabled := AActionEnabled;
-  TempAction.ActionOptions.ActionCondition := ActionCondition;
+  SetBasicActionOptions(ATemplateFileName, AActionName, acExecApp, AActionTimeout, AActionEnabled, AActionCondition, TempAction, TemplateFileName);
 
   //exec app stuff
   SetPointedContentToString(@string(PWideChar(AExecAppOptions^.PathToApp))[1], TempAction.ExecAppOptions.PathToApp);
@@ -483,8 +487,6 @@ function Add_FindControl_ActionToTemplate(ATemplateFileName: Pointer;
                                        ): LongInt;
 var
   TemplateFileName: string;
-  ActionName: string;
-  ActionCondition: string;
   TempAction: TClkActionRec;
 begin
   if InMemFS = nil then
@@ -493,15 +495,7 @@ begin
     Exit;
   end;
 
-  SetPointedContentToString(@string(PWideChar(ATemplateFileName))[1], TemplateFileName);
-  SetPointedContentToString(@string(PWideChar(AActionName))[1], ActionName);
-  SetPointedContentToString(@string(PWideChar(AActionCondition))[1], ActionCondition);
-
-  TempAction.ActionOptions.ActionName := ActionName;
-  TempAction.ActionOptions.Action := AAction;
-  TempAction.ActionOptions.ActionTimeout := AActionTimeout;
-  TempAction.ActionOptions.ActionEnabled := AActionEnabled;
-  TempAction.ActionOptions.ActionCondition := ActionCondition;
+  SetBasicActionOptions(ATemplateFileName, AActionName, AAction, AActionTimeout, AActionEnabled, AActionCondition, TempAction, TemplateFileName);
 
   //find control stuff
   TempAction.FindControlOptions.MatchCriteria.WillMatchText := AFindControlOptions^.MatchCriteria.WillMatchText;
@@ -584,8 +578,6 @@ function AddSetControlTextActionToTemplate(ATemplateFileName: Pointer;
                                           ): LongInt; cdecl;
 var
   TemplateFileName: string;
-  ActionName: string;
-  ActionCondition: string;
   TempAction: TClkActionRec;
 begin
   if InMemFS = nil then
@@ -594,15 +586,7 @@ begin
     Exit;
   end;
 
-  SetPointedContentToString(@string(PWideChar(ATemplateFileName))[1], TemplateFileName);
-  SetPointedContentToString(@string(PWideChar(AActionName))[1], ActionName);
-  SetPointedContentToString(@string(PWideChar(AActionCondition))[1], ActionCondition);
-
-  TempAction.ActionOptions.ActionName := ActionName;
-  TempAction.ActionOptions.Action := acSetControlText;
-  TempAction.ActionOptions.ActionTimeout := AActionTimeout;
-  TempAction.ActionOptions.ActionEnabled := AActionEnabled;
-  TempAction.ActionOptions.ActionCondition := ActionCondition;
+  SetBasicActionOptions(ATemplateFileName, AActionName, acSetControlText, AActionTimeout, AActionEnabled, AActionCondition, TempAction, TemplateFileName);
 
   //set control text stuff
   SetPointedContentToString(@string(PWideChar(ASetControlTextOptions^.Text))[1], TempAction.SetTextOptions.Text);
@@ -625,8 +609,6 @@ function AddCallTemplateActionToTemplate(ATemplateFileName: Pointer;
                                         ): LongInt; cdecl;
 var
   TemplateFileName: string;
-  ActionName: string;
-  ActionCondition: string;
   TempAction: TClkActionRec;
 begin
   if InMemFS = nil then
@@ -635,15 +617,7 @@ begin
     Exit;
   end;
 
-  SetPointedContentToString(@string(PWideChar(ATemplateFileName))[1], TemplateFileName);
-  SetPointedContentToString(@string(PWideChar(AActionName))[1], ActionName);
-  SetPointedContentToString(@string(PWideChar(AActionCondition))[1], ActionCondition);
-
-  TempAction.ActionOptions.ActionName := ActionName;
-  TempAction.ActionOptions.Action := acCallTemplate;
-  TempAction.ActionOptions.ActionTimeout := AActionTimeout;
-  TempAction.ActionOptions.ActionEnabled := AActionEnabled;
-  TempAction.ActionOptions.ActionCondition := ActionCondition;
+  SetBasicActionOptions(ATemplateFileName, AActionName, acCallTemplate, AActionTimeout, AActionEnabled, AActionCondition, TempAction, TemplateFileName);
 
   //call template stuff
   SetPointedContentToString(@string(PWideChar(ACallTemplateOptions^.TemplateFileName))[1], TempAction.CallTemplateOptions.TemplateFileName);
@@ -667,8 +641,6 @@ function AddSleepActionToTemplate(ATemplateFileName: Pointer;
                                  ): LongInt; cdecl;
 var
   TemplateFileName: string;
-  ActionName: string;
-  ActionCondition: string;
   TempAction: TClkActionRec;
 begin
   if InMemFS = nil then
@@ -677,15 +649,7 @@ begin
     Exit;
   end;
 
-  SetPointedContentToString(@string(PWideChar(ATemplateFileName))[1], TemplateFileName);
-  SetPointedContentToString(@string(PWideChar(AActionName))[1], ActionName);
-  SetPointedContentToString(@string(PWideChar(AActionCondition))[1], ActionCondition);
-
-  TempAction.ActionOptions.ActionName := ActionName;
-  TempAction.ActionOptions.Action := acSleep;
-  TempAction.ActionOptions.ActionTimeout := AActionTimeout;
-  TempAction.ActionOptions.ActionEnabled := AActionEnabled;
-  TempAction.ActionOptions.ActionCondition := ActionCondition;
+  SetBasicActionOptions(ATemplateFileName, AActionName, acSleep, AActionTimeout, AActionEnabled, AActionCondition, TempAction, TemplateFileName);
 
   //sleep stuff
   SetPointedContentToString(@string(PWideChar(ASleepOptions^.Value))[1], TempAction.SleepOptions.Value);
@@ -707,9 +671,9 @@ function AddSetVarActionToTemplate(ATemplateFileName: Pointer;
                                   ): LongInt; cdecl;
 var
   TemplateFileName: string;
-  ActionName: string;
-  ActionCondition: string;
   TempAction: TClkActionRec;
+
+  ListOfVarNames, ListOfVarValues, ListOfVarEvalBefore: TStringList;
 begin
   if InMemFS = nil then
   begin
@@ -717,23 +681,48 @@ begin
     Exit;
   end;
 
-  SetPointedContentToString(@string(PWideChar(ATemplateFileName))[1], TemplateFileName);
-  SetPointedContentToString(@string(PWideChar(AActionName))[1], ActionName);
-  SetPointedContentToString(@string(PWideChar(AActionCondition))[1], ActionCondition);
-
-  TempAction.ActionOptions.ActionName := ActionName;
-  TempAction.ActionOptions.Action := acSetVar;
-  TempAction.ActionOptions.ActionTimeout := AActionTimeout;
-  TempAction.ActionOptions.ActionEnabled := AActionEnabled;
-  TempAction.ActionOptions.ActionCondition := ActionCondition;
+  SetBasicActionOptions(ATemplateFileName, AActionName, acSetVar, AActionTimeout, AActionEnabled, AActionCondition, TempAction, TemplateFileName);
 
   //SetVar stuff
   SetPointedContentToString(@string(PWideChar(ASetVarOptions^.ListOfVarNames))[1], TempAction.SetVarOptions.ListOfVarNames);
   SetPointedContentToString(@string(PWideChar(ASetVarOptions^.ListOfVarValues))[1], TempAction.SetVarOptions.ListOfVarValues);
   SetPointedContentToString(@string(PWideChar(ASetVarOptions^.ListOfVarEvalBefore))[1], TempAction.SetVarOptions.ListOfVarEvalBefore);
 
-  AddActionToTemplate(TemplateFileName, TempAction);
   Result := 0;
+
+  ListOfVarNames := TStringList.Create;
+  ListOfVarValues := TStringList.Create;
+  ListOfVarEvalBefore := TStringList.Create;
+  try
+    ListOfVarNames.Text := TempAction.SetVarOptions.ListOfVarNames;
+    ListOfVarValues.Text := TempAction.SetVarOptions.ListOfVarValues;
+    ListOfVarEvalBefore.Text := TempAction.SetVarOptions.ListOfVarEvalBefore;
+
+    if (ListOfVarNames.Count <> ListOfVarValues.Count) or (ListOfVarNames.Count <> ListOfVarEvalBefore.Count) then
+    begin
+      Result := -1;
+
+      ListOfVarNames.Clear;
+      ListOfVarValues.Clear;
+      ListOfVarEvalBefore.Clear;
+
+      ListOfVarNames.Add('$DLL_Err_Var$');
+      ListOfVarValues.Add('The number of items from ListOfVarValues or ListOfVarEvalBefore, does not match the number of items from ListOfVarNames.');
+      ListOfVarEvalBefore.Add('0');
+
+      TempAction.SetVarOptions.ListOfVarNames := ListOfVarNames.Text;
+      TempAction.SetVarOptions.ListOfVarValues := ListOfVarValues.Text;
+      TempAction.SetVarOptions.ListOfVarEvalBefore := ListOfVarEvalBefore.Text;
+
+      //Do not exit, simply create the bad action, then let the user debug it.
+    end;
+  finally
+    ListOfVarNames.Free;
+    ListOfVarValues.Free;
+    ListOfVarEvalBefore.Free;
+  end;
+
+  AddActionToTemplate(TemplateFileName, TempAction);
 end;
 
 
@@ -749,8 +738,6 @@ function AddWindowOperationsActionToTemplate(ATemplateFileName: Pointer;
                                             ): LongInt; cdecl;
 var
   TemplateFileName: string;
-  ActionName: string;
-  ActionCondition: string;
   TempAction: TClkActionRec;
 begin
   if InMemFS = nil then
@@ -759,15 +746,7 @@ begin
     Exit;
   end;
 
-  SetPointedContentToString(@string(PWideChar(ATemplateFileName))[1], TemplateFileName);
-  SetPointedContentToString(@string(PWideChar(AActionName))[1], ActionName);
-  SetPointedContentToString(@string(PWideChar(AActionCondition))[1], ActionCondition);
-
-  TempAction.ActionOptions.ActionName := ActionName;
-  TempAction.ActionOptions.Action := acWindowOperations;
-  TempAction.ActionOptions.ActionTimeout := AActionTimeout;
-  TempAction.ActionOptions.ActionEnabled := AActionEnabled;
-  TempAction.ActionOptions.ActionCondition := ActionCondition;
+  SetBasicActionOptions(ATemplateFileName, AActionName, acWindowOperations, AActionTimeout, AActionEnabled, AActionCondition, TempAction, TemplateFileName);
 
   //Window Operations stuff
   TempAction.WindowOperationsOptions.Operation := AWindowOperationsOptions^.Operation;

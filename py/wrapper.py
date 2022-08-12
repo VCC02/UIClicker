@@ -27,170 +27,183 @@ from ctypes.wintypes import LPCSTR, LPCWSTR, BYTE, BOOLEAN, LONG
 from UIClickerTypes import *
 from UIClickerTypes import TClickOptions
 
-DllHandle = ctypes.CDLL("..\\ClickerClient\\ClickerClient.dll")  #CDLL is used for cdecl.   WinDLL is used for stdcall (and uses WINFUNCTYPE).
 
 CMaxSharedStringLength = 10 * 1048576; #10MB
 
-
-def GetInitClickerClient():
-    InitClickerClientProto = ctypes.CFUNCTYPE(None)
-    InitClickerClientParams = ()
-    InitClickerClientFuncRes = InitClickerClientProto(("InitClickerClient", DllHandle), InitClickerClientParams)
-    return InitClickerClientFuncRes
+class TDllFunctionAddresses:
+    def __init__(self):
+        self.DllHandle = ctypes.CDLL("..\\ClickerClient\\ClickerClient.dll")  #CDLL is used for cdecl.   WinDLL is used for stdcall (and uses WINFUNCTYPE).
 
 
-def GetDoneClickerClient():
-    DoneClickerClientProto = ctypes.CFUNCTYPE(None)
-    DoneClickerClientParams = ()
-    DoneClickerClientFuncRes = DoneClickerClientProto(("DoneClickerClient", DllHandle), DoneClickerClientParams)
-    return DoneClickerClientFuncRes
- 
-
-def GetSetServerAddress():
-    #SetServerAddressProto = ctypes.CFUNCTYPE(None, ctypes.c_char_p) #the SetServerAddress function returns void
-    SetServerAddressProto = ctypes.CFUNCTYPE(None, LPCWSTR)
-    SetServerAddressParams = (1, "AAddress", 0),
-    SetServerAddressFuncRes = SetServerAddressProto(("SetServerAddress", DllHandle), SetServerAddressParams)
-    return SetServerAddressFuncRes
-
-       
-def GetGetServerAddress():
-    GetServerAddressProto = ctypes.CFUNCTYPE(LONG, ctypes.c_char_p)
-    GetServerAddressParams = (1, "AResponse", 0),
-    GetServerAddressFuncRes = GetServerAddressProto(("GetServerAddress", DllHandle), GetServerAddressParams)
-    return GetServerAddressFuncRes
+    def GetInitClickerClient(self):
+        InitClickerClientProto = ctypes.CFUNCTYPE(None)
+        InitClickerClientParams = ()
+        InitClickerClientFuncRes = InitClickerClientProto(("InitClickerClient", self.DllHandle), InitClickerClientParams)
+        return InitClickerClientFuncRes
 
 
-def GetTestConnectionToServerAddress():
-    TestConnectionToServerProto = ctypes.CFUNCTYPE(LONG, ctypes.c_char_p)
-    TestConnectionToServerParams = (1, "AResponse", 0),
-    TestConnectionToServerFuncRes = TestConnectionToServerProto(("TestConnectionToServer", DllHandle), TestConnectionToServerParams)
-    return TestConnectionToServerFuncRes
+    def GetDoneClickerClient(self):
+        DoneClickerClientProto = ctypes.CFUNCTYPE(None)
+        DoneClickerClientParams = ()
+        DoneClickerClientFuncRes = DoneClickerClientProto(("DoneClickerClient", self.DllHandle), DoneClickerClientParams)
+        return DoneClickerClientFuncRes
 
 
-def GetCreateNewTemplate():
-    CreateNewTemplateProto = ctypes.CFUNCTYPE(LONG, LPCWSTR)
-    CreateNewTemplateParams = (1, "ATemplateFileName", 0),
-    CreateNewTemplateFuncRes = CreateNewTemplateProto(("CreateNewTemplate", DllHandle), CreateNewTemplateParams)
-    return CreateNewTemplateFuncRes
+    def GetSetServerAddress(self):
+        #SetServerAddressProto = ctypes.CFUNCTYPE(None, ctypes.c_char_p) #the SetServerAddress function returns void
+        SetServerAddressProto = ctypes.CFUNCTYPE(None, LPCWSTR)
+        SetServerAddressParams = (1, "AAddress", 0),
+        SetServerAddressFuncRes = SetServerAddressProto(("SetServerAddress", self.DllHandle), SetServerAddressParams)
+        return SetServerAddressFuncRes
+
+
+    def GetGetServerAddress(self):
+        GetServerAddressProto = ctypes.CFUNCTYPE(LONG, ctypes.c_char_p)
+        GetServerAddressParams = (1, "AResponse", 0),
+        GetServerAddressFuncRes = GetServerAddressProto(("GetServerAddress", self.DllHandle), GetServerAddressParams)
+        return GetServerAddressFuncRes
     
+    
+    def GetTestConnectionToServerAddress(self):
+        TestConnectionToServerProto = ctypes.CFUNCTYPE(LONG, ctypes.c_char_p)
+        TestConnectionToServerParams = (1, "AResponse", 0),
+        TestConnectionToServerFuncRes = TestConnectionToServerProto(("TestConnectionToServer", self.DllHandle), TestConnectionToServerParams)
+        return TestConnectionToServerFuncRes
+    
+    
+    def GetCreateNewTemplate(self):
+        CreateNewTemplateProto = ctypes.CFUNCTYPE(LONG, LPCWSTR)
+        CreateNewTemplateParams = (1, "ATemplateFileName", 0),
+        CreateNewTemplateFuncRes = CreateNewTemplateProto(("CreateNewTemplate", self.DllHandle), CreateNewTemplateParams)
+        return CreateNewTemplateFuncRes
         
-def GetAddClickActionToTemplate():
-    AddClickActionToTemplateProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, LPCWSTR, LONG, BOOLEAN, LPCWSTR, PClickOptions)
-    AddClickActionToTemplateParams = (1, "ATemplateFileName", 0), (1, "AActionName", 0), (1, "AActionTimeout", 0), (1, "AActionEnabled", 0), (1, "AActionCondition", 0), (1, "AClickOptions", 0),
-    AddClickActionToTemplateFuncRes = AddClickActionToTemplateProto(("AddClickActionToTemplate", DllHandle), AddClickActionToTemplateParams)
-    return AddClickActionToTemplateFuncRes
-
-
-def GetAddExecAppActionToTemplate():
-    AddExecAppActionToTemplateProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, LPCWSTR, LONG, BOOLEAN, LPCWSTR, PExecAppOptions)
-    AddExecAppActionToTemplateParams = (1, "ATemplateFileName", 0), (1, "AActionName", 0), (1, "AActionTimeout", 0), (1, "AActionEnabled", 0), (1, "AActionCondition", 0), (1, "AExecAppOptions", 0),
-    AddExecAppActionToTemplateFuncRes = AddExecAppActionToTemplateProto(("AddExecAppActionToTemplate", DllHandle), AddExecAppActionToTemplateParams)
-    return AddExecAppActionToTemplateFuncRes
-
-
-def GetAddFindControlActionToTemplate():
-    AddFindControlActionToTemplateProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, LPCWSTR, LONG, BOOLEAN, LPCWSTR, PFindControlOptions)
-    AddFindControlActionToTemplateParams = (1, "ATemplateFileName", 0), (1, "AActionName", 0), (1, "AActionTimeout", 0), (1, "AActionEnabled", 0), (1, "AActionCondition", 0), (1, "AFindControlOptions", 0),
-    AddFindControlActionToTemplateFuncRes = AddFindControlActionToTemplateProto(("AddFindControlActionToTemplate", DllHandle), AddFindControlActionToTemplateParams)
-    return AddFindControlActionToTemplateFuncRes
-
-
-def GetAddFindSubControlActionToTemplate():
-    AddFindSubControlActionToTemplateProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, LPCWSTR, LONG, BOOLEAN, LPCWSTR, PFindControlOptions)
-    AddFindSubControlActionToTemplateParams = (1, "ATemplateFileName", 0), (1, "AActionName", 0), (1, "AActionTimeout", 0), (1, "AActionEnabled", 0), (1, "AActionCondition", 0), (1, "AFindControlOptions", 0),
-    AddFindSubControlActionToTemplateFuncRes = AddFindSubControlActionToTemplateProto(("AddFindSubControlActionToTemplate", DllHandle), AddFindSubControlActionToTemplateParams)
-    return AddFindSubControlActionToTemplateFuncRes
+            
+    def GetAddClickActionToTemplate(self):
+        AddClickActionToTemplateProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, LPCWSTR, LONG, BOOLEAN, LPCWSTR, PClickOptions)
+        AddClickActionToTemplateParams = (1, "ATemplateFileName", 0), (1, "AActionName", 0), (1, "AActionTimeout", 0), (1, "AActionEnabled", 0), (1, "AActionCondition", 0), (1, "AClickOptions", 0),
+        AddClickActionToTemplateFuncRes = AddClickActionToTemplateProto(("AddClickActionToTemplate", self.DllHandle), AddClickActionToTemplateParams)
+        return AddClickActionToTemplateFuncRes
     
     
-def GetAddSetControlTextActionToTemplate():
-    AddSetControlTextActionToTemplateProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, LPCWSTR, LONG, BOOLEAN, LPCWSTR, PSetControlTextOptions)
-    AddSetControlTextActionToTemplateParams = (1, "ATemplateFileName", 0), (1, "AActionName", 0), (1, "AActionTimeout", 0), (1, "AActionEnabled", 0), (1, "AActionCondition", 0), (1, "ASetControlTextOptions", 0),
-    AddSetControlTextActionToTemplateFuncRes = AddSetControlTextActionToTemplateProto(("AddSetControlTextActionToTemplate", DllHandle), AddSetControlTextActionToTemplateParams)
-    return AddSetControlTextActionToTemplateFuncRes
-
-
-def GetAddCallTemplateActionToTemplate():
-    AddCallTemplateActionToTemplateProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, LPCWSTR, LONG, BOOLEAN, LPCWSTR, PCallTemplateOptions)
-    AddCallTemplateActionToTemplateParams = (1, "ATemplateFileName", 0), (1, "AActionName", 0), (1, "AActionTimeout", 0), (1, "AActionEnabled", 0), (1, "AActionCondition", 0), (1, "ACallTemplateOptions", 0),
-    AddCallTemplateActionToTemplateFuncRes = AddCallTemplateActionToTemplateProto(("AddCallTemplateActionToTemplate", DllHandle), AddCallTemplateActionToTemplateParams)
-    return AddCallTemplateActionToTemplateFuncRes
-
-
-def GetAddSleepActionToTemplate():
-    AddSleepActionToTemplateProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, LPCWSTR, LONG, BOOLEAN, LPCWSTR, PSleepOptions)
-    AddSleepActionToTemplateParams = (1, "ATemplateFileName", 0), (1, "AActionName", 0), (1, "AActionTimeout", 0), (1, "AActionEnabled", 0), (1, "AActionCondition", 0), (1, "ASleepOptions", 0),
-    AddSleepActionToTemplateFuncRes = AddSleepActionToTemplateProto(("AddSleepActionToTemplate", DllHandle), AddSleepActionToTemplateParams)
-    return AddSleepActionToTemplateFuncRes
-
-
-def GetAddSetVarActionToTemplate():
-    AddSetVarActionToTemplateProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, LPCWSTR, LONG, BOOLEAN, LPCWSTR, PSetVarOptions)
-    AddSetVarActionToTemplateParams = (1, "ATemplateFileName", 0), (1, "AActionName", 0), (1, "AActionTimeout", 0), (1, "AActionEnabled", 0), (1, "AActionCondition", 0), (1, "ASetVarOptions", 0),
-    AddSetVarActionToTemplateFuncRes = AddSetVarActionToTemplateProto(("AddSetVarActionToTemplate", DllHandle), AddSetVarActionToTemplateParams)
-    return AddSetVarActionToTemplateFuncRes
-
-
-def GetAddWindowOperationsActionToTemplate():
-    AddWindowOperationsActionToTemplateProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, LPCWSTR, LONG, BOOLEAN, LPCWSTR, PWindowOperationsOptions)
-    AddWindowOperationsActionToTemplateParams = (1, "ATemplateFileName", 0), (1, "AActionName", 0), (1, "AActionTimeout", 0), (1, "AActionEnabled", 0), (1, "AActionCondition", 0), (1, "AWindowOperationsOptions", 0),
-    AddWindowOperationsActionToTemplateFuncRes = AddWindowOperationsActionToTemplateProto(("AddWindowOperationsActionToTemplate", DllHandle), AddWindowOperationsActionToTemplateParams)
-    return AddWindowOperationsActionToTemplateFuncRes
-
-
-def GetAddFontProfileToFindSubControlAction():
-    AddFontProfileToFindSubControlActionProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, LONG, PClkFindControlMatchBitmapText)
-    AddFontProfileToFindSubControlActionParams = (1, "ATemplateFileName", 0), (1, "AActionIndex", 0), (1, "AFindControlMatchBitmapText", 0),
-    AddFontProfileToFindSubControlActionFuncRes = AddFontProfileToFindSubControlActionProto(("AddFontProfileToFindSubControlAction", DllHandle), AddFontProfileToFindSubControlActionParams)
-    return AddFontProfileToFindSubControlActionFuncRes
-
-
-def GetPrepareFilesInServer():
-    PrepareFilesInServerProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, ctypes.c_char_p)
-    PrepareFilesInServerParams = (1, "ATemplateFileName", 0), (1, "AResponse", 0),
-    PrepareFilesInServerFuncRes = PrepareFilesInServerProto(("PrepareFilesInServer", DllHandle), PrepareFilesInServerParams)
-    return PrepareFilesInServerFuncRes
-
-
-def GetGetListOfFilesFromClientInMem():
-    GetListOfFilesFromClientInMemProto = ctypes.CFUNCTYPE(LONG, ctypes.c_char_p)
-    GetListOfFilesFromClientInMemParams = (1, "AResponse", 0),
-    GetListOfFilesFromClientInMemFuncRes = GetListOfFilesFromClientInMemProto(("GetListOfFilesFromClientInMem", DllHandle), GetListOfFilesFromClientInMemParams)
-    return GetListOfFilesFromClientInMemFuncRes
-
-
-def GetGetTemplateContentFromClientInMemAsString():
-    GetTemplateContentFromClientInMemAsStringProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, ctypes.c_char_p)
-    GetTemplateContentFromClientInMemAsStringParams = (1, "ATemplateFileName", 0), (1, "AResponse", 0),
-    GetTemplateContentFromClientInMemAsStringFuncRes = GetTemplateContentFromClientInMemAsStringProto(("GetTemplateContentFromClientInMemAsString", DllHandle), GetTemplateContentFromClientInMemAsStringParams)
-    return GetTemplateContentFromClientInMemAsStringFuncRes
-   
+    def GetAddExecAppActionToTemplate(self):
+        AddExecAppActionToTemplateProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, LPCWSTR, LONG, BOOLEAN, LPCWSTR, PExecAppOptions)
+        AddExecAppActionToTemplateParams = (1, "ATemplateFileName", 0), (1, "AActionName", 0), (1, "AActionTimeout", 0), (1, "AActionEnabled", 0), (1, "AActionCondition", 0), (1, "AExecAppOptions", 0),
+        AddExecAppActionToTemplateFuncRes = AddExecAppActionToTemplateProto(("AddExecAppActionToTemplate", self.DllHandle), AddExecAppActionToTemplateParams)
+        return AddExecAppActionToTemplateFuncRes
+    
+    
+    def GetAddFindControlActionToTemplate(self):
+        AddFindControlActionToTemplateProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, LPCWSTR, LONG, BOOLEAN, LPCWSTR, PFindControlOptions)
+        AddFindControlActionToTemplateParams = (1, "ATemplateFileName", 0), (1, "AActionName", 0), (1, "AActionTimeout", 0), (1, "AActionEnabled", 0), (1, "AActionCondition", 0), (1, "AFindControlOptions", 0),
+        AddFindControlActionToTemplateFuncRes = AddFindControlActionToTemplateProto(("AddFindControlActionToTemplate", self.DllHandle), AddFindControlActionToTemplateParams)
+        return AddFindControlActionToTemplateFuncRes
+    
+    
+    def GetAddFindSubControlActionToTemplate(self):
+        AddFindSubControlActionToTemplateProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, LPCWSTR, LONG, BOOLEAN, LPCWSTR, PFindControlOptions)
+        AddFindSubControlActionToTemplateParams = (1, "ATemplateFileName", 0), (1, "AActionName", 0), (1, "AActionTimeout", 0), (1, "AActionEnabled", 0), (1, "AActionCondition", 0), (1, "AFindControlOptions", 0),
+        AddFindSubControlActionToTemplateFuncRes = AddFindSubControlActionToTemplateProto(("AddFindSubControlActionToTemplate", self.DllHandle), AddFindSubControlActionToTemplateParams)
+        return AddFindSubControlActionToTemplateFuncRes
         
+        
+    def GetAddSetControlTextActionToTemplate(self):
+        AddSetControlTextActionToTemplateProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, LPCWSTR, LONG, BOOLEAN, LPCWSTR, PSetControlTextOptions)
+        AddSetControlTextActionToTemplateParams = (1, "ATemplateFileName", 0), (1, "AActionName", 0), (1, "AActionTimeout", 0), (1, "AActionEnabled", 0), (1, "AActionCondition", 0), (1, "ASetControlTextOptions", 0),
+        AddSetControlTextActionToTemplateFuncRes = AddSetControlTextActionToTemplateProto(("AddSetControlTextActionToTemplate", self.DllHandle), AddSetControlTextActionToTemplateParams)
+        return AddSetControlTextActionToTemplateFuncRes
+    
+    
+    def GetAddCallTemplateActionToTemplate(self):
+        AddCallTemplateActionToTemplateProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, LPCWSTR, LONG, BOOLEAN, LPCWSTR, PCallTemplateOptions)
+        AddCallTemplateActionToTemplateParams = (1, "ATemplateFileName", 0), (1, "AActionName", 0), (1, "AActionTimeout", 0), (1, "AActionEnabled", 0), (1, "AActionCondition", 0), (1, "ACallTemplateOptions", 0),
+        AddCallTemplateActionToTemplateFuncRes = AddCallTemplateActionToTemplateProto(("AddCallTemplateActionToTemplate", self.DllHandle), AddCallTemplateActionToTemplateParams)
+        return AddCallTemplateActionToTemplateFuncRes
+    
+    
+    def GetAddSleepActionToTemplate(self):
+        AddSleepActionToTemplateProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, LPCWSTR, LONG, BOOLEAN, LPCWSTR, PSleepOptions)
+        AddSleepActionToTemplateParams = (1, "ATemplateFileName", 0), (1, "AActionName", 0), (1, "AActionTimeout", 0), (1, "AActionEnabled", 0), (1, "AActionCondition", 0), (1, "ASleepOptions", 0),
+        AddSleepActionToTemplateFuncRes = AddSleepActionToTemplateProto(("AddSleepActionToTemplate", self.DllHandle), AddSleepActionToTemplateParams)
+        return AddSleepActionToTemplateFuncRes
+    
+    
+    def GetAddSetVarActionToTemplate(self):
+        AddSetVarActionToTemplateProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, LPCWSTR, LONG, BOOLEAN, LPCWSTR, PSetVarOptions)
+        AddSetVarActionToTemplateParams = (1, "ATemplateFileName", 0), (1, "AActionName", 0), (1, "AActionTimeout", 0), (1, "AActionEnabled", 0), (1, "AActionCondition", 0), (1, "ASetVarOptions", 0),
+        AddSetVarActionToTemplateFuncRes = AddSetVarActionToTemplateProto(("AddSetVarActionToTemplate", self.DllHandle), AddSetVarActionToTemplateParams)
+        return AddSetVarActionToTemplateFuncRes
+    
+    
+    def GetAddWindowOperationsActionToTemplate(self):
+        AddWindowOperationsActionToTemplateProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, LPCWSTR, LONG, BOOLEAN, LPCWSTR, PWindowOperationsOptions)
+        AddWindowOperationsActionToTemplateParams = (1, "ATemplateFileName", 0), (1, "AActionName", 0), (1, "AActionTimeout", 0), (1, "AActionEnabled", 0), (1, "AActionCondition", 0), (1, "AWindowOperationsOptions", 0),
+        AddWindowOperationsActionToTemplateFuncRes = AddWindowOperationsActionToTemplateProto(("AddWindowOperationsActionToTemplate", self.DllHandle), AddWindowOperationsActionToTemplateParams)
+        return AddWindowOperationsActionToTemplateFuncRes
+    
+    
+    def GetAddFontProfileToFindSubControlAction(self):
+        AddFontProfileToFindSubControlActionProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, LONG, PClkFindControlMatchBitmapText)
+        AddFontProfileToFindSubControlActionParams = (1, "ATemplateFileName", 0), (1, "AActionIndex", 0), (1, "AFindControlMatchBitmapText", 0),
+        AddFontProfileToFindSubControlActionFuncRes = AddFontProfileToFindSubControlActionProto(("AddFontProfileToFindSubControlAction", self.DllHandle), AddFontProfileToFindSubControlActionParams)
+        return AddFontProfileToFindSubControlActionFuncRes
+    
+    
+    def GetPrepareFilesInServer(self):
+        PrepareFilesInServerProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, ctypes.c_char_p)
+        PrepareFilesInServerParams = (1, "ATemplateFileName", 0), (1, "AResponse", 0),
+        PrepareFilesInServerFuncRes = PrepareFilesInServerProto(("PrepareFilesInServer", self.DllHandle), PrepareFilesInServerParams)
+        return PrepareFilesInServerFuncRes
+    
+    
+    def GetExecuteActionAtIndex(self):
+        ExecuteActionAtIndexProto = ctypes.CFUNCTYPE(BOOLEAN, LONG, LONG)
+        ExecuteActionAtIndexParams = (1, "AActionIndex", 0), (1, "AStackLevel", 0),
+        ExecuteActionAtIndexFuncRes = ExecuteActionAtIndexProto(("ExecuteActionAtIndex", self.DllHandle), ExecuteActionAtIndexParams)
+        return ExecuteActionAtIndexFuncRes
+    
+    
+    def GetGetListOfFilesFromClientInMem(self):
+        GetListOfFilesFromClientInMemProto = ctypes.CFUNCTYPE(LONG, ctypes.c_char_p)
+        GetListOfFilesFromClientInMemParams = (1, "AResponse", 0),
+        GetListOfFilesFromClientInMemFuncRes = GetListOfFilesFromClientInMemProto(("GetListOfFilesFromClientInMem", self.DllHandle), GetListOfFilesFromClientInMemParams)
+        return GetListOfFilesFromClientInMemFuncRes
+    
+    
+    def GetGetTemplateContentFromClientInMemAsString(self):
+        GetTemplateContentFromClientInMemAsStringProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, ctypes.c_char_p)
+        GetTemplateContentFromClientInMemAsStringParams = (1, "ATemplateFileName", 0), (1, "AResponse", 0),
+        GetTemplateContentFromClientInMemAsStringFuncRes = GetTemplateContentFromClientInMemAsStringProto(("GetTemplateContentFromClientInMemAsString", self.DllHandle), GetTemplateContentFromClientInMemAsStringParams)
+        return GetTemplateContentFromClientInMemAsStringFuncRes
+
+
 class TDllFunctions:
     def __init__(self):
-        self.InitClickerClientFunc = GetInitClickerClient()
-        self.DoneClickerClientFunc = GetDoneClickerClient()
+        self.Addresses = TDllFunctionAddresses()
         
-        self.SetServerAddressFunc = GetSetServerAddress()
-        self.GetServerAddressFunc = GetGetServerAddress()
-        self.TestConnectionToServerFunc = GetTestConnectionToServerAddress()
-        self.CreateNewTemplateFunc = GetCreateNewTemplate()
+        self.InitClickerClientFunc = self.Addresses.GetInitClickerClient()
+        self.DoneClickerClientFunc = self.Addresses.GetDoneClickerClient()
         
-        self.AddClickActionToTemplateFunc = GetAddClickActionToTemplate()
-        self.AddExecAppActionToTemplateFunc = GetAddExecAppActionToTemplate()
-        self.AddFindControlActionToTemplateFunc = GetAddFindControlActionToTemplate()
-        self.AddFindSubControlActionToTemplateFunc = GetAddFindSubControlActionToTemplate()
-        self.AddSetControlTextActionToTemplateFunc = GetAddSetControlTextActionToTemplate()
-        self.AddCallTemplateActionToTemplateFunc = GetAddCallTemplateActionToTemplate()
-        self.AddSleepActionToTemplateFunc = GetAddSleepActionToTemplate()
-        self.AddSetVarActionToTemplateFunc = GetAddSetVarActionToTemplate()
-        self.AddWindowOperationsActionToTemplateFunc = GetAddWindowOperationsActionToTemplate()
+        self.SetServerAddressFunc = self.Addresses.GetSetServerAddress()
+        self.GetServerAddressFunc = self.Addresses.GetGetServerAddress()
+        self.TestConnectionToServerFunc = self.Addresses.GetTestConnectionToServerAddress()
+        self.CreateNewTemplateFunc = self.Addresses.GetCreateNewTemplate()
         
-        self.AddFontProfileToFindSubControlActionFunc = GetAddFontProfileToFindSubControlAction()
+        self.AddClickActionToTemplateFunc = self.Addresses.GetAddClickActionToTemplate()
+        self.AddExecAppActionToTemplateFunc = self.Addresses.GetAddExecAppActionToTemplate()
+        self.AddFindControlActionToTemplateFunc = self.Addresses.GetAddFindControlActionToTemplate()
+        self.AddFindSubControlActionToTemplateFunc = self.Addresses.GetAddFindSubControlActionToTemplate()
+        self.AddSetControlTextActionToTemplateFunc = self.Addresses.GetAddSetControlTextActionToTemplate()
+        self.AddCallTemplateActionToTemplateFunc = self.Addresses.GetAddCallTemplateActionToTemplate()
+        self.AddSleepActionToTemplateFunc = self.Addresses.GetAddSleepActionToTemplate()
+        self.AddSetVarActionToTemplateFunc = self.Addresses.GetAddSetVarActionToTemplate()
+        self.AddWindowOperationsActionToTemplateFunc = self.Addresses.GetAddWindowOperationsActionToTemplate()
         
-        self.PrepareFilesInServerFunc = GetPrepareFilesInServer()
-        self.GetListOfFilesFromClientInMemFunc = GetGetListOfFilesFromClientInMem()
-        self.GetTemplateContentFromClientInMemAsStringFunc = GetGetTemplateContentFromClientInMemAsString()
+        self.AddFontProfileToFindSubControlActionFunc = self.Addresses.GetAddFontProfileToFindSubControlAction()
+        
+        self.PrepareFilesInServerFunc = self.Addresses.GetPrepareFilesInServer()
+        self.ExecuteActionAtIndexFunc = self.Addresses.GetExecuteActionAtIndex()
+        self.GetListOfFilesFromClientInMemFunc = self.Addresses.GetGetListOfFilesFromClientInMem()
+        self.GetTemplateContentFromClientInMemAsStringFunc = self.Addresses.GetGetTemplateContentFromClientInMemAsString()
         
     def InitClickerClient(self):
         try:
@@ -198,23 +211,24 @@ class TDllFunctions:
             return 'OK'
         except:
             return 'AV on InitClickerClient'
-    
-    
+
+
     def DoneClickerClient(self):
         try:
             self.DoneClickerClientFunc()
             return 'OK'
         except:
             return 'AV on DoneClickerClient'
-        
+
+
     def SetServerAddress(self, Address):
         try:
             self.SetServerAddressFunc(Address)  #sending PWideChar, and converting to ANSI at dll
             return 'OK'
         except:
             return 'AV on SetServerAddress'
-            
-    
+
+
     def GetServerAddress(self):
         try:
             buffer = ctypes.create_string_buffer(10 * 1048576) # #(CMaxSharedStringLength)
@@ -225,8 +239,8 @@ class TDllFunctions:
             return Response
         except:
             return 'AV on GetServerAddress'
-            
-            
+
+
     def TestConnectionToServer(self):
         try:
             buffer = ctypes.create_string_buffer(10 * 1048576) # #(CMaxSharedStringLength)
@@ -237,8 +251,8 @@ class TDllFunctions:
             return Response
         except:
             return 'AV on TestConnectionToServer'
-    
-    
+
+
     def CreateNewTemplate(self, ATemplateFileName):
         try:
             CreateInMemFileResult = self.CreateNewTemplateFunc(ATemplateFileName)  #sending PWideChar, and converting to ANSI at dll
@@ -338,6 +352,16 @@ class TDllFunctions:
         except:
             return 'AV on PrepareFilesInServer'
             
+    
+    def ExecuteActionAtIndex(self, AActionIndex, AStackLevel):
+        try:
+            ExecuteActionAtIndexResult = self.ExecuteActionAtIndexFunc(AActionIndex, AStackLevel)
+            return ExecuteActionAtIndexesult
+        except:
+            print('AV on ExecuteActionAtIndex')
+            return False
+
+
     def GetListOfFilesFromClientInMem(self):
         try:
             buffer = ctypes.create_string_buffer(10 * 1048576) # #(CMaxSharedStringLength)
@@ -360,6 +384,7 @@ class TDllFunctions:
             return Response.decode('utf-8')
         except:
             return 'AV on GetTemplateContentFromClientInMemAsString'
+
 
 DllFuncs = TDllFunctions()
 
@@ -399,7 +424,7 @@ try:
     print("AddExecAppActionToTemplate: ", DllFuncs.AddExecAppActionToTemplate('VerifyClicking.clktmpl', 'Second', 0, True, '$a$==$b$', ctypes.byref(ExecAppOptions)))
     
     FindControlOptions = GetDefaultFindControlOptions()
-    print("AddFindControlActionToTemplate: ", DllFuncs.AddFindControlActionToTemplate('VerifyClicking.clktmpl', 'Third', 0, True, '$a$<>$b$', ctypes.byref(FindControlOptions)))
+    print("AddFindControlActionToTemplate: ", DllFuncs.AddFindControlActionToTemplate('VerifyClicking.clktmpl', 'Third', 1000, True, '$a$<>$b$', ctypes.byref(FindControlOptions)))
 
     MatchBitmapText = GetDefaultMatchBitmapText()
     print("AddFontProfileToFindSubControlAction: ", DllFuncs.AddFontProfileToFindSubControlAction('VerifyClicking.clktmpl', 2, ctypes.byref(MatchBitmapText)))
@@ -419,7 +444,7 @@ try:
     print("AddFontProfileToFindSubControlAction: ", DllFuncs.AddFontProfileToFindSubControlAction('VerifyClicking.clktmpl', 2, ctypes.byref(MatchBitmapText)))
     
     FindSubControlOptions = GetDefaultFindSubControlOptions()
-    print("AddFindSubControlActionToTemplate: ", DllFuncs.AddFindSubControlActionToTemplate('VerifyClicking.clktmpl', 'Fourth', 0, True, '', ctypes.byref(FindSubControlOptions)))
+    print("AddFindSubControlActionToTemplate: ", DllFuncs.AddFindSubControlActionToTemplate('VerifyClicking.clktmpl', 'Fourth', 1000, True, '', ctypes.byref(FindSubControlOptions)))
     print("AddFontProfileToFindSubControlAction: ", DllFuncs.AddFontProfileToFindSubControlAction('VerifyClicking.clktmpl', 3, ctypes.byref(MatchBitmapText)))
     
     SetControlTextOptions = GetDefaultSetControlTextOptions()
@@ -439,6 +464,8 @@ try:
 
 
     print("PrepareFilesInServer: ", DllFuncs.PrepareFilesInServer('VerifyClicking.clktmpl'))
+    
+    print("ExecuteActionAtIndex: ", DllFuncs.ExecuteActionAtIndex(AActionIndex = 6, AStackLevel = 0))
     
     print("GetListOfFilesFromClientInMem: ", DllFuncs.GetListOfFilesFromClientInMem())
     
