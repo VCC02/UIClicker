@@ -101,6 +101,48 @@ type
   PClkFindControlOptionsAPI = ^TClkFindControlOptionsAPI;
 
 
+  TClkSetTextOptionsAPI = record
+    Text: PWideChar;
+    ControlType: TClkSetTextControlType;
+  end;
+
+  PClkSetTextOptionsAPI = ^TClkSetTextOptionsAPI;
+
+
+  TClkCallTemplateOptionsAPI = record
+    TemplateFileName: PWideChar;
+    ListOfCustomVarsAndValues: PWideChar;
+    EvaluateBeforeCalling: Boolean;
+  end;
+
+  PClkCallTemplateOptionsAPI = ^TClkCallTemplateOptionsAPI;
+
+
+  TClkSleepOptionsAPI = record
+    Value: string;  // [ms]
+  end;
+
+  PClkSleepOptionsAPI = ^TClkSleepOptionsAPI;
+
+
+  TClkSetVarOptionsAPI = record
+    ListOfVarNames: PWideChar;
+    ListOfVarValues: PWideChar;
+    ListOfVarEvalBefore: PWideChar;
+  end;
+
+  PClkSetVarOptionsAPI = ^TClkSetVarOptionsAPI;
+
+
+  TClkWindowOperationsAPI = record
+    Operation: TWindowOperation;
+    NewX, NewY, NewWidth, NewHeight: PWideChar;
+    NewPositionEabled, NewSizeEabled: Boolean;
+  end;
+
+  PClkWindowOperationsAPI = ^TClkWindowOperationsAPI;
+
+
   TClkFindControlMatchBitmapTextAPI = record
     ForegroundColor: PWideChar;
     BackgroundColor: PWideChar;
@@ -530,6 +572,217 @@ begin
 end;
 
 
+function AddSetControlTextActionToTemplate(ATemplateFileName: Pointer;
+
+                                           AActionName: Pointer;
+                                           AActionTimeout: LongInt; //ms
+                                           AActionEnabled: Boolean;
+                                           AActionCondition: Pointer;
+
+                                           ASetControlTextOptions: PClkSetTextOptionsAPI
+
+                                          ): LongInt; cdecl;
+var
+  TemplateFileName: string;
+  ActionName: string;
+  ActionCondition: string;
+  TempAction: TClkActionRec;
+begin
+  if InMemFS = nil then
+  begin
+    Result := -1;
+    Exit;
+  end;
+
+  SetPointedContentToString(@string(PWideChar(ATemplateFileName))[1], TemplateFileName);
+  SetPointedContentToString(@string(PWideChar(AActionName))[1], ActionName);
+  SetPointedContentToString(@string(PWideChar(AActionCondition))[1], ActionCondition);
+
+  TempAction.ActionOptions.ActionName := ActionName;
+  TempAction.ActionOptions.Action := acSetControlText;
+  TempAction.ActionOptions.ActionTimeout := AActionTimeout;
+  TempAction.ActionOptions.ActionEnabled := AActionEnabled;
+  TempAction.ActionOptions.ActionCondition := ActionCondition;
+
+  //set control text stuff
+  SetPointedContentToString(@string(PWideChar(ASetControlTextOptions^.Text))[1], TempAction.SetTextOptions.Text);
+  TempAction.SetTextOptions.ControlType := ASetControlTextOptions^.ControlType;
+
+  AddActionToTemplate(TemplateFileName, TempAction);
+  Result := 0;
+end;
+
+
+function AddCallTemplateActionToTemplate(ATemplateFileName: Pointer;
+
+                                         AActionName: Pointer;
+                                         AActionTimeout: LongInt; //ms
+                                         AActionEnabled: Boolean;
+                                         AActionCondition: Pointer;
+
+                                         ACallTemplateOptions: PClkCallTemplateOptionsAPI
+
+                                        ): LongInt; cdecl;
+var
+  TemplateFileName: string;
+  ActionName: string;
+  ActionCondition: string;
+  TempAction: TClkActionRec;
+begin
+  if InMemFS = nil then
+  begin
+    Result := -1;
+    Exit;
+  end;
+
+  SetPointedContentToString(@string(PWideChar(ATemplateFileName))[1], TemplateFileName);
+  SetPointedContentToString(@string(PWideChar(AActionName))[1], ActionName);
+  SetPointedContentToString(@string(PWideChar(AActionCondition))[1], ActionCondition);
+
+  TempAction.ActionOptions.ActionName := ActionName;
+  TempAction.ActionOptions.Action := acCallTemplate;
+  TempAction.ActionOptions.ActionTimeout := AActionTimeout;
+  TempAction.ActionOptions.ActionEnabled := AActionEnabled;
+  TempAction.ActionOptions.ActionCondition := ActionCondition;
+
+  //call template stuff
+  SetPointedContentToString(@string(PWideChar(ACallTemplateOptions^.TemplateFileName))[1], TempAction.CallTemplateOptions.TemplateFileName);
+  SetPointedContentToString(@string(PWideChar(ACallTemplateOptions^.ListOfCustomVarsAndValues))[1], TempAction.CallTemplateOptions.ListOfCustomVarsAndValues);
+  TempAction.CallTemplateOptions.EvaluateBeforeCalling := ACallTemplateOptions^.EvaluateBeforeCalling;
+
+  AddActionToTemplate(TemplateFileName, TempAction);
+  Result := 0;
+end;
+
+
+function AddSleepActionToTemplate(ATemplateFileName: Pointer;
+
+                                  AActionName: Pointer;
+                                  AActionTimeout: LongInt; //ms
+                                  AActionEnabled: Boolean;
+                                  AActionCondition: Pointer;
+
+                                  ASleepOptions: PClkSleepOptionsAPI
+
+                                 ): LongInt; cdecl;
+var
+  TemplateFileName: string;
+  ActionName: string;
+  ActionCondition: string;
+  TempAction: TClkActionRec;
+begin
+  if InMemFS = nil then
+  begin
+    Result := -1;
+    Exit;
+  end;
+
+  SetPointedContentToString(@string(PWideChar(ATemplateFileName))[1], TemplateFileName);
+  SetPointedContentToString(@string(PWideChar(AActionName))[1], ActionName);
+  SetPointedContentToString(@string(PWideChar(AActionCondition))[1], ActionCondition);
+
+  TempAction.ActionOptions.ActionName := ActionName;
+  TempAction.ActionOptions.Action := acSleep;
+  TempAction.ActionOptions.ActionTimeout := AActionTimeout;
+  TempAction.ActionOptions.ActionEnabled := AActionEnabled;
+  TempAction.ActionOptions.ActionCondition := ActionCondition;
+
+  //sleep stuff
+  SetPointedContentToString(@string(PWideChar(ASleepOptions^.Value))[1], TempAction.SleepOptions.Value);
+
+  AddActionToTemplate(TemplateFileName, TempAction);
+  Result := 0;
+end;
+
+
+function AddSetVarActionToTemplate(ATemplateFileName: Pointer;
+
+                                   AActionName: Pointer;
+                                   AActionTimeout: LongInt; //ms
+                                   AActionEnabled: Boolean;
+                                   AActionCondition: Pointer;
+
+                                   ASetVarOptions: PClkSetVarOptionsAPI
+
+                                  ): LongInt; cdecl;
+var
+  TemplateFileName: string;
+  ActionName: string;
+  ActionCondition: string;
+  TempAction: TClkActionRec;
+begin
+  if InMemFS = nil then
+  begin
+    Result := -1;
+    Exit;
+  end;
+
+  SetPointedContentToString(@string(PWideChar(ATemplateFileName))[1], TemplateFileName);
+  SetPointedContentToString(@string(PWideChar(AActionName))[1], ActionName);
+  SetPointedContentToString(@string(PWideChar(AActionCondition))[1], ActionCondition);
+
+  TempAction.ActionOptions.ActionName := ActionName;
+  TempAction.ActionOptions.Action := acSetVar;
+  TempAction.ActionOptions.ActionTimeout := AActionTimeout;
+  TempAction.ActionOptions.ActionEnabled := AActionEnabled;
+  TempAction.ActionOptions.ActionCondition := ActionCondition;
+
+  //SetVar stuff
+  SetPointedContentToString(@string(PWideChar(ASetVarOptions^.ListOfVarNames))[1], TempAction.SetVarOptions.ListOfVarNames);
+  SetPointedContentToString(@string(PWideChar(ASetVarOptions^.ListOfVarValues))[1], TempAction.SetVarOptions.ListOfVarValues);
+  SetPointedContentToString(@string(PWideChar(ASetVarOptions^.ListOfVarEvalBefore))[1], TempAction.SetVarOptions.ListOfVarEvalBefore);
+
+  AddActionToTemplate(TemplateFileName, TempAction);
+  Result := 0;
+end;
+
+
+function AddWindowOperationsActionToTemplate(ATemplateFileName: Pointer;
+
+                                             AActionName: Pointer;
+                                             AActionTimeout: LongInt; //ms
+                                             AActionEnabled: Boolean;
+                                             AActionCondition: Pointer;
+
+                                             AWindowOperationsOptions: PClkWindowOperationsAPI
+
+                                            ): LongInt; cdecl;
+var
+  TemplateFileName: string;
+  ActionName: string;
+  ActionCondition: string;
+  TempAction: TClkActionRec;
+begin
+  if InMemFS = nil then
+  begin
+    Result := -1;
+    Exit;
+  end;
+
+  SetPointedContentToString(@string(PWideChar(ATemplateFileName))[1], TemplateFileName);
+  SetPointedContentToString(@string(PWideChar(AActionName))[1], ActionName);
+  SetPointedContentToString(@string(PWideChar(AActionCondition))[1], ActionCondition);
+
+  TempAction.ActionOptions.ActionName := ActionName;
+  TempAction.ActionOptions.Action := acWindowOperations;
+  TempAction.ActionOptions.ActionTimeout := AActionTimeout;
+  TempAction.ActionOptions.ActionEnabled := AActionEnabled;
+  TempAction.ActionOptions.ActionCondition := ActionCondition;
+
+  //Window Operations stuff
+  TempAction.WindowOperationsOptions.Operation := AWindowOperationsOptions^.Operation;
+  SetPointedContentToString(@string(PWideChar(AWindowOperationsOptions^.NewX))[1], TempAction.WindowOperationsOptions.NewX);
+  SetPointedContentToString(@string(PWideChar(AWindowOperationsOptions^.NewY))[1], TempAction.WindowOperationsOptions.NewY);
+  SetPointedContentToString(@string(PWideChar(AWindowOperationsOptions^.NewWidth))[1], TempAction.WindowOperationsOptions.NewWidth);
+  SetPointedContentToString(@string(PWideChar(AWindowOperationsOptions^.NewHeight))[1], TempAction.WindowOperationsOptions.NewHeight);
+  TempAction.WindowOperationsOptions.NewPositionEabled := AWindowOperationsOptions^.NewPositionEabled;
+  TempAction.WindowOperationsOptions.NewSizeEabled := AWindowOperationsOptions^.NewSizeEabled;
+
+  AddActionToTemplate(TemplateFileName, TempAction);
+  Result := 0;
+end;
+
+
 function AddFontProfileToFindSubControlActionInTemplate(ATemplateFileName: string; ActionIndex: Integer; AFindControlMatchBitmapText: TClkFindControlMatchBitmapText): Integer;
 var
   ClkActions: TClkActionsRecArr;
@@ -760,7 +1013,11 @@ exports
   AddExecAppActionToTemplate,
   AddFindControlActionToTemplate,
   AddFindSubControlActionToTemplate,
-
+  AddSetControlTextActionToTemplate,
+  AddCallTemplateActionToTemplate,
+  AddSleepActionToTemplate,
+  AddSetVarActionToTemplate,
+  AddWindowOperationsActionToTemplate,
 
   AddFontProfileToFindSubControlAction,
 

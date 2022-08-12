@@ -179,9 +179,9 @@ type
   TClkCallTemplateOptions = record
     TemplateFileName: string;
     ListOfCustomVarsAndValues: string;
-    CallOnlyIfCondition: Boolean;
-    CallOnlyIfConditionVarName: string;
-    CallOnlyIfConditionVarValue: string;
+    CallOnlyIfCondition: Boolean;         //deprecated  - these fields are here for compatibility with some old templates. Action conditions are available to all actions.
+    CallOnlyIfConditionVarName: string;   //deprecated  - these fields are here for compatibility with some old templates
+    CallOnlyIfConditionVarValue: string;  //deprecated  - these fields are here for compatibility with some old templates
     EvaluateBeforeCalling: Boolean;
   end;
 

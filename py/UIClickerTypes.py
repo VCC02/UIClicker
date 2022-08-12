@@ -74,7 +74,7 @@ class TMatchBitmapAlgorithm: #(Enum):
     mbaBruteForce = 0
     mbaXYMultipleAndOffsets = 1
     
-#Graphics.pp
+#TFontQuality from Graphics.pp
 class TFontQuality: #(Enum):
     fqDefault = 0 
     fqDraft = 1
@@ -83,6 +83,17 @@ class TFontQuality: #(Enum):
     fqAntialiased = 4
     fqCleartype = 5
     fqCleartypeNatural = 6
+
+class TClkSetTextControlType: #(Enum):
+    stEditBox = 0
+    stComboBox = 1
+    stKeystrokes = 2
+
+
+class TWindowOperation: #(Enum):
+    woBringToFront = 0
+    woMoveResize = 1
+    woClose = 2
 
 
 class TClickOptions(Structure):
@@ -244,8 +255,96 @@ def GetDefaultFindControlOptions():
     FindControlOptions.CachedControlLeft = ''
     FindControlOptions.CachedControlTop = ''
     return FindControlOptions
- 
- 
+
+
+def GetDefaultFindSubControlOptions():
+    FindSubControlOptions = GetDefaultFindControlOptions()
+    FindSubControlOptions.MatchCriteria.WillMatchText = False
+    FindSubControlOptions.MatchCriteria.WillMatchClassName = False
+    FindSubControlOptions.MatchCriteria.WillMatchBitmapText = True
+    FindSubControlOptions.MatchCriteria.WillMatchBitmapFiles = False
+    FindSubControlOptions.UseWholeScreen = False
+    return FindSubControlOptions
+    
+
+class TSetControlTextOptions(Structure):
+    _fields_ = [("Text", LPCWSTR),
+               ("ControlType", BYTE)] #TClkSetTextControlType
+               
+PSetControlTextOptions = ctypes.POINTER(TSetControlTextOptions)
+
+def GetDefaultSetControlTextOptions():
+    SetControlTextOptions = TSetControlTextOptions()
+    SetControlTextOptions.Text = 'New text'
+    SetControlTextOptions.ControlType = TClkSetTextControlType.stEditBox
+    return SetControlTextOptions
+
+
+class TCallTemplateOptions(Structure):
+    _fields_ = [("TemplateFileName", LPCWSTR),
+               ("ListOfCustomVarsAndValues", LPCWSTR),  #  example:  $VarA$=ValueA\r\n$VarB$=ValueB\r\n$VarC$=ValueC
+               ("EvaluateBeforeCalling", BOOLEAN)]
+
+PCallTemplateOptions = ctypes.POINTER(TCallTemplateOptions)
+
+def GetDefaultCallTemplateOptions():
+    SetControlTextOptions = TCallTemplateOptions()
+    SetControlTextOptions.TemplateFileName = 'PathToTemplate.clktmpl'
+    SetControlTextOptions.ListOfCustomVarsAndValues = ''  #these vars will be added to the existing list of vars
+    SetControlTextOptions.EvaluateBeforeCalling = False
+    return SetControlTextOptions
+
+
+class TSleepOptions(Structure):
+    _fields_ = [("Value", LPCWSTR)]
+
+PSleepOptions = ctypes.POINTER(TSleepOptions)
+
+def GetDefaultSleepOptions():
+    SleepOptions = TSleepOptions()
+    SleepOptions.Value = '300'
+    return SleepOptions
+
+
+class TSetVarOptions(Structure):
+    _fields_ = [("ListOfVarNames", LPCWSTR),
+               ("ListOfVarValues", LPCWSTR),
+               ("ListOfVarEvalBefore", LPCWSTR)]
+
+PSetVarOptions = ctypes.POINTER(TSetVarOptions)
+
+def GetDefaultSetVarOptions():
+    SetVarOptions = TSetVarOptions()  #all of the following lists have to have the same number of items, separated by CRLF  (a.k.a. \r\n)
+    SetVarOptions.ListOfVarNames = ''    #example  '$MyVar$1\r\n$MyVar$2\r\n$MyVar$3\r\n$MyVar$4'
+    SetVarOptions.ListOfVarValues = '' #example  'Val1\r\nVal2\r\nVal3\r\nVal4'
+    SetVarOptions.ListOfVarEvalBefore = ''     #example  '1\r\n1\r\n0\r\n1'
+    return SetVarOptions
+
+
+class TWindowOperationsOptions(Structure):
+    _fields_ = [("Operation", BYTE),  #TWindowOperation
+               ("NewX", LPCWSTR),
+               ("NewY", LPCWSTR),
+               ("NewWidth", LPCWSTR),
+               ("NewHeight", LPCWSTR),
+               ("NewPositionEabled", BOOLEAN),
+               ("NewSizeEabled", BOOLEAN)]
+
+PWindowOperationsOptions = ctypes.POINTER(TWindowOperationsOptions)
+
+def GetDefaultWindowOperationsOptions():
+    WindowOperationsOptions = TWindowOperationsOptions()
+    WindowOperationsOptions.Operation = TWindowOperation.woBringToFront
+    WindowOperationsOptions.NewX = ''  #'$NewX$'
+    WindowOperationsOptions.NewY = ''  #'$NewY$'
+    WindowOperationsOptions.NewWidth = ''  #'$NewWidth$'
+    WindowOperationsOptions.NewHeight = ''  #'$NewHeight$'
+    WindowOperationsOptions.NewPositionEabled = False
+    WindowOperationsOptions.NewSizeEabled = False
+    return WindowOperationsOptions
+
+
+########################
 #Font profile structure. MatchBitmapText field from TFindControlOptions is a dynamic array of TClkFindControlMatchBitmapText.
 class TClkFindControlMatchBitmapText(Structure):
     _fields_ = [("ForegroundColor", LPCWSTR),

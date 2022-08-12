@@ -94,8 +94,50 @@ def GetAddFindControlActionToTemplate():
     AddFindControlActionToTemplateParams = (1, "ATemplateFileName", 0), (1, "AActionName", 0), (1, "AActionTimeout", 0), (1, "AActionEnabled", 0), (1, "AActionCondition", 0), (1, "AFindControlOptions", 0),
     AddFindControlActionToTemplateFuncRes = AddFindControlActionToTemplateProto(("AddFindControlActionToTemplate", DllHandle), AddFindControlActionToTemplateParams)
     return AddFindControlActionToTemplateFuncRes
+
+
+def GetAddFindSubControlActionToTemplate():
+    AddFindSubControlActionToTemplateProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, LPCWSTR, LONG, BOOLEAN, LPCWSTR, PFindControlOptions)
+    AddFindSubControlActionToTemplateParams = (1, "ATemplateFileName", 0), (1, "AActionName", 0), (1, "AActionTimeout", 0), (1, "AActionEnabled", 0), (1, "AActionCondition", 0), (1, "AFindControlOptions", 0),
+    AddFindSubControlActionToTemplateFuncRes = AddFindSubControlActionToTemplateProto(("AddFindSubControlActionToTemplate", DllHandle), AddFindSubControlActionToTemplateParams)
+    return AddFindSubControlActionToTemplateFuncRes
     
     
+def GetAddSetControlTextActionToTemplate():
+    AddSetControlTextActionToTemplateProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, LPCWSTR, LONG, BOOLEAN, LPCWSTR, PSetControlTextOptions)
+    AddSetControlTextActionToTemplateParams = (1, "ATemplateFileName", 0), (1, "AActionName", 0), (1, "AActionTimeout", 0), (1, "AActionEnabled", 0), (1, "AActionCondition", 0), (1, "ASetControlTextOptions", 0),
+    AddSetControlTextActionToTemplateFuncRes = AddSetControlTextActionToTemplateProto(("AddSetControlTextActionToTemplate", DllHandle), AddSetControlTextActionToTemplateParams)
+    return AddSetControlTextActionToTemplateFuncRes
+
+
+def GetAddCallTemplateActionToTemplate():
+    AddCallTemplateActionToTemplateProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, LPCWSTR, LONG, BOOLEAN, LPCWSTR, PCallTemplateOptions)
+    AddCallTemplateActionToTemplateParams = (1, "ATemplateFileName", 0), (1, "AActionName", 0), (1, "AActionTimeout", 0), (1, "AActionEnabled", 0), (1, "AActionCondition", 0), (1, "ACallTemplateOptions", 0),
+    AddCallTemplateActionToTemplateFuncRes = AddCallTemplateActionToTemplateProto(("AddCallTemplateActionToTemplate", DllHandle), AddCallTemplateActionToTemplateParams)
+    return AddCallTemplateActionToTemplateFuncRes
+
+
+def GetAddSleepActionToTemplate():
+    AddSleepActionToTemplateProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, LPCWSTR, LONG, BOOLEAN, LPCWSTR, PSleepOptions)
+    AddSleepActionToTemplateParams = (1, "ATemplateFileName", 0), (1, "AActionName", 0), (1, "AActionTimeout", 0), (1, "AActionEnabled", 0), (1, "AActionCondition", 0), (1, "ASleepOptions", 0),
+    AddSleepActionToTemplateFuncRes = AddSleepActionToTemplateProto(("AddSleepActionToTemplate", DllHandle), AddSleepActionToTemplateParams)
+    return AddSleepActionToTemplateFuncRes
+
+
+def GetAddSetVarActionToTemplate():
+    AddSetVarActionToTemplateProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, LPCWSTR, LONG, BOOLEAN, LPCWSTR, PSetVarOptions)
+    AddSetVarActionToTemplateParams = (1, "ATemplateFileName", 0), (1, "AActionName", 0), (1, "AActionTimeout", 0), (1, "AActionEnabled", 0), (1, "AActionCondition", 0), (1, "ASetVarOptions", 0),
+    AddSetVarActionToTemplateFuncRes = AddSetVarActionToTemplateProto(("AddSetVarActionToTemplate", DllHandle), AddSetVarActionToTemplateParams)
+    return AddSetVarActionToTemplateFuncRes
+
+
+def GetAddWindowOperationsActionToTemplate():
+    AddWindowOperationsActionToTemplateProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, LPCWSTR, LONG, BOOLEAN, LPCWSTR, PWindowOperationsOptions)
+    AddWindowOperationsActionToTemplateParams = (1, "ATemplateFileName", 0), (1, "AActionName", 0), (1, "AActionTimeout", 0), (1, "AActionEnabled", 0), (1, "AActionCondition", 0), (1, "AWindowOperationsOptions", 0),
+    AddWindowOperationsActionToTemplateFuncRes = AddWindowOperationsActionToTemplateProto(("AddWindowOperationsActionToTemplate", DllHandle), AddWindowOperationsActionToTemplateParams)
+    return AddWindowOperationsActionToTemplateFuncRes
+
+
 def GetAddFontProfileToFindSubControlAction():
     AddFontProfileToFindSubControlActionProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, LONG, PClkFindControlMatchBitmapText)
     AddFontProfileToFindSubControlActionParams = (1, "ATemplateFileName", 0), (1, "AActionIndex", 0), (1, "AFindControlMatchBitmapText", 0),
@@ -137,6 +179,12 @@ class TDllFunctions:
         self.AddClickActionToTemplateFunc = GetAddClickActionToTemplate()
         self.AddExecAppActionToTemplateFunc = GetAddExecAppActionToTemplate()
         self.AddFindControlActionToTemplateFunc = GetAddFindControlActionToTemplate()
+        self.AddFindSubControlActionToTemplateFunc = GetAddFindSubControlActionToTemplate()
+        self.AddSetControlTextActionToTemplateFunc = GetAddSetControlTextActionToTemplate()
+        self.AddCallTemplateActionToTemplateFunc = GetAddCallTemplateActionToTemplate()
+        self.AddSleepActionToTemplateFunc = GetAddSleepActionToTemplate()
+        self.AddSetVarActionToTemplateFunc = GetAddSetVarActionToTemplate()
+        self.AddWindowOperationsActionToTemplateFunc = GetAddWindowOperationsActionToTemplate()
         
         self.AddFontProfileToFindSubControlActionFunc = GetAddFontProfileToFindSubControlAction()
         
@@ -223,6 +271,54 @@ class TDllFunctions:
             return 'AV on AddFindControlActionToTemplate'
             
             
+    def AddFindSubControlActionToTemplate(self, ATemplateFileName, AActionName, AActionTimeout, AActionEnabled, AActionCondition, AFindControlOptions):
+        try:
+            AddFindSubControlActionToTemplateResult = self.AddFindSubControlActionToTemplateFunc(ATemplateFileName, AActionName, AActionTimeout, AActionEnabled, AActionCondition, AFindControlOptions)  #sending PWideChar, and converting to ANSI at dll
+            return AddFindSubControlActionToTemplateResult
+        except:
+            return 'AV on AddFindSubControlActionToTemplate'
+            
+            
+    def AddSetControlTextActionToTemplate(self, ATemplateFileName, AActionName, AActionTimeout, AActionEnabled, AActionCondition, ASetControlTextOptions):
+        try:
+            AddSetControlTextActionToTemplateResult = self.AddSetControlTextActionToTemplateFunc(ATemplateFileName, AActionName, AActionTimeout, AActionEnabled, AActionCondition, ASetControlTextOptions)  #sending PWideChar, and converting to ANSI at dll
+            return AddSetControlTextActionToTemplateResult
+        except:
+            return 'AV on AddSetControlTextActionToTemplate'
+
+            
+    def AddCallTemplateActionToTemplate(self, ATemplateFileName, AActionName, AActionTimeout, AActionEnabled, AActionCondition, ACallTemplateOptions):
+        try:
+            AddCallTemplateActionToTemplateResult = self.AddCallTemplateActionToTemplateFunc(ATemplateFileName, AActionName, AActionTimeout, AActionEnabled, AActionCondition, ACallTemplateOptions)  #sending PWideChar, and converting to ANSI at dll
+            return AddCallTemplateActionToTemplateResult
+        except:
+            return 'AV on AddCallTemplateActionToTemplate'
+
+
+    def AddSleepActionToTemplate(self, ATemplateFileName, AActionName, AActionTimeout, AActionEnabled, AActionCondition, ASleepOptions):
+        try:
+            AddSleepActionToTemplateResult = self.AddSleepActionToTemplateFunc(ATemplateFileName, AActionName, AActionTimeout, AActionEnabled, AActionCondition, ASleepOptions)  #sending PWideChar, and converting to ANSI at dll
+            return AddSleepActionToTemplateResult
+        except:
+            return 'AV on AddSleepActionToTemplate'
+
+
+    def AddSetVarActionToTemplate(self, ATemplateFileName, AActionName, AActionTimeout, AActionEnabled, AActionCondition, ASetVarOptions):
+        try:
+            AddSetVarActionToTemplateResult = self.AddSetVarActionToTemplateFunc(ATemplateFileName, AActionName, AActionTimeout, AActionEnabled, AActionCondition, ASetVarOptions)  #sending PWideChar, and converting to ANSI at dll
+            return AddSetVarActionToTemplateResult
+        except:
+            return 'AV on AddSetVarActionToTemplate'
+
+
+    def AddWindowOperationsActionToTemplate(self, ATemplateFileName, AActionName, AActionTimeout, AActionEnabled, AActionCondition, AWindowOperationsOptions):
+        try:
+            AddWindowOperationsActionToTemplateResult = self.AddWindowOperationsActionToTemplateFunc(ATemplateFileName, AActionName, AActionTimeout, AActionEnabled, AActionCondition, AWindowOperationsOptions)  #sending PWideChar, and converting to ANSI at dll
+            return AddWindowOperationsActionToTemplateResult
+        except:
+            return 'AV on AddWindowOperationsActionToTemplate'
+           
+            
     def AddFontProfileToFindSubControlAction(self, ATemplateFileName, AActionIndex, AFindControlMatchBitmapText):
         try:
             AddFontProfileToFindSubControlActionResult = self.AddFontProfileToFindSubControlActionFunc(ATemplateFileName, AActionIndex, AFindControlMatchBitmapText)  #sending PWideChar, and converting to ANSI at dll
@@ -304,8 +400,7 @@ try:
     
     FindControlOptions = GetDefaultFindControlOptions()
     print("AddFindControlActionToTemplate: ", DllFuncs.AddFindControlActionToTemplate('VerifyClicking.clktmpl', 'Third', 0, True, '$a$<>$b$', ctypes.byref(FindControlOptions)))
-    
-    
+
     MatchBitmapText = GetDefaultMatchBitmapText()
     print("AddFontProfileToFindSubControlAction: ", DllFuncs.AddFontProfileToFindSubControlAction('VerifyClicking.clktmpl', 2, ctypes.byref(MatchBitmapText)))
     
@@ -323,6 +418,26 @@ try:
     MatchBitmapText.ProfileName = 'Second profile'
     print("AddFontProfileToFindSubControlAction: ", DllFuncs.AddFontProfileToFindSubControlAction('VerifyClicking.clktmpl', 2, ctypes.byref(MatchBitmapText)))
     
+    FindSubControlOptions = GetDefaultFindSubControlOptions()
+    print("AddFindSubControlActionToTemplate: ", DllFuncs.AddFindSubControlActionToTemplate('VerifyClicking.clktmpl', 'Fourth', 0, True, '', ctypes.byref(FindSubControlOptions)))
+    print("AddFontProfileToFindSubControlAction: ", DllFuncs.AddFontProfileToFindSubControlAction('VerifyClicking.clktmpl', 3, ctypes.byref(MatchBitmapText)))
+    
+    SetControlTextOptions = GetDefaultSetControlTextOptions()
+    print("AddSetControlTextActionToTemplate: ", DllFuncs.AddSetControlTextActionToTemplate('VerifyClicking.clktmpl', 'Fifth', 0, True, '', ctypes.byref(SetControlTextOptions)))
+    
+    CallTemplateOptions = GetDefaultCallTemplateOptions()
+    print("AddCallTemplateActionToTemplate: ", DllFuncs.AddCallTemplateActionToTemplate('VerifyClicking.clktmpl', 'Sixth', 0, True, '', ctypes.byref(CallTemplateOptions)))
+    
+    SleepOptions = GetDefaultSleepOptions()
+    print("AddSleepActionToTemplate: ", DllFuncs.AddSleepActionToTemplate('VerifyClicking.clktmpl', 'Seventh', 0, True, '', ctypes.byref(SleepOptions)))
+
+    SetVarOptions = GetDefaultSetVarOptions()
+    print("AddSetVarActionToTemplate: ", DllFuncs.AddSetVarActionToTemplate('VerifyClicking.clktmpl', 'Eighth', 0, True, '', ctypes.byref(SetVarOptions)))
+
+    WindowOperationsOptions = GetDefaultWindowOperationsOptions()
+    print("AddWindowOperationsActionToTemplate: ", DllFuncs.AddWindowOperationsActionToTemplate('VerifyClicking.clktmpl', 'Nineth', 0, True, '', ctypes.byref(WindowOperationsOptions)))
+
+
     print("PrepareFilesInServer: ", DllFuncs.PrepareFilesInServer('VerifyClicking.clktmpl'))
     
     print("GetListOfFilesFromClientInMem: ", DllFuncs.GetListOfFilesFromClientInMem())
