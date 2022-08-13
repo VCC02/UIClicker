@@ -116,39 +116,40 @@ function TPollForMissingServerFiles.FileIsAllowed(AFileName: string): Boolean;
 var
   FileExt, FilePath: string;
   i: Integer;
-  Found: Boolean;
+  FoundExt, FoundDir: Boolean;
   CurrentItem: string;
 begin
   Result := False;
   AFileName := UpperCase(AFileName);
   FileExt := ExtractFileExt(AFileName);
 
-  Found := False;
+  FoundExt := False;
   for i := 0 to FListOfAccessibleFileExtensions.Count - 1 do
   begin
     CurrentItem := FListOfAccessibleFileExtensions.Strings[i];
     if CurrentItem = FileExt then
     begin
-      Found := True;
+      FoundExt := True;
       Break;
     end;
   end;
 
-  if not Found then
+  if not FoundExt then
     Exit;
 
+  FoundDir := False;
   FilePath := ExtractFilePath(AFileName);
   for i := 0 to FListOfAccessibleDirs.Count - 1 do
   begin
     CurrentItem := FListOfAccessibleDirs.Strings[i];
     if (Pos(CurrentItem, FilePath) = 1) and (Pos('..', CurrentItem) = 0) then
     begin
-      Found := True;
+      FoundDir := True;
       Break;
     end;
   end;
 
-  if not Found then
+  if not FoundDir then
     Exit;
 
   Result := True;

@@ -28,6 +28,9 @@ from UIClickerTypes import *
 from UIClickerTypes import TClickOptions
 
 
+import time
+
+
 CMaxSharedStringLength = 10 * 1048576; #10MB
 
 class TDllFunctionAddresses:
@@ -176,6 +179,62 @@ class TDllFunctionAddresses:
         return GetTemplateContentFromClientInMemAsStringFuncRes
 
 
+    def GetStartFileProviderClientThread(self):
+        StartFileProviderClientThreadProto = ctypes.CFUNCTYPE(None)
+        StartFileProviderClientThreadParams = ()
+        StartFileProviderClientThreadFuncRes = StartFileProviderClientThreadProto(("StartFileProviderClientThread", self.DllHandle), StartFileProviderClientThreadParams)
+        return StartFileProviderClientThreadFuncRes
+
+
+    def GetTerminateFileProviderClientThread(self):
+        TerminateFileProviderClientThreadProto = ctypes.CFUNCTYPE(None)
+        TerminateFileProviderClientThreadParams = ()
+        TerminateFileProviderClientThreadFuncRes = TerminateFileProviderClientThreadProto(("TerminateFileProviderClientThread", self.DllHandle), TerminateFileProviderClientThreadParams)
+        return TerminateFileProviderClientThreadFuncRes
+
+
+    def GetAddListOfAccessibleDirsToFileProviderClient(self):
+        AddListOfAccessibleDirsToFileProviderClientProto = ctypes.CFUNCTYPE(None, LPCWSTR)
+        AddListOfAccessibleDirsToFileProviderClientParams = (1, "AListOfDirs", 0),
+        AddListOfAccessibleDirsToFileProviderClientFuncRes = AddListOfAccessibleDirsToFileProviderClientProto(("AddListOfAccessibleDirsToFileProviderClient", self.DllHandle), AddListOfAccessibleDirsToFileProviderClientParams)
+        return AddListOfAccessibleDirsToFileProviderClientFuncRes
+
+
+    def GetAddListOfAccessibleFileExtensionsToFileProviderClient(self):
+        AddListOfAccessibleFileExtensionsToFileProviderClientProto = ctypes.CFUNCTYPE(None, LPCWSTR)
+        AddListOfAccessibleFileExtensionsToFileProviderClientParams = (1, "AListOfExtensions", 0),
+        AddListOfAccessibleFileExtensionsToFileProviderClientFuncRes = AddListOfAccessibleFileExtensionsToFileProviderClientProto(("AddListOfAccessibleFileExtensionsToFileProviderClient", self.DllHandle), AddListOfAccessibleFileExtensionsToFileProviderClientParams)
+        return AddListOfAccessibleFileExtensionsToFileProviderClientFuncRes
+
+
+    def GetFileProviderClientThreadDone(self):
+        FileProviderClientThreadDoneProto = ctypes.CFUNCTYPE(BOOLEAN)
+        FileProviderClientThreadDoneParams = ()
+        FileProviderClientThreadDoneFuncRes = FileProviderClientThreadDoneProto(("FileProviderClientThreadDone", self.DllHandle), FileProviderClientThreadDoneParams)
+        return FileProviderClientThreadDoneFuncRes
+
+
+    def GetSetFileProviderClientConnectTimeout(self):
+        SetFileProviderClientConnectTimeoutProto = ctypes.CFUNCTYPE(None, LONG)
+        SetFileProviderClientConnectTimeoutParams = (1, "ATimeout", 0),
+        SetFileProviderClientConnectTimeoutFuncRes = SetFileProviderClientConnectTimeoutProto(("SetFileProviderClientConnectTimeout", self.DllHandle), SetFileProviderClientConnectTimeoutParams)
+        return SetFileProviderClientConnectTimeoutFuncRes
+
+
+    def GetClearClientInMemFS(self):
+        ClearClientInMemFSProto = ctypes.CFUNCTYPE(None)
+        ClearClientInMemFSParams = ()
+        ClearClientInMemFSFuncRes = ClearClientInMemFSProto(("ClearClientInMemFS", self.DllHandle), ClearClientInMemFSParams)
+        return ClearClientInMemFSFuncRes
+
+
+    def GetClearServerInMemFS(self):
+        ClearServerInMemFSProto = ctypes.CFUNCTYPE(None)
+        ClearServerInMemFSParams = ()
+        ClearServerInMemFSFuncRes = ClearServerInMemFSProto(("ClearServerInMemFS", self.DllHandle), ClearServerInMemFSParams)
+        return ClearServerInMemFSFuncRes
+
+
 class TDllFunctions:
     def __init__(self):
         self.Addresses = TDllFunctionAddresses()
@@ -204,6 +263,17 @@ class TDllFunctions:
         self.ExecuteActionAtIndexFunc = self.Addresses.GetExecuteActionAtIndex()
         self.GetListOfFilesFromClientInMemFunc = self.Addresses.GetGetListOfFilesFromClientInMem()
         self.GetTemplateContentFromClientInMemAsStringFunc = self.Addresses.GetGetTemplateContentFromClientInMemAsString()
+        
+        self.GetStartFileProviderClientThreadFunc = self.Addresses.GetStartFileProviderClientThread()
+        self.GetTerminateFileProviderClientThreadFunc = self.Addresses.GetTerminateFileProviderClientThread()
+        self.GetAddListOfAccessibleDirsToFileProviderClientFunc = self.Addresses.GetAddListOfAccessibleDirsToFileProviderClient()
+        self.GetAddListOfAccessibleFileExtensionsToFileProviderClientFunc = self.Addresses.GetAddListOfAccessibleFileExtensionsToFileProviderClient()
+        self.GetFileProviderClientThreadDoneFunc = self.Addresses.GetFileProviderClientThreadDone()
+        self.GetSetFileProviderClientConnectTimeoutFunc = self.Addresses.GetSetFileProviderClientConnectTimeout()
+        
+        self.GetClearClientInMemFSFunc = self.Addresses.GetClearClientInMemFS()
+        self.GetClearServerInMemFSFunc = self.Addresses.GetClearServerInMemFS()
+
         
     def InitClickerClient(self):
         try:
@@ -356,7 +426,7 @@ class TDllFunctions:
     def ExecuteActionAtIndex(self, AActionIndex, AStackLevel):
         try:
             ExecuteActionAtIndexResult = self.ExecuteActionAtIndexFunc(AActionIndex, AStackLevel)
-            return ExecuteActionAtIndexesult
+            return ExecuteActionAtIndexResult
         except:
             print('AV on ExecuteActionAtIndex')
             return False
@@ -386,6 +456,71 @@ class TDllFunctions:
             return 'AV on GetTemplateContentFromClientInMemAsString'
 
 
+    def StartFileProviderClientThread(self):
+        try:
+            self.GetStartFileProviderClientThreadFunc()
+            return 'OK'
+        except:
+            return 'AV on StartFileProviderClientThread'
+            
+
+    def TerminateFileProviderClientThread(self):
+        try:
+            self.GetTerminateFileProviderClientThreadFunc()
+            return 'OK'
+        except:
+            return 'AV on TerminateFileProviderClientThread'
+
+
+    def AddListOfAccessibleDirsToFileProviderClient(self, AListOfDirs):
+        try:
+            self.GetAddListOfAccessibleDirsToFileProviderClientFunc(AListOfDirs)  #CRLF separated dirs, accessible by the dll
+            return 'OK'
+        except:
+            return 'AV on AddListOfAccessibleDirsToFileProviderClient'
+
+
+    def AddListOfAccessibleFileExtensionsToFileProviderClient(self, AListOfExtensions):
+        try:
+            self.GetAddListOfAccessibleFileExtensionsToFileProviderClientFunc(AListOfExtensions)  #CRLF separated extensions, e.g. ".bmp\r\n.clktmpl"
+            return 'OK'
+        except:
+            return 'AV on AddListOfAccessibleFileExtensionsToFileProviderClient'
+
+
+    def FileProviderClientThreadDone(self):
+        try:
+            FileProviderClientThreadDoneResult = self.GetFileProviderClientThreadDoneFunc()
+            return FileProviderClientThreadDoneResult
+        except:
+            print('AV on FileProviderClientThreadDone')
+            return False
+
+
+    def SetFileProviderClientConnectTimeout(self, ATimeout):
+        try:
+            self.GetSetFileProviderClientConnectTimeoutFunc(ATimeout)
+            return 'OK'
+        except:
+            return 'AV on SetFileProviderClientConnectTimeout'
+
+
+    def ClearClientInMemFS(self):
+        try:
+            self.GetClearClientInMemFSFunc()
+            return 'OK'
+        except:
+            return 'AV on ClearClientInMemFS'
+
+
+    def ClearServerInMemFS(self):
+        try:
+            self.GetClearServerInMemFSFunc()
+            return 'OK'
+        except:
+            return 'AV on ClearServerInMemFS'
+
+
 DllFuncs = TDllFunctions()
 
 print("InitClickerClient: ", DllFuncs.InitClickerClient())
@@ -401,6 +536,9 @@ try:
     print("SetServerAddress: ", DllFuncs.SetServerAddress('http://127.0.0.1:5444/'))
     print("GetServerAddress: ", DllFuncs.GetServerAddress())
     print("TestConnectionToServer after setting a working address: ", DllFuncs.TestConnectionToServer())
+    
+    #print("ClearClientInMemFS: ", DllFuncs.ClearClientInMemFS())  #For debugging only. The client should work without this call.
+    #print("ClearServerInMemFS: ", DllFuncs.ClearServerInMemFS())  #For debugging only. The server should work without this call.
     
     print("CreateNewTemplate: ", DllFuncs.CreateNewTemplate('VerifyClicking.clktmpl')) #creates a new template in dll's in-mem file system
     print("CreateNewTemplate: ", DllFuncs.CreateNewTemplate('VerifyClicking.clktmpl')) #the second call returns 1, because the file already exists
@@ -424,6 +562,8 @@ try:
     print("AddExecAppActionToTemplate: ", DllFuncs.AddExecAppActionToTemplate('VerifyClicking.clktmpl', 'Second', 0, True, '$a$==$b$', ctypes.byref(ExecAppOptions)))
     
     FindControlOptions = GetDefaultFindControlOptions()
+    FindControlOptions.MatchText = 'UI Clicker Main'
+    FindControlOptions.MatchClassName = 'Window'
     print("AddFindControlActionToTemplate: ", DllFuncs.AddFindControlActionToTemplate('VerifyClicking.clktmpl', 'Third', 1000, True, '$a$<>$b$', ctypes.byref(FindControlOptions)))
 
     MatchBitmapText = GetDefaultMatchBitmapText()
@@ -444,6 +584,14 @@ try:
     print("AddFontProfileToFindSubControlAction: ", DllFuncs.AddFontProfileToFindSubControlAction('VerifyClicking.clktmpl', 2, ctypes.byref(MatchBitmapText)))
     
     FindSubControlOptions = GetDefaultFindSubControlOptions()
+    FindSubControlOptions.MatchBitmapFiles = "bmps\\ShowWindowInterpreter32.bmp\r\nbmps\\ShowWindowInterpreter64.bmp\r\nbmps\\ShowWindowInterpreter_Wine.bmp"   
+    FindSubControlOptions.MatchCriteria.WillMatchBitmapText = False
+    FindSubControlOptions.MatchCriteria.WillMatchBitmapFiles = True
+    FindSubControlOptions.InitialRectange.LeftOffset = '56'
+    FindSubControlOptions.InitialRectange.TopOffset = '92'
+    FindSubControlOptions.InitialRectange.RightOffset = '-70'
+    FindSubControlOptions.InitialRectange.BottomOffset = '-123'
+    ###############
     print("AddFindSubControlActionToTemplate: ", DllFuncs.AddFindSubControlActionToTemplate('VerifyClicking.clktmpl', 'Fourth', 1000, True, '', ctypes.byref(FindSubControlOptions)))
     print("AddFontProfileToFindSubControlAction: ", DllFuncs.AddFontProfileToFindSubControlAction('VerifyClicking.clktmpl', 3, ctypes.byref(MatchBitmapText)))
     
@@ -463,13 +611,28 @@ try:
     print("AddWindowOperationsActionToTemplate: ", DllFuncs.AddWindowOperationsActionToTemplate('VerifyClicking.clktmpl', 'Nineth', 0, True, '', ctypes.byref(WindowOperationsOptions)))
 
 
+    ###########
+    print("AddListOfAccessibleDirsToFileProviderClient: ", DllFuncs.AddListOfAccessibleDirsToFileProviderClient("bmps\\"))
+    print("AddListOfAccessibleFileExtensionsToFileProviderClient: ", DllFuncs.AddListOfAccessibleFileExtensionsToFileProviderClient(".bmp\r\n.clktmpl"))
+    print("SetFileProviderClientConnectTimeout: ", DllFuncs.SetFileProviderClientConnectTimeout(3000))
+
+    print("StartFileProviderClientThread: ", DllFuncs.StartFileProviderClientThread())
+    ###########
+
     print("PrepareFilesInServer: ", DllFuncs.PrepareFilesInServer('VerifyClicking.clktmpl'))
     
     print("ExecuteActionAtIndex: ", DllFuncs.ExecuteActionAtIndex(AActionIndex = 6, AStackLevel = 0))
+    print("ExecuteActionAtIndex: ", DllFuncs.ExecuteActionAtIndex(AActionIndex = 2, AStackLevel = 0))
+    print("ExecuteActionAtIndex: ", DllFuncs.ExecuteActionAtIndex(AActionIndex = 3, AStackLevel = 0))
     
     print("GetListOfFilesFromClientInMem: ", DllFuncs.GetListOfFilesFromClientInMem())
     
     #print("GetTemplateContentFromClientInMemAsString: ", DllFuncs.GetTemplateContentFromClientInMemAsString('VerifyClicking.clktmpl'))
+
+    print("FileProviderClientThreadDone: ", DllFuncs.FileProviderClientThreadDone())
+    print("TerminateFileProviderClientThread: ", DllFuncs.TerminateFileProviderClientThread())
+    time.sleep(1)
+    print("FileProviderClientThreadDone: ", DllFuncs.FileProviderClientThreadDone())
 finally:
     print("DoneClickerClient", DllFuncs.DoneClickerClient())
 

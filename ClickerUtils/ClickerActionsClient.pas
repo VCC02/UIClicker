@@ -85,6 +85,7 @@ const
   CRECmd_GetCurrentlyRecordedScreenShotImage = 'GetCurrentlyRecordedScreenShotImage';
   CRECmd_GetCompInfoAtPoint = 'GetCompInfoAtPoint';
   CRECmd_RecordComponent = 'RecordComponent';
+  CRECmd_ClearInMemFileSystem = 'ClearInMemFileSystem';
 
   CREResp_RemoteExecResponseVar = '$RemoteExecResponse$';
   CREResp_FileExpectancy_ValueOnDisk = 'OnDisk';           //the server expects that templates and bmps to exist on disk
@@ -95,6 +96,7 @@ const
 
   CREResp_ErrParam = 'Err';
   CREResp_ErrResponseOK = 'OK';
+  CREResp_Done = 'Done';
   CREResp_HandleParam = 'Handle';
   CREResp_TextParam = 'Text';
   CREResp_ClassParam = 'Class';
@@ -123,7 +125,7 @@ function GetScreenShotImageFromServer(ARemoteAddress: string; AReceivedBmp: TBit
 function GetCurrentlyRecordedScreenShotImageFromServer(ARemoteAddress: string; AReceivedBmp: TBitmap): string; //returns error message if any
 function GetCompInfoAtPoint(ARemoteAddress: string; X, Y: Integer): string;
 function RecordComponentOnServer(ARemoteAddress: string; AHandle: THandle; AComponentContent: TMemoryStream): string;
-
+function ClearInMemFileSystem(ARemoteAddress: string): string;
 
 procedure GetListOfUsedFilesFromLoadedTemplate(var AClkActions: TClkActionsRecArr; AListOfFiles: TStringList);
 function SendMissingFilesToServer(ARemoteAddress: string; var AClkActions: TClkActionsRecArr): string;
@@ -477,6 +479,13 @@ begin
                                        CREParam_StackLevel + '=0' + '&' +
                                        CREParam_Handle + '=' + IntToStr(AHandle),
                                        AComponentContent);
+end;
+
+
+function ClearInMemFileSystem(ARemoteAddress: string): string;
+begin
+  Result := SendTextRequestToServer(ARemoteAddress + CRECmd_ClearInMemFileSystem + '?' +
+                                    CREParam_StackLevel + '=0');
 end;
 
 

@@ -30,13 +30,15 @@ library ClickerClient;
 
 uses
   Interfaces, Windows, SysUtils, Classes, Controls, Forms, ShellAPI, Graphics,
-  DllUtils, InMemFileSystem, ClickerActionsClient, ClickerUtils, ClickerTemplates;
+  DllUtils, InMemFileSystem, ClickerActionsClient, ClickerUtils, ClickerTemplates,
+  ClickerFileProviderClient;
 
 
 var
   InMemFS: TInMemFileSystem = nil;
   FRemoteAddress: string;
-  FAllVarReplacements: TStringList;
+  FAllVarReplacements: TStringList = nil;
+  FPollForMissingServerFilesTh: TPollForMissingServerFiles = nil;
 
 
 type
@@ -265,6 +267,9 @@ begin
   FExHandler := TExHandler.Create;  /////////////////////////// probably, it will have to be freed
   Application.Initialize;
   Application.OnException := FExHandler.CustomExceptionHandler;
+
+  FPollForMissingServerFilesTh := TPollForMissingServerFiles.Create(True);
+  FPollForMissingServerFilesTh.RemoteAddress := FRemoteAddress;
 end;
 
 
@@ -272,12 +277,16 @@ procedure DoneClickerClient; cdecl;
 begin
   FreeAndNil(InMemFS);
   FreeAndNil(FAllVarReplacements);
+  FreeAndNil(FPollForMissingServerFilesTh);
 end;
 
 
 procedure SetServerAddress(AAddress: Pointer); cdecl;
 begin
   SetPointedContentToString(@string(PWideChar(AAddress))[1], FRemoteAddress);
+
+  if FPollForMissingServerFilesTh <> nil then
+    FPollForMissingServerFilesTh.RemoteAddress := FRemoteAddress;
 end;
 
 
@@ -981,13 +990,89 @@ begin
 end;
 
 
+procedure StartFileProviderClientThread; cdecl;
+begin
+  FPollForMissingServerFilesTh.Start;
+end;
+
+
+procedure TerminateFileProviderClientThread; cdecl;
+begin
+  FPollForMissingServerFilesTh.Terminate;
+end;
+
+
+procedure AddListOfAccessibleDirsToFileProviderClient(AListOfDirs: Pointer); cdecl;
+var
+  AList: TStringList;
+  ListAsString: string;
+begin
+  AList := TStringList.Create;
+  try
+    SetPointedContentToString(@string(PWideChar(AListOfDirs))[1], ListAsString);
+    AList.Text := ListAsString;
+
+    FPollForMissingServerFilesTh.AddListOfAccessibleDirs(AList);
+  finally
+    AList.Free;
+  end;
+end;
+
+
+procedure AddListOfAccessibleFileExtensionsToFileProviderClient(AListOfExtensions: Pointer); cdecl;
+var
+  AList: TStringList;
+  ListAsString: string;
+begin
+  AList := TStringList.Create;
+  try
+    SetPointedContentToString(@string(PWideChar(AListOfExtensions))[1], ListAsString);
+    AList.Text := ListAsString;
+
+    FPollForMissingServerFilesTh.AddListOfAccessibleFileExtensions(AList);
+  finally
+    AList.Free;
+  end;
+end;
+
+
+function FileProviderClientThreadDone: Boolean; cdecl;
+begin
+  Result := FPollForMissingServerFilesTh.Done;
+end;
+
+
+procedure SetFileProviderClientConnectTimeout(ATimeout: LongInt); cdecl; //should be called before StartFileProviderClientThread to actually use the new timeout
+begin
+  if FPollForMissingServerFilesTh = nil then
+    Exit;
+
+  FPollForMissingServerFilesTh.ConnectTimeout := ATimeout;
+end;
+
+
+procedure ClearClientInMemFS; cdecl;
+begin
+  InMemFS.Clear;
+end;
+
+
+procedure ClearServerInMemFS; cdecl;
+begin
+  ClearInMemFileSystem(FRemoteAddress);
+end;
+
+
+
 exports
   InitClickerClient,
   DoneClickerClient,
   SetServerAddress,
   GetServerAddress,
   TestConnectionToServer,
+
   CreateNewTemplate,
+
   AddClickActionToTemplate,
   AddExecAppActionToTemplate,
   AddFindControlActionToTemplate,
@@ -1003,7 +1088,17 @@ exports
   PrepareFilesInServer,
   ExecuteActionAtIndex,
   GetListOfFilesFromClientInMem,
-  GetTemplateContentFromClientInMemAsString;
+  GetTemplateContentFromClientInMemAsString,
+
+  StartFileProviderClientThread,
+  TerminateFileProviderClientThread,
+  AddListOfAccessibleDirsToFileProviderClient,
+  AddListOfAccessibleFileExtensionsToFileProviderClient,
+  FileProviderClientThreadDone,
+  SetFileProviderClientConnectTimeout,
+
+  ClearClientInMemFS,
+  ClearServerInMemFS;
 begin
   ClientLastError := '';
 end.
