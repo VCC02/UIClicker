@@ -70,6 +70,8 @@ const
   CREParam_FileLocation_ValueDisk = 'Disk';
   CREParam_FileLocation_ValueMem = 'Mem';
 
+  CREParam_DebugParam = 'Dbg';
+
   CRECmd_TestConnection = 'TestConnection';
   CRECmd_ExecuteCommandAtIndex = 'ExecuteCommandAtIndex';
   CRECmd_GetExecuteCommandAtIndexResult = 'GetExecuteCommandAtIndexResult';
@@ -121,8 +123,8 @@ function GetDebugImageFromServer(ARemoteAddress: string; AStackLevel: Integer; A
 function SendTemplateContentToServer(ARemoteAddress, AFileName: string; var ACustomACSActions: TClkActionsRecArr): string;
 function SendLoadTemplateInExecListRequest(ARemoteAddress, AFileName: string; AStackLevel: Integer): string;
 function GetServerFileExpectancy(ARemoteAddress: string): string;
-function GetFileExistenceOnServer(ARemoteAddress: string; AListOfFiles, AListOfResults: TStringList; AListOfFilesIncludesHashes: Boolean): string; overload;
-function GetFileExistenceOnServer(ARemoteAddress: string; AFile: string; AFileIncludesHash: Boolean): Boolean; overload;
+function GetFileExistenceOnServer(ARemoteAddress: string; AListOfFiles, AListOfResults: TStringList; AListOfFilesIncludesHashes: Boolean; ADebugParam: string = ''): string; overload;
+function GetFileExistenceOnServer(ARemoteAddress: string; AFileName: string; AFileIncludesHash: Boolean; ADebugParam: string = ''): Boolean; overload;
 
 function GetScreenShotImageFromServer(ARemoteAddress: string; AReceivedBmp: TBitmap): string; //returns error message if any
 function GetCurrentlyRecordedScreenShotImageFromServer(ARemoteAddress: string; AReceivedBmp: TBitmap): string; //returns error message if any
@@ -405,7 +407,7 @@ begin
 end;
 
 
-function GetFileExistenceOnServer(ARemoteAddress: string; AListOfFiles, AListOfResults: TStringList; AListOfFilesIncludesHashes: Boolean): string;
+function GetFileExistenceOnServer(ARemoteAddress: string; AListOfFiles, AListOfResults: TStringList; AListOfFilesIncludesHashes: Boolean; ADebugParam: string = ''): string;
 var
   Link: string;
   MemStream: TMemoryStream;
@@ -413,7 +415,8 @@ var
   TempListOfFileResults: string;
 begin
   Link := ARemoteAddress + CRECmd_GetFileExistenceOnServer;
-  Link := Link + '?' + CREParam_VerifyHashes + '=' + IntToStr(Ord(AListOfFilesIncludesHashes));
+  Link := Link + '?' + CREParam_VerifyHashes + '=' + IntToStr(Ord(AListOfFilesIncludesHashes)) +
+                 '&' + CREParam_DebugParam + '=' + ADebugParam;
 
   MemStream := TMemoryStream.Create;
   RespStream := TMemoryStream.Create;
@@ -436,16 +439,16 @@ begin
 end;
 
 
-function GetFileExistenceOnServer(ARemoteAddress: string; AFile: string; AFileIncludesHash: Boolean): Boolean; overload;
+function GetFileExistenceOnServer(ARemoteAddress: string; AFileName: string; AFileIncludesHash: Boolean; ADebugParam: string = ''): Boolean; overload;
 var
   ListOfFiles, ListOfResults: TStringList;
 begin
   ListOfFiles := TStringList.Create;
   ListOfResults := TStringList.Create;
   try
-    ListOfFiles.Add(AFile);
+    ListOfFiles.Add(AFileName);
 
-    Result := GetFileExistenceOnServer(ARemoteAddress, ListOfFiles, ListOfResults, AFileIncludesHash) = '';
+    Result := GetFileExistenceOnServer(ARemoteAddress, ListOfFiles, ListOfResults, AFileIncludesHash, 'OneFile_' + ADebugParam) = '';
     Result := Result and (ListOfResults.Count > 0) and (ListOfResults.Strings[0] = '1');
   finally
     ListOfFiles.Free;
@@ -541,7 +544,7 @@ begin
 end;
 
 
-//Sends this template and the bitmaps it might use.s
+//Sends this template and the bitmaps it might use.
 function SendMissingFilesToServer(ARemoteAddress: string; var AClkActions: TClkActionsRecArr): string;
 var
   ListOfUsedFiles, ListOfUsedFilesWithHashes, FileExistenceOnServer: TStringList;
@@ -556,7 +559,7 @@ begin
     GetListOfUsedFilesFromLoadedTemplate(AClkActions, ListOfUsedFiles);
     AddHashesToFileNames(ListOfUsedFiles, ListOfUsedFilesWithHashes);
 
-    Result := GetFileExistenceOnServer(ARemoteAddress, ListOfUsedFiles, FileExistenceOnServer, True);
+    Result := GetFileExistenceOnServer(ARemoteAddress, ListOfUsedFiles, FileExistenceOnServer, True, 'SendMissingFilesToServer with used files.');
     if Result = '' then
       for i := 0 to FileExistenceOnServer.Count - 1 do
         if FileExistenceOnServer[i] = '0' then
@@ -598,16 +601,13 @@ begin
   FileContentMem := TMemoryStream.Create;
   try
     GetTemplateContentAsMemoryStream(AClkActions, FileContentMem);
-
-    SetLength(Hash, FileContentMem.Size);
-    FileContentMem.Position := 0;
-    FileContentMem.Read(Hash[1], FileContentMem.Size);
+    Hash := ComputeHash(FileContentMem, FileContentMem.Size);
   finally
     FileContentMem.Free;
   end;
 
   FileNameWithHash := AFileName + CDefaultInMemFileNameHashSeparator + Hash;
-  if not GetFileExistenceOnServer(ARemoteAddress, FileNameWithHash, True) then
+  if not GetFileExistenceOnServer(ARemoteAddress, FileNameWithHash, True, 'SetClientTemplateInServer') then
   begin
     Result := SendTemplateContentToServer(ARemoteAddress, AFileName, AClkActions); //////////////// GetTemplateContentAsMemoryStream is called again in here
     if Pos(CREResp_ReceivedFile, Result) = 0 then

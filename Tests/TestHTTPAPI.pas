@@ -220,7 +220,7 @@ begin
     ListOfFiles.Add(CFileName1 + CDefaultInMemFileNameHashSeparator + '01A883F23CCAFE1CB87AE35BABA90B91');
     ListOfFiles.Add(CFileName2 + CDefaultInMemFileNameHashSeparator + 'bad hash');  //60AFF80200964FA6EFE893DE0F4E2352
     ListOfFiles.Add(CFileName3 + CDefaultInMemFileNameHashSeparator + 'B924828E25CC6B02FC1D84D8129E599F');
-    ListOfFiles.Add('non-existent file');
+    ListOfFiles.Add('non-existent file' + CDefaultInMemFileNameHashSeparator + 'no hash');
 
     AssertEquals('', GetFileExistenceOnServer(CTestServerAddress, ListOfFiles, ListOfResults, True));
     AssertEquals('1', ListOfResults.Strings[0]);
