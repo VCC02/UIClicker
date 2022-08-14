@@ -87,6 +87,7 @@ const
   CRECmd_RecordComponent = 'RecordComponent';
   CRECmd_ClearInMemFileSystem = 'ClearInMemFileSystem';
 
+  CREResp_ConnectionOK = 'Connection ok';
   CREResp_RemoteExecResponseVar = '$RemoteExecResponse$';
   CREResp_FileExpectancy_ValueOnDisk = 'OnDisk';           //the server expects that templates and bmps to exist on disk
   CREResp_FileExpectancy_ValueFromClient = 'FromClient';   //the server expects that templates and bmps to be received from client
@@ -108,12 +109,14 @@ const
   CREResp_CompHeight = 'CompHeight';
 
 
+function TestConnection(ARemoteAddress: string): string;
 function WaitForServerResponse(ATh: TClientThread; ACallAppProcMsg: Boolean = True): Boolean; //used for requests with custom waiting
 function SendTextRequestToServer(AFullLink: string): string;
 //function SendFileToServer(AFullLink: string; AFileContent, AResponseStream: TMemoryStream; ACallAppProcMsg: Boolean = True): string; overload; //expose this only if needed
 function SendFileToServer(AFullLink: string; AFileContent: TMemoryStream; ACallAppProcMsg: Boolean = True): string; overload;
 
 function ExitRemoteTemplate(ARemoteAddress: string; AStackLevel: Integer): string;  //called by client, to send a request to server to close a tab
+function GetAllReplacementVars(ARemoteAddress: string; AStackLevel: Integer): string;
 function GetDebugImageFromServer(ARemoteAddress: string; AStackLevel: Integer; AReceivedBmp: TBitmap; AWithGrid: Boolean): string; //returns error message if any
 function SendTemplateContentToServer(ARemoteAddress, AFileName: string; var ACustomACSActions: TClkActionsRecArr): string;
 function SendLoadTemplateInExecListRequest(ARemoteAddress, AFileName: string; AStackLevel: Integer): string;
@@ -317,6 +320,12 @@ end;
 //function ExecuteRemoteActionAtIndex(ARemoteAddress: string; var ACustomACSActions: TClkActionsRecArr; AActionIndex, AStackLevel: Integer; AVarReplacements: TStringList; AIsDebugging: Boolean): Boolean;
 
 
+function TestConnection(ARemoteAddress: string): string;
+begin
+  Result := SendTextRequestToServer(ARemoteAddress + CRECmd_TestConnection);
+end;
+
+
 //used while debugging, to close templates which open automatically
 function ExitRemoteTemplate(ARemoteAddress: string; AStackLevel: Integer): string;  //called by client, to send a request to server to close a tab
 begin
@@ -404,7 +413,7 @@ var
   TempListOfFileResults: string;
 begin
   Link := ARemoteAddress + CRECmd_GetFileExistenceOnServer;
-  Link := Link + '&' + CREParam_VerifyHashes + '=' + IntToStr(Ord(AListOfFilesIncludesHashes));
+  Link := Link + '?' + CREParam_VerifyHashes + '=' + IntToStr(Ord(AListOfFilesIncludesHashes));
 
   MemStream := TMemoryStream.Create;
   RespStream := TMemoryStream.Create;
