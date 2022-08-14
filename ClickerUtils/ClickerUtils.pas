@@ -897,6 +897,7 @@ begin
       DCP_md5.Update(AFileContent^, AFileSize);
       DCP_md5.Final(BinHash[0]);
 
+      SetLength(BinHash, 16);
       Result := ArrOfByteToHex(BinHash);
     finally
       SetLength(BinHash, 0);
