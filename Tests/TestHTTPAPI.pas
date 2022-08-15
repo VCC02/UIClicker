@@ -61,6 +61,9 @@ type
     procedure Test_GetFileExistenceOnServer_MultipleFilesWithHash;
 
     procedure Test_ClearInMemFileSystem;
+
+    procedure Test_SetVariable_HappyFlow;
+    procedure Test_SetVariable_BadStackLevel;
   end;
 
 
@@ -393,7 +396,35 @@ begin
 end;
 
 
+procedure TTestHTTPAPI.Test_SetVariable_HappyFlow;
+var
+  Response: string;
+begin
+  Response := SetVariable(CTestServerAddress, '$MyVar$', 'some value', 0);
+  AssertEquals(CREResp_Done, Response);
+end;
 
+
+procedure TTestHTTPAPI.Test_SetVariable_BadStackLevel;
+const
+  CBadValue = 'some bad value';
+var
+  Response: string;
+  ListOfVars: TStringList;
+begin
+  Response := SetVariable(CTestServerAddress, '$MyVar$', CBadValue, 10);
+  AssertEquals(CExpectedBadStackLevelResponse, Response);
+
+  Response := FastReplace_87ToReturn(GetAllReplacementVars(CTestServerAddress, 0));
+
+  ListOfVars := TStringList.Create;
+  try
+    ListOfVars.Text := Response;
+    AssertEquals(False, ListOfVars.Values['$MyVar$'] = CBadValue);
+  finally
+    ListOfVars.Free;
+  end;
+end;
 
 
 initialization

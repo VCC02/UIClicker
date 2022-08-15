@@ -508,7 +508,7 @@ end;
 function SetVariable(ARemoteAddress, AVarName, AVarValue: string; AStackLevel: Integer): string;
 begin
   Result := SendTextRequestToServer(ARemoteAddress + CRECmd_SetVariable + '?' +
-                                    CREParam_StackLevel + '=0' + '&' +
+                                    CREParam_StackLevel + '=' + IntToStr(AStackLevel) + '&' +
                                     CREParam_Var + '=' + AVarName + '&' +
                                     CREParam_Value + '=' + AVarValue);
 end;
