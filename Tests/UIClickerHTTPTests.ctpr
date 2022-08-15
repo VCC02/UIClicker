@@ -62,6 +62,14 @@
         <Filename Value="..\..\MiscUtils\InMemFileSystem.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
+      <Unit>
+        <Filename Value="ActionsStuff.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\ClickerUtils\ClickerTemplates.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -73,7 +81,7 @@
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
       <OtherUnitFiles Value="..\ClickerUtils;..\..\MiscUtils"/>
-      <UnitOutputDirectory Value="lib/$(TargetCPU)-$(TargetOS)/$(LCLWidgetType)"/>
+      <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)\$(LCLWidgetType)"/>
     </SearchPaths>
     <Linking>
       <Debugging>

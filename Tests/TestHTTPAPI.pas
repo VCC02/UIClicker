@@ -29,25 +29,37 @@ unit TestHTTPAPI;
 interface
 
 uses
-  Classes, SysUtils, fpcunit, testutils, testregistry;
+  Classes, SysUtils, fpcunit, testregistry, InMemFileSystem;
 
 type
 
   TTestHTTPAPI = class(TTestCase)
   private
+    FInMemFS: TInMemFileSystem;
     function SendTestFileToServer(ARemoteAddress, AFileName: string; AFileContent: string = 'Dummy'): string;
+    function SendTemplateToServer(ARemoteAddress, AFileName: string; AFileContent: TMemoryStream): string;
+    procedure CreateTestTemplateInMem;
+    function Send_ExecuteCommandAtIndex_ToServer(AActionIdx, AStackLevel: Integer): string;
   protected
     procedure SetUp; override;
     procedure TearDown; override;
   published
     procedure Test_TestConnection;
+    procedure Test_ExecuteCommandAtIndex_HappyFlow;
+    procedure Test_ExecuteCommandAtIndex_EmptyTemplate;
+    procedure Test_ExecuteCommandAtIndex_BadActionIndex;
+    procedure Test_ExecuteCommandAtIndex_BadStackIndex;
+
     procedure Test_GetAllReplacementVars_HappyFlow;
     procedure Test_GetAllReplacementVars_BadStackLevel;
+
     procedure Test_SendFileToServer;
+
     procedure Test_GetFileExistenceOnServer_OneFileNoHash;
     procedure Test_GetFileExistenceOnServer_OneFileWithHash;
     procedure Test_GetFileExistenceOnServer_MultipleFilesNoHash;
     procedure Test_GetFileExistenceOnServer_MultipleFilesWithHash;
+
     procedure Test_ClearInMemFileSystem;
   end;
 
@@ -55,22 +67,25 @@ type
 implementation
 
 uses
-  ClickerActionsClient, ClickerUtils, InMemFileSystem;
+  ClickerActionsClient, ClickerUtils, ActionsStuff;
 
 
 const
   CTestServerAddress = 'http://127.0.0.1:5444/';
+  CTestTemplateFileName = 'TestTemplate.clktmpl';
+  CEmptyTestTemplateFileName = 'EmptyTestTemplate.clktmpl';
+  CExpectedBadStackLevelResponse: string = '[Server error] Stack level out of bounds: 10. This happens when there is no template loaded in a new tab (with the requested stack level), as a result of "call template" action. It is also possible that the template is loaded, then exited before being executed.';
 
 
 procedure TTestHTTPAPI.SetUp;
 begin
-
+  FInMemFS := TInMemFileSystem.Create;
 end;
 
 
 procedure TTestHTTPAPI.TearDown;
 begin
-
+  FreeAndNil(FInMemFS);
 end;
 
 
@@ -95,12 +110,144 @@ begin
 end;
 
 
+function TTestHTTPAPI.SendTemplateToServer(ARemoteAddress, AFileName: string; AFileContent: TMemoryStream): string;
+var
+  Link: string;
+begin
+  Link := ARemoteAddress + CRECmd_SendFileToServer + '?' +
+                           CREParam_FileName + '=' + AFileName;
+
+  Result := SendFileToServer(Link, AFileContent);
+
+  AssertEquals('Received file: "' + AFileName + '"  of ' + IntToStr(AFileContent.Size) + ' bytes in size.', Result);
+  AssertEquals(True, GetFileExistenceOnServer(CTestServerAddress, AFileName, False));
+end;
+
+
+procedure TTestHTTPAPI.CreateTestTemplateInMem;
+var
+  ClickOptions: TClkClickOptions;
+begin
+  GetDefaultClickOptions(ClickOptions);
+  ClickOptions.XClickPointReference := xrefVar;
+  ClickOptions.YClickPointReference := yrefVar;
+  ClickOptions.XClickPointVar := '$ObjLeft$';
+  ClickOptions.YClickPointVar := '$ObjTop$';
+  ClickOptions.MoveWithoutClick := True;
+
+  AddClickActionToTemplate(CTestTemplateFileName, '1', 0, True, '', ClickOptions, FInMemFS);
+end;
+
+
+function TTestHTTPAPI.Send_ExecuteCommandAtIndex_ToServer(AActionIdx, AStackLevel: Integer): string;
+var
+  Link: string;
+begin
+  Link := CTestServerAddress + CRECmd_ExecuteCommandAtIndex + '?' +
+                               CREParam_ActionIdx + '=' + IntToStr(AActionIdx) + '&' +
+                               CREParam_StackLevel + '=' + IntToStr(AStackLevel) + '&' +
+                               CREParam_IsDebugging + '=' + IntToStr(0) + '&' +
+                               CREParam_FileLocation + '= ' + CREParam_FileLocation_ValueMem;
+
+  Result := SendTextRequestToServer(Link);
+end;
+
+
 procedure TTestHTTPAPI.Test_TestConnection;
 var
   Response: string;
 begin
   Response := TestConnection(CTestServerAddress);
   AssertEquals(CREResp_ConnectionOK, Response);
+end;
+
+
+//ToDo: some refactoring, then use some test utils for assertions.
+procedure TTestHTTPAPI.Test_ExecuteCommandAtIndex_HappyFlow;
+var
+  Content: TMemoryStream;
+  Response: string;
+  ListOfVars: TStringList;
+begin
+  CreateTestTemplateInMem;
+
+  Content := TMemoryStream.Create;
+  try
+    FInMemFS.LoadFileFromMemToStream(CTestTemplateFileName, Content);
+    SendTemplateToServer(CTestServerAddress, CTestTemplateFileName, Content);
+  finally
+    Content.Free;
+  end;
+
+  AssertEquals(CREResp_TemplateLoaded, SendLoadTemplateInExecListRequest(CTestServerAddress, CTestTemplateFileName, 0));
+
+  Response := FastReplace_87ToReturn(Send_ExecuteCommandAtIndex_ToServer(0, 0));
+
+  ListOfVars := TStringList.Create;
+  try
+    ListOfVars.Text := Response;
+    AssertEquals(True, ListOfVars.Values['$LastAction_Status$'] <> CActionStatusStr[asFailed]);
+  finally
+    ListOfVars.Free;
+  end;
+end;
+
+
+procedure TTestHTTPAPI.Test_ExecuteCommandAtIndex_EmptyTemplate;
+var
+  Content: TMemoryStream;
+  Response: string;
+  ListOfVars: TStringList;
+begin
+  //SetVariable(CTestServerAddress, '$LastAction_Status$', '', 0);
+
+  Content := TMemoryStream.Create;
+  try
+    SendTemplateToServer(CTestServerAddress, CEmptyTestTemplateFileName, Content);
+  finally
+    Content.Free;
+  end;
+
+  AssertEquals(CREResp_TemplateLoaded, SendLoadTemplateInExecListRequest(CTestServerAddress, CEmptyTestTemplateFileName, 0));
+
+  Response := FastReplace_87ToReturn(Send_ExecuteCommandAtIndex_ToServer(0, 0));
+
+  ListOfVars := TStringList.Create;
+  try
+    ListOfVars.Text := Response;
+    AssertEquals(CActionStatusStr[asFailed], ListOfVars.Values['$LastAction_Status$']);
+  finally
+    ListOfVars.Free;
+  end;
+end;
+
+
+procedure TTestHTTPAPI.Test_ExecuteCommandAtIndex_BadActionIndex;
+const
+  CExpectedErr: string = 'Cannot select action, to load values at index 10.  It seems that no template is loaded.';
+var
+  Response: string;
+  ListOfVars: TStringList;
+begin
+  Response := FastReplace_87ToReturn(Send_ExecuteCommandAtIndex_ToServer(10, 0));
+
+  ListOfVars := TStringList.Create;
+  try
+    ListOfVars.Text := Response;
+    AssertEquals(CActionStatusStr[asFailed], ListOfVars.Values['$LastAction_Status$']);
+    AssertEquals(CExpectedErr, ListOfVars.Values['$DbgCurrentAction$']);
+  finally
+    ListOfVars.Free;
+  end;
+end;
+
+
+procedure TTestHTTPAPI.Test_ExecuteCommandAtIndex_BadStackIndex;
+var
+  Response: string;
+begin
+  Response := Send_ExecuteCommandAtIndex_ToServer(0, 10);
+  AssertEquals(CExpectedBadStackLevelResponse, Response);
 end;
 
 
@@ -123,13 +270,11 @@ end;
 
 
 procedure TTestHTTPAPI.Test_GetAllReplacementVars_BadStackLevel;
-const
-  CExpectedResponse: string = '[Server error] Stack level out of bounds: 10. This happens when there is no template loaded in a new tab (with the requested stack level), as a result of "call template" action. It is also possible that the template is loaded, then exited before being executed.';
 var
   Response: string;
 begin
   Response := GetAllReplacementVars(CTestServerAddress, 10);
-  AssertEquals(CExpectedResponse, Response);
+  AssertEquals(CExpectedBadStackLevelResponse, Response);
 end;
 
 

@@ -71,6 +71,8 @@ const
   CREParam_FileLocation_ValueMem = 'Mem';
 
   CREParam_DebugParam = 'Dbg';
+  CREParam_Var = 'Var';
+  CREParam_Value = 'Value';
 
   CRECmd_TestConnection = 'TestConnection';
   CRECmd_ExecuteCommandAtIndex = 'ExecuteCommandAtIndex';
@@ -88,6 +90,7 @@ const
   CRECmd_GetCompInfoAtPoint = 'GetCompInfoAtPoint';
   CRECmd_RecordComponent = 'RecordComponent';
   CRECmd_ClearInMemFileSystem = 'ClearInMemFileSystem';
+  CRECmd_SetVariable = 'SetVariable';
 
   CREResp_ConnectionOK = 'Connection ok';
   CREResp_RemoteExecResponseVar = '$RemoteExecResponse$';
@@ -131,6 +134,7 @@ function GetCurrentlyRecordedScreenShotImageFromServer(ARemoteAddress: string; A
 function GetCompInfoAtPoint(ARemoteAddress: string; X, Y: Integer): string;
 function RecordComponentOnServer(ARemoteAddress: string; AHandle: THandle; AComponentContent: TMemoryStream): string;
 function ClearInMemFileSystem(ARemoteAddress: string): string;
+function SetVariable(ARemoteAddress, AVarName, AVarValue: string; AStackLevel: Integer): string;
 
 procedure GetListOfUsedFilesFromLoadedTemplate(var AClkActions: TClkActionsRecArr; AListOfFiles: TStringList);
 function SendMissingFilesToServer(ARemoteAddress: string; var AClkActions: TClkActionsRecArr): string;
@@ -500,6 +504,14 @@ begin
                                     CREParam_StackLevel + '=0');
 end;
 
+
+function SetVariable(ARemoteAddress, AVarName, AVarValue: string; AStackLevel: Integer): string;
+begin
+  Result := SendTextRequestToServer(ARemoteAddress + CRECmd_SetVariable + '?' +
+                                    CREParam_StackLevel + '=0' + '&' +
+                                    CREParam_Var + '=' + AVarName + '&' +
+                                    CREParam_Value + '=' + AVarValue);
+end;
 
 
 //==============================================================================
