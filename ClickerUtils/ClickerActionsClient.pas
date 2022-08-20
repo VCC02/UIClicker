@@ -92,6 +92,16 @@ const
   CRECmd_ClearInMemFileSystem = 'ClearInMemFileSystem';
   CRECmd_SetVariable = 'SetVariable';
 
+  CRECmd_ExecuteClickAction = 'ExecuteClickAction';
+  CRECmd_ExecuteExecAppAction = 'ExecuteExecAppAction';
+  CRECmd_ExecuteSetControlTextAction = 'ExecuteSetControlTextAction';
+  CRECmd_ExecuteFindControlAction = 'ExecuteFindControlAction';
+  CRECmd_ExecuteFindSubControlAction = 'ExecuteFindSubControlAction';
+  CRECmd_ExecuteCallTemplateAction = 'ExecuteCallTemplateAction';
+  CRECmd_ExecuteSleepAction = 'ExecuteSleepAction';
+  CRECmd_ExecuteSetVarAction = 'ExecuteSetVarAction';
+  CRECmd_ExecuteWindowOperationsAction = 'ExecuteWindowOperationsAction';
+
   CREResp_ConnectionOK = 'Connection ok';
   CREResp_RemoteExecResponseVar = '$RemoteExecResponse$';
   CREResp_FileExpectancy_ValueOnDisk = 'OnDisk';           //the server expects that templates and bmps to exist on disk
@@ -135,6 +145,8 @@ function GetCompInfoAtPoint(ARemoteAddress: string; X, Y: Integer): string;
 function RecordComponentOnServer(ARemoteAddress: string; AHandle: THandle; AComponentContent: TMemoryStream): string;
 function ClearInMemFileSystem(ARemoteAddress: string): string;
 function SetVariable(ARemoteAddress, AVarName, AVarValue: string; AStackLevel: Integer): string;
+
+function ExecuteClickAction(ARemoteAddress: string; AClickOptions: TClkClickOptions): string;
 
 procedure GetListOfUsedFilesFromLoadedTemplate(var AClkActions: TClkActionsRecArr; AListOfFiles: TStringList);
 function SendMissingFilesToServer(ARemoteAddress: string; var AClkActions: TClkActionsRecArr): string;
@@ -511,6 +523,35 @@ begin
                                     CREParam_StackLevel + '=' + IntToStr(AStackLevel) + '&' +
                                     CREParam_Var + '=' + AVarName + '&' +
                                     CREParam_Value + '=' + AVarValue);
+end;
+
+
+function ExecuteClickAction(ARemoteAddress: string; AClickOptions: TClkClickOptions): string;
+begin
+  Result := SendTextRequestToServer(ARemoteAddress + CRECmd_ExecuteClickAction + '?' +
+                                    CREParam_StackLevel + '=0' + '&' +   //use the main editor
+                                    'XClickPointReference' + '=' + IntToStr(Ord(AClickOptions.XClickPointReference)) + '&' +
+                                    'YClickPointReference' + '=' + IntToStr(Ord(AClickOptions.YClickPointReference)) + '&' +
+                                    'XClickPointVar' + '=' + AClickOptions.XClickPointVar + '&' +
+                                    'YClickPointVar' + '=' + AClickOptions.YClickPointVar + '&' +
+                                    'XOffset' + '=' + AClickOptions.XOffset + '&' +
+                                    'YOffset' + '=' + AClickOptions.YOffset + '&' +
+                                    'MouseButton' + '=' + IntToStr(Ord(AClickOptions.MouseButton)) + '&' +
+                                    'ClickWithCtrl' + '=' + IntToStr(Ord(AClickOptions.ClickWithCtrl)) + '&' +
+                                    'ClickWithAlt' + '=' + IntToStr(Ord(AClickOptions.ClickWithAlt)) + '&' +
+                                    'ClickWithShift' + '=' + IntToStr(Ord(AClickOptions.ClickWithShift)) + '&' +
+                                    'ClickWithDoubleClick' + '=' + IntToStr(Ord(AClickOptions.ClickWithDoubleClick)) + '&' +
+                                    'Count' + '=' + IntToStr(AClickOptions.Count) + '&' +
+                                    'LeaveMouse' + '=' + IntToStr(Ord(AClickOptions.LeaveMouse)) + '&' +
+                                    'MoveWithoutClick' + '=' + IntToStr(Ord(AClickOptions.MoveWithoutClick)) + '&' +
+                                    'ClickType' + '=' + IntToStr(Ord(AClickOptions.ClickType)) + '&' +
+                                    'XClickPointReferenceDest' + '=' + IntToStr(Ord(AClickOptions.XClickPointReferenceDest)) + '&' +
+                                    'YClickPointReferenceDest' + '=' + IntToStr(Ord(AClickOptions.YClickPointReferenceDest)) + '&' +
+                                    'XClickPointVarDest' + '=' + AClickOptions.XClickPointVarDest + '&' +
+                                    'YClickPointVarDest' + '=' + AClickOptions.YClickPointVarDest + '&' +
+                                    'XOffsetDest' + '=' + AClickOptions.XOffsetDest + '&' +
+                                    'YOffsetDest' + '=' + AClickOptions.YOffsetDest
+                                    );
 end;
 
 

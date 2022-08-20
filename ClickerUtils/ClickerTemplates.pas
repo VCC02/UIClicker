@@ -392,7 +392,7 @@ begin
 end;
 
 
-procedure LoadAction_WindowOperations(Ini: TClkIniReadonlyFile; SectionIndex: Integer; var AWindowOperationsOptions: TClkWindowOperations);
+procedure LoadAction_WindowOperations(Ini: TClkIniReadonlyFile; SectionIndex: Integer; var AWindowOperationsOptions: TClkWindowOperationsOptions);
 begin
   AWindowOperationsOptions.Operation := TWindowOperation(Min(Ini.ReadInteger(SectionIndex, 'WindowOperation', Integer(woBringToFront)), Integer(High(TWindowOperation))));
   AWindowOperationsOptions.NewX := Ini.ReadString(SectionIndex, 'NewX', '');
@@ -767,7 +767,7 @@ begin
 end;
 
 
-procedure AddAction_WindowOperationsToStringList(var AActionWindowOperationsOptions: TClkWindowOperations; AStringList: TStringList);
+procedure AddAction_WindowOperationsToStringList(var AActionWindowOperationsOptions: TClkWindowOperationsOptions; AStringList: TStringList);
 begin
   AStringList.Add('WindowOperation=' + IntToStr(Ord(AActionWindowOperationsOptions.Operation)));
   AStringList.Add('NewX=' + AActionWindowOperationsOptions.NewX);

@@ -21,6 +21,7 @@
     OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 }
 
+
 unit ClickerUtils;
 
 {$H+}
@@ -36,7 +37,7 @@ uses
   {$ELSE}
     Windows,
   {$ENDIF}
-  SysUtils, Classes, ValEdit, VirtualTrees, Graphics, Controls,
+  SysUtils, Classes, VirtualTrees, Graphics, Controls,
   IdGlobal, DCPmd5;
 
 
@@ -195,7 +196,7 @@ type
     ListOfVarEvalBefore: string;
   end;
 
-  TClkWindowOperations = record
+  TClkWindowOperationsOptions = record
     Operation: TWindowOperation;
     NewX, NewY, NewWidth, NewHeight: string;
     NewPositionEabled, NewSizeEabled: Boolean;
@@ -221,7 +222,7 @@ type
     CallTemplateOptions: TClkCallTemplateOptions;
     SleepOptions: TClkSleepOptions;
     SetVarOptions: TClkSetVarOptions;
-    WindowOperationsOptions: TClkWindowOperations;
+    WindowOperationsOptions: TClkWindowOperationsOptions;
   end;
 
   TClkActionsRecArr = array of TClkActionRec;
@@ -261,7 +262,7 @@ function FastReplace_ReturnToCSV(s: string): string;
 
 function GetIsUserAnAdmin: string;
 
-function EvaluateValLstReplacements(AValLst: TValueListEditor; s: string; Recursive: Boolean = True): string;
+function EvaluateAllReplacements(AListOfVars: TStringList; s: string; Recursive: Boolean = True): string;
 function CreateDirWithSubDirs(ADir: string): Boolean;
 function HexToInt(s: string): Cardinal;
 
@@ -475,10 +476,10 @@ begin
 end;
 
 
-function ReplaceOnce(AValLst: TValueListEditor; s: string; AReplaceRandom: Boolean = True): string;   forward;
+function ReplaceOnce(AListOfVars: TStringList; s: string; AReplaceRandom: Boolean = True): string;   forward;
 
 
-function ReplaceRandom(AValLst: TValueListEditor; s: string): string;
+function ReplaceRandom(AListOfVars: TStringList; s: string): string;
 var
   PosComma: Integer;
   RandomArgs, InitialRandomArgs: string;
@@ -494,7 +495,7 @@ begin
     RandomValueStr := IntToStr(Random(65536))
   else
   begin
-    RandomArgs := ReplaceOnce(AValLst, RandomArgs, False);
+    RandomArgs := ReplaceOnce(AListOfVars, RandomArgs, False);
     RandomArgs := StringReplace(RandomArgs, ' ', '', [rfReplaceAll]);
     PosComma := Pos(',', RandomArgs);
 
@@ -519,7 +520,7 @@ begin
 end;
 
 
-function ReplaceSum(AValLst: TValueListEditor; s: string): string;
+function ReplaceSum(AListOfVars: TStringList; s: string): string;
 var
   PosComma: Integer;
   SumArgs, InitialSumArgs: string;
@@ -535,7 +536,7 @@ begin
     ResultValueStr := '0'
   else
   begin
-    SumArgs := ReplaceOnce(AValLst, SumArgs, False);
+    SumArgs := ReplaceOnce(AListOfVars, SumArgs, False);
     SumArgs := StringReplace(SumArgs, ' ', '', [rfReplaceAll]);
     PosComma := Pos(',', SumArgs);
 
@@ -596,14 +597,20 @@ begin
 end;
 
 
-function ReplaceOnce(AValLst: TValueListEditor; s: string; AReplaceRandom: Boolean = True): string;
+function ReplaceOnce(AListOfVars: TStringList; s: string; AReplaceRandom: Boolean = True): string;
 var
   i: Integer;
   tp: TPoint;
+  CurrentName, CurrentValue: string;
 begin
-  for i := 1 to AValLst.RowCount - 1 do     //starts at 1, because the header is at index 0
-    if Pos(AValLst.Cells[0, i], AValLst.Cells[1, i]) = 0 then  //avoid expanding a string into its "superset", because it will lead to infinite recursion (e.g.: $TextToFind$=$TextToFind$=$ProjectName$ )
-      s := StringReplace(s, AValLst.Cells[0, i], AValLst.Cells[1, i], [rfReplaceAll]);
+  for i := 0 to AListOfVars.Count - 1 do
+  begin
+    CurrentName := AListOfVars.Names[i];
+    CurrentValue := AListOfVars.ValueFromIndex[i];
+
+    if Pos(CurrentName, CurrentValue) = 0 then  //avoid expanding a string into its "superset", because it will lead to infinite recursion (e.g.: $TextToFind$=$TextToFind$=$ProjectName$ )
+      s := StringReplace(s, CurrentName, CurrentValue, [rfReplaceAll]);
+  end;
 
   if Pos('$Random(', s) = 1 then
   begin
@@ -613,7 +620,7 @@ begin
       Randomize;
     end;
 
-    s := ReplaceRandom(AValLst, s);
+    s := ReplaceRandom(AListOfVars, s);
   end;
 
   if Pos('$ExtractFileDir(', s) = 1 then
@@ -647,13 +654,13 @@ begin
     s := ReplaceFastReplace_ReturnTo45(s);
 
   if Pos('$Sum(', s) > 0 then
-    s := ReplaceSum(AValLst, s);
+    s := ReplaceSum(AListOfVars, s);
 
   Result := s;
 end;
 
 
-function EvaluateValLstReplacements(AValLst: TValueListEditor; s: string; Recursive: Boolean = True): string;
+function EvaluateAllReplacements(AListOfVars: TStringList; s: string; Recursive: Boolean = True): string;
 var
   temp_s: string;
   i: Integer;
@@ -664,14 +671,14 @@ begin
     Exit;
   end;
 
-  temp_s := ReplaceOnce(AValLst, s);
+  temp_s := ReplaceOnce(AListOfVars, s);
 
   if Recursive and (Pos('$', temp_s) > 0) then
   begin
     i := 0;
     repeat
       Result := temp_s;
-      temp_s := ReplaceOnce(AValLst, Result);
+      temp_s := ReplaceOnce(AListOfVars, Result);
       if temp_s = Result then //no replacements found
         Break;
 
