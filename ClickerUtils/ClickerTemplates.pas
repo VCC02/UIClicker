@@ -269,6 +269,7 @@ begin
   AExecAppOptions.AppStdIn := Ini.ReadString(SectionIndex, 'AppStdIn', '');
   AExecAppOptions.CurrentDir := Ini.ReadString(SectionIndex, 'CurrentDir', '');
   AExecAppOptions.UseInheritHandles := TExecAppUseInheritHandles(Min(Ini.ReadInteger(SectionIndex, 'UseInheritHandles', Ord(uihOnlyWithStdInOut)), Integer(High(TExecAppUseInheritHandles))));
+  AExecAppOptions.NoConsole := Ini.ReadBool(SectionIndex, 'NoConsole', False);
 end;
 
 
@@ -668,6 +669,7 @@ begin
   AStringList.Add('AppStdIn=' + AActionExecAppOptions.AppStdIn);
   AStringList.Add('CurrentDir=' + AActionExecAppOptions.CurrentDir);
   AStringList.Add('UseInheritHandles' + IntToStr(Ord(AActionExecAppOptions.UseInheritHandles)));
+  AStringList.Add('NoConsole' + IntToStr(Ord(AActionExecAppOptions.NoConsole)));
 end;
 
 

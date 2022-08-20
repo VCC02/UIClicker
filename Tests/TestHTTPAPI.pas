@@ -29,7 +29,7 @@ unit TestHTTPAPI;
 interface
 
 uses
-  Classes, SysUtils, fpcunit, testregistry, InMemFileSystem;
+  LCLIntf, Classes, SysUtils, fpcunit, testregistry, InMemFileSystem;
 
 type
 
@@ -64,13 +64,17 @@ type
 
     procedure Test_SetVariable_HappyFlow;
     procedure Test_SetVariable_BadStackLevel;
+
+    procedure Test_ExecuteClickAction_LeaveMouse;
+    procedure Test_ExecuteExecAppAction_IPConfig;
+    procedure Test_ExecuteExecAppAction_IPConfig_NoInheritHandles;
   end;
 
 
 implementation
 
 uses
-  ClickerActionsClient, ClickerUtils, ActionsStuff;
+  ClickerActionsClient, ClickerUtils, ActionsStuff, Controls;
 
 
 const
@@ -421,6 +425,81 @@ begin
   try
     ListOfVars.Text := Response;
     AssertEquals(False, ListOfVars.Values['$MyVar$'] = CBadValue);
+  finally
+    ListOfVars.Free;
+  end;
+end;
+
+
+procedure TTestHTTPAPI.Test_ExecuteClickAction_LeaveMouse;
+const
+  CX: Integer = 20;
+  CY: Integer = 30;
+var
+  Response: string;
+  ListOfVars: TStringList;
+  ClickOptions: TClkClickOptions;
+  tp: TPoint;
+begin
+  GenerateClickOptionsForLeaveMouse(CX, CY, ClickOptions);
+
+  Response := FastReplace_87ToReturn(ExecuteClickAction(CTestServerAddress, ClickOptions));
+
+  GetCursorPos(tp);
+  AssertEquals(tp.X, CX);
+  AssertEquals(tp.Y, CY);
+
+  ListOfVars := TStringList.Create;
+  try
+    ListOfVars.Text := Response;
+    AssertEquals('', ListOfVars.Values['$ExecAction_Err$']);
+    AssertEquals('1', ListOfVars.Values[CREResp_RemoteExecResponseVar]);
+  finally
+    ListOfVars.Free;
+  end;
+end;
+
+
+procedure TTestHTTPAPI.Test_ExecuteExecAppAction_IPConfig;
+var
+  Response: string;
+  ListOfVars: TStringList;
+  ExecAppOptions: TClkExecAppOptions;
+begin
+  GenerateExecAppOptionsForIPConfig(ExecAppOptions);
+  ExecAppOptions.UseInheritHandles := uihYes;
+
+  Response := FastReplace_87ToReturn(ExecuteExecAppAction(CTestServerAddress, ExecAppOptions, 'TestExec', 1000));
+
+  ListOfVars := TStringList.Create;
+  try
+    ListOfVars.Text := Response;
+    AssertEquals('', ListOfVars.Values['$ExecAction_Err$']);
+    AssertEquals('1', ListOfVars.Values[CREResp_RemoteExecResponseVar]);
+    AssertEquals(True, Pos('Windows IP Configuration', ListOfVars.Values['$ExecAction_StdOut$']) > 0);
+    AssertEquals(True, Pos('Host Name', ListOfVars.Values['$ExecAction_StdOut$']) > 0);
+  finally
+    ListOfVars.Free;
+  end;
+end;
+
+
+procedure TTestHTTPAPI.Test_ExecuteExecAppAction_IPConfig_NoInheritHandles;
+var
+  Response: string;
+  ListOfVars: TStringList;
+  ExecAppOptions: TClkExecAppOptions;
+begin
+  GenerateExecAppOptionsForIPConfig(ExecAppOptions);
+
+  Response := FastReplace_87ToReturn(ExecuteExecAppAction(CTestServerAddress, ExecAppOptions, 'TestExec', 1000));
+
+  ListOfVars := TStringList.Create;
+  try
+    ListOfVars.Text := Response;
+    AssertEquals('', ListOfVars.Values['$ExecAction_Err$']);
+    AssertEquals('1', ListOfVars.Values[CREResp_RemoteExecResponseVar]);
+    AssertEquals('', ListOfVars.Values['$ExecAction_StdOut$']);
   finally
     ListOfVars.Free;
   end;

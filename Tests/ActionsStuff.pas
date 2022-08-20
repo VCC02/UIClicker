@@ -45,6 +45,8 @@ function AddClickActionToTemplate(ATemplateFileName: string;
 
 
 procedure GetDefaultClickOptions(var AClickOptions: TClkClickOptions);
+procedure GenerateClickOptionsForLeaveMouse(X, Y: Integer; var AClickOptions: TClkClickOptions);
+procedure GenerateExecAppOptionsForIPConfig(var AExecAppOptions: TClkExecAppOptions);
 
 
 implementation
@@ -145,6 +147,33 @@ begin
   AClickOptions.YClickPointVarDest := '$Control_Top$';
   AClickOptions.XOffsetDest := '';
   AClickOptions.YOffsetDest := '';
+end;
+
+
+procedure GenerateClickOptionsForLeaveMouse(X, Y: Integer; var AClickOptions: TClkClickOptions);
+begin
+  AClickOptions.XClickPointReference := xrefAbsolute;
+  AClickOptions.YClickPointReference := yrefAbsolute;
+  AClickOptions.XOffset := IntToStr(X);
+  AClickOptions.YOffset := IntToStr(Y);
+  AClickOptions.MouseButton := mbLeft;
+  AClickOptions.Count := 1;
+  AClickOptions.LeaveMouse := True;
+  AClickOptions.MoveWithoutClick := True;
+  AClickOptions.ClickType := CClickType_Click;
+  AClickOptions.XClickPointReferenceDest := xrefAbsolute;
+  AClickOptions.YClickPointReferenceDest := yrefAbsolute;
+end;
+
+
+procedure GenerateExecAppOptionsForIPConfig(var AExecAppOptions: TClkExecAppOptions);
+begin
+  AExecAppOptions.PathToApp := 'C:\Windows\System32\ipconfig.exe';
+  AExecAppOptions.ListOfParams := '/all';
+  AExecAppOptions.CurrentDir := 'C:\Windows';
+  AExecAppOptions.UseInheritHandles := uihNo;
+  AExecAppOptions.WaitForApp := True;
+  AExecAppOptions.NoConsole := True;
 end;
 
 end.

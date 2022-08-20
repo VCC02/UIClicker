@@ -147,6 +147,8 @@ function ClearInMemFileSystem(ARemoteAddress: string): string;
 function SetVariable(ARemoteAddress, AVarName, AVarValue: string; AStackLevel: Integer): string;
 
 function ExecuteClickAction(ARemoteAddress: string; AClickOptions: TClkClickOptions): string;
+function ExecuteExecAppAction(ARemoteAddress: string; AExecAppOptions: TClkExecAppOptions; AActionName: string; AActionTimeout: Integer): string;
+
 
 procedure GetListOfUsedFilesFromLoadedTemplate(var AClkActions: TClkActionsRecArr; AListOfFiles: TStringList);
 function SendMissingFilesToServer(ARemoteAddress: string; var AClkActions: TClkActionsRecArr): string;
@@ -554,6 +556,22 @@ begin
                                     );
 end;
 
+
+function ExecuteExecAppAction(ARemoteAddress: string; AExecAppOptions: TClkExecAppOptions; AActionName: string; AActionTimeout: Integer): string;
+begin
+  Result := SendTextRequestToServer(ARemoteAddress + CRECmd_ExecuteExecAppAction + '?' +
+                                    CREParam_StackLevel + '=0' + '&' +   //use the main editor
+                                    'PathToApp' + '=' + AExecAppOptions.PathToApp + '&' +
+                                    'ListOfParams' + '=' + FastReplace_ReturnTo45(AExecAppOptions.ListOfParams) + '&' +
+                                    'WaitForApp' + '=' + IntToStr(Ord(AExecAppOptions.WaitForApp)) + '&' +
+                                    'AppStdIn' + '=' + AExecAppOptions.AppStdIn + '&' +
+                                    'CurrentDir' + '=' + AExecAppOptions.CurrentDir + '&' +
+                                    'UseInheritHandles' + '=' + IntToStr(Ord(AExecAppOptions.UseInheritHandles)) + '&' +
+                                    'NoConsole' + '=' + IntToStr(Ord(AExecAppOptions.NoConsole)) + '&' +
+                                    'ActionName' + '=' + AActionName + '&' +
+                                    'ActionTimeout' + '=' + IntToStr(AActionTimeout)
+                                    );
+end;
 
 //==============================================================================
 //list of bmp files for now, but it can include all other files, which have to be sent to server

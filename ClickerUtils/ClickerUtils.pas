@@ -108,6 +108,7 @@ type
     AppStdIn: string;
     CurrentDir: string;
     UseInheritHandles: TExecAppUseInheritHandles;
+    NoConsole: Boolean;
   end;
 
   TRectString = record
