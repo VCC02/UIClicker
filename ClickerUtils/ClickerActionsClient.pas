@@ -94,9 +94,9 @@ const
 
   CRECmd_ExecuteClickAction = 'ExecuteClickAction';
   CRECmd_ExecuteExecAppAction = 'ExecuteExecAppAction';
-  CRECmd_ExecuteSetControlTextAction = 'ExecuteSetControlTextAction';
   CRECmd_ExecuteFindControlAction = 'ExecuteFindControlAction';
   CRECmd_ExecuteFindSubControlAction = 'ExecuteFindSubControlAction';
+  CRECmd_ExecuteSetControlTextAction = 'ExecuteSetControlTextAction';
   CRECmd_ExecuteCallTemplateAction = 'ExecuteCallTemplateAction';
   CRECmd_ExecuteSleepAction = 'ExecuteSleepAction';
   CRECmd_ExecuteSetVarAction = 'ExecuteSetVarAction';
@@ -148,6 +148,10 @@ function SetVariable(ARemoteAddress, AVarName, AVarValue: string; AStackLevel: I
 
 function ExecuteClickAction(ARemoteAddress: string; AClickOptions: TClkClickOptions): string;
 function ExecuteExecAppAction(ARemoteAddress: string; AExecAppOptions: TClkExecAppOptions; AActionName: string; AActionTimeout: Integer): string;
+function ExecuteFindControlAction(ARemoteAddress: string; AFindControlOptions: TClkFindControlOptions; AActionName: string; AActionTimeout: Integer; AFileLocation: string): string;
+function ExecuteFindSubControlAction(ARemoteAddress: string; AFindControlOptions: TClkFindControlOptions; AActionName: string; AActionTimeout: Integer; AFileLocation: string): string;
+
+function ExecuteWindowOperationsAction(ARemoteAddress: string; AWindowOperationsOptions: TClkWindowOperationsOptions): string;
 
 
 procedure GetListOfUsedFilesFromLoadedTemplate(var AClkActions: TClkActionsRecArr; AListOfFiles: TStringList);
@@ -568,8 +572,106 @@ begin
                                     'CurrentDir' + '=' + AExecAppOptions.CurrentDir + '&' +
                                     'UseInheritHandles' + '=' + IntToStr(Ord(AExecAppOptions.UseInheritHandles)) + '&' +
                                     'NoConsole' + '=' + IntToStr(Ord(AExecAppOptions.NoConsole)) + '&' +
+
                                     'ActionName' + '=' + AActionName + '&' +
                                     'ActionTimeout' + '=' + IntToStr(AActionTimeout)
+                                    );
+end;
+
+
+function ExecuteGenericFindControlAction(ARemoteAddress: string; AFindControlOptions: TClkFindControlOptions; AActionName: string; AActionTimeout: Integer; AFileLocation: string; AActionType: string): string;
+  function GetMatchBitmapTextContent(var AMatchBitmapText: TClkFindControlMatchBitmapTextArr): string;
+  var
+    i: Integer;
+    Prefix: string;
+  begin
+    Result := '';
+    for i := 0 to Length(AMatchBitmapText) - 1 do
+    begin
+      Prefix := 'MatchBitmapText[' + IntToStr(i) + '].';
+      Result := Result + Prefix + 'ForegroundColor' + '=' + AMatchBitmapText[i].ForegroundColor + '&';
+      Result := Result + Prefix + 'BackgroundColor' + '=' + AMatchBitmapText[i].BackgroundColor + '&';
+      Result := Result + Prefix + 'FontName' + '=' + AMatchBitmapText[i].FontName + '&';
+      Result := Result + Prefix + 'FontSize' + '=' + IntToStr(AMatchBitmapText[i].FontSize) + '&';
+      Result := Result + Prefix + 'Bold' + '=' + IntToStr(Ord(AMatchBitmapText[i].Bold)) + '&';
+      Result := Result + Prefix + 'Italic' + '=' + IntToStr(Ord(AMatchBitmapText[i].Italic)) + '&';
+      Result := Result + Prefix + 'Underline' + '=' + IntToStr(Ord(AMatchBitmapText[i].Underline)) + '&';
+      Result := Result + Prefix + 'StrikeOut' + '=' + IntToStr(Ord(AMatchBitmapText[i].StrikeOut)) + '&';
+      Result := Result + Prefix + 'FontQuality' + '=' + IntToStr(Ord(AMatchBitmapText[i].FontQuality)) + '&';
+      Result := Result + Prefix + 'FontQualityUsesReplacement' + '=' + IntToStr(Ord(AMatchBitmapText[i].FontQualityUsesReplacement)) + '&';
+      Result := Result + Prefix + 'FontQualityReplacement' + '=' + AMatchBitmapText[i].FontQualityReplacement + '&';
+      Result := Result + Prefix + 'ProfileName' + '=' + AMatchBitmapText[i].ProfileName + '&';
+    end;
+  end;
+begin
+  Result := SendTextRequestToServer(ARemoteAddress + AActionType + '?' +
+                                    CREParam_StackLevel + '=0' + '&' +   //use the main editor
+                                    'MatchCriteria.SearchForControlMode' + '=' + IntToStr(Ord(AFindControlOptions.MatchCriteria.SearchForControlMode)) + '&' +
+                                    'MatchCriteria.WillMatchText' + '=' + IntToStr(Ord(AFindControlOptions.MatchCriteria.WillMatchText)) + '&' +
+                                    'MatchCriteria.WillMatchClassName' + '=' + IntToStr(Ord(AFindControlOptions.MatchCriteria.WillMatchClassName)) + '&' +
+                                    'MatchCriteria.WillMatchBitmapText' + '=' + IntToStr(Ord(AFindControlOptions.MatchCriteria.WillMatchBitmapText)) + '&' +
+                                    'MatchCriteria.WillMatchBitmapFiles' + '=' + IntToStr(Ord(AFindControlOptions.MatchCriteria.WillMatchBitmapFiles)) + '&' +
+                                    'AllowToFail' + '=' + IntToStr(Ord(AFindControlOptions.AllowToFail)) + '&' +
+
+                                    'MatchText' + '=' + AFindControlOptions.MatchText + '&' +
+                                    'MatchClassName' + '=' + AFindControlOptions.MatchClassName + '&' +
+                                    'MatchTextSeparator' + '=' + AFindControlOptions.MatchTextSeparator + '&' +
+                                    'MatchClassNameSeparator' + '=' + AFindControlOptions.MatchClassNameSeparator + '&' +
+
+                                    'MatchBitmapText.Count' + '=' + IntToStr(Length(AFindControlOptions.MatchBitmapText)) + '&' +
+                                    GetMatchBitmapTextContent(AFindControlOptions.MatchBitmapText) +
+                                    'MatchBitmapFiles' + '=' + FastReplace_ReturnTo45(AFindControlOptions.MatchBitmapFiles) + '&' +
+                                    'MatchBitmapAlgorithm' + '=' + IntToStr(Ord(AFindControlOptions.MatchBitmapAlgorithm)) + '&' +
+                                    'MatchBitmapAlgorithmSettings.XMultipleOf' + '=' + IntToStr(AFindControlOptions.MatchBitmapAlgorithmSettings.XMultipleOf) + '&' +
+                                    'MatchBitmapAlgorithmSettings.YMultipleOf' + '=' + IntToStr(AFindControlOptions.MatchBitmapAlgorithmSettings.YMultipleOf) + '&' +
+                                    'MatchBitmapAlgorithmSettings.XOffset' + '=' + IntToStr(AFindControlOptions.MatchBitmapAlgorithmSettings.XOffset) + '&' +
+                                    'MatchBitmapAlgorithmSettings.YOffset' + '=' + IntToStr(AFindControlOptions.MatchBitmapAlgorithmSettings.YOffset) + '&' +
+                                    'InitialRectange.Left' + '=' + AFindControlOptions.InitialRectange.Left + '&' +
+                                    'InitialRectange.Top' + '=' + AFindControlOptions.InitialRectange.Top + '&' +
+                                    'InitialRectange.Right' + '=' + AFindControlOptions.InitialRectange.Right + '&' +
+                                    'InitialRectange.Bottom' + '=' + AFindControlOptions.InitialRectange.Bottom + '&' +
+                                    'InitialRectange.LeftOffset' + '=' + AFindControlOptions.InitialRectange.LeftOffset + '&' +
+                                    'InitialRectange.TopOffset' + '=' + AFindControlOptions.InitialRectange.TopOffset + '&' +
+                                    'InitialRectange.RightOffset' + '=' + AFindControlOptions.InitialRectange.RightOffset + '&' +
+                                    'InitialRectange.BottomOffset' + '=' + AFindControlOptions.InitialRectange.BottomOffset + '&' +
+                                    'UseWholeScreen' + '=' + IntToStr(Ord(AFindControlOptions.UseWholeScreen)) + '&' +
+                                    'ColorError' + '=' + AFindControlOptions.ColorError + '&' +
+                                    'AllowedColorErrorCount' + '=' + AFindControlOptions.AllowedColorErrorCount + '&' +
+                                    'WaitForControlToGoAway' + '=' + IntToStr(Ord(AFindControlOptions.WaitForControlToGoAway)) + '&' +
+                                    'StartSearchingWithCachedControl' + '=' + IntToStr(Ord(AFindControlOptions.StartSearchingWithCachedControl)) + '&' +
+                                    'CachedControlLeft' + '=' + AFindControlOptions.ColorError + '&' +
+                                    'CachedControlTop' + '=' + AFindControlOptions.ColorError + '&' +
+
+                                    'ActionName' + '=' + AActionName + '&' +
+                                    'ActionTimeout' + '=' + IntToStr(AActionTimeout) + '&' +
+                                    CREParam_FileLocation + '=' + AFileLocation
+                                    );
+end;
+
+
+function ExecuteFindControlAction(ARemoteAddress: string; AFindControlOptions: TClkFindControlOptions; AActionName: string; AActionTimeout: Integer; AFileLocation: string): string;
+begin
+  Result := ExecuteGenericFindControlAction(ARemoteAddress, AFindControlOptions, AActionName, AActionTimeout, AFileLocation, CRECmd_ExecuteFindControlAction);
+end;
+
+
+function ExecuteFindSubControlAction(ARemoteAddress: string; AFindControlOptions: TClkFindControlOptions; AActionName: string; AActionTimeout: Integer; AFileLocation: string): string;
+begin
+  Result := ExecuteGenericFindControlAction(ARemoteAddress, AFindControlOptions, AActionName, AActionTimeout, AFileLocation, CRECmd_ExecuteFindSubControlAction);
+end;
+
+
+function ExecuteWindowOperationsAction(ARemoteAddress: string; AWindowOperationsOptions: TClkWindowOperationsOptions): string;
+begin
+  Result := SendTextRequestToServer(ARemoteAddress + CRECmd_ExecuteWindowOperationsAction + '?' +
+                                    CREParam_StackLevel + '=0' + '&' +   //use the main editor
+                                    'Operation' + '=' + IntToStr(Ord(AWindowOperationsOptions.Operation)) + '&' +
+                                    'NewX' + '=' + AWindowOperationsOptions.NewX + '&' +
+                                    'NewY' + '=' + AWindowOperationsOptions.NewY + '&' +
+                                    'NewWidth' + '=' + AWindowOperationsOptions.NewWidth + '&' +
+                                    'NewHeight' + '=' + AWindowOperationsOptions.NewHeight + '&' +
+                                    'NewPositionEabled' + '=' + IntToStr(Ord(AWindowOperationsOptions.NewPositionEabled)) + '&' +
+                                    'NewSizeEabled' + '=' + IntToStr(Ord(AWindowOperationsOptions.NewSizeEabled))
                                     );
 end;
 

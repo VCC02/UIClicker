@@ -47,13 +47,17 @@ function AddClickActionToTemplate(ATemplateFileName: string;
 procedure GetDefaultClickOptions(var AClickOptions: TClkClickOptions);
 procedure GenerateClickOptionsForLeaveMouse(X, Y: Integer; var AClickOptions: TClkClickOptions);
 procedure GenerateExecAppOptionsForIPConfig(var AExecAppOptions: TClkExecAppOptions);
+procedure GenerateFindControlOptionsForMainUIClickerWindow(var AFindControlOptions: TClkFindControlOptions; AAllowToFail: Boolean);
+procedure GenerateFindSubControlOptionsForMainUIClickerWindow_Bitness(var AFindControlOptions: TClkFindControlOptions; AAllowToFail: Boolean);
+
+procedure GenerateWindowOperationsOptionsForFindControlSetup(var AWindowOperationsOptions: TClkWindowOperationsOptions; AOperation: TWindowOperation);
 
 
 implementation
 
 
 uses
-  Controls, ClickerTemplates;
+  Controls, ClickerTemplates, Graphics;
 
 
 procedure AddActionToTemplate(ATemplateFileName: string; AClkAction: TClkActionRec; AInMemFS: TInMemFileSystem);
@@ -174,6 +178,69 @@ begin
   AExecAppOptions.UseInheritHandles := uihNo;
   AExecAppOptions.WaitForApp := True;
   AExecAppOptions.NoConsole := True;
+end;
+
+
+procedure GenerateFindControlOptionsForMainUIClickerWindow(var AFindControlOptions: TClkFindControlOptions; AAllowToFail: Boolean);
+begin
+  AFindControlOptions.MatchCriteria.WillMatchText := True;
+  AFindControlOptions.MatchCriteria.WillMatchClassName := True;
+  AFindControlOptions.MatchCriteria.WillMatchBitmapText := False;
+  AFindControlOptions.MatchCriteria.WillMatchBitmapFiles := False;
+  AFindControlOptions.MatchText := 'UI Clicker Main';
+  AFindControlOptions.MatchClassName := 'Window';
+  AFindControlOptions.UseWholeScreen := True;
+  AFindControlOptions.AllowToFail := AAllowToFail;
+  AFindControlOptions.MatchBitmapAlgorithm := mbaBruteForce;
+  SetLength(AFindControlOptions.MatchBitmapText, 0);
+end;
+
+
+procedure GenerateFindSubControlOptionsForMainUIClickerWindow_Bitness(var AFindControlOptions: TClkFindControlOptions; AAllowToFail: Boolean);
+begin
+  AFindControlOptions.MatchCriteria.WillMatchText := False;
+  AFindControlOptions.MatchCriteria.WillMatchClassName := False;
+  AFindControlOptions.MatchCriteria.WillMatchBitmapText := True;
+  AFindControlOptions.MatchCriteria.WillMatchBitmapFiles := False;
+  AFindControlOptions.MatchText := '-bit';  //can be 32-bit or 64-bit, so match both
+  AFindControlOptions.UseWholeScreen := False;
+  AFindControlOptions.AllowToFail := AAllowToFail;
+  AFindControlOptions.MatchBitmapAlgorithm := mbaBruteForce;
+
+  SetLength(AFindControlOptions.MatchBitmapText, 1);
+  AFindControlOptions.MatchBitmapText[0].ForegroundColor := '000000';
+  AFindControlOptions.MatchBitmapText[0].BackgroundColor := '$Color_BtnFace$';
+  AFindControlOptions.MatchBitmapText[0].FontName := 'Segoe UI';
+  AFindControlOptions.MatchBitmapText[0].FontSize := 9;
+  AFindControlOptions.MatchBitmapText[0].FontQuality := fqDefault;
+  AFindControlOptions.MatchBitmapText[0].ProfileName := 'First';
+  AFindControlOptions.MatchBitmapText[0].Bold := False;
+  AFindControlOptions.MatchBitmapText[0].Italic := False;
+  AFindControlOptions.MatchBitmapText[0].Underline := False;
+  AFindControlOptions.MatchBitmapText[0].StrikeOut := False;
+
+  AFindControlOptions.InitialRectange.Left := '$Control_Left$';
+  AFindControlOptions.InitialRectange.Top := '$Control_Top$';
+  AFindControlOptions.InitialRectange.Right := '$Control_Right$';
+  AFindControlOptions.InitialRectange.Bottom := '$Control_Bottom$';
+  AFindControlOptions.InitialRectange.LeftOffset := '0';
+  AFindControlOptions.InitialRectange.TopOffset := '220';
+  AFindControlOptions.InitialRectange.RightOffset := '-250';
+  AFindControlOptions.InitialRectange.BottomOffset := '0';
+  AFindControlOptions.ColorError := '10';
+  AFindControlOptions.AllowedColorErrorCount := '40';
+end;
+
+
+procedure GenerateWindowOperationsOptionsForFindControlSetup(var AWindowOperationsOptions: TClkWindowOperationsOptions; AOperation: TWindowOperation);
+begin
+  AWindowOperationsOptions.Operation := AOperation;
+  AWindowOperationsOptions.NewX := '90';
+  AWindowOperationsOptions.NewY := '90';
+  AWindowOperationsOptions.NewWidth := '336';
+  AWindowOperationsOptions.NewHeight := '279';
+  AWindowOperationsOptions.NewPositionEabled := False; //should be enabled, only if the window can go offscreen
+  AWindowOperationsOptions.NewSizeEabled := True;
 end;
 
 end.

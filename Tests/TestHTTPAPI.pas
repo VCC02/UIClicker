@@ -40,6 +40,7 @@ type
     function SendTemplateToServer(ARemoteAddress, AFileName: string; AFileContent: TMemoryStream): string;
     procedure CreateTestTemplateInMem;
     function Send_ExecuteCommandAtIndex_ToServer(AActionIdx, AStackLevel: Integer): string;
+    procedure SetupTargetWindowFor_FindSubControl;
   protected
     procedure SetUp; override;
     procedure TearDown; override;
@@ -68,6 +69,12 @@ type
     procedure Test_ExecuteClickAction_LeaveMouse;
     procedure Test_ExecuteExecAppAction_IPConfig;
     procedure Test_ExecuteExecAppAction_IPConfig_NoInheritHandles;
+
+    procedure Test_ExecuteFindControlAction_UIClickerMain;
+    procedure Test_ExecuteFindControlAction_UIClickerMain_WrongClass;
+    procedure Test_ExecuteFindControlAction_UIClickerMain_WrongClassAllowToFail;
+
+    procedure Test_ExecuteFindSubControlAction_UIClickerMain_BitnessLabel;
   end;
 
 
@@ -157,6 +164,36 @@ begin
                                CREParam_FileLocation + '= ' + CREParam_FileLocation_ValueMem;
 
   Result := SendTextRequestToServer(Link);
+end;
+
+
+procedure TTestHTTPAPI.SetupTargetWindowFor_FindSubControl;
+var
+  WindowOperationsOptions: TClkWindowOperationsOptions;
+  FindControlOptions: TClkFindControlOptions;
+  UIClickerMainHandle: THandle;
+  Response: string;
+  ListOfVars: TStringList;
+begin
+  GenerateFindControlOptionsForMainUIClickerWindow(FindControlOptions, False);
+  Response := FastReplace_87ToReturn(ExecuteFindControlAction(CTestServerAddress, FindControlOptions, 'Setup UIClicker Main', 1000, CREParam_FileLocation_ValueMem));
+
+  ListOfVars := TStringList.Create;
+  try
+    ListOfVars.Text := Response;
+    AssertEquals(True, ListOfVars.Values['$LastAction_Status$'] <> CActionStatusStr[asFailed]);
+    UIClickerMainHandle := StrToIntDef(ListOfVars.Values['$Control_Handle$'], 0);
+  finally
+    ListOfVars.Free;
+  end;
+
+  //Can't use ExecuteWindowOperationsAction(woBringToFront), because the target window belongs to the same process (UIClicker). See: https://docs.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setforegroundwindow
+  //GenerateWindowOperationsOptionsForFindControlSetup(WindowOperationsOptions, woBringToFront);
+  //ExecuteWindowOperationsAction(CTestServerAddress, WindowOperationsOptions);
+  SetForegroundWindow(UIClickerMainHandle);
+
+  GenerateWindowOperationsOptionsForFindControlSetup(WindowOperationsOptions, woMoveResize);
+  ExecuteWindowOperationsAction(CTestServerAddress, WindowOperationsOptions);
 end;
 
 
@@ -491,7 +528,6 @@ var
   ExecAppOptions: TClkExecAppOptions;
 begin
   GenerateExecAppOptionsForIPConfig(ExecAppOptions);
-
   Response := FastReplace_87ToReturn(ExecuteExecAppAction(CTestServerAddress, ExecAppOptions, 'TestExec', 1000));
 
   ListOfVars := TStringList.Create;
@@ -500,6 +536,93 @@ begin
     AssertEquals('', ListOfVars.Values['$ExecAction_Err$']);
     AssertEquals('1', ListOfVars.Values[CREResp_RemoteExecResponseVar]);
     AssertEquals('', ListOfVars.Values['$ExecAction_StdOut$']);
+  finally
+    ListOfVars.Free;
+  end;
+end;
+
+
+procedure TTestHTTPAPI.Test_ExecuteFindControlAction_UIClickerMain;
+var
+  Response: string;
+  ListOfVars: TStringList;
+  FindControlOptions: TClkFindControlOptions;
+begin
+  GenerateFindControlOptionsForMainUIClickerWindow(FindControlOptions, False);
+  Response := FastReplace_87ToReturn(ExecuteFindControlAction(CTestServerAddress, FindControlOptions, 'TestFind UIClicker Main', 1000, CREParam_FileLocation_ValueMem));
+
+  ListOfVars := TStringList.Create;
+  try
+    ListOfVars.Text := Response;
+    AssertEquals('', ListOfVars.Values['$ExecAction_Err$']);
+    AssertEquals('1', ListOfVars.Values[CREResp_RemoteExecResponseVar]);
+    AssertEquals('Successful', ListOfVars.Values['$LastAction_Status$']);
+  finally
+    ListOfVars.Free;
+  end;
+end;
+
+
+procedure TTestHTTPAPI.Test_ExecuteFindControlAction_UIClickerMain_WrongClass;
+var
+  Response: string;
+  ListOfVars: TStringList;
+  FindControlOptions: TClkFindControlOptions;
+begin
+  GenerateFindControlOptionsForMainUIClickerWindow(FindControlOptions, False);
+  FindControlOptions.MatchClassName := 'non-existent name';
+  Response := FastReplace_87ToReturn(ExecuteFindControlAction(CTestServerAddress, FindControlOptions, 'TestFind UIClicker Main', 1000, CREParam_FileLocation_ValueMem));
+
+  ListOfVars := TStringList.Create;
+  try
+    ListOfVars.Text := Response;
+    AssertEquals(True, Pos('Timeout at "TestFind UIClicker Main" in ', ListOfVars.Values['$ExecAction_Err$']) > 0);
+    AssertEquals('0', ListOfVars.Values[CREResp_RemoteExecResponseVar]);
+    AssertEquals('Failed', ListOfVars.Values['$LastAction_Status$']);
+  finally
+    ListOfVars.Free;
+  end;
+end;
+
+
+procedure TTestHTTPAPI.Test_ExecuteFindControlAction_UIClickerMain_WrongClassAllowToFail;
+var
+  Response: string;
+  ListOfVars: TStringList;
+  FindControlOptions: TClkFindControlOptions;
+begin
+  GenerateFindControlOptionsForMainUIClickerWindow(FindControlOptions, True);
+  FindControlOptions.MatchClassName := 'non-existent name';
+  Response := FastReplace_87ToReturn(ExecuteFindControlAction(CTestServerAddress, FindControlOptions, 'TestFind UIClicker Main', 1000, CREParam_FileLocation_ValueMem));
+
+  ListOfVars := TStringList.Create;
+  try
+    ListOfVars.Text := Response;
+    AssertEquals('', ListOfVars.Values['$ExecAction_Err$']);
+    AssertEquals('0', ListOfVars.Values[CREResp_RemoteExecResponseVar]);
+    AssertEquals('Allowed Failed', ListOfVars.Values['$LastAction_Status$']);
+  finally
+    ListOfVars.Free;
+  end;
+end;
+
+
+procedure TTestHTTPAPI.Test_ExecuteFindSubControlAction_UIClickerMain_BitnessLabel;
+var
+  Response: string;
+  ListOfVars: TStringList;
+  FindSubControlOptions: TClkFindControlOptions;
+begin
+  SetupTargetWindowFor_FindSubControl;
+  GenerateFindSubControlOptionsForMainUIClickerWindow_Bitness(FindSubControlOptions, False);
+  Response := FastReplace_87ToReturn(ExecuteFindSubControlAction(CTestServerAddress, FindSubControlOptions, 'Test Find Bitness on UIClicker Main', 3000, CREParam_FileLocation_ValueMem));
+
+  ListOfVars := TStringList.Create;
+  try
+    ListOfVars.Text := Response;
+    AssertEquals('', ListOfVars.Values['$ExecAction_Err$']);
+    AssertEquals('1', ListOfVars.Values[CREResp_RemoteExecResponseVar]);
+    AssertEquals('Successful', ListOfVars.Values['$LastAction_Status$']);
   finally
     ListOfVars.Free;
   end;
