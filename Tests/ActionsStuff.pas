@@ -49,6 +49,7 @@ procedure GenerateClickOptionsForLeaveMouse(X, Y: Integer; var AClickOptions: TC
 procedure GenerateExecAppOptionsForIPConfig(var AExecAppOptions: TClkExecAppOptions);
 procedure GenerateFindControlOptionsForMainUIClickerWindow(var AFindControlOptions: TClkFindControlOptions; AAllowToFail: Boolean);
 procedure GenerateFindSubControlOptionsForMainUIClickerWindow_Bitness(var AFindControlOptions: TClkFindControlOptions; AAllowToFail: Boolean);
+procedure GenerateFindSubControlOptionsForMainUIClickerWindow_WinInterpBtn(var AFindControlOptions: TClkFindControlOptions; AAllowToFail: Boolean);
 
 procedure GenerateWindowOperationsOptionsForFindControlSetup(var AWindowOperationsOptions: TClkWindowOperationsOptions; AOperation: TWindowOperation);
 
@@ -227,6 +228,37 @@ begin
   AFindControlOptions.InitialRectange.TopOffset := '220';
   AFindControlOptions.InitialRectange.RightOffset := '-250';
   AFindControlOptions.InitialRectange.BottomOffset := '0';
+  AFindControlOptions.ColorError := '10';
+  AFindControlOptions.AllowedColorErrorCount := '40';
+end;
+
+
+procedure GenerateFindSubControlOptionsForMainUIClickerWindow_WinInterpBtn(var AFindControlOptions: TClkFindControlOptions; AAllowToFail: Boolean);
+const
+  CBmpDirAsSrvDisk = 'py\bmps\';
+begin
+  AFindControlOptions.MatchCriteria.WillMatchText := False;
+  AFindControlOptions.MatchCriteria.WillMatchClassName := False;
+  AFindControlOptions.MatchCriteria.WillMatchBitmapText := False;
+  AFindControlOptions.MatchCriteria.WillMatchBitmapFiles := True;
+  AFindControlOptions.UseWholeScreen := False;
+  AFindControlOptions.AllowToFail := AAllowToFail;
+  AFindControlOptions.MatchBitmapAlgorithm := mbaBruteForce;
+
+  SetLength(AFindControlOptions.MatchBitmapText, 0);
+
+  AFindControlOptions.MatchBitmapFiles := CBmpDirAsSrvDisk + 'ShowWindowInterpreter32.bmp' + #13#10 +
+                                          CBmpDirAsSrvDisk + 'ShowWindowInterpreter64.bmp' + #13#10 +
+                                          CBmpDirAsSrvDisk + 'ShowWindowInterpreter_Wine.bmp';
+
+  AFindControlOptions.InitialRectange.Left := '$Control_Left$';
+  AFindControlOptions.InitialRectange.Top := '$Control_Top$';
+  AFindControlOptions.InitialRectange.Right := '$Control_Right$';
+  AFindControlOptions.InitialRectange.Bottom := '$Control_Bottom$';
+  AFindControlOptions.InitialRectange.LeftOffset := '61';
+  AFindControlOptions.InitialRectange.TopOffset := '95';
+  AFindControlOptions.InitialRectange.RightOffset := '-73';
+  AFindControlOptions.InitialRectange.BottomOffset := '-120';
   AFindControlOptions.ColorError := '10';
   AFindControlOptions.AllowedColorErrorCount := '40';
 end;

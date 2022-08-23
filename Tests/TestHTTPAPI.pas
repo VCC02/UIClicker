@@ -75,6 +75,7 @@ type
     procedure Test_ExecuteFindControlAction_UIClickerMain_WrongClassAllowToFail;
 
     procedure Test_ExecuteFindSubControlAction_UIClickerMain_BitnessLabel;
+    procedure Test_ExecuteFindSubControlAction_UIClickerMain_WindowInterpreterButton_Disk;
   end;
 
 
@@ -616,6 +617,28 @@ begin
   SetupTargetWindowFor_FindSubControl;
   GenerateFindSubControlOptionsForMainUIClickerWindow_Bitness(FindSubControlOptions, False);
   Response := FastReplace_87ToReturn(ExecuteFindSubControlAction(CTestServerAddress, FindSubControlOptions, 'Test Find Bitness on UIClicker Main', 3000, CREParam_FileLocation_ValueMem));
+
+  ListOfVars := TStringList.Create;
+  try
+    ListOfVars.Text := Response;
+    AssertEquals('', ListOfVars.Values['$ExecAction_Err$']);
+    AssertEquals('1', ListOfVars.Values[CREResp_RemoteExecResponseVar]);
+    AssertEquals('Successful', ListOfVars.Values['$LastAction_Status$']);
+  finally
+    ListOfVars.Free;
+  end;
+end;
+
+
+procedure TTestHTTPAPI.Test_ExecuteFindSubControlAction_UIClickerMain_WindowInterpreterButton_Disk;
+var
+  Response: string;
+  ListOfVars: TStringList;
+  FindSubControlOptions: TClkFindControlOptions;
+begin
+  SetupTargetWindowFor_FindSubControl;
+  GenerateFindSubControlOptionsForMainUIClickerWindow_WinInterpBtn(FindSubControlOptions, False);
+  Response := FastReplace_87ToReturn(ExecuteFindSubControlAction(CTestServerAddress, FindSubControlOptions, 'Test Find WindowInterpreterButton_Disk on UIClicker Main', 3000, CREParam_FileLocation_ValueDisk));
 
   ListOfVars := TStringList.Create;
   try
