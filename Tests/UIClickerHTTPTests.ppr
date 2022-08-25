@@ -28,7 +28,8 @@ program UIClickerHTTPTests;
 
 uses
   Interfaces, Forms, GuiTestRunner, TestHTTPAPI, ClickerActionsClient,
-  ClickerUtils, ClickerTemplates, InMemFileSystem, Expectations, ActionsStuff;
+  ClickerUtils, ClickerTemplates, InMemFileSystem, Expectations, ActionsStuff,
+  TestMiscHTTPAPI, TestTemplateLevelHTTPAPI, TestLowLevelHTTPAPI;
 
 {$R *.res}
 

@@ -51,6 +51,18 @@
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
+        <Filename Value="TestMiscHTTPAPI.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="TestTemplateLevelHTTPAPI.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="TestLowLevelHTTPAPI.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
         <Filename Value="..\ClickerUtils\ClickerActionsClient.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
