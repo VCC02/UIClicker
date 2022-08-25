@@ -142,6 +142,9 @@ begin
   for i := 0 to FListOfAccessibleDirs.Count - 1 do
   begin
     CurrentItem := FListOfAccessibleDirs.Strings[i];
+    if (CurrentItem > '') and (CurrentItem[Length(CurrentItem)] <> PathDelim) then
+      CurrentItem := CurrentItem + PathDelim;  //make sure there are consistent results, regardless of the last '\' existence
+
     if (Pos(CurrentItem, FilePath) = 1) and (Pos('..', CurrentItem) = 0) then
     begin
       FoundDir := True;

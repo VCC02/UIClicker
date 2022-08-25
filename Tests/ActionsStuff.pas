@@ -184,6 +184,7 @@ end;
 
 procedure GenerateFindControlOptionsForMainUIClickerWindow(var AFindControlOptions: TClkFindControlOptions; AAllowToFail: Boolean);
 begin
+  AFindControlOptions.MatchCriteria.SearchForControlMode := sfcmGenGrid;
   AFindControlOptions.MatchCriteria.WillMatchText := True;
   AFindControlOptions.MatchCriteria.WillMatchClassName := True;
   AFindControlOptions.MatchCriteria.WillMatchBitmapText := False;
@@ -199,6 +200,7 @@ end;
 
 procedure GenerateFindSubControlOptionsForMainUIClickerWindow_Bitness(var AFindControlOptions: TClkFindControlOptions; AAllowToFail: Boolean);
 begin
+  AFindControlOptions.MatchCriteria.SearchForControlMode := sfcmGenGrid;
   AFindControlOptions.MatchCriteria.WillMatchText := False;
   AFindControlOptions.MatchCriteria.WillMatchClassName := False;
   AFindControlOptions.MatchCriteria.WillMatchBitmapText := True;
@@ -237,6 +239,7 @@ procedure GenerateFindSubControlOptionsForMainUIClickerWindow_WinInterpBtn(var A
 const
   CBmpDirAsSrvDisk = 'py\bmps\';
 begin
+  AFindControlOptions.MatchCriteria.SearchForControlMode := sfcmGenGrid;
   AFindControlOptions.MatchCriteria.WillMatchText := False;
   AFindControlOptions.MatchCriteria.WillMatchClassName := False;
   AFindControlOptions.MatchCriteria.WillMatchBitmapText := False;
@@ -247,20 +250,20 @@ begin
 
   SetLength(AFindControlOptions.MatchBitmapText, 0);
 
-  AFindControlOptions.MatchBitmapFiles := CBmpDirAsSrvDisk + 'ShowWindowInterpreter32.bmp' + #13#10 +
-                                          CBmpDirAsSrvDisk + 'ShowWindowInterpreter64.bmp' + #13#10 +
-                                          CBmpDirAsSrvDisk + 'ShowWindowInterpreter_Wine.bmp';
+  AFindControlOptions.MatchBitmapFiles := CBmpDirAsSrvDisk + 'ShowActionsWindow_Focused.bmp' + #13#10 +
+                                          CBmpDirAsSrvDisk + 'ShowActionsWindow_FocusedHighlighted.bmp' + #13#10 +
+                                          CBmpDirAsSrvDisk + 'ShowActionsWindow_Unfocused.bmp';
 
   AFindControlOptions.InitialRectange.Left := '$Control_Left$';
   AFindControlOptions.InitialRectange.Top := '$Control_Top$';
   AFindControlOptions.InitialRectange.Right := '$Control_Right$';
   AFindControlOptions.InitialRectange.Bottom := '$Control_Bottom$';
   AFindControlOptions.InitialRectange.LeftOffset := '61';
-  AFindControlOptions.InitialRectange.TopOffset := '95';
+  AFindControlOptions.InitialRectange.TopOffset := '90';
   AFindControlOptions.InitialRectange.RightOffset := '-73';
   AFindControlOptions.InitialRectange.BottomOffset := '-120';
-  AFindControlOptions.ColorError := '10';
-  AFindControlOptions.AllowedColorErrorCount := '40';
+  AFindControlOptions.ColorError := '25';                    //rendering depends on video card, so allow a high error value
+  AFindControlOptions.AllowedColorErrorCount := '400';
 end;
 
 

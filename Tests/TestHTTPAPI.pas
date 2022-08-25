@@ -29,7 +29,7 @@ unit TestHTTPAPI;
 interface
 
 uses
-  LCLIntf, Classes, SysUtils, fpcunit, testregistry, InMemFileSystem;
+  LCLIntf, Classes, SysUtils, fpcunit, testregistry, InMemFileSystem, Expectations;
 
 type
 
@@ -38,6 +38,9 @@ type
     FInMemFS: TInMemFileSystem;
     function SendTestFileToServer(ARemoteAddress, AFileName: string; AFileContent: string = 'Dummy'): string;
     function SendTemplateToServer(ARemoteAddress, AFileName: string; AFileContent: TMemoryStream): string;
+    procedure SendEmptyTemplateToServerThenLoad;
+    procedure SendTemplateFromInMemToServerThenLoad(AFileName: string);
+    procedure SendMultipleTestFilesToServer(AFileNames: PStrArr; AFileNamesLength: Integer; ABaseContent: string);
     procedure CreateTestTemplateInMem;
     function Send_ExecuteCommandAtIndex_ToServer(AActionIdx, AStackLevel: Integer): string;
     procedure SetupTargetWindowFor_FindSubControl;
@@ -92,6 +95,30 @@ const
   CExpectedBadStackLevelResponse: string = '[Server error] Stack level out of bounds: 10. This happens when there is no template loaded in a new tab (with the requested stack level), as a result of "call template" action. It is also possible that the template is loaded, then exited before being executed.';
 
 
+procedure ExpectSuccessfulAction(AListOfVars: TStringList);
+begin
+  Expect(AListOfVars).WithItem('$ExecAction_Err$', 'list of vars').OfValue('', 'No error Allowed.');
+  Expect(AListOfVars).WithItem(CREResp_RemoteExecResponseVar, 'list of vars').OfValue('1', 'Expected successful action.');
+  Expect(AListOfVars).WithItem('$LastAction_Status$').OfValue('Successful');
+end;
+
+
+procedure ExpectFailedAction(AListOfVars: TStringList; APartOfErrorMessage: string);
+begin
+  Expect(AListOfVars).WithItem('$ExecAction_Err$', 'list of vars').ToContain(APartOfErrorMessage, 'An error is expected.');
+  Expect(AListOfVars).WithItem(CREResp_RemoteExecResponseVar, 'list of vars').OfValue('0', 'Expected failed action.');
+  Expect(AListOfVars).WithItem('$LastAction_Status$').OfValue('Failed');
+end;
+
+
+procedure ExpectAllowedFailedAction(AListOfVars: TStringList);
+begin
+  Expect(AListOfVars).WithItem('$ExecAction_Err$', 'list of vars').OfValue('');
+  Expect(AListOfVars).WithItem(CREResp_RemoteExecResponseVar, 'list of vars').OfValue('0', 'Expected allowed failed action.');
+  Expect(AListOfVars).WithItem('$LastAction_Status$').OfValue('Allowed Failed');
+end;
+
+
 procedure TTestHTTPAPI.SetUp;
 begin
   FInMemFS := TInMemFileSystem.Create;
@@ -120,8 +147,8 @@ begin
     Content.Free;
   end;
 
-  AssertEquals('Received file: "' + AFileName + '"  of ' + IntToStr(Length(AFileContent)) + ' bytes in size.', Result);
-  AssertEquals(True, GetFileExistenceOnServer(CTestServerAddress, AFileName, False));
+  Expect(Result).ToBe('Received file: "' + AFileName + '"  of ' + IntToStr(Length(AFileContent)) + ' bytes in size.');
+  Expect(GetFileExistenceOnServer(CTestServerAddress, AFileName, False)).ToBe(True);
 end;
 
 
@@ -134,8 +161,48 @@ begin
 
   Result := SendFileToServer(Link, AFileContent);
 
-  AssertEquals('Received file: "' + AFileName + '"  of ' + IntToStr(AFileContent.Size) + ' bytes in size.', Result);
-  AssertEquals(True, GetFileExistenceOnServer(CTestServerAddress, AFileName, False));
+  Expect(Result).ToBe('Received file: "' + AFileName + '"  of ' + IntToStr(AFileContent.Size) + ' bytes in size.');
+  Expect(GetFileExistenceOnServer(CTestServerAddress, AFileName, False)).ToBe(True);
+end;
+
+
+procedure TTestHTTPAPI.SendEmptyTemplateToServerThenLoad;
+var
+  Content: TMemoryStream;
+begin
+  Content := TMemoryStream.Create;
+  try
+    SendTemplateToServer(CTestServerAddress, CEmptyTestTemplateFileName, Content);
+  finally
+    Content.Free;
+  end;
+
+  Expect(SendLoadTemplateInExecListRequest(CTestServerAddress, CEmptyTestTemplateFileName, 0)).ToBe(CREResp_TemplateLoaded);
+end;
+
+
+procedure TTestHTTPAPI.SendTemplateFromInMemToServerThenLoad(AFileName: string);
+var
+  Content: TMemoryStream;
+begin
+  Content := TMemoryStream.Create;
+  try
+    FInMemFS.LoadFileFromMemToStream(AFileName, Content);
+    SendTemplateToServer(CTestServerAddress, AFileName, Content);
+  finally
+    Content.Free;
+  end;
+
+  Expect(SendLoadTemplateInExecListRequest(CTestServerAddress, AFileName, 0)).ToBe(CREResp_TemplateLoaded);
+end;
+
+
+procedure TTestHTTPAPI.SendMultipleTestFilesToServer(AFileNames: PStrArr; AFileNamesLength: Integer; ABaseContent: string);
+var
+  i: Integer;
+begin
+  for i := 0 to AFileNamesLength - 1 do
+    SendTestFileToServer(CTestServerAddress, AFileNames^[i], ABaseContent + IntToStr(i + 1));  //i + 1, to match the already existing hashes
 end;
 
 
@@ -182,7 +249,7 @@ begin
   ListOfVars := TStringList.Create;
   try
     ListOfVars.Text := Response;
-    AssertEquals(True, ListOfVars.Values['$LastAction_Status$'] <> CActionStatusStr[asFailed]);
+    Expect(ListOfVars).WithItem('$LastAction_Status$').DifferentThanValue(CActionStatusStr[asFailed]);
     UIClickerMainHandle := StrToIntDef(ListOfVars.Values['$Control_Handle$'], 0);
   finally
     ListOfVars.Free;
@@ -198,40 +265,29 @@ begin
 end;
 
 
+//====================================================================================
+
+
 procedure TTestHTTPAPI.Test_TestConnection;
-var
-  Response: string;
 begin
-  Response := TestConnection(CTestServerAddress);
-  AssertEquals(CREResp_ConnectionOK, Response);
+  Expect(TestConnection(CTestServerAddress)).ToBe(CREResp_ConnectionOK);
 end;
 
 
-//ToDo: some refactoring, then use some test utils for assertions.
 procedure TTestHTTPAPI.Test_ExecuteCommandAtIndex_HappyFlow;
 var
-  Content: TMemoryStream;
   Response: string;
   ListOfVars: TStringList;
 begin
   CreateTestTemplateInMem;
-
-  Content := TMemoryStream.Create;
-  try
-    FInMemFS.LoadFileFromMemToStream(CTestTemplateFileName, Content);
-    SendTemplateToServer(CTestServerAddress, CTestTemplateFileName, Content);
-  finally
-    Content.Free;
-  end;
-
-  AssertEquals(CREResp_TemplateLoaded, SendLoadTemplateInExecListRequest(CTestServerAddress, CTestTemplateFileName, 0));
+  SendTemplateFromInMemToServerThenLoad(CTestTemplateFileName);
 
   Response := FastReplace_87ToReturn(Send_ExecuteCommandAtIndex_ToServer(0, 0));
 
   ListOfVars := TStringList.Create;
   try
     ListOfVars.Text := Response;
-    AssertEquals(True, ListOfVars.Values['$LastAction_Status$'] <> CActionStatusStr[asFailed]);
+    Expect(ListOfVars).WithItem('$LastAction_Status$').DifferentThanValue(CActionStatusStr[asFailed]);
   finally
     ListOfVars.Free;
   end;
@@ -240,27 +296,17 @@ end;
 
 procedure TTestHTTPAPI.Test_ExecuteCommandAtIndex_EmptyTemplate;
 var
-  Content: TMemoryStream;
   Response: string;
   ListOfVars: TStringList;
 begin
   //SetVariable(CTestServerAddress, '$LastAction_Status$', '', 0);
-
-  Content := TMemoryStream.Create;
-  try
-    SendTemplateToServer(CTestServerAddress, CEmptyTestTemplateFileName, Content);
-  finally
-    Content.Free;
-  end;
-
-  AssertEquals(CREResp_TemplateLoaded, SendLoadTemplateInExecListRequest(CTestServerAddress, CEmptyTestTemplateFileName, 0));
-
+  SendEmptyTemplateToServerThenLoad;
   Response := FastReplace_87ToReturn(Send_ExecuteCommandAtIndex_ToServer(0, 0));
 
   ListOfVars := TStringList.Create;
   try
     ListOfVars.Text := Response;
-    AssertEquals(CActionStatusStr[asFailed], ListOfVars.Values['$LastAction_Status$']);
+    Expect(ListOfVars).WithItem('$LastAction_Status$').OfValue(CActionStatusStr[asFailed]);
   finally
     ListOfVars.Free;
   end;
@@ -274,13 +320,14 @@ var
   Response: string;
   ListOfVars: TStringList;
 begin
+  SendEmptyTemplateToServerThenLoad;
   Response := FastReplace_87ToReturn(Send_ExecuteCommandAtIndex_ToServer(10, 0));
 
   ListOfVars := TStringList.Create;
   try
     ListOfVars.Text := Response;
-    AssertEquals(CActionStatusStr[asFailed], ListOfVars.Values['$LastAction_Status$']);
-    AssertEquals(CExpectedErr, ListOfVars.Values['$DbgCurrentAction$']);
+    Expect(ListOfVars).WithItem('$LastAction_Status$').OfValue(CActionStatusStr[asFailed]);
+    Expect(ListOfVars).WithItem('$DbgCurrentAction$').OfValue(CExpectedErr);
   finally
     ListOfVars.Free;
   end;
@@ -288,11 +335,8 @@ end;
 
 
 procedure TTestHTTPAPI.Test_ExecuteCommandAtIndex_BadStackIndex;
-var
-  Response: string;
 begin
-  Response := Send_ExecuteCommandAtIndex_ToServer(0, 10);
-  AssertEquals(CExpectedBadStackLevelResponse, Response);
+  Expect(Send_ExecuteCommandAtIndex_ToServer(0, 10)).ToBe(CExpectedBadStackLevelResponse);
 end;
 
 
@@ -306,8 +350,8 @@ begin
   ListOfVars := TStringList.Create;
   try
     ListOfVars.Text := Response;
-    AssertEquals(True, ListOfVars.IndexOfName('$Control_Handle$') > -1);
-    AssertEquals(True, ListOfVars.IndexOfName('$OSVer$') > -1);
+    Expect(ListOfVars).WithItem('$Control_Handle$');
+    Expect(ListOfVars).WithItem('$OSVer$');
   finally
     ListOfVars.Free;
   end;
@@ -315,11 +359,8 @@ end;
 
 
 procedure TTestHTTPAPI.Test_GetAllReplacementVars_BadStackLevel;
-var
-  Response: string;
 begin
-  Response := GetAllReplacementVars(CTestServerAddress, 10);
-  AssertEquals(CExpectedBadStackLevelResponse, Response);
+  Expect(GetAllReplacementVars(CTestServerAddress, 10)).ToBe(CExpectedBadStackLevelResponse);
 end;
 
 
@@ -328,10 +369,10 @@ const
   CFileName: string = 'Test_SendFileToServer.txt';
   CExpectedHash = 'BCF036B6F33E182D4705F4F5B1AF13AC';
 begin
-  AssertEquals(CREResp_Done, ClearInMemFileSystem(CTestServerAddress));
+  Expect(ClearInMemFileSystem(CTestServerAddress)).ToBe(CREResp_Done);
   SendTestFileToServer(CTestServerAddress, CFileName);
 
-  AssertEquals(True, GetFileExistenceOnServer(CTestServerAddress, CFileName + CDefaultInMemFileNameHashSeparator + CExpectedHash, True));
+  Expect(GetFileExistenceOnServer(CTestServerAddress, CFileName + CDefaultInMemFileNameHashSeparator + CExpectedHash, True)).ToBe(True);
 end;
 
 
@@ -339,10 +380,10 @@ procedure TTestHTTPAPI.Test_GetFileExistenceOnServer_OneFileNoHash;
 const
   CFileName: string = 'Test_GetFileExistenceOnServer_OneFileNoHash.txt';
 begin
-  AssertEquals(CREResp_Done, ClearInMemFileSystem(CTestServerAddress));
+  Expect(ClearInMemFileSystem(CTestServerAddress)).ToBe(CREResp_Done);
   SendTestFileToServer(CTestServerAddress, CFileName, 'SomeContentForNoHash');
 
-  AssertEquals(True, GetFileExistenceOnServer(CTestServerAddress, CFileName, False));
+  Expect(GetFileExistenceOnServer(CTestServerAddress, CFileName, False)).ToBe(True);
 end;
 
 
@@ -351,25 +392,26 @@ const
   CFileName: string = 'Test_GetFileExistenceOnServer_OneFileWithHash.txt';
   CExpectedHash = 'E51AAA0C74A8390EE612C2451F40CAB9';
 begin
-  AssertEquals(CREResp_Done, ClearInMemFileSystem(CTestServerAddress));
+  Expect(ClearInMemFileSystem(CTestServerAddress)).ToBe(CREResp_Done);
   SendTestFileToServer(CTestServerAddress, CFileName, 'SomeContentForComputingHash');
 
-  AssertEquals(True, GetFileExistenceOnServer(CTestServerAddress, CFileName + CDefaultInMemFileNameHashSeparator + CExpectedHash, True));
+  Expect(GetFileExistenceOnServer(CTestServerAddress, CFileName + CDefaultInMemFileNameHashSeparator + CExpectedHash, True)).ToBe(True);
 end;
 
 
 procedure TTestHTTPAPI.Test_GetFileExistenceOnServer_MultipleFilesNoHash;
 const
-  CFileName1: string = 'Test_GetFileExistenceOnServer_OneFileNoHash_1.txt';
-  CFileName2: string = 'Test_GetFileExistenceOnServer_OneFileNoHash_2.txt';
-  CFileName3: string = 'Test_GetFileExistenceOnServer_OneFileNoHash_3.txt';
+  CFileName1 = 'Test_GetFileExistenceOnServer_OneFileNoHash_1.txt';
+  CFileName2 = 'Test_GetFileExistenceOnServer_OneFileNoHash_2.txt';
+  CFileName3 = 'Test_GetFileExistenceOnServer_OneFileNoHash_3.txt';
+  CFileNames: array[0..2] of string = (CFileName1, CFileName2, CFileName3);
+  CExpectedExistence: array[0..3] of string = ('1', '1', '1', '0');
 var
   ListOfFiles, ListOfResults: TStringList;
+  Response: string;
 begin
-  AssertEquals(CREResp_Done, ClearInMemFileSystem(CTestServerAddress));
-  SendTestFileToServer(CTestServerAddress, CFileName1, 'SomeContentForNoHash1');
-  SendTestFileToServer(CTestServerAddress, CFileName2, 'SomeContentForNoHash2');
-  SendTestFileToServer(CTestServerAddress, CFileName3, 'SomeContentForNoHash3');
+  Expect(ClearInMemFileSystem(CTestServerAddress)).ToBe(CREResp_Done);
+  SendMultipleTestFilesToServer(@CFileNames, Length(CFileNames), 'SomeContentForNoHash');
 
   ListOfFiles := TStringList.Create;
   ListOfResults := TStringList.Create;
@@ -379,11 +421,10 @@ begin
     ListOfFiles.Add(CFileName3);
     ListOfFiles.Add('non-existent file');
 
-    AssertEquals('', GetFileExistenceOnServer(CTestServerAddress, ListOfFiles, ListOfResults, False));
-    AssertEquals('1', ListOfResults.Strings[0]);
-    AssertEquals('1', ListOfResults.Strings[1]);
-    AssertEquals('1', ListOfResults.Strings[2]);
-    AssertEquals('0', ListOfResults.Strings[3]);
+    Response := GetFileExistenceOnServer(CTestServerAddress, ListOfFiles, ListOfResults, False);
+
+    Expect(Response).ToBe('');
+    Expect(ListOfResults).ToMatchContentOfStringArray(@CExpectedExistence, 4, 'File existence on server.');
   finally
     ListOfFiles.Free;
     ListOfResults.Free;
@@ -393,16 +434,17 @@ end;
 
 procedure TTestHTTPAPI.Test_GetFileExistenceOnServer_MultipleFilesWithHash;
 const
-  CFileName1: string = 'Test_GetFileExistenceOnServer_OneFileWithHash_1.txt';
-  CFileName2: string = 'Test_GetFileExistenceOnServer_OneFileWithHash_2.txt';
-  CFileName3: string = 'Test_GetFileExistenceOnServer_OneFileWithHash_3.txt';
+  CFileName1 = 'Test_GetFileExistenceOnServer_OneFileWithHash_1.txt';
+  CFileName2 = 'Test_GetFileExistenceOnServer_OneFileWithHash_2.txt';
+  CFileName3 = 'Test_GetFileExistenceOnServer_OneFileWithHash_3.txt';
+  CFileNames: array[0..2] of string = (CFileName1, CFileName2, CFileName3);
+  CExpectedExistence: array[0..3] of string = ('1', '0', '1', '0');
 var
   ListOfFiles, ListOfResults: TStringList;
+  Response: string;
 begin
-  AssertEquals(CREResp_Done, ClearInMemFileSystem(CTestServerAddress));
-  SendTestFileToServer(CTestServerAddress, CFileName1, 'SomeContentForWithHash1');
-  SendTestFileToServer(CTestServerAddress, CFileName2, 'SomeContentForWithHash2');
-  SendTestFileToServer(CTestServerAddress, CFileName3, 'SomeContentForWithHash3');
+  Expect(ClearInMemFileSystem(CTestServerAddress)).ToBe(CREResp_Done);
+  SendMultipleTestFilesToServer(@CFileNames, Length(CFileNames), 'SomeContentForWithHash');
 
   ListOfFiles := TStringList.Create;
   ListOfResults := TStringList.Create;
@@ -412,11 +454,10 @@ begin
     ListOfFiles.Add(CFileName3 + CDefaultInMemFileNameHashSeparator + 'B924828E25CC6B02FC1D84D8129E599F');
     ListOfFiles.Add('non-existent file' + CDefaultInMemFileNameHashSeparator + 'no hash');
 
-    AssertEquals('', GetFileExistenceOnServer(CTestServerAddress, ListOfFiles, ListOfResults, True));
-    AssertEquals('1', ListOfResults.Strings[0]);
-    AssertEquals('0', ListOfResults.Strings[1]);
-    AssertEquals('1', ListOfResults.Strings[2]);
-    AssertEquals('0', ListOfResults.Strings[3]);
+    Response := GetFileExistenceOnServer(CTestServerAddress, ListOfFiles, ListOfResults, True);
+
+    Expect(Response).ToBe('');
+    Expect(ListOfResults).ToMatchContentOfStringArray(@CExpectedExistence, 4, 'File existence on server.');
   finally
     ListOfFiles.Free;
     ListOfResults.Free;
@@ -433,17 +474,14 @@ begin
   SendTestFileToServer(CTestServerAddress, CFileName);
 
   Response := ClearInMemFileSystem(CTestServerAddress);
-  AssertEquals(CREResp_Done, Response);
-  AssertEquals(False, GetFileExistenceOnServer(CTestServerAddress, CFileName, False));
+  Expect(Response).ToBe(CREResp_Done);
+  Expect(GetFileExistenceOnServer(CTestServerAddress, CFileName, False)).ToBe(False);
 end;
 
 
 procedure TTestHTTPAPI.Test_SetVariable_HappyFlow;
-var
-  Response: string;
 begin
-  Response := SetVariable(CTestServerAddress, '$MyVar$', 'some value', 0);
-  AssertEquals(CREResp_Done, Response);
+  Expect(SetVariable(CTestServerAddress, '$MyVar$', 'some value', 0)).ToBe(CREResp_Done);
 end;
 
 
@@ -454,15 +492,14 @@ var
   Response: string;
   ListOfVars: TStringList;
 begin
-  Response := SetVariable(CTestServerAddress, '$MyVar$', CBadValue, 10);
-  AssertEquals(CExpectedBadStackLevelResponse, Response);
+  Expect(SetVariable(CTestServerAddress, '$MyVar$', CBadValue, 10)).ToBe(CExpectedBadStackLevelResponse);
 
   Response := FastReplace_87ToReturn(GetAllReplacementVars(CTestServerAddress, 0));
 
   ListOfVars := TStringList.Create;
   try
     ListOfVars.Text := Response;
-    AssertEquals(False, ListOfVars.Values['$MyVar$'] = CBadValue);
+    Expect(ListOfVars).WithItem('$MyVar$').DifferentThanValue(CBadValue);
   finally
     ListOfVars.Free;
   end;
@@ -477,23 +514,24 @@ var
   Response: string;
   ListOfVars: TStringList;
   ClickOptions: TClkClickOptions;
-  tp: TPoint;
+  tp, InitialTp: TPoint;
 begin
   GenerateClickOptionsForLeaveMouse(CX, CY, ClickOptions);
+  GetCursorPos(InitialTp);
 
   Response := FastReplace_87ToReturn(ExecuteClickAction(CTestServerAddress, ClickOptions));
 
   GetCursorPos(tp);
-  AssertEquals(tp.X, CX);
-  AssertEquals(tp.Y, CY);
+  Expect(tp.X).ToBe(CX, 'mouse pos');
+  Expect(tp.Y).ToBe(CY, 'mouse pos');
 
   ListOfVars := TStringList.Create;
   try
     ListOfVars.Text := Response;
-    AssertEquals('', ListOfVars.Values['$ExecAction_Err$']);
-    AssertEquals('1', ListOfVars.Values[CREResp_RemoteExecResponseVar]);
+    ExpectSuccessfulAction(ListOfVars);
   finally
     ListOfVars.Free;
+    SetCursorPos(InitialTp.X, InitialTp.Y);
   end;
 end;
 
@@ -512,10 +550,9 @@ begin
   ListOfVars := TStringList.Create;
   try
     ListOfVars.Text := Response;
-    AssertEquals('', ListOfVars.Values['$ExecAction_Err$']);
-    AssertEquals('1', ListOfVars.Values[CREResp_RemoteExecResponseVar]);
-    AssertEquals(True, Pos('Windows IP Configuration', ListOfVars.Values['$ExecAction_StdOut$']) > 0);
-    AssertEquals(True, Pos('Host Name', ListOfVars.Values['$ExecAction_StdOut$']) > 0);
+    ExpectSuccessfulAction(ListOfVars);
+    Expect(ListOfVars).WithItem('$ExecAction_StdOut$').ToContain('Windows IP Configuration');
+    Expect(ListOfVars).WithItem('$ExecAction_StdOut$').ToContain('Host Name');
   finally
     ListOfVars.Free;
   end;
@@ -534,9 +571,8 @@ begin
   ListOfVars := TStringList.Create;
   try
     ListOfVars.Text := Response;
-    AssertEquals('', ListOfVars.Values['$ExecAction_Err$']);
-    AssertEquals('1', ListOfVars.Values[CREResp_RemoteExecResponseVar]);
-    AssertEquals('', ListOfVars.Values['$ExecAction_StdOut$']);
+    ExpectSuccessfulAction(ListOfVars);
+    Expect(ListOfVars).WithItem('$ExecAction_StdOut$').OfValue('');
   finally
     ListOfVars.Free;
   end;
@@ -555,9 +591,7 @@ begin
   ListOfVars := TStringList.Create;
   try
     ListOfVars.Text := Response;
-    AssertEquals('', ListOfVars.Values['$ExecAction_Err$']);
-    AssertEquals('1', ListOfVars.Values[CREResp_RemoteExecResponseVar]);
-    AssertEquals('Successful', ListOfVars.Values['$LastAction_Status$']);
+    ExpectSuccessfulAction(ListOfVars);
   finally
     ListOfVars.Free;
   end;
@@ -577,9 +611,7 @@ begin
   ListOfVars := TStringList.Create;
   try
     ListOfVars.Text := Response;
-    AssertEquals(True, Pos('Timeout at "TestFind UIClicker Main" in ', ListOfVars.Values['$ExecAction_Err$']) > 0);
-    AssertEquals('0', ListOfVars.Values[CREResp_RemoteExecResponseVar]);
-    AssertEquals('Failed', ListOfVars.Values['$LastAction_Status$']);
+    ExpectFailedAction(ListOfVars, 'Timeout at "TestFind UIClicker Main" in ');
   finally
     ListOfVars.Free;
   end;
@@ -599,9 +631,7 @@ begin
   ListOfVars := TStringList.Create;
   try
     ListOfVars.Text := Response;
-    AssertEquals('', ListOfVars.Values['$ExecAction_Err$']);
-    AssertEquals('0', ListOfVars.Values[CREResp_RemoteExecResponseVar]);
-    AssertEquals('Allowed Failed', ListOfVars.Values['$LastAction_Status$']);
+    ExpectAllowedFailedAction(ListOfVars);
   finally
     ListOfVars.Free;
   end;
@@ -621,9 +651,7 @@ begin
   ListOfVars := TStringList.Create;
   try
     ListOfVars.Text := Response;
-    AssertEquals('', ListOfVars.Values['$ExecAction_Err$']);
-    AssertEquals('1', ListOfVars.Values[CREResp_RemoteExecResponseVar]);
-    AssertEquals('Successful', ListOfVars.Values['$LastAction_Status$']);
+    ExpectSuccessfulAction(ListOfVars);
   finally
     ListOfVars.Free;
   end;
@@ -643,9 +671,7 @@ begin
   ListOfVars := TStringList.Create;
   try
     ListOfVars.Text := Response;
-    AssertEquals('', ListOfVars.Values['$ExecAction_Err$']);
-    AssertEquals('1', ListOfVars.Values[CREResp_RemoteExecResponseVar]);
-    AssertEquals('Successful', ListOfVars.Values['$LastAction_Status$']);
+    ExpectSuccessfulAction(ListOfVars);
   finally
     ListOfVars.Free;
   end;

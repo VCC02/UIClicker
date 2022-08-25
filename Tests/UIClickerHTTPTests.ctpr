@@ -70,6 +70,10 @@
         <Filename Value="..\ClickerUtils\ClickerTemplates.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
+      <Unit>
+        <Filename Value="..\..\MiscUtils\Expectations.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
