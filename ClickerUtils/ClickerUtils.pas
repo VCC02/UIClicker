@@ -137,6 +137,10 @@ type
     FontQualityUsesReplacement: Boolean;
     FontQualityReplacement: string;
     ProfileName: string;
+    CropLeft: string;
+    CropTop: string;
+    CropRight: string;
+    CropBottom: string;
   end;
 
   TClkFindControlMatchBitmapTextArr = array of TClkFindControlMatchBitmapText;

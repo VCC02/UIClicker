@@ -39,6 +39,8 @@ type
     procedure Test_TestConnection;
     procedure Test_SetVariable_HappyFlow;
     procedure Test_SetVariable_BadStackLevel;
+    procedure Test_GetDebugImageFromServer;
+    procedure Test_GetDebugImageFromServer_BadStackIndex;
   end;
 
 
@@ -46,7 +48,7 @@ implementation
 
 
 uses
-  ClickerActionsClient, ClickerUtils, Controls;
+  ClickerActionsClient, ClickerUtils, Controls, Graphics, ActionsStuff;
 
 
 procedure TTestMiscHTTPAPI.Test_TestConnection;
@@ -81,6 +83,46 @@ begin
   end;
 end;
 
+
+procedure TTestMiscHTTPAPI.Test_GetDebugImageFromServer;
+var
+  Response: string;
+  FindSubControlOptions: TClkFindControlOptions;
+  Bmp: TBitmap;
+begin
+  SetupTargetWindowFor_FindSubControl;
+  GenerateFindSubControlOptionsForMainUIClickerWindow_Bitness(FindSubControlOptions, False);
+  ExecuteFindSubControlAction(CTestServerAddress, FindSubControlOptions, 'Test GetDebugImageFromServer on UIClicker Main', 3000, CREParam_FileLocation_ValueMem);
+
+  Bmp := TBitmap.Create;
+  try
+    Response := GetDebugImageFromServer(CTestServerAddress, 0, Bmp, False);
+    Expect(Response).ToBe('');
+
+    Expect(Bmp.Width).ToBe(400);
+    Expect(Bmp.Height).ToBe(279);
+  finally
+    Bmp.Free;
+  end;
+end;
+
+
+procedure TTestMiscHTTPAPI.Test_GetDebugImageFromServer_BadStackIndex;
+var
+  Response: string;
+  Bmp: TBitmap;
+begin
+  Bmp := TBitmap.Create;
+  try
+    Response := GetDebugImageFromServer(CTestServerAddress, 10, Bmp, False);
+    Expect(Response).ToBe('');
+
+    Expect(Bmp.Width).ToBeGreaterThan(1000);  //the returned bmp contains a long error message
+    Expect(Bmp.Height).ToBeGreaterThan(18);
+  finally
+    Bmp.Free;
+  end;
+end;
 
 initialization
 

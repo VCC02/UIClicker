@@ -313,6 +313,10 @@ begin
       AFindControlOptions.MatchBitmapText[i].FontQualityUsesReplacement := Ini.ReadBool(SectionIndex, Indent + 'FontQualityUsesReplacement', False);
       AFindControlOptions.MatchBitmapText[i].FontQualityReplacement := Ini.ReadString(SectionIndex, Indent + 'FontQualityReplacement', '$MyFontQuality$');
       AFindControlOptions.MatchBitmapText[i].ProfileName := Ini.ReadString(SectionIndex, Indent + 'ProfileName', 'Default');
+      AFindControlOptions.MatchBitmapText[i].CropLeft := Ini.ReadString(SectionIndex, Indent + 'CropLeft', '0');
+      AFindControlOptions.MatchBitmapText[i].CropTop := Ini.ReadString(SectionIndex, Indent + 'CropTop', '0');
+      AFindControlOptions.MatchBitmapText[i].CropRight := Ini.ReadString(SectionIndex, Indent + 'CropRight', '0');
+      AFindControlOptions.MatchBitmapText[i].CropBottom := Ini.ReadString(SectionIndex, Indent + 'CropBottom', '0');
     end;
   end
   else
@@ -332,6 +336,10 @@ begin
     AFindControlOptions.MatchBitmapText[0].FontQualityUsesReplacement := Ini.ReadBool(SectionIndex, 'MatchBitmapText.FontQualityUsesReplacement', False);
     AFindControlOptions.MatchBitmapText[0].FontQualityReplacement := Ini.ReadString(SectionIndex, 'MatchBitmapText.FontQualityReplacement', '$MyFontQuality$');
     AFindControlOptions.MatchBitmapText[0].ProfileName := Ini.ReadString(SectionIndex, 'MatchBitmapText.ProfileName', 'Default');
+    AFindControlOptions.MatchBitmapText[0].CropLeft := Ini.ReadString(SectionIndex, 'MatchBitmapText.CropLeft', '0');
+    AFindControlOptions.MatchBitmapText[0].CropTop := Ini.ReadString(SectionIndex, 'MatchBitmapText.CropTop', '0');
+    AFindControlOptions.MatchBitmapText[0].CropRight := Ini.ReadString(SectionIndex, 'MatchBitmapText.CropRight', '0');
+    AFindControlOptions.MatchBitmapText[0].CropBottom := Ini.ReadString(SectionIndex, 'MatchBitmapText.CropBottom', '0');
   end;
 
   AFindControlOptions.MatchBitmapFiles := FastReplace_45ToReturn(Ini.ReadString(SectionIndex, 'MatchBitmapFiles', ''));
@@ -709,6 +717,10 @@ begin
     AStringList.Add(Indent + 'FontQualityUsesReplacement=' + IntToStr(Ord(AActionFindControlOptions.MatchBitmapText[i].FontQualityUsesReplacement)));
     AStringList.Add(Indent + 'FontQualityReplacement=' + AActionFindControlOptions.MatchBitmapText[i].FontQualityReplacement);
     AStringList.Add(Indent + 'ProfileName=' + AActionFindControlOptions.MatchBitmapText[i].ProfileName);
+    AStringList.Add(Indent + 'CropLeft=' + AActionFindControlOptions.MatchBitmapText[i].CropLeft);
+    AStringList.Add(Indent + 'CropTop=' + AActionFindControlOptions.MatchBitmapText[i].CropTop);
+    AStringList.Add(Indent + 'CropRight=' + AActionFindControlOptions.MatchBitmapText[i].CropRight);
+    AStringList.Add(Indent + 'CropBottom=' + AActionFindControlOptions.MatchBitmapText[i].CropBottom);
   end;
 
   AStringList.Add('MatchBitmapFiles=' + FastReplace_ReturnTo45(AActionFindControlOptions.MatchBitmapFiles));
