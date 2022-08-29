@@ -32,6 +32,19 @@ uses
   LCLIntf, Classes, SysUtils, fpcunit, testregistry, InMemFileSystem, Expectations;
 
 type
+  TTerminateWaitingForFileAvailabilityRequestTh = class(TThread)
+  private
+    FDone: Boolean;
+    FDelayBeforeRequest: Integer;
+    FLoopType: string;
+    FResult: string;
+  protected
+    procedure Execute; override;
+  public
+    constructor Create(CreateSuspended: Boolean;
+                       const StackSize: SizeUInt = DefaultStackSize);
+  end;
+
 
   TTestHTTPAPI = class(TTestCase)
   private
@@ -52,6 +65,7 @@ type
     function Send_ExecuteCommandAtIndex_ToServer(AActionIdx, AStackLevel: Integer): string;
     procedure CreateTestTemplateInMem;
     procedure SetupTargetWindowFor_FindSubControl;
+    procedure SendTerminateWaitingForFileAvailabilityRequest(ALoopType: string; ADelayBeforeRequest: Integer);
   end;
 
 
@@ -71,7 +85,7 @@ implementation
 
 
 uses
-  ClickerActionsClient, ClickerUtils, ActionsStuff, Controls;
+  ClickerActionsClient, ClickerUtils, ActionsStuff, Controls, Forms;
 
 
 procedure ExpectSuccessfulAction(AListOfVars: TStringList);
@@ -95,6 +109,38 @@ begin
   Expect(AListOfVars).WithItem('$ExecAction_Err$', 'list of vars').OfValue('');
   Expect(AListOfVars).WithItem(CREResp_RemoteExecResponseVar, 'list of vars').OfValue('0', 'Expected allowed failed action.');
   Expect(AListOfVars).WithItem('$LastAction_Status$').OfValue('Allowed Failed');
+end;
+
+
+constructor TTerminateWaitingForFileAvailabilityRequestTh.Create(CreateSuspended: Boolean; const StackSize: SizeUInt = DefaultStackSize);
+begin
+  inherited Create(CreateSuspended, StackSize);
+  FDone := False;
+end;
+
+
+procedure TTerminateWaitingForFileAvailabilityRequestTh.Execute;
+var
+  tk: QWord;
+begin
+  try
+    tk := GetTickCount64;
+    repeat
+      Sleep(2);
+    until GetTickCount64 - tk > FDelayBeforeRequest;
+
+    try
+      FResult := TerminateWaitingForFileAvailability(CTestServerAddress, FLoopType, False);
+
+      if FResult <> CREResp_Done then
+        raise Exception.Create(FResult);
+    finally
+      Free;
+    end;
+  except
+    on E: Exception do
+      FResult := E.Message;
+  end;
 end;
 
 
@@ -243,6 +289,22 @@ begin
   ExecuteWindowOperationsAction(CTestServerAddress, WindowOperationsOptions);
 end;
 
+
+procedure TTestHTTPAPI.SendTerminateWaitingForFileAvailabilityRequest(ALoopType: string; ADelayBeforeRequest: Integer);
+var
+  Th: TTerminateWaitingForFileAvailabilityRequestTh;
+begin
+  Th := TTerminateWaitingForFileAvailabilityRequestTh.Create(True);
+
+  Th.FLoopType := ALoopType;
+
+  if ADelayBeforeRequest < 0 then
+    ADelayBeforeRequest := 0;
+
+  Th.FDelayBeforeRequest := ADelayBeforeRequest;
+  Th.FreeOnTerminate := False; //True;
+  Th.Start;
+end;
 
 end.
 

@@ -74,6 +74,11 @@ const
   CREParam_Var = 'Var';
   CREParam_Value = 'Value';
 
+  CREParam_TerminateWaitingLoop = 'Loop'; //loop type can be one of the following values: All, Single, Multi
+  CREParam_TerminateWaitingLoop_ValueAll = 'All';  //both loops, for single file and multiple files
+  CREParam_TerminateWaitingLoop_ValueSingle = 'Single'; //terminates the loop waiting for a single file
+  CREParam_TerminateWaitingLoop_ValueMulti = 'Multi';   //terminates the loop waiting for multiple files
+
   CRECmd_TestConnection = 'TestConnection';
   CRECmd_ExecuteCommandAtIndex = 'ExecuteCommandAtIndex';
   CRECmd_GetExecuteCommandAtIndexResult = 'GetExecuteCommandAtIndexResult';
@@ -91,6 +96,7 @@ const
   CRECmd_RecordComponent = 'RecordComponent';
   CRECmd_ClearInMemFileSystem = 'ClearInMemFileSystem';
   CRECmd_SetVariable = 'SetVariable';
+  CRECmd_TerminateWaitingForFileAvailability = 'TerminateWaitingForFileAvailability';  //three options, both loops, single file only, multi files only  (default both).  See CREParam_TerminateWaitingLoop params.
 
   CRECmd_ExecuteClickAction = 'ExecuteClickAction';
   CRECmd_ExecuteExecAppAction = 'ExecuteExecAppAction';
@@ -126,7 +132,7 @@ const
 
 function TestConnection(ARemoteAddress: string): string;
 function WaitForServerResponse(ATh: TClientThread; ACallAppProcMsg: Boolean = True): Boolean; //used for requests with custom waiting
-function SendTextRequestToServer(AFullLink: string): string;
+function SendTextRequestToServer(AFullLink: string; ACallAppProcMsg: Boolean = True): string;
 //function SendFileToServer(AFullLink: string; AFileContent, AResponseStream: TMemoryStream; ACallAppProcMsg: Boolean = True): string; overload; //expose this only if needed
 function SendFileToServer(AFullLink: string; AFileContent: TMemoryStream; ACallAppProcMsg: Boolean = True): string; overload;
 
@@ -145,6 +151,7 @@ function GetCompInfoAtPoint(ARemoteAddress: string; X, Y: Integer): string;
 function RecordComponentOnServer(ARemoteAddress: string; AHandle: THandle; AComponentContent: TMemoryStream): string;
 function ClearInMemFileSystem(ARemoteAddress: string): string;
 function SetVariable(ARemoteAddress, AVarName, AVarValue: string; AStackLevel: Integer): string;
+function TerminateWaitingForFileAvailability(ARemoteAddress, ALoopType: string; ACallAppProcMsg: Boolean = True): string;
 
 function ExecuteClickAction(ARemoteAddress: string; AClickOptions: TClkClickOptions): string;
 function ExecuteExecAppAction(ARemoteAddress: string; AExecAppOptions: TClkExecAppOptions; AActionName: string; AActionTimeout: Integer): string;
@@ -242,7 +249,7 @@ begin
 end;
 
 
-function SendTextRequestToServer(AFullLink: string): string;
+function SendTextRequestToServer(AFullLink: string; ACallAppProcMsg: Boolean = True): string;
 var
   Th: TClientThread;
 begin
@@ -253,7 +260,7 @@ begin
 
     Th.Start;
 
-    WaitForServerResponse(Th);
+    WaitForServerResponse(Th, ACallAppProcMsg);
     Result := Th.FResult;
   finally
     Th.Free;
@@ -529,6 +536,15 @@ begin
                                     CREParam_StackLevel + '=' + IntToStr(AStackLevel) + '&' +
                                     CREParam_Var + '=' + AVarName + '&' +
                                     CREParam_Value + '=' + AVarValue);
+end;
+
+
+function TerminateWaitingForFileAvailability(ARemoteAddress, ALoopType: string; ACallAppProcMsg: Boolean = True): string;
+begin
+  Result := SendTextRequestToServer(ARemoteAddress + CRECmd_TerminateWaitingForFileAvailability + '?' +
+                                    CREParam_StackLevel + '=0' + '&' +
+                                    CREParam_TerminateWaitingLoop + '=' + ALoopType,
+                                    ACallAppProcMsg);
 end;
 
 

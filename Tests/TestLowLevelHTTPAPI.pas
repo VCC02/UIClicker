@@ -45,7 +45,11 @@ type
     procedure Test_ExecuteFindControlAction_UIClickerMain_WrongClassAllowToFail;
 
     procedure Test_ExecuteFindSubControlAction_UIClickerMain_BitnessLabel;
+    procedure Test_ExecuteFindSubControlAction_UIClickerMain_BitnessLabelWithCropping;
+    procedure Test_ExecuteFindSubControlAction_UIClickerMain_BitnessLabelWithBadCropping;
+
     procedure Test_ExecuteFindSubControlAction_UIClickerMain_WindowInterpreterButton_Disk;
+    procedure Test_ExecuteFindSubControlAction_UIClickerMain_WindowInterpreterButton_Mem_NoSender;
   end;
 
 
@@ -208,6 +212,56 @@ begin
 end;
 
 
+procedure TTestLowLevelHTTPAPI.Test_ExecuteFindSubControlAction_UIClickerMain_BitnessLabelWithCropping;
+var
+  Response: string;
+  ListOfVars: TStringList;
+  FindSubControlOptions: TClkFindControlOptions;
+begin
+  SetupTargetWindowFor_FindSubControl;
+  GenerateFindSubControlOptionsForMainUIClickerWindow_Bitness(FindSubControlOptions, False);
+  FindSubControlOptions.MatchBitmapText[0].CropLeft := '3';
+  FindSubControlOptions.MatchBitmapText[0].CropTop := '1';
+  FindSubControlOptions.MatchBitmapText[0].CropRight := '4';
+  FindSubControlOptions.MatchBitmapText[0].CropBottom := '2';
+
+  Response := FastReplace_87ToReturn(ExecuteFindSubControlAction(CTestServerAddress, FindSubControlOptions, 'Test Find Bitness on UIClicker Main', 3000, CREParam_FileLocation_ValueMem));
+
+  ListOfVars := TStringList.Create;
+  try
+    ListOfVars.Text := Response;
+    ExpectSuccessfulAction(ListOfVars);
+  finally
+    ListOfVars.Free;
+  end;
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecuteFindSubControlAction_UIClickerMain_BitnessLabelWithBadCropping;
+var
+  Response: string;
+  ListOfVars: TStringList;
+  FindSubControlOptions: TClkFindControlOptions;
+begin
+  SetupTargetWindowFor_FindSubControl; //this should set the execution status to "Successful", then the next call, should set it to "Failed".
+  GenerateFindSubControlOptionsForMainUIClickerWindow_Bitness(FindSubControlOptions, False);
+  FindSubControlOptions.MatchBitmapText[0].CropLeft := '3';
+  FindSubControlOptions.MatchBitmapText[0].CropTop := '-14';
+  FindSubControlOptions.MatchBitmapText[0].CropRight := '4';
+  FindSubControlOptions.MatchBitmapText[0].CropBottom := '2';
+
+  Response := FastReplace_87ToReturn(ExecuteFindSubControlAction(CTestServerAddress, FindSubControlOptions, 'Test Find Bitness on UIClicker Main', 3000, CREParam_FileLocation_ValueMem));
+
+  ListOfVars := TStringList.Create;
+  try
+    ListOfVars.Text := Response;
+    ExpectFailedAction(ListOfVars, 'MatchBitmapText[0].CropTop is out of range.');
+  finally
+    ListOfVars.Free;
+  end;
+end;
+
+
 procedure TTestLowLevelHTTPAPI.Test_ExecuteFindSubControlAction_UIClickerMain_WindowInterpreterButton_Disk;
 var
   Response: string;
@@ -222,6 +276,30 @@ begin
   try
     ListOfVars.Text := Response;
     ExpectSuccessfulAction(ListOfVars);
+  finally
+    ListOfVars.Free;
+  end;
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecuteFindSubControlAction_UIClickerMain_WindowInterpreterButton_Mem_NoSender;
+const
+  CExpectedErr: string = 'Timeout at "Test Find WindowInterpreterButton_Mem_NoSender on UIClicker Main" in   AttemptCount=1  File not found: "py\bmps\ShowActionsWindow_Focused.bmp" File not found: "py\bmps\ShowActionsWindow_FocusedHighlighted.bmp" File not found: "py\bmps\ShowActionsWindow_Unfocused.bmp"';
+var
+  Response: string;
+  ListOfVars: TStringList;
+  FindSubControlOptions: TClkFindControlOptions;
+begin
+  SetupTargetWindowFor_FindSubControl;
+  GenerateFindSubControlOptionsForMainUIClickerWindow_WinInterpBtn(FindSubControlOptions, False);
+
+  SendTerminateWaitingForFileAvailabilityRequest(CREParam_TerminateWaitingLoop_ValueAll, 3000); //send request after 3s, and let the test continue
+  Response := FastReplace_87ToReturn(ExecuteFindSubControlAction(CTestServerAddress, FindSubControlOptions, 'Test Find WindowInterpreterButton_Mem_NoSender on UIClicker Main', 3000, CREParam_FileLocation_ValueMem));
+
+  ListOfVars := TStringList.Create;
+  try
+    ListOfVars.Text := Response;
+    ExpectFailedAction(ListOfVars, CExpectedErr);
   finally
     ListOfVars.Free;
   end;
