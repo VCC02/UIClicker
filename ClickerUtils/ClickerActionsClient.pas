@@ -404,7 +404,7 @@ begin
 
   FileContentMem := TMemoryStream.Create;
   try
-    GetTemplateContentAsMemoryStream(ACustomACSActions, FileContentMem);
+    GetTemplateContentAsMemoryStream(ACustomACSActions, '', FileContentMem);
     Result := SendFileToServer(Link, FileContentMem);
   finally
     FileContentMem.Free;
@@ -793,7 +793,7 @@ begin
 
   FileContentMem := TMemoryStream.Create;
   try
-    GetTemplateContentAsMemoryStream(AClkActions, FileContentMem);
+    GetTemplateContentAsMemoryStream(AClkActions, '', FileContentMem);
     Hash := ComputeHash(FileContentMem, FileContentMem.Size);
   finally
     FileContentMem.Free;

@@ -350,6 +350,7 @@ var
   ClkActions: TClkActionsRecArr;
   MemStream: TMemoryStream;
   n: Integer;
+  DummyNotes: string;
 begin
   if not InMemFS.FileExistsInMem(ATemplateFileName) then
     CreateNewTemplateStr(ATemplateFileName);
@@ -359,14 +360,14 @@ begin
     InMemFS.LoadFileFromMemToStream(ATemplateFileName, MemStream);
     MemStream.Position := 0;
 
-    GetTemplateContentFromMemoryStream(ClkActions, MemStream);
+    GetTemplateContentFromMemoryStream(ClkActions, DummyNotes, MemStream);
 
     n := Length(ClkActions);
     SetLength(ClkActions, n + 1);
     CopyActionContent(AClkAction, ClkActions[n]);
 
     MemStream.Clear;
-    GetTemplateContentAsMemoryStream(ClkActions, MemStream);
+    GetTemplateContentAsMemoryStream(ClkActions, DummyNotes, MemStream);
     InMemFS.SaveFileToMem(ATemplateFileName, MemStream.Memory, MemStream.Size);
   finally
     MemStream.Free;
@@ -776,6 +777,7 @@ var
   ClkActions: TClkActionsRecArr;
   MemStream: TMemoryStream;
   n: Integer;
+  DummyNotes: string;
 begin
   Result := 0;
   if not InMemFS.FileExistsInMem(ATemplateFileName) then
@@ -786,7 +788,7 @@ begin
     InMemFS.LoadFileFromMemToStream(ATemplateFileName, MemStream);
     MemStream.Position := 0;
 
-    GetTemplateContentFromMemoryStream(ClkActions, MemStream);
+    GetTemplateContentFromMemoryStream(ClkActions, DummyNotes, MemStream);
 
     if (ActionIndex < 0) or (ActionIndex > Length(ClkActions) - 1) then
     begin
@@ -799,7 +801,7 @@ begin
     ClkActions[ActionIndex].FindControlOptions.MatchBitmapText[n] := AFindControlMatchBitmapText;
 
     MemStream.Clear;
-    GetTemplateContentAsMemoryStream(ClkActions, MemStream);
+    GetTemplateContentAsMemoryStream(ClkActions, DummyNotes, MemStream);
     InMemFS.SaveFileToMem(ATemplateFileName, MemStream.Memory, MemStream.Size);
   finally
     MemStream.Free;
@@ -889,6 +891,7 @@ var
   ClkActions: TClkActionsRecArr;
   MemStream: TMemoryStream;
   SetClientResponse: string;
+  DummyNotes: string;
 begin
   Result := 0;
   SetClientResponse := '';
@@ -909,7 +912,7 @@ begin
         InMemFS.LoadFileFromMemToStream(TemplateFileName, MemStream);
         MemStream.Position := 0;
 
-        GetTemplateContentFromMemoryStream(ClkActions, MemStream);
+        GetTemplateContentFromMemoryStream(ClkActions, DummyNotes, MemStream);
 
         SetClientResponse := 'LoadTemplateInExecList: ' + SetClientTemplateInServer(FRemoteAddress, TemplateFileName, ClkActions, CStackLevel);
         SetClientResponse := SetClientResponse + ',  SendMissingFilesToServer: ' + SendMissingFilesToServer(FRemoteAddress, ClkActions);

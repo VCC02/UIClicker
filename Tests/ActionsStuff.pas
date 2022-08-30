@@ -66,6 +66,7 @@ var
   ClkActions: TClkActionsRecArr;
   MemStream: TMemoryStream;
   n: Integer;
+  DummyNotes: string;
 begin
   if not AInMemFS.FileExistsInMem(ATemplateFileName) then
     AInMemFS.SaveFileToMem(ATemplateFileName, nil, 0);
@@ -75,14 +76,14 @@ begin
     AInMemFS.LoadFileFromMemToStream(ATemplateFileName, MemStream);
     MemStream.Position := 0;
 
-    GetTemplateContentFromMemoryStream(ClkActions, MemStream);
+    GetTemplateContentFromMemoryStream(ClkActions, DummyNotes, MemStream);
 
     n := Length(ClkActions);
     SetLength(ClkActions, n + 1);
     CopyActionContent(AClkAction, ClkActions[n]);
 
     MemStream.Clear;
-    GetTemplateContentAsMemoryStream(ClkActions, MemStream);
+    GetTemplateContentAsMemoryStream(ClkActions, DummyNotes, MemStream);
     AInMemFS.SaveFileToMem(ATemplateFileName, MemStream.Memory, MemStream.Size);
   finally
     MemStream.Free;

@@ -32,13 +32,13 @@ uses
 
 
 procedure LoadTemplateToCustomActions_V1(Ini: TClkIniReadonlyFile; var ACustomActions: TClkActionsRecArr);
-procedure LoadTemplateToCustomActions_V2(Ini: TClkIniReadonlyFile; var ACustomActions: TClkActionsRecArr);
+procedure LoadTemplateToCustomActions_V2(Ini: TClkIniReadonlyFile; var ACustomActions: TClkActionsRecArr; var ANotes: string);
 
 //procedure SaveTemplateWithCustomActions_V1(Fnm: string; ACustomActions: TClkActionsRecArr); //not used anymore
-procedure SaveTemplateWithCustomActionsToStringList_V2(AStringList: TStringList; var ACustomActions: TClkActionsRecArr);
+procedure SaveTemplateWithCustomActionsToStringList_V2(AStringList: TStringList; var ACustomActions: TClkActionsRecArr; ANotes: string);
 procedure CopyActionContent(ASrc: TClkActionRec; var ADest: TClkActionRec);
-procedure GetTemplateContentAsMemoryStream(var ATemplateContent: TClkActionsRecArr; AFileContentMem: TMemoryStream);
-procedure GetTemplateContentFromMemoryStream(var ACustomActions: TClkActionsRecArr; AFileContentMem: TMemoryStream);
+procedure GetTemplateContentAsMemoryStream(var ATemplateContent: TClkActionsRecArr; ANotes: string; AFileContentMem: TMemoryStream);
+procedure GetTemplateContentFromMemoryStream(var ACustomActions: TClkActionsRecArr; var ANotes: string; AFileContentMem: TMemoryStream);
 
 {
  What V2 does better than V1:
@@ -413,7 +413,7 @@ begin
 end;
 
 
-procedure LoadTemplateToCustomActions_V2(Ini: TClkIniReadonlyFile; var ACustomActions: TClkActionsRecArr);
+procedure LoadTemplateToCustomActions_V2(Ini: TClkIniReadonlyFile; var ACustomActions: TClkActionsRecArr; var ANotes: string);
 var
   IterationStr: string;
   SectionIndex: Integer;
@@ -442,6 +442,8 @@ begin
       acWindowOperations: LoadAction_WindowOperations(Ini, SectionIndex, ACustomActions[i].WindowOperationsOptions);
     end;
   end;
+
+  ANotes := Ini.ReadString('Notes', 'Content', '');
 end;
 
 
@@ -809,7 +811,7 @@ begin
 end;
 
 
-procedure SaveTemplateWithCustomActionsToStringList_V2(AStringList: TStringList; var ACustomActions: TClkActionsRecArr);
+procedure SaveTemplateWithCustomActionsToStringList_V2(AStringList: TStringList; var ACustomActions: TClkActionsRecArr; ANotes: string);
 var
   i: Integer;
   IterationStr: string;
@@ -831,6 +833,11 @@ begin
 
     AStringList.Add('');
   end;
+
+  AStringList.Add('[Notes]');
+  AStringList.Add('Content=' + ANotes);
+
+  AStringList.Add('');
 end;
 
 
@@ -878,13 +885,13 @@ begin             //Substructures, which do not contain pointers, can be directl
 end;
 
 
-procedure GetTemplateContentAsMemoryStream(var ATemplateContent: TClkActionsRecArr; AFileContentMem: TMemoryStream);
+procedure GetTemplateContentAsMemoryStream(var ATemplateContent: TClkActionsRecArr; ANotes: string; AFileContentMem: TMemoryStream);
 var
   FileContentStr: TStringList;
 begin
   FileContentStr := TStringList.Create;
   try
-    SaveTemplateWithCustomActionsToStringList_V2(FileContentStr, ATemplateContent);
+    SaveTemplateWithCustomActionsToStringList_V2(FileContentStr, ATemplateContent, ANotes);
     FileContentStr.SaveToStream(AFileContentMem);
   finally
     FileContentStr.Free;
@@ -892,7 +899,7 @@ begin
 end;
 
 
-procedure GetTemplateContentFromMemoryStream(var ACustomActions: TClkActionsRecArr; AFileContentMem: TMemoryStream);
+procedure GetTemplateContentFromMemoryStream(var ACustomActions: TClkActionsRecArr; var ANotes: string; AFileContentMem: TMemoryStream);
 var
   FileContentStr: TStringList;
   Ini: TClkIniReadonlyFile;
@@ -902,7 +909,7 @@ begin
     AFileContentMem.Position := 0;
     Ini := TClkIniReadonlyFile.Create(AFileContentMem);
     try
-      LoadTemplateToCustomActions_V2(Ini, ACustomActions);
+      LoadTemplateToCustomActions_V2(Ini, ACustomActions, ANotes);
     finally
       Ini.Free;
     end;
