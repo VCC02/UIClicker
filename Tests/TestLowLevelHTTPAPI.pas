@@ -47,6 +47,11 @@ type
     procedure Test_ExecuteFindSubControlAction_UIClickerMain_BitnessLabel;
     procedure Test_ExecuteFindSubControlAction_UIClickerMain_BitnessLabelWithCropping;
     procedure Test_ExecuteFindSubControlAction_UIClickerMain_BitnessLabelWithBadCropping;
+    procedure Test_ExecuteFindSubControlAction_UIClickerMain_BitnessLabelWithBadCropping_Width0;
+    procedure Test_ExecuteFindSubControlAction_UIClickerMain_BitnessLabelWithBadCropping_NegativeWidth;
+    procedure Test_ExecuteFindSubControlAction_UIClickerMain_BitnessLabelWithBadCropping_Height0;
+    procedure Test_ExecuteFindSubControlAction_UIClickerMain_BitnessLabelWithBadCropping_NegativeHeight;
+
 
     procedure Test_ExecuteFindSubControlAction_UIClickerMain_WindowInterpreterButton_Disk;
     procedure Test_ExecuteFindSubControlAction_UIClickerMain_WindowInterpreterButton_Mem_NoSender;
@@ -259,6 +264,78 @@ begin
   finally
     ListOfVars.Free;
   end;
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecuteFindSubControlAction_UIClickerMain_BitnessLabelWithBadCropping_Width0;
+var
+  Response: string;
+  FindSubControlOptions: TClkFindControlOptions;
+begin
+  SetupTargetWindowFor_FindSubControl; //this should set the execution status to "Successful", then the next call, should set it to "Failed".
+  GenerateFindSubControlOptionsForMainUIClickerWindow_Bitness(FindSubControlOptions, False);
+  FindSubControlOptions.MatchBitmapText[0].CropLeft := '9';
+  FindSubControlOptions.MatchBitmapText[0].CropTop := '0';
+  FindSubControlOptions.MatchBitmapText[0].CropRight := '10';
+  FindSubControlOptions.MatchBitmapText[0].CropBottom := '0';
+
+  Response := FastReplace_87ToReturn(ExecuteFindSubControlAction(CTestServerAddress, FindSubControlOptions, 'Test Find Bitness on UIClicker Main', 3000, CREParam_FileLocation_ValueMem));
+
+  Expect(Response).ToBe('ProcessServerCommand exception: The text width, after cropping, is 0.  Profile[0]: "frClickerBMPText".   Searched text: "-bit"');
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecuteFindSubControlAction_UIClickerMain_BitnessLabelWithBadCropping_NegativeWidth;
+var
+  Response: string;
+  FindSubControlOptions: TClkFindControlOptions;
+begin
+  SetupTargetWindowFor_FindSubControl; //this should set the execution status to "Successful", then the next call, should set it to "Failed".
+  GenerateFindSubControlOptionsForMainUIClickerWindow_Bitness(FindSubControlOptions, False);
+  FindSubControlOptions.MatchBitmapText[0].CropLeft := '15';
+  FindSubControlOptions.MatchBitmapText[0].CropTop := '0';
+  FindSubControlOptions.MatchBitmapText[0].CropRight := '16';
+  FindSubControlOptions.MatchBitmapText[0].CropBottom := '0';
+
+  Response := FastReplace_87ToReturn(ExecuteFindSubControlAction(CTestServerAddress, FindSubControlOptions, 'Test Find Bitness on UIClicker Main', 3000, CREParam_FileLocation_ValueMem));
+
+  Expect(Response).ToBe('ProcessServerCommand exception: The text width, after cropping, is negative.  Profile[0]: "frClickerBMPText".   Searched text: "-bit"');
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecuteFindSubControlAction_UIClickerMain_BitnessLabelWithBadCropping_Height0;
+var
+  Response: string;
+  FindSubControlOptions: TClkFindControlOptions;
+begin
+  SetupTargetWindowFor_FindSubControl; //this should set the execution status to "Successful", then the next call, should set it to "Failed".
+  GenerateFindSubControlOptionsForMainUIClickerWindow_Bitness(FindSubControlOptions, False);
+  FindSubControlOptions.MatchBitmapText[0].CropLeft := '0';
+  FindSubControlOptions.MatchBitmapText[0].CropTop := '8';
+  FindSubControlOptions.MatchBitmapText[0].CropRight := '0';
+  FindSubControlOptions.MatchBitmapText[0].CropBottom := '7';
+
+  Response := FastReplace_87ToReturn(ExecuteFindSubControlAction(CTestServerAddress, FindSubControlOptions, 'Test Find Bitness on UIClicker Main', 3000, CREParam_FileLocation_ValueMem));
+
+  Expect(Response).ToBe('ProcessServerCommand exception: The text height, after cropping, is 0.  Profile[0]: "frClickerBMPText".   Searched text: "-bit"');
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecuteFindSubControlAction_UIClickerMain_BitnessLabelWithBadCropping_NegativeHeight;
+var
+  Response: string;
+  FindSubControlOptions: TClkFindControlOptions;
+begin
+  SetupTargetWindowFor_FindSubControl; //this should set the execution status to "Successful", then the next call, should set it to "Failed".
+  GenerateFindSubControlOptionsForMainUIClickerWindow_Bitness(FindSubControlOptions, False);
+  FindSubControlOptions.MatchBitmapText[0].CropLeft := '0';
+  FindSubControlOptions.MatchBitmapText[0].CropTop := '9';
+  FindSubControlOptions.MatchBitmapText[0].CropRight := '0';
+  FindSubControlOptions.MatchBitmapText[0].CropBottom := '9';
+
+  Response := FastReplace_87ToReturn(ExecuteFindSubControlAction(CTestServerAddress, FindSubControlOptions, 'Test Find Bitness on UIClicker Main', 3000, CREParam_FileLocation_ValueMem));
+
+  Expect(Response).ToBe('ProcessServerCommand exception: The text height, after cropping, is negative.  Profile[0]: "frClickerBMPText".   Searched text: "-bit"');
 end;
 
 

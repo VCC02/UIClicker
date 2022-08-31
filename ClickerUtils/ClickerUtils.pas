@@ -602,6 +602,18 @@ begin
 end;
 
 
+function ReplaceExit(s: string): string;
+var
+  Args, InitialArgs: string;
+begin
+  Args := Copy(s, Pos('(', s) + 1, MaxInt);
+  Args := Copy(Args, 1, Pos(')$', Args) - 1);
+  InitialArgs := Args;
+
+  Result := StringReplace(s, '$Exit(' + InitialArgs + ')$', 'Exit(<ExitCode>) should be called from SetVar action, to stop the template.', [rfReplaceAll]);
+end;
+
+
 function ReplaceOnce(AListOfVars: TStringList; s: string; AReplaceRandom: Boolean = True): string;
 var
   i: Integer;
@@ -651,6 +663,9 @@ begin
 
   if Pos('$Now$', s) > 0 then
     s := StringReplace(s, '$Now$', DateTimeToStr(Now), [rfReplaceAll]);
+
+  if Pos('$Exit(', s) > 0 then
+    s := ReplaceExit(s);
 
   if Pos('$FastReplace_45ToReturn(', s) > 0 then
     s := ReplaceFastReplace_45ToReturn(s);

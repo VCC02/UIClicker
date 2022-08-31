@@ -196,6 +196,11 @@ begin
   AFindControlOptions.AllowToFail := AAllowToFail;
   AFindControlOptions.MatchBitmapAlgorithm := mbaBruteForce;
   SetLength(AFindControlOptions.MatchBitmapText, 0);
+
+  AFindControlOptions.WaitForControlToGoAway := False;
+  AFindControlOptions.CachedControlLeft := '';
+  AFindControlOptions.CachedControlTop := '';
+  AFindControlOptions.StartSearchingWithCachedControl := False;
 end;
 
 
@@ -222,6 +227,10 @@ begin
   AFindControlOptions.MatchBitmapText[0].Italic := False;
   AFindControlOptions.MatchBitmapText[0].Underline := False;
   AFindControlOptions.MatchBitmapText[0].StrikeOut := False;
+  AFindControlOptions.MatchBitmapText[0].CropLeft := '';
+  AFindControlOptions.MatchBitmapText[0].CropTop := '';
+  AFindControlOptions.MatchBitmapText[0].CropRight := '';
+  AFindControlOptions.MatchBitmapText[0].CropBottom := '';
 
   AFindControlOptions.InitialRectange.Left := '$Control_Left$';
   AFindControlOptions.InitialRectange.Top := '$Control_Top$';
@@ -233,6 +242,16 @@ begin
   AFindControlOptions.InitialRectange.BottomOffset := '0';
   AFindControlOptions.ColorError := '10';
   AFindControlOptions.AllowedColorErrorCount := '40';
+
+  AFindControlOptions.WaitForControlToGoAway := False;
+  AFindControlOptions.CachedControlLeft := '';
+  AFindControlOptions.CachedControlTop := '';
+  AFindControlOptions.StartSearchingWithCachedControl := False;
+
+  AFindControlOptions.MatchBitmapAlgorithmSettings.XOffset := 0;
+  AFindControlOptions.MatchBitmapAlgorithmSettings.YOffset := 0;
+  AFindControlOptions.MatchBitmapAlgorithmSettings.XMultipleOf := 0;
+  AFindControlOptions.MatchBitmapAlgorithmSettings.YMultipleOf := 0;
 end;
 
 
@@ -265,6 +284,11 @@ begin
   AFindControlOptions.InitialRectange.BottomOffset := '-120';
   AFindControlOptions.ColorError := '25';                    //rendering depends on video card, so allow a high error value
   AFindControlOptions.AllowedColorErrorCount := '400';
+
+  AFindControlOptions.WaitForControlToGoAway := False;
+  AFindControlOptions.CachedControlLeft := '';
+  AFindControlOptions.CachedControlTop := '';
+  AFindControlOptions.StartSearchingWithCachedControl := False;
 end;
 
 
