@@ -55,6 +55,8 @@ type
   TOnTriggerOnControlsModified = procedure of object;
   TOnEvaluateReplacements = function(s: string): string of object;
   TOnCopyControlTextAndClassFromMainWindow = procedure(ACompProvider: string; out AControlText, AControlClass: string) of object;
+  TOnGetExtraSearchAreaDebuggingImage = function(AExtraBitmap: TBitmap): Boolean of object;
+  TOnGetExtraSearchAreaDebuggingImageWithStackLevel = function(AExtraBitmap: TBitmap; AStackLevel: Integer): Boolean of object;
   TOnGetConnectionAddress = function: string of object;
   TOnGetSelectedCompFromRemoteWin = function: THandle of object;
 

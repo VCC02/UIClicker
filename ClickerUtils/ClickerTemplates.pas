@@ -881,7 +881,7 @@ begin             //Substructures, which do not contain pointers, can be directl
   SetLength(ASrc.FindControlOptions.MatchBitmapText, Length(ADest.FindControlOptions.MatchBitmapText));
 
   for i := 0 to Length(ADest.FindControlOptions.MatchBitmapText) - 1 do
-    ADest.FindControlOptions.MatchBitmapText := ASrc.FindControlOptions.MatchBitmapText;
+    ADest.FindControlOptions.MatchBitmapText[i] := ASrc.FindControlOptions.MatchBitmapText[i];
 end;
 
 

@@ -90,6 +90,7 @@ const
   CRECmd_GetFileExistenceOnServer = 'GetFileExistenceOnServer';
   CRECmd_GetListOfWaitingFiles = 'GetListOfWaitingFiles';
   CRECmd_GetResultedDebugImage = 'GetResultedDebugImage'; //the image from the debugging tab, resulted after executing FindSubControl
+  CRECmd_GetSearchAreaDebugImage = 'GetSearchAreaDebugImage'; //the image from Find(Sub)Control tabs, as a screenshot of the latest found (sub)control.
   CRECmd_GetScreenShotImage = 'GetScreenShotImage';
   CRECmd_GetCurrentlyRecordedScreenShotImage = 'GetCurrentlyRecordedScreenShotImage';
   CRECmd_GetCompInfoAtPoint = 'GetCompInfoAtPoint';
@@ -97,6 +98,8 @@ const
   CRECmd_ClearInMemFileSystem = 'ClearInMemFileSystem';
   CRECmd_SetVariable = 'SetVariable';
   CRECmd_TerminateWaitingForFileAvailability = 'TerminateWaitingForFileAvailability';  //three options, both loops, single file only, multi files only  (default both).  See CREParam_TerminateWaitingLoop params.
+  CRECmd_MouseDown = 'MouseDown';
+  CRECmd_MouseUp = 'MouseUp';
 
   CRECmd_ExecuteClickAction = 'ExecuteClickAction';
   CRECmd_ExecuteExecAppAction = 'ExecuteExecAppAction';
@@ -139,6 +142,7 @@ function SendFileToServer(AFullLink: string; AFileContent: TMemoryStream; ACallA
 function ExitRemoteTemplate(ARemoteAddress: string; AStackLevel: Integer): string;  //called by client, to send a request to server to close a tab
 function GetAllReplacementVars(ARemoteAddress: string; AStackLevel: Integer): string;
 function GetDebugImageFromServer(ARemoteAddress: string; AStackLevel: Integer; AReceivedBmp: TBitmap; AWithGrid: Boolean): string; //returns error message if any
+function GetSearchAreaDebugImageFromServer(ARemoteAddress: string; AStackLevel: Integer; AReceivedBmp: TBitmap): string; //returns error message if any
 function SendTemplateContentToServer(ARemoteAddress, AFileName: string; var ACustomACSActions: TClkActionsRecArr): string;
 function SendLoadTemplateInExecListRequest(ARemoteAddress, AFileName: string; AStackLevel: Integer): string;
 function GetServerFileExpectancy(ARemoteAddress: string): string;
@@ -152,6 +156,9 @@ function RecordComponentOnServer(ARemoteAddress: string; AHandle: THandle; AComp
 function ClearInMemFileSystem(ARemoteAddress: string): string;
 function SetVariable(ARemoteAddress, AVarName, AVarValue: string; AStackLevel: Integer): string;
 function TerminateWaitingForFileAvailability(ARemoteAddress, ALoopType: string; ACallAppProcMsg: Boolean = True): string;
+
+function SendMouseDown(ARemoteAddress: string; AMouseParams: TStringList): string;
+function SendMouseUp(ARemoteAddress: string; AMouseParams: TStringList): string;
 
 function ExecuteClickAction(ARemoteAddress: string; AClickOptions: TClkClickOptions): string;
 function ExecuteExecAppAction(ARemoteAddress: string; AExecAppOptions: TClkExecAppOptions; AActionName: string; AActionTimeout: Integer): string;
@@ -387,6 +394,17 @@ begin
 end;
 
 
+function GetSearchAreaDebugImageFromServer(ARemoteAddress: string; AStackLevel: Integer; AReceivedBmp: TBitmap): string; //returns error message if any
+var
+  Link: string;
+begin
+  Link := ARemoteAddress + CRECmd_GetSearchAreaDebugImage + '?' +
+                           CREParam_StackLevel + '=' + IntToStr(AStackLevel);
+
+  Result := SendGetBmpRequestToServer(Link, AReceivedBmp);
+end;
+
+
 function SendTemplateContentToServer(ARemoteAddress, AFileName: string; var ACustomACSActions: TClkActionsRecArr): string;
 var
   Link: string;
@@ -545,6 +563,22 @@ begin
                                     CREParam_StackLevel + '=0' + '&' +
                                     CREParam_TerminateWaitingLoop + '=' + ALoopType,
                                     ACallAppProcMsg);
+end;
+
+
+function SendMouseDown(ARemoteAddress: string; AMouseParams: TStringList): string;
+begin
+  Result := SendTextRequestToServer(ARemoteAddress + CRECmd_MouseDown + '?' +
+                                    CREParam_StackLevel + '=0' + '&' +
+                                    StringReplace(AMouseParams.Text, #13#10, '&', [rfReplaceAll]));
+end;
+
+
+function SendMouseUp(ARemoteAddress: string; AMouseParams: TStringList): string;
+begin
+  Result := SendTextRequestToServer(ARemoteAddress + CRECmd_MouseUp + '?' +
+                                    CREParam_StackLevel + '=0' + '&' +
+                                    StringReplace(AMouseParams.Text, #13#10, '&', [rfReplaceAll]));
 end;
 
 
