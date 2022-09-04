@@ -52,9 +52,18 @@ type
     procedure Test_ExecuteFindSubControlAction_UIClickerMain_BitnessLabelWithBadCropping_Height0;
     procedure Test_ExecuteFindSubControlAction_UIClickerMain_BitnessLabelWithBadCropping_NegativeHeight;
 
-
     procedure Test_ExecuteFindSubControlAction_UIClickerMain_WindowInterpreterButton_Disk;
     procedure Test_ExecuteFindSubControlAction_UIClickerMain_WindowInterpreterButton_Mem_NoSender;
+
+    procedure Test_ExecuteSetControlTextAction_HappyFlow;
+    procedure Test_ExecuteCallTemplate_HappyFlow;
+    procedure Test_ExecuteCallTemplateWithSubTemplate_HappyFlow;
+
+    procedure Test_ExecuteSleep_HappyFlow;
+    procedure Test_ExecuteSleep_NegativeValue;
+    procedure Test_ExecuteSetVar_HappyFlow_NoEval;
+    procedure Test_ExecuteSetVar_HappyFlow_NoEvalWithVarName;
+    procedure Test_ExecuteSetVar_HappyFlow_EvalBefore;
   end;
 
 
@@ -377,6 +386,211 @@ begin
   try
     ListOfVars.Text := Response;
     ExpectFailedAction(ListOfVars, CExpectedErr);
+  finally
+    ListOfVars.Free;
+  end;
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecuteSetControlTextAction_HappyFlow;
+const
+  OldCaption = 'UI Clicker Main';
+  NewCaption = 'UI Clicker Main [Modified]';
+begin
+  try
+    ExecuteSetControlTextActionWithMainUIClickerWindow(OldCaption, NewCaption);
+  finally
+    ExecuteSetControlTextActionWithMainUIClickerWindow(NewCaption, OldCaption);  //restore
+  end;
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecuteCallTemplate_HappyFlow;
+const
+  CVarName = '$IncVar$';
+var
+  CurrentValue: Integer;
+  Response: string;
+  ListOfVars: TStringList;
+  CallTemplateOptions: TClkCallTemplateOptions;
+begin
+  CurrentValue := StrToIntDef(GetVarValueFromServer(CVarName), 0);
+  CreateCallableTestTemplateInMem(CTestTemplateFileName, CVarName, IntToStr(CurrentValue + 1), '30');
+  SendTemplateFromInMemToServer(CTestTemplateFileName);
+
+  CallTemplateOptions.TemplateFileName := CTestTemplateFileName;
+  CallTemplateOptions.ListOfCustomVarsAndValues := '';
+  CallTemplateOptions.EvaluateBeforeCalling := False;
+
+  Response := FastReplace_87ToReturn(ExecuteCallTemplateAction(CTestServerAddress, CallTemplateOptions, False, CREParam_FileLocation_ValueMem));
+
+  ListOfVars := TStringList.Create;
+  try
+    ListOfVars.Text := Response;
+    Expect(ListOfVars).WithItem('$ExecAction_Err$').OfValue('', 'No error Allowed.');
+    Expect(ListOfVars).WithItem(CVarName).OfValue(IntToStr(CurrentValue + 1));
+  finally
+    ListOfVars.Free;
+  end;
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecuteCallTemplateWithSubTemplate_HappyFlow;
+const
+  CVarName = '$IncVar$';
+  CCalledTemplate = 'CalledTemplate.clktmpl';
+var
+  CurrentValue: Integer;
+  Response: string;
+  ListOfVars: TStringList;
+  CallTemplateOptions: TClkCallTemplateOptions;
+begin
+  CurrentValue := StrToIntDef(GetVarValueFromServer(CVarName), 0);
+  CreateCallableTestTemplateInMem(CCalledTemplate, CVarName, IntToStr(CurrentValue + 1), '30');
+  SendTemplateFromInMemToServer(CCalledTemplate);
+
+  CreateCallableTestTemplateInMem_WithCallTemplate(CTestTemplateFileName, CVarName, IntToStr(CurrentValue + 1), CCalledTemplate, '', False, '40');
+  SendTemplateFromInMemToServer(CTestTemplateFileName);
+
+  CallTemplateOptions.TemplateFileName := CTestTemplateFileName;
+  CallTemplateOptions.ListOfCustomVarsAndValues := '';
+  CallTemplateOptions.EvaluateBeforeCalling := False;
+
+  Response := FastReplace_87ToReturn(ExecuteCallTemplateAction(CTestServerAddress, CallTemplateOptions, False, CREParam_FileLocation_ValueMem));
+
+  ListOfVars := TStringList.Create;
+  try
+    ListOfVars.Text := Response;
+    Expect(ListOfVars).WithItem('$ExecAction_Err$').OfValue('', 'No error Allowed.');
+    Expect(ListOfVars).WithItem(CVarName).OfValue(IntToStr(CurrentValue + 1));
+  finally
+    ListOfVars.Free;
+  end;
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecuteSleep_HappyFlow;
+var
+  SleepOptions: TClkSleepOptions;
+  tk: QWord;
+  Response: string;
+  ListOfVars: TStringList;
+  Diff: QWord;
+begin
+  GenerateSleepOptions(SleepOptions, '5000');
+  tk := GetTickCount64;
+  Response := FastReplace_87ToReturn(ExecuteSleepAction(CTestServerAddress, SleepOptions, 'Sleep a bit'));
+  Diff := GetTickCount64 - tk;
+
+  Expect(Integer(Diff)).ToBeGreaterThanOrEqualTo(5000);
+  ListOfVars := TStringList.Create;
+  try
+    ListOfVars.Text := Response;
+    ExpectSuccessfulAction(ListOfVars);
+  finally
+    ListOfVars.Free;
+  end;
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecuteSleep_NegativeValue;
+var
+  SleepOptions: TClkSleepOptions;
+  Response: string;
+  ListOfVars: TStringList;
+begin
+  GenerateSleepOptions(SleepOptions, '-3');
+  Response := FastReplace_87ToReturn(ExecuteSleepAction(CTestServerAddress, SleepOptions, 'Sleep a bit'));
+
+  ListOfVars := TStringList.Create;
+  try
+    ListOfVars.Text := Response;
+    ExpectFailedAction(ListOfVars, 'Invalid sleep value: -3');
+  finally
+    ListOfVars.Free;
+  end;
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecuteSetVar_HappyFlow_NoEval;
+const
+  CVarName = '$MyVar$';
+  CVarInitValue = 'init';
+  CVarNewValue = 'some value';
+var
+  SetVarOptions: TClkSetVarOptions;
+  Response: string;
+  ListOfVars: TStringList;
+begin
+  Expect(SetVariable(CTestServerAddress, CVarName, CVarInitValue, 0)).ToBe(CREResp_Done);
+  Expect(GetVarValueFromServer(CVarName)).ToBe(CVarInitValue);
+  GenerateSetVarOptions_OneVar(SetVarOptions, CVarName, CVarNewValue);
+
+  Response := FastReplace_87ToReturn(ExecuteSetVarAction(CTestServerAddress, SetVarOptions));
+
+  ListOfVars := TStringList.Create;
+  try
+    ListOfVars.Text := Response;
+    ExpectSuccessfulAction(ListOfVars);
+    Expect(GetVarValueFromServer(CVarName)).ToBe(CVarNewValue);
+  finally
+    ListOfVars.Free;
+  end;
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecuteSetVar_HappyFlow_NoEvalWithVarName;
+const
+  CVarName = '$MyVar$';
+  CVarInitValue = 'init';
+  CVarNewValue = '$SomeVar$';
+var
+  SetVarOptions: TClkSetVarOptions;
+  Response: string;
+  ListOfVars: TStringList;
+begin
+  Expect(SetVariable(CTestServerAddress, CVarName, CVarInitValue, 0)).ToBe(CREResp_Done);
+  Expect(SetVariable(CTestServerAddress, CVarNewValue, 'unknown', 0)).ToBe(CREResp_Done);
+  Expect(GetVarValueFromServer(CVarName)).ToBe(CVarInitValue);
+  GenerateSetVarOptions_OneVar(SetVarOptions, CVarName, CVarNewValue); //this should not be evaluated to 'unknown'
+
+  Response := FastReplace_87ToReturn(ExecuteSetVarAction(CTestServerAddress, SetVarOptions));
+
+  ListOfVars := TStringList.Create;
+  try
+    ListOfVars.Text := Response;
+    ExpectSuccessfulAction(ListOfVars);
+    Expect(GetVarValueFromServer(CVarName)).ToBe(CVarNewValue);
+  finally
+    ListOfVars.Free;
+  end;
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecuteSetVar_HappyFlow_EvalBefore;
+const
+  CVarName = '$MyVar$';
+  CSecondVarName = '$MySecondVar$';
+  CVarInitValue = 'init';
+  CVarNewValue = 'some value';
+var
+  SetVarOptions: TClkSetVarOptions;
+  Response: string;
+  ListOfVars: TStringList;
+begin
+  Expect(SetVariable(CTestServerAddress, CVarName, CVarInitValue, 0)).ToBe(CREResp_Done);
+  Expect(SetVariable(CTestServerAddress, CSecondVarName, CVarNewValue, 0)).ToBe(CREResp_Done);
+  Expect(GetVarValueFromServer(CVarName)).ToBe(CVarInitValue);
+  Expect(GetVarValueFromServer(CSecondVarName)).ToBe(CVarNewValue);
+  GenerateSetVarOptions_OneVar(SetVarOptions, CVarName, CSecondVarName, True);
+
+  Response := FastReplace_87ToReturn(ExecuteSetVarAction(CTestServerAddress, SetVarOptions));
+
+  ListOfVars := TStringList.Create;
+  try
+    ListOfVars.Text := Response;
+    ExpectSuccessfulAction(ListOfVars);
+    Expect(GetVarValueFromServer(CVarName)).ToBe(CVarNewValue);
   finally
     ListOfVars.Free;
   end;

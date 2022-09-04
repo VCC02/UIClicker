@@ -60,12 +60,18 @@ type
 
     procedure SendEmptyTemplateToServerThenLoad;
 
+    procedure SendTemplateFromInMemToServer(AFileName: string);
     procedure SendTemplateFromInMemToServerThenLoad(AFileName: string);
     procedure SendMultipleTestFilesToServer(AFileNames: PStrArr; AFileNamesLength: Integer; ABaseContent: string);
     function Send_ExecuteCommandAtIndex_ToServer(AActionIdx, AStackLevel: Integer): string;
     procedure CreateTestTemplateInMem;
-    procedure SetupTargetWindowFor_FindSubControl;
+    procedure CreateCallableTestTemplateInMem(ATestTemplateFileName, AVarName, AVarValue: string; ASleepValue: string = '0');
+    procedure CreateCallableTestTemplateInMem_WithCallTemplate(ATestTemplateFileName, AVarName, AVarValue: string; ACalledTemplateName, AListOfVarsAndValues: string; AEvalBefore: Boolean; ASleepValue: string = '0');
+    procedure SetupTargetWindowFor_FindSubControl(ACustomFormCaption: string = 'UI Clicker Main');
     procedure SendTerminateWaitingForFileAvailabilityRequest(ALoopType: string; ADelayBeforeRequest: Integer);
+    procedure ExecuteSetControlTextActionWithMainUIClickerWindow(ASearchedCaption, ASetCaption: string);
+
+    function GetVarValueFromServer(AVarName: string): string;
   end;
 
 
@@ -206,18 +212,23 @@ begin
 end;
 
 
-procedure TTestHTTPAPI.SendTemplateFromInMemToServerThenLoad(AFileName: string);
+procedure TTestHTTPAPI.SendTemplateFromInMemToServer(AFileName: string);
 var
   Content: TMemoryStream;
 begin
   Content := TMemoryStream.Create;
   try
     FInMemFS.LoadFileFromMemToStream(AFileName, Content);
-    SendTemplateToServer(CTestServerAddress, AFileName, Content);
+    Expect(SendTemplateToServer(CTestServerAddress, AFileName, Content)).ToContain('Received file: "' + AFileName + '"');
   finally
     Content.Free;
   end;
+end;
 
+
+procedure TTestHTTPAPI.SendTemplateFromInMemToServerThenLoad(AFileName: string);
+begin
+  SendTemplateFromInMemToServer(AFileName);
   Expect(SendLoadTemplateInExecListRequest(CTestServerAddress, AFileName, 0)).ToBe(CREResp_TemplateLoaded);
 end;
 
@@ -246,6 +257,29 @@ begin
 end;
 
 
+procedure TTestHTTPAPI.CreateCallableTestTemplateInMem(ATestTemplateFileName, AVarName, AVarValue: string; ASleepValue: string = '0');
+var
+  SetVarOptions: TClkSetVarOptions;
+  SleepOptions: TClkSleepOptions;
+begin
+  GenerateSetVarOptions_OneVar(SetVarOptions, AVarName, AVarValue);
+  GenerateSleepOptions(SleepOptions, ASleepValue);
+  AddSetVarActionToTemplate(ATestTemplateFileName, '1', 0, True, '', SetVarOptions, FInMemFS);
+  AddSleepActionToTemplate(ATestTemplateFileName, 'dbg', 0, True, '', SleepOptions, FInMemFS);
+end;
+
+
+procedure TTestHTTPAPI.CreateCallableTestTemplateInMem_WithCallTemplate(ATestTemplateFileName, AVarName, AVarValue: string; ACalledTemplateName, AListOfVarsAndValues: string; AEvalBefore: Boolean; ASleepValue: string = '0');
+var
+  CallTemplateOptions: TClkCallTemplateOptions;
+begin
+  CreateCallableTestTemplateInMem(ATestTemplateFileName, AVarName, AVarValue, ASleepValue);
+
+  GenerateCallTemplateOptions(CallTemplateOptions, ACalledTemplateName, AListOfVarsAndValues, AEvalBefore);
+  AddCallTemplateActionToTemplate(ATestTemplateFileName, 'call ' + ATestTemplateFileName, 0, True, '', CallTemplateOptions, FInMemFS);
+end;
+
+
 function TTestHTTPAPI.Send_ExecuteCommandAtIndex_ToServer(AActionIdx, AStackLevel: Integer): string;
 var
   Link: string;
@@ -260,7 +294,7 @@ begin
 end;
 
 
-procedure TTestHTTPAPI.SetupTargetWindowFor_FindSubControl;
+procedure TTestHTTPAPI.SetupTargetWindowFor_FindSubControl(ACustomFormCaption: string = 'UI Clicker Main');
 var
   WindowOperationsOptions: TClkWindowOperationsOptions;
   FindControlOptions: TClkFindControlOptions;
@@ -268,7 +302,7 @@ var
   Response: string;
   ListOfVars: TStringList;
 begin
-  GenerateFindControlOptionsForMainUIClickerWindow(FindControlOptions, False);
+  GenerateFindControlOptionsForMainUIClickerWindow(FindControlOptions, False, ACustomFormCaption);
   Response := FastReplace_87ToReturn(ExecuteFindControlAction(CTestServerAddress, FindControlOptions, 'Setup UIClicker Main', 1000, CREParam_FileLocation_ValueMem));
 
   ListOfVars := TStringList.Create;
@@ -304,6 +338,44 @@ begin
   Th.FDelayBeforeRequest := ADelayBeforeRequest;
   Th.FreeOnTerminate := False; //True;
   Th.Start;
+end;
+
+
+procedure TTestHTTPAPI.ExecuteSetControlTextActionWithMainUIClickerWindow(ASearchedCaption, ASetCaption: string);
+var
+  Response: string;
+  ListOfVars: TStringList;
+  SetTextOptions: TClkSetTextOptions;
+begin
+  SetupTargetWindowFor_FindSubControl(ASearchedCaption); //find main UIClicker window
+  GenerateSetControlTextOptions(SetTextOptions, ASetCaption, stEditBox);
+
+  Response := FastReplace_87ToReturn(ExecuteSetControlTextAction(CTestServerAddress, SetTextOptions));
+
+  ListOfVars := TStringList.Create;
+  try
+    ListOfVars.Text := Response;
+    ExpectSuccessfulAction(ListOfVars);
+  finally
+    ListOfVars.Free;
+  end;
+end;
+
+
+function TTestHTTPAPI.GetVarValueFromServer(AVarName: string): string;
+var
+  Response: string;
+  ListOfVars: TStringList;
+begin
+  Response := FastReplace_87ToReturn(GetAllReplacementVars(CTestServerAddress, 0));
+
+  ListOfVars := TStringList.Create;
+  try
+    ListOfVars.Text := Response;
+    Result := ListOfVars.Values[AVarName];
+  finally
+    ListOfVars.Free;
+  end;
 end;
 
 end.

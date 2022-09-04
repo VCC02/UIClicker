@@ -164,7 +164,10 @@ function ExecuteClickAction(ARemoteAddress: string; AClickOptions: TClkClickOpti
 function ExecuteExecAppAction(ARemoteAddress: string; AExecAppOptions: TClkExecAppOptions; AActionName: string; AActionTimeout: Integer): string;
 function ExecuteFindControlAction(ARemoteAddress: string; AFindControlOptions: TClkFindControlOptions; AActionName: string; AActionTimeout: Integer; AFileLocation: string): string;
 function ExecuteFindSubControlAction(ARemoteAddress: string; AFindControlOptions: TClkFindControlOptions; AActionName: string; AActionTimeout: Integer; AFileLocation: string): string;
-
+function ExecuteSetControlTextAction(ARemoteAddress: string; ASetTextOptions: TClkSetTextOptions): string;
+function ExecuteCallTemplateAction(ARemoteAddress: string; ACallTemplateOptions: TClkCallTemplateOptions; AIsDebugging: Boolean; AFileLocation: string): string;
+function ExecuteSleepAction(ARemoteAddress: string; ASleepOptions: TClkSleepOptions; AActionName: string): string;
+function ExecuteSetVarAction(ARemoteAddress: string; ASetVarOptions: TClkSetVarOptions): string;
 function ExecuteWindowOperationsAction(ARemoteAddress: string; AWindowOperationsOptions: TClkWindowOperationsOptions): string;
 
 
@@ -712,6 +715,50 @@ end;
 function ExecuteFindSubControlAction(ARemoteAddress: string; AFindControlOptions: TClkFindControlOptions; AActionName: string; AActionTimeout: Integer; AFileLocation: string): string;
 begin
   Result := ExecuteGenericFindControlAction(ARemoteAddress, AFindControlOptions, AActionName, AActionTimeout, AFileLocation, CRECmd_ExecuteFindSubControlAction);
+end;
+
+
+function ExecuteSetControlTextAction(ARemoteAddress: string; ASetTextOptions: TClkSetTextOptions): string;
+begin
+  Result := SendTextRequestToServer(ARemoteAddress + CRECmd_ExecuteSetControlTextAction + '?' +
+                                    CREParam_StackLevel + '=0' + '&' +   //use the main editor
+                                    'Text' + '=' + ASetTextOptions.Text + '&' +
+                                    'ControlType' + '=' + IntToStr(Ord(ASetTextOptions.ControlType))
+                                    );
+end;
+
+
+function ExecuteCallTemplateAction(ARemoteAddress: string; ACallTemplateOptions: TClkCallTemplateOptions; AIsDebugging: Boolean; AFileLocation: string): string;
+begin
+  Result := SendTextRequestToServer(ARemoteAddress + CRECmd_ExecuteCallTemplateAction + '?' +
+                                    CREParam_StackLevel + '=0' + '&' +   //use the main editor
+                                    'TemplateFileName' + '=' + ACallTemplateOptions.TemplateFileName + '&' +
+                                    'ListOfCustomVarsAndValues' + '=' + FastReplace_ReturnTo45(ACallTemplateOptions.ListOfCustomVarsAndValues) + '&' +
+                                    'EvaluateBeforeCalling' + '=' + IntToStr(Ord(ACallTemplateOptions.EvaluateBeforeCalling)) + '&' +
+                                    CREParam_IsDebugging + '=' + IntToStr(Ord(ACallTemplateOptions.EvaluateBeforeCalling)) + '&' +
+                                    CREParam_FileLocation + '=' + AFileLocation
+                                    );
+end;
+
+
+function ExecuteSleepAction(ARemoteAddress: string; ASleepOptions: TClkSleepOptions; AActionName: string): string;
+begin
+  Result := SendTextRequestToServer(ARemoteAddress + CRECmd_ExecuteSleepAction + '?' +
+                                    CREParam_StackLevel + '=0' + '&' +   //use the main editor
+                                    'Value' + '=' + ASleepOptions.Value + '&' +
+                                    'ActionName' + '=' + AActionName
+                                    );
+end;
+
+
+function ExecuteSetVarAction(ARemoteAddress: string; ASetVarOptions: TClkSetVarOptions): string;
+begin
+  Result := SendTextRequestToServer(ARemoteAddress + CRECmd_ExecuteSetVarAction + '?' +
+                                    CREParam_StackLevel + '=0' + '&' +   //use the main editor
+                                    'ListOfVarNames' + '=' + FastReplace_ReturnTo45(ASetVarOptions.ListOfVarNames) + '&' +
+                                    'ListOfVarValues' + '=' + FastReplace_ReturnTo45(ASetVarOptions.ListOfVarValues) + '&' +
+                                    'ListOfVarEvalBefore' + '=' + FastReplace_ReturnTo45(ASetVarOptions.ListOfVarEvalBefore)
+                                    );
 end;
 
 

@@ -44,13 +44,51 @@ function AddClickActionToTemplate(ATemplateFileName: string;
                                   ): LongInt;
 
 
+function AddCallTemplateActionToTemplate(ATemplateFileName: string;
+
+                                         AActionName: string;
+                                         AActionTimeout: LongInt; //ms
+                                         AActionEnabled: Boolean;
+                                         AActionCondition: string;
+
+                                         ACallTemplateOptions: TClkCallTemplateOptions;
+                                         AInMemFS: TInMemFileSystem
+                                         ): LongInt;
+
+
+function AddSleepActionToTemplate(ATemplateFileName: string;
+
+                                  AActionName: string;
+                                  AActionTimeout: LongInt; //ms
+                                  AActionEnabled: Boolean;
+                                  AActionCondition: string;
+
+                                  ASleepOptions: TClkSleepOptions;
+                                  AInMemFS: TInMemFileSystem
+                                  ): LongInt;
+
+
+function AddSetVarActionToTemplate(ATemplateFileName: string;
+
+                                   AActionName: string;
+                                   AActionTimeout: LongInt; //ms
+                                   AActionEnabled: Boolean;
+                                   AActionCondition: string;
+
+                                   ASetVarOptions: TClkSetVarOptions;
+                                   AInMemFS: TInMemFileSystem
+                                   ): LongInt;
+
 procedure GetDefaultClickOptions(var AClickOptions: TClkClickOptions);
 procedure GenerateClickOptionsForLeaveMouse(X, Y: Integer; var AClickOptions: TClkClickOptions);
 procedure GenerateExecAppOptionsForIPConfig(var AExecAppOptions: TClkExecAppOptions);
-procedure GenerateFindControlOptionsForMainUIClickerWindow(var AFindControlOptions: TClkFindControlOptions; AAllowToFail: Boolean);
+procedure GenerateFindControlOptionsForMainUIClickerWindow(var AFindControlOptions: TClkFindControlOptions; AAllowToFail: Boolean; ACustomFormCaption: string = 'UI Clicker Main');
 procedure GenerateFindSubControlOptionsForMainUIClickerWindow_Bitness(var AFindControlOptions: TClkFindControlOptions; AAllowToFail: Boolean);
 procedure GenerateFindSubControlOptionsForMainUIClickerWindow_WinInterpBtn(var AFindControlOptions: TClkFindControlOptions; AAllowToFail: Boolean);
-
+procedure GenerateSetControlTextOptions(var ASetTextOptions: TClkSetTextOptions; AText: string; AControlType: TClkSetTextControlType);
+procedure GenerateCallTemplateOptions(var ACallTemplateOptions: TClkCallTemplateOptions; ATemplateFileName, AListOfVarsAndValues: string; AEvalBefore: Boolean);
+procedure GenerateSleepOptions(var ASleepOptions: TClkSleepOptions; AValue: string);
+procedure GenerateSetVarOptions_OneVar(var ASetVarOptions: TClkSetVarOptions; AVar, AValue: string; AEvalBefore: Boolean = False);
 procedure GenerateWindowOperationsOptionsForFindControlSetup(var AWindowOperationsOptions: TClkWindowOperationsOptions; AOperation: TWindowOperation);
 
 
@@ -130,6 +168,75 @@ begin
 end;
 
 
+function AddCallTemplateActionToTemplate(ATemplateFileName: string;
+
+                                         AActionName: string;
+                                         AActionTimeout: LongInt; //ms
+                                         AActionEnabled: Boolean;
+                                         AActionCondition: string;
+
+                                         ACallTemplateOptions: TClkCallTemplateOptions;
+                                         AInMemFS: TInMemFileSystem
+                                         ): LongInt;
+var
+  TempAction: TClkActionRec;
+begin
+  SetBasicActionOptions(ATemplateFileName, AActionName, acCallTemplate, AActionTimeout, AActionEnabled, AActionCondition, TempAction);
+
+  //CallTemplate stuff
+  TempAction.CallTemplateOptions := ACallTemplateOptions;
+
+  AddActionToTemplate(ATemplateFileName, TempAction, AInMemFS);
+  Result := 0;
+end;
+
+
+function AddSleepActionToTemplate(ATemplateFileName: string;
+
+                                  AActionName: string;
+                                  AActionTimeout: LongInt; //ms
+                                  AActionEnabled: Boolean;
+                                  AActionCondition: string;
+
+                                  ASleepOptions: TClkSleepOptions;
+                                  AInMemFS: TInMemFileSystem
+                                  ): LongInt;
+var
+  TempAction: TClkActionRec;
+begin
+  SetBasicActionOptions(ATemplateFileName, AActionName, acSleep, AActionTimeout, AActionEnabled, AActionCondition, TempAction);
+
+  //Sleep stuff
+  TempAction.SleepOptions := ASleepOptions;
+
+  AddActionToTemplate(ATemplateFileName, TempAction, AInMemFS);
+  Result := 0;
+end;
+
+
+function AddSetVarActionToTemplate(ATemplateFileName: string;
+
+                                   AActionName: string;
+                                   AActionTimeout: LongInt; //ms
+                                   AActionEnabled: Boolean;
+                                   AActionCondition: string;
+
+                                   ASetVarOptions: TClkSetVarOptions;
+                                   AInMemFS: TInMemFileSystem
+                                   ): LongInt;
+var
+  TempAction: TClkActionRec;
+begin
+  SetBasicActionOptions(ATemplateFileName, AActionName, acSetVar, AActionTimeout, AActionEnabled, AActionCondition, TempAction);
+
+  //click stuff
+  TempAction.SetVarOptions := ASetVarOptions;
+
+  AddActionToTemplate(ATemplateFileName, TempAction, AInMemFS);
+  Result := 0;
+end;
+
+
 procedure GetDefaultClickOptions(var AClickOptions: TClkClickOptions);
 begin
   AClickOptions.XClickPointReference := xrefLeft;
@@ -183,14 +290,14 @@ begin
 end;
 
 
-procedure GenerateFindControlOptionsForMainUIClickerWindow(var AFindControlOptions: TClkFindControlOptions; AAllowToFail: Boolean);
+procedure GenerateFindControlOptionsForMainUIClickerWindow(var AFindControlOptions: TClkFindControlOptions; AAllowToFail: Boolean; ACustomFormCaption: string = 'UI Clicker Main');
 begin
   AFindControlOptions.MatchCriteria.SearchForControlMode := sfcmGenGrid;
   AFindControlOptions.MatchCriteria.WillMatchText := True;
   AFindControlOptions.MatchCriteria.WillMatchClassName := True;
   AFindControlOptions.MatchCriteria.WillMatchBitmapText := False;
   AFindControlOptions.MatchCriteria.WillMatchBitmapFiles := False;
-  AFindControlOptions.MatchText := 'UI Clicker Main';
+  AFindControlOptions.MatchText := ACustomFormCaption;
   AFindControlOptions.MatchClassName := 'Window';
   AFindControlOptions.UseWholeScreen := True;
   AFindControlOptions.AllowToFail := AAllowToFail;
@@ -289,6 +396,36 @@ begin
   AFindControlOptions.CachedControlLeft := '';
   AFindControlOptions.CachedControlTop := '';
   AFindControlOptions.StartSearchingWithCachedControl := False;
+end;
+
+
+procedure GenerateSetControlTextOptions(var ASetTextOptions: TClkSetTextOptions; AText: string; AControlType: TClkSetTextControlType);
+begin
+  ASetTextOptions.Text := AText;
+  ASetTextOptions.ControlType := AControlType;
+end;
+
+
+procedure GenerateCallTemplateOptions(var ACallTemplateOptions: TClkCallTemplateOptions; ATemplateFileName, AListOfVarsAndValues: string; AEvalBefore: Boolean);
+begin
+  ACallTemplateOptions.TemplateFileName := ATemplateFileName;
+  ACallTemplateOptions.ListOfCustomVarsAndValues := AListOfVarsAndValues;
+  ACallTemplateOptions.EvaluateBeforeCalling := AEvalBefore;
+  ACallTemplateOptions.CallOnlyIfCondition := False;
+end;
+
+
+procedure GenerateSleepOptions(var ASleepOptions: TClkSleepOptions; AValue: string);
+begin
+  ASleepOptions.Value := AValue;
+end;
+
+
+procedure GenerateSetVarOptions_OneVar(var ASetVarOptions: TClkSetVarOptions; AVar, AValue: string; AEvalBefore: Boolean = False);
+begin
+  ASetVarOptions.ListOfVarNames := AVar;
+  ASetVarOptions.ListOfVarValues := AValue;
+  ASetVarOptions.ListOfVarEvalBefore := IntToStr(Ord(AEvalBefore));
 end;
 
 
