@@ -60,6 +60,7 @@ implementation
 
 constructor TClkIniReadonlyFile.Create(ASourceContent: TStringList);
 begin
+  inherited Create;
   FSections := TStringList.Create;
   LoadSections(ASourceContent);
 end;
@@ -69,6 +70,7 @@ constructor TClkIniReadonlyFile.Create(ASourceContent: TMemoryStream);
 var
   TempStringList: TStringList;
 begin
+  inherited Create;
   FSections := TStringList.Create;
 
   TempStringList := TStringList.Create;
@@ -83,6 +85,7 @@ end;
 
 constructor TClkIniReadonlyFile.Create(const FileName: string);
 begin
+  inherited Create;
   FSections := TStringList.Create;
   LoadSections(FileName);
 end;

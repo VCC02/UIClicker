@@ -678,8 +678,8 @@ begin
   AStringList.Add('WaitForApp=' + IntToStr(Ord(AActionExecAppOptions.WaitForApp)));
   AStringList.Add('AppStdIn=' + AActionExecAppOptions.AppStdIn);
   AStringList.Add('CurrentDir=' + AActionExecAppOptions.CurrentDir);
-  AStringList.Add('UseInheritHandles' + IntToStr(Ord(AActionExecAppOptions.UseInheritHandles)));
-  AStringList.Add('NoConsole' + IntToStr(Ord(AActionExecAppOptions.NoConsole)));
+  AStringList.Add('UseInheritHandles=' + IntToStr(Ord(AActionExecAppOptions.UseInheritHandles)));
+  AStringList.Add('NoConsole=' + IntToStr(Ord(AActionExecAppOptions.NoConsole)));
 end;
 
 

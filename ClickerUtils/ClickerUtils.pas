@@ -38,7 +38,7 @@ uses
     Windows,
   {$ENDIF}
   SysUtils, Classes, VirtualTrees, Graphics, Controls,
-  IdGlobal, DCPmd5;
+  IdGlobal, DCPmd5, ClickerIniFiles;
 
 
 type
@@ -59,12 +59,26 @@ type
   TOnGetExtraSearchAreaDebuggingImageWithStackLevel = function(AExtraBitmap: TBitmap; AStackLevel: Integer): Boolean of object;
   TOnGetConnectionAddress = function: string of object;
   TOnGetSelectedCompFromRemoteWin = function: THandle of object;
+  TOnLoadBitmap = function(ABitmap: TBitmap; AFileName: string): Boolean of object; //returns True if file loaded, and False if file not found
+
+  TOnFileExists = function(const AFileName: string): Boolean of object;
+  TOnTClkIniReadonlyFileCreate = function(AFileName: string): TClkIniReadonlyFile of object;
+  TOnSaveTemplateToFile = procedure(AStringList: TStringList; const AFileName: string) of object;
+  TOnSetTemplateOpenDialogInitialDir = procedure(AInitialDir: string) of object;
+  TOnTemplateOpenDialogExecute = function: Boolean of object;
+  TOnGetTemplateOpenDialogFileName = function: string of object;
+  TOnSetTemplateOpenDialogFileName = procedure(AFileName: string) of object;
+  TOnSetPictureOpenDialogInitialDir = procedure(AInitialDir: string) of object;
+  TOnPictureOpenDialogExecute = function: Boolean of object;
+  TOnGetPictureOpenDialogFileName = function: string of object;
 
 const
   CClkActionStr: array[Low(TClkAction)..High(TClkAction)] of string = ('Click', 'ExecApp', 'FindControl', 'FindSubControl', 'SetControlText', 'CallTemplate', 'Sleep', 'SetVar', 'WindowOperations');
 
   CClickType_Click = 0;
   CClickType_Drag = 1;
+
+  CFuncExVarName = '$FunctionException$';
 
 
 type
@@ -568,6 +582,47 @@ begin
 end;
 
 
+function ReplaceDiff(AListOfVars: TStringList; s: string): string;
+var
+  PosComma: Integer;
+  DiffArgs, InitialDiffArgs: string;
+  DiffOperand1, DiffOperand2: Integer;
+  DiffOperand1Str, DiffOperand2Str: string;
+  ResultValueStr: string;
+begin
+  DiffArgs := Copy(s, Pos('(', s) + 1, MaxInt);
+  DiffArgs := Copy(DiffArgs, 1, Pos(')$', DiffArgs) - 1);
+  InitialDiffArgs := DiffArgs;
+
+  if DiffArgs = '' then
+    ResultValueStr := '0'
+  else
+  begin
+    DiffArgs := ReplaceOnce(AListOfVars, DiffArgs, False);
+    DiffArgs := StringReplace(DiffArgs, ' ', '', [rfReplaceAll]);
+    PosComma := Pos(',', DiffArgs);
+
+    if PosComma > 0 then
+    begin
+      DiffOperand1Str := Copy(DiffArgs, 1, PosComma - 1);
+      DiffOperand2Str := Copy(DiffArgs, PosComma + 1, MaxInt);
+
+      DiffOperand1 := StrToIntDef(DiffOperand1Str, 0);
+      DiffOperand2 := StrToIntDef(DiffOperand2Str, 0);
+    end
+    else
+    begin
+      DiffOperand1 := 0;
+      DiffOperand2 := StrToIntDef(DiffArgs, 0);
+    end;
+
+    ResultValueStr := IntToStr(DiffOperand1 - DiffOperand2);
+  end;
+
+  Result := StringReplace(s, '$Diff(' + InitialDiffArgs + ')$', ResultValueStr, [rfReplaceAll]);
+end;
+
+
 function ReplaceExtractFileDir(s: string): string;
 var
   DirArgs, InitialDirArgs: string;
@@ -613,6 +668,184 @@ begin
   InitialArgs := Args;
 
   Result := StringReplace(s, '$Exit(' + InitialArgs + ')$', 'Exit(<ExitCode>) should be called from SetVar action, to stop the template.', [rfReplaceAll]);
+end;
+
+
+function ReplaceStringContains(AListOfVars: TStringList; s: string): string;  //as limitation, the substring should not contain commas
+var
+  PosComma: Integer;
+  Args, InitialArgs: string;
+  Operand1Str, Operand2Str: string;
+  ResultValueStr: string;
+begin
+  Args := Copy(s, Pos('(', s) + 1, MaxInt);
+  Args := Copy(Args, 1, Pos(')$', Args) - 1);
+  InitialArgs := Args;
+
+  if Args = '' then
+    ResultValueStr := '0'
+  else
+  begin
+    Args := ReplaceOnce(AListOfVars, Args, False);
+    Args := StringReplace(Args, ' ', '', [rfReplaceAll]);
+    PosComma := Pos(',', Args);
+
+    if PosComma > 0 then
+    begin
+      Operand1Str := Copy(Args, 1, PosComma - 1);
+      Operand2Str := Copy(Args, PosComma + 1, MaxInt);
+    end
+    else
+    begin
+      Operand1Str := '';
+      Operand2Str := Args;
+    end;
+
+    ResultValueStr := IntToStr(Ord(Pos(Operand1Str, Operand2Str)));
+  end;
+
+  Result := StringReplace(s, '$StringContains(' + InitialArgs + ')$', ResultValueStr, [rfReplaceAll]);
+end;
+
+
+function ReplaceCreateDir(s: string): string;
+var
+  DirArgs, InitialDirArgs: string;
+begin
+  DirArgs := Copy(s, Pos('(', s) + 1, MaxInt);
+  DirArgs := Copy(DirArgs, 1, Pos(')$', DirArgs) - 1);
+  InitialDirArgs := DirArgs;
+
+  Result := StringReplace(s, '$CreateDir(' + InitialDirArgs + ')$', IntToStr(Ord(CreateDirWithSubDirs(DirArgs))), [rfReplaceAll]);
+end;
+
+
+function ReplaceLoadTextFile(AListOfVars: TStringList; s: string): string;
+var
+  FileArgs, InitialFileArgs: string;
+  AStringList: TStringList;
+begin
+  FileArgs := Copy(s, Pos('(', s) + 1, MaxInt);
+  FileArgs := Copy(FileArgs, 1, Pos(')$', FileArgs) - 1);
+  InitialFileArgs := FileArgs;
+
+  FileArgs := StringReplace(FileArgs, '"', '', [rfReplaceAll]);
+
+  Result := '';
+  try
+    AStringList := TStringList.Create;
+    try
+      AStringList.LoadFromFile(FileArgs);
+      Result := FastReplace_ReturnTo45(AStringList.Text);
+
+      if Result = #4#5 then
+        Result := '';
+    finally
+      AStringList.Free;
+    end;
+
+    Result := StringReplace(s, '$LoadTextFile(' + InitialFileArgs + ')$', Result, [rfReplaceAll]);
+  except
+    on E: Exception do
+    begin
+      Result := '';
+      AListOfVars.Values[CFuncExVarName] := E.Message;  //can be file not found, or some permission error
+    end;
+  end;
+end;
+
+
+function ReplaceItemCount(s: string): string;
+var
+  ItemArgs, InitialItemArgs: string;
+  Count, i: Integer;
+begin
+  ItemArgs := Copy(s, Pos('(', s) + 1, MaxInt);
+  ItemArgs := Copy(ItemArgs, 1, Pos(')$', ItemArgs) - 1);
+  InitialItemArgs := ItemArgs;
+
+  Count := 0;
+  for i := 1 to Length(ItemArgs) - 1 do  //yes, from 1 to len -1
+    if (ItemArgs[i] = #4) and (ItemArgs[i + 1] = #5) then
+    begin
+      Inc(Count);
+      Continue;
+    end;
+
+  Result := StringReplace(s, '$ItemCount(' + InitialItemArgs + ')$', IntToStr(Count), [rfReplaceAll]);
+end;
+
+
+function ReplaceGetTextItem(AListOfVars: TStringList; s: string): string;
+var
+  ItemArgs, InitialItemArgs, Content, IndexStr: string;
+  CurrentIndex, i, ItemIndex, PosComma, ItemPos, PrevItemPos: Integer;
+  Found: Boolean;
+begin
+  ItemArgs := Copy(s, Pos('(', s) + 1, MaxInt);
+  ItemArgs := Copy(ItemArgs, 1, Pos(')$', ItemArgs) - 1);
+  InitialItemArgs := ItemArgs;
+
+  if ItemArgs = '' then
+  begin
+    Result := '';
+    AListOfVars.Values[CFuncExVarName] := 'Missing arguments for GetTextItem.';
+    Exit;
+  end
+  else
+  begin
+    PosComma := Pos(',', ItemArgs);
+
+    if PosComma > 0 then
+    begin
+      Content := Copy(ItemArgs, 1, PosComma - 1);
+      IndexStr := Copy(ItemArgs, PosComma + 1, MaxInt);
+    end
+    else
+    begin
+      Content := Copy(ItemArgs, 1, MaxInt);
+      IndexStr := '0';
+    end;
+  end;
+
+  ItemIndex := StrToIntDef(IndexStr, -1);
+  if ItemIndex = -1 then
+  begin
+    Result := '';
+    AListOfVars.Values[CFuncExVarName] := 'List index out of bounds: -1';
+    Exit;
+  end;
+
+  ItemPos := 1;
+  PrevItemPos := 1;
+                 //this parser should be faster than converting the content to CRLF separated string and assigning it to a TStringList
+  CurrentIndex := -1;
+  Found := False;
+  for i := 1 to Length(Content) - 1 do  //yes, from 1 to len -1
+    if (Content[i] = #4) and (Content[i + 1] = #5) then
+    begin
+      Inc(CurrentIndex);
+
+      if CurrentIndex >= ItemIndex then
+      begin
+        Found := True;
+        ItemPos := i;
+        Break;
+      end;
+
+      PrevItemPos := i + 2;
+      Continue;
+    end;
+
+  if not Found then
+  begin
+    Result := '';
+    AListOfVars.Values[CFuncExVarName] := 'List index out of bounds: ' + IntToStr(ItemIndex);
+    Exit;
+  end;
+
+  Result := Copy(Content, PrevItemPos, ItemPos - PrevItemPos);
+  Result := StringReplace(s, '$GetTextItem(' + InitialItemArgs + ')$', Result, [rfReplaceAll]);
 end;
 
 
@@ -669,6 +902,21 @@ begin
   if Pos('$Exit(', s) > 0 then
     s := ReplaceExit(s);
 
+  if Pos('$StringContains(', s) > 0 then
+    s := ReplaceStringContains(AListOfVars, s);
+
+  if Pos('$CreateDir(', s) > 0 then
+    s := ReplaceCreateDir(s);
+
+  if Pos('$LoadTextFile(', s) > 0 then
+    s := ReplaceLoadTextFile(AListOfVars, s);
+
+  if Pos('$ItemCount(', s) > 0 then
+    s := ReplaceItemCount(s);
+
+  if Pos('$GetTextItem(', s) > 0 then
+    s := ReplaceGetTextItem(AListOfVars, s);
+
   if Pos('$FastReplace_45ToReturn(', s) > 0 then
     s := ReplaceFastReplace_45ToReturn(s);
 
@@ -677,6 +925,9 @@ begin
 
   if Pos('$Sum(', s) > 0 then
     s := ReplaceSum(AListOfVars, s);
+
+  if Pos('$Diff(', s) > 0 then
+    s := ReplaceDiff(AListOfVars, s);
 
   Result := s;
 end;
