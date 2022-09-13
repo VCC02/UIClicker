@@ -1,0 +1,165 @@
+{
+    Copyright (C) 2022 VCC
+    creation date: Dec 2019
+    initial release date: 13 Sep 2022
+
+    author: VCC
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"),
+    to deal in the Software without restriction, including without limitation
+    the rights to use, copy, modify, merge, publish, distribute, sublicense,
+    and/or sell copies of the Software, and to permit persons to whom the
+    Software is furnished to do so, subject to the following conditions:
+    The above copyright notice and this permission notice shall be included
+    in all copies or substantial portions of the Software.
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+    IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+    DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+    TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
+    OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+}
+
+
+program UIClicker;
+
+{$mode objfpc}{$H+}
+
+uses
+  {$IFDEF UNIX}
+  cthreads,
+  {$ENDIF}
+  {$IFDEF HASAMIGA}
+  athreads,
+  {$ENDIF}
+  Interfaces, // this includes the CT adLCL widgetset
+  Windows, SysUtils, Forms, Classes, ShellAPI,
+  ClickerActionsArrFrame, ClickerActionsFrame,
+  ClickerIniFiles, BinSearchValues, BitmapProcessing,
+  ControlInteraction, MouseStuff, ClickerWinInterpForm, ClickerBMPTextFrame,
+  ClickerTemplateCallTreeForm,
+  ClickerConditionEditorFrame, ClickerConditionEditorForm,
+  ClickerFindControlFrame, ClickerActionsForm,
+  ClickerActionsPaletteFrame,
+  UIClickerMainFormFP, ClickerRemoteScreenForm, ClickerPreviewForm, 
+  ClickerActionExecution, ClickerTemplateNotesForm
+  { you can add units after this };
+
+{$R *.res}
+
+type
+  TExHandler = class
+    procedure CustomExceptionHandler(Sender: TObject; E: Exception);
+  end;
+
+var
+  FExHandler: TExHandler;
+
+
+//see https://wiki.freepascal.org/Logging_exceptions
+procedure TExHandler.CustomExceptionHandler(Sender: TObject; E: Exception);
+var
+  ClName, EMsg: string;
+  ExceptionLog: TStringList;
+  LogPath: string;
+begin
+  try
+    ClName := Sender.ClassName;
+  except
+    ClName := '';
+  end;
+
+  try
+    EMsg := E.Message;
+  except
+    EMsg := '';
+  end;
+
+  try
+    ExceptionLog := TStringList.Create;
+    try
+      ExceptionLog.Add(DateTimeToStr(Now));
+      ExceptionLog.Add('Custom exception: ' + EMsg);
+      ExceptionLog.Add('Class: ' + ClName);
+
+      LogPath := ExtractFilePath(ParamStr(0)) + 'ClickerExceptions.txt';
+      ExceptionLog.Add('This file was saved as: ' + LogPath);
+      ExceptionLog.SaveToFile(LogPath);
+
+      LogPath := '"' + LogPath + '"';
+      ShellExecute(0, 'open', 'C:\Windows\Notepad.exe', PChar(LogPath), '', SW_SHOW);  //nothing opens if Windows is installed somewhere else
+
+      //MessageBox(0, PChar(ExceptionLog.Text), 'Clicker', MB_ICONERROR);  //the application crashes after displaying the MessageBox, so the MessageBox is closed
+    finally
+      ExceptionLog.Free;
+    end;
+  except
+    on EE: Exception do
+      MessageBox(0, PChar('Ex on custom exception: ' + EE.Message), 'Clicker', MB_ICONERROR);
+  end;
+end;
+
+
+//see https://wiki.freepascal.org/Logging_exceptions
+procedure CatchUnhandledException(Obj: TObject; Addr: Pointer; FrameCount: LongInt; Frames: PPointer);
+var
+  Msg: string;
+  i: Integer;
+  ExceptionLog: TStringList;
+  LogPath: string;
+begin
+  try //use another try..excempt, just in case parsing the stack would raise more exceptions
+    Msg := 'Unhandled exception at adddr $' + SysBacktraceStr(Addr) + ':' + #13#10;
+
+    if Obj is Exception then
+      Msg := Msg + Exception(Obj).ClassName + ' : ' + Exception(Obj).Message
+    else
+      Msg := Msg + 'Exception object '  + Exception(Obj).ClassName + ' is not class Exception.';
+
+    Msg := Msg + #13#10;
+    Msg := Msg + BacktraceStrFunc(Addr) + #13#10;
+
+    for i := 0 to FrameCount - 1 do
+      Msg := Msg + BacktraceStrFunc(Frames[i]) + #13#10;
+
+    ExceptionLog := TStringList.Create;
+    try
+      ExceptionLog.Add(DateTimeToStr(Now));
+      ExceptionLog.Add('Unhandled exception: ' + Msg);
+
+      LogPath := ExtractFilePath(ParamStr(0)) + 'ClickerUnhandledExceptions.txt';
+      ExceptionLog.Add('This file was saved as: ' + LogPath);
+      ExceptionLog.SaveToFile(LogPath);
+
+      LogPath := '"' + LogPath + '"';
+      ShellExecute(0, 'open', 'C:\Windows\Notepad.exe', PChar(LogPath), '', SW_SHOW);   //nothing opens if Windows is installed somewhere else
+
+      //MessageBox(0, PChar(Msg), 'Clicker', MB_ICONERROR);
+    finally
+      ExceptionLog.Free;
+    end;
+  except
+  end;
+end;
+
+
+begin
+  RequireDerivedFormResource:=True;
+  Application.Scaled:=True;
+  Application.Initialize;
+
+  FExHandler := TExHandler.Create;
+  ExceptProc := @CatchUnhandledException;
+  Application.OnException := @FExHandler.CustomExceptionHandler;
+  Application.CreateForm(TfrmUIClickerMainForm, frmUIClickerMainForm);
+  Application.CreateForm(TfrmClickerControlPreview, frmClickerControlPreview);
+  Application.CreateForm(TfrmClickerActions, frmClickerActions);
+  Application.CreateForm(TfrmClickerWinInterp, frmClickerWinInterp);
+  Application.CreateForm(TfrmClickerTemplateCallTree, frmClickerTemplateCallTree);
+  Application.CreateForm(TfrmClickerRemoteScreen, frmClickerRemoteScreen);
+
+  frmUIClickerMainForm.AllFormsAreCreated := True; //allow loading settings
+  Application.Run;
+end.
+
