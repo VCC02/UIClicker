@@ -19,6 +19,7 @@ If the "Big" IDEs can't be directly built (may finish with errors), please start
 Because of this high amount of required RAM, in the latest versions, the 32-bit IDE comes preconfigured not to install various packages.
 For this project, the following packages have to be manually installed from Typhon32's packages menu: pl_VirtualTrees, pl_DCP, pl_Indy.
 
+Documentation and (released) binaries: https://github.com/VCC02/UIClickerRel
 
 Features:
 
