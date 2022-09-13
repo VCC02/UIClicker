@@ -143,7 +143,7 @@ function ExitRemoteTemplate(ARemoteAddress: string; AStackLevel: Integer): strin
 function GetAllReplacementVars(ARemoteAddress: string; AStackLevel: Integer): string;
 function GetDebugImageFromServer(ARemoteAddress: string; AStackLevel: Integer; AReceivedBmp: TBitmap; AWithGrid: Boolean): string; //returns error message if any
 function GetSearchAreaDebugImageFromServer(ARemoteAddress: string; AStackLevel: Integer; AReceivedBmp: TBitmap): string; //returns error message if any
-function SendTemplateContentToServer(ARemoteAddress, AFileName: string; var ACustomACSActions: TClkActionsRecArr): string;
+function SendTemplateContentToServer(ARemoteAddress, AFileName: string; var ACustomClkActions: TClkActionsRecArr): string;
 function SendLoadTemplateInExecListRequest(ARemoteAddress, AFileName: string; AStackLevel: Integer): string;
 function GetServerFileExpectancy(ARemoteAddress: string): string;
 function GetFileExistenceOnServer(ARemoteAddress: string; AListOfFiles, AListOfResults: TStringList; AListOfFilesIncludesHashes: Boolean; ADebugParam: string = ''): string; overload;
@@ -358,7 +358,7 @@ begin
 end;
 
 
-//function ExecuteRemoteActionAtIndex(ARemoteAddress: string; var ACustomACSActions: TClkActionsRecArr; AActionIndex, AStackLevel: Integer; AVarReplacements: TStringList; AIsDebugging: Boolean): Boolean;
+
 
 
 function TestConnection(ARemoteAddress: string): string;
@@ -380,9 +380,6 @@ begin
   Result := SendTextRequestToServer(ARemoteAddress + CRECmd_GetAllReplacementVars + '?' +
                                     CREParam_StackLevel + '=' + IntToStr(AStackLevel));
 end;
-
-
-
 
 
 function GetDebugImageFromServer(ARemoteAddress: string; AStackLevel: Integer; AReceivedBmp: TBitmap; AWithGrid: Boolean): string; //returns error message if any
@@ -408,7 +405,7 @@ begin
 end;
 
 
-function SendTemplateContentToServer(ARemoteAddress, AFileName: string; var ACustomACSActions: TClkActionsRecArr): string;
+function SendTemplateContentToServer(ARemoteAddress, AFileName: string; var ACustomClkActions: TClkActionsRecArr): string;
 var
   Link: string;
   FileName: string;
@@ -425,7 +422,7 @@ begin
 
   FileContentMem := TMemoryStream.Create;
   try
-    GetTemplateContentAsMemoryStream(ACustomACSActions, '', FileContentMem);
+    GetTemplateContentAsMemoryStream(ACustomClkActions, '', FileContentMem);
     Result := SendFileToServer(Link, FileContentMem);
   finally
     FileContentMem.Free;
