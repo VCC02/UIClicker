@@ -60,11 +60,13 @@ type
   TOnGetConnectionAddress = function: string of object;
   TOnGetSelectedCompFromRemoteWin = function: THandle of object;
   TOnLoadBitmap = function(ABitmap: TBitmap; AFileName: string): Boolean of object; //returns True if file loaded, and False if file not found
+  TOnEditActionCondition = function(var AActionCondition: string): Boolean of object;
 
   TOnFileExists = function(const AFileName: string): Boolean of object;
   TOnTClkIniReadonlyFileCreate = function(AFileName: string): TClkIniReadonlyFile of object;
   TOnSaveTemplateToFile = procedure(AStringList: TStringList; const AFileName: string) of object;
   TOnSetTemplateOpenDialogInitialDir = procedure(AInitialDir: string) of object;
+  TOnTemplateOpenSetMultiSelect = procedure of object; //the dialog is set to allow multiple files to be selected, then it is restored automatically to single file
   TOnTemplateOpenDialogExecute = function: Boolean of object;
   TOnGetTemplateOpenDialogFileName = function: string of object;
   TOnSetTemplateOpenDialogFileName = procedure(AFileName: string) of object;
@@ -198,6 +200,19 @@ type
     //other future options
   end;
 
+  TLoopDirection = (ldInc, ldDec, ldAuto);
+  TLoopEvalBreakPosition = (lebpAfterContent, lebpBeforeContent);
+
+  TClkCallTemplateLoop = record
+    Enabled: Boolean; //When False, the CallTemplate action is executed once, as before. Else, it may be executed or not, based on loop settings.
+    Counter: string;
+    InitValue: string;
+    EndValue: string;
+    Direction: TLoopDirection;
+    BreakCondition: string; //uses the same format as TClkActionOptions.ActionCondition
+    EvalBreakPosition: TLoopEvalBreakPosition;
+  end;
+
   TClkCallTemplateOptions = record
     TemplateFileName: string;
     ListOfCustomVarsAndValues: string;
@@ -205,6 +220,7 @@ type
     CallOnlyIfConditionVarName: string;   //deprecated  - these fields are here for compatibility with some old templates
     CallOnlyIfConditionVarValue: string;  //deprecated  - these fields are here for compatibility with some old templates
     EvaluateBeforeCalling: Boolean;
+    CallTemplateLoop: TClkCallTemplateLoop;
   end;
 
   TClkSleepOptions = record
@@ -635,6 +651,20 @@ begin
 end;
 
 
+function ReplaceChr(s: string): string;
+var
+  Args, InitialArgs: string;
+  ArgsNum: Integer;
+begin
+  Args := Copy(s, Pos('(', s) + 1, MaxInt);
+  Args := Copy(Args, 1, Pos(')$', Args) - 1);
+  InitialArgs := Args;
+  ArgsNum := StrToIntDef(Args, 65);
+
+  Result := StringReplace(s, '$Chr(' + InitialArgs + ')$', Chr(ArgsNum), [rfReplaceAll]);
+end;
+
+
 function ReplaceFastReplace_45ToReturn(s: string): string;
 var
   Args, InitialArgs: string;
@@ -864,7 +894,7 @@ begin
       s := StringReplace(s, CurrentName, CurrentValue, [rfReplaceAll]);
   end;
 
-  if Pos('$Random(', s) = 1 then
+  if Pos('$Random(', s) > 0 then
   begin
     if Random(7) = 3 then
     begin
@@ -875,8 +905,11 @@ begin
     s := ReplaceRandom(AListOfVars, s);
   end;
 
-  if Pos('$ExtractFileDir(', s) = 1 then
+  if Pos('$ExtractFileDir(', s) > 0 then
     s := ReplaceExtractFileDir(s);
+
+  if Pos('$Chr(', s) > 0 then
+    s := ReplaceChr(s);
 
   if Pos('$Current_Mouse_X$', s) > 0 then
   begin

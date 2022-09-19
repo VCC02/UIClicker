@@ -144,12 +144,6 @@ object frmClickerTemplateCallTree: TfrmClickerTemplateCallTree
     Anchors = [akRight, akBottom]
     Caption = 'Search mode'
   end
-  object OpenDialog1: TOpenDialog
-    Filter = 'Clicker Action Templates (*.clktmpl)|*.clktmpl|All Files (*.*)|*.*'
-    Options = [ofAllowMultiSelect, ofEnableSizing, ofViewDetail]
-    Left = 344
-    Top = 40
-  end
   object tmrSearch: TTimer
     Enabled = False
     Interval = 200
@@ -167,6 +161,13 @@ object frmClickerTemplateCallTree: TfrmClickerTemplateCallTree
     object MenuItem_CopySelectedFilePathToClipboard: TMenuItem
       Caption = 'Copy selected filepath to clipboard'
       OnClick = MenuItem_CopySelectedFilePathToClipboardClick
+    end
+    object N1: TMenuItem
+      Caption = '-'
+    end
+    object MenuItem_Export: TMenuItem
+      Caption = 'Export to file...'
+      OnClick = MenuItem_ExportClick
     end
   end
 end

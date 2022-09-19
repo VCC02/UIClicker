@@ -44,19 +44,30 @@ type
     btnCopyOffsetsFromMain: TButton;
     btnSetFromControlLeftAndTop: TButton;
     btnSetFromControlWidthAndHeight: TButton;
+    btnBrowseCallTemplateLoopBreakCondition: TButton;
+    chkCallTemplateLoopEnabled: TCheckBox;
     chkNoConsole: TCheckBox;
     chkWindowOperationsEnablePos: TCheckBox;
     chkMoveWithoutClick: TCheckBox;
     chkLeaveMouse: TCheckBox;
     chkWindowOperationsEnableSize: TCheckBox;
+    cmbCallTemplateLoopBreakPosition: TComboBox;
     cmbClickType: TComboBox;
     cmbUseInheritHandles: TComboBox;
     cmbWindowOperationsType: TComboBox;
+    cmbCallTemplateLoopDirection: TComboBox;
+    grpCallTemplateLoop: TGroupBox;
     imglstSetVar: TImageList;
+    lbeCallTemplateLoopBreakCondition: TLabeledEdit;
+    lblCallTemplateLoopDirection: TLabel;
+    lbeCallTemplateLoopCounter: TLabeledEdit;
+    lbeCallTemplateLoopInitValue: TLabeledEdit;
+    lbeCallTemplateLoopEndValue: TLabeledEdit;
     lbeWindowOperationsX: TLabeledEdit;
     lbeWindowOperationsY: TLabeledEdit;
     lbeWindowOperationsWidth: TLabeledEdit;
     lbeWindowOperationsHeight: TLabeledEdit;
+    lblCallTemplateLoopBreakPosition: TLabel;
     lblSetTextInfo: TLabel;
     lblWindowOperation: TLabel;
     lblAvailableFunctions: TLabel;
@@ -214,10 +225,12 @@ type
     prbSleep: TProgressBar;
     vstCustomVariables: TVirtualStringTree;
     vstSetVar: TVirtualStringTree;
+    procedure btnBrowseCallTemplateLoopBreakConditionClick(Sender: TObject);
     procedure btnBrowseOtherTemplatesClick(Sender: TObject);
     procedure btnSetFromControlLeftAndTopClick(Sender: TObject);
     procedure btnSetFromControlWidthAndHeightClick(Sender: TObject);
     procedure chkAllowToFailChange(Sender: TObject);
+    procedure chkCallTemplateLoopEnabledChange(Sender: TObject);
     procedure chkClickWithDoubleClickChange(Sender: TObject);
     procedure chkLeaveMouseChange(Sender: TObject);
     procedure chkMoveWithoutClickChange(Sender: TObject);
@@ -226,9 +239,15 @@ type
     procedure chkWaitForControlToGoAwayChange(Sender: TObject);
     procedure chkWindowOperationsEnablePosChange(Sender: TObject);
     procedure chkWindowOperationsEnableSizeChange(Sender: TObject);
+    procedure cmbCallTemplateLoopBreakPositionChange(Sender: TObject);
+    procedure cmbCallTemplateLoopDirectionChange(Sender: TObject);
     procedure cmbClickTypeChange(Sender: TObject);
     procedure cmbUseInheritHandlesChange(Sender: TObject);
     procedure cmbWindowOperationsTypeChange(Sender: TObject);
+    procedure lbeCallTemplateLoopBreakConditionChange(Sender: TObject);
+    procedure lbeCallTemplateLoopCounterChange(Sender: TObject);
+    procedure lbeCallTemplateLoopEndValueChange(Sender: TObject);
+    procedure lbeCallTemplateLoopInitValueChange(Sender: TObject);
 
     procedure lbeExecAppCurrentDirChange(Sender: TObject);
     procedure lbeExecAppStdInChange(Sender: TObject);
@@ -388,6 +407,7 @@ type
 
     FOnCopyControlTextAndClassFromMainWindow: TOnCopyControlTextAndClassFromMainWindow;
     FOnGetExtraSearchAreaDebuggingImage: TOnGetExtraSearchAreaDebuggingImage;
+    FOnEditCallTemplateBreakCondition: TOnEditActionCondition;
 
     FOnLoadBitmap: TOnLoadBitmap;
     FOnFileExists: TOnFileExists;
@@ -413,6 +433,7 @@ type
     procedure SetDebuggingInfoAvailable(Value: Boolean);
     procedure TriggerOnControlsModified;
 
+    function DoOnEditCallTemplateBreakCondition(var AActionCondition: string): Boolean;
     function DoOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     function DoOnFileExists(const AFileName: string): Boolean;
 
@@ -489,6 +510,7 @@ type
 
     property OnCopyControlTextAndClassFromMainWindow: TOnCopyControlTextAndClassFromMainWindow read FOnCopyControlTextAndClassFromMainWindow write FOnCopyControlTextAndClassFromMainWindow;
     property OnGetExtraSearchAreaDebuggingImage: TOnGetExtraSearchAreaDebuggingImage write FOnGetExtraSearchAreaDebuggingImage;
+    property OnEditCallTemplateBreakCondition: TOnEditActionCondition write FOnEditCallTemplateBreakCondition;
 
     property OnLoadBitmap: TOnLoadBitmap write FOnLoadBitmap;
     property OnFileExists: TOnFileExists write FOnFileExists;
@@ -695,6 +717,7 @@ begin
 
   FOnCopyControlTextAndClassFromMainWindow := nil;
   FOnGetExtraSearchAreaDebuggingImage := nil;
+  FOnEditCallTemplateBreakCondition := nil;
 
   FOnLoadBitmap := nil;
   FOnFileExists := nil;
@@ -1524,6 +1547,17 @@ begin
 end;
 
 
+procedure TfrClickerActions.btnBrowseCallTemplateLoopBreakConditionClick(
+  Sender: TObject);
+var
+  Condition: string;
+begin
+  Condition := lbeCallTemplateLoopBreakCondition.Text;
+  if DoOnEditCallTemplateBreakCondition(Condition) then
+    lbeCallTemplateLoopBreakCondition.Text := Condition;
+end;
+
+
 procedure TfrClickerActions.btnSetFromControlLeftAndTopClick(Sender: TObject);
 begin
   lbeWindowOperationsX.Text := EvaluateReplacements('$Control_Left$');
@@ -1547,6 +1581,11 @@ end;
 
 
 procedure TfrClickerActions.chkAllowToFailChange(Sender: TObject);
+begin
+  TriggerOnControlsModified;
+end;
+
+procedure TfrClickerActions.chkCallTemplateLoopEnabledChange(Sender: TObject);
 begin
   TriggerOnControlsModified;
 end;
@@ -1605,6 +1644,19 @@ begin
 end;
 
 
+procedure TfrClickerActions.cmbCallTemplateLoopBreakPositionChange(
+  Sender: TObject);
+begin
+  TriggerOnControlsModified;
+end;
+
+
+procedure TfrClickerActions.cmbCallTemplateLoopDirectionChange(Sender: TObject);
+begin
+  TriggerOnControlsModified;
+end;
+
+
 procedure TfrClickerActions.cmbClickTypeChange(Sender: TObject);
 begin
   if Assigned(FgrpMouseDragControls) then
@@ -1628,6 +1680,31 @@ begin
   lbeWindowOperationsY.Enabled := (cmbWindowOperationsType.ItemIndex = Integer(Ord(woMoveResize))) and chkWindowOperationsEnablePos.Checked;
   lbeWindowOperationsWidth.Enabled := (cmbWindowOperationsType.ItemIndex = Integer(Ord(woMoveResize))) and chkWindowOperationsEnableSize.Checked;
   lbeWindowOperationsHeight.Enabled := (cmbWindowOperationsType.ItemIndex = Integer(Ord(woMoveResize))) and chkWindowOperationsEnableSize.Checked;
+end;
+
+
+procedure TfrClickerActions.lbeCallTemplateLoopBreakConditionChange(
+  Sender: TObject);
+begin
+  TriggerOnControlsModified;
+end;
+
+
+procedure TfrClickerActions.lbeCallTemplateLoopCounterChange(Sender: TObject);
+begin
+  TriggerOnControlsModified;
+end;
+
+
+procedure TfrClickerActions.lbeCallTemplateLoopEndValueChange(Sender: TObject);
+begin
+  TriggerOnControlsModified;
+end;
+
+
+procedure TfrClickerActions.lbeCallTemplateLoopInitValueChange(Sender: TObject);
+begin
+  TriggerOnControlsModified;
 end;
 
 
@@ -2090,6 +2167,13 @@ begin
   lbeCallOnlyIfContitionVarValue.Enabled := chkCallOnlyIfContitionIsTrue.Checked;
   vallstCustomVariables.Strings.Clear;
   chkEvaluateVarsBeforeCalling.Checked := False;
+  chkCallTemplateLoopEnabled.Checked := False;
+  lbeCallTemplateLoopCounter.Text := '';
+  lbeCallTemplateLoopInitValue.Text := '';
+  lbeCallTemplateLoopEndValue.Text := '';
+  cmbCallTemplateLoopDirection.ItemIndex := 0;
+  cmbCallTemplateLoopBreakPosition.ItemIndex := 0;
+  lbeCallTemplateLoopBreakCondition.Text := '';
 
   TempListOfVars.ListOfVarNames := '';
   TempListOfVars.ListOfVarValues := '';
@@ -2198,6 +2282,15 @@ end;
 function TfrClickerActions.HandleOnGetPictureOpenDialogFileName: string;
 begin
   Result := DoOnGetPictureOpenDialogFileName;
+end;
+
+
+function TfrClickerActions.DoOnEditCallTemplateBreakCondition(var AActionCondition: string): Boolean;
+begin
+  if not Assigned(FOnEditCallTemplateBreakCondition) then
+    raise Exception.Create('OnEditCallTemplateBreakCondition not assigned.')
+  else
+    Result := FOnEditCallTemplateBreakCondition(AActionCondition);
 end;
 
 

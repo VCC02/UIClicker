@@ -275,6 +275,7 @@ type
     procedure HandleOnSetEditorSleepProgressBarPosition(APositionValue: Integer);
     procedure HandleOnSetEditorSleepInfo(AElapsedTime, ARemainingTime: string);
 
+    function HandleOnEditCallTemplateBreakCondition(var AActionCondition: string): Boolean;
     function HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     function HandleOnFileExists(const AFileName: string): Boolean;
 
@@ -484,6 +485,7 @@ begin
   frClickerActions.OnCopyControlTextAndClassFromMainWindow := HandleOnCopyControlTextAndClassFromMainWindow;
   frClickerActions.OnGetExtraSearchAreaDebuggingImage := HandleOnGetExtraSearchAreaDebuggingImage;
 
+  frClickerActions.OnEditCallTemplateBreakCondition := HandleOnEditCallTemplateBreakCondition;
   frClickerActions.OnLoadBitmap := HandleOnLoadBitmap; //both ActionExecution and frClickerActions use the same handler
   frClickerActions.OnFileExists := HandleOnFileExists;
   frClickerActions.OnSetTemplateOpenDialogInitialDir := HandleOnSetTemplateOpenDialogInitialDir;
@@ -661,6 +663,12 @@ end;
 procedure TfrClickerActionsArr.HandleOnSetEditorTimeoutProgressBarPosition(APositionValue: Integer);
 begin
   frClickerActions.prbTimeout.Position := APositionValue;
+end;
+
+
+function TfrClickerActionsArr.HandleOnEditCallTemplateBreakCondition(var AActionCondition: string): Boolean;
+begin
+  Result := EditActionCondition(AActionCondition);
 end;
 
 
@@ -867,6 +875,14 @@ begin
   FClkActions[ActionIndex].CallTemplateOptions.CallOnlyIfConditionVarValue := frClickerActions.lbeCallOnlyIfContitionVarValue.Text;
   FClkActions[ActionIndex].CallTemplateOptions.EvaluateBeforeCalling := frClickerActions.chkEvaluateVarsBeforeCalling.Checked;
 
+  FClkActions[ActionIndex].CallTemplateOptions.CallTemplateLoop.Enabled := frClickerActions.chkCallTemplateLoopEnabled.Checked;
+  FClkActions[ActionIndex].CallTemplateOptions.CallTemplateLoop.Counter := frClickerActions.lbeCallTemplateLoopCounter.Text;
+  FClkActions[ActionIndex].CallTemplateOptions.CallTemplateLoop.InitValue := frClickerActions.lbeCallTemplateLoopInitValue.Text;
+  FClkActions[ActionIndex].CallTemplateOptions.CallTemplateLoop.EndValue := frClickerActions.lbeCallTemplateLoopEndValue.Text;
+  FClkActions[ActionIndex].CallTemplateOptions.CallTemplateLoop.Direction := TLoopDirection(frClickerActions.cmbCallTemplateLoopDirection.ItemIndex);
+  FClkActions[ActionIndex].CallTemplateOptions.CallTemplateLoop.BreakCondition := frClickerActions.lbeCallTemplateLoopBreakCondition.Text; //uses the same format as TClkActionOptions.ActionCondition
+  FClkActions[ActionIndex].CallTemplateOptions.CallTemplateLoop.EvalBreakPosition := TLoopEvalBreakPosition(frClickerActions.cmbCallTemplateLoopBreakPosition.ItemIndex);
+
   FClkActions[ActionIndex].SleepOptions.Value := frClickerActions.lbeSleep.Text;
 
   FClkActions[ActionIndex].SetVarOptions := frClickerActions.ListOfSetVars;
@@ -1034,6 +1050,14 @@ begin
   frClickerActions.lbeCallOnlyIfContitionVarName.Enabled := frClickerActions.chkCallOnlyIfContitionIsTrue.Checked;
   frClickerActions.lbeCallOnlyIfContitionVarValue.Enabled := frClickerActions.chkCallOnlyIfContitionIsTrue.Checked;
   frClickerActions.chkEvaluateVarsBeforeCalling.Checked := FClkActions[ActionIndex].CallTemplateOptions.EvaluateBeforeCalling;
+
+  frClickerActions.chkCallTemplateLoopEnabled.Checked := FClkActions[ActionIndex].CallTemplateOptions.CallTemplateLoop.Enabled;
+  frClickerActions.lbeCallTemplateLoopCounter.Text := FClkActions[ActionIndex].CallTemplateOptions.CallTemplateLoop.Counter;
+  frClickerActions.lbeCallTemplateLoopInitValue.Text := FClkActions[ActionIndex].CallTemplateOptions.CallTemplateLoop.InitValue;
+  frClickerActions.lbeCallTemplateLoopEndValue.Text := FClkActions[ActionIndex].CallTemplateOptions.CallTemplateLoop.EndValue;
+  frClickerActions.cmbCallTemplateLoopDirection.ItemIndex := Ord(FClkActions[ActionIndex].CallTemplateOptions.CallTemplateLoop.Direction);
+  frClickerActions.lbeCallTemplateLoopBreakCondition.Text := FClkActions[ActionIndex].CallTemplateOptions.CallTemplateLoop.BreakCondition; //uses the same format as TClkActionOptions.ActionCondition
+  frClickerActions.cmbCallTemplateLoopBreakPosition.ItemIndex := Ord(FClkActions[ActionIndex].CallTemplateOptions.CallTemplateLoop.EvalBreakPosition);
 
   frClickerActions.lbeSleep.Text := FClkActions[ActionIndex].SleepOptions.Value;
 
@@ -1235,7 +1259,7 @@ begin
     acFindControl: Result := FActionExecution.ExecuteFindControlActionWithTimeout(FClkActions[AActionIndex].FindControlOptions, FClkActions[AActionIndex].ActionOptions, False);
     acFindSubControl: Result := FActionExecution.ExecuteFindControlActionWithTimeout(FClkActions[AActionIndex].FindControlOptions, FClkActions[AActionIndex].ActionOptions, True);
     acSetControlText: Result := FActionExecution.ExecuteSetControlTextAction(FClkActions[AActionIndex].SetTextOptions);
-    acCallTemplate: Result := FActionExecution.ExecuteCallTemplateAction(FClkActions[AActionIndex].CallTemplateOptions, FContinuePlayingBySteppingInto);
+    acCallTemplate: Result := FActionExecution.ExecuteLoopedCallTemplateAction(FClkActions[AActionIndex].CallTemplateOptions, FContinuePlayingBySteppingInto);
     acSleep: Result := FActionExecution.ExecuteSleepAction(FClkActions[AActionIndex].SleepOptions, FClkActions[AActionIndex].ActionOptions);
     acSetVar: Result := FActionExecution.ExecuteSetVarAction(FClkActions[AActionIndex].SetVarOptions);
     acWindowOperations: Result := FActionExecution.ExecuteWindowOperationsAction(FClkActions[AActionIndex].WindowOperationsOptions);
@@ -1297,7 +1321,7 @@ begin
 
     if AIsDebugging then
       if FClkActions[AActionIndex].ActionOptions.Action = acCallTemplate then
-        EnteredTemplateResult := FActionExecution.ExecuteCallTemplateAction(FClkActions[AActionIndex].CallTemplateOptions, FContinuePlayingBySteppingInto);
+        EnteredTemplateResult := FActionExecution.ExecuteLoopedCallTemplateAction(FClkActions[AActionIndex].CallTemplateOptions, FContinuePlayingBySteppingInto);
 
     WaitForServerResponse(Th);
 

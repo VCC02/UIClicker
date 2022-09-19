@@ -58,6 +58,7 @@ type
     procedure Test_ExecuteSetControlTextAction_HappyFlow;
     procedure Test_ExecuteCallTemplate_HappyFlow;
     procedure Test_ExecuteCallTemplateWithSubTemplate_HappyFlow;
+    procedure Test_ExecuteLoopedCallTemplate_HappyFlow;
 
     procedure Test_ExecuteSleep_HappyFlow;
     procedure Test_ExecuteSleep_NegativeValue;
@@ -421,6 +422,9 @@ begin
   CallTemplateOptions.TemplateFileName := CTestTemplateFileName;
   CallTemplateOptions.ListOfCustomVarsAndValues := '';
   CallTemplateOptions.EvaluateBeforeCalling := False;
+  CallTemplateOptions.CallTemplateLoop.Enabled := False;
+  CallTemplateOptions.CallTemplateLoop.Direction := ldInc;
+  CallTemplateOptions.CallTemplateLoop.EvalBreakPosition := lebpAfterContent;
 
   Response := FastReplace_87ToReturn(ExecuteCallTemplateAction(CTestServerAddress, CallTemplateOptions, False, CREParam_FileLocation_ValueMem));
 
@@ -455,6 +459,9 @@ begin
   CallTemplateOptions.TemplateFileName := CTestTemplateFileName;
   CallTemplateOptions.ListOfCustomVarsAndValues := '';
   CallTemplateOptions.EvaluateBeforeCalling := False;
+  CallTemplateOptions.CallTemplateLoop.Enabled := False;
+  CallTemplateOptions.CallTemplateLoop.Direction := ldInc;
+  CallTemplateOptions.CallTemplateLoop.EvalBreakPosition := lebpAfterContent;
 
   Response := FastReplace_87ToReturn(ExecuteCallTemplateAction(CTestServerAddress, CallTemplateOptions, False, CREParam_FileLocation_ValueMem));
 
@@ -463,6 +470,43 @@ begin
     ListOfVars.Text := Response;
     Expect(ListOfVars).WithItem('$ExecAction_Err$').OfValue('', 'No error Allowed.');
     Expect(ListOfVars).WithItem(CVarName).OfValue(IntToStr(CurrentValue + 1));
+  finally
+    ListOfVars.Free;
+  end;
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecuteLoopedCallTemplate_HappyFlow;
+const
+  CVarName = '$IncVar$';
+var
+  CurrentValue: Integer;
+  Response: string;
+  ListOfVars: TStringList;
+  CallTemplateOptions: TClkCallTemplateOptions;
+begin
+  CurrentValue := StrToIntDef(GetVarValueFromServer(CVarName), 0);
+  CreateCallableTestTemplateInMem(CTestTemplateFileName, CVarName, '$Sum(' + CVarName + ', 1)$', '30', True);
+  SendTemplateFromInMemToServer(CTestTemplateFileName);
+
+  CallTemplateOptions.TemplateFileName := CTestTemplateFileName;
+  CallTemplateOptions.ListOfCustomVarsAndValues := '';
+  CallTemplateOptions.EvaluateBeforeCalling := False;
+  CallTemplateOptions.CallTemplateLoop.Enabled := True;
+  CallTemplateOptions.CallTemplateLoop.InitValue := '0';
+  CallTemplateOptions.CallTemplateLoop.EndValue := '3';
+  CallTemplateOptions.CallTemplateLoop.Counter := '$i$';
+  CallTemplateOptions.CallTemplateLoop.Direction := ldInc;
+  CallTemplateOptions.CallTemplateLoop.BreakCondition := '';
+  CallTemplateOptions.CallTemplateLoop.EvalBreakPosition := lebpAfterContent;
+
+  Response := FastReplace_87ToReturn(ExecuteCallTemplateAction(CTestServerAddress, CallTemplateOptions, False, CREParam_FileLocation_ValueMem));
+
+  ListOfVars := TStringList.Create;
+  try
+    ListOfVars.Text := Response;
+    Expect(ListOfVars).WithItem('$ExecAction_Err$').OfValue('', 'No error Allowed.');
+    Expect(ListOfVars).WithItem(CVarName).OfValue(IntToStr(CurrentValue + 4));
   finally
     ListOfVars.Free;
   end;

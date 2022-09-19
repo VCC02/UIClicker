@@ -78,6 +78,7 @@ type
     procedure PreviewTextOnBmp(var AFindControlOptions: TClkFindControlOptions; AEvaluatedText: string; AProfileIndex: Integer; ASearchedBmp: TBitmap);
 
     procedure SetLastActionStatus(AActionResult, AAlowedToFail: Boolean);
+    procedure CheckManualStopCondition;
 
     procedure ExecuteClickAction(var AClickOptions: TClkClickOptions);
     function ExecuteFindControlAction(var AFindControlOptions: TClkFindControlOptions; var AActionOptions: TClkActionOptions; IsSubControl: Boolean): Boolean; //returns True if found
@@ -98,7 +99,8 @@ type
     function ExecuteExecAppAction(var AExecAppOptions: TClkExecAppOptions; var AActionOptions: TClkActionOptions): Boolean;
     function ExecuteFindControlActionWithTimeout(var AFindControlOptions: TClkFindControlOptions; var AActionOptions: TClkActionOptions; IsSubControl: Boolean): Boolean; //returns True if found
     function ExecuteSetControlTextAction(var ASetTextOptions: TClkSetTextOptions): Boolean;
-    function ExecuteCallTemplateAction(var ACallTemplateOptions: TClkCallTemplateOptions; IsDebugging: Boolean): Boolean;
+    function ExecuteCallTemplateAction(var ACallTemplateOptions: TClkCallTemplateOptions; IsDebugging: Boolean): Boolean; //to be moved to private, after ExecuteFindControlAction header
+    function ExecuteLoopedCallTemplateAction(var ACallTemplateOptions: TClkCallTemplateOptions; IsDebugging: Boolean): Boolean;
     function ExecuteSleepAction(var ASleepOptions: TClkSleepOptions; var AActionOptions: TClkActionOptions): Boolean;
     function ExecuteSetVarAction(var ASetVarOptions: TClkSetVarOptions): Boolean;
     function ExecuteWindowOperationsAction(var AWindowOperationsOptions: TClkWindowOperationsOptions): Boolean;
@@ -1318,6 +1320,24 @@ begin
 end;
 
 
+procedure TActionExecution.CheckManualStopCondition;
+begin
+  if (GetAsyncKeyState(VK_CONTROL) < 0) and (GetAsyncKeyState(VK_SHIFT) < 0) and (GetAsyncKeyState(VK_F2) < 0) then
+  begin
+    if FStopAllActionsOnDemandFromParent <> nil then
+      FStopAllActionsOnDemandFromParent^ := True;
+
+    if FStopAllActionsOnDemand <> nil then
+      FStopAllActionsOnDemand^ := True;
+  end;
+
+  if FStopAllActionsOnDemandFromParent <> nil then
+    if FStopAllActionsOnDemandFromParent^ then
+      if FStopAllActionsOnDemand <> nil then
+        FStopAllActionsOnDemand^ := True;
+end;
+
+
 function TActionExecution.ExecuteCallTemplateAction(var ACallTemplateOptions: TClkCallTemplateOptions; IsDebugging: Boolean): Boolean;
 var
   i: Integer;
@@ -1393,6 +1413,90 @@ begin
 
   if GetActionVarValue('$ExecAction_Err$') <> '' then   ////////////////// ToDo:  improve the error logging
     FLog.Lines.Add(DateTimeToStr(Now) + '  ' + GetActionVarValue('$ExecAction_Err$'));
+end;
+
+
+function TActionExecution.ExecuteLoopedCallTemplateAction(var ACallTemplateOptions: TClkCallTemplateOptions; IsDebugging: Boolean): Boolean;
+var
+  i: Integer;
+  StartValue, StopValue: Integer;
+  TempACallTemplateOptions: TClkCallTemplateOptions;
+begin
+  if not ACallTemplateOptions.CallTemplateLoop.Enabled then
+    Result := ExecuteCallTemplateAction(ACallTemplateOptions, IsDebugging)
+  else
+  begin
+    StartValue := StrToIntDef(EvaluateReplacements(ACallTemplateOptions.CallTemplateLoop.InitValue), 0);
+    StopValue := StrToIntDef(EvaluateReplacements(ACallTemplateOptions.CallTemplateLoop.EndValue), 0);
+
+    Result := True;
+    case ACallTemplateOptions.CallTemplateLoop.Direction of
+      ldInc:
+      begin
+        for i := StartValue to StopValue do
+        begin
+          SetActionVarValue(ACallTemplateOptions.CallTemplateLoop.Counter, IntToStr(i));
+
+          if ACallTemplateOptions.CallTemplateLoop.BreakCondition <> '' then
+            if ACallTemplateOptions.CallTemplateLoop.EvalBreakPosition = lebpBeforeContent then
+              if EvaluateActionCondition(ACallTemplateOptions.CallTemplateLoop.BreakCondition, EvaluateReplacements) then
+                Break;
+
+          Result := Result and ExecuteCallTemplateAction(ACallTemplateOptions, IsDebugging);
+
+          if ACallTemplateOptions.CallTemplateLoop.BreakCondition <> '' then
+            if ACallTemplateOptions.CallTemplateLoop.EvalBreakPosition = lebpAfterContent then
+              if EvaluateActionCondition(ACallTemplateOptions.CallTemplateLoop.BreakCondition, EvaluateReplacements) then
+                Break;
+
+          CheckManualStopCondition;
+          if FStopAllActionsOnDemand <> nil then
+            if FStopAllActionsOnDemand^ then
+              Break;
+        end;
+      end;
+
+      ldDec:
+      begin
+        for i := StartValue downto StopValue do
+        begin
+          SetActionVarValue(ACallTemplateOptions.CallTemplateLoop.Counter, IntToStr(i));
+
+          if ACallTemplateOptions.CallTemplateLoop.EvalBreakPosition = lebpBeforeContent then
+            if EvaluateActionCondition(ACallTemplateOptions.CallTemplateLoop.BreakCondition, EvaluateReplacements) then
+              Break;
+
+          Result := Result and ExecuteCallTemplateAction(ACallTemplateOptions, IsDebugging);
+
+          if ACallTemplateOptions.CallTemplateLoop.EvalBreakPosition = lebpBeforeContent then
+            if EvaluateActionCondition(ACallTemplateOptions.CallTemplateLoop.BreakCondition, EvaluateReplacements) then
+              Break;
+
+          CheckManualStopCondition;
+          if FStopAllActionsOnDemand <> nil then
+            if FStopAllActionsOnDemand^ then
+              Break;
+        end;
+      end;
+
+      ldAuto:
+      begin
+        TempACallTemplateOptions := ACallTemplateOptions;
+        if StartValue < StopValue then
+          TempACallTemplateOptions.CallTemplateLoop.Direction := ldInc
+        else
+          TempACallTemplateOptions.CallTemplateLoop.Direction := ldDec;
+
+        Result := ExecuteLoopedCallTemplateAction(TempACallTemplateOptions, IsDebugging)
+      end;
+
+      else
+      begin
+        Result := False;
+        SetActionVarValue('$ExecAction_Err$', 'Unknown loop direction');
+      end;
+    end;
+  end;
 end;
 
 
@@ -1908,10 +2012,26 @@ end;
 function TActionExecution.ExecuteCallTemplateActionAsString(AListOfCallTemplateOptionsParams: TStrings): Boolean;
 var
   CallTemplateOptions: TClkCallTemplateOptions;
+  Temp_LoopDirection: Integer;
+  Temp_LoopEvalBreakPosition: Integer;
 begin
   Result := False;
   SetActionVarValue('$ExecAction_Err$', '');
   try
+    Temp_LoopDirection := StrToIntDef(AListOfCallTemplateOptionsParams.Values['Loop.Direction'], 0);
+    if (Temp_LoopDirection < 0) or (Temp_LoopDirection > Ord(High(TLoopDirection))) then
+    begin
+      SetActionVarValue('$ExecAction_Err$', 'Loop.Direction is out of range.');
+      Exit;
+    end;
+
+    Temp_LoopEvalBreakPosition := StrToIntDef(AListOfCallTemplateOptionsParams.Values['Loop.EvalBreakPosition'], 0);
+    if (Temp_LoopEvalBreakPosition < 0) or (Temp_LoopEvalBreakPosition > Ord(High(TLoopEvalBreakPosition))) then
+    begin
+      SetActionVarValue('$ExecAction_Err$', 'Loop.EvalBreakPosition is out of range.');
+      Exit;
+    end;
+
     CallTemplateOptions.TemplateFileName := AListOfCallTemplateOptionsParams.Values['TemplateFileName'];
     CallTemplateOptions.ListOfCustomVarsAndValues := AListOfCallTemplateOptionsParams.Values['ListOfCustomVarsAndValues'];
     CallTemplateOptions.CallOnlyIfCondition := False;       //deprecated - must be set to False, to prevent error messages
@@ -1919,7 +2039,15 @@ begin
     CallTemplateOptions.CallOnlyIfConditionVarValue := '';  //deprecated
     CallTemplateOptions.EvaluateBeforeCalling := AListOfCallTemplateOptionsParams.Values['EvaluateBeforeCalling'] = '1';
 
-    Result := ExecuteCallTemplateAction(CallTemplateOptions, AListOfCallTemplateOptionsParams.Values['IsDebugging'] = '1');
+    CallTemplateOptions.CallTemplateLoop.Enabled := AListOfCallTemplateOptionsParams.Values['Loop.Enabled'] = '1'; //When False, the CallTemplate action is executed once, as before. Else, it may be executed or not, based on loop settings.
+    CallTemplateOptions.CallTemplateLoop.Counter := AListOfCallTemplateOptionsParams.Values['Loop.Counter'];
+    CallTemplateOptions.CallTemplateLoop.InitValue := AListOfCallTemplateOptionsParams.Values['Loop.InitValue'];
+    CallTemplateOptions.CallTemplateLoop.EndValue := AListOfCallTemplateOptionsParams.Values['Loop.EndValue'];
+    CallTemplateOptions.CallTemplateLoop.Direction := TLoopDirection(Temp_LoopDirection);
+    CallTemplateOptions.CallTemplateLoop.BreakCondition := FastReplace_45ToReturn(AListOfCallTemplateOptionsParams.Values['Loop.BreakCondition']); //uses the same format as TClkActionOptions.ActionCondition
+    CallTemplateOptions.CallTemplateLoop.EvalBreakPosition := TLoopEvalBreakPosition(Temp_LoopEvalBreakPosition);
+
+    Result := ExecuteLoopedCallTemplateAction(CallTemplateOptions, AListOfCallTemplateOptionsParams.Values['IsDebugging'] = '1');
   finally
     //SetLastActionStatus(Result, False);  //leave the action status as set by the called template
   end;

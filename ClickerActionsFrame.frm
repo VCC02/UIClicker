@@ -78,10 +78,10 @@ object frClickerActions: TfrClickerActions
         Height = 268
         Top = 1
         Width = 890
-        ActivePage = TabSheetActionFindSubControl
+        ActivePage = TabSheetActionCall
         Anchors = [akTop, akLeft, akRight, akBottom]
         Images = imglstActions
-        TabIndex = 3
+        TabIndex = 5
         TabOrder = 5
         OnChange = PageControlActionsChange
         object TabSheetActionClick: TTabSheet
@@ -552,14 +552,14 @@ object frClickerActions: TfrClickerActions
             ShowHint = True
           end
           object lblConditionEquals: TLabel
-            Left = 413
+            Left = 781
             Height = 13
             Top = 118
             Width = 8
             Caption = '='
           end
           object lblDeprecatedCondition: TLabel
-            Left = 352
+            Left = 720
             Height = 13
             Top = 39
             Width = 159
@@ -596,7 +596,7 @@ object frClickerActions: TfrClickerActions
             )
           end
           object chkCallOnlyIfContitionIsTrue: TCheckBox
-            Left = 384
+            Left = 752
             Height = 19
             Top = 58
             Width = 123
@@ -605,7 +605,7 @@ object frClickerActions: TfrClickerActions
             TabOrder = 1
           end
           object lbeCallOnlyIfContitionVarName: TLabeledEdit
-            Left = 417
+            Left = 785
             Height = 21
             Hint = 'Custom variables can also be used.'
             Top = 91
@@ -620,7 +620,7 @@ object frClickerActions: TfrClickerActions
             OnChange = lbeCallOnlyIfContitionVarNameChange
           end
           object lbeCallOnlyIfContitionVarValue: TLabeledEdit
-            Left = 416
+            Left = 784
             Height = 21
             Hint = 'Replacements are available as values.'
             Top = 146
@@ -747,6 +747,143 @@ object frClickerActions: TfrClickerActions
             OnKeyDown = vstCustomVariablesKeyDown
             OnMouseUp = vstCustomVariablesMouseUp
             OnNewText = vstCustomVariablesNewText
+          end
+          object grpCallTemplateLoop: TGroupBox
+            Left = 384
+            Height = 174
+            Top = 40
+            Width = 304
+            Caption = 'Loop'
+            ClientHeight = 156
+            ClientWidth = 300
+            TabOrder = 9
+            object chkCallTemplateLoopEnabled: TCheckBox
+              Left = 8
+              Height = 19
+              Top = 0
+              Width = 58
+              Caption = 'Enabled'
+              OnChange = chkCallTemplateLoopEnabledChange
+              TabOrder = 0
+            end
+            object lbeCallTemplateLoopCounter: TLabeledEdit
+              Left = 8
+              Height = 21
+              Hint = 'Replacements are available'
+              Top = 40
+              Width = 88
+              EditLabel.Height = 13
+              EditLabel.Width = 88
+              EditLabel.Caption = 'Counter'
+              ParentShowHint = False
+              ShowHint = True
+              TabOrder = 1
+              OnChange = lbeCallTemplateLoopCounterChange
+            end
+            object lbeCallTemplateLoopInitValue: TLabeledEdit
+              Left = 104
+              Height = 21
+              Hint = 'Replacements are available'
+              Top = 40
+              Width = 192
+              EditLabel.Height = 13
+              EditLabel.Width = 192
+              EditLabel.Caption = 'Init value'
+              ParentShowHint = False
+              ShowHint = True
+              TabOrder = 2
+              OnChange = lbeCallTemplateLoopInitValueChange
+            end
+            object lbeCallTemplateLoopEndValue: TLabeledEdit
+              Left = 104
+              Height = 21
+              Hint = 'Replacements are available'
+              Top = 88
+              Width = 192
+              EditLabel.Height = 13
+              EditLabel.Width = 192
+              EditLabel.Caption = 'End value'
+              ParentShowHint = False
+              ShowHint = True
+              TabOrder = 3
+              OnChange = lbeCallTemplateLoopEndValueChange
+            end
+            object cmbCallTemplateLoopDirection: TComboBox
+              Left = 8
+              Height = 19
+              Hint = 'Loop direction can be:'#13#10'Inc - when the counter should be incremented.'#13#10'Dec - when the counter should be decremented.'#13#10'Auto - when the init and the end values can be anything, so the counter direction has to be evaluated before starting the loop.'
+              Top = 88
+              Width = 88
+              ItemHeight = 13
+              ItemIndex = 0
+              Items.Strings = (
+                'Inc'
+                'Dec'
+                'Auto'
+              )
+              OnChange = cmbCallTemplateLoopDirectionChange
+              ParentShowHint = False
+              ShowHint = True
+              Style = csOwnerDrawFixed
+              TabOrder = 4
+              Text = 'Inc'
+            end
+            object lblCallTemplateLoopDirection: TLabel
+              Left = 8
+              Height = 13
+              Top = 72
+              Width = 42
+              Caption = 'Direction'
+            end
+            object lblCallTemplateLoopBreakPosition: TLabel
+              Left = 8
+              Height = 13
+              Top = 118
+              Width = 67
+              Caption = 'Break position'
+            end
+            object cmbCallTemplateLoopBreakPosition: TComboBox
+              Left = 8
+              Height = 19
+              Hint = 'The "Break" call can be made, before or after the actual "CallTemplate" call.'
+              Top = 134
+              Width = 88
+              ItemHeight = 13
+              ItemIndex = 0
+              Items.Strings = (
+                'After'
+                'Before'
+              )
+              OnChange = cmbCallTemplateLoopBreakPositionChange
+              ParentShowHint = False
+              ShowHint = True
+              Style = csOwnerDrawFixed
+              TabOrder = 5
+              Text = 'After'
+            end
+            object lbeCallTemplateLoopBreakCondition: TLabeledEdit
+              Left = 104
+              Height = 21
+              Top = 134
+              Width = 160
+              EditLabel.Height = 13
+              EditLabel.Width = 160
+              EditLabel.Caption = 'Break condition'
+              ParentShowHint = False
+              ReadOnly = True
+              ShowHint = True
+              TabOrder = 6
+              OnChange = lbeCallTemplateLoopBreakConditionChange
+            end
+            object btnBrowseCallTemplateLoopBreakCondition: TButton
+              Left = 272
+              Height = 21
+              Top = 134
+              Width = 24
+              Caption = '...'
+              OnClick = btnBrowseCallTemplateLoopBreakConditionClick
+              TabOrder = 7
+            end
           end
         end
         object TabSheetActionSleep: TTabSheet

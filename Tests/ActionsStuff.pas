@@ -412,6 +412,10 @@ begin
   ACallTemplateOptions.ListOfCustomVarsAndValues := AListOfVarsAndValues;
   ACallTemplateOptions.EvaluateBeforeCalling := AEvalBefore;
   ACallTemplateOptions.CallOnlyIfCondition := False;
+
+  ACallTemplateOptions.CallTemplateLoop.Enabled := False;
+  ACallTemplateOptions.CallTemplateLoop.Direction := ldInc;
+  ACallTemplateOptions.CallTemplateLoop.EvalBreakPosition := lebpAfterContent;
 end;
 
 

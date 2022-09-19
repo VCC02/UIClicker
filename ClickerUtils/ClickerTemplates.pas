@@ -203,6 +203,7 @@ begin
     ACustomActions[i].CallTemplateOptions.CallOnlyIfConditionVarName := Ini.ReadString(SectionIndex, 'CallOnlyIfConditionVarName_' + IterationStr, '');
     ACustomActions[i].CallTemplateOptions.CallOnlyIfConditionVarValue := Ini.ReadString(SectionIndex, 'CallOnlyIfConditionVarValue_' + IterationStr, '');
     ACustomActions[i].CallTemplateOptions.EvaluateBeforeCalling := Ini.ReadBool(SectionIndex, 'EvaluateBeforeCalling_' + IterationStr, False);
+    ACustomActions[i].CallTemplateOptions.CallTemplateLoop.Enabled := False; //not implemented in V1
 
     SectionIndex := Ini.GetSectionIndex('Actions.SleepOptions');
     ACustomActions[i].SleepOptions.Value := Ini.ReadString(SectionIndex, 'Value_' + IterationStr, '1');
@@ -383,6 +384,14 @@ begin
   ACallTemplateOptions.CallOnlyIfConditionVarName := Ini.ReadString(SectionIndex, 'CallOnlyIfConditionVarName', '');
   ACallTemplateOptions.CallOnlyIfConditionVarValue := Ini.ReadString(SectionIndex, 'CallOnlyIfConditionVarValue', '');
   ACallTemplateOptions.EvaluateBeforeCalling := Ini.ReadBool(SectionIndex, 'EvaluateBeforeCalling', False);
+
+  ACallTemplateOptions.CallTemplateLoop.Enabled := Ini.ReadBool(SectionIndex, 'Loop.Enabled', False);
+  ACallTemplateOptions.CallTemplateLoop.Counter := Ini.ReadString(SectionIndex, 'Loop.Counter', '');
+  ACallTemplateOptions.CallTemplateLoop.InitValue := Ini.ReadString(SectionIndex, 'Loop.InitValue', '');
+  ACallTemplateOptions.CallTemplateLoop.EndValue := Ini.ReadString(SectionIndex, 'Loop.EndValue', '');
+  ACallTemplateOptions.CallTemplateLoop.Direction := TLoopDirection(Min(Ini.ReadInteger(SectionIndex, 'Loop.Direction', Integer(ldInc)), Integer(High(TLoopDirection))));
+  ACallTemplateOptions.CallTemplateLoop.BreakCondition := FastReplace_45ToReturn(Ini.ReadString(SectionIndex, 'Loop.BreakCondition', '')); //uses the same format as TClkActionOptions.ActionCondition
+  ACallTemplateOptions.CallTemplateLoop.EvalBreakPosition := TLoopEvalBreakPosition(Min(Ini.ReadInteger(SectionIndex, 'Loop.EvalBreakPosition', Integer(lebpAfterContent)), Integer(High(TLoopEvalBreakPosition))));
 end;
 
 
@@ -766,6 +775,14 @@ begin
   AStringList.Add('CallOnlyIfConditionVarName=' + AActionCallTemplateOptions.CallOnlyIfConditionVarName);
   AStringList.Add('CallOnlyIfConditionVarValue=' + AActionCallTemplateOptions.CallOnlyIfConditionVarValue);
   AStringList.Add('EvaluateBeforeCalling=' + IntToStr(Ord(AActionCallTemplateOptions.EvaluateBeforeCalling)));
+
+  AStringList.Add('Loop.Enabled=' + IntToStr(Ord(AActionCallTemplateOptions.CallTemplateLoop.Enabled)));
+  AStringList.Add('Loop.Counter=' + AActionCallTemplateOptions.CallTemplateLoop.Counter);
+  AStringList.Add('Loop.InitValue=' + AActionCallTemplateOptions.CallTemplateLoop.InitValue);
+  AStringList.Add('Loop.EndValue=' + AActionCallTemplateOptions.CallTemplateLoop.EndValue);
+  AStringList.Add('Loop.Direction=' + IntToStr(Ord(AActionCallTemplateOptions.CallTemplateLoop.Direction)));
+  AStringList.Add('Loop.BreakCondition=' + FastReplace_ReturnTo45(AActionCallTemplateOptions.CallTemplateLoop.BreakCondition));
+  AStringList.Add('Loop.EvalBreakPosition=' + IntToStr(Ord(AActionCallTemplateOptions.CallTemplateLoop.EvalBreakPosition)));
 end;
 
 

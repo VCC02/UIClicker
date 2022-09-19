@@ -24,13 +24,16 @@
 
 unit ClickerTemplateCallTreeForm;
 
-{$mode ObjFPC}{$H+}
+{$H+}
+{$IFDEF FPC}
+  //{$MODE Delphi}
+{$ENDIF}
 
 interface
 
 uses
   Windows, Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, ExtCtrls,
-  Menus, VirtualTrees, ClickerUtils, IniFiles;
+  Menus, VirtualTrees, ClickerUtils, IniFiles, ClickerIniFiles;
 
 type
   TTemplateFile = record
@@ -67,9 +70,10 @@ type
     lblCallTree: TLabel;
     lblInfoTemplates: TLabel;
     memTemplates: TMemo;
+    MenuItem_Export: TMenuItem;
+    N1: TMenuItem;
     MenuItem_CopySelectedFilePathToClipboard: TMenuItem;
     MenuItem_CopySelectedFileNameToClipboard: TMenuItem;
-    OpenDialog1: TOpenDialog;
     pmTree: TPopupMenu;
     tmrSearch: TTimer;
     vstCallTree: TVirtualStringTree;
@@ -82,6 +86,7 @@ type
     procedure FormDestroy(Sender: TObject);
     procedure MenuItem_CopySelectedFileNameToClipboardClick(Sender: TObject);
     procedure MenuItem_CopySelectedFilePathToClipboardClick(Sender: TObject);
+    procedure MenuItem_ExportClick(Sender: TObject);
     procedure tmrSearchTimer(Sender: TObject);
     procedure vstCallTreeBeforeCellPaint(Sender: TBaseVirtualTree;
       TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex;
@@ -91,6 +96,17 @@ type
       Column: TColumnIndex; TextType: TVSTTextType; var CellText: String);
   private
     FTemplateFiles: TTemplateFileArr;
+    FOnTemplateOpenSetMultiSelect: TOnTemplateOpenSetMultiSelect;
+    FOnFileExists: TOnFileExists;
+    FOnTClkIniReadonlyFileCreate: TOnTClkIniReadonlyFileCreate;
+    FOnTemplateOpenDialogExecute: TOnTemplateOpenDialogExecute;
+    FOnGetTemplateOpenDialogFileName: TOnGetTemplateOpenDialogFileName;
+
+    procedure DoOnTemplateOpenSetMultiSelect;
+    function DoOnFileExists(const AFileName: string): Boolean;
+    function DoOnTClkIniReadonlyFileCreate(AFileName: string): TClkIniReadonlyFile;
+    function DoOnTemplateOpenDialogExecute: Boolean;
+    function DoOnGetTemplateOpenDialogFileName: string;
 
     procedure ResetItemVisibleFlagOnAllFiles;
     procedure MarkAllParentNodesAsVisible(ACurrentNode: PVirtualNode);
@@ -108,6 +124,12 @@ type
   public
     procedure LoadSettings(AIni: TMemIniFile);
     procedure SaveSettings(AIni: TMemIniFile);
+
+    property OnTemplateOpenSetMultiSelect: TOnTemplateOpenSetMultiSelect write FOnTemplateOpenSetMultiSelect;
+    property OnFileExists: TOnFileExists write FOnFileExists;
+    property OnTClkIniReadonlyFileCreate: TOnTClkIniReadonlyFileCreate write FOnTClkIniReadonlyFileCreate;
+    property OnTemplateOpenDialogExecute: TOnTemplateOpenDialogExecute write FOnTemplateOpenDialogExecute;
+    property OnGetTemplateOpenDialogFileName: TOnGetTemplateOpenDialogFileName write FOnGetTemplateOpenDialogFileName;
   end;
 
 var
@@ -118,7 +140,7 @@ implementation
 {$R *.frm}
 
 uses
-  ClickerTemplates, ClickerIniFiles, Clipbrd;
+  ClickerTemplates, Clipbrd;
 
 
 { TfrmClickerTemplateCallTree }
@@ -139,6 +161,51 @@ begin
   AIni.WriteInteger('CallTreeWindow', 'Top', Top);
   AIni.WriteInteger('CallTreeWindow', 'Width', Width);
   AIni.WriteInteger('CallTreeWindow', 'Height', Height);
+end;
+
+
+procedure TfrmClickerTemplateCallTree.DoOnTemplateOpenSetMultiSelect;
+begin
+  if not Assigned(FOnTemplateOpenSetMultiSelect) then
+    raise Exception.Create('OnTemplateOpenSetMultiSelect is not assigned.')
+  else
+    FOnTemplateOpenSetMultiSelect;
+end;
+
+
+function TfrmClickerTemplateCallTree.DoOnFileExists(const AFileName: string): Boolean;
+begin
+  if not Assigned(FOnFileExists) then
+    raise Exception.Create('OnFileExists is not assigned.')
+  else
+    Result := FOnFileExists(AFileName);
+end;
+
+
+function TfrmClickerTemplateCallTree.DoOnTClkIniReadonlyFileCreate(AFileName: string): TClkIniReadonlyFile;
+begin
+  if not Assigned(FOnTClkIniReadonlyFileCreate) then
+    raise Exception.Create('OnTClkIniReadonlyFileCreate is not assigned.')
+  else
+    Result := FOnTClkIniReadonlyFileCreate(AFileName);
+end;
+
+
+function TfrmClickerTemplateCallTree.DoOnTemplateOpenDialogExecute: Boolean;
+begin
+  if not Assigned(FOnTemplateOpenDialogExecute) then
+    raise Exception.Create('OnTemplateOpenDialogExecute is not assigned.')
+  else
+    Result := FOnTemplateOpenDialogExecute;
+end;
+
+
+function TfrmClickerTemplateCallTree.DoOnGetTemplateOpenDialogFileName: string;
+begin
+  if not Assigned(FOnGetTemplateOpenDialogFileName) then
+    raise Exception.Create('OnGetTemplateOpenDialogFileName is not assigned.')
+  else
+    Result := FOnGetTemplateOpenDialogFileName;
 end;
 
 
@@ -163,6 +230,12 @@ end;
 
 procedure TfrmClickerTemplateCallTree.FormCreate(Sender: TObject);
 begin
+  FOnTemplateOpenSetMultiSelect := nil;
+  FOnFileExists := nil;
+  FOnTClkIniReadonlyFileCreate := nil;
+  FOnTemplateOpenDialogExecute := nil;
+  FOnGetTemplateOpenDialogFileName := nil;
+
   SetLength(FTemplateFiles, 0);
   vstCallTree.NodeDataSize := SizeOf(TTmplDataRec);
 end;
@@ -214,6 +287,69 @@ begin
 
   NodeData := vstCallTree.GetNodeData(Node);
   Clipboard.AsText := NodeData^.Template^.FilePath;
+end;
+
+
+procedure TfrmClickerTemplateCallTree.MenuItem_ExportClick(Sender: TObject);
+function MakeBlanks(ACount: Integer): string;
+begin
+  SetLength(Result, ACount);
+  FillChar(Result[1], ACount, ' ');
+end;
+
+var
+  Content: TStringList;
+  TempSaveDialog: TSaveDialog;
+  Node: PVirtualNode;
+  NodeData: PTmplDataRec;
+  Blanks: string;
+  i: Integer;
+begin
+  TempSaveDialog := TSaveDialog.Create(Self);
+  try
+    TempSaveDialog.Filter := 'Yml files (*.yml)|*.yml|All files (*.*)|*.*';
+
+    if not TempSaveDialog.Execute then
+      Exit;
+
+    if ExtractFileExt(TempSaveDialog.FileName) = '' then
+      TempSaveDialog.FileName := TempSaveDialog.FileName + '.yml';
+
+    Content := TStringList.Create;
+    try
+      Node := vstCallTree.GetFirst;
+      try
+        if Node = nil then
+          Exit;
+
+        repeat
+          NodeData := vstCallTree.GetNodeData(Node);
+          Blanks := MakeBlanks(vstCallTree.GetNodeLevel(Node) shl 2);
+
+          if NodeData = nil then
+            Content.Add(Blanks + 'Data_bug')
+          else
+          begin
+            Content.Add(Blanks + 'Path: "' + NodeData^.Template^.FileName + '"');
+
+            for i := 0 to Length(NodeData^.Template^.ClkActions) - 1 do
+            begin
+              if NodeData^.Template^.ClkActions[i].ActionOptions.Action = acFindSubControl then
+                Content.Add(Blanks + '    Bmps: "' + FastReplace_ReturnToCSV(NodeData^.Template^.ClkActions[i].FindControlOptions.MatchBitmapFiles) + '"');
+            end;
+          end;
+
+          Node := vstCallTree.GetNext(Node);
+        until Node = nil;
+      finally
+        Content.SaveToFile(TempSaveDialog.FileName);
+      end;
+    finally
+      Content.Free;
+    end;
+  finally
+    TempSaveDialog.Free;
+  end;
 end;
 
 
@@ -359,7 +495,7 @@ var
   FormatVersion: string;
   DummyNotes: string;
 begin
-  Ini := TClkIniReadonlyFile.Create(AFileName);
+  Ini := DoOnTClkIniReadonlyFileCreate(AFileName);
   try
     SetLength(ACustomClkActions, Ini.ReadInteger('Actions', 'Count', 0));
     FormatVersion := Ini.ReadString('Actions', 'Version', '1');
@@ -395,7 +531,7 @@ begin
     FTemplateFiles[i]^.FileName := ExtractFileName(Fnm);
     FTemplateFiles[i]^.Highlighted := False;
 
-    if FileExists(Fnm) then
+    if DoOnFileExists(Fnm) then
     begin
       LoadTemplate(Fnm, FTemplateFiles[i]^.ClkActions);
       FTemplateFiles[i]^.Loaded := Length(FTemplateFiles[i]^.ClkActions) > 0;
@@ -656,10 +792,11 @@ end;
 
 procedure TfrmClickerTemplateCallTree.btnBrowseClick(Sender: TObject);
 begin
-  if not OpenDialog1.Execute then
+  DoOnTemplateOpenSetMultiSelect;
+  if not DoOnTemplateOpenDialogExecute then
     Exit;
 
-  memTemplates.Lines.Text := OpenDialog1.Files.Text;
+  memTemplates.Lines.Text := DoOnGetTemplateOpenDialogFileName;
 end;
 
 end.

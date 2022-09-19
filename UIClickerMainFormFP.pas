@@ -83,6 +83,8 @@ type
     function HandleOnPictureOpenDialogExecute: Boolean;
     function HandleOnGetPictureOpenDialogFileName: string;
     function HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
+
+    procedure HandleOnTemplateOpenSetMultiSelect;
   public
     property AllFormsAreCreated: Boolean write FAllFormsAreCreated;
   end;
@@ -140,6 +142,12 @@ begin
     frmClickerActions.OnPictureOpenDialogExecute := HandleOnPictureOpenDialogExecute;
     frmClickerActions.OnGetPictureOpenDialogFileName := HandleOnGetPictureOpenDialogFileName;
     frmClickerActions.OnLoadBitmap := HandleOnLoadBitmap;
+
+    frmClickerTemplateCallTree.OnTemplateOpenSetMultiSelect := HandleOnTemplateOpenSetMultiSelect;
+    frmClickerTemplateCallTree.OnFileExists := HandleOnFileExists;
+    frmClickerTemplateCallTree.OnTClkIniReadonlyFileCreate := HandleOnTClkIniReadonlyFileCreate;
+    frmClickerTemplateCallTree.OnTemplateOpenDialogExecute := HandleOnTemplateOpenDialogExecute;
+    frmClickerTemplateCallTree.OnGetTemplateOpenDialogFileName := HandleOnGetTemplateOpenDialogFileName;
   finally
     Ini.Free;
   end;
@@ -320,12 +328,16 @@ end;
 function TfrmUIClickerMainForm.HandleOnTemplateOpenDialogExecute: Boolean;
 begin
   Result := OpenDialog1.Execute;
+  OpenDialog1.Options := OpenDialog1.Options - [ofAllowMultiSelect];
 end;
 
 
 function TfrmUIClickerMainForm.HandleOnGetTemplateOpenDialogFileName: string;
 begin
-  Result := OpenDialog1.FileName;
+  if OpenDialog1.Files.Count > 1 then
+    Result := OpenDialog1.Files.Text
+  else
+    Result := OpenDialog1.FileName;
 end;
 
 
@@ -380,6 +392,12 @@ begin
   end
   else
     Result := False;
+end;
+
+
+procedure TfrmUIClickerMainForm.HandleOnTemplateOpenSetMultiSelect;
+begin
+  OpenDialog1.Options := OpenDialog1.Options + [ofAllowMultiSelect];
 end;
 
 end.

@@ -2385,7 +2385,7 @@ begin
         cmbExecMode.ItemIndex := 0; //force local mode, for now, then let the user switch again later
         Sleep(100);
         PageControlExecMode.ActivePageIndex := cmbExecMode.ItemIndex;
-        frClickerActionsArrMain.memLogErr.Lines.Add('Stopping "missing files" monitoring thread (again) for client mode.');
+        frClickerActionsArrMain.memLogErr.Lines.Add('Stopping "missing files" monitoring thread (again) for client mode. (If the execution mode keeps keeps going back to "Local", you might have to close the whole application).');
         try
           FPollForMissingServerFiles.Terminate; //terminate existing thread, so a new one can be created
         except
