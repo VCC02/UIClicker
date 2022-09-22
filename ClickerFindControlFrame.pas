@@ -357,7 +357,7 @@ type
 
     FBMPsDir: string;
     FLastClickedLbe: TLabeledEdit;
-    FDragging: Boolean;
+    FDragging: Boolean;  //used for getting control handle
 
     FlbeSearchRectOffsetMDownInit: Integer;
     FlbeSearchRectOffsetMDownValueInit: Integer;
@@ -389,6 +389,10 @@ type
     FMouseDownComponentPos: TPoint;
     FDbgImgHold: Boolean;
 
+    FRectangleSelecting: Boolean;
+    FSelectingXStart: Integer;
+    FSelectingYStart: Integer;
+
     FBMPTextProfiles: TFontProfileArr;
     FInMemFS: TInMemFileSystem; //not created in this unit, set from outside as an existing instance
 
@@ -417,6 +421,10 @@ type
 
     procedure imgSearchAreaControlDbgMouseMove(Sender: TObject;
       Shift: TShiftState; X, Y: Integer);
+    procedure imgSearchAreaControlDbgMouseDown(Sender: TObject;
+      Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+    procedure imgSearchAreaControlDbgMouseUp(Sender: TObject;
+      Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 
     procedure imgSearchAreaSearchedBmpDbgImgMouseMove(Sender: TObject;
       Shift: TShiftState; X, Y: Integer);
@@ -497,6 +505,8 @@ type
     function GetFontProfileIndexByName(AProfileName: string): Integer;
     procedure AddFontProfile(AProfileName: string);
     procedure RemoveFontProfileByIndex(AIndex: Integer);
+
+    procedure SelectDbgImgByRectangle(X, Y: Integer);
 
     function HandleBMPTextOnGetDisplayedText: string;
     procedure HandleBMPTextOnTriggerOnControlsModified;
@@ -1031,6 +1041,7 @@ begin
 
   FLastClickedLbe := nil;
   FDbgImgHold := False;
+  FRectangleSelecting := False;
   FDragging := False;
   FInMemFS := nil;
 
@@ -2485,6 +2496,8 @@ begin
       FSearchAreaControlDbgImg.Left := 0;
       FSearchAreaControlDbgImg.Top := 0;
       FSearchAreaControlDbgImg.OnMouseMove := imgSearchAreaControlDbgMouseMove;
+      FSearchAreaControlDbgImg.OnMouseDown := imgSearchAreaControlDbgMouseDown;
+      FSearchAreaControlDbgImg.OnMouseUp := imgSearchAreaControlDbgMouseUp;
       FSearchAreaControlDbgImg.OnResize := FSearchAreaControlDbgImgResize;
       FSearchAreaControlDbgImg.Hint := 'Current control, where the searched image is matched.';
       FSearchAreaControlDbgImg.ShowHint := True;
@@ -2494,6 +2507,8 @@ begin
       FSearchAreaGridImg.Left := 0;
       FSearchAreaGridImg.Top := 0;
       FSearchAreaGridImg.OnMouseMove := imgSearchAreaControlDbgMouseMove;
+      FSearchAreaGridImg.OnMouseDown := imgSearchAreaControlDbgMouseDown;
+      FSearchAreaGridImg.OnMouseUp := imgSearchAreaControlDbgMouseUp;
       FSearchAreaGridImg.Hint := FSearchAreaControlDbgImg.Hint;
       FSearchAreaGridImg.ShowHint := True;
 
@@ -3094,11 +3109,50 @@ begin
 end;
 
 
+procedure TfrClickerFindControl.SelectDbgImgByRectangle(X, Y: Integer);
+begin
+  if (Abs(X - FSelectingXStart) > 5) and (Abs(Y - FSelectingYStart) > 5) then
+  begin
+    FSearchAreaLeftLimitLabel.Left := Min(FSelectingXStart, FSearchAreaControlDbgImg.Width);
+    FSearchAreaRightLimitLabel.Left := Min(X, FSearchAreaControlDbgImg.Width);
+    FSearchAreaTopLimitLabel.Top := Min(FSelectingYStart, FSearchAreaControlDbgImg.Height);
+    FSearchAreaBottomLimitLabel.Top := Min(Y, FSearchAreaControlDbgImg.Height);
+
+    UpdateTransparent_SearchAreaLimitsFromSearchAreaLimits;
+    UpdateSearchAreaLabelColorsFromTheirPosition;
+    tmrUpdateSearchAreaOffsetEditBoxes.Enabled := True;
+  end;
+end;
+
+
 procedure TfrClickerFindControl.imgSearchAreaControlDbgMouseMove(Sender: TObject;
   Shift: TShiftState; X, Y: Integer);
 begin
   lblMouseOnDbgImg.Caption := IntToStr(X) + ' : ' + IntToStr(Y);
   SetLabelsFromMouseOverDbgImgPixelColor(FSearchAreaControlDbgImg.Canvas.Pixels[X, Y]);
+
+  if FRectangleSelecting then
+    SelectDbgImgByRectangle(X, Y);
+end;
+
+
+procedure TfrClickerFindControl.imgSearchAreaControlDbgMouseDown(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  if Button = mbLeft then
+  begin
+    FRectangleSelecting := True;
+    FSelectingXStart := X;
+    FSelectingYStart := Y;
+  end;
+end;
+
+
+procedure TfrClickerFindControl.imgSearchAreaControlDbgMouseUp(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  if Button = mbLeft then
+    FRectangleSelecting := False;
 end;
 
 

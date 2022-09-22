@@ -78,10 +78,10 @@ object frClickerActions: TfrClickerActions
         Height = 268
         Top = 1
         Width = 890
-        ActivePage = TabSheetActionCall
+        ActivePage = TabSheetActionFindSubControl
         Anchors = [akTop, akLeft, akRight, akBottom]
         Images = imglstActions
-        TabIndex = 5
+        TabIndex = 3
         TabOrder = 5
         OnChange = PageControlActionsChange
         object TabSheetActionClick: TTabSheet
@@ -1048,6 +1048,9 @@ object frClickerActions: TfrClickerActions
               '$ItemCount($TextFileContent$)$'
               '$GetTextItem($TextFileContent$,<ItemIndex>)$'
               '$StringContains(<SubString>, <String>)$'
+              '$ExtractFileName(<PathToFile>)$'
+              '$ExtractFileExt(<PathToFile>)$'
+              '$ExtractFileNameNoExt(<PathToFile>)$'
               ''
               '$Current_Mouse_X$'
               '$Current_Mouse_Y$'

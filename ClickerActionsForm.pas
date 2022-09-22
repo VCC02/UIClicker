@@ -259,6 +259,7 @@ type
     property ShowDeprecatedControls: Boolean read GetShowDeprecatedControls write SetShowDeprecatedControls;
     property ConfiguredRemoteAddress: string read GetConfiguredRemoteAddress;
     property ActionExecution: TActionExecution read GetActionExecution;
+    property StopAllActionsOnDemand: Boolean read FStopAllActionsOnDemand write FStopAllActionsOnDemand;
 
     property OnCopyControlTextAndClassFromMainWindow: TOnCopyControlTextAndClassFromMainWindow read FOnCopyControlTextAndClassFromMainWindow write FOnCopyControlTextAndClassFromMainWindow;
     property OnRecordComponent: TOnRecordComponent read FOnRecordComponent write FOnRecordComponent;

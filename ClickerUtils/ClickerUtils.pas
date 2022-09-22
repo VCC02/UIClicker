@@ -651,6 +651,45 @@ begin
 end;
 
 
+function ReplaceExtractFileName(s: string): string;
+var
+  DirArgs, InitialDirArgs: string;
+begin
+  DirArgs := Copy(s, Pos('(', s) + 1, MaxInt);
+  DirArgs := Copy(DirArgs, 1, Pos(')$', DirArgs) - 1);
+  InitialDirArgs := DirArgs;
+
+  Result := StringReplace(s, '$ExtractFileName(' + InitialDirArgs + ')$', ExtractFileName(DirArgs), [rfReplaceAll]);
+end;
+
+
+function ReplaceExtractFileExt(s: string): string;
+var
+  DirArgs, InitialDirArgs: string;
+begin
+  DirArgs := Copy(s, Pos('(', s) + 1, MaxInt);
+  DirArgs := Copy(DirArgs, 1, Pos(')$', DirArgs) - 1);
+  InitialDirArgs := DirArgs;
+
+  Result := StringReplace(s, '$ExtractFileExt(' + InitialDirArgs + ')$', ExtractFileExt(DirArgs), [rfReplaceAll]);
+end;
+
+
+function ReplaceExtractFileNameNoExt(s: string): string;
+var
+  DirArgs, InitialDirArgs: string;
+  FileNameWithExt, FileNameWithoutExt: string;
+begin
+  DirArgs := Copy(s, Pos('(', s) + 1, MaxInt);
+  DirArgs := Copy(DirArgs, 1, Pos(')$', DirArgs) - 1);
+  InitialDirArgs := DirArgs;
+
+  FileNameWithExt := ExtractFileName(DirArgs);
+  FileNameWithoutExt := Copy(FileNameWithExt, 1, Length(FileNameWithExt) - Length(ExtractFileExt(FileNameWithExt)));
+  Result := StringReplace(s, '$ExtractFileNameNoExt(' + InitialDirArgs + ')$', FileNameWithoutExt, [rfReplaceAll]);
+end;
+
+
 function ReplaceChr(s: string): string;
 var
   Args, InitialArgs: string;
@@ -907,6 +946,15 @@ begin
 
   if Pos('$ExtractFileDir(', s) > 0 then
     s := ReplaceExtractFileDir(s);
+
+  if Pos('$ExtractFileName(', s) > 0 then
+    s := ReplaceExtractFileName(s);
+
+  if Pos('$ExtractFileExt(', s) > 0 then
+    s := ReplaceExtractFileExt(s);
+
+  if Pos('$ExtractFileNameNoExt(', s) > 0 then
+    s := ReplaceExtractFileNameNoExt(s);
 
   if Pos('$Chr(', s) > 0 then
     s := ReplaceChr(s);
