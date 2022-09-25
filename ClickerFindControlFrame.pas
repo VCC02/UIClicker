@@ -258,6 +258,10 @@ type
     TabSheetActionFindSubControlSearchArea: TTabSheet;
     TabSheetActionFindSubControlText: TTabSheet;
     tmrUpdateSearchAreaOffsetEditBoxes: TTimer;
+    updownXMulOf: TUpDown;
+    updownXOffset: TUpDown;
+    updownYMulOf: TUpDown;
+    updownYOffset: TUpDown;
     procedure btnAddBmpFileClick(Sender: TObject);
     procedure btnAddNewFontProfileClick(Sender: TObject);
     procedure btnBrowseBitmapClick(Sender: TObject);
@@ -352,6 +356,16 @@ type
     procedure spdbtnExtraCopyValueWindowsClick(Sender: TObject);
     procedure tabctrlBMPTextChange(Sender: TObject);
     procedure tmrUpdateSearchAreaOffsetEditBoxesTimer(Sender: TObject);
+    procedure updownXMulOfChangingEx(Sender: TObject; var AllowChange: Boolean;
+      NewValue: SmallInt; Direction: TUpDownDirection);
+    procedure updownXOffsetChangingEx(Sender: TObject;
+      var AllowChange: Boolean; NewValue: SmallInt; Direction: TUpDownDirection
+      );
+    procedure updownYMulOfChangingEx(Sender: TObject; var AllowChange: Boolean;
+      NewValue: SmallInt; Direction: TUpDownDirection);
+    procedure updownYOffsetChangingEx(Sender: TObject;
+      var AllowChange: Boolean; NewValue: SmallInt; Direction: TUpDownDirection
+      );
   private
     vstMatchBitmapFiles: TVirtualStringTree;
 
@@ -1449,6 +1463,37 @@ begin
   lbeSearchRectTopOffset.Text := IntToStr(GetSearchAreaTopOffsetFromSelLabel);
   lbeSearchRectRightOffset.Text := IntToStr(GetSearchAreaRightOffsetFromSelLabel - GetControlWidthFromReplacement);
   lbeSearchRectBottomOffset.Text := IntToStr(GetSearchAreaBottomOffsetFromSelLabel - GetControlHeightFromReplacement);
+end;
+
+
+const
+  CDirIncrement: array[TUpDownDirection] of Integer = (0, 1, -1);  //TUpDownDirection = (updNone, updUp, updDown);
+
+procedure TfrClickerFindControl.updownXMulOfChangingEx(Sender: TObject;
+  var AllowChange: Boolean; NewValue: SmallInt; Direction: TUpDownDirection);
+begin
+  lbeMatchBitmapAlgorithmXMulOf.Text := IntToStr(StrToIntDef(lbeMatchBitmapAlgorithmXMulOf.Text, 0) + CDirIncrement[Direction]);
+end;
+
+
+procedure TfrClickerFindControl.updownXOffsetChangingEx(Sender: TObject;
+  var AllowChange: Boolean; NewValue: SmallInt; Direction: TUpDownDirection);
+begin
+  lbeMatchBitmapAlgorithmXOffset.Text := IntToStr(StrToIntDef(lbeMatchBitmapAlgorithmXOffset.Text, 0) + CDirIncrement[Direction]);
+end;
+
+
+procedure TfrClickerFindControl.updownYMulOfChangingEx(Sender: TObject;
+  var AllowChange: Boolean; NewValue: SmallInt; Direction: TUpDownDirection);
+begin
+  lbeMatchBitmapAlgorithmYMulOf.Text := IntToStr(StrToIntDef(lbeMatchBitmapAlgorithmYMulOf.Text, 0) + CDirIncrement[Direction]);
+end;
+
+
+procedure TfrClickerFindControl.updownYOffsetChangingEx(Sender: TObject;
+  var AllowChange: Boolean; NewValue: SmallInt; Direction: TUpDownDirection);
+begin
+  lbeMatchBitmapAlgorithmYOffset.Text := IntToStr(StrToIntDef(lbeMatchBitmapAlgorithmYOffset.Text, 0) + CDirIncrement[Direction]);
 end;
 
 
@@ -3309,6 +3354,10 @@ begin
     TempBmp.Width := FSearchAreaControlDbgImg.Width;
     TempBmp.Height := FSearchAreaControlDbgImg.Height;
     TempBmp.Canvas.Draw(0, 0, FSearchAreaControlDbgImg.Picture.Bitmap);
+
+    if chkShowGridOnBMPPreview.Checked then
+      TempBmp.Canvas.Draw(FSearchAreaGridImg.Left, FSearchAreaGridImg.Top, FSearchAreaGridImg.Picture.Bitmap);
+
     Clipboard.Assign(TempBmp);  //only works with temp bitmap. Maybe, it's because of pixel format (24-bit vs device  or 32-bit).
   finally
     TempBmp.Free;
@@ -3356,6 +3405,9 @@ begin
     TempBmp.Width := FSearchAreaControlDbgImg.Width;
     TempBmp.Height := FSearchAreaControlDbgImg.Height;
     TempBmp.Canvas.Draw(0, 0, FSearchAreaControlDbgImg.Picture.Bitmap);
+
+    if chkShowGridOnBMPPreview.Checked then
+      TempBmp.Canvas.Draw(FSearchAreaGridImg.Left, FSearchAreaGridImg.Top, FSearchAreaGridImg.Picture.Bitmap);
 
     TempBmp.Canvas.Pen.Color := FSearchAreaLeftLimitLabel.Color;
     Line(TempBmp.Canvas, FSearchAreaLeftLimitLabel.Left, 0, FSearchAreaLeftLimitLabel.Left, TempBmp.Width - 1);
@@ -3496,6 +3548,11 @@ begin
   lbeMatchBitmapAlgorithmyOffset.Enabled := lbeMatchBitmapAlgorithmXMulOf.Enabled;
   lbeFindCachedControlLeft.Enabled := chkSearchCachedLeftAndTopFirst.Checked;
   lbeFindCachedControlTop.Enabled := chkSearchCachedLeftAndTopFirst.Checked;
+
+  updownXMulOf.Enabled := lbeMatchBitmapAlgorithmXMulOf.Enabled;
+  updownYMulOf.Enabled := lbeMatchBitmapAlgorithmXMulOf.Enabled;
+  updownXOffset.Enabled := lbeMatchBitmapAlgorithmXMulOf.Enabled;
+  updownYOffset.Enabled := lbeMatchBitmapAlgorithmXMulOf.Enabled;
 
   if Assigned(FOnUpdateBitmapAlgorithmSettings) then
     FOnUpdateBitmapAlgorithmSettings()

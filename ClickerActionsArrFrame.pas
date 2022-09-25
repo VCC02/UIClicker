@@ -60,6 +60,7 @@ type
     lbeSearchAction: TLabeledEdit;
     lblModifiedStatus: TLabel;
     memLogErr: TMemo;
+    MenuItem_PlayActionAndRestoreVars: TMenuItem;
     MenuItem_AddACallTemplateByFile: TMenuItem;
     N2: TMenuItem;
     MenuItem_EditBreakPoint: TMenuItem;
@@ -78,6 +79,7 @@ type
     pnlfrClickerActions: TPanel;
     pmExtraRemove: TPopupMenu;
     pnlvstActions: TPanel;
+    pmExtraPlayAction: TPopupMenu;
     Removeallactions1: TMenuItem;
     imglstActionStatus: TImageList;
     pmExtraAdd: TPopupMenu;
@@ -90,6 +92,7 @@ type
     spdbtnContinuePlayingAll: TSpeedButton;
     spdbtnExtraAdd: TSpeedButton;
     spdbtnExtraPlayAll: TSpeedButton;
+    spdbtnExtraPlayAction: TSpeedButton;
     spdbtnExtraRemove: TSpeedButton;
     spdbtnExtraSave: TSpeedButton;
     spdbtnLoadTemplate: TSpeedButton;
@@ -120,6 +123,7 @@ type
     procedure MenuItemPasteActionsFromClipboardClick(Sender: TObject);
     procedure MenuItem_AddACallTemplateByFileClick(Sender: TObject);
     procedure MenuItem_EditBreakPointClick(Sender: TObject);
+    procedure MenuItem_PlayActionAndRestoreVarsClick(Sender: TObject);
     procedure MenuItem_RefactorSelectedActionsIntoATemplateClick(Sender: TObject
       );
     procedure MenuItem_ReplaceSelectedActionsWithATemplateCallClick(Sender: TObject
@@ -131,6 +135,7 @@ type
       Y: Integer);
     procedure pnlVertSplitterMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
+    procedure spdbtnExtraPlayActionClick(Sender: TObject);
     procedure spdbtnPaletteClick(Sender: TObject);
     procedure spdbtnTemplateNotesClick(Sender: TObject);
     procedure spdbtnUpdateActionClick(Sender: TObject);
@@ -2331,7 +2336,6 @@ begin
     FDebugging := False;
 
   PrepareFilesInServer;
-
   PlaySelectedActionFromButton;
 end;
 
@@ -2871,6 +2875,26 @@ begin
 end;
 
 
+procedure TfrClickerActionsArr.MenuItem_PlayActionAndRestoreVarsClick(
+  Sender: TObject);
+var
+  BackupList: TStringList;
+begin
+  BackupList := TStringList.Create;
+  try
+    BackupList.Text := frClickerActions.vallstVariables.Strings.Text;
+    try
+      PrepareFilesInServer;
+      PlaySelected;
+    finally
+      frClickerActions.vallstVariables.Strings.Text := BackupList.Text;
+    end;
+  finally
+    BackupList.Free;
+  end;
+end;
+
+
 procedure TfrClickerActionsArr.InsertCallTemplateForActionReplacing(AIndexToInsertAt: Integer; ATemplateFileName: string);
 var
   i, n: Integer;
@@ -3222,6 +3246,15 @@ procedure TfrClickerActionsArr.pnlVertSplitterMouseUp(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
   FHold := False;
+end;
+
+
+procedure TfrClickerActionsArr.spdbtnExtraPlayActionClick(Sender: TObject);
+var
+  tp: TPoint;
+begin
+  GetCursorPos(tp);
+  pmExtraPlayAction.Popup(tp.X, tp.Y);
 end;
 
 

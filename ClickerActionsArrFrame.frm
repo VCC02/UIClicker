@@ -327,12 +327,12 @@ object frClickerActionsArr: TfrClickerActionsArr
       TabOrder = 7
     end
     object spdbtnPlaySelectedAction: TSpeedButton
-      Left = 659
+      Left = 657
       Height = 25
       Top = 3
-      Width = 104
+      Width = 89
       Anchors = [akTop, akRight]
-      Caption = 'Play Action     '
+      Caption = 'Play Action '
       Glyph.Data = {
         36030000424D3603000000000000360000002800000010000000100000000100
         1800000000000003000000000000000000000000000000000000FFFFFFFFFFFF
@@ -364,12 +364,12 @@ object frClickerActionsArr: TfrClickerActionsArr
       OnClick = spdbtnPlaySelectedActionClick
     end
     object spdbtnPlayAllActions: TSpeedButton
-      Left = 659
+      Left = 657
       Height = 25
       Top = 28
-      Width = 86
+      Width = 89
       Anchors = [akTop, akRight]
-      Caption = 'Play All     '
+      Caption = 'Play All       '
       Glyph.Data = {
         36030000424D3603000000000000360000002800000010000000100000000100
         1800000000000003000000000000000000000000000000000000FFFFFFFFFFFF
@@ -421,11 +421,11 @@ object frClickerActionsArr: TfrClickerActionsArr
       ParentFont = False
     end
     object spdbtnStopPlaying: TSpeedButton
-      Left = 659
+      Left = 657
       Height = 25
       Hint = 'Ctrl-Shift-F2'
       Top = 53
-      Width = 104
+      Width = 106
       Anchors = [akTop, akRight]
       Caption = 'Stop           '
       Enabled = False
@@ -462,11 +462,11 @@ object frClickerActionsArr: TfrClickerActionsArr
       ParentShowHint = False
     end
     object spdbtnContinuePlayingAll: TSpeedButton
-      Left = 659
+      Left = 657
       Height = 25
       Hint = 'Resume playing (continue until last action, manual stopping or action error).'
       Top = 78
-      Width = 104
+      Width = 106
       Anchors = [akTop, akRight]
       Caption = 'Continue All    '
       Enabled = False
@@ -503,11 +503,11 @@ object frClickerActionsArr: TfrClickerActionsArr
       ParentShowHint = False
     end
     object spdbtnStepOver: TSpeedButton
-      Left = 659
+      Left = 657
       Height = 25
       Hint = 'Plays current action and moves to next'
       Top = 103
-      Width = 104
+      Width = 106
       Anchors = [akTop, akRight]
       Caption = 'Step Over      '
       Enabled = False
@@ -544,11 +544,11 @@ object frClickerActionsArr: TfrClickerActionsArr
       ParentShowHint = False
     end
     object spdbtnStepInto: TSpeedButton
-      Left = 659
+      Left = 657
       Height = 25
       Hint = 'Enters call action'
       Top = 128
-      Width = 104
+      Width = 106
       Anchors = [akTop, akRight]
       Caption = 'Step Into       '
       Enabled = False
@@ -675,6 +675,26 @@ object frClickerActionsArr: TfrClickerActionsArr
         FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
       }
       OnClick = spdbtnTemplateNotesClick
+    end
+    object spdbtnExtraPlayAction: TSpeedButton
+      Left = 745
+      Height = 25
+      Top = 3
+      Width = 18
+      Anchors = [akTop, akRight]
+      Font.Color = clWindowText
+      Glyph.Data = {
+        EA000000424DEA0000000000000036000000280000000B000000050000000100
+        180000000000B400000000000000000000000000000000000000FFFFFFFFFFFF
+        FFFFFFFFFFFFFFFFFF39841AFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF000000FFFF
+        FFFFFFFFFFFFFFFFFFFF39841A39841A39841AFFFFFFFFFFFFFFFFFFFFFFFF00
+        0000FFFFFFFFFFFFFFFFFF39841A39841A39841A39841A39841AFFFFFFFFFFFF
+        FFFFFF000000FFFFFFFFFFFF39841A39841A39841A39841A39841A39841A3984
+        1AFFFFFFFFFFFF000000FFFFFF39841A39841A39841A39841A39841A39841A39
+        841A39841A39841AFFFFFF000000
+      }
+      OnClick = spdbtnExtraPlayActionClick
+      ParentFont = False
     end
   end
   object pnlVertSplitter: TPanel
@@ -1145,5 +1165,41 @@ object frClickerActionsArr: TfrClickerActionsArr
     OnTimer = tmrExecActionFromSrvModuleTimer
     Left = 592
     Top = 424
+  end
+  object pmExtraPlayAction: TPopupMenu
+    Left = 616
+    Top = 88
+    object MenuItem_PlayActionAndRestoreVars: TMenuItem
+      Caption = 'Play action and restore variables'
+      Bitmap.Data = {
+        36030000424D3603000000000000360000002800000010000000100000000100
+        1800000000000003000000000000000000000000000000000000FFFFFFFFFFFF
+        D2F4C4D2F4C4D2F4C4D2F4C4D2F4C4D2F4C4D2F4C4D2F4C4D2F4C4D2F4C4D2F4
+        C4D2F4C4FFFFFFFFFFFFFFFFFFFFFFFF4CB1224CB1224CB1224CB1224CB1224C
+        B1224CB1224CB1224CB1224CB1224CB1224CB122FFFFFFFFFFFFFFFFFFFFFFFF
+        5CD5285CD5285CD5285CD5285CD5285CD5285CD5285CD5285CD5285CD5285CD5
+        285CD528FFFFFFFFFFFFFFFFFFFFFFFFD2F4C4D2F4C4D2F4C4D2F4C4D2F4C4D2
+        F4C4D2F4C4D2F4C4D2F4C4D2F4C4D2F4C4D2F4C4FFFFFFFFFFFFFFFFFFFFFFFF
+        FFFFFFE9F6E4D2ECC8DDF1D6FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+        FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFE9F5E479C55A4CB12263BB3EA6D891E9
+        F5E4FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+        D2ECC84CB1224CB1224CB1224CB1226EC04B9BD483FFFFFFFFFFFFFFFFFFFFFF
+        FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFD2ECC84CB1224CB1224CB1224CB1224C
+        B1224CB1224CB122B1DD9FDDF1D6FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+        D2ECC84CB1224CB1224CB1224CB1224CB1224CB1224CB1224CB12263BB3ED3EC
+        C8FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFD2ECC84CB1224CB1224CB1224CB1224C
+        B1224CB1224CB1224CB1224CB12263BB3EDEF1D6FFFFFFFFFFFFFFFFFFFFFFFF
+        D2ECC84CB1224CB1224CB1224CB1224CB1224CB1224CB1224CB1224CB12263BB
+        3EDEF1D6FFFFFFFFFFFFFFFFFFFFFFFFD2ECC84CB1224CB1224CB1224CB1224C
+        B1224CB1224CB1224CB12263BB3ED3ECC8FFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+        D2ECC84CB1224CB1224CB1224CB1224CB1224CB1224CB122B1DD9FDDF1D6FFFF
+        FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFD2ECC84CB1224CB1224CB1224CB1226E
+        C04B9BD483FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+        E9F5E479C55A4CB12263BB3EA6D891E9F5E4FFFFFFFFFFFFFFFFFFFFFFFFFFFF
+        FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+        FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+      }
+      OnClick = MenuItem_PlayActionAndRestoreVarsClick
+    end
   end
 end

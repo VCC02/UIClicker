@@ -993,17 +993,17 @@ object frClickerFindControl: TfrClickerFindControl
     end
     object TabSheetActionFindSubControlBMPSettings: TTabSheet
       Caption = 'Text/BMP Settings'
-      ClientHeight = 175
+      ClientHeight = 224
       ClientWidth = 869
       ImageIndex = 2
       ParentShowHint = False
       ShowHint = True
       object chkSearchCachedLeftAndTopFirst: TCheckBox
         Left = 240
-        Height = 17
+        Height = 19
         Hint = 'When checked, the control is checked at the specified cached $My_Control_Left$ and $My_Control_Top$ var replacements, before using the search grid.'#13#10'In order to cache the control coordinates, please add a SetVar action after this one, by assigning:'#13#10'$My_Control_Left$ to $Control_Left$'#13#10'and'#13#10'$My_Control_Top$ to $Control_Top$'#13#10'where $My_Control_Left$ and $My_Control_Top$ are the cached values. The "Eval before" checkboxes have to be set.'#13#10'Each Find(Sub)Control action, which uses caching, will have to use its own set of $My_Control_Left$ and $My_Control_Top$ vars.'#13#10'The cached values are global coordinates, so they will become invalid even for a subcontrol if the parent window is moved.'
         Top = 21
-        Width = 156
+        Width = 158
         Caption = 'Search cached Left/Top vars'
         OnClick = chkSearchCachedLeftAndTopFirstClick
         ParentShowHint = False
@@ -1161,13 +1161,69 @@ object frClickerFindControl: TfrClickerFindControl
       end
       object chkShowGridOnBMPPreview: TCheckBox
         Left = 3
-        Height = 17
+        Height = 19
         Hint = 'This will not be saved in project.'
         Top = 101
-        Width = 65
+        Width = 67
         Caption = 'Show grid'
         OnChange = chkShowGridOnBMPPreviewChange
         TabOrder = 10
+      end
+      object updownXMulOf: TUpDown
+        Left = 155
+        Height = 19
+        Top = 60
+        Width = 17
+        Enabled = False
+        Max = 1000
+        Min = 0
+        OnChangingEx = updownXMulOfChangingEx
+        ParentColor = False
+        Position = 0
+        TabOrder = 11
+        Flat = True
+      end
+      object updownYMulOf: TUpDown
+        Left = 155
+        Height = 19
+        Top = 100
+        Width = 17
+        Enabled = False
+        Max = 1000
+        Min = 0
+        OnChangingEx = updownYMulOfChangingEx
+        ParentColor = False
+        Position = 0
+        TabOrder = 12
+        Flat = True
+      end
+      object updownXOffset: TUpDown
+        Left = 212
+        Height = 19
+        Top = 60
+        Width = 17
+        Enabled = False
+        Max = 1000
+        Min = -1000
+        OnChangingEx = updownXOffsetChangingEx
+        ParentColor = False
+        Position = 0
+        TabOrder = 13
+        Flat = True
+      end
+      object updownYOffset: TUpDown
+        Left = 212
+        Height = 19
+        Top = 100
+        Width = 17
+        Enabled = False
+        Max = 1000
+        Min = -1000
+        OnChangingEx = updownYOffsetChangingEx
+        ParentColor = False
+        Position = 0
+        TabOrder = 14
+        Flat = True
       end
     end
   end

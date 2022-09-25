@@ -308,10 +308,7 @@ type
 
     procedure lbeColorErrorChange(Sender: TObject);
     procedure lbeAllowedColorErrorCountChange(Sender: TObject);
-    procedure lbeMatchBitmapAlgorithmXMulOfChange(Sender: TObject);
-    procedure lbeMatchBitmapAlgorithmXOffsetChange(Sender: TObject);
-    procedure lbeMatchBitmapAlgorithmYMulOfChange(Sender: TObject);
-    procedure lbeMatchBitmapAlgorithmYOffsetChange(Sender: TObject);
+
     procedure lbeSearchRectLeftChange(Sender: TObject);
     procedure lbeSearchRectTopChange(Sender: TObject);
     procedure lbeSearchRectRightChange(Sender: TObject);
@@ -1286,7 +1283,7 @@ end;
 
 procedure TfrClickerActions.SetListOfCustomVariables(Value: string);
 begin
-  if vallstCustomVariables.Strings.Text <> Value then
+  //if vallstCustomVariables.Strings.Text <> Value then  //For some reason, this has to stay commented. Otherwise, it won't update the tree.
   begin
     vallstCustomVariables.Strings.Text := Value;
     vstCustomVariables.RootNodeCount := vallstCustomVariables.Strings.Count;
@@ -1486,34 +1483,6 @@ end;
 
 
 procedure TfrClickerActions.lbeExecAppPathChange(Sender: TObject);
-begin
-  TriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerActions.lbeMatchBitmapAlgorithmXMulOfChange(
-  Sender: TObject);
-begin
-  TriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerActions.lbeMatchBitmapAlgorithmXOffsetChange(
-  Sender: TObject);
-begin
-  TriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerActions.lbeMatchBitmapAlgorithmYMulOfChange(
-  Sender: TObject);
-begin
-  TriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerActions.lbeMatchBitmapAlgorithmYOffsetChange(
-  Sender: TObject);
 begin
   TriggerOnControlsModified;
 end;
