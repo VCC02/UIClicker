@@ -257,6 +257,7 @@ type
     TabSheetActionFindSubControlCriteria: TTabSheet;
     TabSheetActionFindSubControlSearchArea: TTabSheet;
     TabSheetActionFindSubControlText: TTabSheet;
+    tmrUpdateGrid: TTimer;
     tmrUpdateSearchAreaOffsetEditBoxes: TTimer;
     updownXMulOf: TUpDown;
     updownXOffset: TUpDown;
@@ -355,6 +356,7 @@ type
     procedure spdbtnDisplaySearchAreaDbgImgMenuClick(Sender: TObject);
     procedure spdbtnExtraCopyValueWindowsClick(Sender: TObject);
     procedure tabctrlBMPTextChange(Sender: TObject);
+    procedure tmrUpdateGridTimer(Sender: TObject);
     procedure tmrUpdateSearchAreaOffsetEditBoxesTimer(Sender: TObject);
     procedure updownXMulOfChangingEx(Sender: TObject; var AllowChange: Boolean;
       NewValue: SmallInt; Direction: TUpDownDirection);
@@ -1454,6 +1456,13 @@ begin
 end;
 
 
+procedure TfrClickerFindControl.tmrUpdateGridTimer(Sender: TObject);
+begin
+  tmrUpdateGrid.Enabled := False;
+  GeneratePreviewGridContent;
+end;
+
+
 procedure TfrClickerFindControl.tmrUpdateSearchAreaOffsetEditBoxesTimer(
   Sender: TObject);
 begin
@@ -1463,6 +1472,8 @@ begin
   lbeSearchRectTopOffset.Text := IntToStr(GetSearchAreaTopOffsetFromSelLabel);
   lbeSearchRectRightOffset.Text := IntToStr(GetSearchAreaRightOffsetFromSelLabel - GetControlWidthFromReplacement);
   lbeSearchRectBottomOffset.Text := IntToStr(GetSearchAreaBottomOffsetFromSelLabel - GetControlHeightFromReplacement);
+
+  tmrUpdateGrid.Enabled := True;
 end;
 
 
@@ -1539,8 +1550,8 @@ begin
   AlgorithmSettings.XOffset := StrToIntDef(lbeMatchBitmapAlgorithmXOffset.Text, 0);
   AlgorithmSettings.YOffset := StrToIntDef(lbeMatchBitmapAlgorithmYOffset.Text, 0);
 
-  FSearchAreaGridImg.Left := AlgorithmSettings.XOffset;
-  FSearchAreaGridImg.Top := AlgorithmSettings.YOffset;
+  FSearchAreaGridImg.Left := AlgorithmSettings.XOffset + FSearchAreaLeftLimitLabel.Left;
+  FSearchAreaGridImg.Top := AlgorithmSettings.YOffset + FSearchAreaTopLimitLabel.Top;
 
   FSearchAreaGridImg.Transparent := True;
 
@@ -1791,7 +1802,9 @@ begin
         begin
           //ControlHeight is initialized above
           FSearchAreaTopLimitLabel.Top := StrToIntDef(EvaluateReplacements(lbeSearchRectTopOffset.Text), 20) - Ref + ControlHeight;
+          FTransparent_SearchAreaTopLimitLabel.Top := FSearchAreaTopLimitLabel.Top;
           FSearchAreaSearchedBmpDbgImg.Top := FSearchAreaTopLimitLabel.Top;
+          tmrUpdateGrid.Enabled := True;
         end;
       end;
 
@@ -1868,6 +1881,7 @@ begin
         FSearchAreaSearchedBmpDbgImg.Left := StrToIntDef(EvaluateReplacements(lbeSearchRectLeftOffset.Text), 20) - Ref;
         FSearchAreaLeftLimitLabel.Left := FSearchAreaSearchedBmpDbgImg.Left;
         FTransparent_SearchAreaLeftLimitLabel.Left := FSearchAreaLeftLimitLabel.Left;
+        tmrUpdateGrid.Enabled := True;
       end;
 
       if ssShift in Shift then
@@ -1972,7 +1986,9 @@ begin
         begin
           //ControlWidth is initialized above
           FSearchAreaLeftLimitLabel.Left := StrToIntDef(EvaluateReplacements(lbeSearchRectLeftOffset.Text), 20) - Ref + ControlWidth;
+          FTransparent_SearchAreaLeftLimitLabel.Left := FSearchAreaLeftLimitLabel.Left;
           FSearchAreaSearchedBmpDbgImg.Left := FSearchAreaLeftLimitLabel.Left;
+          tmrUpdateGrid.Enabled := True;
         end;
       end;
 
@@ -2046,8 +2062,9 @@ begin
       if FSearchAreaSearchedBmpDbgImg <> nil then
       begin
         FSearchAreaSearchedBmpDbgImg.Top := StrToIntDef(EvaluateReplacements(lbeSearchRectTopOffset.Text), 20) - Ref;
-        FSearchAreaTopLimitLabel.Top := FSearchAreaSearchedBmpDbgImg.Top;
         FTransparent_SearchAreaTopLimitLabel.Top := FSearchAreaTopLimitLabel.Top;
+        FSearchAreaTopLimitLabel.Top := FSearchAreaSearchedBmpDbgImg.Top;
+        tmrUpdateGrid.Enabled := True;
       end;
 
       if ssShift in Shift then
@@ -2700,6 +2717,10 @@ begin
     FSearchAreaLeftLimitLabel.Left := FSearchAreaSearchedBmpDbgImg.Left;
     FSearchAreaTopLimitLabel.Top := FSearchAreaSearchedBmpDbgImg.Top;
 
+    FTransparent_SearchAreaLeftLimitLabel.Left := FSearchAreaLeftLimitLabel.Left;
+    FTransparent_SearchAreaTopLimitLabel.Top := FSearchAreaTopLimitLabel.Top;
+    //tmrUpdateGrid.Enabled := True;
+
     //FSearchAreaRightLimitLabel.Left := StrToIntDef(EvaluateReplacements(lbeSearchRectRightOffset.Text), 20);    //wrong, see below
     //FSearchAreaBottomLimitLabel.Top := StrToIntDef(EvaluateReplacements(lbeSearchRectBottomOffset.Text), 20);   //wrong, see below
     if chkUseWholeScreenAsSearchArea.Checked then
@@ -3173,6 +3194,12 @@ end;
 procedure TfrClickerFindControl.imgSearchAreaControlDbgMouseMove(Sender: TObject;
   Shift: TShiftState; X, Y: Integer);
 begin
+  if Sender = FSearchAreaGridImg then
+  begin
+    Inc(X, FSearchAreaGridImg.Left);
+    Inc(Y, FSearchAreaGridImg.Top);
+  end;
+
   lblMouseOnDbgImg.Caption := IntToStr(X) + ' : ' + IntToStr(Y);
   SetLabelsFromMouseOverDbgImgPixelColor(FSearchAreaControlDbgImg.Canvas.Pixels[X, Y]);
 
@@ -3186,6 +3213,12 @@ procedure TfrClickerFindControl.imgSearchAreaControlDbgMouseDown(Sender: TObject
 begin
   if Button = mbLeft then
   begin
+    if Sender = FSearchAreaGridImg then
+    begin
+      Inc(X, FSearchAreaGridImg.Left);
+      Inc(Y, FSearchAreaGridImg.Top);
+    end;
+
     FRectangleSelecting := True;
     FSelectingXStart := X;
     FSelectingYStart := Y;
@@ -3224,6 +3257,7 @@ begin
     begin
       FSearchAreaLeftLimitLabel.Left := FSearchAreaSearchedBmpDbgImg.Left;
       FSearchAreaTopLimitLabel.Top := FSearchAreaSearchedBmpDbgImg.Top;
+      tmrUpdateGrid.Enabled := True;
 
       lbeSearchRectLeftOffset.Text := IntToStr(GetSearchAreaLeftOffsetFromBmpDbgImg);
       lbeSearchRectTopOffset.Text := IntToStr(GetSearchAreaTopOffsetFromBmpDbgImg);
@@ -3293,6 +3327,7 @@ begin
     begin
       FSearchAreaLeftLimitLabel.Left := FSearchAreaSearchedTextDbgImg.Left;
       FSearchAreaTopLimitLabel.Top := FSearchAreaSearchedTextDbgImg.Top;
+      tmrUpdateGrid.Enabled := True;
 
       lbeSearchRectLeftOffset.Text := IntToStr(GetSearchAreaLeftOffsetFromTxtDbgImg);
       lbeSearchRectTopOffset.Text := IntToStr(GetSearchAreaTopOffsetFromTxtDbgImg);
@@ -3356,7 +3391,10 @@ begin
     TempBmp.Canvas.Draw(0, 0, FSearchAreaControlDbgImg.Picture.Bitmap);
 
     if chkShowGridOnBMPPreview.Checked then
+    begin
+      GeneratePreviewGridContent;
       TempBmp.Canvas.Draw(FSearchAreaGridImg.Left, FSearchAreaGridImg.Top, FSearchAreaGridImg.Picture.Bitmap);
+    end;
 
     Clipboard.Assign(TempBmp);  //only works with temp bitmap. Maybe, it's because of pixel format (24-bit vs device  or 32-bit).
   finally
@@ -3407,7 +3445,10 @@ begin
     TempBmp.Canvas.Draw(0, 0, FSearchAreaControlDbgImg.Picture.Bitmap);
 
     if chkShowGridOnBMPPreview.Checked then
+    begin
+      GeneratePreviewGridContent;
       TempBmp.Canvas.Draw(FSearchAreaGridImg.Left, FSearchAreaGridImg.Top, FSearchAreaGridImg.Picture.Bitmap);
+    end;
 
     TempBmp.Canvas.Pen.Color := FSearchAreaLeftLimitLabel.Color;
     Line(TempBmp.Canvas, FSearchAreaLeftLimitLabel.Left, 0, FSearchAreaLeftLimitLabel.Left, TempBmp.Width - 1);
@@ -3474,9 +3515,13 @@ begin
   try
     FSearchAreaLeftLimitLabel.Left := FSearchAreaSearchedTextDbgImg.Left;
     FSearchAreaTopLimitLabel.Top := FSearchAreaSearchedTextDbgImg.Top;
+    UpdateTransparent_SearchAreaLimitsFromSearchAreaLimits;
+    tmrUpdateGrid.Enabled := True;
 
     lbeSearchRectLeftOffset.Text := IntToStr(GetSearchAreaLeftOffsetFromTxtDbgImg);
     lbeSearchRectTopOffset.Text := IntToStr(GetSearchAreaTopOffsetFromTxtDbgImg);
+
+    UpdateSearchAreaLabelColorsFromTheirPosition;
   except
     //this will throw AV on uninitialized components or out of bounds values
   end;
@@ -3488,17 +3533,27 @@ begin
   try
     FSearchAreaLeftLimitLabel.Left := FSearchAreaSearchedBmpDbgImg.Left;
     FSearchAreaTopLimitLabel.Top := FSearchAreaSearchedBmpDbgImg.Top;
+    tmrUpdateGrid.Enabled := True;
 
     lbeSearchRectLeftOffset.Text := IntToStr(GetSearchAreaLeftOffsetFromBmpDbgImg);
     lbeSearchRectTopOffset.Text := IntToStr(GetSearchAreaTopOffsetFromBmpDbgImg);
 
-    FSearchAreaRightLimitLabel.Left := FSearchAreaSearchedBmpDbgImg.Left + FSearchAreaSearchedBmpDbgImg.Width;
-    FSearchAreaBottomLimitLabel.Top := FSearchAreaSearchedBmpDbgImg.Top + FSearchAreaSearchedBmpDbgImg.Height;
+    if Assigned(FSearchAreaSearchedTextDbgImg) and (FSearchAreaSearchedTextDbgImg.Width > 0) then
+    begin
+      FSearchAreaRightLimitLabel.Left := FSearchAreaSearchedTextDbgImg.Left + FSearchAreaSearchedTextDbgImg.Width;
+      FSearchAreaBottomLimitLabel.Top := FSearchAreaSearchedTextDbgImg.Top + FSearchAreaSearchedTextDbgImg.Height;
+    end
+    else
+    begin
+      FSearchAreaRightLimitLabel.Left := FSearchAreaSearchedBmpDbgImg.Left + FSearchAreaSearchedBmpDbgImg.Width;
+      FSearchAreaBottomLimitLabel.Top := FSearchAreaSearchedBmpDbgImg.Top + FSearchAreaSearchedBmpDbgImg.Height;
+    end;
 
     lbeSearchRectRightOffset.Text := IntToStr(GetSearchAreaRightOffsetFromBmpDbgImg - GetControlWidthFromReplacement);
     lbeSearchRectBottomOffset.Text := IntToStr(GetSearchAreaBottomOffsetFromBmpDbgImg - GetControlHeightFromReplacement);
 
     UpdateTransparent_SearchAreaLimitsFromSearchAreaLimits;
+    UpdateSearchAreaLabelColorsFromTheirPosition;
   except
     //this will throw AV on uninitialized components or out of bounds values
   end;

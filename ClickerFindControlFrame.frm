@@ -608,10 +608,10 @@ object frClickerFindControl: TfrClickerFindControl
       end
       object chkUseWholeScreenAsSearchArea: TCheckBox
         Left = 4
-        Height = 19
+        Height = 17
         Hint = 'Use the whole screen as search area, if checked. Use the current control as search area, if not checked.'#13#10'The search area is modified by offsets.'
         Top = 42
-        Width = 123
+        Width = 121
         Caption = 'Use the whole screen'
         Checked = True
         OnClick = chkUseWholeScreenAsSearchAreaClick
@@ -758,6 +758,7 @@ object frClickerFindControl: TfrClickerFindControl
         AutoSize = False
         Caption = 'Reserved space'#13#10'for DbgImg'
         Color = clYellow
+        ParentColor = False
         Transparent = False
         Visible = False
       end
@@ -1434,6 +1435,13 @@ object frClickerFindControl: TfrClickerFindControl
     Interval = 10
     OnTimer = tmrUpdateSearchAreaOffsetEditBoxesTimer
     Left = 275
+    Top = 206
+  end
+  object tmrUpdateGrid: TTimer
+    Enabled = False
+    Interval = 100
+    OnTimer = tmrUpdateGridTimer
+    Left = 84
     Top = 206
   end
 end
