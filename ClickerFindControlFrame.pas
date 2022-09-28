@@ -257,6 +257,7 @@ type
     TabSheetActionFindSubControlCriteria: TTabSheet;
     TabSheetActionFindSubControlSearchArea: TTabSheet;
     TabSheetActionFindSubControlText: TTabSheet;
+    tmrDrawZoom: TTimer;
     tmrUpdateGrid: TTimer;
     tmrUpdateSearchAreaOffsetEditBoxes: TTimer;
     updownXMulOf: TUpDown;
@@ -311,6 +312,8 @@ type
     procedure lbeSearchRectBottomMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure lbeSearchRectBottomOffsetChange(Sender: TObject);
+    procedure lbeSearchRectBottomOffsetKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
     procedure lbeSearchRectBottomOffsetMouseDown(Sender: TObject;
       Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure lbeSearchRectBottomOffsetMouseMove(Sender: TObject;
@@ -320,6 +323,8 @@ type
     procedure lbeSearchRectLeftMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure lbeSearchRectLeftOffsetChange(Sender: TObject);
+    procedure lbeSearchRectLeftOffsetKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
     procedure lbeSearchRectLeftOffsetMouseDown(Sender: TObject;
       Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure lbeSearchRectLeftOffsetMouseMove(Sender: TObject;
@@ -329,6 +334,8 @@ type
     procedure lbeSearchRectRightMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure lbeSearchRectRightOffsetChange(Sender: TObject);
+    procedure lbeSearchRectRightOffsetKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
     procedure lbeSearchRectRightOffsetMouseDown(Sender: TObject;
       Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure lbeSearchRectRightOffsetMouseMove(Sender: TObject;
@@ -338,6 +345,8 @@ type
     procedure lbeSearchRectTopMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure lbeSearchRectTopOffsetChange(Sender: TObject);
+    procedure lbeSearchRectTopOffsetKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
     procedure lbeSearchRectTopOffsetMouseDown(Sender: TObject;
       Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure lbeSearchRectTopOffsetMouseMove(Sender: TObject;
@@ -356,6 +365,7 @@ type
     procedure spdbtnDisplaySearchAreaDbgImgMenuClick(Sender: TObject);
     procedure spdbtnExtraCopyValueWindowsClick(Sender: TObject);
     procedure tabctrlBMPTextChange(Sender: TObject);
+    procedure tmrDrawZoomTimer(Sender: TObject);
     procedure tmrUpdateGridTimer(Sender: TObject);
     procedure tmrUpdateSearchAreaOffsetEditBoxesTimer(Sender: TObject);
     procedure updownXMulOfChangingEx(Sender: TObject; var AllowChange: Boolean;
@@ -387,6 +397,8 @@ type
     FSearchAreaDbgImgSearchedBmpMenu: TPopupMenu;
     FSearchAreaMenu: TPopupMenu;
 
+    FSkipDrawingGrid: Boolean; //to be reset after use
+
     FSearchAreaLeftLimitLabel: TLabel;
     FSearchAreaTopLimitLabel: TLabel;
     FSearchAreaRightLimitLabel: TLabel;
@@ -404,6 +416,7 @@ type
     FMouseDownGlobalPos: TPoint;
     FMouseDownComponentPos: TPoint;
     FDbgImgHold: Boolean;
+    FCurrentMousePosOnPreviewImg: TPoint;
 
     FRectangleSelecting: Boolean;
     FSelectingXStart: Integer;
@@ -441,6 +454,8 @@ type
       Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure imgSearchAreaControlDbgMouseUp(Sender: TObject;
       Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+    procedure imgSearchAreaControlDbgMouseEnter(Sender: TObject);
+    procedure imgSearchAreaControlDbgMouseLeave(Sender: TObject);
 
     procedure imgSearchAreaSearchedBmpDbgImgMouseMove(Sender: TObject;
       Shift: TShiftState; X, Y: Integer);
@@ -448,6 +463,8 @@ type
       Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure imgSearchAreaSearchedBmpDbgImgMouseUp(Sender: TObject;
       Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+    procedure imgSearchAreaSearchedBmpDbgMouseEnter(Sender: TObject);
+    procedure imgSearchAreaSearchedBmpDbgMouseLeave(Sender: TObject);
 
     procedure imgSearchAreaSearchedTextDbgImgMouseMove(Sender: TObject;
       Shift: TShiftState; X, Y: Integer);
@@ -455,6 +472,8 @@ type
       Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure imgSearchAreaSearchedTextDbgImgMouseUp(Sender: TObject;
       Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+    procedure imgSearchAreaSearchedTextDbgMouseEnter(Sender: TObject);
+    procedure imgSearchAreaSearchedTextDbgMouseLeave(Sender: TObject);
 
     procedure FTransparent_LeftMouseDown(Sender: TObject;
       Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
@@ -623,7 +642,7 @@ implementation
 {$R *.frm}
 
 uses
-  BitmapProcessing, ControlInteraction, Clipbrd;
+  BitmapProcessing, ControlInteraction, Clipbrd, ClickerZoomPreviewForm;
 
 
 const
@@ -1054,6 +1073,7 @@ begin
   FSearchAreaControlDbgImg := nil;
   FSearchAreaSearchedBmpDbgImg := nil;
   FSearchAreaSearchedTextDbgImg := nil;
+  FSkipDrawingGrid := False;
 
   FLastClickedLbe := nil;
   FDbgImgHold := False;
@@ -1422,6 +1442,7 @@ procedure TfrClickerFindControl.chkUseWholeScreenAsSearchAreaClick(
 begin
   SetSearchRectEnabledState;
   DoOnTriggerOnControlsModified;
+  UpdateSearchAreaLabelsFromOffsetEditboxes;
 end;
 
 
@@ -1453,6 +1474,52 @@ end;
 procedure TfrClickerFindControl.tabctrlBMPTextChange(Sender: TObject);
 begin
   SetBMPTextFrameVisibility;
+end;
+
+
+procedure TfrClickerFindControl.tmrDrawZoomTimer(Sender: TObject);
+var
+  TempBmp: TBitmap;
+  tp: TPoint;
+begin
+  tmrDrawZoom.Enabled := False;
+
+  if FSearchAreaControlDbgImg = nil then
+    MessageBox(Handle, 'Debug image is not available.', PChar(Caption), MB_ICONERROR);
+
+  TempBmp := TBitmap.Create;
+  try
+    TempBmp.Width := FSearchAreaControlDbgImg.Width;
+    TempBmp.Height := FSearchAreaControlDbgImg.Height;
+    TempBmp.Canvas.Draw(0, 0, FSearchAreaControlDbgImg.Picture.Bitmap);
+
+    TempBmp.Canvas.Pen.Color := FSearchAreaLeftLimitLabel.Color;
+    Line(TempBmp.Canvas, FSearchAreaLeftLimitLabel.Left, 0, FSearchAreaLeftLimitLabel.Left, TempBmp.Width - 1);
+
+    TempBmp.Canvas.Pen.Color := FSearchAreaTopLimitLabel.Color;
+    Line(TempBmp.Canvas, 0, FSearchAreaTopLimitLabel.Top, TempBmp.Width - 1, FSearchAreaTopLimitLabel.Top);
+
+    TempBmp.Canvas.Pen.Color := FSearchAreaRightLimitLabel.Color;
+    Line(TempBmp.Canvas, FSearchAreaRightLimitLabel.Left, 0, FSearchAreaRightLimitLabel.Left, TempBmp.Width - 1);
+
+    TempBmp.Canvas.Pen.Color := FSearchAreaBottomLimitLabel.Color;
+    Line(TempBmp.Canvas, 0, FSearchAreaBottomLimitLabel.Top, TempBmp.Width - 1, FSearchAreaBottomLimitLabel.Top);
+
+    if chkShowGridOnBMPPreview.Checked then
+    begin
+      if FSkipDrawingGrid then
+        FSkipDrawingGrid := False
+      else
+        GeneratePreviewGridContent;
+
+      TempBmp.Canvas.Draw(FSearchAreaGridImg.Left, FSearchAreaGridImg.Top, FSearchAreaGridImg.Picture.Bitmap);
+    end;
+
+    GetCursorPos(tp);
+    SetZoomContent(TempBmp, FCurrentMousePosOnPreviewImg.X, FCurrentMousePosOnPreviewImg.Y, tp.X + 50, tp.Y + 50);
+  finally
+    TempBmp.Free;
+  end;
 end;
 
 
@@ -1757,6 +1824,15 @@ begin
 end;
 
 
+procedure TfrClickerFindControl.lbeSearchRectBottomOffsetKeyDown(
+  Sender: TObject; var Key: Word; Shift: TShiftState);
+begin
+  UpdateSearchAreaLabelsFromOffsetEditboxes;
+  UpdateSearchAreaLabelColorsFromTheirPosition;
+  tmrUpdateGrid.Enabled := True;
+end;
+
+
 procedure TfrClickerFindControl.lbeSearchRectBottomOffsetMouseDown(
   Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 var
@@ -1844,6 +1920,15 @@ end;
 procedure TfrClickerFindControl.lbeSearchRectLeftOffsetChange(Sender: TObject);
 begin
   DoOnTriggerOnControlsModified;
+end;
+
+
+procedure TfrClickerFindControl.lbeSearchRectLeftOffsetKeyDown(Sender: TObject;
+  var Key: Word; Shift: TShiftState);
+begin
+  UpdateSearchAreaLabelsFromOffsetEditboxes;
+  UpdateSearchAreaLabelColorsFromTheirPosition;
+  tmrUpdateGrid.Enabled := True;
 end;
 
 
@@ -1940,6 +2025,15 @@ begin
 end;
 
 
+procedure TfrClickerFindControl.lbeSearchRectRightOffsetKeyDown(
+  Sender: TObject; var Key: Word; Shift: TShiftState);
+begin
+  UpdateSearchAreaLabelsFromOffsetEditboxes;
+  UpdateSearchAreaLabelColorsFromTheirPosition;
+  tmrUpdateGrid.Enabled := True;
+end;
+
+
 procedure TfrClickerFindControl.lbeSearchRectRightOffsetMouseDown(
   Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 var
@@ -2028,6 +2122,15 @@ end;
 procedure TfrClickerFindControl.lbeSearchRectTopOffsetChange(Sender: TObject);
 begin
   DoOnTriggerOnControlsModified;
+end;
+
+
+procedure TfrClickerFindControl.lbeSearchRectTopOffsetKeyDown(Sender: TObject;
+  var Key: Word; Shift: TShiftState);
+begin
+  UpdateSearchAreaLabelsFromOffsetEditboxes;
+  UpdateSearchAreaLabelColorsFromTheirPosition;
+  tmrUpdateGrid.Enabled := True;
 end;
 
 
@@ -2535,6 +2638,8 @@ begin
       FSearchAreaScrBox.HorzScrollBar.Visible := True;
       FSearchAreaScrBox.VertScrollBar.Visible := True;
       FSearchAreaScrBox.OnMouseWheel := FSearchAreaScrBoxMouseWheel;
+      FSearchAreaScrBox.ShowHint := False;
+      FSearchAreaScrBox.ParentShowHint := False;
 
       if PageControlMatch.ActivePage = TabSheetActionFindSubControlBMPSettings then
       begin
@@ -2560,9 +2665,12 @@ begin
       FSearchAreaControlDbgImg.OnMouseMove := imgSearchAreaControlDbgMouseMove;
       FSearchAreaControlDbgImg.OnMouseDown := imgSearchAreaControlDbgMouseDown;
       FSearchAreaControlDbgImg.OnMouseUp := imgSearchAreaControlDbgMouseUp;
+      FSearchAreaControlDbgImg.OnMouseEnter := imgSearchAreaControlDbgMouseEnter;
+      FSearchAreaControlDbgImg.OnMouseLeave := imgSearchAreaControlDbgMouseLeave;
       FSearchAreaControlDbgImg.OnResize := FSearchAreaControlDbgImgResize;
       FSearchAreaControlDbgImg.Hint := 'Current control, where the searched image is matched.';
       FSearchAreaControlDbgImg.ShowHint := True;
+      FSearchAreaControlDbgImg.ParentShowHint := False;
 
       FSearchAreaGridImg := TImage.Create(Self);
       FSearchAreaGridImg.Parent := FSearchAreaScrBox;
@@ -2571,8 +2679,11 @@ begin
       FSearchAreaGridImg.OnMouseMove := imgSearchAreaControlDbgMouseMove;
       FSearchAreaGridImg.OnMouseDown := imgSearchAreaControlDbgMouseDown;
       FSearchAreaGridImg.OnMouseUp := imgSearchAreaControlDbgMouseUp;
+      FSearchAreaGridImg.OnMouseEnter := imgSearchAreaControlDbgMouseEnter;
+      FSearchAreaGridImg.OnMouseLeave := imgSearchAreaControlDbgMouseLeave;
       FSearchAreaGridImg.Hint := FSearchAreaControlDbgImg.Hint;
       FSearchAreaGridImg.ShowHint := True;
+      FSearchAreaGridImg.ParentShowHint := False;
 
       FSearchAreaDbgImgSearchedBmpMenu := TPopupMenu.Create(Self);
 
@@ -2621,6 +2732,8 @@ begin
       FSearchAreaSearchedBmpDbgImg.OnMouseMove := imgSearchAreaSearchedBmpDbgImgMouseMove;
       FSearchAreaSearchedBmpDbgImg.OnMouseDown := imgSearchAreaSearchedBmpDbgImgMouseDown;
       FSearchAreaSearchedBmpDbgImg.OnMouseUp := imgSearchAreaSearchedBmpDbgImgMouseUp;
+      FSearchAreaSearchedBmpDbgImg.OnMouseEnter := imgSearchAreaSearchedBmpDbgMouseEnter;
+      FSearchAreaSearchedBmpDbgImg.OnMouseLeave := imgSearchAreaSearchedBmpDbgMouseLeave;
       FSearchAreaSearchedBmpDbgImg.Hint := 'BMP preview.' + #13#10 + CDbgImgPreviewHint;
       FSearchAreaSearchedBmpDbgImg.ShowHint := True;
       FSearchAreaSearchedBmpDbgImg.Width := 1;
@@ -2631,6 +2744,8 @@ begin
       FSearchAreaSearchedTextDbgImg.OnMouseMove := imgSearchAreaSearchedTextDbgImgMouseMove;
       FSearchAreaSearchedTextDbgImg.OnMouseDown := imgSearchAreaSearchedTextDbgImgMouseDown;
       FSearchAreaSearchedTextDbgImg.OnMouseUp := imgSearchAreaSearchedTextDbgImgMouseUp;
+      FSearchAreaSearchedTextDbgImg.OnMouseEnter := imgSearchAreaSearchedTextDbgMouseEnter;
+      FSearchAreaSearchedTextDbgImg.OnMouseLeave := imgSearchAreaSearchedTextDbgMouseLeave;
       FSearchAreaSearchedTextDbgImg.Hint := 'Text preview.' + #13#10 + CDbgImgPreviewHint;
       FSearchAreaSearchedTextDbgImg.ShowHint := True;
       FSearchAreaSearchedTextDbgImg.Width := 1;
@@ -3205,6 +3320,11 @@ begin
 
   if FRectangleSelecting then
     SelectDbgImgByRectangle(X, Y);
+
+  FCurrentMousePosOnPreviewImg.X := X;
+  FCurrentMousePosOnPreviewImg.Y := Y;
+  FSkipDrawingGrid := True;  //set this, to avoid grid fickering
+  tmrDrawZoom.Enabled := True;
 end;
 
 
@@ -3231,6 +3351,25 @@ procedure TfrClickerFindControl.imgSearchAreaControlDbgMouseUp(Sender: TObject;
 begin
   if Button = mbLeft then
     FRectangleSelecting := False;
+end;
+
+
+procedure TfrClickerFindControl.imgSearchAreaControlDbgMouseEnter(Sender: TObject);
+var
+  tp: TPoint;
+begin
+  FSearchAreaControlDbgImg.ShowHint := False;
+  FSearchAreaGridImg.ShowHint := False;
+  GetCursorPos(tp);
+  ShowZoom(tp.X + 50, tp.Y + 50);
+end;
+
+
+procedure TfrClickerFindControl.imgSearchAreaControlDbgMouseLeave(Sender: TObject);
+begin
+  FSearchAreaControlDbgImg.ShowHint := True;
+  FSearchAreaGridImg.ShowHint := True;
+  HideZoom;
 end;
 
 
@@ -3279,6 +3418,10 @@ begin
 
   lblMouseOnDbgImg.Caption := IntToStr(X + FSearchAreaSearchedBmpDbgImg.Left) + ' : ' + IntToStr(Y + FSearchAreaSearchedBmpDbgImg.Top);
   SetLabelsFromMouseOverDbgImgPixelColor(FSearchAreaSearchedBmpDbgImg.Canvas.Pixels[X, Y]);
+
+  FCurrentMousePosOnPreviewImg.X := X + FSearchAreaSearchedBmpDbgImg.Left;
+  FCurrentMousePosOnPreviewImg.Y := Y + FSearchAreaSearchedBmpDbgImg.Top;
+  tmrDrawZoom.Enabled := True;
 end;
 
 
@@ -3301,6 +3444,22 @@ begin
   FDbgImgHold := False;
   FSearchAreaSearchedTextDbgImg.Left := FSearchAreaSearchedBmpDbgImg.Left;
   FSearchAreaSearchedTextDbgImg.Top := FSearchAreaSearchedBmpDbgImg.Top;
+end;
+
+
+procedure TfrClickerFindControl.imgSearchAreaSearchedBmpDbgMouseEnter(Sender: TObject);
+var
+  tp: TPoint;
+begin
+  FSearchAreaSearchedBmpDbgImg.ShowHint := False;
+  GetCursorPos(tp);
+  ShowZoom(tp.X + 50, tp.Y + 50);
+end;
+
+
+procedure TfrClickerFindControl.imgSearchAreaSearchedBmpDbgMouseLeave(Sender: TObject);
+begin
+  FSearchAreaSearchedBmpDbgImg.ShowHint := True;
 end;
 
 
@@ -3349,6 +3508,10 @@ begin
 
   lblMouseOnDbgImg.Caption := IntToStr(X + FSearchAreaSearchedTextDbgImg.Left) + ' : ' + IntToStr(Y + FSearchAreaSearchedTextDbgImg.Top);
   SetLabelsFromMouseOverDbgImgPixelColor(FSearchAreaSearchedTextDbgImg.Canvas.Pixels[X, Y]);
+
+  FCurrentMousePosOnPreviewImg.X := X + FSearchAreaSearchedTextDbgImg.Left;
+  FCurrentMousePosOnPreviewImg.Y := Y + FSearchAreaSearchedTextDbgImg.Top;
+  tmrDrawZoom.Enabled := True;
 end;
 
 
@@ -3371,6 +3534,22 @@ begin
   FDbgImgHold := False;
   FSearchAreaSearchedBmpDbgImg.Left := FSearchAreaSearchedTextDbgImg.Left;
   FSearchAreaSearchedBmpDbgImg.Top := FSearchAreaSearchedTextDbgImg.Top;
+end;
+
+
+procedure TfrClickerFindControl.imgSearchAreaSearchedTextDbgMouseEnter(Sender: TObject);
+var
+  tp: TPoint;
+begin
+  FSearchAreaSearchedTextDbgImg.ShowHint := False;
+  GetCursorPos(tp);
+  ShowZoom(tp.X + 50, tp.Y + 50);
+end;
+
+
+procedure TfrClickerFindControl.imgSearchAreaSearchedTextDbgMouseLeave(Sender: TObject);
+begin
+  FSearchAreaSearchedTextDbgImg.ShowHint := True;
 end;
 
 
@@ -3452,8 +3631,14 @@ begin
 
     TempBmp.Canvas.Pen.Color := FSearchAreaLeftLimitLabel.Color;
     Line(TempBmp.Canvas, FSearchAreaLeftLimitLabel.Left, 0, FSearchAreaLeftLimitLabel.Left, TempBmp.Width - 1);
+
+    TempBmp.Canvas.Pen.Color := FSearchAreaTopLimitLabel.Color;
     Line(TempBmp.Canvas, 0, FSearchAreaTopLimitLabel.Top, TempBmp.Width - 1, FSearchAreaTopLimitLabel.Top);
+
+    TempBmp.Canvas.Pen.Color := FSearchAreaRightLimitLabel.Color;
     Line(TempBmp.Canvas, FSearchAreaRightLimitLabel.Left, 0, FSearchAreaRightLimitLabel.Left, TempBmp.Width - 1);
+
+    TempBmp.Canvas.Pen.Color := FSearchAreaBottomLimitLabel.Color;
     Line(TempBmp.Canvas, 0, FSearchAreaBottomLimitLabel.Top, TempBmp.Width - 1, FSearchAreaBottomLimitLabel.Top);
 
     if chkShowBMPTextDbgImg.Checked then
@@ -3608,6 +3793,8 @@ begin
   updownYMulOf.Enabled := lbeMatchBitmapAlgorithmXMulOf.Enabled;
   updownXOffset.Enabled := lbeMatchBitmapAlgorithmXMulOf.Enabled;
   updownYOffset.Enabled := lbeMatchBitmapAlgorithmXMulOf.Enabled;
+
+  tmrUpdateGrid.Enabled := True;
 
   if Assigned(FOnUpdateBitmapAlgorithmSettings) then
     FOnUpdateBitmapAlgorithmSettings()

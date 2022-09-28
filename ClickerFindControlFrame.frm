@@ -13,7 +13,6 @@ object frClickerFindControl: TfrClickerFindControl
   object PageControlMatch: TPageControl
     Left = 0
     Height = 250
-    Hint = 'See matching criteria in the "Criteria" tab.'
     Top = 1
     Width = 877
     ActivePage = TabSheetActionFindSubControlSearchArea
@@ -25,7 +24,6 @@ object frClickerFindControl: TfrClickerFindControl
     Images = imglstFindCriteria
     ParentFont = False
     ParentShowHint = False
-    ShowHint = True
     TabIndex = 4
     TabOrder = 0
     OnChange = PageControlMatchChange
@@ -522,7 +520,6 @@ object frClickerFindControl: TfrClickerFindControl
       ClientWidth = 869
       ImageIndex = 2
       ParentShowHint = False
-      ShowHint = True
       object lblInitRectOffsetsInfo: TLabel
         Left = 3
         Height = 13
@@ -608,10 +605,10 @@ object frClickerFindControl: TfrClickerFindControl
       end
       object chkUseWholeScreenAsSearchArea: TCheckBox
         Left = 4
-        Height = 17
+        Height = 19
         Hint = 'Use the whole screen as search area, if checked. Use the current control as search area, if not checked.'#13#10'The search area is modified by offsets.'
         Top = 42
-        Width = 121
+        Width = 123
         Caption = 'Use the whole screen'
         Checked = True
         OnClick = chkUseWholeScreenAsSearchAreaClick
@@ -634,6 +631,7 @@ object frClickerFindControl: TfrClickerFindControl
         TabOrder = 5
         Text = '0'
         OnChange = lbeSearchRectLeftOffsetChange
+        OnKeyDown = lbeSearchRectLeftOffsetKeyDown
         OnMouseDown = lbeSearchRectLeftOffsetMouseDown
         OnMouseMove = lbeSearchRectLeftOffsetMouseMove
       end
@@ -651,6 +649,7 @@ object frClickerFindControl: TfrClickerFindControl
         TabOrder = 6
         Text = '0'
         OnChange = lbeSearchRectTopOffsetChange
+        OnKeyDown = lbeSearchRectTopOffsetKeyDown
         OnMouseDown = lbeSearchRectTopOffsetMouseDown
         OnMouseMove = lbeSearchRectTopOffsetMouseMove
       end
@@ -668,6 +667,7 @@ object frClickerFindControl: TfrClickerFindControl
         TabOrder = 7
         Text = '0'
         OnChange = lbeSearchRectRightOffsetChange
+        OnKeyDown = lbeSearchRectRightOffsetKeyDown
         OnMouseDown = lbeSearchRectRightOffsetMouseDown
         OnMouseMove = lbeSearchRectRightOffsetMouseMove
       end
@@ -685,6 +685,7 @@ object frClickerFindControl: TfrClickerFindControl
         TabOrder = 8
         Text = '0'
         OnChange = lbeSearchRectBottomOffsetChange
+        OnKeyDown = lbeSearchRectBottomOffsetKeyDown
         OnMouseDown = lbeSearchRectBottomOffsetMouseDown
         OnMouseMove = lbeSearchRectBottomOffsetMouseMove
       end
@@ -758,7 +759,6 @@ object frClickerFindControl: TfrClickerFindControl
         AutoSize = False
         Caption = 'Reserved space'#13#10'for DbgImg'
         Color = clYellow
-        ParentColor = False
         Transparent = False
         Visible = False
       end
@@ -1443,5 +1443,12 @@ object frClickerFindControl: TfrClickerFindControl
     OnTimer = tmrUpdateGridTimer
     Left = 84
     Top = 206
+  end
+  object tmrDrawZoom: TTimer
+    Enabled = False
+    Interval = 50
+    OnTimer = tmrDrawZoomTimer
+    Left = 152
+    Top = 192
   end
 end

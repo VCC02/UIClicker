@@ -43,8 +43,7 @@ uses
   ClickerFindControlFrame, ClickerActionsForm,
   ClickerActionsPaletteFrame,
   UIClickerMainFormFP, ClickerRemoteScreenForm, ClickerPreviewForm, 
-  ClickerActionExecution, ClickerTemplateNotesForm
-  { you can add units after this };
+  ClickerActionExecution, ClickerTemplateNotesForm, ClickerZoomPreviewForm;
 
 {$R *.res}
 
@@ -158,6 +157,7 @@ begin
   Application.CreateForm(TfrmClickerWinInterp, frmClickerWinInterp);
   Application.CreateForm(TfrmClickerTemplateCallTree, frmClickerTemplateCallTree);
   Application.CreateForm(TfrmClickerRemoteScreen, frmClickerRemoteScreen);
+  Application.CreateForm(TfrmClickerZoomPreview, frmClickerZoomPreview);
 
   frmUIClickerMainForm.AllFormsAreCreated := True; //allow loading settings
   Application.Run;

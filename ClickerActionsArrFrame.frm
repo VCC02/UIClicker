@@ -330,7 +330,7 @@ object frClickerActionsArr: TfrClickerActionsArr
       Left = 657
       Height = 25
       Top = 3
-      Width = 89
+      Width = 90
       Anchors = [akTop, akRight]
       Caption = 'Play Action '
       Glyph.Data = {
@@ -367,7 +367,7 @@ object frClickerActionsArr: TfrClickerActionsArr
       Left = 657
       Height = 25
       Top = 28
-      Width = 89
+      Width = 90
       Anchors = [akTop, akRight]
       Caption = 'Play All       '
       Glyph.Data = {
@@ -401,7 +401,7 @@ object frClickerActionsArr: TfrClickerActionsArr
       OnClick = spdbtnPlayAllActionsClick
     end
     object spdbtnExtraPlayAll: TSpeedButton
-      Left = 745
+      Left = 746
       Height = 25
       Top = 28
       Width = 18
@@ -425,7 +425,7 @@ object frClickerActionsArr: TfrClickerActionsArr
       Height = 25
       Hint = 'Ctrl-Shift-F2'
       Top = 53
-      Width = 106
+      Width = 107
       Anchors = [akTop, akRight]
       Caption = 'Stop           '
       Enabled = False
@@ -466,7 +466,7 @@ object frClickerActionsArr: TfrClickerActionsArr
       Height = 25
       Hint = 'Resume playing (continue until last action, manual stopping or action error).'
       Top = 78
-      Width = 106
+      Width = 107
       Anchors = [akTop, akRight]
       Caption = 'Continue All    '
       Enabled = False
@@ -507,7 +507,7 @@ object frClickerActionsArr: TfrClickerActionsArr
       Height = 25
       Hint = 'Plays current action and moves to next'
       Top = 103
-      Width = 106
+      Width = 107
       Anchors = [akTop, akRight]
       Caption = 'Step Over      '
       Enabled = False
@@ -548,7 +548,7 @@ object frClickerActionsArr: TfrClickerActionsArr
       Height = 25
       Hint = 'Enters call action'
       Top = 128
-      Width = 106
+      Width = 107
       Anchors = [akTop, akRight]
       Caption = 'Step Into       '
       Enabled = False
@@ -631,10 +631,10 @@ object frClickerActionsArr: TfrClickerActionsArr
       Visible = False
     end
     object chkSwitchEditorOnActionSelect: TCheckBox
-      Left = 452
+      Left = 454
       Height = 19
       Top = 207
-      Width = 195
+      Width = 193
       Anchors = [akRight, akBottom]
       Caption = 'Switch editor tab on action select'
       TabOrder = 9
@@ -677,7 +677,7 @@ object frClickerActionsArr: TfrClickerActionsArr
       OnClick = spdbtnTemplateNotesClick
     end
     object spdbtnExtraPlayAction: TSpeedButton
-      Left = 745
+      Left = 746
       Height = 25
       Top = 3
       Width = 18

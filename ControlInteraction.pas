@@ -562,6 +562,8 @@ end;
 
 
 procedure DisplayDebugGrid(Algorithm: TMatchBitmapAlgorithm; AlgorithmSettings: TMatchBitmapAlgorithmSettings; DebugGrid: TImage; ScrShot_Width, ScrShot_Height: Integer);
+var
+  TempImg: TImage;
 begin
   WipeImage(DebugGrid, ScrShot_Width, ScrShot_Height);
 
@@ -577,7 +579,17 @@ begin
     Exit;
   end;
 
-  DrawSearchGrid(DebugGrid, AlgorithmSettings, ScrShot_Width, ScrShot_Height, $00C9AEFF); //pink
+  TempImg := TImage.Create(nil);   //using a temp image, because DrawSearchGrid does not use offsets anymore
+  try
+    TempImg.AutoSize := False;
+    WipeImage(TempImg, ScrShot_Width, ScrShot_Height);
+
+    WipeImage(DebugGrid, ScrShot_Width, ScrShot_Height);
+    DrawSearchGrid(TempImg, AlgorithmSettings, ScrShot_Width, ScrShot_Height, $00C9AEFF); //pink
+    DebugGrid.Canvas.Draw(AlgorithmSettings.XOffset, AlgorithmSettings.YOffset, TempImg.Picture.Graphic);
+  finally
+    TempImg.Free;
+  end;
 
   MakeImageContentTransparent(DebugGrid);
   DebugGrid.Repaint;  

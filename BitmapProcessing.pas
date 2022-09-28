@@ -62,6 +62,7 @@ procedure AvgBitmapWithColor(ASrcBitmap, ADestBitmap: TBitmap; AColor: TColor; X
 procedure AvgBitmapWithBitmap(ASrcABitmap, ASrcBBitmap, ADestBitmap: TBitmap; XOffset: Integer = -1; YOffset: Integer = -1; Width: Integer = -1; Height: Integer = -1);
 function BitmapsAreEqual(ASrcABitmap, ASrcBBitmap: TBitmap; AWidth, AHeight: Integer): Boolean;
 procedure MakeImageContentTransparent(AImg: TImage);
+procedure WipeBitmap(ABitmap: TBitmap; NewWidth, NewHeight: Integer);
 procedure WipeImage(AImg: TImage; NewWidth, NewHeight: Integer);
 procedure DrawSearchGrid(AImg: TImage; AlgorithmSettings: TMatchBitmapAlgorithmSettings; AGridWidth, AGridHeight: Integer; AGridColor: TColor);
 
@@ -733,6 +734,24 @@ begin
 end;
 
 
+procedure DrawWipeRect(ACanvas: TCanvas; NewWidth, NewHeight: Integer);
+begin
+  ACanvas.Brush.Style := bsSolid;
+  ACanvas.Brush.Color := clWhite;
+  ACanvas.Pen.Color := clWhite;
+  ACanvas.Rectangle(0, 0, NewWidth {- 1}, NewHeight {- 1});
+end;
+
+
+procedure WipeBitmap(ABitmap: TBitmap; NewWidth, NewHeight: Integer);
+begin
+  ABitmap.Clear;
+  ABitmap.Width := NewWidth;
+  ABitmap.Height := NewHeight;
+  DrawWipeRect(ABitmap.Canvas, NewWidth, NewHeight);
+end;
+
+
 procedure WipeImage(AImg: TImage; NewWidth, NewHeight: Integer);
 begin
   AImg.Picture.Clear;
@@ -741,10 +760,7 @@ begin
   AImg.Picture.Bitmap.Width := AImg.Width;
   AImg.Picture.Bitmap.Height := AImg.Height;
 
-  AImg.Canvas.Brush.Style := bsSolid;
-  AImg.Canvas.Brush.Color := clWhite;
-  AImg.Canvas.Pen.Color := clWhite;
-  AImg.Canvas.Rectangle(0, 0, NewWidth {- 1}, NewHeight {- 1});
+  DrawWipeRect(AImg.Canvas, NewWidth, NewHeight);
   AImg.Repaint;
 end;
 
@@ -762,12 +778,12 @@ begin
   if AlgorithmSettings.XMultipleOf < 1 then
     AlgorithmSettings.XMultipleOf := 1;
 
-  for y := 1 to AGridHeight - 1 do   //starts at one, to avoid overwriting transparency pixels
-    if (y - AlgorithmSettings.YOffset) mod AlgorithmSettings.YMultipleOf = 0 then
+  for y := 0 to AGridHeight - 1 do   //starts at one, to avoid overwriting transparency pixels
+    if y mod AlgorithmSettings.YMultipleOf = 0 then
       Line(AImg.Canvas, 1, y, AGridWidth - 1, y);
 
-  for x := 1 to AGridWidth - 1 do   //starts at one, to avoid overwriting transparency pixels
-    if (x - AlgorithmSettings.XOffset) mod AlgorithmSettings.XMultipleOf = 0 then
+  for x := 0 to AGridWidth - 1 do   //starts at one, to avoid overwriting transparency pixels
+    if x mod AlgorithmSettings.XMultipleOf = 0 then
       Line(AImg.Canvas, x, 1, x, AGridHeight - 1);
 end;
 
