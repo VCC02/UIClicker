@@ -210,7 +210,7 @@ type
     function GetCompAtPoint(AParams: TStrings): string;
 
     procedure HandleNewFrameRefreshButton(Sender: TObject);
-    function frClickerActionsArrOnCallTemplate(Sender: TObject; AFileNameToCall: string; ListOfVariables: TStrings; DebugBitmap: TBitmap; DebugGridImage: TImage; IsDebugging: Boolean; AStackLevel: Integer; AExecutesRemotely: Boolean): Boolean;
+    function frClickerActionsArrOnCallTemplate(Sender: TObject; AFileNameToCall: string; ListOfVariables: TStrings; DebugBitmap: TBitmap; DebugGridImage: TImage; IsDebugging, AShouldStopAtBreakPoint: Boolean; AStackLevel: Integer; AExecutesRemotely: Boolean): Boolean;
     procedure HandleOnCopyControlTextAndClassFromMainWindow(ACompProvider: string; out AControlText, AControlClass: string);
     function HandleOnGetExtraSearchAreaDebuggingImageWithStackLevel(AExtraBitmap: TBitmap; AStackLevel: Integer): Boolean;
 
@@ -1033,7 +1033,7 @@ begin
 end;
 
 
-function TfrmClickerActions.frClickerActionsArrOnCallTemplate(Sender: TObject; AFileNameToCall: string; ListOfVariables: TStrings; DebugBitmap: TBitmap; DebugGridImage: TImage; IsDebugging: Boolean; AStackLevel: Integer; AExecutesRemotely: Boolean): Boolean;
+function TfrmClickerActions.frClickerActionsArrOnCallTemplate(Sender: TObject; AFileNameToCall: string; ListOfVariables: TStrings; DebugBitmap: TBitmap; DebugGridImage: TImage; IsDebugging, AShouldStopAtBreakPoint: Boolean; AStackLevel: Integer; AExecutesRemotely: Boolean): Boolean;
 var
   NewTabSheet: TTabSheet;
   NewFrame: TfrClickerActionsArr;
@@ -1088,6 +1088,7 @@ begin
         NewFrame.frClickerActions.vallstVariables.ColWidths[1] := 130;
         //NewFrame.frClickerActions.vallstVariables.ColWidths[0] := 120;
 
+        NewFrame.ShouldStopAtBreakPoint := AShouldStopAtBreakPoint;
         NewFrame.StackLevel := AStackLevel + 1;
         NewFrame.ExecutesRemotely := AExecutesRemotely; //a client executes remotely
         NewFrame.ExecutingActionFromRemote := frClickerActionsArrMain.ExecutingActionFromRemote; //should be true in server mode

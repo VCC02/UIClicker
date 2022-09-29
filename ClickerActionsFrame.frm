@@ -884,6 +884,21 @@ object frClickerActions: TfrClickerActions
               OnClick = btnBrowseCallTemplateLoopBreakConditionClick
               TabOrder = 7
             end
+            object lblFeatureInWork: TLabel
+              Left = 104
+              Height = 21
+              Hint = 'What does not work, is closing subtemplates when remote debugging.'#13#10'So, do not click the stop button when remote debugging CallTemplate actions with loops.'
+              Top = 0
+              Width = 165
+              Caption = '[Feature in work...]'
+              Font.Color = clGray
+              Font.Height = -17
+              Font.Name = 'Tahoma'
+              Font.Style = [fsBold]
+              ParentFont = False
+              ParentShowHint = False
+              ShowHint = True
+            end
           end
         end
         object TabSheetActionSleep: TTabSheet

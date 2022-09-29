@@ -58,6 +58,7 @@ type
     cmbCallTemplateLoopDirection: TComboBox;
     grpCallTemplateLoop: TGroupBox;
     imglstSetVar: TImageList;
+    lblFeatureInWork: TLabel;
     lbeCallTemplateLoopBreakCondition: TLabeledEdit;
     lblCallTemplateLoopDirection: TLabel;
     lbeCallTemplateLoopCounter: TLabeledEdit;

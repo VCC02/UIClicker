@@ -210,6 +210,7 @@ type
     FContinuePlayingAll: Boolean;
     FContinuePlayingNext: Boolean;
     FContinuePlayingBySteppingInto: Boolean;
+    FShouldStopAtBreakPoint: Boolean;
     FUpdateButtonGlowDirection: Boolean;
     FPreviousSelectedNode: PVirtualNode;
     FActionsHitInfo: THitInfo;
@@ -275,7 +276,7 @@ type
     procedure HandleOnSetEditorTimeoutProgressBarMax(AMaxValue: Integer);
     procedure HandleOnSetEditorTimeoutProgressBarPosition(APositionValue: Integer);
     procedure HandleOnWaitForBitmapsAvailability(ListOfBitmapFiles: TStringList);
-    function HandleOnCallTemplate(Sender: TObject; AFileNameToCall: string; ListOfVariables: TStrings; DebugBitmap: TBitmap; DebugGridImage: TImage; IsDebugging: Boolean; AStackLevel: Integer; AExecutesRemotely: Boolean): Boolean;
+    function HandleOnCallTemplate(Sender: TObject; AFileNameToCall: string; ListOfVariables: TStrings; DebugBitmap: TBitmap; DebugGridImage: TImage; IsDebugging, AShouldStopAtBreakPoint: Boolean; AStackLevel: Integer; AExecutesRemotely: Boolean): Boolean;
     procedure HandleOnSetEditorSleepProgressBarMax(AMaxValue: Integer);
     procedure HandleOnSetEditorSleepProgressBarPosition(APositionValue: Integer);
     procedure HandleOnSetEditorSleepInfo(AElapsedTime, ARemainingTime: string);
@@ -428,6 +429,7 @@ type
 
     property InMemFS: TInMemFileSystem write SetInMemFS;
     property ActionExecution: TActionExecution read FActionExecution;
+    property ShouldStopAtBreakPoint: Boolean {read FShouldStopAtBreakPoint} write FShouldStopAtBreakPoint;
 
     property OnCallTemplate: TOnCallTemplate read FOnCallTemplate write FOnCallTemplate;
     property OnExecuteRemoteActionAtIndex: TOnExecuteRemoteActionAtIndex read FOnExecuteRemoteActionAtIndex write FOnExecuteRemoteActionAtIndex;
@@ -642,6 +644,7 @@ begin
   FFileLocationOfDepsIsMem := False;
   FClosingTemplate := False;
   FRemoteAddress := 'http://127.0.0.1:5444/';
+  FShouldStopAtBreakPoint := False;
 end;
 
 
@@ -695,9 +698,9 @@ begin
 end;
 
 
-function TfrClickerActionsArr.HandleOnCallTemplate(Sender: TObject; AFileNameToCall: string; ListOfVariables: TStrings; DebugBitmap: TBitmap; DebugGridImage: TImage; IsDebugging: Boolean; AStackLevel: Integer; AExecutesRemotely: Boolean): Boolean;
+function TfrClickerActionsArr.HandleOnCallTemplate(Sender: TObject; AFileNameToCall: string; ListOfVariables: TStrings; DebugBitmap: TBitmap; DebugGridImage: TImage; IsDebugging, AShouldStopAtBreakPoint: Boolean; AStackLevel: Integer; AExecutesRemotely: Boolean): Boolean;
 begin
-  Result := OnCallTemplate(Sender, AFileNameToCall, ListOfVariables, DebugBitmap, DebugGridImage, IsDebugging, AStackLevel, AExecutesRemotely);
+  Result := OnCallTemplate(Sender, AFileNameToCall, ListOfVariables, DebugBitmap, DebugGridImage, IsDebugging, AShouldStopAtBreakPoint, AStackLevel, AExecutesRemotely);
 end;
 
 
@@ -1264,7 +1267,7 @@ begin
     acFindControl: Result := FActionExecution.ExecuteFindControlActionWithTimeout(FClkActions[AActionIndex].FindControlOptions, FClkActions[AActionIndex].ActionOptions, False);
     acFindSubControl: Result := FActionExecution.ExecuteFindControlActionWithTimeout(FClkActions[AActionIndex].FindControlOptions, FClkActions[AActionIndex].ActionOptions, True);
     acSetControlText: Result := FActionExecution.ExecuteSetControlTextAction(FClkActions[AActionIndex].SetTextOptions);
-    acCallTemplate: Result := FActionExecution.ExecuteLoopedCallTemplateAction(FClkActions[AActionIndex].CallTemplateOptions, FContinuePlayingBySteppingInto);
+    acCallTemplate: Result := FActionExecution.ExecuteLoopedCallTemplateAction(FClkActions[AActionIndex].CallTemplateOptions, FContinuePlayingBySteppingInto, {FShouldStopAtBreakPoint replaced by FDebugging} FDebugging);
     acSleep: Result := FActionExecution.ExecuteSleepAction(FClkActions[AActionIndex].SleepOptions, FClkActions[AActionIndex].ActionOptions);
     acSetVar: Result := FActionExecution.ExecuteSetVarAction(FClkActions[AActionIndex].SetVarOptions);
     acWindowOperations: Result := FActionExecution.ExecuteWindowOperationsAction(FClkActions[AActionIndex].WindowOperationsOptions);
@@ -1326,7 +1329,7 @@ begin
 
     if AIsDebugging then
       if FClkActions[AActionIndex].ActionOptions.Action = acCallTemplate then
-        EnteredTemplateResult := FActionExecution.ExecuteLoopedCallTemplateAction(FClkActions[AActionIndex].CallTemplateOptions, FContinuePlayingBySteppingInto);
+        EnteredTemplateResult := FActionExecution.ExecuteLoopedCallTemplateAction(FClkActions[AActionIndex].CallTemplateOptions, FContinuePlayingBySteppingInto, AIsDebugging);
 
     WaitForServerResponse(Th);
 
@@ -1761,6 +1764,7 @@ var
   Node, OldNode, LastNode: PVirtualNode;
   ClosingTemplateResponse: string;
   tk: QWord;
+  IsAtBreakPoint: Boolean;
 begin
   Result := False;
 
@@ -1797,7 +1801,7 @@ begin
     if Node = nil then
       Exit; //do not show a dialog here
 
-    if IsDebugging then
+    if IsDebugging or FShouldStopAtBreakPoint then
     begin
       spdbtnContinuePlayingAll.Enabled := True;
       spdbtnStepOver.Enabled := True;
@@ -1817,11 +1821,19 @@ begin
 
         spdbtnStepInto.Enabled := IsDebugging and (FClkActions[Node^.Index].ActionOptions.Action = acCallTemplate);
 
-        if ShouldStopActionAtBreakpoint(FClkActions[Node^.Index].ActionBreakPoint) then
+        IsAtBreakPoint := ShouldStopActionAtBreakpoint(FClkActions[Node^.Index].ActionBreakPoint);
+        if IsAtBreakPoint then
+        begin
           FContinuePlayingAll := False;
+          spdbtnContinuePlayingAll.Enabled := True;
+          spdbtnStepOver.Enabled := True;
+        end;
 
-        if IsDebugging and not FContinuePlayingAll then   //pause execution if debugging
+        if (IsDebugging or (FShouldStopAtBreakPoint and IsAtBreakPoint)) and not FContinuePlayingAll then   //pause execution if debugging
+        begin
           WaitInDebuggingMode;
+          FShouldStopAtBreakPoint := False;
+        end;
 
         /////// debugging icons
         if Node^.PrevSibling <> nil then

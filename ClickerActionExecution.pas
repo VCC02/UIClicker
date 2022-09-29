@@ -40,7 +40,7 @@ type
   TOnSetEditorTimeoutProgressBarMax = procedure(AMaxValue: Integer) of object;
   TOnSetEditorTimeoutProgressBarPosition = procedure(APositionValue: Integer) of object;
   TOnWaitForBitmapsAvailability = procedure(ListOfBitmapFiles: TStringList) of object;
-  TOnCallTemplate = function(Sender: TObject; AFileNameToCall: string; ListOfVariables: TStrings; DebugBitmap: TBitmap; DebugGridImage: TImage; IsDebugging: Boolean; AStackLevel: Integer; AExecutesRemotely: Boolean): Boolean of object;
+  TOnCallTemplate = function(Sender: TObject; AFileNameToCall: string; ListOfVariables: TStrings; DebugBitmap: TBitmap; DebugGridImage: TImage; IsDebugging, AShouldStopAtBreakPoint: Boolean; AStackLevel: Integer; AExecutesRemotely: Boolean): Boolean of object;
   TOnSetEditorSleepInfo = procedure(AElapsedTime, ARemainingTime: string) of object;
 
   TActionExecution = class
@@ -99,8 +99,8 @@ type
     function ExecuteExecAppAction(var AExecAppOptions: TClkExecAppOptions; var AActionOptions: TClkActionOptions): Boolean;
     function ExecuteFindControlActionWithTimeout(var AFindControlOptions: TClkFindControlOptions; var AActionOptions: TClkActionOptions; IsSubControl: Boolean): Boolean; //returns True if found
     function ExecuteSetControlTextAction(var ASetTextOptions: TClkSetTextOptions): Boolean;
-    function ExecuteCallTemplateAction(var ACallTemplateOptions: TClkCallTemplateOptions; IsDebugging: Boolean): Boolean; //to be moved to private, after ExecuteFindControlAction header
-    function ExecuteLoopedCallTemplateAction(var ACallTemplateOptions: TClkCallTemplateOptions; IsDebugging: Boolean): Boolean;
+    function ExecuteCallTemplateAction(var ACallTemplateOptions: TClkCallTemplateOptions; IsDebugging, AShouldStopAtBreakPoint: Boolean): Boolean; //to be moved to private, after ExecuteFindControlAction header
+    function ExecuteLoopedCallTemplateAction(var ACallTemplateOptions: TClkCallTemplateOptions; IsDebugging, AShouldStopAtBreakPoint: Boolean): Boolean;
     function ExecuteSleepAction(var ASleepOptions: TClkSleepOptions; var AActionOptions: TClkActionOptions): Boolean;
     function ExecuteSetVarAction(var ASetVarOptions: TClkSetVarOptions): Boolean;
     function ExecuteWindowOperationsAction(var AWindowOperationsOptions: TClkWindowOperationsOptions): Boolean;
@@ -1338,7 +1338,7 @@ begin
 end;
 
 
-function TActionExecution.ExecuteCallTemplateAction(var ACallTemplateOptions: TClkCallTemplateOptions; IsDebugging: Boolean): Boolean;
+function TActionExecution.ExecuteCallTemplateAction(var ACallTemplateOptions: TClkCallTemplateOptions; IsDebugging, AShouldStopAtBreakPoint: Boolean): Boolean;
 var
   i: Integer;
   CustomVars: TStringList;
@@ -1409,21 +1409,21 @@ begin
   if FOwnerFrame = nil then
     raise Exception.Create('FOwnerFrame is not assigned.');
 
-  Result := FOnCallTemplate(FOwnerFrame, Fnm, FClickerVars, frClickerActions.imgDebugBmp.Picture.Bitmap, frClickerActions.imgDebugGrid, IsDebugging, FStackLevel^, FExecutesRemotely^);
+  Result := FOnCallTemplate(FOwnerFrame, Fnm, FClickerVars, frClickerActions.imgDebugBmp.Picture.Bitmap, frClickerActions.imgDebugGrid, IsDebugging, AShouldStopAtBreakPoint, FStackLevel^, FExecutesRemotely^);
 
   if GetActionVarValue('$ExecAction_Err$') <> '' then   ////////////////// ToDo:  improve the error logging
     FLog.Lines.Add(DateTimeToStr(Now) + '  ' + GetActionVarValue('$ExecAction_Err$'));
 end;
 
 
-function TActionExecution.ExecuteLoopedCallTemplateAction(var ACallTemplateOptions: TClkCallTemplateOptions; IsDebugging: Boolean): Boolean;
+function TActionExecution.ExecuteLoopedCallTemplateAction(var ACallTemplateOptions: TClkCallTemplateOptions; IsDebugging, AShouldStopAtBreakPoint: Boolean): Boolean;
 var
   i: Integer;
   StartValue, StopValue: Integer;
   TempACallTemplateOptions: TClkCallTemplateOptions;
 begin
   if not ACallTemplateOptions.CallTemplateLoop.Enabled then
-    Result := ExecuteCallTemplateAction(ACallTemplateOptions, IsDebugging)
+    Result := ExecuteCallTemplateAction(ACallTemplateOptions, IsDebugging, AShouldStopAtBreakPoint)
   else
   begin
     StartValue := StrToIntDef(EvaluateReplacements(ACallTemplateOptions.CallTemplateLoop.InitValue), 0);
@@ -1442,7 +1442,7 @@ begin
               if EvaluateActionCondition(ACallTemplateOptions.CallTemplateLoop.BreakCondition, EvaluateReplacements) then
                 Break;
 
-          Result := Result and ExecuteCallTemplateAction(ACallTemplateOptions, IsDebugging);
+          Result := Result and ExecuteCallTemplateAction(ACallTemplateOptions, IsDebugging, AShouldStopAtBreakPoint);
 
           if ACallTemplateOptions.CallTemplateLoop.BreakCondition <> '' then
             if ACallTemplateOptions.CallTemplateLoop.EvalBreakPosition = lebpAfterContent then
@@ -1466,7 +1466,7 @@ begin
             if EvaluateActionCondition(ACallTemplateOptions.CallTemplateLoop.BreakCondition, EvaluateReplacements) then
               Break;
 
-          Result := Result and ExecuteCallTemplateAction(ACallTemplateOptions, IsDebugging);
+          Result := Result and ExecuteCallTemplateAction(ACallTemplateOptions, IsDebugging, AShouldStopAtBreakPoint);
 
           if ACallTemplateOptions.CallTemplateLoop.EvalBreakPosition = lebpBeforeContent then
             if EvaluateActionCondition(ACallTemplateOptions.CallTemplateLoop.BreakCondition, EvaluateReplacements) then
@@ -1487,7 +1487,7 @@ begin
         else
           TempACallTemplateOptions.CallTemplateLoop.Direction := ldDec;
 
-        Result := ExecuteLoopedCallTemplateAction(TempACallTemplateOptions, IsDebugging)
+        Result := ExecuteLoopedCallTemplateAction(TempACallTemplateOptions, IsDebugging, AShouldStopAtBreakPoint)
       end;
 
       else
@@ -2014,6 +2014,7 @@ var
   CallTemplateOptions: TClkCallTemplateOptions;
   Temp_LoopDirection: Integer;
   Temp_LoopEvalBreakPosition: Integer;
+  IsDebugging: Boolean;
 begin
   Result := False;
   SetActionVarValue('$ExecAction_Err$', '');
@@ -2047,7 +2048,8 @@ begin
     CallTemplateOptions.CallTemplateLoop.BreakCondition := FastReplace_45ToReturn(AListOfCallTemplateOptionsParams.Values['Loop.BreakCondition']); //uses the same format as TClkActionOptions.ActionCondition
     CallTemplateOptions.CallTemplateLoop.EvalBreakPosition := TLoopEvalBreakPosition(Temp_LoopEvalBreakPosition);
 
-    Result := ExecuteLoopedCallTemplateAction(CallTemplateOptions, AListOfCallTemplateOptionsParams.Values['IsDebugging'] = '1');
+    IsDebugging := AListOfCallTemplateOptionsParams.Values['IsDebugging'] = '1';
+    Result := ExecuteLoopedCallTemplateAction(CallTemplateOptions, IsDebugging, IsDebugging); //not sure if AShouldStopAtBreakPoint should be the same as IsDebugging or if it should be another http param
   finally
     //SetLastActionStatus(Result, False);  //leave the action status as set by the called template
   end;

@@ -312,7 +312,7 @@ type
     procedure lbeSearchRectBottomMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure lbeSearchRectBottomOffsetChange(Sender: TObject);
-    procedure lbeSearchRectBottomOffsetKeyDown(Sender: TObject; var Key: Word;
+    procedure lbeSearchRectBottomOffsetKeyUp(Sender: TObject; var Key: Word;
       Shift: TShiftState);
     procedure lbeSearchRectBottomOffsetMouseDown(Sender: TObject;
       Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
@@ -323,7 +323,7 @@ type
     procedure lbeSearchRectLeftMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure lbeSearchRectLeftOffsetChange(Sender: TObject);
-    procedure lbeSearchRectLeftOffsetKeyDown(Sender: TObject; var Key: Word;
+    procedure lbeSearchRectLeftOffsetKeyUp(Sender: TObject; var Key: Word;
       Shift: TShiftState);
     procedure lbeSearchRectLeftOffsetMouseDown(Sender: TObject;
       Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
@@ -334,7 +334,7 @@ type
     procedure lbeSearchRectRightMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure lbeSearchRectRightOffsetChange(Sender: TObject);
-    procedure lbeSearchRectRightOffsetKeyDown(Sender: TObject; var Key: Word;
+    procedure lbeSearchRectRightOffsetKeyUp(Sender: TObject; var Key: Word;
       Shift: TShiftState);
     procedure lbeSearchRectRightOffsetMouseDown(Sender: TObject;
       Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
@@ -345,7 +345,7 @@ type
     procedure lbeSearchRectTopMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure lbeSearchRectTopOffsetChange(Sender: TObject);
-    procedure lbeSearchRectTopOffsetKeyDown(Sender: TObject; var Key: Word;
+    procedure lbeSearchRectTopOffsetKeyUp(Sender: TObject; var Key: Word;
       Shift: TShiftState);
     procedure lbeSearchRectTopOffsetMouseDown(Sender: TObject;
       Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
@@ -583,6 +583,7 @@ type
     function GetSearchAreaRightOffsetFromSelLabel: Integer;
     function GetSearchAreaBottomOffsetFromSelLabel: Integer;
 
+    procedure UpdateSearchAreaLabelsFromKeysOnEditBoxes;
     procedure UpdateSearchAreaLabelColorsFromTheirPosition;
     procedure UpdateTransparent_SearchAreaLimitsFromSearchAreaLimits;
     procedure SetLabelsFromMouseOverDbgImgPixelColor(APixelColor: TColor);
@@ -1824,12 +1825,10 @@ begin
 end;
 
 
-procedure TfrClickerFindControl.lbeSearchRectBottomOffsetKeyDown(
-  Sender: TObject; var Key: Word; Shift: TShiftState);
+procedure TfrClickerFindControl.lbeSearchRectBottomOffsetKeyUp(Sender: TObject;
+  var Key: Word; Shift: TShiftState);
 begin
-  UpdateSearchAreaLabelsFromOffsetEditboxes;
-  UpdateSearchAreaLabelColorsFromTheirPosition;
-  tmrUpdateGrid.Enabled := True;
+  UpdateSearchAreaLabelsFromKeysOnEditBoxes;
 end;
 
 
@@ -1923,12 +1922,10 @@ begin
 end;
 
 
-procedure TfrClickerFindControl.lbeSearchRectLeftOffsetKeyDown(Sender: TObject;
+procedure TfrClickerFindControl.lbeSearchRectLeftOffsetKeyUp(Sender: TObject;
   var Key: Word; Shift: TShiftState);
 begin
-  UpdateSearchAreaLabelsFromOffsetEditboxes;
-  UpdateSearchAreaLabelColorsFromTheirPosition;
-  tmrUpdateGrid.Enabled := True;
+  UpdateSearchAreaLabelsFromKeysOnEditBoxes;
 end;
 
 
@@ -2025,12 +2022,10 @@ begin
 end;
 
 
-procedure TfrClickerFindControl.lbeSearchRectRightOffsetKeyDown(
-  Sender: TObject; var Key: Word; Shift: TShiftState);
+procedure TfrClickerFindControl.lbeSearchRectRightOffsetKeyUp(Sender: TObject;
+  var Key: Word; Shift: TShiftState);
 begin
-  UpdateSearchAreaLabelsFromOffsetEditboxes;
-  UpdateSearchAreaLabelColorsFromTheirPosition;
-  tmrUpdateGrid.Enabled := True;
+  UpdateSearchAreaLabelsFromKeysOnEditBoxes;
 end;
 
 
@@ -2125,12 +2120,10 @@ begin
 end;
 
 
-procedure TfrClickerFindControl.lbeSearchRectTopOffsetKeyDown(Sender: TObject;
+procedure TfrClickerFindControl.lbeSearchRectTopOffsetKeyUp(Sender: TObject;
   var Key: Word; Shift: TShiftState);
 begin
-  UpdateSearchAreaLabelsFromOffsetEditboxes;
-  UpdateSearchAreaLabelColorsFromTheirPosition;
-  tmrUpdateGrid.Enabled := True;
+  UpdateSearchAreaLabelsFromKeysOnEditBoxes;
 end;
 
 
@@ -3073,6 +3066,14 @@ begin
   except
     //exception when the components are not created yet  (expected)
   end;
+end;
+
+
+procedure TfrClickerFindControl.UpdateSearchAreaLabelsFromKeysOnEditBoxes;
+begin
+  UpdateSearchAreaLabelsFromOffsetEditboxes;
+  UpdateSearchAreaLabelColorsFromTheirPosition;
+  tmrUpdateGrid.Enabled := True;
 end;
 
 

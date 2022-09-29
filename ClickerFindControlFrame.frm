@@ -631,7 +631,7 @@ object frClickerFindControl: TfrClickerFindControl
         TabOrder = 5
         Text = '0'
         OnChange = lbeSearchRectLeftOffsetChange
-        OnKeyDown = lbeSearchRectLeftOffsetKeyDown
+        OnKeyUp = lbeSearchRectLeftOffsetKeyUp
         OnMouseDown = lbeSearchRectLeftOffsetMouseDown
         OnMouseMove = lbeSearchRectLeftOffsetMouseMove
       end
@@ -649,7 +649,7 @@ object frClickerFindControl: TfrClickerFindControl
         TabOrder = 6
         Text = '0'
         OnChange = lbeSearchRectTopOffsetChange
-        OnKeyDown = lbeSearchRectTopOffsetKeyDown
+        OnKeyUp = lbeSearchRectTopOffsetKeyUp
         OnMouseDown = lbeSearchRectTopOffsetMouseDown
         OnMouseMove = lbeSearchRectTopOffsetMouseMove
       end
@@ -667,7 +667,7 @@ object frClickerFindControl: TfrClickerFindControl
         TabOrder = 7
         Text = '0'
         OnChange = lbeSearchRectRightOffsetChange
-        OnKeyDown = lbeSearchRectRightOffsetKeyDown
+        OnKeyUp = lbeSearchRectRightOffsetKeyUp
         OnMouseDown = lbeSearchRectRightOffsetMouseDown
         OnMouseMove = lbeSearchRectRightOffsetMouseMove
       end
@@ -685,7 +685,7 @@ object frClickerFindControl: TfrClickerFindControl
         TabOrder = 8
         Text = '0'
         OnChange = lbeSearchRectBottomOffsetChange
-        OnKeyDown = lbeSearchRectBottomOffsetKeyDown
+        OnKeyUp = lbeSearchRectBottomOffsetKeyUp
         OnMouseDown = lbeSearchRectBottomOffsetMouseDown
         OnMouseMove = lbeSearchRectBottomOffsetMouseMove
       end
