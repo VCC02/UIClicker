@@ -3071,6 +3071,9 @@ end;
 
 procedure TfrClickerFindControl.UpdateSearchAreaLabelsFromKeysOnEditBoxes;
 begin
+  if FSearchAreaSearchedBmpDbgImg = nil then
+    Exit;
+
   UpdateSearchAreaLabelsFromOffsetEditboxes;
   UpdateSearchAreaLabelColorsFromTheirPosition;
   tmrUpdateGrid.Enabled := True;

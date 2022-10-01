@@ -60,6 +60,11 @@ type
     lbeSearchAction: TLabeledEdit;
     lblModifiedStatus: TLabel;
     memLogErr: TMemo;
+    MenuItem_SetActionStatusToFailed: TMenuItem;
+    MenuItem_SetActionStatusToAllowedFailed: TMenuItem;
+    MenuItem_SetActionStatusToSuccessful: TMenuItem;
+    MenuItem_SetActionStatusTo: TMenuItem;
+    N3: TMenuItem;
     MenuItem_PlayActionAndRestoreVars: TMenuItem;
     MenuItem_AddACallTemplateByFile: TMenuItem;
     N2: TMenuItem;
@@ -128,6 +133,9 @@ type
       );
     procedure MenuItem_ReplaceSelectedActionsWithATemplateCallClick(Sender: TObject
       );
+    procedure MenuItem_SetActionStatusToAllowedFailedClick(Sender: TObject);
+    procedure MenuItem_SetActionStatusToFailedClick(Sender: TObject);
+    procedure MenuItem_SetActionStatusToSuccessfulClick(Sender: TObject);
     procedure pnlActionsClick(Sender: TObject);
     procedure pnlVertSplitterMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
@@ -1879,7 +1887,8 @@ begin
                   WaitInDebuggingMode;
               end;
 
-              Exit;
+              if FClkActions[Node^.Index].ActionStatus = asFailed then  //the status can be manually reset while debugging
+                Exit;
             end;
         finally
           //restore button states
@@ -3178,6 +3187,51 @@ begin
     SetLength(NewClkActions, 0);
     SetLength(ActionsToRemove, 0);
   end;
+end;
+
+
+procedure TfrClickerActionsArr.MenuItem_SetActionStatusToAllowedFailedClick(
+  Sender: TObject);
+var
+  Node: PVirtualNode;
+begin
+  Node := vstActions.GetFirstSelected;
+  if Node = nil then
+    Exit;
+
+  FClkActions[Node^.Index].ActionStatus := asAllowedFailed;
+  SetActionVarValue('$LastAction_Status$', CActionStatusStr[FClkActions[Node^.Index].ActionStatus]);
+  vstActions.InvalidateNode(Node);
+end;
+
+
+procedure TfrClickerActionsArr.MenuItem_SetActionStatusToFailedClick(
+  Sender: TObject);
+var
+  Node: PVirtualNode;
+begin
+  Node := vstActions.GetFirstSelected;
+  if Node = nil then
+    Exit;
+
+  FClkActions[Node^.Index].ActionStatus := asFailed;
+  SetActionVarValue('$LastAction_Status$', CActionStatusStr[FClkActions[Node^.Index].ActionStatus]);
+  vstActions.InvalidateNode(Node);
+end;
+
+
+procedure TfrClickerActionsArr.MenuItem_SetActionStatusToSuccessfulClick(
+  Sender: TObject);
+var
+  Node: PVirtualNode;
+begin
+  Node := vstActions.GetFirstSelected;
+  if Node = nil then
+    Exit;
+
+  FClkActions[Node^.Index].ActionStatus := asSuccessful;
+  SetActionVarValue('$LastAction_Status$', CActionStatusStr[FClkActions[Node^.Index].ActionStatus]);
+  vstActions.InvalidateNode(Node);
 end;
 
 
