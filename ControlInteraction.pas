@@ -513,6 +513,12 @@ begin
   DebugBmp.Width := DebugDisplayLeft + Max(DebugBmp.Width, 400);  //400.. for long filenames
   DebugBmp.Height := Max(DebugBmp.Height, 100); //use Max to allow displaying text
 
+  if DebugBmp.Width < 1 then //it may happen, if DebugDisplayLeft is negative
+    DebugBmp.Width := 1;
+
+  if DebugBmp.Height < 1 then //it should not happen, from above code
+    DebugBmp.Height := 1;
+
   DebugDrawingX := DebugDisplayLeft + 10;
 
   if mmBitmapText in AMatchingMethods then

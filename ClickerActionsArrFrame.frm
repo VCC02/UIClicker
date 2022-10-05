@@ -1332,4 +1332,11 @@ object frClickerActionsArr: TfrClickerActionsArr
       OnClick = MenuItem_PlayActionAndRestoreVarsClick
     end
   end
+  object tmrDeleteActions: TTimer
+    Enabled = False
+    Interval = 10
+    OnTimer = tmrDeleteActionsTimer
+    Left = 372
+    Top = 90
+  end
 end

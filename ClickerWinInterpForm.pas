@@ -1141,6 +1141,9 @@ begin
 
   RecordComponent(FInterprettedHandle, ImgMatrix, ImgHWMatrix);
 
+  if Length(ImgMatrix) = 0 then
+    Exit;
+
   if FDoneRec then
     Exit;
 

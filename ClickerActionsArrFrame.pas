@@ -112,6 +112,7 @@ type
     spdbtnUpdateAction: TSpeedButton;
     spdbtnPalette: TSpeedButton;
     spdbtnTemplateNotes: TSpeedButton;
+    tmrDeleteActions: TTimer;
     tmrExecActionFromSrvModule: TTimer;
     tmrGlowUpdateButton: TTimer;
     tmrDebugKeys: TTimer;
@@ -147,6 +148,7 @@ type
     procedure spdbtnPaletteClick(Sender: TObject);
     procedure spdbtnTemplateNotesClick(Sender: TObject);
     procedure spdbtnUpdateActionClick(Sender: TObject);
+    procedure tmrDeleteActionsTimer(Sender: TObject);
     procedure tmrExecActionFromSrvModuleTimer(Sender: TObject);
     procedure vstActionsMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
@@ -2266,7 +2268,19 @@ begin
 
       2: CellText := IntToStr(FClkActions[Node^.Index].ActionOptions.ActionTimeout);
       3: CellText := GetVSTMiscDisplayedInfoByAction(FClkActions[Node^.Index]);
-      4: CellText := FClkActions[Node^.Index].FindControlOptions.MatchText + ' / ' + FClkActions[Node^.Index].FindControlOptions.MatchClassName;
+      4:
+      begin
+        case FClkActions[Node^.Index].ActionOptions.Action of
+          acClick: CellText := IntToStr(FClkActions[Node^.Index].ClickOptions.ClickType);
+          acExecApp: CellText := ExtractFileName(FClkActions[Node^.Index].ExecAppOptions.PathToApp);
+          acFindControl, acFindSubControl: CellText := FClkActions[Node^.Index].FindControlOptions.MatchText + ' / ' + FClkActions[Node^.Index].FindControlOptions.MatchClassName;
+          acSetControlText: CellText := FClkActions[Node^.Index].SetTextOptions.Text;
+          acCallTemplate: CellText := ExtractFileName(FClkActions[Node^.Index].CallTemplateOptions.TemplateFileName);
+          acSleep: CellText := FClkActions[Node^.Index].SleepOptions.Value;
+          acSetVar: CellText := FastReplace_ReturnTo45(FClkActions[Node^.Index].SetVarOptions.ListOfVarNames);
+          acWindowOperations: CellText := IntToStr(Ord(FClkActions[Node^.Index].WindowOperationsOptions.Operation));
+        end;
+      end;
       5: CellText := StringReplace(FClkActions[Node^.Index].FindControlOptions.MatchBitmapFiles, #13#10, ', ', [rfReplaceAll]);
       6: CellText := IntToStr(Node^.Index);
     end;
@@ -2535,12 +2549,15 @@ const
   CEnableDisableText: array[Boolean] of string = ('Disable', 'Enable');
 var
   tp: TPoint;
+  ColumnOffSet: Integer;
 begin
   FPreviousSelectedNode := vstActions.GetFirstSelected;
 
   vstActions.GetHitTestInfoAt(X, Y, True, FActionsHitInfo);
+
+  ColumnOffSet := vstActions.Header.Columns.Items[6].Width * Ord(coVisible in vstActions.Header.Columns.Items[6].Options);
                                                                              //these constants should be replaced with vst.Indent (or TextSpacing) + imgLst.Width + NodeCheckBox spacing etc
-  if (FActionsHitInfo.HitColumn = 0) and (FActionsHitInfo.HitNode <> nil) and (X > 24) and (X < 50) then
+  if (FActionsHitInfo.HitColumn = 0) and (FActionsHitInfo.HitNode <> nil) and (X > 24 + ColumnOffSet) and (X < 50 + ColumnOffSet) then
   begin
     case Button of   //click on breakpoint
       mbLeft:
@@ -2617,9 +2634,6 @@ begin
       else
     end;
   end;
-
-  if Key = VK_DELETE then
-    RemoveSelectedActions;
 end;
 
 
@@ -2628,6 +2642,9 @@ procedure TfrClickerActionsArr.vstActionsKeyUp(Sender: TObject; var Key: Word;
 begin
   if Key in [VK_UP, VK_DOWN, VK_NEXT, VK_PRIOR, VK_HOME, VK_END] then
     HandleActionSelection;
+
+  if Key = VK_DELETE then
+    tmrDeleteActions.Enabled := True; //using timer, because of a race condition
 end;
 
 
@@ -3628,6 +3645,13 @@ begin
   Modified := True;
   StopGlowingUpdateButton;
   frClickerActions.UpdatePageControlActionExecutionIcons;
+end;
+
+
+procedure TfrClickerActionsArr.tmrDeleteActionsTimer(Sender: TObject);
+begin
+  tmrDeleteActions.Enabled := False;
+  RemoveSelectedActions;
 end;
 
 

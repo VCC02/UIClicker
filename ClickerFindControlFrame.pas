@@ -1495,13 +1495,13 @@ begin
     TempBmp.Canvas.Draw(0, 0, FSearchAreaControlDbgImg.Picture.Bitmap);
 
     TempBmp.Canvas.Pen.Color := FSearchAreaLeftLimitLabel.Color;
-    Line(TempBmp.Canvas, FSearchAreaLeftLimitLabel.Left, 0, FSearchAreaLeftLimitLabel.Left, TempBmp.Width - 1);
+    Line(TempBmp.Canvas, FSearchAreaLeftLimitLabel.Left, 0, FSearchAreaLeftLimitLabel.Left, TempBmp.Height - 1);
 
     TempBmp.Canvas.Pen.Color := FSearchAreaTopLimitLabel.Color;
     Line(TempBmp.Canvas, 0, FSearchAreaTopLimitLabel.Top, TempBmp.Width - 1, FSearchAreaTopLimitLabel.Top);
 
     TempBmp.Canvas.Pen.Color := FSearchAreaRightLimitLabel.Color;
-    Line(TempBmp.Canvas, FSearchAreaRightLimitLabel.Left, 0, FSearchAreaRightLimitLabel.Left, TempBmp.Width - 1);
+    Line(TempBmp.Canvas, FSearchAreaRightLimitLabel.Left, 0, FSearchAreaRightLimitLabel.Left, TempBmp.Height - 1);
 
     TempBmp.Canvas.Pen.Color := FSearchAreaBottomLimitLabel.Color;
     Line(TempBmp.Canvas, 0, FSearchAreaBottomLimitLabel.Top, TempBmp.Width - 1, FSearchAreaBottomLimitLabel.Top);
@@ -3634,13 +3634,13 @@ begin
     end;
 
     TempBmp.Canvas.Pen.Color := FSearchAreaLeftLimitLabel.Color;
-    Line(TempBmp.Canvas, FSearchAreaLeftLimitLabel.Left, 0, FSearchAreaLeftLimitLabel.Left, TempBmp.Width - 1);
+    Line(TempBmp.Canvas, FSearchAreaLeftLimitLabel.Left, 0, FSearchAreaLeftLimitLabel.Left, TempBmp.Height - 1);
 
     TempBmp.Canvas.Pen.Color := FSearchAreaTopLimitLabel.Color;
     Line(TempBmp.Canvas, 0, FSearchAreaTopLimitLabel.Top, TempBmp.Width - 1, FSearchAreaTopLimitLabel.Top);
 
     TempBmp.Canvas.Pen.Color := FSearchAreaRightLimitLabel.Color;
-    Line(TempBmp.Canvas, FSearchAreaRightLimitLabel.Left, 0, FSearchAreaRightLimitLabel.Left, TempBmp.Width - 1);
+    Line(TempBmp.Canvas, FSearchAreaRightLimitLabel.Left, 0, FSearchAreaRightLimitLabel.Left, TempBmp.Height - 1);
 
     TempBmp.Canvas.Pen.Color := FSearchAreaBottomLimitLabel.Color;
     Line(TempBmp.Canvas, 0, FSearchAreaBottomLimitLabel.Top, TempBmp.Width - 1, FSearchAreaBottomLimitLabel.Top);

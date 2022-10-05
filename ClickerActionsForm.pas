@@ -1198,6 +1198,8 @@ begin
         NewFrame.spdbtnStopPlaying.Enabled := True;
         NewFrame.frClickerActions.PredefinedVarCount := memVariables.Lines.Count;
 
+        NewFrame.chkSwitchEditorOnActionSelect.Checked := frClickerActionsArrMain.chkSwitchEditorOnActionSelect.Checked;
+
         if TfrClickerActionsArr(Sender).chkEnableDebuggerKeys.Checked then
           NewFrame.chkEnableDebuggerKeys.Checked := True;
 
@@ -1253,6 +1255,10 @@ begin
   end;
 
   PageControlPlayer.ActivePageIndex := PageControlPlayer.PageCount - 1;
+  PageControlPlayer.Repaint;
+
+  if PageControlPlayer.ActivePageIndex > -1 then   //it should always be > -1
+    PageControlPlayer.Pages[PageControlPlayer.ActivePageIndex].Repaint;
 end;
 
 
