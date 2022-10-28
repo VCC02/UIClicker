@@ -42,6 +42,7 @@ type
   TOnWaitForBitmapsAvailability = procedure(ListOfBitmapFiles: TStringList) of object;
   TOnCallTemplate = function(Sender: TObject; AFileNameToCall: string; ListOfVariables: TStrings; DebugBitmap: TBitmap; DebugGridImage: TImage; IsDebugging, AShouldStopAtBreakPoint: Boolean; AStackLevel: Integer; AExecutesRemotely: Boolean): Boolean of object;
   TOnSetEditorSleepInfo = procedure(AElapsedTime, ARemainingTime: string) of object;
+  TOnGetSelfHandles = procedure(AListOfSelfHandles: TStringList) of object;
 
   TActionExecution = class
   private
@@ -68,6 +69,7 @@ type
     FOnSetEditorSleepProgressBarMax: TOnSetEditorTimeoutProgressBarMax;
     FOnSetEditorSleepProgressBarPosition: TOnSetEditorTimeoutProgressBarPosition;
     FOnSetEditorSleepInfo: TOnSetEditorSleepInfo;
+    FOnGetSelfHandles: TOnGetSelfHandles;
 
     function GetActionVarValue(VarName: string): string;
     procedure SetActionVarValue(VarName, VarValue: string);
@@ -91,6 +93,7 @@ type
     procedure DoOnSetEditorSleepProgressBarMax(AMaxValue: Integer);
     procedure DoOnSetEditorSleepProgressBarPosition(APositionValue: Integer);
     procedure DoOnSetEditorSleepInfo(AElapsedTime, ARemainingTime: string);
+    procedure DoOnGetSelfHandles(AListOfSelfHandles: TStringList);
   public
     constructor Create;
     destructor Destroy; override;
@@ -138,6 +141,7 @@ type
     property OnSetEditorSleepProgressBarMax: TOnSetEditorTimeoutProgressBarMax write FOnSetEditorSleepProgressBarMax;
     property OnSetEditorSleepProgressBarPosition: TOnSetEditorTimeoutProgressBarPosition write FOnSetEditorSleepProgressBarPosition;
     property OnSetEditorSleepInfo: TOnSetEditorSleepInfo write FOnSetEditorSleepInfo;
+    property OnGetSelfHandles: TOnGetSelfHandles write FOnGetSelfHandles;
   end;
 
 
@@ -176,6 +180,7 @@ begin
   FOnSetEditorSleepProgressBarMax := nil;
   FOnSetEditorSleepProgressBarPosition := nil;
   FOnSetEditorSleepInfo := nil;
+  FOnGetSelfHandles := nil;
 end;
 
 
@@ -470,6 +475,15 @@ begin
     FOnSetEditorSleepInfo(AElapsedTime, ARemainingTime)
   else
     raise Exception.Create('FOnSetEditorSleepInfo is not assigned.');
+end;
+
+
+procedure TActionExecution.DoOnGetSelfHandles(AListOfSelfHandles: TStringList);
+begin
+  if Assigned(FOnGetSelfHandles) then
+    FOnGetSelfHandles(AListOfSelfHandles)
+  else
+    raise Exception.Create('FOnGetSelfHandles is not assigned.');
 end;
 
 
@@ -1571,8 +1585,9 @@ var
   TempListOfSetVarNames: TStringList;
   TempListOfSetVarValues: TStringList;
   TempListOfSetVarEvalBefore: TStringList;
-  i: Integer;
+  i, j: Integer;
   VarName, VarValue: string;
+  ListOfSelfHandles: TStringList;
 begin
   Result := False;
   TempListOfSetVarNames := TStringList.Create;
@@ -1609,6 +1624,21 @@ begin
 
         Result := False;
         Exit;
+      end;
+
+      if VarName = '$GetSelfHandles()$' then
+      begin
+        ListOfSelfHandles := TStringList.Create;
+        try
+          DoOnGetSelfHandles(ListOfSelfHandles);
+
+          for j := 0 to ListOfSelfHandles.Count - 1 do
+            SetActionVarValue('$' + ListOfSelfHandles.Names[j] + '$', ListOfSelfHandles.ValueFromIndex[j]);
+        finally
+          ListOfSelfHandles.Free;
+        end;
+
+        Continue; //use this to prevent adding '$GetSelfHandles()$' as a variable
       end;
 
       if TempListOfSetVarEvalBefore.Strings[i] = '1' then

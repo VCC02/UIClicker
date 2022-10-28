@@ -83,6 +83,7 @@ type
     function HandleOnPictureOpenDialogExecute: Boolean;
     function HandleOnGetPictureOpenDialogFileName: string;
     function HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
+    procedure HandleOnGetSelfHandles(AListOfSelfHandles: TStringList);
 
     procedure HandleOnTemplateOpenSetMultiSelect;
   public
@@ -142,6 +143,7 @@ begin
     frmClickerActions.OnPictureOpenDialogExecute := HandleOnPictureOpenDialogExecute;
     frmClickerActions.OnGetPictureOpenDialogFileName := HandleOnGetPictureOpenDialogFileName;
     frmClickerActions.OnLoadBitmap := HandleOnLoadBitmap;
+    frmClickerActions.OnGetSelfHandles := HandleOnGetSelfHandles;
 
     frmClickerTemplateCallTree.OnTemplateOpenSetMultiSelect := HandleOnTemplateOpenSetMultiSelect;
     frmClickerTemplateCallTree.OnFileExists := HandleOnFileExists;
@@ -392,6 +394,23 @@ begin
   end
   else
     Result := False;
+end;
+
+
+procedure TfrmUIClickerMainForm.HandleOnGetSelfHandles(AListOfSelfHandles: TStringList);
+var
+  i: Integer;
+  CurrentForm: TForm;
+begin
+  for i := 0 to Application.ComponentCount - 1 do
+    if Application.Components[i] is TForm then
+    begin
+      try
+        CurrentForm := Application.Components[i] as TForm;
+        AListOfSelfHandles.Add(CurrentForm.Name + '_Handle=' + IntToStr(CurrentForm.Handle));
+      except
+      end;
+    end;
 end;
 
 

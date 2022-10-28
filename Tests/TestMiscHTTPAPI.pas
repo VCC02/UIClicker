@@ -35,6 +35,8 @@ uses
 type
 
   TTestMiscHTTPAPI = class(TTestHTTPAPI)
+  public
+    constructor Create; override;
   published
     procedure Test_TestConnection;
     procedure Test_SetVariable_HappyFlow;
@@ -51,15 +53,22 @@ uses
   ClickerActionsClient, ClickerUtils, Controls, Graphics, ActionsStuff;
 
 
+constructor TTestMiscHTTPAPI.Create;
+begin
+  inherited Create;
+  TestServerAddress := CTestServerAddress;
+end;
+
+
 procedure TTestMiscHTTPAPI.Test_TestConnection;
 begin
-  Expect(TestConnection(CTestServerAddress)).ToBe(CREResp_ConnectionOK);
+  Expect(TestConnection(TestServerAddress)).ToBe(CREResp_ConnectionOK);
 end;
 
 
 procedure TTestMiscHTTPAPI.Test_SetVariable_HappyFlow;
 begin
-  Expect(SetVariable(CTestServerAddress, '$MyVar$', 'some value', 0)).ToBe(CREResp_Done);
+  Expect(SetVariable(TestServerAddress, '$MyVar$', 'some value', 0)).ToBe(CREResp_Done);
 end;
 
 
@@ -70,9 +79,9 @@ var
   Response: string;
   ListOfVars: TStringList;
 begin
-  Expect(SetVariable(CTestServerAddress, '$MyVar$', CBadValue, 10)).ToBe(CExpectedBadStackLevelResponse);
+  Expect(SetVariable(TestServerAddress, '$MyVar$', CBadValue, 10)).ToBe(CExpectedBadStackLevelResponse);
 
-  Response := FastReplace_87ToReturn(GetAllReplacementVars(CTestServerAddress, 0));
+  Response := FastReplace_87ToReturn(GetAllReplacementVars(TestServerAddress, 0));
 
   ListOfVars := TStringList.Create;
   try
@@ -92,11 +101,11 @@ var
 begin
   SetupTargetWindowFor_FindSubControl;
   GenerateFindSubControlOptionsForMainUIClickerWindow_Bitness(FindSubControlOptions, False);
-  ExecuteFindSubControlAction(CTestServerAddress, FindSubControlOptions, 'Test GetDebugImageFromServer on UIClicker Main', 3000, CREParam_FileLocation_ValueMem);
+  ExecuteFindSubControlAction(TestServerAddress, FindSubControlOptions, 'Test GetDebugImageFromServer on UIClicker Main', 3000, CREParam_FileLocation_ValueMem);
 
   Bmp := TBitmap.Create;
   try
-    Response := GetDebugImageFromServer(CTestServerAddress, 0, Bmp, False);
+    Response := GetDebugImageFromServer(TestServerAddress, 0, Bmp, False);
     Expect(Response).ToBe('');
 
     Expect(Bmp.Width).ToBe(400);
@@ -114,7 +123,7 @@ var
 begin
   Bmp := TBitmap.Create;
   try
-    Response := GetDebugImageFromServer(CTestServerAddress, 10, Bmp, False);
+    Response := GetDebugImageFromServer(TestServerAddress, 10, Bmp, False);
     Expect(Response).ToBe('');
 
     Expect(Bmp.Width).ToBeGreaterThan(1000);  //the returned bmp contains a long error message

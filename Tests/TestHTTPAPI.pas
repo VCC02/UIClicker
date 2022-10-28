@@ -37,18 +37,22 @@ type
     FDone: Boolean;
     FDelayBeforeRequest: Integer;
     FLoopType: string;
+    FTestServerAddress: string;
     FResult: string;
   protected
     procedure Execute; override;
   public
     constructor Create(CreateSuspended: Boolean;
                        const StackSize: SizeUInt = DefaultStackSize);
+
+    property TestServerAddress: string read FTestServerAddress write FTestServerAddress;
   end;
 
 
   TTestHTTPAPI = class(TTestCase)
   private
     FInMemFS: TInMemFileSystem;
+    FTestServerAddress: string;
 
     function SendTemplateToServer(ARemoteAddress, AFileName: string; AFileContent: TMemoryStream): string;
 
@@ -72,6 +76,9 @@ type
     procedure ExecuteSetControlTextActionWithMainUIClickerWindow(ASearchedCaption, ASetCaption: string);
 
     function GetVarValueFromServer(AVarName: string): string;
+
+  public
+    property TestServerAddress: string read FTestServerAddress write FTestServerAddress;
   end;
 
 
@@ -136,7 +143,7 @@ begin
     until GetTickCount64 - tk > FDelayBeforeRequest;
 
     try
-      FResult := TerminateWaitingForFileAvailability(CTestServerAddress, FLoopType, False);
+      FResult := TerminateWaitingForFileAvailability(FTestServerAddress, FLoopType, False);
 
       if FResult <> CREResp_Done then
         raise Exception.Create(FResult);
@@ -179,7 +186,7 @@ begin
   end;
 
   Expect(Result).ToBe('Received file: "' + AFileName + '"  of ' + IntToStr(Length(AFileContent)) + ' bytes in size.');
-  Expect(GetFileExistenceOnServer(CTestServerAddress, AFileName, False)).ToBe(True);
+  Expect(GetFileExistenceOnServer(FTestServerAddress, AFileName, False)).ToBe(True);
 end;
 
 
@@ -193,7 +200,7 @@ begin
   Result := SendFileToServer(Link, AFileContent);
 
   Expect(Result).ToBe('Received file: "' + AFileName + '"  of ' + IntToStr(AFileContent.Size) + ' bytes in size.');
-  Expect(GetFileExistenceOnServer(CTestServerAddress, AFileName, False)).ToBe(True);
+  Expect(GetFileExistenceOnServer(FTestServerAddress, AFileName, False)).ToBe(True);
 end;
 
 
@@ -203,12 +210,12 @@ var
 begin
   Content := TMemoryStream.Create;
   try
-    SendTemplateToServer(CTestServerAddress, CEmptyTestTemplateFileName, Content);
+    SendTemplateToServer(FTestServerAddress, CEmptyTestTemplateFileName, Content);
   finally
     Content.Free;
   end;
 
-  Expect(SendLoadTemplateInExecListRequest(CTestServerAddress, CEmptyTestTemplateFileName, 0)).ToBe(CREResp_TemplateLoaded);
+  Expect(SendLoadTemplateInExecListRequest(FTestServerAddress, CEmptyTestTemplateFileName, 0)).ToBe(CREResp_TemplateLoaded);
 end;
 
 
@@ -219,7 +226,7 @@ begin
   Content := TMemoryStream.Create;
   try
     FInMemFS.LoadFileFromMemToStream(AFileName, Content);
-    Expect(SendTemplateToServer(CTestServerAddress, AFileName, Content)).ToContain('Received file: "' + AFileName + '"');
+    Expect(SendTemplateToServer(FTestServerAddress, AFileName, Content)).ToContain('Received file: "' + AFileName + '"');
   finally
     Content.Free;
   end;
@@ -229,7 +236,7 @@ end;
 procedure TTestHTTPAPI.SendTemplateFromInMemToServerThenLoad(AFileName: string);
 begin
   SendTemplateFromInMemToServer(AFileName);
-  Expect(SendLoadTemplateInExecListRequest(CTestServerAddress, AFileName, 0)).ToBe(CREResp_TemplateLoaded);
+  Expect(SendLoadTemplateInExecListRequest(FTestServerAddress, AFileName, 0)).ToBe(CREResp_TemplateLoaded);
 end;
 
 
@@ -238,7 +245,7 @@ var
   i: Integer;
 begin
   for i := 0 to AFileNamesLength - 1 do
-    SendTestFileToServer(CTestServerAddress, AFileNames^[i], ABaseContent + IntToStr(i + 1));  //i + 1, to match the already existing hashes
+    SendTestFileToServer(FTestServerAddress, AFileNames^[i], ABaseContent + IntToStr(i + 1));  //i + 1, to match the already existing hashes
 end;
 
 
@@ -284,7 +291,7 @@ function TTestHTTPAPI.Send_ExecuteCommandAtIndex_ToServer(AActionIdx, AStackLeve
 var
   Link: string;
 begin
-  Link := CTestServerAddress + CRECmd_ExecuteCommandAtIndex + '?' +
+  Link := FTestServerAddress + CRECmd_ExecuteCommandAtIndex + '?' +
                                CREParam_ActionIdx + '=' + IntToStr(AActionIdx) + '&' +
                                CREParam_StackLevel + '=' + IntToStr(AStackLevel) + '&' +
                                CREParam_IsDebugging + '=' + IntToStr(0) + '&' +
@@ -303,7 +310,7 @@ var
   ListOfVars: TStringList;
 begin
   GenerateFindControlOptionsForMainUIClickerWindow(FindControlOptions, False, ACustomFormCaption);
-  Response := FastReplace_87ToReturn(ExecuteFindControlAction(CTestServerAddress, FindControlOptions, 'Setup UIClicker Main', 1000, CREParam_FileLocation_ValueMem));
+  Response := FastReplace_87ToReturn(ExecuteFindControlAction(FTestServerAddress, FindControlOptions, 'Setup UIClicker Main', 1000, CREParam_FileLocation_ValueMem));
 
   ListOfVars := TStringList.Create;
   try
@@ -320,7 +327,7 @@ begin
   SetForegroundWindow(UIClickerMainHandle);
 
   GenerateWindowOperationsOptionsForFindControlSetup(WindowOperationsOptions, woMoveResize);
-  ExecuteWindowOperationsAction(CTestServerAddress, WindowOperationsOptions);
+  ExecuteWindowOperationsAction(FTestServerAddress, WindowOperationsOptions);
 end;
 
 
@@ -331,6 +338,7 @@ begin
   Th := TTerminateWaitingForFileAvailabilityRequestTh.Create(True);
 
   Th.FLoopType := ALoopType;
+  Th.TestServerAddress := FTestServerAddress;
 
   if ADelayBeforeRequest < 0 then
     ADelayBeforeRequest := 0;
@@ -350,7 +358,7 @@ begin
   SetupTargetWindowFor_FindSubControl(ASearchedCaption); //find main UIClicker window
   GenerateSetControlTextOptions(SetTextOptions, ASetCaption, stEditBox);
 
-  Response := FastReplace_87ToReturn(ExecuteSetControlTextAction(CTestServerAddress, SetTextOptions));
+  Response := FastReplace_87ToReturn(ExecuteSetControlTextAction(FTestServerAddress, SetTextOptions));
 
   ListOfVars := TStringList.Create;
   try
@@ -367,7 +375,7 @@ var
   Response: string;
   ListOfVars: TStringList;
 begin
-  Response := FastReplace_87ToReturn(GetAllReplacementVars(CTestServerAddress, 0));
+  Response := FastReplace_87ToReturn(GetAllReplacementVars(FTestServerAddress, 0));
 
   ListOfVars := TStringList.Create;
   try

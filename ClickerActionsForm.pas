@@ -151,6 +151,7 @@ type
     FOnRecordComponent: TOnRecordComponent;
     FOnGetCurrentlyRecordedScreenShotImage: TOnGetCurrentlyRecordedScreenShotImage;
     FOnLoadBitmap: TOnLoadBitmap;
+    FOnGetSelfHandles: TOnGetSelfHandles;
 
     FOnFileExists: TOnFileExists;
     FOnTClkIniReadonlyFileCreate: TOnTClkIniReadonlyFileCreate;
@@ -187,6 +188,7 @@ type
 
     function DoLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     function DoOnFileExists(const AFileName: string): Boolean;
+    procedure DoOnGetSelfHandles(AListOfSelfHandles: TStringList);
 
     function DoOnTClkIniReadonlyFileCreate(AFileName: string): TClkIniReadonlyFile;
     procedure DoOnSaveTemplateToFile(AStringList: TStringList; const AFileName: string);
@@ -220,6 +222,7 @@ type
 
     function HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     function HandleOnFileExists(const FileName: string): Boolean;
+    procedure HandleOnGetSelfHandles(AListOfSelfHandles: TStringList);
 
     procedure HandleOnBeforeRequestingListOfMissingFiles;  //client thread calls this, without UI sync
     procedure HandleOnAfterRequestingListOfMissingFiles;   //client thread calls this, without UI sync
@@ -265,6 +268,7 @@ type
     property OnRecordComponent: TOnRecordComponent read FOnRecordComponent write FOnRecordComponent;
     property OnGetCurrentlyRecordedScreenShotImage: TOnGetCurrentlyRecordedScreenShotImage read FOnGetCurrentlyRecordedScreenShotImage write FOnGetCurrentlyRecordedScreenShotImage;
     property OnLoadBitmap: TOnLoadBitmap read FOnLoadBitmap write FOnLoadBitmap;
+    property OnGetSelfHandles: TOnGetSelfHandles write FOnGetSelfHandles;
 
     property OnFileExists: TOnFileExists write FOnFileExists;
     property OnTClkIniReadonlyFileCreate: TOnTClkIniReadonlyFileCreate write FOnTClkIniReadonlyFileCreate;
@@ -291,7 +295,7 @@ implementation
 
 
 uses
-  BitmapProcessing, ClickerActionsClient, ControlInteraction, MouseStuff;
+  BitmapProcessing, ClickerActionsClient, MouseStuff;
 
 
 const
@@ -512,6 +516,7 @@ begin
   FOnRecordComponent := nil;
   FOnGetCurrentlyRecordedScreenShotImage := nil;
   FOnLoadBitmap := nil;
+  FOnGetSelfHandles := nil;
 
   FOnFileExists := nil;
   FOnTClkIniReadonlyFileCreate := nil;
@@ -646,6 +651,7 @@ begin
   frClickerActionsArrMain.OnWaitForBitmapsAvailability := HandleOnWaitForBitmapsAvailability;
   frClickerActionsArrMain.OnLoadBitmap := HandleOnLoadBitmap;
   frClickerActionsArrMain.OnFileExists := HandleOnFileExists;
+  frClickerActionsArrMain.ActionExecution.OnGetSelfHandles := HandleOnGetSelfHandles;
   frClickerActionsArrMain.OnTClkIniReadonlyFileCreate := HandleOnTClkIniReadonlyFileCreate;
   frClickerActionsArrMain.OnSaveTemplateToFile := HandleOnSaveTemplateToFile;
   frClickerActionsArrMain.OnSetTemplateOpenDialogInitialDir := HandleOnSetTemplateOpenDialogInitialDir;
@@ -683,6 +689,8 @@ begin
   frClickerActionsArrExperiment2.OnLoadBitmap := HandleOnLoadBitmap;
   frClickerActionsArrExperiment1.OnFileExists := HandleOnFileExists;
   frClickerActionsArrExperiment2.OnFileExists := HandleOnFileExists;
+  frClickerActionsArrExperiment1.ActionExecution.OnGetSelfHandles := HandleOnGetSelfHandles;
+  frClickerActionsArrExperiment2.ActionExecution.OnGetSelfHandles := HandleOnGetSelfHandles;
   frClickerActionsArrExperiment1.OnTClkIniReadonlyFileCreate := HandleOnTClkIniReadonlyFileCreate;
   frClickerActionsArrExperiment2.OnTClkIniReadonlyFileCreate := HandleOnTClkIniReadonlyFileCreate;
   frClickerActionsArrExperiment1.OnSaveTemplateToFile := HandleOnSaveTemplateToFile;
@@ -796,6 +804,15 @@ begin
     raise Exception.Create('OnFileExists is not assigned.')
   else
     Result := FOnFileExists(AFileName);
+end;
+
+
+procedure TfrmClickerActions.DoOnGetSelfHandles(AListOfSelfHandles: TStringList);
+begin
+  if not Assigned(FOnGetSelfHandles) then
+    raise Exception.Create('OnGetSelfHandles is not assigned.')
+  else
+    FOnGetSelfHandles(AListOfSelfHandles);
 end;
 
 
@@ -1045,7 +1062,6 @@ begin
   try
     NewTabSheet.Caption := ExtractFileName(AFileNameToCall);
     NewTabSheet.PageControl := PageControlPlayer;
-    NewTabSheet.PageIndex := PageControlPlayer.PageCount - 1;
     NewTabSheet.ImageIndex := 0;
 
     ABtn := TButton.Create(NewTabSheet);
@@ -1108,6 +1124,7 @@ begin
 
         NewFrame.OnLoadBitmap := HandleOnLoadBitmap;
         NewFrame.OnFileExists := HandleOnFileExists;
+        NewFrame.ActionExecution.OnGetSelfHandles := HandleOnGetSelfHandles;
 
         NewFrame.OnTClkIniReadonlyFileCreate := HandleOnTClkIniReadonlyFileCreate;
         NewFrame.OnSaveTemplateToFile := HandleOnSaveTemplateToFile;
@@ -2542,6 +2559,12 @@ end;
 function TfrmClickerActions.HandleOnFileExists(const FileName: string): Boolean;
 begin
   Result := DoOnFileExists(FileName);
+end;
+
+
+procedure TfrmClickerActions.HandleOnGetSelfHandles(AListOfSelfHandles: TStringList);
+begin
+  DoOnGetSelfHandles(AListOfSelfHandles);
 end;
 
 

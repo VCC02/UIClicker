@@ -176,6 +176,7 @@ type
     chkUseWholeScreenAsSearchArea: TCheckBox;
     chkWaitForControlToGoAway: TCheckBox;
     cmbMatchBitmapTextSearchAlgorithm: TComboBox;
+    edtFoundControlInfo: TEdit;
     grpFindControlDetailsOnWindow: TGroupBox;
     imgCopySelAreaFromBkImg: TImage;
     imgCopyBMPImg: TImage;
@@ -186,7 +187,6 @@ type
     imgUpdateLeftTopOffsets: TImage;
     imgCopyBkImg: TImage;
     imgUpdateLeftTopRightBottomOffsets: TImage;
-    lblFoundControlInfo: TLabel;
     lbeFoundControlText: TLabeledEdit;
     lbeAllowedColorErrorCount: TLabeledEdit;
     lbeColorError: TLabeledEdit;
@@ -643,7 +643,7 @@ implementation
 {$R *.frm}
 
 uses
-  BitmapProcessing, ControlInteraction, Clipbrd, ClickerZoomPreviewForm;
+  BitmapProcessing, Clipbrd, ClickerZoomPreviewForm;
 
 
 const
@@ -2307,9 +2307,9 @@ begin
 
     lbeFoundControlText.Text := Comp.Text;
     lbeFoundControlClass.Text := Comp.ClassName;
-    lblFoundControlInfo.Caption := 'Control info:  handle = ' + IntToStr(Comp.Handle) +
-                                   '  x:y = ' + IntToStr(Comp.ComponentRectangle.Left) + ':' + IntToStr(Comp.ComponentRectangle.Top) +
-                                   '  w:h = ' + IntToStr(Comp.ComponentRectangle.Width) + ':' + IntToStr(Comp.ComponentRectangle.Height);
+    edtFoundControlInfo.Text := 'Control info:  handle = ' + IntToStr(Comp.Handle) +
+                                '  x:y = ' + IntToStr(Comp.ComponentRectangle.Left) + ':' + IntToStr(Comp.ComponentRectangle.Top) +
+                                '  w:h = ' + IntToStr(Comp.ComponentRectangle.Width) + ':' + IntToStr(Comp.ComponentRectangle.Height);
 
     if pnlDrag.Color <> clLime then
       pnlDrag.Color := clLime;

@@ -45,9 +45,6 @@ type
   { TfrClickerActionsArr }
 
   TfrClickerActionsArr = class(TFrame)
-    btnAddAction: TButton;
-    btnNew: TButton;
-    btnRemoveAction: TButton;
     chkSwitchEditorOnActionSelect: TCheckBox;
     chkEnableDebuggerKeys: TCheckBox;
     chkResetVarsOnPlayAll: TCheckBox;
@@ -112,6 +109,9 @@ type
     spdbtnUpdateAction: TSpeedButton;
     spdbtnPalette: TSpeedButton;
     spdbtnTemplateNotes: TSpeedButton;
+    spdbtnAddAction: TSpeedButton;
+    spdbtnRemoveAction: TSpeedButton;
+    spdbtnNew: TSpeedButton;
     tmrDeleteActions: TTimer;
     tmrExecActionFromSrvModule: TTimer;
     tmrGlowUpdateButton: TTimer;
@@ -477,7 +477,7 @@ implementation
 
 
 uses
-  ControlInteraction, ValEdit, Math, ClickerTemplates,
+  ValEdit, Math, ClickerTemplates,
   BitmapProcessing, Clipbrd, ClickerConditionEditorForm, ClickerActionsClient,
   ClickerTemplateNotesForm;
 
@@ -2756,9 +2756,20 @@ begin
 end;
 
 
+function CharCount(AChar: Char; s: string; AMaxIndex: Integer): Integer;
+var
+  i: Integer;
+begin
+  Result := 0;
+  for i := 1 to Min(AMaxIndex, Length(s)) do
+    if s[i] = AChar then
+      Inc(Result);
+end;
+
+
 function TfrClickerActionsArr.EvaluateAssignmentExpression: Boolean;
 var
-  PosEq: Integer;
+  PosEq, PosParanth, PosCrop: Integer;
   PosVar, PosEndVar: Integer;
   s: string;
   LeftSide, RightSide, Value: string;
@@ -2767,7 +2778,20 @@ begin
 
   s := edtConsoleCommand.Text;
   PosEq := Pos('=', s);
-  LeftSide := Trim(Copy(s, 1, PosEq - 1));
+  PosParanth := Pos('(', s);
+  PosCrop := PosEq;
+
+  if PosParanth < PosEq then
+  begin
+    if CharCount('$', s, PosParanth) = 1 then     //e.g.:  $func(value=337770)$
+      PosCrop := PosParanth;
+  end
+  else
+    if PosParanth > PosEq then
+      if CharCount('$', s, PosEq) > 1 then        //e.g.   $var$=$func(abc)$
+        PosCrop := PosEq;
+
+  LeftSide := Trim(Copy(s, 1, PosCrop - 1));
 
   PosVar := Pos('$', LeftSide);
   PosEndVar := Pos('$', LeftSide, PosVar + 1);
@@ -2778,7 +2802,7 @@ begin
     Exit;
   end;
 
-  RightSide := Trim(Copy(s, PosEq + 1, MaxInt));
+  RightSide := Trim(Copy(s, PosCrop + 1, MaxInt));
 
   if (Length(RightSide) > 2) and (RightSide[1] = '"') and (RightSide[Length(RightSide)] = '"') then
     Value := Copy(RightSide, 2, Length(RightSide) - 2)

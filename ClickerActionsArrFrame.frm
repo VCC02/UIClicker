@@ -128,19 +128,6 @@ object frClickerActionsArr: TfrClickerActionsArr
       ParentShowHint = False
       ShowHint = True
     end
-    object btnNew: TButton
-      Left = 224
-      Height = 25
-      Hint = 'Clear all actions and all controls'
-      Top = 207
-      Width = 75
-      Anchors = [akLeft, akBottom]
-      Caption = 'New...'
-      OnClick = btnNewClick
-      ParentShowHint = False
-      ShowHint = True
-      TabOrder = 3
-    end
     object spdbtnLoadTemplate: TSpeedButton
       Left = 304
       Height = 25
@@ -179,19 +166,6 @@ object frClickerActionsArr: TfrClickerActionsArr
       OnClick = spdbtnExtraSaveClick
       ParentFont = False
     end
-    object btnAddAction: TButton
-      Left = 576
-      Height = 25
-      Hint = 'Adds a new action, with the current content from the action editor.'
-      Top = 3
-      Width = 62
-      Anchors = [akTop, akRight]
-      Caption = 'Add'
-      OnClick = btnAddActionClick
-      ParentShowHint = False
-      ShowHint = True
-      TabOrder = 4
-    end
     object spdbtnExtraAdd: TSpeedButton
       Left = 637
       Height = 25
@@ -223,16 +197,6 @@ object frClickerActionsArr: TfrClickerActionsArr
       OnClick = spdbtnUpdateActionClick
       ShowHint = True
       ParentShowHint = False
-    end
-    object btnRemoveAction: TButton
-      Left = 576
-      Height = 25
-      Top = 53
-      Width = 62
-      Anchors = [akTop, akRight]
-      Caption = 'Remove...'
-      OnClick = btnRemoveActionClick
-      TabOrder = 5
     end
     object spdbtnExtraRemove: TSpeedButton
       Left = 637
@@ -310,7 +274,7 @@ object frClickerActionsArr: TfrClickerActionsArr
       Caption = 'Reset Vars On Play All'
       Checked = True
       State = cbChecked
-      TabOrder = 6
+      TabOrder = 3
     end
     object chkEnableDebuggerKeys: TCheckBox
       Left = 627
@@ -324,7 +288,7 @@ object frClickerActionsArr: TfrClickerActionsArr
       OnClick = chkEnableDebuggerKeysClick
       ParentShowHint = False
       ShowHint = True
-      TabOrder = 7
+      TabOrder = 4
     end
     object spdbtnPlaySelectedAction: TSpeedButton
       Left = 657
@@ -627,17 +591,18 @@ object frClickerActionsArr: TfrClickerActionsArr
       Top = 192
       Width = 187
       Caption = 'pnlPalette'
-      TabOrder = 8
+      TabOrder = 5
       Visible = False
     end
     object chkSwitchEditorOnActionSelect: TCheckBox
-      Left = 452
+      Left = 467
       Height = 19
       Top = 207
       Width = 195
       Anchors = [akRight, akBottom]
+      AutoSize = False
       Caption = 'Switch editor tab on action select'
-      TabOrder = 9
+      TabOrder = 6
     end
     object spdbtnTemplateNotes: TSpeedButton
       Left = 576
@@ -695,6 +660,35 @@ object frClickerActionsArr: TfrClickerActionsArr
       }
       OnClick = spdbtnExtraPlayActionClick
       ParentFont = False
+    end
+    object spdbtnAddAction: TSpeedButton
+      Left = 576
+      Height = 25
+      Hint = 'Adds a new action, with the current content from the action editor.'
+      Top = 3
+      Width = 62
+      Anchors = [akTop, akRight]
+      Caption = 'Add'
+      OnClick = btnAddActionClick
+    end
+    object spdbtnRemoveAction: TSpeedButton
+      Left = 576
+      Height = 25
+      Top = 53
+      Width = 62
+      Anchors = [akTop, akRight]
+      Caption = 'Remove...'
+      OnClick = btnRemoveActionClick
+    end
+    object spdbtnNew: TSpeedButton
+      Left = 224
+      Height = 25
+      Hint = 'Clear all actions and all controls'
+      Top = 207
+      Width = 75
+      Anchors = [akLeft, akBottom]
+      Caption = 'New...'
+      OnClick = btnNewClick
     end
   end
   object pnlVertSplitter: TPanel

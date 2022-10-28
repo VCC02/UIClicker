@@ -36,22 +36,6 @@ uses
   Windows, Graphics, Messages, BitmapProcessing, ExtCtrls, ClickerUtils;
 
 type
-  TCompRec = record
-    Handle: THandle;
-    ClassName: string;
-    Text: string;
-    ComponentRectangle: TRect;  //global on screen
-    IsSubControl: Boolean;
-
-    MouseXOffset: Integer;       //relative to the mouee cursor at the time of updating handle
-    MouseYOffset: Integer;       //relative to the mouee cursor at the time of updating handle
-    XOffsetFromParent: Integer;  //field updated when searching for bitmap
-    YOffsetFromParent: Integer;  //field updated when searching for bitmap
-  end;
-
-  TCompRecArr = array of TCompRec;
-
-
   TMatchingMethod = (mmClass, mmText, mmBitmapText, mmBitmapFiles);
   TMatchingMethods = set of TMatchingMethod;
 
@@ -74,13 +58,8 @@ type
   end;
 
 
-function GetControlText(hw: THandle): string;
 procedure SetControlText(hw: THandle; NewText: string);
-
 procedure SelectComboBoxItem(hw: THandle; StartIndex: Integer; TextToSelect: string);
-
-function GetWindowClassRec(HW: THandle): TCompRec; overload;
-function GetWindowClassRec(CrPos: TPoint): TCompRec; overload;
 
 function MatchControlByBitmap(Algorithm: TMatchBitmapAlgorithm; AlgorithmSettings: TMatchBitmapAlgorithmSettings; CompAtPoint: TCompRec; InputData: TFindControlInputData; out SubCnvXOffset, SubCnvYOffset: Integer; AStopAllActionsOnDemand: PBoolean): Boolean;
 function FindControlOnScreen(Algorithm: TMatchBitmapAlgorithm; AlgorithmSettings: TMatchBitmapAlgorithmSettings; InputData: TFindControlInputData; AInitialTickCount, ATimeout: Cardinal; AStopAllActionsOnDemand: PBoolean; out AResultedControl: TCompRec): Boolean;
@@ -95,22 +74,6 @@ uses
   SysUtils, Classes, Forms, BinSearchValues, Types, Math;
 
 
-function GetControlText(HW: THandle): string;
-var
-  TextLength: Integer;
-begin
-  Result := '';
-  TextLength := SendMessage(HW, WM_GETTEXTLENGTH, 0, 0);
-  if TextLength <> 0 then
-  begin
-    SetLength(Result, TextLength shl 1 + 2);  //Allocating twice the size, might be extreme, but better safe than crash. Still not sure about UTF8 compatibility for 4-byte chars.
-    SendMessage(HW, WM_GETTEXT, TextLength + 1, PtrInt(@Result[1]));
-
-    SetLength(Result, TextLength);
-  end;
-end;
-
-
 procedure SetControlText(hw: THandle; NewText: string);
 begin
   SendMessage(hw, WM_SETTEXT, 0, PtrInt(@NewText[1]));
@@ -120,49 +83,6 @@ end;
 procedure SelectComboBoxItem(hw: THandle; StartIndex: Integer; TextToSelect: string);
 begin
   SendMessage(hw, CB_SELECTSTRING, StartIndex, PtrInt(@TextToSelect[1]));
-end;
-
-
-function GetWindowClassRec(HW: THandle): TCompRec; overload;
-var
-  CompName: array[0..1023] of Char;
-begin
-  Result.Handle := HW;
-
-  try
-    if GetClassName(HW, CompName, Length(CompName) - 1) > 0 then
-      Result.ClassName := string(CompName)
-    else
-      Result.ClassName := '';
-  except
-    on E: Exception do
-      MessageBox(0, PChar('Ex on GetClassName: ' + E.Message), PChar(Application.Title), MB_ICONERROR);
-  end;
-
-  try
-    GetWindowRect(HW, Result.ComponentRectangle);
-  except
-    on E: Exception do
-      MessageBox(0, PChar('Ex on GetWindowRect: ' + E.Message), PChar(Application.Title), MB_ICONERROR);
-  end;
-
-  try
-    Result.Text := GetControlText(HW);
-  except
-    on E: Exception do
-    begin
-      Result.Text := '';
-      MessageBox(0, PChar('Ex on GetControlText: ' + E.Message), PChar(Application.Title), MB_ICONERROR);
-    end;
-  end;
-end;
-
-
-function GetWindowClassRec(CrPos: TPoint): TCompRec; overload;
-begin
-  Result := GetWindowClassRec(WindowFromPoint(CrPos));
-  Result.MouseXOffset := CrPos.X - Result.ComponentRectangle.Left;
-  Result.MouseYOffset := CrPos.Y - Result.ComponentRectangle.Top;
 end;
 
 

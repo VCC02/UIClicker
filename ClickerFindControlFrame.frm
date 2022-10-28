@@ -227,17 +227,17 @@ object frClickerFindControl: TfrClickerFindControl
         Left = 320
         Height = 128
         Top = 8
-        Width = 320
+        Width = 344
         Caption = 'Find control details on window'
         ClientHeight = 110
-        ClientWidth = 316
+        ClientWidth = 340
         TabOrder = 4
         object pnlDrag: TPanel
           Left = 8
           Height = 26
           Hint = 'Use this box to get the target component from another window.'
           Top = 0
-          Width = 304
+          Width = 328
           Caption = 'Drag the mouse cursor, from this box to the target window'
           Color = clYellow
           Font.Color = clBlack
@@ -257,10 +257,10 @@ object frClickerFindControl: TfrClickerFindControl
           Height = 21
           Hint = 'Not all controls will have text.'
           Top = 44
-          Width = 152
+          Width = 160
           Color = clScrollBar
           EditLabel.Height = 13
-          EditLabel.Width = 152
+          EditLabel.Width = 160
           EditLabel.Caption = 'Found control text'
           ParentShowHint = False
           ReadOnly = True
@@ -268,23 +268,16 @@ object frClickerFindControl: TfrClickerFindControl
           TabOrder = 1
         end
         object lbeFoundControlClass: TLabeledEdit
-          Left = 168
+          Left = 176
           Height = 21
           Top = 44
-          Width = 144
+          Width = 160
           Color = clScrollBar
           EditLabel.Height = 13
-          EditLabel.Width = 144
+          EditLabel.Width = 160
           EditLabel.Caption = 'Found control class'
           ReadOnly = True
           TabOrder = 2
-        end
-        object lblFoundControlInfo: TLabel
-          Left = 8
-          Height = 13
-          Top = 72
-          Width = 56
-          Caption = 'Control info'
         end
         object chkAutoCopyValuesToMatchEditboxes: TCheckBox
           Left = 8
@@ -296,6 +289,17 @@ object frClickerFindControl: TfrClickerFindControl
           Checked = True
           State = cbChecked
           TabOrder = 3
+        end
+        object edtFoundControlInfo: TEdit
+          Left = 8
+          Height = 13
+          Top = 72
+          Width = 328
+          BorderStyle = bsNone
+          Color = clBtnFace
+          ReadOnly = True
+          TabOrder = 4
+          Text = 'Control info'
         end
       end
       object btnCopyFoundValues: TButton

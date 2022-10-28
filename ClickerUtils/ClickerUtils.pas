@@ -32,11 +32,11 @@ unit ClickerUtils;
 interface
 
 uses
-  {$IFDEF FPC}
-    LCLIntf,
-  {$ELSE}
+  //{$IFDEF FPC}
+  //  LCLIntf,
+  //{$ELSE}
     Windows,
-  {$ENDIF}
+  //{$ENDIF}
   SysUtils, Classes, VirtualTrees, Graphics, Controls,
   IdGlobal, DCPmd5, ClickerIniFiles;
 
@@ -272,6 +272,21 @@ type
 
   TVarReplArr = array of TVarRepl;
 
+  TCompRec = record
+    Handle: THandle;
+    ClassName: string;
+    Text: string;
+    ComponentRectangle: TRect;  //global on screen
+    IsSubControl: Boolean;
+
+    MouseXOffset: Integer;       //relative to the mouee cursor at the time of updating handle
+    MouseYOffset: Integer;       //relative to the mouee cursor at the time of updating handle
+    XOffsetFromParent: Integer;  //field updated when searching for bitmap
+    YOffsetFromParent: Integer;  //field updated when searching for bitmap
+  end;
+
+  TCompRecArr = array of TCompRec;
+
 
 const
   CActionStatusStr: array[Low(TActionStatus)..High(TActionStatus)] of string = ('Not Started', 'Failed', 'Successful', 'In Progress', 'Allowed Failed');
@@ -295,6 +310,8 @@ function FastReplace_ReturnTo68(s: string): string; //used for storing CRLF (rep
 function FastReplace_68ToReturn(s: string): string; //used for storing CRLF (replaced by #6#8) inside a CRLF separated list of variables
 function FastReplace_ReturnTo87(s: string): string; //should be used for remote execution only
 function FastReplace_87ToReturn(s: string): string; //should be used for remote execution only
+function FastReplace_87To45(s: string): string;
+function FastReplace_45To87(s: string): string;
 function FastReplace_ReturnToCSV(s: string): string;
 
 function GetIsUserAnAdmin: string;
@@ -312,11 +329,16 @@ function ComputeHash(AFileContent: Pointer; AFileSize: Int64): string;
 function GetFileHash(AFileName: string): string;
 
 
+function GetControlText(hw: THandle): string;
+function GetWindowClassRec(HW: THandle): TCompRec; overload;
+function GetWindowClassRec(CrPos: TPoint): TCompRec; overload;
+
+
 implementation
 
 
 uses
-  ShellAPI, Forms;
+  ShellAPI, Forms, Messages;
 
 
 {#13#10 -> #4#5}
@@ -458,6 +480,54 @@ begin
       begin
         s[i] := #13;
         s[i + 1] := #10;
+        Continue;
+      end;
+
+  Result := s;
+end;
+
+
+function FastReplace_87To45(s: string): string;
+var
+  i, n: Integer;
+begin
+  n := Pos(#8, s);
+  if n = 0 then
+  begin
+    Result := s;
+    Exit;
+  end;
+
+  for i := n to Length(s) - 1 do
+    if s[i] = #8 then
+      if s[i + 1] = #7 then
+      begin
+        s[i] := #4;
+        s[i + 1] := #5;
+        Continue;
+      end;
+
+  Result := s;
+end;
+
+
+function FastReplace_45To87(s: string): string;
+var
+  i, n: Integer;
+begin
+  n := Pos(#4, s);
+  if n = 0 then
+  begin
+    Result := s;
+    Exit;
+  end;
+
+  for i := n to Length(s) - 1 do
+    if s[i] = #4 then
+      if s[i + 1] = #5 then
+      begin
+        s[i] := #8;
+        s[i + 1] := #7;
         Continue;
       end;
 
@@ -639,6 +709,52 @@ begin
 end;
 
 
+function ReplaceUpdateControlInfo(AListOfVars: TStringList; s: string): string;
+var
+  Args, InitialArgs: string;
+  ControlHandle: THandle;
+  CompRec: TCompRec;
+begin
+  Args := Copy(s, Pos('(', s) + 1, MaxInt);
+  Args := Copy(Args, 1, Pos(')$', Args) - 1);
+  InitialArgs := Args;
+  Args := ReplaceOnce(AListOfVars, Args, False);
+  ControlHandle := StrToIntDef(Args, 0);
+
+  CompRec := GetWindowClassRec(ControlHandle);
+  if CompRec.Handle > 0 then
+  begin
+    AListOfVars.Values['$Control_Text$'] := CompRec.Text;
+    AListOfVars.Values['$Control_Class$'] := CompRec.ClassName;
+    AListOfVars.Values['$Control_Handle$'] := IntToStr(CompRec.Handle);
+    AListOfVars.Values['$Control_Left$'] := IntToStr(CompRec.ComponentRectangle.Left);
+    AListOfVars.Values['$Control_Top$'] := IntToStr(CompRec.ComponentRectangle.Top);
+    AListOfVars.Values['$Control_Right$'] := IntToStr(CompRec.ComponentRectangle.Right);
+    AListOfVars.Values['$Control_Bottom$'] := IntToStr(CompRec.ComponentRectangle.Bottom);
+    AListOfVars.Values['$Control_Width$'] := IntToStr(CompRec.ComponentRectangle.Width);
+    AListOfVars.Values['$Control_Height$'] := IntToStr(CompRec.ComponentRectangle.Height);
+    AListOfVars.Values['$Half_Control_Width$'] := IntToStr(CompRec.ComponentRectangle.Width shr 1);
+    AListOfVars.Values['$Half_Control_Height$'] := IntToStr(CompRec.ComponentRectangle.Height shr 1);
+  end
+  else
+  begin
+    AListOfVars.Values['$Control_Text$'] := '';
+    AListOfVars.Values['$Control_Class$'] := '';
+    AListOfVars.Values['$Control_Handle$'] := '0';
+    AListOfVars.Values['$Control_Left$'] := '0';
+    AListOfVars.Values['$Control_Top$'] := '0';
+    AListOfVars.Values['$Control_Right$'] := '0';
+    AListOfVars.Values['$Control_Bottom$'] := '0';
+    AListOfVars.Values['$Control_Width$'] := '0';
+    AListOfVars.Values['$Control_Height$'] := '0';
+    AListOfVars.Values['$Half_Control_Width$'] := '0';
+    AListOfVars.Values['$Half_Control_Height$'] := '0';
+  end;
+
+  Result := StringReplace(s, '$UpdateControlInfo(' + InitialArgs + ')$', InitialArgs, [rfReplaceAll]);
+end;
+
+
 function ReplaceExtractFileDir(s: string): string;
 var
   DirArgs, InitialDirArgs: string;
@@ -728,6 +844,30 @@ begin
 end;
 
 
+function ReplaceFastReplace_45To87(s: string): string;
+var
+  Args, InitialArgs: string;
+begin
+  Args := Copy(s, Pos('(', s) + 1, MaxInt);
+  Args := Copy(Args, 1, Pos(')$', Args) - 1);
+  InitialArgs := Args;
+
+  Result := StringReplace(s, '$FastReplace_45To87(' + InitialArgs + ')$', FastReplace_45To87(Args), [rfReplaceAll]);
+end;
+
+
+function ReplaceFastReplace_87To45(s: string): string;
+var
+  Args, InitialArgs: string;
+begin
+  Args := Copy(s, Pos('(', s) + 1, MaxInt);
+  Args := Copy(Args, 1, Pos(')$', Args) - 1);
+  InitialArgs := Args;
+
+  Result := StringReplace(s, '$FastReplace_87To45(' + InitialArgs + ')$', FastReplace_87To45(Args), [rfReplaceAll]);
+end;
+
+
 function ReplaceExit(s: string): string;
 var
   Args, InitialArgs: string;
@@ -770,7 +910,7 @@ begin
       Operand2Str := Args;
     end;
 
-    ResultValueStr := IntToStr(Ord(Pos(Operand1Str, Operand2Str)));
+    ResultValueStr := IntToStr(Ord(Pos(Operand1Str, Operand2Str) > 0));
   end;
 
   Result := StringReplace(s, '$StringContains(' + InitialArgs + ')$', ResultValueStr, [rfReplaceAll]);
@@ -918,9 +1058,157 @@ begin
 end;
 
 
+type
+  TBrightnessOperation = (boInc, boDec, boIncR, boIncG, boIncB, boDecR, boDecG, boDecB);
+
+const
+  CBrightnessOperationStr: array[TBrightnessOperation] of string = (
+    'IncBrightness', 'DecBrightness',
+    'IncBrightnessR', 'IncBrightnessG', 'IncBrightnessB',
+    'DecBrightnessR', 'DecBrightnessG', 'DecBrightnessB');
+
+function ReplaceModifyBrightness(AListOfVars: TStringList; s: string; ABrightnessOperation: TBrightnessOperation): string;
+var
+  PosComma: Integer;
+  Args, InitialArgs: string;
+  Operand1Str, Operand2Str: string;
+  ResultValueStr: string;
+  R, G, B: Integer;
+  Red, Green, Blue: Byte;
+  Amount: Byte;
+  OperationStr: string;
+begin
+  Args := Copy(s, Pos('(', s) + 1, MaxInt);
+  Args := Copy(Args, 1, Pos(')$', Args) - 1);
+  InitialArgs := Args;
+
+  OperationStr := CBrightnessOperationStr[ABrightnessOperation];
+
+  if Args = '' then
+    ResultValueStr := '0'
+  else
+  begin
+    Args := ReplaceOnce(AListOfVars, Args, False);
+    Args := StringReplace(Args, ' ', '', [rfReplaceAll]);
+    PosComma := Pos(',', Args);
+
+    if PosComma > 0 then
+    begin
+      Operand1Str := Copy(Args, 1, PosComma - 1);
+      Operand2Str := Copy(Args, PosComma + 1, MaxInt);
+    end
+    else
+    begin
+      Operand1Str := Args;
+      Operand2Str := '1';
+    end;
+
+    RedGreenBlue(HexToInt(Operand1Str), Red, Green, Blue);
+    Amount := StrToIntDef(Operand2Str, 1);
+    R := Red;
+    G := Green;
+    B := Blue;
+
+
+    case ABrightnessOperation of
+      boInc:
+      begin
+        Inc(R, Amount);  R := Min(255, R);
+        Inc(G, Amount);  G := Min(255, G);
+        Inc(B, Amount);  B := Min(255, B);
+      end;
+
+      boDec:
+      begin
+        Dec(R, Amount);  R := Max(0, R);
+        Dec(G, Amount);  G := Max(0, G);
+        Dec(B, Amount);  B := Max(0, B);
+      end;
+
+      boIncR:
+      begin
+        Inc(R, Amount);  R := Min(255, R);
+        //Inc(G, Amount);  G := Min(255, G);
+        //Inc(B, Amount);  B := Min(255, B);
+      end;
+
+      boIncG:
+      begin
+        //Inc(R, Amount);  R := Min(255, R);
+        Inc(G, Amount);  G := Min(255, G);
+        //Inc(B, Amount);  B := Min(255, B);
+      end;
+
+      boIncB:
+      begin
+        //Inc(R, Amount);  R := Min(255, R);
+        //Inc(G, Amount);  G := Min(255, G);
+        Inc(B, Amount);  B := Min(255, B);
+      end;
+
+      boDecR:
+      begin
+        Dec(R, Amount);  R := Max(0, R);
+        //Dec(G, Amount);  G := Max(0, G);
+        //Dec(B, Amount);  B := Max(0, B);
+      end;
+
+      boDecG:
+      begin
+        //Dec(R, Amount);  R := Max(0, R);
+        Dec(G, Amount);  G := Max(0, G);
+        //Dec(B, Amount);  B := Max(0, B);
+      end;
+
+      boDecB:
+      begin
+        //Dec(R, Amount);  R := Max(0, R);
+        //Dec(G, Amount);  G := Max(0, G);
+        Dec(B, Amount);  B := Max(0, B);
+      end;
+    end; //case
+
+    ResultValueStr := IntToHex(RGBToColor(R, G, B), 6);
+  end;
+
+  Result := StringReplace(s, '$' + OperationStr + '(' + InitialArgs + ')$', ResultValueStr, [rfReplaceAll]);
+end;
+
+
+function ReplaceGetSelfHandles(s: string): string;
+begin
+  Result := StringReplace(s, '$GetSelfHandles()$', 'GetSelfHandles() should be called from SetVar action, to fill in the handles.', [rfReplaceAll]);
+end;
+
+
+function ReplaceGetKeyNameFromPair(s: string): string;
+var
+  ItemArgs, InitialItemArgs: string;
+begin
+  ItemArgs := Copy(s, Pos('(', s) + 1, MaxInt);
+  ItemArgs := Copy(ItemArgs, 1, Pos(')$', ItemArgs) - 1);
+  InitialItemArgs := ItemArgs;
+
+  Result := StringReplace(s, '$GetKeyNameFromPair(' + InitialItemArgs + ')$', Copy(ItemArgs, 1, Pos('=', ItemArgs) - 1), [rfReplaceAll]);
+end;
+
+
+function ReplaceGetKeyValueFromPair(s: string): string;
+var
+  ItemArgs, InitialItemArgs: string;
+begin
+  ItemArgs := Copy(s, Pos('(', s) + 1, MaxInt);
+  ItemArgs := Copy(ItemArgs, 1, Pos(')$', ItemArgs) - 1);
+  InitialItemArgs := ItemArgs;
+
+  Result := StringReplace(s, '$GetKeyValueFromPair(' + InitialItemArgs + ')$', Copy(ItemArgs, Pos('=', ItemArgs) + 1, MaxInt), [rfReplaceAll]);
+end;
+
+
 function ReplaceOnce(AListOfVars: TStringList; s: string; AReplaceRandom: Boolean = True): string;
 var
   i: Integer;
+  ibr: TBrightnessOperation;
   tp: TPoint;
   CurrentName, CurrentValue: string;
 begin
@@ -1004,11 +1292,33 @@ begin
   if Pos('$FastReplace_ReturnTo45(', s) > 0 then
     s := ReplaceFastReplace_ReturnTo45(s);
 
+  if Pos('$FastReplace_45To87(', s) > 0 then
+    s := ReplaceFastReplace_45To87(s);
+
+  if Pos('$FastReplace_87To45(', s) > 0 then
+    s := ReplaceFastReplace_87To45(s);
+
   if Pos('$Sum(', s) > 0 then
     s := ReplaceSum(AListOfVars, s);
 
   if Pos('$Diff(', s) > 0 then
     s := ReplaceDiff(AListOfVars, s);
+
+  if Pos('$UpdateControlInfo(', s) > 0 then
+    s := ReplaceUpdateControlInfo(AListOfVars, s);
+
+  for ibr := Low(TBrightnessOperation) to High(TBrightnessOperation) do
+    if Pos('$' + CBrightnessOperationStr[ibr] + '(', s) > 0 then
+      s := ReplaceModifyBrightness(AListOfVars, s, ibr);
+
+  //if Pos('$GetSelfHandles()$', s) > 0 then
+  //  s := ReplaceGetSelfHandles(s);   //this has to be commented, to avoid being evaluated when part of a parameter
+
+  if Pos('$GetKeyNameFromPair(', s) > 0 then
+    s := ReplaceGetKeyNameFromPair(s);
+
+  if Pos('$GetKeyValueFromPair(', s) > 0 then
+    s := ReplaceGetKeyValueFromPair(s);
 
   Result := s;
 end;
@@ -1280,6 +1590,65 @@ begin
   finally
     Stream.Free;
   end;
+end;
+
+
+function GetControlText(HW: THandle): string;
+var
+  TextLength: Integer;
+begin
+  Result := '';
+  TextLength := SendMessage(HW, WM_GETTEXTLENGTH, 0, 0);
+  if TextLength <> 0 then
+  begin
+    SetLength(Result, TextLength shl 1 + 2);  //Allocating twice the size, might be extreme, but better safe than crash. Still not sure about UTF8 compatibility for 4-byte chars.
+    SendMessage(HW, WM_GETTEXT, TextLength + 1, PtrInt(@Result[1]));
+
+    SetLength(Result, TextLength);
+  end;
+end;
+
+
+function GetWindowClassRec(HW: THandle): TCompRec; overload;
+var
+  CompName: array[0..1023] of Char;
+begin
+  Result.Handle := HW;
+
+  try
+    if GetClassName(HW, CompName, Length(CompName) - 1) > 0 then
+      Result.ClassName := string(CompName)
+    else
+      Result.ClassName := '';
+  except
+    on E: Exception do
+      MessageBox(0, PChar('Ex on GetClassName: ' + E.Message), PChar(Application.Title), MB_ICONERROR);
+  end;
+
+  try
+    GetWindowRect(HW, Result.ComponentRectangle);
+  except
+    on E: Exception do
+      MessageBox(0, PChar('Ex on GetWindowRect: ' + E.Message), PChar(Application.Title), MB_ICONERROR);
+  end;
+
+  try
+    Result.Text := GetControlText(HW);
+  except
+    on E: Exception do
+    begin
+      Result.Text := '';
+      MessageBox(0, PChar('Ex on GetControlText: ' + E.Message), PChar(Application.Title), MB_ICONERROR);
+    end;
+  end;
+end;
+
+
+function GetWindowClassRec(CrPos: TPoint): TCompRec; overload;
+begin
+  Result := GetWindowClassRec(WindowFromPoint(CrPos));
+  Result.MouseXOffset := CrPos.X - Result.ComponentRectangle.Left;
+  Result.MouseYOffset := CrPos.Y - Result.ComponentRectangle.Top;
 end;
 
 

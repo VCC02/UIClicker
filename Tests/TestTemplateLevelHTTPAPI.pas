@@ -34,6 +34,8 @@ uses
 type
 
   TTestTemplateLevelHTTPAPI = class(TTestHTTPAPI)
+  public
+    constructor Create; override;
   published
     procedure Test_ExecuteCommandAtIndex_HappyFlow;
     procedure Test_ExecuteCommandAtIndex_EmptyTemplate;
@@ -59,6 +61,13 @@ implementation
 
 uses
   ClickerActionsClient, ClickerUtils, Controls, InMemFileSystem;
+
+
+constructor TTestTemplateLevelHTTPAPI.Create;
+begin
+  inherited Create;
+  TestServerAddress := CTestServerAddress;
+end;
 
 
 procedure TTestTemplateLevelHTTPAPI.Test_ExecuteCommandAtIndex_HappyFlow;
@@ -132,7 +141,7 @@ var
   Response: string;
   ListOfVars: TStringList;
 begin
-  Response := FastReplace_87ToReturn(GetAllReplacementVars(CTestServerAddress, 0));
+  Response := FastReplace_87ToReturn(GetAllReplacementVars(TestServerAddress, 0));
 
   ListOfVars := TStringList.Create;
   try
@@ -147,7 +156,7 @@ end;
 
 procedure TTestTemplateLevelHTTPAPI.Test_GetAllReplacementVars_BadStackLevel;
 begin
-  Expect(GetAllReplacementVars(CTestServerAddress, 10)).ToBe(CExpectedBadStackLevelResponse);
+  Expect(GetAllReplacementVars(TestServerAddress, 10)).ToBe(CExpectedBadStackLevelResponse);
 end;
 
 
@@ -156,10 +165,10 @@ const
   CFileName: string = 'Test_SendFileToServer.txt';
   CExpectedHash = 'BCF036B6F33E182D4705F4F5B1AF13AC';
 begin
-  Expect(ClearInMemFileSystem(CTestServerAddress)).ToBe(CREResp_Done);
-  SendTestFileToServer(CTestServerAddress, CFileName);
+  Expect(ClearInMemFileSystem(TestServerAddress)).ToBe(CREResp_Done);
+  SendTestFileToServer(TestServerAddress, CFileName);
 
-  Expect(GetFileExistenceOnServer(CTestServerAddress, CFileName + CDefaultInMemFileNameHashSeparator + CExpectedHash, True)).ToBe(True);
+  Expect(GetFileExistenceOnServer(TestServerAddress, CFileName + CDefaultInMemFileNameHashSeparator + CExpectedHash, True)).ToBe(True);
 end;
 
 
@@ -167,10 +176,10 @@ procedure TTestTemplateLevelHTTPAPI.Test_GetFileExistenceOnServer_OneFileNoHash;
 const
   CFileName: string = 'Test_GetFileExistenceOnServer_OneFileNoHash.txt';
 begin
-  Expect(ClearInMemFileSystem(CTestServerAddress)).ToBe(CREResp_Done);
-  SendTestFileToServer(CTestServerAddress, CFileName, 'SomeContentForNoHash');
+  Expect(ClearInMemFileSystem(TestServerAddress)).ToBe(CREResp_Done);
+  SendTestFileToServer(TestServerAddress, CFileName, 'SomeContentForNoHash');
 
-  Expect(GetFileExistenceOnServer(CTestServerAddress, CFileName, False)).ToBe(True);
+  Expect(GetFileExistenceOnServer(TestServerAddress, CFileName, False)).ToBe(True);
 end;
 
 
@@ -179,10 +188,10 @@ const
   CFileName: string = 'Test_GetFileExistenceOnServer_OneFileWithHash.txt';
   CExpectedHash = 'E51AAA0C74A8390EE612C2451F40CAB9';
 begin
-  Expect(ClearInMemFileSystem(CTestServerAddress)).ToBe(CREResp_Done);
-  SendTestFileToServer(CTestServerAddress, CFileName, 'SomeContentForComputingHash');
+  Expect(ClearInMemFileSystem(TestServerAddress)).ToBe(CREResp_Done);
+  SendTestFileToServer(TestServerAddress, CFileName, 'SomeContentForComputingHash');
 
-  Expect(GetFileExistenceOnServer(CTestServerAddress, CFileName + CDefaultInMemFileNameHashSeparator + CExpectedHash, True)).ToBe(True);
+  Expect(GetFileExistenceOnServer(TestServerAddress, CFileName + CDefaultInMemFileNameHashSeparator + CExpectedHash, True)).ToBe(True);
 end;
 
 
@@ -197,7 +206,7 @@ var
   ListOfFiles, ListOfResults: TStringList;
   Response: string;
 begin
-  Expect(ClearInMemFileSystem(CTestServerAddress)).ToBe(CREResp_Done);
+  Expect(ClearInMemFileSystem(TestServerAddress)).ToBe(CREResp_Done);
   SendMultipleTestFilesToServer(@CFileNames, Length(CFileNames), 'SomeContentForNoHash');
 
   ListOfFiles := TStringList.Create;
@@ -208,7 +217,7 @@ begin
     ListOfFiles.Add(CFileName3);
     ListOfFiles.Add('non-existent file');
 
-    Response := GetFileExistenceOnServer(CTestServerAddress, ListOfFiles, ListOfResults, False);
+    Response := GetFileExistenceOnServer(TestServerAddress, ListOfFiles, ListOfResults, False);
 
     Expect(Response).ToBe('');
     Expect(ListOfResults).ToMatchContentOfStringArray(@CExpectedExistence, 4, 'File existence on server.');
@@ -230,7 +239,7 @@ var
   ListOfFiles, ListOfResults: TStringList;
   Response: string;
 begin
-  Expect(ClearInMemFileSystem(CTestServerAddress)).ToBe(CREResp_Done);
+  Expect(ClearInMemFileSystem(TestServerAddress)).ToBe(CREResp_Done);
   SendMultipleTestFilesToServer(@CFileNames, Length(CFileNames), 'SomeContentForWithHash');
 
   ListOfFiles := TStringList.Create;
@@ -241,7 +250,7 @@ begin
     ListOfFiles.Add(CFileName3 + CDefaultInMemFileNameHashSeparator + 'B924828E25CC6B02FC1D84D8129E599F');
     ListOfFiles.Add('non-existent file' + CDefaultInMemFileNameHashSeparator + 'no hash');
 
-    Response := GetFileExistenceOnServer(CTestServerAddress, ListOfFiles, ListOfResults, True);
+    Response := GetFileExistenceOnServer(TestServerAddress, ListOfFiles, ListOfResults, True);
 
     Expect(Response).ToBe('');
     Expect(ListOfResults).ToMatchContentOfStringArray(@CExpectedExistence, 4, 'File existence on server.');
@@ -258,11 +267,11 @@ const
 var
   Response: string;
 begin
-  SendTestFileToServer(CTestServerAddress, CFileName);
+  SendTestFileToServer(TestServerAddress, CFileName);
 
-  Response := ClearInMemFileSystem(CTestServerAddress);
+  Response := ClearInMemFileSystem(TestServerAddress);
   Expect(Response).ToBe(CREResp_Done);
-  Expect(GetFileExistenceOnServer(CTestServerAddress, CFileName, False)).ToBe(False);
+  Expect(GetFileExistenceOnServer(TestServerAddress, CFileName, False)).ToBe(False);
 end;
 
 

@@ -35,6 +35,8 @@ uses
 type
 
   TTestLowLevelHTTPAPI = class(TTestHTTPAPI)
+  public
+    constructor Create; override;
   published
     procedure Test_ExecuteClickAction_LeaveMouse;
     procedure Test_ExecuteExecAppAction_IPConfig;
@@ -75,6 +77,13 @@ uses
   ClickerActionsClient, ClickerUtils, ActionsStuff, Controls;
 
 
+constructor TTestLowLevelHTTPAPI.Create;
+begin
+  inherited Create;
+  TestServerAddress := CTestServerAddress;
+end;
+
+
 procedure TTestLowLevelHTTPAPI.Test_ExecuteClickAction_LeaveMouse;
 const
   CX: Integer = 20;
@@ -88,7 +97,7 @@ begin
   GenerateClickOptionsForLeaveMouse(CX, CY, ClickOptions);
   GetCursorPos(InitialTp);
 
-  Response := FastReplace_87ToReturn(ExecuteClickAction(CTestServerAddress, ClickOptions));
+  Response := FastReplace_87ToReturn(ExecuteClickAction(TestServerAddress, ClickOptions));
 
   GetCursorPos(tp);
   Expect(tp.X).ToBe(CX, 'mouse pos');
@@ -114,7 +123,7 @@ begin
   GenerateExecAppOptionsForIPConfig(ExecAppOptions);
   ExecAppOptions.UseInheritHandles := uihYes;
 
-  Response := FastReplace_87ToReturn(ExecuteExecAppAction(CTestServerAddress, ExecAppOptions, 'TestExec', 1000));
+  Response := FastReplace_87ToReturn(ExecuteExecAppAction(TestServerAddress, ExecAppOptions, 'TestExec', 1000));
 
   ListOfVars := TStringList.Create;
   try
@@ -135,7 +144,7 @@ var
   ExecAppOptions: TClkExecAppOptions;
 begin
   GenerateExecAppOptionsForIPConfig(ExecAppOptions);
-  Response := FastReplace_87ToReturn(ExecuteExecAppAction(CTestServerAddress, ExecAppOptions, 'TestExec', 1000));
+  Response := FastReplace_87ToReturn(ExecuteExecAppAction(TestServerAddress, ExecAppOptions, 'TestExec', 1000));
 
   ListOfVars := TStringList.Create;
   try
@@ -155,7 +164,7 @@ var
   FindControlOptions: TClkFindControlOptions;
 begin
   GenerateFindControlOptionsForMainUIClickerWindow(FindControlOptions, False);
-  Response := FastReplace_87ToReturn(ExecuteFindControlAction(CTestServerAddress, FindControlOptions, 'TestFind UIClicker Main', 1000, CREParam_FileLocation_ValueMem));
+  Response := FastReplace_87ToReturn(ExecuteFindControlAction(TestServerAddress, FindControlOptions, 'TestFind UIClicker Main', 1000, CREParam_FileLocation_ValueMem));
 
   ListOfVars := TStringList.Create;
   try
@@ -175,7 +184,7 @@ var
 begin
   GenerateFindControlOptionsForMainUIClickerWindow(FindControlOptions, False);
   FindControlOptions.MatchClassName := 'non-existent name';
-  Response := FastReplace_87ToReturn(ExecuteFindControlAction(CTestServerAddress, FindControlOptions, 'TestFind UIClicker Main', 1000, CREParam_FileLocation_ValueMem));
+  Response := FastReplace_87ToReturn(ExecuteFindControlAction(TestServerAddress, FindControlOptions, 'TestFind UIClicker Main', 1000, CREParam_FileLocation_ValueMem));
 
   ListOfVars := TStringList.Create;
   try
@@ -195,7 +204,7 @@ var
 begin
   GenerateFindControlOptionsForMainUIClickerWindow(FindControlOptions, True);
   FindControlOptions.MatchClassName := 'non-existent name';
-  Response := FastReplace_87ToReturn(ExecuteFindControlAction(CTestServerAddress, FindControlOptions, 'TestFind UIClicker Main', 1000, CREParam_FileLocation_ValueMem));
+  Response := FastReplace_87ToReturn(ExecuteFindControlAction(TestServerAddress, FindControlOptions, 'TestFind UIClicker Main', 1000, CREParam_FileLocation_ValueMem));
 
   ListOfVars := TStringList.Create;
   try
@@ -215,7 +224,7 @@ var
 begin
   SetupTargetWindowFor_FindSubControl;
   GenerateFindSubControlOptionsForMainUIClickerWindow_Bitness(FindSubControlOptions, False);
-  Response := FastReplace_87ToReturn(ExecuteFindSubControlAction(CTestServerAddress, FindSubControlOptions, 'Test Find Bitness on UIClicker Main', 3000, CREParam_FileLocation_ValueMem));
+  Response := FastReplace_87ToReturn(ExecuteFindSubControlAction(TestServerAddress, FindSubControlOptions, 'Test Find Bitness on UIClicker Main', 3000, CREParam_FileLocation_ValueMem));
 
   ListOfVars := TStringList.Create;
   try
@@ -240,7 +249,7 @@ begin
   FindSubControlOptions.MatchBitmapText[0].CropRight := '4';
   FindSubControlOptions.MatchBitmapText[0].CropBottom := '2';
 
-  Response := FastReplace_87ToReturn(ExecuteFindSubControlAction(CTestServerAddress, FindSubControlOptions, 'Test Find Bitness on UIClicker Main', 3000, CREParam_FileLocation_ValueMem));
+  Response := FastReplace_87ToReturn(ExecuteFindSubControlAction(TestServerAddress, FindSubControlOptions, 'Test Find Bitness on UIClicker Main', 3000, CREParam_FileLocation_ValueMem));
 
   ListOfVars := TStringList.Create;
   try
@@ -265,7 +274,7 @@ begin
   FindSubControlOptions.MatchBitmapText[0].CropRight := '4';
   FindSubControlOptions.MatchBitmapText[0].CropBottom := '2';
 
-  Response := FastReplace_87ToReturn(ExecuteFindSubControlAction(CTestServerAddress, FindSubControlOptions, 'Test Find Bitness on UIClicker Main', 3000, CREParam_FileLocation_ValueMem));
+  Response := FastReplace_87ToReturn(ExecuteFindSubControlAction(TestServerAddress, FindSubControlOptions, 'Test Find Bitness on UIClicker Main', 3000, CREParam_FileLocation_ValueMem));
 
   ListOfVars := TStringList.Create;
   try
@@ -289,7 +298,7 @@ begin
   FindSubControlOptions.MatchBitmapText[0].CropRight := '10';
   FindSubControlOptions.MatchBitmapText[0].CropBottom := '0';
 
-  Response := FastReplace_87ToReturn(ExecuteFindSubControlAction(CTestServerAddress, FindSubControlOptions, 'Test Find Bitness on UIClicker Main', 3000, CREParam_FileLocation_ValueMem));
+  Response := FastReplace_87ToReturn(ExecuteFindSubControlAction(TestServerAddress, FindSubControlOptions, 'Test Find Bitness on UIClicker Main', 3000, CREParam_FileLocation_ValueMem));
 
   Expect(Response).ToBe('ProcessServerCommand exception: The text width, after cropping, is 0.  Profile[0]: "frClickerBMPText".   Searched text: "-bit"');
 end;
@@ -307,7 +316,7 @@ begin
   FindSubControlOptions.MatchBitmapText[0].CropRight := '16';
   FindSubControlOptions.MatchBitmapText[0].CropBottom := '0';
 
-  Response := FastReplace_87ToReturn(ExecuteFindSubControlAction(CTestServerAddress, FindSubControlOptions, 'Test Find Bitness on UIClicker Main', 3000, CREParam_FileLocation_ValueMem));
+  Response := FastReplace_87ToReturn(ExecuteFindSubControlAction(TestServerAddress, FindSubControlOptions, 'Test Find Bitness on UIClicker Main', 3000, CREParam_FileLocation_ValueMem));
 
   Expect(Response).ToBe('ProcessServerCommand exception: The text width, after cropping, is negative.  Profile[0]: "frClickerBMPText".   Searched text: "-bit"');
 end;
@@ -325,7 +334,7 @@ begin
   FindSubControlOptions.MatchBitmapText[0].CropRight := '0';
   FindSubControlOptions.MatchBitmapText[0].CropBottom := '7';
 
-  Response := FastReplace_87ToReturn(ExecuteFindSubControlAction(CTestServerAddress, FindSubControlOptions, 'Test Find Bitness on UIClicker Main', 3000, CREParam_FileLocation_ValueMem));
+  Response := FastReplace_87ToReturn(ExecuteFindSubControlAction(TestServerAddress, FindSubControlOptions, 'Test Find Bitness on UIClicker Main', 3000, CREParam_FileLocation_ValueMem));
 
   Expect(Response).ToBe('ProcessServerCommand exception: The text height, after cropping, is 0.  Profile[0]: "frClickerBMPText".   Searched text: "-bit"');
 end;
@@ -343,7 +352,7 @@ begin
   FindSubControlOptions.MatchBitmapText[0].CropRight := '0';
   FindSubControlOptions.MatchBitmapText[0].CropBottom := '9';
 
-  Response := FastReplace_87ToReturn(ExecuteFindSubControlAction(CTestServerAddress, FindSubControlOptions, 'Test Find Bitness on UIClicker Main', 3000, CREParam_FileLocation_ValueMem));
+  Response := FastReplace_87ToReturn(ExecuteFindSubControlAction(TestServerAddress, FindSubControlOptions, 'Test Find Bitness on UIClicker Main', 3000, CREParam_FileLocation_ValueMem));
 
   Expect(Response).ToBe('ProcessServerCommand exception: The text height, after cropping, is negative.  Profile[0]: "frClickerBMPText".   Searched text: "-bit"');
 end;
@@ -357,7 +366,7 @@ var
 begin
   SetupTargetWindowFor_FindSubControl;
   GenerateFindSubControlOptionsForMainUIClickerWindow_WinInterpBtn(FindSubControlOptions, False);
-  Response := FastReplace_87ToReturn(ExecuteFindSubControlAction(CTestServerAddress, FindSubControlOptions, 'Test Find WindowInterpreterButton_Disk on UIClicker Main', 3000, CREParam_FileLocation_ValueDisk));
+  Response := FastReplace_87ToReturn(ExecuteFindSubControlAction(TestServerAddress, FindSubControlOptions, 'Test Find WindowInterpreterButton_Disk on UIClicker Main', 3000, CREParam_FileLocation_ValueDisk));
 
   ListOfVars := TStringList.Create;
   try
@@ -381,7 +390,7 @@ begin
   GenerateFindSubControlOptionsForMainUIClickerWindow_WinInterpBtn(FindSubControlOptions, False);
 
   SendTerminateWaitingForFileAvailabilityRequest(CREParam_TerminateWaitingLoop_ValueAll, 3000); //send request after 3s, and let the test continue
-  Response := FastReplace_87ToReturn(ExecuteFindSubControlAction(CTestServerAddress, FindSubControlOptions, 'Test Find WindowInterpreterButton_Mem_NoSender on UIClicker Main', 3000, CREParam_FileLocation_ValueMem));
+  Response := FastReplace_87ToReturn(ExecuteFindSubControlAction(TestServerAddress, FindSubControlOptions, 'Test Find WindowInterpreterButton_Mem_NoSender on UIClicker Main', 3000, CREParam_FileLocation_ValueMem));
 
   ListOfVars := TStringList.Create;
   try
@@ -426,7 +435,7 @@ begin
   CallTemplateOptions.CallTemplateLoop.Direction := ldInc;
   CallTemplateOptions.CallTemplateLoop.EvalBreakPosition := lebpAfterContent;
 
-  Response := FastReplace_87ToReturn(ExecuteCallTemplateAction(CTestServerAddress, CallTemplateOptions, False, CREParam_FileLocation_ValueMem));
+  Response := FastReplace_87ToReturn(ExecuteCallTemplateAction(TestServerAddress, CallTemplateOptions, False, CREParam_FileLocation_ValueMem));
 
   ListOfVars := TStringList.Create;
   try
@@ -463,7 +472,7 @@ begin
   CallTemplateOptions.CallTemplateLoop.Direction := ldInc;
   CallTemplateOptions.CallTemplateLoop.EvalBreakPosition := lebpAfterContent;
 
-  Response := FastReplace_87ToReturn(ExecuteCallTemplateAction(CTestServerAddress, CallTemplateOptions, False, CREParam_FileLocation_ValueMem));
+  Response := FastReplace_87ToReturn(ExecuteCallTemplateAction(TestServerAddress, CallTemplateOptions, False, CREParam_FileLocation_ValueMem));
 
   ListOfVars := TStringList.Create;
   try
@@ -500,7 +509,7 @@ begin
   CallTemplateOptions.CallTemplateLoop.BreakCondition := '';
   CallTemplateOptions.CallTemplateLoop.EvalBreakPosition := lebpAfterContent;
 
-  Response := FastReplace_87ToReturn(ExecuteCallTemplateAction(CTestServerAddress, CallTemplateOptions, False, CREParam_FileLocation_ValueMem));
+  Response := FastReplace_87ToReturn(ExecuteCallTemplateAction(TestServerAddress, CallTemplateOptions, False, CREParam_FileLocation_ValueMem));
 
   ListOfVars := TStringList.Create;
   try
@@ -523,7 +532,7 @@ var
 begin
   GenerateSleepOptions(SleepOptions, '5000');
   tk := GetTickCount64;
-  Response := FastReplace_87ToReturn(ExecuteSleepAction(CTestServerAddress, SleepOptions, 'Sleep a bit'));
+  Response := FastReplace_87ToReturn(ExecuteSleepAction(TestServerAddress, SleepOptions, 'Sleep a bit'));
   Diff := GetTickCount64 - tk;
 
   Expect(Integer(Diff)).ToBeGreaterThanOrEqualTo(5000);
@@ -544,7 +553,7 @@ var
   ListOfVars: TStringList;
 begin
   GenerateSleepOptions(SleepOptions, '-3');
-  Response := FastReplace_87ToReturn(ExecuteSleepAction(CTestServerAddress, SleepOptions, 'Sleep a bit'));
+  Response := FastReplace_87ToReturn(ExecuteSleepAction(TestServerAddress, SleepOptions, 'Sleep a bit'));
 
   ListOfVars := TStringList.Create;
   try
@@ -566,11 +575,11 @@ var
   Response: string;
   ListOfVars: TStringList;
 begin
-  Expect(SetVariable(CTestServerAddress, CVarName, CVarInitValue, 0)).ToBe(CREResp_Done);
+  Expect(SetVariable(TestServerAddress, CVarName, CVarInitValue, 0)).ToBe(CREResp_Done);
   Expect(GetVarValueFromServer(CVarName)).ToBe(CVarInitValue);
   GenerateSetVarOptions_OneVar(SetVarOptions, CVarName, CVarNewValue);
 
-  Response := FastReplace_87ToReturn(ExecuteSetVarAction(CTestServerAddress, SetVarOptions));
+  Response := FastReplace_87ToReturn(ExecuteSetVarAction(TestServerAddress, SetVarOptions));
 
   ListOfVars := TStringList.Create;
   try
@@ -593,12 +602,12 @@ var
   Response: string;
   ListOfVars: TStringList;
 begin
-  Expect(SetVariable(CTestServerAddress, CVarName, CVarInitValue, 0)).ToBe(CREResp_Done);
-  Expect(SetVariable(CTestServerAddress, CVarNewValue, 'unknown', 0)).ToBe(CREResp_Done);
+  Expect(SetVariable(TestServerAddress, CVarName, CVarInitValue, 0)).ToBe(CREResp_Done);
+  Expect(SetVariable(TestServerAddress, CVarNewValue, 'unknown', 0)).ToBe(CREResp_Done);
   Expect(GetVarValueFromServer(CVarName)).ToBe(CVarInitValue);
   GenerateSetVarOptions_OneVar(SetVarOptions, CVarName, CVarNewValue); //this should not be evaluated to 'unknown'
 
-  Response := FastReplace_87ToReturn(ExecuteSetVarAction(CTestServerAddress, SetVarOptions));
+  Response := FastReplace_87ToReturn(ExecuteSetVarAction(TestServerAddress, SetVarOptions));
 
   ListOfVars := TStringList.Create;
   try
@@ -622,13 +631,13 @@ var
   Response: string;
   ListOfVars: TStringList;
 begin
-  Expect(SetVariable(CTestServerAddress, CVarName, CVarInitValue, 0)).ToBe(CREResp_Done);
-  Expect(SetVariable(CTestServerAddress, CSecondVarName, CVarNewValue, 0)).ToBe(CREResp_Done);
+  Expect(SetVariable(TestServerAddress, CVarName, CVarInitValue, 0)).ToBe(CREResp_Done);
+  Expect(SetVariable(TestServerAddress, CSecondVarName, CVarNewValue, 0)).ToBe(CREResp_Done);
   Expect(GetVarValueFromServer(CVarName)).ToBe(CVarInitValue);
   Expect(GetVarValueFromServer(CSecondVarName)).ToBe(CVarNewValue);
   GenerateSetVarOptions_OneVar(SetVarOptions, CVarName, CSecondVarName, True);
 
-  Response := FastReplace_87ToReturn(ExecuteSetVarAction(CTestServerAddress, SetVarOptions));
+  Response := FastReplace_87ToReturn(ExecuteSetVarAction(TestServerAddress, SetVarOptions));
 
   ListOfVars := TStringList.Create;
   try

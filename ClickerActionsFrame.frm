@@ -797,7 +797,7 @@ object frClickerActions: TfrClickerActions
             object lbeCallTemplateLoopEndValue: TLabeledEdit
               Left = 104
               Height = 21
-              Hint = 'Replacements are available'
+              Hint = 'Replacements are available.'#13#10'If the expression evaluator can''t properly parse this string, please use a SetVar action to break down the expression into smaller pieces.'#13#10#13#10'For example, $Diff($ItemCount($RemoteVars$)$,1)$ can be split into the following SetVar items (both set to be evaluated):'#13#10#13#10'$RemoteVarsCount$ = $ItemCount($RemoteVars$)$'#13#10'$LastItemIndex$ = $Diff($RemoteVarsCount$,1)$'
               Top = 88
               Width = 192
               EditLabel.Height = 13
@@ -864,6 +864,7 @@ object frClickerActions: TfrClickerActions
             object lbeCallTemplateLoopBreakCondition: TLabeledEdit
               Left = 104
               Height = 21
+              Hint = 'This editbox is read-only. Please use the "..." button next to it, to open the condition editor.'
               Top = 134
               Width = 160
               EditLabel.Height = 13
@@ -1046,6 +1047,7 @@ object frClickerActions: TfrClickerActions
           object memAvailableFunctions: TMemo
             Left = 472
             Height = 184
+            Hint = 'The "$GetSelfHandles()$" and "$Exit(<ExitCode>)$" functions do not return a value, so they must be placed in the "Variable" column of a SetVar action.'#13#10'Also, they can''t be evaluated using the console or as part of a condition.'#13#10'All the other function should be called from the "Value" column.'
             Top = 24
             Width = 280
             Color = clBtnFace
@@ -1054,9 +1056,12 @@ object frClickerActions: TfrClickerActions
               '$Random(<min>, <max>)$'
               '$Random(<max>)$'
               '$Sum(<op1>, <op2>)$'
+              '$Diff(<op1>, <op2>)$'
               '$http://<server:port>/[params]$'
               '$FastReplace_45ToReturn(<some_string>)$'
               '$FastReplace_ReturnTo45(<some_string>)$'
+              '$FastReplace_45To87(<some_string>)$'
+              '$FastReplace_87To45(<some_string>)$'
               '$Exit(<ExitCode>)$'
               '$CreateDir(<PathToNewDir>)$'
               '$LoadTextFile(<PathToTextFile>)$'
@@ -1066,6 +1071,20 @@ object frClickerActions: TfrClickerActions
               '$ExtractFileName(<PathToFile>)$'
               '$ExtractFileExt(<PathToFile>)$'
               '$ExtractFileNameNoExt(<PathToFile>)$'
+              '$UpdateControlInfo(<Handle>)$'
+              '$GetSelfHandles()$'
+              '$GetKeyNameFromPair(<key>=<value)$'
+              '$GetKeyValueFromPair(<key>=<value)$'
+              '$Chr(<ByteValue>)$'
+              ''
+              '$IncBrightness(<HexColor>[,Amount])$'
+              '$DecBrightness(<HexColor>[,Amount])$'
+              '$IncBrightnessR(<HexColor>[,Amount])$'
+              '$IncBrightnessG(<HexColor>[,Amount])$'
+              '$IncBrightnessB(<HexColor>[,Amount])$'
+              '$DecBrightnessR(<HexColor>[,Amount])$'
+              '$DecBrightnessG(<HexColor>[,Amount])$'
+              '$DecBrightnessB(<HexColor>[,Amount])$'
               ''
               '$Current_Mouse_X$'
               '$Current_Mouse_Y$'
@@ -1074,8 +1093,10 @@ object frClickerActions: TfrClickerActions
               '$Now$'
               ''
             )
+            ParentShowHint = False
             ReadOnly = True
             ScrollBars = ssBoth
+            ShowHint = True
             TabOrder = 1
             WordWrap = False
           end

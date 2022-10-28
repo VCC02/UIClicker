@@ -32,7 +32,7 @@ interface
 uses
   Windows, Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ExtCtrls,
   StdCtrls, ComCtrls, ColorBox, Menus, Buttons, VirtualTrees, IniFiles,
-  ControlInteraction, ClickerUtils, Types;
+  ClickerUtils, Types;
 
 type
   TColoredHandle = record
