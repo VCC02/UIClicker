@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectSession>
+    <PathDelim Value="\"/>
+    <Version Value="12"/>
+    <BuildModes Active="Default"/>
+    <Units>
+      <Unit>
+        <Filename Value="UIClickerUITests.ppr"/>
+        <FRMtype Value="0"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="-1"/>
+        <WindowIndex Value="0"/>
+        <CursorPos X="3" Y="23"/>
+        <UsageCount Value="24"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\..\MiscUtils\Expectations.pas"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="-1"/>
+        <WindowIndex Value="-1"/>
+        <TopLine Value="-1"/>
+        <CursorPos X="-1" Y="-1"/>
+        <UsageCount Value="24"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\ClickerUtils\ClickerActionsClient.pas"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="-1"/>
+        <WindowIndex Value="-1"/>
+        <TopLine Value="-1"/>
+        <CursorPos X="-1" Y="-1"/>
+        <UsageCount Value="24"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\ClickerUtils\ClickerUtils.pas"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="-1"/>
+        <WindowIndex Value="0"/>
+        <CursorPos X="27" Y="42"/>
+        <UsageCount Value="24"/>
+      </Unit>
+      <Unit>
+        <Filename Value="TestUI.pas"/>
+        <IsPartOfProject Value="True"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="0"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="107"/>
+        <CursorPos X="84" Y="129"/>
+        <UsageCount Value="24"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\TestHTTPAPI.pas"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="2"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="129"/>
+        <CursorPos X="29" Y="160"/>
+        <UsageCount Value="24"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="UIActionsStuff.pas"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="1"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="15"/>
+        <CursorPos X="95" Y="43"/>
+        <UsageCount Value="23"/>
+        <Loaded Value="True"/>
+      </Unit>
+    </Units>
+    <JumpHistory HistoryIndex="12">
+      <Position>
+        <Filename Value="TestUI.pas"/>
+        <Caret Line="9" Column="29"/>
+      </Position>
+      <Position>
+        <Filename Value="..\TestHTTPAPI.pas"/>
+        <Caret Line="62" Column="17" TopLine="52"/>
+      </Position>
+      <Position>
+        <Filename Value="..\TestHTTPAPI.pas"/>
+        <Caret Line="74" Column="20" TopLine="52"/>
+      </Position>
+      <Position>
+        <Filename Value="TestUI.pas"/>
+        <Caret Line="86" Column="75" TopLine="57"/>
+      </Position>
+      <Position>
+        <Filename Value="TestUI.pas"/>
+        <Caret Line="91" TopLine="74"/>
+      </Position>
+      <Position>
+        <Filename Value="TestUI.pas"/>
+        <Caret Line="97" Column="32" TopLine="82"/>
+      </Position>
+      <Position>
+        <Filename Value="TestUI.pas"/>
+        <Caret Line="114" Column="12" TopLine="94"/>
+      </Position>
+      <Position>
+        <Filename Value="UIActionsStuff.pas"/>
+        <Caret Line="32" Column="33" TopLine="18"/>
+      </Position>
+      <Position>
+        <Filename Value="UIActionsStuff.pas"/>
+        <Caret Line="31" Column="37" TopLine="15"/>
+      </Position>
+      <Position>
+        <Filename Value="TestUI.pas"/>
+        <Caret Line="105" Column="26" TopLine="87"/>
+      </Position>
+      <Position>
+        <Filename Value="UIActionsStuff.pas"/>
+        <Caret Line="40" Column="39" TopLine="15"/>
+      </Position>
+      <Position>
+        <Filename Value="TestUI.pas"/>
+        <Caret Line="123" Column="59" TopLine="103"/>
+      </Position>
+      <Position>
+        <Filename Value="TestUI.pas"/>
+        <Caret Line="32" Column="12" TopLine="15"/>
+      </Position>
+    </JumpHistory>
+    <RunParams>
+      <FormatVersion Value="2"/>
+      <Modes ActiveMode=""/>
+    </RunParams>
+  </ProjectSession>
+</CONFIG>

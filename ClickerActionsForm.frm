@@ -43,7 +43,7 @@ object frmClickerActions: TfrmClickerActions
   }
   OnCreate = FormCreate
   OnDestroy = FormDestroy
-  LCLVersion = '7.8'
+  LCLVersion = '7.5'
   object PageControlMain: TPageControl
     Left = 8
     Height = 712
@@ -267,20 +267,21 @@ object frmClickerActions: TfrmClickerActions
             Text = '5444'
           end
           object chkServerActive: TCheckBox
-            Left = 208
-            Height = 17
+            Left = 206
+            Height = 19
             Top = 34
-            Width = 48
+            Width = 50
             Caption = 'Active'
             OnChange = chkServerActiveChange
             TabOrder = 1
           end
           object lblServerInfo: TLabel
-            Left = 115
+            Left = 113
             Height = 13
             Top = 64
             Width = 143
             Alignment = taRightJustify
+            Anchors = [akTop, akRight]
             Caption = 'Server module is inactive'
             Font.CharSet = ANSI_CHARSET
             Font.Color = clGray
@@ -317,17 +318,17 @@ object frmClickerActions: TfrmClickerActions
           end
           object chkKeepAlive: TCheckBox
             Left = 81
-            Height = 17
+            Height = 19
             Hint = 'The file monitoring thread, from client side, can benefit from keeping connection alive.'#13#10'It is also useful to prevent opening a new socket for every request (every 200ms).'#13#10'For most cases, leave this checked.'
             Top = 34
-            Width = 67
+            Width = 69
             Caption = 'Keep alive'
             Checked = True
             State = cbChecked
             TabOrder = 3
           end
           object lblServerMode: TLabel
-            Left = 171
+            Left = 165
             Height = 13
             Top = 78
             Width = 91
@@ -445,6 +446,35 @@ object frmClickerActions: TfrmClickerActions
         Caption = 'Stay on top'
         OnClick = chkStayOnTopClick
         TabOrder = 8
+      end
+      object chkAutoSwitchToExecutingTab: TCheckBox
+        Left = 640
+        Height = 19
+        Hint = 'When checked, the current execution tab is focused (current subtemplate).'#13#10'Not showing the current execution tab, may be a performance improvement when there is no GPU acceleration available (e.g. on VMs).'#13#10'There is also a performance gain when executing looped CallTemplate actions.'#13#10'Automatically switching tabs, is needed for debbugging, to display the current action.'
+        Top = 416
+        Width = 155
+        Anchors = [akRight, akBottom]
+        Caption = 'Autoswitch to executing tab'
+        Checked = True
+        OnChange = chkAutoSwitchToExecutingTabChange
+        ParentShowHint = False
+        ShowHint = True
+        State = cbChecked
+        TabOrder = 9
+      end
+      object chkAutoEnableSwitchingTabsOnDebugging: TCheckBox
+        Left = 640
+        Height = 19
+        Hint = 'When enabled, the execution tabs are switched, even if autoswitching is off.'
+        Top = 440
+        Width = 214
+        Anchors = [akRight, akBottom]
+        Caption = 'Autoenable switching tabs on debugging'
+        Checked = True
+        ParentShowHint = False
+        ShowHint = True
+        State = cbChecked
+        TabOrder = 10
       end
     end
     object TabSheetTemplateExec: TTabSheet

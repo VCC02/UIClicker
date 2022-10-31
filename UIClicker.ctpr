@@ -287,6 +287,7 @@
       <CompilerMessages>
         <IgnoredMessages idx6018="True"/>
       </CompilerMessages>
+      <CustomOptions Value="-d_TestBuild"/>
     </Other>
   </CompilerOptions>
   <Debugging>

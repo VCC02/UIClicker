@@ -900,6 +900,7 @@ var
   FindControlInputData: TFindControlInputData;
   StopAllActionsOnDemandAddr: Pointer;
   EvalFG, EvalBG: string;
+  TemplateDir: string;
 begin
   Result := False;
 
@@ -1144,6 +1145,14 @@ begin
 
               if FFileLocationOfDepsIsMem = nil then
                 raise Exception.Create('FFileLocationOfDepsIsMem is not assigned.');
+
+              if FTemplateFileName = nil then
+                TemplateDir := 'FTemplateFileName not set.'
+              else
+                TemplateDir := ExtractFileDir(FTemplateFileName^);
+
+              for i := 0 to ListOfBitmapFiles.Count - 1 do
+                ListOfBitmapFiles.Strings[i] := StringReplace(ListOfBitmapFiles.Strings[i], '$TemplateDir$', TemplateDir, [rfReplaceAll]);
 
               if FExecutingActionFromRemote^ and FFileLocationOfDepsIsMem^ then
                 DoOnWaitForBitmapsAvailability(ListOfBitmapFiles);

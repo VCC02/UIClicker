@@ -13,7 +13,7 @@ object frClickerFindControl: TfrClickerFindControl
   object PageControlMatch: TPageControl
     Left = 0
     Height = 250
-    Top = 1
+    Top = 0
     Width = 877
     ActivePage = TabSheetActionFindSubControlSearchArea
     Anchors = [akTop, akLeft, akRight, akBottom]

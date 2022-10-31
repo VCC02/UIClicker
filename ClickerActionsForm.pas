@@ -70,6 +70,8 @@ type
   TfrmClickerActions = class(TForm)
     btnBrowseActionTemplatesDir: TButton;
     btnTestConnection: TButton;
+    chkAutoEnableSwitchingTabsOnDebugging: TCheckBox;
+    chkAutoSwitchToExecutingTab: TCheckBox;
     chkDisplayActivity: TCheckBox;
     chkKeepAlive: TCheckBox;
     chkSetExperimentsToClientMode: TCheckBox;
@@ -119,6 +121,7 @@ type
     tmrStartup: TTimer;
     procedure btnBrowseActionTemplatesDirClick(Sender: TObject);
     procedure btnTestConnectionClick(Sender: TObject);
+    procedure chkAutoSwitchToExecutingTabChange(Sender: TObject);
     procedure chkDisplayActivityChange(Sender: TObject);
     procedure chkServerActiveChange(Sender: TObject);
     procedure chkStayOnTopClick(Sender: TObject);
@@ -146,6 +149,8 @@ type
 
     FTerminateWaitForFileAvailability: Boolean;
     FTerminateWaitForMultipleFilesAvailability: Boolean;
+    FAutoSwitchToExecutingTab: Boolean;
+    FAutoEnableSwitchingTabsOnDebugging: Boolean;
 
     FOnCopyControlTextAndClassFromMainWindow: TOnCopyControlTextAndClassFromMainWindow;
     FOnRecordComponent: TOnRecordComponent;
@@ -210,6 +215,9 @@ type
 
     function GetListOfWaitingFiles: string;
     function GetCompAtPoint(AParams: TStrings): string;
+
+    procedure SetExecutionMode(AMode: Integer);
+    procedure ProcessChangingExecutionMode;
 
     procedure HandleNewFrameRefreshButton(Sender: TObject);
     function frClickerActionsArrOnCallTemplate(Sender: TObject; AFileNameToCall: string; ListOfVariables: TStrings; DebugBitmap: TBitmap; DebugGridImage: TImage; IsDebugging, AShouldStopAtBreakPoint: Boolean; AStackLevel: Integer; AExecutesRemotely: Boolean): Boolean;
@@ -383,6 +391,11 @@ begin
   else
     memAllowedFileDirsForServer.Lines.Add(ExtractFilePath(ParamStr(0)) + 'ActionTemplates');
 
+  FAutoSwitchToExecutingTab := AIni.ReadBool('ActionsWindow', 'AutoSwitchToExecutingTab', True);
+  chkAutoSwitchToExecutingTab.Checked := FAutoSwitchToExecutingTab;
+  FAutoEnableSwitchingTabsOnDebugging := AIni.ReadBool('ActionsWindow', 'AutoEnableSwitchingTabsOnDebugging', True);
+  chkAutoSwitchToExecutingTab.Checked := FAutoEnableSwitchingTabsOnDebugging;
+
   FullTemplatesDir := AIni.ReadString('Dirs', 'FullTemplatesDir', '$AppDir$\ActionTemplates');
   BMPsDir := AIni.ReadString('Dirs', 'BMPsDir', '');
 
@@ -430,6 +443,9 @@ begin
 
   for i := 0 to n - 1 do
     AIni.WriteString('ActionsWindow', 'AllowedFileDirsForServer_' + IntToStr(i), memAllowedFileDirsForServer.Lines.Strings[i]);
+
+  AIni.WriteBool('ActionsWindow', 'AutoSwitchToExecutingTab', FAutoSwitchToExecutingTab);
+  AIni.WriteBool('ActionsWindow', 'AutoEnableSwitchingTabsOnDebugging', FAutoEnableSwitchingTabsOnDebugging);
 
   AIni.WriteString('Dirs', 'BMPsDir', BMPsDir);
   AIni.WriteString('Dirs', 'FullTemplatesDir', StringReplace(FullTemplatesDir, ExtractFileDir(ParamStr(0)), '$AppDir$', [rfReplaceAll]));
@@ -511,6 +527,8 @@ begin
   FInMemFileSystem := TInMemFileSystem.Create;
   FInMemFileSystem.OnComputeInMemFileHash := HandleOnComputeInMemFileHash;
   FFileAvailabilityFIFO := TPollingFIFO.Create;
+  FAutoSwitchToExecutingTab := False;
+  FAutoEnableSwitchingTabsOnDebugging := False;
 
   FOnCopyControlTextAndClassFromMainWindow := nil;
   FOnRecordComponent := nil;
@@ -1072,7 +1090,10 @@ begin
     ABtn.Height := 60;
     ABtn.Caption := 'Refresh';
     ABtn.OnClick := HandleNewFrameRefreshButton;
-    ABtn.Show;
+    ABtn.Show;  //  this causes the pagecontrol to switch tabs
+
+    if not FAutoSwitchToExecutingTab and not (FAutoEnableSwitchingTabsOnDebugging and IsDebugging) then
+      PageControlPlayer.ActivePageIndex := PageControlPlayer.PageCount - 2; //switch back to current tab, to prevent wasting time on repainting (useful of VMs without GPU acceleration)
 
     ScrBox := TScrollBox.Create(NewTabSheet {Self}); //using NewTabSheet, to allow finding the scrollbox
     try
@@ -1139,8 +1160,11 @@ begin
         NewFrame.OnPictureOpenDialogExecute := HandleOnPictureOpenDialogExecute;
         NewFrame.OnGetPictureOpenDialogFileName := HandleOnGetPictureOpenDialogFileName;
 
-        PageControlPlayer.ActivePageIndex := PageControlPlayer.PageCount - 1;
-        NewFrame.Show;
+        if FAutoSwitchToExecutingTab or (FAutoEnableSwitchingTabsOnDebugging and IsDebugging) then
+        begin
+          PageControlPlayer.ActivePageIndex := PageControlPlayer.PageCount - 1;
+          NewFrame.Show;
+        end;
 
         FileLoc := CExpectedFileLocation[NewFrame.FileLocationOfDepsIsMem];
 
@@ -2309,14 +2333,42 @@ end;
 
 
 procedure TfrmClickerActions.tmrStartupTimer(Sender: TObject);
+var
+  ExecMode: string;
 begin
   tmrStartup.Enabled := False;
 
   //some startup code here
+  {$IFDEF TestBuild}
+    ExecMode := GetCmdLineOptionValue('--SetExecMode');
+    SetExecutionMode(cmbExecMode.Items.IndexOf(ExecMode));
+  {$ENDIF}
 end;
 
 
-procedure TfrmClickerActions.cmbExecModeChange(Sender: TObject);
+procedure TfrmClickerActions.SetExecutionMode(AMode: Integer);
+var
+  Port: string;
+begin
+  if AMode = -1 then
+    Exit;
+
+  cmbExecMode.ItemIndex := AMode;
+
+  if AMode = 2 then //server
+  begin
+    Port := GetCmdLineOptionValue('--ServerPort');
+    if Port <> '' then
+      lbeServerModePort.Text := IntToStr(StrToIntDef(Port, 5444));
+
+    chkServerActive.Checked := True;
+  end;
+
+  ProcessChangingExecutionMode;
+end;
+
+
+procedure TfrmClickerActions.ProcessChangingExecutionMode;
 const
   CClientExecModeInfoTxt: array[0..2] of string = ('off', 'on', 'off');
   CServerExecModeInfoTxt: array[0..2] of string = ('off', 'off', 'on');
@@ -2443,6 +2495,12 @@ begin
 end;
 
 
+procedure TfrmClickerActions.cmbExecModeChange(Sender: TObject);
+begin
+  ProcessChangingExecutionMode;
+end;
+
+
 procedure TfrmClickerActions.chkServerActiveChange(Sender: TObject);
 var
   s: string;
@@ -2501,6 +2559,12 @@ begin
   RemoteAddress := lbeClientModeServerAddress.Text;
   Response := TestConnection(RemoteAddress);
   MessageBox(Handle, PChar('Server response: ' + Response), PChar(Application.Title), MB_ICONINFORMATION);
+end;
+
+
+procedure TfrmClickerActions.chkAutoSwitchToExecutingTabChange(Sender: TObject);
+begin
+  FAutoSwitchToExecutingTab := chkAutoSwitchToExecutingTab.Checked;
 end;
 
 

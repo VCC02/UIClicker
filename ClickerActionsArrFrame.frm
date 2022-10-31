@@ -391,7 +391,7 @@ object frClickerActionsArr: TfrClickerActionsArr
       Top = 53
       Width = 107
       Anchors = [akTop, akRight]
-      Caption = 'Stop           '
+      Caption = 'Stop                  '
       Enabled = False
       Glyph.Data = {
         36030000424D3603000000000000360000002800000010000000100000000100
@@ -432,7 +432,7 @@ object frClickerActionsArr: TfrClickerActionsArr
       Top = 78
       Width = 107
       Anchors = [akTop, akRight]
-      Caption = 'Continue All    '
+      Caption = 'Continue All     '
       Enabled = False
       Glyph.Data = {
         36030000424D3603000000000000360000002800000010000000100000000100
@@ -473,7 +473,7 @@ object frClickerActionsArr: TfrClickerActionsArr
       Top = 103
       Width = 107
       Anchors = [akTop, akRight]
-      Caption = 'Step Over      '
+      Caption = 'Step Over        '
       Enabled = False
       Glyph.Data = {
         36030000424D3603000000000000360000002800000010000000100000000100
@@ -514,7 +514,7 @@ object frClickerActionsArr: TfrClickerActionsArr
       Top = 128
       Width = 107
       Anchors = [akTop, akRight]
-      Caption = 'Step Into       '
+      Caption = 'Step Into         '
       Enabled = False
       Glyph.Data = {
         36030000424D3603000000000000360000002800000010000000100000000100

@@ -100,7 +100,8 @@ implementation
 
 uses
   ClickerPreviewForm, ClickerWinInterpForm, ClickerTemplateCallTreeForm, ClickerActionsForm,
-  ClickerActionsClient, IniFiles, ClickerFindControlFrame, ClickerRemoteScreenForm;
+  ClickerActionsClient, IniFiles, ClickerFindControlFrame, ClickerRemoteScreenForm,
+  ClickerUtils;
 
 { TfrmUIClickerMainForm }
 
@@ -227,6 +228,8 @@ end;
 
 
 procedure TfrmUIClickerMainForm.tmrStartupTimer(Sender: TObject);
+var
+  ExtraCaption: string;
 begin
   if not FAllFormsAreCreated then
     Exit;
@@ -238,6 +241,19 @@ begin
     lblBitness.Caption := '32-bit'
   else
     lblBitness.Caption := '64-bit';
+
+  {$IFDEF TestBuild}
+    ExtraCaption := GetCmdLineOptionValue('--ExtraCaption');
+    if ExtraCaption <> '' then
+    begin
+      Caption := Caption + ' - ' + ExtraCaption;
+      frmClickerControlPreview.Caption := frmClickerControlPreview.Caption + ' - ' + ExtraCaption;
+      frmClickerActions.Caption := frmClickerActions.Caption + ' - ' + ExtraCaption;
+      frmClickerWinInterp.Caption := frmClickerWinInterp.Caption + ' - ' + ExtraCaption;
+      frmClickerTemplateCallTree.Caption := frmClickerTemplateCallTree.Caption + ' - ' + ExtraCaption;
+      frmClickerRemoteScreen.Caption := frmClickerRemoteScreen.Caption + ' - ' + ExtraCaption;
+    end;
+  {$ENDIF}
 end;
 
 

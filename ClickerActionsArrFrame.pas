@@ -2794,7 +2794,8 @@ begin
   LeftSide := Trim(Copy(s, 1, PosCrop - 1));
 
   PosVar := Pos('$', LeftSide);
-  PosEndVar := Pos('$', LeftSide, PosVar + 1);
+  //PosEndVar := Pos('$', LeftSide, PosVar + 1);
+  PosEndVar := RevPos('$', LeftSide, PosVar + 1);
 
   if (PosVar = 0) or (PosEndVar = 0) then
   begin

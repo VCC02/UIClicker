@@ -77,6 +77,7 @@ type
 
     function GetVarValueFromServer(AVarName: string): string;
 
+    property InMemFS: TInMemFileSystem read FInMemFS;
   public
     property TestServerAddress: string read FTestServerAddress write FTestServerAddress;
   end;

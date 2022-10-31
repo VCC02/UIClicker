@@ -976,6 +976,8 @@ begin
   vstMatchBitmapFiles.Header.Font.Name := 'Tahoma';
   vstMatchBitmapFiles.Header.Font.Style := [];
   vstMatchBitmapFiles.Header.MainColumn := -1;
+  vstMatchBitmapFiles.Hint := 'Relative paths can be entered using the following format:' + #13#10 + '$TemplateDir$\<SomeBmp.bmp>';
+  vstMatchBitmapFiles.ShowHint := True;
   vstMatchBitmapFiles.Indent := 2;
   vstMatchBitmapFiles.ScrollBarOptions.AlwaysVisible := True;
   vstMatchBitmapFiles.StateImages := imglstMatchBitmapFiles;
@@ -2431,7 +2433,7 @@ begin
     if not BrowseBitmapFile then
       Exit;
 
-  if not DoOnFileExists(lbeMatchBitmapFile.Text) then
+  if (Pos('$TemplateDir$', lbeMatchBitmapFile.Text) = 0) and not DoOnFileExists(lbeMatchBitmapFile.Text) then
   begin
     MessageBox(Handle, 'Specified file does not exist. Please browse a bitmap file, to fill in the editbox.', PChar(Caption), MB_ICONERROR);
     Exit;
@@ -2460,7 +2462,7 @@ var
   Node: PVirtualNode;
   UpperCaseFile: string;
 begin
-  if not DoOnFileExists(lbeMatchBitmapFile.Text) then
+  if (Pos('$TemplateDir$', lbeMatchBitmapFile.Text) = 0) and not DoOnFileExists(lbeMatchBitmapFile.Text) then
   begin
     MessageBox(Handle, 'Specified file does not exist. Please browse a bitmap file, to fill in the editbox.', PChar(Caption), MB_ICONERROR);
     Exit;

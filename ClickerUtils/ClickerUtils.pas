@@ -333,6 +333,9 @@ function GetControlText(hw: THandle): string;
 function GetWindowClassRec(HW: THandle): TCompRec; overload;
 function GetWindowClassRec(CrPos: TPoint): TCompRec; overload;
 
+function GetCmdLineOptionValue(AOption: string): string;
+function RevPos(const ASubStr, AString: string; AOffset: Integer = 1): Integer;
+
 
 implementation
 
@@ -586,6 +589,82 @@ end;
 function ReplaceOnce(AListOfVars: TStringList; s: string; AReplaceRandom: Boolean = True): string;   forward;
 
 
+function RevPos(const ASubStr, AString: string; AOffset: Integer = 1): Integer;
+var
+  i: Integer;
+begin
+  Result := 0;
+  if ASubStr = '' then
+    Exit;
+
+  for i := Length(AString) - Length(ASubStr) + 1 downto AOffset do
+    if AString[i] = ASubStr[1] then
+      if Copy(AString, i, Length(ASubStr)) = ASubStr then
+      begin
+        Result := i;
+        Exit;
+      end;
+end;
+
+
+function ExtractFuncArgs(AFuncNameStart, AFuncAndArgs: string): string;
+var
+  Args: string;
+  Count, i: Integer;
+begin
+  Args := Copy(AFuncAndArgs, Pos(AFuncNameStart, AFuncAndArgs) + Length(AFuncNameStart), MaxInt);
+  Count := 1; //number of '(' / ')' pairs found
+  for i := 1 to Length(Args) do
+  begin
+    if Args[i] = '(' then
+      Inc(Count)
+    else
+      if Args[i] = ')' then
+      begin
+        Dec(Count);
+        if Count <= 0 then //can be negative, because it finds ')' without '('
+        begin
+          Result := Copy(Args, 1, i - 1);
+          Break;
+        end;
+      end;
+  end;
+end;
+
+
+const
+  CRandom_FuncName = '$Random(';
+  CSum_FuncName = '$Sum(';
+  CDiff_FuncName = '$Diff(';
+  CUpdateControlInfo_FuncName = '$UpdateControlInfo(';
+  CExtractFileDir_FuncName = '$ExtractFileDir(';
+  CExtractFileName_FuncName = '$ExtractFileName(';
+  CExtractFileExt_FuncName = '$ExtractFileExt(';
+  CExtractFileNameNoExt_FuncName = '$ExtractFileNameNoExt(';
+  CChr_FuncName = '$Chr(';
+  CFastReplace_45ToReturn_FuncName = '$FastReplace_45ToReturn(';
+  CFastReplace_ReturnTo45_FuncName = '$FastReplace_ReturnTo45(';
+  CFastReplace_45To87_FuncName = '$FastReplace_45To87(';
+  CFastReplace_87To45_FuncName = '$FastReplace_87To45(';
+  CExit_FuncName = '$Exit(';
+  CStringContains_FuncName = '$StringContains(';
+  CCreateDir_FuncName = '$CreateDir(';
+  CLoadTextFile_FuncName = '$LoadTextFile(';
+  CItemCount_FuncName = '$ItemCount(';
+  CGetTextItem_FuncName = '$GetTextItem(';
+  CIncBrightness_FuncName = '$IncBrightness(';
+  CDecBrightness_FuncName = '$DecBrightness(';
+  CIncBrightnessR_FuncName = '$IncBrightnessR(';
+  CIncBrightnessG_FuncName = '$IncBrightnessG(';
+  CIncBrightnessB_FuncName = '$IncBrightnessB(';
+  CDecBrightnessR_FuncName = '$DecBrightnessR(';
+  CDecBrightnessG_FuncName = '$DecBrightnessG(';
+  CDecBrightnessB_FuncName = '$DecBrightnessB(';
+  CGetSelfHandles_FuncName = '$GetSelfHandles(';
+  CGetKeyNameFromPair_FuncName = '$GetKeyNameFromPair(';
+  CGetKeyValueFromPair_FuncName = '$GetKeyValueFromPair(';
+
+
 function ReplaceRandom(AListOfVars: TStringList; s: string): string;
 var
   PosComma: Integer;
@@ -594,8 +673,7 @@ var
   RandMinStr, RandMaxStr: string;
   RandomValueStr: string;
 begin
-  RandomArgs := Copy(s, Pos('(', s) + 1, MaxInt);
-  RandomArgs := Copy(RandomArgs, 1, Pos(')$', RandomArgs) - 1);
+  RandomArgs := ExtractFuncArgs(CRandom_FuncName, s);
   InitialRandomArgs := RandomArgs;
 
   if RandomArgs = '' then
@@ -623,7 +701,7 @@ begin
     RandomValueStr := IntToStr(RandMin + Random(RandMax - RandMin));
   end;
 
-  Result := StringReplace(s, '$Random(' + InitialRandomArgs + ')$', RandomValueStr, [rfReplaceAll]);
+  Result := StringReplace(s, CRandom_FuncName + InitialRandomArgs + ')$', RandomValueStr, [rfReplaceAll]);
 end;
 
 
@@ -635,8 +713,7 @@ var
   SumOperand1Str, SumOperand2Str: string;
   ResultValueStr: string;
 begin
-  SumArgs := Copy(s, Pos('(', s) + 1, MaxInt);
-  SumArgs := Copy(SumArgs, 1, Pos(')$', SumArgs) - 1);
+  SumArgs := ExtractFuncArgs(CSum_FuncName, s);
   InitialSumArgs := SumArgs;
 
   if SumArgs = '' then
@@ -664,7 +741,7 @@ begin
     ResultValueStr := IntToStr(SumOperand1 + SumOperand2);
   end;
 
-  Result := StringReplace(s, '$Sum(' + InitialSumArgs + ')$', ResultValueStr, [rfReplaceAll]);
+  Result := StringReplace(s, CSum_FuncName + InitialSumArgs + ')$', ResultValueStr, [rfReplaceAll]);
 end;
 
 
@@ -676,8 +753,7 @@ var
   DiffOperand1Str, DiffOperand2Str: string;
   ResultValueStr: string;
 begin
-  DiffArgs := Copy(s, Pos('(', s) + 1, MaxInt);
-  DiffArgs := Copy(DiffArgs, 1, Pos(')$', DiffArgs) - 1);
+  DiffArgs := ExtractFuncArgs(CDiff_FuncName, s);
   InitialDiffArgs := DiffArgs;
 
   if DiffArgs = '' then
@@ -705,7 +781,7 @@ begin
     ResultValueStr := IntToStr(DiffOperand1 - DiffOperand2);
   end;
 
-  Result := StringReplace(s, '$Diff(' + InitialDiffArgs + ')$', ResultValueStr, [rfReplaceAll]);
+  Result := StringReplace(s, CDiff_FuncName + InitialDiffArgs + ')$', ResultValueStr, [rfReplaceAll]);
 end;
 
 
@@ -715,8 +791,7 @@ var
   ControlHandle: THandle;
   CompRec: TCompRec;
 begin
-  Args := Copy(s, Pos('(', s) + 1, MaxInt);
-  Args := Copy(Args, 1, Pos(')$', Args) - 1);
+  Args := ExtractFuncArgs(CUpdateControlInfo_FuncName, s);
   InitialArgs := Args;
   Args := ReplaceOnce(AListOfVars, Args, False);
   ControlHandle := StrToIntDef(Args, 0);
@@ -751,7 +826,7 @@ begin
     AListOfVars.Values['$Half_Control_Height$'] := '0';
   end;
 
-  Result := StringReplace(s, '$UpdateControlInfo(' + InitialArgs + ')$', InitialArgs, [rfReplaceAll]);
+  Result := StringReplace(s, CUpdateControlInfo_FuncName + InitialArgs + ')$', InitialArgs, [rfReplaceAll]);
 end;
 
 
@@ -759,11 +834,10 @@ function ReplaceExtractFileDir(s: string): string;
 var
   DirArgs, InitialDirArgs: string;
 begin
-  DirArgs := Copy(s, Pos('(', s) + 1, MaxInt);
-  DirArgs := Copy(DirArgs, 1, Pos(')$', DirArgs) - 1);
+  DirArgs := ExtractFuncArgs(CExtractFileDir_FuncName, s);
   InitialDirArgs := DirArgs;
 
-  Result := StringReplace(s, '$ExtractFileDir(' + InitialDirArgs + ')$', ExtractFileDir(DirArgs), [rfReplaceAll]);
+  Result := StringReplace(s, CExtractFileDir_FuncName + InitialDirArgs + ')$', ExtractFileDir(DirArgs), [rfReplaceAll]);
 end;
 
 
@@ -771,11 +845,10 @@ function ReplaceExtractFileName(s: string): string;
 var
   DirArgs, InitialDirArgs: string;
 begin
-  DirArgs := Copy(s, Pos('(', s) + 1, MaxInt);
-  DirArgs := Copy(DirArgs, 1, Pos(')$', DirArgs) - 1);
+  DirArgs := ExtractFuncArgs(CExtractFileName_FuncName, s);
   InitialDirArgs := DirArgs;
 
-  Result := StringReplace(s, '$ExtractFileName(' + InitialDirArgs + ')$', ExtractFileName(DirArgs), [rfReplaceAll]);
+  Result := StringReplace(s, CExtractFileName_FuncName + InitialDirArgs + ')$', ExtractFileName(DirArgs), [rfReplaceAll]);
 end;
 
 
@@ -783,11 +856,10 @@ function ReplaceExtractFileExt(s: string): string;
 var
   DirArgs, InitialDirArgs: string;
 begin
-  DirArgs := Copy(s, Pos('(', s) + 1, MaxInt);
-  DirArgs := Copy(DirArgs, 1, Pos(')$', DirArgs) - 1);
+  DirArgs := ExtractFuncArgs(CExtractFileExt_FuncName, s);
   InitialDirArgs := DirArgs;
 
-  Result := StringReplace(s, '$ExtractFileExt(' + InitialDirArgs + ')$', ExtractFileExt(DirArgs), [rfReplaceAll]);
+  Result := StringReplace(s, CExtractFileExt_FuncName + InitialDirArgs + ')$', ExtractFileExt(DirArgs), [rfReplaceAll]);
 end;
 
 
@@ -796,13 +868,12 @@ var
   DirArgs, InitialDirArgs: string;
   FileNameWithExt, FileNameWithoutExt: string;
 begin
-  DirArgs := Copy(s, Pos('(', s) + 1, MaxInt);
-  DirArgs := Copy(DirArgs, 1, Pos(')$', DirArgs) - 1);
+  DirArgs := ExtractFuncArgs(CExtractFileNameNoExt_FuncName , s);
   InitialDirArgs := DirArgs;
 
   FileNameWithExt := ExtractFileName(DirArgs);
   FileNameWithoutExt := Copy(FileNameWithExt, 1, Length(FileNameWithExt) - Length(ExtractFileExt(FileNameWithExt)));
-  Result := StringReplace(s, '$ExtractFileNameNoExt(' + InitialDirArgs + ')$', FileNameWithoutExt, [rfReplaceAll]);
+  Result := StringReplace(s, CExtractFileNameNoExt_FuncName  + InitialDirArgs + ')$', FileNameWithoutExt, [rfReplaceAll]);
 end;
 
 
@@ -811,12 +882,11 @@ var
   Args, InitialArgs: string;
   ArgsNum: Integer;
 begin
-  Args := Copy(s, Pos('(', s) + 1, MaxInt);
-  Args := Copy(Args, 1, Pos(')$', Args) - 1);
+  Args := ExtractFuncArgs(CChr_FuncName, s);
   InitialArgs := Args;
   ArgsNum := StrToIntDef(Args, 65);
 
-  Result := StringReplace(s, '$Chr(' + InitialArgs + ')$', Chr(ArgsNum), [rfReplaceAll]);
+  Result := StringReplace(s, CChr_FuncName + InitialArgs + ')$', Chr(ArgsNum), [rfReplaceAll]);
 end;
 
 
@@ -824,11 +894,10 @@ function ReplaceFastReplace_45ToReturn(s: string): string;
 var
   Args, InitialArgs: string;
 begin
-  Args := Copy(s, Pos('(', s) + 1, MaxInt);
-  Args := Copy(Args, 1, Pos(')$', Args) - 1);
+  Args := ExtractFuncArgs(CFastReplace_45ToReturn_FuncName, s);
   InitialArgs := Args;
 
-  Result := StringReplace(s, '$FastReplace_45ToReturn(' + InitialArgs + ')$', FastReplace_45ToReturn(Args), [rfReplaceAll]);
+  Result := StringReplace(s, CFastReplace_45ToReturn_FuncName + InitialArgs + ')$', FastReplace_45ToReturn(Args), [rfReplaceAll]);
 end;
 
 
@@ -836,11 +905,10 @@ function ReplaceFastReplace_ReturnTo45(s: string): string;
 var
   Args, InitialArgs: string;
 begin
-  Args := Copy(s, Pos('(', s) + 1, MaxInt);
-  Args := Copy(Args, 1, Pos(')$', Args) - 1);
+  Args := ExtractFuncArgs(CFastReplace_ReturnTo45_FuncName, s);
   InitialArgs := Args;
 
-  Result := StringReplace(s, '$FastReplace_ReturnTo45(' + InitialArgs + ')$', FastReplace_ReturnTo45(Args), [rfReplaceAll]);
+  Result := StringReplace(s, CFastReplace_ReturnTo45_FuncName + InitialArgs + ')$', FastReplace_ReturnTo45(Args), [rfReplaceAll]);
 end;
 
 
@@ -848,11 +916,10 @@ function ReplaceFastReplace_45To87(s: string): string;
 var
   Args, InitialArgs: string;
 begin
-  Args := Copy(s, Pos('(', s) + 1, MaxInt);
-  Args := Copy(Args, 1, Pos(')$', Args) - 1);
+  Args := ExtractFuncArgs(CFastReplace_45To87_FuncName, s);
   InitialArgs := Args;
 
-  Result := StringReplace(s, '$FastReplace_45To87(' + InitialArgs + ')$', FastReplace_45To87(Args), [rfReplaceAll]);
+  Result := StringReplace(s, CFastReplace_45To87_FuncName + InitialArgs + ')$', FastReplace_45To87(Args), [rfReplaceAll]);
 end;
 
 
@@ -860,11 +927,10 @@ function ReplaceFastReplace_87To45(s: string): string;
 var
   Args, InitialArgs: string;
 begin
-  Args := Copy(s, Pos('(', s) + 1, MaxInt);
-  Args := Copy(Args, 1, Pos(')$', Args) - 1);
+  Args := ExtractFuncArgs(CFastReplace_87To45_FuncName, s);
   InitialArgs := Args;
 
-  Result := StringReplace(s, '$FastReplace_87To45(' + InitialArgs + ')$', FastReplace_87To45(Args), [rfReplaceAll]);
+  Result := StringReplace(s, CFastReplace_87To45_FuncName + InitialArgs + ')$', FastReplace_87To45(Args), [rfReplaceAll]);
 end;
 
 
@@ -872,11 +938,10 @@ function ReplaceExit(s: string): string;
 var
   Args, InitialArgs: string;
 begin
-  Args := Copy(s, Pos('(', s) + 1, MaxInt);
-  Args := Copy(Args, 1, Pos(')$', Args) - 1);
+  Args := ExtractFuncArgs(CExit_FuncName, s);
   InitialArgs := Args;
 
-  Result := StringReplace(s, '$Exit(' + InitialArgs + ')$', 'Exit(<ExitCode>) should be called from SetVar action, to stop the template.', [rfReplaceAll]);
+  Result := StringReplace(s, CExit_FuncName + InitialArgs + ')$', 'Exit(<ExitCode>) should be called from SetVar action, to stop the template.', [rfReplaceAll]);
 end;
 
 
@@ -887,8 +952,7 @@ var
   Operand1Str, Operand2Str: string;
   ResultValueStr: string;
 begin
-  Args := Copy(s, Pos('(', s) + 1, MaxInt);
-  Args := Copy(Args, 1, Pos(')$', Args) - 1);
+  Args := ExtractFuncArgs(CStringContains_FuncName, s);
   InitialArgs := Args;
 
   if Args = '' then
@@ -913,7 +977,7 @@ begin
     ResultValueStr := IntToStr(Ord(Pos(Operand1Str, Operand2Str) > 0));
   end;
 
-  Result := StringReplace(s, '$StringContains(' + InitialArgs + ')$', ResultValueStr, [rfReplaceAll]);
+  Result := StringReplace(s, CStringContains_FuncName + InitialArgs + ')$', ResultValueStr, [rfReplaceAll]);
 end;
 
 
@@ -921,11 +985,10 @@ function ReplaceCreateDir(s: string): string;
 var
   DirArgs, InitialDirArgs: string;
 begin
-  DirArgs := Copy(s, Pos('(', s) + 1, MaxInt);
-  DirArgs := Copy(DirArgs, 1, Pos(')$', DirArgs) - 1);
+  DirArgs := ExtractFuncArgs(CCreateDir_FuncName, s);
   InitialDirArgs := DirArgs;
 
-  Result := StringReplace(s, '$CreateDir(' + InitialDirArgs + ')$', IntToStr(Ord(CreateDirWithSubDirs(DirArgs))), [rfReplaceAll]);
+  Result := StringReplace(s, CCreateDir_FuncName + InitialDirArgs + ')$', IntToStr(Ord(CreateDirWithSubDirs(DirArgs))), [rfReplaceAll]);
 end;
 
 
@@ -934,8 +997,7 @@ var
   FileArgs, InitialFileArgs: string;
   AStringList: TStringList;
 begin
-  FileArgs := Copy(s, Pos('(', s) + 1, MaxInt);
-  FileArgs := Copy(FileArgs, 1, Pos(')$', FileArgs) - 1);
+  FileArgs := ExtractFuncArgs(CLoadTextFile_FuncName, s);
   InitialFileArgs := FileArgs;
 
   FileArgs := StringReplace(FileArgs, '"', '', [rfReplaceAll]);
@@ -953,7 +1015,7 @@ begin
       AStringList.Free;
     end;
 
-    Result := StringReplace(s, '$LoadTextFile(' + InitialFileArgs + ')$', Result, [rfReplaceAll]);
+    Result := StringReplace(s, CLoadTextFile_FuncName + InitialFileArgs + ')$', Result, [rfReplaceAll]);
   except
     on E: Exception do
     begin
@@ -969,8 +1031,7 @@ var
   ItemArgs, InitialItemArgs: string;
   Count, i: Integer;
 begin
-  ItemArgs := Copy(s, Pos('(', s) + 1, MaxInt);
-  ItemArgs := Copy(ItemArgs, 1, Pos(')$', ItemArgs) - 1);
+  ItemArgs := ExtractFuncArgs(CItemCount_FuncName, s);
   InitialItemArgs := ItemArgs;
 
   Count := 0;
@@ -981,7 +1042,7 @@ begin
       Continue;
     end;
 
-  Result := StringReplace(s, '$ItemCount(' + InitialItemArgs + ')$', IntToStr(Count), [rfReplaceAll]);
+  Result := StringReplace(s, CItemCount_FuncName + InitialItemArgs + ')$', IntToStr(Count), [rfReplaceAll]);
 end;
 
 
@@ -991,8 +1052,7 @@ var
   CurrentIndex, i, ItemIndex, PosComma, ItemPos, PrevItemPos: Integer;
   Found: Boolean;
 begin
-  ItemArgs := Copy(s, Pos('(', s) + 1, MaxInt);
-  ItemArgs := Copy(ItemArgs, 1, Pos(')$', ItemArgs) - 1);
+  ItemArgs := ExtractFuncArgs(CGetTextItem_FuncName, s);
   InitialItemArgs := ItemArgs;
 
   if ItemArgs = '' then
@@ -1054,7 +1114,7 @@ begin
   end;
 
   Result := Copy(Content, PrevItemPos, ItemPos - PrevItemPos);
-  Result := StringReplace(s, '$GetTextItem(' + InitialItemArgs + ')$', Result, [rfReplaceAll]);
+  Result := StringReplace(s, CGetTextItem_FuncName + InitialItemArgs + ')$', Result, [rfReplaceAll]);
 end;
 
 
@@ -1063,9 +1123,9 @@ type
 
 const
   CBrightnessOperationStr: array[TBrightnessOperation] of string = (
-    'IncBrightness', 'DecBrightness',
-    'IncBrightnessR', 'IncBrightnessG', 'IncBrightnessB',
-    'DecBrightnessR', 'DecBrightnessG', 'DecBrightnessB');
+    CIncBrightness_FuncName, CDecBrightness_FuncName,
+    CIncBrightnessR_FuncName, CIncBrightnessG_FuncName, CIncBrightnessB_FuncName,
+    CDecBrightnessR_FuncName, CDecBrightnessG_FuncName, CDecBrightnessB_FuncName);
 
 function ReplaceModifyBrightness(AListOfVars: TStringList; s: string; ABrightnessOperation: TBrightnessOperation): string;
 var
@@ -1078,11 +1138,9 @@ var
   Amount: Byte;
   OperationStr: string;
 begin
-  Args := Copy(s, Pos('(', s) + 1, MaxInt);
-  Args := Copy(Args, 1, Pos(')$', Args) - 1);
-  InitialArgs := Args;
-
   OperationStr := CBrightnessOperationStr[ABrightnessOperation];
+  Args := ExtractFuncArgs(OperationStr, s);
+  InitialArgs := Args;
 
   if Args = '' then
     ResultValueStr := '0'
@@ -1108,7 +1166,6 @@ begin
     R := Red;
     G := Green;
     B := Blue;
-
 
     case ABrightnessOperation of
       boInc:
@@ -1171,13 +1228,13 @@ begin
     ResultValueStr := IntToHex(RGBToColor(R, G, B), 6);
   end;
 
-  Result := StringReplace(s, '$' + OperationStr + '(' + InitialArgs + ')$', ResultValueStr, [rfReplaceAll]);
+  Result := StringReplace(s, OperationStr + InitialArgs + ')$', ResultValueStr, [rfReplaceAll]);
 end;
 
 
 function ReplaceGetSelfHandles(s: string): string;
 begin
-  Result := StringReplace(s, '$GetSelfHandles()$', 'GetSelfHandles() should be called from SetVar action, to fill in the handles.', [rfReplaceAll]);
+  Result := StringReplace(s, CGetSelfHandles_FuncName + ')$', 'GetSelfHandles() should be called from SetVar action, to fill in the handles.', [rfReplaceAll]);
 end;
 
 
@@ -1185,11 +1242,10 @@ function ReplaceGetKeyNameFromPair(s: string): string;
 var
   ItemArgs, InitialItemArgs: string;
 begin
-  ItemArgs := Copy(s, Pos('(', s) + 1, MaxInt);
-  ItemArgs := Copy(ItemArgs, 1, Pos(')$', ItemArgs) - 1);
+  ItemArgs := ExtractFuncArgs(CGetKeyNameFromPair_FuncName, s);
   InitialItemArgs := ItemArgs;
 
-  Result := StringReplace(s, '$GetKeyNameFromPair(' + InitialItemArgs + ')$', Copy(ItemArgs, 1, Pos('=', ItemArgs) - 1), [rfReplaceAll]);
+  Result := StringReplace(s, CGetKeyNameFromPair_FuncName + InitialItemArgs + ')$', Copy(ItemArgs, 1, Pos('=', ItemArgs) - 1), [rfReplaceAll]);
 end;
 
 
@@ -1197,11 +1253,10 @@ function ReplaceGetKeyValueFromPair(s: string): string;
 var
   ItemArgs, InitialItemArgs: string;
 begin
-  ItemArgs := Copy(s, Pos('(', s) + 1, MaxInt);
-  ItemArgs := Copy(ItemArgs, 1, Pos(')$', ItemArgs) - 1);
+  ItemArgs := ExtractFuncArgs(CGetKeyValueFromPair_FuncName, s);
   InitialItemArgs := ItemArgs;
 
-  Result := StringReplace(s, '$GetKeyValueFromPair(' + InitialItemArgs + ')$', Copy(ItemArgs, Pos('=', ItemArgs) + 1, MaxInt), [rfReplaceAll]);
+  Result := StringReplace(s, CGetKeyValueFromPair_FuncName + InitialItemArgs + ')$', Copy(ItemArgs, Pos('=', ItemArgs) + 1, MaxInt), [rfReplaceAll]);
 end;
 
 
@@ -1221,7 +1276,7 @@ begin
       s := StringReplace(s, CurrentName, CurrentValue, [rfReplaceAll]);
   end;
 
-  if Pos('$Random(', s) > 0 then
+  if Pos(CRandom_FuncName, s) > 0 then
   begin
     if Random(7) = 3 then
     begin
@@ -1232,19 +1287,19 @@ begin
     s := ReplaceRandom(AListOfVars, s);
   end;
 
-  if Pos('$ExtractFileDir(', s) > 0 then
+  if Pos(CExtractFileDir_FuncName, s) > 0 then
     s := ReplaceExtractFileDir(s);
 
-  if Pos('$ExtractFileName(', s) > 0 then
+  if Pos(CExtractFileName_FuncName, s) > 0 then
     s := ReplaceExtractFileName(s);
 
-  if Pos('$ExtractFileExt(', s) > 0 then
+  if Pos(CExtractFileExt_FuncName, s) > 0 then
     s := ReplaceExtractFileExt(s);
 
-  if Pos('$ExtractFileNameNoExt(', s) > 0 then
+  if Pos(CExtractFileNameNoExt_FuncName, s) > 0 then
     s := ReplaceExtractFileNameNoExt(s);
 
-  if Pos('$Chr(', s) > 0 then
+  if Pos(CChr_FuncName, s) > 0 then
     s := ReplaceChr(s);
 
   if Pos('$Current_Mouse_X$', s) > 0 then
@@ -1268,56 +1323,56 @@ begin
   if Pos('$Now$', s) > 0 then
     s := StringReplace(s, '$Now$', DateTimeToStr(Now), [rfReplaceAll]);
 
-  if Pos('$Exit(', s) > 0 then
+  if Pos(CExit_FuncName, s) > 0 then
     s := ReplaceExit(s);
 
-  if Pos('$StringContains(', s) > 0 then
+  if Pos(CStringContains_FuncName, s) > 0 then
     s := ReplaceStringContains(AListOfVars, s);
 
-  if Pos('$CreateDir(', s) > 0 then
+  if Pos(CCreateDir_FuncName, s) > 0 then
     s := ReplaceCreateDir(s);
 
-  if Pos('$LoadTextFile(', s) > 0 then
+  if Pos(CLoadTextFile_FuncName, s) > 0 then
     s := ReplaceLoadTextFile(AListOfVars, s);
 
-  if Pos('$ItemCount(', s) > 0 then
+  if Pos(CItemCount_FuncName, s) > 0 then
     s := ReplaceItemCount(s);
 
-  if Pos('$GetTextItem(', s) > 0 then
+  if Pos(CGetTextItem_FuncName, s) > 0 then
     s := ReplaceGetTextItem(AListOfVars, s);
 
-  if Pos('$FastReplace_45ToReturn(', s) > 0 then
+  if Pos(CFastReplace_45ToReturn_FuncName, s) > 0 then
     s := ReplaceFastReplace_45ToReturn(s);
 
-  if Pos('$FastReplace_ReturnTo45(', s) > 0 then
+  if Pos(CFastReplace_ReturnTo45_FuncName, s) > 0 then
     s := ReplaceFastReplace_ReturnTo45(s);
 
-  if Pos('$FastReplace_45To87(', s) > 0 then
+  if Pos(CFastReplace_45To87_FuncName, s) > 0 then
     s := ReplaceFastReplace_45To87(s);
 
-  if Pos('$FastReplace_87To45(', s) > 0 then
+  if Pos(CFastReplace_87To45_FuncName, s) > 0 then
     s := ReplaceFastReplace_87To45(s);
 
-  if Pos('$Sum(', s) > 0 then
+  if Pos(CSum_FuncName, s) > 0 then
     s := ReplaceSum(AListOfVars, s);
 
-  if Pos('$Diff(', s) > 0 then
+  if Pos(CDiff_FuncName, s) > 0 then
     s := ReplaceDiff(AListOfVars, s);
 
-  if Pos('$UpdateControlInfo(', s) > 0 then
+  if Pos(CUpdateControlInfo_FuncName, s) > 0 then
     s := ReplaceUpdateControlInfo(AListOfVars, s);
 
   for ibr := Low(TBrightnessOperation) to High(TBrightnessOperation) do
-    if Pos('$' + CBrightnessOperationStr[ibr] + '(', s) > 0 then
+    if Pos(CBrightnessOperationStr[ibr], s) > 0 then
       s := ReplaceModifyBrightness(AListOfVars, s, ibr);
 
-  //if Pos('$GetSelfHandles()$', s) > 0 then
+  //if Pos(CGetSelfHandles_FuncName + ')$', s) > 0 then
   //  s := ReplaceGetSelfHandles(s);   //this has to be commented, to avoid being evaluated when part of a parameter
 
-  if Pos('$GetKeyNameFromPair(', s) > 0 then
+  if Pos(CGetKeyNameFromPair_FuncName, s) > 0 then
     s := ReplaceGetKeyNameFromPair(s);
 
-  if Pos('$GetKeyValueFromPair(', s) > 0 then
+  if Pos(CGetKeyValueFromPair_FuncName, s) > 0 then
     s := ReplaceGetKeyValueFromPair(s);
 
   Result := s;
@@ -1651,5 +1706,18 @@ begin
   Result.MouseYOffset := CrPos.Y - Result.ComponentRectangle.Top;
 end;
 
+
+function GetCmdLineOptionValue(AOption: string): string;
+var
+  i: Integer;
+begin
+  Result := '';
+  for i := 1 to ParamCount do
+    if ParamStr(i) = AOption then
+    begin
+      Result := ParamStr(i + 1);
+      Exit;
+    end;
+end;
 
 end.
