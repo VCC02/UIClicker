@@ -161,6 +161,11 @@ procedure TfrmUIClickerMainForm.SaveSettings;
 var
   Ini: TMemIniFile;
 begin
+  {$IFDEF TestBuild}
+    if GetCmdLineOptionValue('--SkipSavingSettings') = 'Yes' then
+      Exit;
+  {$ENDIF}
+
   Ini := TMemIniFile.Create(ExtractFilePath(ParamStr(0)) + 'Clicker.ini');
   try
     Ini.WriteInteger('MainWindow', 'Left', Left);
@@ -228,8 +233,10 @@ end;
 
 
 procedure TfrmUIClickerMainForm.tmrStartupTimer(Sender: TObject);
-var
-  ExtraCaption: string;
+{$IFDEF TestBuild}
+  var
+    ExtraCaption: string;
+{$ENDIF}
 begin
   if not FAllFormsAreCreated then
     Exit;

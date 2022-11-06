@@ -277,11 +277,6 @@
       <Debugging>
         <GenerateDebugInfo Value="False"/>
       </Debugging>
-      <Options>
-        <Win32>
-          <GraphicApplication Value="True"/>
-        </Win32>
-      </Options>
     </Linking>
     <Other>
       <CompilerMessages>

@@ -2011,6 +2011,7 @@ var
   Ini: TClkIniReadonlyFile;
   FormatVersion: string;
   ActionCount: Integer;
+  ErrMsg: string;
 begin
   vstActions.Clear; //to reset the node checkboxes
 
@@ -2022,7 +2023,11 @@ begin
       begin
         if not DoOnFileExists(Fnm) then
         begin
-          AppendErrorMessageToActionVar('Template file not found on executing CallTemplateAction: "' + Fnm + '"...');
+          ErrMsg := 'Template file not found on executing CallTemplateAction: "' + Fnm + '"...';
+          memLogErr.Lines.Add(ErrMsg);
+          AppendErrorMessageToActionVar(ErrMsg);
+          memLogErr.Repaint;
+          //MessageBox(Handle, PChar(ErrMsg), 'Arr', MB_ICONERROR);
           Exit;
         end;
 

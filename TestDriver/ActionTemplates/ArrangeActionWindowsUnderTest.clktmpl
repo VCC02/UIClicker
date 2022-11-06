@@ -35,7 +35,7 @@ BreakpointExists=0
 BreakpointEnabled=0
 BreakpointCondition=
 TemplateFileName=ArrangeOneActionWindowUnderTest.clktmpl
-ListOfCustomVarsAndValues=$ExtraCaption$=Client$NewX$=30$NewY$=360
+ListOfCustomVarsAndValues=$ExtraCaption$=Client$NewX$=30$NewY$=490
 CallOnlyIfCondition=0
 CallOnlyIfConditionVarName=
 CallOnlyIfConditionVarValue=

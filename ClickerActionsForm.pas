@@ -1206,6 +1206,9 @@ begin
             else
             begin
               frmClickerActions.AddToLog('[local] Loading template: "' + AFileNameToCall + '"  FileLoc = ' + IntToStr(Ord(FileLoc)));
+              if not DoOnFileExists(AFileNameToCall) then
+                AddToLog('Template (to be loaded) not found: ' + AFileNameToCall);
+
               NewFrame.LoadTemplate(AFileNameToCall{, FileLoc, FInMemFileSystem});
             end;
           end;
@@ -2348,20 +2351,34 @@ end;
 
 procedure TfrmClickerActions.SetExecutionMode(AMode: Integer);
 var
-  Port: string;
+  Port, ConnectsTo: string;
+  ConnectionTimeout: Integer;
 begin
   if AMode = -1 then
     Exit;
 
   cmbExecMode.ItemIndex := AMode;
 
-  if AMode = 2 then //server
-  begin
-    Port := GetCmdLineOptionValue('--ServerPort');
-    if Port <> '' then
-      lbeServerModePort.Text := IntToStr(StrToIntDef(Port, 5444));
+  case AMode of
+    1: //client
+    begin
+      ConnectsTo := GetCmdLineOptionValue('--ConnectsTo');
+      lbeClientModeServerAddress.Text := ConnectsTo;
+      ConnectionTimeout := StrToIntDef(GetCmdLineOptionValue('--ConnectionTimeout'), 1000);
 
-    chkServerActive.Checked := True;
+      if ConnectionTimeout < -1 then
+        ConnectionTimeout := -1;
+      lbeConnectTimeout.Text := IntToStr(ConnectionTimeout);
+    end;
+
+    2: //server
+    begin
+      Port := GetCmdLineOptionValue('--ServerPort');
+      if Port <> '' then
+        lbeServerModePort.Text := IntToStr(StrToIntDef(Port, 5444));
+
+      chkServerActive.Checked := True;
+    end;
   end;
 
   ProcessChangingExecutionMode;

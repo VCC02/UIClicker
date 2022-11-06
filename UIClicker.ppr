@@ -143,7 +143,37 @@ begin
 end;
 
 
+{$IFDEF TestBuild}
+  var
+    i: Integer;
+{$ENDIF}
+
 begin
+  {$IFDEF TestBuild}
+    for i := 1 to ParamCount do
+      if UpperCase(ParamStr(i)) = '--HELP' then
+      begin
+        WriteLn('Commandline options are available in TestBuild only');
+        WriteLn('Usage:');
+        WriteLn('  ' + ExtractFileName(ParamStr(0)) + ' [Option]');
+        WriteLn('Options:');
+        WriteLn('  --ExtraCaption <Additional caption>');
+        WriteLn('  --SetExecMode <Local, Client, Server>');
+        WriteLn('  --ServerPort <Port used in server mode>');
+        WriteLn('  --ConnectsTo <Server address and port, used in client mode>');
+        WriteLn('  --ConnectionTimeout <Timeout, in milliseconds, used in client mode>');
+        WriteLn('  --SkipSavingSettings <Yes>');
+        WriteLn('Examples:');
+        WriteLn('  ' + ExtractFileName(ParamStr(0)) + ' --ExtraCaption MyServer --SetExecMode Server --ServerPort 15444');
+        WriteLn('  ' + ExtractFileName(ParamStr(0)) + ' --ExtraCaption MyClient --SetExecMode Client --ConnectsTo http://127.0.0.1:15444');
+        WriteLn;
+        Exit;
+      end;
+  {$ELSE}
+    WriteLn('Closing console in UI mode...');
+  {$ENDIF}
+  FreeConsole;
+
   RequireDerivedFormResource:=True;
   Application.Scaled:=True;
   Application.Initialize;
