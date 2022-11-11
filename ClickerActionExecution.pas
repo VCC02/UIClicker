@@ -1607,6 +1607,9 @@ begin
     TempListOfSetVarValues.Text := ASetVarOptions.ListOfVarValues;
     TempListOfSetVarEvalBefore.Text := ASetVarOptions.ListOfVarEvalBefore;
 
+    if (TempListOfSetVarNames.Count = 1) and (TempListOfSetVarValues.Count = 0) then //the only variable, passed here, is set to ''
+      TempListOfSetVarValues.Add('');
+
     if TempListOfSetVarNames.Count <> TempListOfSetVarValues.Count then
     begin
       SetActionVarValue('$ExecAction_Err$', 'SetVar: The list of var names has a different length than the list of var values.');

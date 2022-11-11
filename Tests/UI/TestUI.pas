@@ -42,8 +42,11 @@ type
     procedure ExecuteTemplateOnTestDriver(ATemplatePath, AFileLocation: string);
     procedure ArrangeMainUIClickerWindows;
     procedure ArrangeUIClickerActionWindows;
+
     procedure RunTestTemplateInClickerUnderTest(ATestTemplate: string);
     procedure RunTestTemplateInClickerUnderTestWithDebugging(ATestTemplate: string);
+    procedure RunTestTemplateInClickerUnderTestWithDebuggingAndStepInto(ATestTemplate, AExpectedStepOverCount: string; AStopAfterSteppingInto: string = '0');
+
     procedure PrepareClickerUnderTestToReadItsVars;
   public
     constructor Create; override;
@@ -54,6 +57,10 @@ type
     procedure Test_ExecuteTemplateRemotely_WithLoopedCall;
     procedure Test_ExecuteTemplateRemotelyWithDebugging;
     procedure Test_ExecuteTemplateRemotelyWithDebugging_WithLoopedCall;
+    procedure Test_ExecuteTemplateRemotelyWithDebugging_AndStepInto;
+    procedure Test_ExecuteTemplateRemotelyWithDebugging_WithLoopedCall_AndStepInto;
+    procedure Test_ExecuteTemplateRemotelyWithDebugging_AndStepIntoThenStop;
+    procedure Test_ExecuteTemplateRemotelyWithDebugging_WithLoopedCall_AndStepIntoThenStop;
 
     procedure AfterAll_AlwaysExecute;
   end;
@@ -102,12 +109,13 @@ implementation
 
 
 uses
-  ClickerActionsClient, ClickerUtils, UIActionsStuff, AsyncProcess, Expectations, Forms;
+  ClickerActionsClient, ClickerUtils, UIActionsStuff, AsyncProcess, Expectations, Forms, IniFiles;
 
 
 var  //using global vars instead of class fields, to avoid recreating the objects on every test
   FTestDriverForServer_Proc, FTestDriverForClient_Proc, FServerAppUnderTest_Proc, FClientAppUnderTest_Proc: TAsyncProcess;
   FTemplatesDir: string;
+  FIsWine: Boolean;
 
 
 constructor TTestUI.Create;
@@ -139,7 +147,26 @@ begin
 end;
 
 
+procedure SetUIClickerWindowPosition(APathToIni: string; AMainLeft, AMainTop, AActionsLeft, AActionsTop: Integer);  //useful, to preview the interaction
+var
+  Ini: TMemIniFile;
+begin
+  Ini := TMemIniFile.Create(APathToIni);
+  try
+    Ini.WriteInteger('MainWindow', 'Left', AMainLeft);
+    Ini.WriteInteger('MainWindow', 'Top', AMainTop);
+    Ini.WriteInteger('ActionsWindow', 'Left', AActionsLeft);
+    Ini.WriteInteger('ActionsWindow', 'Top', AActionsTop);
+  finally
+    Ini.Free;
+  end;
+end;
+
+
 procedure TTestUI.StartAllUIClickerInstances;
+const
+  CDisplayTabsOptions: string = ' --AutoSwitchToExecTab Yes --AutoEnableSwitchTabsOnDebugging Yes';
+  CSkipSavingSettings: string = ' --SkipSavingSettings Yes';
 var
   PathToTestDriver, PathToAppUnderTest: string;
   ServerParams, ClientParams, AppUnderTestServerParams, AppUnderTestClientParams: string;
@@ -147,15 +174,46 @@ begin
   PathToTestDriver := ExtractFilePath(ParamStr(0)) + '..\..\TestDriver\UIClicker.exe'; //this should be a stable version of UIClicker
   PathToAppUnderTest := ExtractFilePath(ParamStr(0)) + '..\..\UIClicker.exe';
 
-  ServerParams := '--SetExecMode Server --ExtraCaption Driver.Server --ServerPort ' + CTestDriver_ServerPort_ForServerUnderTest;
-  ClientParams := '--SetExecMode Server --ExtraCaption Driver.Client --ServerPort ' + CTestDriver_ServerPort_ForClientUnderTest;
-  AppUnderTestServerParams := '--SetExecMode Server --ExtraCaption ServerUnderTest --ServerPort ' + CServerUnderTestServerPort;
-  AppUnderTestClientParams := '--SetExecMode Client --ExtraCaption ClientUnderTest --ConnectsTo http://127.0.0.1:' + CServerUnderTestServerPort + '/ --SkipSavingSettings Yes';
+  {$IFDEF UNIX}
+    FIsWine := False;
+  {$ELSE}
+    FIsWine := DirectoryExists('Z:\home') and DirectoryExists('Z:\media') and DirectoryExists('Z:\etc'); //assume this is running on Wine
+  {$ENDIF}
 
-  FTestDriverForServer_Proc := CreateUIClickerProcess(PathToTestDriver, ServerParams);
-  FTestDriverForClient_Proc := CreateUIClickerProcess(PathToTestDriver, ClientParams);
-  FServerAppUnderTest_Proc := CreateUIClickerProcess(PathToAppUnderTest, AppUnderTestServerParams);
-  FClientAppUnderTest_Proc := CreateUIClickerProcess(PathToAppUnderTest, AppUnderTestClientParams);
+  ServerParams := '--SetExecMode Server --ExtraCaption Driver.Server --ServerPort ' + CTestDriver_ServerPort_ForServerUnderTest + CDisplayTabsOptions;
+  ClientParams := '--SetExecMode Server --ExtraCaption Driver.Client --ServerPort ' + CTestDriver_ServerPort_ForClientUnderTest + CDisplayTabsOptions;
+  AppUnderTestServerParams := '--SetExecMode Server --ExtraCaption ServerUnderTest --ServerPort ' + CServerUnderTestServerPort + CSkipSavingSettings + CDisplayTabsOptions;
+  AppUnderTestClientParams := '--SetExecMode Client --ExtraCaption ClientUnderTest --ConnectsTo http://127.0.0.1:' + CServerUnderTestServerPort + '/' + CSkipSavingSettings + CDisplayTabsOptions;
+
+  if FIsWine then
+  begin
+    SetUIClickerWindowPosition(ExtractFilePath(PathToTestDriver) + 'Clicker.ini', 700, 50, 970, 270);
+    Sleep(100);
+    FTestDriverForServer_Proc := CreateUIClickerProcess(PathToTestDriver, ServerParams + ' --UseWideStringsOnGetControlText Yes');
+    Sleep(1000);
+
+    SetUIClickerWindowPosition(ExtractFilePath(PathToTestDriver) + 'Clicker.ini', 1040, 50, 1000, 300);
+    Sleep(100);
+    FTestDriverForClient_Proc := CreateUIClickerProcess(PathToTestDriver, ClientParams + ' --UseWideStringsOnGetControlText Yes');
+    Sleep(1000);
+
+    SetUIClickerWindowPosition(ExtractFilePath(PathToAppUnderTest) + 'Clicker.ini', 10, 50, 10, 330);
+    Sleep(100);
+    FServerAppUnderTest_Proc := CreateUIClickerProcess(PathToAppUnderTest, AppUnderTestServerParams + ' --UseWideStringsOnGetControlText Yes');
+    Sleep(1000);
+
+    SetUIClickerWindowPosition(ExtractFilePath(PathToAppUnderTest) + 'Clicker.ini', 360, 50, 30, 490);
+    Sleep(100);
+    FClientAppUnderTest_Proc := CreateUIClickerProcess(PathToAppUnderTest, AppUnderTestClientParams + ' --UseWideStringsOnGetControlText Yes');
+    Sleep(1000);
+  end
+  else
+  begin
+    FTestDriverForServer_Proc := CreateUIClickerProcess(PathToTestDriver, ServerParams);
+    FTestDriverForClient_Proc := CreateUIClickerProcess(PathToTestDriver, ClientParams);
+    FServerAppUnderTest_Proc := CreateUIClickerProcess(PathToAppUnderTest, AppUnderTestServerParams);
+    FClientAppUnderTest_Proc := CreateUIClickerProcess(PathToAppUnderTest, AppUnderTestClientParams);
+  end;
 end;
 
 
@@ -217,10 +275,15 @@ end;
 procedure TTestUI.BeforeAll_AlwaysExecute;
 begin
   StartAllUIClickerInstances;
-  ArrangeMainUIClickerWindows;
+  ArrangeMainUIClickerWindows;      //Setting window position from ini file, works on Wine. Setting from UIClicker does not (yet).
   ArrangeUIClickerActionWindows;
 
   FTemplatesDir := ExtractFilePath(ParamStr(0)) + '..\..\TestDriver\ActionTemplates\';
+
+  if FIsWine then
+    SetVariableOnTestDriverClient('$IsAdminOnWine$', '  [Is admin]')
+  else
+    SetVariableOnTestDriverClient('$IsAdminOnWine$', #13#10); // a single #13#10 results in an empty string item in a TStringList
 end;
 
 
@@ -237,6 +300,16 @@ begin
   SetVariableOnTestDriverClient('$TemplateToLoad$', FTemplatesDir + ATestTemplate);
   ExecuteTemplateOnTestDriver(FTemplatesDir + 'LoadCallerTemplateIntoAppUnderTest.clktmpl', CREParam_FileLocation_ValueDisk); //this loads BasicCaller into test client (the one which is in client mode)
   ExecuteTemplateOnTestDriver(FTemplatesDir + 'PlayAllActionsFromAppUnderTestWithDebugging.clktmpl', CREParam_FileLocation_ValueDisk);
+end;
+
+
+procedure TTestUI.RunTestTemplateInClickerUnderTestWithDebuggingAndStepInto(ATestTemplate, AExpectedStepOverCount: string; AStopAfterSteppingInto: string = '0');
+begin
+  SetVariableOnTestDriverClient('$TemplateToLoad$', FTemplatesDir + ATestTemplate);
+  SetVariableOnTestDriverClient('$ExpectedStepOverCount$', AExpectedStepOverCount); //how many times to click "Step Over" in the called template
+  SetVariableOnTestDriverClient('$StopAfterSteppingInto$', AStopAfterSteppingInto);
+  ExecuteTemplateOnTestDriver(FTemplatesDir + 'LoadCallerTemplateIntoAppUnderTest.clktmpl', CREParam_FileLocation_ValueDisk); //this loads BasicCaller into test client (the one which is in client mode)
+  ExecuteTemplateOnTestDriver(FTemplatesDir + 'PlayAllActionsFromAppUnderTestWithDebuggingAndSteppingInto.clktmpl', CREParam_FileLocation_ValueDisk);
 end;
 
 
@@ -319,6 +392,82 @@ begin
     //connect to ClientUnderTest instance, which is now running in server mode and read its variables
     Expect(GetVarValueFromServer('$VarToBeIncremented$')).ToBe('10');  //this var is initialized to 0 in BasicCaller.clktmpl
   finally
+    TestServerAddress := CTestDriverServerAddress_Client; //restore
+    ExecuteTemplateOnTestDriver(FTemplatesDir + 'SetExecModeToClient.clktmpl', CREParam_FileLocation_ValueDisk);
+  end;
+end;
+
+
+procedure TTestUI.Test_ExecuteTemplateRemotelyWithDebugging_AndStepInto;
+begin
+  TestServerAddress := CTestDriverServerAddress_Client;
+  RunTestTemplateInClickerUnderTestWithDebuggingAndStepInto('BasicCaller.clktmpl', '1');
+  PrepareClickerUnderTestToReadItsVars;
+
+  Sleep(500);
+
+  TestServerAddress := CTestClientAddress;
+  try
+    //connect to ClientUnderTest instance, which is now running in server mode and read its variables
+    Expect(GetVarValueFromServer('$VarToBeIncremented$')).ToBe('1');  //this var is initialized to 0 in BasicCaller.clktmpl
+  finally
+    TestServerAddress := CTestDriverServerAddress_Client; //restore
+    ExecuteTemplateOnTestDriver(FTemplatesDir + 'SetExecModeToClient.clktmpl', CREParam_FileLocation_ValueDisk);
+  end;
+end;
+
+
+procedure TTestUI.Test_ExecuteTemplateRemotelyWithDebugging_WithLoopedCall_AndStepInto;
+begin
+  TestServerAddress := CTestDriverServerAddress_Client;
+  RunTestTemplateInClickerUnderTestWithDebuggingAndStepInto('BasicLoopedCaller.clktmpl', '10');
+  PrepareClickerUnderTestToReadItsVars;
+
+  Sleep(500);
+
+  TestServerAddress := CTestClientAddress;
+  try
+    //connect to ClientUnderTest instance, which is now running in server mode and read its variables
+    Expect(GetVarValueFromServer('$VarToBeIncremented$')).ToBe('10');  //this var is initialized to 0 in BasicCaller.clktmpl
+  finally
+    TestServerAddress := CTestDriverServerAddress_Client; //restore
+    ExecuteTemplateOnTestDriver(FTemplatesDir + 'SetExecModeToClient.clktmpl', CREParam_FileLocation_ValueDisk);
+  end;
+end;
+
+
+procedure TTestUI.Test_ExecuteTemplateRemotelyWithDebugging_AndStepIntoThenStop;
+begin
+  TestServerAddress := CTestDriverServerAddress_Client;
+  RunTestTemplateInClickerUnderTestWithDebuggingAndStepInto('BasicCaller.clktmpl', '1', '1');
+  PrepareClickerUnderTestToReadItsVars;
+
+  Sleep(500);
+
+  TestServerAddress := CTestClientAddress;
+  try
+    //connect to ClientUnderTest instance, which is now running in server mode and read its variables
+    Expect(GetVarValueFromServer('$VarToBeIncremented$')).ToBe('0');  //this var is initialized to 0 in BasicCaller.clktmpl
+  finally                                                      //expecting 0 if stopped
+    TestServerAddress := CTestDriverServerAddress_Client; //restore
+    ExecuteTemplateOnTestDriver(FTemplatesDir + 'SetExecModeToClient.clktmpl', CREParam_FileLocation_ValueDisk);
+  end;
+end;
+
+
+procedure TTestUI.Test_ExecuteTemplateRemotelyWithDebugging_WithLoopedCall_AndStepIntoThenStop;  //this test fails because stopping the debugger on a looped call, is not yet implemented in UIClicker
+begin
+  TestServerAddress := CTestDriverServerAddress_Client;
+  RunTestTemplateInClickerUnderTestWithDebuggingAndStepInto('BasicLoopedCaller.clktmpl', '10', '1');
+  PrepareClickerUnderTestToReadItsVars;
+
+  Sleep(500);
+
+  TestServerAddress := CTestClientAddress;
+  try
+    //connect to ClientUnderTest instance, which is now running in server mode and read its variables
+    Expect(GetVarValueFromServer('$VarToBeIncremented$')).ToBe('0');  //this var is initialized to 0 in BasicCaller.clktmpl
+  finally                                                      //expecting 0 if stopped
     TestServerAddress := CTestDriverServerAddress_Client; //restore
     ExecuteTemplateOnTestDriver(FTemplatesDir + 'SetExecModeToClient.clktmpl', CREParam_FileLocation_ValueDisk);
   end;

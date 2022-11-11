@@ -454,6 +454,7 @@ object frmClickerActions: TfrmClickerActions
         Top = 416
         Width = 155
         Anchors = [akRight, akBottom]
+        AutoSize = False
         Caption = 'Autoswitch to executing tab'
         Checked = True
         OnChange = chkAutoSwitchToExecutingTabChange
@@ -469,8 +470,10 @@ object frmClickerActions: TfrmClickerActions
         Top = 440
         Width = 214
         Anchors = [akRight, akBottom]
+        AutoSize = False
         Caption = 'Autoenable switching tabs on debugging'
         Checked = True
+        OnChange = chkAutoEnableSwitchingTabsOnDebuggingChange
         ParentShowHint = False
         ShowHint = True
         State = cbChecked

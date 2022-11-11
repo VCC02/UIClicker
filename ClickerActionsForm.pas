@@ -121,6 +121,7 @@ type
     tmrStartup: TTimer;
     procedure btnBrowseActionTemplatesDirClick(Sender: TObject);
     procedure btnTestConnectionClick(Sender: TObject);
+    procedure chkAutoEnableSwitchingTabsOnDebuggingChange(Sender: TObject);
     procedure chkAutoSwitchToExecutingTabChange(Sender: TObject);
     procedure chkDisplayActivityChange(Sender: TObject);
     procedure chkServerActiveChange(Sender: TObject);
@@ -394,7 +395,7 @@ begin
   FAutoSwitchToExecutingTab := AIni.ReadBool('ActionsWindow', 'AutoSwitchToExecutingTab', True);
   chkAutoSwitchToExecutingTab.Checked := FAutoSwitchToExecutingTab;
   FAutoEnableSwitchingTabsOnDebugging := AIni.ReadBool('ActionsWindow', 'AutoEnableSwitchingTabsOnDebugging', True);
-  chkAutoSwitchToExecutingTab.Checked := FAutoEnableSwitchingTabsOnDebugging;
+  chkAutoEnableSwitchingTabsOnDebugging.Checked := FAutoEnableSwitchingTabsOnDebugging;
 
   FullTemplatesDir := AIni.ReadString('Dirs', 'FullTemplatesDir', '$AppDir$\ActionTemplates');
   BMPsDir := AIni.ReadString('Dirs', 'BMPsDir', '');
@@ -2337,7 +2338,14 @@ end;
 
 procedure TfrmClickerActions.tmrStartupTimer(Sender: TObject);
 var
-  ExecMode: string;
+  {$IFDEF TestBuild}
+    ExecMode: string;
+    AutoSwitchToExecTab: string;
+    AutoEnableSwitchTabsOnDebugging: string;
+    UseWideStringsOnGetControlTextOption: string;
+  {$ELSE}
+    i: Integer;
+  {$ENDIF}
 begin
   tmrStartup.Enabled := False;
 
@@ -2345,6 +2353,30 @@ begin
   {$IFDEF TestBuild}
     ExecMode := GetCmdLineOptionValue('--SetExecMode');
     SetExecutionMode(cmbExecMode.Items.IndexOf(ExecMode));
+
+    AutoSwitchToExecTab := GetCmdLineOptionValue('--AutoSwitchToExecTab');
+    AutoEnableSwitchTabsOnDebugging := GetCmdLineOptionValue('--AutoEnableSwitchTabsOnDebugging');
+    UseWideStringsOnGetControlTextOption := GetCmdLineOptionValue('--UseWideStringsOnGetControlText');
+
+    if AutoSwitchToExecTab <> '' then
+    begin
+      chkAutoSwitchToExecutingTab.Checked := AutoSwitchToExecTab = 'Yes';
+      FAutoSwitchToExecutingTab := chkAutoSwitchToExecutingTab.Checked;
+    end;
+
+    if AutoEnableSwitchTabsOnDebugging <> '' then
+    begin
+      chkAutoEnableSwitchingTabsOnDebugging.Checked := AutoEnableSwitchTabsOnDebugging = 'Yes';
+      FAutoEnableSwitchingTabsOnDebugging := chkAutoEnableSwitchingTabsOnDebugging.Checked;
+    end;
+
+    if UseWideStringsOnGetControlTextOption <> '' then
+      UseWideStringsOnGetControlText := UseWideStringsOnGetControlTextOption = 'Yes';
+
+  {$ELSE}
+    for i := 1 to ParamCount do
+      if (ParamStr(i) = '--ExtraCaption') or (ParamStr(i) = '--SetExecMode') or (ParamStr(i) = '--ServerPort') then  // some common options
+        AddToLog('The application is not built for testing, so it won''t accept command line options. Please rebuild with "TestBuild" compiler directive.');
   {$ENDIF}
 end;
 
@@ -2582,6 +2614,13 @@ end;
 procedure TfrmClickerActions.chkAutoSwitchToExecutingTabChange(Sender: TObject);
 begin
   FAutoSwitchToExecutingTab := chkAutoSwitchToExecutingTab.Checked;
+end;
+
+
+procedure TfrmClickerActions.chkAutoEnableSwitchingTabsOnDebuggingChange(
+  Sender: TObject);
+begin
+  FAutoEnableSwitchingTabsOnDebugging := chkAutoEnableSwitchingTabsOnDebugging.Checked;
 end;
 
 

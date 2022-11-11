@@ -163,6 +163,9 @@ begin
         WriteLn('  --ConnectsTo <Server address and port, used in client mode>');
         WriteLn('  --ConnectionTimeout <Timeout, in milliseconds, used in client mode>');
         WriteLn('  --SkipSavingSettings <Yes>');
+        WriteLn('  --AutoSwitchToExecTab <No, Yes>');
+        WriteLn('  --AutoEnableSwitchTabsOnDebugging <No, Yes>');
+        WriteLn('  --UseWideStringsOnGetControlText <No, Yes>');
         WriteLn('Examples:');
         WriteLn('  ' + ExtractFileName(ParamStr(0)) + ' --ExtraCaption MyServer --SetExecMode Server --ServerPort 15444');
         WriteLn('  ' + ExtractFileName(ParamStr(0)) + ' --ExtraCaption MyClient --SetExecMode Client --ConnectsTo http://127.0.0.1:15444');

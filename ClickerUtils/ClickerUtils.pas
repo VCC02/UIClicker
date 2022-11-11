@@ -337,6 +337,10 @@ function GetCmdLineOptionValue(AOption: string): string;
 function RevPos(const ASubStr, AString: string; AOffset: Integer = 1): Integer;
 
 
+var
+  UseWideStringsOnGetControlText: Boolean = False;
+
+
 implementation
 
 
@@ -1658,6 +1662,27 @@ begin
   begin
     SetLength(Result, TextLength shl 1 + 2);  //Allocating twice the size, might be extreme, but better safe than crash. Still not sure about UTF8 compatibility for 4-byte chars.
     SendMessage(HW, WM_GETTEXT, TextLength + 1, PtrInt(@Result[1]));
+    SetLength(Result, TextLength);
+  end;
+end;
+
+
+function GetControlTextW(HW: THandle): string;
+var
+  TextLength: Integer;
+  TempBuffer: array of Char;
+  WideTempBuffer: PWideChar;
+begin
+  Result := '';
+  TextLength := SendMessage(HW, WM_GETTEXTLENGTH, 0, 0);
+  if TextLength <> 0 then
+  begin
+    SetLength(Result, TextLength shl 1 + 2);  //Allocating twice the size, might be extreme, but better safe than crash. Still not sure about UTF8 compatibility for 4-byte chars.
+
+    SetLength(TempBuffer, Length(Result) shl 1);
+    SendMessageW(HW, WM_GETTEXT, TextLength + 1, PtrInt(@TempBuffer[0]));     // W
+    WideTempBuffer := @TempBuffer[0];
+    Result := string(WideTempBuffer);
 
     SetLength(Result, TextLength);
   end;
@@ -1688,7 +1713,10 @@ begin
   end;
 
   try
-    Result.Text := GetControlText(HW);
+    if UseWideStringsOnGetControlText then
+      Result.Text := GetControlTextW(HW)
+    else
+      Result.Text := GetControlText(HW);
   except
     on E: Exception do
     begin
