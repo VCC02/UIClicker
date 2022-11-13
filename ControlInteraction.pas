@@ -76,7 +76,10 @@ uses
 
 procedure SetControlText(hw: THandle; NewText: string);
 begin
-  SendMessage(hw, WM_SETTEXT, 0, PtrInt(@NewText[1]));
+  {if UseWideStringsOnGetControlText then
+    SendMessage(hw, WM_SETTEXT, 0, PtrInt(PWideChar(NewText)))   //does not help on Wine
+  else}
+    SendMessage(hw, WM_SETTEXT, 0, PtrInt(@NewText[1]));
 end;
 
 

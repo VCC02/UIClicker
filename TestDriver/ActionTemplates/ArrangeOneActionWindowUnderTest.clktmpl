@@ -5,7 +5,7 @@ Version=2
 [Action_0]
 ActionName=Find TestApp Server
 Action=FindControl
-ActionTimeout=4000
+ActionTimeout=10000
 ActionEnabled=1
 ActionCondition=
 BreakpointExists=0
@@ -64,7 +64,7 @@ CachedControlTop=
 [Action_1]
 ActionName=Find "Show Actions Window" button
 Action=FindSubControl
-ActionTimeout=1000
+ActionTimeout=2000
 ActionEnabled=1
 ActionCondition=
 BreakpointExists=0
@@ -154,7 +154,7 @@ YOffsetDest=0
 [Action_3]
 ActionName=Find Actions Window
 Action=FindControl
-ActionTimeout=1000
+ActionTimeout=10000
 ActionEnabled=1
 ActionCondition=
 BreakpointExists=0
@@ -165,7 +165,7 @@ MatchCriteria.WillMatchClassName=1
 MatchCriteria.WillMatchBitmapText=0
 MatchCriteria.WillMatchBitmapFiles=0
 MatchCriteria.SearchForControlMode=2
-MatchText=UI Clicker Actions - $ExtraCaption$UnderTest
+MatchText=UI Clicker Actions$IsAdminOnWine$ - $ExtraCaption$UnderTest
 MatchClassName=Window
 MatchTextSeparator=
 MatchClassNameSeparator=

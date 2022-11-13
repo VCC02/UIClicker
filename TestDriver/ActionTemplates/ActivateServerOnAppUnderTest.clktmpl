@@ -5,7 +5,7 @@ Version=2
 [Action_0]
 ActionName=Find UIClicker Actions window
 Action=FindControl
-ActionTimeout=1000
+ActionTimeout=3000
 ActionEnabled=1
 ActionCondition=
 BreakpointExists=0

@@ -2371,7 +2371,13 @@ begin
     end;
 
     if UseWideStringsOnGetControlTextOption <> '' then
+    begin
       UseWideStringsOnGetControlText := UseWideStringsOnGetControlTextOption = 'Yes';
+      if UseWideStringsOnGetControlText then
+        AddToLog('Using wide strings...')
+      else
+        AddToLog('Not using wide strings...');
+    end;
 
   {$ELSE}
     for i := 1 to ParamCount do

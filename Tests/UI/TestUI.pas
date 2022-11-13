@@ -109,7 +109,7 @@ implementation
 
 
 uses
-  ClickerActionsClient, ClickerUtils, UIActionsStuff, AsyncProcess, Expectations, Forms, IniFiles;
+  ClickerActionsClient, ClickerUtils, {UIActionsStuff,} AsyncProcess, Expectations, Forms, IniFiles;
 
 
 var  //using global vars instead of class fields, to avoid recreating the objects on every test
@@ -177,7 +177,7 @@ begin
   {$IFDEF UNIX}
     FIsWine := False;
   {$ELSE}
-    FIsWine := DirectoryExists('Z:\home') and DirectoryExists('Z:\media') and DirectoryExists('Z:\etc'); //assume this is running on Wine
+    FIsWine := {DirectoryExists('Z:\home') and} DirectoryExists('Z:\media') and DirectoryExists('Z:\etc'); //assume this is running on Wine
   {$ENDIF}
 
   ServerParams := '--SetExecMode Server --ExtraCaption Driver.Server --ServerPort ' + CTestDriver_ServerPort_ForServerUnderTest + CDisplayTabsOptions;
@@ -264,26 +264,39 @@ end;
 procedure SetVariableOnTestDriverClient(AVarName, AVarValue: string; AEvalVarBefore: Boolean = False);
 var
   SetVarOptions: TClkSetVarOptions;
+  SetVarResult: TStringList;
 begin
   SetVarOptions.ListOfVarNames := AVarName;
   SetVarOptions.ListOfVarValues := AVarValue;
   SetVarOptions.ListOfVarEvalBefore := Chr(48 + Ord(AEvalVarBefore));
-  ExecuteSetVarAction(CTestDriverServerAddress_Client, SetVarOptions);    //this is driver for client 25444
+
+  SetVarResult := TStringList.Create;
+  try
+    SetVarResult.Text := FastReplace_87ToReturn(ExecuteSetVarAction(CTestDriverServerAddress_Client, SetVarOptions)); //this is driver for client 25444
+    Expect(SetVarResult).WithItem(AVarName).OfValue(AVarValue);
+  finally
+    SetVarResult.Free;
+  end;
 end;
 
 
 procedure TTestUI.BeforeAll_AlwaysExecute;
 begin
   StartAllUIClickerInstances;
+
+  if FIsWine then
+  begin
+    GeneralConnectTimeout := 10000;
+    SetVariableOnTestDriverClient('$IsAdminOnWine$', '  [Is admin]');
+    Application.MainForm.Caption := Application.MainForm.Caption  + '  $IsAdminOnWine$';
+  end
+  else
+    SetVariableOnTestDriverClient('$IsAdminOnWine$', ''); // a single #13#10 results in an empty string item in a TStringList. Still, better send '', to allow the expectation to match ''. UIClicker should convert this one '', into a new line.
+
   ArrangeMainUIClickerWindows;      //Setting window position from ini file, works on Wine. Setting from UIClicker does not (yet).
   ArrangeUIClickerActionWindows;
 
   FTemplatesDir := ExtractFilePath(ParamStr(0)) + '..\..\TestDriver\ActionTemplates\';
-
-  if FIsWine then
-    SetVariableOnTestDriverClient('$IsAdminOnWine$', '  [Is admin]')
-  else
-    SetVariableOnTestDriverClient('$IsAdminOnWine$', #13#10); // a single #13#10 results in an empty string item in a TStringList
 end;
 
 

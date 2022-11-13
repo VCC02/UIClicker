@@ -5,7 +5,7 @@ Version=2
 [Action_0]
 ActionName=Find TestApp Server
 Action=FindControl
-ActionTimeout=4000
+ActionTimeout=5000
 ActionEnabled=1
 ActionCondition=
 BreakpointExists=0
@@ -81,7 +81,7 @@ NewSizeEabled=0
 [Action_2]
 ActionName=Find TestApp Client
 Action=FindControl
-ActionTimeout=4000
+ActionTimeout=5000
 ActionEnabled=1
 ActionCondition=
 BreakpointExists=0
@@ -157,7 +157,7 @@ NewSizeEabled=0
 [Action_4]
 ActionName=Find TestDriver Server
 Action=FindControl
-ActionTimeout=4000
+ActionTimeout=5000
 ActionEnabled=1
 ActionCondition=
 BreakpointExists=0
@@ -233,7 +233,7 @@ NewSizeEabled=0
 [Action_6]
 ActionName=Find TestDriver Client
 Action=FindControl
-ActionTimeout=4000
+ActionTimeout=5000
 ActionEnabled=1
 ActionCondition=
 BreakpointExists=0

@@ -378,7 +378,7 @@ YOffsetDest=0
 [Action_7]
 ActionName=Wait for open dialog
 Action=FindControl
-ActionTimeout=1000
+ActionTimeout=10000
 ActionEnabled=1
 ActionCondition=
 BreakpointExists=0
@@ -448,7 +448,7 @@ Value=300
 [Action_9]
 ActionName=Find open dialog
 Action=FindControl
-ActionTimeout=1000
+ActionTimeout=10000
 ActionEnabled=1
 ActionCondition=
 BreakpointExists=0

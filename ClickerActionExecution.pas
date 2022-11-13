@@ -2092,6 +2092,11 @@ begin
 
     IsDebugging := AListOfCallTemplateOptionsParams.Values['IsDebugging'] = '1';
     Result := ExecuteLoopedCallTemplateAction(CallTemplateOptions, IsDebugging, IsDebugging); //not sure if AShouldStopAtBreakPoint should be the same as IsDebugging or if it should be another http param
+
+    if not Result then
+      FLog.Lines.Add(DateTimeToStr(Now) + '  /ExecuteCallTemplateAction is False. $ExecAction_Err$: ' + EvaluateReplacements('$ExecAction_Err$'))
+    else
+      FLog.Lines.Add(DateTimeToStr(Now) + '  /ExecuteCallTemplateAction is True.');
   finally
     //SetLastActionStatus(Result, False);  //leave the action status as set by the called template
   end;
