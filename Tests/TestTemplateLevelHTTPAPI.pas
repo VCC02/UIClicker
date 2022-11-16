@@ -53,6 +53,7 @@ type
     procedure Test_GetFileExistenceOnServer_MultipleFilesWithHash;
 
     procedure Test_ClearInMemFileSystem;
+    procedure Test_GetListOfWaitingFiles_MissingTemplate;
   end;
 
 
@@ -272,6 +273,40 @@ begin
   Response := ClearInMemFileSystem(TestServerAddress);
   Expect(Response).ToBe(CREResp_Done);
   Expect(GetFileExistenceOnServer(TestServerAddress, CFileName, False)).ToBe(False);
+end;
+
+
+procedure TTestTemplateLevelHTTPAPI.Test_GetListOfWaitingFiles_MissingTemplate;
+const
+  CFileName: string = 'CallMissingTemplate.clktmpl';
+  CDirName: string = 'MemDir';
+var
+  Response: string;
+  ListOfVars: TStringList;
+  MissingTemplateName: string;
+begin
+  Expect(ClearInMemFileSystem(TestServerAddress)).ToBe(CREResp_Done);
+  MissingTemplateName := CDirName + '\MissingTemplate.clktmpl';
+  CreateCallableTestTemplateInMem(MissingTemplateName, '$VarFromCalledTemplate$', 'DefaultValue');
+  CreateCallableTestTemplateInMem_WithCallTemplate(CFileName, '$DummyVar$', '$DummyValue$', MissingTemplateName, '', False);
+
+  SendTemplateFromInMemToServerThenLoad(CFileName);
+  Expect(GetFileExistenceOnServer(TestServerAddress, CFileName, False)).ToBe(True);
+
+  CreateFileProvider(CDirName, '.clktmpl'#13#10'.bmp', @HandleOnFileExists_Mem, @HandleOnLoadMissingFileContent_Mem);
+  try
+    Response := FastReplace_87ToReturn(Send_ExecuteCommandAtIndex_ToServer(2, 0));
+
+    ListOfVars := TStringList.Create;
+    try
+      ListOfVars.Text := Response;
+      Expect(ListOfVars).WithItem('$LastAction_Status$').DifferentThanValue(CActionStatusStr[asFailed]);
+    finally
+      ListOfVars.Free;
+    end;
+  finally
+    DestroyFileProvider;
+  end;
 end;
 
 

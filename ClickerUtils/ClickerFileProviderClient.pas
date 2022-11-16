@@ -28,11 +28,13 @@ unit ClickerFileProviderClient;
 interface
 
 uses
-  Classes, SysUtils;
+  Windows, Classes, SysUtils, ClickerUtils;
 
 
 type
   TPollForMissingServerFilesProcessingEvent = procedure of object;
+  TOnLogMissingServerFile = procedure(AMsg: string) of object;
+  TOnLoadMissingFileContent = procedure(AFileName: string; AFileContent: TMemoryStream) of object;
 
   TPollForMissingServerFiles = class(TThread)
   private
@@ -42,13 +44,23 @@ type
     FListOfAccessibleDirs: TStringList;
     FListOfAccessibleFileExtensions: TStringList;
 
+    FCritSec: TRTLCriticalSection;
+    FLogOutput: TStringList;
+
     FOnBeforeRequestingListOfMissingFiles: TPollForMissingServerFilesProcessingEvent;
     FOnAfterRequestingListOfMissingFiles: TPollForMissingServerFilesProcessingEvent;
+    FOnFileExists: TOnFileExists;
+    FOnLogMissingServerFile: TOnLogMissingServerFile;
+    FOnLoadMissingFileContent: TOnLoadMissingFileContent;
 
     procedure DoOnBeforeRequestingListOfMissingFiles;
     procedure DoOnAfterRequestingListOfMissingFiles;
+    function DoOnFileExists(const AFileName: string): Boolean;
+    procedure DoOnLogMissingServerFile(AMsg: string);
+    procedure DoOnLoadMissingFileContent(AFileName: string; AFileContent: TMemoryStream);
 
-    function FileIsAllowed(AFileName: string): Boolean;
+    procedure AddUniqueMessageToLog(AMsg: string);
+    function FileIsAllowed(AFileName: string; out ADenyReason: string): Boolean;
     procedure RemoveDeniedFilesFromList(AList: TStringList);
   protected
     procedure Execute; override;
@@ -56,8 +68,11 @@ type
     constructor Create(CreateSuspended: Boolean {$IFDEF FPC}; const StackSize: SizeUInt = DefaultStackSize {$ENDIF});
     destructor Destroy; override;
 
-    procedure AddListOfAccessibleDirs(AList: TStrings);
-    procedure AddListOfAccessibleFileExtensions(AList: TStrings);
+    procedure AddListOfAccessibleDirs(AList: TStrings); overload;
+    procedure AddListOfAccessibleFileExtensions(AList: TStrings); overload;
+    procedure AddListOfAccessibleDirs(AListOfDirsStr: string); overload;
+    procedure AddListOfAccessibleFileExtensions(AListOfExtensionsStr: string); overload;
+    procedure GetLogContent(AList: TStrings);
 
     property RemoteAddress: string read FRemoteAddress write FRemoteAddress;
     property Done: Boolean read FDone;
@@ -65,6 +80,9 @@ type
 
     property OnBeforeRequestingListOfMissingFiles: TPollForMissingServerFilesProcessingEvent read FOnBeforeRequestingListOfMissingFiles write FOnBeforeRequestingListOfMissingFiles;
     property OnAfterRequestingListOfMissingFiles: TPollForMissingServerFilesProcessingEvent read FOnAfterRequestingListOfMissingFiles write FOnAfterRequestingListOfMissingFiles;
+    property OnFileExists: TOnFileExists write FOnFileExists;
+    property OnLogMissingServerFile: TOnLogMissingServerFile write FOnLogMissingServerFile;
+    property OnLoadMissingFileContent: TOnLoadMissingFileContent write FOnLoadMissingFileContent;
   end;
 
 
@@ -76,7 +94,7 @@ implementation
 
 
 uses
-  IdHTTP, ClickerUtils, ClickerActionsClient;
+  IdHTTP, ClickerActionsClient;
 
 
 {TPollForMissingServerFiles}
@@ -87,6 +105,15 @@ begin
   FListOfAccessibleDirs := TStringList.Create;
   FListOfAccessibleFileExtensions := TStringList.Create;
   FDone := False;
+
+  FOnBeforeRequestingListOfMissingFiles := nil;
+  FOnAfterRequestingListOfMissingFiles := nil;
+  FOnFileExists := nil;
+  FOnLogMissingServerFile := nil;
+  FOnLoadMissingFileContent := nil;
+
+  InitializeCriticalSection(FCritSec);
+  FLogOutput := TStringList.Create;
 end;
 
 
@@ -94,6 +121,9 @@ destructor TPollForMissingServerFiles.Destroy;
 begin
   FreeAndNil(FListOfAccessibleDirs);
   FreeAndNil(FListOfAccessibleFileExtensions);
+  DeleteCriticalSection(FCritSec);
+  FreeAndNil(FLogOutput);
+
   inherited Destroy;
 end;
 
@@ -112,7 +142,50 @@ begin
 end;
 
 
-function TPollForMissingServerFiles.FileIsAllowed(AFileName: string): Boolean;
+function TPollForMissingServerFiles.DoOnFileExists(const AFileName: string): Boolean;
+begin
+  if not Assigned(FOnFileExists) then
+    raise Exception.Create('OnFileExists is not assigned.')
+  else
+    Result := FOnFileExists(AFileName);
+end;
+
+
+procedure TPollForMissingServerFiles.DoOnLogMissingServerFile(AMsg: string);
+begin
+  if Assigned(FOnLogMissingServerFile) then
+    FOnLogMissingServerFile(AMsg);    //no exception should be raised if not assigned
+end;
+
+
+procedure TPollForMissingServerFiles.DoOnLoadMissingFileContent(AFileName: string; AFileContent: TMemoryStream);
+begin
+  if not Assigned(FOnLoadMissingFileContent) then
+    raise Exception.Create('OnLoadMissingFileContent is not assigned.')
+  else
+    FOnLoadMissingFileContent(AFileName, AFileContent);
+end;
+
+
+procedure TPollForMissingServerFiles.AddUniqueMessageToLog(AMsg: string);
+begin
+  EnterCriticalSection(FCritSec);
+  try
+    if FLogOutput.IndexOf(AMsg) = -1 then
+    begin
+      FLogOutput.Add(AMsg);
+      DoOnLogMissingServerFile(AMsg);
+    end;
+  finally
+    LeaveCriticalSection(FCritSec);
+  end;
+end;
+
+
+function TPollForMissingServerFiles.FileIsAllowed(AFileName: string; out ADenyReason: string): Boolean;
+const
+  CFileExtensionNotAllowed = 'File extension is not allowed.';
+  CFileOutOfAllowedDirs = 'File is outside of allowed directories.';
 var
   FileExt, FilePath: string;
   i: Integer;
@@ -120,6 +193,8 @@ var
   CurrentItem: string;
 begin
   Result := False;
+  ADenyReason := '';
+
   AFileName := UpperCase(AFileName);
   FileExt := ExtractFileExt(AFileName);
 
@@ -135,7 +210,10 @@ begin
   end;
 
   if not FoundExt then
+  begin
+    ADenyReason := CFileExtensionNotAllowed;
     Exit;
+  end;
 
   FoundDir := False;
   FilePath := ExtractFilePath(AFileName);
@@ -153,13 +231,16 @@ begin
   end;
 
   if not FoundDir then
+  begin
+    ADenyReason := CFileOutOfAllowedDirs;
     Exit;
+  end;
 
   Result := True;
 end;
 
 
-procedure TPollForMissingServerFiles.AddListOfAccessibleDirs(AList: TStrings);
+procedure TPollForMissingServerFiles.AddListOfAccessibleDirs(AList: TStrings); overload;
 var
   i: Integer;
 begin
@@ -168,7 +249,7 @@ begin
 end;
 
 
-procedure TPollForMissingServerFiles.AddListOfAccessibleFileExtensions(AList: TStrings);
+procedure TPollForMissingServerFiles.AddListOfAccessibleFileExtensions(AList: TStrings); overload;
 var
   i: Integer;
 begin
@@ -177,13 +258,56 @@ begin
 end;
 
 
+procedure TPollForMissingServerFiles.AddListOfAccessibleDirs(AListOfDirsStr: string); overload;
+var
+  List: TStringList;
+begin
+  List := TStringList.Create;
+  try
+    List.Text := AListOfDirsStr;
+    AddListOfAccessibleDirs(List);
+  finally
+    List.Free;
+  end;
+end;
+
+
+procedure TPollForMissingServerFiles.AddListOfAccessibleFileExtensions(AListOfExtensionsStr: string); overload;
+var
+  List: TStringList;
+begin
+  List := TStringList.Create;
+  try
+    List.Text := AListOfExtensionsStr;
+    AddListOfAccessibleFileExtensions(List);
+  finally
+    List.Free;
+  end;
+end;
+
+
+procedure TPollForMissingServerFiles.GetLogContent(AList: TStrings);
+begin
+  EnterCriticalSection(FCritSec);
+  try
+    AList.AddStrings(FLogOutput);
+  finally
+    LeaveCriticalSection(FCritSec);
+  end;
+end;
+
+
 procedure TPollForMissingServerFiles.RemoveDeniedFilesFromList(AList: TStringList);
 var
   i: Integer;
+  DenyReason: string;
 begin
   for i := AList.Count - 1 downto 0 do
-    if not FileIsAllowed(AList.Strings[i]) then
-       AList.Delete(i);
+    if not FileIsAllowed(AList.Strings[i], DenyReason) then
+    begin
+      AddUniqueMessageToLog('Requested file "' + AList.Strings[i] + '" is not allowed to be sent to server. DenyReason: ' + DenyReason);
+      AList.Delete(i);
+    end;
 end;
 
 
@@ -216,34 +340,36 @@ begin
           ListOfFiles := TStringList.Create;
           try
             ListStr := IdHTTPClient.Get(FRemoteAddress + CRECmd_GetListOfWaitingFiles);  //file names, read from FIFO
-            ListOfFiles.Text := FastReplace_87ToReturn(ListStr);
 
-            //Restrict the files to one or more directories and some specific file types, so the server can't ask for every possible file
-            RemoveDeniedFilesFromList(ListOfFiles);
+            if ListStr <> '<HTML><BODY><B>200 OK</B></BODY></HTML>' then   //this is the standard TIdHTTPServer response, if no user response is provided
+            begin
+              ListOfFiles.Text := FastReplace_87ToReturn(ListStr);
 
-            for i := 0 to ListOfFiles.Count - 1 do
-              if FileExists(ListOfFiles.Strings[i]) then
-              begin
-                try
-                  FileContent := TMemoryStream.Create;
+              //Restrict the files to one or more directories and some specific file types, so the server can't ask for every possible file
+              RemoveDeniedFilesFromList(ListOfFiles);
+
+              for i := 0 to ListOfFiles.Count - 1 do
+                if DoOnFileExists(ListOfFiles.Strings[i]) then
+                begin
                   try
+                    FileContent := TMemoryStream.Create;
                     try
-                      FileContent.LoadFromFile(ListOfFiles.Strings[i]);
-                    except
-                      Sleep(300); //maybe the file is in use by another thread, so wait a bit, then load again
-                      FileContent.LoadFromFile(ListOfFiles.Strings[i]);
+                      DoOnLoadMissingFileContent(ListOfFiles.Strings[i], FileContent);
+
+                      LinkForSendingFiles := FRemoteAddress + CRECmd_SendFileToServer + '?' +
+                                             CREParam_FileName + '=' + ListOfFiles.Strings[i];
+                      SendFileToServer(LinkForSendingFiles, FileContent, False);
+                    finally
+                      FileContent.Free;
                     end;
-
-                    LinkForSendingFiles := FRemoteAddress + CRECmd_SendFileToServer + '?' +
-                                           CREParam_FileName + '=' + ListOfFiles.Strings[i];
-                    SendFileToServer(LinkForSendingFiles, FileContent, False);
-                  finally
-                    FileContent.Free;
+                  except
+                    on E: Exception do
+                      DoOnLogMissingServerFile('File provider: ' + E.Message);
                   end;
-                except
-
-                end;
-              end;
+                end
+                else
+                  DoOnLogMissingServerFile('File provider: File not found: "' + ListOfFiles.Strings[i] + '"');
+            end;
           finally
             DoOnAfterRequestingListOfMissingFiles;
             ListOfFiles.Free;

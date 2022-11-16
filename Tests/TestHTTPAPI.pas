@@ -29,7 +29,8 @@ unit TestHTTPAPI;
 interface
 
 uses
-  LCLIntf, Classes, SysUtils, fpcunit, testregistry, InMemFileSystem, Expectations;
+  LCLIntf, Classes, SysUtils, fpcunit, testregistry, InMemFileSystem, Expectations,
+  ClickerFileProviderClient, ClickerUtils;
 
 type
   TTerminateWaitingForFileAvailabilityRequestTh = class(TThread)
@@ -53,6 +54,7 @@ type
   private
     FInMemFS: TInMemFileSystem;
     FTestServerAddress: string;
+    FPollForMissingServerFiles: TPollForMissingServerFiles;
 
     function SendTemplateToServer(ARemoteAddress, AFileName: string; AFileContent: TMemoryStream): string;
 
@@ -77,6 +79,15 @@ type
 
     function GetVarValueFromServer(AVarName: string): string;
 
+    function HandleOnFileExists_Disk(const AFileName: string): Boolean;
+    function HandleOnFileExists_Mem(const AFileName: string): Boolean;
+    procedure HandleOnLoadMissingFileContent_Disk(AFileName: string; AFileContent: TMemoryStream);
+    procedure HandleOnLoadMissingFileContent_Mem(AFileName: string; AFileContent: TMemoryStream);
+    procedure HandleLogMissingServerFile(AMsg: string);
+
+    procedure CreateFileProvider(AAccessibleDirs, AAccessibleFileExtensions: string; AOnFileExistsHandler: TOnFileExists; AOnLoadMissingFileContentHandler: TOnLoadMissingFileContent);
+    procedure DestroyFileProvider;
+
     property InMemFS: TInMemFileSystem read FInMemFS;
   public
     property TestServerAddress: string read FTestServerAddress write FTestServerAddress;
@@ -99,7 +110,7 @@ implementation
 
 
 uses
-  ClickerActionsClient, ClickerUtils, ActionsStuff, Controls, Forms;
+  ClickerActionsClient, ActionsStuff, Controls, Forms;
 
 
 procedure ExpectSuccessfulAction(AListOfVars: TStringList);
@@ -384,6 +395,90 @@ begin
     Result := ListOfVars.Values[AVarName];
   finally
     ListOfVars.Free;
+  end;
+end;
+
+
+function TTestHTTPAPI.HandleOnFileExists_Disk(const AFileName: string): Boolean;
+begin
+  Result := FileExists(AFileName);
+end;
+
+
+function TTestHTTPAPI.HandleOnFileExists_Mem(const AFileName: string): Boolean;
+begin
+  Result := InMemFS.FileExistsInMem(AFileName);
+end;
+
+
+procedure TTestHTTPAPI.HandleOnLoadMissingFileContent_Disk(AFileName: string; AFileContent: TMemoryStream);
+begin
+  AFileContent.LoadFromFile(AFileName);
+  try
+    AFileContent.LoadFromFile(AFileName);
+  except
+    Sleep(300); //maybe the file is in use by another thread, so wait a bit, then load again
+    AFileContent.LoadFromFile(AFileName);
+  end;
+end;
+
+
+procedure TTestHTTPAPI.HandleOnLoadMissingFileContent_Mem(AFileName: string; AFileContent: TMemoryStream);
+begin
+  FInMemFS.LoadFileFromMemToStream(AFileName, AFileContent);
+end;
+
+
+procedure TTestHTTPAPI.HandleLogMissingServerFile(AMsg: string);
+begin
+  //MessageBox(0, PChar(AMsg), 'Tests log: MissingServerFile', 0);
+end;
+
+
+procedure TTestHTTPAPI.CreateFileProvider(AAccessibleDirs, AAccessibleFileExtensions: string; AOnFileExistsHandler: TOnFileExists; AOnLoadMissingFileContentHandler: TOnLoadMissingFileContent);
+begin
+  FPollForMissingServerFiles := TPollForMissingServerFiles.Create(True);
+  FPollForMissingServerFiles.RemoteAddress := FTestServerAddress;
+  FPollForMissingServerFiles.ConnectTimeout := 1000;
+  FPollForMissingServerFiles.AddListOfAccessibleDirs(AAccessibleDirs);
+  FPollForMissingServerFiles.AddListOfAccessibleFileExtensions(AAccessibleFileExtensions);
+  FPollForMissingServerFiles.OnBeforeRequestingListOfMissingFiles := nil;
+  FPollForMissingServerFiles.OnAfterRequestingListOfMissingFiles := nil;
+  FPollForMissingServerFiles.OnFileExists := AOnFileExistsHandler;
+  FPollForMissingServerFiles.OnLogMissingServerFile := @HandleLogMissingServerFile;
+  FPollForMissingServerFiles.OnLoadMissingFileContent := AOnLoadMissingFileContentHandler;
+  FPollForMissingServerFiles.Start;
+end;
+
+
+procedure TTestHTTPAPI.DestroyFileProvider;
+var
+  tk: QWord;
+begin
+  if FPollForMissingServerFiles <> nil then
+  begin
+    //AddToLog('Stopping "missing files" monitoring thread for client.');
+    FPollForMissingServerFiles.Terminate;
+
+    tk := GetTickCount64;
+    repeat
+      Application.ProcessMessages;
+      Sleep(10);
+
+      if FPollForMissingServerFiles.Done then
+      begin
+        //AddToLog('Monitoring thread terminated.');
+        Break;
+      end;
+
+      if GetTickCount64 - tk > 1500 then
+      begin
+        //AddToLog('Timeout waiting for monitoring thread to terminate. The thread is still running (probably waiting).');
+        Break;
+      end;
+    until False;
+
+    FPollForMissingServerFiles := nil;
   end;
 end;
 

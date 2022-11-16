@@ -233,6 +233,9 @@ type
     function HandleOnFileExists(const FileName: string): Boolean;
     procedure HandleOnGetSelfHandles(AListOfSelfHandles: TStringList);
 
+    procedure HandleLogMissingServerFile(AMsg: string);
+    procedure HandleOnLoadMissingFileContent(AFileName: string; AFileContent: TMemoryStream);
+
     procedure HandleOnBeforeRequestingListOfMissingFiles;  //client thread calls this, without UI sync
     procedure HandleOnAfterRequestingListOfMissingFiles;   //client thread calls this, without UI sync
 
@@ -1653,6 +1656,15 @@ begin
     Exit;
   end;
 
+  if ASyncObj.FCmd = '/' + CRECmd_StopTemplateExecution then
+  begin
+    ASyncObj.FFrame.StopAllActionsOnDemand := True;
+    ASyncObj.FFrame.StopAllActionsOnDemandFromParent^ := True;
+    Result := CREResp_Done;
+    frClickerActionsArrMain.memLogErr.Lines.Add('Stopping template at stack level ' + IntToStr(ASyncObj.FFrame.StackLevel));
+    Exit;
+  end;
+
   if ASyncObj.FCmd = '/' + CRECmd_ExitTemplate then
   begin
     ASyncObj.FFrame.ExitTemplateFromRemote;
@@ -2535,6 +2547,9 @@ begin
       FPollForMissingServerFiles.AddListOfAccessibleFileExtensions(memAllowedFileExtensionsForServer.Lines);
       FPollForMissingServerFiles.OnBeforeRequestingListOfMissingFiles := HandleOnBeforeRequestingListOfMissingFiles;
       FPollForMissingServerFiles.OnAfterRequestingListOfMissingFiles := HandleOnAfterRequestingListOfMissingFiles;
+      FPollForMissingServerFiles.OnFileExists := HandleOnFileExists;
+      FPollForMissingServerFiles.OnLogMissingServerFile := HandleLogMissingServerFile;
+      FPollForMissingServerFiles.OnLoadMissingFileContent := HandleOnLoadMissingFileContent;
       FPollForMissingServerFiles.Start;
 
       frClickerActionsArrMain.memLogErr.Lines.Add('Started "missing files" monitoring thread for client mode.');
@@ -2693,6 +2708,23 @@ begin
   DoOnGetSelfHandles(AListOfSelfHandles);
 end;
 
+
+procedure TfrmClickerActions.HandleLogMissingServerFile(AMsg: string);
+begin
+  AddToLogFromThread(AMsg);
+end;
+
+
+procedure TfrmClickerActions.HandleOnLoadMissingFileContent(AFileName: string; AFileContent: TMemoryStream);
+begin
+  AFileContent.LoadFromFile(AFileName);
+  try
+    AFileContent.LoadFromFile(AFileName);
+  except
+    Sleep(300); //maybe the file is in use by another thread, so wait a bit, then load again
+    AFileContent.LoadFromFile(AFileName);
+  end;
+end;
 
 function TfrmClickerActions.HandleOnTClkIniReadonlyFileCreate(AFileName: string): TClkIniReadonlyFile;
 begin

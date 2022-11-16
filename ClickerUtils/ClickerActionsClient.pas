@@ -82,6 +82,7 @@ const
   CRECmd_TestConnection = 'TestConnection';
   CRECmd_ExecuteCommandAtIndex = 'ExecuteCommandAtIndex';
   CRECmd_GetExecuteCommandAtIndexResult = 'GetExecuteCommandAtIndexResult';
+  CRECmd_StopTemplateExecution = 'StopTemplateExecution';
   CRECmd_ExitTemplate = 'ExitTemplate';
   CRECmd_GetAllReplacementVars = 'GetAllReplacementVars';
   CRECmd_SendFileToServer = 'SendFileToServer';
@@ -139,6 +140,7 @@ function SendTextRequestToServer(AFullLink: string; ACallAppProcMsg: Boolean = T
 //function SendFileToServer(AFullLink: string; AFileContent, AResponseStream: TMemoryStream; ACallAppProcMsg: Boolean = True): string; overload; //expose this only if needed
 function SendFileToServer(AFullLink: string; AFileContent: TMemoryStream; ACallAppProcMsg: Boolean = True): string; overload;
 
+function StopRemoteTemplateExecution(ARemoteAddress: string; AStackLevel: Integer): string;
 function ExitRemoteTemplate(ARemoteAddress: string; AStackLevel: Integer): string;  //called by client, to send a request to server to close a tab
 function GetAllReplacementVars(ARemoteAddress: string; AStackLevel: Integer): string;
 function GetDebugImageFromServer(ARemoteAddress: string; AStackLevel: Integer; AReceivedBmp: TBitmap; AWithGrid: Boolean): string; //returns error message if any
@@ -364,6 +366,13 @@ end;
 function TestConnection(ARemoteAddress: string): string;
 begin
   Result := SendTextRequestToServer(ARemoteAddress + CRECmd_TestConnection);
+end;
+
+
+function StopRemoteTemplateExecution(ARemoteAddress: string; AStackLevel: Integer): string;
+begin
+  Result := SendTextRequestToServer(ARemoteAddress + CRECmd_StopTemplateExecution + '?' +
+                                    CREParam_StackLevel + '=' + IntToStr(AStackLevel));
 end;
 
 

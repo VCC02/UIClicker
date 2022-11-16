@@ -43,7 +43,7 @@ object frmClickerActions: TfrmClickerActions
   }
   OnCreate = FormCreate
   OnDestroy = FormDestroy
-  LCLVersion = '7.5'
+  LCLVersion = '7.9'
   object PageControlMain: TPageControl
     Left = 8
     Height = 712
@@ -427,9 +427,9 @@ object frmClickerActions: TfrmClickerActions
         end
         object chkDisplayActivity: TCheckBox
           Left = 83
-          Height = 19
+          Height = 17
           Top = 8
-          Width = 92
+          Width = 90
           Caption = 'Display activity'
           Checked = True
           OnChange = chkDisplayActivityChange
@@ -438,10 +438,10 @@ object frmClickerActions: TfrmClickerActions
         end
       end
       object chkStayOnTop: TCheckBox
-        Left = 552
-        Height = 19
+        Left = 554
+        Height = 17
         Top = 0
-        Width = 76
+        Width = 74
         Anchors = [akTop, akRight]
         Caption = 'Stay on top'
         OnClick = chkStayOnTopClick

@@ -179,6 +179,13 @@ class TDllFunctionAddresses:
         return GetTemplateContentFromClientInMemAsStringFuncRes
 
 
+    def GetStopTemplateExecution(self):
+        StopTemplateExecutionProto = ctypes.CFUNCTYPE(LONG, LONG, ctypes.c_char_p)
+        StopTemplateExecutionParams = (1, "AStackLevel", 0), (1, "AResponse", 0),
+        StopTemplateExecutionFuncRes = StopTemplateExecutionProto(("StopTemplateExecution", self.DllHandle), StopTemplateExecutionParams)
+        return StopTemplateExecutionFuncRes
+
+
     def GetStartFileProviderClientThread(self):
         StartFileProviderClientThreadProto = ctypes.CFUNCTYPE(None)
         StartFileProviderClientThreadParams = ()
@@ -263,6 +270,7 @@ class TDllFunctions:
         self.ExecuteActionAtIndexFunc = self.Addresses.GetExecuteActionAtIndex()
         self.GetListOfFilesFromClientInMemFunc = self.Addresses.GetGetListOfFilesFromClientInMem()
         self.GetTemplateContentFromClientInMemAsStringFunc = self.Addresses.GetGetTemplateContentFromClientInMemAsString()
+        self.StopTemplateExecutionFunc = self.Addresses.GetStopTemplateExecution()
         
         self.GetStartFileProviderClientThreadFunc = self.Addresses.GetStartFileProviderClientThread()
         self.GetTerminateFileProviderClientThreadFunc = self.Addresses.GetTerminateFileProviderClientThread()
@@ -456,6 +464,18 @@ class TDllFunctions:
             return 'AV on GetTemplateContentFromClientInMemAsString'
 
 
+#    def StopTemplateExecution(self, AStackLevel):
+#        try:
+#            buffer = ctypes.create_string_buffer(10 * 1048576) # #(CMaxSharedStringLength)
+#            ResponsePtr = buffer[0] #ctypes.c_char_p(buffer[0])  #address of first byte in the buffer
+#            RespLen = self.StopTemplateExecutionFunc(AStackLevel, ResponsePtr)  #sending PWideChar, and converting to ANSI at dll
+#            
+#            Response = ctypes.string_at(ResponsePtr, RespLen)
+#            return Response.decode('utf-8')
+#        except:
+#            return 'AV on StopTemplateExecution'
+
+
     def StartFileProviderClientThread(self):
         try:
             self.GetStartFileProviderClientThreadFunc()
@@ -624,6 +644,8 @@ try:
     print("ExecuteActionAtIndex: ", DllFuncs.ExecuteActionAtIndex(AActionIndex = 6, AStackLevel = 0))
     print("ExecuteActionAtIndex: ", DllFuncs.ExecuteActionAtIndex(AActionIndex = 2, AStackLevel = 0))
     print("ExecuteActionAtIndex: ", DllFuncs.ExecuteActionAtIndex(AActionIndex = 3, AStackLevel = 0))
+    
+    #print("StopTemplateExecution: ", DllFuncs.StopTemplateExecution(0))
     
     print("GetListOfFilesFromClientInMem: ", DllFuncs.GetListOfFilesFromClientInMem())
     

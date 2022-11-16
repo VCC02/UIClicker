@@ -993,6 +993,15 @@ begin
 end;
 
 
+function StopTemplateExecution(AStackLevel: LongInt; AResponse: Pointer): LongInt; cdecl;
+var
+  Resp: string;
+begin
+  Resp := StopRemoteTemplateExecution(FRemoteAddress, AStackLevel);
+  Result := SetPointedContentFromString(Resp, AResponse);
+end;
+
+
 procedure StartFileProviderClientThread; cdecl;
 begin
   FPollForMissingServerFilesTh.Start;
@@ -1092,6 +1101,7 @@ exports
   ExecuteActionAtIndex,
   GetListOfFilesFromClientInMem,
   GetTemplateContentFromClientInMemAsString,
+  StopTemplateExecution,
 
   StartFileProviderClientThread,
   TerminateFileProviderClientThread,
