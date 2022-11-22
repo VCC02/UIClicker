@@ -1,5 +1,5 @@
 [Actions]
-Count=6
+Count=8
 Version=2
 
 [Action_0]
@@ -28,7 +28,7 @@ Loop.EvalBreakPosition=0
 [Action_1]
 ActionName=Find Actions Window
 Action=FindControl
-ActionTimeout=1000
+ActionTimeout=10000
 ActionEnabled=1
 ActionCondition=
 BreakpointExists=0
@@ -39,7 +39,7 @@ MatchCriteria.WillMatchClassName=1
 MatchCriteria.WillMatchBitmapText=0
 MatchCriteria.WillMatchBitmapFiles=0
 MatchCriteria.SearchForControlMode=2
-MatchText=UI Clicker Actions - ClientUnderTest
+MatchText=UI Clicker Actions$IsAdminOnWine$ - ClientUnderTest
 MatchClassName=Window
 MatchTextSeparator=
 MatchClassNameSeparator=
@@ -146,7 +146,7 @@ CachedControlTop=
 [Action_3]
 ActionName=Find Play All button
 Action=FindSubControl
-ActionTimeout=1000
+ActionTimeout=5000
 ActionEnabled=1
 ActionCondition=
 BreakpointExists=0
@@ -203,6 +203,48 @@ CachedControlLeft=
 CachedControlTop=
 
 [Action_4]
+ActionName=Move mouse cursor over button (wine)
+Action=Click
+ActionTimeout=0
+ActionEnabled=1
+ActionCondition=$IsAdminOnWine$<>
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+XOffsetReference=0
+YOffsetReference=0
+XClickPointVar=$Control_Left$
+YClickPointVar=$Control_Top$
+XOffset=3
+YOffset=3
+MouseButton=0
+ClickWithCtrl=0
+ClickWithAlt=0
+ClickWithShift=0
+ClickWithDoubleClick=0
+LeaveMouse=1
+MoveWithoutClick=1
+Count=1
+ClickType=0
+XOffsetReferenceDest=0
+YOffsetReferenceDest=0
+XClickPointVarDest=$Control_Left$
+YClickPointVarDest=$Control_Top$
+XOffsetDest=0
+YOffsetDest=0
+
+[Action_5]
+ActionName=Sleep
+Action=Sleep
+ActionTimeout=300
+ActionEnabled=1
+ActionCondition=$IsAdminOnWine$<>
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+Value=300
+
+[Action_6]
 ActionName=Click Play All button
 Action=Click
 ActionTimeout=0
@@ -233,7 +275,7 @@ YClickPointVarDest=$Control_Top$
 XOffsetDest=0
 YOffsetDest=0
 
-[Action_5]
+[Action_7]
 ActionName=Call WaitForExecutionOnAppUnderTest.clktmpl
 Action=CallTemplate
 ActionTimeout=1000

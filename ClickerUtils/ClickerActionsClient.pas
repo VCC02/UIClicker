@@ -58,6 +58,7 @@ const
   CREParam_ActionIdx = 'ActionIdx';
   CREParam_StackLevel = 'StackLevel';
   CREParam_IsDebugging = 'IsDebugging';
+  CREParam_UseLocalDebugger = 'UseLocalDebugger';
   CREParam_Grid = 'Grid';
   CREParam_FileName = 'FileName';
   CREParam_FileLocation = 'FileLocation';
@@ -167,7 +168,7 @@ function ExecuteExecAppAction(ARemoteAddress: string; AExecAppOptions: TClkExecA
 function ExecuteFindControlAction(ARemoteAddress: string; AFindControlOptions: TClkFindControlOptions; AActionName: string; AActionTimeout: Integer; AFileLocation: string): string;
 function ExecuteFindSubControlAction(ARemoteAddress: string; AFindControlOptions: TClkFindControlOptions; AActionName: string; AActionTimeout: Integer; AFileLocation: string): string;
 function ExecuteSetControlTextAction(ARemoteAddress: string; ASetTextOptions: TClkSetTextOptions): string;
-function ExecuteCallTemplateAction(ARemoteAddress: string; ACallTemplateOptions: TClkCallTemplateOptions; AIsDebugging: Boolean; AFileLocation: string): string;
+function ExecuteCallTemplateAction(ARemoteAddress: string; ACallTemplateOptions: TClkCallTemplateOptions; AIsDebugging, AUseLocalDebugger: Boolean; AFileLocation: string): string;
 function ExecuteSleepAction(ARemoteAddress: string; ASleepOptions: TClkSleepOptions; AActionName: string): string;
 function ExecuteSetVarAction(ARemoteAddress: string; ASetVarOptions: TClkSetVarOptions): string;
 function ExecuteWindowOperationsAction(ARemoteAddress: string; AWindowOperationsOptions: TClkWindowOperationsOptions): string;
@@ -734,7 +735,7 @@ begin
 end;
 
 
-function ExecuteCallTemplateAction(ARemoteAddress: string; ACallTemplateOptions: TClkCallTemplateOptions; AIsDebugging: Boolean; AFileLocation: string): string;
+function ExecuteCallTemplateAction(ARemoteAddress: string; ACallTemplateOptions: TClkCallTemplateOptions; AIsDebugging, AUseLocalDebugger: Boolean; AFileLocation: string): string;
 begin
   Result := SendTextRequestToServer(ARemoteAddress + CRECmd_ExecuteCallTemplateAction + '?' +
                                     CREParam_StackLevel + '=0' + '&' +   //use the main editor
@@ -750,8 +751,9 @@ begin
                                     'Loop.BreakCondition' + '=' + FastReplace_ReturnTo45(ACallTemplateOptions.CallTemplateLoop.BreakCondition) + '&' +
                                     'Loop.EvalBreakPosition' + '=' + IntToStr(Ord(ACallTemplateOptions.CallTemplateLoop.EvalBreakPosition)) + '&' +
 
-                                    CREParam_IsDebugging + '=' + IntToStr(Ord(ACallTemplateOptions.EvaluateBeforeCalling)) + '&' +
-                                    CREParam_FileLocation + '=' + AFileLocation
+                                    CREParam_IsDebugging + '=' + IntToStr(Ord(AIsDebugging)) + '&' +
+                                    CREParam_FileLocation + '=' + AFileLocation + '&' +
+                                    CREParam_UseLocalDebugger + '=' + IntToStr(Ord(AUseLocalDebugger))
                                     );
 end;
 

@@ -5,7 +5,7 @@ Version=2
 [Action_0]
 ActionName=Find Actions Window
 Action=FindControl
-ActionTimeout=1000
+ActionTimeout=10000
 ActionEnabled=1
 ActionCondition=
 BreakpointExists=0
@@ -16,7 +16,7 @@ MatchCriteria.WillMatchClassName=1
 MatchCriteria.WillMatchBitmapText=0
 MatchCriteria.WillMatchBitmapFiles=0
 MatchCriteria.SearchForControlMode=2
-MatchText=UI Clicker Actions - ClientUnderTest
+MatchText=UI Clicker Actions$IsAdminOnWine$ - ClientUnderTest
 MatchClassName=Window
 MatchTextSeparator=
 MatchClassNameSeparator=
@@ -140,7 +140,7 @@ CachedControlTop=
 [Action_3]
 ActionName=Find Step Into button
 Action=FindSubControl
-ActionTimeout=1000
+ActionTimeout=5000
 ActionEnabled=1
 ActionCondition=
 BreakpointExists=0

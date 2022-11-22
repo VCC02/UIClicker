@@ -1133,6 +1133,7 @@ begin
         NewFrame.StackLevel := AStackLevel + 1;
         NewFrame.ExecutesRemotely := AExecutesRemotely; //a client executes remotely
         NewFrame.ExecutingActionFromRemote := frClickerActionsArrMain.ExecutingActionFromRemote; //should be true in server mode
+        NewFrame.UseLocalDebugger := frClickerActionsArrMain.UseLocalDebugger;
         NewFrame.FileLocationOfDepsIsMem := frClickerActionsArrMain.FileLocationOfDepsIsMem;
         NewFrame.FullTemplatesDir := FFullTemplatesDir;
         NewFrame.ShowDeprecatedControls := frClickerActionsArrMain.ShowDeprecatedControls;
@@ -1662,6 +1663,7 @@ begin
     ASyncObj.FFrame.StopAllActionsOnDemandFromParent^ := True;
     Result := CREResp_Done;
     frClickerActionsArrMain.memLogErr.Lines.Add('Stopping template at stack level ' + IntToStr(ASyncObj.FFrame.StackLevel));
+    ASyncObj.FFrame.memLogErr.Lines.Add('Stopping template at stack level ' + IntToStr(ASyncObj.FFrame.StackLevel));
     Exit;
   end;
 
@@ -1669,6 +1671,7 @@ begin
   begin
     ASyncObj.FFrame.ExitTemplateFromRemote;
     frClickerActionsArrMain.memLogErr.Lines.Add('Closing template at stack level ' + IntToStr(ASyncObj.FFrame.StackLevel));
+    ASyncObj.FFrame.memLogErr.Lines.Add('Closing template at stack level ' + IntToStr(ASyncObj.FFrame.StackLevel));
     Exit;
   end;
 
@@ -1934,6 +1937,10 @@ begin
   if ASyncObj.FCmd = '/' + CRECmd_ExecuteCallTemplateAction then
   begin
     frClickerActionsArrMain.ExecutingActionFromRemote := True;
+
+    if ASyncObj.FParams.Values['UseLocalDebugger'] = '1' then
+      frClickerActionsArrMain.UseLocalDebugger := True;
+
     frClickerActionsArrMain.FileLocationOfDepsIsMem := ASyncObj.FParams.Values[CREParam_FileLocation] = CREParam_FileLocation_ValueMem; //to load files from in-mem FS
     try
       frClickerActionsArrMain.StopAllActionsOnDemand := False;
@@ -1945,6 +1952,9 @@ begin
     finally
       frClickerActionsArrMain.ExecutingActionFromRemote := False;
       frClickerActionsArrMain.FileLocationOfDepsIsMem := False;
+
+      if ASyncObj.FParams.Values['UseLocalDebugger'] = '1' then
+        frClickerActionsArrMain.UseLocalDebugger := False;
     end;
 
     Exit;

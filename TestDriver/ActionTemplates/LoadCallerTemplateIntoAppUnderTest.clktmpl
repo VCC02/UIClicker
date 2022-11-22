@@ -1,5 +1,5 @@
 [Actions]
-Count=15
+Count=19
 Version=2
 
 [Action_0]
@@ -196,6 +196,48 @@ CachedControlLeft=
 CachedControlTop=
 
 [Action_3]
+ActionName=Move mouse cursor over button (wine)
+Action=Click
+ActionTimeout=0
+ActionEnabled=1
+ActionCondition=$IsAdminOnWine$<>
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+XOffsetReference=0
+YOffsetReference=0
+XClickPointVar=$Control_Left$
+YClickPointVar=$Control_Top$
+XOffset=3
+YOffset=3
+MouseButton=0
+ClickWithCtrl=0
+ClickWithAlt=0
+ClickWithShift=0
+ClickWithDoubleClick=0
+LeaveMouse=1
+MoveWithoutClick=1
+Count=1
+ClickType=0
+XOffsetReferenceDest=0
+YOffsetReferenceDest=0
+XClickPointVarDest=$Control_Left$
+YClickPointVarDest=$Control_Top$
+XOffsetDest=0
+YOffsetDest=0
+
+[Action_4]
+ActionName=Sleep
+Action=Sleep
+ActionTimeout=300
+ActionEnabled=1
+ActionCondition=$IsAdminOnWine$<>
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+Value=300
+
+[Action_5]
 ActionName=Select Template Execution
 Action=Click
 ActionTimeout=0
@@ -226,10 +268,10 @@ YClickPointVarDest=$Control_Top$
 XOffsetDest=0
 YOffsetDest=0
 
-[Action_4]
+[Action_6]
 ActionName=Find Action player
 Action=FindControl
-ActionTimeout=1000
+ActionTimeout=10000
 ActionEnabled=1
 ActionCondition=
 BreakpointExists=0
@@ -285,7 +327,7 @@ StartSearchingWithCachedControl=0
 CachedControlLeft=
 CachedControlTop=
 
-[Action_5]
+[Action_7]
 ActionName=Find Show Action chk
 Action=FindControl
 ActionTimeout=1000
@@ -344,7 +386,49 @@ StartSearchingWithCachedControl=0
 CachedControlLeft=
 CachedControlTop=
 
-[Action_6]
+[Action_8]
+ActionName=Move mouse cursor over button (wine)
+Action=Click
+ActionTimeout=0
+ActionEnabled=1
+ActionCondition=$IsAdminOnWine$<>
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+XOffsetReference=0
+YOffsetReference=0
+XClickPointVar=$Control_Left$
+YClickPointVar=$Control_Top$
+XOffset=200
+YOffset=35
+MouseButton=0
+ClickWithCtrl=0
+ClickWithAlt=0
+ClickWithShift=0
+ClickWithDoubleClick=0
+LeaveMouse=1
+MoveWithoutClick=1
+Count=1
+ClickType=0
+XOffsetReferenceDest=0
+YOffsetReferenceDest=0
+XClickPointVarDest=$Control_Left$
+YClickPointVarDest=$Control_Top$
+XOffsetDest=0
+YOffsetDest=0
+
+[Action_9]
+ActionName=Sleep
+Action=Sleep
+ActionTimeout=300
+ActionEnabled=1
+ActionCondition=$IsAdminOnWine$<>
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+Value=300
+
+[Action_10]
 ActionName=Load template
 Action=Click
 ActionTimeout=0
@@ -375,7 +459,7 @@ YClickPointVarDest=$Control_Top$
 XOffsetDest=0
 YOffsetDest=0
 
-[Action_7]
+[Action_11]
 ActionName=Wait for open dialog
 Action=FindControl
 ActionTimeout=10000
@@ -434,7 +518,7 @@ StartSearchingWithCachedControl=0
 CachedControlLeft=
 CachedControlTop=
 
-[Action_8]
+[Action_12]
 ActionName=wait for dialog blinking
 Action=Sleep
 ActionTimeout=0
@@ -445,7 +529,7 @@ BreakpointEnabled=0
 BreakpointCondition=
 Value=300
 
-[Action_9]
+[Action_13]
 ActionName=Find open dialog
 Action=FindControl
 ActionTimeout=10000
@@ -504,7 +588,7 @@ StartSearchingWithCachedControl=0
 CachedControlLeft=
 CachedControlTop=
 
-[Action_10]
+[Action_14]
 ActionName=Find editbox
 Action=FindControl
 ActionTimeout=1000
@@ -563,7 +647,7 @@ StartSearchingWithCachedControl=0
 CachedControlLeft=
 CachedControlTop=
 
-[Action_11]
+[Action_15]
 ActionName=Set filename
 Action=SetControlText
 ActionTimeout=0
@@ -573,9 +657,9 @@ BreakpointExists=0
 BreakpointEnabled=0
 BreakpointCondition=
 Text=$TemplateToLoad$
-ControlType=0
+ControlType=2
 
-[Action_12]
+[Action_16]
 ActionName=Find open dialog
 Action=FindControl
 ActionTimeout=1000
@@ -634,7 +718,7 @@ StartSearchingWithCachedControl=0
 CachedControlLeft=
 CachedControlTop=
 
-[Action_13]
+[Action_17]
 ActionName=Find Open button
 Action=FindControl
 ActionTimeout=1000
@@ -693,7 +777,7 @@ StartSearchingWithCachedControl=0
 CachedControlLeft=
 CachedControlTop=
 
-[Action_14]
+[Action_18]
 ActionName=Click Open
 Action=Click
 ActionTimeout=0

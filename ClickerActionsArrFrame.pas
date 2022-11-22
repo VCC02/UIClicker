@@ -50,10 +50,12 @@ type
     chkResetVarsOnPlayAll: TCheckBox;
     chkShowActionNumber: TCheckBox;
     edtConsoleCommand: TEdit;
+    imgWaitingInDebuggingMode: TImage;
     imglstActionHasCondition: TImageList;
     imglstActionExtraStatus: TImageList;
     imglstCurrentDebuggingActionWithBreakPoint: TImageList;
     imglstCurrentDebuggingActionWithDisabledBreakPoint: TImageList;
+    imgWaitingInPreDebuggingMode: TImage;
     lbeSearchAction: TLabeledEdit;
     lblModifiedStatus: TLabel;
     memLogErr: TMemo;
@@ -242,6 +244,7 @@ type
     FRemoteExActionIndex: Integer;
     FRemoteExCmdResult: Boolean;
     FExecutingActionFromRemote: Boolean;
+    FUseLocalDebugger: Boolean;
     FFileLocationOfDepsIsMem: Boolean;
     FClosingTemplate: Boolean;  //set to true by ExitTemplateFromRemote when the template should be closed (after it stays open as called template)
 
@@ -434,6 +437,7 @@ type
     property RemoteExActionIndex: Integer read FRemoteExActionIndex write FRemoteExActionIndex;
     property RemoteExCmdResult: Boolean read FRemoteExCmdResult write FRemoteExCmdResult;
     property ExecutingActionFromRemote: Boolean read FExecutingActionFromRemote write FExecutingActionFromRemote; //used in server mode
+    property UseLocalDebugger: Boolean read FUseLocalDebugger write FUseLocalDebugger;
     property FileLocationOfDepsIsMem: Boolean read FFileLocationOfDepsIsMem write FFileLocationOfDepsIsMem;
     property RemoteAddress: string read FRemoteAddress write FRemoteAddress;
 
@@ -651,6 +655,7 @@ begin
   FRemoteExActionIndex := -1;
   FRemoteExCmdResult := False;
   FExecutingActionFromRemote := False;
+  FUseLocalDebugger := False;
   FFileLocationOfDepsIsMem := False;
   FClosingTemplate := False;
   FRemoteAddress := 'http://127.0.0.1:5444/';
@@ -1660,39 +1665,48 @@ end;
 
 procedure TfrClickerActionsArr.WaitInDebuggingMode;
 begin
-  repeat
-    Application.ProcessMessages;
+  imgWaitingInDebuggingMode.Show;
+  imgWaitingInDebuggingMode.Tag := imgWaitingInDebuggingMode.Tag + 1;
+  imgWaitingInDebuggingMode.Hint := 'Waiting in debugging mode.' + #13#10 + 'Call stack level: ' + IntToStr(imgWaitingInDebuggingMode.Tag);
+  try
+    repeat
+      Application.ProcessMessages;
 
-    if FStopAllActionsOnDemandFromParent <> nil then
-      if FStopAllActionsOnDemandFromParent^ then
+      if FStopAllActionsOnDemandFromParent <> nil then
+        if FStopAllActionsOnDemandFromParent^ then
+        begin
+          FStopAllActionsOnDemand := True;
+          Exit;
+        end;
+
+      if (GetAsyncKeyState(VK_CONTROL) < 0) and (GetAsyncKeyState(VK_SHIFT) < 0) and (GetAsyncKeyState(VK_F2) < 0) then
       begin
+        if FStopAllActionsOnDemandFromParent <> nil then
+          FStopAllActionsOnDemandFromParent^ := True;
+
         FStopAllActionsOnDemand := True;
-        Exit;
+        Break;
       end;
 
-    if (GetAsyncKeyState(VK_CONTROL) < 0) and (GetAsyncKeyState(VK_SHIFT) < 0) and (GetAsyncKeyState(VK_F2) < 0) then
-    begin
-      if FStopAllActionsOnDemandFromParent <> nil then
-        FStopAllActionsOnDemandFromParent^ := True;
-        
-      FStopAllActionsOnDemand := True;
-      Break;
-    end;  
+      if FContinuePlayingAll then
+        Break;
 
-    if FContinuePlayingAll then
-      Break;
+      if FContinuePlayingNext then
+      begin
+        FContinuePlayingNext := False;  //reset
+        Break;
+      end;
 
-    if FContinuePlayingNext then
-    begin
-      FContinuePlayingNext := False;  //reset
-      Break;
-    end;
+      if FContinuePlayingBySteppingInto then
+        Break;
 
-    if FContinuePlayingBySteppingInto then
-      Break;
-
-    Sleep(20);
-  until not FPlaying;  //Stop button
+      Sleep(20);
+    until not FPlaying;  //Stop button
+  finally
+    imgWaitingInDebuggingMode.Show;
+    imgWaitingInDebuggingMode.Tag := imgWaitingInDebuggingMode.Tag - 1;
+    imgWaitingInDebuggingMode.Hint := 'Waiting in debugging mode.' + #13#10 + 'Call stack level: ' + IntToStr(imgWaitingInDebuggingMode.Tag);
+  end;
 end;
 
 
@@ -1778,15 +1792,17 @@ var
 begin
   Result := False;
 
-  if IsDebugging and FExecutingActionFromRemote and (FStackLevel > 0) then  //
+  if IsDebugging and FExecutingActionFromRemote and (FStackLevel > 0) and not FUseLocalDebugger then  //  this loop allows receiving missing files
   begin
     SetActionVarValue('$DbgPlayAllActions$', 'Waiting for ClosingTemplate');
 
+    imgWaitingInPreDebuggingMode.Show;
     tk := GetTickCount64;
     repeat
       Application.ProcessMessages;
       Sleep(2);
     until FClosingTemplate or (GetTickCount64 - tk > 3600000);  //1h
+    imgWaitingInPreDebuggingMode.Hide;
 
     SetActionVarValue('$DbgPlayAllActions$', 'ClosingTemplate at stack level' + IntToStr(FStackLevel));
 

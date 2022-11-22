@@ -232,7 +232,7 @@ begin
   CallTemplateOptions.CallTemplateLoop.Direction := ldInc;
   CallTemplateOptions.CallTemplateLoop.EvalBreakPosition := lebpAfterContent;
 
-  Response := FastReplace_87ToReturn(ExecuteCallTemplateAction(CTestDriverServerAddress_Client, CallTemplateOptions, False, AFileLocation));
+  Response := FastReplace_87ToReturn(ExecuteCallTemplateAction(CTestDriverServerAddress_Client, CallTemplateOptions, False, False, AFileLocation));
 
   ListOfVars := TStringList.Create;
   try

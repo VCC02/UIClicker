@@ -435,7 +435,7 @@ begin
   CallTemplateOptions.CallTemplateLoop.Direction := ldInc;
   CallTemplateOptions.CallTemplateLoop.EvalBreakPosition := lebpAfterContent;
 
-  Response := FastReplace_87ToReturn(ExecuteCallTemplateAction(TestServerAddress, CallTemplateOptions, False, CREParam_FileLocation_ValueMem));
+  Response := FastReplace_87ToReturn(ExecuteCallTemplateAction(TestServerAddress, CallTemplateOptions, False, False, CREParam_FileLocation_ValueMem));
 
   ListOfVars := TStringList.Create;
   try
@@ -472,7 +472,7 @@ begin
   CallTemplateOptions.CallTemplateLoop.Direction := ldInc;
   CallTemplateOptions.CallTemplateLoop.EvalBreakPosition := lebpAfterContent;
 
-  Response := FastReplace_87ToReturn(ExecuteCallTemplateAction(TestServerAddress, CallTemplateOptions, False, CREParam_FileLocation_ValueMem));
+  Response := FastReplace_87ToReturn(ExecuteCallTemplateAction(TestServerAddress, CallTemplateOptions, False, False, CREParam_FileLocation_ValueMem));
 
   ListOfVars := TStringList.Create;
   try
@@ -509,7 +509,7 @@ begin
   CallTemplateOptions.CallTemplateLoop.BreakCondition := '';
   CallTemplateOptions.CallTemplateLoop.EvalBreakPosition := lebpAfterContent;
 
-  Response := FastReplace_87ToReturn(ExecuteCallTemplateAction(TestServerAddress, CallTemplateOptions, False, CREParam_FileLocation_ValueMem));
+  Response := FastReplace_87ToReturn(ExecuteCallTemplateAction(TestServerAddress, CallTemplateOptions, False, False, CREParam_FileLocation_ValueMem));
 
   ListOfVars := TStringList.Create;
   try
