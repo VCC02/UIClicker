@@ -43,6 +43,7 @@ type
     FConnectTimeout: Integer;
     FListOfAccessibleDirs: TStringList;
     FListOfAccessibleFileExtensions: TStringList;
+    FFullTemplatesDir: string;
 
     FCritSec: TRTLCriticalSection;
     FLogOutput: TStringList;
@@ -77,6 +78,7 @@ type
     property RemoteAddress: string read FRemoteAddress write FRemoteAddress;
     property Done: Boolean read FDone;
     property ConnectTimeout: Integer read FConnectTimeout write FConnectTimeout;
+    property FullTemplatesDir: string read FFullTemplatesDir write FFullTemplatesDir;
 
     property OnBeforeRequestingListOfMissingFiles: TPollForMissingServerFilesProcessingEvent read FOnBeforeRequestingListOfMissingFiles write FOnBeforeRequestingListOfMissingFiles;
     property OnAfterRequestingListOfMissingFiles: TPollForMissingServerFilesProcessingEvent read FOnAfterRequestingListOfMissingFiles write FOnAfterRequestingListOfMissingFiles;
@@ -104,6 +106,7 @@ begin
   inherited Create(CreateSuspended, StackSize);
   FListOfAccessibleDirs := TStringList.Create;
   FListOfAccessibleFileExtensions := TStringList.Create;
+  FFullTemplatesDir := '';
   FDone := False;
 
   FOnBeforeRequestingListOfMissingFiles := nil;
@@ -215,11 +218,18 @@ begin
     Exit;
   end;
 
+  if (AFileName <> '') and (AFileName[1] = PathDelim) then
+    AFileName := UpperCase(StringReplace(FFullTemplatesDir, '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]) + AFileName);
+
+  if ExtractFileName(AFileName) = AFileName then //files without paths are expected to be found in $AppDir$\ActionTemplates
+    AFileName := UpperCase(StringReplace(FFullTemplatesDir, '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]) + PathDelim + AFileName);
+
   FoundDir := False;
   FilePath := ExtractFilePath(AFileName);
+
   for i := 0 to FListOfAccessibleDirs.Count - 1 do
   begin
-    CurrentItem := FListOfAccessibleDirs.Strings[i];
+    CurrentItem := FListOfAccessibleDirs.Strings[i];  //these are already UpperCase, as set from outside
     if (CurrentItem > '') and (CurrentItem[Length(CurrentItem)] <> PathDelim) then
       CurrentItem := CurrentItem + PathDelim;  //make sure there are consistent results, regardless of the last '\' existence
 
@@ -233,6 +243,7 @@ begin
   if not FoundDir then
   begin
     ADenyReason := CFileOutOfAllowedDirs;
+    //AddUniqueMessageToLog('Denied: "' + AFileName + '" from "' + CurrentItem + '"');  //for debugging
     Exit;
   end;
 
@@ -243,9 +254,14 @@ end;
 procedure TPollForMissingServerFiles.AddListOfAccessibleDirs(AList: TStrings); overload;
 var
   i: Integer;
+  CurrentItem: string;
 begin
   for i := 0 to AList.Count - 1 do
-    FListOfAccessibleDirs.Add(UpperCase(AList.Strings[i]));
+  begin
+    CurrentItem := AList.Strings[i];
+    CurrentItem := StringReplace(CurrentItem, '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
+    FListOfAccessibleDirs.Add(UpperCase(CurrentItem));
+  end;
 end;
 
 
