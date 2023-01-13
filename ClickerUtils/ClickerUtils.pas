@@ -51,6 +51,8 @@ type
   TActionDebuggingStatus = (adsNone, adsPrev, adsCurrent, adsNext);
   TActionStatus = (asNotStarted, asFailed, asSuccessful, asInProgress, asAllowedFailed);
 
+  TOnAddToLog = procedure(s: string) of object;
+
   TEvaluateReplacementsFunc = function(s: string; Recursive: Boolean = True): string of object;
   TOnTriggerOnControlsModified = procedure of object;
   TOnEvaluateReplacements = function(s: string): string of object;

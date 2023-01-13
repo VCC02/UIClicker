@@ -458,7 +458,7 @@ end;
 
 procedure TfrmClickerActions.AddToLog(s: string);
 begin
-  frClickerActionsArrMain.memLogErr.Lines.Add(DateTimeToStr(Now) + '  ' + s);
+  frClickerActionsArrMain.AddToLog(DateTimeToStr(Now) + '  ' + s);
 end;
 
 
@@ -1346,7 +1346,7 @@ begin
     if Response = '' then
     begin
       Result := True;
-      frClickerActionsArrMain.memLogErr.Lines.Add('Received SearchArea bitmap: ' + IntToStr(AExtraBitmap.Width) + ':' + IntToStr(AExtraBitmap.Height));
+      frClickerActionsArrMain.AddToLog('Received SearchArea bitmap: ' + IntToStr(AExtraBitmap.Width) + ':' + IntToStr(AExtraBitmap.Height));
     end
     else
     begin
@@ -1662,16 +1662,16 @@ begin
     ASyncObj.FFrame.StopAllActionsOnDemand := True;
     ASyncObj.FFrame.StopAllActionsOnDemandFromParent^ := True;
     Result := CREResp_Done;
-    frClickerActionsArrMain.memLogErr.Lines.Add('Stopping template at stack level ' + IntToStr(ASyncObj.FFrame.StackLevel));
-    ASyncObj.FFrame.memLogErr.Lines.Add('Stopping template at stack level ' + IntToStr(ASyncObj.FFrame.StackLevel));
+    frClickerActionsArrMain.AddToLog('Stopping template at stack level ' + IntToStr(ASyncObj.FFrame.StackLevel));
+    ASyncObj.FFrame.AddToLog('Stopping template at stack level ' + IntToStr(ASyncObj.FFrame.StackLevel));
     Exit;
   end;
 
   if ASyncObj.FCmd = '/' + CRECmd_ExitTemplate then
   begin
     ASyncObj.FFrame.ExitTemplateFromRemote;
-    frClickerActionsArrMain.memLogErr.Lines.Add('Closing template at stack level ' + IntToStr(ASyncObj.FFrame.StackLevel));
-    ASyncObj.FFrame.memLogErr.Lines.Add('Closing template at stack level ' + IntToStr(ASyncObj.FFrame.StackLevel));
+    frClickerActionsArrMain.AddToLog('Closing template at stack level ' + IntToStr(ASyncObj.FFrame.StackLevel));
+    ASyncObj.FFrame.AddToLog('Closing template at stack level ' + IntToStr(ASyncObj.FFrame.StackLevel));
     Exit;
   end;
 
@@ -1699,7 +1699,7 @@ begin
       ASyncObj.FBmp.Height := 15;
       ASyncObj.FBmp.Canvas.Font.Color := clRed;
       ASyncObj.FBmp.Canvas.TextOut(5, 1, ErrMsg);
-      ASyncObj.FFrame.memLogErr.Lines.Add('Can''t send debug bmp, because the addressed frame is not set at level ' + ASyncObj.FParams.Values[CREParam_StackLevel]);
+      ASyncObj.FFrame.AddToLog('Can''t send debug bmp, because the addressed frame is not set at level ' + ASyncObj.FParams.Values[CREParam_StackLevel]);
     end
     else
     begin
@@ -1712,12 +1712,12 @@ begin
         ASyncObj.FBmp.Canvas.Draw(ASyncObj.FFrame.frClickerActions.imgDebugGrid.Left,
                                   ASyncObj.FFrame.frClickerActions.imgDebugGrid.Top,
                                   ASyncObj.FFrame.frClickerActions.imgDebugGrid.Picture.Bitmap);
-        ASyncObj.FFrame.memLogErr.Lines.Add('Added grid to debug bmp..');
+        ASyncObj.FFrame.AddToLog('Added grid to debug bmp..');
       end;
 
       if ASyncObj.FFrame <> frClickerActionsArrMain then
-              ASyncObj.FFrame.memLogErr.Lines.Add('Sending debug bmp of: ' + IntToStr(ASyncObj.FBmp.Width) + ' x ' + IntToStr(ASyncObj.FBmp.Height) + '  from Frame at level ' + IntToStr(ASyncObj.FFrame.StackLevel));
-      frClickerActionsArrMain.memLogErr.Lines.Add('Sending debug bmp of: ' + IntToStr(ASyncObj.FBmp.Width) + ' x ' + IntToStr(ASyncObj.FBmp.Height) + '  from Frame at level ' + IntToStr(ASyncObj.FFrame.StackLevel));
+              ASyncObj.FFrame.AddToLog('Sending debug bmp of: ' + IntToStr(ASyncObj.FBmp.Width) + ' x ' + IntToStr(ASyncObj.FBmp.Height) + '  from Frame at level ' + IntToStr(ASyncObj.FFrame.StackLevel));
+      frClickerActionsArrMain.AddToLog('Sending debug bmp of: ' + IntToStr(ASyncObj.FBmp.Width) + ' x ' + IntToStr(ASyncObj.FBmp.Height) + '  from Frame at level ' + IntToStr(ASyncObj.FFrame.StackLevel));
     end;
 
     Exit;
@@ -1741,7 +1741,7 @@ begin
       ASyncObj.FBmp.Height := 15;
       ASyncObj.FBmp.Canvas.Font.Color := clRed;
       ASyncObj.FBmp.Canvas.TextOut(5, 1, ErrMsg);
-      ASyncObj.FFrame.memLogErr.Lines.Add('Can''t send search area debug bmp, because the addressed frame is not set at level ' + ASyncObj.FParams.Values[CREParam_StackLevel]);
+      ASyncObj.FFrame.AddToLog('Can''t send search area debug bmp, because the addressed frame is not set at level ' + ASyncObj.FParams.Values[CREParam_StackLevel]);
     end
     else
     begin
@@ -1753,8 +1753,8 @@ begin
       ASyncObj.FBmp.Assign(ASyncObj.FFrame.frClickerActions.frClickerFindControl.SearchAreaControlDbgImg.Picture.Bitmap); //ASyncObj.FBmp.Canvas.Draw(0, 0, ASyncObj.FFrame.frClickerActions.imgDebugBmp.Picture.Bitmap); //using Canvas, requires the device context to be available (a.k.a. Canvas.Handle)
 
       if ASyncObj.FFrame <> frClickerActionsArrMain then
-              ASyncObj.FFrame.memLogErr.Lines.Add('Sending debug bmp of: ' + IntToStr(ASyncObj.FBmp.Width) + ' x ' + IntToStr(ASyncObj.FBmp.Height) + '  from Frame at level ' + IntToStr(ASyncObj.FFrame.StackLevel));
-      frClickerActionsArrMain.memLogErr.Lines.Add('Sending search area debug bmp of: ' + IntToStr(ASyncObj.FBmp.Width) + ' x ' + IntToStr(ASyncObj.FBmp.Height) + '  from Frame at level ' + IntToStr(ASyncObj.FFrame.StackLevel));
+              ASyncObj.FFrame.AddToLog('Sending debug bmp of: ' + IntToStr(ASyncObj.FBmp.Width) + ' x ' + IntToStr(ASyncObj.FBmp.Height) + '  from Frame at level ' + IntToStr(ASyncObj.FFrame.StackLevel));
+      frClickerActionsArrMain.AddToLog('Sending search area debug bmp of: ' + IntToStr(ASyncObj.FBmp.Width) + ' x ' + IntToStr(ASyncObj.FBmp.Height) + '  from Frame at level ' + IntToStr(ASyncObj.FFrame.StackLevel));
     end;
 
     Exit;
@@ -1801,7 +1801,7 @@ begin
       ASyncObj.FFrame.ExecutingActionFromRemote := RemoteState //restore, in case the server is running unattended
     end;
 
-    frClickerActionsArrMain.memLogErr.Lines.Add('Loading template in main list from mem.');
+    frClickerActionsArrMain.AddToLog('Loading template in main list from mem.');
     Result := CREResp_TemplateLoaded;
     Exit;
   end;
@@ -1842,7 +1842,7 @@ begin
   if ASyncObj.FCmd = '/' + CRECmd_TerminateWaitingForFileAvailability then
   begin
     TempStr := ASyncObj.FParams.Values[CREParam_TerminateWaitingLoop];
-    frClickerActionsArrMain.memLogErr.Lines.Add('Terminating waiting loops on request... The waiting action(s) should fail because of missing files.  Loop type: ' + TempStr);
+    frClickerActionsArrMain.AddToLog('Terminating waiting loops on request... The waiting action(s) should fail because of missing files.  Loop type: ' + TempStr);
 
     if TempStr = CREParam_TerminateWaitingLoop_ValueSingle then
       FTerminateWaitForFileAvailability := True
@@ -1855,7 +1855,7 @@ begin
         FTerminateWaitForMultipleFilesAvailability := True;
       end;
 
-    frClickerActionsArrMain.memLogErr.Lines.Add('The waiting loops should be terminated (on request).');
+    frClickerActionsArrMain.AddToLog('The waiting loops should be terminated (on request).');
     Result := CREResp_Done;
     Exit;
   end;
@@ -1986,7 +1986,7 @@ begin
   end;
 
   Result := 'unknown command';  //default if no command is recognized
-  frClickerActionsArrMain.memLogErr.Lines.Add(Result + ': ' + ASyncObj.FCmd);
+  frClickerActionsArrMain.AddToLog(Result + ': ' + ASyncObj.FCmd);
   ASyncObj.FErrCode := 2;
 end;
 
@@ -2493,7 +2493,7 @@ begin
     begin
       if FPollForMissingServerFiles <> nil then
       begin
-        frClickerActionsArrMain.memLogErr.Lines.Add('Stopping "missing files" monitoring thread for client mode.');
+        frClickerActionsArrMain.AddToLog('Stopping "missing files" monitoring thread for client mode.');
         FPollForMissingServerFiles.Terminate;
 
         cmbExecMode.Enabled := False;
@@ -2505,13 +2505,13 @@ begin
 
             if FPollForMissingServerFiles.Done then
             begin
-              frClickerActionsArrMain.memLogErr.Lines.Add('Monitoring thread terminated.');
+              frClickerActionsArrMain.AddToLog('Monitoring thread terminated.');
               Break;
             end;
 
             if GetTickCount64 - tk > 1500 then
             begin
-              frClickerActionsArrMain.memLogErr.Lines.Add('Timeout waiting for monitoring thread to terminate. The thread is still running (probably waiting).');
+              frClickerActionsArrMain.AddToLog('Timeout waiting for monitoring thread to terminate. The thread is still running (probably waiting).');
               Break;
             end;
           until False;
@@ -2539,12 +2539,12 @@ begin
         cmbExecMode.ItemIndex := 0; //force local mode, for now, then let the user switch again later
         Sleep(100);
         PageControlExecMode.ActivePageIndex := cmbExecMode.ItemIndex;
-        frClickerActionsArrMain.memLogErr.Lines.Add('Stopping "missing files" monitoring thread (again) for client mode. (If the execution mode keeps keeps going back to "Local", you might have to close the whole application).');
+        frClickerActionsArrMain.AddToLog('Stopping "missing files" monitoring thread (again) for client mode. (If the execution mode keeps keeps going back to "Local", you might have to close the whole application).');
         try
           FPollForMissingServerFiles.Terminate; //terminate existing thread, so a new one can be created
         except
           on E: Exception do
-            frClickerActionsArrMain.memLogErr.Lines.Add('Exception on stopping client thread. Maybe it''s already done: ' + E.Message);
+            frClickerActionsArrMain.AddToLog('Exception on stopping client thread. Maybe it''s already done: ' + E.Message);
         end;
 
         Exit;
@@ -2562,7 +2562,7 @@ begin
       FPollForMissingServerFiles.OnLoadMissingFileContent := HandleOnLoadMissingFileContent;
       FPollForMissingServerFiles.Start;
 
-      frClickerActionsArrMain.memLogErr.Lines.Add('Started "missing files" monitoring thread for client mode.');
+      frClickerActionsArrMain.AddToLog('Started "missing files" monitoring thread for client mode.');
     end;
   finally
     lblClientMode.Caption := 'Client mode ' + CClientExecModeInfoTxt[cmbExecMode.ItemIndex];

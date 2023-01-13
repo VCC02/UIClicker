@@ -31,7 +31,7 @@ unit ClickerActionExecution;
 interface
 
 uses
-  Windows, Classes, SysUtils, Forms, StdCtrls, Graphics, ExtCtrls,
+  Windows, Classes, SysUtils, Forms, Graphics, ExtCtrls,
   ClickerUtils, ClickerActionsFrame;
 
 
@@ -49,7 +49,6 @@ type
     FClickerVars: TStringList;  //not created here in this class, used from outside
     FStopAllActionsOnDemandFromParent: PBoolean;
     FStopAllActionsOnDemand: PBoolean;
-    FLog: TMemo;
     FTemplateFileName: PString;
     FExecutingActionFromRemote: PBoolean;
     FFileLocationOfDepsIsMem: PBoolean;
@@ -60,6 +59,7 @@ type
 
     FfrClickerActions: TfrClickerActions;  ///////////////////////// temp
 
+    FOnAddToLog: TOnAddToLog;
     FOnSetEditorEnabledState: TOnSetEditorEnabledState;
     FOnSetEditorTimeoutProgressBarMax: TOnSetEditorTimeoutProgressBarMax;
     FOnSetEditorTimeoutProgressBarPosition: TOnSetEditorTimeoutProgressBarPosition;
@@ -78,6 +78,8 @@ type
     procedure PrependErrorMessageToActionVar(NewErrMsg: string);
     function EvaluateHTTP(AValue: string): string;
     procedure PreviewTextOnBmp(var AFindControlOptions: TClkFindControlOptions; AEvaluatedText: string; AProfileIndex: Integer; ASearchedBmp: TBitmap);
+
+    procedure AddToLog(s: string);
 
     procedure SetLastActionStatus(AActionResult, AAlowedToFail: Boolean);
     procedure CheckManualStopCondition;
@@ -121,7 +123,6 @@ type
     property ClickerVars: TStringList write FClickerVars;  //not created here in this class, used from outside
     property StopAllActionsOnDemandFromParent: PBoolean write FStopAllActionsOnDemandFromParent;
     property StopAllActionsOnDemand: PBoolean write FStopAllActionsOnDemand;
-    property Log: TMemo write FLog;   //not created here in this class, used from outside
     property TemplateFileName: PString write FTemplateFileName;
     property ExecutingActionFromRemote: PBoolean write FExecutingActionFromRemote;
     property FileLocationOfDepsIsMem: PBoolean write FFileLocationOfDepsIsMem;
@@ -132,6 +133,7 @@ type
 
     property frClickerActions: TfrClickerActions read FfrClickerActions write FfrClickerActions;  //not created here in this class, used from outside    ///////////////////////// temp
 
+    property OnAddToLog: TOnAddToLog write FOnAddToLog;
     property OnSetEditorEnabledState: TOnSetEditorEnabledState write FOnSetEditorEnabledState;
     property OnSetEditorTimeoutProgressBarMax: TOnSetEditorTimeoutProgressBarMax write FOnSetEditorTimeoutProgressBarMax;
     property OnSetEditorTimeoutProgressBarPosition: TOnSetEditorTimeoutProgressBarPosition write FOnSetEditorTimeoutProgressBarPosition;
@@ -162,7 +164,6 @@ constructor TActionExecution.Create;
 begin
   //inherited Create;
   FClickerVars := nil; //not created here in this class, used from outside
-  FLog := nil;
   FfrClickerActions := nil;
   FExecutingActionFromRemote := nil;
   FFileLocationOfDepsIsMem := nil;
@@ -171,6 +172,7 @@ begin
   FExecutesRemotely := nil;
   FOwnerFrame := nil;
 
+  FOnAddToLog := nil;
   FOnSetEditorEnabledState := nil;
   FOnSetEditorTimeoutProgressBarMax := nil;
   FOnSetEditorTimeoutProgressBarPosition := nil;
@@ -187,7 +189,6 @@ end;
 destructor TActionExecution.Destroy;
 begin
   FClickerVars := nil;
-  FLog := nil;
   inherited Destroy;
 end;
 
@@ -205,11 +206,8 @@ procedure TActionExecution.SetActionVarValue(VarName, VarValue: string);
 begin
   FClickerVars.Values[VarName] := FastReplace_ReturnTo68(VarValue);  //Do not use EvaluateReplacements(VarValue) here, because there are calls which expect the value to be directly assigned !
 
-  if FLog = nil then
-    raise Exception.Create('FLog not assigned.');
-
   if VarName = '$ExecAction_Err$' then
-    FLog.Lines.Add(DateTimeToStr(Now) + '  ' + VarValue);
+    AddToLog(DateTimeToStr(Now) + '  ' + VarValue);
 end;
 
 
@@ -389,6 +387,15 @@ begin
   finally
     APreviewBmp.Free;
   end;
+end;
+
+
+procedure TActionExecution.AddToLog(s: string);
+begin
+  if not Assigned(FOnAddToLog) then
+    raise Exception.Create('OnAddToLog not assigned.');
+
+  FOnAddToLog(s);
 end;
 
 
@@ -986,13 +993,13 @@ begin
         if frClickerActions.frClickerFindControl.BMPTextFontProfiles[j].FGColor and clSystemColor <> 0 then
         begin
           frClickerActions.frClickerFindControl.BMPTextFontProfiles[j].FGColor := clFuchsia;
-          FLog.Lines.Add('System color found on text FG: $' + IntToHex(frClickerActions.frClickerFindControl.BMPTextFontProfiles[j].FGColor, 8));
+          AddToLog('System color found on text FG: $' + IntToHex(frClickerActions.frClickerFindControl.BMPTextFontProfiles[j].FGColor, 8));
         end;
 
         if frClickerActions.frClickerFindControl.BMPTextFontProfiles[j].BGColor and clSystemColor <> 0 then
         begin
           frClickerActions.frClickerFindControl.BMPTextFontProfiles[j].BGColor := clLime;
-          FLog.Lines.Add('System color found on text BG: $' + IntToHex(frClickerActions.frClickerFindControl.BMPTextFontProfiles[j].BGColor, 8));
+          AddToLog('System color found on text BG: $' + IntToHex(frClickerActions.frClickerFindControl.BMPTextFontProfiles[j].BGColor, 8));
         end;
 
         SetActionVarValue('$DebugVar_BitmapText$', FindControlInputData.Text);
@@ -1031,11 +1038,11 @@ begin
 
       if not AFindControlOptions.WaitForControlToGoAway then
       begin
-        FLog.Lines.Add('Find (Sub)Control with text = "' + FindControlInputData.Text + '"');
-        FLog.Lines.Add('Raw GlobalSearchArea.Left = ' + IntToStr(FindControlInputData.GlobalSearchArea.Left));
-        FLog.Lines.Add('Raw GlobalSearchArea.Top = ' + IntToStr(FindControlInputData.GlobalSearchArea.Top));
-        FLog.Lines.Add('Raw GlobalSearchArea.Right = ' + IntToStr(FindControlInputData.GlobalSearchArea.Right));
-        FLog.Lines.Add('Raw GlobalSearchArea.Bottom = ' + IntToStr(FindControlInputData.GlobalSearchArea.Bottom));
+        AddToLog('Find (Sub)Control with text = "' + FindControlInputData.Text + '"');
+        AddToLog('Raw GlobalSearchArea.Left = ' + IntToStr(FindControlInputData.GlobalSearchArea.Left));
+        AddToLog('Raw GlobalSearchArea.Top = ' + IntToStr(FindControlInputData.GlobalSearchArea.Top));
+        AddToLog('Raw GlobalSearchArea.Right = ' + IntToStr(FindControlInputData.GlobalSearchArea.Right));
+        AddToLog('Raw GlobalSearchArea.Bottom = ' + IntToStr(FindControlInputData.GlobalSearchArea.Bottom));
       end;
 
       FindControlInputData.InitialRectangleOffsets.Left := StrToIntDef(EvaluateReplacements(AFindControlOptions.InitialRectange.LeftOffset), 0);
@@ -1050,10 +1057,10 @@ begin
 
       if not AFindControlOptions.WaitForControlToGoAway then
       begin
-        FLog.Lines.Add('(With Offset) GlobalSearchArea.Left = ' + IntToStr(FindControlInputData.GlobalSearchArea.Left));
-        FLog.Lines.Add('(With Offset) GlobalSearchArea.Top = ' + IntToStr(FindControlInputData.GlobalSearchArea.Top));
-        FLog.Lines.Add('(With Offset) GlobalSearchArea.Right = ' + IntToStr(FindControlInputData.GlobalSearchArea.Right));
-        FLog.Lines.Add('(With Offset) GlobalSearchArea.Bottom = ' + IntToStr(FindControlInputData.GlobalSearchArea.Bottom));
+        AddToLog('(With Offset) GlobalSearchArea.Left = ' + IntToStr(FindControlInputData.GlobalSearchArea.Left));
+        AddToLog('(With Offset) GlobalSearchArea.Top = ' + IntToStr(FindControlInputData.GlobalSearchArea.Top));
+        AddToLog('(With Offset) GlobalSearchArea.Right = ' + IntToStr(FindControlInputData.GlobalSearchArea.Right));
+        AddToLog('(With Offset) GlobalSearchArea.Bottom = ' + IntToStr(FindControlInputData.GlobalSearchArea.Bottom));
       end;
 
       if (FindControlInputData.GlobalSearchArea.Right - FindControlInputData.GlobalSearchArea.Left < 1) or
@@ -1081,8 +1088,8 @@ begin
 
         frClickerActions.imgDebugBmp.Canvas.TextOut(0, 210, 'FileName: '+ ExtractFileName(FTemplateFileName^));
 
-        FLog.Lines.Add('Exiting find control, because the search area is negative.');
-        FLog.Lines.Add('');
+        AddToLog('Exiting find control, because the search area is negative.');
+        AddToLog('');
 
         Result := False;
         Continue; //Exit;  moves to the next "for j" iteration
@@ -1124,7 +1131,7 @@ begin
                 frClickerActions.DebuggingInfoAvailable := True;
 
                 Result := True;
-                FLog.Lines.Add('Found text: "' + AFindControlOptions.MatchText + '" in ' + IntToStr(GetTickCount64 - InitialTickCount) + 'ms.');
+                AddToLog('Found text: "' + AFindControlOptions.MatchText + '" in ' + IntToStr(GetTickCount64 - InitialTickCount) + 'ms.');
 
                 Exit;  //to prevent further searching for bitmap files
               end;
@@ -1138,7 +1145,7 @@ begin
             ListOfBitmapFiles := TStringList.Create;
             try
               ListOfBitmapFiles.Text := AFindControlOptions.MatchBitmapFiles;
-              FLog.Lines.Add('Bmp file count to search with: ' + IntToStr(ListOfBitmapFiles.Count));
+              AddToLog('Bmp file count to search with: ' + IntToStr(ListOfBitmapFiles.Count));
 
               if FExecutingActionFromRemote = nil then
                 raise Exception.Create('FExecutingActionFromRemote is not assigned.');
@@ -1435,7 +1442,7 @@ begin
   Result := FOnCallTemplate(FOwnerFrame, Fnm, FClickerVars, frClickerActions.imgDebugBmp.Picture.Bitmap, frClickerActions.imgDebugGrid, IsDebugging, AShouldStopAtBreakPoint, FStackLevel^, FExecutesRemotely^);
 
   if GetActionVarValue('$ExecAction_Err$') <> '' then   ////////////////// ToDo:  improve the error logging
-    FLog.Lines.Add(DateTimeToStr(Now) + '  ' + GetActionVarValue('$ExecAction_Err$'));
+    AddToLog(DateTimeToStr(Now) + '  ' + GetActionVarValue('$ExecAction_Err$'));
 end;
 
 
@@ -2094,9 +2101,9 @@ begin
     Result := ExecuteLoopedCallTemplateAction(CallTemplateOptions, IsDebugging, IsDebugging); //not sure if AShouldStopAtBreakPoint should be the same as IsDebugging or if it should be another http param
 
     if not Result then
-      FLog.Lines.Add(DateTimeToStr(Now) + '  /ExecuteCallTemplateAction is False. $ExecAction_Err$: ' + EvaluateReplacements('$ExecAction_Err$'))
+      AddToLog(DateTimeToStr(Now) + '  /ExecuteCallTemplateAction is False. $ExecAction_Err$: ' + EvaluateReplacements('$ExecAction_Err$'))
     else
-      FLog.Lines.Add(DateTimeToStr(Now) + '  /ExecuteCallTemplateAction is True.');
+      AddToLog(DateTimeToStr(Now) + '  /ExecuteCallTemplateAction is True.');
   finally
     //SetLastActionStatus(Result, False);  //leave the action status as set by the called template
   end;

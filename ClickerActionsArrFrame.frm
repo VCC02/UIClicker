@@ -1415,4 +1415,10 @@ object frClickerActionsArr: TfrClickerActionsArr
     Left = 372
     Top = 90
   end
+  object tmrLogging: TTimer
+    Interval = 200
+    OnTimer = tmrLoggingTimer
+    Left = 592
+    Top = 536
+  end
 end

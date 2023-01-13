@@ -34,7 +34,7 @@ uses
   Windows, {Messages,} SysUtils, Variants, Classes, Graphics, Controls, Forms, Types,
   Dialogs, ClickerActionsFrame, StdCtrls, VirtualTrees, ExtCtrls, Buttons,
   ImgList, Menus, ComCtrls, IdHTTP, ClickerIniFiles, ClickerUtils, InMemFileSystem,
-  ClickerActionsPaletteFrame, ClickerActionExecution;
+  ClickerActionsPaletteFrame, ClickerActionExecution, PollingFIFO;
 
 type
   TOnExecuteRemoteActionAtIndex = function(AActionIndex, AStackLevel: Integer; AVarReplacements: TStringList; AIsDebugging: Boolean): Boolean of object;
@@ -114,6 +114,7 @@ type
     spdbtnAddAction: TSpeedButton;
     spdbtnRemoveAction: TSpeedButton;
     spdbtnNew: TSpeedButton;
+    tmrLogging: TTimer;
     tmrDeleteActions: TTimer;
     tmrExecActionFromSrvModule: TTimer;
     tmrGlowUpdateButton: TTimer;
@@ -152,6 +153,7 @@ type
     procedure spdbtnUpdateActionClick(Sender: TObject);
     procedure tmrDeleteActionsTimer(Sender: TObject);
     procedure tmrExecActionFromSrvModuleTimer(Sender: TObject);
+    procedure tmrLoggingTimer(Sender: TObject);
     procedure vstActionsMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure vstActionsKeyDown(Sender: TObject; var Key: Word;
@@ -277,6 +279,7 @@ type
 
     vstActions: TVirtualStringTree;
     FPalette: TfrClickerActionsPalette;
+    FLoggingFIFO: TPollingFIFO;
 
     function GetShowDeprecatedControls: Boolean;
     procedure SetShowDeprecatedControls(Value: Boolean);
@@ -421,6 +424,8 @@ type
     procedure ExitTemplateFromRemote;
     function SendMissingFilesToServer: string;
     function SetCurrentClientTemplateInServer(ASendFileOnly: Boolean = False): string;
+
+    procedure AddToLog(s: string);
 
     procedure InitFrame;
 
@@ -604,13 +609,14 @@ end;
 constructor TfrClickerActionsArr.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
+  FLoggingFIFO := TPollingFIFO.Create;
   CreateRemainingUIComponents;
 
   FActionExecution := TActionExecution.Create;
   FActionExecution.ClickerVars := frClickerActions.vallstVariables.Strings;
   FActionExecution.StopAllActionsOnDemand := @FStopAllActionsOnDemand;
   FActionExecution.StopAllActionsOnDemandFromParent := FStopAllActionsOnDemandFromParent;
-  FActionExecution.Log := memLogErr;
+  FActionExecution.OnAddToLog := AddToLog;
   FActionExecution.TemplateFileName := @FFileName;
   FActionExecution.ExecutingActionFromRemote := @FExecutingActionFromRemote;
   FActionExecution.FileLocationOfDepsIsMem := @FFileLocationOfDepsIsMem;
@@ -667,6 +673,7 @@ destructor TfrClickerActionsArr.Destroy;
 begin
   FCmdConsoleHistory.Free;
   FActionExecution.Free;
+  FLoggingFIFO.Free;
   inherited Destroy;
 end;
 
@@ -1197,7 +1204,7 @@ procedure TfrClickerActionsArr.SetActionVarValue(VarName, VarValue: string);
 begin
   frClickerActions.vallstVariables.Values[VarName] := FastReplace_ReturnTo68(VarValue);
   if VarName = '$ExecAction_Err$' then
-    memLogErr.Lines.Add(DateTimeToStr(Now) + '  ' + VarValue);
+    AddToLog(DateTimeToStr(Now) + '  ' + VarValue);
 end;
 
 
@@ -1313,9 +1320,9 @@ begin
   if GetServerFileExpectancy(FRemoteAddress) = CREResp_FileExpectancy_ValueFromClient then
     if FStackLevel = 0 then  //Load only the main file. The others should be automatically handled by server.
     begin
-      memLogErr.Lines.Add('Should send template and other files to server...');
-      memLogErr.Lines.Add(SetCurrentClientTemplateInServer);
-      memLogErr.Lines.Add(SendMissingFilesToServer);
+      AddToLog('Should send template and other files to server...');
+      AddToLog(SetCurrentClientTemplateInServer);
+      AddToLog(SendMissingFilesToServer);
     end;
 end;
 
@@ -1353,7 +1360,7 @@ begin
     if (Trim(ServerResponse) = '') or (Pos('$Control_Class$', ServerResponse) = 0) then // uses '$Control_Class$' as a way to find out if the result is a valid list of variables
     begin
       AVarReplacements.Values['$ServerResponse$'] := ServerResponse;
-      memLogErr.Lines.Add(ServerResponse);
+      AddToLog(ServerResponse);
     end
     else
       AVarReplacements.Text := ServerResponse;
@@ -1384,7 +1391,7 @@ begin
       on E: Exception do
       begin
         Msg := E.Message + '  at action index: ' + IntToStr(AActionIndex);
-        memLogErr.Lines.Add('Remote Ex: ' + Msg);
+        AddToLog('Remote Ex: ' + Msg);
         SetActionVarValue('$RemoteEx$', Msg);
       end;
     end;
@@ -1405,14 +1412,14 @@ begin
         TempBmp.Canvas.Font.Color := clFuchsia;  //something different than clRed
         TempBmp.Canvas.TextOut(5, 1, Msg);
       except
-        memLogErr.Lines.Add('error setting default bitmap content -----------------------------');
+        AddToLog('error setting default bitmap content -----------------------------');
       end;
 
       Msg := GetDebugImageFromServer(FRemoteAddress, FStackLevel, TempBmp, False);
 
       if Msg <> '' then
       begin
-        memLogErr.Lines.Add('Remote DbgImg: ' + Msg);
+        AddToLog('Remote DbgImg: ' + Msg);
         SetActionVarValue('$RemoteDbgImg$', Msg);
       end
       else
@@ -1426,7 +1433,7 @@ begin
 
         MakeImageContentTransparent(frClickerActions.imgDebugBmp);
 
-        memLogErr.Lines.Add('Remote DbgImgSize: ' + Msg);
+        AddToLog('Remote DbgImgSize: ' + Msg);
         SetActionVarValue('$RemoteDbgImgSize$', Msg);
       end;
     finally
@@ -1945,10 +1952,10 @@ begin
     begin
       try
         ClosingTemplateResponse := ExitRemoteTemplate(FRemoteAddress, FStackLevel);
-        memLogErr.Lines.Add(DateTimeToStr(Now) + '  Sent request to close remote template at index ' + IntToStr(FStackLevel) +  '  ' + ClosingTemplateResponse);
+        AddToLog(DateTimeToStr(Now) + '  Sent request to close remote template at index ' + IntToStr(FStackLevel) +  '  ' + ClosingTemplateResponse);
       except
         on E: Exception do
-          memLogErr.Lines.Add(DateTimeToStr(Now) + '  Error closing remote template at index ' + IntToStr(FStackLevel) + '  ' + E.Message);
+          AddToLog(DateTimeToStr(Now) + '  Error closing remote template at index ' + IntToStr(FStackLevel) + '  ' + E.Message);
       end;
     end;
   end;
@@ -2040,9 +2047,9 @@ begin
         if not DoOnFileExists(Fnm) then
         begin
           ErrMsg := 'Template file not found on executing CallTemplateAction: "' + Fnm + '"...';
-          memLogErr.Lines.Add(ErrMsg);
+          AddToLog(ErrMsg);
           AppendErrorMessageToActionVar(ErrMsg);
-          memLogErr.Repaint;
+          //memLogErr.Repaint;
           //MessageBox(Handle, PChar(ErrMsg), 'Arr', MB_ICONERROR);
           Exit;
         end;
@@ -2054,7 +2061,7 @@ begin
       begin
         if not AInMemFileSystem.FileExistsInMem(Fnm) then
         begin
-          memLogErr.Lines.Add('Waiting for file availability: ' + Fnm);
+          AddToLog('Waiting for file availability: ' + Fnm);
           DoWaitForFileAvailability(Fnm);
         end;
 
@@ -2068,7 +2075,7 @@ begin
         begin
           if not AInMemFileSystem.FileExistsInMem(Fnm) then
           begin
-            memLogErr.Lines.Add('Waiting for file availability: ' + Fnm);
+            AddToLog('Waiting for file availability: ' + Fnm);
             DoWaitForFileAvailability(Fnm);
           end;
 
@@ -2079,7 +2086,7 @@ begin
       begin
         if not AInMemFileSystem.FileExistsInMem(Fnm) then
         begin
-          memLogErr.Lines.Add('Waiting for file availability: ' + Fnm);
+          AddToLog('Waiting for file availability: ' + Fnm);
           DoWaitForFileAvailability(Fnm);
         end;
 
@@ -2103,7 +2110,7 @@ begin
 
       ActionCount := Ini.ReadInteger('Actions', 'Count', 0);
       SetLength(FClkActions, ActionCount);
-      memLogErr.Lines.Add('Loading template: "' + Fnm + '", with ' + IntToStr(Length(FClkActions)) + ' action(s)..');
+      AddToLog('Loading template: "' + Fnm + '", with ' + IntToStr(Length(FClkActions)) + ' action(s)..');
 
       FormatVersion := Ini.ReadString('Actions', 'Version', '1');
 
@@ -2772,8 +2779,8 @@ end;
 
 procedure TfrClickerActionsArr.DisplayDefaultEvalConsoleEditBox;
 begin
-  memLogErr.Lines.Add('>> ' + edtConsoleCommand.Text);
-  memLogErr.Lines.Add('<- ' + EvaluateReplacements(edtConsoleCommand.Text));
+  AddToLog('>> ' + edtConsoleCommand.Text);
+  AddToLog('<- ' + EvaluateReplacements(edtConsoleCommand.Text));
 end;
 
 
@@ -2833,8 +2840,8 @@ begin
 
   SetActionVarValue(LeftSide, Value);
 
-  memLogErr.Lines.Add('>> ' + edtConsoleCommand.Text);
-  memLogErr.Lines.Add('<- ' + Value);
+  AddToLog('>> ' + edtConsoleCommand.Text);
+  AddToLog('<- ' + Value);
 
   Result := True;
 end;
@@ -4267,7 +4274,7 @@ begin
       FStopAllActionsOnDemandFromParent^ := False;
   end;
 
-  memLogErr.Lines.Add(DateTimeToStr(Now) + '  [Srv]: Executing action at index ' + IntToStr(FRemoteExActionIndex));
+  AddToLog(DateTimeToStr(Now) + '  [Srv]: Executing action at index ' + IntToStr(FRemoteExActionIndex));
   try
     try
       CurrentNode := GetNodeByIndex(FRemoteExActionIndex);
@@ -4290,7 +4297,7 @@ begin
         end;
 
         SetActionVarValue('$DbgCurrentAction$', Err);
-        memLogErr.Lines.Add(DateTimeToStr(Now) + '  [Srv]: ' + Err);
+        AddToLog(DateTimeToStr(Now) + '  [Srv]: ' + Err);
 
         FRemoteExCmdResult := False;
         SetActionVarValue('$LastAction_Status$', CActionStatusStr[asFailed]);
@@ -4343,7 +4350,7 @@ begin
     if CurrentNode <> nil then
       vstActions.RepaintNode(CurrentNode);
   finally
-    memLogErr.Lines.Add(DateTimeToStr(Now) + '  [Srv]: Done executing action at index ' + IntToStr(FRemoteExActionIndex));
+    AddToLog(DateTimeToStr(Now) + '  [Srv]: Done executing action at index ' + IntToStr(FRemoteExActionIndex));
     FExecutingActionFromRemote := False;
     FFileLocationOfDepsIsMem := False;  //reset here, because the server might switch back to local or client, which uses local files
   end;
@@ -4365,6 +4372,36 @@ begin
     Result := False
   else
     Result := FOnGetExtraSearchAreaDebuggingImageWithStackLevel(AExtraBitmap, FStackLevel);
+end;
+
+
+procedure TfrClickerActionsArr.AddToLog(s: string);
+begin
+  FLoggingFIFO.Put(s);
+end;
+
+
+procedure TfrClickerActionsArr.tmrLoggingTimer(Sender: TObject);
+var
+  TempStrings: TStringList;
+  i: Integer;
+begin
+  //FLoggingFIFO.PopAll(memLogErr.Lines); //this resets the memo view to the first line
+
+  try
+    TempStrings := TStringList.Create;
+    try
+      FLoggingFIFO.PopAll(TempStrings);
+
+      for i:= 0 to TempStrings.Count - 1 do
+        memLogErr.Lines.Add(TempStrings[i]);  //adding lines, one by one, instead of calling AddStrings, to leave the focus to the last line
+    finally
+      TempStrings.Free;
+    end;
+  except
+    on E: Exception do
+      memLogErr.Lines.Add('Exception on adding to log: ' + E.Message);
+  end;
 end;
 
 end.
