@@ -255,6 +255,18 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
       </Unit>
+      <Unit>
+        <Filename Value="..\MiscUtils\ObjectInspectorFrame.pas"/>
+        <FRMtype Value="400"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frObjectInspector"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Frame"/>
+      </Unit>
+      <Unit>
+        <Filename Value="ClickerActionValues.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -304,6 +316,12 @@
       </Item>
       <Item>
         <Name Value="EIdConnectTimeout"/>
+      </Item>
+      <Item>
+        <Name Value="RunError(101)"/>
+      </Item>
+      <Item>
+        <Name Value="EInOutError"/>
       </Item>
     </Exceptions>
   </Debugging>

@@ -169,6 +169,7 @@ type
     FOnTemplateSaveDialogExecute: TOnTemplateOpenDialogExecute;
     FOnGetTemplateSaveDialogFileName: TOnGetTemplateOpenDialogFileName;
     FOnSetTemplateSaveDialogFileName: TOnSetTemplateOpenDialogFileName;
+    FOnSetPictureOpenSetMultiSelect: TOnSetPictureOpenSetMultiSelect;
     FOnSetPictureOpenDialogInitialDir: TOnSetPictureOpenDialogInitialDir;
     FOnPictureOpenDialogExecute: TOnPictureOpenDialogExecute;
     FOnGetPictureOpenDialogFileName: TOnGetPictureOpenDialogFileName;
@@ -205,6 +206,7 @@ type
     function DoOnTemplateSaveDialogExecute: Boolean;
     function DoOnGetTemplateSaveDialogFileName: string;
     procedure DoOnSetTemplateSaveDialogFileName(AFileName: string);
+    procedure DoOnSetPictureOpenSetMultiSelect;
     procedure DoOnSetPictureOpenDialogInitialDir(AInitialDir: string);
     function DoOnPictureOpenDialogExecute: Boolean;
     function DoOnGetPictureOpenDialogFileName: string;
@@ -250,6 +252,7 @@ type
     function HandleOnTemplateSaveDialogExecute: Boolean;
     function HandleOnGetTemplateSaveDialogFileName: string;
     procedure HandleOnSetTemplateSaveDialogFileName(AFileName: string);
+    procedure HandleOnSetPictureOpenSetMultiSelect;
     procedure HandleOnSetPictureOpenDialogInitialDir(AInitialDir: string);
     function HandleOnPictureOpenDialogExecute: Boolean;
     function HandleOnGetPictureOpenDialogFileName: string;
@@ -292,6 +295,7 @@ type
     property OnTemplateSaveDialogExecute: TOnTemplateOpenDialogExecute write FOnTemplateSaveDialogExecute;
     property OnGetTemplateSaveDialogFileName: TOnGetTemplateOpenDialogFileName write FOnGetTemplateSaveDialogFileName;
     property OnSetTemplateSaveDialogFileName: TOnSetTemplateOpenDialogFileName write FOnSetTemplateSaveDialogFileName;
+    property OnSetPictureOpenSetMultiSelect: TOnSetPictureOpenSetMultiSelect write FOnSetPictureOpenSetMultiSelect;
     property OnSetPictureOpenDialogInitialDir: TOnSetPictureOpenDialogInitialDir write FOnSetPictureOpenDialogInitialDir;
     property OnPictureOpenDialogExecute: TOnPictureOpenDialogExecute write FOnPictureOpenDialogExecute;
     property OnGetPictureOpenDialogFileName: TOnGetPictureOpenDialogFileName write FOnGetPictureOpenDialogFileName;
@@ -550,6 +554,7 @@ begin
   FOnTemplateSaveDialogExecute := nil;
   FOnGetTemplateSaveDialogFileName := nil;
   FOnSetTemplateSaveDialogFileName := nil;
+  FOnSetPictureOpenSetMultiSelect := nil;
   FOnSetPictureOpenDialogInitialDir := nil;
   FOnPictureOpenDialogExecute := nil;
   FOnGetPictureOpenDialogFileName := nil;
@@ -684,6 +689,7 @@ begin
   frClickerActionsArrMain.OnGetTemplateSaveDialogFileName := HandleOnGetTemplateSaveDialogFileName;
   frClickerActionsArrMain.OnSetTemplateSaveDialogFileName := HandleOnSetTemplateSaveDialogFileName;
   frClickerActionsArrMain.OnSetPictureOpenDialogInitialDir := HandleOnSetPictureOpenDialogInitialDir;
+  frClickerActionsArrMain.OnSetPictureOpenSetMultiSelect := HandleOnSetPictureOpenSetMultiSelect;
   frClickerActionsArrMain.OnPictureOpenDialogExecute := HandleOnPictureOpenDialogExecute;
   frClickerActionsArrMain.OnGetPictureOpenDialogFileName := HandleOnGetPictureOpenDialogFileName;
 
@@ -733,6 +739,8 @@ begin
   frClickerActionsArrExperiment2.OnSetTemplateSaveDialogFileName := HandleOnSetTemplateSaveDialogFileName;
   frClickerActionsArrExperiment1.OnSetPictureOpenDialogInitialDir := HandleOnSetPictureOpenDialogInitialDir;
   frClickerActionsArrExperiment2.OnSetPictureOpenDialogInitialDir := HandleOnSetPictureOpenDialogInitialDir;
+  frClickerActionsArrExperiment1.OnSetPictureOpenSetMultiSelect := HandleOnSetPictureOpenSetMultiSelect;
+  frClickerActionsArrExperiment2.OnSetPictureOpenSetMultiSelect := HandleOnSetPictureOpenSetMultiSelect;
   frClickerActionsArrExperiment1.OnPictureOpenDialogExecute := HandleOnPictureOpenDialogExecute;
   frClickerActionsArrExperiment2.OnPictureOpenDialogExecute := HandleOnPictureOpenDialogExecute;
   frClickerActionsArrExperiment1.OnGetPictureOpenDialogFileName := HandleOnGetPictureOpenDialogFileName;
@@ -916,6 +924,15 @@ begin
     raise Exception.Create('OnSetTemplateSaveDialogFileName is not assigned.')
   else
     FOnSetTemplateSaveDialogFileName(AFileName);
+end;
+
+
+procedure TfrmClickerActions.DoOnSetPictureOpenSetMultiSelect;
+begin
+  if not Assigned(FOnSetPictureOpenSetMultiSelect) then
+    raise Exception.Create('OnSetPictureOpenSetMultiSelect not assigned.')
+  else
+    FOnSetPictureOpenSetMultiSelect;
 end;
 
 
@@ -1162,6 +1179,7 @@ begin
         NewFrame.OnGetTemplateSaveDialogFileName := HandleOnGetTemplateSaveDialogFileName;
         NewFrame.OnSetTemplateSaveDialogFileName := HandleOnSetTemplateSaveDialogFileName;
         NewFrame.OnSetPictureOpenDialogInitialDir := HandleOnSetPictureOpenDialogInitialDir;
+        NewFrame.OnSetPictureOpenSetMultiSelect := HandleOnSetPictureOpenSetMultiSelect;
         NewFrame.OnPictureOpenDialogExecute := HandleOnPictureOpenDialogExecute;
         NewFrame.OnGetPictureOpenDialogFileName := HandleOnGetPictureOpenDialogFileName;
 
@@ -2787,6 +2805,12 @@ end;
 procedure TfrmClickerActions.HandleOnSetTemplateSaveDialogFileName(AFileName: string);
 begin
   DoOnSetTemplateSaveDialogFileName(AFileName);
+end;
+
+
+procedure TfrmClickerActions.HandleOnSetPictureOpenSetMultiSelect;
+begin
+  DoOnSetPictureOpenSetMultiSelect;
 end;
 
 

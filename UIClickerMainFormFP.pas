@@ -79,6 +79,7 @@ type
     function HandleOnTemplateSaveDialogExecute: Boolean;
     function HandleOnGetTemplateSaveDialogFileName: string;
     procedure HandleOnSetTemplateSaveDialogFileName(AFileName: string);
+    procedure HandleOnSetPictureOpenSetMultiSelect;
     procedure HandleOnSetPictureOpenDialogInitialDir(AInitialDir: string);
     function HandleOnPictureOpenDialogExecute: Boolean;
     function HandleOnGetPictureOpenDialogFileName: string;
@@ -140,6 +141,7 @@ begin
     frmClickerActions.OnTemplateSaveDialogExecute := HandleOnTemplateSaveDialogExecute;
     frmClickerActions.OnGetTemplateSaveDialogFileName := HandleOnGetTemplateSaveDialogFileName;
     frmClickerActions.OnSetTemplateSaveDialogFileName := HandleOnSetTemplateSaveDialogFileName;
+    frmClickerActions.OnSetPictureOpenSetMultiSelect := HandleOnSetPictureOpenSetMultiSelect;
     frmClickerActions.OnSetPictureOpenDialogInitialDir := HandleOnSetPictureOpenDialogInitialDir;
     frmClickerActions.OnPictureOpenDialogExecute := HandleOnPictureOpenDialogExecute;
     frmClickerActions.OnGetPictureOpenDialogFileName := HandleOnGetPictureOpenDialogFileName;
@@ -390,6 +392,12 @@ begin
 end;
 
 
+procedure TfrmUIClickerMainForm.HandleOnSetPictureOpenSetMultiSelect;
+begin
+  OpenPictureDialog1.Options := OpenPictureDialog1.Options + [ofAllowMultiSelect];
+end;
+
+
 procedure TfrmUIClickerMainForm.HandleOnSetPictureOpenDialogInitialDir(AInitialDir: string);
 begin
   OpenPictureDialog1.InitialDir := AInitialDir;
@@ -399,12 +407,16 @@ end;
 function TfrmUIClickerMainForm.HandleOnPictureOpenDialogExecute: Boolean;
 begin
   Result := OpenPictureDialog1.Execute;
+  OpenPictureDialog1.Options := OpenPictureDialog1.Options - [ofAllowMultiSelect];
 end;
 
 
 function TfrmUIClickerMainForm.HandleOnGetPictureOpenDialogFileName: string;
 begin
-  Result := OpenPictureDialog1.FileName;
+  if OpenPictureDialog1.Files.Count > 1 then
+    Result := OpenPictureDialog1.Files.Text
+  else
+    Result := OpenPictureDialog1.FileName;
 end;
 
 

@@ -34,16 +34,14 @@ uses
   athreads,
   {$ENDIF}
   Interfaces, // this includes the CT adLCL widgetset
-  Windows, SysUtils, Forms, Classes, ShellAPI,
-  ClickerActionsArrFrame, ClickerActionsFrame,
-  ClickerIniFiles, BinSearchValues, BitmapProcessing,
+  Windows, SysUtils, Forms, Classes, ShellAPI, ClickerActionsArrFrame,
+  ClickerActionsFrame, ClickerIniFiles, BinSearchValues, BitmapProcessing,
   ControlInteraction, MouseStuff, ClickerWinInterpForm, ClickerBMPTextFrame,
-  ClickerTemplateCallTreeForm,
-  ClickerConditionEditorFrame, ClickerConditionEditorForm,
-  ClickerFindControlFrame, ClickerActionsForm,
-  ClickerActionsPaletteFrame,
-  UIClickerMainFormFP, ClickerRemoteScreenForm, ClickerPreviewForm, 
-  ClickerActionExecution, ClickerTemplateNotesForm, ClickerZoomPreviewForm;
+  ClickerTemplateCallTreeForm, ClickerConditionEditorFrame,
+  ClickerConditionEditorForm, ClickerFindControlFrame, ClickerActionsForm,
+  ClickerActionsPaletteFrame, UIClickerMainFormFP, ClickerRemoteScreenForm,
+  ClickerPreviewForm, ClickerActionExecution, ClickerTemplateNotesForm,
+  ClickerZoomPreviewForm, ObjectInspectorFrame, ClickerActionValues;
 
 {$R *.res}
 

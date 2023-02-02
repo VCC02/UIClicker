@@ -235,7 +235,7 @@ begin
   else
     AColumn.Text := 'OR';
 
-  AColumn.MinWidth := 35;
+  AColumn.MinWidth := 45;
   AColumn.Width := AColumn.MinWidth;
   AColumn.Alignment := taCenter;
 end;

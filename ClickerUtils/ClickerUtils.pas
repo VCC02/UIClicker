@@ -72,15 +72,24 @@ type
   TOnTemplateOpenDialogExecute = function: Boolean of object;
   TOnGetTemplateOpenDialogFileName = function: string of object;
   TOnSetTemplateOpenDialogFileName = procedure(AFileName: string) of object;
+  TOnSetPictureOpenSetMultiSelect = procedure of object;
   TOnSetPictureOpenDialogInitialDir = procedure(AInitialDir: string) of object;
   TOnPictureOpenDialogExecute = function: Boolean of object;
   TOnGetPictureOpenDialogFileName = function: string of object;
 
 const
-  CClkActionStr: array[Low(TClkAction)..High(TClkAction)] of string = ('Click', 'ExecApp', 'FindControl', 'FindSubControl', 'SetControlText', 'CallTemplate', 'Sleep', 'SetVar', 'WindowOperations');
+  CClkActionStr: array[TClkAction] of string = ('Click', 'ExecApp', 'FindControl', 'FindSubControl', 'SetControlText', 'CallTemplate', 'Sleep', 'SetVar', 'WindowOperations');
+  CClkUnsetAction = 255; //TClkAction(255);
+
+  //These constants are used to index an array, similar to enum values.  Please update TClickTypeStr if adding more constants to this "type".
+  CClickType_Count = 4; //the number of available modes  (like enum items)
 
   CClickType_Click = 0;
   CClickType_Drag = 1;
+  CClickType_ButtonDown = 2;
+  CClickType_ButtonUp = 3;
+
+  CClickTypeStr: array[0..CClickType_Count - 1] of string = ('Click', 'Drag', 'ButtonDown', 'ButtonUp');
 
   CFuncExVarName = '$FunctionException$';
 
@@ -264,6 +273,8 @@ type
     WindowOperationsOptions: TClkWindowOperationsOptions;
   end;
 
+  PClkActionRec = ^TClkActionRec;
+
   TClkActionsRecArr = array of TClkActionRec;
 
 
@@ -291,7 +302,7 @@ type
 
 
 const
-  CActionStatusStr: array[Low(TActionStatus)..High(TActionStatus)] of string = ('Not Started', 'Failed', 'Successful', 'In Progress', 'Allowed Failed');
+  CActionStatusStr: array[TActionStatus] of string = ('Not Started', 'Failed', 'Successful', 'In Progress', 'Allowed Failed');
   CBoolToCheckState: array[Boolean] of TCheckState = (csUncheckedNormal, csCheckedNormal);
 
   CCompNotEqual = '<>';        //all these comparison operators should be two characters long
@@ -304,6 +315,18 @@ const
 
   CLabel_Orange: TColor = $366FFF;
   CLabel_LightGreen: TColor = $4CC123;
+
+  CXClickPointReferenceStr: array[TXClickPointReference] of string = ('xrefLeft', 'xrefRight', 'xrefWidth', 'xrefVar', 'xrefAbsolute');
+  CYClickPointReferenceStr: array[TYClickPointReference] of string = ('yrefTop', 'yrefBottom', 'yrefHeight', 'yrefVar', 'yrefAbsolute');
+  CMouseButtonStr: array[TMouseButton] of string = ('mbLeft', 'mbRight', 'mbMiddle', 'mbExtra1', 'mbExtra2');
+  CExecAppUseInheritHandlesStr: array[TExecAppUseInheritHandles] of string = ('uihNo', 'uihYes', 'uihOnlyWithStdInOut');
+  CMatchBitmapAlgorithmStr: array[TMatchBitmapAlgorithm] of string = ('mbaBruteForce', 'mbaXYMultipleAndOffsets');
+  CClkSetTextControlTypeStr: array[TClkSetTextControlType] of string = ('stEditBox', 'stComboBox', 'stKeystrokes');
+  CWindowOperationStr: array[TWindowOperation] of string = ('woBringToFront', 'woMoveResize', 'woClose');
+  CSearchForControlModeStr: array[TSearchForControlMode] of string = ('sfcmGenGrid', 'sfcmEnumWindows', 'sfcmFindWindow');
+  CFontQualityStr: array[TFontQuality] of string = ('fqDefault', 'fqDraft', 'fqProof', 'fqNonAntialiased', 'fqAntialiased', 'fqCleartype', 'fqCleartypeNatural');
+  CLoopDirectionStr: array[TLoopDirection] of string = ('ldInc', 'ldDec', 'ldAuto');
+  CLoopEvalBreakPositionStr: array[TLoopEvalBreakPosition] of string  = ('lebpAfterContent', 'lebpBeforeContent');
 
 
 function FastReplace_ReturnTo45(s: string): string;
@@ -337,6 +360,8 @@ function GetWindowClassRec(CrPos: TPoint): TCompRec; overload;
 
 function GetCmdLineOptionValue(AOption: string): string;
 function RevPos(const ASubStr, AString: string; AOffset: Integer = 1): Integer;
+
+function ActionAsStringToTClkAction(ActionAsString: string): TClkAction;
 
 
 var
@@ -1663,7 +1688,7 @@ begin
   if TextLength <> 0 then
   begin
     SetLength(Result, TextLength shl 1 + 2);  //Allocating twice the size, might be extreme, but better safe than crash. Still not sure about UTF8 compatibility for 4-byte chars.
-    SendMessage(HW, WM_GETTEXT, TextLength + 1, PtrInt(@Result[1]));
+    SendMessage(HW, WM_GETTEXT, TextLength + 1, {%H-}PtrInt(@Result[1]));
     SetLength(Result, TextLength);
   end;
 end;
@@ -1682,7 +1707,7 @@ begin
     SetLength(Result, TextLength shl 1 + 2);  //Allocating twice the size, might be extreme, but better safe than crash. Still not sure about UTF8 compatibility for 4-byte chars.
 
     SetLength(TempBuffer, Length(Result) shl 1);
-    SendMessageW(HW, WM_GETTEXT, TextLength + 1, PtrInt(@TempBuffer[0]));     // W
+    SendMessageW(HW, WM_GETTEXT, TextLength + 1, {%H-}PtrInt(@TempBuffer[0]));     // W
     WideTempBuffer := @TempBuffer[0];
     Result := string(WideTempBuffer);
 
@@ -1746,6 +1771,21 @@ begin
     if ParamStr(i) = AOption then
     begin
       Result := ParamStr(i + 1);
+      Exit;
+    end;
+end;
+
+
+function ActionAsStringToTClkAction(ActionAsString: string): TClkAction;
+var
+  i: TClkAction;
+begin
+  Result := acClick; //default
+
+  for i := Low(TClkAction) to High(TClkAction) do
+    if ActionAsString = CClkActionStr[i] then
+    begin
+      Result := i;
       Exit;
     end;
 end;

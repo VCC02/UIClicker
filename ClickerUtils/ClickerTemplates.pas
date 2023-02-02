@@ -56,21 +56,6 @@ uses
   Controls, Graphics;
 
 
-function ActionAsStringToTClkAction(ActionAsString: string): TClkAction;
-var
-  i: TClkAction;
-begin
-  Result := acClick; //default
-
-  for i := Low(TClkAction) to High(TClkAction) do
-    if ActionAsString = CClkActionStr[i] then
-    begin
-      Result := i;
-      Exit;
-    end;
-end;
-
-
 procedure AdjustListOfVarEvalBeforeCount(var ASetVarOptions: TClkSetVarOptions);   //required to update old lists to the new structure
 var
   i, n1, n2: Integer;
@@ -895,7 +880,7 @@ begin             //Substructures, which do not contain pointers, can be directl
   ADest.FindControlOptions.CachedControlLeft := ASrc.FindControlOptions.CachedControlLeft;
   ADest.FindControlOptions.CachedControlTop := ASrc.FindControlOptions.CachedControlTop;
 
-  SetLength(ASrc.FindControlOptions.MatchBitmapText, Length(ADest.FindControlOptions.MatchBitmapText));
+  SetLength(ADest.FindControlOptions.MatchBitmapText, Length(ASrc.FindControlOptions.MatchBitmapText));
 
   for i := 0 to Length(ADest.FindControlOptions.MatchBitmapText) - 1 do
     ADest.FindControlOptions.MatchBitmapText[i] := ASrc.FindControlOptions.MatchBitmapText[i];

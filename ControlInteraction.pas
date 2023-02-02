@@ -79,13 +79,13 @@ begin
   {if UseWideStringsOnGetControlText then
     SendMessage(hw, WM_SETTEXT, 0, PtrInt(PWideChar(NewText)))   //does not help on Wine
   else}
-    SendMessage(hw, WM_SETTEXT, 0, PtrInt(@NewText[1]));
+    SendMessage(hw, WM_SETTEXT, 0, {%H-}PtrInt(@NewText[1]));
 end;
 
 
 procedure SelectComboBoxItem(hw: THandle; StartIndex: Integer; TextToSelect: string);
 begin
-  SendMessage(hw, CB_SELECTSTRING, StartIndex, PtrInt(@TextToSelect[1]));
+  SendMessage(hw, CB_SELECTSTRING, StartIndex, {%H-}PtrInt(@TextToSelect[1]));
 end;
 
 

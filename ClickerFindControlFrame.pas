@@ -549,6 +549,8 @@ type
     procedure HandleBMPTextOnSetCroppingValuesToOtherFontProfiles(ACropLeft, ACropTop, ACropRight, ACropBottom: string; ASkipProfileIndex: Integer);
     function HandleBMPTextOnGetCroppingLinesVisiblity: Boolean;
 
+    function GetSearch_EditBoxVar_Ref(AEditBoxValue, AVarName: string): Integer;
+
     function GetSearch_LeftLeft_Ref: Integer;    //Left
     function GetSearch_RightLeft_Ref: Integer;
 
@@ -2194,19 +2196,31 @@ end;
 
 procedure TfrClickerFindControl.MenuItemControl_EdgeRefGenericClick(Sender: TObject);
 begin
-  FLastClickedLbe.Text := StringReplace((Sender as TMenuItem).Caption, '&', '', [rfReplaceAll]);
+  try
+    FLastClickedLbe.Text := StringReplace((Sender as TMenuItem).Caption, '&', '', [rfReplaceAll]);
+  except
+    MessageBox(Handle, 'EditBox is not available.', PChar(Application.MainForm.Caption), MB_ICONERROR);
+  end;
 end;
 
 
 procedure TfrClickerFindControl.MenuItemCopyRefToClipboardClick(Sender: TObject);
 begin
-  Clipboard.AsText := FLastClickedLbe.Text;
+  try
+    Clipboard.AsText := FLastClickedLbe.Text;
+  except
+    MessageBox(Handle, 'EditBox is not available.', PChar(Application.MainForm.Caption), MB_ICONERROR);
+  end;
 end;
 
 
 procedure TfrClickerFindControl.MenuItemPasteRefFromClipboardClick(Sender: TObject);
 begin
-  FLastClickedLbe.Text := Clipboard.AsText;
+  try
+    FLastClickedLbe.Text := Clipboard.AsText;
+  except
+    MessageBox(Handle, 'EditBox is not available.', PChar(Application.MainForm.Caption), MB_ICONERROR);
+  end;
 end;
 
 
@@ -2971,67 +2985,59 @@ begin
 end;
 
 
-function TfrClickerFindControl.GetSearch_BottomBottom_Ref: Integer;
+function TfrClickerFindControl.GetSearch_EditBoxVar_Ref(AEditBoxValue, AVarName: string): Integer;
 begin
   Result := 0;
-  if lbeSearchRectBottom.Text <> '$Control_Bottom$' then
-    Result := StrToIntDef(EvaluateReplacements('$Control_Bottom$'), 0) - StrToIntDef(EvaluateReplacements(lbeSearchRectBottom.Text), 0);
+  if AEditBoxValue <> AVarName then
+    Result := StrToIntDef(EvaluateReplacements(AVarName), 0) - StrToIntDef(EvaluateReplacements(AEditBoxValue), 0);
+end;
+
+
+function TfrClickerFindControl.GetSearch_BottomBottom_Ref: Integer;
+begin
+  Result := GetSearch_EditBoxVar_Ref(lbeSearchRectBottom.Text, '$Control_Bottom$');
 end;
 
 
 function TfrClickerFindControl.GetSearch_TopBottom_Ref: Integer;
 begin
-  Result := 0;
-  if lbeSearchRectTop.Text <> '$Control_Bottom$' then
-    Result := StrToIntDef(EvaluateReplacements('$Control_Bottom$'), 0) - StrToIntDef(EvaluateReplacements(lbeSearchRectTop.Text), 0);
+  Result := GetSearch_EditBoxVar_Ref(lbeSearchRectTop.Text, '$Control_Bottom$');
 end;
 
 
 function TfrClickerFindControl.GetSearch_LeftLeft_Ref: Integer;
 begin
-  Result := 0;
-  if lbeSearchRectLeft.Text <> '$Control_Left$' then
-    Result := StrToIntDef(EvaluateReplacements('$Control_Left$'), 0) - StrToIntDef(EvaluateReplacements(lbeSearchRectLeft.Text), 0);
+  Result := GetSearch_EditBoxVar_Ref(lbeSearchRectLeft.Text, '$Control_Left$');
 end;
 
 
 function TfrClickerFindControl.GetSearch_RightLeft_Ref: Integer;
 begin
-  Result := 0;
-  if lbeSearchRectRight.Text <> '$Control_Left$' then
-    Result := StrToIntDef(EvaluateReplacements('$Control_Left$'), 0) - StrToIntDef(EvaluateReplacements(lbeSearchRectRight.Text), 0);
+  Result := GetSearch_EditBoxVar_Ref(lbeSearchRectRight.Text, '$Control_Left$');
 end;
 
 
 function TfrClickerFindControl.GetSearch_RightRight_Ref: Integer;
 begin
-  Result := 0;
-  if lbeSearchRectRight.Text <> '$Control_Right$' then
-    Result := StrToIntDef(EvaluateReplacements('$Control_Right$'), 0) - StrToIntDef(EvaluateReplacements(lbeSearchRectRight.Text), 0);
+  Result := GetSearch_EditBoxVar_Ref(lbeSearchRectRight.Text, '$Control_Right$');
 end;
 
 
 function TfrClickerFindControl.GetSearch_LeftRight_Ref: Integer;
 begin
-  Result := 0;
-  if lbeSearchRectLeft.Text <> '$Control_Right$' then
-    Result := StrToIntDef(EvaluateReplacements('$Control_Right$'), 0) - StrToIntDef(EvaluateReplacements(lbeSearchRectLeft.Text), 0);
+  Result := GetSearch_EditBoxVar_Ref(lbeSearchRectLeft.Text, '$Control_Right$');
 end;
 
 
 function TfrClickerFindControl.GetSearch_TopTop_Ref: Integer;
 begin
-  Result := 0;
-  if lbeSearchRectTop.Text <> '$Control_Top$' then
-    Result := StrToIntDef(EvaluateReplacements('$Control_Top$'), 0) - StrToIntDef(EvaluateReplacements(lbeSearchRectTop.Text), 0);
+  Result := GetSearch_EditBoxVar_Ref(lbeSearchRectTop.Text, '$Control_Top$');
 end;
 
 
 function TfrClickerFindControl.GetSearch_BottomTop_Ref: Integer;
 begin
-  Result := 0;
-  if lbeSearchRectBottom.Text <> '$Control_Top$' then
-    Result := StrToIntDef(EvaluateReplacements('$Control_Top$'), 0) - StrToIntDef(EvaluateReplacements(lbeSearchRectBottom.Text), 0);
+  Result := GetSearch_EditBoxVar_Ref(lbeSearchRectBottom.Text, '$Control_Top$');
 end;
 
 

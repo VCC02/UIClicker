@@ -705,7 +705,7 @@ begin
   FOnGetSelectedCompFromRemoteWin := nil;
 
   CreateRemainingComponents;
-  colboxHighlightingLabels.AddItem('clOrange', TObject(Pointer(CLabel_Orange)));
+  colboxHighlightingLabels.AddItem('clOrange', TObject({%H-}Pointer(CLabel_Orange)));
   colboxHighlightingLabels.Selected := CLabel_Orange;
 
   imgLiveScreenshot.Left := 0;

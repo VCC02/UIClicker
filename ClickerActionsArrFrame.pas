@@ -273,6 +273,7 @@ type
     FOnTemplateSaveDialogExecute: TOnTemplateOpenDialogExecute;
     FOnGetTemplateSaveDialogFileName: TOnGetTemplateOpenDialogFileName;
     FOnSetTemplateSaveDialogFileName: TOnSetTemplateOpenDialogFileName;
+    FOnSetPictureOpenSetMultiSelect: TOnSetPictureOpenSetMultiSelect;
     FOnSetPictureOpenDialogInitialDir: TOnSetPictureOpenDialogInitialDir;
     FOnPictureOpenDialogExecute: TOnPictureOpenDialogExecute;
     FOnGetPictureOpenDialogFileName: TOnGetPictureOpenDialogFileName;
@@ -304,6 +305,7 @@ type
     procedure HandleOnSetTemplateOpenDialogInitialDir(AInitialDir: string);
     function HandleOnTemplateOpenDialogExecute: Boolean;
     function HandleOnGetTemplateOpenDialogFileName: string;
+    procedure HandleOnSetPictureOpenSetMultiSelect;
     procedure HandleOnSetPictureOpenDialogInitialDir(AInitialDir: string);
     function HandleOnPictureOpenDialogExecute: Boolean;
     function HandleOnGetPictureOpenDialogFileName: string;
@@ -359,6 +361,7 @@ type
     function DoOnTemplateSaveDialogExecute: Boolean;
     function DoOnGetTemplateSaveDialogFileName: string;
     procedure DoOnSetTemplateSaveDialogFileName(AFileName: string);
+    procedure DoOnSetPictureOpenSetMultiSelect;
     procedure DoOnSetPictureOpenDialogInitialDir(AInitialDir: string);
     function DoOnPictureOpenDialogExecute: Boolean;
     function DoOnGetPictureOpenDialogFileName: string;
@@ -470,6 +473,7 @@ type
     property OnTemplateSaveDialogExecute: TOnTemplateOpenDialogExecute write FOnTemplateSaveDialogExecute;
     property OnGetTemplateSaveDialogFileName: TOnGetTemplateOpenDialogFileName write FOnGetTemplateSaveDialogFileName;
     property OnSetTemplateSaveDialogFileName: TOnSetTemplateOpenDialogFileName write FOnSetTemplateSaveDialogFileName;
+    property OnSetPictureOpenSetMultiSelect: TOnSetPictureOpenSetMultiSelect write FOnSetPictureOpenSetMultiSelect;
     property OnSetPictureOpenDialogInitialDir: TOnSetPictureOpenDialogInitialDir write FOnSetPictureOpenDialogInitialDir;
     property OnPictureOpenDialogExecute: TOnPictureOpenDialogExecute write FOnPictureOpenDialogExecute;
     property OnGetPictureOpenDialogFileName: TOnGetPictureOpenDialogFileName write FOnGetPictureOpenDialogFileName;
@@ -517,6 +521,7 @@ begin
   frClickerActions.OnSetTemplateOpenDialogInitialDir := HandleOnSetTemplateOpenDialogInitialDir;
   frClickerActions.OnTemplateOpenDialogExecute := HandleOnTemplateOpenDialogExecute;
   frClickerActions.OnGetTemplateOpenDialogFileName := HandleOnGetTemplateOpenDialogFileName;
+  frClickerActions.OnSetPictureOpenSetMultiSelect := HandleOnSetPictureOpenSetMultiSelect;
   frClickerActions.OnSetPictureOpenDialogInitialDir := HandleOnSetPictureOpenDialogInitialDir;
   frClickerActions.OnPictureOpenDialogExecute := HandleOnPictureOpenDialogExecute;
   frClickerActions.OnGetPictureOpenDialogFileName := HandleOnGetPictureOpenDialogFileName;
@@ -651,6 +656,7 @@ begin
   FOnTemplateSaveDialogExecute := nil;
   FOnGetTemplateSaveDialogFileName := nil;
   FOnSetTemplateSaveDialogFileName := nil;
+  FOnSetPictureOpenSetMultiSelect := nil;
   FOnSetPictureOpenDialogInitialDir := nil;
   FOnPictureOpenDialogExecute := nil;
   FOnGetPictureOpenDialogFileName := nil;
@@ -760,6 +766,12 @@ end;
 function TfrClickerActionsArr.HandleOnGetTemplateOpenDialogFileName: string;
 begin
   Result := DoOnGetTemplateOpenDialogFileName;
+end;
+
+
+procedure TfrClickerActionsArr.HandleOnSetPictureOpenSetMultiSelect;
+begin
+  DoOnSetPictureOpenSetMultiSelect;
 end;
 
 
@@ -924,6 +936,8 @@ begin
   FClkActions[ActionIndex].WindowOperationsOptions.NewHeight := frClickerActions.lbeWindowOperationsHeight.Text;
   FClkActions[ActionIndex].WindowOperationsOptions.NewPositionEabled := frClickerActions.chkWindowOperationsEnablePos.Checked;
   FClkActions[ActionIndex].WindowOperationsOptions.NewSizeEabled := frClickerActions.chkWindowOperationsEnableSize.Checked;
+
+  //  CopyActionContent(frClickerActions.EditingAction^, FClkActions[ActionIndex]);  //uncomment this after removing above code
 end;
 
 
@@ -1110,6 +1124,10 @@ begin
 
   frClickerActions.UpdateControlWidthHeightLabels;
   frClickerActions.frClickerFindControl.UpdateSearchAreaLabelsFromOffsetEditboxes;
+
+  /////the new content, instead of editboxes and checkboxes
+  CopyActionContent(FClkActions[ActionIndex], frClickerActions.EditingAction^);
+  frClickerActions.CurrentlyEditingActionType := TClkAction(FClkActions[ActionIndex].ActionOptions.Action);
 end;
 
 
@@ -1560,6 +1578,15 @@ begin
     raise Exception.Create('OnSetTemplateSaveDialogFileName is not assigned.')
   else
     FOnSetTemplateSaveDialogFileName(AFileName);
+end;
+
+
+procedure TfrClickerActionsArr.DoOnSetPictureOpenSetMultiSelect;
+begin
+  if not Assigned(FOnSetPictureOpenSetMultiSelect) then
+    raise Exception.Create('OnSetPictureOpenSetMultiSelect not assigned.')
+  else
+    FOnSetPictureOpenSetMultiSelect;
 end;
 
 

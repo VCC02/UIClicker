@@ -34,7 +34,7 @@ uses
   Windows, SysUtils, Variants, Classes, Graphics, Controls, Forms, Dialogs,
   VirtualTrees, ExtCtrls, StdCtrls, ComCtrls, ImgList, Buttons, Grids, ValEdit,
   Menus, ClickerUtils, ClickerConditionEditorFrame, ClickerFindControlFrame, Types,
-  InMemFileSystem;
+  InMemFileSystem, ObjectInspectorFrame;
 
 type
   { TfrClickerActions }
@@ -69,6 +69,7 @@ type
     lbeWindowOperationsWidth: TLabeledEdit;
     lbeWindowOperationsHeight: TLabeledEdit;
     lblCallTemplateLoopBreakPosition: TLabel;
+    lblFeatureInWork1: TLabel;
     lblSetTextInfo: TLabel;
     lblWindowOperation: TLabel;
     lblAvailableFunctions: TLabel;
@@ -84,6 +85,7 @@ type
     lbeTemplateFileName: TLabeledEdit;
     lblSetVarToHttpInfo1: TLabel;
     memAvailableFunctions: TMemo;
+    MenuItem_AddFilesToPropertyList: TMenuItem;
     MenuItem_AddLastActionStatusEqualsSuccessful: TMenuItem;
     MenuItem_AddLastActionStatusEqualsAllowedFailed: TMenuItem;
     N6: TMenuItem;
@@ -127,7 +129,9 @@ type
     pmStandardColorVariables: TPopupMenu;
     pmSetVars: TPopupMenu;
     pnlActionConditions: TPanel;
+    pnlvstOI: TPanel;
     spdbtnBrowseLocalTemplates: TSpeedButton;
+    TabSheetOI: TTabSheet;
     TabSheetActionWindowOperations: TTabSheet;
     TabSheetActionFindControl: TTabSheet;
     TabSheetActionSetVar: TTabSheet;
@@ -156,6 +160,7 @@ type
     N100001: TMenuItem;
     N01: TMenuItem;
     N300001: TMenuItem;
+    tmrReloadOIContent: TTimer;
     tmrEditCustomVars: TTimer;
     tmrEditSetVars: TTimer;
     vallstCustomVariables: TValueListEditor;
@@ -271,6 +276,7 @@ type
     procedure spdbtnDisplaySearchAreaDbgImgMenuClick(Sender: TObject);
     procedure tmrEditCustomVarsTimer(Sender: TObject);
     procedure tmrEditSetVarsTimer(Sender: TObject);
+    procedure tmrReloadOIContentTimer(Sender: TObject);
     procedure vallstCustomVariablesExit(Sender: TObject);
 
     procedure spdbtnCommonTimeoutsClick(Sender: TObject);
@@ -375,12 +381,22 @@ type
       Shift: TShiftState; X, Y: Integer);
     procedure vstSetVarNewText(Sender: TBaseVirtualTree; Node: PVirtualNode;
       Column: TColumnIndex; const NewText: String);
+
+    ///////////////////////////// OI
+    procedure MenuItem_AddFilesToPropertyListClick(Sender: TObject);
+    procedure MenuItem_RemoveAllFilesFromPropertyListClick(Sender: TObject);
+    procedure MenuItem_RemoveFileFromPropertyListClick(Sender: TObject);
+    procedure MenuItem_MoveFileUpInPropertyListClick(Sender: TObject);
+    procedure MenuItem_MoveFileDownInPropertyListClick(Sender: TObject);
   private
     { Private declarations }
     FBMPsDir: string;
     FSetVarMouseUpHitInfo: THitInfo;
     FSetVarEditingText: string;
     FSetVarUpdatedVstText: Boolean;
+
+    FEditingActionRec: TClkActionRec;
+    FEditingAction: PClkActionRec;
 
     FCustomVarsMouseUpHitInfo: THitInfo;
     FCustomVarsEditingText: string;
@@ -402,6 +418,7 @@ type
     FSearchAreaDbgImgSearchedBmpMenu: TPopupMenu;
 
     FPmLocalTemplates: TPopupMenu;
+    FOIFrame: TfrObjectInspector;
 
     FOnCopyControlTextAndClassFromMainWindow: TOnCopyControlTextAndClassFromMainWindow;
     FOnGetExtraSearchAreaDebuggingImage: TOnGetExtraSearchAreaDebuggingImage;
@@ -410,9 +427,11 @@ type
     FOnLoadBitmap: TOnLoadBitmap;
     FOnFileExists: TOnFileExists;
 
+    FOnTemplateOpenSetMultiSelect: TOnTemplateOpenSetMultiSelect;
     FOnSetTemplateOpenDialogInitialDir: TOnSetTemplateOpenDialogInitialDir;
     FOnTemplateOpenDialogExecute: TOnTemplateOpenDialogExecute;
     FOnGetTemplateOpenDialogFileName: TOnGetTemplateOpenDialogFileName;
+    FOnSetPictureOpenSetMultiSelect: TOnSetPictureOpenSetMultiSelect;
     FOnSetPictureOpenDialogInitialDir: TOnSetPictureOpenDialogInitialDir;
     FOnPictureOpenDialogExecute: TOnPictureOpenDialogExecute;
     FOnGetPictureOpenDialogFileName: TOnGetPictureOpenDialogFileName;
@@ -435,9 +454,11 @@ type
     function DoOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     function DoOnFileExists(const AFileName: string): Boolean;
 
+    procedure DoOnTemplateOpenSetMultiSelect;
     procedure DoOnSetTemplateOpenDialogInitialDir(AInitialDir: string);
     function DoOnTemplateOpenDialogExecute: Boolean;
     function DoOnGetTemplateOpenDialogFileName: string;
+    procedure DoOnSetPictureOpenSetMultiSelect;
     procedure DoOnSetPictureOpenDialogInitialDir(AInitialDir: string);
     function DoOnPictureOpenDialogExecute: Boolean;
     function DoOnGetPictureOpenDialogFileName: string;
@@ -445,6 +466,9 @@ type
     procedure SetInMemFS(Value: TInMemFileSystem);
 
     procedure SetLabelsFromMouseOverExecDbgImgPixelColor(APixelColor: TColor);
+
+    function GetCurrentlyEditingActionType: TClkAction;
+    procedure SetCurrentlyEditingActionType(Value: TClkAction);
 
     procedure LocalTemplatesClick(Sender: TObject);
     procedure ClickerConditionEditorControlsModified;
@@ -461,6 +485,58 @@ type
     procedure HandleOnSetPictureOpenDialogInitialDir(AInitialDir: string);
     function HandleOnPictureOpenDialogExecute: Boolean;
     function HandleOnGetPictureOpenDialogFileName: string;
+
+    ///////////////////////////// OI
+    function EditFontProperties(AItemIndexDiv: Integer; var ANewItems: string): Boolean;
+    procedure AddMenuItemToPopupMenu(APopupMenu: TPopupMenu; ACaption: TCaption; AHandler: TNotifyEvent;
+      ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer);
+
+    function HandleOnOIGetCategoryCount: Integer;
+    function HandleOnOIGetCategory(AIndex: Integer): string;
+    function HandleOnOIGetPropertyCount(ACategoryIndex: Integer): Integer;
+    function HandleOnOIGetPropertyName(ACategoryIndex, APropertyIndex: Integer): string;
+    function HandleOnOIGetPropertyValue(ACategoryIndex, APropertyIndex: Integer; var AEditorType: TOIEditorType): string;
+    function HandleOnOIGetListPropertyItemCount(ACategoryIndex, APropertyIndex: Integer): Integer;
+    function HandleOnOIGetListPropertyItemName(ACategoryIndex, APropertyIndex, AItemIndex: Integer): string;
+    function HandleOnOIGetListPropertyItemValue(ACategoryIndex, APropertyIndex, AItemIndex: Integer; var AEditorType: TOIEditorType): string;
+    function HandleOnUIGetDataTypeName(ACategoryIndex, APropertyIndex, AItemIndex: Integer): string;
+    function HandleOnUIGetExtraInfo(ACategoryIndex, APropertyIndex, AItemIndex: Integer): string;
+
+    procedure HandleOnOIGetImageIndexEx(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; Kind: TVTImageKind;
+      Column: TColumnIndex; var Ghosted: Boolean; var ImageIndex: Integer; var ImageList: TCustomImageList);
+    procedure HandleOnOIEditedText(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; ANewText: string);
+    function HandleOnOIEditItems(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; var ANewItems: string): Boolean;
+
+    function HandleOnOIGetColorConstsCount(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer): Integer;
+    procedure HandleOnOIGetColorConst(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AColorItemIndex: Integer; var AColorName: string; var AColorValue: Int64);
+
+    function HandleOnOIGetEnumConstsCount(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer): Integer;
+    procedure HandleOnOIGetEnumConst(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEnumItemIndex: Integer; var AEnumItemName: string);
+
+    procedure HandleOnOIPaintText(ANodeData: TNodeDataPropertyRec; ACategoryIndex, APropertyIndex, APropertyItemIndex: Integer;
+      const TargetCanvas: TCanvas; Column: TColumnIndex; var TextType: TVSTTextType);
+
+    procedure HandleOnTextEditorMouseDown(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer;
+      Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+
+    procedure HandleOnTextEditorMouseMove(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer;
+      Sender: TObject; Shift: TShiftState; X, Y: Integer);
+
+    procedure HandleOnOITextEditorKeyUp(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer;
+      Sender: TObject; var Key: Word; Shift: TShiftState);
+
+    procedure HandleOnOITextEditorKeyDown(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer;
+      Sender: TObject; var Key: Word; Shift: TShiftState);
+
+    procedure HandleOnOIEditorAssignMenuAndTooltip(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer;
+      var APopupMenu: TPopupMenu; var AHint: string; var AShowHint: Boolean);
+
+    procedure HandleOnOIGetFileDialogSettings(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; var AFilter, AInitDir: string);
+    procedure HandleOnOIArrowEditorClick(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer);
+    procedure HandleOnOIUserEditorClick(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; var ARepaintValue: Boolean);
+
+    function HandleOnOIBrowseFile(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer;
+      AFilter, ADialogInitDir: string; var Handled: Boolean; AReturnMultipleFiles: Boolean = False): string;
   public
     { Public declarations }
     frClickerConditionEditor: TfrClickerConditionEditor;  //public, because it is accessed from outside :(
@@ -506,6 +582,9 @@ type
     property ListOfCustomVariables: string read GetListOfCustomVariables write SetListOfCustomVariables;
     property InMemFS: TInMemFileSystem write SetInMemFS;
 
+    property CurrentlyEditingActionType: TClkAction read GetCurrentlyEditingActionType write SetCurrentlyEditingActionType;
+    property EditingAction: PClkActionRec read FEditingAction; //the pointer is not writable from outside, only the content
+
     property OnCopyControlTextAndClassFromMainWindow: TOnCopyControlTextAndClassFromMainWindow read FOnCopyControlTextAndClassFromMainWindow write FOnCopyControlTextAndClassFromMainWindow;
     property OnGetExtraSearchAreaDebuggingImage: TOnGetExtraSearchAreaDebuggingImage write FOnGetExtraSearchAreaDebuggingImage;
     property OnEditCallTemplateBreakCondition: TOnEditActionCondition write FOnEditCallTemplateBreakCondition;
@@ -513,9 +592,11 @@ type
     property OnLoadBitmap: TOnLoadBitmap write FOnLoadBitmap;
     property OnFileExists: TOnFileExists write FOnFileExists;
 
+    property OnTemplateOpenSetMultiSelect: TOnTemplateOpenSetMultiSelect write FOnTemplateOpenSetMultiSelect;
     property OnSetTemplateOpenDialogInitialDir: TOnSetTemplateOpenDialogInitialDir write FOnSetTemplateOpenDialogInitialDir;
     property OnTemplateOpenDialogExecute: TOnTemplateOpenDialogExecute write FOnTemplateOpenDialogExecute;
     property OnGetTemplateOpenDialogFileName: TOnGetTemplateOpenDialogFileName write FOnGetTemplateOpenDialogFileName;
+    property OnSetPictureOpenSetMultiSelect: TOnSetPictureOpenSetMultiSelect write FOnSetPictureOpenSetMultiSelect;
     property OnSetPictureOpenDialogInitialDir: TOnSetPictureOpenDialogInitialDir write FOnSetPictureOpenDialogInitialDir;
     property OnPictureOpenDialogExecute: TOnPictureOpenDialogExecute write FOnPictureOpenDialogExecute;
     property OnGetPictureOpenDialogFileName: TOnGetPictureOpenDialogFileName write FOnGetPictureOpenDialogFileName;
@@ -542,7 +623,7 @@ implementation
 
 
 uses
-  Clipbrd, MouseStuff;
+  Clipbrd, MouseStuff, ClickerActionValues;
 
 
 function ActionStatusStrToActionStatus(AString: string): TActionStatus;
@@ -695,6 +776,55 @@ begin
   lbeClickVarY.Enabled := False;
   FlbeClickVarXDest.Enabled := False;
   FlbeClickVarYDest.Enabled := False;
+
+  ////////////////////////////// OI
+  FOIFrame := TfrObjectInspector.Create(Self);
+  FOIFrame.Parent := pnlvstOI;
+  FOIFrame.Left := 0;
+  FOIFrame.Top := 0;
+  FOIFrame.Width := pnlvstOI.Width;
+  FOIFrame.Height := pnlvstOI.Height;
+  FOIFrame.Anchors := [akBottom, akLeft, akRight, akTop];
+
+  pnlvstOI.Anchors := [akBottom, akLeft, akRight, akTop];
+
+  FOIFrame.OnOIGetCategoryCount := HandleOnOIGetCategoryCount;
+  FOIFrame.OnOIGetCategory := HandleOnOIGetCategory;
+  FOIFrame.OnOIGetPropertyCount := HandleOnOIGetPropertyCount;
+  FOIFrame.OnOIGetPropertyName := HandleOnOIGetPropertyName;
+  FOIFrame.OnOIGetPropertyValue := HandleOnOIGetPropertyValue;
+  FOIFrame.OnOIGetListPropertyItemCount := HandleOnOIGetListPropertyItemCount;
+  FOIFrame.OnOIGetListPropertyItemName := HandleOnOIGetListPropertyItemName;
+  FOIFrame.OnOIGetListPropertyItemValue := HandleOnOIGetListPropertyItemValue;
+  FOIFrame.OnUIGetDataTypeName := HandleOnUIGetDataTypeName;
+  FOIFrame.OnUIGetExtraInfo := HandleOnUIGetExtraInfo;
+  FOIFrame.OnOIGetImageIndexEx := HandleOnOIGetImageIndexEx;
+  FOIFrame.OnOIEditedText := HandleOnOIEditedText;
+  FOIFrame.OnOIEditItems := HandleOnOIEditItems;
+  FOIFrame.OnOIGetColorConstsCount := HandleOnOIGetColorConstsCount;
+  FOIFrame.OnOIGetColorConst := HandleOnOIGetColorConst;
+  FOIFrame.OnOIGetEnumConstsCount := HandleOnOIGetEnumConstsCount;
+  FOIFrame.OnOIGetEnumConst := HandleOnOIGetEnumConst;
+  FOIFrame.OnOIPaintText := HandleOnOIPaintText;
+  FOIFrame.OnOITextEditorMouseDown := HandleOnTextEditorMouseDown;
+  FOIFrame.OnOITextEditorMouseMove := HandleOnTextEditorMouseMove;
+  FOIFrame.OnOITextEditorKeyUp := HandleOnOITextEditorKeyUp;
+  FOIFrame.OnOITextEditorKeyDown := HandleOnOITextEditorKeyDown;
+  FOIFrame.OnOIEditorAssignMenuAndTooltip := HandleOnOIEditorAssignMenuAndTooltip;
+  FOIFrame.OnOIGetFileDialogSettings := HandleOnOIGetFileDialogSettings;
+  FOIFrame.OnOIArrowEditorClick := HandleOnOIArrowEditorClick;
+  FOIFrame.OnOIUserEditorClick := HandleOnOIUserEditorClick;
+  FOIFrame.OnOIBrowseFile := HandleOnOIBrowseFile;
+
+  FOIFrame.Visible := True;
+
+  FOIFrame.ListItemsVisible := True;
+  FOIFrame.DataTypeVisible := True; //False;
+  FOIFrame.ExtraInfoVisible := False;
+  FOIFrame.PropertyItemHeight := 22; //50;  //this should be 50 for bitmaps
+
+  //FOIFrame.ReloadContent;  //set by ActionType combobox
+  pnlvstOI.Visible := True;
 end;
 
 
@@ -720,17 +850,21 @@ begin
   FOnLoadBitmap := nil;
   FOnFileExists := nil;
 
+  FOnTemplateOpenSetMultiSelect := nil;
   FOnSetTemplateOpenDialogInitialDir := nil;
   FOnTemplateOpenDialogExecute := nil;
   FOnGetTemplateOpenDialogFileName := nil;
+  FOnSetPictureOpenSetMultiSelect := nil;
   FOnSetPictureOpenDialogInitialDir := nil;
   FOnPictureOpenDialogExecute := nil;
   FOnGetPictureOpenDialogFileName := nil;
 
   FShowDeprecatedControls := False;
+  FEditingAction := @FEditingActionRec;
 
   PageControlActions.ActivePageIndex := 0;
   PageControlActionExecution.ActivePageIndex := 0;
+
 end;
 
 
@@ -930,6 +1064,8 @@ procedure TfrClickerActions.cmbActionsChange(Sender: TObject);
 begin
   TriggerOnControlsModified;
   UpdatePageControlActionsHighlighting;
+
+  CurrentlyEditingActionType := TClkAction(cmbActions.ItemIndex);
 end;
 
 
@@ -1924,6 +2060,8 @@ end;
 procedure TfrClickerActions.LocalTemplatesClick(Sender: TObject);
 begin
   lbeTemplateFileName.Text := StringReplace((Sender as TMenuItem).Caption, '&', '', [rfReplaceAll]);
+  FEditingAction^.CallTemplateOptions.TemplateFileName := lbeTemplateFileName.Text;
+  FOIFrame.Repaint;
 end;
 
 
@@ -2162,15 +2300,19 @@ begin
   //clear dynamically created mouse controls
 
   UpdatePageControlActionExecutionIcons;
+
+  FEditingAction^.ActionOptions.Action := {%H-}TClkAction(CClkUnsetAction); //not set
+  FOIFrame.ReloadContent;
 end;
 
 
 
 procedure TfrClickerActions.UpdatePageControlActionExecutionIcons;
 begin
-  PageControlActionExecution.Pages[0].ImageIndex := 0 + 3 * Ord(cmbActions.ItemIndex > -1);
-  PageControlActionExecution.Pages[1].ImageIndex := 1 + 3 * Ord(frClickerConditionEditor.ConditionsAvailable);
-  PageControlActionExecution.Pages[2].ImageIndex := 2 + 3 * Ord(FDebuggingInfoAvailable); 
+  PageControlActionExecution.Pages[0].ImageIndex := 0 + 4 * Ord(cmbActions.ItemIndex > -1);
+  PageControlActionExecution.Pages[1].ImageIndex := 1 + 4 * Ord(frClickerConditionEditor.ConditionsAvailable);
+  PageControlActionExecution.Pages[2].ImageIndex := 2 + 4 * Ord(FDebuggingInfoAvailable);
+  PageControlActionExecution.Pages[3].ImageIndex := 3 + 4 * Ord(Integer(FEditingAction^.ActionOptions.Action) <> CClkUnsetAction);
 end;
 
 
@@ -2282,6 +2424,15 @@ begin
 end;
 
 
+procedure TfrClickerActions.DoOnTemplateOpenSetMultiSelect;
+begin
+  if not Assigned(FOnTemplateOpenSetMultiSelect) then
+    raise Exception.Create('OnTemplateOpenSetMultiSelect is not assigned.')
+  else
+    FOnTemplateOpenSetMultiSelect;
+end;
+
+
 procedure TfrClickerActions.DoOnSetTemplateOpenDialogInitialDir(AInitialDir: string);
 begin
   if not Assigned(FOnSetTemplateOpenDialogInitialDir) then
@@ -2309,6 +2460,15 @@ begin
 end;
 
 
+procedure TfrClickerActions.DoOnSetPictureOpenSetMultiSelect;
+begin
+  if not Assigned(FOnSetPictureOpenSetMultiSelect) then
+    raise Exception.Create('OnSetPictureOpenSetMultiSelect is not assigned.')
+  else
+    FOnSetPictureOpenSetMultiSelect;
+end;
+
+
 procedure TfrClickerActions.DoOnSetPictureOpenDialogInitialDir(AInitialDir: string);
 begin
   if not Assigned(FOnSetPictureOpenDialogInitialDir) then
@@ -2333,6 +2493,1134 @@ begin
     raise Exception.Create('OnGetPictureOpenDialogFileName not assigned.')
   else
     Result := FOnGetPictureOpenDialogFileName;
+end;
+
+
+//////////////////////////// OI
+type
+  TOIMenuItemData = record
+    OwnerMenu: TPopupMenu;
+    NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex: Integer;
+  end;
+  POIMenuItemData = ^TOIMenuItemData;
+
+
+function TfrClickerActions.GetCurrentlyEditingActionType: TClkAction;
+begin
+  Result := TClkAction(cmbActions.ItemIndex);
+end;
+
+
+procedure TfrClickerActions.SetCurrentlyEditingActionType(Value: TClkAction);
+begin
+  cmbActions.ItemIndex := Ord(Value);
+  FOIFrame.ReloadContent;
+  pnlvstOI.Visible := True;
+end;
+
+
+procedure TfrClickerActions.tmrReloadOIContentTimer(Sender: TObject);
+begin
+  tmrReloadOIContent.Enabled := False;
+  FOIFrame.ReloadContent;
+end;
+
+
+procedure TfrClickerActions.MenuItem_AddFilesToPropertyListClick(Sender: TObject);
+var
+  MenuData: POIMenuItemData;
+  ListOfFiles: TStringList;
+begin
+  DoOnSetPictureOpenSetMultiSelect;
+  if not DoOnPictureOpenDialogExecute then
+    Exit;
+
+  MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
+  try
+    try
+      ListOfFiles := TStringList.Create;
+      try
+        ListOfFiles.Text := FEditingAction^.FindControlOptions.MatchBitmapFiles;
+        ListOfFiles.Text := ListOfFiles.Text + DoOnGetPictureOpenDialogFileName;
+        FEditingAction^.FindControlOptions.MatchBitmapFiles := ListOfFiles.Text;
+
+        FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex);
+        TriggerOnControlsModified;
+      finally
+        ListOfFiles.Free;
+      end;
+    finally
+      MenuData^.OwnerMenu.Free;
+    end;
+  finally
+    Dispose(MenuData);
+  end;
+end;
+
+
+procedure TfrClickerActions.MenuItem_RemoveAllFilesFromPropertyListClick(Sender: TObject);
+var
+  MenuData: POIMenuItemData;
+begin
+  if MessageBox(Handle, 'Are you sure you want to remove all files from this list?', PChar(Application.MainForm.Caption), MB_ICONQUESTION + MB_YESNO) = IDNO then
+    Exit;
+
+  MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
+  try
+    try
+      FEditingAction^.FindControlOptions.MatchBitmapFiles := '';
+      FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex);
+      TriggerOnControlsModified;
+    finally
+      MenuData^.OwnerMenu.Free;
+    end;
+  finally
+    Dispose(MenuData);
+  end;
+end;
+
+
+procedure TfrClickerActions.MenuItem_RemoveFileFromPropertyListClick(Sender: TObject);
+var
+  MenuData: POIMenuItemData;
+  ListOfFiles: TStringList;
+begin
+  if MessageBox(Handle, 'Are you sure you want to remove this file from list?', PChar(Application.MainForm.Caption), MB_ICONQUESTION + MB_YESNO) = IDNO then
+    Exit;
+
+  MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
+  try
+    try
+      ListOfFiles := TStringList.Create;
+      try
+        ListOfFiles.Text := FEditingAction^.FindControlOptions.MatchBitmapFiles;
+        ListOfFiles.Delete(MenuData^.PropertyItemIndex);
+        FEditingAction^.FindControlOptions.MatchBitmapFiles := ListOfFiles.Text;
+
+        FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex);
+        TriggerOnControlsModified;
+      finally
+        ListOfFiles.Free;
+      end;
+    finally
+      MenuData^.OwnerMenu.Free;
+    end;
+  finally
+    Dispose(MenuData);
+  end;
+end;
+
+
+procedure TfrClickerActions.MenuItem_MoveFileUpInPropertyListClick(Sender: TObject);
+var
+  MenuData: POIMenuItemData;
+  ListOfFiles: TStringList;
+begin
+  MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
+  try
+    try
+      ListOfFiles := TStringList.Create;
+      try
+        if MenuData^.PropertyItemIndex <= 0 then
+          Exit;
+
+        ListOfFiles.Text := FEditingAction^.FindControlOptions.MatchBitmapFiles;
+        ListOfFiles.Move(MenuData^.PropertyItemIndex, MenuData^.PropertyItemIndex - 1);
+        FEditingAction^.FindControlOptions.MatchBitmapFiles := ListOfFiles.Text;
+
+        FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex);
+        TriggerOnControlsModified;
+      finally
+        ListOfFiles.Free;
+      end;
+    finally
+      MenuData^.OwnerMenu.Free;
+    end;
+  finally
+    Dispose(MenuData);
+  end;
+end;
+
+
+procedure TfrClickerActions.MenuItem_MoveFileDownInPropertyListClick(Sender: TObject);
+var
+  MenuData: POIMenuItemData;
+  ListOfFiles: TStringList;
+begin
+  MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
+  try
+    try
+      ListOfFiles := TStringList.Create;
+      try
+        ListOfFiles.Text := FEditingAction^.FindControlOptions.MatchBitmapFiles;
+        if MenuData^.PropertyItemIndex >= ListOfFiles.Count - 1 then
+          Exit;
+
+        ListOfFiles.Move(MenuData^.PropertyItemIndex, MenuData^.PropertyItemIndex + 1);
+        FEditingAction^.FindControlOptions.MatchBitmapFiles := ListOfFiles.Text;
+
+        FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex);
+        TriggerOnControlsModified;
+      finally
+        ListOfFiles.Free;
+      end;
+    finally
+      MenuData^.OwnerMenu.Free;
+    end;
+  finally
+    Dispose(MenuData);
+  end;
+end;
+
+
+function TfrClickerActions.HandleOnOIGetCategoryCount: Integer;
+begin
+  Result := CCategoryCount;
+end;
+
+
+function TfrClickerActions.HandleOnOIGetCategory(AIndex: Integer): string;
+begin
+  Result := CCategories[AIndex];
+end;
+
+
+function TfrClickerActions.HandleOnOIGetPropertyCount(ACategoryIndex: Integer): Integer;
+var
+  EditingActionType: Integer;
+begin
+  case ACategoryIndex of
+    CCategory_Common:
+      Result := CPropCount_Common;
+
+    CCategory_ActionSpecific:
+    begin
+      EditingActionType := Integer(CurrentlyEditingActionType);
+      if EditingActionType = CClkUnsetAction then
+        Result := 0 //no action is selected
+      else
+        Result := CMainPropCounts[EditingActionType];
+    end;
+
+    else
+      Result := 0;
+  end;
+
+  if Result > 500 then   //This will hide some bugs (for now). At least it will prevent crashes and memory overuse.
+    Result := 500;
+
+  if Result < 0 then
+    Result := 0;
+end;
+
+
+function TfrClickerActions.HandleOnOIGetPropertyName(ACategoryIndex, APropertyIndex: Integer): string;
+var
+  EditingActionType: Integer;
+begin
+  case ACategoryIndex of
+    CCategory_Common:
+      Result := CCommonProperties[APropertyIndex].Name;
+
+    CCategory_ActionSpecific:
+    begin
+      EditingActionType := Integer(CurrentlyEditingActionType);
+      if EditingActionType = CClkUnsetAction then
+        Result := '?'
+      else
+        Result := CMainProperties[EditingActionType]^[APropertyIndex].Name;
+
+      if CurrentlyEditingActionType in [acFindControl, acFindSubControl] then
+        if APropertyIndex = CFindControl_MatchBitmapText_PropIndex then
+          Result := Result + ' [0..' + IntToStr(Length(FEditingAction^.FindControlOptions.MatchBitmapText) - 1) + ']';
+    end;
+
+    else
+      Result := '???';
+  end;
+end;
+
+
+function TfrClickerActions.HandleOnOIGetPropertyValue(ACategoryIndex, APropertyIndex: Integer; var AEditorType: TOIEditorType): string;
+var
+  EditingActionType: Integer;
+  PropDef: TOIPropDef;
+begin
+  PropDef.EditorType := etNone;
+  Result := '';
+
+  case ACategoryIndex of
+    CCategory_Common:
+    begin
+      PropDef := CCommonProperties[APropertyIndex];
+      Result := GetActionValueStr_Action(FEditingAction, APropertyIndex);
+    end;
+
+    CCategory_ActionSpecific:
+    begin
+      EditingActionType := Integer(CurrentlyEditingActionType);
+      if EditingActionType = CClkUnsetAction then
+        PropDef.Name := '?'
+      else
+      begin
+        PropDef := CMainProperties[EditingActionType]^[APropertyIndex];
+        Result := CMainGetActionValueStrFunctions[CurrentlyEditingActionType](FEditingAction, APropertyIndex);
+      end;
+    end;
+
+    else
+      PropDef.Name := '???';
+  end;
+
+  AEditorType := PropDef.EditorType;
+end;
+
+
+function TfrClickerActions.HandleOnOIGetListPropertyItemCount(ACategoryIndex, APropertyIndex: Integer): Integer;
+var
+  EditingActionType: Integer;
+  TempStringList: TStringList;
+begin
+  Result := 0;
+  if ACategoryIndex = CCategory_Common then
+    Exit; //no subproperties here
+
+  EditingActionType := Integer(CurrentlyEditingActionType);
+  if EditingActionType = CClkUnsetAction then
+    Exit;
+
+  case EditingActionType of
+    Ord(acFindControl), Ord(acFindSubControl):
+    begin
+      case APropertyIndex of
+        CFindControl_MatchCriteria_PropIndex:
+          Result := CPropCount_FindControlMatchCriteria;
+
+        CFindControl_MatchBitmapText_PropIndex:
+          Result := CPropCount_FindControlMatchBitmapText * frClickerFindControl.GetBMPTextFontProfilesCount;
+
+        CFindControl_MatchBitmapFiles_PropIndex:
+        begin
+          TempStringList := TStringList.Create;
+          try
+            TempStringList.Text := FEditingAction^.FindControlOptions.MatchBitmapFiles;
+            Result := TempStringList.Count;
+          finally
+            TempStringList.Free;
+          end;
+        end;
+
+        CFindControl_MatchBitmapAlgorithmSettings_PropIndex:
+          Result := CPropCount_FindControlMatchBitmapAlgorithmSettings;
+
+        CFindControl_InitialRectange:
+          Result := CPropCount_FindControlInitialRectange;
+
+        else
+          Result := 0;
+      end;
+    end;
+
+    Ord(acCallTemplate):
+    begin
+      case APropertyIndex of
+        CCallTemplate_CallTemplateLoop_PropIndex:
+          Result := CPropCount_CallTemplateLoop;
+
+        else
+          Result := 0;
+      end;
+    end;
+
+  end;   //case EditingActionType
+end;
+
+
+function TfrClickerActions.HandleOnOIGetListPropertyItemName(ACategoryIndex, APropertyIndex, AItemIndex: Integer): string;
+var
+  EditingActionType: Integer;
+  ItemIndexMod, ItemIndexDiv: Integer;
+begin
+  Result := '';
+  if ACategoryIndex = CCategory_Common then
+    Exit;
+
+  EditingActionType := Integer(CurrentlyEditingActionType);
+  if EditingActionType = CClkUnsetAction then
+    Exit;
+
+  case EditingActionType of
+    Ord(acFindControl), Ord(acFindSubControl):
+    begin
+      case APropertyIndex of
+        CFindControl_MatchCriteria_PropIndex:
+          Result := CFindControl_MatchCriteriaProperties[AItemIndex].Name;
+
+        CFindControl_MatchBitmapText_PropIndex:
+        begin
+          ItemIndexMod := AItemIndex mod CPropCount_FindControlMatchBitmapText;
+          ItemIndexDiv := AItemIndex div CPropCount_FindControlMatchBitmapText;
+          Result := '[' + IntToStr(ItemIndexDiv) + ']  ' + CFindControl_MatchBitmapTextProperties[ItemIndexMod].Name;
+        end;
+
+        CFindControl_MatchBitmapFiles_PropIndex:
+          Result := 'File[' + IntToStr(AItemIndex) + ']';
+
+        CFindControl_MatchBitmapAlgorithmSettings_PropIndex:
+          Result := CFindControl_MatchBitmapAlgorithmSettingsProperties[AItemIndex].Name;
+
+        CFindControl_InitialRectange:
+          Result := CFindControl_InitialRectangeProperties[AItemIndex].Name;
+
+        else
+          Result := '';
+      end;
+    end;
+
+    Ord(acCallTemplate):
+    begin
+      case APropertyIndex of
+        CCallTemplate_CallTemplateLoop_PropIndex:
+          Result := CCallTemplate_CallTemplateLoopProperties[AItemIndex].Name;
+
+        else
+          Result := '';
+      end;
+    end;
+
+  end;   //case EditingActionType
+end;
+
+
+function TfrClickerActions.HandleOnOIGetListPropertyItemValue(ACategoryIndex, APropertyIndex, AItemIndex: Integer; var AEditorType: TOIEditorType): string;
+var
+  EditingActionType: Integer;
+  PropDef: TOIPropDef;
+  TempStringList: TStringList;
+begin
+  Result := '';
+  AEditorType := etNone;
+
+  if ACategoryIndex = CCategory_Common then
+    Exit;
+
+  EditingActionType := Integer(CurrentlyEditingActionType);
+  if EditingActionType = CClkUnsetAction then
+    Exit;
+
+  case EditingActionType of
+    Ord(acFindControl), Ord(acFindSubControl):
+    begin
+      case APropertyIndex of
+        CFindControl_MatchCriteria_PropIndex:
+          PropDef := CFindControl_MatchCriteriaProperties[AItemIndex];
+
+        CFindControl_MatchBitmapText_PropIndex:
+          PropDef := CFindControl_MatchBitmapTextProperties[AItemIndex mod CPropCount_FindControlMatchBitmapText];
+
+        CFindControl_MatchBitmapFiles_PropIndex:
+        begin
+          TempStringList := TStringList.Create;
+          try
+            TempStringList.Text := FEditingAction^.FindControlOptions.MatchBitmapFiles;
+            try
+              Result := TempStringList.Strings[AItemIndex];
+            except
+              on E: Exception do
+                Result := E.Message + '  ' + IntToStr(AItemIndex) + '   ' + IntToStr(TempStringList.Count - 1);
+            end;
+          finally
+            TempStringList.Free;
+          end;
+
+          AEditorType := etFilePathWithArrow;
+          Exit;
+        end;
+
+        CFindControl_MatchBitmapAlgorithmSettings_PropIndex:
+          PropDef := CFindControl_MatchBitmapAlgorithmSettingsProperties[AItemIndex];
+
+        CFindControl_InitialRectange:
+          PropDef := CFindControl_InitialRectangeProperties[AItemIndex];
+
+        else
+          ;
+      end;
+
+      Result := CFindControlGetActionValueStrFunctions[APropertyIndex](FEditingAction, AItemIndex);
+    end;
+
+    Ord(acCallTemplate):
+    begin
+      case APropertyIndex of
+        CCallTemplate_CallTemplateLoop_PropIndex:
+          PropDef := CCallTemplate_CallTemplateLoopProperties[AItemIndex];
+
+        else
+          ;
+      end;
+
+      Result := CCallTemplateGetActionValueStrFunctions[APropertyIndex](FEditingAction, AItemIndex);
+    end;
+  end;   //case EditingActionType
+
+  AEditorType := PropDef.EditorType;
+end;
+
+
+function TfrClickerActions.HandleOnUIGetDataTypeName(ACategoryIndex, APropertyIndex, AItemIndex: Integer): string;
+begin
+  Result := 'data';
+end;
+
+
+function TfrClickerActions.HandleOnUIGetExtraInfo(ACategoryIndex, APropertyIndex, AItemIndex: Integer): string;
+begin
+  Result := 'extra';
+end;
+
+
+procedure TfrClickerActions.HandleOnOIGetImageIndexEx(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; Kind: TVTImageKind;
+  Column: TColumnIndex; var Ghosted: Boolean; var ImageIndex: Integer; var ImageList: TCustomImageList);
+begin
+
+end;
+
+
+procedure TfrClickerActions.HandleOnOIEditedText(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; ANewText: string);
+var
+  EditingActionType: Integer;
+  TempStringList: TStringList;
+begin
+  case ACategoryIndex of
+    CCategory_Common:
+    begin
+      SetActionValueStr_Action(FEditingAction, ANewText, APropertyIndex);
+      cmbActions.ItemIndex := Ord(FEditingAction^.ActionOptions.Action);
+
+      TriggerOnControlsModified;
+      UpdatePageControlActionsHighlighting;
+      CurrentlyEditingActionType := FEditingAction^.ActionOptions.Action;
+
+      tmrReloadOIContent.Enabled := True;
+    end;
+
+    CCategory_ActionSpecific:
+    begin
+      EditingActionType := Integer(CurrentlyEditingActionType);
+      if EditingActionType = CClkUnsetAction then
+        Exit;
+
+      case EditingActionType of
+        Ord(acFindControl), Ord(acFindSubControl):
+        begin
+          case APropertyIndex of
+            CFindControl_MatchCriteria_PropIndex:
+            begin
+              SetActionValueStr_FindControl_MatchCriteria(FEditingAction, ANewText, AItemIndex);
+              TriggerOnControlsModified;
+              Exit;
+            end;
+
+            CFindControl_MatchBitmapText_PropIndex:
+            begin
+              SetActionValueStr_FindControl_MatchBitmapText(FEditingAction, ANewText, AItemIndex {no mod here});
+              TriggerOnControlsModified;
+              Exit;
+            end;
+
+            CFindControl_MatchBitmapFiles_PropIndex:
+            begin
+              TempStringList := TStringList.Create;
+              try
+                case ANodeLevel of
+                  CPropertyLevel:
+                  begin
+                    FEditingAction^.FindControlOptions.MatchBitmapFiles := ANewText;
+                    FOIFrame.ReloadPropertyItems(ACategoryIndex, APropertyIndex);
+                    TriggerOnControlsModified;
+                  end;
+
+                  CPropertyItemLevel:
+                  begin
+                    TempStringList.Text := FEditingAction^.FindControlOptions.MatchBitmapFiles;    //read
+                    TempStringList.Strings[AItemIndex] := ANewText;                                //modify
+                    FEditingAction^.FindControlOptions.MatchBitmapFiles := TempStringList.Text;    //write
+                    TriggerOnControlsModified;
+                  end;
+                end;
+              finally
+                TempStringList.Free;
+              end;
+
+              Exit;
+            end;
+
+            CFindControl_MatchBitmapAlgorithmSettings_PropIndex:
+            begin
+              SetActionValueStr_FindControl_MatchBitmapAlgorithmSettings(FEditingAction, ANewText, AItemIndex);
+              TriggerOnControlsModified;
+              Exit;
+            end;
+
+            CFindControl_InitialRectange:
+            begin
+              SetActionValueStr_FindControl_InitialRectange(FEditingAction, ANewText, AItemIndex);
+              TriggerOnControlsModified;
+              Exit;
+            end
+
+            else
+              ;
+          end;
+        end; //FindControl  case
+
+        Ord(acCallTemplate):
+        begin
+          case APropertyIndex of
+            CCallTemplate_CallTemplateLoop_PropIndex:
+            begin
+              SetActionValueStr_CallTemplate_CallTemplateLoop(FEditingAction, ANewText, AItemIndex);
+              TriggerOnControlsModified;
+              Exit;
+            end;
+
+            else
+              ;
+          end;
+        end; //CallTemplate  case
+      end;   //case EditingActionType
+
+      //default handler for main properties
+      CMainSetActionValueStrFunctions[CurrentlyEditingActionType](FEditingAction, ANewText, APropertyIndex);
+      TriggerOnControlsModified;
+    end;
+
+    else
+      ;
+  end;
+end;
+
+
+function TfrClickerActions.EditFontProperties(AItemIndexDiv: Integer; var ANewItems: string): Boolean;
+var
+  TempFontDialog: TFontDialog;
+begin
+  Result := False;
+
+  TempFontDialog := TFontDialog.Create(nil);
+  try
+    TempFontDialog.Font.Name := ANewItems;
+    TempFontDialog.Font.Size := FEditingAction^.FindControlOptions.MatchBitmapText[AItemIndexDiv].FontSize;
+
+    if FEditingAction^.FindControlOptions.MatchBitmapText[AItemIndexDiv].Bold then
+      TempFontDialog.Font.Style := TempFontDialog.Font.Style + [fsBold];
+
+    if FEditingAction^.FindControlOptions.MatchBitmapText[AItemIndexDiv].Italic then
+      TempFontDialog.Font.Style := TempFontDialog.Font.Style + [fsItalic];
+
+    if FEditingAction^.FindControlOptions.MatchBitmapText[AItemIndexDiv].Underline then
+      TempFontDialog.Font.Style := TempFontDialog.Font.Style + [fsUnderline];
+
+    if FEditingAction^.FindControlOptions.MatchBitmapText[AItemIndexDiv].StrikeOut then
+      TempFontDialog.Font.Style := TempFontDialog.Font.Style + [fsStrikeOut];
+
+    if not TempFontDialog.Execute then
+      Exit;
+
+    ANewItems := TempFontDialog.Font.Name;
+    Result := True;
+
+    FEditingAction^.FindControlOptions.MatchBitmapText[AItemIndexDiv].FontName := ANewItems; //redundant, because the OI will call another handler for the property itself
+    FEditingAction^.FindControlOptions.MatchBitmapText[AItemIndexDiv].FontSize := TempFontDialog.Font.Size;
+    FEditingAction^.FindControlOptions.MatchBitmapText[AItemIndexDiv].Bold := fsBold in TempFontDialog.Font.Style;
+    FEditingAction^.FindControlOptions.MatchBitmapText[AItemIndexDiv].Italic := fsItalic in TempFontDialog.Font.Style;
+    FEditingAction^.FindControlOptions.MatchBitmapText[AItemIndexDiv].Underline := fsUnderline in TempFontDialog.Font.Style;
+    FEditingAction^.FindControlOptions.MatchBitmapText[AItemIndexDiv].StrikeOut := fsStrikeOut in TempFontDialog.Font.Style;
+  finally
+    TempFontDialog.Free;
+  end;
+end;
+
+
+function TfrClickerActions.HandleOnOIEditItems(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; var ANewItems: string): Boolean;
+var
+  EditingActionType: Integer;
+  ItemIndexDiv, ItemIndexMod: Integer;
+begin
+  Result := False;
+  if ACategoryIndex = CCategory_ActionSpecific then
+  begin
+    EditingActionType := Integer(CurrentlyEditingActionType);
+    if EditingActionType = CClkUnsetAction then
+      Exit;
+
+    if EditingActionType in [Ord(acFindControl), Ord(acFindSubControl)] then
+      if APropertyIndex = CFindControl_MatchBitmapText_PropIndex then
+      begin
+        ItemIndexDiv := AItemIndex div CPropCount_FindControlMatchBitmapText;
+        ItemIndexMod := AItemIndex mod CPropCount_FindControlMatchBitmapText;
+
+        if ItemIndexMod = CFindControl_MatchBitmapText_FontName_PropItemIndex then
+        begin
+          Result := EditFontProperties(ItemIndexDiv, ANewItems);
+
+          if Result then
+            TriggerOnControlsModified;
+        end;
+      end;
+  end;
+end;
+
+
+function TfrClickerActions.HandleOnOIGetColorConstsCount(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer): Integer;
+begin
+  Result := 0;  //additional user colors
+end;
+
+
+procedure TfrClickerActions.HandleOnOIGetColorConst(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AColorItemIndex: Integer; var AColorName: string; var AColorValue: Int64);
+begin
+  //additional user colors
+end;
+
+
+function TfrClickerActions.HandleOnOIGetEnumConstsCount(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer): Integer;
+var
+  EditingActionType: Integer;
+  ItemIndexMod: Integer;
+begin
+  Result := 0;
+
+  case ACategoryIndex of
+    CCategory_Common:
+      Result := CActionEnumCounts[APropertyIndex];
+
+    CCategory_ActionSpecific:
+    begin
+      EditingActionType := Integer(CurrentlyEditingActionType);
+      if EditingActionType = CClkUnsetAction then
+        Exit;
+
+      if CurrentlyEditingActionType in [acFindControl, acFindSubControl] then
+      begin
+        if APropertyIndex = CFindControl_MatchCriteria_PropIndex then
+        begin
+          Result := CFindControl_MatchCriteriaEnumCounts[AItemIndex];
+          Exit;
+        end;
+
+        if APropertyIndex = CFindControl_MatchBitmapText_PropIndex then
+        begin
+          ItemIndexMod := AItemIndex mod CPropCount_FindControlMatchBitmapText;
+          Result := CFindControl_MatchBitmapTextEnumCounts[ItemIndexMod];
+
+          if ItemIndexMod = CFindControl_MatchBitmapText_FontName_PropItemIndex then
+            Result := Screen.Fonts.Count;
+
+          Exit;
+        end;
+      end;
+
+      if CurrentlyEditingActionType = acCallTemplate then
+        if APropertyIndex = CCallTemplate_CallTemplateLoop_PropIndex then
+        begin
+          Result := CCallTemplate_CallTemplateLoopEnumCounts[AItemIndex];
+          Exit;
+        end;
+
+      Result := CPropEnumCounts[CurrentlyEditingActionType]^[APropertyIndex];
+    end;
+
+    else
+      Result := 0;
+  end;
+end;
+
+
+procedure TfrClickerActions.HandleOnOIGetEnumConst(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEnumItemIndex: Integer; var AEnumItemName: string);
+var
+  EditingActionType: Integer;
+  ItemIndexMod: Integer;
+begin
+  AEnumItemName := '';
+
+  case ACategoryIndex of
+    CCategory_Common:
+      AEnumItemName := CActionEnumStrings[APropertyIndex]^[AEnumItemIndex];
+
+    CCategory_ActionSpecific:
+    begin
+      EditingActionType := Integer(CurrentlyEditingActionType);
+      if EditingActionType = CClkUnsetAction then
+        Exit;
+
+      if CurrentlyEditingActionType in [acFindControl, acFindSubControl] then
+      begin
+        if APropertyIndex = CFindControl_MatchCriteria_PropIndex then
+        begin
+          AEnumItemName := CFindControl_MatchCriteriaEnumStrings[AItemIndex]^[AEnumItemIndex];
+          Exit;
+        end;
+
+        if APropertyIndex = CFindControl_MatchBitmapText_PropIndex then
+        begin
+          ItemIndexMod := AItemIndex mod CPropCount_FindControlMatchBitmapText;
+
+          if ItemIndexMod = CFindControl_MatchBitmapText_FontName_PropItemIndex then
+            AEnumItemName := Screen.Fonts.Strings[AEnumItemIndex]
+          else
+            AEnumItemName := CFindControl_MatchBitmapTextEnumStrings[ItemIndexMod]^[AEnumItemIndex];
+
+          Exit;
+        end;
+      end;
+
+      if CurrentlyEditingActionType = acCallTemplate then
+        if APropertyIndex = CCallTemplate_CallTemplateLoop_PropIndex then
+        begin
+          AEnumItemName := CCallTemplate_CallTemplateLoopEnumStrings[AItemIndex]^[AEnumItemIndex];
+          Exit;
+        end;
+
+      AEnumItemName := CPropEnumStrings[CurrentlyEditingActionType]^[APropertyIndex]^[AEnumItemIndex];
+    end;
+
+    else
+      AEnumItemName := '';
+  end;
+end;
+
+
+procedure TfrClickerActions.HandleOnOIPaintText(ANodeData: TNodeDataPropertyRec; ACategoryIndex, APropertyIndex, APropertyItemIndex: Integer;
+  const TargetCanvas: TCanvas; Column: TColumnIndex; var TextType: TVSTTextType);
+begin
+  if ANodeData.Level = 0 then
+  begin
+    TargetCanvas.Font.Style := [fsBold];
+    Exit;
+  end;
+
+  if (ANodeData.Level = CPropertyLevel) and (Column = 1) and (CurrentlyEditingActionType in [acFindControl, acFindSubControl]) then
+    if (ACategoryIndex = CCategory_ActionSpecific) and (APropertyIndex = CFindControl_MatchBitmapFiles_PropIndex) then
+    begin
+      TargetCanvas.Font.Style := [fsItalic];
+      Exit;
+    end;
+end;
+
+
+procedure TfrClickerActions.HandleOnTextEditorMouseDown(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer;
+  Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  //
+end;
+
+
+procedure TfrClickerActions.HandleOnTextEditorMouseMove(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer;
+  Sender: TObject; Shift: TShiftState; X, Y: Integer);
+begin
+  //
+end;
+
+
+procedure TfrClickerActions.HandleOnOITextEditorKeyUp(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer;
+  Sender: TObject; var Key: Word; Shift: TShiftState);
+begin
+  //
+end;
+
+
+procedure TfrClickerActions.HandleOnOITextEditorKeyDown(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer;
+  Sender: TObject; var Key: Word; Shift: TShiftState);
+begin
+  if Key = VK_SPACE then
+    if ssCtrl in Shift then
+      //open a pop-up window with a list of available variables and functions;
+end;
+
+
+procedure TfrClickerActions.HandleOnOIEditorAssignMenuAndTooltip(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer;
+  var APopupMenu: TPopupMenu; var AHint: string; var AShowHint: Boolean);
+begin
+  APopupMenu := frClickerFindControl.pmStandardControlRefVars; //////////////////////// some example
+  AHint := 'Some hint';
+  AShowHint := True;
+end;
+
+
+procedure TfrClickerActions.HandleOnOIGetFileDialogSettings(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; var AFilter, AInitDir: string);
+var
+  EditingActionType: Integer;
+begin
+  AFilter := '';
+  AInitDir := '';
+
+  if ACategoryIndex <> CCategory_ActionSpecific then
+    Exit;
+
+  EditingActionType := Integer(CurrentlyEditingActionType);
+  if EditingActionType = CClkUnsetAction then
+    Exit;
+
+  case CurrentlyEditingActionType of
+    acExecApp:
+      if APropertyIndex = CExecApp_PathToApp_PropIndex then
+      begin
+        AFilter := 'Executable files (*.exe)|*.exe|All files (*.*)|*.*';
+        AInitDir := ExtractFileDir(ParamStr(0));
+      end;
+
+    acFindControl, acFindSubControl:
+    begin
+      case APropertyIndex of
+        CFindControl_MatchBitmapFiles_PropIndex:
+        begin
+          AFilter := 'Bitmap files (*.bmp)|*.bmp|All files (*.*)|*.*';
+          AInitDir := FBMPsDir;
+        end;
+      end;
+    end;
+
+    acCallTemplate:
+      if APropertyIndex = CCallTemplate_TemplateFileName_PropIndex then
+      begin
+        AFilter := 'Clicker template files (*.clktmpl)|*.clktmpl|All files (*.*)|*.*';
+        AInitDir := ExtractFilePath(ParamStr(0)) + '\ActionTemplates';
+      end;
+
+    else
+      Exit;
+  end;
+end;
+
+
+procedure TfrClickerActions.AddMenuItemToPopupMenu(APopupMenu: TPopupMenu; ACaption: TCaption; AHandler: TNotifyEvent;
+  ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer);
+var
+  MenuData: POIMenuItemData;
+  MenuItem: TMenuItem;
+begin
+  MenuItem := TMenuItem.Create(Self);
+  MenuItem.Caption := ACaption;
+  MenuItem.OnClick := AHandler;
+
+  New(MenuData);
+  MenuItem.Tag := {%H-}PtrInt(MenuData);
+  MenuData^.OwnerMenu := APopupMenu;
+  MenuData^.NodeLevel := ANodeLevel;
+  MenuData^.CategoryIndex := ACategoryIndex;
+  MenuData^.PropertyIndex := APropertyIndex;
+  MenuData^.PropertyItemIndex := AItemIndex;
+
+  APopupMenu.Items.Add(MenuItem);
+end;
+
+
+procedure TfrClickerActions.HandleOnOIArrowEditorClick(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer);
+var
+  tp: TPoint;
+  PropertyMenu: TPopupMenu;
+begin
+  case ACategoryIndex of
+    CCategory_ActionSpecific:
+    begin
+      case APropertyIndex of
+        CFindControl_MatchBitmapFiles_PropIndex:
+        begin
+          case ANodeLevel of
+            CPropertyLevel:
+            begin
+              PropertyMenu := TPopupMenu.Create(Self);
+              AddMenuItemToPopupMenu(PropertyMenu, 'Add file(s) to this list...', MenuItem_AddFilesToPropertyListClick,
+                ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+
+              AddMenuItemToPopupMenu(PropertyMenu, 'Remove all files from this list...', MenuItem_RemoveAllFilesFromPropertyListClick,
+                ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+
+              GetCursorPos(tp);
+              PropertyMenu.PopUp(tp.X, tp.Y);
+            end;
+
+            CPropertyItemLevel:
+            begin
+              PropertyMenu := TPopupMenu.Create(Self);
+              AddMenuItemToPopupMenu(PropertyMenu, 'Remove file from list...', MenuItem_RemoveFileFromPropertyListClick,
+                ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+
+              AddMenuItemToPopupMenu(PropertyMenu, 'Move file up (one position)', MenuItem_MoveFileUpInPropertyListClick,
+                ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+
+              AddMenuItemToPopupMenu(PropertyMenu, 'Move file down (one position)', MenuItem_MoveFileDownInPropertyListClick,
+                ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+
+              GetCursorPos(tp);
+              PropertyMenu.PopUp(tp.X, tp.Y);
+            end;
+
+            else
+              ;
+          end;
+        end;
+
+        CCallTemplate_TemplateFileName_PropIndex:
+        begin
+          LoadListOfAvailableTemplates;
+          GetCursorPos(tp);
+          FPmLocalTemplates.PopUp(tp.X, tp.Y);
+        end;
+      end;
+    end;
+  end;
+end;
+
+
+procedure TfrClickerActions.HandleOnOIUserEditorClick(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; var ARepaintValue: Boolean);
+var
+  EditingActionType: Integer;
+  Condition: string;
+begin
+  case ACategoryIndex of
+    CCategory_Common:
+    begin
+      if APropertyIndex = CMain_ActionCondition_PropIndex then
+      begin
+        Condition := FEditingAction^.ActionOptions.ActionCondition;
+        if DoOnEditCallTemplateBreakCondition(Condition) then
+        begin
+          FEditingAction^.ActionOptions.ActionCondition := Condition;
+          TriggerOnControlsModified;
+        end;
+      end;
+    end;
+
+    CCategory_ActionSpecific:
+    begin
+      EditingActionType := Integer(CurrentlyEditingActionType);
+      if EditingActionType = CClkUnsetAction then
+        Exit;
+
+      case CurrentlyEditingActionType of
+        acExecApp:
+          if APropertyIndex = CExecApp_ListOfParams_PropIndex then
+          begin
+            MessageBox(Handle, 'Param list editor', 'Files', MB_ICONINFORMATION);
+            TriggerOnControlsModified;
+          end;
+
+        acFindControl, acFindSubControl:
+          if APropertyIndex = CFindControl_MatchBitmapFiles_PropIndex then
+          begin
+            MessageBox(Handle, 'File list editor', 'Files', MB_ICONINFORMATION);
+            TriggerOnControlsModified;
+          end;
+
+        acCallTemplate:
+        begin
+          case APropertyIndex of
+            CCallTemplate_ListOfCustomVarsAndValues_PropIndex:
+            begin
+              MessageBox(Handle, 'call template vars - editor', 'Files', MB_ICONINFORMATION);
+              TriggerOnControlsModified;
+            end;
+
+            CCallTemplate_CallTemplateLoop_PropIndex:
+              if AItemIndex = CCallTemplate_CallTemplateLoopProperties_BreakCondition_PropItemIndex then
+              begin
+                Condition := FEditingAction^.CallTemplateOptions.CallTemplateLoop.BreakCondition;
+                if DoOnEditCallTemplateBreakCondition(Condition) then
+                begin
+                  FEditingAction^.CallTemplateOptions.CallTemplateLoop.BreakCondition := Condition;
+                  TriggerOnControlsModified;
+                end;
+              end;
+          end;
+        end;
+
+        acSetVar:
+          if APropertyIndex = CSetVar_ListOfVarNamesValuesAndEvalBefore then
+            MessageBox(Handle, 'SetVar editor', 'Files', MB_ICONINFORMATION);
+
+        else
+          ;
+      end;   //case
+    end; //CCategory_ActionSpecific
+  end; //case
+end;
+
+
+function TfrClickerActions.HandleOnOIBrowseFile(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer;
+  AFilter, ADialogInitDir: string; var Handled: Boolean; AReturnMultipleFiles: Boolean = False): string;
+var
+  EditingActionType: Integer;
+  AOpenDialog: TOpenDialog;
+begin
+  Result := '';
+
+  case ACategoryIndex of
+    CCategory_Common:
+      ;
+
+    CCategory_ActionSpecific:
+    begin
+      EditingActionType := Integer(CurrentlyEditingActionType);
+      if EditingActionType = CClkUnsetAction then
+        Exit;
+
+      case CurrentlyEditingActionType of
+        acExecApp:
+          if APropertyIndex = CExecApp_PathToApp_PropIndex then
+          begin
+            AOpenDialog := TOpenDialog.Create(nil);
+            try
+              AOpenDialog.InitialDir := ExtractFileDir(ParamStr(0));
+              AOpenDialog.Filter := AFilter;
+
+              if AOpenDialog.Execute then
+                Result := AOpenDialog.FileName;
+
+              Handled := True;
+            finally
+              AOpenDialog.Free;
+            end;
+          end;
+
+        acFindControl, acFindSubControl:
+        begin
+          if APropertyIndex = CFindControl_MatchBitmapFiles_PropIndex then
+          begin
+            DoOnSetPictureOpenDialogInitialDir(ADialogInitDir);
+            DoOnSetPictureOpenSetMultiSelect;
+
+            if DoOnPictureOpenDialogExecute then
+              Result := DoOnGetPictureOpenDialogFileName;
+
+            Handled := True;
+          end;
+        end;
+
+        acCallTemplate:
+        begin
+          case APropertyIndex of
+            CCallTemplate_TemplateFileName_PropIndex:
+            begin
+              DoOnSetTemplateOpenDialogInitialDir(ADialogInitDir);
+              if DoOnTemplateOpenDialogExecute then
+                Result := DoOnGetTemplateOpenDialogFileName;
+
+              Handled := True;;
+            end;
+
+            else
+              ;
+          end;
+        end;
+
+        else
+          ;
+      end;   //case
+    end; //CCategory_ActionSpecific
+  end; //case
 end;
 
 end.
