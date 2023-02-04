@@ -79,6 +79,15 @@ const
 
   CFindControl_MatchBitmapText_FontName_PropItemIndex = 2;   //property index in FindControl.MatchBitmapText structure
 
+  CFindControl_InitialRectange_Left_PropItemIndex = 0;
+  CFindControl_InitialRectange_Top_PropItemIndex = 1;
+  CFindControl_InitialRectange_Right_PropItemIndex = 2;
+  CFindControl_InitialRectange_Bottom_PropItemIndex = 3;
+  CFindControl_InitialRectange_LeftOffset_PropItemIndex = 4;
+  CFindControl_InitialRectange_TopOffset_PropItemIndex = 5;
+  CFindControl_InitialRectange_RightOffset_PropItemIndex = 6;
+  CFindControl_InitialRectange_BottomOffset_PropItemIndex = 7;
+
   CSetVar_ListOfVarNamesValuesAndEvalBefore = 0;
 
   //Properties
@@ -130,7 +139,7 @@ const
     (Name: 'MatchClassName'; EditorType: etText),
     (Name: 'MatchTextSeparator'; EditorType: etText),
     (Name: 'MatchClassNameSeparator'; EditorType: etText),
-    (Name: 'MatchBitmapText'; EditorType: etNone),  //array of other structure.  Count should be 0 for FindControl and >0 for FindSubControl
+    (Name: 'MatchBitmapText'; EditorType: etFilePathWithArrow),  //array of other structure.  Count should be 0 for FindControl and >0 for FindSubControl
     (Name: 'MatchBitmapFiles'; EditorType: etFilePathWithArrow),
     (Name: 'MatchBitmapAlgorithm'; EditorType: etEnumCombo),
     (Name: 'MatchBitmapAlgorithmSettings'; EditorType: etNone),    //structure

@@ -17,7 +17,7 @@ object frClickerActions: TfrClickerActions
     Height = 276
     Top = 0
     Width = 1052
-    ActivePage = TabSheetAction
+    ActivePage = TabSheetOI
     Anchors = [akTop, akLeft, akRight, akBottom]
     Font.Color = clWindowText
     Font.Height = -11
@@ -76,18 +76,18 @@ object frClickerActions: TfrClickerActions
       object PageControlActions: TPageControl
         Left = 141
         Height = 268
-        Top = 1
+        Top = 0
         Width = 890
         ActivePage = TabSheetActionFindSubControl
         Anchors = [akTop, akLeft, akRight, akBottom]
         Images = imglstActions
-        TabIndex = 5
+        TabIndex = 3
         TabOrder = 5
         OnChange = PageControlActionsChange
         object TabSheetActionClick: TTabSheet
           Caption = 'Click'
           ClientHeight = 233
-          ClientWidth = 862
+          ClientWidth = 882
           ImageIndex = 0
           object lblXClickReference: TLabel
             Left = 3
@@ -335,7 +335,7 @@ object frClickerActions: TfrClickerActions
         object TabSheetActionExecApp: TTabSheet
           Caption = 'Exec App'
           ClientHeight = 233
-          ClientWidth = 862
+          ClientWidth = 882
           ImageIndex = 1
           object lblExecAppParams: TLabel
             Left = 0
@@ -537,7 +537,7 @@ object frClickerActions: TfrClickerActions
         object TabSheetActionCall: TTabSheet
           Caption = 'Call'
           ClientHeight = 233
-          ClientWidth = 862
+          ClientWidth = 882
           ImageIndex = 5
           OnMouseLeave = TabSheetActionCallMouseLeave
           ParentShowHint = False
@@ -909,7 +909,7 @@ object frClickerActions: TfrClickerActions
         object TabSheetActionSleep: TTabSheet
           Caption = 'Sleep'
           ClientHeight = 233
-          ClientWidth = 862
+          ClientWidth = 882
           ImageIndex = 6
           object lblSleepInfo: TLabel
             Left = 8
@@ -972,7 +972,7 @@ object frClickerActions: TfrClickerActions
         object TabSheetActionSetVar: TTabSheet
           Caption = 'Set Variable'
           ClientHeight = 233
-          ClientWidth = 862
+          ClientWidth = 882
           ImageIndex = 7
           object vstSetVar: TVirtualStringTree
             Left = 0
@@ -1478,7 +1478,7 @@ object frClickerActions: TfrClickerActions
         Left = 0
         Height = 208
         Top = 0
-        Width = 672
+        Width = 384
         Anchors = [akTop, akLeft, akBottom]
         BevelOuter = bvNone
         Caption = 'pnlvstOI'
@@ -1506,6 +1506,17 @@ object frClickerActions: TfrClickerActions
         ParentFont = False
         ParentShowHint = False
         ShowHint = True
+      end
+      object pnlExtra: TPanel
+        Left = 392
+        Height = 266
+        Top = 0
+        Width = 610
+        Anchors = [akTop, akRight]
+        Caption = 'Local editors'
+        Color = 9764056
+        ParentColor = False
+        TabOrder = 1
       end
     end
   end

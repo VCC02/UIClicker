@@ -191,7 +191,7 @@ object frClickerActionsArr: TfrClickerActionsArr
       Height = 25
       Hint = 'Updates the first selected action, with the current content from the action editor.'
       Top = 28
-      Width = 79
+      Width = 62
       Anchors = [akTop, akRight]
       Caption = 'Update'
       OnClick = spdbtnUpdateActionClick
@@ -771,6 +771,26 @@ object frClickerActionsArr: TfrClickerActionsArr
       }
       ShowHint = True
       Visible = False
+    end
+    object spdbtnExtraUpdate: TSpeedButton
+      Left = 637
+      Height = 25
+      Top = 28
+      Width = 18
+      Anchors = [akTop, akRight]
+      Font.Color = clWindowText
+      Glyph.Data = {
+        EA000000424DEA0000000000000036000000280000000B000000050000000100
+        180000000000B400000000000000000000000000000000000000FFFFFFFFFFFF
+        FFFFFFFFFFFFFFFFFF39841AFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF000000FFFF
+        FFFFFFFFFFFFFFFFFFFF39841A39841A39841AFFFFFFFFFFFFFFFFFFFFFFFF00
+        0000FFFFFFFFFFFFFFFFFF39841A39841A39841A39841A39841AFFFFFFFFFFFF
+        FFFFFF000000FFFFFFFFFFFF39841A39841A39841A39841A39841A39841A3984
+        1AFFFFFFFFFFFF000000FFFFFF39841A39841A39841A39841A39841A39841A39
+        841A39841A39841AFFFFFF000000
+      }
+      OnClick = spdbtnExtraUpdateClick
+      ParentFont = False
     end
   end
   object pnlVertSplitter: TPanel
@@ -1420,5 +1440,13 @@ object frClickerActionsArr: TfrClickerActionsArr
     OnTimer = tmrLoggingTimer
     Left = 592
     Top = 536
+  end
+  object pmExtraUpdate: TPopupMenu
+    Left = 504
+    Top = 96
+    object MenuItem_UpdateFromOI: TMenuItem
+      Caption = 'MenuItem_UpdateFromOI'
+      OnClick = MenuItem_UpdateFromOIClick
+    end
   end
 end

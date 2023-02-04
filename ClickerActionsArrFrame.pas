@@ -59,6 +59,7 @@ type
     lbeSearchAction: TLabeledEdit;
     lblModifiedStatus: TLabel;
     memLogErr: TMemo;
+    MenuItem_UpdateFromOI: TMenuItem;
     MenuItem_SetActionStatusToFailed: TMenuItem;
     MenuItem_SetActionStatusToAllowedFailed: TMenuItem;
     MenuItem_SetActionStatusToSuccessful: TMenuItem;
@@ -84,6 +85,7 @@ type
     pmExtraRemove: TPopupMenu;
     pnlvstActions: TPanel;
     pmExtraPlayAction: TPopupMenu;
+    pmExtraUpdate: TPopupMenu;
     Removeallactions1: TMenuItem;
     imglstActionStatus: TImageList;
     pmExtraAdd: TPopupMenu;
@@ -95,6 +97,7 @@ type
     PlayAllInDebuggingMode1: TMenuItem;
     spdbtnContinuePlayingAll: TSpeedButton;
     spdbtnExtraAdd: TSpeedButton;
+    spdbtnExtraUpdate: TSpeedButton;
     spdbtnExtraPlayAll: TSpeedButton;
     spdbtnExtraPlayAction: TSpeedButton;
     spdbtnExtraRemove: TSpeedButton;
@@ -140,6 +143,7 @@ type
     procedure MenuItem_SetActionStatusToAllowedFailedClick(Sender: TObject);
     procedure MenuItem_SetActionStatusToFailedClick(Sender: TObject);
     procedure MenuItem_SetActionStatusToSuccessfulClick(Sender: TObject);
+    procedure MenuItem_UpdateFromOIClick(Sender: TObject);
     procedure pnlActionsClick(Sender: TObject);
     procedure pnlVertSplitterMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
@@ -148,6 +152,7 @@ type
     procedure pnlVertSplitterMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure spdbtnExtraPlayActionClick(Sender: TObject);
+    procedure spdbtnExtraUpdateClick(Sender: TObject);
     procedure spdbtnPaletteClick(Sender: TObject);
     procedure spdbtnTemplateNotesClick(Sender: TObject);
     procedure spdbtnUpdateActionClick(Sender: TObject);
@@ -3332,6 +3337,76 @@ begin
 end;
 
 
+procedure TfrClickerActionsArr.MenuItem_UpdateFromOIClick(Sender: TObject);
+var
+  Node: PVirtualNode;
+  CurrentAction: TClkAction;
+begin
+  Node := vstActions.GetFirstSelected;
+
+  if Node = nil then
+  begin
+    MessageBox(Handle, 'No item selected for updating. Please select an item.', PChar(Caption), MB_ICONINFORMATION);
+    Exit;
+  end;
+
+  if frClickerActions.cmbActions.ItemIndex = -1 then
+  begin
+    MessageBox(Handle, 'No action selected. Please select an action.', PChar(Caption), MB_ICONINFORMATION);
+    Exit;
+  end;
+
+  CurrentAction := TClkAction(frClickerActions.cmbActions.ItemIndex);
+  case CurrentAction of
+    acClick:
+    begin
+      if frClickerActions.cmbXClickReference.ItemIndex = -1 then
+      begin
+        MessageBox(Handle, 'No X Click Reference selected. Please select a reference option for X Click.', PChar(Caption), MB_ICONINFORMATION);
+        Exit;
+      end;
+
+      if frClickerActions.cmbYClickReference.ItemIndex = -1 then
+      begin
+        MessageBox(Handle, 'No Y Click Reference selected. Please select a reference option for Y Click.', PChar(Caption), MB_ICONINFORMATION);
+        Exit;
+      end;
+    end;
+
+    acFindControl:
+      if not (frClickerActions.frClickerFindControl.chkMatchText.Checked or
+              frClickerActions.frClickerFindControl.chkMatchClassName.Checked or
+              frClickerActions.frClickerFindControl.chkMatchBitmapText.Checked or
+              frClickerActions.frClickerFindControl.chkMatchBitmapFiles.Checked) then
+      begin
+        MessageBox(Handle, 'To find a control, at least one match criterion has to be checked.', PChar(Caption), MB_ICONINFORMATION);
+        Exit;
+      end;
+
+    acSetControlText:
+      if frClickerActions.rdgrpSetTextControlType.ItemIndex = -1 then
+      begin
+        MessageBox(Handle, 'No control type selected. Please select a control type.', PChar(Caption), MB_ICONINFORMATION);
+        Exit;
+      end;
+
+    else
+    begin
+    end;
+  end;  //case
+
+  if FClkActions[Node^.Index].ActionOptions.Action <> TClkAction(frClickerActions.cmbActions.ItemIndex) then
+    if MessageBox(Handle, 'Are you sure you want to overwrite existing action?', PChar(Caption), MB_ICONWARNING + MB_YESNO) = IDNO then
+      Exit;
+
+  CopyActionContent(frClickerActions.EditingAction^, FClkActions[Node^.Index]);
+  vstActions.Repaint;
+  Modified := True;
+  StopGlowingUpdateButton;
+  frClickerActions.UpdatePageControlActionExecutionIcons;
+end;
+
+
 procedure TfrClickerActionsArr.pnlActionsClick(Sender: TObject);
 begin
   if pnlPalette.Visible then
@@ -3418,6 +3493,15 @@ var
 begin
   GetCursorPos(tp);
   pmExtraPlayAction.Popup(tp.X, tp.Y);
+end;
+
+
+procedure TfrClickerActionsArr.spdbtnExtraUpdateClick(Sender: TObject);
+var
+  tp: TPoint;
+begin
+  GetCursorPos(tp);
+  pmExtraUpdate.Popup(tp.X, tp.Y);
 end;
 
 
@@ -3720,7 +3804,7 @@ begin
     if MessageBox(Handle, 'Are you sure you want to overwrite existing action?', PChar(Caption), MB_ICONWARNING + MB_YESNO) = IDNO then
       Exit;
 
-  UpdateActionsArrFromControls(Node^.Index);
+  UpdateActionsArrFromControls(Node^.Index);         //CopyActionContent(frClickerActions.EditingAction^, FClkActions[ActionIndex]);
   vstActions.Repaint;
   Modified := True;
   StopGlowingUpdateButton;

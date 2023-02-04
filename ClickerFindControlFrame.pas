@@ -563,6 +563,19 @@ type
     function GetSearch_BottomBottom_Ref: Integer;//Bottom
     function GetSearch_TopBottom_Ref: Integer;
 
+    ///////OI
+    function GetSearch_LeftLeft_Ref_FromInitRect(AInitialRectange: TRectString): Integer;    //Left
+    function GetSearch_RightLeft_Ref_FromInitRect(AInitialRectange: TRectString): Integer;
+
+    function GetSearch_RightRight_Ref_FromInitRect(AInitialRectange: TRectString): Integer;  //Right
+    function GetSearch_LeftRight_Ref_FromInitRect(AInitialRectange: TRectString): Integer;
+
+    function GetSearch_TopTop_Ref_FromInitRect(AInitialRectange: TRectString): Integer;      //Top
+    function GetSearch_BottomTop_Ref_FromInitRect(AInitialRectange: TRectString): Integer;
+
+    function GetSearch_BottomBottom_Ref_FromInitRect(AInitialRectange: TRectString): Integer;//Bottom
+    function GetSearch_TopBottom_Ref_FromInitRect(AInitialRectange: TRectString): Integer;
+
     function EvaluateReplacements(s: string): string;
 
     function GetControlWidthFromReplacement: Integer;
@@ -586,12 +599,14 @@ type
     function GetSearchAreaBottomOffsetFromSelLabel: Integer;
 
     procedure UpdateSearchAreaLabelsFromKeysOnEditBoxes;
+    procedure UpdateSearchAreaLabelsFromInitRect(AInitialRectange: TRectString);
     procedure UpdateSearchAreaLabelColorsFromTheirPosition;
     procedure UpdateTransparent_SearchAreaLimitsFromSearchAreaLimits;
     procedure SetLabelsFromMouseOverDbgImgPixelColor(APixelColor: TColor);
     procedure CopyTextAndClassFromExternalProvider(AProviderName: string);
 
     procedure UpdateAllSelectionLabelsFromCropEditBoxes;
+    procedure UpdateSearchAreaSearchedTextAndLabels;
   public
     //FBMPTextFrames: TfrClickerBMPTextArr; //should eventually made private and accesed through functions
 
@@ -604,6 +619,7 @@ type
     function GetBMPTextFontProfilesCount: Integer;
     procedure SetBMPTextFrameVisibility;
 
+    procedure UpdateSearchAreaLabelsFromKeysOnInitRect(AInitialRectange: TRectString);  //must be called on OI Text editor - KeyUp
     procedure UpdateControlWidthHeightLabels;
     procedure ClearControls;
     procedure UpdateMatchCriteriaPageIcons;
@@ -611,9 +627,19 @@ type
     procedure UpdatePreviewIcons;
     procedure RepaintBitmapFilesVst;
     procedure UpdateSearchAreaLabelsFromOffsetEditboxes;
+
     procedure SetSearchRectEnabledState;
     procedure DisplayDebuggingImage;
     procedure PreviewText; //called by ExecuteAction
+
+    procedure UpdateOnSearchRectLeftOffsetMouseDown(var InitialRectange: TRectString; AEditBox: TVTEdit; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+    procedure UpdateOnSearchRectLeftOffsetMouseMove(var InitialRectange: TRectString; AEditBox: TVTEdit; Shift: TShiftState; X, Y: Integer);
+    procedure UpdateOnSearchRectTopOffsetMouseDown(var InitialRectange: TRectString; AEditBox: TVTEdit; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+    procedure UpdateOnSearchRectTopOffsetMouseMove(var InitialRectange: TRectString; AEditBox: TVTEdit; Shift: TShiftState; X, Y: Integer);
+    procedure UpdateOnSearchRectRightOffsetMouseDown(var InitialRectange: TRectString; AEditBox: TVTEdit; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+    procedure UpdateOnSearchRectRightOffsetMouseMove(var InitialRectange: TRectString; AEditBox: TVTEdit; Shift: TShiftState; X, Y: Integer);
+    procedure UpdateOnSearchRectBottomOffsetMouseDown(var InitialRectange: TRectString; AEditBox: TVTEdit; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+    procedure UpdateOnSearchRectBottomOffsetMouseMove(var InitialRectange: TRectString; AEditBox: TVTEdit; Shift: TShiftState; X, Y: Integer);
 
     property BMPsDir: string read FBMPsDir write FBMPsDir;
     property BMPTextFontProfiles[Index: Integer]: TFontProfile read GetFontProfile;
@@ -1916,7 +1942,7 @@ begin
   if Button <> mbRight then
     Exit;
 
-  FLastClickedLbe := Sender as TLabeledEdit;
+  FLastClickedLbe := Sender as TLabeledEdit;      //not needed on OI, because there is one editor (one EditBox)
 end;
 
 
@@ -3053,7 +3079,55 @@ begin
 end;
 
 
-procedure TfrClickerFindControl.UpdateSearchAreaLabelsFromOffsetEditboxes;
+function TfrClickerFindControl.GetSearch_BottomBottom_Ref_FromInitRect(AInitialRectange: TRectString): Integer;
+begin
+  Result := GetSearch_EditBoxVar_Ref(AInitialRectange.Bottom, '$Control_Bottom$');
+end;
+
+
+function TfrClickerFindControl.GetSearch_TopBottom_Ref_FromInitRect(AInitialRectange: TRectString): Integer;
+begin
+  Result := GetSearch_EditBoxVar_Ref(AInitialRectange.Top, '$Control_Bottom$');
+end;
+
+
+function TfrClickerFindControl.GetSearch_LeftLeft_Ref_FromInitRect(AInitialRectange: TRectString): Integer;
+begin
+  Result := GetSearch_EditBoxVar_Ref(AInitialRectange.Left, '$Control_Left$');
+end;
+
+
+function TfrClickerFindControl.GetSearch_RightLeft_Ref_FromInitRect(AInitialRectange: TRectString): Integer;
+begin
+  Result := GetSearch_EditBoxVar_Ref(AInitialRectange.Right, '$Control_Left$');
+end;
+
+
+function TfrClickerFindControl.GetSearch_RightRight_Ref_FromInitRect(AInitialRectange: TRectString): Integer;
+begin
+  Result := GetSearch_EditBoxVar_Ref(AInitialRectange.Right, '$Control_Right$');
+end;
+
+
+function TfrClickerFindControl.GetSearch_LeftRight_Ref_FromInitRect(AInitialRectange: TRectString): Integer;
+begin
+  Result := GetSearch_EditBoxVar_Ref(AInitialRectange.Left, '$Control_Right$');
+end;
+
+
+function TfrClickerFindControl.GetSearch_TopTop_Ref_FromInitRect(AInitialRectange: TRectString): Integer;
+begin
+  Result := GetSearch_EditBoxVar_Ref(AInitialRectange.Top, '$Control_Top$');
+end;
+
+
+function TfrClickerFindControl.GetSearch_BottomTop_Ref_FromInitRect(AInitialRectange: TRectString): Integer;
+begin
+  Result := GetSearch_EditBoxVar_Ref(AInitialRectange.Bottom, '$Control_Top$');
+end;
+
+
+procedure TfrClickerFindControl.UpdateSearchAreaLabelsFromOffsetEditboxes;  //replaced by below UpdateSearchAreaLabelsFromInitRect
 var
   ControlWidth, ControlHeight: Integer;
 begin
@@ -3077,12 +3151,47 @@ begin
 end;
 
 
+procedure TfrClickerFindControl.UpdateSearchAreaLabelsFromInitRect(AInitialRectange: TRectString);
+var
+  ControlWidth, ControlHeight: Integer;
+begin
+  if FSearchAreaLeftLimitLabel = nil then
+    Exit;   //better exit than swallow exception, because the debugger keeps catching this one, and it becomes unsable
+
+  try
+    FSearchAreaLeftLimitLabel.Left := StrToIntDef(EvaluateReplacements(AInitialRectange.LeftOffset), 20) - GetSearch_LeftLeft_Ref_FromInitRect(AInitialRectange);
+    FSearchAreaTopLimitLabel.Top := StrToIntDef(EvaluateReplacements(AInitialRectange.TopOffset), 20) - GetSearch_TopTop_Ref_FromInitRect(AInitialRectange);
+
+    ControlWidth := GetControlWidthFromReplacement;
+    FSearchAreaRightLimitLabel.Left := StrToIntDef(EvaluateReplacements(AInitialRectange.RightOffset), 20) - GetSearch_RightRight_Ref_FromInitRect(AInitialRectange) + ControlWidth;
+
+    ControlHeight := GetControlHeightFromReplacement;
+    FSearchAreaBottomLimitLabel.Top := StrToIntDef(EvaluateReplacements(AInitialRectange.BottomOffset), 20) - GetSearch_BottomBottom_Ref_FromInitRect(AInitialRectange) + ControlHeight;
+
+    UpdateTransparent_SearchAreaLimitsFromSearchAreaLimits;
+  except
+    //exception when the components are not created yet  (expected)
+  end;
+end;
+
+
 procedure TfrClickerFindControl.UpdateSearchAreaLabelsFromKeysOnEditBoxes;
 begin
   if FSearchAreaSearchedBmpDbgImg = nil then
     Exit;
 
   UpdateSearchAreaLabelsFromOffsetEditboxes;
+  UpdateSearchAreaLabelColorsFromTheirPosition;
+  tmrUpdateGrid.Enabled := True;
+end;
+
+
+procedure TfrClickerFindControl.UpdateSearchAreaLabelsFromKeysOnInitRect(AInitialRectange: TRectString);
+begin
+  if FSearchAreaSearchedBmpDbgImg = nil then
+    Exit;
+
+  UpdateSearchAreaLabelsFromInitRect(AInitialRectange);
   UpdateSearchAreaLabelColorsFromTheirPosition;
   tmrUpdateGrid.Enabled := True;
 end;
@@ -4100,6 +4209,254 @@ var
 begin
   for i := 0 to Length(FBMPTextProfiles) - 1 do
     FBMPTextProfiles[i].UpdateSelectionLabelsFromCropEditBoxes;
+end;
+
+
+
+procedure TfrClickerFindControl.UpdateSearchAreaSearchedTextAndLabels;
+begin
+  if Assigned(FSearchAreaSearchedTextDbgImg) and
+     Assigned(FSearchAreaSearchedBmpDbgImg) then
+  begin
+    FSearchAreaSearchedTextDbgImg.Left := FSearchAreaSearchedBmpDbgImg.Left;
+    FSearchAreaSearchedTextDbgImg.Top := FSearchAreaSearchedBmpDbgImg.Top;
+    UpdateSearchAreaLabelColorsFromTheirPosition;
+  end;
+end;
+
+
+//////////////////////////////// OI stuff
+procedure TfrClickerFindControl.UpdateOnSearchRectLeftOffsetMouseDown(var InitialRectange: TRectString;
+  AEditBox: TVTEdit; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var
+  Ref: Integer;
+begin
+  if (ssLeft in Shift) and (ssCtrl in Shift) then
+  begin
+    Ref := GetSearch_LeftLeft_Ref;
+
+    FlbeSearchRectOffsetMDownInit := Y;  //used to compute offset
+    FlbeSearchRectOffsetMDownValueInit := StrToIntDef(EvaluateReplacements(AEditBox.Text), MaxInt) - Ref;  //editbox value on mouse down
+
+    Ref := GetSearch_RightLeft_Ref;
+    FlbeSearchRectOffsetMDownSecondValueInit := StrToIntDef(EvaluateReplacements(InitialRectange.RightOffset), MaxInt) - Ref;  //editbox value on mouse down
+  end;
+end;
+
+
+procedure TfrClickerFindControl.UpdateOnSearchRectLeftOffsetMouseMove(var InitialRectange: TRectString;
+  AEditBox: TVTEdit; Shift: TShiftState; X, Y: Integer);
+var
+  Ref: Integer;
+begin
+  if (ssLeft in Shift) and (ssCtrl in Shift) then
+    if FlbeSearchRectOffsetMDownValueInit <> MaxInt then  //MaxInt is used as an indicator that a replacement is used, not a numeric value
+    begin
+      Ref := GetSearch_LeftLeft_Ref;
+      AEditBox.Text := IntToStr(FlbeSearchRectOffsetMDownValueInit - (Y - FlbeSearchRectOffsetMDownInit) + Ref);
+      InitialRectange.LeftOffset := AEditBox.Text;
+
+      if FSearchAreaSearchedBmpDbgImg <> nil then
+      begin
+        FSearchAreaSearchedBmpDbgImg.Left := StrToIntDef(EvaluateReplacements(AEditBox.Text), 20) - Ref;
+        FSearchAreaLeftLimitLabel.Left := FSearchAreaSearchedBmpDbgImg.Left;
+        FTransparent_SearchAreaLeftLimitLabel.Left := FSearchAreaLeftLimitLabel.Left;
+        tmrUpdateGrid.Enabled := True;
+      end;
+
+      if ssShift in Shift then
+      begin
+        Ref := GetSearch_RightLeft_Ref;
+        InitialRectange.RightOffset := IntToStr(FlbeSearchRectOffsetMDownSecondValueInit - (Y - FlbeSearchRectOffsetMDownInit) + Ref);
+
+        if FSearchAreaSearchedBmpDbgImg <> nil then
+        begin
+          //if chkUseWholeScreenAsSearchArea.Checked then
+          //  ControlRight := Screen.Width
+          //else
+          //  ControlRight := StrToIntDef(EvaluateReplacements(InitialRectange.Right), 20) - StrToIntDef(EvaluateReplacements(InitialRectange.Left), 20); //Right edge of the search area.
+
+          FSearchAreaRightLimitLabel.Left := StrToIntDef(InitialRectange.RightOffset, 20) - Ref;   ////////// should be control right + offset (offset can be negative)
+          FTransparent_SearchAreaRightLimitLabel.Left := FSearchAreaRightLimitLabel.Left;
+        end;
+      end;
+
+      UpdateSearchAreaSearchedTextAndLabels;
+    end;
+end;
+
+
+procedure TfrClickerFindControl.UpdateOnSearchRectTopOffsetMouseDown(var InitialRectange: TRectString;
+  AEditBox: TVTEdit; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var
+  Ref: Integer;
+begin
+  if (ssLeft in Shift) and (ssCtrl in Shift) then
+  begin
+    Ref := GetSearch_TopTop_Ref;
+    FlbeSearchRectOffsetMDownInit := Y;  //used to compute offset
+    FlbeSearchRectOffsetMDownValueInit := StrToIntDef(EvaluateReplacements(AEditBox.Text), MaxInt) - Ref;  //editbox value on mouse down
+
+    Ref := GetSearch_BottomTop_Ref;
+    FlbeSearchRectOffsetMDownSecondValueInit := StrToIntDef(EvaluateReplacements(InitialRectange.BottomOffset), MaxInt) - Ref;  //editbox value on mouse down
+  end;
+end;
+
+
+procedure TfrClickerFindControl.UpdateOnSearchRectTopOffsetMouseMove(var InitialRectange: TRectString;
+  AEditBox: TVTEdit; Shift: TShiftState; X, Y: Integer);
+var
+  Ref: Integer;
+begin
+  if (ssLeft in Shift) and (ssCtrl in Shift) then
+    if FlbeSearchRectOffsetMDownValueInit <> MaxInt then  //MaxInt is used as an indicator that a replacement is used, not a numeric value
+    begin
+      Ref := GetSearch_TopTop_Ref;
+      AEditBox.Text := IntToStr(FlbeSearchRectOffsetMDownValueInit - (Y - FlbeSearchRectOffsetMDownInit) + Ref);
+      InitialRectange.TopOffset := AEditBox.Text;
+
+      if FSearchAreaSearchedBmpDbgImg <> nil then
+      begin
+        FSearchAreaSearchedBmpDbgImg.Top := StrToIntDef(EvaluateReplacements(AEditBox.Text), 20) - Ref;
+        FTransparent_SearchAreaTopLimitLabel.Top := FSearchAreaTopLimitLabel.Top;
+        FSearchAreaTopLimitLabel.Top := FSearchAreaSearchedBmpDbgImg.Top;
+        tmrUpdateGrid.Enabled := True;
+      end;
+
+      if ssShift in Shift then
+      begin
+        Ref := GetSearch_BottomTop_Ref;
+        InitialRectange.BottomOffset := IntToStr(FlbeSearchRectOffsetMDownSecondValueInit - (Y - FlbeSearchRectOffsetMDownInit) + Ref);
+
+        if FSearchAreaSearchedBmpDbgImg <> nil then
+        begin
+          //if chkUseWholeScreenAsSearchArea.Checked then
+          //  ControlBottom := Screen.Height
+          //else
+          //  ControlBottom := StrToIntDef(EvaluateReplacements(InitialRectange.Bottom), 20) - StrToIntDef(EvaluateReplacements(lbeSearchRectTop.Text), 20); //Bottom edge of the search area.
+
+          FSearchAreaBottomLimitLabel.Top := StrToIntDef(InitialRectange.BottomOffset, 20) - Ref;    ////////// should be control bottom + offset (offset can be negative)
+          FTransparent_SearchAreaBottomLimitLabel.Top := FSearchAreaBottomLimitLabel.Top;
+        end;
+      end;
+
+      UpdateSearchAreaSearchedTextAndLabels;
+    end;
+end;
+
+
+procedure TfrClickerFindControl.UpdateOnSearchRectRightOffsetMouseDown(var InitialRectange: TRectString;
+  AEditBox: TVTEdit; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var
+  Ref: Integer;
+begin
+  if (ssLeft in Shift) and (ssCtrl in Shift) then
+  begin
+    Ref := GetSearch_RightRight_Ref;
+
+    FlbeSearchRectOffsetMDownInit := Y;  //used to compute offset
+    FlbeSearchRectOffsetMDownValueInit := StrToIntDef(EvaluateReplacements(AEditBox.Text), MaxInt) - Ref;  //editbox value on mouse down
+
+    Ref := GetSearch_LeftRight_Ref;
+    FlbeSearchRectOffsetMDownSecondValueInit := StrToIntDef(EvaluateReplacements(InitialRectange.LeftOffset), MaxInt) - Ref;  //editbox value on mouse down
+  end;
+end;
+
+
+procedure TfrClickerFindControl.UpdateOnSearchRectRightOffsetMouseMove(var InitialRectange: TRectString;
+  AEditBox: TVTEdit; Shift: TShiftState; X, Y: Integer);
+var
+  ControlWidth: Integer;
+  Ref: Integer;
+begin
+  if (ssLeft in Shift) and (ssCtrl in Shift) then
+    if FlbeSearchRectOffsetMDownValueInit <> MaxInt then  //MaxInt is used as an indicator that a replacement is used, not a numeric value
+    begin
+      Ref := GetSearch_RightRight_Ref;
+      AEditBox.Text := IntToStr(FlbeSearchRectOffsetMDownValueInit - (Y - FlbeSearchRectOffsetMDownInit) + Ref);
+      InitialRectange.RightOffset := AEditBox.Text;
+
+      if FSearchAreaSearchedBmpDbgImg <> nil then
+      begin
+        ControlWidth := GetControlWidthFromReplacement;
+        FSearchAreaRightLimitLabel.Left := StrToIntDef(EvaluateReplacements(AEditBox.Text), 20) - Ref + ControlWidth;
+        FTransparent_SearchAreaRightLimitLabel.Left := FSearchAreaRightLimitLabel.Left;
+      end;
+
+      if ssShift in Shift then
+      begin
+        Ref := GetSearch_LeftRight_Ref;
+        InitialRectange.LeftOffset := IntToStr(FlbeSearchRectOffsetMDownSecondValueInit - (Y - FlbeSearchRectOffsetMDownInit) + Ref);
+
+        if FSearchAreaSearchedBmpDbgImg <> nil then
+        begin
+          //ControlWidth is initialized above
+          FSearchAreaLeftLimitLabel.Left := StrToIntDef(EvaluateReplacements(InitialRectange.LeftOffset), 20) - Ref + ControlWidth;
+          FTransparent_SearchAreaLeftLimitLabel.Left := FSearchAreaLeftLimitLabel.Left;
+          FSearchAreaSearchedBmpDbgImg.Left := FSearchAreaLeftLimitLabel.Left;
+          tmrUpdateGrid.Enabled := True;
+        end;
+      end;
+
+      UpdateSearchAreaSearchedTextAndLabels;
+    end;
+end;
+
+
+procedure TfrClickerFindControl.UpdateOnSearchRectBottomOffsetMouseDown(var InitialRectange: TRectString;
+  AEditBox: TVTEdit; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var
+  Ref: Integer;
+begin
+  if (ssLeft in Shift) and (ssCtrl in Shift) then
+  begin
+    Ref := GetSearch_BottomBottom_Ref;
+    FlbeSearchRectOffsetMDownInit := Y;  //used to compute offset
+    FlbeSearchRectOffsetMDownValueInit := StrToIntDef(EvaluateReplacements(AEditBox.Text), MaxInt) - Ref;  //editbox value on mouse down
+
+    Ref := GetSearch_TopBottom_Ref;
+    FlbeSearchRectOffsetMDownSecondValueInit := StrToIntDef(EvaluateReplacements(InitialRectange.TopOffset), MaxInt) - Ref;  //editbox value on mouse down
+  end;
+end;
+
+
+procedure TfrClickerFindControl.UpdateOnSearchRectBottomOffsetMouseMove(var InitialRectange: TRectString;
+  AEditBox: TVTEdit; Shift: TShiftState; X, Y: Integer);
+var
+  ControlHeight: Integer;
+  Ref: Integer;
+begin
+  if (ssLeft in Shift) and (ssCtrl in Shift) then
+    if FlbeSearchRectOffsetMDownValueInit <> MaxInt then  //MaxInt is used as an indicator that a replacement is used, not a numeric value
+    begin
+      Ref := GetSearch_BottomBottom_Ref;
+      AEditBox.Text := IntToStr(FlbeSearchRectOffsetMDownValueInit - (Y - FlbeSearchRectOffsetMDownInit) + Ref);
+      InitialRectange.BottomOffset := AEditBox.Text;
+
+      if FSearchAreaSearchedBmpDbgImg <> nil then
+      begin
+        ControlHeight := GetControlHeightFromReplacement;
+        FSearchAreaBottomLimitLabel.Top := StrToIntDef(EvaluateReplacements(AEditBox.Text), 20) - Ref + ControlHeight;
+        FTransparent_SearchAreaBottomLimitLabel.Top := FSearchAreaBottomLimitLabel.Top;
+      end;
+
+      if ssShift in Shift then
+      begin
+        Ref := GetSearch_TopBottom_Ref;
+        InitialRectange.TopOffset := IntToStr(FlbeSearchRectOffsetMDownSecondValueInit - (Y - FlbeSearchRectOffsetMDownInit) + Ref);
+
+        if FSearchAreaSearchedBmpDbgImg <> nil then
+        begin
+          //ControlHeight is initialized above
+          FSearchAreaTopLimitLabel.Top := StrToIntDef(EvaluateReplacements(InitialRectange.TopOffset), 20) - Ref + ControlHeight;
+          FTransparent_SearchAreaTopLimitLabel.Top := FSearchAreaTopLimitLabel.Top;
+          FSearchAreaSearchedBmpDbgImg.Top := FSearchAreaTopLimitLabel.Top;
+          tmrUpdateGrid.Enabled := True;
+        end;
+      end;
+
+      UpdateSearchAreaSearchedTextAndLabels;
+    end;
 end;
 
 end.
