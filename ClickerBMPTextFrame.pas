@@ -202,6 +202,7 @@ type
     procedure PreviewTextOnImage(AImg: TImage; ACroppedImg: TImage = nil);
     procedure ClearControls;
     procedure UpdateSelectionLabelsFromCropEditBoxes;
+    procedure UpdateSelectionLabelsFromCropInfo(var ABMPText: TClkFindControlMatchBitmapText);
     procedure DisplayCroppingLines(AVisible: Boolean);
 
     property ProfileName: string read FProfileName write SetProfileName;
@@ -1053,6 +1054,29 @@ begin
   FSelectedComponentTopLimitLabel.Top := StrToIntDef(EvaluateReplacements(lbeMatchBitmapTextCropTop.Text), 0);
   FSelectedComponentRightLimitLabel.Left := imgPreview.Width - StrToIntDef(EvaluateReplacements(lbeMatchBitmapTextCropRight.Text), 0) + 1;
   FSelectedComponentBottomLimitLabel.Top := imgPreview.Height - StrToIntDef(EvaluateReplacements(lbeMatchBitmapTextCropBottom.Text), 0) + 1;
+
+  FSelectedComponentLeftLimitLabel.Left := Max(0, Min(FSelectedComponentLeftLimitLabel.Left, imgPreview.Width - 3));
+  FSelectedComponentTopLimitLabel.Top := Max(0, Min(FSelectedComponentTopLimitLabel.Top, imgPreview.Height - 3));
+
+  FSelectedComponentRightLimitLabel.Left := Max(FSelectedComponentLeftLimitLabel.Left + 4, FSelectedComponentRightLimitLabel.Left);
+  FSelectedComponentBottomLimitLabel.Top := Max(FSelectedComponentTopLimitLabel.Top + 4, FSelectedComponentBottomLimitLabel.Top);
+
+  FSelectedComponentRightLimitLabel.Left := Max(0, Min(FSelectedComponentRightLimitLabel.Left, imgPreview.Width + 1));
+  FSelectedComponentBottomLimitLabel.Top := Max(0, Min(FSelectedComponentBottomLimitLabel.Top, imgPreview.Height + 1));
+
+  FTransparent_SelectedComponentLeftLimitLabel.Left := FSelectedComponentLeftLimitLabel.Left;
+  FTransparent_SelectedComponentTopLimitLabel.Top := FSelectedComponentTopLimitLabel.Top;
+  FTransparent_SelectedComponentRightLimitLabel.Left := FSelectedComponentRightLimitLabel.Left;
+  FTransparent_SelectedComponentBottomLimitLabel.Top := FSelectedComponentBottomLimitLabel.Top;
+end;
+
+
+procedure TfrClickerBMPText.UpdateSelectionLabelsFromCropInfo(var ABMPText: TClkFindControlMatchBitmapText);
+begin
+  FSelectedComponentLeftLimitLabel.Left := StrToIntDef(EvaluateReplacements(ABMPText.CropLeft), 0);
+  FSelectedComponentTopLimitLabel.Top := StrToIntDef(EvaluateReplacements(ABMPText.CropTop), 0);
+  FSelectedComponentRightLimitLabel.Left := imgPreview.Width - StrToIntDef(EvaluateReplacements(ABMPText.CropRight), 0) + 1;
+  FSelectedComponentBottomLimitLabel.Top := imgPreview.Height - StrToIntDef(EvaluateReplacements(ABMPText.CropBottom), 0) + 1;
 
   FSelectedComponentLeftLimitLabel.Left := Max(0, Min(FSelectedComponentLeftLimitLabel.Left, imgPreview.Width - 3));
   FSelectedComponentTopLimitLabel.Top := Max(0, Min(FSelectedComponentTopLimitLabel.Top, imgPreview.Height - 3));

@@ -78,6 +78,12 @@ const
   CCallTemplate_CallTemplateLoopProperties_BreakCondition_PropItemIndex = 5;
 
   CFindControl_MatchBitmapText_FontName_PropItemIndex = 2;   //property index in FindControl.MatchBitmapText structure
+  CFindControl_MatchBitmapText_ProfileName_PropItemIndex = 11;   //property index in FindControl.MatchBitmapText structure
+
+  CFindControl_MatchBitmapText_CropLeft = 12;
+  CFindControl_MatchBitmapText_CropTop = 13;
+  CFindControl_MatchBitmapText_CropRight = 14;
+  CFindControl_MatchBitmapText_CropBottom = 15;
 
   CFindControl_InitialRectange_Left_PropItemIndex = 0;
   CFindControl_InitialRectange_Top_PropItemIndex = 1;
@@ -174,7 +180,7 @@ const
       (Name: 'FontQuality'; EditorType: etEnumCombo),
       (Name: 'FontQualityUsesReplacement'; EditorType: etBooleanCombo),
       (Name: 'FontQualityReplacement'; EditorType: etText),
-      (Name: 'ProfileName'; EditorType: etText),
+      (Name: 'ProfileName'; EditorType: etTextWithArrow),
       (Name: 'CropLeft'; EditorType: etSpinText),
       (Name: 'CropTop'; EditorType: etSpinText),
       (Name: 'CropRight'; EditorType: etSpinText),

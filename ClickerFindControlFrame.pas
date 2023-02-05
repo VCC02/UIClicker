@@ -120,6 +120,7 @@ type
     procedure PreviewText;
     procedure PreviewTextOnImage(AImg: TImage);
     procedure UpdateSelectionLabelsFromCropEditBoxes;
+    procedure UpdateSelectionLabelsFromCropInfo(var ABMPText: TClkFindControlMatchBitmapText);
 
     property ProfileName: string read GetProfileName write SetProfileName;
     property ObjectName: string read GetObjectName write SetObjectName;
@@ -641,6 +642,15 @@ type
     procedure UpdateOnSearchRectBottomOffsetMouseDown(var InitialRectange: TRectString; AEditBox: TVTEdit; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure UpdateOnSearchRectBottomOffsetMouseMove(var InitialRectange: TRectString; AEditBox: TVTEdit; Shift: TShiftState; X, Y: Integer);
 
+    procedure UpdateOnTextCroppingLeftMouseDown(var AMatchBMP: TClkFindControlMatchBitmapText; AEditBox: TVTEdit; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+    procedure UpdateOnTextCroppingLeftMouseMove(var AMatchBMP: TClkFindControlMatchBitmapText; AEditBox: TVTEdit; Shift: TShiftState; X, Y, AProfileIndex: Integer);
+    procedure UpdateOnTextCroppingTopMouseDown(var AMatchBMP: TClkFindControlMatchBitmapText; AEditBox: TVTEdit; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+    procedure UpdateOnTextCroppingTopMouseMove(var AMatchBMP: TClkFindControlMatchBitmapText; AEditBox: TVTEdit; Shift: TShiftState; X, Y, AProfileIndex: Integer);
+    procedure UpdateOnTextCroppingRightMouseDown(var AMatchBMP: TClkFindControlMatchBitmapText; AEditBox: TVTEdit; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+    procedure UpdateOnTextCroppingRightMouseMove(var AMatchBMP: TClkFindControlMatchBitmapText; AEditBox: TVTEdit; Shift: TShiftState; X, Y, AProfileIndex: Integer);
+    procedure UpdateOnTextCroppingBottomMouseDown(var AMatchBMP: TClkFindControlMatchBitmapText; AEditBox: TVTEdit; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+    procedure UpdateOnTextCroppingBottomMouseMove(var AMatchBMP: TClkFindControlMatchBitmapText; AEditBox: TVTEdit; Shift: TShiftState; X, Y, AProfileIndex: Integer);
+
     property BMPsDir: string read FBMPsDir write FBMPsDir;
     property BMPTextFontProfiles[Index: Integer]: TFontProfile read GetFontProfile;
 
@@ -973,6 +983,11 @@ begin
   FfrClickerBMPText.UpdateSelectionLabelsFromCropEditBoxes;
 end;
 
+
+procedure TFontProfile.UpdateSelectionLabelsFromCropInfo(var ABMPText: TClkFindControlMatchBitmapText);
+begin
+  FfrClickerBMPText.UpdateSelectionLabelsFromCropInfo(ABMPText);
+end;
 
 { TfrClickerFindControl }
 
@@ -4233,12 +4248,12 @@ var
 begin
   if (ssLeft in Shift) and (ssCtrl in Shift) then
   begin
-    Ref := GetSearch_LeftLeft_Ref;
+    Ref := GetSearch_LeftLeft_Ref_FromInitRect(InitialRectange);
 
     FlbeSearchRectOffsetMDownInit := Y;  //used to compute offset
     FlbeSearchRectOffsetMDownValueInit := StrToIntDef(EvaluateReplacements(AEditBox.Text), MaxInt) - Ref;  //editbox value on mouse down
 
-    Ref := GetSearch_RightLeft_Ref;
+    Ref := GetSearch_RightLeft_Ref_FromInitRect(InitialRectange);
     FlbeSearchRectOffsetMDownSecondValueInit := StrToIntDef(EvaluateReplacements(InitialRectange.RightOffset), MaxInt) - Ref;  //editbox value on mouse down
   end;
 end;
@@ -4252,7 +4267,7 @@ begin
   if (ssLeft in Shift) and (ssCtrl in Shift) then
     if FlbeSearchRectOffsetMDownValueInit <> MaxInt then  //MaxInt is used as an indicator that a replacement is used, not a numeric value
     begin
-      Ref := GetSearch_LeftLeft_Ref;
+      Ref := GetSearch_LeftLeft_Ref_FromInitRect(InitialRectange);
       AEditBox.Text := IntToStr(FlbeSearchRectOffsetMDownValueInit - (Y - FlbeSearchRectOffsetMDownInit) + Ref);
       InitialRectange.LeftOffset := AEditBox.Text;
 
@@ -4266,7 +4281,7 @@ begin
 
       if ssShift in Shift then
       begin
-        Ref := GetSearch_RightLeft_Ref;
+        Ref := GetSearch_RightLeft_Ref_FromInitRect(InitialRectange);
         InitialRectange.RightOffset := IntToStr(FlbeSearchRectOffsetMDownSecondValueInit - (Y - FlbeSearchRectOffsetMDownInit) + Ref);
 
         if FSearchAreaSearchedBmpDbgImg <> nil then
@@ -4293,11 +4308,11 @@ var
 begin
   if (ssLeft in Shift) and (ssCtrl in Shift) then
   begin
-    Ref := GetSearch_TopTop_Ref;
+    Ref := GetSearch_TopTop_Ref_FromInitRect(InitialRectange);
     FlbeSearchRectOffsetMDownInit := Y;  //used to compute offset
     FlbeSearchRectOffsetMDownValueInit := StrToIntDef(EvaluateReplacements(AEditBox.Text), MaxInt) - Ref;  //editbox value on mouse down
 
-    Ref := GetSearch_BottomTop_Ref;
+    Ref := GetSearch_BottomTop_Ref_FromInitRect(InitialRectange);
     FlbeSearchRectOffsetMDownSecondValueInit := StrToIntDef(EvaluateReplacements(InitialRectange.BottomOffset), MaxInt) - Ref;  //editbox value on mouse down
   end;
 end;
@@ -4311,7 +4326,7 @@ begin
   if (ssLeft in Shift) and (ssCtrl in Shift) then
     if FlbeSearchRectOffsetMDownValueInit <> MaxInt then  //MaxInt is used as an indicator that a replacement is used, not a numeric value
     begin
-      Ref := GetSearch_TopTop_Ref;
+      Ref := GetSearch_TopTop_Ref_FromInitRect(InitialRectange);
       AEditBox.Text := IntToStr(FlbeSearchRectOffsetMDownValueInit - (Y - FlbeSearchRectOffsetMDownInit) + Ref);
       InitialRectange.TopOffset := AEditBox.Text;
 
@@ -4325,7 +4340,7 @@ begin
 
       if ssShift in Shift then
       begin
-        Ref := GetSearch_BottomTop_Ref;
+        Ref := GetSearch_BottomTop_Ref_FromInitRect(InitialRectange);
         InitialRectange.BottomOffset := IntToStr(FlbeSearchRectOffsetMDownSecondValueInit - (Y - FlbeSearchRectOffsetMDownInit) + Ref);
 
         if FSearchAreaSearchedBmpDbgImg <> nil then
@@ -4352,12 +4367,12 @@ var
 begin
   if (ssLeft in Shift) and (ssCtrl in Shift) then
   begin
-    Ref := GetSearch_RightRight_Ref;
+    Ref := GetSearch_RightRight_Ref_FromInitRect(InitialRectange);
 
     FlbeSearchRectOffsetMDownInit := Y;  //used to compute offset
     FlbeSearchRectOffsetMDownValueInit := StrToIntDef(EvaluateReplacements(AEditBox.Text), MaxInt) - Ref;  //editbox value on mouse down
 
-    Ref := GetSearch_LeftRight_Ref;
+    Ref := GetSearch_LeftRight_Ref_FromInitRect(InitialRectange);
     FlbeSearchRectOffsetMDownSecondValueInit := StrToIntDef(EvaluateReplacements(InitialRectange.LeftOffset), MaxInt) - Ref;  //editbox value on mouse down
   end;
 end;
@@ -4372,7 +4387,7 @@ begin
   if (ssLeft in Shift) and (ssCtrl in Shift) then
     if FlbeSearchRectOffsetMDownValueInit <> MaxInt then  //MaxInt is used as an indicator that a replacement is used, not a numeric value
     begin
-      Ref := GetSearch_RightRight_Ref;
+      Ref := GetSearch_RightRight_Ref_FromInitRect(InitialRectange);
       AEditBox.Text := IntToStr(FlbeSearchRectOffsetMDownValueInit - (Y - FlbeSearchRectOffsetMDownInit) + Ref);
       InitialRectange.RightOffset := AEditBox.Text;
 
@@ -4385,7 +4400,7 @@ begin
 
       if ssShift in Shift then
       begin
-        Ref := GetSearch_LeftRight_Ref;
+        Ref := GetSearch_LeftRight_Ref_FromInitRect(InitialRectange);
         InitialRectange.LeftOffset := IntToStr(FlbeSearchRectOffsetMDownSecondValueInit - (Y - FlbeSearchRectOffsetMDownInit) + Ref);
 
         if FSearchAreaSearchedBmpDbgImg <> nil then
@@ -4410,11 +4425,11 @@ var
 begin
   if (ssLeft in Shift) and (ssCtrl in Shift) then
   begin
-    Ref := GetSearch_BottomBottom_Ref;
+    Ref := GetSearch_BottomBottom_Ref_FromInitRect(InitialRectange);
     FlbeSearchRectOffsetMDownInit := Y;  //used to compute offset
     FlbeSearchRectOffsetMDownValueInit := StrToIntDef(EvaluateReplacements(AEditBox.Text), MaxInt) - Ref;  //editbox value on mouse down
 
-    Ref := GetSearch_TopBottom_Ref;
+    Ref := GetSearch_TopBottom_Ref_FromInitRect(InitialRectange);
     FlbeSearchRectOffsetMDownSecondValueInit := StrToIntDef(EvaluateReplacements(InitialRectange.TopOffset), MaxInt) - Ref;  //editbox value on mouse down
   end;
 end;
@@ -4429,7 +4444,7 @@ begin
   if (ssLeft in Shift) and (ssCtrl in Shift) then
     if FlbeSearchRectOffsetMDownValueInit <> MaxInt then  //MaxInt is used as an indicator that a replacement is used, not a numeric value
     begin
-      Ref := GetSearch_BottomBottom_Ref;
+      Ref := GetSearch_BottomBottom_Ref_FromInitRect(InitialRectange);
       AEditBox.Text := IntToStr(FlbeSearchRectOffsetMDownValueInit - (Y - FlbeSearchRectOffsetMDownInit) + Ref);
       InitialRectange.BottomOffset := AEditBox.Text;
 
@@ -4442,7 +4457,7 @@ begin
 
       if ssShift in Shift then
       begin
-        Ref := GetSearch_TopBottom_Ref;
+        Ref := GetSearch_TopBottom_Ref_FromInitRect(InitialRectange);
         InitialRectange.TopOffset := IntToStr(FlbeSearchRectOffsetMDownSecondValueInit - (Y - FlbeSearchRectOffsetMDownInit) + Ref);
 
         if FSearchAreaSearchedBmpDbgImg <> nil then
@@ -4456,6 +4471,123 @@ begin
       end;
 
       UpdateSearchAreaSearchedTextAndLabels;
+    end;
+end;
+
+
+/////////////// similar to SearchArea, but these are for text cropping
+procedure TfrClickerFindControl.UpdateOnTextCroppingLeftMouseDown(var AMatchBMP: TClkFindControlMatchBitmapText;
+  AEditBox: TVTEdit; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  if (ssLeft in Shift) and (ssCtrl in Shift) then
+  begin
+    FlbeSearchRectOffsetMDownInit := Y;  //used to compute offset
+    FlbeSearchRectOffsetMDownValueInit := StrToIntDef(EvaluateReplacements(AEditBox.Text), MaxInt);  //editbox value on mouse down
+    FlbeSearchRectOffsetMDownSecondValueInit := StrToIntDef(EvaluateReplacements(AMatchBMP.CropRight), MaxInt);  //editbox value on mouse down
+  end;
+end;
+
+
+procedure TfrClickerFindControl.UpdateOnTextCroppingLeftMouseMove(var AMatchBMP: TClkFindControlMatchBitmapText;
+  AEditBox: TVTEdit; Shift: TShiftState; X, Y, AProfileIndex: Integer);
+begin
+  if (ssLeft in Shift) and (ssCtrl in Shift) then
+    if FlbeSearchRectOffsetMDownValueInit <> MaxInt then  //MaxInt is used as an indicator that a replacement is used, not a numeric value
+    begin
+      AEditBox.Text := IntToStr(FlbeSearchRectOffsetMDownValueInit - (Y - FlbeSearchRectOffsetMDownInit));
+      AMatchBMP.CropLeft := AEditBox.Text;
+
+      if ssShift in Shift then
+        AMatchBMP.CropRight := IntToStr(FlbeSearchRectOffsetMDownSecondValueInit - (Y - FlbeSearchRectOffsetMDownInit));
+
+      FBMPTextProfiles[AProfileIndex].UpdateSelectionLabelsFromCropInfo(AMatchBMP);
+    end;
+end;
+
+
+procedure TfrClickerFindControl.UpdateOnTextCroppingTopMouseDown(var AMatchBMP: TClkFindControlMatchBitmapText;
+  AEditBox: TVTEdit; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  if (ssLeft in Shift) and (ssCtrl in Shift) then
+  begin
+    FlbeSearchRectOffsetMDownInit := Y;  //used to compute offset
+    FlbeSearchRectOffsetMDownValueInit := StrToIntDef(EvaluateReplacements(AEditBox.Text), MaxInt);  //editbox value on mouse down
+    FlbeSearchRectOffsetMDownSecondValueInit := StrToIntDef(EvaluateReplacements(AMatchBMP.CropBottom), MaxInt);  //editbox value on mouse down
+  end;
+end;
+
+
+procedure TfrClickerFindControl.UpdateOnTextCroppingTopMouseMove(var AMatchBMP: TClkFindControlMatchBitmapText;
+  AEditBox: TVTEdit; Shift: TShiftState; X, Y, AProfileIndex: Integer);
+begin
+  if (ssLeft in Shift) and (ssCtrl in Shift) then
+    if FlbeSearchRectOffsetMDownValueInit <> MaxInt then  //MaxInt is used as an indicator that a replacement is used, not a numeric value
+    begin
+      AEditBox.Text := IntToStr(FlbeSearchRectOffsetMDownValueInit - (Y - FlbeSearchRectOffsetMDownInit));
+      AMatchBMP.CropTop := AEditBox.Text;
+
+      if ssShift in Shift then
+        AMatchBMP.CropBottom := IntToStr(FlbeSearchRectOffsetMDownSecondValueInit - (Y - FlbeSearchRectOffsetMDownInit));
+
+      FBMPTextProfiles[AProfileIndex].UpdateSelectionLabelsFromCropInfo(AMatchBMP);
+    end;
+end;
+
+
+procedure TfrClickerFindControl.UpdateOnTextCroppingRightMouseDown(var AMatchBMP: TClkFindControlMatchBitmapText;
+  AEditBox: TVTEdit; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  if (ssLeft in Shift) and (ssCtrl in Shift) then
+  begin
+    FlbeSearchRectOffsetMDownInit := Y;  //used to compute offset
+    FlbeSearchRectOffsetMDownValueInit := StrToIntDef(EvaluateReplacements(AEditBox.Text), MaxInt);  //editbox value on mouse down
+    FlbeSearchRectOffsetMDownSecondValueInit := StrToIntDef(EvaluateReplacements(AMatchBMP.CropLeft), MaxInt);  //editbox value on mouse down
+  end;
+end;
+
+
+procedure TfrClickerFindControl.UpdateOnTextCroppingRightMouseMove(var AMatchBMP: TClkFindControlMatchBitmapText;
+  AEditBox: TVTEdit; Shift: TShiftState; X, Y, AProfileIndex: Integer);
+begin
+  if (ssLeft in Shift) and (ssCtrl in Shift) then
+    if FlbeSearchRectOffsetMDownValueInit <> MaxInt then  //MaxInt is used as an indicator that a replacement is used, not a numeric value
+    begin
+      AEditBox.Text := IntToStr(FlbeSearchRectOffsetMDownValueInit - (Y - FlbeSearchRectOffsetMDownInit));
+      AMatchBMP.CropRight := AEditBox.Text;
+
+      if ssShift in Shift then
+        AMatchBMP.CropLeft := IntToStr(FlbeSearchRectOffsetMDownSecondValueInit - (Y - FlbeSearchRectOffsetMDownInit));
+
+      FBMPTextProfiles[AProfileIndex].UpdateSelectionLabelsFromCropInfo(AMatchBMP);
+    end;
+end;
+
+
+procedure TfrClickerFindControl.UpdateOnTextCroppingBottomMouseDown(var AMatchBMP: TClkFindControlMatchBitmapText;
+  AEditBox: TVTEdit; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  if (ssLeft in Shift) and (ssCtrl in Shift) then
+  begin
+    FlbeSearchRectOffsetMDownInit := Y;  //used to compute offset
+    FlbeSearchRectOffsetMDownValueInit := StrToIntDef(EvaluateReplacements(AEditBox.Text), MaxInt);  //editbox value on mouse down
+    FlbeSearchRectOffsetMDownSecondValueInit := StrToIntDef(EvaluateReplacements(AMatchBMP.CropTop), MaxInt);  //editbox value on mouse down
+  end;
+end;
+
+
+procedure TfrClickerFindControl.UpdateOnTextCroppingBottomMouseMove(var AMatchBMP: TClkFindControlMatchBitmapText;
+  AEditBox: TVTEdit; Shift: TShiftState; X, Y, AProfileIndex: Integer);
+begin
+  if (ssLeft in Shift) and (ssCtrl in Shift) then
+    if FlbeSearchRectOffsetMDownValueInit <> MaxInt then  //MaxInt is used as an indicator that a replacement is used, not a numeric value
+    begin
+      AEditBox.Text := IntToStr(FlbeSearchRectOffsetMDownValueInit - (Y - FlbeSearchRectOffsetMDownInit));
+      AMatchBMP.CropBottom := AEditBox.Text;
+
+      if ssShift in Shift then
+        AMatchBMP.CropTop := IntToStr(FlbeSearchRectOffsetMDownSecondValueInit - (Y - FlbeSearchRectOffsetMDownInit));
+
+      FBMPTextProfiles[AProfileIndex].UpdateSelectionLabelsFromCropInfo(AMatchBMP);
     end;
 end;
 
