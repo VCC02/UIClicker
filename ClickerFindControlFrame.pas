@@ -439,6 +439,9 @@ type
     FOnPictureOpenDialogExecute: TOnPictureOpenDialogExecute;
     FOnGetPictureOpenDialogFileName: TOnGetPictureOpenDialogFileName;
 
+    FOnUpdateSearchAreaLimitsInOIFromDraggingLines: TOnUpdateSearchAreaLimitsInOIFromDraggingLines;
+    FOnUpdateTextCroppingLimitsInOIFromDraggingLines: TOnUpdateTextCroppingLimitsInOIFromDraggingLinesIdx;
+
     procedure vstMatchBitmapFilesClick(Sender: TObject);
     procedure vstMatchBitmapFilesGetText(Sender: TBaseVirtualTree;
       Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
@@ -534,6 +537,9 @@ type
     function DoOnPictureOpenDialogExecute: Boolean;
     function DoOnGetPictureOpenDialogFileName: string;
 
+    procedure DoOnUpdateSearchAreaLimitsInOIFromDraggingLines(ALimitLabelsToUpdate: TLimitLabels; var AOffsets: TSimpleRectString);
+    procedure DoOnUpdateTextCroppingLimitsInOIFromDraggingLines(ALimitLabelsToUpdate: TLimitLabels; var AOffsets: TSimpleRectString; AFontProfileIndex: Integer); //called by a handler for BMPTextFrame
+
     function BrowseBitmapFile: Boolean;
     procedure HandleMatchTextClick;
     procedure GeneratePreviewGridContent;
@@ -549,6 +555,7 @@ type
     function HandleBMPTextOnEvaluateReplacements(s: string): string;
     procedure HandleBMPTextOnSetCroppingValuesToOtherFontProfiles(ACropLeft, ACropTop, ACropRight, ACropBottom: string; ASkipProfileIndex: Integer);
     function HandleBMPTextOnGetCroppingLinesVisiblity: Boolean;
+    procedure HandleOnUpdateTextCroppingLimitsInOIFromDraggingLines(ALimitLabelsToUpdate: TLimitLabels; var AOffsets: TSimpleRectString; AFontProfileName: string);
 
     function GetSearch_EditBoxVar_Ref(AEditBoxValue, AVarName: string): Integer;
 
@@ -668,6 +675,9 @@ type
     property OnSetPictureOpenDialogInitialDir: TOnSetPictureOpenDialogInitialDir write FOnSetPictureOpenDialogInitialDir;
     property OnPictureOpenDialogExecute: TOnPictureOpenDialogExecute write FOnPictureOpenDialogExecute;
     property OnGetPictureOpenDialogFileName: TOnGetPictureOpenDialogFileName write FOnGetPictureOpenDialogFileName;
+
+    property OnUpdateSearchAreaLimitsInOIFromDraggingLines: TOnUpdateSearchAreaLimitsInOIFromDraggingLines write FOnUpdateSearchAreaLimitsInOIFromDraggingLines;
+    property OnUpdateTextCroppingLimitsInOIFromDraggingLines: TOnUpdateTextCroppingLimitsInOIFromDraggingLinesIdx write FOnUpdateTextCroppingLimitsInOIFromDraggingLines;
   end;
 
 const
@@ -722,6 +732,7 @@ begin
   Result.OnEvaluateReplacements := FOwner.HandleBMPTextOnEvaluateReplacements;
   Result.OnSetCroppingValuesToOtherFontProfiles := FOwner.HandleBMPTextOnSetCroppingValuesToOtherFontProfiles;
   Result.OnGetCroppingLinesVisiblity := FOwner.HandleBMPTextOnGetCroppingLinesVisiblity;
+  Result.OnUpdateTextCroppingLimitsInOIFromDraggingLines := FOwner.HandleOnUpdateTextCroppingLimitsInOIFromDraggingLines;
 end;
 
 
@@ -1111,6 +1122,9 @@ begin
   FOnPictureOpenDialogExecute := nil;
   FOnGetPictureOpenDialogFileName := nil;
 
+  FOnUpdateSearchAreaLimitsInOIFromDraggingLines := nil;
+  FOnUpdateTextCroppingLimitsInOIFromDraggingLines := nil;
+
   CreateRemainingUIComponents; //this should be called after initializing callback properties to nil  (like FOnTriggerOnControlsModified)
   SetLength(FBMPTextProfiles, 0);
   //CreateSelectionLabels is called where all the other labels are created
@@ -1214,6 +1228,24 @@ begin
     raise Exception.Create('OnGetPictureOpenDialogFileName not assigned.')
   else
     Result := FOnGetPictureOpenDialogFileName;
+end;
+
+
+procedure TfrClickerFindControl.DoOnUpdateSearchAreaLimitsInOIFromDraggingLines(ALimitLabelsToUpdate: TLimitLabels; var AOffsets: TSimpleRectString);
+begin
+  if not Assigned(FOnUpdateSearchAreaLimitsInOIFromDraggingLines) then
+    Exit;
+
+  FOnUpdateSearchAreaLimitsInOIFromDraggingLines(ALimitLabelsToUpdate, AOffsets);
+end;
+
+
+procedure TfrClickerFindControl.DoOnUpdateTextCroppingLimitsInOIFromDraggingLines(ALimitLabelsToUpdate: TLimitLabels; var AOffsets: TSimpleRectString; AFontProfileIndex: Integer);
+begin
+  if not Assigned(FOnUpdateTextCroppingLimitsInOIFromDraggingLines) then
+    Exit;
+
+  FOnUpdateTextCroppingLimitsInOIFromDraggingLines(ALimitLabelsToUpdate, AOffsets, AFontProfileIndex);
 end;
 
 
@@ -1371,6 +1403,18 @@ end;
 function TfrClickerFindControl.HandleBMPTextOnGetCroppingLinesVisiblity: Boolean;
 begin
   Result := chkDisplayCroppingLines.Checked;
+end;
+
+
+procedure TfrClickerFindControl.HandleOnUpdateTextCroppingLimitsInOIFromDraggingLines(ALimitLabelsToUpdate: TLimitLabels; var AOffsets: TSimpleRectString; AFontProfileName: string);
+var
+  ProfileIndex: Integer;
+begin
+  ProfileIndex := GetFontProfileIndexByName(AFontProfileName);
+  if ProfileIndex = -1 then
+    Exit;
+
+  DoOnUpdateTextCroppingLimitsInOIFromDraggingLines(ALimitLabelsToUpdate, AOffsets, ProfileIndex);
 end;
 
 
@@ -1578,6 +1622,8 @@ end;
 
 procedure TfrClickerFindControl.tmrUpdateSearchAreaOffsetEditBoxesTimer(
   Sender: TObject);
+var
+  Offsets: TSimpleRectString;
 begin
   tmrUpdateSearchAreaOffsetEditBoxes.Enabled := False;
 
@@ -1585,6 +1631,12 @@ begin
   lbeSearchRectTopOffset.Text := IntToStr(GetSearchAreaTopOffsetFromSelLabel);
   lbeSearchRectRightOffset.Text := IntToStr(GetSearchAreaRightOffsetFromSelLabel - GetControlWidthFromReplacement);
   lbeSearchRectBottomOffset.Text := IntToStr(GetSearchAreaBottomOffsetFromSelLabel - GetControlHeightFromReplacement);
+
+  Offsets.Left := lbeSearchRectLeftOffset.Text;
+  Offsets.Top := lbeSearchRectTopOffset.Text;
+  Offsets.Right := lbeSearchRectRightOffset.Text;
+  Offsets.Bottom := lbeSearchRectBottomOffset.Text;
+  DoOnUpdateSearchAreaLimitsInOIFromDraggingLines([llLeft, llTop, llRight, llBottom], Offsets);
 
   tmrUpdateGrid.Enabled := True;
 end;
@@ -4494,7 +4546,7 @@ begin
   if (ssLeft in Shift) and (ssCtrl in Shift) then
     if FlbeSearchRectOffsetMDownValueInit <> MaxInt then  //MaxInt is used as an indicator that a replacement is used, not a numeric value
     begin
-      AEditBox.Text := IntToStr(FlbeSearchRectOffsetMDownValueInit - (Y - FlbeSearchRectOffsetMDownInit));
+      AEditBox.Text := IntToStr(Max(0, FlbeSearchRectOffsetMDownValueInit - (Y - FlbeSearchRectOffsetMDownInit)));
       AMatchBMP.CropLeft := AEditBox.Text;
 
       if ssShift in Shift then
@@ -4523,7 +4575,7 @@ begin
   if (ssLeft in Shift) and (ssCtrl in Shift) then
     if FlbeSearchRectOffsetMDownValueInit <> MaxInt then  //MaxInt is used as an indicator that a replacement is used, not a numeric value
     begin
-      AEditBox.Text := IntToStr(FlbeSearchRectOffsetMDownValueInit - (Y - FlbeSearchRectOffsetMDownInit));
+      AEditBox.Text := IntToStr(Max(0, FlbeSearchRectOffsetMDownValueInit - (Y - FlbeSearchRectOffsetMDownInit)));
       AMatchBMP.CropTop := AEditBox.Text;
 
       if ssShift in Shift then
@@ -4552,7 +4604,7 @@ begin
   if (ssLeft in Shift) and (ssCtrl in Shift) then
     if FlbeSearchRectOffsetMDownValueInit <> MaxInt then  //MaxInt is used as an indicator that a replacement is used, not a numeric value
     begin
-      AEditBox.Text := IntToStr(FlbeSearchRectOffsetMDownValueInit - (Y - FlbeSearchRectOffsetMDownInit));
+      AEditBox.Text := IntToStr(Max(0, FlbeSearchRectOffsetMDownValueInit - (Y - FlbeSearchRectOffsetMDownInit)));
       AMatchBMP.CropRight := AEditBox.Text;
 
       if ssShift in Shift then
@@ -4581,7 +4633,7 @@ begin
   if (ssLeft in Shift) and (ssCtrl in Shift) then
     if FlbeSearchRectOffsetMDownValueInit <> MaxInt then  //MaxInt is used as an indicator that a replacement is used, not a numeric value
     begin
-      AEditBox.Text := IntToStr(FlbeSearchRectOffsetMDownValueInit - (Y - FlbeSearchRectOffsetMDownInit));
+      AEditBox.Text := IntToStr(Max(0, FlbeSearchRectOffsetMDownValueInit - (Y - FlbeSearchRectOffsetMDownInit)));
       AMatchBMP.CropBottom := AEditBox.Text;
 
       if ssShift in Shift then

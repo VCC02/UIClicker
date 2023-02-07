@@ -78,10 +78,10 @@ object frClickerActions: TfrClickerActions
         Height = 268
         Top = 0
         Width = 890
-        ActivePage = TabSheetActionFindSubControl
+        ActivePage = TabSheetActionExecApp
         Anchors = [akTop, akLeft, akRight, akBottom]
         Images = imglstActions
-        TabIndex = 3
+        TabIndex = 1
         TabOrder = 5
         OnChange = PageControlActionsChange
         object TabSheetActionClick: TTabSheet
@@ -1494,7 +1494,7 @@ object frClickerActions: TfrClickerActions
       object lblFeatureInWork1: TLabel
         Left = 64
         Height = 21
-        Hint = '- Action content cannot be updated yet from the Object Inspector.'#13#10'- Some data editors are not implemented.'#13#10'- Various editboxes can be set by dragging the mouse from them. This is not implemented in Object Inspector.'#13#10'- Various descriptions are not implemented yet.'
+        Hint = '- Action content cannot be updated yet from the Object Inspector.'#13#10'- Some data editors are not implemented.'#13#10'- Various editboxes can be set by dragging the mouse from them. This is partially implemented in Object Inspector.'#13#10'- Various descriptions are not implemented yet.'
         Top = 216
         Width = 165
         Anchors = [akLeft, akBottom]

@@ -1130,6 +1130,8 @@ begin
   frClickerActions.UpdateControlWidthHeightLabels;
   frClickerActions.frClickerFindControl.UpdateSearchAreaLabelsFromOffsetEditboxes;
 
+  frClickerActions.frClickerExecApp.memExecAppParams.Lines.Text := FClkActions[ActionIndex].ExecAppOptions.ListOfParams;
+
   /////the new content, instead of editboxes and checkboxes
   CopyActionContent(FClkActions[ActionIndex], frClickerActions.EditingAction^);
   frClickerActions.CurrentlyEditingActionType := TClkAction(FClkActions[ActionIndex].ActionOptions.Action);

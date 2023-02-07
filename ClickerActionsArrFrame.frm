@@ -1445,7 +1445,7 @@ object frClickerActionsArr: TfrClickerActionsArr
     Left = 504
     Top = 96
     object MenuItem_UpdateFromOI: TMenuItem
-      Caption = 'MenuItem_UpdateFromOI'
+      Caption = 'Update from Object Inspector'
       OnClick = MenuItem_UpdateFromOIClick
     end
   end

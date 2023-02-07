@@ -60,12 +60,15 @@ const
   CPropCount_CallTemplateLoop = 7;
 
   //PropIndex consts
+  CMain_ActionTimeout_PropIndex = 2; //property index in Action structure
   CMain_ActionCondition_PropIndex = 3; //property index in Action structure
 
   CExecApp_PathToApp_PropIndex = 0;     //property index in ExecApp structure
   CExecApp_ListOfParams_PropIndex = 1;  //property index in ExecApp structure
 
   CFindControl_MatchCriteria_PropIndex = 0; //property index in FindControl structure
+  CFindControl_MatchText_PropIndex = 2;      //property index in FindControl structure
+  CFindControl_MatchClassName_PropIndex = 3;  //property index in FindControl structure
   CFindControl_MatchBitmapText_PropIndex = 6; //property index in FindControl structure
   CFindControl_MatchBitmapFiles_PropIndex = 7; //property index in FindControl structure   - list of files
   CFindControl_MatchBitmapAlgorithmSettings_PropIndex = 9;
@@ -100,7 +103,7 @@ const
   CCommonProperties: array[0..CPropCount_Common - 1] of TOIPropDef = (
     (Name: 'ActionName'; EditorType: etText),
     (Name: 'Action'; EditorType: etEnumCombo),    //readonly, to avoid changing the OI tree structure
-    (Name: 'ActionTimeout'; EditorType: etText),
+    (Name: 'ActionTimeout'; EditorType: etTextWithArrow),
     (Name: 'ActionCondition'; EditorType: etUserEditor)
   );
 
@@ -141,8 +144,8 @@ const
   CFindControlProperties: array[0..CPropCount_FindControl - 1] of TOIPropDef = (
     (Name: 'MatchCriteria'; EditorType: etNone),               //structure
     (Name: 'AllowToFail'; EditorType: etBooleanCombo),
-    (Name: 'MatchText'; EditorType: etText),
-    (Name: 'MatchClassName'; EditorType: etText),
+    (Name: 'MatchText'; EditorType: etTextWithArrow),
+    (Name: 'MatchClassName'; EditorType: etTextWithArrow),
     (Name: 'MatchTextSeparator'; EditorType: etText),
     (Name: 'MatchClassNameSeparator'; EditorType: etText),
     (Name: 'MatchBitmapText'; EditorType: etFilePathWithArrow),  //array of other structure.  Count should be 0 for FindControl and >0 for FindSubControl

@@ -33,7 +33,8 @@ interface
 uses
   Windows, SysUtils, Variants, Classes, Graphics, Controls, Forms, Dialogs,
   VirtualTrees, ExtCtrls, StdCtrls, ComCtrls, ImgList, Buttons, Grids, ValEdit,
-  Menus, ClickerUtils, ClickerConditionEditorFrame, ClickerFindControlFrame, Types,
+  Menus, ClickerUtils, ClickerConditionEditorFrame, ClickerFindControlFrame,
+  ClickerExecAppFrame, Types,
   InMemFileSystem, ObjectInspectorFrame;
 
 type
@@ -384,6 +385,12 @@ type
       Column: TColumnIndex; const NewText: String);
 
     ///////////////////////////// OI
+    procedure MenuItem_SetActionTimeoutFromOI(Sender: TObject);
+
+    procedure MenuItem_CopyTextAndClassFromPreviewWindowClick(Sender: TObject);
+    procedure MenuItem_CopyTextAndClassFromWinInterpWindowClick(Sender: TObject);
+    procedure MenuItem_CopyTextAndClassFromRemoteScreenWindowClick(Sender: TObject);
+
     procedure MenuItem_AddFilesToPropertyListClick(Sender: TObject);
     procedure MenuItem_RemoveAllFilesFromPropertyListClick(Sender: TObject);
     procedure MenuItem_RemoveFileFromPropertyListClick(Sender: TObject);
@@ -479,6 +486,8 @@ type
     procedure LocalTemplatesClick(Sender: TObject);
     procedure ClickerConditionEditorControlsModified;
     procedure OverlapGridImgOnDebugImg(ADebugAndGridBitmap: TBitmap);
+    procedure CopyTextAndClassFromExternalProvider(AProviderName: string);
+    procedure SetActionTimeoutToValue(AValue: Integer);
 
     procedure HandleOnUpdateBitmapAlgorithmSettings;
     procedure HandleOnTriggerOnControlsModified;
@@ -492,10 +501,16 @@ type
     function HandleOnPictureOpenDialogExecute: Boolean;
     function HandleOnGetPictureOpenDialogFileName: string;
 
+    procedure HandleOnUpdateSearchAreaLimitsInOIFromDraggingLines(ALimitLabelsToUpdate: TLimitLabels; var AOffsets: TSimpleRectString);
+    procedure HandleOnUpdateTextCroppingLimitsInOIFromDraggingLines(ALimitLabelsToUpdate: TLimitLabels; var AOffsets: TSimpleRectString; AFontProfileIndex: Integer);
+    procedure HandleOnClickerExecAppFrame_OnTriggerOnControlsModified;
+
     ///////////////////////////// OI
     function EditFontProperties(AItemIndexDiv: Integer; var ANewItems: string): Boolean;
     procedure AddMenuItemToPopupMenu(APopupMenu: TPopupMenu; ACaption: TCaption; AHandler: TNotifyEvent;
       ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer);
+
+    procedure FreeOIPopupMenu(Sender: TObject);
 
     function HandleOnOIGetCategoryCount: Integer;
     function HandleOnOIGetCategory(AIndex: Integer): string;
@@ -544,11 +559,12 @@ type
     function HandleOnOIBrowseFile(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer;
       AFilter, ADialogInitDir: string; var Handled: Boolean; AReturnMultipleFiles: Boolean = False): string;
 
-    procedure HandleOnAfterSpinTextEditorChanging(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; ANewValue: string);
+    procedure HandleOnAfterSpinTextEditorChanging(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; var ANewValue: string);
   public
     { Public declarations }
     frClickerConditionEditor: TfrClickerConditionEditor;  //public, because it is accessed from outside :(
     frClickerFindControl: TfrClickerFindControl;
+    frClickerExecApp: TfrClickerExecApp;
 
     FgrpMouseDragControls: TGroupBox;
     FlblXClickReferenceDest: TLabel;
@@ -674,6 +690,8 @@ begin
   frClickerFindControl.OnSetPictureOpenDialogInitialDir := HandleOnSetPictureOpenDialogInitialDir;
   frClickerFindControl.OnPictureOpenDialogExecute := HandleOnPictureOpenDialogExecute;
   frClickerFindControl.OnGetPictureOpenDialogFileName := HandleOnGetPictureOpenDialogFileName;
+  frClickerFindControl.OnUpdateSearchAreaLimitsInOIFromDraggingLines := HandleOnUpdateSearchAreaLimitsInOIFromDraggingLines;
+  frClickerFindControl.OnUpdateTextCroppingLimitsInOIFromDraggingLines := HandleOnUpdateTextCroppingLimitsInOIFromDraggingLines;
 
   frClickerConditionEditor := TfrClickerConditionEditor.Create(Self);
   frClickerConditionEditor.Parent := pnlActionConditions; //for some reason, using TabSheetCondition leads to a hidden frame
@@ -685,6 +703,15 @@ begin
   frClickerConditionEditor.Anchors := [akBottom, akLeft, akRight, akTop];
   frClickerConditionEditor.OnControlsModified := ClickerConditionEditorControlsModified;
   frClickerConditionEditor.Visible := True;
+
+  frClickerExecApp := TfrClickerExecApp.Create(Self);
+  frClickerExecApp.Parent := pnlExtra;
+  frClickerExecApp.OnTriggerOnControlsModified := HandleOnClickerExecAppFrame_OnTriggerOnControlsModified;
+  frClickerExecApp.Left := 3;
+  frClickerExecApp.Top := 3;
+  frClickerExecApp.Width := pnlExtra.Width - 3;
+  frClickerExecApp.Height := pnlExtra.Height - 3;
+  frClickerExecApp.Visible := True;
 
   FPmLocalTemplates := TPopupMenu.Create(Self);
 
@@ -2409,6 +2436,76 @@ begin
 end;
 
 
+procedure TfrClickerActions.HandleOnUpdateSearchAreaLimitsInOIFromDraggingLines(ALimitLabelsToUpdate: TLimitLabels; var AOffsets: TSimpleRectString);
+begin
+  if llLeft in ALimitLabelsToUpdate then
+  begin
+    FEditingAction^.FindControlOptions.InitialRectange.LeftOffset := AOffsets.Left;
+    FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, CCategory_ActionSpecific, CFindControl_InitialRectange, CFindControl_InitialRectange_LeftOffset_PropItemIndex);
+  end;
+
+  if llTop in ALimitLabelsToUpdate then
+  begin
+    FEditingAction^.FindControlOptions.InitialRectange.TopOffset := AOffsets.Top;
+    FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, CCategory_ActionSpecific, CFindControl_InitialRectange, CFindControl_InitialRectange_TopOffset_PropItemIndex);
+  end;
+
+  if llRight in ALimitLabelsToUpdate then
+  begin
+    FEditingAction^.FindControlOptions.InitialRectange.RightOffset := AOffsets.Right;
+    FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, CCategory_ActionSpecific, CFindControl_InitialRectange, CFindControl_InitialRectange_RightOffset_PropItemIndex);
+  end;
+
+  if llBottom in ALimitLabelsToUpdate then
+  begin
+    FEditingAction^.FindControlOptions.InitialRectange.BottomOffset := AOffsets.Bottom;
+    FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, CCategory_ActionSpecific, CFindControl_InitialRectange, CFindControl_InitialRectange_BottomOffset_PropItemIndex);
+  end;
+end;
+
+
+procedure TfrClickerActions.HandleOnUpdateTextCroppingLimitsInOIFromDraggingLines(ALimitLabelsToUpdate: TLimitLabels; var AOffsets: TSimpleRectString; AFontProfileIndex: Integer);
+var
+  UpdatingNodeIndex: Integer;
+begin
+  if llLeft in ALimitLabelsToUpdate then
+  begin
+    UpdatingNodeIndex := AFontProfileIndex * CPropCount_FindControlMatchBitmapText + CFindControl_MatchBitmapText_CropLeft;
+    FEditingAction^.FindControlOptions.MatchBitmapText[AFontProfileIndex].CropLeft := AOffsets.Left;
+    FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, CCategory_ActionSpecific, CFindControl_MatchBitmapText_PropIndex, UpdatingNodeIndex);
+  end;
+
+  if llTop in ALimitLabelsToUpdate then
+  begin
+    UpdatingNodeIndex := AFontProfileIndex * CPropCount_FindControlMatchBitmapText + CFindControl_MatchBitmapText_CropTop;
+    FEditingAction^.FindControlOptions.MatchBitmapText[AFontProfileIndex].CropTop := AOffsets.Top;
+    FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, CCategory_ActionSpecific, CFindControl_MatchBitmapText_PropIndex, UpdatingNodeIndex);
+  end;
+
+  if llRight in ALimitLabelsToUpdate then
+  begin
+    UpdatingNodeIndex := AFontProfileIndex * CPropCount_FindControlMatchBitmapText + CFindControl_MatchBitmapText_CropRight;
+    FEditingAction^.FindControlOptions.MatchBitmapText[AFontProfileIndex].CropRight := AOffsets.Right;
+    FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, CCategory_ActionSpecific, CFindControl_MatchBitmapText_PropIndex, UpdatingNodeIndex);
+  end;
+
+  if llBottom in ALimitLabelsToUpdate then
+  begin
+    UpdatingNodeIndex := AFontProfileIndex * CPropCount_FindControlMatchBitmapText + CFindControl_MatchBitmapText_CropBottom;
+    FEditingAction^.FindControlOptions.MatchBitmapText[AFontProfileIndex].CropBottom := AOffsets.Bottom;
+    FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, CCategory_ActionSpecific, CFindControl_MatchBitmapText_PropIndex, UpdatingNodeIndex);
+  end;
+end;
+
+
+procedure TfrClickerActions.HandleOnClickerExecAppFrame_OnTriggerOnControlsModified;
+begin
+  FEditingAction.ExecAppOptions.ListOfParams := frClickerExecApp.memExecAppParams.Lines.Text;
+  FOIFrame.RepaintNodeByLevel(CPropertyLevel, CCategory_ActionSpecific, CExecApp_ListOfParams_PropIndex, -1);
+  TriggerOnControlsModified;
+end;
+
+
 function TfrClickerActions.DoOnEditCallTemplateBreakCondition(var AActionCondition: string): Boolean;
 begin
   if not Assigned(FOnEditCallTemplateBreakCondition) then
@@ -2513,6 +2610,7 @@ type
   TOIMenuItemData = record
     OwnerMenu: TPopupMenu;
     NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex: Integer;
+    MenuItemCaption: string;
   end;
   POIMenuItemData = ^TOIMenuItemData;
 
@@ -2535,6 +2633,87 @@ procedure TfrClickerActions.tmrReloadOIContentTimer(Sender: TObject);
 begin
   tmrReloadOIContent.Enabled := False;
   FOIFrame.ReloadContent;
+end;
+
+
+procedure TfrClickerActions.CopyTextAndClassFromExternalProvider(AProviderName: string);
+var
+  ControlText, ControlClass: string;
+begin
+  if not Assigned(FOnCopyControlTextAndClassFromMainWindow) then
+    raise Exception.Create('OnCopyControlTextAndClass not assigned for ' + Caption)
+  else
+  begin
+    FOIFrame.CancelCurrentEditing;
+
+    FOnCopyControlTextAndClassFromMainWindow(AProviderName, ControlText, ControlClass);
+    FEditingAction^.FindControlOptions.MatchText := ControlText;
+    FEditingAction^.FindControlOptions.MatchClassName := ControlClass;
+
+    FOIFrame.RepaintNodeByLevel(CPropertyLevel, CCategory_ActionSpecific, CFindControl_MatchText_PropIndex, -1);
+    FOIFrame.RepaintNodeByLevel(CPropertyLevel, CCategory_ActionSpecific, CFindControl_MatchClassName_PropIndex, -1);
+  end;
+end;
+
+
+procedure TfrClickerActions.SetActionTimeoutToValue(AValue: Integer);
+begin
+  FOIFrame.CancelCurrentEditing;
+  FEditingAction^.ActionOptions.ActionTimeout := AValue;
+  FOIFrame.RepaintNodeByLevel(CPropertyLevel, CCategory_Common, CMain_ActionTimeout_PropIndex, -1);
+end;
+
+
+procedure TfrClickerActions.MenuItem_SetActionTimeoutFromOI(Sender: TObject);
+var
+  MenuData: POIMenuItemData;
+  ValueStr: string;
+begin
+  MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
+  try
+    try
+      ValueStr := StringReplace(MenuData^.MenuItemCaption, '&', '', [rfReplaceAll]);
+      SetActionTimeoutToValue(StrToIntDef(ValueStr, 0));
+    finally
+      MenuData^.OwnerMenu.Free;
+    end;
+  finally
+    Dispose(MenuData);
+  end;
+end;
+
+
+procedure TfrClickerActions.FreeOIPopupMenu(Sender: TObject);
+var
+  MenuData: POIMenuItemData;
+begin
+  MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
+  try
+    MenuData^.OwnerMenu.Free;
+  finally
+    Dispose(MenuData);
+  end;
+end;
+
+
+procedure TfrClickerActions.MenuItem_CopyTextAndClassFromPreviewWindowClick(Sender: TObject);
+begin
+  CopyTextAndClassFromExternalProvider(CPreviewWindow);
+  FreeOIPopupMenu(Sender);
+end;
+
+
+procedure TfrClickerActions.MenuItem_CopyTextAndClassFromWinInterpWindowClick(Sender: TObject);
+begin
+  CopyTextAndClassFromExternalProvider(CWinInterpWindow);
+  FreeOIPopupMenu(Sender);
+end;
+
+
+procedure TfrClickerActions.MenuItem_CopyTextAndClassFromRemoteScreenWindowClick(Sender: TObject);
+begin
+  CopyTextAndClassFromExternalProvider(CRemoteScreenWindow);
+  FreeOIPopupMenu(Sender);
 end;
 
 
@@ -3130,6 +3309,7 @@ procedure TfrClickerActions.HandleOnOIEditedText(ANodeLevel, ACategoryIndex, APr
 var
   EditingActionType: Integer;
   TempStringList: TStringList;
+  ItemIndexMod, ItemIndexDiv: Integer;
 begin
   case ACategoryIndex of
     CCategory_Common:
@@ -3163,6 +3343,50 @@ begin
 
             CFindControl_MatchBitmapText_PropIndex:
             begin
+              if ANodeLevel = CPropertyItemLevel then
+              begin
+                ItemIndexMod := AItemIndex mod CPropCount_FindControlMatchBitmapText;
+                ItemIndexDiv := AItemIndex div CPropCount_FindControlMatchBitmapText;
+
+                case ItemIndexMod of
+                  CFindControl_MatchBitmapText_CropLeft:
+                  begin
+                    if StrToIntDef(ANewText, 0) < 0 then
+                      ANewText := '0';
+
+                    FEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv].CropLeft := ANewText;
+                    frClickerFindControl.BMPTextFontProfiles[ItemIndexDiv].UpdateSelectionLabelsFromCropInfo(FEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv]);
+                  end;
+
+                  CFindControl_MatchBitmapText_CropTop:
+                  begin
+                    if StrToIntDef(ANewText, 0) < 0 then
+                      ANewText := '0';
+
+                    FEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv].CropTop := ANewText;
+                    frClickerFindControl.BMPTextFontProfiles[ItemIndexDiv].UpdateSelectionLabelsFromCropInfo(FEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv]);
+                  end;
+
+                  CFindControl_MatchBitmapText_CropRight:
+                  begin
+                    if StrToIntDef(ANewText, 0) < 0 then
+                      ANewText := '0';
+
+                    FEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv].CropRight := ANewText;
+                    frClickerFindControl.BMPTextFontProfiles[ItemIndexDiv].UpdateSelectionLabelsFromCropInfo(FEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv]);
+                  end;
+
+                  CFindControl_MatchBitmapText_CropBottom:
+                  begin
+                    if StrToIntDef(ANewText, 0) < 0 then
+                      ANewText := '0';
+
+                    FEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv].CropBottom := ANewText;
+                    frClickerFindControl.BMPTextFontProfiles[ItemIndexDiv].UpdateSelectionLabelsFromCropInfo(FEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv]);
+                  end;
+                end; //case  ItemIndexMod
+              end;
+
               SetActionValueStr_FindControl_MatchBitmapText(FEditingAction, ANewText, AItemIndex {no mod here});
               TriggerOnControlsModified;
               Exit;
@@ -3705,6 +3929,7 @@ begin
   MenuData^.CategoryIndex := ACategoryIndex;
   MenuData^.PropertyIndex := APropertyIndex;
   MenuData^.PropertyItemIndex := AItemIndex;
+  MenuData^.MenuItemCaption := ACaption;
 
   APopupMenu.Items.Add(MenuItem);
 end;
@@ -3720,9 +3945,43 @@ var
   ItemIndexMod, ItemIndexDiv: Integer;
 begin
   case ACategoryIndex of
+    CCategory_Common:
+      case APropertyIndex of
+        CMain_ActionTimeout_PropIndex:
+        begin
+          PropertyMenu := TPopupMenu.Create(Self);
+
+          AddMenuItemToPopupMenu(PropertyMenu, '0', MenuItem_SetActionTimeoutFromOI, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+          AddMenuItemToPopupMenu(PropertyMenu, '1000', MenuItem_SetActionTimeoutFromOI, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+          AddMenuItemToPopupMenu(PropertyMenu, '10000', MenuItem_SetActionTimeoutFromOI, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+          AddMenuItemToPopupMenu(PropertyMenu, '30000', MenuItem_SetActionTimeoutFromOI, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+
+          GetCursorPos(tp);
+          PropertyMenu.PopUp(tp.X, tp.Y);
+        end
+        else
+          ;
+      end;
+
     CCategory_ActionSpecific:
     begin
       case APropertyIndex of
+        CFindControl_MatchText_PropIndex, CFindControl_MatchClassName_PropIndex:
+        begin
+          PropertyMenu := TPopupMenu.Create(Self);
+          AddMenuItemToPopupMenu(PropertyMenu, 'Copy values from preview window', MenuItem_CopyTextAndClassFromPreviewWindowClick,
+            ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+
+          AddMenuItemToPopupMenu(PropertyMenu, 'Copy values from window interpreter', MenuItem_CopyTextAndClassFromWinInterpWindowClick,
+            ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+
+          AddMenuItemToPopupMenu(PropertyMenu, 'Copy values from remote screen', MenuItem_CopyTextAndClassFromRemoteScreenWindowClick,
+            ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+
+          GetCursorPos(tp);
+          PropertyMenu.PopUp(tp.X, tp.Y);
+        end;
+
         CFindControl_MatchBitmapText_PropIndex:
           case ANodeLevel of
             CPropertyLevel:
@@ -3845,8 +4104,7 @@ begin
         acExecApp:
           if APropertyIndex = CExecApp_ListOfParams_PropIndex then
           begin
-            MessageBox(Handle, 'Param list editor', 'Files', MB_ICONINFORMATION);
-            TriggerOnControlsModified;
+            frClickerExecApp.BringToFront;  //MessageBox(Handle, 'Param list editor', 'Files', MB_ICONINFORMATION);
           end;
 
         acFindControl, acFindSubControl:
@@ -3968,7 +4226,7 @@ begin
 end;
 
 
-procedure TfrClickerActions.HandleOnAfterSpinTextEditorChanging(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; ANewValue: string);
+procedure TfrClickerActions.HandleOnAfterSpinTextEditorChanging(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; var ANewValue: string);
 var
   ItemIndexMod, ItemIndexDiv: Integer;
 begin
@@ -4010,24 +4268,36 @@ begin
       CFindControl_MatchBitmapText_CropLeft:
       begin
         FEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv].CropLeft := ANewValue;
+        if StrToIntDef(ANewValue, 0) < 0 then
+          ANewValue := '0';
+
         frClickerFindControl.BMPTextFontProfiles[ItemIndexDiv].UpdateSelectionLabelsFromCropInfo(FEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv]);
       end;
 
       CFindControl_MatchBitmapText_CropTop:
       begin
         FEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv].CropTop := ANewValue;
+        if StrToIntDef(ANewValue, 0) < 0 then
+          ANewValue := '0';
+
         frClickerFindControl.BMPTextFontProfiles[ItemIndexDiv].UpdateSelectionLabelsFromCropInfo(FEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv]);
       end;
 
       CFindControl_MatchBitmapText_CropRight:
       begin
         FEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv].CropRight := ANewValue;
+        if StrToIntDef(ANewValue, 0) < 0 then
+          ANewValue := '0';
+
         frClickerFindControl.BMPTextFontProfiles[ItemIndexDiv].UpdateSelectionLabelsFromCropInfo(FEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv]);
       end;
 
       CFindControl_MatchBitmapText_CropBottom:
       begin
         FEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv].CropBottom := ANewValue;
+        if StrToIntDef(ANewValue, 0) < 0 then
+          ANewValue := '0';
+
         frClickerFindControl.BMPTextFontProfiles[ItemIndexDiv].UpdateSelectionLabelsFromCropInfo(FEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv]);
       end;
     end;

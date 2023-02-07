@@ -51,6 +51,9 @@ type
   TActionDebuggingStatus = (adsNone, adsPrev, adsCurrent, adsNext);
   TActionStatus = (asNotStarted, asFailed, asSuccessful, asInProgress, asAllowedFailed);
 
+  TLimitLabel = (llLeft, llTop, llRight, llBottom);
+  TLimitLabels = set of TLimitLabel;
+
   TOnAddToLog = procedure(s: string) of object;
 
   TEvaluateReplacementsFunc = function(s: string; Recursive: Boolean = True): string of object;
@@ -76,6 +79,7 @@ type
   TOnSetPictureOpenDialogInitialDir = procedure(AInitialDir: string) of object;
   TOnPictureOpenDialogExecute = function: Boolean of object;
   TOnGetPictureOpenDialogFileName = function: string of object;
+
 
 const
   CClkActionStr: array[TClkAction] of string = ('Click', 'ExecApp', 'FindControl', 'FindSubControl', 'SetControlText', 'CallTemplate', 'Sleep', 'SetVar', 'WindowOperations');
@@ -143,6 +147,10 @@ type
   TRectString = record
     Left, Top, Right, Bottom: string;
     LeftOffset, TopOffset, RightOffset, BottomOffset: string;
+  end;
+
+  TSimpleRectString = record   //similar to TRectString, but only with a single set of values
+    Left, Top, Right, Bottom: string;
   end;
 
   TClkFindControlMatchCriteria = record
@@ -299,6 +307,11 @@ type
   end;
 
   TCompRecArr = array of TCompRec;
+
+
+  TOnUpdateSearchAreaLimitsInOIFromDraggingLines = procedure(ALimitLabelsToUpdate: TLimitLabels; var AOffsets: TSimpleRectString) of object;
+  TOnUpdateTextCroppingLimitsInOIFromDraggingLines = procedure(ALimitLabelsToUpdate: TLimitLabels; var AOffsets: TSimpleRectString; AFontProfileName: string) of object;
+  TOnUpdateTextCroppingLimitsInOIFromDraggingLinesIdx = procedure(ALimitLabelsToUpdate: TLimitLabels; var AOffsets: TSimpleRectString; AFontProfileIndex: Integer) of object;
 
 
 const

@@ -41,7 +41,8 @@ uses
   ClickerConditionEditorForm, ClickerFindControlFrame, ClickerActionsForm,
   ClickerActionsPaletteFrame, UIClickerMainFormFP, ClickerRemoteScreenForm,
   ClickerPreviewForm, ClickerActionExecution, ClickerTemplateNotesForm,
-  ClickerZoomPreviewForm, ObjectInspectorFrame, ClickerActionValues;
+  ClickerZoomPreviewForm, ObjectInspectorFrame, ClickerActionValues, 
+  ClickerExecAppFrame;
 
 {$R *.res}
 

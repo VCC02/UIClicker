@@ -142,6 +142,7 @@ type
     FOnGetDisplayedText: TOnGetDisplayedText;
     FOnSetCroppingValuesToOtherFontProfiles: TOnSetCroppingValuesToOtherFontProfiles;
     FOnGetCroppingLinesVisiblity: TOnGetCroppingLinesVisiblity;
+    FOnUpdateTextCroppingLimitsInOIFromDraggingLines: TOnUpdateTextCroppingLimitsInOIFromDraggingLines;
 
     FSelectedComponentLeftLimitLabel: TLabel;
     FSelectedComponentTopLimitLabel: TLabel;
@@ -191,6 +192,7 @@ type
     function DoOnGetDisplayedText: string;
     procedure DoOnSetCroppingValuesToOtherFontProfiles(ACropLeft, ACropTop, ACropRight, ACropBottom: string; ASkipProfileIndex: Integer);
     function DoOnGetCroppingLinesVisiblity: Boolean;
+    procedure DoOnUpdateTextCroppingLimitsInOIFromDraggingLines(ALimitLabelsToUpdate: TLimitLabels; var AOffsets: TSimpleRectString; AFontProfileName: string);
 
     function EvaluateReplacements(s: string): string;
     procedure CreateSelectionLabels;
@@ -212,6 +214,7 @@ type
     property OnGetDisplayedText: TOnGetDisplayedText read FOnGetDisplayedText write FOnGetDisplayedText;
     property OnSetCroppingValuesToOtherFontProfiles: TOnSetCroppingValuesToOtherFontProfiles write FOnSetCroppingValuesToOtherFontProfiles;
     property OnGetCroppingLinesVisiblity: TOnGetCroppingLinesVisiblity write FOnGetCroppingLinesVisiblity;
+    property OnUpdateTextCroppingLimitsInOIFromDraggingLines: TOnUpdateTextCroppingLimitsInOIFromDraggingLines write FOnUpdateTextCroppingLimitsInOIFromDraggingLines;
   end;
 
   //TfrClickerBMPTextArr = array of TfrClickerBMPText;
@@ -289,6 +292,15 @@ begin
     Result := FOnGetCroppingLinesVisiblity()
   else
     raise Exception.Create('OnGetCroppingLinesVisiblity not assigned.');
+end;
+
+
+procedure TfrClickerBMPText.DoOnUpdateTextCroppingLimitsInOIFromDraggingLines(ALimitLabelsToUpdate: TLimitLabels; var AOffsets: TSimpleRectString; AFontProfileName: string);
+begin
+  if not Assigned(FOnUpdateTextCroppingLimitsInOIFromDraggingLines) then
+    Exit;
+
+  FOnUpdateTextCroppingLimitsInOIFromDraggingLines(ALimitLabelsToUpdate, AOffsets, AFontProfileName);
 end;
 
 
@@ -408,6 +420,7 @@ begin
   FOnGetDisplayedText := nil;
   FOnSetCroppingValuesToOtherFontProfiles := nil;
   FOnGetCroppingLinesVisiblity := nil;
+  FOnUpdateTextCroppingLimitsInOIFromDraggingLines := nil;
 
   CreateSelectionLabels;
   tmrStartup.Enabled := True; //after creating labels
@@ -1031,6 +1044,8 @@ end;
 
 
 procedure TfrClickerBMPText.tmrUpdateCropEditBoxesTimer(Sender: TObject);
+var
+  Offsets: TSimpleRectString;
 begin
   tmrUpdateCropEditBoxes.Enabled := False;
 
@@ -1045,6 +1060,12 @@ begin
 
   if Pos('$', lbeMatchBitmapTextCropBottom.Text) = 0 then
     lbeMatchBitmapTextCropBottom.Text := IntToStr(imgPreview.Height - FSelectedComponentBottomLimitLabel.Top + 1);
+
+  Offsets.Left := lbeMatchBitmapTextCropLeft.Text;
+  Offsets.Top := lbeMatchBitmapTextCropTop.Text;
+  Offsets.Right := lbeMatchBitmapTextCropRight.Text;
+  Offsets.Bottom := lbeMatchBitmapTextCropBottom.Text;
+  DoOnUpdateTextCroppingLimitsInOIFromDraggingLines([llLeft, llTop, llRight, llBottom], Offsets, FProfileName);
 end;
 
 
