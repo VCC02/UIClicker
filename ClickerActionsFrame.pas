@@ -34,7 +34,7 @@ uses
   Windows, SysUtils, Variants, Classes, Graphics, Controls, Forms, Dialogs,
   VirtualTrees, ExtCtrls, StdCtrls, ComCtrls, ImgList, Buttons, Grids, ValEdit,
   Menus, ClickerUtils, ClickerConditionEditorFrame, ClickerFindControlFrame,
-  ClickerExecAppFrame, Types,
+  ClickerExecAppFrame, ClickerSetVarFrame, Types,
   InMemFileSystem, ObjectInspectorFrame;
 
 type
@@ -127,6 +127,7 @@ type
     MenuItemCopySearchAreaSearchBmpImgToClipboard: TMenuItem;
     MenuItemCopySearchAreaBkImgToClipboard: TMenuItem;
     MenuItemGenericLoadBmpToSearchedArea: TMenuItem;
+    pnlCover: TPanel;
     pnlExtra: TPanel;
     pmStandardColorVariables: TPopupMenu;
     pmSetVars: TPopupMenu;
@@ -504,6 +505,7 @@ type
     procedure HandleOnUpdateSearchAreaLimitsInOIFromDraggingLines(ALimitLabelsToUpdate: TLimitLabels; var AOffsets: TSimpleRectString);
     procedure HandleOnUpdateTextCroppingLimitsInOIFromDraggingLines(ALimitLabelsToUpdate: TLimitLabels; var AOffsets: TSimpleRectString; AFontProfileIndex: Integer);
     procedure HandleOnClickerExecAppFrame_OnTriggerOnControlsModified;
+    procedure HandleOnClickerSetVarFrame_OnTriggerOnControlsModified;
 
     ///////////////////////////// OI
     function EditFontProperties(AItemIndexDiv: Integer; var ANewItems: string): Boolean;
@@ -565,6 +567,7 @@ type
     frClickerConditionEditor: TfrClickerConditionEditor;  //public, because it is accessed from outside :(
     frClickerFindControl: TfrClickerFindControl;
     frClickerExecApp: TfrClickerExecApp;
+    frClickerSetVar: TfrClickerSetVar;
 
     FgrpMouseDragControls: TGroupBox;
     FlblXClickReferenceDest: TLabel;
@@ -712,6 +715,15 @@ begin
   frClickerExecApp.Width := pnlExtra.Width - 3;
   frClickerExecApp.Height := pnlExtra.Height - 3;
   frClickerExecApp.Visible := True;
+
+  frClickerSetVar := TfrClickerSetVar.Create(Self);
+  frClickerSetVar.Parent := pnlExtra;
+  frClickerSetVar.OnTriggerOnControlsModified := HandleOnClickerSetVarFrame_OnTriggerOnControlsModified;
+  frClickerSetVar.Left := 3;
+  frClickerSetVar.Top := 3;
+  frClickerSetVar.Width := pnlExtra.Width - 3;
+  frClickerSetVar.Height := pnlExtra.Height - 3;
+  frClickerSetVar.Visible := True;
 
   FPmLocalTemplates := TPopupMenu.Create(Self);
 
@@ -1901,7 +1913,13 @@ end;
 procedure TfrClickerActions.UpdatePageControlActionsOnFindControlTab;
 begin
   if PageControlActionExecution.ActivePageIndex = 3 then
-    frClickerFindControl.Parent := pnlExtra
+  begin
+    if GetCurrentlyEditingActionType in [acFindControl, acFindSubControl] then
+    begin
+      frClickerFindControl.Parent := pnlExtra;
+      frClickerFindControl.BringToFront;
+    end;
+  end
   else
     case PageControlActions.ActivePageIndex of
       2: frClickerFindControl.Parent := TabSheetActionFindControl;
@@ -2506,6 +2524,13 @@ begin
 end;
 
 
+procedure TfrClickerActions.HandleOnClickerSetVarFrame_OnTriggerOnControlsModified;
+begin
+  FEditingAction.SetVarOptions := frClickerSetVar.GetListOfSetVars;
+  TriggerOnControlsModified;
+end;
+
+
 function TfrClickerActions.DoOnEditCallTemplateBreakCondition(var AActionCondition: string): Boolean;
 begin
   if not Assigned(FOnEditCallTemplateBreakCondition) then
@@ -2626,6 +2651,49 @@ begin
   cmbActions.ItemIndex := Ord(Value);
   FOIFrame.ReloadContent;
   pnlvstOI.Visible := True;
+
+  pnlCover.Hide;
+
+  case Value of
+    acExecApp:
+    begin
+      frClickerExecApp.Show;
+      frClickerExecApp.BringToFront;
+      frClickerFindControl.Parent := TabSheetActionFindControl;
+      frClickerSetVar.Hide;
+    end;
+
+    acFindControl, acFindSubControl:
+    begin
+      frClickerExecApp.Hide;
+      frClickerFindControl.Parent := pnlExtra;
+      frClickerFindControl.Show;
+      frClickerFindControl.BringToFront;
+      frClickerSetVar.Hide;
+    end;
+
+    acSetVar:
+    begin
+      frClickerExecApp.Hide;
+      frClickerFindControl.Parent := TabSheetActionFindControl;
+      frClickerSetVar.Show;
+      frClickerSetVar.BringToFront;
+    end
+
+    else
+    begin
+      frClickerExecApp.Hide;
+      frClickerFindControl.Parent := TabSheetActionFindControl;
+      frClickerSetVar.Hide;
+
+      pnlCover.Left := 0;
+      pnlCover.Top := 0;
+      pnlCover.Width := pnlExtra.Width;
+      pnlCover.Height := pnlExtra.Height;
+      pnlCover.Show;
+      pnlCover.BringToFront;
+    end;
+  end;
 end;
 
 
@@ -4138,7 +4206,11 @@ begin
 
         acSetVar:
           if APropertyIndex = CSetVar_ListOfVarNamesValuesAndEvalBefore then
-            MessageBox(Handle, 'SetVar editor', 'Files', MB_ICONINFORMATION);
+          begin
+            frClickerSetVar.SetListOfSetVars(FEditingAction^.SetVarOptions);
+            frClickerSetVar.BringToFront;
+            //MessageBox(Handle, 'SetVar editor', 'Files', MB_ICONINFORMATION);
+          end;
 
         else
           ;

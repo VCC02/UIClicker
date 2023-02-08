@@ -42,7 +42,7 @@ uses
   ClickerActionsPaletteFrame, UIClickerMainFormFP, ClickerRemoteScreenForm,
   ClickerPreviewForm, ClickerActionExecution, ClickerTemplateNotesForm,
   ClickerZoomPreviewForm, ObjectInspectorFrame, ClickerActionValues, 
-  ClickerExecAppFrame;
+  ClickerExecAppFrame, ClickerSetVarFrame;
 
 {$R *.res}
 

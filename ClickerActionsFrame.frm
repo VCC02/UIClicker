@@ -78,10 +78,10 @@ object frClickerActions: TfrClickerActions
         Height = 268
         Top = 0
         Width = 890
-        ActivePage = TabSheetActionExecApp
+        ActivePage = TabSheetActionFindSubControl
         Anchors = [akTop, akLeft, akRight, akBottom]
         Images = imglstActions
-        TabIndex = 1
+        TabIndex = 3
         TabOrder = 5
         OnChange = PageControlActionsChange
         object TabSheetActionClick: TTabSheet
@@ -1478,7 +1478,7 @@ object frClickerActions: TfrClickerActions
         Left = 0
         Height = 208
         Top = 0
-        Width = 384
+        Width = 432
         Anchors = [akTop, akLeft, akBottom]
         BevelOuter = bvNone
         Caption = 'pnlvstOI'
@@ -1508,15 +1508,25 @@ object frClickerActions: TfrClickerActions
         ShowHint = True
       end
       object pnlExtra: TPanel
-        Left = 392
+        Left = 440
         Height = 266
         Top = 0
-        Width = 610
-        Anchors = [akTop, akRight]
+        Width = 562
+        Anchors = [akTop, akRight, akBottom]
         Caption = 'Local editors'
+        ClientHeight = 266
+        ClientWidth = 562
         Color = 9764056
         ParentColor = False
         TabOrder = 1
+        object pnlCover: TPanel
+          Left = 400
+          Height = 50
+          Top = 152
+          Width = 170
+          TabOrder = 0
+          Visible = False
+        end
       end
     end
   end
