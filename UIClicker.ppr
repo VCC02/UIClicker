@@ -42,7 +42,8 @@ uses
   ClickerActionsPaletteFrame, UIClickerMainFormFP, ClickerRemoteScreenForm,
   ClickerPreviewForm, ClickerActionExecution, ClickerTemplateNotesForm,
   ClickerZoomPreviewForm, ObjectInspectorFrame, ClickerActionValues, 
-  ClickerExecAppFrame, ClickerSetVarFrame;
+  ClickerExecAppFrame, ClickerSetVarFrame, ClickerSleepFrame, 
+ClickerCallTemplateFrame;
 
 {$R *.res}
 

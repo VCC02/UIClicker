@@ -181,8 +181,6 @@ type
     FControlPlayerPopup: TPopupMenu;
 
     procedure SetFullTemplatesDir(Value: string);
-    function GetShowDeprecatedControls: Boolean;
-    procedure SetShowDeprecatedControls(Value: Boolean);
 
     function GetBMPsDir: string;
     procedure SetBMPsDir(Value: string);
@@ -274,7 +272,6 @@ type
 
     //public properties (because of creating new instances)
     property FullTemplatesDir: string read FFullTemplatesDir write SetFullTemplatesDir;  //no trailing backslash
-    property ShowDeprecatedControls: Boolean read GetShowDeprecatedControls write SetShowDeprecatedControls;
     property ConfiguredRemoteAddress: string read GetConfiguredRemoteAddress;
     property ActionExecution: TActionExecution read GetActionExecution;
     property StopAllActionsOnDemand: Boolean read FStopAllActionsOnDemand write FStopAllActionsOnDemand;
@@ -362,7 +359,6 @@ begin
   Width := AIni.ReadInteger('ActionsWindow', 'Width', Width);
   Height := AIni.ReadInteger('ActionsWindow', 'Height', Height);
   chkStayOnTop.Checked := AIni.ReadBool('ActionsWindow', 'StayOnTop', chkStayOnTop.Checked);
-  ShowDeprecatedControls := AIni.ReadBool('ActionsWindow', 'ShowDeprecatedControls', False);
   PageControlMain.ActivePageIndex := AIni.ReadInteger('ActionsWindow', 'ActivePageIndex', PageControlMain.ActivePageIndex);
   frClickerActionsArrMain.chkSwitchEditorOnActionSelect.Checked := AIni.ReadBool('ActionsWindow', 'SwitchEditorOnActionSelect.Main', True);
   frClickerActionsArrExperiment1.chkSwitchEditorOnActionSelect.Checked := AIni.ReadBool('ActionsWindow', 'SwitchEditorOnActionSelect.Exp1', True);
@@ -420,7 +416,6 @@ begin
   AIni.WriteInteger('ActionsWindow', 'Width', Width);
   AIni.WriteInteger('ActionsWindow', 'Height', Height);
   AIni.WriteBool('ActionsWindow', 'StayOnTop', chkStayOnTop.Checked);
-  AIni.WriteBool('ActionsWindow', 'ShowDeprecatedControls', ShowDeprecatedControls);
   AIni.WriteInteger('ActionsWindow', 'ActivePageIndex', PageControlMain.ActivePageIndex);
 
   AIni.WriteBool('ActionsWindow', 'SwitchEditorOnActionSelect.Main', frClickerActionsArrMain.chkSwitchEditorOnActionSelect.Checked);
@@ -692,13 +687,6 @@ begin
   frClickerActionsArrMain.OnSetPictureOpenSetMultiSelect := HandleOnSetPictureOpenSetMultiSelect;
   frClickerActionsArrMain.OnPictureOpenDialogExecute := HandleOnPictureOpenDialogExecute;
   frClickerActionsArrMain.OnGetPictureOpenDialogFileName := HandleOnGetPictureOpenDialogFileName;
-
-  frClickerActionsArrExperiment1.frClickerActions.frClickerFindControl.lbeColorError.Hint := StringReplace(frClickerActionsArrExperiment1.frClickerActions.frClickerFindControl.lbeColorError.Hint, '. ', '.'#13#10, [rfReplaceAll]);
-  frClickerActionsArrExperiment2.frClickerActions.frClickerFindControl.lbeColorError.Hint := StringReplace(frClickerActionsArrExperiment2.frClickerActions.frClickerFindControl.lbeColorError.Hint, '. ', '.'#13#10, [rfReplaceAll]);
-  frClickerActionsArrExperiment1.frClickerActions.frClickerFindControl.lbeAllowedColorErrorCount.Hint := StringReplace(frClickerActionsArrExperiment1.frClickerActions.frClickerFindControl.lbeAllowedColorErrorCount.Hint, '. ', '.'#13#10, [rfReplaceAll]);
-  frClickerActionsArrExperiment2.frClickerActions.frClickerFindControl.lbeAllowedColorErrorCount.Hint := StringReplace(frClickerActionsArrExperiment2.frClickerActions.frClickerFindControl.lbeAllowedColorErrorCount.Hint, '. ', '.'#13#10, [rfReplaceAll]);
-  frClickerActionsArrMain.frClickerActions.frClickerFindControl.lbeColorError.Hint := StringReplace(frClickerActionsArrMain.frClickerActions.frClickerFindControl.lbeColorError.Hint, '. ', '.'#13#10, [rfReplaceAll]);
-  frClickerActionsArrMain.frClickerActions.frClickerFindControl.lbeAllowedColorErrorCount.Hint := StringReplace(frClickerActionsArrMain.frClickerActions.frClickerFindControl.lbeAllowedColorErrorCount.Hint, '. ', '.'#13#10, [rfReplaceAll]);
 
   frClickerActionsArrExperiment1.frClickerActions.PasteDebugValuesListFromMainExecutionList1.OnClick := frClickerActionsArrExperiment1PasteDebugValuesListFromMainExecutionList1Click;
   frClickerActionsArrExperiment2.frClickerActions.PasteDebugValuesListFromMainExecutionList1.OnClick := frClickerActionsArrExperiment2PasteDebugValuesListFromMainExecutionList1Click;
@@ -1153,7 +1141,6 @@ begin
         NewFrame.UseLocalDebugger := frClickerActionsArrMain.UseLocalDebugger;
         NewFrame.FileLocationOfDepsIsMem := frClickerActionsArrMain.FileLocationOfDepsIsMem;
         NewFrame.FullTemplatesDir := FFullTemplatesDir;
-        NewFrame.ShowDeprecatedControls := frClickerActionsArrMain.ShowDeprecatedControls;
         NewFrame.RemoteAddress := frClickerActionsArrMain.RemoteAddress;
         NewFrame.InMemFS := FInMemFileSystem;
 
@@ -1553,24 +1540,6 @@ begin
     frClickerActionsArrExperiment1.FullTemplatesDir := Value;
     frClickerActionsArrExperiment2.FullTemplatesDir := Value;
   end;
-end;
-
-
-function TfrmClickerActions.GetShowDeprecatedControls: Boolean;
-begin
-  Result := frClickerActionsArrMain.ShowDeprecatedControls;
-end;
-
-
-procedure TfrmClickerActions.SetShowDeprecatedControls(Value: Boolean);
-begin
-  frClickerActionsArrMain.ShowDeprecatedControls := Value;
-
-  if frClickerActionsArrExperiment1 <> nil then
-    frClickerActionsArrExperiment1.ShowDeprecatedControls := Value;
-
-  if frClickerActionsArrExperiment2 <> nil then
-    frClickerActionsArrExperiment2.ShowDeprecatedControls := Value;
 end;
 
 

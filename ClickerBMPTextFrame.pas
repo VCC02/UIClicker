@@ -49,11 +49,7 @@ type
     edtFontQualityReplacement: TEdit;
     imgPreview: TImage;
     lbeMatchBitmapTextBGColor: TLabeledEdit;
-    lbeMatchBitmapTextCropTop: TLabeledEdit;
-    lbeMatchBitmapTextCropBottom: TLabeledEdit;
-    lbeMatchBitmapTextCropRight: TLabeledEdit;
     lbeMatchBitmapTextFGColor: TLabeledEdit;
-    lbeMatchBitmapTextCropLeft: TLabeledEdit;
     lbeMatchBitmapTextFontName: TLabeledEdit;
     lbeMatchBitmapTextSize: TLabeledEdit;
     lblMatchBitmapTextFontQuality: TLabel;
@@ -101,18 +97,6 @@ type
     procedure lbeMatchBitmapTextBGColorChange(Sender: TObject);
     procedure lbeMatchBitmapTextBGColorMouseUp(Sender: TObject;
       Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-    procedure lbeMatchBitmapTextCropBottomChange(Sender: TObject);
-    procedure lbeMatchBitmapTextCropBottomKeyDown(Sender: TObject;
-      var Key: Word; Shift: TShiftState);
-    procedure lbeMatchBitmapTextCropLeftChange(Sender: TObject);
-    procedure lbeMatchBitmapTextCropLeftKeyDown(Sender: TObject; var Key: Word;
-      Shift: TShiftState);
-    procedure lbeMatchBitmapTextCropRightChange(Sender: TObject);
-    procedure lbeMatchBitmapTextCropRightKeyDown(Sender: TObject;
-      var Key: Word; Shift: TShiftState);
-    procedure lbeMatchBitmapTextCropTopChange(Sender: TObject);
-    procedure lbeMatchBitmapTextCropTopKeyDown(Sender: TObject; var Key: Word;
-      Shift: TShiftState);
     procedure lbeMatchBitmapTextFGColorChange(Sender: TObject);
     procedure lbeMatchBitmapTextFGColorMouseUp(Sender: TObject;
       Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
@@ -157,6 +141,11 @@ type
     FSelectionHold: Boolean;
     FMouseDownGlobalPos: TPoint;
     FMouseDownSelPos: TPoint;
+
+    FMatchBitmapTextCropLeft: string;
+    FMatchBitmapTextCropTop: string;
+    FMatchBitmapTextCropRight: string;
+    FMatchBitmapTextCropBottom: string;
 
     procedure FTransparent_LeftMouseDown(Sender: TObject;
       Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
@@ -208,6 +197,11 @@ type
     procedure DisplayCroppingLines(AVisible: Boolean);
 
     property ProfileName: string read FProfileName write SetProfileName;
+
+    property MatchBitmapTextCropLeft: string read FMatchBitmapTextCropLeft write FMatchBitmapTextCropLeft;
+    property MatchBitmapTextCropTop: string read FMatchBitmapTextCropTop write FMatchBitmapTextCropTop;
+    property MatchBitmapTextCropRight: string read FMatchBitmapTextCropRight write FMatchBitmapTextCropRight;
+    property MatchBitmapTextCropBottom: string read FMatchBitmapTextCropBottom write FMatchBitmapTextCropBottom;
 
     property OnTriggerOnControlsModified: TOnTriggerOnControlsModified read FOnTriggerOnControlsModified write FOnTriggerOnControlsModified;
     property OnEvaluateReplacements: TOnEvaluateReplacements read FOnEvaluateReplacements write FOnEvaluateReplacements;
@@ -502,10 +496,10 @@ begin
 
   if Assigned(ACroppedImg) then
   begin
-    CropLeft := Max(StrToIntDef(EvaluateReplacements(lbeMatchBitmapTextCropLeft.Text), 0), 0);
-    CropTop := Max(StrToIntDef(EvaluateReplacements(lbeMatchBitmapTextCropTop.Text), 0), 0);
-    CropRight := Max(StrToIntDef(EvaluateReplacements(lbeMatchBitmapTextCropRight.Text), 0), 0);
-    CropBottom := Max(StrToIntDef(EvaluateReplacements(lbeMatchBitmapTextCropBottom.Text), 0), 0);
+    CropLeft := Max(StrToIntDef(EvaluateReplacements(FMatchBitmapTextCropLeft), 0), 0);
+    CropTop := Max(StrToIntDef(EvaluateReplacements(FMatchBitmapTextCropTop), 0), 0);
+    CropRight := Max(StrToIntDef(EvaluateReplacements(FMatchBitmapTextCropRight), 0), 0);
+    CropBottom := Max(StrToIntDef(EvaluateReplacements(FMatchBitmapTextCropBottom), 0), 0);
 
     if (CropLeft <> 0) or (CropTop <> 0) or (CropRight <> 0) or (CropBottom <> 0) then
     begin
@@ -632,10 +626,10 @@ begin
 
   CroppedBmp := TBitmap.Create;
   try
-    CropLeft := Max(StrToIntDef(EvaluateReplacements(lbeMatchBitmapTextCropLeft.Text), 0), 0);
-    CropTop := Max(StrToIntDef(EvaluateReplacements(lbeMatchBitmapTextCropTop.Text), 0), 0);
-    CropRight := Max(StrToIntDef(EvaluateReplacements(lbeMatchBitmapTextCropRight.Text), 0), 0);
-    CropBottom := Max(StrToIntDef(EvaluateReplacements(lbeMatchBitmapTextCropBottom.Text), 0), 0);
+    CropLeft := Max(StrToIntDef(EvaluateReplacements(FMatchBitmapTextCropLeft), 0), 0);
+    CropTop := Max(StrToIntDef(EvaluateReplacements(FMatchBitmapTextCropTop), 0), 0);
+    CropRight := Max(StrToIntDef(EvaluateReplacements(FMatchBitmapTextCropRight), 0), 0);
+    CropBottom := Max(StrToIntDef(EvaluateReplacements(FMatchBitmapTextCropBottom), 0), 0);
 
     CroppedBMP.Width := imgPreview.Width - (CropLeft + CropRight);
     CroppedBMP.Height := imgPreview.Height - (CropTop + CropBottom);
@@ -693,10 +687,10 @@ end;
 procedure TfrClickerBMPText.MenuItemCopyCroppingValuesToOtherProfilesClick(
   Sender: TObject);
 begin
-  DoOnSetCroppingValuesToOtherFontProfiles(lbeMatchBitmapTextCropLeft.Text,
-                                           lbeMatchBitmapTextCropTop.Text,
-                                           lbeMatchBitmapTextCropRight.Text,
-                                           lbeMatchBitmapTextCropBottom.Text,
+  DoOnSetCroppingValuesToOtherFontProfiles(FMatchBitmapTextCropLeft,
+                                           FMatchBitmapTextCropTop,
+                                           FMatchBitmapTextCropRight,
+                                           FMatchBitmapTextCropBottom,
                                            -1);
 end;
 
@@ -789,70 +783,6 @@ begin
     Exit;
 
   FLastClickedLbe := Sender as TLabeledEdit;
-end;
-
-
-procedure TfrClickerBMPText.lbeMatchBitmapTextCropBottomChange(Sender: TObject);
-begin
-  //PreviewText;
-  DoOnTriggerOnControlsModified;
-  UpdateSelectionLabelsFromCropEditBoxes;
-end;
-
-
-procedure TfrClickerBMPText.lbeMatchBitmapTextCropBottomKeyDown(
-  Sender: TObject; var Key: Word; Shift: TShiftState);
-begin
-  if Key = VK_RETURN then
-    UpdateSelectionLabelsFromCropEditBoxes;
-end;
-
-
-procedure TfrClickerBMPText.lbeMatchBitmapTextCropLeftChange(Sender: TObject);
-begin
-  //PreviewText;
-  DoOnTriggerOnControlsModified;
-  UpdateSelectionLabelsFromCropEditBoxes;
-end;
-
-
-procedure TfrClickerBMPText.lbeMatchBitmapTextCropLeftKeyDown(Sender: TObject;
-  var Key: Word; Shift: TShiftState);
-begin
-  if Key = VK_RETURN then
-    UpdateSelectionLabelsFromCropEditBoxes;
-end;
-
-
-procedure TfrClickerBMPText.lbeMatchBitmapTextCropRightChange(Sender: TObject);
-begin
-  //PreviewText;
-  DoOnTriggerOnControlsModified;
-  UpdateSelectionLabelsFromCropEditBoxes;
-end;
-
-
-procedure TfrClickerBMPText.lbeMatchBitmapTextCropRightKeyDown(Sender: TObject;
-  var Key: Word; Shift: TShiftState);
-begin
-  if Key = VK_RETURN then
-    UpdateSelectionLabelsFromCropEditBoxes;
-end;
-
-
-procedure TfrClickerBMPText.lbeMatchBitmapTextCropTopChange(Sender: TObject);
-begin
-  //PreviewText;
-  DoOnTriggerOnControlsModified;
-  UpdateSelectionLabelsFromCropEditBoxes;
-end;
-
-
-procedure TfrClickerBMPText.lbeMatchBitmapTextCropTopKeyDown(Sender: TObject;
-  var Key: Word; Shift: TShiftState);
-begin
-  if Key = VK_RETURN then
-    UpdateSelectionLabelsFromCropEditBoxes;
 end;
 
 
@@ -1049,32 +979,32 @@ var
 begin
   tmrUpdateCropEditBoxes.Enabled := False;
 
-  if Pos('$', lbeMatchBitmapTextCropLeft.Text) = 0 then
-    lbeMatchBitmapTextCropLeft.Text := IntToStr(FSelectedComponentLeftLimitLabel.Left);
+  if Pos('$', FMatchBitmapTextCropLeft) = 0 then
+    FMatchBitmapTextCropLeft := IntToStr(FSelectedComponentLeftLimitLabel.Left);
 
-  if Pos('$', lbeMatchBitmapTextCropRight.Text) = 0 then
-    lbeMatchBitmapTextCropRight.Text := IntToStr(imgPreview.Width - FSelectedComponentRightLimitLabel.Left + 1);
+  if Pos('$', FMatchBitmapTextCropRight) = 0 then
+    FMatchBitmapTextCropRight := IntToStr(imgPreview.Width - FSelectedComponentRightLimitLabel.Left + 1);
 
-  if Pos('$', lbeMatchBitmapTextCropTop.Text) = 0 then
-    lbeMatchBitmapTextCropTop.Text := IntToStr(FSelectedComponentTopLimitLabel.Top);
+  if Pos('$', FMatchBitmapTextCropTop) = 0 then
+    FMatchBitmapTextCropTop := IntToStr(FSelectedComponentTopLimitLabel.Top);
 
-  if Pos('$', lbeMatchBitmapTextCropBottom.Text) = 0 then
-    lbeMatchBitmapTextCropBottom.Text := IntToStr(imgPreview.Height - FSelectedComponentBottomLimitLabel.Top + 1);
+  if Pos('$', FMatchBitmapTextCropBottom) = 0 then
+    FMatchBitmapTextCropBottom := IntToStr(imgPreview.Height - FSelectedComponentBottomLimitLabel.Top + 1);
 
-  Offsets.Left := lbeMatchBitmapTextCropLeft.Text;
-  Offsets.Top := lbeMatchBitmapTextCropTop.Text;
-  Offsets.Right := lbeMatchBitmapTextCropRight.Text;
-  Offsets.Bottom := lbeMatchBitmapTextCropBottom.Text;
+  Offsets.Left := FMatchBitmapTextCropLeft;
+  Offsets.Top := FMatchBitmapTextCropTop;
+  Offsets.Right := FMatchBitmapTextCropRight;
+  Offsets.Bottom := FMatchBitmapTextCropBottom;
   DoOnUpdateTextCroppingLimitsInOIFromDraggingLines([llLeft, llTop, llRight, llBottom], Offsets, FProfileName);
 end;
 
 
 procedure TfrClickerBMPText.UpdateSelectionLabelsFromCropEditBoxes;
 begin
-  FSelectedComponentLeftLimitLabel.Left := StrToIntDef(EvaluateReplacements(lbeMatchBitmapTextCropLeft.Text), 0);
-  FSelectedComponentTopLimitLabel.Top := StrToIntDef(EvaluateReplacements(lbeMatchBitmapTextCropTop.Text), 0);
-  FSelectedComponentRightLimitLabel.Left := imgPreview.Width - StrToIntDef(EvaluateReplacements(lbeMatchBitmapTextCropRight.Text), 0) + 1;
-  FSelectedComponentBottomLimitLabel.Top := imgPreview.Height - StrToIntDef(EvaluateReplacements(lbeMatchBitmapTextCropBottom.Text), 0) + 1;
+  FSelectedComponentLeftLimitLabel.Left := StrToIntDef(EvaluateReplacements(FMatchBitmapTextCropLeft), 0);
+  FSelectedComponentTopLimitLabel.Top := StrToIntDef(EvaluateReplacements(FMatchBitmapTextCropTop), 0);
+  FSelectedComponentRightLimitLabel.Left := imgPreview.Width - StrToIntDef(EvaluateReplacements(FMatchBitmapTextCropRight), 0) + 1;
+  FSelectedComponentBottomLimitLabel.Top := imgPreview.Height - StrToIntDef(EvaluateReplacements(FMatchBitmapTextCropBottom), 0) + 1;
 
   FSelectedComponentLeftLimitLabel.Left := Max(0, Min(FSelectedComponentLeftLimitLabel.Left, imgPreview.Width - 3));
   FSelectedComponentTopLimitLabel.Top := Max(0, Min(FSelectedComponentTopLimitLabel.Top, imgPreview.Height - 3));

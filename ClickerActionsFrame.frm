@@ -78,384 +78,19 @@ object frClickerActions: TfrClickerActions
         Height = 268
         Top = 0
         Width = 890
-        ActivePage = TabSheetActionFindSubControl
+        ActivePage = TabSheetActionCall
         Anchors = [akTop, akLeft, akRight, akBottom]
         Images = imglstActions
-        TabIndex = 3
+        TabIndex = 5
         TabOrder = 5
         OnChange = PageControlActionsChange
         object TabSheetActionClick: TTabSheet
           Caption = 'Click'
-          ClientHeight = 233
-          ClientWidth = 882
           ImageIndex = 0
-          object lblXClickReference: TLabel
-            Left = 3
-            Height = 13
-            Top = 10
-            Width = 83
-            Caption = 'X Click Reference'
-          end
-          object lblYClickReference: TLabel
-            Left = 3
-            Height = 13
-            Top = 65
-            Width = 83
-            Caption = 'Y Click Reference'
-          end
-          object cmbXClickReference: TComboBox
-            Left = 3
-            Height = 22
-            Top = 25
-            Width = 145
-            ItemHeight = 16
-            ItemIndex = 0
-            Items.Strings = (
-              'Control Left'
-              'Control Right'
-              'Control Width'
-              'Var/Replacement'
-              'Screen Absolute X'
-            )
-            OnChange = cmbXClickReferenceChange
-            Style = csOwnerDrawFixed
-            TabOrder = 0
-            Text = 'Control Left'
-          end
-          object cmbYClickReference: TComboBox
-            Left = 3
-            Height = 22
-            Top = 80
-            Width = 145
-            ItemHeight = 16
-            ItemIndex = 0
-            Items.Strings = (
-              'Control Top'
-              'Control Bottom'
-              'Control Height'
-              'Var/Replacement'
-              'Screen Absolute Y'
-            )
-            OnChange = cmbYClickReferenceChange
-            Style = csOwnerDrawFixed
-            TabOrder = 1
-            Text = 'Control Top'
-          end
-          object lbeClickXOffset: TLabeledEdit
-            Left = 320
-            Height = 21
-            Hint = 'Replacements are available.'#13#10'Examples of random value:'#13#10'$Random(50, 100)$'#13#10'$Random($MMin$, $MMax$)$'
-            Top = 25
-            Width = 81
-            EditLabel.Height = 13
-            EditLabel.Width = 81
-            EditLabel.Caption = 'X Offset'
-            ParentShowHint = False
-            ShowHint = True
-            TabOrder = 2
-            OnChange = lbeClickXOffsetChange
-          end
-          object lbeClickYOffset: TLabeledEdit
-            Left = 320
-            Height = 21
-            Hint = 'Replacements are available.'#13#10'Examples of random value:'#13#10'$Random(50, 100)$'#13#10'$Random($MMin$, $MMax$)$'
-            Top = 80
-            Width = 81
-            EditLabel.Height = 13
-            EditLabel.Width = 81
-            EditLabel.Caption = 'Y Offset'
-            ParentShowHint = False
-            ShowHint = True
-            TabOrder = 3
-            OnChange = lbeClickYOffsetChange
-          end
-          object rdgrpMouseButton: TRadioGroup
-            Left = 411
-            Height = 65
-            Top = -2
-            Width = 93
-            AutoFill = True
-            Caption = 'Mouse Button'
-            ChildSizing.LeftRightSpacing = 6
-            ChildSizing.EnlargeHorizontal = crsHomogenousChildResize
-            ChildSizing.EnlargeVertical = crsHomogenousChildResize
-            ChildSizing.ShrinkHorizontal = crsScaleChilds
-            ChildSizing.ShrinkVertical = crsScaleChilds
-            ChildSizing.Layout = cclLeftToRightThenTopToBottom
-            ChildSizing.ControlsPerLine = 1
-            ClientHeight = 47
-            ClientWidth = 89
-            ItemIndex = 0
-            Items.Strings = (
-              'Left'
-              'Right'
-              'Middle'
-            )
-            OnClick = rdgrpMouseButtonClick
-            TabOrder = 4
-          end
-          object chkClickWithCtrl: TCheckBox
-            Left = 3
-            Height = 19
-            Top = 108
-            Width = 86
-            Caption = 'Click With Ctrl'
-            OnClick = chkClickWithCtrlClick
-            TabOrder = 5
-          end
-          object chkClickWithAlt: TCheckBox
-            Left = 3
-            Height = 19
-            Top = 131
-            Width = 82
-            Caption = 'Click With Alt'
-            OnClick = chkClickWithAltClick
-            TabOrder = 6
-          end
-          object chkClickWithShift: TCheckBox
-            Left = 3
-            Height = 19
-            Top = 154
-            Width = 91
-            Caption = 'Click With Shift'
-            OnClick = chkClickWithShiftClick
-            TabOrder = 7
-          end
-          object chkClickWithDoubleClick: TCheckBox
-            Left = 154
-            Height = 19
-            Hint = 'Deprecated (please set the "Count" value to 2, to simulate a double-click).'
-            Top = 107
-            Width = 77
-            Caption = 'Double Click'
-            Enabled = False
-            OnChange = chkClickWithDoubleClickChange
-            ParentShowHint = False
-            ShowHint = True
-            TabOrder = 8
-          end
-          object btnCopyOffsetsFromMain: TButton
-            Left = 320
-            Height = 25
-            Top = 108
-            Width = 184
-            Caption = 'Copy Offsets From Main Window'
-            TabOrder = 9
-            Visible = False
-          end
-          object lbeMultiClickCount: TLabeledEdit
-            Left = 411
-            Height = 21
-            Top = 80
-            Width = 46
-            EditLabel.Height = 13
-            EditLabel.Width = 46
-            EditLabel.Caption = 'Count'
-            TabOrder = 10
-            Text = '1'
-            OnChange = lbeMultiClickCountChange
-          end
-          object lbeClickVarX: TLabeledEdit
-            Left = 154
-            Height = 21
-            Hint = 'The provided variables must be global/screen coordinates.'#13#10'The $Current_Mouse_X$ var/replacement can be used as global mouse X coordinate.'
-            Top = 25
-            Width = 152
-            EditLabel.Height = 13
-            EditLabel.Width = 152
-            EditLabel.Caption = 'Click Var X'
-            ParentShowHint = False
-            ShowHint = True
-            TabOrder = 11
-            Text = '$Control_Left$'
-            OnChange = lbeClickVarXChange
-          end
-          object lbeClickVarY: TLabeledEdit
-            Left = 154
-            Height = 21
-            Hint = 'The provided variables must be global/screen coordinates.'#13#10'The $Current_Mouse_Y$ var/replacement can be used as global mouse Y coordinate.'
-            Top = 80
-            Width = 152
-            EditLabel.Height = 13
-            EditLabel.Width = 152
-            EditLabel.Caption = 'Click Var Y'
-            ParentShowHint = False
-            ShowHint = True
-            TabOrder = 12
-            Text = '$Control_Top$'
-            OnChange = lbeClickVarYChange
-          end
-          object chkLeaveMouse: TCheckBox
-            Left = 154
-            Height = 19
-            Hint = 'When checked, the mouse cursor position is not reset after running the action.'#13#10'It may be required if the click action will open a pop-up menu, to cause the menu to open at that location.'#13#10'This is also useful for debugging, to verify offsets.'
-            Top = 154
-            Width = 83
-            Caption = 'Leave Mouse'
-            OnChange = chkLeaveMouseChange
-            ParentShowHint = False
-            ShowHint = True
-            TabOrder = 13
-          end
-          object chkMoveWithoutClick: TCheckBox
-            Left = 154
-            Height = 19
-            Top = 131
-            Width = 111
-            Caption = 'Move Without Click'
-            OnChange = chkMoveWithoutClickChange
-            TabOrder = 14
-          end
-          object cmbClickType: TComboBox
-            Left = 320
-            Height = 19
-            Top = 160
-            Width = 140
-            ItemHeight = 13
-            ItemIndex = 0
-            Items.Strings = (
-              'Click'
-              'Drag'
-              'ButtonDown'
-              'ButtonUp'
-            )
-            OnChange = cmbClickTypeChange
-            Style = csOwnerDrawFixed
-            TabOrder = 15
-            Text = 'Click'
-          end
-          object lblClickType: TLabel
-            Left = 320
-            Height = 13
-            Top = 144
-            Width = 48
-            Caption = 'Click Type'
-          end
         end
         object TabSheetActionExecApp: TTabSheet
           Caption = 'Exec App'
-          ClientHeight = 233
-          ClientWidth = 882
           ImageIndex = 1
-          object lblExecAppParams: TLabel
-            Left = 0
-            Height = 13
-            Top = 98
-            Width = 55
-            Caption = 'Parameters'
-          end
-          object lbeExecAppPath: TLabeledEdit
-            Left = 0
-            Height = 21
-            Hint = 'Full path (without quotes) to executable or other file to be open with associated application. Replacements are available.'
-            Top = 14
-            Width = 326
-            EditLabel.Height = 13
-            EditLabel.Width = 326
-            EditLabel.Caption = 'Path'
-            ParentShowHint = False
-            ShowHint = True
-            TabOrder = 0
-            OnChange = lbeExecAppPathChange
-          end
-          object btnBrowseExecApp: TButton
-            Left = 335
-            Height = 21
-            Top = 14
-            Width = 25
-            Caption = '...'
-            OnClick = btnBrowseExecAppClick
-            TabOrder = 1
-          end
-          object chkWaitForApp: TCheckBox
-            Left = 368
-            Height = 19
-            Top = 14
-            Width = 83
-            Caption = 'Wait For App'
-            OnChange = chkWaitForAppChange
-            TabOrder = 2
-          end
-          object memExecAppParams: TMemo
-            Left = 0
-            Height = 89
-            Hint = 'Enter each parameter on a new line. Do not add quotes. Replacements are available.'
-            Top = 114
-            Width = 326
-            OnChange = memExecAppParamsChange
-            ParentShowHint = False
-            ScrollBars = ssBoth
-            ShowHint = True
-            TabOrder = 3
-            WordWrap = False
-          end
-          object lbeExecAppStdIn: TLabeledEdit
-            Left = 0
-            Height = 21
-            Hint = 'All #4#5 (a.k.a. 0x4:0x5) occurrences are replaced with CRLF (#13#10) before executing the application.'#13#10'Var/replacements are available. E.g.: $ExecAction_StdIn$'#13#10'When this parameter is empty string, the executed application can run without inherited handles.'
-            Top = 64
-            Width = 326
-            EditLabel.Height = 13
-            EditLabel.Width = 326
-            EditLabel.Caption = 'StdIn'
-            ParentShowHint = False
-            ShowHint = True
-            TabOrder = 4
-            OnChange = lbeExecAppStdInChange
-          end
-          object lbeExecAppCurrentDir: TLabeledEdit
-            Left = 335
-            Height = 21
-            Hint = 'Application current directory.'#13#10'Replacements are avaialable.'#13#10'Example: $ExtractFileDir($PathToMyFile$)$'
-            Top = 64
-            Width = 307
-            EditLabel.Height = 13
-            EditLabel.Width = 307
-            EditLabel.Caption = 'Current directory'
-            ParentShowHint = False
-            ShowHint = True
-            TabOrder = 5
-            OnChange = lbeExecAppCurrentDirChange
-          end
-          object cmbUseInheritHandles: TComboBox
-            Left = 472
-            Height = 19
-            Hint = 'Required mostly when passing data through StdIn.'
-            Top = 14
-            Width = 170
-            ItemHeight = 13
-            ItemIndex = 2
-            Items.Strings = (
-              'No'
-              'Yes'
-              'Only with StdIn / StdOut'
-            )
-            OnChange = cmbUseInheritHandlesChange
-            ParentShowHint = False
-            ShowHint = True
-            Style = csOwnerDrawFixed
-            TabOrder = 6
-            Text = 'Only with StdIn / StdOut'
-          end
-          object lblUseInheritHandles: TLabel
-            Left = 472
-            Height = 13
-            Top = 0
-            Width = 91
-            Caption = 'Use InheritHandles'
-          end
-          object chkNoConsole: TCheckBox
-            Left = 335
-            Height = 19
-            Hint = 'When checked, console applications are not displayed in a new window.'#13#10'UI applications can create and display system consoles. For those applications, this option may cause problems if checked.'
-            Top = 114
-            Width = 72
-            Caption = 'No console'
-            OnChange = chkNoConsoleChange
-            ParentShowHint = False
-            ShowHint = True
-            TabOrder = 7
-          end
         end
         object TabSheetActionFindControl: TTabSheet
           Caption = 'Find Control'
@@ -467,763 +102,24 @@ object frClickerActions: TfrClickerActions
         end
         object TabSheetActionSetText: TTabSheet
           Caption = 'Set Text'
-          ClientHeight = 233
-          ClientWidth = 882
           ImageIndex = 4
-          object lblInfoSetText: TLabel
-            Left = 3
-            Height = 13
-            Top = 149
-            Width = 482
-            Caption = 'The proper control type has to be selected, for the proper API call. Uses $Control_Handle$ variable.'
-          end
-          object lbeSetNewText: TLabeledEdit
-            Left = 3
-            Height = 21
-            Top = 25
-            Width = 876
-            Anchors = [akTop, akLeft, akRight]
-            EditLabel.Height = 13
-            EditLabel.Width = 876
-            EditLabel.Caption = 'New Text'
-            TabOrder = 0
-            OnChange = lbeSetNewTextChange
-          end
-          object rdgrpSetTextControlType: TRadioGroup
-            Left = 3
-            Height = 85
-            Hint = 'Uses WM_SETTEXT or CB_SELECTSTRING messages or emulates keystrokes..'
-            Top = 52
-            Width = 121
-            AutoFill = True
-            Caption = 'Control Type'
-            ChildSizing.LeftRightSpacing = 6
-            ChildSizing.EnlargeHorizontal = crsHomogenousChildResize
-            ChildSizing.EnlargeVertical = crsHomogenousChildResize
-            ChildSizing.ShrinkHorizontal = crsScaleChilds
-            ChildSizing.ShrinkVertical = crsScaleChilds
-            ChildSizing.Layout = cclLeftToRightThenTopToBottom
-            ChildSizing.ControlsPerLine = 1
-            ClientHeight = 67
-            ClientWidth = 117
-            Items.Strings = (
-              'EditBox'
-              'ComboBox'
-              'Keystrokes'
-            )
-            OnClick = rdgrpSetTextControlTypeClick
-            ParentShowHint = False
-            ShowHint = True
-            TabOrder = 1
-          end
-          object lblSetVarToHttpInfo2: TLabel
-            Left = 3
-            Height = 13
-            Hint = 'Every time a variable, with such a value, is evaluated, an http call is made.'
-            Top = 168
-            Width = 483
-            Caption = 'HTTP calls are available, as var values, using the following format: $http://<server:port>/[params]$'
-            ParentShowHint = False
-            ShowHint = True
-          end
-          object lblSetTextInfo: TLabel
-            Left = 136
-            Height = 52
-            Top = 56
-            Width = 562
-            Caption = 'Most edit boxes and combo boxes can be set, using the first two options.'#13#10'However, depending on their usage on the target application, this approach might not be enough.'#13#10'For edit boxes, the action can be configured to use key strokes.'#13#10'For combo boxes, this action will have to be replaced by multiple actions, to open the box, finding text, selecting etc.'
-          end
         end
         object TabSheetActionCall: TTabSheet
           Caption = 'Call'
-          ClientHeight = 233
-          ClientWidth = 882
           ImageIndex = 5
-          OnMouseLeave = TabSheetActionCallMouseLeave
           ParentShowHint = False
-          object lblCustomUserVarsBeforeCall: TLabel
-            Left = 3
-            Height = 13
-            Hint = 'Right-click to add/remove. Double-click to edit.'
-            Top = 40
-            Width = 173
-            Caption = 'Custom user variables before calling'
-            ParentShowHint = False
-            ShowHint = True
-          end
-          object lblConditionEquals: TLabel
-            Left = 781
-            Height = 13
-            Top = 118
-            Width = 8
-            Caption = '='
-          end
-          object lblDeprecatedCondition: TLabel
-            Left = 720
-            Height = 13
-            Top = 39
-            Width = 159
-            Caption = 'Deprecated Condition Mechanism'
-            Color = 13027071
-            Transparent = False
-          end
-          object vallstCustomVariables: TValueListEditor
-            Left = 3
-            Height = 150
-            Hint = 'These variables are passed to the called template. Right-click for adding/removing.'
-            Top = 58
-            Width = 366
-            Color = 13828080
-            DefaultColWidth = 180
-            FixedCols = 0
-            ParentShowHint = False
-            PopupMenu = pmCustomVars
-            RowCount = 2
-            ShowHint = True
-            TabOrder = 0
-            OnExit = vallstCustomVariablesExit
-            OnSetEditText = vallstCustomVariablesSetEditText
-            DisplayOptions = [doColumnTitles, doKeyColFixed]
-            KeyOptions = [keyEdit, keyUnique]
-            TitleCaptions.Strings = (
-              'Variable'
-              'Value'
-            )
-            OnValidate = vallstCustomVariablesValidate
-            ColWidths = (
-              180
-              140
-            )
-          end
-          object chkCallOnlyIfContitionIsTrue: TCheckBox
-            Left = 752
-            Height = 19
-            Top = 58
-            Width = 123
-            Caption = 'Call Only If Contition:'
-            OnClick = chkCallOnlyIfContitionIsTrueClick
-            TabOrder = 1
-          end
-          object lbeCallOnlyIfContitionVarName: TLabeledEdit
-            Left = 785
-            Height = 21
-            Hint = 'Custom variables can also be used.'
-            Top = 91
-            Width = 88
-            EditLabel.Height = 13
-            EditLabel.Width = 88
-            EditLabel.Caption = 'Variable'
-            Enabled = False
-            ParentShowHint = False
-            ShowHint = True
-            TabOrder = 2
-            OnChange = lbeCallOnlyIfContitionVarNameChange
-          end
-          object lbeCallOnlyIfContitionVarValue: TLabeledEdit
-            Left = 784
-            Height = 21
-            Hint = 'Replacements are available as values.'
-            Top = 146
-            Width = 88
-            EditLabel.Height = 13
-            EditLabel.Width = 88
-            EditLabel.Caption = 'Value'
-            Enabled = False
-            ParentShowHint = False
-            ShowHint = True
-            TabOrder = 3
-            OnChange = lbeCallOnlyIfContitionVarValueChange
-          end
-          object btnSelectNoTemplate: TButton
-            Left = 278
-            Height = 21
-            Top = 17
-            Width = 72
-            Caption = 'Select none'
-            OnClick = btnSelectNoTemplateClick
-            TabOrder = 4
-          end
-          object chkEvaluateVarsBeforeCalling: TCheckBox
-            Left = 358
-            Height = 19
-            Hint = 'If unchecked, the values are passed as strings.'
-            Top = 14
-            Width = 153
-            Caption = 'Evaluate vars before calling'
-            OnClick = chkEvaluateVarsBeforeCallingClick
-            ParentShowHint = False
-            ShowHint = True
-            TabOrder = 5
-          end
-          object lbeTemplateFileName: TLabeledEdit
-            Left = 3
-            Height = 21
-            Hint = 'Replacements are available'
-            Top = 17
-            Width = 229
-            EditLabel.Height = 13
-            EditLabel.Width = 229
-            EditLabel.Caption = 'Template file name'
-            ParentShowHint = False
-            ShowHint = True
-            TabOrder = 6
-            OnChange = lbeTemplateFileNameChange
-          end
-          object spdbtnBrowseLocalTemplates: TSpeedButton
-            Left = 232
-            Height = 21
-            Hint = 'Templates from the local dir'
-            Top = 17
-            Width = 16
-            Glyph.Data = {
-              EA000000424DEA0000000000000036000000280000000B000000050000000100
-              180000000000B400000000000000000000000000000000000000FFFFFFFFFFFF
-              FFFFFFFFFFFFFFFFFF39841AFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF000000FFFF
-              FFFFFFFFFFFFFFFFFFFF39841A39841A39841AFFFFFFFFFFFFFFFFFFFFFFFF00
-              0000FFFFFFFFFFFFFFFFFF39841A39841A39841A39841A39841AFFFFFFFFFFFF
-              FFFFFF000000FFFFFFFFFFFF39841A39841A39841A39841A39841A39841A3984
-              1AFFFFFFFFFFFF000000FFFFFF39841A39841A39841A39841A39841A39841A39
-              841A39841A39841AFFFFFF000000
-            }
-            OnClick = spdbtnBrowseLocalTemplatesClick
-            ShowHint = True
-            ParentShowHint = False
-          end
-          object btnBrowseOtherTemplates: TButton
-            Left = 248
-            Height = 21
-            Top = 17
-            Width = 24
-            Caption = '...'
-            OnClick = btnBrowseOtherTemplatesClick
-            TabOrder = 7
-          end
-          object lblSetVarToHttpInfo1: TLabel
-            Left = 3
-            Height = 13
-            Hint = 'Every time a variable, with such a value, is evaluated, an http call is made.'
-            Top = 216
-            Width = 483
-            Caption = 'HTTP calls are available, as var values, using the following format: $http://<server:port>/[params]$'
-            ParentShowHint = False
-            ShowHint = True
-          end
-          object vstCustomVariables: TVirtualStringTree
-            Left = 3
-            Height = 156
-            Hint = 'These variables are set on every loop iteration.'
-            Top = 58
-            Width = 371
-            Colors.UnfocusedColor = clMedGray
-            Colors.UnfocusedSelectionColor = clGradientInactiveCaption
-            DefaultText = 'Node'
-            Header.AutoSizeIndex = 0
-            Header.Columns = <            
-              item
-                MinWidth = 150
-                Position = 0
-                Text = 'Variable'
-                Width = 150
-              end            
-              item
-                MinWidth = 200
-                Position = 1
-                Text = 'Value'
-                Width = 200
-              end>
-            Header.DefaultHeight = 17
-            Header.Height = 21
-            Header.Options = [hoColumnResize, hoDrag, hoShowSortGlyphs, hoVisible]
-            Header.Style = hsFlatButtons
-            Indent = 4
-            ParentShowHint = False
-            PopupMenu = pmCustomVars
-            ShowHint = True
-            TabOrder = 8
-            TreeOptions.AutoOptions = [toAutoDropExpand, toAutoScrollOnExpand, toAutoTristateTracking, toAutoDeleteMovedNodes, toDisableAutoscrollOnFocus, toDisableAutoscrollOnEdit]
-            TreeOptions.MiscOptions = [toAcceptOLEDrop, toEditable, toFullRepaintOnResize, toInitOnSave, toToggleOnDblClick, toWheelPanning, toEditOnDblClick]
-            TreeOptions.PaintOptions = [toShowButtons, toShowDropmark, toShowHorzGridLines, toShowRoot, toShowVertGridLines, toThemeAware, toUseBlendedImages]
-            TreeOptions.SelectionOptions = [toFullRowSelect]
-            OnDblClick = vstCustomVariablesDblClick
-            OnEdited = vstCustomVariablesEdited
-            OnEditing = vstCustomVariablesEditing
-            OnGetText = vstCustomVariablesGetText
-            OnKeyDown = vstCustomVariablesKeyDown
-            OnMouseUp = vstCustomVariablesMouseUp
-            OnNewText = vstCustomVariablesNewText
-          end
-          object grpCallTemplateLoop: TGroupBox
-            Left = 384
-            Height = 174
-            Top = 40
-            Width = 304
-            Caption = 'Loop'
-            ClientHeight = 156
-            ClientWidth = 300
-            TabOrder = 9
-            object chkCallTemplateLoopEnabled: TCheckBox
-              Left = 8
-              Height = 19
-              Top = 0
-              Width = 58
-              Caption = 'Enabled'
-              OnChange = chkCallTemplateLoopEnabledChange
-              TabOrder = 0
-            end
-            object lbeCallTemplateLoopCounter: TLabeledEdit
-              Left = 8
-              Height = 21
-              Hint = 'Replacements are available'
-              Top = 40
-              Width = 88
-              EditLabel.Height = 13
-              EditLabel.Width = 88
-              EditLabel.Caption = 'Counter'
-              ParentShowHint = False
-              ShowHint = True
-              TabOrder = 1
-              OnChange = lbeCallTemplateLoopCounterChange
-            end
-            object lbeCallTemplateLoopInitValue: TLabeledEdit
-              Left = 104
-              Height = 21
-              Hint = 'Replacements are available'
-              Top = 40
-              Width = 192
-              EditLabel.Height = 13
-              EditLabel.Width = 192
-              EditLabel.Caption = 'Init value'
-              ParentShowHint = False
-              ShowHint = True
-              TabOrder = 2
-              OnChange = lbeCallTemplateLoopInitValueChange
-            end
-            object lbeCallTemplateLoopEndValue: TLabeledEdit
-              Left = 104
-              Height = 21
-              Hint = 'Replacements are available.'#13#10'If the expression evaluator can''t properly parse this string, please use a SetVar action to break down the expression into smaller pieces.'#13#10#13#10'For example, $Diff($ItemCount($RemoteVars$)$,1)$ can be split into the following SetVar items (both set to be evaluated):'#13#10#13#10'$RemoteVarsCount$ = $ItemCount($RemoteVars$)$'#13#10'$LastItemIndex$ = $Diff($RemoteVarsCount$,1)$'
-              Top = 88
-              Width = 192
-              EditLabel.Height = 13
-              EditLabel.Width = 192
-              EditLabel.Caption = 'End value'
-              ParentShowHint = False
-              ShowHint = True
-              TabOrder = 3
-              OnChange = lbeCallTemplateLoopEndValueChange
-            end
-            object cmbCallTemplateLoopDirection: TComboBox
-              Left = 8
-              Height = 19
-              Hint = 'Loop direction can be:'#13#10'Inc - when the counter should be incremented.'#13#10'Dec - when the counter should be decremented.'#13#10'Auto - when the init and the end values can be anything, so the counter direction has to be evaluated before starting the loop.'
-              Top = 88
-              Width = 88
-              ItemHeight = 13
-              ItemIndex = 0
-              Items.Strings = (
-                'Inc'
-                'Dec'
-                'Auto'
-              )
-              OnChange = cmbCallTemplateLoopDirectionChange
-              ParentShowHint = False
-              ShowHint = True
-              Style = csOwnerDrawFixed
-              TabOrder = 4
-              Text = 'Inc'
-            end
-            object lblCallTemplateLoopDirection: TLabel
-              Left = 8
-              Height = 13
-              Top = 72
-              Width = 42
-              Caption = 'Direction'
-            end
-            object lblCallTemplateLoopBreakPosition: TLabel
-              Left = 8
-              Height = 13
-              Top = 118
-              Width = 67
-              Caption = 'Break position'
-            end
-            object cmbCallTemplateLoopBreakPosition: TComboBox
-              Left = 8
-              Height = 19
-              Hint = 'The "Break" call can be made, before or after the actual "CallTemplate" call.'
-              Top = 134
-              Width = 88
-              ItemHeight = 13
-              ItemIndex = 0
-              Items.Strings = (
-                'After'
-                'Before'
-              )
-              OnChange = cmbCallTemplateLoopBreakPositionChange
-              ParentShowHint = False
-              ShowHint = True
-              Style = csOwnerDrawFixed
-              TabOrder = 5
-              Text = 'After'
-            end
-            object lbeCallTemplateLoopBreakCondition: TLabeledEdit
-              Left = 104
-              Height = 21
-              Hint = 'This editbox is read-only. Please use the "..." button next to it, to open the condition editor.'
-              Top = 134
-              Width = 160
-              EditLabel.Height = 13
-              EditLabel.Width = 160
-              EditLabel.Caption = 'Break condition'
-              ParentShowHint = False
-              ReadOnly = True
-              ShowHint = True
-              TabOrder = 6
-              OnChange = lbeCallTemplateLoopBreakConditionChange
-            end
-            object btnBrowseCallTemplateLoopBreakCondition: TButton
-              Left = 272
-              Height = 21
-              Top = 134
-              Width = 24
-              Caption = '...'
-              OnClick = btnBrowseCallTemplateLoopBreakConditionClick
-              TabOrder = 7
-            end
-            object lblFeatureInWork: TLabel
-              Left = 104
-              Height = 21
-              Hint = 'What does not work, is closing subtemplates when remote debugging.'#13#10'So, do not click the stop button when remote debugging CallTemplate actions with loops.'
-              Top = 0
-              Width = 165
-              Caption = '[Feature in work...]'
-              Font.Color = clGray
-              Font.Height = -17
-              Font.Name = 'Tahoma'
-              Font.Style = [fsBold]
-              ParentFont = False
-              ParentShowHint = False
-              ShowHint = True
-            end
-          end
         end
         object TabSheetActionSleep: TTabSheet
           Caption = 'Sleep'
-          ClientHeight = 233
-          ClientWidth = 882
           ImageIndex = 6
-          object lblSleepInfo: TLabel
-            Left = 8
-            Height = 13
-            Hint = 'Waiting for the proper event or control property, is the right way to solve a race condition. Use the "sleep" action if the event/property is not available.'
-            Top = 64
-            Width = 379
-            Caption = 'Use this action only as a last resort (e.g. blinking or resizing controls/windows).'
-            ParentShowHint = False
-            ShowHint = True
-          end
-          object lblSleepInfo2: TLabel
-            Left = 130
-            Height = 13
-            Top = 31
-            Width = 193
-            Caption = 'Sleep values, lower than 1, are ignored.'
-          end
-          object lbeSleep: TLabeledEdit
-            Left = 3
-            Height = 21
-            Hint = 'Variable replacements are available.'
-            Top = 28
-            Width = 121
-            EditLabel.Height = 13
-            EditLabel.Width = 121
-            EditLabel.Caption = 'Sleep [ms]'
-            ParentShowHint = False
-            ShowHint = True
-            TabOrder = 0
-            OnChange = lbeSleepChange
-          end
-          object pnlSleepElapsedTime: TPanel
-            Left = 3
-            Height = 24
-            Top = 83
-            Width = 182
-            Alignment = taLeftJustify
-            Caption = 'Elapsed Time [ms]:'
-            TabOrder = 1
-          end
-          object pnlSleepRemainingTime: TPanel
-            Left = 3
-            Height = 24
-            Top = 113
-            Width = 182
-            Alignment = taLeftJustify
-            Caption = 'Remaining Time [ms]:'
-            TabOrder = 2
-          end
-          object prbSleep: TProgressBar
-            Left = 3
-            Height = 17
-            Top = 143
-            Width = 182
-            Smooth = True
-            TabOrder = 3
-          end
         end
         object TabSheetActionSetVar: TTabSheet
           Caption = 'Set Variable'
-          ClientHeight = 233
-          ClientWidth = 882
           ImageIndex = 7
-          object vstSetVar: TVirtualStringTree
-            Left = 0
-            Height = 200
-            Top = 8
-            Width = 464
-            CheckImageKind = ckXP
-            Colors.UnfocusedColor = clMedGray
-            Colors.UnfocusedSelectionColor = clGradientInactiveCaption
-            DefaultText = 'Node'
-            Header.AutoSizeIndex = 0
-            Header.Columns = <            
-              item
-                CheckBox = True
-                MinWidth = 100
-                Position = 0
-                Text = 'Eval before set'
-                Width = 100
-              end            
-              item
-                MinWidth = 150
-                Position = 1
-                Text = 'Variable'
-                Width = 150
-              end            
-              item
-                MinWidth = 300
-                Position = 2
-                Text = 'Value'
-                Width = 300
-              end>
-            Header.DefaultHeight = 21
-            Header.Height = 21
-            Header.Options = [hoColumnResize, hoDblClickResize, hoDrag, hoShowSortGlyphs, hoVisible]
-            Header.Style = hsFlatButtons
-            Indent = 4
-            PopupMenu = pmSetVars
-            StateImages = imglstSetVar
-            TabOrder = 0
-            TreeOptions.AutoOptions = [toAutoDropExpand, toAutoScrollOnExpand, toAutoTristateTracking, toAutoDeleteMovedNodes, toDisableAutoscrollOnFocus, toDisableAutoscrollOnEdit]
-            TreeOptions.MiscOptions = [toAcceptOLEDrop, toCheckSupport, toEditable, toFullRepaintOnResize, toInitOnSave, toToggleOnDblClick, toWheelPanning, toEditOnClick]
-            TreeOptions.PaintOptions = [toShowButtons, toShowDropmark, toShowRoot, toThemeAware, toUseBlendedImages]
-            TreeOptions.SelectionOptions = [toFullRowSelect, toMiddleClickSelect, toRightClickSelect]
-            OnChecked = vstSetVarChecked
-            OnChecking = vstSetVarChecking
-            OnDblClick = vstSetVarDblClick
-            OnEdited = vstSetVarEdited
-            OnEditing = vstSetVarEditing
-            OnGetText = vstSetVarGetText
-            OnGetImageIndex = vstSetVarGetImageIndex
-            OnInitNode = vstSetVarInitNode
-            OnKeyDown = vstSetVarKeyDown
-            OnMouseUp = vstSetVarMouseUp
-            OnNewText = vstSetVarNewText
-          end
-          object lblSetVarToHttpInfo: TLabel
-            Left = 0
-            Height = 13
-            Hint = 'Every time a variable, with such a value, is evaluated, an http call is made.'
-            Top = 216
-            Width = 483
-            Caption = 'HTTP calls are available, as var values, using the following format: $http://<server:port>/[params]$'
-            ParentShowHint = False
-            ShowHint = True
-          end
-          object lblAvailableFunctions: TLabel
-            Left = 472
-            Height = 13
-            Hint = 'Special vars are either updated on every use, or their values can''t be changed (consts).'
-            Top = 8
-            Width = 174
-            Caption = 'Available functions and special vars:'
-            ParentShowHint = False
-            ShowHint = True
-          end
-          object memAvailableFunctions: TMemo
-            Left = 472
-            Height = 184
-            Hint = 'The "$GetSelfHandles()$" and "$Exit(<ExitCode>)$" functions do not return a value, so they must be placed in the "Variable" column of a SetVar action.'#13#10'Also, they can''t be evaluated using the console or as part of a condition.'#13#10'All the other function should be called from the "Value" column.'
-            Top = 24
-            Width = 280
-            Color = clBtnFace
-            Lines.Strings = (
-              '$ExtractFileDir(<DirName>)$ '
-              '$Random(<min>, <max>)$'
-              '$Random(<max>)$'
-              '$Sum(<op1>, <op2>)$'
-              '$Diff(<op1>, <op2>)$'
-              '$http://<server:port>/[params]$'
-              '$FastReplace_45ToReturn(<some_string>)$'
-              '$FastReplace_ReturnTo45(<some_string>)$'
-              '$FastReplace_45To87(<some_string>)$'
-              '$FastReplace_87To45(<some_string>)$'
-              '$Exit(<ExitCode>)$'
-              '$CreateDir(<PathToNewDir>)$'
-              '$LoadTextFile(<PathToTextFile>)$'
-              '$ItemCount($TextFileContent$)$'
-              '$GetTextItem($TextFileContent$,<ItemIndex>)$'
-              '$StringContains(<SubString>, <String>)$'
-              '$ExtractFileName(<PathToFile>)$'
-              '$ExtractFileExt(<PathToFile>)$'
-              '$ExtractFileNameNoExt(<PathToFile>)$'
-              '$UpdateControlInfo(<Handle>)$'
-              '$GetSelfHandles()$'
-              '$GetKeyNameFromPair(<key>=<value)$'
-              '$GetKeyValueFromPair(<key>=<value)$'
-              '$Chr(<ByteValue>)$'
-              ''
-              '$IncBrightness(<HexColor>[,Amount])$'
-              '$DecBrightness(<HexColor>[,Amount])$'
-              '$IncBrightnessR(<HexColor>[,Amount])$'
-              '$IncBrightnessG(<HexColor>[,Amount])$'
-              '$IncBrightnessB(<HexColor>[,Amount])$'
-              '$DecBrightnessR(<HexColor>[,Amount])$'
-              '$DecBrightnessG(<HexColor>[,Amount])$'
-              '$DecBrightnessB(<HexColor>[,Amount])$'
-              ''
-              '$Current_Mouse_X$'
-              '$Current_Mouse_Y$'
-              '$CRLF$'
-              '$#4#5$'
-              '$Now$'
-              ''
-            )
-            ParentShowHint = False
-            ReadOnly = True
-            ScrollBars = ssBoth
-            ShowHint = True
-            TabOrder = 1
-            WordWrap = False
-          end
         end
         object TabSheetActionWindowOperations: TTabSheet
           Caption = 'Window Operations'
-          ClientHeight = 233
-          ClientWidth = 882
           ImageIndex = 8
-          object cmbWindowOperationsType: TComboBox
-            Left = 8
-            Height = 19
-            Top = 32
-            Width = 116
-            ItemHeight = 13
-            ItemIndex = 0
-            Items.Strings = (
-              'Bring to front'
-              'Move / resize'
-              'Close'
-            )
-            OnChange = cmbWindowOperationsTypeChange
-            Style = csOwnerDrawFixed
-            TabOrder = 0
-            Text = 'Bring to front'
-          end
-          object lblWindowOperation: TLabel
-            Left = 8
-            Height = 13
-            Top = 16
-            Width = 52
-            Caption = 'Operation:'
-          end
-          object lbeWindowOperationsX: TLabeledEdit
-            Left = 8
-            Height = 21
-            Top = 80
-            Width = 176
-            EditLabel.Height = 13
-            EditLabel.Width = 176
-            EditLabel.Caption = 'New X'
-            Enabled = False
-            TabOrder = 1
-            OnChange = lbeWindowOperationsXChange
-          end
-          object lbeWindowOperationsY: TLabeledEdit
-            Left = 8
-            Height = 21
-            Top = 128
-            Width = 176
-            EditLabel.Height = 13
-            EditLabel.Width = 176
-            EditLabel.Caption = 'New Y'
-            Enabled = False
-            TabOrder = 2
-            OnChange = lbeWindowOperationsYChange
-          end
-          object lbeWindowOperationsWidth: TLabeledEdit
-            Left = 200
-            Height = 21
-            Top = 80
-            Width = 176
-            EditLabel.Height = 13
-            EditLabel.Width = 176
-            EditLabel.Caption = 'New Width'
-            Enabled = False
-            TabOrder = 3
-            OnChange = lbeWindowOperationsWidthChange
-          end
-          object lbeWindowOperationsHeight: TLabeledEdit
-            Left = 200
-            Height = 21
-            Top = 128
-            Width = 176
-            EditLabel.Height = 13
-            EditLabel.Width = 176
-            EditLabel.Caption = 'New Height'
-            Enabled = False
-            TabOrder = 4
-            OnChange = lbeWindowOperationsHeightChange
-          end
-          object chkWindowOperationsEnablePos: TCheckBox
-            Left = 8
-            Height = 19
-            Top = 168
-            Width = 76
-            Caption = 'Set position'
-            OnChange = chkWindowOperationsEnablePosChange
-            TabOrder = 5
-          end
-          object chkWindowOperationsEnableSize: TCheckBox
-            Left = 200
-            Height = 19
-            Top = 168
-            Width = 57
-            Caption = 'Set size'
-            OnChange = chkWindowOperationsEnableSizeChange
-            TabOrder = 6
-          end
-          object btnSetFromControlLeftAndTop: TButton
-            Left = 8
-            Height = 25
-            Hint = 'Evaluates $Control_Left$ and $Control_Top$ variables and updates "New X" and "New Y" to them.'
-            Top = 192
-            Width = 176
-            Caption = 'Set from $Control_Left/Top$'
-            OnClick = btnSetFromControlLeftAndTopClick
-            ParentShowHint = False
-            ShowHint = True
-            TabOrder = 7
-          end
-          object btnSetFromControlWidthAndHeight: TButton
-            Left = 200
-            Height = 25
-            Hint = 'Evaluates $Control_Width$ and $Control_Height$ variables and updates "New Width" and "New Height" to them.'
-            Top = 192
-            Width = 176
-            Caption = 'Set from $Control_Width/Height$'
-            OnClick = btnSetFromControlWidthAndHeightClick
-            ParentShowHint = False
-            ShowHint = True
-            TabOrder = 8
-          end
         end
       end
       object lbeActionName: TLabeledEdit
@@ -1513,7 +409,6 @@ object frClickerActions: TfrClickerActions
         Top = 0
         Width = 562
         Anchors = [akTop, akRight, akBottom]
-        Caption = 'Local editors'
         ClientHeight = 266
         ClientWidth = 562
         Color = 9764056
@@ -1548,18 +443,6 @@ object frClickerActions: TfrClickerActions
     object N300001: TMenuItem
       Caption = '30000'
       OnClick = N01Click
-    end
-  end
-  object pmCustomVars: TPopupMenu
-    Left = 256
-    Top = 224
-    object AddCustomVarRow1: TMenuItem
-      Caption = 'Add Variable'
-      OnClick = AddCustomVarRow1Click
-    end
-    object RemoveCustomVarRow1: TMenuItem
-      Caption = 'Remove Variable...'
-      OnClick = RemoveCustomVarRow1Click
     end
   end
   object imglstActions: TImageList
@@ -1789,50 +672,313 @@ object frClickerActions: TfrClickerActions
       OnClick = MenuItemEraseDebugImageClick
     end
   end
-  object pmSetVars: TPopupMenu
-    Left = 592
-    Top = 225
-    object MenuItem_AddSetVar: TMenuItem
-      Caption = 'Add Variable'
-      OnClick = MenuItem_AddSetVarClick
-    end
-    object N4: TMenuItem
-      Caption = '-'
-    end
-    object MenuItem_RemoveSetVar: TMenuItem
-      Caption = 'Remove Variable'
-      OnClick = MenuItem_RemoveSetVarClick
-    end
-  end
-  object tmrEditSetVars: TTimer
-    Enabled = False
-    Interval = 1
-    OnTimer = tmrEditSetVarsTimer
-    Left = 624
-    Top = 225
-  end
-  object imglstSetVar: TImageList
-    Left = 656
-    Top = 224
-    Bitmap = {
-      4C7A010000001000000010000000630000000000000078DAFBFFFF3FC37F2A60
-      51868EFF304C888F2C0E93C3661E2E7BC81523248EEE2652CC459727D57E4AF4
-      E30A536C7E2064FF40605C6EC4954EF0F90B5BF811320F5FB89F5CF7FF3FA138
-      21360EF0E987D903A289751BBE70C496D7B0E90700985D9E01
-    }
-  end
-  object tmrEditCustomVars: TTimer
-    Enabled = False
-    Interval = 1
-    OnTimer = tmrEditCustomVarsTimer
-    Left = 760
-    Top = 224
-  end
   object tmrReloadOIContent: TTimer
     Enabled = False
     Interval = 10
     OnTimer = tmrReloadOIContentTimer
     Left = 942
     Top = 224
+  end
+  object imglstClickProperties: TImageList
+    Left = 720
+    Top = 16
+    Bitmap = {
+      4C7A140000001000000010000000C30400000000000078DAED9B5F4F134110C0
+      F904BEF9E6A3091FC657BF0FAFBEF9E7C168229016221AD42A50E44F2422608B
+      5212AA18044C25BE501189C1F7914307B7D3D9D9D9DBBB722D77C9A4EDEEFE76
+      67676776F7EEBA00D007B904C9C90536D1F23EE957AF1C02572E4A47595A5AB2
+      0A969178AD24D97E48FF43EC9F4BF7C682AD9CCD47BB85C738893E7DF9484C3E
+      4E2CD0F67DE522F3B679326E1D71633194D5CEFF1CBBFA0C5462DA9BF2743C6C
+      BA0E0C0CB4F837E569BE346771BC34879969A8A3C973F9AE79CDC6BBF4B7F55F
+      1BFFB6FE4BBA9A7DE2782E5FB23DD77F97FEA1E31FEA7FD2F8C58D3DDFF84932
+      7E71FDF0F51FCED6F47B942F8D016D8B7EA7BA696302EB4E6BDF1377EFEC3BDE
+      A6601D71FC4DE235E36FE3B5E3CFF13EE3EFEABF6BFCD3B45FB7F159BF6FD0DC
+      4BA05FA048F38C34E725C94B719DF3E9F39D1EFF10FFCD9F1B241BFF9264958F
+      7C4E23AEFB10D77EC3C5BB622EE793E7B32292DF69D8A34F3B809FFBC5BE96DF
+      521D5846E2A53AB2C06BFAEF6A5FB2BF567F49B2CA6BEA70F9E079F3521D3EFB
+      8938B167AB2724E6711F24A5F5026F5BA7B93C9A96F69CEBEA472FF0AEFD9234
+      0E49D8FFFAB55F608AC66F30AD17F83CFEF3F8BFC8F1AFD5978BB35EE4F3F8EF
+      6CFCD371F199CF7B81EF96F8D7AE9FDDC6A725FD27C37B6915A07FC0FF5D28B2
+      28BE7520839F71785A479A3C2D67F25A96DACA6C5F1A13C9561CCBB5A3E9ABAD
+      1D1F9E2BA7B595D40E672B89E7DA91589F76347564E579A139AFF8CEB7C8E2BB
+      5FDB3C45CBE3FB5F4C47DEAC8F13644D1EF5E17E53962B6BDAA07C1BCE9ECF17
+      8BC53336FA8ECFF7B18C39F7629D981709E5313D2A43DB97FA2CD9C2B6F662FE
+      E5BE1BA7426D4CD7616A5714E4CD34EEFD1ADD0BD874A6EDD13D80E91BD43F4C
+      1FB3FDA7C7F41FCEBED29A49F5306D42E3836B374EDC2514C399BB56DF56A070
+      EF318C0D0DC3A3C25D18BE3B0E73E569383E3E76B2D56A15EA8BCBB0FDFA089A
+      F50F70B835079BF3BFE1EBBB75989E9870F2A55209BED536DAF81F1FB7A0F060
+      50C53F1D790833632BB0383105CBD3A3501EADC2EC9312DCB9794BC5374E745D
+      9B5F68919DCA7B18191C52F1FB1B9BEC33680D5FABD560FDD5621BFBA5BA0673
+      D32F55E317B543F985E793D0683454FC58A1786A6F647F6E6EC3C28B49D8DBDB
+      53F1070707303F518695F2ECA9BC999A817ABDEEE583CD66132A950A8C8F8FC3
+      EEEE6E6C5FFEFEF97E502C447C12750897F39E28CEBD94F9FEC1E7FDA1EB3757
+      8F94AED551D2C776BF64B2DC3B5DCE0EB6799BFB5F03A7A34D5FDC5F9875F88C
+      0372369EAE69B6FF7D9AFFF1A36B1EB77790EC607BBEE35AFB28CFED2D5DBEA3
+      F10D573D3EBEEAF2CDB87BEC90F787B9F8FF6F29E43C9494E63AF3E77A8696F6
+      99BFB8ED87F63F49FBE7929F7FBBE8E7D742ED97C4F871734EA7FD8FCE399D3C
+      BFDAE1F92AF872AC155ED73F7FF9FB1CE0FF1905369F5EC6FE97E5697EDB8D50
+      ABADDB789A4F59AAA3C973F9369ED35FD29BEA67EBBF4D779B2E9CFD6DBA987D
+      E2782E5FB23DD77F97FEA1E31FEA7FD2F8752A7E625C899C7D0BE1B8BD9DE6FC
+      21C7FB9C3FA4BCEFF9439BFEDAF38712EF6BBF90F383A1E717D3D883E6E74F3B
+      2699B8629CFF515FE6732B631C12E5A518CBF9F4F9F31EFF34FD37EBEB7F92CF
+      1DF2F363E7CFC73D3F187A7EB1DBCF6F76E3F9DF3FF8C7F14C
+    }
+  end
+  object pmWindowOperationsEditors: TPopupMenu
+    Left = 544
+    Top = 208
+    object MenuItem_SetFromControlLeftAndTop: TMenuItem
+      Caption = 'Set from $Control_Left/Top$'
+      Enabled = False
+      OnClick = MenuItem_SetFromControlLeftAndTopClick
+    end
+    object MenuItem_SetFromControlWidthAndHeight: TMenuItem
+      Caption = 'Set from $Control_Width/Height$'
+      Enabled = False
+      OnClick = MenuItem_SetFromControlWidthAndHeightClick
+    end
+  end
+  object imglstActions16: TImageList
+    Left = 200
+    Top = 180
+    Bitmap = {
+      4C7A090000001000000010000000240700000000000078DAED99FB4F145714C7
+      FD078C26FDA1FE608D95D6A6A60D6A55B4BE5A31160A8AADAF46030AEAEA0F3E
+      002522662D454D4D4512564084A03C4C54108B5A51400454D0082A5A61451E2B
+      8F4505011504960ADFCEB9CB1D87656777678CD1D4DEE49B7BEF99F3B9E73ECE
+      ECCCEEF6F5F5E1D9B367686F6F879AD2DDDD8DF4F4741C3D7A948DA3864F4C4C
+      848F8F0F92929254F13131317072728287870732333315F3515151183E7C3886
+      0C19023737379C3A750A1D1D1DAAF83163C62030301079797930994C0EF13A9D
+      0EC3860D63FCD0A143317DFA746CDEBC198D8D8D0EF1D1D1D1183D7A345C5D5D
+      99264F9E8C3973E6203434D42EDFD5D585E4E464F8FAFA62EEDCB9F0F2F2C28E
+      1D3B909F9F8FDBB76F3BC4C7C7C723282808870F1F868B8B0BFCFDFD515151E1
+      D0FED11EE5E4E4B0FD32180C9839732656AD5A85828202F4F6F6DAE5FB84FCA5
+      B37AF9F2257A7A7AE0EDEDCDF62F2E2E0E9D9D9D8AF389F2877291729AF6564D
+      3E363535A98AFDC1969A0C20762E10331388FA56A85D847A9A50CF30F7A3BF01
+      74E3857AAAD017AEC5B8027B170279275FF31A2760AD93B9E6A2FE9AFE9A1422
+      8C19248CE3EF89E2C501C25807FA0F3D0EA815CEBA5AF8FCAA792ED4FD92B649
+      95CD829E02554F043D404BC856337FF53C90EEE4B8A2C2999A34CBCD7CFE59F1
+      9A5B5BD920B1F549D5EFFB689D4F3F9F69B609D7ACFA5B93E05FABE9E72F5D50
+      C51BFC5699F9DC6C557CA5F099C34A56CEEBBD71902555ACE47CBEB2FDEF3F83
+      7B3E6BCCFCE92CF14C94A8DC7B8D987FCDBF2C46BD9727535D7F2DA79A051E30
+      FE341F97177ABF17B79FE1C5739CAB7C80B3F7F5C8ACAE426655256B73FD5571
+      1F39F57566D5D532DF4327D3D8E735157D6B2B26CC9E0DE71933B070DD3AB80B
+      9F9FE3A64CC1472346303BD57F9C398D3461DC94BB7704DB2C84C61E845EAF1F
+      C0A7DCB903BF9D5A041ED0E140EE457CBF7811633E1D370ECBFC3763775AAA4D
+      FE8B8913E1A5598B84E21B03F82F274D62637E3C6A149B871CBFEBC40978076F
+      83362971109F78EB26BE5BF433760AEF2872FC56E139BC22682BC28E1F1BC453
+      4D9AB77CB9553E203212CBB76C8156781722BF23374BB05D78AE527B6378B8C8
+      1FD397335FCED7D6D6629B568B8DC1C18AB47AFD7AC6D3F39BCED152E5E50694
+      9599555363B0EA43ACB55276EF153668DAB1DAFB05664C6E4346BA49513E669F
+      3709CFF33ED60EDED2816913DA54E5755E6E0FA60AEC857326C56CA3B117B35C
+      DA1019D10993721C4F1EF7B2F55F29E85135F7B6D63E84EFEDC4DF775FA9E21F
+      1A5EE1B3912D483B6EFB1DA6F79F0E74BFA85625CEB6371529669B2A0E0DE8C7
+      5EBDC2EED13DC23D4EA236175DE3F94FD7EA85EF2A963CF979FAF96265480813
+      B5B9C64E9820F2D3DCDDEDF2627C9D4EAC690C9A875ADED3CF8FD56A799A3B5D
+      93E3A5FB47BED497CAD6FEBDE9F951DB529A157798747B2E59BD6E8B973294C3
+      C7E3CE29E2A5E32C9CF700F7AE262BE6892156CDFC4934679ABB1CEB487CB975
+      4B79B9FBF74C5A1D8B6FEFFE7DD7A5A5A505D7AF5F5725CEA6A4A42866E93B27
+      3DC3789F97254B96882A2A2A929D7773733313B14B972E15193E06B1523E2222
+      8289FB6DDFBE5DE449A9A9A94C9CE70CD9020202C471B89F34BE1C4F857E53E0
+      76A53CCD9FDA340FA53CB19C93B6E578E9F8C4535D5F5F6F77FFE90C0B0B0BD9
+      BB0C292C2C8CFD0E41359D31B75BAAB4B494F1FF97775F2847DF064F767BB2CB
+      3F7C2A2F47F9F25AEBB2C25BB645DE32B60D5E6A7794979503BCB53D57125FEE
+      2CD5F06AF6DF26EF40FEFC574BE3D12328719B2D8AFA6F328EE9F123C56CD3D9
+      0C946956A2D350A32A36C5ADDEBD93CD41CDFC39678FB7F4B364A4FB68B99F96
+      FB6C29E9F8C6A404942E5D20DAADC56F48881559DABB01BFF5ECFF9DD98DC909
+      B26BA98BD5311F8AD3D55027DA1FA71F37B389F1F2EF73B9D962ECA759AFFF8B
+      693A738AD9EA6222E57F3B3736886BB3F4B3B537EC7B6C7737CAD6FB8A6BEEED
+      EA74E87CECADD9A1EFEA570BC4F9E837691CCE19B9FB4C2E4F94E4A992F8548C
+      F52FA00DC8C5EA251958E69A31E87A7151834DFE74AA9E894A7B8BD97630E206
+      0EEEBF81479580F3C868610CA3CD31C89FE2534D63D17CB481B9AC4D765B8562
+      F2B8E4CB79AA696DF6789A1BF990F83CF97CA85F7CCD6877FE6ACB83BA676FC4
+      04FA672BE639436BA4B3F1F6CC40E49E1B03CE9B4BDAE779420CE509E74DC2ED
+      5698DB603E7341DCDFDC36C2F99368D696E6193F336A938D9F1389FBB94F4B19
+      70FE1487C4C7A339507CCEF3F8727CE125235B2B31FC7C799BE781B5F317AF5F
+      338A0CF70BDD57A478FFD530EF6BC9A84AC0DEE20D0E49ABDF8FF5ADB7984A4C
+      E6DF75C9BEEFE28F08AE9E3F4064FBADC40351696EAC9D10FF03365ED620A3A1
+      0DBF1AAB70B6AB51E4371DF91A2BF2C70F10D9D6FCE98C6D115F897D397E6C0A
+      F0D999563865358AFA3CB58BD9A5FA90784BD1786F83D7EAC399DD11EDBA7960
+      104FB94436257A9FF8B88E1AF19E50227EFFBC49F917963E4F70
+    }
+  end
+  object imglstFindControlProperties: TImageList
+    Left = 720
+    Top = 128
+    Bitmap = {
+      4C7A120000001000000010000000F80900000000000078DAED9B7F5054D715C7
+      F78F9A4C3B62C48218DDE557918DFC50B125FE68A23163623BA66DDA3131A38D
+      21A9B6B69ADA9862D404568A0674ECA0ADA206890808C119098A049004122189
+      8A3F591310AAA522509271348E3AD52ADFBEFBE02E77EFDEF7734148F5CC1CF6
+      EDBBE773CEB93FCEBB6FD9B7438EC0626B2B8148ED0EC0DF920AA5F621DDEC33
+      FB423D94B244D46C681B39A6C2B22C2FB2A16DE498B69363728EE74536B48D9E
+      A37E45BCC8866DA3ED449478DE46696C44BC9A4D7F89D2DAD0B37EA8DE5F3FE6
+      D70FA9416FD64F4B4B8B8568E4E44C848C7BC7F55E49034B531051B3DECD2E6A
+      F24E4C9B5E87194F3BF18379DB157D04A7AC87FD600982F71522B23A155D7133
+      3075FA692C597C1EBF5BD084A9AFD64A3E36C3935D077B6A09A61CFF08B1870F
+      C25A9887319F2421283A1D4FCD74CAECCB710D98B7EE0C1E5DF42942E76E440F
+      2B8D79EA014CC9A894D9989A32D88AF2612D5E25DB84446F9572388E79F3CEE0
+      F9B74FE3D9A41318FF4A25825F5887A0B5295D7133A4B85B095B2AB3810712DD
+      720C89FE1B263EFE99CC3E93701433577C8EC817CBBBE376B37F2F835562830E
+      2408C72828FAAF88F94D95CC3E195F83A94B3F71636D0E12F72DD5390A7C3E15
+      51F3CBBBD8C5953DECEA7CD892DFD49EDF396B609F2BE5BC588ABB88B0A588DE
+      588C5109B912FF862A1F1495ECCE2E2893D931EB8B303AB510FE2B32A5FC5F17
+      FA0826EC5877D6F6CB7C396E98C486AE2940E0EA3CF8E66C4160F11FE11E3709
+      E1638B31655A25C3E6C136FB0D5857C763F8CA4CA9FF791895988380822CF8EC
+      4C836DFFEF651FB68884AEB8D3A4B88FF5C40D9CDDD3576BD252F8BE9E8E8055
+      59F0CBCB806FEE767C3723559ACB38D827381032666F173BA92B6EE073CB3DFA
+      685DBD183E4B374AF96FC790AC2D78605B12461F5C20DBD92724C03A7A376CE1
+      246EBCE2185B1D0BE5B884B5572C72B30B8F8987D5BE54737E4715CE4778C542
+      979D74FD2062B9975512F05A5D5D0D3D767CBB8813F951F24FCFABC5D2C31325
+      C7BC0EE4F8F7F5EEEA40A9FD231D57115ED68AD145CD48ABFF1A466C9C97AE61
+      61F905382AAF6063CD0DFCA9A20399F5ED6E3ED46CC26A3BB1E4F3DBD875F40E
+      764BBAA9EA0A46ACCC40D5D966970F359B91473B6129F90A7E7B1A119B550B4B
+      622E2C4B36B8F16A36B4CD92E38425ADCCD5E6517F021B355E14FF6EF27AF30F
+      3BE6C93FF85A1AAA9B2EF48CBF8A4DFDF54E447CFCB5AB6DF0DA02E49D38EB36
+      FF5A3675576E6278691B2CD975D876A64DB8FEF4D87C8BAF01F7B4A8ECFF9A76
+      7CBB8813F951F23F9078F2DEE170DC359E17C2EAB1138959EE5E92FBFBFFC0DD
+      FFFB7BFFBE5B7C5FEEFFF4FA6376FF67AE5FA6F67FE6FA65B826EED6E7A3A28B
+      971166BD644A297BA4108AAAC6DB11EA3A1689164B79361E11ADF89465E3533F
+      94D78A6B86E75923BC8815F1ECAB16CBF37A73D6CB539B097F1EAEA87AE38AEE
+      BD94E2F32C1B8F706AF1D5FACAF2A2FE6B8D951AAFC52AF1A406F5B094675FFF
+      1FFEF7F7D5D9ED30AB94FF77B6C594B6571D06E5B5BEE3E25589A76B9B7D2F3A
+      16F1225BFED50CCFB37D15DFDBFE7B33FE66945D87C497111D28F543F71C33C2
+      B306C64D287AE6512F6F764E59D5938B929D51DE4C4E3CAF279E19DEDBF1526B
+      E3E7CEA86FD1DA538BAFB516F5F05A63A3357E5A7362740E8DCE15377E7D766D
+      21CF39C8F7360EE3F719E4DE847044E7AC2AD7BC57A1767A787A9EBE4FD8D793
+      27B5A536F41C7965CF137BC2B1FE787BA5F7EC793E27B68D3CE741956F635951
+      9FBB9F1171B5511F7AC792F2DDCF915898675F74CD99527C3A8EA2987AFBCFCF
+      9FDEF117CD83D1F9A7C7ECFC8BD61F696379D696FAE8CDF5AF567FA2B5E2FA1F
+      C755E9CFD5AE38E4958C353DC71E9375207DD690E791BCD263965762E9B34E3C
+      4B5EF9F84A39D0F87C0EA2752152FAFC17AF7CFE4AAA149FE74531585E6BFCD4
+      78ADF13393BFD273617A959D077A2CEA27B1157D0613F1A27EEAE545AC5E5E89
+      FDB6E7AFC6F7C63E6F76EDB0BC9E3D9D8FA9C6F3D76E233C7FED15ED594A3C7F
+      9FC1DF93A8F1A27D4D748F20E28DEC8FF47AC8F2F49E825576BFE2B5B7F3EF8D
+      F1EB8DF9EB8DF56366FD7A533F5E7EFF2F7F076046BD61A9D2CF210127B264F5
+      2B4B93D5373B41D6A1E9F1B20E49FEADAC8317CF96F57BB39F94B5BF796FFBEF
+      ADD2BCA9D2BCA9D2BCA9D2BCA9F637DFDFE3477218FCF22C794E7DE2E7C9393E
+      B4E15579CE7D77BE25F761D8DE14794DF8D76C93FB38A2714FD7EF1BDA4B7B9D
+      27AC11DEDBFA25D7452F78F456FD1361EB8F085B7FF2F30A4CFD1161EBB7BFF8
+      8154FF3467AA3467AA3467AAB4CFFDC9F7F7F81161EB8F085B7F44D8FA23C2D6
+      5F7FF3DED66FAF3C3F3FE72C88EAF1476CA83DCF531F2ABF37046B2BF2497DF0
+      F74A221BF6FE4BCD87521B7FFF26B253F3CBF3A23E8AC6468D57F2C18E6B5FF2
+      DEE4EFCDF879337FDEAE1F6FD7AFB7F5D357DAF44D134A2E94A0E55A8BA1581D
+      373AB0E39F7B117B2E1B8FB47D8099E772B0BC71273E6EAFC6F5FF5E57F475F5
+      D655EC6B29C3D34DEFCAD7367EFC625A8AF042E30E6C3D5780D6EBAD2E3F773A
+      EFA0B2AD0A714DBB1023C553FBFEE431C9C74BB51B5071B1C2C5EF3DBF172F7D
+      B105630431A98E6B2FC7FC864CC41627E3E17C07AA5AAB5C3CF135F1540EE29C
+      5B31ADF580073BA5651FFE70620B82F72463D8EE240408F8E063EFC27A6C279E
+      3D998E9F36EF71B1B3CEEDC6FCEA4DF0CFFB8BCCAAF1C36BBBF417A7B330A761
+      079EABDB8CD8FD6B5D9C5E9E68D4A76B30EEFD440F562F3FEC501286E62E53E0
+      1351D95A698A0FC84FC26B8737E3E2B58B3DBF3392D6D58C93DAFCA4E2F5C868
+      28F05883B73B6FA354EACFAC53CAFC131FAC4359CB87B875E796E2FA6DB8DC80
+      5F9F7E479AC72C176F2B588B570EA5A1FE72BDAE1ABAF49F4B707C998DE8CFDE
+      4674E14AAC3D9989CB372F1BAABF9B776E22F71FEF617F7309486D68D82B0A57
+      FFBA4547FD0BC544FDCBE245FD23BBED27F8D9D908B3F58F0357E6627CDD8FF1
+      F32FA3CCD4BFCC871D8B45E8B14731FD54A4D1FA77F1C147BBF409E74423F5EF
+      C1138D381480C85C5F3DF52FE4832AFD10943E484FFD1BE6B9FA47D5B5859874
+      4A1FCFD57FB77C88F7BF89C3E375EA3C57FF1E720EC998E51C2FCDE344379EAB
+      7F55E9442E96344E4144F5C388C819CCD7BF4E29457ACB74BCD7F12BB6FE4DC9
+      212C43E2F9B1704A7D3322FFC226BC582FDD0F3AFD30AA7D1C429CFE987C7C28
+      D23A66487D547EE0E806F2B0A2F9870839F9104675C46064FB5837B536DB613F
+      EE83394E1B1A90CAFEDA031BDAA722F2E4F76195E2F11CAB81928FC8220B522E
+      4C74D1CBBE084564F520614C57EC8E1F21E2C810D8522D6EF54F845C4B6CE5FE
+      88AC7A1041AD5182988F20A6641046BE69F1A81FCA93FD6FE4FEA1082B7D00A1
+      8D812E36D4390211BBA498CB2DC2FA6379BA778555F8C27EC407E11F7D07B614
+      8B6AFD8A7803FBBF22AF73FF37CCF3F52FCFBEB9FDDF2526F67FA1E8D8FF3545
+      65FFD72D82FD5F51FE07A4D02D67
+    }
+  end
+  object imglstExecAppProperties: TImageList
+    Left = 720
+    Top = 72
+    Bitmap = {
+      4C7A070000001000000010000000FB0100000000000078DAED98BD4E03310CC7
+      F3047D02581012EF82D87917967B082656064604120C4C0C5DE82330B021A82A
+      21245EC09CA5B36A2C3B17C739A06A2DFDA55E925FE2739C8FDE6C0169FFED1E
+      6A34EBD993DB0388A8A571DFACFA1CCBFDD2DA5AE5C4CAB6DC27593EC65B759A
+      0F395E33D9766C7C399EF441E3A9DEEA9B97511B3E7F63EFA3C5C19B57ADF3AF
+      C6A2EB67165CBFBD0B5BAD3E0640AAE18F3A00123ECB7D04CB4ECF1E400ACB97
+      9709B69D8FC67FA798700EA4B80DF3AADACDEB67966779619AC5638EF0DC1AF2
+      A398E7E3236BF9A1ED8B648BEB3597EB2367D847293FD666CAFAA87FAD786B9E
+      D3DDB2F8FDF89EC255327F34E79AA636CFD9CDD7A07587B5443CB256BC359371
+      F0B0A5FBC1147C8BF96C910B5E56DBDB727BB5C6AF9E2FB292369CCDD5E3B3F3
+      BD88D7EE06A4DFE0A3FECB35E98D5FBF1EF13FB47A87F7F2F49B9E0BDFFF5FDC
+      43D2D50B70B9D92F58CBD907F1744EC87E34E578AE1F7E19FEE578EB1CDBF1ED
+      783CF3F1D93A27A4ACDCCAE54B6D6E4FADC837B9F7C7A7E4FD6E637DC7F94BBE
+      C537C9E8FD50DE7DBD7E117F7C5E171799E335718D8C2FEF939B322FA5BC1517
+      EFBD53F2B80623F352B2471CEE7D00C9BBBF7036CA6BF55DD7812539B6D52EA5
+      A48AB35A3DE7E7F37988977D8CB11ACFFBA8E13516CB48A5EF5FC36B6CCEF712
+      3EC772DE9B2F5C9BB24E2C7D0345992743
+    }
+  end
+  object imglstSetTextProperties: TImageList
+    Left = 720
+    Top = 192
+    Bitmap = {
+      4C7A020000001000000010000000AF0000000000000078DAC593CD0D80200C85
+      99C3C48B6338833B71731F0F4EC02EAE51C3A1E6052A058A91E445D4F759E90F
+      1139FA59DBB1508F909FAF93420899E2734912EFBDCFD4C2B34ADC1BEF9C7B14
+      F978652FEFD123C5671FC7672FC6E5FB1A5ECA410B6F892F9D5FE32DF91F517F
+      4BFF59FADFA85F57EFD9515AEE6BF852EDD3FE4AEBA8F59EC66BB31F3DEB3E89
+      AA993DF6B4F09803FC7F64F15D4D7CFC469A9BD2EC7F9DFF11F5B7F49F45D675
+      03193A301C
+    }
+  end
+  object imglstCallTemplateProperties: TImageList
+    Left = 912
+    Top = 16
+    Bitmap = {
+      4C7A040000001000000010000000440100000000000078DAED973D0A02410C85
+      F704765EC08BD85AD87B17F1005EC1D60308961E6141B0B6B7102F110D381262
+      9249328A0A0E3CDC85F7BDCCCF2E1B01A0839BA6DB11C0FD3AA377F0E775075C
+      97E30A223CFA8BAC8C082F65149EE6583C4AE3CB35E77916E7B9223CCF89D697
+      F631C35BFBFF09DE52CBF3FE6D9ACD77D06F00B2BE61B704548D977CF4DECAD0
+      7C9EBA9E6C4F7E6D9D5E6FA696B566A9169E15CA734E78A6DC2BC9EBFB3F7F3F
+      F3FC01D95373683E52C71C928FDE5B199ACF53D793EDC9AFADD3EBADD5C26FA8
+      774E522DE4C9BB5F9D1379A71F3C1FF8BD2B3ED6033D0D8D977AA177F23427CB
+      976BAD97D0786F2F668D6C7D691F0DBE6BED65287F3A2C4259B41743363A1764
+      F69331D47A354D2DF58B37BB7E89D77A792A0F3FE84194C597B96779FCC58C0C
+      4F55E3B51E3C5A5F7A9622EBB7FECBB6F29EF37F85AE81BDD052
+    }
+  end
+  object imglstSleepProperties: TImageList
+    Left = 912
+    Top = 72
+    Bitmap = {
+      4C7A0100000010000000100000004C0000000000000078DAFBFFFF3FC3FF118E
+      CF78D8FF47C7949A05E3BFBA39F33F368C4DEFF3FD27C07AF74D2AF88FCF6DB8
+      DC4789DB71E925C6FD20F782F482DC4F4CD8A2DB43AD30A746FC8D340C0032D6
+      EC8B
+    }
+  end
+  object imglstSetVarProperties: TImageList
+    Left = 912
+    Top = 128
+    Bitmap = {
+      4C7A0100000010000000100000008D0000000000000078DAFBFFFF3F4378D5CE
+      FF27D7FD0701064258F6D9560C75A20C1DFF419818BD3E1B95FE239B81AC8F90
+      1984F4A3BB07D95D30BD2036363388B51B9B7E74B760B31FA60786617C62FC0F
+      532FB26B221C23BB019FFB91DD8D8E61E2A0B807A50172F5538A49497FD8EC25
+      36FDC1C20D593FB1E90F39CE70E9C797FEF08527B1EE27141FF8D21F2EFD001C
+      C3AFDD
+    }
+  end
+  object imglstWindowOperationsProperties: TImageList
+    Left = 912
+    Top = 192
+    Bitmap = {
+      4C7A0700000010000000100000003F0100000000000078DAED98CD0DC3200C85
+      3341D7E818BD76ABEED26D2A75906EE18A83250B05EAE76724D270B084947CFC
+      98671B10914D1A767D8848E77BCB2E2F916285D736DA4761D5227340E6FFBEDF
+      04B13DFEF3DC5CD6E2BD6B1ACD477C51F3A82F6ADE3B7F6D5B7D45F9A21574FF
+      4BDBEA54FB40F742C78FEE25B2FEA86E8E644C2CA31ACEF2ABCD5596F7E6309B
+      2B95F7E4CF5ABFBF2C7BFCACF567EA9AD5CFBF195383191ED1DFCCE7885E6DF1
+      E49DC27BF24F4B8FC8FC19FFD53CBA7F23E63F033F22EF9C29FF64FAD0C32367
+      7744031E7D7979CBECD5DE1E6FFF8FD4F8FA5F66FC8CF5B3FECFD4CFAAFDC7AC
+      DDADBD6FD56EE6DED0E3993AB3786EFFB2CFBE59DA6762C073FF8BBCCFD9B73E
+      ED83792F64D7C8E609DB1773EEF2E4808C1AB5F871FC99CEDD2BFEB1F89FF1FE
+      B0785FFC66E92343ABD198B3B19611B75FCD38FA67
+    }
   end
 end

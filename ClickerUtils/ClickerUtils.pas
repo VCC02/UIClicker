@@ -66,6 +66,8 @@ type
   TOnGetSelectedCompFromRemoteWin = function: THandle of object;
   TOnLoadBitmap = function(ABitmap: TBitmap; AFileName: string): Boolean of object; //returns True if file loaded, and False if file not found
   TOnEditActionCondition = function(var AActionCondition: string): Boolean of object;
+  TOnSetMatchTextAndClassToOI = procedure(AMatchText, AMatchClassName: string) of object;
+  TOnGetUseWholeScreenAsSearchArea = function: Boolean of object;
 
   TOnFileExists = function(const AFileName: string): Boolean of object;
   TOnTClkIniReadonlyFileCreate = function(AFileName: string): TClkIniReadonlyFile of object;
@@ -308,11 +310,13 @@ type
 
   TCompRecArr = array of TCompRec;
 
+  PClkFindControlOptions = ^TClkFindControlOptions;
+
 
   TOnUpdateSearchAreaLimitsInOIFromDraggingLines = procedure(ALimitLabelsToUpdate: TLimitLabels; var AOffsets: TSimpleRectString) of object;
   TOnUpdateTextCroppingLimitsInOIFromDraggingLines = procedure(ALimitLabelsToUpdate: TLimitLabels; var AOffsets: TSimpleRectString; AFontProfileName: string) of object;
   TOnUpdateTextCroppingLimitsInOIFromDraggingLinesIdx = procedure(ALimitLabelsToUpdate: TLimitLabels; var AOffsets: TSimpleRectString; AFontProfileIndex: Integer) of object;
-
+  TOnGetFindControlOptions = function: PClkFindControlOptions of object;
 
 const
   CActionStatusStr: array[TActionStatus] of string = ('Not Started', 'Failed', 'Successful', 'In Progress', 'Allowed Failed');

@@ -153,30 +153,13 @@ type
   { TfrClickerFindControl }
 
   TfrClickerFindControl = class(TFrame)
-    bitbtnUpdateFontProfile: TBitBtn;
-    btnAddBmpFile: TButton;
-    btnAddNewFontProfile: TButton;
-    btnBrowseBitmap: TButton;
-    btnClear: TButton;
-    btnDisplaySearchAreaDebuggingImage: TButton;
-    btnRemoveBmpFile: TButton;
-    btnRemoveFontProfile: TButton;
-    btnUpdateBmpFile: TButton;
     btnCopyFoundValues: TButton;
-    chkAutoCopyValuesToMatchEditboxes: TCheckBox;
+    btnDisplaySearchAreaDebuggingImage: TButton;
+    chkAutoCopyValuesToObjectInspector: TCheckBox;
     chkDisplayCroppingLines: TCheckBox;
-    chkShowGridOnBMPPreview: TCheckBox;
-    chkAllowToFail: TCheckBox;
-    chkMatchBitmapFiles: TCheckBox;
-    chkMatchBitmapText: TCheckBox;
-    chkMatchClassName: TCheckBox;
-    chkMatchText: TCheckBox;
-    chkSearchCachedLeftAndTopFirst: TCheckBox;
     chkShowBMPFileDbgImg: TCheckBox;
     chkShowBMPTextDbgImg: TCheckBox;
-    chkUseWholeScreenAsSearchArea: TCheckBox;
-    chkWaitForControlToGoAway: TCheckBox;
-    cmbMatchBitmapTextSearchAlgorithm: TComboBox;
+    chkShowGridOnBMPPreview: TCheckBox;
     edtFoundControlInfo: TEdit;
     grpFindControlDetailsOnWindow: TGroupBox;
     imgCopySelAreaFromBkImg: TImage;
@@ -189,39 +172,10 @@ type
     imgCopyBkImg: TImage;
     imgUpdateLeftTopRightBottomOffsets: TImage;
     lbeFoundControlText: TLabeledEdit;
-    lbeAllowedColorErrorCount: TLabeledEdit;
-    lbeColorError: TLabeledEdit;
-    lbeCurrentFontProfileName: TLabeledEdit;
-    lbeFindCachedControlLeft: TLabeledEdit;
-    lbeFindCachedControlTop: TLabeledEdit;
     lbeFoundControlClass: TLabeledEdit;
-    lbeMatchBitmapAlgorithmXMulOf: TLabeledEdit;
-    lbeMatchBitmapAlgorithmXOffset: TLabeledEdit;
-    lbeMatchBitmapAlgorithmYMulOf: TLabeledEdit;
-    lbeMatchBitmapAlgorithmYOffset: TLabeledEdit;
-    lbeMatchBitmapFile: TLabeledEdit;
-    lbeMatchBitmapText: TLabeledEdit;
-    lbeMatchClassName: TLabeledEdit;
-    lbeMatchClassNameSeparator: TLabeledEdit;
-    lbeMatchText: TLabeledEdit;
-    lbeMatchTextSeparator: TLabeledEdit;
-    lbeSearchRectBottom: TLabeledEdit;
-    lbeSearchRectBottomOffset: TLabeledEdit;
-    lbeSearchRectLeft: TLabeledEdit;
-    lbeSearchRectLeftOffset: TLabeledEdit;
-    lbeSearchRectRight: TLabeledEdit;
-    lbeSearchRectRightOffset: TLabeledEdit;
-    lbeSearchRectTop: TLabeledEdit;
-    lbeSearchRectTopOffset: TLabeledEdit;
-    lblBMPFilesMatchingInfo: TLabel;
     lblBMPSettingsInfo: TLabel;
-    lblBMPTextMatchingInfo: TLabel;
     lblCachingInfo: TLabel;
-    lblInfoFindSubControl: TLabel;
-    lblInfoFindSubControl2: TLabel;
-    lblInfoFindSubControl3: TLabel;
     lblInitRectOffsetsInfo: TLabel;
-    lblMatchBitmapTextSearchAlgorithm: TLabel;
     lblMouseOnDbgImg: TLabel;
     lblMouseOnDbgImgBB: TLabel;
     lblMouseOnDbgImgGG: TLabel;
@@ -231,7 +185,6 @@ type
     lblReservedSpaceForDbgImg: TLabel;
     lblSearchAreaValidValuesInfo: TLabel;
     lblSearchInfo: TLabel;
-    lblTextMatchingInfo: TLabel;
     lstMatchBitmapFiles: TListBox;
     MenuItem_CopyTextAndClassFromRemoteScreenWindow: TMenuItem;
     MenuItem_CopyTextAndClassFromWinInterpWindow: TMenuItem;
@@ -246,112 +199,25 @@ type
     PageControlMatch: TPageControl;
     pmStandardControlRefVars: TPopupMenu;
     pnlDrag: TPanel;
-    pnlvstMatchBitmapFiles: TPanel;
     pmExtraCopyValueWindows: TPopupMenu;
-    rdgrpSearchForControlMode: TRadioGroup;
     spdbtnDisplaySearchAreaDbgImgMenu: TSpeedButton;
     spdbtnExtraCopyValueWindows: TSpeedButton;
     tabctrlBMPText: TTabControl;
-    TabSheetActionFindSubControlBMPFiles: TTabSheet;
-    TabSheetActionFindSubControlBMPSettings: TTabSheet;
     TabSheetActionFindSubControlBMPText: TTabSheet;
-    TabSheetActionFindSubControlCriteria: TTabSheet;
     TabSheetActionFindSubControlSearchArea: TTabSheet;
     TabSheetActionFindSubControlText: TTabSheet;
     tmrDrawZoom: TTimer;
     tmrUpdateGrid: TTimer;
     tmrUpdateSearchAreaOffsetEditBoxes: TTimer;
-    updownXMulOf: TUpDown;
-    updownXOffset: TUpDown;
-    updownYMulOf: TUpDown;
-    updownYOffset: TUpDown;
-    procedure btnAddBmpFileClick(Sender: TObject);
-    procedure btnAddNewFontProfileClick(Sender: TObject);
-    procedure btnBrowseBitmapClick(Sender: TObject);
-    procedure btnClearClick(Sender: TObject);
     procedure btnCopyFoundValuesClick(Sender: TObject);
     procedure chkDisplayCroppingLinesChange(Sender: TObject);
     procedure CopyTextAndClassFromPreviewWindowClick(Sender: TObject);
     procedure CopyTextAndClassFromRemoteScreenWindowClick(Sender: TObject);
     procedure CopyTextAndClassFromWinInterpWindowClick(Sender: TObject);
     procedure btnDisplaySearchAreaDebuggingImageClick(Sender: TObject);
-    procedure btnRemoveBmpFileClick(Sender: TObject);
-    procedure btnRemoveFontProfileClick(Sender: TObject);
-    procedure btnUpdateBmpFileClick(Sender: TObject);
-    procedure bitbtnUpdateFontProfileClick(Sender: TObject);
-    procedure chkAllowToFailClick(Sender: TObject);
-    procedure chkMatchBitmapFilesClick(Sender: TObject);
-    procedure chkMatchBitmapTextClick(Sender: TObject);
-    procedure chkMatchClassNameClick(Sender: TObject);
-    procedure chkMatchTextClick(Sender: TObject);
-    procedure chkSearchCachedLeftAndTopFirstClick(Sender: TObject);
     procedure chkShowBMPFileDbgImgClick(Sender: TObject);
     procedure chkShowBMPTextDbgImgClick(Sender: TObject);
     procedure chkShowGridOnBMPPreviewChange(Sender: TObject);
-    procedure chkUseWholeScreenAsSearchAreaClick(Sender: TObject);
-    procedure chkWaitForControlToGoAwayClick(Sender: TObject);
-    procedure cmbMatchBitmapTextSearchAlgorithmChange(Sender: TObject);
-    procedure cmbMatchBitmapTextSearchAlgorithmCloseUp(Sender: TObject);
-    procedure cmbMatchBitmapTextSearchAlgorithmDropDown(Sender: TObject);
-    procedure lbeAllowedColorErrorCountChange(Sender: TObject);
-    procedure lbeColorErrorChange(Sender: TObject);
-    procedure lbeCurrentFontProfileNameEditingDone(Sender: TObject);
-    procedure lbeFindCachedControlLeftChange(Sender: TObject);
-    procedure lbeFindCachedControlTopChange(Sender: TObject);
-    procedure lbeMatchBitmapAlgorithmXMulOfChange(Sender: TObject);
-    procedure lbeMatchBitmapAlgorithmXOffsetChange(Sender: TObject);
-    procedure lbeMatchBitmapAlgorithmYMulOfChange(Sender: TObject);
-    procedure lbeMatchBitmapAlgorithmYOffsetChange(Sender: TObject);
-    procedure lbeMatchBitmapTextKeyUp(Sender: TObject; var Key: Word;
-      Shift: TShiftState);
-    procedure lbeMatchClassNameChange(Sender: TObject);
-    procedure lbeMatchClassNameSeparatorChange(Sender: TObject);
-    procedure lbeMatchTextChange(Sender: TObject);
-    procedure lbeMatchTextSeparatorChange(Sender: TObject);
-    procedure lbeSearchRectBottomChange(Sender: TObject);
-    procedure lbeSearchRectBottomMouseEnter(Sender: TObject);
-    procedure lbeSearchRectBottomMouseUp(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
-    procedure lbeSearchRectBottomOffsetChange(Sender: TObject);
-    procedure lbeSearchRectBottomOffsetKeyUp(Sender: TObject; var Key: Word;
-      Shift: TShiftState);
-    procedure lbeSearchRectBottomOffsetMouseDown(Sender: TObject;
-      Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-    procedure lbeSearchRectBottomOffsetMouseMove(Sender: TObject;
-      Shift: TShiftState; X, Y: Integer);
-    procedure lbeSearchRectLeftChange(Sender: TObject);
-    procedure lbeSearchRectLeftMouseEnter(Sender: TObject);
-    procedure lbeSearchRectLeftMouseUp(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
-    procedure lbeSearchRectLeftOffsetChange(Sender: TObject);
-    procedure lbeSearchRectLeftOffsetKeyUp(Sender: TObject; var Key: Word;
-      Shift: TShiftState);
-    procedure lbeSearchRectLeftOffsetMouseDown(Sender: TObject;
-      Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-    procedure lbeSearchRectLeftOffsetMouseMove(Sender: TObject;
-      Shift: TShiftState; X, Y: Integer);
-    procedure lbeSearchRectRightChange(Sender: TObject);
-    procedure lbeSearchRectRightMouseEnter(Sender: TObject);
-    procedure lbeSearchRectRightMouseUp(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
-    procedure lbeSearchRectRightOffsetChange(Sender: TObject);
-    procedure lbeSearchRectRightOffsetKeyUp(Sender: TObject; var Key: Word;
-      Shift: TShiftState);
-    procedure lbeSearchRectRightOffsetMouseDown(Sender: TObject;
-      Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-    procedure lbeSearchRectRightOffsetMouseMove(Sender: TObject;
-      Shift: TShiftState; X, Y: Integer);
-    procedure lbeSearchRectTopChange(Sender: TObject);
-    procedure lbeSearchRectTopMouseEnter(Sender: TObject);
-    procedure lbeSearchRectTopMouseUp(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
-    procedure lbeSearchRectTopOffsetChange(Sender: TObject);
-    procedure lbeSearchRectTopOffsetKeyUp(Sender: TObject; var Key: Word;
-      Shift: TShiftState);
-    procedure lbeSearchRectTopOffsetMouseDown(Sender: TObject;
-      Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-    procedure lbeSearchRectTopOffsetMouseMove(Sender: TObject;
-      Shift: TShiftState; X, Y: Integer);
     procedure MenuItemControl_EdgeRefGenericClick(Sender: TObject);
     procedure MenuItemCopyRefToClipboardClick(Sender: TObject);
     procedure MenuItemPasteRefFromClipboardClick(Sender: TObject);
@@ -362,26 +228,14 @@ type
       Y: Integer);
     procedure pnlDragMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
-    procedure rdgrpSearchForControlModeClick(Sender: TObject);
     procedure spdbtnDisplaySearchAreaDbgImgMenuClick(Sender: TObject);
     procedure spdbtnExtraCopyValueWindowsClick(Sender: TObject);
     procedure tabctrlBMPTextChange(Sender: TObject);
     procedure tmrDrawZoomTimer(Sender: TObject);
     procedure tmrUpdateGridTimer(Sender: TObject);
     procedure tmrUpdateSearchAreaOffsetEditBoxesTimer(Sender: TObject);
-    procedure updownXMulOfChangingEx(Sender: TObject; var AllowChange: Boolean;
-      NewValue: SmallInt; Direction: TUpDownDirection);
-    procedure updownXOffsetChangingEx(Sender: TObject;
-      var AllowChange: Boolean; NewValue: SmallInt; Direction: TUpDownDirection
-      );
-    procedure updownYMulOfChangingEx(Sender: TObject; var AllowChange: Boolean;
-      NewValue: SmallInt; Direction: TUpDownDirection);
-    procedure updownYOffsetChangingEx(Sender: TObject;
-      var AllowChange: Boolean; NewValue: SmallInt; Direction: TUpDownDirection
-      );
-  private
-    vstMatchBitmapFiles: TVirtualStringTree;
 
+  private
     FBMPsDir: string;
     FLastClickedLbe: TLabeledEdit;
     FDragging: Boolean;  //used for getting control handle
@@ -441,16 +295,10 @@ type
 
     FOnUpdateSearchAreaLimitsInOIFromDraggingLines: TOnUpdateSearchAreaLimitsInOIFromDraggingLines;
     FOnUpdateTextCroppingLimitsInOIFromDraggingLines: TOnUpdateTextCroppingLimitsInOIFromDraggingLinesIdx;
-
-    procedure vstMatchBitmapFilesClick(Sender: TObject);
-    procedure vstMatchBitmapFilesGetText(Sender: TBaseVirtualTree;
-      Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
-      var CellText: {$IFDEF FPC} string {$ELSE} WideString {$ENDIF});
-    procedure vstMatchBitmapFilesGetImageIndex(Sender: TBaseVirtualTree;
-      Node: PVirtualNode; Kind: TVTImageKind; Column: TColumnIndex;
-      var Ghosted: Boolean; var ImageIndex: Integer);
-    procedure vstMatchBitmapFilesHeaderMouseUp(Sender: TVTHeader;
-      Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+    FOnGetDisplayedText: TOnGetDisplayedText;
+    FOnSetMatchTextAndClassToOI: TOnSetMatchTextAndClassToOI;
+    FOnGetUseWholeScreenAsSearchArea: TOnGetUseWholeScreenAsSearchArea;
+    FOnGetFindControlOptions: TOnGetFindControlOptions;
 
     procedure imgSearchAreaControlDbgMouseMove(Sender: TObject;
       Shift: TShiftState; X, Y: Integer);
@@ -539,14 +387,14 @@ type
 
     procedure DoOnUpdateSearchAreaLimitsInOIFromDraggingLines(ALimitLabelsToUpdate: TLimitLabels; var AOffsets: TSimpleRectString);
     procedure DoOnUpdateTextCroppingLimitsInOIFromDraggingLines(ALimitLabelsToUpdate: TLimitLabels; var AOffsets: TSimpleRectString; AFontProfileIndex: Integer); //called by a handler for BMPTextFrame
+    function DoOnGetDisplayedText: string;
+    procedure DoOnSetMatchTextAndClassToOI(AMatchText, AMatchClassName: string);
+    function DoOnGetFindControlOptions: PClkFindControlOptions;
 
-    function BrowseBitmapFile: Boolean;
     procedure HandleMatchTextClick;
     procedure GeneratePreviewGridContent;
 
-    function GetFontProfileIndexByName(AProfileName: string): Integer;
     procedure AddFontProfile(AProfileName: string);
-    procedure RemoveFontProfileByIndex(AIndex: Integer);
 
     procedure SelectDbgImgByRectangle(X, Y: Integer);
 
@@ -606,7 +454,6 @@ type
     function GetSearchAreaRightOffsetFromSelLabel: Integer;
     function GetSearchAreaBottomOffsetFromSelLabel: Integer;
 
-    procedure UpdateSearchAreaLabelsFromKeysOnEditBoxes;
     procedure UpdateSearchAreaLabelsFromInitRect(AInitialRectange: TRectString);
     procedure UpdateSearchAreaLabelColorsFromTheirPosition;
     procedure UpdateTransparent_SearchAreaLimitsFromSearchAreaLimits;
@@ -621,8 +468,6 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
 
-    function GetBitmapFilesCount: Integer;
-    procedure SetBitmapFilesCount;
     procedure CreateBMPTextFrames(ACount: Integer);
     function GetBMPTextFontProfilesCount: Integer;
     procedure SetBMPTextFrameVisibility;
@@ -630,13 +475,9 @@ type
     procedure UpdateSearchAreaLabelsFromKeysOnInitRect(AInitialRectange: TRectString);  //must be called on OI Text editor - KeyUp
     procedure UpdateControlWidthHeightLabels;
     procedure ClearControls;
-    procedure UpdateMatchCriteriaPageIcons;
     procedure UpdateBitmapAlgorithmSettings;
     procedure UpdatePreviewIcons;
-    procedure RepaintBitmapFilesVst;
-    procedure UpdateSearchAreaLabelsFromOffsetEditboxes;
 
-    procedure SetSearchRectEnabledState;
     procedure DisplayDebuggingImage;
     procedure PreviewText; //called by ExecuteAction
 
@@ -658,6 +499,11 @@ type
     procedure UpdateOnTextCroppingBottomMouseDown(var AMatchBMP: TClkFindControlMatchBitmapText; AEditBox: TVTEdit; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure UpdateOnTextCroppingBottomMouseMove(var AMatchBMP: TClkFindControlMatchBitmapText; AEditBox: TVTEdit; Shift: TShiftState; X, Y, AProfileIndex: Integer);
 
+    procedure AddNewFontProfile(ANewProfile: TClkFindControlMatchBitmapText);
+    procedure UpdateFontProfilName(AProfileIndex: Integer; ANewName: string);
+    procedure RemoveFontProfileByIndex(AIndex: Integer);
+    function GetFontProfileIndexByName(AProfileName: string): Integer;
+
     property BMPsDir: string read FBMPsDir write FBMPsDir;
     property BMPTextFontProfiles[Index: Integer]: TFontProfile read GetFontProfile;
 
@@ -678,6 +524,9 @@ type
 
     property OnUpdateSearchAreaLimitsInOIFromDraggingLines: TOnUpdateSearchAreaLimitsInOIFromDraggingLines write FOnUpdateSearchAreaLimitsInOIFromDraggingLines;
     property OnUpdateTextCroppingLimitsInOIFromDraggingLines: TOnUpdateTextCroppingLimitsInOIFromDraggingLinesIdx write FOnUpdateTextCroppingLimitsInOIFromDraggingLines;
+    property OnGetDisplayedText: TOnGetDisplayedText write FOnGetDisplayedText;
+    property OnSetMatchTextAndClassToOI: TOnSetMatchTextAndClassToOI write FOnSetMatchTextAndClassToOI;
+    property OnGetFindControlOptions: TOnGetFindControlOptions write FOnGetFindControlOptions;
   end;
 
 const
@@ -694,10 +543,10 @@ uses
   BitmapProcessing, Clipbrd, ClickerZoomPreviewForm;
 
 
-const
-  {$IFDEF FPC}
-    ID_YES = IDYES;  //from Delphi
-  {$ENDIF}
+//const
+//  {$IFDEF FPC}
+//    ID_YES = IDYES;  //from Delphi
+//  {$ENDIF}
 
 
 { TFontProfile }
@@ -707,7 +556,6 @@ begin
   inherited Create;
   FOwner := AOwner;
   FfrClickerBMPText := CreateBMPTextFrame_NoContent(ANewProfileName);
-  FOwner.lbeMatchBitmapText.BringToFront;
 end;
 
 
@@ -925,49 +773,49 @@ end;
 
 function TFontProfile.GetCropLeft: string;
 begin
-  Result := FfrClickerBMPText.lbeMatchBitmapTextCropLeft.Text;
+  Result := FfrClickerBMPText.MatchBitmapTextCropLeft;
 end;
 
 
 procedure TFontProfile.SetCropLeft(Value: string);
 begin
-  FfrClickerBMPText.lbeMatchBitmapTextCropLeft.Text := Value;
+  FfrClickerBMPText.MatchBitmapTextCropLeft := Value;
 end;
 
 
 function TFontProfile.GetCropTop: string;
 begin
-  Result := FfrClickerBMPText.lbeMatchBitmapTextCropTop.Text;
+  Result := FfrClickerBMPText.MatchBitmapTextCropTop;
 end;
 
 
 procedure TFontProfile.SetCropTop(Value: string);
 begin
-  FfrClickerBMPText.lbeMatchBitmapTextCropTop.Text := Value;
+  FfrClickerBMPText.MatchBitmapTextCropTop := Value;
 end;
 
 
 function TFontProfile.GetCropRight: string;
 begin
-  Result := FfrClickerBMPText.lbeMatchBitmapTextCropRight.Text;
+  Result := FfrClickerBMPText.MatchBitmapTextCropRight;
 end;
 
 
 procedure TFontProfile.SetCropRight(Value: string);
 begin
-  FfrClickerBMPText.lbeMatchBitmapTextCropRight.Text := Value;
+  FfrClickerBMPText.MatchBitmapTextCropRight := Value;
 end;
 
 
 function TFontProfile.GetCropBottom: string;
 begin
-  Result := FfrClickerBMPText.lbeMatchBitmapTextCropBottom.Text;
+  Result := FfrClickerBMPText.MatchBitmapTextCropBottom;
 end;
 
 
 procedure TFontProfile.SetCropBottom(Value: string);
 begin
-  FfrClickerBMPText.lbeMatchBitmapTextCropBottom.Text := Value;
+  FfrClickerBMPText.MatchBitmapTextCropBottom := Value;
 end;
 
 
@@ -1014,35 +862,7 @@ end;
 
 procedure TfrClickerFindControl.CreateRemainingUIComponents;
 begin
-  vstMatchBitmapFiles := TVirtualStringTree.Create(Self);
-  vstMatchBitmapFiles.Parent := TabSheetActionFindSubControlBMPFiles;
 
-  vstMatchBitmapFiles.Left := 3;
-  vstMatchBitmapFiles.Top := 3;
-  vstMatchBitmapFiles.Width := 396;
-  vstMatchBitmapFiles.Height := 123;
-  vstMatchBitmapFiles.DefaultNodeHeight := 52;
-  vstMatchBitmapFiles.Header.AutoSizeIndex := 0;
-  vstMatchBitmapFiles.Header.DefaultHeight := 17;
-  vstMatchBitmapFiles.Header.Font.Charset := DEFAULT_CHARSET;
-  vstMatchBitmapFiles.Header.Font.Color := clWindowText;
-  vstMatchBitmapFiles.Header.Font.Height := -11;
-  vstMatchBitmapFiles.Header.Font.Name := 'Tahoma';
-  vstMatchBitmapFiles.Header.Font.Style := [];
-  vstMatchBitmapFiles.Header.MainColumn := -1;
-  vstMatchBitmapFiles.Hint := 'Relative paths can be entered using the following format:' + #13#10 + '$TemplateDir$\<SomeBmp.bmp>';
-  vstMatchBitmapFiles.ShowHint := True;
-  vstMatchBitmapFiles.Indent := 2;
-  vstMatchBitmapFiles.ScrollBarOptions.AlwaysVisible := True;
-  vstMatchBitmapFiles.StateImages := imglstMatchBitmapFiles;
-  vstMatchBitmapFiles.TabOrder := 0;
-  vstMatchBitmapFiles.TreeOptions.PaintOptions := [toShowButtons, toShowDropmark, toShowRoot, toThemeAware, toUseBlendedImages];
-  vstMatchBitmapFiles.TreeOptions.SelectionOptions := [toFullRowSelect, toMiddleClickSelect, toRightClickSelect];
-  vstMatchBitmapFiles.OnClick := vstMatchBitmapFilesClick;
-  vstMatchBitmapFiles.OnGetText := vstMatchBitmapFilesGetText;
-  vstMatchBitmapFiles.OnGetImageIndex := vstMatchBitmapFilesGetImageIndex;
-  vstMatchBitmapFiles.OnHeaderMouseUp := vstMatchBitmapFilesHeaderMouseUp;
-  vstMatchBitmapFiles.Colors.UnfocusedSelectionColor := clGradientInactiveCaption;
 end;
 
 
@@ -1124,6 +944,9 @@ begin
 
   FOnUpdateSearchAreaLimitsInOIFromDraggingLines := nil;
   FOnUpdateTextCroppingLimitsInOIFromDraggingLines := nil;
+  FOnGetDisplayedText := nil;
+  FOnSetMatchTextAndClassToOI := nil;
+  FOnGetUseWholeScreenAsSearchArea := nil;
 
   CreateRemainingUIComponents; //this should be called after initializing callback properties to nil  (like FOnTriggerOnControlsModified)
   SetLength(FBMPTextProfiles, 0);
@@ -1142,10 +965,6 @@ begin
   FInMemFS := nil;
 
   PageControlMatch.ActivePageIndex := 0;
-
-  rdgrpSearchForControlMode.Hint := 'With "Generate Grid", the application generates a grid of points, where it queries for a window/control.' + #13#10 +
-                                    'With "Enumerate Windows", it lists all top-level windows and matches their caption and/or class.' + #13#10 +
-                                    'With "Find Window", both class and caption have to match and no wildcard is available.';
 
   AddFontProfile('Default');
 end;
@@ -1249,15 +1068,30 @@ begin
 end;
 
 
-function TfrClickerFindControl.GetBitmapFilesCount: Integer;
+function TfrClickerFindControl.DoOnGetDisplayedText: string;
 begin
-  Result := vstMatchBitmapFiles.RootNodeCount;
+  if not Assigned(FOnGetDisplayedText) then
+    raise Exception.Create('OnGetDisplayedText not assigned.')
+  else
+    Result := FOnGetDisplayedText;
 end;
 
 
-procedure TfrClickerFindControl.SetBitmapFilesCount;
+procedure TfrClickerFindControl.DoOnSetMatchTextAndClassToOI(AMatchText, AMatchClassName: string);
 begin
-  vstMatchBitmapFiles.RootNodeCount := lstMatchBitmapFiles.Count;
+  if not Assigned(FOnSetMatchTextAndClassToOI) then
+    raise Exception.Create('OnSetMatchTextAndClassToOI not assigned.')
+  else
+    FOnSetMatchTextAndClassToOI(AMatchText, AMatchClassName);
+end;
+
+
+function TfrClickerFindControl.DoOnGetFindControlOptions: PClkFindControlOptions;
+begin
+  if not Assigned(FOnGetFindControlOptions) then
+    raise Exception.Create('OnGetFindControlOptions not assigned.')
+  else
+    Result := FOnGetFindControlOptions;
 end;
 
 
@@ -1267,93 +1101,6 @@ var
 begin
   for i := 0 to Length(FBMPTextProfiles) - 1 do
     FBMPTextProfiles[i].EditorVisible := i = tabctrlBMPText.TabIndex;
-
-  if tabctrlBMPText.TabIndex = -1 then
-    lbeCurrentFontProfileName.Text := ''
-  else
-    lbeCurrentFontProfileName.Text := tabctrlBMPText.Tabs.Strings[tabctrlBMPText.TabIndex];
-end;
-
-
-procedure TfrClickerFindControl.UpdateMatchCriteriaPageIcons;
-var
-  i: Integer;
-  Sel: Byte;
-begin
-  for i := 0 to PageControlMatch.PageCount - 1 do
-    PageControlMatch.Pages[i].ImageIndex := 0;
-
-  PageControlMatch.Pages[4].ImageIndex := 2;
-  PageControlMatch.Pages[5].ImageIndex := 2;
-
-  if not chkMatchText.Checked and
-     not chkMatchClassName.Checked and
-     not chkMatchBitmapText.Checked and
-     not chkMatchBitmapFiles.Checked then
-    Exit;
-
-  if chkMatchText.Checked or chkMatchClassName.Checked then
-  begin
-    PageControlMatch.Pages[0].ImageIndex := 1;
-    PageControlMatch.Pages[1].ImageIndex := 1;
-  end;
-
-  if chkMatchBitmapText.Checked then
-  begin
-    PageControlMatch.Pages[0].ImageIndex := 1;
-    PageControlMatch.Pages[2].ImageIndex := 1;
-    lblBMPTextMatchingInfo.Caption := 'BMP text matching enabled.';
-  end
-  else
-    lblBMPTextMatchingInfo.Caption := 'BMP text matching disabled.';
-
-  if chkMatchBitmapFiles.Checked then
-  begin
-    PageControlMatch.Pages[0].ImageIndex := 1;
-    PageControlMatch.Pages[3].ImageIndex := 1;
-    lblBMPFilesMatchingInfo.Caption := 'BMP files matching enabled.';
-  end
-  else
-    lblBMPFilesMatchingInfo.Caption := 'BMP files matching disabled.';
-
-  Sel := Ord(chkMatchBitmapText.Checked) shl 1 + Ord(chkMatchText.Checked);
-  if Sel > 0 then
-  begin
-    lblTextMatchingInfo.Caption := 'Text matching enabled';
-
-    case Sel of
-      1: lblTextMatchingInfo.Caption := lblTextMatchingInfo.Caption + ' (text only).';
-      2: lblTextMatchingInfo.Caption := lblTextMatchingInfo.Caption + ' (BMP text only).';
-      3: lblTextMatchingInfo.Caption := lblTextMatchingInfo.Caption + ' (text and BMP text).';
-    else
-    end;
-  end
-  else
-    lblTextMatchingInfo.Caption := 'Text matching disabled.';
-end;
-
-
-function TfrClickerFindControl.BrowseBitmapFile: Boolean;
-begin
-  Result := False;
-
-  DoOnSetPictureOpenDialogInitialDir(FBMPsDir);
-  if not DoOnPictureOpenDialogExecute then
-    Exit;
-
-  lbeMatchBitmapFile.Text := DoOnGetPictureOpenDialogFileName;
-  FBMPsDir := ExtractFileDir(DoOnGetPictureOpenDialogFileName);
-
-  Result := True;
-end;
-
-
-procedure TfrClickerFindControl.SetSearchRectEnabledState;
-begin
-  lbeSearchRectTop.Enabled := not chkUseWholeScreenAsSearchArea.Checked;
-  lbeSearchRectRight.Enabled := not chkUseWholeScreenAsSearchArea.Checked;
-  lbeSearchRectLeft.Enabled := not chkUseWholeScreenAsSearchArea.Checked;
-  lbeSearchRectBottom.Enabled := not chkUseWholeScreenAsSearchArea.Checked;
 end;
 
 
@@ -1368,7 +1115,7 @@ end;
 
 function TfrClickerFindControl.HandleBMPTextOnGetDisplayedText: string;
 begin
-  Result := lbeMatchBitmapText.Text;
+  Result := DoOnGetDisplayedText; //lbeMatchBitmapText.Text;
 end;
 
 
@@ -1516,7 +1263,6 @@ begin
 
     tabctrlBMPText.Tabs.Add('no name ' + IntToStr(i));
     tabctrlBMPText.TabIndex := tabctrlBMPText.Tabs.Count - 1;
-    lbeCurrentFontProfileName.Text := tabctrlBMPText.Tabs.Strings[tabctrlBMPText.TabIndex];
   end;
 end;
 
@@ -1524,21 +1270,6 @@ end;
 function TfrClickerFindControl.GetBMPTextFontProfilesCount: Integer;
 begin
   Result := Length(FBMPTextProfiles);
-end;
-
-
-procedure TfrClickerFindControl.chkUseWholeScreenAsSearchAreaClick(
-  Sender: TObject);
-begin
-  SetSearchRectEnabledState;
-  DoOnTriggerOnControlsModified;
-  UpdateSearchAreaLabelsFromOffsetEditboxes;
-end;
-
-
-procedure TfrClickerFindControl.rdgrpSearchForControlModeClick(Sender: TObject);
-begin
-  DoOnTriggerOnControlsModified;
 end;
 
 
@@ -1627,65 +1358,19 @@ var
 begin
   tmrUpdateSearchAreaOffsetEditBoxes.Enabled := False;
 
-  lbeSearchRectLeftOffset.Text := IntToStr(GetSearchAreaLeftOffsetFromSelLabel);
-  lbeSearchRectTopOffset.Text := IntToStr(GetSearchAreaTopOffsetFromSelLabel);
-  lbeSearchRectRightOffset.Text := IntToStr(GetSearchAreaRightOffsetFromSelLabel - GetControlWidthFromReplacement);
-  lbeSearchRectBottomOffset.Text := IntToStr(GetSearchAreaBottomOffsetFromSelLabel - GetControlHeightFromReplacement);
-
-  Offsets.Left := lbeSearchRectLeftOffset.Text;
-  Offsets.Top := lbeSearchRectTopOffset.Text;
-  Offsets.Right := lbeSearchRectRightOffset.Text;
-  Offsets.Bottom := lbeSearchRectBottomOffset.Text;
+  Offsets.Left := IntToStr(GetSearchAreaLeftOffsetFromSelLabel);
+  Offsets.Top := IntToStr(GetSearchAreaTopOffsetFromSelLabel);
+  Offsets.Right := IntToStr(GetSearchAreaRightOffsetFromSelLabel - GetControlWidthFromReplacement);
+  Offsets.Bottom := IntToStr(GetSearchAreaBottomOffsetFromSelLabel - GetControlHeightFromReplacement);
   DoOnUpdateSearchAreaLimitsInOIFromDraggingLines([llLeft, llTop, llRight, llBottom], Offsets);
 
   tmrUpdateGrid.Enabled := True;
 end;
 
 
-const
-  CDirIncrement: array[TUpDownDirection] of Integer = (0, 1, -1);  //TUpDownDirection = (updNone, updUp, updDown);
-
-procedure TfrClickerFindControl.updownXMulOfChangingEx(Sender: TObject;
-  var AllowChange: Boolean; NewValue: SmallInt; Direction: TUpDownDirection);
-begin
-  lbeMatchBitmapAlgorithmXMulOf.Text := IntToStr(StrToIntDef(lbeMatchBitmapAlgorithmXMulOf.Text, 0) + CDirIncrement[Direction]);
-end;
-
-
-procedure TfrClickerFindControl.updownXOffsetChangingEx(Sender: TObject;
-  var AllowChange: Boolean; NewValue: SmallInt; Direction: TUpDownDirection);
-begin
-  lbeMatchBitmapAlgorithmXOffset.Text := IntToStr(StrToIntDef(lbeMatchBitmapAlgorithmXOffset.Text, 0) + CDirIncrement[Direction]);
-end;
-
-
-procedure TfrClickerFindControl.updownYMulOfChangingEx(Sender: TObject;
-  var AllowChange: Boolean; NewValue: SmallInt; Direction: TUpDownDirection);
-begin
-  lbeMatchBitmapAlgorithmYMulOf.Text := IntToStr(StrToIntDef(lbeMatchBitmapAlgorithmYMulOf.Text, 0) + CDirIncrement[Direction]);
-end;
-
-
-procedure TfrClickerFindControl.updownYOffsetChangingEx(Sender: TObject;
-  var AllowChange: Boolean; NewValue: SmallInt; Direction: TUpDownDirection);
-begin
-  lbeMatchBitmapAlgorithmYOffset.Text := IntToStr(StrToIntDef(lbeMatchBitmapAlgorithmYOffset.Text, 0) + CDirIncrement[Direction]);
-end;
-
-
 procedure TfrClickerFindControl.HandleMatchTextClick;
 begin
-  UpdateMatchCriteriaPageIcons;
   DoOnTriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerFindControl.chkSearchCachedLeftAndTopFirstClick(
-  Sender: TObject);
-begin
-  DoOnTriggerOnControlsModified;
-  lbeFindCachedControlLeft.Enabled := chkSearchCachedLeftAndTopFirst.Checked;
-  lbeFindCachedControlTop.Enabled := chkSearchCachedLeftAndTopFirst.Checked;
 end;
 
 
@@ -1706,14 +1391,17 @@ end;
 procedure TfrClickerFindControl.GeneratePreviewGridContent;
 var
   AlgorithmSettings: TMatchBitmapAlgorithmSettings;
+  FindControlOptions: PClkFindControlOptions;
 begin
   if FSearchAreaControlDbgImg = nil then
     Exit;
 
-  AlgorithmSettings.XMultipleOf := StrToIntDef(lbeMatchBitmapAlgorithmXMulOf.Text, 20);
-  AlgorithmSettings.YMultipleOf := StrToIntDef(lbeMatchBitmapAlgorithmYMulOf.Text, 20);
-  AlgorithmSettings.XOffset := StrToIntDef(lbeMatchBitmapAlgorithmXOffset.Text, 0);
-  AlgorithmSettings.YOffset := StrToIntDef(lbeMatchBitmapAlgorithmYOffset.Text, 0);
+  FindControlOptions := DoOnGetFindControlOptions;
+
+  AlgorithmSettings.XMultipleOf := FindControlOptions^.MatchBitmapAlgorithmSettings.XMultipleOf;
+  AlgorithmSettings.YMultipleOf := FindControlOptions^.MatchBitmapAlgorithmSettings.YMultipleOf;
+  AlgorithmSettings.XOffset := FindControlOptions^.MatchBitmapAlgorithmSettings.XOffset;
+  AlgorithmSettings.YOffset := FindControlOptions^.MatchBitmapAlgorithmSettings.YOffset;
 
   FSearchAreaGridImg.Left := AlgorithmSettings.XOffset + FSearchAreaLeftLimitLabel.Left;
   FSearchAreaGridImg.Top := AlgorithmSettings.YOffset + FSearchAreaTopLimitLabel.Top;
@@ -1737,553 +1425,6 @@ begin
 
   if FSearchAreaControlDbgImg <> nil then
     FSearchAreaGridImg.Visible := chkShowGridOnBMPPreview.Checked;
-end;
-
-
-procedure TfrClickerFindControl.chkMatchTextClick(Sender: TObject);
-begin
-  HandleMatchTextClick;
-end;
-
-
-procedure TfrClickerFindControl.chkMatchClassNameClick(Sender: TObject);
-begin
-  HandleMatchTextClick;
-end;
-
-
-procedure TfrClickerFindControl.chkMatchBitmapTextClick(Sender: TObject);
-begin
-  HandleMatchTextClick;
-end;
-
-
-procedure TfrClickerFindControl.chkMatchBitmapFilesClick(Sender: TObject);
-begin
-  HandleMatchTextClick;
-end;
-
-
-procedure TfrClickerFindControl.chkWaitForControlToGoAwayClick(Sender: TObject);
-begin
-  DoOnTriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerFindControl.cmbMatchBitmapTextSearchAlgorithmChange(
-  Sender: TObject);
-begin
-  UpdateBitmapAlgorithmSettings;
-  DoOnTriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerFindControl.cmbMatchBitmapTextSearchAlgorithmCloseUp(
-  Sender: TObject);
-begin
-  cmbMatchBitmapTextSearchAlgorithm.Width := cmbMatchBitmapTextSearchAlgorithm.Width - 160;
-end;
-
-
-procedure TfrClickerFindControl.cmbMatchBitmapTextSearchAlgorithmDropDown(
-  Sender: TObject);
-begin
-  cmbMatchBitmapTextSearchAlgorithm.Width := cmbMatchBitmapTextSearchAlgorithm.Width + 160;
-end;
-
-
-procedure TfrClickerFindControl.lbeAllowedColorErrorCountChange(Sender: TObject);
-begin
-  DoOnTriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerFindControl.lbeColorErrorChange(Sender: TObject);
-begin
-  DoOnTriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerFindControl.lbeCurrentFontProfileNameEditingDone(
-  Sender: TObject);
-begin
-  bitbtnUpdateFontProfile.Font.Color := clRed;
-  bitbtnUpdateFontProfile.Font.Style := [fsBold];
-end;
-
-
-procedure TfrClickerFindControl.lbeFindCachedControlLeftChange(Sender: TObject);
-begin
-  DoOnTriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerFindControl.lbeFindCachedControlTopChange(Sender: TObject);
-begin
-  DoOnTriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerFindControl.lbeMatchBitmapAlgorithmXMulOfChange(
-  Sender: TObject);
-begin
-  DoOnTriggerOnControlsModified;
-  GeneratePreviewGridContent;
-end;
-
-
-procedure TfrClickerFindControl.lbeMatchBitmapAlgorithmXOffsetChange(
-  Sender: TObject);
-begin
-  DoOnTriggerOnControlsModified;
-  GeneratePreviewGridContent;
-end;
-
-
-procedure TfrClickerFindControl.lbeMatchBitmapAlgorithmYMulOfChange(
-  Sender: TObject);
-begin
-  DoOnTriggerOnControlsModified;
-  GeneratePreviewGridContent;
-end;
-
-
-procedure TfrClickerFindControl.lbeMatchBitmapAlgorithmYOffsetChange(
-  Sender: TObject);
-begin
-  DoOnTriggerOnControlsModified;
-  GeneratePreviewGridContent;
-end;
-
-
-procedure TfrClickerFindControl.lbeMatchBitmapTextKeyUp(Sender: TObject;
-  var Key: Word; Shift: TShiftState);
-var
-  i: Integer;
-begin
-  for i := 0 to Length(FBMPTextProfiles) - 1 do
-    FBMPTextProfiles[i].PreviewText;
-end;
-
-
-procedure TfrClickerFindControl.lbeMatchClassNameChange(Sender: TObject);
-begin
-  DoOnTriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerFindControl.lbeMatchClassNameSeparatorChange(Sender: TObject);
-begin
-  DoOnTriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerFindControl.lbeMatchTextChange(Sender: TObject);
-begin
-  lbeMatchBitmapText.Text := lbeMatchText.Text;
-  DoOnTriggerOnControlsModified;
-  PreviewText;
-  UpdateAllSelectionLabelsFromCropEditBoxes;
-end;
-
-
-procedure TfrClickerFindControl.lbeMatchTextSeparatorChange(Sender: TObject);
-begin
-  DoOnTriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerFindControl.lbeSearchRectBottomChange(Sender: TObject);
-begin
-  DoOnTriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerFindControl.lbeSearchRectBottomMouseEnter(Sender: TObject);
-begin
-  lbeSearchRectBottom.Hint := 'Bottom edge of the search area. Variable replacements are available.' + #13#10 +
-                             lbeSearchRectBottom.Text + ' = ' + EvaluateReplacements(lbeSearchRectBottom.Text);
-end;
-
-
-procedure TfrClickerFindControl.lbeSearchRectBottomMouseUp(Sender: TObject;
-  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-begin
-  if Button <> mbRight then
-    Exit;
-
-  FLastClickedLbe := Sender as TLabeledEdit;
-end;
-
-
-procedure TfrClickerFindControl.lbeSearchRectBottomOffsetChange(Sender: TObject);
-begin
-  DoOnTriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerFindControl.lbeSearchRectBottomOffsetKeyUp(Sender: TObject;
-  var Key: Word; Shift: TShiftState);
-begin
-  UpdateSearchAreaLabelsFromKeysOnEditBoxes;
-end;
-
-
-procedure TfrClickerFindControl.lbeSearchRectBottomOffsetMouseDown(
-  Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-var
-  Ref: Integer;
-begin
-  if (ssLeft in Shift) and (ssCtrl in Shift) then
-  begin
-    Ref := GetSearch_BottomBottom_Ref;
-    FlbeSearchRectOffsetMDownInit := Y;  //used to compute offset
-    FlbeSearchRectOffsetMDownValueInit := StrToIntDef(EvaluateReplacements(lbeSearchRectBottomOffset.Text), MaxInt) - Ref;  //editbox value on mouse down
-
-    Ref := GetSearch_TopBottom_Ref;
-    FlbeSearchRectOffsetMDownSecondValueInit := StrToIntDef(EvaluateReplacements(lbeSearchRectTopOffset.Text), MaxInt) - Ref;  //editbox value on mouse down
-  end;
-end;
-
-
-procedure TfrClickerFindControl.lbeSearchRectBottomOffsetMouseMove(
-  Sender: TObject; Shift: TShiftState; X, Y: Integer);
-var
-  ControlHeight: Integer;
-  Ref: Integer;
-begin
-  if (ssLeft in Shift) and (ssCtrl in Shift) then
-    if FlbeSearchRectOffsetMDownValueInit <> MaxInt then  //MaxInt is used as an indicator that a replacement is used, not a numeric value
-    begin
-      Ref := GetSearch_BottomBottom_Ref;
-      lbeSearchRectBottomOffset.Text := IntToStr(FlbeSearchRectOffsetMDownValueInit - (Y - FlbeSearchRectOffsetMDownInit) + Ref);
-
-      if FSearchAreaSearchedBmpDbgImg <> nil then
-      begin
-        ControlHeight := GetControlHeightFromReplacement;
-        FSearchAreaBottomLimitLabel.Top := StrToIntDef(EvaluateReplacements(lbeSearchRectBottomOffset.Text), 20) - Ref + ControlHeight;
-        FTransparent_SearchAreaBottomLimitLabel.Top := FSearchAreaBottomLimitLabel.Top;
-      end;
-
-      if ssShift in Shift then
-      begin
-        Ref := GetSearch_TopBottom_Ref;
-        lbeSearchRectTopOffset.Text := IntToStr(FlbeSearchRectOffsetMDownSecondValueInit - (Y - FlbeSearchRectOffsetMDownInit) + Ref);
-
-        if FSearchAreaSearchedBmpDbgImg <> nil then
-        begin
-          //ControlHeight is initialized above
-          FSearchAreaTopLimitLabel.Top := StrToIntDef(EvaluateReplacements(lbeSearchRectTopOffset.Text), 20) - Ref + ControlHeight;
-          FTransparent_SearchAreaTopLimitLabel.Top := FSearchAreaTopLimitLabel.Top;
-          FSearchAreaSearchedBmpDbgImg.Top := FSearchAreaTopLimitLabel.Top;
-          tmrUpdateGrid.Enabled := True;
-        end;
-      end;
-
-      if Assigned(FSearchAreaSearchedTextDbgImg) and
-         Assigned(FSearchAreaSearchedBmpDbgImg) then
-      begin
-        FSearchAreaSearchedTextDbgImg.Top := FSearchAreaSearchedBmpDbgImg.Top;
-        UpdateSearchAreaLabelColorsFromTheirPosition;
-      end;
-    end;
-end;
-
-
-procedure TfrClickerFindControl.lbeSearchRectLeftChange(Sender: TObject);
-begin
-  DoOnTriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerFindControl.lbeSearchRectLeftMouseEnter(Sender: TObject);
-begin
-  lbeSearchRectLeft.Hint := 'Left edge of the search area. Variable replacements are available.' + #13#10 +
-                            lbeSearchRectLeft.Text + ' = ' + EvaluateReplacements(lbeSearchRectLeft.Text);
-end;
-
-
-procedure TfrClickerFindControl.lbeSearchRectLeftMouseUp(Sender: TObject;
-  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-begin
-  if Button <> mbRight then
-    Exit;
-
-  FLastClickedLbe := Sender as TLabeledEdit;      //not needed on OI, because there is one editor (one EditBox)
-end;
-
-
-procedure TfrClickerFindControl.lbeSearchRectLeftOffsetChange(Sender: TObject);
-begin
-  DoOnTriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerFindControl.lbeSearchRectLeftOffsetKeyUp(Sender: TObject;
-  var Key: Word; Shift: TShiftState);
-begin
-  UpdateSearchAreaLabelsFromKeysOnEditBoxes;
-end;
-
-
-procedure TfrClickerFindControl.lbeSearchRectLeftOffsetMouseDown(
-  Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-var
-  Ref: Integer;
-begin
-  if (ssLeft in Shift) and (ssCtrl in Shift) then
-  begin
-    Ref := GetSearch_LeftLeft_Ref;
-
-    FlbeSearchRectOffsetMDownInit := Y;  //used to compute offset
-    FlbeSearchRectOffsetMDownValueInit := StrToIntDef(EvaluateReplacements(lbeSearchRectLeftOffset.Text), MaxInt) - Ref;  //editbox value on mouse down
-
-    Ref := GetSearch_RightLeft_Ref;
-    FlbeSearchRectOffsetMDownSecondValueInit := StrToIntDef(EvaluateReplacements(lbeSearchRectRightOffset.Text), MaxInt) - Ref;  //editbox value on mouse down
-  end;
-end;
-
-
-procedure TfrClickerFindControl.lbeSearchRectLeftOffsetMouseMove(
-  Sender: TObject; Shift: TShiftState; X, Y: Integer);
-var
-  Ref: Integer;
-begin
-  if (ssLeft in Shift) and (ssCtrl in Shift) then
-    if FlbeSearchRectOffsetMDownValueInit <> MaxInt then  //MaxInt is used as an indicator that a replacement is used, not a numeric value
-    begin
-      Ref := GetSearch_LeftLeft_Ref;
-      lbeSearchRectLeftOffset.Text := IntToStr(FlbeSearchRectOffsetMDownValueInit - (Y - FlbeSearchRectOffsetMDownInit) + Ref);
-
-      if FSearchAreaSearchedBmpDbgImg <> nil then
-      begin
-        FSearchAreaSearchedBmpDbgImg.Left := StrToIntDef(EvaluateReplacements(lbeSearchRectLeftOffset.Text), 20) - Ref;
-        FSearchAreaLeftLimitLabel.Left := FSearchAreaSearchedBmpDbgImg.Left;
-        FTransparent_SearchAreaLeftLimitLabel.Left := FSearchAreaLeftLimitLabel.Left;
-        tmrUpdateGrid.Enabled := True;
-      end;
-
-      if ssShift in Shift then
-      begin
-        Ref := GetSearch_RightLeft_Ref;
-        lbeSearchRectRightOffset.Text := IntToStr(FlbeSearchRectOffsetMDownSecondValueInit - (Y - FlbeSearchRectOffsetMDownInit) + Ref);
-
-        if FSearchAreaSearchedBmpDbgImg <> nil then
-        begin
-          //if chkUseWholeScreenAsSearchArea.Checked then
-          //  ControlRight := Screen.Width
-          //else
-          //  ControlRight := StrToIntDef(EvaluateReplacements(lbeSearchRectRight.Text), 20) - StrToIntDef(EvaluateReplacements(lbeSearchRectLeft.Text), 20); //Right edge of the search area.
-
-          FSearchAreaRightLimitLabel.Left := StrToIntDef(lbeSearchRectRightOffset.Text, 20) - Ref;   ////////// should be control right + offset (offset can be negative)
-          FTransparent_SearchAreaRightLimitLabel.Left := FSearchAreaRightLimitLabel.Left;
-        end;
-      end;
-
-      if Assigned(FSearchAreaSearchedTextDbgImg) and
-         Assigned(FSearchAreaSearchedBmpDbgImg) then
-      begin
-        FSearchAreaSearchedTextDbgImg.Left := FSearchAreaSearchedBmpDbgImg.Left;
-        UpdateSearchAreaLabelColorsFromTheirPosition;
-      end;
-    end;
-end;
-
-
-procedure TfrClickerFindControl.lbeSearchRectRightChange(Sender: TObject);
-begin
-  DoOnTriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerFindControl.lbeSearchRectRightMouseEnter(Sender: TObject);
-begin
-  lbeSearchRectRight.Hint := 'Right edge of the search area. Variable replacements are available.' + #13#10 +
-                             lbeSearchRectRight.Text + ' = ' + EvaluateReplacements(lbeSearchRectRight.Text);
-end;
-
-
-procedure TfrClickerFindControl.lbeSearchRectRightMouseUp(Sender: TObject;
-  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-begin
-  if Button <> mbRight then
-    Exit;
-
-  FLastClickedLbe := Sender as TLabeledEdit;
-end;
-
-
-procedure TfrClickerFindControl.lbeSearchRectRightOffsetChange(Sender: TObject);
-begin
-  DoOnTriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerFindControl.lbeSearchRectRightOffsetKeyUp(Sender: TObject;
-  var Key: Word; Shift: TShiftState);
-begin
-  UpdateSearchAreaLabelsFromKeysOnEditBoxes;
-end;
-
-
-procedure TfrClickerFindControl.lbeSearchRectRightOffsetMouseDown(
-  Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-var
-  Ref: Integer;
-begin
-  if (ssLeft in Shift) and (ssCtrl in Shift) then
-  begin
-    Ref := GetSearch_RightRight_Ref;
-
-    FlbeSearchRectOffsetMDownInit := Y;  //used to compute offset
-    FlbeSearchRectOffsetMDownValueInit := StrToIntDef(EvaluateReplacements(lbeSearchRectRightOffset.Text), MaxInt) - Ref;  //editbox value on mouse down
-
-    Ref := GetSearch_LeftRight_Ref;
-    FlbeSearchRectOffsetMDownSecondValueInit := StrToIntDef(EvaluateReplacements(lbeSearchRectLeftOffset.Text), MaxInt) - Ref;  //editbox value on mouse down
-  end;
-end;
-
-
-procedure TfrClickerFindControl.lbeSearchRectRightOffsetMouseMove(
-  Sender: TObject; Shift: TShiftState; X, Y: Integer);
-var
-  ControlWidth: Integer;
-  Ref: Integer;
-begin
-  if (ssLeft in Shift) and (ssCtrl in Shift) then
-    if FlbeSearchRectOffsetMDownValueInit <> MaxInt then  //MaxInt is used as an indicator that a replacement is used, not a numeric value
-    begin
-      Ref := GetSearch_RightRight_Ref;
-      lbeSearchRectRightOffset.Text := IntToStr(FlbeSearchRectOffsetMDownValueInit - (Y - FlbeSearchRectOffsetMDownInit) + Ref);
-
-      if FSearchAreaSearchedBmpDbgImg <> nil then
-      begin
-        ControlWidth := GetControlWidthFromReplacement;
-        FSearchAreaRightLimitLabel.Left := StrToIntDef(EvaluateReplacements(lbeSearchRectRightOffset.Text), 20) - Ref + ControlWidth;
-        FTransparent_SearchAreaRightLimitLabel.Left := FSearchAreaRightLimitLabel.Left;
-      end;
-
-      if ssShift in Shift then
-      begin
-        Ref := GetSearch_LeftRight_Ref;
-        lbeSearchRectLeftOffset.Text := IntToStr(FlbeSearchRectOffsetMDownSecondValueInit - (Y - FlbeSearchRectOffsetMDownInit) + Ref);
-
-        if FSearchAreaSearchedBmpDbgImg <> nil then
-        begin
-          //ControlWidth is initialized above
-          FSearchAreaLeftLimitLabel.Left := StrToIntDef(EvaluateReplacements(lbeSearchRectLeftOffset.Text), 20) - Ref + ControlWidth;
-          FTransparent_SearchAreaLeftLimitLabel.Left := FSearchAreaLeftLimitLabel.Left;
-          FSearchAreaSearchedBmpDbgImg.Left := FSearchAreaLeftLimitLabel.Left;
-          tmrUpdateGrid.Enabled := True;
-        end;
-      end;
-
-      if Assigned(FSearchAreaSearchedTextDbgImg) and
-         Assigned(FSearchAreaSearchedBmpDbgImg) then
-      begin
-        FSearchAreaSearchedTextDbgImg.Left := FSearchAreaSearchedBmpDbgImg.Left;
-        UpdateSearchAreaLabelColorsFromTheirPosition;
-      end;
-    end;
-end;
-
-
-procedure TfrClickerFindControl.lbeSearchRectTopChange(Sender: TObject);
-begin
-  DoOnTriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerFindControl.lbeSearchRectTopMouseEnter(Sender: TObject);
-begin
-  lbeSearchRectTop.Hint := 'Top edge of the search area. Variable replacements are available.' + #13#10 +
-                           lbeSearchRectTop.Text + ' = ' + EvaluateReplacements(lbeSearchRectTop.Text);
-end;
-
-
-procedure TfrClickerFindControl.lbeSearchRectTopMouseUp(Sender: TObject;
-  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-begin
-  if Button <> mbRight then
-    Exit;
-
-  FLastClickedLbe := Sender as TLabeledEdit;
-end;
-
-
-procedure TfrClickerFindControl.lbeSearchRectTopOffsetChange(Sender: TObject);
-begin
-  DoOnTriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerFindControl.lbeSearchRectTopOffsetKeyUp(Sender: TObject;
-  var Key: Word; Shift: TShiftState);
-begin
-  UpdateSearchAreaLabelsFromKeysOnEditBoxes;
-end;
-
-
-procedure TfrClickerFindControl.lbeSearchRectTopOffsetMouseDown(
-  Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-var
-  Ref: Integer;
-begin
-  if (ssLeft in Shift) and (ssCtrl in Shift) then
-  begin
-    Ref := GetSearch_TopTop_Ref;
-    FlbeSearchRectOffsetMDownInit := Y;  //used to compute offset
-    FlbeSearchRectOffsetMDownValueInit := StrToIntDef(EvaluateReplacements(lbeSearchRectTopOffset.Text), MaxInt) - Ref;  //editbox value on mouse down
-
-    Ref := GetSearch_BottomTop_Ref;
-    FlbeSearchRectOffsetMDownSecondValueInit := StrToIntDef(EvaluateReplacements(lbeSearchRectBottomOffset.Text), MaxInt) - Ref;  //editbox value on mouse down
-  end;
-end;
-
-
-procedure TfrClickerFindControl.lbeSearchRectTopOffsetMouseMove(
-  Sender: TObject; Shift: TShiftState; X, Y: Integer);
-var
-  Ref: Integer;
-begin
-  if (ssLeft in Shift) and (ssCtrl in Shift) then
-    if FlbeSearchRectOffsetMDownValueInit <> MaxInt then  //MaxInt is used as an indicator that a replacement is used, not a numeric value
-    begin
-      Ref := GetSearch_TopTop_Ref;
-      lbeSearchRectTopOffset.Text := IntToStr(FlbeSearchRectOffsetMDownValueInit - (Y - FlbeSearchRectOffsetMDownInit) + Ref);
-
-      if FSearchAreaSearchedBmpDbgImg <> nil then
-      begin
-        FSearchAreaSearchedBmpDbgImg.Top := StrToIntDef(EvaluateReplacements(lbeSearchRectTopOffset.Text), 20) - Ref;
-        FTransparent_SearchAreaTopLimitLabel.Top := FSearchAreaTopLimitLabel.Top;
-        FSearchAreaTopLimitLabel.Top := FSearchAreaSearchedBmpDbgImg.Top;
-        tmrUpdateGrid.Enabled := True;
-      end;
-
-      if ssShift in Shift then
-      begin
-        Ref := GetSearch_BottomTop_Ref;
-        lbeSearchRectBottomOffset.Text := IntToStr(FlbeSearchRectOffsetMDownSecondValueInit - (Y - FlbeSearchRectOffsetMDownInit) + Ref);
-
-        if FSearchAreaSearchedBmpDbgImg <> nil then
-        begin
-          //if chkUseWholeScreenAsSearchArea.Checked then
-          //  ControlBottom := Screen.Height
-          //else
-          //  ControlBottom := StrToIntDef(EvaluateReplacements(lbeSearchRectBottom.Text), 20) - StrToIntDef(EvaluateReplacements(lbeSearchRectTop.Text), 20); //Bottom edge of the search area.
-
-          FSearchAreaBottomLimitLabel.Top := StrToIntDef(lbeSearchRectBottomOffset.Text, 20) - Ref;    ////////// should be control bottom + offset (offset can be negative)
-          FTransparent_SearchAreaBottomLimitLabel.Top := FSearchAreaBottomLimitLabel.Top;
-        end;
-      end;
-
-      if Assigned(FSearchAreaSearchedTextDbgImg) and
-         Assigned(FSearchAreaSearchedBmpDbgImg) then
-      begin
-        FSearchAreaSearchedTextDbgImg.Top := FSearchAreaSearchedBmpDbgImg.Top;
-        UpdateSearchAreaLabelColorsFromTheirPosition;
-      end;
-    end;
 end;
 
 
@@ -2321,9 +1462,6 @@ procedure TfrClickerFindControl.PageControlMatchChange(Sender: TObject);
 var
   i: Integer;
 begin
-  if PageControlMatch.ActivePageIndex = 2 then
-    lbeMatchBitmapText.Text := lbeMatchText.Text;
-
   if PageControlMatch.ActivePage = TabSheetActionFindSubControlSearchArea then
   begin
     if FSearchAreaSearchedTextDbgImg <> nil then
@@ -2357,41 +1495,7 @@ begin
     spdbtnDisplaySearchAreaDbgImgMenu.Left := btnDisplaySearchAreaDebuggingImage.Left + btnDisplaySearchAreaDebuggingImage.Width - 1;
 
     chkShowGridOnBMPPreview.Parent := TabSheetActionFindSubControlSearchArea;
-    chkShowGridOnBMPPreview.Left := lbeSearchRectRight.Left;
-    chkShowGridOnBMPPreview.Top := chkUseWholeScreenAsSearchArea.Top;
-  end;
-
-  if PageControlMatch.ActivePage = TabSheetActionFindSubControlBMPSettings then
-  begin
-    if Assigned(FSearchAreaScrBox) then
-    begin
-      FSearchAreaScrBox.Parent := TabSheetActionFindSubControlBMPSettings;
-      FSearchAreaScrBox.Left := lbeFindCachedControlLeft.Left + lbeFindCachedControlLeft.Width + 10;
-    end;
-
-    lblMouseOnDbgImg.Parent := TabSheetActionFindSubControlBMPSettings;
-    lblMouseOnDbgImgBB.Parent := TabSheetActionFindSubControlBMPSettings;
-    lblMouseOnDbgImgGG.Parent := TabSheetActionFindSubControlBMPSettings;
-    lblMouseOnDbgImgRR.Parent := TabSheetActionFindSubControlBMPSettings;
-
-    lblMouseOnDbgImg.Left := lbeFindCachedControlLeft.Left + lbeFindCachedControlLeft.Width - 70;
-    lblMouseOnDbgImg.Top := lblBMPSettingsInfo.Top;
-    lblMouseOnDbgImgBB.Left := lblMouseOnDbgImg.Left;
-    lblMouseOnDbgImgBB.Top := lblSearchInfo.Top;
-    lblMouseOnDbgImgGG.Left := lblMouseOnDbgImgBB.Left + 16;
-    lblMouseOnDbgImgGG.Top := lblSearchInfo.Top;
-    lblMouseOnDbgImgRR.Left := lblMouseOnDbgImgGG.Left + 16;
-    lblMouseOnDbgImgRR.Top := lblSearchInfo.Top;
-
-    btnDisplaySearchAreaDebuggingImage.Parent := TabSheetActionFindSubControlBMPSettings;
-    spdbtnDisplaySearchAreaDbgImgMenu.Parent := TabSheetActionFindSubControlBMPSettings;
-
-    btnDisplaySearchAreaDebuggingImage.Left := lbeFindCachedControlLeft.Left + lbeFindCachedControlLeft.Width + 10;
-    spdbtnDisplaySearchAreaDbgImgMenu.Left := btnDisplaySearchAreaDebuggingImage.Left + btnDisplaySearchAreaDebuggingImage.Width - 1;
-
-    chkShowGridOnBMPPreview.Parent := TabSheetActionFindSubControlBMPSettings;
-    chkShowGridOnBMPPreview.Left := 3;
-    chkShowGridOnBMPPreview.Top := 101;
+    chkShowGridOnBMPPreview.Top := 40;
   end;
 end;
 
@@ -2432,214 +1536,59 @@ begin
   FDragging := False;
   pnlDrag.Color := clYellow;
 
-  if chkAutoCopyValuesToMatchEditboxes.Checked then
+  if chkAutoCopyValuesToObjectInspector.Checked then
   begin
-    lbeMatchText.Text := lbeFoundControlText.Text;
-    lbeMatchClassName.Text := lbeFoundControlClass.Text;
+    DoOnSetMatchTextAndClassToOI(lbeFoundControlText.Text, lbeFoundControlClass.Text);
     DoOnTriggerOnControlsModified;
   end;
 end;
 
 
-procedure TfrClickerFindControl.chkAllowToFailClick(Sender: TObject);
-begin
-  DoOnTriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerFindControl.btnBrowseBitmapClick(Sender: TObject);
-begin
-  BrowseBitmapFile;
-end;
-
-
-procedure TfrClickerFindControl.btnAddNewFontProfileClick(Sender: TObject);
+procedure TfrClickerFindControl.AddNewFontProfile(ANewProfile: TClkFindControlMatchBitmapText);
 var
-  PrevIndex, n: Integer;
+  n: Integer;
 begin
-  PrevIndex := tabctrlBMPText.TabIndex;
   n := tabctrlBMPText.Tabs.Count;
-  AddFontProfile(lbeCurrentFontProfileName.Text);
+  AddFontProfile(ANewProfile.ProfileName);
 
   if tabctrlBMPText.Tabs.Count = n then
     Exit;
 
-  if PrevIndex <> -1 then
-  begin
-    FBMPTextProfiles[n].MatchBitmapTextFGColor := FBMPTextProfiles[PrevIndex].MatchBitmapTextFGColor;
-    FBMPTextProfiles[n].MatchBitmapTextBGColor := FBMPTextProfiles[PrevIndex].MatchBitmapTextBGColor;
-    FBMPTextProfiles[n].FGColor := FBMPTextProfiles[PrevIndex].FGColor;
-    FBMPTextProfiles[n].BGColor := FBMPTextProfiles[PrevIndex].BGColor;
-    FBMPTextProfiles[n].MatchBitmapTextFontName := FBMPTextProfiles[PrevIndex].MatchBitmapTextFontName;
-    FBMPTextProfiles[n].MatchBitmapTextSize := FBMPTextProfiles[PrevIndex].MatchBitmapTextSize;
-    FBMPTextProfiles[n].FontQualityReplacement := FBMPTextProfiles[PrevIndex].FontQualityReplacement;
-    FBMPTextProfiles[n].MatchBitmapTextFontQualityIndex := FBMPTextProfiles[PrevIndex].MatchBitmapTextFontQualityIndex;
-    FBMPTextProfiles[n].Bold := FBMPTextProfiles[PrevIndex].Bold;
-    FBMPTextProfiles[n].Italic := FBMPTextProfiles[PrevIndex].Italic;
-    FBMPTextProfiles[n].Underline := FBMPTextProfiles[PrevIndex].Underline;
-    FBMPTextProfiles[n].StrikeOut := FBMPTextProfiles[PrevIndex].StrikeOut;
-    FBMPTextProfiles[n].CropLeft := FBMPTextProfiles[PrevIndex].CropLeft;
-    FBMPTextProfiles[n].CropTop := FBMPTextProfiles[PrevIndex].CropTop;
-    FBMPTextProfiles[n].CropRight := FBMPTextProfiles[PrevIndex].CropRight;
-    FBMPTextProfiles[n].CropBottom := FBMPTextProfiles[PrevIndex].CropBottom;
-  end;
+  FBMPTextProfiles[n].MatchBitmapTextFGColor := ANewProfile.ForegroundColor;
+  FBMPTextProfiles[n].MatchBitmapTextBGColor := ANewProfile.BackgroundColor;
+  FBMPTextProfiles[n].FGColor := HexToInt(EvaluateReplacements(ANewProfile.ForegroundColor));
+  FBMPTextProfiles[n].BGColor := HexToInt(EvaluateReplacements(ANewProfile.BackgroundColor));
+  FBMPTextProfiles[n].MatchBitmapTextFontName := ANewProfile.FontName;
+  FBMPTextProfiles[n].MatchBitmapTextSize := IntToStr(ANewProfile.FontSize);
+  FBMPTextProfiles[n].FontQualityReplacement := ANewProfile.FontQualityReplacement;
+  FBMPTextProfiles[n].MatchBitmapTextFontQualityIndex := Ord(ANewProfile.FontQuality);
+  FBMPTextProfiles[n].Bold := ANewProfile.Bold;
+  FBMPTextProfiles[n].Italic := ANewProfile.Italic;
+  FBMPTextProfiles[n].Underline := ANewProfile.Underline;
+  FBMPTextProfiles[n].StrikeOut := ANewProfile.StrikeOut;
+  FBMPTextProfiles[n].CropLeft := ANewProfile.CropLeft;
+  FBMPTextProfiles[n].CropTop := ANewProfile.CropTop;
+  FBMPTextProfiles[n].CropRight := ANewProfile.CropRight;
+  FBMPTextProfiles[n].CropBottom := ANewProfile.CropBottom;
 
   DoOnTriggerOnControlsModified;
-  bitbtnUpdateFontProfile.Font.Color := clDefault;
-  bitbtnUpdateFontProfile.Font.Style := [];
 end;
 
 
-procedure TfrClickerFindControl.bitbtnUpdateFontProfileClick(Sender: TObject);
+procedure TfrClickerFindControl.UpdateFontProfilName(AProfileIndex: Integer; ANewName: string);
 begin
-  if Trim(lbeCurrentFontProfileName.Text) = '' then
-  begin
-    MessageBox(Handle, 'Font profile name cannot be empty.', PChar(Caption), MB_ICONERROR);
-    Exit;
-  end;
+  if (AProfileIndex < 0) or (AProfileIndex > Length(FBMPTextProfiles) - 1) then
+    raise Exception.Create('Index out of bounds (' + IntToStr(AProfileIndex) + ') on updating font profile name: ' + ANewName);
 
-  if tabctrlBMPText.TabIndex = -1 then
-  begin
-    MessageBox(Handle, 'Please select a profile to be updated.', PChar(Caption), MB_ICONINFORMATION);
-    Exit;
-  end;
-
-  FBMPTextProfiles[tabctrlBMPText.TabIndex].ProfileName := lbeCurrentFontProfileName.Text;
-  tabctrlBMPText.Tabs.Strings[tabctrlBMPText.TabIndex] := lbeCurrentFontProfileName.Text;
-
+  FBMPTextProfiles[AProfileIndex].ProfileName := ANewName;
+  tabctrlBMPText.Tabs.Strings[AProfileIndex] := ANewName;
   DoOnTriggerOnControlsModified;
-  bitbtnUpdateFontProfile.Font.Color := clDefault;
-  bitbtnUpdateFontProfile.Font.Style := [];
-end;
-
-
-procedure TfrClickerFindControl.btnRemoveFontProfileClick(Sender: TObject);
-begin
-  if Length(FBMPTextProfiles) < 2 then
-  begin
-    MessageBox(Handle, 'At least one font profile has to exist.', PChar(Caption), MB_ICONINFORMATION);
-    Exit;
-  end;
-
-  if MessageBox(Handle, 'Are you sure you want to remove the selected font profile?', PChar(Caption), MB_ICONQUESTION + MB_YESNO) = IDYES then
-  begin
-    RemoveFontProfileByIndex(tabctrlBMPText.TabIndex);
-    DoOnTriggerOnControlsModified;
-    bitbtnUpdateFontProfile.Font.Color := clDefault;
-    bitbtnUpdateFontProfile.Font.Style := [];
-  end;
-end;
-
-
-procedure TfrClickerFindControl.btnAddBmpFileClick(Sender: TObject);
-var
-  UpperCaseFile: string;
-  i: Integer;
-begin
-  if lbeMatchBitmapFile.Text = '' then
-    if not BrowseBitmapFile then
-      Exit;
-
-  if (Pos('$TemplateDir$', lbeMatchBitmapFile.Text) = 0) and not DoOnFileExists(lbeMatchBitmapFile.Text) then
-  begin
-    MessageBox(Handle, 'Specified file does not exist. Please browse a bitmap file, to fill in the editbox.', PChar(Caption), MB_ICONERROR);
-    Exit;
-  end;
-
-  UpperCaseFile := UpperCase(lbeMatchBitmapFile.Text);
-
-  for i := 0 to lstMatchBitmapFiles.Count - 1 do
-    if UpperCase(lstMatchBitmapFiles.Items.Strings[i]) = UpperCaseFile then
-    begin
-      MessageBox(Handle, 'Specified file is already in the list.', PChar(Caption), MB_ICONERROR);
-      Exit;
-    end;
-
-  lstMatchBitmapFiles.Items.Add(lbeMatchBitmapFile.Text);
-  vstMatchBitmapFiles.RootNodeCount := lstMatchBitmapFiles.Count;
-  UpdatePreviewIcons;
-  vstMatchBitmapFiles.Repaint;
-  DoOnTriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerFindControl.btnUpdateBmpFileClick(Sender: TObject);
-var
-  i: Integer;
-  Node: PVirtualNode;
-  UpperCaseFile: string;
-begin
-  if (Pos('$TemplateDir$', lbeMatchBitmapFile.Text) = 0) and not DoOnFileExists(lbeMatchBitmapFile.Text) then
-  begin
-    MessageBox(Handle, 'Specified file does not exist. Please browse a bitmap file, to fill in the editbox.', PChar(Caption), MB_ICONERROR);
-    Exit;
-  end;
-
-  Node := vstMatchBitmapFiles.GetFirstSelected;
-
-  if Node = nil then
-  begin
-    MessageBox(Handle, 'No item selected for updating. Please select an item.', PChar(Caption), MB_ICONINFORMATION);
-    Exit;
-  end;
-
-  UpperCaseFile := UpperCase(lbeMatchBitmapFile.Text);
-
-  for i := 0 to lstMatchBitmapFiles.Count - 1 do
-    if i <> Integer(Node^.Index) then
-      if UpperCase(lstMatchBitmapFiles.Items.Strings[i]) = UpperCaseFile then
-      begin
-        MessageBox(Handle, 'Specified file is already in the list.', PChar(Caption), MB_ICONERROR);
-        Exit;
-      end;
-
-  lstMatchBitmapFiles.Items.Strings[Node^.Index] := lbeMatchBitmapFile.Text;
-  UpdatePreviewIcons;
-  vstMatchBitmapFiles.Repaint;
-  DoOnTriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerFindControl.btnRemoveBmpFileClick(Sender: TObject);
-var
-  Node: PVirtualNode;
-begin
-  Node := vstMatchBitmapFiles.GetFirstSelected;
-
-  if Node = nil then
-  begin
-    MessageBox(Handle, 'No item selected for removing. Please select an item.', PChar(Caption), MB_ICONINFORMATION);
-    Exit;
-  end;
-
-  if MessageBox(Handle, 'Are you sure you want to remove the selected file from list?', PChar(Caption), MB_ICONQUESTION + MB_YESNO) = ID_YES then
-  begin
-    lstMatchBitmapFiles.Items.Delete(Node^.Index);
-    vstMatchBitmapFiles.RootNodeCount := lstMatchBitmapFiles.Count;
-    UpdatePreviewIcons;
-    vstMatchBitmapFiles.Repaint;
-    DoOnTriggerOnControlsModified;
-  end;
-end;
-
-
-procedure TfrClickerFindControl.btnClearClick(Sender: TObject);
-begin
-  if MessageBox(Handle, 'Are you sure you want to clear the list of files?', PChar(Caption), MB_ICONQUESTION + MB_YESNO) = ID_YES then
-  begin
-    lstMatchBitmapFiles.Items.Clear;
-    vstMatchBitmapFiles.RootNodeCount := 0;
-    imglstMatchBitmapFiles.Clear;
-    vstMatchBitmapFiles.Repaint;
-    DoOnTriggerOnControlsModified;
-  end;
 end;
 
 
 procedure TfrClickerFindControl.btnCopyFoundValuesClick(Sender: TObject);
 begin
-  lbeMatchText.Text := lbeFoundControlText.Text;
-  lbeMatchClassName.Text := lbeFoundControlClass.Text;
+  DoOnSetMatchTextAndClassToOI(lbeFoundControlText.Text, lbeFoundControlClass.Text);
   DoOnTriggerOnControlsModified;
 end;
 
@@ -2662,8 +1611,7 @@ begin
   else
   begin
     FOnCopyControlTextAndClassFromMainWindow(AProviderName, ControlText, ControlClass);
-    lbeMatchText.Text := ControlText;
-    lbeMatchClassName.Text := ControlClass;
+    DoOnSetMatchTextAndClassToOI(ControlText, ControlClass);
   end;
 end;
 
@@ -2721,16 +1669,15 @@ var
   i: Integer;
   ControlRight: Integer;
   ControlBottom: Integer;
+  FindControlOptions: PClkFindControlOptions;
 begin
   try
     if FSearchAreaScrBox = nil then
     begin
       FSearchAreaScrBox := TScrollBox.Create(Self);
       FSearchAreaScrBox.Parent := TabSheetActionFindSubControlSearchArea;
-      FSearchAreaScrBox.Left := lbeSearchRectBottom.Left + lbeSearchRectBottom.Width + 8;
-      FSearchAreaScrBox.Top := lbeSearchRectBottom.Top + lbeSearchRectBottom.Height;
       FSearchAreaScrBox.Width := lblReservedSpaceForDbgImg.Width; // TabSheetActionFindSubControlSearchArea.Width - btnDisplaySearchAreaDebuggingImage.Left - 10; //130;
-      FSearchAreaScrBox.Height := TabSheetActionFindSubControlSearchArea.Height - lbeSearchRectBottom.Top - 30; //120;
+      FSearchAreaScrBox.Height := TabSheetActionFindSubControlSearchArea.Height - 20 - 30; //120;
       FSearchAreaScrBox.Anchors := [akBottom, akLeft, akRight, akTop];
       FSearchAreaScrBox.Color := clYellow;
       FSearchAreaScrBox.HorzScrollBar.Smooth := True;
@@ -2742,12 +1689,6 @@ begin
       FSearchAreaScrBox.OnMouseWheel := FSearchAreaScrBoxMouseWheel;
       FSearchAreaScrBox.ShowHint := False;
       FSearchAreaScrBox.ParentShowHint := False;
-
-      if PageControlMatch.ActivePage = TabSheetActionFindSubControlBMPSettings then
-      begin
-        FSearchAreaScrBox.Left := lbeFindCachedControlLeft.Left + lbeFindCachedControlLeft.Width + 10;
-        FSearchAreaScrBox.Parent := TabSheetActionFindSubControlBMPSettings;
-      end;
     end
     else
       btnDisplaySearchAreaDebuggingImage.Caption := 'Re-display dbg img';
@@ -2925,11 +1866,13 @@ begin
     FSearchAreaBottomLimitLabel.Anchors := FSearchAreaBottomLimitLabel.Anchors + [akRight];}
     //
 
-    FSearchAreaSearchedBmpDbgImg.Left := StrToIntDef(EvaluateReplacements(lbeSearchRectLeftOffset.Text), 20);
-    FSearchAreaSearchedBmpDbgImg.Top := StrToIntDef(EvaluateReplacements(lbeSearchRectTopOffset.Text), 20);
+    FindControlOptions := DoOnGetFindControlOptions;
 
-    FSearchAreaSearchedTextDbgImg.Left := StrToIntDef(EvaluateReplacements(lbeSearchRectLeftOffset.Text), 20);
-    FSearchAreaSearchedTextDbgImg.Top := StrToIntDef(EvaluateReplacements(lbeSearchRectTopOffset.Text), 20);
+    FSearchAreaSearchedBmpDbgImg.Left := StrToIntDef(EvaluateReplacements(FindControlOptions^.InitialRectange.LeftOffset), 20);
+    FSearchAreaSearchedBmpDbgImg.Top := StrToIntDef(EvaluateReplacements(FindControlOptions^.InitialRectange.TopOffset), 20);
+
+    FSearchAreaSearchedTextDbgImg.Left := FSearchAreaSearchedBmpDbgImg.Left;
+    FSearchAreaSearchedTextDbgImg.Top := FSearchAreaSearchedBmpDbgImg.Top;
 
     FSearchAreaLeftLimitLabel.Left := FSearchAreaSearchedBmpDbgImg.Left;
     FSearchAreaTopLimitLabel.Top := FSearchAreaSearchedBmpDbgImg.Top;
@@ -2940,19 +1883,19 @@ begin
 
     //FSearchAreaRightLimitLabel.Left := StrToIntDef(EvaluateReplacements(lbeSearchRectRightOffset.Text), 20);    //wrong, see below
     //FSearchAreaBottomLimitLabel.Top := StrToIntDef(EvaluateReplacements(lbeSearchRectBottomOffset.Text), 20);   //wrong, see below
-    if chkUseWholeScreenAsSearchArea.Checked then
+    if FindControlOptions^.UseWholeScreen then
     begin
       ControlRight := Screen.Width;
       ControlBottom := Screen.Height;
     end
     else
     begin
-      ControlRight := StrToIntDef(EvaluateReplacements(lbeSearchRectRight.Text), 20) - StrToIntDef(EvaluateReplacements(lbeSearchRectLeft.Text), 20); //Right edge of the search area.
-      ControlBottom := StrToIntDef(EvaluateReplacements(lbeSearchRectBottom.Text), 20) - StrToIntDef(EvaluateReplacements(lbeSearchRectTop.Text), 20); //Bottom edge of the search area.
+      ControlRight := StrToIntDef(EvaluateReplacements(FindControlOptions^.InitialRectange.Right), 20) - StrToIntDef(EvaluateReplacements(FindControlOptions^.InitialRectange.Left), 20); //Right edge of the search area.
+      ControlBottom := StrToIntDef(EvaluateReplacements(FindControlOptions^.InitialRectange.Bottom), 20) - StrToIntDef(EvaluateReplacements(FindControlOptions^.InitialRectange.Top), 20); //Bottom edge of the search area.
     end;
 
-    FSearchAreaRightLimitLabel.Left := ControlRight + StrToIntDef(EvaluateReplacements(lbeSearchRectRightOffset.Text), 20);   ////////// should be control right + offset (offset can be negative)
-    FSearchAreaBottomLimitLabel.Top := ControlBottom + StrToIntDef(EvaluateReplacements(lbeSearchRectBottomOffset.Text), 20);    ////////// should be control bottom + offset (offset can be negative)
+    FSearchAreaRightLimitLabel.Left := ControlRight + StrToIntDef(EvaluateReplacements(FindControlOptions^.InitialRectange.RightOffset), 20);   ////////// should be control right + offset (offset can be negative)
+    FSearchAreaBottomLimitLabel.Top := ControlBottom + StrToIntDef(EvaluateReplacements(FindControlOptions^.InitialRectange.BottomOffset), 20);    ////////// should be control bottom + offset (offset can be negative)
 
     UpdateTransparent_SearchAreaLimitsFromSearchAreaLimits;
     ///////////////////////
@@ -3028,56 +1971,6 @@ begin
 end;
 
 
-procedure TfrClickerFindControl.vstMatchBitmapFilesClick(Sender: TObject);
-var
-  Node: PVirtualNode;
-begin
-  Node := vstMatchBitmapFiles.GetFirstSelected;
-  if Node = nil then
-    Exit;
-
-  lbeMatchBitmapFile.Text := lstMatchBitmapFiles.Items.Strings[Node^.Index];
-end;
-
-
-procedure TfrClickerFindControl.vstMatchBitmapFilesGetImageIndex(
-  Sender: TBaseVirtualTree; Node: PVirtualNode; Kind: TVTImageKind;
-  Column: TColumnIndex; var Ghosted: Boolean; var ImageIndex: Integer);
-begin
-  try
-    ImageIndex := Node^.Index;
-  except
-    ImageIndex := -1;
-  end;
-end;
-
-
-procedure TfrClickerFindControl.vstMatchBitmapFilesGetText(Sender: TBaseVirtualTree;
-  Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
-  var CellText: {$IFDEF FPC} string {$ELSE} WideString {$ENDIF});
-begin
-  try
-    CellText := lstMatchBitmapFiles.Items.Strings[Node^.Index];
-  except
-    CellText := 'bug';
-  end;
-end;
-
-
-procedure TfrClickerFindControl.vstMatchBitmapFilesHeaderMouseUp(Sender: TVTHeader;
-  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-var
-  Node: PVirtualNode;
-begin
-  Node := vstMatchBitmapFiles.GetFirstSelected;
-
-  if Node = nil then
-    Exit;
-
-  lbeMatchBitmapFile.Text := lstMatchBitmapFiles.Items.Strings[Node^.Index];
-end;
-
-
 function TfrClickerFindControl.GetSearch_EditBoxVar_Ref(AEditBoxValue, AVarName: string): Integer;
 begin
   Result := 0;
@@ -3088,49 +1981,49 @@ end;
 
 function TfrClickerFindControl.GetSearch_BottomBottom_Ref: Integer;
 begin
-  Result := GetSearch_EditBoxVar_Ref(lbeSearchRectBottom.Text, '$Control_Bottom$');
+  Result := GetSearch_EditBoxVar_Ref(DoOnGetFindControlOptions^.InitialRectange.Bottom, '$Control_Bottom$');
 end;
 
 
 function TfrClickerFindControl.GetSearch_TopBottom_Ref: Integer;
 begin
-  Result := GetSearch_EditBoxVar_Ref(lbeSearchRectTop.Text, '$Control_Bottom$');
+  Result := GetSearch_EditBoxVar_Ref(DoOnGetFindControlOptions^.InitialRectange.Top, '$Control_Bottom$');
 end;
 
 
 function TfrClickerFindControl.GetSearch_LeftLeft_Ref: Integer;
 begin
-  Result := GetSearch_EditBoxVar_Ref(lbeSearchRectLeft.Text, '$Control_Left$');
+  Result := GetSearch_EditBoxVar_Ref(DoOnGetFindControlOptions^.InitialRectange.Left, '$Control_Left$');
 end;
 
 
 function TfrClickerFindControl.GetSearch_RightLeft_Ref: Integer;
 begin
-  Result := GetSearch_EditBoxVar_Ref(lbeSearchRectRight.Text, '$Control_Left$');
+  Result := GetSearch_EditBoxVar_Ref(DoOnGetFindControlOptions^.InitialRectange.Right, '$Control_Left$');
 end;
 
 
 function TfrClickerFindControl.GetSearch_RightRight_Ref: Integer;
 begin
-  Result := GetSearch_EditBoxVar_Ref(lbeSearchRectRight.Text, '$Control_Right$');
+  Result := GetSearch_EditBoxVar_Ref(DoOnGetFindControlOptions^.InitialRectange.Right, '$Control_Right$');
 end;
 
 
 function TfrClickerFindControl.GetSearch_LeftRight_Ref: Integer;
 begin
-  Result := GetSearch_EditBoxVar_Ref(lbeSearchRectLeft.Text, '$Control_Right$');
+  Result := GetSearch_EditBoxVar_Ref(DoOnGetFindControlOptions^.InitialRectange.Left, '$Control_Right$');
 end;
 
 
 function TfrClickerFindControl.GetSearch_TopTop_Ref: Integer;
 begin
-  Result := GetSearch_EditBoxVar_Ref(lbeSearchRectTop.Text, '$Control_Top$');
+  Result := GetSearch_EditBoxVar_Ref(DoOnGetFindControlOptions^.InitialRectange.Top, '$Control_Top$');
 end;
 
 
 function TfrClickerFindControl.GetSearch_BottomTop_Ref: Integer;
 begin
-  Result := GetSearch_EditBoxVar_Ref(lbeSearchRectBottom.Text, '$Control_Top$');
+  Result := GetSearch_EditBoxVar_Ref(DoOnGetFindControlOptions^.InitialRectange.Bottom, '$Control_Top$');
 end;
 
 
@@ -3194,30 +2087,6 @@ begin
 end;
 
 
-procedure TfrClickerFindControl.UpdateSearchAreaLabelsFromOffsetEditboxes;  //replaced by below UpdateSearchAreaLabelsFromInitRect
-var
-  ControlWidth, ControlHeight: Integer;
-begin
-  if FSearchAreaLeftLimitLabel = nil then
-    Exit;   //better exit than swallow exception, because the debugger keeps catching this one, and it becomes unsable
-
-  try
-    FSearchAreaLeftLimitLabel.Left := StrToIntDef(EvaluateReplacements(lbeSearchRectLeftOffset.Text), 20) - GetSearch_LeftLeft_Ref;
-    FSearchAreaTopLimitLabel.Top := StrToIntDef(EvaluateReplacements(lbeSearchRectTopOffset.Text), 20) - GetSearch_TopTop_Ref;
-
-    ControlWidth := GetControlWidthFromReplacement;
-    FSearchAreaRightLimitLabel.Left := StrToIntDef(EvaluateReplacements(lbeSearchRectRightOffset.Text), 20) - GetSearch_RightRight_Ref + ControlWidth;
-
-    ControlHeight := GetControlHeightFromReplacement;
-    FSearchAreaBottomLimitLabel.Top := StrToIntDef(EvaluateReplacements(lbeSearchRectBottomOffset.Text), 20) - GetSearch_BottomBottom_Ref + ControlHeight;
-
-    UpdateTransparent_SearchAreaLimitsFromSearchAreaLimits;
-  except
-    //exception when the components are not created yet  (expected)
-  end;
-end;
-
-
 procedure TfrClickerFindControl.UpdateSearchAreaLabelsFromInitRect(AInitialRectange: TRectString);
 var
   ControlWidth, ControlHeight: Integer;
@@ -3239,17 +2108,6 @@ begin
   except
     //exception when the components are not created yet  (expected)
   end;
-end;
-
-
-procedure TfrClickerFindControl.UpdateSearchAreaLabelsFromKeysOnEditBoxes;
-begin
-  if FSearchAreaSearchedBmpDbgImg = nil then
-    Exit;
-
-  UpdateSearchAreaLabelsFromOffsetEditboxes;
-  UpdateSearchAreaLabelColorsFromTheirPosition;
-  tmrUpdateGrid.Enabled := True;
 end;
 
 
@@ -3567,6 +2425,7 @@ procedure TfrClickerFindControl.imgSearchAreaSearchedBmpDbgImgMouseMove(Sender: 
 var
   tp: TPoint;
   NewLeft, NewTop: Integer;
+  Offsets: TSimpleRectString;
 begin
   if FDbgImgHold and (ssLeft in Shift) then
   begin
@@ -3586,16 +2445,22 @@ begin
       FSearchAreaTopLimitLabel.Top := FSearchAreaSearchedBmpDbgImg.Top;
       tmrUpdateGrid.Enabled := True;
 
-      lbeSearchRectLeftOffset.Text := IntToStr(GetSearchAreaLeftOffsetFromBmpDbgImg);
-      lbeSearchRectTopOffset.Text := IntToStr(GetSearchAreaTopOffsetFromBmpDbgImg);
+      //lbeSearchRectLeftOffset.Text := IntToStr(GetSearchAreaLeftOffsetFromBmpDbgImg);
+      //lbeSearchRectTopOffset.Text := IntToStr(GetSearchAreaTopOffsetFromBmpDbgImg);
+      Offsets.Left := IntToStr(GetSearchAreaLeftOffsetFromBmpDbgImg);
+      Offsets.Top := IntToStr(GetSearchAreaTopOffsetFromBmpDbgImg);
+      DoOnUpdateSearchAreaLimitsInOIFromDraggingLines([llLeft, llTop], Offsets);
 
       if ssShift in Shift then
       begin
         FSearchAreaRightLimitLabel.Left := FSearchAreaSearchedBmpDbgImg.Left + FSearchAreaSearchedBmpDbgImg.Width;
         FSearchAreaBottomLimitLabel.Top := FSearchAreaSearchedBmpDbgImg.Top + FSearchAreaSearchedBmpDbgImg.Height;
 
-        lbeSearchRectRightOffset.Text := IntToStr(GetSearchAreaRightOffsetFromBmpDbgImg - GetControlWidthFromReplacement);
-        lbeSearchRectBottomOffset.Text := IntToStr(GetSearchAreaBottomOffsetFromBmpDbgImg - GetControlHeightFromReplacement);
+        //lbeSearchRectRightOffset.Text := IntToStr(GetSearchAreaRightOffsetFromBmpDbgImg - GetControlWidthFromReplacement);
+        //lbeSearchRectBottomOffset.Text := IntToStr(GetSearchAreaBottomOffsetFromBmpDbgImg - GetControlHeightFromReplacement);
+        Offsets.Right := IntToStr(GetSearchAreaRightOffsetFromBmpDbgImg - GetControlWidthFromReplacement);
+        Offsets.Bottom := IntToStr(GetSearchAreaBottomOffsetFromBmpDbgImg - GetControlHeightFromReplacement);
+        DoOnUpdateSearchAreaLimitsInOIFromDraggingLines([llRight, llBottom], Offsets);
       end;
 
       UpdateTransparent_SearchAreaLimitsFromSearchAreaLimits;
@@ -3657,6 +2522,7 @@ procedure TfrClickerFindControl.imgSearchAreaSearchedTextDbgImgMouseMove(Sender:
 var
   tp: TPoint;
   NewLeft, NewTop: Integer;
+  Offsets: TSimpleRectString;
 begin
   if FDbgImgHold and (ssLeft in Shift) then
   begin
@@ -3676,16 +2542,22 @@ begin
       FSearchAreaTopLimitLabel.Top := FSearchAreaSearchedTextDbgImg.Top;
       tmrUpdateGrid.Enabled := True;
 
-      lbeSearchRectLeftOffset.Text := IntToStr(GetSearchAreaLeftOffsetFromTxtDbgImg);
-      lbeSearchRectTopOffset.Text := IntToStr(GetSearchAreaTopOffsetFromTxtDbgImg);
+      //lbeSearchRectLeftOffset.Text := IntToStr(GetSearchAreaLeftOffsetFromTxtDbgImg);
+      //lbeSearchRectTopOffset.Text := IntToStr(GetSearchAreaTopOffsetFromTxtDbgImg);
+      Offsets.Left := IntToStr(GetSearchAreaLeftOffsetFromTxtDbgImg);
+      Offsets.Top := IntToStr(GetSearchAreaTopOffsetFromTxtDbgImg);
+      DoOnUpdateSearchAreaLimitsInOIFromDraggingLines([llLeft, llTop], Offsets);
 
       if ssShift in Shift then
       begin
         FSearchAreaRightLimitLabel.Left := FSearchAreaSearchedTextDbgImg.Left + FSearchAreaSearchedTextDbgImg.Width;
         FSearchAreaBottomLimitLabel.Top := FSearchAreaSearchedTextDbgImg.Top + FSearchAreaSearchedTextDbgImg.Height;
 
-        lbeSearchRectRightOffset.Text := IntToStr(GetSearchAreaRightOffsetFromTxtDbgImg - GetControlWidthFromReplacement);
-        lbeSearchRectBottomOffset.Text := IntToStr(GetSearchAreaBottomOffsetFromTxtDbgImg - GetControlHeightFromReplacement);
+        //lbeSearchRectRightOffset.Text := IntToStr(GetSearchAreaRightOffsetFromTxtDbgImg - GetControlWidthFromReplacement);
+        //lbeSearchRectBottomOffset.Text := IntToStr(GetSearchAreaBottomOffsetFromTxtDbgImg - GetControlHeightFromReplacement);
+        Offsets.Right := IntToStr(GetSearchAreaRightOffsetFromTxtDbgImg - GetControlWidthFromReplacement);
+        Offsets.Bottom := IntToStr(GetSearchAreaBottomOffsetFromTxtDbgImg - GetControlHeightFromReplacement);
+        DoOnUpdateSearchAreaLimitsInOIFromDraggingLines([llRight, llBottom], Offsets);
       end;
 
       UpdateTransparent_SearchAreaLimitsFromSearchAreaLimits;
@@ -3884,6 +2756,8 @@ end;
 
 
 procedure TfrClickerFindControl.MenuItemUpdateLeftAndTopOffsetsFromPreviewTextImageToEditboxes(Sender: TObject);
+var
+  Offsets: TSimpleRectString;
 begin
   try
     FSearchAreaLeftLimitLabel.Left := FSearchAreaSearchedTextDbgImg.Left;
@@ -3891,8 +2765,11 @@ begin
     UpdateTransparent_SearchAreaLimitsFromSearchAreaLimits;
     tmrUpdateGrid.Enabled := True;
 
-    lbeSearchRectLeftOffset.Text := IntToStr(GetSearchAreaLeftOffsetFromTxtDbgImg);
-    lbeSearchRectTopOffset.Text := IntToStr(GetSearchAreaTopOffsetFromTxtDbgImg);
+    //lbeSearchRectLeftOffset.Text := IntToStr(GetSearchAreaLeftOffsetFromTxtDbgImg);
+    //lbeSearchRectTopOffset.Text := IntToStr(GetSearchAreaTopOffsetFromTxtDbgImg);
+    Offsets.Left := IntToStr(GetSearchAreaLeftOffsetFromTxtDbgImg);
+    Offsets.Top := IntToStr(GetSearchAreaTopOffsetFromTxtDbgImg);
+    DoOnUpdateSearchAreaLimitsInOIFromDraggingLines([llLeft, llTop], Offsets);
 
     UpdateSearchAreaLabelColorsFromTheirPosition;
   except
@@ -3902,14 +2779,19 @@ end;
 
 
 procedure TfrClickerFindControl.MenuItemUpdateLeftTopRightBottomOffsetsFromPreviewTextImageToEditboxes(Sender: TObject);
+var
+  Offsets: TSimpleRectString;
 begin
   try
     FSearchAreaLeftLimitLabel.Left := FSearchAreaSearchedBmpDbgImg.Left;
     FSearchAreaTopLimitLabel.Top := FSearchAreaSearchedBmpDbgImg.Top;
     tmrUpdateGrid.Enabled := True;
 
-    lbeSearchRectLeftOffset.Text := IntToStr(GetSearchAreaLeftOffsetFromBmpDbgImg);
-    lbeSearchRectTopOffset.Text := IntToStr(GetSearchAreaTopOffsetFromBmpDbgImg);
+    //lbeSearchRectLeftOffset.Text := IntToStr(GetSearchAreaLeftOffsetFromBmpDbgImg);
+    //lbeSearchRectTopOffset.Text := IntToStr(GetSearchAreaTopOffsetFromBmpDbgImg);
+    Offsets.Left := IntToStr(GetSearchAreaLeftOffsetFromBmpDbgImg);
+    Offsets.Top := IntToStr(GetSearchAreaTopOffsetFromBmpDbgImg);
+    DoOnUpdateSearchAreaLimitsInOIFromDraggingLines([llLeft, llTop], Offsets);
 
     if Assigned(FSearchAreaSearchedTextDbgImg) and (FSearchAreaSearchedTextDbgImg.Width > 0) then
     begin
@@ -3922,8 +2804,11 @@ begin
       FSearchAreaBottomLimitLabel.Top := FSearchAreaSearchedBmpDbgImg.Top + FSearchAreaSearchedBmpDbgImg.Height;
     end;
 
-    lbeSearchRectRightOffset.Text := IntToStr(GetSearchAreaRightOffsetFromBmpDbgImg - GetControlWidthFromReplacement);
-    lbeSearchRectBottomOffset.Text := IntToStr(GetSearchAreaBottomOffsetFromBmpDbgImg - GetControlHeightFromReplacement);
+    //lbeSearchRectRightOffset.Text := IntToStr(GetSearchAreaRightOffsetFromBmpDbgImg - GetControlWidthFromReplacement);
+    //lbeSearchRectBottomOffset.Text := IntToStr(GetSearchAreaBottomOffsetFromBmpDbgImg - GetControlHeightFromReplacement);
+    Offsets.Right := IntToStr(GetSearchAreaRightOffsetFromBmpDbgImg - GetControlWidthFromReplacement);
+    Offsets.Bottom := IntToStr(GetSearchAreaBottomOffsetFromBmpDbgImg - GetControlHeightFromReplacement);
+    DoOnUpdateSearchAreaLimitsInOIFromDraggingLines([llRight, llBottom], Offsets);
 
     UpdateTransparent_SearchAreaLimitsFromSearchAreaLimits;
     UpdateSearchAreaLabelColorsFromTheirPosition;
@@ -3970,18 +2855,6 @@ end;
 
 procedure TfrClickerFindControl.UpdateBitmapAlgorithmSettings;
 begin
-  lbeMatchBitmapAlgorithmXMulOf.Enabled := cmbMatchBitmapTextSearchAlgorithm.ItemIndex = Ord(mbaXYMultipleAndOffsets);
-  lbeMatchBitmapAlgorithmYMulOf.Enabled := lbeMatchBitmapAlgorithmXMulOf.Enabled;
-  lbeMatchBitmapAlgorithmXOffset.Enabled := lbeMatchBitmapAlgorithmXMulOf.Enabled;
-  lbeMatchBitmapAlgorithmyOffset.Enabled := lbeMatchBitmapAlgorithmXMulOf.Enabled;
-  lbeFindCachedControlLeft.Enabled := chkSearchCachedLeftAndTopFirst.Checked;
-  lbeFindCachedControlTop.Enabled := chkSearchCachedLeftAndTopFirst.Checked;
-
-  updownXMulOf.Enabled := lbeMatchBitmapAlgorithmXMulOf.Enabled;
-  updownYMulOf.Enabled := lbeMatchBitmapAlgorithmXMulOf.Enabled;
-  updownXOffset.Enabled := lbeMatchBitmapAlgorithmXMulOf.Enabled;
-  updownYOffset.Enabled := lbeMatchBitmapAlgorithmXMulOf.Enabled;
-
   tmrUpdateGrid.Enabled := True;
 
   if Assigned(FOnUpdateBitmapAlgorithmSettings) then
@@ -3999,56 +2872,39 @@ end;
 
 
 procedure TfrClickerFindControl.ClearControls;
+var
+  FindControlOptions: PClkFindControlOptions;
+  Offsets: TSimpleRectString;
 begin
-  chkMatchText.Checked := False;
-  chkMatchBitmapText.Checked := False;
-  chkMatchBitmapFiles.Checked := False;
-  chkMatchClassName.Checked := False;
-  rdgrpSearchForControlMode.ItemIndex := Ord(sfcmGenGrid);
-  chkWaitForControlToGoAway.Checked := False;
-
-  lbeMatchText.Text := '';
-  lbeMatchClassName.Text := '';
-  lbeMatchTextSeparator.Text := '';
-  lbeMatchClassNameSeparator.Text := '';
-
-  lbeMatchBitmapText.Text := '';
-
   CreateBMPTextFrames(0);
   AddFontProfile('Default');
 
   lstMatchBitmapFiles.Clear;
+  FindControlOptions := DoOnGetFindControlOptions;
 
-  lbeColorError.Text := '0';
-  lbeAllowedColorErrorCount.Text := '0';
-
-  cmbMatchBitmapTextSearchAlgorithm.ItemIndex := Ord(mbaBruteForce);
-  lbeMatchBitmapAlgorithmXMulOf.Text := '1';
-  lbeMatchBitmapAlgorithmYMulOf.Text := '1';
-  lbeMatchBitmapAlgorithmXOffset.Text := '0';
-  lbeMatchBitmapAlgorithmYOffset.Text := '0';
-  chkSearchCachedLeftAndTopFirst.Checked := False;
-  lbeFindCachedControlLeft.Text := '';
-  lbeFindCachedControlTop.Text := '';
+  FindControlOptions^.MatchBitmapAlgorithm := mbaBruteForce;
+  FindControlOptions^.MatchBitmapAlgorithmSettings.XMultipleOf := 1;
+  FindControlOptions^.MatchBitmapAlgorithmSettings.YMultipleOf := 1;
+  FindControlOptions^.MatchBitmapAlgorithmSettings.XOffset := 0;
+  FindControlOptions^.MatchBitmapAlgorithmSettings.YOffset := 0;
+  FindControlOptions^.StartSearchingWithCachedControl := False;
 
   UpdateBitmapAlgorithmSettings;
 
-  lbeSearchRectLeft.Text := '$Control_Left$';
-  lbeSearchRectTop.Text := '$Control_Top$';
-  lbeSearchRectRight.Text := '$Control_Right$';
-  lbeSearchRectBottom.Text := '$Control_Bottom$';
-  chkUseWholeScreenAsSearchArea.Checked := True;
-  SetSearchRectEnabledState;
-  lbeSearchRectLeftOffset.Text := '0';
-  lbeSearchRectTopOffset.Text := '0';
-  lbeSearchRectRightOffset.Text := '0';
-  lbeSearchRectBottomOffset.Text := '0';
-end;
+  FindControlOptions^.InitialRectange.Left := '$Control_Left$';
+  FindControlOptions^.InitialRectange.Top := '$Control_Top$';
+  FindControlOptions^.InitialRectange.Right := '$Control_Right$';
+  FindControlOptions^.InitialRectange.Bottom := '$Control_Bottom$';
+  FindControlOptions^.InitialRectange.LeftOffset := '0';
+  FindControlOptions^.InitialRectange.TopOffset := '0';
+  FindControlOptions^.InitialRectange.RightOffset := '0';
+  FindControlOptions^.InitialRectange.BottomOffset := '0';
 
-
-procedure TfrClickerFindControl.RepaintBitmapFilesVst;
-begin
-  vstMatchBitmapFiles.Repaint;
+  Offsets.Left := '0';
+  Offsets.Top := '0';
+  Offsets.Right := '0';
+  Offsets.Bottom := '0';
+  DoOnUpdateSearchAreaLimitsInOIFromDraggingLines([llLeft, llTop, llRight, llBottom], Offsets);
 end;
 
 

@@ -1,9 +1,9 @@
 object frClickerBMPText: TfrClickerBMPText
   Left = 0
-  Height = 206
+  Height = 158
   Top = 0
   Width = 434
-  ClientHeight = 206
+  ClientHeight = 158
   ClientWidth = 434
   TabOrder = 0
   DesignLeft = 86
@@ -14,6 +14,7 @@ object frClickerBMPText: TfrClickerBMPText
     Hint = 'Available variable replacement values (case sensitive): Default, Draft, Proof, NonAntialiased, Antialiased, Cleartype, CleartypeNatural'
     Top = 128
     Width = 121
+    Enabled = False
     ItemHeight = 16
     Items.Strings = (
       'Default'
@@ -37,6 +38,7 @@ object frClickerBMPText: TfrClickerBMPText
     Height = 23
     Top = 128
     Width = 100
+    Enabled = False
     TabOrder = 0
     Text = '$MyFontQuality$'
     Visible = False
@@ -47,6 +49,7 @@ object frClickerBMPText: TfrClickerBMPText
     Top = 133
     Width = 38
     Caption = 'Quality'
+    Enabled = False
   end
   object chkItalic: TCheckBox
     Left = 3
@@ -54,6 +57,7 @@ object frClickerBMPText: TfrClickerBMPText
     Top = 107
     Width = 45
     Caption = 'Italic'
+    Enabled = False
     OnClick = chkItalicClick
     TabOrder = 2
   end
@@ -63,6 +67,7 @@ object frClickerBMPText: TfrClickerBMPText
     Top = 89
     Width = 44
     Caption = 'Bold'
+    Enabled = False
     OnClick = chkBoldClick
     TabOrder = 3
   end
@@ -72,6 +77,7 @@ object frClickerBMPText: TfrClickerBMPText
     Top = 89
     Width = 71
     Caption = 'Underline'
+    Enabled = False
     OnClick = chkUnderlineClick
     TabOrder = 4
   end
@@ -81,6 +87,7 @@ object frClickerBMPText: TfrClickerBMPText
     Top = 107
     Width = 69
     Caption = 'StrikeOut'
+    Enabled = False
     OnClick = chkStrikeOutClick
     TabOrder = 5
   end
@@ -93,6 +100,7 @@ object frClickerBMPText: TfrClickerBMPText
     EditLabel.Height = 15
     EditLabel.Width = 34
     EditLabel.Caption = 'Size'
+    Enabled = False
     ParentShowHint = False
     ShowHint = True
     TabOrder = 6
@@ -108,6 +116,7 @@ object frClickerBMPText: TfrClickerBMPText
     EditLabel.Height = 15
     EditLabel.Width = 126
     EditLabel.Caption = 'Font Name'
+    Enabled = False
     ParentShowHint = False
     ShowHint = True
     TabOrder = 7
@@ -120,6 +129,7 @@ object frClickerBMPText: TfrClickerBMPText
     Top = 62
     Width = 26
     Caption = '...'
+    Enabled = False
     OnClick = btnBrowseFontClick
     ParentShowHint = False
     TabOrder = 8
@@ -174,6 +184,7 @@ object frClickerBMPText: TfrClickerBMPText
     EditLabel.Height = 15
     EditLabel.Width = 99
     EditLabel.Caption = 'FG Color'
+    Enabled = False
     ParentShowHint = False
     PopupMenu = pmStandardColorVariables
     ShowHint = True
@@ -190,6 +201,7 @@ object frClickerBMPText: TfrClickerBMPText
     EditLabel.Height = 15
     EditLabel.Width = 89
     EditLabel.Caption = 'BG Color'
+    Enabled = False
     ParentShowHint = False
     PopupMenu = pmStandardColorVariables
     ShowHint = True
@@ -228,66 +240,6 @@ object frClickerBMPText: TfrClickerBMPText
     Width = 160
     Caption = 'Profile Name'
     TabOrder = 14
-  end
-  object lbeMatchBitmapTextCropLeft: TLabeledEdit
-    Left = 3
-    Height = 23
-    Hint = 'Variable replacements are available.'#13#10'Positive values are expected.'
-    Top = 176
-    Width = 97
-    EditLabel.Height = 15
-    EditLabel.Width = 97
-    EditLabel.Caption = 'Crop Left'
-    ParentShowHint = False
-    ShowHint = True
-    TabOrder = 15
-    OnChange = lbeMatchBitmapTextCropLeftChange
-    OnKeyDown = lbeMatchBitmapTextCropLeftKeyDown
-  end
-  object lbeMatchBitmapTextCropTop: TLabeledEdit
-    Left = 111
-    Height = 23
-    Hint = 'Variable replacements are available.'#13#10'Positive values are expected.'
-    Top = 176
-    Width = 97
-    EditLabel.Height = 15
-    EditLabel.Width = 97
-    EditLabel.Caption = 'Crop Top'
-    ParentShowHint = False
-    ShowHint = True
-    TabOrder = 16
-    OnChange = lbeMatchBitmapTextCropTopChange
-    OnKeyDown = lbeMatchBitmapTextCropTopKeyDown
-  end
-  object lbeMatchBitmapTextCropBottom: TLabeledEdit
-    Left = 327
-    Height = 23
-    Hint = 'Variable replacements are available.'#13#10'Positive values are expected.'
-    Top = 176
-    Width = 97
-    EditLabel.Height = 15
-    EditLabel.Width = 97
-    EditLabel.Caption = 'Crop Bottom'
-    ParentShowHint = False
-    ShowHint = True
-    TabOrder = 17
-    OnChange = lbeMatchBitmapTextCropBottomChange
-    OnKeyDown = lbeMatchBitmapTextCropBottomKeyDown
-  end
-  object lbeMatchBitmapTextCropRight: TLabeledEdit
-    Left = 219
-    Height = 23
-    Hint = 'Variable replacements are available.'#13#10'Positive values are expected.'
-    Top = 176
-    Width = 97
-    EditLabel.Height = 15
-    EditLabel.Width = 97
-    EditLabel.Caption = 'Crop Right'
-    ParentShowHint = False
-    ShowHint = True
-    TabOrder = 18
-    OnChange = lbeMatchBitmapTextCropRightChange
-    OnKeyDown = lbeMatchBitmapTextCropRightKeyDown
   end
   object pmPreviewImage: TPopupMenu
     Left = 336

@@ -287,9 +287,6 @@ type
     FPalette: TfrClickerActionsPalette;
     FLoggingFIFO: TPollingFIFO;
 
-    function GetShowDeprecatedControls: Boolean;
-    procedure SetShowDeprecatedControls(Value: Boolean);
-
     procedure GetListOfUsedFilesFromLoadedTemplate(AListOfFiles: TStringList);
 
     procedure HandleActionSelection; //does not handle an event
@@ -443,7 +440,6 @@ type
     property StopAllActionsOnDemandFromParent: PBoolean read FStopAllActionsOnDemandFromParent write FStopAllActionsOnDemandFromParent;
     //property Debugging: Boolean read FDebugging write FDebugging;
     property FullTemplatesDir: string read FFullTemplatesDir write SetFullTemplatesDir;  //no trailing backslash
-    property ShowDeprecatedControls: Boolean read GetShowDeprecatedControls write SetShowDeprecatedControls;
 
     property ExecutesRemotely: Boolean read FExecutesRemotely write FExecutesRemotely;  //used in client mode
     property StackLevel: Integer read FStackLevel write FStackLevel;
@@ -739,20 +735,19 @@ end;
 
 procedure TfrClickerActionsArr.HandleOnSetEditorSleepProgressBarMax(AMaxValue: Integer);
 begin
-  frClickerActions.prbSleep.Max := AMaxValue;
+  frClickerActions.frClickerSleep.ProgressBarMax := AMaxValue;
 end;
 
 
 procedure TfrClickerActionsArr.HandleOnSetEditorSleepProgressBarPosition(APositionValue: Integer);
 begin
-  frClickerActions.prbSleep.Position := APositionValue;
+  frClickerActions.frClickerSleep.ProgressBarPosition := APositionValue;
 end;
 
 
 procedure TfrClickerActionsArr.HandleOnSetEditorSleepInfo(AElapsedTime, ARemainingTime: string);
 begin
-  frClickerActions.pnlSleepElapsedTime.Caption := AElapsedTime;
-  frClickerActions.pnlSleepRemainingTime.Caption := ARemainingTime;
+  frClickerActions.frClickerSleep.SetEditorSleepInfo(AElapsedTime, ARemainingTime);
 end;
 
 
@@ -807,53 +802,6 @@ begin
   FClkActions[ActionIndex].ActionOptions.ActionTimeout := StrToIntDef(frClickerActions.lbeActionTimeout.Text, 0);
   FClkActions[ActionIndex].ActionOptions.ActionCondition := frClickerActions.frClickerConditionEditor.GetActionCondition;
 
-  FClkActions[ActionIndex].ClickOptions.XClickPointReference := TXClickPointReference(frClickerActions.cmbXClickReference.ItemIndex);
-  FClkActions[ActionIndex].ClickOptions.YClickPointReference := TYClickPointReference(frClickerActions.cmbYClickReference.ItemIndex);
-  FClkActions[ActionIndex].ClickOptions.XOffset := frClickerActions.lbeClickXOffset.Text;
-  FClkActions[ActionIndex].ClickOptions.YOffset := frClickerActions.lbeClickYOffset.Text;
-  FClkActions[ActionIndex].ClickOptions.XClickPointVar := frClickerActions.lbeClickVarX.Text;
-  FClkActions[ActionIndex].ClickOptions.YClickPointVar := frClickerActions.lbeClickVarY.Text;
-  FClkActions[ActionIndex].ClickOptions.MouseButton := TMouseButton(frClickerActions.rdgrpMouseButton.ItemIndex);
-  FClkActions[ActionIndex].ClickOptions.ClickWithCtrl := frClickerActions.chkClickWithCtrl.Checked;
-  FClkActions[ActionIndex].ClickOptions.ClickWithAlt := frClickerActions.chkClickWithAlt.Checked;
-  FClkActions[ActionIndex].ClickOptions.ClickWithShift := frClickerActions.chkClickWithShift.Checked;
-  FClkActions[ActionIndex].ClickOptions.ClickWithDoubleClick := frClickerActions.chkClickWithDoubleClick.Checked;
-  FClkActions[ActionIndex].ClickOptions.LeaveMouse := frClickerActions.chkLeaveMouse.Checked;
-  FClkActions[ActionIndex].ClickOptions.MoveWithoutClick := frClickerActions.chkMoveWithoutClick.Checked;
-  FClkActions[ActionIndex].ClickOptions.Count := StrToIntDef(frClickerActions.lbeMultiClickCount.Text, 1);
-  FClkActions[ActionIndex].ClickOptions.ClickType := frClickerActions.cmbClickType.ItemIndex;
-  FClkActions[ActionIndex].ClickOptions.XClickPointReferenceDest := TXClickPointReference(frClickerActions.FcmbXClickReferenceDest.ItemIndex);
-  FClkActions[ActionIndex].ClickOptions.YClickPointReferenceDest := TYClickPointReference(frClickerActions.FcmbYClickReferenceDest.ItemIndex);
-  FClkActions[ActionIndex].ClickOptions.XOffsetDest := frClickerActions.FlbeClickXOffsetDest.Text;
-  FClkActions[ActionIndex].ClickOptions.YOffsetDest := frClickerActions.FlbeClickYOffsetDest.Text;
-  FClkActions[ActionIndex].ClickOptions.XClickPointVarDest := frClickerActions.FlbeClickVarXDest.Text;
-  FClkActions[ActionIndex].ClickOptions.YClickPointVarDest := frClickerActions.FlbeClickVarYDest.Text;
-
-  FClkActions[ActionIndex].ExecAppOptions.PathToApp := frClickerActions.lbeExecAppPath.Text;
-  FClkActions[ActionIndex].ExecAppOptions.ListOfParams := frClickerActions.memExecAppParams.Text;
-  FClkActions[ActionIndex].ExecAppOptions.WaitForApp := frClickerActions.chkWaitForApp.Checked;
-  FClkActions[ActionIndex].ExecAppOptions.AppStdIn := frClickerActions.lbeExecAppStdIn.Text;
-  FClkActions[ActionIndex].ExecAppOptions.CurrentDir := frClickerActions.lbeExecAppCurrentDir.Text;
-  FClkActions[ActionIndex].ExecAppOptions.UseInheritHandles := TExecAppUseInheritHandles(frClickerActions.cmbUseInheritHandles.ItemIndex);
-  FClkActions[ActionIndex].ExecAppOptions.NoConsole := frClickerActions.chkNoConsole.Checked;
-
-  FClkActions[ActionIndex].SetTextOptions.Text := frClickerActions.lbeSetNewText.Text;
-  FClkActions[ActionIndex].SetTextOptions.ControlType := TClkSetTextControlType(frClickerActions.rdgrpSetTextControlType.ItemIndex);
-
-  FClkActions[ActionIndex].FindControlOptions.MatchCriteria.WillMatchText := frClickerActions.frClickerFindControl.chkMatchText.Checked;
-  FClkActions[ActionIndex].FindControlOptions.MatchCriteria.WillMatchClassName := frClickerActions.frClickerFindControl.chkMatchClassName.Checked;
-  FClkActions[ActionIndex].FindControlOptions.MatchCriteria.WillMatchBitmapText := frClickerActions.frClickerFindControl.chkMatchBitmapText.Checked;
-  FClkActions[ActionIndex].FindControlOptions.MatchCriteria.WillMatchBitmapFiles := frClickerActions.frClickerFindControl.chkMatchBitmapFiles.Checked;
-  FClkActions[ActionIndex].FindControlOptions.MatchCriteria.SearchForControlMode := TSearchForControlMode(frClickerActions.frClickerFindControl.rdgrpSearchForControlMode.ItemIndex);
-
-  FClkActions[ActionIndex].FindControlOptions.AllowToFail := frClickerActions.frClickerFindControl.chkAllowToFail.Checked;
-  FClkActions[ActionIndex].FindControlOptions.WaitForControlToGoAway := frClickerActions.frClickerFindControl.chkWaitForControlToGoAway.Checked;
-
-  FClkActions[ActionIndex].FindControlOptions.MatchText := frClickerActions.frClickerFindControl.lbeMatchText.Text;
-  FClkActions[ActionIndex].FindControlOptions.MatchClassName := frClickerActions.frClickerFindControl.lbeMatchClassName.Text;
-  FClkActions[ActionIndex].FindControlOptions.MatchTextSeparator := frClickerActions.frClickerFindControl.lbeMatchTextSeparator.Text;
-  FClkActions[ActionIndex].FindControlOptions.MatchClassNameSeparator := frClickerActions.frClickerFindControl.lbeMatchClassNameSeparator.Text;
-
   //the number of items from MatchBitmapText has to match the number of frames from FBMPTextFrames
   SetLength(FClkActions[ActionIndex].FindControlOptions.MatchBitmapText, frClickerActions.frClickerFindControl.GetBMPTextFontProfilesCount);
 
@@ -893,54 +841,7 @@ begin
 
   FClkActions[ActionIndex].FindControlOptions.MatchBitmapFiles := frClickerActions.frClickerFindControl.lstMatchBitmapFiles.Items.Text;
 
-  FClkActions[ActionIndex].FindControlOptions.ColorError := frClickerActions.frClickerFindControl.lbeColorError.Text;
-  FClkActions[ActionIndex].FindControlOptions.AllowedColorErrorCount := frClickerActions.frClickerFindControl.lbeAllowedColorErrorCount.Text;
-  FClkActions[ActionIndex].FindControlOptions.MatchBitmapAlgorithm := TMatchBitmapAlgorithm(frClickerActions.frClickerFindControl.cmbMatchBitmapTextSearchAlgorithm.ItemIndex);
-  FClkActions[ActionIndex].FindControlOptions.MatchBitmapAlgorithmSettings.XMultipleOf := StrToIntDef(frClickerActions.frClickerFindControl.lbeMatchBitmapAlgorithmXMulOf.Text, 1);
-  FClkActions[ActionIndex].FindControlOptions.MatchBitmapAlgorithmSettings.YMultipleOf := StrToIntDef(frClickerActions.frClickerFindControl.lbeMatchBitmapAlgorithmYMulOf.Text, 1);
-  FClkActions[ActionIndex].FindControlOptions.MatchBitmapAlgorithmSettings.XOffset := StrToIntDef(frClickerActions.frClickerFindControl.lbeMatchBitmapAlgorithmXOffset.Text, 0);
-  FClkActions[ActionIndex].FindControlOptions.MatchBitmapAlgorithmSettings.YOffset := StrToIntDef(frClickerActions.frClickerFindControl.lbeMatchBitmapAlgorithmYOffset.Text, 0);
-
-  FClkActions[ActionIndex].FindControlOptions.InitialRectange.Left := frClickerActions.frClickerFindControl.lbeSearchRectLeft.Text;
-  FClkActions[ActionIndex].FindControlOptions.InitialRectange.Top := frClickerActions.frClickerFindControl.lbeSearchRectTop.Text;
-  FClkActions[ActionIndex].FindControlOptions.InitialRectange.Right := frClickerActions.frClickerFindControl.lbeSearchRectRight.Text;
-  FClkActions[ActionIndex].FindControlOptions.InitialRectange.Bottom := frClickerActions.frClickerFindControl.lbeSearchRectBottom.Text;
-  FClkActions[ActionIndex].FindControlOptions.UseWholeScreen := frClickerActions.frClickerFindControl.chkUseWholeScreenAsSearchArea.Checked;
-  FClkActions[ActionIndex].FindControlOptions.InitialRectange.LeftOffset := frClickerActions.frClickerFindControl.lbeSearchRectLeftOffset.Text;
-  FClkActions[ActionIndex].FindControlOptions.InitialRectange.TopOffset := frClickerActions.frClickerFindControl.lbeSearchRectTopOffset.Text;
-  FClkActions[ActionIndex].FindControlOptions.InitialRectange.RightOffset := frClickerActions.frClickerFindControl.lbeSearchRectRightOffset.Text;
-  FClkActions[ActionIndex].FindControlOptions.InitialRectange.BottomOffset := frClickerActions.frClickerFindControl.lbeSearchRectBottomOffset.Text;
-
-  FClkActions[ActionIndex].FindControlOptions.StartSearchingWithCachedControl := frClickerActions.frClickerFindControl.chkSearchCachedLeftAndTopFirst.Checked;
-  FClkActions[ActionIndex].FindControlOptions.CachedControlLeft := frClickerActions.frClickerFindControl.lbeFindCachedControlLeft.Text;
-  FClkActions[ActionIndex].FindControlOptions.CachedControlTop := frClickerActions.frClickerFindControl.lbeFindCachedControlTop.Text;
-
-  FClkActions[ActionIndex].CallTemplateOptions.TemplateFileName := frClickerActions.lbeTemplateFileName.Text;
   FClkActions[ActionIndex].CallTemplateOptions.ListOfCustomVarsAndValues := FastReplace_ReturnTo45(frClickerActions.ListOfCustomVariables);
-  FClkActions[ActionIndex].CallTemplateOptions.CallOnlyIfCondition := frClickerActions.chkCallOnlyIfContitionIsTrue.Checked;
-  FClkActions[ActionIndex].CallTemplateOptions.CallOnlyIfConditionVarName := frClickerActions.lbeCallOnlyIfContitionVarName.Text;
-  FClkActions[ActionIndex].CallTemplateOptions.CallOnlyIfConditionVarValue := frClickerActions.lbeCallOnlyIfContitionVarValue.Text;
-  FClkActions[ActionIndex].CallTemplateOptions.EvaluateBeforeCalling := frClickerActions.chkEvaluateVarsBeforeCalling.Checked;
-
-  FClkActions[ActionIndex].CallTemplateOptions.CallTemplateLoop.Enabled := frClickerActions.chkCallTemplateLoopEnabled.Checked;
-  FClkActions[ActionIndex].CallTemplateOptions.CallTemplateLoop.Counter := frClickerActions.lbeCallTemplateLoopCounter.Text;
-  FClkActions[ActionIndex].CallTemplateOptions.CallTemplateLoop.InitValue := frClickerActions.lbeCallTemplateLoopInitValue.Text;
-  FClkActions[ActionIndex].CallTemplateOptions.CallTemplateLoop.EndValue := frClickerActions.lbeCallTemplateLoopEndValue.Text;
-  FClkActions[ActionIndex].CallTemplateOptions.CallTemplateLoop.Direction := TLoopDirection(frClickerActions.cmbCallTemplateLoopDirection.ItemIndex);
-  FClkActions[ActionIndex].CallTemplateOptions.CallTemplateLoop.BreakCondition := frClickerActions.lbeCallTemplateLoopBreakCondition.Text; //uses the same format as TClkActionOptions.ActionCondition
-  FClkActions[ActionIndex].CallTemplateOptions.CallTemplateLoop.EvalBreakPosition := TLoopEvalBreakPosition(frClickerActions.cmbCallTemplateLoopBreakPosition.ItemIndex);
-
-  FClkActions[ActionIndex].SleepOptions.Value := frClickerActions.lbeSleep.Text;
-
-  FClkActions[ActionIndex].SetVarOptions := frClickerActions.ListOfSetVars;
-
-  FClkActions[ActionIndex].WindowOperationsOptions.Operation := TWindowOperation(frClickerActions.cmbWindowOperationsType.ItemIndex);
-  FClkActions[ActionIndex].WindowOperationsOptions.NewX := frClickerActions.lbeWindowOperationsX.Text;
-  FClkActions[ActionIndex].WindowOperationsOptions.NewY := frClickerActions.lbeWindowOperationsY.Text;
-  FClkActions[ActionIndex].WindowOperationsOptions.NewWidth := frClickerActions.lbeWindowOperationsWidth.Text;
-  FClkActions[ActionIndex].WindowOperationsOptions.NewHeight := frClickerActions.lbeWindowOperationsHeight.Text;
-  FClkActions[ActionIndex].WindowOperationsOptions.NewPositionEabled := frClickerActions.chkWindowOperationsEnablePos.Checked;
-  FClkActions[ActionIndex].WindowOperationsOptions.NewSizeEabled := frClickerActions.chkWindowOperationsEnableSize.Checked;
 
   //  CopyActionContent(frClickerActions.EditingAction^, FClkActions[ActionIndex]);  //uncomment this after removing above code
 end;
@@ -954,76 +855,6 @@ begin
   frClickerActions.cmbActions.ItemIndex := Integer(FClkActions[ActionIndex].ActionOptions.Action);
   frClickerActions.lbeActionTimeout.Text := IntToStr(FClkActions[ActionIndex].ActionOptions.ActionTimeout);
   frClickerActions.frClickerConditionEditor.DisplayActionCondition(FClkActions[ActionIndex].ActionOptions.ActionCondition);
-
-  frClickerActions.cmbXClickReference.ItemIndex := Integer(FClkActions[ActionIndex].ClickOptions.XClickPointReference);
-  frClickerActions.cmbYClickReference.ItemIndex := Integer(FClkActions[ActionIndex].ClickOptions.YClickPointReference);
-  frClickerActions.lbeClickVarX.Text := FClkActions[ActionIndex].ClickOptions.XClickPointVar;
-  frClickerActions.lbeClickVarY.Text := FClkActions[ActionIndex].ClickOptions.YClickPointVar;
-  frClickerActions.lbeClickXOffset.Text := FClkActions[ActionIndex].ClickOptions.XOffset;
-  frClickerActions.lbeClickYOffset.Text := FClkActions[ActionIndex].ClickOptions.YOffset;
-
-  if Integer(FClkActions[ActionIndex].ClickOptions.MouseButton) = 255 then
-    frClickerActions.rdgrpMouseButton.ItemIndex := -1
-  else
-    frClickerActions.rdgrpMouseButton.ItemIndex := Integer(FClkActions[ActionIndex].ClickOptions.MouseButton);
-
-  frClickerActions.chkClickWithCtrl.Checked := FClkActions[ActionIndex].ClickOptions.ClickWithCtrl;
-  frClickerActions.chkClickWithAlt.Checked := FClkActions[ActionIndex].ClickOptions.ClickWithAlt;
-  frClickerActions.chkClickWithShift.Checked := FClkActions[ActionIndex].ClickOptions.ClickWithShift;
-  frClickerActions.chkClickWithDoubleClick.Checked := FClkActions[ActionIndex].ClickOptions.ClickWithDoubleClick;
-  frClickerActions.chkLeaveMouse.Checked := FClkActions[ActionIndex].ClickOptions.LeaveMouse;
-  frClickerActions.chkMoveWithoutClick.Checked := FClkActions[ActionIndex].ClickOptions.MoveWithoutClick;
-  frClickerActions.lbeMultiClickCount.Text := IntToStr(FClkActions[ActionIndex].ClickOptions.Count);
-
-  frClickerActions.cmbClickType.ItemIndex := FClkActions[ActionIndex].ClickOptions.ClickType;
-  if Assigned(frClickerActions.FgrpMouseDragControls) then
-    frClickerActions.FgrpMouseDragControls.Visible := frClickerActions.cmbClickType.ItemIndex = 1;
-
-  frClickerActions.FcmbXClickReferenceDest.ItemIndex := Ord(FClkActions[ActionIndex].ClickOptions.XClickPointReferenceDest);
-  frClickerActions.FcmbYClickReferenceDest.ItemIndex := Ord(FClkActions[ActionIndex].ClickOptions.YClickPointReferenceDest);
-  frClickerActions.FlbeClickXOffsetDest.Text := FClkActions[ActionIndex].ClickOptions.XOffsetDest;
-  frClickerActions.FlbeClickYOffsetDest.Text := FClkActions[ActionIndex].ClickOptions.YOffsetDest;
-  frClickerActions.FlbeClickVarXDest.Text := FClkActions[ActionIndex].ClickOptions.XClickPointVarDest;
-  frClickerActions.FlbeClickVarYDest.Text := FClkActions[ActionIndex].ClickOptions.YClickPointVarDest;
-
-  frClickerActions.RefreshClickVarXEnabledState;
-  frClickerActions.RefreshClickVarYEnabledState;
-
-  frClickerActions.lbeExecAppPath.Text := FClkActions[ActionIndex].ExecAppOptions.PathToApp;
-  frClickerActions.memExecAppParams.Text := FClkActions[ActionIndex].ExecAppOptions.ListOfParams;
-  frClickerActions.chkWaitForApp.Checked := FClkActions[ActionIndex].ExecAppOptions.WaitForApp;
-  frClickerActions.lbeExecAppStdIn.Text := FClkActions[ActionIndex].ExecAppOptions.AppStdIn;
-  frClickerActions.lbeExecAppCurrentDir.Text := FClkActions[ActionIndex].ExecAppOptions.CurrentDir;
-  frClickerActions.cmbUseInheritHandles.ItemIndex := Ord(FClkActions[ActionIndex].ExecAppOptions.UseInheritHandles);
-  frClickerActions.chkNoConsole.Checked := FClkActions[ActionIndex].ExecAppOptions.NoConsole;
-
-  frClickerActions.lbeSetNewText.Text := FClkActions[ActionIndex].SetTextOptions.Text;
-
-  if Integer(FClkActions[ActionIndex].SetTextOptions.ControlType) = 255 then
-    frClickerActions.rdgrpSetTextControlType.ItemIndex := -1
-  else
-    frClickerActions.rdgrpSetTextControlType.ItemIndex := Integer(FClkActions[ActionIndex].SetTextOptions.ControlType);
-
-  frClickerActions.frClickerFindControl.chkMatchText.Checked := FClkActions[ActionIndex].FindControlOptions.MatchCriteria.WillMatchText;
-  frClickerActions.frClickerFindControl.chkMatchClassName.Checked := FClkActions[ActionIndex].FindControlOptions.MatchCriteria.WillMatchClassName;
-  frClickerActions.frClickerFindControl.chkMatchBitmapText.Checked := FClkActions[ActionIndex].FindControlOptions.MatchCriteria.WillMatchBitmapText;
-  frClickerActions.frClickerFindControl.chkMatchBitmapFiles.Checked := FClkActions[ActionIndex].FindControlOptions.MatchCriteria.WillMatchBitmapFiles;
-
-  if Integer(Ord(FClkActions[ActionIndex].FindControlOptions.MatchCriteria.SearchForControlMode)) = 255 then
-    frClickerActions.frClickerFindControl.rdgrpSearchForControlMode.ItemIndex := -1
-  else
-    frClickerActions.frClickerFindControl.rdgrpSearchForControlMode.ItemIndex := Integer(Ord(FClkActions[ActionIndex].FindControlOptions.MatchCriteria.SearchForControlMode));
-
-  frClickerActions.frClickerFindControl.UpdateMatchCriteriaPageIcons;
-
-  frClickerActions.frClickerFindControl.chkAllowToFail.Checked := FClkActions[ActionIndex].FindControlOptions.AllowToFail;
-  frClickerActions.frClickerFindControl.chkWaitForControlToGoAway.Checked := FClkActions[ActionIndex].FindControlOptions.WaitForControlToGoAway;
-
-  frClickerActions.frClickerFindControl.lbeMatchText.Text := FClkActions[ActionIndex].FindControlOptions.MatchText;
-  frClickerActions.frClickerFindControl.lbeMatchClassName.Text := FClkActions[ActionIndex].FindControlOptions.MatchClassName;
-  frClickerActions.frClickerFindControl.lbeMatchTextSeparator.Text := FClkActions[ActionIndex].FindControlOptions.MatchTextSeparator;
-  frClickerActions.frClickerFindControl.lbeMatchClassNameSeparator.Text := FClkActions[ActionIndex].FindControlOptions.MatchClassNameSeparator;
-  frClickerActions.frClickerFindControl.lbeMatchBitmapText.Text := frClickerActions.frClickerFindControl.lbeMatchText.Text;
 
   //the number of items from MatchBitmapText has to match the number of frames from FBMPTextFrames
   frClickerActions.frClickerFindControl.CreateBMPTextFrames(Length(FClkActions[ActionIndex].FindControlOptions.MatchBitmapText)); //do not use SetLength(frClickerActions.FBMPTextFrames, Length(FClkActions[ActionIndex].FindControlOptions.MatchBitmapText));
@@ -1064,73 +895,20 @@ begin
 
 
   frClickerActions.frClickerFindControl.lstMatchBitmapFiles.Items.Text := FClkActions[ActionIndex].FindControlOptions.MatchBitmapFiles;
-  frClickerActions.frClickerFindControl.SetBitmapFilesCount;
 
-  frClickerActions.frClickerFindControl.lbeColorError.Text := FClkActions[ActionIndex].FindControlOptions.ColorError;
-  frClickerActions.frClickerFindControl.lbeAllowedColorErrorCount.Text := FClkActions[ActionIndex].FindControlOptions.AllowedColorErrorCount;
-  frClickerActions.frClickerFindControl.cmbMatchBitmapTextSearchAlgorithm.ItemIndex := Ord(FClkActions[ActionIndex].FindControlOptions.MatchBitmapAlgorithm);
-  frClickerActions.frClickerFindControl.lbeMatchBitmapAlgorithmXMulOf.Text := IntToStr(FClkActions[ActionIndex].FindControlOptions.MatchBitmapAlgorithmSettings.XMultipleOf);
-  frClickerActions.frClickerFindControl.lbeMatchBitmapAlgorithmYMulOf.Text := IntToStr(FClkActions[ActionIndex].FindControlOptions.MatchBitmapAlgorithmSettings.YMultipleOf);
-  frClickerActions.frClickerFindControl.lbeMatchBitmapAlgorithmXOffset.Text := IntToStr(FClkActions[ActionIndex].FindControlOptions.MatchBitmapAlgorithmSettings.XOffset);
-  frClickerActions.frClickerFindControl.lbeMatchBitmapAlgorithmYOffset.Text := IntToStr(FClkActions[ActionIndex].FindControlOptions.MatchBitmapAlgorithmSettings.YOffset);
   frClickerActions.frClickerFindControl.UpdateBitmapAlgorithmSettings;
 
-  frClickerActions.frClickerFindControl.lbeSearchRectLeft.Text := FClkActions[ActionIndex].FindControlOptions.InitialRectange.Left;
-  frClickerActions.frClickerFindControl.lbeSearchRectTop.Text := FClkActions[ActionIndex].FindControlOptions.InitialRectange.Top;
-  frClickerActions.frClickerFindControl.lbeSearchRectRight.Text := FClkActions[ActionIndex].FindControlOptions.InitialRectange.Right;
-  frClickerActions.frClickerFindControl.lbeSearchRectBottom.Text := FClkActions[ActionIndex].FindControlOptions.InitialRectange.Bottom;
-  frClickerActions.frClickerFindControl.chkUseWholeScreenAsSearchArea.Checked := FClkActions[ActionIndex].FindControlOptions.UseWholeScreen;
-  frClickerActions.frClickerFindControl.lbeSearchRectLeftOffset.Text := FClkActions[ActionIndex].FindControlOptions.InitialRectange.LeftOffset;
-  frClickerActions.frClickerFindControl.lbeSearchRectTopOffset.Text := FClkActions[ActionIndex].FindControlOptions.InitialRectange.TopOffset;
-  frClickerActions.frClickerFindControl.lbeSearchRectRightOffset.Text := FClkActions[ActionIndex].FindControlOptions.InitialRectange.RightOffset;
-  frClickerActions.frClickerFindControl.lbeSearchRectBottomOffset.Text := FClkActions[ActionIndex].FindControlOptions.InitialRectange.BottomOffset;
-
-  frClickerActions.frClickerFindControl.chkSearchCachedLeftAndTopFirst.Checked := FClkActions[ActionIndex].FindControlOptions.StartSearchingWithCachedControl;
-  frClickerActions.frClickerFindControl.lbeFindCachedControlLeft.Text := FClkActions[ActionIndex].FindControlOptions.CachedControlLeft;
-  frClickerActions.frClickerFindControl.lbeFindCachedControlTop.Text := FClkActions[ActionIndex].FindControlOptions.CachedControlTop;
-
   frClickerActions.LoadListOfAvailableTemplates;
-  frClickerActions.lbeTemplateFileName.Text := FClkActions[ActionIndex].CallTemplateOptions.TemplateFileName;
 
   frClickerActions.ListOfCustomVariables := FastReplace_45ToReturn(FClkActions[ActionIndex].CallTemplateOptions.ListOfCustomVarsAndValues);
-  frClickerActions.chkCallOnlyIfContitionIsTrue.Checked := FClkActions[ActionIndex].CallTemplateOptions.CallOnlyIfCondition;
-  frClickerActions.lbeCallOnlyIfContitionVarName.Text := FClkActions[ActionIndex].CallTemplateOptions.CallOnlyIfConditionVarName;
-  frClickerActions.lbeCallOnlyIfContitionVarValue.Text := FClkActions[ActionIndex].CallTemplateOptions.CallOnlyIfConditionVarValue;
-  frClickerActions.lbeCallOnlyIfContitionVarName.Enabled := frClickerActions.chkCallOnlyIfContitionIsTrue.Checked;
-  frClickerActions.lbeCallOnlyIfContitionVarValue.Enabled := frClickerActions.chkCallOnlyIfContitionIsTrue.Checked;
-  frClickerActions.chkEvaluateVarsBeforeCalling.Checked := FClkActions[ActionIndex].CallTemplateOptions.EvaluateBeforeCalling;
-
-  frClickerActions.chkCallTemplateLoopEnabled.Checked := FClkActions[ActionIndex].CallTemplateOptions.CallTemplateLoop.Enabled;
-  frClickerActions.lbeCallTemplateLoopCounter.Text := FClkActions[ActionIndex].CallTemplateOptions.CallTemplateLoop.Counter;
-  frClickerActions.lbeCallTemplateLoopInitValue.Text := FClkActions[ActionIndex].CallTemplateOptions.CallTemplateLoop.InitValue;
-  frClickerActions.lbeCallTemplateLoopEndValue.Text := FClkActions[ActionIndex].CallTemplateOptions.CallTemplateLoop.EndValue;
-  frClickerActions.cmbCallTemplateLoopDirection.ItemIndex := Ord(FClkActions[ActionIndex].CallTemplateOptions.CallTemplateLoop.Direction);
-  frClickerActions.lbeCallTemplateLoopBreakCondition.Text := FClkActions[ActionIndex].CallTemplateOptions.CallTemplateLoop.BreakCondition; //uses the same format as TClkActionOptions.ActionCondition
-  frClickerActions.cmbCallTemplateLoopBreakPosition.ItemIndex := Ord(FClkActions[ActionIndex].CallTemplateOptions.CallTemplateLoop.EvalBreakPosition);
-
-  frClickerActions.lbeSleep.Text := FClkActions[ActionIndex].SleepOptions.Value;
-
-  frClickerActions.ListOfSetVars := FClkActions[ActionIndex].SetVarOptions;
-
-  frClickerActions.cmbWindowOperationsType.ItemIndex := Integer(FClkActions[ActionIndex].WindowOperationsOptions.Operation);
-  frClickerActions.lbeWindowOperationsX.Text := FClkActions[ActionIndex].WindowOperationsOptions.NewX;
-  frClickerActions.lbeWindowOperationsY.Text := FClkActions[ActionIndex].WindowOperationsOptions.NewY;
-  frClickerActions.lbeWindowOperationsWidth.Text := FClkActions[ActionIndex].WindowOperationsOptions.NewWidth;
-  frClickerActions.lbeWindowOperationsHeight.Text := FClkActions[ActionIndex].WindowOperationsOptions.NewHeight;
-  frClickerActions.chkWindowOperationsEnablePos.Checked := FClkActions[ActionIndex].WindowOperationsOptions.NewPositionEabled;
-  frClickerActions.chkWindowOperationsEnableSize.Checked := FClkActions[ActionIndex].WindowOperationsOptions.NewSizeEabled;
-  frClickerActions.lbeWindowOperationsX.Enabled := (frClickerActions.cmbWindowOperationsType.ItemIndex = Integer(Ord(woMoveResize))) and frClickerActions.chkWindowOperationsEnablePos.Checked;
-  frClickerActions.lbeWindowOperationsY.Enabled := (frClickerActions.cmbWindowOperationsType.ItemIndex = Integer(Ord(woMoveResize))) and frClickerActions.chkWindowOperationsEnablePos.Checked;
-  frClickerActions.lbeWindowOperationsWidth.Enabled := (frClickerActions.cmbWindowOperationsType.ItemIndex = Integer(Ord(woMoveResize))) and frClickerActions.chkWindowOperationsEnableSize.Checked;
-  frClickerActions.lbeWindowOperationsHeight.Enabled := (frClickerActions.cmbWindowOperationsType.ItemIndex = Integer(Ord(woMoveResize))) and frClickerActions.chkWindowOperationsEnableSize.Checked;
 
   frClickerActions.frClickerFindControl.UpdatePreviewIcons;
-  frClickerActions.frClickerFindControl.RepaintBitmapFilesVst;
 
   frClickerActions.UpdateControlWidthHeightLabels;
-  frClickerActions.frClickerFindControl.UpdateSearchAreaLabelsFromOffsetEditboxes;
+  frClickerActions.frClickerFindControl.UpdateSearchAreaLabelsFromKeysOnInitRect(FClkActions[ActionIndex].FindControlOptions.InitialRectange);
 
   frClickerActions.frClickerExecApp.memExecAppParams.Lines.Text := FClkActions[ActionIndex].ExecAppOptions.ListOfParams;
+  frClickerActions.frClickerSetVar.SetListOfSetVars(FClkActions[ActionIndex].SetVarOptions);
 
   /////the new content, instead of editboxes and checkboxes
   CopyActionContent(FClkActions[ActionIndex], frClickerActions.EditingAction^);
@@ -2173,13 +1951,6 @@ begin
   vstActions.RootNodeCount := Length(FClkActions);
   vstActions.Repaint;
 
-  try
-    frClickerActions.frClickerFindControl.SetSearchRectEnabledState;
-  except
-    on E: Exception do
-      MessageBox(Handle, PChar('Ex when setting search area: ' + E.Message), PChar(Caption), MB_ICONINFORMATION);
-  end;
-
   UpdateModifiedLabel;  //required for first loading, when Modified is still False
   StopGlowingUpdateButton; //required here, because LoadTemplate can be called from parent of frame
 end;
@@ -2726,42 +2497,24 @@ begin
   case CurrentAction of
     acClick:
     begin
-      if frClickerActions.cmbXClickReference.ItemIndex = -1 then
-      begin
-        MessageBox(Handle, 'No X Click Reference selected. Please select a reference option for X Click.', PChar(Application.Title), MB_ICONINFORMATION);
-        Exit;
-      end;
 
-      if frClickerActions.cmbYClickReference.ItemIndex = -1 then
-      begin
-        MessageBox(Handle, 'No Y Click Reference selected. Please select a reference option for Y Click.', PChar(Application.Title), MB_ICONINFORMATION);
-        Exit;
-      end;
     end;
 
     acFindControl:
-      if not (frClickerActions.frClickerFindControl.chkMatchText.Checked or
-              frClickerActions.frClickerFindControl.chkMatchClassName.Checked or
-              frClickerActions.frClickerFindControl.chkMatchBitmapText.Checked or
-              frClickerActions.frClickerFindControl.chkMatchBitmapFiles.Checked) then
+      if not (frClickerActions.EditingAction^.FindControlOptions.MatchCriteria.WillMatchText or
+              frClickerActions.EditingAction^.FindControlOptions.MatchCriteria.WillMatchClassName or
+              frClickerActions.EditingAction^.FindControlOptions.MatchCriteria.WillMatchBitmapText or
+              frClickerActions.EditingAction^.FindControlOptions.MatchCriteria.WillMatchBitmapFiles) then
       begin
         MessageBox(Handle, 'To find a control, at least one match criterion has to be checked.', PChar(Application.Title), MB_ICONINFORMATION);
         Exit;
       end;
 
     acSetControlText:
-      if frClickerActions.rdgrpSetTextControlType.ItemIndex = -1 then
-      begin
-        MessageBox(Handle, 'No control type selected. Please select a control type.', PChar(Application.Title), MB_ICONINFORMATION);
-        Exit;
-      end;
+      ;
 
     acExecApp:
-      if Trim(frClickerActions.lbeExecAppPath.Text) = '' then
-      begin
-        MessageBox(Handle, 'At least the path to the executable has to be set, in order to run the application.', PChar(Application.Title), MB_ICONINFORMATION);
-        Exit;
-      end;
+      ;
 
     else
     begin
@@ -2959,7 +2712,6 @@ begin
   InsertCallTemplateForActionReplacing(vstActions.RootNodeCount, DoOnGetTemplateOpenDialogFileName);
 
   vstActions.Repaint;
-  frClickerActions.frClickerFindControl.RepaintBitmapFilesVst;
 
   vstActions.ClearSelection;
   Application.ProcessMessages;
@@ -3141,8 +2893,6 @@ begin
   if Node <> nil then
     vstActions.ScrollIntoView(Node, False);
 
-  frClickerActions.frClickerFindControl.RepaintBitmapFilesVst;
-
   Modified := True;
   StopGlowingUpdateButton;
 end;
@@ -3197,7 +2947,6 @@ begin
   InsertCallTemplateForActionReplacing(AFirstSelectedIndex, ACallTemplateFileName);
 
   vstActions.Repaint;
-  frClickerActions.frClickerFindControl.RepaintBitmapFilesVst;
 
   vstActions.ClearSelection;
   Application.ProcessMessages;
@@ -3362,35 +3111,21 @@ begin
   case CurrentAction of
     acClick:
     begin
-      if frClickerActions.cmbXClickReference.ItemIndex = -1 then
-      begin
-        MessageBox(Handle, 'No X Click Reference selected. Please select a reference option for X Click.', PChar(Caption), MB_ICONINFORMATION);
-        Exit;
-      end;
 
-      if frClickerActions.cmbYClickReference.ItemIndex = -1 then
-      begin
-        MessageBox(Handle, 'No Y Click Reference selected. Please select a reference option for Y Click.', PChar(Caption), MB_ICONINFORMATION);
-        Exit;
-      end;
     end;
 
     acFindControl:
-      if not (frClickerActions.frClickerFindControl.chkMatchText.Checked or
-              frClickerActions.frClickerFindControl.chkMatchClassName.Checked or
-              frClickerActions.frClickerFindControl.chkMatchBitmapText.Checked or
-              frClickerActions.frClickerFindControl.chkMatchBitmapFiles.Checked) then
+      if not (frClickerActions.EditingAction^.FindControlOptions.MatchCriteria.WillMatchText or
+              frClickerActions.EditingAction^.FindControlOptions.MatchCriteria.WillMatchClassName or
+              frClickerActions.EditingAction^.FindControlOptions.MatchCriteria.WillMatchBitmapText or
+              frClickerActions.EditingAction^.FindControlOptions.MatchCriteria.WillMatchBitmapFiles) then
       begin
         MessageBox(Handle, 'To find a control, at least one match criterion has to be checked.', PChar(Caption), MB_ICONINFORMATION);
         Exit;
       end;
 
     acSetControlText:
-      if frClickerActions.rdgrpSetTextControlType.ItemIndex = -1 then
-      begin
-        MessageBox(Handle, 'No control type selected. Please select a control type.', PChar(Caption), MB_ICONINFORMATION);
-        Exit;
-      end;
+      ;
 
     else
     begin
@@ -3567,7 +3302,8 @@ begin
     n := Length(FClkActions);
     SetLength(FClkActions, n + 1);
 
-    UpdateActionsArrFromControls(n);
+    UpdateActionsArrFromControls(n); ///////////////////////////////// ToDo  replace this call with some default values
+    FClkActions[n].FindControlOptions.UseWholeScreen := True;
 
     FClkActions[n].ActionOptions.Action := TClkAction(Node^.Index);
     FClkActions[n].ActionOptions.ActionCondition := '';
@@ -3767,35 +3503,21 @@ begin
   case CurrentAction of
     acClick:
     begin
-      if frClickerActions.cmbXClickReference.ItemIndex = -1 then
-      begin
-        MessageBox(Handle, 'No X Click Reference selected. Please select a reference option for X Click.', PChar(Caption), MB_ICONINFORMATION);
-        Exit;
-      end;
 
-      if frClickerActions.cmbYClickReference.ItemIndex = -1 then
-      begin
-        MessageBox(Handle, 'No Y Click Reference selected. Please select a reference option for Y Click.', PChar(Caption), MB_ICONINFORMATION);
-        Exit;
-      end;
     end;
 
     acFindControl:
-      if not (frClickerActions.frClickerFindControl.chkMatchText.Checked or
-              frClickerActions.frClickerFindControl.chkMatchClassName.Checked or
-              frClickerActions.frClickerFindControl.chkMatchBitmapText.Checked or
-              frClickerActions.frClickerFindControl.chkMatchBitmapFiles.Checked) then
+      if not (frClickerActions.EditingAction^.FindControlOptions.MatchCriteria.WillMatchText or
+              frClickerActions.EditingAction^.FindControlOptions.MatchCriteria.WillMatchClassName or
+              frClickerActions.EditingAction^.FindControlOptions.MatchCriteria.WillMatchBitmapText or
+              frClickerActions.EditingAction^.FindControlOptions.MatchCriteria.WillMatchBitmapFiles) then
       begin
         MessageBox(Handle, 'To find a control, at least one match criterion has to be checked.', PChar(Caption), MB_ICONINFORMATION);
         Exit;
       end;
 
     acSetControlText:
-      if frClickerActions.rdgrpSetTextControlType.ItemIndex = -1 then
-      begin
-        MessageBox(Handle, 'No control type selected. Please select a control type.', PChar(Caption), MB_ICONINFORMATION);
-        Exit;
-      end;
+      ;
 
     else
     begin
@@ -4138,7 +3860,6 @@ begin
     end;
 
     vstActions.Repaint;
-    frClickerActions.frClickerFindControl.RepaintBitmapFilesVst;
     Modified := True;
     StopGlowingUpdateButton;
 
@@ -4330,18 +4051,6 @@ begin
                                 'F8 - Step Over' + #13#10 +
                                 'F9 - Continue All  /  Play All in debugging mode' + #13#10 +
                                 'Ctrl-Shift-F2 - Stop  (always enabled for certain actions)';
-end;
-
-
-function TfrClickerActionsArr.GetShowDeprecatedControls: Boolean;
-begin
-  Result := frClickerActions.ShowDeprecatedControls;
-end;
-
-
-procedure TfrClickerActionsArr.SetShowDeprecatedControls(Value: Boolean);
-begin
-  frClickerActions.ShowDeprecatedControls := Value;
 end;
 
 

@@ -143,8 +143,8 @@ object frClickerSetVar: TfrClickerSetVar
     ShowHint = True
   end
   object pmSetVars: TPopupMenu
-    Left = 620
-    Top = 241
+    Left = 560
+    Top = 216
     object MenuItem_AddSetVar: TMenuItem
       Caption = 'Add Variable'
       OnClick = MenuItem_AddSetVarClick
@@ -161,12 +161,12 @@ object frClickerSetVar: TfrClickerSetVar
     Enabled = False
     Interval = 1
     OnTimer = tmrEditSetVarsTimer
-    Left = 652
-    Top = 241
+    Left = 640
+    Top = 216
   end
   object imglstSetVar: TImageList
-    Left = 684
-    Top = 241
+    Left = 728
+    Top = 216
     Bitmap = {
       4C7A010000001000000010000000630000000000000078DAFBFFFF3FC37F2A60
       51868EFF304C888F2C0E93C3661E2E7BC81523248EEE2652CC459727D57E4AF4

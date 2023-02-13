@@ -15,7 +15,7 @@ object frClickerFindControl: TfrClickerFindControl
     Height = 250
     Top = 0
     Width = 877
-    ActivePage = TabSheetActionFindSubControlSearchArea
+    ActivePage = TabSheetActionFindSubControlBMPText
     Anchors = [akTop, akLeft, akRight, akBottom]
     Constraints.MinHeight = 201
     Constraints.MinWidth = 650
@@ -24,214 +24,23 @@ object frClickerFindControl: TfrClickerFindControl
     Images = imglstFindCriteria
     ParentFont = False
     ParentShowHint = False
-    TabIndex = 4
+    TabIndex = 1
     TabOrder = 0
     OnChange = PageControlMatchChange
-    object TabSheetActionFindSubControlCriteria: TTabSheet
-      Caption = 'Criteria'
-      ClientHeight = 175
-      ClientWidth = 869
-      ImageIndex = 2
-      object lblInfoFindSubControl: TLabel
-        Left = 3
-        Height = 13
-        Hint = 'The $Control_Left$, $Control_Top$, $Control_Width$, $Control_Height$, $Control_Right$, $Control_Bottom$ variables ar set with the subcontrol offset.'
-        Top = 101
-        Width = 447
-        Caption = 'When selecting FindSubControl action, only bitmaps can be matched (BMP Text or BMP Files).'
-        ParentShowHint = False
-        ShowHint = True
-      end
-      object lblInfoFindSubControl2: TLabel
-        Left = 3
-        Height = 13
-        Hint = 'The $Control_Left$, $Control_Top$, $Control_Width$, $Control_Height$, $Control_Right$, $Control_Bottom$ variables ar set with the subcontrol offset.'
-        Top = 120
-        Width = 346
-        Caption = 'A SubControl does not have a handle of its own, it is a part of a control.'
-        ParentShowHint = False
-        ShowHint = True
-      end
-      object lblInfoFindSubControl3: TLabel
-        Left = 3
-        Height = 13
-        Hint = 'The "Allowed Failed" response can be used for conditional execution (call action).'
-        Top = 139
-        Width = 440
-        Caption = 'When the action is allowed to fail and it fails, $LastAction_Status$ is set to "Allowed Failed".'
-        ParentShowHint = False
-        ShowHint = True
-      end
-      object chkMatchText: TCheckBox
-        Left = 3
-        Height = 19
-        Top = 0
-        Width = 74
-        Caption = 'Match Text'
-        OnClick = chkMatchTextClick
-        TabOrder = 0
-      end
-      object chkMatchBitmapText: TCheckBox
-        Left = 3
-        Height = 19
-        Top = 46
-        Width = 109
-        Caption = 'Match Bitmap Text'
-        OnClick = chkMatchBitmapTextClick
-        TabOrder = 1
-      end
-      object chkMatchBitmapFiles: TCheckBox
-        Left = 3
-        Height = 19
-        Top = 69
-        Width = 108
-        Caption = 'Match Bitmap Files'
-        OnClick = chkMatchBitmapFilesClick
-        TabOrder = 2
-      end
-      object chkMatchClassName: TCheckBox
-        Left = 3
-        Height = 19
-        Top = 23
-        Width = 107
-        Caption = 'Match Class Name'
-        OnClick = chkMatchClassNameClick
-        TabOrder = 3
-      end
-      object rdgrpSearchForControlMode: TRadioGroup
-        Left = 144
-        Height = 82
-        Top = 0
-        Width = 137
-        AutoFill = True
-        Caption = 'Search For Control Mode'
-        ChildSizing.LeftRightSpacing = 6
-        ChildSizing.EnlargeHorizontal = crsHomogenousChildResize
-        ChildSizing.EnlargeVertical = crsHomogenousChildResize
-        ChildSizing.ShrinkHorizontal = crsScaleChilds
-        ChildSizing.ShrinkVertical = crsScaleChilds
-        ChildSizing.Layout = cclLeftToRightThenTopToBottom
-        ChildSizing.ControlsPerLine = 1
-        ClientHeight = 64
-        ClientWidth = 133
-        ItemIndex = 0
-        Items.Strings = (
-          'Generate Grid (Slow)'
-          'Enumerate Windows'
-          'Find Window (Fast)'
-        )
-        OnClick = rdgrpSearchForControlModeClick
-        ParentShowHint = False
-        ShowHint = True
-        TabOrder = 4
-      end
-      object chkAllowToFail: TCheckBox
-        Left = 304
-        Height = 19
-        Hint = 'When checked, the execution flow does not stop if the searched (sub)control is not found.'
-        Top = 3
-        Width = 79
-        Caption = 'Allow To Fail'
-        OnClick = chkAllowToFailClick
-        ParentShowHint = False
-        ShowHint = True
-        TabOrder = 5
-      end
-      object chkWaitForControlToGoAway: TCheckBox
-        Left = 304
-        Height = 19
-        Hint = 'When checked, the action expects to find no control, using the current settings.'
-        Top = 24
-        Width = 160
-        Caption = 'Wait For Control To Go Away'
-        OnClick = chkWaitForControlToGoAwayClick
-        ParentShowHint = False
-        ShowHint = True
-        TabOrder = 6
-      end
-    end
     object TabSheetActionFindSubControlText: TTabSheet
       Caption = 'Text'
       ClientHeight = 224
       ClientWidth = 869
       ImageIndex = 2
-      object lbeMatchText: TLabeledEdit
-        Left = 3
-        Height = 21
-        Hint = 'Wildcards are available ("*"). Variable replacements are available. Used on matching text and BMP text.'#13#10#13#10'For controls, which can have different text values (e.g. a window displaying a different title), these values can be e.g. comma separated. In that case, the text separator is a comma.'#13#10'For example: a window can display "MyTitle" or "MyTitle (modified)". In that case, the "Match Text" editbox can contain "MyTitle,MyTitle (modified)", without quotes, by using the comma separator.'
-        Top = 24
-        Width = 197
-        EditLabel.Height = 13
-        EditLabel.Width = 197
-        EditLabel.Caption = 'Match Text'
-        ParentShowHint = False
-        ShowHint = True
-        TabOrder = 0
-        OnChange = lbeMatchTextChange
-      end
-      object lbeMatchClassName: TLabeledEdit
-        Left = 3
-        Height = 21
-        Hint = 'Wildcards are available ("*"). Variable replacements are available.'#13#10'There are applications which can have one or more of their windows, registered with class name, containing a randomly generated string.'
-        Top = 68
-        Width = 197
-        EditLabel.Height = 13
-        EditLabel.Width = 197
-        EditLabel.Caption = 'Match Class Name'
-        ParentShowHint = False
-        ShowHint = True
-        TabOrder = 1
-        OnChange = lbeMatchClassNameChange
-      end
-      object lbeMatchTextSeparator: TLabeledEdit
-        Left = 208
-        Height = 21
-        Hint = 'No replacements available.'
-        Top = 24
-        Width = 107
-        EditLabel.Height = 13
-        EditLabel.Width = 107
-        EditLabel.Caption = 'Match Text Separator'
-        ParentShowHint = False
-        ShowHint = True
-        TabOrder = 2
-        OnChange = lbeMatchTextSeparatorChange
-      end
-      object lbeMatchClassNameSeparator: TLabeledEdit
-        Left = 208
-        Height = 21
-        Hint = 'No replacements available.'
-        Top = 68
-        Width = 107
-        EditLabel.Height = 13
-        EditLabel.Width = 107
-        EditLabel.Caption = 'Match Class Separator'
-        ParentShowHint = False
-        ShowHint = True
-        TabOrder = 3
-        OnChange = lbeMatchClassNameSeparatorChange
-      end
-      object lblTextMatchingInfo: TLabel
-        Left = 3
-        Height = 13
-        Top = 132
-        Width = 133
-        Caption = 'Text matching enabled.'
-        Font.Color = clMaroon
-        Font.Height = -11
-        Font.Name = 'Tahoma'
-        Font.Style = [fsBold]
-        ParentFont = False
-      end
       object grpFindControlDetailsOnWindow: TGroupBox
         Left = 320
-        Height = 128
+        Height = 160
         Top = 8
         Width = 344
         Caption = 'Find control details on window'
-        ClientHeight = 110
+        ClientHeight = 142
         ClientWidth = 340
-        TabOrder = 4
+        TabOrder = 0
         object pnlDrag: TPanel
           Left = 8
           Height = 26
@@ -279,13 +88,13 @@ object frClickerFindControl: TfrClickerFindControl
           ReadOnly = True
           TabOrder = 2
         end
-        object chkAutoCopyValuesToMatchEditboxes: TCheckBox
+        object chkAutoCopyValuesToObjectInspector: TCheckBox
           Left = 8
           Height = 19
-          Hint = 'When checked, the contents of "Found control text" and "Found control class" editboxes, are copied to the "Match Text" and "Match Class Name" editboxes, after dragging the mouse cursor to a control.'
+          Hint = 'When checked, the contents of "Found control text" and "Found control class" editboxes, are copied to the "Match Text" and "Match Class Name" properties in Object Inspector, after dragging the mouse cursor to a control.'
           Top = 91
-          Width = 203
-          Caption = 'Autocopy values to "Match" editboxes'
+          Width = 197
+          Caption = 'Autocopy values to Object Inspector'
           Checked = True
           State = cbChecked
           TabOrder = 3
@@ -301,34 +110,34 @@ object frClickerFindControl: TfrClickerFindControl
           TabOrder = 4
           Text = 'Control info'
         end
-      end
-      object btnCopyFoundValues: TButton
-        Left = 3
-        Height = 25
-        Top = 92
-        Width = 180
-        Caption = 'Copy values from found control'
-        OnClick = btnCopyFoundValuesClick
-        TabOrder = 5
-      end
-      object spdbtnExtraCopyValueWindows: TSpeedButton
-        Left = 182
-        Height = 25
-        Top = 92
-        Width = 18
-        Font.Color = clWindowText
-        Glyph.Data = {
-          EA000000424DEA0000000000000036000000280000000B000000050000000100
-          180000000000B400000000000000000000000000000000000000FFFFFFFFFFFF
-          FFFFFFFFFFFFFFFFFF39841AFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF000000FFFF
-          FFFFFFFFFFFFFFFFFFFF39841A39841A39841AFFFFFFFFFFFFFFFFFFFFFFFF00
-          0000FFFFFFFFFFFFFFFFFF39841A39841A39841A39841A39841AFFFFFFFFFFFF
-          FFFFFF000000FFFFFFFFFFFF39841A39841A39841A39841A39841A39841A3984
-          1AFFFFFFFFFFFF000000FFFFFF39841A39841A39841A39841A39841A39841A39
-          841A39841A39841AFFFFFF000000
-        }
-        OnClick = spdbtnExtraCopyValueWindowsClick
-        ParentFont = False
+        object btnCopyFoundValues: TButton
+          Left = 8
+          Height = 25
+          Top = 112
+          Width = 180
+          Caption = 'Copy values from found control'
+          OnClick = btnCopyFoundValuesClick
+          TabOrder = 5
+        end
+        object spdbtnExtraCopyValueWindows: TSpeedButton
+          Left = 187
+          Height = 25
+          Top = 112
+          Width = 18
+          Font.Color = clWindowText
+          Glyph.Data = {
+            EA000000424DEA0000000000000036000000280000000B000000050000000100
+            180000000000B400000000000000000000000000000000000000FFFFFFFFFFFF
+            FFFFFFFFFFFFFFFFFF39841AFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF000000FFFF
+            FFFFFFFFFFFFFFFFFFFF39841A39841A39841AFFFFFFFFFFFFFFFFFFFFFFFF00
+            0000FFFFFFFFFFFFFFFFFF39841A39841A39841A39841A39841AFFFFFFFFFFFF
+            FFFFFF000000FFFFFFFFFFFF39841A39841A39841A39841A39841A39841A3984
+            1AFFFFFFFFFFFF000000FFFFFF39841A39841A39841A39841A39841A39841A39
+            841A39841A39841AFFFFFF000000
+          }
+          OnClick = spdbtnExtraCopyValueWindowsClick
+          ParentFont = False
+        end
       end
     end
     object TabSheetActionFindSubControlBMPText: TTabSheet
@@ -336,47 +145,6 @@ object frClickerFindControl: TfrClickerFindControl
       ClientHeight = 224
       ClientWidth = 869
       ImageIndex = 2
-      object lblBMPTextMatchingInfo: TLabel
-        Left = 446
-        Height = 13
-        Top = 144
-        Width = 158
-        Caption = 'BMP text matching enabled.'
-        Font.Color = clMaroon
-        Font.Height = -11
-        Font.Name = 'Tahoma'
-        Font.Style = [fsBold]
-        ParentFont = False
-      end
-      object btnAddNewFontProfile: TButton
-        Left = 446
-        Height = 25
-        Top = 48
-        Width = 139
-        Caption = 'Add font profile'
-        OnClick = btnAddNewFontProfileClick
-        TabOrder = 1
-      end
-      object btnRemoveFontProfile: TButton
-        Left = 446
-        Height = 25
-        Top = 110
-        Width = 139
-        Caption = 'Remove font profile'
-        OnClick = btnRemoveFontProfileClick
-        TabOrder = 2
-      end
-      object lbeCurrentFontProfileName: TLabeledEdit
-        Left = 446
-        Height = 21
-        Top = 19
-        Width = 139
-        EditLabel.Height = 13
-        EditLabel.Width = 139
-        EditLabel.Caption = 'Font profile name'
-        TabOrder = 3
-        OnEditingDone = lbeCurrentFontProfileNameEditingDone
-      end
       object tabctrlBMPText: TTabControl
         Left = 0
         Height = 223
@@ -386,31 +154,7 @@ object frClickerFindControl: TfrClickerFindControl
         Anchors = [akTop, akLeft, akBottom]
         Constraints.MinHeight = 174
         Constraints.MinWidth = 437
-        TabOrder = 4
-      end
-      object lbeMatchBitmapText: TLabeledEdit
-        Left = 4
-        Height = 21
-        Hint = 'Please edit from "Text" tab in order to update an action.'#13#10'This editbox is for text preview only.'
-        Top = 39
-        Width = 158
-        Color = 13487565
-        EditLabel.Height = 13
-        EditLabel.Width = 158
-        EditLabel.Caption = 'Bitmap Text'
-        ParentShowHint = False
-        ShowHint = True
         TabOrder = 0
-        OnKeyUp = lbeMatchBitmapTextKeyUp
-      end
-      object bitbtnUpdateFontProfile: TBitBtn
-        Left = 446
-        Height = 25
-        Top = 80
-        Width = 139
-        Caption = 'Update name'
-        OnClick = bitbtnUpdateFontProfileClick
-        TabOrder = 5
       end
       object chkDisplayCroppingLines: TCheckBox
         Left = 446
@@ -419,103 +163,7 @@ object frClickerFindControl: TfrClickerFindControl
         Width = 122
         Caption = 'Display cropping lines'
         OnChange = chkDisplayCroppingLinesChange
-        TabOrder = 6
-      end
-    end
-    object TabSheetActionFindSubControlBMPFiles: TTabSheet
-      Caption = 'BMP Files'
-      ClientHeight = 224
-      ClientWidth = 869
-      ImageIndex = 2
-      object pnlvstMatchBitmapFiles: TPanel
-        Left = 3
-        Height = 120
-        Top = 3
-        Width = 396
-        Caption = 'pnlvstMatchBitmapFiles'
-        Color = clYellow
-        ParentColor = False
-        TabOrder = 7
-      end
-      object lbeMatchBitmapFile: TLabeledEdit
-        Left = 64
-        Height = 21
-        Top = 129
-        Width = 385
-        EditLabel.Height = 13
-        EditLabel.Width = 51
-        EditLabel.Caption = 'Bitmap File'
-        LabelPosition = lpLeft
-        TabOrder = 0
-      end
-      object btnBrowseBitmap: TButton
-        Left = 455
-        Height = 21
-        Hint = 'Browse Bitmap'
-        Top = 129
-        Width = 26
-        Caption = '...'
-        OnClick = btnBrowseBitmapClick
-        ParentShowHint = False
         TabOrder = 1
-      end
-      object btnAddBmpFile: TButton
-        Left = 405
-        Height = 25
-        Top = 5
-        Width = 75
-        Caption = 'Add...'
-        OnClick = btnAddBmpFileClick
-        TabOrder = 2
-      end
-      object btnUpdateBmpFile: TButton
-        Left = 405
-        Height = 25
-        Top = 36
-        Width = 75
-        Caption = 'Update'
-        OnClick = btnUpdateBmpFileClick
-        TabOrder = 3
-      end
-      object btnRemoveBmpFile: TButton
-        Left = 405
-        Height = 25
-        Top = 67
-        Width = 75
-        Caption = 'Remove...'
-        OnClick = btnRemoveBmpFileClick
-        TabOrder = 4
-      end
-      object lstMatchBitmapFiles: TListBox
-        Left = 88
-        Height = 47
-        Top = 38
-        Width = 49
-        Color = clSkyBlue
-        ItemHeight = 0
-        TabOrder = 5
-        Visible = False
-      end
-      object btnClear: TButton
-        Left = 405
-        Height = 25
-        Top = 98
-        Width = 76
-        Caption = 'Clear...'
-        OnClick = btnClearClick
-        TabOrder = 6
-      end
-      object lblBMPFilesMatchingInfo: TLabel
-        Left = 3
-        Height = 13
-        Top = 149
-        Width = 131
-        Caption = 'BMP matching enabled.'
-        Font.Color = clMaroon
-        Font.Height = -11
-        Font.Name = 'Tahoma'
-        Font.Style = [fsBold]
-        ParentFont = False
       end
     end
     object TabSheetActionFindSubControlSearchArea: TTabSheet
@@ -524,174 +172,22 @@ object frClickerFindControl: TfrClickerFindControl
       ClientWidth = 869
       ImageIndex = 2
       ParentShowHint = False
+      object lstMatchBitmapFiles: TListBox
+        Left = 728
+        Height = 34
+        Top = 4
+        Width = 33
+        Color = clSkyBlue
+        ItemHeight = 0
+        TabOrder = 3
+        Visible = False
+      end
       object lblInitRectOffsetsInfo: TLabel
         Left = 3
         Height = 13
         Top = 115
         Width = 264
         Caption = 'Offsets can be used to limit or extend the search area.'
-      end
-      object lbeSearchRectTop: TLabeledEdit
-        Left = 88
-        Height = 21
-        Hint = 'Top edge of the search area. Variable replacements are available.'
-        Top = 15
-        Width = 80
-        EditLabel.Height = 13
-        EditLabel.Width = 80
-        EditLabel.Caption = 'Top Edge'
-        Enabled = False
-        ParentShowHint = False
-        PopupMenu = pmStandardControlRefVars
-        ShowHint = True
-        TabOrder = 0
-        Text = '$Control_Top$'
-        OnChange = lbeSearchRectTopChange
-        OnMouseEnter = lbeSearchRectTopMouseEnter
-        OnMouseUp = lbeSearchRectTopMouseUp
-      end
-      object lbeSearchRectRight: TLabeledEdit
-        Left = 172
-        Height = 21
-        Hint = 'Right edge of the search area. Variable replacements are available.'
-        Top = 15
-        Width = 86
-        EditLabel.Height = 13
-        EditLabel.Width = 86
-        EditLabel.Caption = 'Right Edge'
-        Enabled = False
-        ParentShowHint = False
-        PopupMenu = pmStandardControlRefVars
-        ShowHint = True
-        TabOrder = 1
-        Text = '$Control_Right$'
-        OnChange = lbeSearchRectRightChange
-        OnMouseEnter = lbeSearchRectRightMouseEnter
-        OnMouseUp = lbeSearchRectRightMouseUp
-      end
-      object lbeSearchRectLeft: TLabeledEdit
-        Left = 3
-        Height = 21
-        Hint = 'Left edge of the search area. Variable replacements are available.'
-        Top = 15
-        Width = 80
-        EditLabel.Height = 13
-        EditLabel.Width = 80
-        EditLabel.Caption = 'Left Edge'
-        Enabled = False
-        ParentShowHint = False
-        PopupMenu = pmStandardControlRefVars
-        ShowHint = True
-        TabOrder = 2
-        Text = '$Control_Left$'
-        OnChange = lbeSearchRectLeftChange
-        OnMouseEnter = lbeSearchRectLeftMouseEnter
-        OnMouseUp = lbeSearchRectLeftMouseUp
-      end
-      object lbeSearchRectBottom: TLabeledEdit
-        Left = 262
-        Height = 21
-        Hint = 'Bottom edge of the search area. Variable replacements are available.'
-        Top = 15
-        Width = 94
-        EditLabel.Height = 13
-        EditLabel.Width = 94
-        EditLabel.Caption = 'Bottom Edge'
-        Enabled = False
-        ParentShowHint = False
-        PopupMenu = pmStandardControlRefVars
-        ShowHint = True
-        TabOrder = 3
-        Text = '$Control_Bottom$'
-        OnChange = lbeSearchRectBottomChange
-        OnMouseEnter = lbeSearchRectBottomMouseEnter
-        OnMouseUp = lbeSearchRectBottomMouseUp
-      end
-      object chkUseWholeScreenAsSearchArea: TCheckBox
-        Left = 4
-        Height = 19
-        Hint = 'Use the whole screen as search area, if checked. Use the current control as search area, if not checked.'#13#10'The search area is modified by offsets.'
-        Top = 42
-        Width = 123
-        Caption = 'Use the whole screen'
-        Checked = True
-        OnClick = chkUseWholeScreenAsSearchAreaClick
-        ParentShowHint = False
-        ShowHint = True
-        State = cbChecked
-        TabOrder = 4
-      end
-      object lbeSearchRectLeftOffset: TLabeledEdit
-        Left = 4
-        Height = 21
-        Hint = 'Offset for the left edge of the search area. Variable replacements are available.'#13#10'Use Ctrl+MouseLeft drag (up/down) to increase or decrease the current value.'#13#10'Hold Shift while using Ctrl+MouseLeft, to update the right offset value at the same time.'
-        Top = 89
-        Width = 80
-        EditLabel.Height = 13
-        EditLabel.Width = 80
-        EditLabel.Caption = 'Left Offset'
-        ParentShowHint = False
-        ShowHint = True
-        TabOrder = 5
-        Text = '0'
-        OnChange = lbeSearchRectLeftOffsetChange
-        OnKeyUp = lbeSearchRectLeftOffsetKeyUp
-        OnMouseDown = lbeSearchRectLeftOffsetMouseDown
-        OnMouseMove = lbeSearchRectLeftOffsetMouseMove
-      end
-      object lbeSearchRectTopOffset: TLabeledEdit
-        Left = 88
-        Height = 21
-        Hint = 'Offset for the top edge of the search area. Variable replacements are available.'#13#10'Use Ctrl+MouseLeft drag (up/down) to increase or decrease the current value.'#13#10'Hold Shift while using Ctrl+MouseLeft, to update the bottom offset value at the same time.'
-        Top = 89
-        Width = 80
-        EditLabel.Height = 13
-        EditLabel.Width = 80
-        EditLabel.Caption = 'Top Offset'
-        ParentShowHint = False
-        ShowHint = True
-        TabOrder = 6
-        Text = '0'
-        OnChange = lbeSearchRectTopOffsetChange
-        OnKeyUp = lbeSearchRectTopOffsetKeyUp
-        OnMouseDown = lbeSearchRectTopOffsetMouseDown
-        OnMouseMove = lbeSearchRectTopOffsetMouseMove
-      end
-      object lbeSearchRectRightOffset: TLabeledEdit
-        Left = 171
-        Height = 21
-        Hint = 'Offset for the right edge of the search area. Variable replacements are available.'#13#10'Use Ctrl+MouseLeft drag (up/down) to increase or decrease the current value.'#13#10'Hold Shift while using Ctrl+MouseLeft, to update the left offset value at the same time.'
-        Top = 89
-        Width = 86
-        EditLabel.Height = 13
-        EditLabel.Width = 86
-        EditLabel.Caption = 'Right Offset'
-        ParentShowHint = False
-        ShowHint = True
-        TabOrder = 7
-        Text = '0'
-        OnChange = lbeSearchRectRightOffsetChange
-        OnKeyUp = lbeSearchRectRightOffsetKeyUp
-        OnMouseDown = lbeSearchRectRightOffsetMouseDown
-        OnMouseMove = lbeSearchRectRightOffsetMouseMove
-      end
-      object lbeSearchRectBottomOffset: TLabeledEdit
-        Left = 262
-        Height = 21
-        Hint = 'Offset for the bottom edge of the search area. Variable replacements are available.'#13#10'Use Ctrl+MouseLeft drag (up/down) to increase or decrease the current value.'#13#10'Hold Shift while using Ctrl+MouseLeft, to update the top offset value at the same time.'
-        Top = 89
-        Width = 94
-        EditLabel.Height = 13
-        EditLabel.Width = 94
-        EditLabel.Caption = 'Bottom Offset'
-        ParentShowHint = False
-        ShowHint = True
-        TabOrder = 8
-        Text = '0'
-        OnChange = lbeSearchRectBottomOffsetChange
-        OnKeyUp = lbeSearchRectBottomOffsetKeyUp
-        OnMouseDown = lbeSearchRectBottomOffsetMouseDown
-        OnMouseMove = lbeSearchRectBottomOffsetMouseMove
       end
       object btnDisplaySearchAreaDebuggingImage: TButton
         Left = 368
@@ -701,7 +197,7 @@ object frClickerFindControl: TfrClickerFindControl
         Width = 105
         Caption = 'Display dbg img'
         OnClick = btnDisplaySearchAreaDebuggingImageClick
-        TabOrder = 9
+        TabOrder = 0
       end
       object spdbtnDisplaySearchAreaDbgImgMenu: TSpeedButton
         Left = 472
@@ -737,7 +233,7 @@ object frClickerFindControl: TfrClickerFindControl
         ParentShowHint = False
         ShowHint = True
         State = cbChecked
-        TabOrder = 10
+        TabOrder = 1
       end
       object chkShowBMPTextDbgImg: TCheckBox
         Left = 282
@@ -752,7 +248,7 @@ object frClickerFindControl: TfrClickerFindControl
         ParentShowHint = False
         ShowHint = True
         State = cbChecked
-        TabOrder = 11
+        TabOrder = 2
       end
       object lblReservedSpaceForDbgImg: TLabel
         Left = 368
@@ -772,16 +268,6 @@ object frClickerFindControl: TfrClickerFindControl
         Top = 42
         Width = 16
         Caption = '0:0'
-      end
-      object lblSearchAreaValidValuesInfo: TLabel
-        Left = 3
-        Height = 13
-        Hint = 'When setting the search area and the offset values, make sure the previous action is the last executed action.'#13#10'Also it has to be successfully executed. Otherwise, the reference values will be wrong.'
-        Top = 156
-        Width = 349
-        Caption = 'The above values should be valid before executing the action, not after.'
-        ParentShowHint = False
-        ShowHint = True
       end
       object imgUpdateLeftTopOffsets: TImage
         Left = 376
@@ -995,240 +481,47 @@ object frClickerFindControl: TfrClickerFindControl
         }
         Visible = False
       end
-    end
-    object TabSheetActionFindSubControlBMPSettings: TTabSheet
-      Caption = 'Text/BMP Settings'
-      ClientHeight = 224
-      ClientWidth = 869
-      ImageIndex = 2
-      ParentShowHint = False
-      ShowHint = True
-      object chkSearchCachedLeftAndTopFirst: TCheckBox
-        Left = 240
+      object chkShowGridOnBMPPreview: TCheckBox
+        Left = 596
         Height = 19
-        Hint = 'When checked, the control is checked at the specified cached $My_Control_Left$ and $My_Control_Top$ var replacements, before using the search grid.'#13#10'In order to cache the control coordinates, please add a SetVar action after this one, by assigning:'#13#10'$My_Control_Left$ to $Control_Left$'#13#10'and'#13#10'$My_Control_Top$ to $Control_Top$'#13#10'where $My_Control_Left$ and $My_Control_Top$ are the cached values. The "Eval before" checkboxes have to be set.'#13#10'Each Find(Sub)Control action, which uses caching, will have to use its own set of $My_Control_Left$ and $My_Control_Top$ vars.'#13#10'The cached values are global coordinates, so they will become invalid even for a subcontrol if the parent window is moved.'
-        Top = 21
-        Width = 158
-        Caption = 'Search cached Left/Top vars'
-        OnClick = chkSearchCachedLeftAndTopFirstClick
-        ParentShowHint = False
-        ShowHint = True
-        TabOrder = 9
-      end
-      object lblMatchBitmapTextSearchAlgorithm: TLabel
-        Left = 110
-        Height = 13
-        Top = 3
-        Width = 170
-        Caption = 'Algorithm (used on FindSubControl)'
-      end
-      object lbeColorError: TLabeledEdit
-        Left = 3
-        Height = 21
-        Hint = 'When matching bitmaps, which contain antialiasing pixels (see smooth text), some of those pixels will not match. The "Color Error" represents the difference between the color values for the two compared pixels, for each RGB channel. The "Color Error Count" is the allowed number of mismatching pixels. Variable replacements are available.'#13#10'If at least one of the three color channels (R, G, B) mismatches by at least ColorError, it counts as an error point.'
+        Hint = 'This will not be saved in project.'
         Top = 19
-        Width = 94
-        EditLabel.Height = 13
-        EditLabel.Width = 94
-        EditLabel.Caption = 'Color Error'
-        ParentShowHint = False
-        ShowHint = True
-        TabOrder = 0
-        Text = '0'
-        OnChange = lbeColorErrorChange
-      end
-      object lbeAllowedColorErrorCount: TLabeledEdit
-        Left = 3
-        Height = 21
-        Hint = 'When matching bitmaps, which contain antialiasing pixels (see smooth text), some of those pixels will not match. The "Color Error" represents the difference between the color values for the two compared pixels, for each RGB channel. The "Color Error Count" is the allowed number of mismatching pixels. Variable replacements are available.'
-        Top = 59
-        Width = 94
-        EditLabel.Height = 13
-        EditLabel.Width = 94
-        EditLabel.Caption = 'Color Error Count'
-        ParentShowHint = False
-        ShowHint = True
-        TabOrder = 1
-        Text = '0'
-        OnChange = lbeAllowedColorErrorCountChange
-      end
-      object cmbMatchBitmapTextSearchAlgorithm: TComboBox
-        Left = 110
-        Height = 22
-        Top = 19
-        Width = 120
-        ItemHeight = 16
-        ItemIndex = 0
-        Items.Strings = (
-          'Brute Force'
-          'X and Y are multiple of a value and use offsets'
-        )
-        OnChange = cmbMatchBitmapTextSearchAlgorithmChange
-        OnCloseUp = cmbMatchBitmapTextSearchAlgorithmCloseUp
-        OnDropDown = cmbMatchBitmapTextSearchAlgorithmDropDown
-        Style = csOwnerDrawFixed
-        TabOrder = 2
-        Text = 'Brute Force'
-      end
-      object lbeMatchBitmapAlgorithmXMulOf: TLabeledEdit
-        Left = 110
-        Height = 21
-        Top = 59
-        Width = 63
-        EditLabel.Height = 13
-        EditLabel.Width = 63
-        EditLabel.Caption = 'X Multiple Of'
-        Enabled = False
-        TabOrder = 3
-        OnChange = lbeMatchBitmapAlgorithmXMulOfChange
-      end
-      object lbeMatchBitmapAlgorithmXOffset: TLabeledEdit
-        Left = 179
-        Height = 21
-        Top = 59
-        Width = 51
-        EditLabel.Height = 13
-        EditLabel.Width = 51
-        EditLabel.Caption = 'X Offset'
-        Enabled = False
+        Width = 67
+        Caption = 'Show grid'
+        OnChange = chkShowGridOnBMPPreviewChange
         TabOrder = 4
-        OnChange = lbeMatchBitmapAlgorithmXOffsetChange
       end
-      object lbeMatchBitmapAlgorithmYMulOf: TLabeledEdit
-        Left = 110
-        Height = 21
-        Top = 99
-        Width = 63
-        EditLabel.Height = 13
-        EditLabel.Width = 63
-        EditLabel.Caption = 'Y Multiple Of'
-        Enabled = False
-        TabOrder = 5
-        OnChange = lbeMatchBitmapAlgorithmYMulOfChange
-      end
-      object lbeMatchBitmapAlgorithmYOffset: TLabeledEdit
-        Left = 179
-        Height = 21
-        Top = 99
-        Width = 51
-        EditLabel.Height = 13
-        EditLabel.Width = 51
-        EditLabel.Caption = 'Y Offset'
-        Enabled = False
-        TabOrder = 6
-        OnChange = lbeMatchBitmapAlgorithmYOffsetChange
+      object lblSearchAreaValidValuesInfo: TLabel
+        Left = 3
+        Height = 13
+        Hint = 'When setting the search area and the offset values, make sure the previous action is the last executed action.'#13#10'Also it has to be successfully executed. Otherwise, the reference values will be wrong.'
+        Top = 156
+        Width = 349
+        Caption = 'The above values should be valid before executing the action, not after.'
+        ParentShowHint = False
+        ShowHint = True
       end
       object lblBMPSettingsInfo: TLabel
         Left = 3
         Height = 13
-        Top = 131
+        Top = 175
         Width = 177
         Caption = 'Used for "BMP Text" and "BMP Files".'
       end
       object lblSearchInfo: TLabel
         Left = 3
         Height = 13
-        Top = 147
+        Top = 191
         Width = 254
         Caption = 'The bitmap searching algorithm stops on error count.'
-      end
-      object lbeFindCachedControlLeft: TLabeledEdit
-        Left = 240
-        Height = 21
-        Top = 59
-        Width = 152
-        EditLabel.Height = 13
-        EditLabel.Width = 152
-        EditLabel.Caption = 'Cached $Control_Left$'
-        Enabled = False
-        TabOrder = 7
-        OnChange = lbeFindCachedControlLeftChange
-      end
-      object lbeFindCachedControlTop: TLabeledEdit
-        Left = 240
-        Height = 21
-        Top = 99
-        Width = 152
-        EditLabel.Height = 13
-        EditLabel.Width = 152
-        EditLabel.Caption = 'Cached $Control_Top$'
-        Enabled = False
-        TabOrder = 8
-        OnChange = lbeFindCachedControlTopChange
       end
       object lblCachingInfo: TLabel
         Left = 3
         Height = 13
         Hint = 'Using caching on multpile font profiles may indeed be faster than without it, but for every cache miss, the search defaults to the selected algorithm.'
-        Top = 161
+        Top = 205
         Width = 379
         Caption = 'Caching is more effective when searching for controls with a single font profile.'
-      end
-      object chkShowGridOnBMPPreview: TCheckBox
-        Left = 3
-        Height = 19
-        Hint = 'This will not be saved in project.'
-        Top = 101
-        Width = 67
-        Caption = 'Show grid'
-        OnChange = chkShowGridOnBMPPreviewChange
-        TabOrder = 10
-      end
-      object updownXMulOf: TUpDown
-        Left = 155
-        Height = 19
-        Top = 60
-        Width = 17
-        Enabled = False
-        Max = 1000
-        Min = 0
-        OnChangingEx = updownXMulOfChangingEx
-        ParentColor = False
-        Position = 0
-        TabOrder = 11
-        Flat = True
-      end
-      object updownYMulOf: TUpDown
-        Left = 155
-        Height = 19
-        Top = 100
-        Width = 17
-        Enabled = False
-        Max = 1000
-        Min = 0
-        OnChangingEx = updownYMulOfChangingEx
-        ParentColor = False
-        Position = 0
-        TabOrder = 12
-        Flat = True
-      end
-      object updownXOffset: TUpDown
-        Left = 212
-        Height = 19
-        Top = 60
-        Width = 17
-        Enabled = False
-        Max = 1000
-        Min = -1000
-        OnChangingEx = updownXOffsetChangingEx
-        ParentColor = False
-        Position = 0
-        TabOrder = 13
-        Flat = True
-      end
-      object updownYOffset: TUpDown
-        Left = 212
-        Height = 19
-        Top = 100
-        Width = 17
-        Enabled = False
-        Max = 1000
-        Min = -1000
-        OnChangingEx = updownYOffsetChangingEx
-        ParentColor = False
-        Position = 0
-        TabOrder = 14
-        Flat = True
       end
     end
   end

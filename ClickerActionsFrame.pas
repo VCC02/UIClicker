@@ -33,59 +33,30 @@ interface
 uses
   Windows, SysUtils, Variants, Classes, Graphics, Controls, Forms, Dialogs,
   VirtualTrees, ExtCtrls, StdCtrls, ComCtrls, ImgList, Buttons, Grids, ValEdit,
-  Menus, ClickerUtils, ClickerConditionEditorFrame, ClickerFindControlFrame,
-  ClickerExecAppFrame, ClickerSetVarFrame, Types,
-  InMemFileSystem, ObjectInspectorFrame;
+  Menus, ClickerUtils, ClickerConditionEditorFrame,
+  ClickerFindControlFrame, ClickerExecAppFrame, ClickerSetVarFrame,
+  ClickerCallTemplateFrame, ClickerSleepFrame,
+  Types, InMemFileSystem, ObjectInspectorFrame;
 
 type
   { TfrClickerActions }
 
   TfrClickerActions = class(TFrame)
-    btnBrowseOtherTemplates: TButton;
-    btnCopyOffsetsFromMain: TButton;
-    btnSetFromControlLeftAndTop: TButton;
-    btnSetFromControlWidthAndHeight: TButton;
-    btnBrowseCallTemplateLoopBreakCondition: TButton;
-    chkCallTemplateLoopEnabled: TCheckBox;
-    chkNoConsole: TCheckBox;
-    chkWindowOperationsEnablePos: TCheckBox;
-    chkMoveWithoutClick: TCheckBox;
-    chkLeaveMouse: TCheckBox;
-    chkWindowOperationsEnableSize: TCheckBox;
-    cmbCallTemplateLoopBreakPosition: TComboBox;
-    cmbClickType: TComboBox;
-    cmbUseInheritHandles: TComboBox;
-    cmbWindowOperationsType: TComboBox;
-    cmbCallTemplateLoopDirection: TComboBox;
-    grpCallTemplateLoop: TGroupBox;
-    imglstSetVar: TImageList;
-    lblFeatureInWork: TLabel;
-    lbeCallTemplateLoopBreakCondition: TLabeledEdit;
-    lblCallTemplateLoopDirection: TLabel;
-    lbeCallTemplateLoopCounter: TLabeledEdit;
-    lbeCallTemplateLoopInitValue: TLabeledEdit;
-    lbeCallTemplateLoopEndValue: TLabeledEdit;
-    lbeWindowOperationsX: TLabeledEdit;
-    lbeWindowOperationsY: TLabeledEdit;
-    lbeWindowOperationsWidth: TLabeledEdit;
-    lbeWindowOperationsHeight: TLabeledEdit;
-    lblCallTemplateLoopBreakPosition: TLabel;
+    imglstWindowOperationsProperties: TImageList;
+    imglstSleepProperties: TImageList;
+    imglstExecAppProperties: TImageList;
+    imglstSetTextProperties: TImageList;
+    imglstFindControlProperties: TImageList;
+    imglstActions16: TImageList;
+    imglstClickProperties: TImageList;
+    imglstCallTemplateProperties: TImageList;
+    imglstSetVarProperties: TImageList;
     lblFeatureInWork1: TLabel;
-    lblSetTextInfo: TLabel;
-    lblWindowOperation: TLabel;
-    lblAvailableFunctions: TLabel;
-    lblUseInheritHandles: TLabel;
-    lbeExecAppStdIn: TLabeledEdit;
-    lbeExecAppCurrentDir: TLabeledEdit;
     lblMouseOnExecDbgImgBB: TLabel;
     lblMouseOnExecDbgImgGG: TLabel;
     lblMouseOnExecDbgImgRR: TLabel;
-    lblSetVarToHttpInfo2: TLabel;
-    lblClickType: TLabel;
-    lblSetVarToHttpInfo: TLabel;
-    lbeTemplateFileName: TLabeledEdit;
-    lblSetVarToHttpInfo1: TLabel;
-    memAvailableFunctions: TMemo;
+    MenuItem_SetFromControlWidthAndHeight: TMenuItem;
+    MenuItem_SetFromControlLeftAndTop: TMenuItem;
     MenuItem_AddFilesToPropertyList: TMenuItem;
     MenuItem_AddLastActionStatusEqualsSuccessful: TMenuItem;
     MenuItem_AddLastActionStatusEqualsAllowedFailed: TMenuItem;
@@ -130,10 +101,9 @@ type
     pnlCover: TPanel;
     pnlExtra: TPanel;
     pmStandardColorVariables: TPopupMenu;
-    pmSetVars: TPopupMenu;
     pnlActionConditions: TPanel;
     pnlvstOI: TPanel;
-    spdbtnBrowseLocalTemplates: TSpeedButton;
+    pmWindowOperationsEditors: TPopupMenu;
     TabSheetOI: TTabSheet;
     TabSheetActionWindowOperations: TTabSheet;
     TabSheetActionFindControl: TTabSheet;
@@ -143,49 +113,20 @@ type
     TabSheetActionExecApp: TTabSheet;
     TabSheetActionFindSubControl: TTabSheet;
     TabSheetActionSetText: TTabSheet;
-    cmbXClickReference: TComboBox;
-    cmbYClickReference: TComboBox;
-    lbeClickXOffset: TLabeledEdit;
-    lbeClickYOffset: TLabeledEdit;
-    lblXClickReference: TLabel;
-    lblYClickReference: TLabel;
-    lbeSetNewText: TLabeledEdit;
-    rdgrpSetTextControlType: TRadioGroup;
-    lblInfoSetText: TLabel;
     TabSheetActionCall: TTabSheet;
-    rdgrpMouseButton: TRadioGroup;
-    chkClickWithCtrl: TCheckBox;
-    chkClickWithAlt: TCheckBox;
-    chkClickWithShift: TCheckBox;
-    chkClickWithDoubleClick: TCheckBox;
     pmCommonTimeouts: TPopupMenu;
     N10001: TMenuItem;
     N100001: TMenuItem;
     N01: TMenuItem;
     N300001: TMenuItem;
     tmrReloadOIContent: TTimer;
-    tmrEditCustomVars: TTimer;
-    tmrEditSetVars: TTimer;
-    vallstCustomVariables: TValueListEditor;
-    lblCustomUserVarsBeforeCall: TLabel;
-    pmCustomVars: TPopupMenu;
     AddCustomVarRow1: TMenuItem;
     RemoveCustomVarRow1: TMenuItem;
     vallstVariables: TValueListEditor;
     scrboxDebugBmp: TScrollBox;
     imgDebugBmp: TImage;
-    chkCallOnlyIfContitionIsTrue: TCheckBox;
-    lbeCallOnlyIfContitionVarName: TLabeledEdit;
-    lbeCallOnlyIfContitionVarValue: TLabeledEdit;
-    lblConditionEquals: TLabel;
     MenuItemSavePreviewImage: TMenuItem;
     MenuItemCopyPreviewImage: TMenuItem;
-    lbeMultiClickCount: TLabeledEdit;
-    lbeExecAppPath: TLabeledEdit;
-    btnBrowseExecApp: TButton;
-    chkWaitForApp: TCheckBox;
-    memExecAppParams: TMemo;
-    lblExecAppParams: TLabel;
     imglstActions: TImageList;
     pmDebugVars: TPopupMenu;
     CopyDebugValuesListToClipboard1: TMenuItem;
@@ -194,7 +135,6 @@ type
     lblDebugBitmapXMouseOffset: TLabel;
     lblDebugBitmapYMouseOffset: TLabel;
     MenuItemErasePreviewImage: TMenuItem;
-    btnSelectNoTemplate: TButton;
     chkShowDebugGrid: TCheckBox;
     imgDebugGrid: TImage;
     PageControlActionExecution: TPageControl;
@@ -221,100 +161,33 @@ type
     N1: TMenuItem;
     AddVariable1: TMenuItem;
     RemoveVariable1: TMenuItem;
-    chkEvaluateVarsBeforeCalling: TCheckBox;
-    lblDeprecatedCondition: TLabel;
-    lbeClickVarX: TLabeledEdit;
-    lbeClickVarY: TLabeledEdit;
     TabSheetActionSleep: TTabSheet;
-    lbeSleep: TLabeledEdit;
-    lblSleepInfo: TLabel;
-    lblSleepInfo2: TLabel;
-    pnlSleepElapsedTime: TPanel;
-    pnlSleepRemainingTime: TPanel;
-    prbSleep: TProgressBar;
-    vstCustomVariables: TVirtualStringTree;
-    vstSetVar: TVirtualStringTree;
-    procedure btnBrowseCallTemplateLoopBreakConditionClick(Sender: TObject);
-    procedure btnBrowseOtherTemplatesClick(Sender: TObject);
-    procedure btnSetFromControlLeftAndTopClick(Sender: TObject);
-    procedure btnSetFromControlWidthAndHeightClick(Sender: TObject);
     procedure chkAllowToFailChange(Sender: TObject);
-    procedure chkCallTemplateLoopEnabledChange(Sender: TObject);
-    procedure chkClickWithDoubleClickChange(Sender: TObject);
-    procedure chkLeaveMouseChange(Sender: TObject);
-    procedure chkMoveWithoutClickChange(Sender: TObject);
-    procedure chkNoConsoleChange(Sender: TObject);
-    procedure chkWaitForAppChange(Sender: TObject);
     procedure chkWaitForControlToGoAwayChange(Sender: TObject);
-    procedure chkWindowOperationsEnablePosChange(Sender: TObject);
-    procedure chkWindowOperationsEnableSizeChange(Sender: TObject);
-    procedure cmbCallTemplateLoopBreakPositionChange(Sender: TObject);
-    procedure cmbCallTemplateLoopDirectionChange(Sender: TObject);
-    procedure cmbClickTypeChange(Sender: TObject);
-    procedure cmbUseInheritHandlesChange(Sender: TObject);
-    procedure cmbWindowOperationsTypeChange(Sender: TObject);
-    procedure lbeCallTemplateLoopBreakConditionChange(Sender: TObject);
-    procedure lbeCallTemplateLoopCounterChange(Sender: TObject);
-    procedure lbeCallTemplateLoopEndValueChange(Sender: TObject);
-    procedure lbeCallTemplateLoopInitValueChange(Sender: TObject);
 
-    procedure lbeExecAppCurrentDirChange(Sender: TObject);
-    procedure lbeExecAppStdInChange(Sender: TObject);
-
-    procedure lbeTemplateFileNameChange(Sender: TObject);
     procedure lbeFindCachedControlLeftChange(Sender: TObject);
     procedure lbeFindCachedControlTopChange(Sender: TObject);
-    procedure lbeWindowOperationsHeightChange(Sender: TObject);
-    procedure lbeWindowOperationsWidthChange(Sender: TObject);
-    procedure lbeWindowOperationsXChange(Sender: TObject);
-    procedure lbeWindowOperationsYChange(Sender: TObject);
-
-    procedure MenuItem_AddSetVarClick(Sender: TObject);
-    procedure MenuItem_RemoveSetVarClick(Sender: TObject);
+    procedure MenuItem_SetFromControlLeftAndTopClick(Sender: TObject);
+    procedure MenuItem_SetFromControlWidthAndHeightClick(Sender: TObject);
 
     procedure PageControlActionsChange(Sender: TObject);
     procedure scrboxDebugBmpMouseWheel(Sender: TObject; Shift: TShiftState;
       WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
-    procedure spdbtnBrowseLocalTemplatesClick(Sender: TObject);
     procedure spdbtnDisplaySearchAreaDbgImgMenuClick(Sender: TObject);
-    procedure tmrEditCustomVarsTimer(Sender: TObject);
-    procedure tmrEditSetVarsTimer(Sender: TObject);
     procedure tmrReloadOIContentTimer(Sender: TObject);
-    procedure vallstCustomVariablesExit(Sender: TObject);
 
     procedure spdbtnCommonTimeoutsClick(Sender: TObject);
     procedure N01Click(Sender: TObject);
-    procedure AddCustomVarRow1Click(Sender: TObject);
-    procedure RemoveCustomVarRow1Click(Sender: TObject);
-    procedure chkCallOnlyIfContitionIsTrueClick(Sender: TObject);
-    procedure vallstCustomVariablesSetEditText(Sender: TObject; ACol,
-      ARow: Integer; const Value: string);
-    procedure vallstCustomVariablesValidate(Sender: TObject; ACol,
-      ARow: Integer; const KeyName, KeyValue: string);
-    procedure btnBrowseExecAppClick(Sender: TObject);
     procedure CopyDebugValuesListToClipboard1Click(Sender: TObject);
     procedure PasteDebugValuesListFromClipboard1Click(Sender: TObject);
     procedure PasteDebugValuesListFromMainExecutionList1Click(Sender: TObject);
 
     procedure imgDebugBmpMouseMove(Sender: TObject; Shift: TShiftState; X,
       Y: Integer);
-    procedure btnSelectNoTemplateClick(Sender: TObject);
     procedure chkShowDebugGridClick(Sender: TObject);
     procedure MenuItemSaveDebugImageClick(Sender: TObject);
     procedure MenuItemCopyDebugImageClick(Sender: TObject);
     procedure MenuItemEraseDebugImageClick(Sender: TObject);
-
-    procedure lbeExecAppPathChange(Sender: TObject);
-    procedure memExecAppParamsChange(Sender: TObject);
-    procedure cmbXClickReferenceChange(Sender: TObject);
-    procedure cmbYClickReferenceChange(Sender: TObject);
-    procedure lbeClickXOffsetChange(Sender: TObject);
-    procedure lbeClickYOffsetChange(Sender: TObject);
-    procedure lbeMultiClickCountChange(Sender: TObject);
-    procedure chkClickWithCtrlClick(Sender: TObject);
-    procedure chkClickWithAltClick(Sender: TObject);
-    procedure chkClickWithShiftClick(Sender: TObject);
-    procedure rdgrpMouseButtonClick(Sender: TObject);
 
     procedure lbeColorErrorChange(Sender: TObject);
     procedure lbeAllowedColorErrorCountChange(Sender: TObject);
@@ -329,10 +202,6 @@ type
     procedure lbeSearchRectBottomOffsetChange(Sender: TObject);
     procedure rdgrpSearchForControlModeClick(Sender: TObject);
     procedure chkAllowToFailClick(Sender: TObject);
-    procedure lbeSetNewTextChange(Sender: TObject);
-    procedure rdgrpSetTextControlTypeClick(Sender: TObject);
-    procedure lbeCallOnlyIfContitionVarNameChange(Sender: TObject);
-    procedure lbeCallOnlyIfContitionVarValueChange(Sender: TObject);
     procedure lbeActionNameChange(Sender: TObject);
     procedure cmbActionsChange(Sender: TObject);
     procedure lbeActionTimeoutChange(Sender: TObject);
@@ -341,49 +210,9 @@ type
       const KeyName, KeyValue: string);
     procedure AddVariable1Click(Sender: TObject);
     procedure RemoveVariable1Click(Sender: TObject);
-    procedure lbeClickVarXChange(Sender: TObject);
-    procedure lbeClickVarYChange(Sender: TObject);
-    procedure chkEvaluateVarsBeforeCallingClick(Sender: TObject);
-    procedure TabSheetActionCallMouseLeave(Sender: TObject);
     procedure lbeMatchClassNameChange(Sender: TObject);
     procedure lbeMatchTextSeparatorChange(Sender: TObject);
     procedure lbeMatchClassNameSeparatorChange(Sender: TObject);
-    procedure lbeSleepChange(Sender: TObject);
-    procedure vstCustomVariablesDblClick(Sender: TObject);
-    procedure vstCustomVariablesEdited(Sender: TBaseVirtualTree;
-      Node: PVirtualNode; Column: TColumnIndex);
-    procedure vstCustomVariablesEditing(Sender: TBaseVirtualTree;
-      Node: PVirtualNode; Column: TColumnIndex; var Allowed: Boolean);
-    procedure vstCustomVariablesGetText(Sender: TBaseVirtualTree;
-      Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
-      var CellText: String);
-    procedure vstCustomVariablesKeyDown(Sender: TObject; var Key: Word;
-      Shift: TShiftState);
-    procedure vstCustomVariablesMouseUp(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
-    procedure vstCustomVariablesNewText(Sender: TBaseVirtualTree;
-      Node: PVirtualNode; Column: TColumnIndex; const NewText: String);
-    procedure vstSetVarChecked(Sender: TBaseVirtualTree; Node: PVirtualNode);
-    procedure vstSetVarChecking(Sender: TBaseVirtualTree; Node: PVirtualNode;
-      var NewState: TCheckState; var Allowed: Boolean);
-    procedure vstSetVarDblClick(Sender: TObject);
-    procedure vstSetVarEdited(Sender: TBaseVirtualTree; Node: PVirtualNode;
-      Column: TColumnIndex);
-    procedure vstSetVarEditing(Sender: TBaseVirtualTree; Node: PVirtualNode;
-      Column: TColumnIndex; var Allowed: Boolean);
-    procedure vstSetVarGetImageIndex(Sender: TBaseVirtualTree;
-      Node: PVirtualNode; Kind: TVTImageKind; Column: TColumnIndex;
-      var Ghosted: Boolean; var ImageIndex: Integer);
-    procedure vstSetVarGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
-      Column: TColumnIndex; TextType: TVSTTextType; var CellText: String);
-    procedure vstSetVarInitNode(Sender: TBaseVirtualTree; ParentNode,
-      Node: PVirtualNode; var InitialStates: TVirtualNodeInitStates);
-    procedure vstSetVarKeyDown(Sender: TObject; var Key: Word;
-      Shift: TShiftState);
-    procedure vstSetVarMouseUp(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
-    procedure vstSetVarNewText(Sender: TBaseVirtualTree; Node: PVirtualNode;
-      Column: TColumnIndex; const NewText: String);
 
     ///////////////////////////// OI
     procedure MenuItem_SetActionTimeoutFromOI(Sender: TObject);
@@ -405,16 +234,9 @@ type
   private
     { Private declarations }
     FBMPsDir: string;
-    FSetVarMouseUpHitInfo: THitInfo;
-    FSetVarEditingText: string;
-    FSetVarUpdatedVstText: Boolean;
 
     FEditingActionRec: TClkActionRec;
     FEditingAction: PClkActionRec;
-
-    FCustomVarsMouseUpHitInfo: THitInfo;
-    FCustomVarsEditingText: string;
-    FCustomVarsUpdatedVstText: Boolean;
 
     FOnControlsModified: TNotifyEvent;
     FControlsModified: Boolean;
@@ -453,13 +275,9 @@ type
     //function GetListOfSetVarEntries: string;
     //procedure SetListOfSetVarEntries(Value: string);
 
-    function GetListOfSetVars: TClkSetVarOptions;
-    procedure SetListOfSetVars(Value: TClkSetVarOptions);
-
     function GetListOfCustomVariables: string;
     procedure SetListOfCustomVariables(Value: string);
 
-    procedure SetShowDeprecatedControls(Value: Boolean);
     procedure CreateRemainingUIComponents;
     procedure SetDebuggingInfoAvailable(Value: Boolean);
     procedure TriggerOnControlsModified;
@@ -504,8 +322,13 @@ type
 
     procedure HandleOnUpdateSearchAreaLimitsInOIFromDraggingLines(ALimitLabelsToUpdate: TLimitLabels; var AOffsets: TSimpleRectString);
     procedure HandleOnUpdateTextCroppingLimitsInOIFromDraggingLines(ALimitLabelsToUpdate: TLimitLabels; var AOffsets: TSimpleRectString; AFontProfileIndex: Integer);
+    function HandleOnGetDisplayedText: string;
+    procedure HandleOnSetMatchTextAndClassToOI(AMatchText, AMatchClassName: string);
+    function HandleOnGetFindControlOptions: PClkFindControlOptions;
+
     procedure HandleOnClickerExecAppFrame_OnTriggerOnControlsModified;
     procedure HandleOnClickerSetVarFrame_OnTriggerOnControlsModified;
+    procedure HandleOnClickerCallTemplateFrame_OnTriggerOnControlsModified;
 
     ///////////////////////////// OI
     function EditFontProperties(AItemIndexDiv: Integer; var ANewItems: string): Boolean;
@@ -568,16 +391,8 @@ type
     frClickerFindControl: TfrClickerFindControl;
     frClickerExecApp: TfrClickerExecApp;
     frClickerSetVar: TfrClickerSetVar;
-
-    FgrpMouseDragControls: TGroupBox;
-    FlblXClickReferenceDest: TLabel;
-    FcmbXClickReferenceDest: TComboBox;
-    FlbeClickVarXDest: TLabeledEdit;
-    FlbeClickXOffsetDest: TLabeledEdit;
-    FlblYClickReferenceDest: TLabel;
-    FcmbYClickReferenceDest: TComboBox;
-    FlbeClickVarYDest: TLabeledEdit;
-    FlbeClickYOffsetDest: TLabeledEdit;
+    frClickerCallTemplate: TfrClickerCallTemplate;
+    frClickerSleep: TfrClickerSleep;
 
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -591,9 +406,6 @@ type
     procedure UpdateControlWidthHeightLabels;
     procedure UpdatePageControlActionsOnFindControlTab;
 
-    procedure RefreshClickVarXEnabledState;
-    procedure RefreshClickVarYEnabledState;
-
     procedure ClearControls;
 
     property BMPsDir: string read FBMPsDir write FBMPsDir;  /////////////////////////// to be removed
@@ -603,8 +415,6 @@ type
     property DebuggingInfoAvailable: Boolean write SetDebuggingInfoAvailable;
     property FullTemplatesDir: string read FFullTemplatesDir write FFullTemplatesDir;  //no trailing backslash
     //property ListOfSetVarEntries: string read GetListOfSetVarEntries write SetListOfSetVarEntries;
-    property ListOfSetVars: TClkSetVarOptions read GetListOfSetVars write SetListOfSetVars;
-    property ShowDeprecatedControls: Boolean read FShowDeprecatedControls write SetShowDeprecatedControls;
 
     property ListOfCustomVariables: string read GetListOfCustomVariables write SetListOfCustomVariables;
     property InMemFS: TInMemFileSystem write SetInMemFS;
@@ -650,7 +460,7 @@ implementation
 
 
 uses
-  Clipbrd, MouseStuff, ClickerActionValues;
+  Clipbrd, ClickerActionValues;
 
 
 function ActionStatusStrToActionStatus(AString: string): TActionStatus;
@@ -695,6 +505,9 @@ begin
   frClickerFindControl.OnGetPictureOpenDialogFileName := HandleOnGetPictureOpenDialogFileName;
   frClickerFindControl.OnUpdateSearchAreaLimitsInOIFromDraggingLines := HandleOnUpdateSearchAreaLimitsInOIFromDraggingLines;
   frClickerFindControl.OnUpdateTextCroppingLimitsInOIFromDraggingLines := HandleOnUpdateTextCroppingLimitsInOIFromDraggingLines;
+  frClickerFindControl.OnGetDisplayedText := HandleOnGetDisplayedText;
+  frClickerFindControl.OnSetMatchTextAndClassToOI := HandleOnSetMatchTextAndClassToOI;
+  frClickerFindControl.OnGetFindControlOptions := HandleOnGetFindControlOptions;
 
   frClickerConditionEditor := TfrClickerConditionEditor.Create(Self);
   frClickerConditionEditor.Parent := pnlActionConditions; //for some reason, using TabSheetCondition leads to a hidden frame
@@ -714,7 +527,7 @@ begin
   frClickerExecApp.Top := 3;
   frClickerExecApp.Width := pnlExtra.Width - 3;
   frClickerExecApp.Height := pnlExtra.Height - 3;
-  frClickerExecApp.Visible := True;
+  frClickerExecApp.Visible := False;
 
   frClickerSetVar := TfrClickerSetVar.Create(Self);
   frClickerSetVar.Parent := pnlExtra;
@@ -723,106 +536,28 @@ begin
   frClickerSetVar.Top := 3;
   frClickerSetVar.Width := pnlExtra.Width - 3;
   frClickerSetVar.Height := pnlExtra.Height - 3;
-  frClickerSetVar.Visible := True;
+  frClickerSetVar.Visible := False;
+
+  frClickerCallTemplate := TfrClickerCallTemplate.Create(Self);
+  frClickerCallTemplate.Parent := pnlExtra;
+  frClickerCallTemplate.OnTriggerOnControlsModified := HandleOnClickerCallTemplateFrame_OnTriggerOnControlsModified;
+  frClickerCallTemplate.Left := 3;
+  frClickerCallTemplate.Top := 3;
+  frClickerCallTemplate.Width := pnlExtra.Width - 3;
+  frClickerCallTemplate.Height := pnlExtra.Height - 3;
+  frClickerCallTemplate.Visible := False;
+
+  frClickerSleep := TfrClickerSleep.Create(Self);
+  frClickerSleep.Parent := pnlExtra;
+  frClickerSleep.Left := 3;
+  frClickerSleep.Top := 3;
+  frClickerSleep.Width := pnlExtra.Width - 3;
+  frClickerSleep.Height := pnlExtra.Height - 3;
+  frClickerSleep.Visible := False;
+
+
 
   FPmLocalTemplates := TPopupMenu.Create(Self);
-
-  //mouse drag controls
-  FgrpMouseDragControls := TGroupBox.Create(Self);
-  FgrpMouseDragControls.Parent := TabSheetActionClick;
-  FgrpMouseDragControls.Left := 0;
-  FgrpMouseDragControls.Top := cmbClickType.Top + cmbClickType.Height + 8;
-  FgrpMouseDragControls.Width := lbeMultiClickCount.Left;
-  FgrpMouseDragControls.Height := chkClickWithCtrl.Top + 20;
-  FgrpMouseDragControls.Name := 'grpMouseDragControls';
-  FgrpMouseDragControls.Caption := 'Mouse drag - destination point';
-  FgrpMouseDragControls.Visible := False;
-  FgrpMouseDragControls.Color := clCream; //does nothing on a themed application
-
-  FlblXClickReferenceDest := TLabel.Create(Self);
-  FlblXClickReferenceDest.Parent := FgrpMouseDragControls;
-  FlblXClickReferenceDest.Left := lblXClickReference.Left;
-  FlblXClickReferenceDest.Top := lblXClickReference.Top;
-  FlblXClickReferenceDest.Caption := lblXClickReference.Caption;
-
-  FcmbXClickReferenceDest := TComboBox.Create(Self);
-  FcmbXClickReferenceDest.Parent := FgrpMouseDragControls;
-  FcmbXClickReferenceDest.Style := csOwnerDrawFixed;
-  FcmbXClickReferenceDest.Left := cmbXClickReference.Left;
-  FcmbXClickReferenceDest.Top := cmbXClickReference.Top;
-  FcmbXClickReferenceDest.Width := cmbXClickReference.Width;
-  FcmbXClickReferenceDest.Items.Text := cmbXClickReference.Items.Text;
-  FcmbXClickReferenceDest.Hint := cmbXClickReference.Hint;
-  FcmbXClickReferenceDest.ShowHint := cmbXClickReference.ShowHint;
-  FcmbXClickReferenceDest.OnChange := cmbXClickReference.OnChange;
-  FcmbXClickReferenceDest.ItemIndex := 0;
-
-  FlbeClickVarXDest := TLabeledEdit.Create(Self);
-  FlbeClickVarXDest.Parent := FgrpMouseDragControls;
-  FlbeClickVarXDest.Left := lbeClickVarX.Left;
-  FlbeClickVarXDest.Top := lbeClickVarX.Top;
-  FlbeClickVarXDest.Width := lbeClickVarX.Width;
-  FlbeClickVarXDest.EditLabel.Caption := lbeClickVarX.EditLabel.Caption;
-  FlbeClickVarXDest.Hint := lbeClickVarX.Hint;
-  FlbeClickVarXDest.ShowHint := lbeClickVarX.ShowHint;
-  FlbeClickVarXDest.Text := lbeClickVarX.Text;
-  FlbeClickVarXDest.OnChange := lbeClickVarX.OnChange;
-
-  FlbeClickXOffsetDest := TLabeledEdit.Create(Self);
-  FlbeClickXOffsetDest.Parent := FgrpMouseDragControls;
-  FlbeClickXOffsetDest.Left := lbeClickXOffset.Left;
-  FlbeClickXOffsetDest.Top := lbeClickXOffset.Top;
-  FlbeClickXOffsetDest.Width := lbeClickXOffset.Width;
-  FlbeClickXOffsetDest.EditLabel.Caption := lbeClickXOffset.EditLabel.Caption;
-  FlbeClickXOffsetDest.Hint := lbeClickXOffset.Hint;
-  FlbeClickXOffsetDest.ShowHint := lbeClickXOffset.ShowHint;
-  FlbeClickXOffsetDest.Text := lbeClickXOffset.Text;
-  FlbeClickXOffsetDest.OnChange := lbeClickXOffset.OnChange;
-
-  FlblYClickReferenceDest := TLabel.Create(Self);
-  FlblYClickReferenceDest.Parent := FgrpMouseDragControls;
-  FlblYClickReferenceDest.Left := lblYClickReference.Left;
-  FlblYClickReferenceDest.Top := lblYClickReference.Top;
-  FlblYClickReferenceDest.Caption := lblYClickReference.Caption;
-
-  FcmbYClickReferenceDest := TComboBox.Create(Self);
-  FcmbYClickReferenceDest.Parent := FgrpMouseDragControls;
-  FcmbYClickReferenceDest.Style := csOwnerDrawFixed;
-  FcmbYClickReferenceDest.Left := cmbYClickReference.Left;
-  FcmbYClickReferenceDest.Top := cmbYClickReference.Top;
-  FcmbYClickReferenceDest.Width := cmbYClickReference.Width;
-  FcmbYClickReferenceDest.Items.Text := cmbYClickReference.Items.Text;
-  FcmbYClickReferenceDest.Hint := cmbYClickReference.Hint;
-  FcmbYClickReferenceDest.ShowHint := cmbYClickReference.ShowHint;
-  FcmbYClickReferenceDest.OnChange := cmbYClickReference.OnChange;
-  FcmbYClickReferenceDest.ItemIndex := 0;
-
-  FlbeClickVarYDest := TLabeledEdit.Create(Self);
-  FlbeClickVarYDest.Parent := FgrpMouseDragControls;
-  FlbeClickVarYDest.Left := lbeClickVarY.Left;
-  FlbeClickVarYDest.Top := lbeClickVarY.Top;
-  FlbeClickVarYDest.Width := lbeClickVarY.Width;
-  FlbeClickVarYDest.EditLabel.Caption := lbeClickVarY.EditLabel.Caption;
-  FlbeClickVarYDest.Hint := lbeClickVarY.Hint;
-  FlbeClickVarYDest.ShowHint := lbeClickVarY.ShowHint;
-  FlbeClickVarYDest.Text := lbeClickVarY.Text;
-  FlbeClickVarYDest.OnChange := lbeClickVarY.OnChange;
-
-  FlbeClickYOffsetDest := TLabeledEdit.Create(Self);
-  FlbeClickYOffsetDest.Parent := FgrpMouseDragControls;
-  FlbeClickYOffsetDest.Left := lbeClickYOffset.Left;
-  FlbeClickYOffsetDest.Top := lbeClickYOffset.Top;
-  FlbeClickYOffsetDest.Width := lbeClickYOffset.Width;
-  FlbeClickYOffsetDest.EditLabel.Caption := lbeClickYOffset.EditLabel.Caption;
-  FlbeClickYOffsetDest.Hint := lbeClickYOffset.Hint;
-  FlbeClickYOffsetDest.ShowHint := lbeClickYOffset.ShowHint;
-  FlbeClickYOffsetDest.Text := lbeClickYOffset.Text;
-  FlbeClickYOffsetDest.OnChange := lbeClickYOffset.OnChange;
-
-  lbeClickVarX.Enabled := False;
-  lbeClickVarY.Enabled := False;
-  FlbeClickVarXDest.Enabled := False;
-  FlbeClickVarYDest.Enabled := False;
 
   ////////////////////////////// OI
   FOIFrame := TfrObjectInspector.Create(Self);
@@ -941,19 +676,7 @@ begin
 end;
 
 
-procedure TfrClickerActions.rdgrpMouseButtonClick(Sender: TObject);
-begin
-  TriggerOnControlsModified;
-end;
-
-
 procedure TfrClickerActions.rdgrpSearchForControlModeClick(Sender: TObject);
-begin
-  TriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerActions.rdgrpSetTextControlTypeClick(Sender: TObject);
 begin
   TriggerOnControlsModified;
 end;
@@ -974,66 +697,6 @@ begin
 end;
 
 
-procedure TfrClickerActions.TabSheetActionCallMouseLeave(Sender: TObject);
-{$IFnDEF FPC}
-  var
-    i: Integer;
-{$ENDIF}
-begin
-  {$IFDEF FPC}
-    if vallstCustomVariables.Focused then  ///////////////////////////////////// ToDo  search for a proper editor (if available)
-      chkEvaluateVarsBeforeCalling.SetFocus; //make vallst remove focus
-  {$ELSE}
-    for i := 0 to vallstCustomVariables.ControlCount - 1 do
-      if (vallstCustomVariables.Controls[i] is TInplaceEditList) then    //TInplaceEditList is the internal editbox, used for inputting new values
-        if (vallstCustomVariables.Controls[i] as TInplaceEditList).Focused then
-          chkEvaluateVarsBeforeCalling.SetFocus; //make vallst remove focus
-  {$ENDIF}
-end;
-
-
-procedure TfrClickerActions.AddCustomVarRow1Click(Sender: TObject);
-begin
-  vallstCustomVariables.Strings.Add('');
-  vstCustomVariables.RootNodeCount := vallstCustomVariables.Strings.Count;
-  vstCustomVariables.Repaint;
-
-  vstCustomVariables.Selected[vstCustomVariables.GetLast] := True;
-
-  TriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerActions.RemoveCustomVarRow1Click(Sender: TObject);
-var
-  Node: PVirtualNode;
-begin
-  try
-    //if MessageBox(Handle, PChar('Remove variable?' + #13#10 + vallstCustomVariables.Strings[vallstCustomVariables.Selection.Top - 1]), 'Selection', MB_ICONQUESTION + MB_YESNO) = IDNO then
-    //  Exit;
-
-    Node := vstCustomVariables.GetFirstSelected;
-
-    if Node = nil then
-    begin
-      MessageBox(Handle, 'Please select a variable to be deleted.', PChar(Application.Title), MB_ICONINFORMATION);
-      Exit;
-    end;
-
-    if MessageBox(Handle, PChar('Remove variable?' + #13#10 + vallstCustomVariables.Strings[Node^.Index]), 'Selection', MB_ICONQUESTION + MB_YESNO) = IDNO then
-      Exit;
-
-    //vallstCustomVariables.Strings.Delete(vallstCustomVariables.Selection.Top - 1);
-    vallstCustomVariables.Strings.Delete(Node^.Index);
-
-    vstCustomVariables.RootNodeCount := vallstCustomVariables.Strings.Count;
-    vstCustomVariables.Repaint;
-    TriggerOnControlsModified;
-  except
-  end;
-end;
-
-
 procedure TfrClickerActions.RemoveVariable1Click(Sender: TObject);
 begin
   if vallstVariables.Selection.Top - 1 < FPredefinedVarCount - 1 then
@@ -1050,38 +713,6 @@ end;
 
 
 procedure TfrClickerActions.chkAllowToFailClick(Sender: TObject);
-begin
-  TriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerActions.chkCallOnlyIfContitionIsTrueClick(Sender: TObject);
-begin
-  lbeCallOnlyIfContitionVarName.Enabled := chkCallOnlyIfContitionIsTrue.Checked;
-  lbeCallOnlyIfContitionVarValue.Enabled := chkCallOnlyIfContitionIsTrue.Checked;
-  TriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerActions.chkClickWithAltClick(Sender: TObject);
-begin
-  TriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerActions.chkClickWithCtrlClick(Sender: TObject);
-begin
-  TriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerActions.chkClickWithShiftClick(Sender: TObject);
-begin
-  TriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerActions.chkEvaluateVarsBeforeCallingClick(Sender: TObject);
 begin
   TriggerOnControlsModified;
 end;
@@ -1114,34 +745,6 @@ begin
   UpdatePageControlActionsHighlighting;
 
   CurrentlyEditingActionType := TClkAction(cmbActions.ItemIndex);
-end;
-
-
-procedure TfrClickerActions.RefreshClickVarXEnabledState;
-begin
-  lbeClickVarX.Enabled := (cmbXClickReference.ItemIndex > -1) and (cmbXClickReference.Items.Strings[cmbXClickReference.ItemIndex] = 'Var/Replacement');
-  FlbeClickVarXDest.Enabled := (FcmbXClickReferenceDest.ItemIndex > -1) and (FcmbXClickReferenceDest.Items.Strings[FcmbXClickReferenceDest.ItemIndex] = 'Var/Replacement');
-end;
-
-
-procedure TfrClickerActions.RefreshClickVarYEnabledState;
-begin
-  lbeClickVarY.Enabled := (cmbYClickReference.ItemIndex > -1) and (cmbYClickReference.Items.Strings[cmbYClickReference.ItemIndex] = 'Var/Replacement');
-  FlbeClickVarYDest.Enabled := (FcmbYClickReferenceDest.ItemIndex > -1) and (FcmbYClickReferenceDest.Items.Strings[FcmbYClickReferenceDest.ItemIndex] = 'Var/Replacement');
-end;
-
-
-procedure TfrClickerActions.cmbXClickReferenceChange(Sender: TObject);
-begin
-  TriggerOnControlsModified;
-  RefreshClickVarXEnabledState;
-end;
-
-
-procedure TfrClickerActions.cmbYClickReferenceChange(Sender: TObject);
-begin
-  TriggerOnControlsModified;
-  RefreshClickVarYEnabledState;
 end;
 
 
@@ -1195,12 +798,6 @@ begin
 end;
 
 
-procedure TfrClickerActions.lbeMultiClickCountChange(Sender: TObject);
-begin
-  TriggerOnControlsModified;
-end;
-
-
 procedure TfrClickerActions.lbeSearchRectBottomChange(Sender: TObject);
 begin
   TriggerOnControlsModified;
@@ -1249,351 +846,15 @@ begin
 end;
 
 
-procedure TfrClickerActions.lbeSetNewTextChange(Sender: TObject);
-begin
-  TriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerActions.lbeSleepChange(Sender: TObject);
-begin
-  TriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerActions.vstCustomVariablesDblClick(Sender: TObject);
-begin
-  tmrEditCustomVars.Enabled := True;
-end;
-
-
-procedure TfrClickerActions.vstCustomVariablesEdited(Sender: TBaseVirtualTree;
-  Node: PVirtualNode; Column: TColumnIndex);
-var
-  NewLine: string;
-begin
-  if FCustomVarsMouseUpHitInfo.HitNode = nil then
-    Exit;
-
-  if not FCustomVarsUpdatedVstText then
-    Exit;
-
-  case Column of
-    0:
-    begin
-      if Trim(FCustomVarsEditingText) = '' then
-      begin
-        MessageBox(Handle, 'Variable name must not be empty.', PChar(Application.Title), MB_ICONERROR);
-        Exit;
-      end;
-
-      if (FCustomVarsEditingText[1] <> '$') or (FCustomVarsEditingText[Length(FCustomVarsEditingText)] <> '$') then
-      begin
-        MessageBox(Handle, 'Variable name must be enclosed by two "$" characters. E.g. "$my_var$" (without double quotes).', PChar(Application.Title), MB_ICONERROR);
-        Exit;
-      end;
-
-      NewLine := FCustomVarsEditingText + '=' + vallstCustomVariables.Strings.ValueFromIndex[Node^.Index];
-
-      if vallstCustomVariables.Strings.Strings[Node^.Index] <> NewLine then
-      begin
-        vallstCustomVariables.Strings.Strings[Node^.Index] := NewLine;
-        TriggerOnControlsModified;
-      end;
-    end;
-
-    1:
-    begin
-      if vallstCustomVariables.Strings.ValueFromIndex[Node^.Index] <> FCustomVarsEditingText then
-      begin
-        vallstCustomVariables.Strings.ValueFromIndex[Node^.Index] := FCustomVarsEditingText;
-        TriggerOnControlsModified;
-      end;
-    end;
-  end;
-end;
-
-
-procedure TfrClickerActions.vstCustomVariablesEditing(Sender: TBaseVirtualTree;
-  Node: PVirtualNode; Column: TColumnIndex; var Allowed: Boolean);
-begin
-  Allowed := Column < 2;
-  FCustomVarsUpdatedVstText := False;
-end;
-
-
-procedure TfrClickerActions.vstCustomVariablesGetText(Sender: TBaseVirtualTree;
-  Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
-  var CellText: String);
-begin
-  try
-    case Column of
-      0: CellText := vallstCustomVariables.Strings.Names[Node^.Index];
-      1: CellText := vallstCustomVariables.Strings.ValueFromIndex[Node^.Index];
-    end;
-  except
-    CellText := 'bug';
-  end;
-end;
-
-
-procedure TfrClickerActions.vstCustomVariablesKeyDown(Sender: TObject;
-  var Key: Word; Shift: TShiftState);
-begin
-  if Key = VK_DELETE then
-    RemoveCustomVarRow1Click(RemoveCustomVarRow1);
-end;
-
-
-procedure TfrClickerActions.vstCustomVariablesMouseUp(Sender: TObject;
-  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-begin
-  vstCustomVariables.GetHitTestInfoAt(X, Y, True, FCustomVarsMouseUpHitInfo);
-end;
-
-
-procedure TfrClickerActions.vstCustomVariablesNewText(Sender: TBaseVirtualTree;
-  Node: PVirtualNode; Column: TColumnIndex; const NewText: String);
-begin
-  FCustomVarsEditingText := FastReplace_ReturnTo68(NewText);
-  FCustomVarsUpdatedVstText := True;
-end;
-
-
-procedure TfrClickerActions.vstSetVarChecked(Sender: TBaseVirtualTree;
-  Node: PVirtualNode);
-begin
-  FSetVarContent_EvalBefore.Strings[Node^.Index] := IntToStr(Ord(Node^.CheckState = csCheckedNormal));
-  TriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerActions.vstSetVarChecking(Sender: TBaseVirtualTree;
-  Node: PVirtualNode; var NewState: TCheckState; var Allowed: Boolean);
-begin
-  Allowed := True;
-end;
-
-
-procedure TfrClickerActions.vstSetVarDblClick(Sender: TObject);
-begin
-  tmrEditSetVars.Enabled := True;
-end;
-
-
-//function TfrClickerActions.GetListOfSetVarEntries: string;
-//var
-//  i: Integer;
-//begin
-//  Result := '';
-//  for i := 0 to FSetVarContent_Vars.Count - 1 do
-//    Result := Result + FSetVarContent_Vars.Strings[i] + '=' + FSetVarContent_Values.Strings[i] + #13#10;
-//end;
-//
-//
-//procedure TfrClickerActions.SetListOfSetVarEntries(Value: string);
-//var
-//  i: Integer;
-//  TempList: TStringList;
-//  s: string;
-//begin
-//  FSetVarContent_Vars.Clear;
-//  FSetVarContent_Values.Clear;
-//
-//  TempList := TStringList.Create;
-//  try
-//    TempList.Text := Value;
-//    for i := 0 to TempList.Count - 1 do
-//    begin
-//      s := TempList.Strings[i];
-//
-//      FSetVarContent_Vars.Add(Copy(s, 1, Pos('=', s) - 1));
-//      FSetVarContent_Values.Add(Copy(s, Pos('=', s) + 1, MaxInt));
-//    end;
-//
-//    //if Integer(vstSetVar.RootNodeCount) <> TempList.Count then   //see below
-//    begin
-//      vstSetVar.RootNodeCount := TempList.Count;
-//      vstSetVar.Repaint;
-//      TriggerOnControlsModified;
-//    end;
-//  finally
-//    TempList.Free;
-//  end;
-//end;
-
-
-function TfrClickerActions.GetListOfSetVars: TClkSetVarOptions;
-begin
-  Result.ListOfVarNames := FSetVarContent_Vars.Text;
-  Result.ListOfVarValues := FSetVarContent_Values.Text;
-  Result.ListOfVarEvalBefore := FSetVarContent_EvalBefore.Text;
-end;
-
-
-procedure TfrClickerActions.SetListOfSetVars(Value: TClkSetVarOptions);
-const
-  CNodeCheckState: array[Boolean] of TCheckState = (csUncheckedNormal, csCheckedNormal);
-var
-  Node: PVirtualNode;
-begin
-  FSetVarContent_Vars.Text := Value.ListOfVarNames;
-  FSetVarContent_Values.Text := Value.ListOfVarValues;
-  FSetVarContent_EvalBefore.Text := Value.ListOfVarEvalBefore;
-
-  //if Integer(vstSetVar.RootNodeCount) <> FSetVarContent_Vars.Count then  //Leave this commented! The new list might have the same length (with different content), so refresh the vst.
-  begin
-    vstSetVar.RootNodeCount := FSetVarContent_Vars.Count;
-
-    if vstSetVar.RootNodeCount > 0 then
-    begin
-      Node := vstSetVar.GetFirst;
-      repeat
-        vstSetVar.CheckState[Node] := CNodeCheckState[FSetVarContent_EvalBefore.Strings[Node^.Index] = '1'];
-        Node := Node^.NextSibling;
-      until Node = nil;
-    end;
-
-    vstSetVar.Repaint;
-    TriggerOnControlsModified;
-  end;
-end;
-
-
 function TfrClickerActions.GetListOfCustomVariables: string;
 begin
-  Result := vallstCustomVariables.Strings.Text;
+  Result := frClickerCallTemplate.GetListOfCustomVariables;
 end;
 
 
 procedure TfrClickerActions.SetListOfCustomVariables(Value: string);
 begin
-  //if vallstCustomVariables.Strings.Text <> Value then  //For some reason, this has to stay commented. Otherwise, it won't update the tree.
-  begin
-    vallstCustomVariables.Strings.Text := Value;
-    vstCustomVariables.RootNodeCount := vallstCustomVariables.Strings.Count;
-    vstCustomVariables.Repaint;
-  end;
-end;
-
-
-procedure TfrClickerActions.SetShowDeprecatedControls(Value: Boolean);
-begin
-  FShowDeprecatedControls := Value;
-  lblDeprecatedCondition.Visible := Value;
-  chkCallOnlyIfContitionIsTrue.Visible := Value;
-  lbeCallOnlyIfContitionVarName.Visible := Value;
-  lblConditionEquals.Visible := Value;
-  lbeCallOnlyIfContitionVarValue.Visible := Value;
-end;
-
-
-procedure TfrClickerActions.vstSetVarEdited(Sender: TBaseVirtualTree;
-  Node: PVirtualNode; Column: TColumnIndex);
-begin
-  if FSetVarMouseUpHitInfo.HitNode = nil then
-    Exit;
-
-  if not FSetVarUpdatedVstText then
-    Exit;
-
-  case Column of
-    0:
-    begin
-      //nothing here
-    end;
-
-    1:
-    begin
-      if (Trim(FSetVarEditingText) = '') or
-         (Length(FSetVarEditingText) < 3) or
-         (FSetVarEditingText[1] <> '$') or
-         (FSetVarEditingText[Length(FSetVarEditingText)] <> '$') then
-      begin
-        MessageBox(Handle, 'The variable name must have the following format: "$<varname>$" .', PChar(Application.Title), MB_ICONINFORMATION);
-        Exit;
-      end;
-
-      FSetVarContent_Vars.Strings[Node^.Index] := FSetVarEditingText;
-      TriggerOnControlsModified;
-    end;
-
-    2:
-    begin
-      FSetVarContent_Values.Strings[Node^.Index] := FSetVarEditingText;
-      TriggerOnControlsModified;
-    end;
-
-    else
-      MessageBox(Handle, 'Editing wrong column (bug)', PChar(Application.Title), MB_ICONERROR);
-  end;
-end;
-
-
-procedure TfrClickerActions.vstSetVarEditing(Sender: TBaseVirtualTree;
-  Node: PVirtualNode; Column: TColumnIndex; var Allowed: Boolean);
-begin
-  Allowed := Column in [1, 2];
-  FSetVarUpdatedVstText := False;
-end;
-
-
-procedure TfrClickerActions.vstSetVarGetImageIndex(Sender: TBaseVirtualTree;
-  Node: PVirtualNode; Kind: TVTImageKind; Column: TColumnIndex;
-  var Ghosted: Boolean; var ImageIndex: Integer);
-begin
-  if Column = 0 then
-    ImageIndex := 0;
-end;
-
-
-procedure TfrClickerActions.vstSetVarGetText(Sender: TBaseVirtualTree;
-  Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
-  var CellText: String);
-const
-  CEvalState: array[Boolean] of string = ('No', 'Yes');
-begin
-  try
-    case Column of
-      0: CellText := CEvalState[FSetVarContent_EvalBefore.Strings[Node^.Index] = '1'];
-      1: CellText := FSetVarContent_Vars.Strings[Node^.Index];
-      2: CellText := FSetVarContent_Values.Strings[Node^.Index];
-    end;
-  except
-    on E: Exception do
-      CellText := 'bug: ' + E.Message;
-  end;
-end;
-
-
-procedure TfrClickerActions.vstSetVarInitNode(Sender: TBaseVirtualTree;
-  ParentNode, Node: PVirtualNode; var InitialStates: TVirtualNodeInitStates);
-begin
-  Node^.CheckType := ctCheckBox;
-  Node^.CheckState := csUncheckedNormal;
-end;
-
-
-procedure TfrClickerActions.vstSetVarKeyDown(Sender: TObject; var Key: Word;
-  Shift: TShiftState);
-begin
-  if Key = VK_DELETE then
-    MenuItem_RemoveSetVarClick(MenuItem_RemoveSetVar);
-end;
-
-
-procedure TfrClickerActions.vstSetVarMouseUp(Sender: TObject;
-  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-begin
-  vstSetVar.GetHitTestInfoAt(X, Y, True, FSetVarMouseUpHitInfo);
-end;
-
-
-procedure TfrClickerActions.vstSetVarNewText(Sender: TBaseVirtualTree;
-  Node: PVirtualNode; Column: TColumnIndex; const NewText: String);
-begin
-  FSetVarEditingText := NewText;
-  FSetVarUpdatedVstText := True;
+  frClickerCallTemplate.SetListOfCustomVariables(Value);
 end;
 
 
@@ -1623,51 +884,8 @@ begin
 end;
 
 
-procedure TfrClickerActions.lbeCallOnlyIfContitionVarNameChange(
-  Sender: TObject);
-begin
-  TriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerActions.lbeCallOnlyIfContitionVarValueChange(
-  Sender: TObject);
-begin
-  TriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerActions.lbeClickVarXChange(Sender: TObject);
-begin
-  TriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerActions.lbeClickVarYChange(Sender: TObject);
-begin
-  TriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerActions.lbeClickXOffsetChange(Sender: TObject);
-begin
-  TriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerActions.lbeClickYOffsetChange(Sender: TObject);
-begin
-  TriggerOnControlsModified;
-end;
-
 
 procedure TfrClickerActions.lbeColorErrorChange(Sender: TObject);
-begin
-  TriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerActions.lbeExecAppPathChange(Sender: TObject);
 begin
   TriggerOnControlsModified;
 end;
@@ -1685,47 +903,6 @@ begin
 end;
 
 
-procedure TfrClickerActions.btnSelectNoTemplateClick(Sender: TObject);
-begin
-  lbeTemplateFileName.Text := '';
-  TriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerActions.btnBrowseOtherTemplatesClick(Sender: TObject);
-begin
-  DoOnSetTemplateOpenDialogInitialDir(ExtractFileDir(lbeTemplateFileName.Text));
-
-  if DoOnTemplateOpenDialogExecute then
-    lbeTemplateFileName.Text := DoOnGetTemplateOpenDialogFileName;
-end;
-
-
-procedure TfrClickerActions.btnBrowseCallTemplateLoopBreakConditionClick(
-  Sender: TObject);
-var
-  Condition: string;
-begin
-  Condition := lbeCallTemplateLoopBreakCondition.Text;
-  if DoOnEditCallTemplateBreakCondition(Condition) then
-    lbeCallTemplateLoopBreakCondition.Text := Condition;
-end;
-
-
-procedure TfrClickerActions.btnSetFromControlLeftAndTopClick(Sender: TObject);
-begin
-  lbeWindowOperationsX.Text := EvaluateReplacements('$Control_Left$');
-  lbeWindowOperationsY.Text := EvaluateReplacements('$Control_Top$');
-end;
-
-
-procedure TfrClickerActions.btnSetFromControlWidthAndHeightClick(Sender: TObject);
-begin
-  lbeWindowOperationsWidth.Text := EvaluateReplacements('$Control_Width$');
-  lbeWindowOperationsHeight.Text := EvaluateReplacements('$Control_Height$');
-end;
-
-
 procedure TfrClickerActions.SetLabelsFromMouseOverExecDbgImgPixelColor(APixelColor: TColor);
 begin
   lblMouseOnExecDbgImgRR.Caption := IntToHex(APixelColor and $FF, 2);
@@ -1739,173 +916,9 @@ begin
   TriggerOnControlsModified;
 end;
 
-procedure TfrClickerActions.chkCallTemplateLoopEnabledChange(Sender: TObject);
-begin
-  TriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerActions.chkClickWithDoubleClickChange(Sender: TObject);
-begin
-  TriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerActions.chkLeaveMouseChange(Sender: TObject);
-begin
-  TriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerActions.chkMoveWithoutClickChange(Sender: TObject);
-begin
-  TriggerOnControlsModified;
-end;
-
-procedure TfrClickerActions.chkNoConsoleChange(Sender: TObject);
-begin
-  TriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerActions.chkWaitForAppChange(Sender: TObject);
-begin
-  TriggerOnControlsModified;
-end;
-
 
 procedure TfrClickerActions.chkWaitForControlToGoAwayChange(Sender: TObject);
 begin
-  TriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerActions.chkWindowOperationsEnablePosChange(Sender: TObject);
-begin
-  TriggerOnControlsModified;
-
-  lbeWindowOperationsX.Enabled := (cmbWindowOperationsType.ItemIndex = Integer(Ord(woMoveResize))) and chkWindowOperationsEnablePos.Checked;
-  lbeWindowOperationsY.Enabled := (cmbWindowOperationsType.ItemIndex = Integer(Ord(woMoveResize))) and chkWindowOperationsEnablePos.Checked;
-end;
-
-
-procedure TfrClickerActions.chkWindowOperationsEnableSizeChange(Sender: TObject);
-begin
-  TriggerOnControlsModified;
-
-  lbeWindowOperationsWidth.Enabled := (cmbWindowOperationsType.ItemIndex = Integer(Ord(woMoveResize))) and chkWindowOperationsEnableSize.Checked;
-  lbeWindowOperationsHeight.Enabled := (cmbWindowOperationsType.ItemIndex = Integer(Ord(woMoveResize))) and chkWindowOperationsEnableSize.Checked;
-end;
-
-
-procedure TfrClickerActions.cmbCallTemplateLoopBreakPositionChange(
-  Sender: TObject);
-begin
-  TriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerActions.cmbCallTemplateLoopDirectionChange(Sender: TObject);
-begin
-  TriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerActions.cmbClickTypeChange(Sender: TObject);
-begin
-  if Assigned(FgrpMouseDragControls) then
-    FgrpMouseDragControls.Visible := cmbClickType.ItemIndex = 1;
-
-  TriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerActions.cmbUseInheritHandlesChange(Sender: TObject);
-begin
-  TriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerActions.cmbWindowOperationsTypeChange(Sender: TObject);
-begin
-  TriggerOnControlsModified;
-
-  lbeWindowOperationsX.Enabled := (cmbWindowOperationsType.ItemIndex = Integer(Ord(woMoveResize))) and chkWindowOperationsEnablePos.Checked;
-  lbeWindowOperationsY.Enabled := (cmbWindowOperationsType.ItemIndex = Integer(Ord(woMoveResize))) and chkWindowOperationsEnablePos.Checked;
-  lbeWindowOperationsWidth.Enabled := (cmbWindowOperationsType.ItemIndex = Integer(Ord(woMoveResize))) and chkWindowOperationsEnableSize.Checked;
-  lbeWindowOperationsHeight.Enabled := (cmbWindowOperationsType.ItemIndex = Integer(Ord(woMoveResize))) and chkWindowOperationsEnableSize.Checked;
-end;
-
-
-procedure TfrClickerActions.lbeCallTemplateLoopBreakConditionChange(
-  Sender: TObject);
-begin
-  TriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerActions.lbeCallTemplateLoopCounterChange(Sender: TObject);
-begin
-  TriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerActions.lbeCallTemplateLoopEndValueChange(Sender: TObject);
-begin
-  TriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerActions.lbeCallTemplateLoopInitValueChange(Sender: TObject);
-begin
-  TriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerActions.lbeExecAppCurrentDirChange(Sender: TObject);
-begin
-  TriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerActions.lbeExecAppStdInChange(Sender: TObject);
-begin
-  TriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerActions.MenuItem_AddSetVarClick(Sender: TObject);
-begin
-  FSetVarContent_Vars.Add('');
-  FSetVarContent_Values.Add('');
-  FSetVarContent_EvalBefore.Add('');
-
-  vstSetVar.RootNodeCount := FSetVarContent_Vars.Count;
-  vstSetVar.Repaint;
-  TriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerActions.MenuItem_RemoveSetVarClick(Sender: TObject);
-var
-  Node: PVirtualNode;
-begin
-  Node := vstSetVar.GetFirstSelected;
-  if Node = nil then
-  begin
-    MessageBox(Handle, 'Please select an item to be removed.', PChar(Caption), MB_ICONINFORMATION);
-    Exit;
-  end;
-
-  if MessageBox(Handle, 'Are you sure you want to remove the selected item?', PChar(Caption), MB_ICONQUESTION + MB_YESNO) = IDNO then
-    Exit;
-
-  FSetVarContent_Vars.Delete(Node^.Index);
-  FSetVarContent_Values.Delete(Node^.Index);
-  FSetVarContent_EvalBefore.Delete(Node^.Index);
-
-  vstSetVar.RootNodeCount := FSetVarContent_Vars.Count;
-  vstSetVar.Repaint;
   TriggerOnControlsModified;
 end;
 
@@ -1954,17 +967,6 @@ begin
 end;
 
 
-procedure TfrClickerActions.spdbtnBrowseLocalTemplatesClick(Sender: TObject);
-var
-  tp: TPoint;
-begin
-  LoadListOfAvailableTemplates;
-  GetCursorPos(tp);
-  FPmLocalTemplates.PopUp(tp.X, tp.Y);
-end;
-
-
-
 procedure TfrClickerActions.UpdateControlWidthHeightLabels;
 begin
   frClickerFindControl.UpdateControlWidthHeightLabels;
@@ -1977,39 +979,6 @@ var
 begin
   GetCursorPos(tp);
   FSearchAreaDbgImgSearchedBmpMenu.PopUp(tp.X, tp.Y);
-end;
-
-procedure TfrClickerActions.tmrEditCustomVarsTimer(Sender: TObject);
-begin
-  tmrEditCustomVars.Enabled := False;
-
-  if FCustomVarsMouseUpHitInfo.HitNode = nil then
-    Exit;
-
-  vstCustomVariables.EditNode(FCustomVarsMouseUpHitInfo.HitNode, FCustomVarsMouseUpHitInfo.HitColumn);
-end;
-
-
-procedure TfrClickerActions.tmrEditSetVarsTimer(Sender: TObject);
-begin
-  tmrEditSetVars.Enabled := False;
-
-  if FSetVarMouseUpHitInfo.HitNode = nil then
-    Exit;
-
-  vstSetVar.EditNode(FSetVarMouseUpHitInfo.HitNode, FSetVarMouseUpHitInfo.HitColumn);
-end;
-
-
-procedure TfrClickerActions.vallstCustomVariablesExit(Sender: TObject);
-begin
-  TriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerActions.lbeTemplateFileNameChange(Sender: TObject);
-begin
-  TriggerOnControlsModified;
 end;
 
 
@@ -2025,77 +994,25 @@ begin
 end;
 
 
-procedure TfrClickerActions.lbeWindowOperationsXChange(Sender: TObject);
+procedure TfrClickerActions.MenuItem_SetFromControlLeftAndTopClick(
+  Sender: TObject);
 begin
-  TriggerOnControlsModified;
+  FOIFrame.CancelCurrentEditing;
+  FEditingAction^.WindowOperationsOptions.NewX := EvaluateReplacements('$Control_Left$');
+  FEditingAction^.WindowOperationsOptions.NewY := EvaluateReplacements('$Control_Top$');
+  FOIFrame.RepaintNodeByLevel(CPropertyLevel, CCategory_ActionSpecific, CWindowOperations_NewX, -1);
+  FOIFrame.RepaintNodeByLevel(CPropertyLevel, CCategory_ActionSpecific, CWindowOperations_NewY, -1);
 end;
 
 
-procedure TfrClickerActions.lbeWindowOperationsYChange(Sender: TObject);
+procedure TfrClickerActions.MenuItem_SetFromControlWidthAndHeightClick(
+  Sender: TObject);
 begin
-  TriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerActions.lbeWindowOperationsWidthChange(Sender: TObject);
-begin
-  TriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerActions.lbeWindowOperationsHeightChange(Sender: TObject);
-begin
-  TriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerActions.btnBrowseExecAppClick(Sender: TObject);
-var
-  AOpenDialog: TOpenDialog;
-begin
-  AOpenDialog := TOpenDialog.Create(nil);
-  try
-    AOpenDialog.InitialDir := ExtractFileDir(ParamStr(0));
-
-    if AOpenDialog.Execute then
-    begin
-      lbeExecAppPath.Text := AOpenDialog.FileName;
-      TriggerOnControlsModified;
-    end;
-  finally
-    AOpenDialog.Free;
-  end;
-end;
-
-
-procedure TfrClickerActions.vallstCustomVariablesSetEditText(Sender: TObject;
-  ACol, ARow: Integer; const Value: string);
-begin
-  {if ACol = 0 then
-  begin
-    if Value > '' then
-      if (Length(Value) < 2) or (Value[1] <> '$') or (Value[Length(Value)] <> '$') then
-        raise Exception.Create('Variable name must be enclosed by two "$" characters. E.g. "$my_var$" (without double quotes).');
-  end;}
-
-  (*
-  {$IFnDEF FPC}  //this handler executes AFTER modifying the content in FPC, which is different than Delphi, where it executes BEFORE
-    if vallstCustomVariables.Cells[ACol, ARow] <> Value then
-  {$ENDIF}
-      TriggerOnControlsModified;
-  *)
-end;
-
-
-procedure TfrClickerActions.vallstCustomVariablesValidate(Sender: TObject; ACol,
-  ARow: Integer; const KeyName, KeyValue: string);
-begin
-  if ACol = 0 then
-  begin
-    if KeyName > '' then
-      if {(Length(KeyName) < 2) or} (KeyName[1] <> '$') or (KeyName[Length(KeyName)] <> '$') then
-        raise Exception.Create('Variable name must be enclosed by two "$" characters. E.g. "$my_var$" (without double quotes).');
-  end;
+  FOIFrame.CancelCurrentEditing;
+  FEditingAction^.WindowOperationsOptions.NewWidth := EvaluateReplacements('$Control_Width$');
+  FEditingAction^.WindowOperationsOptions.NewHeight := EvaluateReplacements('$Control_Height$');
+  FOIFrame.RepaintNodeByLevel(CPropertyLevel, CCategory_ActionSpecific, CWindowOperations_NewWidth, -1);
+  FOIFrame.RepaintNodeByLevel(CPropertyLevel, CCategory_ActionSpecific, CWindowOperations_NewHeight, -1);
 end;
 
 
@@ -2115,10 +1032,13 @@ end;
 
 
 procedure TfrClickerActions.LocalTemplatesClick(Sender: TObject);
+var
+  Fnm: string;
 begin
-  lbeTemplateFileName.Text := StringReplace((Sender as TMenuItem).Caption, '&', '', [rfReplaceAll]);
-  FEditingAction^.CallTemplateOptions.TemplateFileName := lbeTemplateFileName.Text;
-  FOIFrame.Repaint;
+  Fnm := StringReplace((Sender as TMenuItem).Caption, '&', '', [rfReplaceAll]);
+  FEditingAction^.CallTemplateOptions.TemplateFileName := Fnm;
+  FOIFrame.Repaint;   //ideally, RepaintNodeByLevel
+  TriggerOnControlsModified;
 end;
 
 
@@ -2159,12 +1079,6 @@ begin
   finally
     AvailableTemplates.Free;
   end;
-end;
-
-
-procedure TfrClickerActions.memExecAppParamsChange(Sender: TObject);
-begin
-  TriggerOnControlsModified;
 end;
 
 
@@ -2279,8 +1193,6 @@ end;
 
 
 procedure TfrClickerActions.ClearControls;
-var
-  TempListOfVars: TClkSetVarOptions;
 begin
   lbeActionName.Text := '';
   cmbActions.ItemIndex := -1;
@@ -2288,71 +1200,7 @@ begin
   frClickerConditionEditor.ClearActionConditionPreview;
   UpdatePageControlActionsHighlighting;
 
-  cmbXClickReference.ItemIndex := 0;
-  cmbYClickReference.ItemIndex := 0;
-  lbeClickXOffset.Text := '0';
-  lbeClickYOffset.Text := '0';
-  lbeClickVarX.Text := '$Control_Left$';
-  lbeClickVarY.Text := '$Control_Top$';
-  lbeClickVarX.Enabled := False;
-  lbeClickVarY.Enabled := False;
-
-  cmbClickType.ItemIndex := CMouseClickType_Click;
-  FcmbXClickReferenceDest.ItemIndex := 0;
-  FcmbYClickReferenceDest.ItemIndex := 0;
-  FlbeClickXOffsetDest.Text := '0';
-  FlbeClickYOffsetDest.Text := '0';
-  FlbeClickVarXDest.Text := '$Control_Left$';
-  FlbeClickVarYDest.Text := '$Control_Top$';
-  FgrpMouseDragControls.Hide;
-  FlbeClickVarXDest.Enabled := False;
-  FlbeClickVarYDest.Enabled := False;
-  
-  rdgrpMouseButton.ItemIndex := Ord(mbLeft);
-  chkClickWithCtrl.Checked := False;
-  chkClickWithAlt.Checked := False;
-  chkClickWithShift.Checked := False;
-  chkClickWithDoubleClick.Checked := False;
-  chkLeaveMouse.Checked := False;
-  chkMoveWithoutClick.Checked := False;
-  lbeMultiClickCount.Text := '1';
-
-  lbeExecAppPath.Text := '';
-  memExecAppParams.Text := '';
-  chkWaitForApp.Checked := False;
-  chkNoConsole.Checked := False;
-
   frClickerFindControl.ClearControls;
-
-  lbeSetNewText.Text := '';
-
-  lbeTemplateFileName.Text := '';
-  chkCallOnlyIfContitionIsTrue.Checked := False;
-  lbeCallOnlyIfContitionVarName.Enabled := chkCallOnlyIfContitionIsTrue.Checked;
-  lbeCallOnlyIfContitionVarValue.Enabled := chkCallOnlyIfContitionIsTrue.Checked;
-  vallstCustomVariables.Strings.Clear;
-  chkEvaluateVarsBeforeCalling.Checked := False;
-  chkCallTemplateLoopEnabled.Checked := False;
-  lbeCallTemplateLoopCounter.Text := '';
-  lbeCallTemplateLoopInitValue.Text := '';
-  lbeCallTemplateLoopEndValue.Text := '';
-  cmbCallTemplateLoopDirection.ItemIndex := 0;
-  cmbCallTemplateLoopBreakPosition.ItemIndex := 0;
-  lbeCallTemplateLoopBreakCondition.Text := '';
-
-  TempListOfVars.ListOfVarNames := '';
-  TempListOfVars.ListOfVarValues := '';
-  ListOfSetVars := TempListOfVars;
-
-  cmbWindowOperationsType.ItemIndex := 0;
-  lbeWindowOperationsX.Text := '';
-  lbeWindowOperationsX.Enabled := False;
-  lbeWindowOperationsY.Text := '';
-  lbeWindowOperationsY.Enabled := False;
-  lbeWindowOperationsWidth.Text := '';
-  lbeWindowOperationsWidth.Enabled := False;
-  lbeWindowOperationsHeight.Text := '';
-  lbeWindowOperationsHeight.Enabled := False;
 
   //clear dynamically created mouse controls
 
@@ -2459,25 +1307,25 @@ begin
   if llLeft in ALimitLabelsToUpdate then
   begin
     FEditingAction^.FindControlOptions.InitialRectange.LeftOffset := AOffsets.Left;
-    FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, CCategory_ActionSpecific, CFindControl_InitialRectange, CFindControl_InitialRectange_LeftOffset_PropItemIndex);
+    FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, CCategory_ActionSpecific, CFindControl_InitialRectange_PropIndex, CFindControl_InitialRectange_LeftOffset_PropItemIndex);
   end;
 
   if llTop in ALimitLabelsToUpdate then
   begin
     FEditingAction^.FindControlOptions.InitialRectange.TopOffset := AOffsets.Top;
-    FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, CCategory_ActionSpecific, CFindControl_InitialRectange, CFindControl_InitialRectange_TopOffset_PropItemIndex);
+    FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, CCategory_ActionSpecific, CFindControl_InitialRectange_PropIndex, CFindControl_InitialRectange_TopOffset_PropItemIndex);
   end;
 
   if llRight in ALimitLabelsToUpdate then
   begin
     FEditingAction^.FindControlOptions.InitialRectange.RightOffset := AOffsets.Right;
-    FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, CCategory_ActionSpecific, CFindControl_InitialRectange, CFindControl_InitialRectange_RightOffset_PropItemIndex);
+    FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, CCategory_ActionSpecific, CFindControl_InitialRectange_PropIndex, CFindControl_InitialRectange_RightOffset_PropItemIndex);
   end;
 
   if llBottom in ALimitLabelsToUpdate then
   begin
     FEditingAction^.FindControlOptions.InitialRectange.BottomOffset := AOffsets.Bottom;
-    FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, CCategory_ActionSpecific, CFindControl_InitialRectange, CFindControl_InitialRectange_BottomOffset_PropItemIndex);
+    FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, CCategory_ActionSpecific, CFindControl_InitialRectange_PropIndex, CFindControl_InitialRectange_BottomOffset_PropItemIndex);
   end;
 end;
 
@@ -2516,6 +1364,25 @@ begin
 end;
 
 
+function TfrClickerActions.HandleOnGetDisplayedText: string;
+begin
+  Result := FEditingAction^.FindControlOptions.MatchText;
+end;
+
+
+procedure TfrClickerActions.HandleOnSetMatchTextAndClassToOI(AMatchText, AMatchClassName: string);
+begin
+  FEditingAction^.FindControlOptions.MatchText := AMatchText;
+  FEditingAction^.FindControlOptions.MatchClassName := AMatchClassName;
+end;
+
+
+function TfrClickerActions.HandleOnGetFindControlOptions: PClkFindControlOptions;
+begin
+  Result := @FEditingAction^.FindControlOptions;
+end;
+
+
 procedure TfrClickerActions.HandleOnClickerExecAppFrame_OnTriggerOnControlsModified;
 begin
   FEditingAction.ExecAppOptions.ListOfParams := frClickerExecApp.memExecAppParams.Lines.Text;
@@ -2527,6 +1394,13 @@ end;
 procedure TfrClickerActions.HandleOnClickerSetVarFrame_OnTriggerOnControlsModified;
 begin
   FEditingAction.SetVarOptions := frClickerSetVar.GetListOfSetVars;
+  TriggerOnControlsModified;
+end;
+
+
+procedure TfrClickerActions.HandleOnClickerCallTemplateFrame_OnTriggerOnControlsModified;
+begin
+  FEditingAction.CallTemplateOptions.ListOfCustomVarsAndValues := frClickerCallTemplate.GetListOfCustomVariables;
   TriggerOnControlsModified;
 end;
 
@@ -2661,6 +1535,8 @@ begin
       frClickerExecApp.BringToFront;
       frClickerFindControl.Parent := TabSheetActionFindControl;
       frClickerSetVar.Hide;
+      frClickerCallTemplate.Hide;
+      frClickerSleep.Hide;
     end;
 
     acFindControl, acFindSubControl:
@@ -2670,6 +1546,8 @@ begin
       frClickerFindControl.Show;
       frClickerFindControl.BringToFront;
       frClickerSetVar.Hide;
+      frClickerCallTemplate.Hide;
+      frClickerSleep.Hide;
     end;
 
     acSetVar:
@@ -2678,13 +1556,37 @@ begin
       frClickerFindControl.Parent := TabSheetActionFindControl;
       frClickerSetVar.Show;
       frClickerSetVar.BringToFront;
-    end
+      frClickerCallTemplate.Hide;
+      frClickerSleep.Hide;
+    end;
+
+    acCallTemplate:
+    begin
+      frClickerExecApp.Hide;
+      frClickerFindControl.Parent := TabSheetActionFindControl;
+      frClickerSetVar.Hide;
+      frClickerCallTemplate.Show;
+      frClickerCallTemplate.BringToFront;
+      frClickerSleep.Hide;
+    end;
+
+    acSleep:
+    begin
+      frClickerExecApp.Hide;
+      frClickerFindControl.Parent := TabSheetActionFindControl;
+      frClickerSetVar.Hide;
+      frClickerCallTemplate.Hide;
+      frClickerSleep.Show;
+      frClickerSleep.BringToFront;
+    end;
 
     else
     begin
       frClickerExecApp.Hide;
       frClickerFindControl.Parent := TabSheetActionFindControl;
       frClickerSetVar.Hide;
+      frClickerCallTemplate.Hide;
+      frClickerSleep.Hide;
 
       pnlCover.Left := 0;
       pnlCover.Top := 0;
@@ -2936,6 +1838,23 @@ procedure TfrClickerActions.MenuItem_AddFontProfileToPropertyListClick(Sender: T
 var
   MenuData: POIMenuItemData;
   n: Integer;
+
+  function GetUniqueProfileName: string;
+  var
+    AttemptCount: Integer;
+  begin
+    Result := 'Profile [' + IntToStr(n) + ']';
+
+    AttemptCount := 0;
+    while frClickerFindControl.GetFontProfileIndexByName(Result) <> -1 do
+    begin
+      Result := Result + 'A';
+      Inc(AttemptCount);
+
+      if AttemptCount > 1000 then
+        raise Exception.Create('Can''t generate a new font profile name.');
+    end;
+  end;
 begin
   MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
   try
@@ -2943,8 +1862,8 @@ begin
       n := Length(FEditingAction^.FindControlOptions.MatchBitmapText);
       SetLength(FEditingAction^.FindControlOptions.MatchBitmapText, n + 1);
 
-      FEditingAction^.FindControlOptions.MatchBitmapText[n].ForegroundColor := '';
-      FEditingAction^.FindControlOptions.MatchBitmapText[n].BackgroundColor := '';
+      FEditingAction^.FindControlOptions.MatchBitmapText[n].ForegroundColor := '$Color_Window$';
+      FEditingAction^.FindControlOptions.MatchBitmapText[n].BackgroundColor := '$Color_Highlight$';
       FEditingAction^.FindControlOptions.MatchBitmapText[n].FontName := 'Tahoma';
       FEditingAction^.FindControlOptions.MatchBitmapText[n].FontSize := 8;
       FEditingAction^.FindControlOptions.MatchBitmapText[n].FontQualityReplacement := '';
@@ -2958,7 +1877,9 @@ begin
       FEditingAction^.FindControlOptions.MatchBitmapText[n].CropTop := '0';
       FEditingAction^.FindControlOptions.MatchBitmapText[n].CropRight := '0';
       FEditingAction^.FindControlOptions.MatchBitmapText[n].CropBottom := '0';
-      FEditingAction^.FindControlOptions.MatchBitmapText[n].ProfileName := 'Profile [' + IntToStr(n) + ']';
+      FEditingAction^.FindControlOptions.MatchBitmapText[n].ProfileName := GetUniqueProfileName;
+
+      frClickerFindControl.AddNewFontProfile(FEditingAction^.FindControlOptions.MatchBitmapText[n]);
 
       FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex);
       TriggerOnControlsModified;
@@ -2993,6 +1914,8 @@ begin
       SetLength(FEditingAction^.FindControlOptions.MatchBitmapText, n - 1);
 
       FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex);
+
+      frClickerFindControl.RemoveFontProfileByIndex(MenuData^.PropertyItemIndex);
       TriggerOnControlsModified;
     finally
       MenuData^.OwnerMenu.Free;
@@ -3199,7 +2122,7 @@ begin
         CFindControl_MatchBitmapAlgorithmSettings_PropIndex:
           Result := CPropCount_FindControlMatchBitmapAlgorithmSettings;
 
-        CFindControl_InitialRectange:
+        CFindControl_InitialRectange_PropIndex:
           Result := CPropCount_FindControlInitialRectange;
 
         else
@@ -3255,7 +2178,7 @@ begin
         CFindControl_MatchBitmapAlgorithmSettings_PropIndex:
           Result := CFindControl_MatchBitmapAlgorithmSettingsProperties[AItemIndex].Name;
 
-        CFindControl_InitialRectange:
+        CFindControl_InitialRectange_PropIndex:
           Result := CFindControl_InitialRectangeProperties[AItemIndex].Name;
 
         else
@@ -3326,7 +2249,7 @@ begin
         CFindControl_MatchBitmapAlgorithmSettings_PropIndex:
           PropDef := CFindControl_MatchBitmapAlgorithmSettingsProperties[AItemIndex];
 
-        CFindControl_InitialRectange:
+        CFindControl_InitialRectange_PropIndex:
           PropDef := CFindControl_InitialRectangeProperties[AItemIndex];
 
         else
@@ -3368,8 +2291,70 @@ end;
 
 procedure TfrClickerActions.HandleOnOIGetImageIndexEx(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; Kind: TVTImageKind;
   Column: TColumnIndex; var Ghosted: Boolean; var ImageIndex: Integer; var ImageList: TCustomImageList);
+var
+  EditingActionType: Integer;
 begin
+  EditingActionType := Integer(CurrentlyEditingActionType);
 
+  case ACategoryIndex of
+    CCategory_Common:
+    begin
+      ;
+    end;
+
+    CCategory_ActionSpecific:
+    begin
+      if EditingActionType = CClkUnsetAction then
+        Exit;
+
+      if Column = 0 then
+      begin
+        case ANodeLevel of
+          CCategoryLevel:
+          begin
+            ImageList := imglstActions16;
+            ImageIndex := EditingActionType;
+          end;
+
+          CPropertyLevel:
+          begin
+            ImageIndex := APropertyIndex;
+
+            case EditingActionType of
+              Ord(acClick):
+                ImageList := imglstClickProperties;
+
+              Ord(acExecApp):
+                ImageList := imglstExecAppProperties;
+
+              Ord(acFindControl), Ord(acFindSubControl):
+                ImageList := imglstFindControlProperties;
+
+              Ord(acSetControlText):
+                ImageList := imglstSetTextProperties;
+
+              Ord(acCallTemplate):
+                ImageList := imglstCallTemplateProperties;
+
+              Ord(acSleep):
+                ImageList := imglstSleepProperties;
+
+              Ord(acSetVar):
+                ImageList := imglstSetVarProperties;
+
+              Ord(acWindowOperations):
+                ImageList := imglstWindowOperationsProperties;
+            end;   //case
+          end;
+
+          CPropertyItemLevel:
+          begin
+
+          end;
+        end; //case
+      end; // Column = 0
+    end;
+  end;
 end;
 
 
@@ -3378,6 +2363,7 @@ var
   EditingActionType: Integer;
   TempStringList: TStringList;
   ItemIndexMod, ItemIndexDiv: Integer;
+  FoundProfileIndex: Integer;
 begin
   case ACategoryIndex of
     CCategory_Common:
@@ -3452,10 +2438,18 @@ begin
                     FEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv].CropBottom := ANewText;
                     frClickerFindControl.BMPTextFontProfiles[ItemIndexDiv].UpdateSelectionLabelsFromCropInfo(FEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv]);
                   end;
+
+                  CFindControl_MatchBitmapText_ProfileName_PropItemIndex:
+                  begin
+                    FoundProfileIndex := frClickerFindControl.GetFontProfileIndexByName(ANewText);
+                    if (FoundProfileIndex > -1) and (FoundProfileIndex <> ItemIndexDiv) then
+                      raise Exception.Create('Font profile name already exists. Please use a different one.');
+                  end;
                 end; //case  ItemIndexMod
               end;
 
               SetActionValueStr_FindControl_MatchBitmapText(FEditingAction, ANewText, AItemIndex {no mod here});
+              frClickerFindControl.PreviewText;
               TriggerOnControlsModified;
               Exit;
             end;
@@ -3494,12 +2488,15 @@ begin
               Exit;
             end;
 
-            CFindControl_InitialRectange:
+            CFindControl_InitialRectange_PropIndex:
             begin
               SetActionValueStr_FindControl_InitialRectange(FEditingAction, ANewText, AItemIndex);
               TriggerOnControlsModified;
               Exit;
-            end
+            end;
+
+            CFindControl_UseWholeScreen_PropIndex:   //this call will have to take into account, the screen edges or vars as search area limits
+              frClickerFindControl.UpdateSearchAreaLabelsFromKeysOnInitRect(FEditingAction^.FindControlOptions.InitialRectange);
 
             else
               ;
@@ -3746,7 +2743,7 @@ procedure TfrClickerActions.HandleOnTextEditorMouseDown(ANodeLevel, ACategoryInd
 var
   ItemIndexMod, ItemIndexDiv: Integer;
 begin
-  if (ACategoryIndex = CCategory_ActionSpecific) and (APropertyIndex = CFindControl_InitialRectange) then
+  if (ACategoryIndex = CCategory_ActionSpecific) and (APropertyIndex = CFindControl_InitialRectange_PropIndex) then
   begin
     case AItemIndex of
       CFindControl_InitialRectange_LeftOffset_PropItemIndex:
@@ -3792,7 +2789,7 @@ var
 begin
   Result := False;
 
-  if (ACategoryIndex = CCategory_ActionSpecific) and (APropertyIndex = CFindControl_InitialRectange) then
+  if (ACategoryIndex = CCategory_ActionSpecific) and (APropertyIndex = CFindControl_InitialRectange_PropIndex) then
   begin
     case AItemIndex of
       CFindControl_InitialRectange_LeftOffset_PropItemIndex:
@@ -3857,26 +2854,60 @@ end;
 
 procedure TfrClickerActions.HandleOnOITextEditorKeyUp(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer;
   Sender: TObject; var Key: Word; Shift: TShiftState);
+var
+  i: Integer;
+  ItemIndexMod, ItemIndexDiv: Integer;
 begin
-  if (ACategoryIndex = CCategory_ActionSpecific) and (APropertyIndex = CFindControl_InitialRectange) then
-    if AItemIndex in [CFindControl_InitialRectange_LeftOffset_PropItemIndex .. CFindControl_InitialRectange_BottomOffset_PropItemIndex] then
-    begin
-      case AItemIndex of
-        CFindControl_InitialRectange_LeftOffset_PropItemIndex:
-          FEditingAction^.FindControlOptions.InitialRectange.LeftOffset := (Sender as TVTEdit).Text;
+  if ACategoryIndex = CCategory_ActionSpecific then
+  begin
+    if FEditingAction^.ActionOptions.Action in [acFindControl, acFindSubControl] then
+      case APropertyIndex of
+        CFindControl_MatchText_PropIndex:
+        begin
+          FEditingAction^.FindControlOptions.MatchText := TVTEdit(Sender).Text;
 
-        CFindControl_InitialRectange_TopOffset_PropItemIndex:
-          FEditingAction^.FindControlOptions.InitialRectange.TopOffset := (Sender as TVTEdit).Text;
+          frClickerFindControl.PreviewText;
+          for i := 0 to Length(FEditingAction^.FindControlOptions.MatchBitmapText) - 1 do
+            frClickerFindControl.BMPTextFontProfiles[i].UpdateSelectionLabelsFromCropInfo(FEditingAction^.FindControlOptions.MatchBitmapText[i]);
+        end;
 
-        CFindControl_InitialRectange_RightOffset_PropItemIndex:
-          FEditingAction^.FindControlOptions.InitialRectange.RightOffset := (Sender as TVTEdit).Text;
+        CFindControl_MatchBitmapText_PropIndex:
+        begin
+          ItemIndexMod := AItemIndex mod CPropCount_FindControlMatchBitmapText;
+          ItemIndexDiv := AItemIndex div CPropCount_FindControlMatchBitmapText;
 
-        CFindControl_InitialRectange_BottomOffset_PropItemIndex:
-          FEditingAction^.FindControlOptions.InitialRectange.BottomOffset := (Sender as TVTEdit).Text;
-      end;
+          if ItemIndexMod = CFindControl_MatchBitmapText_ProfileName_PropItemIndex then
+          begin
+            FEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv].ProfileName := TVTEdit(Sender).Text;
+            frClickerFindControl.UpdateFontProfilName(ItemIndexDiv, TVTEdit(Sender).Text);
+          end;
 
-      frClickerFindControl.UpdateSearchAreaLabelsFromKeysOnInitRect(FEditingAction^.FindControlOptions.InitialRectange);
-    end;
+          frClickerFindControl.PreviewText;
+        end;
+
+        CFindControl_InitialRectange_PropIndex:
+        begin
+          if AItemIndex in [CFindControl_InitialRectange_LeftOffset_PropItemIndex .. CFindControl_InitialRectange_BottomOffset_PropItemIndex] then
+          begin
+            case AItemIndex of
+              CFindControl_InitialRectange_LeftOffset_PropItemIndex:
+                FEditingAction^.FindControlOptions.InitialRectange.LeftOffset := (Sender as TVTEdit).Text;
+
+              CFindControl_InitialRectange_TopOffset_PropItemIndex:
+                FEditingAction^.FindControlOptions.InitialRectange.TopOffset := (Sender as TVTEdit).Text;
+
+              CFindControl_InitialRectange_RightOffset_PropItemIndex:
+                FEditingAction^.FindControlOptions.InitialRectange.RightOffset := (Sender as TVTEdit).Text;
+
+              CFindControl_InitialRectange_BottomOffset_PropItemIndex:
+                FEditingAction^.FindControlOptions.InitialRectange.BottomOffset := (Sender as TVTEdit).Text;
+            end;
+
+            frClickerFindControl.UpdateSearchAreaLabelsFromKeysOnInitRect(FEditingAction^.FindControlOptions.InitialRectange);
+          end;
+        end; //init rect
+      end; //case
+  end;
 end;
 
 
@@ -3894,43 +2925,102 @@ procedure TfrClickerActions.HandleOnOIEditorAssignMenuAndTooltip(ANodeLevel, ACa
 var
   TempValue: string;
 begin
-  APopupMenu := frClickerFindControl.pmStandardControlRefVars; //////////////////////// some example
+  APopupMenu := nil;
   AHint := '';
   AShowHint := True;
 
-  if (ACategoryIndex = CCategory_ActionSpecific) and (APropertyIndex = CFindControl_InitialRectange) then
-    if AItemIndex in [CFindControl_InitialRectange_Left_PropItemIndex .. CFindControl_InitialRectange_Bottom_PropItemIndex] then
-    begin
-      case AItemIndex of
-        CFindControl_InitialRectange_Left_PropItemIndex:
-        begin
-          TempValue := FEditingAction^.FindControlOptions.InitialRectange.Left;
-          AHint := 'Left edge of the search area. Variable replacements are available.' + #13#10 +
-                   TempValue + ' = ' + EvaluateReplacements(TempValue);
-        end;
+  if ACategoryIndex = CCategory_ActionSpecific then
+  begin
+    case CurrentlyEditingActionType of
+      acFindControl, acFindSubControl:
+      begin
+        case APropertyIndex of
+          CFindControl_MatchCriteria_PropIndex:
+          begin
+            if AItemIndex = CFindControl_MatchCriteria_SearchForControlMode_PropItemIndex then
+            begin
+              AHint := 'With "Generate Grid", the application generates a grid of points, where it queries for a window/control.' + #13#10 +
+                       'With "Enumerate Windows", it lists all top-level windows and matches their caption and/or class.' + #13#10 +
+                       'With "Find Window", both class and caption have to match and no wildcard is available.';
+            end;
+          end;
 
-        CFindControl_InitialRectange_Top_PropItemIndex:
-        begin
-          TempValue := FEditingAction^.FindControlOptions.InitialRectange.Top;
-          AHint := 'Top edge of the search area. Variable replacements are available.' + #13#10 +
-                   TempValue + ' = ' + EvaluateReplacements(TempValue);
-        end;
+          CFindControl_InitialRectange_PropIndex:
+            if AItemIndex in [CFindControl_InitialRectange_Left_PropItemIndex .. CFindControl_InitialRectange_Bottom_PropItemIndex] then
+            begin
+              case AItemIndex of
+                CFindControl_InitialRectange_Left_PropItemIndex:
+                begin
+                  APopupMenu := frClickerFindControl.pmStandardControlRefVars;
+                  TempValue := FEditingAction^.FindControlOptions.InitialRectange.Left;
+                  AHint := 'Left edge of the search area. Variable replacements are available.' + #13#10 +
+                           TempValue + ' = ' + EvaluateReplacements(TempValue);
+                end;
 
-        CFindControl_InitialRectange_Right_PropItemIndex:
-        begin
-          TempValue := FEditingAction^.FindControlOptions.InitialRectange.Right;
-          AHint := 'Right edge of the search area. Variable replacements are available.' + #13#10 +
-                   TempValue + ' = ' + EvaluateReplacements(TempValue);
-        end;
+                CFindControl_InitialRectange_Top_PropItemIndex:
+                begin
+                  APopupMenu := frClickerFindControl.pmStandardControlRefVars;
+                  TempValue := FEditingAction^.FindControlOptions.InitialRectange.Top;
+                  AHint := 'Top edge of the search area. Variable replacements are available.' + #13#10 +
+                           TempValue + ' = ' + EvaluateReplacements(TempValue);
+                end;
 
-        CFindControl_InitialRectange_Bottom_PropItemIndex:
-        begin
-          TempValue := FEditingAction^.FindControlOptions.InitialRectange.Bottom;
-          AHint := 'Bottom edge of the search area. Variable replacements are available.' + #13#10 +
-                   TempValue + ' = ' + EvaluateReplacements(TempValue);
+                CFindControl_InitialRectange_Right_PropItemIndex:
+                begin
+                  APopupMenu := frClickerFindControl.pmStandardControlRefVars;
+                  TempValue := FEditingAction^.FindControlOptions.InitialRectange.Right;
+                  AHint := 'Right edge of the search area. Variable replacements are available.' + #13#10 +
+                           TempValue + ' = ' + EvaluateReplacements(TempValue);
+                end;
+
+                CFindControl_InitialRectange_Bottom_PropItemIndex:
+                begin
+                  APopupMenu := frClickerFindControl.pmStandardControlRefVars;
+                  TempValue := FEditingAction^.FindControlOptions.InitialRectange.Bottom;
+                  AHint := 'Bottom edge of the search area. Variable replacements are available.' + #13#10 +
+                           TempValue + ' = ' + EvaluateReplacements(TempValue);
+                end;
+              end;
+            end;
+        end; //case
+      end; //FindControl
+
+      acWindowOperations:
+      begin
+        APopupMenu := pmWindowOperationsEditors;
+
+        case APropertyIndex of
+          CWindowOperations_NewX, CWindowOperations_NewY:
+          begin
+            AHint := 'Evaluates $Control_Left$ and $Control_Top$ variables and updates "New X" and "New Y" to them.';
+            MenuItem_SetFromControlLeftAndTop.Enabled := True;
+            MenuItem_SetFromControlWidthAndHeight.Enabled := False;
+          end;
+
+          CWindowOperations_NewWidth, CWindowOperations_NewHeight:
+          begin
+            AHint := 'Evaluates $Control_Width$ and $Control_Height$ variables and updates "New Width" and "New Height" to them.';
+            MenuItem_SetFromControlLeftAndTop.Enabled := False;
+            MenuItem_SetFromControlWidthAndHeight.Enabled := True;
+          end
+
+          else
+          begin
+            MenuItem_SetFromControlLeftAndTop.Enabled := False;
+            MenuItem_SetFromControlWidthAndHeight.Enabled := False;
+          end ;
         end;
       end;
-    end;
+
+      acSleep:
+        AHint := 'Sleep values, lower than 1, are ignored.' + #13#10 +
+                 'Use this action only as a last resort (e.g. blinking or resizing controls/windows).' + #13#10 +
+                 'Waiting for the proper event or control property, is the right way to solve a race condition. Use the "sleep" action if the event/property is not available.';
+
+      else
+        ;
+    end;  //case CurrentlyEditingActionType
+  end;
 end;
 
 
@@ -4178,7 +3268,7 @@ begin
         acFindControl, acFindSubControl:
           if APropertyIndex = CFindControl_MatchBitmapFiles_PropIndex then
           begin
-            MessageBox(Handle, 'File list editor', 'Files', MB_ICONINFORMATION);
+            //MessageBox(Handle, 'File list editor', 'Files', MB_ICONINFORMATION);
             TriggerOnControlsModified;
           end;
 
@@ -4187,8 +3277,8 @@ begin
           case APropertyIndex of
             CCallTemplate_ListOfCustomVarsAndValues_PropIndex:
             begin
-              MessageBox(Handle, 'call template vars - editor', 'Files', MB_ICONINFORMATION);
-              TriggerOnControlsModified;
+              frClickerCallTemplate.SetListOfCustomVariables(FEditingAction^.CallTemplateOptions.ListOfCustomVarsAndValues);
+              //TriggerOnControlsModified;
             end;
 
             CCallTemplate_CallTemplateLoop_PropIndex:
@@ -4302,7 +3392,7 @@ procedure TfrClickerActions.HandleOnAfterSpinTextEditorChanging(ANodeLevel, ACat
 var
   ItemIndexMod, ItemIndexDiv: Integer;
 begin
-  if (ACategoryIndex = CCategory_ActionSpecific) and (APropertyIndex = CFindControl_InitialRectange) then
+  if (ACategoryIndex = CCategory_ActionSpecific) and (APropertyIndex = CFindControl_InitialRectange_PropIndex) then
   begin
     case AItemIndex of
       CFindControl_InitialRectange_LeftOffset_PropItemIndex:

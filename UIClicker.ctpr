@@ -280,6 +280,21 @@
         <FRMtype Value="400"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frClickerSetVar"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Frame"/>
+      </Unit>
+      <Unit>
+        <Filename Value="ClickerSleepFrame.pas"/>
+        <FRMtype Value="400"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frClickerSleep"/>
+        <ResourceBaseClass Value="Frame"/>
+      </Unit>
+      <Unit>
+        <Filename Value="ClickerCallTemplateFrame.pas"/>
+        <FRMtype Value="400"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frClickerCallTemplate"/>
         <ResourceBaseClass Value="Frame"/>
       </Unit>
     </Units>
