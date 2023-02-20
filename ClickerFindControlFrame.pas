@@ -2939,8 +2939,8 @@ begin
   begin
     CurrentLabel := Sender as TLabel;
     NewLeft := FMouseDownSelPos.X + tp.X - FMouseDownGlobalPos.X;
-    //if NewLeft <> CurrentLabel.Left then
-    //  Modified := True;
+    if NewLeft <> CurrentLabel.Left then
+      DoOnTriggerOnControlsModified;
 
     CurrentLabel.Left := Min(NewLeft, FSearchAreaControlDbgImg.Width);
     FSearchAreaLeftLimitLabel.Left := CurrentLabel.Left;
@@ -2989,8 +2989,8 @@ begin
   begin
     CurrentLabel := Sender as TLabel;
     NewLeft := FMouseDownSelPos.X + tp.X - FMouseDownGlobalPos.X;
-    //if NewLeft <> CurrentLabel.Left then
-    //  Modified := True;
+    if NewLeft <> CurrentLabel.Left then
+      DoOnTriggerOnControlsModified;
 
     CurrentLabel.Left := Min(NewLeft, FSearchAreaControlDbgImg.Width);
     FSearchAreaRightLimitLabel.Left := CurrentLabel.Left;
@@ -3039,8 +3039,8 @@ begin
   begin
     CurrentLabel := Sender as TLabel;
     NewTop := FMouseDownSelPos.Y + tp.Y - FMouseDownGlobalPos.Y;
-    //if NewTop <> CurrentLabel.Top then
-    //  Modified := True;
+    if NewTop <> CurrentLabel.Top then
+      DoOnTriggerOnControlsModified;
 
     CurrentLabel.Top := Min(NewTop, FSearchAreaControlDbgImg.Height);
     FSearchAreaTopLimitLabel.Top := CurrentLabel.Top;
@@ -3089,8 +3089,8 @@ begin
   begin
     CurrentLabel := Sender as TLabel;
     NewTop := FMouseDownSelPos.Y + tp.Y - FMouseDownGlobalPos.Y;
-    //if NewTop <> CurrentLabel.Top then
-    //  Modified := True;
+    if NewTop <> CurrentLabel.Top then
+      DoOnTriggerOnControlsModified;
 
     CurrentLabel.Top := Min(NewTop, FSearchAreaControlDbgImg.Height);
     FSearchAreaBottomLimitLabel.Top := CurrentLabel.Top;

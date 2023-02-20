@@ -43,7 +43,7 @@ uses
   ClickerPreviewForm, ClickerActionExecution, ClickerTemplateNotesForm,
   ClickerZoomPreviewForm, ObjectInspectorFrame, ClickerActionValues, 
   ClickerExecAppFrame, ClickerSetVarFrame, ClickerSleepFrame, 
-ClickerCallTemplateFrame;
+  ClickerCallTemplateFrame, ClickerUtils;
 
 {$R *.res}
 
@@ -76,6 +76,11 @@ begin
   end;
 
   try
+    {$IFDEF TestBuild}
+      if GetCmdLineOptionValue('--EnableSavingExceptionToFile') = 'No' then
+        Exit;
+    {$ENDIF}
+
     ExceptionLog := TStringList.Create;
     try
       ExceptionLog.Add(DateTimeToStr(Now));
@@ -109,6 +114,11 @@ var
   LogPath: string;
 begin
   try //use another try..excempt, just in case parsing the stack would raise more exceptions
+    {$IFDEF TestBuild}
+      if GetCmdLineOptionValue('--EnableSavingExceptionToFile') = 'No' then
+        Exit;
+    {$ENDIF}
+
     Msg := 'Unhandled exception at adddr $' + SysBacktraceStr(Addr) + ':' + #13#10;
 
     if Obj is Exception then
@@ -166,6 +176,8 @@ begin
         WriteLn('  --AutoSwitchToExecTab <No, Yes>');
         WriteLn('  --AutoEnableSwitchTabsOnDebugging <No, Yes>');
         WriteLn('  --UseWideStringsOnGetControlText <No, Yes>');
+        WriteLn('  --EnableSavingExceptionToFile <No, Yes>');  //defaults to Yes, for backkward compatibility
+        WriteLn('  --AddAppArgsToLog <No, Yes>');  //defaults to No
         WriteLn('Examples:');
         WriteLn('  ' + ExtractFileName(ParamStr(0)) + ' --ExtraCaption MyServer --SetExecMode Server --ServerPort 15444');
         WriteLn('  ' + ExtractFileName(ParamStr(0)) + ' --ExtraCaption MyClient --SetExecMode Client --ConnectsTo http://127.0.0.1:15444');

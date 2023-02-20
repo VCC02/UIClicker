@@ -706,7 +706,32 @@ const
   {$ENDIF}
 
 
+
+function GetPropertyHint_Click_XClickPointVar: string;
+function GetPropertyHint_Click_YClickPointVar: string;
+function GetPropertyHint_Click_XOffset: string;
+function GetPropertyHint_Click_YOffset: string;
+function GetPropertyHint_Click_LeaveMouse: string;
+
+function GetPropertyHint_FindControl_MatchCriteria_SearchForControlMode: string;
+function GetPropertyHint_FindControl_InitialRectange_Left(AKey, AValue: string): string;
+function GetPropertyHint_FindControl_InitialRectange_Top(AKey, AValue: string): string;
+function GetPropertyHint_FindControl_InitialRectange_Right(AKey, AValue: string): string;
+function GetPropertyHint_FindControl_InitialRectange_Bottom(AKey, AValue: string): string;
+
+function GetPropertyHint_WindowOperations_NewXY: string;
+function GetPropertyHint_WindowOperations_NewWidthHeight: string;
+
+function GetPropertyHint_Sleep: string;
+
+//const
+
+
 implementation
+
+
+uses
+  Math;
 
 
 function GetActionValueStr_Action(AAction: PClkActionRec; APropertyIndex: Integer): string;
@@ -1150,7 +1175,7 @@ begin
     8: AAction^.ClickOptions.ClickWithAlt := StrToBool(NewValue);
     9: AAction^.ClickOptions.ClickWithShift := StrToBool(NewValue);
     //10:= BoolToStr(AAction^.ClickOptions.ClickWithDoubleClick, True);  //deprecated
-    10: IntToStr(AAction^.ClickOptions.Count);
+    10: AAction^.ClickOptions.Count := Max(1, StrToIntDef(NewValue, 1));
     11: AAction^.ClickOptions.LeaveMouse := StrToBool(NewValue);
     12: AAction^.ClickOptions.MoveWithoutClick := StrToBool(NewValue);
     13: AAction^.ClickOptions.ClickType := ClickType_AsStringToValue(NewValue);
@@ -1360,6 +1385,308 @@ begin
       ;
   end;
 end;
+
+
+//
+
+function GetPropertyHint_Click_XClickPointVar: string;
+begin
+  Result := 'The provided variables must be global/screen coordinates.' + #13#10 +
+            'The $Current_Mouse_X$ var/replacement can be used as global mouse X coordinate.';
+end;
+
+
+function GetPropertyHint_Click_YClickPointVar: string;
+begin
+  Result := 'The provided variables must be global/screen coordinates.' + #13#10 +
+            'The $Current_Mouse_Y$ var/replacement can be used as global mouse Y coordinate.';
+end;
+
+
+function GetPropertyHint_Click_XOffset: string;
+begin
+  Result := 'Replacements are available.  Examples of random value: $Random(50, 100)$   $Random($MMin$, $MMax$)$';
+end;
+
+
+function GetPropertyHint_Click_YOffset: string;
+begin
+  Result := 'Replacements are available.  Examples of random value: $Random(50, 100)$   $Random($MMin$, $MMax$)$';
+end;
+
+
+function GetPropertyHint_Click_LeaveMouse: string;
+begin
+  Result := 'When True, the mouse cursor position is not reset after running the action.' + #13#10 +
+            'It may be required if the click action will open a pop-up menu, to cause the menu to open at that location.' + #13#10 +
+            'This is also useful for debugging, to verify offsets.';
+end;
+
+
+function GetPropertyHint_ExecApp_PathToApp: string;
+begin
+  Result := 'Full path (without quotes) to executable or other file to be open with associated application. Replacements are available.';
+end;
+
+
+function GetPropertyHint_ExecApp_AppStdIn: string;
+begin
+  Result := 'All #4#5 (a.k.a. 0x4:0x5) occurrences are replaced with CRLF (#13#10) before executing the application.' + #13#10 +
+            'Var/replacements are available. E.g.: $ExecAction_StdIn$' + #13#10 +
+            'When this parameter is empty string, the executed application can run without inherited handles.';
+end;
+
+
+function GetPropertyHint_ExecApp_CurrentDir: string;
+begin
+  Result := 'Application current directory.  Replacements are avaialable.  Example: $ExtractFileDir($PathToMyFile$)$';
+end;
+
+
+function GetPropertyHint_ExecApp_UseInheritHandles: string;
+begin
+  Result := 'Required mostly when passing data through StdIn.';
+end;
+
+
+function GetPropertyHint_ExecApp_NoConsole: string;
+begin
+  Result := 'When checked, console applications are not displayed in a new window.' + #13#10 +
+            'UI applications can create and display system consoles. For those applications, this option may cause problems if checked.';
+end;
+
+
+function GetPropertyHint_FindControl_AllowToFail: string;
+begin
+  Result := 'When checked, the execution flow does not stop if the searched (sub)control is not found.' + #13#10 +
+            'The "Allowed Failed" response can be used for conditional execution (call action).' + #13#10 +
+            'When the action is allowed to fail and it fails, $LastAction_Status$ is set to "Allowed Failed".';
+end;
+
+
+function GetPropertyHint_FindControl_MatchText: string;
+begin
+  Result := 'Wildcards are available ("*"). Variable replacements are available.' + #13#10 +
+            'Used on matching text and BMP text.' + #13#10 +
+            'For controls, which can have different text values (e.g. a window displaying a different title), these values can be e.g. comma separated. In that case, the text separator is a comma.' + #13#10 +
+            'For example: a window can display "MyTitle" or "MyTitle (modified)". In that case, the "Match Text" editbox can contain "MyTitle,MyTitle (modified)", without quotes, by using the comma separator.';
+end;
+
+
+function GetPropertyHint_FindControl_MatchClassName: string;
+begin
+  Result := 'Wildcards are available ("*"). Variable replacements are available.' + #13#10 +
+            'There are applications which can have one or more of their windows, registered with class name, containing a randomly generated string.';
+end;
+
+
+function GetPropertyHint_FindControl_MatchBitmapText: string;
+begin
+  Result := 'Count should be 0 for FindControl and >0 for FindSubControl';
+end;
+
+
+function GetPropertyHint_FindControl_MatchBitmapFiles: string;
+begin
+  Result := 'Relative paths can be entered using the following format:' + #13#10 + '$TemplateDir$\<SomeBmp.bmp>';
+end;
+
+
+function GetPropertyHint_FindControl_UseWholeScreen: string;
+begin
+  Result := 'Use the whole screen as search area, if True.' + #13#10 +
+            'Use the current control as search area, if False.' + #13#10 +
+            'The search area is modified by offsets.';
+end;
+
+
+function GetPropertyHint_FindControl_ColorError: string;
+begin
+  Result := 'When matching bitmaps, which contain antialiasing pixels (see smooth text), some of those pixels will not match.' + #13#10 +
+            'The "Color Error" represents the difference between the color values for the two compared pixels, for each RGB channel.' + #13#10 +
+            'The "Color Error Count" is the allowed number of mismatching pixels.' + #13#10 +
+            'Variable replacements are available.' + #13#10 +
+            'If at least one of the three color channels (R, G, B) mismatches by at least ColorError, it counts as an error point.';
+end;
+
+
+function GetPropertyHint_FindControl_AllowedColorErrorCount: string;
+begin
+  Result := 'When matching bitmaps, which contain antialiasing pixels (see smooth text), some of those pixels will not match.' + #13#10 +
+            'The "Color Error" represents the difference between the color values for the two compared pixels, for each RGB channel.' + #13#10 +
+            'The "Color Error Count" is the allowed number of mismatching pixels. Variable replacements are available.';
+end;
+
+
+function GetPropertyHint_FindControl_WaitForControlToGoAway: string;
+begin
+  Result := 'When True, the action expects to find no control, using the current settings.';
+end;
+
+
+function GetPropertyHint_FindControl_StartSearchingWithCachedControl: string;
+begin
+  Result := 'When True, the control is checked at the specified cached $My_Control_Left$ and $My_Control_Top$ var replacements, before using the search grid.' + #13#10 +
+            'In order to cache the control coordinates, please add a SetVar action after this one, by assigning:' + #13#10 +
+            '$My_Control_Left$ to $Control_Left$' + #13#10 +
+            'and' + #13#10 +
+            '$My_Control_Top$ to $Control_Top$' + #13#10 +
+            'where $My_Control_Left$ and $My_Control_Top$ are the cached values. The "Eval before" checkboxes have to be set.' + #13#10 +
+            'Each Find(Sub)Control action, which uses caching, will have to use its own set of $My_Control_Left$ and $My_Control_Top$ vars.' + #13#10 +
+            'The cached values are global coordinates, so they will become invalid even for a subcontrol if the parent window is moved.';
+end;
+
+
+{$IFDEF SubProperties}
+  function GetPropertyHint_FindControl_MatchCriteria_WillMatchBitmapText: string;
+  begin
+    Result := 'When selecting FindSubControl action, only bitmaps can be matched (BMP Text or BMP Files).' + #13#10 +
+              'A SubControl does not have a handle of its own, it is a part of a control.' + #13#10 +
+              'The $Control_Left$, $Control_Top$, $Control_Width$, $Control_Height$, $Control_Right$, $Control_Bottom$ variables ar set with the subcontrol offset.';
+  end;
+
+
+  function GetPropertyHint_FindControl_MatchCriteria_SearchForControlMode: string;
+  begin
+    Result := 'With "Generate Grid", the application generates a grid of points, where it queries for a window/control.' + #13#10 +
+              'With "Enumerate Windows", it lists all top-level windows and matches their caption and/or class.' + #13#10 +
+              'With "Find Window", both class and caption have to match and no wildcard is available.'
+  end;
+{$ENDIF}
+
+
+{$IFDEF SubProperties}
+  function GetPropertyHint_FindControl_InitialRectange(AEdge, AKey, AValue: string): string;
+  begin
+    Result := AEdge + ' edge of the search area. Variable replacements are available.' + #13#10 +
+              AKey + ' = ' + AValue;
+  end;
+
+
+  function GetPropertyHint_FindControl_InitialRectange_Left(AKey, AValue: string): string;
+  begin
+    Result := GetPropertyHint_FindControl_InitialRectange('Left', AKey, AValue);
+  end;
+
+
+  function GetPropertyHint_FindControl_InitialRectange_Top(AKey, AValue: string): string;
+  begin
+    Result := GetPropertyHint_FindControl_InitialRectange('Top', AKey, AValue);
+  end;
+
+
+  function GetPropertyHint_FindControl_InitialRectange_Right(AKey, AValue: string): string;
+  begin
+    Result := GetPropertyHint_FindControl_InitialRectange('Right', AKey, AValue);
+  end;
+
+
+  function GetPropertyHint_FindControl_InitialRectange_Bottom(AKey, AValue: string): string;
+  begin
+    Result := GetPropertyHint_FindControl_InitialRectange('Bottom', AKey, AValue);
+  end;
+{$ENDIF}
+
+
+function GetPropertyHint_SetText: string;
+begin
+  Result := 'Most edit boxes and combo boxes can be set, using the first two options.' + #13#10 +
+            'However, depending on their usage on the target application, this approach might not be enough.' + #13#10 +
+            'For edit boxes, the action can be configured to use key strokes.' + #13#10 +
+            'For combo boxes, this action will have to be replaced by multiple actions, to open the box, finding text, selecting etc.';
+end;
+
+
+function GetPropertyHint_SetText_Text: string;
+begin
+  Result := 'The proper control type has to be selected, for the proper API call. Uses $Control_Handle$ variable.' + #13#10 +
+            'HTTP calls are available, as var values, using the following format: $http://<server:port>/[params]$';
+end;
+
+
+function GetPropertyHint_SetText_ControlType: string;
+begin
+  Result := 'Uses WM_SETTEXT or CB_SELECTSTRING messages or emulates keystrokes.';
+end;
+
+
+{$IFDEF SubProperties}
+  function GetPropertyHint_CallTemplate_TemplateFileName: string;
+  begin
+    Result := 'Replacements are available.' + #13#10 +
+              'Click the arrow button to brose templates from the local dir.';
+  end;
+
+
+  function GetPropertyHint_CallTemplate_EvaluateBeforeCalling: string;
+  begin
+    Result := 'If unchecked, the values are passed as strings.';
+  end;
+
+
+  function GetPropertyHint_CallTemplate_CallTemplateLoop: string;
+  begin
+    Result := 'What does not work, is closing subtemplates when remote debugging.' + #13#10 +
+              'So, do not click the stop button when remote debugging CallTemplate actions with loops.';
+  end;
+
+
+  function GetPropertyHint_CallTemplate_CallTemplateLoop_Counter: string;
+  begin
+    Result := 'Replacements are available';
+  end;
+
+
+  function GetPropertyHint_CallTemplate_CallTemplateLoop_InitValue: string;
+  begin
+    Result := 'Replacements are available';
+  end;
+
+
+  function GetPropertyHint_CallTemplate_CallTemplateLoop_EndValue: string;
+  begin
+    Result := 'Replacements are available.' + #13#10 +
+              'If the expression evaluator can''t properly parse this string, please use a SetVar action to break down the expression into smaller pieces.' + #13#10 +
+              'For example, $Diff($ItemCount($RemoteVars$)$,1)$ can be split into the following SetVar items (both set to be evaluated):' + #13#10 +
+              '$RemoteVarsCount$ = $ItemCount($RemoteVars$)$  $LastItemIndex$ = $Diff($RemoteVarsCount$,1)$';
+  end;
+
+
+  function GetPropertyHint_CallTemplate_CallTemplateLoop_Direction: string;
+  begin
+    Result := 'Loop direction can be:' + #13#10#13#10 +
+              'Inc - when the counter should be incremented.' + #13#10 +
+              'Dec - when the counter should be decremented.' + #13#10 +
+              'Auto - when the init and the end values can be anything, so the counter direction has to be evaluated before starting the loop.';
+  end;
+
+
+  function GetPropertyHint_CallTemplate_CallTemplateLoop_EvalBreakPosition: string;
+  begin
+    Result := 'The "Break" call can be made, before or after the actual "CallTemplate" call.';
+  end;
+{$ENDIF}
+
+
+function GetPropertyHint_WindowOperations_NewXY: string;
+begin
+  Result := 'Evaluates $Control_Left$ and $Control_Top$ variables and updates "New X" and "New Y" to them.';
+end;
+
+
+function GetPropertyHint_WindowOperations_NewWidthHeight: string;
+begin
+  Result := 'Evaluates $Control_Width$ and $Control_Height$ variables and updates "New Width" and "New Height" to them.';
+end;
+
+
+function GetPropertyHint_Sleep: string;
+begin
+  Result := 'Sleep values, lower than 1, are ignored.' + #13#10 +
+                 'Use this action only as a last resort (e.g. blinking or resizing controls/windows).' + #13#10 +
+                 'Waiting for the proper event or control property, is the right way to solve a race condition. Use the "sleep" action if the event/property is not available.';
+end;
+
 
 end.
 

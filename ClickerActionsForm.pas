@@ -2352,9 +2352,11 @@ var
     AutoSwitchToExecTab: string;
     AutoEnableSwitchTabsOnDebugging: string;
     UseWideStringsOnGetControlTextOption: string;
+    AddAppArgsToLog: string;
   {$ELSE}
-    i: Integer;
+
   {$ENDIF}
+  i: Integer;
 begin
   tmrStartup.Enabled := False;
 
@@ -2366,6 +2368,7 @@ begin
     AutoSwitchToExecTab := GetCmdLineOptionValue('--AutoSwitchToExecTab');
     AutoEnableSwitchTabsOnDebugging := GetCmdLineOptionValue('--AutoEnableSwitchTabsOnDebugging');
     UseWideStringsOnGetControlTextOption := GetCmdLineOptionValue('--UseWideStringsOnGetControlText');
+    AddAppArgsToLog := GetCmdLineOptionValue('--AddAppArgsToLog');
 
     if AutoSwitchToExecTab <> '' then
     begin
@@ -2388,6 +2391,11 @@ begin
         AddToLog('Not using wide strings...');
     end;
 
+    if AddAppArgsToLog = 'Yes' then
+    begin
+      for i := 1 to ParamCount shr 1 do
+        AddToLog(ParamStr(i shl 1 - 1) + ' = "' + ParamStr(i shl 1 - 1 + 1) + '"');
+    end;
   {$ELSE}
     for i := 1 to ParamCount do
       if (ParamStr(i) = '--ExtraCaption') or (ParamStr(i) = '--SetExecMode') or (ParamStr(i) = '--ServerPort') then  // some common options

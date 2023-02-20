@@ -42,6 +42,7 @@ type
   { TfrClickerActions }
 
   TfrClickerActions = class(TFrame)
+    imglstCallTemplateLoopProperties: TImageList;
     imglstWindowOperationsProperties: TImageList;
     imglstSleepProperties: TImageList;
     imglstExecAppProperties: TImageList;
@@ -1374,6 +1375,8 @@ procedure TfrClickerActions.HandleOnSetMatchTextAndClassToOI(AMatchText, AMatchC
 begin
   FEditingAction^.FindControlOptions.MatchText := AMatchText;
   FEditingAction^.FindControlOptions.MatchClassName := AMatchClassName;
+  FOIFrame.RepaintNodeByLevel(CPropertyLevel, CCategory_ActionSpecific, CFindControl_MatchText_PropIndex, -1, True);
+  FOIFrame.RepaintNodeByLevel(CPropertyLevel, CCategory_ActionSpecific, CFindControl_MatchClassName_PropIndex, -1, True);
 end;
 
 
@@ -2349,7 +2352,12 @@ begin
 
           CPropertyItemLevel:
           begin
+            ImageIndex := AItemIndex;
 
+            case EditingActionType of
+              Ord(acCallTemplate):
+                ImageList := imglstCallTemplateLoopProperties;
+            end;
           end;
         end; //case
       end; // Column = 0
@@ -2938,11 +2946,7 @@ begin
           CFindControl_MatchCriteria_PropIndex:
           begin
             if AItemIndex = CFindControl_MatchCriteria_SearchForControlMode_PropItemIndex then
-            begin
-              AHint := 'With "Generate Grid", the application generates a grid of points, where it queries for a window/control.' + #13#10 +
-                       'With "Enumerate Windows", it lists all top-level windows and matches their caption and/or class.' + #13#10 +
-                       'With "Find Window", both class and caption have to match and no wildcard is available.';
-            end;
+              AHint := GetPropertyHint_FindControl_MatchCriteria_SearchForControlMode;
           end;
 
           CFindControl_InitialRectange_PropIndex:
@@ -2953,32 +2957,28 @@ begin
                 begin
                   APopupMenu := frClickerFindControl.pmStandardControlRefVars;
                   TempValue := FEditingAction^.FindControlOptions.InitialRectange.Left;
-                  AHint := 'Left edge of the search area. Variable replacements are available.' + #13#10 +
-                           TempValue + ' = ' + EvaluateReplacements(TempValue);
+                  AHint := GetPropertyHint_FindControl_InitialRectange_Left(TempValue, EvaluateReplacements(TempValue));
                 end;
 
                 CFindControl_InitialRectange_Top_PropItemIndex:
                 begin
                   APopupMenu := frClickerFindControl.pmStandardControlRefVars;
                   TempValue := FEditingAction^.FindControlOptions.InitialRectange.Top;
-                  AHint := 'Top edge of the search area. Variable replacements are available.' + #13#10 +
-                           TempValue + ' = ' + EvaluateReplacements(TempValue);
+                  AHint := GetPropertyHint_FindControl_InitialRectange_Top(TempValue, EvaluateReplacements(TempValue));
                 end;
 
                 CFindControl_InitialRectange_Right_PropItemIndex:
                 begin
                   APopupMenu := frClickerFindControl.pmStandardControlRefVars;
                   TempValue := FEditingAction^.FindControlOptions.InitialRectange.Right;
-                  AHint := 'Right edge of the search area. Variable replacements are available.' + #13#10 +
-                           TempValue + ' = ' + EvaluateReplacements(TempValue);
+                  AHint := GetPropertyHint_FindControl_InitialRectange_Right(TempValue, EvaluateReplacements(TempValue));
                 end;
 
                 CFindControl_InitialRectange_Bottom_PropItemIndex:
                 begin
                   APopupMenu := frClickerFindControl.pmStandardControlRefVars;
                   TempValue := FEditingAction^.FindControlOptions.InitialRectange.Bottom;
-                  AHint := 'Bottom edge of the search area. Variable replacements are available.' + #13#10 +
-                           TempValue + ' = ' + EvaluateReplacements(TempValue);
+                  AHint := GetPropertyHint_FindControl_InitialRectange_Bottom(TempValue, EvaluateReplacements(TempValue));
                 end;
               end;
             end;
@@ -2992,14 +2992,14 @@ begin
         case APropertyIndex of
           CWindowOperations_NewX, CWindowOperations_NewY:
           begin
-            AHint := 'Evaluates $Control_Left$ and $Control_Top$ variables and updates "New X" and "New Y" to them.';
+            AHint := GetPropertyHint_WindowOperations_NewXY;
             MenuItem_SetFromControlLeftAndTop.Enabled := True;
             MenuItem_SetFromControlWidthAndHeight.Enabled := False;
           end;
 
           CWindowOperations_NewWidth, CWindowOperations_NewHeight:
           begin
-            AHint := 'Evaluates $Control_Width$ and $Control_Height$ variables and updates "New Width" and "New Height" to them.';
+            AHint := GetPropertyHint_WindowOperations_NewWidthHeight;
             MenuItem_SetFromControlLeftAndTop.Enabled := False;
             MenuItem_SetFromControlWidthAndHeight.Enabled := True;
           end
@@ -3013,9 +3013,7 @@ begin
       end;
 
       acSleep:
-        AHint := 'Sleep values, lower than 1, are ignored.' + #13#10 +
-                 'Use this action only as a last resort (e.g. blinking or resizing controls/windows).' + #13#10 +
-                 'Waiting for the proper event or control property, is the right way to solve a race condition. Use the "sleep" action if the event/property is not available.';
+        AHint := GetPropertyHint_Sleep;
 
       else
         ;

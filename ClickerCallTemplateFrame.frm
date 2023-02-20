@@ -52,6 +52,7 @@ object frClickerCallTemplate: TfrClickerCallTemplate
     Width = 371
     Colors.UnfocusedColor = clMedGray
     Colors.UnfocusedSelectionColor = clGradientInactiveCaption
+    DefaultNodeHeight = 21
     DefaultText = 'Node'
     Header.AutoSizeIndex = 0
     Header.Columns = <    

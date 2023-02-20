@@ -135,7 +135,7 @@ const
   CREResp_CompHeight = 'CompHeight';
 
 
-function TestConnection(ARemoteAddress: string): string;
+function TestConnection(ARemoteAddress: string; ACallAppProcMsg: Boolean = True): string;
 function WaitForServerResponse(ATh: TClientThread; ACallAppProcMsg: Boolean = True): Boolean; //used for requests with custom waiting
 function SendTextRequestToServer(AFullLink: string; ACallAppProcMsg: Boolean = True): string;
 //function SendFileToServer(AFullLink: string; AFileContent, AResponseStream: TMemoryStream; ACallAppProcMsg: Boolean = True): string; overload; //expose this only if needed
@@ -168,7 +168,7 @@ function ExecuteExecAppAction(ARemoteAddress: string; AExecAppOptions: TClkExecA
 function ExecuteFindControlAction(ARemoteAddress: string; AFindControlOptions: TClkFindControlOptions; AActionName: string; AActionTimeout: Integer; AFileLocation: string): string;
 function ExecuteFindSubControlAction(ARemoteAddress: string; AFindControlOptions: TClkFindControlOptions; AActionName: string; AActionTimeout: Integer; AFileLocation: string): string;
 function ExecuteSetControlTextAction(ARemoteAddress: string; ASetTextOptions: TClkSetTextOptions): string;
-function ExecuteCallTemplateAction(ARemoteAddress: string; ACallTemplateOptions: TClkCallTemplateOptions; AIsDebugging, AUseLocalDebugger: Boolean; AFileLocation: string): string;
+function ExecuteCallTemplateAction(ARemoteAddress: string; ACallTemplateOptions: TClkCallTemplateOptions; AIsDebugging, AUseLocalDebugger: Boolean; AFileLocation: string; ACallAppProcMsg: Boolean = True): string;
 function ExecuteSleepAction(ARemoteAddress: string; ASleepOptions: TClkSleepOptions; AActionName: string): string;
 function ExecuteSetVarAction(ARemoteAddress: string; ASetVarOptions: TClkSetVarOptions): string;
 function ExecuteWindowOperationsAction(ARemoteAddress: string; AWindowOperationsOptions: TClkWindowOperationsOptions): string;
@@ -364,9 +364,9 @@ end;
 
 
 
-function TestConnection(ARemoteAddress: string): string;
+function TestConnection(ARemoteAddress: string; ACallAppProcMsg: Boolean = True): string;
 begin
-  Result := SendTextRequestToServer(ARemoteAddress + CRECmd_TestConnection);
+  Result := SendTextRequestToServer(ARemoteAddress + CRECmd_TestConnection, ACallAppProcMsg);
 end;
 
 
@@ -735,7 +735,7 @@ begin
 end;
 
 
-function ExecuteCallTemplateAction(ARemoteAddress: string; ACallTemplateOptions: TClkCallTemplateOptions; AIsDebugging, AUseLocalDebugger: Boolean; AFileLocation: string): string;
+function ExecuteCallTemplateAction(ARemoteAddress: string; ACallTemplateOptions: TClkCallTemplateOptions; AIsDebugging, AUseLocalDebugger: Boolean; AFileLocation: string; ACallAppProcMsg: Boolean = True): string;
 begin
   Result := SendTextRequestToServer(ARemoteAddress + CRECmd_ExecuteCallTemplateAction + '?' +
                                     CREParam_StackLevel + '=0' + '&' +   //use the main editor
@@ -753,7 +753,9 @@ begin
 
                                     CREParam_IsDebugging + '=' + IntToStr(Ord(AIsDebugging)) + '&' +
                                     CREParam_FileLocation + '=' + AFileLocation + '&' +
-                                    CREParam_UseLocalDebugger + '=' + IntToStr(Ord(AUseLocalDebugger))
+                                    CREParam_UseLocalDebugger + '=' + IntToStr(Ord(AUseLocalDebugger)),
+
+                                    ACallAppProcMsg
                                     );
 end;
 
