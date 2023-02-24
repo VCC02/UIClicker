@@ -163,15 +163,15 @@ function TerminateWaitingForFileAvailability(ARemoteAddress, ALoopType: string; 
 function SendMouseDown(ARemoteAddress: string; AMouseParams: TStringList): string;
 function SendMouseUp(ARemoteAddress: string; AMouseParams: TStringList): string;
 
-function ExecuteClickAction(ARemoteAddress: string; AClickOptions: TClkClickOptions): string;
-function ExecuteExecAppAction(ARemoteAddress: string; AExecAppOptions: TClkExecAppOptions; AActionName: string; AActionTimeout: Integer): string;
-function ExecuteFindControlAction(ARemoteAddress: string; AFindControlOptions: TClkFindControlOptions; AActionName: string; AActionTimeout: Integer; AFileLocation: string): string;
-function ExecuteFindSubControlAction(ARemoteAddress: string; AFindControlOptions: TClkFindControlOptions; AActionName: string; AActionTimeout: Integer; AFileLocation: string): string;
-function ExecuteSetControlTextAction(ARemoteAddress: string; ASetTextOptions: TClkSetTextOptions): string;
+function ExecuteClickAction(ARemoteAddress: string; AClickOptions: TClkClickOptions; ACallAppProcMsg: Boolean = True): string;
+function ExecuteExecAppAction(ARemoteAddress: string; AExecAppOptions: TClkExecAppOptions; AActionName: string; AActionTimeout: Integer; ACallAppProcMsg: Boolean = True): string;
+function ExecuteFindControlAction(ARemoteAddress: string; AFindControlOptions: TClkFindControlOptions; AActionName: string; AActionTimeout: Integer; AFileLocation: string; ACallAppProcMsg: Boolean = True): string;
+function ExecuteFindSubControlAction(ARemoteAddress: string; AFindControlOptions: TClkFindControlOptions; AActionName: string; AActionTimeout: Integer; AFileLocation: string; ACallAppProcMsg: Boolean = True): string;
+function ExecuteSetControlTextAction(ARemoteAddress: string; ASetTextOptions: TClkSetTextOptions; ACallAppProcMsg: Boolean = True): string;
 function ExecuteCallTemplateAction(ARemoteAddress: string; ACallTemplateOptions: TClkCallTemplateOptions; AIsDebugging, AUseLocalDebugger: Boolean; AFileLocation: string; ACallAppProcMsg: Boolean = True): string;
-function ExecuteSleepAction(ARemoteAddress: string; ASleepOptions: TClkSleepOptions; AActionName: string): string;
-function ExecuteSetVarAction(ARemoteAddress: string; ASetVarOptions: TClkSetVarOptions): string;
-function ExecuteWindowOperationsAction(ARemoteAddress: string; AWindowOperationsOptions: TClkWindowOperationsOptions): string;
+function ExecuteSleepAction(ARemoteAddress: string; ASleepOptions: TClkSleepOptions; AActionName: string; ACallAppProcMsg: Boolean = True): string;
+function ExecuteSetVarAction(ARemoteAddress: string; ASetVarOptions: TClkSetVarOptions; ACallAppProcMsg: Boolean = True): string;
+function ExecuteWindowOperationsAction(ARemoteAddress: string; AWindowOperationsOptions: TClkWindowOperationsOptions; ACallAppProcMsg: Boolean = True): string;
 
 
 procedure GetListOfUsedFilesFromLoadedTemplate(var AClkActions: TClkActionsRecArr; AListOfFiles: TStringList);
@@ -592,7 +592,7 @@ begin
 end;
 
 
-function ExecuteClickAction(ARemoteAddress: string; AClickOptions: TClkClickOptions): string;
+function ExecuteClickAction(ARemoteAddress: string; AClickOptions: TClkClickOptions; ACallAppProcMsg: Boolean = True): string;
 begin
   Result := SendTextRequestToServer(ARemoteAddress + CRECmd_ExecuteClickAction + '?' +
                                     CREParam_StackLevel + '=0' + '&' +   //use the main editor
@@ -616,12 +616,13 @@ begin
                                     'XClickPointVarDest' + '=' + AClickOptions.XClickPointVarDest + '&' +
                                     'YClickPointVarDest' + '=' + AClickOptions.YClickPointVarDest + '&' +
                                     'XOffsetDest' + '=' + AClickOptions.XOffsetDest + '&' +
-                                    'YOffsetDest' + '=' + AClickOptions.YOffsetDest
+                                    'YOffsetDest' + '=' + AClickOptions.YOffsetDest,
+                                    ACallAppProcMsg
                                     );
 end;
 
 
-function ExecuteExecAppAction(ARemoteAddress: string; AExecAppOptions: TClkExecAppOptions; AActionName: string; AActionTimeout: Integer): string;
+function ExecuteExecAppAction(ARemoteAddress: string; AExecAppOptions: TClkExecAppOptions; AActionName: string; AActionTimeout: Integer; ACallAppProcMsg: Boolean = True): string;
 begin
   Result := SendTextRequestToServer(ARemoteAddress + CRECmd_ExecuteExecAppAction + '?' +
                                     CREParam_StackLevel + '=0' + '&' +   //use the main editor
@@ -634,12 +635,13 @@ begin
                                     'NoConsole' + '=' + IntToStr(Ord(AExecAppOptions.NoConsole)) + '&' +
 
                                     'ActionName' + '=' + AActionName + '&' +
-                                    'ActionTimeout' + '=' + IntToStr(AActionTimeout)
+                                    'ActionTimeout' + '=' + IntToStr(AActionTimeout),
+                                    ACallAppProcMsg
                                     );
 end;
 
 
-function ExecuteGenericFindControlAction(ARemoteAddress: string; AFindControlOptions: TClkFindControlOptions; AActionName: string; AActionTimeout: Integer; AFileLocation: string; AActionType: string): string;
+function ExecuteGenericFindControlAction(ARemoteAddress: string; AFindControlOptions: TClkFindControlOptions; AActionName: string; AActionTimeout: Integer; AFileLocation: string; AActionType: string; ACallAppProcMsg: Boolean = True): string;
   function GetMatchBitmapTextContent(var AMatchBitmapText: TClkFindControlMatchBitmapTextArr): string;
   var
     i: Integer;
@@ -690,14 +692,14 @@ begin
                                     'MatchBitmapAlgorithmSettings.YMultipleOf' + '=' + IntToStr(AFindControlOptions.MatchBitmapAlgorithmSettings.YMultipleOf) + '&' +
                                     'MatchBitmapAlgorithmSettings.XOffset' + '=' + IntToStr(AFindControlOptions.MatchBitmapAlgorithmSettings.XOffset) + '&' +
                                     'MatchBitmapAlgorithmSettings.YOffset' + '=' + IntToStr(AFindControlOptions.MatchBitmapAlgorithmSettings.YOffset) + '&' +
-                                    'InitialRectange.Left' + '=' + AFindControlOptions.InitialRectange.Left + '&' +
-                                    'InitialRectange.Top' + '=' + AFindControlOptions.InitialRectange.Top + '&' +
-                                    'InitialRectange.Right' + '=' + AFindControlOptions.InitialRectange.Right + '&' +
-                                    'InitialRectange.Bottom' + '=' + AFindControlOptions.InitialRectange.Bottom + '&' +
-                                    'InitialRectange.LeftOffset' + '=' + AFindControlOptions.InitialRectange.LeftOffset + '&' +
-                                    'InitialRectange.TopOffset' + '=' + AFindControlOptions.InitialRectange.TopOffset + '&' +
-                                    'InitialRectange.RightOffset' + '=' + AFindControlOptions.InitialRectange.RightOffset + '&' +
-                                    'InitialRectange.BottomOffset' + '=' + AFindControlOptions.InitialRectange.BottomOffset + '&' +
+                                    'InitialRectangle.Left' + '=' + AFindControlOptions.InitialRectangle.Left + '&' +
+                                    'InitialRectangle.Top' + '=' + AFindControlOptions.InitialRectangle.Top + '&' +
+                                    'InitialRectangle.Right' + '=' + AFindControlOptions.InitialRectangle.Right + '&' +
+                                    'InitialRectangle.Bottom' + '=' + AFindControlOptions.InitialRectangle.Bottom + '&' +
+                                    'InitialRectangle.LeftOffset' + '=' + AFindControlOptions.InitialRectangle.LeftOffset + '&' +
+                                    'InitialRectangle.TopOffset' + '=' + AFindControlOptions.InitialRectangle.TopOffset + '&' +
+                                    'InitialRectangle.RightOffset' + '=' + AFindControlOptions.InitialRectangle.RightOffset + '&' +
+                                    'InitialRectangle.BottomOffset' + '=' + AFindControlOptions.InitialRectangle.BottomOffset + '&' +
                                     'UseWholeScreen' + '=' + IntToStr(Ord(AFindControlOptions.UseWholeScreen)) + '&' +
                                     'ColorError' + '=' + AFindControlOptions.ColorError + '&' +
                                     'AllowedColorErrorCount' + '=' + AFindControlOptions.AllowedColorErrorCount + '&' +
@@ -708,29 +710,31 @@ begin
 
                                     'ActionName' + '=' + AActionName + '&' +
                                     'ActionTimeout' + '=' + IntToStr(AActionTimeout) + '&' +
-                                    CREParam_FileLocation + '=' + AFileLocation
+                                    CREParam_FileLocation + '=' + AFileLocation,
+                                    ACallAppProcMsg
                                     );
 end;
 
 
-function ExecuteFindControlAction(ARemoteAddress: string; AFindControlOptions: TClkFindControlOptions; AActionName: string; AActionTimeout: Integer; AFileLocation: string): string;
+function ExecuteFindControlAction(ARemoteAddress: string; AFindControlOptions: TClkFindControlOptions; AActionName: string; AActionTimeout: Integer; AFileLocation: string; ACallAppProcMsg: Boolean = True): string;
 begin
-  Result := ExecuteGenericFindControlAction(ARemoteAddress, AFindControlOptions, AActionName, AActionTimeout, AFileLocation, CRECmd_ExecuteFindControlAction);
+  Result := ExecuteGenericFindControlAction(ARemoteAddress, AFindControlOptions, AActionName, AActionTimeout, AFileLocation, CRECmd_ExecuteFindControlAction, ACallAppProcMsg);
 end;
 
 
-function ExecuteFindSubControlAction(ARemoteAddress: string; AFindControlOptions: TClkFindControlOptions; AActionName: string; AActionTimeout: Integer; AFileLocation: string): string;
+function ExecuteFindSubControlAction(ARemoteAddress: string; AFindControlOptions: TClkFindControlOptions; AActionName: string; AActionTimeout: Integer; AFileLocation: string; ACallAppProcMsg: Boolean = True): string;
 begin
-  Result := ExecuteGenericFindControlAction(ARemoteAddress, AFindControlOptions, AActionName, AActionTimeout, AFileLocation, CRECmd_ExecuteFindSubControlAction);
+  Result := ExecuteGenericFindControlAction(ARemoteAddress, AFindControlOptions, AActionName, AActionTimeout, AFileLocation, CRECmd_ExecuteFindSubControlAction, ACallAppProcMsg);
 end;
 
 
-function ExecuteSetControlTextAction(ARemoteAddress: string; ASetTextOptions: TClkSetTextOptions): string;
+function ExecuteSetControlTextAction(ARemoteAddress: string; ASetTextOptions: TClkSetTextOptions; ACallAppProcMsg: Boolean = True): string;
 begin
   Result := SendTextRequestToServer(ARemoteAddress + CRECmd_ExecuteSetControlTextAction + '?' +
                                     CREParam_StackLevel + '=0' + '&' +   //use the main editor
                                     'Text' + '=' + ASetTextOptions.Text + '&' +
-                                    'ControlType' + '=' + IntToStr(Ord(ASetTextOptions.ControlType))
+                                    'ControlType' + '=' + IntToStr(Ord(ASetTextOptions.ControlType)),
+                                    ACallAppProcMsg
                                     );
 end;
 
@@ -760,28 +764,30 @@ begin
 end;
 
 
-function ExecuteSleepAction(ARemoteAddress: string; ASleepOptions: TClkSleepOptions; AActionName: string): string;
+function ExecuteSleepAction(ARemoteAddress: string; ASleepOptions: TClkSleepOptions; AActionName: string; ACallAppProcMsg: Boolean = True): string;
 begin
   Result := SendTextRequestToServer(ARemoteAddress + CRECmd_ExecuteSleepAction + '?' +
                                     CREParam_StackLevel + '=0' + '&' +   //use the main editor
                                     'Value' + '=' + ASleepOptions.Value + '&' +
-                                    'ActionName' + '=' + AActionName
+                                    'ActionName' + '=' + AActionName,
+                                    ACallAppProcMsg
                                     );
 end;
 
 
-function ExecuteSetVarAction(ARemoteAddress: string; ASetVarOptions: TClkSetVarOptions): string;
+function ExecuteSetVarAction(ARemoteAddress: string; ASetVarOptions: TClkSetVarOptions; ACallAppProcMsg: Boolean = True): string;
 begin
   Result := SendTextRequestToServer(ARemoteAddress + CRECmd_ExecuteSetVarAction + '?' +
                                     CREParam_StackLevel + '=0' + '&' +   //use the main editor
                                     'ListOfVarNames' + '=' + FastReplace_ReturnTo45(ASetVarOptions.ListOfVarNames) + '&' +
                                     'ListOfVarValues' + '=' + FastReplace_ReturnTo45(ASetVarOptions.ListOfVarValues) + '&' +
-                                    'ListOfVarEvalBefore' + '=' + FastReplace_ReturnTo45(ASetVarOptions.ListOfVarEvalBefore)
+                                    'ListOfVarEvalBefore' + '=' + FastReplace_ReturnTo45(ASetVarOptions.ListOfVarEvalBefore),
+                                    ACallAppProcMsg
                                     );
 end;
 
 
-function ExecuteWindowOperationsAction(ARemoteAddress: string; AWindowOperationsOptions: TClkWindowOperationsOptions): string;
+function ExecuteWindowOperationsAction(ARemoteAddress: string; AWindowOperationsOptions: TClkWindowOperationsOptions; ACallAppProcMsg: Boolean = True): string;
 begin
   Result := SendTextRequestToServer(ARemoteAddress + CRECmd_ExecuteWindowOperationsAction + '?' +
                                     CREParam_StackLevel + '=0' + '&' +   //use the main editor
@@ -790,8 +796,9 @@ begin
                                     'NewY' + '=' + AWindowOperationsOptions.NewY + '&' +
                                     'NewWidth' + '=' + AWindowOperationsOptions.NewWidth + '&' +
                                     'NewHeight' + '=' + AWindowOperationsOptions.NewHeight + '&' +
-                                    'NewPositionEabled' + '=' + IntToStr(Ord(AWindowOperationsOptions.NewPositionEabled)) + '&' +
-                                    'NewSizeEabled' + '=' + IntToStr(Ord(AWindowOperationsOptions.NewSizeEabled))
+                                    'NewPositionEnabled' + '=' + IntToStr(Ord(AWindowOperationsOptions.NewPositionEnabled)) + '&' +
+                                    'NewSizeEnabled' + '=' + IntToStr(Ord(AWindowOperationsOptions.NewSizeEnabled)),
+                                    ACallAppProcMsg
                                     );
 end;
 

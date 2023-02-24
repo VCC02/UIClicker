@@ -42,6 +42,11 @@ type
   { TfrClickerActions }
 
   TfrClickerActions = class(TFrame)
+    imglstMatchBitmapTextProperties: TImageList;
+    imglstMatchCriteriaProperties: TImageList;
+    imglstInitialRectangleProperties: TImageList;
+    imglstMatchBitmapAlgorithmSettingsProperties: TImageList;
+    imglstActionProperties: TImageList;
     imglstCallTemplateLoopProperties: TImageList;
     imglstWindowOperationsProperties: TImageList;
     imglstSleepProperties: TImageList;
@@ -99,23 +104,12 @@ type
     MenuItemCopySearchAreaSearchBmpImgToClipboard: TMenuItem;
     MenuItemCopySearchAreaBkImgToClipboard: TMenuItem;
     MenuItemGenericLoadBmpToSearchedArea: TMenuItem;
-    pnlCover: TPanel;
-    pnlExtra: TPanel;
     pmStandardColorVariables: TPopupMenu;
     pnlActionConditions: TPanel;
-    pnlvstOI: TPanel;
     pmWindowOperationsEditors: TPopupMenu;
-    TabSheetOI: TTabSheet;
-    TabSheetActionWindowOperations: TTabSheet;
-    TabSheetActionFindControl: TTabSheet;
-    TabSheetActionSetVar: TTabSheet;
-    PageControlActions: TPageControl;
-    TabSheetActionClick: TTabSheet;
-    TabSheetActionExecApp: TTabSheet;
-    TabSheetActionFindSubControl: TTabSheet;
-    TabSheetActionSetText: TTabSheet;
-    TabSheetActionCall: TTabSheet;
-    pmCommonTimeouts: TPopupMenu;
+    pnlCover: TPanel;
+    pnlExtra: TPanel;
+    pnlvstOI: TPanel;
     N10001: TMenuItem;
     N100001: TMenuItem;
     N01: TMenuItem;
@@ -145,9 +139,6 @@ type
     imglstActionExecution: TImageList;
     lblAction: TLabel;
     spdbtnCommonTimeouts: TSpeedButton;
-    lbeActionName: TLabeledEdit;
-    cmbActions: TComboBox;
-    lbeActionTimeout: TLabeledEdit;
     prbTimeout: TProgressBar;
     spdbtnClear: TSpeedButton;
     chkStopOnError: TCheckBox;
@@ -162,8 +153,6 @@ type
     N1: TMenuItem;
     AddVariable1: TMenuItem;
     RemoveVariable1: TMenuItem;
-    TabSheetActionSleep: TTabSheet;
-    procedure chkAllowToFailChange(Sender: TObject);
     procedure chkWaitForControlToGoAwayChange(Sender: TObject);
 
     procedure lbeFindCachedControlLeftChange(Sender: TObject);
@@ -171,14 +160,11 @@ type
     procedure MenuItem_SetFromControlLeftAndTopClick(Sender: TObject);
     procedure MenuItem_SetFromControlWidthAndHeightClick(Sender: TObject);
 
-    procedure PageControlActionsChange(Sender: TObject);
     procedure scrboxDebugBmpMouseWheel(Sender: TObject; Shift: TShiftState;
       WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
     procedure spdbtnDisplaySearchAreaDbgImgMenuClick(Sender: TObject);
     procedure tmrReloadOIContentTimer(Sender: TObject);
 
-    procedure spdbtnCommonTimeoutsClick(Sender: TObject);
-    procedure N01Click(Sender: TObject);
     procedure CopyDebugValuesListToClipboard1Click(Sender: TObject);
     procedure PasteDebugValuesListFromClipboard1Click(Sender: TObject);
     procedure PasteDebugValuesListFromMainExecutionList1Click(Sender: TObject);
@@ -190,9 +176,6 @@ type
     procedure MenuItemCopyDebugImageClick(Sender: TObject);
     procedure MenuItemEraseDebugImageClick(Sender: TObject);
 
-    procedure lbeColorErrorChange(Sender: TObject);
-    procedure lbeAllowedColorErrorCountChange(Sender: TObject);
-
     procedure lbeSearchRectLeftChange(Sender: TObject);
     procedure lbeSearchRectTopChange(Sender: TObject);
     procedure lbeSearchRectRightChange(Sender: TObject);
@@ -202,10 +185,6 @@ type
     procedure lbeSearchRectRightOffsetChange(Sender: TObject);
     procedure lbeSearchRectBottomOffsetChange(Sender: TObject);
     procedure rdgrpSearchForControlModeClick(Sender: TObject);
-    procedure chkAllowToFailClick(Sender: TObject);
-    procedure lbeActionNameChange(Sender: TObject);
-    procedure cmbActionsChange(Sender: TObject);
-    procedure lbeActionTimeoutChange(Sender: TObject);
     procedure spdbtnClearClick(Sender: TObject);
     procedure vallstVariablesValidate(Sender: TObject; ACol, ARow: Integer;
       const KeyName, KeyValue: string);
@@ -253,6 +232,8 @@ type
     FSearchAreaSearchedBmpDbgImg: TImage;
     FSearchAreaSearchedTextDbgImg: TImage;
     FSearchAreaDbgImgSearchedBmpMenu: TPopupMenu;
+
+    FCurrentlyEditingActionType: Integer;  //yes integer
 
     FPmLocalTemplates: TPopupMenu;
     FOIFrame: TfrObjectInspector;
@@ -402,10 +383,8 @@ type
 
     procedure LoadListOfAvailableTemplates;
     procedure SetDebugVariablesFromListOfStrings(AListOfStrings: string);
-    procedure UpdatePageControlActionsHighlighting;
     procedure UpdatePageControlActionExecutionIcons;
     procedure UpdateControlWidthHeightLabels;
-    procedure UpdatePageControlActionsOnFindControlTab;
 
     procedure ClearControls;
 
@@ -487,7 +466,7 @@ end;
 procedure TfrClickerActions.CreateRemainingUIComponents;
 begin
   frClickerFindControl := TfrClickerFindControl.Create(Self);
-  frClickerFindControl.Parent := TabSheetActionFindSubControl;
+  frClickerFindControl.Parent := pnlExtra;
 
   frClickerFindControl.Left := 3;
   frClickerFindControl.Top := 3;
@@ -509,6 +488,7 @@ begin
   frClickerFindControl.OnGetDisplayedText := HandleOnGetDisplayedText;
   frClickerFindControl.OnSetMatchTextAndClassToOI := HandleOnSetMatchTextAndClassToOI;
   frClickerFindControl.OnGetFindControlOptions := HandleOnGetFindControlOptions;
+  frClickerFindControl.Visible := False;
 
   frClickerConditionEditor := TfrClickerConditionEditor.Create(Self);
   frClickerConditionEditor.Parent := pnlActionConditions; //for some reason, using TabSheetCondition leads to a hidden frame
@@ -646,9 +626,7 @@ begin
   FShowDeprecatedControls := False;
   FEditingAction := @FEditingActionRec;
 
-  PageControlActions.ActivePageIndex := 0;
   PageControlActionExecution.ActivePageIndex := 0;
-
 end;
 
 
@@ -689,15 +667,6 @@ begin
 end;
 
 
-procedure TfrClickerActions.spdbtnCommonTimeoutsClick(Sender: TObject);
-var
-  tp: TPoint;
-begin
-  GetCursorPos(tp);
-  pmCommonTimeouts.Popup(tp.X, tp.Y);
-end;
-
-
 procedure TfrClickerActions.RemoveVariable1Click(Sender: TObject);
 begin
   if vallstVariables.Selection.Top - 1 < FPredefinedVarCount - 1 then
@@ -710,12 +679,6 @@ begin
     Exit;
 
   vallstVariables.Strings.Delete(vallstVariables.Selection.Top - 1);
-end;
-
-
-procedure TfrClickerActions.chkAllowToFailClick(Sender: TObject);
-begin
-  TriggerOnControlsModified;
 end;
 
 
@@ -737,15 +700,6 @@ begin
   imgDebugBmp.Repaint;
 
   //imgDebugGrid does not have to be cleared
-end;
-
-
-procedure TfrClickerActions.cmbActionsChange(Sender: TObject);
-begin
-  TriggerOnControlsModified;
-  UpdatePageControlActionsHighlighting;
-
-  CurrentlyEditingActionType := TClkAction(cmbActions.ItemIndex);
 end;
 
 
@@ -859,39 +813,6 @@ begin
 end;
 
 
-procedure TfrClickerActions.N01Click(Sender: TObject);
-begin
-  lbeActionTimeout.Text := (Sender as TMenuItem).Caption;
-  lbeActionTimeout.Text := StringReplace(lbeActionTimeout.Text, '&', '', [rfReplaceAll]);
-  TriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerActions.lbeActionNameChange(Sender: TObject);
-begin
-  TriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerActions.lbeActionTimeoutChange(Sender: TObject);
-begin
-  TriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerActions.lbeAllowedColorErrorCountChange(Sender: TObject);
-begin
-  TriggerOnControlsModified;
-end;
-
-
-
-procedure TfrClickerActions.lbeColorErrorChange(Sender: TObject);
-begin
-  TriggerOnControlsModified;
-end;
-
-
 procedure TfrClickerActions.lbeMatchClassNameChange(Sender: TObject);
 begin
   TriggerOnControlsModified;
@@ -912,39 +833,9 @@ begin
 end;
 
 
-procedure TfrClickerActions.chkAllowToFailChange(Sender: TObject);
-begin
-  TriggerOnControlsModified;
-end;
-
-
 procedure TfrClickerActions.chkWaitForControlToGoAwayChange(Sender: TObject);
 begin
   TriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerActions.UpdatePageControlActionsOnFindControlTab;
-begin
-  if PageControlActionExecution.ActivePageIndex = 3 then
-  begin
-    if GetCurrentlyEditingActionType in [acFindControl, acFindSubControl] then
-    begin
-      frClickerFindControl.Parent := pnlExtra;
-      frClickerFindControl.BringToFront;
-    end;
-  end
-  else
-    case PageControlActions.ActivePageIndex of
-      2: frClickerFindControl.Parent := TabSheetActionFindControl;
-      3: frClickerFindControl.Parent := TabSheetActionFindSubControl;
-    end;
-end;
-
-
-procedure TfrClickerActions.PageControlActionsChange(Sender: TObject);
-begin
-  UpdatePageControlActionsOnFindControlTab;
 end;
 
 
@@ -1195,12 +1086,7 @@ end;
 
 procedure TfrClickerActions.ClearControls;
 begin
-  lbeActionName.Text := '';
-  cmbActions.ItemIndex := -1;
-  lbeActionTimeout.Text := '0';
   frClickerConditionEditor.ClearActionConditionPreview;
-  UpdatePageControlActionsHighlighting;
-
   frClickerFindControl.ClearControls;
 
   //clear dynamically created mouse controls
@@ -1215,10 +1101,9 @@ end;
 
 procedure TfrClickerActions.UpdatePageControlActionExecutionIcons;
 begin
-  PageControlActionExecution.Pages[0].ImageIndex := 0 + 4 * Ord(cmbActions.ItemIndex > -1);
-  PageControlActionExecution.Pages[1].ImageIndex := 1 + 4 * Ord(frClickerConditionEditor.ConditionsAvailable);
-  PageControlActionExecution.Pages[2].ImageIndex := 2 + 4 * Ord(FDebuggingInfoAvailable);
-  PageControlActionExecution.Pages[3].ImageIndex := 3 + 4 * Ord(Integer(FEditingAction^.ActionOptions.Action) <> CClkUnsetAction);
+  PageControlActionExecution.Pages[0].ImageIndex := 0 + 3 * Ord(Integer(FEditingAction^.ActionOptions.Action) <> CClkUnsetAction);
+  PageControlActionExecution.Pages[1].ImageIndex := 1 + 3 * Ord(frClickerConditionEditor.ConditionsAvailable);
+  PageControlActionExecution.Pages[2].ImageIndex := 2 + 3 * Ord(FDebuggingInfoAvailable);
 end;
 
 
@@ -1235,23 +1120,6 @@ end;
 procedure TfrClickerActions.SetInMemFS(Value: TInMemFileSystem);
 begin
   frClickerFindControl.InMemFS := Value;
-end;
-
-
-procedure TfrClickerActions.UpdatePageControlActionsHighlighting;
-var
-  i: Integer;
-begin
-  {$IFnDEF FPC}
-    for i := 0 to PageControlActions.PageCount - 1 do
-      PageControlActions.Pages[i].Highlighted := cmbActions.ItemIndex = i;  //available in Delphi only
-  {$ENDIF}
-
-  for i := 0 to PageControlActions.PageCount - 1 do
-    if cmbActions.ItemIndex = i then
-      PageControlActions.Pages[i].ImageIndex := i
-    else
-      PageControlActions.Pages[i].ImageIndex := i + 10;
 end;
 
 
@@ -1307,26 +1175,26 @@ procedure TfrClickerActions.HandleOnUpdateSearchAreaLimitsInOIFromDraggingLines(
 begin
   if llLeft in ALimitLabelsToUpdate then
   begin
-    FEditingAction^.FindControlOptions.InitialRectange.LeftOffset := AOffsets.Left;
-    FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, CCategory_ActionSpecific, CFindControl_InitialRectange_PropIndex, CFindControl_InitialRectange_LeftOffset_PropItemIndex);
+    FEditingAction^.FindControlOptions.InitialRectangle.LeftOffset := AOffsets.Left;
+    FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, CCategory_ActionSpecific, CFindControl_InitialRectangle_PropIndex, CFindControl_InitialRectangle_LeftOffset_PropItemIndex);
   end;
 
   if llTop in ALimitLabelsToUpdate then
   begin
-    FEditingAction^.FindControlOptions.InitialRectange.TopOffset := AOffsets.Top;
-    FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, CCategory_ActionSpecific, CFindControl_InitialRectange_PropIndex, CFindControl_InitialRectange_TopOffset_PropItemIndex);
+    FEditingAction^.FindControlOptions.InitialRectangle.TopOffset := AOffsets.Top;
+    FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, CCategory_ActionSpecific, CFindControl_InitialRectangle_PropIndex, CFindControl_InitialRectangle_TopOffset_PropItemIndex);
   end;
 
   if llRight in ALimitLabelsToUpdate then
   begin
-    FEditingAction^.FindControlOptions.InitialRectange.RightOffset := AOffsets.Right;
-    FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, CCategory_ActionSpecific, CFindControl_InitialRectange_PropIndex, CFindControl_InitialRectange_RightOffset_PropItemIndex);
+    FEditingAction^.FindControlOptions.InitialRectangle.RightOffset := AOffsets.Right;
+    FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, CCategory_ActionSpecific, CFindControl_InitialRectangle_PropIndex, CFindControl_InitialRectangle_RightOffset_PropItemIndex);
   end;
 
   if llBottom in ALimitLabelsToUpdate then
   begin
-    FEditingAction^.FindControlOptions.InitialRectange.BottomOffset := AOffsets.Bottom;
-    FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, CCategory_ActionSpecific, CFindControl_InitialRectange_PropIndex, CFindControl_InitialRectange_BottomOffset_PropItemIndex);
+    FEditingAction^.FindControlOptions.InitialRectangle.BottomOffset := AOffsets.Bottom;
+    FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, CCategory_ActionSpecific, CFindControl_InitialRectangle_PropIndex, CFindControl_InitialRectangle_BottomOffset_PropItemIndex);
   end;
 end;
 
@@ -1519,13 +1387,13 @@ type
 
 function TfrClickerActions.GetCurrentlyEditingActionType: TClkAction;
 begin
-  Result := TClkAction(cmbActions.ItemIndex);
+  Result := TClkAction(FCurrentlyEditingActionType);
 end;
 
 
 procedure TfrClickerActions.SetCurrentlyEditingActionType(Value: TClkAction);
 begin
-  cmbActions.ItemIndex := Ord(Value);
+  FCurrentlyEditingActionType := Ord(Value);
   FOIFrame.ReloadContent;
   pnlvstOI.Visible := True;
 
@@ -1536,7 +1404,7 @@ begin
     begin
       frClickerExecApp.Show;
       frClickerExecApp.BringToFront;
-      frClickerFindControl.Parent := TabSheetActionFindControl;
+      frClickerFindControl.Hide;
       frClickerSetVar.Hide;
       frClickerCallTemplate.Hide;
       frClickerSleep.Hide;
@@ -1545,7 +1413,6 @@ begin
     acFindControl, acFindSubControl:
     begin
       frClickerExecApp.Hide;
-      frClickerFindControl.Parent := pnlExtra;
       frClickerFindControl.Show;
       frClickerFindControl.BringToFront;
       frClickerSetVar.Hide;
@@ -1556,7 +1423,7 @@ begin
     acSetVar:
     begin
       frClickerExecApp.Hide;
-      frClickerFindControl.Parent := TabSheetActionFindControl;
+      frClickerFindControl.Hide;
       frClickerSetVar.Show;
       frClickerSetVar.BringToFront;
       frClickerCallTemplate.Hide;
@@ -1566,7 +1433,7 @@ begin
     acCallTemplate:
     begin
       frClickerExecApp.Hide;
-      frClickerFindControl.Parent := TabSheetActionFindControl;
+      frClickerFindControl.Hide;
       frClickerSetVar.Hide;
       frClickerCallTemplate.Show;
       frClickerCallTemplate.BringToFront;
@@ -1576,7 +1443,7 @@ begin
     acSleep:
     begin
       frClickerExecApp.Hide;
-      frClickerFindControl.Parent := TabSheetActionFindControl;
+      frClickerFindControl.Hide;
       frClickerSetVar.Hide;
       frClickerCallTemplate.Hide;
       frClickerSleep.Show;
@@ -1586,7 +1453,7 @@ begin
     else
     begin
       frClickerExecApp.Hide;
-      frClickerFindControl.Parent := TabSheetActionFindControl;
+      frClickerFindControl.Hide;
       frClickerSetVar.Hide;
       frClickerCallTemplate.Hide;
       frClickerSleep.Hide;
@@ -2125,8 +1992,8 @@ begin
         CFindControl_MatchBitmapAlgorithmSettings_PropIndex:
           Result := CPropCount_FindControlMatchBitmapAlgorithmSettings;
 
-        CFindControl_InitialRectange_PropIndex:
-          Result := CPropCount_FindControlInitialRectange;
+        CFindControl_InitialRectangle_PropIndex:
+          Result := CPropCount_FindControlInitialRectangle;
 
         else
           Result := 0;
@@ -2181,8 +2048,8 @@ begin
         CFindControl_MatchBitmapAlgorithmSettings_PropIndex:
           Result := CFindControl_MatchBitmapAlgorithmSettingsProperties[AItemIndex].Name;
 
-        CFindControl_InitialRectange_PropIndex:
-          Result := CFindControl_InitialRectangeProperties[AItemIndex].Name;
+        CFindControl_InitialRectangle_PropIndex:
+          Result := CFindControl_InitialRectangleProperties[AItemIndex].Name;
 
         else
           Result := '';
@@ -2252,8 +2119,8 @@ begin
         CFindControl_MatchBitmapAlgorithmSettings_PropIndex:
           PropDef := CFindControl_MatchBitmapAlgorithmSettingsProperties[AItemIndex];
 
-        CFindControl_InitialRectange_PropIndex:
-          PropDef := CFindControl_InitialRectangeProperties[AItemIndex];
+        CFindControl_InitialRectangle_PropIndex:
+          PropDef := CFindControl_InitialRectangleProperties[AItemIndex];
 
         else
           ;
@@ -2296,14 +2163,17 @@ procedure TfrClickerActions.HandleOnOIGetImageIndexEx(ANodeLevel, ACategoryIndex
   Column: TColumnIndex; var Ghosted: Boolean; var ImageIndex: Integer; var ImageList: TCustomImageList);
 var
   EditingActionType: Integer;
+  ItemIndexMod: Integer;
 begin
   EditingActionType := Integer(CurrentlyEditingActionType);
 
   case ACategoryIndex of
     CCategory_Common:
-    begin
-      ;
-    end;
+      if Column = 0 then
+      begin
+        ImageList := imglstActionProperties;
+        ImageIndex := APropertyIndex;
+      end;
 
     CCategory_ActionSpecific:
     begin
@@ -2355,6 +2225,27 @@ begin
             ImageIndex := AItemIndex;
 
             case EditingActionType of
+              Ord(acFindControl), Ord(acFindSubControl):
+              begin
+                case APropertyIndex of
+                  CFindControl_MatchCriteria_PropIndex:
+                    ImageList := imglstMatchCriteriaProperties;
+
+                  CFindControl_MatchBitmapText_PropIndex:
+                  begin
+                    ItemIndexMod := AItemIndex mod CPropCount_FindControlMatchBitmapText;
+                    ImageIndex := ItemIndexMod;
+                    ImageList := imglstMatchBitmapTextProperties;
+                  end;
+
+                  CFindControl_MatchBitmapAlgorithmSettings_PropIndex:
+                    ImageList := imglstMatchBitmapAlgorithmSettingsProperties;
+
+                  CFindControl_InitialRectangle_PropIndex:
+                    ImageList := imglstInitialRectangleProperties;
+                end;
+              end;
+
               Ord(acCallTemplate):
                 ImageList := imglstCallTemplateLoopProperties;
             end;
@@ -2377,10 +2268,9 @@ begin
     CCategory_Common:
     begin
       SetActionValueStr_Action(FEditingAction, ANewText, APropertyIndex);
-      cmbActions.ItemIndex := Ord(FEditingAction^.ActionOptions.Action);
+      FCurrentlyEditingActionType := Ord(FEditingAction^.ActionOptions.Action);
 
       TriggerOnControlsModified;
-      UpdatePageControlActionsHighlighting;
       CurrentlyEditingActionType := FEditingAction^.ActionOptions.Action;
 
       tmrReloadOIContent.Enabled := True;
@@ -2496,15 +2386,15 @@ begin
               Exit;
             end;
 
-            CFindControl_InitialRectange_PropIndex:
+            CFindControl_InitialRectangle_PropIndex:
             begin
-              SetActionValueStr_FindControl_InitialRectange(FEditingAction, ANewText, AItemIndex);
+              SetActionValueStr_FindControl_InitialRectangle(FEditingAction, ANewText, AItemIndex);
               TriggerOnControlsModified;
               Exit;
             end;
 
             CFindControl_UseWholeScreen_PropIndex:   //this call will have to take into account, the screen edges or vars as search area limits
-              frClickerFindControl.UpdateSearchAreaLabelsFromKeysOnInitRect(FEditingAction^.FindControlOptions.InitialRectange);
+              frClickerFindControl.UpdateSearchAreaLabelsFromKeysOnInitRect(FEditingAction^.FindControlOptions.InitialRectangle);
 
             else
               ;
@@ -2751,20 +2641,20 @@ procedure TfrClickerActions.HandleOnTextEditorMouseDown(ANodeLevel, ACategoryInd
 var
   ItemIndexMod, ItemIndexDiv: Integer;
 begin
-  if (ACategoryIndex = CCategory_ActionSpecific) and (APropertyIndex = CFindControl_InitialRectange_PropIndex) then
+  if (ACategoryIndex = CCategory_ActionSpecific) and (APropertyIndex = CFindControl_InitialRectangle_PropIndex) then
   begin
     case AItemIndex of
-      CFindControl_InitialRectange_LeftOffset_PropItemIndex:
-        frClickerFindControl.UpdateOnSearchRectLeftOffsetMouseDown(FEditingAction^.FindControlOptions.InitialRectange, Sender as TVTEdit, Button, Shift, X, Y);
+      CFindControl_InitialRectangle_LeftOffset_PropItemIndex:
+        frClickerFindControl.UpdateOnSearchRectLeftOffsetMouseDown(FEditingAction^.FindControlOptions.InitialRectangle, Sender as TVTEdit, Button, Shift, X, Y);
 
-      CFindControl_InitialRectange_TopOffset_PropItemIndex:
-        frClickerFindControl.UpdateOnSearchRectTopOffsetMouseDown(FEditingAction^.FindControlOptions.InitialRectange, Sender as TVTEdit, Button, Shift, X, Y);
+      CFindControl_InitialRectangle_TopOffset_PropItemIndex:
+        frClickerFindControl.UpdateOnSearchRectTopOffsetMouseDown(FEditingAction^.FindControlOptions.InitialRectangle, Sender as TVTEdit, Button, Shift, X, Y);
 
-      CFindControl_InitialRectange_RightOffset_PropItemIndex:
-        frClickerFindControl.UpdateOnSearchRectRightOffsetMouseDown(FEditingAction^.FindControlOptions.InitialRectange, Sender as TVTEdit, Button, Shift, X, Y);
+      CFindControl_InitialRectangle_RightOffset_PropItemIndex:
+        frClickerFindControl.UpdateOnSearchRectRightOffsetMouseDown(FEditingAction^.FindControlOptions.InitialRectangle, Sender as TVTEdit, Button, Shift, X, Y);
 
-      CFindControl_InitialRectange_BottomOffset_PropItemIndex:
-        frClickerFindControl.UpdateOnSearchRectBottomOffsetMouseDown(FEditingAction^.FindControlOptions.InitialRectange, Sender as TVTEdit, Button, Shift, X, Y);
+      CFindControl_InitialRectangle_BottomOffset_PropItemIndex:
+        frClickerFindControl.UpdateOnSearchRectBottomOffsetMouseDown(FEditingAction^.FindControlOptions.InitialRectangle, Sender as TVTEdit, Button, Shift, X, Y);
     end;
   end;
 
@@ -2797,30 +2687,30 @@ var
 begin
   Result := False;
 
-  if (ACategoryIndex = CCategory_ActionSpecific) and (APropertyIndex = CFindControl_InitialRectange_PropIndex) then
+  if (ACategoryIndex = CCategory_ActionSpecific) and (APropertyIndex = CFindControl_InitialRectangle_PropIndex) then
   begin
     case AItemIndex of
-      CFindControl_InitialRectange_LeftOffset_PropItemIndex:
+      CFindControl_InitialRectangle_LeftOffset_PropItemIndex:
       begin
-        frClickerFindControl.UpdateOnSearchRectLeftOffsetMouseMove(FEditingAction^.FindControlOptions.InitialRectange, Sender as TVTEdit, Shift, X, Y);
+        frClickerFindControl.UpdateOnSearchRectLeftOffsetMouseMove(FEditingAction^.FindControlOptions.InitialRectangle, Sender as TVTEdit, Shift, X, Y);
         Result := True;
       end;
 
-      CFindControl_InitialRectange_TopOffset_PropItemIndex:
+      CFindControl_InitialRectangle_TopOffset_PropItemIndex:
       begin
-        frClickerFindControl.UpdateOnSearchRectTopOffsetMouseMove(FEditingAction^.FindControlOptions.InitialRectange, Sender as TVTEdit, Shift, X, Y);
+        frClickerFindControl.UpdateOnSearchRectTopOffsetMouseMove(FEditingAction^.FindControlOptions.InitialRectangle, Sender as TVTEdit, Shift, X, Y);
         Result := True;
       end;
 
-      CFindControl_InitialRectange_RightOffset_PropItemIndex:
+      CFindControl_InitialRectangle_RightOffset_PropItemIndex:
       begin
-        frClickerFindControl.UpdateOnSearchRectRightOffsetMouseMove(FEditingAction^.FindControlOptions.InitialRectange, Sender as TVTEdit, Shift, X, Y);
+        frClickerFindControl.UpdateOnSearchRectRightOffsetMouseMove(FEditingAction^.FindControlOptions.InitialRectangle, Sender as TVTEdit, Shift, X, Y);
         Result := True;
       end;
 
-      CFindControl_InitialRectange_BottomOffset_PropItemIndex:
+      CFindControl_InitialRectangle_BottomOffset_PropItemIndex:
       begin
-        frClickerFindControl.UpdateOnSearchRectBottomOffsetMouseMove(FEditingAction^.FindControlOptions.InitialRectange, Sender as TVTEdit, Shift, X, Y);
+        frClickerFindControl.UpdateOnSearchRectBottomOffsetMouseMove(FEditingAction^.FindControlOptions.InitialRectangle, Sender as TVTEdit, Shift, X, Y);
         Result := True;
       end;
     end;
@@ -2893,25 +2783,25 @@ begin
           frClickerFindControl.PreviewText;
         end;
 
-        CFindControl_InitialRectange_PropIndex:
+        CFindControl_InitialRectangle_PropIndex:
         begin
-          if AItemIndex in [CFindControl_InitialRectange_LeftOffset_PropItemIndex .. CFindControl_InitialRectange_BottomOffset_PropItemIndex] then
+          if AItemIndex in [CFindControl_InitialRectangle_LeftOffset_PropItemIndex .. CFindControl_InitialRectangle_BottomOffset_PropItemIndex] then
           begin
             case AItemIndex of
-              CFindControl_InitialRectange_LeftOffset_PropItemIndex:
-                FEditingAction^.FindControlOptions.InitialRectange.LeftOffset := (Sender as TVTEdit).Text;
+              CFindControl_InitialRectangle_LeftOffset_PropItemIndex:
+                FEditingAction^.FindControlOptions.InitialRectangle.LeftOffset := (Sender as TVTEdit).Text;
 
-              CFindControl_InitialRectange_TopOffset_PropItemIndex:
-                FEditingAction^.FindControlOptions.InitialRectange.TopOffset := (Sender as TVTEdit).Text;
+              CFindControl_InitialRectangle_TopOffset_PropItemIndex:
+                FEditingAction^.FindControlOptions.InitialRectangle.TopOffset := (Sender as TVTEdit).Text;
 
-              CFindControl_InitialRectange_RightOffset_PropItemIndex:
-                FEditingAction^.FindControlOptions.InitialRectange.RightOffset := (Sender as TVTEdit).Text;
+              CFindControl_InitialRectangle_RightOffset_PropItemIndex:
+                FEditingAction^.FindControlOptions.InitialRectangle.RightOffset := (Sender as TVTEdit).Text;
 
-              CFindControl_InitialRectange_BottomOffset_PropItemIndex:
-                FEditingAction^.FindControlOptions.InitialRectange.BottomOffset := (Sender as TVTEdit).Text;
+              CFindControl_InitialRectangle_BottomOffset_PropItemIndex:
+                FEditingAction^.FindControlOptions.InitialRectangle.BottomOffset := (Sender as TVTEdit).Text;
             end;
 
-            frClickerFindControl.UpdateSearchAreaLabelsFromKeysOnInitRect(FEditingAction^.FindControlOptions.InitialRectange);
+            frClickerFindControl.UpdateSearchAreaLabelsFromKeysOnInitRect(FEditingAction^.FindControlOptions.InitialRectangle);
           end;
         end; //init rect
       end; //case
@@ -2949,36 +2839,36 @@ begin
               AHint := GetPropertyHint_FindControl_MatchCriteria_SearchForControlMode;
           end;
 
-          CFindControl_InitialRectange_PropIndex:
-            if AItemIndex in [CFindControl_InitialRectange_Left_PropItemIndex .. CFindControl_InitialRectange_Bottom_PropItemIndex] then
+          CFindControl_InitialRectangle_PropIndex:
+            if AItemIndex in [CFindControl_InitialRectangle_Left_PropItemIndex .. CFindControl_InitialRectangle_Bottom_PropItemIndex] then
             begin
               case AItemIndex of
-                CFindControl_InitialRectange_Left_PropItemIndex:
+                CFindControl_InitialRectangle_Left_PropItemIndex:
                 begin
                   APopupMenu := frClickerFindControl.pmStandardControlRefVars;
-                  TempValue := FEditingAction^.FindControlOptions.InitialRectange.Left;
-                  AHint := GetPropertyHint_FindControl_InitialRectange_Left(TempValue, EvaluateReplacements(TempValue));
+                  TempValue := FEditingAction^.FindControlOptions.InitialRectangle.Left;
+                  AHint := GetPropertyHint_FindControl_InitialRectangle_Left(TempValue, EvaluateReplacements(TempValue));
                 end;
 
-                CFindControl_InitialRectange_Top_PropItemIndex:
+                CFindControl_InitialRectangle_Top_PropItemIndex:
                 begin
                   APopupMenu := frClickerFindControl.pmStandardControlRefVars;
-                  TempValue := FEditingAction^.FindControlOptions.InitialRectange.Top;
-                  AHint := GetPropertyHint_FindControl_InitialRectange_Top(TempValue, EvaluateReplacements(TempValue));
+                  TempValue := FEditingAction^.FindControlOptions.InitialRectangle.Top;
+                  AHint := GetPropertyHint_FindControl_InitialRectangle_Top(TempValue, EvaluateReplacements(TempValue));
                 end;
 
-                CFindControl_InitialRectange_Right_PropItemIndex:
+                CFindControl_InitialRectangle_Right_PropItemIndex:
                 begin
                   APopupMenu := frClickerFindControl.pmStandardControlRefVars;
-                  TempValue := FEditingAction^.FindControlOptions.InitialRectange.Right;
-                  AHint := GetPropertyHint_FindControl_InitialRectange_Right(TempValue, EvaluateReplacements(TempValue));
+                  TempValue := FEditingAction^.FindControlOptions.InitialRectangle.Right;
+                  AHint := GetPropertyHint_FindControl_InitialRectangle_Right(TempValue, EvaluateReplacements(TempValue));
                 end;
 
-                CFindControl_InitialRectange_Bottom_PropItemIndex:
+                CFindControl_InitialRectangle_Bottom_PropItemIndex:
                 begin
                   APopupMenu := frClickerFindControl.pmStandardControlRefVars;
-                  TempValue := FEditingAction^.FindControlOptions.InitialRectange.Bottom;
-                  AHint := GetPropertyHint_FindControl_InitialRectange_Bottom(TempValue, EvaluateReplacements(TempValue));
+                  TempValue := FEditingAction^.FindControlOptions.InitialRectangle.Bottom;
+                  AHint := GetPropertyHint_FindControl_InitialRectangle_Bottom(TempValue, EvaluateReplacements(TempValue));
                 end;
               end;
             end;
@@ -3390,31 +3280,31 @@ procedure TfrClickerActions.HandleOnAfterSpinTextEditorChanging(ANodeLevel, ACat
 var
   ItemIndexMod, ItemIndexDiv: Integer;
 begin
-  if (ACategoryIndex = CCategory_ActionSpecific) and (APropertyIndex = CFindControl_InitialRectange_PropIndex) then
+  if (ACategoryIndex = CCategory_ActionSpecific) and (APropertyIndex = CFindControl_InitialRectangle_PropIndex) then
   begin
     case AItemIndex of
-      CFindControl_InitialRectange_LeftOffset_PropItemIndex:
+      CFindControl_InitialRectangle_LeftOffset_PropItemIndex:
       begin
-        FEditingAction^.FindControlOptions.InitialRectange.LeftOffset := ANewValue;
-        frClickerFindControl.UpdateSearchAreaLabelsFromKeysOnInitRect(FEditingAction^.FindControlOptions.InitialRectange);
+        FEditingAction^.FindControlOptions.InitialRectangle.LeftOffset := ANewValue;
+        frClickerFindControl.UpdateSearchAreaLabelsFromKeysOnInitRect(FEditingAction^.FindControlOptions.InitialRectangle);
       end;
 
-      CFindControl_InitialRectange_TopOffset_PropItemIndex:
+      CFindControl_InitialRectangle_TopOffset_PropItemIndex:
       begin
-        FEditingAction^.FindControlOptions.InitialRectange.TopOffset := ANewValue;
-        frClickerFindControl.UpdateSearchAreaLabelsFromKeysOnInitRect(FEditingAction^.FindControlOptions.InitialRectange);
+        FEditingAction^.FindControlOptions.InitialRectangle.TopOffset := ANewValue;
+        frClickerFindControl.UpdateSearchAreaLabelsFromKeysOnInitRect(FEditingAction^.FindControlOptions.InitialRectangle);
       end;
 
-      CFindControl_InitialRectange_RightOffset_PropItemIndex:
+      CFindControl_InitialRectangle_RightOffset_PropItemIndex:
       begin
-        FEditingAction^.FindControlOptions.InitialRectange.RightOffset := ANewValue;
-        frClickerFindControl.UpdateSearchAreaLabelsFromKeysOnInitRect(FEditingAction^.FindControlOptions.InitialRectange);
+        FEditingAction^.FindControlOptions.InitialRectangle.RightOffset := ANewValue;
+        frClickerFindControl.UpdateSearchAreaLabelsFromKeysOnInitRect(FEditingAction^.FindControlOptions.InitialRectangle);
       end;
 
-      CFindControl_InitialRectange_BottomOffset_PropItemIndex:
+      CFindControl_InitialRectangle_BottomOffset_PropItemIndex:
       begin
-        FEditingAction^.FindControlOptions.InitialRectange.BottomOffset := ANewValue;
-        frClickerFindControl.UpdateSearchAreaLabelsFromKeysOnInitRect(FEditingAction^.FindControlOptions.InitialRectange);
+        FEditingAction^.FindControlOptions.InitialRectangle.BottomOffset := ANewValue;
+        frClickerFindControl.UpdateSearchAreaLabelsFromKeysOnInitRect(FEditingAction^.FindControlOptions.InitialRectangle);
       end;
     end;
   end;

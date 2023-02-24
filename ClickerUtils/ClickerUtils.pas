@@ -205,7 +205,7 @@ type
     MatchBitmapFiles: string; //ListOfStrings
     MatchBitmapAlgorithm: TMatchBitmapAlgorithm;
     MatchBitmapAlgorithmSettings: TMatchBitmapAlgorithmSettings;
-    InitialRectange: TRectString;
+    InitialRectangle: TRectString;
     UseWholeScreen: Boolean;
     ColorError: string;  //string, to allow var replacements
     AllowedColorErrorCount: string;  //Number of pixels allowed to mismatch
@@ -257,7 +257,7 @@ type
   TClkWindowOperationsOptions = record
     Operation: TWindowOperation;
     NewX, NewY, NewWidth, NewHeight: string;
-    NewPositionEabled, NewSizeEabled: Boolean;
+    NewPositionEnabled, NewSizeEnabled: Boolean;
   end;
 
   TActionBreakPoint = record

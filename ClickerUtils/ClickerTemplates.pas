@@ -163,15 +163,15 @@ begin
     ACustomActions[i].FindControlOptions.MatchBitmapAlgorithmSettings.XOffset := Ini.ReadInteger(SectionIndex, 'MatchBitmapAlgorithm_Grid_XOffset' + IterationStr, 0);
     ACustomActions[i].FindControlOptions.MatchBitmapAlgorithmSettings.YOffset := Ini.ReadInteger(SectionIndex, 'MatchBitmapAlgorithm_Grid_YOffset' + IterationStr, 0);
 
-    ACustomActions[i].FindControlOptions.InitialRectange.Left := Ini.ReadString(SectionIndex, 'InitialRectange.Left_' + IterationStr, '$Control_Left$');
-    ACustomActions[i].FindControlOptions.InitialRectange.Top := Ini.ReadString(SectionIndex, 'InitialRectange.Top_' + IterationStr, '$Control_Top$');
-    ACustomActions[i].FindControlOptions.InitialRectange.Right := Ini.ReadString(SectionIndex, 'InitialRectange.Right_' + IterationStr, '$Control_Right$');
-    ACustomActions[i].FindControlOptions.InitialRectange.Bottom := Ini.ReadString(SectionIndex, 'InitialRectange.Bottom_' + IterationStr, '$Control_Bottom$');
+    ACustomActions[i].FindControlOptions.InitialRectangle.Left := Ini.ReadString(SectionIndex, 'InitialRectangle.Left_' + IterationStr, '$Control_Left$');
+    ACustomActions[i].FindControlOptions.InitialRectangle.Top := Ini.ReadString(SectionIndex, 'InitialRectangle.Top_' + IterationStr, '$Control_Top$');
+    ACustomActions[i].FindControlOptions.InitialRectangle.Right := Ini.ReadString(SectionIndex, 'InitialRectangle.Right_' + IterationStr, '$Control_Right$');
+    ACustomActions[i].FindControlOptions.InitialRectangle.Bottom := Ini.ReadString(SectionIndex, 'InitialRectangle.Bottom_' + IterationStr, '$Control_Bottom$');
     ACustomActions[i].FindControlOptions.UseWholeScreen := Ini.ReadBool(SectionIndex, 'UseWholeScreen_' + IterationStr, True);
-    ACustomActions[i].FindControlOptions.InitialRectange.LeftOffset := Ini.ReadString(SectionIndex, 'InitialRectange.LeftOffset_' + IterationStr, '0');
-    ACustomActions[i].FindControlOptions.InitialRectange.TopOffset := Ini.ReadString(SectionIndex, 'InitialRectange.TopOffset_' + IterationStr, '0');
-    ACustomActions[i].FindControlOptions.InitialRectange.RightOffset := Ini.ReadString(SectionIndex, 'InitialRectange.RightOffset_' + IterationStr, '0');
-    ACustomActions[i].FindControlOptions.InitialRectange.BottomOffset := Ini.ReadString(SectionIndex, 'InitialRectange.BottomOffset_' + IterationStr, '0');
+    ACustomActions[i].FindControlOptions.InitialRectangle.LeftOffset := Ini.ReadString(SectionIndex, 'InitialRectangle.LeftOffset_' + IterationStr, '0');
+    ACustomActions[i].FindControlOptions.InitialRectangle.TopOffset := Ini.ReadString(SectionIndex, 'InitialRectangle.TopOffset_' + IterationStr, '0');
+    ACustomActions[i].FindControlOptions.InitialRectangle.RightOffset := Ini.ReadString(SectionIndex, 'InitialRectangle.RightOffset_' + IterationStr, '0');
+    ACustomActions[i].FindControlOptions.InitialRectangle.BottomOffset := Ini.ReadString(SectionIndex, 'InitialRectangle.BottomOffset_' + IterationStr, '0');
 
     ACustomActions[i].FindControlOptions.StartSearchingWithCachedControl := Ini.ReadBool(SectionIndex, 'StartSearchingWithCachedControl_' + IterationStr, False);
     ACustomActions[i].FindControlOptions.CachedControlLeft := Ini.ReadString(SectionIndex, 'CachedControlLeft_' + IterationStr, '');
@@ -338,15 +338,15 @@ begin
   AFindControlOptions.MatchBitmapAlgorithmSettings.XOffset := Ini.ReadInteger(SectionIndex, 'MatchBitmapAlgorithm_Grid_XOffset', 0);
   AFindControlOptions.MatchBitmapAlgorithmSettings.YOffset := Ini.ReadInteger(SectionIndex, 'MatchBitmapAlgorithm_Grid_YOffset', 0);
 
-  AFindControlOptions.InitialRectange.Left := Ini.ReadString(SectionIndex, 'InitialRectange.Left', '$Control_Left$');
-  AFindControlOptions.InitialRectange.Top := Ini.ReadString(SectionIndex, 'InitialRectange.Top', '$Control_Top$');
-  AFindControlOptions.InitialRectange.Right := Ini.ReadString(SectionIndex, 'InitialRectange.Right', '$Control_Right$');
-  AFindControlOptions.InitialRectange.Bottom := Ini.ReadString(SectionIndex, 'InitialRectange.Bottom', '$Control_Bottom$');
+  AFindControlOptions.InitialRectangle.Left := Ini.ReadString(SectionIndex, 'InitialRectangle.Left', Ini.ReadString(SectionIndex, 'InitialRectange.Left', '$Control_Left$'));
+  AFindControlOptions.InitialRectangle.Top := Ini.ReadString(SectionIndex, 'InitialRectangle.Top', Ini.ReadString(SectionIndex, 'InitialRectange.Top', '$Control_Top$'));
+  AFindControlOptions.InitialRectangle.Right := Ini.ReadString(SectionIndex, 'InitialRectangle.Right', Ini.ReadString(SectionIndex, 'InitialRectange.Right', '$Control_Right$'));
+  AFindControlOptions.InitialRectangle.Bottom := Ini.ReadString(SectionIndex, 'InitialRectangle.Bottom', Ini.ReadString(SectionIndex, 'InitialRectange.Bottom', '$Control_Bottom$'));
   AFindControlOptions.UseWholeScreen := Ini.ReadBool(SectionIndex, 'UseWholeScreen', True);
-  AFindControlOptions.InitialRectange.LeftOffset := Ini.ReadString(SectionIndex, 'InitialRectange.LeftOffset', '0');
-  AFindControlOptions.InitialRectange.TopOffset := Ini.ReadString(SectionIndex, 'InitialRectange.TopOffset', '0');
-  AFindControlOptions.InitialRectange.RightOffset := Ini.ReadString(SectionIndex, 'InitialRectange.RightOffset', '0');
-  AFindControlOptions.InitialRectange.BottomOffset := Ini.ReadString(SectionIndex, 'InitialRectange.BottomOffset', '0');
+  AFindControlOptions.InitialRectangle.LeftOffset := Ini.ReadString(SectionIndex, 'InitialRectangle.LeftOffset', Ini.ReadString(SectionIndex, 'InitialRectange.LeftOffset', '0'));
+  AFindControlOptions.InitialRectangle.TopOffset := Ini.ReadString(SectionIndex, 'InitialRectangle.TopOffset', Ini.ReadString(SectionIndex, 'InitialRectange.TopOffset', '0'));
+  AFindControlOptions.InitialRectangle.RightOffset := Ini.ReadString(SectionIndex, 'InitialRectangle.RightOffset', Ini.ReadString(SectionIndex, 'InitialRectange.RightOffset', '0'));
+  AFindControlOptions.InitialRectangle.BottomOffset := Ini.ReadString(SectionIndex, 'InitialRectangle.BottomOffset', Ini.ReadString(SectionIndex, 'InitialRectange.BottomOffset', '0'));
 
   AFindControlOptions.StartSearchingWithCachedControl := Ini.ReadBool(SectionIndex, 'StartSearchingWithCachedControl', False);
   AFindControlOptions.CachedControlLeft := Ini.ReadString(SectionIndex, 'CachedControlLeft', '');
@@ -402,8 +402,8 @@ begin
   AWindowOperationsOptions.NewY := Ini.ReadString(SectionIndex, 'NewY', '');
   AWindowOperationsOptions.NewWidth := Ini.ReadString(SectionIndex, 'NewWidth', '');
   AWindowOperationsOptions.NewHeight := Ini.ReadString(SectionIndex, 'NewHeight', '');
-  AWindowOperationsOptions.NewPositionEabled := Ini.ReadBool(SectionIndex, 'NewPositionEabled', False);
-  AWindowOperationsOptions.NewSizeEabled := Ini.ReadBool(SectionIndex, 'NewSizeEabled', False);
+  AWindowOperationsOptions.NewPositionEnabled := Ini.ReadBool(SectionIndex, 'NewPositionEnabled', Ini.ReadBool(SectionIndex, 'NewPositionEabled', False));
+  AWindowOperationsOptions.NewSizeEnabled := Ini.ReadBool(SectionIndex, 'NewSizeEnabled', Ini.ReadBool(SectionIndex, 'NewSizeEabled', False));
 end;
 
 
@@ -556,15 +556,15 @@ begin
       AStringList.Add('MatchBitmapAlgorithm_Grid_XOffset' + IterationStr + '=' + IntToStr(Ord(ACustomActions[i].FindControlOptions.MatchBitmapAlgorithmSettings.XOffset)));
       AStringList.Add('MatchBitmapAlgorithm_Grid_YOffset' + IterationStr + '=' + IntToStr(Ord(ACustomActions[i].FindControlOptions.MatchBitmapAlgorithmSettings.YOffset)));
 
-      AStringList.Add('InitialRectange.Left_' + IterationStr + '=' + ACustomActions[i].FindControlOptions.InitialRectange.Left);
-      AStringList.Add('InitialRectange.Top_' + IterationStr + '=' + ACustomActions[i].FindControlOptions.InitialRectange.Top);
-      AStringList.Add('InitialRectange.Right_' + IterationStr + '=' + ACustomActions[i].FindControlOptions.InitialRectange.Right);
-      AStringList.Add('InitialRectange.Bottom_' + IterationStr + '=' + ACustomActions[i].FindControlOptions.InitialRectange.Bottom);
+      AStringList.Add('InitialRectangle.Left_' + IterationStr + '=' + ACustomActions[i].FindControlOptions.InitialRectangle.Left);
+      AStringList.Add('InitialRectangle.Top_' + IterationStr + '=' + ACustomActions[i].FindControlOptions.InitialRectangle.Top);
+      AStringList.Add('InitialRectangle.Right_' + IterationStr + '=' + ACustomActions[i].FindControlOptions.InitialRectangle.Right);
+      AStringList.Add('InitialRectangle.Bottom_' + IterationStr + '=' + ACustomActions[i].FindControlOptions.InitialRectangle.Bottom);
       AStringList.Add('UseWholeScreen_' + IterationStr + '=' + IntToStr(Ord(ACustomActions[i].FindControlOptions.UseWholeScreen)));
-      AStringList.Add('InitialRectange.LeftOffset_' + IterationStr + '=' + ACustomActions[i].FindControlOptions.InitialRectange.LeftOffset);
-      AStringList.Add('InitialRectange.TopOffset_' + IterationStr + '=' + ACustomActions[i].FindControlOptions.InitialRectange.TopOffset);
-      AStringList.Add('InitialRectange.RightOffset_' + IterationStr + '=' + ACustomActions[i].FindControlOptions.InitialRectange.RightOffset);
-      AStringList.Add('InitialRectange.BottomOffset_' + IterationStr + '=' + ACustomActions[i].FindControlOptions.InitialRectange.BottomOffset);
+      AStringList.Add('InitialRectangle.LeftOffset_' + IterationStr + '=' + ACustomActions[i].FindControlOptions.InitialRectangle.LeftOffset);
+      AStringList.Add('InitialRectangle.TopOffset_' + IterationStr + '=' + ACustomActions[i].FindControlOptions.InitialRectangle.TopOffset);
+      AStringList.Add('InitialRectangle.RightOffset_' + IterationStr + '=' + ACustomActions[i].FindControlOptions.InitialRectangle.RightOffset);
+      AStringList.Add('InitialRectangle.BottomOffset_' + IterationStr + '=' + ACustomActions[i].FindControlOptions.InitialRectangle.BottomOffset);
     end;
 
     AStringList.Add('');
@@ -729,15 +729,15 @@ begin
   AStringList.Add('MatchBitmapAlgorithm_Grid_XOffset=' + IntToStr(Ord(AActionFindControlOptions.MatchBitmapAlgorithmSettings.XOffset)));
   AStringList.Add('MatchBitmapAlgorithm_Grid_YOffset=' + IntToStr(Ord(AActionFindControlOptions.MatchBitmapAlgorithmSettings.YOffset)));
 
-  AStringList.Add('InitialRectange.Left=' + AActionFindControlOptions.InitialRectange.Left);
-  AStringList.Add('InitialRectange.Top=' + AActionFindControlOptions.InitialRectange.Top);
-  AStringList.Add('InitialRectange.Right=' + AActionFindControlOptions.InitialRectange.Right);
-  AStringList.Add('InitialRectange.Bottom=' + AActionFindControlOptions.InitialRectange.Bottom);
+  AStringList.Add('InitialRectangle.Left=' + AActionFindControlOptions.InitialRectangle.Left);
+  AStringList.Add('InitialRectangle.Top=' + AActionFindControlOptions.InitialRectangle.Top);
+  AStringList.Add('InitialRectangle.Right=' + AActionFindControlOptions.InitialRectangle.Right);
+  AStringList.Add('InitialRectangle.Bottom=' + AActionFindControlOptions.InitialRectangle.Bottom);
   AStringList.Add('UseWholeScreen=' + IntToStr(Ord(AActionFindControlOptions.UseWholeScreen)));
-  AStringList.Add('InitialRectange.LeftOffset=' + AActionFindControlOptions.InitialRectange.LeftOffset);
-  AStringList.Add('InitialRectange.TopOffset=' + AActionFindControlOptions.InitialRectange.TopOffset);
-  AStringList.Add('InitialRectange.RightOffset=' + AActionFindControlOptions.InitialRectange.RightOffset);
-  AStringList.Add('InitialRectange.BottomOffset=' + AActionFindControlOptions.InitialRectange.BottomOffset);
+  AStringList.Add('InitialRectangle.LeftOffset=' + AActionFindControlOptions.InitialRectangle.LeftOffset);
+  AStringList.Add('InitialRectangle.TopOffset=' + AActionFindControlOptions.InitialRectangle.TopOffset);
+  AStringList.Add('InitialRectangle.RightOffset=' + AActionFindControlOptions.InitialRectangle.RightOffset);
+  AStringList.Add('InitialRectangle.BottomOffset=' + AActionFindControlOptions.InitialRectangle.BottomOffset);
 
   AStringList.Add('StartSearchingWithCachedControl=' + IntToStr(Ord(AActionFindControlOptions.StartSearchingWithCachedControl)));
   AStringList.Add('CachedControlLeft=' + AActionFindControlOptions.CachedControlLeft);
@@ -792,8 +792,8 @@ begin
   AStringList.Add('NewY=' + AActionWindowOperationsOptions.NewY);
   AStringList.Add('NewWidth=' + AActionWindowOperationsOptions.NewWidth);
   AStringList.Add('NewHeight=' + AActionWindowOperationsOptions.NewHeight);
-  AStringList.Add('NewPositionEabled=' + IntToStr(Ord(AActionWindowOperationsOptions.NewPositionEabled)));
-  AStringList.Add('NewSizeEabled=' + IntToStr(Ord(AActionWindowOperationsOptions.NewSizeEabled)));
+  AStringList.Add('NewPositionEnabled=' + IntToStr(Ord(AActionWindowOperationsOptions.NewPositionEnabled)));
+  AStringList.Add('NewSizeEnabled=' + IntToStr(Ord(AActionWindowOperationsOptions.NewSizeEnabled)));
 end;
 
 
@@ -870,7 +870,7 @@ begin             //Substructures, which do not contain pointers, can be directl
   ADest.FindControlOptions.MatchBitmapFiles := ASrc.FindControlOptions.MatchBitmapFiles;
   ADest.FindControlOptions.MatchBitmapAlgorithm := ASrc.FindControlOptions.MatchBitmapAlgorithm;
   ADest.FindControlOptions.MatchBitmapAlgorithmSettings := ASrc.FindControlOptions.MatchBitmapAlgorithmSettings;
-  ADest.FindControlOptions.InitialRectange := ASrc.FindControlOptions.InitialRectange;
+  ADest.FindControlOptions.InitialRectangle := ASrc.FindControlOptions.InitialRectangle;
   ADest.FindControlOptions.UseWholeScreen := ASrc.FindControlOptions.UseWholeScreen;
   ADest.FindControlOptions.ColorError := ASrc.FindControlOptions.ColorError;
   ADest.FindControlOptions.AllowedColorErrorCount := ASrc.FindControlOptions.AllowedColorErrorCount;

@@ -1030,10 +1030,10 @@ begin
       end
       else
       begin
-        FindControlInputData.GlobalSearchArea.Left := StrToIntDef(EvaluateReplacements(AFindControlOptions.InitialRectange.Left), 0);
-        FindControlInputData.GlobalSearchArea.Top := StrToIntDef(EvaluateReplacements(AFindControlOptions.InitialRectange.Top), 0);
-        FindControlInputData.GlobalSearchArea.Right := StrToIntDef(EvaluateReplacements(AFindControlOptions.InitialRectange.Right), 0);
-        FindControlInputData.GlobalSearchArea.Bottom := StrToIntDef(EvaluateReplacements(AFindControlOptions.InitialRectange.Bottom), 0);
+        FindControlInputData.GlobalSearchArea.Left := StrToIntDef(EvaluateReplacements(AFindControlOptions.InitialRectangle.Left), 0);
+        FindControlInputData.GlobalSearchArea.Top := StrToIntDef(EvaluateReplacements(AFindControlOptions.InitialRectangle.Top), 0);
+        FindControlInputData.GlobalSearchArea.Right := StrToIntDef(EvaluateReplacements(AFindControlOptions.InitialRectangle.Right), 0);
+        FindControlInputData.GlobalSearchArea.Bottom := StrToIntDef(EvaluateReplacements(AFindControlOptions.InitialRectangle.Bottom), 0);
       end;
 
       if not AFindControlOptions.WaitForControlToGoAway then
@@ -1045,10 +1045,10 @@ begin
         AddToLog('Raw GlobalSearchArea.Bottom = ' + IntToStr(FindControlInputData.GlobalSearchArea.Bottom));
       end;
 
-      FindControlInputData.InitialRectangleOffsets.Left := StrToIntDef(EvaluateReplacements(AFindControlOptions.InitialRectange.LeftOffset), 0);
-      FindControlInputData.InitialRectangleOffsets.Top := StrToIntDef(EvaluateReplacements(AFindControlOptions.InitialRectange.TopOffset), 0);
-      FindControlInputData.InitialRectangleOffsets.Right := StrToIntDef(EvaluateReplacements(AFindControlOptions.InitialRectange.RightOffset), 0);
-      FindControlInputData.InitialRectangleOffsets.Bottom := StrToIntDef(EvaluateReplacements(AFindControlOptions.InitialRectange.BottomOffset), 0);
+      FindControlInputData.InitialRectangleOffsets.Left := StrToIntDef(EvaluateReplacements(AFindControlOptions.InitialRectangle.LeftOffset), 0);
+      FindControlInputData.InitialRectangleOffsets.Top := StrToIntDef(EvaluateReplacements(AFindControlOptions.InitialRectangle.TopOffset), 0);
+      FindControlInputData.InitialRectangleOffsets.Right := StrToIntDef(EvaluateReplacements(AFindControlOptions.InitialRectangle.RightOffset), 0);
+      FindControlInputData.InitialRectangleOffsets.Bottom := StrToIntDef(EvaluateReplacements(AFindControlOptions.InitialRectangle.BottomOffset), 0);
 
       Inc(FindControlInputData.GlobalSearchArea.Left, FindControlInputData.InitialRectangleOffsets.Left);
       Inc(FindControlInputData.GlobalSearchArea.Top, FindControlInputData.InitialRectangleOffsets.Top);
@@ -1087,6 +1087,7 @@ begin
         frClickerActions.imgDebugBmp.Canvas.TextOut(0, 180, 'Bottom offset: ' + IntToStr(FindControlInputData.InitialRectangleOffsets.Bottom) + '   ');
 
         frClickerActions.imgDebugBmp.Canvas.TextOut(0, 210, 'FileName: '+ ExtractFileName(FTemplateFileName^));
+        frClickerActions.imgDebugBmp.Canvas.TextOut(0, 225, 'Action: "' + AActionOptions.ActionName + '"');
 
         AddToLog('Exiting find control, because the search area is negative.');
         AddToLog('');
@@ -1701,7 +1702,7 @@ begin
     begin
       Flags := SWP_ASYNCWINDOWPOS or SWP_NOACTIVATE or SWP_NOOWNERZORDER or SWP_NOZORDER;
 
-      if AWindowOperationsOptions.NewPositionEabled then
+      if AWindowOperationsOptions.NewPositionEnabled then
       begin
         X := StrToIntDef(EvaluateReplacements(AWindowOperationsOptions.NewX), 0);
         Y := StrToIntDef(EvaluateReplacements(AWindowOperationsOptions.NewY), 0);
@@ -1709,7 +1710,7 @@ begin
       else
         Flags := Flags or SWP_NOMOVE;
 
-      if AWindowOperationsOptions.NewSizeEabled then
+      if AWindowOperationsOptions.NewSizeEnabled then
       begin
         cx := StrToIntDef(EvaluateReplacements(AWindowOperationsOptions.NewWidth), 0);
         cy := StrToIntDef(EvaluateReplacements(AWindowOperationsOptions.NewHeight), 0);
@@ -2005,14 +2006,14 @@ begin
     FindControlOptions.MatchBitmapAlgorithmSettings.XOffset := StrToIntDef(AListOfFindControlOptionsParams.Values['MatchBitmapAlgorithmSettings.XOffset'], 0);
     FindControlOptions.MatchBitmapAlgorithmSettings.YOffset := StrToIntDef(AListOfFindControlOptionsParams.Values['MatchBitmapAlgorithmSettings.YOffset'], 0);
 
-    FindControlOptions.InitialRectange.Left := AListOfFindControlOptionsParams.Values['InitialRectange.Left'];
-    FindControlOptions.InitialRectange.Top := AListOfFindControlOptionsParams.Values['InitialRectange.Top'];
-    FindControlOptions.InitialRectange.Right := AListOfFindControlOptionsParams.Values['InitialRectange.Right'];
-    FindControlOptions.InitialRectange.Bottom := AListOfFindControlOptionsParams.Values['InitialRectange.Bottom'];
-    FindControlOptions.InitialRectange.LeftOffset := AListOfFindControlOptionsParams.Values['InitialRectange.LeftOffset'];
-    FindControlOptions.InitialRectange.TopOffset := AListOfFindControlOptionsParams.Values['InitialRectange.TopOffset'];
-    FindControlOptions.InitialRectange.RightOffset := AListOfFindControlOptionsParams.Values['InitialRectange.RightOffset'];
-    FindControlOptions.InitialRectange.BottomOffset := AListOfFindControlOptionsParams.Values['InitialRectange.BottomOffset'];
+    FindControlOptions.InitialRectangle.Left := AListOfFindControlOptionsParams.Values['InitialRectangle.Left'];
+    FindControlOptions.InitialRectangle.Top := AListOfFindControlOptionsParams.Values['InitialRectangle.Top'];
+    FindControlOptions.InitialRectangle.Right := AListOfFindControlOptionsParams.Values['InitialRectangle.Right'];
+    FindControlOptions.InitialRectangle.Bottom := AListOfFindControlOptionsParams.Values['InitialRectangle.Bottom'];
+    FindControlOptions.InitialRectangle.LeftOffset := AListOfFindControlOptionsParams.Values['InitialRectangle.LeftOffset'];
+    FindControlOptions.InitialRectangle.TopOffset := AListOfFindControlOptionsParams.Values['InitialRectangle.TopOffset'];
+    FindControlOptions.InitialRectangle.RightOffset := AListOfFindControlOptionsParams.Values['InitialRectangle.RightOffset'];
+    FindControlOptions.InitialRectangle.BottomOffset := AListOfFindControlOptionsParams.Values['InitialRectangle.BottomOffset'];
 
     FindControlOptions.UseWholeScreen := AListOfFindControlOptionsParams.Values['UseWholeScreen'] = '1';
     FindControlOptions.ColorError := AListOfFindControlOptionsParams.Values['ColorError'];  //string, to allow var replacements
@@ -2169,8 +2170,8 @@ begin
     WindowOperationsOptions.NewY := AListOfWindowOperationsOptionsParams.Values['NewY'];
     WindowOperationsOptions.NewWidth := AListOfWindowOperationsOptionsParams.Values['NewWidth'];
     WindowOperationsOptions.NewHeight := AListOfWindowOperationsOptionsParams.Values['NewHeight'];
-    WindowOperationsOptions.NewPositionEabled := AListOfWindowOperationsOptionsParams.Values['NewPositionEabled'] = '1';
-    WindowOperationsOptions.NewSizeEabled := AListOfWindowOperationsOptionsParams.Values['NewSizeEabled'] = '1';
+    WindowOperationsOptions.NewPositionEnabled := AListOfWindowOperationsOptionsParams.Values['NewPositionEnabled'] = '1';
+    WindowOperationsOptions.NewSizeEnabled := AListOfWindowOperationsOptionsParams.Values['NewSizeEnabled'] = '1';
 
     Result := ExecuteWindowOperationsAction(WindowOperationsOptions);
   finally

@@ -603,6 +603,7 @@ object frClickerActionsArr: TfrClickerActionsArr
       AutoSize = False
       Caption = 'Switch editor tab on action select'
       TabOrder = 6
+      Visible = False
     end
     object spdbtnTemplateNotes: TSpeedButton
       Left = 576

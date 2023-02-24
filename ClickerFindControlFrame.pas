@@ -1467,35 +1467,6 @@ begin
     if FSearchAreaSearchedTextDbgImg <> nil then
       for i := 0 to Length(FBMPTextProfiles) - 1 do
         FBMPTextProfiles[i].PreviewTextOnImage(FSearchAreaSearchedTextDbgImg);
-
-    if Assigned(FSearchAreaScrBox) then
-    begin
-      FSearchAreaScrBox.Parent := TabSheetActionFindSubControlSearchArea;
-      FSearchAreaScrBox.Left := lblReservedSpaceForDbgImg.Left;
-    end;
-
-    lblMouseOnDbgImg.Parent := TabSheetActionFindSubControlSearchArea;
-    lblMouseOnDbgImgBB.Parent := TabSheetActionFindSubControlSearchArea;
-    lblMouseOnDbgImgGG.Parent := TabSheetActionFindSubControlSearchArea;
-    lblMouseOnDbgImgRR.Parent := TabSheetActionFindSubControlSearchArea;
-
-    lblMouseOnDbgImg.Left := 296;
-    lblMouseOnDbgImg.Top := 42;
-    lblMouseOnDbgImgBB.Left := 296;
-    lblMouseOnDbgImgBB.Top := 56;
-    lblMouseOnDbgImgGG.Left := 312;
-    lblMouseOnDbgImgGG.Top := 56;
-    lblMouseOnDbgImgRR.Left := 328;
-    lblMouseOnDbgImgRR.Top := 56;
-
-    btnDisplaySearchAreaDebuggingImage.Parent := TabSheetActionFindSubControlSearchArea;
-    spdbtnDisplaySearchAreaDbgImgMenu.Parent := TabSheetActionFindSubControlSearchArea;
-
-    btnDisplaySearchAreaDebuggingImage.Left := lblReservedSpaceForDbgImg.Left;
-    spdbtnDisplaySearchAreaDbgImgMenu.Left := btnDisplaySearchAreaDebuggingImage.Left + btnDisplaySearchAreaDebuggingImage.Width - 1;
-
-    chkShowGridOnBMPPreview.Parent := TabSheetActionFindSubControlSearchArea;
-    chkShowGridOnBMPPreview.Top := 40;
   end;
 end;
 
@@ -1678,6 +1649,8 @@ begin
       FSearchAreaScrBox.Parent := TabSheetActionFindSubControlSearchArea;
       FSearchAreaScrBox.Width := lblReservedSpaceForDbgImg.Width; // TabSheetActionFindSubControlSearchArea.Width - btnDisplaySearchAreaDebuggingImage.Left - 10; //130;
       FSearchAreaScrBox.Height := TabSheetActionFindSubControlSearchArea.Height - 20 - 30; //120;
+      FSearchAreaScrBox.Left := lblReservedSpaceForDbgImg.Left;
+      FSearchAreaScrBox.Top := lblReservedSpaceForDbgImg.Top;
       FSearchAreaScrBox.Anchors := [akBottom, akLeft, akRight, akTop];
       FSearchAreaScrBox.Color := clYellow;
       FSearchAreaScrBox.HorzScrollBar.Smooth := True;
@@ -1868,8 +1841,8 @@ begin
 
     FindControlOptions := DoOnGetFindControlOptions;
 
-    FSearchAreaSearchedBmpDbgImg.Left := StrToIntDef(EvaluateReplacements(FindControlOptions^.InitialRectange.LeftOffset), 20);
-    FSearchAreaSearchedBmpDbgImg.Top := StrToIntDef(EvaluateReplacements(FindControlOptions^.InitialRectange.TopOffset), 20);
+    FSearchAreaSearchedBmpDbgImg.Left := StrToIntDef(EvaluateReplacements(FindControlOptions^.InitialRectangle.LeftOffset), 20);
+    FSearchAreaSearchedBmpDbgImg.Top := StrToIntDef(EvaluateReplacements(FindControlOptions^.InitialRectangle.TopOffset), 20);
 
     FSearchAreaSearchedTextDbgImg.Left := FSearchAreaSearchedBmpDbgImg.Left;
     FSearchAreaSearchedTextDbgImg.Top := FSearchAreaSearchedBmpDbgImg.Top;
@@ -1890,12 +1863,12 @@ begin
     end
     else
     begin
-      ControlRight := StrToIntDef(EvaluateReplacements(FindControlOptions^.InitialRectange.Right), 20) - StrToIntDef(EvaluateReplacements(FindControlOptions^.InitialRectange.Left), 20); //Right edge of the search area.
-      ControlBottom := StrToIntDef(EvaluateReplacements(FindControlOptions^.InitialRectange.Bottom), 20) - StrToIntDef(EvaluateReplacements(FindControlOptions^.InitialRectange.Top), 20); //Bottom edge of the search area.
+      ControlRight := StrToIntDef(EvaluateReplacements(FindControlOptions^.InitialRectangle.Right), 20) - StrToIntDef(EvaluateReplacements(FindControlOptions^.InitialRectangle.Left), 20); //Right edge of the search area.
+      ControlBottom := StrToIntDef(EvaluateReplacements(FindControlOptions^.InitialRectangle.Bottom), 20) - StrToIntDef(EvaluateReplacements(FindControlOptions^.InitialRectangle.Top), 20); //Bottom edge of the search area.
     end;
 
-    FSearchAreaRightLimitLabel.Left := ControlRight + StrToIntDef(EvaluateReplacements(FindControlOptions^.InitialRectange.RightOffset), 20);   ////////// should be control right + offset (offset can be negative)
-    FSearchAreaBottomLimitLabel.Top := ControlBottom + StrToIntDef(EvaluateReplacements(FindControlOptions^.InitialRectange.BottomOffset), 20);    ////////// should be control bottom + offset (offset can be negative)
+    FSearchAreaRightLimitLabel.Left := ControlRight + StrToIntDef(EvaluateReplacements(FindControlOptions^.InitialRectangle.RightOffset), 20);   ////////// should be control right + offset (offset can be negative)
+    FSearchAreaBottomLimitLabel.Top := ControlBottom + StrToIntDef(EvaluateReplacements(FindControlOptions^.InitialRectangle.BottomOffset), 20);    ////////// should be control bottom + offset (offset can be negative)
 
     UpdateTransparent_SearchAreaLimitsFromSearchAreaLimits;
     ///////////////////////
@@ -1981,49 +1954,49 @@ end;
 
 function TfrClickerFindControl.GetSearch_BottomBottom_Ref: Integer;
 begin
-  Result := GetSearch_EditBoxVar_Ref(DoOnGetFindControlOptions^.InitialRectange.Bottom, '$Control_Bottom$');
+  Result := GetSearch_EditBoxVar_Ref(DoOnGetFindControlOptions^.InitialRectangle.Bottom, '$Control_Bottom$');
 end;
 
 
 function TfrClickerFindControl.GetSearch_TopBottom_Ref: Integer;
 begin
-  Result := GetSearch_EditBoxVar_Ref(DoOnGetFindControlOptions^.InitialRectange.Top, '$Control_Bottom$');
+  Result := GetSearch_EditBoxVar_Ref(DoOnGetFindControlOptions^.InitialRectangle.Top, '$Control_Bottom$');
 end;
 
 
 function TfrClickerFindControl.GetSearch_LeftLeft_Ref: Integer;
 begin
-  Result := GetSearch_EditBoxVar_Ref(DoOnGetFindControlOptions^.InitialRectange.Left, '$Control_Left$');
+  Result := GetSearch_EditBoxVar_Ref(DoOnGetFindControlOptions^.InitialRectangle.Left, '$Control_Left$');
 end;
 
 
 function TfrClickerFindControl.GetSearch_RightLeft_Ref: Integer;
 begin
-  Result := GetSearch_EditBoxVar_Ref(DoOnGetFindControlOptions^.InitialRectange.Right, '$Control_Left$');
+  Result := GetSearch_EditBoxVar_Ref(DoOnGetFindControlOptions^.InitialRectangle.Right, '$Control_Left$');
 end;
 
 
 function TfrClickerFindControl.GetSearch_RightRight_Ref: Integer;
 begin
-  Result := GetSearch_EditBoxVar_Ref(DoOnGetFindControlOptions^.InitialRectange.Right, '$Control_Right$');
+  Result := GetSearch_EditBoxVar_Ref(DoOnGetFindControlOptions^.InitialRectangle.Right, '$Control_Right$');
 end;
 
 
 function TfrClickerFindControl.GetSearch_LeftRight_Ref: Integer;
 begin
-  Result := GetSearch_EditBoxVar_Ref(DoOnGetFindControlOptions^.InitialRectange.Left, '$Control_Right$');
+  Result := GetSearch_EditBoxVar_Ref(DoOnGetFindControlOptions^.InitialRectangle.Left, '$Control_Right$');
 end;
 
 
 function TfrClickerFindControl.GetSearch_TopTop_Ref: Integer;
 begin
-  Result := GetSearch_EditBoxVar_Ref(DoOnGetFindControlOptions^.InitialRectange.Top, '$Control_Top$');
+  Result := GetSearch_EditBoxVar_Ref(DoOnGetFindControlOptions^.InitialRectangle.Top, '$Control_Top$');
 end;
 
 
 function TfrClickerFindControl.GetSearch_BottomTop_Ref: Integer;
 begin
-  Result := GetSearch_EditBoxVar_Ref(DoOnGetFindControlOptions^.InitialRectange.Bottom, '$Control_Top$');
+  Result := GetSearch_EditBoxVar_Ref(DoOnGetFindControlOptions^.InitialRectangle.Bottom, '$Control_Top$');
 end;
 
 
@@ -2891,14 +2864,14 @@ begin
 
   UpdateBitmapAlgorithmSettings;
 
-  FindControlOptions^.InitialRectange.Left := '$Control_Left$';
-  FindControlOptions^.InitialRectange.Top := '$Control_Top$';
-  FindControlOptions^.InitialRectange.Right := '$Control_Right$';
-  FindControlOptions^.InitialRectange.Bottom := '$Control_Bottom$';
-  FindControlOptions^.InitialRectange.LeftOffset := '0';
-  FindControlOptions^.InitialRectange.TopOffset := '0';
-  FindControlOptions^.InitialRectange.RightOffset := '0';
-  FindControlOptions^.InitialRectange.BottomOffset := '0';
+  FindControlOptions^.InitialRectangle.Left := '$Control_Left$';
+  FindControlOptions^.InitialRectangle.Top := '$Control_Top$';
+  FindControlOptions^.InitialRectangle.Right := '$Control_Right$';
+  FindControlOptions^.InitialRectangle.Bottom := '$Control_Bottom$';
+  FindControlOptions^.InitialRectangle.LeftOffset := '0';
+  FindControlOptions^.InitialRectangle.TopOffset := '0';
+  FindControlOptions^.InitialRectangle.RightOffset := '0';
+  FindControlOptions^.InitialRectangle.BottomOffset := '0';
 
   Offsets.Left := '0';
   Offsets.Top := '0';

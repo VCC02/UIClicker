@@ -295,6 +295,7 @@
         <FRMtype Value="400"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frClickerCallTemplate"/>
+        <HasResources Value="True"/>
         <ResourceBaseClass Value="Frame"/>
       </Unit>
     </Units>

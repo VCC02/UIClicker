@@ -900,24 +900,24 @@ begin
   AAction.FindControlOptions.MatchClassNameSeparator := '';
 
   AAction.FindControlOptions.UseWholeScreen := ASearchWholeScreen;
-  AAction.FindControlOptions.InitialRectange.Left := '$Control_Left$';
-  AAction.FindControlOptions.InitialRectange.Top := '$Control_Top$';
-  AAction.FindControlOptions.InitialRectange.Right := '$Control_Right$';
-  AAction.FindControlOptions.InitialRectange.Bottom := '$Control_Bottom$';
+  AAction.FindControlOptions.InitialRectangle.Left := '$Control_Left$';
+  AAction.FindControlOptions.InitialRectangle.Top := '$Control_Top$';
+  AAction.FindControlOptions.InitialRectangle.Right := '$Control_Right$';
+  AAction.FindControlOptions.InitialRectangle.Bottom := '$Control_Bottom$';
 
   if ASearchWholeScreen then
   begin
-    AAction.FindControlOptions.InitialRectange.LeftOffset := '0';
-    AAction.FindControlOptions.InitialRectange.TopOffset := '0';
-    AAction.FindControlOptions.InitialRectange.RightOffset := '0';
-    AAction.FindControlOptions.InitialRectange.BottomOffset := '0';
+    AAction.FindControlOptions.InitialRectangle.LeftOffset := '0';
+    AAction.FindControlOptions.InitialRectangle.TopOffset := '0';
+    AAction.FindControlOptions.InitialRectangle.RightOffset := '0';
+    AAction.FindControlOptions.InitialRectangle.BottomOffset := '0';
   end
   else
   begin
-    AAction.FindControlOptions.InitialRectange.LeftOffset := '-10';
-    AAction.FindControlOptions.InitialRectange.TopOffset := '-10';
-    AAction.FindControlOptions.InitialRectange.RightOffset := '10';
-    AAction.FindControlOptions.InitialRectange.BottomOffset := '10';
+    AAction.FindControlOptions.InitialRectangle.LeftOffset := '-10';
+    AAction.FindControlOptions.InitialRectangle.TopOffset := '-10';
+    AAction.FindControlOptions.InitialRectangle.RightOffset := '10';
+    AAction.FindControlOptions.InitialRectangle.BottomOffset := '10';
   end;
 
   AAction.FindControlOptions.ColorError := '0';

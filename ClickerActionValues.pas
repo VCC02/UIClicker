@@ -79,7 +79,7 @@ const
   CPropCount_FindControlMatchCriteria = 5;
   CPropCount_FindControlMatchBitmapText = 16;
   CPropCount_FindControlMatchBitmapAlgorithmSettings = 4;
-  CPropCount_FindControlInitialRectange = 8;
+  CPropCount_FindControlInitialRectangle = 8;
 
   CPropCount_CallTemplateLoop = 7;
 
@@ -96,7 +96,7 @@ const
   CFindControl_MatchBitmapText_PropIndex = 6; //property index in FindControl structure
   CFindControl_MatchBitmapFiles_PropIndex = 7; //property index in FindControl structure   - list of files
   CFindControl_MatchBitmapAlgorithmSettings_PropIndex = 9;
-  CFindControl_InitialRectange_PropIndex = 10;
+  CFindControl_InitialRectangle_PropIndex = 10;
   CFindControl_UseWholeScreen_PropIndex = 11;
 
   CCallTemplate_TemplateFileName_PropIndex = 0; //property index in CallTemplate structure
@@ -115,14 +115,14 @@ const
   CFindControl_MatchBitmapText_CropRight = 14;
   CFindControl_MatchBitmapText_CropBottom = 15;
 
-  CFindControl_InitialRectange_Left_PropItemIndex = 0;
-  CFindControl_InitialRectange_Top_PropItemIndex = 1;
-  CFindControl_InitialRectange_Right_PropItemIndex = 2;
-  CFindControl_InitialRectange_Bottom_PropItemIndex = 3;
-  CFindControl_InitialRectange_LeftOffset_PropItemIndex = 4;
-  CFindControl_InitialRectange_TopOffset_PropItemIndex = 5;
-  CFindControl_InitialRectange_RightOffset_PropItemIndex = 6;
-  CFindControl_InitialRectange_BottomOffset_PropItemIndex = 7;
+  CFindControl_InitialRectangle_Left_PropItemIndex = 0;
+  CFindControl_InitialRectangle_Top_PropItemIndex = 1;
+  CFindControl_InitialRectangle_Right_PropItemIndex = 2;
+  CFindControl_InitialRectangle_Bottom_PropItemIndex = 3;
+  CFindControl_InitialRectangle_LeftOffset_PropItemIndex = 4;
+  CFindControl_InitialRectangle_TopOffset_PropItemIndex = 5;
+  CFindControl_InitialRectangle_RightOffset_PropItemIndex = 6;
+  CFindControl_InitialRectangle_BottomOffset_PropItemIndex = 7;
 
   CSetVar_ListOfVarNamesValuesAndEvalBefore = 0;
 
@@ -184,7 +184,7 @@ const
     (Name: 'MatchBitmapFiles'; EditorType: etFilePathWithArrow),  //Description:  Relative paths can be entered using the following format:' + #13#10 + '$TemplateDir$\<SomeBmp.bmp>
     (Name: 'MatchBitmapAlgorithm'; EditorType: etEnumCombo),
     (Name: 'MatchBitmapAlgorithmSettings'; EditorType: etNone),    //structure
-    (Name: 'InitialRectange'; EditorType: etNone),                 //structure
+    (Name: 'InitialRectangle'; EditorType: etNone),                 //structure
     (Name: 'UseWholeScreen'; EditorType: etBooleanCombo),          //Description:  Use the whole screen as search area, if True. Use the current control as search area, if False. The search area is modified by offsets.
     (Name: 'ColorError'; EditorType: etSpinText),                  //Description:  When matching bitmaps, which contain antialiasing pixels (see smooth text), some of those pixels will not match. The "Color Error" represents the difference between the color values for the two compared pixels, for each RGB channel. The "Color Error Count" is the allowed number of mismatching pixels. Variable replacements are available.  If at least one of the three color channels (R, G, B) mismatches by at least ColorError, it counts as an error point.
     (Name: 'AllowedColorErrorCount'; EditorType: etSpinText),      //Description:  When matching bitmaps, which contain antialiasing pixels (see smooth text), some of those pixels will not match. The "Color Error" represents the difference between the color values for the two compared pixels, for each RGB channel. The "Color Error Count" is the allowed number of mismatching pixels. Variable replacements are available.
@@ -229,7 +229,7 @@ const
       (Name: 'YOffset'; EditorType: etSpinText)
     );
 
-    CFindControl_InitialRectangeProperties: array[0..CPropCount_FindControlInitialRectange - 1] of TOIPropDef = (
+    CFindControl_InitialRectangleProperties: array[0..CPropCount_FindControlInitialRectangle - 1] of TOIPropDef = (
       (Name: 'Left'; EditorType: etText),
       (Name: 'Top'; EditorType: etText),
       (Name: 'Right'; EditorType: etText),
@@ -279,8 +279,8 @@ const
     (Name: 'NewY'; EditorType: etSpinText),
     (Name: 'NewWidth'; EditorType: etSpinText),
     (Name: 'NewHeight'; EditorType: etSpinText),
-    (Name: 'NewPositionEabled'; EditorType: etBooleanCombo),
-    (Name: 'NewSizeEabled'; EditorType: etBooleanCombo)
+    (Name: 'NewPositionEnabled'; EditorType: etBooleanCombo),
+    (Name: 'NewSizeEnabled'; EditorType: etBooleanCombo)
   );
 
 type
@@ -335,7 +335,7 @@ function GetActionValueStr_WindowOperations(AAction: PClkActionRec; APropertyInd
   function GetActionValueStr_FindControl_MatchCriteria(AAction: PClkActionRec; APropertyIndex: Integer): string;
   function GetActionValueStr_FindControl_MatchBitmapText(AAction: PClkActionRec; APropertyIndex: Integer): string;
   function GetActionValueStr_FindControl_MatchBitmapAlgorithmSettings(AAction: PClkActionRec; APropertyIndex: Integer): string;
-  function GetActionValueStr_FindControl_InitialRectange(AAction: PClkActionRec; APropertyIndex: Integer): string;
+  function GetActionValueStr_FindControl_InitialRectangle(AAction: PClkActionRec; APropertyIndex: Integer): string;
 
   function GetActionValueStr_CallTemplate_CallTemplateLoop(AAction: PClkActionRec; APropertyIndex: Integer): string;
 {$ENDIF}
@@ -356,7 +356,7 @@ procedure SetActionValueStr_WindowOperations(AAction: PClkActionRec; NewValue: s
   procedure SetActionValueStr_FindControl_MatchCriteria(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
   procedure SetActionValueStr_FindControl_MatchBitmapText(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
   procedure SetActionValueStr_FindControl_MatchBitmapAlgorithmSettings(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
-  procedure SetActionValueStr_FindControl_InitialRectange(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
+  procedure SetActionValueStr_FindControl_InitialRectangle(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
 
   procedure SetActionValueStr_CallTemplate_CallTemplateLoop(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
 {$ENDIF}
@@ -398,7 +398,7 @@ const
     nil, //MatchBitmapFiles
     nil, //MatchBitmapAlgorithm
     GetActionValueStr_FindControl_MatchBitmapAlgorithmSettings,
-    GetActionValueStr_FindControl_InitialRectange,
+    GetActionValueStr_FindControl_InitialRectangle,
     nil, //UseWholeScreen
     nil, //ColorError
     nil, //AllowedColorErrorCount
@@ -468,7 +468,7 @@ const
     0, //MatchBitmapFiles: string; //ListOfStrings
     Ord(High(TMatchBitmapAlgorithm)) + 1,
     0, //MatchBitmapAlgorithmSettings: TMatchBitmapAlgorithmSettings;
-    0, //InitialRectange: TRectString;
+    0, //InitialRectangle: TRectString;
     0, //UseWholeScreen: Boolean;
     0, //ColorError: string;  //string, to allow var replacements
     0, //AllowedColorErrorCount: string;  //Number of pixels allowed to mismatch
@@ -504,8 +504,8 @@ const
     0, //NewY,
     0, //NewWidth,
     0, //NewHeight
-    0, //NewPositionEabled,
-    0  //NewSizeEabled: Boolean;
+    0, //NewPositionEnabled,
+    0  //NewSizeEnabled: Boolean;
   );
 
 
@@ -613,7 +613,7 @@ const
     nil, //MatchBitmapFiles: string; //ListOfStrings
     @CMatchBitmapAlgorithmStr,
     nil, //MatchBitmapAlgorithmSettings: TMatchBitmapAlgorithmSettings;
-    nil, //InitialRectange: TRectString;
+    nil, //InitialRectangle: TRectString;
     nil, //UseWholeScreen: Boolean;
     nil, //ColorError: string;  //string, to allow var replacements
     nil, //AllowedColorErrorCount: string;  //Number of pixels allowed to mismatch
@@ -649,8 +649,8 @@ const
     nil, //NewY,
     nil, //NewWidth,
     nil, //NewHeight
-    nil, //NewPositionEabled,
-    nil  //NewSizeEabled: Boolean;
+    nil, //NewPositionEnabled,
+    nil  //NewSizeEnabled: Boolean;
   );
 
 
@@ -714,10 +714,10 @@ function GetPropertyHint_Click_YOffset: string;
 function GetPropertyHint_Click_LeaveMouse: string;
 
 function GetPropertyHint_FindControl_MatchCriteria_SearchForControlMode: string;
-function GetPropertyHint_FindControl_InitialRectange_Left(AKey, AValue: string): string;
-function GetPropertyHint_FindControl_InitialRectange_Top(AKey, AValue: string): string;
-function GetPropertyHint_FindControl_InitialRectange_Right(AKey, AValue: string): string;
-function GetPropertyHint_FindControl_InitialRectange_Bottom(AKey, AValue: string): string;
+function GetPropertyHint_FindControl_InitialRectangle_Left(AKey, AValue: string): string;
+function GetPropertyHint_FindControl_InitialRectangle_Top(AKey, AValue: string): string;
+function GetPropertyHint_FindControl_InitialRectangle_Right(AKey, AValue: string): string;
+function GetPropertyHint_FindControl_InitialRectangle_Bottom(AKey, AValue: string): string;
 
 function GetPropertyHint_WindowOperations_NewXY: string;
 function GetPropertyHint_WindowOperations_NewWidthHeight: string;
@@ -812,7 +812,7 @@ begin
     7: Result := AAction^.FindControlOptions.MatchBitmapFiles; //ListOfStrings
     8: Result := CMatchBitmapAlgorithmStr[AAction^.FindControlOptions.MatchBitmapAlgorithm];
     9: Result := '';  //MatchBitmapAlgorithmSettings
-    10: Result := '';  //InitialRectange
+    10: Result := '';  //InitialRectangle
     11: Result := BoolToStr(AAction^.FindControlOptions.UseWholeScreen, True);
     12: Result := AAction^.FindControlOptions.ColorError;  //string, to allow var replacements
     13: Result := AAction^.FindControlOptions.AllowedColorErrorCount;  //Number of pixels allowed to mismatch
@@ -889,17 +889,17 @@ end;
   end;
 
 
-  function GetActionValueStr_FindControl_InitialRectange(AAction: PClkActionRec; APropertyIndex: Integer): string;
+  function GetActionValueStr_FindControl_InitialRectangle(AAction: PClkActionRec; APropertyIndex: Integer): string;
   begin
     case APropertyIndex of
-      0: Result := AAction^.FindControlOptions.InitialRectange.Left;
-      1: Result := AAction^.FindControlOptions.InitialRectange.Top;
-      2: Result := AAction^.FindControlOptions.InitialRectange.Right;
-      3: Result := AAction^.FindControlOptions.InitialRectange.Bottom;
-      4: Result := AAction^.FindControlOptions.InitialRectange.LeftOffset;
-      5: Result := AAction^.FindControlOptions.InitialRectange.TopOffset;
-      6: Result := AAction^.FindControlOptions.InitialRectange.RightOffset;
-      7: Result := AAction^.FindControlOptions.InitialRectange.BottomOffset;
+      0: Result := AAction^.FindControlOptions.InitialRectangle.Left;
+      1: Result := AAction^.FindControlOptions.InitialRectangle.Top;
+      2: Result := AAction^.FindControlOptions.InitialRectangle.Right;
+      3: Result := AAction^.FindControlOptions.InitialRectangle.Bottom;
+      4: Result := AAction^.FindControlOptions.InitialRectangle.LeftOffset;
+      5: Result := AAction^.FindControlOptions.InitialRectangle.TopOffset;
+      6: Result := AAction^.FindControlOptions.InitialRectangle.RightOffset;
+      7: Result := AAction^.FindControlOptions.InitialRectangle.BottomOffset;
       else
         Result := 'unknown';
     end;
@@ -977,8 +977,8 @@ begin
     2: Result := AAction^.WindowOperationsOptions.NewY;
     3: Result := AAction^.WindowOperationsOptions.NewWidth;
     4: Result := AAction^.WindowOperationsOptions.NewHeight;
-    5: Result := BoolToStr(AAction^.WindowOperationsOptions.NewPositionEabled, True);
-    6: Result := BoolToStr(AAction^.WindowOperationsOptions.NewSizeEabled, True);
+    5: Result := BoolToStr(AAction^.WindowOperationsOptions.NewPositionEnabled, True);
+    6: Result := BoolToStr(AAction^.WindowOperationsOptions.NewSizeEnabled, True);
     else
       Result := 'unknown';
   end;
@@ -1220,7 +1220,7 @@ begin
     7: AAction^.FindControlOptions.MatchBitmapFiles := NewValue; //ListOfStrings
     8: AAction^.FindControlOptions.MatchBitmapAlgorithm := MatchBitmapAlgorithm_AsStringToValue(NewValue);
     9: ;  //MatchBitmapAlgorithmSettings
-    10: ;  //InitialRectange
+    10: ;  //InitialRectangle
     11: AAction^.FindControlOptions.UseWholeScreen := StrToBool(NewValue);
     12: AAction^.FindControlOptions.ColorError := NewValue;  //string, to allow var replacements
     13: AAction^.FindControlOptions.AllowedColorErrorCount := NewValue;  //Number of pixels allowed to mismatch
@@ -1291,17 +1291,17 @@ end;
   end;
 
 
-  procedure SetActionValueStr_FindControl_InitialRectange(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
+  procedure SetActionValueStr_FindControl_InitialRectangle(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
   begin
     case APropertyIndex of
-      0: AAction^.FindControlOptions.InitialRectange.Left := NewValue;
-      1: AAction^.FindControlOptions.InitialRectange.Top := NewValue;
-      2: AAction^.FindControlOptions.InitialRectange.Right := NewValue;
-      3: AAction^.FindControlOptions.InitialRectange.Bottom := NewValue;
-      4: AAction^.FindControlOptions.InitialRectange.LeftOffset := NewValue;
-      5: AAction^.FindControlOptions.InitialRectange.TopOffset := NewValue;
-      6: AAction^.FindControlOptions.InitialRectange.RightOffset := NewValue;
-      7: AAction^.FindControlOptions.InitialRectange.BottomOffset := NewValue;
+      0: AAction^.FindControlOptions.InitialRectangle.Left := NewValue;
+      1: AAction^.FindControlOptions.InitialRectangle.Top := NewValue;
+      2: AAction^.FindControlOptions.InitialRectangle.Right := NewValue;
+      3: AAction^.FindControlOptions.InitialRectangle.Bottom := NewValue;
+      4: AAction^.FindControlOptions.InitialRectangle.LeftOffset := NewValue;
+      5: AAction^.FindControlOptions.InitialRectangle.TopOffset := NewValue;
+      6: AAction^.FindControlOptions.InitialRectangle.RightOffset := NewValue;
+      7: AAction^.FindControlOptions.InitialRectangle.BottomOffset := NewValue;
       else
         ;
     end;
@@ -1379,8 +1379,8 @@ begin
     2: AAction^.WindowOperationsOptions.NewY := NewValue;
     3: AAction^.WindowOperationsOptions.NewWidth := NewValue;
     4: AAction^.WindowOperationsOptions.NewHeight := NewValue;
-    5: AAction^.WindowOperationsOptions.NewPositionEabled := StrToBool(NewValue);
-    6: AAction^.WindowOperationsOptions.NewSizeEabled := StrToBool(NewValue);
+    5: AAction^.WindowOperationsOptions.NewPositionEnabled := StrToBool(NewValue);
+    6: AAction^.WindowOperationsOptions.NewSizeEnabled := StrToBool(NewValue);
     else
       ;
   end;
@@ -1556,34 +1556,34 @@ end;
 
 
 {$IFDEF SubProperties}
-  function GetPropertyHint_FindControl_InitialRectange(AEdge, AKey, AValue: string): string;
+  function GetPropertyHint_FindControl_InitialRectangle(AEdge, AKey, AValue: string): string;
   begin
     Result := AEdge + ' edge of the search area. Variable replacements are available.' + #13#10 +
               AKey + ' = ' + AValue;
   end;
 
 
-  function GetPropertyHint_FindControl_InitialRectange_Left(AKey, AValue: string): string;
+  function GetPropertyHint_FindControl_InitialRectangle_Left(AKey, AValue: string): string;
   begin
-    Result := GetPropertyHint_FindControl_InitialRectange('Left', AKey, AValue);
+    Result := GetPropertyHint_FindControl_InitialRectangle('Left', AKey, AValue);
   end;
 
 
-  function GetPropertyHint_FindControl_InitialRectange_Top(AKey, AValue: string): string;
+  function GetPropertyHint_FindControl_InitialRectangle_Top(AKey, AValue: string): string;
   begin
-    Result := GetPropertyHint_FindControl_InitialRectange('Top', AKey, AValue);
+    Result := GetPropertyHint_FindControl_InitialRectangle('Top', AKey, AValue);
   end;
 
 
-  function GetPropertyHint_FindControl_InitialRectange_Right(AKey, AValue: string): string;
+  function GetPropertyHint_FindControl_InitialRectangle_Right(AKey, AValue: string): string;
   begin
-    Result := GetPropertyHint_FindControl_InitialRectange('Right', AKey, AValue);
+    Result := GetPropertyHint_FindControl_InitialRectangle('Right', AKey, AValue);
   end;
 
 
-  function GetPropertyHint_FindControl_InitialRectange_Bottom(AKey, AValue: string): string;
+  function GetPropertyHint_FindControl_InitialRectangle_Bottom(AKey, AValue: string): string;
   begin
-    Result := GetPropertyHint_FindControl_InitialRectange('Bottom', AKey, AValue);
+    Result := GetPropertyHint_FindControl_InitialRectangle('Bottom', AKey, AValue);
   end;
 {$ENDIF}
 

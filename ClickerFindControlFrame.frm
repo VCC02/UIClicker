@@ -15,7 +15,7 @@ object frClickerFindControl: TfrClickerFindControl
     Height = 250
     Top = 0
     Width = 877
-    ActivePage = TabSheetActionFindSubControlBMPText
+    ActivePage = TabSheetActionFindSubControlText
     Anchors = [akTop, akLeft, akRight, akBottom]
     Constraints.MinHeight = 201
     Constraints.MinWidth = 650
@@ -24,7 +24,7 @@ object frClickerFindControl: TfrClickerFindControl
     Images = imglstFindCriteria
     ParentFont = False
     ParentShowHint = False
-    TabIndex = 1
+    TabIndex = 0
     TabOrder = 0
     OnChange = PageControlMatchChange
     object TabSheetActionFindSubControlText: TTabSheet
@@ -33,7 +33,7 @@ object frClickerFindControl: TfrClickerFindControl
       ClientWidth = 869
       ImageIndex = 2
       object grpFindControlDetailsOnWindow: TGroupBox
-        Left = 320
+        Left = 0
         Height = 160
         Top = 8
         Width = 344
@@ -183,14 +183,14 @@ object frClickerFindControl: TfrClickerFindControl
         Visible = False
       end
       object lblInitRectOffsetsInfo: TLabel
-        Left = 3
+        Left = 472
         Height = 13
-        Top = 115
+        Top = 128
         Width = 264
         Caption = 'Offsets can be used to limit or extend the search area.'
       end
       object btnDisplaySearchAreaDebuggingImage: TButton
-        Left = 368
+        Left = 344
         Height = 25
         Hint = 'This button can be "clicked" with F6 key while debugging.'
         Top = 0
@@ -200,7 +200,7 @@ object frClickerFindControl: TfrClickerFindControl
         TabOrder = 0
       end
       object spdbtnDisplaySearchAreaDbgImgMenu: TSpeedButton
-        Left = 472
+        Left = 448
         Height = 25
         Hint = 'Display list of files from "BMP files" tab.'
         Top = 0
@@ -221,10 +221,10 @@ object frClickerFindControl: TfrClickerFindControl
         ParentShowHint = False
       end
       object chkShowBMPFileDbgImg: TCheckBox
-        Left = 282
+        Left = 80
         Height = 19
         Hint = 'Displays an overlapped image with loaded/selected BMP file.'#13#10'Also used when copying the debug image to clipboard.'
-        Top = 112
+        Top = 1
         Width = 74
         AutoSize = False
         Caption = 'Show BMP'
@@ -236,10 +236,10 @@ object frClickerFindControl: TfrClickerFindControl
         TabOrder = 1
       end
       object chkShowBMPTextDbgImg: TCheckBox
-        Left = 282
+        Left = 160
         Height = 19
         Hint = 'Displays an overlapped image of generated BMP text.'#13#10'Also used when copying the debug image to clipboard.'
-        Top = 136
+        Top = 1
         Width = 74
         AutoSize = False
         Caption = 'Show Text'
@@ -251,10 +251,10 @@ object frClickerFindControl: TfrClickerFindControl
         TabOrder = 2
       end
       object lblReservedSpaceForDbgImg: TLabel
-        Left = 368
-        Height = 181
-        Top = 40
-        Width = 496
+        Left = 0
+        Height = 189
+        Top = 32
+        Width = 464
         Anchors = [akTop, akLeft, akRight, akBottom]
         AutoSize = False
         Caption = 'Reserved space'#13#10'for DbgImg'
@@ -263,16 +263,16 @@ object frClickerFindControl: TfrClickerFindControl
         Visible = False
       end
       object lblMouseOnDbgImg: TLabel
-        Left = 296
+        Left = 264
         Height = 13
-        Top = 42
+        Top = -2
         Width = 16
         Caption = '0:0'
       end
       object imgUpdateLeftTopOffsets: TImage
-        Left = 376
+        Left = 824
         Height = 16
-        Top = 24
+        Top = 1
         Width = 16
         Picture.Data = {
           07544269746D617036030000424D360300000000000036000000280000001000
@@ -306,9 +306,9 @@ object frClickerFindControl: TfrClickerFindControl
         Visible = False
       end
       object imgUpdateLeftTopRightBottomOffsets: TImage
-        Left = 400
+        Left = 848
         Height = 16
-        Top = 24
+        Top = 1
         Width = 16
         Picture.Data = {
           07544269746D617036030000424D360300000000000036000000280000001000
@@ -342,23 +342,23 @@ object frClickerFindControl: TfrClickerFindControl
         Visible = False
       end
       object lblPreviewControl_Width: TLabel
-        Left = 498
+        Left = 472
         Height = 13
         Top = 1
         Width = 81
         Caption = '$Control_Width$'
       end
       object lblPreviewControl_Height: TLabel
-        Left = 498
+        Left = 472
         Height = 13
         Top = 19
         Width = 84
         Caption = '$Control_Height$'
       end
       object lblMouseOnDbgImgBB: TLabel
-        Left = 296
+        Left = 264
         Height = 13
-        Top = 56
+        Top = 12
         Width = 12
         Caption = 'BB'
         Font.Color = 16734553
@@ -367,9 +367,9 @@ object frClickerFindControl: TfrClickerFindControl
         ParentFont = False
       end
       object lblMouseOnDbgImgGG: TLabel
-        Left = 312
+        Left = 280
         Height = 13
-        Top = 56
+        Top = 12
         Width = 14
         Caption = 'GG'
         Font.Color = clGreen
@@ -378,9 +378,9 @@ object frClickerFindControl: TfrClickerFindControl
         ParentFont = False
       end
       object lblMouseOnDbgImgRR: TLabel
-        Left = 328
+        Left = 296
         Height = 13
-        Top = 56
+        Top = 12
         Width = 14
         Caption = 'RR'
         Font.Color = 187
@@ -463,7 +463,7 @@ object frClickerFindControl: TfrClickerFindControl
         Visible = False
       end
       object imgCopySelAreaFromBkImg: TImage
-        Left = 708
+        Left = 704
         Height = 16
         Top = 4
         Width = 16
@@ -482,44 +482,44 @@ object frClickerFindControl: TfrClickerFindControl
         Visible = False
       end
       object chkShowGridOnBMPPreview: TCheckBox
-        Left = 596
+        Left = 0
         Height = 19
         Hint = 'This will not be saved in project.'
-        Top = 19
+        Top = 1
         Width = 67
         Caption = 'Show grid'
         OnChange = chkShowGridOnBMPPreviewChange
         TabOrder = 4
       end
       object lblSearchAreaValidValuesInfo: TLabel
-        Left = 3
+        Left = 472
         Height = 13
         Hint = 'When setting the search area and the offset values, make sure the previous action is the last executed action.'#13#10'Also it has to be successfully executed. Otherwise, the reference values will be wrong.'
-        Top = 156
+        Top = 152
         Width = 349
         Caption = 'The above values should be valid before executing the action, not after.'
         ParentShowHint = False
         ShowHint = True
       end
       object lblBMPSettingsInfo: TLabel
-        Left = 3
+        Left = 472
         Height = 13
-        Top = 175
+        Top = 171
         Width = 177
         Caption = 'Used for "BMP Text" and "BMP Files".'
       end
       object lblSearchInfo: TLabel
-        Left = 3
+        Left = 472
         Height = 13
-        Top = 191
+        Top = 187
         Width = 254
         Caption = 'The bitmap searching algorithm stops on error count.'
       end
       object lblCachingInfo: TLabel
-        Left = 3
+        Left = 472
         Height = 13
         Hint = 'Using caching on multpile font profiles may indeed be faster than without it, but for every cache miss, the search defaults to the selected algorithm.'
-        Top = 205
+        Top = 201
         Width = 379
         Caption = 'Caching is more effective when searching for controls with a single font profile.'
       end
@@ -529,7 +529,7 @@ object frClickerFindControl: TfrClickerFindControl
     Height = 15
     Width = 15
     Left = 784
-    Top = 48
+    Top = 72
     Bitmap = {
       4C7A030000000F0000000F000000780300000000000078DAC5945B6EDB461486
       DDC76E271B28D0A76E2741D85B92064DD338B1D34D640F5940D1DCD038A91D3B
@@ -564,7 +564,7 @@ object frClickerFindControl: TfrClickerFindControl
   end
   object pmStandardControlRefVars: TPopupMenu
     Left = 784
-    Top = 120
+    Top = 144
     object MenuItemCopyRefToClipboard: TMenuItem
       Caption = 'Copy Ref To Clipboard'
       OnClick = MenuItemCopyRefToClipboardClick
@@ -709,7 +709,7 @@ object frClickerFindControl: TfrClickerFindControl
     Height = 50
     Width = 50
     Left = 648
-    Top = 48
+    Top = 80
   end
   object pmExtraCopyValueWindows: TPopupMenu
     Left = 584

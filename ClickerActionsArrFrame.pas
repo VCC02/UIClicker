@@ -797,9 +797,6 @@ procedure TfrClickerActionsArr.UpdateActionsArrFromControls(ActionIndex: Integer
 var
   i: Integer;
 begin
-  FClkActions[ActionIndex].ActionOptions.ActionName := frClickerActions.lbeActionName.Text;
-  FClkActions[ActionIndex].ActionOptions.Action := TClkAction(frClickerActions.cmbActions.ItemIndex);
-  FClkActions[ActionIndex].ActionOptions.ActionTimeout := StrToIntDef(frClickerActions.lbeActionTimeout.Text, 0);
   FClkActions[ActionIndex].ActionOptions.ActionCondition := frClickerActions.frClickerConditionEditor.GetActionCondition;
 
   //the number of items from MatchBitmapText has to match the number of frames from FBMPTextFrames
@@ -843,7 +840,7 @@ begin
 
   FClkActions[ActionIndex].CallTemplateOptions.ListOfCustomVarsAndValues := FastReplace_ReturnTo45(frClickerActions.ListOfCustomVariables);
 
-  //  CopyActionContent(frClickerActions.EditingAction^, FClkActions[ActionIndex]);  //uncomment this after removing above code
+  CopyActionContent(frClickerActions.EditingAction^, FClkActions[ActionIndex]);  //uncomment this after removing above code
 end;
 
 
@@ -851,9 +848,6 @@ procedure TfrClickerActionsArr.UpdateControlsFromActionsArr(ActionIndex: Integer
 var
   i: Integer;
 begin
-  frClickerActions.lbeActionName.Text := FClkActions[ActionIndex].ActionOptions.ActionName;
-  frClickerActions.cmbActions.ItemIndex := Integer(FClkActions[ActionIndex].ActionOptions.Action);
-  frClickerActions.lbeActionTimeout.Text := IntToStr(FClkActions[ActionIndex].ActionOptions.ActionTimeout);
   frClickerActions.frClickerConditionEditor.DisplayActionCondition(FClkActions[ActionIndex].ActionOptions.ActionCondition);
 
   //the number of items from MatchBitmapText has to match the number of frames from FBMPTextFrames
@@ -905,7 +899,7 @@ begin
   frClickerActions.frClickerFindControl.UpdatePreviewIcons;
 
   frClickerActions.UpdateControlWidthHeightLabels;
-  frClickerActions.frClickerFindControl.UpdateSearchAreaLabelsFromKeysOnInitRect(FClkActions[ActionIndex].FindControlOptions.InitialRectange);
+  frClickerActions.frClickerFindControl.UpdateSearchAreaLabelsFromKeysOnInitRect(FClkActions[ActionIndex].FindControlOptions.InitialRectangle);
 
   frClickerActions.frClickerExecApp.memExecAppParams.Lines.Text := FClkActions[ActionIndex].ExecAppOptions.ListOfParams;
   frClickerActions.frClickerSetVar.SetListOfSetVars(FClkActions[ActionIndex].SetVarOptions);
@@ -1587,7 +1581,6 @@ begin
   vstActions.ScrollIntoView(Node, True);
   UpdateControlsFromActionsArr(Node^.Index);
   StopGlowingUpdateButton;
-  frClickerActions.UpdatePageControlActionsHighlighting;
   frClickerActions.UpdatePageControlActionExecutionIcons;
 
   /////// debugging icons
@@ -2438,14 +2431,7 @@ begin
 
   UpdateControlsFromActionsArr(Node^.Index);
   StopGlowingUpdateButton;
-  frClickerActions.UpdatePageControlActionsHighlighting;
   frClickerActions.UpdatePageControlActionExecutionIcons;
-
-  if chkSwitchEditorOnActionSelect.Checked then
-  begin
-    frClickerActions.PageControlActions.ActivePageIndex := Ord(FClkActions[Node^.Index].ActionOptions.Action);
-    frClickerActions.UpdatePageControlActionsOnFindControlTab;
-  end;
 end;
 
 
@@ -2487,13 +2473,13 @@ var
 begin
   Result := False;
 
-  if frClickerActions.cmbActions.ItemIndex = -1 then
+  if Ord(frClickerActions.CurrentlyEditingActionType) = CClkUnsetAction then
   begin
     MessageBox(Handle, 'Please specify an action type.', PChar(Application.Title), MB_ICONINFORMATION);
     Exit;
   end;
 
-  CurrentAction := TClkAction(frClickerActions.cmbActions.ItemIndex);
+  CurrentAction := frClickerActions.CurrentlyEditingActionType;
   case CurrentAction of
     acClick:
     begin
@@ -3101,13 +3087,13 @@ begin
     Exit;
   end;
 
-  if frClickerActions.cmbActions.ItemIndex = -1 then
+  if Ord(frClickerActions.CurrentlyEditingActionType) = CClkUnsetAction then
   begin
     MessageBox(Handle, 'No action selected. Please select an action.', PChar(Caption), MB_ICONINFORMATION);
     Exit;
   end;
 
-  CurrentAction := TClkAction(frClickerActions.cmbActions.ItemIndex);
+  CurrentAction := frClickerActions.CurrentlyEditingActionType;
   case CurrentAction of
     acClick:
     begin
@@ -3132,7 +3118,7 @@ begin
     end;
   end;  //case
 
-  if FClkActions[Node^.Index].ActionOptions.Action <> TClkAction(frClickerActions.cmbActions.ItemIndex) then
+  if FClkActions[Node^.Index].ActionOptions.Action <> frClickerActions.CurrentlyEditingActionType then
     if MessageBox(Handle, 'Are you sure you want to overwrite existing action?', PChar(Caption), MB_ICONWARNING + MB_YESNO) = IDNO then
       Exit;
 
@@ -3303,7 +3289,6 @@ begin
     SetLength(FClkActions, n + 1);
 
     UpdateActionsArrFromControls(n); ///////////////////////////////// ToDo  replace this call with some default values
-    FClkActions[n].FindControlOptions.UseWholeScreen := True;
 
     FClkActions[n].ActionOptions.Action := TClkAction(Node^.Index);
     FClkActions[n].ActionOptions.ActionCondition := '';
@@ -3312,10 +3297,62 @@ begin
     FClkActions[n].ActionOptions.ActionTimeout := 0;
     FClkActions[n].ActionStatus := asNotStarted;
 
+
+    //Important default values    ///////////////////////////////// ToDo  replace these with some default values
+    FClkActions[n].ClickOptions.XClickPointReference := xrefLeft;
+    FClkActions[n].ClickOptions.YClickPointReference := yrefTop;
+    FClkActions[n].ClickOptions.ClickType := CClickType_Click;
+    FClkActions[n].ClickOptions.Count := 1;
+    FClkActions[n].ClickOptions.LeaveMouse := False;
+    FClkActions[n].ClickOptions.MoveWithoutClick := False;
+    FClkActions[n].ClickOptions.MouseButton := mbLeft;
+    FClkActions[n].ClickOptions.XOffset := '4';
+    FClkActions[n].ClickOptions.YOffset := '4';
+
+    FClkActions[n].FindControlOptions.UseWholeScreen := FClkActions[n].ActionOptions.Action = acFindControl;
+    FClkActions[n].FindControlOptions.MatchCriteria.WillMatchText := FClkActions[n].ActionOptions.Action = acFindControl;
+    FClkActions[n].FindControlOptions.MatchCriteria.WillMatchClassName := FClkActions[n].ActionOptions.Action = acFindControl;
+    FClkActions[n].FindControlOptions.MatchCriteria.WillMatchBitmapText := FClkActions[n].ActionOptions.Action = acFindSubControl;
+    FClkActions[n].FindControlOptions.MatchCriteria.WillMatchBitmapFiles := False;
+    FClkActions[n].FindControlOptions.MatchCriteria.SearchForControlMode := sfcmGenGrid;
+    FClkActions[n].FindControlOptions.InitialRectangle.Left := '$Control_Left$';
+    FClkActions[n].FindControlOptions.InitialRectangle.Top := '$Control_Top$';
+    FClkActions[n].FindControlOptions.InitialRectangle.Right := '$Control_Right$';
+    FClkActions[n].FindControlOptions.InitialRectangle.Bottom := '$Control_Bottom$';
+    FClkActions[n].FindControlOptions.InitialRectangle.LeftOffset := '0';
+    FClkActions[n].FindControlOptions.InitialRectangle.TopOffset := '0';
+    FClkActions[n].FindControlOptions.InitialRectangle.RightOffset := '0';
+    FClkActions[n].FindControlOptions.InitialRectangle.BottomOffset := '0';
+
+    SetLength(FClkActions[n].FindControlOptions.MatchBitmapText, 1);
+    FClkActions[n].FindControlOptions.MatchBitmapText[0].ForegroundColor := '$Color_Window$';
+    FClkActions[n].FindControlOptions.MatchBitmapText[0].BackgroundColor := '$Color_Highlight$';
+    FClkActions[n].FindControlOptions.MatchBitmapText[0].FontName := 'Tahoma';
+    FClkActions[n].FindControlOptions.MatchBitmapText[n].FontSize := 8;
+    FClkActions[n].FindControlOptions.MatchBitmapText[n].FontQualityReplacement := '';
+    FClkActions[n].FindControlOptions.MatchBitmapText[n].FontQuality := fqNonAntialiased;
+    FClkActions[n].FindControlOptions.MatchBitmapText[n].FontQualityUsesReplacement := False;
+    FClkActions[n].FindControlOptions.MatchBitmapText[n].Bold := False;
+    FClkActions[n].FindControlOptions.MatchBitmapText[n].Italic := False;
+    FClkActions[n].FindControlOptions.MatchBitmapText[n].Underline := False;
+    FClkActions[n].FindControlOptions.MatchBitmapText[n].StrikeOut := False;
+    FClkActions[n].FindControlOptions.MatchBitmapText[n].CropLeft := '0';
+    FClkActions[n].FindControlOptions.MatchBitmapText[n].CropTop := '0';
+    FClkActions[n].FindControlOptions.MatchBitmapText[n].CropRight := '0';
+    FClkActions[n].FindControlOptions.MatchBitmapText[n].CropBottom := '0';
+    FClkActions[n].FindControlOptions.MatchBitmapText[n].ProfileName := 'Profile [0]';
+
+    FClkActions[n].SetTextOptions.ControlType := stEditBox;
+    FClkActions[n].CallTemplateOptions.CallTemplateLoop.Enabled := False;
+    FClkActions[n].SleepOptions.Value := '1000';
+    FClkActions[n].WindowOperationsOptions.Operation := woBringToFront;
+
     vstActions.RootNodeCount := Length(FClkActions);
 
     if not frClickerActions.ControlsModified then
     begin
+      frClickerActions.CurrentlyEditingActionType := TClkAction(FClkActions[n].ActionOptions.Action);
+
       vstActions.ClearSelection;
       vstActions.Selected[vstActions.GetLast] := True;
       vstActions.ScrollIntoView(vstActions.GetLast, False);
@@ -3325,16 +3362,9 @@ begin
       FClkActions[n].ActionOptions.Action := TClkAction(Node^.Index);
       FClkActions[n].ActionOptions.ActionName := CClkActionStr[FClkActions[n].ActionOptions.Action];
 
-      frClickerActions.cmbActions.ItemIndex := Node^.Index;
-      frClickerActions.lbeActionName.Text := FClkActions[n].ActionOptions.ActionName;
-
-      if FClkActions[n].ActionOptions.Action in [acFindControl, acFindSubControl] then
-        frClickerActions.lbeActionTimeout.Text := '1000'
-      else
-        frClickerActions.lbeActionTimeout.Text := '0';
+      frClickerActions.EditingAction^.ActionOptions := FClkActions[n].ActionOptions;   //temp solution, to load action settings
 
       UpdateActionsArrFromControls(n);
-      frClickerActions.UpdatePageControlActionsHighlighting;
       frClickerActions.UpdatePageControlActionExecutionIcons;
     end;
 
@@ -3350,7 +3380,7 @@ end;
 procedure TfrClickerActionsArr.spdbtnPaletteClick(Sender: TObject);
 var
   ActionNames: TStringList;
-  i: Integer;
+  i: TClkAction;
 begin
   pnlPalette.Visible := not pnlPalette.Visible;
 
@@ -3374,8 +3404,8 @@ begin
 
     ActionNames := TStringList.Create;
     try
-      for i := 0 to frClickerActions.PageControlActions.PageCount - 1 do
-        ActionNames.Add(frClickerActions.PageControlActions.Pages[i].Caption);
+      for i := Low(TClkAction) to High(TClkAction) do
+        ActionNames.Add(CClkActionStr[i]);
 
       FPalette.SetActionNames(ActionNames);
       FPalette.vstActionsPalette.OnMouseDown := FPaletteVstMouseDown;
@@ -3493,13 +3523,13 @@ begin
     Exit;
   end;
 
-  if frClickerActions.cmbActions.ItemIndex = -1 then
+  if Ord(frClickerActions.CurrentlyEditingActionType) = CClkUnsetAction then
   begin
     MessageBox(Handle, 'No action selected. Please select an action.', PChar(Caption), MB_ICONINFORMATION);
     Exit;
   end;
 
-  CurrentAction := TClkAction(frClickerActions.cmbActions.ItemIndex);
+  CurrentAction := frClickerActions.CurrentlyEditingActionType;
   case CurrentAction of
     acClick:
     begin
@@ -3524,7 +3554,7 @@ begin
     end;
   end;  //case
 
-  if FClkActions[Node^.Index].ActionOptions.Action <> TClkAction(frClickerActions.cmbActions.ItemIndex) then
+  if FClkActions[Node^.Index].ActionOptions.Action <> frClickerActions.CurrentlyEditingActionType then
     if MessageBox(Handle, 'Are you sure you want to overwrite existing action?', PChar(Caption), MB_ICONWARNING + MB_YESNO) = IDNO then
       Exit;
 
