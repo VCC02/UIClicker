@@ -186,7 +186,6 @@ object frClickerBMPText: TfrClickerBMPText
     EditLabel.Caption = 'FG Color'
     Enabled = False
     ParentShowHint = False
-    PopupMenu = pmStandardColorVariables
     ShowHint = True
     TabOrder = 10
     OnChange = lbeMatchBitmapTextFGColorChange
@@ -203,7 +202,6 @@ object frClickerBMPText: TfrClickerBMPText
     EditLabel.Caption = 'BG Color'
     Enabled = False
     ParentShowHint = False
-    PopupMenu = pmStandardColorVariables
     ShowHint = True
     TabOrder = 11
     OnChange = lbeMatchBitmapTextBGColorChange
@@ -270,77 +268,6 @@ object frClickerBMPText: TfrClickerBMPText
     object MenuItemCopyCroppingValuesToOtherProfiles: TMenuItem
       Caption = 'Copy these cropping values to all the other font profiles'
       OnClick = MenuItemCopyCroppingValuesToOtherProfilesClick
-    end
-  end
-  object pmStandardColorVariables: TPopupMenu
-    OnPopup = pmStandardColorVariablesPopup
-    Left = 232
-    Top = 78
-    object MenuItemCopyColorToClipboard: TMenuItem
-      Caption = 'Copy Color To Clipboard'
-      OnClick = MenuItemCopyColorToClipboardClick
-    end
-    object MenuItemPasteColorFromClipboard: TMenuItem
-      Caption = 'Paste Color From Clipboard'
-      OnClick = MenuItemPasteColorFromClipboardClick
-    end
-    object N2: TMenuItem
-      Caption = '-'
-    end
-    object MenuItemColor_Window: TMenuItem
-      Caption = '$Color_Window$'
-      OnClick = MenuItemColor_GenericClick
-    end
-    object MenuItemColor_BtnFace: TMenuItem
-      Caption = '$Color_BtnFace$'
-      OnClick = MenuItemColor_GenericClick
-    end
-    object MenuItemColor_ActiveCaption: TMenuItem
-      Caption = '$Color_ActiveCaption$'
-      OnClick = MenuItemColor_GenericClick
-    end
-    object MenuItemColor_InactiveCaption: TMenuItem
-      Caption = '$Color_InactiveCaption$'
-      OnClick = MenuItemColor_GenericClick
-    end
-    object MenuItemColor_Highlight: TMenuItem
-      Caption = '$Color_Highlight$'
-      OnClick = MenuItemColor_GenericClick
-    end
-    object MenuItemColor_WindowText: TMenuItem
-      Caption = '$Color_WindowText$'
-      OnClick = MenuItemColor_GenericClick
-    end
-    object N5: TMenuItem
-      Caption = '-'
-    end
-    object MenuItemColor_GrayText: TMenuItem
-      Caption = '$Color_GrayText$'
-      OnClick = MenuItemColor_GenericClick
-    end
-    object MenuItemColor_GradientActiveCaption: TMenuItem
-      Caption = '$Color_GradientActiveCaption$'
-      OnClick = MenuItemColor_GenericClick
-    end
-    object MenuItemColor_GradientInactiveCaption: TMenuItem
-      Caption = '$Color_GradientInactiveCaption$'
-      OnClick = MenuItemColor_GenericClick
-    end
-    object MenuItemColor_ScrollBar: TMenuItem
-      Caption = '$Color_ScrollBar$'
-      OnClick = MenuItemColor_GenericClick
-    end
-    object MenuItemColor_3DDkShadow: TMenuItem
-      Caption = '$Color_3DDkShadow$'
-      OnClick = MenuItemColor_GenericClick
-    end
-    object MenuItemColor_3DLight: TMenuItem
-      Caption = '$Color_3DLight$'
-      OnClick = MenuItemColor_GenericClick
-    end
-    object MenuItemColor_WindowFrame: TMenuItem
-      Caption = '$Color_WindowFrame$'
-      OnClick = MenuItemColor_GenericClick
     end
   end
   object tmrUpdateCropEditBoxes: TTimer

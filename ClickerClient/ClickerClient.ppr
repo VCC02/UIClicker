@@ -90,7 +90,7 @@ type
     MatchBitmapFiles: PWideChar;
     MatchBitmapAlgorithm: TMatchBitmapAlgorithm;
     MatchBitmapAlgorithmSettings: TMatchBitmapAlgorithmSettings;
-    InitialRectange: TRectString;
+    InitialRectangle: TRectString;
     UseWholeScreen: Boolean;
     ColorError: PWideChar;
     AllowedColorErrorCount: PWideChar;
@@ -111,10 +111,21 @@ type
   PClkSetTextOptionsAPI = ^TClkSetTextOptionsAPI;
 
 
+  TClkCallTemplateLoopOptionsAPI = record
+    Enabled: Boolean; //When False, the CallTemplate action is executed once, as before. Else, it may be executed or not, based on loop settings.
+    Counter: PWideChar;
+    InitValue: PWideChar;
+    EndValue: PWideChar;
+    Direction: TLoopDirection;
+    BreakCondition: PWideChar; //uses the same format as TClkActionOptions.ActionCondition
+    EvalBreakPosition: TLoopEvalBreakPosition;
+  end;
+
   TClkCallTemplateOptionsAPI = record
     TemplateFileName: PWideChar;
     ListOfCustomVarsAndValues: PWideChar;
     EvaluateBeforeCalling: Boolean;
+    CallTemplateLoop: TClkCallTemplateLoopOptionsAPI;
   end;
 
   PClkCallTemplateOptionsAPI = ^TClkCallTemplateOptionsAPI;
@@ -139,7 +150,7 @@ type
   TClkWindowOperationsAPI = record
     Operation: TWindowOperation;
     NewX, NewY, NewWidth, NewHeight: PWideChar;
-    NewPositionEabled, NewSizeEabled: Boolean;
+    NewPositionEnabled, NewSizeEnabled: Boolean;
   end;
 
   PClkWindowOperationsAPI = ^TClkWindowOperationsAPI;
@@ -524,14 +535,14 @@ begin
   TempAction.FindControlOptions.MatchBitmapAlgorithm := AFindControlOptions^.MatchBitmapAlgorithm;
 
   TempAction.FindControlOptions.MatchBitmapAlgorithmSettings := AFindControlOptions^.MatchBitmapAlgorithmSettings;
-  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.InitialRectange.Left))[1], TempAction.FindControlOptions.InitialRectange.Left);
-  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.InitialRectange.Top))[1], TempAction.FindControlOptions.InitialRectange.Top);
-  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.InitialRectange.Right))[1], TempAction.FindControlOptions.InitialRectange.Right);
-  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.InitialRectange.Bottom))[1], TempAction.FindControlOptions.InitialRectange.Bottom);
-  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.InitialRectange.LeftOffset))[1], TempAction.FindControlOptions.InitialRectange.LeftOffset);
-  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.InitialRectange.TopOffset))[1], TempAction.FindControlOptions.InitialRectange.TopOffset);
-  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.InitialRectange.RightOffset))[1], TempAction.FindControlOptions.InitialRectange.RightOffset);
-  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.InitialRectange.BottomOffset))[1], TempAction.FindControlOptions.InitialRectange.BottomOffset);
+  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.InitialRectangle.Left))[1], TempAction.FindControlOptions.InitialRectangle.Left);
+  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.InitialRectangle.Top))[1], TempAction.FindControlOptions.InitialRectangle.Top);
+  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.InitialRectangle.Right))[1], TempAction.FindControlOptions.InitialRectangle.Right);
+  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.InitialRectangle.Bottom))[1], TempAction.FindControlOptions.InitialRectangle.Bottom);
+  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.InitialRectangle.LeftOffset))[1], TempAction.FindControlOptions.InitialRectangle.LeftOffset);
+  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.InitialRectangle.TopOffset))[1], TempAction.FindControlOptions.InitialRectangle.TopOffset);
+  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.InitialRectangle.RightOffset))[1], TempAction.FindControlOptions.InitialRectangle.RightOffset);
+  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.InitialRectangle.BottomOffset))[1], TempAction.FindControlOptions.InitialRectangle.BottomOffset);
 
   TempAction.FindControlOptions.UseWholeScreen := AFindControlOptions^.UseWholeScreen;
   SetPointedContentToString(@string(PWideChar(AFindControlOptions^.ColorError))[1], TempAction.FindControlOptions.ColorError);
@@ -633,6 +644,14 @@ begin
   SetPointedContentToString(@string(PWideChar(ACallTemplateOptions^.TemplateFileName))[1], TempAction.CallTemplateOptions.TemplateFileName);
   SetPointedContentToString(@string(PWideChar(ACallTemplateOptions^.ListOfCustomVarsAndValues))[1], TempAction.CallTemplateOptions.ListOfCustomVarsAndValues);
   TempAction.CallTemplateOptions.EvaluateBeforeCalling := ACallTemplateOptions^.EvaluateBeforeCalling;
+
+  TempAction.CallTemplateOptions.CallTemplateLoop.Enabled := ACallTemplateOptions^.CallTemplateLoop.Enabled;
+  SetPointedContentToString(@string(PWideChar(ACallTemplateOptions^.CallTemplateLoop.Counter))[1], TempAction.CallTemplateOptions.CallTemplateLoop.Counter);
+  SetPointedContentToString(@string(PWideChar(ACallTemplateOptions^.CallTemplateLoop.InitValue))[1], TempAction.CallTemplateOptions.CallTemplateLoop.InitValue);
+  SetPointedContentToString(@string(PWideChar(ACallTemplateOptions^.CallTemplateLoop.EndValue))[1], TempAction.CallTemplateOptions.CallTemplateLoop.EndValue);
+  TempAction.CallTemplateOptions.CallTemplateLoop.Direction := ACallTemplateOptions^.CallTemplateLoop.Direction;
+  SetPointedContentToString(@string(PWideChar(ACallTemplateOptions^.CallTemplateLoop.BreakCondition))[1], TempAction.CallTemplateOptions.CallTemplateLoop.BreakCondition);
+  TempAction.CallTemplateOptions.CallTemplateLoop.EvalBreakPosition := ACallTemplateOptions^.CallTemplateLoop.EvalBreakPosition;
 
   AddActionToTemplate(TemplateFileName, TempAction);
   Result := 0;
@@ -764,8 +783,8 @@ begin
   SetPointedContentToString(@string(PWideChar(AWindowOperationsOptions^.NewY))[1], TempAction.WindowOperationsOptions.NewY);
   SetPointedContentToString(@string(PWideChar(AWindowOperationsOptions^.NewWidth))[1], TempAction.WindowOperationsOptions.NewWidth);
   SetPointedContentToString(@string(PWideChar(AWindowOperationsOptions^.NewHeight))[1], TempAction.WindowOperationsOptions.NewHeight);
-  TempAction.WindowOperationsOptions.NewPositionEabled := AWindowOperationsOptions^.NewPositionEabled;
-  TempAction.WindowOperationsOptions.NewSizeEabled := AWindowOperationsOptions^.NewSizeEabled;
+  TempAction.WindowOperationsOptions.NewPositionEnabled := AWindowOperationsOptions^.NewPositionEnabled;
+  TempAction.WindowOperationsOptions.NewSizeEnabled := AWindowOperationsOptions^.NewSizeEnabled;
 
   AddActionToTemplate(TemplateFileName, TempAction);
   Result := 0;

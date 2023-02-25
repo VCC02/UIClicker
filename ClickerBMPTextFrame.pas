@@ -80,7 +80,6 @@ type
     N5: TMenuItem;
     pnlProfileName: TPanel;
     pmPreviewImage: TPopupMenu;
-    pmStandardColorVariables: TPopupMenu;
     pnlBG: TPanel;
     pnlFG: TPanel;
     scrboxPreview: TScrollBox;
@@ -103,16 +102,12 @@ type
     procedure lbeMatchBitmapTextFontNameChange(Sender: TObject);
     procedure lbeMatchBitmapTextSizeChange(Sender: TObject);
     procedure lblPreviewClick(Sender: TObject);
-    procedure MenuItemColor_GenericClick(Sender: TObject);
-    procedure MenuItemCopyColorToClipboardClick(Sender: TObject);
     procedure MenuItemCopyCroppedPreviewImageClick(Sender: TObject);
     procedure MenuItemCopyCroppingValuesToOtherProfilesClick(Sender: TObject);
     procedure MenuItemCopyPreviewImageAndCroppingLinesClick(Sender: TObject);
     procedure MenuItemCopyPreviewImageClick(Sender: TObject);
     procedure MenuItemErasePreviewImageClick(Sender: TObject);
-    procedure MenuItemPasteColorFromClipboardClick(Sender: TObject);
     procedure MenuItemSavePreviewImageClick(Sender: TObject);
-    procedure pmStandardColorVariablesPopup(Sender: TObject);
     procedure pnlBGDblClick(Sender: TObject);
     procedure pnlFGDblClick(Sender: TObject);
     procedure tmrStartupTimer(Sender: TObject);
@@ -600,18 +595,6 @@ begin
 end;
 
 
-procedure TfrClickerBMPText.MenuItemColor_GenericClick(Sender: TObject);
-begin
-  FLastClickedLbe.Text := StringReplace((Sender as TMenuItem).Caption, '&', '', [rfReplaceAll]);
-end;
-
-
-procedure TfrClickerBMPText.MenuItemCopyColorToClipboardClick(Sender: TObject);
-begin
-  Clipboard.AsText := FLastClickedLbe.Text;
-end;
-
-
 procedure TfrClickerBMPText.MenuItemCopyCroppedPreviewImageClick(Sender: TObject);
 var
   CroppedBmp: TBitmap;
@@ -695,12 +678,6 @@ begin
 end;
 
 
-procedure TfrClickerBMPText.MenuItemPasteColorFromClipboardClick(Sender: TObject);
-begin
-  FLastClickedLbe.Text := Clipboard.AsText;
-end;
-
-
 procedure TfrClickerBMPText.MenuItemCopyPreviewImageClick(Sender: TObject);
 begin
   if (imgPreview.Picture.Bitmap.Width = 0) and (imgPreview.Picture.Bitmap.Height = 0) then
@@ -748,31 +725,6 @@ begin
   finally
     ASaveDialog.Free;
   end;
-end;
-
-
-procedure TfrClickerBMPText.pmStandardColorVariablesPopup(Sender: TObject);
-var
-  i: Integer;
-  s: string;
-  TextColor: TColor;
-begin
-  for i := 0 to pmStandardColorVariables.Items.Count - 1 do
-    if Pos('$', pmStandardColorVariables.Items.Items[i].Caption) > 0 then
-    begin
-      if pmStandardColorVariables.Items.Items[i].Bitmap <> nil then
-        pmStandardColorVariables.Items.Items[i].Bitmap.Free;
-
-      pmStandardColorVariables.Items.Items[i].Bitmap := TBitmap.Create;
-      pmStandardColorVariables.Items.Items[i].Bitmap.Width := 16;
-      pmStandardColorVariables.Items.Items[i].Bitmap.Height := 16;
-      s := EvaluateReplacements(pmStandardColorVariables.Items.Items[i].Caption);
-      TextColor := HexToInt(s);
-
-      pmStandardColorVariables.Items.Items[i].Bitmap.Canvas.Pen.Color := 1;  // > 0
-      pmStandardColorVariables.Items.Items[i].Bitmap.Canvas.Brush.Color := TextColor;
-      pmStandardColorVariables.Items.Items[i].Bitmap.Canvas.Rectangle(0, 0, 16, 16);
-    end;
 end;
 
 

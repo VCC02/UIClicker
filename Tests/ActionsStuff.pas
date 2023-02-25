@@ -339,14 +339,14 @@ begin
   AFindControlOptions.MatchBitmapText[0].CropRight := '';
   AFindControlOptions.MatchBitmapText[0].CropBottom := '';
 
-  AFindControlOptions.InitialRectange.Left := '$Control_Left$';
-  AFindControlOptions.InitialRectange.Top := '$Control_Top$';
-  AFindControlOptions.InitialRectange.Right := '$Control_Right$';
-  AFindControlOptions.InitialRectange.Bottom := '$Control_Bottom$';
-  AFindControlOptions.InitialRectange.LeftOffset := '0';
-  AFindControlOptions.InitialRectange.TopOffset := '220';
-  AFindControlOptions.InitialRectange.RightOffset := '-250';
-  AFindControlOptions.InitialRectange.BottomOffset := '0';
+  AFindControlOptions.InitialRectangle.Left := '$Control_Left$';
+  AFindControlOptions.InitialRectangle.Top := '$Control_Top$';
+  AFindControlOptions.InitialRectangle.Right := '$Control_Right$';
+  AFindControlOptions.InitialRectangle.Bottom := '$Control_Bottom$';
+  AFindControlOptions.InitialRectangle.LeftOffset := '0';
+  AFindControlOptions.InitialRectangle.TopOffset := '220';
+  AFindControlOptions.InitialRectangle.RightOffset := '-250';
+  AFindControlOptions.InitialRectangle.BottomOffset := '0';
   AFindControlOptions.ColorError := '10';
   AFindControlOptions.AllowedColorErrorCount := '40';
 
@@ -381,14 +381,14 @@ begin
                                           CBmpDirAsSrvDisk + 'ShowActionsWindow_FocusedHighlighted.bmp' + #13#10 +
                                           CBmpDirAsSrvDisk + 'ShowActionsWindow_Unfocused.bmp';
 
-  AFindControlOptions.InitialRectange.Left := '$Control_Left$';
-  AFindControlOptions.InitialRectange.Top := '$Control_Top$';
-  AFindControlOptions.InitialRectange.Right := '$Control_Right$';
-  AFindControlOptions.InitialRectange.Bottom := '$Control_Bottom$';
-  AFindControlOptions.InitialRectange.LeftOffset := '61';
-  AFindControlOptions.InitialRectange.TopOffset := '90';
-  AFindControlOptions.InitialRectange.RightOffset := '-73';
-  AFindControlOptions.InitialRectange.BottomOffset := '-120';
+  AFindControlOptions.InitialRectangle.Left := '$Control_Left$';
+  AFindControlOptions.InitialRectangle.Top := '$Control_Top$';
+  AFindControlOptions.InitialRectangle.Right := '$Control_Right$';
+  AFindControlOptions.InitialRectangle.Bottom := '$Control_Bottom$';
+  AFindControlOptions.InitialRectangle.LeftOffset := '61';
+  AFindControlOptions.InitialRectangle.TopOffset := '90';
+  AFindControlOptions.InitialRectangle.RightOffset := '-73';
+  AFindControlOptions.InitialRectangle.BottomOffset := '-120';
   AFindControlOptions.ColorError := '25';                    //rendering depends on video card, so allow a high error value
   AFindControlOptions.AllowedColorErrorCount := '400';
 
@@ -440,8 +440,8 @@ begin
   AWindowOperationsOptions.NewY := '90';
   AWindowOperationsOptions.NewWidth := '336';
   AWindowOperationsOptions.NewHeight := '279';
-  AWindowOperationsOptions.NewPositionEabled := False; //should be enabled, only if the window can go offscreen
-  AWindowOperationsOptions.NewSizeEabled := True;
+  AWindowOperationsOptions.NewPositionEnabled := False; //should be enabled, only if the window can go offscreen
+  AWindowOperationsOptions.NewSizeEnabled := True;
 end;
 
 end.

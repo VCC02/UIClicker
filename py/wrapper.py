@@ -607,10 +607,10 @@ try:
     FindSubControlOptions.MatchBitmapFiles = "bmps\\ShowWindowInterpreter32.bmp\r\nbmps\\ShowWindowInterpreter64.bmp\r\nbmps\\ShowWindowInterpreter_Wine.bmp"   
     FindSubControlOptions.MatchCriteria.WillMatchBitmapText = False
     FindSubControlOptions.MatchCriteria.WillMatchBitmapFiles = True
-    FindSubControlOptions.InitialRectange.LeftOffset = '56'
-    FindSubControlOptions.InitialRectange.TopOffset = '92'
-    FindSubControlOptions.InitialRectange.RightOffset = '-70'
-    FindSubControlOptions.InitialRectange.BottomOffset = '-123'
+    FindSubControlOptions.InitialRectangle.LeftOffset = '56'
+    FindSubControlOptions.InitialRectangle.TopOffset = '92'
+    FindSubControlOptions.InitialRectangle.RightOffset = '-70'
+    FindSubControlOptions.InitialRectangle.BottomOffset = '-123'
     ###############
     print("AddFindSubControlActionToTemplate: ", DllFuncs.AddFindSubControlActionToTemplate('VerifyClicking.clktmpl', 'Fourth', 1000, True, '', ctypes.byref(FindSubControlOptions)))
     print("AddFontProfileToFindSubControlAction: ", DllFuncs.AddFontProfileToFindSubControlAction('VerifyClicking.clktmpl', 3, ctypes.byref(MatchBitmapText)))

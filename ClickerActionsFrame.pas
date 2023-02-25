@@ -104,6 +104,7 @@ type
     MenuItemCopySearchAreaSearchBmpImgToClipboard: TMenuItem;
     MenuItemCopySearchAreaBkImgToClipboard: TMenuItem;
     MenuItemGenericLoadBmpToSearchedArea: TMenuItem;
+    pmStandardControlRefVars: TPopupMenu;
     pmStandardColorVariables: TPopupMenu;
     pnlActionConditions: TPanel;
     pmWindowOperationsEditors: TPopupMenu;
@@ -159,6 +160,7 @@ type
     procedure lbeFindCachedControlTopChange(Sender: TObject);
     procedure MenuItem_SetFromControlLeftAndTopClick(Sender: TObject);
     procedure MenuItem_SetFromControlWidthAndHeightClick(Sender: TObject);
+    procedure pmStandardColorVariablesPopup(Sender: TObject);
 
     procedure scrboxDebugBmpMouseWheel(Sender: TObject; Shift: TShiftState;
       WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
@@ -211,6 +213,10 @@ type
     procedure MenuItem_RemoveFontProfileFromPropertyListClick(Sender: TObject);
     procedure MenuItem_MoveFontProfileUpInPropertyListClick(Sender: TObject);
     procedure MenuItem_MoveFontProfileDownInPropertyListClick(Sender: TObject);
+
+    procedure MenuItemControl_EdgeRefGenericClick(Sender: TObject);
+    procedure MenuItemCopyRefToClipboardClick(Sender: TObject);
+    procedure MenuItemPasteRefFromClipboardClick(Sender: TObject);
   private
     { Private declarations }
     FBMPsDir: string;
@@ -234,6 +240,8 @@ type
     FSearchAreaDbgImgSearchedBmpMenu: TPopupMenu;
 
     FCurrentlyEditingActionType: Integer;  //yes integer
+    FLastClickedTVTEdit: TVTEdit;
+    FLastClickedEdit: TEdit;
 
     FPmLocalTemplates: TPopupMenu;
     FOIFrame: TfrObjectInspector;
@@ -357,7 +365,7 @@ type
       Sender: TObject; var Key: Word; Shift: TShiftState);
 
     procedure HandleOnOIEditorAssignMenuAndTooltip(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer;
-      var APopupMenu: TPopupMenu; var AHint: string; var AShowHint: Boolean);
+      Sender: TObject; var APopupMenu: TPopupMenu; var AHint: string; var AShowHint: Boolean);
 
     procedure HandleOnOIGetFileDialogSettings(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; var AFilter, AInitDir: string);
     procedure HandleOnOIArrowEditorClick(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer);
@@ -606,6 +614,8 @@ begin
   FSetVarContent_Vars := TStringList.Create;
   FSetVarContent_Values := TStringList.Create;
   FSetVarContent_EvalBefore := TStringList.Create;
+  FLastClickedTVTEdit := nil;
+  FLastClickedEdit := nil;
 
   FOnCopyControlTextAndClassFromMainWindow := nil;
   FOnGetExtraSearchAreaDebuggingImage := nil;
@@ -905,6 +915,31 @@ begin
   FEditingAction^.WindowOperationsOptions.NewHeight := EvaluateReplacements('$Control_Height$');
   FOIFrame.RepaintNodeByLevel(CPropertyLevel, CCategory_ActionSpecific, CWindowOperations_NewWidth, -1);
   FOIFrame.RepaintNodeByLevel(CPropertyLevel, CCategory_ActionSpecific, CWindowOperations_NewHeight, -1);
+end;
+
+
+procedure TfrClickerActions.pmStandardColorVariablesPopup(Sender: TObject);
+var
+  i: Integer;
+  s: string;
+  TextColor: TColor;
+begin
+  for i := 0 to pmStandardColorVariables.Items.Count - 1 do
+    if Pos('$', pmStandardColorVariables.Items.Items[i].Caption) > 0 then
+    begin
+      if pmStandardColorVariables.Items.Items[i].Bitmap <> nil then
+        pmStandardColorVariables.Items.Items[i].Bitmap.Free;
+
+      pmStandardColorVariables.Items.Items[i].Bitmap := TBitmap.Create;
+      pmStandardColorVariables.Items.Items[i].Bitmap.Width := 16;
+      pmStandardColorVariables.Items.Items[i].Bitmap.Height := 16;
+      s := EvaluateReplacements(pmStandardColorVariables.Items.Items[i].Caption);
+      TextColor := HexToInt(s);
+
+      pmStandardColorVariables.Items.Items[i].Bitmap.Canvas.Pen.Color := 1;  // > 0
+      pmStandardColorVariables.Items.Items[i].Bitmap.Canvas.Brush.Color := TextColor;
+      pmStandardColorVariables.Items.Items[i].Bitmap.Canvas.Rectangle(0, 0, 16, 16);
+    end;
 end;
 
 
@@ -1848,6 +1883,65 @@ begin
     end;
   finally
     Dispose(MenuData);
+  end;
+end;
+
+
+procedure TfrClickerActions.MenuItemControl_EdgeRefGenericClick(Sender: TObject);
+begin
+  try
+    if Assigned(FLastClickedTVTEdit) then
+    begin
+      FLastClickedTVTEdit.Text := StringReplace((Sender as TMenuItem).Caption, '&', '', [rfReplaceAll]);
+      FOIFrame.EditingText := FLastClickedTVTEdit.Text;
+    end;
+
+    if Assigned(FLastClickedEdit) then
+    begin
+      FLastClickedEdit.Text := StringReplace((Sender as TMenuItem).Caption, '&', '', [rfReplaceAll]);
+      if Assigned(FLastClickedEdit.OnChange) then
+        FLastClickedEdit.OnChange(FLastClickedEdit);
+    end;
+  except
+    on E: Exception do
+      MessageBox(Handle, PChar('EditBox is not available.' + #13#10 + E.Message), PChar(Application.MainForm.Caption), MB_ICONERROR);
+  end;
+end;
+
+
+procedure TfrClickerActions.MenuItemCopyRefToClipboardClick(Sender: TObject);
+begin
+  try
+    if Assigned(FLastClickedTVTEdit) then
+      Clipboard.AsText := FLastClickedTVTEdit.Text;
+
+    if Assigned(FLastClickedEdit) then
+      Clipboard.AsText := FLastClickedEdit.Text;
+  except
+    on E: Exception do
+      MessageBox(Handle, PChar('EditBox is not available.' + #13#10 + E.Message), PChar(Application.MainForm.Caption), MB_ICONERROR);
+  end;
+end;
+
+
+procedure TfrClickerActions.MenuItemPasteRefFromClipboardClick(Sender: TObject);
+begin
+  try
+    if Assigned(FLastClickedTVTEdit) then
+    begin
+      FLastClickedTVTEdit.Text := Clipboard.AsText;
+      FOIFrame.EditingText := FLastClickedTVTEdit.Text;
+    end;
+
+    if Assigned(FLastClickedEdit) then
+    begin
+      FLastClickedEdit.Text := Clipboard.AsText;
+      if Assigned(FLastClickedEdit.OnChange) then
+        FLastClickedEdit.OnChange(FLastClickedEdit);
+    end;
+  except
+    on E: Exception do
+      MessageBox(Handle, PChar('EditBox is not available.' + #13#10 + E.Message), PChar(Application.MainForm.Caption), MB_ICONERROR);
   end;
 end;
 
@@ -2819,7 +2913,7 @@ end;
 
 
 procedure TfrClickerActions.HandleOnOIEditorAssignMenuAndTooltip(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer;
-  var APopupMenu: TPopupMenu; var AHint: string; var AShowHint: Boolean);
+  Sender: TObject; var APopupMenu: TPopupMenu; var AHint: string; var AShowHint: Boolean);
 var
   TempValue: string;
 begin
@@ -2839,34 +2933,55 @@ begin
               AHint := GetPropertyHint_FindControl_MatchCriteria_SearchForControlMode;
           end;
 
+          CFindControl_MatchBitmapText_PropIndex:
+            case AItemIndex of
+              CFindControl_MatchBitmapText_ForegroundColor_PropItemIndex, CFindControl_MatchBitmapText_BackgroundColor_PropItemIndex:
+              begin
+                FLastClickedTVTEdit := nil;
+                FLastClickedEdit := Sender as TEdit;
+                APopupMenu := pmStandardColorVariables;
+              end;
+
+              else
+                ;
+            end;
+
           CFindControl_InitialRectangle_PropIndex:
             if AItemIndex in [CFindControl_InitialRectangle_Left_PropItemIndex .. CFindControl_InitialRectangle_Bottom_PropItemIndex] then
             begin
               case AItemIndex of
                 CFindControl_InitialRectangle_Left_PropItemIndex:
                 begin
-                  APopupMenu := frClickerFindControl.pmStandardControlRefVars;
+                  FLastClickedTVTEdit := Sender as TVTEdit;
+                  FLastClickedEdit := nil;
+                  APopupMenu := pmStandardControlRefVars;
                   TempValue := FEditingAction^.FindControlOptions.InitialRectangle.Left;
                   AHint := GetPropertyHint_FindControl_InitialRectangle_Left(TempValue, EvaluateReplacements(TempValue));
                 end;
 
                 CFindControl_InitialRectangle_Top_PropItemIndex:
                 begin
-                  APopupMenu := frClickerFindControl.pmStandardControlRefVars;
+                  FLastClickedTVTEdit := Sender as TVTEdit;
+                  FLastClickedEdit := nil;
+                  APopupMenu := pmStandardControlRefVars;
                   TempValue := FEditingAction^.FindControlOptions.InitialRectangle.Top;
                   AHint := GetPropertyHint_FindControl_InitialRectangle_Top(TempValue, EvaluateReplacements(TempValue));
                 end;
 
                 CFindControl_InitialRectangle_Right_PropItemIndex:
                 begin
-                  APopupMenu := frClickerFindControl.pmStandardControlRefVars;
+                  FLastClickedTVTEdit := Sender as TVTEdit;
+                  FLastClickedEdit := nil;
+                  APopupMenu := pmStandardControlRefVars;
                   TempValue := FEditingAction^.FindControlOptions.InitialRectangle.Right;
                   AHint := GetPropertyHint_FindControl_InitialRectangle_Right(TempValue, EvaluateReplacements(TempValue));
                 end;
 
                 CFindControl_InitialRectangle_Bottom_PropItemIndex:
                 begin
-                  APopupMenu := frClickerFindControl.pmStandardControlRefVars;
+                  FLastClickedTVTEdit := Sender as TVTEdit;
+                  FLastClickedEdit := nil;
+                  APopupMenu := pmStandardControlRefVars;
                   TempValue := FEditingAction^.FindControlOptions.InitialRectangle.Bottom;
                   AHint := GetPropertyHint_FindControl_InitialRectangle_Bottom(TempValue, EvaluateReplacements(TempValue));
                 end;

@@ -197,7 +197,6 @@ type
     MenuItemPasteRefFromClipboard: TMenuItem;
     N3: TMenuItem;
     PageControlMatch: TPageControl;
-    pmStandardControlRefVars: TPopupMenu;
     pnlDrag: TPanel;
     pmExtraCopyValueWindows: TPopupMenu;
     spdbtnDisplaySearchAreaDbgImgMenu: TSpeedButton;
@@ -218,9 +217,6 @@ type
     procedure chkShowBMPFileDbgImgClick(Sender: TObject);
     procedure chkShowBMPTextDbgImgClick(Sender: TObject);
     procedure chkShowGridOnBMPPreviewChange(Sender: TObject);
-    procedure MenuItemControl_EdgeRefGenericClick(Sender: TObject);
-    procedure MenuItemCopyRefToClipboardClick(Sender: TObject);
-    procedure MenuItemPasteRefFromClipboardClick(Sender: TObject);
     procedure PageControlMatchChange(Sender: TObject);
     procedure pnlDragMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
@@ -1425,36 +1421,6 @@ begin
 
   if FSearchAreaControlDbgImg <> nil then
     FSearchAreaGridImg.Visible := chkShowGridOnBMPPreview.Checked;
-end;
-
-
-procedure TfrClickerFindControl.MenuItemControl_EdgeRefGenericClick(Sender: TObject);
-begin
-  try
-    FLastClickedLbe.Text := StringReplace((Sender as TMenuItem).Caption, '&', '', [rfReplaceAll]);
-  except
-    MessageBox(Handle, 'EditBox is not available.', PChar(Application.MainForm.Caption), MB_ICONERROR);
-  end;
-end;
-
-
-procedure TfrClickerFindControl.MenuItemCopyRefToClipboardClick(Sender: TObject);
-begin
-  try
-    Clipboard.AsText := FLastClickedLbe.Text;
-  except
-    MessageBox(Handle, 'EditBox is not available.', PChar(Application.MainForm.Caption), MB_ICONERROR);
-  end;
-end;
-
-
-procedure TfrClickerFindControl.MenuItemPasteRefFromClipboardClick(Sender: TObject);
-begin
-  try
-    FLastClickedLbe.Text := Clipboard.AsText;
-  except
-    MessageBox(Handle, 'EditBox is not available.', PChar(Application.MainForm.Caption), MB_ICONERROR);
-  end;
 end;
 
 

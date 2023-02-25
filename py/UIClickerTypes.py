@@ -202,7 +202,7 @@ class TFindControlOptions(Structure):
                ("MatchBitmapFiles", LPCWSTR),
                ("MatchBitmapAlgorithm", BYTE), #TMatchBitmapAlgorithm)
                ("MatchBitmapAlgorithmSettings", TMatchBitmapAlgorithmSettings),
-               ("InitialRectange", TRectString),
+               ("InitialRectangle", TRectString),
                ("UseWholeScreen", BOOLEAN),
                ("ColorError", LPCWSTR),
                ("AllowedColorErrorCount", LPCWSTR),
@@ -237,15 +237,15 @@ def GetDefaultFindControlOptions():
     FindControlOptions.MatchBitmapAlgorithmSettings.XOffset = 0
     FindControlOptions.MatchBitmapAlgorithmSettings.YOffset = 0
     
-    FindControlOptions.InitialRectange = TRectString()
-    FindControlOptions.InitialRectange.Left = '$Control_Left$'
-    FindControlOptions.InitialRectange.Top = '$Control_Top$'
-    FindControlOptions.InitialRectange.Right = '$Control_Right$'
-    FindControlOptions.InitialRectange.Bottom = '$Control_Bottom$'
-    FindControlOptions.InitialRectange.LeftOffset = '0'
-    FindControlOptions.InitialRectange.TopOffset = '0'
-    FindControlOptions.InitialRectange.RightOffset = '0'
-    FindControlOptions.InitialRectange.BottomOffset = '0'
+    FindControlOptions.InitialRectangle = TRectString()
+    FindControlOptions.InitialRectangle.Left = '$Control_Left$'
+    FindControlOptions.InitialRectangle.Top = '$Control_Top$'
+    FindControlOptions.InitialRectangle.Right = '$Control_Right$'
+    FindControlOptions.InitialRectangle.Bottom = '$Control_Bottom$'
+    FindControlOptions.InitialRectangle.LeftOffset = '0'
+    FindControlOptions.InitialRectangle.TopOffset = '0'
+    FindControlOptions.InitialRectangle.RightOffset = '0'
+    FindControlOptions.InitialRectangle.BottomOffset = '0'
     
     FindControlOptions.UseWholeScreen = True  #usually True for finding a window, and False, for finding a (sub)control on a window or another control.  
     FindControlOptions.ColorError = '0'
@@ -327,8 +327,8 @@ class TWindowOperationsOptions(Structure):
                ("NewY", LPCWSTR),
                ("NewWidth", LPCWSTR),
                ("NewHeight", LPCWSTR),
-               ("NewPositionEabled", BOOLEAN),
-               ("NewSizeEabled", BOOLEAN)]
+               ("NewPositionEnabled", BOOLEAN),
+               ("NewSizeEnabled", BOOLEAN)]
 
 PWindowOperationsOptions = ctypes.POINTER(TWindowOperationsOptions)
 
@@ -339,8 +339,8 @@ def GetDefaultWindowOperationsOptions():
     WindowOperationsOptions.NewY = ''  #'$NewY$'
     WindowOperationsOptions.NewWidth = ''  #'$NewWidth$'
     WindowOperationsOptions.NewHeight = ''  #'$NewHeight$'
-    WindowOperationsOptions.NewPositionEabled = False
-    WindowOperationsOptions.NewSizeEabled = False
+    WindowOperationsOptions.NewPositionEnabled = False
+    WindowOperationsOptions.NewSizeEnabled = False
     return WindowOperationsOptions
 
 
