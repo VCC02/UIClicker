@@ -498,6 +498,8 @@ begin
   frClickerFindControl.OnGetFindControlOptions := HandleOnGetFindControlOptions;
   frClickerFindControl.Visible := False;
 
+  //frClickerFindControl.AddDefaultFontProfile;
+
   frClickerConditionEditor := TfrClickerConditionEditor.Create(Self);
   frClickerConditionEditor.Parent := pnlActionConditions; //for some reason, using TabSheetCondition leads to a hidden frame
 
@@ -1663,7 +1665,8 @@ begin
         ListOfFiles.Delete(MenuData^.PropertyItemIndex);
         FEditingAction^.FindControlOptions.MatchBitmapFiles := ListOfFiles.Text;
 
-        FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex);
+        FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex, True);
+
         TriggerOnControlsModified;
       finally
         ListOfFiles.Free;
@@ -1694,7 +1697,7 @@ begin
         ListOfFiles.Move(MenuData^.PropertyItemIndex, MenuData^.PropertyItemIndex - 1);
         FEditingAction^.FindControlOptions.MatchBitmapFiles := ListOfFiles.Text;
 
-        FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex);
+        FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex, True);
         TriggerOnControlsModified;
       finally
         ListOfFiles.Free;
@@ -1725,7 +1728,7 @@ begin
         ListOfFiles.Move(MenuData^.PropertyItemIndex, MenuData^.PropertyItemIndex + 1);
         FEditingAction^.FindControlOptions.MatchBitmapFiles := ListOfFiles.Text;
 
-        FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex);
+        FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex, True);
         TriggerOnControlsModified;
       finally
         ListOfFiles.Free;
@@ -2356,7 +2359,7 @@ var
   EditingActionType: Integer;
   TempStringList: TStringList;
   ItemIndexMod, ItemIndexDiv: Integer;
-  FoundProfileIndex: Integer;
+  FoundProfileIndex, i: Integer;
 begin
   case ACategoryIndex of
     CCategory_Common:
@@ -2442,6 +2445,10 @@ begin
 
               SetActionValueStr_FindControl_MatchBitmapText(FEditingAction, ANewText, AItemIndex {no mod here});
               frClickerFindControl.PreviewText;
+
+              for i := 0 to Length(FEditingAction^.FindControlOptions.MatchBitmapText) - 1 do
+                frClickerFindControl.BMPTextFontProfiles[i].UpdateSelectionLabelsFromCropInfo(FEditingAction^.FindControlOptions.MatchBitmapText[i]);
+
               TriggerOnControlsModified;
               Exit;
             end;
@@ -2871,7 +2878,7 @@ begin
           if ItemIndexMod = CFindControl_MatchBitmapText_ProfileName_PropItemIndex then
           begin
             FEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv].ProfileName := TVTEdit(Sender).Text;
-            frClickerFindControl.UpdateFontProfilName(ItemIndexDiv, TVTEdit(Sender).Text);
+            frClickerFindControl.UpdateFontProfileName(ItemIndexDiv, TVTEdit(Sender).Text);
           end;
 
           frClickerFindControl.PreviewText;

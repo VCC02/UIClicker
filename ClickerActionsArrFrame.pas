@@ -802,39 +802,39 @@ begin
   //the number of items from MatchBitmapText has to match the number of frames from FBMPTextFrames
   SetLength(FClkActions[ActionIndex].FindControlOptions.MatchBitmapText, frClickerActions.frClickerFindControl.GetBMPTextFontProfilesCount);
 
-  for i := 0 to frClickerActions.frClickerFindControl.GetBMPTextFontProfilesCount - 1 do
-  begin
-    FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].ForegroundColor := frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].MatchBitmapTextFGColor;
-    FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].BackgroundColor := frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].MatchBitmapTextBGColor;
-    FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].FontName := frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].MatchBitmapTextFontName;
-    FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].FontSize := StrToIntDef(frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].MatchBitmapTextSize, 8);
-    FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].Bold := frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].Bold;
-    FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].Italic := frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].Italic;
-    FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].Underline := frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].Underline;
-    FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].StrikeOut := frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].StrikeOut;
-
-    if frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].MatchBitmapTextFontQualityIndex = -1 then
-      FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].FontQuality := fqDefault
-    else
-    begin
-      FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].FontQuality := TFontQuality(frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].MatchBitmapTextFontQualityIndex);
-
-      if frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].MatchBitmapTextFontQualityIndex = Integer(High(TFontQuality)) + 1 then  //is a replacement
-      begin
-        FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].FontQualityReplacement := frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].FontQualityReplacement;
-        FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].FontQualityUsesReplacement := True;
-      end
-      else
-        FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].FontQualityUsesReplacement := False;
-    end;
-
-    FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].ProfileName := frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].ProfileName;
-
-    FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].CropLeft := frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].CropLeft;
-    FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].CropTop := frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].CropTop;
-    FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].CropRight := frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].CropRight;
-    FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].CropBottom := frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].CropBottom;
-  end;
+  //for i := 0 to frClickerActions.frClickerFindControl.GetBMPTextFontProfilesCount - 1 do
+  //begin
+  //  FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].ForegroundColor := frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].MatchBitmapTextFGColor;
+  //  FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].BackgroundColor := frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].MatchBitmapTextBGColor;
+  //  FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].FontName := frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].MatchBitmapTextFontName;
+  //  FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].FontSize := StrToIntDef(frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].MatchBitmapTextSize, 8);
+  //  FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].Bold := frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].Bold;
+  //  FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].Italic := frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].Italic;
+  //  FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].Underline := frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].Underline;
+  //  FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].StrikeOut := frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].StrikeOut;
+  //
+  //  if frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].MatchBitmapTextFontQualityIndex = -1 then
+  //    FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].FontQuality := fqDefault
+  //  else
+  //  begin
+  //    FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].FontQuality := TFontQuality(frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].MatchBitmapTextFontQualityIndex);
+  //
+  //    if frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].MatchBitmapTextFontQualityIndex = Integer(High(TFontQuality)) + 1 then  //is a replacement
+  //    begin
+  //      FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].FontQualityReplacement := frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].FontQualityReplacement;
+  //      FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].FontQualityUsesReplacement := True;
+  //    end
+  //    else
+  //      FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].FontQualityUsesReplacement := False;
+  //  end;
+  //
+  //  FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].ProfileName := frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].ProfileName;
+  //
+  //  FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].CropLeft := frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].CropLeft;
+  //  FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].CropTop := frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].CropTop;
+  //  FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].CropRight := frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].CropRight;
+  //  FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].CropBottom := frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].CropBottom;
+  //end;
 
   FClkActions[ActionIndex].FindControlOptions.MatchBitmapFiles := frClickerActions.frClickerFindControl.lstMatchBitmapFiles.Items.Text;
 
@@ -847,18 +847,22 @@ end;
 procedure TfrClickerActionsArr.UpdateControlsFromActionsArr(ActionIndex: Integer);
 var
   i: Integer;
+  TempProfileName: string;
 begin
   frClickerActions.frClickerConditionEditor.DisplayActionCondition(FClkActions[ActionIndex].ActionOptions.ActionCondition);
+
+  /////the new content, instead of editboxes and checkboxes
+  CopyActionContent(FClkActions[ActionIndex], frClickerActions.EditingAction^);
 
   //the number of items from MatchBitmapText has to match the number of frames from FBMPTextFrames
   frClickerActions.frClickerFindControl.CreateBMPTextFrames(Length(FClkActions[ActionIndex].FindControlOptions.MatchBitmapText)); //do not use SetLength(frClickerActions.FBMPTextFrames, Length(FClkActions[ActionIndex].FindControlOptions.MatchBitmapText));
 
-  for i := 0 to frClickerActions.frClickerFindControl.GetBMPTextFontProfilesCount - 1 do
+  for i := 0 to frClickerActions.frClickerFindControl.GetBMPTextFontProfilesCount - 1 do  //this part is still required when selecting an action
   begin
     frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].MatchBitmapTextFGColor := FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].ForegroundColor;
     frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].MatchBitmapTextBGColor := FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].BackgroundColor;
-    frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].FGColor := HexToInt(EvaluateReplacements(FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].ForegroundColor));
-    frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].BGColor := HexToInt(EvaluateReplacements(FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].BackgroundColor));
+    //frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].FGColor := HexToInt(EvaluateReplacements(FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].ForegroundColor));
+    //frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].BGColor := HexToInt(EvaluateReplacements(FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].BackgroundColor));
     frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].MatchBitmapTextFontName := FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].FontName;
     frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].MatchBitmapTextSize := IntToStr(FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].FontSize);
     frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].Bold := FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].Bold;
@@ -874,8 +878,10 @@ begin
     else
       frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].MatchBitmapTextFontQualityIndex := Integer(FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].FontQuality);
 
-    frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].ProfileName := FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].ProfileName;
-    frClickerActions.frClickerFindControl.tabctrlBMPText.Tabs.Strings[i] := frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].ProfileName;
+    TempProfileName := FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].ProfileName;
+    //frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].ProfileName := TempProfileName;
+    //frClickerActions.frClickerFindControl.tabctrlBMPText.Tabs.Strings[i] := TempProfileName;     //remove these calls if UpdateFontProfileName works as expected
+    frClickerActions.frClickerFindControl.UpdateFontProfileName(i, TempProfileName);
 
     frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].CropLeft := FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].CropLeft;
     frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].CropTop := FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].CropTop;
@@ -904,9 +910,10 @@ begin
   frClickerActions.frClickerExecApp.memExecAppParams.Lines.Text := FClkActions[ActionIndex].ExecAppOptions.ListOfParams;
   frClickerActions.frClickerSetVar.SetListOfSetVars(FClkActions[ActionIndex].SetVarOptions);
 
-  /////the new content, instead of editboxes and checkboxes
-  CopyActionContent(FClkActions[ActionIndex], frClickerActions.EditingAction^);
   frClickerActions.CurrentlyEditingActionType := TClkAction(FClkActions[ActionIndex].ActionOptions.Action);
+
+  if frClickerActions.CurrentlyEditingActionType = acFindSubControl then
+    frClickerActions.frClickerFindControl.PreviewText;
 end;
 
 
@@ -2421,6 +2428,9 @@ begin
   if Node = nil then
     Exit;
 
+  if FActionsHitInfo.HitNode = nil then
+    Exit;
+
   if frClickerActions.ControlsModified then
     if MessageBox(Handle, 'There are changed properties for the selected action. By selecting another action, you will discard those changes. You can click Update to record the changes to the action list. Go back to previous action/content?', '', MB_ICONWARNING + MB_YESNO) = IDYES then
     begin
@@ -3309,12 +3319,15 @@ begin
     FClkActions[n].ClickOptions.XOffset := '4';
     FClkActions[n].ClickOptions.YOffset := '4';
 
-    FClkActions[n].FindControlOptions.UseWholeScreen := FClkActions[n].ActionOptions.Action = acFindControl;
     FClkActions[n].FindControlOptions.MatchCriteria.WillMatchText := FClkActions[n].ActionOptions.Action = acFindControl;
     FClkActions[n].FindControlOptions.MatchCriteria.WillMatchClassName := FClkActions[n].ActionOptions.Action = acFindControl;
     FClkActions[n].FindControlOptions.MatchCriteria.WillMatchBitmapText := FClkActions[n].ActionOptions.Action = acFindSubControl;
     FClkActions[n].FindControlOptions.MatchCriteria.WillMatchBitmapFiles := False;
     FClkActions[n].FindControlOptions.MatchCriteria.SearchForControlMode := sfcmGenGrid;
+    FClkActions[n].FindControlOptions.MatchText := '';
+    FClkActions[n].FindControlOptions.MatchClassName := '';
+    FClkActions[n].FindControlOptions.MatchTextSeparator := '';
+    FClkActions[n].FindControlOptions.MatchClassNameSeparator := '';
     FClkActions[n].FindControlOptions.InitialRectangle.Left := '$Control_Left$';
     FClkActions[n].FindControlOptions.InitialRectangle.Top := '$Control_Top$';
     FClkActions[n].FindControlOptions.InitialRectangle.Right := '$Control_Right$';
@@ -3323,6 +3336,7 @@ begin
     FClkActions[n].FindControlOptions.InitialRectangle.TopOffset := '0';
     FClkActions[n].FindControlOptions.InitialRectangle.RightOffset := '0';
     FClkActions[n].FindControlOptions.InitialRectangle.BottomOffset := '0';
+    FClkActions[n].FindControlOptions.UseWholeScreen := FClkActions[n].ActionOptions.Action = acFindControl;
 
     SetLength(FClkActions[n].FindControlOptions.MatchBitmapText, 1);
     FClkActions[n].FindControlOptions.MatchBitmapText[0].ForegroundColor := '$Color_Window$';
@@ -3340,7 +3354,7 @@ begin
     FClkActions[n].FindControlOptions.MatchBitmapText[0].CropTop := '0';
     FClkActions[n].FindControlOptions.MatchBitmapText[0].CropRight := '0';
     FClkActions[n].FindControlOptions.MatchBitmapText[0].CropBottom := '0';
-    FClkActions[n].FindControlOptions.MatchBitmapText[0].ProfileName := 'Profile [0]';
+    FClkActions[n].FindControlOptions.MatchBitmapText[0].ProfileName := CDefaultFontProfileName;
 
     FClkActions[n].SetTextOptions.ControlType := stEditBox;
     FClkActions[n].CallTemplateOptions.CallTemplateLoop.Enabled := False;
@@ -3356,7 +3370,7 @@ begin
       vstActions.ClearSelection;
       vstActions.Selected[vstActions.GetLast] := True;
       vstActions.ScrollIntoView(vstActions.GetLast, False);
-      LoadActionIntoEditorByIndex(n);
+      //LoadActionIntoEditorByIndex(n);
 
       frClickerActions.ClearControls;
       FClkActions[n].ActionOptions.Action := TClkAction(Node^.Index);
@@ -3364,7 +3378,7 @@ begin
 
       frClickerActions.EditingAction^.ActionOptions := FClkActions[n].ActionOptions;   //temp solution, to load action settings
 
-      UpdateActionsArrFromControls(n);
+      UpdateControlsFromActionsArr(n); //UpdateActionsArrFromControls(n);
       frClickerActions.UpdatePageControlActionExecutionIcons;
     end;
 

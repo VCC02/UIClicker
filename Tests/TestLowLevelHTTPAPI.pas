@@ -300,7 +300,7 @@ begin
 
   Response := FastReplace_87ToReturn(ExecuteFindSubControlAction(TestServerAddress, FindSubControlOptions, 'Test Find Bitness on UIClicker Main', 3000, CREParam_FileLocation_ValueMem));
 
-  Expect(Response).ToBe('ProcessServerCommand exception: The text width, after cropping, is 0.  Profile[0]: "frClickerBMPText".   Searched text: "-bit"');
+  Expect(Response).ToBe('ProcessServerCommand exception: The text width, after cropping, is 0.  Profile[0]: "not set 0".   Searched text: "-bit"');
 end;
 
 
@@ -318,7 +318,7 @@ begin
 
   Response := FastReplace_87ToReturn(ExecuteFindSubControlAction(TestServerAddress, FindSubControlOptions, 'Test Find Bitness on UIClicker Main', 3000, CREParam_FileLocation_ValueMem));
 
-  Expect(Response).ToBe('ProcessServerCommand exception: The text width, after cropping, is negative.  Profile[0]: "frClickerBMPText".   Searched text: "-bit"');
+  Expect(Response).ToBe('ProcessServerCommand exception: The text width, after cropping, is negative.  Profile[0]: "not set 0".   Searched text: "-bit"');
 end;
 
 
@@ -336,7 +336,7 @@ begin
 
   Response := FastReplace_87ToReturn(ExecuteFindSubControlAction(TestServerAddress, FindSubControlOptions, 'Test Find Bitness on UIClicker Main', 3000, CREParam_FileLocation_ValueMem));
 
-  Expect(Response).ToBe('ProcessServerCommand exception: The text height, after cropping, is 0.  Profile[0]: "frClickerBMPText".   Searched text: "-bit"');
+  Expect(Response).ToBe('ProcessServerCommand exception: The text height, after cropping, is 0.  Profile[0]: "not set 0".   Searched text: "-bit"');
 end;
 
 
@@ -354,7 +354,7 @@ begin
 
   Response := FastReplace_87ToReturn(ExecuteFindSubControlAction(TestServerAddress, FindSubControlOptions, 'Test Find Bitness on UIClicker Main', 3000, CREParam_FileLocation_ValueMem));
 
-  Expect(Response).ToBe('ProcessServerCommand exception: The text height, after cropping, is negative.  Profile[0]: "frClickerBMPText".   Searched text: "-bit"');
+  Expect(Response).ToBe('ProcessServerCommand exception: The text height, after cropping, is negative.  Profile[0]: "not set 0".   Searched text: "-bit"');
 end;
 
 
@@ -380,7 +380,8 @@ end;
 
 procedure TTestLowLevelHTTPAPI.Test_ExecuteFindSubControlAction_UIClickerMain_WindowInterpreterButton_Mem_NoSender;
 const
-  CExpectedErr: string = 'Timeout at "Test Find WindowInterpreterButton_Mem_NoSender on UIClicker Main" in   AttemptCount=1  File not found: "py\bmps\ShowActionsWindow_Focused.bmp" File not found: "py\bmps\ShowActionsWindow_FocusedHighlighted.bmp" File not found: "py\bmps\ShowActionsWindow_Unfocused.bmp"';
+  CExpectedErr_Part1: string = 'Timeout at "Test Find WindowInterpreterButton_Mem_NoSender on UIClicker Main" in ';
+  CExpectedErr_Part2: string = '  AttemptCount=1  File not found: "py\bmps\ShowActionsWindow_Focused.bmp" File not found: "py\bmps\ShowActionsWindow_FocusedHighlighted.bmp" File not found: "py\bmps\ShowActionsWindow_Unfocused.bmp"';
 var
   Response: string;
   ListOfVars: TStringList;
@@ -395,7 +396,8 @@ begin
   ListOfVars := TStringList.Create;
   try
     ListOfVars.Text := Response;
-    ExpectFailedAction(ListOfVars, CExpectedErr);
+    ExpectFailedAction(ListOfVars, CExpectedErr_Part1);
+    ExpectFailedAction(ListOfVars, CExpectedErr_Part2);
   finally
     ListOfVars.Free;
   end;

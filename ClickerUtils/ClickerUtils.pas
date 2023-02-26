@@ -182,6 +182,8 @@ type
     CropBottom: string;
   end;
 
+  PClkFindControlMatchBitmapText = ^TClkFindControlMatchBitmapText;
+
   TClkFindControlMatchBitmapTextArr = array of TClkFindControlMatchBitmapText;
 
   //once implemented, do not change the order of these values, because they are saved in files as integers
@@ -317,6 +319,7 @@ type
   TOnUpdateTextCroppingLimitsInOIFromDraggingLines = procedure(ALimitLabelsToUpdate: TLimitLabels; var AOffsets: TSimpleRectString; AFontProfileName: string) of object;
   TOnUpdateTextCroppingLimitsInOIFromDraggingLinesIdx = procedure(ALimitLabelsToUpdate: TLimitLabels; var AOffsets: TSimpleRectString; AFontProfileIndex: Integer) of object;
   TOnGetFindControlOptions = function: PClkFindControlOptions of object;
+  TOnGetFindControlMatchBitmapText = function(Sender: TObject): PClkFindControlMatchBitmapText of object;
 
 const
   CActionStatusStr: array[TActionStatus] of string = ('Not Started', 'Failed', 'Successful', 'In Progress', 'Allowed Failed');
@@ -332,6 +335,8 @@ const
 
   CLabel_Orange: TColor = $366FFF;
   CLabel_LightGreen: TColor = $4CC123;
+
+  CDefaultFontProfileName = 'Profile [0]';
 
   CXClickPointReferenceStr: array[TXClickPointReference] of string = ('xrefLeft', 'xrefRight', 'xrefWidth', 'xrefVar', 'xrefAbsolute');
   CYClickPointReferenceStr: array[TYClickPointReference] of string = ('yrefTop', 'yrefBottom', 'yrefHeight', 'yrefVar', 'yrefAbsolute');

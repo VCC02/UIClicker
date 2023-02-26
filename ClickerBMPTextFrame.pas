@@ -40,19 +40,7 @@ type
   { TfrClickerBMPText }
 
   TfrClickerBMPText = class(TFrame)
-    btnBrowseFont: TButton;
-    chkBold: TCheckBox;
-    chkItalic: TCheckBox;
-    chkStrikeOut: TCheckBox;
-    chkUnderline: TCheckBox;
-    cmbMatchBitmapTextFontQuality: TComboBox;
-    edtFontQualityReplacement: TEdit;
     imgPreview: TImage;
-    lbeMatchBitmapTextBGColor: TLabeledEdit;
-    lbeMatchBitmapTextFGColor: TLabeledEdit;
-    lbeMatchBitmapTextFontName: TLabeledEdit;
-    lbeMatchBitmapTextSize: TLabeledEdit;
-    lblMatchBitmapTextFontQuality: TLabel;
     lblPreview: TLabel;
     MenuItemCopyPreviewImageAndCroppingLines: TMenuItem;
     MenuItemCopyCroppingValuesToOtherProfiles: TMenuItem;
@@ -78,29 +66,11 @@ type
     MenuItemSavePreviewImage: TMenuItem;
     N2: TMenuItem;
     N5: TMenuItem;
-    pnlProfileName: TPanel;
     pmPreviewImage: TPopupMenu;
-    pnlBG: TPanel;
-    pnlFG: TPanel;
     scrboxPreview: TScrollBox;
     tmrStartup: TTimer;
     tmrUpdateCropEditBoxes: TTimer;
-    procedure btnBrowseFontClick(Sender: TObject);
-    procedure chkBoldClick(Sender: TObject);
-    procedure chkItalicClick(Sender: TObject);
-    procedure chkStrikeOutClick(Sender: TObject);
-    procedure chkUnderlineClick(Sender: TObject);
-    procedure cmbMatchBitmapTextFontQualityChange(Sender: TObject);
-    procedure cmbMatchBitmapTextFontQualityDropDown(Sender: TObject);
     procedure imgPreviewResize(Sender: TObject);
-    procedure lbeMatchBitmapTextBGColorChange(Sender: TObject);
-    procedure lbeMatchBitmapTextBGColorMouseUp(Sender: TObject;
-      Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-    procedure lbeMatchBitmapTextFGColorChange(Sender: TObject);
-    procedure lbeMatchBitmapTextFGColorMouseUp(Sender: TObject;
-      Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-    procedure lbeMatchBitmapTextFontNameChange(Sender: TObject);
-    procedure lbeMatchBitmapTextSizeChange(Sender: TObject);
     procedure lblPreviewClick(Sender: TObject);
     procedure MenuItemCopyCroppedPreviewImageClick(Sender: TObject);
     procedure MenuItemCopyCroppingValuesToOtherProfilesClick(Sender: TObject);
@@ -108,8 +78,6 @@ type
     procedure MenuItemCopyPreviewImageClick(Sender: TObject);
     procedure MenuItemErasePreviewImageClick(Sender: TObject);
     procedure MenuItemSavePreviewImageClick(Sender: TObject);
-    procedure pnlBGDblClick(Sender: TObject);
-    procedure pnlFGDblClick(Sender: TObject);
     procedure tmrStartupTimer(Sender: TObject);
     procedure tmrUpdateCropEditBoxesTimer(Sender: TObject);
   private
@@ -122,6 +90,7 @@ type
     FOnSetCroppingValuesToOtherFontProfiles: TOnSetCroppingValuesToOtherFontProfiles;
     FOnGetCroppingLinesVisiblity: TOnGetCroppingLinesVisiblity;
     FOnUpdateTextCroppingLimitsInOIFromDraggingLines: TOnUpdateTextCroppingLimitsInOIFromDraggingLines;
+    FOnGetFindControlMatchBitmapText: TOnGetFindControlMatchBitmapText;
 
     FSelectedComponentLeftLimitLabel: TLabel;
     FSelectedComponentTopLimitLabel: TLabel;
@@ -177,6 +146,7 @@ type
     procedure DoOnSetCroppingValuesToOtherFontProfiles(ACropLeft, ACropTop, ACropRight, ACropBottom: string; ASkipProfileIndex: Integer);
     function DoOnGetCroppingLinesVisiblity: Boolean;
     procedure DoOnUpdateTextCroppingLimitsInOIFromDraggingLines(ALimitLabelsToUpdate: TLimitLabels; var AOffsets: TSimpleRectString; AFontProfileName: string);
+    function DoOnGetFindControlMatchBitmapText: PClkFindControlMatchBitmapText;
 
     function EvaluateReplacements(s: string): string;
     procedure CreateSelectionLabels;
@@ -204,6 +174,7 @@ type
     property OnSetCroppingValuesToOtherFontProfiles: TOnSetCroppingValuesToOtherFontProfiles write FOnSetCroppingValuesToOtherFontProfiles;
     property OnGetCroppingLinesVisiblity: TOnGetCroppingLinesVisiblity write FOnGetCroppingLinesVisiblity;
     property OnUpdateTextCroppingLimitsInOIFromDraggingLines: TOnUpdateTextCroppingLimitsInOIFromDraggingLines write FOnUpdateTextCroppingLimitsInOIFromDraggingLines;
+    property OnGetFindControlMatchBitmapText: TOnGetFindControlMatchBitmapText write FOnGetFindControlMatchBitmapText;
   end;
 
   //TfrClickerBMPTextArr = array of TfrClickerBMPText;
@@ -241,10 +212,7 @@ end;
 procedure TfrClickerBMPText.SetProfileName(Value: string);
 begin
   if FProfileName <> Value then
-  begin
     FProfileName := Value;
-    pnlProfileName.Caption := 'Profile name: ' + FProfileName;
-  end;
 end;
 
 
@@ -290,6 +258,15 @@ begin
     Exit;
 
   FOnUpdateTextCroppingLimitsInOIFromDraggingLines(ALimitLabelsToUpdate, AOffsets, AFontProfileName);
+end;
+
+
+function TfrClickerBMPText.DoOnGetFindControlMatchBitmapText: PClkFindControlMatchBitmapText;
+begin
+  if Assigned(FOnGetFindControlMatchBitmapText) then
+    Result := FOnGetFindControlMatchBitmapText(Self)
+  else
+    raise Exception.Create('OnGetFindControlMatchBitmapText not assigned.');
 end;
 
 
@@ -410,6 +387,7 @@ begin
   FOnSetCroppingValuesToOtherFontProfiles := nil;
   FOnGetCroppingLinesVisiblity := nil;
   FOnUpdateTextCroppingLimitsInOIFromDraggingLines := nil;
+  FOnGetFindControlMatchBitmapText := nil;
 
   CreateSelectionLabels;
   tmrStartup.Enabled := True; //after creating labels
@@ -422,6 +400,24 @@ begin
 end;
 
 
+function GetFontQualityIndexByName(AQualityName: string): Integer;
+const
+  CQualityNames: array[0..Ord(High(TFontQuality))] of string = (
+    'Default', 'Draft', 'Proof', 'NonAntialiased', 'Antialiased', 'Cleartype', 'CleartypeNatural'
+  );
+var
+  i: Integer;
+begin
+  Result := -1;
+  for i := 0 to Length(CQualityNames) - 1 do
+    if AQualityName = CQualityNames[i] then
+    begin
+      Result := i;
+      Exit;
+    end;
+end;
+
+
 procedure TfrClickerBMPText.PreviewTextOnImage(AImg: TImage; ACroppedImg: TImage = nil);
 var
   TextDimensions: TSize;
@@ -429,6 +425,8 @@ var
   FontQualityReplacement: Integer;
   FontQualityReplacementStr: string;
   CropLeft, CropTop, CropRight, CropBottom: Integer;
+  TempFindControlMatchBitmapText: PClkFindControlMatchBitmapText;
+  TempBGColor: TColor;
 begin
   if AImg = nil then
     Exit;
@@ -443,42 +441,42 @@ begin
 
   AImg.Picture.Bitmap.PixelFormat := pf24bit;
 
-  AImg.Canvas.Font.Color := pnlFG.Color;
-  AImg.Canvas.Font.Name := EvaluateReplacements(lbeMatchBitmapTextFontName.Text);
+  TempFindControlMatchBitmapText := DoOnGetFindControlMatchBitmapText;
 
-  AImg.Canvas.Font.Size := StrToIntDef(lbeMatchBitmapTextSize.Text, 8);
+  AImg.Canvas.Font.Color := HexToInt(EvaluateReplacements(TempFindControlMatchBitmapText^.ForegroundColor));
+  AImg.Canvas.Font.Name := EvaluateReplacements(TempFindControlMatchBitmapText^.FontName);
+
+  AImg.Canvas.Font.Size := TempFindControlMatchBitmapText^.FontSize;
 
   AImg.Canvas.Font.Style := [];
 
-  if chkBold.Checked then
+  if TempFindControlMatchBitmapText^.Bold then
     AImg.Canvas.Font.Style := AImg.Canvas.Font.Style + [fsBold];
 
-  if chkItalic.Checked then
+  if TempFindControlMatchBitmapText^.Italic then
     AImg.Canvas.Font.Style := AImg.Canvas.Font.Style + [fsItalic];
 
-  if chkUnderline.Checked then
+  if TempFindControlMatchBitmapText^.Underline then
     AImg.Canvas.Font.Style := AImg.Canvas.Font.Style + [fsUnderline];
 
-  if chkStrikeOut.Checked then
+  if TempFindControlMatchBitmapText^.StrikeOut then
     AImg.Canvas.Font.Style := AImg.Canvas.Font.Style + [fsStrikeOut];
 
-  if cmbMatchBitmapTextFontQuality.ItemIndex = -1 then
-    cmbMatchBitmapTextFontQuality.ItemIndex := 0;
-
-  if cmbMatchBitmapTextFontQuality.ItemIndex = Integer(High(TFontQuality)) + 1 then
+  if TempFindControlMatchBitmapText^.FontQualityUsesReplacement then
   begin
-    FontQualityReplacementStr := EvaluateReplacements(edtFontQualityReplacement.Text);  //should return a string in the following set: 'Default', 'Draft', 'Proof', 'NonAntialiased', 'Antialiased', 'Cleartype', 'CleartypeNatural'
-    FontQualityReplacement := cmbMatchBitmapTextFontQuality.Items.IndexOf(FontQualityReplacementStr);    // 'Var Replacement' string can also be matched here, but it wraps around to 0 (i.e. 'Default')
+    FontQualityReplacementStr := EvaluateReplacements(TempFindControlMatchBitmapText^.FontQualityReplacement);  //should return a string in the following set: 'Default', 'Draft', 'Proof', 'NonAntialiased', 'Antialiased', 'Cleartype', 'CleartypeNatural'
+    FontQualityReplacement := GetFontQualityIndexByName(FontQualityReplacementStr);    // 'Var Replacement' string can also be matched here, but it wraps around to 0 (i.e. 'Default')
     if FontQualityReplacement = -1 then
       FontQualityReplacement := 0;  //default to fqDefault
 
     AImg.Canvas.Font.Quality := TFontQuality(FontQualityReplacement);
   end
   else
-    AImg.Canvas.Font.Quality := TFontQuality(cmbMatchBitmapTextFontQuality.ItemIndex);
+    AImg.Canvas.Font.Quality := TFontQuality(TempFindControlMatchBitmapText^.FontQuality);
 
-  AImg.Canvas.Brush.Color := pnlBG.Color;
-  AImg.Canvas.Pen.Color := pnlBG.Color;  //yes, BG
+  TempBGColor := HexToInt(EvaluateReplacements(TempFindControlMatchBitmapText^.BackgroundColor));
+  AImg.Canvas.Brush.Color := TempBGColor;
+  AImg.Canvas.Pen.Color := TempBGColor;  //yes, BG
 
   TextDimensions := AImg.Canvas.TextExtent(TextToDisplay);
   AImg.Width := TextDimensions.cx;
@@ -541,51 +539,21 @@ end;
 
 
 procedure TfrClickerBMPText.ClearControls;
+var
+  TempFindControlMatchBitmapText: PClkFindControlMatchBitmapText;
 begin
-  lbeMatchBitmapTextFontName.Text := 'Tahoma';
-  lbeMatchBitmapTextSize.Text := '8';
-  lbeMatchBitmapTextFGColor.Text := '';
-  lbeMatchBitmapTextBGColor.Text := '';
-  pnlFG.Color := clBtnFace;
-  pnlBG.Color := clBtnFace;
-  chkBold.Checked := False;
-  chkItalic.Checked := False;
-  chkUnderline.Checked := False;
-  chkStrikeOut.Checked := False;
-  cmbMatchBitmapTextFontQuality.ItemIndex := Integer(fqDefault);
-  edtFontQualityReplacement.Visible := False;
-end;
+  TempFindControlMatchBitmapText := DoOnGetFindControlMatchBitmapText;
 
-
-procedure TfrClickerBMPText.lbeMatchBitmapTextFGColorChange(Sender: TObject);
-begin
-  pnlFG.Color := HexToInt(EvaluateReplacements(lbeMatchBitmapTextFGColor.Text));  //moved from ClickActionsArrFrame.pas
-  PreviewText;
-  DoOnTriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerBMPText.lbeMatchBitmapTextFGColorMouseUp(Sender: TObject;
-  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-begin
-  if Button <> mbRight then
-    Exit;
-
-  FLastClickedLbe := Sender as TLabeledEdit;
-end;
-
-
-procedure TfrClickerBMPText.lbeMatchBitmapTextFontNameChange(Sender: TObject);
-begin
-  PreviewText;
-  DoOnTriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerBMPText.lbeMatchBitmapTextSizeChange(Sender: TObject);
-begin
-  PreviewText;
-  DoOnTriggerOnControlsModified;
+  TempFindControlMatchBitmapText^.FontName := 'Tahoma';
+  TempFindControlMatchBitmapText^.FontSize := 8;
+  TempFindControlMatchBitmapText^.ForegroundColor := '$Color_Window$';
+  TempFindControlMatchBitmapText^.BackgroundColor := '$Color_Highlight$';
+  TempFindControlMatchBitmapText^.Bold := False;
+  TempFindControlMatchBitmapText^.Italic := False;
+  TempFindControlMatchBitmapText^.Underline := False;
+  TempFindControlMatchBitmapText^.StrikeOut := False;
+  TempFindControlMatchBitmapText^.FontQuality := fqDefault;
+  TempFindControlMatchBitmapText^.FontQualityUsesReplacement := False;
 end;
 
 
@@ -728,137 +696,6 @@ begin
 end;
 
 
-procedure TfrClickerBMPText.lbeMatchBitmapTextBGColorMouseUp(Sender: TObject;
-  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-begin
-  if Button <> mbRight then
-    Exit;
-
-  FLastClickedLbe := Sender as TLabeledEdit;
-end;
-
-
-procedure TfrClickerBMPText.lbeMatchBitmapTextBGColorChange(Sender: TObject);
-begin
-  pnlBG.Color := HexToInt(EvaluateReplacements(lbeMatchBitmapTextBGColor.Text));  //moved from ClickActionsArrFrame.pas
-  PreviewText;
-  DoOnTriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerBMPText.btnBrowseFontClick(Sender: TObject);
-var
-  //ReplacementVar: string;
-  AFontDialog: TFontDialog;
-begin
-  AFontDialog := TFontDialog.Create(nil);
-  try
-    AFontDialog.Font.Name := EvaluateReplacements(lbeMatchBitmapTextFontName.Text);
-    AFontDialog.Font.Size := StrToIntDef(lbeMatchBitmapTextSize.Text, 8);
-
-    //ReplacementVar := GetReplacementVarFromString(lbeMatchBitmapTextFontName.Text);
-
-    AFontDialog.Font.Style := [];
-
-    if chkBold.Checked then
-      AFontDialog.Font.Style := AFontDialog.Font.Style + [fsBold];
-
-    if chkItalic.Checked then
-      AFontDialog.Font.Style := AFontDialog.Font.Style + [fsItalic];
-
-    if chkUnderline.Checked then
-      AFontDialog.Font.Style := AFontDialog.Font.Style + [fsUnderline];
-
-    if chkStrikeOut.Checked then
-      AFontDialog.Font.Style := AFontDialog.Font.Style + [fsStrikeOut];
-
-    if not AFontDialog.Execute then
-      Exit;
-
-    //if ReplacementVar <> '' then
-    //begin
-    //  if MessageBox(Handle, PChar('A variable replacement (' + ReplacementVar + ') was found to be used as font name.' + #13#10 + 'Do you want to update it?'), PChar(Caption), MB_ICONQUESTION + MB_YESNO) = IDYES then
-    //    vallstVariables.Values[ReplacementVar] := AFontDialog.Font.Name;
-    //end
-    //else
-      lbeMatchBitmapTextFontName.Text := AFontDialog.Font.Name;
-
-    lbeMatchBitmapTextSize.Text := IntToStr(AFontDialog.Font.Size);
-
-    chkBold.Checked := fsBold in AFontDialog.Font.Style;
-    chkItalic.Checked := fsItalic in AFontDialog.Font.Style;
-    chkUnderline.Checked := fsUnderline in AFontDialog.Font.Style;
-    chkStrikeOut.Checked := fsStrikeOut in AFontDialog.Font.Style;
-
-    PreviewText;
-  finally
-    AFontDialog.Free;
-  end;
-
-  DoOnTriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerBMPText.chkBoldClick(Sender: TObject);
-begin
-  PreviewText;
-  DoOnTriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerBMPText.chkItalicClick(Sender: TObject);
-begin
-  PreviewText;
-  DoOnTriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerBMPText.chkStrikeOutClick(Sender: TObject);
-begin
-  PreviewText;
-  DoOnTriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerBMPText.chkUnderlineClick(Sender: TObject);
-begin
-  PreviewText;
-  DoOnTriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerBMPText.cmbMatchBitmapTextFontQualityChange(Sender: TObject);
-begin
-  PreviewText;
-  DoOnTriggerOnControlsModified;
-
-  edtFontQualityReplacement.Visible := cmbMatchBitmapTextFontQuality.ItemIndex = Integer(High(TFontQuality)) + 1;
-end;
-
-
-procedure TfrClickerBMPText.cmbMatchBitmapTextFontQualityDropDown(
-  Sender: TObject);
-const
-  CFontQualityNames: array[Low(TFontQuality)..High(TFontQuality)] of string = (
-    'Default', 'Draft', 'Proof', 'NonAntialiased', 'Antialiased', 'Cleartype', 'CleartypeNatural');
-var
-  i: TFontQuality;
-  OldItemIndex: Integer;
-begin
-  OldItemIndex := cmbMatchBitmapTextFontQuality.ItemIndex;
-  try
-    cmbMatchBitmapTextFontQuality.Clear;
-
-    for i := Low(TFontQuality) to High(TFontQuality) do
-      cmbMatchBitmapTextFontQuality.Items.Add(CFontQualityNames[i]);
-
-    cmbMatchBitmapTextFontQuality.Items.Add('Var Replacement');
-  finally
-    cmbMatchBitmapTextFontQuality.ItemIndex := OldItemIndex;
-  end;
-end;
-
-
 procedure TfrClickerBMPText.imgPreviewResize(Sender: TObject);
 begin
   FSelectedComponentLeftLimitLabel.Height := Max(imgPreview.Height, scrboxPreview.Height) - 20;
@@ -873,52 +710,10 @@ begin
 end;
 
 
-procedure TfrClickerBMPText.pnlFGDblClick(Sender: TObject);
-var
-  AColorDialog: TColorDialog;
-begin
-  AColorDialog := TColorDialog.Create(nil);
-  try
-    AColorDialog.Color := pnlFG.Color;
-
-    if AColorDialog.Execute then
-    begin
-      pnlFG.Color := AColorDialog.Color;
-      lbeMatchBitmapTextFGColor.Text := IntToHex(Int64(pnlFG.Color and $FFFFFF), 6);
-      PreviewText;
-      DoOnTriggerOnControlsModified;
-    end;
-  finally
-    AColorDialog.Free;
-  end;
-end;
-
-
 procedure TfrClickerBMPText.tmrStartupTimer(Sender: TObject);
 begin
   tmrStartup.Enabled := False;
   DisplayCroppingLines(DoOnGetCroppingLinesVisiblity);
-end;
-
-
-procedure TfrClickerBMPText.pnlBGDblClick(Sender: TObject);
-var
-  AColorDialog: TColorDialog;
-begin
-  AColorDialog := TColorDialog.Create(nil);
-  try
-    AColorDialog.Color := pnlBG.Color;
-
-    if AColorDialog.Execute then
-    begin
-      pnlBG.Color := AColorDialog.Color;
-      lbeMatchBitmapTextBGColor.Text := IntToHex(Int64(pnlBG.Color and $FFFFFF), 6);
-      PreviewText;
-      DoOnTriggerOnControlsModified;
-    end;
-  finally
-    AColorDialog.Free;
-  end;
 end;
 
 

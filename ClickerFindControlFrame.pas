@@ -48,7 +48,8 @@ type
   TFontProfile = class
   private
     FfrClickerBMPText: TfrClickerBMPText;
-    FOwner: TfrClickerFindControl;
+    FOwnerEditor: TfrClickerFindControl;
+    FFindControlMatchBitmapText: PClkFindControlMatchBitmapText;
 
     function GetProfileName: string;
     procedure SetProfileName(Value: string);
@@ -67,11 +68,11 @@ type
     function GetMatchBitmapTextBGColor: string;
     procedure SetMatchBitmapTextBGColor(Value: string);
 
-    function GetFGColor: TColor;
-    procedure SetFGColor(Value: TColor);
-
-    function GetBGColor: TColor;
-    procedure SetBGColor(Value: TColor);
+    //function GetFGColor: TColor;
+    //procedure SetFGColor(Value: TColor);
+    //
+    //function GetBGColor: TColor;
+    //procedure SetBGColor(Value: TColor);
 
     function GetMatchBitmapTextFontName: string;
     procedure SetMatchBitmapTextFontName(Value: string);
@@ -112,9 +113,8 @@ type
     procedure SetShowCroppingLines(Value: Boolean);
 
     function CreateBMPTextFrame_NoContent(ANewName: string): TfrClickerBMPText;
-
   public
-    constructor Create(AOwner: TfrClickerFindControl; ANewProfileName: string);
+    constructor Create(AOwnerEditor: TfrClickerFindControl; ANewProfileName: string);
     destructor Destroy; override;
 
     procedure PreviewText;
@@ -129,8 +129,8 @@ type
 
     property MatchBitmapTextFGColor: string read GetMatchBitmapTextFGColor write SetMatchBitmapTextFGColor;
     property MatchBitmapTextBGColor: string read GetMatchBitmapTextBGColor write SetMatchBitmapTextBGColor;
-    property FGColor: TColor read GetFGColor write SetFGColor;   //The evaluated version of MatchBitmapTextFGColor. Kind of redundant, but it's a bit faster this way.
-    property BGColor: TColor read GetBGColor write SetBGColor;   //The evaluated version of MatchBitmapTextBGColor. Kind of redundant, but it's a bit faster this way.
+    //property FGColor: TColor read GetFGColor write SetFGColor;   //The evaluated version of MatchBitmapTextFGColor. Kind of redundant, but it's a bit faster this way.
+    //property BGColor: TColor read GetBGColor write SetBGColor;   //The evaluated version of MatchBitmapTextBGColor. Kind of redundant, but it's a bit faster this way.
     property MatchBitmapTextFontName: string read GetMatchBitmapTextFontName write SetMatchBitmapTextFontName;
     property MatchBitmapTextSize: string read GetMatchBitmapTextSize write SetMatchBitmapTextSize;
     property FontQualityReplacement: string read GetFontQualityReplacement write SetFontQualityReplacement;  //this can be one of the available font qualities or it can be var/replacement
@@ -145,6 +145,11 @@ type
     property CropRight: string read GetCropRight write SetCropRight;
     property CropBottom: string read GetCropBottom write SetCropBottom;
     property ShowCroppingLines: Boolean write SetShowCroppingLines;
+
+    property FindControlMatchBitmapText: PClkFindControlMatchBitmapText write FFindControlMatchBitmapText; //must be set by owner
+    property OwnerEditor: TfrClickerFindControl read FOwnerEditor;
+
+    property frClickerBMPText: TfrClickerBMPText read FfrClickerBMPText;
   end;
 
   TFontProfileArr = array of TFontProfile;
@@ -400,6 +405,7 @@ type
     procedure HandleBMPTextOnSetCroppingValuesToOtherFontProfiles(ACropLeft, ACropTop, ACropRight, ACropBottom: string; ASkipProfileIndex: Integer);
     function HandleBMPTextOnGetCroppingLinesVisiblity: Boolean;
     procedure HandleOnUpdateTextCroppingLimitsInOIFromDraggingLines(ALimitLabelsToUpdate: TLimitLabels; var AOffsets: TSimpleRectString; AFontProfileName: string);
+    function HandleOnGetFindControlMatchBitmapText(Sender: TObject): PClkFindControlMatchBitmapText;
 
     function GetSearch_EditBoxVar_Ref(AEditBoxValue, AVarName: string): Integer;
 
@@ -464,6 +470,7 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
 
+    //procedure AddDefaultFontProfile;
     procedure CreateBMPTextFrames(ACount: Integer);
     function GetBMPTextFontProfilesCount: Integer;
     procedure SetBMPTextFrameVisibility;
@@ -496,7 +503,7 @@ type
     procedure UpdateOnTextCroppingBottomMouseMove(var AMatchBMP: TClkFindControlMatchBitmapText; AEditBox: TVTEdit; Shift: TShiftState; X, Y, AProfileIndex: Integer);
 
     procedure AddNewFontProfile(ANewProfile: TClkFindControlMatchBitmapText);
-    procedure UpdateFontProfilName(AProfileIndex: Integer; ANewName: string);
+    procedure UpdateFontProfileName(AProfileIndex: Integer; ANewName: string);
     procedure RemoveFontProfileByIndex(AIndex: Integer);
     function GetFontProfileIndexByName(AProfileName: string): Integer;
 
@@ -547,10 +554,10 @@ uses
 
 { TFontProfile }
 
-constructor TFontProfile.Create(AOwner: TfrClickerFindControl; ANewProfileName: string);
+constructor TFontProfile.Create(AOwnerEditor: TfrClickerFindControl; ANewProfileName: string);
 begin
   inherited Create;
-  FOwner := AOwner;
+  FOwnerEditor := AOwnerEditor;
   FfrClickerBMPText := CreateBMPTextFrame_NoContent(ANewProfileName);
 end;
 
@@ -564,19 +571,20 @@ end;
 
 function TFontProfile.CreateBMPTextFrame_NoContent(ANewName: string): TfrClickerBMPText;
 begin
-  Result := TfrClickerBMPText.Create(FOwner);
+  Result := TfrClickerBMPText.Create(FOwnerEditor);
   Result.Name := ANewName;
 
   Result.Left := 2;
   Result.Top := 21;
-  Result.Parent := FOwner.tabctrlBMPText; //TabSheetActionFindSubControlBMPText;
+  Result.Parent := FOwnerEditor.tabctrlBMPText; //TabSheetActionFindSubControlBMPText;
   Result.Visible := False;
-  Result.OnGetDisplayedText := FOwner.HandleBMPTextOnGetDisplayedText;
-  Result.OnTriggerOnControlsModified := FOwner.HandleBMPTextOnTriggerOnControlsModified;
-  Result.OnEvaluateReplacements := FOwner.HandleBMPTextOnEvaluateReplacements;
-  Result.OnSetCroppingValuesToOtherFontProfiles := FOwner.HandleBMPTextOnSetCroppingValuesToOtherFontProfiles;
-  Result.OnGetCroppingLinesVisiblity := FOwner.HandleBMPTextOnGetCroppingLinesVisiblity;
-  Result.OnUpdateTextCroppingLimitsInOIFromDraggingLines := FOwner.HandleOnUpdateTextCroppingLimitsInOIFromDraggingLines;
+  Result.OnGetDisplayedText := FOwnerEditor.HandleBMPTextOnGetDisplayedText;
+  Result.OnTriggerOnControlsModified := FOwnerEditor.HandleBMPTextOnTriggerOnControlsModified;
+  Result.OnEvaluateReplacements := FOwnerEditor.HandleBMPTextOnEvaluateReplacements;
+  Result.OnSetCroppingValuesToOtherFontProfiles := FOwnerEditor.HandleBMPTextOnSetCroppingValuesToOtherFontProfiles;
+  Result.OnGetCroppingLinesVisiblity := FOwnerEditor.HandleBMPTextOnGetCroppingLinesVisiblity;
+  Result.OnUpdateTextCroppingLimitsInOIFromDraggingLines := FOwnerEditor.HandleOnUpdateTextCroppingLimitsInOIFromDraggingLines;
+  Result.OnGetFindControlMatchBitmapText := FOwnerEditor.HandleOnGetFindControlMatchBitmapText;
 end;
 
 
@@ -624,146 +632,151 @@ end;
 
 function TFontProfile.GetMatchBitmapTextFGColor: string;
 begin
-  Result := FfrClickerBMPText.lbeMatchBitmapTextFGColor.Text;
+  Result := FFindControlMatchBitmapText^.ForegroundColor;
 end;
 
 
 procedure TFontProfile.SetMatchBitmapTextFGColor(Value: string);
 begin
-  FfrClickerBMPText.lbeMatchBitmapTextFGColor.Text := Value;
+  FFindControlMatchBitmapText^.ForegroundColor := Value;
 end;
 
 
 function TFontProfile.GetMatchBitmapTextBGColor: string;
 begin
-  Result := FfrClickerBMPText.lbeMatchBitmapTextBGColor.Text;
+  Result := FFindControlMatchBitmapText^.BackgroundColor;
 end;
 
 
 procedure TFontProfile.SetMatchBitmapTextBGColor(Value: string);
 begin
-  FfrClickerBMPText.lbeMatchBitmapTextBGColor.Text := Value;
+  FFindControlMatchBitmapText^.BackgroundColor := Value;
 end;
 
 
-function TFontProfile.GetFGColor: TColor;
-begin
-  Result := FfrClickerBMPText.pnlFG.Color;
-end;
-
-
-procedure TFontProfile.SetFGColor(Value: TColor);
-begin
-  FfrClickerBMPText.pnlFG.Color := Value;
-end;
-
-
-function TFontProfile.GetBGColor: TColor;
-begin
-  Result := FfrClickerBMPText.pnlBG.Color;
-end;
-
-
-procedure TFontProfile.SetBGColor(Value: TColor);
-begin
-  FfrClickerBMPText.pnlBG.Color := Value;
-end;
+//function TFontProfile.GetFGColor: TColor;
+//begin
+//  Result := FfrClickerBMPText.pnlFG.Color;
+//end;
+//
+//
+//procedure TFontProfile.SetFGColor(Value: TColor);
+//begin
+//  FfrClickerBMPText.pnlFG.Color := Value;
+//end;
+//
+//
+//function TFontProfile.GetBGColor: TColor;
+//begin
+//  Result := FfrClickerBMPText.pnlBG.Color;
+//end;
+//
+//
+//procedure TFontProfile.SetBGColor(Value: TColor);
+//begin
+//  FfrClickerBMPText.pnlBG.Color := Value;
+//end;
 
 
 function TFontProfile.GetMatchBitmapTextFontName: string;
 begin
-  Result := FfrClickerBMPText.lbeMatchBitmapTextFontName.Text;
+  Result := FFindControlMatchBitmapText^.FontName;
 end;
 
 
 procedure TFontProfile.SetMatchBitmapTextFontName(Value: string);
 begin
-  FfrClickerBMPText.lbeMatchBitmapTextFontName.Text := Value;
+  FFindControlMatchBitmapText^.FontName := Value;
 end;
 
 
 function TFontProfile.GetMatchBitmapTextSize: string;
 begin
-  Result := FfrClickerBMPText.lbeMatchBitmapTextSize.Text;
+  Result := IntToStr(FFindControlMatchBitmapText^.FontSize);
 end;
 
 
 procedure TFontProfile.SetMatchBitmapTextSize(Value: string);
 begin
-  FfrClickerBMPText.lbeMatchBitmapTextSize.Text := Value;
+  FFindControlMatchBitmapText^.FontSize := StrToIntDef(Value, 8);
 end;
 
 
 function TFontProfile.GetFontQualityReplacement: string;
 begin
-  Result := FfrClickerBMPText.edtFontQualityReplacement.Text;
+  Result := FFindControlMatchBitmapText^.FontQualityReplacement;
 end;
 
 
 procedure TFontProfile.SetFontQualityReplacement(Value: string);
 begin
-  FfrClickerBMPText.edtFontQualityReplacement.Text := Value
+  FFindControlMatchBitmapText^.FontQualityReplacement := Value
 end;
 
 
 function TFontProfile.GetMatchBitmapTextFontQualityIndex: Integer;
 begin
-  Result := FfrClickerBMPText.cmbMatchBitmapTextFontQuality.ItemIndex;
+  Result := Ord(FFindControlMatchBitmapText^.FontQuality);
 end;
 
 
 procedure TFontProfile.SetMatchBitmapTextFontQualityIndex(Value: Integer);
 begin
-  FfrClickerBMPText.cmbMatchBitmapTextFontQuality.ItemIndex := Value;
-  FfrClickerBMPText.edtFontQualityReplacement.Visible := Value = Integer(High(TFontQuality)) + 1;
+  if Value > Ord(High(TFontQuality)) then
+  begin
+    Value := Ord(High(TFontQuality));
+    FFindControlMatchBitmapText^.FontQualityUsesReplacement := True;
+  end
+  else
+    FFindControlMatchBitmapText^.FontQualityUsesReplacement := False;
 end;
 
 
 function TFontProfile.GetBold: Boolean;
 begin
-  Result := FfrClickerBMPText.chkBold.Checked;
+  Result := FFindControlMatchBitmapText^.Bold;
 end;
 
 
 procedure TFontProfile.SetBold(Value: Boolean);
 begin
-  FfrClickerBMPText.chkBold.Checked := Value;
+  FFindControlMatchBitmapText^.Bold := Value;
 end;
 
 
 function TFontProfile.GetItalic: Boolean;
 begin
-  Result := FfrClickerBMPText.chkItalic.Checked;
+  Result := FFindControlMatchBitmapText^.Italic;
 end;
 
 
 procedure TFontProfile.SetItalic(Value: Boolean);
 begin
-  FfrClickerBMPText.chkItalic.Checked := Value;
+  FFindControlMatchBitmapText^.Italic := Value;
 end;
 
 
 function TFontProfile.GetUnderline: Boolean;
 begin
-  Result := FfrClickerBMPText.chkUnderline.Checked;
+  Result := FFindControlMatchBitmapText^.Underline;
 end;
 
 
 procedure TFontProfile.SetUnderline(Value: Boolean);
 begin
-  FfrClickerBMPText.chkUnderline.Checked := Value;
+  FFindControlMatchBitmapText^.Underline := Value;
 end;
 
 
 function TFontProfile.GetStrikeOut: Boolean;
 begin
-  Result := FfrClickerBMPText.chkStrikeOut.Checked;
+  Result := FFindControlMatchBitmapText^.StrikeOut;
 end;
 
 
 procedure TFontProfile.SetStrikeOut(Value: Boolean);
 begin
-  FfrClickerBMPText.chkStrikeOut.Checked := Value;
+  FFindControlMatchBitmapText^.StrikeOut := Value;
 end;
 
 
@@ -961,8 +974,6 @@ begin
   FInMemFS := nil;
 
   PageControlMatch.ActivePageIndex := 0;
-
-  AddFontProfile('Default');
 end;
 
 
@@ -980,6 +991,12 @@ begin
 
   inherited Destroy;
 end;
+
+
+//procedure TfrClickerFindControl.AddDefaultFontProfile;
+//begin
+//  AddFontProfile(CDefaultFontProfileName);
+//end;
 
 
 procedure TfrClickerFindControl.DoOnTriggerOnControlsModified;
@@ -1161,6 +1178,34 @@ begin
 end;
 
 
+function TfrClickerFindControl.HandleOnGetFindControlMatchBitmapText(Sender: TObject): PClkFindControlMatchBitmapText;
+var
+  FindControlOptions: PClkFindControlOptions;
+  i: Integer;
+  Found: Boolean;
+begin
+  FindControlOptions := DoOnGetFindControlOptions;
+
+  if Length(FBMPTextProfiles) = 0 then
+    raise Exception.Create('No font profile available.');
+
+  Found := False;
+  for i := 0 to Length(FBMPTextProfiles) - 1 do
+  begin
+    if Sender = FBMPTextProfiles[i].frClickerBMPText then
+    begin
+      Found := True;
+      Break;
+    end;
+  end;
+
+  if Found then
+    Result := @FindControlOptions^.MatchBitmapText[i]
+  else
+    raise Exception.Create('Can''t find font profile by index.');
+end;
+
+
 function TfrClickerFindControl.EvaluateReplacements(s: string): string;
 begin
   if Assigned(FOnEvaluateReplacements) then
@@ -1229,13 +1274,14 @@ begin
     Exit;
   end;
 
+  tabctrlBMPText.Tabs.Add(AProfileName);
+  tabctrlBMPText.TabIndex := tabctrlBMPText.Tabs.Count - 1;
+
   n := Length(FBMPTextProfiles);
   SetLength(FBMPTextProfiles, n + 1);
   FBMPTextProfiles[n] := TFontProfile.Create(Self, 'FBMPTextFrames_' + IntToStr(n));
   FBMPTextProfiles[n].ProfileName := AProfileName;
-
-  tabctrlBMPText.Tabs.Add(AProfileName);
-  tabctrlBMPText.TabIndex := tabctrlBMPText.Tabs.Count - 1;
+  FBMPTextProfiles[n].FindControlMatchBitmapText := @DoOnGetFindControlOptions.MatchBitmapText[n];
 
   SetBMPTextFrameVisibility;
 end;
@@ -1256,6 +1302,9 @@ begin
   begin
     FBMPTextProfiles[i] := TFontProfile.Create(Self, 'FBMPTextFrames_' + IntToStr(i));
     FBMPTextProfiles[i].EditorVisible := i = tabctrlBMPText.TabIndex;
+
+    FBMPTextProfiles[i].ProfileName := 'not set ' + IntToStr(i);
+    FBMPTextProfiles[i].FindControlMatchBitmapText := @DoOnGetFindControlOptions.MatchBitmapText[i];
 
     tabctrlBMPText.Tabs.Add('no name ' + IntToStr(i));
     tabctrlBMPText.TabIndex := tabctrlBMPText.Tabs.Count - 1;
@@ -1493,8 +1542,8 @@ begin
 
   FBMPTextProfiles[n].MatchBitmapTextFGColor := ANewProfile.ForegroundColor;
   FBMPTextProfiles[n].MatchBitmapTextBGColor := ANewProfile.BackgroundColor;
-  FBMPTextProfiles[n].FGColor := HexToInt(EvaluateReplacements(ANewProfile.ForegroundColor));
-  FBMPTextProfiles[n].BGColor := HexToInt(EvaluateReplacements(ANewProfile.BackgroundColor));
+  //FBMPTextProfiles[n].FGColor := HexToInt(EvaluateReplacements(ANewProfile.ForegroundColor));
+  //FBMPTextProfiles[n].BGColor := HexToInt(EvaluateReplacements(ANewProfile.BackgroundColor));
   FBMPTextProfiles[n].MatchBitmapTextFontName := ANewProfile.FontName;
   FBMPTextProfiles[n].MatchBitmapTextSize := IntToStr(ANewProfile.FontSize);
   FBMPTextProfiles[n].FontQualityReplacement := ANewProfile.FontQualityReplacement;
@@ -1512,7 +1561,7 @@ begin
 end;
 
 
-procedure TfrClickerFindControl.UpdateFontProfilName(AProfileIndex: Integer; ANewName: string);
+procedure TfrClickerFindControl.UpdateFontProfileName(AProfileIndex: Integer; ANewName: string);
 begin
   if (AProfileIndex < 0) or (AProfileIndex > Length(FBMPTextProfiles) - 1) then
     raise Exception.Create('Index out of bounds (' + IntToStr(AProfileIndex) + ') on updating font profile name: ' + ANewName);
@@ -2816,7 +2865,7 @@ var
   Offsets: TSimpleRectString;
 begin
   CreateBMPTextFrames(0);
-  AddFontProfile('Default');
+  AddFontProfile(CDefaultFontProfileName);
 
   lstMatchBitmapFiles.Clear;
   FindControlOptions := DoOnGetFindControlOptions;
