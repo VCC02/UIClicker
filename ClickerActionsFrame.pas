@@ -1551,6 +1551,7 @@ begin
     try
       ValueStr := StringReplace(MenuData^.MenuItemCaption, '&', '', [rfReplaceAll]);
       SetActionTimeoutToValue(StrToIntDef(ValueStr, 0));
+      TriggerOnControlsModified;
     finally
       MenuData^.OwnerMenu.Free;
     end;

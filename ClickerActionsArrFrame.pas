@@ -85,7 +85,6 @@ type
     pmExtraRemove: TPopupMenu;
     pnlvstActions: TPanel;
     pmExtraPlayAction: TPopupMenu;
-    pmExtraUpdate: TPopupMenu;
     Removeallactions1: TMenuItem;
     imglstActionStatus: TImageList;
     pmExtraAdd: TPopupMenu;
@@ -97,7 +96,6 @@ type
     PlayAllInDebuggingMode1: TMenuItem;
     spdbtnContinuePlayingAll: TSpeedButton;
     spdbtnExtraAdd: TSpeedButton;
-    spdbtnExtraUpdate: TSpeedButton;
     spdbtnExtraPlayAll: TSpeedButton;
     spdbtnExtraPlayAction: TSpeedButton;
     spdbtnExtraRemove: TSpeedButton;
@@ -143,7 +141,6 @@ type
     procedure MenuItem_SetActionStatusToAllowedFailedClick(Sender: TObject);
     procedure MenuItem_SetActionStatusToFailedClick(Sender: TObject);
     procedure MenuItem_SetActionStatusToSuccessfulClick(Sender: TObject);
-    procedure MenuItem_UpdateFromOIClick(Sender: TObject);
     procedure pnlActionsClick(Sender: TObject);
     procedure pnlVertSplitterMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
@@ -152,7 +149,6 @@ type
     procedure pnlVertSplitterMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure spdbtnExtraPlayActionClick(Sender: TObject);
-    procedure spdbtnExtraUpdateClick(Sender: TObject);
     procedure spdbtnPaletteClick(Sender: TObject);
     procedure spdbtnTemplateNotesClick(Sender: TObject);
     procedure spdbtnUpdateActionClick(Sender: TObject);
@@ -3084,62 +3080,6 @@ begin
 end;
 
 
-procedure TfrClickerActionsArr.MenuItem_UpdateFromOIClick(Sender: TObject);
-var
-  Node: PVirtualNode;
-  CurrentAction: TClkAction;
-begin
-  Node := vstActions.GetFirstSelected;
-
-  if Node = nil then
-  begin
-    MessageBox(Handle, 'No item selected for updating. Please select an item.', PChar(Caption), MB_ICONINFORMATION);
-    Exit;
-  end;
-
-  if Ord(frClickerActions.CurrentlyEditingActionType) = CClkUnsetAction then
-  begin
-    MessageBox(Handle, 'No action selected. Please select an action.', PChar(Caption), MB_ICONINFORMATION);
-    Exit;
-  end;
-
-  CurrentAction := frClickerActions.CurrentlyEditingActionType;
-  case CurrentAction of
-    acClick:
-    begin
-
-    end;
-
-    acFindControl:
-      if not (frClickerActions.EditingAction^.FindControlOptions.MatchCriteria.WillMatchText or
-              frClickerActions.EditingAction^.FindControlOptions.MatchCriteria.WillMatchClassName or
-              frClickerActions.EditingAction^.FindControlOptions.MatchCriteria.WillMatchBitmapText or
-              frClickerActions.EditingAction^.FindControlOptions.MatchCriteria.WillMatchBitmapFiles) then
-      begin
-        MessageBox(Handle, 'To find a control, at least one match criterion has to be checked.', PChar(Caption), MB_ICONINFORMATION);
-        Exit;
-      end;
-
-    acSetControlText:
-      ;
-
-    else
-    begin
-    end;
-  end;  //case
-
-  if FClkActions[Node^.Index].ActionOptions.Action <> frClickerActions.CurrentlyEditingActionType then
-    if MessageBox(Handle, 'Are you sure you want to overwrite existing action?', PChar(Caption), MB_ICONWARNING + MB_YESNO) = IDNO then
-      Exit;
-
-  CopyActionContent(frClickerActions.EditingAction^, FClkActions[Node^.Index]);
-  vstActions.Repaint;
-  Modified := True;
-  StopGlowingUpdateButton;
-  frClickerActions.UpdatePageControlActionExecutionIcons;
-end;
-
-
 procedure TfrClickerActionsArr.pnlActionsClick(Sender: TObject);
 begin
   if pnlPalette.Visible then
@@ -3229,15 +3169,6 @@ begin
 end;
 
 
-procedure TfrClickerActionsArr.spdbtnExtraUpdateClick(Sender: TObject);
-var
-  tp: TPoint;
-begin
-  GetCursorPos(tp);
-  pmExtraUpdate.Popup(tp.X, tp.Y);
-end;
-
-
 procedure TfrClickerActionsArr.FPaletteVstMouseDown(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
@@ -3311,23 +3242,50 @@ begin
     //Important default values    ///////////////////////////////// ToDo  replace these with some default values
     FClkActions[n].ClickOptions.XClickPointReference := xrefLeft;
     FClkActions[n].ClickOptions.YClickPointReference := yrefTop;
-    FClkActions[n].ClickOptions.ClickType := CClickType_Click;
+    FClkActions[n].ClickOptions.XClickPointVar := '$Control_Left$';
+    FClkActions[n].ClickOptions.YClickPointVar := '$Control_Top$';
+    FClkActions[n].ClickOptions.XOffset := '4';
+    FClkActions[n].ClickOptions.YOffset := '4';
+    FClkActions[n].ClickOptions.MouseButton := mbLeft;
+    FClkActions[n].ClickOptions.ClickWithCtrl := False;
+    FClkActions[n].ClickOptions.ClickWithAlt := False;
+    FClkActions[n].ClickOptions.ClickWithShift := False;
+    //FClkActions[n].ClickOptions.ClickWithDoubleClick := False;
     FClkActions[n].ClickOptions.Count := 1;
     FClkActions[n].ClickOptions.LeaveMouse := False;
     FClkActions[n].ClickOptions.MoveWithoutClick := False;
-    FClkActions[n].ClickOptions.MouseButton := mbLeft;
-    FClkActions[n].ClickOptions.XOffset := '4';
-    FClkActions[n].ClickOptions.YOffset := '4';
+    FClkActions[n].ClickOptions.ClickType := CClickType_Click;
+    FClkActions[n].ClickOptions.XClickPointReferenceDest := xrefLeft;
+    FClkActions[n].ClickOptions.YClickPointReferenceDest := yrefTop;
+    FClkActions[n].ClickOptions.XClickPointVarDest := '$Control_Left$';
+    FClkActions[n].ClickOptions.YClickPointVarDest := '$Control_Top$';
+    FClkActions[n].ClickOptions.XOffsetDest := '7';
+    FClkActions[n].ClickOptions.YOffsetDest := '7';
+
+    FClkActions[n].ExecAppOptions.PathToApp := '';
+    FClkActions[n].ExecAppOptions.ListOfParams := '';
+    FClkActions[n].ExecAppOptions.WaitForApp := False;
+    FClkActions[n].ExecAppOptions.AppStdIn := '';
+    FClkActions[n].ExecAppOptions.CurrentDir := '';
+    FClkActions[n].ExecAppOptions.UseInheritHandles := uihNo;
+    FClkActions[n].ExecAppOptions.NoConsole := False;
 
     FClkActions[n].FindControlOptions.MatchCriteria.WillMatchText := FClkActions[n].ActionOptions.Action = acFindControl;
     FClkActions[n].FindControlOptions.MatchCriteria.WillMatchClassName := FClkActions[n].ActionOptions.Action = acFindControl;
     FClkActions[n].FindControlOptions.MatchCriteria.WillMatchBitmapText := FClkActions[n].ActionOptions.Action = acFindSubControl;
     FClkActions[n].FindControlOptions.MatchCriteria.WillMatchBitmapFiles := False;
     FClkActions[n].FindControlOptions.MatchCriteria.SearchForControlMode := sfcmGenGrid;
+    FClkActions[n].FindControlOptions.AllowToFail := False;
     FClkActions[n].FindControlOptions.MatchText := '';
     FClkActions[n].FindControlOptions.MatchClassName := '';
     FClkActions[n].FindControlOptions.MatchTextSeparator := '';
     FClkActions[n].FindControlOptions.MatchClassNameSeparator := '';
+    FClkActions[n].FindControlOptions.MatchBitmapFiles := '';
+    FClkActions[n].FindControlOptions.MatchBitmapAlgorithm := mbaBruteForce;
+    FClkActions[n].FindControlOptions.MatchBitmapAlgorithmSettings.XMultipleOf := 1;
+    FClkActions[n].FindControlOptions.MatchBitmapAlgorithmSettings.YMultipleOf := 1;
+    FClkActions[n].FindControlOptions.MatchBitmapAlgorithmSettings.XOffset := 0;
+    FClkActions[n].FindControlOptions.MatchBitmapAlgorithmSettings.YOffset := 0;
     FClkActions[n].FindControlOptions.InitialRectangle.Left := '$Control_Left$';
     FClkActions[n].FindControlOptions.InitialRectangle.Top := '$Control_Top$';
     FClkActions[n].FindControlOptions.InitialRectangle.Right := '$Control_Right$';
@@ -3337,6 +3295,12 @@ begin
     FClkActions[n].FindControlOptions.InitialRectangle.RightOffset := '0';
     FClkActions[n].FindControlOptions.InitialRectangle.BottomOffset := '0';
     FClkActions[n].FindControlOptions.UseWholeScreen := FClkActions[n].ActionOptions.Action = acFindControl;
+    FClkActions[n].FindControlOptions.ColorError := '0';
+    FClkActions[n].FindControlOptions.AllowedColorErrorCount := '0';
+    FClkActions[n].FindControlOptions.WaitForControlToGoAway := False;
+    FClkActions[n].FindControlOptions.StartSearchingWithCachedControl := False;
+    FClkActions[n].FindControlOptions.CachedControlLeft := '';;
+    FClkActions[n].FindControlOptions.CachedControlTop := '';;
 
     SetLength(FClkActions[n].FindControlOptions.MatchBitmapText, 1);
     FClkActions[n].FindControlOptions.MatchBitmapText[0].ForegroundColor := '$Color_Window$';
@@ -3356,10 +3320,33 @@ begin
     FClkActions[n].FindControlOptions.MatchBitmapText[0].CropBottom := '0';
     FClkActions[n].FindControlOptions.MatchBitmapText[0].ProfileName := CDefaultFontProfileName;
 
+    FClkActions[n].SetTextOptions.Text := '';
     FClkActions[n].SetTextOptions.ControlType := stEditBox;
+
+    FClkActions[n].CallTemplateOptions.TemplateFileName := '';
+    FClkActions[n].CallTemplateOptions.ListOfCustomVarsAndValues := '';
+    FClkActions[n].CallTemplateOptions.EvaluateBeforeCalling := False;
     FClkActions[n].CallTemplateOptions.CallTemplateLoop.Enabled := False;
+    FClkActions[n].CallTemplateOptions.CallTemplateLoop.Counter := '';
+    FClkActions[n].CallTemplateOptions.CallTemplateLoop.InitValue := '';
+    FClkActions[n].CallTemplateOptions.CallTemplateLoop.EndValue := '';
+    FClkActions[n].CallTemplateOptions.CallTemplateLoop.Direction := ldInc;
+    FClkActions[n].CallTemplateOptions.CallTemplateLoop.BreakCondition := '';
+    FClkActions[n].CallTemplateOptions.CallTemplateLoop.EvalBreakPosition := lebpBeforeContent;
+
     FClkActions[n].SleepOptions.Value := '1000';
+
+    FClkActions[n].SetVarOptions.ListOfVarNames := '';
+    FClkActions[n].SetVarOptions.ListOfVarValues := '';
+    FClkActions[n].SetVarOptions.ListOfVarEvalBefore := '';
+
     FClkActions[n].WindowOperationsOptions.Operation := woBringToFront;
+    FClkActions[n].WindowOperationsOptions.NewX := '';
+    FClkActions[n].WindowOperationsOptions.NewY := '';
+    FClkActions[n].WindowOperationsOptions.NewWidth := '';
+    FClkActions[n].WindowOperationsOptions.NewHeight := '';
+    FClkActions[n].WindowOperationsOptions.NewPositionEnabled := False;
+    FClkActions[n].WindowOperationsOptions.NewSizeEnabled := False;
 
     vstActions.RootNodeCount := Length(FClkActions);
 
@@ -3946,6 +3933,7 @@ begin
   Modified := True; //to update displayed FileName
   Modified := False;   //false for clearing filename
   StopGlowingUpdateButton;
+  frClickerActions.CurrentlyEditingActionType := TClkAction(CClkUnsetAction);
 end;
 
 
