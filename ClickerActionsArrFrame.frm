@@ -1422,4 +1422,11 @@ object frClickerActionsArr: TfrClickerActionsArr
     Left = 592
     Top = 536
   end
+  object tmrEditActionsVST: TTimer
+    Enabled = False
+    Interval = 10
+    OnTimer = tmrEditActionsVSTTimer
+    Left = 40
+    Top = 8
+  end
 end

@@ -43,6 +43,7 @@ type
   TOnCallTemplate = function(Sender: TObject; AFileNameToCall: string; ListOfVariables: TStrings; DebugBitmap: TBitmap; DebugGridImage: TImage; IsDebugging, AShouldStopAtBreakPoint: Boolean; AStackLevel: Integer; AExecutesRemotely: Boolean): Boolean of object;
   TOnSetEditorSleepInfo = procedure(AElapsedTime, ARemainingTime: string) of object;
   TOnGetSelfHandles = procedure(AListOfSelfHandles: TStringList) of object;
+  TOnAddDefaultFontProfile = procedure(var AFindControlOptions: TClkFindControlOptions; var AActionOptions: TClkActionOptions) of object;
 
   TActionExecution = class
   private
@@ -70,6 +71,7 @@ type
     FOnSetEditorSleepProgressBarPosition: TOnSetEditorTimeoutProgressBarPosition;
     FOnSetEditorSleepInfo: TOnSetEditorSleepInfo;
     FOnGetSelfHandles: TOnGetSelfHandles;
+    FOnAddDefaultFontProfile: TOnAddDefaultFontProfile;
 
     function GetActionVarValue(VarName: string): string;
     procedure SetActionVarValue(VarName, VarValue: string);
@@ -96,6 +98,7 @@ type
     procedure DoOnSetEditorSleepProgressBarPosition(APositionValue: Integer);
     procedure DoOnSetEditorSleepInfo(AElapsedTime, ARemainingTime: string);
     procedure DoOnGetSelfHandles(AListOfSelfHandles: TStringList);
+    procedure DoOnAddDefaultFontProfile(var AFindControlOptions: TClkFindControlOptions; var AActionOptions: TClkActionOptions);
   public
     constructor Create;
     destructor Destroy; override;
@@ -144,6 +147,7 @@ type
     property OnSetEditorSleepProgressBarPosition: TOnSetEditorTimeoutProgressBarPosition write FOnSetEditorSleepProgressBarPosition;
     property OnSetEditorSleepInfo: TOnSetEditorSleepInfo write FOnSetEditorSleepInfo;
     property OnGetSelfHandles: TOnGetSelfHandles write FOnGetSelfHandles;
+    property OnAddDefaultFontProfile: TOnAddDefaultFontProfile write FOnAddDefaultFontProfile;
   end;
 
 
@@ -183,6 +187,7 @@ begin
   FOnSetEditorSleepProgressBarPosition := nil;
   FOnSetEditorSleepInfo := nil;
   FOnGetSelfHandles := nil;
+  FOnAddDefaultFontProfile := nil;
 end;
 
 
@@ -277,6 +282,12 @@ var
   TextWidthAfterCropping, TextHeightAfterCropping: Integer;
 begin
   TextToDisplay := AEvaluatedText; //ask once    - it expects an already evaluated text, which is also used somewhere else, so evaluated as less as possible
+
+  if Length(AFindControlOptions.MatchBitmapText) = 0 then
+  begin
+    AddToLog('No font profiles are available when previewing text on bmp.  Text = "' + AEvaluatedText + '".');
+    Exit;
+  end;
 
   APreviewBmp := TBitmap.Create;
   try
@@ -491,6 +502,24 @@ begin
     FOnGetSelfHandles(AListOfSelfHandles)
   else
     raise Exception.Create('FOnGetSelfHandles is not assigned.');
+end;
+
+
+procedure TActionExecution.DoOnAddDefaultFontProfile(var AFindControlOptions: TClkFindControlOptions; var AActionOptions: TClkActionOptions);
+begin
+  if Assigned(FOnAddDefaultFontProfile) then
+    FOnAddDefaultFontProfile(AFindControlOptions, AActionOptions)
+  else
+  begin     //this part is required when using ClickerActionExecution without UI
+    SetLength(AFindControlOptions.MatchBitmapText, 1); //this is required, to execute the next for loop, without font profiles
+                                                       //this code will have to be split in FindControl and FindSubControl. Then, this part will have to be deleted.
+    AFindControlOptions.MatchBitmapText[0].FontName := 'Tahoma';
+    AFindControlOptions.MatchBitmapText[0].FontSize := 8;
+    AFindControlOptions.MatchBitmapText[0].ForegroundColor := '000000';
+    AFindControlOptions.MatchBitmapText[0].BackgroundColor := '0000FF';
+    AFindControlOptions.MatchBitmapText[0].ProfileName := CDefaultFontProfileName;
+    frClickerActions.frClickerFindControl.AddNewFontProfile(AFindControlOptions.MatchBitmapText[0]);
+  end;
 end;
 
 
@@ -960,9 +989,9 @@ begin
   n := Length(AFindControlOptions.MatchBitmapText);
   if n = 0 then
   begin
-    SetLength(AFindControlOptions.MatchBitmapText, 1); //this is required, to execute the next for loop, without font profiles
-    n := 1;                                            //this code will have to be split in FindControl and FindSubControl. Then, this part will have to be deleted.
-    frClickerActions.frClickerFindControl.CreateBMPTextFrames(1);
+    AddToLog('Adding default font profile to action: "' + AActionOptions.ActionName + '", of ' + CClkActionStr[AActionOptions.Action] + ' type.');
+    DoOnAddDefaultFontProfile(AFindControlOptions, AActionOptions); //Currently, both FindControl and FindSubControl require a default font profile, because of the "for j" loop bellow. Once these two actions are split, only FindSubControl will require it.
+    n := Length(AFindControlOptions.MatchBitmapText);
   end;
 
   FindControlInputData.StartSearchingWithCachedControl := AFindControlOptions.StartSearchingWithCachedControl;
@@ -1010,7 +1039,11 @@ begin
           PreviewTextOnBmp(AFindControlOptions, FindControlInputData.Text, j, FindControlInputData.BitmapToSearchFor);
         except
           on E: Exception do
-            raise Exception.Create(E.Message + '  Profile[' + IntToStr(j) + ']: "' + frClickerActions.frClickerFindControl.BMPTextFontProfiles[j].ProfileName + '".   Searched text: "' + FindControlInputData.Text + '"');
+          begin
+            AddToLog('Can''t preview bmp text. Ex: "' + E.Message + '".  Action: "' + AActionOptions.ActionName + '" of ' + CClkActionStr[AActionOptions.Action] + ' type.');
+            // frClickerActions.frClickerFindControl.BMPTextFontProfiles[j].ProfileName  is no longer available, since no UI is updated on remote execution. It is replaced by AFindControlOptions.MatchBitmapText[j].ProfileName.
+            raise Exception.Create(E.Message + '  Profile[' + IntToStr(j) + ']: "' + AFindControlOptions.MatchBitmapText[j].ProfileName + '".   Searched text: "' + FindControlInputData.Text + '"');
+          end;
         end;
         //This is the original code for getting the text from the editor, instead of rendering with PreviewTextOnBmp. It should do the same thing.
         //FindControlInputData.BitmapToSearchFor.Width := frClickerActions.frClickerFindControl.BMPTextFontProfiles[j].PreviewImageBitmap.Width;

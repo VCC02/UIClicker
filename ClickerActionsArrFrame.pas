@@ -115,6 +115,7 @@ type
     spdbtnAddAction: TSpeedButton;
     spdbtnRemoveAction: TSpeedButton;
     spdbtnNew: TSpeedButton;
+    tmrEditActionsVST: TTimer;
     tmrLogging: TTimer;
     tmrDeleteActions: TTimer;
     tmrExecActionFromSrvModule: TTimer;
@@ -153,6 +154,7 @@ type
     procedure spdbtnTemplateNotesClick(Sender: TObject);
     procedure spdbtnUpdateActionClick(Sender: TObject);
     procedure tmrDeleteActionsTimer(Sender: TObject);
+    procedure tmrEditActionsVSTTimer(Sender: TObject);
     procedure tmrExecActionFromSrvModuleTimer(Sender: TObject);
     procedure tmrLoggingTimer(Sender: TObject);
     procedure vstActionsMouseUp(Sender: TObject; Button: TMouseButton;
@@ -164,6 +166,7 @@ type
     procedure btnRemoveActionClick(Sender: TObject);
     procedure vstActionsGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
       Column: TColumnIndex; TextType: TVSTTextType; var CellText: {$IFDEF FPC} string {$ELSE} WideString {$ENDIF});
+    procedure vstActionsNewText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; const NewText: String);
     procedure vstActionsPaintText(Sender: TBaseVirtualTree;
       const TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex;
       TextType: TVSTTextType);
@@ -187,6 +190,10 @@ type
     procedure vstActionsInitNode(Sender: TBaseVirtualTree; ParentNode,
       Node: PVirtualNode; var InitialStates: TVirtualNodeInitStates);
     procedure vstActionsChecked(Sender: TBaseVirtualTree; Node: PVirtualNode);
+    procedure vstActionsDblClick(Sender: TObject);
+    procedure vstActionsEditCancelled(Sender: TBaseVirtualTree; Column: TColumnIndex);
+    procedure vstActionsEdited(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
+    procedure vstActionsEditing(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; var Allowed: Boolean);
     procedure spdbtnExtraAddClick(Sender: TObject);
     procedure InsertActionBeforeSelected1Click(Sender: TObject);
     procedure InsertActionAfterSelected1Click(Sender: TObject);
@@ -213,6 +220,7 @@ type
     FClkActions: TClkActionsRecArr;
     FTemplateNotes: string;
     FActionExecution: TActionExecution;
+    FEditingText: string;
 
     FModified: Boolean;
     FStopAllActionsOnDemand: Boolean;
@@ -295,6 +303,7 @@ type
     procedure HandleOnSetEditorSleepProgressBarMax(AMaxValue: Integer);
     procedure HandleOnSetEditorSleepProgressBarPosition(APositionValue: Integer);
     procedure HandleOnSetEditorSleepInfo(AElapsedTime, ARemainingTime: string);
+    procedure HandleOnAddDefaultFontProfile(var AFindControlOptions: TClkFindControlOptions; var AActionOptions: TClkActionOptions);
 
     function HandleOnEditCallTemplateBreakCondition(var AActionCondition: string): Boolean;
     function HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
@@ -547,12 +556,17 @@ begin
   //vstActions.PopupMenu := pmVstActions; //the menu will be poped up by code
   vstActions.StateImages := frClickerActions.imglstActions;
   vstActions.TabOrder := 0;
-  vstActions.TreeOptions.MiscOptions := [toAcceptOLEDrop, toCheckSupport, toFullRepaintOnResize, toInitOnSave, toToggleOnDblClick, toWheelPanning];
+  vstActions.TreeOptions.MiscOptions := [toAcceptOLEDrop, toEditable, toCheckSupport, toFullRepaintOnResize, toInitOnSave, toToggleOnDblClick, toWheelPanning];
   vstActions.TreeOptions.PaintOptions := [toShowButtons, toShowDropmark, toShowRoot, toThemeAware, toUseBlendedImages];
   vstActions.TreeOptions.SelectionOptions := [toFullRowSelect, toMiddleClickSelect, {toRightClickSelect,} toMultiSelect];
   vstActions.OnBeforeCellPaint := vstActionsBeforeCellPaint;
   vstActions.OnChecked := vstActionsChecked;
+  vstActions.OnDblClick := vstActionsDblClick;
+  vstActions.OnEditCancelled := vstActionsEditCancelled;
+  vstActions.OnEdited := vstActionsEdited;
+  vstActions.OnEditing := vstActionsEditing;
   vstActions.OnGetText := vstActionsGetText;
+  vstActions.OnNewText := vstActionsNewText;
   vstActions.OnPaintText := vstActionsPaintText;
   vstActions.OnGetImageIndex := vstActionsGetImageIndex;
   vstActions.OnGetImageIndexEx := vstActionsGetImageIndexEx;
@@ -636,6 +650,7 @@ begin
   FActionExecution.OnSetEditorSleepProgressBarMax := HandleOnSetEditorSleepProgressBarMax;
   FActionExecution.OnSetEditorSleepProgressBarPosition := HandleOnSetEditorSleepProgressBarPosition;
   FActionExecution.OnSetEditorSleepInfo := HandleOnSetEditorSleepInfo;
+  FActionExecution.OnAddDefaultFontProfile := HandleOnAddDefaultFontProfile;
 
   FCmdConsoleHistory := TStringList.Create;
   FOnExecuteRemoteActionAtIndex := nil;
@@ -669,6 +684,8 @@ begin
   FClosingTemplate := False;
   FRemoteAddress := 'http://127.0.0.1:5444/';
   FShouldStopAtBreakPoint := False;
+
+  FEditingText := '';
 end;
 
 
@@ -744,6 +761,41 @@ end;
 procedure TfrClickerActionsArr.HandleOnSetEditorSleepInfo(AElapsedTime, ARemainingTime: string);
 begin
   frClickerActions.frClickerSleep.SetEditorSleepInfo(AElapsedTime, ARemainingTime);
+end;
+
+
+procedure TfrClickerActionsArr.HandleOnAddDefaultFontProfile(var AFindControlOptions: TClkFindControlOptions; var AActionOptions: TClkActionOptions);
+var
+  ExecIdx: Integer;
+begin
+  //FindSubControl requires at least one font profile.
+  //If the action is part of a list of actions, then the UI can be updated with a new profile.
+
+  SetLength(AFindControlOptions.MatchBitmapText, 1);
+  AFindControlOptions.MatchBitmapText[0].ForegroundColor := '$Color_Window$';
+  AFindControlOptions.MatchBitmapText[0].BackgroundColor := '$Color_Highlight$';
+  AFindControlOptions.MatchBitmapText[0].FontName := 'Tahoma';
+  AFindControlOptions.MatchBitmapText[0].FontSize := 8;
+  AFindControlOptions.MatchBitmapText[0].FontQualityReplacement := '';
+  AFindControlOptions.MatchBitmapText[0].FontQuality := fqNonAntialiased;
+  AFindControlOptions.MatchBitmapText[0].FontQualityUsesReplacement := False;
+  AFindControlOptions.MatchBitmapText[0].Bold := False;
+  AFindControlOptions.MatchBitmapText[0].Italic := False;
+  AFindControlOptions.MatchBitmapText[0].Underline := False;
+  AFindControlOptions.MatchBitmapText[0].StrikeOut := False;
+  AFindControlOptions.MatchBitmapText[0].CropLeft := '0';
+  AFindControlOptions.MatchBitmapText[0].CropTop := '0';
+  AFindControlOptions.MatchBitmapText[0].CropRight := '0';
+  AFindControlOptions.MatchBitmapText[0].CropBottom := '0';
+  AFindControlOptions.MatchBitmapText[0].ProfileName := CDefaultFontProfileName;
+
+  ExecIdx := StrToIntDef(AActionOptions.ExecutionIndex, 1);
+  if (ExecIdx > -1) and (ExecIdx < Length(FClkActions))  then
+  begin
+    frClickerActions.ClearControls;
+    UpdateControlsFromActionsArr(ExecIdx);
+    frClickerActions.UpdatePageControlActionExecutionIcons;
+  end;
 end;
 
 
@@ -1658,6 +1710,7 @@ begin
     try
       LastNode := vstActions.GetLast;
       repeat
+        FClkActions[Node^.Index].ActionOptions.ExecutionIndex := IntToStr(Node^.Index);  //required by FindSubControl, to update the UI, when adding a default font profile
         HighlightCurrentlyExecutedAction(Node);
 
         spdbtnStepInto.Enabled := IsDebugging and (FClkActions[Node^.Index].ActionOptions.Action = acCallTemplate);
@@ -1987,6 +2040,53 @@ procedure TfrClickerActionsArr.vstActionsChecked(Sender: TBaseVirtualTree;
 begin
   FClkActions[Node^.Index].ActionOptions.ActionEnabled := Node^.CheckState = csCheckedNormal;
   Modified := True;
+end;
+
+
+procedure TfrClickerActionsArr.vstActionsDblClick(Sender: TObject);
+begin
+  if FActionsHitInfo.HitColumn = 0 then
+    tmrEditActionsVST.Enabled := True;
+end;
+
+
+procedure TfrClickerActionsArr.vstActionsEditCancelled(Sender: TBaseVirtualTree; Column: TColumnIndex);
+begin
+
+end;
+
+
+procedure TfrClickerActionsArr.vstActionsEdited(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
+begin
+  FClkActions[Node^.Index].ActionOptions.ActionName := FEditingText;
+  HandleActionSelection; // frClickerActions.OIFrame.;
+end;
+
+
+procedure TfrClickerActionsArr.vstActionsEditing(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; var Allowed: Boolean);
+begin
+  Allowed := Column = 0;
+  FEditingText := FClkActions[Node^.Index].ActionOptions.ActionName;
+end;
+
+
+procedure TfrClickerActionsArr.vstActionsNewText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; const NewText: String);
+begin
+  FEditingText := NewText;
+end;
+
+
+procedure TfrClickerActionsArr.tmrEditActionsVSTTimer(Sender: TObject);
+var
+  Node: PVirtualNode;
+begin
+  tmrEditActionsVST.Enabled := False;
+
+  Node := vstActions.GetFirstSelected;
+  if Node = nil then
+    Exit;
+
+  vstActions.EditNode(Node, 0);
 end;
 
 
@@ -3234,7 +3334,7 @@ begin
     FClkActions[n].ActionOptions.Action := TClkAction(Node^.Index);
     FClkActions[n].ActionOptions.ActionCondition := '';
     FClkActions[n].ActionOptions.ActionEnabled := True;
-    FClkActions[n].ActionOptions.ActionName := CClkActionStr[FClkActions[n].ActionOptions.Action];
+    FClkActions[n].ActionOptions.ActionName := '"' + CClkActionStr[FClkActions[n].ActionOptions.Action] + '"';
     FClkActions[n].ActionOptions.ActionTimeout := 0;
     FClkActions[n].ActionStatus := asNotStarted;
 
@@ -3361,7 +3461,7 @@ begin
 
       frClickerActions.ClearControls;
       FClkActions[n].ActionOptions.Action := TClkAction(Node^.Index);
-      FClkActions[n].ActionOptions.ActionName := CClkActionStr[FClkActions[n].ActionOptions.Action];
+      FClkActions[n].ActionOptions.ActionName := '"' + CClkActionStr[FClkActions[n].ActionOptions.Action] + '"';
 
       frClickerActions.EditingAction^.ActionOptions := FClkActions[n].ActionOptions;   //temp solution, to load action settings
 
@@ -3926,6 +4026,8 @@ end;
 
 
 procedure TfrClickerActionsArr.ClearAllActions;
+var
+  UnsetActionValue: Byte;
 begin
   SetLength(FClkActions, 0);
   vstActions.RootNodeCount := 0;
@@ -3933,7 +4035,9 @@ begin
   Modified := True; //to update displayed FileName
   Modified := False;   //false for clearing filename
   StopGlowingUpdateButton;
-  frClickerActions.CurrentlyEditingActionType := TClkAction(CClkUnsetAction);
+
+  UnsetActionValue := CClkUnsetAction; //Using a var, to get rid of warnings. The code is expected to handle out of range values.
+  frClickerActions.CurrentlyEditingActionType := TClkAction(UnsetActionValue);
 end;
 
 

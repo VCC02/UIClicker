@@ -17,7 +17,7 @@ object frClickerActions: TfrClickerActions
     Height = 276
     Top = 0
     Width = 1052
-    ActivePage = TabSheetDebugging
+    ActivePage = TabSheetAction
     Anchors = [akTop, akLeft, akRight, akBottom]
     Font.Color = clWindowText
     Font.Height = -11
@@ -25,13 +25,13 @@ object frClickerActions: TfrClickerActions
     Font.Style = [fsBold]
     Images = imglstActionExecution
     ParentFont = False
-    TabIndex = 2
+    TabIndex = 0
     TabOrder = 0
     TabPosition = tpLeft
     object TabSheetAction: TTabSheet
       Caption = 'Action'
       ClientHeight = 268
-      ClientWidth = 1004
+      ClientWidth = 1024
       Font.Color = clWindowText
       Font.Height = -11
       Font.Name = 'Tahoma'
@@ -99,9 +99,9 @@ object frClickerActions: TfrClickerActions
         TabOrder = 0
       end
       object chkStopOnError: TCheckBox
-        Left = 346
+        Left = 2
         Height = 19
-        Top = 247
+        Top = 248
         Width = 86
         Anchors = [akLeft, akBottom]
         Caption = 'Stop On Error'
@@ -126,14 +126,13 @@ object frClickerActions: TfrClickerActions
         ShowHint = True
       end
       object pnlExtra: TPanel
-        Left = 440
+        Left = 460
         Height = 266
         Top = 0
         Width = 562
         Anchors = [akTop, akRight, akBottom]
         ClientHeight = 266
         ClientWidth = 562
-        Color = 9764056
         ParentColor = False
         TabOrder = 3
         object pnlCover: TPanel

@@ -29,8 +29,8 @@ unit ClickerSetVarFrame;
 interface
 
 uses
-  Windows, Classes, SysUtils, Forms, Controls, Menus, ExtCtrls, StdCtrls, VirtualTrees,
-  ClickerUtils;
+  Windows, Classes, SysUtils, Forms, Controls, Menus, ExtCtrls, StdCtrls,
+  Buttons, VirtualTrees, ClickerUtils;
 
 type
 
@@ -45,10 +45,14 @@ type
     MenuItem_RemoveSetVar: TMenuItem;
     N4: TMenuItem;
     pmSetVars: TPopupMenu;
+    spdbtnMoveDown: TSpeedButton;
+    spdbtnMoveUp: TSpeedButton;
     tmrEditSetVars: TTimer;
     vstSetVar: TVirtualStringTree;
     procedure MenuItem_AddSetVarClick(Sender: TObject);
     procedure MenuItem_RemoveSetVarClick(Sender: TObject);
+    procedure spdbtnMoveDownClick(Sender: TObject);
+    procedure spdbtnMoveUpClick(Sender: TObject);
     procedure tmrEditSetVarsTimer(Sender: TObject);
     procedure vstSetVarChecked(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure vstSetVarChecking(Sender: TBaseVirtualTree; Node: PVirtualNode;
@@ -81,6 +85,8 @@ type
     FSetVarUpdatedVstText: Boolean;
 
     FOnTriggerOnControlsModified: TOnTriggerOnControlsModified;
+
+    procedure UpdateNodeCheckStateFromEvalBefore(ANode: PVirtualNode);
 
     procedure DoOnTriggerOnControlsModified;
   public
@@ -343,6 +349,60 @@ begin
   FSetVarContent_EvalBefore.Delete(Node^.Index);
 
   vstSetVar.RootNodeCount := FSetVarContent_Vars.Count;
+  vstSetVar.Repaint;
+  DoOnTriggerOnControlsModified;
+end;
+
+
+procedure TfrClickerSetVar.UpdateNodeCheckStateFromEvalBefore(ANode: PVirtualNode);
+const
+  CCheckStates: array[Boolean] of TCheckState = (csUnCheckedNormal, csCheckedNormal);
+begin
+  ANode.CheckState := CCheckStates[FSetVarContent_EvalBefore.Strings[ANode^.Index] = '1'];
+end;
+
+
+procedure TfrClickerSetVar.spdbtnMoveUpClick(Sender: TObject);
+var
+  Node: PVirtualNode;
+begin
+  Node := vstSetVar.GetFirstSelected;
+  if (Node = nil) or (Node = vstSetVar.GetFirst) or (vstSetVar.RootNodeCount = 1) then
+    Exit;
+
+  FSetVarContent_Vars.Move(Node^.Index, Node^.Index - 1);
+  FSetVarContent_Values.Move(Node^.Index, Node^.Index - 1);
+  FSetVarContent_EvalBefore.Move(Node^.Index, Node^.Index - 1);
+
+  UpdateNodeCheckStateFromEvalBefore(Node^.PrevSibling);
+  UpdateNodeCheckStateFromEvalBefore(Node);
+
+  vstSetVar.ClearSelection;
+  vstSetVar.Selected[Node^.PrevSibling] := True;
+  vstSetVar.ScrollIntoView(Node, True);
+  vstSetVar.Repaint;
+  DoOnTriggerOnControlsModified;
+end;
+
+
+procedure TfrClickerSetVar.spdbtnMoveDownClick(Sender: TObject);
+var
+  Node: PVirtualNode;
+begin
+  Node := vstSetVar.GetFirstSelected;
+  if (Node = nil) or (Node = vstSetVar.GetLast) or (vstSetVar.RootNodeCount = 1) then
+    Exit;
+
+  FSetVarContent_Vars.Move(Node^.Index, Node^.Index + 1);
+  FSetVarContent_Values.Move(Node^.Index, Node^.Index + 1);
+  FSetVarContent_EvalBefore.Move(Node^.Index, Node^.Index + 1);
+
+  UpdateNodeCheckStateFromEvalBefore(Node^.NextSibling);
+  UpdateNodeCheckStateFromEvalBefore(Node);
+
+  vstSetVar.ClearSelection;
+  vstSetVar.Selected[Node^.NextSibling] := True;
+  vstSetVar.ScrollIntoView(Node, True);
   vstSetVar.Repaint;
   DoOnTriggerOnControlsModified;
 end;

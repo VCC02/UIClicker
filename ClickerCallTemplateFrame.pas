@@ -30,7 +30,7 @@ interface
 
 uses
   Windows, Classes, SysUtils, Forms, Controls, StdCtrls, Menus, ExtCtrls,
-  ValEdit, VirtualTrees, ClickerUtils;
+  ValEdit, Buttons, VirtualTrees, ClickerUtils;
 
 type
 
@@ -41,11 +41,15 @@ type
     lblCustomUserVarsBeforeCall: TLabel;
     pmCustomVars: TPopupMenu;
     RemoveCustomVarRow1: TMenuItem;
+    spdbtnMoveDown: TSpeedButton;
+    spdbtnMoveUp: TSpeedButton;
     tmrEditCustomVars: TTimer;
     vallstCustomVariables: TValueListEditor;
     vstCustomVariables: TVirtualStringTree;
     procedure AddCustomVarRow1Click(Sender: TObject);
     procedure RemoveCustomVarRow1Click(Sender: TObject);
+    procedure spdbtnMoveDownClick(Sender: TObject);
+    procedure spdbtnMoveUpClick(Sender: TObject);
     procedure tmrEditCustomVarsTimer(Sender: TObject);
     procedure vstCustomVariablesDblClick(Sender: TObject);
     procedure vstCustomVariablesEdited(Sender: TBaseVirtualTree;
@@ -170,6 +174,48 @@ begin
     DoOnTriggerOnControlsModified;
   except
   end;
+end;
+
+
+procedure TfrClickerCallTemplate.spdbtnMoveUpClick(Sender: TObject);
+var
+  Node: PVirtualNode;
+begin
+  Node := vstCustomVariables.GetFirstSelected;
+  if (Node = nil) or (Node = vstCustomVariables.GetFirst) or (vstCustomVariables.RootNodeCount = 1) then
+    Exit;
+
+  vallstCustomVariables.Strings.Move(Node^.Index, Node^.Index - 1);
+
+  //UpdateNodeCheckStateFromEvalBefore(Node^.PrevSibling);   //uncomment these if there will ever be individual evaluations
+  //UpdateNodeCheckStateFromEvalBefore(Node);
+
+  vstCustomVariables.ClearSelection;
+  vstCustomVariables.Selected[Node^.PrevSibling] := True;
+  vstCustomVariables.ScrollIntoView(Node, True);
+  vstCustomVariables.Repaint;
+  DoOnTriggerOnControlsModified;
+end;
+
+
+procedure TfrClickerCallTemplate.spdbtnMoveDownClick(Sender: TObject);
+var
+  Node: PVirtualNode;
+begin
+  Node := vstCustomVariables.GetFirstSelected;
+  if (Node = nil) or (Node = vstCustomVariables.GetLast) or (vstCustomVariables.RootNodeCount = 1) then
+    Exit;
+
+  vallstCustomVariables.Strings.Move(Node^.Index, Node^.Index + 1);
+
+  //UpdateNodeCheckStateFromEvalBefore(Node^.NextSibling);    //uncomment these if there will ever be individual evaluations
+  //UpdateNodeCheckStateFromEvalBefore(Node);
+
+  vstCustomVariables.ClearSelection;
+  vstCustomVariables.Selected[Node^.NextSibling] := True;
+  vstCustomVariables.ScrollIntoView(Node, True);
+  vstCustomVariables.Repaint;
+  DoOnTriggerOnControlsModified;
 end;
 
 

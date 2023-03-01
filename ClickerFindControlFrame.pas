@@ -421,6 +421,9 @@ type
     function GetSearch_BottomBottom_Ref: Integer;//Bottom
     function GetSearch_TopBottom_Ref: Integer;
 
+    function GetSelectedBMPTextTab: Integer;
+    procedure SetSelectedBMPTextTab(Value: Integer);
+
     ///////OI
     function GetSearch_LeftLeft_Ref_FromInitRect(AInitialRectange: TRectString): Integer;    //Left
     function GetSearch_RightLeft_Ref_FromInitRect(AInitialRectange: TRectString): Integer;
@@ -509,6 +512,7 @@ type
 
     property BMPsDir: string read FBMPsDir write FBMPsDir;
     property BMPTextFontProfiles[Index: Integer]: TFontProfile read GetFontProfile;
+    property SelectedBMPTextTab: Integer read GetSelectedBMPTextTab write SetSelectedBMPTextTab;
 
     property InMemFS: TInMemFileSystem write FInMemFS;
     property SearchAreaControlDbgImg: TImage read FSearchAreaControlDbgImg;
@@ -1959,6 +1963,25 @@ begin
 end;
 
 
+function TfrClickerFindControl.GetSelectedBMPTextTab: Integer;
+begin
+  Result := tabctrlBMPText.TabIndex;
+end;
+
+
+procedure TfrClickerFindControl.SetSelectedBMPTextTab(Value: Integer);
+begin
+  if Value > tabctrlBMPText.Tabs.Count - 1 then
+    Value := tabctrlBMPText.Tabs.Count - 1;
+
+  if Value < 0 then
+    Value := 0;
+
+  tabctrlBMPText.TabIndex := Value;
+  SetBMPTextFrameVisibility;
+end;
+
+
 function TfrClickerFindControl.GetSearch_EditBoxVar_Ref(AEditBoxValue, AVarName: string): Integer;
 begin
   Result := 0;
@@ -2384,7 +2407,12 @@ procedure TfrClickerFindControl.imgSearchAreaControlDbgMouseUp(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
   if Button = mbLeft then
+  begin
+    if FRectangleSelecting then
+      DoOnTriggerOnControlsModified;
+
     FRectangleSelecting := False;
+  end;
 end;
 
 

@@ -107,6 +107,7 @@ type
     ActionTimeout: Integer; //ms
     ActionEnabled: Boolean;
     ActionCondition: string;
+    ExecutionIndex: string; //Used while executing an action, to identify the action in a list of actions.  When no list is used, this field should stay ''.
   end;
 
   TXClickPointReference = (xrefLeft, xrefRight, xrefWidth, xrefVar, xrefAbsolute);    //see CXOffsetReference below if modified
@@ -315,6 +316,8 @@ type
   PClkFindControlOptions = ^TClkFindControlOptions;
 
 
+  TBrightnessOperation = (boInc, boDec, boIncR, boIncG, boIncB, boDecR, boDecG, boDecB);
+
   TOnUpdateSearchAreaLimitsInOIFromDraggingLines = procedure(ALimitLabelsToUpdate: TLimitLabels; var AOffsets: TSimpleRectString) of object;
   TOnUpdateTextCroppingLimitsInOIFromDraggingLines = procedure(ALimitLabelsToUpdate: TLimitLabels; var AOffsets: TSimpleRectString; AFontProfileName: string) of object;
   TOnUpdateTextCroppingLimitsInOIFromDraggingLinesIdx = procedure(ALimitLabelsToUpdate: TLimitLabels; var AOffsets: TSimpleRectString; AFontProfileIndex: Integer) of object;
@@ -384,6 +387,8 @@ function GetCmdLineOptionValue(AOption: string): string;
 function RevPos(const ASubStr, AString: string; AOffset: Integer = 1): Integer;
 
 function ActionAsStringToTClkAction(ActionAsString: string): TClkAction;
+
+function ModifyBrightness(AColor: TColor; AAmount: Byte; ABrightnessOperation: TBrightnessOperation): TColor;
 
 
 var
@@ -1171,8 +1176,78 @@ begin
 end;
 
 
-type
-  TBrightnessOperation = (boInc, boDec, boIncR, boIncG, boIncB, boDecR, boDecG, boDecB);
+function ModifyBrightness(AColor: TColor; AAmount: Byte; ABrightnessOperation: TBrightnessOperation): TColor;
+var
+  R, G, B: Integer;
+  Red, Green, Blue: Byte;
+begin
+  RedGreenBlue(AColor, Red, Green, Blue);
+
+  R := Red;
+  G := Green;
+  B := Blue;
+
+  case ABrightnessOperation of
+    boInc:
+    begin
+      Inc(R, AAmount);  R := Min(255, R);
+      Inc(G, AAmount);  G := Min(255, G);
+      Inc(B, AAmount);  B := Min(255, B);
+    end;
+
+    boDec:
+    begin
+      Dec(R, AAmount);  R := Max(0, R);
+      Dec(G, AAmount);  G := Max(0, G);
+      Dec(B, AAmount);  B := Max(0, B);
+    end;
+
+    boIncR:
+    begin
+      Inc(R, AAmount);  R := Min(255, R);
+      //Inc(G, AAmount);  G := Min(255, G);
+      //Inc(B, AAmount);  B := Min(255, B);
+    end;
+
+    boIncG:
+    begin
+      //Inc(R, AAmount);  R := Min(255, R);
+      Inc(G, AAmount);  G := Min(255, G);
+      //Inc(B, AAmount);  B := Min(255, B);
+    end;
+
+    boIncB:
+    begin
+      //Inc(R, AAmount);  R := Min(255, R);
+      //Inc(G, AAmount);  G := Min(255, G);
+      Inc(B, AAmount);  B := Min(255, B);
+    end;
+
+    boDecR:
+    begin
+      Dec(R, AAmount);  R := Max(0, R);
+      //Dec(G, AAmount);  G := Max(0, G);
+      //Dec(B, AAmount);  B := Max(0, B);
+    end;
+
+    boDecG:
+    begin
+      //Dec(R, AAmount);  R := Max(0, R);
+      Dec(G, AAmount);  G := Max(0, G);
+      //Dec(B, AAmount);  B := Max(0, B);
+    end;
+
+    boDecB:
+    begin
+      //Dec(R, AAmount);  R := Max(0, R);
+      //Dec(G, AAmount);  G := Max(0, G);
+      Dec(B, AAmount);  B := Max(0, B);
+    end;
+  end; //case
+
+  Result := RGBToColor(R, G, B);
+end;
+
 
 const
   CBrightnessOperationStr: array[TBrightnessOperation] of string = (
@@ -1186,9 +1261,8 @@ var
   Args, InitialArgs: string;
   Operand1Str, Operand2Str: string;
   ResultValueStr: string;
-  R, G, B: Integer;
-  Red, Green, Blue: Byte;
   Amount: Byte;
+  ColorToBeModified, ResultValue: TColor;
   OperationStr: string;
 begin
   OperationStr := CBrightnessOperationStr[ABrightnessOperation];
@@ -1214,71 +1288,11 @@ begin
       Operand2Str := '1';
     end;
 
-    RedGreenBlue(HexToInt(Operand1Str), Red, Green, Blue);
+    ColorToBeModified := HexToInt(Operand1Str);
     Amount := StrToIntDef(Operand2Str, 1);
-    R := Red;
-    G := Green;
-    B := Blue;
+    ResultValue := ModifyBrightness(ColorToBeModified, Amount, ABrightnessOperation);
 
-    case ABrightnessOperation of
-      boInc:
-      begin
-        Inc(R, Amount);  R := Min(255, R);
-        Inc(G, Amount);  G := Min(255, G);
-        Inc(B, Amount);  B := Min(255, B);
-      end;
-
-      boDec:
-      begin
-        Dec(R, Amount);  R := Max(0, R);
-        Dec(G, Amount);  G := Max(0, G);
-        Dec(B, Amount);  B := Max(0, B);
-      end;
-
-      boIncR:
-      begin
-        Inc(R, Amount);  R := Min(255, R);
-        //Inc(G, Amount);  G := Min(255, G);
-        //Inc(B, Amount);  B := Min(255, B);
-      end;
-
-      boIncG:
-      begin
-        //Inc(R, Amount);  R := Min(255, R);
-        Inc(G, Amount);  G := Min(255, G);
-        //Inc(B, Amount);  B := Min(255, B);
-      end;
-
-      boIncB:
-      begin
-        //Inc(R, Amount);  R := Min(255, R);
-        //Inc(G, Amount);  G := Min(255, G);
-        Inc(B, Amount);  B := Min(255, B);
-      end;
-
-      boDecR:
-      begin
-        Dec(R, Amount);  R := Max(0, R);
-        //Dec(G, Amount);  G := Max(0, G);
-        //Dec(B, Amount);  B := Max(0, B);
-      end;
-
-      boDecG:
-      begin
-        //Dec(R, Amount);  R := Max(0, R);
-        Dec(G, Amount);  G := Max(0, G);
-        //Dec(B, Amount);  B := Max(0, B);
-      end;
-
-      boDecB:
-      begin
-        //Dec(R, Amount);  R := Max(0, R);
-        //Dec(G, Amount);  G := Max(0, G);
-        Dec(B, Amount);  B := Max(0, B);
-      end;
-    end; //case
-
-    ResultValueStr := IntToHex(RGBToColor(R, G, B), 6);
+    ResultValueStr := IntToHex(ResultValue, 6);
   end;
 
   Result := StringReplace(s, OperationStr + InitialArgs + ')$', ResultValueStr, [rfReplaceAll]);

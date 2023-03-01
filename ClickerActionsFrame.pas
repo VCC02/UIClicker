@@ -352,6 +352,9 @@ type
     procedure HandleOnOIPaintText(ANodeData: TNodeDataPropertyRec; ACategoryIndex, APropertyIndex, APropertyItemIndex: Integer;
       const TargetCanvas: TCanvas; Column: TColumnIndex; var TextType: TVSTTextType);
 
+    procedure HandleOnOIBeforeCellPaint(ANodeData: TNodeDataPropertyRec; ACategoryIndex, APropertyIndex, APropertyItemIndex: Integer;
+      TargetCanvas: TCanvas; Column: TColumnIndex; CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
+
     procedure HandleOnTextEditorMouseDown(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer;
       Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 
@@ -579,6 +582,7 @@ begin
   FOIFrame.OnOIGetEnumConstsCount := HandleOnOIGetEnumConstsCount;
   FOIFrame.OnOIGetEnumConst := HandleOnOIGetEnumConst;
   FOIFrame.OnOIPaintText := HandleOnOIPaintText;
+  FOIFrame.OnOIBeforeCellPaint := HandleOnOIBeforeCellPaint;
   FOIFrame.OnOITextEditorMouseDown := HandleOnTextEditorMouseDown;
   FOIFrame.OnOITextEditorMouseMove := HandleOnTextEditorMouseMove;
   FOIFrame.OnOITextEditorKeyUp := HandleOnOITextEditorKeyUp;
@@ -960,11 +964,21 @@ begin
 end;
 
 
+const
+  CNoTemplatesMsg = 'No local templates available.';
+
 procedure TfrClickerActions.LocalTemplatesClick(Sender: TObject);
 var
   Fnm: string;
 begin
   Fnm := StringReplace((Sender as TMenuItem).Caption, '&', '', [rfReplaceAll]);
+
+  if Fnm = CNoTemplatesMsg then
+  begin
+    MessageBox(Handle, 'There are no templates in the local directory, ActionTemplates.', PChar(Application.Title), MB_ICONINFORMATION);
+    Exit;
+  end;
+
   FEditingAction^.CallTemplateOptions.TemplateFileName := Fnm;
   FOIFrame.Repaint;   //ideally, RepaintNodeByLevel
   TriggerOnControlsModified;
@@ -997,6 +1011,9 @@ begin
     end;
 
     FPmLocalTemplates.Items.Clear;
+
+    if AvailableTemplates.Count = 0 then
+      AvailableTemplates.Add(CNoTemplatesMsg);
 
     for i := 0 to AvailableTemplates.Count - 1 do
     begin
@@ -2738,6 +2755,31 @@ begin
 end;
 
 
+procedure TfrClickerActions.HandleOnOIBeforeCellPaint(ANodeData: TNodeDataPropertyRec; ACategoryIndex, APropertyIndex, APropertyItemIndex: Integer;
+  TargetCanvas: TCanvas; Column: TColumnIndex; CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
+var
+  ItemIndexDiv: Integer;
+  NewColor: TColor;
+begin
+  if (ACategoryIndex = CCategory_ActionSpecific) and (APropertyIndex = CFindControl_MatchBitmapText_PropIndex) then
+  begin
+    ItemIndexDiv := APropertyItemIndex div CPropCount_FindControlMatchBitmapText;
+
+    if ItemIndexDiv and 1 = 0 then
+      NewColor := $E0FFE0   //light green
+    else
+      NewColor := $97E0FF;   //light orange
+
+    if ItemIndexDiv = frClickerFindControl.SelectedBMPTextTab then
+      NewColor := ModifyBrightness(NewColor, 30, boDec);
+
+    TargetCanvas.Pen.Color := NewColor;
+    TargetCanvas.Brush.Color := NewColor;
+    TargetCanvas.Rectangle(CellRect);
+  end;
+end;
+
+
 procedure TfrClickerActions.HandleOnTextEditorMouseDown(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer;
   Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 var
@@ -2827,24 +2869,28 @@ begin
       CFindControl_MatchBitmapText_CropLeft:
       begin
         frClickerFindControl.UpdateOnTextCroppingLeftMouseMove(FEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv], Sender as TVTEdit, Shift, X, Y, ItemIndexDiv);
+        frClickerFindControl.SelectedBMPTextTab := ItemIndexDiv;
         Result := True;
       end;
 
       CFindControl_MatchBitmapText_CropTop:
       begin
         frClickerFindControl.UpdateOnTextCroppingTopMouseMove(FEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv], Sender as TVTEdit, Shift, X, Y, ItemIndexDiv);
+        frClickerFindControl.SelectedBMPTextTab := ItemIndexDiv;
         Result := True;
       end;
 
       CFindControl_MatchBitmapText_CropRight:
       begin
         frClickerFindControl.UpdateOnTextCroppingRightMouseMove(FEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv], Sender as TVTEdit, Shift, X, Y, ItemIndexDiv);
+        frClickerFindControl.SelectedBMPTextTab := ItemIndexDiv;
         Result := True;
       end;
 
       CFindControl_MatchBitmapText_CropBottom:
       begin
         frClickerFindControl.UpdateOnTextCroppingBottomMouseMove(FEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv], Sender as TVTEdit, Shift, X, Y, ItemIndexDiv);
+        frClickerFindControl.SelectedBMPTextTab := ItemIndexDiv;
         Result := True;
       end;
     end;

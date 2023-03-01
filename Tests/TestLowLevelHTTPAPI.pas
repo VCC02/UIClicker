@@ -300,7 +300,7 @@ begin
 
   Response := FastReplace_87ToReturn(ExecuteFindSubControlAction(TestServerAddress, FindSubControlOptions, 'Test Find Bitness on UIClicker Main', 3000, CREParam_FileLocation_ValueMem));
 
-  Expect(Response).ToBe('ProcessServerCommand exception: The text width, after cropping, is 0.  Profile[0]: "not set 0".   Searched text: "-bit"');
+  Expect(Response).ToBe('ProcessServerCommand exception: The text width, after cropping, is 0.  Profile[0]: "' + FindSubControlOptions.MatchBitmapText[0].ProfileName + '".   Searched text: "-bit"');
 end;
 
 
@@ -318,7 +318,7 @@ begin
 
   Response := FastReplace_87ToReturn(ExecuteFindSubControlAction(TestServerAddress, FindSubControlOptions, 'Test Find Bitness on UIClicker Main', 3000, CREParam_FileLocation_ValueMem));
 
-  Expect(Response).ToBe('ProcessServerCommand exception: The text width, after cropping, is negative.  Profile[0]: "not set 0".   Searched text: "-bit"');
+  Expect(Response).ToBe('ProcessServerCommand exception: The text width, after cropping, is negative.  Profile[0]: "' + FindSubControlOptions.MatchBitmapText[0].ProfileName + '".   Searched text: "-bit"');
 end;
 
 
@@ -336,7 +336,7 @@ begin
 
   Response := FastReplace_87ToReturn(ExecuteFindSubControlAction(TestServerAddress, FindSubControlOptions, 'Test Find Bitness on UIClicker Main', 3000, CREParam_FileLocation_ValueMem));
 
-  Expect(Response).ToBe('ProcessServerCommand exception: The text height, after cropping, is 0.  Profile[0]: "not set 0".   Searched text: "-bit"');
+  Expect(Response).ToBe('ProcessServerCommand exception: The text height, after cropping, is 0.  Profile[0]: "' + FindSubControlOptions.MatchBitmapText[0].ProfileName + '".   Searched text: "-bit"');
 end;
 
 
@@ -354,7 +354,7 @@ begin
 
   Response := FastReplace_87ToReturn(ExecuteFindSubControlAction(TestServerAddress, FindSubControlOptions, 'Test Find Bitness on UIClicker Main', 3000, CREParam_FileLocation_ValueMem));
 
-  Expect(Response).ToBe('ProcessServerCommand exception: The text height, after cropping, is negative.  Profile[0]: "not set 0".   Searched text: "-bit"');
+  Expect(Response).ToBe('ProcessServerCommand exception: The text height, after cropping, is negative.  Profile[0]: "' + FindSubControlOptions.MatchBitmapText[0].ProfileName + '".   Searched text: "-bit"');
 end;
 
 
