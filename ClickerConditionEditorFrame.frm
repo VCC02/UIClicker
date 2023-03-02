@@ -12,7 +12,7 @@ object frClickerConditionEditor: TfrClickerConditionEditor
     Left = 3
     Height = 230
     Top = 3
-    Width = 737
+    Width = 730
     Anchors = [akTop, akLeft, akRight, akBottom]
     Caption = 'pnlvstActionConditions'
     ParentColor = False
@@ -28,18 +28,18 @@ object frClickerConditionEditor: TfrClickerConditionEditor
     Caption = '$LastAction_Status$ Valid values:'
   end
   object spdbtnAddOR: TSpeedButton
-    Left = 623
+    Left = 616
     Height = 22
-    Top = 240
+    Top = 241
     Width = 55
     Anchors = [akRight, akBottom]
     Caption = 'Add OR'
     OnClick = spdbtnAddORClick
   end
   object spdbtnAddAND: TSpeedButton
-    Left = 685
+    Left = 678
     Height = 22
-    Top = 240
+    Top = 241
     Width = 55
     Anchors = [akRight, akBottom]
     Caption = 'Add AND'

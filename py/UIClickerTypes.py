@@ -107,7 +107,7 @@ class TClickOptions(Structure):
                ("ClickWithCtrl", BOOLEAN),
                ("ClickWithAlt", BOOLEAN),
                ("ClickWithShift", BOOLEAN),
-               ("ClickWithDoubleClick", BOOLEAN),  #not used anymore (filed kept for backwards compatibility with old templates)
+               ("ClickWithDoubleClick", BOOLEAN),  #not used anymore (field kept for backwards compatibility with old templates)
                ("Count", LONG),
                ("LeaveMouse", BOOLEAN),
                ("MoveWithoutClick", BOOLEAN),
@@ -288,11 +288,11 @@ class TCallTemplateOptions(Structure):
 PCallTemplateOptions = ctypes.POINTER(TCallTemplateOptions)
 
 def GetDefaultCallTemplateOptions():
-    SetControlTextOptions = TCallTemplateOptions()
-    SetControlTextOptions.TemplateFileName = 'PathToTemplate.clktmpl'
-    SetControlTextOptions.ListOfCustomVarsAndValues = ''  #these vars will be added to the existing list of vars
-    SetControlTextOptions.EvaluateBeforeCalling = False
-    return SetControlTextOptions
+    CallTemplateOptions = TCallTemplateOptions()
+    CallTemplateOptions.TemplateFileName = 'PathToTemplate.clktmpl'
+    CallTemplateOptions.ListOfCustomVarsAndValues = ''  #these vars will be added to the existing list of vars
+    CallTemplateOptions.EvaluateBeforeCalling = False
+    return CallTemplateOptions
 
 
 class TSleepOptions(Structure):

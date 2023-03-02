@@ -41,6 +41,7 @@ type
   TOIPropDef = record
     Name: string;
     EditorType: TOIEditorType;
+    DataType: string;
   end;
 
 const
@@ -133,156 +134,164 @@ const
   CWindowOperations_NewWidth = 3;
   CWindowOperations_NewHeight = 4;
 
+  CDTString = 'String';
+  CDTEnum = 'Enum';
+  CDTBool = 'Boolean';
+  CDTInteger = 'Integer';
+  CDTStructure = 'Structure';
+  CDTArray = 'Array';
+
+
   //Properties
   CCommonProperties: array[0..CPropCount_Common - 1] of TOIPropDef = (
-    (Name: 'ActionName'; EditorType: etText),
-    (Name: 'Action'; EditorType: etEnumCombo),    //readonly, to avoid changing the OI tree structure
-    (Name: 'ActionTimeout'; EditorType: etTextWithArrow),
-    (Name: 'ActionCondition'; EditorType: etUserEditor)
+    (Name: 'ActionName'; EditorType: etText; DataType: CDTString),
+    (Name: 'Action'; EditorType: etEnumCombo; DataType: CDTEnum),    //readonly, to avoid changing the OI tree structure
+    (Name: 'ActionTimeout'; EditorType: etTextWithArrow; DataType: CDTInteger),
+    (Name: 'ActionCondition'; EditorType: etUserEditor; DataType: CDTString)
   );
 
   //Action specific properties
   CClickProperties: array[0..CPropCount_Click - 1] of TOIPropDef = (
-    (Name: 'XClickPointReference'; EditorType: etEnumCombo),
-    (Name: 'YClickPointReference'; EditorType: etEnumCombo),
-    (Name: 'XClickPointVar'; EditorType: etText),                //Description:  The provided variables must be global/screen coordinates. The $Current_Mouse_X$ var/replacement can be used as global mouse X coordinate.
-    (Name: 'YClickPointVar'; EditorType: etText),                //Description:  The provided variables must be global/screen coordinates. The $Current_Mouse_Y$ var/replacement can be used as global mouse Y coordinate.
-    (Name: 'XOffset'; EditorType: etSpinText),                   //Description:  Replacements are available.  Examples of random value: $Random(50, 100)$   $Random($MMin$, $MMax$)$
-    (Name: 'YOffset'; EditorType: etSpinText),                   //Description:  Replacements are available.  Examples of random value: $Random(50, 100)$   $Random($MMin$, $MMax$)$
-    (Name: 'MouseButton'; EditorType: etEnumCombo),
-    (Name: 'ClickWithCtrl'; EditorType: etBooleanCombo),
-    (Name: 'ClickWithAlt'; EditorType: etBooleanCombo),
-    (Name: 'ClickWithShift'; EditorType: etBooleanCombo),
-    (Name: 'Count'; EditorType: etSpinText),
-    (Name: 'LeaveMouse'; EditorType: etBooleanCombo),            //Description:  When True, the mouse cursor position is not reset after running the action. It may be required if the click action will open a pop-up menu, to cause the menu to open at that location. This is also useful for debugging, to verify offsets.
-    (Name: 'MoveWithoutClick'; EditorType: etBooleanCombo),
-    (Name: 'ClickType'; EditorType: etEnumCombo),
-    (Name: 'XClickPointReferenceDest'; EditorType: etEnumCombo),
-    (Name: 'YClickPointReferenceDest'; EditorType: etEnumCombo),
-    (Name: 'XClickPointVarDest'; EditorType: etText),
-    (Name: 'YClickPointVarDest'; EditorType: etText),
-    (Name: 'XOffsetDest'; EditorType: etSpinText),
-    (Name: 'YOffsetDest'; EditorType: etSpinText)
+    (Name: 'XClickPointReference'; EditorType: etEnumCombo; DataType: CDTEnum),
+    (Name: 'YClickPointReference'; EditorType: etEnumCombo; DataType: CDTEnum),
+    (Name: 'XClickPointVar'; EditorType: etText; DataType: CDTString),                //Description:  The provided variables must be global/screen coordinates. The $Current_Mouse_X$ var/replacement can be used as global mouse X coordinate.
+    (Name: 'YClickPointVar'; EditorType: etText; DataType: CDTString),                //Description:  The provided variables must be global/screen coordinates. The $Current_Mouse_Y$ var/replacement can be used as global mouse Y coordinate.
+    (Name: 'XOffset'; EditorType: etSpinText; DataType: CDTString),                   //Description:  Replacements are available.  Examples of random value: $Random(50, 100)$   $Random($MMin$, $MMax$)$
+    (Name: 'YOffset'; EditorType: etSpinText; DataType: CDTString),                   //Description:  Replacements are available.  Examples of random value: $Random(50, 100)$   $Random($MMin$, $MMax$)$
+    (Name: 'MouseButton'; EditorType: etEnumCombo; DataType: CDTEnum),
+    (Name: 'ClickWithCtrl'; EditorType: etBooleanCombo; DataType: CDTBool),
+    (Name: 'ClickWithAlt'; EditorType: etBooleanCombo; DataType: CDTBool),
+    (Name: 'ClickWithShift'; EditorType: etBooleanCombo; DataType: CDTBool),
+    (Name: 'Count'; EditorType: etSpinText; DataType: CDTInteger),
+    (Name: 'LeaveMouse'; EditorType: etBooleanCombo; DataType: CDTBool),            //Description:  When True, the mouse cursor position is not reset after running the action. It may be required if the click action will open a pop-up menu, to cause the menu to open at that location. This is also useful for debugging, to verify offsets.
+    (Name: 'MoveWithoutClick'; EditorType: etBooleanCombo; DataType: CDTBool),
+    (Name: 'ClickType'; EditorType: etEnumCombo; DataType: CDTEnum),
+    (Name: 'XClickPointReferenceDest'; EditorType: etEnumCombo; DataType: CDTEnum),
+    (Name: 'YClickPointReferenceDest'; EditorType: etEnumCombo; DataType: CDTEnum),
+    (Name: 'XClickPointVarDest'; EditorType: etText; DataType: CDTString),
+    (Name: 'YClickPointVarDest'; EditorType: etText; DataType: CDTString),
+    (Name: 'XOffsetDest'; EditorType: etSpinText; DataType: CDTString),
+    (Name: 'YOffsetDest'; EditorType: etSpinText; DataType: CDTString)
   );
 
   CExecAppProperties: array[0..CPropCount_ExecApp - 1] of TOIPropDef = (
-    (Name: 'PathToApp'; EditorType: etFilePath),                  //Description:  Full path (without quotes) to executable or other file to be open with associated application. Replacements are available.
-    (Name: 'ListOfParams'; EditorType: etUserEditor),          //string items
-    (Name: 'WaitForApp'; EditorType: etBooleanCombo),
-    (Name: 'AppStdIn'; EditorType: etText),                       //Description:  All #4#5 (a.k.a. 0x4:0x5) occurrences are replaced with CRLF (#13#10) before executing the application. Var/replacements are available. E.g.: $ExecAction_StdIn$  When this parameter is empty string, the executed application can run without inherited handles.
-    (Name: 'CurrentDir'; EditorType: etDirPath),                  //Description:  Application current directory.  Replacements are avaialable.  Example: $ExtractFileDir($PathToMyFile$)$
-    (Name: 'UseInheritHandles'; EditorType: etEnumCombo),         //Description:  Required mostly when passing data through StdIn.
-    (Name: 'NoConsole'; EditorType: etBooleanCombo)               //Description:  When checked, console applications are not displayed in a new window.  UI applications can create and display system consoles. For those applications, this option may cause problems if checked.
+    (Name: 'PathToApp'; EditorType: etFilePath; DataType: CDTString),                  //Description:  Full path (without quotes) to executable or other file to be open with associated application. Replacements are available.
+    (Name: 'ListOfParams'; EditorType: etUserEditor; DataType: CDTString),          //string items
+    (Name: 'WaitForApp'; EditorType: etBooleanCombo; DataType: CDTBool),
+    (Name: 'AppStdIn'; EditorType: etText; DataType: CDTString),                       //Description:  All #4#5 (a.k.a. 0x4:0x5) occurrences are replaced with CRLF (#13#10) before executing the application. Var/replacements are available. E.g.: $ExecAction_StdIn$  When this parameter is empty string, the executed application can run without inherited handles.
+    (Name: 'CurrentDir'; EditorType: etDirPath; DataType: CDTString),                  //Description:  Application current directory.  Replacements are avaialable.  Example: $ExtractFileDir($PathToMyFile$)$
+    (Name: 'UseInheritHandles'; EditorType: etEnumCombo; DataType: CDTEnum),         //Description:  Required mostly when passing data through StdIn.
+    (Name: 'NoConsole'; EditorType: etBooleanCombo; DataType: CDTBool)               //Description:  When checked, console applications are not displayed in a new window.  UI applications can create and display system consoles. For those applications, this option may cause problems if checked.
   );
 
   CFindControlProperties: array[0..CPropCount_FindControl - 1] of TOIPropDef = (
-    (Name: 'MatchCriteria'; EditorType: etNone),               //structure
-    (Name: 'AllowToFail'; EditorType: etBooleanCombo),            //Description:  When checked, the execution flow does not stop if the searched (sub)control is not found.  The "Allowed Failed" response can be used for conditional execution (call action).   When the action is allowed to fail and it fails, $LastAction_Status$ is set to "Allowed Failed".
-    (Name: 'MatchText'; EditorType: etTextWithArrow),             //Description:  Wildcards are available ("*"). Variable replacements are available. Used on matching text and BMP text.   For controls, which can have different text values (e.g. a window displaying a different title), these values can be e.g. comma separated. In that case, the text separator is a comma.  For example: a window can display "MyTitle" or "MyTitle (modified)". In that case, the "Match Text" editbox can contain "MyTitle,MyTitle (modified)", without quotes, by using the comma separator.
-    (Name: 'MatchClassName'; EditorType: etTextWithArrow),        //Description:  Wildcards are available ("*"). Variable replacements are available.  There are applications which can have one or more of their windows, registered with class name, containing a randomly generated string.
-    (Name: 'MatchTextSeparator'; EditorType: etText),
-    (Name: 'MatchClassNameSeparator'; EditorType: etText),
-    (Name: 'MatchBitmapText'; EditorType: etFilePathWithArrow),  //array of other structure.  Count should be 0 for FindControl and >0 for FindSubControl
-    (Name: 'MatchBitmapFiles'; EditorType: etFilePathWithArrow),  //Description:  Relative paths can be entered using the following format:' + #13#10 + '$TemplateDir$\<SomeBmp.bmp>
-    (Name: 'MatchBitmapAlgorithm'; EditorType: etEnumCombo),
-    (Name: 'MatchBitmapAlgorithmSettings'; EditorType: etNone),    //structure
-    (Name: 'InitialRectangle'; EditorType: etNone),                 //structure
-    (Name: 'UseWholeScreen'; EditorType: etBooleanCombo),          //Description:  Use the whole screen as search area, if True. Use the current control as search area, if False. The search area is modified by offsets.
-    (Name: 'ColorError'; EditorType: etSpinText),                  //Description:  When matching bitmaps, which contain antialiasing pixels (see smooth text), some of those pixels will not match. The "Color Error" represents the difference between the color values for the two compared pixels, for each RGB channel. The "Color Error Count" is the allowed number of mismatching pixels. Variable replacements are available.  If at least one of the three color channels (R, G, B) mismatches by at least ColorError, it counts as an error point.
-    (Name: 'AllowedColorErrorCount'; EditorType: etSpinText),      //Description:  When matching bitmaps, which contain antialiasing pixels (see smooth text), some of those pixels will not match. The "Color Error" represents the difference between the color values for the two compared pixels, for each RGB channel. The "Color Error Count" is the allowed number of mismatching pixels. Variable replacements are available.
-    (Name: 'WaitForControlToGoAway'; EditorType: etBooleanCombo),  //Description:     When checked, the action expects to find no control, using the current settings.
-    (Name: 'StartSearchingWithCachedControl'; EditorType: etBooleanCombo),   //Description: When checked, the control is checked at the specified cached $My_Control_Left$ and $My_Control_Top$ var replacements, before using the search grid.  In order to cache the control coordinates, please add a SetVar action after this one, by assigning:  $My_Control_Left$ to $Control_Left$  and  $My_Control_Top$ to $Control_Top$  where $My_Control_Left$ and $My_Control_Top$ are the cached values. The "Eval before" checkboxes have to be set.  Each Find(Sub)Control action, which uses caching, will have to use its own set of $My_Control_Left$ and $My_Control_Top$ vars.  The cached values are global coordinates, so they will become invalid even for a subcontrol if the parent window is moved.
-    (Name: 'CachedControlLeft'; EditorType: etText),
-    (Name: 'CachedControlTop'; EditorType: etText)
+    (Name: 'MatchCriteria'; EditorType: etNone; DataType: CDTStructure),               //structure
+    (Name: 'AllowToFail'; EditorType: etBooleanCombo; DataType: CDTBool),            //Description:  When checked, the execution flow does not stop if the searched (sub)control is not found.  The "Allowed Failed" response can be used for conditional execution (call action).   When the action is allowed to fail and it fails, $LastAction_Status$ is set to "Allowed Failed".
+    (Name: 'MatchText'; EditorType: etTextWithArrow; DataType: CDTString),             //Description:  Wildcards are available ("*"). Variable replacements are available. Used on matching text and BMP text.   For controls, which can have different text values (e.g. a window displaying a different title), these values can be e.g. comma separated. In that case, the text separator is a comma.  For example: a window can display "MyTitle" or "MyTitle (modified)". In that case, the "Match Text" editbox can contain "MyTitle,MyTitle (modified)", without quotes, by using the comma separator.
+    (Name: 'MatchClassName'; EditorType: etTextWithArrow; DataType: CDTString),        //Description:  Wildcards are available ("*"). Variable replacements are available.  There are applications which can have one or more of their windows, registered with class name, containing a randomly generated string.
+    (Name: 'MatchTextSeparator'; EditorType: etText; DataType: CDTString),
+    (Name: 'MatchClassNameSeparator'; EditorType: etText; DataType: CDTString),
+    (Name: 'MatchBitmapText'; EditorType: etFilePathWithArrow; DataType: CDTArray),  //array of other structure.  Count should be 0 for FindControl and >0 for FindSubControl
+    (Name: 'MatchBitmapFiles'; EditorType: etFilePathWithArrow; DataType: CDTArray),  //Description:  Relative paths can be entered using the following format:' + #13#10 + '$TemplateDir$\<SomeBmp.bmp>
+    (Name: 'MatchBitmapAlgorithm'; EditorType: etEnumCombo; DataType: CDTEnum),
+    (Name: 'MatchBitmapAlgorithmSettings'; EditorType: etNone; DataType: CDTStructure),    //structure
+    (Name: 'InitialRectangle'; EditorType: etNone; DataType: CDTStructure),                 //structure
+    (Name: 'UseWholeScreen'; EditorType: etBooleanCombo; DataType: CDTBool),          //Description:  Use the whole screen as search area, if True. Use the current control as search area, if False. The search area is modified by offsets.
+    (Name: 'ColorError'; EditorType: etSpinText; DataType: CDTString),                  //Description:  When matching bitmaps, which contain antialiasing pixels (see smooth text), some of those pixels will not match. The "Color Error" represents the difference between the color values for the two compared pixels, for each RGB channel. The "Color Error Count" is the allowed number of mismatching pixels. Variable replacements are available.  If at least one of the three color channels (R, G, B) mismatches by at least ColorError, it counts as an error point.
+    (Name: 'AllowedColorErrorCount'; EditorType: etSpinText; DataType: CDTString),      //Description:  When matching bitmaps, which contain antialiasing pixels (see smooth text), some of those pixels will not match. The "Color Error" represents the difference between the color values for the two compared pixels, for each RGB channel. The "Color Error Count" is the allowed number of mismatching pixels. Variable replacements are available.
+    (Name: 'WaitForControlToGoAway'; EditorType: etBooleanCombo; DataType: CDTBool),  //Description:     When checked, the action expects to find no control, using the current settings.
+    (Name: 'StartSearchingWithCachedControl'; EditorType: etBooleanCombo; DataType: CDTBool),   //Description: When checked, the control is checked at the specified cached $My_Control_Left$ and $My_Control_Top$ var replacements, before using the search grid.  In order to cache the control coordinates, please add a SetVar action after this one, by assigning:  $My_Control_Left$ to $Control_Left$  and  $My_Control_Top$ to $Control_Top$  where $My_Control_Left$ and $My_Control_Top$ are the cached values. The "Eval before" checkboxes have to be set.  Each Find(Sub)Control action, which uses caching, will have to use its own set of $My_Control_Left$ and $My_Control_Top$ vars.  The cached values are global coordinates, so they will become invalid even for a subcontrol if the parent window is moved.
+    (Name: 'CachedControlLeft'; EditorType: etText; DataType: CDTString),
+    (Name: 'CachedControlTop'; EditorType: etText; DataType: CDTString)
   );
 
   {$IFDEF SubProperties}
     CFindControl_MatchCriteriaProperties: array[0..CPropCount_FindControlMatchCriteria - 1] of TOIPropDef = (
-      (Name: 'WillMatchText'; EditorType: etBooleanCombo),
-      (Name: 'WillMatchClassName'; EditorType: etBooleanCombo),
-      (Name: 'WillMatchBitmapText'; EditorType: etBooleanCombo),    //Description:   When selecting FindSubControl action, only bitmaps can be matched (BMP Text or BMP Files).  A SubControl does not have a handle of its own, it is a part of a control.  The $Control_Left$, $Control_Top$, $Control_Width$, $Control_Height$, $Control_Right$, $Control_Bottom$ variables ar set with the subcontrol offset.
-      (Name: 'WillMatchBitmapFiles'; EditorType: etBooleanCombo),
-      (Name: 'SearchForControlMode'; EditorType: etEnumCombo)
+      (Name: 'WillMatchText'; EditorType: etBooleanCombo; DataType: CDTBool),
+      (Name: 'WillMatchClassName'; EditorType: etBooleanCombo; DataType: CDTBool),
+      (Name: 'WillMatchBitmapText'; EditorType: etBooleanCombo; DataType: CDTBool),    //Description:   When selecting FindSubControl action, only bitmaps can be matched (BMP Text or BMP Files).  A SubControl does not have a handle of its own, it is a part of a control.  The $Control_Left$, $Control_Top$, $Control_Width$, $Control_Height$, $Control_Right$, $Control_Bottom$ variables ar set with the subcontrol offset.
+      (Name: 'WillMatchBitmapFiles'; EditorType: etBooleanCombo; DataType: CDTBool),
+      (Name: 'SearchForControlMode'; EditorType: etEnumCombo; DataType: CDTEnum)
     );
 
     CFindControl_MatchBitmapTextProperties: array[0..CPropCount_FindControlMatchBitmapText - 1] of TOIPropDef = (
-      (Name: 'ForegroundColor'; EditorType: etColorCombo),
-      (Name: 'BackgroundColor'; EditorType: etColorCombo),
-      (Name: 'FontName'; EditorType: etEnumComboWithBtn),
-      (Name: 'FontSize'; EditorType: etSpinText),
-      (Name: 'Bold'; EditorType: etBooleanCombo),
-      (Name: 'Italic'; EditorType: etBooleanCombo),
-      (Name: 'Underline'; EditorType: etBooleanCombo),
-      (Name: 'StrikeOut'; EditorType: etBooleanCombo),
-      (Name: 'FontQuality'; EditorType: etEnumCombo),
-      (Name: 'FontQualityUsesReplacement'; EditorType: etBooleanCombo),
-      (Name: 'FontQualityReplacement'; EditorType: etText),
-      (Name: 'ProfileName'; EditorType: etTextWithArrow),
-      (Name: 'CropLeft'; EditorType: etSpinText),
-      (Name: 'CropTop'; EditorType: etSpinText),
-      (Name: 'CropRight'; EditorType: etSpinText),
-      (Name: 'CropBottom'; EditorType: etSpinText)
+      (Name: 'ForegroundColor'; EditorType: etColorCombo; DataType: CDTString),
+      (Name: 'BackgroundColor'; EditorType: etColorCombo; DataType: CDTString),
+      (Name: 'FontName'; EditorType: etEnumComboWithBtn; DataType: CDTString),
+      (Name: 'FontSize'; EditorType: etSpinText; DataType: CDTInteger),
+      (Name: 'Bold'; EditorType: etBooleanCombo; DataType: CDTBool),
+      (Name: 'Italic'; EditorType: etBooleanCombo; DataType: CDTBool),
+      (Name: 'Underline'; EditorType: etBooleanCombo; DataType: CDTBool),
+      (Name: 'StrikeOut'; EditorType: etBooleanCombo; DataType: CDTBool),
+      (Name: 'FontQuality'; EditorType: etEnumCombo; DataType: CDTEnum),
+      (Name: 'FontQualityUsesReplacement'; EditorType: etBooleanCombo; DataType: CDTBool),
+      (Name: 'FontQualityReplacement'; EditorType: etText; DataType: CDTString),
+      (Name: 'ProfileName'; EditorType: etTextWithArrow; DataType: CDTString),
+      (Name: 'CropLeft'; EditorType: etSpinText; DataType: CDTString),
+      (Name: 'CropTop'; EditorType: etSpinText; DataType: CDTString),
+      (Name: 'CropRight'; EditorType: etSpinText; DataType: CDTString),
+      (Name: 'CropBottom'; EditorType: etSpinText; DataType: CDTString)
     );
 
     CFindControl_MatchBitmapAlgorithmSettingsProperties: array[0..CPropCount_FindControlMatchBitmapAlgorithmSettings - 1] of TOIPropDef = (
-      (Name: 'XMultipleOf'; EditorType: etSpinText),
-      (Name: 'YMultipleOf'; EditorType: etSpinText),
-      (Name: 'XOffset'; EditorType: etSpinText),
-      (Name: 'YOffset'; EditorType: etSpinText)
+      (Name: 'XMultipleOf'; EditorType: etSpinText; DataType: CDTInteger),
+      (Name: 'YMultipleOf'; EditorType: etSpinText; DataType: CDTInteger),
+      (Name: 'XOffset'; EditorType: etSpinText; DataType: CDTInteger),
+      (Name: 'YOffset'; EditorType: etSpinText; DataType: CDTInteger)
     );
 
     CFindControl_InitialRectangleProperties: array[0..CPropCount_FindControlInitialRectangle - 1] of TOIPropDef = (
-      (Name: 'Left'; EditorType: etText),
-      (Name: 'Top'; EditorType: etText),
-      (Name: 'Right'; EditorType: etText),
-      (Name: 'Bottom'; EditorType: etText),
-      (Name: 'LeftOffset'; EditorType: etSpinText),
-      (Name: 'TopOffset'; EditorType: etSpinText),
-      (Name: 'RightOffset'; EditorType: etSpinText),
-      (Name: 'BottomOffset'; EditorType: etSpinText)
+      (Name: 'Left'; EditorType: etText; DataType: CDTString),
+      (Name: 'Top'; EditorType: etText; DataType: CDTString),
+      (Name: 'Right'; EditorType: etText; DataType: CDTString),
+      (Name: 'Bottom'; EditorType: etText; DataType: CDTString),
+      (Name: 'LeftOffset'; EditorType: etSpinText; DataType: CDTString),
+      (Name: 'TopOffset'; EditorType: etSpinText; DataType: CDTString),
+      (Name: 'RightOffset'; EditorType: etSpinText; DataType: CDTString),
+      (Name: 'BottomOffset'; EditorType: etSpinText; DataType: CDTString)
     );
   {$ENDIF}
 
   CSetTextProperties: array[0..CPropCount_SetText - 1] of TOIPropDef = (   //Description:  Most edit boxes and combo boxes can be set, using the first two options.  However, depending on their usage on the target application, this approach might not be enough.  For edit boxes, the action can be configured to use key strokes.  For combo boxes, this action will have to be replaced by multiple actions, to open the box, finding text, selecting etc.
-    (Name: 'Text'; EditorType: etText),                                    //Description:  The proper control type has to be selected, for the proper API call. Uses $Control_Handle$ variable.    HTTP calls are available, as var values, using the following format: $http://<server:port>/[params]$
-    (Name: 'ControlType'; EditorType: etEnumCombo)                         //Description:  Uses WM_SETTEXT or CB_SELECTSTRING messages or emulates keystrokes..
+    (Name: 'Text'; EditorType: etText; DataType: CDTString),                                    //Description:  The proper control type has to be selected, for the proper API call. Uses $Control_Handle$ variable.    HTTP calls are available, as var values, using the following format: $http://<server:port>/[params]$
+    (Name: 'ControlType'; EditorType: etEnumCombo; DataType: CDTEnum)                         //Description:  Uses WM_SETTEXT or CB_SELECTSTRING messages or emulates keystrokes..
   );
 
   CCallTemplateProperties: array[0..CPropCount_CallTemplate - 1] of TOIPropDef = (
-    (Name: 'TemplateFileName'; EditorType: etFilePathWithArrow),           //Description:  Replacements are available    //Description[arrow button]:   Templates from the local dir
-    (Name: 'ListOfCustomVarsAndValues'; EditorType: etUserEditor),
-    (Name: 'EvaluateBeforeCalling'; EditorType: etBooleanCombo),           //Description:  If unchecked, the values are passed as strings.
-    (Name: 'CallTemplateLoop'; EditorType: etNone)       //structure       //Description:  What does not work, is closing subtemplates when remote debugging.  So, do not click the stop button when remote debugging CallTemplate actions with loops.
+    (Name: 'TemplateFileName'; EditorType: etFilePathWithArrow; DataType: CDTString),           //Description:  Replacements are available    //Description[arrow button]:   Templates from the local dir
+    (Name: 'ListOfCustomVarsAndValues'; EditorType: etUserEditor; DataType: CDTStructure),
+    (Name: 'EvaluateBeforeCalling'; EditorType: etBooleanCombo; DataType: CDTBool),           //Description:  If unchecked, the values are passed as strings.
+    (Name: 'CallTemplateLoop'; EditorType: etNone; DataType: CDTStructure)       //structure       //Description:  What does not work, is closing subtemplates when remote debugging.  So, do not click the stop button when remote debugging CallTemplate actions with loops.
   );
 
   {$IFDEF SubProperties}
     CCallTemplate_CallTemplateLoopProperties: array[0..CPropCount_CallTemplateLoop - 1] of TOIPropDef = (
-      (Name: 'Enabled'; EditorType: etBooleanCombo),
-      (Name: 'Counter'; EditorType: etText),                                //Description:  Replacements are available
-      (Name: 'InitValue'; EditorType: etText),                              //Description:  Replacements are available
-      (Name: 'EndValue'; EditorType: etText),                               //Description:  Replacements are available.  If the expression evaluator can't properly parse this string, please use a SetVar action to break down the expression into smaller pieces.  For example, $Diff($ItemCount($RemoteVars$)$,1)$ can be split into the following SetVar items (both set to be evaluated):   $RemoteVarsCount$ = $ItemCount($RemoteVars$)$  $LastItemIndex$ = $Diff($RemoteVarsCount$,1)$
-      (Name: 'Direction'; EditorType: etEnumCombo),                         //Description:  Loop direction can be:  Inc - when the counter should be incremented.  Dec - when the counter should be decremented.  Auto - when the init and the end values can be anything, so the counter direction has to be evaluated before starting the loop.
-      (Name: 'BreakCondition'; EditorType: etUserEditor),
-      (Name: 'EvalBreakPosition'; EditorType: etEnumCombo)                  //Description:  The "Break" call can be made, before or after the actual "CallTemplate" call.
+      (Name: 'Enabled'; EditorType: etBooleanCombo; DataType: CDTBool),
+      (Name: 'Counter'; EditorType: etText; DataType: CDTString),                                //Description:  Replacements are available
+      (Name: 'InitValue'; EditorType: etText; DataType: CDTString),                              //Description:  Replacements are available
+      (Name: 'EndValue'; EditorType: etText; DataType: CDTString),                               //Description:  Replacements are available.  If the expression evaluator can't properly parse this string, please use a SetVar action to break down the expression into smaller pieces.  For example, $Diff($ItemCount($RemoteVars$)$,1)$ can be split into the following SetVar items (both set to be evaluated):   $RemoteVarsCount$ = $ItemCount($RemoteVars$)$  $LastItemIndex$ = $Diff($RemoteVarsCount$,1)$
+      (Name: 'Direction'; EditorType: etEnumCombo; DataType: CDTEnum),                         //Description:  Loop direction can be:  Inc - when the counter should be incremented.  Dec - when the counter should be decremented.  Auto - when the init and the end values can be anything, so the counter direction has to be evaluated before starting the loop.
+      (Name: 'BreakCondition'; EditorType: etUserEditor; DataType: CDTString),
+      (Name: 'EvalBreakPosition'; EditorType: etEnumCombo; DataType: CDTEnum)                  //Description:  The "Break" call can be made, before or after the actual "CallTemplate" call.
     );
   {$ENDIF}
 
   CSleepProperties: array[0..CPropCount_Sleep - 1] of TOIPropDef = (
-    (Name: 'Value'; EditorType: etText)
+    (Name: 'Value'; EditorType: etText; DataType: CDTString)
   );
 
   CSetVarProperties: array[0..CPropCount_SetVar - 1] of TOIPropDef = (
-    (Name: 'ListOfVarNamesValuesAndEvalBefore'; EditorType: etUserEditor) //structure   (no sub properties)
+    (Name: 'ListOfVarNamesValuesAndEvalBefore'; EditorType: etUserEditor; DataType: CDTStructure) //structure   (no sub properties)
   );
 
   CWindowOperationsProperties: array[0..CPropCount_WindowOperations - 1] of TOIPropDef = (
-    (Name: 'Operation'; EditorType: etEnumCombo),
-    (Name: 'NewX'; EditorType: etSpinText),
-    (Name: 'NewY'; EditorType: etSpinText),
-    (Name: 'NewWidth'; EditorType: etSpinText),
-    (Name: 'NewHeight'; EditorType: etSpinText),
-    (Name: 'NewPositionEnabled'; EditorType: etBooleanCombo),
-    (Name: 'NewSizeEnabled'; EditorType: etBooleanCombo)
+    (Name: 'Operation'; EditorType: etEnumCombo; DataType: CDTEnum),
+    (Name: 'NewX'; EditorType: etSpinText; DataType: CDTString),
+    (Name: 'NewY'; EditorType: etSpinText; DataType: CDTString),
+    (Name: 'NewWidth'; EditorType: etSpinText; DataType: CDTString),
+    (Name: 'NewHeight'; EditorType: etSpinText; DataType: CDTString),
+    (Name: 'NewPositionEnabled'; EditorType: etBooleanCombo; DataType: CDTBool),
+    (Name: 'NewSizeEnabled'; EditorType: etBooleanCombo; DataType: CDTBool)
   );
 
 type

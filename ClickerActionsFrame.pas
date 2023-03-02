@@ -42,6 +42,8 @@ type
   { TfrClickerActions }
 
   TfrClickerActions = class(TFrame)
+    imgFontColorBuffer: TImage;
+    imglstFontColorProperties: TImageList;
     imglstMatchBitmapTextProperties: TImageList;
     imglstMatchCriteriaProperties: TImageList;
     imglstInitialRectangleProperties: TImageList;
@@ -110,6 +112,7 @@ type
     pmWindowOperationsEditors: TPopupMenu;
     pnlCover: TPanel;
     pnlExtra: TPanel;
+    pnlHorizSplitter: TPanel;
     pnlvstOI: TPanel;
     N10001: TMenuItem;
     N100001: TMenuItem;
@@ -142,7 +145,6 @@ type
     spdbtnCommonTimeouts: TSpeedButton;
     prbTimeout: TProgressBar;
     spdbtnClear: TSpeedButton;
-    chkStopOnError: TCheckBox;
     pmDebugImage: TPopupMenu;
     MenuItemSaveDebugImage: TMenuItem;
     MenuItemCopyDebugImage: TMenuItem;
@@ -155,12 +157,19 @@ type
     AddVariable1: TMenuItem;
     RemoveVariable1: TMenuItem;
     procedure chkWaitForControlToGoAwayChange(Sender: TObject);
+    procedure FrameResize(Sender: TObject);
 
     procedure lbeFindCachedControlLeftChange(Sender: TObject);
     procedure lbeFindCachedControlTopChange(Sender: TObject);
     procedure MenuItem_SetFromControlLeftAndTopClick(Sender: TObject);
     procedure MenuItem_SetFromControlWidthAndHeightClick(Sender: TObject);
     procedure pmStandardColorVariablesPopup(Sender: TObject);
+    procedure pnlHorizSplitterMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure pnlHorizSplitterMouseMove(Sender: TObject; Shift: TShiftState; X,
+      Y: Integer);
+    procedure pnlHorizSplitterMouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
 
     procedure scrboxDebugBmpMouseWheel(Sender: TObject; Shift: TShiftState;
       WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
@@ -220,6 +229,9 @@ type
   private
     { Private declarations }
     FBMPsDir: string;
+    FHold: Boolean;
+    FSplitterMouseDownGlobalPos: TPoint;
+    FSplitterMouseDownImagePos: TPoint;
 
     FEditingActionRec: TClkActionRec;
     FEditingAction: PClkActionRec;
@@ -297,6 +309,7 @@ type
     procedure OverlapGridImgOnDebugImg(ADebugAndGridBitmap: TBitmap);
     procedure CopyTextAndClassFromExternalProvider(AProviderName: string);
     procedure SetActionTimeoutToValue(AValue: Integer);
+    procedure ResizeFrameSectionsBySplitter(NewLeft: Integer);
 
     procedure HandleOnUpdateBitmapAlgorithmSettings;
     procedure HandleOnTriggerOnControlsModified;
@@ -326,6 +339,7 @@ type
       ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer);
 
     procedure FreeOIPopupMenu(Sender: TObject);
+    procedure BuildFontColorIconsList;
 
     function HandleOnOIGetCategoryCount: Integer;
     function HandleOnOIGetCategory(AIndex: Integer): string;
@@ -613,6 +627,7 @@ begin
   CreateRemainingUIComponents;
 
   FFullTemplatesDir := 'Non-existentFolder'; //ExtractFilePath(ParamStr(0)) + 'ActionTemplates'; //init value can be overridden by external wrapper
+  FHold := False;
 
   FSearchAreaScrBox := nil;
   FSearchAreaSearchedBmpDbgImg := nil;
@@ -946,6 +961,77 @@ begin
       pmStandardColorVariables.Items.Items[i].Bitmap.Canvas.Brush.Color := TextColor;
       pmStandardColorVariables.Items.Items[i].Bitmap.Canvas.Rectangle(0, 0, 16, 16);
     end;
+end;
+
+
+procedure TfrClickerActions.FrameResize(Sender: TObject);
+var
+  NewLeft: Integer;
+begin
+  NewLeft := pnlHorizSplitter.Left;
+
+  if NewLeft > Width - 260 then
+    NewLeft := Width - 260;
+
+  ResizeFrameSectionsBySplitter(NewLeft);
+end;
+
+
+procedure TfrClickerActions.ResizeFrameSectionsBySplitter(NewLeft: Integer);
+begin
+  if NewLeft < pnlvstOI.Constraints.MinWidth then
+    NewLeft := pnlvstOI.Constraints.MinWidth;
+
+  if NewLeft > Width - 260 then
+    NewLeft := Width - 260;
+
+  pnlHorizSplitter.Left := NewLeft;
+
+  pnlExtra.Left := pnlHorizSplitter.Left + pnlHorizSplitter.Width;
+  pnlExtra.Width := TabSheetAction.Width - pnlExtra.Left;
+  pnlvstOI.Width := pnlHorizSplitter.Left;
+end;
+
+
+procedure TfrClickerActions.pnlHorizSplitterMouseDown(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  if Shift <> [ssLeft] then
+    Exit;
+
+  if not FHold then
+  begin
+    GetCursorPos(FSplitterMouseDownGlobalPos);
+
+    FSplitterMouseDownImagePos.X := pnlHorizSplitter.Left;
+    FHold := True;
+  end;
+end;
+
+
+procedure TfrClickerActions.pnlHorizSplitterMouseMove(Sender: TObject;
+  Shift: TShiftState; X, Y: Integer);
+var
+  tp: TPoint;
+  NewLeft: Integer;
+begin
+  if Shift <> [ssLeft] then
+    Exit;
+
+  if not FHold then
+    Exit;
+
+  GetCursorPos(tp);
+  NewLeft := FSplitterMouseDownImagePos.X + tp.X - FSplitterMouseDownGlobalPos.X;
+
+  ResizeFrameSectionsBySplitter(NewLeft);
+end;
+
+
+procedure TfrClickerActions.pnlHorizSplitterMouseUp(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  FHold := False;
 end;
 
 
@@ -1448,6 +1534,7 @@ end;
 procedure TfrClickerActions.SetCurrentlyEditingActionType(Value: TClkAction);
 begin
   FCurrentlyEditingActionType := Ord(Value);
+  BuildFontColorIconsList;
   FOIFrame.ReloadContent;
   pnlvstOI.Visible := True;
 
@@ -1806,6 +1893,7 @@ begin
       FEditingAction^.FindControlOptions.MatchBitmapText[n].ProfileName := GetUniqueProfileName;
 
       frClickerFindControl.AddNewFontProfile(FEditingAction^.FindControlOptions.MatchBitmapText[n]);
+      BuildFontColorIconsList;
 
       FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex);
       TriggerOnControlsModified;
@@ -1963,6 +2051,33 @@ begin
   except
     on E: Exception do
       MessageBox(Handle, PChar('EditBox is not available.' + #13#10 + E.Message), PChar(Application.MainForm.Caption), MB_ICONERROR);
+  end;
+end;
+
+
+procedure TfrClickerActions.BuildFontColorIconsList;
+var
+  i: Integer;
+  FontProfilesCount: Integer;
+  FG, BG: TColor;
+begin
+  FontProfilesCount := Length(FEditingAction^.FindControlOptions.MatchBitmapText);
+
+  imglstFontColorProperties.Clear;
+  for i := 0 to FontProfilesCount - 1 do
+  begin
+    FG := HexToInt(EvaluateReplacements(FEditingAction^.FindControlOptions.MatchBitmapText[i].ForegroundColor));
+    BG := HexToInt(EvaluateReplacements(FEditingAction^.FindControlOptions.MatchBitmapText[i].BackgroundColor));
+
+    imgFontColorBuffer.Canvas.Pen.Color := 1;
+
+    imgFontColorBuffer.Canvas.Brush.Color := FG;
+    imgFontColorBuffer.Canvas.Rectangle(0, 0, imgFontColorBuffer.Width, imgFontColorBuffer.Height);
+    imglstFontColorProperties.AddMasked(imgFontColorBuffer.Picture.Bitmap, 2);
+
+    imgFontColorBuffer.Canvas.Brush.Color := BG;
+    imgFontColorBuffer.Canvas.Rectangle(0, 0, imgFontColorBuffer.Width, imgFontColorBuffer.Height);
+    imglstFontColorProperties.AddMasked(imgFontColorBuffer.Picture.Bitmap, 2);
   end;
 end;
 
@@ -2263,8 +2378,55 @@ end;
 
 
 function TfrClickerActions.HandleOnUIGetDataTypeName(ACategoryIndex, APropertyIndex, AItemIndex: Integer): string;
+var
+  EditingActionType: Integer;
 begin
-  Result := 'data';
+  Result := '';
+
+  case ACategoryIndex of
+    CCategory_Common:
+      Result := CCommonProperties[APropertyIndex].DataType;
+
+    CCategory_ActionSpecific:
+    begin
+      EditingActionType := Integer(CurrentlyEditingActionType);
+      if EditingActionType = CClkUnsetAction then
+        Result := '?'
+      else
+      begin
+        if AItemIndex = -1 then
+          Result := CMainProperties[EditingActionType]^[APropertyIndex].DataType
+        else
+        begin
+          case EditingActionType of
+            Ord(acFindControl), Ord(acFindSubControl):
+            begin
+              case APropertyIndex of
+                CFindControl_MatchCriteria_PropIndex:
+                  Result := CFindControl_MatchCriteriaProperties[AItemIndex].DataType;
+
+                CFindControl_MatchBitmapText_PropIndex:
+                  Result := CFindControl_MatchBitmapTextProperties[AItemIndex].DataType;
+
+                CFindControl_MatchBitmapAlgorithmSettings_PropIndex:
+                  Result := CFindControl_MatchBitmapAlgorithmSettingsProperties[AItemIndex].DataType;
+
+                CFindControl_InitialRectangle_PropIndex:
+                  Result := CFindControl_InitialRectangleProperties[AItemIndex].DataType;
+              end;
+            end;
+
+            Ord(acCallTemplate):
+              if APropertyIndex = CCallTemplate_CallTemplateLoop_PropIndex then
+                Result := CCallTemplate_CallTemplateLoopProperties[AItemIndex].DataType;
+          end;
+        end; //else
+      end;
+    end;
+
+    else
+      Result := '???';
+  end;
 end;
 
 
@@ -2278,7 +2440,7 @@ procedure TfrClickerActions.HandleOnOIGetImageIndexEx(ANodeLevel, ACategoryIndex
   Column: TColumnIndex; var Ghosted: Boolean; var ImageIndex: Integer; var ImageList: TCustomImageList);
 var
   EditingActionType: Integer;
-  ItemIndexMod: Integer;
+  ItemIndexMod, ItemIndexDiv: Integer;
 begin
   EditingActionType := Integer(CurrentlyEditingActionType);
 
@@ -2367,6 +2529,24 @@ begin
           end;
         end; //case
       end; // Column = 0
+
+      if Column = 1 then
+        if ANodeLevel = CPropertyItemLevel then
+          if EditingActionType in [Ord(acFindControl), Ord(acFindSubControl)] then
+            if APropertyIndex = CFindControl_MatchBitmapText_PropIndex then
+            begin
+              ItemIndexMod := AItemIndex mod CPropCount_FindControlMatchBitmapText;
+              ItemIndexDiv := AItemIndex div CPropCount_FindControlMatchBitmapText;
+
+              if ItemIndexMod in [CFindControl_MatchBitmapText_ForegroundColor_PropItemIndex, CFindControl_MatchBitmapText_BackgroundColor_PropItemIndex] then
+              begin
+                ImageList := imglstFontColorProperties;
+                ImageIndex := ItemIndexDiv shl 1 + ItemIndexMod;
+
+                if ImageIndex > imglstFontColorProperties.Count - 1 then
+                  BuildFontColorIconsList;
+              end;
+            end;
     end;
   end;
 end;
@@ -2377,7 +2557,7 @@ var
   EditingActionType: Integer;
   TempStringList: TStringList;
   ItemIndexMod, ItemIndexDiv: Integer;
-  FoundProfileIndex, i: Integer;
+  FoundProfileIndex, i, ImageIndex: Integer;
 begin
   case ACategoryIndex of
     CCategory_Common:
@@ -2416,6 +2596,19 @@ begin
                 ItemIndexDiv := AItemIndex div CPropCount_FindControlMatchBitmapText;
 
                 case ItemIndexMod of
+                  CFindControl_MatchBitmapText_ForegroundColor_PropItemIndex, CFindControl_MatchBitmapText_BackgroundColor_PropItemIndex:
+                  begin
+                    imgFontColorBuffer.Canvas.Pen.Color := 1;
+                    imgFontColorBuffer.Canvas.Brush.Color := HexToInt(EvaluateReplacements(ANewText));
+                    imgFontColorBuffer.Canvas.Rectangle(0, 0, imgFontColorBuffer.Width, imgFontColorBuffer.Height);
+
+                    ImageIndex := ItemIndexDiv shl 1 + ItemIndexMod;    //shl 1 means that there are two items / pair  (FG and BG)
+                    if ImageIndex > imglstFontColorProperties.Count - 1 then
+                      BuildFontColorIconsList;
+
+                    imglstFontColorProperties.ReplaceMasked(ImageIndex, imgFontColorBuffer.Picture.Bitmap, 2);
+                  end;
+
                   CFindControl_MatchBitmapText_CropLeft:
                   begin
                     if StrToIntDef(ANewText, 0) < 0 then

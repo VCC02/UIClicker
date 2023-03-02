@@ -8,6 +8,7 @@ object frClickerActions: TfrClickerActions
   ClientWidth = 1056
   Constraints.MinHeight = 260
   Constraints.MinWidth = 688
+  OnResize = FrameResize
   TabOrder = 0
   TabStop = True
   DesignLeft = 86
@@ -39,20 +40,61 @@ object frClickerActions: TfrClickerActions
       ParentFont = False
       object pnlvstOI: TPanel
         Left = 0
-        Height = 208
+        Height = 248
         Top = 0
         Width = 432
         Anchors = [akTop, akLeft, akBottom]
         BevelOuter = bvNone
         Caption = 'pnlvstOI'
+        ClientHeight = 248
+        ClientWidth = 432
         Color = 13500339
+        Constraints.MinHeight = 208
+        Constraints.MinWidth = 350
         Font.Color = clWindowText
         Font.Height = -11
         Font.Name = 'Tahoma'
         ParentColor = False
         ParentFont = False
-        TabOrder = 2
+        TabOrder = 1
         Visible = False
+        object imgFontColorBuffer: TImage
+          Left = 383
+          Height = 16
+          Top = 204
+          Width = 16
+          AutoSize = True
+          Picture.Data = {
+            07544269746D617036030000424D360300000000000036000000280000001000
+            0000100000000100180000000000000300000000000000000000000000000000
+            0000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+            FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+            FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+            FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+            FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+            FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+            FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+            FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+            FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+            FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+            FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+            FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+            FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+            FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+            FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+            FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+            FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+            FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+            FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+            FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+            FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+            FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+            FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+            FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
+            FFFF
+          }
+          Visible = False
+        end
       end
       object lblAction: TLabel
         Left = 1
@@ -92,28 +134,17 @@ object frClickerActions: TfrClickerActions
       object prbTimeout: TProgressBar
         Left = 2
         Height = 8
-        Top = 240
+        Top = 258
         Width = 137
         Anchors = [akLeft, akBottom]
         Smooth = True
         TabOrder = 0
       end
-      object chkStopOnError: TCheckBox
-        Left = 2
-        Height = 19
-        Top = 248
-        Width = 86
-        Anchors = [akLeft, akBottom]
-        Caption = 'Stop On Error'
-        Checked = True
-        State = cbChecked
-        TabOrder = 1
-      end
       object lblFeatureInWork1: TLabel
-        Left = 64
+        Left = 176
         Height = 21
         Hint = '- Action content cannot be updated yet from the Object Inspector.'#13#10'- Some data editors are not implemented.'#13#10'- Various editboxes can be set by dragging the mouse from them. This is partially implemented in Object Inspector.'#13#10'- Various descriptions are not implemented yet.'
-        Top = 216
+        Top = 245
         Width = 165
         Anchors = [akLeft, akBottom]
         Caption = '[Feature in work...]'
@@ -134,7 +165,7 @@ object frClickerActions: TfrClickerActions
         ClientHeight = 266
         ClientWidth = 562
         ParentColor = False
-        TabOrder = 3
+        TabOrder = 2
         object pnlCover: TPanel
           Left = 400
           Height = 50
@@ -144,11 +175,25 @@ object frClickerActions: TfrClickerActions
           Visible = False
         end
       end
+      object pnlHorizSplitter: TPanel
+        Cursor = crHSplit
+        Left = 436
+        Height = 266
+        Top = 0
+        Width = 11
+        Anchors = [akTop, akLeft, akBottom]
+        Color = 13041606
+        ParentColor = False
+        TabOrder = 3
+        OnMouseDown = pnlHorizSplitterMouseDown
+        OnMouseMove = pnlHorizSplitterMouseMove
+        OnMouseUp = pnlHorizSplitterMouseUp
+      end
     end
     object TabSheetCondition: TTabSheet
       Caption = 'Condition'
       ClientHeight = 268
-      ClientWidth = 1004
+      ClientWidth = 1024
       Font.Color = clWindowText
       Font.Height = -11
       Font.Name = 'Tahoma'
@@ -158,7 +203,7 @@ object frClickerActions: TfrClickerActions
         Left = 0
         Height = 272
         Top = 0
-        Width = 1022
+        Width = 1042
         Anchors = [akTop, akLeft, akRight, akBottom]
         ParentColor = False
         TabOrder = 0
@@ -1205,5 +1250,13 @@ object frClickerActions: TfrClickerActions
       Caption = '$Color_WindowFrame$'
       OnClick = MenuItemControl_EdgeRefGenericClick
     end
+  end
+  object imglstFontColorProperties: TImageList
+    Left = 312
+    Top = 176
+    Bitmap = {
+      4C7A040000001000000010000000260000000000000078DAEDD53101000008C3
+      303CA116B543C872C4429B640274BA055A6920F83F50E701FC199088
+    }
   end
 end
