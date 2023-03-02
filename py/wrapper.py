@@ -547,18 +547,18 @@ print("InitClickerClient: ", DllFuncs.InitClickerClient())
 try:
     print("TestConnectionToServer: ", DllFuncs.TestConnectionToServer())
     
-    print("GetServerAddress: ", DllFuncs.GetServerAddress())
+    #print("GetServerAddress: ", DllFuncs.GetServerAddress())
     
-    print("SetServerAddress: ", DllFuncs.SetServerAddress('http://192.168.3.102:5444/'))
-    print("GetServerAddress: ", DllFuncs.GetServerAddress())
-    print("TestConnectionToServer after setting wrong address: ", DllFuncs.TestConnectionToServer())
+    # print("SetServerAddress: ", DllFuncs.SetServerAddress('http://192.168.3.102:5444/'))
+    # print("GetServerAddress: ", DllFuncs.GetServerAddress())
+    # print("TestConnectionToServer after setting wrong address: ", DllFuncs.TestConnectionToServer())
     
-    print("SetServerAddress: ", DllFuncs.SetServerAddress('http://127.0.0.1:5444/'))
-    print("GetServerAddress: ", DllFuncs.GetServerAddress())
-    print("TestConnectionToServer after setting a working address: ", DllFuncs.TestConnectionToServer())
+    # print("SetServerAddress: ", DllFuncs.SetServerAddress('http://127.0.0.1:5444/'))
+    # print("GetServerAddress: ", DllFuncs.GetServerAddress())
+    # print("TestConnectionToServer after setting a working address: ", DllFuncs.TestConnectionToServer())
     
-    #print("ClearClientInMemFS: ", DllFuncs.ClearClientInMemFS())  #For debugging only. The client should work without this call.
-    #print("ClearServerInMemFS: ", DllFuncs.ClearServerInMemFS())  #For debugging only. The server should work without this call.
+    # #print("ClearClientInMemFS: ", DllFuncs.ClearClientInMemFS())  #For debugging only. The client should work without this call.
+    # #print("ClearServerInMemFS: ", DllFuncs.ClearServerInMemFS())  #For debugging only. The server should work without this call.
     
     print("CreateNewTemplate: ", DllFuncs.CreateNewTemplate('VerifyClicking.clktmpl')) #creates a new template in dll's in-mem file system
     print("CreateNewTemplate: ", DllFuncs.CreateNewTemplate('VerifyClicking.clktmpl')) #the second call returns 1, because the file already exists
@@ -649,7 +649,7 @@ try:
     
     print("GetListOfFilesFromClientInMem: ", DllFuncs.GetListOfFilesFromClientInMem())
     
-    #print("GetTemplateContentFromClientInMemAsString: ", DllFuncs.GetTemplateContentFromClientInMemAsString('VerifyClicking.clktmpl'))
+    # #print("GetTemplateContentFromClientInMemAsString: ", DllFuncs.GetTemplateContentFromClientInMemAsString('VerifyClicking.clktmpl'))
 
     print("FileProviderClientThreadDone: ", DllFuncs.FileProviderClientThreadDone())
     print("TerminateFileProviderClientThread: ", DllFuncs.TerminateFileProviderClientThread())
@@ -657,5 +657,6 @@ try:
     print("FileProviderClientThreadDone: ", DllFuncs.FileProviderClientThreadDone())
 finally:
     print("DoneClickerClient", DllFuncs.DoneClickerClient())
+    print("end of script")
 
 

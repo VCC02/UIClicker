@@ -80,6 +80,7 @@ type
 
 
   TClkFindControlOptionsAPI = record
+    DummyField: Integer;    //required for proper alignment (otherwise, there is an AV in Python)
     MatchCriteria: TClkFindControlMatchCriteria;
     AllowToFail: Boolean;
     MatchText: PWideChar;

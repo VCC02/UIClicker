@@ -96,14 +96,24 @@ class TWindowOperation: #(Enum):
     woClose = 2
 
 
+class TLoopDirection:  #
+    ldInc = 0
+    ldDec = 1
+    ldAuto = 2
+
+class TLoopEvalBreakPosition:  #(Enum):
+    lebpAfterContent = 0
+    lebpBeforeContent = 1
+
+               
 class TClickOptions(Structure):
-    _fields_ = [("XClickPointReference", BYTE), #LONG), #TXClickPointReference),  #this is defined as 32-bit in dll, but somehow, it wants 8-bit
-               ("YClickPointReference", BYTE), #LONG), #TYClickPointReference),  #this is defined as 32-bit in dll, but somehow, it wants 8-bit
+    _fields_ = [("XClickPointReference", LONG), #TXClickPointReference
+               ("YClickPointReference", LONG), #TYClickPointReference
                ("XClickPointVar", LPCWSTR),
                ("YClickPointVar", LPCWSTR),
                ("XOffset", LPCWSTR),
                ("YOffset", LPCWSTR),
-               ("MouseButton", LONG), #TMouseButton),  #not clear why TMouseButton has to be 32-bit, while TXClickPointReference is 8-bit
+               ("MouseButton", LONG), #TMouseButton
                ("ClickWithCtrl", BOOLEAN),
                ("ClickWithAlt", BOOLEAN),
                ("ClickWithShift", BOOLEAN),
@@ -112,12 +122,12 @@ class TClickOptions(Structure):
                ("LeaveMouse", BOOLEAN),
                ("MoveWithoutClick", BOOLEAN),
                ("ClickType", LONG),    #see CClickType_Click and CClickType_DoubleClick
-               ("XClickPointReferenceDest", BYTE), #TXClickPointReference),  #this is defined as 32-bit in dll, but somehow, it wants 8-bit
-               ("YClickPointReferenceDest", BYTE), #TYClickPointReference),  #this is defined as 32-bit in dll, but somehow, it wants 8-bit
+               ("XClickPointReferenceDest", LONG), #TXClickPointReference
+               ("YClickPointReferenceDest", LONG), #TYClickPointReference
                ("XClickPointVarDest", LPCWSTR),
                ("YClickPointVarDest", LPCWSTR),
                ("XOffsetDest", LPCWSTR), 
-               ("YOffsetDest", LPCWSTR)]
+               ("YOffsetDest", LPCWSTR)]               
 
 PClickOptions = ctypes.POINTER(TClickOptions)
 
@@ -145,15 +155,15 @@ def GetDefaultClickOptions():
     ClickOptions.XOffsetDest = ''
     ClickOptions.YOffsetDest = ''
     return ClickOptions
-    
-    
+
+
 class TExecAppOptions(Structure):
     _fields_ = [("PathToApp", LPCWSTR),
                ("ListOfParams", LPCWSTR),
                ("WaitForApp", BOOLEAN),
                ("AppStdIn", LPCWSTR),
                ("CurrentDir", LPCWSTR),
-               ("UseInheritHandles", BYTE)] #TExecAppUseInheritHandles
+               ("UseInheritHandles", LONG)] #TExecAppUseInheritHandless
 
 PExecAppOptions = ctypes.POINTER(TExecAppOptions)
 
@@ -173,14 +183,14 @@ class TClkFindControlMatchCriteria(Structure):
                ("WillMatchClassName", BOOLEAN),
                ("WillMatchBitmapText", BOOLEAN),
                ("WillMatchBitmapFiles", BOOLEAN),
-               ("SearchForControlMode", BYTE)] #TSearchForControlMode
-               
+               ("SearchForControlMode", LONG)] #TSearchForControlMode
+
 class TMatchBitmapAlgorithmSettings(Structure):
     _fields_ = [("XMultipleOf", LONG),
                ("YMultipleOf", LONG),
                ("XOffset", LONG),
                ("YOffset", LONG)]
-               
+
 class TRectString(Structure):
     _fields_ = [("Left", LPCWSTR),
                ("Top", LPCWSTR),
@@ -191,8 +201,10 @@ class TRectString(Structure):
                ("RightOffset", LPCWSTR),
                ("BottomOffset", LPCWSTR)]
 
+
 class TFindControlOptions(Structure):
-    _fields_ = [("MatchCriteria", TClkFindControlMatchCriteria),
+    _fields_ = [("DummyField", LONG),
+               ("MatchCriteria", TClkFindControlMatchCriteria),
                ("AllowToFail", BOOLEAN),
                ("MatchText", LPCWSTR),
                ("MatchClassName", LPCWSTR),
@@ -200,7 +212,7 @@ class TFindControlOptions(Structure):
                ("MatchClassNameSeparator", LPCWSTR),
                ("MatchBitmapText", LARGE_INTEGER), #TClkFindControlMatchBitmapTextArr;  #dummy field, can be updated, by a different call
                ("MatchBitmapFiles", LPCWSTR),
-               ("MatchBitmapAlgorithm", BYTE), #TMatchBitmapAlgorithm)
+               ("MatchBitmapAlgorithm", LONG), #TMatchBitmapAlgorithm)
                ("MatchBitmapAlgorithmSettings", TMatchBitmapAlgorithmSettings),
                ("InitialRectangle", TRectString),
                ("UseWholeScreen", BOOLEAN),
@@ -210,7 +222,7 @@ class TFindControlOptions(Structure):
                ("StartSearchingWithCachedControl", BOOLEAN),
                ("CachedControlLeft", LPCWSTR),
                ("CachedControlTop", LPCWSTR)]
-               
+
 PFindControlOptions = ctypes.POINTER(TFindControlOptions)
 
 def GetDefaultFindControlOptions():
@@ -221,22 +233,22 @@ def GetDefaultFindControlOptions():
     FindControlOptions.MatchCriteria.WillMatchBitmapText = False
     FindControlOptions.MatchCriteria.WillMatchBitmapFiles = False
     FindControlOptions.MatchCriteria.SearchForControlMode = TSearchForControlMode.sfcmGenGrid
-    
+
     FindControlOptions.AllowToFail = False
     FindControlOptions.MatchText = 'SomeText'
     FindControlOptions.MatchClassName = 'TButton'
     FindControlOptions.MatchTextSeparator = ''
     FindControlOptions.MatchClassNameSeparator = ''
-    FindControlOptions.MatchBitmapText = 0 #dummy field  (The content is updated separately. See TClkFindControlMatchBitmapText)
+    FindControlOptions.MatchBitmapText = 305419907 # $12345683 #0 #dummy field  (The content is updated separately. See TClkFindControlMatchBitmapText)
     FindControlOptions.MatchBitmapFiles = '' #'FileExample1.bmp\r\nFileExample2.bmp\r\nFileExample3.bmp'
     FindControlOptions.MatchBitmapAlgorithm = TMatchBitmapAlgorithm.mbaBruteForce
-    
+
     FindControlOptions.MatchBitmapAlgorithmSettings = TMatchBitmapAlgorithmSettings()
     FindControlOptions.MatchBitmapAlgorithmSettings.XMultipleOf = 1
     FindControlOptions.MatchBitmapAlgorithmSettings.YMultipleOf = 1
     FindControlOptions.MatchBitmapAlgorithmSettings.XOffset = 0
     FindControlOptions.MatchBitmapAlgorithmSettings.YOffset = 0
-    
+
     FindControlOptions.InitialRectangle = TRectString()
     FindControlOptions.InitialRectangle.Left = '$Control_Left$'
     FindControlOptions.InitialRectangle.Top = '$Control_Top$'
@@ -246,7 +258,7 @@ def GetDefaultFindControlOptions():
     FindControlOptions.InitialRectangle.TopOffset = '0'
     FindControlOptions.InitialRectangle.RightOffset = '0'
     FindControlOptions.InitialRectangle.BottomOffset = '0'
-    
+
     FindControlOptions.UseWholeScreen = True  #usually True for finding a window, and False, for finding a (sub)control on a window or another control.  
     FindControlOptions.ColorError = '0'
     FindControlOptions.AllowedColorErrorCount = '0'
@@ -269,8 +281,8 @@ def GetDefaultFindSubControlOptions():
 
 class TSetControlTextOptions(Structure):
     _fields_ = [("Text", LPCWSTR),
-               ("ControlType", BYTE)] #TClkSetTextControlType
-               
+               ("ControlType", LONG)] #TClkSetTextControlType
+
 PSetControlTextOptions = ctypes.POINTER(TSetControlTextOptions)
 
 def GetDefaultSetControlTextOptions():
@@ -280,10 +292,21 @@ def GetDefaultSetControlTextOptions():
     return SetControlTextOptions
 
 
+class TClkCallTemplateLoop(Structure):
+    _fields_ = [("Enabled", BOOLEAN),
+               ("Counter", LPCWSTR),
+               ("InitValue", LPCWSTR),
+               ("EndValue", LPCWSTR),
+               ("Direction", LONG), #TLoopDirection
+               ("BreakCondition", LPCWSTR),
+               ("EvalBreakPosition", LONG)] #TLoopEvalBreakPosition
+               
+
 class TCallTemplateOptions(Structure):
     _fields_ = [("TemplateFileName", LPCWSTR),
                ("ListOfCustomVarsAndValues", LPCWSTR),  #  example:  $VarA$=ValueA\r\n$VarB$=ValueB\r\n$VarC$=ValueC
-               ("EvaluateBeforeCalling", BOOLEAN)]
+               ("EvaluateBeforeCalling", BOOLEAN),
+               ("CallTemplateLoop", TClkCallTemplateLoop)]
 
 PCallTemplateOptions = ctypes.POINTER(TCallTemplateOptions)
 
@@ -292,6 +315,15 @@ def GetDefaultCallTemplateOptions():
     CallTemplateOptions.TemplateFileName = 'PathToTemplate.clktmpl'
     CallTemplateOptions.ListOfCustomVarsAndValues = ''  #these vars will be added to the existing list of vars
     CallTemplateOptions.EvaluateBeforeCalling = False
+
+    CallTemplateOptions.CallTemplateLoop = TClkCallTemplateLoop()
+    CallTemplateOptions.CallTemplateLoop.Enabled = False
+    CallTemplateOptions.CallTemplateLoop.Counter = ''  #  e.g. "$i$"
+    CallTemplateOptions.CallTemplateLoop.InitValue = '0'
+    CallTemplateOptions.CallTemplateLoop.EndValue = '3'
+    CallTemplateOptions.CallTemplateLoop.Direction = TLoopDirection.ldInc
+    CallTemplateOptions.CallTemplateLoop.BreakCondition = ''
+    CallTemplateOptions.CallTemplateLoop.EvalBreakPosition = TLoopEvalBreakPosition.lebpAfterContent
     return CallTemplateOptions
 
 
@@ -322,7 +354,7 @@ def GetDefaultSetVarOptions():
 
 
 class TWindowOperationsOptions(Structure):
-    _fields_ = [("Operation", BYTE),  #TWindowOperation
+    _fields_ = [("Operation", LONG),  #TWindowOperation
                ("NewX", LPCWSTR),
                ("NewY", LPCWSTR),
                ("NewWidth", LPCWSTR),
@@ -355,7 +387,7 @@ class TClkFindControlMatchBitmapText(Structure):
                ("Italic", BOOLEAN),
                ("Underline", BOOLEAN),
                ("StrikeOut", BOOLEAN),
-               ("FontQuality", BYTE), #TFontQuality
+               ("FontQuality", LONG), #TFontQuality
                ("FontQualityUsesReplacement", BOOLEAN),
                ("FontQualityReplacement", LPCWSTR),
                ("ProfileName", LPCWSTR),
@@ -363,7 +395,7 @@ class TClkFindControlMatchBitmapText(Structure):
                ("CropTop", LPCWSTR),
                ("CropRight", LPCWSTR),
                ("CropBottom", LPCWSTR)]
-               
+
 PClkFindControlMatchBitmapText = ctypes.POINTER(TClkFindControlMatchBitmapText)
 
 def GetDefaultMatchBitmapText():
