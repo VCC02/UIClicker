@@ -15,7 +15,7 @@ object frClickerFindControl: TfrClickerFindControl
     Height = 250
     Top = 0
     Width = 877
-    ActivePage = TabSheetActionFindSubControlBMPText
+    ActivePage = TabSheetActionFindSubControlSearchArea
     Anchors = [akTop, akLeft, akRight, akBottom]
     Constraints.MinHeight = 201
     Constraints.MinWidth = 650
@@ -24,7 +24,7 @@ object frClickerFindControl: TfrClickerFindControl
     Images = imglstFindCriteria
     ParentFont = False
     ParentShowHint = False
-    TabIndex = 1
+    TabIndex = 2
     TabOrder = 0
     OnChange = PageControlMatchChange
     object TabSheetActionFindSubControlText: TTabSheet
@@ -182,14 +182,6 @@ object frClickerFindControl: TfrClickerFindControl
         ItemHeight = 0
         TabOrder = 3
         Visible = False
-      end
-      object lblInitRectOffsetsInfo: TLabel
-        Left = 472
-        Height = 13
-        Top = 128
-        Width = 264
-        Anchors = [akTop, akRight]
-        Caption = 'Offsets can be used to limit or extend the search area.'
       end
       object btnDisplaySearchAreaDebuggingImage: TButton
         Left = 344
@@ -493,42 +485,6 @@ object frClickerFindControl: TfrClickerFindControl
         OnChange = chkShowGridOnBMPPreviewChange
         TabOrder = 4
       end
-      object lblSearchAreaValidValuesInfo: TLabel
-        Left = 472
-        Height = 13
-        Hint = 'When setting the search area and the offset values, make sure the previous action is the last executed action.'#13#10'Also it has to be successfully executed. Otherwise, the reference values will be wrong.'
-        Top = 152
-        Width = 349
-        Anchors = [akTop, akRight]
-        Caption = 'The above values should be valid before executing the action, not after.'
-        ParentShowHint = False
-        ShowHint = True
-      end
-      object lblBMPSettingsInfo: TLabel
-        Left = 472
-        Height = 13
-        Top = 171
-        Width = 177
-        Anchors = [akTop, akRight]
-        Caption = 'Used for "BMP Text" and "BMP Files".'
-      end
-      object lblSearchInfo: TLabel
-        Left = 472
-        Height = 13
-        Top = 187
-        Width = 254
-        Anchors = [akTop, akRight]
-        Caption = 'The bitmap searching algorithm stops on error count.'
-      end
-      object lblCachingInfo: TLabel
-        Left = 472
-        Height = 13
-        Hint = 'Using caching on multpile font profiles may indeed be faster than without it, but for every cache miss, the search defaults to the selected algorithm.'
-        Top = 201
-        Width = 379
-        Anchors = [akTop, akRight]
-        Caption = 'Caching is more effective when searching for controls with a single font profile.'
-      end
     end
   end
   object imglstFindCriteria: TImageList
@@ -575,8 +531,8 @@ object frClickerFindControl: TfrClickerFindControl
     Top = 80
   end
   object pmExtraCopyValueWindows: TPopupMenu
-    Left = 584
-    Top = 152
+    Left = 536
+    Top = 96
     object MenuItem_CopyTextAndClassFromPreviewWindow: TMenuItem
       Caption = 'Copy values from preview window'
       OnClick = CopyTextAndClassFromPreviewWindowClick

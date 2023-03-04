@@ -44,13 +44,23 @@ type
     MenuItem_AddSetVar: TMenuItem;
     MenuItem_RemoveSetVar: TMenuItem;
     N4: TMenuItem;
+    pnlVars: TPanel;
+    pnlFunctions: TPanel;
     pmSetVars: TPopupMenu;
+    pnlHorizSplitter: TPanel;
     spdbtnMoveDown: TSpeedButton;
     spdbtnMoveUp: TSpeedButton;
     tmrEditSetVars: TTimer;
     vstSetVar: TVirtualStringTree;
+    procedure FrameResize(Sender: TObject);
     procedure MenuItem_AddSetVarClick(Sender: TObject);
     procedure MenuItem_RemoveSetVarClick(Sender: TObject);
+    procedure pnlHorizSplitterMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure pnlHorizSplitterMouseMove(Sender: TObject; Shift: TShiftState; X,
+      Y: Integer);
+    procedure pnlHorizSplitterMouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
     procedure spdbtnMoveDownClick(Sender: TObject);
     procedure spdbtnMoveUpClick(Sender: TObject);
     procedure tmrEditSetVarsTimer(Sender: TObject);
@@ -84,9 +94,14 @@ type
     FSetVarEditingText: string;
     FSetVarUpdatedVstText: Boolean;
 
+    FHold: Boolean;
+    FSplitterMouseDownGlobalPos: TPoint;
+    FSplitterMouseDownImagePos: TPoint;
+
     FOnTriggerOnControlsModified: TOnTriggerOnControlsModified;
 
     procedure UpdateNodeCheckStateFromEvalBefore(ANode: PVirtualNode);
+    procedure ResizeFrameSectionsBySplitter(NewLeft: Integer);
 
     procedure DoOnTriggerOnControlsModified;
   public
@@ -114,6 +129,8 @@ begin
   FSetVarContent_Vars := TStringList.Create;
   FSetVarContent_Values := TStringList.Create;
   FSetVarContent_EvalBefore := TStringList.Create;
+
+  FHold := False;
 
   FOnTriggerOnControlsModified := nil;
 
@@ -351,6 +368,77 @@ begin
   vstSetVar.RootNodeCount := FSetVarContent_Vars.Count;
   vstSetVar.Repaint;
   DoOnTriggerOnControlsModified;
+end;
+
+
+procedure TfrClickerSetVar.FrameResize(Sender: TObject);
+var
+  NewLeft: Integer;
+begin
+  NewLeft := pnlHorizSplitter.Left;
+
+  if NewLeft > Width - 100 then
+    NewLeft := Width - 100;
+
+  ResizeFrameSectionsBySplitter(NewLeft);
+end;
+
+
+procedure TfrClickerSetVar.ResizeFrameSectionsBySplitter(NewLeft: Integer);
+begin
+  if NewLeft < pnlVars.Constraints.MinWidth then
+    NewLeft := pnlVars.Constraints.MinWidth;
+
+  if NewLeft > Width - 100 then
+    NewLeft := Width - 100;
+
+  pnlHorizSplitter.Left := NewLeft;
+
+  pnlFunctions.Left := pnlHorizSplitter.Left + pnlHorizSplitter.Width;
+  pnlFunctions.Width := Width - pnlFunctions.Left;
+  pnlVars.Width := pnlHorizSplitter.Left;
+end;
+
+
+procedure TfrClickerSetVar.pnlHorizSplitterMouseDown(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  if Shift <> [ssLeft] then
+    Exit;
+
+  if not FHold then
+  begin
+    GetCursorPos(FSplitterMouseDownGlobalPos);
+
+    FSplitterMouseDownImagePos.X := pnlHorizSplitter.Left;
+    FHold := True;
+  end;
+end;
+
+
+procedure TfrClickerSetVar.pnlHorizSplitterMouseMove(Sender: TObject;
+  Shift: TShiftState; X, Y: Integer);
+var
+  tp: TPoint;
+  NewLeft: Integer;
+begin
+  if Shift <> [ssLeft] then
+    Exit;
+
+  if not FHold then
+    Exit;
+
+  GetCursorPos(tp);
+  NewLeft := FSplitterMouseDownImagePos.X + tp.X - FSplitterMouseDownGlobalPos.X;
+
+  ResizeFrameSectionsBySplitter(NewLeft);
+end;
+
+
+procedure TfrClickerSetVar.pnlHorizSplitterMouseUp(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  FHold := False;
 end;
 
 

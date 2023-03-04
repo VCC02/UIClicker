@@ -178,9 +178,6 @@ type
     imgUpdateLeftTopRightBottomOffsets: TImage;
     lbeFoundControlText: TLabeledEdit;
     lbeFoundControlClass: TLabeledEdit;
-    lblBMPSettingsInfo: TLabel;
-    lblCachingInfo: TLabel;
-    lblInitRectOffsetsInfo: TLabel;
     lblMouseOnDbgImg: TLabel;
     lblMouseOnDbgImgBB: TLabel;
     lblMouseOnDbgImgGG: TLabel;
@@ -188,8 +185,6 @@ type
     lblPreviewControl_Height: TLabel;
     lblPreviewControl_Width: TLabel;
     lblReservedSpaceForDbgImg: TLabel;
-    lblSearchAreaValidValuesInfo: TLabel;
-    lblSearchInfo: TLabel;
     lstMatchBitmapFiles: TListBox;
     MenuItem_CopyTextAndClassFromRemoteScreenWindow: TMenuItem;
     MenuItem_CopyTextAndClassFromWinInterpWindow: TMenuItem;
@@ -1560,6 +1555,8 @@ begin
   FBMPTextProfiles[n].CropTop := ANewProfile.CropTop;
   FBMPTextProfiles[n].CropRight := ANewProfile.CropRight;
   FBMPTextProfiles[n].CropBottom := ANewProfile.CropBottom;
+
+  PreviewText;
 
   DoOnTriggerOnControlsModified;
 end;

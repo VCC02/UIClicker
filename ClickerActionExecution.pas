@@ -884,8 +884,8 @@ end;
 //this function should eventually be split into FindControl and FindSubControl
 function TActionExecution.ExecuteFindControlAction(var AFindControlOptions: TClkFindControlOptions; var AActionOptions: TClkActionOptions; IsSubControl: Boolean): Boolean; //returns True if found
 {$IFDEF FPC}
-  const
-    clSystemColor = $FF000000;
+  //const
+  //  clSystemColor = $FF000000;
 {$ENDIF}
 
   procedure UpdateActionVarValuesFromControl(AControl: TCompRec);
@@ -1019,13 +1019,13 @@ begin
                           ' Eval(FG)=' + EvaluateReplacements(AFindControlOptions.MatchBitmapText[j].ForegroundColor, False) + '=' + EvalFG +
                           ' Eval(BG)=' + EvaluateReplacements(AFindControlOptions.MatchBitmapText[j].BackgroundColor, False) + '=' + EvalBG );
 
-        //if frClickerActions.frClickerFindControl.BMPTextFontProfiles[j].FGColor and clSystemColor <> 0 then
+        //if frClickerActions.frClickerFindControl.BMPTextFontProfiles[j].FGColor and clSystemColor <> 0 then  //clSystemColor is declared above
         //begin
         //  frClickerActions.frClickerFindControl.BMPTextFontProfiles[j].FGColor := clFuchsia;
         //  AddToLog('System color found on text FG: $' + IntToHex(frClickerActions.frClickerFindControl.BMPTextFontProfiles[j].FGColor, 8));
         //end;
         //
-        //if frClickerActions.frClickerFindControl.BMPTextFontProfiles[j].BGColor and clSystemColor <> 0 then
+        //if frClickerActions.frClickerFindControl.BMPTextFontProfiles[j].BGColor and clSystemColor <> 0 then  //clSystemColor is declared above
         //begin
         //  frClickerActions.frClickerFindControl.BMPTextFontProfiles[j].BGColor := clLime;
         //  AddToLog('System color found on text BG: $' + IntToHex(frClickerActions.frClickerFindControl.BMPTextFontProfiles[j].BGColor, 8));

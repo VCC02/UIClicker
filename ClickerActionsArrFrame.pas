@@ -842,8 +842,8 @@ end;
 
 
 procedure TfrClickerActionsArr.UpdateActionsArrFromControls(ActionIndex: Integer);
-var
-  i: Integer;
+//var
+//  i: Integer;
 begin
   FClkActions[ActionIndex].ActionOptions.ActionCondition := frClickerActions.frClickerConditionEditor.GetActionCondition;
 
@@ -2528,7 +2528,7 @@ begin
     Exit;
 
   if frClickerActions.ControlsModified then
-    if MessageBox(Handle, 'There are changed properties for the selected action. By selecting another action, you will discard those changes. You can click Update to record the changes to the action list. Go back to previous action/content?', '', MB_ICONWARNING + MB_YESNO) = IDYES then
+    if MessageBox(Handle, PChar('There are changed properties for the selected action. By selecting another action, you will discard those changes. You can click Update to record the changes to the action list.'#13#10#13#10'Go back to previous action/content?'), '', MB_ICONWARNING + MB_YESNO) = IDYES then
     begin
       vstActions.ClearSelection;
       vstActions.Selected[FPreviousSelectedNode] := True;
@@ -3309,6 +3309,7 @@ var
   tp: TPoint;
   Comp: TCompRec;
   n: Integer;
+  TempControlsModified: Boolean;
 begin
   if FPalette.vstActionsPalette.Tag <> 1 then
     Exit;
@@ -3450,7 +3451,8 @@ begin
 
     vstActions.RootNodeCount := Length(FClkActions);
 
-    if not frClickerActions.ControlsModified then
+    TempControlsModified := frClickerActions.ControlsModified;
+    if not TempControlsModified then
     begin
       frClickerActions.CurrentlyEditingActionType := TClkAction(FClkActions[n].ActionOptions.Action);
 
@@ -3472,7 +3474,9 @@ begin
     vstActions.Repaint;
     Application.ProcessMessages;
 
-    StopGlowingUpdateButton;
+    if not TempControlsModified then
+      StopGlowingUpdateButton;
+
     Modified := True;
   end;
 end;

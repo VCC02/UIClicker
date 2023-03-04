@@ -400,11 +400,15 @@ begin
 end;
 
 
-function GetFontQualityIndexByName(AQualityName: string): Integer;
 const
   CQualityNames: array[0..Ord(High(TFontQuality))] of string = (
     'Default', 'Draft', 'Proof', 'NonAntialiased', 'Antialiased', 'Cleartype', 'CleartypeNatural'
   );
+
+  CValidQNames = 'Default, Draft, Proof, NonAntialiased, Antialiased, Cleartype, CleartypeNatural';
+
+
+function GetFontQualityIndexByName(AQualityName: string): Integer;
 var
   i: Integer;
 begin
@@ -423,10 +427,13 @@ var
   TextDimensions: TSize;
   TextToDisplay: string;
   FontQualityReplacement: Integer;
+  FontQualityReplacementInitialIndex: Integer;
   FontQualityReplacementStr: string;
   CropLeft, CropTop, CropRight, CropBottom: Integer;
   TempFindControlMatchBitmapText: PClkFindControlMatchBitmapText;
   TempBGColor: TColor;
+  NewHint: string;
+
 begin
   if AImg = nil then
     Exit;
@@ -462,17 +469,38 @@ begin
   if TempFindControlMatchBitmapText^.StrikeOut then
     AImg.Canvas.Font.Style := AImg.Canvas.Font.Style + [fsStrikeOut];
 
+  NewHint := 'Right-click for options' + #13#10#13#10;
+  NewHint := NewHint + 'FontQuality uses replacement: ' + BoolToStr(TempFindControlMatchBitmapText^.FontQualityUsesReplacement, 'Yes', 'No') + #13#10;
+
   if TempFindControlMatchBitmapText^.FontQualityUsesReplacement then
   begin
     FontQualityReplacementStr := EvaluateReplacements(TempFindControlMatchBitmapText^.FontQualityReplacement);  //should return a string in the following set: 'Default', 'Draft', 'Proof', 'NonAntialiased', 'Antialiased', 'Cleartype', 'CleartypeNatural'
     FontQualityReplacement := GetFontQualityIndexByName(FontQualityReplacementStr);    // 'Var Replacement' string can also be matched here, but it wraps around to 0 (i.e. 'Default')
+    FontQualityReplacementInitialIndex := FontQualityReplacement;
     if FontQualityReplacement = -1 then
-      FontQualityReplacement := 0;  //default to fqDefault
+      FontQualityReplacement := 0;  //defaults to fqDefault
 
     AImg.Canvas.Font.Quality := TFontQuality(FontQualityReplacement);
+
+    NewHint := NewHint + 'FontQualityReplacement (raw): ' + TempFindControlMatchBitmapText^.FontQualityReplacement + #13#10;
+    NewHint := NewHint + 'FontQualityReplacement (evaluated): ' + FontQualityReplacementStr + #13#10;
+    NewHint := NewHint + 'FontQualityReplacement index: ' + IntToStr(FontQualityReplacement) + #13#10;
+    NewHint := NewHint + 'FontQualityReplacement initial index: ' + IntToStr(FontQualityReplacementInitialIndex) + #13#10;
+    NewHint := NewHint + 'Valid quality values: ' + CValidQNames + #13#10;
   end
   else
     AImg.Canvas.Font.Quality := TFontQuality(TempFindControlMatchBitmapText^.FontQuality);
+
+  try
+    NewHint := NewHint + 'Used FontQuality: ' + CQualityNames[Ord(AImg.Canvas.Font.Quality)];
+  except
+    NewHint := NewHint + 'Used FontQuality: ' + CQualityNames[Ord(AImg.Canvas.Font.Quality) mod Ord(High(TFontQuality))];
+  end;
+
+
+
+  imgPreview.Hint := NewHint;
+  scrboxPreview.Hint := NewHint;
 
   TempBGColor := HexToInt(EvaluateReplacements(TempFindControlMatchBitmapText^.BackgroundColor));
   AImg.Canvas.Brush.Color := TempBGColor;

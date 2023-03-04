@@ -398,7 +398,7 @@ end;
 
 function BitmapPosMatch(Algorithm: TMatchBitmapAlgorithm; AlgorithmSettings: TMatchBitmapAlgorithmSettings; SourceBitmap, SubBitmap: TBitmap; ColorErrorLevel: Integer; out SubCnvXOffset, SubCnvYOffset: Integer; TotalErrorCount: Integer; AStopSearchOnDemand: PBoolean = nil; StopSearchOnMismatch: Boolean = True): Boolean;
 const
-  CDebugSubBmpPath = 'E:\SubBmp.bmp';
+  {%H-}CDebugSubBmpPath = 'E:\SubBmp.bmp';
 var
   SourceCanvasMat_R, SubCanvasMat_R: PCanvasMat;
   SourceCanvasMat_G, SubCanvasMat_G: PCanvasMat;

@@ -106,6 +106,7 @@ const
 
   CCallTemplate_CallTemplateLoopProperties_BreakCondition_PropItemIndex = 5;
 
+  CFindControl_MatchCriteria_WillMatchBitmapText_PropItemIndex = 2;
   CFindControl_MatchCriteria_SearchForControlMode_PropItemIndex = 4;
 
   CFindControl_MatchBitmapText_ForegroundColor_PropItemIndex = 0;   //property index in FindControl.MatchBitmapText structure
@@ -128,6 +129,14 @@ const
   CFindControl_InitialRectangle_BottomOffset_PropItemIndex = 7;
 
   CSetVar_ListOfVarNamesValuesAndEvalBefore = 0;
+
+  CCallTemplate_CallTemplateLoop_Enabled_PropItemIndex = 0;
+  CCallTemplate_CallTemplateLoop_Counter_PropItemIndex = 1;
+  CCallTemplate_CallTemplateLoop_InitValue_PropItemIndex = 2;
+  CCallTemplate_CallTemplateLoop_EndValue_PropItemIndex = 3;
+  CCallTemplate_CallTemplateLoop_Direction_PropItemIndex = 4;
+  CCallTemplate_CallTemplateLoop_BreakCondition_PropItemIndex = 5;
+  CCallTemplate_CallTemplateLoop_EvalBreakPosition_PropItemIndex = 6;
 
   CWindowOperations_NewX = 1;
   CWindowOperations_NewY = 2;
@@ -226,7 +235,7 @@ const
       (Name: 'FontQuality'; EditorType: etEnumCombo; DataType: CDTEnum),
       (Name: 'FontQualityUsesReplacement'; EditorType: etBooleanCombo; DataType: CDTBool),
       (Name: 'FontQualityReplacement'; EditorType: etText; DataType: CDTString),
-      (Name: 'ProfileName'; EditorType: etTextWithArrow; DataType: CDTString),
+      (Name: 'ProfileName'; EditorType: etText; DataType: CDTString),
       (Name: 'CropLeft'; EditorType: etSpinText; DataType: CDTString),
       (Name: 'CropTop'; EditorType: etSpinText; DataType: CDTString),
       (Name: 'CropRight'; EditorType: etSpinText; DataType: CDTString),
@@ -258,7 +267,7 @@ const
   );
 
   CCallTemplateProperties: array[0..CPropCount_CallTemplate - 1] of TOIPropDef = (
-    (Name: 'TemplateFileName'; EditorType: etFilePathWithArrow; DataType: CDTString),           //Description:  Replacements are available    //Description[arrow button]:   Templates from the local dir
+    (Name: 'TemplateFileName'; EditorType: etTextWithArrow; DataType: CDTString),           //Description:  Replacements are available    //Description[arrow button]:   Templates from the local dir
     (Name: 'ListOfCustomVarsAndValues'; EditorType: etUserEditor; DataType: CDTStructure),
     (Name: 'EvaluateBeforeCalling'; EditorType: etBooleanCombo; DataType: CDTBool),           //Description:  If unchecked, the values are passed as strings.
     (Name: 'CallTemplateLoop'; EditorType: etNone; DataType: CDTStructure)       //structure       //Description:  What does not work, is closing subtemplates when remote debugging.  So, do not click the stop button when remote debugging CallTemplate actions with loops.
@@ -308,6 +317,11 @@ type
   TSetActionValueStrProcArr = array[TClkAction] of TSetActionValueStrProc;
   TSetFindControlValueStrProcArr = array[0..CPropCount_FindControl - 1] of TSetActionValueStrProc;
   TSetCallTemplateValueStrProcArr = array[0..CPropCount_CallTemplate - 1] of TSetActionValueStrProc;
+
+  TPropHintFunc = function: string;
+  TPropHintFuncArr = array[0..0] of TPropHintFunc;
+  PPropHintFuncArr = ^TPropHintFuncArr;
+  TPropHintFuncActionArr = array[TClkAction] of PPropHintFuncArr;
 
   TArrayOfEnumCounts = array[0..0] of Integer;
   PArrayOfEnumCounts  = ^TArrayOfEnumCounts;
@@ -717,6 +731,7 @@ const
   {$ENDIF}
 
 
+function GetPropertyHintNoHint: string;
 
 function GetPropertyHint_Click_XClickPointVar: string;
 function GetPropertyHint_Click_YClickPointVar: string;
@@ -724,18 +739,202 @@ function GetPropertyHint_Click_XOffset: string;
 function GetPropertyHint_Click_YOffset: string;
 function GetPropertyHint_Click_LeaveMouse: string;
 
-function GetPropertyHint_FindControl_MatchCriteria_SearchForControlMode: string;
-function GetPropertyHint_FindControl_InitialRectangle_Left(AKey, AValue: string): string;
-function GetPropertyHint_FindControl_InitialRectangle_Top(AKey, AValue: string): string;
-function GetPropertyHint_FindControl_InitialRectangle_Right(AKey, AValue: string): string;
-function GetPropertyHint_FindControl_InitialRectangle_Bottom(AKey, AValue: string): string;
+function GetPropertyHint_ExecApp_PathToApp: string;
+function GetPropertyHint_ExecApp_AppStdIn: string;
+function GetPropertyHint_ExecApp_CurrentDir: string;
+function GetPropertyHint_ExecApp_UseInheritHandles: string;
+function GetPropertyHint_ExecApp_NoConsole: string;
+
+function GetPropertyHint_FindControl_AllowToFail: string;
+function GetPropertyHint_FindControl_MatchText: string;
+function GetPropertyHint_FindControl_MatchClassName: string;
+function GetPropertyHint_FindControl_MatchBitmapText: string;
+function GetPropertyHint_FindControl_MatchBitmapFiles: string;
+function GetPropertyHint_FindControl_UseWholeScreen: string;
+function GetPropertyHint_FindControl_ColorError: string;
+function GetPropertyHint_FindControl_AllowedColorErrorCount: string;
+function GetPropertyHint_FindControl_WaitForControlToGoAway: string;
+function GetPropertyHint_FindControl_StartSearchingWithCachedControl: string;
+function GetPropertyHint_FindControl_CachedControlLeftTop: string;
+
+{$IFDEF SubProperties}
+  function GetPropertyHint_FindControl_MatchCriteria_MatchBitmapText: string;
+  function GetPropertyHint_FindControl_MatchCriteria_WillMatchBitmapText: string;
+  function GetPropertyHint_FindControl_MatchCriteria_SearchForControlMode: string;
+{$ENDIF}
+
+{$IFDEF SubProperties}
+  function GetPropertyHint_FindControl_InitialRectangle_Left: string;
+  function GetPropertyHint_FindControl_InitialRectangle_Top: string;
+  function GetPropertyHint_FindControl_InitialRectangle_Right: string;
+  function GetPropertyHint_FindControl_InitialRectangle_Bottom: string;
+  function GetPropertyHint_FindControl_InitialRectangle_Offsets: string;
+{$ENDIF}
+
+
+function GetPropertyHint_SetText: string;
+
+{$IFDEF SubProperties}
+  function GetPropertyHint_SetText_Text: string;
+  function GetPropertyHint_SetText_ControlType: string;
+{$ENDIF}
+
+
+function GetPropertyHint_CallTemplate_TemplateFileName: string;
+function GetPropertyHint_CallTemplate_EvaluateBeforeCalling: string;
+function GetPropertyHint_CallTemplate_CallTemplateLoop: string;
+
+
+{$IFDEF SubProperties}
+  function GetPropertyHint_CallTemplate_CallTemplateLoop_Counter: string;
+  function GetPropertyHint_CallTemplate_CallTemplateLoop_InitValue: string;
+  function GetPropertyHint_CallTemplate_CallTemplateLoop_EndValue: string;
+  function GetPropertyHint_CallTemplate_CallTemplateLoop_Direction: string;
+  function GetPropertyHint_CallTemplate_CallTemplateLoop_EvalBreakPosition: string;
+{$ENDIF}
+
 
 function GetPropertyHint_WindowOperations_NewXY: string;
 function GetPropertyHint_WindowOperations_NewWidthHeight: string;
 
-function GetPropertyHint_Sleep: string;
+function GetPropertyHint_Sleep_Value: string;
 
-//const
+
+const
+  CGetPropertyHint_Click: array[0..CPropCount_Click - 1] of TPropHintFunc = (
+    @GetPropertyHintNoHint, //XClickPointReference: TXClickPointReference;
+    @GetPropertyHintNoHint, //YClickPointReference: TYClickPointReference;
+    @GetPropertyHint_Click_XClickPointVar,
+    @GetPropertyHint_Click_YClickPointVar,
+    @GetPropertyHint_Click_XOffset,
+    @GetPropertyHint_Click_YOffset,
+    @GetPropertyHintNoHint, //MouseButton: TMouseButton;
+    @GetPropertyHintNoHint, // ClickWithCtrl: Boolean;
+    @GetPropertyHintNoHint, // ClickWithAlt: Boolean;
+    @GetPropertyHintNoHint, // ClickWithShift: Boolean;
+    @GetPropertyHintNoHint, // Count: Integer;
+    @GetPropertyHint_Click_LeaveMouse,
+    @GetPropertyHintNoHint, // MoveWithoutClick: Boolean;
+    @GetPropertyHintNoHint, // ClickType: Integer;    //see CClickType_Click and CClickType_Drag
+    @GetPropertyHintNoHint, // XClickPointReferenceDest: TXClickPointReference;
+    @GetPropertyHintNoHint, // YClickPointReferenceDest: TYClickPointReference;
+    @GetPropertyHintNoHint, // XClickPointVarDest: string;
+    @GetPropertyHintNoHint, // YClickPointVarDest: string;
+    @GetPropertyHintNoHint, // XOffsetDest
+    @GetPropertyHintNoHint  // YOffsetDest
+  );
+
+
+  CGetPropertyHint_ExecApp: array[0..CPropCount_ExecApp - 1] of TPropHintFunc = (
+    @GetPropertyHint_ExecApp_PathToApp, // PathToApp: string;
+    @GetPropertyHintNoHint, // ListOfParams: string;
+    @GetPropertyHintNoHint, // WaitForApp: Boolean;
+    @GetPropertyHint_ExecApp_AppStdIn, // AppStdIn: string;
+    @GetPropertyHint_ExecApp_CurrentDir, // CurrentDir: string;
+    @GetPropertyHint_ExecApp_UseInheritHandles, // UseInheritHandles: TExecAppUseInheritHandles;
+    @GetPropertyHint_ExecApp_NoConsole // NoConsole: Boolean;
+  );
+
+
+  CGetPropertyHint_FindControl: array[0..CPropCount_FindControl - 1] of TPropHintFunc = (
+    @GetPropertyHintNoHint, // MatchCriteria: TClkFindControlMatchCriteria;
+    @GetPropertyHint_FindControl_AllowToFail, // AllowToFail: Boolean;
+    @GetPropertyHint_FindControl_MatchText, // MatchText: string;
+    @GetPropertyHint_FindControl_MatchClassName, // MatchClassName: string;
+    @GetPropertyHintNoHint, // MatchTextSeparator: string;
+    @GetPropertyHintNoHint, // MatchClassNameSeparator: string;
+    @GetPropertyHint_FindControl_MatchBitmapText, // MatchBitmapText: TClkFindControlMatchBitmapTextArr;
+    @GetPropertyHint_FindControl_MatchBitmapFiles, // MatchBitmapFiles: string; //ListOfStrings
+    @GetPropertyHintNoHint, // MatchBitmapAlgorithm: TMatchBitmapAlgorithm;
+    @GetPropertyHintNoHint, // MatchBitmapAlgorithmSettings: TMatchBitmapAlgorithmSettings;
+    @GetPropertyHintNoHint, // InitialRectangle: TRectString;
+    @GetPropertyHint_FindControl_UseWholeScreen, // UseWholeScreen: Boolean;
+    @GetPropertyHint_FindControl_ColorError, // ColorError: string;  //string, to allow var replacements
+    @GetPropertyHint_FindControl_AllowedColorErrorCount, // AllowedColorErrorCount: string;  //Number of pixels allowed to mismatch
+    @GetPropertyHint_FindControl_WaitForControlToGoAway, // WaitForControlToGoAway: Boolean;
+    @GetPropertyHint_FindControl_StartSearchingWithCachedControl, // StartSearchingWithCachedControl: Boolean;
+    @GetPropertyHint_FindControl_CachedControlLeftTop, // CachedControlLeft: string;
+    @GetPropertyHint_FindControl_CachedControlLeftTop  // CachedControlTop: string;
+  );
+
+
+  CGetPropertyHint_SetText: array[0..CPropCount_SetText - 1] of TPropHintFunc = (
+    @GetPropertyHint_SetText_Text, // Text: string;
+    @GetPropertyHint_SetText_ControlType  // ControlType: TClkSetTextControlType;
+  );
+
+
+  CGetPropertyHint_CallTemplate: array[0..CPropCount_CallTemplate - 1] of TPropHintFunc = (
+    @GetPropertyHint_CallTemplate_TemplateFileName, // TemplateFileName: string;
+    @GetPropertyHintNoHint, // ListOfCustomVarsAndValues: string;
+    @GetPropertyHint_CallTemplate_EvaluateBeforeCalling, // EvaluateBeforeCalling: Boolean;
+    @GetPropertyHint_CallTemplate_CallTemplateLoop  // CallTemplateLoop: TClkCallTemplateLoop;
+  );
+
+
+  CGetPropertyHint_Sleep: array[0..CPropCount_Sleep - 1] of TPropHintFunc = (
+    @GetPropertyHint_Sleep_Value //Value: string;  // [ms]
+  );
+
+
+  CGetPropertyHint_SetVar: array[0..CPropCount_SetVar - 1] of TPropHintFunc = (
+    @GetPropertyHintNoHint //ListOfVarNamesValuesAndEvalBefore
+  );
+
+
+  CGetPropertyHint_WindowOperations: array[0..CPropCount_WindowOperations - 1] of TPropHintFunc = (
+    @GetPropertyHintNoHint, // Operation: TWindowOperation;
+    @GetPropertyHint_WindowOperations_NewXY, // NewX,
+    @GetPropertyHint_WindowOperations_NewXY, // NewY
+    @GetPropertyHint_WindowOperations_NewWidthHeight, // NewWidth
+    @GetPropertyHint_WindowOperations_NewWidthHeight, // NewHeight
+    @GetPropertyHintNoHint, // NewPositionEnabled,
+    @GetPropertyHintNoHint  // NewSizeEnabled
+  );
+
+
+  CGetPropertyHint_Actions: TPropHintFuncActionArr = (
+    @CGetPropertyHint_Click,
+    @CGetPropertyHint_ExecApp,
+    @CGetPropertyHint_FindControl,
+    @CGetPropertyHint_FindControl,
+    @CGetPropertyHint_SetText,
+    @CGetPropertyHint_CallTemplate,
+    @CGetPropertyHint_Sleep,
+    @CGetPropertyHint_SetVar,
+    @CGetPropertyHint_WindowOperations
+  );
+
+
+  CGetPropertyHint_FindControlMatchCriteria_Items: array[0..CPropCount_FindControlMatchCriteria - 1] of TPropHintFunc = (
+    @GetPropertyHint_FindControl_MatchCriteria_MatchBitmapText, //WillMatchText: Boolean;
+    @GetPropertyHintNoHint, //WillMatchClassName: Boolean;
+    @GetPropertyHint_FindControl_MatchCriteria_WillMatchBitmapText, //WillMatchBitmapText: Boolean;
+    @GetPropertyHintNoHint, //WillMatchBitmapFiles: Boolean;
+    @GetPropertyHint_FindControl_MatchCriteria_SearchForControlMode //SearchForControlMode: TSearchForControlMode;
+  );
+
+  CGetPropertyHint_FindControlInitialRectangle_Items: array[0..CPropCount_FindControlInitialRectangle - 1] of TPropHintFunc = (
+    @GetPropertyHint_FindControl_InitialRectangle_Left, //Left
+    @GetPropertyHint_FindControl_InitialRectangle_Top, //Top
+    @GetPropertyHint_FindControl_InitialRectangle_Right, //Right
+    @GetPropertyHint_FindControl_InitialRectangle_Bottom, //Bottom
+    @GetPropertyHint_FindControl_InitialRectangle_Offsets, //LeftOffset
+    @GetPropertyHint_FindControl_InitialRectangle_Offsets, //TopOffset
+    @GetPropertyHint_FindControl_InitialRectangle_Offsets, //RightOffset
+    @GetPropertyHint_FindControl_InitialRectangle_Offsets  //BottomOffset
+  );
+
+
+  CGetPropertyHint_CallTemplateLoop_Items: array[0..CPropCount_CallTemplateLoop - 1] of TPropHintFunc = (
+    @GetPropertyHintNoHint, //Enabled: Boolean;
+    @GetPropertyHint_CallTemplate_CallTemplateLoop_Counter, //Counter: string;
+    @GetPropertyHint_CallTemplate_CallTemplateLoop_InitValue, // InitValue: string;
+    @GetPropertyHint_CallTemplate_CallTemplateLoop_EndValue, // EndValue: string;
+    @GetPropertyHint_CallTemplate_CallTemplateLoop_Direction, // Direction: TLoopDirection;
+    @GetPropertyHintNoHint, // BreakCondition: string;
+    @GetPropertyHint_CallTemplate_CallTemplateLoop_EvalBreakPosition  // EvalBreakPosition: TLoopEvalBreakPosition;
+  );
 
 
 implementation
@@ -1046,6 +1245,7 @@ function ClickType_AsStringToValue(AClickTypeAsString: string): Integer;
 var
   i: Integer;
 begin
+  Result := CClickType_Click;
   for i := Low(CClickTypeStr) to High(CClickTypeStr) do
     if CClickTypeStr[i] = AClickTypeAsString then
     begin
@@ -1059,6 +1259,7 @@ function ExecAppUseInheritHandles_AsStringToValue(AExecAppUseInheritHandlesAsStr
 var
   i: TExecAppUseInheritHandles;
 begin
+  Result := uihNo;
   for i := Low(TExecAppUseInheritHandles) to High(TExecAppUseInheritHandles) do
     if CExecAppUseInheritHandlesStr[i] = AExecAppUseInheritHandlesAsString then
     begin
@@ -1072,6 +1273,7 @@ function MatchBitmapAlgorithm_AsStringToValue(AMatchBitmapAlgorithmAsString: str
 var
   i: TMatchBitmapAlgorithm;
 begin
+  Result := mbaBruteForce;
   for i := Low(TMatchBitmapAlgorithm) to High(TMatchBitmapAlgorithm) do
     if CMatchBitmapAlgorithmStr[i] = AMatchBitmapAlgorithmAsString then
     begin
@@ -1085,6 +1287,7 @@ function SearchForControlMode_AsStringToValue(ASearchForControlModeAsString: str
 var
   i: TSearchForControlMode;
 begin
+  Result := sfcmGenGrid;
   for i := Low(TSearchForControlMode) to High(TSearchForControlMode) do
     if CSearchForControlModeStr[i] = ASearchForControlModeAsString then
     begin
@@ -1098,6 +1301,7 @@ function FontQuality_AsStringToValue(AFontQualityAsString: string): TFontQuality
 var
   i: TFontQuality;
 begin
+  Result := fqCleartype;
   for i := Low(TFontQuality) to High(TFontQuality) do
     if CFontQualityStr[i] = AFontQualityAsString then
     begin
@@ -1111,6 +1315,7 @@ function ClkSetTextControlType_AsStringToValue(AClkSetTextControlTypeAsString: s
 var
   i: TClkSetTextControlType;
 begin
+  Result := stEditBox;
   for i := Low(TClkSetTextControlType) to High(TClkSetTextControlType) do
     if CClkSetTextControlTypeStr[i] = AClkSetTextControlTypeAsString then
     begin
@@ -1124,6 +1329,7 @@ function LoopDirection_AsStringToValue(ALoopDirectionAsString: string): TLoopDir
 var
   i: TLoopDirection;
 begin
+  Result := ldInc;
   for i := Low(TLoopDirection) to High(TLoopDirection) do
     if CLoopDirectionStr[i] = ALoopDirectionAsString then
     begin
@@ -1137,6 +1343,7 @@ function LoopEvalBreakPosition_AsStringToValue(ALoopEvalBreakPositionAsString: s
 var
   i: TLoopEvalBreakPosition;
 begin
+  Result := lebpAfterContent;
   for i := Low(TLoopEvalBreakPosition) to High(TLoopEvalBreakPosition) do
     if CLoopEvalBreakPositionStr[i] = ALoopEvalBreakPositionAsString then
     begin
@@ -1150,6 +1357,7 @@ function WindowOperation_AsStringToValue(AWindowOperationAsString: string): TWin
 var
   i: TWindowOperation;
 begin
+  Result := woBringToFront;
   for i := Low(TWindowOperation) to High(TWindowOperation) do
     if CWindowOperationStr[i] = AWindowOperationAsString then
     begin
@@ -1399,6 +1607,11 @@ end;
 
 
 //
+function GetPropertyHintNoHint: string;
+begin
+  Result := '';
+end;
+
 
 function GetPropertyHint_Click_XClickPointVar: string;
 begin
@@ -1517,7 +1730,8 @@ begin
             'The "Color Error" represents the difference between the color values for the two compared pixels, for each RGB channel.' + #13#10 +
             'The "Color Error Count" is the allowed number of mismatching pixels.' + #13#10 +
             'Variable replacements are available.' + #13#10 +
-            'If at least one of the three color channels (R, G, B) mismatches by at least ColorError, it counts as an error point.';
+            'If at least one of the three color channels (R, G, B) mismatches by at least ColorError, it counts as an error point.' + #13#10 +
+            'Used for "BMP Text" and "BMP Files".';
 end;
 
 
@@ -1525,7 +1739,8 @@ function GetPropertyHint_FindControl_AllowedColorErrorCount: string;
 begin
   Result := 'When matching bitmaps, which contain antialiasing pixels (see smooth text), some of those pixels will not match.' + #13#10 +
             'The "Color Error" represents the difference between the color values for the two compared pixels, for each RGB channel.' + #13#10 +
-            'The "Color Error Count" is the allowed number of mismatching pixels. Variable replacements are available.';
+            'The "Color Error Count" is the allowed number of mismatching pixels. Variable replacements are available.' + #13#10 +
+            'Used for "BMP Text" and "BMP Files". The bitmap searching algorithm stops on error count.';
 end;
 
 
@@ -1537,7 +1752,7 @@ end;
 
 function GetPropertyHint_FindControl_StartSearchingWithCachedControl: string;
 begin
-  Result := 'When True, the control is checked at the specified cached $My_Control_Left$ and $My_Control_Top$ var replacements, before using the search grid.' + #13#10 +
+  Result := 'When True, the control is searched at the specified cached $My_Control_Left$ and $My_Control_Top$ var replacements, before using the search grid.' + #13#10 +
             'In order to cache the control coordinates, please add a SetVar action after this one, by assigning:' + #13#10 +
             '$My_Control_Left$ to $Control_Left$' + #13#10 +
             'and' + #13#10 +
@@ -1548,7 +1763,21 @@ begin
 end;
 
 
+function GetPropertyHint_FindControl_CachedControlLeftTop: string;
+begin
+  Result := 'Caching is more effective when searching for controls with a single font profile.' + #13#10 +
+            'Using caching on multpile font profiles may indeed be faster than without it, but for every cache miss, the search defaults to the selected algorithm.';
+end;
+
+
 {$IFDEF SubProperties}
+  function GetPropertyHint_FindControl_MatchCriteria_MatchBitmapText: string;
+  begin
+    Result := 'The actual text being matched against.' + #13#10 +
+              'It is used, both for FindControl and FindSubControl, when WillMatchText or WillMatchBitmapText properties are True.';
+  end;
+
+
   function GetPropertyHint_FindControl_MatchCriteria_WillMatchBitmapText: string;
   begin
     Result := 'When selecting FindSubControl action, only bitmaps can be matched (BMP Text or BMP Files).' + #13#10 +
@@ -1567,35 +1796,45 @@ end;
 
 
 {$IFDEF SubProperties}
-  function GetPropertyHint_FindControl_InitialRectangle(AEdge, AKey, AValue: string): string;
+  function GetPropertyHint_FindControl_InitialRectangle(AEdge: string): string;
   begin
-    Result := AEdge + ' edge of the search area. Variable replacements are available.' + #13#10 +
-              AKey + ' = ' + AValue;
+    Result := AEdge + ' edge of the search area. Variable replacements are available.';
   end;
 
 
-  function GetPropertyHint_FindControl_InitialRectangle_Left(AKey, AValue: string): string;
+  function GetPropertyHint_FindControl_InitialRectangle_Left: string;
   begin
-    Result := GetPropertyHint_FindControl_InitialRectangle('Left', AKey, AValue);
+    Result := GetPropertyHint_FindControl_InitialRectangle('Left');
   end;
 
 
-  function GetPropertyHint_FindControl_InitialRectangle_Top(AKey, AValue: string): string;
+  function GetPropertyHint_FindControl_InitialRectangle_Top: string;
   begin
-    Result := GetPropertyHint_FindControl_InitialRectangle('Top', AKey, AValue);
+    Result := GetPropertyHint_FindControl_InitialRectangle('Top');
   end;
 
 
-  function GetPropertyHint_FindControl_InitialRectangle_Right(AKey, AValue: string): string;
+  function GetPropertyHint_FindControl_InitialRectangle_Right: string;
   begin
-    Result := GetPropertyHint_FindControl_InitialRectangle('Right', AKey, AValue);
+    Result := GetPropertyHint_FindControl_InitialRectangle('Right');
   end;
 
 
-  function GetPropertyHint_FindControl_InitialRectangle_Bottom(AKey, AValue: string): string;
+  function GetPropertyHint_FindControl_InitialRectangle_Bottom: string;
   begin
-    Result := GetPropertyHint_FindControl_InitialRectangle('Bottom', AKey, AValue);
+    Result := GetPropertyHint_FindControl_InitialRectangle('Bottom');
   end;
+
+
+  function GetPropertyHint_FindControl_InitialRectangle_Offsets: string;
+  begin
+    Result := 'Offsets can be used to limit or extend the search area.' + #13#10 +
+              'They are relative to the evaluated versions of Left/Top/Right/Bottom edges of search area.' + #13#10#13#10 +
+              'These values should be valid (i.e. configured) before executing the action, not after.' + #13#10 +
+              'When setting the search area and the offset values, make sure the previous action is the last executed action.' + #13#10 +
+              'Also it has to be successfully executed. Otherwise, the reference values will be wrong.';
+  end;
+
 {$ENDIF}
 
 
@@ -1621,36 +1860,36 @@ begin
 end;
 
 
+function GetPropertyHint_CallTemplate_TemplateFileName: string;
+begin
+  Result := 'Replacements are available.' + #13#10 +
+            'Click the arrow button to browse templates from the local dir.';
+end;
+
+
+function GetPropertyHint_CallTemplate_EvaluateBeforeCalling: string;
+begin
+  Result := 'If unchecked, the values are passed as strings.';
+end;
+
+
+function GetPropertyHint_CallTemplate_CallTemplateLoop: string;
+begin
+  Result := 'What does not work, is closing subtemplates when remote debugging.' + #13#10 +
+            'So, do not click the stop button when remote debugging CallTemplate actions with loops.';
+end;
+
 {$IFDEF SubProperties}
-  function GetPropertyHint_CallTemplate_TemplateFileName: string;
-  begin
-    Result := 'Replacements are available.' + #13#10 +
-              'Click the arrow button to brose templates from the local dir.';
-  end;
-
-
-  function GetPropertyHint_CallTemplate_EvaluateBeforeCalling: string;
-  begin
-    Result := 'If unchecked, the values are passed as strings.';
-  end;
-
-
-  function GetPropertyHint_CallTemplate_CallTemplateLoop: string;
-  begin
-    Result := 'What does not work, is closing subtemplates when remote debugging.' + #13#10 +
-              'So, do not click the stop button when remote debugging CallTemplate actions with loops.';
-  end;
-
 
   function GetPropertyHint_CallTemplate_CallTemplateLoop_Counter: string;
   begin
-    Result := 'Replacements are available';
+    Result := 'Variable, used as loop counter.' + #13#10 + 'Replacements are available';
   end;
 
 
   function GetPropertyHint_CallTemplate_CallTemplateLoop_InitValue: string;
   begin
-    Result := 'Replacements are available';
+    Result := 'Initialization value for the loop counter.' + #13#10 + 'Replacements are available';
   end;
 
 
@@ -1691,11 +1930,11 @@ begin
 end;
 
 
-function GetPropertyHint_Sleep: string;
+function GetPropertyHint_Sleep_Value: string;
 begin
   Result := 'Sleep values, lower than 1, are ignored.' + #13#10 +
-                 'Use this action only as a last resort (e.g. blinking or resizing controls/windows).' + #13#10 +
-                 'Waiting for the proper event or control property, is the right way to solve a race condition. Use the "sleep" action if the event/property is not available.';
+            'Use this action only as a last resort (e.g. blinking or resizing controls/windows).' + #13#10 +
+            'Waiting for the proper event or control property, is the right way to solve a race condition. Use the "sleep" action if the event/property is not available.';
 end;
 
 

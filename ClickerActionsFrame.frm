@@ -40,13 +40,13 @@ object frClickerActions: TfrClickerActions
       ParentFont = False
       object pnlvstOI: TPanel
         Left = 0
-        Height = 248
+        Height = 256
         Top = 0
         Width = 432
         Anchors = [akTop, akLeft, akBottom]
         BevelOuter = bvNone
         Caption = 'pnlvstOI'
-        ClientHeight = 248
+        ClientHeight = 256
         ClientWidth = 432
         Color = 13500339
         Constraints.MinHeight = 208
@@ -96,13 +96,6 @@ object frClickerActions: TfrClickerActions
           Visible = False
         end
       end
-      object lblAction: TLabel
-        Left = 1
-        Height = 13
-        Top = 47
-        Width = 57
-        Caption = 'Action Type'
-      end
       object spdbtnCommonTimeouts: TSpeedButton
         Left = 122
         Height = 23
@@ -123,14 +116,6 @@ object frClickerActions: TfrClickerActions
         }
         ParentFont = False
       end
-      object spdbtnClear: TSpeedButton
-        Left = 91
-        Height = 26
-        Top = 168
-        Width = 48
-        Caption = 'Clear'
-        OnClick = spdbtnClearClick
-      end
       object prbTimeout: TProgressBar
         Left = 2
         Height = 8
@@ -139,22 +124,6 @@ object frClickerActions: TfrClickerActions
         Anchors = [akLeft, akBottom]
         Smooth = True
         TabOrder = 0
-      end
-      object lblFeatureInWork1: TLabel
-        Left = 176
-        Height = 21
-        Hint = '- Action content cannot be updated yet from the Object Inspector.'#13#10'- Some data editors are not implemented.'#13#10'- Various editboxes can be set by dragging the mouse from them. This is partially implemented in Object Inspector.'#13#10'- Various descriptions are not implemented yet.'
-        Top = 245
-        Width = 165
-        Anchors = [akLeft, akBottom]
-        Caption = '[Feature in work...]'
-        Font.Color = clGray
-        Font.Height = -17
-        Font.Name = 'Tahoma'
-        Font.Style = [fsBold]
-        ParentFont = False
-        ParentShowHint = False
-        ShowHint = True
       end
       object pnlExtra: TPanel
         Left = 460

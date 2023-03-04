@@ -24,7 +24,9 @@ object frClickerBMPText: TfrClickerBMPText
     ClientWidth = 261
     Color = clYellow
     ParentColor = False
+    ParentShowHint = False
     PopupMenu = pmPreviewImage
+    ShowHint = True
     TabOrder = 0
     object imgPreview: TImage
       Left = 1
