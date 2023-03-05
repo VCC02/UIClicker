@@ -936,11 +936,10 @@ begin
     frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].CropRight := FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].CropRight;
     frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].CropBottom := FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].CropBottom;
 
-    frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].UpdateSelectionLabelsFromCropEditBoxes;
+    //frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].UpdateSelectionLabelsFromCropEditBoxes;  //replaced below with other call
   end;
 
   frClickerActions.frClickerFindControl.SetBMPTextFrameVisibility;
-
 
   frClickerActions.frClickerFindControl.lstMatchBitmapFiles.Items.Text := FClkActions[ActionIndex].FindControlOptions.MatchBitmapFiles;
 
@@ -961,7 +960,12 @@ begin
   frClickerActions.CurrentlyEditingActionType := TClkAction(FClkActions[ActionIndex].ActionOptions.Action);
 
   if frClickerActions.CurrentlyEditingActionType = acFindSubControl then
+  begin
     frClickerActions.frClickerFindControl.PreviewText;
+
+    for i := 0 to frClickerActions.frClickerFindControl.GetBMPTextFontProfilesCount - 1 do
+      frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].UpdateSelectionLabelsFromCropInfo(FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i]);
+  end;
 end;
 
 
@@ -4247,7 +4251,7 @@ begin
         except
           on E: Exception do
             raise Exception.Create(E.Message + '  in HighlightCurrentlyExecutedAction(' + IntToStr(FRemoteExActionIndex) +')');
-        end;
+        end;                                //good to have to blanks here ('  '), to easily find the message
       end
       else
       begin

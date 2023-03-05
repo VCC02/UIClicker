@@ -119,6 +119,11 @@ const
   CFindControl_MatchBitmapText_CropRight = 14;
   CFindControl_MatchBitmapText_CropBottom = 15;
 
+  CFindControl_MatchBitmapAlgorithmSettings_XMultipleOf_PropItemIndex = 0;
+  CFindControl_MatchBitmapAlgorithmSettings_YMultipleOf_PropItemIndex = 1;
+  CFindControl_MatchBitmapAlgorithmSettings_XOffset_PropItemIndex = 2;
+  CFindControl_MatchBitmapAlgorithmSettings_YOffset_PropItemIndex = 3;
+
   CFindControl_InitialRectangle_Left_PropItemIndex = 0;
   CFindControl_InitialRectangle_Top_PropItemIndex = 1;
   CFindControl_InitialRectangle_Right_PropItemIndex = 2;

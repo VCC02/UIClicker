@@ -462,6 +462,7 @@ type
 
     procedure UpdateAllSelectionLabelsFromCropEditBoxes;
     procedure UpdateSearchAreaSearchedTextAndLabels;
+    procedure PopulateDbgImgExtraMenu;
   public
     //FBMPTextFrames: TfrClickerBMPTextArr; //should eventually made private and accesed through functions
 
@@ -1322,6 +1323,7 @@ procedure TfrClickerFindControl.spdbtnDisplaySearchAreaDbgImgMenuClick(
 var
   tp: TPoint;
 begin
+  PopulateDbgImgExtraMenu;
   GetCursorPos(tp);
   FSearchAreaDbgImgSearchedBmpMenu.PopUp(tp.X, tp.Y);
 end;
@@ -1522,10 +1524,7 @@ begin
   pnlDrag.Color := clYellow;
 
   if chkAutoCopyValuesToObjectInspector.Checked then
-  begin
     DoOnSetMatchTextAndClassToOI(lbeFoundControlText.Text, lbeFoundControlClass.Text);
-    DoOnTriggerOnControlsModified;
-  end;
 end;
 
 
@@ -1576,7 +1575,6 @@ end;
 procedure TfrClickerFindControl.btnCopyFoundValuesClick(Sender: TObject);
 begin
   DoOnSetMatchTextAndClassToOI(lbeFoundControlText.Text, lbeFoundControlClass.Text);
-  DoOnTriggerOnControlsModified;
 end;
 
 
@@ -1641,6 +1639,31 @@ begin
     FSearchAreaScrBox.VertScrollBar.Position := FSearchAreaScrBox.VertScrollBar.Position - WheelDelta div Factor;
 
   Handled := True;
+end;
+
+
+procedure TfrClickerFindControl.PopulateDbgImgExtraMenu;
+var
+  MenuItem: TMenuItem;
+  i: Integer;
+begin
+  FSearchAreaDbgImgSearchedBmpMenu.Items.Clear;
+  MenuItem := TMenuItem.Create(FSearchAreaDbgImgSearchedBmpMenu);
+  MenuItem.Caption := 'Load Bmp Text To Searched Area';
+  MenuItem.OnClick := MenuItemLoadBmpTextToSearchedAreaClick;
+  FSearchAreaDbgImgSearchedBmpMenu.Items.Add(MenuItem);
+
+  MenuItem := TMenuItem.Create(FSearchAreaMenu);
+  MenuItem.Caption := '-';
+  FSearchAreaDbgImgSearchedBmpMenu.Items.Add(MenuItem);
+
+  for i := 0 to lstMatchBitmapFiles.Items.Count - 1 do
+  begin
+    MenuItem := TMenuItem.Create(FSearchAreaDbgImgSearchedBmpMenu);
+    MenuItem.Caption := lstMatchBitmapFiles.Items.Strings[i];
+    MenuItem.OnClick := MenuItemGenericLoadBmpToSearchedAreaClick;
+    FSearchAreaDbgImgSearchedBmpMenu.Items.Add(MenuItem);
+  end;
 end;
 
 
@@ -1889,22 +1912,7 @@ begin
     UpdateTransparent_SearchAreaLimitsFromSearchAreaLimits;
     ///////////////////////
 
-    MenuItem := TMenuItem.Create(FSearchAreaDbgImgSearchedBmpMenu);
-    MenuItem.Caption := 'Load Bmp Text To Searched Area';
-    MenuItem.OnClick := MenuItemLoadBmpTextToSearchedAreaClick;
-    FSearchAreaDbgImgSearchedBmpMenu.Items.Add(MenuItem);
-
-    MenuItem := TMenuItem.Create(FSearchAreaMenu);
-    MenuItem.Caption := '-';
-    FSearchAreaDbgImgSearchedBmpMenu.Items.Add(MenuItem);
-
-    for i := 0 to lstMatchBitmapFiles.Items.Count - 1 do
-    begin
-      MenuItem := TMenuItem.Create(FSearchAreaDbgImgSearchedBmpMenu);
-      MenuItem.Caption := lstMatchBitmapFiles.Items.Strings[i];
-      MenuItem.OnClick := MenuItemGenericLoadBmpToSearchedAreaClick;
-      FSearchAreaDbgImgSearchedBmpMenu.Items.Add(MenuItem);
-    end;
+    PopulateDbgImgExtraMenu;
 
     spdbtnDisplaySearchAreaDbgImgMenu.Enabled := True;
 
@@ -2477,6 +2485,7 @@ begin
       end;
 
       UpdateTransparent_SearchAreaLimitsFromSearchAreaLimits;
+      DoOnTriggerOnControlsModified;
     end;
 
     UpdateSearchAreaLabelColorsFromTheirPosition;
@@ -2574,6 +2583,7 @@ begin
       end;
 
       UpdateTransparent_SearchAreaLimitsFromSearchAreaLimits;
+      DoOnTriggerOnControlsModified;
     end;
 
     UpdateSearchAreaLabelColorsFromTheirPosition;
