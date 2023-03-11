@@ -37,7 +37,7 @@ uses
   StdCtrls, ExtCtrls, Menus, ClickerActionsArrFrame, InMemFileSystem,
   IdHTTPServer, IdSchedulerOfThreadPool, IdCustomHTTPServer, IdContext, IdSync, IdGlobal,
   PollingFIFO, ClickerFileProviderClient, IniFiles, ClickerUtils, ClickerActionExecution,
-  ClickerIniFiles;
+  ClickerIniFiles, ClickerPrimitiveUtils;
 
 type
   TLoggingSyncObj = class(TIdSync)
@@ -157,19 +157,23 @@ type
     FOnRecordComponent: TOnRecordComponent;
     FOnGetCurrentlyRecordedScreenShotImage: TOnGetCurrentlyRecordedScreenShotImage;
     FOnLoadBitmap: TOnLoadBitmap;
+    FOnLoadPrimitivesFile: TOnLoadPrimitivesFile;
     FOnGetSelfHandles: TOnGetSelfHandles;
 
     FOnFileExists: TOnFileExists;
     FOnTClkIniReadonlyFileCreate: TOnTClkIniReadonlyFileCreate;
     FOnSaveTemplateToFile: TOnSaveTemplateToFile;
-    FOnSetTemplateOpenDialogInitialDir: TOnSetTemplateOpenDialogInitialDir;
-    FOnTemplateOpenDialogExecute: TOnTemplateOpenDialogExecute;
-    FOnGetTemplateOpenDialogFileName: TOnGetTemplateOpenDialogFileName;
-    FOnSetTemplateSaveDialogInitialDir: TOnSetTemplateOpenDialogInitialDir;
-    FOnTemplateSaveDialogExecute: TOnTemplateOpenDialogExecute;
-    FOnGetTemplateSaveDialogFileName: TOnGetTemplateOpenDialogFileName;
-    FOnSetTemplateSaveDialogFileName: TOnSetTemplateOpenDialogFileName;
-    FOnSetPictureOpenSetMultiSelect: TOnSetPictureOpenSetMultiSelect;
+
+    FOnSetOpenDialogMultiSelect: TOnSetOpenDialogMultiSelect;
+    FOnSetOpenDialogInitialDir: TOnSetOpenDialogInitialDir;
+    FOnOpenDialogExecute: TOnOpenDialogExecute;
+    FOnGetOpenDialogFileName: TOnGetOpenDialogFileName;
+    FOnSetSaveDialogInitialDir: TOnSetOpenDialogInitialDir;
+    FOnSaveDialogExecute: TOnOpenDialogExecute;
+    FOnGetSaveDialogFileName: TOnGetOpenDialogFileName;
+    FOnSetSaveDialogFileName: TOnSetOpenDialogFileName;
+
+    FOnSetPictureSetOpenDialogMultiSelect: TOnSetPictureSetOpenDialogMultiSelect;
     FOnSetPictureOpenDialogInitialDir: TOnSetPictureOpenDialogInitialDir;
     FOnPictureOpenDialogExecute: TOnPictureOpenDialogExecute;
     FOnGetPictureOpenDialogFileName: TOnGetPictureOpenDialogFileName;
@@ -191,20 +195,24 @@ type
     procedure DoOnRecordComponent(ACompHandle: THandle; ATreeContentStream: TMemoryStream);
     procedure DoOnGetCurrentlyRecordedScreenShotImage(ABmp: TBitmap);
 
-    function DoLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
+    function DoOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
+    procedure DoOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TPrimitiveOrderArr);
     function DoOnFileExists(const AFileName: string): Boolean;
     procedure DoOnGetSelfHandles(AListOfSelfHandles: TStringList);
 
     function DoOnTClkIniReadonlyFileCreate(AFileName: string): TClkIniReadonlyFile;
     procedure DoOnSaveTemplateToFile(AStringList: TStringList; const AFileName: string);
-    procedure DoOnSetTemplateOpenDialogInitialDir(AInitialDir: string);
-    function DoOnTemplateOpenDialogExecute: Boolean;
-    function DoOnGetTemplateOpenDialogFileName: string;
-    procedure DoOnSetTemplateSaveDialogInitialDir(AInitialDir: string);
-    function DoOnTemplateSaveDialogExecute: Boolean;
-    function DoOnGetTemplateSaveDialogFileName: string;
-    procedure DoOnSetTemplateSaveDialogFileName(AFileName: string);
-    procedure DoOnSetPictureOpenSetMultiSelect;
+
+    procedure DoOnSetOpenDialogMultiSelect;
+    procedure DoOnSetOpenDialogInitialDir(AInitialDir: string);
+    function DoOnOpenDialogExecute(AFilter: string): Boolean;
+    function DoOnGetOpenDialogFileName: string;
+    procedure DoOnSetSaveDialogInitialDir(AInitialDir: string);
+    function DoOnSaveDialogExecute(AFilter: string): Boolean;
+    function DoOnGetSaveDialogFileName: string;
+    procedure DoOnSetSaveDialogFileName(AFileName: string);
+
+    procedure DoOnSetPictureSetOpenDialogMultiSelect;
     procedure DoOnSetPictureOpenDialogInitialDir(AInitialDir: string);
     function DoOnPictureOpenDialogExecute: Boolean;
     function DoOnGetPictureOpenDialogFileName: string;
@@ -230,6 +238,7 @@ type
     procedure HandleOnWaitForBitmapsAvailability(AListOfBitmapFiles: TStringList);  //ClickerActionsArrFrame instances call this, to add multiple bmps to FIFO, if not found
 
     function HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
+    procedure HandleOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TPrimitiveOrderArr);
     function HandleOnFileExists(const FileName: string): Boolean;
     procedure HandleOnGetSelfHandles(AListOfSelfHandles: TStringList);
 
@@ -243,14 +252,17 @@ type
 
     function HandleOnTClkIniReadonlyFileCreate(AFileName: string): TClkIniReadonlyFile;
     procedure HandleOnSaveTemplateToFile(AStringList: TStringList; const FileName: string);
-    procedure HandleOnSetTemplateOpenDialogInitialDir(AInitialDir: string);
-    function HandleOnTemplateOpenDialogExecute: Boolean;
-    function HandleOnGetTemplateOpenDialogFileName: string;
-    procedure HandleOnSetTemplateSaveDialogInitialDir(AInitialDir: string);
-    function HandleOnTemplateSaveDialogExecute: Boolean;
-    function HandleOnGetTemplateSaveDialogFileName: string;
-    procedure HandleOnSetTemplateSaveDialogFileName(AFileName: string);
-    procedure HandleOnSetPictureOpenSetMultiSelect;
+
+    procedure HandleOnSetOpenDialogMultiSelect;
+    procedure HandleOnSetOpenDialogInitialDir(AInitialDir: string);
+    function HandleOnOpenDialogExecute(AFilter: string): Boolean;
+    function HandleOnGetOpenDialogFileName: string;
+    procedure HandleOnSetSaveDialogInitialDir(AInitialDir: string);
+    function HandleOnSaveDialogExecute(AFilter: string): Boolean;
+    function HandleOnGetSaveDialogFileName: string;
+    procedure HandleOnSetSaveDialogFileName(AFileName: string);
+
+    procedure HandleOnSetPictureSetOpenDialogMultiSelect;
     procedure HandleOnSetPictureOpenDialogInitialDir(AInitialDir: string);
     function HandleOnPictureOpenDialogExecute: Boolean;
     function HandleOnGetPictureOpenDialogFileName: string;
@@ -280,19 +292,23 @@ type
     property OnRecordComponent: TOnRecordComponent read FOnRecordComponent write FOnRecordComponent;
     property OnGetCurrentlyRecordedScreenShotImage: TOnGetCurrentlyRecordedScreenShotImage read FOnGetCurrentlyRecordedScreenShotImage write FOnGetCurrentlyRecordedScreenShotImage;
     property OnLoadBitmap: TOnLoadBitmap read FOnLoadBitmap write FOnLoadBitmap;
+    property OnLoadPrimitivesFile: TOnLoadPrimitivesFile read FOnLoadPrimitivesFile write FOnLoadPrimitivesFile;
     property OnGetSelfHandles: TOnGetSelfHandles write FOnGetSelfHandles;
 
     property OnFileExists: TOnFileExists write FOnFileExists;
     property OnTClkIniReadonlyFileCreate: TOnTClkIniReadonlyFileCreate write FOnTClkIniReadonlyFileCreate;
     property OnSaveTemplateToFile: TOnSaveTemplateToFile write FOnSaveTemplateToFile;
-    property OnSetTemplateOpenDialogInitialDir: TOnSetTemplateOpenDialogInitialDir write FOnSetTemplateOpenDialogInitialDir;
-    property OnTemplateOpenDialogExecute: TOnTemplateOpenDialogExecute write FOnTemplateOpenDialogExecute;
-    property OnGetTemplateOpenDialogFileName: TOnGetTemplateOpenDialogFileName write FOnGetTemplateOpenDialogFileName;
-    property OnSetTemplateSaveDialogInitialDir: TOnSetTemplateOpenDialogInitialDir write FOnSetTemplateSaveDialogInitialDir;
-    property OnTemplateSaveDialogExecute: TOnTemplateOpenDialogExecute write FOnTemplateSaveDialogExecute;
-    property OnGetTemplateSaveDialogFileName: TOnGetTemplateOpenDialogFileName write FOnGetTemplateSaveDialogFileName;
-    property OnSetTemplateSaveDialogFileName: TOnSetTemplateOpenDialogFileName write FOnSetTemplateSaveDialogFileName;
-    property OnSetPictureOpenSetMultiSelect: TOnSetPictureOpenSetMultiSelect write FOnSetPictureOpenSetMultiSelect;
+
+    property OnSetOpenDialogMultiSelect: TOnSetOpenDialogMultiSelect write FOnSetOpenDialogMultiSelect;
+    property OnSetOpenDialogInitialDir: TOnSetOpenDialogInitialDir write FOnSetOpenDialogInitialDir;
+    property OnOpenDialogExecute: TOnOpenDialogExecute write FOnOpenDialogExecute;
+    property OnGetOpenDialogFileName: TOnGetOpenDialogFileName write FOnGetOpenDialogFileName;
+    property OnSetSaveDialogInitialDir: TOnSetOpenDialogInitialDir write FOnSetSaveDialogInitialDir;
+    property OnSaveDialogExecute: TOnOpenDialogExecute write FOnSaveDialogExecute;
+    property OnGetSaveDialogFileName: TOnGetOpenDialogFileName write FOnGetSaveDialogFileName;
+    property OnSetSaveDialogFileName: TOnSetOpenDialogFileName write FOnSetSaveDialogFileName;
+
+    property OnSetPictureSetOpenDialogMultiSelect: TOnSetPictureSetOpenDialogMultiSelect write FOnSetPictureSetOpenDialogMultiSelect;
     property OnSetPictureOpenDialogInitialDir: TOnSetPictureOpenDialogInitialDir write FOnSetPictureOpenDialogInitialDir;
     property OnPictureOpenDialogExecute: TOnPictureOpenDialogExecute write FOnPictureOpenDialogExecute;
     property OnGetPictureOpenDialogFileName: TOnGetPictureOpenDialogFileName write FOnGetPictureOpenDialogFileName;
@@ -308,7 +324,7 @@ implementation
 
 
 uses
-  BitmapProcessing, ClickerActionsClient, MouseStuff;
+  BitmapProcessing, ClickerActionsClient, MouseStuff, ClickerPrimitives;
 
 
 const
@@ -344,6 +360,28 @@ begin
     AInMemFileSystem.LoadFileFromMemToStream(AFileName, MemStream);
     MemStream.Position := 0;
     ABmp.LoadFromStream(MemStream, MemStream.Size);
+  finally
+    MemStream.Free;
+  end;
+end;
+
+
+procedure LoadPmtvFromInMemFileSystem(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TPrimitiveOrderArr; AInMemFileSystem: TInMemFileSystem);
+var
+  MemStream: TMemoryStream;
+  Ini: TClkIniReadonlyFile;
+begin
+  MemStream := TMemoryStream.Create;
+  try
+    AInMemFileSystem.LoadFileFromMemToStream(AFileName, MemStream);
+    MemStream.Position := 0;
+
+    Ini := TClkIniReadonlyFile.Create(MemStream);
+    try
+      LoadPrimitivesFile(Ini, APrimitives, AOrders);
+    finally
+      Ini.Free;
+    end;
   finally
     MemStream.Free;
   end;
@@ -537,19 +575,24 @@ begin
   FOnRecordComponent := nil;
   FOnGetCurrentlyRecordedScreenShotImage := nil;
   FOnLoadBitmap := nil;
+  FOnLoadPrimitivesFile := nil;
+
   FOnGetSelfHandles := nil;
 
   FOnFileExists := nil;
   FOnTClkIniReadonlyFileCreate := nil;
   FOnSaveTemplateToFile := nil;
-  FOnSetTemplateOpenDialogInitialDir := nil;
-  FOnTemplateOpenDialogExecute := nil;
-  FOnGetTemplateOpenDialogFileName := nil;
-  FOnSetTemplateSaveDialogInitialDir := nil;
-  FOnTemplateSaveDialogExecute := nil;
-  FOnGetTemplateSaveDialogFileName := nil;
-  FOnSetTemplateSaveDialogFileName := nil;
-  FOnSetPictureOpenSetMultiSelect := nil;
+
+  FOnSetOpenDialogMultiSelect := nil;
+  FOnSetOpenDialogInitialDir := nil;
+  FOnOpenDialogExecute := nil;
+  FOnGetOpenDialogFileName := nil;
+  FOnSetSaveDialogInitialDir := nil;
+  FOnSaveDialogExecute := nil;
+  FOnGetSaveDialogFileName := nil;
+  FOnSetSaveDialogFileName := nil;
+
+  FOnSetPictureSetOpenDialogMultiSelect := nil;
   FOnSetPictureOpenDialogInitialDir := nil;
   FOnPictureOpenDialogExecute := nil;
   FOnGetPictureOpenDialogFileName := nil;
@@ -672,19 +715,23 @@ begin
   frClickerActionsArrMain.OnWaitForMultipleFilesAvailability := HandleOnWaitForMultipleFilesAvailability;
   frClickerActionsArrMain.OnWaitForBitmapsAvailability := HandleOnWaitForBitmapsAvailability;
   frClickerActionsArrMain.OnLoadBitmap := HandleOnLoadBitmap;
+  frClickerActionsArrMain.OnLoadPrimitivesFile := HandleOnLoadPrimitivesFile;
   frClickerActionsArrMain.OnFileExists := HandleOnFileExists;
   frClickerActionsArrMain.ActionExecution.OnGetSelfHandles := HandleOnGetSelfHandles;
   frClickerActionsArrMain.OnTClkIniReadonlyFileCreate := HandleOnTClkIniReadonlyFileCreate;
   frClickerActionsArrMain.OnSaveTemplateToFile := HandleOnSaveTemplateToFile;
-  frClickerActionsArrMain.OnSetTemplateOpenDialogInitialDir := HandleOnSetTemplateOpenDialogInitialDir;
-  frClickerActionsArrMain.OnTemplateOpenDialogExecute := HandleOnTemplateOpenDialogExecute;
-  frClickerActionsArrMain.OnGetTemplateOpenDialogFileName := HandleOnGetTemplateOpenDialogFileName;
-  frClickerActionsArrMain.OnSetTemplateSaveDialogInitialDir := HandleOnSetTemplateSaveDialogInitialDir;
-  frClickerActionsArrMain.OnTemplateSaveDialogExecute := HandleOnTemplateSaveDialogExecute;
-  frClickerActionsArrMain.OnGetTemplateSaveDialogFileName := HandleOnGetTemplateSaveDialogFileName;
-  frClickerActionsArrMain.OnSetTemplateSaveDialogFileName := HandleOnSetTemplateSaveDialogFileName;
+
+  frClickerActionsArrMain.OnSetOpenDialogMultiSelect := HandleOnSetOpenDialogMultiSelect;
+  frClickerActionsArrMain.OnSetOpenDialogInitialDir := HandleOnSetOpenDialogInitialDir;
+  frClickerActionsArrMain.OnOpenDialogExecute := HandleOnOpenDialogExecute;
+  frClickerActionsArrMain.OnGetOpenDialogFileName := HandleOnGetOpenDialogFileName;
+  frClickerActionsArrMain.OnSetSaveDialogInitialDir := HandleOnSetSaveDialogInitialDir;
+  frClickerActionsArrMain.OnSaveDialogExecute := HandleOnSaveDialogExecute;
+  frClickerActionsArrMain.OnGetSaveDialogFileName := HandleOnGetSaveDialogFileName;
+  frClickerActionsArrMain.OnSetSaveDialogFileName := HandleOnSetSaveDialogFileName;
+
   frClickerActionsArrMain.OnSetPictureOpenDialogInitialDir := HandleOnSetPictureOpenDialogInitialDir;
-  frClickerActionsArrMain.OnSetPictureOpenSetMultiSelect := HandleOnSetPictureOpenSetMultiSelect;
+  frClickerActionsArrMain.OnSetPictureSetOpenDialogMultiSelect := HandleOnSetPictureSetOpenDialogMultiSelect;
   frClickerActionsArrMain.OnPictureOpenDialogExecute := HandleOnPictureOpenDialogExecute;
   frClickerActionsArrMain.OnGetPictureOpenDialogFileName := HandleOnGetPictureOpenDialogFileName;
 
@@ -703,6 +750,8 @@ begin
   frClickerActionsArrExperiment2.OnWaitForBitmapsAvailability := HandleOnWaitForBitmapsAvailability;
   frClickerActionsArrExperiment1.OnLoadBitmap := HandleOnLoadBitmap;
   frClickerActionsArrExperiment2.OnLoadBitmap := HandleOnLoadBitmap;
+  frClickerActionsArrExperiment1.OnLoadPrimitivesFile := HandleOnLoadPrimitivesFile;
+  frClickerActionsArrExperiment2.OnLoadPrimitivesFile := HandleOnLoadPrimitivesFile;
   frClickerActionsArrExperiment1.OnFileExists := HandleOnFileExists;
   frClickerActionsArrExperiment2.OnFileExists := HandleOnFileExists;
   frClickerActionsArrExperiment1.ActionExecution.OnGetSelfHandles := HandleOnGetSelfHandles;
@@ -711,24 +760,26 @@ begin
   frClickerActionsArrExperiment2.OnTClkIniReadonlyFileCreate := HandleOnTClkIniReadonlyFileCreate;
   frClickerActionsArrExperiment1.OnSaveTemplateToFile := HandleOnSaveTemplateToFile;
   frClickerActionsArrExperiment2.OnSaveTemplateToFile := HandleOnSaveTemplateToFile;
-  frClickerActionsArrExperiment1.OnSetTemplateOpenDialogInitialDir := HandleOnSetTemplateOpenDialogInitialDir;
-  frClickerActionsArrExperiment2.OnSetTemplateOpenDialogInitialDir := HandleOnSetTemplateOpenDialogInitialDir;
-  frClickerActionsArrExperiment1.OnTemplateOpenDialogExecute := HandleOnTemplateOpenDialogExecute;
-  frClickerActionsArrExperiment2.OnTemplateOpenDialogExecute := HandleOnTemplateOpenDialogExecute;
-  frClickerActionsArrExperiment1.OnGetTemplateOpenDialogFileName := HandleOnGetTemplateOpenDialogFileName;
-  frClickerActionsArrExperiment2.OnGetTemplateOpenDialogFileName := HandleOnGetTemplateOpenDialogFileName;
-  frClickerActionsArrExperiment1.OnSetTemplateSaveDialogInitialDir := HandleOnSetTemplateSaveDialogInitialDir;
-  frClickerActionsArrExperiment2.OnSetTemplateSaveDialogInitialDir := HandleOnSetTemplateSaveDialogInitialDir;
-  frClickerActionsArrExperiment1.OnTemplateSaveDialogExecute := HandleOnTemplateSaveDialogExecute;
-  frClickerActionsArrExperiment2.OnTemplateSaveDialogExecute := HandleOnTemplateSaveDialogExecute;
-  frClickerActionsArrExperiment1.OnGetTemplateSaveDialogFileName := HandleOnGetTemplateSaveDialogFileName;
-  frClickerActionsArrExperiment2.OnGetTemplateSaveDialogFileName := HandleOnGetTemplateSaveDialogFileName;
-  frClickerActionsArrExperiment1.OnSetTemplateSaveDialogFileName := HandleOnSetTemplateSaveDialogFileName;
-  frClickerActionsArrExperiment2.OnSetTemplateSaveDialogFileName := HandleOnSetTemplateSaveDialogFileName;
+
+  frClickerActionsArrExperiment1.OnSetOpenDialogInitialDir := HandleOnSetOpenDialogInitialDir;
+  frClickerActionsArrExperiment2.OnSetOpenDialogInitialDir := HandleOnSetOpenDialogInitialDir;
+  frClickerActionsArrExperiment1.OnOpenDialogExecute := HandleOnOpenDialogExecute;
+  frClickerActionsArrExperiment2.OnOpenDialogExecute := HandleOnOpenDialogExecute;
+  frClickerActionsArrExperiment1.OnGetOpenDialogFileName := HandleOnGetOpenDialogFileName;
+  frClickerActionsArrExperiment2.OnGetOpenDialogFileName := HandleOnGetOpenDialogFileName;
+  frClickerActionsArrExperiment1.OnSetSaveDialogInitialDir := HandleOnSetSaveDialogInitialDir;
+  frClickerActionsArrExperiment2.OnSetSaveDialogInitialDir := HandleOnSetSaveDialogInitialDir;
+  frClickerActionsArrExperiment1.OnSaveDialogExecute := HandleOnSaveDialogExecute;
+  frClickerActionsArrExperiment2.OnSaveDialogExecute := HandleOnSaveDialogExecute;
+  frClickerActionsArrExperiment1.OnGetSaveDialogFileName := HandleOnGetSaveDialogFileName;
+  frClickerActionsArrExperiment2.OnGetSaveDialogFileName := HandleOnGetSaveDialogFileName;
+  frClickerActionsArrExperiment1.OnSetSaveDialogFileName := HandleOnSetSaveDialogFileName;
+  frClickerActionsArrExperiment2.OnSetSaveDialogFileName := HandleOnSetSaveDialogFileName;
+
   frClickerActionsArrExperiment1.OnSetPictureOpenDialogInitialDir := HandleOnSetPictureOpenDialogInitialDir;
   frClickerActionsArrExperiment2.OnSetPictureOpenDialogInitialDir := HandleOnSetPictureOpenDialogInitialDir;
-  frClickerActionsArrExperiment1.OnSetPictureOpenSetMultiSelect := HandleOnSetPictureOpenSetMultiSelect;
-  frClickerActionsArrExperiment2.OnSetPictureOpenSetMultiSelect := HandleOnSetPictureOpenSetMultiSelect;
+  frClickerActionsArrExperiment1.OnSetPictureSetOpenDialogMultiSelect := HandleOnSetPictureSetOpenDialogMultiSelect;
+  frClickerActionsArrExperiment2.OnSetPictureSetOpenDialogMultiSelect := HandleOnSetPictureSetOpenDialogMultiSelect;
   frClickerActionsArrExperiment1.OnPictureOpenDialogExecute := HandleOnPictureOpenDialogExecute;
   frClickerActionsArrExperiment2.OnPictureOpenDialogExecute := HandleOnPictureOpenDialogExecute;
   frClickerActionsArrExperiment1.OnGetPictureOpenDialogFileName := HandleOnGetPictureOpenDialogFileName;
@@ -807,12 +858,21 @@ begin
 end;
 
 
-function TfrmClickerActions.DoLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
+function TfrmClickerActions.DoOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
 begin
   if Assigned(FOnLoadBitmap) then
     Result := FOnLoadBitmap(ABitmap, AFileName)
   else
     Result := False;
+end;
+
+
+procedure TfrmClickerActions.DoOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TPrimitiveOrderArr);
+begin
+  if not Assigned(FOnLoadPrimitivesFile) then
+    raise Exception.Create('OnLoadPrimitivesFile not assigned.')
+  else
+    FOnLoadPrimitivesFile(AFileName, APrimitives, AOrders);
 end;
 
 
@@ -852,75 +912,84 @@ begin
 end;
 
 
-procedure TfrmClickerActions.DoOnSetTemplateOpenDialogInitialDir(AInitialDir: string);
+procedure TfrmClickerActions.DoOnSetOpenDialogMultiSelect;
 begin
-  if not Assigned(FOnSetTemplateOpenDialogInitialDir) then
-    raise Exception.Create('OnSetTemplateOpenDialogInitialDir is not assigned.')
+  if not Assigned(FOnSetOpenDialogMultiSelect) then
+    raise Exception.Create('OnSetOpenDialogMultiSelect is not assigned.')
   else
-    FOnSetTemplateOpenDialogInitialDir(AInitialDir);
+    FOnSetOpenDialogMultiSelect;
 end;
 
 
-function TfrmClickerActions.DoOnTemplateOpenDialogExecute: Boolean;
+procedure TfrmClickerActions.DoOnSetOpenDialogInitialDir(AInitialDir: string);
 begin
-  if not Assigned(FOnTemplateOpenDialogExecute) then
-    raise Exception.Create('OnTemplateOpenDialogExecute is not assigned.')
+  if not Assigned(FOnSetOpenDialogInitialDir) then
+    raise Exception.Create('OnSetOpenDialogInitialDir is not assigned.')
   else
-    Result := FOnTemplateOpenDialogExecute;
+    FOnSetOpenDialogInitialDir(AInitialDir);
 end;
 
 
-function TfrmClickerActions.DoOnGetTemplateOpenDialogFileName: string;
+function TfrmClickerActions.DoOnOpenDialogExecute(AFilter: string): Boolean;
 begin
-  if not Assigned(FOnGetTemplateOpenDialogFileName) then
-    raise Exception.Create('OnGetTemplateOpenDialogFileName is not assigned.')
+  if not Assigned(FOnOpenDialogExecute) then
+    raise Exception.Create('OnOpenDialogExecute is not assigned.')
   else
-    Result := FOnGetTemplateOpenDialogFileName;
+    Result := FOnOpenDialogExecute(AFilter);
 end;
 
 
-procedure TfrmClickerActions.DoOnSetTemplateSaveDialogInitialDir(AInitialDir: string);
+function TfrmClickerActions.DoOnGetOpenDialogFileName: string;
 begin
-  if not Assigned(FOnSetTemplateSaveDialogInitialDir) then
-    raise Exception.Create('OnSetTemplateSaveDialogInitialDir is not assigned.')
+  if not Assigned(FOnGetOpenDialogFileName) then
+    raise Exception.Create('OnGetOpenDialogFileName is not assigned.')
   else
-    FOnSetTemplateSaveDialogInitialDir(AInitialDir);
+    Result := FOnGetOpenDialogFileName;
 end;
 
 
-function TfrmClickerActions.DoOnTemplateSaveDialogExecute: Boolean;
+procedure TfrmClickerActions.DoOnSetSaveDialogInitialDir(AInitialDir: string);
 begin
-  if not Assigned(FOnTemplateSaveDialogExecute) then
-    raise Exception.Create('OnTemplateSaveDialogExecute is not assigned.')
+  if not Assigned(FOnSetSaveDialogInitialDir) then
+    raise Exception.Create('OnSetSaveDialogInitialDir is not assigned.')
   else
-    Result := FOnTemplateSaveDialogExecute;
+    FOnSetSaveDialogInitialDir(AInitialDir);
 end;
 
 
-function TfrmClickerActions.DoOnGetTemplateSaveDialogFileName: string;
+function TfrmClickerActions.DoOnSaveDialogExecute(AFilter: string): Boolean;
 begin
-  if not Assigned(FOnGetTemplateSaveDialogFileName) then
-    raise Exception.Create('OnGetTemplateSaveDialogFileName is not assigned.')
+  if not Assigned(FOnSaveDialogExecute) then
+    raise Exception.Create('OnSaveDialogExecute is not assigned.')
   else
-    Result := FOnGetTemplateSaveDialogFileName;
+    Result := FOnSaveDialogExecute(AFilter);
 end;
 
 
-procedure TfrmClickerActions.DoOnSetTemplateSaveDialogFileName(AFileName: string);
+function TfrmClickerActions.DoOnGetSaveDialogFileName: string;
 begin
-  if not Assigned(FOnSetTemplateSaveDialogFileName) then
-    raise Exception.Create('OnSetTemplateSaveDialogFileName is not assigned.')
+  if not Assigned(FOnGetSaveDialogFileName) then
+    raise Exception.Create('OnGetSaveDialogFileName is not assigned.')
   else
-    FOnSetTemplateSaveDialogFileName(AFileName);
+    Result := FOnGetSaveDialogFileName;
 end;
 
 
-procedure TfrmClickerActions.DoOnSetPictureOpenSetMultiSelect;
+procedure TfrmClickerActions.DoOnSetSaveDialogFileName(AFileName: string);
 begin
-  if not Assigned(FOnSetPictureOpenSetMultiSelect) then
-    raise Exception.Create('OnSetPictureOpenSetMultiSelect not assigned.')
+  if not Assigned(FOnSetSaveDialogFileName) then
+    raise Exception.Create('OnSetSaveDialogFileName is not assigned.')
   else
-    FOnSetPictureOpenSetMultiSelect;
+    FOnSetSaveDialogFileName(AFileName);
+end;
+
+
+procedure TfrmClickerActions.DoOnSetPictureSetOpenDialogMultiSelect;
+begin
+  if not Assigned(FOnSetPictureSetOpenDialogMultiSelect) then
+    raise Exception.Create('OnSetPictureSetOpenDialogMultiSelect not assigned.')
+  else
+    FOnSetPictureSetOpenDialogMultiSelect;
 end;
 
 
@@ -1153,20 +1222,23 @@ begin
         NewFrame.OnWaitForBitmapsAvailability := HandleOnWaitForBitmapsAvailability;
 
         NewFrame.OnLoadBitmap := HandleOnLoadBitmap;
+        NewFrame.OnLoadPrimitivesFile := HandleOnLoadPrimitivesFile;
         NewFrame.OnFileExists := HandleOnFileExists;
         NewFrame.ActionExecution.OnGetSelfHandles := HandleOnGetSelfHandles;
 
         NewFrame.OnTClkIniReadonlyFileCreate := HandleOnTClkIniReadonlyFileCreate;
         NewFrame.OnSaveTemplateToFile := HandleOnSaveTemplateToFile;
-        NewFrame.OnSetTemplateOpenDialogInitialDir := HandleOnSetTemplateOpenDialogInitialDir;
-        NewFrame.OnTemplateOpenDialogExecute := HandleOnTemplateOpenDialogExecute;
-        NewFrame.OnGetTemplateOpenDialogFileName := HandleOnGetTemplateOpenDialogFileName;
-        NewFrame.OnSetTemplateSaveDialogInitialDir := HandleOnSetTemplateSaveDialogInitialDir;
-        NewFrame.OnTemplateSaveDialogExecute := HandleOnTemplateSaveDialogExecute;
-        NewFrame.OnGetTemplateSaveDialogFileName := HandleOnGetTemplateSaveDialogFileName;
-        NewFrame.OnSetTemplateSaveDialogFileName := HandleOnSetTemplateSaveDialogFileName;
+
+        NewFrame.OnSetOpenDialogInitialDir := HandleOnSetOpenDialogInitialDir;
+        NewFrame.OnOpenDialogExecute := HandleOnOpenDialogExecute;
+        NewFrame.OnGetOpenDialogFileName := HandleOnGetOpenDialogFileName;
+        NewFrame.OnSetSaveDialogInitialDir := HandleOnSetSaveDialogInitialDir;
+        NewFrame.OnSaveDialogExecute := HandleOnSaveDialogExecute;
+        NewFrame.OnGetSaveDialogFileName := HandleOnGetSaveDialogFileName;
+        NewFrame.OnSetSaveDialogFileName := HandleOnSetSaveDialogFileName;
+
         NewFrame.OnSetPictureOpenDialogInitialDir := HandleOnSetPictureOpenDialogInitialDir;
-        NewFrame.OnSetPictureOpenSetMultiSelect := HandleOnSetPictureOpenSetMultiSelect;
+        NewFrame.OnSetPictureSetOpenDialogMultiSelect := HandleOnSetPictureSetOpenDialogMultiSelect;
         NewFrame.OnPictureOpenDialogExecute := HandleOnPictureOpenDialogExecute;
         NewFrame.OnGetPictureOpenDialogFileName := HandleOnGetPictureOpenDialogFileName;
 
@@ -1483,7 +1555,32 @@ begin
     Result := True;
   end
   else
-    Result := DoLoadBitmap(ABitmap, AFileName);
+    Result := DoOnLoadBitmap(ABitmap, AFileName);
+end;
+
+
+procedure TfrmClickerActions.HandleOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TPrimitiveOrderArr);
+begin
+  if CExpectedFileLocation[frClickerActionsArrMain.FileLocationOfDepsIsMem] = flMem then
+  begin
+    if not FInMemFileSystem.FileExistsInMem(AFileName) then
+      Exit;
+  end
+  else
+    if CExpectedFileLocation[frClickerActionsArrMain.FileLocationOfDepsIsMem] = flDisk then
+    begin
+      if not DoOnFileExists(AFileName) then
+        Exit;
+    end;
+
+  //replaced FileExistsInDiskOrMemWithPriority with the above logic, because of disk handlers
+  //if not FileExistsInDiskOrMemWithPriority(AFileName, FInMemFileSystem, CExpectedFileLocation[frClickerActionsArrMain.FileLocationOfDepsIsMem]) then
+  //  Exit;
+
+  if frClickerActionsArrMain.FileLocationOfDepsIsMem then
+    LoadPmtvFromInMemFileSystem(AFileName, APrimitives, AOrders, FInMemFileSystem)
+  else
+    DoOnLoadPrimitivesFile(AFileName, APrimitives, AOrders);
 end;
 
 
@@ -2731,6 +2828,7 @@ begin
   end;
 end;
 
+
 function TfrmClickerActions.HandleOnTClkIniReadonlyFileCreate(AFileName: string): TClkIniReadonlyFile;
 begin
   Result := DoOnTClkIniReadonlyFileCreate(AFileName);
@@ -2743,51 +2841,57 @@ begin
 end;
 
 
-procedure TfrmClickerActions.HandleOnSetTemplateOpenDialogInitialDir(AInitialDir: string);
+procedure TfrmClickerActions.HandleOnSetOpenDialogMultiSelect;
 begin
-  DoOnSetTemplateOpenDialogInitialDir(AInitialDir);
+  DoOnSetOpenDialogMultiSelect;
 end;
 
 
-function TfrmClickerActions.HandleOnTemplateOpenDialogExecute: Boolean;
+procedure TfrmClickerActions.HandleOnSetOpenDialogInitialDir(AInitialDir: string);
 begin
-  Result := DoOnTemplateOpenDialogExecute;
+  DoOnSetOpenDialogInitialDir(AInitialDir);
 end;
 
 
-function TfrmClickerActions.HandleOnGetTemplateOpenDialogFileName: string;
+function TfrmClickerActions.HandleOnOpenDialogExecute(AFilter: string): Boolean;
 begin
-  Result := DoOnGetTemplateOpenDialogFileName;
+  Result := DoOnOpenDialogExecute(AFilter);
 end;
 
 
-procedure TfrmClickerActions.HandleOnSetTemplateSaveDialogInitialDir(AInitialDir: string);
+function TfrmClickerActions.HandleOnGetOpenDialogFileName: string;
 begin
-  DoOnSetTemplateSaveDialogInitialDir(AInitialDir);
+  Result := DoOnGetOpenDialogFileName;
 end;
 
 
-function TfrmClickerActions.HandleOnTemplateSaveDialogExecute: Boolean;
+procedure TfrmClickerActions.HandleOnSetSaveDialogInitialDir(AInitialDir: string);
 begin
-  Result := DoOnTemplateSaveDialogExecute;
+  DoOnSetSaveDialogInitialDir(AInitialDir);
 end;
 
 
-function TfrmClickerActions.HandleOnGetTemplateSaveDialogFileName: string;
+function TfrmClickerActions.HandleOnSaveDialogExecute(AFilter: string): Boolean;
 begin
-  Result := DoOnGetTemplateSaveDialogFileName;
+  Result := DoOnSaveDialogExecute(AFilter);
 end;
 
 
-procedure TfrmClickerActions.HandleOnSetTemplateSaveDialogFileName(AFileName: string);
+function TfrmClickerActions.HandleOnGetSaveDialogFileName: string;
 begin
-  DoOnSetTemplateSaveDialogFileName(AFileName);
+  Result := DoOnGetSaveDialogFileName;
 end;
 
 
-procedure TfrmClickerActions.HandleOnSetPictureOpenSetMultiSelect;
+procedure TfrmClickerActions.HandleOnSetSaveDialogFileName(AFileName: string);
 begin
-  DoOnSetPictureOpenSetMultiSelect;
+  DoOnSetSaveDialogFileName(AFileName);
+end;
+
+
+procedure TfrmClickerActions.HandleOnSetPictureSetOpenDialogMultiSelect;
+begin
+  DoOnSetPictureSetOpenDialogMultiSelect;
 end;
 
 

@@ -36,7 +36,8 @@ uses
   Menus, ClickerUtils, ClickerConditionEditorFrame,
   ClickerFindControlFrame, ClickerExecAppFrame, ClickerSetVarFrame,
   ClickerCallTemplateFrame, ClickerSleepFrame,
-  Types, InMemFileSystem, ObjectInspectorFrame;
+  Types, InMemFileSystem, ObjectInspectorFrame,
+  ClickerPrimitiveUtils;
 
 type
   { TfrClickerActions }
@@ -208,12 +209,20 @@ type
     procedure MenuItem_CopyTextAndClassFromWinInterpWindowClick(Sender: TObject);
     procedure MenuItem_CopyTextAndClassFromRemoteScreenWindowClick(Sender: TObject);
 
-    procedure MenuItem_AddFilesToPropertyListClick(Sender: TObject);
-    procedure MenuItem_RemoveAllFilesFromPropertyListClick(Sender: TObject);
-    procedure MenuItem_BrowseFileFromPropertyListClick(Sender: TObject);
-    procedure MenuItem_RemoveFileFromPropertyListClick(Sender: TObject);
-    procedure MenuItem_MoveFileUpInPropertyListClick(Sender: TObject);
-    procedure MenuItem_MoveFileDownInPropertyListClick(Sender: TObject);
+    procedure MenuItem_AddBMPFilesToPropertyListClick(Sender: TObject);
+    procedure MenuItem_RemoveAllBMPFilesFromPropertyListClick(Sender: TObject);
+    procedure MenuItem_BrowseBMPFileFromPropertyListClick(Sender: TObject);
+    procedure MenuItem_RemoveBMPFileFromPropertyListClick(Sender: TObject);
+    procedure MenuItem_MoveBMPFileUpInPropertyListClick(Sender: TObject);
+    procedure MenuItem_MoveBMPFileDownInPropertyListClick(Sender: TObject);
+
+    procedure MenuItem_AddExistingPrimitiveFilesToPropertyListClick(Sender: TObject);
+    procedure MenuItem_AddNewPrimitiveFilesToPropertyListClick(Sender: TObject);
+    procedure MenuItem_RemoveAllPrimitiveFilesFromPropertyListClick(Sender: TObject);
+    procedure MenuItem_BrowsePrimitiveFileFromPropertyListClick(Sender: TObject);
+    procedure MenuItem_RemovePrimitiveFileFromPropertyListClick(Sender: TObject);
+    procedure MenuItem_MovePrimitiveFileUpInPropertyListClick(Sender: TObject);
+    procedure MenuItem_MovePrimitiveFileDownInPropertyListClick(Sender: TObject);
 
     procedure MenuItem_AddFontProfileToPropertyListClick(Sender: TObject);
     procedure MenuItem_RemoveFontProfileFromPropertyListClick(Sender: TObject);
@@ -260,13 +269,19 @@ type
     FOnEditCallTemplateBreakCondition: TOnEditActionCondition;
 
     FOnLoadBitmap: TOnLoadBitmap;
+    FOnLoadPrimitivesFile: TOnLoadPrimitivesFile;
     FOnFileExists: TOnFileExists;
 
-    FOnTemplateOpenSetMultiSelect: TOnTemplateOpenSetMultiSelect;
-    FOnSetTemplateOpenDialogInitialDir: TOnSetTemplateOpenDialogInitialDir;
-    FOnTemplateOpenDialogExecute: TOnTemplateOpenDialogExecute;
-    FOnGetTemplateOpenDialogFileName: TOnGetTemplateOpenDialogFileName;
-    FOnSetPictureOpenSetMultiSelect: TOnSetPictureOpenSetMultiSelect;
+    FOnSetOpenDialogMultiSelect: TOnSetOpenDialogMultiSelect;
+    FOnSetOpenDialogInitialDir: TOnSetOpenDialogInitialDir;
+    FOnOpenDialogExecute: TOnOpenDialogExecute;
+    FOnGetOpenDialogFileName: TOnGetOpenDialogFileName;
+    FOnSetSaveDialogInitialDir: TOnSetOpenDialogInitialDir;
+    FOnSaveDialogExecute: TOnOpenDialogExecute;
+    FOnGetSaveDialogFileName: TOnGetOpenDialogFileName;
+    FOnSetSaveDialogFileName: TOnSetOpenDialogFileName;
+
+    FOnSetPictureSetOpenDialogMultiSelect: TOnSetPictureSetOpenDialogMultiSelect;
     FOnSetPictureOpenDialogInitialDir: TOnSetPictureOpenDialogInitialDir;
     FOnPictureOpenDialogExecute: TOnPictureOpenDialogExecute;
     FOnGetPictureOpenDialogFileName: TOnGetPictureOpenDialogFileName;
@@ -283,16 +298,23 @@ type
 
     function DoOnEditCallTemplateBreakCondition(var AActionCondition: string): Boolean;
     function DoOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
+    procedure DoOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TPrimitiveOrderArr);
     function DoOnFileExists(const AFileName: string): Boolean;
 
-    procedure DoOnTemplateOpenSetMultiSelect;
-    procedure DoOnSetTemplateOpenDialogInitialDir(AInitialDir: string);
-    function DoOnTemplateOpenDialogExecute: Boolean;
-    function DoOnGetTemplateOpenDialogFileName: string;
-    procedure DoOnSetPictureOpenSetMultiSelect;
+    procedure DoOnSetOpenDialogMultiSelect;
+    procedure DoOnSetOpenDialogInitialDir(AInitialDir: string);
+    function DoOnOpenDialogExecute(AFilter: string): Boolean;
+    function DoOnGetOpenDialogFileName: string;
+    procedure DoOnSetSaveDialogInitialDir(AInitialDir: string);
+    function DoOnSaveDialogExecute(AFilter: string): Boolean;
+    function DoOnGetSaveDialogFileName: string;
+    procedure DoOnSetSaveDialogFileName(AFileName: string);
+
+    procedure DoOnSetPictureSetOpenDialogMultiSelect;
     procedure DoOnSetPictureOpenDialogInitialDir(AInitialDir: string);
     function DoOnPictureOpenDialogExecute: Boolean;
     function DoOnGetPictureOpenDialogFileName: string;
+
 
     procedure SetInMemFS(Value: TInMemFileSystem);
 
@@ -331,10 +353,12 @@ type
     procedure HandleOnClickerSetVarFrame_OnTriggerOnControlsModified;
     procedure HandleOnClickerCallTemplateFrame_OnTriggerOnControlsModified;
 
+    function HandleOnEvaluateReplacementsFunc(s: string; Recursive: Boolean = True): string;
+    procedure HandleOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TPrimitiveOrderArr);
+    procedure HandleOnPrimitivesTriggerOnControlsModified;
+
     ///////////////////////////// OI
     function EditFontProperties(AItemIndexDiv: Integer; var ANewItems: string): Boolean;
-    procedure AddMenuItemToPopupMenu(APopupMenu: TPopupMenu; ACaption: TCaption; AHandler: TNotifyEvent;
-      ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer);
 
     procedure FreeOIPopupMenu(Sender: TObject);
     procedure BuildFontColorIconsList;
@@ -389,7 +413,8 @@ type
     function HandleOnOIBrowseFile(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer;
       AFilter, ADialogInitDir: string; var Handled: Boolean; AReturnMultipleFiles: Boolean = False): string;
 
-    procedure HandleOnAfterSpinTextEditorChanging(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; var ANewValue: string);
+    procedure HandleOnOIAfterSpinTextEditorChanging(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; var ANewValue: string);
+    procedure HandleOnOISelectedNode(NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex, Column: Integer; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
   public
     { Public declarations }
     frClickerConditionEditor: TfrClickerConditionEditor;  //public, because it is accessed from outside :(
@@ -430,13 +455,19 @@ type
     property OnEditCallTemplateBreakCondition: TOnEditActionCondition write FOnEditCallTemplateBreakCondition;
 
     property OnLoadBitmap: TOnLoadBitmap write FOnLoadBitmap;
+    property OnLoadPrimitivesFile: TOnLoadPrimitivesFile write FOnLoadPrimitivesFile;
     property OnFileExists: TOnFileExists write FOnFileExists;
 
-    property OnTemplateOpenSetMultiSelect: TOnTemplateOpenSetMultiSelect write FOnTemplateOpenSetMultiSelect;
-    property OnSetTemplateOpenDialogInitialDir: TOnSetTemplateOpenDialogInitialDir write FOnSetTemplateOpenDialogInitialDir;
-    property OnTemplateOpenDialogExecute: TOnTemplateOpenDialogExecute write FOnTemplateOpenDialogExecute;
-    property OnGetTemplateOpenDialogFileName: TOnGetTemplateOpenDialogFileName write FOnGetTemplateOpenDialogFileName;
-    property OnSetPictureOpenSetMultiSelect: TOnSetPictureOpenSetMultiSelect write FOnSetPictureOpenSetMultiSelect;
+    property OnSetOpenDialogMultiSelect: TOnSetOpenDialogMultiSelect write FOnSetOpenDialogMultiSelect;
+    property OnSetOpenDialogInitialDir: TOnSetOpenDialogInitialDir write FOnSetOpenDialogInitialDir;
+    property OnOpenDialogExecute: TOnOpenDialogExecute write FOnOpenDialogExecute;
+    property OnGetOpenDialogFileName: TOnGetOpenDialogFileName write FOnGetOpenDialogFileName;
+    property OnSetSaveDialogInitialDir: TOnSetOpenDialogInitialDir write FOnSetSaveDialogInitialDir;
+    property OnSaveDialogExecute: TOnOpenDialogExecute write FOnSaveDialogExecute;
+    property OnGetSaveDialogFileName: TOnGetOpenDialogFileName write FOnGetSaveDialogFileName;
+    property OnSetSaveDialogFileName: TOnSetOpenDialogFileName write FOnSetSaveDialogFileName;
+
+    property OnSetPictureSetOpenDialogMultiSelect: TOnSetPictureSetOpenDialogMultiSelect write FOnSetPictureSetOpenDialogMultiSelect;
     property OnSetPictureOpenDialogInitialDir: TOnSetPictureOpenDialogInitialDir write FOnSetPictureOpenDialogInitialDir;
     property OnPictureOpenDialogExecute: TOnPictureOpenDialogExecute write FOnPictureOpenDialogExecute;
     property OnGetPictureOpenDialogFileName: TOnGetPictureOpenDialogFileName write FOnGetPictureOpenDialogFileName;
@@ -463,7 +494,7 @@ implementation
 
 
 uses
-  Clipbrd, ClickerActionValues;
+  Clipbrd, ClickerActionValues, ClickerOIUtils;
 
 
 function ActionStatusStrToActionStatus(AString: string): TActionStatus;
@@ -604,7 +635,8 @@ begin
   FOIFrame.OnOIArrowEditorClick := HandleOnOIArrowEditorClick;
   FOIFrame.OnOIUserEditorClick := HandleOnOIUserEditorClick;
   FOIFrame.OnOIBrowseFile := HandleOnOIBrowseFile;
-  FOIFrame.OnAfterSpinTextEditorChanging := HandleOnAfterSpinTextEditorChanging;
+  FOIFrame.OnOIAfterSpinTextEditorChanging := HandleOnOIAfterSpinTextEditorChanging;
+  FOIFrame.OnOISelectedNode := HandleOnOISelectedNode;
 
   FOIFrame.Visible := True;
 
@@ -641,13 +673,19 @@ begin
   FOnEditCallTemplateBreakCondition := nil;
 
   FOnLoadBitmap := nil;
+  FOnLoadPrimitivesFile := nil;
   FOnFileExists := nil;
 
-  FOnTemplateOpenSetMultiSelect := nil;
-  FOnSetTemplateOpenDialogInitialDir := nil;
-  FOnTemplateOpenDialogExecute := nil;
-  FOnGetTemplateOpenDialogFileName := nil;
-  FOnSetPictureOpenSetMultiSelect := nil;
+  FOnSetOpenDialogMultiSelect := nil;
+  FOnSetOpenDialogInitialDir := nil;
+  FOnOpenDialogExecute := nil;
+  FOnGetOpenDialogFileName := nil;
+  FOnSetSaveDialogInitialDir := nil;
+  FOnSaveDialogExecute := nil;
+  FOnGetSaveDialogFileName := nil;
+  FOnSetSaveDialogFileName := nil;
+
+  FOnSetPictureSetOpenDialogMultiSelect := nil;
   FOnSetPictureOpenDialogInitialDir := nil;
   FOnPictureOpenDialogExecute := nil;
   FOnGetPictureOpenDialogFileName := nil;
@@ -1067,10 +1105,10 @@ end;
 
 procedure TfrClickerActions.BrowseTemplatesClick(Sender: TObject);
 begin
-  DoOnSetTemplateOpenDialogInitialDir(FFullTemplatesDir);    //this is not the right dir
-  if DoOnTemplateOpenDialogExecute then
+  DoOnSetOpenDialogInitialDir(FFullTemplatesDir);    //this is not the right dir
+  if DoOnOpenDialogExecute(CTemplateDialogFilter) then
   begin
-    FEditingAction^.CallTemplateOptions.TemplateFileName := DoOnGetTemplateOpenDialogFileName;
+    FEditingAction^.CallTemplateOptions.TemplateFileName := DoOnGetOpenDialogFileName;
     FOIFrame.CancelCurrentEditing;
     FOIFrame.Repaint;   //ideally, RepaintNodeByLevel
     TriggerOnControlsModified;
@@ -1439,6 +1477,24 @@ begin
 end;
 
 
+function TfrClickerActions.HandleOnEvaluateReplacementsFunc(s: string; Recursive: Boolean = True): string;
+begin
+  Result := EvaluateReplacements(s, Recursive);
+end;
+
+
+procedure TfrClickerActions.HandleOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TPrimitiveOrderArr);
+begin
+  DoOnLoadPrimitivesFile(AFileName, APrimitives, AOrders);
+end;
+
+
+procedure TfrClickerActions.HandleOnPrimitivesTriggerOnControlsModified;
+begin
+  //either save the selected pmtv file, or set a modified flag (+UI update), or trigger another OnPrimitivesTriggerOnControlsModified event
+end;
+
+
 function TfrClickerActions.DoOnEditCallTemplateBreakCondition(var AActionCondition: string): Boolean;
 begin
   if not Assigned(FOnEditCallTemplateBreakCondition) then
@@ -1457,6 +1513,15 @@ begin
 end;
 
 
+procedure TfrClickerActions.DoOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TPrimitiveOrderArr);
+begin
+  if not Assigned(FOnLoadPrimitivesFile) then
+    raise Exception.Create('OnLoadPrimitivesFile not assigned.')
+  else
+    FOnLoadPrimitivesFile(AFileName, APrimitives, AOrders);
+end;
+
+
 function TfrClickerActions.DoOnFileExists(const AFileName: string): Boolean;
 begin
   if not Assigned(FOnFileExists) then
@@ -1466,48 +1531,84 @@ begin
 end;
 
 
-procedure TfrClickerActions.DoOnTemplateOpenSetMultiSelect;
+procedure TfrClickerActions.DoOnSetOpenDialogMultiSelect;
 begin
-  if not Assigned(FOnTemplateOpenSetMultiSelect) then
-    raise Exception.Create('OnTemplateOpenSetMultiSelect is not assigned.')
+  if not Assigned(FOnSetOpenDialogMultiSelect) then
+    raise Exception.Create('OnSetOpenDialogMultiSelect is not assigned.')
   else
-    FOnTemplateOpenSetMultiSelect;
+    FOnSetOpenDialogMultiSelect;
 end;
 
 
-procedure TfrClickerActions.DoOnSetTemplateOpenDialogInitialDir(AInitialDir: string);
+procedure TfrClickerActions.DoOnSetOpenDialogInitialDir(AInitialDir: string);
 begin
-  if not Assigned(FOnSetTemplateOpenDialogInitialDir) then
-    raise Exception.Create('OnSetTemplateOpenDialogInitialDir is not assigned.')
+  if not Assigned(FOnSetOpenDialogInitialDir) then
+    raise Exception.Create('OnSetOpenDialogInitialDir is not assigned.')
   else
-    FOnSetTemplateOpenDialogInitialDir(AInitialDir);
+    FOnSetOpenDialogInitialDir(AInitialDir);
 end;
 
 
-function TfrClickerActions.DoOnTemplateOpenDialogExecute: Boolean;
+function TfrClickerActions.DoOnOpenDialogExecute(AFilter: string): Boolean;
 begin
-  if not Assigned(FOnTemplateOpenDialogExecute) then
-    raise Exception.Create('OnTemplateOpenDialogExecute is not assigned.')
+  if not Assigned(FOnOpenDialogExecute) then
+    raise Exception.Create('OnOpenDialogExecute is not assigned.')
   else
-    Result := FOnTemplateOpenDialogExecute;
+    Result := FOnOpenDialogExecute(AFilter);
 end;
 
 
-function TfrClickerActions.DoOnGetTemplateOpenDialogFileName: string;
+function TfrClickerActions.DoOnGetOpenDialogFileName: string;
 begin
-  if not Assigned(FOnGetTemplateOpenDialogFileName) then
-    raise Exception.Create('OnGetTemplateOpenDialogFileName is not assigned.')
+  if not Assigned(FOnGetOpenDialogFileName) then
+    raise Exception.Create('OnGetOpenDialogFileName is not assigned.')
   else
-    Result := FOnGetTemplateOpenDialogFileName;
+    Result := FOnGetOpenDialogFileName;
 end;
 
 
-procedure TfrClickerActions.DoOnSetPictureOpenSetMultiSelect;
+procedure TfrClickerActions.DoOnSetSaveDialogInitialDir(AInitialDir: string);
 begin
-  if not Assigned(FOnSetPictureOpenSetMultiSelect) then
-    raise Exception.Create('OnSetPictureOpenSetMultiSelect is not assigned.')
+  if not Assigned(FOnSetSaveDialogInitialDir) then
+    raise Exception.Create('OnSetSaveDialogInitialDir is not assigned.')
   else
-    FOnSetPictureOpenSetMultiSelect;
+    FOnSetSaveDialogInitialDir(AInitialDir);
+end;
+
+
+function TfrClickerActions.DoOnSaveDialogExecute(AFilter: string): Boolean;
+begin
+  if not Assigned(FOnSaveDialogExecute) then
+    raise Exception.Create('OnSaveDialogExecute is not assigned.')
+  else
+    Result := FOnSaveDialogExecute(AFilter);
+end;
+
+
+function TfrClickerActions.DoOnGetSaveDialogFileName: string;
+begin
+  if not Assigned(FOnGetSaveDialogFileName) then
+    raise Exception.Create('OnGetSaveDialogFileName is not assigned.')
+  else
+    Result := FOnGetSaveDialogFileName;
+end;
+
+
+procedure TfrClickerActions.DoOnSetSaveDialogFileName(AFileName: string);
+begin
+  if not Assigned(FOnSetSaveDialogFileName) then
+    raise Exception.Create('OnSetSaveDialogFileName is not assigned.')
+  else
+    FOnSetSaveDialogFileName(AFileName);
+end;
+
+
+procedure TfrClickerActions.DoOnSetPictureSetOpenDialogMultiSelect;
+begin
+  if not Assigned(FOnSetPictureSetOpenDialogMultiSelect) then
+    raise Exception.Create('OnSetPictureSetOpenDialogMultiSelect is not assigned.')
+  else
+    FOnSetPictureSetOpenDialogMultiSelect;
 end;
 
 
@@ -1539,14 +1640,6 @@ end;
 
 
 //////////////////////////// OI
-type
-  TOIMenuItemData = record
-    OwnerMenu: TPopupMenu;
-    NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex: Integer;
-    MenuItemCaption: string;
-  end;
-  POIMenuItemData = ^TOIMenuItemData;
-
 
 function TfrClickerActions.GetCurrentlyEditingActionType: TClkAction;
 begin
@@ -1726,12 +1819,12 @@ begin
 end;
 
 
-procedure TfrClickerActions.MenuItem_AddFilesToPropertyListClick(Sender: TObject);
+procedure TfrClickerActions.MenuItem_AddBMPFilesToPropertyListClick(Sender: TObject);
 var
   MenuData: POIMenuItemData;
   ListOfFiles: TStringList;
 begin
-  DoOnSetPictureOpenSetMultiSelect;
+  DoOnSetPictureSetOpenDialogMultiSelect;
   if not DoOnPictureOpenDialogExecute then
     Exit;
 
@@ -1758,7 +1851,7 @@ begin
 end;
 
 
-procedure TfrClickerActions.MenuItem_RemoveAllFilesFromPropertyListClick(Sender: TObject);
+procedure TfrClickerActions.MenuItem_RemoveAllBMPFilesFromPropertyListClick(Sender: TObject);
 var
   MenuData: POIMenuItemData;
 begin
@@ -1780,7 +1873,7 @@ begin
 end;
 
 
-procedure TfrClickerActions.MenuItem_BrowseFileFromPropertyListClick(Sender: TObject);
+procedure TfrClickerActions.MenuItem_BrowseBMPFileFromPropertyListClick(Sender: TObject);
 var
   MenuData: POIMenuItemData;
   ListOfFiles: TStringList;
@@ -1813,7 +1906,7 @@ begin
 end;
 
 
-procedure TfrClickerActions.MenuItem_RemoveFileFromPropertyListClick(Sender: TObject);
+procedure TfrClickerActions.MenuItem_RemoveBMPFileFromPropertyListClick(Sender: TObject);
 var
   MenuData: POIMenuItemData;
   ListOfFiles: TStringList;
@@ -1845,7 +1938,7 @@ begin
 end;
 
 
-procedure TfrClickerActions.MenuItem_MoveFileUpInPropertyListClick(Sender: TObject);
+procedure TfrClickerActions.MenuItem_MoveBMPFileUpInPropertyListClick(Sender: TObject);
 var
   MenuData: POIMenuItemData;
   ListOfFiles: TStringList;
@@ -1876,7 +1969,7 @@ begin
 end;
 
 
-procedure TfrClickerActions.MenuItem_MoveFileDownInPropertyListClick(Sender: TObject);
+procedure TfrClickerActions.MenuItem_MoveBMPFileDownInPropertyListClick(Sender: TObject);
 var
   MenuData: POIMenuItemData;
   ListOfFiles: TStringList;
@@ -1892,6 +1985,219 @@ begin
 
         ListOfFiles.Move(MenuData^.PropertyItemIndex, MenuData^.PropertyItemIndex + 1);
         FEditingAction^.FindControlOptions.MatchBitmapFiles := ListOfFiles.Text;
+
+        FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex, True);
+        TriggerOnControlsModified;
+      finally
+        ListOfFiles.Free;
+      end;
+    finally
+      MenuData^.OwnerMenu.Free;
+    end;
+  finally
+    Dispose(MenuData);
+  end;
+end;
+
+
+procedure TfrClickerActions.MenuItem_AddExistingPrimitiveFilesToPropertyListClick(Sender: TObject);
+var
+  MenuData: POIMenuItemData;
+  ListOfFiles: TStringList;
+begin
+  DoOnSetOpenDialogMultiSelect;
+  if not DoOnOpenDialogExecute(CPrimitivesDialogFilter) then
+    Exit;
+
+  MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
+  try
+    try
+      ListOfFiles := TStringList.Create;
+      try
+        ListOfFiles.Text := FEditingAction^.FindControlOptions.MatchPrimitiveFiles;
+        ListOfFiles.Text := ListOfFiles.Text + DoOnGetOpenDialogFileName;
+        FEditingAction^.FindControlOptions.MatchPrimitiveFiles := ListOfFiles.Text;
+
+        FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex);
+        TriggerOnControlsModified;
+      finally
+        ListOfFiles.Free;
+      end;
+    finally
+      MenuData^.OwnerMenu.Free;
+    end;
+  finally
+    Dispose(MenuData);
+  end;
+end;
+
+
+procedure TfrClickerActions.MenuItem_AddNewPrimitiveFilesToPropertyListClick(Sender: TObject);
+var
+  MenuData: POIMenuItemData;
+  ListOfFiles: TStringList;
+begin
+  //DoOnSetOpenDialogMultiSelect; //do not call multiselect, as this is a single file save
+  if not DoOnSaveDialogExecute(CPrimitivesDialogFilter) then
+    Exit;
+
+  MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
+  try
+    try
+      ListOfFiles := TStringList.Create;
+      try
+        ListOfFiles.Text := FEditingAction^.FindControlOptions.MatchPrimitiveFiles;
+        ListOfFiles.Text := ListOfFiles.Text + DoOnGetSaveDialogFileName;
+        FEditingAction^.FindControlOptions.MatchPrimitiveFiles := ListOfFiles.Text;
+
+        FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex);
+        TriggerOnControlsModified;
+      finally
+        ListOfFiles.Free;
+      end;
+    finally
+      MenuData^.OwnerMenu.Free;
+    end;
+  finally
+    Dispose(MenuData);
+  end;
+end;
+
+
+procedure TfrClickerActions.MenuItem_RemoveAllPrimitiveFilesFromPropertyListClick(Sender: TObject);
+var
+  MenuData: POIMenuItemData;
+begin
+  if MessageBox(Handle, 'Are you sure you want to remove all files from this list?', PChar(Application.MainForm.Caption), MB_ICONQUESTION + MB_YESNO) = IDNO then
+    Exit;
+
+  MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
+  try
+    try
+      FEditingAction^.FindControlOptions.MatchPrimitiveFiles := '';
+      FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex);
+      TriggerOnControlsModified;
+    finally
+      MenuData^.OwnerMenu.Free;
+    end;
+  finally
+    Dispose(MenuData);
+  end;
+end;
+
+
+procedure TfrClickerActions.MenuItem_BrowsePrimitiveFileFromPropertyListClick(Sender: TObject);
+var
+  MenuData: POIMenuItemData;
+  ListOfFiles: TStringList;
+begin
+  MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
+  try
+    try
+      //DoOnSetOpenDialogInitialDir();
+      if not DoOnOpenDialogExecute(CPrimitivesDialogFilter) then
+        Exit;
+
+      ListOfFiles := TStringList.Create;
+      try
+        ListOfFiles.Text := FEditingAction^.FindControlOptions.MatchPrimitiveFiles;
+        ListOfFiles.Strings[MenuData^.PropertyItemIndex] := DoOnGetOpenDialogFileName;
+        FEditingAction^.FindControlOptions.MatchPrimitiveFiles := ListOfFiles.Text;
+
+        FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex, True);
+
+        TriggerOnControlsModified;
+      finally
+        ListOfFiles.Free;
+      end;
+    finally
+      MenuData^.OwnerMenu.Free;
+    end;
+  finally
+    Dispose(MenuData);
+  end;
+end;
+
+
+procedure TfrClickerActions.MenuItem_RemovePrimitiveFileFromPropertyListClick(Sender: TObject);
+var
+  MenuData: POIMenuItemData;
+  ListOfFiles: TStringList;
+begin
+  if MessageBox(Handle, 'Are you sure you want to remove this file from list?', PChar(Application.MainForm.Caption), MB_ICONQUESTION + MB_YESNO) = IDNO then
+    Exit;
+
+  MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
+  try
+    try
+      ListOfFiles := TStringList.Create;
+      try
+        ListOfFiles.Text := FEditingAction^.FindControlOptions.MatchPrimitiveFiles;
+        ListOfFiles.Delete(MenuData^.PropertyItemIndex);
+        FEditingAction^.FindControlOptions.MatchPrimitiveFiles := ListOfFiles.Text;
+
+        FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex, True);
+
+        TriggerOnControlsModified;
+      finally
+        ListOfFiles.Free;
+      end;
+    finally
+      MenuData^.OwnerMenu.Free;
+    end;
+  finally
+    Dispose(MenuData);
+  end;
+end;
+
+
+procedure TfrClickerActions.MenuItem_MovePrimitiveFileUpInPropertyListClick(Sender: TObject);
+var
+  MenuData: POIMenuItemData;
+  ListOfFiles: TStringList;
+begin
+  MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
+  try
+    try
+      ListOfFiles := TStringList.Create;
+      try
+        if MenuData^.PropertyItemIndex <= 0 then
+          Exit;
+
+        ListOfFiles.Text := FEditingAction^.FindControlOptions.MatchPrimitiveFiles;
+        ListOfFiles.Move(MenuData^.PropertyItemIndex, MenuData^.PropertyItemIndex - 1);
+        FEditingAction^.FindControlOptions.MatchPrimitiveFiles := ListOfFiles.Text;
+
+        FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex, True);
+        TriggerOnControlsModified;
+      finally
+        ListOfFiles.Free;
+      end;
+    finally
+      MenuData^.OwnerMenu.Free;
+    end;
+  finally
+    Dispose(MenuData);
+  end;
+end;
+
+
+procedure TfrClickerActions.MenuItem_MovePrimitiveFileDownInPropertyListClick(Sender: TObject);
+var
+  MenuData: POIMenuItemData;
+  ListOfFiles: TStringList;
+begin
+  MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
+  try
+    try
+      ListOfFiles := TStringList.Create;
+      try
+        ListOfFiles.Text := FEditingAction^.FindControlOptions.MatchPrimitiveFiles;
+        if MenuData^.PropertyItemIndex >= ListOfFiles.Count - 1 then
+          Exit;
+
+        ListOfFiles.Move(MenuData^.PropertyItemIndex, MenuData^.PropertyItemIndex + 1);
+        FEditingAction^.FindControlOptions.MatchPrimitiveFiles := ListOfFiles.Text;
 
         FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex, True);
         TriggerOnControlsModified;
@@ -2285,6 +2591,17 @@ begin
         CFindControl_InitialRectangle_PropIndex:
           Result := CPropCount_FindControlInitialRectangle;
 
+        CFindControl_MatchPrimitiveFiles_PropIndex:
+        begin
+          TempStringList := TStringList.Create;
+          try
+            TempStringList.Text := FEditingAction^.FindControlOptions.MatchPrimitiveFiles;
+            Result := TempStringList.Count;
+          finally
+            TempStringList.Free;
+          end;
+        end;
+
         else
           Result := 0;
       end;
@@ -2341,6 +2658,8 @@ begin
         CFindControl_InitialRectangle_PropIndex:
           Result := CFindControl_InitialRectangleProperties[AItemIndex].Name;
 
+        CFindControl_MatchPrimitiveFiles_PropIndex:
+          Result := 'File[' + IntToStr(AItemIndex) + ']';
         else
           Result := '';
       end;
@@ -2412,6 +2731,24 @@ begin
         CFindControl_InitialRectangle_PropIndex:
           PropDef := CFindControl_InitialRectangleProperties[AItemIndex];
 
+        CFindControl_MatchPrimitiveFiles_PropIndex:
+        begin
+          TempStringList := TStringList.Create;
+          try
+            TempStringList.Text := FEditingAction^.FindControlOptions.MatchPrimitiveFiles;
+            try
+              Result := TempStringList.Strings[AItemIndex];
+            except
+              on E: Exception do
+                Result := E.Message + '  ' + IntToStr(AItemIndex) + '   ' + IntToStr(TempStringList.Count - 1);
+            end;
+          finally
+            TempStringList.Free;
+          end;
+
+          AEditorType := etTextWithArrow;
+          Exit;
+        end;
         else
           ;
       end;
@@ -2777,6 +3114,34 @@ begin
             CFindControl_UseWholeScreen_PropIndex:   //this call will have to take into account, the screen edges or vars as search area limits
               frClickerFindControl.UpdateSearchAreaLabelsFromKeysOnInitRect(FEditingAction^.FindControlOptions.InitialRectangle);
 
+            CFindControl_MatchPrimitiveFiles_PropIndex:
+            begin
+              TempStringList := TStringList.Create;
+              try
+                case ANodeLevel of
+                  CPropertyLevel:
+                  begin
+                    OldText := FEditingAction^.FindControlOptions.MatchPrimitiveFiles;
+                    FEditingAction^.FindControlOptions.MatchPrimitiveFiles := ANewText;
+                    FOIFrame.ReloadPropertyItems(ACategoryIndex, APropertyIndex);
+                    TriggerOnControlsModified(ANewText <> OldText);
+                  end;
+
+                  CPropertyItemLevel:
+                  begin
+                    TempStringList.Text := FEditingAction^.FindControlOptions.MatchPrimitiveFiles;    //read
+                    OldText := TempStringList.Strings[AItemIndex];
+                    TempStringList.Strings[AItemIndex] := ANewText;                                   //modify
+                    FEditingAction^.FindControlOptions.MatchPrimitiveFiles := TempStringList.Text;    //write
+                    TriggerOnControlsModified(ANewText <> OldText);
+                  end;
+                end;
+              finally
+                TempStringList.Free;
+              end;
+
+              Exit;
+            end;
             else
               ;
           end;
@@ -3011,7 +3376,8 @@ begin
   end;
 
   if (ANodeData.Level = CPropertyLevel) and (Column = 1) and (CurrentlyEditingActionType in [acFindControl, acFindSubControl]) then
-    if (ACategoryIndex = CCategory_ActionSpecific) and (APropertyIndex = CFindControl_MatchBitmapFiles_PropIndex) then
+    if (ACategoryIndex = CCategory_ActionSpecific) then
+      if APropertyIndex in [CFindControl_MatchBitmapFiles_PropIndex, CFindControl_MatchPrimitiveFiles_PropIndex] then
     begin
       TargetCanvas.Font.Style := [fsItalic];
       Exit;
@@ -3396,6 +3762,12 @@ begin
           AFilter := 'Bitmap files (*.bmp)|*.bmp|All files (*.*)|*.*';
           AInitDir := FBMPsDir;
         end;
+
+        CFindControl_MatchPrimitiveFiles_PropIndex:
+        begin
+          AFilter := 'Bitmap files (*.pmtv)|*.pmtv|All files (*.*)|*.*';
+          AInitDir := FBMPsDir;
+        end;
       end;
     end;
 
@@ -3409,29 +3781,6 @@ begin
     else
       Exit;
   end;
-end;
-
-
-procedure TfrClickerActions.AddMenuItemToPopupMenu(APopupMenu: TPopupMenu; ACaption: TCaption; AHandler: TNotifyEvent;
-  ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer);
-var
-  MenuData: POIMenuItemData;
-  MenuItem: TMenuItem;
-begin
-  MenuItem := TMenuItem.Create(Self);
-  MenuItem.Caption := ACaption;
-  MenuItem.OnClick := AHandler;
-
-  New(MenuData);
-  MenuItem.Tag := {%H-}PtrInt(MenuData);
-  MenuData^.OwnerMenu := APopupMenu;
-  MenuData^.NodeLevel := ANodeLevel;
-  MenuData^.CategoryIndex := ACategoryIndex;
-  MenuData^.PropertyIndex := APropertyIndex;
-  MenuData^.PropertyItemIndex := AItemIndex;
-  MenuData^.MenuItemCaption := ACaption;
-
-  APopupMenu.Items.Add(MenuItem);
 end;
 
 
@@ -3532,10 +3881,10 @@ begin
             CPropertyLevel:
             begin
               PropertyMenu := TPopupMenu.Create(Self);
-              AddMenuItemToPopupMenu(PropertyMenu, 'Add file(s) to this list...', MenuItem_AddFilesToPropertyListClick,
+              AddMenuItemToPopupMenu(PropertyMenu, 'Add file(s) to this list...', MenuItem_AddBMPFilesToPropertyListClick,
                 ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
 
-              AddMenuItemToPopupMenu(PropertyMenu, 'Remove all files from this list...', MenuItem_RemoveAllFilesFromPropertyListClick,
+              AddMenuItemToPopupMenu(PropertyMenu, 'Remove all files from this list...', MenuItem_RemoveAllBMPFilesFromPropertyListClick,
                 ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
 
               GetCursorPos(tp);
@@ -3545,16 +3894,59 @@ begin
             CPropertyItemLevel:
             begin
               PropertyMenu := TPopupMenu.Create(Self);
-              AddMenuItemToPopupMenu(PropertyMenu, 'Browse...', MenuItem_BrowseFileFromPropertyListClick,
+              AddMenuItemToPopupMenu(PropertyMenu, 'Browse...', MenuItem_BrowseBMPFileFromPropertyListClick,
                 ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
 
-              AddMenuItemToPopupMenu(PropertyMenu, 'Remove file from list...', MenuItem_RemoveFileFromPropertyListClick,
+              AddMenuItemToPopupMenu(PropertyMenu, 'Remove file from list...', MenuItem_RemoveBMPFileFromPropertyListClick,
                 ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
 
-              AddMenuItemToPopupMenu(PropertyMenu, 'Move file up (one position)', MenuItem_MoveFileUpInPropertyListClick,
+              AddMenuItemToPopupMenu(PropertyMenu, 'Move file up (one position)', MenuItem_MoveBMPFileUpInPropertyListClick,
                 ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
 
-              AddMenuItemToPopupMenu(PropertyMenu, 'Move file down (one position)', MenuItem_MoveFileDownInPropertyListClick,
+              AddMenuItemToPopupMenu(PropertyMenu, 'Move file down (one position)', MenuItem_MoveBMPFileDownInPropertyListClick,
+                ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+
+              GetCursorPos(tp);
+              PropertyMenu.PopUp(tp.X, tp.Y);
+            end;
+
+            else
+              ;
+          end;
+        end;
+
+        CFindControl_MatchPrimitiveFiles_PropIndex:
+        begin
+          case ANodeLevel of
+            CPropertyLevel:
+            begin
+              PropertyMenu := TPopupMenu.Create(Self);
+              AddMenuItemToPopupMenu(PropertyMenu, 'Add existing file(s) to this list...', MenuItem_AddExistingPrimitiveFilesToPropertyListClick,
+                ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+
+              AddMenuItemToPopupMenu(PropertyMenu, 'Add new file to this list...', MenuItem_AddNewPrimitiveFilesToPropertyListClick,
+                ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+
+              AddMenuItemToPopupMenu(PropertyMenu, 'Remove all files from this list...', MenuItem_RemoveAllPrimitiveFilesFromPropertyListClick,
+                ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+
+              GetCursorPos(tp);
+              PropertyMenu.PopUp(tp.X, tp.Y);
+            end;
+
+            CPropertyItemLevel:
+            begin
+              PropertyMenu := TPopupMenu.Create(Self);
+              AddMenuItemToPopupMenu(PropertyMenu, 'Browse...', MenuItem_BrowsePrimitiveFileFromPropertyListClick,
+                ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+
+              AddMenuItemToPopupMenu(PropertyMenu, 'Remove file from list...', MenuItem_RemovePrimitiveFileFromPropertyListClick,
+                ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+
+              AddMenuItemToPopupMenu(PropertyMenu, 'Move file up (one position)', MenuItem_MovePrimitiveFileUpInPropertyListClick,
+                ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+
+              AddMenuItemToPopupMenu(PropertyMenu, 'Move file down (one position)', MenuItem_MovePrimitiveFileDownInPropertyListClick,
                 ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
 
               GetCursorPos(tp);
@@ -3611,7 +4003,7 @@ begin
           end;
 
         acFindControl, acFindSubControl:
-          if APropertyIndex = CFindControl_MatchBitmapFiles_PropIndex then
+          if APropertyIndex in [CFindControl_MatchBitmapFiles_PropIndex, CFindControl_MatchPrimitiveFiles_PropIndex] then
           begin
             //MessageBox(Handle, 'File list editor', 'Files', MB_ICONINFORMATION);
             TriggerOnControlsModified;
@@ -3699,10 +4091,21 @@ begin
           if APropertyIndex = CFindControl_MatchBitmapFiles_PropIndex then
           begin
             DoOnSetPictureOpenDialogInitialDir(ADialogInitDir);
-            DoOnSetPictureOpenSetMultiSelect;
+            DoOnSetPictureSetOpenDialogMultiSelect;
 
             if DoOnPictureOpenDialogExecute then
               Result := DoOnGetPictureOpenDialogFileName;
+
+            Handled := True;
+          end;
+
+          if APropertyIndex = CFindControl_MatchPrimitiveFiles_PropIndex then
+          begin
+            DoOnSetOpenDialogInitialDir(ADialogInitDir);
+            DoOnSetOpenDialogMultiSelect;
+
+            if DoOnOpenDialogExecute(CPrimitivesDialogFilter) then
+              Result := DoOnGetOpenDialogFileName;
 
             Handled := True;
           end;
@@ -3713,9 +4116,9 @@ begin
           case APropertyIndex of
             CCallTemplate_TemplateFileName_PropIndex:
             begin
-              DoOnSetTemplateOpenDialogInitialDir(ADialogInitDir);
-              if DoOnTemplateOpenDialogExecute then
-                Result := DoOnGetTemplateOpenDialogFileName;
+              DoOnSetOpenDialogInitialDir(ADialogInitDir);
+              if DoOnOpenDialogExecute(CTemplateDialogFilter) then
+                Result := DoOnGetOpenDialogFileName;
 
               Handled := True;
             end;
@@ -3733,12 +4136,13 @@ begin
 end;
 
 
-procedure TfrClickerActions.HandleOnAfterSpinTextEditorChanging(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; var ANewValue: string);
+procedure TfrClickerActions.HandleOnOIAfterSpinTextEditorChanging(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; var ANewValue: string);
 var
   ItemIndexMod, ItemIndexDiv: Integer;
   OldValue: string;
 begin
-  if (ACategoryIndex = CCategory_ActionSpecific) then
+  if (CurrentlyEditingActionType in [acFindControl, acFindSubControl]) and
+     (ACategoryIndex = CCategory_ActionSpecific) then
   begin
     case APropertyIndex of
       CFindControl_InitialRectangle_PropIndex:
@@ -3814,5 +4218,33 @@ begin
     end; //case
   end;
 end;
+
+
+procedure TfrClickerActions.HandleOnOISelectedNode(NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex, Column: Integer; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var
+  PrimitiveFileNames: TStringList;
+begin
+  //load primitives frame
+  if (CurrentlyEditingActionType in [acFindControl, acFindSubControl]) and
+     (CategoryIndex = CCategory_ActionSpecific) then
+    if (NodeLevel = CPropertyItemLevel) and (PropertyIndex = CFindControl_MatchPrimitiveFiles_PropIndex) then
+    begin
+      frClickerFindControl.CreateClickerPrimitivesFrame;
+
+      PrimitiveFileNames := TStringList.Create;
+      try
+        PrimitiveFileNames.Text := FEditingAction^.FindControlOptions.MatchPrimitiveFiles;
+        frClickerFindControl.frClickerPrimitives.OnEvaluateReplacementsFunc := HandleOnEvaluateReplacementsFunc;
+        frClickerFindControl.frClickerPrimitives.OnLoadPrimitivesFile := HandleOnLoadPrimitivesFile;
+        frClickerFindControl.frClickerPrimitives.OnTriggerOnControlsModified := HandleOnPrimitivesTriggerOnControlsModified;
+
+        frClickerFindControl.frClickerPrimitives.LoadFile(PrimitiveFileNames.Strings[PropertyItemIndex]);
+
+      finally
+        PrimitiveFileNames.Free;
+      end;
+    end;
+end;
+
 
 end.

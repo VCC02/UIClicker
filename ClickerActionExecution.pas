@@ -1958,6 +1958,7 @@ begin
     FindControlOptions.MatchCriteria.WillMatchClassName := AListOfFindControlOptionsParams.Values['MatchCriteria.WillMatchClassName'] = '1';
     FindControlOptions.MatchCriteria.WillMatchBitmapText := AListOfFindControlOptionsParams.Values['MatchCriteria.WillMatchBitmapText'] = '1';
     FindControlOptions.MatchCriteria.WillMatchBitmapFiles := AListOfFindControlOptionsParams.Values['MatchCriteria.WillMatchBitmapFiles'] = '1';
+    FindControlOptions.MatchCriteria.WillMatchPrimitiveFiles := AListOfFindControlOptionsParams.Values['MatchCriteria.WillMatchPrimitiveFiles'] = '1';
 
     FindControlOptions.AllowToFail := AListOfFindControlOptionsParams.Values['AllowToFail'] = '1';
     FindControlOptions.MatchText := AListOfFindControlOptionsParams.Values['MatchText'];
@@ -2055,6 +2056,8 @@ begin
     FindControlOptions.StartSearchingWithCachedControl := AListOfFindControlOptionsParams.Values['StartSearchingWithCachedControl'] = '1';
     FindControlOptions.CachedControlLeft := AListOfFindControlOptionsParams.Values['CachedControlLeft'];
     FindControlOptions.CachedControlTop := AListOfFindControlOptionsParams.Values['CachedControlTop'];
+
+    FindControlOptions.MatchPrimitiveFiles := FastReplace_45ToReturn(AListOfFindControlOptionsParams.Values['MatchPrimitiveFiles']); //ListOfStrings
 
     ActionOptions.ActionName := AListOfFindControlOptionsParams.Values['ActionName'];
     ActionOptions.ActionTimeout := Temp_ActionTimeout;

@@ -56,8 +56,8 @@ const
   //Properties (counts)
   CPropCount_Click = 20;
   CPropCount_ExecApp = 7;
-  CPropCount_FindControl = 18;
-  CPropCount_FindSubControl = 18;
+  CPropCount_FindControl = 19;
+  CPropCount_FindSubControl = 19;
   CPropCount_SetText = 2;
   CPropCount_CallTemplate = 4;
   CPropCount_Sleep = 1;
@@ -77,7 +77,7 @@ const
   );
 
   //Sub properties (counts)
-  CPropCount_FindControlMatchCriteria = 5;
+  CPropCount_FindControlMatchCriteria = 6;
   CPropCount_FindControlMatchBitmapText = 16;
   CPropCount_FindControlMatchBitmapAlgorithmSettings = 4;
   CPropCount_FindControlInitialRectangle = 8;
@@ -99,6 +99,7 @@ const
   CFindControl_MatchBitmapAlgorithmSettings_PropIndex = 9;
   CFindControl_InitialRectangle_PropIndex = 10;
   CFindControl_UseWholeScreen_PropIndex = 11;
+  CFindControl_MatchPrimitiveFiles_PropIndex = 18; //property index in FindControl structure   - list of files
 
   CCallTemplate_TemplateFileName_PropIndex = 0; //property index in CallTemplate structure
   CCallTemplate_ListOfCustomVarsAndValues_PropIndex = 1;
@@ -216,7 +217,8 @@ const
     (Name: 'WaitForControlToGoAway'; EditorType: etBooleanCombo; DataType: CDTBool),  //Description:     When checked, the action expects to find no control, using the current settings.
     (Name: 'StartSearchingWithCachedControl'; EditorType: etBooleanCombo; DataType: CDTBool),   //Description: When checked, the control is checked at the specified cached $My_Control_Left$ and $My_Control_Top$ var replacements, before using the search grid.  In order to cache the control coordinates, please add a SetVar action after this one, by assigning:  $My_Control_Left$ to $Control_Left$  and  $My_Control_Top$ to $Control_Top$  where $My_Control_Left$ and $My_Control_Top$ are the cached values. The "Eval before" checkboxes have to be set.  Each Find(Sub)Control action, which uses caching, will have to use its own set of $My_Control_Left$ and $My_Control_Top$ vars.  The cached values are global coordinates, so they will become invalid even for a subcontrol if the parent window is moved.
     (Name: 'CachedControlLeft'; EditorType: etText; DataType: CDTString),
-    (Name: 'CachedControlTop'; EditorType: etText; DataType: CDTString)
+    (Name: 'CachedControlTop'; EditorType: etText; DataType: CDTString),
+    (Name: 'MatchPrimitiveFiles'; EditorType: etFilePathWithArrow; DataType: CDTArray)
   );
 
   {$IFDEF SubProperties}
@@ -225,6 +227,7 @@ const
       (Name: 'WillMatchClassName'; EditorType: etBooleanCombo; DataType: CDTBool),
       (Name: 'WillMatchBitmapText'; EditorType: etBooleanCombo; DataType: CDTBool),    //Description:   When selecting FindSubControl action, only bitmaps can be matched (BMP Text or BMP Files).  A SubControl does not have a handle of its own, it is a part of a control.  The $Control_Left$, $Control_Top$, $Control_Width$, $Control_Height$, $Control_Right$, $Control_Bottom$ variables ar set with the subcontrol offset.
       (Name: 'WillMatchBitmapFiles'; EditorType: etBooleanCombo; DataType: CDTBool),
+      (Name: 'WillMatchPrimitiveFiles'; EditorType: etBooleanCombo; DataType: CDTBool),
       (Name: 'SearchForControlMode'; EditorType: etEnumCombo; DataType: CDTEnum)
     );
 
@@ -435,7 +438,8 @@ const
     nil, //WaitForControlToGoAway
     nil, //StartSearchingWithCachedControl
     nil, //CachedControlLeft
-    nil  //CachedControlTop
+    nil, //CachedControlTop
+    nil  //MatchPrimitiveFiles
   );
 
   CCallTemplateGetActionValueStrFunctions: TGetCallTemplateValueStrFuncArr = (
@@ -505,7 +509,8 @@ const
     0, //WaitForControlToGoAway: Boolean;
     0, //StartSearchingWithCachedControl: Boolean;
     0, //CachedControlLeft: string;
-    0  //CachedControlTop: string;
+    0, //CachedControlTop: string;
+    0  //MatchPrimitiveFiles
   );
 
   CSetTextEnumCounts: array[0..CPropCount_SetText - 1] of Integer = (
@@ -558,6 +563,7 @@ const
       0, //WillMatchClassName: Boolean;
       0, //WillMatchBitmapText: Boolean;
       0, //WillMatchBitmapFiles: Boolean;
+      0, //WillMatchPrimitiveFiles: Boolean;
       Ord(High(TSearchForControlMode)) + 1
     );
 
@@ -650,7 +656,8 @@ const
     nil, //WaitForControlToGoAway: Boolean;
     nil, //StartSearchingWithCachedControl: Boolean;
     nil, //CachedControlLeft: string;
-    nil  //CachedControlTop: string;
+    nil, //CachedControlTop: string;
+    nil
   );
 
   CSetTextEnumStrings: array[0..CPropCount_SetText - 1] of PArrayOfString = (
@@ -702,6 +709,7 @@ const
       nil, //WillMatchClassName: Boolean;
       nil, //WillMatchBitmapText: Boolean;
       nil, //WillMatchBitmapFiles: Boolean;
+      nil, //WillMatchPrimitiveFiles: Boolean;
       @CSearchForControlModeStr
     );
 
@@ -761,6 +769,7 @@ function GetPropertyHint_FindControl_AllowedColorErrorCount: string;
 function GetPropertyHint_FindControl_WaitForControlToGoAway: string;
 function GetPropertyHint_FindControl_StartSearchingWithCachedControl: string;
 function GetPropertyHint_FindControl_CachedControlLeftTop: string;
+function GetPropertyHint_FindControl_MatchPrimitiveFiles: string;
 
 {$IFDEF SubProperties}
   function GetPropertyHint_FindControl_MatchCriteria_MatchBitmapText: string;
@@ -859,7 +868,8 @@ const
     @GetPropertyHint_FindControl_WaitForControlToGoAway, // WaitForControlToGoAway: Boolean;
     @GetPropertyHint_FindControl_StartSearchingWithCachedControl, // StartSearchingWithCachedControl: Boolean;
     @GetPropertyHint_FindControl_CachedControlLeftTop, // CachedControlLeft: string;
-    @GetPropertyHint_FindControl_CachedControlLeftTop  // CachedControlTop: string;
+    @GetPropertyHint_FindControl_CachedControlLeftTop, // CachedControlTop: string;
+    @GetPropertyHint_FindControl_MatchPrimitiveFiles // MatchPrimitiveFiles: string; //ListOfStrings
   );
 
 
@@ -916,6 +926,7 @@ const
     @GetPropertyHintNoHint, //WillMatchClassName: Boolean;
     @GetPropertyHint_FindControl_MatchCriteria_WillMatchBitmapText, //WillMatchBitmapText: Boolean;
     @GetPropertyHintNoHint, //WillMatchBitmapFiles: Boolean;
+    @GetPropertyHintNoHint, //WillMatchPrimitiveFiles: Boolean;
     @GetPropertyHint_FindControl_MatchCriteria_SearchForControlMode //SearchForControlMode: TSearchForControlMode;
   );
 
@@ -1035,6 +1046,7 @@ begin
     15: Result := BoolToStr(AAction^.FindControlOptions.StartSearchingWithCachedControl, True);
     16: Result := AAction^.FindControlOptions.CachedControlLeft;
     17: Result := AAction^.FindControlOptions.CachedControlTop;
+    18: Result := AAction^.FindControlOptions.MatchPrimitiveFiles; //ListOfStrings
     else
       Result := 'unknown';
   end;
@@ -1049,7 +1061,8 @@ end;
       1: Result := BoolToStr(AAction^.FindControlOptions.MatchCriteria.WillMatchClassName, True);
       2: Result := BoolToStr(AAction^.FindControlOptions.MatchCriteria.WillMatchBitmapText, True);
       3: Result := BoolToStr(AAction^.FindControlOptions.MatchCriteria.WillMatchBitmapFiles, True);
-      4: Result := CSearchForControlModeStr[AAction^.FindControlOptions.MatchCriteria.SearchForControlMode];
+      4: Result := BoolToStr(AAction^.FindControlOptions.MatchCriteria.WillMatchPrimitiveFiles, True);
+      5: Result := CSearchForControlModeStr[AAction^.FindControlOptions.MatchCriteria.SearchForControlMode];
       else
         Result := 'unknown';
     end;
@@ -1452,6 +1465,7 @@ begin
     15: AAction^.FindControlOptions.StartSearchingWithCachedControl := StrToBool(NewValue);
     16: AAction^.FindControlOptions.CachedControlLeft := NewValue;
     17: AAction^.FindControlOptions.CachedControlTop := NewValue;
+    18: AAction^.FindControlOptions.MatchPrimitiveFiles := NewValue; //ListOfStrings
     else
       ;
   end;
@@ -1466,7 +1480,8 @@ end;
       1: AAction^.FindControlOptions.MatchCriteria.WillMatchClassName := StrToBool(NewValue);
       2: AAction^.FindControlOptions.MatchCriteria.WillMatchBitmapText := StrToBool(NewValue);
       3: AAction^.FindControlOptions.MatchCriteria.WillMatchBitmapFiles := StrToBool(NewValue);
-      4: AAction^.FindControlOptions.MatchCriteria.SearchForControlMode := SearchForControlMode_AsStringToValue(NewValue);
+      4: AAction^.FindControlOptions.MatchCriteria.WillMatchPrimitiveFiles := StrToBool(NewValue);
+      5: AAction^.FindControlOptions.MatchCriteria.SearchForControlMode := SearchForControlMode_AsStringToValue(NewValue);
       else
         ;
     end;
@@ -1772,6 +1787,12 @@ function GetPropertyHint_FindControl_CachedControlLeftTop: string;
 begin
   Result := 'Caching is more effective when searching for controls with a single font profile.' + #13#10 +
             'Using caching on multpile font profiles may indeed be faster than without it, but for every cache miss, the search defaults to the selected algorithm.';
+end;
+
+
+function GetPropertyHint_FindControl_MatchPrimitiveFiles: string;
+begin
+  Result := 'Relative paths can be entered using the following format:' + #13#10 + '$TemplateDir$\<SomeFile.pmtv>';
 end;
 
 

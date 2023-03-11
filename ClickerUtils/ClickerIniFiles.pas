@@ -43,7 +43,9 @@ type
     constructor Create; overload;
     destructor Destroy; override;
 
+    function GetSectionCount: Integer;
     function GetSectionIndex(Section: string): Integer;
+    function GetSectionAtIndex(AIndex: Integer): string;
 
     function ReadString(const Section, Ident, Default: string): string; overload;
     function ReadInteger(const Section, Ident: string; Default: Longint): Longint; overload;
@@ -142,7 +144,8 @@ begin
         end;
       end
       else
-        FSectionContents[n].Add(s);  //this assumes the file is in a good format (section name before contents)
+        if n > -1 then
+          FSectionContents[n].Add(s);  //this assumes the file is in a good format (section name before contents)
     end;
   end;
 end;
@@ -160,9 +163,24 @@ begin
 end;
 
 
+function TClkIniReadonlyFile.GetSectionCount: Integer;
+begin
+  Result := FSections.Count;
+end;
+
+
 function TClkIniReadonlyFile.GetSectionIndex(Section: string): Integer;
 begin
   Result := FSections.IndexOf(Section);
+end;
+
+
+function TClkIniReadonlyFile.GetSectionAtIndex(AIndex: Integer): string;
+begin
+  if (AIndex < 0) or (AIndex > FSections.Count - 1) then
+    raise Exception.Create('Section index out of bounds: ' + IntToStr(AIndex))
+  else
+    Result := FSections.Strings[AIndex];
 end;
 
 

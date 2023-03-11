@@ -15,7 +15,7 @@ object frClickerFindControl: TfrClickerFindControl
     Height = 250
     Top = 0
     Width = 877
-    ActivePage = TabSheetActionFindSubControlSearchArea
+    ActivePage = TabSheetActionFindSubControlPrimitives
     Anchors = [akTop, akLeft, akRight, akBottom]
     Constraints.MinHeight = 201
     Constraints.MinWidth = 650
@@ -24,7 +24,7 @@ object frClickerFindControl: TfrClickerFindControl
     Images = imglstFindCriteria
     ParentFont = False
     ParentShowHint = False
-    TabIndex = 2
+    TabIndex = 3
     TabOrder = 0
     OnChange = PageControlMatchChange
     object TabSheetActionFindSubControlText: TTabSheet
@@ -485,6 +485,10 @@ object frClickerFindControl: TfrClickerFindControl
         OnChange = chkShowGridOnBMPPreviewChange
         TabOrder = 4
       end
+    end
+    object TabSheetActionFindSubControlPrimitives: TTabSheet
+      Caption = 'Primitives'
+      ImageIndex = 2
     end
   end
   object imglstFindCriteria: TImageList

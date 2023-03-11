@@ -96,17 +96,17 @@ type
       Column: TColumnIndex; TextType: TVSTTextType; var CellText: String);
   private
     FTemplateFiles: TTemplateFileArr;
-    FOnTemplateOpenSetMultiSelect: TOnTemplateOpenSetMultiSelect;
+    FOnSetOpenDialogMultiSelect: TOnSetOpenDialogMultiSelect;
     FOnFileExists: TOnFileExists;
     FOnTClkIniReadonlyFileCreate: TOnTClkIniReadonlyFileCreate;
-    FOnTemplateOpenDialogExecute: TOnTemplateOpenDialogExecute;
-    FOnGetTemplateOpenDialogFileName: TOnGetTemplateOpenDialogFileName;
+    FOnOpenDialogExecute: TOnOpenDialogExecute;
+    FOnGetOpenDialogFileName: TOnGetOpenDialogFileName;
 
-    procedure DoOnTemplateOpenSetMultiSelect;
+    procedure DoOnSetOpenDialogMultiSelect;
     function DoOnFileExists(const AFileName: string): Boolean;
     function DoOnTClkIniReadonlyFileCreate(AFileName: string): TClkIniReadonlyFile;
-    function DoOnTemplateOpenDialogExecute: Boolean;
-    function DoOnGetTemplateOpenDialogFileName: string;
+    function DoOnOpenDialogExecute(AFilter: string): Boolean;
+    function DoOnGetOpenDialogFileName: string;
 
     procedure ResetItemVisibleFlagOnAllFiles;
     procedure MarkAllParentNodesAsVisible(ACurrentNode: PVirtualNode);
@@ -125,11 +125,11 @@ type
     procedure LoadSettings(AIni: TMemIniFile);
     procedure SaveSettings(AIni: TMemIniFile);
 
-    property OnTemplateOpenSetMultiSelect: TOnTemplateOpenSetMultiSelect write FOnTemplateOpenSetMultiSelect;
+    property OnSetOpenDialogMultiSelect: TOnSetOpenDialogMultiSelect write FOnSetOpenDialogMultiSelect;
     property OnFileExists: TOnFileExists write FOnFileExists;
     property OnTClkIniReadonlyFileCreate: TOnTClkIniReadonlyFileCreate write FOnTClkIniReadonlyFileCreate;
-    property OnTemplateOpenDialogExecute: TOnTemplateOpenDialogExecute write FOnTemplateOpenDialogExecute;
-    property OnGetTemplateOpenDialogFileName: TOnGetTemplateOpenDialogFileName write FOnGetTemplateOpenDialogFileName;
+    property OnOpenDialogExecute: TOnOpenDialogExecute write FOnOpenDialogExecute;
+    property OnGetOpenDialogFileName: TOnGetOpenDialogFileName write FOnGetOpenDialogFileName;
   end;
 
 var
@@ -164,12 +164,12 @@ begin
 end;
 
 
-procedure TfrmClickerTemplateCallTree.DoOnTemplateOpenSetMultiSelect;
+procedure TfrmClickerTemplateCallTree.DoOnSetOpenDialogMultiSelect;
 begin
-  if not Assigned(FOnTemplateOpenSetMultiSelect) then
-    raise Exception.Create('OnTemplateOpenSetMultiSelect is not assigned.')
+  if not Assigned(FOnSetOpenDialogMultiSelect) then
+    raise Exception.Create('OnSetOpenDialogMultiSelect is not assigned.')
   else
-    FOnTemplateOpenSetMultiSelect;
+    FOnSetOpenDialogMultiSelect;
 end;
 
 
@@ -191,21 +191,21 @@ begin
 end;
 
 
-function TfrmClickerTemplateCallTree.DoOnTemplateOpenDialogExecute: Boolean;
+function TfrmClickerTemplateCallTree.DoOnOpenDialogExecute(AFilter: string): Boolean;
 begin
-  if not Assigned(FOnTemplateOpenDialogExecute) then
-    raise Exception.Create('OnTemplateOpenDialogExecute is not assigned.')
+  if not Assigned(FOnOpenDialogExecute) then
+    raise Exception.Create('OnOpenDialogExecute is not assigned.')
   else
-    Result := FOnTemplateOpenDialogExecute;
+    Result := FOnOpenDialogExecute(AFilter);
 end;
 
 
-function TfrmClickerTemplateCallTree.DoOnGetTemplateOpenDialogFileName: string;
+function TfrmClickerTemplateCallTree.DoOnGetOpenDialogFileName: string;
 begin
-  if not Assigned(FOnGetTemplateOpenDialogFileName) then
-    raise Exception.Create('OnGetTemplateOpenDialogFileName is not assigned.')
+  if not Assigned(FOnGetOpenDialogFileName) then
+    raise Exception.Create('OnGetOpenDialogFileName is not assigned.')
   else
-    Result := FOnGetTemplateOpenDialogFileName;
+    Result := FOnGetOpenDialogFileName;
 end;
 
 
@@ -230,11 +230,11 @@ end;
 
 procedure TfrmClickerTemplateCallTree.FormCreate(Sender: TObject);
 begin
-  FOnTemplateOpenSetMultiSelect := nil;
+  FOnSetOpenDialogMultiSelect := nil;
   FOnFileExists := nil;
   FOnTClkIniReadonlyFileCreate := nil;
-  FOnTemplateOpenDialogExecute := nil;
-  FOnGetTemplateOpenDialogFileName := nil;
+  FOnOpenDialogExecute := nil;
+  FOnGetOpenDialogFileName := nil;
 
   SetLength(FTemplateFiles, 0);
   vstCallTree.NodeDataSize := SizeOf(TTmplDataRec);
@@ -792,11 +792,11 @@ end;
 
 procedure TfrmClickerTemplateCallTree.btnBrowseClick(Sender: TObject);
 begin
-  DoOnTemplateOpenSetMultiSelect;
-  if not DoOnTemplateOpenDialogExecute then
+  DoOnSetOpenDialogMultiSelect;
+  if not DoOnOpenDialogExecute(CTemplateDialogFilter) then
     Exit;
 
-  memTemplates.Lines.Text := DoOnGetTemplateOpenDialogFileName;
+  memTemplates.Lines.Text := DoOnGetOpenDialogFileName;
 end;
 
 end.

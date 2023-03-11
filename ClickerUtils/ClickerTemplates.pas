@@ -128,6 +128,7 @@ begin
     ACustomActions[i].FindControlOptions.MatchCriteria.WillMatchClassName := Ini.ReadBool(SectionIndex, 'MatchCriteria.WillMatchClassName_' + IterationStr, True);
     ACustomActions[i].FindControlOptions.MatchCriteria.WillMatchBitmapText := Ini.ReadBool(SectionIndex, 'MatchCriteria.WillMatchBitmapText_' + IterationStr, False);
     ACustomActions[i].FindControlOptions.MatchCriteria.WillMatchBitmapFiles := Ini.ReadBool(SectionIndex, 'MatchCriteria.WillMatchBitmapFiles_' + IterationStr, False);
+    ACustomActions[i].FindControlOptions.MatchCriteria.WillMatchPrimitiveFiles := Ini.ReadBool(SectionIndex, 'MatchCriteria.WillMatchPrimitiveFiles_' + IterationStr, False);
     ACustomActions[i].FindControlOptions.MatchCriteria.SearchForControlMode := TSearchForControlMode(Ini.ReadInteger(SectionIndex, 'MatchCriteria.SearchForControlMode_' + IterationStr, Ord(sfcmGenGrid)));
 
     ACustomActions[i].FindControlOptions.AllowToFail := Ini.ReadBool(SectionIndex, 'AllowToFail_' + IterationStr, False);
@@ -176,6 +177,8 @@ begin
     ACustomActions[i].FindControlOptions.StartSearchingWithCachedControl := Ini.ReadBool(SectionIndex, 'StartSearchingWithCachedControl_' + IterationStr, False);
     ACustomActions[i].FindControlOptions.CachedControlLeft := Ini.ReadString(SectionIndex, 'CachedControlLeft_' + IterationStr, '');
     ACustomActions[i].FindControlOptions.CachedControlTop := Ini.ReadString(SectionIndex, 'CachedControlTop_' + IterationStr, '');
+
+    ACustomActions[i].FindControlOptions.MatchPrimitiveFiles := StringReplace(Ini.ReadString(SectionIndex, 'MatchPrimitiveFiles_' + IterationStr, ''), #4#5, #13#10, [rfReplaceAll]);
 
     SectionIndex := Ini.GetSectionIndex('Actions.SetTextOptions');
     ACustomActions[i].SetTextOptions.Text := Ini.ReadString(SectionIndex, 'Text_' + IterationStr, '');
@@ -268,6 +271,7 @@ begin
   AFindControlOptions.MatchCriteria.WillMatchClassName := Ini.ReadBool(SectionIndex, 'MatchCriteria.WillMatchClassName', True);
   AFindControlOptions.MatchCriteria.WillMatchBitmapText := Ini.ReadBool(SectionIndex, 'MatchCriteria.WillMatchBitmapText', False);
   AFindControlOptions.MatchCriteria.WillMatchBitmapFiles := Ini.ReadBool(SectionIndex, 'MatchCriteria.WillMatchBitmapFiles', False);
+  AFindControlOptions.MatchCriteria.WillMatchPrimitiveFiles := Ini.ReadBool(SectionIndex, 'MatchCriteria.WillMatchPrimitiveFiles', False);
   AFindControlOptions.MatchCriteria.SearchForControlMode := TSearchForControlMode(Min(Ini.ReadInteger(SectionIndex, 'MatchCriteria.SearchForControlMode', Ord(sfcmGenGrid)), Integer(High(TSearchForControlMode))));
 
   AFindControlOptions.AllowToFail := Ini.ReadBool(SectionIndex, 'AllowToFail', False);
@@ -351,6 +355,8 @@ begin
   AFindControlOptions.StartSearchingWithCachedControl := Ini.ReadBool(SectionIndex, 'StartSearchingWithCachedControl', False);
   AFindControlOptions.CachedControlLeft := Ini.ReadString(SectionIndex, 'CachedControlLeft', '');
   AFindControlOptions.CachedControlTop := Ini.ReadString(SectionIndex, 'CachedControlTop', '');
+
+  AFindControlOptions.MatchPrimitiveFiles := FastReplace_45ToReturn(Ini.ReadString(SectionIndex, 'MatchPrimitiveFiles', ''));
 end;
 
 
@@ -686,6 +692,7 @@ begin
   AStringList.Add('MatchCriteria.WillMatchClassName=' + IntToStr(Ord(AActionFindControlOptions.MatchCriteria.WillMatchClassName)));
   AStringList.Add('MatchCriteria.WillMatchBitmapText=' + IntToStr(Ord(AActionFindControlOptions.MatchCriteria.WillMatchBitmapText)));
   AStringList.Add('MatchCriteria.WillMatchBitmapFiles=' + IntToStr(Ord(AActionFindControlOptions.MatchCriteria.WillMatchBitmapFiles)));
+  AStringList.Add('MatchCriteria.WillMatchPrimitiveFiles=' + IntToStr(Ord(AActionFindControlOptions.MatchCriteria.WillMatchPrimitiveFiles)));
   AStringList.Add('MatchCriteria.SearchForControlMode=' + IntToStr(Ord(AActionFindControlOptions.MatchCriteria.SearchForControlMode)));
   AStringList.Add('MatchText=' + AActionFindControlOptions.MatchText);
   AStringList.Add('MatchClassName=' + AActionFindControlOptions.MatchClassName);
@@ -742,6 +749,8 @@ begin
   AStringList.Add('StartSearchingWithCachedControl=' + IntToStr(Ord(AActionFindControlOptions.StartSearchingWithCachedControl)));
   AStringList.Add('CachedControlLeft=' + AActionFindControlOptions.CachedControlLeft);
   AStringList.Add('CachedControlTop=' + AActionFindControlOptions.CachedControlTop);
+
+  AStringList.Add('MatchPrimitiveFiles=' + FastReplace_ReturnTo45(AActionFindControlOptions.MatchPrimitiveFiles));
 end;
 
 
@@ -879,6 +888,8 @@ begin             //Substructures, which do not contain pointers, can be directl
   ADest.FindControlOptions.StartSearchingWithCachedControl := ASrc.FindControlOptions.StartSearchingWithCachedControl;
   ADest.FindControlOptions.CachedControlLeft := ASrc.FindControlOptions.CachedControlLeft;
   ADest.FindControlOptions.CachedControlTop := ASrc.FindControlOptions.CachedControlTop;
+
+  ADest.FindControlOptions.MatchPrimitiveFiles := ASrc.FindControlOptions.MatchPrimitiveFiles;
 
   SetLength(ADest.FindControlOptions.MatchBitmapText, Length(ASrc.FindControlOptions.MatchBitmapText));
 

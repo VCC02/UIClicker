@@ -33,7 +33,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, ExtCtrls,
-  Buttons, ExtDlgs, ClickerIniFiles;
+  Buttons, ExtDlgs, ClickerIniFiles, ClickerPrimitiveUtils;
 
 type
 
@@ -72,21 +72,23 @@ type
     function HandleOnFileExists(const FileName: string): Boolean;
     function HandleOnTClkIniReadonlyFileCreate(AFileName: string): TClkIniReadonlyFile;
     procedure HandleOnSaveTemplateToFile(AStringList: TStringList; const FileName: string);
-    procedure HandleOnSetTemplateOpenDialogInitialDir(AInitialDir: string);
-    function HandleOnTemplateOpenDialogExecute: Boolean;
-    function HandleOnGetTemplateOpenDialogFileName: string;
-    procedure HandleOnSetTemplateSaveDialogInitialDir(AInitialDir: string);
-    function HandleOnTemplateSaveDialogExecute: Boolean;
-    function HandleOnGetTemplateSaveDialogFileName: string;
-    procedure HandleOnSetTemplateSaveDialogFileName(AFileName: string);
-    procedure HandleOnSetPictureOpenSetMultiSelect;
+
+    procedure HandleOnSetOpenDialogMultiSelect;
+    procedure HandleOnSetOpenDialogInitialDir(AInitialDir: string);
+    function HandleOnOpenDialogExecute(AFilter: string): Boolean;
+    function HandleOnGetOpenDialogFileName: string;
+    procedure HandleOnSetSaveDialogInitialDir(AInitialDir: string);
+    function HandleOnSaveDialogExecute(AFilter: string): Boolean;
+    function HandleOnGetSaveDialogFileName: string;
+    procedure HandleOnSetSaveDialogFileName(AFileName: string);
+
+    procedure HandleOnSetPictureSetOpenDialogMultiSelect;
     procedure HandleOnSetPictureOpenDialogInitialDir(AInitialDir: string);
     function HandleOnPictureOpenDialogExecute: Boolean;
     function HandleOnGetPictureOpenDialogFileName: string;
     function HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
+    procedure HandleOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TPrimitiveOrderArr);
     procedure HandleOnGetSelfHandles(AListOfSelfHandles: TStringList);
-
-    procedure HandleOnTemplateOpenSetMultiSelect;
   public
     property AllFormsAreCreated: Boolean write FAllFormsAreCreated;
   end;
@@ -102,7 +104,7 @@ implementation
 uses
   ClickerPreviewForm, ClickerWinInterpForm, ClickerTemplateCallTreeForm, ClickerActionsForm,
   ClickerActionsClient, IniFiles, ClickerFindControlFrame, ClickerRemoteScreenForm,
-  ClickerUtils;
+  ClickerUtils, ClickerPrimitives;
 
 { TfrmUIClickerMainForm }
 
@@ -134,25 +136,29 @@ begin
     frmClickerActions.OnFileExists := HandleOnFileExists;
     frmClickerActions.OnTClkIniReadonlyFileCreate := HandleOnTClkIniReadonlyFileCreate;
     frmClickerActions.OnSaveTemplateToFile := HandleOnSaveTemplateToFile;
-    frmClickerActions.OnSetTemplateOpenDialogInitialDir := HandleOnSetTemplateOpenDialogInitialDir;
-    frmClickerActions.OnTemplateOpenDialogExecute := HandleOnTemplateOpenDialogExecute;
-    frmClickerActions.OnGetTemplateOpenDialogFileName := HandleOnGetTemplateOpenDialogFileName;
-    frmClickerActions.OnSetTemplateSaveDialogInitialDir := HandleOnSetTemplateSaveDialogInitialDir;
-    frmClickerActions.OnTemplateSaveDialogExecute := HandleOnTemplateSaveDialogExecute;
-    frmClickerActions.OnGetTemplateSaveDialogFileName := HandleOnGetTemplateSaveDialogFileName;
-    frmClickerActions.OnSetTemplateSaveDialogFileName := HandleOnSetTemplateSaveDialogFileName;
-    frmClickerActions.OnSetPictureOpenSetMultiSelect := HandleOnSetPictureOpenSetMultiSelect;
+
+    frmClickerActions.OnSetOpenDialogMultiSelect := HandleOnSetOpenDialogMultiSelect;
+    frmClickerActions.OnSetOpenDialogInitialDir := HandleOnSetOpenDialogInitialDir;
+    frmClickerActions.OnOpenDialogExecute := HandleOnOpenDialogExecute;
+    frmClickerActions.OnGetOpenDialogFileName := HandleOnGetOpenDialogFileName;
+    frmClickerActions.OnSetSaveDialogInitialDir := HandleOnSetSaveDialogInitialDir;
+    frmClickerActions.OnSaveDialogExecute := HandleOnSaveDialogExecute;
+    frmClickerActions.OnGetSaveDialogFileName := HandleOnGetSaveDialogFileName;
+    frmClickerActions.OnSetSaveDialogFileName := HandleOnSetSaveDialogFileName;
+
+    frmClickerActions.OnSetPictureSetOpenDialogMultiSelect := HandleOnSetPictureSetOpenDialogMultiSelect;
     frmClickerActions.OnSetPictureOpenDialogInitialDir := HandleOnSetPictureOpenDialogInitialDir;
     frmClickerActions.OnPictureOpenDialogExecute := HandleOnPictureOpenDialogExecute;
     frmClickerActions.OnGetPictureOpenDialogFileName := HandleOnGetPictureOpenDialogFileName;
     frmClickerActions.OnLoadBitmap := HandleOnLoadBitmap;
+    frmClickerActions.OnLoadPrimitivesFile := HandleOnLoadPrimitivesFile;
     frmClickerActions.OnGetSelfHandles := HandleOnGetSelfHandles;
 
-    frmClickerTemplateCallTree.OnTemplateOpenSetMultiSelect := HandleOnTemplateOpenSetMultiSelect;
+    frmClickerTemplateCallTree.OnSetOpenDialogMultiSelect := HandleOnSetOpenDialogMultiSelect;
     frmClickerTemplateCallTree.OnFileExists := HandleOnFileExists;
     frmClickerTemplateCallTree.OnTClkIniReadonlyFileCreate := HandleOnTClkIniReadonlyFileCreate;
-    frmClickerTemplateCallTree.OnTemplateOpenDialogExecute := HandleOnTemplateOpenDialogExecute;
-    frmClickerTemplateCallTree.OnGetTemplateOpenDialogFileName := HandleOnGetTemplateOpenDialogFileName;
+    frmClickerTemplateCallTree.OnOpenDialogExecute := HandleOnOpenDialogExecute;
+    frmClickerTemplateCallTree.OnGetOpenDialogFileName := HandleOnGetOpenDialogFileName;
   finally
     Ini.Free;
   end;
@@ -346,20 +352,27 @@ begin
 end;
 
 
-procedure TfrmUIClickerMainForm.HandleOnSetTemplateOpenDialogInitialDir(AInitialDir: string);
+procedure TfrmUIClickerMainForm.HandleOnSetOpenDialogMultiSelect;
+begin
+  OpenDialog1.Options := OpenDialog1.Options + [ofAllowMultiSelect];
+end;
+
+
+procedure TfrmUIClickerMainForm.HandleOnSetOpenDialogInitialDir(AInitialDir: string);
 begin
   OpenDialog1.InitialDir := AInitialDir;
 end;
 
 
-function TfrmUIClickerMainForm.HandleOnTemplateOpenDialogExecute: Boolean;
+function TfrmUIClickerMainForm.HandleOnOpenDialogExecute(AFilter: string): Boolean;
 begin
+  OpenDialog1.Filter := AFilter;
   Result := OpenDialog1.Execute;
   OpenDialog1.Options := OpenDialog1.Options - [ofAllowMultiSelect];
 end;
 
 
-function TfrmUIClickerMainForm.HandleOnGetTemplateOpenDialogFileName: string;
+function TfrmUIClickerMainForm.HandleOnGetOpenDialogFileName: string;
 begin
   if OpenDialog1.Files.Count > 1 then
     Result := OpenDialog1.Files.Text
@@ -368,31 +381,33 @@ begin
 end;
 
 
-procedure TfrmUIClickerMainForm.HandleOnSetTemplateSaveDialogInitialDir(AInitialDir: string);
+procedure TfrmUIClickerMainForm.HandleOnSetSaveDialogInitialDir(AInitialDir: string);
 begin
   SaveDialog1.InitialDir := AInitialDir;
 end;
 
 
-function TfrmUIClickerMainForm.HandleOnTemplateSaveDialogExecute: Boolean;
+function TfrmUIClickerMainForm.HandleOnSaveDialogExecute(AFilter: string): Boolean;
 begin
+  SaveDialog1.Filter := AFilter;
   Result := SaveDialog1.Execute;
+  OpenDialog1.Options := OpenDialog1.Options - [ofAllowMultiSelect];
 end;
 
 
-function TfrmUIClickerMainForm.HandleOnGetTemplateSaveDialogFileName: string;
+function TfrmUIClickerMainForm.HandleOnGetSaveDialogFileName: string;
 begin
   Result := SaveDialog1.FileName;
 end;
 
 
-procedure TfrmUIClickerMainForm.HandleOnSetTemplateSaveDialogFileName(AFileName: string);
+procedure TfrmUIClickerMainForm.HandleOnSetSaveDialogFileName(AFileName: string);
 begin
   SaveDialog1.FileName := AFileName;
 end;
 
 
-procedure TfrmUIClickerMainForm.HandleOnSetPictureOpenSetMultiSelect;
+procedure TfrmUIClickerMainForm.HandleOnSetPictureSetOpenDialogMultiSelect;
 begin
   OpenPictureDialog1.Options := OpenPictureDialog1.Options + [ofAllowMultiSelect];
 end;
@@ -432,6 +447,31 @@ begin
 end;
 
 
+procedure TfrmUIClickerMainForm.HandleOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TPrimitiveOrderArr);
+var
+  MemStream: TMemoryStream;
+  Ini: TClkIniReadonlyFile;
+begin
+  if FileExists(AFileName) then
+  begin
+    MemStream := TMemoryStream.Create;
+    try
+      MemStream.LoadFromFile(AFileName);
+      MemStream.Position := 0;
+
+      Ini := TClkIniReadonlyFile.Create(MemStream);
+      try
+        LoadPrimitivesFile(Ini, APrimitives, AOrders);
+      finally
+        Ini.Free;
+      end;
+    finally
+      MemStream.Free;
+    end;
+  end;
+end;
+
+
 procedure TfrmUIClickerMainForm.HandleOnGetSelfHandles(AListOfSelfHandles: TStringList);
 var
   i: Integer;
@@ -448,11 +488,6 @@ begin
     end;
 end;
 
-
-procedure TfrmUIClickerMainForm.HandleOnTemplateOpenSetMultiSelect;
-begin
-  OpenDialog1.Options := OpenDialog1.Options + [ofAllowMultiSelect];
-end;
 
 end.
 

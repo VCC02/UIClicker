@@ -72,12 +72,14 @@ type
   TOnFileExists = function(const AFileName: string): Boolean of object;
   TOnTClkIniReadonlyFileCreate = function(AFileName: string): TClkIniReadonlyFile of object;
   TOnSaveTemplateToFile = procedure(AStringList: TStringList; const AFileName: string) of object;
-  TOnSetTemplateOpenDialogInitialDir = procedure(AInitialDir: string) of object;
-  TOnTemplateOpenSetMultiSelect = procedure of object; //the dialog is set to allow multiple files to be selected, then it is restored automatically to single file
-  TOnTemplateOpenDialogExecute = function: Boolean of object;
-  TOnGetTemplateOpenDialogFileName = function: string of object;
-  TOnSetTemplateOpenDialogFileName = procedure(AFileName: string) of object;
-  TOnSetPictureOpenSetMultiSelect = procedure of object;
+
+  TOnSetOpenDialogInitialDir = procedure(AInitialDir: string) of object;
+  TOnSetOpenDialogMultiSelect = procedure of object; //the dialog is set to allow multiple files to be selected, then it is restored automatically to single file
+  TOnOpenDialogExecute = function(AFilter: string): Boolean of object;
+  TOnGetOpenDialogFileName = function: string of object;
+  TOnSetOpenDialogFileName = procedure(AFileName: string) of object;
+
+  TOnSetPictureSetOpenDialogMultiSelect = procedure of object;
   TOnSetPictureOpenDialogInitialDir = procedure(AInitialDir: string) of object;
   TOnPictureOpenDialogExecute = function: Boolean of object;
   TOnGetPictureOpenDialogFileName = function: string of object;
@@ -161,6 +163,7 @@ type
     WillMatchClassName: Boolean;
     WillMatchBitmapText: Boolean;
     WillMatchBitmapFiles: Boolean;
+    WillMatchPrimitiveFiles: Boolean;
     SearchForControlMode: TSearchForControlMode;
   end;
 
@@ -216,6 +219,7 @@ type
     StartSearchingWithCachedControl: Boolean;
     CachedControlLeft: string;
     CachedControlTop: string;
+    MatchPrimitiveFiles: string;  //ListOfStrings
   end;
 
   TClkSetTextOptions = record
@@ -340,6 +344,8 @@ const
   CLabel_LightGreen: TColor = $4CC123;
 
   CDefaultFontProfileName = 'Profile [0]';
+  CTemplateDialogFilter = 'Clicker Action Templates (*.clktmpl)|*.clktmpl|All Files (*.*)|*.*';
+  CPrimitivesDialogFilter = 'Clicker Primitives (*.pmtv)|*.pmtv|All Files (*.*)|*.*';
 
   CXClickPointReferenceStr: array[TXClickPointReference] of string = ('xrefLeft', 'xrefRight', 'xrefWidth', 'xrefVar', 'xrefAbsolute');
   CYClickPointReferenceStr: array[TYClickPointReference] of string = ('yrefTop', 'yrefBottom', 'yrefHeight', 'yrefVar', 'yrefAbsolute');

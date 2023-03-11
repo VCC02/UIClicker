@@ -34,7 +34,8 @@ interface
 uses
   Windows, Classes, SysUtils, Forms, Controls, ComCtrls,
   Menus, Buttons, StdCtrls, ExtCtrls, Graphics,
-  ClickerUtils, ClickerBMPTextFrame, InMemFileSystem, VirtualTrees;
+  ClickerUtils, ClickerBMPTextFrame, ClickerPrimitivesFrame,
+  InMemFileSystem, VirtualTrees;
 
 type
   TOnUpdateBitmapAlgorithmSettings = procedure of object;
@@ -202,6 +203,7 @@ type
     spdbtnDisplaySearchAreaDbgImgMenu: TSpeedButton;
     spdbtnExtraCopyValueWindows: TSpeedButton;
     tabctrlBMPText: TTabControl;
+    TabSheetActionFindSubControlPrimitives: TTabSheet;
     TabSheetActionFindSubControlBMPText: TTabSheet;
     TabSheetActionFindSubControlSearchArea: TTabSheet;
     TabSheetActionFindSubControlText: TTabSheet;
@@ -275,6 +277,7 @@ type
 
     FBMPTextProfiles: TFontProfileArr;
     FInMemFS: TInMemFileSystem; //not created in this unit, set from outside as an existing instance
+    FfrClickerPrimitives: TfrClickerPrimitives;
 
     FOnTriggerOnControlsModified: TOnTriggerOnControlsModified;
     FOnEvaluateReplacements: TOnEvaluateReplacements;
@@ -473,6 +476,7 @@ type
     procedure CreateBMPTextFrames(ACount: Integer);
     function GetBMPTextFontProfilesCount: Integer;
     procedure SetBMPTextFrameVisibility;
+    procedure CreateClickerPrimitivesFrame;
 
     procedure UpdateSearchAreaLabelsFromKeysOnInitRect(AInitialRectange: TRectString);  //must be called on OI Text editor - KeyUp
     procedure UpdateControlWidthHeightLabels;
@@ -512,6 +516,7 @@ type
 
     property InMemFS: TInMemFileSystem write FInMemFS;
     property SearchAreaControlDbgImg: TImage read FSearchAreaControlDbgImg;
+    property frClickerPrimitives: TfrClickerPrimitives read FfrClickerPrimitives;
 
     property OnTriggerOnControlsModified: TOnTriggerOnControlsModified read FOnTriggerOnControlsModified write FOnTriggerOnControlsModified;
     property OnEvaluateReplacements: TOnEvaluateReplacements read FOnEvaluateReplacements write FOnEvaluateReplacements;
@@ -1117,6 +1122,24 @@ begin
 end;
 
 
+procedure TfrClickerFindControl.CreateClickerPrimitivesFrame;
+begin
+  if FfrClickerPrimitives <> nil then
+    FfrClickerPrimitives.Free;
+
+  FfrClickerPrimitives := TfrClickerPrimitives.Create(Self);
+  FfrClickerPrimitives.Parent := TabSheetActionFindSubControlPrimitives;
+  FfrClickerPrimitives.Width := TabSheetActionFindSubControlPrimitives.Width;
+  FfrClickerPrimitives.Height := TabSheetActionFindSubControlPrimitives.Height;
+  FfrClickerPrimitives.Left := 0;
+  FfrClickerPrimitives.Top := 0;
+  FfrClickerPrimitives.Anchors := [akLeft, akTop, akRight, akBottom];
+  FfrClickerPrimitives.Visible := True;
+
+  //do not set FfrClickerPrimitives handlers here, because they are set in TfrClickerActions.HandleOnOISelectedNode
+end;
+
+
 procedure TfrClickerFindControl.PreviewText;
 var
   i: Integer;
@@ -1676,7 +1699,6 @@ var
   SearchAreaControlRect: TRect;
   SearchAreaControlHandle: THandle;
   MenuItem: TMenuItem;
-  i: Integer;
   ControlRight: Integer;
   ControlBottom: Integer;
   FindControlOptions: PClkFindControlOptions;

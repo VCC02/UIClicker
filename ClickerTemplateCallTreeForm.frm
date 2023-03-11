@@ -34,7 +34,7 @@ object frmClickerTemplateCallTree: TfrmClickerTemplateCallTree
     Top = 24
     Width = 75
     Anchors = [akTop, akRight]
-    Caption = 'Browse'
+    Caption = 'Browse...'
     OnClick = btnBrowseClick
     TabOrder = 1
   end

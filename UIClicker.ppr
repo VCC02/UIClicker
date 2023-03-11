@@ -43,7 +43,9 @@ uses
   ClickerPreviewForm, ClickerActionExecution, ClickerTemplateNotesForm,
   ClickerZoomPreviewForm, ObjectInspectorFrame, ClickerActionValues, 
   ClickerExecAppFrame, ClickerSetVarFrame, ClickerSleepFrame, 
-  ClickerCallTemplateFrame, ClickerUtils;
+  ClickerCallTemplateFrame, ClickerUtils, ClickerPrimitiveUtils, 
+ClickerPrimitivesFrame, ClickerPrimitiveValues, ClickerPrimitives, 
+ClickerOIUtils;
 
 {$R *.res}
 
