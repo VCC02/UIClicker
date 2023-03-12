@@ -51,16 +51,19 @@ type
     Pattern: string; //TBrushPattern;
   end;
 
-  TClkSetGradientFill = record
-    StartColor: string;
-    StopColor: string;
-    Direction: string; //TGradientDirection;
+  TClkSetMisc = record
+    AntialiasingMode: string; //TAntialiasingMode
   end;
 
   TClkSetFont = TClkFindControlMatchBitmapText;
 
   TClkImage = record
+    X1: string;
+    X2: string;
+    Y1: string;
+    Y2: string;
     Path: string; //path to a bmp (or png) file, which will be part of the composition
+    Stretch: string; //Boolean
   end;
 
   TClkLine = record
@@ -82,13 +85,16 @@ type
     X2: string;
     Y1: string;
     Y2: string;
+    StartColor: string;
+    StopColor: string;
+    Direction: string; //TGradientDirection;
   end;
 
 
 const
   CClkSetPenPrimitiveCmdIdx = 0;
   CClkSetBrushPrimitiveCmdIdx = 1;
-  CClkSetGradientFillPrimitiveCmdIdx = 2;
+  CClkSetMiscPrimitiveCmdIdx = 2;
   CClkSetFontPrimitiveCmdIdx = 3;
   CClkImagePrimitiveCmdIdx = 4;
   CClkLinePrimitiveCmdIdx = 5;
@@ -103,7 +109,7 @@ type
 
     ClkSetPen: TClkSetPen;
     ClkSetBrush: TClkSetBrush;
-    ClkSetGradientFill: TClkSetGradientFill;
+    ClkSetMisc: TClkSetMisc;
     ClkSetFont: TClkSetFont;
     ClkImage: TClkImage;
     ClkLine: TClkLine;
@@ -126,7 +132,7 @@ type
 const
   CPrimitiveTypeCount = 8;
   CPrimitiveNames: array[0..CPrimitiveTypeCount - 1] of string = (
-    'SetPen', 'SetBrush', 'SetGradientFill', 'SetFont', 'Image', 'Line', 'Rect', 'GradientFill');
+    'SetPen', 'SetBrush', 'SetMisc', 'SetFont', 'Image', 'Line', 'Rect', 'GradientFill');
 
 function PrimitiveTypeNameToIndex(AName: string): Integer;
 

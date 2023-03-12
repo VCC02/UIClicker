@@ -1492,6 +1492,8 @@ end;
 procedure TfrClickerActions.HandleOnPrimitivesTriggerOnControlsModified;
 begin
   //either save the selected pmtv file, or set a modified flag (+UI update), or trigger another OnPrimitivesTriggerOnControlsModified event
+
+  //SavePrimitivesFile;
 end;
 
 
@@ -2094,7 +2096,7 @@ begin
   MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
   try
     try
-      //DoOnSetOpenDialogInitialDir();
+      //DoOnSetOpenDialogMultiSelect;
       if not DoOnOpenDialogExecute(CPrimitivesDialogFilter) then
         Exit;
 
@@ -4235,6 +4237,7 @@ begin
       try
         PrimitiveFileNames.Text := FEditingAction^.FindControlOptions.MatchPrimitiveFiles;
         frClickerFindControl.frClickerPrimitives.OnEvaluateReplacementsFunc := HandleOnEvaluateReplacementsFunc;
+        frClickerFindControl.frClickerPrimitives.OnLoadBitmap := HandleOnLoadBitmap;
         frClickerFindControl.frClickerPrimitives.OnLoadPrimitivesFile := HandleOnLoadPrimitivesFile;
         frClickerFindControl.frClickerPrimitives.OnTriggerOnControlsModified := HandleOnPrimitivesTriggerOnControlsModified;
 

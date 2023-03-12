@@ -62,11 +62,9 @@ begin
 end;
 
 
-procedure Get_SetGradientFill_PrimitiveFromIni(AIni: TClkIniReadonlyFile; ASectionIndex: Integer; var APrimitive: TPrimitiveRec);
+procedure Get_SetMisc_PrimitiveFromIni(AIni: TClkIniReadonlyFile; ASectionIndex: Integer; var APrimitive: TPrimitiveRec);
 begin
-  APrimitive.ClkSetGradientFill.StartColor := AIni.ReadString(ASectionIndex, 'StartColor', '44FF44');
-  APrimitive.ClkSetGradientFill.StopColor := AIni.ReadString(ASectionIndex, 'StopColor', 'FF44FF');
-  APrimitive.ClkSetGradientFill.Direction := AIni.ReadString(ASectionIndex, 'Direction', '0'); //TGradientDirection
+  APrimitive.ClkSetMisc.AntialiasingMode := AIni.ReadString(ASectionIndex, 'AntialiasingMode', '0');
 end;
 
 
@@ -127,7 +125,7 @@ const
   CGetAllPrimitiveFromIni: array[0..CPrimitiveTypeCount - 1] of TGetPrimitiveFromIni = (
     @Get_SetPen_PrimitiveFromIni,
     @Get_SetBrush_PrimitiveFromIni,
-    @Get_SetGradientFill_PrimitiveFromIni,
+    @Get_SetMisc_PrimitiveFromIni,
     @Get_SetFont_PrimitiveFromIni,
     @Get_Image_PrimitiveFromIni,
     @Get_Line_PrimitiveFromIni,
@@ -195,11 +193,9 @@ begin
 end;
 
 
-procedure AddPrimitive_SetGradientFillToStringList(var APrimitive: TPrimitiveRec; AStringList: TStringList);
+procedure AddPrimitive_SetMiscToStringList(var APrimitive: TPrimitiveRec; AStringList: TStringList);
 begin
-  AStringList.Add('StartColor=' + APrimitive.ClkSetGradientFill.StartColor);
-  AStringList.Add('StopColor=' + APrimitive.ClkSetGradientFill.StopColor);
-  AStringList.Add('Direction=' + APrimitive.ClkSetGradientFill.Direction);
+  AStringList.Add('AntialiasingMode=' + APrimitive.ClkSetMisc.AntialiasingMode);
 end;
 
 
@@ -263,7 +259,7 @@ const
   CAddAllPrimitives_ToStringList: array[0..CPrimitiveTypeCount - 1] of TAddPrimitive_ToStringList = (
     @AddPrimitive_SetPenToStringList,
     @AddPrimitive_SetBrushToStringList,
-    @AddPrimitive_SetGradientFillToStringList,
+    @AddPrimitive_SetMiscToStringList,
     @AddPrimitive_SetFontToStringList,
     @AddPrimitive_ImageToStringList,
     @AddPrimitive_LineToStringList,

@@ -237,6 +237,7 @@ type
     FUpdateButtonGlowDirection: Boolean;
     FPreviousSelectedNode: PVirtualNode;
     FActionsHitInfo: THitInfo;
+    FActionsHitTimeStamp: QWord; //required, to detect fake double-clicks
 
     F2_State: Byte;
     F6_State: Byte;
@@ -2569,6 +2570,7 @@ var
   tp: TPoint;
   ColumnOffSet: Integer;
 begin
+  FActionsHitTimeStamp := GetTickCount64; //required on MouseUp
   FPreviousSelectedNode := vstActions.GetFirstSelected;
 
   vstActions.GetHitTestInfoAt(X, Y, True, FActionsHitInfo);
@@ -2632,13 +2634,9 @@ end;
 
 procedure TfrClickerActionsArr.vstActionsMouseUp(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-var
-  MouseUpActionsHitInfo: THitInfo;
 begin
-  vstActions.GetHitTestInfoAt(X, Y, True, MouseUpActionsHitInfo);
-
-  if CompareMem(@MouseUpActionsHitInfo, @FActionsHitInfo, SizeOf(THitInfo)) then  //This check is required, when double-clicking a file, in an OpenDialog, over vstActions.
-    HandleActionSelection;                                                        //The dialog closes at the second MouseDown event of the double-click action, while the second MouseUp triggers this (vstActionsMouseUp) handler.
+  if GetTickCount64 - FActionsHitTimeStamp < 500 then  //This check is required, when double-clicking a file, in an OpenDialog, over vstActions.
+    HandleActionSelection;                             //The dialog closes at the second MouseDown event of the double-click action, while the second MouseUp triggers this (vstActionsMouseUp) handler.
 end;
 
 
