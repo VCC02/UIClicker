@@ -44,7 +44,6 @@ type
 
 const
   CCategoryCount = 2;
-  CPrimitiveTypeCount = 8;
 
   CCategory_Primitives = 0;  //index of first category  - list of primitives, as added by user
   CCategory_Order = 1;       //index of second category - list of composition orders for all above primitives
@@ -59,6 +58,7 @@ const
   CPropCountClkLinePrimitive = 4;
   CPropCountClkRectPrimitive = 4;
   CPropCountClkGradientFillPrimitive = 7;
+  CPropCountClkTextPrimitive = 3;
 
   CClkPrimitivesTypeCounts: array[0..CPrimitiveTypeCount - 1] of Integer = (
     CPropCountClkSetPenPrimitive,
@@ -68,28 +68,29 @@ const
     CPropCountClkImagePrimitive,
     CPropCountClkLinePrimitive,
     CPropCountClkRectPrimitive,
-    CPropCountClkGradientFillPrimitive
+    CPropCountClkGradientFillPrimitive,
+    CPropCountClkTextPrimitive
   );
 
 
   CSetPenPrimitiveProperties: array[0..CPropCountClkSetPenPrimitive - 1] of TOIPropDef = (
     (Name: 'Color'; EditorType: etColorCombo),
-    (Name: 'Style'; EditorType: etEnumCombo),
+    (Name: 'Style'; EditorType: etTextWithArrow), //etEnumCombo
     (Name: 'Width'; EditorType: etSpinText),
-    (Name: 'Mode'; EditorType: etEnumCombo),
+    (Name: 'Mode'; EditorType: etTextWithArrow),  //etEnumCombo
     (Name: 'Pattern'; EditorType: etTextWithArrow),
-    (Name: 'EndCap'; EditorType: etEnumCombo),
-    (Name: 'JoinStyle'; EditorType: etEnumCombo)
+    (Name: 'EndCap'; EditorType: etTextWithArrow),   //etEnumCombo
+    (Name: 'JoinStyle'; EditorType: etTextWithArrow)  //etEnumCombo
   );
 
   CSetBrushPrimitiveProperties: array[0..CPropCountClkSetBrushPrimitive - 1] of TOIPropDef = (
     (Name: 'Color'; EditorType: etColorCombo),
-    (Name: 'Style'; EditorType: etEnumCombo),
+    (Name: 'Style'; EditorType: etTextWithArrow),   //etEnumCombo
     (Name: 'Pattern'; EditorType: etTextWithArrow)
   );
 
   CSetMiscPrimitiveProperties: array[0..CPropCountClkSetMiscPrimitive - 1] of TOIPropDef = (
-    (Name: 'AntialiasingMode'; EditorType: etEnumCombo)
+    (Name: 'AntialiasingMode'; EditorType: etTextWithArrow)   //etEnumCombo
   );
 
   CSetFontPrimitiveProperties: array[0..CPropCountClkSetFontPrimitive - 1] of TOIPropDef = (
@@ -141,7 +142,13 @@ const
     (Name: 'Y2'; EditorType: etSpinText),
     (Name: 'StartColor'; EditorType: etColorCombo),
     (Name: 'StopColor'; EditorType: etColorCombo),
-    (Name: 'Direction'; EditorType: etEnumCombo)
+    (Name: 'Direction'; EditorType: etTextWithArrow)  //etEnumCombo
+  );
+
+  CTextPrimitiveProperties: array[0..CPropCountClkTextPrimitive - 1] of TOIPropDef = (
+    (Name: 'Text'; EditorType: etText),
+    (Name: 'X'; EditorType: etSpinText),
+    (Name: 'Y'; EditorType: etSpinText)
   );
 
   CSetPenPrimitive_Color_PropIndex = 0;
@@ -167,19 +174,34 @@ const
     @CImagePrimitiveProperties,
     @CLinePrimitiveProperties,
     @CRectPrimitiveProperties,
-    @CGradientFillPrimitiveProperties
+    @CGradientFillPrimitiveProperties,
+    @CTextPrimitiveProperties
   );
 
 
 {$IFDEF SubProperties}
-  function GetActionValueStr_SetPen(var APrimitive: TPrimitiveRec; APropertyIndex: Integer): string;
-  function GetActionValueStr_SetBrush(var APrimitive: TPrimitiveRec; APropertyIndex: Integer): string;
-  function GetActionValueStr_SetMisc(var APrimitive: TPrimitiveRec; APropertyIndex: Integer): string;
-  function GetActionValueStr_SetFont(var APrimitive: TPrimitiveRec; APropertyIndex: Integer): string;
-  function GetActionValueStr_Image(var APrimitive: TPrimitiveRec; APropertyIndex: Integer): string;
-  function GetActionValueStr_Line(var APrimitive: TPrimitiveRec; APropertyIndex: Integer): string;
-  function GetActionValueStr_Rect(var APrimitive: TPrimitiveRec; APropertyIndex: Integer): string;
-  function GetActionValueStr_GradientFill(var APrimitive: TPrimitiveRec; APropertyIndex: Integer): string;
+  function GetPrimitiveValueStr_SetPen(var APrimitive: TPrimitiveRec; APropertyIndex: Integer): string;
+  function GetPrimitiveValueStr_SetBrush(var APrimitive: TPrimitiveRec; APropertyIndex: Integer): string;
+  function GetPrimitiveValueStr_SetMisc(var APrimitive: TPrimitiveRec; APropertyIndex: Integer): string;
+  function GetPrimitiveValueStr_SetFont(var APrimitive: TPrimitiveRec; APropertyIndex: Integer): string;
+  function GetPrimitiveValueStr_Image(var APrimitive: TPrimitiveRec; APropertyIndex: Integer): string;
+  function GetPrimitiveValueStr_Line(var APrimitive: TPrimitiveRec; APropertyIndex: Integer): string;
+  function GetPrimitiveValueStr_Rect(var APrimitive: TPrimitiveRec; APropertyIndex: Integer): string;
+  function GetPrimitiveValueStr_GradientFill(var APrimitive: TPrimitiveRec; APropertyIndex: Integer): string;
+  function GetPrimitiveValueStr_Text(var APrimitive: TPrimitiveRec; APropertyIndex: Integer): string;
+{$ENDIF}
+
+
+{$IFDEF SubProperties}
+  procedure SetPrimitiveValueStr_SetPen(var APrimitive: TPrimitiveRec; NewValue: string; APropertyIndex: Integer);
+  procedure SetPrimitiveValueStr_SetBrush(var APrimitive: TPrimitiveRec; NewValue: string; APropertyIndex: Integer);
+  procedure SetPrimitiveValueStr_SetMisc(var APrimitive: TPrimitiveRec; NewValue: string; APropertyIndex: Integer);
+  procedure SetPrimitiveValueStr_SetFont(var APrimitive: TPrimitiveRec; NewValue: string; APropertyIndex: Integer);
+  procedure SetPrimitiveValueStr_Image(var APrimitive: TPrimitiveRec; NewValue: string; APropertyIndex: Integer);
+  procedure SetPrimitiveValueStr_Line(var APrimitive: TPrimitiveRec; NewValue: string; APropertyIndex: Integer);
+  procedure SetPrimitiveValueStr_Rect(var APrimitive: TPrimitiveRec; NewValue: string; APropertyIndex: Integer);
+  procedure SetPrimitiveValueStr_GradientFill(var APrimitive: TPrimitiveRec; NewValue: string; APropertyIndex: Integer);
+  procedure SetPrimitiveValueStr_Text(var APrimitive: TPrimitiveRec; NewValue: string; APropertyIndex: Integer);
 {$ENDIF}
 
 
@@ -191,11 +213,13 @@ procedure FillInDefaultValuesToPrimitive_Image(var APrimitive: TPrimitiveRec);
 procedure FillInDefaultValuesToPrimitive_Line(var APrimitive: TPrimitiveRec);
 procedure FillInDefaultValuesToPrimitive_Rect(var APrimitive: TPrimitiveRec);
 procedure FillInDefaultValuesToPrimitive_GradientFill(var APrimitive: TPrimitiveRec);
+procedure FillInDefaultValuesToPrimitive_Text(var APrimitive: TPrimitiveRec);
 
 
 type
   TFillInDefaultValuesToPrimitive = procedure(var APrimitive: TPrimitiveRec);
-  TGetActionValueStr_Primitive = function(var APrimitive: TPrimitiveRec; APropertyIndex: Integer): string;
+  TPrimitiveGetActionValueStrFunc = function(var APrimitive: TPrimitiveRec; APropertyIndex: Integer): string;
+  TPrimitiveSetActionValueStrProc = procedure(var APrimitive: TPrimitiveRec; NewValue: string; APropertyIndex: Integer);
 
 const
   CFillInDefaultValuesToPrimitives: array[0..CPrimitiveTypeCount - 1] of TFillInDefaultValuesToPrimitive = (
@@ -206,19 +230,34 @@ const
     @FillInDefaultValuesToPrimitive_Image,
     @FillInDefaultValuesToPrimitive_Line,
     @FillInDefaultValuesToPrimitive_Rect,
-    @FillInDefaultValuesToPrimitive_GradientFill
+    @FillInDefaultValuesToPrimitive_GradientFill,
+    @FillInDefaultValuesToPrimitive_Text
   );
 
 
-  CGetActionValueStr_Primitive: array[0..CPrimitiveTypeCount - 1] of TGetActionValueStr_Primitive = (
-    @GetActionValueStr_SetPen,
-    @GetActionValueStr_SetBrush,
-    @GetActionValueStr_SetMisc,
-    @GetActionValueStr_SetFont,
-    @GetActionValueStr_Image,
-    @GetActionValueStr_Line,
-    @GetActionValueStr_Rect,
-    @GetActionValueStr_GradientFill
+  CGetPrimitiveValueStrFunctions: array[0..CPrimitiveTypeCount - 1] of TPrimitiveGetActionValueStrFunc = (
+    @GetPrimitiveValueStr_SetPen,
+    @GetPrimitiveValueStr_SetBrush,
+    @GetPrimitiveValueStr_SetMisc,
+    @GetPrimitiveValueStr_SetFont,
+    @GetPrimitiveValueStr_Image,
+    @GetPrimitiveValueStr_Line,
+    @GetPrimitiveValueStr_Rect,
+    @GetPrimitiveValueStr_GradientFill,
+    @GetPrimitiveValueStr_Text
+  );
+
+
+  CSetPrimitiveValueStrFunctions: array[0..CPrimitiveTypeCount - 1] of TPrimitiveSetActionValueStrProc = (
+    @SetPrimitiveValueStr_SetPen,
+    @SetPrimitiveValueStr_SetBrush,
+    @SetPrimitiveValueStr_SetMisc,
+    @SetPrimitiveValueStr_SetFont,
+    @SetPrimitiveValueStr_Image,
+    @SetPrimitiveValueStr_Line,
+    @SetPrimitiveValueStr_Rect,
+    @SetPrimitiveValueStr_GradientFill,
+    @SetPrimitiveValueStr_Text
   );
 
 const
@@ -294,6 +333,12 @@ const
     Ord(High(TGradientDirection)) + 1 //Direction: string; //TGradientDirection;
   );
 
+  CTextEnumCounts: array[0..CPropCountClkTextPrimitive - 1] of Integer = (
+    0,  //Text: string;
+    0,  //X: string;
+    0   //Y: string;
+  );
+
 
   CPrimitivesPropEnumCounts: array[0..CPrimitiveTypeCount - 1] of PArrayOfEnumCounts = (
     @CSetPenEnumCounts,
@@ -303,7 +348,100 @@ const
     @CImageEnumCounts,
     @CLineEnumCounts,
     @CRectEnumCounts,
-    @CGradientFillEnumCounts
+    @CGradientFillEnumCounts,
+    @CTextEnumCounts
+  );
+
+
+  CSetPenEnumStrings: array[0..CPropCountClkSetPenPrimitive - 1] of PArrayOfString = (
+    nil, //Color: string; //TColor;
+    @CPenStyleStr, //Style: string; //TFPPenStyle;
+    nil, //Width: string; //Integer;
+    @CPenModeStr, //Mode: string; //TFPPenMode;
+    nil, //Pattern: string; //LongWord;
+    @CPenEndCapStr, //EndCap: string; //TFPPenEndCap;
+    @CPenJoinStyleStr  //JoinStyle: string; //TFPPenJoinStyle;
+  );
+
+  CSetBrushEnumStrings: array[0..CPropCountClkSetBrushPrimitive - 1] of PArrayOfString = (
+    nil, //Color: string; //TColor;
+    @CBrushStyleStr, //Style: string; //TFPBrushStyle;
+    nil  //Pattern: string; //TBrushPattern;
+  );
+
+  CSetMiscEnumStrings: array[0..CPropCountClkSetMiscPrimitive - 1] of PArrayOfString = (
+    @CAntialiasingModeStr  //AntialiasingMode: string; //TAntialiasingMode
+  );
+
+  CSetFontEnumStrings: array[0..CPropCountClkSetFontPrimitive - 1] of PArrayOfString = (   //same as CFindControl_MatchBitmapTextEnumStrings
+    nil, //ForegroundColor: string;
+    nil, //BackgroundColor: string;
+    nil, //FontName: string;
+    nil, //FontSize: Integer;
+    nil, //Bold: Boolean;
+    nil, //Italic: Boolean;
+    nil, //Underline: Boolean;
+    nil, //StrikeOut: Boolean;
+    @CFontQualityStr,
+    nil, //FontQualityUsesReplacement: Boolean;
+    nil, //FontQualityReplacement: string;
+    nil, //ProfileName: string;
+    nil, //CropLeft: string;
+    nil, //CropTop: string;
+    nil, //CropRight: string;
+    nil  //CropBottom: string;
+  );
+
+  CImageEnumStrings: array[0..CPropCountClkImagePrimitive - 1] of PArrayOfString = (
+    nil, //X1: string;
+    nil, //X2: string;
+    nil, //Y1: string;
+    nil, //Y2: string;
+    nil, //Path: string; //path to a bmp (or png) file, which will be part of the composition
+    nil  //Stretch: string; //Boolean
+  );
+
+  CLineEnumStrings: array[0..CPropCountClkLinePrimitive - 1] of PArrayOfString = (
+    nil, //X1: string;
+    nil, //X2: string;
+    nil, //Y1: string;
+    nil  //Y2: string;
+  );
+
+  CRectEnumStrings: array[0..CPropCountClkRectPrimitive - 1] of PArrayOfString = (
+    nil, //X1: string;
+    nil, //X2: string;
+    nil, //Y1: string;
+    nil  //Y2: string;
+  );
+
+  CGradientFillEnumStrings: array[0..CPropCountClkGradientFillPrimitive - 1] of PArrayOfString = (
+    nil, //X1: string;
+    nil, //X2: string;
+    nil, //Y1: string;
+    nil, //Y2: string;
+    nil, //StartColor: string;
+    nil, //StopColor: string;
+    @CGradientDirectionStr  //Direction: string; //TGradientDirection;
+  );
+
+  CTextEnumStrings: array[0..CPropCountClkTextPrimitive - 1] of PArrayOfString = (
+    nil, //Text: string;
+    nil, //X: string;
+    nil //Y: string;
+  );
+
+
+  CPrimitivesPropEnumStrings: array[0..CPrimitiveTypeCount - 1] of PArrayOfEnumStrings = (
+    @CSetPenEnumStrings,
+    @CSetBrushEnumStrings,
+    @CSetMiscEnumStrings,
+    @CSetFontEnumStrings,
+    @CImageEnumStrings,
+    @CLineEnumStrings,
+    @CRectEnumStrings,
+    @CGradientFillEnumStrings,
+    @CTextEnumStrings
   );
 
 
@@ -311,7 +449,7 @@ implementation
 
 
 {$IFDEF SubProperties}
-  function GetActionValueStr_SetPen(var APrimitive: TPrimitiveRec; APropertyIndex: Integer): string;
+  function GetPrimitiveValueStr_SetPen(var APrimitive: TPrimitiveRec; APropertyIndex: Integer): string;
   begin
     case APropertyIndex of
       0: Result := APrimitive.ClkSetPen.Color; //TColor;
@@ -327,17 +465,19 @@ implementation
   end;
 
 
-  function GetActionValueStr_SetBrush(var APrimitive: TPrimitiveRec; APropertyIndex: Integer): string;
+  function GetPrimitiveValueStr_SetBrush(var APrimitive: TPrimitiveRec; APropertyIndex: Integer): string;
   begin
     case APropertyIndex of
       0: Result := APrimitive.ClkSetBrush.Color; //TColor;
       1: Result := APrimitive.ClkSetBrush.Style; //TFPBrushStyle;
       2: Result := APrimitive.ClkSetBrush.Pattern; //TBrushPattern;
+      else
+        Result := 'unknown';
     end;
   end;
 
 
-  function GetActionValueStr_SetMisc(var APrimitive: TPrimitiveRec; APropertyIndex: Integer): string;
+  function GetPrimitiveValueStr_SetMisc(var APrimitive: TPrimitiveRec; APropertyIndex: Integer): string;
   begin
     case APropertyIndex of
       0: Result := APrimitive.ClkSetMisc.AntialiasingMode;
@@ -347,7 +487,7 @@ implementation
   end;
 
 
-  function GetActionValueStr_SetFont(var APrimitive: TPrimitiveRec; APropertyIndex: Integer): string;
+  function GetPrimitiveValueStr_SetFont(var APrimitive: TPrimitiveRec; APropertyIndex: Integer): string;
   begin
     case APropertyIndex of
       0: Result := APrimitive.ClkSetFont.ForegroundColor;
@@ -372,7 +512,7 @@ implementation
   end;
 
 
-  function GetActionValueStr_Image(var APrimitive: TPrimitiveRec; APropertyIndex: Integer): string;
+  function GetPrimitiveValueStr_Image(var APrimitive: TPrimitiveRec; APropertyIndex: Integer): string;
   begin
     case APropertyIndex of
       0: Result := APrimitive.ClkImage.X1;
@@ -387,7 +527,7 @@ implementation
   end;
 
 
-  function GetActionValueStr_Line(var APrimitive: TPrimitiveRec; APropertyIndex: Integer): string;
+  function GetPrimitiveValueStr_Line(var APrimitive: TPrimitiveRec; APropertyIndex: Integer): string;
   begin
     case APropertyIndex of
       0: Result := APrimitive.ClkLine.X1;
@@ -400,7 +540,7 @@ implementation
   end;
 
 
-  function GetActionValueStr_Rect(var APrimitive: TPrimitiveRec; APropertyIndex: Integer): string;
+  function GetPrimitiveValueStr_Rect(var APrimitive: TPrimitiveRec; APropertyIndex: Integer): string;
   begin
     case APropertyIndex of
       0: Result := APrimitive.ClkRect.X1;
@@ -413,7 +553,7 @@ implementation
   end;
 
 
-  function GetActionValueStr_GradientFill(var APrimitive: TPrimitiveRec; APropertyIndex: Integer): string;
+  function GetPrimitiveValueStr_GradientFill(var APrimitive: TPrimitiveRec; APropertyIndex: Integer): string;
   begin
     case APropertyIndex of
       0: Result := APrimitive.ClkGradientFill.X1;
@@ -425,6 +565,152 @@ implementation
       6: Result := APrimitive.ClkGradientFill.Direction;
       else
         Result := 'unknown';
+    end;
+  end;
+
+
+  function GetPrimitiveValueStr_Text(var APrimitive: TPrimitiveRec; APropertyIndex: Integer): string;
+  begin
+    case APropertyIndex of
+      0: Result := APrimitive.ClkText.Text;
+      1: Result := APrimitive.ClkText.X;
+      2: Result := APrimitive.ClkText.Y;
+      else
+        Result := 'unknown';
+    end;
+  end;
+{$ENDIF}
+
+
+{$IFDEF SubProperties}
+  procedure SetPrimitiveValueStr_SetPen(var APrimitive: TPrimitiveRec; NewValue: string; APropertyIndex: Integer);
+  begin
+    case APropertyIndex of
+      0: APrimitive.ClkSetPen.Color := NewValue; //TColor;
+      1: APrimitive.ClkSetPen.Style := NewValue; //TFPPenStyle;
+      2: APrimitive.ClkSetPen.Width := NewValue; //Integer;
+      3: APrimitive.ClkSetPen.Mode := NewValue; //TFPPenMode;
+      4: APrimitive.ClkSetPen.Pattern := NewValue; //LongWord;
+      5: APrimitive.ClkSetPen.EndCap := NewValue; //TFPPenEndCap;
+      6: APrimitive.ClkSetPen.JoinStyle := NewValue; //TFPPenJoinStyle;
+      else
+        ;
+    end;
+  end;
+
+
+  procedure SetPrimitiveValueStr_SetBrush(var APrimitive: TPrimitiveRec; NewValue: string; APropertyIndex: Integer);
+  begin
+    case APropertyIndex of
+      0: APrimitive.ClkSetBrush.Color := NewValue; //TColor;
+      1: APrimitive.ClkSetBrush.Style := NewValue; //TFPBrushStyle;
+      2: APrimitive.ClkSetBrush.Pattern := NewValue; //TBrushPattern;
+      else
+        ;
+    end;
+  end;
+
+
+  procedure SetPrimitiveValueStr_SetMisc(var APrimitive: TPrimitiveRec; NewValue: string; APropertyIndex: Integer);
+  begin
+    case APropertyIndex of
+       0: APrimitive.ClkSetMisc.AntialiasingMode := NewValue;
+      else
+        ;
+    end;
+  end;
+
+
+  procedure SetPrimitiveValueStr_SetFont(var APrimitive: TPrimitiveRec; NewValue: string; APropertyIndex: Integer);
+  begin
+    case APropertyIndex of
+      0: APrimitive.ClkSetFont.ForegroundColor := NewValue;
+      1: APrimitive.ClkSetFont.BackgroundColor := NewValue;
+      2: APrimitive.ClkSetFont.FontName := NewValue;
+      3: APrimitive.ClkSetFont.FontSize := StrToIntDef(NewValue, 8);
+      4: APrimitive.ClkSetFont.Bold := StrToBool(NewValue);
+      5: APrimitive.ClkSetFont.Italic := StrToBool(NewValue);
+      6: APrimitive.ClkSetFont.Underline := StrToBool(NewValue);
+      7: APrimitive.ClkSetFont.StrikeOut := StrToBool(NewValue);
+      8: APrimitive.ClkSetFont.FontQuality := FontQuality_AsStringToValue(NewValue);
+      9: APrimitive.ClkSetFont.FontQualityUsesReplacement := StrToBool(NewValue);
+      10: APrimitive.ClkSetFont.FontQualityReplacement := NewValue;
+      11: APrimitive.ClkSetFont.ProfileName := NewValue;
+      12: APrimitive.ClkSetFont.CropLeft := NewValue;
+      13: APrimitive.ClkSetFont.CropTop := NewValue;
+      14: APrimitive.ClkSetFont.CropRight := NewValue;
+      15: APrimitive.ClkSetFont.CropBottom := NewValue;
+      else
+        ;
+    end;
+  end;
+
+
+  procedure SetPrimitiveValueStr_Image(var APrimitive: TPrimitiveRec; NewValue: string; APropertyIndex: Integer);
+  begin
+    case APropertyIndex of
+      0: APrimitive.ClkImage.X1 := NewValue;
+      1: APrimitive.ClkImage.Y1 := NewValue;
+      2: APrimitive.ClkImage.X2 := NewValue;
+      3: APrimitive.ClkImage.Y2 := NewValue;
+      4: APrimitive.ClkImage.Path := NewValue;
+      5: APrimitive.ClkImage.Stretch := NewValue;
+      else
+        ;
+    end;
+  end;
+
+
+  procedure SetPrimitiveValueStr_Line(var APrimitive: TPrimitiveRec; NewValue: string; APropertyIndex: Integer);
+  begin
+    case APropertyIndex of
+      0: APrimitive.ClkLine.X1 := NewValue;
+      1: APrimitive.ClkLine.Y1 := NewValue;
+      2: APrimitive.ClkLine.X2 := NewValue;
+      3: APrimitive.ClkLine.Y2 := NewValue;
+      else
+        ;
+    end;
+  end;
+
+
+  procedure SetPrimitiveValueStr_Rect(var APrimitive: TPrimitiveRec; NewValue: string; APropertyIndex: Integer);
+  begin
+    case APropertyIndex of
+      0: APrimitive.ClkRect.X1 := NewValue;
+      1: APrimitive.ClkRect.Y1 := NewValue;
+      2: APrimitive.ClkRect.X2 := NewValue;
+      3: APrimitive.ClkRect.Y2 := NewValue;
+      else
+        ;
+    end;
+  end;
+
+
+  procedure SetPrimitiveValueStr_GradientFill(var APrimitive: TPrimitiveRec; NewValue: string; APropertyIndex: Integer);
+  begin
+    case APropertyIndex of
+      0: APrimitive.ClkGradientFill.X1 := NewValue;
+      1: APrimitive.ClkGradientFill.Y1 := NewValue;
+      2: APrimitive.ClkGradientFill.X2 := NewValue;
+      3: APrimitive.ClkGradientFill.Y2 := NewValue;
+      4: APrimitive.ClkGradientFill.StartColor := NewValue;
+      5: APrimitive.ClkGradientFill.StopColor := NewValue;
+      6: APrimitive.ClkGradientFill.Direction := NewValue;
+      else
+        ;
+    end;
+  end;
+
+
+  procedure SetPrimitiveValueStr_Text(var APrimitive: TPrimitiveRec; NewValue: string; APropertyIndex: Integer);
+  begin
+    case APropertyIndex of
+      0: APrimitive.ClkText.Text := NewValue;
+      1: APrimitive.ClkText.X := NewValue;
+      2: APrimitive.ClkText.Y := NewValue;
+      else
+        ;
     end;
   end;
 {$ENDIF}
@@ -511,6 +797,14 @@ begin
   APrimitive.ClkGradientFill.StartColor := '00FF33';
   APrimitive.ClkGradientFill.StopColor := '330099';
   APrimitive.ClkGradientFill.Direction := '0';
+end;
+
+
+procedure FillInDefaultValuesToPrimitive_Text(var APrimitive: TPrimitiveRec);
+begin
+  APrimitive.ClkText.Text := '';
+  APrimitive.ClkText.X := '50';
+  APrimitive.ClkText.Y := '60';
 end;
 
 end.

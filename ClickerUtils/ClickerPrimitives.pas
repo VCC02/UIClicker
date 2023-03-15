@@ -118,6 +118,12 @@ begin
 end;
 
 
+procedure Get_Text_PrimitiveFromIni(AIni: TClkIniReadonlyFile; ASectionIndex: Integer; var APrimitive: TPrimitiveRec);
+begin
+  APrimitive.ClkText.Text := AIni.ReadString(ASectionIndex, 'Text', '');
+end;
+
+
 type
   TGetPrimitiveFromIni = procedure(AIni: TClkIniReadonlyFile; ASectionIndex: Integer; var APrimitive: TPrimitiveRec);
 
@@ -130,7 +136,8 @@ const
     @Get_Image_PrimitiveFromIni,
     @Get_Line_PrimitiveFromIni,
     @Get_Rect_PrimitiveFromIni,
-    @Get_GradientFill_PrimitiveFromIni
+    @Get_GradientFill_PrimitiveFromIni,
+    @Get_Text_PrimitiveFromIni
   );
 
 
@@ -252,6 +259,13 @@ begin
   AStringList.Add('Y2=' + APrimitive.ClkGradientFill.Y2);
 end;
 
+
+procedure AddPrimitive_TextToStringList(var APrimitive: TPrimitiveRec; AStringList: TStringList);
+begin
+  AStringList.Add('Text=' + APrimitive.ClkText.Text);
+end;
+
+
 type
   TAddPrimitive_ToStringList = procedure(var APrimitive: TPrimitiveRec; AStringList: TStringList);
 
@@ -264,7 +278,8 @@ const
     @AddPrimitive_ImageToStringList,
     @AddPrimitive_LineToStringList,
     @AddPrimitive_RectToStringList,
-    @AddPrimitive_GradientFillToStringList
+    @AddPrimitive_GradientFillToStringList,
+    @AddPrimitive_TextToStringList
   );
 
 

@@ -953,6 +953,9 @@ const
   );
 
 
+function FontQuality_AsStringToValue(AFontQualityAsString: string): TFontQuality;
+
+
 implementation
 
 

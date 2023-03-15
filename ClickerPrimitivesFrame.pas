@@ -58,6 +58,8 @@ type
 
     procedure MenuItem_RemoveAllPrimitivesFromList(Sender: TObject);
     procedure MenuItem_AddPrimitiveToList(Sender: TObject);
+    procedure MenuItem_SetValueFromEnumItem(Sender: TObject);
+    procedure MenuItem_RemovePrimitiveFromList(Sender: TObject);
 
     function DoOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     procedure DoOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TPrimitiveOrderArr);
@@ -141,6 +143,7 @@ uses
 
 const
   CAddPrimitiveMenuPrefix = 'Add ';
+  CRemovePrimitiveMenuPrefix = 'Remove ';
 
 
 procedure TfrClickerPrimitives.CreateRemainingUIComponents;
@@ -190,7 +193,7 @@ begin
   FOIFrame.Visible := True;
 
   FOIFrame.ListItemsVisible := True;
-  FOIFrame.DataTypeVisible := True; //False;
+  FOIFrame.DataTypeVisible := False;
   FOIFrame.ExtraInfoVisible := False;
   FOIFrame.PropertyItemHeight := 22; //50;  //this should be 50 for bitmaps
 
@@ -234,13 +237,13 @@ end;
 
 procedure RenderPrimitive_SetPen(Sender: TfrClickerPrimitives; ABmp: TBitmap; var APrimitive: TPrimitiveRec);
 begin
-  ABmp.Canvas.Pen.Color := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetPen.Color), clFuchsia); //TColor;
-  ABmp.Canvas.Pen.Style := TFPPenStyle(StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetPen.Style), Ord(psSolid))); //TFPPenStyle;
+  ABmp.Canvas.Pen.Color := HexToInt(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetPen.Color)); //TColor;
+  ABmp.Canvas.Pen.Style := PenStyleNameToIndex(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetPen.Style)); //TFPPenStyle;
   ABmp.Canvas.Pen.Width := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetPen.Width), 1); //Integer;
-  ABmp.Canvas.Pen.Mode := TFPPenMode(StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetPen.Mode), Ord(pmBlack))); //TFPPenMode;
+  ABmp.Canvas.Pen.Mode := PenModeNameToIndex(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetPen.Mode)); //TFPPenMode;
   ABmp.Canvas.Pen.Pattern := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetPen.Pattern), 0); //LongWord;
-  ABmp.Canvas.Pen.EndCap := TFPPenEndCap(StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetPen.EndCap), Ord(pecRound))); //TFPPenEndCap;
-  ABmp.Canvas.Pen.JoinStyle := TFPPenJoinStyle(StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetPen.JoinStyle), Ord(pjsRound))); //TFPPenJoinStyle;
+  ABmp.Canvas.Pen.EndCap := PenEndCapNameToIndex(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetPen.EndCap)); //TFPPenEndCap;
+  ABmp.Canvas.Pen.JoinStyle := PenJoinStyleNameToIndex(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetPen.JoinStyle)); //TFPPenJoinStyle;
 end;
 
 
@@ -248,8 +251,8 @@ procedure RenderPrimitive_SetBrush(Sender: TfrClickerPrimitives; ABmp: TBitmap; 
 var
   TempBrushPattern: TBrushPattern;
 begin
-  ABmp.Canvas.Brush.Color := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetPen.Color), clTeal); //TColor;
-  ABmp.Canvas.Brush.Style := TFPBrushStyle(StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetPen.Style), Ord(bsSolid))); //TFPBrushStyle;
+  ABmp.Canvas.Brush.Color := HexToInt(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetPen.Color)); //TColor;
+  ABmp.Canvas.Brush.Style := BrushStyleNameToIndex(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetPen.Style)); //TFPBrushStyle;
   ABmp.Canvas.Brush.Pattern := TempBrushPattern;    // array[0..31] of Cardinal
 end;
 
@@ -262,9 +265,19 @@ end;
 
 procedure RenderPrimitive_SetFont(Sender: TfrClickerPrimitives; ABmp: TBitmap; var APrimitive: TPrimitiveRec);
 begin
-  ABmp.Canvas.Font.Color := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetFont.ForegroundColor), clFuchsia);
-  ABmp.Canvas.Brush.Color := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetFont.BackgroundColor), clLtGray);
+  ABmp.Canvas.Font.Color := HexToInt(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetFont.ForegroundColor));
+  ABmp.Canvas.Brush.Color := HexToInt(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetFont.BackgroundColor));
+  ABmp.Canvas.Font.Name := Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetFont.FontName);
+  ABmp.Canvas.Font.Size := APrimitive.ClkSetFont.FontSize;
+  ABmp.Canvas.Font.Bold := APrimitive.ClkSetFont.Bold;
+  ABmp.Canvas.Font.Italic := APrimitive.ClkSetFont.Italic;
+  ABmp.Canvas.Font.Underline := APrimitive.ClkSetFont.Underline;
+  ABmp.Canvas.Font.StrikeThrough := APrimitive.ClkSetFont.StrikeOut;
 
+  if APrimitive.ClkSetFont.FontQualityUsesReplacement then
+    ABmp.Canvas.Font.Quality := TFontQuality(StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetFont.FontQualityReplacement), Ord(fqDefault)))
+  else
+    ABmp.Canvas.Font.Quality := APrimitive.ClkSetFont.FontQuality;
 end;
 
 
@@ -275,8 +288,8 @@ var
   WillStretch: Boolean;
   TempRect: TRect;
 begin
-  ABmp.Canvas.Brush.Color := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetPen.Color), clTeal); //TColor;
-  ABmp.Canvas.Brush.Style := TFPBrushStyle(StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetPen.Style), Ord(bsSolid))); //TFPBrushStyle;
+  ABmp.Canvas.Brush.Color := HexToInt(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetPen.Color)); //TColor;
+  ABmp.Canvas.Brush.Style := TBrushStyle(StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetPen.Style), Ord(bsSolid))); //TFPBrushStyle;
 
   WillStretch := Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkImage.Stretch) = '1';
 
@@ -343,6 +356,19 @@ begin
 end;
 
 
+procedure RenderPrimitive_Text(Sender: TfrClickerPrimitives; ABmp: TBitmap; var APrimitive: TPrimitiveRec);
+var
+  X, Y: Integer;
+  TempText: string;
+begin
+  X := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkText.X), 30);
+  Y := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkText.Y), 40);
+  TempText := Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkText.Text);
+
+  ABmp.Canvas.TextOut(X, Y, TempText);
+end;
+
+
 type
   TRenderPrimitivesProc = procedure(Sender: TfrClickerPrimitives; ABmp: TBitmap; var APrimitive: TPrimitiveRec);
 
@@ -357,7 +383,8 @@ const
     @RenderPrimitive_Image,
     @RenderPrimitive_Line,
     @RenderPrimitive_Rect,
-    @RenderPrimitive_GradientFill
+    @RenderPrimitive_GradientFill,
+    @RenderPrimitive_Text
   );
 
 var
@@ -429,6 +456,64 @@ begin
       CFillInDefaultValuesToPrimitives[TempPrimitiveType](FPrimitives[n]);
       tmrReloadOIContent.Enabled := True;
 
+      DoOnTriggerOnControlsModified;  //the pmtv file is modified, not the template
+    finally
+      MenuData^.OwnerMenu.Free;
+    end;
+  finally
+    Dispose(MenuData);
+  end;
+end;
+
+
+procedure TfrClickerPrimitives.MenuItem_SetValueFromEnumItem(Sender: TObject);
+var
+  MenuData: POIMenuItemData;
+  ValueStr: string;
+  TempPrimitiveType: Integer;
+begin
+  MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
+  try
+    try
+      ValueStr := StringReplace(MenuData^.MenuItemCaption, '&', '', [rfReplaceAll]);
+
+      TempPrimitiveType := FPrimitives[MenuData^.PropertyIndex].PrimitiveType;
+      if TempPrimitiveType = -1 then
+      begin
+        MessageBox(Handle, 'The current primitive type is not implemented.', PChar(Application.Title), MB_ICONERROR);
+        Exit;
+      end;
+
+      CSetPrimitiveValueStrFunctions[TempPrimitiveType](FPrimitives[MenuData^.PropertyIndex], ValueStr, MenuData^.PropertyItemIndex);
+      FOIFrame.CancelCurrentEditing;
+      DoOnTriggerOnControlsModified;  //the pmtv file is modified, not the template
+    finally
+      MenuData^.OwnerMenu.Free;
+    end;
+  finally
+    Dispose(MenuData);
+  end;
+end;
+
+
+procedure TfrClickerPrimitives.MenuItem_RemovePrimitiveFromList(Sender: TObject);
+var
+  MenuData: POIMenuItemData;
+  IndexToDel, i: Integer;
+begin
+  MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
+  try
+    try
+      if MessageBox(Handle, 'Are you sure you want to remove the current primitive from list?', PChar(Application.Title), MB_ICONQUESTION + MB_YESNO) = IDNO then
+        Exit;
+
+      IndexToDel := MenuData^.PropertyIndex;
+      for i := IndexToDel to Length(FPrimitives) - 2 do
+        FPrimitives[i] := FPrimitives[i + 1];
+
+      SetLength(FPrimitives, Length(FPrimitives) - 1);
+
+      tmrReloadOIContent.Enabled := True;
       DoOnTriggerOnControlsModified;  //the pmtv file is modified, not the template
     finally
       MenuData^.OwnerMenu.Free;
@@ -544,7 +629,10 @@ function TfrClickerPrimitives.HandleOnOIGetPropertyValue(ACategoryIndex, AProper
 begin
   case ACategoryIndex of
     CCategory_Primitives:
+    begin
       Result := FPrimitives[APropertyIndex].PrimitiveName;
+      AEditorType := etTextWithArrow;
+    end;
 
     CCategory_Order:
       Result := 'not implemented';
@@ -581,11 +669,11 @@ end;
 
 function TfrClickerPrimitives.HandleOnOIGetListPropertyItemValue(ACategoryIndex, APropertyIndex, AItemIndex: Integer; var AEditorType: TOIEditorType): string;
 begin
-  Result := 'value';
+  Result := '';
 
   if ACategoryIndex = CCategory_Primitives then
   begin
-    Result := CGetActionValueStr_Primitive[FPrimitives[APropertyIndex].PrimitiveType](FPrimitives[APropertyIndex], AItemIndex);
+    Result := CGetPrimitiveValueStrFunctions[FPrimitives[APropertyIndex].PrimitiveType](FPrimitives[APropertyIndex], AItemIndex);
     AEditorType := CPrimitivesMainProperties[FPrimitives[APropertyIndex].PrimitiveType]^[AItemIndex].EditorType;
   end;
 end;
@@ -593,13 +681,13 @@ end;
 
 function TfrClickerPrimitives.HandleOnUIGetDataTypeName(ACategoryIndex, APropertyIndex, AItemIndex: Integer): string;
 begin
-  Result := 'type';
+  Result := '';
 end;
 
 
 function TfrClickerPrimitives.HandleOnUIGetExtraInfo(ACategoryIndex, APropertyIndex, AItemIndex: Integer): string;
 begin
-  Result := 'extra';
+  Result := '';
 end;
 
 
@@ -611,8 +699,20 @@ end;
 
 
 procedure TfrClickerPrimitives.HandleOnOIEditedText(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; ANewText: string);
+var
+  PmtvType: Integer;
 begin
+  if ACategoryIndex = CCategory_Primitives then
+    case ANodeLevel of
+      CPropertyLevel:
+        FPrimitives[APropertyIndex].PrimitiveName := ANewText;
 
+      CPropertyItemLevel:
+      begin
+        PmtvType := FPrimitives[APropertyIndex].PrimitiveType;
+        CSetPrimitiveValueStrFunctions[PmtvType](FPrimitives[APropertyIndex], ANewText, AItemIndex);
+      end;
+    end;
 end;
 
 
@@ -624,19 +724,27 @@ var
 begin
   Result := False;
 
-  if ANodeLevel = CCategoryLevel then
-    if ACategoryIndex = CCategory_Primitives then
-    begin
-      PropertyMenu := TPopupMenu.Create(Self);
+  if ACategoryIndex = CCategory_Primitives then
+    case ANodeLevel of
+      CCategoryLevel:
+      begin
+        PropertyMenu := TPopupMenu.Create(Self);
 
-      AddMenuItemToPopupMenu(PropertyMenu, 'Remove all primitives from list...', MenuItem_RemoveAllPrimitivesFromList, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-      AddMenuItemToPopupMenu(PropertyMenu, '-', nil, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+        AddMenuItemToPopupMenu(PropertyMenu, 'Remove all primitives from list...', MenuItem_RemoveAllPrimitivesFromList, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+        AddMenuItemToPopupMenu(PropertyMenu, '-', nil, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
 
-      for i := 0 to CPrimitiveTypeCount - 1 do
-        AddMenuItemToPopupMenu(PropertyMenu, CAddPrimitiveMenuPrefix + CPrimitiveNames[i], MenuItem_AddPrimitiveToList, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+        for i := 0 to CPrimitiveTypeCount - 1 do
+          AddMenuItemToPopupMenu(PropertyMenu, CAddPrimitiveMenuPrefix + CPrimitiveNames[i], MenuItem_AddPrimitiveToList, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
 
-      GetCursorPos(tp);
-      PropertyMenu.PopUp(tp.X, tp.Y);
+        GetCursorPos(tp);
+        PropertyMenu.PopUp(tp.X, tp.Y);
+      end;
+
+      CPropertyLevel:
+        ;
+
+      CPropertyItemLevel:
+        ;
     end;
 end;
 
@@ -665,7 +773,11 @@ end;
 
 procedure TfrClickerPrimitives.HandleOnOIGetEnumConst(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEnumItemIndex: Integer; var AEnumItemName: string);
 begin
-  AEnumItemName := IntToStr(AEnumItemIndex);
+  AEnumItemName := '';
+
+  if ANodeLevel = CPropertyItemLevel then
+    if ACategoryIndex = CCategory_Primitives then
+      AEnumItemName := CPrimitivesPropEnumStrings[FPrimitives[APropertyIndex].PrimitiveType]^[AItemIndex]^[AEnumItemIndex];
 end;
 
 
@@ -736,8 +848,41 @@ end;
 
 
 procedure TfrClickerPrimitives.HandleOnOIArrowEditorClick(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer);
+var
+  tp: TPoint;
+  PropertyMenu: TPopupMenu;
+  i: Integer;
+  EnumItemName: string;
 begin
+  if ACategoryIndex = CCategory_Primitives then
+    case ANodeLevel of
+      CCategoryLevel:
+        ;
 
+      CPropertyLevel:
+      begin
+        PropertyMenu := TPopupMenu.Create(Self);
+        AddMenuItemToPopupMenu(PropertyMenu, CRemovePrimitiveMenuPrefix + '"' + FPrimitives[APropertyIndex].PrimitiveName + '"', MenuItem_RemovePrimitiveFromList, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+
+        GetCursorPos(tp);
+        PropertyMenu.PopUp(tp.X, tp.Y);
+      end;
+
+      CPropertyItemLevel:
+      begin
+        PropertyMenu := TPopupMenu.Create(Self);
+
+        for i := 0 to CPrimitivesPropEnumCounts[FPrimitives[APropertyIndex].PrimitiveType]^[AItemIndex] - 1 do
+        begin
+          EnumItemName := CPrimitivesPropEnumStrings[FPrimitives[APropertyIndex].PrimitiveType]^[AItemIndex]^[i];
+          AddMenuItemToPopupMenu(PropertyMenu, EnumItemName, MenuItem_SetValueFromEnumItem, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+        end;
+
+        GetCursorPos(tp);
+        PropertyMenu.PopUp(tp.X, tp.Y);
+      end;
+
+    end;
 end;
 
 

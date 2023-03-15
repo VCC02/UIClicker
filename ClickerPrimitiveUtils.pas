@@ -90,6 +90,13 @@ type
     Direction: string; //TGradientDirection;
   end;
 
+  TClkText = record
+    Text: string;
+    X: string;
+    Y: string;
+    //Evaluate: Boolean;  //Add this field if ever needed. Otherwise, the text is automatically evaluated. (i.e. all replacements in "Text" are evaluated to their values)
+  end;
+
 
 const
   CClkSetPenPrimitiveCmdIdx = 0;
@@ -100,6 +107,7 @@ const
   CClkLinePrimitiveCmdIdx = 5;
   CClkRectPrimitiveCmdIdx = 6;
   CClkGradientFill = 7;
+  CClkText = 8;
 
 
 type
@@ -115,6 +123,7 @@ type
     ClkLine: TClkLine;
     ClkRect: TClkRect;
     ClkGradientFill: TClkGradientFill;
+    ClkText: TClkText;
   end;
 
   PPrimitiveRec = ^TPrimitiveRec;
@@ -130,11 +139,35 @@ type
 
 
 const
-  CPrimitiveTypeCount = 8;
+  CPrimitiveTypeCount = 9;
   CPrimitiveNames: array[0..CPrimitiveTypeCount - 1] of string = (
-    'SetPen', 'SetBrush', 'SetMisc', 'SetFont', 'Image', 'Line', 'Rect', 'GradientFill');
+    'SetPen', 'SetBrush', 'SetMisc', 'SetFont', 'Image', 'Line', 'Rect', 'GradientFill', 'Text');
+
+  CPenStyleStr: array[TPenStyle] of string = ('psSolid', 'psDash', 'psDot', 'psDashDot', 'psDashDotDot', 'psinsideFrame', 'psPattern', 'psClear');
+  CPenModeStr: array[TPenMode] of string = (
+    'pmBlack', 'pmWhite', 'pmNop', 'pmNot', 'pmCopy', 'pmNotCopy',
+    'pmMergePenNot', 'pmMaskPenNot', 'pmMergeNotPen', 'pmMaskNotPen', 'pmMerge',
+    'pmNotMerge', 'pmMask', 'pmNotMask', 'pmXor', 'pmNotXor'
+  );
+
+  CPenEndCapStr: array[TPenEndCap] of string = ('pecRound', 'pecSquare', 'pecFlat');
+  CPenJoinStyleStr: array[TPenJoinStyle] of string = ('pjsRound', 'pjsBevel', 'pjsMiter');
+
+  CBrushStyleStr: array[TBrushStyle] of string = (
+    'bsSolid', 'bsClear', 'bsHorizontal', 'bsVertical', 'bsFDiagonal',
+    'bsBDiagonal', 'bsCross', 'bsDiagCross', 'bsImage', 'bsPattern'
+  );
+
+  CAntialiasingModeStr: array[TAntialiasingMode] of string = ('amDontCare', 'amOn', 'amOff');
+  CGradientDirectionStr: array[TGradientDirection] of string = ('gdVertical', 'gdHorizontal');
 
 function PrimitiveTypeNameToIndex(AName: string): Integer;
+
+function PenStyleNameToIndex(AName: string): TPenStyle;
+function PenModeNameToIndex(AName: string): TPenMode;
+function PenEndCapNameToIndex(AName: string): TPenEndCap;
+function PenJoinStyleNameToIndex(AName: string): TPenJoinStyle;
+function BrushStyleNameToIndex(AName: string): TBrushStyle;
 
 
 implementation
@@ -147,6 +180,76 @@ begin
   Result := -1;
   for i := 0 to CPrimitiveTypeCount - 1 do
     if CPrimitiveNames[i] = AName then
+    begin
+      Result := i;
+      Break;
+    end;
+end;
+
+
+function PenStyleNameToIndex(AName: string): TPenStyle;
+var
+  i: TPenStyle;
+begin
+  Result := Low(TPenStyle);
+  for i := Low(TPenStyle) to High(TPenStyle) do
+    if CPenStyleStr[i] = AName then
+    begin
+      Result := i;
+      Break;
+    end;
+end;
+
+
+function PenModeNameToIndex(AName: string): TPenMode;
+var
+  i: TPenMode;
+begin
+  Result := Low(TPenMode);
+  for i := Low(TPenMode) to High(TPenMode) do
+    if CPenModeStr[i] = AName then
+    begin
+      Result := i;
+      Break;
+    end;
+end;
+
+
+function PenEndCapNameToIndex(AName: string): TPenEndCap;
+var
+  i: TPenEndCap;
+begin
+  Result := Low(TPenEndCap);
+  for i := Low(TPenEndCap) to High(TPenEndCap) do
+    if CPenEndCapStr[i] = AName then
+    begin
+      Result := i;
+      Break;
+    end;
+end;
+
+
+function PenJoinStyleNameToIndex(AName: string): TPenJoinStyle;
+var
+  i: TPenJoinStyle;
+begin
+  Result := Low(TPenJoinStyle);
+  for i := Low(TPenJoinStyle) to High(TPenJoinStyle) do
+    if CPenJoinStyleStr[i] = AName then
+    begin
+      Result := i;
+      Break;
+    end;
+end;
+
+
+function BrushStyleNameToIndex(AName: string): TBrushStyle;
+var
+  i: TBrushStyle;
+begin
+  Result := Low(TBrushStyle);
+  for i := Low(TBrushStyle) to High(TBrushStyle) do
+    if CBrushStyleStr[i] = AName then
     begin
       Result := i;
       Break;
