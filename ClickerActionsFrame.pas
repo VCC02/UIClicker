@@ -263,6 +263,7 @@ type
 
     FPmLocalTemplates: TPopupMenu;
     FOIFrame: TfrObjectInspector;
+    FOIEditorMenu: TPopupMenu;
 
     FOnCopyControlTextAndClassFromMainWindow: TOnCopyControlTextAndClassFromMainWindow;
     FOnGetExtraSearchAreaDebuggingImage: TOnGetExtraSearchAreaDebuggingImage;
@@ -667,6 +668,7 @@ begin
   FSetVarContent_EvalBefore := TStringList.Create;
   FLastClickedTVTEdit := nil;
   FLastClickedEdit := nil;
+  FOIEditorMenu := TPopupMenu.Create(Self);
 
   FOnCopyControlTextAndClassFromMainWindow := nil;
   FOnGetExtraSearchAreaDebuggingImage := nil;
@@ -702,6 +704,7 @@ begin
   FSetVarContent_Vars.Free;
   FSetVarContent_Values.Free;
   FSetVarContent_EvalBefore.Free;
+  FOIEditorMenu.Free;
 
   inherited Destroy;
 end;
@@ -1774,13 +1777,9 @@ var
 begin
   MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
   try
-    try
-      ValueStr := StringReplace(MenuData^.MenuItemCaption, '&', '', [rfReplaceAll]);
-      SetActionTimeoutToValue(StrToIntDef(ValueStr, 0));
-      TriggerOnControlsModified;
-    finally
-      MenuData^.OwnerMenu.Free;
-    end;
+    ValueStr := StringReplace(MenuData^.MenuItemCaption, '&', '', [rfReplaceAll]);
+    SetActionTimeoutToValue(StrToIntDef(ValueStr, 0));
+    TriggerOnControlsModified;
   finally
     Dispose(MenuData);
   end;
@@ -1792,11 +1791,7 @@ var
   MenuData: POIMenuItemData;
 begin
   MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
-  try
-    MenuData^.OwnerMenu.Free;
-  finally
-    Dispose(MenuData);
-  end;
+  Dispose(MenuData);
 end;
 
 
@@ -1832,20 +1827,16 @@ begin
 
   MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
   try
+    ListOfFiles := TStringList.Create;
     try
-      ListOfFiles := TStringList.Create;
-      try
-        ListOfFiles.Text := FEditingAction^.FindControlOptions.MatchBitmapFiles;
-        ListOfFiles.Text := ListOfFiles.Text + DoOnGetPictureOpenDialogFileName;
-        FEditingAction^.FindControlOptions.MatchBitmapFiles := ListOfFiles.Text;
+      ListOfFiles.Text := FEditingAction^.FindControlOptions.MatchBitmapFiles;
+      ListOfFiles.Text := ListOfFiles.Text + DoOnGetPictureOpenDialogFileName;
+      FEditingAction^.FindControlOptions.MatchBitmapFiles := ListOfFiles.Text;
 
-        FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex);
-        TriggerOnControlsModified;
-      finally
-        ListOfFiles.Free;
-      end;
+      FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex);
+      TriggerOnControlsModified;
     finally
-      MenuData^.OwnerMenu.Free;
+      ListOfFiles.Free;
     end;
   finally
     Dispose(MenuData);
@@ -1862,13 +1853,9 @@ begin
 
   MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
   try
-    try
-      FEditingAction^.FindControlOptions.MatchBitmapFiles := '';
-      FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex);
-      TriggerOnControlsModified;
-    finally
-      MenuData^.OwnerMenu.Free;
-    end;
+    FEditingAction^.FindControlOptions.MatchBitmapFiles := '';
+    FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex);
+    TriggerOnControlsModified;
   finally
     Dispose(MenuData);
   end;
@@ -1882,25 +1869,21 @@ var
 begin
   MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
   try
+    //DoOnSetPictureOpenDialogInitialDir();
+    if not DoOnPictureOpenDialogExecute then
+      Exit;
+
+    ListOfFiles := TStringList.Create;
     try
-      //DoOnSetPictureOpenDialogInitialDir();
-      if not DoOnPictureOpenDialogExecute then
-        Exit;
+      ListOfFiles.Text := FEditingAction^.FindControlOptions.MatchBitmapFiles;
+      ListOfFiles.Strings[MenuData^.PropertyItemIndex] := DoOnGetPictureOpenDialogFileName;
+      FEditingAction^.FindControlOptions.MatchBitmapFiles := ListOfFiles.Text;
 
-      ListOfFiles := TStringList.Create;
-      try
-        ListOfFiles.Text := FEditingAction^.FindControlOptions.MatchBitmapFiles;
-        ListOfFiles.Strings[MenuData^.PropertyItemIndex] := DoOnGetPictureOpenDialogFileName;
-        FEditingAction^.FindControlOptions.MatchBitmapFiles := ListOfFiles.Text;
+      FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex, True);
 
-        FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex, True);
-
-        TriggerOnControlsModified;
-      finally
-        ListOfFiles.Free;
-      end;
+      TriggerOnControlsModified;
     finally
-      MenuData^.OwnerMenu.Free;
+      ListOfFiles.Free;
     end;
   finally
     Dispose(MenuData);
@@ -1918,21 +1901,17 @@ begin
 
   MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
   try
+    ListOfFiles := TStringList.Create;
     try
-      ListOfFiles := TStringList.Create;
-      try
-        ListOfFiles.Text := FEditingAction^.FindControlOptions.MatchBitmapFiles;
-        ListOfFiles.Delete(MenuData^.PropertyItemIndex);
-        FEditingAction^.FindControlOptions.MatchBitmapFiles := ListOfFiles.Text;
+      ListOfFiles.Text := FEditingAction^.FindControlOptions.MatchBitmapFiles;
+      ListOfFiles.Delete(MenuData^.PropertyItemIndex);
+      FEditingAction^.FindControlOptions.MatchBitmapFiles := ListOfFiles.Text;
 
-        FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex, True);
+      FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex, True);
 
-        TriggerOnControlsModified;
-      finally
-        ListOfFiles.Free;
-      end;
+      TriggerOnControlsModified;
     finally
-      MenuData^.OwnerMenu.Free;
+      ListOfFiles.Free;
     end;
   finally
     Dispose(MenuData);
@@ -1947,23 +1926,19 @@ var
 begin
   MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
   try
+    ListOfFiles := TStringList.Create;
     try
-      ListOfFiles := TStringList.Create;
-      try
-        if MenuData^.PropertyItemIndex <= 0 then
-          Exit;
+      if MenuData^.PropertyItemIndex <= 0 then
+        Exit;
 
-        ListOfFiles.Text := FEditingAction^.FindControlOptions.MatchBitmapFiles;
-        ListOfFiles.Move(MenuData^.PropertyItemIndex, MenuData^.PropertyItemIndex - 1);
-        FEditingAction^.FindControlOptions.MatchBitmapFiles := ListOfFiles.Text;
+      ListOfFiles.Text := FEditingAction^.FindControlOptions.MatchBitmapFiles;
+      ListOfFiles.Move(MenuData^.PropertyItemIndex, MenuData^.PropertyItemIndex - 1);
+      FEditingAction^.FindControlOptions.MatchBitmapFiles := ListOfFiles.Text;
 
-        FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex, True);
-        TriggerOnControlsModified;
-      finally
-        ListOfFiles.Free;
-      end;
+      FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex, True);
+      TriggerOnControlsModified;
     finally
-      MenuData^.OwnerMenu.Free;
+      ListOfFiles.Free;
     end;
   finally
     Dispose(MenuData);
@@ -1978,23 +1953,19 @@ var
 begin
   MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
   try
+    ListOfFiles := TStringList.Create;
     try
-      ListOfFiles := TStringList.Create;
-      try
-        ListOfFiles.Text := FEditingAction^.FindControlOptions.MatchBitmapFiles;
-        if MenuData^.PropertyItemIndex >= ListOfFiles.Count - 1 then
-          Exit;
+      ListOfFiles.Text := FEditingAction^.FindControlOptions.MatchBitmapFiles;
+      if MenuData^.PropertyItemIndex >= ListOfFiles.Count - 1 then
+        Exit;
 
-        ListOfFiles.Move(MenuData^.PropertyItemIndex, MenuData^.PropertyItemIndex + 1);
-        FEditingAction^.FindControlOptions.MatchBitmapFiles := ListOfFiles.Text;
+      ListOfFiles.Move(MenuData^.PropertyItemIndex, MenuData^.PropertyItemIndex + 1);
+      FEditingAction^.FindControlOptions.MatchBitmapFiles := ListOfFiles.Text;
 
-        FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex, True);
-        TriggerOnControlsModified;
-      finally
-        ListOfFiles.Free;
-      end;
+      FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex, True);
+      TriggerOnControlsModified;
     finally
-      MenuData^.OwnerMenu.Free;
+      ListOfFiles.Free;
     end;
   finally
     Dispose(MenuData);
@@ -2013,20 +1984,16 @@ begin
 
   MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
   try
+    ListOfFiles := TStringList.Create;
     try
-      ListOfFiles := TStringList.Create;
-      try
-        ListOfFiles.Text := FEditingAction^.FindControlOptions.MatchPrimitiveFiles;
-        ListOfFiles.Text := ListOfFiles.Text + DoOnGetOpenDialogFileName;
-        FEditingAction^.FindControlOptions.MatchPrimitiveFiles := ListOfFiles.Text;
+      ListOfFiles.Text := FEditingAction^.FindControlOptions.MatchPrimitiveFiles;
+      ListOfFiles.Text := ListOfFiles.Text + DoOnGetOpenDialogFileName;
+      FEditingAction^.FindControlOptions.MatchPrimitiveFiles := ListOfFiles.Text;
 
-        FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex);
-        TriggerOnControlsModified;
-      finally
-        ListOfFiles.Free;
-      end;
+      FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex);
+      TriggerOnControlsModified;
     finally
-      MenuData^.OwnerMenu.Free;
+      ListOfFiles.Free;
     end;
   finally
     Dispose(MenuData);
@@ -2045,20 +2012,16 @@ begin
 
   MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
   try
+    ListOfFiles := TStringList.Create;
     try
-      ListOfFiles := TStringList.Create;
-      try
-        ListOfFiles.Text := FEditingAction^.FindControlOptions.MatchPrimitiveFiles;
-        ListOfFiles.Text := ListOfFiles.Text + DoOnGetSaveDialogFileName;
-        FEditingAction^.FindControlOptions.MatchPrimitiveFiles := ListOfFiles.Text;
+      ListOfFiles.Text := FEditingAction^.FindControlOptions.MatchPrimitiveFiles;
+      ListOfFiles.Text := ListOfFiles.Text + DoOnGetSaveDialogFileName;
+      FEditingAction^.FindControlOptions.MatchPrimitiveFiles := ListOfFiles.Text;
 
-        FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex);
-        TriggerOnControlsModified;
-      finally
-        ListOfFiles.Free;
-      end;
+      FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex);
+      TriggerOnControlsModified;
     finally
-      MenuData^.OwnerMenu.Free;
+      ListOfFiles.Free;
     end;
   finally
     Dispose(MenuData);
@@ -2075,13 +2038,9 @@ begin
 
   MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
   try
-    try
-      FEditingAction^.FindControlOptions.MatchPrimitiveFiles := '';
-      FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex);
-      TriggerOnControlsModified;
-    finally
-      MenuData^.OwnerMenu.Free;
-    end;
+    FEditingAction^.FindControlOptions.MatchPrimitiveFiles := '';
+    FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex);
+    TriggerOnControlsModified;
   finally
     Dispose(MenuData);
   end;
@@ -2095,25 +2054,21 @@ var
 begin
   MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
   try
+    //DoOnSetOpenDialogMultiSelect;
+    if not DoOnOpenDialogExecute(CPrimitivesDialogFilter) then
+      Exit;
+
+    ListOfFiles := TStringList.Create;
     try
-      //DoOnSetOpenDialogMultiSelect;
-      if not DoOnOpenDialogExecute(CPrimitivesDialogFilter) then
-        Exit;
+      ListOfFiles.Text := FEditingAction^.FindControlOptions.MatchPrimitiveFiles;
+      ListOfFiles.Strings[MenuData^.PropertyItemIndex] := DoOnGetOpenDialogFileName;
+      FEditingAction^.FindControlOptions.MatchPrimitiveFiles := ListOfFiles.Text;
 
-      ListOfFiles := TStringList.Create;
-      try
-        ListOfFiles.Text := FEditingAction^.FindControlOptions.MatchPrimitiveFiles;
-        ListOfFiles.Strings[MenuData^.PropertyItemIndex] := DoOnGetOpenDialogFileName;
-        FEditingAction^.FindControlOptions.MatchPrimitiveFiles := ListOfFiles.Text;
+      FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex, True);
 
-        FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex, True);
-
-        TriggerOnControlsModified;
-      finally
-        ListOfFiles.Free;
-      end;
+      TriggerOnControlsModified;
     finally
-      MenuData^.OwnerMenu.Free;
+      ListOfFiles.Free;
     end;
   finally
     Dispose(MenuData);
@@ -2131,21 +2086,17 @@ begin
 
   MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
   try
+    ListOfFiles := TStringList.Create;
     try
-      ListOfFiles := TStringList.Create;
-      try
-        ListOfFiles.Text := FEditingAction^.FindControlOptions.MatchPrimitiveFiles;
-        ListOfFiles.Delete(MenuData^.PropertyItemIndex);
-        FEditingAction^.FindControlOptions.MatchPrimitiveFiles := ListOfFiles.Text;
+      ListOfFiles.Text := FEditingAction^.FindControlOptions.MatchPrimitiveFiles;
+      ListOfFiles.Delete(MenuData^.PropertyItemIndex);
+      FEditingAction^.FindControlOptions.MatchPrimitiveFiles := ListOfFiles.Text;
 
-        FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex, True);
+      FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex, True);
 
-        TriggerOnControlsModified;
-      finally
-        ListOfFiles.Free;
-      end;
+      TriggerOnControlsModified;
     finally
-      MenuData^.OwnerMenu.Free;
+      ListOfFiles.Free;
     end;
   finally
     Dispose(MenuData);
@@ -2160,23 +2111,19 @@ var
 begin
   MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
   try
+    ListOfFiles := TStringList.Create;
     try
-      ListOfFiles := TStringList.Create;
-      try
-        if MenuData^.PropertyItemIndex <= 0 then
-          Exit;
+      if MenuData^.PropertyItemIndex <= 0 then
+        Exit;
 
-        ListOfFiles.Text := FEditingAction^.FindControlOptions.MatchPrimitiveFiles;
-        ListOfFiles.Move(MenuData^.PropertyItemIndex, MenuData^.PropertyItemIndex - 1);
-        FEditingAction^.FindControlOptions.MatchPrimitiveFiles := ListOfFiles.Text;
+      ListOfFiles.Text := FEditingAction^.FindControlOptions.MatchPrimitiveFiles;
+      ListOfFiles.Move(MenuData^.PropertyItemIndex, MenuData^.PropertyItemIndex - 1);
+      FEditingAction^.FindControlOptions.MatchPrimitiveFiles := ListOfFiles.Text;
 
-        FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex, True);
-        TriggerOnControlsModified;
-      finally
-        ListOfFiles.Free;
-      end;
+      FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex, True);
+      TriggerOnControlsModified;
     finally
-      MenuData^.OwnerMenu.Free;
+      ListOfFiles.Free;
     end;
   finally
     Dispose(MenuData);
@@ -2191,23 +2138,19 @@ var
 begin
   MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
   try
+    ListOfFiles := TStringList.Create;
     try
-      ListOfFiles := TStringList.Create;
-      try
-        ListOfFiles.Text := FEditingAction^.FindControlOptions.MatchPrimitiveFiles;
-        if MenuData^.PropertyItemIndex >= ListOfFiles.Count - 1 then
-          Exit;
+      ListOfFiles.Text := FEditingAction^.FindControlOptions.MatchPrimitiveFiles;
+      if MenuData^.PropertyItemIndex >= ListOfFiles.Count - 1 then
+        Exit;
 
-        ListOfFiles.Move(MenuData^.PropertyItemIndex, MenuData^.PropertyItemIndex + 1);
-        FEditingAction^.FindControlOptions.MatchPrimitiveFiles := ListOfFiles.Text;
+      ListOfFiles.Move(MenuData^.PropertyItemIndex, MenuData^.PropertyItemIndex + 1);
+      FEditingAction^.FindControlOptions.MatchPrimitiveFiles := ListOfFiles.Text;
 
-        FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex, True);
-        TriggerOnControlsModified;
-      finally
-        ListOfFiles.Free;
-      end;
+      FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex, True);
+      TriggerOnControlsModified;
     finally
-      MenuData^.OwnerMenu.Free;
+      ListOfFiles.Free;
     end;
   finally
     Dispose(MenuData);
@@ -2239,35 +2182,31 @@ var
 begin
   MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
   try
-    try
-      n := Length(FEditingAction^.FindControlOptions.MatchBitmapText);
-      SetLength(FEditingAction^.FindControlOptions.MatchBitmapText, n + 1);
+    n := Length(FEditingAction^.FindControlOptions.MatchBitmapText);
+    SetLength(FEditingAction^.FindControlOptions.MatchBitmapText, n + 1);
 
-      FEditingAction^.FindControlOptions.MatchBitmapText[n].ForegroundColor := '$Color_Window$';
-      FEditingAction^.FindControlOptions.MatchBitmapText[n].BackgroundColor := '$Color_Highlight$';
-      FEditingAction^.FindControlOptions.MatchBitmapText[n].FontName := 'Tahoma';
-      FEditingAction^.FindControlOptions.MatchBitmapText[n].FontSize := 8;
-      FEditingAction^.FindControlOptions.MatchBitmapText[n].FontQualityReplacement := '';
-      FEditingAction^.FindControlOptions.MatchBitmapText[n].FontQuality := fqNonAntialiased;
-      FEditingAction^.FindControlOptions.MatchBitmapText[n].FontQualityUsesReplacement := False;
-      FEditingAction^.FindControlOptions.MatchBitmapText[n].Bold := False;
-      FEditingAction^.FindControlOptions.MatchBitmapText[n].Italic := False;
-      FEditingAction^.FindControlOptions.MatchBitmapText[n].Underline := False;
-      FEditingAction^.FindControlOptions.MatchBitmapText[n].StrikeOut := False;
-      FEditingAction^.FindControlOptions.MatchBitmapText[n].CropLeft := '0';
-      FEditingAction^.FindControlOptions.MatchBitmapText[n].CropTop := '0';
-      FEditingAction^.FindControlOptions.MatchBitmapText[n].CropRight := '0';
-      FEditingAction^.FindControlOptions.MatchBitmapText[n].CropBottom := '0';
-      FEditingAction^.FindControlOptions.MatchBitmapText[n].ProfileName := GetUniqueProfileName;
+    FEditingAction^.FindControlOptions.MatchBitmapText[n].ForegroundColor := '$Color_Window$';
+    FEditingAction^.FindControlOptions.MatchBitmapText[n].BackgroundColor := '$Color_Highlight$';
+    FEditingAction^.FindControlOptions.MatchBitmapText[n].FontName := 'Tahoma';
+    FEditingAction^.FindControlOptions.MatchBitmapText[n].FontSize := 8;
+    FEditingAction^.FindControlOptions.MatchBitmapText[n].FontQualityReplacement := '';
+    FEditingAction^.FindControlOptions.MatchBitmapText[n].FontQuality := fqNonAntialiased;
+    FEditingAction^.FindControlOptions.MatchBitmapText[n].FontQualityUsesReplacement := False;
+    FEditingAction^.FindControlOptions.MatchBitmapText[n].Bold := False;
+    FEditingAction^.FindControlOptions.MatchBitmapText[n].Italic := False;
+    FEditingAction^.FindControlOptions.MatchBitmapText[n].Underline := False;
+    FEditingAction^.FindControlOptions.MatchBitmapText[n].StrikeOut := False;
+    FEditingAction^.FindControlOptions.MatchBitmapText[n].CropLeft := '0';
+    FEditingAction^.FindControlOptions.MatchBitmapText[n].CropTop := '0';
+    FEditingAction^.FindControlOptions.MatchBitmapText[n].CropRight := '0';
+    FEditingAction^.FindControlOptions.MatchBitmapText[n].CropBottom := '0';
+    FEditingAction^.FindControlOptions.MatchBitmapText[n].ProfileName := GetUniqueProfileName;
 
-      frClickerFindControl.AddNewFontProfile(FEditingAction^.FindControlOptions.MatchBitmapText[n]);
-      BuildFontColorIconsList;
+    frClickerFindControl.AddNewFontProfile(FEditingAction^.FindControlOptions.MatchBitmapText[n]);
+    BuildFontColorIconsList;
 
-      FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex);
-      TriggerOnControlsModified;
-    finally
-      MenuData^.OwnerMenu.Free;
-    end;
+    FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex);
+    TriggerOnControlsModified;
   finally
     Dispose(MenuData);
   end;
@@ -2281,27 +2220,23 @@ var
 begin
   MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
   try
-    try
-      n := Length(FEditingAction^.FindControlOptions.MatchBitmapText);
+    n := Length(FEditingAction^.FindControlOptions.MatchBitmapText);
 
-      if MessageBox(Handle,
-                    PChar('Are you sure you want to remove font profile: ' + FEditingAction^.FindControlOptions.MatchBitmapText[MenuData^.PropertyItemIndex].ProfileName),
-                    PChar(Application.Title),
-                    MB_ICONQUESTION + MB_YESNO) = IDNO then
-        Exit;
+    if MessageBox(Handle,
+                  PChar('Are you sure you want to remove font profile: ' + FEditingAction^.FindControlOptions.MatchBitmapText[MenuData^.PropertyItemIndex].ProfileName),
+                  PChar(Application.Title),
+                  MB_ICONQUESTION + MB_YESNO) = IDNO then
+      Exit;
 
-      for i := MenuData^.PropertyItemIndex to n - 2 do
-        FEditingAction^.FindControlOptions.MatchBitmapText[i] := FEditingAction^.FindControlOptions.MatchBitmapText[i + 1];
+    for i := MenuData^.PropertyItemIndex to n - 2 do
+      FEditingAction^.FindControlOptions.MatchBitmapText[i] := FEditingAction^.FindControlOptions.MatchBitmapText[i + 1];
 
-      SetLength(FEditingAction^.FindControlOptions.MatchBitmapText, n - 1);
+    SetLength(FEditingAction^.FindControlOptions.MatchBitmapText, n - 1);
 
-      FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex);
+    FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex);
 
-      frClickerFindControl.RemoveFontProfileByIndex(MenuData^.PropertyItemIndex);
-      TriggerOnControlsModified;
-    finally
-      MenuData^.OwnerMenu.Free;
-    end;
+    frClickerFindControl.RemoveFontProfileByIndex(MenuData^.PropertyItemIndex);
+    TriggerOnControlsModified;
   finally
     Dispose(MenuData);
   end;
@@ -2315,21 +2250,17 @@ var
 begin
   MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
   try
-    try
-      if MenuData^.PropertyItemIndex <= 0 then
-        Exit;
+    if MenuData^.PropertyItemIndex <= 0 then
+      Exit;
 
-      TempProfile := FEditingAction^.FindControlOptions.MatchBitmapText[MenuData^.PropertyItemIndex];
-      FEditingAction^.FindControlOptions.MatchBitmapText[MenuData^.PropertyItemIndex] :=
-        FEditingAction^.FindControlOptions.MatchBitmapText[MenuData^.PropertyItemIndex - 1];
+    TempProfile := FEditingAction^.FindControlOptions.MatchBitmapText[MenuData^.PropertyItemIndex];
+    FEditingAction^.FindControlOptions.MatchBitmapText[MenuData^.PropertyItemIndex] :=
+      FEditingAction^.FindControlOptions.MatchBitmapText[MenuData^.PropertyItemIndex - 1];
 
-      FEditingAction^.FindControlOptions.MatchBitmapText[MenuData^.PropertyItemIndex - 1] := TempProfile;
+    FEditingAction^.FindControlOptions.MatchBitmapText[MenuData^.PropertyItemIndex - 1] := TempProfile;
 
-      FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex);
-      TriggerOnControlsModified;
-    finally
-      MenuData^.OwnerMenu.Free;
-    end;
+    FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex);
+    TriggerOnControlsModified;
   finally
     Dispose(MenuData);
   end;
@@ -2343,21 +2274,17 @@ var
 begin
   MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
   try
-    try
-      if MenuData^.PropertyItemIndex >= Length(FEditingAction^.FindControlOptions.MatchBitmapText) - 1 then
-        Exit;
+    if MenuData^.PropertyItemIndex >= Length(FEditingAction^.FindControlOptions.MatchBitmapText) - 1 then
+      Exit;
 
-      TempProfile := FEditingAction^.FindControlOptions.MatchBitmapText[MenuData^.PropertyItemIndex];
-      FEditingAction^.FindControlOptions.MatchBitmapText[MenuData^.PropertyItemIndex] :=
-        FEditingAction^.FindControlOptions.MatchBitmapText[MenuData^.PropertyItemIndex + 1];
+    TempProfile := FEditingAction^.FindControlOptions.MatchBitmapText[MenuData^.PropertyItemIndex];
+    FEditingAction^.FindControlOptions.MatchBitmapText[MenuData^.PropertyItemIndex] :=
+      FEditingAction^.FindControlOptions.MatchBitmapText[MenuData^.PropertyItemIndex + 1];
 
-      FEditingAction^.FindControlOptions.MatchBitmapText[MenuData^.PropertyItemIndex + 1] := TempProfile;
+    FEditingAction^.FindControlOptions.MatchBitmapText[MenuData^.PropertyItemIndex + 1] := TempProfile;
 
-      FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex);
-      TriggerOnControlsModified;
-    finally
-      MenuData^.OwnerMenu.Free;
-    end;
+    FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex);
+    TriggerOnControlsModified;
   finally
     Dispose(MenuData);
   end;
@@ -3789,7 +3716,6 @@ end;
 procedure TfrClickerActions.HandleOnOIArrowEditorClick(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer);
 var
   tp: TPoint;
-  PropertyMenu: TPopupMenu;
   i: Integer;
   s: string;
   BMPTxt: TClkFindControlMatchBitmapText;
@@ -3800,15 +3726,15 @@ begin
       case APropertyIndex of
         CMain_ActionTimeout_PropIndex:
         begin
-          PropertyMenu := TPopupMenu.Create(Self);
+          FOIEditorMenu.Items.Clear;
 
-          AddMenuItemToPopupMenu(PropertyMenu, '0', MenuItem_SetActionTimeoutFromOI, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-          AddMenuItemToPopupMenu(PropertyMenu, '1000', MenuItem_SetActionTimeoutFromOI, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-          AddMenuItemToPopupMenu(PropertyMenu, '10000', MenuItem_SetActionTimeoutFromOI, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-          AddMenuItemToPopupMenu(PropertyMenu, '30000', MenuItem_SetActionTimeoutFromOI, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+          AddMenuItemToPopupMenu(FOIEditorMenu, '0', MenuItem_SetActionTimeoutFromOI, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+          AddMenuItemToPopupMenu(FOIEditorMenu, '1000', MenuItem_SetActionTimeoutFromOI, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+          AddMenuItemToPopupMenu(FOIEditorMenu, '10000', MenuItem_SetActionTimeoutFromOI, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+          AddMenuItemToPopupMenu(FOIEditorMenu, '30000', MenuItem_SetActionTimeoutFromOI, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
 
           GetCursorPos(tp);
-          PropertyMenu.PopUp(tp.X, tp.Y);
+          FOIEditorMenu.PopUp(tp.X, tp.Y);
         end
         else
           ;
@@ -3819,41 +3745,43 @@ begin
       case APropertyIndex of
         CFindControl_MatchText_PropIndex, CFindControl_MatchClassName_PropIndex:
         begin
-          PropertyMenu := TPopupMenu.Create(Self);
-          AddMenuItemToPopupMenu(PropertyMenu, 'Copy values from preview window', MenuItem_CopyTextAndClassFromPreviewWindowClick,
+          FOIEditorMenu.Items.Clear;
+
+          AddMenuItemToPopupMenu(FOIEditorMenu, 'Copy values from preview window', MenuItem_CopyTextAndClassFromPreviewWindowClick,
             ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
 
-          AddMenuItemToPopupMenu(PropertyMenu, 'Copy values from window interpreter', MenuItem_CopyTextAndClassFromWinInterpWindowClick,
+          AddMenuItemToPopupMenu(FOIEditorMenu, 'Copy values from window interpreter', MenuItem_CopyTextAndClassFromWinInterpWindowClick,
             ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
 
-          AddMenuItemToPopupMenu(PropertyMenu, 'Copy values from remote screen', MenuItem_CopyTextAndClassFromRemoteScreenWindowClick,
+          AddMenuItemToPopupMenu(FOIEditorMenu, 'Copy values from remote screen', MenuItem_CopyTextAndClassFromRemoteScreenWindowClick,
             ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
 
           GetCursorPos(tp);
-          PropertyMenu.PopUp(tp.X, tp.Y);
+          FOIEditorMenu.PopUp(tp.X, tp.Y);
         end;
 
         CFindControl_MatchBitmapText_PropIndex:
           case ANodeLevel of
             CPropertyLevel:
             begin
-              PropertyMenu := TPopupMenu.Create(Self);
-              AddMenuItemToPopupMenu(PropertyMenu, 'Add font profile', MenuItem_AddFontProfileToPropertyListClick,
+              FOIEditorMenu.Items.Clear;
+
+              AddMenuItemToPopupMenu(FOIEditorMenu, 'Add font profile', MenuItem_AddFontProfileToPropertyListClick,
                 ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
 
               if Length(FEditingAction^.FindControlOptions.MatchBitmapText) > 0 then
-                AddMenuItemToPopupMenu(PropertyMenu, '-', nil, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+                AddMenuItemToPopupMenu(FOIEditorMenu, '-', nil, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
 
               for i := 0 to Length(FEditingAction^.FindControlOptions.MatchBitmapText) - 1 do
               begin
                 BMPTxt := FEditingAction^.FindControlOptions.MatchBitmapText[i];
                 s := '  Name: ' + BMPTxt.ProfileName + '  (' + BMPTxt.FontName + ', ' + IntToStr(BMPTxt.FontSize) + ', ' + BMPTxt.ForegroundColor + ', ' + BMPTxt.BackgroundColor + ')';
-                AddMenuItemToPopupMenu(PropertyMenu, 'Remove font profile[' + IntToStr(i) + ']  ' + s, MenuItem_RemoveFontProfileFromPropertyListClick,
+                AddMenuItemToPopupMenu(FOIEditorMenu, 'Remove font profile[' + IntToStr(i) + ']  ' + s, MenuItem_RemoveFontProfileFromPropertyListClick,
                   ANodeLevel, ACategoryIndex, APropertyIndex, i);  //ItemIndex is not the real one. It points to the profile index.
               end;
 
               GetCursorPos(tp);
-              PropertyMenu.PopUp(tp.X, tp.Y);
+              FOIEditorMenu.PopUp(tp.X, tp.Y);
             end;
 
             CPropertyItemLevel:
@@ -3864,15 +3792,16 @@ begin
               if ItemIndexMod = CFindControl_MatchBitmapText_ProfileName_PropItemIndex then
                 if Length(FEditingAction^.FindControlOptions.MatchBitmapText) > 1 then  //add only if there are at least two profiles
                 begin
-                  PropertyMenu := TPopupMenu.Create(Self);
-                  AddMenuItemToPopupMenu(PropertyMenu, 'Move font profile up', MenuItem_MoveFontProfileUpInPropertyListClick,
+                  FOIEditorMenu.Items.Clear;
+
+                  AddMenuItemToPopupMenu(FOIEditorMenu, 'Move font profile up', MenuItem_MoveFontProfileUpInPropertyListClick,
                     ANodeLevel, ACategoryIndex, APropertyIndex, ItemIndexDiv); //sending the profile index through item index arg
 
-                  AddMenuItemToPopupMenu(PropertyMenu, 'Move font profile down', MenuItem_MoveFontProfileDownInPropertyListClick,
+                  AddMenuItemToPopupMenu(FOIEditorMenu, 'Move font profile down', MenuItem_MoveFontProfileDownInPropertyListClick,
                     ANodeLevel, ACategoryIndex, APropertyIndex, ItemIndexDiv); //sending the profile index through item index arg
 
                   GetCursorPos(tp);
-                  PropertyMenu.PopUp(tp.X, tp.Y);
+                  FOIEditorMenu.PopUp(tp.X, tp.Y);
                 end;
             end;
           end; //case
@@ -3882,34 +3811,36 @@ begin
           case ANodeLevel of
             CPropertyLevel:
             begin
-              PropertyMenu := TPopupMenu.Create(Self);
-              AddMenuItemToPopupMenu(PropertyMenu, 'Add file(s) to this list...', MenuItem_AddBMPFilesToPropertyListClick,
+              FOIEditorMenu.Items.Clear;
+
+              AddMenuItemToPopupMenu(FOIEditorMenu, 'Add file(s) to this list...', MenuItem_AddBMPFilesToPropertyListClick,
                 ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
 
-              AddMenuItemToPopupMenu(PropertyMenu, 'Remove all files from this list...', MenuItem_RemoveAllBMPFilesFromPropertyListClick,
+              AddMenuItemToPopupMenu(FOIEditorMenu, 'Remove all files from this list...', MenuItem_RemoveAllBMPFilesFromPropertyListClick,
                 ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
 
               GetCursorPos(tp);
-              PropertyMenu.PopUp(tp.X, tp.Y);
+              FOIEditorMenu.PopUp(tp.X, tp.Y);
             end;
 
             CPropertyItemLevel:
             begin
-              PropertyMenu := TPopupMenu.Create(Self);
-              AddMenuItemToPopupMenu(PropertyMenu, 'Browse...', MenuItem_BrowseBMPFileFromPropertyListClick,
+              FOIEditorMenu.Items.Clear;
+
+              AddMenuItemToPopupMenu(FOIEditorMenu, 'Browse...', MenuItem_BrowseBMPFileFromPropertyListClick,
                 ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
 
-              AddMenuItemToPopupMenu(PropertyMenu, 'Remove file from list...', MenuItem_RemoveBMPFileFromPropertyListClick,
+              AddMenuItemToPopupMenu(FOIEditorMenu, 'Remove file from list...', MenuItem_RemoveBMPFileFromPropertyListClick,
                 ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
 
-              AddMenuItemToPopupMenu(PropertyMenu, 'Move file up (one position)', MenuItem_MoveBMPFileUpInPropertyListClick,
+              AddMenuItemToPopupMenu(FOIEditorMenu, 'Move file up (one position)', MenuItem_MoveBMPFileUpInPropertyListClick,
                 ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
 
-              AddMenuItemToPopupMenu(PropertyMenu, 'Move file down (one position)', MenuItem_MoveBMPFileDownInPropertyListClick,
+              AddMenuItemToPopupMenu(FOIEditorMenu, 'Move file down (one position)', MenuItem_MoveBMPFileDownInPropertyListClick,
                 ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
 
               GetCursorPos(tp);
-              PropertyMenu.PopUp(tp.X, tp.Y);
+              FOIEditorMenu.PopUp(tp.X, tp.Y);
             end;
 
             else
@@ -3922,37 +3853,39 @@ begin
           case ANodeLevel of
             CPropertyLevel:
             begin
-              PropertyMenu := TPopupMenu.Create(Self);
-              AddMenuItemToPopupMenu(PropertyMenu, 'Add existing file(s) to this list...', MenuItem_AddExistingPrimitiveFilesToPropertyListClick,
+              FOIEditorMenu.Items.Clear;
+
+              AddMenuItemToPopupMenu(FOIEditorMenu, 'Add existing file(s) to this list...', MenuItem_AddExistingPrimitiveFilesToPropertyListClick,
                 ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
 
-              AddMenuItemToPopupMenu(PropertyMenu, 'Add new file to this list...', MenuItem_AddNewPrimitiveFilesToPropertyListClick,
+              AddMenuItemToPopupMenu(FOIEditorMenu, 'Add new file to this list...', MenuItem_AddNewPrimitiveFilesToPropertyListClick,
                 ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
 
-              AddMenuItemToPopupMenu(PropertyMenu, 'Remove all files from this list...', MenuItem_RemoveAllPrimitiveFilesFromPropertyListClick,
+              AddMenuItemToPopupMenu(FOIEditorMenu, 'Remove all files from this list...', MenuItem_RemoveAllPrimitiveFilesFromPropertyListClick,
                 ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
 
               GetCursorPos(tp);
-              PropertyMenu.PopUp(tp.X, tp.Y);
+              FOIEditorMenu.PopUp(tp.X, tp.Y);
             end;
 
             CPropertyItemLevel:
             begin
-              PropertyMenu := TPopupMenu.Create(Self);
-              AddMenuItemToPopupMenu(PropertyMenu, 'Browse...', MenuItem_BrowsePrimitiveFileFromPropertyListClick,
+              FOIEditorMenu.Items.Clear;
+
+              AddMenuItemToPopupMenu(FOIEditorMenu, 'Browse...', MenuItem_BrowsePrimitiveFileFromPropertyListClick,
                 ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
 
-              AddMenuItemToPopupMenu(PropertyMenu, 'Remove file from list...', MenuItem_RemovePrimitiveFileFromPropertyListClick,
+              AddMenuItemToPopupMenu(FOIEditorMenu, 'Remove file from list...', MenuItem_RemovePrimitiveFileFromPropertyListClick,
                 ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
 
-              AddMenuItemToPopupMenu(PropertyMenu, 'Move file up (one position)', MenuItem_MovePrimitiveFileUpInPropertyListClick,
+              AddMenuItemToPopupMenu(FOIEditorMenu, 'Move file up (one position)', MenuItem_MovePrimitiveFileUpInPropertyListClick,
                 ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
 
-              AddMenuItemToPopupMenu(PropertyMenu, 'Move file down (one position)', MenuItem_MovePrimitiveFileDownInPropertyListClick,
+              AddMenuItemToPopupMenu(FOIEditorMenu, 'Move file down (one position)', MenuItem_MovePrimitiveFileDownInPropertyListClick,
                 ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
 
               GetCursorPos(tp);
-              PropertyMenu.PopUp(tp.X, tp.Y);
+              FOIEditorMenu.PopUp(tp.X, tp.Y);
             end;
 
             else

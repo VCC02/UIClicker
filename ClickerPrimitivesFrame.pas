@@ -33,7 +33,7 @@ interface
 
 uses
   Windows, Classes, SysUtils, Forms, Controls, ExtCtrls, ObjectInspectorFrame, VirtualTrees, ImgList,
-  Graphics, Menus, Types, ClickerUtils, ClickerPrimitiveUtils;
+  Graphics, Menus, StdCtrls, Types, ClickerUtils, ClickerPrimitiveUtils;
 
 type
 
@@ -41,6 +41,8 @@ type
 
   TfrClickerPrimitives = class(TFrame)
     imgFontColorBuffer: TImage;
+    lblRenderingInfo: TLabel;
+    pnlPreview: TPanel;
     pnlvstOI: TPanel;
     tmrReloadOIContent: TTimer;
     procedure tmrReloadOIContentTimer(Sender: TObject);
@@ -48,6 +50,7 @@ type
     FOIFrame: TfrObjectInspector;
     FPrimitives: TPrimitiveRecArr;
     FOrders: TPrimitiveOrderArr; //array of orders  - i.e. array of array of indexes.
+    FOIEditorMenu: TPopupMenu;
 
     FOnLoadBitmap: TOnLoadBitmap;
     FOnLoadPrimitivesFile: TOnLoadPrimitivesFile;
@@ -60,6 +63,9 @@ type
     procedure MenuItem_AddPrimitiveToList(Sender: TObject);
     procedure MenuItem_SetValueFromEnumItem(Sender: TObject);
     procedure MenuItem_RemovePrimitiveFromList(Sender: TObject);
+    procedure MenuItem_RemoveAllCompositionOrdersFromList(Sender: TObject);
+    procedure MenuItem_AddCompositionOrderToList(Sender: TObject);
+    procedure MenuItem_RemoveCompositionOrderFromList(Sender: TObject);
 
     function DoOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     procedure DoOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TPrimitiveOrderArr);
@@ -144,6 +150,7 @@ uses
 const
   CAddPrimitiveMenuPrefix = 'Add ';
   CRemovePrimitiveMenuPrefix = 'Remove ';
+  CRemoveOrderMenuPrefix = 'Remove ';
 
 
 procedure TfrClickerPrimitives.CreateRemainingUIComponents;
@@ -157,7 +164,7 @@ begin
   FOIFrame.Height := pnlvstOI.Height;
   FOIFrame.Anchors := [akBottom, akLeft, akRight, akTop];
 
-  pnlvstOI.Anchors := [akBottom, akLeft, akRight, akTop];
+  pnlvstOI.Anchors := [akBottom, akLeft, {akRight,} akTop];
 
   FOIFrame.OnOIGetCategoryCount := HandleOnOIGetCategoryCount;
   FOIFrame.OnOIGetCategory := HandleOnOIGetCategory;
@@ -196,6 +203,8 @@ begin
   FOIFrame.DataTypeVisible := False;
   FOIFrame.ExtraInfoVisible := False;
   FOIFrame.PropertyItemHeight := 22; //50;  //this should be 50 for bitmaps
+  FOIFrame.ColumnWidths[0] := 144;
+  FOIFrame.ColumnWidths[1] := 130;
 
   //FOIFrame.ReloadContent;  //set by loading
   pnlvstOI.Visible := True;
@@ -208,6 +217,7 @@ begin
   CreateRemainingUIComponents;
   SetLength(FPrimitives, 0);
   SetLength(FOrders, 0);
+  FOIEditorMenu := TPopupMenu.Create(Self);
 
   FOnLoadBitmap := nil;
   FOnLoadPrimitivesFile := nil;
@@ -220,6 +230,8 @@ destructor TfrClickerPrimitives.Destroy;
 begin
   SetLength(FPrimitives, 0);
   SetLength(FOrders, 0);
+  FOIEditorMenu.Free;
+
   inherited Destroy;
 end;
 
@@ -412,18 +424,13 @@ var
 begin
   MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
   try
-    try
-      if MessageBox(Handle, 'Are you sure you want to remove all the primitives from list?', PChar(Application.Title), MB_ICONQUESTION + MB_YESNO) = IDNO then
-        Exit;
+    if MessageBox(Handle, 'Are you sure you want to remove all the primitives from list?', PChar(Application.Title), MB_ICONQUESTION + MB_YESNO) = IDNO then
+      Exit;
 
-      SetLength(FPrimitives, 0);
+    SetLength(FPrimitives, 0);
 
-      tmrReloadOIContent.Enabled := True;
-
-      DoOnTriggerOnControlsModified;  //the pmtv file is modified, not the template
-    finally
-      MenuData^.OwnerMenu.Free;
-    end;
+    tmrReloadOIContent.Enabled := True;
+    DoOnTriggerOnControlsModified;  //the pmtv file is modified, not the template
   finally
     Dispose(MenuData);
   end;
@@ -438,28 +445,23 @@ var
 begin
   MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
   try
-    try
-      ValueStr := StringReplace(MenuData^.MenuItemCaption, '&', '', [rfReplaceAll]);
-      ValueStr := Copy(ValueStr, Length(CAddPrimitiveMenuPrefix) + 1, MaxInt);
-      TempPrimitiveType := PrimitiveTypeNameToIndex(ValueStr);
-      n := Length(FPrimitives);
+    ValueStr := StringReplace(MenuData^.MenuItemCaption, '&', '', [rfReplaceAll]);
+    ValueStr := Copy(ValueStr, Length(CAddPrimitiveMenuPrefix) + 1, MaxInt);
+    TempPrimitiveType := PrimitiveTypeNameToIndex(ValueStr);
+    n := Length(FPrimitives);
 
-      if TempPrimitiveType = -1 then
-      begin
-        MessageBox(Handle, 'The current primitive type is not implemented.', PChar(Application.Title), MB_ICONERROR);
-        Exit;
-      end;
-
-      SetLength(FPrimitives, n + 1);
-      FPrimitives[n].PrimitiveType := TempPrimitiveType;
-
-      CFillInDefaultValuesToPrimitives[TempPrimitiveType](FPrimitives[n]);
-      tmrReloadOIContent.Enabled := True;
-
-      DoOnTriggerOnControlsModified;  //the pmtv file is modified, not the template
-    finally
-      MenuData^.OwnerMenu.Free;
+    if TempPrimitiveType = -1 then
+    begin
+      MessageBox(Handle, 'The current primitive type is not implemented.', PChar(Application.Title), MB_ICONERROR);
+      Exit;
     end;
+
+    SetLength(FPrimitives, n + 1);
+    FPrimitives[n].PrimitiveType := TempPrimitiveType;
+
+    CFillInDefaultValuesToPrimitives[TempPrimitiveType](FPrimitives[n]);
+    tmrReloadOIContent.Enabled := True;
+    DoOnTriggerOnControlsModified;  //the pmtv file is modified, not the template
   finally
     Dispose(MenuData);
   end;
@@ -474,22 +476,18 @@ var
 begin
   MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
   try
-    try
-      ValueStr := StringReplace(MenuData^.MenuItemCaption, '&', '', [rfReplaceAll]);
+    ValueStr := StringReplace(MenuData^.MenuItemCaption, '&', '', [rfReplaceAll]);
 
-      TempPrimitiveType := FPrimitives[MenuData^.PropertyIndex].PrimitiveType;
-      if TempPrimitiveType = -1 then
-      begin
-        MessageBox(Handle, 'The current primitive type is not implemented.', PChar(Application.Title), MB_ICONERROR);
-        Exit;
-      end;
-
-      CSetPrimitiveValueStrFunctions[TempPrimitiveType](FPrimitives[MenuData^.PropertyIndex], ValueStr, MenuData^.PropertyItemIndex);
-      FOIFrame.CancelCurrentEditing;
-      DoOnTriggerOnControlsModified;  //the pmtv file is modified, not the template
-    finally
-      MenuData^.OwnerMenu.Free;
+    TempPrimitiveType := FPrimitives[MenuData^.PropertyIndex].PrimitiveType;
+    if TempPrimitiveType = -1 then
+    begin
+      MessageBox(Handle, 'The current primitive type is not implemented.', PChar(Application.Title), MB_ICONERROR);
+      Exit;
     end;
+
+    CSetPrimitiveValueStrFunctions[TempPrimitiveType](FPrimitives[MenuData^.PropertyIndex], ValueStr, MenuData^.PropertyItemIndex);
+    FOIFrame.CancelCurrentEditing;
+    DoOnTriggerOnControlsModified;  //the pmtv file is modified, not the template
   finally
     Dispose(MenuData);
   end;
@@ -503,21 +501,87 @@ var
 begin
   MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
   try
-    try
-      if MessageBox(Handle, 'Are you sure you want to remove the current primitive from list?', PChar(Application.Title), MB_ICONQUESTION + MB_YESNO) = IDNO then
-        Exit;
+    if MessageBox(Handle, 'Are you sure you want to remove the current primitive from list?', PChar(Application.Title), MB_ICONQUESTION + MB_YESNO) = IDNO then
+      Exit;
 
-      IndexToDel := MenuData^.PropertyIndex;
-      for i := IndexToDel to Length(FPrimitives) - 2 do
-        FPrimitives[i] := FPrimitives[i + 1];
+    IndexToDel := MenuData^.PropertyIndex;
+    for i := IndexToDel to Length(FPrimitives) - 2 do
+      FPrimitives[i] := FPrimitives[i + 1];
 
-      SetLength(FPrimitives, Length(FPrimitives) - 1);
+    SetLength(FPrimitives, Length(FPrimitives) - 1);
 
-      tmrReloadOIContent.Enabled := True;
-      DoOnTriggerOnControlsModified;  //the pmtv file is modified, not the template
-    finally
-      MenuData^.OwnerMenu.Free;
-    end;
+    tmrReloadOIContent.Enabled := True;
+    DoOnTriggerOnControlsModified;  //the pmtv file is modified, not the template
+  finally
+    Dispose(MenuData);
+  end;
+end;
+
+
+procedure TfrClickerPrimitives.MenuItem_RemoveAllCompositionOrdersFromList(Sender: TObject);
+var
+  MenuData: POIMenuItemData;
+  i: Integer;
+begin
+  MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
+  try
+    if MessageBox(Handle, 'Are you sure you want to remove all composition orders from list?', PChar(Application.Title), MB_ICONQUESTION + MB_YESNO) = IDNO then
+      Exit;
+
+    for i := 0 to Length(FOrders) - 1 do
+      SetLength(FOrders[i], 0);
+
+    SetLength(FOrders, 0);
+
+    FOIFrame.CancelCurrentEditing;
+    tmrReloadOIContent.Enabled := True;
+    DoOnTriggerOnControlsModified;  //the pmtv file is modified, not the template
+  finally
+    Dispose(MenuData);
+  end;
+end;
+
+
+procedure TfrClickerPrimitives.MenuItem_AddCompositionOrderToList(Sender: TObject);
+var
+  MenuData: POIMenuItemData;
+  n, i: Integer;
+begin
+  MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
+  try
+    n := Length(FOrders);
+
+    SetLength(FOrders, n + 1);
+    SetLength(FOrders[n], Length(FPrimitives));
+    for i := 0 to Length(FOrders[n]) - 1 do
+      FOrders[n][i] := i;
+
+    tmrReloadOIContent.Enabled := True;
+    DoOnTriggerOnControlsModified;  //the pmtv file is modified, not the template
+  finally
+    Dispose(MenuData);
+  end;
+end;
+
+
+procedure TfrClickerPrimitives.MenuItem_RemoveCompositionOrderFromList(Sender: TObject);
+var
+  MenuData: POIMenuItemData;
+  IndexToDel, i: Integer;
+begin
+  MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
+  try
+    if MessageBox(Handle, 'Are you sure you want to remove the current composition order from list?', PChar(Application.Title), MB_ICONQUESTION + MB_YESNO) = IDNO then
+      Exit;
+
+    IndexToDel := MenuData^.PropertyIndex;
+    for i := IndexToDel to Length(FOrders) - 2 do
+      FOrders[i] := FOrders[i + 1];        //To be verified
+
+    SetLength(FOrders, Length(FOrders) - 1);
+
+    tmrReloadOIContent.Enabled := True;
+    DoOnTriggerOnControlsModified;  //the pmtv file is modified, not the template
   finally
     Dispose(MenuData);
   end;
@@ -586,7 +650,7 @@ begin
     CCategory_Primitives:
       AEditorType := etUserEditor;
 
-    CCategory_Order:
+    CCategory_Orders:
       AEditorType := etUserEditor;
 
     else
@@ -601,7 +665,7 @@ begin
     CCategory_Primitives:
       Result := Length(FPrimitives);
 
-    CCategory_Order:
+    CCategory_Orders:
       Result := Length(FOrders);
 
     else
@@ -616,8 +680,8 @@ begin
     CCategory_Primitives:
       Result := CPrimitiveNames[FPrimitives[APropertyIndex].PrimitiveType]; //IntToStr(APropertyIndex); // FPrimitives[APropertyIndex].ClkSetPen;
 
-    CCategory_Order:
-      Result := IntToStr(APropertyIndex); // FOrders[];
+    CCategory_Orders:
+      Result := 'Order ' + IntToStr(APropertyIndex); // FOrders[];
 
     else
       Result := 'unknown';
@@ -634,8 +698,11 @@ begin
       AEditorType := etTextWithArrow;
     end;
 
-    CCategory_Order:
-      Result := 'not implemented';
+    CCategory_Orders:
+    begin
+      Result := 'Order "' + IntToStr(APropertyIndex) + '"';
+      AEditorType := etTextWithArrow;
+    end
 
     else
       Result := 'unknown category';
@@ -649,8 +716,8 @@ begin
     CCategory_Primitives:
       Result := CClkPrimitivesTypeCounts[FPrimitives[APropertyIndex].PrimitiveType];
 
-    CCategory_Order:
-      Result := 0;
+    CCategory_Orders:
+      Result := Length(FOrders[APropertyIndex]);
 
     else
       Result := 0;
@@ -662,8 +729,16 @@ function TfrClickerPrimitives.HandleOnOIGetListPropertyItemName(ACategoryIndex, 
 begin
   Result := '';
 
-  if ACategoryIndex = CCategory_Primitives then
-    Result := CPrimitivesMainProperties[FPrimitives[APropertyIndex].PrimitiveType]^[AItemIndex].Name;
+  case ACategoryIndex of
+    CCategory_Primitives:
+      Result := CPrimitivesMainProperties[FPrimitives[APropertyIndex].PrimitiveType]^[AItemIndex].Name;
+
+    CCategory_Orders:
+      Result := FPrimitives[FOrders[APropertyIndex][AItemIndex]].PrimitiveName;
+
+    else
+      ;
+  end;
 end;
 
 
@@ -676,6 +751,7 @@ begin
     Result := CGetPrimitiveValueStrFunctions[FPrimitives[APropertyIndex].PrimitiveType](FPrimitives[APropertyIndex], AItemIndex);
     AEditorType := CPrimitivesMainProperties[FPrimitives[APropertyIndex].PrimitiveType]^[AItemIndex].EditorType;
   end;
+
 end;
 
 
@@ -719,33 +795,58 @@ end;
 function TfrClickerPrimitives.HandleOnOIEditItems(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; var ANewItems: string): Boolean;
 var
   tp: TPoint;
-  PropertyMenu: TPopupMenu;
   i: Integer;
 begin
   Result := False;
 
-  if ACategoryIndex = CCategory_Primitives then
-    case ANodeLevel of
-      CCategoryLevel:
-      begin
-        PropertyMenu := TPopupMenu.Create(Self);
+  case ACategoryIndex of
+    CCategory_Primitives:
+      case ANodeLevel of
+        CCategoryLevel:
+        begin
+          FOIEditorMenu.Items.Clear;
 
-        AddMenuItemToPopupMenu(PropertyMenu, 'Remove all primitives from list...', MenuItem_RemoveAllPrimitivesFromList, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-        AddMenuItemToPopupMenu(PropertyMenu, '-', nil, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+          AddMenuItemToPopupMenu(FOIEditorMenu, 'Remove all primitives from list...', MenuItem_RemoveAllPrimitivesFromList, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+          AddMenuItemToPopupMenu(FOIEditorMenu, '-', nil, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
 
-        for i := 0 to CPrimitiveTypeCount - 1 do
-          AddMenuItemToPopupMenu(PropertyMenu, CAddPrimitiveMenuPrefix + CPrimitiveNames[i], MenuItem_AddPrimitiveToList, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+          for i := 0 to CPrimitiveTypeCount - 1 do
+            AddMenuItemToPopupMenu(FOIEditorMenu, CAddPrimitiveMenuPrefix + CPrimitiveNames[i], MenuItem_AddPrimitiveToList, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
 
-        GetCursorPos(tp);
-        PropertyMenu.PopUp(tp.X, tp.Y);
-      end;
+          GetCursorPos(tp);
+          FOIEditorMenu.PopUp(tp.X, tp.Y);
+        end;
 
-      CPropertyLevel:
-        ;
+        CPropertyLevel:
+          ;
 
-      CPropertyItemLevel:
-        ;
-    end;
+        CPropertyItemLevel:
+          ;
+      end; //case ANodeLevel
+
+    CCategory_Orders:
+      case ANodeLevel of
+        CCategoryLevel:
+        begin
+          FOIEditorMenu.Items.Clear;
+
+          AddMenuItemToPopupMenu(FOIEditorMenu, 'Remove all composition orders from list...', MenuItem_RemoveAllCompositionOrdersFromList, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+          AddMenuItemToPopupMenu(FOIEditorMenu, '-', nil, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+          AddMenuItemToPopupMenu(FOIEditorMenu, 'Add composition order to list', MenuItem_AddCompositionOrderToList, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+
+          GetCursorPos(tp);
+          FOIEditorMenu.PopUp(tp.X, tp.Y);
+        end;
+
+        CPropertyLevel:
+          ;
+
+        CPropertyItemLevel:
+          ;
+      end; //case ANodeLevel
+
+    else
+      ;
+  end; //case ACategoryIndex
 end;
 
 
@@ -850,39 +951,60 @@ end;
 procedure TfrClickerPrimitives.HandleOnOIArrowEditorClick(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer);
 var
   tp: TPoint;
-  PropertyMenu: TPopupMenu;
   i: Integer;
   EnumItemName: string;
 begin
-  if ACategoryIndex = CCategory_Primitives then
-    case ANodeLevel of
-      CCategoryLevel:
-        ;
+  case ACategoryIndex of
+    CCategory_Primitives:
+      case ANodeLevel of
+        CCategoryLevel:
+          ;
 
-      CPropertyLevel:
-      begin
-        PropertyMenu := TPopupMenu.Create(Self);
-        AddMenuItemToPopupMenu(PropertyMenu, CRemovePrimitiveMenuPrefix + '"' + FPrimitives[APropertyIndex].PrimitiveName + '"', MenuItem_RemovePrimitiveFromList, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-
-        GetCursorPos(tp);
-        PropertyMenu.PopUp(tp.X, tp.Y);
-      end;
-
-      CPropertyItemLevel:
-      begin
-        PropertyMenu := TPopupMenu.Create(Self);
-
-        for i := 0 to CPrimitivesPropEnumCounts[FPrimitives[APropertyIndex].PrimitiveType]^[AItemIndex] - 1 do
+        CPropertyLevel:
         begin
-          EnumItemName := CPrimitivesPropEnumStrings[FPrimitives[APropertyIndex].PrimitiveType]^[AItemIndex]^[i];
-          AddMenuItemToPopupMenu(PropertyMenu, EnumItemName, MenuItem_SetValueFromEnumItem, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+          FOIEditorMenu.Items.Clear;
+
+          AddMenuItemToPopupMenu(FOIEditorMenu, CRemovePrimitiveMenuPrefix + '"' + FPrimitives[APropertyIndex].PrimitiveName + '"', MenuItem_RemovePrimitiveFromList, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+
+          GetCursorPos(tp);
+          FOIEditorMenu.PopUp(tp.X, tp.Y);
         end;
 
-        GetCursorPos(tp);
-        PropertyMenu.PopUp(tp.X, tp.Y);
+        CPropertyItemLevel:
+        begin
+          FOIEditorMenu.Items.Clear;
+
+          for i := 0 to CPrimitivesPropEnumCounts[FPrimitives[APropertyIndex].PrimitiveType]^[AItemIndex] - 1 do
+          begin
+            EnumItemName := CPrimitivesPropEnumStrings[FPrimitives[APropertyIndex].PrimitiveType]^[AItemIndex]^[i];
+            AddMenuItemToPopupMenu(FOIEditorMenu, EnumItemName, MenuItem_SetValueFromEnumItem, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+          end;
+
+          GetCursorPos(tp);
+          FOIEditorMenu.PopUp(tp.X, tp.Y);
+        end;
+
       end;
 
-    end;
+    CCategory_Orders:
+      case ANodeLevel of
+        CCategoryLevel:
+          ;
+
+        CPropertyLevel:
+        begin
+          FOIEditorMenu.Items.Clear;
+
+          AddMenuItemToPopupMenu(FOIEditorMenu, CRemoveOrderMenuPrefix + '"Order ' + IntToStr(APropertyIndex) + '"', MenuItem_RemoveCompositionOrderFromList, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+
+          GetCursorPos(tp);
+          FOIEditorMenu.PopUp(tp.X, tp.Y);
+        end;
+
+        CPropertyItemLevel:
+          ;
+      end;
+  end; //ACategoryIndex
 end;
 
 

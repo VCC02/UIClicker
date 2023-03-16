@@ -46,7 +46,7 @@ const
   CCategoryCount = 2;
 
   CCategory_Primitives = 0;  //index of first category  - list of primitives, as added by user
-  CCategory_Order = 1;       //index of second category - list of composition orders for all above primitives
+  CCategory_Orders = 1;      //index of second category - list of composition orders for all above primitives
 
   CCategories: array[0..CCategoryCount - 1] of string = ('Primitives', 'Composition orders');
 

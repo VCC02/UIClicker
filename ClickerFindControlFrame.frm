@@ -18,7 +18,7 @@ object frClickerFindControl: TfrClickerFindControl
     ActivePage = TabSheetActionFindSubControlPrimitives
     Anchors = [akTop, akLeft, akRight, akBottom]
     Constraints.MinHeight = 201
-    Constraints.MinWidth = 650
+    Constraints.MinWidth = 250
     Font.Height = -11
     Font.Name = 'Tahoma'
     Images = imglstFindCriteria

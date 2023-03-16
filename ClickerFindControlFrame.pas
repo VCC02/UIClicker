@@ -1129,7 +1129,7 @@ begin
 
   FfrClickerPrimitives := TfrClickerPrimitives.Create(Self);
   FfrClickerPrimitives.Parent := TabSheetActionFindSubControlPrimitives;
-  FfrClickerPrimitives.Width := TabSheetActionFindSubControlPrimitives.Width;
+  FfrClickerPrimitives.Width := TabSheetActionFindSubControlPrimitives.Width - 320;
   FfrClickerPrimitives.Height := TabSheetActionFindSubControlPrimitives.Height;
   FfrClickerPrimitives.Left := 0;
   FfrClickerPrimitives.Top := 0;
