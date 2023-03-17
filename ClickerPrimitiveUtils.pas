@@ -131,11 +131,15 @@ type
   TPrimitiveRecArr = array of TPrimitiveRec;
 
   TIntArr = array of Integer;         //redefined from BinSearchValues
-  TIntArrArr = array of TIntArr;      //redefined from BinSearchValues
-  TPrimitiveOrderArr = TIntArrArr;
+  TCompositionOrder = record
+    Items: TIntArr;
+    Name: string;
+  end;
 
-  TOnLoadPrimitivesFile = procedure(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TPrimitiveOrderArr) of object;
-  TOnSavePrimitivesFile = procedure(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TPrimitiveOrderArr) of object;
+  TCompositionOrderArr = array of TCompositionOrder;
+
+  TOnLoadPrimitivesFile = procedure(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr) of object;
+  TOnSavePrimitivesFile = procedure(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr) of object;
 
 
 const

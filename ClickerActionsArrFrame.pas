@@ -312,7 +312,7 @@ type
 
     function HandleOnEditCallTemplateBreakCondition(var AActionCondition: string): Boolean;
     function HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
-    procedure HandleOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TPrimitiveOrderArr);
+    procedure HandleOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr);
     function HandleOnFileExists(const AFileName: string): Boolean;
 
     procedure HandleOnSetOpenDialogMultiSelect;
@@ -369,7 +369,7 @@ type
     procedure DoWaitForMultipleFilesAvailability(AListOfFiles: TStringList);
     procedure DoWaitForBitmapsAvailability(AListOfFiles: TStringList);
     function DoOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
-    procedure DoOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TPrimitiveOrderArr);
+    procedure DoOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr);
 
     function DoOnFileExists(const AFileName: string): Boolean;
     function DoOnTClkIniReadonlyFileCreate(AFileName: string): TClkIniReadonlyFile;
@@ -760,7 +760,7 @@ begin
 end;
 
 
-procedure TfrClickerActionsArr.HandleOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TPrimitiveOrderArr);
+procedure TfrClickerActionsArr.HandleOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr);
 begin
   DoOnLoadPrimitivesFile(AFileName, APrimitives, AOrders);
 end;
@@ -1397,7 +1397,7 @@ begin
 end;
 
 
-procedure TfrClickerActionsArr.DoOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TPrimitiveOrderArr);
+procedure TfrClickerActionsArr.DoOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr);
 begin
   if not Assigned(FOnLoadPrimitivesFile) then
     raise Exception.Create('OnLoadPrimitivesFile not assigned.')

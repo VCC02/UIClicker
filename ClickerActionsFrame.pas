@@ -299,7 +299,7 @@ type
 
     function DoOnEditCallTemplateBreakCondition(var AActionCondition: string): Boolean;
     function DoOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
-    procedure DoOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TPrimitiveOrderArr);
+    procedure DoOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr);
     function DoOnFileExists(const AFileName: string): Boolean;
 
     procedure DoOnSetOpenDialogMultiSelect;
@@ -355,7 +355,7 @@ type
     procedure HandleOnClickerCallTemplateFrame_OnTriggerOnControlsModified;
 
     function HandleOnEvaluateReplacementsFunc(s: string; Recursive: Boolean = True): string;
-    procedure HandleOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TPrimitiveOrderArr);
+    procedure HandleOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr);
     procedure HandleOnPrimitivesTriggerOnControlsModified;
 
     ///////////////////////////// OI
@@ -1486,7 +1486,7 @@ begin
 end;
 
 
-procedure TfrClickerActions.HandleOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TPrimitiveOrderArr);
+procedure TfrClickerActions.HandleOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr);
 begin
   DoOnLoadPrimitivesFile(AFileName, APrimitives, AOrders);
 end;
@@ -1518,7 +1518,7 @@ begin
 end;
 
 
-procedure TfrClickerActions.DoOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TPrimitiveOrderArr);
+procedure TfrClickerActions.DoOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr);
 begin
   if not Assigned(FOnLoadPrimitivesFile) then
     raise Exception.Create('OnLoadPrimitivesFile not assigned.')

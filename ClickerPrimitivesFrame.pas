@@ -49,7 +49,7 @@ type
   private
     FOIFrame: TfrObjectInspector;
     FPrimitives: TPrimitiveRecArr;
-    FOrders: TPrimitiveOrderArr; //array of orders  - i.e. array of array of indexes.
+    FOrders: TCompositionOrderArr; //array of orders  - i.e. array of array of indexes.
     FOIEditorMenu: TPopupMenu;
 
     FOnLoadBitmap: TOnLoadBitmap;
@@ -68,7 +68,7 @@ type
     procedure MenuItem_RemoveCompositionOrderFromList(Sender: TObject);
 
     function DoOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
-    procedure DoOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TPrimitiveOrderArr);
+    procedure DoOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr);
     function DoOnEvaluateReplacementsFunc(s: string; Recursive: Boolean = True): string;
     procedure DoOnTriggerOnControlsModified;
 
@@ -124,6 +124,10 @@ type
       AFilter, ADialogInitDir: string; var Handled: Boolean; AReturnMultipleFiles: Boolean = False): string;
 
     procedure HandleOnOIAfterSpinTextEditorChanging(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; var ANewValue: string);
+
+    procedure HandleOnOIDragAllowed(NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex: Integer; var Allowed: Boolean);
+    procedure HandleOnOIDragOver(NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex: Integer; Shift: TShiftState; State: TDragState; const Pt: TPoint; Mode: TDropMode; var Effect: DWORD; var Accept: Boolean);
+    procedure HandleOnOIDragDrop(NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex, SrcNodeLevel, SrcCategoryIndex, SrcPropertyIndex, SrcPropertyItemIndex: Integer; Shift: TShiftState; const Pt: TPoint; var Effect: DWORD; Mode: TDropMode);
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -196,6 +200,9 @@ begin
   FOIFrame.OnOIUserEditorClick := HandleOnOIUserEditorClick;
   FOIFrame.OnOIBrowseFile := HandleOnOIBrowseFile;
   FOIFrame.OnOIAfterSpinTextEditorChanging := HandleOnOIAfterSpinTextEditorChanging;
+  FOIFrame.OnOIDragAllowed := HandleOnOIDragAllowed;
+  FOIFrame.OnOIDragOver := HandleOnOIDragOver;
+  FOIFrame.OnOIDragDrop := HandleOnOIDragDrop;
 
   FOIFrame.Visible := True;
 
@@ -529,7 +536,7 @@ begin
       Exit;
 
     for i := 0 to Length(FOrders) - 1 do
-      SetLength(FOrders[i], 0);
+      SetLength(FOrders[i].Items, 0);
 
     SetLength(FOrders, 0);
 
@@ -552,9 +559,9 @@ begin
     n := Length(FOrders);
 
     SetLength(FOrders, n + 1);
-    SetLength(FOrders[n], Length(FPrimitives));
-    for i := 0 to Length(FOrders[n]) - 1 do
-      FOrders[n][i] := i;
+    SetLength(FOrders[n].Items, Length(FPrimitives));
+    for i := 0 to Length(FOrders[n].Items) - 1 do
+      FOrders[n].Items[i] := i;
 
     tmrReloadOIContent.Enabled := True;
     DoOnTriggerOnControlsModified;  //the pmtv file is modified, not the template
@@ -597,7 +604,7 @@ begin
 end;
 
 
-procedure TfrClickerPrimitives.DoOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TPrimitiveOrderArr);
+procedure TfrClickerPrimitives.DoOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr);
 begin
   if not Assigned(FOnLoadPrimitivesFile) then
     raise Exception.Create('OnLoadPrimitivesFile not assigned.')
@@ -681,7 +688,7 @@ begin
       Result := CPrimitiveNames[FPrimitives[APropertyIndex].PrimitiveType]; //IntToStr(APropertyIndex); // FPrimitives[APropertyIndex].ClkSetPen;
 
     CCategory_Orders:
-      Result := 'Order ' + IntToStr(APropertyIndex); // FOrders[];
+      Result := 'Order [' + IntToStr(APropertyIndex) + ']';
 
     else
       Result := 'unknown';
@@ -700,7 +707,7 @@ begin
 
     CCategory_Orders:
     begin
-      Result := 'Order "' + IntToStr(APropertyIndex) + '"';
+      Result := FOrders[APropertyIndex].Name;
       AEditorType := etTextWithArrow;
     end
 
@@ -717,7 +724,7 @@ begin
       Result := CClkPrimitivesTypeCounts[FPrimitives[APropertyIndex].PrimitiveType];
 
     CCategory_Orders:
-      Result := Length(FOrders[APropertyIndex]);
+      Result := Length(FOrders[APropertyIndex].Items);
 
     else
       Result := 0;
@@ -734,7 +741,7 @@ begin
       Result := CPrimitivesMainProperties[FPrimitives[APropertyIndex].PrimitiveType]^[AItemIndex].Name;
 
     CCategory_Orders:
-      Result := FPrimitives[FOrders[APropertyIndex][AItemIndex]].PrimitiveName;
+      Result := FPrimitives[FOrders[APropertyIndex].Items[AItemIndex]].PrimitiveName;
 
     else
       ;
@@ -778,17 +785,28 @@ procedure TfrClickerPrimitives.HandleOnOIEditedText(ANodeLevel, ACategoryIndex, 
 var
   PmtvType: Integer;
 begin
-  if ACategoryIndex = CCategory_Primitives then
-    case ANodeLevel of
-      CPropertyLevel:
-        FPrimitives[APropertyIndex].PrimitiveName := ANewText;
+  case ACategoryIndex of
+    CCategory_Primitives:
+      case ANodeLevel of
+        CPropertyLevel:
+          FPrimitives[APropertyIndex].PrimitiveName := ANewText;
 
-      CPropertyItemLevel:
-      begin
-        PmtvType := FPrimitives[APropertyIndex].PrimitiveType;
-        CSetPrimitiveValueStrFunctions[PmtvType](FPrimitives[APropertyIndex], ANewText, AItemIndex);
+        CPropertyItemLevel:
+        begin
+          PmtvType := FPrimitives[APropertyIndex].PrimitiveType;
+          CSetPrimitiveValueStrFunctions[PmtvType](FPrimitives[APropertyIndex], ANewText, AItemIndex);
+        end;
       end;
-    end;
+
+    CCategory_Orders:
+      case ANodeLevel of
+        CPropertyLevel:
+          FOrders[APropertyIndex].Name := ANewText;
+
+        CPropertyItemLevel:
+          ;
+      end;
+  end;
 end;
 
 
@@ -995,7 +1013,7 @@ begin
         begin
           FOIEditorMenu.Items.Clear;
 
-          AddMenuItemToPopupMenu(FOIEditorMenu, CRemoveOrderMenuPrefix + '"Order ' + IntToStr(APropertyIndex) + '"', MenuItem_RemoveCompositionOrderFromList, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+          AddMenuItemToPopupMenu(FOIEditorMenu, CRemoveOrderMenuPrefix + '"' + FOrders[APropertyIndex].Name + '"', MenuItem_RemoveCompositionOrderFromList, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
 
           GetCursorPos(tp);
           FOIEditorMenu.PopUp(tp.X, tp.Y);
@@ -1026,6 +1044,44 @@ end;
 procedure TfrClickerPrimitives.HandleOnOIAfterSpinTextEditorChanging(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; var ANewValue: string);
 begin
 
+end;
+
+
+procedure TfrClickerPrimitives.HandleOnOIDragAllowed(NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex: Integer; var Allowed: Boolean);
+begin
+  Allowed := (NodeLevel = CPropertyLevel) and
+             (CategoryIndex = CCategory_Orders) and
+             (PropertyItemIndex = -1);
+end;
+
+
+procedure TfrClickerPrimitives.HandleOnOIDragOver(NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex: Integer; Shift: TShiftState; State: TDragState; const Pt: TPoint; Mode: TDropMode; var Effect: DWORD; var Accept: Boolean);
+begin
+  Accept := (NodeLevel = CPropertyLevel) and
+            (CategoryIndex = CCategory_Orders) and
+            (PropertyItemIndex = -1);
+end;
+
+
+procedure TfrClickerPrimitives.HandleOnOIDragDrop(NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex, SrcNodeLevel, SrcCategoryIndex, SrcPropertyIndex, SrcPropertyItemIndex: Integer; Shift: TShiftState; const Pt: TPoint; var Effect: DWORD; Mode: TDropMode);
+var
+  Ph: TCompositionOrder;
+begin
+  if not ((NodeLevel = CPropertyLevel) and (CategoryIndex = CCategory_Orders) and (PropertyItemIndex = -1)) then
+    Exit;
+
+  if not ((SrcNodeLevel = CPropertyLevel) and (SrcCategoryIndex = CCategory_Orders) and (SrcPropertyItemIndex = -1)) then
+    Exit;
+
+  if PropertyIndex = SrcPropertyIndex then
+    Exit;
+
+  Ph := FOrders[PropertyIndex];
+  FOrders[PropertyIndex] := FOrders[SrcPropertyIndex];
+  FOrders[SrcPropertyIndex] := Ph;
+
+  FOIFrame.ReloadPropertyItems(CategoryIndex, PropertyIndex, True);
+  FOIFrame.ReloadPropertyItems(SrcCategoryIndex, SrcPropertyIndex, True);
 end;
 
 

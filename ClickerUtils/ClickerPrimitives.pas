@@ -31,8 +31,8 @@ uses
   Classes, SysUtils, ClickerUtils, ClickerPrimitiveUtils, ClickerIniFiles, Math;
 
 
-procedure LoadPrimitivesFile(Ini: TClkIniReadonlyFile; var APrimitives: TPrimitiveRecArr; var AOrders: TPrimitiveOrderArr);
-procedure SavePrimitivesFile(AStringList: TStringList; var APrimitives: TPrimitiveRecArr; var AOrders: TPrimitiveOrderArr);
+procedure LoadPrimitivesFile(Ini: TClkIniReadonlyFile; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr);
+procedure SavePrimitivesFile(AStringList: TStringList; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr);
 
 
 implementation
@@ -141,7 +141,7 @@ const
   );
 
 
-procedure LoadPrimitivesFile(Ini: TClkIniReadonlyFile; var APrimitives: TPrimitiveRecArr; var AOrders: TPrimitiveOrderArr);
+procedure LoadPrimitivesFile(Ini: TClkIniReadonlyFile; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr);
 var
   n, m, i, SectionIndex: Integer;
   PrimitiveTypeStr, PrimitiveIndexStr: string;
@@ -283,7 +283,7 @@ const
   );
 
 
-procedure SavePrimitivesFile(AStringList: TStringList; var APrimitives: TPrimitiveRecArr; var AOrders: TPrimitiveOrderArr);
+procedure SavePrimitivesFile(AStringList: TStringList; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr);
 var
   i: Integer;
   IterationStr: string;
