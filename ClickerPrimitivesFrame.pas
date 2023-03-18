@@ -126,7 +126,7 @@ type
     procedure HandleOnOIAfterSpinTextEditorChanging(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; var ANewValue: string);
 
     procedure HandleOnOIDragAllowed(NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex: Integer; var Allowed: Boolean);
-    procedure HandleOnOIDragOver(NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex: Integer; Shift: TShiftState; State: TDragState; const Pt: TPoint; Mode: TDropMode; var Effect: DWORD; var Accept: Boolean);
+    procedure HandleOnOIDragOver(NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex, SrcNodeLevel, SrcCategoryIndex, SrcPropertyIndex, SrcPropertyItemIndex: Integer; Shift: TShiftState; State: TDragState; const Pt: TPoint; Mode: TDropMode; var Effect: DWORD; var Accept: Boolean);
     procedure HandleOnOIDragDrop(NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex, SrcNodeLevel, SrcCategoryIndex, SrcPropertyIndex, SrcPropertyItemIndex: Integer; Shift: TShiftState; const Pt: TPoint; var Effect: DWORD; Mode: TDropMode);
   public
     constructor Create(AOwner: TComponent); override;
@@ -428,6 +428,7 @@ end;
 procedure TfrClickerPrimitives.MenuItem_RemoveAllPrimitivesFromList(Sender: TObject);
 var
   MenuData: POIMenuItemData;
+  i: Integer;
 begin
   MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
   try
@@ -435,6 +436,9 @@ begin
       Exit;
 
     SetLength(FPrimitives, 0);
+
+    for i := 0 to Length(FOrders) - 1 do
+      SetLength(FOrders[i].Items, 0);
 
     tmrReloadOIContent.Enabled := True;
     DoOnTriggerOnControlsModified;  //the pmtv file is modified, not the template
@@ -448,7 +452,7 @@ procedure TfrClickerPrimitives.MenuItem_AddPrimitiveToList(Sender: TObject);
 var
   MenuData: POIMenuItemData;
   ValueStr: string;
-  TempPrimitiveType, n: Integer;
+  TempPrimitiveType, n, i: Integer;
 begin
   MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
   try
@@ -465,8 +469,16 @@ begin
 
     SetLength(FPrimitives, n + 1);
     FPrimitives[n].PrimitiveType := TempPrimitiveType;
+    FPrimitives[n].PrimitiveName := '"' + ValueStr + '"';
 
     CFillInDefaultValuesToPrimitives[TempPrimitiveType](FPrimitives[n]);
+
+    for i := 0 to Length(FOrders) - 1 do
+    begin
+      SetLength(FOrders[i].Items, Length(FPrimitives));
+      FOrders[i].Items[Length(FOrders[i].Items) - 1] := n;
+    end;
+
     tmrReloadOIContent.Enabled := True;
     DoOnTriggerOnControlsModified;  //the pmtv file is modified, not the template
   finally
@@ -504,7 +516,7 @@ end;
 procedure TfrClickerPrimitives.MenuItem_RemovePrimitiveFromList(Sender: TObject);
 var
   MenuData: POIMenuItemData;
-  IndexToDel, i: Integer;
+  IndexToDel, OrderIndexToDel, i, j: Integer;
 begin
   MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
   try
@@ -516,6 +528,31 @@ begin
       FPrimitives[i] := FPrimitives[i + 1];
 
     SetLength(FPrimitives, Length(FPrimitives) - 1);
+
+    for j := 0 to Length(FOrders) - 1 do
+    begin
+      //Delete the item, which is equal to IndexToDel
+      OrderIndexToDel := -1;
+      for i := 0 to Length(FOrders[j].Items) - 1 do
+        if FOrders[j].Items[i] = IndexToDel then
+        begin
+          OrderIndexToDel := i;
+          Break;
+        end;
+
+      if OrderIndexToDel > -1 then
+      begin
+        for i := OrderIndexToDel to Length(FOrders[j].Items) - 2 do
+          FOrders[j].Items[i] := FOrders[j].Items[i + 1];
+
+        SetLength(FOrders[j].Items, Length(FOrders[j].Items) - 1);
+      end;
+    end;
+
+    for j := 0 to Length(FOrders) - 1 do
+      for i := 0 to Length(FOrders[j].Items) - 1 do
+        if FOrders[j].Items[i] > IndexToDel then
+          Dec(FOrders[j].Items[i]);
 
     tmrReloadOIContent.Enabled := True;
     DoOnTriggerOnControlsModified;  //the pmtv file is modified, not the template
@@ -753,10 +790,18 @@ function TfrClickerPrimitives.HandleOnOIGetListPropertyItemValue(ACategoryIndex,
 begin
   Result := '';
 
-  if ACategoryIndex = CCategory_Primitives then
-  begin
-    Result := CGetPrimitiveValueStrFunctions[FPrimitives[APropertyIndex].PrimitiveType](FPrimitives[APropertyIndex], AItemIndex);
-    AEditorType := CPrimitivesMainProperties[FPrimitives[APropertyIndex].PrimitiveType]^[AItemIndex].EditorType;
+  case ACategoryIndex of
+    CCategory_Primitives:
+    begin
+      Result := CGetPrimitiveValueStrFunctions[FPrimitives[APropertyIndex].PrimitiveType](FPrimitives[APropertyIndex], AItemIndex);
+      AEditorType := CPrimitivesMainProperties[FPrimitives[APropertyIndex].PrimitiveType]^[AItemIndex].EditorType;
+    end;
+
+    CCategory_Orders:
+    begin
+      Result := '[' + IntToStr(FOrders[APropertyIndex].Items[AItemIndex]) + ']';
+      AEditorType := etNone; //these items are not editable
+    end;
   end;
 
 end;
@@ -1049,39 +1094,69 @@ end;
 
 procedure TfrClickerPrimitives.HandleOnOIDragAllowed(NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex: Integer; var Allowed: Boolean);
 begin
-  Allowed := (NodeLevel = CPropertyLevel) and
-             (CategoryIndex = CCategory_Orders) and
-             (PropertyItemIndex = -1);
+  Allowed := (CategoryIndex = CCategory_Orders) and
+             (((NodeLevel = CPropertyLevel) and (PropertyItemIndex = -1)) or
+             ((NodeLevel = CPropertyItemLevel) and (PropertyItemIndex > -1)));
 end;
 
 
-procedure TfrClickerPrimitives.HandleOnOIDragOver(NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex: Integer; Shift: TShiftState; State: TDragState; const Pt: TPoint; Mode: TDropMode; var Effect: DWORD; var Accept: Boolean);
+procedure TfrClickerPrimitives.HandleOnOIDragOver(NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex, SrcNodeLevel, SrcCategoryIndex, SrcPropertyIndex, SrcPropertyItemIndex: Integer; Shift: TShiftState; State: TDragState; const Pt: TPoint; Mode: TDropMode; var Effect: DWORD; var Accept: Boolean);
+var
+  MatchingCategory: Boolean;
+  SameSrcAndDest: Boolean;
+  DraggingOrderName, DraggingOrderItem: Boolean;
+  IsPropertyLevel, IsPropertyItemLevel: Boolean;
+  DraggingFromTheSameOrder: Boolean;
 begin
-  Accept := (NodeLevel = CPropertyLevel) and
-            (CategoryIndex = CCategory_Orders) and
-            (PropertyItemIndex = -1);
+  MatchingCategory := CategoryIndex = CCategory_Orders;
+  SameSrcAndDest := NodeLevel = SrcNodeLevel;
+  IsPropertyLevel := NodeLevel = CPropertyLevel;
+  IsPropertyItemLevel := NodeLevel = CPropertyItemLevel;
+
+  DraggingOrderName := IsPropertyLevel and (PropertyItemIndex = -1);
+  DraggingOrderItem := IsPropertyItemLevel and (PropertyItemIndex > -1);
+  DraggingFromTheSameOrder := (PropertyIndex = SrcPropertyIndex) and IsPropertyItemLevel;
+
+  Accept := MatchingCategory and
+            SameSrcAndDest and
+            (DraggingOrderName or (DraggingOrderItem and DraggingFromTheSameOrder));
 end;
 
 
 procedure TfrClickerPrimitives.HandleOnOIDragDrop(NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex, SrcNodeLevel, SrcCategoryIndex, SrcPropertyIndex, SrcPropertyItemIndex: Integer; Shift: TShiftState; const Pt: TPoint; var Effect: DWORD; Mode: TDropMode);
 var
   Ph: TCompositionOrder;
+  Ph2: Integer;
 begin
-  if not ((NodeLevel = CPropertyLevel) and (CategoryIndex = CCategory_Orders) and (PropertyItemIndex = -1)) then
+  if not ((CategoryIndex = CCategory_Orders) and (SrcCategoryIndex = CCategory_Orders)) then
     Exit;
 
-  if not ((SrcNodeLevel = CPropertyLevel) and (SrcCategoryIndex = CCategory_Orders) and (SrcPropertyItemIndex = -1)) then
-    Exit;
+  //dragging an order
+  if (NodeLevel = CPropertyLevel) and (SrcNodeLevel = CPropertyLevel) then
+    if (PropertyItemIndex = -1) and (SrcPropertyItemIndex = -1) then
+      if PropertyIndex <> SrcPropertyIndex then
+      begin
+        Ph := FOrders[PropertyIndex];
+        FOrders[PropertyIndex] := FOrders[SrcPropertyIndex];
+        FOrders[SrcPropertyIndex] := Ph;
 
-  if PropertyIndex = SrcPropertyIndex then
-    Exit;
+        FOIFrame.ReloadPropertyItems(CategoryIndex, PropertyIndex, True);
+        FOIFrame.ReloadPropertyItems(SrcCategoryIndex, SrcPropertyIndex, True);
+      end;
 
-  Ph := FOrders[PropertyIndex];
-  FOrders[PropertyIndex] := FOrders[SrcPropertyIndex];
-  FOrders[SrcPropertyIndex] := Ph;
+  //dragging an order item
+  if (NodeLevel = CPropertyItemLevel) and (SrcNodeLevel = CPropertyItemLevel) then
+    if (PropertyItemIndex > -1) and (SrcPropertyItemIndex > -1) then
+      if PropertyIndex = SrcPropertyIndex then
+        if PropertyItemIndex <> SrcPropertyItemIndex then
+        begin
+          Ph2 := FOrders[PropertyIndex].Items[PropertyItemIndex];
+          FOrders[PropertyIndex].Items[PropertyItemIndex] := FOrders[PropertyIndex].Items[SrcPropertyItemIndex];
+          FOrders[PropertyIndex].Items[SrcPropertyItemIndex] := Ph2;
 
-  FOIFrame.ReloadPropertyItems(CategoryIndex, PropertyIndex, True);
-  FOIFrame.ReloadPropertyItems(SrcCategoryIndex, SrcPropertyIndex, True);
+          FOIFrame.ReloadPropertyItems(CategoryIndex, PropertyIndex, True);
+          FOIFrame.ReloadPropertyItems(SrcCategoryIndex, SrcPropertyIndex, True);
+        end;
 end;
 
 

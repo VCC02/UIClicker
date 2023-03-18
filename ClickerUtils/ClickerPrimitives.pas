@@ -143,15 +143,18 @@ const
 
 procedure LoadPrimitivesFile(Ini: TClkIniReadonlyFile; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr);
 var
-  n, m, i, SectionIndex: Integer;
-  PrimitiveTypeStr, PrimitiveIndexStr: string;
+  n, m, i, j, SectionIndex: Integer;
+  PrimitiveTypeStr, PrimitiveIndexStr, OrderIndexStr: string;
   SectionName: string;
-  PrimitiveIndex: Integer;
+  PrimitiveIndex, OrderIndex: Integer;
 begin
   n := Ini.ReadInteger('Primitives', 'Count', 0);
   m := Ini.ReadInteger('ProcessingOrder', 'Count', 0);
-  SetLength(APrimitives, Max(Min(n, 300), 0));  //do not load more than 300 pirimitives
+  SetLength(APrimitives, Max(Min(n, 300), 0));  //do not load more than 300 primitives
   SetLength(AOrders, Max(Min(m, 30), 0));  //do not load more than 30 orders
+
+  for i := 0 to m - 1 do
+    SetLength(AOrders[i].Items, n);     //every order should have the same number of items as there are primitives
 
   for i := 0 to Ini.GetSectionCount - 1 do
   begin
@@ -174,7 +177,12 @@ begin
 
     if (m > 0) and (Pos('Order_', SectionName) > 0) then
     begin
+      OrderIndexStr := Copy(SectionName, Pos('_', SectionName) + 1, MaxInt);
+      OrderIndex := StrToIntDef(OrderIndexStr, 0);
 
+      AOrders[OrderIndex].Name := Ini.ReadString(SectionIndex, 'OrderName', '');
+      for j := 0 to Length(AOrders[OrderIndex].Items) - 1 do
+        AOrders[OrderIndex].Items[j] := Ini.ReadInteger(SectionIndex, 'i' + IntToStr(j), j);
     end;
   end;
 end;
@@ -285,7 +293,7 @@ const
 
 procedure SavePrimitivesFile(AStringList: TStringList; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr);
 var
-  i: Integer;
+  i, j: Integer;
   IterationStr: string;
 begin
   AStringList.Add('[Primitives]');
@@ -306,8 +314,18 @@ begin
     AStringList.Add('');
   end;
 
-
   AStringList.Add('');
+
+  for i := 0 to Length(AOrders) - 1 do
+  begin
+    AStringList.Add('[Order_' + IntToStr(i));
+    AStringList.Add('OrderName=' + AOrders[i].Name);
+
+    for j := 0 to Length(AOrders[i].Items) - 1 do
+      AStringList.Add('i' + IntToStr(j) + '=' + IntToStr(AOrders[i].Items[j]));
+
+    AStringList.Add('');
+  end;
 end;
 
 end.
