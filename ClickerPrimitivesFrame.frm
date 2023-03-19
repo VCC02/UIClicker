@@ -81,14 +81,14 @@ object frClickerPrimitives: TfrClickerPrimitives
     ClientWidth = 118
     ParentColor = False
     TabOrder = 1
-    object lblRenderingInfo: TLabel
-      Left = 7
-      Height = 30
-      Top = 160
-      Width = 106
-      Alignment = taCenter
-      Anchors = [akTop]
-      Caption = 'Please add'#13#10'composition orders.'
+    object PageControlPreview: TPageControl
+      Left = 0
+      Height = 258
+      Top = 0
+      Width = 119
+      Anchors = [akTop, akLeft, akRight, akBottom]
+      TabOrder = 0
+      Options = [nboDoChangeOnSetIndex]
     end
   end
   object tmrReloadOIContent: TTimer

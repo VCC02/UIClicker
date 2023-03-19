@@ -32,8 +32,9 @@ unit ClickerPrimitivesFrame;
 interface
 
 uses
-  Windows, Classes, SysUtils, Forms, Controls, ExtCtrls, ObjectInspectorFrame, VirtualTrees, ImgList,
-  Graphics, Menus, StdCtrls, Types, ClickerUtils, ClickerPrimitiveUtils;
+  Windows, Classes, SysUtils, Forms, Controls, ExtCtrls, ObjectInspectorFrame,
+  VirtualTrees, ImgList, Graphics, Menus, ComCtrls, Types,
+  ClickerUtils, ClickerPrimitiveUtils;
 
 type
 
@@ -41,7 +42,7 @@ type
 
   TfrClickerPrimitives = class(TFrame)
     imgFontColorBuffer: TImage;
-    lblRenderingInfo: TLabel;
+    PageControlPreview: TPageControl;
     pnlPreview: TPanel;
     pnlvstOI: TPanel;
     tmrReloadOIContent: TTimer;
@@ -59,6 +60,16 @@ type
 
     procedure CreateRemainingUIComponents;
 
+    procedure ClearPreviewTabs;
+    function AddPreviewTabWithImage(ATabName: string): TImage;
+    procedure CreateAllPreviewPages;
+
+    procedure GetOrderContentByIndex(AIndex: Integer; var ADestContent: TCompositionOrder);
+    procedure DeleteOrderByIndex(AIndex: Integer; ADeleteTab: Boolean = True);
+    procedure InsertOrderAtIndex(AIndex: Integer; var ASrcContent: TCompositionOrder);
+    procedure MoveOrder(ASrcIndex, ADestIndex: Integer);
+    procedure MoveOrderTabContent(ASrcIndex, ADestIndex: Integer);
+
     procedure MenuItem_RemoveAllPrimitivesFromList(Sender: TObject);
     procedure MenuItem_AddPrimitiveToList(Sender: TObject);
     procedure MenuItem_SetValueFromEnumItem(Sender: TObject);
@@ -66,6 +77,7 @@ type
     procedure MenuItem_RemoveAllCompositionOrdersFromList(Sender: TObject);
     procedure MenuItem_AddCompositionOrderToList(Sender: TObject);
     procedure MenuItem_RemoveCompositionOrderFromList(Sender: TObject);
+    procedure MenuItem_RepaintAllCompositions(Sender: TObject);
 
     function DoOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     procedure DoOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr);
@@ -134,6 +146,7 @@ type
 
     procedure LoadFile(AFileName: string);
     procedure RenderPrimitives(ABmp: TBitmap; AOrderIndex: Integer);
+    procedure RepaintAllCompositions;
     function GetOrderCount: Integer;
 
     property OnLoadBitmap: TOnLoadBitmap write FOnLoadBitmap;
@@ -243,6 +256,100 @@ begin
 end;
 
 
+procedure TfrClickerPrimitives.ClearPreviewTabs;
+var
+  i: Integer;
+begin
+  for i := PageControlPreview.PageCount - 1 downto 0 do
+    PageControlPreview.Pages[i].Free;
+end;
+
+
+function TfrClickerPrimitives.AddPreviewTabWithImage(ATabName: string): TImage;
+var
+  TempTabSheet: TTabSheet;
+  TempScrollBox: TScrollBox;
+  TempPanel: TPanel;
+  PreviewImage: TImage;
+begin
+  TempTabSheet := TTabSheet.Create(PageControlPreview);
+  TempTabSheet.Parent := PageControlPreview;
+  PageControlPreview.ActivePageIndex := PageControlPreview.PageCount - 1;  //required, otherwise, the tab is not added properly
+
+  TempTabSheet.Caption := ATabName;
+
+  TempScrollBox := TScrollBox.Create(TempTabSheet);  //set TempTabSheet as the owner, for easy finding
+  TempScrollBox.Parent := TempTabSheet;
+  TempTabSheet.Tag := PtrInt(TempScrollBox); //store a pointer to the scrollbox, so it can be used later
+
+  TempScrollBox.Left := 0;
+  TempScrollBox.Top := 0;
+  TempScrollBox.Width := TempTabSheet.Width;
+  TempScrollBox.Height := TempTabSheet.Height;
+  TempScrollBox.Anchors := [akLeft, akTop, akRight, akBottom];
+  TempScrollBox.HorzScrollBar.Visible := True;
+  TempScrollBox.VertScrollBar.Visible := True;
+  TempScrollBox.Visible := True;
+
+  TempPanel := TPanel.Create(TempScrollBox);
+  TempPanel.Parent := TempScrollBox;
+  TempPanel.Left := 0;
+  TempPanel.Top := 0;
+  TempPanel.Width := TempScrollBox.Width - 20;
+  TempPanel.Height := TempScrollBox.Height - 20;
+  TempPanel.Anchors := [akLeft, akTop, akRight, akBottom];
+  TempPanel.Visible := True;
+
+  PreviewImage := TImage.Create(TempPanel);
+  PreviewImage.Parent := TempPanel;
+  TempScrollBox.Tag := PtrInt(PreviewImage);  //the image can be easily accessed as TImage(TScrollBox(PageControlPreview.Pages[i].Tag).Tag).Canvas.WhatEver;
+
+  PreviewImage.Left := 0;
+  PreviewImage.Top := 0;
+  PreviewImage.Width := TempPanel.Width;
+  PreviewImage.Height := TempPanel.Height;
+  PreviewImage.Anchors := [akLeft, akTop, akRight, akBottom];
+  PreviewImage.AutoSize := False;
+  PreviewImage.Transparent := False;
+  PreviewImage.Visible := True;
+
+  PreviewImage.Canvas.Pen.Color := clWhite;
+  PreviewImage.Canvas.Brush.Color := clWhite;
+  PreviewImage.Canvas.Rectangle(0, 0, PreviewImage.Width, PreviewImage.Height);
+
+  //PreviewImage.Canvas.Font.Color := clRed;          //for debugging only
+  //PreviewImage.Canvas.TextOut(20, 20, ATabName);    //for debugging only
+
+  Result := PreviewImage;
+end;
+
+
+procedure TfrClickerPrimitives.CreateAllPreviewPages;
+var
+  i: Integer;
+begin
+  ClearPreviewTabs;
+
+  for i := 0 to Length(FOrders) - 1 do
+    AddPreviewTabWithImage(FOrders[i].Name);
+
+  PageControlPreview.ActivePageIndex := 0;
+end;
+
+
+procedure TfrClickerPrimitives.RepaintAllCompositions;
+var
+  i: Integer;
+  PreviewImage: TImage;
+begin
+  for i := 0 to Length(FOrders) - 1 do
+  begin
+    PreviewImage := TImage(TScrollBox(PageControlPreview.Pages[i].Tag).Tag);
+    RenderPrimitives(PreviewImage.Picture.Bitmap, i);
+  end;
+end;
+
+
 procedure TfrClickerPrimitives.LoadFile(AFileName: string);
 begin
   SetLength(FPrimitives, 0);
@@ -251,6 +358,111 @@ begin
 
   DoOnLoadPrimitivesFile(AFileName, FPrimitives, FOrders);
   FOIFrame.ReloadContent;
+  CreateAllPreviewPages;
+  RepaintAllCompositions;
+end;
+
+
+procedure TfrClickerPrimitives.GetOrderContentByIndex(AIndex: Integer; var ADestContent: TCompositionOrder);
+var
+  i: Integer;
+begin
+  ADestContent.Name := FOrders[AIndex].Name;
+  SetLength(ADestContent.Items, Length(FOrders[AIndex].Items));
+
+  for i := 0 to Length(ADestContent.Items) - 1 do
+    ADestContent.Items[i] := FOrders[AIndex].Items[i];
+end;
+
+
+procedure TfrClickerPrimitives.DeleteOrderByIndex(AIndex: Integer; ADeleteTab: Boolean = True);
+var
+  i, j: Integer;
+begin
+  for i := AIndex to Length(FOrders) - 2 do
+  begin
+    FOrders[i].Name := FOrders[i + 1].Name;
+
+    for j := 0 to Length(FOrders[i].Items) - 1 do
+      FOrders[i].Items[j] := FOrders[i + 1].Items[j];
+  end;
+
+  SetLength(FOrders[Length(FOrders) - 1].Items, 0);
+  SetLength(FOrders, Length(FOrders) - 1);
+
+  if ADeleteTab then
+    PageControlPreview.Pages[AIndex].Free;
+end;
+
+
+procedure TfrClickerPrimitives.InsertOrderAtIndex(AIndex: Integer; var ASrcContent: TCompositionOrder);
+var
+  i, j: Integer;
+begin
+  SetLength(FOrders, Length(FOrders) + 1);
+  SetLength(FOrders[Length(FOrders) - 1].Items, Length(FPrimitives));
+
+  for i := Length(FOrders) - 1 downto AIndex + 1 do
+  begin
+    FOrders[i].Name := FOrders[i - 1].Name;
+
+    for j := 0 to Length(FOrders[i].Items) - 1 do
+      FOrders[i].Items[j] := FOrders[i - 1].Items[j];
+  end;
+
+  FOrders[AIndex].Name := ASrcContent.Name;
+  for j := 0 to Length(FOrders[AIndex].Items) - 1 do
+    FOrders[AIndex].Items[j] := ASrcContent.Items[j];
+end;
+
+
+procedure TfrClickerPrimitives.MoveOrder(ASrcIndex, ADestIndex: Integer);
+var
+  Ph: TCompositionOrder;
+begin
+  if ASrcIndex = ADestIndex then
+    Exit;
+
+  GetOrderContentByIndex(ASrcIndex, Ph);
+  DeleteOrderByIndex(ASrcIndex, False);
+
+  InsertOrderAtIndex(ADestIndex, Ph);
+  MoveOrderTabContent(ASrcIndex, ADestIndex);
+end;
+
+
+procedure TfrClickerPrimitives.MoveOrderTabContent(ASrcIndex, ADestIndex: Integer);
+var
+  ScrollBoxAtSrc: PtrInt;
+  i: Integer;
+begin
+  if ASrcIndex = ADestIndex then
+    Exit;
+
+  ScrollBoxAtSrc := PageControlPreview.Pages[ASrcIndex].Tag;
+
+  if ASrcIndex < ADestIndex then
+  begin
+    for i := ASrcIndex to ADestIndex - 1 do
+    begin
+      TScrollBox(PageControlPreview.Pages[i + 1].Tag).Parent := PageControlPreview.Pages[i];
+      PageControlPreview.Pages[i].Tag := PageControlPreview.Pages[i + 1].Tag;
+    end;
+  end
+  else
+  begin
+    for i := ASrcIndex downto ADestIndex + 1 do
+    begin
+      TScrollBox(PageControlPreview.Pages[i - 1].Tag).Parent := PageControlPreview.Pages[i];
+      PageControlPreview.Pages[i].Tag := PageControlPreview.Pages[i - 1].Tag;
+    end;
+  end;
+
+  TScrollBox(ScrollBoxAtSrc).Parent := PageControlPreview.Pages[ADestIndex];
+  PageControlPreview.Pages[ADestIndex].Tag := ScrollBoxAtSrc;
+
+  for i := 0 to PageControlPreview.PageCount - 1 do
+    PageControlPreview.Pages[i].Caption := FOrders[i].Name;
 end;
 
 
@@ -272,7 +484,7 @@ var
 begin
   ABmp.Canvas.Brush.Color := HexToInt(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetPen.Color)); //TColor;
   ABmp.Canvas.Brush.Style := BrushStyleNameToIndex(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetPen.Style)); //TFPBrushStyle;
-  ABmp.Canvas.Brush.Pattern := TempBrushPattern;    // array[0..31] of Cardinal
+  //ABmp.Canvas.Brush.Pattern := TempBrushPattern;    // array[0..31] of Cardinal
 end;
 
 
@@ -407,14 +619,28 @@ const
   );
 
 var
-  i: Integer;
+  i, NewIndex: Integer;
 begin
-  //ToDo:  read order
-  ABmp.Width := 150;
-  ABmp.Height := 90;
+  //ABmp.Width := 150;
+  //ABmp.Height := 90;
+  //ABmp.PixelFormat := pf24bit;
+  ABmp.Transparent := False;
+  ABmp.Canvas.Pen.Style := psSolid;
+  ABmp.Canvas.Pen.Width := 1;
+  ABmp.Canvas.Brush.Style := bsClear;//bsSolid;
+  ABmp.Canvas.Pen.Color := clWhite;
+  ABmp.Canvas.Brush.Color := clWhite;
+  ABmp.Canvas.Rectangle(0, 0, ABmp.Width, ABmp.Height);
+  ABmp.Canvas.Brush.Style := bsSolid;
 
-  for i := 0 to Length(FPrimitives) - 1 do
-    CRenderPrimitives[FPrimitives[i].PrimitiveType](Self, ABmp, FPrimitives[i]);
+  //for i := 0 to Length(FPrimitives) - 1 do
+  for i := Length(FPrimitives) - 1 downto 0 do
+  begin
+    NewIndex := FOrders[AOrderIndex].Items[i];
+    //CRenderPrimitives[FPrimitives[NewIndex].PrimitiveType](Self, ABmp, FPrimitives[i]);
+    //CRenderPrimitives[FPrimitives[i].PrimitiveType](Self, ABmp, FPrimitives[NewIndex]);
+    CRenderPrimitives[FPrimitives[NewIndex].PrimitiveType](Self, ABmp, FPrimitives[NewIndex]);
+  end;
 end;
 
 
@@ -481,6 +707,8 @@ begin
 
     tmrReloadOIContent.Enabled := True;
     DoOnTriggerOnControlsModified;  //the pmtv file is modified, not the template
+
+    RepaintAllCompositions;
   finally
     Dispose(MenuData);
   end;
@@ -556,6 +784,8 @@ begin
 
     tmrReloadOIContent.Enabled := True;
     DoOnTriggerOnControlsModified;  //the pmtv file is modified, not the template
+
+    RepaintAllCompositions;
   finally
     Dispose(MenuData);
   end;
@@ -580,6 +810,8 @@ begin
     FOIFrame.CancelCurrentEditing;
     tmrReloadOIContent.Enabled := True;
     DoOnTriggerOnControlsModified;  //the pmtv file is modified, not the template
+
+    ClearPreviewTabs;
   finally
     Dispose(MenuData);
   end;
@@ -587,6 +819,8 @@ end;
 
 
 procedure TfrClickerPrimitives.MenuItem_AddCompositionOrderToList(Sender: TObject);
+const
+  CNewOrderName: string = 'new';
 var
   MenuData: POIMenuItemData;
   n, i: Integer;
@@ -597,11 +831,16 @@ begin
 
     SetLength(FOrders, n + 1);
     SetLength(FOrders[n].Items, Length(FPrimitives));
+
+    FOrders[n].Name := CNewOrderName;
     for i := 0 to Length(FOrders[n].Items) - 1 do
       FOrders[n].Items[i] := i;
 
     tmrReloadOIContent.Enabled := True;
     DoOnTriggerOnControlsModified;  //the pmtv file is modified, not the template
+
+    AddPreviewTabWithImage(CNewOrderName);
+    RepaintAllCompositions;
   finally
     Dispose(MenuData);
   end;
@@ -611,7 +850,7 @@ end;
 procedure TfrClickerPrimitives.MenuItem_RemoveCompositionOrderFromList(Sender: TObject);
 var
   MenuData: POIMenuItemData;
-  IndexToDel, i: Integer;
+  IndexToDel: Integer;
 begin
   MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
   try
@@ -619,13 +858,23 @@ begin
       Exit;
 
     IndexToDel := MenuData^.PropertyIndex;
-    for i := IndexToDel to Length(FOrders) - 2 do
-      FOrders[i] := FOrders[i + 1];        //To be verified
-
-    SetLength(FOrders, Length(FOrders) - 1);
+    DeleteOrderByIndex(IndexToDel);
 
     tmrReloadOIContent.Enabled := True;
     DoOnTriggerOnControlsModified;  //the pmtv file is modified, not the template
+  finally
+    Dispose(MenuData);
+  end;
+end;
+
+
+procedure TfrClickerPrimitives.MenuItem_RepaintAllCompositions(Sender: TObject);
+var
+  MenuData: POIMenuItemData;
+begin
+  MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
+  try
+    RepaintAllCompositions;
   finally
     Dispose(MenuData);
   end;
@@ -840,13 +1089,17 @@ begin
         begin
           PmtvType := FPrimitives[APropertyIndex].PrimitiveType;
           CSetPrimitiveValueStrFunctions[PmtvType](FPrimitives[APropertyIndex], ANewText, AItemIndex);
+          RepaintAllCompositions;
         end;
       end;
 
     CCategory_Orders:
       case ANodeLevel of
         CPropertyLevel:
+        begin
           FOrders[APropertyIndex].Name := ANewText;
+          PageControlPreview.Pages[APropertyIndex].Caption := ANewText;
+        end;
 
         CPropertyItemLevel:
           ;
@@ -869,11 +1122,11 @@ begin
         begin
           FOIEditorMenu.Items.Clear;
 
-          AddMenuItemToPopupMenu(FOIEditorMenu, 'Remove all primitives from list...', MenuItem_RemoveAllPrimitivesFromList, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-          AddMenuItemToPopupMenu(FOIEditorMenu, '-', nil, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-
           for i := 0 to CPrimitiveTypeCount - 1 do
             AddMenuItemToPopupMenu(FOIEditorMenu, CAddPrimitiveMenuPrefix + CPrimitiveNames[i], MenuItem_AddPrimitiveToList, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+
+          AddMenuItemToPopupMenu(FOIEditorMenu, '-', nil, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+          AddMenuItemToPopupMenu(FOIEditorMenu, 'Remove all primitives from list...', MenuItem_RemoveAllPrimitivesFromList, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
 
           GetCursorPos(tp);
           FOIEditorMenu.PopUp(tp.X, tp.Y);
@@ -892,9 +1145,11 @@ begin
         begin
           FOIEditorMenu.Items.Clear;
 
+          AddMenuItemToPopupMenu(FOIEditorMenu, 'Add composition order to list', MenuItem_AddCompositionOrderToList, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+          AddMenuItemToPopupMenu(FOIEditorMenu, '-', nil, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
           AddMenuItemToPopupMenu(FOIEditorMenu, 'Remove all composition orders from list...', MenuItem_RemoveAllCompositionOrdersFromList, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
           AddMenuItemToPopupMenu(FOIEditorMenu, '-', nil, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-          AddMenuItemToPopupMenu(FOIEditorMenu, 'Add composition order to list', MenuItem_AddCompositionOrderToList, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+          AddMenuItemToPopupMenu(FOIEditorMenu, 'Repaint all compositions', MenuItem_RepaintAllCompositions, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
 
           GetCursorPos(tp);
           FOIEditorMenu.PopUp(tp.X, tp.Y);
@@ -1125,7 +1380,6 @@ end;
 
 procedure TfrClickerPrimitives.HandleOnOIDragDrop(NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex, SrcNodeLevel, SrcCategoryIndex, SrcPropertyIndex, SrcPropertyItemIndex: Integer; Shift: TShiftState; const Pt: TPoint; var Effect: DWORD; Mode: TDropMode);
 var
-  Ph: TCompositionOrder;
   Ph2: Integer;
 begin
   if not ((CategoryIndex = CCategory_Orders) and (SrcCategoryIndex = CCategory_Orders)) then
@@ -1136,9 +1390,7 @@ begin
     if (PropertyItemIndex = -1) and (SrcPropertyItemIndex = -1) then
       if PropertyIndex <> SrcPropertyIndex then
       begin
-        Ph := FOrders[PropertyIndex];
-        FOrders[PropertyIndex] := FOrders[SrcPropertyIndex];
-        FOrders[SrcPropertyIndex] := Ph;
+        MoveOrder(SrcPropertyIndex, PropertyIndex);
 
         FOIFrame.ReloadPropertyItems(CategoryIndex, PropertyIndex, True);
         FOIFrame.ReloadPropertyItems(SrcCategoryIndex, SrcPropertyIndex, True);
@@ -1156,6 +1408,8 @@ begin
 
           FOIFrame.ReloadPropertyItems(CategoryIndex, PropertyIndex, True);
           FOIFrame.ReloadPropertyItems(SrcCategoryIndex, SrcPropertyIndex, True);
+
+          RepaintAllCompositions;
         end;
 end;
 

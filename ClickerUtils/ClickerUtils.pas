@@ -700,6 +700,8 @@ const
   CRandom_FuncName = '$Random(';
   CSum_FuncName = '$Sum(';
   CDiff_FuncName = '$Diff(';
+  CMul_FuncName = '$Mul(';
+  CDiv_FuncName = '$Div(';
   CUpdateControlInfo_FuncName = '$UpdateControlInfo(';
   CExtractFileDir_FuncName = '$ExtractFileDir(';
   CExtractFileName_FuncName = '$ExtractFileName(';
@@ -846,6 +848,90 @@ begin
   end;
 
   Result := StringReplace(s, CDiff_FuncName + InitialDiffArgs + ')$', ResultValueStr, [rfReplaceAll]);
+end;
+
+
+function ReplaceMul(AListOfVars: TStringList; s: string): string;
+var
+  PosComma: Integer;
+  MulArgs, InitialMulArgs: string;
+  MulOperand1, MulOperand2: Integer;
+  MulOperand1Str, MulOperand2Str: string;
+  ResultValueStr: string;
+begin
+  MulArgs := ExtractFuncArgs(CMul_FuncName, s);
+  InitialMulArgs := MulArgs;
+
+  if MulArgs = '' then
+    ResultValueStr := '0'
+  else
+  begin
+    MulArgs := ReplaceOnce(AListOfVars, MulArgs, False);
+    MulArgs := StringReplace(MulArgs, ' ', '', [rfReplaceAll]);
+    PosComma := Pos(',', MulArgs);
+
+    if PosComma > 0 then
+    begin
+      MulOperand1Str := Copy(MulArgs, 1, PosComma - 1);
+      MulOperand2Str := Copy(MulArgs, PosComma + 1, MaxInt);
+
+      MulOperand1 := StrToIntDef(MulOperand1Str, 0);
+      MulOperand2 := StrToIntDef(MulOperand2Str, 0);
+    end
+    else
+    begin
+      MulOperand1 := 0;
+      MulOperand2 := StrToIntDef(MulArgs, 0);
+    end;
+
+    ResultValueStr := IntToStr(MulOperand1 * MulOperand2);
+  end;
+
+  Result := StringReplace(s, CMul_FuncName + InitialMulArgs + ')$', ResultValueStr, [rfReplaceAll]);
+end;
+
+
+function ReplaceDiv(AListOfVars: TStringList; s: string): string;
+var
+  PosComma: Integer;
+  DivArgs, InitialDivArgs: string;
+  DivOperand1, DivOperand2: Integer;
+  DivOperand1Str, DivOperand2Str: string;
+  ResultValueStr: string;
+begin
+  DivArgs := ExtractFuncArgs(CDiv_FuncName, s);
+  InitialDivArgs := DivArgs;
+
+  if DivArgs = '' then
+    ResultValueStr := '0'
+  else
+  begin
+    DivArgs := ReplaceOnce(AListOfVars, DivArgs, False);
+    DivArgs := StringReplace(DivArgs, ' ', '', [rfReplaceAll]);
+    PosComma := Pos(',', DivArgs);
+
+    if PosComma > 0 then
+    begin
+      DivOperand1Str := Copy(DivArgs, 1, PosComma - 1);
+      DivOperand2Str := Copy(DivArgs, PosComma + 1, MaxInt);
+
+      DivOperand1 := StrToIntDef(DivOperand1Str, 0);
+      DivOperand2 := StrToIntDef(DivOperand2Str, 0);
+    end
+    else
+    begin
+      DivOperand1 := 0;
+      DivOperand2 := StrToIntDef(DivArgs, 0);
+    end;
+
+    try
+      ResultValueStr := IntToStr(DivOperand1 div DivOperand2);
+    except
+      ResultValueStr := IntToStr(MaxInt);  //exception on division by 0
+    end;
+  end;
+
+  Result := StringReplace(s, CDiv_FuncName + InitialDivArgs + ')$', ResultValueStr, [rfReplaceAll]);
 end;
 
 
@@ -1431,6 +1517,12 @@ begin
 
   if Pos(CDiff_FuncName, s) > 0 then
     s := ReplaceDiff(AListOfVars, s);
+
+  if Pos(CMul_FuncName, s) > 0 then
+    s := ReplaceMul(AListOfVars, s);
+
+  if Pos(CDiv_FuncName, s) > 0 then
+    s := ReplaceDiv(AListOfVars, s);
 
   if Pos(CUpdateControlInfo_FuncName, s) > 0 then
     s := ReplaceUpdateControlInfo(AListOfVars, s);
