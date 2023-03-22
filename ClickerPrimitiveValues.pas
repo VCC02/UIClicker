@@ -43,15 +43,16 @@ type
   end;
 
 const
-  CCategoryCount = 2;
+  CCategoryCount = 3;
 
   CCategory_Primitives = 0;  //index of first category  - list of primitives, as added by user
   CCategory_Orders = 1;      //index of second category - list of composition orders for all above primitives
+  CCategory_Settings = 2;    //index of second category - various composition settings
 
-  CCategories: array[0..CCategoryCount - 1] of string = ('Primitives', 'Composition orders');
+  CCategories: array[0..CCategoryCount - 1] of string = ('Primitives', 'Composition orders', 'Settings');
 
-  CPropCountClkSetPenPrimitive = 7;
-  CPropCountClkSetBrushPrimitive = 3;
+  CPropCountClkSetPenPrimitive = 6;
+  CPropCountClkSetBrushPrimitive = 2;
   CPropCountClkSetMiscPrimitive = 1;
   CPropCountClkSetFontPrimitive = CPropCount_FindControlMatchBitmapText; //16;
   CPropCountClkImagePrimitive = 6;
@@ -78,15 +79,13 @@ const
     (Name: 'Style'; EditorType: etTextWithArrow), //etEnumCombo
     (Name: 'Width'; EditorType: etSpinText),
     (Name: 'Mode'; EditorType: etTextWithArrow),  //etEnumCombo
-    (Name: 'Pattern'; EditorType: etTextWithArrow),
     (Name: 'EndCap'; EditorType: etTextWithArrow),   //etEnumCombo
     (Name: 'JoinStyle'; EditorType: etTextWithArrow)  //etEnumCombo
   );
 
   CSetBrushPrimitiveProperties: array[0..CPropCountClkSetBrushPrimitive - 1] of TOIPropDef = (
     (Name: 'Color'; EditorType: etColorCombo),
-    (Name: 'Style'; EditorType: etTextWithArrow),   //etEnumCombo
-    (Name: 'Pattern'; EditorType: etTextWithArrow)
+    (Name: 'Style'; EditorType: etTextWithArrow)    //etEnumCombo
   );
 
   CSetMiscPrimitiveProperties: array[0..CPropCountClkSetMiscPrimitive - 1] of TOIPropDef = (
@@ -155,9 +154,8 @@ const
   CSetPenPrimitive_Style_PropIndex = 1;
   CSetPenPrimitive_Width_PropIndex = 2;
   CSetPenPrimitive_Mode_PropIndex = 3;
-  CSetPenPrimitive_Pattern_PropIndex = 4;
-  CSetPenPrimitive_EndCap_PropIndex = 5;
-  CSetPenPrimitive_JoinStyle_PropIndex = 6;
+  CSetPenPrimitive_EndCap_PropIndex = 4;
+  CSetPenPrimitive_JoinStyle_PropIndex = 5;
 
 
 type
@@ -177,6 +175,9 @@ const
     @CGradientFillPrimitiveProperties,
     @CTextPrimitiveProperties
   );
+
+  CSettingsClkPropCount = 2;
+  CSettingsNames: array[0..CSettingsClkPropCount - 1] of string = ('Compositor direction', 'Reserved');
 
 
 {$IFDEF SubProperties}
@@ -266,15 +267,13 @@ const
     Ord(High(TPenStyle)) + 1, //Style: string; //TFPPenStyle;
     0, //Width: string; //Integer;
     Ord(High(TPenMode)) + 1, //Mode: string; //TFPPenMode;
-    0, //Pattern: string; //LongWord;
     Ord(High(TPenEndCap)) + 1, //EndCap: string; //TFPPenEndCap;
     Ord(High(TPenJoinStyle)) + 1   //JoinStyle: string; //TFPPenJoinStyle;
   );
 
   CSetBrushEnumCounts: array[0..CPropCountClkSetBrushPrimitive - 1] of Integer = (
     0,  //Color: string; //TColor;
-    Ord(High(TBrushStyle)) + 1, //Style: string; //TFPBrushStyle;
-    0  //Pattern: string; //TBrushPattern;
+    Ord(High(TBrushStyle)) + 1  //Style: string; //TFPBrushStyle;
   );
 
   CSetMiscEnumCounts: array[0..CPropCountClkSetMiscPrimitive - 1] of Integer = (
@@ -358,15 +357,13 @@ const
     @CPenStyleStr, //Style: string; //TFPPenStyle;
     nil, //Width: string; //Integer;
     @CPenModeStr, //Mode: string; //TFPPenMode;
-    nil, //Pattern: string; //LongWord;
     @CPenEndCapStr, //EndCap: string; //TFPPenEndCap;
     @CPenJoinStyleStr  //JoinStyle: string; //TFPPenJoinStyle;
   );
 
   CSetBrushEnumStrings: array[0..CPropCountClkSetBrushPrimitive - 1] of PArrayOfString = (
     nil, //Color: string; //TColor;
-    @CBrushStyleStr, //Style: string; //TFPBrushStyle;
-    nil  //Pattern: string; //TBrushPattern;
+    @CBrushStyleStr  //Style: string; //TFPBrushStyle;
   );
 
   CSetMiscEnumStrings: array[0..CPropCountClkSetMiscPrimitive - 1] of PArrayOfString = (
@@ -445,6 +442,20 @@ const
   );
 
 
+  ///// Settings
+  CCompositorDirection_PropIndex = 0;
+
+  CPrimitiveSettingsPropEnumCounts: array[0..CSettingsClkPropCount - 1] of Integer = (
+    Ord(High(TCompositorDirection)) + 1,
+    0
+  );
+
+  CPrimitiveSettingsPropEnumStrings: array[0..CSettingsClkPropCount - 1] of PArrayOfString = (
+    @CCompositorDirectionStr,
+    nil
+  );
+
+
 implementation
 
 
@@ -456,9 +467,8 @@ implementation
       1: Result := APrimitive.ClkSetPen.Style; //TFPPenStyle;
       2: Result := APrimitive.ClkSetPen.Width; //Integer;
       3: Result := APrimitive.ClkSetPen.Mode; //TFPPenMode;
-      4: Result := APrimitive.ClkSetPen.Pattern; //LongWord;
-      5: Result := APrimitive.ClkSetPen.EndCap; //TFPPenEndCap;
-      6: Result := APrimitive.ClkSetPen.JoinStyle; //TFPPenJoinStyle;
+      4: Result := APrimitive.ClkSetPen.EndCap; //TFPPenEndCap;
+      5: Result := APrimitive.ClkSetPen.JoinStyle; //TFPPenJoinStyle;
       else
         Result := 'unknown';
     end;
@@ -470,7 +480,6 @@ implementation
     case APropertyIndex of
       0: Result := APrimitive.ClkSetBrush.Color; //TColor;
       1: Result := APrimitive.ClkSetBrush.Style; //TFPBrushStyle;
-      2: Result := APrimitive.ClkSetBrush.Pattern; //TBrushPattern;
       else
         Result := 'unknown';
     end;
@@ -590,9 +599,8 @@ implementation
       1: APrimitive.ClkSetPen.Style := NewValue; //TFPPenStyle;
       2: APrimitive.ClkSetPen.Width := NewValue; //Integer;
       3: APrimitive.ClkSetPen.Mode := NewValue; //TFPPenMode;
-      4: APrimitive.ClkSetPen.Pattern := NewValue; //LongWord;
-      5: APrimitive.ClkSetPen.EndCap := NewValue; //TFPPenEndCap;
-      6: APrimitive.ClkSetPen.JoinStyle := NewValue; //TFPPenJoinStyle;
+      4: APrimitive.ClkSetPen.EndCap := NewValue; //TFPPenEndCap;
+      5: APrimitive.ClkSetPen.JoinStyle := NewValue; //TFPPenJoinStyle;
       else
         ;
     end;
@@ -604,7 +612,6 @@ implementation
     case APropertyIndex of
       0: APrimitive.ClkSetBrush.Color := NewValue; //TColor;
       1: APrimitive.ClkSetBrush.Style := NewValue; //TFPBrushStyle;
-      2: APrimitive.ClkSetBrush.Pattern := NewValue; //TBrushPattern;
       else
         ;
     end;
@@ -719,26 +726,24 @@ implementation
 procedure FillInDefaultValuesToPrimitive_SetPen(var APrimitive: TPrimitiveRec);
 begin
   APrimitive.ClkSetPen.Color := '4444FF';
-  APrimitive.ClkSetPen.Style := '0';
+  APrimitive.ClkSetPen.Style := CPenStyleStr[psSolid];
   APrimitive.ClkSetPen.Width := '1';
-  APrimitive.ClkSetPen.Mode := '0';
-  APrimitive.ClkSetPen.Pattern := '0';
-  APrimitive.ClkSetPen.EndCap := '0';
-  APrimitive.ClkSetPen.JoinStyle := '0';
+  APrimitive.ClkSetPen.Mode := CPenModeStr[pmCopy];
+  APrimitive.ClkSetPen.EndCap := CPenEndCapStr[pecRound];
+  APrimitive.ClkSetPen.JoinStyle := CPenJoinStyleStr[pjsRound];
 end;
 
 
 procedure FillInDefaultValuesToPrimitive_SetBrush(var APrimitive: TPrimitiveRec);
 begin
   APrimitive.ClkSetBrush.Color := '44FF33';
-  APrimitive.ClkSetBrush.Style := '0';
-  APrimitive.ClkSetBrush.Pattern := '0,,0,,0,,0,,0,,0,,0,,0,,0,,0,,0,,0,,0,,0,,0,,0,,0,,0,,0,,0,,0,,0,,0,,0,,0,,0,,0,,0,,0,,0,,0,,0';
+  APrimitive.ClkSetBrush.Style := CBrushStyleStr[bsSolid];
 end;
 
 
 procedure FillInDefaultValuesToPrimitive_SetMisc(var APrimitive: TPrimitiveRec);
 begin
-  APrimitive.ClkSetMisc.AntialiasingMode := '0';  //0 is the default = Doesn't care, which is set to antialiasing
+  APrimitive.ClkSetMisc.AntialiasingMode := CAntialiasingModeStr[amDontCare];  //0 is the default = Doesn't care, which is set to antialiasing
 end;
 
 
@@ -796,7 +801,7 @@ begin
   APrimitive.ClkGradientFill.Y2 := '17';
   APrimitive.ClkGradientFill.StartColor := '00FF33';
   APrimitive.ClkGradientFill.StopColor := '330099';
-  APrimitive.ClkGradientFill.Direction := '0';
+  APrimitive.ClkGradientFill.Direction := CGradientDirectionStr[gdVertical];
 end;
 
 

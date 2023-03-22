@@ -40,7 +40,6 @@ type
     Style: string; //TFPPenStyle;
     Width: string; //Integer;
     Mode: string; //TFPPenMode;
-    Pattern: string; //LongWord;
     EndCap: string; //TFPPenEndCap;
     JoinStyle: string; //TFPPenJoinStyle;
   end;
@@ -48,7 +47,6 @@ type
   TClkSetBrush = record
     Color: string; //TColor;
     Style: string; //TFPBrushStyle;
-    Pattern: string; //TBrushPattern;
   end;
 
   TClkSetMisc = record
@@ -110,7 +108,14 @@ const
   CClkText = 8;
 
 
+
 type
+  TCompositorDirection = (cdTopBot, cdBotTop);   //cdTopBot means that the composition is made from [0] to [n-1]. The last item will be fully visible on the final image.
+
+  TPrimitiveSettings = record
+    CompositorDirection: TCompositorDirection;
+  end;
+
   TPrimitiveRec = record        //Only one of the "primitive" fields is used at a time. This is similar to TClkActionRec.
     PrimitiveType: Integer; //index of one of the following fields
     PrimitiveName: string;
@@ -138,8 +143,8 @@ type
 
   TCompositionOrderArr = array of TCompositionOrder;
 
-  TOnLoadPrimitivesFile = procedure(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr) of object;
-  TOnSavePrimitivesFile = procedure(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr) of object;
+  TOnLoadPrimitivesFile = procedure(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings) of object;
+  TOnSavePrimitivesFile = procedure(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings) of object;
 
 
 const
@@ -165,6 +170,9 @@ const
   CAntialiasingModeStr: array[TAntialiasingMode] of string = ('amDontCare', 'amOn', 'amOff');
   CGradientDirectionStr: array[TGradientDirection] of string = ('gdVertical', 'gdHorizontal');
 
+  CCompositorDirectionStr: array[TCompositorDirection] of string = ('cdTopBot', 'cdBotTop');
+
+
 function PrimitiveTypeNameToIndex(AName: string): Integer;
 
 function PenStyleNameToIndex(AName: string): TPenStyle;
@@ -172,6 +180,7 @@ function PenModeNameToIndex(AName: string): TPenMode;
 function PenEndCapNameToIndex(AName: string): TPenEndCap;
 function PenJoinStyleNameToIndex(AName: string): TPenJoinStyle;
 function BrushStyleNameToIndex(AName: string): TBrushStyle;
+function CompositorDirectionToIndex(AName: string): TCompositorDirection;
 
 
 implementation
@@ -259,6 +268,21 @@ begin
       Break;
     end;
 end;
+
+
+function CompositorDirectionToIndex(AName: string): TCompositorDirection;
+var
+  i: TCompositorDirection;
+begin
+  Result := Low(TCompositorDirection);
+  for i := Low(TCompositorDirection) to High(TCompositorDirection) do
+    if CCompositorDirectionStr[i] = AName then
+    begin
+      Result := i;
+      Break;
+    end;
+end;
+
 
 end.
 

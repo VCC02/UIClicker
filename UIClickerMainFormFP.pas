@@ -87,7 +87,7 @@ type
     function HandleOnPictureOpenDialogExecute: Boolean;
     function HandleOnGetPictureOpenDialogFileName: string;
     function HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
-    procedure HandleOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr);
+    procedure HandleOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
     procedure HandleOnGetSelfHandles(AListOfSelfHandles: TStringList);
   public
     property AllFormsAreCreated: Boolean write FAllFormsAreCreated;
@@ -447,7 +447,7 @@ begin
 end;
 
 
-procedure TfrmUIClickerMainForm.HandleOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr);
+procedure TfrmUIClickerMainForm.HandleOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
 var
   MemStream: TMemoryStream;
   Ini: TClkIniReadonlyFile;
@@ -461,7 +461,7 @@ begin
 
       Ini := TClkIniReadonlyFile.Create(MemStream);
       try
-        LoadPrimitivesFile(Ini, APrimitives, AOrders);
+        LoadPrimitivesFile(Ini, APrimitives, AOrders, ASettings);
       finally
         Ini.Free;
       end;

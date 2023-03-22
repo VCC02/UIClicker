@@ -196,7 +196,7 @@ type
     procedure DoOnGetCurrentlyRecordedScreenShotImage(ABmp: TBitmap);
 
     function DoOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
-    procedure DoOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr);
+    procedure DoOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
     function DoOnFileExists(const AFileName: string): Boolean;
     procedure DoOnGetSelfHandles(AListOfSelfHandles: TStringList);
 
@@ -238,7 +238,7 @@ type
     procedure HandleOnWaitForBitmapsAvailability(AListOfBitmapFiles: TStringList);  //ClickerActionsArrFrame instances call this, to add multiple bmps to FIFO, if not found
 
     function HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
-    procedure HandleOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr);
+    procedure HandleOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
     function HandleOnFileExists(const FileName: string): Boolean;
     procedure HandleOnGetSelfHandles(AListOfSelfHandles: TStringList);
 
@@ -366,7 +366,7 @@ begin
 end;
 
 
-procedure LoadPmtvFromInMemFileSystem(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; AInMemFileSystem: TInMemFileSystem);
+procedure LoadPmtvFromInMemFileSystem(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; ASettings: TPrimitiveSettings; AInMemFileSystem: TInMemFileSystem);
 var
   MemStream: TMemoryStream;
   Ini: TClkIniReadonlyFile;
@@ -378,7 +378,7 @@ begin
 
     Ini := TClkIniReadonlyFile.Create(MemStream);
     try
-      LoadPrimitivesFile(Ini, APrimitives, AOrders);
+      LoadPrimitivesFile(Ini, APrimitives, AOrders, ASettings);
     finally
       Ini.Free;
     end;
@@ -867,12 +867,12 @@ begin
 end;
 
 
-procedure TfrmClickerActions.DoOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr);
+procedure TfrmClickerActions.DoOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
 begin
   if not Assigned(FOnLoadPrimitivesFile) then
     raise Exception.Create('OnLoadPrimitivesFile not assigned.')
   else
-    FOnLoadPrimitivesFile(AFileName, APrimitives, AOrders);
+    FOnLoadPrimitivesFile(AFileName, APrimitives, AOrders, ASettings);
 end;
 
 
@@ -1559,7 +1559,7 @@ begin
 end;
 
 
-procedure TfrmClickerActions.HandleOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr);
+procedure TfrmClickerActions.HandleOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
 begin
   if CExpectedFileLocation[frClickerActionsArrMain.FileLocationOfDepsIsMem] = flMem then
   begin
@@ -1578,9 +1578,9 @@ begin
   //  Exit;
 
   if frClickerActionsArrMain.FileLocationOfDepsIsMem then
-    LoadPmtvFromInMemFileSystem(AFileName, APrimitives, AOrders, FInMemFileSystem)
+    LoadPmtvFromInMemFileSystem(AFileName, APrimitives, AOrders, ASettings, FInMemFileSystem)
   else
-    DoOnLoadPrimitivesFile(AFileName, APrimitives, AOrders);
+    DoOnLoadPrimitivesFile(AFileName, APrimitives, AOrders, ASettings);
 end;
 
 

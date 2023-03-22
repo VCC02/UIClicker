@@ -31,8 +31,8 @@ uses
   Classes, SysUtils, ClickerUtils, ClickerPrimitiveUtils, ClickerIniFiles, Math;
 
 
-procedure LoadPrimitivesFile(Ini: TClkIniReadonlyFile; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr);
-procedure SavePrimitivesFile(AStringList: TStringList; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr);
+procedure LoadPrimitivesFile(Ini: TClkIniReadonlyFile; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
+procedure SavePrimitivesFile(AStringList: TStringList; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
 
 
 implementation
@@ -48,7 +48,6 @@ begin
   APrimitive.ClkSetPen.Style := AIni.ReadString(ASectionIndex, 'Style', '0'); //TFPPenStyle;
   APrimitive.ClkSetPen.Width := AIni.ReadString(ASectionIndex, 'Width', '1'); //Integer;
   APrimitive.ClkSetPen.Mode := AIni.ReadString(ASectionIndex, 'Mode', '0');  //TFPPenMode;
-  APrimitive.ClkSetPen.Pattern := AIni.ReadString(ASectionIndex, 'Pattern', '0'); //LongWord;
   APrimitive.ClkSetPen.EndCap := AIni.ReadString(ASectionIndex, 'EndCap', '0'); //TFPPenEndCap;
   APrimitive.ClkSetPen.JoinStyle := AIni.ReadString(ASectionIndex, 'JoinStyle', '0');
 end;
@@ -58,7 +57,6 @@ procedure Get_SetBrush_PrimitiveFromIni(AIni: TClkIniReadonlyFile; ASectionIndex
 begin
   APrimitive.ClkSetBrush.Color := AIni.ReadString(ASectionIndex, 'Color', '00FFFF');
   APrimitive.ClkSetBrush.Style := AIni.ReadString(ASectionIndex, 'Style', '0');
-  APrimitive.ClkSetBrush.Pattern := AIni.ReadString(ASectionIndex, 'Pattern', '0');  //TBrushPattern = array[0..PatternBitCount-1] of TPenPattern;
 end;
 
 
@@ -87,7 +85,12 @@ end;
 
 procedure Get_Image_PrimitiveFromIni(AIni: TClkIniReadonlyFile; ASectionIndex: Integer; var APrimitive: TPrimitiveRec);
 begin
+  APrimitive.ClkImage.X1 := AIni.ReadString(ASectionIndex, 'X1', '30');
+  APrimitive.ClkImage.Y1 := AIni.ReadString(ASectionIndex, 'Y1', '40');
+  APrimitive.ClkImage.X2 := AIni.ReadString(ASectionIndex, 'X2', '50');
+  APrimitive.ClkImage.Y2 := AIni.ReadString(ASectionIndex, 'Y2', '60');
   APrimitive.ClkImage.Path := AIni.ReadString(ASectionIndex, 'Path', '');
+  APrimitive.ClkImage.Stretch := AIni.ReadString(ASectionIndex, 'Stretch', '0');
 end;
 
 
@@ -141,13 +144,15 @@ const
   );
 
 
-procedure LoadPrimitivesFile(Ini: TClkIniReadonlyFile; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr);
+procedure LoadPrimitivesFile(Ini: TClkIniReadonlyFile; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
 var
   n, m, i, j, SectionIndex: Integer;
   PrimitiveTypeStr, PrimitiveIndexStr, OrderIndexStr: string;
   SectionName: string;
   PrimitiveIndex, OrderIndex: Integer;
 begin
+  ASettings.CompositorDirection := TCompositorDirection(Ini.ReadInteger('Settings', 'CompositorDirection', Ord(cdTopBot)));
+
   n := Ini.ReadInteger('Primitives', 'Count', 0);
   m := Ini.ReadInteger('ProcessingOrder', 'Count', 0);
   SetLength(APrimitives, Max(Min(n, 300), 0));  //do not load more than 300 primitives
@@ -191,12 +196,11 @@ end;
 procedure AddPrimitive_SetPenToStringList(var APrimitive: TPrimitiveRec; AStringList: TStringList);
 begin
   AStringList.Add('Color=' + APrimitive.ClkSetPen.Color);
-  AStringList.Add('NewX=' + APrimitive.ClkSetPen.Style);
-  AStringList.Add('NewY=' + APrimitive.ClkSetPen.Width);
-  AStringList.Add('NewWidth=' + APrimitive.ClkSetPen.Mode);
-  AStringList.Add('NewHeight=' + APrimitive.ClkSetPen.Pattern);
-  AStringList.Add('NewPositionEnabled=' + APrimitive.ClkSetPen.EndCap);
-  AStringList.Add('NewSizeEnabled=' + APrimitive.ClkSetPen.JoinStyle);
+  AStringList.Add('Style=' + APrimitive.ClkSetPen.Style);
+  AStringList.Add('Width=' + APrimitive.ClkSetPen.Width);
+  AStringList.Add('Mode=' + APrimitive.ClkSetPen.Mode);
+  AStringList.Add('EndCap=' + APrimitive.ClkSetPen.EndCap);
+  AStringList.Add('JoinStyle=' + APrimitive.ClkSetPen.JoinStyle);
 end;
 
 
@@ -204,7 +208,6 @@ procedure AddPrimitive_SetBrushToStringList(var APrimitive: TPrimitiveRec; AStri
 begin
   AStringList.Add('Color=' + APrimitive.ClkSetBrush.Color);
   AStringList.Add('Style=' + APrimitive.ClkSetBrush.Style);
-  AStringList.Add('Pattern=' + APrimitive.ClkSetBrush.Pattern);
 end;
 
 
@@ -237,7 +240,12 @@ end;
 
 procedure AddPrimitive_ImageToStringList(var APrimitive: TPrimitiveRec; AStringList: TStringList);
 begin
+  AStringList.Add('X1=' + APrimitive.ClkImage.X1);
+  AStringList.Add('Y1=' + APrimitive.ClkImage.Y1);
+  AStringList.Add('X2=' + APrimitive.ClkImage.X2);
+  AStringList.Add('Y2=' + APrimitive.ClkImage.Y2);
   AStringList.Add('Path=' + APrimitive.ClkImage.Path);
+  AStringList.Add('Stretch=' + APrimitive.ClkImage.Stretch);
 end;
 
 
@@ -291,11 +299,15 @@ const
   );
 
 
-procedure SavePrimitivesFile(AStringList: TStringList; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr);
+procedure SavePrimitivesFile(AStringList: TStringList; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
 var
   i, j: Integer;
   IterationStr: string;
 begin
+  AStringList.Add('[Settings]');
+  AStringList.Add('CompositorDirection=' + IntToStr(Ord(ASettings.CompositorDirection)));
+  AStringList.Add('');
+
   AStringList.Add('[Primitives]');
   AStringList.Add('Count=' + IntToStr(Length(APrimitives)));
   AStringList.Add('');

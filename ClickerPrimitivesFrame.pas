@@ -41,6 +41,7 @@ type
   { TfrClickerPrimitives }
 
   TfrClickerPrimitives = class(TFrame)
+    imglstPrimitives: TImageList;
     imgFontColorBuffer: TImage;
     PageControlPreview: TPageControl;
     pnlPreview: TPanel;
@@ -51,6 +52,8 @@ type
     FOIFrame: TfrObjectInspector;
     FPrimitives: TPrimitiveRecArr;
     FOrders: TCompositionOrderArr; //array of orders  - i.e. array of array of indexes.
+    FPrimitiveSettings: TPrimitiveSettings;
+
     FOIEditorMenu: TPopupMenu;
 
     FOnLoadBitmap: TOnLoadBitmap;
@@ -80,7 +83,7 @@ type
     procedure MenuItem_RepaintAllCompositions(Sender: TObject);
 
     function DoOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
-    procedure DoOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr);
+    procedure DoOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
     function DoOnEvaluateReplacementsFunc(s: string; Recursive: Boolean = True): string;
     procedure DoOnTriggerOnControlsModified;
 
@@ -145,13 +148,13 @@ type
     destructor Destroy; override;
 
     procedure LoadFile(AFileName: string);
-    procedure RenderPrimitives(ABmp: TBitmap; AOrderIndex: Integer);
+    procedure ComposePrimitives(ABmp: TBitmap; AOrderIndex: Integer);
     procedure RepaintAllCompositions;
     function GetOrderCount: Integer;
 
     property OnLoadBitmap: TOnLoadBitmap write FOnLoadBitmap;
     property OnLoadPrimitivesFile: TOnLoadPrimitivesFile write FOnLoadPrimitivesFile; //called by LoadFile
-    property OnEvaluateReplacementsFunc: TEvaluateReplacementsFunc write FOnEvaluateReplacementsFunc; //called by RenderPrimitives
+    property OnEvaluateReplacementsFunc: TEvaluateReplacementsFunc write FOnEvaluateReplacementsFunc; //called by ComposePrimitives
     property OnTriggerOnControlsModified: TOnTriggerOnControlsModified write FOnTriggerOnControlsModified;
   end;
 
@@ -235,8 +238,11 @@ constructor TfrClickerPrimitives.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   CreateRemainingUIComponents;
+
   SetLength(FPrimitives, 0);
   SetLength(FOrders, 0);
+  FPrimitiveSettings.CompositorDirection := cdTopBot;
+
   FOIEditorMenu := TPopupMenu.Create(Self);
 
   FOnLoadBitmap := nil;
@@ -345,7 +351,7 @@ begin
   for i := 0 to Length(FOrders) - 1 do
   begin
     PreviewImage := TImage(TScrollBox(PageControlPreview.Pages[i].Tag).Tag);
-    RenderPrimitives(PreviewImage.Picture.Bitmap, i);
+    ComposePrimitives(PreviewImage.Picture.Bitmap, i);
   end;
 end;
 
@@ -356,7 +362,7 @@ begin
   SetLength(FOrders, 0);
   FOIFrame.ReloadContent;  //cleanup here, so the tree won't repaint with dangling pointers
 
-  DoOnLoadPrimitivesFile(AFileName, FPrimitives, FOrders);
+  DoOnLoadPrimitivesFile(AFileName, FPrimitives, FOrders, FPrimitiveSettings);
   FOIFrame.ReloadContent;
   CreateAllPreviewPages;
   RepaintAllCompositions;
@@ -466,35 +472,31 @@ begin
 end;
 
 
-procedure RenderPrimitive_SetPen(Sender: TfrClickerPrimitives; ABmp: TBitmap; var APrimitive: TPrimitiveRec);
+procedure ComposePrimitive_SetPen(Sender: TfrClickerPrimitives; ABmp: TBitmap; var APrimitive: TPrimitiveRec);
 begin
   ABmp.Canvas.Pen.Color := HexToInt(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetPen.Color)); //TColor;
   ABmp.Canvas.Pen.Style := PenStyleNameToIndex(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetPen.Style)); //TFPPenStyle;
   ABmp.Canvas.Pen.Width := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetPen.Width), 1); //Integer;
   ABmp.Canvas.Pen.Mode := PenModeNameToIndex(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetPen.Mode)); //TFPPenMode;
-  ABmp.Canvas.Pen.Pattern := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetPen.Pattern), 0); //LongWord;
   ABmp.Canvas.Pen.EndCap := PenEndCapNameToIndex(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetPen.EndCap)); //TFPPenEndCap;
   ABmp.Canvas.Pen.JoinStyle := PenJoinStyleNameToIndex(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetPen.JoinStyle)); //TFPPenJoinStyle;
 end;
 
 
-procedure RenderPrimitive_SetBrush(Sender: TfrClickerPrimitives; ABmp: TBitmap; var APrimitive: TPrimitiveRec);
-var
-  TempBrushPattern: TBrushPattern;
+procedure ComposePrimitive_SetBrush(Sender: TfrClickerPrimitives; ABmp: TBitmap; var APrimitive: TPrimitiveRec);
 begin
-  ABmp.Canvas.Brush.Color := HexToInt(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetPen.Color)); //TColor;
-  ABmp.Canvas.Brush.Style := BrushStyleNameToIndex(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetPen.Style)); //TFPBrushStyle;
-  //ABmp.Canvas.Brush.Pattern := TempBrushPattern;    // array[0..31] of Cardinal
+  ABmp.Canvas.Brush.Color := HexToInt(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetBrush.Color)); //TColor;
+  ABmp.Canvas.Brush.Style := BrushStyleNameToIndex(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetBrush.Style)); //TFPBrushStyle;
 end;
 
 
-procedure RenderPrimitive_SetMisc(Sender: TfrClickerPrimitives; ABmp: TBitmap; var APrimitive: TPrimitiveRec);
+procedure ComposePrimitive_SetMisc(Sender: TfrClickerPrimitives; ABmp: TBitmap; var APrimitive: TPrimitiveRec);
 begin
   ABmp.Canvas.AntialiasingMode := TAntialiasingMode(StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetMisc.AntialiasingMode), Ord(amDontCare)));
 end;
 
 
-procedure RenderPrimitive_SetFont(Sender: TfrClickerPrimitives; ABmp: TBitmap; var APrimitive: TPrimitiveRec);
+procedure ComposePrimitive_SetFont(Sender: TfrClickerPrimitives; ABmp: TBitmap; var APrimitive: TPrimitiveRec);
 begin
   ABmp.Canvas.Font.Color := HexToInt(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetFont.ForegroundColor));
   ABmp.Canvas.Brush.Color := HexToInt(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetFont.BackgroundColor));
@@ -512,15 +514,15 @@ begin
 end;
 
 
-procedure RenderPrimitive_Image(Sender: TfrClickerPrimitives; ABmp: TBitmap; var APrimitive: TPrimitiveRec);
+procedure ComposePrimitive_Image(Sender: TfrClickerPrimitives; ABmp: TBitmap; var APrimitive: TPrimitiveRec);
 var
   SrcBmp: TBitmap;
   SrcBitmapFnm: string;
   WillStretch: Boolean;
   TempRect: TRect;
 begin
-  ABmp.Canvas.Brush.Color := HexToInt(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetPen.Color)); //TColor;
-  ABmp.Canvas.Brush.Style := TBrushStyle(StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetPen.Style), Ord(bsSolid))); //TFPBrushStyle;
+  ABmp.Canvas.Brush.Color := HexToInt(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetBrush.Color)); //TColor;
+  ABmp.Canvas.Brush.Style := TBrushStyle(StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetBrush.Style), Ord(bsSolid))); //TFPBrushStyle;
 
   WillStretch := Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkImage.Stretch) = '1';
 
@@ -543,7 +545,7 @@ begin
 end;
 
 
-procedure RenderPrimitive_Line(Sender: TfrClickerPrimitives; ABmp: TBitmap; var APrimitive: TPrimitiveRec);
+procedure ComposePrimitive_Line(Sender: TfrClickerPrimitives; ABmp: TBitmap; var APrimitive: TPrimitiveRec);
 var
   x1, y1, x2, y2: Integer;
 begin
@@ -556,7 +558,7 @@ begin
 end;
 
 
-procedure RenderPrimitive_Rect(Sender: TfrClickerPrimitives; ABmp: TBitmap; var APrimitive: TPrimitiveRec);
+procedure ComposePrimitive_Rect(Sender: TfrClickerPrimitives; ABmp: TBitmap; var APrimitive: TPrimitiveRec);
 var
   x1, y1, x2, y2: Integer;
 begin
@@ -569,7 +571,7 @@ begin
 end;
 
 
-procedure RenderPrimitive_GradientFill(Sender: TfrClickerPrimitives; ABmp: TBitmap; var APrimitive: TPrimitiveRec);
+procedure ComposePrimitive_GradientFill(Sender: TfrClickerPrimitives; ABmp: TBitmap; var APrimitive: TPrimitiveRec);
 var
   TempRect: TRect;
   StartColor, StopColor: TColor;
@@ -587,7 +589,7 @@ begin
 end;
 
 
-procedure RenderPrimitive_Text(Sender: TfrClickerPrimitives; ABmp: TBitmap; var APrimitive: TPrimitiveRec);
+procedure ComposePrimitive_Text(Sender: TfrClickerPrimitives; ABmp: TBitmap; var APrimitive: TPrimitiveRec);
 var
   X, Y: Integer;
   TempText: string;
@@ -601,29 +603,26 @@ end;
 
 
 type
-  TRenderPrimitivesProc = procedure(Sender: TfrClickerPrimitives; ABmp: TBitmap; var APrimitive: TPrimitiveRec);
+  TComposePrimitivesProc = procedure(Sender: TfrClickerPrimitives; ABmp: TBitmap; var APrimitive: TPrimitiveRec);
 
 
-procedure TfrClickerPrimitives.RenderPrimitives(ABmp: TBitmap; AOrderIndex: Integer);
+procedure TfrClickerPrimitives.ComposePrimitives(ABmp: TBitmap; AOrderIndex: Integer);
 const
-  CRenderPrimitives: array[0..CPrimitiveTypeCount - 1] of TRenderPrimitivesProc = (
-    @RenderPrimitive_SetPen,
-    @RenderPrimitive_SetBrush,
-    @RenderPrimitive_SetMisc,
-    @RenderPrimitive_SetFont,
-    @RenderPrimitive_Image,
-    @RenderPrimitive_Line,
-    @RenderPrimitive_Rect,
-    @RenderPrimitive_GradientFill,
-    @RenderPrimitive_Text
+  CComposePrimitives: array[0..CPrimitiveTypeCount - 1] of TComposePrimitivesProc = (
+    @ComposePrimitive_SetPen,
+    @ComposePrimitive_SetBrush,
+    @ComposePrimitive_SetMisc,
+    @ComposePrimitive_SetFont,
+    @ComposePrimitive_Image,
+    @ComposePrimitive_Line,
+    @ComposePrimitive_Rect,
+    @ComposePrimitive_GradientFill,
+    @ComposePrimitive_Text
   );
 
 var
   i, NewIndex: Integer;
 begin
-  //ABmp.Width := 150;
-  //ABmp.Height := 90;
-  //ABmp.PixelFormat := pf24bit;
   ABmp.Transparent := False;
   ABmp.Canvas.Pen.Style := psSolid;
   ABmp.Canvas.Pen.Width := 1;
@@ -631,15 +630,29 @@ begin
   ABmp.Canvas.Pen.Color := clWhite;
   ABmp.Canvas.Brush.Color := clWhite;
   ABmp.Canvas.Rectangle(0, 0, ABmp.Width, ABmp.Height);
-  ABmp.Canvas.Brush.Style := bsSolid;
 
-  //for i := 0 to Length(FPrimitives) - 1 do
-  for i := Length(FPrimitives) - 1 downto 0 do
-  begin
-    NewIndex := FOrders[AOrderIndex].Items[i];
-    //CRenderPrimitives[FPrimitives[NewIndex].PrimitiveType](Self, ABmp, FPrimitives[i]);
-    //CRenderPrimitives[FPrimitives[i].PrimitiveType](Self, ABmp, FPrimitives[NewIndex]);
-    CRenderPrimitives[FPrimitives[NewIndex].PrimitiveType](Self, ABmp, FPrimitives[NewIndex]);
+  ABmp.Canvas.Brush.Style := bsSolid;  //reset to some default values
+  ABmp.Canvas.Pen.Color := clWhite;
+  ABmp.Canvas.Brush.Color := clWhite;
+
+  case FPrimitiveSettings.CompositorDirection of
+    cdTopBot:
+    begin
+      for i := 0 to Length(FPrimitives) - 1 do
+      begin
+        NewIndex := FOrders[AOrderIndex].Items[i];
+        CComposePrimitives[FPrimitives[NewIndex].PrimitiveType](Self, ABmp, FPrimitives[NewIndex]);
+      end;
+    end;
+
+    cdBotTop:
+    begin
+      for i := Length(FPrimitives) - 1 downto 0 do
+      begin
+        NewIndex := FOrders[AOrderIndex].Items[i];
+        CComposePrimitives[FPrimitives[NewIndex].PrimitiveType](Self, ABmp, FPrimitives[NewIndex]);
+      end;
+    end;
   end;
 end;
 
@@ -735,6 +748,8 @@ begin
     CSetPrimitiveValueStrFunctions[TempPrimitiveType](FPrimitives[MenuData^.PropertyIndex], ValueStr, MenuData^.PropertyItemIndex);
     FOIFrame.CancelCurrentEditing;
     DoOnTriggerOnControlsModified;  //the pmtv file is modified, not the template
+
+    RepaintAllCompositions;
   finally
     Dispose(MenuData);
   end;
@@ -890,12 +905,12 @@ begin
 end;
 
 
-procedure TfrClickerPrimitives.DoOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr);
+procedure TfrClickerPrimitives.DoOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
 begin
   if not Assigned(FOnLoadPrimitivesFile) then
     raise Exception.Create('OnLoadPrimitivesFile not assigned.')
   else
-    FOnLoadPrimitivesFile(AFileName, APrimitives, AOrders);
+    FOnLoadPrimitivesFile(AFileName, APrimitives, AOrders, ASettings);
 end;
 
 
@@ -961,6 +976,9 @@ begin
     CCategory_Orders:
       Result := Length(FOrders);
 
+    CCategory_Settings:
+      Result := CSettingsClkPropCount;
+
     else
       Result := 0;
   end;
@@ -975,6 +993,9 @@ begin
 
     CCategory_Orders:
       Result := 'Order [' + IntToStr(APropertyIndex) + ']';
+
+    CCategory_Settings:
+      Result := CSettingsNames[APropertyIndex];
 
     else
       Result := 'unknown';
@@ -995,7 +1016,21 @@ begin
     begin
       Result := FOrders[APropertyIndex].Name;
       AEditorType := etTextWithArrow;
-    end
+    end;
+
+    CCategory_Settings:
+    begin
+      case APropertyIndex of
+        CCompositorDirection_PropIndex:
+        begin
+          Result := CPrimitiveSettingsPropEnumStrings[APropertyIndex]^[Ord(FPrimitiveSettings.CompositorDirection)];
+          AEditorType := etEnumCombo;
+        end
+
+        else
+          Result := 'unset property';
+      end;
+    end;
 
     else
       Result := 'unknown category';
@@ -1011,6 +1046,9 @@ begin
 
     CCategory_Orders:
       Result := Length(FOrders[APropertyIndex].Items);
+
+    CCategory_Settings:
+      Result := 0;
 
     else
       Result := 0;
@@ -1028,6 +1066,9 @@ begin
 
     CCategory_Orders:
       Result := FPrimitives[FOrders[APropertyIndex].Items[AItemIndex]].PrimitiveName;
+
+    CCategory_Settings:
+      Result := '';
 
     else
       ;
@@ -1071,7 +1112,47 @@ end;
 procedure TfrClickerPrimitives.HandleOnOIGetImageIndexEx(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; Kind: TVTImageKind;
   Column: TColumnIndex; var Ghosted: Boolean; var ImageIndex: Integer; var ImageList: TCustomImageList);
 begin
+  if Column <> 0 then
+  begin
+    ImageIndex := -1;
+    Exit;
+  end;
 
+  case ANodeLevel of
+    CCategoryLevel:
+      ;
+
+    CPropertyLevel:
+    begin
+      case ACategoryIndex of
+        CCategory_Primitives:
+        begin
+          ImageList := imglstPrimitives;
+          ImageIndex := FPrimitives[APropertyIndex].PrimitiveType;
+        end;
+
+        CCategory_Orders:
+        begin
+
+        end;
+      end;
+
+    end; //CPropertyLevel
+
+    CPropertyItemLevel:
+    begin
+      case ACategoryIndex of
+        CCategory_Primitives:
+          ;
+
+        CCategory_Orders:
+        begin
+          ImageList := imglstPrimitives;
+          ImageIndex := FPrimitives[FOrders[APropertyIndex].Items[AItemIndex]].PrimitiveType;
+        end;
+      end;
+    end;
+  end; //NodeLevel
 end;
 
 
@@ -1104,6 +1185,21 @@ begin
         CPropertyItemLevel:
           ;
       end;
+
+    CCategory_Settings:
+      case ANodeLevel of
+        CPropertyLevel:
+        begin
+          if APropertyIndex = CCompositorDirection_PropIndex then
+          begin
+            FPrimitiveSettings.CompositorDirection := CompositorDirectionToIndex(ANewText);
+            RepaintAllCompositions;
+          end;
+        end;
+
+        CPropertyItemLevel:
+          ;
+      end;
   end;
 end;
 
@@ -1123,7 +1219,20 @@ begin
           FOIEditorMenu.Items.Clear;
 
           for i := 0 to CPrimitiveTypeCount - 1 do
+          begin
             AddMenuItemToPopupMenu(FOIEditorMenu, CAddPrimitiveMenuPrefix + CPrimitiveNames[i], MenuItem_AddPrimitiveToList, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+            imgFontColorBuffer.Canvas.Pen.Color := clWhite;
+            imgFontColorBuffer.Canvas.Brush.Color := clWhite;
+            imgFontColorBuffer.Canvas.Rectangle(0, 0, imgFontColorBuffer.Width, imgFontColorBuffer.Height);
+
+            imgFontColorBuffer.Picture.Graphic.Transparent := False;
+            imglstPrimitives.Draw(imgFontColorBuffer.Canvas, 0, 0, i, dsNormal, itImage);
+            FOIEditorMenu.Items.Items[i].Bitmap := TBitmap.Create;
+            FOIEditorMenu.Items.Items[i].Bitmap.Width := 16;
+            FOIEditorMenu.Items.Items[i].Bitmap.Height := 16;
+            FOIEditorMenu.Items.Items[i].Bitmap.Transparent := False;
+            FOIEditorMenu.Items.Items[i].Bitmap.Canvas.Draw(0, 0, imgFontColorBuffer.Picture.Graphic);
+          end;
 
           AddMenuItemToPopupMenu(FOIEditorMenu, '-', nil, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
           AddMenuItemToPopupMenu(FOIEditorMenu, 'Remove all primitives from list...', MenuItem_RemoveAllPrimitivesFromList, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
@@ -1187,6 +1296,10 @@ begin
   if ANodeLevel = CPropertyItemLevel then
     if ACategoryIndex = CCategory_Primitives then
       Result := CPrimitivesPropEnumCounts[FPrimitives[APropertyIndex].PrimitiveType]^[AItemIndex];
+
+  if ANodeLevel = CPropertyLevel then
+    if ACategoryIndex = CCategory_Settings then
+      Result := CPrimitiveSettingsPropEnumCounts[APropertyIndex];
 end;
 
 
@@ -1197,6 +1310,10 @@ begin
   if ANodeLevel = CPropertyItemLevel then
     if ACategoryIndex = CCategory_Primitives then
       AEnumItemName := CPrimitivesPropEnumStrings[FPrimitives[APropertyIndex].PrimitiveType]^[AItemIndex]^[AEnumItemIndex];
+
+  if ANodeLevel = CPropertyLevel then
+    if ACategoryIndex = CCategory_Settings then
+      AEnumItemName := CPrimitiveSettingsPropEnumStrings[APropertyIndex]^[AEnumItemIndex];
 end;
 
 
