@@ -249,6 +249,7 @@ type
     FSearchAreaGridImg: TImage;
     FSearchAreaDbgImgSearchedBmpMenu: TPopupMenu;
     FSearchAreaMenu: TPopupMenu;
+    FSearchAreaOutOfImgLabel: TLabel;  //yellow label
 
     FSkipDrawingGrid: Boolean; //to be reset after use
 
@@ -970,6 +971,7 @@ begin
   FSearchAreaControlDbgImg := nil;
   FSearchAreaSearchedBmpDbgImg := nil;
   FSearchAreaSearchedTextDbgImg := nil;
+  FSearchAreaOutOfImgLabel := nil;
   FSkipDrawingGrid := False;
 
   FLastClickedLbe := nil;
@@ -1695,12 +1697,14 @@ const
   CDbgImgPreviewHint: string = 'Drag to move.' + #13#10 +
                                'Ctrl-Drag, to update Left/Top offsets.' + #13#10 +
                                'Ctrl-Shift-Drag, to update Left/Top/Right/Bottom offsets.';
+  CSearchAreaMaxWidth = 2000;
+  CSearchAreaMaxHeight = 1200;
 var
   SearchAreaControlRect: TRect;
   SearchAreaControlHandle: THandle;
   MenuItem: TMenuItem;
-  ControlRight: Integer;
-  ControlBottom: Integer;
+  ControlLeft: Integer;
+  ControlTop: Integer;
   FindControlOptions: PClkFindControlOptions;
 begin
   try
@@ -1732,6 +1736,20 @@ begin
     SearchAreaControlRect.Width := StrToIntDef(EvaluateReplacements('$Control_Width$'), 300);
     SearchAreaControlRect.Height := StrToIntDef(EvaluateReplacements('$Control_Height$'), 300);
     SearchAreaControlHandle := StrToIntDef(EvaluateReplacements('$Control_Handle$'), 0);
+
+    if FSearchAreaOutOfImgLabel = nil then
+    begin
+      FSearchAreaOutOfImgLabel := TLabel.Create(Self);
+      FSearchAreaOutOfImgLabel.Parent := FSearchAreaScrBox;
+      FSearchAreaOutOfImgLabel.AutoSize := False;
+      FSearchAreaOutOfImgLabel.Caption := '';
+      FSearchAreaOutOfImgLabel.Color := $A0FFFF; //light yellow
+      FSearchAreaOutOfImgLabel.Left := 0;
+      FSearchAreaOutOfImgLabel.Top := 0;
+      FSearchAreaOutOfImgLabel.Width := CSearchAreaMaxWidth;
+      FSearchAreaOutOfImgLabel.Height := CSearchAreaMaxHeight;
+      FSearchAreaOutOfImgLabel.OnMouseMove := imgSearchAreaControlDbgMouseMove;
+    end;
 
     if FSearchAreaControlDbgImg = nil then
     begin
@@ -1888,10 +1906,10 @@ begin
     FSearchAreaSearchedTextDbgImg.PopupMenu := FSearchAreaMenu;
     FSearchAreaGridImg.PopupMenu := FSearchAreaMenu;
 
-    FSearchAreaLeftLimitLabel.Height := 1200;//FSearchAreaScrBox.Height;
-    FSearchAreaTopLimitLabel.Width := 2000;//FSearchAreaScrBox.Width;
-    FSearchAreaRightLimitLabel.Height := 1200;//FFSearchAreaScrBox.Height;
-    FSearchAreaBottomLimitLabel.Width := 2000;//FSearchAreaScrBox.Width;
+    FSearchAreaLeftLimitLabel.Height := CSearchAreaMaxHeight;//FSearchAreaScrBox.Height;
+    FSearchAreaTopLimitLabel.Width := CSearchAreaMaxWidth;//FSearchAreaScrBox.Width;
+    FSearchAreaRightLimitLabel.Height := CSearchAreaMaxHeight;//FFSearchAreaScrBox.Height;
+    FSearchAreaBottomLimitLabel.Width := CSearchAreaMaxWidth;//FSearchAreaScrBox.Width;
 
     //
     {FSearchAreaLeftLimitLabel.Anchors := FSearchAreaLeftLimitLabel.Anchors + [akBottom];
@@ -1902,8 +1920,14 @@ begin
 
     FindControlOptions := DoOnGetFindControlOptions;
 
-    FSearchAreaSearchedBmpDbgImg.Left := StrToIntDef(EvaluateReplacements(FindControlOptions^.InitialRectangle.LeftOffset), 20);
-    FSearchAreaSearchedBmpDbgImg.Top := StrToIntDef(EvaluateReplacements(FindControlOptions^.InitialRectangle.TopOffset), 20);
+    ControlLeft := StrToIntDef(EvaluateReplacements('$Control_Left$'), 0);
+    ControlTop := StrToIntDef(EvaluateReplacements('$Control_Top$'), 0);
+
+    FSearchAreaSearchedBmpDbgImg.Left := StrToIntDef(EvaluateReplacements(FindControlOptions^.InitialRectangle.LeftOffset), 0);
+    FSearchAreaSearchedBmpDbgImg.Top := StrToIntDef(EvaluateReplacements(FindControlOptions^.InitialRectangle.TopOffset), 0);
+
+    FSearchAreaSearchedBmpDbgImg.Left := FSearchAreaSearchedBmpDbgImg.Left - (ControlLeft - StrToIntDef(EvaluateReplacements(FindControlOptions^.InitialRectangle.Left), 0)) * Ord(not FindControlOptions^.UseWholeScreen);
+    FSearchAreaSearchedBmpDbgImg.Top := FSearchAreaSearchedBmpDbgImg.Top - (ControlTop - StrToIntDef(EvaluateReplacements(FindControlOptions^.InitialRectangle.Top), 0)) * Ord(not FindControlOptions^.UseWholeScreen);
 
     FSearchAreaSearchedTextDbgImg.Left := FSearchAreaSearchedBmpDbgImg.Left;
     FSearchAreaSearchedTextDbgImg.Top := FSearchAreaSearchedBmpDbgImg.Top;
@@ -1915,23 +1939,22 @@ begin
     FTransparent_SearchAreaTopLimitLabel.Top := FSearchAreaTopLimitLabel.Top;
     //tmrUpdateGrid.Enabled := True;
 
-    //FSearchAreaRightLimitLabel.Left := StrToIntDef(EvaluateReplacements(lbeSearchRectRightOffset.Text), 20);    //wrong, see below
-    //FSearchAreaBottomLimitLabel.Top := StrToIntDef(EvaluateReplacements(lbeSearchRectBottomOffset.Text), 20);   //wrong, see below
+    FSearchAreaRightLimitLabel.Left := StrToIntDef(EvaluateReplacements(FindControlOptions^.InitialRectangle.RightOffset), 0);
+    FSearchAreaBottomLimitLabel.Top := StrToIntDef(EvaluateReplacements(FindControlOptions^.InitialRectangle.BottomOffset), 0);
+
     if FindControlOptions^.UseWholeScreen then
     begin
-      ControlRight := Screen.Width;
-      ControlBottom := Screen.Height;
+      FSearchAreaRightLimitLabel.Left := FSearchAreaRightLimitLabel.Left + Screen.Width;
+      FSearchAreaBottomLimitLabel.Top := FSearchAreaBottomLimitLabel.Top + Screen.Height;
     end
     else
     begin
-      ControlRight := StrToIntDef(EvaluateReplacements(FindControlOptions^.InitialRectangle.Right), 20) - StrToIntDef(EvaluateReplacements(FindControlOptions^.InitialRectangle.Left), 20); //Right edge of the search area.
-      ControlBottom := StrToIntDef(EvaluateReplacements(FindControlOptions^.InitialRectangle.Bottom), 20) - StrToIntDef(EvaluateReplacements(FindControlOptions^.InitialRectangle.Top), 20); //Bottom edge of the search area.
+      FSearchAreaRightLimitLabel.Left := FSearchAreaRightLimitLabel.Left - (ControlLeft - StrToIntDef(EvaluateReplacements(FindControlOptions^.InitialRectangle.Right), 0));
+      FSearchAreaBottomLimitLabel.Top := FSearchAreaBottomLimitLabel.Top - (ControlTop - StrToIntDef(EvaluateReplacements(FindControlOptions^.InitialRectangle.Bottom), 0));
     end;
 
-    FSearchAreaRightLimitLabel.Left := ControlRight + StrToIntDef(EvaluateReplacements(FindControlOptions^.InitialRectangle.RightOffset), 20);   ////////// should be control right + offset (offset can be negative)
-    FSearchAreaBottomLimitLabel.Top := ControlBottom + StrToIntDef(EvaluateReplacements(FindControlOptions^.InitialRectangle.BottomOffset), 20);    ////////// should be control bottom + offset (offset can be negative)
-
     UpdateTransparent_SearchAreaLimitsFromSearchAreaLimits;
+    UpdateSearchAreaLabelColorsFromTheirPosition;
     ///////////////////////
 
     PopulateDbgImgExtraMenu;
@@ -1972,7 +1995,7 @@ procedure TfrClickerFindControl.btnDisplaySearchAreaDebuggingImageClick(Sender: 
 var
   TempBmp: TBitmap;
 begin
-  DisplayDebuggingImage;
+  DisplayDebuggingImage;  //call this, before working with FSearchAreaControlDbgImg, because it might be nil, so it has to be created
 
   TempBmp := TBitmap.Create;
   try
@@ -1983,6 +2006,8 @@ begin
 
       WipeImage(FSearchAreaControlDbgImg, TempBmp.Width, TempBmp.Height);
       FSearchAreaControlDbgImg.Canvas.Draw(0, 0, TempBmp);
+
+      DisplayDebuggingImage; //call again, to update the content
     end;
   finally
     TempBmp.Free;
