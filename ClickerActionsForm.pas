@@ -398,9 +398,6 @@ begin
   Height := AIni.ReadInteger('ActionsWindow', 'Height', Height);
   chkStayOnTop.Checked := AIni.ReadBool('ActionsWindow', 'StayOnTop', chkStayOnTop.Checked);
   PageControlMain.ActivePageIndex := AIni.ReadInteger('ActionsWindow', 'ActivePageIndex', PageControlMain.ActivePageIndex);
-  frClickerActionsArrMain.chkSwitchEditorOnActionSelect.Checked := AIni.ReadBool('ActionsWindow', 'SwitchEditorOnActionSelect.Main', True);
-  frClickerActionsArrExperiment1.chkSwitchEditorOnActionSelect.Checked := AIni.ReadBool('ActionsWindow', 'SwitchEditorOnActionSelect.Exp1', True);
-  frClickerActionsArrExperiment2.chkSwitchEditorOnActionSelect.Checked := AIni.ReadBool('ActionsWindow', 'SwitchEditorOnActionSelect.Exp2', True);
 
   frClickerActionsArrMain.frClickerActions.frClickerFindControl.chkDisplayCroppingLines.Checked := AIni.ReadBool('ActionsWindow', 'DisplayCroppingLines.Main', True);
   frClickerActionsArrExperiment1.frClickerActions.frClickerFindControl.chkDisplayCroppingLines.Checked := AIni.ReadBool('ActionsWindow', 'DisplayCroppingLines.Exp1', True);
@@ -455,10 +452,6 @@ begin
   AIni.WriteInteger('ActionsWindow', 'Height', Height);
   AIni.WriteBool('ActionsWindow', 'StayOnTop', chkStayOnTop.Checked);
   AIni.WriteInteger('ActionsWindow', 'ActivePageIndex', PageControlMain.ActivePageIndex);
-
-  AIni.WriteBool('ActionsWindow', 'SwitchEditorOnActionSelect.Main', frClickerActionsArrMain.chkSwitchEditorOnActionSelect.Checked);
-  AIni.WriteBool('ActionsWindow', 'SwitchEditorOnActionSelect.Exp1', frClickerActionsArrExperiment1.chkSwitchEditorOnActionSelect.Checked);
-  AIni.WriteBool('ActionsWindow', 'SwitchEditorOnActionSelect.Exp2', frClickerActionsArrExperiment2.chkSwitchEditorOnActionSelect.Checked);
 
   AIni.WriteBool('ActionsWindow', 'DisplayCroppingLines.Main', frClickerActionsArrMain.frClickerActions.frClickerFindControl.chkDisplayCroppingLines.Checked);
   AIni.WriteBool('ActionsWindow', 'DisplayCroppingLines.Exp1', frClickerActionsArrExperiment1.frClickerActions.frClickerFindControl.chkDisplayCroppingLines.Checked);
@@ -1323,8 +1316,6 @@ begin
         NewFrame.spdbtnPlayAllActions.Enabled := False;
         NewFrame.spdbtnStopPlaying.Enabled := True;
         NewFrame.frClickerActions.PredefinedVarCount := memVariables.Lines.Count;
-
-        NewFrame.chkSwitchEditorOnActionSelect.Checked := frClickerActionsArrMain.chkSwitchEditorOnActionSelect.Checked;
 
         if TfrClickerActionsArr(Sender).chkEnableDebuggerKeys.Checked then
           NewFrame.chkEnableDebuggerKeys.Checked := True;

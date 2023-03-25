@@ -515,7 +515,7 @@ type
     property BMPTextFontProfiles[Index: Integer]: TFontProfile read GetFontProfile;
     property SelectedBMPTextTab: Integer read GetSelectedBMPTextTab write SetSelectedBMPTextTab;
 
-    property InMemFS: TInMemFileSystem write FInMemFS;
+    property InMemFS: TInMemFileSystem read FInMemFS write FInMemFS;
     property SearchAreaControlDbgImg: TImage read FSearchAreaControlDbgImg;
     property frClickerPrimitives: TfrClickerPrimitives read FfrClickerPrimitives;
 

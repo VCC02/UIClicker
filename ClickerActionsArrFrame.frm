@@ -138,7 +138,7 @@ object frClickerActionsArr: TfrClickerActionsArr
       OnClick = btnLoadTemplateClick
     end
     object spdbtnSaveTemplate: TSpeedButton
-      Left = 416
+      Left = 440
       Height = 25
       Top = 207
       Width = 93
@@ -147,7 +147,7 @@ object frClickerActionsArr: TfrClickerActionsArr
       OnClick = btnSaveTemplateClick
     end
     object spdbtnExtraSave: TSpeedButton
-      Left = 508
+      Left = 532
       Height = 25
       Top = 207
       Width = 18
@@ -594,17 +594,6 @@ object frClickerActionsArr: TfrClickerActionsArr
       TabOrder = 5
       Visible = False
     end
-    object chkSwitchEditorOnActionSelect: TCheckBox
-      Left = 467
-      Height = 19
-      Top = 207
-      Width = 195
-      Anchors = [akRight, akBottom]
-      AutoSize = False
-      Caption = 'Switch editor tab on action select'
-      TabOrder = 6
-      Visible = False
-    end
     object spdbtnTemplateNotes: TSpeedButton
       Left = 576
       Height = 23
@@ -772,6 +761,26 @@ object frClickerActionsArr: TfrClickerActionsArr
       }
       ShowHint = True
       Visible = False
+    end
+    object spdbtnExtraLoad: TSpeedButton
+      Left = 409
+      Height = 25
+      Top = 207
+      Width = 18
+      Anchors = [akLeft, akBottom]
+      Font.Color = clWindowText
+      Glyph.Data = {
+        EA000000424DEA0000000000000036000000280000000B000000050000000100
+        180000000000B400000000000000000000000000000000000000FFFFFFFFFFFF
+        FFFFFFFFFFFFFFFFFF39841AFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF000000FFFF
+        FFFFFFFFFFFFFFFFFFFF39841A39841A39841AFFFFFFFFFFFFFFFFFFFFFFFF00
+        0000FFFFFFFFFFFFFFFFFF39841A39841A39841A39841A39841AFFFFFFFFFFFF
+        FFFFFF000000FFFFFFFFFFFF39841A39841A39841A39841A39841A39841A3984
+        1AFFFFFFFFFFFF000000FFFFFF39841A39841A39841A39841A39841A39841A39
+        841A39841A39841AFFFFFF000000
+      }
+      OnClick = spdbtnExtraLoadClick
+      ParentFont = False
     end
   end
   object pnlVertSplitter: TPanel
@@ -1428,5 +1437,16 @@ object frClickerActionsArr: TfrClickerActionsArr
     OnTimer = tmrEditActionsVSTTimer
     Left = 40
     Top = 8
+  end
+  object pmExtraLoad: TPopupMenu
+    Left = 408
+    Top = 232
+    object MenuItem_RecentFiles: TMenuItem
+      Caption = 'Recent Files'
+      Enabled = False
+    end
+    object MenuItem_InMemReceivedAsServer: TMenuItem
+      Caption = 'In-Memory - Received as server'
+    end
   end
 end

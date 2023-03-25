@@ -317,6 +317,7 @@ type
     function DoOnGetPictureOpenDialogFileName: string;
 
 
+    function GetInMemFS: TInMemFileSystem;
     procedure SetInMemFS(Value: TInMemFileSystem);
 
     procedure SetLabelsFromMouseOverExecDbgImgPixelColor(APixelColor: TColor);
@@ -446,7 +447,7 @@ type
     //property ListOfSetVarEntries: string read GetListOfSetVarEntries write SetListOfSetVarEntries;
 
     property ListOfCustomVariables: string read GetListOfCustomVariables write SetListOfCustomVariables;
-    property InMemFS: TInMemFileSystem write SetInMemFS;
+    property InMemFS: TInMemFileSystem read GetInMemFS write SetInMemFS;
 
     property CurrentlyEditingActionType: TClkAction read GetCurrentlyEditingActionType write SetCurrentlyEditingActionType;
     property EditingAction: PClkActionRec read FEditingAction; //the pointer is not writable from outside, only the content
@@ -1315,6 +1316,12 @@ begin
     FDebuggingInfoAvailable := Value;
     UpdatePageControlActionExecutionIcons;
   end;
+end;
+
+
+function TfrClickerActions.GetInMemFS: TInMemFileSystem;
+begin
+  Result := frClickerFindControl.InMemFS;
 end;
 
 

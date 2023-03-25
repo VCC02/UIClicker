@@ -45,7 +45,6 @@ type
   { TfrClickerActionsArr }
 
   TfrClickerActionsArr = class(TFrame)
-    chkSwitchEditorOnActionSelect: TCheckBox;
     chkEnableDebuggerKeys: TCheckBox;
     chkResetVarsOnPlayAll: TCheckBox;
     chkShowActionNumber: TCheckBox;
@@ -59,6 +58,8 @@ type
     lbeSearchAction: TLabeledEdit;
     lblModifiedStatus: TLabel;
     memLogErr: TMemo;
+    MenuItem_InMemReceivedAsServer: TMenuItem;
+    MenuItem_RecentFiles: TMenuItem;
     MenuItem_UpdateFromOI: TMenuItem;
     MenuItem_SetActionStatusToFailed: TMenuItem;
     MenuItem_SetActionStatusToAllowedFailed: TMenuItem;
@@ -85,6 +86,7 @@ type
     pmExtraRemove: TPopupMenu;
     pnlvstActions: TPanel;
     pmExtraPlayAction: TPopupMenu;
+    pmExtraLoad: TPopupMenu;
     Removeallactions1: TMenuItem;
     imglstActionStatus: TImageList;
     pmExtraAdd: TPopupMenu;
@@ -100,6 +102,7 @@ type
     spdbtnExtraPlayAction: TSpeedButton;
     spdbtnExtraRemove: TSpeedButton;
     spdbtnExtraSave: TSpeedButton;
+    spdbtnExtraLoad: TSpeedButton;
     spdbtnLoadTemplate: TSpeedButton;
     spdbtnMoveDown: TSpeedButton;
     spdbtnMoveUp: TSpeedButton;
@@ -149,6 +152,7 @@ type
       Y: Integer);
     procedure pnlVertSplitterMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
+    procedure spdbtnExtraLoadClick(Sender: TObject);
     procedure spdbtnExtraPlayActionClick(Sender: TObject);
     procedure spdbtnPaletteClick(Sender: TObject);
     procedure spdbtnTemplateNotesClick(Sender: TObject);
@@ -329,13 +333,16 @@ type
     function HandleOnPictureOpenDialogExecute: Boolean;
     function HandleOnGetPictureOpenDialogFileName: string;
 
+    function GetInMemFS: TInMemFileSystem;
     procedure SetInMemFS(Value: TInMemFileSystem);
 
     procedure CreateRemainingUIComponents;
 
+    procedure LoadTemplateWithUIUpdate(AFileName: string; AFileLocation: TFileLocation = flDisk; AInMemFileSystem: TInMemFileSystem = nil);
     procedure SetFullTemplatesDir(Value: string);
     procedure SetModified(Value: Boolean);
     procedure UpdateModifiedLabel;
+    procedure SaveTemplateIfModified;
 
     procedure ResizeFrameSectionsBySplitter(NewTop: Integer);
 
@@ -345,6 +352,8 @@ type
     procedure FPaletteVstMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure FPaletteVstMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
     procedure FPaletteVsMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+
+    procedure ExtraLoadInMemFileClick(Sender: TObject);
 
     procedure UpdateNodesCheckStateFromActions;
     procedure RemoveAction(ActionIndex: Integer; AClearSelectionAfterRemoving: Boolean = True);
@@ -471,7 +480,7 @@ type
     property FileLocationOfDepsIsMem: Boolean read FFileLocationOfDepsIsMem write FFileLocationOfDepsIsMem;
     property RemoteAddress: string read FRemoteAddress write FRemoteAddress;
 
-    property InMemFS: TInMemFileSystem write SetInMemFS;
+    property InMemFS: TInMemFileSystem read GetInMemFS write SetInMemFS;
     property ActionExecution: TActionExecution read FActionExecution;
     property ShouldStopAtBreakPoint: Boolean {read FShouldStopAtBreakPoint} write FShouldStopAtBreakPoint;
 
@@ -3352,6 +3361,56 @@ begin
 end;
 
 
+procedure TfrClickerActionsArr.ExtraLoadInMemFileClick(Sender: TObject);
+var
+  Fnm: string;
+begin
+  Fnm := (Sender as TMenuItem).Caption;
+  Fnm := StringReplace(Fnm, '&', '', [rfReplaceAll]);
+
+  LoadTemplateWithUIUpdate(Fnm, flMem, InMemFS);
+
+  SaveTemplateIfModified;
+
+  FFileName := Fnm; //update before loading, to allow properly displaying the label
+  lblModifiedStatus.Hint := FFileName;
+  LoadTemplate(FFileName, flMem, InMemFS); //load with full path
+
+  frClickerActions.ClearControls;
+  StopGlowingUpdateButton;
+end;
+
+
+procedure TfrClickerActionsArr.spdbtnExtraLoadClick(Sender: TObject);
+var
+  tp: TPoint;
+  i: Integer;
+  MenuItem: TMenuItem;
+  ListOfMemFiles: TStringList;
+begin
+  pmExtraLoad.Items[1].Clear;
+
+  ListOfMemFiles := TStringList.Create;
+  try
+    frClickerActions.InMemFS.ListMemFiles(ListOfMemFiles);
+
+    for i := 0 to ListOfMemFiles.Count - 1 do
+    begin
+      MenuItem := TMenuItem.Create(Self);
+      MenuItem.Caption := ListOfMemFiles.Strings[i];
+      MenuItem.OnClick := ExtraLoadInMemFileClick;
+      pmExtraLoad.Items[1].Add(MenuItem);
+    end;
+
+  finally
+    ListOfMemFiles.Free;
+  end;
+
+  GetCursorPos(tp);
+  pmExtraLoad.Popup(tp.X, tp.Y);
+end;
+
+
 procedure TfrClickerActionsArr.spdbtnExtraPlayActionClick(Sender: TObject);
 var
   tp: TPoint;
@@ -3901,13 +3960,8 @@ begin
 end;
 
 
-procedure TfrClickerActionsArr.btnLoadTemplateClick(Sender: TObject);
+procedure TfrClickerActionsArr.SaveTemplateIfModified;
 begin
-  DoOnSetOpenDialogInitialDir(FullTemplatesDir);
-  CreateDirWithSubDirs(FullTemplatesDir);
-  if not DoOnOpenDialogExecute(CTemplateDialogFilter) then
-    Exit;
-
   if FModified then
   begin
     if MessageBox(Handle, 'The current template is modified. Save before loading a new one?', PChar(Caption), MB_ICONQUESTION + MB_YESNO) = IDYES then
@@ -3929,13 +3983,30 @@ begin
       lblModifiedStatus.Hint := DoOnGetSaveDialogFileName;
     end;
   end;
+end;
 
-  FFileName := DoOnGetOpenDialogFileName; //update before loading, to allow properly displaying the label
+
+procedure TfrClickerActionsArr.LoadTemplateWithUIUpdate(AFileName: string; AFileLocation: TFileLocation = flDisk; AInMemFileSystem: TInMemFileSystem = nil);
+begin
+  SaveTemplateIfModified;
+
+  FFileName := AFileName; //update before loading, to allow properly displaying the label
   lblModifiedStatus.Hint := FFileName;
   LoadTemplate(FFileName); //load with full path
 
   frClickerActions.ClearControls;
   StopGlowingUpdateButton;
+end;
+
+
+procedure TfrClickerActionsArr.btnLoadTemplateClick(Sender: TObject);
+begin
+  DoOnSetOpenDialogInitialDir(FullTemplatesDir);
+  CreateDirWithSubDirs(FullTemplatesDir);
+  if not DoOnOpenDialogExecute(CTemplateDialogFilter) then
+    Exit;
+
+  LoadTemplateWithUIUpdate(DoOnGetOpenDialogFileName);
 end;
 
 
@@ -4308,10 +4379,17 @@ begin
 end;
 
 
+function TfrClickerActionsArr.GetInMemFS: TInMemFileSystem;
+begin
+  Result := frClickerActions.InMemFS;
+end;
+
+
 procedure TfrClickerActionsArr.SetInMemFS(Value: TInMemFileSystem);
 begin
   frClickerActions.InMemFS := Value;
 end;
+
 
 //called in server mode
 procedure TfrClickerActionsArr.tmrExecActionFromSrvModuleTimer(Sender: TObject);
