@@ -321,12 +321,15 @@ type
 
 
   TBrightnessOperation = (boInc, boDec, boIncR, boIncG, boIncB, boDecR, boDecG, boDecB);
+  TDisplayGridLineOption = (loDot, loSolid, loTransparentSolid);
 
   TOnUpdateSearchAreaLimitsInOIFromDraggingLines = procedure(ALimitLabelsToUpdate: TLimitLabels; var AOffsets: TSimpleRectString) of object;
   TOnUpdateTextCroppingLimitsInOIFromDraggingLines = procedure(ALimitLabelsToUpdate: TLimitLabels; var AOffsets: TSimpleRectString; AFontProfileName: string) of object;
   TOnUpdateTextCroppingLimitsInOIFromDraggingLinesIdx = procedure(ALimitLabelsToUpdate: TLimitLabels; var AOffsets: TSimpleRectString; AFontProfileIndex: Integer) of object;
   TOnGetFindControlOptions = function: PClkFindControlOptions of object;
   TOnGetFindControlMatchBitmapText = function(Sender: TObject): PClkFindControlMatchBitmapText of object;
+  TOnGetGridDrawingOption = function: TDisplayGridLineOption of object;
+
 
 const
   CActionStatusStr: array[TActionStatus] of string = ('Not Started', 'Failed', 'Successful', 'In Progress', 'Allowed Failed');
@@ -342,6 +345,8 @@ const
 
   CLabel_Orange: TColor = $366FFF;
   CLabel_LightGreen: TColor = $4CC123;
+
+  CDisplayGridLineOptionStr: array[TDisplayGridLineOption] of string = ('Dot', 'Solid', 'TransparentSolid');
 
   CDefaultFontProfileName = 'Profile [0]';
   CTemplateDialogFilter = 'Clicker Action Templates (*.clktmpl)|*.clktmpl|All Files (*.*)|*.*';
