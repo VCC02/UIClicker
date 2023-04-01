@@ -325,6 +325,8 @@ type
     function GetCurrentlyEditingActionType: TClkAction;
     procedure SetCurrentlyEditingActionType(Value: TClkAction);
 
+    procedure SetGridDrawingOption(Value: TDisplayGridLineOption);
+
     procedure LocalTemplatesClick(Sender: TObject);
     procedure BrowseTemplatesClick(Sender: TObject);
     procedure ClickerConditionEditorControlsModified;
@@ -451,6 +453,8 @@ type
 
     property CurrentlyEditingActionType: TClkAction read GetCurrentlyEditingActionType write SetCurrentlyEditingActionType;
     property EditingAction: PClkActionRec read FEditingAction; //the pointer is not writable from outside, only the content
+
+    property GridDrawingOption: TDisplayGridLineOption write SetGridDrawingOption;
 
     property OnCopyControlTextAndClassFromMainWindow: TOnCopyControlTextAndClassFromMainWindow read FOnCopyControlTextAndClassFromMainWindow write FOnCopyControlTextAndClassFromMainWindow;
     property OnGetExtraSearchAreaDebuggingImage: TOnGetExtraSearchAreaDebuggingImage write FOnGetExtraSearchAreaDebuggingImage;
@@ -1735,6 +1739,13 @@ begin
       pnlCover.BringToFront;
     end;
   end;
+end;
+
+
+procedure TfrClickerActions.SetGridDrawingOption(Value: TDisplayGridLineOption);
+begin
+  frClickerFindControl.GridDrawingOption := Value;
+  frClickerFindControl.RefreshGrid;
 end;
 
 

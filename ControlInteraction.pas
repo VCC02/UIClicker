@@ -61,8 +61,8 @@ type
 procedure SetControlText(hw: THandle; NewText: string);
 procedure SelectComboBoxItem(hw: THandle; StartIndex: Integer; TextToSelect: string);
 
-function MatchControlByBitmap(Algorithm: TMatchBitmapAlgorithm; AlgorithmSettings: TMatchBitmapAlgorithmSettings; CompAtPoint: TCompRec; InputData: TFindControlInputData; out SubCnvXOffset, SubCnvYOffset: Integer; AStopAllActionsOnDemand: PBoolean): Boolean;
-function FindControlOnScreen(Algorithm: TMatchBitmapAlgorithm; AlgorithmSettings: TMatchBitmapAlgorithmSettings; InputData: TFindControlInputData; AInitialTickCount, ATimeout: Cardinal; AStopAllActionsOnDemand: PBoolean; out AResultedControl: TCompRec): Boolean;
+function MatchControlByBitmap(Algorithm: TMatchBitmapAlgorithm; AlgorithmSettings: TMatchBitmapAlgorithmSettings; CompAtPoint: TCompRec; InputData: TFindControlInputData; out SubCnvXOffset, SubCnvYOffset: Integer; AStopAllActionsOnDemand: PBoolean; ADisplayGridLineOption: TDisplayGridLineOption): Boolean;
+function FindControlOnScreen(Algorithm: TMatchBitmapAlgorithm; AlgorithmSettings: TMatchBitmapAlgorithmSettings; InputData: TFindControlInputData; AInitialTickCount, ATimeout: Cardinal; AStopAllActionsOnDemand: PBoolean; out AResultedControl: TCompRec; ADisplayGridLineOption: TDisplayGridLineOption): Boolean;
 function FindWindowOnScreenByCaptionOrClass(InputData: TFindControlInputData; AInitialTickCount, ATimeout: Cardinal; AStopAllActionsOnDemand: PBoolean; out AResultedControl: TCompRec): Boolean;
 function FindWindowOnScreenByCaptionAndClass(InputData: TFindControlInputData; AInitialTickCount, ATimeout: Cardinal; AStopAllActionsOnDemand: PBoolean; out AResultedControl: TCompRec): Boolean;
 
@@ -490,7 +490,7 @@ begin
 end;
 
 
-procedure DisplayDebugGrid(Algorithm: TMatchBitmapAlgorithm; AlgorithmSettings: TMatchBitmapAlgorithmSettings; DebugGrid: TImage; ScrShot_Width, ScrShot_Height: Integer);
+procedure DisplayDebugGrid(Algorithm: TMatchBitmapAlgorithm; AlgorithmSettings: TMatchBitmapAlgorithmSettings; DebugGrid: TImage; ScrShot_Width, ScrShot_Height: Integer; ADisplayGridLineOption: TDisplayGridLineOption);
 var
   TempImg: TImage;
 begin
@@ -514,7 +514,7 @@ begin
     WipeImage(TempImg, ScrShot_Width, ScrShot_Height);
 
     WipeImage(DebugGrid, ScrShot_Width, ScrShot_Height);
-    DrawSearchGrid(TempImg, AlgorithmSettings, ScrShot_Width, ScrShot_Height, $00C9AEFF); //pink
+    DrawSearchGrid(TempImg, AlgorithmSettings, ScrShot_Width, ScrShot_Height, $00C9AEFF, ADisplayGridLineOption); //pink
     DebugGrid.Canvas.Draw(AlgorithmSettings.XOffset, AlgorithmSettings.YOffset, TempImg.Picture.Graphic);
   finally
     TempImg.Free;
@@ -565,7 +565,7 @@ end;
 
 //Searches for BitmapToSearchFor in the bitmap of a component defined by ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height
 //SrcCompSearchAreaBitmap - bitmap with source component, defined by InitRect
-function MatchControlByBitmap(Algorithm: TMatchBitmapAlgorithm; AlgorithmSettings: TMatchBitmapAlgorithmSettings; CompAtPoint: TCompRec; InputData: TFindControlInputData; out SubCnvXOffset, SubCnvYOffset: Integer; AStopAllActionsOnDemand: PBoolean): Boolean;
+function MatchControlByBitmap(Algorithm: TMatchBitmapAlgorithm; AlgorithmSettings: TMatchBitmapAlgorithmSettings; CompAtPoint: TCompRec; InputData: TFindControlInputData; out SubCnvXOffset, SubCnvYOffset: Integer; AStopAllActionsOnDemand: PBoolean; ADisplayGridLineOption: TDisplayGridLineOption): Boolean;
 var
   ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height, CompWith, CompHeight: Integer;
   SrcCompSearchAreaBitmap: TBitmap;
@@ -605,7 +605,7 @@ begin
       else
         DisplayDebugBmpForFailedMatch(InputData.BitmapToSearchFor, SrcCompSearchAreaBitmap, InputData.DebugBitmap, ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height, SubCnvXOffset, SubCnvYOffset, InputData.MatchingMethods, InputData.DebugTemplateName, InputData.Text);
 
-      DisplayDebugGrid(Algorithm, AlgorithmSettings, InputData.DebugGrid, ScrShot_Width, ScrShot_Height);
+      DisplayDebugGrid(Algorithm, AlgorithmSettings, InputData.DebugGrid, ScrShot_Width, ScrShot_Height, ADisplayGridLineOption);
     end;
   finally
     SrcCompSearchAreaBitmap.Free;
@@ -628,7 +628,8 @@ function MatchControl(var CompAtPoint: TCompRec;
                       InputData: TFindControlInputData;
                       AStopAllActionsOnDemand: PBoolean;
                       {var} AvailableControls: TCompRecArr; //Do not pass by reference. Let it create a copy, so that any modification will not affect "source" components (search area).
-                      ListOfControlTexts, ListOfControlClasses: TStringList
+                      ListOfControlTexts, ListOfControlClasses: TStringList;
+                      ADisplayGridLineOption: TDisplayGridLineOption
                       ): Boolean;
 var
   FoundClass, FoundText, FoundBmp: Boolean;
@@ -661,7 +662,7 @@ begin
       SetLength(AvailableControls, Length(AvailableControls) + 1);
       AvailableControls[Length(AvailableControls) - 1] := CompAtPoint;
 
-      FoundBmp := MatchControlByBitmap(Algorithm, AlgorithmSettings, CompAtPoint, InputData, SubCnvXOffset, SubCnvYOffset, AStopAllActionsOnDemand);
+      FoundBmp := MatchControlByBitmap(Algorithm, AlgorithmSettings, CompAtPoint, InputData, SubCnvXOffset, SubCnvYOffset, AStopAllActionsOnDemand, ADisplayGridLineOption);
     end
     else
       FoundBmp := False;
@@ -682,7 +683,7 @@ begin
 end;
 
 
-function FindControlOnScreen(Algorithm: TMatchBitmapAlgorithm; AlgorithmSettings: TMatchBitmapAlgorithmSettings; InputData: TFindControlInputData; AInitialTickCount, ATimeout: Cardinal; AStopAllActionsOnDemand: PBoolean; out AResultedControl: TCompRec): Boolean;
+function FindControlOnScreen(Algorithm: TMatchBitmapAlgorithm; AlgorithmSettings: TMatchBitmapAlgorithmSettings; InputData: TFindControlInputData; AInitialTickCount, ATimeout: Cardinal; AStopAllActionsOnDemand: PBoolean; out AResultedControl: TCompRec; ADisplayGridLineOption: TDisplayGridLineOption): Boolean;
 var
   i, j, k: Integer;
   tp: TPoint;
@@ -750,7 +751,8 @@ begin
                       AStopAllActionsOnDemand,
                       AvailableControls,
                       ListOfControlTexts,
-                      ListOfControlClasses) then
+                      ListOfControlClasses,
+                      ADisplayGridLineOption) then
       begin
         AResultedControl := CompAtPoint;
         Result := True;
@@ -802,7 +804,8 @@ begin
                             AStopAllActionsOnDemand,
                             AvailableControls,
                             ListOfControlTexts,
-                            ListOfControlClasses) then
+                            ListOfControlClasses,
+                            ADisplayGridLineOption) then
             begin
               AResultedControl := CompAtPoint;
               Result := True;

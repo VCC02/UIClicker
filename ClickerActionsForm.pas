@@ -79,6 +79,7 @@ type
     chkStayOnTop: TCheckBox;
     cmbExecMode: TComboBox;
     cmbFilesExistence: TComboBox;
+    cmbImgPreviewGridType: TComboBox;
     grpMissingFilesMonitoring: TGroupBox;
     grpAllowedFileExtensionsForServer: TGroupBox;
     grpAllowedFileDirsForServer: TGroupBox;
@@ -87,6 +88,7 @@ type
     IdSchedulerOfThreadPool1: TIdSchedulerOfThreadPool;
     imglstCalledTemplates: TImageList;
     imglstMainPage: TImageList;
+    lblGridType: TLabel;
     lblClientMode: TLabel;
     lbeConnectTimeout: TLabeledEdit;
     lblServerMode: TLabel;
@@ -127,6 +129,7 @@ type
     procedure chkServerActiveChange(Sender: TObject);
     procedure chkStayOnTopClick(Sender: TObject);
     procedure cmbExecModeChange(Sender: TObject);
+    procedure cmbImgPreviewGridTypeChange(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure IdHTTPServer1CommandGet(AContext: TIdContext;
@@ -227,6 +230,7 @@ type
 
     procedure SetExecutionMode(AMode: Integer);
     procedure ProcessChangingExecutionMode;
+    procedure UpdateGridType;
 
     procedure HandleNewFrameRefreshButton(Sender: TObject);
     function frClickerActionsArrOnCallTemplate(Sender: TObject; AFileNameToCall: string; ListOfVariables: TStrings; DebugBitmap: TBitmap; DebugGridImage: TImage; IsDebugging, AShouldStopAtBreakPoint: Boolean; AStackLevel: Integer; AExecutesRemotely: Boolean): Boolean;
@@ -434,6 +438,8 @@ begin
   chkAutoSwitchToExecutingTab.Checked := FAutoSwitchToExecutingTab;
   FAutoEnableSwitchingTabsOnDebugging := AIni.ReadBool('ActionsWindow', 'AutoEnableSwitchingTabsOnDebugging', True);
   chkAutoEnableSwitchingTabsOnDebugging.Checked := FAutoEnableSwitchingTabsOnDebugging;
+  cmbImgPreviewGridType.ItemIndex := AIni.ReadInteger('ActionsWindow', 'GridType', 0);
+  UpdateGridType;
 
   FullTemplatesDir := AIni.ReadString('Dirs', 'FullTemplatesDir', '$AppDir$\ActionTemplates');
   BMPsDir := AIni.ReadString('Dirs', 'BMPsDir', '');
@@ -480,6 +486,7 @@ begin
 
   AIni.WriteBool('ActionsWindow', 'AutoSwitchToExecutingTab', FAutoSwitchToExecutingTab);
   AIni.WriteBool('ActionsWindow', 'AutoEnableSwitchingTabsOnDebugging', FAutoEnableSwitchingTabsOnDebugging);
+  AIni.WriteInteger('ActionsWindow', 'GridType', cmbImgPreviewGridType.ItemIndex);
 
   AIni.WriteString('Dirs', 'BMPsDir', BMPsDir);
   AIni.WriteString('Dirs', 'FullTemplatesDir', StringReplace(FullTemplatesDir, ExtractFileDir(ParamStr(0)), '$AppDir$', [rfReplaceAll]));
@@ -547,6 +554,7 @@ var
   OSVerNumber, OSVerStr: string;
   hmod: THandle;
   AdminStatus: string;
+  i: TDisplayGridLineOption;
 begin
   CreateRemainingUIComponents;
 
@@ -613,6 +621,11 @@ begin
   frClickerActionsArrExperiment1.InitFrame;
   frClickerActionsArrExperiment2.InitFrame;
   frClickerActionsArrMain.InitFrame;
+
+  for i := Low(TDisplayGridLineOption) to High(TDisplayGridLineOption) do
+    cmbImgPreviewGridType.Items.Add(CDisplayGridLineOptionStr[i]);
+
+  cmbImgPreviewGridType.ItemIndex := Ord(loDot);
 
   memVariables.Lines.Add('$Screen_Width$=' + IntToStr(Screen.Width));
   memVariables.Lines.Add('$Screen_Height$=' + IntToStr(Screen.Height));
@@ -686,6 +699,10 @@ begin
   frClickerActionsArrExperiment1.InMemFS := FInMemFileSystem;
   frClickerActionsArrExperiment2.InMemFS := FInMemFileSystem;
   frClickerActionsArrMain.InMemFS := FInMemFileSystem;
+
+  frClickerActionsArrExperiment1.GridDrawingOption := TDisplayGridLineOption(cmbImgPreviewGridType.ItemIndex);
+  frClickerActionsArrExperiment2.GridDrawingOption := TDisplayGridLineOption(cmbImgPreviewGridType.ItemIndex);
+  frClickerActionsArrMain.GridDrawingOption := TDisplayGridLineOption(cmbImgPreviewGridType.ItemIndex);
 
   frClickerActionsArrExperiment1.OnExecuteRemoteActionAtIndex := nil;
   frClickerActionsArrExperiment2.OnExecuteRemoteActionAtIndex := nil;
@@ -1205,6 +1222,7 @@ begin
         NewFrame.FullTemplatesDir := FFullTemplatesDir;
         NewFrame.RemoteAddress := frClickerActionsArrMain.RemoteAddress;
         NewFrame.InMemFS := FInMemFileSystem;
+        NewFrame.GridDrawingOption := TDisplayGridLineOption(cmbImgPreviewGridType.ItemIndex);
 
         NewFrame.OnCallTemplate := frClickerActionsArrOnCallTemplate;
         NewFrame.OnCopyControlTextAndClassFromMainWindow := HandleOnCopyControlTextAndClassFromMainWindow;
@@ -2661,6 +2679,24 @@ end;
 procedure TfrmClickerActions.cmbExecModeChange(Sender: TObject);
 begin
   ProcessChangingExecutionMode;
+end;
+
+
+procedure TfrmClickerActions.UpdateGridType;
+var
+  NewOption: TDisplayGridLineOption;
+begin
+  NewOption := TDisplayGridLineOption(cmbImgPreviewGridType.ItemIndex);
+
+  frClickerActionsArrExperiment1.GridDrawingOption := NewOption;
+  frClickerActionsArrExperiment2.GridDrawingOption := NewOption;
+  frClickerActionsArrMain.GridDrawingOption := NewOption;
+end;
+
+
+procedure TfrmClickerActions.cmbImgPreviewGridTypeChange(Sender: TObject);
+begin
+  UpdateGridType;
 end;
 
 

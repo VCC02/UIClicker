@@ -43,7 +43,7 @@ object frmClickerActions: TfrmClickerActions
   }
   OnCreate = FormCreate
   OnDestroy = FormDestroy
-  LCLVersion = '7.9'
+  LCLVersion = '7.5'
   object PageControlMain: TPageControl
     Left = 8
     Height = 712
@@ -427,9 +427,9 @@ object frmClickerActions: TfrmClickerActions
         end
         object chkDisplayActivity: TCheckBox
           Left = 83
-          Height = 17
+          Height = 19
           Top = 8
-          Width = 90
+          Width = 92
           Caption = 'Display activity'
           Checked = True
           OnChange = chkDisplayActivityChange
@@ -438,10 +438,10 @@ object frmClickerActions: TfrmClickerActions
         end
       end
       object chkStayOnTop: TCheckBox
-        Left = 554
-        Height = 17
+        Left = 552
+        Height = 19
         Top = 0
-        Width = 74
+        Width = 76
         Anchors = [akTop, akRight]
         Caption = 'Stay on top'
         OnClick = chkStayOnTopClick
@@ -478,6 +478,25 @@ object frmClickerActions: TfrmClickerActions
         ShowHint = True
         State = cbChecked
         TabOrder = 10
+      end
+      object cmbImgPreviewGridType: TComboBox
+        Left = 640
+        Height = 19
+        Top = 495
+        Width = 115
+        Anchors = [akRight, akBottom]
+        ItemHeight = 13
+        OnChange = cmbImgPreviewGridTypeChange
+        Style = csOwnerDrawFixed
+        TabOrder = 11
+      end
+      object lblGridType: TLabel
+        Left = 640
+        Height = 13
+        Top = 478
+        Width = 92
+        Anchors = [akRight, akBottom]
+        Caption = 'Displayed grid type'
       end
     end
     object TabSheetTemplateExec: TTabSheet

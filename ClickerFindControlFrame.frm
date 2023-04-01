@@ -478,11 +478,13 @@ object frClickerFindControl: TfrClickerFindControl
       object chkShowGridOnBMPPreview: TCheckBox
         Left = 0
         Height = 19
-        Hint = 'This will not be saved in project.'
+        Hint = 'This will not be saved in project.'#13#10'Right-click for grid options.'
         Top = 1
         Width = 67
         Caption = 'Show grid'
         OnChange = chkShowGridOnBMPPreviewChange
+        ParentShowHint = False
+        ShowHint = True
         TabOrder = 4
       end
     end

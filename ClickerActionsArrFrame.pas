@@ -313,6 +313,7 @@ type
     procedure HandleOnSetEditorSleepProgressBarPosition(APositionValue: Integer);
     procedure HandleOnSetEditorSleepInfo(AElapsedTime, ARemainingTime: string);
     procedure HandleOnAddDefaultFontProfile(var AFindControlOptions: TClkFindControlOptions; var AActionOptions: TClkActionOptions);
+    function HandleOnGetGridDrawingOption: TDisplayGridLineOption;
 
     function HandleOnEditCallTemplateBreakCondition(var AActionCondition: string): Boolean;
     function HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
@@ -335,6 +336,8 @@ type
 
     function GetInMemFS: TInMemFileSystem;
     procedure SetInMemFS(Value: TInMemFileSystem);
+
+    procedure SetGridDrawingOption(Value: TDisplayGridLineOption);
 
     procedure CreateRemainingUIComponents;
 
@@ -483,6 +486,8 @@ type
     property InMemFS: TInMemFileSystem read GetInMemFS write SetInMemFS;
     property ActionExecution: TActionExecution read FActionExecution;
     property ShouldStopAtBreakPoint: Boolean {read FShouldStopAtBreakPoint} write FShouldStopAtBreakPoint;
+
+    property GridDrawingOption: TDisplayGridLineOption write SetGridDrawingOption;
 
     property OnCallTemplate: TOnCallTemplate read FOnCallTemplate write FOnCallTemplate;
     property OnExecuteRemoteActionAtIndex: TOnExecuteRemoteActionAtIndex read FOnExecuteRemoteActionAtIndex write FOnExecuteRemoteActionAtIndex;
@@ -688,6 +693,7 @@ begin
   FActionExecution.OnSetEditorSleepProgressBarPosition := HandleOnSetEditorSleepProgressBarPosition;
   FActionExecution.OnSetEditorSleepInfo := HandleOnSetEditorSleepInfo;
   FActionExecution.OnAddDefaultFontProfile := HandleOnAddDefaultFontProfile;
+  FActionExecution.OnGetGridDrawingOption := HandleOnGetGridDrawingOption;
 
   FCmdConsoleHistory := TStringList.Create;
   FOnExecuteRemoteActionAtIndex := nil;
@@ -843,6 +849,12 @@ begin
     UpdateControlsFromActionsArr(ExecIdx);
     frClickerActions.UpdatePageControlActionExecutionIcons;
   end;
+end;
+
+
+function TfrClickerActionsArr.HandleOnGetGridDrawingOption: TDisplayGridLineOption;
+begin
+  Result := loDot; //hardcoded for now
 end;
 
 
@@ -4388,6 +4400,12 @@ end;
 procedure TfrClickerActionsArr.SetInMemFS(Value: TInMemFileSystem);
 begin
   frClickerActions.InMemFS := Value;
+end;
+
+
+procedure TfrClickerActionsArr.SetGridDrawingOption(Value: TDisplayGridLineOption);
+begin
+  frClickerActions.GridDrawingOption := Value;
 end;
 
 

@@ -64,7 +64,7 @@ function BitmapsAreEqual(ASrcABitmap, ASrcBBitmap: TBitmap; AWidth, AHeight: Int
 procedure MakeImageContentTransparent(AImg: TImage);
 procedure WipeBitmap(ABitmap: TBitmap; NewWidth, NewHeight: Integer);
 procedure WipeImage(AImg: TImage; NewWidth, NewHeight: Integer);
-procedure DrawSearchGrid(AImg: TImage; AlgorithmSettings: TMatchBitmapAlgorithmSettings; AGridWidth, AGridHeight: Integer; AGridColor: TColor);
+procedure DrawSearchGrid(AImg: TImage; AlgorithmSettings: TMatchBitmapAlgorithmSettings; AGridWidth, AGridHeight: Integer; AGridColor: TColor; ADisplayGridLineOption: TDisplayGridLineOption);
 
 
 implementation
@@ -765,12 +765,19 @@ begin
 end;
 
 
-procedure DrawSearchGrid(AImg: TImage; AlgorithmSettings: TMatchBitmapAlgorithmSettings; AGridWidth, AGridHeight: Integer; AGridColor: TColor);
+procedure DrawSearchGrid(AImg: TImage; AlgorithmSettings: TMatchBitmapAlgorithmSettings; AGridWidth, AGridHeight: Integer; AGridColor: TColor; ADisplayGridLineOption: TDisplayGridLineOption);
 var
   x, y: Integer;
 begin
   AImg.Canvas.Pen.Color := AGridColor;
-  AImg.Canvas.Pen.Style := psDot;
+
+  case ADisplayGridLineOption of
+    loDot:
+      AImg.Canvas.Pen.Style := psDot;
+
+    loSolid, loTransparentSolid:
+      AImg.Canvas.Pen.Style := psSolid;
+  end;
 
   if AlgorithmSettings.YMultipleOf < 1 then
     AlgorithmSettings.YMultipleOf := 1;

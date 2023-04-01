@@ -72,6 +72,7 @@ type
     FOnSetEditorSleepInfo: TOnSetEditorSleepInfo;
     FOnGetSelfHandles: TOnGetSelfHandles;
     FOnAddDefaultFontProfile: TOnAddDefaultFontProfile;
+    FOnGetGridDrawingOption: TOnGetGridDrawingOption;
 
     function GetActionVarValue(VarName: string): string;
     procedure SetActionVarValue(VarName, VarValue: string);
@@ -99,6 +100,7 @@ type
     procedure DoOnSetEditorSleepInfo(AElapsedTime, ARemainingTime: string);
     procedure DoOnGetSelfHandles(AListOfSelfHandles: TStringList);
     procedure DoOnAddDefaultFontProfile(var AFindControlOptions: TClkFindControlOptions; var AActionOptions: TClkActionOptions);
+    function DoOnGetGridDrawingOption: TOnGetGridDrawingOption;
   public
     constructor Create;
     destructor Destroy; override;
@@ -148,6 +150,7 @@ type
     property OnSetEditorSleepInfo: TOnSetEditorSleepInfo write FOnSetEditorSleepInfo;
     property OnGetSelfHandles: TOnGetSelfHandles write FOnGetSelfHandles;
     property OnAddDefaultFontProfile: TOnAddDefaultFontProfile write FOnAddDefaultFontProfile;
+    property OnGetGridDrawingOption: TOnGetGridDrawingOption write FOnGetGridDrawingOption;
   end;
 
 
@@ -188,6 +191,7 @@ begin
   FOnSetEditorSleepInfo := nil;
   FOnGetSelfHandles := nil;
   FOnAddDefaultFontProfile := nil;
+  FOnGetGridDrawingOption := nil;
 end;
 
 
@@ -520,6 +524,15 @@ begin
     AFindControlOptions.MatchBitmapText[0].ProfileName := CDefaultFontProfileName;
     frClickerActions.frClickerFindControl.AddNewFontProfile(AFindControlOptions.MatchBitmapText[0]);
   end;
+end;
+
+
+function TActionExecution.DoOnGetGridDrawingOption: TOnGetGridDrawingOption;
+begin
+  if not Assigned(FOnGetGridDrawingOption) then
+    raise Exception.Create('OnGetGridDrawingOption not assigned.')
+  else
+    Result := FOnGetGridDrawingOption;
 end;
 
 
@@ -1159,7 +1172,7 @@ begin
              (mmBitmapText in FindControlInputData.MatchingMethods) then
           begin
             try
-              if FindControlOnScreen(AFindControlOptions.MatchBitmapAlgorithm, AFindControlOptions.MatchBitmapAlgorithmSettings, FindControlInputData, InitialTickCount, Timeout, StopAllActionsOnDemandAddr, ResultedControl) then
+              if FindControlOnScreen(AFindControlOptions.MatchBitmapAlgorithm, AFindControlOptions.MatchBitmapAlgorithmSettings, FindControlInputData, InitialTickCount, Timeout, StopAllActionsOnDemandAddr, ResultedControl, DoOnGetGridDrawingOption) then
               begin
                 UpdateActionVarValuesFromControl(ResultedControl);
                 frClickerActions.DebuggingInfoAvailable := True;
@@ -1217,7 +1230,7 @@ begin
                 else
                   Timeout := AActionOptions.ActionTimeout;
 
-                if FindControlOnScreen(AFindControlOptions.MatchBitmapAlgorithm, AFindControlOptions.MatchBitmapAlgorithmSettings, FindControlInputData, InitialTickCount, Timeout, StopAllActionsOnDemandAddr, ResultedControl) then
+                if FindControlOnScreen(AFindControlOptions.MatchBitmapAlgorithm, AFindControlOptions.MatchBitmapAlgorithmSettings, FindControlInputData, InitialTickCount, Timeout, StopAllActionsOnDemandAddr, ResultedControl, DoOnGetGridDrawingOption) then
                 begin
                   UpdateActionVarValuesFromControl(ResultedControl);
                   frClickerActions.DebuggingInfoAvailable := True;

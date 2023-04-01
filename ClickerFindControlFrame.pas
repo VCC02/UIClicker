@@ -276,9 +276,12 @@ type
     FSelectingXStart: Integer;
     FSelectingYStart: Integer;
 
+    FGridDrawingOption: TDisplayGridLineOption;
+
     FBMPTextProfiles: TFontProfileArr;
     FInMemFS: TInMemFileSystem; //not created in this unit, set from outside as an existing instance
     FfrClickerPrimitives: TfrClickerPrimitives;
+    FGridLineOptionMenu: TPopupMenu;
 
     FOnTriggerOnControlsModified: TOnTriggerOnControlsModified;
     FOnEvaluateReplacements: TOnEvaluateReplacements;
@@ -370,11 +373,13 @@ type
     procedure MenuItemGenericLoadBmpToSearchedAreaClick(Sender: TObject);
 
     procedure FSearchAreaScrBoxMouseWheel(Sender: TObject; Shift: TShiftState; WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
+    procedure MenuSetGridType(Sender: TObject);
 
     function GetFontProfile(Value: Integer): TFontProfile;
 
     procedure CreateRemainingUIComponents;
     procedure CreateSelectionLabels;
+    procedure CreateGridLineOptionMenu;
     procedure DoOnTriggerOnControlsModified;
     function DoOnGetExtraSearchAreaDebuggingImage(AExtraBitmap: TBitmap): Boolean;
 
@@ -392,7 +397,7 @@ type
     function DoOnGetFindControlOptions: PClkFindControlOptions;
 
     procedure HandleMatchTextClick;
-    procedure GeneratePreviewGridContent;
+    procedure GeneratePreviewGridContent(ADisplayGridLineOption: TDisplayGridLineOption);
 
     procedure AddFontProfile(AProfileName: string);
 
@@ -422,6 +427,8 @@ type
 
     function GetSelectedBMPTextTab: Integer;
     procedure SetSelectedBMPTextTab(Value: Integer);
+
+    procedure SetGridDrawingOption(Value: TDisplayGridLineOption);
 
     ///////OI
     function GetSearch_LeftLeft_Ref_FromInitRect(AInitialRectange: TRectString): Integer;    //Left
@@ -487,6 +494,7 @@ type
 
     procedure DisplayDebuggingImage;
     procedure PreviewText; //called by ExecuteAction
+    procedure RefreshGrid;
 
     procedure UpdateOnSearchRectLeftOffsetMouseDown(var InitialRectange: TRectString; AEditBox: TVTEdit; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure UpdateOnSearchRectLeftOffsetMouseMove(var InitialRectange: TRectString; AEditBox: TVTEdit; Shift: TShiftState; X, Y: Integer);
@@ -518,6 +526,7 @@ type
     property InMemFS: TInMemFileSystem read FInMemFS write FInMemFS;
     property SearchAreaControlDbgImg: TImage read FSearchAreaControlDbgImg;
     property frClickerPrimitives: TfrClickerPrimitives read FfrClickerPrimitives;
+    property GridDrawingOption: TDisplayGridLineOption read FGridDrawingOption write SetGridDrawingOption;
 
     property OnTriggerOnControlsModified: TOnTriggerOnControlsModified read FOnTriggerOnControlsModified write FOnTriggerOnControlsModified;
     property OnEvaluateReplacements: TOnEvaluateReplacements read FOnEvaluateReplacements write FOnEvaluateReplacements;
@@ -941,6 +950,27 @@ begin
 end;
 
 
+procedure TfrClickerFindControl.CreateGridLineOptionMenu;
+var
+  i: TDisplayGridLineOption;
+  TempMenuItem: TMenuItem;
+begin
+  FGridLineOptionMenu := TPopupMenu.Create(Self);
+
+  for i := Low(TDisplayGridLineOption) to High(TDisplayGridLineOption) do
+  begin
+    TempMenuItem := TMenuItem.Create(Self);
+    TempMenuItem.Caption := CDisplayGridLineOptionStr[i];
+    TempMenuItem.Tag := Ord(i);
+    TempMenuItem.OnClick := MenuSetGridType;
+
+    FGridLineOptionMenu.Items.Add(TempMenuItem);
+  end;
+
+  chkShowGridOnBMPPreview.PopupMenu := FGridLineOptionMenu;
+end;
+
+
 constructor TfrClickerFindControl.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
@@ -962,8 +992,10 @@ begin
   FOnGetDisplayedText := nil;
   FOnSetMatchTextAndClassToOI := nil;
   FOnGetUseWholeScreenAsSearchArea := nil;
+  FOnGetFindControlOptions := nil;
 
   CreateRemainingUIComponents; //this should be called after initializing callback properties to nil  (like FOnTriggerOnControlsModified)
+  CreateGridLineOptionMenu;
   SetLength(FBMPTextProfiles, 0);
   //CreateSelectionLabels is called where all the other labels are created
 
@@ -979,6 +1011,8 @@ begin
   FRectangleSelecting := False;
   FDragging := False;
   FInMemFS := nil;
+
+  FGridDrawingOption := loDot;
 
   PageControlMatch.ActivePageIndex := 0;
 end;
@@ -1402,7 +1436,7 @@ begin
       if FSkipDrawingGrid then
         FSkipDrawingGrid := False
       else
-        GeneratePreviewGridContent;
+        GeneratePreviewGridContent(FGridDrawingOption);
 
       TempBmp.Canvas.Draw(FSearchAreaGridImg.Left, FSearchAreaGridImg.Top, FSearchAreaGridImg.Picture.Bitmap);
     end;
@@ -1418,7 +1452,7 @@ end;
 procedure TfrClickerFindControl.tmrUpdateGridTimer(Sender: TObject);
 begin
   tmrUpdateGrid.Enabled := False;
-  GeneratePreviewGridContent;
+  GeneratePreviewGridContent(FGridDrawingOption);
 end;
 
 
@@ -1459,10 +1493,11 @@ begin
 end;
 
 
-procedure TfrClickerFindControl.GeneratePreviewGridContent;
+procedure TfrClickerFindControl.GeneratePreviewGridContent(ADisplayGridLineOption: TDisplayGridLineOption);
 var
   AlgorithmSettings: TMatchBitmapAlgorithmSettings;
   FindControlOptions: PClkFindControlOptions;
+  NoGridAreaImg: TImage;
 begin
   if FSearchAreaControlDbgImg = nil then
     Exit;
@@ -1483,19 +1518,86 @@ begin
   FSearchAreaGridImg.Picture.Bitmap.TransparentColor := clWhite;
 
   if chkShowGridOnBMPPreview.Checked then
-    DrawSearchGrid(FSearchAreaGridImg, AlgorithmSettings, FSearchAreaControlDbgImg.Width, FSearchAreaControlDbgImg.Height, $00C9AEFF);
+  begin
+    if ADisplayGridLineOption = loTransparentSolid then
+      BitBlt(FSearchAreaGridImg.Canvas.Handle,
+             0,
+             0,
+             FSearchAreaControlDbgImg.Width - FSearchAreaGridImg.Left,
+             FSearchAreaControlDbgImg.Height - FSearchAreaGridImg.Top,
+             FSearchAreaControlDbgImg.Canvas.Handle,
+             FSearchAreaGridImg.Left,
+             FSearchAreaGridImg.Top,
+             SRCCOPY
+      );
+
+      //HDC hdcDest, // handle to destination DC
+      //int nXDest,  // x-coord of destination upper-left corner
+      //int nYDest,  // y-coord of destination upper-left corner
+      //int nWidth,  // width of destination rectangle
+      //int nHeight, // height of destination rectangle
+      //HDC hdcSrc,  // handle to source DC
+      //int nXSrc,   // x-coordinate of source upper-left corner
+      //int nYSrc,   // y-coordinate of source upper-left corner
+      //DWORD dwRop  // raster operation code
+
+    DrawSearchGrid(FSearchAreaGridImg, AlgorithmSettings, FSearchAreaControlDbgImg.Width, FSearchAreaControlDbgImg.Height, $00C9AEFF, ADisplayGridLineOption);
+
+    if ADisplayGridLineOption = loTransparentSolid then
+    begin
+      NoGridAreaImg := TImage.Create(Self);
+      try
+        NoGridAreaImg.Visible := False;
+        WipeImage(NoGridAreaImg, FSearchAreaControlDbgImg.Width, FSearchAreaControlDbgImg.Height);   //////////////// this image is too large
+
+        BitBlt(NoGridAreaImg.Canvas.Handle,
+             0,
+             0,
+             FSearchAreaControlDbgImg.Width - FSearchAreaGridImg.Left,
+             FSearchAreaControlDbgImg.Height - FSearchAreaGridImg.Top,
+             FSearchAreaControlDbgImg.Canvas.Handle,
+             FSearchAreaGridImg.Left,
+             FSearchAreaGridImg.Top,
+             SRCCOPY
+        );
+
+        AvgBitmapWithBitmap(FSearchAreaGridImg.Picture.Bitmap,        //image with grid
+                            NoGridAreaImg.Picture.Bitmap,             //image without grid
+                            FSearchAreaGridImg.Picture.Bitmap,        //destination should have an average grid
+                            0,
+                            0,
+                            FSearchAreaControlDbgImg.Width - FSearchAreaGridImg.Left,
+                            FSearchAreaControlDbgImg.Height - FSearchAreaGridImg.Top);
+      finally
+        NoGridAreaImg.Free;
+      end;
+    end;
+  end;
 
   MakeImageContentTransparent(FSearchAreaGridImg);
 end;
 
 
-procedure TfrClickerFindControl.chkShowGridOnBMPPreviewChange(Sender: TObject);
+procedure TfrClickerFindControl.RefreshGrid;
 begin
   if chkShowGridOnBMPPreview.Checked then
-    GeneratePreviewGridContent;
+    GeneratePreviewGridContent(FGridDrawingOption);
 
   if FSearchAreaControlDbgImg <> nil then
     FSearchAreaGridImg.Visible := chkShowGridOnBMPPreview.Checked;
+end;
+
+
+procedure TfrClickerFindControl.chkShowGridOnBMPPreviewChange(Sender: TObject);
+begin
+  RefreshGrid;
+end;
+
+
+procedure TfrClickerFindControl.MenuSetGridType(Sender: TObject);
+begin
+  FGridDrawingOption := TDisplayGridLineOption((Sender as TMenuItem).Tag);
+  RefreshGrid;
 end;
 
 
@@ -2031,6 +2133,16 @@ begin
 
   tabctrlBMPText.TabIndex := Value;
   SetBMPTextFrameVisibility;
+end;
+
+
+procedure TfrClickerFindControl.SetGridDrawingOption(Value: TDisplayGridLineOption);
+begin
+  if FGridDrawingOption <> Value then
+  begin
+    FGridDrawingOption := Value;
+    RefreshGrid;
+  end;
 end;
 
 
@@ -2701,7 +2813,7 @@ begin
 
     if chkShowGridOnBMPPreview.Checked then
     begin
-      GeneratePreviewGridContent;
+      GeneratePreviewGridContent(FGridDrawingOption);
       TempBmp.Canvas.Draw(FSearchAreaGridImg.Left, FSearchAreaGridImg.Top, FSearchAreaGridImg.Picture.Bitmap);
     end;
 
@@ -2755,7 +2867,7 @@ begin
 
     if chkShowGridOnBMPPreview.Checked then
     begin
-      GeneratePreviewGridContent;
+      GeneratePreviewGridContent(FGridDrawingOption);
       TempBmp.Canvas.Draw(FSearchAreaGridImg.Left, FSearchAreaGridImg.Top, FSearchAreaGridImg.Picture.Bitmap);
     end;
 
