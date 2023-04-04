@@ -233,6 +233,7 @@ type
     FOnCallTemplate: TOnCallTemplate;
     FFileName: string;
     FPlaying: Boolean;
+    FPlayingAllActions: Boolean;  //similar to FPlaying, but this is set internally (PlayAllActions)
     FDebugging: Boolean;
     FContinuePlayingAll: Boolean;
     FContinuePlayingNext: Boolean;
@@ -488,6 +489,7 @@ type
     property ShouldStopAtBreakPoint: Boolean {read FShouldStopAtBreakPoint} write FShouldStopAtBreakPoint;
 
     property GridDrawingOption: TDisplayGridLineOption write SetGridDrawingOption;
+    property PlayingAllActions: Boolean read FPlayingAllActions;
 
     property OnCallTemplate: TOnCallTemplate read FOnCallTemplate write FOnCallTemplate;
     property OnExecuteRemoteActionAtIndex: TOnExecuteRemoteActionAtIndex read FOnExecuteRemoteActionAtIndex write FOnExecuteRemoteActionAtIndex;
@@ -731,6 +733,7 @@ begin
   FClosingTemplate := False;
   FRemoteAddress := 'http://127.0.0.1:5444/';
   FShouldStopAtBreakPoint := False;
+  FPlayingAllActions := False;
 
   FEditingText := '';
 end;
@@ -1768,171 +1771,176 @@ var
   tk: QWord;
   IsAtBreakPoint: Boolean;
 begin
-  Result := False;
-
-  if IsDebugging and FExecutingActionFromRemote and (FStackLevel > 0) and not FUseLocalDebugger then  //  this loop allows receiving missing files
-  begin
-    SetActionVarValue('$DbgPlayAllActions$', 'Waiting for ClosingTemplate');
-
-    imgWaitingInPreDebuggingMode.Show;
-    tk := GetTickCount64;
-    repeat
-      Application.ProcessMessages;
-      Sleep(2);
-    until FClosingTemplate or (GetTickCount64 - tk > 3600000);  //1h
-    imgWaitingInPreDebuggingMode.Hide;
-
-    SetActionVarValue('$DbgPlayAllActions$', 'ClosingTemplate at stack level' + IntToStr(FStackLevel));
-
-    Result := True;
-    Exit;
-  end
-  else
-    SetActionVarValue('$DbgPlayAllActions$', 'FStackLevel: ' + IntToStr(FStackLevel));
-
-  SetActionVarValue('$DbgPlayAllActions$', GetActionVarValue('$DbgPlayAllActions$') + '  IsDebugging: ' + IntToStr(Ord(IsDebugging)) + '  ExecutingActionFromRemote: ' + IntToStr(Ord(FExecutingActionFromRemote)) + '  ClosingTemplate: ' + IntToStr(Ord(FClosingTemplate)) + '  FileLocationOfDepsIsMem: ' + IntToStr(Ord(FFileLocationOfDepsIsMem)));
-
+  FPlayingAllActions := True;
   try
-    if StartAtSelected then
+    Result := False;
+
+    if IsDebugging and FExecutingActionFromRemote and (FStackLevel > 0) and not FUseLocalDebugger then  //  this loop allows receiving missing files
     begin
-      Node := vstActions.GetFirstSelected;
-      if Node = nil then
-        Node := vstActions.GetFirst;
+      SetActionVarValue('$DbgPlayAllActions$', 'Waiting for ClosingTemplate');
+
+      imgWaitingInPreDebuggingMode.Show;
+      tk := GetTickCount64;
+      repeat
+        Application.ProcessMessages;
+        Sleep(2);
+      until FClosingTemplate or (GetTickCount64 - tk > 3600000);  //1h
+      imgWaitingInPreDebuggingMode.Hide;
+
+      SetActionVarValue('$DbgPlayAllActions$', 'ClosingTemplate at stack level' + IntToStr(FStackLevel));
+
+      Result := True;
+      Exit;
     end
     else
-      Node := vstActions.GetFirst;
+      SetActionVarValue('$DbgPlayAllActions$', 'FStackLevel: ' + IntToStr(FStackLevel));
 
-    if Node = nil then
-      Exit; //do not show a dialog here
-
-    if IsDebugging or FShouldStopAtBreakPoint then
-    begin
-      spdbtnContinuePlayingAll.Enabled := True;
-      spdbtnStepOver.Enabled := True;
-      spdbtnStepInto.Enabled := False; //this one is false
-    end;
-
-    FContinuePlayingAll := False;
-    FContinuePlayingNext := False;
-    FContinuePlayingBySteppingInto := False;
-
-    ResetDebuggingStatusOnAllActions;
+    SetActionVarValue('$DbgPlayAllActions$', GetActionVarValue('$DbgPlayAllActions$') + '  IsDebugging: ' + IntToStr(Ord(IsDebugging)) + '  ExecutingActionFromRemote: ' + IntToStr(Ord(FExecutingActionFromRemote)) + '  ClosingTemplate: ' + IntToStr(Ord(FClosingTemplate)) + '  FileLocationOfDepsIsMem: ' + IntToStr(Ord(FFileLocationOfDepsIsMem)));
 
     try
-      LastNode := vstActions.GetLast;
-      repeat
-        FClkActions[Node^.Index].ActionOptions.ExecutionIndex := IntToStr(Node^.Index);  //required by FindSubControl, to update the UI, when adding a default font profile
-        HighlightCurrentlyExecutedAction(Node);
+      if StartAtSelected then
+      begin
+        Node := vstActions.GetFirstSelected;
+        if Node = nil then
+          Node := vstActions.GetFirst;
+      end
+      else
+        Node := vstActions.GetFirst;
 
-        spdbtnStepInto.Enabled := IsDebugging and (FClkActions[Node^.Index].ActionOptions.Action = acCallTemplate);
+      if Node = nil then
+        Exit; //do not show a dialog here
 
-        IsAtBreakPoint := ShouldStopActionAtBreakpoint(FClkActions[Node^.Index].ActionBreakPoint);
-        if IsAtBreakPoint then
-        begin
-          FContinuePlayingAll := False;
-          spdbtnContinuePlayingAll.Enabled := True;
-          spdbtnStepOver.Enabled := True;
-        end;
+      if IsDebugging or FShouldStopAtBreakPoint then
+      begin
+        spdbtnContinuePlayingAll.Enabled := True;
+        spdbtnStepOver.Enabled := True;
+        spdbtnStepInto.Enabled := False; //this one is false
+      end;
 
-        if (IsDebugging or (FShouldStopAtBreakPoint and IsAtBreakPoint)) and not FContinuePlayingAll then   //pause execution if debugging
-        begin
-          WaitInDebuggingMode;
-          FShouldStopAtBreakPoint := False;
-        end;
+      FContinuePlayingAll := False;
+      FContinuePlayingNext := False;
+      FContinuePlayingBySteppingInto := False;
 
-        /////// debugging icons
-        if Node^.PrevSibling <> nil then
-        begin
-          FClkActions[Node^.Index - 1].ActionDebuggingStatus := adsNone;
-          vstActions.InvalidateNode(Node^.PrevSibling);
-        end;
-        FClkActions[Node^.Index].ActionDebuggingStatus := adsCurrent;
-        vstActions.InvalidateNode(Node);
-        /////// debugging icons
+      ResetDebuggingStatusOnAllActions;
 
-        if FStopAllActionsOnDemandFromParent <> nil then
-          if FStopAllActionsOnDemandFromParent^ then
+      try
+        LastNode := vstActions.GetLast;
+        repeat
+          FClkActions[Node^.Index].ActionOptions.ExecutionIndex := IntToStr(Node^.Index);  //required by FindSubControl, to update the UI, when adding a default font profile
+          HighlightCurrentlyExecutedAction(Node);
+
+          spdbtnStepInto.Enabled := IsDebugging and (FClkActions[Node^.Index].ActionOptions.Action = acCallTemplate);
+
+          IsAtBreakPoint := ShouldStopActionAtBreakpoint(FClkActions[Node^.Index].ActionBreakPoint);
+          if IsAtBreakPoint then
           begin
+            FContinuePlayingAll := False;
+            spdbtnContinuePlayingAll.Enabled := True;
+            spdbtnStepOver.Enabled := True;
+          end;
+
+          if (IsDebugging or (FShouldStopAtBreakPoint and IsAtBreakPoint)) and not FContinuePlayingAll then   //pause execution if debugging
+          begin
+            WaitInDebuggingMode;
+            FShouldStopAtBreakPoint := False;
+          end;
+
+          /////// debugging icons
+          if Node^.PrevSibling <> nil then
+          begin
+            FClkActions[Node^.Index - 1].ActionDebuggingStatus := adsNone;
+            vstActions.InvalidateNode(Node^.PrevSibling);
+          end;
+          FClkActions[Node^.Index].ActionDebuggingStatus := adsCurrent;
+          vstActions.InvalidateNode(Node);
+          /////// debugging icons
+
+          if FStopAllActionsOnDemandFromParent <> nil then
+            if FStopAllActionsOnDemandFromParent^ then
+            begin
+              FStopAllActionsOnDemand := True;
+              Exit;
+            end;
+
+          if (GetAsyncKeyState(VK_CONTROL) < 0) and (GetAsyncKeyState(VK_SHIFT) < 0) and (GetAsyncKeyState(VK_F2) < 0) then
+          begin
+            if FStopAllActionsOnDemandFromParent <> nil then
+              FStopAllActionsOnDemandFromParent^ := True;
+
             FStopAllActionsOnDemand := True;
             Exit;
           end;
 
-        if (GetAsyncKeyState(VK_CONTROL) < 0) and (GetAsyncKeyState(VK_SHIFT) < 0) and (GetAsyncKeyState(VK_F2) < 0) then
-        begin
-          if FStopAllActionsOnDemandFromParent <> nil then
-            FStopAllActionsOnDemandFromParent^ := True;
+          spdbtnContinuePlayingAll.Enabled := False;
+          spdbtnStepOver.Enabled := False;
+          spdbtnStepInto.Enabled := False; //disable button while executing
+          try
+            if Node^.CheckState = csCheckedNormal then
+              if not PlayActionByNode(Node) then               //    Execution happens here
+              begin
+                //MessageBox(Handle, PChar('Action[' + IntToStr(Node^.Index) + '] failed...' + #13#10 + 'Err=' + GetActionVarValue('$ExecAction_Err$') + #13#10 + 'Caller=' + FCallerName + #13#10 + 'LoadedFile: '+ FFileName), PChar(Caption), MB_ICONERROR);
 
-          FStopAllActionsOnDemand := True;
-          Exit;
-        end;
+                if IsDebugging then
+                begin
+                  spdbtnContinuePlayingAll.Enabled := True;
+                  spdbtnStepOver.Enabled := True;
 
+                  if not FContinuePlayingAll then   //pause execution if debugging
+                    WaitInDebuggingMode;
+                end;
+
+                if FClkActions[Node^.Index].ActionStatus = asFailed then  //the status can be manually reset while debugging
+                  Exit;
+              end;
+          finally
+            //restore button states
+            if IsDebugging then
+            begin
+              spdbtnContinuePlayingAll.Enabled := True;
+              spdbtnStepOver.Enabled := True;
+              //spdbtnContinuePlayingInto does not have to be enabled
+            end;
+          end;
+
+          if FClkActions[Node^.Index].ActionOptions.Action = acCallTemplate then
+          begin
+            FContinuePlayingBySteppingInto := False; //reset flag for next execution
+            //spdbtnContinuePlayingInto.Enabled := False;
+          end;
+
+          /////// debugging icons
+          FClkActions[Node^.Index].ActionDebuggingStatus := adsPrev;
+          vstActions.InvalidateNode(Node);
+          /////// debugging icons
+
+          OldNode := Node;
+          Node := Node^.NextSibling;
+          vstActions.RepaintNode(Node);
+          Application.ProcessMessages;
+        until (OldNode = LastNode) or not FPlaying;
+      finally
         spdbtnContinuePlayingAll.Enabled := False;
         spdbtnStepOver.Enabled := False;
-        spdbtnStepInto.Enabled := False; //disable button while executing
-        try
-          if Node^.CheckState = csCheckedNormal then
-            if not PlayActionByNode(Node) then               //    Execution happens here
-            begin
-              //MessageBox(Handle, PChar('Action[' + IntToStr(Node^.Index) + '] failed...' + #13#10 + 'Err=' + GetActionVarValue('$ExecAction_Err$') + #13#10 + 'Caller=' + FCallerName + #13#10 + 'LoadedFile: '+ FFileName), PChar(Caption), MB_ICONERROR);
+        spdbtnStepInto.Enabled := False;
+      end;
 
-              if IsDebugging then
-              begin
-                spdbtnContinuePlayingAll.Enabled := True;
-                spdbtnStepOver.Enabled := True;
-
-                if not FContinuePlayingAll then   //pause execution if debugging
-                  WaitInDebuggingMode;
-              end;
-
-              if FClkActions[Node^.Index].ActionStatus = asFailed then  //the status can be manually reset while debugging
-                Exit;
-            end;
-        finally
-          //restore button states
-          if IsDebugging then
-          begin
-            spdbtnContinuePlayingAll.Enabled := True;
-            spdbtnStepOver.Enabled := True;
-            //spdbtnContinuePlayingInto does not have to be enabled
-          end;
-        end;
-
-        if FClkActions[Node^.Index].ActionOptions.Action = acCallTemplate then
-        begin
-          FContinuePlayingBySteppingInto := False; //reset flag for next execution
-          //spdbtnContinuePlayingInto.Enabled := False;
-        end;
-
-        /////// debugging icons
-        FClkActions[Node^.Index].ActionDebuggingStatus := adsPrev;
-        vstActions.InvalidateNode(Node);
-        /////// debugging icons
-
-        OldNode := Node;
-        Node := Node^.NextSibling;
-        vstActions.RepaintNode(Node);
-        Application.ProcessMessages;
-      until (OldNode = LastNode) or not FPlaying;
     finally
-      spdbtnContinuePlayingAll.Enabled := False;
-      spdbtnStepOver.Enabled := False;
-      spdbtnStepInto.Enabled := False;
-    end;
-
-  finally
-    if (FStackLevel > 0) and FExecutesRemotely then
-    begin
-      try
-        ClosingTemplateResponse := ExitRemoteTemplate(FRemoteAddress, FStackLevel);
-        AddToLog(DateTimeToStr(Now) + '  Sent request to close remote template at index ' + IntToStr(FStackLevel) +  '  ' + ClosingTemplateResponse);
-      except
-        on E: Exception do
-          AddToLog(DateTimeToStr(Now) + '  Error closing remote template at index ' + IntToStr(FStackLevel) + '  ' + E.Message);
+      if (FStackLevel > 0) and FExecutesRemotely then
+      begin
+        try
+          ClosingTemplateResponse := ExitRemoteTemplate(FRemoteAddress, FStackLevel);
+          AddToLog(DateTimeToStr(Now) + '  Sent request to close remote template at index ' + IntToStr(FStackLevel) +  '  ' + ClosingTemplateResponse);
+        except
+          on E: Exception do
+            AddToLog(DateTimeToStr(Now) + '  Error closing remote template at index ' + IntToStr(FStackLevel) + '  ' + E.Message);
+        end;
       end;
     end;
-  end;
 
-  Result := True;
+    Result := True;
+  finally
+    FPlayingAllActions := False;
+  end;
 end;
 
 
@@ -2171,6 +2179,8 @@ procedure TfrClickerActionsArr.vstActionsEdited(Sender: TBaseVirtualTree; Node: 
 begin
   FClkActions[Node^.Index].ActionOptions.ActionName := FEditingText;
   HandleActionSelection; // frClickerActions.OIFrame.;
+  Modified := True;
+  frClickerActions.RefreshActionName;
 end;
 
 

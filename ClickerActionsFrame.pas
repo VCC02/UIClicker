@@ -437,6 +437,7 @@ type
     procedure SetDebugVariablesFromListOfStrings(AListOfStrings: string);
     procedure UpdatePageControlActionExecutionIcons;
     procedure UpdateControlWidthHeightLabels;
+    procedure RefreshActionName; //called by action list, when modifying the action name from there
 
     procedure ClearControls;
 
@@ -1739,6 +1740,12 @@ begin
       pnlCover.BringToFront;
     end;
   end;
+end;
+
+
+procedure TfrClickerActions.RefreshActionName;
+begin
+  FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, CCategory_Common, CMain_ActionName_PropIndex, -1);
 end;
 
 
