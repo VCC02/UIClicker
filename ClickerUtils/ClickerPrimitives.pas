@@ -320,6 +320,8 @@ begin
   begin
     IterationStr := IntToStr(i);
     AStringList.Add('[Primitive_' + IterationStr + ']');
+    AStringList.Add('PrimitiveName=' + APrimitives[i].PrimitiveName);
+    AStringList.Add('Primitive=' + CPrimitiveNames[APrimitives[i].PrimitiveType]);
 
     CAddAllPrimitives_ToStringList[APrimitives[i].PrimitiveType](APrimitives[i], AStringList);
 
@@ -330,7 +332,7 @@ begin
 
   for i := 0 to Length(AOrders) - 1 do
   begin
-    AStringList.Add('[Order_' + IntToStr(i));
+    AStringList.Add('[Order_' + IntToStr(i) + ']');
     AStringList.Add('OrderName=' + AOrders[i].Name);
 
     for j := 0 to Length(AOrders[i].Items) - 1 do

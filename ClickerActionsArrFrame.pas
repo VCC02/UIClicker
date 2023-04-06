@@ -278,6 +278,7 @@ type
     FOnWaitForBitmapsAvailability: TOnWaitForBitmapsAvailability;
     FOnLoadBitmap: TOnLoadBitmap;
     FOnLoadPrimitivesFile: TOnLoadPrimitivesFile;
+    FOnSavePrimitivesFile: TOnSavePrimitivesFile;
 
     FOnFileExists: TOnFileExists;
     FOnTClkIniReadonlyFileCreate: TOnTClkIniReadonlyFileCreate;
@@ -319,6 +320,7 @@ type
     function HandleOnEditCallTemplateBreakCondition(var AActionCondition: string): Boolean;
     function HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     procedure HandleOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
+    procedure HandleOnSavePrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
     function HandleOnFileExists(const AFileName: string): Boolean;
 
     procedure HandleOnSetOpenDialogMultiSelect;
@@ -383,6 +385,7 @@ type
     procedure DoWaitForBitmapsAvailability(AListOfFiles: TStringList);
     function DoOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     procedure DoOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
+    procedure DoOnSavePrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
 
     function DoOnFileExists(const AFileName: string): Boolean;
     function DoOnTClkIniReadonlyFileCreate(AFileName: string): TClkIniReadonlyFile;
@@ -501,6 +504,7 @@ type
     property OnWaitForBitmapsAvailability: TOnWaitForBitmapsAvailability read FOnWaitForBitmapsAvailability write FOnWaitForBitmapsAvailability;
     property OnLoadBitmap: TOnLoadBitmap read FOnLoadBitmap write FOnLoadBitmap;
     property OnLoadPrimitivesFile: TOnLoadPrimitivesFile write FOnLoadPrimitivesFile;
+    property OnSavePrimitivesFile: TOnSavePrimitivesFile write FOnSavePrimitivesFile;
 
     property OnFileExists: TOnFileExists write FOnFileExists;
     property OnTClkIniReadonlyFileCreate: TOnTClkIniReadonlyFileCreate write FOnTClkIniReadonlyFileCreate;
@@ -560,6 +564,7 @@ begin
   frClickerActions.OnEditCallTemplateBreakCondition := HandleOnEditCallTemplateBreakCondition;
   frClickerActions.OnLoadBitmap := HandleOnLoadBitmap; //both ActionExecution and frClickerActions use the same handler
   frClickerActions.OnLoadPrimitivesFile := HandleOnLoadPrimitivesFile;
+  frClickerActions.OnSavePrimitivesFile := HandleOnSavePrimitivesFile;
   frClickerActions.OnFileExists := HandleOnFileExists;
 
   frClickerActions.OnSetOpenDialogMultiSelect := HandleOnSetOpenDialogMultiSelect;
@@ -703,6 +708,7 @@ begin
   FOnGetExtraSearchAreaDebuggingImageWithStackLevel := nil;
   FOnLoadBitmap := nil;
   FOnLoadPrimitivesFile := nil;
+  FOnSavePrimitivesFile := nil;
 
   FOnFileExists := nil;
   FOnTClkIniReadonlyFileCreate := nil;
@@ -781,6 +787,12 @@ end;
 procedure TfrClickerActionsArr.HandleOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
 begin
   DoOnLoadPrimitivesFile(AFileName, APrimitives, AOrders, ASettings);
+end;
+
+
+procedure TfrClickerActionsArr.HandleOnSavePrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
+begin
+  DoOnSavePrimitivesFile(AFileName, APrimitives, AOrders, ASettings);
 end;
 
 
@@ -1427,6 +1439,15 @@ begin
     raise Exception.Create('OnLoadPrimitivesFile not assigned.')
   else
     FOnLoadPrimitivesFile(AFileName, APrimitives, AOrders, ASettings);
+end;
+
+
+procedure TfrClickerActionsArr.DoOnSavePrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
+begin
+  if not Assigned(FOnSavePrimitivesFile) then
+    raise Exception.Create('OnSavePrimitivesFile not assigned.')
+  else
+    FOnSavePrimitivesFile(AFileName, APrimitives, AOrders, ASettings);
 end;
 
 
@@ -3573,8 +3594,10 @@ begin
     FClkActions[n].FindControlOptions.AllowedColorErrorCount := '0';
     FClkActions[n].FindControlOptions.WaitForControlToGoAway := False;
     FClkActions[n].FindControlOptions.StartSearchingWithCachedControl := False;
-    FClkActions[n].FindControlOptions.CachedControlLeft := '';;
-    FClkActions[n].FindControlOptions.CachedControlTop := '';;
+    FClkActions[n].FindControlOptions.CachedControlLeft := '';
+    FClkActions[n].FindControlOptions.CachedControlTop := '';
+    FClkActions[n].FindControlOptions.MatchPrimitiveFiles := '';
+    FClkActions[n].FindControlOptions.MatchPrimitiveFiles_Modified := '';
 
     SetLength(FClkActions[n].FindControlOptions.MatchBitmapText, 1);
     FClkActions[n].FindControlOptions.MatchBitmapText[0].ForegroundColor := '$Color_Window$';

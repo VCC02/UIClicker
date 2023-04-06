@@ -161,6 +161,7 @@ type
     FOnGetCurrentlyRecordedScreenShotImage: TOnGetCurrentlyRecordedScreenShotImage;
     FOnLoadBitmap: TOnLoadBitmap;
     FOnLoadPrimitivesFile: TOnLoadPrimitivesFile;
+    FOnSavePrimitivesFile: TOnSavePrimitivesFile;
     FOnGetSelfHandles: TOnGetSelfHandles;
 
     FOnFileExists: TOnFileExists;
@@ -200,6 +201,7 @@ type
 
     function DoOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     procedure DoOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
+    procedure DoOnSavePrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
     function DoOnFileExists(const AFileName: string): Boolean;
     procedure DoOnGetSelfHandles(AListOfSelfHandles: TStringList);
 
@@ -243,6 +245,7 @@ type
 
     function HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     procedure HandleOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
+    procedure HandleOnSavePrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
     function HandleOnFileExists(const FileName: string): Boolean;
     procedure HandleOnGetSelfHandles(AListOfSelfHandles: TStringList);
 
@@ -296,7 +299,8 @@ type
     property OnRecordComponent: TOnRecordComponent read FOnRecordComponent write FOnRecordComponent;
     property OnGetCurrentlyRecordedScreenShotImage: TOnGetCurrentlyRecordedScreenShotImage read FOnGetCurrentlyRecordedScreenShotImage write FOnGetCurrentlyRecordedScreenShotImage;
     property OnLoadBitmap: TOnLoadBitmap read FOnLoadBitmap write FOnLoadBitmap;
-    property OnLoadPrimitivesFile: TOnLoadPrimitivesFile read FOnLoadPrimitivesFile write FOnLoadPrimitivesFile;
+    property OnLoadPrimitivesFile: TOnLoadPrimitivesFile write FOnLoadPrimitivesFile;
+    property OnSavePrimitivesFile: TOnSavePrimitivesFile write FOnSavePrimitivesFile;
     property OnGetSelfHandles: TOnGetSelfHandles write FOnGetSelfHandles;
 
     property OnFileExists: TOnFileExists write FOnFileExists;
@@ -385,6 +389,31 @@ begin
       LoadPrimitivesFile(Ini, APrimitives, AOrders, ASettings);
     finally
       Ini.Free;
+    end;
+  finally
+    MemStream.Free;
+  end;
+end;
+
+
+procedure SavePmtvToInMemFileSystem(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; ASettings: TPrimitiveSettings; AInMemFileSystem: TInMemFileSystem);
+var
+  MemStream: TMemoryStream;
+  ContentAsStringList: TStringList;
+begin
+  MemStream := TMemoryStream.Create;
+  try
+    ContentAsStringList := TStringList.Create;
+    try
+      SavePrimitivesFile(ContentAsStringList, APrimitives, AOrders, ASettings);
+
+      MemStream.Position := 0;
+      ContentAsStringList.SaveToStream(MemStream);
+
+      MemStream.Position := 0;
+      AInMemFileSystem.SaveFileToMem(AFileName, MemStream.Memory, MemStream.Size);
+    finally
+      ContentAsStringList.Free;
     end;
   finally
     MemStream.Free;
@@ -577,6 +606,7 @@ begin
   FOnGetCurrentlyRecordedScreenShotImage := nil;
   FOnLoadBitmap := nil;
   FOnLoadPrimitivesFile := nil;
+  FOnSavePrimitivesFile := nil;
 
   FOnGetSelfHandles := nil;
 
@@ -726,6 +756,7 @@ begin
   frClickerActionsArrMain.OnWaitForBitmapsAvailability := HandleOnWaitForBitmapsAvailability;
   frClickerActionsArrMain.OnLoadBitmap := HandleOnLoadBitmap;
   frClickerActionsArrMain.OnLoadPrimitivesFile := HandleOnLoadPrimitivesFile;
+  frClickerActionsArrMain.OnSavePrimitivesFile := HandleOnSavePrimitivesFile;
   frClickerActionsArrMain.OnFileExists := HandleOnFileExists;
   frClickerActionsArrMain.ActionExecution.OnGetSelfHandles := HandleOnGetSelfHandles;
   frClickerActionsArrMain.OnTClkIniReadonlyFileCreate := HandleOnTClkIniReadonlyFileCreate;
@@ -762,6 +793,8 @@ begin
   frClickerActionsArrExperiment2.OnLoadBitmap := HandleOnLoadBitmap;
   frClickerActionsArrExperiment1.OnLoadPrimitivesFile := HandleOnLoadPrimitivesFile;
   frClickerActionsArrExperiment2.OnLoadPrimitivesFile := HandleOnLoadPrimitivesFile;
+  frClickerActionsArrExperiment1.OnSavePrimitivesFile := HandleOnSavePrimitivesFile;
+  frClickerActionsArrExperiment2.OnSavePrimitivesFile := HandleOnSavePrimitivesFile;
   frClickerActionsArrExperiment1.OnFileExists := HandleOnFileExists;
   frClickerActionsArrExperiment2.OnFileExists := HandleOnFileExists;
   frClickerActionsArrExperiment1.ActionExecution.OnGetSelfHandles := HandleOnGetSelfHandles;
@@ -883,6 +916,15 @@ begin
     raise Exception.Create('OnLoadPrimitivesFile not assigned.')
   else
     FOnLoadPrimitivesFile(AFileName, APrimitives, AOrders, ASettings);
+end;
+
+
+procedure TfrmClickerActions.DoOnSavePrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
+begin
+  if not Assigned(FOnSavePrimitivesFile) then
+    raise Exception.Create('OnSavePrimitivesFile not assigned.')
+  else
+    FOnSavePrimitivesFile(AFileName, APrimitives, AOrders, ASettings);
 end;
 
 
@@ -1234,6 +1276,7 @@ begin
 
         NewFrame.OnLoadBitmap := HandleOnLoadBitmap;
         NewFrame.OnLoadPrimitivesFile := HandleOnLoadPrimitivesFile;
+        NewFrame.OnSavePrimitivesFile := HandleOnSavePrimitivesFile;
         NewFrame.OnFileExists := HandleOnFileExists;
         NewFrame.ActionExecution.OnGetSelfHandles := HandleOnGetSelfHandles;
 
@@ -1590,6 +1633,15 @@ begin
     LoadPmtvFromInMemFileSystem(AFileName, APrimitives, AOrders, ASettings, FInMemFileSystem)
   else
     DoOnLoadPrimitivesFile(AFileName, APrimitives, AOrders, ASettings);
+end;
+
+
+procedure TfrmClickerActions.HandleOnSavePrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
+begin
+  if frClickerActionsArrMain.FileLocationOfDepsIsMem then
+    SavePmtvToInMemFileSystem(AFileName, APrimitives, AOrders, ASettings, FInMemFileSystem)
+  else
+    DoOnSavePrimitivesFile(AFileName, APrimitives, AOrders, ASettings);
 end;
 
 

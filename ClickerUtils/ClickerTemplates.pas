@@ -265,7 +265,8 @@ end;
 procedure LoadAction_FindControl(Ini: TClkIniReadonlyFile; SectionIndex: Integer; var AFindControlOptions: TClkFindControlOptions);
 var
   i, n: Integer;
-  Indent: string;
+  Indent, s: string;
+  ListOfPrimitiveFiles: TStringList;
 begin
   AFindControlOptions.MatchCriteria.WillMatchText := Ini.ReadBool(SectionIndex, 'MatchCriteria.WillMatchText', True);
   AFindControlOptions.MatchCriteria.WillMatchClassName := Ini.ReadBool(SectionIndex, 'MatchCriteria.WillMatchClassName', True);
@@ -357,6 +358,17 @@ begin
   AFindControlOptions.CachedControlTop := Ini.ReadString(SectionIndex, 'CachedControlTop', '');
 
   AFindControlOptions.MatchPrimitiveFiles := FastReplace_45ToReturn(Ini.ReadString(SectionIndex, 'MatchPrimitiveFiles', ''));
+  ListOfPrimitiveFiles := TStringList.Create;
+  try
+    ListOfPrimitiveFiles.Text := AFindControlOptions.MatchPrimitiveFiles;
+    s := '';
+    for i := 0 to ListOfPrimitiveFiles.Count - 1 do
+      s := s + '0' + #13#10;
+
+    AFindControlOptions.MatchPrimitiveFiles_Modified := s;
+  finally
+    ListOfPrimitiveFiles.Free;
+  end;
 end;
 
 
@@ -890,6 +902,7 @@ begin             //Substructures, which do not contain pointers, can be directl
   ADest.FindControlOptions.CachedControlTop := ASrc.FindControlOptions.CachedControlTop;
 
   ADest.FindControlOptions.MatchPrimitiveFiles := ASrc.FindControlOptions.MatchPrimitiveFiles;
+  ADest.FindControlOptions.MatchPrimitiveFiles_Modified := ASrc.FindControlOptions.MatchPrimitiveFiles_Modified;
 
   SetLength(ADest.FindControlOptions.MatchBitmapText, Length(ASrc.FindControlOptions.MatchBitmapText));
 

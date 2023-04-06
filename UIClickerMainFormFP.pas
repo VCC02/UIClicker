@@ -88,6 +88,7 @@ type
     function HandleOnGetPictureOpenDialogFileName: string;
     function HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     procedure HandleOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
+    procedure HandleOnSavePrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
     procedure HandleOnGetSelfHandles(AListOfSelfHandles: TStringList);
   public
     property AllFormsAreCreated: Boolean write FAllFormsAreCreated;
@@ -152,6 +153,7 @@ begin
     frmClickerActions.OnGetPictureOpenDialogFileName := HandleOnGetPictureOpenDialogFileName;
     frmClickerActions.OnLoadBitmap := HandleOnLoadBitmap;
     frmClickerActions.OnLoadPrimitivesFile := HandleOnLoadPrimitivesFile;
+    frmClickerActions.OnSavePrimitivesFile := HandleOnSavePrimitivesFile;
     frmClickerActions.OnGetSelfHandles := HandleOnGetSelfHandles;
 
     frmClickerTemplateCallTree.OnSetOpenDialogMultiSelect := HandleOnSetOpenDialogMultiSelect;
@@ -468,6 +470,20 @@ begin
     finally
       MemStream.Free;
     end;
+  end;
+end;
+
+
+procedure TfrmUIClickerMainForm.HandleOnSavePrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
+var
+  FileContent: TStringList;
+begin
+  FileContent := TStringList.Create;
+  try
+    SavePrimitivesFile(FileContent, APrimitives, AOrders, ASettings);
+    FileContent.SaveToFile(AFileName);
+  finally
+    FileContent.Free;
   end;
 end;
 

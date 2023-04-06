@@ -220,6 +220,7 @@ type
     CachedControlLeft: string;
     CachedControlTop: string;
     MatchPrimitiveFiles: string;  //ListOfStrings
+    MatchPrimitiveFiles_Modified: string;  //ListOfStrings  '0's and '1's.  This field is not a separate property in ObjectInspector
   end;
 
   TClkSetTextOptions = record

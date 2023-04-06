@@ -43,6 +43,7 @@ type
   { TfrClickerActions }
 
   TfrClickerActions = class(TFrame)
+    imglstMatchPrimitiveFilesProperties: TImageList;
     imgFontColorBuffer: TImage;
     imglstFontColorProperties: TImageList;
     imglstMatchBitmapTextProperties: TImageList;
@@ -223,6 +224,7 @@ type
     procedure MenuItem_RemovePrimitiveFileFromPropertyListClick(Sender: TObject);
     procedure MenuItem_MovePrimitiveFileUpInPropertyListClick(Sender: TObject);
     procedure MenuItem_MovePrimitiveFileDownInPropertyListClick(Sender: TObject);
+    procedure MenuItem_SavePrimitiveFileInPropertyListClick(Sender: TObject);
 
     procedure MenuItem_AddFontProfileToPropertyListClick(Sender: TObject);
     procedure MenuItem_RemoveFontProfileFromPropertyListClick(Sender: TObject);
@@ -241,6 +243,7 @@ type
 
     FEditingActionRec: TClkActionRec;
     FEditingAction: PClkActionRec;
+    FPrevSelectedPrimitiveNode: Integer;
 
     FOnControlsModified: TNotifyEvent;
     FControlsModified: Boolean;
@@ -258,6 +261,7 @@ type
     FSearchAreaDbgImgSearchedBmpMenu: TPopupMenu;
 
     FCurrentlyEditingActionType: Integer;  //yes integer
+    FCurrentlyEditingPrimitiveFileName: string;
     FLastClickedTVTEdit: TVTEdit;
     FLastClickedEdit: TEdit;
 
@@ -271,6 +275,7 @@ type
 
     FOnLoadBitmap: TOnLoadBitmap;
     FOnLoadPrimitivesFile: TOnLoadPrimitivesFile;
+    FOnSavePrimitivesFile: TOnSavePrimitivesFile;
     FOnFileExists: TOnFileExists;
 
     FOnSetOpenDialogMultiSelect: TOnSetOpenDialogMultiSelect;
@@ -300,6 +305,7 @@ type
     function DoOnEditCallTemplateBreakCondition(var AActionCondition: string): Boolean;
     function DoOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     procedure DoOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
+    procedure DoOnSavePrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
     function DoOnFileExists(const AFileName: string): Boolean;
 
     procedure DoOnSetOpenDialogMultiSelect;
@@ -359,6 +365,7 @@ type
 
     function HandleOnEvaluateReplacementsFunc(s: string; Recursive: Boolean = True): string;
     procedure HandleOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
+    procedure HandleOnSavePrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
     procedure HandleOnPrimitivesTriggerOnControlsModified;
 
     ///////////////////////////// OI
@@ -366,6 +373,7 @@ type
 
     procedure FreeOIPopupMenu(Sender: TObject);
     procedure BuildFontColorIconsList;
+    function CreateBitmapForMenu(AImageList: TImageList; AImageIndex: Integer): TBitmap;
 
     function HandleOnOIGetCategoryCount: Integer;
     function HandleOnOIGetCategory(AIndex: Integer): string;
@@ -463,6 +471,7 @@ type
 
     property OnLoadBitmap: TOnLoadBitmap write FOnLoadBitmap;
     property OnLoadPrimitivesFile: TOnLoadPrimitivesFile write FOnLoadPrimitivesFile;
+    property OnSavePrimitivesFile: TOnSavePrimitivesFile write FOnSavePrimitivesFile;
     property OnFileExists: TOnFileExists write FOnFileExists;
 
     property OnSetOpenDialogMultiSelect: TOnSetOpenDialogMultiSelect write FOnSetOpenDialogMultiSelect;
@@ -682,6 +691,7 @@ begin
 
   FOnLoadBitmap := nil;
   FOnLoadPrimitivesFile := nil;
+  FOnSavePrimitivesFile := nil;
   FOnFileExists := nil;
 
   FOnSetOpenDialogMultiSelect := nil;
@@ -700,6 +710,8 @@ begin
 
   FShowDeprecatedControls := False;
   FEditingAction := @FEditingActionRec;
+  FCurrentlyEditingPrimitiveFileName := '';
+  FPrevSelectedPrimitiveNode := -1;
 
   PageControlActionExecution.ActivePageIndex := 0;
 end;
@@ -1500,15 +1512,54 @@ end;
 
 procedure TfrClickerActions.HandleOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
 begin
+  FCurrentlyEditingPrimitiveFileName := AFileName;
   DoOnLoadPrimitivesFile(AFileName, APrimitives, AOrders, ASettings);
 end;
 
 
-procedure TfrClickerActions.HandleOnPrimitivesTriggerOnControlsModified;
+procedure TfrClickerActions.HandleOnSavePrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
 begin
-  //either save the selected pmtv file, or set a modified flag (+UI update), or trigger another OnPrimitivesTriggerOnControlsModified event
+  FCurrentlyEditingPrimitiveFileName := AFileName; //required on save as
+  DoOnSavePrimitivesFile(AFileName, APrimitives, AOrders, ASettings);
+end;
 
-  //SavePrimitivesFile;
+
+procedure TfrClickerActions.HandleOnPrimitivesTriggerOnControlsModified;
+var
+  PrimitiveFileIndex, i: Integer;
+  ListOfPrimitiveFiles, ListOfPrimitiveFiles_Modified: TStringList;
+  UpperCaseName: string;
+begin
+  ListOfPrimitiveFiles := TStringList.Create;
+  try
+    ListOfPrimitiveFiles.Text := FEditingAction^.FindControlOptions.MatchPrimitiveFiles;
+
+    UpperCaseName := UpperCase(FCurrentlyEditingPrimitiveFileName);
+    PrimitiveFileIndex := -1;
+    for i := 0 to ListOfPrimitiveFiles.Count - 1 do
+      if UpperCase(ListOfPrimitiveFiles.Strings[i]) = UpperCaseName then     //this requires the list to have unique filenames
+      begin
+        PrimitiveFileIndex := i;
+        Break;
+      end;
+
+    if PrimitiveFileIndex <> -1 then
+    begin
+      ListOfPrimitiveFiles_Modified := TStringList.Create;
+      try
+        ListOfPrimitiveFiles_Modified.Text := FEditingAction^.FindControlOptions.MatchPrimitiveFiles_Modified;
+        ListOfPrimitiveFiles_Modified.Strings[PrimitiveFileIndex] := '1';
+        FEditingAction^.FindControlOptions.MatchPrimitiveFiles_Modified := ListOfPrimitiveFiles_Modified.Text;
+      finally
+        ListOfPrimitiveFiles_Modified.Free;
+      end;
+
+      //repaint node
+      FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, CCategory_ActionSpecific, CFindControl_MatchPrimitiveFiles_PropIndex, PrimitiveFileIndex);
+    end;
+  finally
+    ListOfPrimitiveFiles.Free;
+  end;
 end;
 
 
@@ -1536,6 +1587,15 @@ begin
     raise Exception.Create('OnLoadPrimitivesFile not assigned.')
   else
     FOnLoadPrimitivesFile(AFileName, APrimitives, AOrders, ASettings);
+end;
+
+
+procedure TfrClickerActions.DoOnSavePrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
+begin
+  if not Assigned(FOnSavePrimitivesFile) then
+    raise Exception.Create('OnSavePrimitivesFile not assigned.')
+  else
+    FOnSavePrimitivesFile(AFileName, APrimitives, AOrders, ASettings);
 end;
 
 
@@ -2002,6 +2062,8 @@ procedure TfrClickerActions.MenuItem_AddExistingPrimitiveFilesToPropertyListClic
 var
   MenuData: POIMenuItemData;
   ListOfFiles: TStringList;
+  ListOfFiles_Modified: TStringList;
+  i, OldCount: Integer;
 begin
   DoOnSetOpenDialogMultiSelect;
   if not DoOnOpenDialogExecute(CPrimitivesDialogFilter) then
@@ -2010,15 +2072,25 @@ begin
   MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
   try
     ListOfFiles := TStringList.Create;
+    ListOfFiles_Modified := TStringList.Create;
     try
       ListOfFiles.Text := FEditingAction^.FindControlOptions.MatchPrimitiveFiles;
+      OldCount := ListOfFiles.Count;
       ListOfFiles.Text := ListOfFiles.Text + DoOnGetOpenDialogFileName;
       FEditingAction^.FindControlOptions.MatchPrimitiveFiles := ListOfFiles.Text;
+
+      ListOfFiles_Modified.Text := FEditingAction^.FindControlOptions.MatchPrimitiveFiles_Modified;
+
+      for i := OldCount to ListOfFiles.Count - 1 do
+        ListOfFiles_Modified.Add('0');
+
+      FEditingAction^.FindControlOptions.MatchPrimitiveFiles_Modified := ListOfFiles_Modified.Text;
 
       FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex);
       TriggerOnControlsModified;
     finally
       ListOfFiles.Free;
+      ListOfFiles_Modified.Free;
     end;
   finally
     Dispose(MenuData);
@@ -2030,6 +2102,7 @@ procedure TfrClickerActions.MenuItem_AddNewPrimitiveFilesToPropertyListClick(Sen
 var
   MenuData: POIMenuItemData;
   ListOfFiles: TStringList;
+  ListOfFiles_Modified: TStringList;
 begin
   //DoOnSetOpenDialogMultiSelect; //do not call multiselect, as this is a single file save
   if not DoOnSaveDialogExecute(CPrimitivesDialogFilter) then
@@ -2038,15 +2111,21 @@ begin
   MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
   try
     ListOfFiles := TStringList.Create;
+    ListOfFiles_Modified := TStringList.Create;
     try
       ListOfFiles.Text := FEditingAction^.FindControlOptions.MatchPrimitiveFiles;
       ListOfFiles.Text := ListOfFiles.Text + DoOnGetSaveDialogFileName;
       FEditingAction^.FindControlOptions.MatchPrimitiveFiles := ListOfFiles.Text;
 
+      ListOfFiles_Modified.Text := FEditingAction^.FindControlOptions.MatchPrimitiveFiles_Modified;
+      ListOfFiles_Modified.Add('0');
+      FEditingAction^.FindControlOptions.MatchPrimitiveFiles_Modified := ListOfFiles_Modified.Text;
+
       FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex);
       TriggerOnControlsModified;
     finally
       ListOfFiles.Free;
+      ListOfFiles_Modified.Free;
     end;
   finally
     Dispose(MenuData);
@@ -2064,6 +2143,9 @@ begin
   MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
   try
     FEditingAction^.FindControlOptions.MatchPrimitiveFiles := '';
+    FEditingAction^.FindControlOptions.MatchPrimitiveFiles_Modified := '';
+
+    FPrevSelectedPrimitiveNode := -1;
     FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex);
     TriggerOnControlsModified;
   finally
@@ -2076,6 +2158,7 @@ procedure TfrClickerActions.MenuItem_BrowsePrimitiveFileFromPropertyListClick(Se
 var
   MenuData: POIMenuItemData;
   ListOfFiles: TStringList;
+  ListOfFiles_Modified: TStringList;
 begin
   MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
   try
@@ -2084,16 +2167,27 @@ begin
       Exit;
 
     ListOfFiles := TStringList.Create;
+    ListOfFiles_Modified := TStringList.Create;
     try
+      ListOfFiles_Modified.Text := FEditingAction^.FindControlOptions.MatchPrimitiveFiles_Modified;
+
+      if ListOfFiles_Modified.Strings[MenuData^.PropertyItemIndex] = '1' then
+        if MessageBox(Handle, 'The file is modified. Do you want to set this to another file and discard all changes?', PChar(Application.Title), MB_ICONQUESTION + MB_YESNO) = IDNO then
+          Exit;
+
       ListOfFiles.Text := FEditingAction^.FindControlOptions.MatchPrimitiveFiles;
       ListOfFiles.Strings[MenuData^.PropertyItemIndex] := DoOnGetOpenDialogFileName;
       FEditingAction^.FindControlOptions.MatchPrimitiveFiles := ListOfFiles.Text;
+
+      ListOfFiles_Modified.Strings[MenuData^.PropertyItemIndex] := '0';
+      FEditingAction^.FindControlOptions.MatchPrimitiveFiles_Modified := ListOfFiles_Modified.Text;
 
       FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex, True);
 
       TriggerOnControlsModified;
     finally
       ListOfFiles.Free;
+      ListOfFiles_Modified.Free;
     end;
   finally
     Dispose(MenuData);
@@ -2105,6 +2199,7 @@ procedure TfrClickerActions.MenuItem_RemovePrimitiveFileFromPropertyListClick(Se
 var
   MenuData: POIMenuItemData;
   ListOfFiles: TStringList;
+  ListOfFiles_Modified: TStringList;
 begin
   if MessageBox(Handle, 'Are you sure you want to remove this file from list?', PChar(Application.MainForm.Caption), MB_ICONQUESTION + MB_YESNO) = IDNO then
     Exit;
@@ -2112,16 +2207,22 @@ begin
   MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
   try
     ListOfFiles := TStringList.Create;
+    ListOfFiles_Modified := TStringList.Create;
     try
       ListOfFiles.Text := FEditingAction^.FindControlOptions.MatchPrimitiveFiles;
       ListOfFiles.Delete(MenuData^.PropertyItemIndex);
       FEditingAction^.FindControlOptions.MatchPrimitiveFiles := ListOfFiles.Text;
 
-      FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex, True);
+      ListOfFiles_Modified.Text := FEditingAction^.FindControlOptions.MatchPrimitiveFiles_Modified;
+      ListOfFiles_Modified.Delete(MenuData^.PropertyItemIndex);
+      FEditingAction.FindControlOptions.MatchPrimitiveFiles_Modified := ListOfFiles_Modified.Text;
 
+      FPrevSelectedPrimitiveNode := -1;
+      FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex, True);
       TriggerOnControlsModified;
     finally
       ListOfFiles.Free;
+      ListOfFiles_Modified.Free;
     end;
   finally
     Dispose(MenuData);
@@ -2133,10 +2234,12 @@ procedure TfrClickerActions.MenuItem_MovePrimitiveFileUpInPropertyListClick(Send
 var
   MenuData: POIMenuItemData;
   ListOfFiles: TStringList;
+  ListOfFiles_Modified: TStringList;
 begin
   MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
   try
     ListOfFiles := TStringList.Create;
+    ListOfFiles_Modified := TStringList.Create;
     try
       if MenuData^.PropertyItemIndex <= 0 then
         Exit;
@@ -2145,10 +2248,16 @@ begin
       ListOfFiles.Move(MenuData^.PropertyItemIndex, MenuData^.PropertyItemIndex - 1);
       FEditingAction^.FindControlOptions.MatchPrimitiveFiles := ListOfFiles.Text;
 
+      ListOfFiles_Modified.Text := FEditingAction^.FindControlOptions.MatchPrimitiveFiles_Modified;
+      ListOfFiles_Modified.Move(MenuData^.PropertyItemIndex, MenuData^.PropertyItemIndex - 1);
+      FEditingAction^.FindControlOptions.MatchPrimitiveFiles_Modified := ListOfFiles_Modified.Text;
+
+      Dec(FPrevSelectedPrimitiveNode);
       FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex, True);
       TriggerOnControlsModified;
     finally
       ListOfFiles.Free;
+      ListOfFiles_Modified.Free;
     end;
   finally
     Dispose(MenuData);
@@ -2160,10 +2269,12 @@ procedure TfrClickerActions.MenuItem_MovePrimitiveFileDownInPropertyListClick(Se
 var
   MenuData: POIMenuItemData;
   ListOfFiles: TStringList;
+  ListOfFiles_Modified: TStringList;
 begin
   MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
   try
     ListOfFiles := TStringList.Create;
+    ListOfFiles_Modified := TStringList.Create;
     try
       ListOfFiles.Text := FEditingAction^.FindControlOptions.MatchPrimitiveFiles;
       if MenuData^.PropertyItemIndex >= ListOfFiles.Count - 1 then
@@ -2172,10 +2283,47 @@ begin
       ListOfFiles.Move(MenuData^.PropertyItemIndex, MenuData^.PropertyItemIndex + 1);
       FEditingAction^.FindControlOptions.MatchPrimitiveFiles := ListOfFiles.Text;
 
+      ListOfFiles_Modified.Text := FEditingAction^.FindControlOptions.MatchPrimitiveFiles_Modified;
+      ListOfFiles_Modified.Move(MenuData^.PropertyItemIndex, MenuData^.PropertyItemIndex + 1);
+      FEditingAction^.FindControlOptions.MatchPrimitiveFiles_Modified := ListOfFiles_Modified.Text;
+
+      Inc(FPrevSelectedPrimitiveNode);
       FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex, True);
       TriggerOnControlsModified;
     finally
       ListOfFiles.Free;
+      ListOfFiles_Modified.Free;
+    end;
+  finally
+    Dispose(MenuData);
+  end;
+end;
+
+
+procedure TfrClickerActions.MenuItem_SavePrimitiveFileInPropertyListClick(Sender: TObject);
+var
+  MenuData: POIMenuItemData;
+  ListOfFiles: TStringList;
+  ListOfFiles_Modified: TStringList;
+begin
+  MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
+  try
+    ListOfFiles := TStringList.Create;
+    ListOfFiles_Modified := TStringList.Create;
+    try
+      ListOfFiles.Text := FEditingAction^.FindControlOptions.MatchPrimitiveFiles;
+      frClickerFindControl.frClickerPrimitives.SaveFile(ListOfFiles.Strings[MenuData^.PropertyItemIndex]);
+
+      //maybe the following three lines, should be moved to the OnSave handler
+      ListOfFiles_Modified.Text := FEditingAction^.FindControlOptions.MatchPrimitiveFiles_Modified;
+      ListOfFiles_Modified.Strings[MenuData^.PropertyItemIndex] := '0';
+      FEditingAction^.FindControlOptions.MatchPrimitiveFiles_Modified := ListOfFiles_Modified.Text;
+
+      FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex, True);
+      //TriggerOnControlsModified;  //commented, because the template is not modified by this action
+    finally
+      ListOfFiles.Free;
+      ListOfFiles_Modified.Free;
     end;
   finally
     Dispose(MenuData);
@@ -2402,6 +2550,18 @@ begin
 end;
 
 
+function TfrClickerActions.CreateBitmapForMenu(AImageList: TImageList; AImageIndex: Integer): TBitmap;
+begin
+  Result := TBitmap.Create;
+  Result.Width := 16;
+  Result.Height := 16;
+  Result.Canvas.Pen.Color := clWhite - 1;
+  Result.Canvas.Brush.Color := clWhite;
+  Result.Canvas.Rectangle(0, 0, Result.Width, Result.Height);
+  AImageList.Draw(Result.Canvas, 0, 0, AImageIndex, dsNormal, itImage);
+end;
+
+
 function TfrClickerActions.HandleOnOIGetCategoryCount: Integer;
 begin
   Result := CCategoryCount;
@@ -2580,6 +2740,7 @@ function TfrClickerActions.HandleOnOIGetListPropertyItemName(ACategoryIndex, APr
 var
   EditingActionType: Integer;
   ItemIndexMod, ItemIndexDiv: Integer;
+  ListOfPrimitiveFiles_Modified: TStringList;
 begin
   Result := '';
   if ACategoryIndex = CCategory_Common then
@@ -2613,7 +2774,24 @@ begin
           Result := CFindControl_InitialRectangleProperties[AItemIndex].Name;
 
         CFindControl_MatchPrimitiveFiles_PropIndex:
+        begin
           Result := 'File[' + IntToStr(AItemIndex) + ']';
+
+          ListOfPrimitiveFiles_Modified := TStringList.Create;
+          try
+            ListOfPrimitiveFiles_Modified.Text := FEditingAction^.FindControlOptions.MatchPrimitiveFiles_Modified;
+            try
+              if ListOfPrimitiveFiles_Modified.Strings[AItemIndex] = '1' then
+                Result := Result + '  (* Modified)';
+            except
+              on E: Exception do
+                Result := E.Message + '  ' + IntToStr(AItemIndex) + '   ' + IntToStr(ListOfPrimitiveFiles_Modified.Count - 1);
+            end;
+          finally
+            ListOfPrimitiveFiles_Modified.Free;
+          end;
+        end;  //CFindControl_MatchPrimitiveFiles_PropIndex
+
         else
           Result := '';
       end;
@@ -3322,6 +3500,8 @@ end;
 
 procedure TfrClickerActions.HandleOnOIPaintText(ANodeData: TNodeDataPropertyRec; ACategoryIndex, APropertyIndex, APropertyItemIndex: Integer;
   const TargetCanvas: TCanvas; Column: TColumnIndex; var TextType: TVSTTextType);
+var
+  ListOfPrimitiveFiles_Modified: TStringList;
 begin
   if ANodeData.Level = 0 then
   begin
@@ -3336,6 +3516,28 @@ begin
       TargetCanvas.Font.Style := [fsItalic];
       Exit;
     end;
+
+  if (ANodeData.Level = CPropertyItemLevel) and (Column = 1) and (CurrentlyEditingActionType in [acFindControl, acFindSubControl]) then
+    if (ACategoryIndex = CCategory_ActionSpecific) then
+      if APropertyIndex = CFindControl_MatchPrimitiveFiles_PropIndex then
+      begin
+        ListOfPrimitiveFiles_Modified := TStringList.Create;   //instead of parsing this list on every tree paint action, the "modified" flags could be stored in some array of (paths + modified)
+        try
+          ListOfPrimitiveFiles_Modified.Text := FEditingAction^.FindControlOptions.MatchPrimitiveFiles_Modified;
+
+          try
+            if ListOfPrimitiveFiles_Modified.Strings[APropertyItemIndex] = '1' then
+              TargetCanvas.Font.Color := clRed;
+          except
+            TargetCanvas.Font.Color := clWhite;
+            TargetCanvas.Brush.Color := clRed;
+          end;
+
+          Exit;
+        finally
+          ListOfPrimitiveFiles_Modified.Free;
+        end;
+      end;
 end;
 
 
@@ -3899,15 +4101,27 @@ begin
 
               AddMenuItemToPopupMenu(FOIEditorMenu, 'Browse...', MenuItem_BrowsePrimitiveFileFromPropertyListClick,
                 ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+              FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 0);
 
               AddMenuItemToPopupMenu(FOIEditorMenu, 'Remove file from list...', MenuItem_RemovePrimitiveFileFromPropertyListClick,
                 ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+              FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 1);
 
               AddMenuItemToPopupMenu(FOIEditorMenu, 'Move file up (one position)', MenuItem_MovePrimitiveFileUpInPropertyListClick,
                 ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+              FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 2);
 
               AddMenuItemToPopupMenu(FOIEditorMenu, 'Move file down (one position)', MenuItem_MovePrimitiveFileDownInPropertyListClick,
                 ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+              FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 3);
+
+              AddMenuItemToPopupMenu(FOIEditorMenu, '-', nil,
+                ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+
+              AddMenuItemToPopupMenu(FOIEditorMenu, 'Save file', MenuItem_SavePrimitiveFileInPropertyListClick,
+                ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+
+              FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 4);
 
               GetCursorPos(tp);
               FOIEditorMenu.PopUp(tp.X, tp.Y);
@@ -4183,29 +4397,53 @@ end;
 procedure TfrClickerActions.HandleOnOISelectedNode(NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex, Column: Integer; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 var
   PrimitiveFileNames: TStringList;
+  PrimitiveFile_Modified: TStringList;
+  IndexOfModifiedPmtv: Integer;
 begin
   //load primitives frame
   if (CurrentlyEditingActionType in [acFindControl, acFindSubControl]) and
      (CategoryIndex = CCategory_ActionSpecific) then
     if (NodeLevel = CPropertyItemLevel) and (PropertyIndex = CFindControl_MatchPrimitiveFiles_PropIndex) then
     begin
-      frClickerFindControl.CreateClickerPrimitivesFrame;
-
       PrimitiveFileNames := TStringList.Create;
+      PrimitiveFile_Modified := TStringList.Create;
       try
         PrimitiveFileNames.Text := FEditingAction^.FindControlOptions.MatchPrimitiveFiles;
+        PrimitiveFile_Modified.Text := FEditingAction^.FindControlOptions.MatchPrimitiveFiles_Modified;
+
+        IndexOfModifiedPmtv := PrimitiveFile_Modified.IndexOf('1');
+        if (IndexOfModifiedPmtv > -1) and (IndexOfModifiedPmtv <> PropertyItemIndex) then   //found a modified file, which is not this one
+        begin
+          if MessageBox(Handle, 'The current primitive file is modified. If you select another one, the changes will be lost. Continue?', PChar(Application.Title), MB_ICONWARNING + MB_YESNO) = IDNO then
+          begin  //no, go back to the modified file
+            FOIFrame.SelectNode(NodeLevel, CategoryIndex, PropertyIndex, FPrevSelectedPrimitiveNode);
+            Exit;
+          end
+          else
+          begin //yes, select the new file and reset the flag on the old one
+            PrimitiveFile_Modified.Strings[FPrevSelectedPrimitiveNode] := '0'; //reset modified flag
+            FEditingAction^.FindControlOptions.MatchPrimitiveFiles_Modified := PrimitiveFile_Modified.Text;
+            FOIFrame.RepaintNodeByLevel(NodeLevel, CategoryIndex, PropertyIndex, FPrevSelectedPrimitiveNode);
+          end;
+        end;
+
+        FPrevSelectedPrimitiveNode := PropertyItemIndex;
+
+        frClickerFindControl.CreateClickerPrimitivesFrame;
         frClickerFindControl.frClickerPrimitives.OnEvaluateReplacementsFunc := HandleOnEvaluateReplacementsFunc;
         frClickerFindControl.frClickerPrimitives.OnLoadBitmap := HandleOnLoadBitmap;
         frClickerFindControl.frClickerPrimitives.OnLoadPrimitivesFile := HandleOnLoadPrimitivesFile;
+        frClickerFindControl.frClickerPrimitives.OnSavePrimitivesFile := HandleOnSavePrimitivesFile;
         frClickerFindControl.frClickerPrimitives.OnTriggerOnControlsModified := HandleOnPrimitivesTriggerOnControlsModified;
 
         frClickerFindControl.frClickerPrimitives.LoadFile(PrimitiveFileNames.Strings[PropertyItemIndex]);
-
       finally
         PrimitiveFileNames.Free;
+        PrimitiveFile_Modified.Free;
       end;
     end;
 end;
 
 
 end.
+

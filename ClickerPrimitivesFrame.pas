@@ -58,6 +58,7 @@ type
 
     FOnLoadBitmap: TOnLoadBitmap;
     FOnLoadPrimitivesFile: TOnLoadPrimitivesFile;
+    FOnSavePrimitivesFile: TOnSavePrimitivesFile;
     FOnEvaluateReplacementsFunc: TEvaluateReplacementsFunc;
     FOnTriggerOnControlsModified: TOnTriggerOnControlsModified;
 
@@ -84,6 +85,7 @@ type
 
     function DoOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     procedure DoOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
+    procedure DoOnSavePrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
     function DoOnEvaluateReplacementsFunc(s: string; Recursive: Boolean = True): string;
     procedure DoOnTriggerOnControlsModified;
 
@@ -148,12 +150,14 @@ type
     destructor Destroy; override;
 
     procedure LoadFile(AFileName: string);
+    procedure SaveFile(AFileName: string);
     procedure ComposePrimitives(ABmp: TBitmap; AOrderIndex: Integer);
     procedure RepaintAllCompositions;
     function GetOrderCount: Integer;
 
     property OnLoadBitmap: TOnLoadBitmap write FOnLoadBitmap;
     property OnLoadPrimitivesFile: TOnLoadPrimitivesFile write FOnLoadPrimitivesFile; //called by LoadFile
+    property OnSavePrimitivesFile: TOnSavePrimitivesFile write FOnSavePrimitivesFile;
     property OnEvaluateReplacementsFunc: TEvaluateReplacementsFunc write FOnEvaluateReplacementsFunc; //called by ComposePrimitives
     property OnTriggerOnControlsModified: TOnTriggerOnControlsModified write FOnTriggerOnControlsModified;
   end;
@@ -247,6 +251,7 @@ begin
 
   FOnLoadBitmap := nil;
   FOnLoadPrimitivesFile := nil;
+  FOnSavePrimitivesFile := nil;
   FOnEvaluateReplacementsFunc := nil;
   FOnTriggerOnControlsModified := nil;
 end;
@@ -366,6 +371,12 @@ begin
   FOIFrame.ReloadContent;
   CreateAllPreviewPages;
   RepaintAllCompositions;
+end;
+
+
+procedure TfrClickerPrimitives.SaveFile(AFileName: string);
+begin
+  DoOnSavePrimitivesFile(AFileName, FPrimitives, FOrders, FPrimitiveSettings);
 end;
 
 
@@ -914,6 +925,15 @@ begin
 end;
 
 
+procedure TfrClickerPrimitives.DoOnSavePrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
+begin
+  if not Assigned(FOnSavePrimitivesFile) then
+    raise Exception.Create('OnSavePrimitivesFile not assigned.')
+  else
+    FOnSavePrimitivesFile(AFileName, APrimitives, AOrders, ASettings);
+end;
+
+
 function TfrClickerPrimitives.DoOnEvaluateReplacementsFunc(s: string; Recursive: Boolean = True): string;
 begin
   if not Assigned(FOnEvaluateReplacementsFunc) then
@@ -1201,6 +1221,8 @@ begin
           ;
       end;
   end;
+
+  DoOnTriggerOnControlsModified;
 end;
 
 
