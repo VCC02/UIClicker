@@ -2678,6 +2678,14 @@ begin
       Exit;
     end;
 
+  if frClickerActions.ModifiedPmtvFiles then
+    if MessageBox(Handle, PChar('One or more primitive files are modified for the selected action. By selecting another action, you will discard those changes.'#13#10#13#10'Go back to previous action/content?'), '', MB_ICONWARNING + MB_YESNO) = IDYES then
+    begin
+      vstActions.ClearSelection;
+      vstActions.Selected[FPreviousSelectedNode] := True;
+      Exit;
+    end;
+
   UpdateControlsFromActionsArr(Node^.Index);
   StopGlowingUpdateButton;
   frClickerActions.UpdatePageControlActionExecutionIcons;

@@ -332,6 +332,7 @@ type
     procedure SetCurrentlyEditingActionType(Value: TClkAction);
 
     procedure SetGridDrawingOption(Value: TDisplayGridLineOption);
+    function GetModifiedPmtvFiles: Boolean;
 
     procedure LocalTemplatesClick(Sender: TObject);
     procedure BrowseTemplatesClick(Sender: TObject);
@@ -340,6 +341,7 @@ type
     procedure CopyTextAndClassFromExternalProvider(AProviderName: string);
     procedure SetActionTimeoutToValue(AValue: Integer);
     procedure ResizeFrameSectionsBySplitter(NewLeft: Integer);
+    function GetIndexOfFirstModifiedPmtvFile: Integer;
 
     procedure HandleOnUpdateBitmapAlgorithmSettings;
     procedure HandleOnTriggerOnControlsModified;
@@ -464,6 +466,7 @@ type
     property EditingAction: PClkActionRec read FEditingAction; //the pointer is not writable from outside, only the content
 
     property GridDrawingOption: TDisplayGridLineOption write SetGridDrawingOption;
+    property ModifiedPmtvFiles: Boolean read GetModifiedPmtvFiles;
 
     property OnCopyControlTextAndClassFromMainWindow: TOnCopyControlTextAndClassFromMainWindow read FOnCopyControlTextAndClassFromMainWindow write FOnCopyControlTextAndClassFromMainWindow;
     property OnGetExtraSearchAreaDebuggingImage: TOnGetExtraSearchAreaDebuggingImage write FOnGetExtraSearchAreaDebuggingImage;
@@ -1041,6 +1044,20 @@ begin
   pnlExtra.Left := pnlHorizSplitter.Left + pnlHorizSplitter.Width;
   pnlExtra.Width := TabSheetAction.Width - pnlExtra.Left;
   pnlvstOI.Width := pnlHorizSplitter.Left;
+end;
+
+
+function TfrClickerActions.GetIndexOfFirstModifiedPmtvFile: Integer;
+var
+  PrimitiveFile_Modified: TStringList;
+begin
+  PrimitiveFile_Modified := TStringList.Create;
+  try
+    PrimitiveFile_Modified.Text := FEditingAction^.FindControlOptions.MatchPrimitiveFiles_Modified;
+    Result := PrimitiveFile_Modified.IndexOf('1');
+  finally
+    PrimitiveFile_Modified.Free;
+  end;
 end;
 
 
@@ -1813,6 +1830,12 @@ procedure TfrClickerActions.SetGridDrawingOption(Value: TDisplayGridLineOption);
 begin
   frClickerFindControl.GridDrawingOption := Value;
   frClickerFindControl.RefreshGrid;
+end;
+
+
+function TfrClickerActions.GetModifiedPmtvFiles: Boolean;
+begin
+  Result := GetIndexOfFirstModifiedPmtvFile > -1;
 end;
 
 
