@@ -74,6 +74,11 @@ type
     procedure MoveOrder(ASrcIndex, ADestIndex: Integer);
     procedure MoveOrderTabContent(ASrcIndex, ADestIndex: Integer);
 
+    function GetOrderItemByIndex(AOrderIndex, AItemIndex: Integer): Integer;
+    procedure DeleteOrderItemByIndex(AOrderIndex, AItemIndex: Integer);
+    procedure InsertOrderItemAtIndex(AOrderIndex, AItemIndex: Integer; ASrcItem: Integer);
+    procedure MoveOrderItem(AOrderIndex, ASrcIndex, ADestIndex: Integer);
+
     procedure MenuItem_RemoveAllPrimitivesFromList(Sender: TObject);
     procedure MenuItem_AddPrimitiveToList(Sender: TObject);
     procedure MenuItem_SetValueFromEnumItem(Sender: TObject);
@@ -151,6 +156,7 @@ type
 
     procedure LoadFile(AFileName: string);
     procedure SaveFile(AFileName: string);
+    procedure ClearContent;
     procedure ComposePrimitives(ABmp: TBitmap; AOrderIndex: Integer);
     procedure RepaintAllCompositions;
     function GetOrderCount: Integer;
@@ -380,6 +386,14 @@ begin
 end;
 
 
+procedure TfrClickerPrimitives.ClearContent;
+begin
+  SetLength(FPrimitives, 0);
+  SetLength(FOrders, 0);
+  FOIFrame.ReloadContent;
+end;
+
+
 procedure TfrClickerPrimitives.GetOrderContentByIndex(AIndex: Integer; var ADestContent: TCompositionOrder);
 var
   i: Integer;
@@ -480,6 +494,50 @@ begin
 
   for i := 0 to PageControlPreview.PageCount - 1 do
     PageControlPreview.Pages[i].Caption := FOrders[i].Name;
+end;
+
+
+function TfrClickerPrimitives.GetOrderItemByIndex(AOrderIndex, AItemIndex: Integer): Integer;
+begin
+  Result := FOrders[AOrderIndex].Items[AItemIndex];
+end;
+
+
+procedure TfrClickerPrimitives.DeleteOrderItemByIndex(AOrderIndex, AItemIndex: Integer);
+var
+  i: Integer;
+begin
+  for i := AItemIndex to Length(FOrders[AOrderIndex].Items) - 2 do
+    FOrders[AOrderIndex].Items[i] := FOrders[AOrderIndex].Items[i + 1];
+
+  SetLength(FOrders[AOrderIndex].Items, Length(FOrders[AOrderIndex].Items) - 1);
+end;
+
+
+procedure TfrClickerPrimitives.InsertOrderItemAtIndex(AOrderIndex, AItemIndex: Integer; ASrcItem: Integer);
+var
+  i: Integer;
+begin
+  SetLength(FOrders[AOrderIndex].Items, Length(FOrders[AOrderIndex].Items) + 1);
+
+  for i := Length(FOrders[AOrderIndex].Items) - 1 downto AItemIndex + 1 do
+    FOrders[AOrderIndex].Items[i] := FOrders[AOrderIndex].Items[i - 1];
+
+  FOrders[AOrderIndex].Items[AItemIndex] := ASrcItem;
+end;
+
+
+procedure TfrClickerPrimitives.MoveOrderItem(AOrderIndex, ASrcIndex, ADestIndex: Integer);
+var
+  Ph: Integer;
+begin
+  if ASrcIndex = ADestIndex then
+    Exit;
+
+  Ph := GetOrderItemByIndex(AOrderIndex, ASrcIndex);
+  DeleteOrderItemByIndex(AOrderIndex, ASrcIndex);
+
+  InsertOrderItemAtIndex(AOrderIndex, ADestIndex, Ph);
 end;
 
 
@@ -1518,8 +1576,6 @@ end;
 
 
 procedure TfrClickerPrimitives.HandleOnOIDragDrop(NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex, SrcNodeLevel, SrcCategoryIndex, SrcPropertyIndex, SrcPropertyItemIndex: Integer; Shift: TShiftState; const Pt: TPoint; var Effect: DWORD; Mode: TDropMode);
-var
-  Ph2: Integer;
 begin
   if not ((CategoryIndex = CCategory_Orders) and (SrcCategoryIndex = CCategory_Orders)) then
     Exit;
@@ -1533,6 +1589,7 @@ begin
 
         FOIFrame.ReloadPropertyItems(CategoryIndex, PropertyIndex, True);
         FOIFrame.ReloadPropertyItems(SrcCategoryIndex, SrcPropertyIndex, True);
+        DoOnTriggerOnControlsModified;
       end;
 
   //dragging an order item
@@ -1541,14 +1598,11 @@ begin
       if PropertyIndex = SrcPropertyIndex then
         if PropertyItemIndex <> SrcPropertyItemIndex then
         begin
-          Ph2 := FOrders[PropertyIndex].Items[PropertyItemIndex];
-          FOrders[PropertyIndex].Items[PropertyItemIndex] := FOrders[PropertyIndex].Items[SrcPropertyItemIndex];
-          FOrders[PropertyIndex].Items[SrcPropertyItemIndex] := Ph2;
+          MoveOrderItem(PropertyIndex, SrcPropertyItemIndex, PropertyItemIndex);
 
           FOIFrame.ReloadPropertyItems(CategoryIndex, PropertyIndex, True);
-          FOIFrame.ReloadPropertyItems(SrcCategoryIndex, SrcPropertyIndex, True);
-
           RepaintAllCompositions;
+          DoOnTriggerOnControlsModified;
         end;
 end;
 

@@ -2684,7 +2684,9 @@ begin
       vstActions.ClearSelection;
       vstActions.Selected[FPreviousSelectedNode] := True;
       Exit;
-    end;
+    end
+    else
+      frClickerActions.ResetAllPmtvModifiedFlags;  //reset the flags, so that next time this action is selected, the files won't appear as modified
 
   UpdateControlsFromActionsArr(Node^.Index);
   StopGlowingUpdateButton;

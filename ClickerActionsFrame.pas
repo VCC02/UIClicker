@@ -225,6 +225,7 @@ type
     procedure MenuItem_MovePrimitiveFileUpInPropertyListClick(Sender: TObject);
     procedure MenuItem_MovePrimitiveFileDownInPropertyListClick(Sender: TObject);
     procedure MenuItem_SavePrimitiveFileInPropertyListClick(Sender: TObject);
+    procedure MenuItem_DiscardChangesAndReloadPrimitiveFileInPropertyListClick(Sender: TObject);
 
     procedure MenuItem_AddFontProfileToPropertyListClick(Sender: TObject);
     procedure MenuItem_RemoveFontProfileFromPropertyListClick(Sender: TObject);
@@ -448,6 +449,7 @@ type
     procedure UpdatePageControlActionExecutionIcons;
     procedure UpdateControlWidthHeightLabels;
     procedure RefreshActionName; //called by action list, when modifying the action name from there
+    procedure ResetAllPmtvModifiedFlags; //called when users select a diffeent action from the one with modified pmtv files
 
     procedure ClearControls;
 
@@ -1826,6 +1828,26 @@ begin
 end;
 
 
+procedure TfrClickerActions.ResetAllPmtvModifiedFlags;
+var
+  ListOfFiles_Modified: TStringList;
+  i: Integer;
+begin
+  ListOfFiles_Modified := TStringList.Create;
+  try
+    ListOfFiles_Modified.Text := FEditingAction^.FindControlOptions.MatchPrimitiveFiles_Modified;
+
+    for i := 0 to ListOfFiles_Modified.Count - 1 do
+      ListOfFiles_Modified.Strings[i] := '0';
+
+    FEditingAction^.FindControlOptions.MatchPrimitiveFiles_Modified := ListOfFiles_Modified.Text;
+    frClickerFindControl.frClickerPrimitives.ClearContent;
+  finally
+    ListOfFiles_Modified.Free;
+  end;
+end;
+
+
 procedure TfrClickerActions.SetGridDrawingOption(Value: TDisplayGridLineOption);
 begin
   frClickerFindControl.GridDrawingOption := Value;
@@ -2338,6 +2360,39 @@ begin
       frClickerFindControl.frClickerPrimitives.SaveFile(ListOfFiles.Strings[MenuData^.PropertyItemIndex]);
 
       //maybe the following three lines, should be moved to the OnSave handler
+      ListOfFiles_Modified.Text := FEditingAction^.FindControlOptions.MatchPrimitiveFiles_Modified;
+      ListOfFiles_Modified.Strings[MenuData^.PropertyItemIndex] := '0';
+      FEditingAction^.FindControlOptions.MatchPrimitiveFiles_Modified := ListOfFiles_Modified.Text;
+
+      FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex, True);
+      //TriggerOnControlsModified;  //commented, because the template is not modified by this action
+    finally
+      ListOfFiles.Free;
+      ListOfFiles_Modified.Free;
+    end;
+  finally
+    Dispose(MenuData);
+  end;
+end;
+
+
+procedure TfrClickerActions.MenuItem_DiscardChangesAndReloadPrimitiveFileInPropertyListClick(Sender: TObject);
+var
+  MenuData: POIMenuItemData;
+  ListOfFiles: TStringList;
+  ListOfFiles_Modified: TStringList;
+begin
+  MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
+  try
+    ListOfFiles := TStringList.Create;
+    ListOfFiles_Modified := TStringList.Create;
+    try
+      if MessageBox(Handle, 'Discard changes and reload?', PChar(Application.Title), MB_ICONQUESTION + MB_YESNO) = IDNO then
+        Exit;
+
+      ListOfFiles.Text := FEditingAction^.FindControlOptions.MatchPrimitiveFiles;
+      frClickerFindControl.frClickerPrimitives.LoadFile(ListOfFiles.Strings[MenuData^.PropertyItemIndex]);
+
       ListOfFiles_Modified.Text := FEditingAction^.FindControlOptions.MatchPrimitiveFiles_Modified;
       ListOfFiles_Modified.Strings[MenuData^.PropertyItemIndex] := '0';
       FEditingAction^.FindControlOptions.MatchPrimitiveFiles_Modified := ListOfFiles_Modified.Text;
@@ -4143,8 +4198,14 @@ begin
 
               AddMenuItemToPopupMenu(FOIEditorMenu, 'Save file', MenuItem_SavePrimitiveFileInPropertyListClick,
                 ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-
               FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 4);
+
+              AddMenuItemToPopupMenu(FOIEditorMenu, '-', nil,
+                ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+
+              AddMenuItemToPopupMenu(FOIEditorMenu, 'Discard changes and reload file...', MenuItem_DiscardChangesAndReloadPrimitiveFileInPropertyListClick,
+                ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+              FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 5);
 
               GetCursorPos(tp);
               FOIEditorMenu.PopUp(tp.X, tp.Y);
@@ -4435,19 +4496,24 @@ begin
         PrimitiveFile_Modified.Text := FEditingAction^.FindControlOptions.MatchPrimitiveFiles_Modified;
 
         IndexOfModifiedPmtv := PrimitiveFile_Modified.IndexOf('1');
-        if (IndexOfModifiedPmtv > -1) and (IndexOfModifiedPmtv <> PropertyItemIndex) then   //found a modified file, which is not this one
+        if IndexOfModifiedPmtv > -1 then
         begin
-          if MessageBox(Handle, 'The current primitive file is modified. If you select another one, the changes will be lost. Continue?', PChar(Application.Title), MB_ICONWARNING + MB_YESNO) = IDNO then
-          begin  //no, go back to the modified file
-            FOIFrame.SelectNode(NodeLevel, CategoryIndex, PropertyIndex, FPrevSelectedPrimitiveNode);
-            Exit;
+          if IndexOfModifiedPmtv <> PropertyItemIndex then   //found a modified file, which is not this one
+          begin
+            if MessageBox(Handle, 'The current primitive file is modified. If you select another one, the changes will be lost. Continue?', PChar(Application.Title), MB_ICONWARNING + MB_YESNO) = IDNO then
+            begin  //no, go back to the modified file
+              FOIFrame.SelectNode(NodeLevel, CategoryIndex, PropertyIndex, FPrevSelectedPrimitiveNode);
+              Exit;
+            end
+            else
+            begin //yes, select the new file and reset the flag on the old one
+              PrimitiveFile_Modified.Strings[FPrevSelectedPrimitiveNode] := '0'; //reset modified flag
+              FEditingAction^.FindControlOptions.MatchPrimitiveFiles_Modified := PrimitiveFile_Modified.Text;
+              FOIFrame.RepaintNodeByLevel(NodeLevel, CategoryIndex, PropertyIndex, FPrevSelectedPrimitiveNode);
+            end;
           end
           else
-          begin //yes, select the new file and reset the flag on the old one
-            PrimitiveFile_Modified.Strings[FPrevSelectedPrimitiveNode] := '0'; //reset modified flag
-            FEditingAction^.FindControlOptions.MatchPrimitiveFiles_Modified := PrimitiveFile_Modified.Text;
-            FOIFrame.RepaintNodeByLevel(NodeLevel, CategoryIndex, PropertyIndex, FPrevSelectedPrimitiveNode);
-          end;
+            Exit; //the same (maodified) file is selected, nothing to do here
         end;
 
         FPrevSelectedPrimitiveNode := PropertyItemIndex;
