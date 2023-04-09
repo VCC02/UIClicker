@@ -43,16 +43,22 @@ type
   TfrClickerPrimitives = class(TFrame)
     imglstPrimitives: TImageList;
     imgFontColorBuffer: TImage;
+    MenuItem_CopyToClipboard: TMenuItem;
     PageControlPreview: TPageControl;
     pnlPreview: TPanel;
     pnlvstOI: TPanel;
+    pmPreview: TPopupMenu;
+    tmrDrawZoom: TTimer;
     tmrReloadOIContent: TTimer;
+    procedure MenuItem_CopyToClipboardClick(Sender: TObject);
+    procedure tmrDrawZoomTimer(Sender: TObject);
     procedure tmrReloadOIContentTimer(Sender: TObject);
   private
     FOIFrame: TfrObjectInspector;
     FPrimitives: TPrimitiveRecArr;
     FOrders: TCompositionOrderArr; //array of orders  - i.e. array of array of indexes.
     FPrimitiveSettings: TPrimitiveSettings;
+    FCurrentMousePosOnPreviewImg: TPoint;
 
     FOIEditorMenu: TPopupMenu;
 
@@ -87,6 +93,10 @@ type
     procedure MenuItem_AddCompositionOrderToList(Sender: TObject);
     procedure MenuItem_RemoveCompositionOrderFromList(Sender: TObject);
     procedure MenuItem_RepaintAllCompositions(Sender: TObject);
+
+    procedure imgPreviewMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+    procedure imgPreviewMouseEnter(Sender: TObject);
+    procedure imgPreviewMouseLeave(Sender: TObject);
 
     function DoOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     procedure DoOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
@@ -150,6 +160,9 @@ type
     procedure HandleOnOIDragAllowed(NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex: Integer; var Allowed: Boolean);
     procedure HandleOnOIDragOver(NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex, SrcNodeLevel, SrcCategoryIndex, SrcPropertyIndex, SrcPropertyItemIndex: Integer; Shift: TShiftState; State: TDragState; const Pt: TPoint; Mode: TDropMode; var Effect: DWORD; var Accept: Boolean);
     procedure HandleOnOIDragDrop(NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex, SrcNodeLevel, SrcCategoryIndex, SrcPropertyIndex, SrcPropertyItemIndex: Integer; Shift: TShiftState; const Pt: TPoint; var Effect: DWORD; Mode: TDropMode);
+
+    function HandleOnEvaluateReplacementsFunc(s: string; Recursive: Boolean = True): string;
+    function HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -174,7 +187,8 @@ implementation
 
 
 uses
-  ClickerPrimitiveValues, ClickerOIUtils, FPCanvas;
+  ClickerPrimitiveValues, ClickerOIUtils, ClickerPrimitivesCompositor, ClickerZoomPreviewForm,
+  FPCanvas, Clipbrd;
 
 
 const
@@ -253,6 +267,9 @@ begin
   SetLength(FOrders, 0);
   FPrimitiveSettings.CompositorDirection := cdTopBot;
 
+  FCurrentMousePosOnPreviewImg.X := Screen.Width - 10;  //init somewhere near the bottom-right corner of the screen
+  FCurrentMousePosOnPreviewImg.Y := Screen.Height - 10;
+
   FOIEditorMenu := TPopupMenu.Create(Self);
 
   FOnLoadBitmap := nil;
@@ -329,6 +346,7 @@ begin
   PreviewImage.AutoSize := False;
   PreviewImage.Transparent := False;
   PreviewImage.Visible := True;
+  PreviewImage.PopupMenu := pmPreview;
 
   PreviewImage.Canvas.Pen.Color := clWhite;
   PreviewImage.Canvas.Brush.Color := clWhite;
@@ -336,6 +354,10 @@ begin
 
   //PreviewImage.Canvas.Font.Color := clRed;          //for debugging only
   //PreviewImage.Canvas.TextOut(20, 20, ATabName);    //for debugging only
+
+  PreviewImage.OnMouseMove := imgPreviewMouseMove;
+  PreviewImage.OnMouseEnter := imgPreviewMouseEnter;
+  PreviewImage.OnMouseLeave := imgPreviewMouseLeave;
 
   Result := PreviewImage;
 end;
@@ -358,11 +380,20 @@ procedure TfrClickerPrimitives.RepaintAllCompositions;
 var
   i: Integer;
   PreviewImage: TImage;
+  PmtvCompositor: TPrimitivesCompositor;
 begin
-  for i := 0 to Length(FOrders) - 1 do
-  begin
-    PreviewImage := TImage(TScrollBox(PageControlPreview.Pages[i].Tag).Tag);
-    ComposePrimitives(PreviewImage.Picture.Bitmap, i);
+  PmtvCompositor := TPrimitivesCompositor.Create;
+  try
+    PmtvCompositor.OnEvaluateReplacementsFunc := HandleOnEvaluateReplacementsFunc;
+    PmtvCompositor.OnLoadBitmap := HandleOnLoadBitmap;
+
+    for i := 0 to Length(FOrders) - 1 do
+    begin
+      PreviewImage := TImage(TScrollBox(PageControlPreview.Pages[i].Tag).Tag);
+      PmtvCompositor.ComposePrimitives(PreviewImage.Picture.Bitmap, i, FPrimitives, FOrders, FPrimitiveSettings);
+    end;
+  finally
+    PmtvCompositor.Free;
   end;
 end;
 
@@ -541,187 +572,18 @@ begin
 end;
 
 
-procedure ComposePrimitive_SetPen(Sender: TfrClickerPrimitives; ABmp: TBitmap; var APrimitive: TPrimitiveRec);
-begin
-  ABmp.Canvas.Pen.Color := HexToInt(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetPen.Color)); //TColor;
-  ABmp.Canvas.Pen.Style := PenStyleNameToIndex(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetPen.Style)); //TFPPenStyle;
-  ABmp.Canvas.Pen.Width := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetPen.Width), 1); //Integer;
-  ABmp.Canvas.Pen.Mode := PenModeNameToIndex(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetPen.Mode)); //TFPPenMode;
-  ABmp.Canvas.Pen.EndCap := PenEndCapNameToIndex(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetPen.EndCap)); //TFPPenEndCap;
-  ABmp.Canvas.Pen.JoinStyle := PenJoinStyleNameToIndex(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetPen.JoinStyle)); //TFPPenJoinStyle;
-end;
-
-
-procedure ComposePrimitive_SetBrush(Sender: TfrClickerPrimitives; ABmp: TBitmap; var APrimitive: TPrimitiveRec);
-begin
-  ABmp.Canvas.Brush.Color := HexToInt(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetBrush.Color)); //TColor;
-  ABmp.Canvas.Brush.Style := BrushStyleNameToIndex(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetBrush.Style)); //TFPBrushStyle;
-end;
-
-
-procedure ComposePrimitive_SetMisc(Sender: TfrClickerPrimitives; ABmp: TBitmap; var APrimitive: TPrimitiveRec);
-begin
-  ABmp.Canvas.AntialiasingMode := TAntialiasingMode(StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetMisc.AntialiasingMode), Ord(amDontCare)));
-end;
-
-
-procedure ComposePrimitive_SetFont(Sender: TfrClickerPrimitives; ABmp: TBitmap; var APrimitive: TPrimitiveRec);
-begin
-  ABmp.Canvas.Font.Color := HexToInt(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetFont.ForegroundColor));
-  ABmp.Canvas.Brush.Color := HexToInt(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetFont.BackgroundColor));
-  ABmp.Canvas.Font.Name := Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetFont.FontName);
-  ABmp.Canvas.Font.Size := APrimitive.ClkSetFont.FontSize;
-  ABmp.Canvas.Font.Bold := APrimitive.ClkSetFont.Bold;
-  ABmp.Canvas.Font.Italic := APrimitive.ClkSetFont.Italic;
-  ABmp.Canvas.Font.Underline := APrimitive.ClkSetFont.Underline;
-  ABmp.Canvas.Font.StrikeThrough := APrimitive.ClkSetFont.StrikeOut;
-
-  if APrimitive.ClkSetFont.FontQualityUsesReplacement then
-    ABmp.Canvas.Font.Quality := TFontQuality(StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetFont.FontQualityReplacement), Ord(fqDefault)))
-  else
-    ABmp.Canvas.Font.Quality := APrimitive.ClkSetFont.FontQuality;
-end;
-
-
-procedure ComposePrimitive_Image(Sender: TfrClickerPrimitives; ABmp: TBitmap; var APrimitive: TPrimitiveRec);
-var
-  SrcBmp: TBitmap;
-  SrcBitmapFnm: string;
-  WillStretch: Boolean;
-  TempRect: TRect;
-begin
-  ABmp.Canvas.Brush.Color := HexToInt(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetBrush.Color)); //TColor;
-  ABmp.Canvas.Brush.Style := TBrushStyle(StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetBrush.Style), Ord(bsSolid))); //TFPBrushStyle;
-
-  WillStretch := Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkImage.Stretch) = '1';
-
-  TempRect.Left := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkImage.X1), 10);
-  TempRect.Top := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkImage.Y1), 20);
-
-  if WillStretch then
-  begin
-    TempRect.Right := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkImage.X2), 30);
-    TempRect.Bottom := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkImage.Y2), 40);
-  end;
-
-  SrcBitmapFnm := Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkImage.Path);
-  Sender.DoOnLoadBitmap(SrcBmp, SrcBitmapFnm);
-
-  if WillStretch then
-    ABmp.Canvas.StretchDraw(TempRect, SrcBmp)
-  else
-    ABmp.Canvas.Draw(TempRect.Left, TempRect.Top, SrcBmp);
-end;
-
-
-procedure ComposePrimitive_Line(Sender: TfrClickerPrimitives; ABmp: TBitmap; var APrimitive: TPrimitiveRec);
-var
-  x1, y1, x2, y2: Integer;
-begin
-  x1 := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkLine.X1), 10);
-  y1 := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkLine.Y1), 20);
-  x2 := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkLine.X2), 30);
-  y2 := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkLine.Y2), 40);
-
-  ABmp.Canvas.Line(x1, y1, x2, y2);
-end;
-
-
-procedure ComposePrimitive_Rect(Sender: TfrClickerPrimitives; ABmp: TBitmap; var APrimitive: TPrimitiveRec);
-var
-  x1, y1, x2, y2: Integer;
-begin
-  x1 := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkRect.X1), 10);
-  y1 := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkRect.Y1), 20);
-  x2 := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkRect.X2), 30);
-  y2 := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkRect.Y2), 40);
-
-  ABmp.Canvas.Rectangle(x1, y1, x2, y2);
-end;
-
-
-procedure ComposePrimitive_GradientFill(Sender: TfrClickerPrimitives; ABmp: TBitmap; var APrimitive: TPrimitiveRec);
-var
-  TempRect: TRect;
-  StartColor, StopColor: TColor;
-  GradientDirection: TGradientDirection;
-begin
-  TempRect.Left := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkGradientFill.X1), 10);
-  TempRect.Top := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkGradientFill.Y1), 20);
-  TempRect.Right := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkGradientFill.X2), 30);
-  TempRect.Bottom := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkGradientFill.Y2), 40);
-  StartColor := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkGradientFill.StartColor), clLime);
-  StopColor := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkGradientFill.StopColor), clYellow);
-  GradientDirection := TGradientDirection(Ord(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkGradientFill.Direction) = '1'));
-
-  ABmp.Canvas.GradientFill(TempRect, StartColor, StopColor, GradientDirection);
-end;
-
-
-procedure ComposePrimitive_Text(Sender: TfrClickerPrimitives; ABmp: TBitmap; var APrimitive: TPrimitiveRec);
-var
-  X, Y: Integer;
-  TempText: string;
-begin
-  X := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkText.X), 30);
-  Y := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkText.Y), 40);
-  TempText := Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkText.Text);
-
-  ABmp.Canvas.TextOut(X, Y, TempText);
-end;
-
-
-type
-  TComposePrimitivesProc = procedure(Sender: TfrClickerPrimitives; ABmp: TBitmap; var APrimitive: TPrimitiveRec);
-
-
 procedure TfrClickerPrimitives.ComposePrimitives(ABmp: TBitmap; AOrderIndex: Integer);
-const
-  CComposePrimitives: array[0..CPrimitiveTypeCount - 1] of TComposePrimitivesProc = (
-    @ComposePrimitive_SetPen,
-    @ComposePrimitive_SetBrush,
-    @ComposePrimitive_SetMisc,
-    @ComposePrimitive_SetFont,
-    @ComposePrimitive_Image,
-    @ComposePrimitive_Line,
-    @ComposePrimitive_Rect,
-    @ComposePrimitive_GradientFill,
-    @ComposePrimitive_Text
-  );
-
 var
-  i, NewIndex: Integer;
+  PmtvCompositor: TPrimitivesCompositor;
 begin
-  ABmp.Transparent := False;
-  ABmp.Canvas.Pen.Style := psSolid;
-  ABmp.Canvas.Pen.Width := 1;
-  ABmp.Canvas.Brush.Style := bsClear;//bsSolid;
-  ABmp.Canvas.Pen.Color := clWhite;
-  ABmp.Canvas.Brush.Color := clWhite;
-  ABmp.Canvas.Rectangle(0, 0, ABmp.Width, ABmp.Height);
+  PmtvCompositor := TPrimitivesCompositor.Create;
+  try
+    PmtvCompositor.OnEvaluateReplacementsFunc := HandleOnEvaluateReplacementsFunc;
+    PmtvCompositor.OnLoadBitmap := HandleOnLoadBitmap;
 
-  ABmp.Canvas.Brush.Style := bsSolid;  //reset to some default values
-  ABmp.Canvas.Pen.Color := clWhite;
-  ABmp.Canvas.Brush.Color := clWhite;
-
-  case FPrimitiveSettings.CompositorDirection of
-    cdTopBot:
-    begin
-      for i := 0 to Length(FPrimitives) - 1 do
-      begin
-        NewIndex := FOrders[AOrderIndex].Items[i];
-        CComposePrimitives[FPrimitives[NewIndex].PrimitiveType](Self, ABmp, FPrimitives[NewIndex]);
-      end;
-    end;
-
-    cdBotTop:
-    begin
-      for i := Length(FPrimitives) - 1 downto 0 do
-      begin
-        NewIndex := FOrders[AOrderIndex].Items[i];
-        CComposePrimitives[FPrimitives[NewIndex].PrimitiveType](Self, ABmp, FPrimitives[NewIndex]);
-      end;
-    end;
+    PmtvCompositor.ComposePrimitives(ABmp, AOrderIndex, FPrimitives, FOrders, FPrimitiveSettings);
+  finally
+    PmtvCompositor.Free;
   end;
 end;
 
@@ -730,6 +592,77 @@ procedure TfrClickerPrimitives.tmrReloadOIContentTimer(Sender: TObject);
 begin
   tmrReloadOIContent.Enabled := False;
   FOIFrame.ReloadContent;
+end;
+
+
+procedure TfrClickerPrimitives.tmrDrawZoomTimer(Sender: TObject);
+var
+  TempBmp: TBitmap;
+  tp: TPoint;
+  PreviewImage: TImage;
+  Idx: Integer;
+begin
+  tmrDrawZoom.Enabled := False;
+
+  Idx := PageControlPreview.ActivePageIndex;
+  if Idx = -1 then
+    Exit;
+
+  PreviewImage := TImage(TScrollBox(PageControlPreview.Pages[Idx].Tag).Tag);
+
+  if PreviewImage = nil then
+    Exit;
+
+  TempBmp := TBitmap.Create;
+  try
+    TempBmp.Width := PreviewImage.Width;
+    TempBmp.Height := PreviewImage.Height;
+    TempBmp.Canvas.Draw(0, 0, PreviewImage.Picture.Bitmap);
+
+    GetCursorPos(tp);
+    SetZoomContent(TempBmp, FCurrentMousePosOnPreviewImg.X, FCurrentMousePosOnPreviewImg.Y, tp.X + 50, tp.Y + 50);
+  finally
+    TempBmp.Free;
+  end;
+end;
+
+
+procedure TfrClickerPrimitives.MenuItem_CopyToClipboardClick(Sender: TObject);
+var
+  Idx: Integer;
+  PmtvCompositor: TPrimitivesCompositor;
+  Bmp: TBitmap;
+begin
+  PmtvCompositor := TPrimitivesCompositor.Create;
+  try
+    PmtvCompositor.OnEvaluateReplacementsFunc := HandleOnEvaluateReplacementsFunc;
+    PmtvCompositor.OnLoadBitmap := HandleOnLoadBitmap;
+
+    Idx := PageControlPreview.ActivePageIndex;
+    if Idx > Length(FOrders) - 1 then
+    begin
+      MessageBox(Handle, 'Primitive order index is out of range.', PChar(Application.Title), MB_ICONERROR);
+      Exit;
+    end;
+
+    Bmp := TBitmap.Create;
+    try
+      Bmp.PixelFormat := pf24bit;
+      Bmp.Width := 100;
+      Bmp.Height := 100;
+      Bmp.Canvas.Rectangle(0, 0, Bmp.Width, Bmp.Height);
+
+      Bmp.Width := PmtvCompositor.GetMaxX(Bmp.Canvas, FPrimitives);
+      Bmp.Height := PmtvCompositor.GetMaxY(Bmp.Canvas, FPrimitives);
+      PmtvCompositor.ComposePrimitives(Bmp, Idx, FPrimitives, FOrders, FPrimitiveSettings);
+
+      Clipboard.Assign(Bmp);
+    finally
+      Bmp.Free;
+    end;
+  finally
+    PmtvCompositor.Free;
+  end;
 end;
 
 
@@ -962,6 +895,54 @@ begin
   finally
     Dispose(MenuData);
   end;
+end;
+
+
+procedure TfrClickerPrimitives.imgPreviewMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+begin
+  FCurrentMousePosOnPreviewImg.X := X;
+  FCurrentMousePosOnPreviewImg.Y := Y;
+  tmrDrawZoom.Enabled := True;
+end;
+
+
+procedure TfrClickerPrimitives.imgPreviewMouseEnter(Sender: TObject);
+var
+  tp: TPoint;
+  Idx: Integer;
+  PreviewImage: TImage;
+begin
+  Idx := PageControlPreview.ActivePageIndex;
+  if Idx = -1 then
+    Exit;
+
+  PreviewImage := TImage(TScrollBox(PageControlPreview.Pages[Idx].Tag).Tag);
+
+  if PreviewImage = nil then
+    Exit;
+
+  PreviewImage.ShowHint := False;
+  GetCursorPos(tp);
+  ShowZoom(tp.X + 50, tp.Y + 50);
+end;
+
+
+procedure TfrClickerPrimitives.imgPreviewMouseLeave(Sender: TObject);
+var
+  Idx: Integer;
+  PreviewImage: TImage;
+begin
+  Idx := PageControlPreview.ActivePageIndex;
+  if Idx = -1 then
+    Exit;
+
+  PreviewImage := TImage(TScrollBox(PageControlPreview.Pages[Idx].Tag).Tag);
+
+  if PreviewImage = nil then
+    Exit;
+
+  PreviewImage.ShowHint := True;
+  HideZoom;
 end;
 
 
@@ -1604,6 +1585,20 @@ begin
           RepaintAllCompositions;
           DoOnTriggerOnControlsModified;
         end;
+end;
+
+
+//Primitive compositor handlers
+
+function TfrClickerPrimitives.HandleOnEvaluateReplacementsFunc(s: string; Recursive: Boolean = True): string;
+begin
+  Result := DoOnEvaluateReplacementsFunc(s, Recursive);
+end;
+
+
+function TfrClickerPrimitives.HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
+begin
+  Result := DoOnLoadBitmap(ABitmap, AFileName);
 end;
 
 

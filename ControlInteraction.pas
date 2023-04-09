@@ -36,7 +36,7 @@ uses
   Windows, Graphics, Messages, BitmapProcessing, ExtCtrls, ClickerUtils;
 
 type
-  TMatchingMethod = (mmClass, mmText, mmBitmapText, mmBitmapFiles);
+  TMatchingMethod = (mmClass, mmText, mmBitmapText, mmBitmapFiles, mmPrimitiveFiles);
   TMatchingMethods = set of TMatchingMethod;
 
   TFindControlInputData = record
@@ -617,7 +617,7 @@ end;
 
 type
   TMatchingMethodsRec = record
-    Matching_Class, Matching_Text, Matching_BitmapText, Matching_BitmapFiles: Boolean;
+    Matching_Class, Matching_Text, Matching_BitmapText, Matching_BitmapFiles, Matching_PrimitiveFiles: Boolean;
   end;
 
 
@@ -655,7 +655,9 @@ begin
       FoundText := CompAtPoint.Text = '';
   end;
 
-  if AMatchingMethodsRec.Matching_BitmapText or AMatchingMethodsRec.Matching_BitmapFiles then
+  if AMatchingMethodsRec.Matching_BitmapText or
+     AMatchingMethodsRec.Matching_BitmapFiles or
+     AMatchingMethodsRec.Matching_PrimitiveFiles then
   begin
     if not ControlIsInListByInfo(CompAtPoint, AvailableControls) then
     begin
@@ -713,6 +715,7 @@ begin
     MatchingMethodsRec.Matching_Text := mmText in InputData.MatchingMethods;
     MatchingMethodsRec.Matching_BitmapText := mmBitmapText in InputData.MatchingMethods;
     MatchingMethodsRec.Matching_BitmapFiles := mmBitmapFiles in InputData.MatchingMethods;
+    MatchingMethodsRec.Matching_PrimitiveFiles := mmPrimitiveFiles in InputData.MatchingMethods;
 
     if InputData.StartSearchingWithCachedControl then
     begin

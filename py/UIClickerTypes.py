@@ -183,6 +183,7 @@ class TClkFindControlMatchCriteria(Structure):
                ("WillMatchClassName", BOOLEAN),
                ("WillMatchBitmapText", BOOLEAN),
                ("WillMatchBitmapFiles", BOOLEAN),
+			   ("WillMatchPrimitiveFiles", BOOLEAN),
                ("SearchForControlMode", LONG)] #TSearchForControlMode
 
 class TMatchBitmapAlgorithmSettings(Structure):
@@ -221,7 +222,8 @@ class TFindControlOptions(Structure):
                ("WaitForControlToGoAway", BOOLEAN),
                ("StartSearchingWithCachedControl", BOOLEAN),
                ("CachedControlLeft", LPCWSTR),
-               ("CachedControlTop", LPCWSTR)]
+               ("CachedControlTop", LPCWSTR),
+			   ("MatchPrimitiveFiles", LPCWSTR)]
 
 PFindControlOptions = ctypes.POINTER(TFindControlOptions)
 
@@ -232,6 +234,7 @@ def GetDefaultFindControlOptions():
     FindControlOptions.MatchCriteria.WillMatchClassName = True
     FindControlOptions.MatchCriteria.WillMatchBitmapText = False
     FindControlOptions.MatchCriteria.WillMatchBitmapFiles = False
+	FindControlOptions.MatchCriteria.WillMatchPrimitiveFiles = False
     FindControlOptions.MatchCriteria.SearchForControlMode = TSearchForControlMode.sfcmGenGrid
 
     FindControlOptions.AllowToFail = False
@@ -266,6 +269,8 @@ def GetDefaultFindControlOptions():
     FindControlOptions.StartSearchingWithCachedControl = False
     FindControlOptions.CachedControlLeft = ''
     FindControlOptions.CachedControlTop = ''
+	
+	FindControlOptions.MatchPrimitiveFiles = '' #'FileExample1.pmtv\r\nFileExample2.pmtv\r\nFileExample3.pmtv'
     return FindControlOptions
 
 
@@ -275,6 +280,7 @@ def GetDefaultFindSubControlOptions():
     FindSubControlOptions.MatchCriteria.WillMatchClassName = False
     FindSubControlOptions.MatchCriteria.WillMatchBitmapText = True
     FindSubControlOptions.MatchCriteria.WillMatchBitmapFiles = False
+	FindSubControlOptions.MatchCriteria.WillMatchPrimitiveFiles = False
     FindSubControlOptions.UseWholeScreen = False
     return FindSubControlOptions
     

@@ -558,6 +558,7 @@ begin
   frClickerActions.ParentColor := False;
   frClickerActions.TabOrder := 2;
   frClickerActions.TabStop := True;
+
   frClickerActions.OnCopyControlTextAndClassFromMainWindow := HandleOnCopyControlTextAndClassFromMainWindow;
   frClickerActions.OnGetExtraSearchAreaDebuggingImage := HandleOnGetExtraSearchAreaDebuggingImage;
 
@@ -701,6 +702,7 @@ begin
   FActionExecution.OnSetEditorSleepInfo := HandleOnSetEditorSleepInfo;
   FActionExecution.OnAddDefaultFontProfile := HandleOnAddDefaultFontProfile;
   FActionExecution.OnGetGridDrawingOption := HandleOnGetGridDrawingOption;
+  FActionExecution.OnLoadPrimitivesFile := HandleOnLoadPrimitivesFile;
 
   FCmdConsoleHistory := TStringList.Create;
   FOnExecuteRemoteActionAtIndex := nil;
@@ -1097,6 +1099,7 @@ begin
     Value := StringReplace(Value, '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
     FFullTemplatesDir := Value;
     frClickerActions.FullTemplatesDir := Value; //this is how the frame gets the path to templates
+    AddToLog('Setting templates dir to "' + Value + '"');
   end;
 end;
 

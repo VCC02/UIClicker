@@ -32,7 +32,7 @@ interface
 
 uses
   Windows, Classes, SysUtils, Forms, Graphics, ExtCtrls,
-  ClickerUtils, ClickerActionsFrame;
+  ClickerUtils, ClickerPrimitiveUtils, ClickerActionsFrame;
 
 
 type
@@ -73,6 +73,7 @@ type
     FOnGetSelfHandles: TOnGetSelfHandles;
     FOnAddDefaultFontProfile: TOnAddDefaultFontProfile;
     FOnGetGridDrawingOption: TOnGetGridDrawingOption;
+    FOnLoadPrimitivesFile: TOnLoadPrimitivesFile;
 
     function GetActionVarValue(VarName: string): string;
     procedure SetActionVarValue(VarName, VarValue: string);
@@ -101,6 +102,10 @@ type
     procedure DoOnGetSelfHandles(AListOfSelfHandles: TStringList);
     procedure DoOnAddDefaultFontProfile(var AFindControlOptions: TClkFindControlOptions; var AActionOptions: TClkActionOptions);
     function DoOnGetGridDrawingOption: TOnGetGridDrawingOption;
+    procedure DoOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
+
+    function HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
+    function HandleOnEvaluateReplacements(s: string; Recursive: Boolean = True): string;
   public
     constructor Create;
     destructor Destroy; override;
@@ -151,6 +156,7 @@ type
     property OnGetSelfHandles: TOnGetSelfHandles write FOnGetSelfHandles;
     property OnAddDefaultFontProfile: TOnAddDefaultFontProfile write FOnAddDefaultFontProfile;
     property OnGetGridDrawingOption: TOnGetGridDrawingOption write FOnGetGridDrawingOption;
+    property OnLoadPrimitivesFile: TOnLoadPrimitivesFile write FOnLoadPrimitivesFile;
   end;
 
 
@@ -164,7 +170,7 @@ uses
   {$ELSE}
     Process,
   {$ENDIF}
-  ControlInteraction, IdHTTP;
+  ControlInteraction, IdHTTP, ClickerPrimitivesCompositor;
 
 
 constructor TActionExecution.Create;
@@ -192,6 +198,7 @@ begin
   FOnGetSelfHandles := nil;
   FOnAddDefaultFontProfile := nil;
   FOnGetGridDrawingOption := nil;
+  FOnLoadPrimitivesFile := nil;
 end;
 
 
@@ -533,6 +540,15 @@ begin
     raise Exception.Create('OnGetGridDrawingOption not assigned.')
   else
     Result := FOnGetGridDrawingOption;
+end;
+
+
+procedure TActionExecution.DoOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
+begin
+  if not Assigned(FOnLoadPrimitivesFile) then
+    raise Exception.Create('OnLoadPrimitivesFile not assigned.')
+  else
+    FOnLoadPrimitivesFile(AFileName, APrimitives, AOrders, ASettings);
 end;
 
 
@@ -942,14 +958,19 @@ function TActionExecution.ExecuteFindControlAction(var AFindControlOptions: TClk
   end;
 
 var
-  i, j, n: Integer;
-  ListOfBitmapFiles: TStringList;
+  i, j, k, n: Integer;
+  ListOfBitmapFiles, ListOfPrimitiveFiles: TStringList;
   ResultedControl: TCompRec;
   InitialTickCount, Timeout: QWord;
   FindControlInputData: TFindControlInputData;
   StopAllActionsOnDemandAddr: Pointer;
   EvalFG, EvalBG: string;
   TemplateDir: string;
+
+  TempPrimitives: TPrimitiveRecArr;
+  TempOrders: TCompositionOrderArr;
+  TempPrimitiveSettings: TPrimitiveSettings;
+  PrimitivesCompositor: TPrimitivesCompositor;
 begin
   Result := False;
 
@@ -971,6 +992,9 @@ begin
 
   if AFindControlOptions.MatchCriteria.WillMatchBitmapFiles then
     FindControlInputData.MatchingMethods := FindControlInputData.MatchingMethods + [mmBitmapFiles];
+
+  if AFindControlOptions.MatchCriteria.WillMatchPrimitiveFiles then
+    FindControlInputData.MatchingMethods := FindControlInputData.MatchingMethods + [mmPrimitiveFiles];
 
   if FindControlInputData.MatchingMethods = [] then
   begin
@@ -1062,10 +1086,13 @@ begin
         //FindControlInputData.BitmapToSearchFor.Width := frClickerActions.frClickerFindControl.BMPTextFontProfiles[j].PreviewImageBitmap.Width;
         //FindControlInputData.BitmapToSearchFor.Height := frClickerActions.frClickerFindControl.BMPTextFontProfiles[j].PreviewImageBitmap.Height;
         //FindControlInputData.BitmapToSearchFor.Canvas.Draw(0, 0, frClickerActions.frClickerFindControl.BMPTextFontProfiles[j].PreviewImageBitmap);   //updated above by PreviewText
-
-        FindControlInputData.DebugBitmap := frClickerActions.imgDebugBmp.Picture.Bitmap;
-        FindControlInputData.DebugGrid := frClickerActions.imgDebugGrid;
       end;  //WillMatchBitmapText
+
+      //if AFindControlOptions.MatchCriteria.WillMatchPrimitiveFiles then   //dbg only
+      //begin
+      //  FindControlInputData.BitmapToSearchFor.Canvas.Pen.Color := clRed;
+      //  FindControlInputData.BitmapToSearchFor.Canvas.Line(20, 30, 60, 70);
+      //end;
 
       if AFindControlOptions.UseWholeScreen then
       begin
@@ -1164,6 +1191,9 @@ begin
       frClickerActions.imgDebugBmp.Canvas.Brush.Color := clWhite;
       frClickerActions.imgDebugBmp.Canvas.Rectangle(0, 0, frClickerActions.imgDebugBmp.Width, frClickerActions.imgDebugBmp.Height);
 
+      FindControlInputData.DebugBitmap := frClickerActions.imgDebugBmp.Picture.Bitmap;
+      FindControlInputData.DebugGrid := frClickerActions.imgDebugGrid;
+
       case AFindControlOptions.MatchCriteria.SearchForControlMode of
         sfcmGenGrid:
         begin
@@ -1208,6 +1238,12 @@ begin
               for i := 0 to ListOfBitmapFiles.Count - 1 do
                 ListOfBitmapFiles.Strings[i] := StringReplace(ListOfBitmapFiles.Strings[i], '$TemplateDir$', TemplateDir, [rfReplaceAll]);
 
+              if not FExecutingActionFromRemote^ then
+              begin
+                for i := 0 to ListOfBitmapFiles.Count - 1 do
+                  ListOfBitmapFiles.Strings[i] := StringReplace(ListOfBitmapFiles.Strings[i], '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
+              end;
+
               if FExecutingActionFromRemote^ and FFileLocationOfDepsIsMem^ then
                 DoOnWaitForBitmapsAvailability(ListOfBitmapFiles);
 
@@ -1218,9 +1254,6 @@ begin
                   AppendErrorMessageToActionVar('File not found: "' + ListOfBitmapFiles.Strings[i] + '" ');
                   Continue;
                 end;
-
-                FindControlInputData.DebugBitmap := frClickerActions.imgDebugBmp.Picture.Bitmap;
-                FindControlInputData.DebugGrid := frClickerActions.imgDebugGrid;
 
                 //memLogErr.Lines.Add('DebugBitmap pixel format: ' + IntToStr(Ord(FindControlInputData.DebugBitmap.PixelFormat))); // [6]  - 24-bit
 
@@ -1244,6 +1277,86 @@ begin
               SetDbgImgPos(AFindControlOptions.MatchBitmapAlgorithm, FindControlInputData, ResultedControl);
             end;
           end; //WillMatchBitmapFiles
+
+          if AFindControlOptions.MatchCriteria.WillMatchPrimitiveFiles then
+          begin
+            ListOfPrimitiveFiles := TStringList.Create;
+            try
+              ListOfPrimitiveFiles.Text := AFindControlOptions.MatchPrimitiveFiles;
+              AddToLog('Pmtv file count to search with: ' + IntToStr(ListOfPrimitiveFiles.Count));
+
+              if FTemplateFileName = nil then
+                TemplateDir := 'FTemplateFileName not set.'
+              else
+                TemplateDir := ExtractFileDir(FTemplateFileName^);
+
+              for i := 0 to ListOfPrimitiveFiles.Count - 1 do
+                ListOfPrimitiveFiles.Strings[i] := StringReplace(ListOfPrimitiveFiles.Strings[i], '$TemplateDir$', TemplateDir, [rfReplaceAll]);
+
+              if not FExecutingActionFromRemote^ then
+              begin
+                for i := 0 to ListOfPrimitiveFiles.Count - 1 do
+                  ListOfPrimitiveFiles.Strings[i] := StringReplace(ListOfPrimitiveFiles.Strings[i], '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
+              end;
+
+              if FExecutingActionFromRemote^ and FFileLocationOfDepsIsMem^ then
+                DoOnWaitForBitmapsAvailability(ListOfPrimitiveFiles);    //might also work for pmtv files
+                                                                         //ComposePrimitive_Image also has to wait for bmp files
+
+              for i := 0 to ListOfPrimitiveFiles.Count - 1 do
+              begin
+                DoOnLoadPrimitivesFile(ListOfPrimitiveFiles.Strings[i], TempPrimitives, TempOrders, TempPrimitiveSettings);
+                //if not DoOnLoadPrimitivesFile(ListOfPrimitiveFiles.Strings[i], TempPrimitives, TempOrders, TempPrimitiveSettings)then
+                //begin
+                //  AppendErrorMessageToActionVar('File not found: "' + ListOfPrimitiveFiles.Strings[i] + '" ');
+                //  Continue;
+                //end;
+
+                PrimitivesCompositor := TPrimitivesCompositor.Create;
+                try
+                  PrimitivesCompositor.OnEvaluateReplacementsFunc := HandleOnEvaluateReplacements;
+                  PrimitivesCompositor.OnLoadBitmap := HandleOnLoadBitmap;
+
+                  FindControlInputData.BitmapToSearchFor.Width := PrimitivesCompositor.GetMaxX(FindControlInputData.BitmapToSearchFor.Canvas, TempPrimitives);
+                  FindControlInputData.BitmapToSearchFor.Height := PrimitivesCompositor.GetMaxY(FindControlInputData.BitmapToSearchFor.Canvas, TempPrimitives);
+
+                  if (FindControlInputData.BitmapToSearchFor.Width = 0) or (FindControlInputData.BitmapToSearchFor.Height = 0) then
+                  begin
+                    AddToLog('Primitive file: "' + ExtractFileName(ListOfPrimitiveFiles.Strings[i]) + '" has a zero width or height');
+                    Continue;
+                  end;
+
+                  for k := 0 to Length(TempOrders) - 1 do
+                  begin
+                    InitialTickCount := GetTickCount64;
+                    if AActionOptions.ActionTimeout < 0 then
+                      Timeout := 0
+                    else
+                      Timeout := AActionOptions.ActionTimeout;
+
+                    //no need to clear the bitmap, it is already implemented in ComposePrimitives
+                    PrimitivesCompositor.ComposePrimitives(FindControlInputData.BitmapToSearchFor, k, TempPrimitives, TempOrders, TempPrimitiveSettings);
+
+                    if FindControlOnScreen(AFindControlOptions.MatchBitmapAlgorithm, AFindControlOptions.MatchBitmapAlgorithmSettings, FindControlInputData, InitialTickCount, Timeout, StopAllActionsOnDemandAddr, ResultedControl, DoOnGetGridDrawingOption) then
+                    begin
+                      UpdateActionVarValuesFromControl(ResultedControl);
+                      frClickerActions.DebuggingInfoAvailable := True;
+
+                      AddToLog('Matched by primitive file: "' + ExtractFileName(ListOfPrimitiveFiles.Strings[i]) + '"  at order ' + IntToStr(k) + '.  Bmp w/h: ' + IntToStr(FindControlInputData.BitmapToSearchFor.Width) + ' / ' + IntToStr(FindControlInputData.BitmapToSearchFor.Height));
+
+                      Result := True;
+                      Exit;  //to prevent further searching for other primitive compositions
+                    end;
+                  end; //for k
+                finally
+                  PrimitivesCompositor.Free;
+                end;
+              end; //for i
+            finally
+              ListOfPrimitiveFiles.Free;
+              SetDbgImgPos(AFindControlOptions.MatchBitmapAlgorithm, FindControlInputData, ResultedControl);
+            end;
+          end;
         end; //generated grid
 
         sfcmEnumWindows:        //Caption OR Class
@@ -2228,6 +2341,18 @@ begin
   end;
 end;
 
+
+//some handlers for primitives compositor
+function TActionExecution.HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
+begin
+  Result := DoOnLoadBitmap(ABitmap, AFileName)
+end;
+
+
+function TActionExecution.HandleOnEvaluateReplacements(s: string; Recursive: Boolean = True): string;
+begin
+  Result := EvaluateReplacements(s, Recursive);
+end;
 
 end.
 

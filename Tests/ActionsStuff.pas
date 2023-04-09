@@ -85,6 +85,7 @@ procedure GenerateExecAppOptionsForIPConfig(var AExecAppOptions: TClkExecAppOpti
 procedure GenerateFindControlOptionsForMainUIClickerWindow(var AFindControlOptions: TClkFindControlOptions; AAllowToFail: Boolean; ACustomFormCaption: string = 'UI Clicker Main');
 procedure GenerateFindSubControlOptionsForMainUIClickerWindow_Bitness(var AFindControlOptions: TClkFindControlOptions; AAllowToFail: Boolean);
 procedure GenerateFindSubControlOptionsForMainUIClickerWindow_WinInterpBtn(var AFindControlOptions: TClkFindControlOptions; AAllowToFail: Boolean);
+procedure GenerateFindSubControlOptionsForMainUIClickerWindow_PmtvPreviewBtn(var AFindControlOptions: TClkFindControlOptions; AAllowToFail: Boolean);
 procedure GenerateSetControlTextOptions(var ASetTextOptions: TClkSetTextOptions; AText: string; AControlType: TClkSetTextControlType);
 procedure GenerateCallTemplateOptions(var ACallTemplateOptions: TClkCallTemplateOptions; ATemplateFileName, AListOfVarsAndValues: string; AEvalBefore: Boolean);
 procedure GenerateSleepOptions(var ASleepOptions: TClkSleepOptions; AValue: string);
@@ -297,6 +298,7 @@ begin
   AFindControlOptions.MatchCriteria.WillMatchClassName := True;
   AFindControlOptions.MatchCriteria.WillMatchBitmapText := False;
   AFindControlOptions.MatchCriteria.WillMatchBitmapFiles := False;
+  AFindControlOptions.MatchCriteria.WillMatchPrimitiveFiles := False;
   AFindControlOptions.MatchText := ACustomFormCaption;
   AFindControlOptions.MatchClassName := 'Window';
   AFindControlOptions.UseWholeScreen := True;
@@ -318,6 +320,7 @@ begin
   AFindControlOptions.MatchCriteria.WillMatchClassName := False;
   AFindControlOptions.MatchCriteria.WillMatchBitmapText := True;
   AFindControlOptions.MatchCriteria.WillMatchBitmapFiles := False;
+  AFindControlOptions.MatchCriteria.WillMatchPrimitiveFiles := False;
   AFindControlOptions.MatchText := '-bit';  //can be 32-bit or 64-bit, so match both
   AFindControlOptions.UseWholeScreen := False;
   AFindControlOptions.AllowToFail := AAllowToFail;
@@ -371,6 +374,7 @@ begin
   AFindControlOptions.MatchCriteria.WillMatchClassName := False;
   AFindControlOptions.MatchCriteria.WillMatchBitmapText := False;
   AFindControlOptions.MatchCriteria.WillMatchBitmapFiles := True;
+  AFindControlOptions.MatchCriteria.WillMatchPrimitiveFiles := False;
   AFindControlOptions.UseWholeScreen := False;
   AFindControlOptions.AllowToFail := AAllowToFail;
   AFindControlOptions.MatchBitmapAlgorithm := mbaBruteForce;
@@ -391,6 +395,44 @@ begin
   AFindControlOptions.InitialRectangle.BottomOffset := '-120';
   AFindControlOptions.ColorError := '25';                    //rendering depends on video card, so allow a high error value
   AFindControlOptions.AllowedColorErrorCount := '400';
+
+  AFindControlOptions.WaitForControlToGoAway := False;
+  AFindControlOptions.CachedControlLeft := '';
+  AFindControlOptions.CachedControlTop := '';
+  AFindControlOptions.StartSearchingWithCachedControl := False;
+end;
+
+
+procedure GenerateFindSubControlOptionsForMainUIClickerWindow_PmtvPreviewBtn(var AFindControlOptions: TClkFindControlOptions; AAllowToFail: Boolean);
+const
+  CBmpDirAsSrvDisk = 'py\bmps\';
+begin
+  AFindControlOptions.MatchCriteria.SearchForControlMode := sfcmGenGrid;
+  AFindControlOptions.MatchCriteria.WillMatchText := False;
+  AFindControlOptions.MatchCriteria.WillMatchClassName := False;
+  AFindControlOptions.MatchCriteria.WillMatchBitmapText := False;
+  AFindControlOptions.MatchCriteria.WillMatchBitmapFiles := False;
+  AFindControlOptions.MatchCriteria.WillMatchPrimitiveFiles := True;
+  AFindControlOptions.UseWholeScreen := False;
+  AFindControlOptions.AllowToFail := AAllowToFail;
+  AFindControlOptions.MatchBitmapAlgorithm := mbaBruteForce;
+
+  SetLength(AFindControlOptions.MatchBitmapText, 0);
+
+  AFindControlOptions.MatchBitmapFiles := '';
+  AFindControlOptions.MatchPrimitiveFiles := CBmpDirAsSrvDisk + 'PreviewButtonIcon.pmtv' + #13#10 +
+                                             CBmpDirAsSrvDisk + 'PreviewButtonIcon64.pmtv';
+
+  AFindControlOptions.InitialRectangle.Left := '$Control_Left$';
+  AFindControlOptions.InitialRectangle.Top := '$Control_Top$';
+  AFindControlOptions.InitialRectangle.Right := '$Control_Right$';
+  AFindControlOptions.InitialRectangle.Bottom := '$Control_Bottom$';
+  AFindControlOptions.InitialRectangle.LeftOffset := '76';
+  AFindControlOptions.InitialRectangle.TopOffset := '60';
+  AFindControlOptions.InitialRectangle.RightOffset := '-217';
+  AFindControlOptions.InitialRectangle.BottomOffset := '-185';
+  AFindControlOptions.ColorError := '0';
+  AFindControlOptions.AllowedColorErrorCount := '0';
 
   AFindControlOptions.WaitForControlToGoAway := False;
   AFindControlOptions.CachedControlLeft := '';

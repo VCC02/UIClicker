@@ -56,6 +56,7 @@ type
 
     procedure Test_ExecuteFindSubControlAction_UIClickerMain_WindowInterpreterButton_Disk;
     procedure Test_ExecuteFindSubControlAction_UIClickerMain_WindowInterpreterButton_Mem_NoSender;
+    procedure Test_ExecuteFindSubControlAction_UIClickerMain_PmtvPreviewButton_Disk;
 
     procedure Test_ExecuteSetControlTextAction_HappyFlow;
     procedure Test_ExecuteCallTemplate_HappyFlow;
@@ -398,6 +399,26 @@ begin
     ListOfVars.Text := Response;
     ExpectFailedAction(ListOfVars, CExpectedErr_Part1);
     ExpectFailedAction(ListOfVars, CExpectedErr_Part2);
+  finally
+    ListOfVars.Free;
+  end;
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecuteFindSubControlAction_UIClickerMain_PmtvPreviewButton_Disk;
+var
+  Response: string;
+  ListOfVars: TStringList;
+  FindSubControlOptions: TClkFindControlOptions;
+begin
+  SetupTargetWindowFor_FindSubControl;
+  GenerateFindSubControlOptionsForMainUIClickerWindow_PmtvPreviewBtn(FindSubControlOptions, False);
+  Response := FastReplace_87ToReturn(ExecuteFindSubControlAction(TestServerAddress, FindSubControlOptions, 'Test Find PreviewButton_Disk on UIClicker Main with pmtv', 3000, CREParam_FileLocation_ValueDisk));
+
+  ListOfVars := TStringList.Create;
+  try
+    ListOfVars.Text := Response;
+    ExpectSuccessfulAction(ListOfVars);
   finally
     ListOfVars.Free;
   end;

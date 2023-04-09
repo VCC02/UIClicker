@@ -127,4 +127,19 @@ object frClickerPrimitives: TfrClickerPrimitives
       A7E497C6EFE253EABF8AFB9FF2FCA53CFF29FA0BD537C59E
     }
   end
+  object pmPreview: TPopupMenu
+    Left = 328
+    Top = 192
+    object MenuItem_CopyToClipboard: TMenuItem
+      Caption = 'Copy to clipboard'
+      OnClick = MenuItem_CopyToClipboardClick
+    end
+  end
+  object tmrDrawZoom: TTimer
+    Enabled = False
+    Interval = 50
+    OnTimer = tmrDrawZoomTimer
+    Left = 208
+    Top = 128
+  end
 end

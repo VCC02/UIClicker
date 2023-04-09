@@ -5,7 +5,7 @@ unit ClickerZoomPreviewForm;
 interface
 
 uses
-  Windows, Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ExtCtrls;
+  Windows, Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, ExtCtrls;
 
 type
 
@@ -13,8 +13,14 @@ type
 
   TfrmClickerZoomPreview = class(TForm)
     imgZoom: TImage;
+    tmrStartup: TTimer;
+    procedure FormCreate(Sender: TObject);
+    procedure tmrStartupTimer(Sender: TObject);
   private
-
+    FlblLeft: TLabel;
+    FlblTop: TLabel;
+    FlblRight: TLabel;
+    FlblBottom: TLabel;
   public
 
   end;
@@ -89,5 +95,84 @@ begin
   frmClickerZoomPreview.Hide;
 end;
 
-end.
+{ TfrmClickerZoomPreview }
 
+procedure TfrmClickerZoomPreview.FormCreate(Sender: TObject);
+begin
+  tmrStartup.Enabled := True;
+end;
+
+
+procedure TfrmClickerZoomPreview.tmrStartupTimer(Sender: TObject);
+const
+  CLabelColor: TColor = $00FF8855;
+begin
+  tmrStartup.Enabled := False;
+
+  FlblLeft := TLabel.Create(Self);
+  FlblTop := TLabel.Create(Self);
+  FlblRight := TLabel.Create(Self);
+  FlblBottom := TLabel.Create(Self);
+
+  FlblLeft := TLabel.Create(Self);
+  FlblTop := TLabel.Create(Self);
+  FlblRight := TLabel.Create(Self);
+  FlblBottom := TLabel.Create(Self);
+
+  FlblLeft.Parent := Self;
+  FlblTop.Parent := Self;
+  FlblRight.Parent := Self;
+  FlblBottom.Parent := Self;
+
+  FlblLeft.AutoSize := False;
+  FlblTop.AutoSize := False;
+  FlblRight.AutoSize := False;
+  FlblBottom.AutoSize := False;
+
+  FlblLeft.Caption := '';
+  FlblTop.Caption := '';
+  FlblRight.Caption := '';
+  FlblBottom.Caption := '';
+
+  FlblLeft.Color := CLabelColor;
+  FlblTop.Color := CLabelColor;
+  FlblRight.Color := CLabelColor;
+  FlblBottom.Color := CLabelColor;
+
+  FlblLeft.Left := imgZoom.Left + imgZoom.Width shr 1 - 1;
+  FlblLeft.Top := imgZoom.Top;
+  FlblLeft.Width := 1;
+  FlblLeft.Height := imgZoom.Height;
+
+  FlblTop.Left := imgZoom.Left;
+  FlblTop.Top := imgZoom.Top + imgZoom.Height shr 1 - 1;
+  FlblTop.Width := imgZoom.Width;
+  FlblTop.Height := 1;
+
+  FlblRight.Left := imgZoom.Left + imgZoom.Width shr 1 + 8 - 1;
+  FlblRight.Top := imgZoom.Top;
+  FlblRight.Width := 1;
+  FlblRight.Height := imgZoom.Height;
+
+  FlblBottom.Left := imgZoom.Left;
+  FlblBottom.Top := imgZoom.Top + imgZoom.Height shr 1 + 8 - 1;
+  FlblBottom.Width := imgZoom.Width;
+  FlblBottom.Height := 1;
+
+  FlblLeft.Transparent := False;
+  FlblTop.Transparent := False;
+  FlblRight.Transparent := False;
+  FlblBottom.Transparent := False;
+
+  FlblLeft.Visible := True;
+  FlblTop.Visible := True;
+  FlblRight.Visible := True;
+  FlblBottom.Visible := True;
+
+  FlblLeft.BringToFront;
+  FlblTop.BringToFront;
+  FlblRight.BringToFront;
+  FlblBottom.BringToFront;
+end;
+
+end.
