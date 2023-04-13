@@ -194,6 +194,7 @@ var
   i: Integer;
   FoundExt, FoundDir: Boolean;
   CurrentItem: string;
+  TempFullTemplatesDir: string;
 begin
   Result := False;
   ADenyReason := '';
@@ -218,11 +219,16 @@ begin
     Exit;
   end;
 
-  if (AFileName <> '') and (AFileName[1] = PathDelim) then
-    AFileName := UpperCase(StringReplace(FFullTemplatesDir, '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]) + AFileName);
+  TempFullTemplatesDir := UpperCase(StringReplace(FFullTemplatesDir, '$APPDIR$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]));
+
+  if (AFileName <> '') and (AFileName[1] = PathDelim) then   //resolve relative paths to TemplatesDir
+    AFileName := UpperCase(TempFullTemplatesDir + AFileName);
+
+  AFileName := UpperCase(StringReplace(AFileName, '$APPDIR$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]) + AFileName);
+  AFileName := UpperCase(StringReplace(AFileName, '$TEMPLATEDIR$', TempFullTemplatesDir, [rfReplaceAll]) + AFileName);
 
   if ExtractFileName(AFileName) = AFileName then //files without paths are expected to be found in $AppDir$\ActionTemplates
-    AFileName := UpperCase(StringReplace(FFullTemplatesDir, '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]) + PathDelim + AFileName);
+    AFileName := UpperCase(TempFullTemplatesDir + PathDelim + AFileName);
 
   FoundDir := False;
   FilePath := ExtractFilePath(AFileName);
@@ -243,7 +249,7 @@ begin
   if not FoundDir then
   begin
     ADenyReason := CFileOutOfAllowedDirs;
-    //AddUniqueMessageToLog('Denied: "' + AFileName + '" from "' + CurrentItem + '"');  //for debugging
+    //AddUniqueMessageToLog('Denied: "' + AFileName + '" from "' + FastReplace_ReturnTo45(FListOfAccessibleDirs.Text) + '"');  //for debugging
     Exit;
   end;
 
@@ -374,6 +380,8 @@ begin
 
                       LinkForSendingFiles := FRemoteAddress + CRECmd_SendFileToServer + '?' +
                                              CREParam_FileName + '=' + ListOfFiles.Strings[i];
+
+                      DoOnLogMissingServerFile('Sending "' + ListOfFiles.Strings[i] + '"');
                       SendFileToServer(LinkForSendingFiles, FileContent, False);
                     finally
                       FileContent.Free;

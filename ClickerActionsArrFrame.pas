@@ -2682,7 +2682,7 @@ begin
     end;
 
   if frClickerActions.ModifiedPmtvFiles then
-    if MessageBox(Handle, PChar('One or more primitive files are modified for the selected action. By selecting another action, you will discard those changes.'#13#10#13#10'Go back to previous action/content?'), '', MB_ICONWARNING + MB_YESNO) = IDYES then
+    if MessageBox(Handle, PChar('One or more primitives files are modified for the selected action. By selecting another action, you will discard those changes.'#13#10#13#10'Go back to previous action/content?'), '', MB_ICONWARNING + MB_YESNO) = IDYES then
     begin
       vstActions.ClearSelection;
       vstActions.Selected[FPreviousSelectedNode] := True;
@@ -3629,6 +3629,9 @@ begin
     FClkActions[n].FindControlOptions.MatchBitmapText[0].CropRight := '0';
     FClkActions[n].FindControlOptions.MatchBitmapText[0].CropBottom := '0';
     FClkActions[n].FindControlOptions.MatchBitmapText[0].ProfileName := CDefaultFontProfileName;
+
+    if FClkActions[n].ActionOptions.Action = acFindSubControl then
+      FClkActions[n].ActionOptions.ActionTimeout := 1000;
 
     FClkActions[n].SetTextOptions.Text := '';
     FClkActions[n].SetTextOptions.ControlType := stEditBox;

@@ -33,7 +33,7 @@ interface
 
 uses
   Windows, Classes, SysUtils, Forms, Controls, ExtCtrls, ObjectInspectorFrame,
-  VirtualTrees, ImgList, Graphics, Menus, ComCtrls, Types,
+  VirtualTrees, ImgList, Graphics, Menus, ComCtrls, StdCtrls, Types,
   ClickerUtils, ClickerPrimitiveUtils;
 
 type
@@ -43,6 +43,13 @@ type
   TfrClickerPrimitives = class(TFrame)
     imglstPrimitives: TImageList;
     imgFontColorBuffer: TImage;
+    lblModified: TLabel;
+    lblMouseOnPreviewImg: TLabel;
+    lblMouseOnPreviewImgBB: TLabel;
+    lblMouseOnPreviewImgGG: TLabel;
+    lblMouseOnPreviewImgRR: TLabel;
+    N1: TMenuItem;
+    MenuItem_SavePrimitivesFile: TMenuItem;
     MenuItem_CopyToClipboard: TMenuItem;
     PageControlPreview: TPageControl;
     pnlPreview: TPanel;
@@ -51,6 +58,7 @@ type
     tmrDrawZoom: TTimer;
     tmrReloadOIContent: TTimer;
     procedure MenuItem_CopyToClipboardClick(Sender: TObject);
+    procedure MenuItem_SavePrimitivesFileClick(Sender: TObject);
     procedure tmrDrawZoomTimer(Sender: TObject);
     procedure tmrReloadOIContentTimer(Sender: TObject);
   private
@@ -67,6 +75,7 @@ type
     FOnSavePrimitivesFile: TOnSavePrimitivesFile;
     FOnEvaluateReplacementsFunc: TEvaluateReplacementsFunc;
     FOnTriggerOnControlsModified: TOnTriggerOnControlsModified;
+    FOnSaveFromMenu: TNotifyEvent;
 
     procedure CreateRemainingUIComponents;
 
@@ -94,6 +103,7 @@ type
     procedure MenuItem_RemoveCompositionOrderFromList(Sender: TObject);
     procedure MenuItem_RepaintAllCompositions(Sender: TObject);
 
+    procedure SetLabelsFromMouseOverPreviewImgPixelColor(APixelColor: TColor);
     procedure imgPreviewMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
     procedure imgPreviewMouseEnter(Sender: TObject);
     procedure imgPreviewMouseLeave(Sender: TObject);
@@ -103,6 +113,7 @@ type
     procedure DoOnSavePrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
     function DoOnEvaluateReplacementsFunc(s: string; Recursive: Boolean = True): string;
     procedure DoOnTriggerOnControlsModified;
+    procedure DoOnSaveFromMenu;
 
     function HandleOnOIGetCategoryCount: Integer;
     function HandleOnOIGetCategory(AIndex: Integer): string;
@@ -179,6 +190,7 @@ type
     property OnSavePrimitivesFile: TOnSavePrimitivesFile write FOnSavePrimitivesFile;
     property OnEvaluateReplacementsFunc: TEvaluateReplacementsFunc write FOnEvaluateReplacementsFunc; //called by ComposePrimitives
     property OnTriggerOnControlsModified: TOnTriggerOnControlsModified write FOnTriggerOnControlsModified;
+    property OnSaveFromMenu: TNotifyEvent write FOnSaveFromMenu;
   end;
 
 implementation
@@ -270,6 +282,8 @@ begin
   FCurrentMousePosOnPreviewImg.X := Screen.Width - 10;  //init somewhere near the bottom-right corner of the screen
   FCurrentMousePosOnPreviewImg.Y := Screen.Height - 10;
 
+  lblModified.Left := lblModified.Left + 20;
+
   FOIEditorMenu := TPopupMenu.Create(Self);
 
   FOnLoadBitmap := nil;
@@ -277,6 +291,7 @@ begin
   FOnSavePrimitivesFile := nil;
   FOnEvaluateReplacementsFunc := nil;
   FOnTriggerOnControlsModified := nil;
+  FOnSaveFromMenu := nil;
 end;
 
 
@@ -408,12 +423,14 @@ begin
   FOIFrame.ReloadContent;
   CreateAllPreviewPages;
   RepaintAllCompositions;
+  lblModified.Hide;
 end;
 
 
 procedure TfrClickerPrimitives.SaveFile(AFileName: string);
 begin
   DoOnSavePrimitivesFile(AFileName, FPrimitives, FOrders, FPrimitiveSettings);
+  lblModified.Hide;
 end;
 
 
@@ -652,8 +669,8 @@ begin
       Bmp.Height := 100;
       Bmp.Canvas.Rectangle(0, 0, Bmp.Width, Bmp.Height);
 
-      Bmp.Width := PmtvCompositor.GetMaxX(Bmp.Canvas, FPrimitives);
-      Bmp.Height := PmtvCompositor.GetMaxY(Bmp.Canvas, FPrimitives);
+      Bmp.Width := PmtvCompositor.GetMaxX(Bmp.Canvas, FPrimitives) + 1;
+      Bmp.Height := PmtvCompositor.GetMaxY(Bmp.Canvas, FPrimitives) + 1;
       PmtvCompositor.ComposePrimitives(Bmp, Idx, FPrimitives, FOrders, FPrimitiveSettings);
 
       Clipboard.Assign(Bmp);
@@ -663,6 +680,12 @@ begin
   finally
     PmtvCompositor.Free;
   end;
+end;
+
+
+procedure TfrClickerPrimitives.MenuItem_SavePrimitivesFileClick(Sender: TObject);
+begin
+  DoOnSaveFromMenu;
 end;
 
 
@@ -898,11 +921,28 @@ begin
 end;
 
 
+procedure TfrClickerPrimitives.SetLabelsFromMouseOverPreviewImgPixelColor(APixelColor: TColor);
+begin
+  lblMouseOnPreviewImgRR.Caption := IntToHex(APixelColor and $FF, 2);
+  lblMouseOnPreviewImgGG.Caption := IntToHex(APixelColor shr 8 and $FF, 2);
+  lblMouseOnPreviewImgBB.Caption := IntToHex(APixelColor shr 16 and $FF, 2);
+end;
+
+
 procedure TfrClickerPrimitives.imgPreviewMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+var
+  PreviewImage: TImage;
 begin
   FCurrentMousePosOnPreviewImg.X := X;
   FCurrentMousePosOnPreviewImg.Y := Y;
   tmrDrawZoom.Enabled := True;
+
+  if PageControlPreview.ActivePageIndex > -1 then
+  begin
+    lblMouseOnPreviewImg.Caption := IntToStr(X) + ' : ' + IntToStr(Y);
+    PreviewImage := TImage(TScrollBox(PageControlPreview.Pages[PageControlPreview.ActivePageIndex].Tag).Tag);
+    SetLabelsFromMouseOverPreviewImgPixelColor(PreviewImage.Canvas.Pixels[X, Y]);
+  end;
 end;
 
 
@@ -985,7 +1025,19 @@ end;
 procedure TfrClickerPrimitives.DoOnTriggerOnControlsModified;
 begin
   if Assigned(FOnTriggerOnControlsModified) then
-    FOnTriggerOnControlsModified()
+  begin
+    FOnTriggerOnControlsModified;
+    lblModified.Show;
+  end
+  else
+    raise Exception.Create('OnTriggerOnControlsModified not assigned.');
+end;
+
+
+procedure TfrClickerPrimitives.DoOnSaveFromMenu;
+begin
+  if Assigned(FOnSaveFromMenu) then
+    FOnSaveFromMenu(Self)
   else
     raise Exception.Create('OnTriggerOnControlsModified not assigned.');
 end;

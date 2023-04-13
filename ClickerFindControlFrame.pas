@@ -177,6 +177,7 @@ type
     imgUpdateLeftTopOffsets: TImage;
     imgCopyBkImg: TImage;
     imgUpdateLeftTopRightBottomOffsets: TImage;
+    lblPrimitivesInfo: TLabel;
     lbeFoundControlText: TLabeledEdit;
     lbeFoundControlClass: TLabeledEdit;
     lblMouseOnDbgImg: TLabel;

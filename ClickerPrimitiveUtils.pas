@@ -69,6 +69,7 @@ type
     X2: string;
     Y1: string;
     Y2: string;
+    ShowEndpointPixel: string;
   end;
 
   TClkRect = record
@@ -76,6 +77,7 @@ type
     X2: string;
     Y1: string;
     Y2: string;
+    ExtendToEndpointCorner: string;
   end;
 
   TClkGradientFill = record

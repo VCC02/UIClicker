@@ -490,7 +490,16 @@ object frClickerFindControl: TfrClickerFindControl
     end
     object TabSheetActionFindSubControlPrimitives: TTabSheet
       Caption = 'Primitives'
+      ClientHeight = 224
+      ClientWidth = 869
       ImageIndex = 2
+      object lblPrimitivesInfo: TLabel
+        Left = 0
+        Height = 13
+        Top = 24
+        Width = 367
+        Caption = 'Please select a primitives file, from the object inspector, to load the content.'
+      end
     end
   end
   object imglstFindCriteria: TImageList

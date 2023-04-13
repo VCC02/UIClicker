@@ -100,6 +100,7 @@ begin
   APrimitive.ClkLine.Y1 := AIni.ReadString(ASectionIndex, 'Y1', '4');
   APrimitive.ClkLine.X2 := AIni.ReadString(ASectionIndex, 'X2', '5');
   APrimitive.ClkLine.Y2 := AIni.ReadString(ASectionIndex, 'Y2', '6');
+  APrimitive.ClkLine.ShowEndpointPixel := AIni.ReadString(ASectionIndex, 'ShowEndpointPixel', '1');   //defaults to 1, because this is the behavior which makes sense
 end;
 
 
@@ -109,6 +110,7 @@ begin
   APrimitive.ClkRect.Y1 := AIni.ReadString(ASectionIndex, 'Y1', '6');
   APrimitive.ClkRect.X2 := AIni.ReadString(ASectionIndex, 'X2', '7');
   APrimitive.ClkRect.Y2 := AIni.ReadString(ASectionIndex, 'Y2', '8');
+  APrimitive.ClkRect.ExtendToEndpointCorner := AIni.ReadString(ASectionIndex, 'ExtendToEndpointCorner', '1');  //defaults to 1, because this is the behavior which makes sense
 end;
 
 
@@ -124,6 +126,8 @@ end;
 procedure Get_Text_PrimitiveFromIni(AIni: TClkIniReadonlyFile; ASectionIndex: Integer; var APrimitive: TPrimitiveRec);
 begin
   APrimitive.ClkText.Text := AIni.ReadString(ASectionIndex, 'Text', '');
+  APrimitive.ClkText.X := AIni.ReadString(ASectionIndex, 'X', '3');
+  APrimitive.ClkText.Y := AIni.ReadString(ASectionIndex, 'Y', '4');
 end;
 
 
@@ -255,6 +259,7 @@ begin
   AStringList.Add('Y1=' + APrimitive.ClkLine.Y1);
   AStringList.Add('X2=' + APrimitive.ClkLine.X2);
   AStringList.Add('Y2=' + APrimitive.ClkLine.Y2);
+  AStringList.Add('ShowEndpointPixel=' + APrimitive.ClkLine.ShowEndpointPixel);
 end;
 
 
@@ -264,6 +269,7 @@ begin
   AStringList.Add('Y1=' + APrimitive.ClkRect.Y1);
   AStringList.Add('X2=' + APrimitive.ClkRect.X2);
   AStringList.Add('Y2=' + APrimitive.ClkRect.Y2);
+  AStringList.Add('ExtendToEndpointCorner=' + APrimitive.ClkRect.ExtendToEndpointCorner);
 end;
 
 
@@ -279,6 +285,8 @@ end;
 procedure AddPrimitive_TextToStringList(var APrimitive: TPrimitiveRec; AStringList: TStringList);
 begin
   AStringList.Add('Text=' + APrimitive.ClkText.Text);
+  AStringList.Add('X=' + APrimitive.ClkText.X);
+  AStringList.Add('Y=' + APrimitive.ClkText.Y);
 end;
 
 

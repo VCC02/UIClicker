@@ -1317,12 +1317,12 @@ begin
                   PrimitivesCompositor.OnEvaluateReplacementsFunc := HandleOnEvaluateReplacements;
                   PrimitivesCompositor.OnLoadBitmap := HandleOnLoadBitmap;
 
-                  FindControlInputData.BitmapToSearchFor.Width := PrimitivesCompositor.GetMaxX(FindControlInputData.BitmapToSearchFor.Canvas, TempPrimitives);
-                  FindControlInputData.BitmapToSearchFor.Height := PrimitivesCompositor.GetMaxY(FindControlInputData.BitmapToSearchFor.Canvas, TempPrimitives);
+                  FindControlInputData.BitmapToSearchFor.Width := PrimitivesCompositor.GetMaxX(FindControlInputData.BitmapToSearchFor.Canvas, TempPrimitives) + 1;
+                  FindControlInputData.BitmapToSearchFor.Height := PrimitivesCompositor.GetMaxY(FindControlInputData.BitmapToSearchFor.Canvas, TempPrimitives) + 1;
 
                   if (FindControlInputData.BitmapToSearchFor.Width = 0) or (FindControlInputData.BitmapToSearchFor.Height = 0) then
                   begin
-                    AddToLog('Primitive file: "' + ExtractFileName(ListOfPrimitiveFiles.Strings[i]) + '" has a zero width or height');
+                    AddToLog('Primitives file: "' + ExtractFileName(ListOfPrimitiveFiles.Strings[i]) + '" has a zero width or height');
                     Continue;
                   end;
 
@@ -1342,7 +1342,7 @@ begin
                       UpdateActionVarValuesFromControl(ResultedControl);
                       frClickerActions.DebuggingInfoAvailable := True;
 
-                      AddToLog('Matched by primitive file: "' + ExtractFileName(ListOfPrimitiveFiles.Strings[i]) + '"  at order ' + IntToStr(k) + '.  Bmp w/h: ' + IntToStr(FindControlInputData.BitmapToSearchFor.Width) + ' / ' + IntToStr(FindControlInputData.BitmapToSearchFor.Height));
+                      AddToLog('Matched by primitives file: "' + ExtractFileName(ListOfPrimitiveFiles.Strings[i]) + '"  at order ' + IntToStr(k) + '.  Bmp w/h: ' + IntToStr(FindControlInputData.BitmapToSearchFor.Width) + ' / ' + IntToStr(FindControlInputData.BitmapToSearchFor.Height));
 
                       Result := True;
                       Exit;  //to prevent further searching for other primitive compositions

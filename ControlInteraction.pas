@@ -71,7 +71,9 @@ implementation
 
 
 uses
-  SysUtils, Classes, Forms, BinSearchValues, Types, Math;
+  SysUtils, Classes, Forms, BinSearchValues, Types, Math
+  , Clipbrd //for debugging only
+  ;
 
 
 procedure SetControlText(hw: THandle; NewText: string);
@@ -459,7 +461,8 @@ begin
     DebugBmp.Canvas.Rectangle(DebugDrawingX - 1, 30 - 1, DebugDrawingX + BitmapToSearchFor.Width + 1, 30 - 1 + BitmapToSearchFor.Height + 2);
   end;
 
-  if mmBitmapFiles in AMatchingMethods then
+  if (mmBitmapFiles in AMatchingMethods) or
+     (mmPrimitiveFiles in AMatchingMethods) then
   begin
     DebugBmp.Canvas.Brush.Style := bsClear;
     DebugBmp.Canvas.Font.Color := clRed;

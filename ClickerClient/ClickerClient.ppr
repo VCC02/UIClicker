@@ -99,6 +99,7 @@ type
     StartSearchingWithCachedControl: Boolean;
     CachedControlLeft: PWideChar;
     CachedControlTop: PWideChar;
+    MatchPrimitiveFiles: PWideChar;
   end;
 
   PClkFindControlOptionsAPI = ^TClkFindControlOptionsAPI;
@@ -524,6 +525,7 @@ begin
   TempAction.FindControlOptions.MatchCriteria.WillMatchClassName := AFindControlOptions^.MatchCriteria.WillMatchClassName;
   TempAction.FindControlOptions.MatchCriteria.WillMatchBitmapText := AFindControlOptions^.MatchCriteria.WillMatchBitmapText;
   TempAction.FindControlOptions.MatchCriteria.WillMatchBitmapFiles := AFindControlOptions^.MatchCriteria.WillMatchBitmapFiles;
+  TempAction.FindControlOptions.MatchCriteria.WillMatchPrimitiveFiles := AFindControlOptions^.MatchCriteria.WillMatchPrimitiveFiles;
   TempAction.FindControlOptions.MatchCriteria.SearchForControlMode := AFindControlOptions^.MatchCriteria.SearchForControlMode;
 
   TempAction.FindControlOptions.AllowToFail := AFindControlOptions^.AllowToFail;
@@ -552,6 +554,8 @@ begin
   TempAction.FindControlOptions.StartSearchingWithCachedControl := AFindControlOptions^.StartSearchingWithCachedControl;
   SetPointedContentToString(@string(PWideChar(AFindControlOptions^.CachedControlLeft))[1], TempAction.FindControlOptions.CachedControlLeft);
   SetPointedContentToString(@string(PWideChar(AFindControlOptions^.CachedControlTop))[1], TempAction.FindControlOptions.CachedControlTop);
+
+  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.MatchPrimitiveFiles))[1], TempAction.FindControlOptions.MatchPrimitiveFiles);
 
   AddActionToTemplate(TemplateFileName, TempAction);
   Result := 0;

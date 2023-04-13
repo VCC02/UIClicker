@@ -1,4 +1,4 @@
-#   Copyright (C) 2022 VCC
+#   Copyright (C) 2022-2023 VCC
 #   creation date: Aug 2022
 #   initial release date: 10 Aug 2022
 #
@@ -183,7 +183,7 @@ class TClkFindControlMatchCriteria(Structure):
                ("WillMatchClassName", BOOLEAN),
                ("WillMatchBitmapText", BOOLEAN),
                ("WillMatchBitmapFiles", BOOLEAN),
-			   ("WillMatchPrimitiveFiles", BOOLEAN),
+               ("WillMatchPrimitiveFiles", BOOLEAN),
                ("SearchForControlMode", LONG)] #TSearchForControlMode
 
 class TMatchBitmapAlgorithmSettings(Structure):
@@ -223,7 +223,7 @@ class TFindControlOptions(Structure):
                ("StartSearchingWithCachedControl", BOOLEAN),
                ("CachedControlLeft", LPCWSTR),
                ("CachedControlTop", LPCWSTR),
-			   ("MatchPrimitiveFiles", LPCWSTR)]
+               ("MatchPrimitiveFiles", LPCWSTR)]
 
 PFindControlOptions = ctypes.POINTER(TFindControlOptions)
 
@@ -234,7 +234,7 @@ def GetDefaultFindControlOptions():
     FindControlOptions.MatchCriteria.WillMatchClassName = True
     FindControlOptions.MatchCriteria.WillMatchBitmapText = False
     FindControlOptions.MatchCriteria.WillMatchBitmapFiles = False
-	FindControlOptions.MatchCriteria.WillMatchPrimitiveFiles = False
+    FindControlOptions.MatchCriteria.WillMatchPrimitiveFiles = False
     FindControlOptions.MatchCriteria.SearchForControlMode = TSearchForControlMode.sfcmGenGrid
 
     FindControlOptions.AllowToFail = False
@@ -269,8 +269,8 @@ def GetDefaultFindControlOptions():
     FindControlOptions.StartSearchingWithCachedControl = False
     FindControlOptions.CachedControlLeft = ''
     FindControlOptions.CachedControlTop = ''
-	
-	FindControlOptions.MatchPrimitiveFiles = '' #'FileExample1.pmtv\r\nFileExample2.pmtv\r\nFileExample3.pmtv'
+    
+    FindControlOptions.MatchPrimitiveFiles = '' #'FileExample1.pmtv\r\nFileExample2.pmtv\r\nFileExample3.pmtv'
     return FindControlOptions
 
 
@@ -280,7 +280,7 @@ def GetDefaultFindSubControlOptions():
     FindSubControlOptions.MatchCriteria.WillMatchClassName = False
     FindSubControlOptions.MatchCriteria.WillMatchBitmapText = True
     FindSubControlOptions.MatchCriteria.WillMatchBitmapFiles = False
-	FindSubControlOptions.MatchCriteria.WillMatchPrimitiveFiles = False
+    FindSubControlOptions.MatchCriteria.WillMatchPrimitiveFiles = False
     FindSubControlOptions.UseWholeScreen = False
     return FindSubControlOptions
     

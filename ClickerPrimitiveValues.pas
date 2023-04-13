@@ -56,8 +56,8 @@ const
   CPropCountClkSetMiscPrimitive = 1;
   CPropCountClkSetFontPrimitive = CPropCount_FindControlMatchBitmapText; //16;
   CPropCountClkImagePrimitive = 6;
-  CPropCountClkLinePrimitive = 4;
-  CPropCountClkRectPrimitive = 4;
+  CPropCountClkLinePrimitive = 5;
+  CPropCountClkRectPrimitive = 5;
   CPropCountClkGradientFillPrimitive = 7;
   CPropCountClkTextPrimitive = 3;
 
@@ -124,14 +124,16 @@ const
     (Name: 'X1'; EditorType: etSpinText),
     (Name: 'Y1'; EditorType: etSpinText),
     (Name: 'X2'; EditorType: etSpinText),
-    (Name: 'Y2'; EditorType: etSpinText)
+    (Name: 'Y2'; EditorType: etSpinText),
+    (Name: 'ShowEndpointPixel'; EditorType: etText)
   );
 
   CRectPrimitiveProperties: array[0..CPropCountClkRectPrimitive - 1] of TOIPropDef = (
     (Name: 'X1'; EditorType: etSpinText),
     (Name: 'Y1'; EditorType: etSpinText),
     (Name: 'X2'; EditorType: etSpinText),
-    (Name: 'Y2'; EditorType: etSpinText)
+    (Name: 'Y2'; EditorType: etSpinText),
+    (Name: 'ExtendToEndpointCorner'; EditorType: etText)
   );
 
   CGradientFillPrimitiveProperties: array[0..CPropCountClkGradientFillPrimitive - 1] of TOIPropDef = (
@@ -312,14 +314,16 @@ const
     0,  //X1: string;
     0,  //X2: string;
     0,  //Y1: string;
-    0   //Y2: string;
+    0,  //Y2: string;
+    0   //ShowEndpointPixel: string;
   );
 
   CRectEnumCounts: array[0..CPropCountClkRectPrimitive - 1] of Integer = (
     0,  //X1: string;
     0,  //X2: string;
     0,  //Y1: string;
-    0   //Y2: string;
+    0,  //Y2: string;
+    0   //ExtendToEndpointCorner: string;
   );
 
   CGradientFillEnumCounts: array[0..CPropCountClkGradientFillPrimitive - 1] of Integer = (
@@ -402,14 +406,16 @@ const
     nil, //X1: string;
     nil, //X2: string;
     nil, //Y1: string;
-    nil  //Y2: string;
+    nil, //Y2: string;
+    nil  //ShowEndpointPixel: string;
   );
 
   CRectEnumStrings: array[0..CPropCountClkRectPrimitive - 1] of PArrayOfString = (
     nil, //X1: string;
     nil, //X2: string;
     nil, //Y1: string;
-    nil  //Y2: string;
+    nil, //Y2: string;
+    nil  //ExtendToEndpointCorner: string;
   );
 
   CGradientFillEnumStrings: array[0..CPropCountClkGradientFillPrimitive - 1] of PArrayOfString = (
@@ -543,6 +549,7 @@ implementation
       1: Result := APrimitive.ClkLine.Y1;
       2: Result := APrimitive.ClkLine.X2;
       3: Result := APrimitive.ClkLine.Y2;
+      4: Result := APrimitive.ClkLine.ShowEndpointPixel;
       else
         Result := 'unknown';
     end;
@@ -556,6 +563,7 @@ implementation
       1: Result := APrimitive.ClkRect.Y1;
       2: Result := APrimitive.ClkRect.X2;
       3: Result := APrimitive.ClkRect.Y2;
+      4: Result := APrimitive.ClkRect.ExtendToEndpointCorner;
       else
         Result := 'unknown';
     end;
@@ -675,6 +683,7 @@ implementation
       1: APrimitive.ClkLine.Y1 := NewValue;
       2: APrimitive.ClkLine.X2 := NewValue;
       3: APrimitive.ClkLine.Y2 := NewValue;
+      4: APrimitive.ClkLine.ShowEndpointPixel := NewValue;
       else
         ;
     end;
@@ -688,6 +697,7 @@ implementation
       1: APrimitive.ClkRect.Y1 := NewValue;
       2: APrimitive.ClkRect.X2 := NewValue;
       3: APrimitive.ClkRect.Y2 := NewValue;
+      4: APrimitive.ClkRect.ExtendToEndpointCorner := NewValue;
       else
         ;
     end;
@@ -781,6 +791,7 @@ begin
   APrimitive.ClkLine.Y1 := '15';
   APrimitive.ClkLine.X2 := '16';
   APrimitive.ClkLine.Y2 := '17';
+  APrimitive.ClkLine.ShowEndpointPixel := '0'; //False
 end;
 
 
@@ -790,6 +801,7 @@ begin
   APrimitive.ClkRect.Y1 := '26';
   APrimitive.ClkRect.X2 := '27';
   APrimitive.ClkRect.Y2 := '29';
+  APrimitive.ClkRect.ExtendToEndpointCorner := '0'; //False
 end;
 
 

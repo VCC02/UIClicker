@@ -141,11 +141,29 @@ end;
 procedure ComposePrimitive_Line(Sender: TPrimitivesCompositor; ABmp: TBitmap; var APrimitive: TPrimitiveRec);
 var
   x1, y1, x2, y2: Integer;
+  EvalShowEndpointPixel: string;
 begin
+  EvalShowEndpointPixel := Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkLine.ShowEndpointPixel);
+
   x1 := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkLine.X1), 10);
   y1 := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkLine.Y1), 20);
   x2 := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkLine.X2), 30);
   y2 := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkLine.Y2), 40);
+
+  if (StrToIntDef(EvalShowEndpointPixel, 0) = 1) or (UpperCase(EvalShowEndpointPixel) = 'TRUE') then
+  begin                 //do nothing if x1=x2 or y1=y2
+    if x1 < x2 then
+      Inc(x2);
+
+    if x1 > x2 then
+      Dec(x2);
+
+    if y1 < y2 then
+      Inc(y2);
+
+    if y1 > y2 then
+      Dec(y2);
+  end;
 
   ABmp.Canvas.Line(x1, y1, x2, y2);
 end;
@@ -154,11 +172,29 @@ end;
 procedure ComposePrimitive_Rect(Sender: TPrimitivesCompositor; ABmp: TBitmap; var APrimitive: TPrimitiveRec);
 var
   x1, y1, x2, y2: Integer;
+  EvalExtendToEndpointCorner: string;
 begin
+  EvalExtendToEndpointCorner := Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkRect.ExtendToEndpointCorner);
+
   x1 := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkRect.X1), 10);
   y1 := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkRect.Y1), 20);
   x2 := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkRect.X2), 30);
   y2 := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkRect.Y2), 40);
+
+  if (StrToIntDef(EvalExtendToEndpointCorner, 0) = 1) or (UpperCase(EvalExtendToEndpointCorner) = 'TRUE') then
+  begin                 //do nothing if x1=x2 or y1=y2
+    if x1 < x2 then
+      Inc(x2);
+
+    if x1 > x2 then
+      Dec(x2);
+
+    if y1 < y2 then
+      Inc(y2);
+
+    if y1 > y2 then
+      Dec(y2);
+  end;
 
   ABmp.Canvas.Rectangle(x1, y1, x2, y2);
 end;
@@ -244,6 +280,7 @@ const
 var
   i, NewIndex: Integer;
 begin
+  ABmp.PixelFormat := pf24bit;
   ABmp.Transparent := False;
   ABmp.Canvas.Pen.Style := psSolid;
   ABmp.Canvas.Pen.Width := 1;
@@ -251,6 +288,16 @@ begin
   ABmp.Canvas.Pen.Color := clWhite;
   ABmp.Canvas.Brush.Color := clWhite;
   ABmp.Canvas.Rectangle(0, 0, ABmp.Width, ABmp.Height);
+
+  if Ord(APrimitiveSettings.CompositorDirection) > Ord(High(TCompositorDirection)) then
+  begin
+    ABmp.Width := ABmp.Width + 400;
+    ABmp.Height := ABmp.Height + 30;
+    ABmp.Canvas.Brush.Color := clWhite;
+    ABmp.Canvas.Font.Color := clRed;
+    ABmp.Canvas.TextOut(30, 0, 'Unsupported compositor direction: ' + IntToStr(Ord(APrimitiveSettings.CompositorDirection)));
+    Exit;
+  end;
 
   ABmp.Canvas.Brush.Style := bsSolid;  //reset to some default values
   ABmp.Canvas.Pen.Color := clWhite;
@@ -278,7 +325,7 @@ begin
 end;
 
 
-//Ideally, the whole primitive file should be composed, to take the entire stack into account. Then, the proper font settings are applied.
+//Ideally, the whole primitives file should be composed, to take the entire stack into account. Then, the proper font settings are applied.
 procedure TPrimitivesCompositor.SetFontByPrimitive(ADestCanvas: TCanvas; var APrimitive: TPrimitiveRec);
 begin
   ADestCanvas.Font.Name := DoOnEvaluateReplacementsFunc(APrimitive.ClkSetFont.FontName);
@@ -361,7 +408,7 @@ begin
       begin
         X := StrToIntDef(DoOnEvaluateReplacementsFunc(APrimitives[i].ClkText.X), 10);
         W := ADestCanvas.TextWidth(DoOnEvaluateReplacementsFunc(APrimitives[i].ClkText.Text));
-        Inc(X, W);
+        Inc(X, W - 1);
 
         if Result < X then
           Result := X;
@@ -437,7 +484,7 @@ begin
       begin
         Y := StrToIntDef(DoOnEvaluateReplacementsFunc(APrimitives[i].ClkText.Y), 10);
         H := ADestCanvas.TextHeight(DoOnEvaluateReplacementsFunc(APrimitives[i].ClkText.Text));
-        Inc(Y, H);
+        Inc(Y, H - 1);
 
         if Result < Y then
           Result := Y;

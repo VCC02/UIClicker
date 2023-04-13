@@ -374,7 +374,7 @@ begin
 end;
 
 
-procedure LoadPmtvFromInMemFileSystem(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; ASettings: TPrimitiveSettings; AInMemFileSystem: TInMemFileSystem);
+procedure LoadPmtvFromInMemFileSystem(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings; AInMemFileSystem: TInMemFileSystem);
 var
   MemStream: TMemoryStream;
   Ini: TClkIniReadonlyFile;
@@ -804,6 +804,8 @@ begin
   frClickerActionsArrExperiment1.OnSaveTemplateToFile := HandleOnSaveTemplateToFile;
   frClickerActionsArrExperiment2.OnSaveTemplateToFile := HandleOnSaveTemplateToFile;
 
+  frClickerActionsArrExperiment1.OnSetOpenDialogMultiSelect := HandleOnSetOpenDialogMultiSelect;
+  frClickerActionsArrExperiment2.OnSetOpenDialogMultiSelect := HandleOnSetOpenDialogMultiSelect;
   frClickerActionsArrExperiment1.OnSetOpenDialogInitialDir := HandleOnSetOpenDialogInitialDir;
   frClickerActionsArrExperiment2.OnSetOpenDialogInitialDir := HandleOnSetOpenDialogInitialDir;
   frClickerActionsArrExperiment1.OnOpenDialogExecute := HandleOnOpenDialogExecute;
@@ -1283,6 +1285,7 @@ begin
         NewFrame.OnTClkIniReadonlyFileCreate := HandleOnTClkIniReadonlyFileCreate;
         NewFrame.OnSaveTemplateToFile := HandleOnSaveTemplateToFile;
 
+        NewFrame.OnSetOpenDialogMultiSelect := HandleOnSetOpenDialogMultiSelect;
         NewFrame.OnSetOpenDialogInitialDir := HandleOnSetOpenDialogInitialDir;
         NewFrame.OnOpenDialogExecute := HandleOnOpenDialogExecute;
         NewFrame.OnGetOpenDialogFileName := HandleOnGetOpenDialogFileName;
@@ -2879,8 +2882,14 @@ end;
 
 
 function TfrmClickerActions.HandleOnFileExists(const FileName: string): Boolean;
+var
+  TempFileName: string;
 begin
-  Result := DoOnFileExists(FileName);
+  TempFileName := FileName;
+  TempFileName := StringReplace(TempFileName, '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
+  TempFileName := StringReplace(TempFileName, '$TemplateDir$', FFullTemplatesDir, [rfReplaceAll]);
+
+  Result := DoOnFileExists(TempFileName);
 end;
 
 
@@ -2898,6 +2907,9 @@ end;
 
 procedure TfrmClickerActions.HandleOnLoadMissingFileContent(AFileName: string; AFileContent: TMemoryStream);
 begin
+  AFileName := StringReplace(AFileName, '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
+  AFileName := StringReplace(AFileName, '$TemplateDir$', FFullTemplatesDir, [rfReplaceAll]);
+
   AFileContent.LoadFromFile(AFileName);
   try
     AFileContent.LoadFromFile(AFileName);

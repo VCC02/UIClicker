@@ -28,8 +28,9 @@ PrimitiveName=Int rect
 Primitive=Rect
 X1=5
 Y1=3
-X2=13
-Y2=11
+X2=12
+Y2=10
+ExtendToEndpointCorner=1
 
 [Primitive_3]
 PrimitiveName=SetPen ext
@@ -52,8 +53,9 @@ PrimitiveName=Ext rect
 Primitive=Rect
 X1=0
 Y1=0
-X2=14
-Y2=12
+X2=13
+Y2=11
+ExtendToEndpointCorner=1
 
 
 [Order_0]
