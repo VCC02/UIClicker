@@ -54,7 +54,6 @@ type
   private
     FInMemFS: TInMemFileSystem;
     FTestServerAddress: string;
-    FPollForMissingServerFiles: TPollForMissingServerFiles;
 
     function SendTemplateToServer(ARemoteAddress, AFileName: string; AFileContent: TMemoryStream): string;
 
@@ -73,6 +72,10 @@ type
     procedure CreateTestTemplateInMem;
     procedure CreateCallableTestTemplateInMem(ATestTemplateFileName, AVarName, AVarValue: string; ASleepValue: string = '0'; AEvalBefore: Boolean = False);
     procedure CreateCallableTestTemplateInMem_WithCallTemplate(ATestTemplateFileName, AVarName, AVarValue: string; ACalledTemplateName, AListOfVarsAndValues: string; AEvalBefore: Boolean; ASleepValue: string = '0');
+
+    procedure CopyFileFromDiskToInMemFS(ADiskFileName, AInMemFileName: string);
+    procedure CopyMultipleFilesFromDiskToInMemFS(AListOfFiles: string);
+
     procedure SetupTargetWindowFor_FindSubControl(ACustomFormCaption: string = 'UI Clicker Main');
     procedure SendTerminateWaitingForFileAvailabilityRequest(ALoopType: string; ADelayBeforeRequest: Integer);
     procedure ExecuteSetControlTextActionWithMainUIClickerWindow(ASearchedCaption, ASetCaption: string);
@@ -85,8 +88,8 @@ type
     procedure HandleOnLoadMissingFileContent_Mem(AFileName: string; AFileContent: TMemoryStream);
     procedure HandleLogMissingServerFile(AMsg: string);
 
-    procedure CreateFileProvider(AAccessibleDirs, AAccessibleFileExtensions: string; AOnFileExistsHandler: TOnFileExists; AOnLoadMissingFileContentHandler: TOnLoadMissingFileContent);
-    procedure DestroyFileProvider;
+    function CreateFileProvider(AAccessibleDirs, AAccessibleFileExtensions: string; AOnFileExistsHandler: TOnFileExists; AOnLoadMissingFileContentHandler: TOnLoadMissingFileContent): TPollForMissingServerFiles;
+    procedure DestroyFileProvider(AFileProvider: TPollForMissingServerFiles);
 
     property InMemFS: TInMemFileSystem read FInMemFS;
   public
@@ -299,6 +302,43 @@ begin
 end;
 
 
+procedure TTestHTTPAPI.CopyFileFromDiskToInMemFS(ADiskFileName, AInMemFileName: string);
+var
+  MemStream: TMemoryStream;
+begin
+  MemStream := TMemoryStream.Create;
+  try
+    MemStream.LoadFromFile(ADiskFileName);
+    FInMemFS.SaveFileToMem(AInMemFileName, MemStream.Memory, MemStream.Size);
+  finally
+    MemStream.Free;
+  end;
+end;
+
+
+procedure TTestHTTPAPI.CopyMultipleFilesFromDiskToInMemFS(AListOfFiles: string);
+var
+  ListOfFilesToSend: TStringList;
+  i: Integer;
+  Fnm: string;
+begin
+  ListOfFilesToSend := TStringList.Create;
+  try
+    ListOfFilesToSend.Text := AListOfFiles;
+
+    for i := 0 to ListOfFilesToSend.Count - 1 do
+    begin
+      Fnm := ListOfFilesToSend.Strings[i];
+      Fnm := StringReplace(Fnm, '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
+
+      CopyFileFromDiskToInMemFS(Fnm, ListOfFilesToSend.Strings[i]);
+    end;
+  finally
+    ListOfFilesToSend.Free;
+  end;
+end;
+
+
 function TTestHTTPAPI.Send_ExecuteCommandAtIndex_ToServer(AActionIdx, AStackLevel: Integer): string;
 var
   Link: string;
@@ -435,37 +475,37 @@ begin
 end;
 
 
-procedure TTestHTTPAPI.CreateFileProvider(AAccessibleDirs, AAccessibleFileExtensions: string; AOnFileExistsHandler: TOnFileExists; AOnLoadMissingFileContentHandler: TOnLoadMissingFileContent);
+function TTestHTTPAPI.CreateFileProvider(AAccessibleDirs, AAccessibleFileExtensions: string; AOnFileExistsHandler: TOnFileExists; AOnLoadMissingFileContentHandler: TOnLoadMissingFileContent): TPollForMissingServerFiles;
 begin
-  FPollForMissingServerFiles := TPollForMissingServerFiles.Create(True);
-  FPollForMissingServerFiles.RemoteAddress := FTestServerAddress;
-  FPollForMissingServerFiles.ConnectTimeout := 1000;
-  FPollForMissingServerFiles.AddListOfAccessibleDirs(AAccessibleDirs);
-  FPollForMissingServerFiles.AddListOfAccessibleFileExtensions(AAccessibleFileExtensions);
-  FPollForMissingServerFiles.OnBeforeRequestingListOfMissingFiles := nil;
-  FPollForMissingServerFiles.OnAfterRequestingListOfMissingFiles := nil;
-  FPollForMissingServerFiles.OnFileExists := AOnFileExistsHandler;
-  FPollForMissingServerFiles.OnLogMissingServerFile := @HandleLogMissingServerFile;
-  FPollForMissingServerFiles.OnLoadMissingFileContent := AOnLoadMissingFileContentHandler;
-  FPollForMissingServerFiles.Start;
+  Result := TPollForMissingServerFiles.Create(True);
+  Result.RemoteAddress := FTestServerAddress;
+  Result.ConnectTimeout := 1000;
+  Result.AddListOfAccessibleDirs(AAccessibleDirs);
+  Result.AddListOfAccessibleFileExtensions(AAccessibleFileExtensions);
+  Result.OnBeforeRequestingListOfMissingFiles := nil;
+  Result.OnAfterRequestingListOfMissingFiles := nil;
+  Result.OnFileExists := AOnFileExistsHandler;
+  Result.OnLogMissingServerFile := @HandleLogMissingServerFile;
+  Result.OnLoadMissingFileContent := AOnLoadMissingFileContentHandler;
+  Result.Start;
 end;
 
 
-procedure TTestHTTPAPI.DestroyFileProvider;
+procedure TTestHTTPAPI.DestroyFileProvider(AFileProvider: TPollForMissingServerFiles);
 var
   tk: QWord;
 begin
-  if FPollForMissingServerFiles <> nil then
+  if AFileProvider <> nil then
   begin
     //AddToLog('Stopping "missing files" monitoring thread for client.');
-    FPollForMissingServerFiles.Terminate;
+    AFileProvider.Terminate;
 
     tk := GetTickCount64;
     repeat
       Application.ProcessMessages;
       Sleep(10);
 
-      if FPollForMissingServerFiles.Done then
+      if AFileProvider.Done then
       begin
         //AddToLog('Monitoring thread terminated.');
         Break;
@@ -478,7 +518,7 @@ begin
       end;
     until False;
 
-    FPollForMissingServerFiles := nil;
+    AFileProvider := nil;
   end;
 end;
 

@@ -57,6 +57,7 @@ type
     procedure Test_ExecuteFindSubControlAction_UIClickerMain_WindowInterpreterButton_Disk;
     procedure Test_ExecuteFindSubControlAction_UIClickerMain_WindowInterpreterButton_Mem_NoSender;
     procedure Test_ExecuteFindSubControlAction_UIClickerMain_PmtvPreviewButton_Disk;
+    procedure Test_ExecuteFindSubControlAction_UIClickerMain_PmtvPreviewButton_Mem;
 
     procedure Test_ExecuteSetControlTextAction_HappyFlow;
     procedure Test_ExecuteCallTemplate_HappyFlow;
@@ -75,7 +76,7 @@ implementation
 
 
 uses
-  ClickerActionsClient, ClickerUtils, ActionsStuff, Controls;
+  ClickerActionsClient, ClickerUtils, ActionsStuff, Controls, ClickerFileProviderClient;
 
 
 constructor TTestLowLevelHTTPAPI.Create;
@@ -421,6 +422,44 @@ begin
     ExpectSuccessfulAction(ListOfVars);
   finally
     ListOfVars.Free;
+  end;
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecuteFindSubControlAction_UIClickerMain_PmtvPreviewButton_Mem;
+const
+  CAllowedDirs = '$AppDir$\TestFiles\';
+  CAllowedExts = '.clktmpl'#13#10'.bmp'#13#10'.pmtv';
+  CPmtvFiles = 'TestFiles\PreviewButtonIcon.pmtv'#13#10'TestFiles\PreviewButtonIcon64.pmtv'#13#10 +
+               '$AppDir$\TestFiles\PreviewButtonIcon.pmtv'#13#10'$AppDir$\TestFiles\PreviewButtonIcon64.pmtv';
+var
+  Response: string;
+  ListOfVars: TStringList;
+  FindSubControlOptions: TClkFindControlOptions;
+  FileProvider: TPollForMissingServerFiles;
+begin
+  SetupTargetWindowFor_FindSubControl;
+  GenerateFindSubControlOptionsForMainUIClickerWindow_PmtvPreviewBtn(FindSubControlOptions, False);
+
+  FindSubControlOptions.MatchPrimitiveFiles := CPmtvFiles;
+
+  Expect(ClearInMemFileSystem(TestServerAddress)).ToBe(CREResp_Done);
+  CopyMultipleFilesFromDiskToInMemFS(FindSubControlOptions.MatchPrimitiveFiles);
+
+  FileProvider := CreateFileProvider(CAllowedDirs, CAllowedExts, @HandleOnFileExists_Mem, @HandleOnLoadMissingFileContent_Mem);
+  try
+    Response := FastReplace_87ToReturn(Send_ExecuteCommandAtIndex_ToServer(2, 0));
+    Response := FastReplace_87ToReturn(ExecuteFindSubControlAction(TestServerAddress, FindSubControlOptions, 'Test Find PreviewButton_Mem on UIClicker Main with pmtv', 3000, CREParam_FileLocation_ValueMem));
+
+    ListOfVars := TStringList.Create;
+    try
+      ListOfVars.Text := Response;
+      ExpectSuccessfulAction(ListOfVars);
+    finally
+      ListOfVars.Free;
+    end;
+  finally
+    DestroyFileProvider(FileProvider);
   end;
 end;
 

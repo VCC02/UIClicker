@@ -1,0 +1,69 @@
+[Settings]
+CompositorDirection=0
+
+[Primitives]
+Count=6
+
+[ProcessingOrder]
+Count=1
+
+[Primitive_0]
+PrimitiveName=SetPen int
+Primitive=SetPen
+Color=357C16
+Style=psSolid
+Width=1
+Mode=pmCopy
+EndCap=pecRound
+JoinStyle=pjsRound
+
+[Primitive_1]
+PrimitiveName=SetBrush int
+Primitive=SetBrush
+Color=1BE6B5
+Style=bsSolid
+
+[Primitive_2]
+PrimitiveName=Int rect
+Primitive=Rect
+X1=5
+Y1=3
+X2=12
+Y2=10
+ExtendToEndpointCorner=1
+
+[Primitive_3]
+PrimitiveName=SetPen ext
+Primitive=SetPen
+Color=357C16
+Style=psSolid
+Width=1
+Mode=pmCopy
+EndCap=pecRound
+JoinStyle=pjsRound
+
+[Primitive_4]
+PrimitiveName=SetBrush ext
+Primitive=SetBrush
+Color=0CC9FF
+Style=bsSolid
+
+[Primitive_5]
+PrimitiveName=Ext rect
+Primitive=Rect
+X1=0
+Y1=0
+X2=13
+Y2=11
+ExtendToEndpointCorner=1
+
+
+[Order_0]
+OrderName=main
+i0=3
+i1=4
+i2=5
+i3=0
+i4=1
+i5=2
+

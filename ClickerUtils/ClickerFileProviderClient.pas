@@ -189,6 +189,7 @@ function TPollForMissingServerFiles.FileIsAllowed(AFileName: string; out ADenyRe
 const
   CFileExtensionNotAllowed = 'File extension is not allowed.';
   CFileOutOfAllowedDirs = 'File is outside of allowed directories.';
+  CFileFromUpperDirs = 'Also, paths are not allowed to contain ".." directories.';
 var
   FileExt, FilePath: string;
   i: Integer;
@@ -224,8 +225,8 @@ begin
   if (AFileName <> '') and (AFileName[1] = PathDelim) then   //resolve relative paths to TemplatesDir
     AFileName := UpperCase(TempFullTemplatesDir + AFileName);
 
-  AFileName := UpperCase(StringReplace(AFileName, '$APPDIR$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]) + AFileName);
-  AFileName := UpperCase(StringReplace(AFileName, '$TEMPLATEDIR$', TempFullTemplatesDir, [rfReplaceAll]) + AFileName);
+  AFileName := UpperCase(StringReplace(AFileName, '$APPDIR$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]));
+  AFileName := UpperCase(StringReplace(AFileName, '$TEMPLATEDIR$', TempFullTemplatesDir, [rfReplaceAll]));
 
   if ExtractFileName(AFileName) = AFileName then //files without paths are expected to be found in $AppDir$\ActionTemplates
     AFileName := UpperCase(TempFullTemplatesDir + PathDelim + AFileName);
@@ -239,7 +240,8 @@ begin
     if (CurrentItem > '') and (CurrentItem[Length(CurrentItem)] <> PathDelim) then
       CurrentItem := CurrentItem + PathDelim;  //make sure there are consistent results, regardless of the last '\' existence
 
-    if (Pos(CurrentItem, FilePath) = 1) and (Pos('..', CurrentItem) = 0) then
+    if ((Pos(CurrentItem, FilePath) = 1) or (Pos(ExtractFileDir(AFileName), CurrentItem) > 1)) and
+       (Pos('..', CurrentItem) = 0) then
     begin
       FoundDir := True;
       Break;
@@ -249,6 +251,10 @@ begin
   if not FoundDir then
   begin
     ADenyReason := CFileOutOfAllowedDirs;
+
+    if Pos('..', CurrentItem) > 0 then
+      ADenyReason := ADenyReason + ' ' + CFileFromUpperDirs;
+
     //AddUniqueMessageToLog('Denied: "' + AFileName + '" from "' + FastReplace_ReturnTo45(FListOfAccessibleDirs.Text) + '"');  //for debugging
     Exit;
   end;
