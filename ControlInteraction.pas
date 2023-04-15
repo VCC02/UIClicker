@@ -405,26 +405,44 @@ begin
 end;
 
 
-procedure DisplayDebugBmpForSuccessfulMatch(BitmapToSearchFor, DebugBmp: TBitmap; ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height: Integer; SubCnvXOffset, SubCnvYOffset: Integer);
+procedure DisplayDebugBmpForSuccessfulMatch(BitmapToSearchFor, DebugBmp: TBitmap; ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height: Integer; SubCnvXOffset, SubCnvYOffset: Integer; ATransparentFoundSelection: Boolean);
 var
   DebugDisplayLeft: Integer; //This is the value backup of the debug screenshot width, before increasing it. Debug information is displayed starting at this value
+  BmpWithFoundSelection: TBitmap;
+
+  procedure DrawFoundSelection;
+  begin
+    DebugBmp.Canvas.Pen.Color := clRed;
+    Line(DebugBmp.Canvas, SubCnvXOffset, 0, SubCnvXOffset, DebugBmp.Height);   //vert
+    Line(DebugBmp.Canvas, SubCnvXOffset + BitmapToSearchFor.Width - 1, 0, SubCnvXOffset + BitmapToSearchFor.Width - 1, DebugBmp.Height);  //vert
+    Line(DebugBmp.Canvas, 0, SubCnvYOffset, DebugDisplayLeft, SubCnvYOffset);   //horiz
+    Line(DebugBmp.Canvas, 0, SubCnvYOffset + BitmapToSearchFor.Height - 1, DebugDisplayLeft, SubCnvYOffset + BitmapToSearchFor.Height - 1); //horiz
+  end;
 begin
   DebugDisplayLeft := DebugBmp.Width;  //yes, width
 
   DebugBmp.Width := Max(DebugBmp.Width, 400); //use Max to allow displaying text
   DebugBmp.Height := Max(DebugBmp.Height, 100); //use Max to allow displaying text
 
-  DebugBmp.Canvas.Pen.Color := clRed;
-  Line(DebugBmp.Canvas, SubCnvXOffset, 0, SubCnvXOffset, DebugBmp.Height);   //vert
-  Line(DebugBmp.Canvas, SubCnvXOffset + BitmapToSearchFor.Width - 1, 0, SubCnvXOffset + BitmapToSearchFor.Width - 1, DebugBmp.Height);  //vert
-  Line(DebugBmp.Canvas, 0, SubCnvYOffset, DebugDisplayLeft, SubCnvYOffset);   //horiz
-  Line(DebugBmp.Canvas, 0, SubCnvYOffset + BitmapToSearchFor.Height - 1, DebugDisplayLeft, SubCnvYOffset + BitmapToSearchFor.Height - 1); //horiz
-
   DebugBmp.Canvas.Brush.Style := bsClear;
   DebugBmp.Canvas.Pen.Color := clLime;
   DebugBmp.Canvas.Pen.Style := psDot;
   DebugBmp.Canvas.Rectangle(ScrShot_Left, ScrShot_Top, ScrShot_Left + ScrShot_Width, ScrShot_Top + ScrShot_Height);
   DebugBmp.Canvas.Pen.Style := psSolid;
+
+  if ATransparentFoundSelection then
+  begin
+    BmpWithFoundSelection := TBitmap.Create;
+    try
+      BmpWithFoundSelection.Assign(DebugBmp);
+      DrawFoundSelection;
+      AvgBitmapWithBitmap(DebugBmp, BmpWithFoundSelection, DebugBmp);
+    finally
+      BmpWithFoundSelection.Free;
+    end;
+  end
+  else
+    DrawFoundSelection;
 end;
 
 
@@ -604,7 +622,7 @@ begin
     if InputData.DebugBitmap <> nil then
     begin
       if FoundBmp then
-        DisplayDebugBmpForSuccessfulMatch(InputData.BitmapToSearchFor, InputData.DebugBitmap, ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height, SubCnvXOffset, SubCnvYOffset)
+        DisplayDebugBmpForSuccessfulMatch(InputData.BitmapToSearchFor, InputData.DebugBitmap, ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height, SubCnvXOffset, SubCnvYOffset, ADisplayGridLineOption = loTransparentSolid)
       else
         DisplayDebugBmpForFailedMatch(InputData.BitmapToSearchFor, SrcCompSearchAreaBitmap, InputData.DebugBitmap, ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height, SubCnvXOffset, SubCnvYOffset, InputData.MatchingMethods, InputData.DebugTemplateName, InputData.Text);
 

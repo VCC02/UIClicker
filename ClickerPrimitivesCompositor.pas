@@ -48,7 +48,7 @@ type
     function DoOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
   public
     constructor Create;
-    procedure ComposePrimitives(ABmp: TBitmap; AOrderIndex: Integer; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var APrimitiveSettings: TPrimitiveSettings);
+    procedure ComposePrimitives(ABmp: TBitmap; AOrderIndex: Integer; AUseHighContrastColors: Boolean; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var APrimitiveSettings: TPrimitiveSettings);
 
     function GetMaxX(ADestCanvas: TCanvas; var APrimitives: TPrimitiveRecArr): Integer;
     function GetMaxY(ADestCanvas: TCanvas; var APrimitives: TPrimitiveRecArr): Integer;
@@ -65,9 +65,13 @@ uses
   FPCanvas;
 
 
-procedure ComposePrimitive_SetPen(Sender: TPrimitivesCompositor; ABmp: TBitmap; var APrimitive: TPrimitiveRec);
+procedure ComposePrimitive_SetPen(Sender: TPrimitivesCompositor; ABmp: TBitmap; var APrimitive: TPrimitiveRec; AHighContrast: TColor = -1);
 begin
-  ABmp.Canvas.Pen.Color := HexToInt(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetPen.Color)); //TColor;
+  if AHighContrast <> -1 then
+    ABmp.Canvas.Pen.Color := AHighContrast
+  else
+    ABmp.Canvas.Pen.Color := HexToInt(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetPen.Color)); //TColor;
+
   ABmp.Canvas.Pen.Style := PenStyleNameToIndex(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetPen.Style)); //TFPPenStyle;
   ABmp.Canvas.Pen.Width := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetPen.Width), 1); //Integer;
   ABmp.Canvas.Pen.Mode := PenModeNameToIndex(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetPen.Mode)); //TFPPenMode;
@@ -76,23 +80,36 @@ begin
 end;
 
 
-procedure ComposePrimitive_SetBrush(Sender: TPrimitivesCompositor; ABmp: TBitmap; var APrimitive: TPrimitiveRec);
+procedure ComposePrimitive_SetBrush(Sender: TPrimitivesCompositor; ABmp: TBitmap; var APrimitive: TPrimitiveRec; AHighContrast: TColor = -1);
 begin
-  ABmp.Canvas.Brush.Color := HexToInt(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetBrush.Color)); //TColor;
+  if AHighContrast <> -1 then
+    ABmp.Canvas.Brush.Color := AHighContrast
+  else
+    ABmp.Canvas.Brush.Color := HexToInt(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetBrush.Color)); //TColor;
+
   ABmp.Canvas.Brush.Style := BrushStyleNameToIndex(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetBrush.Style)); //TFPBrushStyle;
 end;
 
 
-procedure ComposePrimitive_SetMisc(Sender: TPrimitivesCompositor; ABmp: TBitmap; var APrimitive: TPrimitiveRec);
+procedure ComposePrimitive_SetMisc(Sender: TPrimitivesCompositor; ABmp: TBitmap; var APrimitive: TPrimitiveRec; AHighContrast: TColor = -1);
 begin
   ABmp.Canvas.AntialiasingMode := TAntialiasingMode(StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetMisc.AntialiasingMode), Ord(amDontCare)));
 end;
 
 
-procedure ComposePrimitive_SetFont(Sender: TPrimitivesCompositor; ABmp: TBitmap; var APrimitive: TPrimitiveRec);
+procedure ComposePrimitive_SetFont(Sender: TPrimitivesCompositor; ABmp: TBitmap; var APrimitive: TPrimitiveRec; AHighContrast: TColor = -1);
 begin
-  ABmp.Canvas.Font.Color := HexToInt(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetFont.ForegroundColor));
-  ABmp.Canvas.Brush.Color := HexToInt(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetFont.BackgroundColor));
+  if AHighContrast <> -1 then
+  begin
+    ABmp.Canvas.Font.Color := AHighContrast;
+    //ABmp.Canvas.Brush.Color    Do not change Brush.Color! It might already be set by ComposePrimitive_SetBrush
+  end
+  else
+  begin
+    ABmp.Canvas.Font.Color := HexToInt(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetFont.ForegroundColor));
+    ABmp.Canvas.Brush.Color := HexToInt(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetFont.BackgroundColor));
+  end;
+
   ABmp.Canvas.Font.Name := Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetFont.FontName);
   ABmp.Canvas.Font.Size := APrimitive.ClkSetFont.FontSize;
   ABmp.Canvas.Font.Bold := APrimitive.ClkSetFont.Bold;
@@ -107,7 +124,7 @@ begin
 end;
 
 
-procedure ComposePrimitive_Image(Sender: TPrimitivesCompositor; ABmp: TBitmap; var APrimitive: TPrimitiveRec);
+procedure ComposePrimitive_Image(Sender: TPrimitivesCompositor; ABmp: TBitmap; var APrimitive: TPrimitiveRec; AHighContrast: TColor = -1);
 var
   SrcBmp: TBitmap;
   SrcBitmapFnm: string;
@@ -138,7 +155,7 @@ begin
 end;
 
 
-procedure ComposePrimitive_Line(Sender: TPrimitivesCompositor; ABmp: TBitmap; var APrimitive: TPrimitiveRec);
+procedure ComposePrimitive_Line(Sender: TPrimitivesCompositor; ABmp: TBitmap; var APrimitive: TPrimitiveRec; AHighContrast: TColor = -1);
 var
   x1, y1, x2, y2: Integer;
   EvalShowEndpointPixel: string;
@@ -169,7 +186,7 @@ begin
 end;
 
 
-procedure ComposePrimitive_Rect(Sender: TPrimitivesCompositor; ABmp: TBitmap; var APrimitive: TPrimitiveRec);
+procedure ComposePrimitive_Rect(Sender: TPrimitivesCompositor; ABmp: TBitmap; var APrimitive: TPrimitiveRec; AHighContrast: TColor = -1);
 var
   x1, y1, x2, y2: Integer;
   EvalExtendToEndpointCorner: string;
@@ -200,7 +217,7 @@ begin
 end;
 
 
-procedure ComposePrimitive_GradientFill(Sender: TPrimitivesCompositor; ABmp: TBitmap; var APrimitive: TPrimitiveRec);
+procedure ComposePrimitive_GradientFill(Sender: TPrimitivesCompositor; ABmp: TBitmap; var APrimitive: TPrimitiveRec; AHighContrast: TColor = -1);
 var
   TempRect: TRect;
   StartColor, StopColor: TColor;
@@ -210,15 +227,25 @@ begin
   TempRect.Top := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkGradientFill.Y1), 20);
   TempRect.Right := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkGradientFill.X2), 30);
   TempRect.Bottom := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkGradientFill.Y2), 40);
-  StartColor := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkGradientFill.StartColor), clLime);
-  StopColor := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkGradientFill.StopColor), clYellow);
+
+  if AHighContrast <> -1 then
+  begin
+    StartColor := (StartColor xor AHighContrast) and $00FFFFFF; //something faster than working on individual R, G, B, channels
+    StopColor := (StopColor xor AHighContrast) and $00FFFFFF; //something faster than working on individual R, G, B, channels
+  end
+  else
+  begin
+    StartColor := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkGradientFill.StartColor), clLime);
+    StopColor := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkGradientFill.StopColor), clYellow);
+  end;
+
   GradientDirection := TGradientDirection(Ord(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkGradientFill.Direction) = '1'));
 
   ABmp.Canvas.GradientFill(TempRect, StartColor, StopColor, GradientDirection);
 end;
 
 
-procedure ComposePrimitive_Text(Sender: TPrimitivesCompositor; ABmp: TBitmap; var APrimitive: TPrimitiveRec);
+procedure ComposePrimitive_Text(Sender: TPrimitivesCompositor; ABmp: TBitmap; var APrimitive: TPrimitiveRec; AHighContrast: TColor = -1);
 var
   X, Y: Integer;
   TempText: string;
@@ -260,10 +287,10 @@ end;
 
 
 type
-  TComposePrimitivesProc = procedure(Sender: TPrimitivesCompositor; ABmp: TBitmap; var APrimitive: TPrimitiveRec);
+  TComposePrimitivesProc = procedure(Sender: TPrimitivesCompositor; ABmp: TBitmap; var APrimitive: TPrimitiveRec; AHighContrast: TColor = -1);
 
 
-procedure TPrimitivesCompositor.ComposePrimitives(ABmp: TBitmap; AOrderIndex: Integer; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var APrimitiveSettings: TPrimitiveSettings);
+procedure TPrimitivesCompositor.ComposePrimitives(ABmp: TBitmap; AOrderIndex: Integer; AUseHighContrastColors: Boolean; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var APrimitiveSettings: TPrimitiveSettings);
 const
   CComposePrimitives: array[0..CPrimitiveTypeCount - 1] of TComposePrimitivesProc = (
     @ComposePrimitive_SetPen,
@@ -279,6 +306,8 @@ const
 
 var
   i, NewIndex: Integer;
+  HighContrastColors: array of TColor;
+  R, G, B: Byte;
 begin
   ABmp.PixelFormat := pf24bit;
   ABmp.Transparent := False;
@@ -303,13 +332,30 @@ begin
   ABmp.Canvas.Pen.Color := clWhite;
   ABmp.Canvas.Brush.Color := clWhite;
 
+  SetLength(HighContrastColors, Length(APrimitives));
+  R := 32 + 32;
+  G := 128 + 32;
+  B := (224 + 32) and $FF;
+
+  for i := 0 to Length(HighContrastColors) - 1 do
+  begin
+    HighContrastColors[i] := RGBToColor(R, G, B);
+    Inc(R, 32 + 7);
+    Inc(G, 32 + 7);
+    Inc(B, 32 + 7);
+  end;
+
   case APrimitiveSettings.CompositorDirection of
     cdTopBot:
     begin
       for i := 0 to Length(APrimitives) - 1 do
       begin
         NewIndex := AOrders[AOrderIndex].Items[i];
-        CComposePrimitives[APrimitives[NewIndex].PrimitiveType](Self, ABmp, APrimitives[NewIndex]);
+
+        if AUseHighContrastColors then
+          CComposePrimitives[APrimitives[NewIndex].PrimitiveType](Self, ABmp, APrimitives[NewIndex], HighContrastColors[i])
+        else
+          CComposePrimitives[APrimitives[NewIndex].PrimitiveType](Self, ABmp, APrimitives[NewIndex], -1);
       end;
     end;
 
@@ -318,7 +364,11 @@ begin
       for i := Length(APrimitives) - 1 downto 0 do
       begin
         NewIndex := AOrders[AOrderIndex].Items[i];
-        CComposePrimitives[APrimitives[NewIndex].PrimitiveType](Self, ABmp, APrimitives[NewIndex]);
+
+        if AUseHighContrastColors then
+          CComposePrimitives[APrimitives[NewIndex].PrimitiveType](Self, ABmp, APrimitives[NewIndex], HighContrastColors[i])
+        else
+          CComposePrimitives[APrimitives[NewIndex].PrimitiveType](Self, ABmp, APrimitives[NewIndex], -1);
       end;
     end;
   end;

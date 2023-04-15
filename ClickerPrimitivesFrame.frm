@@ -142,6 +142,15 @@ object frClickerPrimitives: TfrClickerPrimitives
       ParentFont = False
       Visible = False
     end
+    object chkHighContrast: TCheckBox
+      Left = 24
+      Height = 19
+      Top = -1
+      Width = 92
+      Caption = 'High contrast'
+      OnChange = chkHighContrastChange
+      TabOrder = 1
+    end
   end
   object tmrReloadOIContent: TTimer
     Enabled = False

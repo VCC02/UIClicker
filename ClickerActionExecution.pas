@@ -1335,7 +1335,7 @@ begin
                       Timeout := AActionOptions.ActionTimeout;
 
                     //no need to clear the bitmap, it is already implemented in ComposePrimitives
-                    PrimitivesCompositor.ComposePrimitives(FindControlInputData.BitmapToSearchFor, k, TempPrimitives, TempOrders, TempPrimitiveSettings);
+                    PrimitivesCompositor.ComposePrimitives(FindControlInputData.BitmapToSearchFor, k, False, TempPrimitives, TempOrders, TempPrimitiveSettings);
 
                     if FindControlOnScreen(AFindControlOptions.MatchBitmapAlgorithm, AFindControlOptions.MatchBitmapAlgorithmSettings, FindControlInputData, InitialTickCount, Timeout, StopAllActionsOnDemandAddr, ResultedControl, DoOnGetGridDrawingOption) then
                     begin

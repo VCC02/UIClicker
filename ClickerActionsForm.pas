@@ -274,6 +274,8 @@ type
     function HandleOnPictureOpenDialogExecute: Boolean;
     function HandleOnGetPictureOpenDialogFileName: string;
 
+    function HandleOnGetGridDrawingOption: TDisplayGridLineOption;
+
     procedure CreateRemainingUIComponents;
     function GetClickerActionsArrFrameByStackLevel(AStackLevel: Integer): TfrClickerActionsArr;
 
@@ -776,6 +778,8 @@ begin
   frClickerActionsArrMain.OnPictureOpenDialogExecute := HandleOnPictureOpenDialogExecute;
   frClickerActionsArrMain.OnGetPictureOpenDialogFileName := HandleOnGetPictureOpenDialogFileName;
 
+  frClickerActionsArrMain.OnGetGridDrawingOption := HandleOnGetGridDrawingOption;
+
   frClickerActionsArrExperiment1.frClickerActions.PasteDebugValuesListFromMainExecutionList1.OnClick := frClickerActionsArrExperiment1PasteDebugValuesListFromMainExecutionList1Click;
   frClickerActionsArrExperiment2.frClickerActions.PasteDebugValuesListFromMainExecutionList1.OnClick := frClickerActionsArrExperiment2PasteDebugValuesListFromMainExecutionList1Click;
   frClickerActionsArrExperiment1.OnCopyControlTextAndClassFromMainWindow := HandleOnCopyControlTextAndClassFromMainWindow;
@@ -829,6 +833,9 @@ begin
   frClickerActionsArrExperiment2.OnPictureOpenDialogExecute := HandleOnPictureOpenDialogExecute;
   frClickerActionsArrExperiment1.OnGetPictureOpenDialogFileName := HandleOnGetPictureOpenDialogFileName;
   frClickerActionsArrExperiment2.OnGetPictureOpenDialogFileName := HandleOnGetPictureOpenDialogFileName;
+
+  frClickerActionsArrExperiment1.OnGetGridDrawingOption := HandleOnGetGridDrawingOption;
+  frClickerActionsArrExperiment2.OnGetGridDrawingOption := HandleOnGetGridDrawingOption;
 
   tmrStartup.Enabled := True;
 end;
@@ -1298,6 +1305,8 @@ begin
         NewFrame.OnSetPictureSetOpenDialogMultiSelect := HandleOnSetPictureSetOpenDialogMultiSelect;
         NewFrame.OnPictureOpenDialogExecute := HandleOnPictureOpenDialogExecute;
         NewFrame.OnGetPictureOpenDialogFileName := HandleOnGetPictureOpenDialogFileName;
+
+        NewFrame.OnGetGridDrawingOption := HandleOnGetGridDrawingOption;
 
         if FAutoSwitchToExecutingTab or (FAutoEnableSwitchingTabsOnDebugging and IsDebugging) then
         begin
@@ -3001,6 +3010,18 @@ end;
 function TfrmClickerActions.HandleOnGetPictureOpenDialogFileName: string;
 begin
   Result := DoOnGetPictureOpenDialogFileName;
+end;
+
+
+function TfrmClickerActions.HandleOnGetGridDrawingOption: TDisplayGridLineOption;
+var
+  SelectedOption: Integer;
+begin
+  SelectedOption := cmbImgPreviewGridType.ItemIndex;
+  if SelectedOption < 0 then
+    SelectedOption := 0;
+
+  Result := TDisplayGridLineOption(SelectedOption);
 end;
 
 end.

@@ -119,6 +119,7 @@ type
     N100001: TMenuItem;
     N01: TMenuItem;
     N300001: TMenuItem;
+    tmrDrawZoom: TTimer;
     tmrReloadOIContent: TTimer;
     AddCustomVarRow1: TMenuItem;
     RemoveCustomVarRow1: TMenuItem;
@@ -157,7 +158,6 @@ type
     RemoveVariable1: TMenuItem;
     procedure chkWaitForControlToGoAwayChange(Sender: TObject);
     procedure FrameResize(Sender: TObject);
-
     procedure lbeFindCachedControlLeftChange(Sender: TObject);
     procedure lbeFindCachedControlTopChange(Sender: TObject);
     procedure MenuItem_SetFromControlLeftAndTopClick(Sender: TObject);
@@ -173,12 +173,15 @@ type
     procedure scrboxDebugBmpMouseWheel(Sender: TObject; Shift: TShiftState;
       WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
     procedure spdbtnDisplaySearchAreaDbgImgMenuClick(Sender: TObject);
+    procedure tmrDrawZoomTimer(Sender: TObject);
     procedure tmrReloadOIContentTimer(Sender: TObject);
 
     procedure CopyDebugValuesListToClipboard1Click(Sender: TObject);
     procedure PasteDebugValuesListFromClipboard1Click(Sender: TObject);
     procedure PasteDebugValuesListFromMainExecutionList1Click(Sender: TObject);
 
+    procedure imgDebugBmpMouseEnter(Sender: TObject);
+    procedure imgDebugBmpMouseLeave(Sender: TObject);
     procedure imgDebugBmpMouseMove(Sender: TObject; Shift: TShiftState; X,
       Y: Integer);
     procedure chkShowDebugGridClick(Sender: TObject);
@@ -257,6 +260,7 @@ type
     FSetVarContent_Values: TStringList;
     FSetVarContent_EvalBefore: TStringList;
     FShowDeprecatedControls: Boolean;
+    FCurrentMousePosOnPreviewImg: TPoint;
 
     FSearchAreaScrBox: TScrollBox;
     FSearchAreaSearchedBmpDbgImg: TImage;
@@ -519,7 +523,7 @@ implementation
 
 
 uses
-  Clipbrd, ClickerActionValues, ClickerOIUtils;
+  Clipbrd, ClickerActionValues, ClickerOIUtils, ClickerZoomPreviewForm;
 
 
 function ActionStatusStrToActionStatus(AString: string): TActionStatus;
@@ -743,12 +747,45 @@ begin
 end;
 
 
+procedure TfrClickerActions.tmrDrawZoomTimer(Sender: TObject);
+var
+  tp: TPoint;
+begin
+  tmrDrawZoom.Enabled := false;
+  GetCursorPos(tp);
+
+  if Assigned(imgDebugBmp.Picture.Bitmap) then
+    SetZoomContent(imgDebugBmp.Picture.Bitmap, FCurrentMousePosOnPreviewImg.X, FCurrentMousePosOnPreviewImg.Y, tp.X + 50, tp.Y + 50);
+end;
+
+
+procedure TfrClickerActions.imgDebugBmpMouseEnter(Sender: TObject);
+var
+  tp: TPoint;
+begin
+  imgDebugBmp.ShowHint := False;
+  GetCursorPos(tp);
+  ShowZoom(tp.X + 50, tp.Y + 50);
+end;
+
+
+procedure TfrClickerActions.imgDebugBmpMouseLeave(Sender: TObject);
+begin
+  imgDebugBmp.ShowHint := True;
+  HideZoom;
+end;
+
+
 procedure TfrClickerActions.imgDebugBmpMouseMove(Sender: TObject;
   Shift: TShiftState; X, Y: Integer);
 begin
   lblDebugBitmapXMouseOffset.Caption := 'mx: ' + IntToStr(X);
   lblDebugBitmapYMouseOffset.Caption := 'my: ' + IntToStr(Y);
   SetLabelsFromMouseOverExecDbgImgPixelColor(imgDebugBmp.Canvas.Pixels[X, Y]);
+
+  FCurrentMousePosOnPreviewImg.X := X;
+  FCurrentMousePosOnPreviewImg.Y := Y;
+  tmrDrawZoom.Enabled := True;
 end;
 
 
@@ -2189,6 +2226,7 @@ var
   ListOfFiles_Modified: TStringList;
 begin
   //DoOnSetOpenDialogMultiSelect; //do not call multiselect, as this is a single file save
+  DoOnSetSaveDialogFileName('');
   if not DoOnSaveDialogExecute(CPrimitivesDialogFilter) then
     Exit;
 
@@ -2446,11 +2484,11 @@ begin
       PmtvFnm := StringReplace(PmtvFnm, '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
       PmtvFnm := EvaluateReplacements(PmtvFnm);
 
-      DoOnSetOpenDialogInitialDir(ExtractFileDir(PmtvFnm));
-      if not DoOnOpenDialogExecute(CPrimitivesDialogFilter) then
+      DoOnSetSaveDialogInitialDir(ExtractFileDir(PmtvFnm));
+      if not DoOnSaveDialogExecute(CPrimitivesDialogFilter) then
         Exit;
 
-      ListOfFiles.Strings[MenuData^.PropertyItemIndex] := DoOnGetOpenDialogFileName;  //Let the user replace back with $AppDir$ if that's the case. The dialog doesn't know about replacements.
+      ListOfFiles.Strings[MenuData^.PropertyItemIndex] := DoOnGetSaveDialogFileName;  //Let the user replace back with $AppDir$ if that's the case. The dialog doesn't know about replacements.
 
       frClickerFindControl.frClickerPrimitives.SaveFile(ListOfFiles.Strings[MenuData^.PropertyItemIndex]);
       FEditingAction^.FindControlOptions.MatchPrimitiveFiles := ListOfFiles.Text;
@@ -2461,7 +2499,7 @@ begin
       FEditingAction^.FindControlOptions.MatchPrimitiveFiles_Modified := ListOfFiles_Modified.Text;
 
       FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex, True);
-      //TriggerOnControlsModified;  //commented, because the template is not modified by this action
+      TriggerOnControlsModified;
     finally
       ListOfFiles.Free;
       ListOfFiles_Modified.Free;

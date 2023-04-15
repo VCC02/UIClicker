@@ -298,6 +298,8 @@ type
     FOnPictureOpenDialogExecute: TOnPictureOpenDialogExecute;
     FOnGetPictureOpenDialogFileName: TOnGetPictureOpenDialogFileName;
 
+    FOnGetGridDrawingOption: TOnGetGridDrawingOption;
+
     vstActions: TVirtualStringTree;
     FPalette: TfrClickerActionsPalette;
     FLoggingFIFO: TPollingFIFO;
@@ -404,6 +406,8 @@ type
     procedure DoOnSetPictureOpenDialogInitialDir(AInitialDir: string);
     function DoOnPictureOpenDialogExecute: Boolean;
     function DoOnGetPictureOpenDialogFileName: string;
+
+    function DoOnGetGridDrawingOption: TDisplayGridLineOption;
 
     function PlayActionByNode(Node: PVirtualNode): Boolean;
     procedure PlaySelected;
@@ -523,6 +527,8 @@ type
     property OnSetPictureOpenDialogInitialDir: TOnSetPictureOpenDialogInitialDir write FOnSetPictureOpenDialogInitialDir;
     property OnPictureOpenDialogExecute: TOnPictureOpenDialogExecute write FOnPictureOpenDialogExecute;
     property OnGetPictureOpenDialogFileName: TOnGetPictureOpenDialogFileName write FOnGetPictureOpenDialogFileName;
+
+    property OnGetGridDrawingOption: TOnGetGridDrawingOption write FOnGetGridDrawingOption;
   end;
 
 
@@ -730,6 +736,8 @@ begin
   FOnPictureOpenDialogExecute := nil;
   FOnGetPictureOpenDialogFileName := nil;
 
+  FOnGetGridDrawingOption := nil;
+
   FPalette := nil;
 
   FExecutesRemotely := False;
@@ -812,6 +820,12 @@ end;
 
 function TfrClickerActionsArr.HandleOnCallTemplate(Sender: TObject; AFileNameToCall: string; ListOfVariables: TStrings; DebugBitmap: TBitmap; DebugGridImage: TImage; IsDebugging, AShouldStopAtBreakPoint: Boolean; AStackLevel: Integer; AExecutesRemotely: Boolean): Boolean;
 begin
+  if not Assigned(OnCallTemplate) then
+  begin
+    AddToLog('OnCallTemplate not assigned. Can''t call templates. Is this an experimental tab?');
+    raise Exception.Create('OnCallTemplate not assigned. Stopping execution...');
+  end;
+
   Result := OnCallTemplate(Sender, AFileNameToCall, ListOfVariables, DebugBitmap, DebugGridImage, IsDebugging, AShouldStopAtBreakPoint, AStackLevel, AExecutesRemotely);
 end;
 
@@ -871,7 +885,7 @@ end;
 
 function TfrClickerActionsArr.HandleOnGetGridDrawingOption: TDisplayGridLineOption;
 begin
-  Result := loDot; //hardcoded for now
+  Result := DoOnGetGridDrawingOption;
 end;
 
 
@@ -1586,6 +1600,15 @@ begin
     raise Exception.Create('OnGetPictureOpenDialogFileName not assigned.')
   else
     Result := FOnGetPictureOpenDialogFileName;
+end;
+
+
+function TfrClickerActionsArr.DoOnGetGridDrawingOption: TDisplayGridLineOption;
+begin
+  if not Assigned(FOnGetGridDrawingOption) then
+    raise Exception.Create('OnGetGridDrawingOption not assigned.')
+  else
+    Result := FOnGetGridDrawingOption;
 end;
 
 

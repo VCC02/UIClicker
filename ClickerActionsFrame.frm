@@ -267,6 +267,8 @@ object frClickerActions: TfrClickerActions
           Top = 0
           Width = 2
           AutoSize = True
+          OnMouseEnter = imgDebugBmpMouseEnter
+          OnMouseLeave = imgDebugBmpMouseLeave
           OnMouseMove = imgDebugBmpMouseMove
           Picture.Data = {
             07544269746D617046000000424D460000000000000036000000280000000200
@@ -1276,5 +1278,12 @@ object frClickerActions: TfrClickerActions
       BE7E9C06C7A76213F17C8D74ECBFC1D38C9FA67E7C96FB4D34B87708722CD13B
       4D22961FFCB5926CFD246393AD75217942E30F60983E75
     }
+  end
+  object tmrDrawZoom: TTimer
+    Enabled = False
+    Interval = 50
+    OnTimer = tmrDrawZoomTimer
+    Left = 408
+    Top = 224
   end
 end

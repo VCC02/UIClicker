@@ -41,6 +41,7 @@ type
   { TfrClickerPrimitives }
 
   TfrClickerPrimitives = class(TFrame)
+    chkHighContrast: TCheckBox;
     imglstPrimitives: TImageList;
     imgFontColorBuffer: TImage;
     lblModified: TLabel;
@@ -57,6 +58,7 @@ type
     pmPreview: TPopupMenu;
     tmrDrawZoom: TTimer;
     tmrReloadOIContent: TTimer;
+    procedure chkHighContrastChange(Sender: TObject);
     procedure MenuItem_CopyToClipboardClick(Sender: TObject);
     procedure MenuItem_SavePrimitivesFileClick(Sender: TObject);
     procedure tmrDrawZoomTimer(Sender: TObject);
@@ -283,6 +285,7 @@ begin
   FCurrentMousePosOnPreviewImg.Y := Screen.Height - 10;
 
   lblModified.Left := lblModified.Left + 20;
+  chkHighContrast.Left := lblModified.Width + lblModified.Left + 20;
 
   FOIEditorMenu := TPopupMenu.Create(Self);
 
@@ -396,16 +399,18 @@ var
   i: Integer;
   PreviewImage: TImage;
   PmtvCompositor: TPrimitivesCompositor;
+  UsingHighContrast: Boolean;
 begin
   PmtvCompositor := TPrimitivesCompositor.Create;
   try
     PmtvCompositor.OnEvaluateReplacementsFunc := HandleOnEvaluateReplacementsFunc;
     PmtvCompositor.OnLoadBitmap := HandleOnLoadBitmap;
 
+    UsingHighContrast := chkHighContrast.Checked;
     for i := 0 to Length(FOrders) - 1 do
     begin
       PreviewImage := TImage(TScrollBox(PageControlPreview.Pages[i].Tag).Tag);
-      PmtvCompositor.ComposePrimitives(PreviewImage.Picture.Bitmap, i, FPrimitives, FOrders, FPrimitiveSettings);
+      PmtvCompositor.ComposePrimitives(PreviewImage.Picture.Bitmap, i, UsingHighContrast, FPrimitives, FOrders, FPrimitiveSettings);
     end;
   finally
     PmtvCompositor.Free;
@@ -598,7 +603,7 @@ begin
     PmtvCompositor.OnEvaluateReplacementsFunc := HandleOnEvaluateReplacementsFunc;
     PmtvCompositor.OnLoadBitmap := HandleOnLoadBitmap;
 
-    PmtvCompositor.ComposePrimitives(ABmp, AOrderIndex, FPrimitives, FOrders, FPrimitiveSettings);
+    PmtvCompositor.ComposePrimitives(ABmp, AOrderIndex, chkHighContrast.Checked, FPrimitives, FOrders, FPrimitiveSettings);
   finally
     PmtvCompositor.Free;
   end;
@@ -671,7 +676,7 @@ begin
 
       Bmp.Width := PmtvCompositor.GetMaxX(Bmp.Canvas, FPrimitives) + 1;
       Bmp.Height := PmtvCompositor.GetMaxY(Bmp.Canvas, FPrimitives) + 1;
-      PmtvCompositor.ComposePrimitives(Bmp, Idx, FPrimitives, FOrders, FPrimitiveSettings);
+      PmtvCompositor.ComposePrimitives(Bmp, Idx, chkHighContrast.Checked, FPrimitives, FOrders, FPrimitiveSettings);
 
       Clipboard.Assign(Bmp);
     finally
@@ -680,6 +685,12 @@ begin
   finally
     PmtvCompositor.Free;
   end;
+end;
+
+
+procedure TfrClickerPrimitives.chkHighContrastChange(Sender: TObject);
+begin
+  RepaintAllCompositions;
 end;
 
 
