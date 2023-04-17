@@ -24,7 +24,7 @@ import sys
 import ctypes
 import ctypes.wintypes
 
-from ctypes.wintypes import LPCSTR, LPCWSTR, BYTE, BOOLEAN, LONG, LARGE_INTEGER
+from ctypes.wintypes import LPCSTR, LPCWSTR, BYTE, BOOLEAN, WORD, LONG, LARGE_INTEGER
 from ctypes import Structure, POINTER
 from enum import Enum
 
@@ -318,7 +318,7 @@ PCallTemplateOptions = ctypes.POINTER(TCallTemplateOptions)
 
 def GetDefaultCallTemplateOptions():
     CallTemplateOptions = TCallTemplateOptions()
-    CallTemplateOptions.TemplateFileName = 'PathToTemplate.clktmpl'
+    CallTemplateOptions.TemplateFileName = '' #'PathToTemplate.clktmpl'
     CallTemplateOptions.ListOfCustomVarsAndValues = ''  #these vars will be added to the existing list of vars
     CallTemplateOptions.EvaluateBeforeCalling = False
 

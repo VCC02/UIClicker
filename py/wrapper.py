@@ -23,6 +23,7 @@
 import sys
 import ctypes
 import ctypes.wintypes  #without importing wintypes, python crashes when calling functions like TestConnectionToServerFunc
+import os
 from ctypes.wintypes import LPCSTR, LPCWSTR, BYTE, BOOLEAN, LONG
 from UIClickerTypes import *
 from UIClickerTypes import TClickOptions
@@ -43,7 +44,7 @@ class TDllFunctionAddresses:
         InitClickerClientParams = ()
         InitClickerClientFuncRes = InitClickerClientProto(("InitClickerClient", self.DllHandle), InitClickerClientParams)
         return InitClickerClientFuncRes
-
+ 
 
     def GetDoneClickerClient(self):
         DoneClickerClientProto = ctypes.CFUNCTYPE(None)
@@ -72,8 +73,29 @@ class TDllFunctionAddresses:
         TestConnectionToServerParams = (1, "AResponse", 0),
         TestConnectionToServerFuncRes = TestConnectionToServerProto(("TestConnectionToServer", self.DllHandle), TestConnectionToServerParams)
         return TestConnectionToServerFuncRes
-    
-    
+
+
+    def GetSetTemplatesDir(self):
+        SetTemplatesDirProto = ctypes.CFUNCTYPE(None, LPCWSTR)
+        SetTemplatesDirParams = (1, "AAddress", 0),
+        SetTemplatesDirFuncRes = SetTemplatesDirProto(("SetTemplatesDir", self.DllHandle), SetTemplatesDirParams)
+        return SetTemplatesDirFuncRes
+
+
+    def GetCreateLoggingWindow(self):
+        CreateLoggingWindowProto = ctypes.CFUNCTYPE(None)
+        CreateLoggingWindowParams = ()
+        CreateLoggingWindowFuncRes = CreateLoggingWindowProto(("CreateLoggingWindow", self.DllHandle), CreateLoggingWindowParams)
+        return CreateLoggingWindowFuncRes
+
+
+    def GetDestroyLoggingWindow(self):
+        DestroyLoggingWindowProto = ctypes.CFUNCTYPE(None)
+        DestroyLoggingWindowParams = ()
+        DestroyLoggingWindowFuncRes = DestroyLoggingWindowProto(("DestroyLoggingWindow", self.DllHandle), DestroyLoggingWindowParams)
+        return DestroyLoggingWindowFuncRes
+
+
     def GetCreateNewTemplate(self):
         CreateNewTemplateProto = ctypes.CFUNCTYPE(LONG, LPCWSTR)
         CreateNewTemplateParams = (1, "ATemplateFileName", 0),
@@ -252,6 +274,9 @@ class TDllFunctions:
         self.SetServerAddressFunc = self.Addresses.GetSetServerAddress()
         self.GetServerAddressFunc = self.Addresses.GetGetServerAddress()
         self.TestConnectionToServerFunc = self.Addresses.GetTestConnectionToServerAddress()
+        self.SetTemplatesDirFunc = self.Addresses.GetSetTemplatesDir()
+        self.CreateLoggingWindowFunc = self.Addresses.GetCreateLoggingWindow()
+        self.DestroyLoggingWindowFunc = self.Addresses.GetDestroyLoggingWindow()
         self.CreateNewTemplateFunc = self.Addresses.GetCreateNewTemplate()
         
         self.AddClickActionToTemplateFunc = self.Addresses.GetAddClickActionToTemplate()
@@ -331,6 +356,31 @@ class TDllFunctions:
             return 'AV on TestConnectionToServer'
 
 
+    def SetTemplatesDir(self, ADir):
+        try:
+            self.SetTemplatesDirFunc(ADir)  #sending PWideChar, and converting to ANSI at dll
+            return 'OK'
+        except:
+            return 'AV on SetTemplatesDir'
+
+
+    def CreateLoggingWindow(self):
+        try:
+            self.CreateLoggingWindowFunc()
+            return 'OK'
+        except:
+            return 'AV on CreateLoggingWindow'
+
+
+    def DestroyLoggingWindow(self):
+        try:
+            self.DestroyLoggingWindowFunc()
+            return 'OK'
+        except:
+            return 'AV on DestroyLoggingWindow'
+
+
+
     def CreateNewTemplate(self, ATemplateFileName):
         try:
             CreateInMemFileResult = self.CreateNewTemplateFunc(ATemplateFileName)  #sending PWideChar, and converting to ANSI at dll
@@ -359,16 +409,16 @@ class TDllFunctions:
         try:
             AddFindControlActionToTemplateResult = self.AddFindControlActionToTemplateFunc(ATemplateFileName, AActionName, AActionTimeout, AActionEnabled, AActionCondition, AFindControlOptions)  #sending PWideChar, and converting to ANSI at dll
             return AddFindControlActionToTemplateResult
-        except:
-            return 'AV on AddFindControlActionToTemplate'
+        except Exception as e:
+            return 'AV on AddFindControlActionToTemplate. {}'.format(e)
             
             
     def AddFindSubControlActionToTemplate(self, ATemplateFileName, AActionName, AActionTimeout, AActionEnabled, AActionCondition, AFindControlOptions):
         try:
             AddFindSubControlActionToTemplateResult = self.AddFindSubControlActionToTemplateFunc(ATemplateFileName, AActionName, AActionTimeout, AActionEnabled, AActionCondition, AFindControlOptions)  #sending PWideChar, and converting to ANSI at dll
             return AddFindSubControlActionToTemplateResult
-        except:
-            return 'AV on AddFindSubControlActionToTemplate'
+        except Exception as e:
+            return 'AV on AddFindSubControlActionToTemplate. {}'.format(e)
             
             
     def AddSetControlTextActionToTemplate(self, ATemplateFileName, AActionName, AActionTimeout, AActionEnabled, AActionCondition, ASetControlTextOptions):
@@ -415,8 +465,8 @@ class TDllFunctions:
         try:
             AddFontProfileToFindSubControlActionResult = self.AddFontProfileToFindSubControlActionFunc(ATemplateFileName, AActionIndex, AFindControlMatchBitmapText)  #sending PWideChar, and converting to ANSI at dll
             return AddFontProfileToFindSubControlActionResult
-        except:
-            return 'AV on AddFontProfileToFindSubControlAction'
+        except Exception as e:
+            return 'AV on AddFontProfileToFindSubControlAction. {}'.format(e)
 
     
     def PrepareFilesInServer(self, ATemplateFileName):
@@ -545,20 +595,31 @@ DllFuncs = TDllFunctions()
 
 print("InitClickerClient: ", DllFuncs.InitClickerClient())
 try:
+    print("CreateLoggingWindow: ", DllFuncs.CreateLoggingWindow())
     print("TestConnectionToServer: ", DllFuncs.TestConnectionToServer())
     
-    #print("GetServerAddress: ", DllFuncs.GetServerAddress())
+    print("GetServerAddress: ", DllFuncs.GetServerAddress())
     
-    # print("SetServerAddress: ", DllFuncs.SetServerAddress('http://192.168.3.102:5444/'))
-    # print("GetServerAddress: ", DllFuncs.GetServerAddress())
-    # print("TestConnectionToServer after setting wrong address: ", DllFuncs.TestConnectionToServer())
+    print("SetServerAddress: ", DllFuncs.SetServerAddress('http://192.168.3.102:5444/'))
+    print("GetServerAddress: ", DllFuncs.GetServerAddress())
+    print("TestConnectionToServer after setting wrong address: ", DllFuncs.TestConnectionToServer())
     
-    # print("SetServerAddress: ", DllFuncs.SetServerAddress('http://127.0.0.1:5444/'))
-    # print("GetServerAddress: ", DllFuncs.GetServerAddress())
-    # print("TestConnectionToServer after setting a working address: ", DllFuncs.TestConnectionToServer())
+    print("SetServerAddress: ", DllFuncs.SetServerAddress('http://127.0.0.1:5444/'))
+    print("GetServerAddress: ", DllFuncs.GetServerAddress())
+    print("TestConnectionToServer after setting a working address: ", DllFuncs.TestConnectionToServer())
+    
+    print("SetTemplatesDir: ", DllFuncs.SetTemplatesDir(os.getcwd())) #required for sending files
     
     # #print("ClearClientInMemFS: ", DllFuncs.ClearClientInMemFS())  #For debugging only. The client should work without this call.
     # #print("ClearServerInMemFS: ", DllFuncs.ClearServerInMemFS())  #For debugging only. The server should work without this call.
+    
+    ###########
+    print("AddListOfAccessibleDirsToFileProviderClient: ", DllFuncs.AddListOfAccessibleDirsToFileProviderClient("bmps\\"))
+    print("AddListOfAccessibleFileExtensionsToFileProviderClient: ", DllFuncs.AddListOfAccessibleFileExtensionsToFileProviderClient(".bmp\r\n.clktmpl\r\n.pmtv"))
+    print("SetFileProviderClientConnectTimeout: ", DllFuncs.SetFileProviderClientConnectTimeout(3000))
+
+    print("StartFileProviderClientThread: ", DllFuncs.StartFileProviderClientThread())
+    ###########
     
     print("CreateNewTemplate: ", DllFuncs.CreateNewTemplate('VerifyClicking.clktmpl')) #creates a new template in dll's in-mem file system
     print("CreateNewTemplate: ", DllFuncs.CreateNewTemplate('VerifyClicking.clktmpl')) #the second call returns 1, because the file already exists
@@ -588,6 +649,8 @@ try:
 
     MatchBitmapText = GetDefaultMatchBitmapText()
     print("AddFontProfileToFindSubControlAction: ", DllFuncs.AddFontProfileToFindSubControlAction('VerifyClicking.clktmpl', 2, ctypes.byref(MatchBitmapText)))
+    #-2 means the action index is out of range (negative or greater than the number of actions)
+    #it may happen, if the above AddFindControlActionToTemplate calls fail, so there are no actions
     
     MatchBitmapText.ForegroundColor = 'FF8800'
     MatchBitmapText.BackgroundColor = '223344'
@@ -619,6 +682,7 @@ try:
     print("AddSetControlTextActionToTemplate: ", DllFuncs.AddSetControlTextActionToTemplate('VerifyClicking.clktmpl', 'Fifth', 0, True, '', ctypes.byref(SetControlTextOptions)))
     
     CallTemplateOptions = GetDefaultCallTemplateOptions()
+    CallTemplateOptions.TemplateFileName = "bmps\\SleepABit.clktmpl"
     print("AddCallTemplateActionToTemplate: ", DllFuncs.AddCallTemplateActionToTemplate('VerifyClicking.clktmpl', 'Sixth', 0, True, '', ctypes.byref(CallTemplateOptions)))
     
     SleepOptions = GetDefaultSleepOptions()
@@ -630,14 +694,6 @@ try:
     WindowOperationsOptions = GetDefaultWindowOperationsOptions()
     print("AddWindowOperationsActionToTemplate: ", DllFuncs.AddWindowOperationsActionToTemplate('VerifyClicking.clktmpl', 'Nineth', 0, True, '', ctypes.byref(WindowOperationsOptions)))
 
-
-    ###########
-    print("AddListOfAccessibleDirsToFileProviderClient: ", DllFuncs.AddListOfAccessibleDirsToFileProviderClient("bmps\\"))
-    print("AddListOfAccessibleFileExtensionsToFileProviderClient: ", DllFuncs.AddListOfAccessibleFileExtensionsToFileProviderClient(".bmp\r\n.clktmpl"))
-    print("SetFileProviderClientConnectTimeout: ", DllFuncs.SetFileProviderClientConnectTimeout(3000))
-
-    print("StartFileProviderClientThread: ", DllFuncs.StartFileProviderClientThread())
-    ###########
 
     print("PrepareFilesInServer: ", DllFuncs.PrepareFilesInServer('VerifyClicking.clktmpl'))
     
@@ -656,6 +712,7 @@ try:
     time.sleep(1)
     print("FileProviderClientThreadDone: ", DllFuncs.FileProviderClientThreadDone())
 finally:
+    print("DestroyLoggingWindow: ", DllFuncs.DestroyLoggingWindow())
     print("DoneClickerClient", DllFuncs.DoneClickerClient())
     print("end of script")
 

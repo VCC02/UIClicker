@@ -31,7 +31,7 @@ library ClickerClient;
 uses
   Interfaces, Windows, SysUtils, Classes, Controls, Forms, ShellAPI, Graphics,
   DllUtils, InMemFileSystem, ClickerActionsClient, ClickerUtils, ClickerTemplates,
-  ClickerFileProviderClient;
+  ClickerFileProviderClient, ClickerClientLoggingForm;
 
 
 var
@@ -79,9 +79,24 @@ type
   PClkExecAppOptionsAPI = ^TClkExecAppOptionsAPI;
 
 
+  TClkFindControlMatchCriteriaAPI = record
+    WillMatchText: Boolean;
+    WillMatchClassName: Boolean;
+    WillMatchBitmapText: Boolean;
+    WillMatchBitmapFiles: Boolean;
+    WillMatchPrimitiveFiles: Boolean;
+
+    SearchForControlMode: LongInt; // TSearchForControlMode; //must be LongInt, for proper alignment
+  end;
+
+  TRectStringAPI = record
+    Left, Top, Right, Bottom: PWideChar;
+    LeftOffset, TopOffset, RightOffset, BottomOffset: PWideChar;
+  end;
+
   TClkFindControlOptionsAPI = record
     DummyField: Integer;    //required for proper alignment (otherwise, there is an AV in Python)
-    MatchCriteria: TClkFindControlMatchCriteria;
+    MatchCriteria: TClkFindControlMatchCriteriaAPI;
     AllowToFail: Boolean;
     MatchText: PWideChar;
     MatchClassName: PWideChar;
@@ -89,9 +104,9 @@ type
     MatchClassNameSeparator: PWideChar;
     MatchBitmapText: Pointer; //TClkFindControlMatchBitmapTextArr;
     MatchBitmapFiles: PWideChar;
-    MatchBitmapAlgorithm: TMatchBitmapAlgorithm;
+    MatchBitmapAlgorithm: TMatchBitmapAlgorithm; //change this to LongInt, in case of AV at python side
     MatchBitmapAlgorithmSettings: TMatchBitmapAlgorithmSettings;
-    InitialRectangle: TRectString;
+    InitialRectangle: TRectStringAPI;
     UseWholeScreen: Boolean;
     ColorError: PWideChar;
     AllowedColorErrorCount: PWideChar;
@@ -171,6 +186,10 @@ type
     FontQualityUsesReplacement: Boolean;
     FontQualityReplacement: PWideChar;
     ProfileName: PWideChar;
+    CropLeft: PWideChar;
+    CropTop: PWideChar;
+    CropRight: PWideChar;
+    CropBottom: PWideChar;
   end;
 
   PClkFindControlMatchBitmapTextAPI = ^TClkFindControlMatchBitmapTextAPI;
@@ -180,8 +199,15 @@ type
     procedure CustomExceptionHandler(Sender: TObject; E: Exception);
   end;
 
+  TFileSenderHandler = class
+    procedure HandleOnLoadMissingFileContent(AFileName: string; AFileContent: TMemoryStream);
+    function HandleOnFileExists(const AFileName: string): Boolean;
+  end;
+
+
 var
   FExHandler: TExHandler;
+  FFileSenderHandler: TFileSenderHandler;
 
 
 procedure TExHandler.CustomExceptionHandler(Sender: TObject; E: Exception);
@@ -270,6 +296,27 @@ begin
 end;
 
 
+procedure TFileSenderHandler.HandleOnLoadMissingFileContent(AFileName: string; AFileContent: TMemoryStream);
+begin
+  AFileContent.LoadFromFile(AFileName);
+end;
+
+
+function TFileSenderHandler.HandleOnFileExists(const AFileName: string): Boolean;
+begin
+  Result := FileExists(AFileName);
+end;
+
+
+procedure AddToLog(AMsg: string);
+begin
+  if frmClickerClientLogging = nil then
+    Exit;
+
+  frmClickerClientLogging.AddToLog(AMsg);
+end;
+
+
 procedure InitClickerClient; cdecl;
 begin
   InMemFS := TInMemFileSystem.Create;
@@ -278,11 +325,18 @@ begin
 
   ExceptProc := @CatchUnhandledException;
   FExHandler := TExHandler.Create;  /////////////////////////// probably, it will have to be freed
+  FFileSenderHandler := TFileSenderHandler.Create;
+
   Application.Initialize;
   Application.OnException := FExHandler.CustomExceptionHandler;
 
   FPollForMissingServerFilesTh := TPollForMissingServerFiles.Create(True);
   FPollForMissingServerFilesTh.RemoteAddress := FRemoteAddress;
+
+  FPollForMissingServerFilesTh.OnLoadMissingFileContent := FFileSenderHandler.HandleOnLoadMissingFileContent;
+  FPollForMissingServerFilesTh.OnFileExists := FFileSenderHandler.HandleOnFileExists;
+
+  AddToLog('Clicker client is initialized. Remote address is set to ' + FRemoteAddress);
 end;
 
 
@@ -291,6 +345,7 @@ begin
   FreeAndNil(InMemFS);
   FreeAndNil(FAllVarReplacements);
   FreeAndNil(FPollForMissingServerFilesTh);
+  FreeAndNil(FFileSenderHandler);
 end;
 
 
@@ -299,7 +354,12 @@ begin
   SetPointedContentToString(@string(PWideChar(AAddress))[1], FRemoteAddress);
 
   if FPollForMissingServerFilesTh <> nil then
+  begin
     FPollForMissingServerFilesTh.RemoteAddress := FRemoteAddress;
+    AddToLog('Setting remote address to ' + FRemoteAddress);
+  end
+  else
+    AddToLog('Can''t set remote address, because the file provider module is not creaeted.');
 end;
 
 
@@ -325,6 +385,47 @@ begin
     on E: Exception do
       Result := SetPointedContentFromString(E.Message, AResponse);
   end;
+end;
+
+
+procedure SetTemplatesDir(ADir: Pointer); cdecl;
+var
+  TempDir: string;
+begin
+  SetPointedContentToString(@string(PWideChar(ADir))[1], TempDir);
+
+  if (TempDir <> '') and (TempDir[Length(TempDir)] = PathDelim) then
+    Delete(TempDir, Length(TempDir) - 1, 1);
+
+  if FPollForMissingServerFilesTh <> nil then
+  begin
+    FPollForMissingServerFilesTh.FullTemplatesDir := TempDir;
+    AddToLog('Setting templates dir to "' + TempDir + '"');
+  end;
+end;
+
+
+procedure CreateLoggingWindow; cdecl;
+begin
+  if frmClickerClientLogging = nil then
+  begin
+    Application.CreateForm(TfrmClickerClientLogging, frmClickerClientLogging);
+    FPollForMissingServerFilesTh.OnLogMissingServerFile := frmClickerClientLogging.HandleOnLogMissingServerFile;
+  end;
+
+  frmClickerClientLogging.Visible := True;
+  frmClickerClientLogging.BringToFront;
+  AddToLog('Clicker client startup...');
+end;
+
+
+procedure DestroyLoggingWindow; cdecl;
+begin
+  if frmClickerClientLogging = nil then
+    Exit;
+
+  frmClickerClientLogging.Close;
+  frmClickerClientLogging := nil;
 end;
 
 
@@ -526,7 +627,7 @@ begin
   TempAction.FindControlOptions.MatchCriteria.WillMatchBitmapText := AFindControlOptions^.MatchCriteria.WillMatchBitmapText;
   TempAction.FindControlOptions.MatchCriteria.WillMatchBitmapFiles := AFindControlOptions^.MatchCriteria.WillMatchBitmapFiles;
   TempAction.FindControlOptions.MatchCriteria.WillMatchPrimitiveFiles := AFindControlOptions^.MatchCriteria.WillMatchPrimitiveFiles;
-  TempAction.FindControlOptions.MatchCriteria.SearchForControlMode := AFindControlOptions^.MatchCriteria.SearchForControlMode;
+  TempAction.FindControlOptions.MatchCriteria.SearchForControlMode := TSearchForControlMode(AFindControlOptions^.MatchCriteria.SearchForControlMode);
 
   TempAction.FindControlOptions.AllowToFail := AFindControlOptions^.AllowToFail;
   SetPointedContentToString(@string(PWideChar(AFindControlOptions^.MatchText))[1], TempAction.FindControlOptions.MatchText);
@@ -535,7 +636,7 @@ begin
   SetPointedContentToString(@string(PWideChar(AFindControlOptions^.MatchClassNameSeparator))[1], TempAction.FindControlOptions.MatchClassNameSeparator);
   SetLength(TempAction.FindControlOptions.MatchBitmapText, 0);
   SetPointedContentToString(@string(PWideChar(AFindControlOptions^.MatchBitmapFiles))[1], TempAction.FindControlOptions.MatchBitmapFiles);
-  TempAction.FindControlOptions.MatchBitmapAlgorithm := AFindControlOptions^.MatchBitmapAlgorithm;
+  TempAction.FindControlOptions.MatchBitmapAlgorithm := TMatchBitmapAlgorithm(AFindControlOptions^.MatchBitmapAlgorithm);
 
   TempAction.FindControlOptions.MatchBitmapAlgorithmSettings := AFindControlOptions^.MatchBitmapAlgorithmSettings;
   SetPointedContentToString(@string(PWideChar(AFindControlOptions^.InitialRectangle.Left))[1], TempAction.FindControlOptions.InitialRectangle.Left);
@@ -867,6 +968,11 @@ begin
   FindControlMatchBitmapText.FontQualityUsesReplacement := AFindControlMatchBitmapText^.FontQualityUsesReplacement;
   SetPointedContentToString(@string(PWideChar(AFindControlMatchBitmapText^.FontQualityReplacement))[1], FindControlMatchBitmapText.FontQualityReplacement);
   SetPointedContentToString(@string(PWideChar(AFindControlMatchBitmapText^.ProfileName))[1], FindControlMatchBitmapText.ProfileName);
+  SetPointedContentToString(@string(PWideChar(AFindControlMatchBitmapText^.CropLeft))[1], FindControlMatchBitmapText.CropLeft);
+  SetPointedContentToString(@string(PWideChar(AFindControlMatchBitmapText^.CropTop))[1], FindControlMatchBitmapText.CropTop);
+  SetPointedContentToString(@string(PWideChar(AFindControlMatchBitmapText^.CropRight))[1], FindControlMatchBitmapText.CropRight);
+  SetPointedContentToString(@string(PWideChar(AFindControlMatchBitmapText^.CropBottom))[1], FindControlMatchBitmapText.CropBottom);
+
 
   Result := AddFontProfileToFindSubControlActionInTemplate(TemplateFileName, AActionIndex, FindControlMatchBitmapText);
 end;
@@ -1106,6 +1212,9 @@ exports
   SetServerAddress,
   GetServerAddress,
   TestConnectionToServer,
+  SetTemplatesDir,
+  CreateLoggingWindow,
+  DestroyLoggingWindow,
 
   CreateNewTemplate,
 
@@ -1138,5 +1247,6 @@ exports
   ClearServerInMemFS;
 begin
   ClientLastError := '';
+  frmClickerClientLogging := nil;
 end.
 
