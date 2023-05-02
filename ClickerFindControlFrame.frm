@@ -487,6 +487,16 @@ object frClickerFindControl: TfrClickerFindControl
         ShowHint = True
         TabOrder = 4
       end
+      object lstMatchPrimitiveFiles: TListBox
+        Left = 768
+        Height = 34
+        Top = 4
+        Width = 33
+        Color = clSkyBlue
+        ItemHeight = 0
+        TabOrder = 5
+        Visible = False
+      end
     end
     object TabSheetActionFindSubControlPrimitives: TTabSheet
       Caption = 'Primitives'

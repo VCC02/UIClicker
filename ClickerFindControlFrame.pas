@@ -188,6 +188,7 @@ type
     lblPreviewControl_Width: TLabel;
     lblReservedSpaceForDbgImg: TLabel;
     lstMatchBitmapFiles: TListBox;
+    lstMatchPrimitiveFiles: TListBox;
     MenuItem_CopyTextAndClassFromRemoteScreenWindow: TMenuItem;
     MenuItem_CopyTextAndClassFromWinInterpWindow: TMenuItem;
     MenuItem_CopyTextAndClassFromPreviewWindow: TMenuItem;
@@ -1781,16 +1782,34 @@ begin
   MenuItem.OnClick := MenuItemLoadBmpTextToSearchedAreaClick;
   FSearchAreaDbgImgSearchedBmpMenu.Items.Add(MenuItem);
 
-  MenuItem := TMenuItem.Create(FSearchAreaMenu);
-  MenuItem.Caption := '-';
-  FSearchAreaDbgImgSearchedBmpMenu.Items.Add(MenuItem);
-
-  for i := 0 to lstMatchBitmapFiles.Items.Count - 1 do
+  if lstMatchBitmapFiles.Items.Count > 0 then
   begin
-    MenuItem := TMenuItem.Create(FSearchAreaDbgImgSearchedBmpMenu);
-    MenuItem.Caption := lstMatchBitmapFiles.Items.Strings[i];
-    MenuItem.OnClick := MenuItemGenericLoadBmpToSearchedAreaClick;
+    MenuItem := TMenuItem.Create(FSearchAreaMenu);
+    MenuItem.Caption := '-';
     FSearchAreaDbgImgSearchedBmpMenu.Items.Add(MenuItem);
+
+    for i := 0 to lstMatchBitmapFiles.Items.Count - 1 do
+    begin
+      MenuItem := TMenuItem.Create(FSearchAreaDbgImgSearchedBmpMenu);
+      MenuItem.Caption := lstMatchBitmapFiles.Items.Strings[i];
+      MenuItem.OnClick := MenuItemGenericLoadBmpToSearchedAreaClick;
+      FSearchAreaDbgImgSearchedBmpMenu.Items.Add(MenuItem);
+    end;
+  end;
+
+  if lstMatchPrimitiveFiles.Items.Count > 0 then
+  begin
+    MenuItem := TMenuItem.Create(FSearchAreaMenu);
+    MenuItem.Caption := '-';
+    FSearchAreaDbgImgSearchedBmpMenu.Items.Add(MenuItem);
+
+    for i := 0 to lstMatchPrimitiveFiles.Items.Count - 1 do
+    begin
+      MenuItem := TMenuItem.Create(FSearchAreaDbgImgSearchedBmpMenu);
+      MenuItem.Caption := lstMatchPrimitiveFiles.Items.Strings[i];
+      MenuItem.OnClick := MenuItemGenericLoadBmpToSearchedAreaClick;
+      FSearchAreaDbgImgSearchedBmpMenu.Items.Add(MenuItem);
+    end;
   end;
 end;
 
@@ -3063,6 +3082,7 @@ begin
   AddFontProfile(CDefaultFontProfileName);
 
   lstMatchBitmapFiles.Clear;
+  lstMatchPrimitiveFiles.Clear;
   FindControlOptions := DoOnGetFindControlOptions;
 
   FindControlOptions^.MatchBitmapAlgorithm := mbaBruteForce;

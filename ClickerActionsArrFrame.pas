@@ -1062,6 +1062,7 @@ begin
   frClickerActions.frClickerFindControl.SetBMPTextFrameVisibility;
 
   frClickerActions.frClickerFindControl.lstMatchBitmapFiles.Items.Text := FClkActions[ActionIndex].FindControlOptions.MatchBitmapFiles;
+  frClickerActions.frClickerFindControl.lstMatchPrimitiveFiles.Items.Text := FClkActions[ActionIndex].FindControlOptions.MatchPrimitiveFiles;
 
   frClickerActions.frClickerFindControl.UpdateBitmapAlgorithmSettings;
 
