@@ -246,4 +246,8 @@ object frClickerPrimitives: TfrClickerPrimitives
     Left = 208
     Top = 128
   end
+  object imglstPreviewPrimitives: TImageList
+    Left = 320
+    Top = 144
+  end
 end

@@ -42,6 +42,7 @@ type
 
   TfrClickerPrimitives = class(TFrame)
     chkHighContrast: TCheckBox;
+    imglstPreviewPrimitives: TImageList;
     imglstPrimitives: TImageList;
     imgFontColorBuffer: TImage;
     lblModified: TLabel;
@@ -84,6 +85,7 @@ type
     procedure ClearPreviewTabs;
     function AddPreviewTabWithImage(ATabName: string): TImage;
     procedure CreateAllPreviewPages;
+    procedure BuildImgLstPreviewPrimitives;
 
     procedure GetOrderContentByIndex(AIndex: Integer; var ADestContent: TCompositionOrder);
     procedure DeleteOrderByIndex(AIndex: Integer; ADeleteTab: Boolean = True);
@@ -428,6 +430,7 @@ begin
   FOIFrame.ReloadContent;
   CreateAllPreviewPages;
   RepaintAllCompositions;
+  BuildImgLstPreviewPrimitives;
   lblModified.Hide;
 end;
 
@@ -690,7 +693,9 @@ end;
 
 procedure TfrClickerPrimitives.chkHighContrastChange(Sender: TObject);
 begin
+  BuildImgLstPreviewPrimitives;
   RepaintAllCompositions;
+  FOIFrame.RepaintOI;
 end;
 
 
@@ -720,6 +725,8 @@ begin
   finally
     Dispose(MenuData);
   end;
+
+  BuildImgLstPreviewPrimitives;
 end;
 
 
@@ -761,6 +768,8 @@ begin
   finally
     Dispose(MenuData);
   end;
+
+  BuildImgLstPreviewPrimitives;
 end;
 
 
@@ -789,6 +798,8 @@ begin
   finally
     Dispose(MenuData);
   end;
+
+  BuildImgLstPreviewPrimitives;
 end;
 
 
@@ -840,6 +851,8 @@ begin
   finally
     Dispose(MenuData);
   end;
+
+  BuildImgLstPreviewPrimitives;
 end;
 
 
@@ -929,6 +942,8 @@ begin
   finally
     Dispose(MenuData);
   end;
+
+  BuildImgLstPreviewPrimitives;
 end;
 
 
@@ -994,6 +1009,114 @@ begin
 
   PreviewImage.ShowHint := True;
   HideZoom;
+end;
+
+
+procedure TfrClickerPrimitives.BuildImgLstPreviewPrimitives;
+var
+  i: Integer;
+  Bmp, PreviewBmp: TBitmap;
+  PmtvCompositor: TPrimitivesCompositor;
+  UsingHighContrast: Boolean;
+  DestRect: TRect;
+  CurrentPrimitive: TPrimitiveRecArr;
+
+  CfgPenColor, CfgBrushColor, CfgFontColor: TColor;
+  CfgPenStyle: TPenStyle;
+  CfgPenWidth: Integer;
+  CfgBrushStyle: TBrushStyle;
+  CfgFont_Name: string;
+  CfgFont_Orientation: Integer;
+  CfgFont_Pitch: TFontPitch;
+  CfgFont_Quality: TFontQuality;
+  CfgFont_Size: Integer;
+  CfgFont_Style: TFontStyles;
+begin
+  imglstPreviewPrimitives.Clear;
+  DestRect.Left := 0;
+  DestRect.Top := 0;
+  DestRect.Width := 16;
+  DestRect.Height := 16;
+
+  SetLength(CurrentPrimitive, 1);
+  PmtvCompositor := TPrimitivesCompositor.Create;
+  try
+    PmtvCompositor.OnEvaluateReplacementsFunc := HandleOnEvaluateReplacementsFunc;
+    PmtvCompositor.OnLoadBitmap := HandleOnLoadBitmap;
+
+    UsingHighContrast := chkHighContrast.Checked;
+
+    CfgPenColor := clGreen;
+    CfgBrushColor := clCream;
+    CfgFontColor := clHighlight;
+    CfgPenStyle := psSolid;
+    CfgPenWidth := 1;
+    CfgBrushStyle := bsSolid;
+
+    CfgFont_Name := 'Tahoma';
+    CfgFont_Orientation := 0;
+    CfgFont_Pitch := fpDefault;
+    CfgFont_Quality := fqNonAntialiased;
+    CfgFont_Size := 8;
+    CfgFont_Style := [];
+
+    for i := 0 to Length(FPrimitives) - 1 do
+    begin
+      Bmp := TBitmap.Create;
+      PreviewBmp := TBitmap.Create;
+      try
+        Bmp.PixelFormat := pf24bit;
+        Bmp.Width := 16;
+        Bmp.Height := 16;
+        PreviewBmp.PixelFormat := pf24bit;
+        CurrentPrimitive[0] := FPrimitives[i];
+        PreviewBmp.Width := Max(16, PmtvCompositor.GetMaxX(PreviewBmp.Canvas, CurrentPrimitive));
+        PreviewBmp.Height := Max(16, PmtvCompositor.GetMaxY(PreviewBmp.Canvas, CurrentPrimitive));
+
+        PreviewBmp.Canvas.Brush.Style := bsSolid;  //reset to some default values
+        PreviewBmp.Canvas.Pen.Color := clWhite;
+        PreviewBmp.Canvas.Brush.Color := clWhite;
+        PreviewBmp.Canvas.Rectangle(0, 0, PreviewBmp.Width, PreviewBmp.Height);
+
+        PreviewBmp.Canvas.Pen.Color := CfgPenColor;
+        PreviewBmp.Canvas.Brush.Color := CfgBrushColor;
+        PreviewBmp.Canvas.Font.Color := CfgFontColor;
+        PreviewBmp.Canvas.Pen.Style := CfgPenStyle;
+        PreviewBmp.Canvas.Pen.Width := CfgPenWidth;
+        PreviewBmp.Canvas.Brush.Style := CfgBrushStyle;
+        PreviewBmp.Canvas.Font.Name := CfgFont_Name;
+        PreviewBmp.Canvas.Font.Orientation := CfgFont_Orientation;
+        PreviewBmp.Canvas.Font.Pitch := CfgFont_Pitch;
+        PreviewBmp.Canvas.Font.Quality := CfgFont_Quality;
+        PreviewBmp.Canvas.Font.Size := CfgFont_Size;
+        PreviewBmp.Canvas.Font.Style := CfgFont_Style;
+
+        PmtvCompositor.PreviewPrimitive(PreviewBmp, UsingHighContrast, FPrimitives, i);
+
+        CfgPenColor := PreviewBmp.Canvas.Pen.Color;
+        CfgBrushColor := PreviewBmp.Canvas.Brush.Color;
+        CfgFontColor := PreviewBmp.Canvas.Font.Color;
+        CfgPenStyle := PreviewBmp.Canvas.Pen.Style;
+        CfgPenWidth := PreviewBmp.Canvas.Pen.Width;
+        CfgBrushStyle := PreviewBmp.Canvas.Brush.Style;
+        CfgFont_Name := PreviewBmp.Canvas.Font.Name;
+        CfgFont_Orientation := PreviewBmp.Canvas.Font.Orientation;
+        CfgFont_Pitch := PreviewBmp.Canvas.Font.Pitch;
+        CfgFont_Quality := PreviewBmp.Canvas.Font.Quality;
+        CfgFont_Size := PreviewBmp.Canvas.Font.Size;
+        CfgFont_Style := PreviewBmp.Canvas.Font.Style;
+
+        Bmp.Canvas.StretchDraw(DestRect, PreviewBmp);
+        imglstPreviewPrimitives.AddMasked(Bmp, 1);  //using 1 as the mask color, allows for all standard colors to be used as background
+      finally
+        Bmp.Free;
+        PreviewBmp.Free;
+      end;
+    end;
+  finally
+    SetLength(CurrentPrimitive, 0);
+    PmtvCompositor.Free;
+  end;
 end;
 
 
@@ -1234,47 +1357,86 @@ end;
 procedure TfrClickerPrimitives.HandleOnOIGetImageIndexEx(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; Kind: TVTImageKind;
   Column: TColumnIndex; var Ghosted: Boolean; var ImageIndex: Integer; var ImageList: TCustomImageList);
 begin
-  if Column <> 0 then
-  begin
-    ImageIndex := -1;
-    Exit;
-  end;
 
-  case ANodeLevel of
-    CCategoryLevel:
-      ;
-
-    CPropertyLevel:
+  case Column of
+    0:
     begin
-      case ACategoryIndex of
-        CCategory_Primitives:
-        begin
-          ImageList := imglstPrimitives;
-          ImageIndex := FPrimitives[APropertyIndex].PrimitiveType;
-        end;
-
-        CCategory_Orders:
-        begin
-
-        end;
-      end;
-
-    end; //CPropertyLevel
-
-    CPropertyItemLevel:
-    begin
-      case ACategoryIndex of
-        CCategory_Primitives:
+      case ANodeLevel of
+        CCategoryLevel:
           ;
 
-        CCategory_Orders:
+        CPropertyLevel:
         begin
-          ImageList := imglstPrimitives;
-          ImageIndex := FPrimitives[FOrders[APropertyIndex].Items[AItemIndex]].PrimitiveType;
+          case ACategoryIndex of
+            CCategory_Primitives:
+            begin
+              ImageList := imglstPrimitives;
+              ImageIndex := FPrimitives[APropertyIndex].PrimitiveType;
+            end;
+
+            CCategory_Orders:
+            begin
+
+            end;
+          end;
+
+        end; //CPropertyLevel
+
+        CPropertyItemLevel:
+        begin
+          case ACategoryIndex of
+            CCategory_Primitives:
+              ;
+
+            CCategory_Orders:
+            begin
+              ImageList := imglstPrimitives;
+              ImageIndex := FPrimitives[FOrders[APropertyIndex].Items[AItemIndex]].PrimitiveType;
+            end;
+          end;
+        end;
+      end; //NodeLevel
+    end; //Column 0
+
+    1:
+    begin
+      case ANodeLevel of
+        CCategoryLevel:
+          ;
+
+        CPropertyLevel:
+        begin
+          case ACategoryIndex of
+            CCategory_Primitives:
+            begin
+              ImageList := imglstPreviewPrimitives;
+              ImageIndex := APropertyIndex;
+            end;
+
+            CCategory_Orders:
+            begin
+
+            end;
+          end;
+
+        end; //CPropertyLevel
+
+        CPropertyItemLevel:
+        begin
+          case ACategoryIndex of
+            CCategory_Primitives:
+              ;
+
+            CCategory_Orders:
+            begin
+              ImageList := imglstPreviewPrimitives;
+              ImageIndex := FOrders[APropertyIndex].Items[AItemIndex];
+            end;
+          end;
         end;
       end;
     end;
-  end; //NodeLevel
+  end; //case
 end;
 
 
@@ -1293,6 +1455,7 @@ begin
           PmtvType := FPrimitives[APropertyIndex].PrimitiveType;
           CSetPrimitiveValueStrFunctions[PmtvType](FPrimitives[APropertyIndex], ANewText, AItemIndex);
           RepaintAllCompositions;
+          BuildImgLstPreviewPrimitives;
         end;
       end;
 
