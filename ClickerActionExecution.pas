@@ -998,7 +998,8 @@ begin
 
   if FindControlInputData.MatchingMethods = [] then
   begin
-    SetActionVarValue('$ExecAction_Err$', 'No match criteria set.');
+    SetActionVarValue('$ExecAction_Err$', 'No match criteria set. Action: ' + AActionOptions.ActionName);
+    AddToLog('No match criteria set.');
     Result := False;
   end;
 

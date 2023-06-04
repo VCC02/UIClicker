@@ -1332,6 +1332,7 @@ end;
 procedure TfrClickerActions.HandleOnTriggerOnControlsModified;
 begin
   TriggerOnControlsModified;
+  FOIFrame.RepaintOI;
 end;
 
 
@@ -2592,6 +2593,10 @@ begin
 
     FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex);
     TriggerOnControlsModified;
+
+    FOIFrame.SelectNode(CPropertyItemLevel, MenuData^.CategoryIndex, MenuData^.PropertyIndex, n * CPropCount_FindControlMatchBitmapText);
+    FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, MenuData^.CategoryIndex, MenuData^.PropertyIndex, n * CPropCount_FindControlMatchBitmapText, True, True);
+    FOIFrame.FocusOI;
   finally
     Dispose(MenuData);
   end;
@@ -3147,7 +3152,7 @@ begin
                   Result := CFindControl_MatchCriteriaProperties[AItemIndex].DataType;
 
                 CFindControl_MatchBitmapText_PropIndex:
-                  Result := CFindControl_MatchBitmapTextProperties[AItemIndex].DataType;
+                  Result := CFindControl_MatchBitmapTextProperties[AItemIndex mod CPropCount_FindControlMatchBitmapText].DataType;
 
                 CFindControl_MatchBitmapAlgorithmSettings_PropIndex:
                   Result := CFindControl_MatchBitmapAlgorithmSettingsProperties[AItemIndex].DataType;
