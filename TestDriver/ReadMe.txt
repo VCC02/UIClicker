@@ -10,3 +10,6 @@ Both instances run initially in server mode and listens on 15444.  UIClicker-und
 
 1. The driver instance executes a SetVar action on UIClicker-under-test to get the window handles.  The result is a #7#8 separated list of name=value pairs, which cannot be parsed:  $frmUIClickerMainForm_Handle$=337770$frmClickerControlPreview_Handle$=272500$frmClickerActions_Handle$=336718
 2. The driver instance controls the UIClicker-under-test to switch from server mode to local mode.
+
+Other requirements:
+- The ClientUnderTest will have to access templates from "<Path to UIClicker dir>\TestDriver\ActionTemplates". This has to be added on "Allowed file directories for server" editbox on "Settings" page, when UIClicker is manually started, to allow saving the setting to ini.

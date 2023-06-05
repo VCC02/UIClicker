@@ -1,5 +1,5 @@
 [Actions]
-Count=30
+Count=31
 Version=2
 
 [Action_0]
@@ -38,6 +38,7 @@ MatchCriteria.WillMatchText=1
 MatchCriteria.WillMatchClassName=1
 MatchCriteria.WillMatchBitmapText=0
 MatchCriteria.WillMatchBitmapFiles=0
+MatchCriteria.WillMatchPrimitiveFiles=0
 MatchCriteria.SearchForControlMode=2
 MatchText=UI Clicker Actions$IsAdminOnWine$ - ClientUnderTest
 MatchClassName=Window
@@ -71,18 +72,19 @@ MatchBitmapAlgorithm_Grid_XMultipleOf=1
 MatchBitmapAlgorithm_Grid_YMultipleOf=1
 MatchBitmapAlgorithm_Grid_XOffset=0
 MatchBitmapAlgorithm_Grid_YOffset=0
-InitialRectange.Left=$Control_Left$
-InitialRectange.Top=$Control_Top$
-InitialRectange.Right=$Control_Right$
-InitialRectange.Bottom=$Control_Bottom$
+InitialRectangle.Left=$Control_Left$
+InitialRectangle.Top=$Control_Top$
+InitialRectangle.Right=$Control_Right$
+InitialRectangle.Bottom=$Control_Bottom$
 UseWholeScreen=1
-InitialRectange.LeftOffset=0
-InitialRectange.TopOffset=0
-InitialRectange.RightOffset=0
-InitialRectange.BottomOffset=0
+InitialRectangle.LeftOffset=0
+InitialRectangle.TopOffset=0
+InitialRectangle.RightOffset=0
+InitialRectangle.BottomOffset=0
 StartSearchingWithCachedControl=0
 CachedControlLeft=
 CachedControlTop=
+MatchPrimitiveFiles=
 
 [Action_2]
 ActionName=Find main PageControl
@@ -97,6 +99,7 @@ MatchCriteria.WillMatchText=1
 MatchCriteria.WillMatchClassName=1
 MatchCriteria.WillMatchBitmapText=0
 MatchCriteria.WillMatchBitmapFiles=0
+MatchCriteria.WillMatchPrimitiveFiles=0
 MatchCriteria.SearchForControlMode=0
 MatchText=
 MatchClassName=SysTabControl32
@@ -130,18 +133,19 @@ MatchBitmapAlgorithm_Grid_XMultipleOf=1
 MatchBitmapAlgorithm_Grid_YMultipleOf=1
 MatchBitmapAlgorithm_Grid_XOffset=0
 MatchBitmapAlgorithm_Grid_YOffset=0
-InitialRectange.Left=$Control_Left$
-InitialRectange.Top=$Control_Top$
-InitialRectange.Right=$Control_Left$
-InitialRectange.Bottom=$Control_Top$
+InitialRectangle.Left=$Control_Left$
+InitialRectangle.Top=$Control_Top$
+InitialRectangle.Right=$Control_Left$
+InitialRectangle.Bottom=$Control_Top$
 UseWholeScreen=0
-InitialRectange.LeftOffset=13
-InitialRectange.TopOffset=29
-InitialRectange.RightOffset=320
-InitialRectange.BottomOffset=48
+InitialRectangle.LeftOffset=13
+InitialRectangle.TopOffset=29
+InitialRectangle.RightOffset=320
+InitialRectangle.BottomOffset=48
 StartSearchingWithCachedControl=0
 CachedControlLeft=
 CachedControlTop=
+MatchPrimitiveFiles=
 
 [Action_3]
 ActionName=Find Play All button
@@ -156,6 +160,7 @@ MatchCriteria.WillMatchText=0
 MatchCriteria.WillMatchClassName=0
 MatchCriteria.WillMatchBitmapText=1
 MatchCriteria.WillMatchBitmapFiles=0
+MatchCriteria.WillMatchPrimitiveFiles=0
 MatchCriteria.SearchForControlMode=0
 MatchText=Play All
 MatchClassName=
@@ -189,18 +194,19 @@ MatchBitmapAlgorithm_Grid_XMultipleOf=1
 MatchBitmapAlgorithm_Grid_YMultipleOf=1
 MatchBitmapAlgorithm_Grid_XOffset=0
 MatchBitmapAlgorithm_Grid_YOffset=0
-InitialRectange.Left=$Control_Right$
-InitialRectange.Top=$Control_Top$
-InitialRectange.Right=$Control_Right$
-InitialRectange.Bottom=$Control_Top$
+InitialRectangle.Left=$Control_Right$
+InitialRectangle.Top=$Control_Top$
+InitialRectangle.Right=$Control_Right$
+InitialRectangle.Bottom=$Control_Top$
 UseWholeScreen=0
-InitialRectange.LeftOffset=-134
-InitialRectange.TopOffset=75
-InitialRectange.RightOffset=-54
-InitialRectange.BottomOffset=117
+InitialRectangle.LeftOffset=-134
+InitialRectangle.TopOffset=75
+InitialRectangle.RightOffset=-54
+InitialRectangle.BottomOffset=117
 StartSearchingWithCachedControl=0
 CachedControlLeft=
 CachedControlTop=
+MatchPrimitiveFiles=
 
 [Action_4]
 ActionName=Find Play All arrow button
@@ -215,6 +221,7 @@ MatchCriteria.WillMatchText=0
 MatchCriteria.WillMatchClassName=0
 MatchCriteria.WillMatchBitmapText=1
 MatchCriteria.WillMatchBitmapFiles=0
+MatchCriteria.WillMatchPrimitiveFiles=0
 MatchCriteria.SearchForControlMode=0
 MatchText=_
 MatchClassName=
@@ -248,18 +255,19 @@ MatchBitmapAlgorithm_Grid_XMultipleOf=1
 MatchBitmapAlgorithm_Grid_YMultipleOf=1
 MatchBitmapAlgorithm_Grid_XOffset=0
 MatchBitmapAlgorithm_Grid_YOffset=0
-InitialRectange.Left=$Control_Right$
-InitialRectange.Top=$Control_Top$
-InitialRectange.Right=$Control_Right$
-InitialRectange.Bottom=$Control_Top$
+InitialRectangle.Left=$Control_Right$
+InitialRectangle.Top=$Control_Top$
+InitialRectangle.Right=$Control_Right$
+InitialRectangle.Bottom=$Control_Top$
 UseWholeScreen=0
-InitialRectange.LeftOffset=31
-InitialRectange.TopOffset=-8
-InitialRectange.RightOffset=44
-InitialRectange.BottomOffset=7
+InitialRectangle.LeftOffset=31
+InitialRectangle.TopOffset=-8
+InitialRectangle.RightOffset=44
+InitialRectangle.BottomOffset=7
 StartSearchingWithCachedControl=0
 CachedControlLeft=
 CachedControlTop=
+MatchPrimitiveFiles=
 
 [Action_5]
 ActionName=Click Play All button
@@ -293,6 +301,17 @@ XOffsetDest=0
 YOffsetDest=0
 
 [Action_6]
+ActionName=wait after click (this fixes a race-condition on the next screenshot)
+Action=Sleep
+ActionTimeout=0
+ActionEnabled=1
+ActionCondition=
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+Value=400
+
+[Action_7]
 ActionName=Find debugging menu
 Action=FindControl
 ActionTimeout=1000
@@ -305,6 +324,7 @@ MatchCriteria.WillMatchText=1
 MatchCriteria.WillMatchClassName=1
 MatchCriteria.WillMatchBitmapText=0
 MatchCriteria.WillMatchBitmapFiles=0
+MatchCriteria.WillMatchPrimitiveFiles=0
 MatchCriteria.SearchForControlMode=0
 MatchText=
 MatchClassName=#32768
@@ -338,21 +358,22 @@ MatchBitmapAlgorithm_Grid_XMultipleOf=1
 MatchBitmapAlgorithm_Grid_YMultipleOf=1
 MatchBitmapAlgorithm_Grid_XOffset=0
 MatchBitmapAlgorithm_Grid_YOffset=0
-InitialRectange.Left=$Control_Left$
-InitialRectange.Top=$Control_Top$
-InitialRectange.Right=$Control_Right$
-InitialRectange.Bottom=$Control_Bottom$
+InitialRectangle.Left=$Control_Left$
+InitialRectangle.Top=$Control_Top$
+InitialRectangle.Right=$Control_Right$
+InitialRectangle.Bottom=$Control_Bottom$
 UseWholeScreen=0
-InitialRectange.LeftOffset=-10
-InitialRectange.TopOffset=-10
-InitialRectange.RightOffset=10
-InitialRectange.BottomOffset=10
+InitialRectangle.LeftOffset=-19
+InitialRectangle.TopOffset=-19
+InitialRectangle.RightOffset=19
+InitialRectangle.BottomOffset=19
 StartSearchingWithCachedControl=0
 CachedControlLeft=
 CachedControlTop=
+MatchPrimitiveFiles=
 
-[Action_7]
-ActionName=Find PlayAllInDebuggingMode item
+[Action_8]
+ActionName=Find PlayAllInDebuggingMode item (may fail with blank screenshot)
 Action=FindSubControl
 ActionTimeout=1000
 ActionEnabled=1
@@ -364,6 +385,7 @@ MatchCriteria.WillMatchText=0
 MatchCriteria.WillMatchClassName=0
 MatchCriteria.WillMatchBitmapText=1
 MatchCriteria.WillMatchBitmapFiles=0
+MatchCriteria.WillMatchPrimitiveFiles=0
 MatchCriteria.SearchForControlMode=0
 MatchText=Play all in debugging mode           
 MatchClassName=
@@ -385,10 +407,10 @@ MatchBitmapText[0].FontQuality=0
 MatchBitmapText[0].FontQualityUsesReplacement=0
 MatchBitmapText[0].FontQualityReplacement=
 MatchBitmapText[0].ProfileName=Default
-MatchBitmapText[0].CropLeft=
-MatchBitmapText[0].CropTop=
-MatchBitmapText[0].CropRight=
-MatchBitmapText[0].CropBottom=
+MatchBitmapText[0].CropLeft=0
+MatchBitmapText[0].CropTop=0
+MatchBitmapText[0].CropRight=0
+MatchBitmapText[0].CropBottom=0
 MatchBitmapFiles=
 ColorError=10
 AllowedColorErrorCount=40
@@ -397,20 +419,21 @@ MatchBitmapAlgorithm_Grid_XMultipleOf=1
 MatchBitmapAlgorithm_Grid_YMultipleOf=1
 MatchBitmapAlgorithm_Grid_XOffset=0
 MatchBitmapAlgorithm_Grid_YOffset=0
-InitialRectange.Left=$Control_Left$
-InitialRectange.Top=$Control_Top$
-InitialRectange.Right=$Control_Right$
-InitialRectange.Bottom=$Control_Bottom$
+InitialRectangle.Left=$Control_Left$
+InitialRectangle.Top=$Control_Top$
+InitialRectangle.Right=$Control_Right$
+InitialRectangle.Bottom=$Control_Bottom$
 UseWholeScreen=0
-InitialRectange.LeftOffset=30
-InitialRectange.TopOffset=0
-InitialRectange.RightOffset=0
-InitialRectange.BottomOffset=0
+InitialRectangle.LeftOffset=30
+InitialRectangle.TopOffset=0
+InitialRectangle.RightOffset=0
+InitialRectangle.BottomOffset=0
 StartSearchingWithCachedControl=0
 CachedControlLeft=
 CachedControlTop=
+MatchPrimitiveFiles=
 
-[Action_8]
+[Action_9]
 ActionName=Click
 Action=Click
 ActionTimeout=0
@@ -441,7 +464,7 @@ YClickPointVarDest=$Control_Top$
 XOffsetDest=0
 YOffsetDest=0
 
-[Action_9]
+[Action_10]
 ActionName=Find Stop button icon - running state
 Action=FindSubControl
 ActionTimeout=1000
@@ -454,6 +477,7 @@ MatchCriteria.WillMatchText=0
 MatchCriteria.WillMatchClassName=0
 MatchCriteria.WillMatchBitmapText=1
 MatchCriteria.WillMatchBitmapFiles=0
+MatchCriteria.WillMatchPrimitiveFiles=0
 MatchCriteria.SearchForControlMode=0
 MatchText=@
 MatchClassName=
@@ -487,20 +511,21 @@ MatchBitmapAlgorithm_Grid_XMultipleOf=1
 MatchBitmapAlgorithm_Grid_YMultipleOf=1
 MatchBitmapAlgorithm_Grid_XOffset=0
 MatchBitmapAlgorithm_Grid_YOffset=0
-InitialRectange.Left=$Stop_Left$
-InitialRectange.Top=$Stop_Top$
-InitialRectange.Right=$Stop_Left$
-InitialRectange.Bottom=$Stop_Top$
+InitialRectangle.Left=$Stop_Left$
+InitialRectangle.Top=$Stop_Top$
+InitialRectangle.Right=$Stop_Left$
+InitialRectangle.Bottom=$Stop_Top$
 UseWholeScreen=0
-InitialRectange.LeftOffset=-17
-InitialRectange.TopOffset=3
-InitialRectange.RightOffset=-3
-InitialRectange.BottomOffset=13
+InitialRectangle.LeftOffset=-17
+InitialRectangle.TopOffset=3
+InitialRectangle.RightOffset=-3
+InitialRectangle.BottomOffset=13
 StartSearchingWithCachedControl=0
 CachedControlLeft=
 CachedControlTop=
+MatchPrimitiveFiles=
 
-[Action_10]
+[Action_11]
 ActionName=CacheStepOver
 Action=CallTemplate
 ActionTimeout=0
@@ -523,7 +548,7 @@ Loop.Direction=0
 Loop.BreakCondition=
 Loop.EvalBreakPosition=0
 
-[Action_11]
+[Action_12]
 ActionName=Find Step Over button icon - running state
 Action=FindSubControl
 ActionTimeout=1000
@@ -536,6 +561,7 @@ MatchCriteria.WillMatchText=0
 MatchCriteria.WillMatchClassName=0
 MatchCriteria.WillMatchBitmapText=1
 MatchCriteria.WillMatchBitmapFiles=0
+MatchCriteria.WillMatchPrimitiveFiles=0
 MatchCriteria.SearchForControlMode=0
 MatchText=@
 MatchClassName=
@@ -569,20 +595,21 @@ MatchBitmapAlgorithm_Grid_XMultipleOf=1
 MatchBitmapAlgorithm_Grid_YMultipleOf=1
 MatchBitmapAlgorithm_Grid_XOffset=0
 MatchBitmapAlgorithm_Grid_YOffset=0
-InitialRectange.Left=$StepOver_Left$
-InitialRectange.Top=$StepOver_Top$
-InitialRectange.Right=$StepOver_Left$
-InitialRectange.Bottom=$StepOver_Top$
+InitialRectangle.Left=$StepOver_Left$
+InitialRectangle.Top=$StepOver_Top$
+InitialRectangle.Right=$StepOver_Left$
+InitialRectangle.Bottom=$StepOver_Top$
 UseWholeScreen=0
-InitialRectange.LeftOffset=-17
-InitialRectange.TopOffset=3
-InitialRectange.RightOffset=-3
-InitialRectange.BottomOffset=13
+InitialRectangle.LeftOffset=-17
+InitialRectangle.TopOffset=3
+InitialRectangle.RightOffset=-3
+InitialRectangle.BottomOffset=13
 StartSearchingWithCachedControl=0
 CachedControlLeft=
 CachedControlTop=
+MatchPrimitiveFiles=
 
-[Action_12]
+[Action_13]
 ActionName=Step over (SetVar)
 Action=Click
 ActionTimeout=0
@@ -613,7 +640,7 @@ YClickPointVarDest=$Control_Top$
 XOffsetDest=0
 YOffsetDest=0
 
-[Action_13]
+[Action_14]
 ActionName=Find Step Over button icon - idle state
 Action=FindSubControl
 ActionTimeout=1000
@@ -626,6 +653,7 @@ MatchCriteria.WillMatchText=0
 MatchCriteria.WillMatchClassName=0
 MatchCriteria.WillMatchBitmapText=1
 MatchCriteria.WillMatchBitmapFiles=0
+MatchCriteria.WillMatchPrimitiveFiles=0
 MatchCriteria.SearchForControlMode=0
 MatchText=@
 MatchClassName=
@@ -659,20 +687,21 @@ MatchBitmapAlgorithm_Grid_XMultipleOf=1
 MatchBitmapAlgorithm_Grid_YMultipleOf=1
 MatchBitmapAlgorithm_Grid_XOffset=0
 MatchBitmapAlgorithm_Grid_YOffset=0
-InitialRectange.Left=$StepOver_Left$
-InitialRectange.Top=$StepOver_Top$
-InitialRectange.Right=$StepOver_Left$
-InitialRectange.Bottom=$StepOver_Top$
+InitialRectangle.Left=$StepOver_Left$
+InitialRectangle.Top=$StepOver_Top$
+InitialRectangle.Right=$StepOver_Left$
+InitialRectangle.Bottom=$StepOver_Top$
 UseWholeScreen=0
-InitialRectange.LeftOffset=-17
-InitialRectange.TopOffset=3
-InitialRectange.RightOffset=-3
-InitialRectange.BottomOffset=13
+InitialRectangle.LeftOffset=-17
+InitialRectangle.TopOffset=3
+InitialRectangle.RightOffset=-3
+InitialRectangle.BottomOffset=13
 StartSearchingWithCachedControl=0
 CachedControlLeft=
 CachedControlTop=
+MatchPrimitiveFiles=
 
-[Action_14]
+[Action_15]
 ActionName=Find Step Over button icon - running state
 Action=FindSubControl
 ActionTimeout=2000
@@ -685,6 +714,7 @@ MatchCriteria.WillMatchText=0
 MatchCriteria.WillMatchClassName=0
 MatchCriteria.WillMatchBitmapText=1
 MatchCriteria.WillMatchBitmapFiles=0
+MatchCriteria.WillMatchPrimitiveFiles=0
 MatchCriteria.SearchForControlMode=0
 MatchText=@
 MatchClassName=
@@ -718,20 +748,21 @@ MatchBitmapAlgorithm_Grid_XMultipleOf=1
 MatchBitmapAlgorithm_Grid_YMultipleOf=1
 MatchBitmapAlgorithm_Grid_XOffset=0
 MatchBitmapAlgorithm_Grid_YOffset=0
-InitialRectange.Left=$StepOver_Left$
-InitialRectange.Top=$StepOver_Top$
-InitialRectange.Right=$StepOver_Left$
-InitialRectange.Bottom=$StepOver_Top$
+InitialRectangle.Left=$StepOver_Left$
+InitialRectangle.Top=$StepOver_Top$
+InitialRectangle.Right=$StepOver_Left$
+InitialRectangle.Bottom=$StepOver_Top$
 UseWholeScreen=0
-InitialRectange.LeftOffset=-17
-InitialRectange.TopOffset=3
-InitialRectange.RightOffset=-3
-InitialRectange.BottomOffset=13
+InitialRectangle.LeftOffset=-17
+InitialRectangle.TopOffset=3
+InitialRectangle.RightOffset=-3
+InitialRectangle.BottomOffset=13
 StartSearchingWithCachedControl=0
 CachedControlLeft=
 CachedControlTop=
+MatchPrimitiveFiles=
 
-[Action_15]
+[Action_16]
 ActionName=Step over (Sleep)
 Action=Click
 ActionTimeout=0
@@ -762,7 +793,7 @@ YClickPointVarDest=$Control_Top$
 XOffsetDest=0
 YOffsetDest=0
 
-[Action_16]
+[Action_17]
 ActionName=CacheStepInto
 Action=CallTemplate
 ActionTimeout=0
@@ -785,7 +816,7 @@ Loop.Direction=0
 Loop.BreakCondition=
 Loop.EvalBreakPosition=0
 
-[Action_17]
+[Action_18]
 ActionName=Find Step Into button icon - running state
 Action=FindSubControl
 ActionTimeout=2000
@@ -798,6 +829,7 @@ MatchCriteria.WillMatchText=0
 MatchCriteria.WillMatchClassName=0
 MatchCriteria.WillMatchBitmapText=1
 MatchCriteria.WillMatchBitmapFiles=0
+MatchCriteria.WillMatchPrimitiveFiles=0
 MatchCriteria.SearchForControlMode=0
 MatchText=@
 MatchClassName=
@@ -831,20 +863,21 @@ MatchBitmapAlgorithm_Grid_XMultipleOf=1
 MatchBitmapAlgorithm_Grid_YMultipleOf=1
 MatchBitmapAlgorithm_Grid_XOffset=0
 MatchBitmapAlgorithm_Grid_YOffset=0
-InitialRectange.Left=$StepInto_Left$
-InitialRectange.Top=$StepInto_Top$
-InitialRectange.Right=$StepInto_Left$
-InitialRectange.Bottom=$StepInto_Top$
+InitialRectangle.Left=$StepInto_Left$
+InitialRectangle.Top=$StepInto_Top$
+InitialRectangle.Right=$StepInto_Left$
+InitialRectangle.Bottom=$StepInto_Top$
 UseWholeScreen=0
-InitialRectange.LeftOffset=-17
-InitialRectange.TopOffset=3
-InitialRectange.RightOffset=-3
-InitialRectange.BottomOffset=13
+InitialRectangle.LeftOffset=-17
+InitialRectangle.TopOffset=3
+InitialRectangle.RightOffset=-3
+InitialRectangle.BottomOffset=13
 StartSearchingWithCachedControl=0
 CachedControlLeft=
 CachedControlTop=
+MatchPrimitiveFiles=
 
-[Action_18]
+[Action_19]
 ActionName=Step into (Call)
 Action=Click
 ActionTimeout=0
@@ -875,7 +908,7 @@ YClickPointVarDest=$Control_Top$
 XOffsetDest=0
 YOffsetDest=0
 
-[Action_19]
+[Action_20]
 ActionName=wait for tabs to change
 Action=Sleep
 ActionTimeout=0
@@ -886,7 +919,7 @@ BreakpointEnabled=0
 BreakpointCondition=
 Value=200
 
-[Action_20]
+[Action_21]
 ActionName=Find Actions Window
 Action=FindControl
 ActionTimeout=1000
@@ -899,6 +932,7 @@ MatchCriteria.WillMatchText=1
 MatchCriteria.WillMatchClassName=1
 MatchCriteria.WillMatchBitmapText=0
 MatchCriteria.WillMatchBitmapFiles=0
+MatchCriteria.WillMatchPrimitiveFiles=0
 MatchCriteria.SearchForControlMode=2
 MatchText=UI Clicker Actions - ClientUnderTest
 MatchClassName=Window
@@ -932,20 +966,21 @@ MatchBitmapAlgorithm_Grid_XMultipleOf=1
 MatchBitmapAlgorithm_Grid_YMultipleOf=1
 MatchBitmapAlgorithm_Grid_XOffset=0
 MatchBitmapAlgorithm_Grid_YOffset=0
-InitialRectange.Left=$Control_Left$
-InitialRectange.Top=$Control_Top$
-InitialRectange.Right=$Control_Right$
-InitialRectange.Bottom=$Control_Bottom$
+InitialRectangle.Left=$Control_Left$
+InitialRectangle.Top=$Control_Top$
+InitialRectangle.Right=$Control_Right$
+InitialRectangle.Bottom=$Control_Bottom$
 UseWholeScreen=1
-InitialRectange.LeftOffset=0
-InitialRectange.TopOffset=0
-InitialRectange.RightOffset=0
-InitialRectange.BottomOffset=0
+InitialRectangle.LeftOffset=0
+InitialRectangle.TopOffset=0
+InitialRectangle.RightOffset=0
+InitialRectangle.BottomOffset=0
 StartSearchingWithCachedControl=0
 CachedControlLeft=
 CachedControlTop=
+MatchPrimitiveFiles=
 
-[Action_21]
+[Action_22]
 ActionName=Find main PageControl
 Action=FindControl
 ActionTimeout=1000
@@ -958,6 +993,7 @@ MatchCriteria.WillMatchText=1
 MatchCriteria.WillMatchClassName=1
 MatchCriteria.WillMatchBitmapText=0
 MatchCriteria.WillMatchBitmapFiles=0
+MatchCriteria.WillMatchPrimitiveFiles=0
 MatchCriteria.SearchForControlMode=0
 MatchText=
 MatchClassName=SysTabControl32
@@ -991,20 +1027,21 @@ MatchBitmapAlgorithm_Grid_XMultipleOf=1
 MatchBitmapAlgorithm_Grid_YMultipleOf=1
 MatchBitmapAlgorithm_Grid_XOffset=0
 MatchBitmapAlgorithm_Grid_YOffset=0
-InitialRectange.Left=$Control_Left$
-InitialRectange.Top=$Control_Top$
-InitialRectange.Right=$Control_Left$
-InitialRectange.Bottom=$Control_Top$
+InitialRectangle.Left=$Control_Left$
+InitialRectangle.Top=$Control_Top$
+InitialRectangle.Right=$Control_Left$
+InitialRectangle.Bottom=$Control_Top$
 UseWholeScreen=0
-InitialRectange.LeftOffset=13
-InitialRectange.TopOffset=29
-InitialRectange.RightOffset=320
-InitialRectange.BottomOffset=48
+InitialRectangle.LeftOffset=13
+InitialRectangle.TopOffset=29
+InitialRectangle.RightOffset=320
+InitialRectangle.BottomOffset=48
 StartSearchingWithCachedControl=0
 CachedControlLeft=
 CachedControlTop=
+MatchPrimitiveFiles=
 
-[Action_22]
+[Action_23]
 ActionName=Find player tabs
 Action=FindControl
 ActionTimeout=1000
@@ -1017,6 +1054,7 @@ MatchCriteria.WillMatchText=1
 MatchCriteria.WillMatchClassName=1
 MatchCriteria.WillMatchBitmapText=0
 MatchCriteria.WillMatchBitmapFiles=0
+MatchCriteria.WillMatchPrimitiveFiles=0
 MatchCriteria.SearchForControlMode=0
 MatchText=
 MatchClassName=SysTabControl32
@@ -1050,20 +1088,21 @@ MatchBitmapAlgorithm_Grid_XMultipleOf=1
 MatchBitmapAlgorithm_Grid_YMultipleOf=1
 MatchBitmapAlgorithm_Grid_XOffset=0
 MatchBitmapAlgorithm_Grid_YOffset=0
-InitialRectange.Left=$Control_Left$
-InitialRectange.Top=$Control_Top$
-InitialRectange.Right=$Control_Left$
-InitialRectange.Bottom=$Control_Top$
+InitialRectangle.Left=$Control_Left$
+InitialRectangle.Top=$Control_Top$
+InitialRectangle.Right=$Control_Left$
+InitialRectangle.Bottom=$Control_Top$
 UseWholeScreen=0
-InitialRectange.LeftOffset=15
-InitialRectange.TopOffset=26
-InitialRectange.RightOffset=272
-InitialRectange.BottomOffset=44
+InitialRectangle.LeftOffset=15
+InitialRectangle.TopOffset=26
+InitialRectangle.RightOffset=272
+InitialRectangle.BottomOffset=44
 StartSearchingWithCachedControl=0
 CachedControlLeft=
 CachedControlTop=
+MatchPrimitiveFiles=
 
-[Action_23]
+[Action_24]
 ActionName=Find TemplateToBeCalled tab (subtemplate)
 Action=FindSubControl
 ActionTimeout=1000
@@ -1076,6 +1115,7 @@ MatchCriteria.WillMatchText=0
 MatchCriteria.WillMatchClassName=0
 MatchCriteria.WillMatchBitmapText=1
 MatchCriteria.WillMatchBitmapFiles=0
+MatchCriteria.WillMatchPrimitiveFiles=0
 MatchCriteria.SearchForControlMode=0
 MatchText=TemplateToBeCalled
 MatchClassName=
@@ -1125,20 +1165,21 @@ MatchBitmapAlgorithm_Grid_XMultipleOf=1
 MatchBitmapAlgorithm_Grid_YMultipleOf=1
 MatchBitmapAlgorithm_Grid_XOffset=0
 MatchBitmapAlgorithm_Grid_YOffset=0
-InitialRectange.Left=$Control_Left$
-InitialRectange.Top=$Control_Top$
-InitialRectange.Right=$Control_Left$
-InitialRectange.Bottom=$Control_Top$
+InitialRectangle.Left=$Control_Left$
+InitialRectangle.Top=$Control_Top$
+InitialRectangle.Right=$Control_Left$
+InitialRectangle.Bottom=$Control_Top$
 UseWholeScreen=0
-InitialRectange.LeftOffset=100
-InitialRectange.TopOffset=2
-InitialRectange.RightOffset=260
-InitialRectange.BottomOffset=18
+InitialRectangle.LeftOffset=100
+InitialRectangle.TopOffset=2
+InitialRectangle.RightOffset=260
+InitialRectangle.BottomOffset=18
 StartSearchingWithCachedControl=0
 CachedControlLeft=
 CachedControlTop=
+MatchPrimitiveFiles=
 
-[Action_24]
+[Action_25]
 ActionName=Make sure the tab is active
 Action=Click
 ActionTimeout=0
@@ -1169,7 +1210,7 @@ YClickPointVarDest=$Control_Top$
 XOffsetDest=0
 YOffsetDest=0
 
-[Action_25]
+[Action_26]
 ActionName=Stop execution (this should close the subtemplate on server as well)
 Action=Click
 ActionTimeout=0
@@ -1200,7 +1241,7 @@ YClickPointVarDest=$Control_Top$
 XOffsetDest=0
 YOffsetDest=0
 
-[Action_26]
+[Action_27]
 ActionName=StepOverOnAppUnderTest
 Action=CallTemplate
 ActionTimeout=1000
@@ -1223,7 +1264,7 @@ Loop.Direction=0
 Loop.BreakCondition=
 Loop.EvalBreakPosition=0
 
-[Action_27]
+[Action_28]
 ActionName=VerifyIfTheSubTemplateIsClosed
 Action=CallTemplate
 ActionTimeout=1000
@@ -1246,7 +1287,7 @@ Loop.Direction=0
 Loop.BreakCondition=
 Loop.EvalBreakPosition=0
 
-[Action_28]
+[Action_29]
 ActionName=Find Step Over button icon - idle state
 Action=FindSubControl
 ActionTimeout=15000
@@ -1259,6 +1300,7 @@ MatchCriteria.WillMatchText=0
 MatchCriteria.WillMatchClassName=0
 MatchCriteria.WillMatchBitmapText=1
 MatchCriteria.WillMatchBitmapFiles=0
+MatchCriteria.WillMatchPrimitiveFiles=0
 MatchCriteria.SearchForControlMode=0
 MatchText=@
 MatchClassName=
@@ -1292,20 +1334,21 @@ MatchBitmapAlgorithm_Grid_XMultipleOf=1
 MatchBitmapAlgorithm_Grid_YMultipleOf=1
 MatchBitmapAlgorithm_Grid_XOffset=0
 MatchBitmapAlgorithm_Grid_YOffset=0
-InitialRectange.Left=$StepOver_Left$
-InitialRectange.Top=$StepOver_Top$
-InitialRectange.Right=$StepOver_Left$
-InitialRectange.Bottom=$StepOver_Top$
+InitialRectangle.Left=$StepOver_Left$
+InitialRectangle.Top=$StepOver_Top$
+InitialRectangle.Right=$StepOver_Left$
+InitialRectangle.Bottom=$StepOver_Top$
 UseWholeScreen=0
-InitialRectange.LeftOffset=-17
-InitialRectange.TopOffset=3
-InitialRectange.RightOffset=-3
-InitialRectange.BottomOffset=13
+InitialRectangle.LeftOffset=-17
+InitialRectangle.TopOffset=3
+InitialRectangle.RightOffset=-3
+InitialRectangle.BottomOffset=13
 StartSearchingWithCachedControl=0
 CachedControlLeft=
 CachedControlTop=
+MatchPrimitiveFiles=
 
-[Action_29]
+[Action_30]
 ActionName=Find Stop button icon - idle state
 Action=FindSubControl
 ActionTimeout=15000
@@ -1318,6 +1361,7 @@ MatchCriteria.WillMatchText=0
 MatchCriteria.WillMatchClassName=0
 MatchCriteria.WillMatchBitmapText=1
 MatchCriteria.WillMatchBitmapFiles=0
+MatchCriteria.WillMatchPrimitiveFiles=0
 MatchCriteria.SearchForControlMode=0
 MatchText=@
 MatchClassName=
@@ -1351,19 +1395,20 @@ MatchBitmapAlgorithm_Grid_XMultipleOf=1
 MatchBitmapAlgorithm_Grid_YMultipleOf=1
 MatchBitmapAlgorithm_Grid_XOffset=0
 MatchBitmapAlgorithm_Grid_YOffset=0
-InitialRectange.Left=$Stop_Left$
-InitialRectange.Top=$Stop_Top$
-InitialRectange.Right=$Stop_Left$
-InitialRectange.Bottom=$Stop_Top$
+InitialRectangle.Left=$Stop_Left$
+InitialRectangle.Top=$Stop_Top$
+InitialRectangle.Right=$Stop_Left$
+InitialRectangle.Bottom=$Stop_Top$
 UseWholeScreen=0
-InitialRectange.LeftOffset=-17
-InitialRectange.TopOffset=3
-InitialRectange.RightOffset=-3
-InitialRectange.BottomOffset=13
+InitialRectangle.LeftOffset=-17
+InitialRectangle.TopOffset=3
+InitialRectangle.RightOffset=-3
+InitialRectangle.BottomOffset=13
 StartSearchingWithCachedControl=0
 CachedControlLeft=
 CachedControlTop=
+MatchPrimitiveFiles=
 
 [Notes]
-Content=ToDo:see "Step over (Sleep)  - should be replaced wi th a looped call (includin finding step over gray than yellow" action
+Content=ToDo:see "Step over (Sleep)  - should be replaced with a looped call (includin finding step over gray than yellow" action
 

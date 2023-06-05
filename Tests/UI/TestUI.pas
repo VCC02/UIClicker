@@ -265,6 +265,7 @@ procedure SetVariableOnTestDriverClient(AVarName, AVarValue: string; AEvalVarBef
 var
   SetVarOptions: TClkSetVarOptions;
   SetVarResult: TStringList;
+  RawResult: string;
 begin
   SetVarOptions.ListOfVarNames := AVarName;
   SetVarOptions.ListOfVarValues := AVarValue;
@@ -272,17 +273,32 @@ begin
 
   SetVarResult := TStringList.Create;
   try
-    SetVarResult.Text := FastReplace_87ToReturn(ExecuteSetVarAction(CTestDriverServerAddress_Client, SetVarOptions)); //this is driver for client 25444
-    Expect(SetVarResult).WithItem(AVarName).OfValue(AVarValue);
+    RawResult := ExecuteSetVarAction(CTestDriverServerAddress_Client, SetVarOptions);
+    SetVarResult.Text := FastReplace_87ToReturn(RawResult); //this is the test "driver" for client 25444
+    Expect(SetVarResult).WithItem(AVarName).OfValue(AVarValue, 'Expected a particular var value.');
   finally
     SetVarResult.Free;
   end;
 end;
 
 
+procedure WaitForDriverStartup;
+var
+  TestResult: string;
+  tk: QWord;
+begin
+  tk := GetTickCount64;
+  repeat
+    TestResult := TestConnection(CTestDriverServerAddress_Client, False);
+  until (TestResult = CREResp_ConnectionOK) or (GetTickCount64 - tk > 3000);
+end;
+
+
 procedure TTestUI.BeforeAll_AlwaysExecute;
 begin
   StartAllUIClickerInstances;
+
+  WaitForDriverStartup;
 
   if FIsWine then
   begin
@@ -294,7 +310,9 @@ begin
     SetVariableOnTestDriverClient('$IsAdminOnWine$', ''); // a single #13#10 results in an empty string item in a TStringList. Still, better send '', to allow the expectation to match ''. UIClicker should convert this one '', into a new line.
 
   ArrangeMainUIClickerWindows;      //Setting window position from ini file, works on Wine. Setting from UIClicker does not (yet).
+  Sleep(500);                       //these sleep calls should be replaced by some waiting loops
   ArrangeUIClickerActionWindows;
+  Sleep(500);
 
   FTemplatesDir := ExtractFilePath(ParamStr(0)) + '..\..\TestDriver\ActionTemplates\';
 end;
