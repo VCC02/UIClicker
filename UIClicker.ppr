@@ -45,7 +45,7 @@ uses
   ClickerExecAppFrame, ClickerSetVarFrame, ClickerSleepFrame, 
   ClickerCallTemplateFrame, ClickerUtils, ClickerPrimitiveUtils, 
   ClickerPrimitivesFrame, ClickerPrimitiveValues, ClickerPrimitives, 
-  ClickerOIUtils, ClickerPrimitivesCompositor;
+  ClickerOIUtils, ClickerPrimitivesCompositor, ClickerPrimitivesCompEditors;
 
 {$R *.res}
 

@@ -145,7 +145,7 @@ object frClickerPrimitives: TfrClickerPrimitives
     object chkHighContrast: TCheckBox
       Left = 24
       Height = 19
-      Top = -1
+      Top = -2
       Width = 92
       Caption = 'High contrast'
       OnChange = chkHighContrastChange
@@ -237,6 +237,13 @@ object frClickerPrimitives: TfrClickerPrimitives
         FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
       }
       OnClick = MenuItem_SavePrimitivesFileClick
+    end
+    object N2: TMenuItem
+      Caption = '-'
+    end
+    object MenuItem_EditMode: TMenuItem
+      AutoCheck = True
+      Caption = 'Edit mode'
     end
   end
   object tmrDrawZoom: TTimer

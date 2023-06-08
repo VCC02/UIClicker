@@ -4066,6 +4066,11 @@ begin
               end;
             end;
           end; //init rect
+
+          CFindControl_MatchPrimitiveFiles_PropIndex:
+          begin
+            AHint := '$AppDir$ replacement is available';
+          end;
         end; //case
       end; //FindControl
 

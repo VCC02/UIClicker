@@ -50,6 +50,8 @@ type
     lblMouseOnPreviewImgBB: TLabel;
     lblMouseOnPreviewImgGG: TLabel;
     lblMouseOnPreviewImgRR: TLabel;
+    MenuItem_EditMode: TMenuItem;
+    N2: TMenuItem;
     N1: TMenuItem;
     MenuItem_SavePrimitivesFile: TMenuItem;
     MenuItem_CopyToClipboard: TMenuItem;
@@ -108,7 +110,11 @@ type
     procedure MenuItem_RepaintAllCompositions(Sender: TObject);
 
     procedure SetLabelsFromMouseOverPreviewImgPixelColor(APixelColor: TColor);
+    procedure ClearPrimitiveSelection;
+    function PointOnPrimitive(X, Y: Integer; var APrimitive: TPrimitiveRec; AWorkingImage: TImage): Boolean;
+    procedure SelectPrimitiveByOrderIndex(APrimitiveIndex: Integer);
     procedure imgPreviewMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+    procedure imgPreviewMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure imgPreviewMouseEnter(Sender: TObject);
     procedure imgPreviewMouseLeave(Sender: TObject);
 
@@ -367,6 +373,7 @@ begin
   PreviewImage.Transparent := False;
   PreviewImage.Visible := True;
   PreviewImage.PopupMenu := pmPreview;
+  PreviewImage.Tag := PageControlPreview.ActivePageIndex;
 
   PreviewImage.Canvas.Pen.Color := clWhite;
   PreviewImage.Canvas.Brush.Color := clWhite;
@@ -376,6 +383,7 @@ begin
   //PreviewImage.Canvas.TextOut(20, 20, ATabName);    //for debugging only
 
   PreviewImage.OnMouseMove := imgPreviewMouseMove;
+  PreviewImage.OnMouseDown := imgPreviewMouseDown;
   PreviewImage.OnMouseEnter := imgPreviewMouseEnter;
   PreviewImage.OnMouseLeave := imgPreviewMouseLeave;
 
@@ -753,6 +761,9 @@ begin
     FPrimitives[n].PrimitiveType := TempPrimitiveType;
     FPrimitives[n].PrimitiveName := '"' + ValueStr + '"';
 
+    ClearPrimitiveSelection;
+    FPrimitives[n].Selected := True;
+
     CFillInDefaultValuesToPrimitives[TempPrimitiveType](FPrimitives[n]);
 
     for i := 0 to Length(FOrders) - 1 do
@@ -955,6 +966,15 @@ begin
 end;
 
 
+procedure TfrClickerPrimitives.ClearPrimitiveSelection;
+var
+  i: Integer;
+begin
+  for i := 0 to Length(FPrimitives) - 1 do
+    FPrimitives[i].Selected := False;
+end;
+
+
 procedure TfrClickerPrimitives.imgPreviewMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
 var
   PreviewImage: TImage;
@@ -969,6 +989,151 @@ begin
     PreviewImage := TImage(TScrollBox(PageControlPreview.Pages[PageControlPreview.ActivePageIndex].Tag).Tag);
     SetLabelsFromMouseOverPreviewImgPixelColor(PreviewImage.Canvas.Pixels[X, Y]);
   end;
+end;
+
+
+function PointBetweenEndpoints(X, X1, X2: Integer): Boolean;
+begin
+  Result := False; // :D
+
+  if X1 = X2 then
+    Result := X = X1
+  else
+    if X1 < X2 then
+      Result := (X >= X1) and (X <= X2)
+    else
+      if X1 > X2 then
+        Result := (X <= X1) and (X >= X2);
+end;
+
+
+function TfrClickerPrimitives.PointOnPrimitive(X, Y: Integer; var APrimitive: TPrimitiveRec; AWorkingImage: TImage): Boolean;
+var
+  X1, X2, Y1, Y2: Integer;
+  TempSize: TSize;
+begin
+  Result := False;
+
+  case APrimitive.PrimitiveType of
+    CClkImagePrimitiveCmdIdx:
+    begin
+      X1 := StrToIntDef(DoOnEvaluateReplacementsFunc(APrimitive.ClkImage.X1), 0);
+      X2 := StrToIntDef(DoOnEvaluateReplacementsFunc(APrimitive.ClkImage.X2), 0);
+      Y1 := StrToIntDef(DoOnEvaluateReplacementsFunc(APrimitive.ClkImage.Y1), 0);
+      Y2 := StrToIntDef(DoOnEvaluateReplacementsFunc(APrimitive.ClkImage.Y2), 0);
+
+      Result := PointBetweenEndpoints(X, X1, X2) and PointBetweenEndpoints(Y, Y1, Y2);
+    end;
+
+    CClkLinePrimitiveCmdIdx:  ////////////////////////////////// ToDo: find a way to verify 2 points around the line (both for thin and thick lines)
+    begin
+      X1 := StrToIntDef(DoOnEvaluateReplacementsFunc(APrimitive.ClkLine.X1), 0);
+      X2 := StrToIntDef(DoOnEvaluateReplacementsFunc(APrimitive.ClkLine.X2), 0);
+      Y1 := StrToIntDef(DoOnEvaluateReplacementsFunc(APrimitive.ClkLine.Y1), 0);
+      Y2 := StrToIntDef(DoOnEvaluateReplacementsFunc(APrimitive.ClkLine.Y2), 0);
+
+      if (X1 <> X2) and (Y1 <> Y2) then  //verify if the line is oblique, to avoid division by 0
+      begin
+        //if ((X - X1) / (X2 - X1)) - ((Y - Y1) / (Y2 - Y1)) < 0.0001 then
+        if ((X1 - X) * (Y - Y2)) = ((X - X2) * (Y1 - Y)) then  //See stackoverflow.com, question 17692922
+          Result := PointBetweenEndpoints(X, X1, X2) and PointBetweenEndpoints(Y, Y1, Y2);
+      end
+      else
+        if X1 = X2 then   //vertical line
+        begin
+          if X = X1 then
+            Result := PointBetweenEndpoints(Y, Y1, Y2);
+        end
+        else
+          if Y2 = Y1 then //horizontal line
+          begin
+            if Y = Y1 then
+              Result := PointBetweenEndpoints(X, X1, X2);
+          end;
+    end;
+
+    CClkRectPrimitiveCmdIdx:
+    begin
+      X1 := StrToIntDef(DoOnEvaluateReplacementsFunc(APrimitive.ClkRect.X1), 0);
+      X2 := StrToIntDef(DoOnEvaluateReplacementsFunc(APrimitive.ClkRect.X2), 0);
+      Y1 := StrToIntDef(DoOnEvaluateReplacementsFunc(APrimitive.ClkRect.Y1), 0);
+      Y2 := StrToIntDef(DoOnEvaluateReplacementsFunc(APrimitive.ClkRect.Y2), 0);
+
+      Result := PointBetweenEndpoints(X, X1, X2) and PointBetweenEndpoints(Y, Y1, Y2);
+    end;
+
+    CClkGradientFill:
+    begin
+      X1 := StrToIntDef(DoOnEvaluateReplacementsFunc(APrimitive.ClkGradientFill.X1), 0);
+      X2 := StrToIntDef(DoOnEvaluateReplacementsFunc(APrimitive.ClkGradientFill.X2), 0);
+      Y1 := StrToIntDef(DoOnEvaluateReplacementsFunc(APrimitive.ClkGradientFill.Y1), 0);
+      Y2 := StrToIntDef(DoOnEvaluateReplacementsFunc(APrimitive.ClkGradientFill.Y2), 0);
+
+      Result := PointBetweenEndpoints(X, X1, X2) and PointBetweenEndpoints(Y, Y1, Y2);
+    end;
+
+    CClkText:
+    begin
+      TempSize := AWorkingImage.Canvas.TextExtent(DoOnEvaluateReplacementsFunc(APrimitive.ClkText.Text)); ///// This depends on current text settings (e.g. font name, size, style and orientation)
+
+      X1 := StrToIntDef(DoOnEvaluateReplacementsFunc(APrimitive.ClkText.X), 0);
+      X2 := X1 + TempSize.Width;
+      Y1 := StrToIntDef(DoOnEvaluateReplacementsFunc(APrimitive.ClkText.Y), 0);
+      Y2 := Y1 + TempSize.Height;
+
+      Result := PointBetweenEndpoints(X, X1, X2) and PointBetweenEndpoints(Y, Y1, Y2);
+    end;
+  end;
+end;
+
+
+procedure TfrClickerPrimitives.SelectPrimitiveByOrderIndex(APrimitiveIndex: Integer);
+begin
+  ClearPrimitiveSelection;
+  FPrimitives[APrimitiveIndex].Selected := True;
+  FOIFrame.SelectNode(CPropertyLevel, CCategory_Primitives, APrimitiveIndex, -1, True, True);
+end;
+
+
+procedure TfrClickerPrimitives.imgPreviewMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var
+  i, OrderIdx: Integer;
+  Img: TImage;
+  Found: Boolean;
+begin
+  if not MenuItem_EditMode.Checked then
+  begin
+    ClearPrimitiveSelection;
+    Exit;
+  end;
+
+  Img := Sender as TImage;
+  OrderIdx := Img.Tag;
+  Found := False;
+
+  if FPrimitiveSettings.CompositorDirection = cdTopBot then
+  begin
+    for i := Length(FPrimitives) - 1 downto 0 do
+      if PointOnPrimitive(X, Y, FPrimitives[FOrders[OrderIdx].Items[i]], Img) then
+      begin
+        SelectPrimitiveByOrderIndex(FOrders[OrderIdx].Items[i]);
+        Found := True;
+        Break;
+      end;
+  end
+  else
+  begin
+    for i := 0 to Length(FPrimitives) - 1 do
+      if PointOnPrimitive(X, Y, FPrimitives[FOrders[OrderIdx].Items[i]], Img) then
+      begin
+        SelectPrimitiveByOrderIndex(FOrders[OrderIdx].Items[i]);
+        Found := True;
+        Break;
+      end;
+  end;
+
+  if not Found then
+    FOIFrame.ClearNodeSelection;
 end;
 
 

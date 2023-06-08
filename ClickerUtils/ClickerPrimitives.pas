@@ -180,6 +180,7 @@ begin
 
       APrimitives[PrimitiveIndex].PrimitiveType := PrimitiveTypeNameToIndex(PrimitiveTypeStr);
       APrimitives[PrimitiveIndex].PrimitiveName := Ini.ReadString(SectionIndex, 'PrimitiveName', 'some primitive');
+      APrimitives[PrimitiveIndex].Selected := False;
 
       CGetAllPrimitiveFromIni[APrimitives[PrimitiveIndex].PrimitiveType](Ini, SectionIndex, APrimitives[PrimitiveIndex]);
     end;

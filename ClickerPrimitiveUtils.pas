@@ -121,6 +121,7 @@ type
   TPrimitiveRec = record        //Only one of the "primitive" fields is used at a time. This is similar to TClkActionRec.
     PrimitiveType: Integer; //index of one of the following fields
     PrimitiveName: string;
+    Selected: Boolean;  //Selected in editor. Allows dragging and resizing (except for text).
 
     ClkSetPen: TClkSetPen;
     ClkSetBrush: TClkSetBrush;
