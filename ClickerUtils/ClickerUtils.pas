@@ -677,31 +677,6 @@ begin
 end;
 
 
-function ExtractFuncArgs(AFuncNameStart, AFuncAndArgs: string): string;
-var
-  Args: string;
-  Count, i: Integer;
-begin
-  Args := Copy(AFuncAndArgs, Pos(AFuncNameStart, AFuncAndArgs) + Length(AFuncNameStart), MaxInt);
-  Count := 1; //number of '(' / ')' pairs found
-  for i := 1 to Length(Args) do
-  begin
-    if Args[i] = '(' then
-      Inc(Count)
-    else
-      if Args[i] = ')' then
-      begin
-        Dec(Count);
-        if Count <= 0 then //can be negative, because it finds ')' without '('
-        begin
-          Result := Copy(Args, 1, i - 1);
-          Break;
-        end;
-      end;
-  end;
-end;
-
-
 const
   CRandom_FuncName = '$Random(';
   CSum_FuncName = '$Sum(';
@@ -735,6 +710,110 @@ const
   CGetSelfHandles_FuncName = '$GetSelfHandles(';
   CGetKeyNameFromPair_FuncName = '$GetKeyNameFromPair(';
   CGetKeyValueFromPair_FuncName = '$GetKeyValueFromPair(';
+
+  CBuiltInFunctionCount = 32;
+  CBuiltInFunctions: array[0..CBuiltInFunctionCount - 1] of string = (
+    CRandom_FuncName,
+    CSum_FuncName,
+    CDiff_FuncName,
+    CMul_FuncName,
+    CDiv_FuncName,
+    CUpdateControlInfo_FuncName,
+    CExtractFileDir_FuncName,
+    CExtractFileName_FuncName,
+    CExtractFileExt_FuncName,
+    CExtractFileNameNoExt_FuncName,
+    CChr_FuncName,
+    CFastReplace_45ToReturn_FuncName,
+    CFastReplace_ReturnTo45_FuncName,
+    CFastReplace_45To87_FuncName,
+    CFastReplace_87To45_FuncName,
+    CExit_FuncName,
+    CStringContains_FuncName,
+    CCreateDir_FuncName,
+    CLoadTextFile_FuncName,
+    CItemCount_FuncName,
+    CGetTextItem_FuncName,
+    CIncBrightness_FuncName,
+    CDecBrightness_FuncName,
+    CIncBrightnessR_FuncName,
+    CIncBrightnessG_FuncName,
+    CIncBrightnessB_FuncName,
+    CDecBrightnessR_FuncName,
+    CDecBrightnessG_FuncName,
+    CDecBrightnessB_FuncName,
+    CGetSelfHandles_FuncName,
+    CGetKeyNameFromPair_FuncName,
+    CGetKeyValueFromPair_FuncName
+  );
+
+
+function AnyBuiltInFunctionExistsAtTheEndOfString(AString: string): Integer;
+var
+  i: Integer;
+  ParamLen, CurrentLen: Integer;
+begin
+  Result := -1;
+  ParamLen := Length(AString);
+
+  for i := 0 to CBuiltInFunctionCount - 1 do
+  begin
+    CurrentLen := Length(CBuiltInFunctions[i]);
+
+    if CurrentLen < ParamLen then
+      if Copy(AString, ParamLen - CurrentLen + 1, CurrentLen) = CBuiltInFunctions[i] then
+      begin
+        Result := i;
+        Break;
+      end;
+  end;
+end;
+
+
+//function AnyBuiltInFunctionExists(AString: string): Integer;
+//var
+//  i: Integer;
+//begin
+//  Result := -1;
+//
+//  for i := 0 to CBuiltInFunctionCount - 1 do
+//    if Pos(CBuiltInFunctions[i], AString) > 0 then
+//    begin
+//      Result := i;
+//      Break;
+//    end;
+//end;
+
+
+function ExtractFuncArgs(AFuncNameStart, AFuncAndArgs: string): string;
+var
+  Args: string;
+  Count, i: Integer;
+  //FuncIdx: Integer;
+begin
+  Args := Copy(AFuncAndArgs, Pos(AFuncNameStart, AFuncAndArgs) + Length(AFuncNameStart), MaxInt);
+  Count := 1; //number of '(' / ')' pairs found
+  for i := 1 to Length(Args) do
+  begin
+    if (Args[i] = '(') and (i > 3) and (AnyBuiltInFunctionExistsAtTheEndOfString(Copy(AFuncAndArgs, 1, i)) > -1) then
+      Inc(Count)
+    else
+      if (Args[i] = ')') and (i < Length(Args)) and (Args[i + 1] = '$') then
+      begin
+        Dec(Count);
+        if Count <= 0 then //can be negative, because it finds ')' without '('
+        begin
+          Result := Copy(Args, 1, i - 1);
+
+          //FuncIdx := AnyBuiltInFunctionExists(Result);      //The inner most function has to be solved first (through recursion).
+          //if FuncIdx > -1 then
+          //  Result := ExtractFuncArgs(CBuiltInFunctions[FuncIdx], Result + ')$');   //recursion here
+
+          Break;
+        end;
+      end;
+  end;
+end;
 
 
 function ReplaceRandom(AListOfVars: TStringList; s: string): string;
