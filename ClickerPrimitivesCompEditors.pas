@@ -25,7 +25,7 @@
 unit ClickerPrimitivesCompEditors;
 
 {$mode Delphi}
-
+{$WARN 5029 off : Private field "$1.$2" is never used}
 interface
 
 uses

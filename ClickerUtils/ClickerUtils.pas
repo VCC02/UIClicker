@@ -770,28 +770,29 @@ begin
 end;
 
 
-//function AnyBuiltInFunctionExists(AString: string): Integer;
-//var
-//  i: Integer;
-//begin
-//  Result := -1;
-//
-//  for i := 0 to CBuiltInFunctionCount - 1 do
-//    if Pos(CBuiltInFunctions[i], AString) > 0 then
-//    begin
-//      Result := i;
-//      Break;
-//    end;
-//end;
+function AnyBuiltInFunctionExists(AString: string): Integer;
+var
+  i: Integer;
+begin
+  Result := -1;
+
+  for i := 0 to CBuiltInFunctionCount - 1 do
+    if Pos(CBuiltInFunctions[i], AString) > 0 then
+    begin
+      Result := i;
+      Break;
+    end;
+end;
 
 
 function ExtractFuncArgs(AFuncNameStart, AFuncAndArgs: string): string;
 var
   Args: string;
   Count, i: Integer;
-  //FuncIdx: Integer;
+  FuncIdx: Integer;
 begin
   Args := Copy(AFuncAndArgs, Pos(AFuncNameStart, AFuncAndArgs) + Length(AFuncNameStart), MaxInt);
+
   Count := 1; //number of '(' / ')' pairs found
   for i := 1 to Length(Args) do
   begin
@@ -805,9 +806,9 @@ begin
         begin
           Result := Copy(Args, 1, i - 1);
 
-          //FuncIdx := AnyBuiltInFunctionExists(Result);      //The inner most function has to be solved first (through recursion).
-          //if FuncIdx > -1 then
-          //  Result := ExtractFuncArgs(CBuiltInFunctions[FuncIdx], Result + ')$');   //recursion here
+          FuncIdx := AnyBuiltInFunctionExists(Result);      //The inner most function has to be solved first (through recursion).
+          if FuncIdx > -1 then
+            Result := ExtractFuncArgs(CBuiltInFunctions[FuncIdx], Result + ')$');   //recursion here
 
           Break;
         end;
