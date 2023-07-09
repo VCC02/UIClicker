@@ -87,6 +87,7 @@ type
     function HandleOnPictureOpenDialogExecute: Boolean;
     function HandleOnGetPictureOpenDialogFileName: string;
     function HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
+
     procedure HandleOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
     procedure HandleOnSavePrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
     procedure HandleOnGetSelfHandles(AListOfSelfHandles: TStringList);
@@ -103,9 +104,9 @@ implementation
 
 
 uses
-  ClickerPreviewForm, ClickerWinInterpForm, ClickerTemplateCallTreeForm, ClickerActionsForm,
+  ClickerPreviewForm, ClickerWinInterpForm, ClickerWinInterpFrame, ClickerTemplateCallTreeForm,
   ClickerActionsClient, IniFiles, ClickerFindControlFrame, ClickerRemoteScreenForm,
-  ClickerUtils, ClickerPrimitives;
+  ClickerUtils, ClickerPrimitives, ClickerActionsForm;
 
 { TfrmUIClickerMainForm }
 

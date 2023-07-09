@@ -1785,7 +1785,7 @@ begin
   if FExecutingActionFromRemote then
   begin   //some green actions in server mode
     vstActions.Colors.UnfocusedSelectionColor := $00D8FFD8;
-    vstActions.Colors.FocusedSelectionColor := $00408811;
+    vstActions.Colors.FocusedSelectionColor := $00408823;
   end
   else
   begin

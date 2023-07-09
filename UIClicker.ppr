@@ -41,11 +41,12 @@ uses
   ClickerConditionEditorForm, ClickerFindControlFrame, ClickerActionsForm,
   ClickerActionsPaletteFrame, UIClickerMainFormFP, ClickerRemoteScreenForm,
   ClickerPreviewForm, ClickerActionExecution, ClickerTemplateNotesForm,
-  ClickerZoomPreviewForm, ObjectInspectorFrame, ClickerActionValues, 
-  ClickerExecAppFrame, ClickerSetVarFrame, ClickerSleepFrame, 
-  ClickerCallTemplateFrame, ClickerUtils, ClickerPrimitiveUtils, 
-  ClickerPrimitivesFrame, ClickerPrimitiveValues, ClickerPrimitives, 
-  ClickerOIUtils, ClickerPrimitivesCompositor, ClickerPrimitivesCompEditors;
+  ClickerZoomPreviewForm, ObjectInspectorFrame, ClickerActionValues,
+  ClickerExecAppFrame, ClickerSetVarFrame, ClickerSleepFrame,
+  ClickerCallTemplateFrame, ClickerUtils, ClickerPrimitiveUtils,
+  ClickerPrimitivesFrame, ClickerPrimitiveValues, ClickerPrimitives,
+  ClickerOIUtils, ClickerPrimitivesCompositor, ClickerPrimitivesCompEditors,
+  ClickerWinInterpFrame;
 
 {$R *.res}
 
