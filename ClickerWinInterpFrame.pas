@@ -82,6 +82,9 @@ type
     lblGauge: TLabel;
     lblHighlightingLabels: TLabel;
     memCompInfo: TMemo;
+    MenuItem_ConfigureMultiSizeRecording: TMenuItem;
+    MenuItem_RecordMultipleSizes: TMenuItem;
+    Separator2: TMenuItem;
     MenuItemCopyFindControlActionsToClipBoard: TMenuItem;
     MenuItemCopyFindControlAndCachePositionActionsToClipBoard: TMenuItem;
     MenuItemCopyFindControlAndClickActionsToClipBoard: TMenuItem;
@@ -125,6 +128,7 @@ type
     procedure MenuItem_CopySelectedComponentToClipboardClick(Sender: TObject);
     procedure MenuItem_CopySelectionToClipboardClick(Sender: TObject);
     procedure MenuItem_RecordFromRemoteClick(Sender: TObject);
+    procedure MenuItem_RecordMultipleSizesClick(Sender: TObject);
     procedure MenuItem_SaveSelectedComponentToFileClick(Sender: TObject);
     procedure MenuItem_SaveSelectionToFileClick(Sender: TObject);
     procedure pnlDragMouseDown(Sender: TObject; Button: TMouseButton;
@@ -231,6 +235,7 @@ type
     procedure BuildColors;
     procedure GenerateCompImagesfromTreeContent;
     function GetParentNodeByRectangle(AComp: THighlightedCompRec): PVirtualNode;
+    procedure InsertTreeComponent(AParentNode: PVirtualNode; AComp: THighlightedCompRec);
     procedure AddTreeComponent(AComp: THighlightedCompRec);
     procedure SelectTreeNodeByHandle(HW: THandle);
     procedure SelectTreeNodeByImgPoint(X, Y: Integer);
@@ -1504,6 +1509,106 @@ begin
 end;
 
 
+procedure TfrClickerWinInterp.MenuItem_RecordMultipleSizesClick(Sender: TObject);
+var
+  ImgMatrix: TColorArr;
+  ImgHWMatrix: THandleArr;
+  i: Integer;
+  Flags: DWord;
+  MainCompRec: TCompRec;
+  TempSaveDialog: TSaveDialog;
+  RecResult: Boolean;
+  s: string;
+  MainFileName: string;
+begin
+  MessageBox(Handle,
+             PChar('The target window sizes (width/height) are not configurable for now. They will be incresed by 30px for each recording.' + #13#10 +
+                   'There will be three recordings, starting with the current target window size.' + #13#10 +
+                   'Make sure the window can be resized to at least 60px on both width and height, i.e. the window is not maximized.' + #13#10 +
+                   'Window Interpreter will attempt to resize the window automatically, after each recording.' + #13#10#13#10 +
+                   'A save dialog will open, to let you browse the location of where the .tree files will be saved.'),
+             PChar(Application.Title),
+             MB_ICONINFORMATION);
+
+  if FInterprettedHandle = 0 then
+  begin
+    pnlDrag.Color := clRed;
+    MessageBox(Handle, 'Please set the target control (or window) before recording it.', PChar(Caption), MB_ICONINFORMATION);
+    pnlDrag.Color := clYellow;
+    Exit;
+  end;
+
+  TempSaveDialog := TSaveDialog.Create(nil);
+  try
+    TempSaveDialog.Filter := 'Tree files (*.tree)|*.tree|All files (*.*)|*.*';
+    if not TempSaveDialog.Execute then
+      Exit;
+
+    if ExtractFileExt(TempSaveDialog.FileName) = '' then
+      TempSaveDialog.FileName := TempSaveDialog.FileName + '.tree';
+
+    MainFileName := TempSaveDialog.FileName;
+    MainFileName := Copy(MainFileName, 1, Length(MainFileName) - 5);
+
+    s := '';
+
+    Flags := SWP_ASYNCWINDOWPOS or SWP_NOACTIVATE or SWP_NOOWNERZORDER or SWP_NOZORDER;
+    Flags := Flags or SWP_NOMOVE;
+
+    for i := 0 to 2 do
+    begin
+      if i = 0 then
+        MainCompRec := GetWindowClassRec(FInterprettedHandle);
+
+      try
+        RecordComponent(FInterprettedHandle, ImgMatrix, ImgHWMatrix);
+      finally
+        SetLength(ImgMatrix, 0);
+        SetLength(ImgHWMatrix, 0);
+      end;
+
+      RecResult := SetWindowPos( FInterprettedHandle,
+                                 HWND_TOP,
+                                 MainCompRec.ComponentRectangle.Left,
+                                 MainCompRec.ComponentRectangle.Top,
+                                 MainCompRec.ComponentRectangle.Width + (i + 1) * 30,
+                                 MainCompRec.ComponentRectangle.Height + (i + 1) * 30,
+                                 Flags);
+
+      if not RecResult then
+        s := s + 'Resizing error: ' + SysErrorMessage(GetLastError) + #13#10;
+
+      try
+        vstComponents.SaveToFile(MainFileName + '_' + IntToStr(i) + '.tree');
+        SaveImages(MainFileName + '_' + IntToStr(i) + '.tree');
+      except
+        on E: Exception do
+          s := s + 'Recording exception: '  + E.Message;
+      end;
+    end; //for
+
+    //Restore
+    RecResult := SetWindowPos( FInterprettedHandle,
+                               HWND_TOP,
+                               MainCompRec.ComponentRectangle.Left,
+                               MainCompRec.ComponentRectangle.Top,
+                               MainCompRec.ComponentRectangle.Width,
+                               MainCompRec.ComponentRectangle.Height,
+                               Flags);
+
+    if not RecResult then
+      s := s + 'Resizing error: ' + SysErrorMessage(GetLastError) + #13#10;
+
+    if s <> '' then
+      s := #13#10 + s;
+
+    MessageBox(Handle, PChar('Done recording.' + s), PChar(Application.Title), MB_ICONINFORMATION);
+  finally
+    TempSaveDialog.Free;
+  end;
+end;
+
+
 procedure TfrClickerWinInterp.MenuItem_SaveSelectionToFileClick(Sender: TObject);
 var
   Node: PVirtualNode;
@@ -1637,14 +1742,12 @@ begin
 end;
 
 
-procedure TfrClickerWinInterp.AddTreeComponent(AComp: THighlightedCompRec);
+procedure TfrClickerWinInterp.InsertTreeComponent(AParentNode: PVirtualNode; AComp: THighlightedCompRec);
 var
   NewData: PHighlightedCompRec;
-  Node, ParentNode: PVirtualNode;
+  Node: PVirtualNode;
 begin
-  ParentNode := GetParentNodeByRectangle(AComp);
-
-  if ParentNode = nil then
+  if AParentNode = nil then
   begin
     try
       Node := vstComponents.InsertNode(vstComponents.RootNode, amAddChildLast)
@@ -1658,8 +1761,8 @@ begin
   end
   else
   begin
-    Node := vstComponents.InsertNode(ParentNode, amAddChildLast);
-    vstComponents.FullExpand(ParentNode);
+    Node := vstComponents.InsertNode(AParentNode, amAddChildLast);
+    vstComponents.FullExpand(AParentNode);
   end;
 
   NewData := vstComponents.GetNodeData(Node);
@@ -1670,6 +1773,15 @@ begin
   end;
 
   NewData^ := AComp;
+end;
+
+
+procedure TfrClickerWinInterp.AddTreeComponent(AComp: THighlightedCompRec);
+var
+  ParentNode: PVirtualNode;
+begin
+  ParentNode := GetParentNodeByRectangle(AComp);
+  InsertTreeComponent(ParentNode, AComp);
 end;
 
 
@@ -1770,6 +1882,8 @@ begin
     HighlightedCompRec.AssignedColor := Result;
     HighlightedCompRec.LocalX := ALocalX;
     HighlightedCompRec.LocalY := ALocalY;
+
+    HighlightedCompRec.ManuallyAdded := False;
 
     try
       AddTreeComponent(HighlightedCompRec);

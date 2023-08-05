@@ -25,7 +25,7 @@
 unit BitmapProcessing;
 
 {$IFDEF FPC}
-  //{$MODE Delphi}
+  {$MODE Delphi}
 {$ENDIF}
 
 interface

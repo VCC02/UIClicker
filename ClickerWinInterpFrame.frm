@@ -327,7 +327,7 @@ object frClickerWinInterp: TfrClickerWinInterp
     Height = 256
     Top = 8
     Width = 456
-    Anchors = [akTop, akLeft, akBottom]
+    Anchors = [akTop, akRight, akBottom]
     Caption = 'pnlvstComponents'
     Color = clYellow
     ParentColor = False
@@ -448,6 +448,17 @@ object frClickerWinInterp: TfrClickerWinInterp
         FFFFFFFFFFFFFFFFB3B3B3B0B0B0FFFFFFFFFFFFFFFFFFFFFFFF
       }
       OnClick = MenuItemRecordWithMouseSwipeClick
+    end
+    object Separator2: TMenuItem
+      Caption = '-'
+    end
+    object MenuItem_RecordMultipleSizes: TMenuItem
+      Caption = 'Record multiple sizes...'
+      OnClick = MenuItem_RecordMultipleSizesClick
+    end
+    object MenuItem_ConfigureMultiSizeRecording: TMenuItem
+      Caption = 'Configure multi-size recording...'
+      Enabled = False
     end
   end
   object imglstSpinner: TImageList
