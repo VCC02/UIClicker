@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2022 VCC
+    Copyright (C) 2023 VCC
     creation date: Dec 2019
     initial release date: 26 Jul 2022
 
@@ -247,6 +247,8 @@ begin
   AClickOptions.YClickPointVarDest := Ini.ReadString(SectionIndex, 'YClickPointVarDest', '$Control_Top$');
   AClickOptions.XOffsetDest := Ini.ReadString(SectionIndex, 'XOffsetDest', '0');
   AClickOptions.YOffsetDest := Ini.ReadString(SectionIndex, 'YOffsetDest', '0');
+  AClickOptions.MouseWheelType := TMouseWheelType(Min(Ini.ReadInteger(SectionIndex, 'MouseWheelType', 0), Integer(High(TMouseWheelType))));
+  AClickOptions.MouseWheelAmount := Ini.ReadString(SectionIndex, 'MouseWheelAmount', '0');
 end;
 
 
@@ -680,6 +682,9 @@ begin
   AStringList.Add('YClickPointVarDest=' + AActionClickOptions.YClickPointVarDest);
   AStringList.Add('XOffsetDest=' + AActionClickOptions.XOffsetDest);
   AStringList.Add('YOffsetDest=' + AActionClickOptions.YOffsetDest);
+
+  AStringList.Add('MouseWheelType=' + IntToStr(Ord(AActionClickOptions.MouseWheelType)));
+  AStringList.Add('MouseWheelAmount=' + AActionClickOptions.MouseWheelAmount);
 end;
 
 

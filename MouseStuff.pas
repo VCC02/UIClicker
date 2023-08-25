@@ -44,10 +44,17 @@ const
   CMouseXDest = 'XDest';
   CMouseYDest = 'YDest';
 
+  CMouseWheelType = 'WheelType';
+  CMouseWheelVertWheel = 'VWheel';
+  CMouseWheelHorizWheel = 'HWheel';
+  CMouseWheelAmount = 'WheelAmount'; //the values of this key are in 120 unit increments  (can also be negative)
+
+  //Same values are defined in ClickerUtils. They are redefined here, to avoid a dependency.
   CMouseClickType_Click = 0;
   CMouseClickType_Drag = 1;
   CMouseClickType_MouseDown = 2;
   CMouseClickType_MouseUp = 3;
+  CMouseClickType_Wheel = 4;
 
   CMouseClickType_DragStr = '1';
 
@@ -64,6 +71,7 @@ const
 procedure ClickTControl(AParams: TStringList);
 procedure MouseDownTControl(AParams: TStrings);
 procedure MouseUpTControl(AParams: TStrings);
+procedure MouseWheelTControl(AParams: TStrings);
 
   
 implementation
@@ -370,6 +378,20 @@ begin
   GetCursorPos(tp);
   GetMouseEventsFromParam(AParams, tp.X, tp.Y, X, Y, XDest, YDest, IsDragging, AShift, AButton);
   ExecMouseUp;
+end;
+
+
+procedure MouseWheelTControl(AParams: TStrings);
+var
+  Amount: Integer;
+begin
+  Amount := StrToIntDef(AParams.Values[CMouseWheelAmount], 0);
+
+  if AParams.Values[CMouseWheelType] = CMouseWheelVertWheel then
+    mouse_event(MOUSEEVENTF_WHEEL, 0, 0, DWord(Amount * WHEEL_DELTA), 0);
+
+  if AParams.Values[CMouseWheelType] = CMouseWheelHorizWheel then
+    mouse_event(MOUSEEVENTF_WHEEL, 0, 0, DWord(Amount), 0);
 end;
 
 end.

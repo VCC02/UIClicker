@@ -646,6 +646,19 @@ begin
       MouseParams.Values[CMouseYDest] := IntToStr(YClick);
     end; ///Dest
 
+    if AClickOptions.ClickType = CMouseClickType_Wheel then
+    begin
+      case AClickOptions.MouseWheelType of
+        mwtVert:
+          MouseParams.Values[CMouseWheelType] := CMouseWheelVertWheel;
+
+        mwtHoriz:
+          MouseParams.Values[CMouseWheelType] := CMouseWheelHorizWheel;
+      end;
+
+      MouseParams.Values[CMouseWheelAmount] := EvaluateReplacements(AClickOptions.MouseWheelAmount);
+    end;
+
     case AClickOptions.ClickType of
       CMouseClickType_Click, CMouseClickType_Drag:
         ClickTControl(MouseParams);
@@ -655,6 +668,9 @@ begin
 
       CMouseClickType_MouseUp:
         MouseUpTControl(MouseParams);
+
+      CMouseClickType_Wheel:
+        MouseWheelTControl(MouseParams);
     end;
   finally
     MouseParams.Free;
@@ -1903,7 +1919,7 @@ var
   ClickOptions: TClkClickOptions;
   Temp_XClickPointReference: Integer;
   Temp_YClickPointReference: Integer;
-  Temp_MouseButton: Integer;
+  Temp_MouseButton, Temp_MouseWheelType: Integer;
   Temp_XClickPointReferenceDest: Integer;
   Temp_YClickPointReferenceDest: Integer;
   Temp_ClickType: Integer;
@@ -1926,10 +1942,17 @@ begin
       Exit;
     end;
 
-    Temp_MouseButton := StrToIntDef(AListOfClickOptionsParams.Values['MouseButton'], 0);
+    Temp_MouseButton := StrToIntDef(AListOfClickOptionsParams.Values['MouseButton'], Ord(mbLeft));
     if (Temp_MouseButton < 0) or (Temp_MouseButton > Ord(High(TMouseButton))) then
     begin
       SetActionVarValue('$ExecAction_Err$', 'MouseButton is out of range.');
+      Exit;
+    end;
+
+    Temp_MouseWheelType := StrToIntDef(AListOfClickOptionsParams.Values['MouseWheelType'], Ord(mwtVert));
+    if (Temp_MouseWheelType < 0) or (Temp_MouseWheelType > Ord(High(TMouseWheelType))) then
+    begin
+      SetActionVarValue('$ExecAction_Err$', 'MouseWheelType is out of range.');
       Exit;
     end;
 
@@ -1948,7 +1971,7 @@ begin
     end;
 
     Temp_ClickType := StrToIntDef(AListOfClickOptionsParams.Values['ClickType'], CClickType_Click);
-    if (Temp_ClickType < 0) or (Temp_ClickType > 3) then
+    if (Temp_ClickType < 0) or (Temp_ClickType > CClickType_Count - 1) then
     begin
       SetActionVarValue('$ExecAction_Err$', 'ClickType is out of range.');
       Exit;
@@ -1982,6 +2005,8 @@ begin
     ClickOptions.YClickPointVarDest := AListOfClickOptionsParams.Values['YClickPointVarDest'];
     ClickOptions.XOffsetDest := AListOfClickOptionsParams.Values['XOffsetDest'];
     ClickOptions.YOffsetDest := AListOfClickOptionsParams.Values['YOffsetDest'];
+    ClickOptions.MouseWheelType := TMouseWheelType(Temp_MouseWheelType);
+    ClickOptions.MouseWheelAmount := AListOfClickOptionsParams.Values['MouseWheelAmount'];
 
     Result := ExecuteMultiClickAction(ClickOptions);
   finally

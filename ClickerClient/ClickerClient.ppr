@@ -62,6 +62,8 @@ type
     XClickPointVarDest: PWideChar;
     YClickPointVarDest: PWideChar;
     XOffsetDest, YOffsetDest: PWideChar;
+    MouseWheelType: TMouseWheelType;
+    MouseWheelAmount: PWideChar;
   end;
 
   PClkClickOptionsAPI = ^TClkClickOptionsAPI;
@@ -557,6 +559,8 @@ begin
   SetPointedContentToString(@string(PWideChar(AClickOptions^.YClickPointVarDest))[1], TempAction.ClickOptions.YClickPointVarDest);
   SetPointedContentToString(@string(PWideChar(AClickOptions^.XOffsetDest))[1], TempAction.ClickOptions.XOffsetDest);
   SetPointedContentToString(@string(PWideChar(AClickOptions^.YOffsetDest))[1], TempAction.ClickOptions.YOffsetDest);
+  TempAction.ClickOptions.MouseWheelType := AClickOptions^.MouseWheelType;
+  SetPointedContentToString(@string(PWideChar(AClickOptions^.MouseWheelAmount))[1], TempAction.ClickOptions.MouseWheelAmount);
 
   AddActionToTemplate(TemplateFileName, TempAction);
   Result := 0;

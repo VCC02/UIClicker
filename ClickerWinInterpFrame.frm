@@ -6,6 +6,7 @@ object frClickerWinInterp: TfrClickerWinInterp
   ClientHeight = 501
   ClientWidth = 893
   OnResize = FrameResize
+  ParentBackground = False
   TabOrder = 0
   DesignLeft = 86
   DesignTop = 85

@@ -90,14 +90,16 @@ const
   CClkUnsetAction = 255; //TClkAction(255);
 
   //These constants are used to index an array, similar to enum values.  Please update TClickTypeStr if adding more constants to this "type".
-  CClickType_Count = 4; //the number of available modes  (like enum items)
+  CClickType_Count = 5; //the number of available modes  (like enum items)
 
+  //The following ClickType constants are also defined in MouseStuff.pas.
   CClickType_Click = 0;
   CClickType_Drag = 1;
   CClickType_ButtonDown = 2;
   CClickType_ButtonUp = 3;
+  CClickType_Wheel = 4;
 
-  CClickTypeStr: array[0..CClickType_Count - 1] of string = ('Click', 'Drag', 'ButtonDown', 'ButtonUp');
+  CClickTypeStr: array[0..CClickType_Count - 1] of string = ('Click', 'Drag', 'ButtonDown', 'ButtonUp', 'Wheel');
 
   CFuncExVarName = '$FunctionException$';
 
@@ -114,6 +116,7 @@ type
 
   TXClickPointReference = (xrefLeft, xrefRight, xrefWidth, xrefVar, xrefAbsolute);    //see CXOffsetReference below if modified
   TYClickPointReference = (yrefTop, yrefBottom, yrefHeight, yrefVar, yrefAbsolute);   //see CYOffsetReference below if modified
+  TMouseWheelType = (mwtVert, mwtHoriz);
 
   TClkClickOptions = record
     XClickPointReference: TXClickPointReference;
@@ -135,6 +138,8 @@ type
     XClickPointVarDest: string;
     YClickPointVarDest: string;
     XOffsetDest, YOffsetDest: string;
+    MouseWheelType: TMouseWheelType;
+    MouseWheelAmount: string;
   end;
 
   TExecAppUseInheritHandles = (uihNo, uihYes, uihOnlyWithStdInOut);
@@ -356,6 +361,7 @@ const
   CXClickPointReferenceStr: array[TXClickPointReference] of string = ('xrefLeft', 'xrefRight', 'xrefWidth', 'xrefVar', 'xrefAbsolute');
   CYClickPointReferenceStr: array[TYClickPointReference] of string = ('yrefTop', 'yrefBottom', 'yrefHeight', 'yrefVar', 'yrefAbsolute');
   CMouseButtonStr: array[TMouseButton] of string = ('mbLeft', 'mbRight', 'mbMiddle', 'mbExtra1', 'mbExtra2');
+  CMouseWheelTypeStr: array[TMouseWheelType] of string = ('mwtVert', 'mwtHoriz');
   CExecAppUseInheritHandlesStr: array[TExecAppUseInheritHandles] of string = ('uihNo', 'uihYes', 'uihOnlyWithStdInOut');
   CMatchBitmapAlgorithmStr: array[TMatchBitmapAlgorithm] of string = ('mbaBruteForce', 'mbaXYMultipleAndOffsets');
   CClkSetTextControlTypeStr: array[TClkSetTextControlType] of string = ('stEditBox', 'stComboBox', 'stKeystrokes');

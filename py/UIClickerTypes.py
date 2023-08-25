@@ -57,6 +57,11 @@ class TMouseButton: #(Enum):
     mbMiddle = 2
     mbExtra1 = 3
     mbExtra2 = 4
+
+	
+class TMouseWheelType: #(Enum):
+    mwtVert = 0
+    mwtHoriz = 1
     
     
 class TExecAppUseInheritHandles: #(Enum):
@@ -126,8 +131,10 @@ class TClickOptions(Structure):
                ("YClickPointReferenceDest", LONG), #TYClickPointReference
                ("XClickPointVarDest", LPCWSTR),
                ("YClickPointVarDest", LPCWSTR),
-               ("XOffsetDest", LPCWSTR), 
-               ("YOffsetDest", LPCWSTR)]               
+               ("XOffsetDest", LPCWSTR),
+               ("YOffsetDest", LPCWSTR),
+			   ("MouseWheelType", LONG), #TMouseWheelType
+			   ("MouseWheelAmount", LPCWSTR)]               
 
 PClickOptions = ctypes.POINTER(TClickOptions)
 
@@ -154,6 +161,8 @@ def GetDefaultClickOptions():
     ClickOptions.YClickPointVarDest = '$Control_Top$'
     ClickOptions.XOffsetDest = ''
     ClickOptions.YOffsetDest = ''
+    ClickOptions.MouseWheelType = TMouseWheelType.mwtVert
+    ClickOptions.MouseWheelAmount = '0'
     return ClickOptions
 
 

@@ -336,6 +336,7 @@
         <FRMtype Value="400"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frClickerWinInterp"/>
+        <HasResources Value="True"/>
         <ResourceBaseClass Value="Frame"/>
       </Unit>
     </Units>

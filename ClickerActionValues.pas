@@ -54,7 +54,7 @@ const
   CPropCount_Common = 4;  //Action name, Action type, Action Timeout, StopOnError
 
   //Properties (counts)
-  CPropCount_Click = 20;
+  CPropCount_Click = 22;
   CPropCount_ExecApp = 7;
   CPropCount_FindControl = 19;
   CPropCount_FindSubControl = 19;
@@ -187,7 +187,9 @@ const
     (Name: 'XClickPointVarDest'; EditorType: etText; DataType: CDTString),
     (Name: 'YClickPointVarDest'; EditorType: etText; DataType: CDTString),
     (Name: 'XOffsetDest'; EditorType: etSpinText; DataType: CDTString),
-    (Name: 'YOffsetDest'; EditorType: etSpinText; DataType: CDTString)
+    (Name: 'YOffsetDest'; EditorType: etSpinText; DataType: CDTString),
+    (Name: 'MouseWheelType'; EditorType: etEnumCombo; DataType: CDTEnum),
+    (Name: 'MouseWheelAmount'; EditorType: etSpinText; DataType: CDTString)
   );
 
   CExecAppProperties: array[0..CPropCount_ExecApp - 1] of TOIPropDef = (
@@ -479,7 +481,9 @@ const
     0, //XClickPointVarDest: string;
     0, //YClickPointVarDest: string;
     0, //XOffsetDest
-    0 //YOffsetDest
+    0, //YOffsetDest
+    Ord(High(TMouseWheelType)) + 1,
+    0 //MouseWheelAmount: string;
   );
 
   CExecAppEnumCounts: array[0..CPropCount_ExecApp - 1] of Integer = (
@@ -626,7 +630,9 @@ const
     nil, //XClickPointVarDest: string;
     nil, //YClickPointVarDest: string;
     nil, //XOffsetDest
-    nil //YOffsetDest
+    nil, //YOffsetDest
+    @CMouseWheelTypeStr, //MouseWheelType: TMouseWheelType;
+    nil  //MouseWheelAmount
   );
 
   CExecAppEnumStrings: array[0..CPropCount_ExecApp - 1] of PArrayOfString = (
@@ -836,7 +842,9 @@ const
     @GetPropertyHintNoHint, // XClickPointVarDest: string;
     @GetPropertyHintNoHint, // YClickPointVarDest: string;
     @GetPropertyHintNoHint, // XOffsetDest
-    @GetPropertyHintNoHint  // YOffsetDest
+    @GetPropertyHintNoHint, // YOffsetDest
+    @GetPropertyHintNoHint, // MouseWheelType: TMouseWheelType;
+    @GetPropertyHintNoHint  // MouseWheelAmount: string;
   );
 
 
@@ -1007,6 +1015,8 @@ begin
     17: Result := AAction^.ClickOptions.YClickPointVarDest;
     18: Result := AAction^.ClickOptions.XOffsetDest;
     19: Result := AAction^.ClickOptions.YOffsetDest;
+    20: Result := CMouseWheelTypeStr[AAction^.ClickOptions.MouseWheelType];
+    21: Result := AAction^.ClickOptions.MouseWheelAmount;
     else
       Result := 'unknown';
   end;
@@ -1257,6 +1267,19 @@ begin
 end;
 
 
+function TMouseWheelType_AsStringToValue(AMouseWheelTypeAsString: string): TMouseWheelType;
+var
+  i: TMouseWheelType;
+begin
+  for i := Low(TMouseWheelType) to High(TMouseWheelType) do
+    if CMouseWheelTypeStr[i] = AMouseWheelTypeAsString then
+    begin
+      Result := i;
+      Exit;
+    end;
+end;
+
+
 function StrToBool(ABoolAsString: string): Boolean;
 begin
   Result := ABoolAsString = 'True';
@@ -1426,6 +1449,8 @@ begin
     17: AAction^.ClickOptions.YClickPointVarDest := NewValue;
     18: AAction^.ClickOptions.XOffsetDest := NewValue;
     19: AAction^.ClickOptions.YOffsetDest := NewValue;
+    20: AAction^.ClickOptions.MouseWheelType := TMouseWheelType_AsStringToValue(NewValue);
+    21: AAction^.ClickOptions.MouseWheelAmount := NewValue;
     else
       ;
   end;

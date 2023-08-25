@@ -616,7 +616,9 @@ begin
                                     'XClickPointVarDest' + '=' + AClickOptions.XClickPointVarDest + '&' +
                                     'YClickPointVarDest' + '=' + AClickOptions.YClickPointVarDest + '&' +
                                     'XOffsetDest' + '=' + AClickOptions.XOffsetDest + '&' +
-                                    'YOffsetDest' + '=' + AClickOptions.YOffsetDest,
+                                    'YOffsetDest' + '=' + AClickOptions.YOffsetDest + '&' +
+                                    'MouseWheelType' + '=' + IntToStr(Ord(AClickOptions.MouseWheelType)) + '&' +
+                                    'MouseWheelAmount' + '=' + AClickOptions.MouseWheelAmount,
                                     ACallAppProcMsg
                                     );
 end;
