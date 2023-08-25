@@ -42,8 +42,12 @@ type
   THighlightedCompRec = record
     CompRec: TCompRec;
     LocalX, LocalY: Integer;  //relative to the screenshot image
+    LocalX_FromParent, LocalY_FromParent: Integer;  //relative to the parent component
     AssignedColor: TColor;
     ManuallyAdded: Boolean;  //Set to True when added by user. It is usually set for subcomponents.
+
+    Ctrl: TWinControl; //used by drawing board, to sync components  (this is the mount panel)
+    ParentCtrl: TWinControl; //used by drawing board, to sync components  (this can be the drawing board or another mount panel)
   end;
 
 
@@ -57,6 +61,10 @@ type
 
   TColorArr = array of TColor;
   THandleArr = array of THandle;
+
+
+  TOnInsertTreeComponent = procedure(ACompData: PHighlightedCompRec) of object;
+  TOnClearWinInterp = procedure of object;
 
   { TfrClickerWinInterp }
 
@@ -75,6 +83,7 @@ type
     imgLiveScreenshot: TImage;
     imglstSpinner: TImageList;
     imgScannedWindow: TImage;
+    imgScannedWindowWithText: TImage;
     imgScreenshot: TImage;
     imgSpinner: TImage;
     imgSpinnerDiff: TImage;
@@ -84,6 +93,17 @@ type
     memCompInfo: TMemo;
     MenuItem_ConfigureMultiSizeRecording: TMenuItem;
     MenuItem_RecordMultipleSizes: TMenuItem;
+    pnlDrag: TPanel;
+    pnlFrameBK: TPanel;
+    pmComponents: TPopupMenu;
+    pmExtraRecording: TPopupMenu;
+    pnlHorizSplitter: TPanel;
+    pnlMouseCoordsOnScreenshot: TPanel;
+    pnlvstComponents: TPanel;
+    pnlWinInterpSettings: TPanel;
+    prbRecording: TProgressBar;
+    rdgrpLayers: TRadioGroup;
+    scrboxScannedComponents: TScrollBox;
     Separator2: TMenuItem;
     MenuItemCopyFindControlActionsToClipBoard: TMenuItem;
     MenuItemCopyFindControlAndCachePositionActionsToClipBoard: TMenuItem;
@@ -94,15 +114,7 @@ type
     MenuItem_RecordFromRemote: TMenuItem;
     MenuItem_SaveSelectedComponentToFile: TMenuItem;
     MenuItem_SaveSelectionToFile: TMenuItem;
-    pmComponents: TPopupMenu;
-    pmExtraRecording: TPopupMenu;
     pmScreenshot: TPopupMenu;
-    pnlDrag: TPanel;
-    pnlMouseCoordsOnScreenshot: TPanel;
-    pnlvstComponents: TPanel;
-    prbRecording: TProgressBar;
-    rdgrpLayers: TRadioGroup;
-    scrboxScannedComponents: TScrollBox;
     Separator1: TMenuItem;
     spdbtnExtraRecording: TSpeedButton;
     tmrSpinner: TTimer;
@@ -113,6 +125,7 @@ type
     procedure btnStopRecClick(Sender: TObject);
     procedure chkHighlightSelectedComponentChange(Sender: TObject);
     procedure colboxHighlightingLabelsSelect(Sender: TObject);
+    procedure FrameResize(Sender: TObject);
     procedure imgLiveScreenshotMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure imgScannedWindowMouseDown(Sender: TObject; Button: TMouseButton;
@@ -136,6 +149,12 @@ type
     procedure pnlDragMouseMove(Sender: TObject; Shift: TShiftState; X,
       Y: Integer);
     procedure pnlDragMouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure pnlHorizSplitterMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure pnlHorizSplitterMouseMove(Sender: TObject; Shift: TShiftState; X,
+      Y: Integer);
+    procedure pnlHorizSplitterMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure rdgrpLayersClick(Sender: TObject);
     procedure scrboxScannedComponentsMouseWheel(Sender: TObject;
@@ -183,8 +202,14 @@ type
     FSelectedComponentText: string;
     FSelectedComponentClassName: string;
 
+    FHold: Boolean;
+    FSplitterMouseDownGlobalPos: TPoint;
+    FSplitterMouseDownImagePos: TPoint;
+
     FOnGetConnectionAddress: TOnGetConnectionAddress;
     FOnGetSelectedCompFromRemoteWin: TOnGetSelectedCompFromRemoteWin;
+    FOnInsertTreeComponent: TOnInsertTreeComponent;
+    FOnClearWinInterp: TOnClearWinInterp;
 
     procedure FTransparent_LeftMouseDown(Sender: TObject;
       Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
@@ -225,11 +250,15 @@ type
 
     function DoOnGetConnectionAddress: string;
     function DoOnGetSelectedCompFromRemoteWin: THandle;
+    procedure DoOnInsertTreeComponent(ACompData: PHighlightedCompRec);
+    procedure DoOnClearWinInterp;
 
     procedure CreateRemainingComponents;
     procedure AdjustHighlightingLabelsToScreenshot;
     procedure HighlightComponent(Node: PVirtualNode);
     procedure CopyFindControlActionsToClipBoard(AIncludeAction: TLastFindControlGeneratedAction);
+
+    procedure ResizeFrameSectionsBySplitter(NewLeft: Integer);
 
     procedure GetWindowInfo;
     procedure BuildColors;
@@ -275,6 +304,8 @@ type
 
     property OnGetConnectionAddress: TOnGetConnectionAddress read FOnGetConnectionAddress write FOnGetConnectionAddress;
     property OnGetSelectedCompFromRemoteWin: TOnGetSelectedCompFromRemoteWin read FOnGetSelectedCompFromRemoteWin write FOnGetSelectedCompFromRemoteWin;
+    property OnInsertTreeComponent: TOnInsertTreeComponent write FOnInsertTreeComponent;
+    property OnClearWinInterp: TOnClearWinInterp write FOnClearWinInterp;
   end;
 
 implementation
@@ -363,6 +394,20 @@ begin
 end;
 
 
+procedure TfrClickerWinInterp.DoOnInsertTreeComponent(ACompData: PHighlightedCompRec);
+begin
+  if Assigned(FOnInsertTreeComponent) then
+    FOnInsertTreeComponent(ACompData);
+end;
+
+
+procedure TfrClickerWinInterp.DoOnClearWinInterp;
+begin
+  if Assigned(FOnClearWinInterp) then
+    FOnClearWinInterp;
+end;
+
+
 procedure TfrClickerWinInterp.BuildColors;
 var
   r, g, b: Byte;
@@ -439,7 +484,9 @@ begin
     7: CellText := IntToStr(NodeData^.CompRec.ComponentRectangle.Bottom);
     8: CellText := IntToStr(NodeData^.LocalX);
     9: CellText := IntToStr(NodeData^.LocalY);
-    10: CellText := BoolToStr(NodeData^.ManuallyAdded, 'Yes', 'No');
+    10: CellText := IntToStr(NodeData^.LocalX_FromParent);
+    11: CellText := IntToStr(NodeData^.LocalY_FromParent);
+    12: CellText := BoolToStr(NodeData^.ManuallyAdded, 'Yes', 'No');
   end;
 end;
 
@@ -592,6 +639,80 @@ begin
 end;
 
 
+procedure TfrClickerWinInterp.pnlHorizSplitterMouseDown(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  if Shift <> [ssLeft] then
+    Exit;
+
+  if not FHold then
+  begin
+    GetCursorPos(FSplitterMouseDownGlobalPos);
+
+    FSplitterMouseDownImagePos.X := pnlHorizSplitter.Left;
+    FHold := True;
+  end;
+end;
+
+
+procedure TfrClickerWinInterp.pnlHorizSplitterMouseMove(Sender: TObject;
+  Shift: TShiftState; X, Y: Integer);
+var
+  tp: TPoint;
+  NewLeft: Integer;
+begin
+  if Shift <> [ssLeft] then
+    Exit;
+
+  if not FHold then
+    Exit;
+
+  GetCursorPos(tp);
+  NewLeft := FSplitterMouseDownImagePos.X + tp.X - FSplitterMouseDownGlobalPos.X;
+
+  ResizeFrameSectionsBySplitter(NewLeft);
+end;
+
+
+procedure TfrClickerWinInterp.pnlHorizSplitterMouseUp(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  FHold := False;
+end;
+
+
+procedure TfrClickerWinInterp.FrameResize(Sender: TObject);
+var
+  NewLeft: Integer;
+begin
+  NewLeft := pnlHorizSplitter.Left;
+
+  if NewLeft > Width - 260 then
+    NewLeft := Width - 260;
+
+  ResizeFrameSectionsBySplitter(NewLeft);
+end;
+
+
+procedure TfrClickerWinInterp.ResizeFrameSectionsBySplitter(NewLeft: Integer);
+begin
+  if NewLeft < scrboxScannedComponents.Constraints.MinWidth then
+    NewLeft := scrboxScannedComponents.Constraints.MinWidth;
+
+  if NewLeft > Width - 460 - pnlHorizSplitter.Width then
+    NewLeft := Width - 460 - pnlHorizSplitter.Width;
+
+  if NewLeft < 424 then
+    NewLeft := 424;
+
+  pnlHorizSplitter.Left := NewLeft;
+
+  pnlWinInterpSettings.Left := pnlHorizSplitter.Left + pnlHorizSplitter.Width;
+  pnlWinInterpSettings.Width := Width - pnlWinInterpSettings.Left;
+  scrboxScannedComponents.Width := pnlHorizSplitter.Left;
+end;
+
+
 procedure TfrClickerWinInterp.CreateRemainingComponents;
 var
   NewColum: TVirtualTreeColumn;
@@ -603,7 +724,7 @@ begin
   vstComponents.Height := 256;
   vstComponents.Top := 0;
   vstComponents.Width := 456;
-  vstComponents.Anchors := [akTop, akRight, akBottom];
+  vstComponents.Anchors := [akLeft, akTop, akRight, akBottom];
   vstComponents.Colors.UnfocusedColor := clMedGray;
   vstComponents.Colors.UnfocusedSelectionColor := clGradientInactiveCaption;
   vstComponents.DefaultText := 'Node';
@@ -684,8 +805,20 @@ begin
   NewColum.Text := 'Local Top';
 
   NewColum := vstComponents.Header.Columns.Add;
-  NewColum.MinWidth := 99;
+  NewColum.MinWidth := 70;
   NewColum.Position := 10;
+  NewColum.Width := 170;
+  NewColum.Text := 'Local Left from parent';
+
+  NewColum := vstComponents.Header.Columns.Add;
+  NewColum.MinWidth := 70;
+  NewColum.Position := 11;
+  NewColum.Width := 170;
+  NewColum.Text := 'Local Top from parent';
+
+  NewColum := vstComponents.Header.Columns.Add;
+  NewColum.MinWidth := 99;
+  NewColum.Position := 12;
   NewColum.Width := 99;
   NewColum.Text := 'Manually Added';
 
@@ -791,6 +924,7 @@ begin
   FDoneRec := False;
   BuildColors;
 
+  FHold := False;
   FOldSelectedNode := nil;
 
   FInterprettedHandle := 0;
@@ -810,6 +944,12 @@ begin
   FSelectedComponentText := 'no selected component';
   FSelectedComponentClassName := 'no selected component';
 
+  FOnGetConnectionAddress := nil;
+  FOnGetSelectedCompFromRemoteWin := nil;
+  FOnInsertTreeComponent := nil;
+
+  pnlWinInterpSettings.Caption := '';
+
   imgScannedWindow.Left := 0;
   imgScannedWindow.Top := 0;
   imgScreenshot.Left := 0;
@@ -822,6 +962,8 @@ begin
   imgLiveScreenshot.Top := 0;
   imgHandleColors.Left := 0;
   imgHandleColors.Top := 0;
+  imgScannedWindowWithText.Left := 0;
+  imgScannedWindowWithText.Top := 0;
 
   //some default values
   imgScannedWindow.Width := 1920;
@@ -836,6 +978,8 @@ begin
   imgLiveScreenshot.Height := 1080;
   imgHandleColors.Width := 1920;
   imgHandleColors.Height := 1080;
+  imgScannedWindowWithText.Width := 1920;
+  imgScannedWindowWithText.Height := 1080;
 end;
 
 
@@ -1242,6 +1386,8 @@ begin
   if FDoneRec then
     Exit;
 
+  //no need to call DoOnClearWinInterp here, because it is called internally by RecordComponent
+
   memCompInfo.Lines.Add('Estimated duration: ' + FloatToStr(EstimatedDuration) + ' min.');
   tk := GetTickCount64;
 
@@ -1265,6 +1411,7 @@ begin
 
   imgScannedWindow.Canvas.Lock;
   imgHandleColors.Canvas.Lock;
+  imgScannedWindowWithText.Canvas.Lock;
   vstComponents.BeginUpdate;
   btnStartRec.Enabled := False;
   spdbtnExtraRecording.Enabled := False;
@@ -1364,11 +1511,14 @@ begin
       end;
     end;
 
+    imgScannedWindowWithText.Picture.Bitmap.Canvas.Draw(0, 0, imgScannedWindow.Picture.Bitmap);
+
     SetLength(ImgMatrix, 0);
     SetLength(ImgHWMatrix, 0);
 
     imgScannedWindow.Canvas.Unlock;
     imgHandleColors.Canvas.Unlock;
+    imgScannedWindowWithText.Canvas.Unlock;
     vstComponents.EndUpdate;
     btnStartRec.Enabled := True;
     spdbtnExtraRecording.Enabled := True;
@@ -1476,6 +1626,8 @@ begin
       MessageBox(Handle, PChar('No selected component. Please open the remote screen tool, refresh the screenshot there, then click on a component from screenshot.'), PChar(Application.Title), MB_ICONINFORMATION);
       Exit;
     end;
+
+    DoOnClearWinInterp;
 
     btnStartRec.Enabled := False;
     spdbtnExtraRecording.Enabled := False;
@@ -1744,7 +1896,7 @@ end;
 
 procedure TfrClickerWinInterp.InsertTreeComponent(AParentNode: PVirtualNode; AComp: THighlightedCompRec);
 var
-  NewData: PHighlightedCompRec;
+  NewData, ParentData: PHighlightedCompRec;
   Node: PVirtualNode;
 begin
   if AParentNode = nil then
@@ -1773,6 +1925,24 @@ begin
   end;
 
   NewData^ := AComp;
+
+  if AParentNode = nil then
+    NewData^.ParentCtrl := nil
+  else
+  begin
+    ParentData := vstComponents.GetNodeData(AParentNode);
+    if ParentData <> nil then
+    begin
+      NewData^.ParentCtrl := ParentData^.Ctrl;
+
+      NewData^.LocalX_FromParent := NewData^.CompRec.ComponentRectangle.Left - ParentData^.CompRec.ComponentRectangle.Left;
+      NewData^.LocalY_FromParent := NewData^.CompRec.ComponentRectangle.Top - ParentData^.CompRec.ComponentRectangle.Top;
+    end
+    else
+      NewData^.ParentCtrl := nil; //not sure about this corner case
+  end;
+
+  DoOnInsertTreeComponent(NewData);  //this is used to update an external structure (e.g. DrawingBoard)
 end;
 
 
@@ -1838,7 +2008,7 @@ begin
     HandleIndex := Length(FColoredHandles); //without -1
 
     Result := clrs2[(HandleIndex + 1) mod Length(clrs2)];  //colors are reused, leading to selection bugs if selection relies on color @ [x, y]
-    AddColoredHandle(HW, Result);
+    AddColoredHandle(HW, Result);  //this adds the handle and color (i.e. Result) to FColoredHandles
 
     HighlightedCompRec.CompRec := GetWindowClassRec(HW);
     HighlightedCompRec.CompRec.IsSubControl := False;
@@ -1846,6 +2016,10 @@ begin
     HighlightedCompRec.LocalX := ALocalX;
     HighlightedCompRec.LocalY := ALocalY;
     HighlightedCompRec.ManuallyAdded := False;
+    HighlightedCompRec.Ctrl := nil; //init here
+    HighlightedCompRec.ParentCtrl := nil; //init here
+    HighlightedCompRec.LocalX_FromParent := ALocalX;  //init here, although these will have to be updated later by AddTreeComponent, when the values are available from parent
+    HighlightedCompRec.LocalY_FromParent := ALocalY;  //init here, although these will have to be updated later by AddTreeComponent, when the values are available from parent
 
     try
       AddTreeComponent(HighlightedCompRec);
@@ -1955,6 +2129,17 @@ begin
   imgHandleColors.Canvas.Pen.Color := clBlack;
   imgHandleColors.Canvas.Brush.Color := clBlack;
   imgHandleColors.Canvas.Rectangle(0, 0, imgScreenshot.Width - 1, imgScreenshot.Height - 1);
+
+  imgScannedWindowWithText.Picture.Clear;
+  imgScannedWindowWithText.Left := 0;
+  imgScannedWindowWithText.Top := 0;
+  imgScannedWindowWithText.Width := imgScannedWindowWithText.Width;
+  imgScannedWindowWithText.Height := imgScannedWindowWithText.Height;
+  imgScannedWindowWithText.Picture.Bitmap.Width := imgScannedWindowWithText.Width;
+  imgScannedWindowWithText.Picture.Bitmap.Height := imgScannedWindowWithText.Height;
+  imgScannedWindowWithText.Canvas.Pen.Color := clBlack;
+  imgScannedWindowWithText.Canvas.Brush.Color := clBlack;
+  imgScannedWindowWithText.Canvas.Rectangle(0, 0, imgScreenshot.Width - 1, imgScreenshot.Height - 1);
 end;
 
 
@@ -2029,6 +2214,8 @@ var
   RectWidth, RectHeight: Integer;
   tk: QWord;
   AppTitle: string;
+  Node: PVirtualNode;
+  NodeData: PHighlightedCompRec;
 begin
   if chkMinimizeWhileRecording.Checked then
     if AInterprettedHandle <> Handle then
@@ -2042,6 +2229,8 @@ begin
   FDoneRec := False;
   if GetWindowRect(AInterprettedHandle, rct) = False then
     Exit;
+
+  DoOnClearWinInterp;
 
   vstComponents.BeginUpdate;
   try
@@ -2078,6 +2267,7 @@ begin
 
   imgScannedWindow.Canvas.Lock;
   imgHandleColors.Canvas.Lock;
+  imgScannedWindowWithText.Canvas.Lock;
   vstComponents.BeginUpdate;
   btnStartRec.Enabled := False;
   spdbtnExtraRecording.Enabled := False;
@@ -2143,12 +2333,32 @@ begin
       end;
     end;
 
+    imgScannedWindowWithText.Picture.Bitmap.Canvas.Draw(0, 0, imgScannedWindow.Picture.Bitmap);
+
+    Node := vstComponents.GetFirst;
+    if Node <> nil then
+    begin
+      repeat
+        NodeData := vstComponents.GetNodeData(Node);
+
+        if NodeData <> nil then
+        begin
+          imgScannedWindowWithText.Canvas.Font.Color := clWhite;
+          imgScannedWindowWithText.Canvas.Brush.Color := NodeData^.AssignedColor;
+          imgScannedWindowWithText.Canvas.TextOut(NodeData^.LocalX, NodeData^.LocalY, IntToStr(NodeData^.CompRec.Handle));
+        end;
+
+        Node := vstComponents.GetNext(Node);
+      until Node = nil;
+    end;
+
     imgScannedWindow.Canvas.Unlock;
     imgHandleColors.Canvas.Unlock;
+    imgScannedWindowWithText.Canvas.Unlock;
     vstComponents.EndUpdate;
     btnStartRec.Enabled := True;
     spdbtnExtraRecording.Enabled := True;
-  end;
+  end;  //try
 
   if chkMinimizeWhileRecording.Checked then
     if AInterprettedHandle <> Handle then
@@ -2267,6 +2477,19 @@ begin
   end
   else
     memCompInfo.Lines.Add('Image not found: ' + ABasePath + 'HandleColors.png');
+
+  if FileExists(ABasePath + 'ScannedWindowWithText.png') then
+  begin
+    APng := TPNGImage.Create;
+    try
+      APng.LoadFromFile(ABasePath + 'ScannedWindowWithText.png');
+      imgScannedWindowWithText.Picture.Bitmap.LoadFromDevice(APng.Canvas.Handle);
+    finally
+      APng.Free;
+    end;
+  end
+  else
+    memCompInfo.Lines.Add('Image not found: ' + ABasePath + 'ScannedWindowWithText.png');
 end;
 
 
@@ -2303,6 +2526,14 @@ begin
   try
     APng.LoadFromDevice(imgHandleColors.Canvas.Handle);
     APng.SaveToFile(ABasePath + 'HandleColors.png');
+  finally
+    APng.Free;
+  end;
+
+  APng := TPNGImage.Create;
+  try
+    APng.LoadFromDevice(imgScannedWindowWithText.Canvas.Handle);
+    APng.SaveToFile(ABasePath + 'ScannedWindowWithText.png');
   finally
     APng.Free;
   end;
@@ -2391,6 +2622,8 @@ begin
     if not TempOpenDialog.Execute then
       Exit;
 
+    DoOnClearWinInterp;
+
     try
       vstComponents.LoadFromFile(TempOpenDialog.FileName);
     except
@@ -2456,9 +2689,11 @@ begin
   WipeImage(imgAvgScreenshotAndAssignedComp, imgScannedWindow.Width, imgScannedWindow.Height);
   WipeImage(imgLiveScreenshot, imgScannedWindow.Width, imgScannedWindow.Height);
   WipeImage(imgHandleColors, imgScannedWindow.Width, imgScannedWindow.Height);
+  WipeImage(imgScannedWindowWithText, imgScannedWindow.Width, imgScannedWindow.Height);
 
   imgScannedWindow.Canvas.Lock;
   imgHandleColors.Canvas.Lock;
+  imgScannedWindowWithText.Canvas.Lock;
   try
     repeat
       NodeData := vstComponents.GetNodeData(Node);
@@ -2487,12 +2722,29 @@ begin
       Node := vstComponents.GetNext(Node);
     until Node = nil;
 
+    imgScannedWindowWithText.Picture.Bitmap.Canvas.Draw(0, 0, imgScannedWindow.Picture.Bitmap);
+
+
+    repeat
+      NodeData := vstComponents.GetNodeData(Node);
+
+      if NodeData <> nil then
+      begin
+        imgScannedWindowWithText.Canvas.Font.Color := clWhite;
+        imgScannedWindowWithText.Canvas.Brush.Color := NodeData^.AssignedColor;
+        imgScannedWindowWithText.Canvas.TextOut(NodeData^.LocalX, NodeData^.LocalY, IntToStr(NodeData^.CompRec.Handle));
+      end;
+
+      Node := vstComponents.GetNext(Node);
+    until Node = nil;
+
     GenerateContent_AvgScreenshotAndGenComp;   //requires images to have some screenshots, already loaded
     AdjustHighlightingLabelsToScreenshot;
     UpdateLayersVisibility;
   finally
     imgScannedWindow.Canvas.Unlock;
     imgHandleColors.Canvas.Unlock;
+    imgScannedWindowWithText.Canvas.Unlock;
   end;
 end;
 
@@ -2563,6 +2815,7 @@ var
 begin
   imgScreenshot.Visible := False;
   imgScannedWindow.Visible := False;
+  imgScannedWindowWithText.Visible := False;
   imgAvgScreenshotAndGreenComp.Visible := False;
   imgAvgScreenshotAndAssignedComp.Visible := False;
 
@@ -2573,7 +2826,11 @@ begin
   case rdgrpLayers.ItemIndex of
     0: imgScreenshot.Visible := True;
 
-    1: imgScannedWindow.Visible := True;
+    1:
+    begin
+      //imgScannedWindow.Visible := True;
+      imgScannedWindowWithText.Visible := True;
+    end;
 
     2:
     begin

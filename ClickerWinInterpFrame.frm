@@ -5,358 +5,392 @@ object frClickerWinInterp: TfrClickerWinInterp
   Width = 893
   ClientHeight = 501
   ClientWidth = 893
+  OnResize = FrameResize
   TabOrder = 0
   DesignLeft = 86
   DesignTop = 85
-  object scrboxScannedComponents: TScrollBox
-    Left = 8
-    Height = 456
-    Top = 37
-    Width = 416
-    HorzScrollBar.Page = 265
-    HorzScrollBar.Tracking = True
-    VertScrollBar.Page = 265
-    VertScrollBar.Tracking = True
+  object pnlFrameBK: TPanel
+    Left = 0
+    Height = 503
+    Top = 0
+    Width = 893
     Anchors = [akTop, akLeft, akRight, akBottom]
-    ClientHeight = 452
-    ClientWidth = 412
+    Caption = 'pnlFrameBK'
+    ClientHeight = 503
+    ClientWidth = 893
     TabOrder = 0
-    OnMouseWheel = scrboxScannedComponentsMouseWheel
-    object imgScreenshot: TImage
-      Left = 28
-      Height = 121
-      Top = 28
-      Width = 121
-      OnMouseDown = imgScannedWindowMouseDown
-      OnMouseMove = imgScannedWindowMouseMove
-      PopupMenu = pmScreenshot
-      Visible = False
-    end
-    object imgAvgScreenshotAndGreenComp: TImage
-      Left = 56
-      Height = 121
-      Top = 56
-      Width = 121
-      OnMouseDown = imgScannedWindowMouseDown
-      OnMouseMove = imgScannedWindowMouseMove
-      PopupMenu = pmScreenshot
-      Visible = False
-    end
-    object imgAvgScreenshotAndAssignedComp: TImage
-      Left = 84
-      Height = 121
-      Top = 84
-      Width = 121
-      OnMouseDown = imgScannedWindowMouseDown
-      OnMouseMove = imgScannedWindowMouseMove
-      PopupMenu = pmScreenshot
-      Visible = False
-    end
-    object imgScannedWindow: TImage
-      Left = 0
-      Height = 121
+    object pnlWinInterpSettings: TPanel
+      Left = 432
+      Height = 493
       Top = 0
-      Width = 121
-      OnMouseDown = imgScannedWindowMouseDown
-      OnMouseMove = imgScannedWindowMouseMove
-      PopupMenu = pmScreenshot
+      Width = 460
+      Anchors = [akTop, akLeft, akRight, akBottom]
+      Caption = 'pnlWinInterpSettings'
+      ClientHeight = 493
+      ClientWidth = 460
+      ParentBackground = False
+      ParentColor = False
+      TabOrder = 0
+      object memCompInfo: TMemo
+        Left = 0
+        Height = 93
+        Top = 396
+        Width = 264
+        Anchors = [akLeft, akBottom]
+        ReadOnly = True
+        ScrollBars = ssBoth
+        TabOrder = 0
+        WordWrap = False
+      end
+      object btnStartRec: TButton
+        Left = 273
+        Height = 25
+        Top = 300
+        Width = 97
+        Anchors = [akLeft, akBottom]
+        Caption = 'Start Recording'
+        OnClick = btnStartRecClick
+        TabOrder = 1
+      end
+      object btnStopRec: TButton
+        Left = 273
+        Height = 25
+        Top = 330
+        Width = 97
+        Anchors = [akLeft, akBottom]
+        Caption = 'Stop Recording'
+        OnClick = btnStopRecClick
+        TabOrder = 2
+      end
+      object prbRecording: TProgressBar
+        Left = 273
+        Height = 16
+        Top = 276
+        Width = 140
+        Anchors = [akLeft, akBottom]
+        Smooth = True
+        TabOrder = 3
+      end
+      object chkMinimizeWhileRecording: TCheckBox
+        Left = 273
+        Height = 19
+        Top = 372
+        Width = 140
+        Anchors = [akLeft, akBottom]
+        Caption = 'Minimize on recording'
+        TabOrder = 4
+      end
+      object lbeStep: TLabeledEdit
+        Left = 401
+        Height = 23
+        Hint = 'Scanning granularity'
+        Top = 332
+        Width = 48
+        Anchors = [akLeft, akBottom]
+        EditLabel.Height = 15
+        EditLabel.Width = 48
+        EditLabel.Caption = 'Step [px]'
+        ParentShowHint = False
+        ShowHint = True
+        TabOrder = 5
+        Text = '1'
+      end
+      object lblGauge: TLabel
+        Left = 441
+        Height = 15
+        Top = 276
+        Width = 16
+        Anchors = [akLeft, akBottom]
+        Caption = '0%'
+      end
+      object chkHighlightSelectedComponent: TCheckBox
+        Left = 0
+        Height = 19
+        Top = 372
+        Width = 181
+        Anchors = [akLeft, akBottom]
+        Caption = 'Highlight selected component'
+        Checked = True
+        OnChange = chkHighlightSelectedComponentChange
+        State = cbChecked
+        TabOrder = 6
+      end
+      object rdgrpLayers: TRadioGroup
+        Left = 0
+        Height = 96
+        Top = 268
+        Width = 249
+        Anchors = [akLeft, akBottom]
+        AutoFill = True
+        Caption = 'Layers'
+        ChildSizing.LeftRightSpacing = 6
+        ChildSizing.EnlargeHorizontal = crsHomogenousChildResize
+        ChildSizing.EnlargeVertical = crsHomogenousChildResize
+        ChildSizing.ShrinkHorizontal = crsScaleChilds
+        ChildSizing.ShrinkVertical = crsScaleChilds
+        ChildSizing.Layout = cclLeftToRightThenTopToBottom
+        ChildSizing.ControlsPerLine = 1
+        ClientHeight = 76
+        ClientWidth = 245
+        ItemIndex = 1
+        Items.Strings = (
+          'Screenshot'
+          'Component rectangles'
+          'Avg(Screenshot, Green Comp Rect)'
+          'Avg(Screenshot, Assigned Comp Rect)'
+        )
+        OnClick = rdgrpLayersClick
+        TabOrder = 7
+      end
+      object lblHighlightingLabels: TLabel
+        Left = 273
+        Height = 15
+        Top = 396
+        Width = 124
+        Anchors = [akLeft, akBottom]
+        Caption = 'Highlighting lines color'
+      end
+      object btnExport: TButton
+        Left = 382
+        Height = 25
+        Hint = 'Export as YAML.'
+        Top = 464
+        Width = 75
+        Anchors = [akLeft, akBottom]
+        Caption = 'Export...'
+        OnClick = btnExportClick
+        ParentShowHint = False
+        ShowHint = True
+        TabOrder = 8
+      end
+      object btnSaveTree: TButton
+        Left = 273
+        Height = 25
+        Hint = 'Save to binary file.'#13#10'The Left/Top/Right/Bottom values depend on window position on screen as it was recorded.'
+        Top = 464
+        Width = 75
+        Anchors = [akLeft, akBottom]
+        Caption = 'Save Tree...'
+        OnClick = btnSaveTreeClick
+        ParentShowHint = False
+        ShowHint = True
+        TabOrder = 9
+      end
+      object btnLoadTree: TButton
+        Left = 273
+        Height = 25
+        Hint = 'Load from binary file.'
+        Top = 438
+        Width = 75
+        Anchors = [akLeft, akBottom]
+        Caption = 'Load Tree...'
+        OnClick = btnLoadTreeClick
+        ParentShowHint = False
+        ShowHint = True
+        TabOrder = 10
+      end
+      object spdbtnExtraRecording: TSpeedButton
+        Left = 369
+        Height = 25
+        Top = 300
+        Width = 18
+        Anchors = [akLeft, akBottom]
+        Font.Color = clWindowText
+        Glyph.Data = {
+          EA000000424DEA0000000000000036000000280000000B000000050000000100
+          180000000000B400000000000000000000000000000000000000FFFFFFFFFFFF
+          FFFFFFFFFFFFFFFFFF39841AFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF000000FFFF
+          FFFFFFFFFFFFFFFFFFFF39841A39841A39841AFFFFFFFFFFFFFFFFFFFFFFFF00
+          0000FFFFFFFFFFFFFFFFFF39841A39841A39841A39841A39841AFFFFFFFFFFFF
+          FFFFFF000000FFFFFFFFFFFF39841A39841A39841A39841A39841A39841A3984
+          1AFFFFFFFFFFFF000000FFFFFF39841A39841A39841A39841A39841A39841A39
+          841A39841A39841AFFFFFF000000
+        }
+        OnClick = spdbtnExtraRecordingClick
+        ParentFont = False
+      end
+      object imgSpinner: TImage
+        Left = 371
+        Height = 16
+        Hint = 'Waiting for server...'
+        Top = 330
+        Width = 16
+        Anchors = [akLeft, akBottom]
+        ParentShowHint = False
+        Picture.Data = {
+          1754506F727461626C654E6574776F726B47726170686963B900000089504E47
+          0D0A1A0A0000000D494844520000001000000010080200000090916836000000
+          017352474200AECE1CE90000000467414D410000B18F0BFC6105000000097048
+          597300000EC300000EC301C76FA8640000004E49444154384F63F84F22006978
+          FF64033252DAE80347685258340015FDFFC40047687AD035405443CC8620343D
+          434003104114C111B26A20C2A20188206643109A14760D78D048D64002F8FF1F
+          0028306487B25356190000000049454E44AE426082
+        }
+        ShowHint = True
+        Visible = False
+      end
+      object imgSpinnerDiff: TImage
+        Left = 255
+        Height = 16
+        Hint = 'Found subcontrol...'
+        Top = 276
+        Width = 16
+        Anchors = [akLeft, akBottom]
+        ParentShowHint = False
+        Picture.Data = {
+          1754506F727461626C654E6574776F726B47726170686963B900000089504E47
+          0D0A1A0A0000000D494844520000001000000010080200000090916836000000
+          017352474200AECE1CE90000000467414D410000B18F0BFC6105000000097048
+          597300000EC300000EC301C76FA8640000004E49444154384F63F84F22006978
+          FF64033252DAE80347685258340015FDFFC40047687AD035405443CC8620343D
+          434003104114C111B26A20C2A20188206643109A14760D78D048D64002F8FF1F
+          0028306487B25356190000000049454E44AE426082
+        }
+        ShowHint = True
+        Visible = False
+      end
+      object pnlvstComponents: TPanel
+        Left = 0
+        Height = 256
+        Top = 4
+        Width = 456
+        Anchors = [akTop, akLeft, akRight, akBottom]
+        Caption = 'pnlvstComponents'
+        Color = clYellow
+        ParentColor = False
+        TabOrder = 11
+      end
+      object colboxHighlightingLabels: TColorBox
+        Left = 273
+        Height = 22
+        Top = 413
+        Width = 184
+        Anchors = [akLeft, akBottom]
+        ItemHeight = 16
+        OnSelect = colboxHighlightingLabelsSelect
+        TabOrder = 12
+      end
     end
-    object imgLiveScreenshot: TImage
-      Left = 113
-      Height = 121
-      Top = 113
-      Width = 121
-      OnMouseDown = imgLiveScreenshotMouseDown
-      Visible = False
+    object pnlDrag: TPanel
+      Left = 4
+      Height = 26
+      Hint = 'Use this box to get the target component from another window.'
+      Top = 8
+      Width = 322
+      Caption = 'Drag the mouse cursor, from this box to the target window'
+      Color = clYellow
+      ParentColor = False
+      ParentShowHint = False
+      ShowHint = True
+      TabOrder = 1
+      OnMouseDown = pnlDragMouseDown
+      OnMouseMove = pnlDragMouseMove
+      OnMouseUp = pnlDragMouseUp
     end
-    object imgHandleColors: TImage
-      Left = 144
-      Height = 121
-      Top = 144
-      Width = 121
-      OnMouseDown = imgScannedWindowMouseDown
-      OnMouseMove = imgScannedWindowMouseMove
-      PopupMenu = pmScreenshot
-      Visible = False
+    object pnlMouseCoordsOnScreenshot: TPanel
+      Left = 332
+      Height = 25
+      Top = 8
+      Width = 72
+      Caption = '0:0'
+      TabOrder = 2
     end
-  end
-  object pnlDrag: TPanel
-    Left = 8
-    Height = 26
-    Hint = 'Use this box to get the target component from another window.'
-    Top = 8
-    Width = 322
-    Caption = 'Drag the mouse cursor, from this box to the target window'
-    Color = clYellow
-    ParentColor = False
-    ParentShowHint = False
-    ShowHint = True
-    TabOrder = 1
-    OnMouseDown = pnlDragMouseDown
-    OnMouseMove = pnlDragMouseMove
-    OnMouseUp = pnlDragMouseUp
-  end
-  object memCompInfo: TMemo
-    Left = 432
-    Height = 93
-    Top = 400
-    Width = 264
-    Anchors = [akRight, akBottom]
-    ReadOnly = True
-    ScrollBars = ssBoth
-    TabOrder = 2
-    WordWrap = False
-  end
-  object btnStartRec: TButton
-    Left = 704
-    Height = 25
-    Top = 304
-    Width = 97
-    Anchors = [akRight, akBottom]
-    Caption = 'Start Recording'
-    OnClick = btnStartRecClick
-    TabOrder = 3
-  end
-  object btnStopRec: TButton
-    Left = 704
-    Height = 25
-    Top = 334
-    Width = 97
-    Anchors = [akRight, akBottom]
-    Caption = 'Stop Recording'
-    OnClick = btnStopRecClick
-    TabOrder = 4
-  end
-  object prbRecording: TProgressBar
-    Left = 704
-    Height = 16
-    Top = 280
-    Width = 140
-    Anchors = [akRight, akBottom]
-    Smooth = True
-    TabOrder = 5
-  end
-  object chkMinimizeWhileRecording: TCheckBox
-    Left = 704
-    Height = 19
-    Top = 376
-    Width = 140
-    Anchors = [akRight, akBottom]
-    Caption = 'Minimize on recording'
-    TabOrder = 6
-  end
-  object lbeStep: TLabeledEdit
-    Left = 832
-    Height = 23
-    Hint = 'Scanning granularity'
-    Top = 336
-    Width = 48
-    Anchors = [akRight, akBottom]
-    EditLabel.Height = 15
-    EditLabel.Width = 48
-    EditLabel.Caption = 'Step [px]'
-    ParentShowHint = False
-    ShowHint = True
-    TabOrder = 7
-    Text = '1'
-  end
-  object lblGauge: TLabel
-    Left = 872
-    Height = 15
-    Top = 280
-    Width = 16
-    Anchors = [akRight, akBottom]
-    Caption = '0%'
-  end
-  object chkHighlightSelectedComponent: TCheckBox
-    Left = 432
-    Height = 19
-    Top = 376
-    Width = 181
-    Anchors = [akRight, akBottom]
-    Caption = 'Highlight selected component'
-    Checked = True
-    OnChange = chkHighlightSelectedComponentChange
-    State = cbChecked
-    TabOrder = 8
-  end
-  object rdgrpLayers: TRadioGroup
-    Left = 432
-    Height = 96
-    Top = 272
-    Width = 249
-    Anchors = [akRight, akBottom]
-    AutoFill = True
-    Caption = 'Layers'
-    ChildSizing.LeftRightSpacing = 6
-    ChildSizing.EnlargeHorizontal = crsHomogenousChildResize
-    ChildSizing.EnlargeVertical = crsHomogenousChildResize
-    ChildSizing.ShrinkHorizontal = crsScaleChilds
-    ChildSizing.ShrinkVertical = crsScaleChilds
-    ChildSizing.Layout = cclLeftToRightThenTopToBottom
-    ChildSizing.ControlsPerLine = 1
-    ClientHeight = 76
-    ClientWidth = 245
-    ItemIndex = 1
-    Items.Strings = (
-      'Screenshot'
-      'Component rectangles'
-      'Avg(Screenshot, Green Comp Rect)'
-      'Avg(Screenshot, Assigned Comp Rect)'
-    )
-    OnClick = rdgrpLayersClick
-    TabOrder = 9
-  end
-  object pnlMouseCoordsOnScreenshot: TPanel
-    Left = 336
-    Height = 25
-    Top = 8
-    Width = 88
-    Caption = '0:0'
-    TabOrder = 10
-  end
-  object lblHighlightingLabels: TLabel
-    Left = 704
-    Height = 15
-    Top = 400
-    Width = 124
-    Anchors = [akRight, akBottom]
-    Caption = 'Highlighting lines color'
-  end
-  object btnExport: TButton
-    Left = 813
-    Height = 25
-    Hint = 'Export as YAML.'
-    Top = 468
-    Width = 75
-    Anchors = [akRight, akBottom]
-    Caption = 'Export...'
-    OnClick = btnExportClick
-    ParentShowHint = False
-    ShowHint = True
-    TabOrder = 11
-  end
-  object btnSaveTree: TButton
-    Left = 704
-    Height = 25
-    Hint = 'Save to binary file.'#13#10'The Left/Top/Right/Bottom values depend on window position on screen as it was recorded.'
-    Top = 468
-    Width = 75
-    Anchors = [akRight, akBottom]
-    Caption = 'Save Tree...'
-    OnClick = btnSaveTreeClick
-    ParentShowHint = False
-    ShowHint = True
-    TabOrder = 12
-  end
-  object btnLoadTree: TButton
-    Left = 704
-    Height = 25
-    Hint = 'Load from binary file.'
-    Top = 442
-    Width = 75
-    Anchors = [akRight, akBottom]
-    Caption = 'Load Tree...'
-    OnClick = btnLoadTreeClick
-    ParentShowHint = False
-    ShowHint = True
-    TabOrder = 13
-  end
-  object spdbtnExtraRecording: TSpeedButton
-    Left = 800
-    Height = 25
-    Top = 304
-    Width = 18
-    Anchors = [akRight, akBottom]
-    Font.Color = clWindowText
-    Glyph.Data = {
-      EA000000424DEA0000000000000036000000280000000B000000050000000100
-      180000000000B400000000000000000000000000000000000000FFFFFFFFFFFF
-      FFFFFFFFFFFFFFFFFF39841AFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF000000FFFF
-      FFFFFFFFFFFFFFFFFFFF39841A39841A39841AFFFFFFFFFFFFFFFFFFFFFFFF00
-      0000FFFFFFFFFFFFFFFFFF39841A39841A39841A39841A39841AFFFFFFFFFFFF
-      FFFFFF000000FFFFFFFFFFFF39841A39841A39841A39841A39841A39841A3984
-      1AFFFFFFFFFFFF000000FFFFFF39841A39841A39841A39841A39841A39841A39
-      841A39841A39841AFFFFFF000000
-    }
-    OnClick = spdbtnExtraRecordingClick
-    ParentFont = False
-  end
-  object imgSpinner: TImage
-    Left = 802
-    Height = 16
-    Hint = 'Waiting for server...'
-    Top = 334
-    Width = 16
-    Anchors = [akRight, akBottom]
-    ParentShowHint = False
-    Picture.Data = {
-      1754506F727461626C654E6574776F726B47726170686963B900000089504E47
-      0D0A1A0A0000000D494844520000001000000010080200000090916836000000
-      017352474200AECE1CE90000000467414D410000B18F0BFC6105000000097048
-      597300000EC300000EC301C76FA8640000004E49444154384F63F84F22006978
-      FF64033252DAE80347685258340015FDFFC40047687AD035405443CC8620343D
-      434003104114C111B26A20C2A20188206643109A14760D78D048D64002F8FF1F
-      0028306487B25356190000000049454E44AE426082
-    }
-    ShowHint = True
-    Visible = False
-  end
-  object imgSpinnerDiff: TImage
-    Left = 686
-    Height = 16
-    Hint = 'Found subcontrol...'
-    Top = 280
-    Width = 16
-    Anchors = [akRight, akBottom]
-    ParentShowHint = False
-    Picture.Data = {
-      1754506F727461626C654E6574776F726B47726170686963B900000089504E47
-      0D0A1A0A0000000D494844520000001000000010080200000090916836000000
-      017352474200AECE1CE90000000467414D410000B18F0BFC6105000000097048
-      597300000EC300000EC301C76FA8640000004E49444154384F63F84F22006978
-      FF64033252DAE80347685258340015FDFFC40047687AD035405443CC8620343D
-      434003104114C111B26A20C2A20188206643109A14760D78D048D64002F8FF1F
-      0028306487B25356190000000049454E44AE426082
-    }
-    ShowHint = True
-    Visible = False
-  end
-  object pnlvstComponents: TPanel
-    Left = 432
-    Height = 256
-    Top = 8
-    Width = 456
-    Anchors = [akTop, akRight, akBottom]
-    Caption = 'pnlvstComponents'
-    Color = clYellow
-    ParentColor = False
-    TabOrder = 14
-  end
-  object colboxHighlightingLabels: TColorBox
-    Left = 704
-    Height = 22
-    Top = 417
-    Width = 184
-    Anchors = [akRight, akBottom]
-    ItemHeight = 16
-    OnSelect = colboxHighlightingLabelsSelect
-    TabOrder = 15
-  end
-  object pmComponents: TPopupMenu
-    Left = 687
-    Top = 211
-    object MenuItemCopyFindControlActionsToClipBoard: TMenuItem
-      Caption = 'Create FindControl actions and copy them to clipboard'
-      OnClick = MenuItemCopyFindControlActionsToClipBoardClick
+    object scrboxScannedComponents: TScrollBox
+      Left = 4
+      Height = 456
+      Top = 37
+      Width = 416
+      HorzScrollBar.Page = 293
+      HorzScrollBar.Tracking = True
+      VertScrollBar.Page = 293
+      VertScrollBar.Tracking = True
+      Anchors = [akTop, akLeft, akRight, akBottom]
+      ClientHeight = 452
+      ClientWidth = 412
+      TabOrder = 3
+      OnMouseWheel = scrboxScannedComponentsMouseWheel
+      object imgScreenshot: TImage
+        Left = 28
+        Height = 121
+        Top = 28
+        Width = 121
+        OnMouseDown = imgScannedWindowMouseDown
+        OnMouseMove = imgScannedWindowMouseMove
+        PopupMenu = pmScreenshot
+        Visible = False
+      end
+      object imgAvgScreenshotAndGreenComp: TImage
+        Left = 56
+        Height = 121
+        Top = 56
+        Width = 121
+        OnMouseDown = imgScannedWindowMouseDown
+        OnMouseMove = imgScannedWindowMouseMove
+        PopupMenu = pmScreenshot
+        Visible = False
+      end
+      object imgAvgScreenshotAndAssignedComp: TImage
+        Left = 84
+        Height = 121
+        Top = 84
+        Width = 121
+        OnMouseDown = imgScannedWindowMouseDown
+        OnMouseMove = imgScannedWindowMouseMove
+        PopupMenu = pmScreenshot
+        Visible = False
+      end
+      object imgScannedWindow: TImage
+        Left = 0
+        Height = 121
+        Top = 0
+        Width = 121
+        OnMouseDown = imgScannedWindowMouseDown
+        OnMouseMove = imgScannedWindowMouseMove
+        PopupMenu = pmScreenshot
+      end
+      object imgLiveScreenshot: TImage
+        Left = 113
+        Height = 121
+        Top = 113
+        Width = 121
+        OnMouseDown = imgLiveScreenshotMouseDown
+        Visible = False
+      end
+      object imgHandleColors: TImage
+        Left = 144
+        Height = 121
+        Top = 144
+        Width = 121
+        OnMouseDown = imgScannedWindowMouseDown
+        OnMouseMove = imgScannedWindowMouseMove
+        PopupMenu = pmScreenshot
+        Visible = False
+      end
+      object imgScannedWindowWithText: TImage
+        Left = 172
+        Height = 121
+        Top = 172
+        Width = 121
+        OnMouseDown = imgScannedWindowMouseDown
+        OnMouseMove = imgScannedWindowMouseMove
+        ParentShowHint = False
+        PopupMenu = pmScreenshot
+        Visible = False
+      end
     end
-    object MenuItemCopyFindControlAndClickActionsToClipBoard: TMenuItem
-      Caption = 'Create FindControl (+Click) actions and copy them to clipboard'
-      OnClick = MenuItemCopyFindControlAndClickActionsToClipBoardClick
-    end
-    object MenuItemCopyFindControlAndCachePositionActionsToClipBoard: TMenuItem
-      Caption = 'Create FindControl (+Cache position) actions and copy them to clipboard'
-      OnClick = MenuItemCopyFindControlAndCachePositionActionsToClipBoardClick
+    object pnlHorizSplitter: TPanel
+      Cursor = crHSplit
+      Left = 421
+      Height = 493
+      Top = 0
+      Width = 11
+      Anchors = [akTop, akLeft, akBottom]
+      Color = 13041606
+      ParentColor = False
+      TabOrder = 4
+      OnMouseDown = pnlHorizSplitterMouseDown
+      OnMouseMove = pnlHorizSplitterMouseMove
+      OnMouseUp = pnlHorizSplitterMouseUp
     end
   end
   object pmScreenshot: TPopupMenu
@@ -379,9 +413,25 @@ object frClickerWinInterp: TfrClickerWinInterp
       OnClick = MenuItem_SaveSelectedComponentToFileClick
     end
   end
+  object pmComponents: TPopupMenu
+    Left = 280
+    Top = 231
+    object MenuItemCopyFindControlActionsToClipBoard: TMenuItem
+      Caption = 'Create FindControl actions and copy them to clipboard'
+      OnClick = MenuItemCopyFindControlActionsToClipBoardClick
+    end
+    object MenuItemCopyFindControlAndClickActionsToClipBoard: TMenuItem
+      Caption = 'Create FindControl (+Click) actions and copy them to clipboard'
+      OnClick = MenuItemCopyFindControlAndClickActionsToClipBoardClick
+    end
+    object MenuItemCopyFindControlAndCachePositionActionsToClipBoard: TMenuItem
+      Caption = 'Create FindControl (+Cache position) actions and copy them to clipboard'
+      OnClick = MenuItemCopyFindControlAndCachePositionActionsToClipBoardClick
+    end
+  end
   object pmExtraRecording: TPopupMenu
-    Left = 628
-    Top = 436
+    Left = 221
+    Top = 432
     object MenuItem_RecordFromRemote: TMenuItem
       Caption = 'Record from remote...'
       Bitmap.Data = {
@@ -462,8 +512,8 @@ object frClickerWinInterp: TfrClickerWinInterp
     end
   end
   object imglstSpinner: TImageList
-    Left = 484
-    Top = 436
+    Left = 77
+    Top = 432
     Bitmap = {
       4C7A080000001000000010000000CA0000000000000078DAED98410E80300804
       7D8BEFF1B1FA27EF267E00E3C1C43660A9A035B8076E9D36B2BBA196883A32D6
@@ -478,7 +528,7 @@ object frClickerWinInterp: TfrClickerWinInterp
     Enabled = False
     Interval = 100
     OnTimer = tmrSpinnerTimer
-    Left = 788
-    Top = 212
+    Left = 381
+    Top = 232
   end
 end
