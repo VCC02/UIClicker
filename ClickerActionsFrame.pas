@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2022 VCC
+    Copyright (C) 2023 VCC
     creation date: Dec 2019
     initial release date: 13 Sep 2022
 
@@ -339,6 +339,7 @@ type
     procedure SetCurrentlyEditingActionType(Value: TClkAction);
 
     procedure SetGridDrawingOption(Value: TDisplayGridLineOption);
+    procedure SetPreviewSelectionColors(Value: TSelectionColors);
     function GetModifiedPmtvFiles: Boolean;
 
     procedure LocalTemplatesClick(Sender: TObject);
@@ -476,6 +477,7 @@ type
     property EditingAction: PClkActionRec read FEditingAction; //the pointer is not writable from outside, only the content
 
     property GridDrawingOption: TDisplayGridLineOption write SetGridDrawingOption;
+    property PreviewSelectionColors: TSelectionColors write SetPreviewSelectionColors;
     property ModifiedPmtvFiles: Boolean read GetModifiedPmtvFiles;
 
     property OnCopyControlTextAndClassFromMainWindow: TOnCopyControlTextAndClassFromMainWindow read FOnCopyControlTextAndClassFromMainWindow write FOnCopyControlTextAndClassFromMainWindow;
@@ -1929,6 +1931,12 @@ procedure TfrClickerActions.SetGridDrawingOption(Value: TDisplayGridLineOption);
 begin
   frClickerFindControl.GridDrawingOption := Value;
   frClickerFindControl.RefreshGrid;
+end;
+
+
+procedure TfrClickerActions.SetPreviewSelectionColors(Value: TSelectionColors);
+begin
+  frClickerFindControl.PreviewSelectionColors := Value;
 end;
 
 

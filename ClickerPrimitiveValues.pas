@@ -159,6 +159,8 @@ const
   CSetPenPrimitive_EndCap_PropIndex = 4;
   CSetPenPrimitive_JoinStyle_PropIndex = 5;
 
+  CSetFontPrimitive_FontName_PropIndex = 2;
+
 
 type
   TArrayOfProperties = array[0..0] of TOIPropDef;

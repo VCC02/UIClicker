@@ -117,6 +117,7 @@ type
     CachedControlLeft: PWideChar;
     CachedControlTop: PWideChar;
     MatchPrimitiveFiles: PWideChar;
+    GetAllControls: Boolean;
   end;
 
   PClkFindControlOptionsAPI = ^TClkFindControlOptionsAPI;
@@ -661,6 +662,7 @@ begin
   SetPointedContentToString(@string(PWideChar(AFindControlOptions^.CachedControlTop))[1], TempAction.FindControlOptions.CachedControlTop);
 
   SetPointedContentToString(@string(PWideChar(AFindControlOptions^.MatchPrimitiveFiles))[1], TempAction.FindControlOptions.MatchPrimitiveFiles);
+  TempAction.FindControlOptions.GetAllControls := AFindControlOptions^.GetAllControls;
 
   AddActionToTemplate(TemplateFileName, TempAction);
   Result := 0;

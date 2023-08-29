@@ -56,14 +56,22 @@ type
     MenuItem_SavePrimitivesFile: TMenuItem;
     MenuItem_CopyToClipboard: TMenuItem;
     PageControlPreview: TPageControl;
+    pnlHorizSplitter: TPanel;
     pnlPreview: TPanel;
     pnlvstOI: TPanel;
     pmPreview: TPopupMenu;
     tmrDrawZoom: TTimer;
     tmrReloadOIContent: TTimer;
     procedure chkHighContrastChange(Sender: TObject);
+    procedure FrameResize(Sender: TObject);
     procedure MenuItem_CopyToClipboardClick(Sender: TObject);
     procedure MenuItem_SavePrimitivesFileClick(Sender: TObject);
+    procedure pnlHorizSplitterMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure pnlHorizSplitterMouseMove(Sender: TObject; Shift: TShiftState; X,
+      Y: Integer);
+    procedure pnlHorizSplitterMouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
     procedure tmrDrawZoomTimer(Sender: TObject);
     procedure tmrReloadOIContentTimer(Sender: TObject);
   private
@@ -72,6 +80,10 @@ type
     FOrders: TCompositionOrderArr; //array of orders  - i.e. array of array of indexes.
     FPrimitiveSettings: TPrimitiveSettings;
     FCurrentMousePosOnPreviewImg: TPoint;
+
+    FHold: Boolean;
+    FSplitterMouseDownGlobalPos: TPoint;
+    FSplitterMouseDownImagePos: TPoint;
 
     FOIEditorMenu: TPopupMenu;
 
@@ -88,6 +100,7 @@ type
     function AddPreviewTabWithImage(ATabName: string): TImage;
     procedure CreateAllPreviewPages;
     procedure BuildImgLstPreviewPrimitives;
+    procedure ResizeFrameSectionsBySplitter(NewLeft: Integer);
 
     procedure GetOrderContentByIndex(AIndex: Integer; var ADestContent: TCompositionOrder);
     procedure DeleteOrderByIndex(AIndex: Integer; ADeleteTab: Boolean = True);
@@ -124,6 +137,8 @@ type
     function DoOnEvaluateReplacementsFunc(s: string; Recursive: Boolean = True): string;
     procedure DoOnTriggerOnControlsModified;
     procedure DoOnSaveFromMenu;
+
+    function EditFontProperties(APmtvType, APropertyIndex, AItemIndex: Integer; var ANewItems: string): Boolean;
 
     function HandleOnOIGetCategoryCount: Integer;
     function HandleOnOIGetCategory(AIndex: Integer): string;
@@ -210,7 +225,7 @@ implementation
 
 uses
   ClickerPrimitiveValues, ClickerOIUtils, ClickerPrimitivesCompositor, ClickerZoomPreviewForm,
-  FPCanvas, Clipbrd;
+  FPCanvas, Clipbrd, Dialogs;
 
 
 const
@@ -291,6 +306,7 @@ begin
 
   FCurrentMousePosOnPreviewImg.X := Screen.Width - 10;  //init somewhere near the bottom-right corner of the screen
   FCurrentMousePosOnPreviewImg.Y := Screen.Height - 10;
+  FHold := False;
 
   lblModified.Left := lblModified.Left + 20;
   chkHighContrast.Left := lblModified.Width + lblModified.Left + 20;
@@ -710,6 +726,77 @@ end;
 procedure TfrClickerPrimitives.MenuItem_SavePrimitivesFileClick(Sender: TObject);
 begin
   DoOnSaveFromMenu;
+end;
+
+
+procedure TfrClickerPrimitives.pnlHorizSplitterMouseDown(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  if Shift <> [ssLeft] then
+    Exit;
+
+  if not FHold then
+  begin
+    GetCursorPos(FSplitterMouseDownGlobalPos);
+
+    FSplitterMouseDownImagePos.X := pnlHorizSplitter.Left;
+    FHold := True;
+  end;
+end;
+
+
+procedure TfrClickerPrimitives.pnlHorizSplitterMouseMove(Sender: TObject;
+  Shift: TShiftState; X, Y: Integer);
+var
+  tp: TPoint;
+  NewLeft: Integer;
+begin
+  if Shift <> [ssLeft] then
+    Exit;
+
+  if not FHold then
+    Exit;
+
+  GetCursorPos(tp);
+  NewLeft := FSplitterMouseDownImagePos.X + tp.X - FSplitterMouseDownGlobalPos.X;
+
+  ResizeFrameSectionsBySplitter(NewLeft);
+end;
+
+
+procedure TfrClickerPrimitives.pnlHorizSplitterMouseUp(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  FHold := False;
+end;
+
+
+procedure TfrClickerPrimitives.FrameResize(Sender: TObject);
+var
+  NewLeft: Integer;
+begin
+  NewLeft := pnlHorizSplitter.Left;
+
+  if NewLeft > Width - 270 then
+    NewLeft := Width - 270;
+
+  ResizeFrameSectionsBySplitter(NewLeft);
+end;
+
+
+procedure TfrClickerPrimitives.ResizeFrameSectionsBySplitter(NewLeft: Integer);
+begin
+  if NewLeft < pnlvstOI.Constraints.MinWidth then
+    NewLeft := pnlvstOI.Constraints.MinWidth;
+
+  if NewLeft > Width - 270 then
+    NewLeft := Width - 270;
+
+  pnlHorizSplitter.Left := NewLeft;
+
+  pnlPreview.Left := pnlHorizSplitter.Left + pnlHorizSplitter.Width;
+  pnlPreview.Width := Width - pnlPreview.Left;
+  pnlvstOI.Width := pnlHorizSplitter.Left;
 end;
 
 
@@ -1656,77 +1743,75 @@ begin
 end;
 
 
-function TfrClickerPrimitives.HandleOnOIEditItems(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; var ANewItems: string): Boolean;
+function TfrClickerPrimitives.EditFontProperties(APmtvType, APropertyIndex, AItemIndex: Integer; var ANewItems: string): Boolean;
 var
-  tp: TPoint;
-  i: Integer;
+  TempFontDialog: TFontDialog;
 begin
   Result := False;
 
-  case ACategoryIndex of
-    CCategory_Primitives:
-      case ANodeLevel of
-        CCategoryLevel:
-        begin
-          FOIEditorMenu.Items.Clear;
+  TempFontDialog := TFontDialog.Create(nil);
+  try
+    TempFontDialog.Font.Name := ANewItems;
+    TempFontDialog.Font.Size := FPrimitives[APropertyIndex].ClkSetFont.FontSize;
 
-          for i := 0 to CPrimitiveTypeCount - 1 do
-          begin
-            AddMenuItemToPopupMenu(FOIEditorMenu, CAddPrimitiveMenuPrefix + CPrimitiveNames[i], MenuItem_AddPrimitiveToList, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-            imgFontColorBuffer.Canvas.Pen.Color := clWhite;
-            imgFontColorBuffer.Canvas.Brush.Color := clWhite;
-            imgFontColorBuffer.Canvas.Rectangle(0, 0, imgFontColorBuffer.Width, imgFontColorBuffer.Height);
+    if FPrimitives[APropertyIndex].ClkSetFont.Bold then
+      TempFontDialog.Font.Style := TempFontDialog.Font.Style + [fsBold];
 
-            imgFontColorBuffer.Picture.Graphic.Transparent := False;
-            imglstPrimitives.Draw(imgFontColorBuffer.Canvas, 0, 0, i, dsNormal, itImage);
-            FOIEditorMenu.Items.Items[i].Bitmap := TBitmap.Create;
-            FOIEditorMenu.Items.Items[i].Bitmap.Width := 16;
-            FOIEditorMenu.Items.Items[i].Bitmap.Height := 16;
-            FOIEditorMenu.Items.Items[i].Bitmap.Transparent := False;
-            FOIEditorMenu.Items.Items[i].Bitmap.Canvas.Draw(0, 0, imgFontColorBuffer.Picture.Graphic);
-          end;
+    if FPrimitives[APropertyIndex].ClkSetFont.Italic then
+      TempFontDialog.Font.Style := TempFontDialog.Font.Style + [fsItalic];
 
-          AddMenuItemToPopupMenu(FOIEditorMenu, '-', nil, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-          AddMenuItemToPopupMenu(FOIEditorMenu, 'Remove all primitives from list...', MenuItem_RemoveAllPrimitivesFromList, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+    if FPrimitives[APropertyIndex].ClkSetFont.Underline then
+      TempFontDialog.Font.Style := TempFontDialog.Font.Style + [fsUnderline];
 
-          GetCursorPos(tp);
-          FOIEditorMenu.PopUp(tp.X, tp.Y);
-        end;
+    if FPrimitives[APropertyIndex].ClkSetFont.StrikeOut then
+      TempFontDialog.Font.Style := TempFontDialog.Font.Style + [fsStrikeOut];
 
-        CPropertyLevel:
-          ;
+    if not TempFontDialog.Execute then
+      Exit;
 
-        CPropertyItemLevel:
-          ;
-      end; //case ANodeLevel
+    ANewItems := TempFontDialog.Font.Name;
+    Result := True;
 
-    CCategory_Orders:
-      case ANodeLevel of
-        CCategoryLevel:
-        begin
-          FOIEditorMenu.Items.Clear;
-
-          AddMenuItemToPopupMenu(FOIEditorMenu, 'Add composition order to list', MenuItem_AddCompositionOrderToList, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-          AddMenuItemToPopupMenu(FOIEditorMenu, '-', nil, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-          AddMenuItemToPopupMenu(FOIEditorMenu, 'Remove all composition orders from list...', MenuItem_RemoveAllCompositionOrdersFromList, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-          AddMenuItemToPopupMenu(FOIEditorMenu, '-', nil, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-          AddMenuItemToPopupMenu(FOIEditorMenu, 'Repaint all compositions', MenuItem_RepaintAllCompositions, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-
-          GetCursorPos(tp);
-          FOIEditorMenu.PopUp(tp.X, tp.Y);
-        end;
-
-        CPropertyLevel:
-          ;
-
-        CPropertyItemLevel:
-          ;
-      end; //case ANodeLevel
-
-    else
-      ;
-  end; //case ACategoryIndex
+    FPrimitives[APropertyIndex].ClkSetFont.FontName := ANewItems; //redundant, because the OI will call another handler for the property itself
+    FPrimitives[APropertyIndex].ClkSetFont.FontSize := TempFontDialog.Font.Size;
+    FPrimitives[APropertyIndex].ClkSetFont.Bold := fsBold in TempFontDialog.Font.Style;
+    FPrimitives[APropertyIndex].ClkSetFont.Italic := fsItalic in TempFontDialog.Font.Style;
+    FPrimitives[APropertyIndex].ClkSetFont.Underline := fsUnderline in TempFontDialog.Font.Style;
+    FPrimitives[APropertyIndex].ClkSetFont.StrikeOut := fsStrikeOut in TempFontDialog.Font.Style;
+  finally
+    TempFontDialog.Free;
+  end;
 end;
+
+
+function TfrClickerPrimitives.HandleOnOIEditItems(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; var ANewItems: string): Boolean;
+var
+  PmtvType: Integer;
+begin
+  Result := False;
+  if ACategoryIndex = CCategory_Primitives then
+  begin
+    case ANodeLevel of
+      CPropertyLevel:
+        ;
+
+      CPropertyItemLevel:
+      begin
+        PmtvType := FPrimitives[APropertyIndex].PrimitiveType;
+        if PmtvType = CClkSetFontPrimitiveCmdIdx then
+          if AItemIndex = CSetFontPrimitive_FontName_PropIndex then
+          begin
+            Result := EditFontProperties(PmtvType, APropertyIndex, AItemIndex, ANewItems);
+
+            if Result then
+              DoOnTriggerOnControlsModified;
+          end;
+      end;
+    end;
+
+  end; //ACategoryIndex
+end;
+
 
 
 function TfrClickerPrimitives.HandleOnOIGetColorConstsCount(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer): Integer;
@@ -1743,29 +1828,56 @@ end;
 
 
 function TfrClickerPrimitives.HandleOnOIGetEnumConstsCount(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer): Integer;
+var
+  PmtvType: Integer;
 begin
   Result := 0;
-  if ANodeLevel = CPropertyItemLevel then
-    if ACategoryIndex = CCategory_Primitives then
-      Result := CPrimitivesPropEnumCounts[FPrimitives[APropertyIndex].PrimitiveType]^[AItemIndex];
 
-  if ANodeLevel = CPropertyLevel then
-    if ACategoryIndex = CCategory_Settings then
-      Result := CPrimitiveSettingsPropEnumCounts[APropertyIndex];
+  case ANodeLevel of
+    CPropertyLevel:
+      if ACategoryIndex = CCategory_Settings then
+        Result := CPrimitiveSettingsPropEnumCounts[APropertyIndex];
+
+    CPropertyItemLevel:
+      if ACategoryIndex = CCategory_Primitives then
+      begin
+        Result := CPrimitivesPropEnumCounts[FPrimitives[APropertyIndex].PrimitiveType]^[AItemIndex];
+
+        PmtvType := FPrimitives[APropertyIndex].PrimitiveType;
+        if PmtvType = CClkSetFontPrimitiveCmdIdx then
+          if AItemIndex = CSetFontPrimitive_FontName_PropIndex then
+            Result := Screen.Fonts.Count;
+      end;
+
+  end;
 end;
 
 
 procedure TfrClickerPrimitives.HandleOnOIGetEnumConst(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEnumItemIndex: Integer; var AEnumItemName: string);
+var
+  PmtvType: Integer;
 begin
   AEnumItemName := '';
 
-  if ANodeLevel = CPropertyItemLevel then
-    if ACategoryIndex = CCategory_Primitives then
-      AEnumItemName := CPrimitivesPropEnumStrings[FPrimitives[APropertyIndex].PrimitiveType]^[AItemIndex]^[AEnumItemIndex];
+  case ANodeLevel of
+    CPropertyLevel:
+      if ACategoryIndex = CCategory_Settings then
+        AEnumItemName := CPrimitiveSettingsPropEnumStrings[APropertyIndex]^[AEnumItemIndex];
 
-  if ANodeLevel = CPropertyLevel then
-    if ACategoryIndex = CCategory_Settings then
-      AEnumItemName := CPrimitiveSettingsPropEnumStrings[APropertyIndex]^[AEnumItemIndex];
+    CPropertyItemLevel:
+      if ACategoryIndex = CCategory_Primitives then
+      begin
+        PmtvType := FPrimitives[APropertyIndex].PrimitiveType;
+        if PmtvType = CClkSetFontPrimitiveCmdIdx then
+          if AItemIndex = CSetFontPrimitive_FontName_PropIndex then
+          begin
+            AEnumItemName := Screen.Fonts.Strings[AEnumItemIndex];
+            Exit;
+          end;
+
+        AEnumItemName := CPrimitivesPropEnumStrings[FPrimitives[APropertyIndex].PrimitiveType]^[AItemIndex]^[AEnumItemIndex];
+      end;
+  end;
 end;
 
 
@@ -1896,8 +2008,73 @@ end;
 
 
 procedure TfrClickerPrimitives.HandleOnOIUserEditorClick(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; var ARepaintValue: Boolean);
+var
+  tp: TPoint;
+  i: Integer;
 begin
+  case ACategoryIndex of
+    CCategory_Primitives:
+      case ANodeLevel of
+        CCategoryLevel:
+        begin
+          FOIEditorMenu.Items.Clear;
 
+          for i := 0 to CPrimitiveTypeCount - 1 do
+          begin
+            AddMenuItemToPopupMenu(FOIEditorMenu, CAddPrimitiveMenuPrefix + CPrimitiveNames[i], MenuItem_AddPrimitiveToList, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+            imgFontColorBuffer.Canvas.Pen.Color := clWhite;
+            imgFontColorBuffer.Canvas.Brush.Color := clWhite;
+            imgFontColorBuffer.Canvas.Rectangle(0, 0, imgFontColorBuffer.Width, imgFontColorBuffer.Height);
+
+            imgFontColorBuffer.Picture.Graphic.Transparent := False;
+            imglstPrimitives.Draw(imgFontColorBuffer.Canvas, 0, 0, i, dsNormal, itImage);
+            FOIEditorMenu.Items.Items[i].Bitmap := TBitmap.Create;
+            FOIEditorMenu.Items.Items[i].Bitmap.Width := 16;
+            FOIEditorMenu.Items.Items[i].Bitmap.Height := 16;
+            FOIEditorMenu.Items.Items[i].Bitmap.Transparent := False;
+            FOIEditorMenu.Items.Items[i].Bitmap.Canvas.Draw(0, 0, imgFontColorBuffer.Picture.Graphic);
+          end;
+
+          AddMenuItemToPopupMenu(FOIEditorMenu, '-', nil, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+          AddMenuItemToPopupMenu(FOIEditorMenu, 'Remove all primitives from list...', MenuItem_RemoveAllPrimitivesFromList, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+
+          GetCursorPos(tp);
+          FOIEditorMenu.PopUp(tp.X, tp.Y);
+        end;
+
+        CPropertyLevel:
+          ;
+
+        CPropertyItemLevel:
+          ;
+      end; //case ANodeLevel
+
+    CCategory_Orders:
+      case ANodeLevel of
+        CCategoryLevel:
+        begin
+          FOIEditorMenu.Items.Clear;
+
+          AddMenuItemToPopupMenu(FOIEditorMenu, 'Add composition order to list', MenuItem_AddCompositionOrderToList, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+          AddMenuItemToPopupMenu(FOIEditorMenu, '-', nil, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+          AddMenuItemToPopupMenu(FOIEditorMenu, 'Remove all composition orders from list...', MenuItem_RemoveAllCompositionOrdersFromList, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+          AddMenuItemToPopupMenu(FOIEditorMenu, '-', nil, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+          AddMenuItemToPopupMenu(FOIEditorMenu, 'Repaint all compositions', MenuItem_RepaintAllCompositions, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+
+          GetCursorPos(tp);
+          FOIEditorMenu.PopUp(tp.X, tp.Y);
+        end;
+
+        CPropertyLevel:
+          ;
+
+        CPropertyItemLevel:
+          ;
+      end; //case ANodeLevel
+
+    else
+      ;
+  end; //case ACategoryIndex
 end;
 
 

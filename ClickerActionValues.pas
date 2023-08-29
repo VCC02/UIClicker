@@ -56,7 +56,7 @@ const
   //Properties (counts)
   CPropCount_Click = 22;
   CPropCount_ExecApp = 7;
-  CPropCount_FindControl = 19;
+  CPropCount_FindControl = 20;
   CPropCount_FindSubControl = 19;
   CPropCount_SetText = 2;
   CPropCount_CallTemplate = 4;
@@ -221,7 +221,8 @@ const
     (Name: 'StartSearchingWithCachedControl'; EditorType: etBooleanCombo; DataType: CDTBool),   //Description: When checked, the control is checked at the specified cached $My_Control_Left$ and $My_Control_Top$ var replacements, before using the search grid.  In order to cache the control coordinates, please add a SetVar action after this one, by assigning:  $My_Control_Left$ to $Control_Left$  and  $My_Control_Top$ to $Control_Top$  where $My_Control_Left$ and $My_Control_Top$ are the cached values. The "Eval before" checkboxes have to be set.  Each Find(Sub)Control action, which uses caching, will have to use its own set of $My_Control_Left$ and $My_Control_Top$ vars.  The cached values are global coordinates, so they will become invalid even for a subcontrol if the parent window is moved.
     (Name: 'CachedControlLeft'; EditorType: etText; DataType: CDTString),
     (Name: 'CachedControlTop'; EditorType: etText; DataType: CDTString),
-    (Name: 'MatchPrimitiveFiles'; EditorType: etFilePathWithArrow; DataType: CDTArray)
+    (Name: 'MatchPrimitiveFiles'; EditorType: etFilePathWithArrow; DataType: CDTArray),
+    (Name: 'GetAllControls'; EditorType: etBooleanCombo; DataType: CDTBool)
   );
 
   {$IFDEF SubProperties}
@@ -442,7 +443,8 @@ const
     nil, //StartSearchingWithCachedControl
     nil, //CachedControlLeft
     nil, //CachedControlTop
-    nil  //MatchPrimitiveFiles
+    nil, //MatchPrimitiveFiles
+    nil  //GetAllControls
   );
 
   CCallTemplateGetActionValueStrFunctions: TGetCallTemplateValueStrFuncArr = (
@@ -515,7 +517,8 @@ const
     0, //StartSearchingWithCachedControl: Boolean;
     0, //CachedControlLeft: string;
     0, //CachedControlTop: string;
-    0  //MatchPrimitiveFiles
+    0, //MatchPrimitiveFiles
+    0  //GetAllControls: Boolean;
   );
 
   CSetTextEnumCounts: array[0..CPropCount_SetText - 1] of Integer = (
@@ -664,7 +667,8 @@ const
     nil, //StartSearchingWithCachedControl: Boolean;
     nil, //CachedControlLeft: string;
     nil, //CachedControlTop: string;
-    nil
+    nil, //Primitives
+    nil  //GetAllControls
   );
 
   CSetTextEnumStrings: array[0..CPropCount_SetText - 1] of PArrayOfString = (
@@ -777,6 +781,7 @@ function GetPropertyHint_FindControl_WaitForControlToGoAway: string;
 function GetPropertyHint_FindControl_StartSearchingWithCachedControl: string;
 function GetPropertyHint_FindControl_CachedControlLeftTop: string;
 function GetPropertyHint_FindControl_MatchPrimitiveFiles: string;
+function GetPropertyHint_FindControl_GetAllControls: string;
 
 {$IFDEF SubProperties}
   function GetPropertyHint_FindControl_MatchCriteria_MatchBitmapText: string;
@@ -878,7 +883,8 @@ const
     @GetPropertyHint_FindControl_StartSearchingWithCachedControl, // StartSearchingWithCachedControl: Boolean;
     @GetPropertyHint_FindControl_CachedControlLeftTop, // CachedControlLeft: string;
     @GetPropertyHint_FindControl_CachedControlLeftTop, // CachedControlTop: string;
-    @GetPropertyHint_FindControl_MatchPrimitiveFiles // MatchPrimitiveFiles: string; //ListOfStrings
+    @GetPropertyHint_FindControl_MatchPrimitiveFiles,// MatchPrimitiveFiles: string; //ListOfStrings
+    @GetPropertyHint_FindControl_GetAllControls // GetAllControls: Boolean;
   );
 
 
@@ -1061,6 +1067,7 @@ begin
     16: Result := AAction^.FindControlOptions.CachedControlLeft;
     17: Result := AAction^.FindControlOptions.CachedControlTop;
     18: Result := AAction^.FindControlOptions.MatchPrimitiveFiles; //ListOfStrings
+    19: Result := BoolToStr(AAction^.FindControlOptions.GetAllControls, True);
     else
       Result := 'unknown';
   end;
@@ -1495,6 +1502,7 @@ begin
     16: AAction^.FindControlOptions.CachedControlLeft := NewValue;
     17: AAction^.FindControlOptions.CachedControlTop := NewValue;
     18: AAction^.FindControlOptions.MatchPrimitiveFiles := NewValue; //ListOfStrings
+    19: AAction^.FindControlOptions.GetAllControls := StrToBool(NewValue);
     else
       ;
   end;
@@ -1822,6 +1830,16 @@ end;
 function GetPropertyHint_FindControl_MatchPrimitiveFiles: string;
 begin
   Result := 'Relative paths can be entered using the following format:' + #13#10 + '$TemplateDir$\<SomeFile.pmtv>';
+end;
+
+
+function GetPropertyHint_FindControl_GetAllControls: string;
+begin
+  Result := 'When set to True, FindControl doesn''t stop at the first result.' + #13#10 +
+            'It adds all control handles, as a #4#5 separated list, to $AllControl_Handles$ variable.' + #13#10 +
+            'The list items can be extracted with $GetTextItem($AllControl_Handles$,<ItemIndex>)$ function.' + #13#10 +
+            'The number of handles can be obtained with $ItemCount($AllControl_Handles$)$.' + #13#10#13#10 +
+            'When iterating through all returned handles, the control property variables (like $Control_Left$, $Control_Top$ etc.) can be set by calling $UpdateControlInfo(<Handle>)$.';
 end;
 
 

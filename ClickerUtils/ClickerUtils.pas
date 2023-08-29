@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2022 VCC
+    Copyright (C) 2023 VCC
     creation date: Dec 2019
     initial release date: 26 Jul 2022
 
@@ -226,6 +226,7 @@ type
     CachedControlTop: string;
     MatchPrimitiveFiles: string;  //ListOfStrings
     MatchPrimitiveFiles_Modified: string;  //ListOfStrings  '0's and '1's.  This field is not a separate property in ObjectInspector
+    GetAllControls: Boolean; //When True, the FindControl algorithm does not stop on the first found control. It keeps adding found handles to a list.
   end;
 
   TClkSetTextOptions = record
@@ -328,6 +329,12 @@ type
 
   TBrightnessOperation = (boInc, boDec, boIncR, boIncG, boIncB, boDecR, boDecG, boDecB);
   TDisplayGridLineOption = (loDot, loSolid, loTransparentSolid);
+  TSelectionColors = record  //used by Find(Sub)Control preview
+    TopLeft_Valid: TColor;    //default: orange
+    BotRight_Valid: TColor;   //default: green
+    TopLeft_Invalid: TColor;  //default: dark red1
+    BotRight_Invalid: TColor; //default: dark red2
+  end;
 
   TOnUpdateSearchAreaLimitsInOIFromDraggingLines = procedure(ALimitLabelsToUpdate: TLimitLabels; var AOffsets: TSimpleRectString) of object;
   TOnUpdateTextCroppingLimitsInOIFromDraggingLines = procedure(ALimitLabelsToUpdate: TLimitLabels; var AOffsets: TSimpleRectString; AFontProfileName: string) of object;

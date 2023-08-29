@@ -81,6 +81,7 @@ function AddSetVarActionToTemplate(ATemplateFileName: string;
 
 procedure GetDefaultClickOptions(var AClickOptions: TClkClickOptions);
 procedure GenerateClickOptionsForLeaveMouse(X, Y: Integer; var AClickOptions: TClkClickOptions);
+procedure GenerateClickOptionsForMouseWheel(AWheelType: TMouseWheelType; AAmount: Integer; var AClickOptions: TClkClickOptions);
 procedure GenerateExecAppOptionsForIPConfig(var AExecAppOptions: TClkExecAppOptions);
 procedure GenerateFindControlOptionsForMainUIClickerWindow(var AFindControlOptions: TClkFindControlOptions; AAllowToFail: Boolean; ACustomFormCaption: string = 'UI Clicker Main');
 procedure GenerateFindSubControlOptionsForMainUIClickerWindow_Bitness(var AFindControlOptions: TClkFindControlOptions; AAllowToFail: Boolean);
@@ -91,6 +92,7 @@ procedure GenerateCallTemplateOptions(var ACallTemplateOptions: TClkCallTemplate
 procedure GenerateSleepOptions(var ASleepOptions: TClkSleepOptions; AValue: string);
 procedure GenerateSetVarOptions_OneVar(var ASetVarOptions: TClkSetVarOptions; AVar, AValue: string; AEvalBefore: Boolean = False);
 procedure GenerateWindowOperationsOptionsForFindControlSetup(var AWindowOperationsOptions: TClkWindowOperationsOptions; AOperation: TWindowOperation);
+procedure GenerateWindowOperationsOptionsForMouseWheelSetup(var AWindowOperationsOptions: TClkWindowOperationsOptions; AOperation: TWindowOperation);
 
 
 implementation
@@ -277,6 +279,26 @@ begin
   AClickOptions.ClickType := CClickType_Click;
   AClickOptions.XClickPointReferenceDest := xrefAbsolute;
   AClickOptions.YClickPointReferenceDest := yrefAbsolute;
+  AClickOptions.MouseWheelType := mwtVert;
+  AClickOptions.MouseWheelAmount := '0';
+end;
+
+
+procedure GenerateClickOptionsForMouseWheel(AWheelType: TMouseWheelType; AAmount: Integer; var AClickOptions: TClkClickOptions);
+begin
+  AClickOptions.XClickPointReference := xrefAbsolute;
+  AClickOptions.YClickPointReference := yrefAbsolute;
+  AClickOptions.XOffset := '0';
+  AClickOptions.YOffset := '0';
+  AClickOptions.MouseButton := mbLeft;
+  AClickOptions.Count := 1;
+  AClickOptions.LeaveMouse := True;
+  AClickOptions.MoveWithoutClick := True;
+  AClickOptions.ClickType := CClickType_Wheel;
+  AClickOptions.XClickPointReferenceDest := xrefAbsolute;
+  AClickOptions.YClickPointReferenceDest := yrefAbsolute;
+  AClickOptions.MouseWheelType := AWheelType;
+  AClickOptions.MouseWheelAmount := IntToStr(AAmount);
 end;
 
 
@@ -484,6 +506,18 @@ begin
   AWindowOperationsOptions.NewHeight := '279';
   AWindowOperationsOptions.NewPositionEnabled := False; //should be enabled, only if the window can go offscreen
   AWindowOperationsOptions.NewSizeEnabled := True;
+end;
+
+
+procedure GenerateWindowOperationsOptionsForMouseWheelSetup(var AWindowOperationsOptions: TClkWindowOperationsOptions; AOperation: TWindowOperation);
+begin
+  AWindowOperationsOptions.Operation := AOperation;
+  AWindowOperationsOptions.NewX := '';
+  AWindowOperationsOptions.NewY := '';
+  AWindowOperationsOptions.NewWidth := '';
+  AWindowOperationsOptions.NewHeight := '';
+  AWindowOperationsOptions.NewPositionEnabled := False;
+  AWindowOperationsOptions.NewSizeEnabled := False;
 end;
 
 end.

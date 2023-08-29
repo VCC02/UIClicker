@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2022 VCC
+    Copyright (C) 2023 VCC
     creation date: Dec 2019
     initial release date: 13 Sep 2022
 
@@ -718,7 +718,7 @@ end;
 
 function TActionExecution.ExecuteExecAppAction(var AExecAppOptions: TClkExecAppOptions; var AActionOptions: TClkActionOptions): Boolean;
 var
-  ACmd: string;
+  ACmd, ErrMsg: string;
   i: Integer;
   AllParams: TStringList;
 
@@ -914,7 +914,8 @@ begin
           if FTemplateFileName = nil then
             raise Exception.Create('FTemplateFileName not set.');
 
-          SetActionVarValue('$ExecAction_Err$', 'Exception "' + E.Message + '" at "' + AActionOptions.ActionName + '" in ' + FTemplateFileName^);
+          ErrMsg := StringReplace(SysErrorMessage(GetLastOSError), '%1', '"' + ACmd + '"', [rfReplaceAll]);
+          SetActionVarValue('$ExecAction_Err$', 'Exception "' + E.Message + '" at "' + AActionOptions.ActionName + '" in ' + FTemplateFileName^ + '   SysMsg: ' + ErrMsg);
         end;
       end;
     {$ENDIF}
@@ -973,10 +974,23 @@ function TActionExecution.ExecuteFindControlAction(var AFindControlOptions: TClk
     end; //case
   end;
 
+  procedure SetAllControl_Handles_FromResultedControlArr(var AResultedControlArr: TCompRecArr);
+  var
+    i: Integer;
+    s: string;
+  begin
+    s := '';
+    for i := 0 to Length(AResultedControlArr) - 1 do
+      s := s + IntToStr(AResultedControlArr[i].Handle) + #4#5;
+
+    SetActionVarValue('$AllControl_Handles$', s);
+  end;
+
 var
   i, j, k, n: Integer;
   ListOfBitmapFiles, ListOfPrimitiveFiles: TStringList;
   ResultedControl: TCompRec;
+  ResultedControlArr: TCompRecArr;
   InitialTickCount, Timeout: QWord;
   FindControlInputData: TFindControlInputData;
   StopAllActionsOnDemandAddr: Pointer;
@@ -1024,6 +1038,7 @@ begin
 
   FindControlInputData.ClassName := EvaluateReplacements(AFindControlOptions.MatchClassName);
   FindControlInputData.Text := EvaluateReplacements(AFindControlOptions.MatchText, True);
+  FindControlInputData.GetAllHandles := AFindControlOptions.GetAllControls;
 
   if AFindControlOptions.MatchCriteria.WillMatchBitmapText then
     if FindControlInputData.Text = '' then
@@ -1051,6 +1066,10 @@ begin
   FindControlInputData.StartSearchingWithCachedControl := AFindControlOptions.StartSearchingWithCachedControl;
   FindControlInputData.CachedControlLeft := StrToIntDef(EvaluateReplacements(AFindControlOptions.CachedControlLeft), 0);
   FindControlInputData.CachedControlTop := StrToIntDef(EvaluateReplacements(AFindControlOptions.CachedControlTop), 0);
+
+  if AFindControlOptions.GetAllControls then
+    if not IsSubControl then
+      SetActionVarValue('$AllControl_Handles$', '');
 
   for j := 0 to n - 1 do //number of font profiles
   begin
@@ -1128,7 +1147,10 @@ begin
 
       if not AFindControlOptions.WaitForControlToGoAway then
       begin
-        AddToLog('Find (Sub)Control with text = "' + FindControlInputData.Text + '"');
+        AddToLog('Find (Sub)Control with text = "' + FindControlInputData.Text + '"' +
+                 '    GetAllControls is set to ' + BoolToStr(AFindControlOptions.GetAllControls, True) +
+                 '    SearchMode: ' + CSearchForControlModeStr[AFindControlOptions.MatchCriteria.SearchForControlMode]);
+
         AddToLog('Raw GlobalSearchArea.Left = ' + IntToStr(FindControlInputData.GlobalSearchArea.Left));
         AddToLog('Raw GlobalSearchArea.Top = ' + IntToStr(FindControlInputData.GlobalSearchArea.Top));
         AddToLog('Raw GlobalSearchArea.Right = ' + IntToStr(FindControlInputData.GlobalSearchArea.Right));
@@ -1219,10 +1241,13 @@ begin
              (mmBitmapText in FindControlInputData.MatchingMethods) then
           begin
             try
-              if FindControlOnScreen(AFindControlOptions.MatchBitmapAlgorithm, AFindControlOptions.MatchBitmapAlgorithmSettings, FindControlInputData, InitialTickCount, Timeout, StopAllActionsOnDemandAddr, ResultedControl, DoOnGetGridDrawingOption) then
+              if FindControlOnScreen(AFindControlOptions.MatchBitmapAlgorithm, AFindControlOptions.MatchBitmapAlgorithmSettings, FindControlInputData, InitialTickCount, Timeout, StopAllActionsOnDemandAddr, ResultedControlArr, DoOnGetGridDrawingOption) then
               begin
-                UpdateActionVarValuesFromControl(ResultedControl);
+                UpdateActionVarValuesFromControl(ResultedControlArr[0]);
                 frClickerActions.DebuggingInfoAvailable := True;
+
+                if AFindControlOptions.GetAllControls then
+                  SetAllControl_Handles_FromResultedControlArr(ResultedControlArr);
 
                 Result := True;
                 AddToLog('Found text: "' + AFindControlOptions.MatchText + '" in ' + IntToStr(GetTickCount64 - InitialTickCount) + 'ms.');
@@ -1230,6 +1255,9 @@ begin
                 Exit;  //to prevent further searching for bitmap files
               end;
             finally
+              if Length(ResultedControlArr) > 0 then
+                ResultedControl := ResultedControlArr[0];  //ResultedControl has some fields, initialized before the search. If no result is found, then call SetDbgImgPos with those values.
+
               SetDbgImgPos(AFindControlOptions.MatchBitmapAlgorithm, FindControlInputData, ResultedControl);
             end;
           end;
@@ -1280,10 +1308,13 @@ begin
                 else
                   Timeout := AActionOptions.ActionTimeout;
 
-                if FindControlOnScreen(AFindControlOptions.MatchBitmapAlgorithm, AFindControlOptions.MatchBitmapAlgorithmSettings, FindControlInputData, InitialTickCount, Timeout, StopAllActionsOnDemandAddr, ResultedControl, DoOnGetGridDrawingOption) then
+                if FindControlOnScreen(AFindControlOptions.MatchBitmapAlgorithm, AFindControlOptions.MatchBitmapAlgorithmSettings, FindControlInputData, InitialTickCount, Timeout, StopAllActionsOnDemandAddr, ResultedControlArr, DoOnGetGridDrawingOption) then
                 begin
-                  UpdateActionVarValuesFromControl(ResultedControl);
+                  UpdateActionVarValuesFromControl(ResultedControlArr[0]);
                   frClickerActions.DebuggingInfoAvailable := True;
+
+                  //if AFindControlOptions.GetAllControls then
+                  //  SetAllControl_Handles_FromResultedControlArr(ResultedControlArr);
 
                   Result := True;
                   Exit;  //to prevent further searching for other bitmap files
@@ -1291,6 +1322,9 @@ begin
               end;
             finally
               ListOfBitmapFiles.Free;
+              if Length(ResultedControlArr) > 0 then
+                ResultedControl := ResultedControlArr[0];
+
               SetDbgImgPos(AFindControlOptions.MatchBitmapAlgorithm, FindControlInputData, ResultedControl);
             end;
           end; //WillMatchBitmapFiles
@@ -1354,10 +1388,13 @@ begin
                     //no need to clear the bitmap, it is already implemented in ComposePrimitives
                     PrimitivesCompositor.ComposePrimitives(FindControlInputData.BitmapToSearchFor, k, False, TempPrimitives, TempOrders, TempPrimitiveSettings);
 
-                    if FindControlOnScreen(AFindControlOptions.MatchBitmapAlgorithm, AFindControlOptions.MatchBitmapAlgorithmSettings, FindControlInputData, InitialTickCount, Timeout, StopAllActionsOnDemandAddr, ResultedControl, DoOnGetGridDrawingOption) then
+                    if FindControlOnScreen(AFindControlOptions.MatchBitmapAlgorithm, AFindControlOptions.MatchBitmapAlgorithmSettings, FindControlInputData, InitialTickCount, Timeout, StopAllActionsOnDemandAddr, ResultedControlArr, DoOnGetGridDrawingOption) then
                     begin
-                      UpdateActionVarValuesFromControl(ResultedControl);
+                      UpdateActionVarValuesFromControl(ResultedControlArr[0]);
                       frClickerActions.DebuggingInfoAvailable := True;
+
+                      //if AFindControlOptions.GetAllControls then
+                      //  SetAllControl_Handles_FromResultedControlArr(ResultedControlArr);
 
                       AddToLog('Matched by primitives file: "' + ExtractFileName(ListOfPrimitiveFiles.Strings[i]) + '"  at order ' + IntToStr(k) + '.  Bmp w/h: ' + IntToStr(FindControlInputData.BitmapToSearchFor.Width) + ' / ' + IntToStr(FindControlInputData.BitmapToSearchFor.Height));
 
@@ -1371,6 +1408,9 @@ begin
               end; //for i
             finally
               ListOfPrimitiveFiles.Free;
+              if Length(ResultedControlArr) > 0 then
+                ResultedControl := ResultedControlArr[0];
+
               SetDbgImgPos(AFindControlOptions.MatchBitmapAlgorithm, FindControlInputData, ResultedControl);
             end;
           end;
@@ -1389,11 +1429,15 @@ begin
 
         sfcmFindWindow:         //Caption AND Class
         begin
-          if FindWindowOnScreenByCaptionAndClass(FindControlInputData, InitialTickCount, Timeout, StopAllActionsOnDemandAddr, ResultedControl) then
+          if FindWindowOnScreenByCaptionAndClass(FindControlInputData, InitialTickCount, Timeout, StopAllActionsOnDemandAddr, ResultedControlArr) then
           begin
-            UpdateActionVarValuesFromControl(ResultedControl);
+            UpdateActionVarValuesFromControl(ResultedControlArr[0]);
             Result := True;
             frClickerActions.DebuggingInfoAvailable := True;
+
+            if AFindControlOptions.GetAllControls then
+              SetAllControl_Handles_FromResultedControlArr(ResultedControlArr);
+
             Exit;  //to prevent further searching for bitmap files
           end;
         end;
@@ -1404,7 +1448,7 @@ begin
 
     if Result then
       Break;
-  end;  //for j
+  end;  //for j  - font profiles
 end;
 
 
@@ -1616,6 +1660,7 @@ begin
   if FOwnerFrame = nil then
     raise Exception.Create('FOwnerFrame is not assigned.');
 
+  //do not verify here if the file exists or not, because this verification is done by FOnCallTemplate, both for disk and in-mem FS
   Result := FOnCallTemplate(FOwnerFrame, Fnm, FClickerVars, frClickerActions.imgDebugBmp.Picture.Bitmap, frClickerActions.imgDebugGrid, IsDebugging, AShouldStopAtBreakPoint, FStackLevel^, FExecutesRemotely^);
 
   if GetActionVarValue('$ExecAction_Err$') <> '' then   ////////////////// ToDo:  improve the error logging
@@ -2210,6 +2255,7 @@ begin
     FindControlOptions.CachedControlTop := AListOfFindControlOptionsParams.Values['CachedControlTop'];
 
     FindControlOptions.MatchPrimitiveFiles := FastReplace_45ToReturn(AListOfFindControlOptionsParams.Values['MatchPrimitiveFiles']); //ListOfStrings
+    FindControlOptions.GetAllControls := AListOfFindControlOptionsParams.Values['GetAllControls'] = '1';
 
     ActionOptions.ActionName := AListOfFindControlOptionsParams.Values['ActionName'];
     ActionOptions.ActionTimeout := Temp_ActionTimeout;

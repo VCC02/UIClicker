@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2022 VCC
+    Copyright (C) 2023 VCC
     creation date: Dec 2019
     initial release date: 13 Sep 2022
 
@@ -279,6 +279,7 @@ type
     FSelectingYStart: Integer;
 
     FGridDrawingOption: TDisplayGridLineOption;
+    FPreviewSelectionColors: TSelectionColors;
 
     FBMPTextProfiles: TFontProfileArr;
     FInMemFS: TInMemFileSystem; //not created in this unit, set from outside as an existing instance
@@ -431,6 +432,7 @@ type
     procedure SetSelectedBMPTextTab(Value: Integer);
 
     procedure SetGridDrawingOption(Value: TDisplayGridLineOption);
+    procedure SetPreviewSelectionColors(Value: TSelectionColors);
 
     ///////OI
     function GetSearch_LeftLeft_Ref_FromInitRect(AInitialRectange: TRectString): Integer;    //Left
@@ -529,6 +531,7 @@ type
     property SearchAreaControlDbgImg: TImage read FSearchAreaControlDbgImg;
     property frClickerPrimitives: TfrClickerPrimitives read FfrClickerPrimitives;
     property GridDrawingOption: TDisplayGridLineOption read FGridDrawingOption write SetGridDrawingOption;
+    property PreviewSelectionColors: TSelectionColors read FPreviewSelectionColors write SetPreviewSelectionColors;
 
     property OnTriggerOnControlsModified: TOnTriggerOnControlsModified read FOnTriggerOnControlsModified write FOnTriggerOnControlsModified;
     property OnEvaluateReplacements: TOnEvaluateReplacements read FOnEvaluateReplacements write FOnEvaluateReplacements;
@@ -937,18 +940,26 @@ begin
   FTransparent_SearchAreaLeftLimitLabel.OnMouseDown := FTransparent_LeftMouseDown;
   FTransparent_SearchAreaLeftLimitLabel.OnMouseMove := FTransparent_LeftMouseMove;
   FTransparent_SearchAreaLeftLimitLabel.OnMouseUp := FTransparent_LeftMouseUp;
+  FTransparent_SearchAreaLeftLimitLabel.OnMouseEnter := imgSearchAreaControlDbgMouseEnter;
+  FTransparent_SearchAreaLeftLimitLabel.OnMouseLeave := imgSearchAreaControlDbgMouseLeave;
 
   FTransparent_SearchAreaRightLimitLabel.OnMouseDown := FTransparent_RightMouseDown;
   FTransparent_SearchAreaRightLimitLabel.OnMouseMove := FTransparent_RightMouseMove;
   FTransparent_SearchAreaRightLimitLabel.OnMouseUp := FTransparent_RightMouseUp;
+  FTransparent_SearchAreaRightLimitLabel.OnMouseEnter := imgSearchAreaControlDbgMouseEnter;
+  FTransparent_SearchAreaRightLimitLabel.OnMouseLeave := imgSearchAreaControlDbgMouseLeave;
 
   FTransparent_SearchAreaTopLimitLabel.OnMouseDown := FTransparent_TopMouseDown;
   FTransparent_SearchAreaTopLimitLabel.OnMouseMove := FTransparent_TopMouseMove;
   FTransparent_SearchAreaTopLimitLabel.OnMouseUp := FTransparent_TopMouseUp;
+  FTransparent_SearchAreaTopLimitLabel.OnMouseEnter := imgSearchAreaControlDbgMouseEnter;
+  FTransparent_SearchAreaTopLimitLabel.OnMouseLeave := imgSearchAreaControlDbgMouseLeave;
 
   FTransparent_SearchAreaBottomLimitLabel.OnMouseDown := FTransparent_BottomMouseDown;
   FTransparent_SearchAreaBottomLimitLabel.OnMouseMove := FTransparent_BottomMouseMove;
   FTransparent_SearchAreaBottomLimitLabel.OnMouseUp := FTransparent_BottomMouseUp;
+  FTransparent_SearchAreaBottomLimitLabel.OnMouseEnter := imgSearchAreaControlDbgMouseEnter;
+  FTransparent_SearchAreaBottomLimitLabel.OnMouseLeave := imgSearchAreaControlDbgMouseLeave;
 end;
 
 
@@ -1015,6 +1026,11 @@ begin
   FInMemFS := nil;
 
   FGridDrawingOption := loDot;
+
+  FPreviewSelectionColors.TopLeft_Valid := CLabel_Orange;
+  FPreviewSelectionColors.BotRight_Valid := CLabel_LightGreen;
+  FPreviewSelectionColors.TopLeft_Invalid := clRed;
+  FPreviewSelectionColors.BotRight_Invalid := clMaroon;
 
   PageControlMatch.ActivePageIndex := 0;
 end;
@@ -1924,10 +1940,10 @@ begin
       FSearchAreaRightLimitLabel.Caption := '';
       FSearchAreaBottomLimitLabel.Caption := '';
 
-      FSearchAreaLeftLimitLabel.Color := CLabel_Orange;
-      FSearchAreaTopLimitLabel.Color := CLabel_Orange;
-      FSearchAreaRightLimitLabel.Color := CLabel_LightGreen;
-      FSearchAreaBottomLimitLabel.Color := CLabel_LightGreen;
+      FSearchAreaLeftLimitLabel.Color := FPreviewSelectionColors.TopLeft_Valid;
+      FSearchAreaTopLimitLabel.Color := FPreviewSelectionColors.TopLeft_Valid;
+      FSearchAreaRightLimitLabel.Color := FPreviewSelectionColors.BotRight_Valid;
+      FSearchAreaBottomLimitLabel.Color := FPreviewSelectionColors.BotRight_Valid;
 
       FSearchAreaLeftLimitLabel.Width := 1;
       FSearchAreaTopLimitLabel.Height := 1;
@@ -2162,6 +2178,19 @@ begin
   begin
     FGridDrawingOption := Value;
     RefreshGrid;
+  end;
+end;
+
+
+procedure TfrClickerFindControl.SetPreviewSelectionColors(Value: TSelectionColors);
+begin
+  if (FPreviewSelectionColors.TopLeft_Valid <> Value.TopLeft_Valid) or
+     (FPreviewSelectionColors.BotRight_Valid <> Value.BotRight_Valid) or
+     (FPreviewSelectionColors.TopLeft_Invalid <> Value.TopLeft_Invalid) or
+     (FPreviewSelectionColors.BotRight_Invalid <> Value.BotRight_Invalid) then
+  begin
+    FPreviewSelectionColors := Value;
+    UpdateSearchAreaLabelColorsFromTheirPosition;
   end;
 end;
 
@@ -2499,26 +2528,29 @@ end;
 
 procedure TfrClickerFindControl.UpdateSearchAreaLabelColorsFromTheirPosition;
 begin
+  if not Assigned(FSearchAreaLeftLimitLabel) then
+    Exit;
+
   if FSearchAreaLeftLimitLabel.Left < FSearchAreaRightLimitLabel.Left then
   begin
-    FSearchAreaLeftLimitLabel.Color := CLabel_Orange;
-    FSearchAreaRightLimitLabel.Color := CLabel_LightGreen;
+    FSearchAreaLeftLimitLabel.Color := FPreviewSelectionColors.TopLeft_Valid; // CLabel_Orange;
+    FSearchAreaRightLimitLabel.Color := FPreviewSelectionColors.BotRight_Valid; // CLabel_LightGreen;
   end
   else
   begin
-    FSearchAreaLeftLimitLabel.Color := clRed;
-    FSearchAreaRightLimitLabel.Color := clMaroon;
+    FSearchAreaLeftLimitLabel.Color := FPreviewSelectionColors.TopLeft_Invalid; // clRed;
+    FSearchAreaRightLimitLabel.Color := FPreviewSelectionColors.BotRight_Invalid; // clMaroon;
   end;
 
   if FSearchAreaTopLimitLabel.Top < FSearchAreaBottomLimitLabel.Top then
   begin
-    FSearchAreaTopLimitLabel.Color := CLabel_Orange;
-    FSearchAreaBottomLimitLabel.Color := CLabel_LightGreen;
+    FSearchAreaTopLimitLabel.Color := FPreviewSelectionColors.TopLeft_Valid; // CLabel_Orange;
+    FSearchAreaBottomLimitLabel.Color := FPreviewSelectionColors.BotRight_Valid; // CLabel_LightGreen;
   end
   else
   begin
-    FSearchAreaTopLimitLabel.Color := clRed;
-    FSearchAreaBottomLimitLabel.Color := clMaroon;
+    FSearchAreaTopLimitLabel.Color := FPreviewSelectionColors.TopLeft_Invalid; // clRed;
+    FSearchAreaBottomLimitLabel.Color := FPreviewSelectionColors.BotRight_Invalid; // clMaroon;
   end;
 end;
 
@@ -3150,6 +3182,9 @@ begin
 
     tmrUpdateSearchAreaOffsetEditBoxes.Enabled := True;
     UpdateSearchAreaLabelColorsFromTheirPosition;
+
+    //ToDo: refactoring, to avoid calling the imgSearchAreaControlDbgMouseMove handler
+    imgSearchAreaControlDbgMouseMove(FSearchAreaControlDbgImg, Shift, FTransparent_SearchAreaLeftLimitLabel.Left + FTransparent_SearchAreaLeftLimitLabel.Width shr 1, Y);  //shr 1, because of label width
   end;
 end;
 
@@ -3200,6 +3235,9 @@ begin
 
     tmrUpdateSearchAreaOffsetEditBoxes.Enabled := True;
     UpdateSearchAreaLabelColorsFromTheirPosition;
+
+    //ToDo: refactoring, to avoid calling the imgSearchAreaControlDbgMouseMove handler
+    imgSearchAreaControlDbgMouseMove(FSearchAreaControlDbgImg, Shift, FTransparent_SearchAreaRightLimitLabel.Left + FTransparent_SearchAreaRightLimitLabel.Width shr 1, Y);  //shr 1, because of label width
   end;
 end;
 
@@ -3250,6 +3288,9 @@ begin
 
     tmrUpdateSearchAreaOffsetEditBoxes.Enabled := True;
     UpdateSearchAreaLabelColorsFromTheirPosition;
+
+    //ToDo: refactoring, to avoid calling the imgSearchAreaControlDbgMouseMove handler
+    imgSearchAreaControlDbgMouseMove(FSearchAreaControlDbgImg, Shift, X, FTransparent_SearchAreaTopLimitLabel.Top + FTransparent_SearchAreaTopLimitLabel.Height shr 1);  //shr 1, because of label height
   end;
 end;
 
@@ -3300,6 +3341,9 @@ begin
 
     tmrUpdateSearchAreaOffsetEditBoxes.Enabled := True;
     UpdateSearchAreaLabelColorsFromTheirPosition;
+
+    //ToDo: refactoring, to avoid calling the imgSearchAreaControlDbgMouseMove handler
+    imgSearchAreaControlDbgMouseMove(FSearchAreaControlDbgImg, Shift, X, FTransparent_SearchAreaBottomLimitLabel.Top + FTransparent_SearchAreaBottomLimitLabel.Height shr 1);  //shr 1, because of label height
   end;
 end;
 

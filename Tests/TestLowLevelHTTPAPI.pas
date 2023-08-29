@@ -39,6 +39,7 @@ type
     constructor Create; override;
   published
     procedure Test_ExecuteClickAction_LeaveMouse;
+    procedure Test_ExecuteClickAction_MouseWheel;
     procedure Test_ExecuteExecAppAction_IPConfig;
     procedure Test_ExecuteExecAppAction_IPConfig_NoInheritHandles;
 
@@ -92,7 +93,6 @@ const
   CY: Integer = 30;
 var
   Response: string;
-  ListOfVars: TStringList;
   ClickOptions: TClkClickOptions;
   tp, InitialTp: TPoint;
 begin
@@ -105,14 +105,23 @@ begin
   Expect(tp.X).ToBe(CX, 'mouse pos');
   Expect(tp.Y).ToBe(CY, 'mouse pos');
 
-  ListOfVars := TStringList.Create;
   try
-    ListOfVars.Text := Response;
-    ExpectSuccessfulAction(ListOfVars);
+    ExpectSuccessfulAction(Response);
   finally
-    ListOfVars.Free;
     SetCursorPos(InitialTp.X, InitialTp.Y);
   end;
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecuteClickAction_MouseWheel;
+var
+  Response: string;
+  CallTemplateOptions: TClkCallTemplateOptions;
+begin
+  GenerateCallTemplateOptions(CallTemplateOptions, '$AppDir$\Tests\TestFiles\MouseWheelOnWinInterp.clktmpl', '', False);
+  Response := FastReplace_87ToReturn(ExecuteCallTemplateAction(TestServerAddress, CallTemplateOptions, False, False, CREParam_FileLocation_ValueDisk));
+
+  ExpectSuccessfulAction(Response);
 end;
 
 
@@ -162,19 +171,12 @@ end;
 procedure TTestLowLevelHTTPAPI.Test_ExecuteFindControlAction_UIClickerMain;
 var
   Response: string;
-  ListOfVars: TStringList;
   FindControlOptions: TClkFindControlOptions;
 begin
   GenerateFindControlOptionsForMainUIClickerWindow(FindControlOptions, False);
   Response := FastReplace_87ToReturn(ExecuteFindControlAction(TestServerAddress, FindControlOptions, 'TestFind UIClicker Main', 1000, CREParam_FileLocation_ValueMem));
 
-  ListOfVars := TStringList.Create;
-  try
-    ListOfVars.Text := Response;
-    ExpectSuccessfulAction(ListOfVars);
-  finally
-    ListOfVars.Free;
-  end;
+  ExpectSuccessfulAction(Response);
 end;
 
 
@@ -221,27 +223,19 @@ end;
 procedure TTestLowLevelHTTPAPI.Test_ExecuteFindSubControlAction_UIClickerMain_BitnessLabel;
 var
   Response: string;
-  ListOfVars: TStringList;
   FindSubControlOptions: TClkFindControlOptions;
 begin
   SetupTargetWindowFor_FindSubControl;
   GenerateFindSubControlOptionsForMainUIClickerWindow_Bitness(FindSubControlOptions, False);
   Response := FastReplace_87ToReturn(ExecuteFindSubControlAction(TestServerAddress, FindSubControlOptions, 'Test Find Bitness on UIClicker Main', 3000, CREParam_FileLocation_ValueMem));
 
-  ListOfVars := TStringList.Create;
-  try
-    ListOfVars.Text := Response;
-    ExpectSuccessfulAction(ListOfVars);
-  finally
-    ListOfVars.Free;
-  end;
+  ExpectSuccessfulAction(Response);
 end;
 
 
 procedure TTestLowLevelHTTPAPI.Test_ExecuteFindSubControlAction_UIClickerMain_BitnessLabelWithCropping;
 var
   Response: string;
-  ListOfVars: TStringList;
   FindSubControlOptions: TClkFindControlOptions;
 begin
   SetupTargetWindowFor_FindSubControl;
@@ -252,14 +246,7 @@ begin
   FindSubControlOptions.MatchBitmapText[0].CropBottom := '2';
 
   Response := FastReplace_87ToReturn(ExecuteFindSubControlAction(TestServerAddress, FindSubControlOptions, 'Test Find Bitness on UIClicker Main', 3000, CREParam_FileLocation_ValueMem));
-
-  ListOfVars := TStringList.Create;
-  try
-    ListOfVars.Text := Response;
-    ExpectSuccessfulAction(ListOfVars);
-  finally
-    ListOfVars.Free;
-  end;
+  ExpectSuccessfulAction(Response);
 end;
 
 
@@ -363,20 +350,13 @@ end;
 procedure TTestLowLevelHTTPAPI.Test_ExecuteFindSubControlAction_UIClickerMain_WindowInterpreterButton_Disk;
 var
   Response: string;
-  ListOfVars: TStringList;
   FindSubControlOptions: TClkFindControlOptions;
 begin
   SetupTargetWindowFor_FindSubControl;
   GenerateFindSubControlOptionsForMainUIClickerWindow_WinInterpBtn(FindSubControlOptions, False);
   Response := FastReplace_87ToReturn(ExecuteFindSubControlAction(TestServerAddress, FindSubControlOptions, 'Test Find WindowInterpreterButton_Disk on UIClicker Main', 3000, CREParam_FileLocation_ValueDisk));
 
-  ListOfVars := TStringList.Create;
-  try
-    ListOfVars.Text := Response;
-    ExpectSuccessfulAction(ListOfVars);
-  finally
-    ListOfVars.Free;
-  end;
+  ExpectSuccessfulAction(Response);
 end;
 
 
@@ -409,20 +389,13 @@ end;
 procedure TTestLowLevelHTTPAPI.Test_ExecuteFindSubControlAction_UIClickerMain_PmtvPreviewButton_Disk;
 var
   Response: string;
-  ListOfVars: TStringList;
   FindSubControlOptions: TClkFindControlOptions;
 begin
   SetupTargetWindowFor_FindSubControl;
   GenerateFindSubControlOptionsForMainUIClickerWindow_PmtvPreviewBtn(FindSubControlOptions, False);
   Response := FastReplace_87ToReturn(ExecuteFindSubControlAction(TestServerAddress, FindSubControlOptions, 'Test Find PreviewButton_Disk on UIClicker Main with pmtv', 3000, CREParam_FileLocation_ValueDisk));
 
-  ListOfVars := TStringList.Create;
-  try
-    ListOfVars.Text := Response;
-    ExpectSuccessfulAction(ListOfVars);
-  finally
-    ListOfVars.Free;
-  end;
+  ExpectSuccessfulAction(Response);
 end;
 
 
@@ -451,13 +424,7 @@ begin
     Response := FastReplace_87ToReturn(Send_ExecuteCommandAtIndex_ToServer(2, 0));
     Response := FastReplace_87ToReturn(ExecuteFindSubControlAction(TestServerAddress, FindSubControlOptions, 'Test Find PreviewButton_Mem on UIClicker Main with pmtv', 3000, CREParam_FileLocation_ValueMem));
 
-    ListOfVars := TStringList.Create;
-    try
-      ListOfVars.Text := Response;
-      ExpectSuccessfulAction(ListOfVars);
-    finally
-      ListOfVars.Free;
-    end;
+    ExpectSuccessfulAction(Response);
   finally
     DestroyFileProvider(FileProvider);
   end;
@@ -598,13 +565,7 @@ begin
   Diff := GetTickCount64 - tk;
 
   Expect(Integer(Diff)).ToBeGreaterThanOrEqualTo(5000);
-  ListOfVars := TStringList.Create;
-  try
-    ListOfVars.Text := Response;
-    ExpectSuccessfulAction(ListOfVars);
-  finally
-    ListOfVars.Free;
-  end;
+  ExpectSuccessfulAction(Response);
 end;
 
 
@@ -635,7 +596,6 @@ const
 var
   SetVarOptions: TClkSetVarOptions;
   Response: string;
-  ListOfVars: TStringList;
 begin
   Expect(SetVariable(TestServerAddress, CVarName, CVarInitValue, 0)).ToBe(CREResp_Done);
   Expect(GetVarValueFromServer(CVarName)).ToBe(CVarInitValue);
@@ -643,14 +603,8 @@ begin
 
   Response := FastReplace_87ToReturn(ExecuteSetVarAction(TestServerAddress, SetVarOptions));
 
-  ListOfVars := TStringList.Create;
-  try
-    ListOfVars.Text := Response;
-    ExpectSuccessfulAction(ListOfVars);
-    Expect(GetVarValueFromServer(CVarName)).ToBe(CVarNewValue);
-  finally
-    ListOfVars.Free;
-  end;
+  ExpectSuccessfulAction(Response);
+  Expect(GetVarValueFromServer(CVarName)).ToBe(CVarNewValue);
 end;
 
 
@@ -662,7 +616,6 @@ const
 var
   SetVarOptions: TClkSetVarOptions;
   Response: string;
-  ListOfVars: TStringList;
 begin
   Expect(SetVariable(TestServerAddress, CVarName, CVarInitValue, 0)).ToBe(CREResp_Done);
   Expect(SetVariable(TestServerAddress, CVarNewValue, 'unknown', 0)).ToBe(CREResp_Done);
@@ -671,14 +624,8 @@ begin
 
   Response := FastReplace_87ToReturn(ExecuteSetVarAction(TestServerAddress, SetVarOptions));
 
-  ListOfVars := TStringList.Create;
-  try
-    ListOfVars.Text := Response;
-    ExpectSuccessfulAction(ListOfVars);
-    Expect(GetVarValueFromServer(CVarName)).ToBe(CVarNewValue);
-  finally
-    ListOfVars.Free;
-  end;
+  ExpectSuccessfulAction(Response);
+  Expect(GetVarValueFromServer(CVarName)).ToBe(CVarNewValue);
 end;
 
 
@@ -691,7 +638,6 @@ const
 var
   SetVarOptions: TClkSetVarOptions;
   Response: string;
-  ListOfVars: TStringList;
 begin
   Expect(SetVariable(TestServerAddress, CVarName, CVarInitValue, 0)).ToBe(CREResp_Done);
   Expect(SetVariable(TestServerAddress, CSecondVarName, CVarNewValue, 0)).ToBe(CREResp_Done);
@@ -701,14 +647,8 @@ begin
 
   Response := FastReplace_87ToReturn(ExecuteSetVarAction(TestServerAddress, SetVarOptions));
 
-  ListOfVars := TStringList.Create;
-  try
-    ListOfVars.Text := Response;
-    ExpectSuccessfulAction(ListOfVars);
-    Expect(GetVarValueFromServer(CVarName)).ToBe(CVarNewValue);
-  finally
-    ListOfVars.Free;
-  end;
+  ExpectSuccessfulAction(Response);
+  Expect(GetVarValueFromServer(CVarName)).ToBe(CVarNewValue);
 end;
 
 

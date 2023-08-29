@@ -371,6 +371,8 @@ begin
   finally
     ListOfPrimitiveFiles.Free;
   end;
+
+  AFindControlOptions.GetAllControls := Ini.ReadBool(SectionIndex, 'GetAllControls', False);
 end;
 
 
@@ -768,6 +770,7 @@ begin
   AStringList.Add('CachedControlTop=' + AActionFindControlOptions.CachedControlTop);
 
   AStringList.Add('MatchPrimitiveFiles=' + FastReplace_ReturnTo45(AActionFindControlOptions.MatchPrimitiveFiles));
+  AStringList.Add('GetAllControls=' + IntToStr(Ord(AActionFindControlOptions.GetAllControls)));
 end;
 
 
@@ -913,6 +916,8 @@ begin             //Substructures, which do not contain pointers, can be directl
 
   for i := 0 to Length(ADest.FindControlOptions.MatchBitmapText) - 1 do
     ADest.FindControlOptions.MatchBitmapText[i] := ASrc.FindControlOptions.MatchBitmapText[i];
+
+  ADest.FindControlOptions.GetAllControls := ASrc.FindControlOptions.GetAllControls;
 end;
 
 

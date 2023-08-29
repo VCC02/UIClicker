@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2022 VCC
+    Copyright (C) 2023 VCC
     creation date: Dec 2019
     initial release date: 13 Sep 2022
 
@@ -55,6 +55,7 @@ type
     ColorError: Integer;
     AllowedColorErrorCount: Integer;
     DebugTemplateName: string;
+    GetAllHandles: Boolean;
   end;
 
 
@@ -62,9 +63,9 @@ procedure SetControlText(hw: THandle; NewText: string);
 procedure SelectComboBoxItem(hw: THandle; StartIndex: Integer; TextToSelect: string);
 
 function MatchControlByBitmap(Algorithm: TMatchBitmapAlgorithm; AlgorithmSettings: TMatchBitmapAlgorithmSettings; CompAtPoint: TCompRec; InputData: TFindControlInputData; out SubCnvXOffset, SubCnvYOffset: Integer; AStopAllActionsOnDemand: PBoolean; ADisplayGridLineOption: TDisplayGridLineOption): Boolean;
-function FindControlOnScreen(Algorithm: TMatchBitmapAlgorithm; AlgorithmSettings: TMatchBitmapAlgorithmSettings; InputData: TFindControlInputData; AInitialTickCount, ATimeout: Cardinal; AStopAllActionsOnDemand: PBoolean; out AResultedControl: TCompRec; ADisplayGridLineOption: TDisplayGridLineOption): Boolean;
+function FindControlOnScreen(Algorithm: TMatchBitmapAlgorithm; AlgorithmSettings: TMatchBitmapAlgorithmSettings; InputData: TFindControlInputData; AInitialTickCount, ATimeout: Cardinal; AStopAllActionsOnDemand: PBoolean; var AResultedControl: TCompRecArr; ADisplayGridLineOption: TDisplayGridLineOption): Boolean;
 function FindWindowOnScreenByCaptionOrClass(InputData: TFindControlInputData; AInitialTickCount, ATimeout: Cardinal; AStopAllActionsOnDemand: PBoolean; out AResultedControl: TCompRec): Boolean;
-function FindWindowOnScreenByCaptionAndClass(InputData: TFindControlInputData; AInitialTickCount, ATimeout: Cardinal; AStopAllActionsOnDemand: PBoolean; out AResultedControl: TCompRec): Boolean;
+function FindWindowOnScreenByCaptionAndClass(InputData: TFindControlInputData; AInitialTickCount, ATimeout: Cardinal; AStopAllActionsOnDemand: PBoolean; var AResultedControls: TCompRecArr): Boolean;
 
 
 implementation
@@ -303,7 +304,7 @@ end;
 
 
 //uses '*' as wildcard
-function FindWindowByByCaptionOrClassPattern(AListOfControlTexts, AListOfControlClasses: TStringList; AMatchingMethods: TMatchingMethods; var hwc: TCompRec): Boolean;
+function FindWindowByCaptionOrClassPattern(AListOfControlTexts, AListOfControlClasses: TStringList; AMatchingMethods: TMatchingMethods; var hwc: TCompRec): Boolean;
 begin
   FindWindowByPatternObj := TFindWindowByPatternObj.Create;
   try
@@ -312,11 +313,11 @@ begin
     FindWindowByPatternObj.ListOfControlClasses := AListOfControlClasses;
     FindWindowByPatternObj.MatchingMethods := AMatchingMethods;
 
-    //MessageBox(0, PChar('LParam: ' + IntToStr(LPARAM(FindWindowByPatterObj))), 'FindWindowByByCaptionOrClassPattern', MB_ICONINFORMATION);
+    //MessageBox(0, PChar('LParam: ' + IntToStr(LPARAM(FindWindowByPatterObj))), 'FindWindowByCaptionOrClassPattern', MB_ICONINFORMATION);
     EnumWindows(@EnumWindowsProc, LPARAM(FindWindowByPatternObj));
 
     Result := FindWindowByPatternObj.FoundByEnum;
-    
+
     if Result then
       hwc := FindWindowByPatternObj.ResultedControl;
   finally
@@ -336,7 +337,7 @@ begin
     ListOfControlTexts.Text := StringReplace(InputData.Text, InputData.TextSeparator, #13#10, [rfReplaceAll]);             //no fast replace here :( , because the separator can be anything
     ListOfControlClasses.Text := StringReplace(InputData.ClassName, InputData.ClassNameSeparator, #13#10, [rfReplaceAll]); //no fast replace here :( , because the separator can be anything
 
-    Result := FindWindowByByCaptionOrClassPattern(ListOfControlTexts, ListOfControlClasses, InputData.MatchingMethods, hwc);
+    Result := FindWindowByCaptionOrClassPattern(ListOfControlTexts, ListOfControlClasses, InputData.MatchingMethods, hwc);
     if Result then
       AResultedControl := hwc;
   finally
@@ -348,31 +349,47 @@ end;
 
 
 //uses '*' as wildcard
-function FindWindowByByCaptionAndClassPattern(AListOfControlTexts, AListOfControlClasses: TStringList; AMatchingMethods: TMatchingMethods; var hwc: TCompRec): Boolean;
+function FindWindowByCaptionAndClassPattern(AListOfControlTexts, AListOfControlClasses: TStringList; AMatchingMethods: TMatchingMethods; AGetAllHandles: Boolean; var AResultedControls: TCompRecArr): Boolean;
 var
   i, j: Integer;
   AHandle: THandle;
 begin
   Result := False;
 
+  SetLength(AResultedControls, 0);
   for i := 0 to AListOfControlTexts.Count - 1 do
     for j := 0 to AListOfControlClasses.Count - 1 do
     begin
       AHandle := FindWindow(PChar(AListOfControlClasses.Strings[j]), PChar(string(AListOfControlTexts.Strings[i])));
       if AHandle > 0 then
       begin
-        hwc := GetWindowClassRec(AHandle);
+        SetLength(AResultedControls, Length(AResultedControls) + 1);
+        AResultedControls[Length(AResultedControls) - 1] := GetWindowClassRec(AHandle);
+
         Result := True;
-        Exit;
+
+        if not AGetAllHandles then
+          Exit;
       end;
     end;
+
+  if Length(AResultedControls) = 0 then
+  begin
+    SetLength(AResultedControls, 1);
+    AResultedControls[0].Handle := 0;
+    AResultedControls[0].ClassName := '';
+    AResultedControls[0].Text := '';
+    AResultedControls[0].ComponentRectangle.Left := 0;
+    AResultedControls[0].ComponentRectangle.Top := 0;
+    AResultedControls[0].ComponentRectangle.Width := 0;
+    AResultedControls[0].ComponentRectangle.Height := 0;
+  end;
 end;
 
 
-function FindWindowOnScreenByCaptionAndClass(InputData: TFindControlInputData; AInitialTickCount, ATimeout: Cardinal; AStopAllActionsOnDemand: PBoolean; out AResultedControl: TCompRec): Boolean;
+function FindWindowOnScreenByCaptionAndClass(InputData: TFindControlInputData; AInitialTickCount, ATimeout: Cardinal; AStopAllActionsOnDemand: PBoolean; var AResultedControls: TCompRecArr): Boolean;
 var
   ListOfControlTexts, ListOfControlClasses: TStringList;
-  hwc: TCompRec;
 begin
   ListOfControlTexts := TStringList.Create;
   ListOfControlClasses := TStringList.Create;
@@ -380,10 +397,7 @@ begin
     ListOfControlTexts.Text := StringReplace(InputData.Text, InputData.TextSeparator, #13#10, [rfReplaceAll]);             //no fast replace here :( , because the separator can be anything
     ListOfControlClasses.Text := StringReplace(InputData.ClassName, InputData.ClassNameSeparator, #13#10, [rfReplaceAll]); //no fast replace here :( , because the separator can be anything
 
-    Result := FindWindowByByCaptionAndClassPattern(ListOfControlTexts, ListOfControlClasses, InputData.MatchingMethods, hwc);
-
-    if Result then
-      AResultedControl := hwc;
+    Result := FindWindowByCaptionAndClassPattern(ListOfControlTexts, ListOfControlClasses, InputData.MatchingMethods, InputData.GetAllHandles, AResultedControls);
   finally
     ListOfControlTexts.Free;
     ListOfControlClasses.Free;
@@ -706,7 +720,22 @@ begin
 end;
 
 
-function FindControlOnScreen(Algorithm: TMatchBitmapAlgorithm; AlgorithmSettings: TMatchBitmapAlgorithmSettings; InputData: TFindControlInputData; AInitialTickCount, ATimeout: Cardinal; AStopAllActionsOnDemand: PBoolean; out AResultedControl: TCompRec; ADisplayGridLineOption: TDisplayGridLineOption): Boolean;
+function GetControlHandleIndexInResultedControls(var AResultedControl: TCompRecArr; ASearchHandle: THandle): Integer;
+var
+  i: Integer;
+begin
+  Result := -1;
+
+  for i := Length(AResultedControl) - 1 downto 0 do  //using downto, because there is a higher probability that the searched handle is at the end of the array
+    if AResultedControl[i].Handle = ASearchHandle then
+    begin
+      Result := i;
+      Break;
+    end;
+end;
+
+
+function FindControlOnScreen(Algorithm: TMatchBitmapAlgorithm; AlgorithmSettings: TMatchBitmapAlgorithmSettings; InputData: TFindControlInputData; AInitialTickCount, ATimeout: Cardinal; AStopAllActionsOnDemand: PBoolean; var AResultedControl: TCompRecArr; ADisplayGridLineOption: TDisplayGridLineOption): Boolean;
 var
   i, j, k: Integer;
   tp: TPoint;
@@ -720,7 +749,7 @@ var
 begin
   Result := False;
 
-  //InputData.BitmapToSearchFor.PixelFormat := pf24bit;  //Leave commented! If the pixel format is different than 24-bit, then changed here, the content is cleared.
+  //InputData.BitmapToSearchFor.PixelFormat := pf24bit;  //Leave commented! If the pixel format is different than 24-bit, and changed here, the content is cleared.
 
   ListOfControlTexts := TStringList.Create;
   ListOfControlClasses := TStringList.Create;
@@ -778,7 +807,8 @@ begin
                       ListOfControlClasses,
                       ADisplayGridLineOption) then
       begin
-        AResultedControl := CompAtPoint;
+        SetLength(AResultedControl, 1);
+        AResultedControl[0] := CompAtPoint;
         Result := True;
 
         //MessageBox(0, PChar('Found by cache in ' + IntToStr(GetTickCount64 - AInitialTickCount)),
@@ -806,12 +836,13 @@ begin
       GenerateBinarySearchValuesForImage(GlobalSearchAreaWidth, GlobalSearchAreaHeight, XValues, YValues);
 
     try
+      Result := False;
+      SetLength(AResultedControl, 0);
       for k := 0 to Length(XValues) - 1 do   //all granularity levels        //search for multiple controls in the search area, then verify if their bitmaps match
       begin
         for i := 0 to Length(YValues[k]) - 1 do
           for j := 0 to Length(XValues[k]) - 1 do
           begin
-            Result := False;
             tp.X := XValues[k][j] + InputData.GlobalSearchArea.Left;
             tp.Y := YValues[k][i] + InputData.GlobalSearchArea.Top;
             CompAtPoint := GetWindowClassRec(tp);
@@ -831,9 +862,16 @@ begin
                             ListOfControlClasses,
                             ADisplayGridLineOption) then
             begin
-              AResultedControl := CompAtPoint;
+              if GetControlHandleIndexInResultedControls(AResultedControl, CompAtPoint.Handle) = -1 then
+              begin
+                SetLength(AResultedControl, Length(AResultedControl) + 1);
+                AResultedControl[Length(AResultedControl) - 1] := CompAtPoint;
+              end;
+
               Result := True;
-              Exit;
+
+              if not InputData.GetAllHandles then
+                Exit;
             end;
 
             if Random(7) = 2 then

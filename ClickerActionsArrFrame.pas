@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2022 VCC
+    Copyright (C) 2023 VCC
     creation date: Dec 2019
     initial release date: 13 Sep 2022
 
@@ -343,6 +343,7 @@ type
     procedure SetInMemFS(Value: TInMemFileSystem);
 
     procedure SetGridDrawingOption(Value: TDisplayGridLineOption);
+    procedure SetPreviewSelectionColors(Value: TSelectionColors);
 
     procedure CreateRemainingUIComponents;
 
@@ -496,6 +497,7 @@ type
     property ShouldStopAtBreakPoint: Boolean {read FShouldStopAtBreakPoint} write FShouldStopAtBreakPoint;
 
     property GridDrawingOption: TDisplayGridLineOption write SetGridDrawingOption;
+    property PreviewSelectionColors: TSelectionColors write SetPreviewSelectionColors;
     property PlayingAllActions: Boolean read FPlayingAllActions;
 
     property OnCallTemplate: TOnCallTemplate read FOnCallTemplate write FOnCallTemplate;
@@ -3593,6 +3595,8 @@ begin
     FClkActions[n].ClickOptions.YClickPointVarDest := '$Control_Top$';
     FClkActions[n].ClickOptions.XOffsetDest := '7';
     FClkActions[n].ClickOptions.YOffsetDest := '7';
+    FClkActions[n].ClickOptions.MouseWheelType := mwtVert;
+    FClkActions[n].ClickOptions.MouseWheelAmount := '1';
 
     FClkActions[n].ExecAppOptions.PathToApp := '';
     FClkActions[n].ExecAppOptions.ListOfParams := '';
@@ -3635,6 +3639,7 @@ begin
     FClkActions[n].FindControlOptions.CachedControlTop := '';
     FClkActions[n].FindControlOptions.MatchPrimitiveFiles := '';
     FClkActions[n].FindControlOptions.MatchPrimitiveFiles_Modified := '';
+    FClkActions[n].FindControlOptions.GetAllControls := False;
 
     SetLength(FClkActions[n].FindControlOptions.MatchBitmapText, 1);
     FClkActions[n].FindControlOptions.MatchBitmapText[0].ForegroundColor := '$Color_Window$';
@@ -3656,6 +3661,9 @@ begin
 
     if FClkActions[n].ActionOptions.Action = acFindSubControl then
       FClkActions[n].ActionOptions.ActionTimeout := 1000;
+
+    if FClkActions[n].ActionOptions.Action = acFindControl then
+      FClkActions[n].ActionOptions.ActionTimeout := 3000;
 
     FClkActions[n].SetTextOptions.Text := '';
     FClkActions[n].SetTextOptions.ControlType := stEditBox;
@@ -4479,6 +4487,12 @@ end;
 procedure TfrClickerActionsArr.SetGridDrawingOption(Value: TDisplayGridLineOption);
 begin
   frClickerActions.GridDrawingOption := Value;
+end;
+
+
+procedure TfrClickerActionsArr.SetPreviewSelectionColors(Value: TSelectionColors);
+begin
+  frClickerActions.PreviewSelectionColors := Value;
 end;
 
 

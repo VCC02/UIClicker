@@ -104,7 +104,8 @@ const
   CExpectedBadStackLevelResponse: string = '[Server error] Stack level out of bounds: 10. This happens when there is no template loaded in a new tab (with the requested stack level), as a result of "call template" action. It is also possible that the template is loaded, then exited before being executed.';
 
 
-procedure ExpectSuccessfulAction(AListOfVars: TStringList);
+procedure ExpectSuccessfulAction(AListOfVars: TStringList); overload;
+procedure ExpectSuccessfulAction(AListOfVars: string); overload;
 procedure ExpectFailedAction(AListOfVars: TStringList; APartOfErrorMessage: string);
 procedure ExpectAllowedFailedAction(AListOfVars: TStringList);
 
@@ -121,6 +122,20 @@ begin
   Expect(AListOfVars).WithItem('$ExecAction_Err$', 'list of vars').OfValue('', 'No error Allowed.');
   Expect(AListOfVars).WithItem(CREResp_RemoteExecResponseVar, 'list of vars').OfValue('1', 'Expected successful action.');
   Expect(AListOfVars).WithItem('$LastAction_Status$').OfValue('Successful');
+end;
+
+
+procedure ExpectSuccessfulAction(AListOfVars: string);
+var
+  TempListOfVars: TStringList;
+begin
+  TempListOfVars := TStringList.Create;
+  try
+    TempListOfVars.Text := AListOfVars;
+    ExpectSuccessfulAction(TempListOfVars);
+  finally
+    TempListOfVars.Free;
+  end;
 end;
 
 

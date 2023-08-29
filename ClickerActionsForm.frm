@@ -43,6 +43,7 @@ object frmClickerActions: TfrmClickerActions
   }
   OnCreate = FormCreate
   OnDestroy = FormDestroy
+  OnShow = FormShow
   LCLVersion = '7.5'
   object PageControlMain: TPageControl
     Left = 8
@@ -498,6 +499,88 @@ object frmClickerActions: TfrmClickerActions
         Anchors = [akRight, akBottom]
         Caption = 'Displayed grid type'
       end
+      object grpSelectionColors: TGroupBox
+        Left = 336
+        Height = 184
+        Top = 24
+        Width = 240
+        Caption = 'Selection colors'
+        ClientHeight = 166
+        ClientWidth = 236
+        TabOrder = 12
+        object colcmbTopLeftValid: TColorBox
+          Left = 96
+          Height = 22
+          Top = 13
+          Width = 120
+          Selected = clGreen
+          Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbCustomColor, cbCustomColors]
+          ItemHeight = 16
+          OnChange = colcmbTopLeftValidChange
+          TabOrder = 0
+        end
+        object colcmbBotRightValid: TColorBox
+          Left = 96
+          Height = 22
+          Top = 56
+          Width = 120
+          Selected = clGreen
+          Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbCustomColor, cbCustomColors]
+          ItemHeight = 16
+          OnChange = colcmbBotRightValidChange
+          TabOrder = 1
+        end
+        object colcmbTopLeftInvalid: TColorBox
+          Left = 96
+          Height = 22
+          Top = 96
+          Width = 120
+          Selected = clGreen
+          Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbCustomColor, cbCustomColors]
+          ItemHeight = 16
+          OnChange = colcmbTopLeftInvalidChange
+          TabOrder = 2
+        end
+        object colcmbBotRightInvalid: TColorBox
+          Left = 96
+          Height = 22
+          Top = 136
+          Width = 120
+          Selected = clGreen
+          Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbCustomColor, cbCustomColors]
+          ItemHeight = 16
+          OnChange = colcmbBotRightInvalidChange
+          TabOrder = 3
+        end
+        object lblTopLeftValidColor: TLabel
+          Left = 8
+          Height = 13
+          Top = 19
+          Width = 74
+          Caption = 'Top/Left (Valid)'
+        end
+        object lblBotRightValidColor: TLabel
+          Left = 8
+          Height = 13
+          Top = 61
+          Width = 78
+          Caption = 'Bot/Right (Valid)'
+        end
+        object lblTopLeftInvalidColor: TLabel
+          Left = 8
+          Height = 13
+          Top = 101
+          Width = 74
+          Caption = 'Top/Left (Valid)'
+        end
+        object lblBotRightInvalidColor: TLabel
+          Left = 8
+          Height = 13
+          Top = 141
+          Width = 78
+          Caption = 'Bot/Right (Valid)'
+        end
+      end
     end
     object TabSheetTemplateExec: TTabSheet
       Caption = 'Template Execution'
@@ -601,7 +684,7 @@ object frmClickerActions: TfrmClickerActions
   object imglstCalledTemplates: TImageList
     BkColor = 15245824
     Left = 480
-    Top = 96
+    Top = 328
     Bitmap = {
       4C7A020000001000000010000000DE0200000000000078DAC593FB4B935118C7
       FD67FA35C89439DD726ADACD124333ACC8AC30C48A4A490CBC54868AD20D95E9
@@ -662,5 +745,19 @@ object frmClickerActions: TfrmClickerActions
     OnTimer = tmrDisplayMissingFilesRequestsTimer
     Left = 304
     Top = 88
+  end
+  object tmrUpdateColors: TTimer
+    Enabled = False
+    Interval = 100
+    OnTimer = tmrUpdateColorsTimer
+    Left = 600
+    Top = 144
+  end
+  object tmrUpdateSelectionColorsFromColorBoxes: TTimer
+    Enabled = False
+    Interval = 50
+    OnTimer = tmrUpdateSelectionColorsFromColorBoxesTimer
+    Left = 592
+    Top = 344
   end
 end

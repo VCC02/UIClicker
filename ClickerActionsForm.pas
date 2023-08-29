@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2022 VCC
+    Copyright (C) 2023 VCC
     creation date: Dec 2019
     initial release date: 13 Sep 2022
 
@@ -34,7 +34,7 @@ interface
 
 uses
   Windows, Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ComCtrls,
-  StdCtrls, ExtCtrls, Menus, ClickerActionsArrFrame, InMemFileSystem,
+  StdCtrls, ExtCtrls, Menus, ColorBox, ClickerActionsArrFrame, InMemFileSystem,
   IdHTTPServer, IdSchedulerOfThreadPool, IdCustomHTTPServer, IdContext, IdSync, IdGlobal,
   PollingFIFO, ClickerFileProviderClient, IniFiles, ClickerUtils, ClickerActionExecution,
   ClickerIniFiles, ClickerPrimitiveUtils;
@@ -80,6 +80,11 @@ type
     cmbExecMode: TComboBox;
     cmbFilesExistence: TComboBox;
     cmbImgPreviewGridType: TComboBox;
+    colcmbTopLeftValid: TColorBox;
+    colcmbBotRightValid: TColorBox;
+    colcmbTopLeftInvalid: TColorBox;
+    colcmbBotRightInvalid: TColorBox;
+    grpSelectionColors: TGroupBox;
     grpMissingFilesMonitoring: TGroupBox;
     grpAllowedFileExtensionsForServer: TGroupBox;
     grpAllowedFileDirsForServer: TGroupBox;
@@ -88,6 +93,8 @@ type
     IdSchedulerOfThreadPool1: TIdSchedulerOfThreadPool;
     imglstCalledTemplates: TImageList;
     imglstMainPage: TImageList;
+    lblBotRightInvalidColor: TLabel;
+    lblTopLeftValidColor: TLabel;
     lblGridType: TLabel;
     lblClientMode: TLabel;
     lbeConnectTimeout: TLabeledEdit;
@@ -103,6 +110,8 @@ type
     lbeClientModeServerAddress: TLabeledEdit;
     lbePathToTemplates: TLabeledEdit;
     lblExecMode: TLabel;
+    lblBotRightValidColor: TLabel;
+    lblTopLeftInvalidColor: TLabel;
     memAllowedFileExtensionsForServer: TMemo;
     memAllowedFileDirsForServer: TMemo;
     memVariables: TMemo;
@@ -119,6 +128,8 @@ type
     TabSheetExecMainPlayer: TTabSheet;
     TabSheetExperiments1: TTabSheet;
     TabSheetExperiments2: TTabSheet;
+    tmrUpdateSelectionColorsFromColorBoxes: TTimer;
+    tmrUpdateColors: TTimer;
     tmrDisplayMissingFilesRequests: TTimer;
     tmrStartup: TTimer;
     procedure btnBrowseActionTemplatesDirClick(Sender: TObject);
@@ -130,8 +141,13 @@ type
     procedure chkStayOnTopClick(Sender: TObject);
     procedure cmbExecModeChange(Sender: TObject);
     procedure cmbImgPreviewGridTypeChange(Sender: TObject);
+    procedure colcmbBotRightInvalidChange(Sender: TObject);
+    procedure colcmbBotRightValidChange(Sender: TObject);
+    procedure colcmbTopLeftInvalidChange(Sender: TObject);
+    procedure colcmbTopLeftValidChange(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
+    procedure FormShow(Sender: TObject);
     procedure IdHTTPServer1CommandGet(AContext: TIdContext;
       ARequestInfo: TIdHTTPRequestInfo; AResponseInfo: TIdHTTPResponseInfo);
     procedure IdHTTPServer1CommandOther(AContext: TIdContext;
@@ -141,6 +157,8 @@ type
       );
     procedure tmrDisplayMissingFilesRequestsTimer(Sender: TObject);
     procedure tmrStartupTimer(Sender: TObject);
+    procedure tmrUpdateColorsTimer(Sender: TObject);
+    procedure tmrUpdateSelectionColorsFromColorBoxesTimer(Sender: TObject);
   private
     FStopAllActionsOnDemand: Boolean;
     FFullTemplatesDir: string;
@@ -150,6 +168,8 @@ type
     FPollForMissingServerFiles: TPollForMissingServerFiles;
     FProcessingMissingFilesRequestByClient: Boolean; //for activity info
     FProcessingMissingFilesRequestByServer: Boolean; //for activity info
+
+    FPreviewSelectionColors: TSelectionColors;
 
     FTerminateWaitForFileAvailability: Boolean;
     FTerminateWaitForMultipleFilesAvailability: Boolean;
@@ -195,6 +215,7 @@ type
 
     function GetConfiguredRemoteAddress: string;
     function GetActionExecution: TActionExecution;
+    procedure UpdatePreviewSelectionColorsFromColorBoxes;
 
     procedure DoOnRecordComponent(ACompHandle: THandle; ATreeContentStream: TMemoryStream);
     procedure DoOnGetCurrentlyRecordedScreenShotImage(ABmp: TBitmap);
@@ -472,6 +493,29 @@ begin
   cmbImgPreviewGridType.ItemIndex := AIni.ReadInteger('ActionsWindow', 'GridType', 0);
   UpdateGridType;
 
+  FPreviewSelectionColors.TopLeft_Valid := AIni.ReadInteger('ActionsWindow', 'TopLeft_ValidColor', CLabel_Orange);
+  FPreviewSelectionColors.BotRight_Valid := AIni.ReadInteger('ActionsWindow', 'BotRight_ValidColor', CLabel_LightGreen);
+  FPreviewSelectionColors.TopLeft_Invalid := AIni.ReadInteger('ActionsWindow', 'TopLeft_InvalidColor', clRed);
+  FPreviewSelectionColors.BotRight_Invalid := AIni.ReadInteger('ActionsWindow', 'BotRight_InvalidColor', clMaroon);
+
+  colcmbTopLeftValid.Selected := FPreviewSelectionColors.TopLeft_Valid;
+  colcmbBotRightValid.Selected := FPreviewSelectionColors.BotRight_Valid;
+  colcmbTopLeftInvalid.Selected := FPreviewSelectionColors.TopLeft_Invalid;
+  colcmbBotRightInvalid.Selected := FPreviewSelectionColors.BotRight_Invalid;
+
+  colcmbTopLeftValid.AutoSelect := False;
+  colcmbBotRightValid.AutoSelect := False;
+  colcmbTopLeftInvalid.AutoSelect := False;
+  colcmbBotRightInvalid.AutoSelect := False;
+  colcmbTopLeftValid.ItemIndex := colcmbTopLeftValid.Items.IndexOfObject(TObject(TColor(FPreviewSelectionColors.TopLeft_Valid)));
+  colcmbBotRightValid.ItemIndex := colcmbBotRightValid.Items.IndexOfObject(TObject(TColor(FPreviewSelectionColors.BotRight_Valid)));
+  colcmbTopLeftInvalid.ItemIndex := colcmbTopLeftInvalid.Items.IndexOfObject(TObject(TColor(FPreviewSelectionColors.TopLeft_Invalid)));
+  colcmbBotRightInvalid.ItemIndex := colcmbBotRightInvalid.Items.IndexOfObject(TObject(TColor(FPreviewSelectionColors.BotRight_Invalid)));
+  colcmbTopLeftValid.AutoSelect := True;
+  colcmbBotRightValid.AutoSelect := True;
+  colcmbTopLeftInvalid.AutoSelect := True;
+  colcmbBotRightInvalid.AutoSelect := True;
+
   FullTemplatesDir := AIni.ReadString('Dirs', 'FullTemplatesDir', '$AppDir$\ActionTemplates');
   BMPsDir := AIni.ReadString('Dirs', 'BMPsDir', '');
 
@@ -521,6 +565,11 @@ begin
 
   AIni.WriteString('Dirs', 'BMPsDir', BMPsDir);
   AIni.WriteString('Dirs', 'FullTemplatesDir', StringReplace(FullTemplatesDir, ExtractFileDir(ParamStr(0)), '$AppDir$', [rfReplaceAll]));
+
+  AIni.WriteInteger('ActionsWindow', 'TopLeft_ValidColor', FPreviewSelectionColors.TopLeft_Valid);
+  AIni.WriteInteger('ActionsWindow', 'BotRight_ValidColor', FPreviewSelectionColors.BotRight_Valid);
+  AIni.WriteInteger('ActionsWindow', 'TopLeft_InvalidColor', FPreviewSelectionColors.TopLeft_Invalid );
+  AIni.WriteInteger('ActionsWindow', 'BotRight_InvalidColor', FPreviewSelectionColors.BotRight_Invalid);
 end;
 
 
@@ -634,6 +683,15 @@ begin
   PageControlMain.ActivePageIndex := 0;
   PageControlExecMode.ActivePageIndex := 0;
 
+  colcmbTopLeftValid.AddItem('clOrange', TObject(QWord(CLabel_Orange)));
+  colcmbTopLeftValid.AddItem('clLightGreen', TObject(QWord(CLabel_LightGreen)));
+  colcmbBotRightValid.AddItem('clOrange', TObject(QWord(CLabel_Orange)));
+  colcmbBotRightValid.AddItem('clLightGreen', TObject(QWord(CLabel_LightGreen)));
+  colcmbTopLeftInvalid.AddItem('clOrange', TObject(QWord(CLabel_Orange)));
+  colcmbTopLeftInvalid.AddItem('clLightGreen', TObject(QWord(CLabel_LightGreen)));
+  colcmbBotRightInvalid.AddItem('clOrange', TObject(QWord(CLabel_Orange)));
+  colcmbBotRightInvalid.AddItem('clLightGreen', TObject(QWord(CLabel_LightGreen)));
+
   frClickerActionsArrMain := TfrClickerActionsArr.Create(Self);
   frClickerActionsArrMain.Parent := scrboxMain;
   scrboxMain.Tag := PtrInt(frClickerActionsArrMain);
@@ -735,6 +793,14 @@ begin
   frClickerActionsArrExperiment1.GridDrawingOption := TDisplayGridLineOption(cmbImgPreviewGridType.ItemIndex);
   frClickerActionsArrExperiment2.GridDrawingOption := TDisplayGridLineOption(cmbImgPreviewGridType.ItemIndex);
   frClickerActionsArrMain.GridDrawingOption := TDisplayGridLineOption(cmbImgPreviewGridType.ItemIndex);
+
+  //frClickerActionsArrExperiment1.PreviewSelectionColors := FPreviewSelectionColors;  //do not set the PreviewSelectionColors property here, because the objects are not created yet
+  //frClickerActionsArrExperiment2.PreviewSelectionColors := FPreviewSelectionColors;
+  //frClickerActionsArrMain.PreviewSelectionColors := FPreviewSelectionColors;
+  FPreviewSelectionColors.TopLeft_Valid := CLabel_Orange;
+  FPreviewSelectionColors.BotRight_Valid := CLabel_LightGreen;
+  FPreviewSelectionColors.TopLeft_Invalid := clRed;
+  FPreviewSelectionColors.BotRight_Invalid := clMaroon;
 
   frClickerActionsArrExperiment1.OnExecuteRemoteActionAtIndex := nil;
   frClickerActionsArrExperiment2.OnExecuteRemoteActionAtIndex := nil;
@@ -889,6 +955,12 @@ begin
   finally
     FreeAndNil(frClickerActionsArrMain);
   end;
+end;
+
+
+procedure TfrmClickerActions.FormShow(Sender: TObject);
+begin
+  tmrUpdateColors.Enabled := True;
 end;
 
 
@@ -1348,7 +1420,7 @@ begin
           begin  //local mode
             if ExtractFileName(AFileNameToCall) = AFileNameToCall then  //AFileNameToCall does not contain a path
             begin
-              frmClickerActions.AddToLog('[local] Loading template: "' + FFullTemplatesDir + '\' + AFileNameToCall + '"  FileLoc = ' + IntToStr(Ord(FileLoc)) + '   [using default template dir]');
+              frmClickerActions.AddToLog('[local] Loading template: "' + FFullTemplatesDir + '\' + AFileNameToCall + '"  FileLoc = ' + CFileLocationStr[FileLoc] + '   [using default template dir]');
               NewFrame.LoadTemplate(FFullTemplatesDir + '\' + AFileNameToCall{, FileLoc, FInMemFileSystem});
             end
             else
@@ -1368,14 +1440,17 @@ begin
           //the current implementation does not allow using files from disk in server mode
           if (ExtractFileName(AFileNameToCall) = AFileNameToCall) and (FileLoc <> flMem) then  //AFileNameToCall does not contain a path
           begin
-            frmClickerActions.AddToLog('[server] Loading template: "' + FFullTemplatesDir + '\' + AFileNameToCall + '"  FileLoc = ' + IntToStr(Ord(FileLoc)) + '   [using default template dir]');
+            frmClickerActions.AddToLog('[server] Loading template: "' + FFullTemplatesDir + '\' + AFileNameToCall + '"  FileLoc = ' + CFileLocationStr[FileLoc] + '   [using default template dir]');
             NewFrame.LoadTemplate(FFullTemplatesDir + '\' + AFileNameToCall, FileLoc, FInMemFileSystem);
           end
           else
           begin
-            frmClickerActions.AddToLog('[server] Loading template: "' + AFileNameToCall + '"  FileLoc = ' + IntToStr(Ord(FileLoc)));
+            frmClickerActions.AddToLog('[server] Loading template: "' + AFileNameToCall + '"  FileLoc = ' + CFileLocationStr[FileLoc]);
             NewFrame.LoadTemplate(AFileNameToCall, FileLoc, FInMemFileSystem);
           end;
+
+          if not DoOnFileExists(AFileNameToCall) then
+            frmClickerActions.AddToLog('[server] Template file not found: "' + AFileNameToCall + '"');
         end;
 
         NewFrame.InitFrame; //after "LoadTemplate", before "FileName :="
@@ -2574,6 +2649,60 @@ begin
 end;
 
 
+procedure TfrmClickerActions.tmrUpdateColorsTimer(Sender: TObject);
+begin
+  tmrUpdateColors.Enabled := False;
+  //colcmbTopLeftValid.Selected := FPreviewSelectionColors.TopLeft_Valid;
+  //colcmbBotRightValid.Selected := FPreviewSelectionColors.BotRight_Valid;
+  //colcmbTopLeftInvalid.Selected := FPreviewSelectionColors.TopLeft_Invalid;
+  //colcmbBotRightInvalid.Selected := FPreviewSelectionColors.BotRight_Invalid;
+
+  colcmbTopLeftValid.AutoSelect := False;
+  colcmbBotRightValid.AutoSelect := False;
+  colcmbTopLeftInvalid.AutoSelect := False;
+  colcmbBotRightInvalid.AutoSelect := False;
+  colcmbTopLeftValid.ItemIndex := colcmbTopLeftValid.Items.IndexOfObject(TObject(TColor(FPreviewSelectionColors.TopLeft_Valid)));
+  colcmbBotRightValid.ItemIndex := colcmbBotRightValid.Items.IndexOfObject(TObject(TColor(FPreviewSelectionColors.BotRight_Valid)));
+  colcmbTopLeftInvalid.ItemIndex := colcmbTopLeftInvalid.Items.IndexOfObject(TObject(TColor(FPreviewSelectionColors.TopLeft_Invalid)));
+  colcmbBotRightInvalid.ItemIndex := colcmbBotRightInvalid.Items.IndexOfObject(TObject(TColor(FPreviewSelectionColors.BotRight_Invalid)));
+  colcmbTopLeftValid.AutoSelect := True;
+  colcmbBotRightValid.AutoSelect := True;
+  colcmbTopLeftInvalid.AutoSelect := True;
+  colcmbBotRightInvalid.AutoSelect := True;
+end;
+
+
+procedure TfrmClickerActions.tmrUpdateSelectionColorsFromColorBoxesTimer(
+  Sender: TObject);
+begin
+  tmrUpdateSelectionColorsFromColorBoxes.Enabled := False;
+
+  FPreviewSelectionColors.TopLeft_Valid := colcmbTopLeftValid.Selected;
+  FPreviewSelectionColors.BotRight_Valid := colcmbBotRightValid.Selected;
+  FPreviewSelectionColors.TopLeft_Invalid := colcmbTopLeftInvalid.Selected;
+  FPreviewSelectionColors.BotRight_Invalid := colcmbBotRightInvalid.Selected;
+
+  if not Assigned(frClickerActionsArrMain) then
+    Exit;
+
+  //using individual try..except sections, because some of the objects may not be created yet
+  try
+    frClickerActionsArrExperiment1.PreviewSelectionColors := FPreviewSelectionColors;
+  except
+  end;
+
+  try
+    frClickerActionsArrExperiment2.PreviewSelectionColors := FPreviewSelectionColors;
+  except
+  end;
+
+  try
+    frClickerActionsArrMain.PreviewSelectionColors := FPreviewSelectionColors;
+  except
+  end;
+end;
+
+
 procedure TfrmClickerActions.SetExecutionMode(AMode: Integer);
 var
   Port, ConnectsTo: string;
@@ -2761,6 +2890,36 @@ end;
 procedure TfrmClickerActions.cmbImgPreviewGridTypeChange(Sender: TObject);
 begin
   UpdateGridType;
+end;
+
+
+procedure TfrmClickerActions.UpdatePreviewSelectionColorsFromColorBoxes;
+begin
+  tmrUpdateSelectionColorsFromColorBoxes.Enabled := True;
+end;
+
+
+procedure TfrmClickerActions.colcmbTopLeftValidChange(Sender: TObject);
+begin
+  UpdatePreviewSelectionColorsFromColorBoxes;
+end;
+
+
+procedure TfrmClickerActions.colcmbBotRightValidChange(Sender: TObject);
+begin
+  UpdatePreviewSelectionColorsFromColorBoxes;
+end;
+
+
+procedure TfrmClickerActions.colcmbTopLeftInvalidChange(Sender: TObject);
+begin
+  UpdatePreviewSelectionColorsFromColorBoxes;
+end;
+
+
+procedure TfrmClickerActions.colcmbBotRightInvalidChange(Sender: TObject);
+begin
+  UpdatePreviewSelectionColorsFromColorBoxes;
 end;
 
 

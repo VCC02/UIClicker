@@ -97,7 +97,7 @@ object frClickerWinInterp: TfrClickerWinInterp
         Text = '1'
       end
       object lblGauge: TLabel
-        Left = 441
+        Left = 425
         Height = 15
         Top = 276
         Width = 16

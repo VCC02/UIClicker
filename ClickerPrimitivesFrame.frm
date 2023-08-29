@@ -7,6 +7,7 @@ object frClickerPrimitives: TfrClickerPrimitives
   ClientWidth = 399
   Color = clDefault
   Constraints.MinWidth = 399
+  OnResize = FrameResize
   ParentBackground = False
   ParentColor = False
   TabOrder = 0
@@ -16,12 +17,12 @@ object frClickerPrimitives: TfrClickerPrimitives
     Left = 0
     Height = 256
     Top = 0
-    Width = 278
+    Width = 270
     Anchors = [akTop, akLeft, akBottom]
     BevelOuter = bvNone
     Caption = 'pnlvstOI'
     ClientHeight = 256
-    ClientWidth = 278
+    ClientWidth = 270
     Color = 13500339
     Constraints.MinHeight = 208
     Constraints.MinWidth = 270
@@ -151,6 +152,20 @@ object frClickerPrimitives: TfrClickerPrimitives
       OnChange = chkHighContrastChange
       TabOrder = 1
     end
+  end
+  object pnlHorizSplitter: TPanel
+    Cursor = crHSplit
+    Left = 271
+    Height = 266
+    Top = 0
+    Width = 9
+    Anchors = [akTop, akLeft, akBottom]
+    Color = 13041606
+    ParentColor = False
+    TabOrder = 2
+    OnMouseDown = pnlHorizSplitterMouseDown
+    OnMouseMove = pnlHorizSplitterMouseMove
+    OnMouseUp = pnlHorizSplitterMouseUp
   end
   object tmrReloadOIContent: TTimer
     Enabled = False
