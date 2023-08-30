@@ -391,7 +391,7 @@ begin
     mouse_event(MOUSEEVENTF_WHEEL, 0, 0, DWord(Amount * WHEEL_DELTA), 0);
 
   if AParams.Values[CMouseWheelType] = CMouseWheelHorizWheel then
-    mouse_event(MOUSEEVENTF_WHEEL, 0, 0, DWord(Amount), 0);
+    mouse_event(MOUSEEVENTF_HWHEEL, 0, 0, DWord(Amount), 0);  //the official MSDN doc does not mention doing a multiplication by WHEEL_DELTA
 end;
 
 end.

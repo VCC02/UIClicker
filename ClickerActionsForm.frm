@@ -509,7 +509,7 @@ object frmClickerActions: TfrmClickerActions
         ClientWidth = 236
         TabOrder = 12
         object colcmbTopLeftValid: TColorBox
-          Left = 96
+          Left = 104
           Height = 22
           Top = 13
           Width = 120
@@ -520,7 +520,7 @@ object frmClickerActions: TfrmClickerActions
           TabOrder = 0
         end
         object colcmbBotRightValid: TColorBox
-          Left = 96
+          Left = 104
           Height = 22
           Top = 56
           Width = 120
@@ -531,7 +531,7 @@ object frmClickerActions: TfrmClickerActions
           TabOrder = 1
         end
         object colcmbTopLeftInvalid: TColorBox
-          Left = 96
+          Left = 104
           Height = 22
           Top = 96
           Width = 120
@@ -542,7 +542,7 @@ object frmClickerActions: TfrmClickerActions
           TabOrder = 2
         end
         object colcmbBotRightInvalid: TColorBox
-          Left = 96
+          Left = 104
           Height = 22
           Top = 136
           Width = 120
@@ -570,15 +570,15 @@ object frmClickerActions: TfrmClickerActions
           Left = 8
           Height = 13
           Top = 101
-          Width = 74
-          Caption = 'Top/Left (Valid)'
+          Width = 84
+          Caption = 'Top/Left (Invalid)'
         end
         object lblBotRightInvalidColor: TLabel
           Left = 8
           Height = 13
           Top = 141
-          Width = 78
-          Caption = 'Bot/Right (Valid)'
+          Width = 88
+          Caption = 'Bot/Right (Invalid)'
         end
       end
     end
