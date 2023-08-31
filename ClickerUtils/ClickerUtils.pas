@@ -1973,10 +1973,18 @@ begin
   end;
 
   try
-    if UseWideStringsOnGetControlText then
-      Result.Text := GetControlTextW(HW)
+    if (Result.ComponentRectangle.Left = 0) and
+       (Result.ComponentRectangle.Top = 0) and
+       (Result.ComponentRectangle.Right = 0) and
+       (Result.ComponentRectangle.Bottom = 0) then
+      Result.Text := ''
     else
-      Result.Text := GetControlText(HW);
+    begin
+      if UseWideStringsOnGetControlText then
+        Result.Text := GetControlTextW(HW)
+      else
+        Result.Text := GetControlText(HW);
+    end;
   except
     on E: Exception do
     begin

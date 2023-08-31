@@ -589,6 +589,7 @@ begin
   frClickerActions.OnSetPictureOpenDialogInitialDir := HandleOnSetPictureOpenDialogInitialDir;
   frClickerActions.OnPictureOpenDialogExecute := HandleOnPictureOpenDialogExecute;
   frClickerActions.OnGetPictureOpenDialogFileName := HandleOnGetPictureOpenDialogFileName;
+  //frClickerActions.OnControlsModified := ClickerActionsFrameOnControlsModified;   //this is set on frame initialization
 
   vstActions := TVirtualStringTree.Create(Self);
   vstActions.Parent := pnlActions;

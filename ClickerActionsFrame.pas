@@ -544,6 +544,7 @@ end;
 
 procedure TfrClickerActions.ClickerConditionEditorControlsModified;
 begin
+  FEditingAction^.ActionOptions.ActionCondition := frClickerConditionEditor.GetActionCondition;
   TriggerOnControlsModified;
 end;
 

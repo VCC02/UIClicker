@@ -248,7 +248,7 @@ var
   i: Integer;
 begin
   Result := False;
-  for i  := 0 to AStringList.Count - 1 do
+  for i := 0 to AStringList.Count - 1 do
     if StringMatchByWildCard(ClassNameOrCaption, AStringList.Strings[i]) then
     begin
       Result := True;
@@ -265,7 +265,7 @@ type
     FoundByEnum: Boolean;
   end;
 
-var
+threadvar
   FindWindowByPatternObj: TFindWindowByPatternObj;  
 
 
@@ -300,6 +300,7 @@ begin
 
   FindWindowByPatternObj.FoundByEnum := Found;
   Result := not Found; //if not Found, then continue searching  (a.k.a. continue calling this callback)         //To continue enumeration, the callback function must return TRUE; to stop enumeration, it must return FALSE.
+  //MSDN Doc: To continue enumeration, the callback function must return TRUE; to stop enumeration, it must return FALSE.
 end;
 
 
