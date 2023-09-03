@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2022 VCC
+    Copyright (C) 2023 VCC
     creation date: Dec 2019
     initial release date: 13 Sep 2022
 
@@ -39,24 +39,26 @@ type
   { TfrmClickerControlPreview }
 
   TfrmClickerControlPreview = class(TForm)
+    btnCopyImageToClipboard: TButton;
+    btnSaveImage: TButton;
+    btnSelectFull: TButton;
+    btnSelectionRectangleColor: TButton;
+    chkNoKeysScanningTimer: TCheckBox;
     chkScanningTimer: TCheckBox;
-    lblZoom: TLabel;
-    tmrScan: TTimer;
-    lblInstructions: TLabel;
-    trbCropLeft: TTrackBar;
-    trbCropRight: TTrackBar;
+    chkShowCropRectangle: TCheckBox;
+    imgCrop: TImage;
+    lblInfo: TLabel;
+    lblCropBottom: TLabel;
     lblCropImage: TLabel;
     lblCropLeft: TLabel;
     lblCropRight: TLabel;
-    trbCropTop: TTrackBar;
-    trbCropBottom: TTrackBar;
     lblCropTop: TLabel;
-    lblCropBottom: TLabel;
-    chkShowCropRectangle: TCheckBox;
+    lblZoom: TLabel;
+    pnlImageSelection: TPanel;
+    pnlDrag: TPanel;
     scrboxCrop: TScrollBox;
-    imgCrop: TImage;
-    trbCropZoom: TTrackBar;
-    btnSaveImage: TButton;
+    tmrScan: TTimer;
+    lblInstructions: TLabel;
     SavePictureDialog1: TSavePictureDialog;
     scrboxScreenshot: TScrollBox;
     pnlBase: TPanel;
@@ -68,17 +70,14 @@ type
     pnlSelRight: TPanel;
     pnlSelBottom: TPanel;
     ColorDialog1: TColorDialog;
-    btnSelectionRectangleColor: TButton;
     grpWinInfo: TGroupBox;
     lbeHandle: TLabeledEdit;
     lbeClass: TLabeledEdit;
     lbeText: TLabeledEdit;
     lbeRect: TLabeledEdit;
-    btnSelectFull: TButton;
     lbeMouseXOffset: TLabeledEdit;
     lbeMouseYOffset: TLabeledEdit;
     tmrStartup: TTimer;
-    btnCopyImageToClipboard: TButton;
     lbeMouseGX: TLabeledEdit;
     lbeMouseGY: TLabeledEdit;
     grpTestSetControlText: TGroupBox;
@@ -87,7 +86,19 @@ type
     rdgrpTestSetTextControlType: TRadioGroup;
     lbeTestSetControlTextNewText: TLabeledEdit;
     chkStayOnTop: TCheckBox;
+    trbCropBottom: TTrackBar;
+    trbCropLeft: TTrackBar;
+    trbCropRight: TTrackBar;
+    trbCropTop: TTrackBar;
+    trbCropZoom: TTrackBar;
+    procedure chkNoKeysScanningTimerChange(Sender: TObject);
     procedure chkScanningTimerChange(Sender: TObject);
+    procedure pnlDragMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure pnlDragMouseMove(Sender: TObject; Shift: TShiftState; X,
+      Y: Integer);
+    procedure pnlDragMouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
     procedure tmrScanTimer(Sender: TObject);
     procedure FormCreate(Sender: TObject);
     procedure trbCropLeftChange(Sender: TObject);
@@ -114,11 +125,14 @@ type
     FSelecting: Boolean;
     FSelectingXStart: Integer;
     FSelectingYStart: Integer;
+    FNoKeysScanningTimer: Boolean;
+    FDragging: Boolean;
 
     pnlImgCoords: TPanel;
 
     procedure SetCropRectangleByTrb;
     procedure DrawCroppedImage;
+    procedure ScanTargetControl;
   public
     { Public declarations }
     procedure LoadSettings(AIni: TMemIniFile);
@@ -316,6 +330,7 @@ begin
     imgCrop.Picture.Bitmap := TBitmap.Create;
 
   FSelecting := False;
+  FDragging := False;
   tmrStartup.Enabled := True;
   Application.HintHidePause := 20000;
 
@@ -327,12 +342,14 @@ begin
   {$ENDIF}
 
   pnlImgCoords := TPanel.Create(Self);
-  pnlImgCoords.Parent := grpWinInfo;
-  pnlImgCoords.Left := 238;
+  pnlImgCoords.Parent := pnlImageSelection;
+  pnlImgCoords.Left := lblInfo.Left;
   pnlImgCoords.Height := 18;
-  pnlImgCoords.Top := -1;
-  pnlImgCoords.Width := 118;
+  pnlImgCoords.Top := lblInfo.Top;
+  pnlImgCoords.Width := btnCopyImageToClipboard.Width;
   pnlImgCoords.Caption := 'Coords';
+
+  FNoKeysScanningTimer := False;
 end;
 
 
@@ -381,81 +398,85 @@ begin
 end;
 
 
-procedure TfrmClickerControlPreview.tmrScanTimer(Sender: TObject);
+procedure TfrmClickerControlPreview.ScanTargetControl;
 var
   tp: TPoint;
   hwc: TCompRec;
   CompWidth, CompHeight: Integer;
 begin
-  if (GetAsyncKeyState(VK_CONTROL) < 0) and (GetAsyncKeyState(VK_SHIFT) < 0) then
+  GetCursorPos(tp);
+  lbeMouseGX.Text := IntToStr(tp.X);
+  lbeMouseGY.Text := IntToStr(tp.Y);
+
+
+  hwc := GetWindowClassRec(tp);
+
+  lbeHandle.Text := IntToStr(hwc.Handle);
+  lbeClass.Text := hwc.ClassName;
+  lbeText.Text := hwc.Text;
+
+  lbeRect.Text := ' Left=' + IntToStr(hwc.ComponentRectangle.Left) +
+                  ' Top=' + IntToStr(hwc.ComponentRectangle.Top) +
+                  ' Right=' + IntToStr(hwc.ComponentRectangle.Right) +
+                  ' Bottom=' + IntToStr(hwc.ComponentRectangle.Bottom) +
+                  ' Width=' + IntToStr(hwc.ComponentRectangle.Right - hwc.ComponentRectangle.Left) +
+                  ' Height=' + IntToStr(hwc.ComponentRectangle.Bottom - hwc.ComponentRectangle.Top);
+
+  lbeMouseXOffset.Text := IntToStr(hwc.MouseXOffset);
+  lbeMouseYOffset.Text := IntToStr(hwc.MouseYOffset);
+
+  CompWidth := hwc.ComponentRectangle.Right - hwc.ComponentRectangle.Left;
+  CompHeight := hwc.ComponentRectangle.Bottom - hwc.ComponentRectangle.Top;
+
+  if CompWidth > 16383 then
+    CompWidth := 16383;
+
+  if CompHeight > 16383 then
+    CompHeight := 16383;
+
+  pnlCaptureWidth.Width := CompWidth;
+  pnlCaptureHeight.Height := CompHeight;
+  {
+  if CompWidth < imgScreenshot.Width then
   begin
-    GetCursorPos(tp);
-    lbeMouseGX.Text := IntToStr(tp.X);
-    lbeMouseGY.Text := IntToStr(tp.Y);
-
-    
-    hwc := GetWindowClassRec(tp);
-
-    lbeHandle.Text := IntToStr(hwc.Handle);
-    lbeClass.Text := hwc.ClassName;
-    lbeText.Text := hwc.Text;
-
-    lbeRect.Text := ' Left=' + IntToStr(hwc.ComponentRectangle.Left) +
-                    ' Top=' + IntToStr(hwc.ComponentRectangle.Top) +
-                    ' Right=' + IntToStr(hwc.ComponentRectangle.Right) +
-                    ' Bottom=' + IntToStr(hwc.ComponentRectangle.Bottom) +
-                    ' Width=' + IntToStr(hwc.ComponentRectangle.Right - hwc.ComponentRectangle.Left) +
-                    ' Height=' + IntToStr(hwc.ComponentRectangle.Bottom - hwc.ComponentRectangle.Top);
-
-    lbeMouseXOffset.Text := IntToStr(hwc.MouseXOffset);
-    lbeMouseYOffset.Text := IntToStr(hwc.MouseYOffset);            
-
-    CompWidth := hwc.ComponentRectangle.Right - hwc.ComponentRectangle.Left;
-    CompHeight := hwc.ComponentRectangle.Bottom - hwc.ComponentRectangle.Top;
-
-    if CompWidth > 16383 then
-      CompWidth := 16383;
-
-    if CompHeight > 16383 then
-      CompHeight := 16383;
-
-    pnlCaptureWidth.Width := CompWidth;
-    pnlCaptureHeight.Height := CompHeight;
-    {
-    if CompWidth < imgScreenshot.Width then
-    begin
-      imgScreenshot.Canvas.Brush.Color := clAqua;
-      imgScreenshot.Canvas.Pen.Color := clAqua;
-      imgScreenshot.Canvas.Rectangle(CompWidth, 0, imgScreenshot.Width - 1, CompHeight);
-    end;
-
-    if CompHeight < imgScreenshot.Height then
-    begin
-      imgScreenshot.Canvas.Brush.Color := clLime;
-      imgScreenshot.Canvas.Pen.Color := clLime;
-      imgScreenshot.Canvas.Rectangle(0, CompHeight, CompWidth, imgScreenshot.Height - 1);
-    end;
-
-    if (CompWidth < imgScreenshot.Width) and (CompHeight < imgScreenshot.Height) then
-    begin
-      imgScreenshot.Canvas.Brush.Color := clRed;
-      imgScreenshot.Canvas.Pen.Color := clRed;
-      imgScreenshot.Canvas.Rectangle(CompWidth, CompHeight, imgScreenshot.Width - 1, imgScreenshot.Height - 1);
-    end;    }
-
-    imgScreenshot.Width := CompWidth;             //AV here after debugging, then reloading a template while debugging and pressing Continue (AV), then pressing Ctrl key to enter here
-    imgScreenshot.Height := CompHeight;
-    pnlBase.Width := imgScreenshot.Left + imgScreenshot.Width + 5;
-    pnlBase.Height := imgScreenshot.Top + imgScreenshot.Height + 5;
-
-    ScreenShot(hwc.Handle, imgScreenshot.Picture.Bitmap, 0, 0, CompWidth, CompHeight);
-    //imgScreenshot.Repaint;
-
-    trbCropLeft.Max := CompWidth;
-    trbCropRight.Max := CompWidth;
-    trbCropTop.Max := CompHeight;
-    trbCropBottom.Max := CompHeight;
+    imgScreenshot.Canvas.Brush.Color := clAqua;
+    imgScreenshot.Canvas.Pen.Color := clAqua;
+    imgScreenshot.Canvas.Rectangle(CompWidth, 0, imgScreenshot.Width - 1, CompHeight);
   end;
+
+  if CompHeight < imgScreenshot.Height then
+  begin
+    imgScreenshot.Canvas.Brush.Color := clLime;
+    imgScreenshot.Canvas.Pen.Color := clLime;
+    imgScreenshot.Canvas.Rectangle(0, CompHeight, CompWidth, imgScreenshot.Height - 1);
+  end;
+
+  if (CompWidth < imgScreenshot.Width) and (CompHeight < imgScreenshot.Height) then
+  begin
+    imgScreenshot.Canvas.Brush.Color := clRed;
+    imgScreenshot.Canvas.Pen.Color := clRed;
+    imgScreenshot.Canvas.Rectangle(CompWidth, CompHeight, imgScreenshot.Width - 1, imgScreenshot.Height - 1);
+  end;    }
+
+  imgScreenshot.Width := CompWidth;             //AV here after debugging, then reloading a template while debugging and pressing Continue (AV), then pressing Ctrl key to enter here
+  imgScreenshot.Height := CompHeight;
+  pnlBase.Width := imgScreenshot.Left + imgScreenshot.Width + 5;
+  pnlBase.Height := imgScreenshot.Top + imgScreenshot.Height + 5;
+
+  ScreenShot(hwc.Handle, imgScreenshot.Picture.Bitmap, 0, 0, CompWidth, CompHeight);
+  //imgScreenshot.Repaint;
+
+  trbCropLeft.Max := CompWidth;
+  trbCropRight.Max := CompWidth;
+  trbCropTop.Max := CompHeight;
+  trbCropBottom.Max := CompHeight;
+end;
+
+
+procedure TfrmClickerControlPreview.tmrScanTimer(Sender: TObject);
+begin
+  if FNoKeysScanningTimer or ((GetAsyncKeyState(VK_CONTROL) < 0) and (GetAsyncKeyState(VK_SHIFT) < 0)) then
+    ScanTargetControl;
 end;
 
 
@@ -464,9 +485,43 @@ begin
   tmrScan.Enabled := chkScanningTimer.Checked;
 
   if chkScanningTimer.Checked then
-    chkScanningTimer.Font.Color := $000000B9
+    chkScanningTimer.Font.Color := $000000B9   //this won't work if the application has an OS theme manifest
   else
     chkScanningTimer.Font.Color := clDefault;
+end;
+
+
+procedure TfrmClickerControlPreview.pnlDragMouseDown(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  FDragging := True;
+end;
+
+
+procedure TfrmClickerControlPreview.pnlDragMouseMove(Sender: TObject;
+  Shift: TShiftState; X, Y: Integer);
+begin
+  if FDragging then
+  begin
+    ScanTargetControl;
+
+    if pnlDrag.Color <> clLime then
+      pnlDrag.Color := clLime;
+  end;
+end;
+
+
+procedure TfrmClickerControlPreview.pnlDragMouseUp(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  FDragging := False;
+  pnlDrag.Color := clYellow;
+end;
+
+
+procedure TfrmClickerControlPreview.chkNoKeysScanningTimerChange(Sender: TObject);
+begin
+  FNoKeysScanningTimer := chkNoKeysScanningTimer.Checked;
 end;
 
 

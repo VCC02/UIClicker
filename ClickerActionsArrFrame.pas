@@ -3668,6 +3668,7 @@ begin
 
     FClkActions[n].SetTextOptions.Text := '';
     FClkActions[n].SetTextOptions.ControlType := stEditBox;
+    FClkActions[n].SetTextOptions.DelayBetweenKeyStrokes := '0';
 
     FClkActions[n].CallTemplateOptions.TemplateFileName := '';
     FClkActions[n].CallTemplateOptions.ListOfCustomVarsAndValues := '';

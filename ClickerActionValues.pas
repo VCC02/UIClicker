@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2022 VCC
+    Copyright (C) 2023 VCC
     creation date: Feb 2023
     initial release date: 02 Feb 2023
 
@@ -58,7 +58,7 @@ const
   CPropCount_ExecApp = 7;
   CPropCount_FindControl = 20;
   CPropCount_FindSubControl = 19;
-  CPropCount_SetText = 2;
+  CPropCount_SetText = 3;
   CPropCount_CallTemplate = 4;
   CPropCount_Sleep = 1;
   CPropCount_SetVar = 1;
@@ -88,6 +88,18 @@ const
   CMain_ActionName_PropIndex = 0; //property index in Action structure
   CMain_ActionTimeout_PropIndex = 2; //property index in Action structure
   CMain_ActionCondition_PropIndex = 3; //property index in Action structure
+
+  CClick_XClickPointVar_PropIndex = 2;
+  CClick_YClickPointVar_PropIndex = 3;
+  CClick_LeaveMouse_PropIndex = 11;
+  CClick_XClickPointReferenceDest_PropIndex = 14;
+  CClick_YClickPointReferenceDest_PropIndex = 15;
+  CClick_XClickPointVarDest_PropIndex = 16;
+  CClick_YClickPointVarDest_PropIndex = 17;
+  CClick_XOffsetDest_PropIndex = 18;
+  CClick_YOffsetDest_PropIndex = 19;
+  CClick_MouseWheelType_PropIndex = 20;
+  CClick_MouseWheelAmount_PropIndex = 21;
 
   CExecApp_PathToApp_PropIndex = 0;     //property index in ExecApp structure
   CExecApp_ListOfParams_PropIndex = 1;  //property index in ExecApp structure
@@ -145,10 +157,13 @@ const
   CCallTemplate_CallTemplateLoop_BreakCondition_PropItemIndex = 5;
   CCallTemplate_CallTemplateLoop_EvalBreakPosition_PropItemIndex = 6;
 
-  CWindowOperations_NewX = 1;
-  CWindowOperations_NewY = 2;
-  CWindowOperations_NewWidth = 3;
-  CWindowOperations_NewHeight = 4;
+  CWindowOperations_Operation_PropItemIndex = 0;
+  CWindowOperations_NewX_PropItemIndex = 1;
+  CWindowOperations_NewY_PropItemIndex = 2;
+  CWindowOperations_NewWidth_PropItemIndex = 3;
+  CWindowOperations_NewHeight_PropItemIndex = 4;
+  CWindowOperations_NewPositionEnabled_PropItemIndex = 5;
+  CWindowOperations_NewSizeEnabled_PropItemIndex = 6;
 
   CDTString = 'String';
   CDTEnum = 'Enum';
@@ -275,7 +290,8 @@ const
 
   CSetTextProperties: array[0..CPropCount_SetText - 1] of TOIPropDef = (   //Description:  Most edit boxes and combo boxes can be set, using the first two options.  However, depending on their usage on the target application, this approach might not be enough.  For edit boxes, the action can be configured to use key strokes.  For combo boxes, this action will have to be replaced by multiple actions, to open the box, finding text, selecting etc.
     (Name: 'Text'; EditorType: etText; DataType: CDTString),                                    //Description:  The proper control type has to be selected, for the proper API call. Uses $Control_Handle$ variable.    HTTP calls are available, as var values, using the following format: $http://<server:port>/[params]$
-    (Name: 'ControlType'; EditorType: etEnumCombo; DataType: CDTEnum)                         //Description:  Uses WM_SETTEXT or CB_SELECTSTRING messages or emulates keystrokes..
+    (Name: 'ControlType'; EditorType: etEnumCombo; DataType: CDTEnum),                          //Description:  Uses WM_SETTEXT or CB_SELECTSTRING messages or emulates keystrokes..
+    (Name: 'DelayBetweenKeyStrokes'; EditorType: etText; DataType: CDTString)
   );
 
   CCallTemplateProperties: array[0..CPropCount_CallTemplate - 1] of TOIPropDef = (
@@ -523,7 +539,8 @@ const
 
   CSetTextEnumCounts: array[0..CPropCount_SetText - 1] of Integer = (
     0, //Text: string;
-    Ord(High(TClkSetTextControlType)) + 1
+    Ord(High(TClkSetTextControlType)) + 1,
+    0  //DelayBetweenKeyStrokes: string;
   );
 
   CCallTemplateEnumCounts: array[0..CPropCount_CallTemplate - 1] of Integer = (
@@ -673,7 +690,8 @@ const
 
   CSetTextEnumStrings: array[0..CPropCount_SetText - 1] of PArrayOfString = (
     nil, //Text: string;
-    @CClkSetTextControlTypeStr
+    @CClkSetTextControlTypeStr,
+    nil  //DelayBetweenKeyStrokes: string;
   );
 
   CCallTemplateEnumStrings: array[0..CPropCount_CallTemplate - 1] of PArrayOfString = (
@@ -803,6 +821,7 @@ function GetPropertyHint_SetText: string;
 {$IFDEF SubProperties}
   function GetPropertyHint_SetText_Text: string;
   function GetPropertyHint_SetText_ControlType: string;
+  function GetPropertyHint_DelayBetweenKeyStrokes_Text: string;
 {$ENDIF}
 
 
@@ -890,7 +909,8 @@ const
 
   CGetPropertyHint_SetText: array[0..CPropCount_SetText - 1] of TPropHintFunc = (
     @GetPropertyHint_SetText_Text, // Text: string;
-    @GetPropertyHint_SetText_ControlType  // ControlType: TClkSetTextControlType;
+    @GetPropertyHint_SetText_ControlType,  // ControlType: TClkSetTextControlType;
+    @GetPropertyHint_DelayBetweenKeyStrokes_Text // DelayBetweenKeyStrokes: string;
   );
 
 
@@ -1161,6 +1181,7 @@ begin
   case APropertyIndex of
     0: Result := AAction^.SetTextOptions.Text;
     1: Result := CClkSetTextControlTypeStr[AAction^.SetTextOptions.ControlType];
+    2: Result := AAction^.SetTextOptions.DelayBetweenKeyStrokes;
     else
       Result := 'unknown';
   end;
@@ -1590,6 +1611,7 @@ begin
   case APropertyIndex of
     0: AAction^.SetTextOptions.Text := NewValue;
     1: AAction^.SetTextOptions.ControlType := ClkSetTextControlType_AsStringToValue(NewValue);
+    2: AAction^.SetTextOptions.DelayBetweenKeyStrokes := NewValue;
     else
       ;
   end;
@@ -1930,6 +1952,12 @@ end;
 function GetPropertyHint_SetText_ControlType: string;
 begin
   Result := 'Uses WM_SETTEXT or CB_SELECTSTRING messages or emulates keystrokes.';
+end;
+
+
+function GetPropertyHint_DelayBetweenKeyStrokes_Text: string;
+begin
+  Result := 'For keystrokes only. Measured in ms.'#13#10'A value of 0 or empty string, results in no delay.';
 end;
 
 

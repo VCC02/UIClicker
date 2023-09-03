@@ -1425,7 +1425,7 @@ begin
             end
             else
             begin
-              frmClickerActions.AddToLog('[local] Loading template: "' + AFileNameToCall + '"  FileLoc = ' + IntToStr(Ord(FileLoc)));
+              frmClickerActions.AddToLog('[local] Loading template: "' + AFileNameToCall + '"  FileLoc = ' + CFileLocationStr[FileLoc]);
               if not DoOnFileExists(AFileNameToCall) then
                 AddToLog('Template (to be loaded) not found: ' + AFileNameToCall);
 

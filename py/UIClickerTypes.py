@@ -232,7 +232,8 @@ class TFindControlOptions(Structure):
                ("StartSearchingWithCachedControl", BOOLEAN),
                ("CachedControlLeft", LPCWSTR),
                ("CachedControlTop", LPCWSTR),
-               ("MatchPrimitiveFiles", LPCWSTR)]
+               ("MatchPrimitiveFiles", LPCWSTR),
+               ("GetAllControls", BOOLEAN)]
 
 PFindControlOptions = ctypes.POINTER(TFindControlOptions)
 
@@ -280,6 +281,7 @@ def GetDefaultFindControlOptions():
     FindControlOptions.CachedControlTop = ''
     
     FindControlOptions.MatchPrimitiveFiles = '' #'FileExample1.pmtv\r\nFileExample2.pmtv\r\nFileExample3.pmtv'
+    FindControlOptions.GetAllControls = False
     return FindControlOptions
 
 
@@ -296,7 +298,8 @@ def GetDefaultFindSubControlOptions():
 
 class TSetControlTextOptions(Structure):
     _fields_ = [("Text", LPCWSTR),
-               ("ControlType", LONG)] #TClkSetTextControlType
+               ("ControlType", LONG), #TClkSetTextControlType
+               ("DelayBetweenKeyStrokes", LPCWSTR)]
 
 PSetControlTextOptions = ctypes.POINTER(TSetControlTextOptions)
 
@@ -304,6 +307,7 @@ def GetDefaultSetControlTextOptions():
     SetControlTextOptions = TSetControlTextOptions()
     SetControlTextOptions.Text = 'New text'
     SetControlTextOptions.ControlType = TClkSetTextControlType.stEditBox
+    SetControlTextOptions.DelayBetweenKeyStrokes = '0'
     return SetControlTextOptions
 
 

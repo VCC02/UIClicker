@@ -86,7 +86,7 @@ type
     procedure AddToLog(s: string);
 
     procedure SetLastActionStatus(AActionResult, AAlowedToFail: Boolean);
-    procedure CheckManualStopCondition;
+    function CheckManualStopCondition: Boolean;
 
     procedure ExecuteClickAction(var AClickOptions: TClkClickOptions);
     function ExecuteFindControlAction(var AFindControlOptions: TClkFindControlOptions; var AActionOptions: TClkActionOptions; IsSubControl: Boolean): Boolean; //returns True if found
@@ -721,6 +721,7 @@ var
   ACmd, ErrMsg: string;
   i: Integer;
   AllParams: TStringList;
+  s, SelfAppDir: string;
 
   {$IFnDEF FPC}
     hwnd: THandle;
@@ -736,7 +737,9 @@ var
     TimeoutForAppRun: Integer;
   {$ENDIF}
 begin
+  SelfAppDir := ExtractFileDir(ParamStr(0));
   ACmd := EvaluateReplacements(AExecAppOptions.PathToApp);
+  ACmd := StringReplace(ACmd, '$AppDir$', SelfAppDir, [rfReplaceAll]);
 
   Result := True;
 
@@ -751,10 +754,16 @@ begin
   try
     AllParams.Text := AExecAppOptions.ListOfParams;
 
+
     {$IFnDEF FPC}   //backwards compatibility with Delphi, where there is no TProcess.  Still, there is CreateProcess and WaitForSingleObject.
       AParams := '';
+
       for i := 0 to AllParams.Count - 1 do
-        AParams := AParams + '"' + EvaluateReplacements(AllParams.Strings[i]) + '" ';
+      begin
+        s := EvaluateReplacements(AllParams.Strings[i]);
+        s := StringReplace(s, '$AppDir$', SelfAppDir, [rfReplaceAll]);
+        AParams := AParams + '"' + s + '" ';
+      end;
 
       if AParams > '' then
         Delete(AParams, Length(AParams), 1); //delete last ' '
@@ -783,7 +792,11 @@ begin
           AProcess.Executable := ACmd;
 
           for i := 0 to AllParams.Count - 1 do
-            AProcess.Parameters.Add(EvaluateReplacements(AllParams.Strings[i]));
+          begin
+            s := EvaluateReplacements(AllParams.Strings[i]);
+            s := StringReplace(s, '$AppDir$', SelfAppDir, [rfReplaceAll]);
+            AProcess.Parameters.Add(s);
+          end;
 
           AProcess.Options := [poUsePipes, poStderrToOutPut{, poPassInput}];
           AProcess.StartupOptions := AProcess.StartupOptions + [suoUseShowWindow];
@@ -1516,11 +1529,12 @@ end;
 function TActionExecution.ExecuteSetControlTextAction(var ASetTextOptions: TClkSetTextOptions): Boolean;
 var
   Control_Handle: THandle;
-  i, Idx: Integer;
+  i, j, Idx: Integer;
   TextToSend: string;
   KeyStrokes: array of TINPUT;
   Err: Integer;
   ErrStr: string;
+  DelayBetweenKeyStrokesInt: Integer;
 begin
   Result := True;
 
@@ -1535,6 +1549,8 @@ begin
 
     stKeystrokes:
     begin
+      DelayBetweenKeyStrokesInt := StrToIntDef(EvaluateReplacements(ASetTextOptions.DelayBetweenKeyStrokes), 0);
+
       SetLength(KeyStrokes, Length(TextToSend) shl 1);
       try
         for i := 0 to Length(TextToSend) - 1 do   //string len, not array len
@@ -1556,13 +1572,46 @@ begin
         end;
 
         SetLastError(0);
-        if Integer(SendInput(Length(KeyStrokes), @KeyStrokes[0], SizeOf(TINPUT))) <> Length(KeyStrokes) then
+        if DelayBetweenKeyStrokesInt = 0 then
         begin
-          Err := GetLastOSError;
-          ErrStr := 'KeyStrokes error: ' + IntToStr(Err) + '  ' + SysErrorMessage(GetLastOSError) + '  Keystrokes count: ' + IntToStr(Length(KeyStrokes));
-          SetActionVarValue('$ExecAction_Err$', ErrStr);
-          Result := False;
-        end;
+          if Integer(SendInput(Length(KeyStrokes), @KeyStrokes[0], SizeOf(TINPUT))) <> Length(KeyStrokes) then
+          begin
+            Err := GetLastOSError;
+            ErrStr := 'KeyStrokes error: ' + IntToStr(Err) + '  ' + SysErrorMessage(GetLastOSError) + '  Keystrokes count: ' + IntToStr(Length(KeyStrokes));
+            SetActionVarValue('$ExecAction_Err$', ErrStr);
+            Result := False;
+          end;
+        end
+        else
+        begin
+          for i := 0 to Length(TextToSend) - 1 do
+          begin
+            if Integer(SendInput(2, @KeyStrokes[i shl 1], SizeOf(TINPUT))) <> 2 then
+            begin
+              Err := GetLastOSError;
+              ErrStr := 'KeyStrokes error: ' + IntToStr(Err) + '  ' + SysErrorMessage(GetLastOSError) + '  Keystrokes count: ' + IntToStr(Length(KeyStrokes));
+              SetActionVarValue('$ExecAction_Err$', ErrStr);
+              Result := False;
+            end;
+
+            for j := 1 to DelayBetweenKeyStrokesInt do
+            begin
+              Sleep(1);
+
+              if CheckManualStopCondition then
+              begin
+                Result := False;
+                Break;     //break inner for
+              end;
+            end;
+
+            if CheckManualStopCondition then
+            begin
+              Result := False;
+              Break;       //break outer for
+            end;
+          end;
+        end; //using delays
       finally
         SetLength(KeyStrokes, 0);
       end;
@@ -1571,10 +1620,14 @@ begin
 end;
 
 
-procedure TActionExecution.CheckManualStopCondition;
+function TActionExecution.CheckManualStopCondition: Boolean;
 begin
+  Result := False;
+
   if (GetAsyncKeyState(VK_CONTROL) < 0) and (GetAsyncKeyState(VK_SHIFT) < 0) and (GetAsyncKeyState(VK_F2) < 0) then
   begin
+    Result := True;
+
     if FStopAllActionsOnDemandFromParent <> nil then
       FStopAllActionsOnDemandFromParent^ := True;
 
@@ -2285,6 +2338,7 @@ begin
 
     SetTextOptions.Text := AListOfSetControlTextOptionsParams.Values['Text'];
     SetTextOptions.ControlType := TClkSetTextControlType(Temp_ControlType);
+    SetTextOptions.DelayBetweenKeyStrokes := AListOfSetControlTextOptionsParams.Values['DelayBetweenKeyStrokes'];
 
     Result := ExecuteSetControlTextAction(SetTextOptions);
   finally

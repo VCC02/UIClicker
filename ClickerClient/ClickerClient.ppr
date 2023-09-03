@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2022 VCC
+    Copyright (C) 2023 VCC
     creation date: Jul 2022
     initial release date: 26 Jul 2022
 
@@ -126,6 +126,7 @@ type
   TClkSetTextOptionsAPI = record
     Text: PWideChar;
     ControlType: TClkSetTextControlType;
+    DelayBetweenKeyStrokes: PWideChar;
   end;
 
   PClkSetTextOptionsAPI = ^TClkSetTextOptionsAPI;
@@ -724,6 +725,7 @@ begin
   //set control text stuff
   SetPointedContentToString(@string(PWideChar(ASetControlTextOptions^.Text))[1], TempAction.SetTextOptions.Text);
   TempAction.SetTextOptions.ControlType := ASetControlTextOptions^.ControlType;
+  SetPointedContentToString(@string(PWideChar(ASetControlTextOptions^.DelayBetweenKeyStrokes))[1], TempAction.SetTextOptions.DelayBetweenKeyStrokes);
 
   AddActionToTemplate(TemplateFileName, TempAction);
   Result := 0;

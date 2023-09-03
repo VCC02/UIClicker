@@ -738,7 +738,8 @@ begin
   Result := SendTextRequestToServer(ARemoteAddress + CRECmd_ExecuteSetControlTextAction + '?' +
                                     CREParam_StackLevel + '=0' + '&' +   //use the main editor
                                     'Text' + '=' + ASetTextOptions.Text + '&' +
-                                    'ControlType' + '=' + IntToStr(Ord(ASetTextOptions.ControlType)),
+                                    'ControlType' + '=' + IntToStr(Ord(ASetTextOptions.ControlType))  + '&' +
+                                    'DelayBetweenKeyStrokes' + '=' + ASetTextOptions.DelayBetweenKeyStrokes,
                                     ACallAppProcMsg
                                     );
 end;

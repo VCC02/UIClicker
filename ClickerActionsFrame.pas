@@ -615,6 +615,7 @@ begin
   frClickerCallTemplate.Width := pnlExtra.Width - 3;
   frClickerCallTemplate.Height := pnlExtra.Height - 3;
   frClickerCallTemplate.Visible := False;
+  frClickerCallTemplate.Anchors := [akBottom, akLeft, akRight, akTop];
 
   frClickerSleep := TfrClickerSleep.Create(Self);
   frClickerSleep.Parent := pnlExtra;
@@ -1023,8 +1024,8 @@ begin
   FOIFrame.CancelCurrentEditing;
   FEditingAction^.WindowOperationsOptions.NewX := EvaluateReplacements('$Control_Left$');
   FEditingAction^.WindowOperationsOptions.NewY := EvaluateReplacements('$Control_Top$');
-  FOIFrame.RepaintNodeByLevel(CPropertyLevel, CCategory_ActionSpecific, CWindowOperations_NewX, -1);
-  FOIFrame.RepaintNodeByLevel(CPropertyLevel, CCategory_ActionSpecific, CWindowOperations_NewY, -1);
+  FOIFrame.RepaintNodeByLevel(CPropertyLevel, CCategory_ActionSpecific, CWindowOperations_NewX_PropItemIndex, -1);
+  FOIFrame.RepaintNodeByLevel(CPropertyLevel, CCategory_ActionSpecific, CWindowOperations_NewY_PropItemIndex, -1);
 end;
 
 
@@ -1034,8 +1035,8 @@ begin
   FOIFrame.CancelCurrentEditing;
   FEditingAction^.WindowOperationsOptions.NewWidth := EvaluateReplacements('$Control_Width$');
   FEditingAction^.WindowOperationsOptions.NewHeight := EvaluateReplacements('$Control_Height$');
-  FOIFrame.RepaintNodeByLevel(CPropertyLevel, CCategory_ActionSpecific, CWindowOperations_NewWidth, -1);
-  FOIFrame.RepaintNodeByLevel(CPropertyLevel, CCategory_ActionSpecific, CWindowOperations_NewHeight, -1);
+  FOIFrame.RepaintNodeByLevel(CPropertyLevel, CCategory_ActionSpecific, CWindowOperations_NewWidth_PropItemIndex, -1);
+  FOIFrame.RepaintNodeByLevel(CPropertyLevel, CCategory_ActionSpecific, CWindowOperations_NewHeight_PropItemIndex, -1);
 end;
 
 
@@ -2830,6 +2831,8 @@ end;
 
 
 function TfrClickerActions.HandleOnOIGetPropertyName(ACategoryIndex, APropertyIndex: Integer): string;
+const
+  CNotUsedStr = '   [Not used]';
 var
   EditingActionType: Integer;
 begin
@@ -2846,8 +2849,33 @@ begin
         Result := CMainProperties[EditingActionType]^[APropertyIndex].Name;
 
       if CurrentlyEditingActionType in [acFindControl, acFindSubControl] then
+      begin
         if APropertyIndex = CFindControl_MatchBitmapText_PropIndex then
           Result := Result + ' [0..' + IntToStr(Length(FEditingAction^.FindControlOptions.MatchBitmapText) - 1) + ']';
+
+        case APropertyIndex of
+          CFindControl_MatchText_PropIndex:
+            if not EditingAction^.FindControlOptions.MatchCriteria.WillMatchText and
+               not EditingAction^.FindControlOptions.MatchCriteria.WillMatchBitmapText then
+              Result := Result + CNotUsedStr;
+
+          CFindControl_MatchClassName_PropIndex:
+            if not EditingAction^.FindControlOptions.MatchCriteria.WillMatchClassName then
+              Result := Result + CNotUsedStr;
+
+          CFindControl_MatchBitmapText_PropIndex:
+            if not EditingAction^.FindControlOptions.MatchCriteria.WillMatchBitmapText then
+              Result := Result + CNotUsedStr;
+
+          CFindControl_MatchBitmapFiles_PropIndex:
+            if not EditingAction^.FindControlOptions.MatchCriteria.WillMatchBitmapFiles then
+              Result := Result + CNotUsedStr;
+
+          CFindControl_MatchPrimitiveFiles_PropIndex:
+            if not EditingAction^.FindControlOptions.MatchCriteria.WillMatchPrimitiveFiles then
+              Result := Result + CNotUsedStr;
+        end;
+      end;
     end;
 
     else
@@ -3310,7 +3338,7 @@ end;
 procedure TfrClickerActions.HandleOnOIEditedText(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; ANewText: string);
 var
   EditingActionType: Integer;
-  TempStringList: TStringList;
+  TempStringList, ListOfFiles_Modified: TStringList;
   ItemIndexMod, ItemIndexDiv: Integer;
   FoundProfileIndex, i, ImageIndex: Integer;
   OldText: string;
@@ -3481,6 +3509,17 @@ begin
                   begin
                     OldText := FEditingAction^.FindControlOptions.MatchPrimitiveFiles;
                     FEditingAction^.FindControlOptions.MatchPrimitiveFiles := ANewText;
+
+                    FEditingAction^.FindControlOptions.MatchPrimitiveFiles_Modified := '';
+                    ListOfFiles_Modified := TStringList.Create;
+                    try
+                      ListOfFiles_Modified.Text := FEditingAction^.FindControlOptions.MatchPrimitiveFiles;
+                      for i := 0 to ListOfFiles_Modified.Count - 1 do
+                        FEditingAction^.FindControlOptions.MatchPrimitiveFiles_Modified := FEditingAction^.FindControlOptions.MatchPrimitiveFiles_Modified + '0'#13#10;
+                    finally
+                      ListOfFiles_Modified.Free;
+                    end;
+
                     FOIFrame.ReloadPropertyItems(ACategoryIndex, APropertyIndex);
                     TriggerOnControlsModified(ANewText <> OldText);
                   end;
@@ -3728,6 +3767,7 @@ procedure TfrClickerActions.HandleOnOIPaintText(ANodeData: TNodeDataPropertyRec;
   const TargetCanvas: TCanvas; Column: TColumnIndex; var TextType: TVSTTextType);
 var
   ListOfPrimitiveFiles_Modified: TStringList;
+  ClickTypeIsNotDrag: Boolean;
 begin
   if ANodeData.Level = 0 then
   begin
@@ -3735,16 +3775,48 @@ begin
     Exit;
   end;
 
-  if (ANodeData.Level = CPropertyLevel) and (Column = 1) and (CurrentlyEditingActionType in [acFindControl, acFindSubControl]) then
-    if (ACategoryIndex = CCategory_ActionSpecific) then
+  if (ACategoryIndex = CCategory_ActionSpecific) and (Column = 1) then
+  begin
+    if (ANodeData.Level = CPropertyLevel) and (CurrentlyEditingActionType = acClick) then
+    begin
+      ClickTypeIsNotDrag := FEditingAction^.ClickOptions.ClickType <> CClickType_Drag;
+
+      if ((APropertyIndex = CClick_XClickPointVar_PropIndex) and (FEditingAction^.ClickOptions.XClickPointReference <> xrefVar)) or
+         ((APropertyIndex = CClick_YClickPointVar_PropIndex) and (FEditingAction^.ClickOptions.YClickPointReference <> yrefVar)) or
+         ((APropertyIndex = CClick_XClickPointReferenceDest_PropIndex) and ClickTypeIsNotDrag) or
+         ((APropertyIndex = CClick_YClickPointReferenceDest_PropIndex) and ClickTypeIsNotDrag) or
+         ((APropertyIndex = CClick_XClickPointVarDest_PropIndex) and ((FEditingAction^.ClickOptions.XClickPointReferenceDest <> xrefVar) or ClickTypeIsNotDrag)) or
+         ((APropertyIndex = CClick_YClickPointVarDest_PropIndex) and ((FEditingAction^.ClickOptions.YClickPointReferenceDest <> yrefVar) or ClickTypeIsNotDrag)) or
+         ((APropertyIndex = CClick_XOffsetDest_PropIndex) and ClickTypeIsNotDrag) or
+         ((APropertyIndex = CClick_YOffsetDest_PropIndex) and ClickTypeIsNotDrag) or
+         ((APropertyIndex = CClick_MouseWheelType_PropIndex) and (FEditingAction^.ClickOptions.ClickType <> CClickType_Wheel)) or
+         ((APropertyIndex = CClick_MouseWheelAmount_PropIndex) and (FEditingAction^.ClickOptions.ClickType <> CClickType_Wheel)) or
+         ((APropertyIndex = CClick_LeaveMouse_PropIndex) and (FEditingAction^.ClickOptions.ClickType in [CClickType_Drag, CClickType_Wheel])) then
+      begin
+        TargetCanvas.Font.Color := clGray;
+        Exit;
+      end;
+    end;
+
+    if (ANodeData.Level = CPropertyLevel) and (CurrentlyEditingActionType in [acFindControl, acFindSubControl]) then
       if APropertyIndex in [CFindControl_MatchBitmapFiles_PropIndex, CFindControl_MatchPrimitiveFiles_PropIndex] then
       begin
         TargetCanvas.Font.Style := [fsItalic];
         Exit;
       end;
 
-  if (ANodeData.Level = CPropertyItemLevel) and (Column = 1) and (CurrentlyEditingActionType in [acFindControl, acFindSubControl]) then
-    if (ACategoryIndex = CCategory_ActionSpecific) then
+
+    if (ANodeData.Level = CPropertyLevel) and (CurrentlyEditingActionType = acWindowOperations) then
+      if APropertyIndex in [CWindowOperations_NewX_PropItemIndex .. CWindowOperations_NewSizeEnabled_PropItemIndex] then
+        if (FEditingAction^.WindowOperationsOptions.Operation <> woMoveResize) or
+          (not FEditingAction^.WindowOperationsOptions.NewPositionEnabled) and (APropertyIndex in [CWindowOperations_NewX_PropItemIndex, CWindowOperations_NewY_PropItemIndex]) or
+          (not FEditingAction^.WindowOperationsOptions.NewSizeEnabled) and (APropertyIndex in [CWindowOperations_NewWidth_PropItemIndex, CWindowOperations_NewHeight_PropItemIndex]) then
+        begin
+          TargetCanvas.Font.Color := clGray;
+          Exit;
+        end;
+
+    if (ANodeData.Level = CPropertyItemLevel) and (CurrentlyEditingActionType in [acFindControl, acFindSubControl]) then
       if APropertyIndex = CFindControl_MatchPrimitiveFiles_PropIndex then
       begin
         ListOfPrimitiveFiles_Modified := TStringList.Create;   //instead of parsing this list on every tree paint action, the "modified" flags could be stored in some array of (paths + modified)
@@ -3764,6 +3836,8 @@ begin
           ListOfPrimitiveFiles_Modified.Free;
         end;
       end;
+
+  end;  //CCategory_ActionSpecific
 end;
 
 
@@ -4092,13 +4166,13 @@ begin
         APopupMenu := pmWindowOperationsEditors;
 
         case APropertyIndex of
-          CWindowOperations_NewX, CWindowOperations_NewY:
+          CWindowOperations_NewX_PropItemIndex, CWindowOperations_NewY_PropItemIndex:
           begin
             MenuItem_SetFromControlLeftAndTop.Enabled := True;
             MenuItem_SetFromControlWidthAndHeight.Enabled := False;
           end;
 
-          CWindowOperations_NewWidth, CWindowOperations_NewHeight:
+          CWindowOperations_NewWidth_PropItemIndex, CWindowOperations_NewHeight_PropItemIndex:
           begin
             MenuItem_SetFromControlLeftAndTop.Enabled := False;
             MenuItem_SetFromControlWidthAndHeight.Enabled := True;

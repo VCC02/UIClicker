@@ -380,6 +380,7 @@ procedure LoadAction_SetControlText(Ini: TClkIniReadonlyFile; SectionIndex: Inte
 begin
   ASetTextOptions.Text := Ini.ReadString(SectionIndex, 'Text', '');
   ASetTextOptions.ControlType := TClkSetTextControlType(Min(Ini.ReadInteger(SectionIndex, 'ControlType', Integer(stEditBox)), Integer(High(TClkSetTextControlType))));
+  ASetTextOptions.DelayBetweenKeyStrokes := Ini.ReadString(SectionIndex, 'DelayBetweenKeyStrokes', '0');
 end;
 
 
@@ -778,6 +779,7 @@ procedure AddAction_SetControlTextToStringList(var AActionSetTextOptions: TClkSe
 begin
   AStringList.Add('Text=' + AActionSetTextOptions.Text);
   AStringList.Add('ControlType=' + IntToStr(Ord(AActionSetTextOptions.ControlType)));
+  AStringList.Add('DelayBetweenKeyStrokes=' + AActionSetTextOptions.DelayBetweenKeyStrokes);
 end;
 
 

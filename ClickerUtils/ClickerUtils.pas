@@ -232,7 +232,7 @@ type
   TClkSetTextOptions = record
     Text: string;
     ControlType: TClkSetTextControlType;
-    //other future options
+    DelayBetweenKeyStrokes: string; //Available on stKeystrokes only. It is measured in ms.
   end;
 
   TLoopDirection = (ldInc, ldDec, ldAuto);

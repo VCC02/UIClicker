@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2022 VCC
+    Copyright (C) 2023 VCC
     creation date: Dec 2019
     initial release date: 13 Sep 2022
 
@@ -242,7 +242,7 @@ var
   begin
     ClickPoint.X := X;
     ClickPoint.Y := Y;
-    MoveMouseCursor(ClickPoint);
+    MoveMouseCursor(ClickPoint, False);
 
     MoveWithoutClick := AParams.Values['MoveWithoutClick'] = '1';
 
@@ -250,18 +250,18 @@ var
     begin
       SetMouseButtonStates(AButton, AMouseBtnDownState, AMouseBtnUpState);
       SimulateSpecialKeys(AShift, 0);
-      Application.ProcessMessages;
+      //Application.ProcessMessages;
 
       SetBasicMouseInfo(AInputs, X, Y);
 
       AInputs.mi.dwFlags := MOUSEEVENTF_ABSOLUTE or MOUSEEVENTF_MOVE;
       mouse_event(AInputs.mi.dwFlags, DWord(AInputs.mi.dx), DWord(AInputs.mi.dy), 0, 0);
-      Application.ProcessMessages;
+      //Application.ProcessMessages;
       Sleep(50);
 
       AInputs.mi.dwFlags := MOUSEEVENTF_ABSOLUTE or AMouseBtnDownState;
       mouse_event(AInputs.mi.dwFlags, DWord(AInputs.mi.dx), DWord(AInputs.mi.dy), 0, 0);
-      Application.ProcessMessages;
+      //Application.ProcessMessages;
       Sleep(100);
     end;
 
@@ -272,7 +272,7 @@ var
       AInputs.mi.dwFlags := MOUSEEVENTF_ABSOLUTE or MOUSEEVENTF_MOVE;
       mouse_event(AInputs.mi.dwFlags, DWord(AInputs.mi.dx), DWord(AInputs.mi.dy), 0, 0);
 
-      Application.ProcessMessages;
+      //Application.ProcessMessages;
       Sleep(50);
     end;
 
@@ -280,17 +280,17 @@ var
     begin
       AInputs.mi.dwFlags := MOUSEEVENTF_ABSOLUTE or AMouseBtnUpState;
       mouse_event(AInputs.mi.dwFlags, DWord(AInputs.mi.dx), DWord(AInputs.mi.dy), 0, 0);
-      Application.ProcessMessages;
+      //Application.ProcessMessages;
 
       if AButton <> mbMiddle then
       begin
         AInputs.mi.dwFlags := MOUSEEVENTF_ABSOLUTE or MOUSEEVENTF_MOVE;
         mouse_event(AInputs.mi.dwFlags, DWord(AInputs.mi.dx), DWord(AInputs.mi.dy), 0, 0);
-        Application.ProcessMessages;
+        //Application.ProcessMessages;
       end;
 
       SimulateSpecialKeys(AShift, KEYEVENTF_KEYUP);
-      Application.ProcessMessages;
+      //Application.ProcessMessages;
     end;
   end;
 begin
@@ -299,10 +299,16 @@ begin
 
   GetCursorPos(InitialPoint);
   try
+    if IsDragging then
+      SetCursorPos(XDest, YDest);
+
     ExecMouseClick;
   finally
-    if AParams.Values['LeaveMouse'] <> '1' then
-      SetCursorPos(InitialPoint.X, InitialPoint.Y);
+    if IsDragging then
+      SetCursorPos(XDest, YDest)
+    else
+      if (AParams.Values['LeaveMouse'] <> '1') {or IsDragging} then
+        SetCursorPos(InitialPoint.X, InitialPoint.Y);
   end;
 end;
 

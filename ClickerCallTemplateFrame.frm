@@ -94,7 +94,7 @@ object frClickerCallTemplate: TfrClickerCallTemplate
     Left = 3
     Height = 22
     Hint = 'Move Up'
-    Top = 218
+    Top = 217
     Width = 20
     Anchors = [akLeft, akBottom]
     Font.Color = clWindowText
@@ -117,7 +117,7 @@ object frClickerCallTemplate: TfrClickerCallTemplate
     Left = 27
     Height = 22
     Hint = 'Move Down'
-    Top = 218
+    Top = 217
     Width = 20
     Anchors = [akLeft, akBottom]
     Font.Color = clWindowText
