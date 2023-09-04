@@ -8,16 +8,16 @@ https://github.com/VCC02/MiscUtils
 .
 
 YT video of DynTFTCodeGen being automated: https://www.youtube.com/watch?v=iOkeoE4eYF8
+[![YT video of DynTFTCodeGen being automated](https://img.youtube.com/vi/iOkeoE4eYF8/maxresdefault.jpg)](https://www.youtube.com/watch?v=iOkeoE4eYF8)
 
 YT video of CircuitMaker being automated, for pdf generation: https://www.youtube.com/watch?v=rxoqM8BEBNE
+[![YT video of CircuitMaker being automated, for pdf generation](https://img.youtube.com/vi/rxoqM8BEBNE/maxresdefault.jpg)](https://www.youtube.com/watch?v=rxoqM8BEBNE)
 
 Displaying the action editor was pretty slow, because there was no GPU acceleration.
 
 .
-
-[![UIClicker controlling another instance of UIClicker]
-(https://img.youtube.com/vi/1esk-VP_6ig/maxresdefault.jpg)]
-(https://www.youtube.com/watch?v=1esk-VP_6ig)
+UIClicker controlling another instance of UIClicker: https://www.youtube.com/watch?v=1esk-VP_6ig
+[![UIClicker controlling another instance of UIClicker](https://img.youtube.com/vi/1esk-VP_6ig/maxresdefault.jpg)](https://www.youtube.com/watch?v=1esk-VP_6ig)
 
 .
 
