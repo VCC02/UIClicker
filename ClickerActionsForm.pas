@@ -1347,6 +1347,11 @@ begin
         NewFrame.InMemFS := FInMemFileSystem;
         NewFrame.GridDrawingOption := TDisplayGridLineOption(cmbImgPreviewGridType.ItemIndex);
 
+        try
+          NewFrame.PreviewSelectionColors := FPreviewSelectionColors;
+        except
+        end;
+
         NewFrame.OnCallTemplate := frClickerActionsArrOnCallTemplate;
         NewFrame.OnCopyControlTextAndClassFromMainWindow := HandleOnCopyControlTextAndClassFromMainWindow;
         NewFrame.OnGetExtraSearchAreaDebuggingImageWithStackLevel := HandleOnGetExtraSearchAreaDebuggingImageWithStackLevel;

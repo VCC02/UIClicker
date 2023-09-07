@@ -192,7 +192,6 @@ object frClickerSetVar: TfrClickerSetVar
         '$GetKeyNameFromPair(<key>=<value>)$'
         '$GetKeyValueFromPair(<key>=<value>)$'
         '$Chr(<ByteValue>)$'
-        ''
         '$IncBrightness(<HexColor>[,Amount])$'
         '$DecBrightness(<HexColor>[,Amount])$'
         '$IncBrightnessR(<HexColor>[,Amount])$'
@@ -201,13 +200,11 @@ object frClickerSetVar: TfrClickerSetVar
         '$DecBrightnessR(<HexColor>[,Amount])$'
         '$DecBrightnessG(<HexColor>[,Amount])$'
         '$DecBrightnessB(<HexColor>[,Amount])$'
-        ''
         '$Current_Mouse_X$'
         '$Current_Mouse_Y$'
         '$CRLF$'
         '$#4#5$'
         '$Now$'
-        ''
       )
       ParentShowHint = False
       ReadOnly = True

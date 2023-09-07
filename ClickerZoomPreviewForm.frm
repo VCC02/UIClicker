@@ -1,5 +1,5 @@
 object frmClickerZoomPreview: TfrmClickerZoomPreview
-  Left = 242
+  Left = 244
   Height = 242
   Top = 227
   Width = 242

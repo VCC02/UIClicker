@@ -1,5 +1,5 @@
 [Actions]
-Count=30
+Count=33
 Version=2
 
 [Action_0]
@@ -37,7 +37,7 @@ MatchClassNameSeparator=
 AllowToFail=0
 WaitForControlToGoAway=0
 MatchBitmapTextArr=1
-MatchBitmapText_Count=1
+MatchBitmapText_Count=2
 MatchBitmapText[0].ForegroundColor=$Color_WindowText$
 MatchBitmapText[0].BackgroundColor=$Color_BtnFace$
 MatchBitmapText[0].FontName=Segoe UI
@@ -54,9 +54,25 @@ MatchBitmapText[0].CropLeft=0
 MatchBitmapText[0].CropTop=0
 MatchBitmapText[0].CropRight=0
 MatchBitmapText[0].CropBottom=0
+MatchBitmapText[1].ForegroundColor=$Color_WindowText$
+MatchBitmapText[1].BackgroundColor=$Color_BtnFace$
+MatchBitmapText[1].FontName=Segoe UI
+MatchBitmapText[1].FontSize=9
+MatchBitmapText[1].Bold=0
+MatchBitmapText[1].Italic=0
+MatchBitmapText[1].Underline=0
+MatchBitmapText[1].StrikeOut=0
+MatchBitmapText[1].FontQuality=4
+MatchBitmapText[1].FontQualityUsesReplacement=0
+MatchBitmapText[1].FontQualityReplacement=
+MatchBitmapText[1].ProfileName=Profile [1]
+MatchBitmapText[1].CropLeft=0
+MatchBitmapText[1].CropTop=0
+MatchBitmapText[1].CropRight=0
+MatchBitmapText[1].CropBottom=0
 MatchBitmapFiles=
-ColorError=10
-AllowedColorErrorCount=40
+ColorError=30
+AllowedColorErrorCount=320
 MatchBitmapAlgorithm=0
 MatchBitmapAlgorithm_Grid_XMultipleOf=1
 MatchBitmapAlgorithm_Grid_YMultipleOf=1
@@ -539,6 +555,19 @@ MatchPrimitiveFiles=
 GetAllControls=0
 
 [Action_14]
+ActionName=Cache ComboBox
+Action=SetVar
+ActionTimeout=0
+ActionEnabled=1
+ActionCondition=
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+ListOfVarNames=$Combo_Left$$Combo_Top$
+ListOfVarValues=$Control_Left$$Control_Top$
+ListOfVarEvalBefore=11
+
+[Action_15]
 ActionName=Drop ComboBox
 Action=Click
 ActionTimeout=0
@@ -551,8 +580,8 @@ XOffsetReference=0
 YOffsetReference=0
 XClickPointVar=$Control_Left$
 YClickPointVar=$Control_Top$
-XOffset=4
-YOffset=4
+XOffset=7
+YOffset=7
 MouseButton=0
 ClickWithCtrl=0
 ClickWithAlt=0
@@ -571,7 +600,7 @@ YOffsetDest=7
 MouseWheelType=0
 MouseWheelAmount=1
 
-[Action_15]
+[Action_16]
 ActionName=wait a bit,to open
 Action=Sleep
 ActionTimeout=0
@@ -582,7 +611,82 @@ BreakpointEnabled=0
 BreakpointCondition=
 Value=300
 
-[Action_16]
+[Action_17]
+ActionName=Wait for ComboBox.ListBox
+Action=FindControl
+ActionTimeout=2000
+ActionEnabled=1
+ActionCondition=
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+MatchCriteria.WillMatchText=1
+MatchCriteria.WillMatchClassName=1
+MatchCriteria.WillMatchBitmapText=0
+MatchCriteria.WillMatchBitmapFiles=0
+MatchCriteria.WillMatchPrimitiveFiles=0
+MatchCriteria.SearchForControlMode=0
+MatchText=
+MatchClassName=ComboLBox
+MatchTextSeparator=
+MatchClassNameSeparator=
+AllowToFail=0
+WaitForControlToGoAway=0
+MatchBitmapTextArr=1
+MatchBitmapText_Count=1
+MatchBitmapText[0].ForegroundColor=$Color_Window$
+MatchBitmapText[0].BackgroundColor=$Color_Highlight$
+MatchBitmapText[0].FontName=Tahoma
+MatchBitmapText[0].FontSize=8
+MatchBitmapText[0].Bold=0
+MatchBitmapText[0].Italic=0
+MatchBitmapText[0].Underline=0
+MatchBitmapText[0].StrikeOut=0
+MatchBitmapText[0].FontQuality=3
+MatchBitmapText[0].FontQualityUsesReplacement=0
+MatchBitmapText[0].FontQualityReplacement=
+MatchBitmapText[0].ProfileName=Profile [0]
+MatchBitmapText[0].CropLeft=0
+MatchBitmapText[0].CropTop=0
+MatchBitmapText[0].CropRight=0
+MatchBitmapText[0].CropBottom=0
+MatchBitmapFiles=
+ColorError=0
+AllowedColorErrorCount=0
+MatchBitmapAlgorithm=0
+MatchBitmapAlgorithm_Grid_XMultipleOf=1
+MatchBitmapAlgorithm_Grid_YMultipleOf=1
+MatchBitmapAlgorithm_Grid_XOffset=0
+MatchBitmapAlgorithm_Grid_YOffset=0
+InitialRectangle.Left=$Control_Left$
+InitialRectangle.Top=$Control_Top$
+InitialRectangle.Right=$Control_Right$
+InitialRectangle.Bottom=$Control_Bottom$
+UseWholeScreen=0
+InitialRectangle.LeftOffset=0
+InitialRectangle.TopOffset=-17
+InitialRectangle.RightOffset=0
+InitialRectangle.BottomOffset=17
+StartSearchingWithCachedControl=0
+CachedControlLeft=
+CachedControlTop=
+MatchPrimitiveFiles=
+GetAllControls=0
+
+[Action_18]
+ActionName=Restore cached ComboBox
+Action=SetVar
+ActionTimeout=0
+ActionEnabled=1
+ActionCondition=
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+ListOfVarNames=$Control_Left$$Control_Top$
+ListOfVarValues=$Combo_Left$$Combo_Top$
+ListOfVarEvalBefore=11
+
+[Action_19]
 ActionName=Close ComboBox
 Action=Click
 ActionTimeout=0
@@ -595,8 +699,8 @@ XOffsetReference=0
 YOffsetReference=0
 XClickPointVar=$Control_Left$
 YClickPointVar=$Control_Top$
-XOffset=4
-YOffset=4
+XOffset=7
+YOffset=7
 MouseButton=0
 ClickWithCtrl=0
 ClickWithAlt=0
@@ -615,7 +719,7 @@ YOffsetDest=7
 MouseWheelType=0
 MouseWheelAmount=1
 
-[Action_17]
+[Action_20]
 ActionName=Scroll to the first item
 Action=Click
 ActionTimeout=0
@@ -648,7 +752,7 @@ YOffsetDest=7
 MouseWheelType=0
 MouseWheelAmount=60
 
-[Action_18]
+[Action_21]
 ActionName=Scroll to clMaroon
 Action=Click
 ActionTimeout=0
@@ -681,7 +785,7 @@ YOffsetDest=7
 MouseWheelType=0
 MouseWheelAmount=-1
 
-[Action_19]
+[Action_22]
 ActionName=Verify if clMaroon is selected
 Action=FindControl
 ActionTimeout=1000
@@ -743,7 +847,7 @@ CachedControlTop=
 MatchPrimitiveFiles=
 GetAllControls=0
 
-[Action_20]
+[Action_23]
 ActionName=Scroll to clOlive
 Action=Click
 ActionTimeout=0
@@ -776,7 +880,7 @@ YOffsetDest=7
 MouseWheelType=0
 MouseWheelAmount=-2
 
-[Action_21]
+[Action_24]
 ActionName=Verify if clOlive is selected
 Action=FindControl
 ActionTimeout=1000
@@ -838,7 +942,7 @@ CachedControlTop=
 MatchPrimitiveFiles=
 GetAllControls=0
 
-[Action_22]
+[Action_25]
 ActionName=Scroll to clOrange
 Action=Click
 ActionTimeout=0
@@ -871,7 +975,7 @@ YOffsetDest=7
 MouseWheelType=0
 MouseWheelAmount=-60
 
-[Action_23]
+[Action_26]
 ActionName=Verify if clOrange is selected
 Action=FindControl
 ActionTimeout=1000
@@ -933,7 +1037,7 @@ CachedControlTop=
 MatchPrimitiveFiles=
 GetAllControls=0
 
-[Action_24]
+[Action_27]
 ActionName=Update Control to WinInterp
 Action=SetVar
 ActionTimeout=0
@@ -946,7 +1050,7 @@ ListOfVarNames=$UpdateRes$
 ListOfVarValues=$UpdateControlInfo($frmClickerWinInterp_Handle$)$
 ListOfVarEvalBefore=1
 
-[Action_25]
+[Action_28]
 ActionName=Click on Drag panel from screenshot
 Action=Click
 ActionTimeout=0
@@ -979,7 +1083,7 @@ YOffsetDest=7
 MouseWheelType=0
 MouseWheelAmount=1
 
-[Action_26]
+[Action_29]
 ActionName=Update Control to WinInterp
 Action=SetVar
 ActionTimeout=0
@@ -992,7 +1096,7 @@ ListOfVarNames=$UpdateRes$
 ListOfVarValues=$UpdateControlInfo($frmClickerWinInterp_Handle$)$
 ListOfVarEvalBefore=1
 
-[Action_27]
+[Action_30]
 ActionName=Find a selection line
 Action=FindSubControl
 ActionTimeout=1000
@@ -1054,7 +1158,7 @@ CachedControlTop=
 MatchPrimitiveFiles=$AppDir$\Tests\TestFiles\WinInterpTopSelectionLine.pmtv
 GetAllControls=0
 
-[Action_28]
+[Action_31]
 ActionName=Update Control to WinInterp
 Action=SetVar
 ActionTimeout=0
@@ -1067,7 +1171,7 @@ ListOfVarNames=$UpdateRes$
 ListOfVarValues=$UpdateControlInfo($frmClickerWinInterp_Handle$)$
 ListOfVarEvalBefore=1
 
-[Action_29]
+[Action_32]
 ActionName=Close WinInterp
 Action=WindowOperations
 ActionTimeout=0

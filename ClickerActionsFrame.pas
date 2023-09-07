@@ -2052,6 +2052,7 @@ begin
 
       FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex);
       TriggerOnControlsModified;
+      frClickerFindControl.UpdateListsOfSearchFiles(EditingAction^.FindControlOptions.MatchBitmapFiles, EditingAction^.FindControlOptions.MatchPrimitiveFiles);
     finally
       ListOfFiles.Free;
     end;
@@ -2073,6 +2074,7 @@ begin
     FEditingAction^.FindControlOptions.MatchBitmapFiles := '';
     FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex);
     TriggerOnControlsModified;
+    frClickerFindControl.UpdateListsOfSearchFiles(EditingAction^.FindControlOptions.MatchBitmapFiles, EditingAction^.FindControlOptions.MatchPrimitiveFiles);
   finally
     Dispose(MenuData);
   end;
@@ -2099,6 +2101,7 @@ begin
       FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex, True);
 
       TriggerOnControlsModified;
+      frClickerFindControl.UpdateListsOfSearchFiles(EditingAction^.FindControlOptions.MatchBitmapFiles, EditingAction^.FindControlOptions.MatchPrimitiveFiles);
     finally
       ListOfFiles.Free;
     end;
@@ -2127,6 +2130,7 @@ begin
       FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex, True);
 
       TriggerOnControlsModified;
+      frClickerFindControl.UpdateListsOfSearchFiles(EditingAction^.FindControlOptions.MatchBitmapFiles, EditingAction^.FindControlOptions.MatchPrimitiveFiles);
     finally
       ListOfFiles.Free;
     end;
@@ -2153,7 +2157,9 @@ begin
       FEditingAction^.FindControlOptions.MatchBitmapFiles := ListOfFiles.Text;
 
       FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex, True);
+
       TriggerOnControlsModified;
+      frClickerFindControl.UpdateListsOfSearchFiles(EditingAction^.FindControlOptions.MatchBitmapFiles, EditingAction^.FindControlOptions.MatchPrimitiveFiles);
     finally
       ListOfFiles.Free;
     end;
@@ -2180,7 +2186,9 @@ begin
       FEditingAction^.FindControlOptions.MatchBitmapFiles := ListOfFiles.Text;
 
       FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex, True);
+
       TriggerOnControlsModified;
+      frClickerFindControl.UpdateListsOfSearchFiles(EditingAction^.FindControlOptions.MatchBitmapFiles, EditingAction^.FindControlOptions.MatchPrimitiveFiles);
     finally
       ListOfFiles.Free;
     end;
@@ -2220,6 +2228,7 @@ begin
 
       FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex);
       TriggerOnControlsModified;
+      frClickerFindControl.UpdateListsOfSearchFiles(EditingAction^.FindControlOptions.MatchBitmapFiles, EditingAction^.FindControlOptions.MatchPrimitiveFiles);
     finally
       ListOfFiles.Free;
       ListOfFiles_Modified.Free;
@@ -2256,6 +2265,7 @@ begin
 
       FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex);
       TriggerOnControlsModified;
+      frClickerFindControl.UpdateListsOfSearchFiles(EditingAction^.FindControlOptions.MatchBitmapFiles, EditingAction^.FindControlOptions.MatchPrimitiveFiles);
     finally
       ListOfFiles.Free;
       ListOfFiles_Modified.Free;
@@ -2280,7 +2290,9 @@ begin
 
     FPrevSelectedPrimitiveNode := -1;
     FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex);
+
     TriggerOnControlsModified;
+    frClickerFindControl.UpdateListsOfSearchFiles(EditingAction^.FindControlOptions.MatchBitmapFiles, EditingAction^.FindControlOptions.MatchPrimitiveFiles);
   finally
     Dispose(MenuData);
   end;
@@ -2318,6 +2330,7 @@ begin
       FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex, True);
 
       TriggerOnControlsModified;
+      frClickerFindControl.UpdateListsOfSearchFiles(EditingAction^.FindControlOptions.MatchBitmapFiles, EditingAction^.FindControlOptions.MatchPrimitiveFiles);
     finally
       ListOfFiles.Free;
       ListOfFiles_Modified.Free;
@@ -2352,7 +2365,9 @@ begin
 
       FPrevSelectedPrimitiveNode := -1;
       FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex, True);
+
       TriggerOnControlsModified;
+      frClickerFindControl.UpdateListsOfSearchFiles(EditingAction^.FindControlOptions.MatchBitmapFiles, EditingAction^.FindControlOptions.MatchPrimitiveFiles);
     finally
       ListOfFiles.Free;
       ListOfFiles_Modified.Free;
@@ -2387,7 +2402,9 @@ begin
 
       Dec(FPrevSelectedPrimitiveNode);
       FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex, True);
+
       TriggerOnControlsModified;
+      frClickerFindControl.UpdateListsOfSearchFiles(EditingAction^.FindControlOptions.MatchBitmapFiles, EditingAction^.FindControlOptions.MatchPrimitiveFiles);
     finally
       ListOfFiles.Free;
       ListOfFiles_Modified.Free;
@@ -2422,7 +2439,9 @@ begin
 
       Inc(FPrevSelectedPrimitiveNode);
       FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex, True);
+
       TriggerOnControlsModified;
+      frClickerFindControl.UpdateListsOfSearchFiles(EditingAction^.FindControlOptions.MatchBitmapFiles, EditingAction^.FindControlOptions.MatchPrimitiveFiles);
     finally
       ListOfFiles.Free;
       ListOfFiles_Modified.Free;
@@ -2510,7 +2529,9 @@ begin
       FEditingAction^.FindControlOptions.MatchPrimitiveFiles_Modified := ListOfFiles_Modified.Text;
 
       FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex, True);
+
       TriggerOnControlsModified;
+      frClickerFindControl.UpdateListsOfSearchFiles(EditingAction^.FindControlOptions.MatchBitmapFiles, EditingAction^.FindControlOptions.MatchPrimitiveFiles);
     finally
       ListOfFiles.Free;
       ListOfFiles_Modified.Free;
@@ -3462,7 +3483,9 @@ begin
                     OldText := FEditingAction^.FindControlOptions.MatchBitmapFiles;
                     FEditingAction^.FindControlOptions.MatchBitmapFiles := ANewText;
                     FOIFrame.ReloadPropertyItems(ACategoryIndex, APropertyIndex);
+
                     TriggerOnControlsModified(ANewText <> OldText);
+                    frClickerFindControl.UpdateListsOfSearchFiles(EditingAction^.FindControlOptions.MatchBitmapFiles, EditingAction^.FindControlOptions.MatchPrimitiveFiles);
                   end;
 
                   CPropertyItemLevel:
@@ -3471,7 +3494,9 @@ begin
                     OldText := TempStringList.Strings[AItemIndex];
                     TempStringList.Strings[AItemIndex] := ANewText;                                //modify
                     FEditingAction^.FindControlOptions.MatchBitmapFiles := TempStringList.Text;    //write
+
                     TriggerOnControlsModified(ANewText <> OldText);
+                    frClickerFindControl.UpdateListsOfSearchFiles(EditingAction^.FindControlOptions.MatchBitmapFiles, EditingAction^.FindControlOptions.MatchPrimitiveFiles);
                   end;
                 end;
               finally
@@ -3521,7 +3546,9 @@ begin
                     end;
 
                     FOIFrame.ReloadPropertyItems(ACategoryIndex, APropertyIndex);
+
                     TriggerOnControlsModified(ANewText <> OldText);
+                    frClickerFindControl.UpdateListsOfSearchFiles(EditingAction^.FindControlOptions.MatchBitmapFiles, EditingAction^.FindControlOptions.MatchPrimitiveFiles);
                   end;
 
                   CPropertyItemLevel:
@@ -3530,7 +3557,9 @@ begin
                     OldText := TempStringList.Strings[AItemIndex];
                     TempStringList.Strings[AItemIndex] := ANewText;                                   //modify
                     FEditingAction^.FindControlOptions.MatchPrimitiveFiles := TempStringList.Text;    //write
+
                     TriggerOnControlsModified(ANewText <> OldText);
+                    frClickerFindControl.UpdateListsOfSearchFiles(EditingAction^.FindControlOptions.MatchBitmapFiles, EditingAction^.FindControlOptions.MatchPrimitiveFiles);
                   end;
                 end;
               finally
@@ -4344,6 +4373,9 @@ begin
             CPropertyLevel:
             begin
               FOIEditorMenu.Items.Clear;
+
+              /////////////////////////////////// To add to menu item handlers
+              /////////////////////////////////// Add also to browse buttons
 
               AddMenuItemToPopupMenu(FOIEditorMenu, 'Add file(s) to this list...', MenuItem_AddBMPFilesToPropertyListClick,
                 ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);

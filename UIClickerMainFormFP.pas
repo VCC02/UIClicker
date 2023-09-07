@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2022 VCC
+    Copyright (C) 2023 VCC
     creation date: Dec 2019
     initial release date: 13 Sep 2022
 
@@ -63,6 +63,9 @@ type
 
     procedure LoadSettings;
     procedure SaveSettings;
+    procedure ComposePrimitiveOnBmp(ABmp: TBitmap; APmtvFile: string);
+    function HandleOnEvaluateReplacements(s: string; Recursive: Boolean = True): string;
+
     procedure HandleOnCopyControlTextAndClassFromMainWindow(ACompProvider: string; out AControlText, AControlClass: string);
     function HandleOnGetConnectionAddress: string;
     procedure HandleOnRecordComponent(ACompHandle: THandle; ATreeContentStream: TMemoryStream);
@@ -106,7 +109,7 @@ implementation
 uses
   ClickerPreviewForm, ClickerWinInterpForm, ClickerWinInterpFrame, ClickerTemplateCallTreeForm,
   ClickerActionsClient, IniFiles, ClickerFindControlFrame, ClickerRemoteScreenForm,
-  ClickerUtils, ClickerPrimitives, ClickerActionsForm;
+  ClickerUtils, ClickerPrimitives, ClickerActionsForm, ClickerPrimitivesCompositor;
 
 { TfrmUIClickerMainForm }
 
@@ -442,7 +445,12 @@ function TfrmUIClickerMainForm.HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: s
 begin
   if FileExists(AFileName) then
   begin
-    ABitmap.LoadFromFile(AFileName);
+    if UpperCase(ExtractFileExt(AFileName)) = '.BMP' then
+      ABitmap.LoadFromFile(AFileName)
+    else
+      if UpperCase(ExtractFileExt(AFileName)) = '.PMTV' then
+        ComposePrimitiveOnBmp(ABitmap, AFileName);
+
     Result := True;
   end
   else
@@ -505,6 +513,59 @@ begin
     end;
 end;
 
+
+procedure TfrmUIClickerMainForm.ComposePrimitiveOnBmp(ABmp: TBitmap; APmtvFile: string);
+var
+  MemStream: TMemoryStream;
+  Ini: TClkIniReadonlyFile;
+  Primitives: TPrimitiveRecArr;
+  Orders: TCompositionOrderArr;
+  PrimitiveSettings: TPrimitiveSettings;
+  PmtvCompositor: TPrimitivesCompositor;
+  UsingHighContrast: Boolean;
+begin
+  if FileExists(APmtvFile) then
+  begin
+    MemStream := TMemoryStream.Create;
+    try
+      MemStream.LoadFromFile(APmtvFile);
+      MemStream.Position := 0;
+
+      Ini := TClkIniReadonlyFile.Create(MemStream);
+      try
+        PrimitiveSettings.CompositorDirection := cdTopBot;  //this can also come as parameter
+        LoadPrimitivesFile(Ini, Primitives, Orders, PrimitiveSettings);
+
+        PmtvCompositor := TPrimitivesCompositor.Create;
+        try
+          PmtvCompositor.OnEvaluateReplacementsFunc := HandleOnEvaluateReplacements;
+          PmtvCompositor.OnLoadBitmap := HandleOnLoadBitmap;
+
+          UsingHighContrast := False; //update this if it will ever be an option from parameter
+          if Length(Orders) > 0 then
+          begin
+            ABmp.Width := PmtvCompositor.GetMaxX(ABmp.Canvas, Primitives);
+            ABmp.Height := PmtvCompositor.GetMaxX(ABmp.Canvas, Primitives);
+            PmtvCompositor.ComposePrimitives(ABmp, 0, UsingHighContrast, Primitives, Orders, PrimitiveSettings);
+
+          end;
+        finally
+          PmtvCompositor.Free;
+        end;
+      finally
+        Ini.Free;
+      end;
+    finally
+      MemStream.Free;
+    end;
+  end;
+end;
+
+
+function TfrmUIClickerMainForm.HandleOnEvaluateReplacements(s: string; Recursive: Boolean = True): string;  //this handler is used in this unit only
+begin
+  Result := frmClickerActions.frClickerActionsArrMain.frClickerActions.EvaluateReplacements(s, Recursive);
+end;
 
 end.
 

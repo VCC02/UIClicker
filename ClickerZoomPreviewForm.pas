@@ -48,11 +48,13 @@ procedure SetZoomContent(ABitmap: TBitmap; AXCenter, AYCenter, AWinPosX, AWinPos
 var
   DestRect: TRect;
   CroppedBmp: TBitmap;
+  Factor: Integer;
 begin
   DestRect.Left := 0;
   DestRect.Top := 0;
   DestRect.Right := frmClickerZoomPreview.imgZoom.Width shl 3;
   DestRect.Bottom := frmClickerZoomPreview.imgZoom.Height shl 3;
+  Factor := frmClickerZoomPreview.imgZoom.Width shr 4;
 
   WipeImage(frmClickerZoomPreview.imgZoom, frmClickerZoomPreview.imgZoom.Width, frmClickerZoomPreview.imgZoom.Height);
 
@@ -75,6 +77,58 @@ begin
       //DWORD dwRop  // raster operation code
 
     frmClickerZoomPreview.imgZoom.Canvas.StretchDraw(DestRect, CroppedBmp);
+
+    if AXCenter - CroppedBmp.Width shr 4 < 0 then
+    begin
+      frmClickerZoomPreview.imgZoom.Canvas.Pen.Color := $A0FFFF; //light yellow
+      frmClickerZoomPreview.imgZoom.Canvas.Brush.Style := bsSolid;
+      frmClickerZoomPreview.imgZoom.Canvas.Brush.Color := $A0FFFF; //light yellow
+      frmClickerZoomPreview.imgZoom.Canvas.Rectangle(0, 0, (CroppedBmp.Width shr 4 - AXCenter) shl 3, frmClickerZoomPreview.imgZoom.Height);
+
+      frmClickerZoomPreview.imgZoom.Canvas.Pen.Color := $A0FFFF; //light yellow
+      frmClickerZoomPreview.imgZoom.Canvas.Brush.Style := bsFDiagonal;
+      frmClickerZoomPreview.imgZoom.Canvas.Brush.Color := $008888FF;
+      frmClickerZoomPreview.imgZoom.Canvas.Rectangle(0, 0, (CroppedBmp.Width shr 4 - AXCenter) shl 3, frmClickerZoomPreview.imgZoom.Height);
+    end;
+
+    if AYCenter - CroppedBmp.Height shr 4 < 0 then
+    begin
+      frmClickerZoomPreview.imgZoom.Canvas.Pen.Color := $A0FFFF; //light yellow
+      frmClickerZoomPreview.imgZoom.Canvas.Brush.Style := bsSolid;
+      frmClickerZoomPreview.imgZoom.Canvas.Brush.Color := $A0FFFF; //light yellow
+      frmClickerZoomPreview.imgZoom.Canvas.Rectangle(0, 0, frmClickerZoomPreview.imgZoom.Height, (CroppedBmp.Height shr 4 - AYCenter) shl 3);
+
+      frmClickerZoomPreview.imgZoom.Canvas.Pen.Color := $A0FFFF; //light yellow
+      frmClickerZoomPreview.imgZoom.Canvas.Brush.Style := bsFDiagonal;
+      frmClickerZoomPreview.imgZoom.Canvas.Brush.Color := $008888FF;
+      frmClickerZoomPreview.imgZoom.Canvas.Rectangle(0, 0, frmClickerZoomPreview.imgZoom.Height, (CroppedBmp.Height shr 4 - AYCenter) shl 3);
+    end;
+
+    if ABitmap.Width - AXCenter < Factor then
+    begin
+      frmClickerZoomPreview.imgZoom.Canvas.Pen.Color := $A0FFFF; //light yellow
+      frmClickerZoomPreview.imgZoom.Canvas.Brush.Style := bsSolid;
+      frmClickerZoomPreview.imgZoom.Canvas.Brush.Color := $A0FFFF; //light yellow
+      frmClickerZoomPreview.imgZoom.Canvas.Rectangle((ABitmap.Width - AXCenter + Factor) shl 3, 0, CroppedBmp.Width, frmClickerZoomPreview.imgZoom.Height);
+
+      frmClickerZoomPreview.imgZoom.Canvas.Pen.Color := $A0FFFF; //light yellow
+      frmClickerZoomPreview.imgZoom.Canvas.Brush.Style := bsFDiagonal;
+      frmClickerZoomPreview.imgZoom.Canvas.Brush.Color := $008888FF;
+      frmClickerZoomPreview.imgZoom.Canvas.Rectangle((ABitmap.Width - AXCenter + Factor) shl 3, 0, CroppedBmp.Width, frmClickerZoomPreview.imgZoom.Height);
+    end;
+
+    if ABitmap.Height - AYCenter < Factor then
+    begin
+      frmClickerZoomPreview.imgZoom.Canvas.Pen.Color := $A0FFFF; //light yellow
+      frmClickerZoomPreview.imgZoom.Canvas.Brush.Style := bsSolid;
+      frmClickerZoomPreview.imgZoom.Canvas.Brush.Color := $A0FFFF; //light yellow
+      frmClickerZoomPreview.imgZoom.Canvas.Rectangle(0, (ABitmap.Height - AYCenter + Factor) shl 3, frmClickerZoomPreview.imgZoom.Width, CroppedBmp.Height);
+
+      frmClickerZoomPreview.imgZoom.Canvas.Pen.Color := $A0FFFF; //light yellow
+      frmClickerZoomPreview.imgZoom.Canvas.Brush.Style := bsFDiagonal;
+      frmClickerZoomPreview.imgZoom.Canvas.Brush.Color := $008888FF;
+      frmClickerZoomPreview.imgZoom.Canvas.Rectangle(0, (ABitmap.Height - AYCenter + Factor) shl 3, frmClickerZoomPreview.imgZoom.Width, CroppedBmp.Height);
+    end;
   finally
     CroppedBmp.Free;
   end;

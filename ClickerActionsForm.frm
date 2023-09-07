@@ -63,7 +63,7 @@ object frmClickerActions: TfrmClickerActions
       object lbePathToTemplates: TLabeledEdit
         Left = 8
         Height = 21
-        Hint = 'The $AppDir$ replacement is available.'
+        Hint = 'The Templates directory is used when loading templates without a full path.'#13#10'The $AppDir$ replacement is available.'
         Top = 24
         Width = 277
         EditLabel.Height = 13

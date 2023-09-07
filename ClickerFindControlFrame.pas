@@ -251,7 +251,7 @@ type
     FSearchAreaGridImg: TImage;
     FSearchAreaDbgImgSearchedBmpMenu: TPopupMenu;
     FSearchAreaMenu: TPopupMenu;
-    FSearchAreaOutOfImgLabel: TLabel;  //yellow label
+    FSearchAreaOutOfImgImg: TImage;    //yellow image
 
     FSkipDrawingGrid: Boolean; //to be reset after use
 
@@ -373,6 +373,7 @@ type
     procedure MenuItemUpdateLeftTopRightBottomOffsetsFromPreviewTextImageToEditboxes(Sender: TObject);
 
     procedure MenuItemLoadBmpTextToSearchedAreaClick(Sender: TObject);
+    procedure MenuItemUnloadBmpTextFromSearchedAreaClick(Sender: TObject);
     procedure MenuItemGenericLoadBmpToSearchedAreaClick(Sender: TObject);
 
     procedure FSearchAreaScrBoxMouseWheel(Sender: TObject; Shift: TShiftState; WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
@@ -495,6 +496,7 @@ type
     procedure ClearControls;
     procedure UpdateBitmapAlgorithmSettings;
     procedure UpdatePreviewIcons;
+    procedure UpdateListsOfSearchFiles(AMatchBitmapFiles, AMatchPrimitiveFiles: string);
 
     procedure DisplayDebuggingImage;
     procedure PreviewText; //called by ExecuteAction
@@ -1016,7 +1018,7 @@ begin
   FSearchAreaControlDbgImg := nil;
   FSearchAreaSearchedBmpDbgImg := nil;
   FSearchAreaSearchedTextDbgImg := nil;
-  FSearchAreaOutOfImgLabel := nil;
+  FSearchAreaOutOfImgImg := nil;
   FSkipDrawingGrid := False;
 
   FLastClickedLbe := nil;
@@ -1395,7 +1397,7 @@ begin
 end;
 
 
-procedure TfrClickerFindControl.spdbtnDisplaySearchAreaDbgImgMenuClick(
+procedure TfrClickerFindControl.spdbtnDisplaySearchAreaDbgImgMenuClick(    //the small arrow button, next to "Display dbg img" button
   Sender: TObject);
 var
   tp: TPoint;
@@ -1793,9 +1795,15 @@ var
   i: Integer;
 begin
   FSearchAreaDbgImgSearchedBmpMenu.Items.Clear;
+
   MenuItem := TMenuItem.Create(FSearchAreaDbgImgSearchedBmpMenu);
-  MenuItem.Caption := 'Load Bmp Text To Searched Area';
+  MenuItem.Caption := 'Load "Bmp Text" to searched area';
   MenuItem.OnClick := MenuItemLoadBmpTextToSearchedAreaClick;
+  FSearchAreaDbgImgSearchedBmpMenu.Items.Add(MenuItem);
+
+  MenuItem := TMenuItem.Create(FSearchAreaDbgImgSearchedBmpMenu);
+  MenuItem.Caption := 'Unload "Bmp Text" from searched area';
+  MenuItem.OnClick := MenuItemUnloadBmpTextFromSearchedAreaClick;
   FSearchAreaDbgImgSearchedBmpMenu.Items.Add(MenuItem);
 
   if lstMatchBitmapFiles.Items.Count > 0 then
@@ -1809,6 +1817,7 @@ begin
       MenuItem := TMenuItem.Create(FSearchAreaDbgImgSearchedBmpMenu);
       MenuItem.Caption := lstMatchBitmapFiles.Items.Strings[i];
       MenuItem.OnClick := MenuItemGenericLoadBmpToSearchedAreaClick;
+      MenuItem.Enabled := DoOnFileExists(lstMatchBitmapFiles.Items.Strings[i]);
       FSearchAreaDbgImgSearchedBmpMenu.Items.Add(MenuItem);
     end;
   end;
@@ -1824,6 +1833,7 @@ begin
       MenuItem := TMenuItem.Create(FSearchAreaDbgImgSearchedBmpMenu);
       MenuItem.Caption := lstMatchPrimitiveFiles.Items.Strings[i];
       MenuItem.OnClick := MenuItemGenericLoadBmpToSearchedAreaClick;
+      MenuItem.Enabled := DoOnFileExists(lstMatchPrimitiveFiles.Items.Strings[i]);
       FSearchAreaDbgImgSearchedBmpMenu.Items.Add(MenuItem);
     end;
   end;
@@ -1875,18 +1885,27 @@ begin
     SearchAreaControlRect.Height := StrToIntDef(EvaluateReplacements('$Control_Height$'), 300);
     SearchAreaControlHandle := StrToIntDef(EvaluateReplacements('$Control_Handle$'), 0);
 
-    if FSearchAreaOutOfImgLabel = nil then
+    if FSearchAreaOutOfImgImg = nil then
     begin
-      FSearchAreaOutOfImgLabel := TLabel.Create(Self);
-      FSearchAreaOutOfImgLabel.Parent := FSearchAreaScrBox;
-      FSearchAreaOutOfImgLabel.AutoSize := False;
-      FSearchAreaOutOfImgLabel.Caption := '';
-      FSearchAreaOutOfImgLabel.Color := $A0FFFF; //light yellow
-      FSearchAreaOutOfImgLabel.Left := 0;
-      FSearchAreaOutOfImgLabel.Top := 0;
-      FSearchAreaOutOfImgLabel.Width := CSearchAreaMaxWidth;
-      FSearchAreaOutOfImgLabel.Height := CSearchAreaMaxHeight;
-      FSearchAreaOutOfImgLabel.OnMouseMove := imgSearchAreaControlDbgMouseMove;
+      FSearchAreaOutOfImgImg := TImage.Create(Self);
+      FSearchAreaOutOfImgImg.Parent := FSearchAreaScrBox;
+      FSearchAreaOutOfImgImg.AutoSize := False;
+      FSearchAreaOutOfImgImg.Transparent := False;
+      FSearchAreaOutOfImgImg.Left := 0;
+      FSearchAreaOutOfImgImg.Top := 0;
+      FSearchAreaOutOfImgImg.Width := CSearchAreaMaxWidth;
+      FSearchAreaOutOfImgImg.Height := CSearchAreaMaxHeight;
+      FSearchAreaOutOfImgImg.OnMouseMove := imgSearchAreaControlDbgMouseMove;
+
+      FSearchAreaOutOfImgImg.Canvas.Pen.Color := $A0FFFF; //light yellow
+      FSearchAreaOutOfImgImg.Canvas.Brush.Style := bsSolid;
+      FSearchAreaOutOfImgImg.Canvas.Brush.Color := $A0FFFF; //light yellow
+      FSearchAreaOutOfImgImg.Canvas.Rectangle(0, 0, FSearchAreaOutOfImgImg.Width, FSearchAreaOutOfImgImg.Height);
+
+      FSearchAreaOutOfImgImg.Canvas.Pen.Color := $A0FFFF; //light yellow
+      FSearchAreaOutOfImgImg.Canvas.Brush.Style := bsFDiagonal;
+      FSearchAreaOutOfImgImg.Canvas.Brush.Color := $008888FF;
+      FSearchAreaOutOfImgImg.Canvas.Rectangle(0, 0, FSearchAreaOutOfImgImg.Width, FSearchAreaOutOfImgImg.Height);
     end;
 
     if FSearchAreaControlDbgImg = nil then
@@ -2024,13 +2043,13 @@ begin
       FSearchAreaMenu.Items.Add(MenuItem);
 
       MenuItem := TMenuItem.Create(FSearchAreaMenu);
-      MenuItem.Caption := 'Update Left and Top offsets from PreviewText image to editboxes';
+      MenuItem.Caption := 'Update Left and Top offsets from "Preview" image to editboxes';
       MenuItem.OnClick := MenuItemUpdateLeftAndTopOffsetsFromPreviewTextImageToEditboxes;
       MenuItem.Bitmap := imgUpdateLeftTopOffsets.Picture.Bitmap;
       FSearchAreaMenu.Items.Add(MenuItem);
 
       MenuItem := TMenuItem.Create(FSearchAreaMenu);
-      MenuItem.Caption := 'Update Left, Top, Right and Botttom offsets from PreviewText image to editboxes';
+      MenuItem.Caption := 'Update Left, Top, Right and Botttom offsets from "Preview" image to editboxes';
       MenuItem.OnClick := MenuItemUpdateLeftTopRightBottomOffsetsFromPreviewTextImageToEditboxes;
       MenuItem.Bitmap := imgUpdateLeftTopRightBottomOffsets.Picture.Bitmap;
       FSearchAreaMenu.Items.Add(MenuItem);
@@ -2523,6 +2542,13 @@ begin
       ABitmap.Free;
     end;
   end;
+end;
+
+
+procedure TfrClickerFindControl.UpdateListsOfSearchFiles(AMatchBitmapFiles, AMatchPrimitiveFiles: string);
+begin
+  lstMatchBitmapFiles.Items.Text := AMatchBitmapFiles;
+  lstMatchPrimitiveFiles.Items.Text := AMatchPrimitiveFiles;
 end;
 
 
@@ -3027,7 +3053,9 @@ begin
     Offsets.Top := IntToStr(GetSearchAreaTopOffsetFromBmpDbgImg);
     DoOnUpdateSearchAreaLimitsInOIFromDraggingLines([llLeft, llTop], Offsets);
 
-    if Assigned(FSearchAreaSearchedTextDbgImg) and (FSearchAreaSearchedTextDbgImg.Width > 0) then
+    if Assigned(FSearchAreaSearchedTextDbgImg) and
+      (FSearchAreaSearchedTextDbgImg.Width > 0) and
+      (FSearchAreaSearchedTextDbgImg.Picture.Bitmap.Width > 0) then
     begin
       FSearchAreaRightLimitLabel.Left := FSearchAreaSearchedTextDbgImg.Left + FSearchAreaSearchedTextDbgImg.Width;
       FSearchAreaBottomLimitLabel.Top := FSearchAreaSearchedTextDbgImg.Top + FSearchAreaSearchedTextDbgImg.Height;
@@ -3063,15 +3091,27 @@ begin
 end;
 
 
+procedure TfrClickerFindControl.MenuItemUnloadBmpTextFromSearchedAreaClick(Sender: TObject);
+begin
+  FSearchAreaSearchedTextDbgImg.Picture.Clear;
+  FSearchAreaSearchedTextDbgImg.Hide;
+end;
+
+
 procedure TfrClickerFindControl.MenuItemGenericLoadBmpToSearchedAreaClick(Sender: TObject);
 var
   BmpPath: string;
 begin
   BmpPath := StringReplace((Sender as TMenuItem).Caption, '&', '', [rfReplaceAll]);
+  BmpPath := StringReplace(BmpPath, '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
+
   if DoOnFileExists(BmpPath) then
   begin
     FSearchAreaSearchedBmpDbgImg.AutoSize := True;  //should be set-reset when implementing zoom
     DoOnLoadBitmap(FSearchAreaSearchedBmpDbgImg.Picture.Bitmap, BmpPath);
+
+    FSearchAreaSearchedBmpDbgImg.Width := FSearchAreaSearchedBmpDbgImg.Picture.Bitmap.Width;
+    FSearchAreaSearchedBmpDbgImg.Height := FSearchAreaSearchedBmpDbgImg.Picture.Bitmap.Height;
   end
   else
   begin

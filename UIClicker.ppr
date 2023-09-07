@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2022 VCC
+    Copyright (C) 2023 VCC
     creation date: Dec 2019
     initial release date: 13 Sep 2022
 
@@ -41,12 +41,12 @@ uses
   ClickerConditionEditorForm, ClickerFindControlFrame, ClickerActionsForm,
   ClickerActionsPaletteFrame, UIClickerMainFormFP, ClickerRemoteScreenForm,
   ClickerPreviewForm, ClickerActionExecution, ClickerTemplateNotesForm,
-  ClickerZoomPreviewForm, ObjectInspectorFrame, ClickerActionValues,
-  ClickerExecAppFrame, ClickerSetVarFrame, ClickerSleepFrame,
-  ClickerCallTemplateFrame, ClickerUtils, ClickerPrimitiveUtils,
-  ClickerPrimitivesFrame, ClickerPrimitiveValues, ClickerPrimitives,
-  ClickerOIUtils, ClickerPrimitivesCompositor, ClickerPrimitivesCompEditors,
-  ClickerWinInterpFrame;
+  ClickerZoomPreviewForm, ObjectInspectorFrame, AutoCompleteForm,
+  ClickerActionValues, ClickerExecAppFrame, ClickerSetVarFrame,
+  ClickerSleepFrame, ClickerCallTemplateFrame, ClickerUtils,
+  ClickerPrimitiveUtils, ClickerPrimitivesFrame, ClickerPrimitiveValues,
+  ClickerPrimitives, ClickerOIUtils, ClickerPrimitivesCompositor,
+  ClickerPrimitivesCompEditors, ClickerWinInterpFrame;
 
 {$R *.res}
 

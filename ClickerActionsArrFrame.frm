@@ -55,6 +55,7 @@ object frClickerActionsArr: TfrClickerActionsArr
       Width = 760
       Anchors = [akLeft, akRight, akBottom]
       OnKeyDown = edtConsoleCommandKeyDown
+      OnKeyUp = edtConsoleCommandKeyUp
       ParentShowHint = False
       ShowHint = True
       TabOrder = 2

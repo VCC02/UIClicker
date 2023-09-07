@@ -407,7 +407,6 @@ const
                '$AppDir$\TestFiles\PreviewButtonIcon.pmtv'#13#10'$AppDir$\TestFiles\PreviewButtonIcon64.pmtv';
 var
   Response: string;
-  ListOfVars: TStringList;
   FindSubControlOptions: TClkFindControlOptions;
   FileProvider: TPollForMissingServerFiles;
 begin
@@ -556,7 +555,6 @@ var
   SleepOptions: TClkSleepOptions;
   tk: QWord;
   Response: string;
-  ListOfVars: TStringList;
   Diff: QWord;
 begin
   GenerateSleepOptions(SleepOptions, '5000');

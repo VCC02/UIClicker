@@ -131,6 +131,8 @@ type
     procedure btnNewClick(Sender: TObject);
     procedure edtConsoleCommandKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
+    procedure edtConsoleCommandKeyUp(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
     procedure FrameResize(Sender: TObject);
     procedure MenuItemCopySelectedActionsToClipboardClick(Sender: TObject);
     procedure MenuItemEnableDisableBreakPointClick(Sender: TObject);
@@ -546,7 +548,7 @@ implementation
 uses
   ValEdit, Math, ClickerTemplates,
   BitmapProcessing, Clipbrd, ClickerConditionEditorForm, ClickerActionsClient,
-  ClickerTemplateNotesForm;
+  ClickerTemplateNotesForm, AutoCompleteForm;
 
 
 procedure TfrClickerActionsArr.CreateRemainingUIComponents;
@@ -1064,9 +1066,7 @@ begin
 
   frClickerActions.frClickerFindControl.SetBMPTextFrameVisibility;
 
-  frClickerActions.frClickerFindControl.lstMatchBitmapFiles.Items.Text := FClkActions[ActionIndex].FindControlOptions.MatchBitmapFiles;
-  frClickerActions.frClickerFindControl.lstMatchPrimitiveFiles.Items.Text := FClkActions[ActionIndex].FindControlOptions.MatchPrimitiveFiles;
-
+  frClickerActions.frClickerFindControl.UpdateListsOfSearchFiles(FClkActions[ActionIndex].FindControlOptions.MatchBitmapFiles, FClkActions[ActionIndex].FindControlOptions.MatchPrimitiveFiles);
   frClickerActions.frClickerFindControl.UpdateBitmapAlgorithmSettings;
 
   frClickerActions.LoadListOfAvailableTemplates;
@@ -2961,7 +2961,32 @@ begin
 
       Key := 0;
     end;
-  end;
+  end; //case
+
+  if Key = VK_SPACE then
+    if ssCtrl in Shift then
+    begin
+      Key := 0;
+      Exit;
+    end;
+
+  if Key in [VK_RETURN, VK_ESCAPE] then
+    CloseAutoComplete;
+end;
+
+
+procedure TfrClickerActionsArr.edtConsoleCommandKeyUp(Sender: TObject;
+  var Key: Word; Shift: TShiftState);
+begin
+  if Key = VK_SPACE then
+    if ssCtrl in Shift then
+    begin
+      Key := 0;
+      ShowAutoComplete(edtConsoleCommand, frClickerActions.vallstVariables.Cols[0], frClickerActions.frClickerSetVar.memAvailableFunctions.Lines);
+    end;
+
+  if AutoCompleteVisible then
+    ShowAutoComplete(edtConsoleCommand, frClickerActions.vallstVariables.Cols[0], frClickerActions.frClickerSetVar.memAvailableFunctions.Lines);
 end;
 
 
