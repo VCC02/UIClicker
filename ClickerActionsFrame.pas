@@ -3825,14 +3825,24 @@ begin
         TargetCanvas.Font.Color := clGray;
         Exit;
       end;
-    end;
+    end;  //acClick
 
     if (ANodeData.Level = CPropertyLevel) and (CurrentlyEditingActionType in [acFindControl, acFindSubControl]) then
-      if APropertyIndex in [CFindControl_MatchBitmapFiles_PropIndex, CFindControl_MatchPrimitiveFiles_PropIndex] then
+    begin
+      if (APropertyIndex in [CFindControl_MatchBitmapFiles_PropIndex, CFindControl_MatchPrimitiveFiles_PropIndex]) then
       begin
         TargetCanvas.Font.Style := [fsItalic];
+        //Exit;
+      end;
+
+      if ((APropertyIndex in [CFindControl_MatchBitmapText_PropIndex .. CFindControl_MatchBitmapAlgorithmSettings_PropIndex,
+                              CFindControl_ColorError_PropIndex .. CFindControl_AllowedColorErrorCount_PropIndex,
+                              CFindControl_MatchPrimitiveFiles_PropIndex]) and (CurrentlyEditingActionType = acFindControl)) then
+      begin
+        TargetCanvas.Font.Color := clGray;
         Exit;
       end;
+    end;
 
 
     if (ANodeData.Level = CPropertyLevel) and (CurrentlyEditingActionType = acWindowOperations) then
@@ -3846,6 +3856,7 @@ begin
         end;
 
     if (ANodeData.Level = CPropertyItemLevel) and (CurrentlyEditingActionType in [acFindControl, acFindSubControl]) then
+    begin
       if APropertyIndex = CFindControl_MatchPrimitiveFiles_PropIndex then
       begin
         ListOfPrimitiveFiles_Modified := TStringList.Create;   //instead of parsing this list on every tree paint action, the "modified" flags could be stored in some array of (paths + modified)
@@ -3860,11 +3871,21 @@ begin
             TargetCanvas.Brush.Color := clRed;
           end;
 
-          Exit;
+          //Exit;
         finally
           ListOfPrimitiveFiles_Modified.Free;
         end;
+      end; //primitives
+
+      if CurrentlyEditingActionType = acFindControl then
+        if APropertyIndex in [CFindControl_MatchBitmapText_PropIndex .. CFindControl_MatchBitmapAlgorithmSettings_PropIndex,
+                              CFindControl_ColorError_PropIndex .. CFindControl_AllowedColorErrorCount_PropIndex,
+                              CFindControl_MatchPrimitiveFiles_PropIndex] then
+      begin
+        TargetCanvas.Font.Color := clGray;
+        Exit;
       end;
+    end; //acFindControl, acFindSubControl
 
   end;  //CCategory_ActionSpecific
 end;

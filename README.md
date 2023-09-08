@@ -5,6 +5,9 @@ dependencies:
 https://github.com/VCC02/MiscUtils
 
 
+Doc:
+https://github.com/VCC02/UIClickerRel/blob/main/UIClicker.pdf
+
 .
 
 YT video of DynTFTCodeGen being automated: https://www.youtube.com/watch?v=iOkeoE4eYF8

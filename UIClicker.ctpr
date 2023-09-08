@@ -339,6 +339,13 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Frame"/>
       </Unit>
+      <Unit>
+        <Filename Value="..\MiscUtils\AutoCompleteForm.pas"/>
+        <FRMtype Value="200"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frmAutoComplete"/>
+        <ResourceBaseClass Value="Form"/>
+      </Unit>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

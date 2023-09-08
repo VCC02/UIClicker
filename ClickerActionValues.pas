@@ -112,6 +112,8 @@ const
   CFindControl_MatchBitmapAlgorithmSettings_PropIndex = 9;
   CFindControl_InitialRectangle_PropIndex = 10;
   CFindControl_UseWholeScreen_PropIndex = 11;
+  CFindControl_ColorError_PropIndex = 12;
+  CFindControl_AllowedColorErrorCount_PropIndex = 13;
   CFindControl_MatchPrimitiveFiles_PropIndex = 18; //property index in FindControl structure   - list of files
 
   CCallTemplate_TemplateFileName_PropIndex = 0; //property index in CallTemplate structure

@@ -1296,14 +1296,19 @@ begin
               for i := 0 to ListOfBitmapFiles.Count - 1 do
                 ListOfBitmapFiles.Strings[i] := StringReplace(ListOfBitmapFiles.Strings[i], '$TemplateDir$', TemplateDir, [rfReplaceAll]);
 
-              if not FExecutingActionFromRemote^ then
-              begin
-                for i := 0 to ListOfBitmapFiles.Count - 1 do
-                  ListOfBitmapFiles.Strings[i] := StringReplace(ListOfBitmapFiles.Strings[i], '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
-              end;
+              //Leave this section commented, it exists after the DoOnWaitForBitmapsAvailability call!
+              //if not FExecutingActionFromRemote^ then
+              //begin
+              //  for i := 0 to ListOfBitmapFiles.Count - 1 do
+              //    ListOfBitmapFiles.Strings[i] := StringReplace(ListOfBitmapFiles.Strings[i], '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
+              //end;
 
               if FExecutingActionFromRemote^ and FFileLocationOfDepsIsMem^ then
                 DoOnWaitForBitmapsAvailability(ListOfBitmapFiles);
+
+              //resolving the $AppDir$ replacement after having all files available
+              for i := 0 to ListOfBitmapFiles.Count - 1 do
+                ListOfBitmapFiles.Strings[i] := StringReplace(ListOfBitmapFiles.Strings[i], '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
 
               for i := 0 to ListOfBitmapFiles.Count - 1 do
               begin
@@ -1357,15 +1362,20 @@ begin
               for i := 0 to ListOfPrimitiveFiles.Count - 1 do
                 ListOfPrimitiveFiles.Strings[i] := StringReplace(ListOfPrimitiveFiles.Strings[i], '$TemplateDir$', TemplateDir, [rfReplaceAll]);
 
-              if not FExecutingActionFromRemote^ then
-              begin
-                for i := 0 to ListOfPrimitiveFiles.Count - 1 do
-                  ListOfPrimitiveFiles.Strings[i] := StringReplace(ListOfPrimitiveFiles.Strings[i], '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
-              end;
+              //Leave this section commented, it exists after the DoOnWaitForBitmapsAvailability call!
+              //if not FExecutingActionFromRemote^ then   //files from client will not have the $AppDir$ replacement resolved here, because of requesting them with original name
+              //begin
+              //  for i := 0 to ListOfPrimitiveFiles.Count - 1 do
+              //    ListOfPrimitiveFiles.Strings[i] := StringReplace(ListOfPrimitiveFiles.Strings[i], '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
+              //end;
 
               if FExecutingActionFromRemote^ and FFileLocationOfDepsIsMem^ then
                 DoOnWaitForBitmapsAvailability(ListOfPrimitiveFiles);    //might also work for pmtv files
                                                                          //ComposePrimitive_Image also has to wait for bmp files
+
+              //resolving the $AppDir$ replacement after having all files available
+              for i := 0 to ListOfPrimitiveFiles.Count - 1 do
+                ListOfPrimitiveFiles.Strings[i] := StringReplace(ListOfPrimitiveFiles.Strings[i], '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
 
               for i := 0 to ListOfPrimitiveFiles.Count - 1 do
               begin
@@ -1375,6 +1385,16 @@ begin
                 //  AppendErrorMessageToActionVar('File not found: "' + ListOfPrimitiveFiles.Strings[i] + '" ');
                 //  Continue;
                 //end;
+
+                if Length(TempPrimitives) = 0 then
+                begin
+                  if FExecutingActionFromRemote^ and (Pos('$AppDir$', ListOfPrimitiveFiles.Strings[i]) > 0) then
+                    AddToLog('Primitives file: "' + ExtractFileName(ListOfPrimitiveFiles.Strings[i]) + '" has no primitives because is is not loaded. It should have been received from client but it has an illegal path, which contains "$AppDir$".')
+                  else
+                    AddToLog('Primitives file: "' + ExtractFileName(ListOfPrimitiveFiles.Strings[i]) + '" has no primitives.');
+
+                  Continue;
+                end;
 
                 PrimitivesCompositor := TPrimitivesCompositor.Create;
                 try
