@@ -54,6 +54,7 @@ object frClickerActionsArr: TfrClickerActionsArr
       Top = 371
       Width = 760
       Anchors = [akLeft, akRight, akBottom]
+      OnExit = edtConsoleCommandExit
       OnKeyDown = edtConsoleCommandKeyDown
       OnKeyUp = edtConsoleCommandKeyUp
       ParentShowHint = False
@@ -122,7 +123,7 @@ object frClickerActionsArr: TfrClickerActionsArr
       Width = 31
       Anchors = [akLeft, akBottom]
       Caption = 'Status'
-      Font.Color = 272895
+      Font.Color = 29952
       Font.Height = -11
       Font.Name = 'Tahoma'
       ParentFont = False

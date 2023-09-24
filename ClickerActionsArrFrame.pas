@@ -129,6 +129,7 @@ type
     imglstCurrentDebuggingAction: TImageList;
     procedure btnAddActionClick(Sender: TObject);
     procedure btnNewClick(Sender: TObject);
+    procedure edtConsoleCommandExit(Sender: TObject);
     procedure edtConsoleCommandKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
     procedure edtConsoleCommandKeyUp(Sender: TObject; var Key: Word;
@@ -1098,11 +1099,13 @@ begin
   if FModified then
   begin
     lblModifiedStatus.Caption := 'Modified: ' + ExtractFileName(FFileName);
+    lblModifiedStatus.Font.Color := $000429FF;
     spdbtnSaveTemplate.Font.Color := $00241CED;
   end
   else
   begin
     lblModifiedStatus.Caption := 'Up to date: ' + ExtractFileName(FFileName);
+    lblModifiedStatus.Font.Color := $00007500;
     spdbtnSaveTemplate.Font.Color := clWindowText;
   end;
 
@@ -2837,6 +2840,13 @@ begin
     frClickerActions.ClearControls;
     FTemplateNotes := '';
   end;
+end;
+
+
+procedure TfrClickerActionsArr.edtConsoleCommandExit(Sender: TObject);
+begin
+  if not frmAutoComplete.Focused then
+    CloseAutoComplete;
 end;
 
 

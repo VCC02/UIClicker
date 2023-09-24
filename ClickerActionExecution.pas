@@ -1072,7 +1072,7 @@ begin
   if n = 0 then
   begin
     AddToLog('Adding default font profile to action: "' + AActionOptions.ActionName + '", of ' + CClkActionStr[AActionOptions.Action] + ' type.');
-    DoOnAddDefaultFontProfile(AFindControlOptions, AActionOptions); //Currently, both FindControl and FindSubControl require a default font profile, because of the "for j" loop bellow. Once these two actions are split, only FindSubControl will require it.
+    DoOnAddDefaultFontProfile(AFindControlOptions, AActionOptions); //Currently, both FindControl and FindSubControl require a default font profile, because of the "for j" loop below. Once these two actions are split, only FindSubControl will require it.
     n := Length(AFindControlOptions.MatchBitmapText);
   end;
 
