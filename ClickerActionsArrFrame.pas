@@ -2941,6 +2941,12 @@ begin
 
     VK_UP:
     begin
+      if AutoCompleteVisible then
+      begin
+        frmAutoComplete.SetFocus;
+        Exit;
+      end;
+
       edtConsoleCommand.Tag := edtConsoleCommand.Tag - 1;
 
       if edtConsoleCommand.Tag < 0 then
@@ -2960,6 +2966,12 @@ begin
 
     VK_DOWN:
     begin
+      if AutoCompleteVisible then
+      begin
+        frmAutoComplete.SetFocus;
+        Exit;
+      end;
+
       edtConsoleCommand.Tag := edtConsoleCommand.Tag + 1;
       if edtConsoleCommand.Tag > FCmdConsoleHistory.Count then  //without - 1
         edtConsoleCommand.Tag := FCmdConsoleHistory.Count;      //this will make Tag, at most equal to FCmdConsoleHistory.Count (outside of list), to clear the editbox
