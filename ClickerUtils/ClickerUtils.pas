@@ -59,6 +59,7 @@ type
   TEvaluateReplacementsFunc = function(s: string; Recursive: Boolean = True): string of object;
   TOnTriggerOnControlsModified = procedure of object;
   TOnEvaluateReplacements = function(s: string): string of object;
+  TOnReverseEvaluateReplacements = function(s: string): string of object;
   TOnCopyControlTextAndClassFromMainWindow = procedure(ACompProvider: string; out AControlText, AControlClass: string) of object;
   TOnGetExtraSearchAreaDebuggingImage = function(AExtraBitmap: TBitmap): Boolean of object;
   TOnGetExtraSearchAreaDebuggingImageWithStackLevel = function(AExtraBitmap: TBitmap; AStackLevel: Integer): Boolean of object;

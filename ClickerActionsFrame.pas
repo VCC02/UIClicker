@@ -64,6 +64,8 @@ type
     lblMouseOnExecDbgImgBB: TLabel;
     lblMouseOnExecDbgImgGG: TLabel;
     lblMouseOnExecDbgImgRR: TLabel;
+    MenuItem_ReplaceWithTemplateDir: TMenuItem;
+    MenuItem_ReplaceWithAppDir: TMenuItem;
     MenuItem_SetFromControlWidthAndHeight: TMenuItem;
     MenuItem_SetFromControlLeftAndTop: TMenuItem;
     MenuItem_AddFilesToPropertyList: TMenuItem;
@@ -119,6 +121,7 @@ type
     N100001: TMenuItem;
     N01: TMenuItem;
     N300001: TMenuItem;
+    pmPathReplacements: TPopupMenu;
     tmrDrawZoom: TTimer;
     tmrReloadOIContent: TTimer;
     AddCustomVarRow1: TMenuItem;
@@ -160,6 +163,8 @@ type
     procedure FrameResize(Sender: TObject);
     procedure lbeFindCachedControlLeftChange(Sender: TObject);
     procedure lbeFindCachedControlTopChange(Sender: TObject);
+    procedure MenuItem_ReplaceWithAppDirClick(Sender: TObject);
+    procedure MenuItem_ReplaceWithTemplateDirClick(Sender: TObject);
     procedure MenuItem_SetFromControlLeftAndTopClick(Sender: TObject);
     procedure MenuItem_SetFromControlWidthAndHeightClick(Sender: TObject);
     procedure pmStandardColorVariablesPopup(Sender: TObject);
@@ -355,6 +360,7 @@ type
     procedure HandleOnUpdateBitmapAlgorithmSettings;
     procedure HandleOnTriggerOnControlsModified;
     function HandleOnEvaluateReplacements(s: string): string;
+    function HandleOnReverseEvaluateReplacements(s: string): string;
     procedure HandleOnCopyControlTextAndClassFromMainWindow(ACompProvider: string; out AControlText, AControlClass: string);
     function HandleOnGetExtraSearchAreaDebuggingImage(AExtraBitmap: TBitmap): Boolean;
 
@@ -452,6 +458,7 @@ type
     destructor Destroy; override;
 
     function EvaluateReplacements(VarName: string; Recursive: Boolean = True): string;
+    function ReverseEvaluateReplacements(AValue: string): string;
 
     procedure LoadListOfAvailableTemplates;
     procedure SetDebugVariablesFromListOfStrings(AListOfStrings: string);
@@ -562,6 +569,7 @@ begin
   frClickerFindControl.OnUpdateBitmapAlgorithmSettings := HandleOnUpdateBitmapAlgorithmSettings;
   frClickerFindControl.OnTriggerOnControlsModified := HandleOnTriggerOnControlsModified;
   frClickerFindControl.OnEvaluateReplacements := HandleOnEvaluateReplacements;
+  frClickerFindControl.OnReverseEvaluateReplacements := HandleOnReverseEvaluateReplacements;
   frClickerFindControl.OnCopyControlTextAndClassFromMainWindow := HandleOnCopyControlTextAndClassFromMainWindow;
   frClickerFindControl.OnGetExtraSearchAreaDebuggingImage := HandleOnGetExtraSearchAreaDebuggingImage;
   frClickerFindControl.OnLoadBitmap := HandleOnLoadBitmap;
@@ -748,6 +756,20 @@ end;
 function TfrClickerActions.EvaluateReplacements(VarName: string; Recursive: Boolean = True): string;
 begin
   Result := EvaluateAllReplacements(vallstVariables.Strings, VarName, Recursive);
+end;
+
+
+function TfrClickerActions.ReverseEvaluateReplacements(AValue: string): string;
+var
+  i: Integer;
+begin
+  Result := '';
+  for i := 0 to vallstVariables.Strings.Count - 1 do
+    if vallstVariables.Strings.ValueFromIndex[i] = AValue then
+    begin
+      Result := vallstVariables.Strings.Names[i];
+      Break;
+    end;
 end;
 
 
@@ -1018,6 +1040,50 @@ begin
 end;
 
 
+procedure TfrClickerActions.MenuItem_ReplaceWithAppDirClick(Sender: TObject);
+begin
+  try
+    if Assigned(FLastClickedTVTEdit) then
+    begin
+      FLastClickedTVTEdit.Text := StringReplace(FLastClickedTVTEdit.Text, ExtractFileDir(ParamStr(0)), '$AppDir$', [rfReplaceAll]);
+      FOIFrame.EditingText := FLastClickedTVTEdit.Text;
+    end;
+
+    if Assigned(FLastClickedEdit) then
+    begin
+      FLastClickedEdit.Text := StringReplace(FLastClickedEdit.Text, ExtractFileDir(ParamStr(0)), '$AppDir$', [rfReplaceAll]);
+      if Assigned(FLastClickedEdit.OnChange) then
+        FLastClickedEdit.OnChange(FLastClickedEdit);
+    end;
+  except
+    on E: Exception do
+      MessageBox(Handle, PChar('EditBox is not available.' + #13#10 + E.Message), PChar(Application.MainForm.Caption), MB_ICONERROR);
+  end;
+end;
+
+
+procedure TfrClickerActions.MenuItem_ReplaceWithTemplateDirClick(Sender: TObject);
+begin
+  try
+    if Assigned(FLastClickedTVTEdit) then
+    begin
+      FLastClickedTVTEdit.Text := StringReplace(FLastClickedTVTEdit.Text, FFullTemplatesDir, '$TemplateDir$', [rfReplaceAll]);
+      FOIFrame.EditingText := FLastClickedTVTEdit.Text;
+    end;
+
+    if Assigned(FLastClickedEdit) then
+    begin
+      FLastClickedEdit.Text := StringReplace(FLastClickedEdit.Text, FFullTemplatesDir, '$TemplateDir$', [rfReplaceAll]);
+      if Assigned(FLastClickedEdit.OnChange) then
+        FLastClickedEdit.OnChange(FLastClickedEdit);
+    end;
+  except
+    on E: Exception do
+      MessageBox(Handle, PChar('EditBox is not available.' + #13#10 + E.Message), PChar(Application.MainForm.Caption), MB_ICONERROR);
+  end;
+end;
+
+
 procedure TfrClickerActions.MenuItem_SetFromControlLeftAndTopClick(
   Sender: TObject);
 begin
@@ -1043,7 +1109,7 @@ end;
 procedure TfrClickerActions.pmStandardColorVariablesPopup(Sender: TObject);
 var
   i: Integer;
-  s: string;
+  s, evs: string;
   TextColor: TColor;
 begin
   for i := 0 to pmStandardColorVariables.Items.Count - 1 do
@@ -1055,8 +1121,14 @@ begin
       pmStandardColorVariables.Items.Items[i].Bitmap := TBitmap.Create;
       pmStandardColorVariables.Items.Items[i].Bitmap.Width := 16;
       pmStandardColorVariables.Items.Items[i].Bitmap.Height := 16;
-      s := EvaluateReplacements(pmStandardColorVariables.Items.Items[i].Caption);
-      TextColor := HexToInt(s);
+
+      s := pmStandardColorVariables.Items.Items[i].Caption;
+      Delete(s, 1, 1); //remove first '$', so that Pos returns the next one
+      s := '$' + Copy(s, 1, Pos('$', s));
+      evs := EvaluateReplacements(s);
+      TextColor := HexToInt(evs);
+
+      pmStandardColorVariables.Items.Items[i].Caption := s + '   (' + evs + ')';
 
       pmStandardColorVariables.Items.Items[i].Bitmap.Canvas.Pen.Color := 1;  // > 0
       pmStandardColorVariables.Items.Items[i].Bitmap.Canvas.Brush.Color := TextColor;
@@ -1343,6 +1415,12 @@ end;
 function TfrClickerActions.HandleOnEvaluateReplacements(s: string): string;
 begin
   Result := EvaluateReplacements(s);
+end;
+
+
+function TfrClickerActions.HandleOnReverseEvaluateReplacements(s: string): string;
+begin
+  Result := ReverseEvaluateReplacements(s);
 end;
 
 
@@ -2713,17 +2791,23 @@ end;
 
 
 procedure TfrClickerActions.MenuItemControl_EdgeRefGenericClick(Sender: TObject);
+var
+  s: string;
 begin
   try
+    s := StringReplace((Sender as TMenuItem).Caption, '&', '', [rfReplaceAll]);
+    Delete(s, 1, 1); //delete first '$'
+    s := '$' + Copy(s, 1, Pos('$', s));
+
     if Assigned(FLastClickedTVTEdit) then
     begin
-      FLastClickedTVTEdit.Text := StringReplace((Sender as TMenuItem).Caption, '&', '', [rfReplaceAll]);
+      FLastClickedTVTEdit.Text := s;
       FOIFrame.EditingText := FLastClickedTVTEdit.Text;
     end;
 
     if Assigned(FLastClickedEdit) then
     begin
-      FLastClickedEdit.Text := StringReplace((Sender as TMenuItem).Caption, '&', '', [rfReplaceAll]);
+      FLastClickedEdit.Text := s;
       if Assigned(FLastClickedEdit.OnChange) then
         FLastClickedEdit.OnChange(FLastClickedEdit);
     end;
@@ -4142,7 +4226,7 @@ begin
             AHint := CGetPropertyHint_FindControlMatchCriteria_Items[AItemIndex];
 
           CFindControl_MatchBitmapText_PropIndex:
-            case AItemIndex of
+            case AItemIndex mod CPropCount_FindControlMatchBitmapText of
               CFindControl_MatchBitmapText_ForegroundColor_PropItemIndex, CFindControl_MatchBitmapText_BackgroundColor_PropItemIndex:
               begin
                 FLastClickedTVTEdit := nil;
@@ -4200,8 +4284,15 @@ begin
             end;
           end; //init rect
 
-          CFindControl_MatchPrimitiveFiles_PropIndex:
+          CFindControl_MatchBitmapFiles_PropIndex, CFindControl_MatchPrimitiveFiles_PropIndex:
           begin
+            if Sender is TVTEdit then
+              FLastClickedTVTEdit := Sender as TVTEdit
+            else
+              FLastClickedTVTEdit := nil;
+
+            FLastClickedEdit := nil;
+            APopupMenu := pmPathReplacements;
             AHint := '$AppDir$ replacement is available';
           end;
         end; //case

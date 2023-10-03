@@ -161,6 +161,7 @@ type
   TfrClickerFindControl = class(TFrame)
     btnCopyFoundValues: TButton;
     btnDisplaySearchAreaDebuggingImage: TButton;
+    chkIncludeSearchedBmpInZoom: TCheckBox;
     chkAutoCopyValuesToObjectInspector: TCheckBox;
     chkDisplayCroppingLines: TCheckBox;
     chkShowBMPFileDbgImg: TCheckBox;
@@ -177,6 +178,8 @@ type
     imgUpdateLeftTopOffsets: TImage;
     imgCopyBkImg: TImage;
     imgUpdateLeftTopRightBottomOffsets: TImage;
+    lblColorUnderCursor: TLabel;
+    lblColorUnderCursorPreview: TLabel;
     lblPrimitivesInfo: TLabel;
     lbeFoundControlText: TLabeledEdit;
     lbeFoundControlClass: TLabeledEdit;
@@ -288,6 +291,7 @@ type
 
     FOnTriggerOnControlsModified: TOnTriggerOnControlsModified;
     FOnEvaluateReplacements: TOnEvaluateReplacements;
+    FOnReverseEvaluateReplacements: TOnReverseEvaluateReplacements;
     FOnUpdateBitmapAlgorithmSettings: TOnUpdateBitmapAlgorithmSettings;
     FOnCopyControlTextAndClassFromMainWindow: TOnCopyControlTextAndClassFromMainWindow;
     FOnGetExtraSearchAreaDebuggingImage: TOnGetExtraSearchAreaDebuggingImage;
@@ -449,6 +453,7 @@ type
     function GetSearch_TopBottom_Ref_FromInitRect(AInitialRectange: TRectString): Integer;
 
     function EvaluateReplacements(s: string): string;
+    function ReverseEvaluateReplacements(s: string): string;
 
     function GetControlWidthFromReplacement: Integer;
     function GetControlHeightFromReplacement: Integer;
@@ -537,6 +542,7 @@ type
 
     property OnTriggerOnControlsModified: TOnTriggerOnControlsModified read FOnTriggerOnControlsModified write FOnTriggerOnControlsModified;
     property OnEvaluateReplacements: TOnEvaluateReplacements read FOnEvaluateReplacements write FOnEvaluateReplacements;
+    property OnReverseEvaluateReplacements: TOnReverseEvaluateReplacements read FOnReverseEvaluateReplacements write FOnReverseEvaluateReplacements;
     property OnUpdateBitmapAlgorithmSettings: TOnUpdateBitmapAlgorithmSettings read FOnUpdateBitmapAlgorithmSettings write FOnUpdateBitmapAlgorithmSettings;
     property OnCopyControlTextAndClassFromMainWindow: TOnCopyControlTextAndClassFromMainWindow read FOnCopyControlTextAndClassFromMainWindow write FOnCopyControlTextAndClassFromMainWindow;
     property OnGetExtraSearchAreaDebuggingImage: TOnGetExtraSearchAreaDebuggingImage write FOnGetExtraSearchAreaDebuggingImage;
@@ -992,6 +998,7 @@ begin
 
   FOnTriggerOnControlsModified := nil;
   FOnEvaluateReplacements := nil;
+  FOnReverseEvaluateReplacements := nil;
   FOnUpdateBitmapAlgorithmSettings := nil;
   FOnCopyControlTextAndClassFromMainWindow := nil;
   FOnGetExtraSearchAreaDebuggingImage := nil;
@@ -1294,6 +1301,15 @@ begin
 end;
 
 
+function TfrClickerFindControl.ReverseEvaluateReplacements(s: string): string;
+begin
+  if Assigned(FOnReverseEvaluateReplacements) then
+    Result := FOnReverseEvaluateReplacements(s)
+  else
+    raise Exception.Create('OnReverseEvaluateReplacements not assigned.');
+end;
+
+
 function TfrClickerFindControl.GetFontProfileIndexByName(AProfileName: string): Integer;
 var
   i: Integer;
@@ -1450,6 +1466,17 @@ begin
 
     TempBmp.Canvas.Pen.Color := FSearchAreaBottomLimitLabel.Color;
     Line(TempBmp.Canvas, 0, FSearchAreaBottomLimitLabel.Top, TempBmp.Width - 1, FSearchAreaBottomLimitLabel.Top);
+
+    if chkIncludeSearchedBmpInZoom.Checked then
+    begin
+      if Assigned(FSearchAreaSearchedBmpDbgImg) then
+        if (FSearchAreaSearchedBmpDbgImg.Width > 0) and (FSearchAreaSearchedBmpDbgImg.Height > 0) then
+          TempBmp.Canvas.Draw(FSearchAreaSearchedBmpDbgImg.Left, FSearchAreaSearchedBmpDbgImg.Top, FSearchAreaSearchedBmpDbgImg.Picture.Bitmap);
+
+      if Assigned(FSearchAreaSearchedTextDbgImg) then
+        if (FSearchAreaSearchedTextDbgImg.Width > 0) and (FSearchAreaSearchedTextDbgImg.Height > 0) then
+          TempBmp.Canvas.Draw(FSearchAreaSearchedTextDbgImg.Left, FSearchAreaSearchedTextDbgImg.Top, FSearchAreaSearchedTextDbgImg.Picture.Bitmap);
+    end;
 
     if chkShowGridOnBMPPreview.Checked then
     begin
@@ -2582,10 +2609,25 @@ end;
 
 
 procedure TfrClickerFindControl.SetLabelsFromMouseOverDbgImgPixelColor(APixelColor: TColor);
+var
+  ColorStr, RR, GG, BB, VarName: string;
 begin
-  lblMouseOnDbgImgRR.Caption := IntToHex(APixelColor and $FF, 2);
-  lblMouseOnDbgImgGG.Caption := IntToHex(APixelColor shr 8 and $FF, 2);
-  lblMouseOnDbgImgBB.Caption := IntToHex(APixelColor shr 16 and $FF, 2);
+  RR := IntToHex(APixelColor and $FF, 2);
+  GG := IntToHex(APixelColor shr 8 and $FF, 2);
+  BB := IntToHex(APixelColor shr 16 and $FF, 2);
+
+  lblMouseOnDbgImgRR.Caption := RR;
+  lblMouseOnDbgImgGG.Caption := GG;
+  lblMouseOnDbgImgBB.Caption := BB;
+
+  ColorStr := BB + GG + RR;
+  VarName := ReverseEvaluateReplacements(ColorStr);
+  if VarName = '' then
+    lblColorUnderCursor.Caption := 'Unknown color'
+  else
+    lblColorUnderCursor.Caption := VarName;
+
+  lblColorUnderCursorPreview.Color := APixelColor;
 end;
 
 

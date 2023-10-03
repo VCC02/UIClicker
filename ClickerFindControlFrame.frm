@@ -246,8 +246,8 @@ object frClickerFindControl: TfrClickerFindControl
       end
       object lblReservedSpaceForDbgImg: TLabel
         Left = 0
-        Height = 189
-        Top = 32
+        Height = 173
+        Top = 48
         Width = 464
         Anchors = [akTop, akLeft, akRight, akBottom]
         AutoSize = False
@@ -496,6 +496,33 @@ object frClickerFindControl: TfrClickerFindControl
         ItemHeight = 0
         TabOrder = 5
         Visible = False
+      end
+      object lblColorUnderCursor: TLabel
+        Left = 264
+        Height = 13
+        Top = 28
+        Width = 69
+        Caption = 'UnknownColor'
+      end
+      object lblColorUnderCursorPreview: TLabel
+        Left = 246
+        Height = 29
+        Hint = 'Preview'
+        Top = 12
+        Width = 13
+        AutoSize = False
+        Color = 10156169
+        ParentShowHint = False
+        ShowHint = True
+        Transparent = False
+      end
+      object chkIncludeSearchedBmpInZoom: TCheckBox
+        Left = 0
+        Height = 19
+        Top = 24
+        Width = 164
+        Caption = 'Include searched bmp in zoom'
+        TabOrder = 6
       end
     end
     object TabSheetActionFindSubControlPrimitives: TTabSheet

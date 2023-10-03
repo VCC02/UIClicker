@@ -247,6 +247,9 @@ type
     FActionsHitInfo: THitInfo;
     FActionsHitTimeStamp: QWord; //required, to detect fake double-clicks
 
+    FVarDescriptions: TStringList;
+    FFuncDescriptions: TStringList;
+
     F2_State: Byte;
     F6_State: Byte;
     F7_State: Byte;
@@ -348,6 +351,9 @@ type
     procedure SetGridDrawingOption(Value: TDisplayGridLineOption);
     procedure SetPreviewSelectionColors(Value: TSelectionColors);
 
+    procedure FillInWithAllVars(AListOfVars: TStringList);
+    procedure FillInWithAllFuncs(AListOfVars: TStringList);
+    procedure FillInVarAndFuncDescriptions;
     procedure CreateRemainingUIComponents;
 
     procedure LoadTemplateWithUIUpdate(AFileName: string; AFileLocation: TFileLocation = flDisk; AInMemFileSystem: TInMemFileSystem = nil);
@@ -552,6 +558,155 @@ uses
   ClickerTemplateNotesForm, AutoCompleteForm;
 
 
+procedure TfrClickerActionsArr.FillInWithAllVars(AListOfVars: TStringList);
+const
+  CMissingVars: array[0..7] of string = (
+    '$ExitCode$',
+    '$frmUIClickerMainForm_Handle$',
+    '$frmClickerControlPreview_Handle$',
+    '$frmClickerActions_Handle$',
+    '$frmClickerWinInterp_Handle$',
+    '$frmClickerTemplateCallTree_Handle$',
+    '$frmClickerRemoteScreen_Handle$',
+    '$frmClickerZoomPreview_Handle$'
+  );
+var
+  i: Integer;
+begin
+  AListOfVars.AddStrings(frClickerActions.vallstVariables.Cols[0]);
+  if AListOfVars.Count > 0 then
+    if AListOfVars[0] = 'Variable' then
+      AListOfVars.Delete(0);
+
+  if AListOfVars.IndexOf('$AppDir$') = -1 then
+    AListOfVars.Insert(0, '$AppDir$');
+
+  for i := 0 to Length(CMissingVars) - 1 do
+    if AListOfVars.IndexOf(CMissingVars[i]) = -1 then
+      AListOfVars.Add(CMissingVars[i]);
+end;
+
+
+procedure TfrClickerActionsArr.FillInWithAllFuncs(AListOfVars: TStringList);
+begin
+  AListOfVars.AddStrings(frClickerActions.frClickerSetVar.memAvailableFunctions.Lines);
+end;
+
+
+procedure TfrClickerActionsArr.FillInVarAndFuncDescriptions;
+var
+  i: Integer;
+  TempVarDescriptions: TStringList;
+  TempFuncDescriptions: TStringList;
+  s: string;
+begin
+  FVarDescriptions.Clear;
+  FFuncDescriptions.Clear;
+
+  TempVarDescriptions := TStringList.Create;
+  try
+    FillInWithAllVars(FVarDescriptions);
+
+    TempVarDescriptions.Add('$Control_Text$=[String] Current control text. Not all controls have text. Subcontrols do not have a text. This is updated by FindControl action, if the control is found.');
+    TempVarDescriptions.Add('$Control_Class$=[String] Current control class. All controls should have a class. Subcontrols do not have a class. This is updated by FindControl action, if the control is found.');
+    TempVarDescriptions.Add('$Control_Handle$=[Numeric] Current control handle. All controls have a handle. Subcontrols do not have a handle. This is updated by FindControl action, if the control is found.');
+    TempVarDescriptions.Add('$Control_Left$=[Numeric] Current control left edge. This is updated by Find(Sub)Control action, if the control is found.');
+    TempVarDescriptions.Add('$Control_Top$=[Numeric] Current control top edge. This is updated by Find(Sub)Control action, if the control is found.');
+    TempVarDescriptions.Add('$Control_Right$=[Numeric] Current control right edge. This is updated by Find(Sub)Control action, if the control is found.');
+    TempVarDescriptions.Add('$Control_Bottom$=[Numeric] Current control bottom edge. This is updated by Find(Sub)Control action, if the control is found.');
+    TempVarDescriptions.Add('$Control_Width$=[Numeric] Current control width. This is updated by Find(Sub)Control action, if the control is found.');
+    TempVarDescriptions.Add('$Control_Height$=[Numeric] Current control left edge. This is updated by Find(Sub)Control action, if the control is found.');
+    TempVarDescriptions.Add('$Half_Control_Width$=[Numeric] Current control half width. This is updated by Find(Sub)Control action, if the control is found.');
+    TempVarDescriptions.Add('$Half_Control_Height$=[Numeric] Current control half height. This is updated by Find(Sub)Control action, if the control is found.');
+    TempVarDescriptions.Add('$ExecAction_Err$=[String] Error message, as a result of action execution.');
+    TempVarDescriptions.Add('$LastAction_Status$=[String] Action execution status.');
+    TempVarDescriptions.Add('$LastAction_Skipped$=[String] Indicator of skipping an action execution, based on action condition.');
+    TempVarDescriptions.Add('$Screen_Width$=[Numeric] Current screen width. This value is read once, on application startup.');
+    TempVarDescriptions.Add('$Screen_Height$=[Numeric] Current screen height. This value is read once, on application startup.');
+    TempVarDescriptions.Add('$Desktop_Width$=[Numeric] Current desktop width. This value is read once, on application startup.');
+    TempVarDescriptions.Add('$Desktop_Height$=[Numeric] Current desktop height. This value is read once, on application startup.');
+    TempVarDescriptions.Add('$Color_Highlight$=[Numeric] Standard system color (value updated by OS). It is used on e.g. focused and selected listbox items.');
+    TempVarDescriptions.Add('$Color_BtnFace$=[Numeric] Standard system color (value updated by OS). It is used mostly as background color on windows and buttons.');
+    TempVarDescriptions.Add('$Color_Window$=[Numeric] Standard system color (value updated by OS). It is used as background color on e.g. lists and editboxes.');
+    TempVarDescriptions.Add('$Color_WindowText$=[Numeric] Standard system color (value updated by OS). It is used as text color on unselected, focused system components.');
+    TempVarDescriptions.Add('$ExitCode$=[Numeric] The argument passed to the $Exit(<ExitCode>)$ function.');
+    TempVarDescriptions.Add('$AppDir$=[String] This variable can be used in some file paths. It points to the directory where this UIClicker executable is. For safety reasons, the internal use of $AppDir$ is hardcoded, so that it cannot be overriden from the list of variables.');
+    TempVarDescriptions.Add('$TemplateDir$=[String] This variable can be used in some file paths (.bmp and .pmtv files, on executing FindSubControl action). It points to the directory, configured on Actions window (settings page). For safety reasons, the internal use of $TemplateDir$ is hardcoded, so that it cannot be overriden from the list of variables.');
+    TempVarDescriptions.Add('$SelfTemplateDir$=[String] This variable can be used in some file paths (.bmp and .pmtv files, on executing FindSubControl action). It points to the directory, where the current template is (during FindSubControl execution only). For safety reasons, the internal use of $SelfTemplateDir$ is hardcoded, so that it cannot be overriden from the list of variables.');
+    TempVarDescriptions.Add('$frmUIClickerMainForm_Handle$=[Numeric] The current handle of (this) UIClicker''s main form. This variable is generated by a call to $GetSelfHandles()$.');
+    TempVarDescriptions.Add('$frmClickerControlPreview_Handle$=[Numeric] The current handle of (this) UIClicker''s Preview form. This variable is generated by a call to $GetSelfHandles()$.');
+    TempVarDescriptions.Add('$frmClickerActions_Handle$=[Numeric] The current handle of (this) UIClicker''s Actions form. This variable is generated by a call to $GetSelfHandles()$.');
+    TempVarDescriptions.Add('$frmClickerWinInterp_Handle$=[Numeric] The current handle of (this) UIClicker''s WinInterp form. This variable is generated by a call to $GetSelfHandles()$.');
+    TempVarDescriptions.Add('$frmClickerTemplateCallTree_Handle$=[Numeric] The current handle of (this) UIClicker''s TemplateCallTree form. This variable is generated by a call to $GetSelfHandles()$.');
+    TempVarDescriptions.Add('$frmClickerRemoteScreen_Handle$=[Numeric] The current handle of (this) UIClicker''s RemoteScreen form. This variable is generated by a call to $GetSelfHandles()$.');
+    TempVarDescriptions.Add('$frmClickerZoomPreview_Handle$=[Numeric] The current handle of (this) UIClicker''s ZoomPreview form. This variable is generated by a call to $GetSelfHandles()$.');
+    TempVarDescriptions.Add('$DebugVar_SubCnvXOffset$=[Numeric] This is a debugging variable. It is updated by FindSubControl action, with the left edge of the found subcontrol, relative to its parent (sub)control.');
+    TempVarDescriptions.Add('$DebugVar_SubCnvYOffset$=[Numeric] This is a debugging variable. It is updated by FindSubControl action, with the top edge of the found subcontrol, relative to its parent (sub)control.');
+    TempVarDescriptions.Add('$DebugVar_TextColors$=[String] This is a debugging variable. It is updated by FindSubControl action, with the path to the executing template and the evaluated foreground and background color of the searched bitmap text, from the current font profile. After execution, the variable contains the colors from the last font profile.');
+    TempVarDescriptions.Add('$DebugVar_BitmapText$=[String] This is a debugging variable. It is updated by FindSubControl action, with the searched bitmap text. If the text is empty, the variable contains an error message, which helps the user understand why the action fails.');
+    TempVarDescriptions.Add('$DbgCurrentAction$=[String] This is a debugging variable. It is updated in server mode with an error message, when attempting to execute an out of index action, or an action from an empty template.');
+    TempVarDescriptions.Add('$DbgPlayAllActions$=[String] This is a debugging variable. It is updated in server mode with debugging information about action execution state. It is useful during remote debugging, when the server waits for client to close a template.');
+
+    for i := 0 to FVarDescriptions.Count - 1 do
+      FVarDescriptions.Strings[i] := TempVarDescriptions.Values[FVarDescriptions.Strings[i]];
+  finally
+    TempVarDescriptions.Free;
+  end;
+
+  TempFuncDescriptions := TStringList.Create;
+  try
+    FillInWithAllFuncs(FFuncDescriptions);
+
+    TempFuncDescriptions.Add('$ExtractFileDir(<DirName>)$=Returns the directory up to and not including the last item in the path.');
+    TempFuncDescriptions.Add('$Random(<min>, <max>)$=Returns a random number between min and max.');
+    TempFuncDescriptions.Add('$Random(<max>)$=Returns a random number, lower than max.');
+    TempFuncDescriptions.Add('$Sum(<op1>, <op2>)$=Adds two numbers.');
+    TempFuncDescriptions.Add('$Diff(<op1>, <op2>)$=Subtracts two numbers.');
+    TempFuncDescriptions.Add('$http://<server:port>/[params]$=Makes an http GET request to the specified server address and port. Returns the result.');
+    TempFuncDescriptions.Add('$FastReplace_45ToReturn(<some_string>)$=Replaces all #4#5 (ASCII_4 and ASCII_5) occurrences with CRLF. Returns the result.');
+    TempFuncDescriptions.Add('$FastReplace_ReturnTo45(<some_string>)$=Replaces all CRLF (ASCII_13 and ASCII_10) occurrences with #4#5. Returns the result.');
+    TempFuncDescriptions.Add('$FastReplace_45To87(<some_string>)$=Replaces all #4#5 (ASCII_4 and ASCII_5) occurrences with #8#7 (ASCII_8 and ASCII_7). Returns the result.');
+    TempFuncDescriptions.Add('$FastReplace_87To45(<some_string>)$=Replaces all #8#7 (ASCII_8 and ASCII_7) occurrences with #4#5 (ASCII_4 and ASCII_5). Returns the result.');
+    TempFuncDescriptions.Add('$Exit(<ExitCode>)$=Stops current template execution. If the passed ExitCode argument is 0, the template stops with a "Successful" status, otherwise with "Failed". Returns nothing. Sets the $ExitCode$ variable to the passed argument. It can be executed by SetVar action and must be placed in its "Variable" column.');
+    TempFuncDescriptions.Add('$CreateDir(<PathToNewDir>)$=Creates a directory (and its parent directories, if required) by the current path.');
+    TempFuncDescriptions.Add('$LoadTextFile(<PathToTextFile>)$=Loads a text file (CRLF-separated lines) and returns its content as #4#5 separated strings.');
+    TempFuncDescriptions.Add('$ItemCount($TextFileContent$)$=Returns the number of items in a #4#5-separated list of strings (as returned by $LoadTextFile()$. Even the last item has to be terminated by #4#5.');
+    TempFuncDescriptions.Add('$GetTextItem($TextFileContent$,<ItemIndex>)$=Returns the item by index, in a #4#5-separated list of strings (as returned by $LoadTextFile()$. Even the last item has to be terminated by #4#5.');
+    TempFuncDescriptions.Add('$StringContains(<SubString>, <String>)$=Return 1, if <SubString> is part of <String>. Otherwise, it returns 0.');
+    TempFuncDescriptions.Add('$ExtractFileName(<PathToFile>)$=Returns the last item of a file path.');
+    TempFuncDescriptions.Add('$ExtractFileExt(<PathToFile>)$=Returns the extension (including the dot) of a file name.');
+    TempFuncDescriptions.Add('$ExtractFileNameNoExt(<PathToFile>)$=Returns the filename, without extension, from a file path');
+    TempFuncDescriptions.Add('$UpdateControlInfo(<Handle>)$=Updates several variables (e.g. $Control_Text$, $Control_Class$, $Control_Left$, $Control_Top$ etc.) with details about the control, which matches the handle. Returns the passed handle. If the handle is invalid/unused, the $Control_Class$ variable is empty.');
+    TempFuncDescriptions.Add('$GetSelfHandles()$=Updates several variables with their window handles (see $frmUIClickerMainForm_Handle$). Returns nothing. It can be executed by SetVar action and must be placed in its "Variable" column.');
+    TempFuncDescriptions.Add('$GetKeyNameFromPair(<key>eq<value>)$=Returns <key> from a <key>eq<value> statement.');
+    TempFuncDescriptions.Add('$GetKeyValueFromPair(<key>eq<value>)$=Returns <value> from a <key>eq<value> statement.');
+    TempFuncDescriptions.Add('$Chr(<ByteValue>)$=Returns the ASCII character, based on the given index. Not all characters have a visual representation.');
+    TempFuncDescriptions.Add('$IncBrightness(<HexColor>[,Amount])$=Returns <HexColor>, increased by Amount, on all RGB channels. If Amount is not passed, <HexColor> is increased by one, on all RGB channels.');
+    TempFuncDescriptions.Add('$DecBrightness(<HexColor>[,Amount])$=Returns <HexColor>, decreased by Amount, on all RGB channels. If Amount is not passed, <HexColor> is decreased by one, on all RGB channels.');
+    TempFuncDescriptions.Add('$IncBrightnessR(<HexColor>[,Amount])$=Returns <HexColor>, increased by Amount, on R channel only. If Amount is not passed, <HexColor> is increased by one, on R channel only. <HexColor> must be in BBGGRR format.');
+    TempFuncDescriptions.Add('$IncBrightnessG(<HexColor>[,Amount])$=Returns <HexColor>, increased by Amount, on G channel only. If Amount is not passed, <HexColor> is increased by one, on G channel only. <HexColor> must be in BBGGRR format.');
+    TempFuncDescriptions.Add('$IncBrightnessB(<HexColor>[,Amount])$=Returns <HexColor>, increased by Amount, on B channel only. If Amount is not passed, <HexColor> is increased by one, on B channel only. <HexColor> must be in BBGGRR format.');
+    TempFuncDescriptions.Add('$DecBrightnessR(<HexColor>[,Amount])$=Returns <HexColor>, decreased by Amount, on R channel only. If Amount is not passed, <HexColor> is decreased by one, on R channel only. <HexColor> must be in BBGGRR format.');
+    TempFuncDescriptions.Add('$DecBrightnessG(<HexColor>[,Amount])$=Returns <HexColor>, decreased by Amount, on G channel only. If Amount is not passed, <HexColor> is decreased by one, on G channel only. <HexColor> must be in BBGGRR format.');
+    TempFuncDescriptions.Add('$DecBrightnessB(<HexColor>[,Amount])$=Returns <HexColor>, decreased by Amount, on B channel only. If Amount is not passed, <HexColor> is decreased by one, on B channel only. <HexColor> must be in BBGGRR format.');
+    TempFuncDescriptions.Add('$Current_Mouse_X$=Returns the current global X position of the mouse cursor.');
+    TempFuncDescriptions.Add('$Current_Mouse_Y$=Returns the current global Y position of the mouse cursor.');
+    TempFuncDescriptions.Add('$CRLF$=Returns a CRLF sequence.');
+    TempFuncDescriptions.Add('$#4#5$=Returns a ASCII #4#5 sequence.');
+    TempFuncDescriptions.Add('$Now$=Returns current datetime.');
+
+    for i := 0 to FFuncDescriptions.Count - 1 do
+    begin
+      s := FFuncDescriptions.Strings[i];
+      s := StringReplace(s, '<key>=<value>', '<key>eq<value>', [rfReplaceAll]);
+      FFuncDescriptions.Strings[i] := StringReplace(TempFuncDescriptions.Values[s], '<key>eq<value>', '<key>=<value>', [rfReplaceAll]);
+    end;
+  finally
+    TempFuncDescriptions.Free;
+  end;
+end;
+
+
 procedure TfrClickerActionsArr.CreateRemainingUIComponents;
 var
   NewColum: TVirtualTreeColumn;
@@ -681,6 +836,10 @@ begin
   NewColum.Position := 0;
   NewColum.Width := 30;
   NewColum.Text := '#';
+
+  FVarDescriptions := TStringList.Create;
+  FFuncDescriptions := TStringList.Create;
+  //FillInVarDescriptions; called when displaying autocomplete
 end;
 
 
@@ -695,7 +854,7 @@ begin
   FActionExecution.StopAllActionsOnDemand := @FStopAllActionsOnDemand;
   FActionExecution.StopAllActionsOnDemandFromParent := FStopAllActionsOnDemandFromParent;
   FActionExecution.OnAddToLog := AddToLog;
-  FActionExecution.TemplateFileName := @FFileName;
+  FActionExecution.SelfTemplateFileName := @FFileName;
   FActionExecution.ExecutingActionFromRemote := @FExecutingActionFromRemote;
   FActionExecution.FileLocationOfDepsIsMem := @FFileLocationOfDepsIsMem;
   FActionExecution.FullTemplatesDir := @FFullTemplatesDir;
@@ -766,6 +925,9 @@ begin
   FCmdConsoleHistory.Free;
   FActionExecution.Free;
   FLoggingFIFO.Free;
+  FVarDescriptions.Free;
+  FFuncDescriptions.Free;
+
   inherited Destroy;
 end;
 
@@ -1628,6 +1790,7 @@ begin
   ActionIndex := Node^.Index;
 
   FClkActions[ActionIndex].ActionStatus := asInProgress;
+  SetActionVarValue('$ExitCode$', '');
   vstActions.RepaintNode(Node);
 
   try
@@ -1677,7 +1840,10 @@ begin
       Result := True; //allow further execution
     end
     else
-      FClkActions[ActionIndex].ActionStatus := asFailed;
+      if GetActionVarValue('$ExitCode$') <> '0' then
+        FClkActions[ActionIndex].ActionStatus := asFailed
+      else
+        FClkActions[ActionIndex].ActionStatus := asSuccessful;
   end;
 
   if not FExecutesRemotely then
@@ -1945,7 +2111,21 @@ begin
 
                 if FClkActions[Node^.Index].ActionStatus = asFailed then  //the status can be manually reset while debugging
                   Exit;
-              end;
+              end
+              else
+                if GetActionVarValue('$ExitCode$') = '0' then
+                begin
+                  if IsDebugging then
+                  begin
+                    spdbtnContinuePlayingAll.Enabled := True;
+                    spdbtnStepOver.Enabled := True;
+
+                    if not FContinuePlayingAll then   //pause execution if debugging
+                      WaitInDebuggingMode;
+                  end;
+
+                  Exit;   //exit template
+                end;
           finally
             //restore button states
             if IsDebugging then
@@ -2845,7 +3025,7 @@ end;
 
 procedure TfrClickerActionsArr.edtConsoleCommandExit(Sender: TObject);
 begin
-  if not frmAutoComplete.Focused then
+  if Assigned(frmAutoComplete) and not frmAutoComplete.Focused then
     CloseAutoComplete;
 end;
 
@@ -2999,16 +3179,30 @@ end;
 
 procedure TfrClickerActionsArr.edtConsoleCommandKeyUp(Sender: TObject;
   var Key: Word; Shift: TShiftState);
+var
+  TempVars: TStringList;
+  TempFuncs: TStringList;
 begin
   if Key = VK_SPACE then
     if ssCtrl in Shift then
     begin
       Key := 0;
-      ShowAutoComplete(edtConsoleCommand, frClickerActions.vallstVariables.Cols[0], frClickerActions.frClickerSetVar.memAvailableFunctions.Lines);
+      FillInVarAndFuncDescriptions;
+
+      TempVars := TStringList.Create;
+      TempFuncs := TStringList.Create;
+      try
+        FillInWithAllVars(TempVars);
+        FillInWithAllFuncs(TempFuncs);
+        ShowAutoComplete(edtConsoleCommand, TempVars, TempFuncs, FVarDescriptions, FFuncDescriptions);
+      finally
+        TempVars.Free;
+        TempFuncs.Free;
+      end;
     end;
 
   if AutoCompleteVisible then
-    ShowAutoComplete(edtConsoleCommand, frClickerActions.vallstVariables.Cols[0], frClickerActions.frClickerSetVar.memAvailableFunctions.Lines);
+    ShowAutoComplete(edtConsoleCommand, nil, nil, FVarDescriptions, FFuncDescriptions);
 end;
 
 

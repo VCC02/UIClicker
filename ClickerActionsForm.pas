@@ -777,6 +777,10 @@ begin
 
   memVariables.Lines.Add('$OSVerNumber$=' + OSVerNumber);
   memVariables.Lines.Add('$OSVer$=' + OSVerStr);
+  memVariables.Lines.Add('$ExitCode$=');
+  memVariables.Lines.Add('$AppDir$=' + ExtractFileDir(ParamStr(0)));
+  memVariables.Lines.Add('$TemplateDir$=' + FFullTemplatesDir);
+  memVariables.Lines.Add('$SelfTemplateDir$=' + frClickerActionsArrMain.FileName);   //frClickerActionsArrMain.FileName is empty here, because no template is being executed at this point
 
   frClickerActionsArrExperiment1.SetVariables(memVariables.Lines);
   frClickerActionsArrExperiment2.SetVariables(memVariables.Lines);
@@ -2651,6 +2655,17 @@ begin
       if (ParamStr(i) = '--ExtraCaption') or (ParamStr(i) = '--SetExecMode') or (ParamStr(i) = '--ServerPort') then  // some common options
         AddToLog('The application is not built for testing, so it won''t accept command line options. Please rebuild with "TestBuild" compiler directive.');
   {$ENDIF}
+
+  try
+    frClickerActionsArrMain.SetActionVarValue('$TemplateDir$', FFullTemplatesDir);
+    frClickerActionsArrExperiment1.SetActionVarValue('$TemplateDir$', FFullTemplatesDir);
+    frClickerActionsArrExperiment2.SetActionVarValue('$TemplateDir$', FFullTemplatesDir);
+
+    //frClickerActionsArrMain.SetActionVarValue('$SelfTemplateDir$', frClickerActionsArrMain.FileName);  //FileName is still not available
+  except
+    //AV in case the frames are not created
+    AddToLog('Action frames are not created when setting $TemplateDir$');
+  end;
 end;
 
 
@@ -3010,7 +3025,7 @@ begin
   AOpenDialog := TSelectDirectoryDialog.Create(nil);
   try
     AOpenDialog.Filter := 'Clicker template files (*.clktmpl)|*.clktmpl|All files (*.*)|*.*';
-    AOpenDialog.InitialDir := StringReplace(lbePathToTemplates.Text, '$AppDir$', ParamStr(0), [rfReplaceAll]);
+    AOpenDialog.InitialDir := StringReplace(lbePathToTemplates.Text, '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
 
     if AOpenDialog.Execute then
     begin

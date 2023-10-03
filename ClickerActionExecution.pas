@@ -50,7 +50,7 @@ type
     FClickerVars: TStringList;  //not created here in this class, used from outside
     FStopAllActionsOnDemandFromParent: PBoolean;
     FStopAllActionsOnDemand: PBoolean;
-    FTemplateFileName: PString;
+    FSelfTemplateFileName: PString;
     FExecutingActionFromRemote: PBoolean;
     FFileLocationOfDepsIsMem: PBoolean;
     FFullTemplatesDir: PString;
@@ -133,7 +133,7 @@ type
     property ClickerVars: TStringList write FClickerVars;  //not created here in this class, used from outside
     property StopAllActionsOnDemandFromParent: PBoolean write FStopAllActionsOnDemandFromParent;
     property StopAllActionsOnDemand: PBoolean write FStopAllActionsOnDemand;
-    property TemplateFileName: PString write FTemplateFileName;
+    property SelfTemplateFileName: PString write FSelfTemplateFileName;
     property ExecutingActionFromRemote: PBoolean write FExecutingActionFromRemote;
     property FileLocationOfDepsIsMem: PBoolean write FFileLocationOfDepsIsMem;
     property FullTemplatesDir: PString write FFullTemplatesDir;
@@ -870,10 +870,10 @@ begin
 
                 if GetTickCount64 - tk >= TimeoutForAppRun then
                 begin
-                  if FTemplateFileName = nil then
-                    raise Exception.Create('FTemplateFileName not set.');
+                  if FSelfTemplateFileName = nil then
+                    raise Exception.Create('FSelfTemplateFileName not set.');
 
-                  PrependErrorMessageToActionVar('Timeout at "' + AActionOptions.ActionName + '" in ' + FTemplateFileName^);
+                  PrependErrorMessageToActionVar('Timeout at "' + AActionOptions.ActionName + '" in ' + FSelfTemplateFileName^);
                   Result := False;
                   Break;
                 end;
@@ -881,7 +881,7 @@ begin
                 if ((FStopAllActionsOnDemand <> nil) and FStopAllActionsOnDemand^) or
                    ((FStopAllActionsOnDemandFromParent <> nil) and FStopAllActionsOnDemandFromParent^) then
                 begin
-                  PrependErrorMessageToActionVar('App Execution manually stopped at "' + AActionOptions.ActionName + '" in ' + FTemplateFileName^);
+                  PrependErrorMessageToActionVar('App Execution manually stopped at "' + AActionOptions.ActionName + '" in ' + FSelfTemplateFileName^);
                   Result := False;
                   Break;
                 end;
@@ -924,11 +924,11 @@ begin
              (AExecAppOptions.UseInheritHandles = uihNo) then
             E.Message := E.Message + '  Make sure the UseInheritHandles option is set to "Yes" or "Only with StdIn / StdOut", when using StdIn or StdOut.';
 
-          if FTemplateFileName = nil then
-            raise Exception.Create('FTemplateFileName not set.');
+          if FSelfTemplateFileName = nil then
+            raise Exception.Create('FSelfTemplateFileName not set.');
 
           ErrMsg := StringReplace(SysErrorMessage(GetLastOSError), '%1', '"' + ACmd + '"', [rfReplaceAll]);
-          SetActionVarValue('$ExecAction_Err$', 'Exception "' + E.Message + '" at "' + AActionOptions.ActionName + '" in ' + FTemplateFileName^ + '   SysMsg: ' + ErrMsg);
+          SetActionVarValue('$ExecAction_Err$', 'Exception "' + E.Message + '" at "' + AActionOptions.ActionName + '" in ' + FSelfTemplateFileName^ + '   SysMsg: ' + ErrMsg);
         end;
       end;
     {$ENDIF}
@@ -1066,7 +1066,7 @@ begin
   FindControlInputData.TextSeparator := AFindControlOptions.MatchTextSeparator;
   FindControlInputData.ColorError := StrToIntDef(EvaluateReplacements(AFindControlOptions.ColorError), 0);
   FindControlInputData.AllowedColorErrorCount := StrToIntDef(EvaluateReplacements(AFindControlOptions.AllowedColorErrorCount), 0);
-  FindControlInputData.DebugTemplateName := FTemplateFileName^;
+  FindControlInputData.DebugTemplateName := FSelfTemplateFileName^;
 
   n := Length(AFindControlOptions.MatchBitmapText);
   if n = 0 then
@@ -1099,7 +1099,7 @@ begin
         EvalBG := EvaluateReplacements(AFindControlOptions.MatchBitmapText[j].BackgroundColor, True);
 
         SetActionVarValue('$DebugVar_TextColors$',
-                          'FileName=' + FTemplateFileName^ +
+                          'FileName=' + FSelfTemplateFileName^ +
                           //' FG=' + IntToHex(frClickerActions.frClickerFindControl.BMPTextFontProfiles[j].FGColor, 8) +
                           //' BG=' + IntToHex(frClickerActions.frClickerFindControl.BMPTextFontProfiles[j].BGColor, 8) +
                           ' Eval(FG)=' + EvaluateReplacements(AFindControlOptions.MatchBitmapText[j].ForegroundColor, False) + '=' + EvalFG +
@@ -1211,7 +1211,7 @@ begin
         frClickerActions.imgDebugBmp.Canvas.TextOut(0, 165, 'Right offset: ' + IntToStr(FindControlInputData.InitialRectangleOffsets.Right) + '   ');
         frClickerActions.imgDebugBmp.Canvas.TextOut(0, 180, 'Bottom offset: ' + IntToStr(FindControlInputData.InitialRectangleOffsets.Bottom) + '   ');
 
-        frClickerActions.imgDebugBmp.Canvas.TextOut(0, 210, 'FileName: '+ ExtractFileName(FTemplateFileName^));
+        frClickerActions.imgDebugBmp.Canvas.TextOut(0, 210, 'FileName: '+ ExtractFileName(FSelfTemplateFileName^));
         frClickerActions.imgDebugBmp.Canvas.TextOut(0, 225, 'Action: "' + AActionOptions.ActionName + '"');
 
         AddToLog('Exiting find control, because the search area is negative.');
@@ -1288,13 +1288,16 @@ begin
               if FFileLocationOfDepsIsMem = nil then
                 raise Exception.Create('FFileLocationOfDepsIsMem is not assigned.');
 
-              if FTemplateFileName = nil then
-                TemplateDir := 'FTemplateFileName not set.'
+              if FSelfTemplateFileName = nil then
+                TemplateDir := 'FSelfTemplateFileName not set.'
               else
-                TemplateDir := ExtractFileDir(FTemplateFileName^);
+                TemplateDir := ExtractFileDir(FSelfTemplateFileName^);
 
               for i := 0 to ListOfBitmapFiles.Count - 1 do
-                ListOfBitmapFiles.Strings[i] := StringReplace(ListOfBitmapFiles.Strings[i], '$TemplateDir$', TemplateDir, [rfReplaceAll]);
+                ListOfBitmapFiles.Strings[i] := StringReplace(ListOfBitmapFiles.Strings[i], '$SelfTemplateDir$', TemplateDir, [rfReplaceAll]);
+
+              for i := 0 to ListOfBitmapFiles.Count - 1 do
+                ListOfBitmapFiles.Strings[i] := StringReplace(ListOfBitmapFiles.Strings[i], '$TemplateDir$', FFullTemplatesDir^, [rfReplaceAll]);
 
               //Leave this section commented, it exists after the DoOnWaitForBitmapsAvailability call!
               //if not FExecutingActionFromRemote^ then
@@ -1354,13 +1357,16 @@ begin
               ListOfPrimitiveFiles.Text := AFindControlOptions.MatchPrimitiveFiles;
               AddToLog('Pmtv file count to search with: ' + IntToStr(ListOfPrimitiveFiles.Count));
 
-              if FTemplateFileName = nil then
-                TemplateDir := 'FTemplateFileName not set.'
+              if FSelfTemplateFileName = nil then
+                TemplateDir := 'FSelfTemplateFileName not set.'
               else
-                TemplateDir := ExtractFileDir(FTemplateFileName^);
+                TemplateDir := ExtractFileDir(FSelfTemplateFileName^);
 
               for i := 0 to ListOfPrimitiveFiles.Count - 1 do
-                ListOfPrimitiveFiles.Strings[i] := StringReplace(ListOfPrimitiveFiles.Strings[i], '$TemplateDir$', TemplateDir, [rfReplaceAll]);
+                ListOfPrimitiveFiles.Strings[i] := StringReplace(ListOfPrimitiveFiles.Strings[i], '$SelfTemplateDir$', TemplateDir, [rfReplaceAll]);
+
+              for i := 0 to ListOfPrimitiveFiles.Count - 1 do
+                ListOfPrimitiveFiles.Strings[i] := StringReplace(ListOfPrimitiveFiles.Strings[i], '$TemplateDir$', FFullTemplatesDir^, [rfReplaceAll]);
 
               //Leave this section commented, it exists after the DoOnWaitForBitmapsAvailability call!
               //if not FExecutingActionFromRemote^ then   //files from client will not have the $AppDir$ replacement resolved here, because of requesting them with original name
@@ -1513,7 +1519,7 @@ begin
 
     if FStopAllActionsOnDemand^ then
     begin
-      PrependErrorMessageToActionVar('Stopped by user at "' + AActionOptions.ActionName + '" in ' + FTemplateFileName^ + '  ');
+      PrependErrorMessageToActionVar('Stopped by user at "' + AActionOptions.ActionName + '" in ' + FSelfTemplateFileName^ + '  ');
       Break;
     end;
 
@@ -1535,7 +1541,7 @@ begin
 
     if (frClickerActions.prbTimeout.Max > 0) and (frClickerActions.prbTimeout.Position >= frClickerActions.prbTimeout.Max) then
     begin
-      PrependErrorMessageToActionVar('Timeout at "' + AActionOptions.ActionName + '" in ' + FTemplateFileName^ + '  AttemptCount=' + IntToStr(AttemptCount) + '  ');
+      PrependErrorMessageToActionVar('Timeout at "' + AActionOptions.ActionName + '" in ' + FSelfTemplateFileName^ + '  AttemptCount=' + IntToStr(AttemptCount) + '  ');
       Break;
     end;
 
@@ -1702,7 +1708,7 @@ begin
 
   if ACallTemplateOptions.CallOnlyIfCondition then
   begin
-    MessageBox(Application.MainForm.Handle, PChar('Using this condition mechanism is deprecated. Please move this condition to the "Condition" tab.' + #13#10 + 'Filename: ' + FTemplateFileName^), PChar(Application.Title), MB_ICONWARNING);
+    MessageBox(Application.MainForm.Handle, PChar('Using this condition mechanism is deprecated. Please move this condition to the "Condition" tab.' + #13#10 + 'Filename: ' + FSelfTemplateFileName^), PChar(Application.Title), MB_ICONWARNING);
 
     KeyName := ACallTemplateOptions.CallOnlyIfConditionVarName;
     KeyValue := ACallTemplateOptions.CallOnlyIfConditionVarValue;
@@ -1874,7 +1880,7 @@ begin
 
     if FStopAllActionsOnDemand^ then
     begin
-      PrependErrorMessageToActionVar('Stopped by user at "' + AActionOptions.ActionName + '" in ' + FTemplateFileName^ + '  ');
+      PrependErrorMessageToActionVar('Stopped by user at "' + AActionOptions.ActionName + '" in ' + FSelfTemplateFileName^ + '  ');
       Result := False;
       Break;
     end;
@@ -1934,9 +1940,9 @@ begin
         VarValue := Copy(VarName, Pos('(', VarName) + 1, MaxInt);
         VarValue := Copy(VarValue, 1, Length(VarValue) - 2);
         SetActionVarValue('$ExecAction_Err$', 'Terminating template execution on request.');
-        SetActionVarValue('ExitCode', VarValue);
+        SetActionVarValue('$ExitCode$', VarValue);
 
-        Result := False;
+        Result := VarValue = '0';
         Exit;
       end;
 

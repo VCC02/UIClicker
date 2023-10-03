@@ -168,7 +168,7 @@ object frClickerSetVar: TfrClickerSetVar
       Anchors = [akTop, akLeft, akRight, akBottom]
       Color = clBtnFace
       Lines.Strings = (
-        '$ExtractFileDir(<DirName>)$ '
+        '$ExtractFileDir(<DirName>)$'
         '$Random(<min>, <max>)$'
         '$Random(<max>)$'
         '$Sum(<op1>, <op2>)$'

@@ -1296,4 +1296,16 @@ object frClickerActions: TfrClickerActions
     Left = 408
     Top = 224
   end
+  object pmPathReplacements: TPopupMenu
+    Left = 631
+    Top = 176
+    object MenuItem_ReplaceWithAppDir: TMenuItem
+      Caption = 'Replace part of the path with $AppDir$'
+      OnClick = MenuItem_ReplaceWithAppDirClick
+    end
+    object MenuItem_ReplaceWithTemplateDir: TMenuItem
+      Caption = 'Replace part of the path with $TemplateDir$'
+      OnClick = MenuItem_ReplaceWithTemplateDirClick
+    end
+  end
 end
