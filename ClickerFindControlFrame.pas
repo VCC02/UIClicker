@@ -203,6 +203,7 @@ type
     MenuItemPasteRefFromClipboard: TMenuItem;
     N3: TMenuItem;
     PageControlMatch: TPageControl;
+    pnlUseWholeScreen: TPanel;
     pnlDrag: TPanel;
     pmExtraCopyValueWindows: TPopupMenu;
     spdbtnDisplaySearchAreaDbgImgMenu: TSpeedButton;
@@ -498,6 +499,7 @@ type
 
     procedure UpdateSearchAreaLabelsFromKeysOnInitRect(AInitialRectange: TRectString);  //must be called on OI Text editor - KeyUp
     procedure UpdateControlWidthHeightLabels;
+    procedure UpdateUseWholeScreenLabel(AUseWholeScreen: Boolean);
     procedure ClearControls;
     procedure UpdateBitmapAlgorithmSettings;
     procedure UpdatePreviewIcons;
@@ -3184,6 +3186,23 @@ procedure TfrClickerFindControl.UpdateControlWidthHeightLabels;
 begin
   lblPreviewControl_Width.Caption := '$Control_Width$: ' + EvaluateReplacements('$Control_Width$');
   lblPreviewControl_Height.Caption := '$Control_Height$: ' + EvaluateReplacements('$Control_Height$');
+end;
+
+
+procedure TfrClickerFindControl.UpdateUseWholeScreenLabel(AUseWholeScreen: Boolean);
+var
+  FindControlOptions: PClkFindControlOptions;
+begin
+  pnlUseWholeScreen.Visible := AUseWholeScreen;
+  FindControlOptions := DoOnGetFindControlOptions;
+
+  if AUseWholeScreen and
+     (FindControlOptions^.MatchCriteria.WillMatchBitmapText or
+     FindControlOptions^.MatchCriteria.WillMatchBitmapFiles or
+     FindControlOptions^.MatchCriteria.WillMatchPrimitiveFiles) then
+    pnlUseWholeScreen.Color := $00C6C6FF  //some light red
+  else
+    pnlUseWholeScreen.Color := $00E2F7CE; //some light green
 end;
 
 

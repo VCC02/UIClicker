@@ -519,10 +519,23 @@ object frClickerFindControl: TfrClickerFindControl
       object chkIncludeSearchedBmpInZoom: TCheckBox
         Left = 0
         Height = 19
-        Top = 24
+        Top = 25
         Width = 164
         Caption = 'Include searched bmp in zoom'
         TabOrder = 6
+      end
+      object pnlUseWholeScreen: TPanel
+        Left = 168
+        Height = 18
+        Hint = 'The search area is set to the whole screen, not to the previous control.'
+        Top = 26
+        Width = 74
+        Caption = 'Whole screen'
+        Color = 14874574
+        ParentColor = False
+        ParentShowHint = False
+        ShowHint = True
+        TabOrder = 7
       end
     end
     object TabSheetActionFindSubControlPrimitives: TTabSheet

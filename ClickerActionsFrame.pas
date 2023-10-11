@@ -464,6 +464,7 @@ type
     procedure SetDebugVariablesFromListOfStrings(AListOfStrings: string);
     procedure UpdatePageControlActionExecutionIcons;
     procedure UpdateControlWidthHeightLabels;
+    procedure UpdateUseWholeScreenLabel(AUseWholeScreen: Boolean);
     procedure RefreshActionName; //called by action list, when modifying the action name from there
     procedure ResetAllPmtvModifiedFlags; //called when users select a diffeent action from the one with modified pmtv files
 
@@ -1016,6 +1017,12 @@ end;
 procedure TfrClickerActions.UpdateControlWidthHeightLabels;
 begin
   frClickerFindControl.UpdateControlWidthHeightLabels;
+end;
+
+
+procedure TfrClickerActions.UpdateUseWholeScreenLabel(AUseWholeScreen: Boolean);
+begin
+  frClickerFindControl.UpdateUseWholeScreenLabel(AUseWholeScreen);
 end;
 
 
@@ -3607,7 +3614,10 @@ begin
             end;
 
             CFindControl_UseWholeScreen_PropIndex:   //this call will have to take into account, the screen edges or vars as search area limits
+            begin
               frClickerFindControl.UpdateSearchAreaLabelsFromKeysOnInitRect(FEditingAction^.FindControlOptions.InitialRectangle);
+              frClickerFindControl.UpdateUseWholeScreenLabel(StrToBool(ANewText));
+            end;
 
             CFindControl_MatchPrimitiveFiles_PropIndex:
             begin

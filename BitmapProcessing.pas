@@ -314,7 +314,7 @@ var
   SrcWidth, SrcHeight: Integer;
   SubWidth, SubHeight: Integer;
   XAmount, YAmount: Integer;
-begin
+begin                     //this algorithm can be optimized by searching a 5x5px area, then if that matches, go for full size search
   Result := False;
 
   SubCnvXOffset := -1;

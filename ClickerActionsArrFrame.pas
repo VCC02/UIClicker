@@ -1239,6 +1239,7 @@ begin
   frClickerActions.frClickerFindControl.UpdatePreviewIcons;
 
   frClickerActions.UpdateControlWidthHeightLabels;
+  frClickerActions.UpdateUseWholeScreenLabel(FClkActions[ActionIndex].FindControlOptions.UseWholeScreen);
   frClickerActions.frClickerFindControl.UpdateSearchAreaLabelsFromKeysOnInitRect(FClkActions[ActionIndex].FindControlOptions.InitialRectangle);
 
   frClickerActions.frClickerExecApp.memExecAppParams.Lines.Text := FClkActions[ActionIndex].ExecAppOptions.ListOfParams;
