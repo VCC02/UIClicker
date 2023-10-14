@@ -308,28 +308,14 @@ begin
 end;
 
 
-function BitmapPosMatch_BruteForce(SrcMat, SubMat: TRGBPCanvasMat; SourceBitmap, SubBitmap: TBitmap; ColorErrorLevel: Integer; out SubCnvXOffset, SubCnvYOffset: Integer; TotalErrorCount: Integer; AStopSearchOnDemand: PBoolean = nil; StopSearchOnMismatch: Boolean = True): Boolean;
+function BitmapPosMatch_BruteForceWithOffset(SrcMat, SubMat: TRGBPCanvasMat; XOffset, YOffset, XAmount, YAmount, SrcWidth, SrcHeight, SubWidth, SubHeight, ColorErrorLevel: Integer; var SubCnvXOffset, SubCnvYOffset: Integer; TotalErrorCount: Integer; AStopSearchOnDemand: PBoolean = nil; StopSearchOnMismatch: Boolean = True): Boolean;
 var
   x, y: Integer;
-  SrcWidth, SrcHeight: Integer;
-  SubWidth, SubHeight: Integer;
-  XAmount, YAmount: Integer;
-begin                     //this algorithm can be optimized by searching a 5x5px area, then if that matches, go for full size search
+begin
   Result := False;
 
-  SubCnvXOffset := -1;
-  SubCnvYOffset := -1;
-
-  SrcWidth := SourceBitmap.Width;
-  SrcHeight := SourceBitmap.Height;
-  SubWidth := SubBitmap.Width;
-  SubHeight := SubBitmap.Height;
-  
-  XAmount := SrcWidth - SubWidth;  // +1 ????
-  YAmount := SrcHeight - SubHeight;  // +1 ????
-
-  for y := 0 to YAmount do
-    for x := 0 to XAmount do
+  for y := YOffset to YAmount do
+    for x := XOffset to XAmount do
     begin
       if (AStopSearchOnDemand <> nil) and AStopSearchOnDemand^ then
         Exit;
@@ -343,6 +329,59 @@ begin                     //this algorithm can be optimized by searching a 5x5px
       end;
 
       RandomSleep;
+    end;
+end;
+
+
+function BitmapPosMatch_BruteForce(SrcMat, SubMat: TRGBPCanvasMat; SourceBitmap, SubBitmap: TBitmap; ColorErrorLevel: Integer; out SubCnvXOffset, SubCnvYOffset: Integer; TotalErrorCount: Integer; AStopSearchOnDemand: PBoolean = nil; StopSearchOnMismatch: Boolean = True): Boolean;
+const
+  CPreSize = 5; //px
+var
+  xx, yy: Integer;
+  SrcWidth, SrcHeight: Integer;
+  SubWidth, SubHeight: Integer;
+  XAmount, YAmount: Integer;
+  PreErrorCount: Integer;
+  PreSizeX, PreSizeY: Integer;
+begin                     //default optimization: searching a 5px x 5px area, then if that matches, go for full size search
+  Result := False;
+
+  SubCnvXOffset := -1;
+  SubCnvYOffset := -1;
+
+  SrcWidth := SourceBitmap.Width;
+  SrcHeight := SourceBitmap.Height;
+  SubWidth := SubBitmap.Width;
+  SubHeight := SubBitmap.Height;
+  
+  XAmount := SrcWidth - SubWidth;  // +1 ????
+  YAmount := SrcHeight - SubHeight;  // +1 ????
+
+  //old, full search  - to be used as an option
+  //Result := BitmapPosMatch_BruteForceWithOffset(SrcMat, SubMat, 0, 0, XAmount, YAmount, SrcWidth, SrcHeight, SubWidth, SubHeight, ColorErrorLevel, SubCnvXOffset, SubCnvYOffset, TotalErrorCount, AStopSearchOnDemand);
+
+  PreErrorCount := Round(TotalErrorCount / (SubWidth * SubHeight / Sqr(CPreSize)));
+  PreSizeX := Min(SubWidth, CPreSize);
+  PreSizeY := Min(SubHeight, CPreSize);
+
+  for yy := 0 to YAmount do
+    for xx := 0 to XAmount do
+    begin
+      if (AStopSearchOnDemand <> nil) and AStopSearchOnDemand^ then
+        Exit;
+
+      if CanvasPosMatch(SrcMat, SubMat, xx, yy, SrcWidth, SrcHeight, PreSizeX, PreSizeY, ColorErrorLevel, PreErrorCount, AStopSearchOnDemand, StopSearchOnMismatch) then
+      begin
+        if CanvasPosMatch(SrcMat, SubMat, xx, yy, SrcWidth, SrcHeight, SubWidth, SubHeight, ColorErrorLevel, TotalErrorCount, AStopSearchOnDemand, StopSearchOnMismatch) then
+        begin
+          Result := True;
+          SubCnvXOffset := xx;
+          SubCnvYOffset := yy;
+          Exit;
+        end;
+
+        RandomSleep;
+      end;
     end;
 end;
 
