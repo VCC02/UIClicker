@@ -373,6 +373,8 @@ begin
   end;
 
   AFindControlOptions.GetAllControls := Ini.ReadBool(SectionIndex, 'GetAllControls', False);
+  AFindControlOptions.UseFastSearch := Ini.ReadBool(SectionIndex, 'UseFastSearch', True);
+  AFindControlOptions.FastSearchAllowedColorErrorCount := Ini.ReadString(SectionIndex, 'FastSearchAllowedColorErrorCount', '10');
 end;
 
 
@@ -772,6 +774,9 @@ begin
 
   AStringList.Add('MatchPrimitiveFiles=' + FastReplace_ReturnTo45(AActionFindControlOptions.MatchPrimitiveFiles));
   AStringList.Add('GetAllControls=' + IntToStr(Ord(AActionFindControlOptions.GetAllControls)));
+
+  AStringList.Add('UseFastSearch=' + IntToStr(Ord(AActionFindControlOptions.UseFastSearch)));
+  AStringList.Add('FastSearchAllowedColorErrorCount=' + AActionFindControlOptions.FastSearchAllowedColorErrorCount);
 end;
 
 
@@ -920,6 +925,9 @@ begin             //Substructures, which do not contain pointers, can be directl
     ADest.FindControlOptions.MatchBitmapText[i] := ASrc.FindControlOptions.MatchBitmapText[i];
 
   ADest.FindControlOptions.GetAllControls := ASrc.FindControlOptions.GetAllControls;
+
+  ADest.FindControlOptions.UseFastSearch := ASrc.FindControlOptions.UseFastSearch;
+  ADest.FindControlOptions.FastSearchAllowedColorErrorCount := ASrc.FindControlOptions.FastSearchAllowedColorErrorCount;
 end;
 
 

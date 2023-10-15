@@ -1084,6 +1084,12 @@ begin
     if not IsSubControl then
       SetActionVarValue('$AllControl_Handles$', '');
 
+  FindControlInputData.UseFastSearch := AFindControlOptions.UseFastSearch;
+  if FindControlInputData.UseFastSearch then
+    FindControlInputData.FastSearchAllowedColorErrorCount := StrToIntDef(EvaluateReplacements(AFindControlOptions.FastSearchAllowedColorErrorCount), -1)
+  else
+    FindControlInputData.FastSearchAllowedColorErrorCount := 0; //not used anyway
+
   for j := 0 to n - 1 do //number of font profiles
   begin
     if j > n - 1 then  //it seems that a FP bug allows "j" to go past n - 1. It may happen on EnumerateWindows only. At best, the memory is overwritten, which causes this behavior.
@@ -2335,6 +2341,9 @@ begin
 
     FindControlOptions.MatchPrimitiveFiles := FastReplace_45ToReturn(AListOfFindControlOptionsParams.Values['MatchPrimitiveFiles']); //ListOfStrings
     FindControlOptions.GetAllControls := AListOfFindControlOptionsParams.Values['GetAllControls'] = '1';
+
+    FindControlOptions.UseFastSearch := AListOfFindControlOptionsParams.Values['UseFastSearch'] <> '0';
+    FindControlOptions.FastSearchAllowedColorErrorCount := AListOfFindControlOptionsParams.Values['FastSearchAllowedColorErrorCount'];
 
     ActionOptions.ActionName := AListOfFindControlOptionsParams.Values['ActionName'];
     ActionOptions.ActionTimeout := Temp_ActionTimeout;

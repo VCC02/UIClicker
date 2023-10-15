@@ -56,7 +56,7 @@ type                      //2048 is used as 2^11 = 2048, as an optimization. See
 
 procedure Line(ACnv: TCanvas; x1, y1, x2, y2: Integer);
 procedure ScreenShot(SrcHandle: THandle; DestBitmap: TBitmap; XOffsetSrc, YOffsetSrc, Width, Height: Integer);
-function BitmapPosMatch(Algorithm: TMatchBitmapAlgorithm; AlgorithmSettings: TMatchBitmapAlgorithmSettings; SourceBitmap, SubBitmap: TBitmap; ColorErrorLevel: Integer; out SubCnvXOffset, SubCnvYOffset: Integer; TotalErrorCount: Integer; AStopSearchOnDemand: PBoolean = nil; StopSearchOnMismatch: Boolean = True): Boolean;
+function BitmapPosMatch(Algorithm: TMatchBitmapAlgorithm; AlgorithmSettings: TMatchBitmapAlgorithmSettings; SourceBitmap, SubBitmap: TBitmap; ColorErrorLevel: Integer; out SubCnvXOffset, SubCnvYOffset: Integer; TotalErrorCount, FastSearchColorErrorCount: Integer; AUseFastSearch: Boolean; AStopSearchOnDemand: PBoolean = nil; StopSearchOnMismatch: Boolean = True): Boolean;
 function AvgTwoTrueColors(Color1, Color2: TColor): TColor;
 procedure AvgBitmapWithColor(ASrcBitmap, ADestBitmap: TBitmap; AColor: TColor; XOffset: Integer = -1; YOffset: Integer = -1; Width: Integer = -1; Height: Integer = -1); //if X, Y, W, H are specified, the function operates on that area only
 procedure AvgBitmapWithBitmap(ASrcABitmap, ASrcBBitmap, ADestBitmap: TBitmap; XOffset: Integer = -1; YOffset: Integer = -1; Width: Integer = -1; Height: Integer = -1);
@@ -308,28 +308,14 @@ begin
 end;
 
 
-function BitmapPosMatch_BruteForce(SrcMat, SubMat: TRGBPCanvasMat; SourceBitmap, SubBitmap: TBitmap; ColorErrorLevel: Integer; out SubCnvXOffset, SubCnvYOffset: Integer; TotalErrorCount: Integer; AStopSearchOnDemand: PBoolean = nil; StopSearchOnMismatch: Boolean = True): Boolean;
+function BitmapPosMatch_BruteForceWithOffset(SrcMat, SubMat: TRGBPCanvasMat; XOffset, YOffset, XAmount, YAmount, SrcWidth, SrcHeight, SubWidth, SubHeight, ColorErrorLevel: Integer; var SubCnvXOffset, SubCnvYOffset: Integer; TotalErrorCount: Integer; AStopSearchOnDemand: PBoolean = nil; StopSearchOnMismatch: Boolean = True): Boolean;
 var
   x, y: Integer;
-  SrcWidth, SrcHeight: Integer;
-  SubWidth, SubHeight: Integer;
-  XAmount, YAmount: Integer;
-begin                     //this algorithm can be optimized by searching a 5x5px area, then if that matches, go for full size search
+begin
   Result := False;
 
-  SubCnvXOffset := -1;
-  SubCnvYOffset := -1;
-
-  SrcWidth := SourceBitmap.Width;
-  SrcHeight := SourceBitmap.Height;
-  SubWidth := SubBitmap.Width;
-  SubHeight := SubBitmap.Height;
-  
-  XAmount := SrcWidth - SubWidth;  // +1 ????
-  YAmount := SrcHeight - SubHeight;  // +1 ????
-
-  for y := 0 to YAmount do
-    for x := 0 to XAmount do
+  for y := YOffset to YAmount do
+    for x := XOffset to XAmount do
     begin
       if (AStopSearchOnDemand <> nil) and AStopSearchOnDemand^ then
         Exit;
@@ -344,6 +330,66 @@ begin                     //this algorithm can be optimized by searching a 5x5px
 
       RandomSleep;
     end;
+end;
+
+
+function BitmapPosMatch_BruteForce(SrcMat, SubMat: TRGBPCanvasMat; SourceBitmap, SubBitmap: TBitmap; ColorErrorLevel: Integer; out SubCnvXOffset, SubCnvYOffset: Integer; TotalErrorCount, FastSearchColorErrorCount: Integer; AUseFastSearch: Boolean; AStopSearchOnDemand: PBoolean = nil; StopSearchOnMismatch: Boolean = True): Boolean;
+const
+  CPreSize = 5; //px
+var
+  xx, yy: Integer;
+  SrcWidth, SrcHeight: Integer;
+  SubWidth, SubHeight: Integer;
+  XAmount, YAmount: Integer;
+  PreErrorCount: Integer;
+  PreSizeX, PreSizeY: Integer;
+begin                     //default optimization: searching a 5px x 5px area, then if that matches, go for full size search
+  Result := False;
+
+  SubCnvXOffset := -1;
+  SubCnvYOffset := -1;
+
+  SrcWidth := SourceBitmap.Width;
+  SrcHeight := SourceBitmap.Height;
+  SubWidth := SubBitmap.Width;
+  SubHeight := SubBitmap.Height;
+  
+  XAmount := SrcWidth - SubWidth;  // +1 ????
+  YAmount := SrcHeight - SubHeight;  // +1 ????
+
+  //old, full search  - to be used as an option
+  if not AUseFastSearch then
+    Result := BitmapPosMatch_BruteForceWithOffset(SrcMat, SubMat, 0, 0, XAmount, YAmount, SrcWidth, SrcHeight, SubWidth, SubHeight, ColorErrorLevel, SubCnvXOffset, SubCnvYOffset, TotalErrorCount, AStopSearchOnDemand)
+  else
+  begin
+    if FastSearchColorErrorCount = -1 then
+      PreErrorCount := Round(TotalErrorCount / (SubWidth * SubHeight / Sqr(CPreSize)))
+    else
+      PreErrorCount := FastSearchColorErrorCount;
+
+    PreSizeX := Min(SubWidth, CPreSize);
+    PreSizeY := Min(SubHeight, CPreSize);
+
+    for yy := 0 to YAmount do
+      for xx := 0 to XAmount do
+      begin
+        if (AStopSearchOnDemand <> nil) and AStopSearchOnDemand^ then
+          Exit;
+
+        if CanvasPosMatch(SrcMat, SubMat, xx, yy, SrcWidth, SrcHeight, PreSizeX, PreSizeY, ColorErrorLevel, PreErrorCount, AStopSearchOnDemand, StopSearchOnMismatch) then
+        begin
+          if CanvasPosMatch(SrcMat, SubMat, xx, yy, SrcWidth, SrcHeight, SubWidth, SubHeight, ColorErrorLevel, TotalErrorCount, AStopSearchOnDemand, StopSearchOnMismatch) then
+          begin
+            Result := True;
+            SubCnvXOffset := xx;
+            SubCnvYOffset := yy;
+            Exit;
+          end;
+
+          RandomSleep;
+        end;
+      end;
+  end;
 end;
 
 
@@ -396,7 +442,7 @@ begin
 end;
 
 
-function BitmapPosMatch(Algorithm: TMatchBitmapAlgorithm; AlgorithmSettings: TMatchBitmapAlgorithmSettings; SourceBitmap, SubBitmap: TBitmap; ColorErrorLevel: Integer; out SubCnvXOffset, SubCnvYOffset: Integer; TotalErrorCount: Integer; AStopSearchOnDemand: PBoolean = nil; StopSearchOnMismatch: Boolean = True): Boolean;
+function BitmapPosMatch(Algorithm: TMatchBitmapAlgorithm; AlgorithmSettings: TMatchBitmapAlgorithmSettings; SourceBitmap, SubBitmap: TBitmap; ColorErrorLevel: Integer; out SubCnvXOffset, SubCnvYOffset: Integer; TotalErrorCount, FastSearchColorErrorCount: Integer; AUseFastSearch: Boolean; AStopSearchOnDemand: PBoolean = nil; StopSearchOnMismatch: Boolean = True): Boolean;
 const
   {%H-}CDebugSubBmpPath = 'E:\SubBmp.bmp';
 var
@@ -442,7 +488,7 @@ begin
     end;
 
     case Algorithm of
-      mbaBruteForce: Result := BitmapPosMatch_BruteForce(SrcMat, SubMat, SourceBitmap, SubBitmap, ColorErrorLevel, SubCnvXOffset, SubCnvYOffset, TotalErrorCount, AStopSearchOnDemand, StopSearchOnMismatch);
+      mbaBruteForce: Result := BitmapPosMatch_BruteForce(SrcMat, SubMat, SourceBitmap, SubBitmap, ColorErrorLevel, SubCnvXOffset, SubCnvYOffset, TotalErrorCount, FastSearchColorErrorCount, AUseFastSearch, AStopSearchOnDemand, StopSearchOnMismatch);
       mbaXYMultipleAndOffsets: Result := BitmapPosMatch_SimpleGrid_XYMultipleAndOffsets(SrcMat, SubMat, AlgorithmSettings, SourceBitmap, SubBitmap, ColorErrorLevel, SubCnvXOffset, SubCnvYOffset, TotalErrorCount, AStopSearchOnDemand, StopSearchOnMismatch);
     else
       raise Exception.Create('Bitmap search algorithm #' + IntToStr(Ord(Algorithm)) + ' not implemented.');

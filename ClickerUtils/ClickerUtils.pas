@@ -226,8 +226,10 @@ type
     CachedControlLeft: string;
     CachedControlTop: string;
     MatchPrimitiveFiles: string;  //ListOfStrings
-    MatchPrimitiveFiles_Modified: string;  //ListOfStrings  '0's and '1's.  This field is not a separate property in ObjectInspector
+      MatchPrimitiveFiles_Modified: string;  //ListOfStrings  '0's and '1's.  This field is not a separate property in ObjectInspector
     GetAllControls: Boolean; //When True, the FindControl algorithm does not stop on the first found control. It keeps adding found handles to a list.
+    UseFastSearch: Boolean; //When True, the FindSubControl algorithm searches a 5px x 5px area first. If that matches, then it goes for full search. Make sure that FastSearchAllowedColorErrorCount has the right value.
+    FastSearchAllowedColorErrorCount: string;  //-1 = Use calculated value (scaled down value of AllowedColorErrorCount). Other values are directly converted / used (including 0). Because the 5x5 area is small, a scaled down value, will often end up being 0, which won't allow a proper match.
   end;
 
   TClkSetTextOptions = record

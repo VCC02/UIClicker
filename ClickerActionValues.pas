@@ -56,8 +56,8 @@ const
   //Properties (counts)
   CPropCount_Click = 22;
   CPropCount_ExecApp = 7;
-  CPropCount_FindControl = 20;
-  CPropCount_FindSubControl = 19;
+  CPropCount_FindControl = 22;
+  CPropCount_FindSubControl = CPropCount_FindControl;
   CPropCount_SetText = 3;
   CPropCount_CallTemplate = 4;
   CPropCount_Sleep = 1;
@@ -115,6 +115,9 @@ const
   CFindControl_ColorError_PropIndex = 12;
   CFindControl_AllowedColorErrorCount_PropIndex = 13;
   CFindControl_MatchPrimitiveFiles_PropIndex = 18; //property index in FindControl structure   - list of files
+  CFindControl_GetAllControls_PropIndex = 19;
+  CFindControl_UseFastSearch_PropIndex = 20;
+  CFindControl_FastSearchAllowedColorErrorCount_PropIndex = 21;
 
   CCallTemplate_TemplateFileName_PropIndex = 0; //property index in CallTemplate structure
   CCallTemplate_ListOfCustomVarsAndValues_PropIndex = 1;
@@ -239,7 +242,9 @@ const
     (Name: 'CachedControlLeft'; EditorType: etText; DataType: CDTString),
     (Name: 'CachedControlTop'; EditorType: etText; DataType: CDTString),
     (Name: 'MatchPrimitiveFiles'; EditorType: etFilePathWithArrow; DataType: CDTArray),
-    (Name: 'GetAllControls'; EditorType: etBooleanCombo; DataType: CDTBool)
+    (Name: 'GetAllControls'; EditorType: etBooleanCombo; DataType: CDTBool),
+    (Name: 'UseFastSearch'; EditorType: etBooleanCombo; DataType: CDTBool),
+    (Name: 'FastSearchAllowedColorErrorCount'; EditorType: etText; DataType: CDTString)
   );
 
   {$IFDEF SubProperties}
@@ -462,7 +467,9 @@ const
     nil, //CachedControlLeft
     nil, //CachedControlTop
     nil, //MatchPrimitiveFiles
-    nil  //GetAllControls
+    nil, //GetAllControls
+    nil, //UseFastSearch
+    nil  //FastSearchAllowedColorErrorCount
   );
 
   CCallTemplateGetActionValueStrFunctions: TGetCallTemplateValueStrFuncArr = (
@@ -536,7 +543,9 @@ const
     0, //CachedControlLeft: string;
     0, //CachedControlTop: string;
     0, //MatchPrimitiveFiles
-    0  //GetAllControls: Boolean;
+    0, //GetAllControls: Boolean;
+    0, //UseFastSearch: Boolean;
+    0  //FastSearchAllowedColorErrorCount: Boolean;
   );
 
   CSetTextEnumCounts: array[0..CPropCount_SetText - 1] of Integer = (
@@ -687,7 +696,9 @@ const
     nil, //CachedControlLeft: string;
     nil, //CachedControlTop: string;
     nil, //Primitives
-    nil  //GetAllControls
+    nil, //GetAllControls
+    nil, //UseFastSearch
+    nil  //FastSearchAllowedColorErrorCount
   );
 
   CSetTextEnumStrings: array[0..CPropCount_SetText - 1] of PArrayOfString = (
@@ -802,6 +813,8 @@ function GetPropertyHint_FindControl_StartSearchingWithCachedControl: string;
 function GetPropertyHint_FindControl_CachedControlLeftTop: string;
 function GetPropertyHint_FindControl_MatchPrimitiveFiles: string;
 function GetPropertyHint_FindControl_GetAllControls: string;
+function GetPropertyHint_FindControl_UseFastSearch: string;
+function GetPropertyHint_FindControl_FastSearchAllowedColorErrorCount: string;
 
 {$IFDEF SubProperties}
   function GetPropertyHint_FindControl_MatchCriteria_MatchBitmapText: string;
@@ -904,8 +917,10 @@ const
     @GetPropertyHint_FindControl_StartSearchingWithCachedControl, // StartSearchingWithCachedControl: Boolean;
     @GetPropertyHint_FindControl_CachedControlLeftTop, // CachedControlLeft: string;
     @GetPropertyHint_FindControl_CachedControlLeftTop, // CachedControlTop: string;
-    @GetPropertyHint_FindControl_MatchPrimitiveFiles,// MatchPrimitiveFiles: string; //ListOfStrings
-    @GetPropertyHint_FindControl_GetAllControls // GetAllControls: Boolean;
+    @GetPropertyHint_FindControl_MatchPrimitiveFiles, // MatchPrimitiveFiles: string; //ListOfStrings
+    @GetPropertyHint_FindControl_GetAllControls, // GetAllControls: Boolean;
+    @GetPropertyHint_FindControl_UseFastSearch, // UseFastSearch: Boolean;
+    @GetPropertyHint_FindControl_FastSearchAllowedColorErrorCount // FastSearchAllowedColorErrorCount: string;
   );
 
 
@@ -1090,6 +1105,8 @@ begin
     17: Result := AAction^.FindControlOptions.CachedControlTop;
     18: Result := AAction^.FindControlOptions.MatchPrimitiveFiles; //ListOfStrings
     19: Result := BoolToStr(AAction^.FindControlOptions.GetAllControls, True);
+    20: Result := BoolToStr(AAction^.FindControlOptions.UseFastSearch, True);
+    21: Result := AAction^.FindControlOptions.FastSearchAllowedColorErrorCount;
     else
       Result := 'unknown';
   end;
@@ -1526,6 +1543,8 @@ begin
     17: AAction^.FindControlOptions.CachedControlTop := NewValue;
     18: AAction^.FindControlOptions.MatchPrimitiveFiles := NewValue; //ListOfStrings
     19: AAction^.FindControlOptions.GetAllControls := StrToBool(NewValue);
+    20: AAction^.FindControlOptions.UseFastSearch := StrToBool(NewValue);
+    21: AAction^.FindControlOptions.FastSearchAllowedColorErrorCount := NewValue;
     else
       ;
   end;
@@ -1864,6 +1883,28 @@ begin
             'The list items can be extracted with $GetTextItem($AllControl_Handles$,<ItemIndex>)$ function.' + #13#10 +
             'The number of handles can be obtained with $ItemCount($AllControl_Handles$)$.' + #13#10#13#10 +
             'When iterating through all returned handles, the control property variables (like $Control_Left$, $Control_Top$ etc.) can be set by calling $UpdateControlInfo(<Handle>)$.';
+end;
+
+
+function GetPropertyHint_FindControl_UseFastSearch: string;
+begin
+  Result := 'When set to True, FindSubControl starts searching the bitmap (text, file, primitive etc) by cropping a 5px x 5px area, from its top-left corner.' + #13#10 +
+            'If that matches, the algorihm verifies a match at the same position, for the full searched bitmap.' + #13#10 +
+            'When set to True, the full bitmap is verified at every valid position. Usually, this is very slow (it gets slower with larger bitmaps).';
+end;
+
+
+function GetPropertyHint_FindControl_FastSearchAllowedColorErrorCount: string;
+begin
+  Result := 'This is similar to AllowedColorErrorCount, but it is used for the small searched area (e.g. 5px x 5px), when UseFastSearch is True.' + #13#10 +
+            'A value of -1, will instruct the algorithm to calculate its own value, as a scaled down version of AllowedColorErrorCount,' + #13#10 +
+            'based on the ratio between the small search area (5x5) and the full searched bitmap size. That ratio will often be 0, because of rounding to integer.' + #13#10 +
+            'FastSearchAllowedColorErrorCount should have a minimium value, so that the 5x5 area will match (even if at multiple locations).' + #13#10#13#10 +
+
+            'If FastSearchAllowedColorErrorCount is too small, so that no 5x5 area matches, then no full bitmap is searched for.' + #13#10 +
+            'Because of that, it is possible that a match would exist for the full searched bitmap, but a too tight color error count, would prevent a 5x5 area match.' + #13#10#13#10 +
+
+            'If the value is too high, there are too many false positives (false matchings), causing a full bitmap search on all these positions, defeating the purpose.';
 end;
 
 

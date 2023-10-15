@@ -118,6 +118,8 @@ type
     CachedControlTop: PWideChar;
     MatchPrimitiveFiles: PWideChar;
     GetAllControls: Boolean;
+    UseFastSearch: Boolean;
+    FastSearchAllowedColorErrorCount: PWideChar;
   end;
 
   PClkFindControlOptionsAPI = ^TClkFindControlOptionsAPI;
@@ -664,6 +666,8 @@ begin
 
   SetPointedContentToString(@string(PWideChar(AFindControlOptions^.MatchPrimitiveFiles))[1], TempAction.FindControlOptions.MatchPrimitiveFiles);
   TempAction.FindControlOptions.GetAllControls := AFindControlOptions^.GetAllControls;
+  TempAction.FindControlOptions.UseFastSearch := AFindControlOptions^.UseFastSearch;
+  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.FastSearchAllowedColorErrorCount))[1], TempAction.FindControlOptions.FastSearchAllowedColorErrorCount);
 
   AddActionToTemplate(TemplateFileName, TempAction);
   Result := 0;

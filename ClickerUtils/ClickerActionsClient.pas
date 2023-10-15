@@ -712,6 +712,8 @@ begin
                                     'CachedControlTop' + '=' + AFindControlOptions.ColorError + '&' +
                                     'MatchPrimitiveFiles' + '=' + FastReplace_ReturnTo45(AFindControlOptions.MatchPrimitiveFiles) + '&' +
                                     'GetAllControls' + '=' + IntToStr(Ord(AFindControlOptions.GetAllControls)) + '&' +
+                                    'UseFastSearch' + '=' + IntToStr(Ord(AFindControlOptions.UseFastSearch)) + '&' +
+                                    'FastSearchAllowedColorErrorCount' + '=' + AFindControlOptions.FastSearchAllowedColorErrorCount + '&' +
 
                                     'ActionName' + '=' + AActionName + '&' +
                                     'ActionTimeout' + '=' + IntToStr(AActionTimeout) + '&' +

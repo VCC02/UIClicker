@@ -233,7 +233,9 @@ class TFindControlOptions(Structure):
                ("CachedControlLeft", LPCWSTR),
                ("CachedControlTop", LPCWSTR),
                ("MatchPrimitiveFiles", LPCWSTR),
-               ("GetAllControls", BOOLEAN)]
+               ("GetAllControls", BOOLEAN),
+			   ("UseFastSearch", BOOLEAN),
+			   ("FastSearchAllowedColorErrorCount", LPCWSTR)]
 
 PFindControlOptions = ctypes.POINTER(TFindControlOptions)
 
@@ -282,6 +284,9 @@ def GetDefaultFindControlOptions():
     
     FindControlOptions.MatchPrimitiveFiles = '' #'FileExample1.pmtv\r\nFileExample2.pmtv\r\nFileExample3.pmtv'
     FindControlOptions.GetAllControls = False
+    
+    FindControlOptions.UseFastSearch = True
+    FindControlOptions.FastSearchAllowedColorErrorCount = '10'
     return FindControlOptions
 
 

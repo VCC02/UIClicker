@@ -56,6 +56,8 @@ type
     AllowedColorErrorCount: Integer;
     DebugTemplateName: string;
     GetAllHandles: Boolean;
+    UseFastSearch: Boolean;
+    FastSearchAllowedColorErrorCount: Integer;
   end;
 
 
@@ -581,7 +583,7 @@ end;
 
 //Searches for BitmapToSearchFor in the bitmap of a component defined by ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height
 //SrcCompSearchAreaBitmap - bitmap with source component, defined by InitRect
-function MatchByBitmap(Algorithm: TMatchBitmapAlgorithm; AlgorithmSettings: TMatchBitmapAlgorithmSettings; ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height: Integer; BitmapToSearchFor, SrcCompSearchAreaBitmap: TBitmap; CompHandle: THandle; ColorErr, AllowedColorErrCnt: Integer; out SubCnvXOffset, SubCnvYOffset: Integer; AStopAllActionsOnDemand: PBoolean): Boolean;
+function MatchByBitmap(Algorithm: TMatchBitmapAlgorithm; AlgorithmSettings: TMatchBitmapAlgorithmSettings; ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height: Integer; BitmapToSearchFor, SrcCompSearchAreaBitmap: TBitmap; CompHandle: THandle; ColorErr, AllowedColorErrCnt, FastSearchAllowedColorErrCnt: Integer; out SubCnvXOffset, SubCnvYOffset: Integer; AUseFastSearch: Boolean; AStopAllActionsOnDemand: PBoolean): Boolean;
 begin
   Result := False;
                        //SrcCompSearchAreaBitmap is the cropped area, from where BitmapToSearchFor is searched for.
@@ -590,7 +592,7 @@ begin
 
   SubCnvXOffset := -1;  //for debugging..
   SubCnvYOffset := -1;  //for debugging..
-  if BitmapPosMatch(Algorithm, AlgorithmSettings, SrcCompSearchAreaBitmap, BitmapToSearchFor, ColorErr, SubCnvXOffset, SubCnvYOffset, AllowedColorErrCnt, AStopAllActionsOnDemand) then
+  if BitmapPosMatch(Algorithm, AlgorithmSettings, SrcCompSearchAreaBitmap, BitmapToSearchFor, ColorErr, SubCnvXOffset, SubCnvYOffset, AllowedColorErrCnt, FastSearchAllowedColorErrCnt, AUseFastSearch, AStopAllActionsOnDemand) then
   begin
     Result := True;
     Inc(SubCnvXOffset, ScrShot_Left);
@@ -630,8 +632,10 @@ begin
                               CompAtPoint.Handle,
                               InputData.ColorError,
                               InputData.AllowedColorErrorCount,
+                              InputData.FastSearchAllowedColorErrorCount,
                               SubCnvXOffset,
                               SubCnvYOffset,
+                              InputData.UseFastSearch,
                               AStopAllActionsOnDemand);
 
     if InputData.DebugBitmap <> nil then

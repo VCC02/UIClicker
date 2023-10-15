@@ -54,6 +54,7 @@ type
     procedure Test_ExecuteFindSubControlAction_UIClickerMain_BitnessLabelWithBadCropping_NegativeWidth;
     procedure Test_ExecuteFindSubControlAction_UIClickerMain_BitnessLabelWithBadCropping_Height0;
     procedure Test_ExecuteFindSubControlAction_UIClickerMain_BitnessLabelWithBadCropping_NegativeHeight;
+    procedure Test_ExecuteFindSubControlAction_UIClickerMain_BitnessLabel_WithFastSearch;
 
     procedure Test_ExecuteFindSubControlAction_UIClickerMain_WindowInterpreterButton_Disk;
     procedure Test_ExecuteFindSubControlAction_UIClickerMain_WindowInterpreterButton_Mem_NoSender;
@@ -344,6 +345,39 @@ begin
   Response := FastReplace_87ToReturn(ExecuteFindSubControlAction(TestServerAddress, FindSubControlOptions, 'Test Find Bitness on UIClicker Main', 3000, CREParam_FileLocation_ValueMem));
 
   Expect(Response).ToBe('ProcessServerCommand exception: The text height, after cropping, is negative.  Profile[0]: "' + FindSubControlOptions.MatchBitmapText[0].ProfileName + '".   Searched text: "-bit"');
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecuteFindSubControlAction_UIClickerMain_BitnessLabel_WithFastSearch;
+  procedure ExecFastSearchTestTemplate(ATemplateName: string);
+  var
+    Response: string;
+    CallTemplateOptions: TClkCallTemplateOptions;
+  begin
+    CallTemplateOptions.TemplateFileName := ATemplateName;
+    CallTemplateOptions.ListOfCustomVarsAndValues := '';
+    CallTemplateOptions.EvaluateBeforeCalling := False;
+    CallTemplateOptions.CallTemplateLoop.Enabled := False;
+    CallTemplateOptions.CallTemplateLoop.Direction := ldInc;
+    CallTemplateOptions.CallTemplateLoop.EvalBreakPosition := lebpAfterContent;
+
+    Response := FastReplace_87ToReturn(ExecuteCallTemplateAction(TestServerAddress, CallTemplateOptions, False, False, CREParam_FileLocation_ValueDisk));
+    ExpectSuccessfulAction(Response);
+  end;
+
+var
+  tk: QWord;
+  FirstDuration, SecondDuration: QWord;
+begin                                         //This test should be modified, to execute in-mem actions, i.e. FindSubControl, via API. Only the FindSubControl execution time should be measured.
+  tk := GetTickCount64;                       //It should generate some options with GenerateFindSubControlOptionsForMainUIClickerWindow_Bitness and modify them for this test.
+  ExecFastSearchTestTemplate('$AppDir$\Tests\TestFiles\FindBitOnMainNoFastSearch.clktmpl');
+  FirstDuration := GetTickCount64 - tk;
+
+  tk := GetTickCount64;
+  ExecFastSearchTestTemplate('$AppDir$\Tests\TestFiles\FindBitOnMainWithFastSearch.clktmpl');
+  SecondDuration := GetTickCount64 - tk;
+
+  Expect(DWord(FirstDuration)).ToBeGreaterThan(25 * SecondDuration, 'Expecting some performance gain.');
 end;
 
 

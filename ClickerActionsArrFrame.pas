@@ -3883,6 +3883,8 @@ begin
     FClkActions[n].FindControlOptions.MatchPrimitiveFiles := '';
     FClkActions[n].FindControlOptions.MatchPrimitiveFiles_Modified := '';
     FClkActions[n].FindControlOptions.GetAllControls := False;
+    FClkActions[n].FindControlOptions.UseFastSearch := True;
+    FClkActions[n].FindControlOptions.FastSearchAllowedColorErrorCount := '10';
 
     SetLength(FClkActions[n].FindControlOptions.MatchBitmapText, 1);
     FClkActions[n].FindControlOptions.MatchBitmapText[0].ForegroundColor := '$Color_Window$';
