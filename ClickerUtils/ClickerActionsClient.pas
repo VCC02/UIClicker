@@ -669,6 +669,7 @@ function ExecuteGenericFindControlAction(ARemoteAddress: string; AFindControlOpt
       Result := Result + Prefix + 'CropTop' + '=' + AMatchBitmapText[i].CropTop + '&';
       Result := Result + Prefix + 'CropRight' + '=' + AMatchBitmapText[i].CropRight + '&';
       Result := Result + Prefix + 'CropBottom' + '=' + AMatchBitmapText[i].CropBottom + '&';
+      Result := Result + Prefix + 'IgnoreBackgroundColor' + '=' + IntToStr(Ord(AMatchBitmapText[i].IgnoreBackgroundColor)) + '&';
     end;
   end;
 begin

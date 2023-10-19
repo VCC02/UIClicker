@@ -78,7 +78,7 @@ const
 
   //Sub properties (counts)
   CPropCount_FindControlMatchCriteria = 6;
-  CPropCount_FindControlMatchBitmapText = 16;
+  CPropCount_FindControlMatchBitmapText = 17;
   CPropCount_FindControlMatchBitmapAlgorithmSettings = 4;
   CPropCount_FindControlInitialRectangle = 8;
 
@@ -103,6 +103,7 @@ const
 
   CExecApp_PathToApp_PropIndex = 0;     //property index in ExecApp structure
   CExecApp_ListOfParams_PropIndex = 1;  //property index in ExecApp structure
+  CExecApp_CurrentDir_PropIndex = 4;  //property index in ExecApp structure
 
   CFindControl_MatchCriteria_PropIndex = 0; //property index in FindControl structure
   CFindControl_MatchText_PropIndex = 2;      //property index in FindControl structure
@@ -132,6 +133,7 @@ const
   CFindControl_MatchBitmapText_BackgroundColor_PropItemIndex = 1;   //property index in FindControl.MatchBitmapText structure
   CFindControl_MatchBitmapText_FontName_PropItemIndex = 2;   //property index in FindControl.MatchBitmapText structure
   CFindControl_MatchBitmapText_ProfileName_PropItemIndex = 11;   //property index in FindControl.MatchBitmapText structure
+  CFindControl_MatchBitmapText_IgnoreBackgroundColor_PropItemIndex = 16;   //property index in FindControl.MatchBitmapText structure
 
   CFindControl_MatchBitmapText_CropLeft = 12;
   CFindControl_MatchBitmapText_CropTop = 13;
@@ -273,7 +275,8 @@ const
       (Name: 'CropLeft'; EditorType: etSpinText; DataType: CDTString),
       (Name: 'CropTop'; EditorType: etSpinText; DataType: CDTString),
       (Name: 'CropRight'; EditorType: etSpinText; DataType: CDTString),
-      (Name: 'CropBottom'; EditorType: etSpinText; DataType: CDTString)
+      (Name: 'CropBottom'; EditorType: etSpinText; DataType: CDTString),
+      (Name: 'IgnoreBackgroundColor'; EditorType: etBooleanCombo; DataType: CDTBool)
     );
 
     CFindControl_MatchBitmapAlgorithmSettingsProperties: array[0..CPropCount_FindControlMatchBitmapAlgorithmSettings - 1] of TOIPropDef = (
@@ -619,7 +622,8 @@ const
       0, //CropLeft: string;
       0, //CropTop: string;
       0, //CropRight: string;
-      0  //CropBottom: string;
+      0, //CropBottom: string;
+      0  //IgnoreBackgroundColor: Boolean;
     );
 
     CCallTemplate_CallTemplateLoopEnumCounts: array[0..CPropCount_CallTemplateLoop - 1] of Integer = (
@@ -771,7 +775,8 @@ const
       nil, //CropLeft: string;
       nil, //CropTop: string;
       nil, //CropRight: string;
-      nil  //CropBottom: string;
+      nil, //CropBottom: string;
+      nil  //IgnoreBackgroundColor: Boolean;
     );
 
     CCallTemplate_CallTemplateLoopEnumStrings: array[0..CPropCount_CallTemplateLoop - 1] of PArrayOfString = (
@@ -1158,6 +1163,7 @@ end;
       13: Result := AAction^.FindControlOptions.MatchBitmapText[PropertyIndexDiv].CropTop;
       14: Result := AAction^.FindControlOptions.MatchBitmapText[PropertyIndexDiv].CropRight;
       15: Result := AAction^.FindControlOptions.MatchBitmapText[PropertyIndexDiv].CropBottom;
+      16: Result := BoolToStr(AAction^.FindControlOptions.MatchBitmapText[PropertyIndexDiv].IgnoreBackgroundColor, True);
       else
         Result := 'unknown';
     end;
@@ -1590,6 +1596,7 @@ end;
       13: AAction^.FindControlOptions.MatchBitmapText[PropertyIndexDiv].CropTop := NewValue;
       14: AAction^.FindControlOptions.MatchBitmapText[PropertyIndexDiv].CropRight := NewValue;
       15: AAction^.FindControlOptions.MatchBitmapText[PropertyIndexDiv].CropBottom := NewValue;
+      16: AAction^.FindControlOptions.MatchBitmapText[PropertyIndexDiv].IgnoreBackgroundColor := StrToBool(NewValue);
       else
         ;
     end;

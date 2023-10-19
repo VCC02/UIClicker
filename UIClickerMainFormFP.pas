@@ -120,7 +120,7 @@ implementation
   - optionally, if the new field (as an ObjectInspector property) is related to other fields, so that it makes sense to be added right after them, and not at the end of the structure, then various other structures will have to be adjusted (including imglst icons)
   - Add/Modify some tests
   - Update documentation (and API)
-  - If there are standalone applications, which are derived from UIClicker, and directly depend on the new datatype, they have to be updated
+  - If there are standalone applications, which are derived from UIClicker (e.g. EDAUIClicker), and directly depend on the new field, they have to be updated
 }
 
 

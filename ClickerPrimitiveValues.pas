@@ -108,7 +108,8 @@ const
     (Name: 'CropLeft'; EditorType: etSpinText),
     (Name: 'CropTop'; EditorType: etSpinText),
     (Name: 'CropRight'; EditorType: etSpinText),
-    (Name: 'CropBottom'; EditorType: etSpinText)
+    (Name: 'CropBottom'; EditorType: etSpinText),
+    (Name: 'IgnoreBackgroundColor'; EditorType: etBooleanCombo)
   );
 
   CImagePrimitiveProperties: array[0..CPropCountClkImagePrimitive - 1] of TOIPropDef = (
@@ -300,7 +301,8 @@ const
     0, //CropLeft: string;
     0, //CropTop: string;
     0, //CropRight: string;
-    0  //CropBottom: string;
+    0, //CropBottom: string;
+    0  //IgnoreBackgroundColor: Boolean;
   );
 
   CImageEnumCounts: array[0..CPropCountClkImagePrimitive - 1] of Integer = (
@@ -392,7 +394,8 @@ const
     nil, //CropLeft: string;
     nil, //CropTop: string;
     nil, //CropRight: string;
-    nil  //CropBottom: string;
+    nil, //CropBottom: string;
+    nil  //IgnoreBackgroundColor: Boolean;
   );
 
   CImageEnumStrings: array[0..CPropCountClkImagePrimitive - 1] of PArrayOfString = (
@@ -523,6 +526,7 @@ implementation
       13: Result := APrimitive.ClkSetFont.CropTop;
       14: Result := APrimitive.ClkSetFont.CropRight;
       15: Result := APrimitive.ClkSetFont.CropBottom;
+      16: Result := BoolToStr(APrimitive.ClkSetFont.IgnoreBackgroundColor, True);
       else
         Result := 'unknown';
     end;
@@ -657,6 +661,7 @@ implementation
       13: APrimitive.ClkSetFont.CropTop := NewValue;
       14: APrimitive.ClkSetFont.CropRight := NewValue;
       15: APrimitive.ClkSetFont.CropBottom := NewValue;
+      16: APrimitive.ClkSetFont.IgnoreBackgroundColor := StrToBool(NewValue);
       else
         ;
     end;
@@ -773,6 +778,7 @@ begin
   APrimitive.ClkSetFont.FontQualityUsesReplacement := False;
   APrimitive.ClkSetFont.FontQualityReplacement := '';
   APrimitive.ClkSetFont.ProfileName := 'Default'; //probably, not used anyway
+  APrimitive.ClkSetFont.IgnoreBackgroundColor := False;
 end;
 
 

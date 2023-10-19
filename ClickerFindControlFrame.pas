@@ -111,6 +111,9 @@ type
     function GetCropBottom: string;
     procedure SetCropBottom(Value: string);
 
+    function GetIgnoreBackgroundColor: Boolean;
+    procedure SetIgnoreBackgroundColor(Value: Boolean);
+
     procedure SetShowCroppingLines(Value: Boolean);
 
     function CreateBMPTextFrame_NoContent(ANewName: string): TfrClickerBMPText;
@@ -145,6 +148,8 @@ type
     property CropTop: string read GetCropTop write SetCropTop;
     property CropRight: string read GetCropRight write SetCropRight;
     property CropBottom: string read GetCropBottom write SetCropBottom;
+    property IgnoreBackgroundColor: Boolean read GetIgnoreBackgroundColor write SetIgnoreBackgroundColor;
+
     property ShowCroppingLines: Boolean write SetShowCroppingLines;
 
     property FindControlMatchBitmapText: PClkFindControlMatchBitmapText write FFindControlMatchBitmapText; //must be set by owner
@@ -855,6 +860,18 @@ end;
 procedure TFontProfile.SetCropBottom(Value: string);
 begin
   FfrClickerBMPText.MatchBitmapTextCropBottom := Value;
+end;
+
+
+function TFontProfile.GetIgnoreBackgroundColor: Boolean;
+begin
+  Result := FFindControlMatchBitmapText^.IgnoreBackgroundColor;
+end;
+
+
+procedure TFontProfile.SetIgnoreBackgroundColor(Value: Boolean);
+begin
+  FFindControlMatchBitmapText^.IgnoreBackgroundColor := Value;
 end;
 
 
@@ -3200,9 +3217,9 @@ begin
      (FindControlOptions^.MatchCriteria.WillMatchBitmapText or
      FindControlOptions^.MatchCriteria.WillMatchBitmapFiles or
      FindControlOptions^.MatchCriteria.WillMatchPrimitiveFiles) then
-    pnlUseWholeScreen.Color := $00C6C6FF  //some light red
+    pnlUseWholeScreen.Color := $00B6B6FF  //some light red
   else
-    pnlUseWholeScreen.Color := $00E2F7CE; //some light green
+    pnlUseWholeScreen.Color := $0053F783; //some green
 end;
 
 

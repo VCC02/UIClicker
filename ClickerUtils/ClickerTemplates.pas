@@ -310,6 +310,7 @@ begin
       AFindControlOptions.MatchBitmapText[i].CropTop := Ini.ReadString(SectionIndex, Indent + 'CropTop', '0');
       AFindControlOptions.MatchBitmapText[i].CropRight := Ini.ReadString(SectionIndex, Indent + 'CropRight', '0');
       AFindControlOptions.MatchBitmapText[i].CropBottom := Ini.ReadString(SectionIndex, Indent + 'CropBottom', '0');
+      AFindControlOptions.MatchBitmapText[i].IgnoreBackgroundColor := Ini.ReadBool(SectionIndex, Indent + 'IgnoreBackgroundColor', False);
     end;
   end
   else
@@ -333,6 +334,7 @@ begin
     AFindControlOptions.MatchBitmapText[0].CropTop := Ini.ReadString(SectionIndex, 'MatchBitmapText.CropTop', '0');
     AFindControlOptions.MatchBitmapText[0].CropRight := Ini.ReadString(SectionIndex, 'MatchBitmapText.CropRight', '0');
     AFindControlOptions.MatchBitmapText[0].CropBottom := Ini.ReadString(SectionIndex, 'MatchBitmapText.CropBottom', '0');
+    AFindControlOptions.MatchBitmapText[0].IgnoreBackgroundColor := Ini.ReadBool(SectionIndex, 'MatchBitmapText.IgnoreBackgroundColor', False);
   end;
 
   AFindControlOptions.MatchBitmapFiles := FastReplace_45ToReturn(Ini.ReadString(SectionIndex, 'MatchBitmapFiles', ''));
@@ -746,6 +748,7 @@ begin
     AStringList.Add(Indent + 'CropTop=' + AActionFindControlOptions.MatchBitmapText[i].CropTop);
     AStringList.Add(Indent + 'CropRight=' + AActionFindControlOptions.MatchBitmapText[i].CropRight);
     AStringList.Add(Indent + 'CropBottom=' + AActionFindControlOptions.MatchBitmapText[i].CropBottom);
+    AStringList.Add(Indent + 'IgnoreBackgroundColor=' + IntToStr(Ord(AActionFindControlOptions.MatchBitmapText[i].IgnoreBackgroundColor)));
   end;
 
   AStringList.Add('MatchBitmapFiles=' + FastReplace_ReturnTo45(AActionFindControlOptions.MatchBitmapFiles));

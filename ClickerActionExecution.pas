@@ -1227,6 +1227,9 @@ begin
         Continue; //Exit;  moves to the next "for j" iteration
       end;
 
+      FindControlInputData.IgnoreBackgroundColor := AFindControlOptions.MatchBitmapText[j].IgnoreBackgroundColor;
+      FindControlInputData.BackgroundColor := HexToInt(EvalBG);
+
       InitialTickCount := GetTickCount64;
       if AActionOptions.ActionTimeout < 0 then
         Timeout := 0
@@ -2312,6 +2315,7 @@ begin
       FindControlOptions.MatchBitmapText[i].CropTop := Temp_CropTop;
       FindControlOptions.MatchBitmapText[i].CropRight := Temp_CropRight;
       FindControlOptions.MatchBitmapText[i].CropBottom := Temp_CropBottom;
+      FindControlOptions.MatchBitmapText[i].IgnoreBackgroundColor := AListOfFindControlOptionsParams.Values[Prefix + 'IgnoreBackgroundColor'] = '1';
     end;
 
     FindControlOptions.MatchBitmapFiles := FastReplace_45ToReturn(AListOfFindControlOptionsParams.Values['MatchBitmapFiles']); //ListOfStrings

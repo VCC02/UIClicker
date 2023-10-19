@@ -196,6 +196,7 @@ type
     CropTop: PWideChar;
     CropRight: PWideChar;
     CropBottom: PWideChar;
+    IgnoreBackgroundColor: Boolean;
   end;
 
   PClkFindControlMatchBitmapTextAPI = ^TClkFindControlMatchBitmapTextAPI;
@@ -984,7 +985,7 @@ begin
   SetPointedContentToString(@string(PWideChar(AFindControlMatchBitmapText^.CropTop))[1], FindControlMatchBitmapText.CropTop);
   SetPointedContentToString(@string(PWideChar(AFindControlMatchBitmapText^.CropRight))[1], FindControlMatchBitmapText.CropRight);
   SetPointedContentToString(@string(PWideChar(AFindControlMatchBitmapText^.CropBottom))[1], FindControlMatchBitmapText.CropBottom);
-
+  FindControlMatchBitmapText.IgnoreBackgroundColor := AFindControlMatchBitmapText^.IgnoreBackgroundColor;
 
   Result := AddFontProfileToFindSubControlActionInTemplate(TemplateFileName, AActionIndex, FindControlMatchBitmapText);
 end;

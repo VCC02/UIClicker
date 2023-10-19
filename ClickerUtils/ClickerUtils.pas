@@ -190,6 +190,7 @@ type
     CropTop: string;
     CropRight: string;
     CropBottom: string;
+    IgnoreBackgroundColor: Boolean;
   end;
 
   PClkFindControlMatchBitmapText = ^TClkFindControlMatchBitmapText;

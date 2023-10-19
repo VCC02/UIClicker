@@ -55,6 +55,7 @@ type
     procedure Test_ExecuteFindSubControlAction_UIClickerMain_BitnessLabelWithBadCropping_Height0;
     procedure Test_ExecuteFindSubControlAction_UIClickerMain_BitnessLabelWithBadCropping_NegativeHeight;
     procedure Test_ExecuteFindSubControlAction_UIClickerMain_BitnessLabel_WithFastSearch;
+    procedure Test_ExecuteFindSubControlAction_UIClickerMain_CustomLabel_IgnoreBG;
 
     procedure Test_ExecuteFindSubControlAction_UIClickerMain_WindowInterpreterButton_Disk;
     procedure Test_ExecuteFindSubControlAction_UIClickerMain_WindowInterpreterButton_Mem_NoSender;
@@ -348,36 +349,46 @@ begin
 end;
 
 
+procedure ExecFastSearchTestTemplate(ATestServerAddress, ATemplateName: string);
+var
+  Response: string;
+  CallTemplateOptions: TClkCallTemplateOptions;
+begin
+  CallTemplateOptions.TemplateFileName := ATemplateName;
+  CallTemplateOptions.ListOfCustomVarsAndValues := '';
+  CallTemplateOptions.EvaluateBeforeCalling := False;
+  CallTemplateOptions.CallTemplateLoop.Enabled := False;
+  CallTemplateOptions.CallTemplateLoop.Direction := ldInc;
+  CallTemplateOptions.CallTemplateLoop.EvalBreakPosition := lebpAfterContent;
+
+  Response := FastReplace_87ToReturn(ExecuteCallTemplateAction(ATestServerAddress, CallTemplateOptions, False, False, CREParam_FileLocation_ValueDisk));
+  ExpectSuccessfulAction(Response);
+end;
+
+
 procedure TTestLowLevelHTTPAPI.Test_ExecuteFindSubControlAction_UIClickerMain_BitnessLabel_WithFastSearch;
-  procedure ExecFastSearchTestTemplate(ATemplateName: string);
-  var
-    Response: string;
-    CallTemplateOptions: TClkCallTemplateOptions;
-  begin
-    CallTemplateOptions.TemplateFileName := ATemplateName;
-    CallTemplateOptions.ListOfCustomVarsAndValues := '';
-    CallTemplateOptions.EvaluateBeforeCalling := False;
-    CallTemplateOptions.CallTemplateLoop.Enabled := False;
-    CallTemplateOptions.CallTemplateLoop.Direction := ldInc;
-    CallTemplateOptions.CallTemplateLoop.EvalBreakPosition := lebpAfterContent;
-
-    Response := FastReplace_87ToReturn(ExecuteCallTemplateAction(TestServerAddress, CallTemplateOptions, False, False, CREParam_FileLocation_ValueDisk));
-    ExpectSuccessfulAction(Response);
-  end;
-
+const
+  CExpectedMultiplier = 25;
 var
   tk: QWord;
   FirstDuration, SecondDuration: QWord;
 begin                                         //This test should be modified, to execute in-mem actions, i.e. FindSubControl, via API. Only the FindSubControl execution time should be measured.
   tk := GetTickCount64;                       //It should generate some options with GenerateFindSubControlOptionsForMainUIClickerWindow_Bitness and modify them for this test.
-  ExecFastSearchTestTemplate('$AppDir$\Tests\TestFiles\FindBitOnMainNoFastSearch.clktmpl');
+  ExecFastSearchTestTemplate(TestServerAddress, '$AppDir$\Tests\TestFiles\FindBitOnMainNoFastSearch.clktmpl');
   FirstDuration := GetTickCount64 - tk;
 
   tk := GetTickCount64;
-  ExecFastSearchTestTemplate('$AppDir$\Tests\TestFiles\FindBitOnMainWithFastSearch.clktmpl');
+  ExecFastSearchTestTemplate(TestServerAddress, '$AppDir$\Tests\TestFiles\FindBitOnMainWithFastSearch.clktmpl');
   SecondDuration := GetTickCount64 - tk;
 
-  Expect(DWord(FirstDuration)).ToBeGreaterThan(25 * SecondDuration, 'Expecting some performance gain.');
+  Expect(DWord(FirstDuration)).ToBeGreaterThan(CExpectedMultiplier * SecondDuration, 'Expecting some performance gain.  ' + IntToStr(FirstDuration) + ' vs. ' + IntToStr(CExpectedMultiplier) + ' * ' + IntToStr(SecondDuration));
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecuteFindSubControlAction_UIClickerMain_CustomLabel_IgnoreBG;
+begin                                         //This test should be modified, to execute in-mem actions, i.e. FindSubControl, via API. Only the FindSubControl execution time should be measured.
+                                              //It should generate some options with GenerateFindSubControlOptionsForMainUIClickerWindow_Bitness and modify them for this test.
+  ExecFastSearchTestTemplate(TestServerAddress, '$AppDir$\Tests\TestFiles\FindTextOnAppIgnoreBG.clktmpl');
 end;
 
 

@@ -1170,6 +1170,7 @@ begin
   //  FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].CropTop := frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].CropTop;
   //  FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].CropRight := frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].CropRight;
   //  FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].CropBottom := frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].CropBottom;
+  //  FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].IgnoreBackgroundColor := frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].IgnoreBackgroundColor;
   //end;
 
   FClkActions[ActionIndex].FindControlOptions.MatchBitmapFiles := frClickerActions.frClickerFindControl.lstMatchBitmapFiles.Items.Text;
@@ -1223,6 +1224,8 @@ begin
     frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].CropTop := FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].CropTop;
     frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].CropRight := FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].CropRight;
     frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].CropBottom := FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].CropBottom;
+
+    frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].IgnoreBackgroundColor := FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].IgnoreBackgroundColor;
 
     //frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].UpdateSelectionLabelsFromCropEditBoxes;  //replaced below with other call
   end;
@@ -3902,6 +3905,7 @@ begin
     FClkActions[n].FindControlOptions.MatchBitmapText[0].CropTop := '0';
     FClkActions[n].FindControlOptions.MatchBitmapText[0].CropRight := '0';
     FClkActions[n].FindControlOptions.MatchBitmapText[0].CropBottom := '0';
+    FClkActions[n].FindControlOptions.MatchBitmapText[0].IgnoreBackgroundColor := False;
     FClkActions[n].FindControlOptions.MatchBitmapText[0].ProfileName := CDefaultFontProfileName;
 
     if FClkActions[n].ActionOptions.Action = acFindSubControl then

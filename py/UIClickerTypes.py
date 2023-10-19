@@ -418,7 +418,8 @@ class TClkFindControlMatchBitmapText(Structure):
                ("CropLeft", LPCWSTR),
                ("CropTop", LPCWSTR),
                ("CropRight", LPCWSTR),
-               ("CropBottom", LPCWSTR)]
+               ("CropBottom", LPCWSTR),
+               ("IgnoreBackgroundColor", BOOLEAN)]
 
 PClkFindControlMatchBitmapText = ctypes.POINTER(TClkFindControlMatchBitmapText)
 
@@ -440,4 +441,5 @@ def GetDefaultMatchBitmapText():
     MatchBitmapTextProfile.CropTop = '0'
     MatchBitmapTextProfile.CropRight = '0'
     MatchBitmapTextProfile.CropBottom = '0'
+    MatchBitmapTextProfile.IgnoreBackgroundColor = False
     return MatchBitmapTextProfile

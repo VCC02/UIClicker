@@ -4237,6 +4237,30 @@ begin
       AHint := CGetPropertyHint_Actions[CurrentlyEditingActionType]^[APropertyIndex];
 
     case CurrentlyEditingActionType of
+      acExecApp:
+      begin
+        case APropertyIndex of
+          CExecApp_PathToApp_PropIndex, CExecApp_CurrentDir_PropIndex:
+          begin
+            FLastClickedTVTEdit := nil;
+            FLastClickedEdit := nil;
+
+            if Sender is TVTEdit then
+              FLastClickedTVTEdit := Sender as TVTEdit
+            else
+              FLastClickedTVTEdit := nil;
+
+            if Sender is TEdit then
+              FLastClickedEdit := Sender as TEdit
+            else
+              FLastClickedEdit := nil;
+
+            APopupMenu := pmPathReplacements;
+            AHint := '$AppDir$ replacement is available';
+          end;
+        end;
+      end;
+
       acFindControl, acFindSubControl:
       begin
         case APropertyIndex of
@@ -4251,6 +4275,11 @@ begin
                 FLastClickedEdit := Sender as TEdit;
                 APopupMenu := pmStandardColorVariables;
               end;
+
+              CFindControl_MatchBitmapText_IgnoreBackgroundColor_PropItemIndex:
+                AHint := 'When set to True, the pixels, which match the current BackgroundColor, under the configured error level, are ignored.' + #13#10 +
+                         'This option is not suitable for antialiased text, if using a color, which is very different than BackgroundColor.' + #13#10 +
+                         'It is better to use it for non-antialiased text.';
 
               else
                 ;
@@ -4317,8 +4346,24 @@ begin
       end; //FindControl
 
       acCallTemplate:
-        if APropertyIndex = CCallTemplate_CallTemplateLoop_PropIndex then
-          AHint := CGetPropertyHint_CallTemplateLoop_Items[AItemIndex];
+      begin
+        case APropertyIndex of
+          CCallTemplate_TemplateFileName_PropIndex:
+          begin
+            if Sender is TVTEdit then
+              FLastClickedTVTEdit := Sender as TVTEdit
+            else
+              FLastClickedTVTEdit := nil;
+
+            FLastClickedEdit := nil;
+            APopupMenu := pmPathReplacements;
+            AHint := '$AppDir$ replacement is available';
+          end;
+
+          CCallTemplate_CallTemplateLoop_PropIndex:
+            AHint := CGetPropertyHint_CallTemplateLoop_Items[AItemIndex];
+        end;
+      end;
 
       acWindowOperations:
       begin
