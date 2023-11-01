@@ -60,6 +60,7 @@ type
     FastSearchAllowedColorErrorCount: Integer;
     IgnoreBackgroundColor: Boolean;
     BackgroundColor: TColor;
+    IgnoredColorsArr: TIntArr;
   end;
 
 
@@ -592,7 +593,7 @@ end;
 
 //Searches for BitmapToSearchFor in the bitmap of a component defined by ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height
 //SrcCompSearchAreaBitmap - bitmap with source component, defined by InitRect
-function MatchByBitmap(Algorithm: TMatchBitmapAlgorithm; AlgorithmSettings: TMatchBitmapAlgorithmSettings; ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height: Integer; BitmapToSearchFor, SrcCompSearchAreaBitmap: TBitmap; CompHandle: THandle; ColorErr, AllowedColorErrCnt, FastSearchAllowedColorErrCnt: Integer; out SubCnvXOffset, SubCnvYOffset: Integer; AUseFastSearch, AIgnoreBackgroundColor: Boolean; ABackgroundColor: TColor; AStopAllActionsOnDemand: PBoolean): Boolean;
+function MatchByBitmap(Algorithm: TMatchBitmapAlgorithm; AlgorithmSettings: TMatchBitmapAlgorithmSettings; ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height: Integer; BitmapToSearchFor, SrcCompSearchAreaBitmap: TBitmap; CompHandle: THandle; ColorErr, AllowedColorErrCnt, FastSearchAllowedColorErrCnt: Integer; out SubCnvXOffset, SubCnvYOffset: Integer; AUseFastSearch, AIgnoreBackgroundColor: Boolean; ABackgroundColor: TColor; var AIgnoredColorsArr: TColorArr; AStopAllActionsOnDemand: PBoolean): Boolean;
 begin
   Result := False;
                        //SrcCompSearchAreaBitmap is the cropped area, from where BitmapToSearchFor is searched for.
@@ -601,7 +602,7 @@ begin
 
   SubCnvXOffset := -1;  //for debugging..
   SubCnvYOffset := -1;  //for debugging..
-  if BitmapPosMatch(Algorithm, AlgorithmSettings, SrcCompSearchAreaBitmap, BitmapToSearchFor, ColorErr, SubCnvXOffset, SubCnvYOffset, AllowedColorErrCnt, FastSearchAllowedColorErrCnt, AUseFastSearch, AIgnoreBackgroundColor, ABackgroundColor, AStopAllActionsOnDemand) then
+  if BitmapPosMatch(Algorithm, AlgorithmSettings, SrcCompSearchAreaBitmap, BitmapToSearchFor, ColorErr, SubCnvXOffset, SubCnvYOffset, AllowedColorErrCnt, FastSearchAllowedColorErrCnt, AUseFastSearch, AIgnoreBackgroundColor, ABackgroundColor, AIgnoredColorsArr, AStopAllActionsOnDemand) then
   begin
     Result := True;
     Inc(SubCnvXOffset, ScrShot_Left);
@@ -647,6 +648,7 @@ begin
                               InputData.UseFastSearch,
                               InputData.IgnoreBackgroundColor,
                               InputData.BackgroundColor,
+                              InputData.IgnoredColorsArr,
                               AStopAllActionsOnDemand);
 
     if InputData.DebugBitmap <> nil then

@@ -377,6 +377,7 @@ begin
   AFindControlOptions.GetAllControls := Ini.ReadBool(SectionIndex, 'GetAllControls', False);
   AFindControlOptions.UseFastSearch := Ini.ReadBool(SectionIndex, 'UseFastSearch', True);
   AFindControlOptions.FastSearchAllowedColorErrorCount := Ini.ReadString(SectionIndex, 'FastSearchAllowedColorErrorCount', '10');
+  AFindControlOptions.IgnoredColors := Ini.ReadString(SectionIndex, 'IgnoredColors', '');
 end;
 
 
@@ -780,6 +781,8 @@ begin
 
   AStringList.Add('UseFastSearch=' + IntToStr(Ord(AActionFindControlOptions.UseFastSearch)));
   AStringList.Add('FastSearchAllowedColorErrorCount=' + AActionFindControlOptions.FastSearchAllowedColorErrorCount);
+
+  AStringList.Add('IgnoredColors=' + AActionFindControlOptions.IgnoredColors);
 end;
 
 
@@ -931,6 +934,7 @@ begin             //Substructures, which do not contain pointers, can be directl
 
   ADest.FindControlOptions.UseFastSearch := ASrc.FindControlOptions.UseFastSearch;
   ADest.FindControlOptions.FastSearchAllowedColorErrorCount := ASrc.FindControlOptions.FastSearchAllowedColorErrorCount;
+  ADest.FindControlOptions.IgnoredColors := ASrc.FindControlOptions.IgnoredColors;
 end;
 
 

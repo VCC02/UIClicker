@@ -59,7 +59,6 @@ type
   TExtendDir = (edLeft, edTop, edRight, edBottom);
   TExtendDirs = set of TExtendDir;
 
-  TColorArr = array of TColor;
   THandleArr = array of THandle;
 
 
@@ -1348,7 +1347,7 @@ var
   IndexOfRect, n: Integer;
   ExtDirs: TExtendDirs;
   AppTitle: string;
-  ImgMatrix: array of TColor;
+  ImgMatrix: TColorArr;
   ImgHWMatrix: array of THandle;
   tk, Duration: QWord;
   EstimatedDuration: Double;

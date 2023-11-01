@@ -999,6 +999,31 @@ function TActionExecution.ExecuteFindControlAction(var AFindControlOptions: TClk
     SetActionVarValue('$AllControl_Handles$', s);
   end;
 
+  procedure IgnoredColorsStrToArr(AIgnoredColorsStr: string; var AIgnoredColorsArr: TColorArr);
+  var
+    i: Integer;
+    ColorsStr: string;
+    ListOfIgnoredColors: TStringList;
+  begin
+    if AIgnoredColorsStr <> '' then
+    begin
+      ListOfIgnoredColors := TStringList.Create;
+      try
+        ListOfIgnoredColors.Text := StringReplace(AIgnoredColorsStr, ',', #13#10, [rfReplaceAll]);
+
+        SetLength(AIgnoredColorsArr, ListOfIgnoredColors.Count);
+        for i := 0 to ListOfIgnoredColors.Count - 1 do
+        begin
+          ColorsStr := Trim(ListOfIgnoredColors.Strings[i]);    //a bit ugly to reuse the variable
+          ColorsStr := EvaluateReplacements(ColorsStr);
+          AIgnoredColorsArr[i] := HexToInt(ColorsStr);
+        end;
+      finally
+        ListOfIgnoredColors.Free;
+      end;
+    end;
+  end;
+
 var
   i, j, k, n: Integer;
   ListOfBitmapFiles, ListOfPrimitiveFiles: TStringList;
@@ -1089,6 +1114,10 @@ begin
     FindControlInputData.FastSearchAllowedColorErrorCount := StrToIntDef(EvaluateReplacements(AFindControlOptions.FastSearchAllowedColorErrorCount), -1)
   else
     FindControlInputData.FastSearchAllowedColorErrorCount := 0; //not used anyway
+
+  IgnoredColorsStrToArr(AFindControlOptions.IgnoredColors, FindControlInputData.IgnoredColorsArr);
+  if Length(FindControlInputData.IgnoredColorsArr) > 0 then
+    AddToLog('Ignoring colors: ' + AFindControlOptions.IgnoredColors);
 
   for j := 0 to n - 1 do //number of font profiles
   begin
@@ -1550,7 +1579,19 @@ begin
 
     if (frClickerActions.prbTimeout.Max > 0) and (frClickerActions.prbTimeout.Position >= frClickerActions.prbTimeout.Max) then
     begin
-      PrependErrorMessageToActionVar('Timeout at "' + AActionOptions.ActionName + '" in ' + FSelfTemplateFileName^ + '  AttemptCount=' + IntToStr(AttemptCount) + '  ');
+      PrependErrorMessageToActionVar('Timeout at "' + AActionOptions.ActionName +
+                                     '" in ' + FSelfTemplateFileName^ +
+                                     '  AttemptCount=' + IntToStr(AttemptCount) +
+                                     '  Search: ' +
+                                     '  $Control_Left$=' + EvaluateReplacements('$Control_Left$') + //sasme as "global...", but are required here, to be displayed in caller template log
+                                     '  $Control_Top$=' + EvaluateReplacements('$Control_Top$') +
+                                     '  $Control_Right$=' + EvaluateReplacements('$Control_Right$') +
+                                     '  $Control_Bottom$=' + EvaluateReplacements('$Control_Bottom$') +
+                                     '  $Control_Text$="' + EvaluateReplacements('$Control_Text$') + '"' +
+                                     '  $Control_Class$="' + EvaluateReplacements('$Control_Class$') + '"' +
+                                     '  SearchedText="' + EvaluateReplacements(AFindControlOptions.MatchText) + '"' +
+                                     '  SearchedClass="' + EvaluateReplacements(AFindControlOptions.MatchClassName) + '"' +
+                                     '  ');
       Break;
     end;
 
@@ -2348,6 +2389,7 @@ begin
 
     FindControlOptions.UseFastSearch := AListOfFindControlOptionsParams.Values['UseFastSearch'] <> '0';
     FindControlOptions.FastSearchAllowedColorErrorCount := AListOfFindControlOptionsParams.Values['FastSearchAllowedColorErrorCount'];
+    FindControlOptions.IgnoredColors := AListOfFindControlOptionsParams.Values['IgnoredColors'];
 
     ActionOptions.ActionName := AListOfFindControlOptionsParams.Values['ActionName'];
     ActionOptions.ActionTimeout := Temp_ActionTimeout;

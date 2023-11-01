@@ -138,7 +138,6 @@ type
 
   TPrimitiveRecArr = array of TPrimitiveRec;
 
-  TIntArr = array of Integer;         //redefined from BinSearchValues
   TCompositionOrder = record
     Items: TIntArr;
     Name: string;

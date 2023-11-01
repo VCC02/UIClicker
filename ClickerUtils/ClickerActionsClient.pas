@@ -715,6 +715,7 @@ begin
                                     'GetAllControls' + '=' + IntToStr(Ord(AFindControlOptions.GetAllControls)) + '&' +
                                     'UseFastSearch' + '=' + IntToStr(Ord(AFindControlOptions.UseFastSearch)) + '&' +
                                     'FastSearchAllowedColorErrorCount' + '=' + AFindControlOptions.FastSearchAllowedColorErrorCount + '&' +
+                                    'IgnoredColors' + '=' + AFindControlOptions.IgnoredColors + '&' +
 
                                     'ActionName' + '=' + AActionName + '&' +
                                     'ActionTimeout' + '=' + IntToStr(AActionTimeout) + '&' +

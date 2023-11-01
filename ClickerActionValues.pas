@@ -56,7 +56,7 @@ const
   //Properties (counts)
   CPropCount_Click = 22;
   CPropCount_ExecApp = 7;
-  CPropCount_FindControl = 22;
+  CPropCount_FindControl = 23;
   CPropCount_FindSubControl = CPropCount_FindControl;
   CPropCount_SetText = 3;
   CPropCount_CallTemplate = 4;
@@ -119,6 +119,7 @@ const
   CFindControl_GetAllControls_PropIndex = 19;
   CFindControl_UseFastSearch_PropIndex = 20;
   CFindControl_FastSearchAllowedColorErrorCount_PropIndex = 21;
+  CFindControl_IgnoredColors_PropIndex = 22;
 
   CCallTemplate_TemplateFileName_PropIndex = 0; //property index in CallTemplate structure
   CCallTemplate_ListOfCustomVarsAndValues_PropIndex = 1;
@@ -246,7 +247,8 @@ const
     (Name: 'MatchPrimitiveFiles'; EditorType: etFilePathWithArrow; DataType: CDTArray),
     (Name: 'GetAllControls'; EditorType: etBooleanCombo; DataType: CDTBool),
     (Name: 'UseFastSearch'; EditorType: etBooleanCombo; DataType: CDTBool),
-    (Name: 'FastSearchAllowedColorErrorCount'; EditorType: etText; DataType: CDTString)
+    (Name: 'FastSearchAllowedColorErrorCount'; EditorType: etText; DataType: CDTString),
+    (Name: 'IgnoredColors'; EditorType: etText; DataType: CDTString)
   );
 
   {$IFDEF SubProperties}
@@ -472,7 +474,8 @@ const
     nil, //MatchPrimitiveFiles
     nil, //GetAllControls
     nil, //UseFastSearch
-    nil  //FastSearchAllowedColorErrorCount
+    nil, //FastSearchAllowedColorErrorCount
+    nil  //IgnoredColors
   );
 
   CCallTemplateGetActionValueStrFunctions: TGetCallTemplateValueStrFuncArr = (
@@ -548,7 +551,8 @@ const
     0, //MatchPrimitiveFiles
     0, //GetAllControls: Boolean;
     0, //UseFastSearch: Boolean;
-    0  //FastSearchAllowedColorErrorCount: Boolean;
+    0, //FastSearchAllowedColorErrorCount: Boolean;
+    0  //IgnoredColors: Boolean;
   );
 
   CSetTextEnumCounts: array[0..CPropCount_SetText - 1] of Integer = (
@@ -702,7 +706,8 @@ const
     nil, //Primitives
     nil, //GetAllControls
     nil, //UseFastSearch
-    nil  //FastSearchAllowedColorErrorCount
+    nil, //FastSearchAllowedColorErrorCount
+    nil  //IgnoredColors
   );
 
   CSetTextEnumStrings: array[0..CPropCount_SetText - 1] of PArrayOfString = (
@@ -820,6 +825,7 @@ function GetPropertyHint_FindControl_MatchPrimitiveFiles: string;
 function GetPropertyHint_FindControl_GetAllControls: string;
 function GetPropertyHint_FindControl_UseFastSearch: string;
 function GetPropertyHint_FindControl_FastSearchAllowedColorErrorCount: string;
+function GetPropertyHint_FindControl_IgnoredColors: string;
 
 {$IFDEF SubProperties}
   function GetPropertyHint_FindControl_MatchCriteria_MatchBitmapText: string;
@@ -925,7 +931,8 @@ const
     @GetPropertyHint_FindControl_MatchPrimitiveFiles, // MatchPrimitiveFiles: string; //ListOfStrings
     @GetPropertyHint_FindControl_GetAllControls, // GetAllControls: Boolean;
     @GetPropertyHint_FindControl_UseFastSearch, // UseFastSearch: Boolean;
-    @GetPropertyHint_FindControl_FastSearchAllowedColorErrorCount // FastSearchAllowedColorErrorCount: string;
+    @GetPropertyHint_FindControl_FastSearchAllowedColorErrorCount, // FastSearchAllowedColorErrorCount: string;
+    @GetPropertyHint_FindControl_IgnoredColors // IgnoredColors: string;
   );
 
 
@@ -1112,6 +1119,7 @@ begin
     19: Result := BoolToStr(AAction^.FindControlOptions.GetAllControls, True);
     20: Result := BoolToStr(AAction^.FindControlOptions.UseFastSearch, True);
     21: Result := AAction^.FindControlOptions.FastSearchAllowedColorErrorCount;
+    22: Result := AAction^.FindControlOptions.IgnoredColors;
     else
       Result := 'unknown';
   end;
@@ -1285,6 +1293,8 @@ function XClickPointReference_AsStringToValue(AXClickPointReferenceAsString: str
 var
   i: TXClickPointReference;
 begin
+  Result := Low(TXClickPointReference);
+
   for i := Low(TXClickPointReference) to High(TXClickPointReference) do
     if CXClickPointReferenceStr[i] = AXClickPointReferenceAsString then
     begin
@@ -1298,6 +1308,8 @@ function YClickPointReference_AsStringToValue(AYClickPointReferenceAsString: str
 var
   i: TYClickPointReference;
 begin
+  Result := Low(TYClickPointReference);
+
   for i := Low(TYClickPointReference) to High(TYClickPointReference) do
     if CYClickPointReferenceStr[i] = AYClickPointReferenceAsString then
     begin
@@ -1311,6 +1323,8 @@ function TMouseButton_AsStringToValue(AMouseButtonAsString: string): TMouseButto
 var
   i: TMouseButton;
 begin
+  Result := Low(TMouseButton);
+
   for i := Low(TMouseButton) to High(TMouseButton) do
     if CMouseButtonStr[i] = AMouseButtonAsString then
     begin
@@ -1324,6 +1338,8 @@ function TMouseWheelType_AsStringToValue(AMouseWheelTypeAsString: string): TMous
 var
   i: TMouseWheelType;
 begin
+  Result := Low(TMouseWheelType);
+
   for i := Low(TMouseWheelType) to High(TMouseWheelType) do
     if CMouseWheelTypeStr[i] = AMouseWheelTypeAsString then
     begin
@@ -1551,6 +1567,7 @@ begin
     19: AAction^.FindControlOptions.GetAllControls := StrToBool(NewValue);
     20: AAction^.FindControlOptions.UseFastSearch := StrToBool(NewValue);
     21: AAction^.FindControlOptions.FastSearchAllowedColorErrorCount := NewValue;
+    22: AAction^.FindControlOptions.IgnoredColors := NewValue;
     else
       ;
   end;
@@ -1912,6 +1929,13 @@ begin
             'Because of that, it is possible that a match would exist for the full searched bitmap, but a too tight color error count, would prevent a 5x5 area match.' + #13#10#13#10 +
 
             'If the value is too high, there are too many false positives (false matchings), causing a full bitmap search on all these positions, defeating the purpose.';
+end;
+
+
+function GetPropertyHint_FindControl_IgnoredColors: string;
+begin
+  Result := 'Comma-separated list of colors. They can be 6-digit hex values (BGR format, without "0x" prefix) or var/replacements, which contain 6-digit hex values.' + #13#10 +
+            'When empty, no color is ignored (except for text background color, if configured).';
 end;
 
 

@@ -203,6 +203,7 @@ begin
   AFileName := UpperCase(AFileName);
   FileExt := ExtractFileExt(AFileName);
 
+  CurrentItem := '.CLKTMPL';
   FoundExt := False;
   for i := 0 to FListOfAccessibleFileExtensions.Count - 1 do
   begin

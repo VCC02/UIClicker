@@ -234,8 +234,9 @@ class TFindControlOptions(Structure):
                ("CachedControlTop", LPCWSTR),
                ("MatchPrimitiveFiles", LPCWSTR),
                ("GetAllControls", BOOLEAN),
-			   ("UseFastSearch", BOOLEAN),
-			   ("FastSearchAllowedColorErrorCount", LPCWSTR)]
+               ("UseFastSearch", BOOLEAN),
+               ("FastSearchAllowedColorErrorCount", LPCWSTR),
+               ("IgnoredColors", LPCWSTR)]
 
 PFindControlOptions = ctypes.POINTER(TFindControlOptions)
 
@@ -287,6 +288,7 @@ def GetDefaultFindControlOptions():
     
     FindControlOptions.UseFastSearch = True
     FindControlOptions.FastSearchAllowedColorErrorCount = '10'
+    FindControlOptions.IgnoredColors = ''
     return FindControlOptions
 
 

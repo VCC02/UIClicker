@@ -1582,6 +1582,7 @@ begin
       AExtraBitmap.Width := NewSize.Width + 10;
       AExtraBitmap.Height := NewSize.Height;
       AExtraBitmap.Canvas.TextOut(5, 0, Response);
+      Result := False;
     end;
   end
   else
