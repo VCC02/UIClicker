@@ -345,6 +345,9 @@ type
     function HandleOnPictureOpenDialogExecute: Boolean;
     function HandleOnGetPictureOpenDialogFileName: string;
 
+    function HandleOnExecuteFindSubControlAction(AErrorLevel, AErrorCount, AFastSearchErrorCount: Integer; out AFoundArea: TRect): Boolean;
+    procedure HandleOnAddToLog(s: string);
+
     function GetInMemFS: TInMemFileSystem;
     procedure SetInMemFS(Value: TInMemFileSystem);
 
@@ -747,6 +750,9 @@ begin
   frClickerActions.OnSetPictureOpenDialogInitialDir := HandleOnSetPictureOpenDialogInitialDir;
   frClickerActions.OnPictureOpenDialogExecute := HandleOnPictureOpenDialogExecute;
   frClickerActions.OnGetPictureOpenDialogFileName := HandleOnGetPictureOpenDialogFileName;
+
+  frClickerActions.OnExecuteFindSubControlAction := HandleOnExecuteFindSubControlAction;
+  frClickerActions.OnAddToLog := HandleOnAddToLog;
   //frClickerActions.OnControlsModified := ClickerActionsFrameOnControlsModified;   //this is set on frame initialization
 
   vstActions := TVirtualStringTree.Create(Self);
@@ -1126,6 +1132,58 @@ end;
 function TfrClickerActionsArr.HandleOnGetPictureOpenDialogFileName: string;
 begin
   Result := DoOnGetPictureOpenDialogFileName;
+end;
+
+
+function TfrClickerActionsArr.HandleOnExecuteFindSubControlAction(AErrorLevel, AErrorCount, AFastSearchErrorCount: Integer; out AFoundArea: TRect): Boolean;
+var
+  VarsBkp: string;
+  Node: PVirtualNode;
+  BkpErrorLevel, BkpErrorCount, BkpFastSearchErrorCount: string;
+begin
+  Node := vstActions.GetFirstSelected;
+  if Node = nil then
+    MessageBox(Handle, 'No action is selected. Please select a FindSubControl action.', PChar(Application.Title), MB_ICONERROR);
+
+  VarsBkp := frClickerActions.vallstVariables.Strings.Text;
+  BkpErrorLevel := FClkActions[Node^.Index].FindControlOptions.ColorError;
+  BkpErrorCount := FClkActions[Node^.Index].FindControlOptions.AllowedColorErrorCount;
+  BkpFastSearchErrorCount := FClkActions[Node^.Index].FindControlOptions.FastSearchAllowedColorErrorCount;
+  try
+    FClkActions[Node^.Index].FindControlOptions.ColorError := IntToStr(AErrorLevel);
+    FClkActions[Node^.Index].FindControlOptions.AllowedColorErrorCount := IntToStr(AErrorCount);
+    FClkActions[Node^.Index].FindControlOptions.FastSearchAllowedColorErrorCount := IntToStr(AFastSearchErrorCount);
+
+    FDebugging := False;  /////////////////////// to be verified if this will throw the debugger into a bad state
+    PrepareFilesInServer;
+    Result := PlayActionByNode(Node);
+
+    if Result then
+    begin
+      AFoundArea.Left := StrToIntDef(EvaluateReplacements('$DebugVar_SubCnvXOffset$'), -1);
+      AFoundArea.Top := StrToIntDef(EvaluateReplacements('$DebugVar_SubCnvYOffset$'), -1);
+      AFoundArea.Width := StrToIntDef(EvaluateReplacements('$Control_Width$'), -1);
+      AFoundArea.Height := StrToIntDef(EvaluateReplacements('$Control_Height$'), -1);
+    end
+    else
+    begin
+      AFoundArea.Left := -1;
+      AFoundArea.Top := -1;
+      AFoundArea.Width := -1;
+      AFoundArea.Height := -1;
+    end;
+  finally
+    frClickerActions.vallstVariables.Strings.Text := VarsBkp;
+    FClkActions[Node^.Index].FindControlOptions.ColorError := BkpErrorLevel;
+    FClkActions[Node^.Index].FindControlOptions.AllowedColorErrorCount := BkpErrorCount;
+    FClkActions[Node^.Index].FindControlOptions.FastSearchAllowedColorErrorCount := BkpFastSearchErrorCount;
+  end;
+end;
+
+
+procedure TfrClickerActionsArr.HandleOnAddToLog(s: string);
+begin
+  AddToLog(s);
 end;
 
 

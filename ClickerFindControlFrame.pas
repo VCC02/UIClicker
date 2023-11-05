@@ -42,6 +42,8 @@ type
 
   //TOnSetPictureOpenDialogFileName = procedure(AFileName: string) of object;
 
+  TOnExecuteFindSubControlAction = function(AErrorLevel, AErrorCount, AFastSearchErrorCount: Integer; out AFoundArea: TRect): Boolean of object; //maybe add some text settings (like list of font names)
+
   TfrClickerFindControl = class; //forward
 
   { TFontProfile }     //a wrapper over TfrClickerBMPText, to isolate visual components and expose their values as properties
@@ -161,6 +163,12 @@ type
   TFontProfileArr = array of TFontProfile;
 
 
+  TPaintedLabel = class(TLabel)
+  public
+    procedure Paint; override;
+  end;
+
+
   { TfrClickerFindControl }
 
   TfrClickerFindControl = class(TFrame)
@@ -174,12 +182,15 @@ type
     chkShowGridOnBMPPreview: TCheckBox;
     edtFoundControlInfo: TEdit;
     grpFindControlDetailsOnWindow: TGroupBox;
+    imgCalcMinErrLevel: TImage;
+    imgStopCalcMinErrLevel: TImage;
     imgCopySelAreaFromBkImg: TImage;
     imgCopyBMPImg: TImage;
     imgCopyTextImg: TImage;
     imgCopyBkAndBMPImg: TImage;
     imglstFindCriteria: TImageList;
     imglstMatchBitmapFiles: TImageList;
+    imgDisplayExpectedFindLocation: TImage;
     imgUpdateLeftTopOffsets: TImage;
     imgCopyBkImg: TImage;
     imgUpdateLeftTopRightBottomOffsets: TImage;
@@ -218,6 +229,7 @@ type
     TabSheetActionFindSubControlBMPText: TTabSheet;
     TabSheetActionFindSubControlSearchArea: TTabSheet;
     TabSheetActionFindSubControlText: TTabSheet;
+    tmrBlinkCalcErrLevel: TTimer;
     tmrDrawZoom: TTimer;
     tmrUpdateGrid: TTimer;
     tmrUpdateSearchAreaOffsetEditBoxes: TTimer;
@@ -240,6 +252,7 @@ type
     procedure spdbtnDisplaySearchAreaDbgImgMenuClick(Sender: TObject);
     procedure spdbtnExtraCopyValueWindowsClick(Sender: TObject);
     procedure tabctrlBMPTextChange(Sender: TObject);
+    procedure tmrBlinkCalcErrLevelTimer(Sender: TObject);
     procedure tmrDrawZoomTimer(Sender: TObject);
     procedure tmrUpdateGridTimer(Sender: TObject);
     procedure tmrUpdateSearchAreaOffsetEditBoxesTimer(Sender: TObject);
@@ -274,6 +287,11 @@ type
     FTransparent_SearchAreaRightLimitLabel: TLabel;
     FTransparent_SearchAreaBottomLimitLabel: TLabel;
 
+    FSearchAreaLeftLimitLabel_ForMinErr: TPaintedLabel;
+    FSearchAreaTopLimitLabel_ForMinErr: TPaintedLabel;
+    FSearchAreaRightLimitLabel_ForMinErr: TPaintedLabel;
+    FSearchAreaBottomLimitLabel_ForMinErr: TPaintedLabel;
+
     FSelectionHold: Boolean;
     //FMouseDownGlobalPos: TPoint;
     FMouseDownSelPos: TPoint;
@@ -287,6 +305,8 @@ type
     FSelectingXStart: Integer;
     FSelectingYStart: Integer;
 
+    FRectangleSelectingForMinErr: Boolean;
+
     FGridDrawingOption: TDisplayGridLineOption;
     FPreviewSelectionColors: TSelectionColors;
 
@@ -294,6 +314,10 @@ type
     FInMemFS: TInMemFileSystem; //not created in this unit, set from outside as an existing instance
     FfrClickerPrimitives: TfrClickerPrimitives;
     FGridLineOptionMenu: TPopupMenu;
+
+    FExpectedErrLevel_TopLeft: TPoint;
+    FExpectedErrLevel_BotRight: TPoint;
+    FManuallyStopCalcErrLevel: Boolean;
 
     FOnTriggerOnControlsModified: TOnTriggerOnControlsModified;
     FOnEvaluateReplacements: TOnEvaluateReplacements;
@@ -315,6 +339,9 @@ type
     FOnSetMatchTextAndClassToOI: TOnSetMatchTextAndClassToOI;
     FOnGetUseWholeScreenAsSearchArea: TOnGetUseWholeScreenAsSearchArea;
     FOnGetFindControlOptions: TOnGetFindControlOptions;
+
+    FOnExecuteFindSubControlAction: TOnExecuteFindSubControlAction;
+    FOnAddToLog: TOnAddToLog;
 
     procedure imgSearchAreaControlDbgMouseMove(Sender: TObject;
       Shift: TShiftState; X, Y: Integer);
@@ -381,6 +408,11 @@ type
     procedure MenuItemCopySearchAreaSelectedAreaFromBkToClipboardClick(Sender: TObject);
     procedure MenuItemUpdateLeftAndTopOffsetsFromPreviewTextImageToEditboxes(Sender: TObject);
     procedure MenuItemUpdateLeftTopRightBottomOffsetsFromPreviewTextImageToEditboxes(Sender: TObject);
+    procedure MenuItemCalculateMinimumErrorLevelToMatchText(Sender: TObject);
+    procedure MenuItemCalculateMinimumColorErrorCountToMatchText(Sender: TObject);
+    procedure MenuItemStopCalculatingMinimumErrorLevelToMatchText(Sender: TObject);
+    procedure MenuItemDisplaySelectionLinesForExpectedFindLocation(Sender: TObject);
+    procedure MenuItemHideSelectionLinesForExpectedFindLocation(Sender: TObject);
 
     procedure MenuItemLoadBmpTextToSearchedAreaClick(Sender: TObject);
     procedure MenuItemUnloadBmpTextFromSearchedAreaClick(Sender: TObject);
@@ -392,7 +424,6 @@ type
     function GetFontProfile(Value: Integer): TFontProfile;
 
     procedure CreateRemainingUIComponents;
-    procedure CreateSelectionLabels;
     procedure CreateGridLineOptionMenu;
     procedure DoOnTriggerOnControlsModified;
     function DoOnGetExtraSearchAreaDebuggingImage(AExtraBitmap: TBitmap): Boolean;
@@ -410,12 +441,18 @@ type
     procedure DoOnSetMatchTextAndClassToOI(AMatchText, AMatchClassName: string);
     function DoOnGetFindControlOptions: PClkFindControlOptions;
 
+    function DoOnExecuteFindSubControlAction(AErrorLevel, AErrorCount, AFastSearchErrorCount: Integer; out AFoundArea: TRect): Boolean;
+    procedure DoOnAddToLog(s: string);
+
     procedure HandleMatchTextClick;
     procedure GeneratePreviewGridContent(ADisplayGridLineOption: TDisplayGridLineOption);
 
     procedure AddFontProfile(AProfileName: string);
 
     procedure SelectDbgImgByRectangle(X, Y: Integer);
+    procedure SelectDbgImgByRectangleForMinErr(X, Y: Integer);
+    procedure DisplaySelectionLinesForExpectedFindLocation;
+    procedure HideSelectionLinesForExpectedFindLocation;
 
     function HandleBMPTextOnGetDisplayedText: string;
     procedure HandleBMPTextOnTriggerOnControlsModified;
@@ -510,6 +547,8 @@ type
     procedure UpdatePreviewIcons;
     procedure UpdateListsOfSearchFiles(AMatchBitmapFiles, AMatchPrimitiveFiles: string);
 
+    procedure CreateTransparentSelectionLabels;
+    procedure CreateSelectionLabels(var ALeftLabel, ATopLabel, ARightLabel, ABottomLabel: TLabel; ALeftColor, ATopColor, ARightColor, ABottomColor: TColor; AShouldBringToFront, ACreateWithPaintedLabel: Boolean);
     procedure DisplayDebuggingImage;
     procedure PreviewText; //called by ExecuteAction
     procedure RefreshGrid;
@@ -565,6 +604,9 @@ type
     property OnGetDisplayedText: TOnGetDisplayedText write FOnGetDisplayedText;
     property OnSetMatchTextAndClassToOI: TOnSetMatchTextAndClassToOI write FOnSetMatchTextAndClassToOI;
     property OnGetFindControlOptions: TOnGetFindControlOptions write FOnGetFindControlOptions;
+
+    property OnExecuteFindSubControlAction: TOnExecuteFindSubControlAction write FOnExecuteFindSubControlAction;   //used on finding error level only (not on all FindSubControl actions)
+    property OnAddToLog: TOnAddToLog write FOnAddToLog;
   end;
 
 const
@@ -904,6 +946,24 @@ begin
   FfrClickerBMPText.UpdateSelectionLabelsFromCropInfo(ABMPText);
 end;
 
+
+{ TPaintedLabel }
+
+procedure TPaintedLabel.Paint;
+begin
+  inherited Paint;
+
+  Canvas.Pen.Style := psDashDot;
+  Canvas.Pen.Color := $8888FF;
+
+  if Width = 1 then
+    Canvas.Line(0, 0, 0, Height);
+
+  if Height = 1 then
+    Canvas.Line(0, 0, Width, 0);
+end;
+
+
 { TfrClickerFindControl }
 
 
@@ -919,74 +979,6 @@ end;
 procedure TfrClickerFindControl.CreateRemainingUIComponents;
 begin
 
-end;
-
-
-procedure TfrClickerFindControl.CreateSelectionLabels;
-begin
-  FTransparent_SearchAreaLeftLimitLabel := TLabel.Create(Self);
-  FTransparent_SearchAreaTopLimitLabel := TLabel.Create(Self);
-  FTransparent_SearchAreaRightLimitLabel := TLabel.Create(Self);
-  FTransparent_SearchAreaBottomLimitLabel := TLabel.Create(Self);
-
-  FTransparent_SearchAreaLeftLimitLabel.Parent := FSearchAreaScrBox;
-  FTransparent_SearchAreaTopLimitLabel.Parent := FSearchAreaScrBox;
-  FTransparent_SearchAreaRightLimitLabel.Parent := FSearchAreaScrBox;
-  FTransparent_SearchAreaBottomLimitLabel.Parent := FSearchAreaScrBox;
-
-  FTransparent_SearchAreaLeftLimitLabel.AutoSize := False;
-  FTransparent_SearchAreaTopLimitLabel.AutoSize := False;
-  FTransparent_SearchAreaRightLimitLabel.AutoSize := False;
-  FTransparent_SearchAreaBottomLimitLabel.AutoSize := False;
-
-  FTransparent_SearchAreaLeftLimitLabel.Caption := '';
-  FTransparent_SearchAreaTopLimitLabel.Caption := '';
-  FTransparent_SearchAreaRightLimitLabel.Caption := '';
-  FTransparent_SearchAreaBottomLimitLabel.Caption := '';
-
-  FTransparent_SearchAreaLeftLimitLabel.Color := clDefault;
-  FTransparent_SearchAreaTopLimitLabel.Color := clDefault;
-  FTransparent_SearchAreaRightLimitLabel.Color := clDefault;
-  FTransparent_SearchAreaBottomLimitLabel.Color := clDefault;
-
-  FTransparent_SearchAreaLeftLimitLabel.Width := 3;
-  FTransparent_SearchAreaTopLimitLabel.Height := 3;
-  FTransparent_SearchAreaRightLimitLabel.Width := 3;
-  FTransparent_SearchAreaBottomLimitLabel.Height := 3;
-
-  FTransparent_SearchAreaLeftLimitLabel.Transparent := True;
-  FTransparent_SearchAreaTopLimitLabel.Transparent := True;
-  FTransparent_SearchAreaRightLimitLabel.Transparent := True;
-  FTransparent_SearchAreaBottomLimitLabel.Transparent := True;
-
-  FTransparent_SearchAreaLeftLimitLabel.Cursor := crSizeWE;
-  FTransparent_SearchAreaTopLimitLabel.Cursor := crSizeNS;
-  FTransparent_SearchAreaRightLimitLabel.Cursor := crSizeWE;
-  FTransparent_SearchAreaBottomLimitLabel.Cursor := crSizeNS;
-
-  FTransparent_SearchAreaLeftLimitLabel.OnMouseDown := FTransparent_LeftMouseDown;
-  FTransparent_SearchAreaLeftLimitLabel.OnMouseMove := FTransparent_LeftMouseMove;
-  FTransparent_SearchAreaLeftLimitLabel.OnMouseUp := FTransparent_LeftMouseUp;
-  FTransparent_SearchAreaLeftLimitLabel.OnMouseEnter := imgSearchAreaControlDbgMouseEnter;
-  FTransparent_SearchAreaLeftLimitLabel.OnMouseLeave := imgSearchAreaControlDbgMouseLeave;
-
-  FTransparent_SearchAreaRightLimitLabel.OnMouseDown := FTransparent_RightMouseDown;
-  FTransparent_SearchAreaRightLimitLabel.OnMouseMove := FTransparent_RightMouseMove;
-  FTransparent_SearchAreaRightLimitLabel.OnMouseUp := FTransparent_RightMouseUp;
-  FTransparent_SearchAreaRightLimitLabel.OnMouseEnter := imgSearchAreaControlDbgMouseEnter;
-  FTransparent_SearchAreaRightLimitLabel.OnMouseLeave := imgSearchAreaControlDbgMouseLeave;
-
-  FTransparent_SearchAreaTopLimitLabel.OnMouseDown := FTransparent_TopMouseDown;
-  FTransparent_SearchAreaTopLimitLabel.OnMouseMove := FTransparent_TopMouseMove;
-  FTransparent_SearchAreaTopLimitLabel.OnMouseUp := FTransparent_TopMouseUp;
-  FTransparent_SearchAreaTopLimitLabel.OnMouseEnter := imgSearchAreaControlDbgMouseEnter;
-  FTransparent_SearchAreaTopLimitLabel.OnMouseLeave := imgSearchAreaControlDbgMouseLeave;
-
-  FTransparent_SearchAreaBottomLimitLabel.OnMouseDown := FTransparent_BottomMouseDown;
-  FTransparent_SearchAreaBottomLimitLabel.OnMouseMove := FTransparent_BottomMouseMove;
-  FTransparent_SearchAreaBottomLimitLabel.OnMouseUp := FTransparent_BottomMouseUp;
-  FTransparent_SearchAreaBottomLimitLabel.OnMouseEnter := imgSearchAreaControlDbgMouseEnter;
-  FTransparent_SearchAreaBottomLimitLabel.OnMouseLeave := imgSearchAreaControlDbgMouseLeave;
 end;
 
 
@@ -1035,6 +1027,9 @@ begin
   FOnGetUseWholeScreenAsSearchArea := nil;
   FOnGetFindControlOptions := nil;
 
+  FOnExecuteFindSubControlAction := nil;
+  FOnAddToLog := nil;
+
   CreateRemainingUIComponents; //this should be called after initializing callback properties to nil  (like FOnTriggerOnControlsModified)
   CreateGridLineOptionMenu;
   SetLength(FBMPTextProfiles, 0);
@@ -1050,6 +1045,7 @@ begin
   FLastClickedLbe := nil;
   FDbgImgHold := False;
   FRectangleSelecting := False;
+  FRectangleSelectingForMinErr := False;
   FDragging := False;
   FInMemFS := nil;
 
@@ -1059,6 +1055,12 @@ begin
   FPreviewSelectionColors.BotRight_Valid := CLabel_LightGreen;
   FPreviewSelectionColors.TopLeft_Invalid := clRed;
   FPreviewSelectionColors.BotRight_Invalid := clMaroon;
+
+  FManuallyStopCalcErrLevel := False;
+  FExpectedErrLevel_TopLeft.X := -1;
+  FExpectedErrLevel_TopLeft.Y := -1;
+  FExpectedErrLevel_BotRight.X := -1;
+  FExpectedErrLevel_BotRight.Y := -1;
 
   PageControlMatch.ActivePageIndex := 0;
 end;
@@ -1192,6 +1194,24 @@ begin
     raise Exception.Create('OnGetFindControlOptions not assigned.')
   else
     Result := FOnGetFindControlOptions;
+end;
+
+
+function TfrClickerFindControl.DoOnExecuteFindSubControlAction(AErrorLevel, AErrorCount, AFastSearchErrorCount: Integer; out AFoundArea: TRect): Boolean;
+begin
+  if not Assigned(FOnExecuteFindSubControlAction) then
+    raise Exception.Create('OnExecuteFindSubControlAction not assigned.')
+  else
+    Result := FOnExecuteFindSubControlAction(AErrorLevel, AErrorCount, AFastSearchErrorCount, AFoundArea);
+end;
+
+
+procedure TfrClickerFindControl.DoOnAddToLog(s: string);
+begin
+  if not Assigned(FOnAddToLog) then
+    raise Exception.Create('OnAddToLog not assigned.')
+  else
+    FOnAddToLog(s);
 end;
 
 
@@ -1455,6 +1475,12 @@ end;
 procedure TfrClickerFindControl.tabctrlBMPTextChange(Sender: TObject);
 begin
   SetBMPTextFrameVisibility;
+end;
+
+
+procedure TfrClickerFindControl.tmrBlinkCalcErrLevelTimer(Sender: TObject);
+begin
+  imgCalcMinErrLevel.Visible := not imgCalcMinErrLevel.Visible;
 end;
 
 
@@ -1886,6 +1912,117 @@ begin
 end;
 
 
+procedure TfrClickerFindControl.CreateSelectionLabels(var ALeftLabel, ATopLabel, ARightLabel, ABottomLabel: TLabel; ALeftColor, ATopColor, ARightColor, ABottomColor: TColor; AShouldBringToFront, ACreateWithPaintedLabel: Boolean);
+begin
+  if ACreateWithPaintedLabel then
+  begin
+    ALeftLabel := TPaintedLabel.Create(Self);
+    ATopLabel := TPaintedLabel.Create(Self);
+    ARightLabel := TPaintedLabel.Create(Self);
+    ABottomLabel := TPaintedLabel.Create(Self);
+  end
+  else
+  begin
+    ALeftLabel := TLabel.Create(Self);
+    ATopLabel := TLabel.Create(Self);
+    ARightLabel := TLabel.Create(Self);
+    ABottomLabel := TLabel.Create(Self);
+  end;
+
+  ALeftLabel.Parent := FSearchAreaScrBox;
+  ATopLabel.Parent := FSearchAreaScrBox;
+  ARightLabel.Parent := FSearchAreaScrBox;
+  ABottomLabel.Parent := FSearchAreaScrBox;
+
+  ALeftLabel.AutoSize := False;
+  ATopLabel.AutoSize := False;
+  ARightLabel.AutoSize := False;
+  ABottomLabel.AutoSize := False;
+
+  ALeftLabel.Caption := '';
+  ATopLabel.Caption := '';
+  ARightLabel.Caption := '';
+  ABottomLabel.Caption := '';
+
+  ALeftLabel.Color := ALeftColor;
+  ATopLabel.Color := ATopColor;
+  ARightLabel.Color := ARightColor;
+  ABottomLabel.Color := ABottomColor;
+
+  ALeftLabel.Width := 1;
+  ATopLabel.Height := 1;
+  ARightLabel.Width := 1;
+  ABottomLabel.Height := 1;
+
+  if AShouldBringToFront then
+  begin
+    ALeftLabel.BringToFront;
+    ATopLabel.BringToFront;
+    ARightLabel.BringToFront;
+    ABottomLabel.BringToFront;
+  end;
+
+  ALeftLabel.Transparent := False;
+  ATopLabel.Transparent := False;
+  ARightLabel.Transparent := False;
+  ABottomLabel.Transparent := False;
+end;
+
+
+procedure TfrClickerFindControl.CreateTransparentSelectionLabels;
+begin
+  CreateSelectionLabels(FTransparent_SearchAreaLeftLimitLabel,
+                        FTransparent_SearchAreaTopLimitLabel,
+                        FTransparent_SearchAreaRightLimitLabel,
+                        FTransparent_SearchAreaBottomLimitLabel,
+                        clDefault,
+                        clDefault,
+                        clDefault,
+                        clDefault,
+                        False,
+                        False);
+
+  FTransparent_SearchAreaLeftLimitLabel.Width := 3;
+  FTransparent_SearchAreaTopLimitLabel.Height := 3;
+  FTransparent_SearchAreaRightLimitLabel.Width := 3;
+  FTransparent_SearchAreaBottomLimitLabel.Height := 3;
+
+  FTransparent_SearchAreaLeftLimitLabel.Transparent := True;
+  FTransparent_SearchAreaTopLimitLabel.Transparent := True;
+  FTransparent_SearchAreaRightLimitLabel.Transparent := True;
+  FTransparent_SearchAreaBottomLimitLabel.Transparent := True;
+
+  FTransparent_SearchAreaLeftLimitLabel.Cursor := crSizeWE;
+  FTransparent_SearchAreaTopLimitLabel.Cursor := crSizeNS;
+  FTransparent_SearchAreaRightLimitLabel.Cursor := crSizeWE;
+  FTransparent_SearchAreaBottomLimitLabel.Cursor := crSizeNS;
+
+  FTransparent_SearchAreaLeftLimitLabel.OnMouseDown := FTransparent_LeftMouseDown;
+  FTransparent_SearchAreaLeftLimitLabel.OnMouseMove := FTransparent_LeftMouseMove;
+  FTransparent_SearchAreaLeftLimitLabel.OnMouseUp := FTransparent_LeftMouseUp;
+  FTransparent_SearchAreaLeftLimitLabel.OnMouseEnter := imgSearchAreaControlDbgMouseEnter;
+  FTransparent_SearchAreaLeftLimitLabel.OnMouseLeave := imgSearchAreaControlDbgMouseLeave;
+
+  FTransparent_SearchAreaRightLimitLabel.OnMouseDown := FTransparent_RightMouseDown;
+  FTransparent_SearchAreaRightLimitLabel.OnMouseMove := FTransparent_RightMouseMove;
+  FTransparent_SearchAreaRightLimitLabel.OnMouseUp := FTransparent_RightMouseUp;
+  FTransparent_SearchAreaRightLimitLabel.OnMouseEnter := imgSearchAreaControlDbgMouseEnter;
+  FTransparent_SearchAreaRightLimitLabel.OnMouseLeave := imgSearchAreaControlDbgMouseLeave;
+
+  FTransparent_SearchAreaTopLimitLabel.OnMouseDown := FTransparent_TopMouseDown;
+  FTransparent_SearchAreaTopLimitLabel.OnMouseMove := FTransparent_TopMouseMove;
+  FTransparent_SearchAreaTopLimitLabel.OnMouseUp := FTransparent_TopMouseUp;
+  FTransparent_SearchAreaTopLimitLabel.OnMouseEnter := imgSearchAreaControlDbgMouseEnter;
+  FTransparent_SearchAreaTopLimitLabel.OnMouseLeave := imgSearchAreaControlDbgMouseLeave;
+
+  FTransparent_SearchAreaBottomLimitLabel.OnMouseDown := FTransparent_BottomMouseDown;
+  FTransparent_SearchAreaBottomLimitLabel.OnMouseMove := FTransparent_BottomMouseMove;
+  FTransparent_SearchAreaBottomLimitLabel.OnMouseUp := FTransparent_BottomMouseUp;
+  FTransparent_SearchAreaBottomLimitLabel.OnMouseEnter := imgSearchAreaControlDbgMouseEnter;
+  FTransparent_SearchAreaBottomLimitLabel.OnMouseLeave := imgSearchAreaControlDbgMouseLeave;
+end;
+
+
 procedure TfrClickerFindControl.DisplayDebuggingImage;
 const
   CDbgImgPreviewHint: string = 'Drag to move.' + #13#10 +
@@ -1985,45 +2122,32 @@ begin
 
       FSearchAreaDbgImgSearchedBmpMenu := TPopupMenu.Create(Self);
 
-      FSearchAreaLeftLimitLabel := TLabel.Create(Self);
-      FSearchAreaTopLimitLabel := TLabel.Create(Self);
-      FSearchAreaRightLimitLabel := TLabel.Create(Self);
-      FSearchAreaBottomLimitLabel := TLabel.Create(Self);
+      CreateSelectionLabels(FSearchAreaLeftLimitLabel,
+                            FSearchAreaTopLimitLabel,
+                            FSearchAreaRightLimitLabel,
+                            FSearchAreaBottomLimitLabel,
+                            FPreviewSelectionColors.TopLeft_Valid,
+                            FPreviewSelectionColors.TopLeft_Valid,
+                            FPreviewSelectionColors.BotRight_Valid,
+                            FPreviewSelectionColors.BotRight_Valid,
+                            True,
+                            False);
 
-      FSearchAreaLeftLimitLabel.Parent := FSearchAreaScrBox;
-      FSearchAreaTopLimitLabel.Parent := FSearchAreaScrBox;
-      FSearchAreaRightLimitLabel.Parent := FSearchAreaScrBox;
-      FSearchAreaBottomLimitLabel.Parent := FSearchAreaScrBox;
+      CreateSelectionLabels(TLabel(FSearchAreaLeftLimitLabel_ForMinErr),
+                            TLabel(FSearchAreaTopLimitLabel_ForMinErr),
+                            TLabel(FSearchAreaRightLimitLabel_ForMinErr),
+                            TLabel(FSearchAreaBottomLimitLabel_ForMinErr),
+                            clTeal,
+                            clTeal,
+                            clTeal,
+                            clTeal,
+                            True,
+                            True);
 
-      FSearchAreaLeftLimitLabel.AutoSize := False;
-      FSearchAreaTopLimitLabel.AutoSize := False;
-      FSearchAreaRightLimitLabel.AutoSize := False;
-      FSearchAreaBottomLimitLabel.AutoSize := False;
-
-      FSearchAreaLeftLimitLabel.Caption := '';
-      FSearchAreaTopLimitLabel.Caption := '';
-      FSearchAreaRightLimitLabel.Caption := '';
-      FSearchAreaBottomLimitLabel.Caption := '';
-
-      FSearchAreaLeftLimitLabel.Color := FPreviewSelectionColors.TopLeft_Valid;
-      FSearchAreaTopLimitLabel.Color := FPreviewSelectionColors.TopLeft_Valid;
-      FSearchAreaRightLimitLabel.Color := FPreviewSelectionColors.BotRight_Valid;
-      FSearchAreaBottomLimitLabel.Color := FPreviewSelectionColors.BotRight_Valid;
-
-      FSearchAreaLeftLimitLabel.Width := 1;
-      FSearchAreaTopLimitLabel.Height := 1;
-      FSearchAreaRightLimitLabel.Width := 1;
-      FSearchAreaBottomLimitLabel.Height := 1;
-
-      FSearchAreaLeftLimitLabel.BringToFront;
-      FSearchAreaTopLimitLabel.BringToFront;
-      FSearchAreaRightLimitLabel.BringToFront;
-      FSearchAreaBottomLimitLabel.BringToFront;
-
-      FSearchAreaLeftLimitLabel.Transparent := False;
-      FSearchAreaTopLimitLabel.Transparent := False;
-      FSearchAreaRightLimitLabel.Transparent := False;
-      FSearchAreaBottomLimitLabel.Transparent := False;
+      FSearchAreaLeftLimitLabel_ForMinErr.Visible := False;
+      FSearchAreaTopLimitLabel_ForMinErr.Visible := False;
+      FSearchAreaRightLimitLabel_ForMinErr.Visible := False;
+      FSearchAreaBottomLimitLabel_ForMinErr.Visible := False;
 
       FSearchAreaSearchedBmpDbgImg := TImage.Create(Self);      //created after labels, to maintain the proper z order
       FSearchAreaSearchedBmpDbgImg.Parent := FSearchAreaScrBox;
@@ -2049,7 +2173,7 @@ begin
       FSearchAreaSearchedTextDbgImg.Width := 1;
       FSearchAreaSearchedTextDbgImg.Height := 1;
 
-      CreateSelectionLabels;
+      CreateTransparentSelectionLabels;
 
       /////////
       FSearchAreaMenu := TPopupMenu.Create(Self);
@@ -2099,6 +2223,44 @@ begin
       MenuItem.OnClick := MenuItemUpdateLeftTopRightBottomOffsetsFromPreviewTextImageToEditboxes;
       MenuItem.Bitmap := imgUpdateLeftTopRightBottomOffsets.Picture.Bitmap;
       FSearchAreaMenu.Items.Add(MenuItem);
+
+      MenuItem := TMenuItem.Create(FSearchAreaMenu);
+      MenuItem.Caption := '-';
+      FSearchAreaMenu.Items.Add(MenuItem);
+
+      MenuItem := TMenuItem.Create(FSearchAreaMenu);
+      MenuItem.Caption := 'Calculate minimum color error level to match text...';
+      MenuItem.OnClick := MenuItemCalculateMinimumErrorLevelToMatchText;
+      MenuItem.Bitmap := imgCalcMinErrLevel.Picture.Bitmap;
+      FSearchAreaMenu.Items.Add(MenuItem);
+
+      MenuItem := TMenuItem.Create(FSearchAreaMenu);
+      MenuItem.Caption := 'Calculate minimum color error count to match text...';
+      MenuItem.OnClick := MenuItemCalculateMinimumColorErrorCountToMatchText;
+      MenuItem.Bitmap := imgCalcMinErrLevel.Picture.Bitmap;
+      FSearchAreaMenu.Items.Add(MenuItem);
+
+      MenuItem := TMenuItem.Create(FSearchAreaMenu);
+      MenuItem.Caption := 'Stop calculating minimum error level';
+      MenuItem.OnClick := MenuItemStopCalculatingMinimumErrorLevelToMatchText;
+      MenuItem.Bitmap := imgStopCalcMinErrLevel.Picture.Bitmap;
+      FSearchAreaMenu.Items.Add(MenuItem);
+
+      MenuItem := TMenuItem.Create(FSearchAreaMenu);
+      MenuItem.Caption := 'Display selection lines for expected find location';
+      MenuItem.OnClick := MenuItemDisplaySelectionLinesForExpectedFindLocation;
+      MenuItem.Bitmap := imgDisplayExpectedFindLocation.Picture.Bitmap;
+      FSearchAreaMenu.Items.Add(MenuItem);
+
+      MenuItem := TMenuItem.Create(FSearchAreaMenu);
+      MenuItem.Caption := 'Hide selection lines for expected find location';
+      MenuItem.OnClick := MenuItemHideSelectionLinesForExpectedFindLocation;
+      MenuItem.Bitmap := imgDisplayExpectedFindLocation.Picture.Bitmap;
+      FSearchAreaMenu.Items.Add(MenuItem);
+
+      MenuItem := TMenuItem.Create(FSearchAreaMenu);
+      MenuItem.Caption := '-';
+      FSearchAreaMenu.Items.Add(MenuItem);
     end
     else
       FSearchAreaDbgImgSearchedBmpMenu.Items.Clear;
@@ -2113,6 +2275,11 @@ begin
     FSearchAreaTopLimitLabel.Width := CSearchAreaMaxWidth;//FSearchAreaScrBox.Width;
     FSearchAreaRightLimitLabel.Height := CSearchAreaMaxHeight;//FFSearchAreaScrBox.Height;
     FSearchAreaBottomLimitLabel.Width := CSearchAreaMaxWidth;//FSearchAreaScrBox.Width;
+
+    FSearchAreaLeftLimitLabel_ForMinErr.Height := CSearchAreaMaxHeight;//FSearchAreaScrBox.Height;
+    FSearchAreaTopLimitLabel_ForMinErr.Width := CSearchAreaMaxWidth;//FSearchAreaScrBox.Width;
+    FSearchAreaRightLimitLabel_ForMinErr.Height := CSearchAreaMaxHeight;//FFSearchAreaScrBox.Height;
+    FSearchAreaBottomLimitLabel_ForMinErr.Width := CSearchAreaMaxWidth;//FSearchAreaScrBox.Width;
 
     //
     {FSearchAreaLeftLimitLabel.Anchors := FSearchAreaLeftLimitLabel.Anchors + [akBottom];
@@ -2666,6 +2833,37 @@ begin
 end;
 
 
+procedure TfrClickerFindControl.SelectDbgImgByRectangleForMinErr(X, Y: Integer);
+var
+  Ph: Integer;
+begin
+  if (Abs(X - FExpectedErrLevel_TopLeft.X) > 3) and (Abs(Y - FExpectedErrLevel_TopLeft.Y) > 3) then
+  begin
+    FExpectedErrLevel_BotRight.X := X;
+    FExpectedErrLevel_BotRight.Y := Y;
+
+    if FExpectedErrLevel_TopLeft.X > FExpectedErrLevel_BotRight.X then
+    begin
+      Ph := FExpectedErrLevel_TopLeft.X;
+      FExpectedErrLevel_TopLeft.X := FExpectedErrLevel_BotRight.X;
+      FExpectedErrLevel_BotRight.X := Ph;
+    end;
+
+    if FExpectedErrLevel_TopLeft.Y > FExpectedErrLevel_BotRight.Y then
+    begin
+      Ph := FExpectedErrLevel_TopLeft.Y;
+      FExpectedErrLevel_TopLeft.Y := FExpectedErrLevel_BotRight.Y;
+      FExpectedErrLevel_BotRight.Y := Ph;
+    end;
+
+    FSearchAreaLeftLimitLabel_ForMinErr.Left := Min(FExpectedErrLevel_TopLeft.X, FSearchAreaControlDbgImg.Width);
+    FSearchAreaRightLimitLabel_ForMinErr.Left := Min(X, FSearchAreaControlDbgImg.Width);
+    FSearchAreaTopLimitLabel_ForMinErr.Top := Min(FExpectedErrLevel_TopLeft.Y, FSearchAreaControlDbgImg.Height);
+    FSearchAreaBottomLimitLabel_ForMinErr.Top := Min(Y, FSearchAreaControlDbgImg.Height);
+  end;
+end;
+
+
 procedure TfrClickerFindControl.imgSearchAreaControlDbgMouseMove(Sender: TObject;
   Shift: TShiftState; X, Y: Integer);
 begin
@@ -2678,8 +2876,11 @@ begin
   lblMouseOnDbgImg.Caption := IntToStr(X) + ' : ' + IntToStr(Y);
   SetLabelsFromMouseOverDbgImgPixelColor(FSearchAreaControlDbgImg.Canvas.Pixels[X, Y]);
 
-  if FRectangleSelecting then
-    SelectDbgImgByRectangle(X, Y);
+  if FRectangleSelectingForMinErr then
+    SelectDbgImgByRectangleForMinErr(X, Y)
+  else
+    if FRectangleSelecting then
+      SelectDbgImgByRectangle(X, Y);
 
   FCurrentMousePosOnPreviewImg.X := X;
   FCurrentMousePosOnPreviewImg.Y := Y;
@@ -2699,9 +2900,19 @@ begin
       Inc(Y, FSearchAreaGridImg.Top);
     end;
 
-    FRectangleSelecting := True;
-    FSelectingXStart := X;
-    FSelectingYStart := Y;
+    if ssAlt in Shift then
+    begin
+      FRectangleSelectingForMinErr := True;
+      FExpectedErrLevel_TopLeft.X := X;
+      FExpectedErrLevel_TopLeft.Y := Y;
+      DisplaySelectionLinesForExpectedFindLocation;
+    end
+    else
+    begin
+      FRectangleSelecting := True;
+      FSelectingXStart := X;
+      FSelectingYStart := Y;
+    end;
   end;
 end;
 
@@ -2714,6 +2925,7 @@ begin
     if FRectangleSelecting then
       DoOnTriggerOnControlsModified;
 
+    FRectangleSelectingForMinErr := False; //set both to False, because the user might release the Alt key, while dragging
     FRectangleSelecting := False;
   end;
 end;
@@ -3138,6 +3350,305 @@ begin
   except
     //this will throw AV on uninitialized components or out of bounds values
   end;
+end;
+
+
+procedure TfrClickerFindControl.MenuItemCalculateMinimumErrorLevelToMatchText(Sender: TObject);
+var
+  MinInterval, MaxInterval: Integer;
+  Found: Boolean;
+  FindControlOptions: PClkFindControlOptions;
+  TestedErrorLevel, LastValidErrorLevel: Integer;
+  AllowedColErr, FastSearchAllowedColErr: Integer;
+  ExpectedArea: TRect; //Expected area where the text should be found. If found somewhere else, then it's a false positive.
+  FoundArea: TRect;
+  FoundOutsideOfExpectedArea: Boolean;
+begin
+  (Sender as TMenuItem).Enabled := False;
+  try
+    if MessageBox(Handle, 'The algorithm will use the current FindSubControl action settings, to get the minimum color error level from the expected area (defined by holding the Alt key while selecting). It can be stopped with Ctrl-Shift-F2. Continue?', PChar(Application.Title), MB_ICONQUESTION + MB_YESNO) = IDNO then
+      Exit;
+
+    FindControlOptions := DoOnGetFindControlOptions;
+
+    MinInterval := 0;
+    MaxInterval := 100; //a color error this high would make no sense anyway
+    LastValidErrorLevel := -1;
+
+    AllowedColErr := StrToIntDef(EvaluateReplacements(FindControlOptions.AllowedColorErrorCount), 10);
+    FastSearchAllowedColErr := StrToIntDef(EvaluateReplacements(FindControlOptions.FastSearchAllowedColorErrorCount), 10);
+
+    DoOnAddToLog('');
+    DoOnAddToLog('Searching for minimum color error level...');
+
+    if (FExpectedErrLevel_TopLeft.X < 0) or (FExpectedErrLevel_TopLeft.Y < 0) then
+    begin
+      FExpectedErrLevel_TopLeft.X := 0;
+      FExpectedErrLevel_TopLeft.Y := 0;
+      FExpectedErrLevel_BotRight.X := FSearchAreaControlDbgImg.Width;
+      FExpectedErrLevel_BotRight.Y := FSearchAreaControlDbgImg.Height;
+    end;
+
+    Found := False;
+    FManuallyStopCalcErrLevel := False;
+    FoundOutsideOfExpectedArea := False;
+
+    tmrBlinkCalcErrLevel.Enabled := True;
+    try
+      while MaxInterval - MinInterval > 1 do
+      begin
+        TestedErrorLevel := (MinInterval + MaxInterval) shr 1;
+
+        DoOnAddToLog('TestedErrorLevel: ' + IntToStr(TestedErrorLevel) + '    Interval: [' + IntToStr(MinInterval) + '..' + IntToStr(MaxInterval) + ']');
+
+        Found := DoOnExecuteFindSubControlAction(TestedErrorLevel, AllowedColErr, FastSearchAllowedColErr, FoundArea);
+
+        if Found then
+        begin
+          ExpectedArea.Left := FExpectedErrLevel_TopLeft.X;
+          ExpectedArea.Top := FExpectedErrLevel_TopLeft.Y;
+          ExpectedArea.Right := FExpectedErrLevel_BotRight.X;
+          ExpectedArea.Bottom := FExpectedErrLevel_BotRight.Y;
+
+          if (FoundArea.Left < ExpectedArea.Left) or
+             (FoundArea.Top < ExpectedArea.Top) or
+             (FoundArea.Right > ExpectedArea.Right) or
+             (FoundArea.Bottom > ExpectedArea.Bottom) then
+          begin
+            Found := False;
+            FoundOutsideOfExpectedArea := True;
+          end
+          else
+            LastValidErrorLevel := TestedErrorLevel;
+        end;
+
+        if not Found then
+          MinInterval := TestedErrorLevel
+        else
+          MaxInterval := TestedErrorLevel;
+
+        if (GetAsyncKeyState(VK_CONTROL) < 0) and (GetAsyncKeyState(VK_SHIFT) < 0) and(GetAsyncKeyState(VK_F2) < 0) then
+          Break;
+
+        Application.ProcessMessages;
+        Sleep(10);
+
+        if FManuallyStopCalcErrLevel then
+        begin
+          DoOnAddToLog('Manually stopping searching for color error level.');
+          Break;
+        end;
+
+        if not Found and (LastValidErrorLevel <> -1) then //Found at least once.  This may prevent further searching, if the minimum value is somewhere in between TestedErrorLevel and LastValidErrorLevel.
+        begin
+          Found := True; //accept the current found value
+          Break;
+        end;
+      end; //while
+    finally
+      tmrBlinkCalcErrLevel.Enabled := False;
+      imgCalcMinErrLevel.Visible := False;
+    end;
+
+    FManuallyStopCalcErrLevel := False;
+
+    if not Found then
+    begin
+      MessageBox(Handle, 'No proper color error level found.', PChar(Application.Title), MB_ICONINFORMATION);
+      DoOnAddToLog('No proper color error level found.');
+
+      if FoundOutsideOfExpectedArea then
+        DoOnAddToLog('The searched text can be found outside of expected area.');
+    end
+    else
+    begin
+      if LastValidErrorLevel = -1 then
+        DoOnAddToLog('No valid value found.')
+      else
+      begin
+        if TestedErrorLevel <> LastValidErrorLevel then
+          TestedErrorLevel := LastValidErrorLevel; //update to the latest valid value
+
+        DoOnAddToLog('Found an error level for color matching: ' + IntToStr(TestedErrorLevel));
+        if MessageBox(Handle, 'A color error level found. Do you want to update the action properties?', PChar(Application.Title), MB_ICONQUESTION + MB_YESNO) = IDYES then
+        begin
+          FindControlOptions^.ColorError := IntToStr(TestedErrorLevel);
+          tmrUpdateSearchAreaOffsetEditBoxes.Enabled := True; //an ugly way to trigger the modified flag in parent frames, up to OI
+          DoOnTriggerOnControlsModified;
+          //update other properties if the algorithm is advanced enough to calculate more than ColorError
+        end;
+      end;
+    end;
+  finally
+    (Sender as TMenuItem).Enabled := True;
+  end;
+end;
+
+
+procedure TfrClickerFindControl.MenuItemCalculateMinimumColorErrorCountToMatchText(Sender: TObject); //These two functions should be refactored, because they have a similar structure.
+var
+  MinInterval, MaxInterval: Integer;
+  Found: Boolean;
+  FindControlOptions: PClkFindControlOptions;
+  ErrorLevel, TestedAllowedColErr, LastValidAllowedColErr, FastSearchAllowedColErr: Integer;
+  ExpectedArea: TRect; //Expected area where the text should be found. If found somewhere else, then it's a false positive.
+  FoundArea: TRect;
+  FoundOutsideOfExpectedArea: Boolean;
+begin
+  (Sender as TMenuItem).Enabled := False;
+  try
+    if MessageBox(Handle, 'The algorithm will use the current FindSubControl action settings, to get the minimum color error count from the expected area (defined by holding the Alt key while selecting). It can be stopped with Ctrl-Shift-F2. Continue?', PChar(Application.Title), MB_ICONQUESTION + MB_YESNO) = IDNO then
+      Exit;
+
+    FindControlOptions := DoOnGetFindControlOptions;
+
+    MinInterval := 0;
+    MaxInterval := 1000; //depends on text size and length (afterall, the bmp area)
+    LastValidAllowedColErr := -1;
+
+    ErrorLevel := StrToIntDef(EvaluateReplacements(FindControlOptions.ColorError), 10);
+    FastSearchAllowedColErr := StrToIntDef(EvaluateReplacements(FindControlOptions.FastSearchAllowedColorErrorCount), 10);
+
+    DoOnAddToLog('');
+    DoOnAddToLog('Searching for minimum color error count...');
+
+    if (FExpectedErrLevel_TopLeft.X < 0) or (FExpectedErrLevel_TopLeft.Y < 0) then
+    begin
+      FExpectedErrLevel_TopLeft.X := 0;
+      FExpectedErrLevel_TopLeft.Y := 0;
+      FExpectedErrLevel_BotRight.X := FSearchAreaControlDbgImg.Width;
+      FExpectedErrLevel_BotRight.Y := FSearchAreaControlDbgImg.Height;
+    end;
+
+    Found := False;
+    FManuallyStopCalcErrLevel := False;
+    FoundOutsideOfExpectedArea := False;
+
+    tmrBlinkCalcErrLevel.Enabled := True;
+    try
+      while MaxInterval - MinInterval > 1 do
+      begin
+        TestedAllowedColErr := (MinInterval + MaxInterval) shr 1;
+
+        DoOnAddToLog('TestedAllowedColErr: ' + IntToStr(TestedAllowedColErr) + '    Interval: [' + IntToStr(MinInterval) + '..' + IntToStr(MaxInterval) + ']');
+
+        Found := DoOnExecuteFindSubControlAction(ErrorLevel, TestedAllowedColErr, FastSearchAllowedColErr, FoundArea);
+
+        if Found then
+        begin
+          ExpectedArea.Left := FExpectedErrLevel_TopLeft.X;
+          ExpectedArea.Top := FExpectedErrLevel_TopLeft.Y;
+          ExpectedArea.Right := FExpectedErrLevel_BotRight.X;
+          ExpectedArea.Bottom := FExpectedErrLevel_BotRight.Y;
+
+          if (FoundArea.Left < ExpectedArea.Left) or
+             (FoundArea.Top < ExpectedArea.Top) or
+             (FoundArea.Right > ExpectedArea.Right) or
+             (FoundArea.Bottom > ExpectedArea.Bottom) then
+          begin
+            Found := False;
+            FoundOutsideOfExpectedArea := True;
+          end
+          else
+            LastValidAllowedColErr := TestedAllowedColErr;
+        end;
+
+        if not Found then
+          MinInterval := TestedAllowedColErr
+        else
+          MaxInterval := TestedAllowedColErr;
+
+        if (GetAsyncKeyState(VK_CONTROL) < 0) and (GetAsyncKeyState(VK_SHIFT) < 0) and(GetAsyncKeyState(VK_F2) < 0) then
+          Break;
+
+        Application.ProcessMessages;
+        Sleep(10);
+
+        if FManuallyStopCalcErrLevel then
+        begin
+          DoOnAddToLog('Manually stopping searching for color error count.');
+          Break;
+        end;
+
+        if not Found and (LastValidAllowedColErr <> -1) then //Found at least once.  This may prevent further searching, if the minimum value is somewhere in between TestedErrorLevel and LastValidErrorLevel.
+        begin
+          Found := True; //accept the current found value
+          Break;
+        end;
+      end; //while
+    finally
+      tmrBlinkCalcErrLevel.Enabled := False;
+      imgCalcMinErrLevel.Visible := False;
+    end;
+
+    FManuallyStopCalcErrLevel := False;
+
+    if not Found then
+    begin
+      MessageBox(Handle, 'No proper color error count found.', PChar(Application.Title), MB_ICONINFORMATION);
+      DoOnAddToLog('No proper color error count found.');
+
+      if FoundOutsideOfExpectedArea then
+        DoOnAddToLog('The searched text can be found outside of expected area.');
+    end
+    else
+    begin
+      if LastValidAllowedColErr = -1 then
+        DoOnAddToLog('No valid value found.')
+      else
+      begin
+        if TestedAllowedColErr <> LastValidAllowedColErr then
+          TestedAllowedColErr := LastValidAllowedColErr; //update to the latest valid value
+
+        DoOnAddToLog('Found an error count for color matching: ' + IntToStr(TestedAllowedColErr));
+        if MessageBox(Handle, 'A color error count found. Do you want to update the action properties?', PChar(Application.Title), MB_ICONQUESTION + MB_YESNO) = IDYES then
+        begin
+          FindControlOptions^.AllowedColorErrorCount := IntToStr(TestedAllowedColErr);
+          tmrUpdateSearchAreaOffsetEditBoxes.Enabled := True; //an ugly way to trigger the modified flag in parent frames, up to OI
+          DoOnTriggerOnControlsModified;
+          //update other properties if the algorithm is advanced enough to calculate more than ColorError
+        end;
+      end;
+    end;
+  finally
+    (Sender as TMenuItem).Enabled := True;
+  end;
+end;
+
+
+procedure TfrClickerFindControl.MenuItemStopCalculatingMinimumErrorLevelToMatchText(Sender: TObject);
+begin
+  FManuallyStopCalcErrLevel := True;
+end;
+
+
+procedure TfrClickerFindControl.DisplaySelectionLinesForExpectedFindLocation;
+begin
+  FSearchAreaLeftLimitLabel_ForMinErr.Show;
+  FSearchAreaTopLimitLabel_ForMinErr.Show;
+  FSearchAreaRightLimitLabel_ForMinErr.Show;
+  FSearchAreaBottomLimitLabel_ForMinErr.Show;
+end;
+
+
+procedure TfrClickerFindControl.HideSelectionLinesForExpectedFindLocation;
+begin
+  FSearchAreaLeftLimitLabel_ForMinErr.Hide;
+  FSearchAreaTopLimitLabel_ForMinErr.Hide;
+  FSearchAreaRightLimitLabel_ForMinErr.Hide;
+  FSearchAreaBottomLimitLabel_ForMinErr.Hide;
+end;
+
+
+procedure TfrClickerFindControl.MenuItemDisplaySelectionLinesForExpectedFindLocation(Sender: TObject);
+begin
+  DisplaySelectionLinesForExpectedFindLocation;
+end;
+
+
+procedure TfrClickerFindControl.MenuItemHideSelectionLinesForExpectedFindLocation(Sender: TObject);
+begin
+  HideSelectionLinesForExpectedFindLocation;
 end;
 
 

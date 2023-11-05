@@ -304,6 +304,9 @@ type
     FOnPictureOpenDialogExecute: TOnPictureOpenDialogExecute;
     FOnGetPictureOpenDialogFileName: TOnGetPictureOpenDialogFileName;
 
+    FOnExecuteFindSubControlAction: TOnExecuteFindSubControlAction;
+    FOnAddToLog: TOnAddToLog;
+
     //function GetListOfSetVarEntries: string;
     //procedure SetListOfSetVarEntries(Value: string);
 
@@ -334,6 +337,8 @@ type
     function DoOnPictureOpenDialogExecute: Boolean;
     function DoOnGetPictureOpenDialogFileName: string;
 
+    function DoOnExecuteFindSubControlAction(AErrorLevel, AErrorCount, AFastSearchErrorCount: Integer; out AFoundArea: TRect): Boolean;
+    procedure DoOnAddToLog(s: string);
 
     function GetInMemFS: TInMemFileSystem;
     procedure SetInMemFS(Value: TInMemFileSystem);
@@ -375,6 +380,9 @@ type
     function HandleOnGetDisplayedText: string;
     procedure HandleOnSetMatchTextAndClassToOI(AMatchText, AMatchClassName: string);
     function HandleOnGetFindControlOptions: PClkFindControlOptions;
+
+    function HandleOnExecuteFindSubControlAction(AErrorLevel, AErrorCount, AFastSearchErrorCount: Integer; out AFoundArea: TRect): Boolean;
+    procedure HandleOnAddToLog(s: string);
 
     procedure HandleOnClickerExecAppFrame_OnTriggerOnControlsModified;
     procedure HandleOnClickerSetVarFrame_OnTriggerOnControlsModified;
@@ -510,6 +518,9 @@ type
     property OnSetPictureOpenDialogInitialDir: TOnSetPictureOpenDialogInitialDir write FOnSetPictureOpenDialogInitialDir;
     property OnPictureOpenDialogExecute: TOnPictureOpenDialogExecute write FOnPictureOpenDialogExecute;
     property OnGetPictureOpenDialogFileName: TOnGetPictureOpenDialogFileName write FOnGetPictureOpenDialogFileName;
+
+    property OnExecuteFindSubControlAction: TOnExecuteFindSubControlAction write FOnExecuteFindSubControlAction;
+    property OnAddToLog: TOnAddToLog write FOnAddToLog;
   end;
 
 
@@ -583,6 +594,9 @@ begin
   frClickerFindControl.OnGetDisplayedText := HandleOnGetDisplayedText;
   frClickerFindControl.OnSetMatchTextAndClassToOI := HandleOnSetMatchTextAndClassToOI;
   frClickerFindControl.OnGetFindControlOptions := HandleOnGetFindControlOptions;
+  frClickerFindControl.OnExecuteFindSubControlAction := HandleOnExecuteFindSubControlAction;
+  frClickerFindControl.OnAddToLog := HandleOnAddToLog;
+
   frClickerFindControl.Visible := False;
 
   //frClickerFindControl.AddDefaultFontProfile;
@@ -733,6 +747,9 @@ begin
   FOnSetPictureOpenDialogInitialDir := nil;
   FOnPictureOpenDialogExecute := nil;
   FOnGetPictureOpenDialogFileName := nil;
+
+  FOnExecuteFindSubControlAction := nil;
+  FOnAddToLog := nil;
 
   FShowDeprecatedControls := False;
   FEditingAction := @FEditingActionRec;
@@ -1632,6 +1649,18 @@ begin
 end;
 
 
+function TfrClickerActions.HandleOnExecuteFindSubControlAction(AErrorLevel, AErrorCount, AFastSearchErrorCount: Integer; out AFoundArea: TRect): Boolean;
+begin
+  Result := DoOnExecuteFindSubControlAction(AErrorLevel, AErrorCount, AFastSearchErrorCount, AFoundArea);
+end;
+
+
+procedure TfrClickerActions.HandleOnAddToLog(s: string);
+begin
+  DoOnAddToLog(s);
+end;
+
+
 procedure TfrClickerActions.HandleOnClickerExecAppFrame_OnTriggerOnControlsModified;
 begin
   FEditingAction.ExecAppOptions.ListOfParams := frClickerExecApp.memExecAppParams.Lines.Text;
@@ -1900,6 +1929,23 @@ begin
     Result := FOnGetPictureOpenDialogFileName;
 end;
 
+
+function TfrClickerActions.DoOnExecuteFindSubControlAction(AErrorLevel, AErrorCount, AFastSearchErrorCount: Integer; out AFoundArea: TRect): Boolean;
+begin
+  if not Assigned(FOnExecuteFindSubControlAction) then
+    raise Exception.Create('OnExecuteFindSubControlAction not assigned.')
+  else
+    Result := FOnExecuteFindSubControlAction(AErrorLevel, AErrorCount, AFastSearchErrorCount, AFoundArea);
+end;
+
+
+procedure TfrClickerActions.DoOnAddToLog(s: string);
+begin
+  if not Assigned(FOnAddToLog) then
+    raise Exception.Create('OnAddToLog not assigned.')
+  else
+    FOnAddToLog(s);
+end;
 
 //////////////////////////// OI
 
