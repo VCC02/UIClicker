@@ -1,10 +1,10 @@
 object frmGradientTextMain: TfrmGradientTextMain
   Left = 401
-  Height = 246
+  Height = 363
   Top = 43
   Width = 623
   Caption = 'Gradient Text'
-  ClientHeight = 246
+  ClientHeight = 363
   ClientWidth = 623
   OnCreate = FormCreate
   LCLVersion = '7.5'
@@ -13011,5 +13011,74 @@ object frmGradientTextMain: TfrmGradientTextMain
       B48263B48263B48263B48263B48263B48263B48263B48263B48263B58364EBDD
       D200
     }
+  end
+  object grpClickTesting: TGroupBox
+    Left = 16
+    Height = 108
+    Top = 248
+    Width = 320
+    Caption = 'Click Testing'
+    ClientHeight = 88
+    ClientWidth = 316
+    Color = clYellow
+    ParentBackground = False
+    ParentColor = False
+    TabOrder = 0
+    object btnResetTrackBar: TButton
+      Left = 8
+      Height = 25
+      Top = 8
+      Width = 107
+      Caption = 'Reset TrackBar'
+      OnClick = btnResetTrackBarClick
+      OnMouseDown = btnResetTrackBarMouseDown
+      OnMouseUp = btnResetTrackBarMouseUp
+      TabOrder = 0
+    end
+    object trbTestTrackBar: TTrackBar
+      Left = 8
+      Height = 25
+      Top = 56
+      Width = 104
+      Max = 50
+      Position = 0
+      OnMouseDown = trbTestTrackBarMouseDown
+      OnMouseUp = trbTestTrackBarMouseUp
+      TabOrder = 1
+    end
+    object grpButtonClickDuration: TGroupBox
+      Left = 136
+      Height = 43
+      Top = -8
+      Width = 176
+      Caption = 'Button click duration [ms]'
+      ClientHeight = 23
+      ClientWidth = 172
+      TabOrder = 2
+      object edtButtonClickDuration: TEdit
+        Left = 8
+        Height = 23
+        Top = 0
+        Width = 160
+        TabOrder = 0
+      end
+    end
+    object grpTrackBarDragDuration: TGroupBox
+      Left = 136
+      Height = 43
+      Top = 40
+      Width = 176
+      Caption = 'TrackBar drag duration [ms]'
+      ClientHeight = 23
+      ClientWidth = 172
+      TabOrder = 3
+      object edtTrackBarDragDuration: TEdit
+        Left = 8
+        Height = 23
+        Top = 0
+        Width = 160
+        TabOrder = 0
+      end
+    end
   end
 end

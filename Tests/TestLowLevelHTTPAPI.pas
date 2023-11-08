@@ -40,6 +40,8 @@ type
   published
     procedure Test_ExecuteClickAction_LeaveMouse;
     procedure Test_ExecuteClickAction_MouseWheel;
+    procedure Test_ExecuteClickAction_TestApp_ClickDuration;
+    procedure Test_ExecuteClickAction_TestApp_DragDuration;
     procedure Test_ExecuteExecAppAction_IPConfig;
     procedure Test_ExecuteExecAppAction_IPConfig_NoInheritHandles;
 
@@ -80,6 +82,23 @@ implementation
 
 uses
   ClickerActionsClient, ClickerUtils, ActionsStuff, Controls, ClickerFileProviderClient;
+
+
+procedure ExecTestTemplate(ATestServerAddress, ATemplateName: string);
+var
+  Response: string;
+  CallTemplateOptions: TClkCallTemplateOptions;
+begin
+  CallTemplateOptions.TemplateFileName := ATemplateName;
+  CallTemplateOptions.ListOfCustomVarsAndValues := '';
+  CallTemplateOptions.EvaluateBeforeCalling := False;
+  CallTemplateOptions.CallTemplateLoop.Enabled := False;
+  CallTemplateOptions.CallTemplateLoop.Direction := ldInc;
+  CallTemplateOptions.CallTemplateLoop.EvalBreakPosition := lebpAfterContent;
+
+  Response := FastReplace_87ToReturn(ExecuteCallTemplateAction(ATestServerAddress, CallTemplateOptions, False, False, CREParam_FileLocation_ValueDisk));
+  ExpectSuccessfulAction(Response);
+end;
 
 
 constructor TTestLowLevelHTTPAPI.Create;
@@ -124,6 +143,20 @@ begin
   Response := FastReplace_87ToReturn(ExecuteCallTemplateAction(TestServerAddress, CallTemplateOptions, False, False, CREParam_FileLocation_ValueDisk));
 
   ExpectSuccessfulAction(Response);
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecuteClickAction_TestApp_ClickDuration;
+begin                                         //This test should be modified, to execute in-mem actions, i.e. Click, via API.
+                                              //It should generate some options similar to GenerateClickOptionsForLeaveMouse and modify them for this test.
+  ExecTestTemplate(TestServerAddress, '$AppDir$\Tests\TestFiles\ClickMeasurements.clktmpl');
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecuteClickAction_TestApp_DragDuration;
+begin                                         //This test should be modified, to execute in-mem actions, i.e. Click, via API.
+                                              //It should generate some options similar to GenerateClickOptionsForLeaveMouse and modify them for this test.
+  ExecTestTemplate(TestServerAddress, '$AppDir$\Tests\TestFiles\DragMeasurements.clktmpl');
 end;
 
 
@@ -349,36 +382,19 @@ begin
 end;
 
 
-procedure ExecFastSearchTestTemplate(ATestServerAddress, ATemplateName: string);
-var
-  Response: string;
-  CallTemplateOptions: TClkCallTemplateOptions;
-begin
-  CallTemplateOptions.TemplateFileName := ATemplateName;
-  CallTemplateOptions.ListOfCustomVarsAndValues := '';
-  CallTemplateOptions.EvaluateBeforeCalling := False;
-  CallTemplateOptions.CallTemplateLoop.Enabled := False;
-  CallTemplateOptions.CallTemplateLoop.Direction := ldInc;
-  CallTemplateOptions.CallTemplateLoop.EvalBreakPosition := lebpAfterContent;
-
-  Response := FastReplace_87ToReturn(ExecuteCallTemplateAction(ATestServerAddress, CallTemplateOptions, False, False, CREParam_FileLocation_ValueDisk));
-  ExpectSuccessfulAction(Response);
-end;
-
-
 procedure TTestLowLevelHTTPAPI.Test_ExecuteFindSubControlAction_UIClickerMain_BitnessLabel_WithFastSearch;
 const
-  CExpectedMultiplier = 25;
+  CExpectedMultiplier = 16;
 var
   tk: QWord;
   FirstDuration, SecondDuration: QWord;
 begin                                         //This test should be modified, to execute in-mem actions, i.e. FindSubControl, via API. Only the FindSubControl execution time should be measured.
   tk := GetTickCount64;                       //It should generate some options with GenerateFindSubControlOptionsForMainUIClickerWindow_Bitness and modify them for this test.
-  ExecFastSearchTestTemplate(TestServerAddress, '$AppDir$\Tests\TestFiles\FindBitOnMainNoFastSearch.clktmpl');
+  ExecTestTemplate(TestServerAddress, '$AppDir$\Tests\TestFiles\FindBitOnMainNoFastSearch.clktmpl');
   FirstDuration := GetTickCount64 - tk;
 
   tk := GetTickCount64;
-  ExecFastSearchTestTemplate(TestServerAddress, '$AppDir$\Tests\TestFiles\FindBitOnMainWithFastSearch.clktmpl');
+  ExecTestTemplate(TestServerAddress, '$AppDir$\Tests\TestFiles\FindBitOnMainWithFastSearch.clktmpl');
   SecondDuration := GetTickCount64 - tk;
 
   Expect(DWord(FirstDuration)).ToBeGreaterThan(CExpectedMultiplier * SecondDuration, 'Expecting some performance gain.  ' + IntToStr(FirstDuration) + ' vs. ' + IntToStr(CExpectedMultiplier) + ' * ' + IntToStr(SecondDuration));
@@ -388,7 +404,7 @@ end;
 procedure TTestLowLevelHTTPAPI.Test_ExecuteFindSubControlAction_UIClickerMain_CustomLabel_IgnoreBG;
 begin                                         //This test should be modified, to execute in-mem actions, i.e. FindSubControl, via API. Only the FindSubControl execution time should be measured.
                                               //It should generate some options with GenerateFindSubControlOptionsForMainUIClickerWindow_Bitness and modify them for this test.
-  ExecFastSearchTestTemplate(TestServerAddress, '$AppDir$\Tests\TestFiles\FindTextOnAppIgnoreBG.clktmpl');
+  ExecTestTemplate(TestServerAddress, '$AppDir$\Tests\TestFiles\FindTextOnAppIgnoreBG.clktmpl');
 end;
 
 

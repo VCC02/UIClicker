@@ -263,6 +263,10 @@ object frClickerConditionEditor: TfrClickerConditionEditor
       Caption = 'Add $LastAction_Status$ == "Successful"'
       OnClick = MenuItem_AddLastActionStatusEqualsSuccessfulClick
     end
+    object MenuItem_AddPrefixWithZerosEqualsNumber: TMenuItem
+      Caption = 'Add $PrefixWithZeros($SomeNumber$,6)$ == 001234'
+      OnClick = MenuItem_AddPrefixWithZerosEqualsNumberClick
+    end
   end
   object tmrEditingCondition: TTimer
     Enabled = False

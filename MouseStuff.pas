@@ -43,6 +43,9 @@ const
   CMouseClickType = 'ClickType';
   CMouseXDest = 'XDest';
   CMouseYDest = 'YDest';
+  CMouseDelayAfterMovingToDestination = 'DelayAfterMovingToDestination';
+  CMouseDelayAfterMouseDown = 'DelayAfterMouseDown';
+  CMouseMoveDuration = 'MoveDuration';
 
   CMouseWheelType = 'WheelType';
   CMouseWheelVertWheel = 'VWheel';
@@ -90,7 +93,7 @@ begin
     else
       Result := 1;
 end;
-  
+
 
 procedure MoveMouseCursor(DestTp: TPoint; ACallAppProcMsg: Boolean = True); //slow move, not teleporting
 var
@@ -131,6 +134,55 @@ begin
   Sleep(1);
   Dec(IncX);
   SetCursorPos(IncX, IncY);
+end;
+
+
+procedure MoveMouseCursorWithDuration(DestTp: TPoint; ADuration: Integer; ACallAppProcMsg: Boolean = True); //slow move, not teleporting
+var
+  SrcTp: TPoint;
+  IncX, IncY: Extended;
+  IncXDist, IncYDist: Extended;
+  IncCount, SleepDistance: Integer;
+  MaxDiff: Integer;
+begin
+  if ADuration < 1 then
+  begin
+    SetCursorPos(DestTp.X, DestTp.Y);
+    Exit;
+  end;
+
+  GetCursorPos(SrcTp);
+
+  IncX := SrcTp.X;
+  IncY := SrcTp.Y;
+  MaxDiff := Max(Abs(SrcTp.X - DestTp.X), Abs(SrcTp.Y - DestTp.Y));
+  IncCount := 0;
+  SleepDistance := MaxDiff shr 3;
+
+  IncXDist := (DestTp.X - SrcTp.X) / ADuration;
+  IncYDist := (DestTp.Y - SrcTp.Y) / ADuration;
+
+  repeat
+    IncX := IncX + IncXDist;
+    IncY := IncY + IncYDist;
+    Inc(IncCount);
+
+    SetCursorPos(Round(IncX), Round(IncY));
+
+    if ACallAppProcMsg then
+      if (SleepDistance > 0) and (IncCount mod SleepDistance = 0) then
+        Application.ProcessMessages;
+
+    Sleep(1);  //the loop should take ADuration iterations. Most likely, Sleep(1) will take longer than 1ms, so the loop will take a bit longer.
+  until IncCount >= ADuration;
+
+  //move mouse once again, to trigger MouseMove event   -  not sure if required or working
+  Sleep(1);
+  IncX := IncX + 1;
+  SetCursorPos(Round(IncX), Round(IncY));
+
+  Sleep(1);
+  SetCursorPos(DestTp.X, DestTp.Y);
 end;
 
 
@@ -231,7 +283,7 @@ var
   IsDragging: Boolean;
   AShift: TShiftState;
   AButton: TMouseButton;
-  ClickPoint: TPoint;
+  ClickPoint, DestPoint: TPoint;
   InitialPoint: TPoint;
 
   procedure ExecMouseClick;
@@ -239,12 +291,25 @@ var
     AMouseBtnDownState, AMouseBtnUpState: Word;
     AInputs: TInput;
     MoveWithoutClick: Boolean;
+    DelayAfterMovingToDestination: Integer;
+    DelayAfterMouseDown: Integer;
+    MoveDuration: Integer;
   begin
     ClickPoint.X := X;
     ClickPoint.Y := Y;
-    MoveMouseCursor(ClickPoint, False);
 
     MoveWithoutClick := AParams.Values['MoveWithoutClick'] = '1';
+    DelayAfterMovingToDestination := Max(1, StrToIntDef(AParams.Values[CMouseDelayAfterMovingToDestination], 50));
+    DelayAfterMouseDown := Max(1, StrToIntDef(AParams.Values[CMouseDelayAfterMouseDown], 200));
+    MoveDuration := Max(-1, StrToIntDef(AParams.Values[CMouseMoveDuration], -1));
+
+    if MoveDuration < 1 then
+      MoveMouseCursor(ClickPoint, False)
+    else
+    begin
+      if not IsDragging then
+        MoveMouseCursorWithDuration(ClickPoint, MoveDuration, MoveDuration > 5000);  //there will be race-conditions on client-server execution, if using App.ProcMsg
+    end;
 
     if not MoveWithoutClick then
     begin
@@ -255,37 +320,41 @@ var
       SetBasicMouseInfo(AInputs, X, Y);
 
       AInputs.mi.dwFlags := MOUSEEVENTF_ABSOLUTE or MOUSEEVENTF_MOVE;
-      mouse_event(AInputs.mi.dwFlags, DWord(AInputs.mi.dx), DWord(AInputs.mi.dy), 0, 0);
+      mouse_event(AInputs.mi.dwFlags, DWord(AInputs.mi.dx), DWord(AInputs.mi.dy), 0, 0);  //at ClickPoint
       //Application.ProcessMessages;
-      Sleep(50);
+      Sleep(DelayAfterMovingToDestination);  //delay after moving to destination
 
       AInputs.mi.dwFlags := MOUSEEVENTF_ABSOLUTE or AMouseBtnDownState;
-      mouse_event(AInputs.mi.dwFlags, DWord(AInputs.mi.dx), DWord(AInputs.mi.dy), 0, 0);
+      mouse_event(AInputs.mi.dwFlags, DWord(AInputs.mi.dx), DWord(AInputs.mi.dy), 0, 0);  //at ClickPoint
       //Application.ProcessMessages;
-      Sleep(100);
+      Sleep(DelayAfterMouseDown);  //delay after mouse down
     end;
 
     if IsDragging then
     begin
+      DestPoint.X := XDest;
+      DestPoint.Y := YDest;
+      MoveMouseCursorWithDuration(DestPoint, MoveDuration, MoveDuration > 5000);  //there will be race-conditions on client-server execution, if using App.ProcMsg
+
       SetBasicMouseInfo(AInputs, XDest, YDest);
 
       AInputs.mi.dwFlags := MOUSEEVENTF_ABSOLUTE or MOUSEEVENTF_MOVE;
-      mouse_event(AInputs.mi.dwFlags, DWord(AInputs.mi.dx), DWord(AInputs.mi.dy), 0, 0);
+      mouse_event(AInputs.mi.dwFlags, DWord(AInputs.mi.dx), DWord(AInputs.mi.dy), 0, 0);  //at destination
 
       //Application.ProcessMessages;
-      Sleep(50);
+      Sleep(DelayAfterMovingToDestination);   //delay after moving to destination
     end;
 
     if not MoveWithoutClick then
     begin
       AInputs.mi.dwFlags := MOUSEEVENTF_ABSOLUTE or AMouseBtnUpState;
-      mouse_event(AInputs.mi.dwFlags, DWord(AInputs.mi.dx), DWord(AInputs.mi.dy), 0, 0);
+      mouse_event(AInputs.mi.dwFlags, DWord(AInputs.mi.dx), DWord(AInputs.mi.dy), 0, 0);  //at ClickPoint if not dragging, at destination if dragging
       //Application.ProcessMessages;
 
       if AButton <> mbMiddle then
       begin
         AInputs.mi.dwFlags := MOUSEEVENTF_ABSOLUTE or MOUSEEVENTF_MOVE;
-        mouse_event(AInputs.mi.dwFlags, DWord(AInputs.mi.dx), DWord(AInputs.mi.dy), 0, 0);
+        mouse_event(AInputs.mi.dwFlags, DWord(AInputs.mi.dx), DWord(AInputs.mi.dy), 0, 0); //same as above
         //Application.ProcessMessages;
       end;
 
@@ -300,7 +369,7 @@ begin
   GetCursorPos(InitialPoint);
   try
     if IsDragging then
-      SetCursorPos(XDest, YDest);
+      SetCursorPos(XDest, YDest);   //usually harmless, but it might be needed in some special corner cases
 
     ExecMouseClick;
   finally

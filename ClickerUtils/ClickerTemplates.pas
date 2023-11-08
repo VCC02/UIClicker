@@ -249,6 +249,9 @@ begin
   AClickOptions.YOffsetDest := Ini.ReadString(SectionIndex, 'YOffsetDest', '0');
   AClickOptions.MouseWheelType := TMouseWheelType(Min(Ini.ReadInteger(SectionIndex, 'MouseWheelType', 0), Integer(High(TMouseWheelType))));
   AClickOptions.MouseWheelAmount := Ini.ReadString(SectionIndex, 'MouseWheelAmount', '0');
+  AClickOptions.DelayAfterMovingToDestination := Ini.ReadString(SectionIndex, 'DelayAfterMovingToDestination', '50');
+  AClickOptions.DelayAfterMouseDown := Ini.ReadString(SectionIndex, 'DelayAfterMouseDown', '100');
+  AClickOptions.MoveDuration := Ini.ReadString(SectionIndex, 'MoveDuration', '-1');
 end;
 
 
@@ -693,6 +696,9 @@ begin
 
   AStringList.Add('MouseWheelType=' + IntToStr(Ord(AActionClickOptions.MouseWheelType)));
   AStringList.Add('MouseWheelAmount=' + AActionClickOptions.MouseWheelAmount);
+  AStringList.Add('DelayAfterMovingToDestination=' + AActionClickOptions.DelayAfterMovingToDestination);
+  AStringList.Add('DelayAfterMouseDown=' + AActionClickOptions.DelayAfterMouseDown);
+  AStringList.Add('MoveDuration=' + AActionClickOptions.MoveDuration);
 end;
 
 

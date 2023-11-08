@@ -152,19 +152,20 @@ object frClickerSetVar: TfrClickerSetVar
     Left = 448
     Height = 269
     Top = 0
-    Width = 342
+    Width = 341
     Anchors = [akTop, akLeft, akRight, akBottom]
+    BevelOuter = bvNone
     Caption = 'pnlFunctions'
     ClientHeight = 269
-    ClientWidth = 342
-    Constraints.MinWidth = 342
+    ClientWidth = 341
+    Constraints.MinWidth = 341
     TabOrder = 2
     object memAvailableFunctions: TMemo
       Left = 0
       Height = 247
       Hint = 'The "$GetSelfHandles()$" and "$Exit(<ExitCode>)$" functions do not return a value, so they must be placed in the "Variable" column of a SetVar action.'#13#10'Also, they can''t be evaluated using the console or as part of a condition.'#13#10'All the other function should be called from the "Value" column.'
       Top = 20
-      Width = 336
+      Width = 335
       Anchors = [akTop, akLeft, akRight, akBottom]
       Color = clBtnFace
       Lines.Strings = (
@@ -173,6 +174,16 @@ object frClickerSetVar: TfrClickerSetVar
         '$Random(<max>)$'
         '$Sum(<op1>, <op2>)$'
         '$Diff(<op1>, <op2>)$'
+        '$Mul(<op1>, <op2>)$'
+        '$Div(<op1>, <op2>)$'
+        '$FMul(<op1>, <op2>)$'
+        '$FDiv(<op1>, <op2>)$'
+        '$EFMul(<op1>, <op2>)$'
+        '$EFDiv(<op1>, <op2>)$'
+        '$Abs(<op>)$'
+        '$FAbs(<op>)$'
+        '$EFAbs(<op>)$'
+        '$PrefixWithZeros(<Number>, <TotalNumberOfDigits>)$'
         '$http://<server:port>/[params]$'
         '$FastReplace_45ToReturn(<some_string>)$'
         '$FastReplace_ReturnTo45(<some_string>)$'
@@ -214,14 +225,17 @@ object frClickerSetVar: TfrClickerSetVar
       WordWrap = False
     end
     object lblAvailableFunctions: TLabel
-      Left = 0
-      Height = 15
+      Left = 2
+      Height = 20
       Hint = 'Special vars are either updated on every use, or their values can''t be changed (consts).'
-      Top = 2
-      Width = 190
+      Top = 0
+      Width = 335
+      AutoSize = False
       Caption = 'Available functions and special vars:'
+      Color = clBtnFace
       ParentShowHint = False
       ShowHint = True
+      Transparent = False
     end
   end
   object pmSetVars: TPopupMenu

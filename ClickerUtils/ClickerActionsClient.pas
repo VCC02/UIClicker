@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2022 VCC
+    Copyright (C) 2023 VCC
     creation date: Dec 2019
     initial release date: 26 Jul 2022
 
@@ -618,7 +618,10 @@ begin
                                     'XOffsetDest' + '=' + AClickOptions.XOffsetDest + '&' +
                                     'YOffsetDest' + '=' + AClickOptions.YOffsetDest + '&' +
                                     'MouseWheelType' + '=' + IntToStr(Ord(AClickOptions.MouseWheelType)) + '&' +
-                                    'MouseWheelAmount' + '=' + AClickOptions.MouseWheelAmount,
+                                    'MouseWheelAmount' + '=' + AClickOptions.MouseWheelAmount + '&' +
+                                    'DelayAfterMovingToDestination' + '=' + AClickOptions.DelayAfterMovingToDestination + '&' +
+                                    'DelayAfterMouseDown' + '=' + AClickOptions.DelayAfterMouseDown + '&' +
+                                    'MoveDuration' + '=' + AClickOptions.MoveDuration,
                                     ACallAppProcMsg
                                     );
 end;

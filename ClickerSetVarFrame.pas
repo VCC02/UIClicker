@@ -102,6 +102,7 @@ type
 
     procedure UpdateNodeCheckStateFromEvalBefore(ANode: PVirtualNode);
     procedure ResizeFrameSectionsBySplitter(NewLeft: Integer);
+    procedure UpdateVstCheckStates;
 
     procedure DoOnTriggerOnControlsModified;
   public
@@ -156,11 +157,24 @@ begin
 end;
 
 
-procedure TfrClickerSetVar.SetListOfSetVars(Value: TClkSetVarOptions);
+procedure TfrClickerSetVar.UpdateVstCheckStates;
 const
   CNodeCheckState: array[Boolean] of TCheckState = (csUncheckedNormal, csCheckedNormal);
 var
   Node: PVirtualNode;
+begin
+  if vstSetVar.RootNodeCount > 0 then
+  begin
+    Node := vstSetVar.GetFirst;
+    repeat
+      vstSetVar.CheckState[Node] := CNodeCheckState[FSetVarContent_EvalBefore.Strings[Node^.Index] = '1'];
+      Node := Node^.NextSibling;
+    until Node = nil;
+  end;
+end;
+
+
+procedure TfrClickerSetVar.SetListOfSetVars(Value: TClkSetVarOptions);
 begin
   FSetVarContent_Vars.Text := Value.ListOfVarNames;
   FSetVarContent_Values.Text := Value.ListOfVarValues;
@@ -169,16 +183,7 @@ begin
   //if Integer(vstSetVar.RootNodeCount) <> FSetVarContent_Vars.Count then  //Leave this commented! The new list might have the same length (with different content), so refresh the vst.
   begin
     vstSetVar.RootNodeCount := FSetVarContent_Vars.Count;
-
-    if vstSetVar.RootNodeCount > 0 then
-    begin
-      Node := vstSetVar.GetFirst;
-      repeat
-        vstSetVar.CheckState[Node] := CNodeCheckState[FSetVarContent_EvalBefore.Strings[Node^.Index] = '1'];
-        Node := Node^.NextSibling;
-      until Node = nil;
-    end;
-
+    UpdateVstCheckStates;
     vstSetVar.Repaint;
     DoOnTriggerOnControlsModified;
   end;
@@ -366,6 +371,7 @@ begin
   FSetVarContent_EvalBefore.Delete(Node^.Index);
 
   vstSetVar.RootNodeCount := FSetVarContent_Vars.Count;
+  UpdateVstCheckStates;
   vstSetVar.Repaint;
   DoOnTriggerOnControlsModified;
 end;

@@ -54,7 +54,7 @@ const
   CPropCount_Common = 4;  //Action name, Action type, Action Timeout, StopOnError
 
   //Properties (counts)
-  CPropCount_Click = 22;
+  CPropCount_Click = 25;
   CPropCount_ExecApp = 7;
   CPropCount_FindControl = 23;
   CPropCount_FindSubControl = CPropCount_FindControl;
@@ -100,6 +100,9 @@ const
   CClick_YOffsetDest_PropIndex = 19;
   CClick_MouseWheelType_PropIndex = 20;
   CClick_MouseWheelAmount_PropIndex = 21;
+  CClick_DelayAfterMovingToDestination_PropIndex = 22;
+  CClick_DelayAfterMouseDown_PropIndex = 23;
+  CClick_MoveDuration_PropIndex = 24;
 
   CExecApp_PathToApp_PropIndex = 0;     //property index in ExecApp structure
   CExecApp_ListOfParams_PropIndex = 1;  //property index in ExecApp structure
@@ -212,7 +215,10 @@ const
     (Name: 'XOffsetDest'; EditorType: etSpinText; DataType: CDTString),
     (Name: 'YOffsetDest'; EditorType: etSpinText; DataType: CDTString),
     (Name: 'MouseWheelType'; EditorType: etEnumCombo; DataType: CDTEnum),
-    (Name: 'MouseWheelAmount'; EditorType: etSpinText; DataType: CDTString)
+    (Name: 'MouseWheelAmount'; EditorType: etSpinText; DataType: CDTString),
+    (Name: 'DelayAfterMovingToDestination'; EditorType: etSpinText; DataType: CDTString),
+    (Name: 'DelayAfterMouseDown'; EditorType: etSpinText; DataType: CDTString),
+    (Name: 'MoveDuration'; EditorType: etSpinText; DataType: CDTString)
   );
 
   CExecAppProperties: array[0..CPropCount_ExecApp - 1] of TOIPropDef = (
@@ -516,7 +522,10 @@ const
     0, //XOffsetDest
     0, //YOffsetDest
     Ord(High(TMouseWheelType)) + 1,
-    0 //MouseWheelAmount: string;
+    0, //MouseWheelAmount: string;
+    0, //DelayAfterMovingToDestination: string;
+    0, //DelayAfterMouseDown: string;
+    0 //MoveDuration: string;
   );
 
   CExecAppEnumCounts: array[0..CPropCount_ExecApp - 1] of Integer = (
@@ -671,7 +680,10 @@ const
     nil, //XOffsetDest
     nil, //YOffsetDest
     @CMouseWheelTypeStr, //MouseWheelType: TMouseWheelType;
-    nil  //MouseWheelAmount
+    nil, //MouseWheelAmount
+    nil, //DelayAfterMovingToDestination
+    nil, //DelayAfterMouseDown
+    nil  //MoveDuration
   );
 
   CExecAppEnumStrings: array[0..CPropCount_ExecApp - 1] of PArrayOfString = (
@@ -803,6 +815,9 @@ function GetPropertyHint_Click_YClickPointVar: string;
 function GetPropertyHint_Click_XOffset: string;
 function GetPropertyHint_Click_YOffset: string;
 function GetPropertyHint_Click_LeaveMouse: string;
+function GetPropertyHint_Click_DelayAfterMovingToDestination: string;
+function GetPropertyHint_Click_DelayAfterMouseDown: string;
+function GetPropertyHint_Click_MoveDuration: string;
 
 function GetPropertyHint_ExecApp_PathToApp: string;
 function GetPropertyHint_ExecApp_AppStdIn: string;
@@ -894,7 +909,10 @@ const
     @GetPropertyHintNoHint, // XOffsetDest
     @GetPropertyHintNoHint, // YOffsetDest
     @GetPropertyHintNoHint, // MouseWheelType: TMouseWheelType;
-    @GetPropertyHintNoHint  // MouseWheelAmount: string;
+    @GetPropertyHintNoHint, // MouseWheelAmount: string;
+    @GetPropertyHint_Click_DelayAfterMovingToDestination,
+    @GetPropertyHint_Click_DelayAfterMouseDown,
+    @GetPropertyHint_Click_MoveDuration
   );
 
 
@@ -1072,6 +1090,9 @@ begin
     19: Result := AAction^.ClickOptions.YOffsetDest;
     20: Result := CMouseWheelTypeStr[AAction^.ClickOptions.MouseWheelType];
     21: Result := AAction^.ClickOptions.MouseWheelAmount;
+    22: Result := AAction^.ClickOptions.DelayAfterMovingToDestination;
+    23: Result := AAction^.ClickOptions.DelayAfterMouseDown;
+    24: Result := AAction^.ClickOptions.MoveDuration;
     else
       Result := 'unknown';
   end;
@@ -1520,6 +1541,9 @@ begin
     19: AAction^.ClickOptions.YOffsetDest := NewValue;
     20: AAction^.ClickOptions.MouseWheelType := TMouseWheelType_AsStringToValue(NewValue);
     21: AAction^.ClickOptions.MouseWheelAmount := NewValue;
+    22: AAction^.ClickOptions.DelayAfterMovingToDestination := NewValue;
+    23: AAction^.ClickOptions.DelayAfterMouseDown := NewValue;
+    24: AAction^.ClickOptions.MoveDuration := NewValue;
     else
       ;
   end;
@@ -1768,6 +1792,25 @@ begin
   Result := 'When True, the mouse cursor position is not reset after running the action.' + #13#10 +
             'It may be required if the click action will open a pop-up menu, to cause the menu to open at that location.' + #13#10 +
             'This is also useful for debugging, to verify offsets.';
+end;
+
+
+function GetPropertyHint_Click_DelayAfterMovingToDestination: string;
+begin
+  Result := 'Delay in ms, between moving the cursor to click point, and the actual click operation.';
+end;
+
+
+function GetPropertyHint_Click_DelayAfterMouseDown: string;
+begin
+  Result := 'Delay in ms, between mouse down and mouse up events, of a click operation.';
+end;
+
+
+function GetPropertyHint_Click_MoveDuration: string;
+begin
+  Result := 'Duration in ms, of how much it takes to move the mouse cursor from its current location to its destination.' + #13#10 +
+            'If set to a negative value, no delay is used.';
 end;
 
 

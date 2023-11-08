@@ -618,6 +618,10 @@ begin
 
     MouseParams.Values[CMouseClickType] := IntToStr(AClickOptions.ClickType);
 
+    MouseParams.Values[CMouseDelayAfterMovingToDestination] := EvaluateReplacements(AClickOptions.DelayAfterMovingToDestination);
+    MouseParams.Values[CMouseDelayAfterMouseDown] := EvaluateReplacements(AClickOptions.DelayAfterMouseDown);
+    MouseParams.Values[CMouseMoveDuration] := EvaluateReplacements(AClickOptions.MoveDuration);
+
     if AClickOptions.ClickType = CMouseClickType_Drag then  ///Dest
     begin
       XClick := Control_Left; //global in screen

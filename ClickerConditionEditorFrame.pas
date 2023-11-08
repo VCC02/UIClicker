@@ -43,6 +43,7 @@ type
   TfrClickerConditionEditor = class(TFrame)
     imglstComparisonOperators: TImageList;
     lblLastActionStatusValidValues: TLabel;
+    MenuItem_AddPrefixWithZerosEqualsNumber: TMenuItem;
     MenuItemEqual: TMenuItem;
     MenuItemGreaterThan: TMenuItem;
     MenuItemGreaterThanOrEqual: TMenuItem;
@@ -72,6 +73,7 @@ type
       Sender: TObject);
     procedure MenuItem_AddLastActionStatusEqualsSuccessfulClick(Sender: TObject
       );
+    procedure MenuItem_AddPrefixWithZerosEqualsNumberClick(Sender: TObject);
     procedure spdbtnAddANDClick(Sender: TObject);
     procedure spdbtnAddORClick(Sender: TObject);
     procedure tmrEditingConditionTimer(Sender: TObject);
@@ -722,6 +724,36 @@ begin
   begin
     AddExpressionColumns(True); //OR
     FActionConditionForPreview[Length(FActionConditionForPreview) - 1].Text := '$LastAction_Status$==Successful';
+  end;
+
+  vstActionConditions.RootNodeCount := Length(FActionConditionForPreview);
+  vstActionConditions.Repaint;
+
+  TriggerOnControlsModified;
+end;
+
+
+procedure TfrClickerConditionEditor.MenuItem_AddPrefixWithZerosEqualsNumberClick
+  (Sender: TObject);
+var
+  i: Integer;
+  s: string;
+begin
+  SetLength(FActionConditionForPreview, Length(FActionConditionForPreview) + 1);
+  FActionConditionForPreview[Length(FActionConditionForPreview) - 1] := TStringList.Create;
+
+  if Length(FActionConditionForPreview) > 1 then //there is already an item to copy from
+  begin
+    s := '';
+    for i := 0 to FActionConditionForPreview[0].Count - 1 do
+      s := s + '$PrefixWithZeros($SomeNumber$,6)$==001234' + #13#10;
+
+    FActionConditionForPreview[Length(FActionConditionForPreview) - 1].Text := s;
+  end
+  else
+  begin
+    AddExpressionColumns(True); //OR
+    FActionConditionForPreview[Length(FActionConditionForPreview) - 1].Text := '$PrefixWithZeros($SomeNumber$,6)$==001234';
   end;
 
   vstActionConditions.RootNodeCount := Length(FActionConditionForPreview);

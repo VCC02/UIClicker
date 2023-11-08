@@ -3,7 +3,7 @@ Count=5
 Version=2
 
 [Action_0]
-ActionName=Exec GradienText app
+ActionName=Exec GradientText app
 Action=ExecApp
 ActionTimeout=0
 ActionEnabled=1
@@ -20,7 +20,7 @@ UseInheritHandles=0
 NoConsole=0
 
 [Action_1]
-ActionName=Wind window
+ActionName=Find window
 Action=FindControl
 ActionTimeout=3000
 ActionEnabled=1
@@ -83,6 +83,7 @@ MatchPrimitiveFiles=
 GetAllControls=0
 UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
+IgnoredColors=
 
 [Action_2]
 ActionName=Bring to front
@@ -102,7 +103,7 @@ NewPositionEnabled=0
 NewSizeEnabled=0
 
 [Action_3]
-ActionName="FindSubControl"
+ActionName=Find text on gradient BG
 Action=FindSubControl
 ActionTimeout=1000
 ActionEnabled=1
@@ -165,9 +166,10 @@ MatchPrimitiveFiles=
 GetAllControls=0
 UseFastSearch=1
 FastSearchAllowedColorErrorCount=2
+IgnoredColors=
 
 [Action_4]
-ActionName="WindowOperations"
+ActionName=Close window
 Action=WindowOperations
 ActionTimeout=0
 ActionEnabled=1

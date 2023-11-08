@@ -665,6 +665,16 @@ begin
     TempFuncDescriptions.Add('$Random(<max>)$=Returns a random number, lower than max.');
     TempFuncDescriptions.Add('$Sum(<op1>, <op2>)$=Adds two numbers.');
     TempFuncDescriptions.Add('$Diff(<op1>, <op2>)$=Subtracts two numbers.');
+    TempFuncDescriptions.Add('$Mul(<op1>, <op2>)$=Multiplies two integer numbers. If only one operand is passed, the result is Sqr(<op>).');
+    TempFuncDescriptions.Add('$Div(<op1>, <op2>)$=Subtracts two integer numbers. If only one operand is passed, the result is Round(Sqrt(<op>)).');
+    TempFuncDescriptions.Add('$FMul(<op1>, <op2>)$=Multiplies two double-precision numbers. If only one operand is passed, the result is Sqr(<op>).');
+    TempFuncDescriptions.Add('$FDiv(<op1>, <op2>)$=Subtracts two double-precision numbers. If only one operand is passed, the result is Sqrt(<op>).');
+    TempFuncDescriptions.Add('$EFMul(<op1>, <op2>)$=Multiplies two extended-precision numbers. If only one operand is passed, the result is Sqr(<op>).');
+    TempFuncDescriptions.Add('$EFDiv(<op1>, <op2>)$=Subtracts two extended-precision numbers. If only one operand is passed, the result is Sqrt(<op>).');
+    TempFuncDescriptions.Add('$Abs(<op>)$=Returns the absolute value of an integer number.');
+    TempFuncDescriptions.Add('$FAbs(<op>)$=Returns the absolute value of a double-precision number.');
+    TempFuncDescriptions.Add('$EFAbs(<op>)$=Returns the absolute value of an extended-precision number.');
+    TempFuncDescriptions.Add('$PrefixWithZeros(<Number>, <TotalNumberOfDigits>)$=Prefixes a number, or a variable which evaluates to a number, with one or more zeros, until the total string length is at least TotalNumberOfDigits characters long. It is useful on action conditions, where the two operands are compared as strings.');
     TempFuncDescriptions.Add('$http://<server:port>/[params]$=Makes an http GET request to the specified server address and port. Returns the result.');
     TempFuncDescriptions.Add('$FastReplace_45ToReturn(<some_string>)$=Replaces all #4#5 (ASCII_4 and ASCII_5) occurrences with CRLF. Returns the result.');
     TempFuncDescriptions.Add('$FastReplace_ReturnTo45(<some_string>)$=Replaces all CRLF (ASCII_13 and ASCII_10) occurrences with #4#5. Returns the result.');
@@ -3235,7 +3245,8 @@ begin
     end;
 
   if Key in [VK_RETURN, VK_ESCAPE] then
-    CloseAutoComplete;
+    if AutoCompleteVisible then
+      CloseAutoComplete;
 end;
 
 
@@ -3901,6 +3912,9 @@ begin
     FClkActions[n].ClickOptions.YOffsetDest := '7';
     FClkActions[n].ClickOptions.MouseWheelType := mwtVert;
     FClkActions[n].ClickOptions.MouseWheelAmount := '1';
+    FClkActions[n].ClickOptions.DelayAfterMovingToDestination := '50';
+    FClkActions[n].ClickOptions.DelayAfterMouseDown := '200';
+    FClkActions[n].ClickOptions.MoveDuration := '-1';
 
     FClkActions[n].ExecAppOptions.PathToApp := '';
     FClkActions[n].ExecAppOptions.ListOfParams := '';

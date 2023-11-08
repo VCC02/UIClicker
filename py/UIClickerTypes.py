@@ -58,7 +58,7 @@ class TMouseButton: #(Enum):
     mbExtra1 = 3
     mbExtra2 = 4
 
-	
+
 class TMouseWheelType: #(Enum):
     mwtVert = 0
     mwtHoriz = 1
@@ -133,8 +133,11 @@ class TClickOptions(Structure):
                ("YClickPointVarDest", LPCWSTR),
                ("XOffsetDest", LPCWSTR),
                ("YOffsetDest", LPCWSTR),
-			   ("MouseWheelType", LONG), #TMouseWheelType
-			   ("MouseWheelAmount", LPCWSTR)]               
+               ("MouseWheelType", LONG), #TMouseWheelType
+               ("MouseWheelAmount", LPCWSTR),
+               ("DelayAfterMovingToDestination", LPCWSTR),
+               ("DelayAfterMouseDown", LPCWSTR),
+               ("MoveDuration", LPCWSTR)]
 
 PClickOptions = ctypes.POINTER(TClickOptions)
 
@@ -163,6 +166,9 @@ def GetDefaultClickOptions():
     ClickOptions.YOffsetDest = ''
     ClickOptions.MouseWheelType = TMouseWheelType.mwtVert
     ClickOptions.MouseWheelAmount = '0'
+    ClickOptions.DelayAfterMovingToDestination = '50'
+    ClickOptions.DelayAfterMouseDown = '200'
+    ClickOptions.MoveDuration = '-1'
     return ClickOptions
 
 

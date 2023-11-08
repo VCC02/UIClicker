@@ -64,6 +64,9 @@ type
     XOffsetDest, YOffsetDest: PWideChar;
     MouseWheelType: TMouseWheelType;
     MouseWheelAmount: PWideChar;
+    DelayAfterMovingToDestination: PWideChar;
+    DelayAfterMouseDown: PWideChar;
+    MoveDuration: PWideChar;
   end;
 
   PClkClickOptionsAPI = ^TClkClickOptionsAPI;
@@ -567,6 +570,9 @@ begin
   SetPointedContentToString(@string(PWideChar(AClickOptions^.YOffsetDest))[1], TempAction.ClickOptions.YOffsetDest);
   TempAction.ClickOptions.MouseWheelType := AClickOptions^.MouseWheelType;
   SetPointedContentToString(@string(PWideChar(AClickOptions^.MouseWheelAmount))[1], TempAction.ClickOptions.MouseWheelAmount);
+  SetPointedContentToString(@string(PWideChar(AClickOptions^.DelayAfterMovingToDestination))[1], TempAction.ClickOptions.DelayAfterMovingToDestination);
+  SetPointedContentToString(@string(PWideChar(AClickOptions^.DelayAfterMouseDown))[1], TempAction.ClickOptions.DelayAfterMouseDown);
+  SetPointedContentToString(@string(PWideChar(AClickOptions^.MoveDuration))[1], TempAction.ClickOptions.MoveDuration);
 
   AddActionToTemplate(TemplateFileName, TempAction);
   Result := 0;

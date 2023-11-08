@@ -141,6 +141,9 @@ type
     XOffsetDest, YOffsetDest: string;
     MouseWheelType: TMouseWheelType;
     MouseWheelAmount: string;
+    DelayAfterMovingToDestination: string;
+    DelayAfterMouseDown: string;
+    MoveDuration: string;
   end;
 
   TExecAppUseInheritHandles = (uihNo, uihYes, uihOnlyWithStdInOut);
@@ -704,6 +707,14 @@ const
   CDiff_FuncName = '$Diff(';
   CMul_FuncName = '$Mul(';
   CDiv_FuncName = '$Div(';
+  CFMul_FuncName = '$FMul(';
+  CFDiv_FuncName = '$FDiv(';
+  CEFMul_FuncName = '$EFMul(';
+  CEFDiv_FuncName = '$EFDiv(';
+  CAbs_FuncName = '$Abs(';
+  CFAbs_FuncName = '$FAbs(';
+  CEFAbs_FuncName = '$EFAbs(';
+  CPrefixWithZeros_FuncName = '$PrefixWithZeros(';
   CUpdateControlInfo_FuncName = '$UpdateControlInfo(';
   CExtractFileDir_FuncName = '$ExtractFileDir(';
   CExtractFileName_FuncName = '$ExtractFileName(';
@@ -983,13 +994,13 @@ begin
       MulOperand1Str := Copy(MulArgs, 1, PosComma - 1);
       MulOperand2Str := Copy(MulArgs, PosComma + 1, MaxInt);
 
-      MulOperand1 := StrToIntDef(MulOperand1Str, 0);
-      MulOperand2 := StrToIntDef(MulOperand2Str, 0);
+      MulOperand1 := StrToIntDef(MulOperand1Str, 1);
+      MulOperand2 := StrToIntDef(MulOperand2Str, 1);
     end
     else
     begin
-      MulOperand1 := 0;
-      MulOperand2 := StrToIntDef(MulArgs, 0);
+      MulOperand1 := StrToIntDef(MulArgs, 1);
+      MulOperand2 := MulOperand1;
     end;
 
     ResultValueStr := IntToStr(MulOperand1 * MulOperand2);
@@ -1023,23 +1034,331 @@ begin
       DivOperand1Str := Copy(DivArgs, 1, PosComma - 1);
       DivOperand2Str := Copy(DivArgs, PosComma + 1, MaxInt);
 
-      DivOperand1 := StrToIntDef(DivOperand1Str, 0);
-      DivOperand2 := StrToIntDef(DivOperand2Str, 0);
+      DivOperand1 := StrToIntDef(DivOperand1Str, 1);
+      DivOperand2 := StrToIntDef(DivOperand2Str, 1);
+
+      try
+        ResultValueStr := IntToStr(DivOperand1 div DivOperand2);
+      except
+        ResultValueStr := IntToStr(MaxInt);  //exception on division by 0
+      end;
     end
     else
     begin
       DivOperand1 := 0;
-      DivOperand2 := StrToIntDef(DivArgs, 0);
-    end;
+      DivOperand2 := StrToIntDef(DivArgs, 1);
 
-    try
-      ResultValueStr := IntToStr(DivOperand1 div DivOperand2);
-    except
-      ResultValueStr := IntToStr(MaxInt);  //exception on division by 0
+      try
+        ResultValueStr := IntToStr(Round(Sqrt(DivOperand2)));
+      except
+        ResultValueStr := IntToStr(MaxInt);  //exception on division by 0
+      end;
     end;
   end;
 
   Result := StringReplace(s, CDiv_FuncName + InitialDivArgs + ')$', ResultValueStr, [rfReplaceAll]);
+end;
+
+
+function ReplaceFMul(AListOfVars: TStringList; s: string): string;
+var
+  PosComma: Integer;
+  MulArgs, InitialMulArgs: string;
+  MulOperand1, MulOperand2: Double;
+  MulOperand1Str, MulOperand2Str: string;
+  ResultValueStr: string;
+begin
+  MulArgs := ExtractFuncArgs(CFMul_FuncName, s);
+  InitialMulArgs := MulArgs;
+
+  if MulArgs = '' then
+    ResultValueStr := '0'
+  else
+  begin
+    MulArgs := ReplaceOnce(AListOfVars, MulArgs, False);
+    MulArgs := StringReplace(MulArgs, ' ', '', [rfReplaceAll]);
+    PosComma := Pos(',', MulArgs);
+
+    if PosComma > 0 then
+    begin
+      MulOperand1Str := Copy(MulArgs, 1, PosComma - 1);
+      MulOperand2Str := Copy(MulArgs, PosComma + 1, MaxInt);
+
+      MulOperand1 := StrToFloatDef(MulOperand1Str, 1);
+      MulOperand2 := StrToFloatDef(MulOperand2Str, 1);
+    end
+    else
+    begin
+      MulOperand1 := StrToFloatDef(MulArgs, 1);
+      MulOperand2 := MulOperand1;
+    end;
+
+    ResultValueStr := FloatToStr(MulOperand1 * MulOperand2);
+  end;
+
+  Result := StringReplace(s, CFMul_FuncName + InitialMulArgs + ')$', ResultValueStr, [rfReplaceAll]);
+end;
+
+
+function ReplaceFDiv(AListOfVars: TStringList; s: string): string;
+var
+  PosComma: Integer;
+  DivArgs, InitialDivArgs: string;
+  DivOperand1, DivOperand2: Double;
+  DivOperand1Str, DivOperand2Str: string;
+  ResultValueStr: string;
+begin
+  DivArgs := ExtractFuncArgs(CFDiv_FuncName, s);
+  InitialDivArgs := DivArgs;
+
+  if DivArgs = '' then
+    ResultValueStr := '0'
+  else
+  begin
+    DivArgs := ReplaceOnce(AListOfVars, DivArgs, False);
+    DivArgs := StringReplace(DivArgs, ' ', '', [rfReplaceAll]);
+    PosComma := Pos(',', DivArgs);
+
+    if PosComma > 0 then
+    begin
+      DivOperand1Str := Copy(DivArgs, 1, PosComma - 1);
+      DivOperand2Str := Copy(DivArgs, PosComma + 1, MaxInt);
+
+      DivOperand1 := StrToFloatDef(DivOperand1Str, 1);
+      DivOperand2 := StrToFloatDef(DivOperand2Str, 1);
+
+      try
+        ResultValueStr := FloatToStr(DivOperand1 / DivOperand2);
+      except
+        ResultValueStr := IntToStr(MaxInt);  //exception on division by 0
+      end;
+    end
+    else
+    begin
+      DivOperand1 := 0;
+      DivOperand2 := StrToFloatDef(DivArgs, 1);
+
+      try
+        ResultValueStr := FloatToStr(Sqrt(DivOperand2));
+      except
+        ResultValueStr := IntToStr(MaxInt);  //exception on division by 0
+      end;
+    end;
+  end;
+
+  Result := StringReplace(s, CFDiv_FuncName + InitialDivArgs + ')$', ResultValueStr, [rfReplaceAll]);
+end;
+
+
+function ReplaceEFMul(AListOfVars: TStringList; s: string): string;
+var
+  PosComma: Integer;
+  MulArgs, InitialMulArgs: string;
+  MulOperand1, MulOperand2: Extended;
+  MulOperand1Str, MulOperand2Str: string;
+  ResultValueStr: string;
+begin
+  MulArgs := ExtractFuncArgs(CEFMul_FuncName, s);
+  InitialMulArgs := MulArgs;
+
+  if MulArgs = '' then
+    ResultValueStr := '0'
+  else
+  begin
+    MulArgs := ReplaceOnce(AListOfVars, MulArgs, False);
+    MulArgs := StringReplace(MulArgs, ' ', '', [rfReplaceAll]);
+    PosComma := Pos(',', MulArgs);
+
+    if PosComma > 0 then
+    begin
+      MulOperand1Str := Copy(MulArgs, 1, PosComma - 1);
+      MulOperand2Str := Copy(MulArgs, PosComma + 1, MaxInt);
+
+      MulOperand1 := StrToFloatDef(MulOperand1Str, 0);
+      MulOperand2 := StrToFloatDef(MulOperand2Str, 0);
+    end
+    else
+    begin
+      MulOperand1 := StrToFloatDef(MulArgs, 1);
+      MulOperand2 := MulOperand1;
+    end;
+
+    ResultValueStr := FloatToStr(MulOperand1 * MulOperand2);
+  end;
+
+  Result := StringReplace(s, CEFMul_FuncName + InitialMulArgs + ')$', ResultValueStr, [rfReplaceAll]);
+end;
+
+
+function ReplaceEFDiv(AListOfVars: TStringList; s: string): string;
+var
+  PosComma: Integer;
+  DivArgs, InitialDivArgs: string;
+  DivOperand1, DivOperand2: Extended;
+  DivOperand1Str, DivOperand2Str: string;
+  ResultValueStr: string;
+begin
+  DivArgs := ExtractFuncArgs(CEFDiv_FuncName, s);
+  InitialDivArgs := DivArgs;
+
+  if DivArgs = '' then
+    ResultValueStr := '0'
+  else
+  begin
+    DivArgs := ReplaceOnce(AListOfVars, DivArgs, False);
+    DivArgs := StringReplace(DivArgs, ' ', '', [rfReplaceAll]);
+    PosComma := Pos(',', DivArgs);
+
+    if PosComma > 0 then
+    begin
+      DivOperand1Str := Copy(DivArgs, 1, PosComma - 1);
+      DivOperand2Str := Copy(DivArgs, PosComma + 1, MaxInt);
+
+      DivOperand1 := StrToFloatDef(DivOperand1Str, 1);
+      DivOperand2 := StrToFloatDef(DivOperand2Str, 1);
+
+      try
+        ResultValueStr := FloatToStr(DivOperand1 / DivOperand2);
+      except
+        ResultValueStr := IntToStr(MaxInt);  //exception on division by 0
+      end;
+    end
+    else
+    begin
+      DivOperand1 := 0;
+      DivOperand2 := StrToFloatDef(DivArgs, 1);
+
+      try
+        ResultValueStr := FloatToStr(Sqrt(DivOperand2));
+      except
+        ResultValueStr := IntToStr(MaxInt);  //exception on invalid FP operation
+      end;
+    end;
+  end;
+
+  Result := StringReplace(s, CEFDiv_FuncName + InitialDivArgs + ')$', ResultValueStr, [rfReplaceAll]);
+end;
+
+
+function ReplaceAbs(AListOfVars: TStringList; s: string): string;
+var
+  AbsArgs, InitialAbsArgs: string;
+  AbsOperand: Integer;
+  AbsOperandStr: string;
+  ResultValueStr: string;
+begin
+  AbsArgs := ExtractFuncArgs(CAbs_FuncName, s);
+  InitialAbsArgs := AbsArgs;
+
+  if AbsArgs = '' then
+    ResultValueStr := '0'
+  else
+  begin
+    AbsArgs := ReplaceOnce(AListOfVars, AbsArgs, False);
+    AbsArgs := StringReplace(AbsArgs, ' ', '', [rfReplaceAll]);
+
+    AbsOperandStr := AbsArgs;
+    AbsOperand := StrToIntDef(AbsOperandStr, 0);
+
+    ResultValueStr := IntToStr(Abs(AbsOperand));
+  end;
+
+  Result := StringReplace(s, CAbs_FuncName + InitialAbsArgs + ')$', ResultValueStr, [rfReplaceAll]);
+end;
+
+
+function ReplaceFAbs(AListOfVars: TStringList; s: string): string;
+var
+  AbsArgs, InitialAbsArgs: string;
+  AbsOperand: Double;
+  AbsOperandStr: string;
+  ResultValueStr: string;
+begin
+  AbsArgs := ExtractFuncArgs(CFAbs_FuncName, s);
+  InitialAbsArgs := AbsArgs;
+
+  if AbsArgs = '' then
+    ResultValueStr := '0'
+  else
+  begin
+    AbsArgs := ReplaceOnce(AListOfVars, AbsArgs, False);
+    AbsArgs := StringReplace(AbsArgs, ' ', '', [rfReplaceAll]);
+
+    AbsOperandStr := AbsArgs;
+    AbsOperand := StrToFloatDef(AbsOperandStr, 0);
+
+    ResultValueStr := FloatToStr(Abs(AbsOperand));
+  end;
+
+  Result := StringReplace(s, CFAbs_FuncName + InitialAbsArgs + ')$', ResultValueStr, [rfReplaceAll]);
+end;
+
+
+function ReplaceEFAbs(AListOfVars: TStringList; s: string): string;
+var
+  AbsArgs, InitialAbsArgs: string;
+  AbsOperand: Double;
+  AbsOperandStr: string;
+  ResultValueStr: string;
+begin
+  AbsArgs := ExtractFuncArgs(CEFAbs_FuncName, s);
+  InitialAbsArgs := AbsArgs;
+
+  if AbsArgs = '' then
+    ResultValueStr := '0'
+  else
+  begin
+    AbsArgs := ReplaceOnce(AListOfVars, AbsArgs, False);
+    AbsArgs := StringReplace(AbsArgs, ' ', '', [rfReplaceAll]);
+
+    AbsOperandStr := AbsArgs;
+    AbsOperand := StrToFloatDef(AbsOperandStr, 0);
+
+    ResultValueStr := FloatToStr(Abs(AbsOperand));
+  end;
+
+  Result := StringReplace(s, CEFAbs_FuncName + InitialAbsArgs + ')$', ResultValueStr, [rfReplaceAll]);
+end;
+
+
+function ReplacePrefixWithZeros(AListOfVars: TStringList; s: string): string;
+var
+  PosComma: Integer;
+  PrefixWithZerosArgs, InitialPrefixWithZerosArgs: string;
+  PrefixWithZerosOperand2: Integer;
+  PrefixWithZerosOperand1Str, PrefixWithZerosOperand2Str: string;
+  ResultValueStr: string;
+  i: Integer;
+begin
+  PrefixWithZerosArgs := ExtractFuncArgs(CPrefixWithZeros_FuncName, s);
+  InitialPrefixWithZerosArgs := PrefixWithZerosArgs;
+
+  if PrefixWithZerosArgs = '' then
+    ResultValueStr := '0'
+  else
+  begin
+    PrefixWithZerosArgs := ReplaceOnce(AListOfVars, PrefixWithZerosArgs, False);
+    PrefixWithZerosArgs := StringReplace(PrefixWithZerosArgs, ' ', '', [rfReplaceAll]);
+    PosComma := Pos(',', PrefixWithZerosArgs);
+
+    if PosComma > 0 then
+    begin
+      PrefixWithZerosOperand1Str := Copy(PrefixWithZerosArgs, 1, PosComma - 1);
+      PrefixWithZerosOperand2Str := Copy(PrefixWithZerosArgs, PosComma + 1, MaxInt);
+
+      PrefixWithZerosOperand2 := StrToIntDef(PrefixWithZerosOperand2Str, 0);
+
+      ResultValueStr := '';
+      for i := Length(PrefixWithZerosOperand1Str) to PrefixWithZerosOperand2 - 1 do
+        ResultValueStr := ResultValueStr + '0';
+
+      ResultValueStr := ResultValueStr + PrefixWithZerosOperand1Str;
+    end
+    else
+      ResultValueStr := PrefixWithZerosOperand1Str;
+  end;
+
+  Result := StringReplace(s, CPrefixWithZeros_FuncName + InitialPrefixWithZerosArgs + ')$', ResultValueStr, [rfReplaceAll]);
 end;
 
 
@@ -1631,6 +1950,30 @@ begin
 
   if Pos(CDiv_FuncName, s) > 0 then
     s := ReplaceDiv(AListOfVars, s);
+
+  if Pos(CFMul_FuncName, s) > 0 then
+    s := ReplaceFMul(AListOfVars, s);
+
+  if Pos(CFDiv_FuncName, s) > 0 then
+    s := ReplaceFDiv(AListOfVars, s);
+
+  if Pos(CEFMul_FuncName, s) > 0 then
+    s := ReplaceEFMul(AListOfVars, s);
+
+  if Pos(CEFDiv_FuncName, s) > 0 then
+    s := ReplaceEFDiv(AListOfVars, s);
+
+  if Pos(CAbs_FuncName, s) > 0 then
+    s := ReplaceAbs(AListOfVars, s);
+
+  if Pos(CFAbs_FuncName, s) > 0 then
+    s := ReplaceFAbs(AListOfVars, s);
+
+  if Pos(CEFAbs_FuncName, s) > 0 then
+    s := ReplaceEFAbs(AListOfVars, s);
+
+  if Pos(CPrefixWithZeros_FuncName, s) > 0 then
+    s := ReplacePrefixWithZeros(AListOfVars, s);
 
   if Pos(CUpdateControlInfo_FuncName, s) > 0 then
     s := ReplaceUpdateControlInfo(AListOfVars, s);
