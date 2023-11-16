@@ -37,7 +37,7 @@ uses
   //{$ELSE}
     Windows,
   //{$ENDIF}
-  SysUtils, Classes, VirtualTrees, Graphics, Controls,
+  SysUtils, Classes, VirtualTrees, Graphics, Controls, StdCtrls,
   IdGlobal, DCPmd5, ClickerIniFiles;
 
 
@@ -66,6 +66,9 @@ type
   TOnGetConnectionAddress = function: string of object;
   TOnGetSelectedCompFromRemoteWin = function: THandle of object;
   TOnLoadBitmap = function(ABitmap: TBitmap; AFileName: string): Boolean of object; //returns True if file loaded, and False if file not found
+  TOnLoadRenderedBitmap = function(ABitmap: TBitmap; AFileName: string): Boolean of object; //returns True if file loaded, and False if file not found in in-mem FS for received rendered bitmaps
+  TOnGetListOfExternallyRenderedImages = procedure(AListOfExternallyRenderedImages: TStringList) of object;
+  TOnRenderBmpExternally = function(ARequest: string): string of object; //Returns client result (empty string for no error).
   TOnEditActionCondition = function(var AActionCondition: string): Boolean of object;
   TOnSetMatchTextAndClassToOI = procedure(AMatchText, AMatchClassName: string) of object;
   TOnGetUseWholeScreenAsSearchArea = function: Boolean of object;
@@ -103,6 +106,13 @@ const
   CClickTypeStr: array[0..CClickType_Count - 1] of string = ('Click', 'Drag', 'ButtonDown', 'ButtonUp', 'Wheel');
 
   CFuncExVarName = '$FunctionException$';
+
+
+  CExtBmp_Filename = 'Filename';
+  CExtBmp_SrvAddrPort = 'SrvAddrPort';
+  CExtBmp_Cmd = 'Cmd';
+  CExtBmp_Params = 'Params';
+  CExtBmp_IncludeFilenameInRequest = 'IncludeFilenameInRequest';  //can be '0' or '1'
 
 
 type
@@ -347,6 +357,13 @@ type
     BotRight_Invalid: TColor; //default: dark red2
   end;
 
+
+  TPaintedLabel = class(TLabel)
+  public
+    procedure Paint; override;
+  end;
+
+
   TOnUpdateSearchAreaLimitsInOIFromDraggingLines = procedure(ALimitLabelsToUpdate: TLimitLabels; var AOffsets: TSimpleRectString) of object;
   TOnUpdateTextCroppingLimitsInOIFromDraggingLines = procedure(ALimitLabelsToUpdate: TLimitLabels; var AOffsets: TSimpleRectString; AFontProfileName: string) of object;
   TOnUpdateTextCroppingLimitsInOIFromDraggingLinesIdx = procedure(ALimitLabelsToUpdate: TLimitLabels; var AOffsets: TSimpleRectString; AFontProfileIndex: Integer) of object;
@@ -425,6 +442,7 @@ function RevPos(const ASubStr, AString: string; AOffset: Integer = 1): Integer;
 function ActionAsStringToTClkAction(ActionAsString: string): TClkAction;
 
 function ModifyBrightness(AColor: TColor; AAmount: Byte; ABrightnessOperation: TBrightnessOperation): TColor;
+procedure CreateSelectionLabels(AOwner: TComponent; AParent: TWinControl; var ALeftLabel, ATopLabel, ARightLabel, ABottomLabel: TLabel; ALeftColor, ATopColor, ARightColor, ABottomColor: TColor; AShouldBringToFront, ACreateWithPaintedLabel: Boolean);
 
 
 var
@@ -743,13 +761,21 @@ const
   CGetKeyNameFromPair_FuncName = '$GetKeyNameFromPair(';
   CGetKeyValueFromPair_FuncName = '$GetKeyValueFromPair(';
 
-  CBuiltInFunctionCount = 32;
+  CBuiltInFunctionCount = 40;
   CBuiltInFunctions: array[0..CBuiltInFunctionCount - 1] of string = (
     CRandom_FuncName,
     CSum_FuncName,
     CDiff_FuncName,
     CMul_FuncName,
     CDiv_FuncName,
+    CFMul_FuncName,
+    CFDiv_FuncName,
+    CEFMul_FuncName,
+    CEFDiv_FuncName,
+    CAbs_FuncName,
+    CFAbs_FuncName,
+    CEFAbs_FuncName,
+    CPrefixWithZeros_FuncName,
     CUpdateControlInfo_FuncName,
     CExtractFileDir_FuncName,
     CExtractFileName_FuncName,
@@ -2381,6 +2407,80 @@ begin
       Result := i;
       Exit;
     end;
+end;
+
+
+{ TPaintedLabel }
+
+procedure TPaintedLabel.Paint;
+begin
+  inherited Paint;
+
+  Canvas.Pen.Style := psDashDot;
+  Canvas.Pen.Color := $8888FF;
+
+  if Width = 1 then
+    Canvas.Line(0, 0, 0, Height);
+
+  if Height = 1 then
+    Canvas.Line(0, 0, Width, 0);
+end;
+
+
+procedure CreateSelectionLabels(AOwner: TComponent; AParent: TWinControl; var ALeftLabel, ATopLabel, ARightLabel, ABottomLabel: TLabel; ALeftColor, ATopColor, ARightColor, ABottomColor: TColor; AShouldBringToFront, ACreateWithPaintedLabel: Boolean);
+begin
+  if ACreateWithPaintedLabel then
+  begin
+    ALeftLabel := TPaintedLabel.Create(AOwner);
+    ATopLabel := TPaintedLabel.Create(AOwner);
+    ARightLabel := TPaintedLabel.Create(AOwner);
+    ABottomLabel := TPaintedLabel.Create(AOwner);
+  end
+  else
+  begin
+    ALeftLabel := TLabel.Create(AOwner);
+    ATopLabel := TLabel.Create(AOwner);
+    ARightLabel := TLabel.Create(AOwner);
+    ABottomLabel := TLabel.Create(AOwner);
+  end;
+
+  ALeftLabel.Parent := AParent;
+  ATopLabel.Parent := AParent;
+  ARightLabel.Parent := AParent;
+  ABottomLabel.Parent := AParent;
+
+  ALeftLabel.AutoSize := False;
+  ATopLabel.AutoSize := False;
+  ARightLabel.AutoSize := False;
+  ABottomLabel.AutoSize := False;
+
+  ALeftLabel.Caption := '';
+  ATopLabel.Caption := '';
+  ARightLabel.Caption := '';
+  ABottomLabel.Caption := '';
+
+  ALeftLabel.Color := ALeftColor;
+  ATopLabel.Color := ATopColor;
+  ARightLabel.Color := ARightColor;
+  ABottomLabel.Color := ABottomColor;
+
+  ALeftLabel.Width := 1;
+  ATopLabel.Height := 1;
+  ARightLabel.Width := 1;
+  ABottomLabel.Height := 1;
+
+  if AShouldBringToFront then
+  begin
+    ALeftLabel.BringToFront;
+    ATopLabel.BringToFront;
+    ARightLabel.BringToFront;
+    ABottomLabel.BringToFront;
+  end;
+
+  ALeftLabel.Transparent := False;
+  ATopLabel.Transparent := False;
+  ARightLabel.Transparent := False;
+  ABottomLabel.Transparent := False;
 end;
 
 end.

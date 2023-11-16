@@ -286,6 +286,8 @@ type
     FOnEditCallTemplateBreakCondition: TOnEditActionCondition;
 
     FOnLoadBitmap: TOnLoadBitmap;
+    FOnLoadRenderedBitmap: TOnLoadRenderedBitmap;
+    FOnGetListOfExternallyRenderedImages: TOnGetListOfExternallyRenderedImages;
     FOnLoadPrimitivesFile: TOnLoadPrimitivesFile;
     FOnSavePrimitivesFile: TOnSavePrimitivesFile;
     FOnFileExists: TOnFileExists;
@@ -319,6 +321,8 @@ type
 
     function DoOnEditCallTemplateBreakCondition(var AActionCondition: string): Boolean;
     function DoOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
+    function DoOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
+    procedure DoOnGetListOfExternallyRenderedImages(AListOfExternallyRenderedImages: TStringList);
     procedure DoOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
     procedure DoOnSavePrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
     function DoOnFileExists(const AFileName: string): Boolean;
@@ -370,6 +374,8 @@ type
     function HandleOnGetExtraSearchAreaDebuggingImage(AExtraBitmap: TBitmap): Boolean;
 
     function HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
+    function HandleOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
+    procedure HandleOnGetListOfExternallyRenderedImages(AListOfExternallyRenderedImages: TStringList);
     function HandleOnFileExists(const AFileName: string): Boolean;
     procedure HandleOnSetPictureOpenDialogInitialDir(AInitialDir: string);
     function HandleOnPictureOpenDialogExecute: Boolean;
@@ -501,6 +507,8 @@ type
     property OnEditCallTemplateBreakCondition: TOnEditActionCondition write FOnEditCallTemplateBreakCondition;
 
     property OnLoadBitmap: TOnLoadBitmap write FOnLoadBitmap;
+    property OnLoadRenderedBitmap: TOnLoadRenderedBitmap write FOnLoadRenderedBitmap;
+    property OnGetListOfExternallyRenderedImages: TOnGetListOfExternallyRenderedImages write FOnGetListOfExternallyRenderedImages;
     property OnLoadPrimitivesFile: TOnLoadPrimitivesFile write FOnLoadPrimitivesFile;
     property OnSavePrimitivesFile: TOnSavePrimitivesFile write FOnSavePrimitivesFile;
     property OnFileExists: TOnFileExists write FOnFileExists;
@@ -585,6 +593,7 @@ begin
   frClickerFindControl.OnCopyControlTextAndClassFromMainWindow := HandleOnCopyControlTextAndClassFromMainWindow;
   frClickerFindControl.OnGetExtraSearchAreaDebuggingImage := HandleOnGetExtraSearchAreaDebuggingImage;
   frClickerFindControl.OnLoadBitmap := HandleOnLoadBitmap;
+  //frClickerFindControl.OnLoadRenderedBitmap := HandleOnLoadRenderedBitmap;
   frClickerFindControl.OnFileExists := HandleOnFileExists;
   frClickerFindControl.OnSetPictureOpenDialogInitialDir := HandleOnSetPictureOpenDialogInitialDir;
   frClickerFindControl.OnPictureOpenDialogExecute := HandleOnPictureOpenDialogExecute;
@@ -730,6 +739,8 @@ begin
   FOnEditCallTemplateBreakCondition := nil;
 
   FOnLoadBitmap := nil;
+  FOnLoadRenderedBitmap := nil;
+  FOnGetListOfExternallyRenderedImages := nil;
   FOnLoadPrimitivesFile := nil;
   FOnSavePrimitivesFile := nil;
   FOnFileExists := nil;
@@ -1539,6 +1550,18 @@ begin
 end;
 
 
+function TfrClickerActions.HandleOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
+begin
+  Result := DoOnLoadRenderedBitmap(ABitmap, AFileName);
+end;
+
+
+procedure TfrClickerActions.HandleOnGetListOfExternallyRenderedImages(AListOfExternallyRenderedImages: TStringList);
+begin
+  DoOnGetListOfExternallyRenderedImages(AListOfExternallyRenderedImages);
+end;
+
+
 function TfrClickerActions.HandleOnFileExists(const AFileName: string): Boolean;
 begin
   Result := DoOnFileExists(AFileName);
@@ -1792,6 +1815,24 @@ begin
     raise Exception.Create('OnLoadBitmap not assigned.')
   else
     Result := FOnLoadBitmap(ABitmap, AFileName);
+end;
+
+
+function TfrClickerActions.DoOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
+begin
+  if not Assigned(FOnLoadRenderedBitmap) then
+    raise Exception.Create('OnLoadRenderedBitmap not assigned.')
+  else
+    Result := FOnLoadRenderedBitmap(ABitmap, AFileName);
+end;
+
+
+procedure TfrClickerActions.DoOnGetListOfExternallyRenderedImages(AListOfExternallyRenderedImages: TStringList);
+begin
+  if not Assigned(FOnGetListOfExternallyRenderedImages) then
+    raise Exception.Create('OnGetListOfExternallyRenderedImages not assigned.')
+  else
+    FOnGetListOfExternallyRenderedImages(AListOfExternallyRenderedImages);
 end;
 
 
@@ -5007,6 +5048,8 @@ begin
         frClickerFindControl.CreateClickerPrimitivesFrame;
         frClickerFindControl.frClickerPrimitives.OnEvaluateReplacementsFunc := HandleOnEvaluateReplacementsFunc;
         frClickerFindControl.frClickerPrimitives.OnLoadBitmap := HandleOnLoadBitmap;
+        frClickerFindControl.frClickerPrimitives.OnLoadRenderedBitmap := HandleOnLoadRenderedBitmap;
+        frClickerFindControl.frClickerPrimitives.OnGetListOfExternallyRenderedImages := HandleOnGetListOfExternallyRenderedImages;
         frClickerFindControl.frClickerPrimitives.OnLoadPrimitivesFile := HandleOnLoadPrimitivesFile;
         frClickerFindControl.frClickerPrimitives.OnSavePrimitivesFile := HandleOnSavePrimitivesFile;
         frClickerFindControl.frClickerPrimitives.OnTriggerOnControlsModified := HandleOnPrimitivesTriggerOnControlsModified;

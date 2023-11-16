@@ -41,11 +41,13 @@ type
   private
     FOnEvaluateReplacementsFunc: TEvaluateReplacementsFunc;
     FOnLoadBitmap: TOnLoadBitmap;
+    FOnLoadRenderedBitmap: TOnLoadRenderedBitmap;
 
     procedure SetFontByPrimitive(ADestCanvas: TCanvas; var APrimitive: TPrimitiveRec);
 
     function DoOnEvaluateReplacementsFunc(s: string; Recursive: Boolean = True): string;
     function DoOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
+    function DoOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
   public
     constructor Create;
     procedure ComposePrimitives(ABmp: TBitmap; AOrderIndex: Integer; AUseHighContrastColors: Boolean; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var APrimitiveSettings: TPrimitiveSettings);
@@ -56,6 +58,7 @@ type
 
     property OnEvaluateReplacementsFunc: TEvaluateReplacementsFunc write FOnEvaluateReplacementsFunc;
     property OnLoadBitmap: TOnLoadBitmap write FOnLoadBitmap;
+    property OnLoadRenderedBitmap: TOnLoadRenderedBitmap write FOnLoadRenderedBitmap;
   end;
 
 
@@ -129,13 +132,17 @@ procedure ComposePrimitive_Image(Sender: TPrimitivesCompositor; ABmp: TBitmap; v
 var
   SrcBmp: TBitmap;
   SrcBitmapFnm: string;
+  WillStretchStr: string;
   WillStretch: Boolean;
   TempRect: TRect;
+  RenderedExternallyStr: string;
+  RenderedExternally: Boolean;
 begin
   ABmp.Canvas.Brush.Color := HexToInt(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetBrush.Color)); //TColor;
   ABmp.Canvas.Brush.Style := TBrushStyle(StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetBrush.Style), Ord(bsSolid))); //TFPBrushStyle;
 
-  WillStretch := Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkImage.Stretch) = '1';
+  WillStretchStr := Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkImage.Stretch);
+  WillStretch := (WillStretchStr = '1') or (UpperCase(WillStretchStr) = 'TRUE');
 
   TempRect.Left := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkImage.X1), 10);
   TempRect.Top := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkImage.Y1), 20);
@@ -148,9 +155,20 @@ begin
 
   SrcBitmapFnm := Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkImage.Path);
 
+  RenderedExternallyStr := Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkImage.RenderedExternally);
+  RenderedExternally := (RenderedExternallyStr = '1') or (UpperCase(RenderedExternallyStr) = 'TRUE');
+
   SrcBmp := TBitmap.Create;
   try
-    Sender.DoOnLoadBitmap(SrcBmp, SrcBitmapFnm);
+    SrcBmp.PixelFormat := pf24bit;
+    SrcBmp.Transparent := False;
+    SrcBmp.TransparentMode := tmFixed;
+    SrcBmp.TransparentColor := 1;
+
+    if RenderedExternally then
+      Sender.DoOnLoadRenderedBitmap(SrcBmp, SrcBitmapFnm)
+    else
+      Sender.DoOnLoadBitmap(SrcBmp, SrcBitmapFnm);
 
     if WillStretch then
       ABmp.Canvas.StretchDraw(TempRect, SrcBmp)
@@ -272,6 +290,7 @@ begin
 
   FOnEvaluateReplacementsFunc := nil;
   FOnLoadBitmap := nil;
+  FOnLoadRenderedBitmap := nil;
 end;
 
 
@@ -290,6 +309,15 @@ begin
     raise Exception.Create('OnLoadBitmap not assigned.')
   else
     Result := FOnLoadBitmap(ABitmap, AFileName);
+end;
+
+
+function TPrimitivesCompositor.DoOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
+begin
+  if not Assigned(FOnLoadRenderedBitmap) then
+    raise Exception.Create('OnLoadRenderedBitmap not assigned.')
+  else
+    Result := FOnLoadRenderedBitmap(ABitmap, AFileName);
 end;
 
 

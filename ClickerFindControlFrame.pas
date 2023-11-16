@@ -163,12 +163,6 @@ type
   TFontProfileArr = array of TFontProfile;
 
 
-  TPaintedLabel = class(TLabel)
-  public
-    procedure Paint; override;
-  end;
-
-
   { TfrClickerFindControl }
 
   TfrClickerFindControl = class(TFrame)
@@ -548,7 +542,6 @@ type
     procedure UpdateListsOfSearchFiles(AMatchBitmapFiles, AMatchPrimitiveFiles: string);
 
     procedure CreateTransparentSelectionLabels;
-    procedure CreateSelectionLabels(var ALeftLabel, ATopLabel, ARightLabel, ABottomLabel: TLabel; ALeftColor, ATopColor, ARightColor, ABottomColor: TColor; AShouldBringToFront, ACreateWithPaintedLabel: Boolean);
     procedure DisplayDebuggingImage;
     procedure PreviewText; //called by ExecuteAction
     procedure RefreshGrid;
@@ -944,23 +937,6 @@ end;
 procedure TFontProfile.UpdateSelectionLabelsFromCropInfo(var ABMPText: TClkFindControlMatchBitmapText);
 begin
   FfrClickerBMPText.UpdateSelectionLabelsFromCropInfo(ABMPText);
-end;
-
-
-{ TPaintedLabel }
-
-procedure TPaintedLabel.Paint;
-begin
-  inherited Paint;
-
-  Canvas.Pen.Style := psDashDot;
-  Canvas.Pen.Color := $8888FF;
-
-  if Width = 1 then
-    Canvas.Line(0, 0, 0, Height);
-
-  if Height = 1 then
-    Canvas.Line(0, 0, Width, 0);
 end;
 
 
@@ -1912,66 +1888,11 @@ begin
 end;
 
 
-procedure TfrClickerFindControl.CreateSelectionLabels(var ALeftLabel, ATopLabel, ARightLabel, ABottomLabel: TLabel; ALeftColor, ATopColor, ARightColor, ABottomColor: TColor; AShouldBringToFront, ACreateWithPaintedLabel: Boolean);
-begin
-  if ACreateWithPaintedLabel then
-  begin
-    ALeftLabel := TPaintedLabel.Create(Self);
-    ATopLabel := TPaintedLabel.Create(Self);
-    ARightLabel := TPaintedLabel.Create(Self);
-    ABottomLabel := TPaintedLabel.Create(Self);
-  end
-  else
-  begin
-    ALeftLabel := TLabel.Create(Self);
-    ATopLabel := TLabel.Create(Self);
-    ARightLabel := TLabel.Create(Self);
-    ABottomLabel := TLabel.Create(Self);
-  end;
-
-  ALeftLabel.Parent := FSearchAreaScrBox;
-  ATopLabel.Parent := FSearchAreaScrBox;
-  ARightLabel.Parent := FSearchAreaScrBox;
-  ABottomLabel.Parent := FSearchAreaScrBox;
-
-  ALeftLabel.AutoSize := False;
-  ATopLabel.AutoSize := False;
-  ARightLabel.AutoSize := False;
-  ABottomLabel.AutoSize := False;
-
-  ALeftLabel.Caption := '';
-  ATopLabel.Caption := '';
-  ARightLabel.Caption := '';
-  ABottomLabel.Caption := '';
-
-  ALeftLabel.Color := ALeftColor;
-  ATopLabel.Color := ATopColor;
-  ARightLabel.Color := ARightColor;
-  ABottomLabel.Color := ABottomColor;
-
-  ALeftLabel.Width := 1;
-  ATopLabel.Height := 1;
-  ARightLabel.Width := 1;
-  ABottomLabel.Height := 1;
-
-  if AShouldBringToFront then
-  begin
-    ALeftLabel.BringToFront;
-    ATopLabel.BringToFront;
-    ARightLabel.BringToFront;
-    ABottomLabel.BringToFront;
-  end;
-
-  ALeftLabel.Transparent := False;
-  ATopLabel.Transparent := False;
-  ARightLabel.Transparent := False;
-  ABottomLabel.Transparent := False;
-end;
-
-
 procedure TfrClickerFindControl.CreateTransparentSelectionLabels;
 begin
-  CreateSelectionLabels(FTransparent_SearchAreaLeftLimitLabel,
+  CreateSelectionLabels(Self,
+                        FSearchAreaScrBox,
+                        FTransparent_SearchAreaLeftLimitLabel,
                         FTransparent_SearchAreaTopLimitLabel,
                         FTransparent_SearchAreaRightLimitLabel,
                         FTransparent_SearchAreaBottomLimitLabel,
@@ -2122,7 +2043,9 @@ begin
 
       FSearchAreaDbgImgSearchedBmpMenu := TPopupMenu.Create(Self);
 
-      CreateSelectionLabels(FSearchAreaLeftLimitLabel,
+      CreateSelectionLabels(Self,
+                            FSearchAreaScrBox,
+                            FSearchAreaLeftLimitLabel,
                             FSearchAreaTopLimitLabel,
                             FSearchAreaRightLimitLabel,
                             FSearchAreaBottomLimitLabel,
@@ -2133,7 +2056,9 @@ begin
                             True,
                             False);
 
-      CreateSelectionLabels(TLabel(FSearchAreaLeftLimitLabel_ForMinErr),
+      CreateSelectionLabels(Self,
+                            FSearchAreaScrBox,
+                            TLabel(FSearchAreaLeftLimitLabel_ForMinErr),
                             TLabel(FSearchAreaTopLimitLabel_ForMinErr),
                             TLabel(FSearchAreaRightLimitLabel_ForMinErr),
                             TLabel(FSearchAreaBottomLimitLabel_ForMinErr),

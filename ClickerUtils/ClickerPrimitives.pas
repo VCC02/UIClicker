@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2022 VCC
+    Copyright (C) 2023 VCC
     creation date: Dec 2019
     initial release date: 26 Jul 2022
 
@@ -91,6 +91,7 @@ begin
   APrimitive.ClkImage.Y2 := AIni.ReadString(ASectionIndex, 'Y2', '60');
   APrimitive.ClkImage.Path := AIni.ReadString(ASectionIndex, 'Path', '');
   APrimitive.ClkImage.Stretch := AIni.ReadString(ASectionIndex, 'Stretch', '0');
+  APrimitive.ClkImage.RenderedExternally := AIni.ReadString(ASectionIndex, 'RenderedExternally', '0');
 end;
 
 
@@ -251,6 +252,7 @@ begin
   AStringList.Add('Y2=' + APrimitive.ClkImage.Y2);
   AStringList.Add('Path=' + APrimitive.ClkImage.Path);
   AStringList.Add('Stretch=' + APrimitive.ClkImage.Stretch);
+  AStringList.Add('RenderedExternally=' + APrimitive.ClkImage.RenderedExternally);
 end;
 
 

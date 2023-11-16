@@ -65,6 +65,8 @@ type
     FOnSetEditorTimeoutProgressBarMax: TOnSetEditorTimeoutProgressBarMax;
     FOnSetEditorTimeoutProgressBarPosition: TOnSetEditorTimeoutProgressBarPosition;
     FOnLoadBitmap: TOnLoadBitmap;
+    FOnLoadRenderedBitmap: TOnLoadRenderedBitmap;
+    FOnRenderBmpExternally: TOnRenderBmpExternally;
     FOnWaitForBitmapsAvailability: TOnWaitForBitmapsAvailability;
     FOnCallTemplate: TOnCallTemplate;
     FOnSetEditorSleepProgressBarMax: TOnSetEditorTimeoutProgressBarMax;
@@ -95,6 +97,8 @@ type
     procedure DoOnSetEditorTimeoutProgressBarMax(AMaxValue: Integer);
     procedure DoOnSetEditorTimeoutProgressBarPosition(APositionValue: Integer);
     function DoOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
+    function DoOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
+    function DoOnRenderBmpExternally(ARequest: string): string;
     procedure DoOnWaitForBitmapsAvailability(AListOfFiles: TStringList);
     procedure DoOnSetEditorSleepProgressBarMax(AMaxValue: Integer);
     procedure DoOnSetEditorSleepProgressBarPosition(APositionValue: Integer);
@@ -105,6 +109,7 @@ type
     procedure DoOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
 
     function HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
+    function HandleOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     function HandleOnEvaluateReplacements(s: string; Recursive: Boolean = True): string;
   public
     constructor Create;
@@ -148,6 +153,8 @@ type
     property OnSetEditorTimeoutProgressBarMax: TOnSetEditorTimeoutProgressBarMax write FOnSetEditorTimeoutProgressBarMax;
     property OnSetEditorTimeoutProgressBarPosition: TOnSetEditorTimeoutProgressBarPosition write FOnSetEditorTimeoutProgressBarPosition;
     property OnLoadBitmap: TOnLoadBitmap write FOnLoadBitmap;
+    property OnLoadRenderedBitmap: TOnLoadRenderedBitmap write FOnLoadRenderedBitmap;
+    property OnRenderBmpExternally: TOnRenderBmpExternally write FOnRenderBmpExternally;
     property OnWaitForBitmapsAvailability: TOnWaitForBitmapsAvailability write FOnWaitForBitmapsAvailability;
     property OnCallTemplate: TOnCallTemplate write FOnCallTemplate;
     property OnSetEditorSleepProgressBarMax: TOnSetEditorTimeoutProgressBarMax write FOnSetEditorSleepProgressBarMax;
@@ -190,6 +197,8 @@ begin
   FOnSetEditorTimeoutProgressBarMax := nil;
   FOnSetEditorTimeoutProgressBarPosition := nil;
   FOnLoadBitmap := nil;
+  FOnLoadRenderedBitmap := nil;
+  FOnRenderBmpExternally := nil;
   FOnWaitForBitmapsAvailability := nil;
   FOnCallTemplate := nil;
   FOnSetEditorSleepProgressBarMax := nil;
@@ -468,6 +477,24 @@ begin
     Result := FOnLoadBitmap(ABitmap, AFileName)
   else
     raise Exception.Create('OnLoadBitmap is not assigned.');
+end;
+
+
+function TActionExecution.DoOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
+begin
+  if Assigned(FOnLoadRenderedBitmap) then
+    Result := FOnLoadRenderedBitmap(ABitmap, AFileName)
+  else
+    raise Exception.Create('OnLoadRenderedBitmap is not assigned.');
+end;
+
+
+function TActionExecution.DoOnRenderBmpExternally(ARequest: string): string;
+begin
+  if Assigned(FOnRenderBmpExternally) then
+    Result := FOnRenderBmpExternally(ARequest)
+  else
+    raise Exception.Create('OnRenderBmpExternally is not assigned.');
 end;
 
 
@@ -1453,6 +1480,7 @@ begin
                 try
                   PrimitivesCompositor.OnEvaluateReplacementsFunc := HandleOnEvaluateReplacements;
                   PrimitivesCompositor.OnLoadBitmap := HandleOnLoadBitmap;
+                  PrimitivesCompositor.OnLoadRenderedBitmap := HandleOnLoadRenderedBitmap;
 
                   FindControlInputData.BitmapToSearchFor.Width := PrimitivesCompositor.GetMaxX(FindControlInputData.BitmapToSearchFor.Canvas, TempPrimitives) + 1;
                   FindControlInputData.BitmapToSearchFor.Height := PrimitivesCompositor.GetMaxY(FindControlInputData.BitmapToSearchFor.Canvas, TempPrimitives) + 1;
@@ -2024,6 +2052,10 @@ begin
         VarValue := EvaluateReplacements(VarValue);
 
       VarValue := EvaluateHTTP(VarValue);
+
+      if (Pos('$RenderBmpExternally(', VarName) = 1) and (VarName[Length(VarName)] = '$') and (VarName[Length(VarName) - 1] = ')') then
+        SetActionVarValue('$ExternallyRenderedBmpResult$', DoOnRenderBmpExternally(VarValue));
+
       SetActionVarValue(VarName, VarValue);
     end;
   finally
@@ -2562,6 +2594,12 @@ end;
 function TActionExecution.HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
 begin
   Result := DoOnLoadBitmap(ABitmap, AFileName)
+end;
+
+
+function TActionExecution.HandleOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
+begin
+  Result := DoOnLoadRenderedBitmap(ABitmap, AFileName);
 end;
 
 

@@ -216,6 +216,7 @@ object frClickerSetVar: TfrClickerSetVar
         '$CRLF$'
         '$#4#5$'
         '$Now$'
+        '$RenderBmpExternally(<ListOfParams>)$'
       )
       ParentShowHint = False
       ReadOnly = True

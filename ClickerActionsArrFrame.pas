@@ -283,6 +283,9 @@ type
     FOnWaitForMultipleFilesAvailability: TOnWaitForMultipleFilesAvailability;
     FOnWaitForBitmapsAvailability: TOnWaitForBitmapsAvailability;
     FOnLoadBitmap: TOnLoadBitmap;
+    FOnLoadRenderedBitmap: TOnLoadRenderedBitmap;
+    FOnRenderBmpExternally: TOnRenderBmpExternally;
+    FOnGetListOfExternallyRenderedImages: TOnGetListOfExternallyRenderedImages;
     FOnLoadPrimitivesFile: TOnLoadPrimitivesFile;
     FOnSavePrimitivesFile: TOnSavePrimitivesFile;
 
@@ -327,6 +330,9 @@ type
 
     function HandleOnEditCallTemplateBreakCondition(var AActionCondition: string): Boolean;
     function HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
+    function HandleOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
+    function HandleOnRenderBmpExternally(AFilename: string): string;
+    procedure HandleOnGetListOfExternallyRenderedImages(AListOfExternallyRenderedImages: TStringList);
     procedure HandleOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
     procedure HandleOnSavePrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
     function HandleOnFileExists(const AFileName: string): Boolean;
@@ -399,6 +405,9 @@ type
     procedure DoWaitForMultipleFilesAvailability(AListOfFiles: TStringList);
     procedure DoWaitForBitmapsAvailability(AListOfFiles: TStringList);
     function DoOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
+    function DoOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
+    function DoOnRenderBmpExternally(AFilename: string): string;
+    procedure DoOnGetListOfExternallyRenderedImages(AListOfExternallyRenderedImages: TStringList);
     procedure DoOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
     procedure DoOnSavePrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
 
@@ -521,6 +530,9 @@ type
     property OnWaitForMultipleFilesAvailability: TOnWaitForMultipleFilesAvailability read FOnWaitForMultipleFilesAvailability write FOnWaitForMultipleFilesAvailability;
     property OnWaitForBitmapsAvailability: TOnWaitForBitmapsAvailability read FOnWaitForBitmapsAvailability write FOnWaitForBitmapsAvailability;
     property OnLoadBitmap: TOnLoadBitmap read FOnLoadBitmap write FOnLoadBitmap;
+    property OnLoadRenderedBitmap: TOnLoadRenderedBitmap read FOnLoadRenderedBitmap write FOnLoadRenderedBitmap;
+    property OnRenderBmpExternally: TOnRenderBmpExternally read FOnRenderBmpExternally write FOnRenderBmpExternally;
+    property OnGetListOfExternallyRenderedImages: TOnGetListOfExternallyRenderedImages write FOnGetListOfExternallyRenderedImages;
     property OnLoadPrimitivesFile: TOnLoadPrimitivesFile write FOnLoadPrimitivesFile;
     property OnSavePrimitivesFile: TOnSavePrimitivesFile write FOnSavePrimitivesFile;
 
@@ -707,6 +719,7 @@ begin
     TempFuncDescriptions.Add('$CRLF$=Returns a CRLF sequence.');
     TempFuncDescriptions.Add('$#4#5$=Returns a ASCII #4#5 sequence.');
     TempFuncDescriptions.Add('$Now$=Returns current datetime.');
+    TempFuncDescriptions.Add('$RenderBmpExternally(<ListOfParams>)$=Sends an http request to a server, for rendering a bitmap, using the supplied list of parameters. These parameters are encoded as a #4#5 separated <key>eq<value> strings. The required parameters are (without quotes): "' + CExtBmp_SrvAddrPort + '", "' + CExtBmp_Cmd + '", "' + CExtBmp_Filename + '". The optional parameters are (without quotes): "' + CExtBmp_Params + '" and "' + CExtBmp_IncludeFilenameInRequest + '". When provided, "' + CExtBmp_Params + '" are "&"-separated key%3Dvalue pairs. When "' + CExtBmp_IncludeFilenameInRequest + '" is 1, the filename is added to request. The result is placed in $ExternallyRenderedBmpResult$ variable. If successful, the function returns empty string, otherwise it returns an error. The received bitmap is "stored" in an in-mem file system.');
 
     for i := 0 to FFuncDescriptions.Count - 1 do
     begin
@@ -743,6 +756,8 @@ begin
 
   frClickerActions.OnEditCallTemplateBreakCondition := HandleOnEditCallTemplateBreakCondition;
   frClickerActions.OnLoadBitmap := HandleOnLoadBitmap; //both ActionExecution and frClickerActions use the same handler
+  frClickerActions.OnLoadRenderedBitmap := HandleOnLoadRenderedBitmap;
+  frClickerActions.OnGetListOfExternallyRenderedImages := HandleOnGetListOfExternallyRenderedImages;
   frClickerActions.OnLoadPrimitivesFile := HandleOnLoadPrimitivesFile;
   frClickerActions.OnSavePrimitivesFile := HandleOnSavePrimitivesFile;
   frClickerActions.OnFileExists := HandleOnFileExists;
@@ -883,6 +898,8 @@ begin
   FActionExecution.OnSetEditorTimeoutProgressBarPosition := HandleOnSetEditorTimeoutProgressBarPosition;
   FActionExecution.OnWaitForBitmapsAvailability := HandleOnWaitForBitmapsAvailability;
   FActionExecution.OnLoadBitmap := HandleOnLoadBitmap; //both ActionExecution and frClickerActions use the same handler
+  FActionExecution.OnLoadRenderedBitmap := HandleOnLoadRenderedBitmap;
+  FActionExecution.OnRenderBmpExternally := HandleOnRenderBmpExternally;
   FActionExecution.OnCallTemplate := HandleOnCallTemplate;
   FActionExecution.OnSetEditorSleepProgressBarMax := HandleOnSetEditorSleepProgressBarMax;
   FActionExecution.OnSetEditorSleepProgressBarPosition := HandleOnSetEditorSleepProgressBarPosition;
@@ -896,6 +913,9 @@ begin
   FOnCopyControlTextAndClassFromMainWindow := nil;
   FOnGetExtraSearchAreaDebuggingImageWithStackLevel := nil;
   FOnLoadBitmap := nil;
+  FOnLoadRenderedBitmap := nil;
+  FOnRenderBmpExternally := nil;
+  FOnGetListOfExternallyRenderedImages := nil;
   FOnLoadPrimitivesFile := nil;
   FOnSavePrimitivesFile := nil;
 
@@ -975,6 +995,24 @@ end;
 function TfrClickerActionsArr.HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
 begin
   Result := DoOnLoadBitmap(ABitmap, AFileName);
+end;
+
+
+function TfrClickerActionsArr.HandleOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
+begin
+  Result := DoOnLoadRenderedBitmap(ABitmap, AFileName);
+end;
+
+
+function TfrClickerActionsArr.HandleOnRenderBmpExternally(AFilename: string): string;
+begin
+  Result := DoOnRenderBmpExternally(AFilename);
+end;
+
+
+procedure TfrClickerActionsArr.HandleOnGetListOfExternallyRenderedImages(AListOfExternallyRenderedImages: TStringList);
+begin
+  DoOnGetListOfExternallyRenderedImages(AListOfExternallyRenderedImages);
 end;
 
 
@@ -1688,6 +1726,33 @@ begin
     Result := FOnLoadBitmap(ABitmap, AFileName)
   else
     Result := False;
+end;
+
+
+function TfrClickerActionsArr.DoOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
+begin
+  if Assigned(FOnLoadRenderedBitmap) then
+    Result := FOnLoadRenderedBitmap(ABitmap, AFileName)
+  else
+    Result := False;
+end;
+
+
+function TfrClickerActionsArr.DoOnRenderBmpExternally(AFilename: string): string;
+begin
+  if Assigned(FOnRenderBmpExternally) then
+    Result := FOnRenderBmpExternally(AFileName)
+  else
+    Result := 'OnRenderBmpExternally not assigned';
+end;
+
+
+procedure TfrClickerActionsArr.DoOnGetListOfExternallyRenderedImages(AListOfExternallyRenderedImages: TStringList);
+begin
+  if not Assigned(FOnGetListOfExternallyRenderedImages) then
+    raise Exception.Create('OnGetListOfExternallyRenderedImages not assigned.')
+  else
+    FOnGetListOfExternallyRenderedImages(AListOfExternallyRenderedImages);
 end;
 
 

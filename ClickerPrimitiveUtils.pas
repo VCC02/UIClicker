@@ -62,6 +62,7 @@ type
     Y2: string;
     Path: string; //path to a bmp (or png) file, which will be part of the composition
     Stretch: string; //Boolean
+    RenderedExternally: string; //Boolean;
   end;
 
   TClkLine = record

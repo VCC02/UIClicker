@@ -41,6 +41,7 @@ type
   { TfrClickerPrimitives }
 
   TfrClickerPrimitives = class(TFrame)
+    chkShowPrimitiveEdges: TCheckBox;
     chkHighContrast: TCheckBox;
     imglstPreviewPrimitives: TImageList;
     imglstPrimitives: TImageList;
@@ -63,6 +64,7 @@ type
     tmrDrawZoom: TTimer;
     tmrReloadOIContent: TTimer;
     procedure chkHighContrastChange(Sender: TObject);
+    procedure chkShowPrimitiveEdgesChange(Sender: TObject);
     procedure FrameResize(Sender: TObject);
     procedure MenuItem_CopyToClipboardClick(Sender: TObject);
     procedure MenuItem_SavePrimitivesFileClick(Sender: TObject);
@@ -88,6 +90,8 @@ type
     FOIEditorMenu: TPopupMenu;
 
     FOnLoadBitmap: TOnLoadBitmap;
+    FOnLoadRenderedBitmap: TOnLoadRenderedBitmap;
+    FOnGetListOfExternallyRenderedImages: TOnGetListOfExternallyRenderedImages;
     FOnLoadPrimitivesFile: TOnLoadPrimitivesFile;
     FOnSavePrimitivesFile: TOnSavePrimitivesFile;
     FOnEvaluateReplacementsFunc: TEvaluateReplacementsFunc;
@@ -112,10 +116,12 @@ type
     procedure DeleteOrderItemByIndex(AOrderIndex, AItemIndex: Integer);
     procedure InsertOrderItemAtIndex(AOrderIndex, AItemIndex: Integer; ASrcItem: Integer);
     procedure MoveOrderItem(AOrderIndex, ASrcIndex, ADestIndex: Integer);
+    procedure GetSelectionLabelsByOrderIndex(AOrderIndex: Integer; var ALeftLbl, ATopLbl, ARightLbl, ABottomLbl: TLabel);
 
     procedure MenuItem_RemoveAllPrimitivesFromList(Sender: TObject);
     procedure MenuItem_AddPrimitiveToList(Sender: TObject);
     procedure MenuItem_SetValueFromEnumItem(Sender: TObject);
+    procedure MenuItem_SetExternallyRenderedFile(Sender: TObject);
     procedure MenuItem_RemovePrimitiveFromList(Sender: TObject);
     procedure MenuItem_RemoveAllCompositionOrdersFromList(Sender: TObject);
     procedure MenuItem_AddCompositionOrderToList(Sender: TObject);
@@ -132,6 +138,8 @@ type
     procedure imgPreviewMouseLeave(Sender: TObject);
 
     function DoOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
+    function DoOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
+    procedure DoOnGetListOfExternallyRenderedImages(AListOfExternallyRenderedImages: TStringList);
     procedure DoOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
     procedure DoOnSavePrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
     function DoOnEvaluateReplacementsFunc(s: string; Recursive: Boolean = True): string;
@@ -192,6 +200,7 @@ type
       AFilter, ADialogInitDir: string; var Handled: Boolean; AReturnMultipleFiles: Boolean = False): string;
 
     procedure HandleOnOIAfterSpinTextEditorChanging(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; var ANewValue: string);
+    procedure HandleOnOISelectedNode(NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex, Column: Integer; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 
     procedure HandleOnOIDragAllowed(NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex: Integer; var Allowed: Boolean);
     procedure HandleOnOIDragOver(NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex, SrcNodeLevel, SrcCategoryIndex, SrcPropertyIndex, SrcPropertyItemIndex: Integer; Shift: TShiftState; State: TDragState; const Pt: TPoint; Mode: TDropMode; var Effect: DWORD; var Accept: Boolean);
@@ -199,6 +208,7 @@ type
 
     function HandleOnEvaluateReplacementsFunc(s: string; Recursive: Boolean = True): string;
     function HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
+    function HandleOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -211,6 +221,8 @@ type
     function GetOrderCount: Integer;
 
     property OnLoadBitmap: TOnLoadBitmap write FOnLoadBitmap;
+    property OnLoadRenderedBitmap: TOnLoadRenderedBitmap write FOnLoadRenderedBitmap;
+    property OnGetListOfExternallyRenderedImages: TOnGetListOfExternallyRenderedImages write FOnGetListOfExternallyRenderedImages;
     property OnLoadPrimitivesFile: TOnLoadPrimitivesFile write FOnLoadPrimitivesFile; //called by LoadFile
     property OnSavePrimitivesFile: TOnSavePrimitivesFile write FOnSavePrimitivesFile;
     property OnEvaluateReplacementsFunc: TEvaluateReplacementsFunc write FOnEvaluateReplacementsFunc; //called by ComposePrimitives
@@ -232,6 +244,11 @@ const
   CAddPrimitiveMenuPrefix = 'Add ';
   CRemovePrimitiveMenuPrefix = 'Remove ';
   CRemoveOrderMenuPrefix = 'Remove ';
+
+  CLeftLblID = 101;
+  CTopLblID = 102;
+  CRightLblID = 103;
+  CBottomLblID = 104;
 
 
 procedure TfrClickerPrimitives.CreateRemainingUIComponents;
@@ -277,6 +294,7 @@ begin
   FOIFrame.OnOIUserEditorClick := HandleOnOIUserEditorClick;
   FOIFrame.OnOIBrowseFile := HandleOnOIBrowseFile;
   FOIFrame.OnOIAfterSpinTextEditorChanging := HandleOnOIAfterSpinTextEditorChanging;
+  FOIFrame.OnOISelectedNode := HandleOnOISelectedNode;
   FOIFrame.OnOIDragAllowed := HandleOnOIDragAllowed;
   FOIFrame.OnOIDragOver := HandleOnOIDragOver;
   FOIFrame.OnOIDragDrop := HandleOnOIDragDrop;
@@ -310,10 +328,14 @@ begin
 
   lblModified.Left := lblModified.Left + 20;
   chkHighContrast.Left := lblModified.Width + lblModified.Left + 20;
+  chkShowPrimitiveEdges.Left := chkHighContrast.Left + chkHighContrast.Width + 20;
+  chkShowPrimitiveEdges.Top := chkHighContrast.Top;
 
   FOIEditorMenu := TPopupMenu.Create(Self);
 
   FOnLoadBitmap := nil;
+  FOnLoadRenderedBitmap := nil;
+  FOnGetListOfExternallyRenderedImages := nil;
   FOnLoadPrimitivesFile := nil;
   FOnSavePrimitivesFile := nil;
   FOnEvaluateReplacementsFunc := nil;
@@ -347,6 +369,10 @@ var
   TempScrollBox: TScrollBox;
   TempPanel: TPanel;
   PreviewImage: TImage;
+  FLeftLimitLabel_ForPrimitive: TLabel;
+  FTopLimitLabel_ForPrimitive: TLabel;
+  FRightLimitLabel_ForPrimitive: TLabel;
+  FBottomLimitLabel_ForPrimitive: TLabel;
 begin
   TempTabSheet := TTabSheet.Create(PageControlPreview);
   TempTabSheet.Parent := PageControlPreview;
@@ -360,11 +386,14 @@ begin
 
   TempScrollBox.Left := 0;
   TempScrollBox.Top := 0;
-  TempScrollBox.Width := TempTabSheet.Width;
-  TempScrollBox.Height := TempTabSheet.Height;
+  TempScrollBox.Width := 1920 shr 2; //TempTabSheet.Width;
+  TempScrollBox.Height := 1080 shr 2; //TempTabSheet.Height;
   TempScrollBox.Anchors := [akLeft, akTop, akRight, akBottom];
   TempScrollBox.HorzScrollBar.Visible := True;
   TempScrollBox.VertScrollBar.Visible := True;
+  TempScrollBox.HorzScrollBar.Tracking := True;
+  TempScrollBox.VertScrollBar.Tracking := True;
+  TempScrollBox.Color := clYellow;
   TempScrollBox.Visible := True;
 
   TempPanel := TPanel.Create(TempScrollBox);
@@ -374,6 +403,7 @@ begin
   TempPanel.Width := TempScrollBox.Width - 20;
   TempPanel.Height := TempScrollBox.Height - 20;
   TempPanel.Anchors := [akLeft, akTop, akRight, akBottom];
+  TempPanel.Color := $88FF88;
   TempPanel.Visible := True;
 
   PreviewImage := TImage.Create(TempPanel);
@@ -395,6 +425,9 @@ begin
   PreviewImage.Canvas.Brush.Color := clWhite;
   PreviewImage.Canvas.Rectangle(0, 0, PreviewImage.Width, PreviewImage.Height);
 
+  TempScrollBox.Width := TempTabSheet.Width;
+  TempScrollBox.Height := TempTabSheet.Height;
+
   //PreviewImage.Canvas.Font.Color := clRed;          //for debugging only
   //PreviewImage.Canvas.TextOut(20, 20, ATabName);    //for debugging only
 
@@ -404,6 +437,44 @@ begin
   PreviewImage.OnMouseLeave := imgPreviewMouseLeave;
 
   Result := PreviewImage;
+
+  CreateSelectionLabels(TempPanel, //Self,
+                        TempPanel,
+                        TLabel(FLeftLimitLabel_ForPrimitive),
+                        TLabel(FTopLimitLabel_ForPrimitive),
+                        TLabel(FRightLimitLabel_ForPrimitive),
+                        TLabel(FBottomLimitLabel_ForPrimitive),
+                        clTeal,
+                        clTeal,
+                        clTeal,
+                        clTeal,
+                        True,
+                        True);
+
+  FLeftLimitLabel_ForPrimitive.Tag := CLeftLblID;  //to identify the labels later
+  FTopLimitLabel_ForPrimitive.Tag := CTopLblID;
+  FRightLimitLabel_ForPrimitive.Tag := CRightLblID;
+  FBottomLimitLabel_ForPrimitive.Tag := CBottomLblID;
+
+  FLeftLimitLabel_ForPrimitive.Left := 0;
+  FTopLimitLabel_ForPrimitive.Top := 0;
+  FRightLimitLabel_ForPrimitive.Left := 200;
+  FBottomLimitLabel_ForPrimitive.Top := 200;
+
+  FLeftLimitLabel_ForPrimitive.Height := 1080;//TempScrollBox.Height;
+  FTopLimitLabel_ForPrimitive.Width := 1920;//TempScrollBox.Width;
+  FRightLimitLabel_ForPrimitive.Height := 1080;//TempScrollBox.Height;
+  FBottomLimitLabel_ForPrimitive.Width := 1920;//TempScrollBox.Width;
+
+  //FLeftLimitLabel_ForPrimitive.SendToBack;  //for some reason, the labels are sent under the panel, as if they are at the same level :(
+  //FTopLimitLabel_ForPrimitive.SendToBack;
+  //FRightLimitLabel_ForPrimitive.SendToBack;
+  //FBottomLimitLabel_ForPrimitive.SendToBack;
+
+  FLeftLimitLabel_ForPrimitive.Hide;
+  FTopLimitLabel_ForPrimitive.Hide;
+  FRightLimitLabel_ForPrimitive.Hide;
+  FBottomLimitLabel_ForPrimitive.Hide;
 end;
 
 
@@ -426,17 +497,42 @@ var
   PreviewImage: TImage;
   PmtvCompositor: TPrimitivesCompositor;
   UsingHighContrast: Boolean;
+  TempScrollBox: TScrollBox;
+  TempPanel: TPanel;
 begin
   PmtvCompositor := TPrimitivesCompositor.Create;
   try
     PmtvCompositor.OnEvaluateReplacementsFunc := HandleOnEvaluateReplacementsFunc;
     PmtvCompositor.OnLoadBitmap := HandleOnLoadBitmap;
+    PmtvCompositor.OnLoadRenderedBitmap := HandleOnLoadRenderedBitmap;
 
     UsingHighContrast := chkHighContrast.Checked;
     for i := 0 to Length(FOrders) - 1 do
     begin
-      PreviewImage := TImage(TScrollBox(PageControlPreview.Pages[i].Tag).Tag);
+      TempScrollBox := TScrollBox(PageControlPreview.Pages[i].Tag);
+      PreviewImage := TImage(TempScrollBox.Tag);
+      TempPanel := PreviewImage.Parent as TPanel;
+
+      PreviewImage.Picture.Bitmap.Width := PmtvCompositor.GetMaxX(PreviewImage.Picture.Bitmap.Canvas, FPrimitives) + 1;
+      PreviewImage.Picture.Bitmap.Height := PmtvCompositor.GetMaxY(PreviewImage.Picture.Bitmap.Canvas, FPrimitives) + 1;
+
       PmtvCompositor.ComposePrimitives(PreviewImage.Picture.Bitmap, i, UsingHighContrast, FPrimitives, FOrders, FPrimitiveSettings);
+
+      if PreviewImage.Width <> PreviewImage.Picture.Bitmap.Width then
+        PreviewImage.Width := PreviewImage.Picture.Bitmap.Width;
+
+      if PreviewImage.Height <> PreviewImage.Picture.Bitmap.Height then
+        PreviewImage.Height := PreviewImage.Picture.Bitmap.Height;
+
+      if TempPanel.Width <> PreviewImage.Picture.Bitmap.Width then
+        TempPanel.Width := PreviewImage.Picture.Bitmap.Width;
+
+      if TempPanel.Height <> PreviewImage.Picture.Bitmap.Height then
+        TempPanel.Height := PreviewImage.Picture.Bitmap.Height;
+
+      //TempScrollBox.UpdateScrollbars;  //useless
+      TempScrollBox.HorzScrollBar.Range := TempPanel.Width;
+      TempScrollBox.VertScrollBar.Range := TempPanel.Height;
     end;
   finally
     PmtvCompositor.Free;
@@ -621,6 +717,53 @@ begin
 end;
 
 
+procedure TfrClickerPrimitives.GetSelectionLabelsByOrderIndex(AOrderIndex: Integer; var ALeftLbl, ATopLbl, ARightLbl, ABottomLbl: TLabel);
+var
+  TempScrollBox: TScrollBox;
+  TempPanel: TPanel;
+  i: Integer;
+begin
+  TempScrollBox := TScrollBox(PageControlPreview.Pages[AOrderIndex].Tag);
+
+  TempPanel := nil;
+  for i := 0 to TempScrollBox.ComponentCount - 1 do
+    if TempScrollBox.Components[i] is TPanel then
+    begin
+      TempPanel := TempScrollBox.Components[i] as TPanel;
+      Break;
+    end;
+
+  if TempPanel = nil then
+  begin
+    MessageBox(Handle, PChar('Cannot get primitives drawing panel on order index: ' + IntToStr(AOrderIndex)), PChar(Application.Title), MB_ICONERROR);
+    Exit;
+  end;
+
+  ALeftLbl := nil;
+  ATopLbl := nil;
+  ARightLbl := nil;
+  ABottomLbl := nil;
+
+  for i := 0 to TempPanel.ComponentCount - 1 do
+    if (TempPanel.Components[i] is TLabel) or (TempPanel.Components[i] is TPaintedLabel) then
+    begin
+      case TempPanel.Components[i].Tag of
+        CLeftLblID:
+           ALeftLbl := TLabel(TempPanel.Components[i]);
+
+        CTopLblID:
+          ATopLbl := TLabel(TempPanel.Components[i]);
+
+        CRightLblID:
+          ARightLbl := TLabel(TempPanel.Components[i]);
+
+        CBottomLblID:
+          ABottomLbl := TLabel(TempPanel.Components[i]);
+      end;
+    end;
+end;
+
+
 procedure TfrClickerPrimitives.ComposePrimitives(ABmp: TBitmap; AOrderIndex: Integer);
 var
   PmtvCompositor: TPrimitivesCompositor;
@@ -629,6 +772,7 @@ begin
   try
     PmtvCompositor.OnEvaluateReplacementsFunc := HandleOnEvaluateReplacementsFunc;
     PmtvCompositor.OnLoadBitmap := HandleOnLoadBitmap;
+    PmtvCompositor.OnLoadRenderedBitmap := HandleOnLoadRenderedBitmap;
 
     PmtvCompositor.ComposePrimitives(ABmp, AOrderIndex, chkHighContrast.Checked, FPrimitives, FOrders, FPrimitiveSettings);
   finally
@@ -686,6 +830,7 @@ begin
   try
     PmtvCompositor.OnEvaluateReplacementsFunc := HandleOnEvaluateReplacementsFunc;
     PmtvCompositor.OnLoadBitmap := HandleOnLoadBitmap;
+    PmtvCompositor.OnLoadRenderedBitmap := HandleOnLoadRenderedBitmap;
 
     Idx := PageControlPreview.ActivePageIndex;
     if Idx > Length(FOrders) - 1 then
@@ -720,6 +865,30 @@ begin
   BuildImgLstPreviewPrimitives;
   RepaintAllCompositions;
   FOIFrame.RepaintOI;
+end;
+
+
+procedure TfrClickerPrimitives.chkShowPrimitiveEdgesChange(Sender: TObject);
+var
+  FLeftLimitLabel_ForPrimitive: TPaintedLabel;
+  FTopLimitLabel_ForPrimitive: TPaintedLabel;
+  FRightLimitLabel_ForPrimitive: TPaintedLabel;
+  FBottomLimitLabel_ForPrimitive: TPaintedLabel;
+  i: Integer;
+begin
+  for i := 0 to Length(FOrders) - 1 do
+  begin
+    GetSelectionLabelsByOrderIndex(i,
+                                   TLabel(FLeftLimitLabel_ForPrimitive),
+                                   TLabel(FTopLimitLabel_ForPrimitive),
+                                   TLabel(FRightLimitLabel_ForPrimitive),
+                                   TLabel(FBottomLimitLabel_ForPrimitive));
+
+    FLeftLimitLabel_ForPrimitive.Visible := chkShowPrimitiveEdges.Checked;
+    FTopLimitLabel_ForPrimitive.Visible := chkShowPrimitiveEdges.Checked;
+    FRightLimitLabel_ForPrimitive.Visible := chkShowPrimitiveEdges.Checked;
+    FBottomLimitLabel_ForPrimitive.Visible := chkShowPrimitiveEdges.Checked;
+  end;
 end;
 
 
@@ -898,6 +1067,39 @@ begin
   end;
 
   BuildImgLstPreviewPrimitives;
+end;
+
+
+procedure TfrClickerPrimitives.MenuItem_SetExternallyRenderedFile(Sender: TObject);
+var
+  MenuData: POIMenuItemData;
+  ValueStr: string;
+  TempPrimitiveType: Integer;
+begin
+  MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
+  try
+    ValueStr := StringReplace(MenuData^.MenuItemCaption, '&', '', [rfReplaceAll]);
+    if Pos(#8#7, ValueStr) > 0 then
+      ValueStr := Copy(ValueStr, 1, Pos(#8#7, ValueStr) - 1);
+
+    TempPrimitiveType := FPrimitives[MenuData^.PropertyIndex].PrimitiveType;
+    if TempPrimitiveType = -1 then
+    begin
+      MessageBox(Handle, 'The current primitive type is not implemented.', PChar(Application.Title), MB_ICONERROR);
+      Exit;
+    end;
+
+    CSetPrimitiveValueStrFunctions[TempPrimitiveType](FPrimitives[MenuData^.PropertyIndex], ValueStr, MenuData^.PropertyItemIndex);
+    FOIFrame.CancelCurrentEditing;
+    DoOnTriggerOnControlsModified;  //the pmtv file is modified, not the template
+
+    RepaintAllCompositions;
+    FOIFrame.RepaintNodeByLevel(MenuData.NodeLevel, MenuData.CategoryIndex, MenuData.PropertyIndex, MenuData.PropertyItemIndex);
+  finally
+    Dispose(MenuData);
+  end;
+
+ // BuildImgLstPreviewPrimitives;
 end;
 
 
@@ -1295,6 +1497,7 @@ begin
   try
     PmtvCompositor.OnEvaluateReplacementsFunc := HandleOnEvaluateReplacementsFunc;
     PmtvCompositor.OnLoadBitmap := HandleOnLoadBitmap;
+    PmtvCompositor.OnLoadRenderedBitmap := HandleOnLoadRenderedBitmap;
 
     UsingHighContrast := chkHighContrast.Checked;
 
@@ -1378,6 +1581,24 @@ begin
     raise Exception.Create('OnLoadBitmap not assigned.')
   else
     Result := FOnLoadBitmap(ABitmap, AFileName);
+end;
+
+
+function TfrClickerPrimitives.DoOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
+begin
+  if not Assigned(FOnLoadRenderedBitmap) then
+    raise Exception.Create('OnLoadRenderedBitmap not assigned.')
+  else
+    Result := FOnLoadRenderedBitmap(ABitmap, AFileName);
+end;
+
+
+procedure TfrClickerPrimitives.DoOnGetListOfExternallyRenderedImages(AListOfExternallyRenderedImages: TStringList);
+begin
+  if not Assigned(FOnGetListOfExternallyRenderedImages) then
+    raise Exception.Create('OnGetListOfExternallyRenderedImages not assigned.')
+  else
+    FOnGetListOfExternallyRenderedImages(AListOfExternallyRenderedImages);
 end;
 
 
@@ -1695,19 +1916,29 @@ end;
 procedure TfrClickerPrimitives.HandleOnOIEditedText(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; ANewText: string);
 var
   PmtvType: Integer;
+  PrevValue: string;
 begin
   case ACategoryIndex of
     CCategory_Primitives:
       case ANodeLevel of
         CPropertyLevel:
-          FPrimitives[APropertyIndex].PrimitiveName := ANewText;
+          if FPrimitives[APropertyIndex].PrimitiveName <> ANewText then
+          begin
+            FPrimitives[APropertyIndex].PrimitiveName := ANewText;
+            DoOnTriggerOnControlsModified;
+          end;
 
         CPropertyItemLevel:
         begin
           PmtvType := FPrimitives[APropertyIndex].PrimitiveType;
+          PrevValue := CGetPrimitiveValueStrFunctions[PmtvType](FPrimitives[APropertyIndex], AItemIndex);
           CSetPrimitiveValueStrFunctions[PmtvType](FPrimitives[APropertyIndex], ANewText, AItemIndex);
+
           RepaintAllCompositions;
           BuildImgLstPreviewPrimitives;
+
+          if ANewText <> PrevValue then
+            DoOnTriggerOnControlsModified;
         end;
       end;
 
@@ -1715,8 +1946,12 @@ begin
       case ANodeLevel of
         CPropertyLevel:
         begin
-          FOrders[APropertyIndex].Name := ANewText;
-          PageControlPreview.Pages[APropertyIndex].Caption := ANewText;
+          if FOrders[APropertyIndex].Name <> ANewText then
+          begin
+            FOrders[APropertyIndex].Name := ANewText;
+            PageControlPreview.Pages[APropertyIndex].Caption := ANewText;
+            DoOnTriggerOnControlsModified;
+          end;
         end;
 
         CPropertyItemLevel:
@@ -1728,18 +1963,18 @@ begin
         CPropertyLevel:
         begin
           if APropertyIndex = CCompositorDirection_PropIndex then
-          begin
-            FPrimitiveSettings.CompositorDirection := CompositorDirectionToIndex(ANewText);
-            RepaintAllCompositions;
-          end;
+            if FPrimitiveSettings.CompositorDirection <> CompositorDirectionToIndex(ANewText) then
+            begin
+              FPrimitiveSettings.CompositorDirection := CompositorDirectionToIndex(ANewText);
+              RepaintAllCompositions;
+              DoOnTriggerOnControlsModified;
+            end;
         end;
 
         CPropertyItemLevel:
           ;
       end;
   end;
-
-  DoOnTriggerOnControlsModified;
 end;
 
 
@@ -1936,8 +2171,40 @@ end;
 
 procedure TfrClickerPrimitives.HandleOnOIEditorAssignMenuAndTooltip(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer;
   Sender: TObject; var APopupMenu: TPopupMenu; var AHint: string; var AShowHint: Boolean);
+var
+  PmtvType: Integer;
 begin
-  //
+  case ACategoryIndex of
+    CCategory_Primitives:
+    begin
+      case ANodeLevel of
+        CPropertyLevel:
+          ;
+
+        CPropertyItemLevel:
+        begin
+          PmtvType := FPrimitives[APropertyIndex].PrimitiveType;
+          if PmtvType = CClkImagePrimitiveCmdIdx then
+          begin
+            case AItemIndex of
+              CImagePrimitive_Stretch_PropIndex:
+              begin
+                AHint := 'Set this to 1 or True, to stretch the image to the maximum available size of the composition.';
+                AShowHint := True;
+              end;
+
+              CImagePrimitive_RenderedExternally_PropIndex:
+              begin
+                AHint := 'Set this to 1 or True, to load an externally rendered bmp (i.e. received from a server).' + #13#10 +
+                         'The image is identified by path and "stored" in a separate in-mem file system (not the same one used on client-server execution).';
+                AShowHint := True;
+              end;
+            end; //case
+          end; //if
+        end; //item leve
+      end; //case
+    end; //CCategory_Primitives
+  end;
 end;
 
 
@@ -1952,6 +2219,8 @@ var
   tp: TPoint;
   i: Integer;
   EnumItemName: string;
+  PmtvType: Integer;
+  ListOfExternallyRenderedImages: TStringList;
 begin
   case ACategoryIndex of
     CCategory_Primitives:
@@ -1973,10 +2242,30 @@ begin
         begin
           FOIEditorMenu.Items.Clear;
 
+          //menus for enum like properties
           for i := 0 to CPrimitivesPropEnumCounts[FPrimitives[APropertyIndex].PrimitiveType]^[AItemIndex] - 1 do
           begin
             EnumItemName := CPrimitivesPropEnumStrings[FPrimitives[APropertyIndex].PrimitiveType]^[AItemIndex]^[i];
             AddMenuItemToPopupMenu(FOIEditorMenu, EnumItemName, MenuItem_SetValueFromEnumItem, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+          end;
+
+          //menus for other types of properties
+          PmtvType := FPrimitives[APropertyIndex].PrimitiveType;
+          if PmtvType = CClkImagePrimitiveCmdIdx then
+          begin
+            case AItemIndex of
+              CImagePrimitive_Path_PropIndex:
+              begin
+                ListOfExternallyRenderedImages := TStringList.Create;
+                try
+                  DoOnGetListOfExternallyRenderedImages(ListOfExternallyRenderedImages);
+                  for i := 0 to ListOfExternallyRenderedImages.Count - 1 do
+                    AddMenuItemToPopupMenu(FOIEditorMenu, ListOfExternallyRenderedImages.Strings[i], MenuItem_SetExternallyRenderedFile, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+                finally
+                  ListOfExternallyRenderedImages.Free;
+                end;
+              end;
+            end; //case
           end;
 
           GetCursorPos(tp);
@@ -2093,6 +2382,111 @@ begin
 end;
 
 
+procedure TfrClickerPrimitives.HandleOnOISelectedNode(NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex, Column: Integer; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var
+  x1, x2, y1, y2: Integer;
+  PmtvType, i: Integer;
+  TempText: string;
+  TempBmp: TBitmap;
+  TextSize: TSize;
+  FLeftLimitLabel_ForPrimitive: TPaintedLabel;
+  FTopLimitLabel_ForPrimitive: TPaintedLabel;
+  FRightLimitLabel_ForPrimitive: TPaintedLabel;
+  FBottomLimitLabel_ForPrimitive: TPaintedLabel;
+  TempImage: TImage;
+begin
+  for i := 0 to Length(FOrders) - 1 do
+  begin
+    GetSelectionLabelsByOrderIndex(i,
+                                   TLabel(FLeftLimitLabel_ForPrimitive),
+                                   TLabel(FTopLimitLabel_ForPrimitive),
+                                   TLabel(FRightLimitLabel_ForPrimitive),
+                                   TLabel(FBottomLimitLabel_ForPrimitive));
+
+    TempImage := TImage(TScrollBox(PageControlPreview.Pages[i].Tag).Tag);
+
+    case CategoryIndex of
+      CCategory_Primitives:
+        case NodeLevel of
+          CCategoryLevel:
+            ;
+
+          CPropertyLevel:
+          begin
+            PmtvType := FPrimitives[PropertyIndex].PrimitiveType;
+
+            case PmtvType of
+              CClkImagePrimitiveCmdIdx:
+              begin
+                FLeftLimitLabel_ForPrimitive.Left := StrToIntDef(DoOnEvaluateReplacementsFunc(FPrimitives[PropertyIndex].ClkImage.X1), 0);
+                FTopLimitLabel_ForPrimitive.Top := StrToIntDef(DoOnEvaluateReplacementsFunc(FPrimitives[PropertyIndex].ClkImage.Y1), 0);
+                FRightLimitLabel_ForPrimitive.Left := StrToIntDef(DoOnEvaluateReplacementsFunc(FPrimitives[PropertyIndex].ClkImage.X2), 100);
+                FBottomLimitLabel_ForPrimitive.Top := StrToIntDef(DoOnEvaluateReplacementsFunc(FPrimitives[PropertyIndex].ClkImage.Y2), 100);
+              end;
+
+              CClkLinePrimitiveCmdIdx:
+              begin
+                FLeftLimitLabel_ForPrimitive.Left := StrToIntDef(DoOnEvaluateReplacementsFunc(FPrimitives[PropertyIndex].ClkLine.X1), 0);
+                FTopLimitLabel_ForPrimitive.Top := StrToIntDef(DoOnEvaluateReplacementsFunc(FPrimitives[PropertyIndex].ClkLine.Y1), 0);
+                FRightLimitLabel_ForPrimitive.Left := StrToIntDef(DoOnEvaluateReplacementsFunc(FPrimitives[PropertyIndex].ClkLine.X2), 100);
+                FBottomLimitLabel_ForPrimitive.Top := StrToIntDef(DoOnEvaluateReplacementsFunc(FPrimitives[PropertyIndex].ClkLine.Y2), 100);
+              end;
+
+              CClkRectPrimitiveCmdIdx:
+              begin
+                FLeftLimitLabel_ForPrimitive.Left := StrToIntDef(DoOnEvaluateReplacementsFunc(FPrimitives[PropertyIndex].ClkRect.X1), 0);
+                FTopLimitLabel_ForPrimitive.Top := StrToIntDef(DoOnEvaluateReplacementsFunc(FPrimitives[PropertyIndex].ClkRect.Y1), 0);
+                FRightLimitLabel_ForPrimitive.Left := StrToIntDef(DoOnEvaluateReplacementsFunc(FPrimitives[PropertyIndex].ClkRect.X2), 100);
+                FBottomLimitLabel_ForPrimitive.Top := StrToIntDef(DoOnEvaluateReplacementsFunc(FPrimitives[PropertyIndex].ClkRect.Y2), 100);
+              end;
+
+              CClkGradientFill:
+              begin
+                FLeftLimitLabel_ForPrimitive.Left := StrToIntDef(DoOnEvaluateReplacementsFunc(FPrimitives[PropertyIndex].ClkGradientFill.X1), 0);
+                FTopLimitLabel_ForPrimitive.Top := StrToIntDef(DoOnEvaluateReplacementsFunc(FPrimitives[PropertyIndex].ClkGradientFill.Y1), 0);
+                FRightLimitLabel_ForPrimitive.Left := StrToIntDef(DoOnEvaluateReplacementsFunc(FPrimitives[PropertyIndex].ClkGradientFill.X2), 100);
+                FBottomLimitLabel_ForPrimitive.Top := StrToIntDef(DoOnEvaluateReplacementsFunc(FPrimitives[PropertyIndex].ClkGradientFill.Y2), 100);
+              end;
+
+              CClkText:
+              begin
+                TempText := DoOnEvaluateReplacementsFunc(FPrimitives[PropertyIndex].ClkText.Text);
+                TempBmp := TBitmap.Create;
+                try
+                  //init to some defaults
+                  TempBmp.Canvas.Font.Name := TempImage.Canvas.Font.Name;
+                  TempBmp.Canvas.Font.Size := TempImage.Canvas.Font.Size;
+                  TempBmp.Canvas.Font.Style := TempImage.Canvas.Font.Style;
+
+                  //ToDo
+                  // depending on FPrimitiveSettings.CompositorDirection, the FOrders array should be iterated, to get the first SetFont "primitive"
+                  //based on that, the TempBmp.Canvas.Font property should be set
+
+                  TextSize := TempBmp.Canvas.TextExtent(TempText);
+                  x1 := StrToIntDef(DoOnEvaluateReplacementsFunc(FPrimitives[PropertyIndex].ClkText.X), 0);
+                  x2 := x1 + TextSize.cx;
+                  y1 := StrToIntDef(DoOnEvaluateReplacementsFunc(FPrimitives[PropertyIndex].ClkText.Y), 0);
+                  y2 := y1 + TextSize.cy;
+
+                  FLeftLimitLabel_ForPrimitive.Left := x1;
+                  FTopLimitLabel_ForPrimitive.Top := y1;
+                  FRightLimitLabel_ForPrimitive.Left := x2;
+                  FBottomLimitLabel_ForPrimitive.Top := y2;
+                finally
+                  TempBmp.Free;
+                end;
+              end;
+            end;
+          end;
+
+          CPropertyItemLevel:
+            ;
+        end;
+    end; //case CategoryIndex
+  end; //for
+end;
+
+
 procedure TfrClickerPrimitives.HandleOnOIDragAllowed(NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex: Integer; var Allowed: Boolean);
 begin
   Allowed := (CategoryIndex = CCategory_Orders) and
@@ -2167,6 +2561,12 @@ end;
 function TfrClickerPrimitives.HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
 begin
   Result := DoOnLoadBitmap(ABitmap, AFileName);
+end;
+
+
+function TfrClickerPrimitives.HandleOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
+begin
+  Result := DoOnLoadRenderedBitmap(ABitmap, AFileName);
 end;
 
 

@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2022 VCC
+    Copyright (C) 2023 VCC
     creation date: Mar 2023
     initial release date: 11 Mar 2023
 
@@ -55,7 +55,7 @@ const
   CPropCountClkSetBrushPrimitive = 2;
   CPropCountClkSetMiscPrimitive = 1;
   CPropCountClkSetFontPrimitive = CPropCount_FindControlMatchBitmapText; //16;
-  CPropCountClkImagePrimitive = 6;
+  CPropCountClkImagePrimitive = 7;
   CPropCountClkLinePrimitive = 5;
   CPropCountClkRectPrimitive = 5;
   CPropCountClkGradientFillPrimitive = 7;
@@ -118,7 +118,8 @@ const
     (Name: 'X2'; EditorType: etSpinText),
     (Name: 'Y2'; EditorType: etSpinText),
     (Name: 'Path'; EditorType: etFilePathWithArrow),
-    (Name: 'Stretch'; EditorType: etBooleanCombo)
+    (Name: 'Stretch'; EditorType: etText),
+    (Name: 'RenderedExternally'; EditorType: etText)
   );
 
   CLinePrimitiveProperties: array[0..CPropCountClkLinePrimitive - 1] of TOIPropDef = (
@@ -161,6 +162,10 @@ const
   CSetPenPrimitive_JoinStyle_PropIndex = 5;
 
   CSetFontPrimitive_FontName_PropIndex = 2;
+
+  CImagePrimitive_Path_PropIndex = 4;
+  CImagePrimitive_Stretch_PropIndex = 5;
+  CImagePrimitive_RenderedExternally_PropIndex = 6;
 
 
 type
@@ -311,7 +316,8 @@ const
     0,  //Y1: string;
     0,  //Y2: string;
     0,  //Path: string; //path to a bmp (or png) file, which will be part of the composition
-    0   //Stretch: string; //Boolean
+    0,  //Stretch: string; //Boolean
+    0   //RenderedExternally: string; //Boolean
   );
 
   CLineEnumCounts: array[0..CPropCountClkLinePrimitive - 1] of Integer = (
@@ -404,7 +410,8 @@ const
     nil, //Y1: string;
     nil, //Y2: string;
     nil, //Path: string; //path to a bmp (or png) file, which will be part of the composition
-    nil  //Stretch: string; //Boolean
+    nil, //Stretch: string; //Boolean
+    nil  //RenderedExternally: string; //Boolean
   );
 
   CLineEnumStrings: array[0..CPropCountClkLinePrimitive - 1] of PArrayOfString = (
@@ -542,6 +549,7 @@ implementation
       3: Result := APrimitive.ClkImage.Y2;
       4: Result := APrimitive.ClkImage.Path;
       5: Result := APrimitive.ClkImage.Stretch;
+      6: Result := APrimitive.ClkImage.RenderedExternally;
       else
         Result := 'unknown';
     end;
@@ -677,6 +685,7 @@ implementation
       3: APrimitive.ClkImage.Y2 := NewValue;
       4: APrimitive.ClkImage.Path := NewValue;
       5: APrimitive.ClkImage.Stretch := NewValue;
+      6: APrimitive.ClkImage.RenderedExternally := NewValue;
       else
         ;
     end;
@@ -790,6 +799,7 @@ begin
   APrimitive.ClkImage.Y2 := '17';
   APrimitive.ClkImage.Path := '';
   APrimitive.ClkImage.Stretch := '0';
+  APrimitive.ClkImage.RenderedExternally := '0';
 end;
 
 

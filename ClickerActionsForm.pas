@@ -163,7 +163,8 @@ type
     FStopAllActionsOnDemand: Boolean;
     FFullTemplatesDir: string;
     FBMPsDir: string;
-    FInMemFileSystem: TInMemFileSystem;
+    FInMemFileSystem: TInMemFileSystem;   //for client-server execution
+    FRenderedInMemFileSystem: TInMemFileSystem;  //for externally rendered images
     FFileAvailabilityFIFO: TPollingFIFO;
     FPollForMissingServerFiles: TPollForMissingServerFiles;
     FProcessingMissingFilesRequestByClient: Boolean; //for activity info
@@ -265,6 +266,9 @@ type
     procedure HandleOnWaitForBitmapsAvailability(AListOfBitmapFiles: TStringList);  //ClickerActionsArrFrame instances call this, to add multiple bmps to FIFO, if not found
 
     function HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
+    function HandleOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
+    procedure HandleOnGetListOfExternallyRenderedImages(AListOfExternallyRenderedImages: TStringList);
+    function HandleOnRenderBmpExternally(ARequest: string): string;
     procedure HandleOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
     procedure HandleOnSavePrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
     function HandleOnFileExists(const FileName: string): Boolean;
@@ -648,6 +652,10 @@ begin
 
   FInMemFileSystem := TInMemFileSystem.Create;
   FInMemFileSystem.OnComputeInMemFileHash := HandleOnComputeInMemFileHash;
+
+  FRenderedInMemFileSystem := TInMemFileSystem.Create;
+  FRenderedInMemFileSystem.OnComputeInMemFileHash := HandleOnComputeInMemFileHash;
+
   FFileAvailabilityFIFO := TPollingFIFO.Create;
   FAutoSwitchToExecutingTab := False;
   FAutoEnableSwitchingTabsOnDebugging := False;
@@ -793,6 +801,7 @@ begin
   frClickerActionsArrExperiment1.InMemFS := FInMemFileSystem;
   frClickerActionsArrExperiment2.InMemFS := FInMemFileSystem;
   frClickerActionsArrMain.InMemFS := FInMemFileSystem;
+  //do not set FRenderedInMemFileSystem here, as it is used for externally rendered images, not for other files
 
   frClickerActionsArrExperiment1.GridDrawingOption := TDisplayGridLineOption(cmbImgPreviewGridType.ItemIndex);
   frClickerActionsArrExperiment2.GridDrawingOption := TDisplayGridLineOption(cmbImgPreviewGridType.ItemIndex);
@@ -827,6 +836,9 @@ begin
   frClickerActionsArrMain.OnWaitForMultipleFilesAvailability := HandleOnWaitForMultipleFilesAvailability;
   frClickerActionsArrMain.OnWaitForBitmapsAvailability := HandleOnWaitForBitmapsAvailability;
   frClickerActionsArrMain.OnLoadBitmap := HandleOnLoadBitmap;
+  frClickerActionsArrMain.OnLoadRenderedBitmap := HandleOnLoadRenderedBitmap;
+  frClickerActionsArrMain.OnGetListOfExternallyRenderedImages := HandleOnGetListOfExternallyRenderedImages;
+  frClickerActionsArrMain.OnRenderBmpExternally := HandleOnRenderBmpExternally;
   frClickerActionsArrMain.OnLoadPrimitivesFile := HandleOnLoadPrimitivesFile;
   frClickerActionsArrMain.OnSavePrimitivesFile := HandleOnSavePrimitivesFile;
   frClickerActionsArrMain.OnFileExists := HandleOnFileExists;
@@ -865,6 +877,12 @@ begin
   frClickerActionsArrExperiment2.OnWaitForBitmapsAvailability := HandleOnWaitForBitmapsAvailability;
   frClickerActionsArrExperiment1.OnLoadBitmap := HandleOnLoadBitmap;
   frClickerActionsArrExperiment2.OnLoadBitmap := HandleOnLoadBitmap;
+  frClickerActionsArrExperiment1.OnLoadRenderedBitmap := HandleOnLoadRenderedBitmap;
+  frClickerActionsArrExperiment2.OnLoadRenderedBitmap := HandleOnLoadRenderedBitmap;
+  frClickerActionsArrExperiment1.OnGetListOfExternallyRenderedImages := HandleOnGetListOfExternallyRenderedImages;
+  frClickerActionsArrExperiment2.OnGetListOfExternallyRenderedImages := HandleOnGetListOfExternallyRenderedImages;
+  frClickerActionsArrExperiment1.OnRenderBmpExternally := HandleOnRenderBmpExternally;
+  frClickerActionsArrExperiment2.OnRenderBmpExternally := HandleOnRenderBmpExternally;
   frClickerActionsArrExperiment1.OnLoadPrimitivesFile := HandleOnLoadPrimitivesFile;
   frClickerActionsArrExperiment2.OnLoadPrimitivesFile := HandleOnLoadPrimitivesFile;
   frClickerActionsArrExperiment1.OnSavePrimitivesFile := HandleOnSavePrimitivesFile;
@@ -951,6 +969,7 @@ begin
 
   FreeAndNil(FFileAvailabilityFIFO); //destroy the FIFO before the in-mem filesystem
   FreeAndNil(FInMemFileSystem);
+  FreeAndNil(FRenderedInMemFileSystem);
 
   try
     frClickerActionsArrMain.frClickerActions.frClickerConditionEditor.ClearActionConditionPreview;
@@ -1349,6 +1368,7 @@ begin
         NewFrame.FullTemplatesDir := FFullTemplatesDir;
         NewFrame.RemoteAddress := frClickerActionsArrMain.RemoteAddress;
         NewFrame.InMemFS := FInMemFileSystem;
+        //do not set FRenderedInMemFileSystem here
         NewFrame.GridDrawingOption := TDisplayGridLineOption(cmbImgPreviewGridType.ItemIndex);
 
         try
@@ -1365,6 +1385,9 @@ begin
         NewFrame.OnWaitForBitmapsAvailability := HandleOnWaitForBitmapsAvailability;
 
         NewFrame.OnLoadBitmap := HandleOnLoadBitmap;
+        NewFrame.OnLoadRenderedBitmap := HandleOnLoadRenderedBitmap;
+        NewFrame.OnGetListOfExternallyRenderedImages := HandleOnGetListOfExternallyRenderedImages;
+        NewFrame.OnRenderBmpExternally := HandleOnRenderBmpExternally;
         NewFrame.OnLoadPrimitivesFile := HandleOnLoadPrimitivesFile;
         NewFrame.OnSavePrimitivesFile := HandleOnSavePrimitivesFile;
         NewFrame.OnFileExists := HandleOnFileExists;
@@ -1705,6 +1728,109 @@ begin
   end
   else
     Result := DoOnLoadBitmap(ABitmap, AFileName);
+end;
+
+
+function TfrmClickerActions.HandleOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
+begin
+  if FRenderedInMemFileSystem.FileExistsInMem(AFileName) then
+  begin
+    LoadBmpFromInMemFileSystem(AFileName, ABitmap, FRenderedInMemFileSystem);
+    Result := True;
+  end
+  else
+    Result := False;
+end;
+
+
+procedure TfrmClickerActions.HandleOnGetListOfExternallyRenderedImages(AListOfExternallyRenderedImages: TStringList);
+var
+  Stream: TMemoryStream;
+  Bmp: TBitmap;
+  i: Integer;
+  TempName: string;
+begin
+  FRenderedInMemFileSystem.ListMemFiles(AListOfExternallyRenderedImages);
+
+  for i := 0 to AListOfExternallyRenderedImages.Count - 1 do
+  begin
+    Stream := TMemoryStream.Create;
+    Bmp := TBitmap.Create;
+    try
+      TempName := AListOfExternallyRenderedImages.Strings[i];
+      FRenderedInMemFileSystem.LoadFileFromMemToStream(TempName, Stream);
+
+      Stream.Position := 0;
+      Bmp.LoadFromStream(Stream, Stream.Size);
+
+      AListOfExternallyRenderedImages.Strings[i] := TempName + #8#7 + IntToStr(Bmp.Width) + ':' + IntToStr(Bmp.Height) + '  ' + IntToStr(Stream.Size) + 'B';
+    finally
+      Stream.Free;
+      Bmp.Free;
+    end;
+  end;
+end;
+
+
+function TfrmClickerActions.HandleOnRenderBmpExternally(ARequest: string): string;
+var
+  ListOfParams: TStringList;
+  FullLink, Filename, SrvAddrPort, Cmd, Params: string;
+  IncludeFilenameInRequest: Boolean;
+  TempFileContent: TMemoryStream;
+begin
+  Result := 'not set';
+
+  ListOfParams := TStringList.Create;
+  try
+    ListOfParams.Text := FastReplace_45ToReturn(ARequest);
+
+    Filename := ListOfParams.Values[CExtBmp_Filename];
+    if Filename = '' then
+    begin
+      Result := 'The "' + CExtBmp_Filename + '" parameter is empty or missing from parameter list.';
+      Exit;
+    end;
+
+    SrvAddrPort := ListOfParams.Values[CExtBmp_SrvAddrPort];   //something like 'http://127.0.0.1:15444/'
+    if SrvAddrPort = '' then
+    begin
+      Result := 'The "' + CExtBmp_SrvAddrPort + '" parameter is empty or missing from parameter list.';
+      Exit;
+    end;
+
+    if SrvAddrPort[Length(SrvAddrPort)] <> '/' then
+      SrvAddrPort := SrvAddrPort + '/';
+
+    Cmd := ListOfParams.Values[CExtBmp_Cmd];  //something like 'RenderMyBmp'
+    if Cmd = '' then
+    begin
+      Result := 'The "' + CExtBmp_Cmd + '" parameter is empty or missing from parameter list.';
+      Exit;
+    end;
+
+    FullLink := SrvAddrPort + Cmd;
+    Params := ListOfParams.Values[CExtBmp_Params];  //should not include '?'
+
+    IncludeFilenameInRequest := ListOfParams.Values[CExtBmp_IncludeFilenameInRequest] = '1';
+    if IncludeFilenameInRequest then
+      Params := Params + '&' + CExtBmp_Filename + '=' + Filename;
+
+    if Params > '' then
+      FullLink := FullLink + '?' + Params;
+
+    TempFileContent := TMemoryStream.Create;
+    try
+      Result := SendGetFileRequestToServer(FullLink, TempFileContent);
+
+      if Result = '' then
+        FRenderedInMemFileSystem.SaveFileToMem(Filename, TempFileContent.Memory, TempFileContent.Size);
+    finally
+      TempFileContent.Free;
+    end;
+  finally
+    ListOfParams.Free;
+  end;
 end;
 
 

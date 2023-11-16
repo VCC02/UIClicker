@@ -28,6 +28,7 @@ unit ClickerOIUtils;
 
 interface
 
+
 uses
   Classes, SysUtils, Menus, Controls;
 

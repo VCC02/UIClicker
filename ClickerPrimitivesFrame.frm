@@ -152,6 +152,18 @@ object frClickerPrimitives: TfrClickerPrimitives
       OnChange = chkHighContrastChange
       TabOrder = 1
     end
+    object chkShowPrimitiveEdges: TCheckBox
+      Left = 18
+      Height = 19
+      Hint = 'Select a primitive in the list, to update the visual selection.'
+      Top = 13
+      Width = 141
+      Caption = 'Show primitive''s edges'
+      OnChange = chkShowPrimitiveEdgesChange
+      ParentShowHint = False
+      ShowHint = True
+      TabOrder = 2
+    end
   end
   object pnlHorizSplitter: TPanel
     Cursor = crHSplit

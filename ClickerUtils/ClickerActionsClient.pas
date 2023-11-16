@@ -21,6 +21,7 @@
     OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 }
 
+
 unit ClickerActionsClient;
 
 {$mode ObjFPC}{$H+}
@@ -138,6 +139,7 @@ const
 function TestConnection(ARemoteAddress: string; ACallAppProcMsg: Boolean = True): string;
 function WaitForServerResponse(ATh: TClientThread; ACallAppProcMsg: Boolean = True): Boolean; //used for requests with custom waiting
 function SendTextRequestToServer(AFullLink: string; ACallAppProcMsg: Boolean = True): string;
+function SendGetFileRequestToServer(AFullLink: string; AStream: TMemoryStream): string;
 //function SendFileToServer(AFullLink: string; AFileContent, AResponseStream: TMemoryStream; ACallAppProcMsg: Boolean = True): string; overload; //expose this only if needed
 function SendFileToServer(AFullLink: string; AFileContent: TMemoryStream; ACallAppProcMsg: Boolean = True): string; overload;
 
