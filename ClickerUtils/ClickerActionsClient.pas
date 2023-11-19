@@ -189,7 +189,7 @@ implementation
 
 
 uses
-  IdHTTP, Forms, ClickerTemplates, InMemFileSystem;
+  IdHTTP, Forms, ClickerTemplates, InMemFileSystem, ClickerActionProperties;
 
 
 {TClientThread}
@@ -598,32 +598,7 @@ function ExecuteClickAction(ARemoteAddress: string; AClickOptions: TClkClickOpti
 begin
   Result := SendTextRequestToServer(ARemoteAddress + CRECmd_ExecuteClickAction + '?' +
                                     CREParam_StackLevel + '=0' + '&' +   //use the main editor
-                                    'XClickPointReference' + '=' + IntToStr(Ord(AClickOptions.XClickPointReference)) + '&' +
-                                    'YClickPointReference' + '=' + IntToStr(Ord(AClickOptions.YClickPointReference)) + '&' +
-                                    'XClickPointVar' + '=' + AClickOptions.XClickPointVar + '&' +
-                                    'YClickPointVar' + '=' + AClickOptions.YClickPointVar + '&' +
-                                    'XOffset' + '=' + AClickOptions.XOffset + '&' +
-                                    'YOffset' + '=' + AClickOptions.YOffset + '&' +
-                                    'MouseButton' + '=' + IntToStr(Ord(AClickOptions.MouseButton)) + '&' +
-                                    'ClickWithCtrl' + '=' + IntToStr(Ord(AClickOptions.ClickWithCtrl)) + '&' +
-                                    'ClickWithAlt' + '=' + IntToStr(Ord(AClickOptions.ClickWithAlt)) + '&' +
-                                    'ClickWithShift' + '=' + IntToStr(Ord(AClickOptions.ClickWithShift)) + '&' +
-                                    'ClickWithDoubleClick' + '=' + IntToStr(Ord(AClickOptions.ClickWithDoubleClick)) + '&' +
-                                    'Count' + '=' + IntToStr(AClickOptions.Count) + '&' +
-                                    'LeaveMouse' + '=' + IntToStr(Ord(AClickOptions.LeaveMouse)) + '&' +
-                                    'MoveWithoutClick' + '=' + IntToStr(Ord(AClickOptions.MoveWithoutClick)) + '&' +
-                                    'ClickType' + '=' + IntToStr(Ord(AClickOptions.ClickType)) + '&' +
-                                    'XClickPointReferenceDest' + '=' + IntToStr(Ord(AClickOptions.XClickPointReferenceDest)) + '&' +
-                                    'YClickPointReferenceDest' + '=' + IntToStr(Ord(AClickOptions.YClickPointReferenceDest)) + '&' +
-                                    'XClickPointVarDest' + '=' + AClickOptions.XClickPointVarDest + '&' +
-                                    'YClickPointVarDest' + '=' + AClickOptions.YClickPointVarDest + '&' +
-                                    'XOffsetDest' + '=' + AClickOptions.XOffsetDest + '&' +
-                                    'YOffsetDest' + '=' + AClickOptions.YOffsetDest + '&' +
-                                    'MouseWheelType' + '=' + IntToStr(Ord(AClickOptions.MouseWheelType)) + '&' +
-                                    'MouseWheelAmount' + '=' + AClickOptions.MouseWheelAmount + '&' +
-                                    'DelayAfterMovingToDestination' + '=' + AClickOptions.DelayAfterMovingToDestination + '&' +
-                                    'DelayAfterMouseDown' + '=' + AClickOptions.DelayAfterMouseDown + '&' +
-                                    'MoveDuration' + '=' + AClickOptions.MoveDuration,
+                                    GetClickActionProperties(AClickOptions),
                                     ACallAppProcMsg
                                     );
 end;
@@ -633,13 +608,7 @@ function ExecuteExecAppAction(ARemoteAddress: string; AExecAppOptions: TClkExecA
 begin
   Result := SendTextRequestToServer(ARemoteAddress + CRECmd_ExecuteExecAppAction + '?' +
                                     CREParam_StackLevel + '=0' + '&' +   //use the main editor
-                                    'PathToApp' + '=' + AExecAppOptions.PathToApp + '&' +
-                                    'ListOfParams' + '=' + FastReplace_ReturnTo45(AExecAppOptions.ListOfParams) + '&' +
-                                    'WaitForApp' + '=' + IntToStr(Ord(AExecAppOptions.WaitForApp)) + '&' +
-                                    'AppStdIn' + '=' + AExecAppOptions.AppStdIn + '&' +
-                                    'CurrentDir' + '=' + AExecAppOptions.CurrentDir + '&' +
-                                    'UseInheritHandles' + '=' + IntToStr(Ord(AExecAppOptions.UseInheritHandles)) + '&' +
-                                    'NoConsole' + '=' + IntToStr(Ord(AExecAppOptions.NoConsole)) + '&' +
+                                    GetExecAppActionProperties(AExecAppOptions) + '&' +
 
                                     'ActionName' + '=' + AActionName + '&' +
                                     'ActionTimeout' + '=' + IntToStr(AActionTimeout),
@@ -649,78 +618,10 @@ end;
 
 
 function ExecuteGenericFindControlAction(ARemoteAddress: string; AFindControlOptions: TClkFindControlOptions; AActionName: string; AActionTimeout: Integer; AFileLocation: string; AActionType: string; ACallAppProcMsg: Boolean = True): string;
-  function GetMatchBitmapTextContent(var AMatchBitmapText: TClkFindControlMatchBitmapTextArr): string;
-  var
-    i: Integer;
-    Prefix: string;
-  begin
-    Result := '';
-    for i := 0 to Length(AMatchBitmapText) - 1 do
-    begin
-      Prefix := 'MatchBitmapText[' + IntToStr(i) + '].';
-      Result := Result + Prefix + 'ForegroundColor' + '=' + AMatchBitmapText[i].ForegroundColor + '&';
-      Result := Result + Prefix + 'BackgroundColor' + '=' + AMatchBitmapText[i].BackgroundColor + '&';
-      Result := Result + Prefix + 'FontName' + '=' + AMatchBitmapText[i].FontName + '&';
-      Result := Result + Prefix + 'FontSize' + '=' + IntToStr(AMatchBitmapText[i].FontSize) + '&';
-      Result := Result + Prefix + 'Bold' + '=' + IntToStr(Ord(AMatchBitmapText[i].Bold)) + '&';
-      Result := Result + Prefix + 'Italic' + '=' + IntToStr(Ord(AMatchBitmapText[i].Italic)) + '&';
-      Result := Result + Prefix + 'Underline' + '=' + IntToStr(Ord(AMatchBitmapText[i].Underline)) + '&';
-      Result := Result + Prefix + 'StrikeOut' + '=' + IntToStr(Ord(AMatchBitmapText[i].StrikeOut)) + '&';
-      Result := Result + Prefix + 'FontQuality' + '=' + IntToStr(Ord(AMatchBitmapText[i].FontQuality)) + '&';
-      Result := Result + Prefix + 'FontQualityUsesReplacement' + '=' + IntToStr(Ord(AMatchBitmapText[i].FontQualityUsesReplacement)) + '&';
-      Result := Result + Prefix + 'FontQualityReplacement' + '=' + AMatchBitmapText[i].FontQualityReplacement + '&';
-      Result := Result + Prefix + 'ProfileName' + '=' + AMatchBitmapText[i].ProfileName + '&';
-      Result := Result + Prefix + 'CropLeft' + '=' + AMatchBitmapText[i].CropLeft + '&';
-      Result := Result + Prefix + 'CropTop' + '=' + AMatchBitmapText[i].CropTop + '&';
-      Result := Result + Prefix + 'CropRight' + '=' + AMatchBitmapText[i].CropRight + '&';
-      Result := Result + Prefix + 'CropBottom' + '=' + AMatchBitmapText[i].CropBottom + '&';
-      Result := Result + Prefix + 'IgnoreBackgroundColor' + '=' + IntToStr(Ord(AMatchBitmapText[i].IgnoreBackgroundColor)) + '&';
-    end;
-  end;
 begin
   Result := SendTextRequestToServer(ARemoteAddress + AActionType + '?' +
                                     CREParam_StackLevel + '=0' + '&' +   //use the main editor
-                                    'MatchCriteria.SearchForControlMode' + '=' + IntToStr(Ord(AFindControlOptions.MatchCriteria.SearchForControlMode)) + '&' +
-                                    'MatchCriteria.WillMatchText' + '=' + IntToStr(Ord(AFindControlOptions.MatchCriteria.WillMatchText)) + '&' +
-                                    'MatchCriteria.WillMatchClassName' + '=' + IntToStr(Ord(AFindControlOptions.MatchCriteria.WillMatchClassName)) + '&' +
-                                    'MatchCriteria.WillMatchBitmapText' + '=' + IntToStr(Ord(AFindControlOptions.MatchCriteria.WillMatchBitmapText)) + '&' +
-                                    'MatchCriteria.WillMatchBitmapFiles' + '=' + IntToStr(Ord(AFindControlOptions.MatchCriteria.WillMatchBitmapFiles)) + '&' +
-                                    'MatchCriteria.WillMatchPrimitiveFiles' + '=' + IntToStr(Ord(AFindControlOptions.MatchCriteria.WillMatchPrimitiveFiles)) + '&' +
-                                    'AllowToFail' + '=' + IntToStr(Ord(AFindControlOptions.AllowToFail)) + '&' +
-
-                                    'MatchText' + '=' + AFindControlOptions.MatchText + '&' +
-                                    'MatchClassName' + '=' + AFindControlOptions.MatchClassName + '&' +
-                                    'MatchTextSeparator' + '=' + AFindControlOptions.MatchTextSeparator + '&' +
-                                    'MatchClassNameSeparator' + '=' + AFindControlOptions.MatchClassNameSeparator + '&' +
-
-                                    'MatchBitmapText.Count' + '=' + IntToStr(Length(AFindControlOptions.MatchBitmapText)) + '&' +
-                                    GetMatchBitmapTextContent(AFindControlOptions.MatchBitmapText) +
-                                    'MatchBitmapFiles' + '=' + FastReplace_ReturnTo45(AFindControlOptions.MatchBitmapFiles) + '&' +
-                                    'MatchBitmapAlgorithm' + '=' + IntToStr(Ord(AFindControlOptions.MatchBitmapAlgorithm)) + '&' +
-                                    'MatchBitmapAlgorithmSettings.XMultipleOf' + '=' + IntToStr(AFindControlOptions.MatchBitmapAlgorithmSettings.XMultipleOf) + '&' +
-                                    'MatchBitmapAlgorithmSettings.YMultipleOf' + '=' + IntToStr(AFindControlOptions.MatchBitmapAlgorithmSettings.YMultipleOf) + '&' +
-                                    'MatchBitmapAlgorithmSettings.XOffset' + '=' + IntToStr(AFindControlOptions.MatchBitmapAlgorithmSettings.XOffset) + '&' +
-                                    'MatchBitmapAlgorithmSettings.YOffset' + '=' + IntToStr(AFindControlOptions.MatchBitmapAlgorithmSettings.YOffset) + '&' +
-                                    'InitialRectangle.Left' + '=' + AFindControlOptions.InitialRectangle.Left + '&' +
-                                    'InitialRectangle.Top' + '=' + AFindControlOptions.InitialRectangle.Top + '&' +
-                                    'InitialRectangle.Right' + '=' + AFindControlOptions.InitialRectangle.Right + '&' +
-                                    'InitialRectangle.Bottom' + '=' + AFindControlOptions.InitialRectangle.Bottom + '&' +
-                                    'InitialRectangle.LeftOffset' + '=' + AFindControlOptions.InitialRectangle.LeftOffset + '&' +
-                                    'InitialRectangle.TopOffset' + '=' + AFindControlOptions.InitialRectangle.TopOffset + '&' +
-                                    'InitialRectangle.RightOffset' + '=' + AFindControlOptions.InitialRectangle.RightOffset + '&' +
-                                    'InitialRectangle.BottomOffset' + '=' + AFindControlOptions.InitialRectangle.BottomOffset + '&' +
-                                    'UseWholeScreen' + '=' + IntToStr(Ord(AFindControlOptions.UseWholeScreen)) + '&' +
-                                    'ColorError' + '=' + AFindControlOptions.ColorError + '&' +
-                                    'AllowedColorErrorCount' + '=' + AFindControlOptions.AllowedColorErrorCount + '&' +
-                                    'WaitForControlToGoAway' + '=' + IntToStr(Ord(AFindControlOptions.WaitForControlToGoAway)) + '&' +
-                                    'StartSearchingWithCachedControl' + '=' + IntToStr(Ord(AFindControlOptions.StartSearchingWithCachedControl)) + '&' +
-                                    'CachedControlLeft' + '=' + AFindControlOptions.ColorError + '&' +
-                                    'CachedControlTop' + '=' + AFindControlOptions.ColorError + '&' +
-                                    'MatchPrimitiveFiles' + '=' + FastReplace_ReturnTo45(AFindControlOptions.MatchPrimitiveFiles) + '&' +
-                                    'GetAllControls' + '=' + IntToStr(Ord(AFindControlOptions.GetAllControls)) + '&' +
-                                    'UseFastSearch' + '=' + IntToStr(Ord(AFindControlOptions.UseFastSearch)) + '&' +
-                                    'FastSearchAllowedColorErrorCount' + '=' + AFindControlOptions.FastSearchAllowedColorErrorCount + '&' +
-                                    'IgnoredColors' + '=' + AFindControlOptions.IgnoredColors + '&' +
+                                    GetFindControlActionProperties(AFindControlOptions) + '&' +
 
                                     'ActionName' + '=' + AActionName + '&' +
                                     'ActionTimeout' + '=' + IntToStr(AActionTimeout) + '&' +
@@ -746,9 +647,7 @@ function ExecuteSetControlTextAction(ARemoteAddress: string; ASetTextOptions: TC
 begin
   Result := SendTextRequestToServer(ARemoteAddress + CRECmd_ExecuteSetControlTextAction + '?' +
                                     CREParam_StackLevel + '=0' + '&' +   //use the main editor
-                                    'Text' + '=' + ASetTextOptions.Text + '&' +
-                                    'ControlType' + '=' + IntToStr(Ord(ASetTextOptions.ControlType)) + '&' +
-                                    'DelayBetweenKeyStrokes' + '=' + ASetTextOptions.DelayBetweenKeyStrokes,
+                                    GetSetControlTextActionProperties(ASetTextOptions),
                                     ACallAppProcMsg
                                     );
 end;
@@ -758,17 +657,7 @@ function ExecuteCallTemplateAction(ARemoteAddress: string; ACallTemplateOptions:
 begin
   Result := SendTextRequestToServer(ARemoteAddress + CRECmd_ExecuteCallTemplateAction + '?' +
                                     CREParam_StackLevel + '=0' + '&' +   //use the main editor
-                                    'TemplateFileName' + '=' + ACallTemplateOptions.TemplateFileName + '&' +
-                                    'ListOfCustomVarsAndValues' + '=' + FastReplace_ReturnTo45(ACallTemplateOptions.ListOfCustomVarsAndValues) + '&' +
-                                    'EvaluateBeforeCalling' + '=' + IntToStr(Ord(ACallTemplateOptions.EvaluateBeforeCalling)) + '&' +
-
-                                    'Loop.Enabled' + '=' + IntToStr(Ord(ACallTemplateOptions.CallTemplateLoop.Enabled)) + '&' +
-                                    'Loop.Counter' + '=' + ACallTemplateOptions.CallTemplateLoop.Counter + '&' +
-                                    'Loop.InitValue' + '=' + ACallTemplateOptions.CallTemplateLoop.InitValue + '&' +
-                                    'Loop.EndValue' + '=' + ACallTemplateOptions.CallTemplateLoop.EndValue + '&' +
-                                    'Loop.Direction' + '=' + IntToStr(Ord(ACallTemplateOptions.CallTemplateLoop.Direction)) + '&' +
-                                    'Loop.BreakCondition' + '=' + FastReplace_ReturnTo45(ACallTemplateOptions.CallTemplateLoop.BreakCondition) + '&' +
-                                    'Loop.EvalBreakPosition' + '=' + IntToStr(Ord(ACallTemplateOptions.CallTemplateLoop.EvalBreakPosition)) + '&' +
+                                    GetCallTemplateActionProperties(ACallTemplateOptions) + '&' +
 
                                     CREParam_IsDebugging + '=' + IntToStr(Ord(AIsDebugging)) + '&' +
                                     CREParam_FileLocation + '=' + AFileLocation + '&' +
@@ -783,7 +672,7 @@ function ExecuteSleepAction(ARemoteAddress: string; ASleepOptions: TClkSleepOpti
 begin
   Result := SendTextRequestToServer(ARemoteAddress + CRECmd_ExecuteSleepAction + '?' +
                                     CREParam_StackLevel + '=0' + '&' +   //use the main editor
-                                    'Value' + '=' + ASleepOptions.Value + '&' +
+                                    GetSleepActionProperties(ASleepOptions) + '&' +
                                     'ActionName' + '=' + AActionName,
                                     ACallAppProcMsg
                                     );
@@ -794,9 +683,7 @@ function ExecuteSetVarAction(ARemoteAddress: string; ASetVarOptions: TClkSetVarO
 begin
   Result := SendTextRequestToServer(ARemoteAddress + CRECmd_ExecuteSetVarAction + '?' +
                                     CREParam_StackLevel + '=0' + '&' +   //use the main editor
-                                    'ListOfVarNames' + '=' + FastReplace_ReturnTo45(ASetVarOptions.ListOfVarNames) + '&' +
-                                    'ListOfVarValues' + '=' + FastReplace_ReturnTo45(ASetVarOptions.ListOfVarValues) + '&' +
-                                    'ListOfVarEvalBefore' + '=' + FastReplace_ReturnTo45(ASetVarOptions.ListOfVarEvalBefore),
+                                    GetSetVarActionProperties(ASetVarOptions),
                                     ACallAppProcMsg
                                     );
 end;
@@ -806,13 +693,7 @@ function ExecuteWindowOperationsAction(ARemoteAddress: string; AWindowOperations
 begin
   Result := SendTextRequestToServer(ARemoteAddress + CRECmd_ExecuteWindowOperationsAction + '?' +
                                     CREParam_StackLevel + '=0' + '&' +   //use the main editor
-                                    'Operation' + '=' + IntToStr(Ord(AWindowOperationsOptions.Operation)) + '&' +
-                                    'NewX' + '=' + AWindowOperationsOptions.NewX + '&' +
-                                    'NewY' + '=' + AWindowOperationsOptions.NewY + '&' +
-                                    'NewWidth' + '=' + AWindowOperationsOptions.NewWidth + '&' +
-                                    'NewHeight' + '=' + AWindowOperationsOptions.NewHeight + '&' +
-                                    'NewPositionEnabled' + '=' + IntToStr(Ord(AWindowOperationsOptions.NewPositionEnabled)) + '&' +
-                                    'NewSizeEnabled' + '=' + IntToStr(Ord(AWindowOperationsOptions.NewSizeEnabled)),
+                                    GetWindowOperationsActionProperties(AWindowOperationsOptions),
                                     ACallAppProcMsg
                                     );
 end;

@@ -136,6 +136,7 @@ type
     procedure imgPreviewMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure imgPreviewMouseEnter(Sender: TObject);
     procedure imgPreviewMouseLeave(Sender: TObject);
+    procedure pnlPreviewMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
 
     function DoOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     function DoOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
@@ -402,9 +403,11 @@ begin
   TempPanel.Top := 0;
   TempPanel.Width := TempScrollBox.Width - 20;
   TempPanel.Height := TempScrollBox.Height - 20;
-  TempPanel.Anchors := [akLeft, akTop, akRight, akBottom];
+  //TempPanel.Anchors := [akLeft, akTop, akRight, akBottom];
   TempPanel.Color := $88FF88;
   TempPanel.Visible := True;
+  TempPanel.ShowHint := True;
+  TempPanel.OnMouseMove := pnlPreviewMouseMove;
 
   PreviewImage := TImage.Create(TempPanel);
   PreviewImage.Parent := TempPanel;
@@ -414,7 +417,7 @@ begin
   PreviewImage.Top := 0;
   PreviewImage.Width := TempPanel.Width;
   PreviewImage.Height := TempPanel.Height;
-  PreviewImage.Anchors := [akLeft, akTop, akRight, akBottom];
+  //PreviewImage.Anchors := [akLeft, akTop, akRight, akBottom];
   PreviewImage.AutoSize := False;
   PreviewImage.Transparent := False;
   PreviewImage.Visible := True;
@@ -478,6 +481,29 @@ begin
 end;
 
 
+procedure UpdatePreviewImageSizeFromPrimitives(APreviewImage: TImage; APreviewScrollBox: TScrollBox);
+var
+  TempPanel: TPanel;
+begin
+  if APreviewImage.Width <> APreviewImage.Picture.Bitmap.Width then
+    APreviewImage.Width := APreviewImage.Picture.Bitmap.Width;
+
+  if APreviewImage.Height <> APreviewImage.Picture.Bitmap.Height then
+    APreviewImage.Height := APreviewImage.Picture.Bitmap.Height;
+
+  TempPanel := APreviewImage.Parent as TPanel;
+  if TempPanel.Width <> APreviewImage.Picture.Bitmap.Width + 10 then
+    TempPanel.Width := APreviewImage.Picture.Bitmap.Width + 10;
+
+  if TempPanel.Height <> APreviewImage.Picture.Bitmap.Height + 10 then
+    TempPanel.Height := APreviewImage.Picture.Bitmap.Height + 10;
+
+  //APreviewScrollBox.UpdateScrollbars;  //useless
+  APreviewScrollBox.HorzScrollBar.Range := TempPanel.Width;
+  APreviewScrollBox.VertScrollBar.Range := TempPanel.Height;
+end;
+
+
 procedure TfrClickerPrimitives.CreateAllPreviewPages;
 var
   i: Integer;
@@ -487,6 +513,7 @@ begin
   for i := 0 to Length(FOrders) - 1 do
     AddPreviewTabWithImage(FOrders[i].Name);
 
+  RepaintAllCompositions;
   PageControlPreview.ActivePageIndex := 0;
 end;
 
@@ -498,7 +525,6 @@ var
   PmtvCompositor: TPrimitivesCompositor;
   UsingHighContrast: Boolean;
   TempScrollBox: TScrollBox;
-  TempPanel: TPanel;
 begin
   PmtvCompositor := TPrimitivesCompositor.Create;
   try
@@ -511,28 +537,12 @@ begin
     begin
       TempScrollBox := TScrollBox(PageControlPreview.Pages[i].Tag);
       PreviewImage := TImage(TempScrollBox.Tag);
-      TempPanel := PreviewImage.Parent as TPanel;
 
       PreviewImage.Picture.Bitmap.Width := PmtvCompositor.GetMaxX(PreviewImage.Picture.Bitmap.Canvas, FPrimitives) + 1;
       PreviewImage.Picture.Bitmap.Height := PmtvCompositor.GetMaxY(PreviewImage.Picture.Bitmap.Canvas, FPrimitives) + 1;
 
       PmtvCompositor.ComposePrimitives(PreviewImage.Picture.Bitmap, i, UsingHighContrast, FPrimitives, FOrders, FPrimitiveSettings);
-
-      if PreviewImage.Width <> PreviewImage.Picture.Bitmap.Width then
-        PreviewImage.Width := PreviewImage.Picture.Bitmap.Width;
-
-      if PreviewImage.Height <> PreviewImage.Picture.Bitmap.Height then
-        PreviewImage.Height := PreviewImage.Picture.Bitmap.Height;
-
-      if TempPanel.Width <> PreviewImage.Picture.Bitmap.Width then
-        TempPanel.Width := PreviewImage.Picture.Bitmap.Width;
-
-      if TempPanel.Height <> PreviewImage.Picture.Bitmap.Height then
-        TempPanel.Height := PreviewImage.Picture.Bitmap.Height;
-
-      //TempScrollBox.UpdateScrollbars;  //useless
-      TempScrollBox.HorzScrollBar.Range := TempPanel.Width;
-      TempScrollBox.VertScrollBar.Range := TempPanel.Height;
+      UpdatePreviewImageSizeFromPrimitives(PreviewImage, TempScrollBox);
     end;
   finally
     PmtvCompositor.Free;
@@ -1451,6 +1461,7 @@ procedure TfrClickerPrimitives.imgPreviewMouseLeave(Sender: TObject);
 var
   Idx: Integer;
   PreviewImage: TImage;
+  TempPanel: TPanel;
 begin
   Idx := PageControlPreview.ActivePageIndex;
   if Idx = -1 then
@@ -1463,6 +1474,17 @@ begin
 
   PreviewImage.ShowHint := True;
   HideZoom;
+
+  TempPanel := (PreviewImage.Parent as TPanel);
+  TempPanel.Hint := 'Image size: ' + IntToStr(PreviewImage.Width) + ' : ' + IntToStr(PreviewImage.Height) + #13#10 +
+                    'Bitmap size: ' + IntToStr(PreviewImage.Picture.Bitmap.Width) + ' : ' + IntToStr(PreviewImage.Picture.Bitmap.Height) + #13#10 +
+                    'Green panel size: ' + IntToStr(TempPanel.Width) + ' : ' + IntToStr(TempPanel.Height);
+end;
+
+
+procedure TfrClickerPrimitives.pnlPreviewMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+begin
+  lblMouseOnPreviewImg.Caption := IntToStr(X) + ' : ' + IntToStr(Y);
 end;
 
 
@@ -2199,6 +2221,28 @@ begin
                          'The image is identified by path and "stored" in a separate in-mem file system (not the same one used on client-server execution).';
                 AShowHint := True;
               end;
+
+              CImagePrimitive_Transparent_PropIndex:
+              begin
+                AHint := 'Set this to 1 or True, to have one of the colors as the transparency color.';
+                AShowHint := True;
+              end;
+
+              CImagePrimitive_TransparentMode_PropIndex:
+              begin
+                AHint := 'Set this to 0 or Auto, or 1 or Fixed.';
+                AShowHint := True;
+              end;
+
+              CImagePrimitive_TransparentColor_PropIndex:
+              begin
+                AHint := '6-digit hexa number (BGR), for a simple color, or 8-digit hexa number for a special system color.' + #13#10;
+                AHint := AHint + 'When using the value 20000000 (clDefault is a special system color), the transparency color is read from the bottom-left pixel of the image.' + #13#10;
+                AHint := AHint + 'Available special system colors: ' + #13#10;
+                AHint := AHint + '1FFFFFFF   (clNone)' + #13#10;
+                AHint := AHint + '20000000   (clDefault)';
+                AShowHint := True;
+              end;
             end; //case
           end; //if
         end; //item leve
@@ -2384,7 +2428,7 @@ end;
 
 procedure TfrClickerPrimitives.HandleOnOISelectedNode(NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex, Column: Integer; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 var
-  x1, x2, y1, y2: Integer;
+  x1, x2, y1, y2, cx, cy, r1, r2, rmax: Integer;
   PmtvType, i: Integer;
   TempText: string;
   TempBmp: TBitmap;
@@ -2475,6 +2519,25 @@ begin
                 finally
                   TempBmp.Free;
                 end;
+              end;
+
+              CClkDonutSector:
+              begin
+                r1 := StrToIntDef(DoOnEvaluateReplacementsFunc(FPrimitives[PropertyIndex].ClkDonutSector.Radius1), 30);
+                r2 := StrToIntDef(DoOnEvaluateReplacementsFunc(FPrimitives[PropertyIndex].ClkDonutSector.Radius2), 90);
+                cx := StrToIntDef(DoOnEvaluateReplacementsFunc(FPrimitives[PropertyIndex].ClkDonutSector.Cx), 100);
+                cy := StrToIntDef(DoOnEvaluateReplacementsFunc(FPrimitives[PropertyIndex].ClkDonutSector.Cy), 100);
+                rmax := Max(r1, r2);
+
+                x1 := cx - rmax;
+                x2 := cx + rmax;
+                y1 := cy - rmax;
+                y2 := cx + rmax;
+
+                FLeftLimitLabel_ForPrimitive.Left := x1;
+                FTopLimitLabel_ForPrimitive.Top := y1;
+                FRightLimitLabel_ForPrimitive.Left := x2;
+                FBottomLimitLabel_ForPrimitive.Top := y2;
               end;
             end;
           end;

@@ -92,6 +92,9 @@ begin
   APrimitive.ClkImage.Path := AIni.ReadString(ASectionIndex, 'Path', '');
   APrimitive.ClkImage.Stretch := AIni.ReadString(ASectionIndex, 'Stretch', '0');
   APrimitive.ClkImage.RenderedExternally := AIni.ReadString(ASectionIndex, 'RenderedExternally', '0');
+  APrimitive.ClkImage.Transparent := AIni.ReadString(ASectionIndex, 'Transparent', '0');
+  APrimitive.ClkImage.TransparentMode := AIni.ReadString(ASectionIndex, 'TransparentMode', '0');
+  APrimitive.ClkImage.TransparentColor := AIni.ReadString(ASectionIndex, 'TransparentColor', 'F0F0F0');
 end;
 
 
@@ -132,6 +135,23 @@ begin
 end;
 
 
+procedure Get_DonutSector_PrimitiveFromIni(AIni: TClkIniReadonlyFile; ASectionIndex: Integer; var APrimitive: TPrimitiveRec);
+begin
+  APrimitive.ClkDonutSector.Cx := AIni.ReadString(ASectionIndex, 'Cx', '100');
+  APrimitive.ClkDonutSector.Cy := AIni.ReadString(ASectionIndex, 'Cy', '100');
+  APrimitive.ClkDonutSector.Radius1 := AIni.ReadString(ASectionIndex, 'Radius1', '30');
+  APrimitive.ClkDonutSector.Radius2 := AIni.ReadString(ASectionIndex, 'Radius2', '90');
+  APrimitive.ClkDonutSector.PointCount := AIni.ReadString(ASectionIndex, 'PointCount', '40');
+  APrimitive.ClkDonutSector.StartAngle := AIni.ReadString(ASectionIndex, 'StartAngle', '-60');
+  APrimitive.ClkDonutSector.EndAngle := AIni.ReadString(ASectionIndex, 'EndAngle', '240');
+  APrimitive.ClkDonutSector.AngleSpacing := AIni.ReadString(ASectionIndex, 'AngleSpacing', '0');
+  APrimitive.ClkDonutSector.StartColorFG := AIni.ReadString(ASectionIndex, 'StartColorFG', '1FFFFFFF');
+  APrimitive.ClkDonutSector.EndColorFG := AIni.ReadString(ASectionIndex, 'EndColorFG', '1FFFFFFF');
+  APrimitive.ClkDonutSector.StartColorBG := AIni.ReadString(ASectionIndex, 'StartColorBG', '008080'); //clOlive;
+  APrimitive.ClkDonutSector.EndColorBG := AIni.ReadString(ASectionIndex, 'EndColorBG', '808000');  //clTeal;
+end;
+
+
 type
   TGetPrimitiveFromIni = procedure(AIni: TClkIniReadonlyFile; ASectionIndex: Integer; var APrimitive: TPrimitiveRec);
 
@@ -145,7 +165,8 @@ const
     @Get_Line_PrimitiveFromIni,
     @Get_Rect_PrimitiveFromIni,
     @Get_GradientFill_PrimitiveFromIni,
-    @Get_Text_PrimitiveFromIni
+    @Get_Text_PrimitiveFromIni,
+    @Get_DonutSector_PrimitiveFromIni
   );
 
 
@@ -253,6 +274,9 @@ begin
   AStringList.Add('Path=' + APrimitive.ClkImage.Path);
   AStringList.Add('Stretch=' + APrimitive.ClkImage.Stretch);
   AStringList.Add('RenderedExternally=' + APrimitive.ClkImage.RenderedExternally);
+  AStringList.Add('Transparent=' + APrimitive.ClkImage.Transparent);
+  AStringList.Add('TransparentMode=' + APrimitive.ClkImage.TransparentMode);
+  AStringList.Add('TransparentColor=' + APrimitive.ClkImage.TransparentColor);
 end;
 
 
@@ -293,6 +317,23 @@ begin
 end;
 
 
+procedure AddPrimitive_DonutSectorToStringList(var APrimitive: TPrimitiveRec; AStringList: TStringList);
+begin
+  AStringList.Add('Cx=' + APrimitive.ClkDonutSector.Cx);
+  AStringList.Add('Cy=' + APrimitive.ClkDonutSector.Cy);
+  AStringList.Add('Radius1=' + APrimitive.ClkDonutSector.Radius1);
+  AStringList.Add('Radius2=' + APrimitive.ClkDonutSector.Radius2);
+  AStringList.Add('PointCount=' + APrimitive.ClkDonutSector.PointCount);
+  AStringList.Add('StartAngle=' + APrimitive.ClkDonutSector.StartAngle);
+  AStringList.Add('EndAngle=' + APrimitive.ClkDonutSector.EndAngle);
+  AStringList.Add('AngleSpacing=' + APrimitive.ClkDonutSector.AngleSpacing);
+  AStringList.Add('StartColorFG=' + APrimitive.ClkDonutSector.StartColorFG);
+  AStringList.Add('EndColorFG=' + APrimitive.ClkDonutSector.EndColorFG);
+  AStringList.Add('StartColorBG=' + APrimitive.ClkDonutSector.StartColorBG);
+  AStringList.Add('EndColorBG=' + APrimitive.ClkDonutSector.EndColorBG);
+end;
+
+
 type
   TAddPrimitive_ToStringList = procedure(var APrimitive: TPrimitiveRec; AStringList: TStringList);
 
@@ -306,7 +347,8 @@ const
     @AddPrimitive_LineToStringList,
     @AddPrimitive_RectToStringList,
     @AddPrimitive_GradientFillToStringList,
-    @AddPrimitive_TextToStringList
+    @AddPrimitive_TextToStringList,
+    @AddPrimitive_DonutSectorToStringList
   );
 
 

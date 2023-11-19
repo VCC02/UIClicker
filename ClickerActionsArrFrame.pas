@@ -332,6 +332,7 @@ type
     function HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     function HandleOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     function HandleOnRenderBmpExternally(AFilename: string): string;
+    function HandleOnGetActionProperties(AActionName: string): PClkActionRec;
     procedure HandleOnGetListOfExternallyRenderedImages(AListOfExternallyRenderedImages: TStringList);
     procedure HandleOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
     procedure HandleOnSavePrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
@@ -678,11 +679,11 @@ begin
     TempFuncDescriptions.Add('$Sum(<op1>, <op2>)$=Adds two numbers.');
     TempFuncDescriptions.Add('$Diff(<op1>, <op2>)$=Subtracts two numbers.');
     TempFuncDescriptions.Add('$Mul(<op1>, <op2>)$=Multiplies two integer numbers. If only one operand is passed, the result is Sqr(<op>).');
-    TempFuncDescriptions.Add('$Div(<op1>, <op2>)$=Subtracts two integer numbers. If only one operand is passed, the result is Round(Sqrt(<op>)).');
+    TempFuncDescriptions.Add('$Div(<op1>, <op2>)$=Divides two integer numbers. If only one operand is passed, the result is Round(Sqrt(<op>)).');
     TempFuncDescriptions.Add('$FMul(<op1>, <op2>)$=Multiplies two double-precision numbers. If only one operand is passed, the result is Sqr(<op>).');
-    TempFuncDescriptions.Add('$FDiv(<op1>, <op2>)$=Subtracts two double-precision numbers. If only one operand is passed, the result is Sqrt(<op>).');
+    TempFuncDescriptions.Add('$FDiv(<op1>, <op2>)$=Divides two double-precision numbers. If only one operand is passed, the result is Sqrt(<op>).');
     TempFuncDescriptions.Add('$EFMul(<op1>, <op2>)$=Multiplies two extended-precision numbers. If only one operand is passed, the result is Sqr(<op>).');
-    TempFuncDescriptions.Add('$EFDiv(<op1>, <op2>)$=Subtracts two extended-precision numbers. If only one operand is passed, the result is Sqrt(<op>).');
+    TempFuncDescriptions.Add('$EFDiv(<op1>, <op2>)$=Divides two extended-precision numbers. If only one operand is passed, the result is Sqrt(<op>).');
     TempFuncDescriptions.Add('$Abs(<op>)$=Returns the absolute value of an integer number.');
     TempFuncDescriptions.Add('$FAbs(<op>)$=Returns the absolute value of a double-precision number.');
     TempFuncDescriptions.Add('$EFAbs(<op>)$=Returns the absolute value of an extended-precision number.');
@@ -719,7 +720,8 @@ begin
     TempFuncDescriptions.Add('$CRLF$=Returns a CRLF sequence.');
     TempFuncDescriptions.Add('$#4#5$=Returns a ASCII #4#5 sequence.');
     TempFuncDescriptions.Add('$Now$=Returns current datetime.');
-    TempFuncDescriptions.Add('$RenderBmpExternally(<ListOfParams>)$=Sends an http request to a server, for rendering a bitmap, using the supplied list of parameters. These parameters are encoded as a #4#5 separated <key>eq<value> strings. The required parameters are (without quotes): "' + CExtBmp_SrvAddrPort + '", "' + CExtBmp_Cmd + '", "' + CExtBmp_Filename + '". The optional parameters are (without quotes): "' + CExtBmp_Params + '" and "' + CExtBmp_IncludeFilenameInRequest + '". When provided, "' + CExtBmp_Params + '" are "&"-separated key%3Dvalue pairs. When "' + CExtBmp_IncludeFilenameInRequest + '" is 1, the filename is added to request. The result is placed in $ExternallyRenderedBmpResult$ variable. If successful, the function returns empty string, otherwise it returns an error. The received bitmap is "stored" in an in-mem file system.');
+    TempFuncDescriptions.Add('$RenderBmpExternally()$=Sends an http request to a server, for rendering a bitmap, using the supplied list of parameters (from right column of a SetVar action). These parameters are encoded as a #4#5 separated <key>eq<value> strings. The required parameters are (without quotes): "' + CExtBmp_SrvAddrPort + '", "' + CExtBmp_Cmd + '", "' + CExtBmp_Filename + '". The optional parameters are (without quotes): "' + CExtBmp_Params + '" and "' + CExtBmp_IncludeFilenameInRequest + '". When provided, "' + CExtBmp_Params + '" are "&"-separated key%3Dvalue pairs. When "' + CExtBmp_IncludeFilenameInRequest + '" is 1, the filename is added to request. The result is placed in $ExternallyRenderedBmpResult$ variable. If successful, the result is set to empty string, otherwise it is set to an error message. The received bitmap is "stored" in an in-mem file system. The function must be called from the left column of SetVar action.');
+    TempFuncDescriptions.Add('$GetActionProperties()$=Sets the $ActionPropertiesResult$ variable to an &-separated list of action properties and their values, from the current template. The action is identified by name, and this name has to be provided in the right column of a SetVar action. If the action is not found by name (which is case sensitive), the result is set to an error message. The function must be called from the left column.');
 
     for i := 0 to FFuncDescriptions.Count - 1 do
     begin
@@ -900,6 +902,7 @@ begin
   FActionExecution.OnLoadBitmap := HandleOnLoadBitmap; //both ActionExecution and frClickerActions use the same handler
   FActionExecution.OnLoadRenderedBitmap := HandleOnLoadRenderedBitmap;
   FActionExecution.OnRenderBmpExternally := HandleOnRenderBmpExternally;
+  FActionExecution.OnGetActionProperties := HandleOnGetActionProperties;
   FActionExecution.OnCallTemplate := HandleOnCallTemplate;
   FActionExecution.OnSetEditorSleepProgressBarMax := HandleOnSetEditorSleepProgressBarMax;
   FActionExecution.OnSetEditorSleepProgressBarPosition := HandleOnSetEditorSleepProgressBarPosition;
@@ -1007,6 +1010,20 @@ end;
 function TfrClickerActionsArr.HandleOnRenderBmpExternally(AFilename: string): string;
 begin
   Result := DoOnRenderBmpExternally(AFilename);
+end;
+
+
+function TfrClickerActionsArr.HandleOnGetActionProperties(AActionName: string): PClkActionRec;
+var
+  i: Integer;
+begin
+  Result := nil;
+  for i := 0 to Length(FClkActions) - 1 do
+    if FClkActions[i].ActionOptions.ActionName = AActionName then
+    begin
+      Result := @FClkActions[i];
+      Break;
+    end;
 end;
 
 

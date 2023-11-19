@@ -370,6 +370,7 @@ type
   TOnGetFindControlOptions = function: PClkFindControlOptions of object;
   TOnGetFindControlMatchBitmapText = function(Sender: TObject): PClkFindControlMatchBitmapText of object;
   TOnGetGridDrawingOption = function: TDisplayGridLineOption of object;
+  TOnGetActionProperties = function(AActionName: string): PClkActionRec of object;
 
 
 const

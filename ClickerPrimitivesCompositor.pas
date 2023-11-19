@@ -66,7 +66,7 @@ implementation
 
 
 uses
-  FPCanvas;
+  FPCanvas, Math;
 
 
 procedure ComposePrimitive_SetPen(Sender: TPrimitivesCompositor; ABmp: TBitmap; var APrimitive: TPrimitiveRec; AHighContrast: TColor = -1);
@@ -137,6 +137,12 @@ var
   TempRect: TRect;
   RenderedExternallyStr: string;
   RenderedExternally: Boolean;
+  TempTransparentStr: string;
+  TempTransparent: Boolean;
+  TempTransparentModeStr: string;
+  TempTransparentMode: TTransparentMode;
+  TempTransparentColorStr: string;
+  TempTransparentColor: TColor;
 begin
   ABmp.Canvas.Brush.Color := HexToInt(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetBrush.Color)); //TColor;
   ABmp.Canvas.Brush.Style := TBrushStyle(StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetBrush.Style), Ord(bsSolid))); //TFPBrushStyle;
@@ -158,12 +164,21 @@ begin
   RenderedExternallyStr := Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkImage.RenderedExternally);
   RenderedExternally := (RenderedExternallyStr = '1') or (UpperCase(RenderedExternallyStr) = 'TRUE');
 
+  TempTransparentStr := Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkImage.Transparent);
+  TempTransparent := (TempTransparentStr = '1') or (UpperCase(TempTransparentStr) = 'TRUE');
+
+  TempTransparentModeStr := Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkImage.TransparentMode);
+  TempTransparentMode := TTransparentMode(Ord((TempTransparentModeStr = '1') or (UpperCase(TempTransparentModeStr) = 'Fixed')));  //Auto = 0, Fixed = 1
+
+  TempTransparentColorStr := Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkImage.TransparentColor);
+  TempTransparentColor := HexToInt(TempTransparentColorStr);  //e.g. F0F0F0
+
   SrcBmp := TBitmap.Create;
   try
     SrcBmp.PixelFormat := pf24bit;
-    SrcBmp.Transparent := False;
-    SrcBmp.TransparentMode := tmFixed;
-    SrcBmp.TransparentColor := 1;
+    SrcBmp.Transparent := TempTransparent;
+    SrcBmp.TransparentMode := TempTransparentMode;
+    SrcBmp.TransparentColor := TempTransparentColor;
 
     if RenderedExternally then
       Sender.DoOnLoadRenderedBitmap(SrcBmp, SrcBitmapFnm)
@@ -284,6 +299,31 @@ begin
 end;
 
 
+procedure ComposePrimitive_DonutSector(Sender: TPrimitivesCompositor; ABmp: TBitmap; var APrimitive: TPrimitiveRec; AHighContrast: TColor = -1);
+var
+  TempCx, TempCy, TempRadius1, TempRadius2, TempPointCount: Integer;
+  TempStartAngle, TempEndAngle, TempAngleSpacing: Extended;
+  TempStartColorFG, TempEndColorFG, TempStartColorBG, TempEndColorBG: TColor;
+begin
+  TempCx := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkDonutSector.Cx), 100);
+  TempCy := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkDonutSector.Cy), 100);
+  TempRadius1 := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkDonutSector.Radius1), 30);
+  TempRadius2 := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkDonutSector.Radius2), 90);
+  TempPointCount := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkDonutSector.PointCount), 40);
+  TempStartAngle := StrToFloatDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkDonutSector.StartAngle), -60);
+  TempEndAngle := StrToFloatDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkDonutSector.EndAngle), 240);
+  TempAngleSpacing := StrToFloatDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkDonutSector.AngleSpacing), 0);
+  TempStartColorFG := HexToInt(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkDonutSector.StartColorFG));
+  TempEndColorFG := HexToInt(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkDonutSector.EndColorFG));
+  TempStartColorBG := HexToInt(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkDonutSector.StartColorBG));
+  TempEndColorBG := HexToInt(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkDonutSector.EndColorBG));
+
+  DrawDonutSector(ABmp.Canvas, TempCx, TempCy, TempRadius1, TempRadius2, TempPointCount,
+                  TempStartAngle, TempEndAngle, TempAngleSpacing,
+                  TempStartColorFG, TempEndColorFG, TempStartColorBG, TempEndColorBG);
+end;
+
+
 constructor TPrimitivesCompositor.Create;
 begin
   inherited Create;
@@ -335,7 +375,8 @@ const
     @ComposePrimitive_Line,
     @ComposePrimitive_Rect,
     @ComposePrimitive_GradientFill,
-    @ComposePrimitive_Text
+    @ComposePrimitive_Text,
+    @ComposePrimitive_DonutSector
   );
 
 
@@ -478,7 +519,7 @@ end;
 function TPrimitivesCompositor.GetMaxX(ADestCanvas: TCanvas; var APrimitives: TPrimitiveRecArr): Integer;
 var
   i: Integer;
-  X, W: Integer;
+  X, W, W2: Integer;
 begin
   Result := 0;
 
@@ -546,6 +587,17 @@ begin
         if Result < X then
           Result := X;
       end;
+
+      CClkDonutSector: // = 9
+      begin
+        X := StrToIntDef(DoOnEvaluateReplacementsFunc(APrimitives[i].ClkDonutSector.Cx), 10);
+        W := StrToIntDef(DoOnEvaluateReplacementsFunc(APrimitives[i].ClkDonutSector.Radius1), 30);
+        W2 := StrToIntDef(DoOnEvaluateReplacementsFunc(APrimitives[i].ClkDonutSector.Radius2), 90);
+        Inc(X, Max(W, W2) - 1);
+
+        if Result < X then
+          Result := X;
+      end;
     end;
   end;
 end;
@@ -554,7 +606,7 @@ end;
 function TPrimitivesCompositor.GetMaxY(ADestCanvas: TCanvas; var APrimitives: TPrimitiveRecArr): Integer;
 var
   i: Integer;
-  Y, H: Integer;
+  Y, H, H2: Integer;
 begin
   Result := 0;
 
@@ -618,6 +670,17 @@ begin
         Y := StrToIntDef(DoOnEvaluateReplacementsFunc(APrimitives[i].ClkText.Y), 10);
         H := ADestCanvas.TextHeight(DoOnEvaluateReplacementsFunc(APrimitives[i].ClkText.Text));
         Inc(Y, H - 1);
+
+        if Result < Y then
+          Result := Y;
+      end;
+
+      CClkDonutSector: // = 9
+      begin
+        Y := StrToIntDef(DoOnEvaluateReplacementsFunc(APrimitives[i].ClkDonutSector.Cy), 10);
+        H := StrToIntDef(DoOnEvaluateReplacementsFunc(APrimitives[i].ClkDonutSector.Radius1), 30);
+        H2 := StrToIntDef(DoOnEvaluateReplacementsFunc(APrimitives[i].ClkDonutSector.Radius2), 90);
+        Inc(Y, Max(H, H2) - 1);
 
         if Result < Y then
           Result := Y;

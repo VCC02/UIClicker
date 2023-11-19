@@ -61,6 +61,7 @@ function AvgTwoTrueColors(Color1, Color2: TColor): TColor;
 procedure AvgBitmapWithColor(ASrcBitmap, ADestBitmap: TBitmap; AColor: TColor; XOffset: Integer = -1; YOffset: Integer = -1; Width: Integer = -1; Height: Integer = -1); //if X, Y, W, H are specified, the function operates on that area only
 procedure AvgBitmapWithBitmap(ASrcABitmap, ASrcBBitmap, ADestBitmap: TBitmap; XOffset: Integer = -1; YOffset: Integer = -1; Width: Integer = -1; Height: Integer = -1);
 function BitmapsAreEqual(ASrcABitmap, ASrcBBitmap: TBitmap; AWidth, AHeight: Integer): Boolean;
+procedure GenerateGradientColors(AStartColor, AEndColor: TColor; APointCount: Integer; var AResult: TColorArr);
 procedure MakeImageContentTransparent(AImg: TImage);
 procedure WipeBitmap(ABitmap: TBitmap; NewWidth, NewHeight: Integer);
 procedure WipeImage(AImg: TImage; NewWidth, NewHeight: Integer);
@@ -284,6 +285,34 @@ begin
       Result := True;
       Break;
     end;
+  end;
+end;
+
+
+procedure GenerateGradientColors(AStartColor, AEndColor: TColor; APointCount: Integer; var AResult: TColorArr);
+var
+  i: Integer;
+  ColorScale: Extended;
+  StartColorR, StartColorG, StartColorB: SmallInt;
+  EndColorR, EndColorG, EndColorB: SmallInt;
+  DiffR, DiffG, DiffB: SmallInt;
+  ResR, ResG, ResB: SmallInt;
+begin
+  SysRedGreenBlue(AStartColor, StartColorR, StartColorG, StartColorB);
+  SysRedGreenBlue(AEndColor, EndColorR, EndColorG, EndColorB);
+  DiffR := StartColorR - EndColorR;
+  DiffG := StartColorG - EndColorG;
+  DiffB := StartColorB - EndColorB;
+
+  SetLength(AResult, APointCount);
+  for i := 0 to APointCount - 1 do
+  begin
+    ColorScale := i / APointCount;
+    ResR := Round(StartColorR - ColorScale * DiffR);
+    ResG := Round(StartColorG - ColorScale * DiffG);
+    ResB := Round(StartColorB - ColorScale * DiffB);
+
+    AResult[i] := RGBToColor(ResR, ResG, ResB);
   end;
 end;
 

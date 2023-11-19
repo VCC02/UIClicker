@@ -55,11 +55,12 @@ const
   CPropCountClkSetBrushPrimitive = 2;
   CPropCountClkSetMiscPrimitive = 1;
   CPropCountClkSetFontPrimitive = CPropCount_FindControlMatchBitmapText; //16;
-  CPropCountClkImagePrimitive = 7;
+  CPropCountClkImagePrimitive = 10;
   CPropCountClkLinePrimitive = 5;
   CPropCountClkRectPrimitive = 5;
   CPropCountClkGradientFillPrimitive = 7;
   CPropCountClkTextPrimitive = 3;
+  CPropCountClkDonutSectorPrimitive = 12;
 
   CClkPrimitivesTypeCounts: array[0..CPrimitiveTypeCount - 1] of Integer = (
     CPropCountClkSetPenPrimitive,
@@ -70,7 +71,8 @@ const
     CPropCountClkLinePrimitive,
     CPropCountClkRectPrimitive,
     CPropCountClkGradientFillPrimitive,
-    CPropCountClkTextPrimitive
+    CPropCountClkTextPrimitive,
+    CPropCountClkDonutSectorPrimitive
   );
 
 
@@ -119,7 +121,10 @@ const
     (Name: 'Y2'; EditorType: etSpinText),
     (Name: 'Path'; EditorType: etFilePathWithArrow),
     (Name: 'Stretch'; EditorType: etText),
-    (Name: 'RenderedExternally'; EditorType: etText)
+    (Name: 'RenderedExternally'; EditorType: etText),
+    (Name: 'Transparent'; EditorType: etText),
+    (Name: 'TransparentMode'; EditorType: etText),
+    (Name: 'TransparentColor'; EditorType: etText)
   );
 
   CLinePrimitiveProperties: array[0..CPropCountClkLinePrimitive - 1] of TOIPropDef = (
@@ -154,6 +159,21 @@ const
     (Name: 'Y'; EditorType: etSpinText)
   );
 
+  CDonutSectorPrimitiveProperties: array[0..CPropCountClkDonutSectorPrimitive - 1] of TOIPropDef = (
+    (Name: 'Cx'; EditorType: etSpinText),
+    (Name: 'Cy'; EditorType: etSpinText),
+    (Name: 'Radius1'; EditorType: etSpinText),
+    (Name: 'Radius2'; EditorType: etSpinText),
+    (Name: 'PointCount'; EditorType: etSpinText),
+    (Name: 'StartAngle'; EditorType: etSpinText),
+    (Name: 'EndAngle'; EditorType: etSpinText),
+    (Name: 'AngleSpacing'; EditorType: etSpinText),
+    (Name: 'StartColorFG'; EditorType: etColorCombo),
+    (Name: 'EndColorFG'; EditorType: etColorCombo),
+    (Name: 'StartColorBG'; EditorType: etColorCombo),
+    (Name: 'EndColorBG'; EditorType: etColorCombo)
+  );
+
   CSetPenPrimitive_Color_PropIndex = 0;
   CSetPenPrimitive_Style_PropIndex = 1;
   CSetPenPrimitive_Width_PropIndex = 2;
@@ -166,6 +186,9 @@ const
   CImagePrimitive_Path_PropIndex = 4;
   CImagePrimitive_Stretch_PropIndex = 5;
   CImagePrimitive_RenderedExternally_PropIndex = 6;
+  CImagePrimitive_Transparent_PropIndex = 7;
+  CImagePrimitive_TransparentMode_PropIndex = 8;
+  CImagePrimitive_TransparentColor_PropIndex = 9;
 
 
 type
@@ -183,7 +206,8 @@ const
     @CLinePrimitiveProperties,
     @CRectPrimitiveProperties,
     @CGradientFillPrimitiveProperties,
-    @CTextPrimitiveProperties
+    @CTextPrimitiveProperties,
+    @CDonutSectorPrimitiveProperties
   );
 
   CSettingsClkPropCount = 2;
@@ -200,6 +224,7 @@ const
   function GetPrimitiveValueStr_Rect(var APrimitive: TPrimitiveRec; APropertyIndex: Integer): string;
   function GetPrimitiveValueStr_GradientFill(var APrimitive: TPrimitiveRec; APropertyIndex: Integer): string;
   function GetPrimitiveValueStr_Text(var APrimitive: TPrimitiveRec; APropertyIndex: Integer): string;
+  function GetPrimitiveValueStr_DonutSector(var APrimitive: TPrimitiveRec; APropertyIndex: Integer): string;
 {$ENDIF}
 
 
@@ -213,6 +238,7 @@ const
   procedure SetPrimitiveValueStr_Rect(var APrimitive: TPrimitiveRec; NewValue: string; APropertyIndex: Integer);
   procedure SetPrimitiveValueStr_GradientFill(var APrimitive: TPrimitiveRec; NewValue: string; APropertyIndex: Integer);
   procedure SetPrimitiveValueStr_Text(var APrimitive: TPrimitiveRec; NewValue: string; APropertyIndex: Integer);
+  procedure SetPrimitiveValueStr_DonutSector(var APrimitive: TPrimitiveRec; NewValue: string; APropertyIndex: Integer);
 {$ENDIF}
 
 
@@ -225,6 +251,7 @@ procedure FillInDefaultValuesToPrimitive_Line(var APrimitive: TPrimitiveRec);
 procedure FillInDefaultValuesToPrimitive_Rect(var APrimitive: TPrimitiveRec);
 procedure FillInDefaultValuesToPrimitive_GradientFill(var APrimitive: TPrimitiveRec);
 procedure FillInDefaultValuesToPrimitive_Text(var APrimitive: TPrimitiveRec);
+procedure FillInDefaultValuesToPrimitive_DonutSector(var APrimitive: TPrimitiveRec);
 
 
 type
@@ -242,7 +269,8 @@ const
     @FillInDefaultValuesToPrimitive_Line,
     @FillInDefaultValuesToPrimitive_Rect,
     @FillInDefaultValuesToPrimitive_GradientFill,
-    @FillInDefaultValuesToPrimitive_Text
+    @FillInDefaultValuesToPrimitive_Text,
+    @FillInDefaultValuesToPrimitive_DonutSector
   );
 
 
@@ -255,7 +283,8 @@ const
     @GetPrimitiveValueStr_Line,
     @GetPrimitiveValueStr_Rect,
     @GetPrimitiveValueStr_GradientFill,
-    @GetPrimitiveValueStr_Text
+    @GetPrimitiveValueStr_Text,
+    @GetPrimitiveValueStr_DonutSector
   );
 
 
@@ -268,7 +297,8 @@ const
     @SetPrimitiveValueStr_Line,
     @SetPrimitiveValueStr_Rect,
     @SetPrimitiveValueStr_GradientFill,
-    @SetPrimitiveValueStr_Text
+    @SetPrimitiveValueStr_Text,
+    @SetPrimitiveValueStr_DonutSector
   );
 
 const
@@ -317,7 +347,10 @@ const
     0,  //Y2: string;
     0,  //Path: string; //path to a bmp (or png) file, which will be part of the composition
     0,  //Stretch: string; //Boolean
-    0   //RenderedExternally: string; //Boolean
+    0,  //RenderedExternally: string; //Boolean
+    0,  //Transparent: string; //
+    0,  //TransparentMode: string; //
+    0   //TransparentColor: string; //hexa
   );
 
   CLineEnumCounts: array[0..CPropCountClkLinePrimitive - 1] of Integer = (
@@ -352,6 +385,21 @@ const
     0   //Y: string;
   );
 
+  CDonutSectorEnumCounts: array[0..CPropCountClkDonutSectorPrimitive - 1] of Integer = (
+    0,  //Cx: string;          // Integer;
+    0,  //Cy: string;          // Integer;
+    0,  //Radius1: string;     // Integer;
+    0,  //Radius2: string;     // Integer;
+    0,  //PointCount: string;  // Integer;
+    0,  //StartAngle: string;  // Extended;
+    0,  //EndAngle: string;    // Extended;
+    0,  //AngleSpacing: string;// Extended;
+    0,  //StartColorFG: string;// TColor
+    0,  //EndColorFG: string;  // TColor
+    0,  //StartColorBG: string;// TColor
+    0   //EndColorBG: string;  // TColor
+  );
+
 
   CPrimitivesPropEnumCounts: array[0..CPrimitiveTypeCount - 1] of PArrayOfEnumCounts = (
     @CSetPenEnumCounts,
@@ -362,7 +410,8 @@ const
     @CLineEnumCounts,
     @CRectEnumCounts,
     @CGradientFillEnumCounts,
-    @CTextEnumCounts
+    @CTextEnumCounts,
+    @CDonutSectorEnumCounts
   );
 
 
@@ -411,7 +460,10 @@ const
     nil, //Y2: string;
     nil, //Path: string; //path to a bmp (or png) file, which will be part of the composition
     nil, //Stretch: string; //Boolean
-    nil  //RenderedExternally: string; //Boolean
+    nil, //RenderedExternally: string; //Boolean
+    nil, //Transparent: string; //
+    nil, //TransparentMode: string; //
+    nil  //TransparentColor: string; //
   );
 
   CLineEnumStrings: array[0..CPropCountClkLinePrimitive - 1] of PArrayOfString = (
@@ -443,9 +495,23 @@ const
   CTextEnumStrings: array[0..CPropCountClkTextPrimitive - 1] of PArrayOfString = (
     nil, //Text: string;
     nil, //X: string;
-    nil //Y: string;
+    nil  //Y: string;
   );
 
+  CDonutSectorEnumStrings: array[0..CPropCountClkDonutSectorPrimitive - 1] of PArrayOfString = (
+    nil, //Cx: string;          // Integer;
+    nil, //Cy: string;          // Integer;
+    nil, //Radius1: string;     // Integer;
+    nil, //Radius2: string;     // Integer;
+    nil, //PointCount: string;  // Integer;
+    nil, //StartAngle: string;  // Extended;
+    nil, //EndAngle: string;    // Extended;
+    nil, //AngleSpacing: string;// Extended;
+    nil, //StartColorFG: string;// TColor
+    nil, //EndColorFG: string;  // TColor
+    nil, //StartColorBG: string;// TColor
+    nil  //EndColorBG: string;  // TColor
+  );
 
   CPrimitivesPropEnumStrings: array[0..CPrimitiveTypeCount - 1] of PArrayOfEnumStrings = (
     @CSetPenEnumStrings,
@@ -456,7 +522,8 @@ const
     @CLineEnumStrings,
     @CRectEnumStrings,
     @CGradientFillEnumStrings,
-    @CTextEnumStrings
+    @CTextEnumStrings,
+    @CDonutSectorEnumStrings
   );
 
 
@@ -550,6 +617,9 @@ implementation
       4: Result := APrimitive.ClkImage.Path;
       5: Result := APrimitive.ClkImage.Stretch;
       6: Result := APrimitive.ClkImage.RenderedExternally;
+      7: Result := APrimitive.ClkImage.Transparent;
+      8: Result := APrimitive.ClkImage.TransparentMode;
+      9: Result := APrimitive.ClkImage.TransparentColor;
       else
         Result := 'unknown';
     end;
@@ -606,6 +676,27 @@ implementation
       0: Result := APrimitive.ClkText.Text;
       1: Result := APrimitive.ClkText.X;
       2: Result := APrimitive.ClkText.Y;
+      else
+        Result := 'unknown';
+    end;
+  end;
+
+
+  function GetPrimitiveValueStr_DonutSector(var APrimitive: TPrimitiveRec; APropertyIndex: Integer): string;
+  begin
+    case APropertyIndex of
+      0: Result := APrimitive.ClkDonutSector.Cx;
+      1: Result := APrimitive.ClkDonutSector.Cy;
+      2: Result := APrimitive.ClkDonutSector.Radius1;
+      3: Result := APrimitive.ClkDonutSector.Radius2;
+      4: Result := APrimitive.ClkDonutSector.PointCount;
+      5: Result := APrimitive.ClkDonutSector.StartAngle;
+      6: Result := APrimitive.ClkDonutSector.EndAngle;
+      7: Result := APrimitive.ClkDonutSector.AngleSpacing;
+      8: Result := APrimitive.ClkDonutSector.StartColorFG;
+      9: Result := APrimitive.ClkDonutSector.EndColorFG;
+      10: Result := APrimitive.ClkDonutSector.StartColorBG;
+      11: Result := APrimitive.ClkDonutSector.EndColorBG;
       else
         Result := 'unknown';
     end;
@@ -686,6 +777,9 @@ implementation
       4: APrimitive.ClkImage.Path := NewValue;
       5: APrimitive.ClkImage.Stretch := NewValue;
       6: APrimitive.ClkImage.RenderedExternally := NewValue;
+      7: APrimitive.ClkImage.Transparent := NewValue;
+      8: APrimitive.ClkImage.TransparentMode := NewValue;
+      9: APrimitive.ClkImage.TransparentColor := NewValue;
       else
         ;
     end;
@@ -746,6 +840,27 @@ implementation
         ;
     end;
   end;
+
+
+  procedure SetPrimitiveValueStr_DonutSector(var APrimitive: TPrimitiveRec; NewValue: string; APropertyIndex: Integer);
+  begin
+    case APropertyIndex of
+      0: APrimitive.ClkDonutSector.Cx := NewValue;
+      1: APrimitive.ClkDonutSector.Cy := NewValue;
+      2: APrimitive.ClkDonutSector.Radius1 := NewValue;
+      3: APrimitive.ClkDonutSector.Radius2 := NewValue;
+      4: APrimitive.ClkDonutSector.PointCount := NewValue;
+      5: APrimitive.ClkDonutSector.StartAngle := NewValue;
+      6: APrimitive.ClkDonutSector.EndAngle := NewValue;
+      7: APrimitive.ClkDonutSector.AngleSpacing := NewValue;
+      8: APrimitive.ClkDonutSector.StartColorFG := NewValue;
+      9: APrimitive.ClkDonutSector.EndColorFG := NewValue;
+      10: APrimitive.ClkDonutSector.StartColorBG := NewValue;
+      11: APrimitive.ClkDonutSector.EndColorBG := NewValue;
+      else
+        ;
+    end;
+  end;
 {$ENDIF}
 
 
@@ -800,6 +915,9 @@ begin
   APrimitive.ClkImage.Path := '';
   APrimitive.ClkImage.Stretch := '0';
   APrimitive.ClkImage.RenderedExternally := '0';
+  APrimitive.ClkImage.Transparent := '0';
+  APrimitive.ClkImage.TransparentMode := '0';
+  APrimitive.ClkImage.TransparentColor := 'F0F0F0';
 end;
 
 
@@ -840,6 +958,23 @@ begin
   APrimitive.ClkText.Text := '';
   APrimitive.ClkText.X := '50';
   APrimitive.ClkText.Y := '60';
+end;
+
+
+procedure FillInDefaultValuesToPrimitive_DonutSector(var APrimitive: TPrimitiveRec);
+begin
+  APrimitive.ClkDonutSector.Cx := '100';
+  APrimitive.ClkDonutSector.Cy := '100';
+  APrimitive.ClkDonutSector.Radius1 := '30';
+  APrimitive.ClkDonutSector.Radius2 := '90';
+  APrimitive.ClkDonutSector.PointCount := '40';
+  APrimitive.ClkDonutSector.StartAngle := '-60.2';
+  APrimitive.ClkDonutSector.EndAngle := '240.2';
+  APrimitive.ClkDonutSector.AngleSpacing := '0.01';
+  APrimitive.ClkDonutSector.StartColorFG := '1FFFFFFF';
+  APrimitive.ClkDonutSector.EndColorFG := '1FFFFFFF';
+  APrimitive.ClkDonutSector.StartColorBG := '008080'; //clOlive;
+  APrimitive.ClkDonutSector.EndColorBG := '808000'; //clTeal;
 end;
 
 end.

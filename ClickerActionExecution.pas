@@ -67,6 +67,7 @@ type
     FOnLoadBitmap: TOnLoadBitmap;
     FOnLoadRenderedBitmap: TOnLoadRenderedBitmap;
     FOnRenderBmpExternally: TOnRenderBmpExternally;
+    FOnGetActionProperties: TOnGetActionProperties;
     FOnWaitForBitmapsAvailability: TOnWaitForBitmapsAvailability;
     FOnCallTemplate: TOnCallTemplate;
     FOnSetEditorSleepProgressBarMax: TOnSetEditorTimeoutProgressBarMax;
@@ -84,6 +85,7 @@ type
     procedure PrependErrorMessageToActionVar(NewErrMsg: string);
     function EvaluateHTTP(AValue: string): string;
     procedure PreviewTextOnBmp(var AFindControlOptions: TClkFindControlOptions; AEvaluatedText: string; AProfileIndex: Integer; ASearchedBmp: TBitmap);
+    function GetActionProperties(AActionName: string): string;
 
     procedure AddToLog(s: string);
 
@@ -99,6 +101,7 @@ type
     function DoOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     function DoOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     function DoOnRenderBmpExternally(ARequest: string): string;
+    function DoOnGetActionProperties(AActionName: string): PClkActionRec;
     procedure DoOnWaitForBitmapsAvailability(AListOfFiles: TStringList);
     procedure DoOnSetEditorSleepProgressBarMax(AMaxValue: Integer);
     procedure DoOnSetEditorSleepProgressBarPosition(APositionValue: Integer);
@@ -155,6 +158,7 @@ type
     property OnLoadBitmap: TOnLoadBitmap write FOnLoadBitmap;
     property OnLoadRenderedBitmap: TOnLoadRenderedBitmap write FOnLoadRenderedBitmap;
     property OnRenderBmpExternally: TOnRenderBmpExternally write FOnRenderBmpExternally;
+    property OnGetActionProperties: TOnGetActionProperties write FOnGetActionProperties;
     property OnWaitForBitmapsAvailability: TOnWaitForBitmapsAvailability write FOnWaitForBitmapsAvailability;
     property OnCallTemplate: TOnCallTemplate write FOnCallTemplate;
     property OnSetEditorSleepProgressBarMax: TOnSetEditorTimeoutProgressBarMax write FOnSetEditorSleepProgressBarMax;
@@ -177,7 +181,7 @@ uses
   {$ELSE}
     Process,
   {$ENDIF}
-  ControlInteraction, IdHTTP, ClickerPrimitivesCompositor;
+  ControlInteraction, IdHTTP, ClickerPrimitivesCompositor, ClickerActionProperties;
 
 
 constructor TActionExecution.Create;
@@ -199,6 +203,7 @@ begin
   FOnLoadBitmap := nil;
   FOnLoadRenderedBitmap := nil;
   FOnRenderBmpExternally := nil;
+  FOnGetActionProperties := nil;
   FOnWaitForBitmapsAvailability := nil;
   FOnCallTemplate := nil;
   FOnSetEditorSleepProgressBarMax := nil;
@@ -421,6 +426,45 @@ begin
 end;
 
 
+function TActionExecution.GetActionProperties(AActionName: string): string;
+var
+  Action: PClkActionRec;
+begin
+  Action := DoOnGetActionProperties(AActionName);
+  if Action = nil then
+  begin
+    Result := 'Action name not found.';
+    Exit;
+  end;
+
+  case Action^.ActionOptions.Action of
+    acClick:
+      Result := GetClickActionProperties(Action.ClickOptions);
+
+    acExecApp:
+      Result := GetExecAppActionProperties(Action.ExecAppOptions);
+
+    acFindControl, acFindSubControl:
+      Result := GetFindControlActionProperties(Action.FindControlOptions);
+
+    acSetControlText:
+      Result := GetSetControlTextActionProperties(Action.SetTextOptions);
+
+    acCallTemplate:
+      Result := GetCallTemplateActionProperties(Action.CallTemplateOptions);
+
+    acSleep:
+      Result := GetSleepActionProperties(Action.SleepOptions);
+
+    acSetVar:
+      Result := GetSetVarActionProperties(Action.SetVarOptions);
+
+    acWindowOperations:
+      Result := GetWindowOperationsActionProperties(Action.WindowOperationsOptions);
+  end;
+end;
+
+
 procedure TActionExecution.AddToLog(s: string);
 begin
   if not Assigned(FOnAddToLog) then
@@ -495,6 +539,15 @@ begin
     Result := FOnRenderBmpExternally(ARequest)
   else
     raise Exception.Create('OnRenderBmpExternally is not assigned.');
+end;
+
+
+function TActionExecution.DoOnGetActionProperties(AActionName: string): PClkActionRec;
+begin
+  if Assigned(FOnGetActionProperties) then
+    Result := FOnGetActionProperties(AActionName)
+  else
+    raise Exception.Create('OnGetActionProperties is not assigned.');
 end;
 
 
@@ -2056,6 +2109,9 @@ begin
       if (Pos('$RenderBmpExternally(', VarName) = 1) and (VarName[Length(VarName)] = '$') and (VarName[Length(VarName) - 1] = ')') then
         SetActionVarValue('$ExternallyRenderedBmpResult$', DoOnRenderBmpExternally(VarValue));
 
+      if (Pos('$GetActionProperties(', VarName) = 1) and (VarName[Length(VarName)] = '$') and (VarName[Length(VarName) - 1] = ')') then
+        SetActionVarValue('$ActionPropertiesResult$', GetActionProperties(VarValue));
+
       SetActionVarValue(VarName, VarValue);
     end;
   finally
@@ -2222,6 +2278,9 @@ begin
     ClickOptions.YOffsetDest := AListOfClickOptionsParams.Values['YOffsetDest'];
     ClickOptions.MouseWheelType := TMouseWheelType(Temp_MouseWheelType);
     ClickOptions.MouseWheelAmount := AListOfClickOptionsParams.Values['MouseWheelAmount'];
+    ClickOptions.DelayAfterMovingToDestination := AListOfClickOptionsParams.Values['DelayAfterMovingToDestination'];
+    ClickOptions.DelayAfterMouseDown := AListOfClickOptionsParams.Values['DelayAfterMouseDown'];
+    ClickOptions.MoveDuration := AListOfClickOptionsParams.Values['MoveDuration'];
 
     Result := ExecuteMultiClickAction(ClickOptions);
   finally

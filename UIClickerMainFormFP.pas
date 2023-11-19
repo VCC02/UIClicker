@@ -111,7 +111,8 @@ implementation
   - Set default value for the new field when adding a new action (from palette)  - see TfrClickerActionsArr.FPaletteVsMouseUp
   - In ClickerActonsArrFrame.pas, update action settings  (see UpdateActionsArrFromControls and UpdateControlsFromActionsArr) if required
   - In ClickerTemplates.pas, add new field (Load and Save). If the actions is FindControl or FindSubControl, the field has to be added to CopyActionContent, as well.
-  - In ActionExecution.pas, handle the new field, including Execute<ActionName>ActionAsString function
+  - In ActionExecution.pas, handle the new field.
+  - In ClickerActionProperties.pas, handle the new field.
   - In ClickerActionsFrame.pas, add new icon to the "imglst*" image list for that action.
   - In ClickerActionsFrame.pas, Add menu, hint, (and custom editors, if required). Some properties may have to be grayed-out depending on other properties (see HandleOnOIPaintText).
   - In ClickerActionsClient.pas, add the new field

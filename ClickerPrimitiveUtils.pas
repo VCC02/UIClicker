@@ -63,6 +63,9 @@ type
     Path: string; //path to a bmp (or png) file, which will be part of the composition
     Stretch: string; //Boolean
     RenderedExternally: string; //Boolean;
+    Transparent: string; //Boolean;
+    TransparentMode: string; //Auto or Fixed
+    TransparentColor: string; //BGR (6-digit hexa)
   end;
 
   TClkLine = record
@@ -98,6 +101,21 @@ type
     //Evaluate: Boolean;  //Add this field if ever needed. Otherwise, the text is automatically evaluated. (i.e. all replacements in "Text" are evaluated to their values)
   end;
 
+  TClkDonutSector = record
+    Cx: string;          // Integer;
+    Cy: string;          // Integer;
+    Radius1: string;     // Integer;
+    Radius2: string;     // Integer;
+    PointCount: string;  // Integer;
+    StartAngle: string;  // Extended;
+    EndAngle: string;    // Extended;
+    AngleSpacing: string;// Extended;
+    StartColorFG: string;// TColor
+    EndColorFG: string;  // TColor
+    StartColorBG: string;// TColor
+    EndColorBG: string;  // TColor
+  end;
+
 
 const
   CClkSetPenPrimitiveCmdIdx = 0;
@@ -109,7 +127,7 @@ const
   CClkRectPrimitiveCmdIdx = 6;
   CClkGradientFill = 7;
   CClkText = 8;
-
+  CClkDonutSector = 9;
 
 
 type
@@ -133,6 +151,7 @@ type
     ClkRect: TClkRect;
     ClkGradientFill: TClkGradientFill;
     ClkText: TClkText;
+    ClkDonutSector: TClkDonutSector;
   end;
 
   PPrimitiveRec = ^TPrimitiveRec;
@@ -151,9 +170,9 @@ type
 
 
 const
-  CPrimitiveTypeCount = 9;
+  CPrimitiveTypeCount = 10;
   CPrimitiveNames: array[0..CPrimitiveTypeCount - 1] of string = (
-    'SetPen', 'SetBrush', 'SetMisc', 'SetFont', 'Image', 'Line', 'Rect', 'GradientFill', 'Text');
+    'SetPen', 'SetBrush', 'SetMisc', 'SetFont', 'Image', 'Line', 'Rect', 'GradientFill', 'Text', 'DonutSector');
 
   CPenStyleStr: array[TPenStyle] of string = ('psSolid', 'psDash', 'psDot', 'psDashDot', 'psDashDotDot', 'psinsideFrame', 'psPattern', 'psClear');
   CPenModeStr: array[TPenMode] of string = (
@@ -185,8 +204,14 @@ function PenJoinStyleNameToIndex(AName: string): TPenJoinStyle;
 function BrushStyleNameToIndex(AName: string): TBrushStyle;
 function CompositorDirectionToIndex(AName: string): TCompositorDirection;
 
+procedure DrawDonutSector(ACanvas: TCanvas; ACx, ACy, Radius1, Radius2, APointCount: Integer; AStartAngle, AEndAngle, AAngleSpacing: Extended; AStartColorFG, AEndColorFG, AStartColorBG, AEndColorBG: TColor);
+
 
 implementation
+
+
+uses
+  BitmapProcessing, Math;
 
 
 function PrimitiveTypeNameToIndex(AName: string): Integer;
@@ -284,6 +309,54 @@ begin
       Result := i;
       Break;
     end;
+end;
+
+                                                                                                    //degrees
+procedure DrawDonutSector(ACanvas: TCanvas; ACx, ACy, Radius1, Radius2, APointCount: Integer; AStartAngle, AEndAngle, AAngleSpacing: Extended; AStartColorFG, AEndColorFG, AStartColorBG, AEndColorBG: TColor);
+var
+  ZonePoints: array of TPoint;   //4 points
+  FGColors, BGColors: TColorArr;
+  CurrentAngle, NextAngle, AngleDiff: Extended;
+  CosCAng, CosNAng, SinCAng, SinNAng: Extended;
+  i: Integer;
+begin
+  SetLength(ZonePoints, 4); //two points on Radius1 and two points on Radius2
+  SetLength(FGColors, APointCount);
+  SetLength(BGColors, APointCount);
+
+  GenerateGradientColors(AStartColorFG, AEndColorFG, APointCount, FGColors);
+  GenerateGradientColors(AStartColorBG, AEndColorBG, APointCount, BGColors);
+
+  AngleDiff := DegToRad(AEndAngle - AStartAngle);
+
+  if (AStartColorFG = clNone) and (AEndColorFG = clNone) then
+    ACanvas.Pen.Style := psClear;
+
+  for i := 0 to APointCount - 1 do
+  begin
+    ACanvas.Pen.Color := FGColors[i];
+    ACanvas.Brush.Color := BGColors[i];
+
+    CurrentAngle := DegToRad(AStartAngle) + (i / APointCount) * AngleDiff;
+    NextAngle := DegToRad(AStartAngle - AAngleSpacing) + ((i + 1) / APointCount) * AngleDiff;
+
+    CosCAng := Cos(CurrentAngle);
+    CosNAng := Cos(NextAngle);
+    SinCAng := Sin(CurrentAngle);
+    SinNAng := Sin(NextAngle);
+
+    ZonePoints[0].X := ACx + Round(Radius1 * CosCAng);
+    ZonePoints[1].X := ACx + Round(Radius2 * CosCAng);
+    ZonePoints[2].X := ACx + Round(Radius2 * CosNAng);
+    ZonePoints[3].X := ACx + Round(Radius1 * CosNAng);
+
+    ZonePoints[0].Y := ACy - Round(Radius1 * SinCAng);
+    ZonePoints[1].Y := ACy - Round(Radius2 * SinCAng);
+    ZonePoints[2].Y := ACy - Round(Radius2 * SinNAng);
+    ZonePoints[3].Y := ACy - Round(Radius1 * SinNAng);
+
+    ACanvas.Polygon(ZonePoints);
+  end;
 end;
 
 
