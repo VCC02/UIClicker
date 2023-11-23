@@ -308,6 +308,8 @@ type
     FOnGetPictureOpenDialogFileName: TOnGetPictureOpenDialogFileName;
 
     FOnGetGridDrawingOption: TOnGetGridDrawingOption;
+    FOnGetFontFinderSettings: TOnRWFontFinderSettings;
+    FOnSetFontFinderSettings: TOnRWFontFinderSettings;
 
     vstActions: TVirtualStringTree;
     FPalette: TfrClickerActionsPalette;
@@ -352,8 +354,10 @@ type
     function HandleOnPictureOpenDialogExecute: Boolean;
     function HandleOnGetPictureOpenDialogFileName: string;
 
-    function HandleOnExecuteFindSubControlAction(AErrorLevel, AErrorCount, AFastSearchErrorCount: Integer; out AFoundArea: TRect): Boolean;
+    function HandleOnExecuteFindSubControlAction(AErrorLevel, AErrorCount, AFastSearchErrorCount: Integer; AFontName: string; AFontSize: Integer; out AFoundArea: TRect): Boolean;
     procedure HandleOnAddToLog(s: string);
+    procedure HandleOnGetFontFinderSettings(var AFontFinderSettings: TFontFinderSettings);
+    procedure HandleOnSetFontFinderSettings(var AFontFinderSettings: TFontFinderSettings);
 
     function GetInMemFS: TInMemFileSystem;
     procedure SetInMemFS(Value: TInMemFileSystem);
@@ -431,6 +435,8 @@ type
     function DoOnGetPictureOpenDialogFileName: string;
 
     function DoOnGetGridDrawingOption: TDisplayGridLineOption;
+    procedure DoOnGetFontFinderSettings(var AFontFinderSettings: TFontFinderSettings);
+    procedure DoOnSetFontFinderSettings(var AFontFinderSettings: TFontFinderSettings);
 
     function PlayActionByNode(Node: PVirtualNode): Boolean;
     procedure PlaySelected;
@@ -556,6 +562,8 @@ type
     property OnGetPictureOpenDialogFileName: TOnGetPictureOpenDialogFileName write FOnGetPictureOpenDialogFileName;
 
     property OnGetGridDrawingOption: TOnGetGridDrawingOption write FOnGetGridDrawingOption;
+    property OnGetFontFinderSettings: TOnRWFontFinderSettings write FOnGetFontFinderSettings;
+    property OnSetFontFinderSettings: TOnRWFontFinderSettings write FOnSetFontFinderSettings;
   end;
 
 
@@ -780,6 +788,9 @@ begin
 
   frClickerActions.OnExecuteFindSubControlAction := HandleOnExecuteFindSubControlAction;
   frClickerActions.OnAddToLog := HandleOnAddToLog;
+  frClickerActions.OnGetFontFinderSettings := HandleOnGetFontFinderSettings;
+  frClickerActions.OnSetFontFinderSettings := HandleOnSetFontFinderSettings;
+
   //frClickerActions.OnControlsModified := ClickerActionsFrameOnControlsModified;   //this is set on frame initialization
 
   vstActions := TVirtualStringTree.Create(Self);
@@ -941,6 +952,8 @@ begin
   FOnGetPictureOpenDialogFileName := nil;
 
   FOnGetGridDrawingOption := nil;
+  FOnGetFontFinderSettings := nil;
+  FOnSetFontFinderSettings := nil;
 
   FPalette := nil;
 
@@ -1200,11 +1213,14 @@ begin
 end;
 
 
-function TfrClickerActionsArr.HandleOnExecuteFindSubControlAction(AErrorLevel, AErrorCount, AFastSearchErrorCount: Integer; out AFoundArea: TRect): Boolean;
+function TfrClickerActionsArr.HandleOnExecuteFindSubControlAction(AErrorLevel, AErrorCount, AFastSearchErrorCount: Integer; AFontName: string; AFontSize: Integer; out AFoundArea: TRect): Boolean;
 var
   VarsBkp: string;
   Node: PVirtualNode;
   BkpErrorLevel, BkpErrorCount, BkpFastSearchErrorCount: string;
+  BkpFontNames: TStringArray;
+  BkpFontSizes: TIntArr;
+  i: Integer;
 begin
   Node := vstActions.GetFirstSelected;
   if Node = nil then
@@ -1214,10 +1230,26 @@ begin
   BkpErrorLevel := FClkActions[Node^.Index].FindControlOptions.ColorError;
   BkpErrorCount := FClkActions[Node^.Index].FindControlOptions.AllowedColorErrorCount;
   BkpFastSearchErrorCount := FClkActions[Node^.Index].FindControlOptions.FastSearchAllowedColorErrorCount;
+
+  SetLength(BkpFontNames, Length(FClkActions[Node^.Index].FindControlOptions.MatchBitmapText));
+  SetLength(BkpFontSizes, Length(FClkActions[Node^.Index].FindControlOptions.MatchBitmapText));
+  for i := 0 to Length(BkpFontNames) - 1 do
+  begin
+    BkpFontNames[i] := FClkActions[Node^.Index].FindControlOptions.MatchBitmapText[i].FontName;
+    BkpFontSizes[i] := FClkActions[Node^.Index].FindControlOptions.MatchBitmapText[i].FontSize;
+  end;
+
   try
     FClkActions[Node^.Index].FindControlOptions.ColorError := IntToStr(AErrorLevel);
     FClkActions[Node^.Index].FindControlOptions.AllowedColorErrorCount := IntToStr(AErrorCount);
     FClkActions[Node^.Index].FindControlOptions.FastSearchAllowedColorErrorCount := IntToStr(AFastSearchErrorCount);
+
+    if (AFontName <> '') and (AFontSize <> -1) then
+      for i := 0 to Length(BkpFontNames) - 1 do
+      begin
+        FClkActions[Node^.Index].FindControlOptions.MatchBitmapText[i].FontName := AFontName;
+        FClkActions[Node^.Index].FindControlOptions.MatchBitmapText[i].FontSize := AFontSize;
+      end;
 
     FDebugging := False;  /////////////////////// to be verified if this will throw the debugger into a bad state
     PrepareFilesInServer;
@@ -1242,6 +1274,12 @@ begin
     FClkActions[Node^.Index].FindControlOptions.ColorError := BkpErrorLevel;
     FClkActions[Node^.Index].FindControlOptions.AllowedColorErrorCount := BkpErrorCount;
     FClkActions[Node^.Index].FindControlOptions.FastSearchAllowedColorErrorCount := BkpFastSearchErrorCount;
+
+    for i := 0 to Length(BkpFontNames) - 1 do
+    begin
+      FClkActions[Node^.Index].FindControlOptions.MatchBitmapText[i].FontName := BkpFontNames[i];
+      FClkActions[Node^.Index].FindControlOptions.MatchBitmapText[i].FontSize := BkpFontSizes[i];
+    end;
   end;
 end;
 
@@ -1249,6 +1287,18 @@ end;
 procedure TfrClickerActionsArr.HandleOnAddToLog(s: string);
 begin
   AddToLog(s);
+end;
+
+
+procedure TfrClickerActionsArr.HandleOnGetFontFinderSettings(var AFontFinderSettings: TFontFinderSettings);
+begin
+  DoOnGetFontFinderSettings(AFontFinderSettings);
+end;
+
+
+procedure TfrClickerActionsArr.HandleOnSetFontFinderSettings(var AFontFinderSettings: TFontFinderSettings);
+begin
+  DoOnSetFontFinderSettings(AFontFinderSettings);
 end;
 
 
@@ -1932,6 +1982,24 @@ begin
     raise Exception.Create('OnGetGridDrawingOption not assigned.')
   else
     Result := FOnGetGridDrawingOption;
+end;
+
+
+procedure TfrClickerActionsArr.DoOnGetFontFinderSettings(var AFontFinderSettings: TFontFinderSettings);
+begin
+  if not Assigned(FOnGetFontFinderSettings) then
+    raise Exception.Create('OnGetFontFinderSettings not assigned.')
+  else
+    FOnGetFontFinderSettings(AFontFinderSettings);
+end;
+
+
+procedure TfrClickerActionsArr.DoOnSetFontFinderSettings(var AFontFinderSettings: TFontFinderSettings);
+begin
+  if not Assigned(FOnSetFontFinderSettings) then
+    raise Exception.Create('OnSetFontFinderSettings not assigned.')
+  else
+    FOnSetFontFinderSettings(AFontFinderSettings);
 end;
 
 

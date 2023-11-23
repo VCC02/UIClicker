@@ -358,6 +358,14 @@ type
   end;
 
 
+  TFontFinderSettings = record
+    ListOfUsedFonts: string; //CRLF separated list of font names  (#4#5 in ini file)
+    MinFontSize: Integer;
+    MaxFontSize: Integer;
+    ShowAllFonts: Boolean;
+  end;
+
+
   TPaintedLabel = class(TLabel)
   public
     procedure Paint; override;
@@ -371,6 +379,7 @@ type
   TOnGetFindControlMatchBitmapText = function(Sender: TObject): PClkFindControlMatchBitmapText of object;
   TOnGetGridDrawingOption = function: TDisplayGridLineOption of object;
   TOnGetActionProperties = function(AActionName: string): PClkActionRec of object;
+  TOnRWFontFinderSettings = procedure(var AFontFinderSettings: TFontFinderSettings) of object;
 
 
 const

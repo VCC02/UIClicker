@@ -176,6 +176,7 @@ type
     FTerminateWaitForMultipleFilesAvailability: Boolean;
     FAutoSwitchToExecutingTab: Boolean;
     FAutoEnableSwitchingTabsOnDebugging: Boolean;
+    FFontFinderSettings: TFontFinderSettings;
 
     FOnCopyControlTextAndClassFromMainWindow: TOnCopyControlTextAndClassFromMainWindow;
     FOnRecordComponent: TOnRecordComponent;
@@ -300,6 +301,8 @@ type
     function HandleOnGetPictureOpenDialogFileName: string;
 
     function HandleOnGetGridDrawingOption: TDisplayGridLineOption;
+    procedure HandleOnGetFontFinderSettings(var AFontFinderSettings: TFontFinderSettings);
+    procedure HandleOnSetFontFinderSettings(var AFontFinderSettings: TFontFinderSettings);
 
     procedure CreateRemainingUIComponents;
     function GetClickerActionsArrFrameByStackLevel(AStackLevel: Integer): TfrClickerActionsArr;
@@ -502,6 +505,11 @@ begin
   FPreviewSelectionColors.TopLeft_Invalid := AIni.ReadInteger('ActionsWindow', 'TopLeft_InvalidColor', clRed);
   FPreviewSelectionColors.BotRight_Invalid := AIni.ReadInteger('ActionsWindow', 'BotRight_InvalidColor', clMaroon);
 
+  FFontFinderSettings.ListOfUsedFonts := FastReplace_45ToReturn(AIni.ReadString('ActionsWindow', 'ListOfUsedFonts', 'Tahoma'#13#10'Segoe UI'));
+  FFontFinderSettings.MinFontSize := AIni.ReadInteger('ActionsWindow', 'MinFontSize', 7);
+  FFontFinderSettings.MaxFontSize := AIni.ReadInteger('ActionsWindow', 'MaxFontSize', 9);
+  FFontFinderSettings.ShowAllFonts := AIni.ReadBool('ActionsWindow', 'ShowAllFonts', False);
+
   colcmbTopLeftValid.Selected := FPreviewSelectionColors.TopLeft_Valid;
   colcmbBotRightValid.Selected := FPreviewSelectionColors.BotRight_Valid;
   colcmbTopLeftInvalid.Selected := FPreviewSelectionColors.TopLeft_Invalid;
@@ -574,6 +582,11 @@ begin
   AIni.WriteInteger('ActionsWindow', 'BotRight_ValidColor', FPreviewSelectionColors.BotRight_Valid);
   AIni.WriteInteger('ActionsWindow', 'TopLeft_InvalidColor', FPreviewSelectionColors.TopLeft_Invalid );
   AIni.WriteInteger('ActionsWindow', 'BotRight_InvalidColor', FPreviewSelectionColors.BotRight_Invalid);
+
+  AIni.WriteString('ActionsWindow', 'ListOfUsedFonts', FastReplace_ReturnTo45(FFontFinderSettings.ListOfUsedFonts));
+  AIni.WriteInteger('ActionsWindow', 'MinFontSize', FFontFinderSettings.MinFontSize);
+  AIni.WriteInteger('ActionsWindow', 'MaxFontSize', FFontFinderSettings.MaxFontSize);
+  AIni.WriteBool('ActionsWindow', 'ShowAllFonts', FFontFinderSettings.ShowAllFonts);
 end;
 
 
@@ -861,6 +874,8 @@ begin
   frClickerActionsArrMain.OnGetPictureOpenDialogFileName := HandleOnGetPictureOpenDialogFileName;
 
   frClickerActionsArrMain.OnGetGridDrawingOption := HandleOnGetGridDrawingOption;
+  frClickerActionsArrMain.OnGetFontFinderSettings := HandleOnGetFontFinderSettings;
+  frClickerActionsArrMain.OnSetFontFinderSettings := HandleOnSetFontFinderSettings;
 
   frClickerActionsArrExperiment1.frClickerActions.PasteDebugValuesListFromMainExecutionList1.OnClick := frClickerActionsArrExperiment1PasteDebugValuesListFromMainExecutionList1Click;
   frClickerActionsArrExperiment2.frClickerActions.PasteDebugValuesListFromMainExecutionList1.OnClick := frClickerActionsArrExperiment2PasteDebugValuesListFromMainExecutionList1Click;
@@ -924,6 +939,10 @@ begin
 
   frClickerActionsArrExperiment1.OnGetGridDrawingOption := HandleOnGetGridDrawingOption;
   frClickerActionsArrExperiment2.OnGetGridDrawingOption := HandleOnGetGridDrawingOption;
+  frClickerActionsArrExperiment1.OnGetFontFinderSettings := HandleOnGetFontFinderSettings;
+  frClickerActionsArrExperiment2.OnGetFontFinderSettings := HandleOnGetFontFinderSettings;
+  frClickerActionsArrExperiment1.OnSetFontFinderSettings := HandleOnSetFontFinderSettings;
+  frClickerActionsArrExperiment2.OnSetFontFinderSettings := HandleOnSetFontFinderSettings;
 
   tmrStartup.Enabled := True;
 end;
@@ -1411,6 +1430,8 @@ begin
         NewFrame.OnGetPictureOpenDialogFileName := HandleOnGetPictureOpenDialogFileName;
 
         NewFrame.OnGetGridDrawingOption := HandleOnGetGridDrawingOption;
+        NewFrame.OnGetFontFinderSettings := HandleOnGetFontFinderSettings;
+        NewFrame.OnSetFontFinderSettings := HandleOnSetFontFinderSettings;
 
         if FAutoSwitchToExecutingTab or (FAutoEnableSwitchingTabsOnDebugging and IsDebugging) then
         begin
@@ -3328,6 +3349,18 @@ begin
     SelectedOption := 0;
 
   Result := TDisplayGridLineOption(SelectedOption);
+end;
+
+
+procedure TfrmClickerActions.HandleOnGetFontFinderSettings(var AFontFinderSettings: TFontFinderSettings);
+begin
+  AFontFinderSettings := FFontFinderSettings;
+end;
+
+
+procedure TfrmClickerActions.HandleOnSetFontFinderSettings(var AFontFinderSettings: TFontFinderSettings);
+begin
+  FFontFinderSettings := AFontFinderSettings;
 end;
 
 end.

@@ -308,6 +308,8 @@ type
 
     FOnExecuteFindSubControlAction: TOnExecuteFindSubControlAction;
     FOnAddToLog: TOnAddToLog;
+    FOnGetFontFinderSettings: TOnRWFontFinderSettings;
+    FOnSetFontFinderSettings: TOnRWFontFinderSettings;
 
     //function GetListOfSetVarEntries: string;
     //procedure SetListOfSetVarEntries(Value: string);
@@ -341,8 +343,10 @@ type
     function DoOnPictureOpenDialogExecute: Boolean;
     function DoOnGetPictureOpenDialogFileName: string;
 
-    function DoOnExecuteFindSubControlAction(AErrorLevel, AErrorCount, AFastSearchErrorCount: Integer; out AFoundArea: TRect): Boolean;
+    function DoOnExecuteFindSubControlAction(AErrorLevel, AErrorCount, AFastSearchErrorCount: Integer; AFontName: string; AFontSize: Integer; out AFoundArea: TRect): Boolean;
     procedure DoOnAddToLog(s: string);
+    procedure DoOnGetFontFinderSettings(var AFontFinderSettings: TFontFinderSettings);
+    procedure DoOnSetFontFinderSettings(var AFontFinderSettings: TFontFinderSettings);
 
     function GetInMemFS: TInMemFileSystem;
     procedure SetInMemFS(Value: TInMemFileSystem);
@@ -387,7 +391,7 @@ type
     procedure HandleOnSetMatchTextAndClassToOI(AMatchText, AMatchClassName: string);
     function HandleOnGetFindControlOptions: PClkFindControlOptions;
 
-    function HandleOnExecuteFindSubControlAction(AErrorLevel, AErrorCount, AFastSearchErrorCount: Integer; out AFoundArea: TRect): Boolean;
+    function HandleOnExecuteFindSubControlAction(AErrorLevel, AErrorCount, AFastSearchErrorCount: Integer; AFontName: string; AFontSize: Integer; out AFoundArea: TRect): Boolean;
     procedure HandleOnAddToLog(s: string);
 
     procedure HandleOnClickerExecAppFrame_OnTriggerOnControlsModified;
@@ -399,6 +403,8 @@ type
     procedure HandleOnSavePrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
     procedure HandleOnPrimitivesTriggerOnControlsModified;
     procedure HandleOnSaveFromMenu(Sender: TObject);
+    procedure HandleOnGetFontFinderSettings(var AFontFinderSettings: TFontFinderSettings);
+    procedure HandleOnSetFontFinderSettings(var AFontFinderSettings: TFontFinderSettings);
 
     ///////////////////////////// OI
     function EditFontProperties(AItemIndexDiv: Integer; var ANewItems: string): Boolean;
@@ -529,6 +535,8 @@ type
 
     property OnExecuteFindSubControlAction: TOnExecuteFindSubControlAction write FOnExecuteFindSubControlAction;
     property OnAddToLog: TOnAddToLog write FOnAddToLog;
+    property OnGetFontFinderSettings: TOnRWFontFinderSettings write FOnGetFontFinderSettings;
+    property OnSetFontFinderSettings: TOnRWFontFinderSettings write FOnSetFontFinderSettings;
   end;
 
 
@@ -605,6 +613,8 @@ begin
   frClickerFindControl.OnGetFindControlOptions := HandleOnGetFindControlOptions;
   frClickerFindControl.OnExecuteFindSubControlAction := HandleOnExecuteFindSubControlAction;
   frClickerFindControl.OnAddToLog := HandleOnAddToLog;
+  frClickerFindControl.OnGetFontFinderSettings := HandleOnGetFontFinderSettings;
+  frClickerFindControl.OnSetFontFinderSettings := HandleOnSetFontFinderSettings;
 
   frClickerFindControl.Visible := False;
 
@@ -761,6 +771,8 @@ begin
 
   FOnExecuteFindSubControlAction := nil;
   FOnAddToLog := nil;
+  FOnGetFontFinderSettings := nil;
+  FOnSetFontFinderSettings := nil;
 
   FShowDeprecatedControls := False;
   FEditingAction := @FEditingActionRec;
@@ -1672,9 +1684,9 @@ begin
 end;
 
 
-function TfrClickerActions.HandleOnExecuteFindSubControlAction(AErrorLevel, AErrorCount, AFastSearchErrorCount: Integer; out AFoundArea: TRect): Boolean;
+function TfrClickerActions.HandleOnExecuteFindSubControlAction(AErrorLevel, AErrorCount, AFastSearchErrorCount: Integer; AFontName: string; AFontSize: Integer; out AFoundArea: TRect): Boolean;
 begin
-  Result := DoOnExecuteFindSubControlAction(AErrorLevel, AErrorCount, AFastSearchErrorCount, AFoundArea);
+  Result := DoOnExecuteFindSubControlAction(AErrorLevel, AErrorCount, AFastSearchErrorCount, AFontName, AFontSize, AFoundArea);
 end;
 
 
@@ -1797,6 +1809,18 @@ begin
   end
   else
     MessageBox(Handle, 'Can''t get index of editing primitives filename. This is a bug', PChar(Application.Title), MB_ICONERROR);
+end;
+
+
+procedure TfrClickerActions.HandleOnGetFontFinderSettings(var AFontFinderSettings: TFontFinderSettings);
+begin
+  DoOnGetFontFinderSettings(AFontFinderSettings);
+end;
+
+
+procedure TfrClickerActions.HandleOnSetFontFinderSettings(var AFontFinderSettings: TFontFinderSettings);
+begin
+  DoOnSetFontFinderSettings(AFontFinderSettings);
 end;
 
 
@@ -1971,12 +1995,12 @@ begin
 end;
 
 
-function TfrClickerActions.DoOnExecuteFindSubControlAction(AErrorLevel, AErrorCount, AFastSearchErrorCount: Integer; out AFoundArea: TRect): Boolean;
+function TfrClickerActions.DoOnExecuteFindSubControlAction(AErrorLevel, AErrorCount, AFastSearchErrorCount: Integer; AFontName: string; AFontSize: Integer; out AFoundArea: TRect): Boolean;
 begin
   if not Assigned(FOnExecuteFindSubControlAction) then
     raise Exception.Create('OnExecuteFindSubControlAction not assigned.')
   else
-    Result := FOnExecuteFindSubControlAction(AErrorLevel, AErrorCount, AFastSearchErrorCount, AFoundArea);
+    Result := FOnExecuteFindSubControlAction(AErrorLevel, AErrorCount, AFastSearchErrorCount, AFontName, AFontSize, AFoundArea);
 end;
 
 
@@ -1987,6 +2011,25 @@ begin
   else
     FOnAddToLog(s);
 end;
+
+
+procedure TfrClickerActions.DoOnGetFontFinderSettings(var AFontFinderSettings: TFontFinderSettings);
+begin
+  if not Assigned(FOnGetFontFinderSettings) then
+    raise Exception.Create('OnGetFontFinderSettings not assigned.')
+  else
+    FOnGetFontFinderSettings(AFontFinderSettings);
+end;
+
+
+procedure TfrClickerActions.DoOnSetFontFinderSettings(var AFontFinderSettings: TFontFinderSettings);
+begin
+  if not Assigned(FOnSetFontFinderSettings) then
+    raise Exception.Create('OnSetFontFinderSettings not assigned.')
+  else
+    FOnSetFontFinderSettings(AFontFinderSettings);
+end;
+
 
 //////////////////////////// OI
 

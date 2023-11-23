@@ -42,7 +42,7 @@ type
 
   //TOnSetPictureOpenDialogFileName = procedure(AFileName: string) of object;
 
-  TOnExecuteFindSubControlAction = function(AErrorLevel, AErrorCount, AFastSearchErrorCount: Integer; out AFoundArea: TRect): Boolean of object; //maybe add some text settings (like list of font names)
+  TOnExecuteFindSubControlAction = function(AErrorLevel, AErrorCount, AFastSearchErrorCount: Integer; AFontName: string; AFontSize: Integer; out AFoundArea: TRect): Boolean of object; //maybe add some text settings (like list of font names)
 
   TfrClickerFindControl = class; //forward
 
@@ -177,6 +177,9 @@ type
     edtFoundControlInfo: TEdit;
     grpFindControlDetailsOnWindow: TGroupBox;
     imgCalcMinErrLevel: TImage;
+    imgFindFontNameAndSize: TImage;
+    imgStopFindFontNameAndSize: TImage;
+    imgFindFontNameAndSizeSettings: TImage;
     imgStopCalcMinErrLevel: TImage;
     imgCopySelAreaFromBkImg: TImage;
     imgCopyBMPImg: TImage;
@@ -311,7 +314,7 @@ type
 
     FExpectedErrLevel_TopLeft: TPoint;
     FExpectedErrLevel_BotRight: TPoint;
-    FManuallyStopCalcErrLevel: Boolean;
+    FManuallyStopSearching: Boolean;
 
     FOnTriggerOnControlsModified: TOnTriggerOnControlsModified;
     FOnEvaluateReplacements: TOnEvaluateReplacements;
@@ -336,6 +339,8 @@ type
 
     FOnExecuteFindSubControlAction: TOnExecuteFindSubControlAction;
     FOnAddToLog: TOnAddToLog;
+    FOnGetFontFinderSettings: TOnRWFontFinderSettings;
+    FOnSetFontFinderSettings: TOnRWFontFinderSettings;
 
     procedure imgSearchAreaControlDbgMouseMove(Sender: TObject;
       Shift: TShiftState; X, Y: Integer);
@@ -407,6 +412,9 @@ type
     procedure MenuItemStopCalculatingMinimumErrorLevelToMatchText(Sender: TObject);
     procedure MenuItemDisplaySelectionLinesForExpectedFindLocation(Sender: TObject);
     procedure MenuItemHideSelectionLinesForExpectedFindLocation(Sender: TObject);
+    procedure MenuItemFindFontNameAndSizeToMatchText(Sender: TObject);
+    procedure MenuItemEditSettingsForFontNameAndSizeSearching(Sender: TObject);
+    procedure MenuItemStopFindFontNameAndSizeToMatchText(Sender: TObject);
 
     procedure MenuItemLoadBmpTextToSearchedAreaClick(Sender: TObject);
     procedure MenuItemUnloadBmpTextFromSearchedAreaClick(Sender: TObject);
@@ -435,8 +443,10 @@ type
     procedure DoOnSetMatchTextAndClassToOI(AMatchText, AMatchClassName: string);
     function DoOnGetFindControlOptions: PClkFindControlOptions;
 
-    function DoOnExecuteFindSubControlAction(AErrorLevel, AErrorCount, AFastSearchErrorCount: Integer; out AFoundArea: TRect): Boolean;
+    function DoOnExecuteFindSubControlAction(AErrorLevel, AErrorCount, AFastSearchErrorCount: Integer; AFontName: string; AFontSize: Integer; out AFoundArea: TRect): Boolean;
     procedure DoOnAddToLog(s: string);
+    procedure DoOnGetFontFinderSettings(var AFontFinderSettings: TFontFinderSettings);
+    procedure DoOnSetFontFinderSettings(var AFontFinderSettings: TFontFinderSettings);
 
     procedure HandleMatchTextClick;
     procedure GeneratePreviewGridContent(ADisplayGridLineOption: TDisplayGridLineOption);
@@ -600,6 +610,8 @@ type
 
     property OnExecuteFindSubControlAction: TOnExecuteFindSubControlAction write FOnExecuteFindSubControlAction;   //used on finding error level only (not on all FindSubControl actions)
     property OnAddToLog: TOnAddToLog write FOnAddToLog;
+    property OnGetFontFinderSettings: TOnRWFontFinderSettings write FOnGetFontFinderSettings;
+    property OnSetFontFinderSettings: TOnRWFontFinderSettings write FOnSetFontFinderSettings;
   end;
 
 const
@@ -613,7 +625,7 @@ implementation
 {$R *.frm}
 
 uses
-  BitmapProcessing, Clipbrd, ClickerZoomPreviewForm;
+  BitmapProcessing, Clipbrd, ClickerZoomPreviewForm, ClickerFontFinderSettingsForm;
 
 
 //const
@@ -1005,6 +1017,8 @@ begin
 
   FOnExecuteFindSubControlAction := nil;
   FOnAddToLog := nil;
+  FOnGetFontFinderSettings := nil;
+  FOnSetFontFinderSettings := nil;
 
   CreateRemainingUIComponents; //this should be called after initializing callback properties to nil  (like FOnTriggerOnControlsModified)
   CreateGridLineOptionMenu;
@@ -1032,7 +1046,7 @@ begin
   FPreviewSelectionColors.TopLeft_Invalid := clRed;
   FPreviewSelectionColors.BotRight_Invalid := clMaroon;
 
-  FManuallyStopCalcErrLevel := False;
+  FManuallyStopSearching := False;
   FExpectedErrLevel_TopLeft.X := -1;
   FExpectedErrLevel_TopLeft.Y := -1;
   FExpectedErrLevel_BotRight.X := -1;
@@ -1173,12 +1187,12 @@ begin
 end;
 
 
-function TfrClickerFindControl.DoOnExecuteFindSubControlAction(AErrorLevel, AErrorCount, AFastSearchErrorCount: Integer; out AFoundArea: TRect): Boolean;
+function TfrClickerFindControl.DoOnExecuteFindSubControlAction(AErrorLevel, AErrorCount, AFastSearchErrorCount: Integer; AFontName: string; AFontSize: Integer; out AFoundArea: TRect): Boolean;
 begin
   if not Assigned(FOnExecuteFindSubControlAction) then
     raise Exception.Create('OnExecuteFindSubControlAction not assigned.')
   else
-    Result := FOnExecuteFindSubControlAction(AErrorLevel, AErrorCount, AFastSearchErrorCount, AFoundArea);
+    Result := FOnExecuteFindSubControlAction(AErrorLevel, AErrorCount, AFastSearchErrorCount, AFontName, AFontSize, AFoundArea);
 end;
 
 
@@ -1188,6 +1202,24 @@ begin
     raise Exception.Create('OnAddToLog not assigned.')
   else
     FOnAddToLog(s);
+end;
+
+
+procedure TfrClickerFindControl.DoOnGetFontFinderSettings(var AFontFinderSettings: TFontFinderSettings);
+begin
+  if not Assigned(FOnGetFontFinderSettings) then
+    raise Exception.Create('OnGetFontFinderSettings not assigned.')
+  else
+    FOnGetFontFinderSettings(AFontFinderSettings);
+end;
+
+
+procedure TfrClickerFindControl.DoOnSetFontFinderSettings(var AFontFinderSettings: TFontFinderSettings);
+begin
+  if not Assigned(FOnSetFontFinderSettings) then
+    raise Exception.Create('OnSetFontFinderSettings not assigned.')
+  else
+    FOnSetFontFinderSettings(AFontFinderSettings);
 end;
 
 
@@ -2181,6 +2213,28 @@ begin
       MenuItem.Caption := 'Hide selection lines for expected find location';
       MenuItem.OnClick := MenuItemHideSelectionLinesForExpectedFindLocation;
       MenuItem.Bitmap := imgDisplayExpectedFindLocation.Picture.Bitmap;
+      FSearchAreaMenu.Items.Add(MenuItem);
+
+      MenuItem := TMenuItem.Create(FSearchAreaMenu);
+      MenuItem.Caption := '-';
+      FSearchAreaMenu.Items.Add(MenuItem);
+
+      MenuItem := TMenuItem.Create(FSearchAreaMenu);
+      MenuItem.Caption := 'Find font name and size to match text...';
+      MenuItem.OnClick := MenuItemFindFontNameAndSizeToMatchText;
+      MenuItem.Bitmap := imgFindFontNameAndSize.Picture.Bitmap;
+      FSearchAreaMenu.Items.Add(MenuItem);
+
+      MenuItem := TMenuItem.Create(FSearchAreaMenu);
+      MenuItem.Caption := 'Edit settings for font name and size searching...';
+      MenuItem.OnClick := MenuItemEditSettingsForFontNameAndSizeSearching;
+      MenuItem.Bitmap := imgFindFontNameAndSizeSettings.Picture.Bitmap;
+      FSearchAreaMenu.Items.Add(MenuItem);
+
+      MenuItem := TMenuItem.Create(FSearchAreaMenu);
+      MenuItem.Caption := 'Stop finding font name and size to match text...';
+      MenuItem.OnClick := MenuItemStopFindFontNameAndSizeToMatchText;
+      MenuItem.Bitmap := imgStopFindFontNameAndSize.Picture.Bitmap;
       FSearchAreaMenu.Items.Add(MenuItem);
 
       MenuItem := TMenuItem.Create(FSearchAreaMenu);
@@ -3315,7 +3369,7 @@ begin
     end;
 
     Found := False;
-    FManuallyStopCalcErrLevel := False;
+    FManuallyStopSearching := False;
     FoundOutsideOfExpectedArea := False;
 
     tmrBlinkCalcErrLevel.Enabled := True;
@@ -3326,7 +3380,8 @@ begin
 
         DoOnAddToLog('TestedErrorLevel: ' + IntToStr(TestedErrorLevel) + '    Interval: [' + IntToStr(MinInterval) + '..' + IntToStr(MaxInterval) + ']');
 
-        Found := DoOnExecuteFindSubControlAction(TestedErrorLevel, AllowedColErr, FastSearchAllowedColErr, FoundArea);
+        Found := DoOnExecuteFindSubControlAction(TestedErrorLevel, AllowedColErr, FastSearchAllowedColErr, '', 0, FoundArea);
+        DoOnAddToLog('"Found" flag: ' + BoolToStr(Found, 'True', 'False'));
 
         if Found then
         begin
@@ -3342,6 +3397,7 @@ begin
           begin
             Found := False;
             FoundOutsideOfExpectedArea := True;
+            DoOnAddToLog('Resetting "Found" flag, because the text can be found outside of expected area..');
           end
           else
             LastValidErrorLevel := TestedErrorLevel;
@@ -3358,7 +3414,7 @@ begin
         Application.ProcessMessages;
         Sleep(10);
 
-        if FManuallyStopCalcErrLevel then
+        if FManuallyStopSearching then
         begin
           DoOnAddToLog('Manually stopping searching for color error level.');
           Break;
@@ -3375,9 +3431,9 @@ begin
       imgCalcMinErrLevel.Visible := False;
     end;
 
-    FManuallyStopCalcErrLevel := False;
+    FManuallyStopSearching := False;
 
-    if not Found then
+    if not Found and not FoundOutsideOfExpectedArea then
     begin
       MessageBox(Handle, 'No proper color error level found.', PChar(Application.Title), MB_ICONINFORMATION);
       DoOnAddToLog('No proper color error level found.');
@@ -3446,7 +3502,7 @@ begin
     end;
 
     Found := False;
-    FManuallyStopCalcErrLevel := False;
+    FManuallyStopSearching := False;
     FoundOutsideOfExpectedArea := False;
 
     tmrBlinkCalcErrLevel.Enabled := True;
@@ -3457,7 +3513,8 @@ begin
 
         DoOnAddToLog('TestedAllowedColErr: ' + IntToStr(TestedAllowedColErr) + '    Interval: [' + IntToStr(MinInterval) + '..' + IntToStr(MaxInterval) + ']');
 
-        Found := DoOnExecuteFindSubControlAction(ErrorLevel, TestedAllowedColErr, FastSearchAllowedColErr, FoundArea);
+        Found := DoOnExecuteFindSubControlAction(ErrorLevel, TestedAllowedColErr, FastSearchAllowedColErr, '', 0, FoundArea);
+        DoOnAddToLog('"Found" flag: ' + BoolToStr(Found, 'True', 'False'));
 
         if Found then
         begin
@@ -3473,12 +3530,13 @@ begin
           begin
             Found := False;
             FoundOutsideOfExpectedArea := True;
+            DoOnAddToLog('Resetting "Found" flag, because the text can be found outside of expected area..');
           end
           else
             LastValidAllowedColErr := TestedAllowedColErr;
         end;
 
-        if not Found then
+        if not Found and not FoundOutsideOfExpectedArea then
           MinInterval := TestedAllowedColErr
         else
           MaxInterval := TestedAllowedColErr;
@@ -3489,7 +3547,7 @@ begin
         Application.ProcessMessages;
         Sleep(10);
 
-        if FManuallyStopCalcErrLevel then
+        if FManuallyStopSearching then
         begin
           DoOnAddToLog('Manually stopping searching for color error count.');
           Break;
@@ -3506,7 +3564,7 @@ begin
       imgCalcMinErrLevel.Visible := False;
     end;
 
-    FManuallyStopCalcErrLevel := False;
+    FManuallyStopSearching := False;
 
     if not Found then
     begin
@@ -3541,9 +3599,216 @@ begin
 end;
 
 
+procedure TfrClickerFindControl.MenuItemFindFontNameAndSizeToMatchText(Sender: TObject);
+var
+  Found: Boolean;
+  FindControlOptions: PClkFindControlOptions;
+  ErrorLevel, AllowedColErr, LastValidSize, FastSearchAllowedColErr: Integer;
+  FoundArea: TRect;
+  ExpectedArea: TRect; //Expected area where the text should be found. If found somewhere else, then it's a false positive.
+  FoundOutsideOfExpectedArea: Boolean;
+  i, j: Integer;
+  FontName: string;
+  FontSize: Integer;
+  FontFinderSettings: TFontFinderSettings;
+  ListOfFontNames: TStringList;
+  tk: QWord;
+begin
+  (Sender as TMenuItem).Enabled := False;
+  try
+    if MessageBox(Handle, 'The algorithm will use the current FindSubControl action settings, to search for a matching font name and size. It can be stopped with Ctrl-Shift-F2. Continue?', PChar(Application.Title), MB_ICONQUESTION + MB_YESNO) = IDNO then
+      Exit;
+
+    FindControlOptions := DoOnGetFindControlOptions;
+
+    LastValidSize := -1;
+
+    ErrorLevel := StrToIntDef(EvaluateReplacements(FindControlOptions.ColorError), 10);
+    FastSearchAllowedColErr := StrToIntDef(EvaluateReplacements(FindControlOptions.FastSearchAllowedColorErrorCount), 10);
+    AllowedColErr := StrToIntDef(EvaluateReplacements(FindControlOptions.AllowedColorErrorCount), 10);
+
+    DoOnAddToLog('');
+    DoOnAddToLog('Searching for font name and size...');
+
+    if (FExpectedErrLevel_TopLeft.X < 0) or (FExpectedErrLevel_TopLeft.Y < 0) then
+    begin
+      FExpectedErrLevel_TopLeft.X := 0;
+      FExpectedErrLevel_TopLeft.Y := 0;
+      FExpectedErrLevel_BotRight.X := FSearchAreaControlDbgImg.Width;
+      FExpectedErrLevel_BotRight.Y := FSearchAreaControlDbgImg.Height;
+    end;
+
+    Found := False;
+    FManuallyStopSearching := False;
+    FoundOutsideOfExpectedArea := False;
+
+    tmrBlinkCalcErrLevel.Enabled := True;
+    ListOfFontNames := TStringList.Create;
+    try
+      DoOnGetFontFinderSettings(FontFinderSettings);
+
+      if FontFinderSettings.MinFontSize > FontFinderSettings.MaxFontSize then
+        DoOnAddToLog('Error: The font size interval is wrong: [' + IntToStr(FontFinderSettings.MinFontSize) + '..' + IntToStr(FontFinderSettings.MaxFontSize) + ']');
+
+      ListOfFontNames.Text := FontFinderSettings.ListOfUsedFonts;
+
+      if ListOfFontNames.Count = 0 then
+        DoOnAddToLog('Error: The list of font names is empty.')
+      else
+        DoOnAddToLog('Searching with font sizes: [' + IntToStr(FontFinderSettings.MinFontSize) + '..' + IntToStr(FontFinderSettings.MaxFontSize) + '] and names: ' + FastReplace_ReturnToCSV(FontFinderSettings.ListOfUsedFonts));
+
+      tk := GetTickCount64;
+      for i := FontFinderSettings.MinFontSize to FontFinderSettings.MaxFontSize do
+      begin
+        for j := 0 to ListOfFontNames.Count - 1 do
+        begin
+          FontSize := i;
+          FontName := ListOfFontNames.Strings[j];
+          DoOnAddToLog('--- Testing font: ' + FontName + '    Size: ' + IntToStr(FontSize));
+
+          Found := DoOnExecuteFindSubControlAction(ErrorLevel, AllowedColErr, FastSearchAllowedColErr, FontName, FontSize, FoundArea);
+          DoOnAddToLog('"Found" flag: ' + BoolToStr(Found, 'True', 'False'));
+
+          if Found then
+          begin
+            ExpectedArea.Left := FExpectedErrLevel_TopLeft.X;
+            ExpectedArea.Top := FExpectedErrLevel_TopLeft.Y;
+            ExpectedArea.Right := FExpectedErrLevel_BotRight.X;
+            ExpectedArea.Bottom := FExpectedErrLevel_BotRight.Y;
+
+            if (FoundArea.Left < ExpectedArea.Left) or
+               (FoundArea.Top < ExpectedArea.Top) or
+               (FoundArea.Right > ExpectedArea.Right) or
+               (FoundArea.Bottom > ExpectedArea.Bottom) then
+            begin
+              Found := False;
+              FoundOutsideOfExpectedArea := True;
+            end
+            else
+              LastValidSize := FontSize;
+          end;
+
+          if (GetAsyncKeyState(VK_CONTROL) < 0) and (GetAsyncKeyState(VK_SHIFT) < 0) and(GetAsyncKeyState(VK_F2) < 0) then
+            Break;
+
+          Application.ProcessMessages;
+          Sleep(10);
+
+          if FManuallyStopSearching then
+          begin
+            DoOnAddToLog('Manually stopping searching for font name and size.');
+            Break;
+          end;
+
+          if not Found and (LastValidSize <> -1) then //Found at least once.  This may prevent further searching.
+          begin
+            Found := True; //accept the current found value
+            Break;
+          end;
+
+          if Found then
+            Break;
+        end; //for j
+
+        if Found or FManuallyStopSearching then
+          Break;
+      end; //for i
+
+      DoOnAddToLog('Search duration: ' + IntToStr(GetTickCount64 - tk) + 'ms.');
+    finally
+      tmrBlinkCalcErrLevel.Enabled := False;
+      imgCalcMinErrLevel.Visible := False;
+      ListOfFontNames.Free;
+    end;
+
+    FManuallyStopSearching := False;
+
+    if not Found then
+    begin
+      MessageBox(Handle, 'No proper font name and size found.', PChar(Application.Title), MB_ICONINFORMATION);
+      DoOnAddToLog('No proper font name and size found.');
+
+      if FoundOutsideOfExpectedArea then
+        DoOnAddToLog('The searched text can be found outside of expected area.');
+    end
+    else
+    begin
+      if LastValidSize = -1 then
+        DoOnAddToLog('No valid value found.')
+      else
+      begin
+        if FontSize <> LastValidSize then
+          FontSize := LastValidSize; //update to the latest valid value
+
+        DoOnAddToLog('Found a font name and size: ' + FontName + '  ' + IntToStr(FontSize));
+
+        if Length(FindControlOptions^.MatchBitmapText) = 1 then  //ask to update, only if there is a single font profile
+          if MessageBox(Handle, 'A font name and size found. Do you want to update the action properties?', PChar(Application.Title), MB_ICONQUESTION + MB_YESNO) = IDYES then
+          begin
+            FindControlOptions^.MatchBitmapText[0].FontName := FontName;
+            FindControlOptions^.MatchBitmapText[0].FontSize := FontSize;
+            tmrUpdateSearchAreaOffsetEditBoxes.Enabled := True; //an ugly way to trigger the modified flag in parent frames, up to OI
+            DoOnTriggerOnControlsModified;
+            //update other properties if the algorithm is advanced enough to calculate more than ColorError
+          end;
+      end;
+    end;
+  finally
+    (Sender as TMenuItem).Enabled := True;
+  end;
+end;
+
+
+procedure TfrClickerFindControl.MenuItemEditSettingsForFontNameAndSizeSearching(Sender: TObject);
+var
+  FontFinderSettings: TFontFinderSettings;
+  PreviewFont: TFont;
+  Options: PClkFindControlOptions;
+  FGColor, BGColor: TColor;
+begin
+  if Length(FBMPTextProfiles) > 0 then
+  begin
+    PreviewFont := FBMPTextProfiles[0].frClickerBMPText.imgPreview.Canvas.Font;
+    FGColor := FBMPTextProfiles[0].frClickerBMPText.imgPreview.Canvas.Font.Color;
+    BGColor := FBMPTextProfiles[0].frClickerBMPText.imgPreview.Canvas.Brush.Color;
+  end
+  else
+  begin
+    PreviewFont := TabSheetActionFindSubControlSearchArea.Font; //something, just to have some settings
+    FGColor := -1;
+    BGColor := -1;
+  end;
+
+  Options := DoOnGetFindControlOptions;
+  if BGColor = -1 then
+  begin
+    if Length(Options^.MatchBitmapText) > 0 then
+    begin
+      FGColor := StrToIntDef(EvaluateReplacements(Options^.MatchBitmapText[0].ForegroundColor), clWindowText);
+      BGColor := StrToIntDef(EvaluateReplacements(Options^.MatchBitmapText[0].BackgroundColor), clBtnFace);
+    end
+    else
+    begin
+      FGColor := clWindowText;
+      BGColor := clBtnFace;
+    end;
+  end;
+
+  DoOnGetFontFinderSettings(FontFinderSettings);
+  if EditFontFinderSettings(FontFinderSettings, PreviewFont, FGColor, BGColor, Options^.MatchText) then
+    DoOnSetFontFinderSettings(FontFinderSettings);
+end;
+
+
+procedure TfrClickerFindControl.MenuItemStopFindFontNameAndSizeToMatchText(Sender: TObject);
+begin
+  FManuallyStopSearching := True;
+end;
+
+
 procedure TfrClickerFindControl.MenuItemStopCalculatingMinimumErrorLevelToMatchText(Sender: TObject);
 begin
-  FManuallyStopCalcErrLevel := True;
+  FManuallyStopSearching := True;
 end;
 
 
