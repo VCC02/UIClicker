@@ -58,6 +58,8 @@ type
     lbeSearchAction: TLabeledEdit;
     lblModifiedStatus: TLabel;
     memLogErr: TMemo;
+    MenuItem_AddRestoreCachedControlAction: TMenuItem;
+    MenuItem_AddCacheControlAction: TMenuItem;
     MenuItem_InMemReceivedAsServer: TMenuItem;
     MenuItem_RecentFiles: TMenuItem;
     MenuItem_UpdateFromOI: TMenuItem;
@@ -139,6 +141,8 @@ type
     procedure MenuItemEnableDisableBreakPointClick(Sender: TObject);
     procedure MenuItemPasteActionsFromClipboardClick(Sender: TObject);
     procedure MenuItem_AddACallTemplateByFileClick(Sender: TObject);
+    procedure MenuItem_AddCacheControlActionClick(Sender: TObject);
+    procedure MenuItem_AddRestoreCachedControlActionClick(Sender: TObject);
     procedure MenuItem_EditBreakPointClick(Sender: TObject);
     procedure MenuItem_PlayActionAndRestoreVarsClick(Sender: TObject);
     procedure MenuItem_RefactorSelectedActionsIntoATemplateClick(Sender: TObject
@@ -461,6 +465,7 @@ type
     procedure ClearAllActions;
 
     procedure InsertCallTemplateForActionReplacing(AIndexToInsertAt: Integer; ATemplateFileName: string);
+    procedure InsertSetVar(AIndexToInsertAt: Integer; AActionName: string; var ANewAction: TClkSetVarOptions);
 
     procedure GetSelectedActions(var ActionsToCopy: TClkActionsRecArr); overload;
     function GetSelectedActions(var AIndexArr: TIntegerDynArray; var AActionsArr: TClkActionsRecArr): Integer; overload;
@@ -1447,6 +1452,8 @@ begin
     lblModifiedStatus.Font.Color := $00007500;
     spdbtnSaveTemplate.Font.Color := clWindowText;
   end;
+
+  spdbtnSaveTemplate.Font.Bold := FModified;
 
   lblModifiedStatus.Repaint;
 end;
@@ -3464,6 +3471,46 @@ begin
 end;
 
 
+procedure TfrClickerActionsArr.MenuItem_AddCacheControlActionClick(
+  Sender: TObject);
+var
+  Node: PVirtualNode;
+  NewAction: TClkSetVarOptions;
+  InsertIndex: Integer;
+begin
+  InsertIndex := -1;
+  Node := vstActions.GetFirstSelected;
+  if Node <> nil then
+    InsertIndex := Node^.Index;
+
+  NewAction.ListOfVarNames := FastReplace_45ToReturn('$My_Left$$My_Top$$My_Right$$My_Bottom$$My_Width$$My_Height$$My_Text$$My_Class$$My_Handle$');
+  NewAction.ListOfVarValues := FastReplace_45ToReturn('$Control_Left$$Control_Top$$Control_Right$$Control_Bottom$$Control_Width$$Control_Height$$Control_Text$$Control_Class$$Control_Handle$');
+  NewAction.ListOfVarEvalBefore := FastReplace_45ToReturn('111111111');
+
+  InsertSetVar(InsertIndex + 1, 'Cache current control', NewAction);
+end;
+
+
+procedure TfrClickerActionsArr.MenuItem_AddRestoreCachedControlActionClick(
+  Sender: TObject);
+var
+  Node: PVirtualNode;
+  NewAction: TClkSetVarOptions;
+  InsertIndex: Integer;
+begin
+  InsertIndex := -1;
+  Node := vstActions.GetFirstSelected;
+  if Node <> nil then
+    InsertIndex := Node^.Index;
+
+  NewAction.ListOfVarNames := FastReplace_45ToReturn('$Control_Left$$Control_Top$$Control_Right$$Control_Bottom$$Control_Width$$Control_Height$$Control_Text$$Control_Class$$Control_Handle$');
+  NewAction.ListOfVarValues := FastReplace_45ToReturn('$My_Left$$My_Top$$My_Right$$My_Bottom$$My_Width$$My_Height$$My_Text$$My_Class$$My_Handle$');
+  NewAction.ListOfVarEvalBefore := FastReplace_45ToReturn('111111111');
+
+  InsertSetVar(InsertIndex + 1, 'Restore cached control', NewAction);
+end;
+
+
 procedure TfrClickerActionsArr.MenuItemEnableDisableBreakPointClick(
   Sender: TObject);
 begin
@@ -3538,6 +3585,28 @@ begin
     FClkActions[AIndexToInsertAt].CallTemplateOptions.TemplateFileName := ExtractFileName(ATemplateFileName)
   else
     FClkActions[AIndexToInsertAt].CallTemplateOptions.TemplateFileName := ATemplateFileName;
+
+  vstActions.RootNodeCount := Length(FClkActions);
+end;
+
+
+procedure TfrClickerActionsArr.InsertSetVar(AIndexToInsertAt: Integer; AActionName: string; var ANewAction: TClkSetVarOptions);
+var
+  i, n: Integer;
+begin
+  n := Length(FClkActions);
+  SetLength(FClkActions, n + 1);
+
+  for i := n downto AIndexToInsertAt + 1 do
+    FClkActions[i] := FClkActions[i - 1];
+
+  FClkActions[AIndexToInsertAt].ActionDebuggingStatus := adsNone;
+  FClkActions[AIndexToInsertAt].ActionOptions.Action := acSetVar;
+  FClkActions[AIndexToInsertAt].ActionOptions.ActionCondition := '';
+  FClkActions[AIndexToInsertAt].ActionOptions.ActionEnabled := True;
+  FClkActions[AIndexToInsertAt].ActionOptions.ActionName := AActionName;
+  FClkActions[AIndexToInsertAt].ActionOptions.ActionTimeout := 0;
+  FClkActions[AIndexToInsertAt].SetVarOptions := ANewAction;
 
   vstActions.RootNodeCount := Length(FClkActions);
 end;

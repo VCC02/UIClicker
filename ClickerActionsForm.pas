@@ -397,7 +397,19 @@ begin
   try
     AInMemFileSystem.LoadFileFromMemToStream(AFileName, MemStream);
     MemStream.Position := 0;
-    ABmp.LoadFromStream(MemStream, MemStream.Size);
+
+    try
+      ABmp.LoadFromStream(MemStream, MemStream.Size);
+    except
+      on E: Exception do
+      begin
+        ABmp.Width := ABmp.Canvas.TextWidth(E.Message) + 20;
+        ABmp.Height := 30;
+        ABmp.Canvas.Brush.Color := clRed;
+        ABmp.Canvas.Font.Color := clWhite;
+        ABmp.Canvas.TextOut(10, 10, E.Message);
+      end;
+    end;
   finally
     MemStream.Free;
   end;
@@ -1782,7 +1794,12 @@ begin
       FRenderedInMemFileSystem.LoadFileFromMemToStream(TempName, Stream);
 
       Stream.Position := 0;
-      Bmp.LoadFromStream(Stream, Stream.Size);
+      try
+        Bmp.LoadFromStream(Stream, Stream.Size);
+      except
+        on E: Exception do
+          AddToLog('Error loading received bitmap: "' + E.Message + '"   of size: ' + IntToStr(Stream.Size) + 'B.');
+      end;
 
       AListOfExternallyRenderedImages.Strings[i] := TempName + #8#7 + IntToStr(Bmp.Width) + ':' + IntToStr(Bmp.Height) + '  ' + IntToStr(Stream.Size) + 'B';
     finally

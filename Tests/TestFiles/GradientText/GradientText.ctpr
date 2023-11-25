@@ -26,6 +26,15 @@
     </RunParams>
     <RequiredPackages>
       <Item>
+        <PackageName Value="pl_DCP"/>
+      </Item>
+      <Item>
+        <PackageName Value="pl_VirtualTrees"/>
+      </Item>
+      <Item>
+        <PackageName Value="pl_Indy"/>
+      </Item>
+      <Item>
         <PackageName Value="adLCL"/>
       </Item>
     </RequiredPackages>
@@ -43,6 +52,10 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
       </Unit>
+      <Unit>
+        <Filename Value="..\..\..\ClickerUtils\ClickerUtils.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -53,6 +66,7 @@
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
+      <OtherUnitFiles Value="..\..\..\ClickerUtils"/>
       <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <CodeGeneration>

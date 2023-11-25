@@ -1,14 +1,14 @@
 object frmGradientTextMain: TfrmGradientTextMain
-  Left = 401
-  Height = 363
-  Top = 43
+  Left = 100
+  Height = 608
+  Top = 143
   Width = 623
   Caption = 'Gradient Text'
-  ClientHeight = 363
+  ClientHeight = 608
   ClientWidth = 623
+  LCLVersion = '8.2'
   OnCreate = FormCreate
-  LCLVersion = '7.5'
-  object Image1: TImage
+  object imgGradient: TImage
     Left = 16
     Height = 232
     Top = 8
@@ -13030,10 +13030,10 @@ object frmGradientTextMain: TfrmGradientTextMain
       Top = 8
       Width = 107
       Caption = 'Reset TrackBar'
+      TabOrder = 0
       OnClick = btnResetTrackBarClick
       OnMouseDown = btnResetTrackBarMouseDown
       OnMouseUp = btnResetTrackBarMouseUp
-      TabOrder = 0
     end
     object trbTestTrackBar: TTrackBar
       Left = 8
@@ -13042,9 +13042,9 @@ object frmGradientTextMain: TfrmGradientTextMain
       Width = 104
       Max = 50
       Position = 0
+      TabOrder = 1
       OnMouseDown = trbTestTrackBarMouseDown
       OnMouseUp = trbTestTrackBarMouseUp
-      TabOrder = 1
     end
     object grpButtonClickDuration: TGroupBox
       Left = 136
@@ -13054,6 +13054,7 @@ object frmGradientTextMain: TfrmGradientTextMain
       Caption = 'Button click duration [ms]'
       ClientHeight = 23
       ClientWidth = 172
+      ParentBackground = False
       TabOrder = 2
       object edtButtonClickDuration: TEdit
         Left = 8
@@ -13071,6 +13072,7 @@ object frmGradientTextMain: TfrmGradientTextMain
       Caption = 'TrackBar drag duration [ms]'
       ClientHeight = 23
       ClientWidth = 172
+      ParentBackground = False
       TabOrder = 3
       object edtTrackBarDragDuration: TEdit
         Left = 8
@@ -13080,5 +13082,112 @@ object frmGradientTextMain: TfrmGradientTextMain
         TabOrder = 0
       end
     end
+  end
+  object grpRenderingServer: TGroupBox
+    Left = 344
+    Height = 108
+    Top = 248
+    Width = 269
+    Caption = 'Rendering server'
+    ClientHeight = 88
+    ClientWidth = 265
+    TabOrder = 1
+    object lbeServerModePort: TLabeledEdit
+      Left = 8
+      Height = 23
+      Hint = 'Listening port'
+      Top = 24
+      Width = 56
+      EditLabel.Height = 15
+      EditLabel.Width = 56
+      EditLabel.Caption = 'Port'
+      ParentShowHint = False
+      ShowHint = True
+      TabOrder = 0
+      Text = '53444'
+    end
+    object chkKeepAlive: TCheckBox
+      Left = 81
+      Height = 19
+      Hint = 'The file monitoring thread, from client side, can benefit from keeping connection alive.'#13#10'It is also useful to prevent opening a new socket for every request (every 200ms).'#13#10'For most cases, leave this checked.'
+      Top = 24
+      Width = 71
+      Caption = 'Keep alive'
+      Checked = True
+      State = cbChecked
+      TabOrder = 1
+    end
+    object chkServerActive: TCheckBox
+      Left = 206
+      Height = 19
+      Top = 24
+      Width = 51
+      Caption = 'Active'
+      TabOrder = 2
+      OnChange = chkServerActiveChange
+    end
+    object lblServerInfo: TLabel
+      Left = 113
+      Height = 13
+      Top = 54
+      Width = 143
+      Alignment = taRightJustify
+      Anchors = [akTop, akRight]
+      Caption = 'Server module is inactive'
+      Font.CharSet = ANSI_CHARSET
+      Font.Color = clGray
+      Font.Height = -11
+      Font.Name = 'Tahoma'
+      Font.Pitch = fpVariable
+      Font.Quality = fqDraft
+      Font.Style = [fsBold]
+      ParentFont = False
+      ParentShowHint = False
+      ShowHint = True
+    end
+  end
+  object lblCustomText: TLabel
+    Left = 16
+    Height = 13
+    Top = 8
+    Width = 62
+    Caption = 'Custom Text'
+    Font.Height = -11
+    Font.Quality = fqNonAntialiased
+    ParentFont = False
+    Transparent = False
+    Visible = False
+  end
+  object imgBrowserRendering: TImage
+    Left = 16
+    Height = 234
+    Top = 368
+    Width = 320
+    AutoSize = True
+  end
+  object IdSchedulerOfThreadPool1: TIdSchedulerOfThreadPool
+    MaxThreads = 30
+    PoolSize = 10
+    Left = 392
+    Top = 176
+  end
+  object IdHTTPServer1: TIdHTTPServer
+    Bindings = <>
+    DefaultPort = 5444
+    ListenQueue = 30
+    OnConnect = IdHTTPServer1Connect
+    OnException = IdHTTPServer1Exception
+    ReuseSocket = rsFalse
+    UseNagle = False
+    Scheduler = IdSchedulerOfThreadPool1
+    KeepAlive = True
+    OnCommandGet = IdHTTPServer1CommandGet
+    Left = 536
+    Top = 176
+  end
+  object IdDecoderMIME1: TIdDecoderMIME
+    FillChar = '='
+    Left = 536
+    Top = 120
   end
 end

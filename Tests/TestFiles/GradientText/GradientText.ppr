@@ -10,8 +10,7 @@ uses
   athreads,
   {$ENDIF}
   Interfaces, // this includes the CT adLCL widgetset
-  Forms, GradientTextMainForm
-  { you can add units after this };
+  Forms, GradientTextMainForm, ClickerUtils;
 
 {$R *.res}
 

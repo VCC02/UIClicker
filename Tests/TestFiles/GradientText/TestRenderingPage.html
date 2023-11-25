@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <meta charset="utf-8">
+  <canvas id="rnd" width="500" height="500" />
+
+  <script>
+    const canvas = document.getElementById("rnd");
+    const context = canvas.getContext("2d");
+
+    const grd = context.createLinearGradient(0, 0, 500, 500);
+    grd.addColorStop(0, "red");
+    grd.addColorStop(1, "green");
+
+    context.fillStyle = grd;
+    context.fillRect(10, 10, 300, 500);
+
+    context.fillStyle = '#00f000';
+    context.beginPath();
+    context.moveTo(0, 0);
+    context.lineTo(200, 50);
+    context.lineTo(200, 300);
+    context.lineTo(100, 200);
+    context.lineTo(0, 50);
+    context.closePath();
+    context.fill();
+
+    let imgContent = canvas.toDataURL();
+    const xhr = new XMLHttpRequest();
+    xhr.open("GET", "/SetRenderingResult/" + imgContent, true);
+    xhr.onload = () => {
+      console.log('set image response: ' + xhr.response);
+    }
+
+    xhr.send(null);
+  </script>
+</html>
