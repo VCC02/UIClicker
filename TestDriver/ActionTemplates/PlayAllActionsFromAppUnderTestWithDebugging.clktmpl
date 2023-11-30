@@ -64,6 +64,7 @@ MatchBitmapText[0].CropLeft=
 MatchBitmapText[0].CropTop=
 MatchBitmapText[0].CropRight=
 MatchBitmapText[0].CropBottom=
+MatchBitmapText[0].IgnoreBackgroundColor=0
 MatchBitmapFiles=
 ColorError=0
 AllowedColorErrorCount=0
@@ -85,6 +86,10 @@ StartSearchingWithCachedControl=0
 CachedControlLeft=
 CachedControlTop=
 MatchPrimitiveFiles=
+GetAllControls=0
+UseFastSearch=1
+FastSearchAllowedColorErrorCount=10
+IgnoredColors=
 
 [Action_2]
 ActionName=Find main PageControl
@@ -101,7 +106,7 @@ MatchCriteria.WillMatchBitmapText=0
 MatchCriteria.WillMatchBitmapFiles=0
 MatchCriteria.WillMatchPrimitiveFiles=0
 MatchCriteria.SearchForControlMode=0
-MatchText=
+MatchText=Main
 MatchClassName=SysTabControl32
 MatchTextSeparator=
 MatchClassNameSeparator=
@@ -125,6 +130,7 @@ MatchBitmapText[0].CropLeft=
 MatchBitmapText[0].CropTop=
 MatchBitmapText[0].CropRight=
 MatchBitmapText[0].CropBottom=
+MatchBitmapText[0].IgnoreBackgroundColor=0
 MatchBitmapFiles=
 ColorError=0
 AllowedColorErrorCount=0
@@ -146,6 +152,10 @@ StartSearchingWithCachedControl=0
 CachedControlLeft=
 CachedControlTop=
 MatchPrimitiveFiles=
+GetAllControls=0
+UseFastSearch=1
+FastSearchAllowedColorErrorCount=10
+IgnoredColors=
 
 [Action_3]
 ActionName=Find Play All button
@@ -186,6 +196,7 @@ MatchBitmapText[0].CropLeft=
 MatchBitmapText[0].CropTop=
 MatchBitmapText[0].CropRight=
 MatchBitmapText[0].CropBottom=
+MatchBitmapText[0].IgnoreBackgroundColor=0
 MatchBitmapFiles=
 ColorError=20
 AllowedColorErrorCount=50
@@ -207,6 +218,10 @@ StartSearchingWithCachedControl=0
 CachedControlLeft=
 CachedControlTop=
 MatchPrimitiveFiles=
+GetAllControls=0
+UseFastSearch=1
+FastSearchAllowedColorErrorCount=10
+IgnoredColors=
 
 [Action_4]
 ActionName=Find Play All arrow button
@@ -247,6 +262,7 @@ MatchBitmapText[0].CropLeft=
 MatchBitmapText[0].CropTop=
 MatchBitmapText[0].CropRight=
 MatchBitmapText[0].CropBottom=
+MatchBitmapText[0].IgnoreBackgroundColor=0
 MatchBitmapFiles=
 ColorError=20
 AllowedColorErrorCount=50
@@ -268,6 +284,10 @@ StartSearchingWithCachedControl=0
 CachedControlLeft=
 CachedControlTop=
 MatchPrimitiveFiles=
+GetAllControls=0
+UseFastSearch=1
+FastSearchAllowedColorErrorCount=10
+IgnoredColors=
 
 [Action_5]
 ActionName=Click Play All button
@@ -299,6 +319,11 @@ XClickPointVarDest=$Control_Left$
 YClickPointVarDest=$Control_Top$
 XOffsetDest=0
 YOffsetDest=0
+MouseWheelType=0
+MouseWheelAmount=0
+DelayAfterMovingToDestination=50
+DelayAfterMouseDown=100
+MoveDuration=-1
 
 [Action_6]
 ActionName=wait after click (this fixes a race-condition on the next screenshot)
@@ -350,6 +375,7 @@ MatchBitmapText[0].CropLeft=
 MatchBitmapText[0].CropTop=
 MatchBitmapText[0].CropRight=
 MatchBitmapText[0].CropBottom=
+MatchBitmapText[0].IgnoreBackgroundColor=0
 MatchBitmapFiles=
 ColorError=0
 AllowedColorErrorCount=0
@@ -371,6 +397,10 @@ StartSearchingWithCachedControl=0
 CachedControlLeft=
 CachedControlTop=
 MatchPrimitiveFiles=
+GetAllControls=0
+UseFastSearch=1
+FastSearchAllowedColorErrorCount=10
+IgnoredColors=
 
 [Action_8]
 ActionName=Find PlayAllInDebuggingMode item (may fail with blank screenshot)
@@ -411,6 +441,7 @@ MatchBitmapText[0].CropLeft=0
 MatchBitmapText[0].CropTop=0
 MatchBitmapText[0].CropRight=0
 MatchBitmapText[0].CropBottom=0
+MatchBitmapText[0].IgnoreBackgroundColor=0
 MatchBitmapFiles=
 ColorError=10
 AllowedColorErrorCount=40
@@ -432,6 +463,10 @@ StartSearchingWithCachedControl=0
 CachedControlLeft=
 CachedControlTop=
 MatchPrimitiveFiles=
+GetAllControls=0
+UseFastSearch=1
+FastSearchAllowedColorErrorCount=10
+IgnoredColors=
 
 [Action_9]
 ActionName=Click
@@ -463,6 +498,11 @@ XClickPointVarDest=$Control_Left$
 YClickPointVarDest=$Control_Top$
 XOffsetDest=0
 YOffsetDest=0
+MouseWheelType=0
+MouseWheelAmount=0
+DelayAfterMovingToDestination=50
+DelayAfterMouseDown=100
+MoveDuration=-1
 
 [Action_10]
 ActionName=Find Stop button icon - running state
@@ -503,6 +543,7 @@ MatchBitmapText[0].CropLeft=
 MatchBitmapText[0].CropTop=
 MatchBitmapText[0].CropRight=
 MatchBitmapText[0].CropBottom=
+MatchBitmapText[0].IgnoreBackgroundColor=0
 MatchBitmapFiles=
 ColorError=40
 AllowedColorErrorCount=40
@@ -524,6 +565,10 @@ StartSearchingWithCachedControl=0
 CachedControlLeft=
 CachedControlTop=
 MatchPrimitiveFiles=
+GetAllControls=0
+UseFastSearch=1
+FastSearchAllowedColorErrorCount=10
+IgnoredColors=
 
 [Action_11]
 ActionName=CacheStepOver
@@ -587,6 +632,7 @@ MatchBitmapText[0].CropLeft=
 MatchBitmapText[0].CropTop=
 MatchBitmapText[0].CropRight=
 MatchBitmapText[0].CropBottom=
+MatchBitmapText[0].IgnoreBackgroundColor=0
 MatchBitmapFiles=
 ColorError=40
 AllowedColorErrorCount=40
@@ -608,6 +654,10 @@ StartSearchingWithCachedControl=0
 CachedControlLeft=
 CachedControlTop=
 MatchPrimitiveFiles=
+GetAllControls=0
+UseFastSearch=1
+FastSearchAllowedColorErrorCount=10
+IgnoredColors=
 
 [Action_13]
 ActionName=Step over (SetVar)
@@ -639,6 +689,11 @@ XClickPointVarDest=$Control_Left$
 YClickPointVarDest=$Control_Top$
 XOffsetDest=0
 YOffsetDest=0
+MouseWheelType=0
+MouseWheelAmount=0
+DelayAfterMovingToDestination=50
+DelayAfterMouseDown=100
+MoveDuration=-1
 
 [Action_14]
 ActionName=Find Step Over button icon - idle state
@@ -679,6 +734,7 @@ MatchBitmapText[0].CropLeft=
 MatchBitmapText[0].CropTop=
 MatchBitmapText[0].CropRight=
 MatchBitmapText[0].CropBottom=
+MatchBitmapText[0].IgnoreBackgroundColor=0
 MatchBitmapFiles=
 ColorError=40
 AllowedColorErrorCount=40
@@ -700,6 +756,10 @@ StartSearchingWithCachedControl=0
 CachedControlLeft=
 CachedControlTop=
 MatchPrimitiveFiles=
+GetAllControls=0
+UseFastSearch=1
+FastSearchAllowedColorErrorCount=10
+IgnoredColors=
 
 [Action_15]
 ActionName=Find Step Over button icon - running state
@@ -740,6 +800,7 @@ MatchBitmapText[0].CropLeft=
 MatchBitmapText[0].CropTop=
 MatchBitmapText[0].CropRight=
 MatchBitmapText[0].CropBottom=
+MatchBitmapText[0].IgnoreBackgroundColor=0
 MatchBitmapFiles=
 ColorError=40
 AllowedColorErrorCount=40
@@ -761,6 +822,10 @@ StartSearchingWithCachedControl=0
 CachedControlLeft=
 CachedControlTop=
 MatchPrimitiveFiles=
+GetAllControls=0
+UseFastSearch=1
+FastSearchAllowedColorErrorCount=10
+IgnoredColors=
 
 [Action_16]
 ActionName=Step over (Sleep)
@@ -792,6 +857,11 @@ XClickPointVarDest=$Control_Left$
 YClickPointVarDest=$Control_Top$
 XOffsetDest=0
 YOffsetDest=0
+MouseWheelType=0
+MouseWheelAmount=0
+DelayAfterMovingToDestination=50
+DelayAfterMouseDown=100
+MoveDuration=-1
 
 [Action_17]
 ActionName=Find Step Over button icon - idle state
@@ -832,6 +902,7 @@ MatchBitmapText[0].CropLeft=
 MatchBitmapText[0].CropTop=
 MatchBitmapText[0].CropRight=
 MatchBitmapText[0].CropBottom=
+MatchBitmapText[0].IgnoreBackgroundColor=0
 MatchBitmapFiles=
 ColorError=40
 AllowedColorErrorCount=40
@@ -853,6 +924,10 @@ StartSearchingWithCachedControl=0
 CachedControlLeft=
 CachedControlTop=
 MatchPrimitiveFiles=
+GetAllControls=0
+UseFastSearch=1
+FastSearchAllowedColorErrorCount=10
+IgnoredColors=
 
 [Action_18]
 ActionName=Find Step Over button icon - running state
@@ -893,6 +968,7 @@ MatchBitmapText[0].CropLeft=
 MatchBitmapText[0].CropTop=
 MatchBitmapText[0].CropRight=
 MatchBitmapText[0].CropBottom=
+MatchBitmapText[0].IgnoreBackgroundColor=0
 MatchBitmapFiles=
 ColorError=40
 AllowedColorErrorCount=40
@@ -914,6 +990,10 @@ StartSearchingWithCachedControl=0
 CachedControlLeft=
 CachedControlTop=
 MatchPrimitiveFiles=
+GetAllControls=0
+UseFastSearch=1
+FastSearchAllowedColorErrorCount=10
+IgnoredColors=
 
 [Action_19]
 ActionName=Step over (Call)
@@ -945,6 +1025,11 @@ XClickPointVarDest=$Control_Left$
 YClickPointVarDest=$Control_Top$
 XOffsetDest=0
 YOffsetDest=0
+MouseWheelType=0
+MouseWheelAmount=0
+DelayAfterMovingToDestination=50
+DelayAfterMouseDown=100
+MoveDuration=-1
 
 [Action_20]
 ActionName=Find Step Over button icon - idle state
@@ -985,6 +1070,7 @@ MatchBitmapText[0].CropLeft=
 MatchBitmapText[0].CropTop=
 MatchBitmapText[0].CropRight=
 MatchBitmapText[0].CropBottom=
+MatchBitmapText[0].IgnoreBackgroundColor=0
 MatchBitmapFiles=
 ColorError=40
 AllowedColorErrorCount=40
@@ -1006,6 +1092,10 @@ StartSearchingWithCachedControl=0
 CachedControlLeft=
 CachedControlTop=
 MatchPrimitiveFiles=
+GetAllControls=0
+UseFastSearch=1
+FastSearchAllowedColorErrorCount=10
+IgnoredColors=
 
 [Action_21]
 ActionName=Find Stop button icon - idle state
@@ -1046,6 +1136,7 @@ MatchBitmapText[0].CropLeft=
 MatchBitmapText[0].CropTop=
 MatchBitmapText[0].CropRight=
 MatchBitmapText[0].CropBottom=
+MatchBitmapText[0].IgnoreBackgroundColor=0
 MatchBitmapFiles=
 ColorError=40
 AllowedColorErrorCount=40
@@ -1067,6 +1158,10 @@ StartSearchingWithCachedControl=0
 CachedControlLeft=
 CachedControlTop=
 MatchPrimitiveFiles=
+GetAllControls=0
+UseFastSearch=1
+FastSearchAllowedColorErrorCount=10
+IgnoredColors=
 
 [Notes]
 Content=

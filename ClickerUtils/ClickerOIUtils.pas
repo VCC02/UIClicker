@@ -30,7 +30,7 @@ interface
 
 
 uses
-  Classes, SysUtils, Menus, Controls;
+  Classes, SysUtils, Menus, Controls, ClickerUtils, Graphics;
 
 
 type
@@ -44,6 +44,8 @@ type
 
 procedure AddMenuItemToPopupMenu(APopupMenu: TPopupMenu; ACaption: TCaption; AHandler: TNotifyEvent;
   ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer);
+
+procedure BuildFontColorIcons(AImgLst: TImageList; var AFindControlOptions: TClkFindControlOptions; AEvaluateReplacementsFunc: TEvaluateReplacementsFunc);
 
 
 implementation
@@ -69,6 +71,41 @@ begin
   MenuData^.MenuItemCaption := ACaption;
 
   APopupMenu.Items.Add(MenuItem);
+end;
+
+
+procedure BuildFontColorIcons(AImgLst: TImageList; var AFindControlOptions: TClkFindControlOptions; AEvaluateReplacementsFunc: TEvaluateReplacementsFunc);
+var
+  i: Integer;
+  FontProfilesCount: Integer;
+  FG, BG: TColor;
+  Bmp: TBitmap;
+begin
+  FontProfilesCount := Length(AFindControlOptions.MatchBitmapText);
+
+  AImgLst.Clear;
+  for i := 0 to FontProfilesCount - 1 do
+  begin
+    FG := HexToInt(AEvaluateReplacementsFunc(AFindControlOptions.MatchBitmapText[i].ForegroundColor));
+    BG := HexToInt(AEvaluateReplacementsFunc(AFindControlOptions.MatchBitmapText[i].BackgroundColor));
+
+    Bmp := TBitmap.Create;
+    try
+      Bmp.Width := 16;
+      Bmp.Height := 16;
+      Bmp.Canvas.Pen.Color := 1;
+
+      Bmp.Canvas.Brush.Color := FG;
+      Bmp.Canvas.Rectangle(0, 0, Bmp.Width, Bmp.Height);
+      AImgLst.AddMasked(Bmp, 2);
+
+      Bmp.Canvas.Brush.Color := BG;
+      Bmp.Canvas.Rectangle(0, 0, Bmp.Width, Bmp.Height);
+      AImgLst.AddMasked(Bmp, 2);
+    finally
+      Bmp.Free;
+    end;
+  end;
 end;
 
 end.

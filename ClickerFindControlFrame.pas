@@ -154,13 +154,15 @@ type
 
     property ShowCroppingLines: Boolean write SetShowCroppingLines;
 
-    property FindControlMatchBitmapText: PClkFindControlMatchBitmapText write FFindControlMatchBitmapText; //must be set by owner
+    property FindControlMatchBitmapText: PClkFindControlMatchBitmapText read FFindControlMatchBitmapText write FFindControlMatchBitmapText; //must be set by owner
     property OwnerEditor: TfrClickerFindControl read FOwnerEditor;
 
     property frClickerBMPText: TfrClickerBMPText read FfrClickerBMPText;
   end;
 
   TFontProfileArr = array of TFontProfile;
+
+  TCalculateMinimumErrorCallback = procedure(ATestedError, AErrA, AErrB: Integer; out AFoundArea: TRect; out ARes: Boolean) of object;
 
 
   { TfrClickerFindControl }
@@ -178,6 +180,7 @@ type
     grpFindControlDetailsOnWindow: TGroupBox;
     imgCalcMinErrLevel: TImage;
     imgFindFontNameAndSize: TImage;
+    imgCopyColorUnderMouseCursorImg: TImage;
     imgStopFindFontNameAndSize: TImage;
     imgFindFontNameAndSizeSettings: TImage;
     imgStopCalcMinErrLevel: TImage;
@@ -303,6 +306,7 @@ type
     FSelectingYStart: Integer;
 
     FRectangleSelectingForMinErr: Boolean;
+    FVerboseSearchResults: Boolean;
 
     FGridDrawingOption: TDisplayGridLineOption;
     FPreviewSelectionColors: TSelectionColors;
@@ -405,13 +409,15 @@ type
 
     procedure MenuItemCopySearchAreaAllToClipboardClick(Sender: TObject);
     procedure MenuItemCopySearchAreaSelectedAreaFromBkToClipboardClick(Sender: TObject);
+    procedure MenuItemCopyColorUnderMouseCursorToClipboardClick(Sender: TObject);
     procedure MenuItemUpdateLeftAndTopOffsetsFromPreviewTextImageToEditboxes(Sender: TObject);
     procedure MenuItemUpdateLeftTopRightBottomOffsetsFromPreviewTextImageToEditboxes(Sender: TObject);
-    procedure MenuItemCalculateMinimumErrorLevelToMatchText(Sender: TObject);
-    procedure MenuItemCalculateMinimumColorErrorCountToMatchText(Sender: TObject);
-    procedure MenuItemStopCalculatingMinimumErrorLevelToMatchText(Sender: TObject);
+    procedure MenuItemCalculateMinimumErrorLevelToMatchBitmap(Sender: TObject);
+    procedure MenuItemCalculateMinimumColorErrorCountToMatchBitmap(Sender: TObject);
+    procedure MenuItemStopCalculatingMinimumErrorLevelToMatchBitmap(Sender: TObject);
     procedure MenuItemDisplaySelectionLinesForExpectedFindLocation(Sender: TObject);
     procedure MenuItemHideSelectionLinesForExpectedFindLocation(Sender: TObject);
+    procedure MenuItemEnableVerboseSearchResults(Sender: TObject);
     procedure MenuItemFindFontNameAndSizeToMatchText(Sender: TObject);
     procedure MenuItemEditSettingsForFontNameAndSizeSearching(Sender: TObject);
     procedure MenuItemStopFindFontNameAndSizeToMatchText(Sender: TObject);
@@ -422,6 +428,12 @@ type
 
     procedure FSearchAreaScrBoxMouseWheel(Sender: TObject; Shift: TShiftState; WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
     procedure MenuSetGridType(Sender: TObject);
+
+    procedure ExecuteFindSubControl_ForColorErrorLevel(ATestedError, AErrA, AErrB: Integer; out AFoundArea: TRect; out ARes: Boolean);
+    procedure ExecuteFindSubControl_ForColorErrorCount(ATestedError, AErrA, AErrB: Integer; out AFoundArea: TRect; out ARes: Boolean);
+    function CalculateMinimumErrorLevelToMatchBitmap(AFindControlOptions: PClkFindControlOptions): Integer;
+    function CalculateMinimumErrorCountToMatchBitmap(AFindControlOptions: PClkFindControlOptions): Integer;
+    function CalculateMinimumErrorToMatchBitmap(AMinInterval, AMaxInterval, AErrA, AErrB: Integer; ASearchedParamName: string; ACallback: TCalculateMinimumErrorCallback): Integer;
 
     function GetFontProfile(Value: Integer): TFontProfile;
 
@@ -530,6 +542,7 @@ type
 
     procedure UpdateAllSelectionLabelsFromCropEditBoxes;
     procedure UpdateSearchAreaSearchedTextAndLabels;
+    procedure PopulateDbgImgExtraMenuWithTxtItems;
     procedure PopulateDbgImgExtraMenu;
   public
     //FBMPTextFrames: TfrClickerBMPTextArr; //should eventually made private and accesed through functions
@@ -573,6 +586,7 @@ type
     procedure UpdateOnTextCroppingRightMouseMove(var AMatchBMP: TClkFindControlMatchBitmapText; AEditBox: TVTEdit; Shift: TShiftState; X, Y, AProfileIndex: Integer);
     procedure UpdateOnTextCroppingBottomMouseDown(var AMatchBMP: TClkFindControlMatchBitmapText; AEditBox: TVTEdit; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure UpdateOnTextCroppingBottomMouseMove(var AMatchBMP: TClkFindControlMatchBitmapText; AEditBox: TVTEdit; Shift: TShiftState; X, Y, AProfileIndex: Integer);
+    procedure UpdateOnTextPropeties;
 
     procedure AddNewFontProfile(ANewProfile: TClkFindControlMatchBitmapText);
     procedure UpdateFontProfileName(AProfileIndex: Integer; ANewName: string);
@@ -1036,6 +1050,7 @@ begin
   FDbgImgHold := False;
   FRectangleSelecting := False;
   FRectangleSelectingForMinErr := False;
+  FVerboseSearchResults := False;
   FDragging := False;
   FInMemFS := nil;
 
@@ -1053,6 +1068,7 @@ begin
   FExpectedErrLevel_BotRight.Y := -1;
 
   PageControlMatch.ActivePageIndex := 0;
+  PageControlMatch.Caption := 'Match';
 end;
 
 
@@ -1869,22 +1885,109 @@ begin
 end;
 
 
-procedure TfrClickerFindControl.PopulateDbgImgExtraMenu;
+procedure TfrClickerFindControl.PopulateDbgImgExtraMenuWithTxtItems;
 var
-  MenuItem: TMenuItem;
-  i: Integer;
+  MenuItem, MenuItem_Load: TMenuItem;
+  i, QualityIdx: Integer;
+  FindControlOptions: PClkFindControlOptions;
+  Bmp: TBitmap;
 begin
+  for i := 0 to FSearchAreaDbgImgSearchedBmpMenu.Items.Count - 1 do
+    if FSearchAreaDbgImgSearchedBmpMenu.Items.Items[i].Bitmap <> nil then
+    begin
+      try
+        FSearchAreaDbgImgSearchedBmpMenu.Items.Items[i].Bitmap.Free;
+        FSearchAreaDbgImgSearchedBmpMenu.Items.Items[i].Bitmap := nil;
+      except
+        //double free
+      end;
+    end;
+
   FSearchAreaDbgImgSearchedBmpMenu.Items.Clear;
 
-  MenuItem := TMenuItem.Create(FSearchAreaDbgImgSearchedBmpMenu);
-  MenuItem.Caption := 'Load "Bmp Text" to searched area';
-  MenuItem.OnClick := MenuItemLoadBmpTextToSearchedAreaClick;
-  FSearchAreaDbgImgSearchedBmpMenu.Items.Add(MenuItem);
+  MenuItem_Load := TMenuItem.Create(FSearchAreaDbgImgSearchedBmpMenu);
+  MenuItem_Load.Caption := 'Load "Bmp Text" to searched area';
+  MenuItem_Load.OnClick := nil;
+  FSearchAreaDbgImgSearchedBmpMenu.Items.Add(MenuItem_Load);
+
+  FindControlOptions := DoOnGetFindControlOptions;
+  for i := 0 to Length(FindControlOptions^.MatchBitmapText) - 1 do
+  begin
+    MenuItem := TMenuItem.Create(FSearchAreaDbgImgSearchedBmpMenu);
+    MenuItem.Caption := 'Profile [' + IntToStr(i) + ']: ' +
+                        FindControlOptions^.MatchBitmapText[i].FontName + '  ' +
+                        IntToStr(FindControlOptions^.MatchBitmapText[i].FontSize) + '  ';
+
+    if FindControlOptions^.MatchBitmapText[i].FontQualityUsesReplacement then
+      MenuItem.Caption := MenuItem.Caption + FindControlOptions^.MatchBitmapText[i].FontQualityReplacement
+    else
+      MenuItem.Caption := MenuItem.Caption + CFontQualityStr[FindControlOptions^.MatchBitmapText[i].FontQuality];
+
+    MenuItem.Caption := MenuItem.Caption + '   ' + FindControlOptions^.MatchBitmapText[i].ForegroundColor;
+    MenuItem.Caption := MenuItem.Caption + '   ' + FindControlOptions^.MatchBitmapText[i].BackgroundColor;
+
+    if FindControlOptions^.MatchBitmapText[i].Bold then
+      MenuItem.Caption := MenuItem.Caption + '  Bold';
+
+    if FindControlOptions^.MatchBitmapText[i].Italic then
+      MenuItem.Caption := MenuItem.Caption + '  Italic';
+
+    if FindControlOptions^.MatchBitmapText[i].Underline then
+      MenuItem.Caption := MenuItem.Caption + '  Underline';
+
+    if FindControlOptions^.MatchBitmapText[i].StrikeOut then
+      MenuItem.Caption := MenuItem.Caption + '  StrikeOut';
+
+    MenuItem.OnClick := MenuItemLoadBmpTextToSearchedAreaClick;
+    Bmp := TBitmap.Create;
+    Bmp.Width := 16;
+    Bmp.Height := 16;
+    Bmp.Canvas.Font.Color := HexToInt(EvaluateReplacements(FindControlOptions^.MatchBitmapText[i].ForegroundColor));
+    if FindControlOptions^.MatchBitmapText[i].FontQuality = fqNonAntialiased then
+    begin
+      Bmp.Canvas.Font.Name := 'Tahoma';
+      Bmp.Canvas.Font.Size := 8;
+    end
+    else
+    begin
+      Bmp.Canvas.Font.Name := 'Segoe UI';
+      Bmp.Canvas.Font.Size := 9;
+    end;
+
+    if FindControlOptions^.MatchBitmapText[i].FontQualityUsesReplacement then
+    begin
+      QualityIdx := GetFontQualityIndexByName(EvaluateReplacements(FindControlOptions^.MatchBitmapText[i].FontQualityReplacement));
+      if (QualityIdx > -1) and (QualityIdx <= Ord(High(TFontQuality))) then
+        Bmp.Canvas.Font.Quality := TFontQuality(QualityIdx)
+      else
+        Bmp.Canvas.Font.Quality := fqDefault
+    end
+    else
+      Bmp.Canvas.Font.Quality := FindControlOptions^.MatchBitmapText[i].FontQuality;
+
+    Bmp.Canvas.Brush.Color := HexToInt(EvaluateReplacements(FindControlOptions^.MatchBitmapText[i].BackgroundColor));
+    Bmp.Canvas.Pen.Color := Bmp.Canvas.Brush.Color;
+    Bmp.Canvas.Rectangle(0, 0, 16, 16);
+    Bmp.Canvas.TextOut(0, 0, 'Txt');
+    MenuItem.Bitmap := Bmp;
+    MenuItem.Tag := i;
+
+    FSearchAreaDbgImgSearchedBmpMenu.Items.Items[0].Add(MenuItem);
+  end;
 
   MenuItem := TMenuItem.Create(FSearchAreaDbgImgSearchedBmpMenu);
   MenuItem.Caption := 'Unload "Bmp Text" from searched area';
   MenuItem.OnClick := MenuItemUnloadBmpTextFromSearchedAreaClick;
   FSearchAreaDbgImgSearchedBmpMenu.Items.Add(MenuItem);
+end;
+
+
+procedure TfrClickerFindControl.PopulateDbgImgExtraMenu;
+var
+  MenuItem: TMenuItem;
+  i: Integer;
+begin
+  PopulateDbgImgExtraMenuWithTxtItems;
 
   if lstMatchBitmapFiles.Items.Count > 0 then
   begin
@@ -2166,6 +2269,12 @@ begin
       FSearchAreaMenu.Items.Add(MenuItem);
 
       MenuItem := TMenuItem.Create(FSearchAreaMenu);
+      MenuItem.Caption := 'Copy color under mouse cursor to clipboard';
+      MenuItem.OnClick := MenuItemCopyColorUnderMouseCursorToClipboardClick;
+      MenuItem.Bitmap := imgCopyColorUnderMouseCursorImg.Picture.Bitmap;
+      FSearchAreaMenu.Items.Add(MenuItem);
+
+      MenuItem := TMenuItem.Create(FSearchAreaMenu);
       MenuItem.Caption := '-';
       FSearchAreaMenu.Items.Add(MenuItem);
 
@@ -2186,20 +2295,20 @@ begin
       FSearchAreaMenu.Items.Add(MenuItem);
 
       MenuItem := TMenuItem.Create(FSearchAreaMenu);
-      MenuItem.Caption := 'Calculate minimum color error level to match text...';
-      MenuItem.OnClick := MenuItemCalculateMinimumErrorLevelToMatchText;
+      MenuItem.Caption := 'Calculate minimum color error level to match bitmap...';
+      MenuItem.OnClick := MenuItemCalculateMinimumErrorLevelToMatchBitmap;
       MenuItem.Bitmap := imgCalcMinErrLevel.Picture.Bitmap;
       FSearchAreaMenu.Items.Add(MenuItem);
 
       MenuItem := TMenuItem.Create(FSearchAreaMenu);
-      MenuItem.Caption := 'Calculate minimum color error count to match text...';
-      MenuItem.OnClick := MenuItemCalculateMinimumColorErrorCountToMatchText;
+      MenuItem.Caption := 'Calculate minimum color error count to match bitmap...';
+      MenuItem.OnClick := MenuItemCalculateMinimumColorErrorCountToMatchBitmap;
       MenuItem.Bitmap := imgCalcMinErrLevel.Picture.Bitmap;
       FSearchAreaMenu.Items.Add(MenuItem);
 
       MenuItem := TMenuItem.Create(FSearchAreaMenu);
       MenuItem.Caption := 'Stop calculating minimum error level';
-      MenuItem.OnClick := MenuItemStopCalculatingMinimumErrorLevelToMatchText;
+      MenuItem.OnClick := MenuItemStopCalculatingMinimumErrorLevelToMatchBitmap;
       MenuItem.Bitmap := imgStopCalcMinErrLevel.Picture.Bitmap;
       FSearchAreaMenu.Items.Add(MenuItem);
 
@@ -2213,6 +2322,13 @@ begin
       MenuItem.Caption := 'Hide selection lines for expected find location';
       MenuItem.OnClick := MenuItemHideSelectionLinesForExpectedFindLocation;
       MenuItem.Bitmap := imgDisplayExpectedFindLocation.Picture.Bitmap;
+      FSearchAreaMenu.Items.Add(MenuItem);
+
+      MenuItem := TMenuItem.Create(FSearchAreaMenu);
+      MenuItem.Caption := 'Enable verbose search results';
+      MenuItem.OnClick := MenuItemEnableVerboseSearchResults;
+      MenuItem.AutoCheck := True;
+      MenuItem.Bitmap := nil; //imgEnableVerboseSearchResults.Picture.Bitmap;
       FSearchAreaMenu.Items.Add(MenuItem);
 
       MenuItem := TMenuItem.Create(FSearchAreaMenu);
@@ -3267,6 +3383,12 @@ begin
 end;
 
 
+procedure TfrClickerFindControl.MenuItemCopyColorUnderMouseCursorToClipboardClick(Sender: TObject);
+begin
+  Clipboard.AsText := lblMouseOnDbgImgBB.Caption + lblMouseOnDbgImgGG.Caption + lblMouseOnDbgImgRR.Caption;
+end;
+
+
 procedure TfrClickerFindControl.MenuItemUpdateLeftAndTopOffsetsFromPreviewTextImageToEditboxes(Sender: TObject);
 var
   Offsets: TSimpleRectString;
@@ -3332,133 +3454,55 @@ begin
 end;
 
 
-procedure TfrClickerFindControl.MenuItemCalculateMinimumErrorLevelToMatchText(Sender: TObject);
+procedure TfrClickerFindControl.ExecuteFindSubControl_ForColorErrorLevel(ATestedError, AErrA, AErrB: Integer; out AFoundArea: TRect; out ARes: Boolean);
+begin
+  ARes := DoOnExecuteFindSubControlAction(ATestedError, AErrA, AErrB, '', 0, AFoundArea);
+end;
+
+
+procedure TfrClickerFindControl.ExecuteFindSubControl_ForColorErrorCount(ATestedError, AErrA, AErrB: Integer; out AFoundArea: TRect; out ARes: Boolean);
+begin
+  ARes := DoOnExecuteFindSubControlAction(AErrA, ATestedError, AErrB, '', 0, AFoundArea);
+end;
+
+
+function TfrClickerFindControl.CalculateMinimumErrorLevelToMatchBitmap(AFindControlOptions: PClkFindControlOptions): Integer;
 var
-  MinInterval, MaxInterval: Integer;
-  Found: Boolean;
+  ErrA, ErrB: Integer;
+begin
+  ErrA := StrToIntDef(EvaluateReplacements(AFindControlOptions.AllowedColorErrorCount), 10); //AllowedColErr
+  ErrB := StrToIntDef(EvaluateReplacements(AFindControlOptions.FastSearchAllowedColorErrorCount), 10); //FastSearchAllowedColErr
+
+  Result := CalculateMinimumErrorToMatchBitmap(0, 100, ErrA, ErrB, 'level', ExecuteFindSubControl_ForColorErrorLevel);
+end;
+
+
+function TfrClickerFindControl.CalculateMinimumErrorCountToMatchBitmap(AFindControlOptions: PClkFindControlOptions): Integer;
+var
+  ErrA, ErrB: Integer;
+begin
+  ErrA := StrToIntDef(EvaluateReplacements(AFindControlOptions.ColorError), 10); //ErrorLevel
+  ErrB := StrToIntDef(EvaluateReplacements(AFindControlOptions.FastSearchAllowedColorErrorCount), 10);
+
+  Result := CalculateMinimumErrorToMatchBitmap(0, 1000, ErrA, ErrB, 'count', ExecuteFindSubControl_ForColorErrorCount);
+end;
+
+
+procedure TfrClickerFindControl.MenuItemCalculateMinimumErrorLevelToMatchBitmap(Sender: TObject);
+var
   FindControlOptions: PClkFindControlOptions;
-  TestedErrorLevel, LastValidErrorLevel: Integer;
-  AllowedColErr, FastSearchAllowedColErr: Integer;
-  ExpectedArea: TRect; //Expected area where the text should be found. If found somewhere else, then it's a false positive.
-  FoundArea: TRect;
-  FoundOutsideOfExpectedArea: Boolean;
+  Res: Integer;
 begin
   (Sender as TMenuItem).Enabled := False;
   try
-    if MessageBox(Handle, 'The algorithm will use the current FindSubControl action settings, to get the minimum color error level from the expected area (defined by holding the Alt key while selecting). It can be stopped with Ctrl-Shift-F2. Continue?', PChar(Application.Title), MB_ICONQUESTION + MB_YESNO) = IDNO then
-      Exit;
-
     FindControlOptions := DoOnGetFindControlOptions;
+    Res := CalculateMinimumErrorLevelToMatchBitmap(FindControlOptions);
 
-    MinInterval := 0;
-    MaxInterval := 100; //a color error this high would make no sense anyway
-    LastValidErrorLevel := -1;
-
-    AllowedColErr := StrToIntDef(EvaluateReplacements(FindControlOptions.AllowedColorErrorCount), 10);
-    FastSearchAllowedColErr := StrToIntDef(EvaluateReplacements(FindControlOptions.FastSearchAllowedColorErrorCount), 10);
-
-    DoOnAddToLog('');
-    DoOnAddToLog('Searching for minimum color error level...');
-
-    if (FExpectedErrLevel_TopLeft.X < 0) or (FExpectedErrLevel_TopLeft.Y < 0) then
+    if Res <> -1 then
     begin
-      FExpectedErrLevel_TopLeft.X := 0;
-      FExpectedErrLevel_TopLeft.Y := 0;
-      FExpectedErrLevel_BotRight.X := FSearchAreaControlDbgImg.Width;
-      FExpectedErrLevel_BotRight.Y := FSearchAreaControlDbgImg.Height;
-    end;
-
-    Found := False;
-    FManuallyStopSearching := False;
-    FoundOutsideOfExpectedArea := False;
-
-    tmrBlinkCalcErrLevel.Enabled := True;
-    try
-      while MaxInterval - MinInterval > 1 do
-      begin
-        TestedErrorLevel := (MinInterval + MaxInterval) shr 1;
-
-        DoOnAddToLog('TestedErrorLevel: ' + IntToStr(TestedErrorLevel) + '    Interval: [' + IntToStr(MinInterval) + '..' + IntToStr(MaxInterval) + ']');
-
-        Found := DoOnExecuteFindSubControlAction(TestedErrorLevel, AllowedColErr, FastSearchAllowedColErr, '', 0, FoundArea);
-        DoOnAddToLog('"Found" flag: ' + BoolToStr(Found, 'True', 'False'));
-
-        if Found then
-        begin
-          ExpectedArea.Left := FExpectedErrLevel_TopLeft.X;
-          ExpectedArea.Top := FExpectedErrLevel_TopLeft.Y;
-          ExpectedArea.Right := FExpectedErrLevel_BotRight.X;
-          ExpectedArea.Bottom := FExpectedErrLevel_BotRight.Y;
-
-          if (FoundArea.Left < ExpectedArea.Left) or
-             (FoundArea.Top < ExpectedArea.Top) or
-             (FoundArea.Right > ExpectedArea.Right) or
-             (FoundArea.Bottom > ExpectedArea.Bottom) then
-          begin
-            Found := False;
-            FoundOutsideOfExpectedArea := True;
-            DoOnAddToLog('Resetting "Found" flag, because the text can be found outside of expected area..');
-          end
-          else
-            LastValidErrorLevel := TestedErrorLevel;
-        end;
-
-        if not Found then
-          MinInterval := TestedErrorLevel
-        else
-          MaxInterval := TestedErrorLevel;
-
-        if (GetAsyncKeyState(VK_CONTROL) < 0) and (GetAsyncKeyState(VK_SHIFT) < 0) and(GetAsyncKeyState(VK_F2) < 0) then
-          Break;
-
-        Application.ProcessMessages;
-        Sleep(10);
-
-        if FManuallyStopSearching then
-        begin
-          DoOnAddToLog('Manually stopping searching for color error level.');
-          Break;
-        end;
-
-        if not Found and (LastValidErrorLevel <> -1) then //Found at least once.  This may prevent further searching, if the minimum value is somewhere in between TestedErrorLevel and LastValidErrorLevel.
-        begin
-          Found := True; //accept the current found value
-          Break;
-        end;
-      end; //while
-    finally
-      tmrBlinkCalcErrLevel.Enabled := False;
-      imgCalcMinErrLevel.Visible := False;
-    end;
-
-    FManuallyStopSearching := False;
-
-    if not Found and not FoundOutsideOfExpectedArea then
-    begin
-      MessageBox(Handle, 'No proper color error level found.', PChar(Application.Title), MB_ICONINFORMATION);
-      DoOnAddToLog('No proper color error level found.');
-
-      if FoundOutsideOfExpectedArea then
-        DoOnAddToLog('The searched text can be found outside of expected area.');
-    end
-    else
-    begin
-      if LastValidErrorLevel = -1 then
-        DoOnAddToLog('No valid value found.')
-      else
-      begin
-        if TestedErrorLevel <> LastValidErrorLevel then
-          TestedErrorLevel := LastValidErrorLevel; //update to the latest valid value
-
-        DoOnAddToLog('Found an error level for color matching: ' + IntToStr(TestedErrorLevel));
-        if MessageBox(Handle, 'A color error level found. Do you want to update the action properties?', PChar(Application.Title), MB_ICONQUESTION + MB_YESNO) = IDYES then
-        begin
-          FindControlOptions^.ColorError := IntToStr(TestedErrorLevel);
-          tmrUpdateSearchAreaOffsetEditBoxes.Enabled := True; //an ugly way to trigger the modified flag in parent frames, up to OI
-          DoOnTriggerOnControlsModified;
-          //update other properties if the algorithm is advanced enough to calculate more than ColorError
-        end;
-      end;
+      FindControlOptions^.ColorError := IntToStr(Res);
+      tmrUpdateSearchAreaOffsetEditBoxes.Enabled := True; //an ugly way to trigger the modified flag in parent frames, up to OI
+      DoOnTriggerOnControlsModified;
     end;
   finally
     (Sender as TMenuItem).Enabled := True;
@@ -3466,135 +3510,197 @@ begin
 end;
 
 
-procedure TfrClickerFindControl.MenuItemCalculateMinimumColorErrorCountToMatchText(Sender: TObject); //These two functions should be refactored, because they have a similar structure.
+procedure TfrClickerFindControl.MenuItemCalculateMinimumColorErrorCountToMatchBitmap(Sender: TObject);
 var
-  MinInterval, MaxInterval: Integer;
-  Found: Boolean;
   FindControlOptions: PClkFindControlOptions;
-  ErrorLevel, TestedAllowedColErr, LastValidAllowedColErr, FastSearchAllowedColErr: Integer;
-  ExpectedArea: TRect; //Expected area where the text should be found. If found somewhere else, then it's a false positive.
-  FoundArea: TRect;
-  FoundOutsideOfExpectedArea: Boolean;
+  Res: Integer;
 begin
   (Sender as TMenuItem).Enabled := False;
   try
-    if MessageBox(Handle, 'The algorithm will use the current FindSubControl action settings, to get the minimum color error count from the expected area (defined by holding the Alt key while selecting). It can be stopped with Ctrl-Shift-F2. Continue?', PChar(Application.Title), MB_ICONQUESTION + MB_YESNO) = IDNO then
-      Exit;
-
     FindControlOptions := DoOnGetFindControlOptions;
+    Res := CalculateMinimumErrorCountToMatchBitmap(FindControlOptions);
 
-    MinInterval := 0;
-    MaxInterval := 1000; //depends on text size and length (afterall, the bmp area)
-    LastValidAllowedColErr := -1;
-
-    ErrorLevel := StrToIntDef(EvaluateReplacements(FindControlOptions.ColorError), 10);
-    FastSearchAllowedColErr := StrToIntDef(EvaluateReplacements(FindControlOptions.FastSearchAllowedColorErrorCount), 10);
-
-    DoOnAddToLog('');
-    DoOnAddToLog('Searching for minimum color error count...');
-
-    if (FExpectedErrLevel_TopLeft.X < 0) or (FExpectedErrLevel_TopLeft.Y < 0) then
+    if Res <> -1 then
     begin
-      FExpectedErrLevel_TopLeft.X := 0;
-      FExpectedErrLevel_TopLeft.Y := 0;
-      FExpectedErrLevel_BotRight.X := FSearchAreaControlDbgImg.Width;
-      FExpectedErrLevel_BotRight.Y := FSearchAreaControlDbgImg.Height;
-    end;
-
-    Found := False;
-    FManuallyStopSearching := False;
-    FoundOutsideOfExpectedArea := False;
-
-    tmrBlinkCalcErrLevel.Enabled := True;
-    try
-      while MaxInterval - MinInterval > 1 do
-      begin
-        TestedAllowedColErr := (MinInterval + MaxInterval) shr 1;
-
-        DoOnAddToLog('TestedAllowedColErr: ' + IntToStr(TestedAllowedColErr) + '    Interval: [' + IntToStr(MinInterval) + '..' + IntToStr(MaxInterval) + ']');
-
-        Found := DoOnExecuteFindSubControlAction(ErrorLevel, TestedAllowedColErr, FastSearchAllowedColErr, '', 0, FoundArea);
-        DoOnAddToLog('"Found" flag: ' + BoolToStr(Found, 'True', 'False'));
-
-        if Found then
-        begin
-          ExpectedArea.Left := FExpectedErrLevel_TopLeft.X;
-          ExpectedArea.Top := FExpectedErrLevel_TopLeft.Y;
-          ExpectedArea.Right := FExpectedErrLevel_BotRight.X;
-          ExpectedArea.Bottom := FExpectedErrLevel_BotRight.Y;
-
-          if (FoundArea.Left < ExpectedArea.Left) or
-             (FoundArea.Top < ExpectedArea.Top) or
-             (FoundArea.Right > ExpectedArea.Right) or
-             (FoundArea.Bottom > ExpectedArea.Bottom) then
-          begin
-            Found := False;
-            FoundOutsideOfExpectedArea := True;
-            DoOnAddToLog('Resetting "Found" flag, because the text can be found outside of expected area..');
-          end
-          else
-            LastValidAllowedColErr := TestedAllowedColErr;
-        end;
-
-        if not Found and not FoundOutsideOfExpectedArea then
-          MinInterval := TestedAllowedColErr
-        else
-          MaxInterval := TestedAllowedColErr;
-
-        if (GetAsyncKeyState(VK_CONTROL) < 0) and (GetAsyncKeyState(VK_SHIFT) < 0) and(GetAsyncKeyState(VK_F2) < 0) then
-          Break;
-
-        Application.ProcessMessages;
-        Sleep(10);
-
-        if FManuallyStopSearching then
-        begin
-          DoOnAddToLog('Manually stopping searching for color error count.');
-          Break;
-        end;
-
-        if not Found and (LastValidAllowedColErr <> -1) then //Found at least once.  This may prevent further searching, if the minimum value is somewhere in between TestedErrorLevel and LastValidErrorLevel.
-        begin
-          Found := True; //accept the current found value
-          Break;
-        end;
-      end; //while
-    finally
-      tmrBlinkCalcErrLevel.Enabled := False;
-      imgCalcMinErrLevel.Visible := False;
-    end;
-
-    FManuallyStopSearching := False;
-
-    if not Found then
-    begin
-      MessageBox(Handle, 'No proper color error count found.', PChar(Application.Title), MB_ICONINFORMATION);
-      DoOnAddToLog('No proper color error count found.');
-
-      if FoundOutsideOfExpectedArea then
-        DoOnAddToLog('The searched text can be found outside of expected area.');
-    end
-    else
-    begin
-      if LastValidAllowedColErr = -1 then
-        DoOnAddToLog('No valid value found.')
-      else
-      begin
-        if TestedAllowedColErr <> LastValidAllowedColErr then
-          TestedAllowedColErr := LastValidAllowedColErr; //update to the latest valid value
-
-        DoOnAddToLog('Found an error count for color matching: ' + IntToStr(TestedAllowedColErr));
-        if MessageBox(Handle, 'A color error count found. Do you want to update the action properties?', PChar(Application.Title), MB_ICONQUESTION + MB_YESNO) = IDYES then
-        begin
-          FindControlOptions^.AllowedColorErrorCount := IntToStr(TestedAllowedColErr);
-          tmrUpdateSearchAreaOffsetEditBoxes.Enabled := True; //an ugly way to trigger the modified flag in parent frames, up to OI
-          DoOnTriggerOnControlsModified;
-          //update other properties if the algorithm is advanced enough to calculate more than ColorError
-        end;
-      end;
+      FindControlOptions^.AllowedColorErrorCount := IntToStr(Res);
+      tmrUpdateSearchAreaOffsetEditBoxes.Enabled := True; //an ugly way to trigger the modified flag in parent frames, up to OI
+      DoOnTriggerOnControlsModified;
     end;
   finally
     (Sender as TMenuItem).Enabled := True;
+  end;
+end;
+
+
+function TfrClickerFindControl.CalculateMinimumErrorToMatchBitmap(AMinInterval, AMaxInterval, AErrA, AErrB: Integer; ASearchedParamName: string; ACallback: TCalculateMinimumErrorCallback): Integer;
+var
+  MinInterval, MaxInterval: Integer;
+  Found: Boolean;
+  LastValidValue, TestedError: Integer;
+  ExpectedArea: TRect; //Expected area where the bitmap should be found. If found somewhere else, then it's a false positive.
+  FoundArea: TRect;
+  FoundOutsideOfExpectedArea: Boolean;
+  FoundOutsideOfExpectedArea_ThisTime: Boolean;
+  DetailedErrMsg, DisplayedMsg: string;
+begin
+  DetailedErrMsg := '';
+  Result := -1;
+  if MessageBox(Handle, PChar('The algorithm will use the current FindSubControl action settings, to get the minimum color error ' + ASearchedParamName + ' from the expected area (defined by holding the Alt key while selecting). It can be stopped with Ctrl-Shift-F2. Continue?'), PChar(Application.Title), MB_ICONQUESTION + MB_YESNO) = IDNO then
+    Exit;
+
+  MinInterval := AMinInterval;
+  MaxInterval := AMaxInterval;
+  LastValidValue := -1;
+
+  DoOnAddToLog('');
+  DisplayedMsg := 'Searching for minimum color error ' + ASearchedParamName + '...';
+  DetailedErrMsg := DetailedErrMsg + DisplayedMsg;
+  DoOnAddToLog(DisplayedMsg);
+
+  if (FExpectedErrLevel_TopLeft.X < 0) or (FExpectedErrLevel_TopLeft.Y < 0) then
+  begin
+    FExpectedErrLevel_TopLeft.X := 0;
+    FExpectedErrLevel_TopLeft.Y := 0;
+    FExpectedErrLevel_BotRight.X := FSearchAreaControlDbgImg.Width;
+    FExpectedErrLevel_BotRight.Y := FSearchAreaControlDbgImg.Height;
+  end;
+
+  Found := False;
+  FManuallyStopSearching := False;
+  FoundOutsideOfExpectedArea := False;
+
+  tmrBlinkCalcErrLevel.Enabled := True;
+  try
+    while MaxInterval - MinInterval > 1 do
+    begin
+      TestedError := (MinInterval + MaxInterval) shr 1;
+
+      DisplayedMsg := 'Tested value: ' + IntToStr(TestedError) + ', from interval: [' + IntToStr(MinInterval) + '..' + IntToStr(MaxInterval) + ']';
+      DoOnAddToLog(DisplayedMsg);
+      DetailedErrMsg := DetailedErrMsg + #13#10 + DisplayedMsg;
+
+      ACallback(TestedError, AErrA, AErrB, FoundArea, Found);
+
+      DisplayedMsg := '"Found" flag: ' + BoolToStr(Found, 'True', 'False');
+      DoOnAddToLog(DisplayedMsg);
+      DetailedErrMsg := DetailedErrMsg + #13#10 + DisplayedMsg;
+
+      FoundOutsideOfExpectedArea_ThisTime := False;
+
+      if Found then
+      begin
+        ExpectedArea.Left := FExpectedErrLevel_TopLeft.X;
+        ExpectedArea.Top := FExpectedErrLevel_TopLeft.Y;
+        ExpectedArea.Right := FExpectedErrLevel_BotRight.X;
+        ExpectedArea.Bottom := FExpectedErrLevel_BotRight.Y;
+
+        if (FoundArea.Left < ExpectedArea.Left) or
+           (FoundArea.Top < ExpectedArea.Top) or
+           (FoundArea.Right > ExpectedArea.Right) or
+           (FoundArea.Bottom > ExpectedArea.Bottom) then
+        begin
+          Found := False;
+          FoundOutsideOfExpectedArea := True;
+          FoundOutsideOfExpectedArea_ThisTime := True;
+
+          DisplayedMsg := 'Resetting "Found" flag, because the bitmap can be found outside of expected area (Found vs. Expected).' +
+                          '  L: ' + IntToStr(FoundArea.Left) + ' vs. ' + IntToStr(ExpectedArea.Left) +
+                          '  T: ' + IntToStr(FoundArea.Top) + ' vs. ' + IntToStr(ExpectedArea.Top) +
+                          '  R: ' + IntToStr(FoundArea.Right) + ' vs. ' + IntToStr(ExpectedArea.Right) +
+                          '  B: ' + IntToStr(FoundArea.Bottom) + ' vs. ' + IntToStr(ExpectedArea.Bottom);
+          DoOnAddToLog(DisplayedMsg);
+          DetailedErrMsg := DetailedErrMsg + #13#10 + DisplayedMsg;
+        end
+        else
+          LastValidValue := TestedError;
+      end;
+
+      if not Found and not FoundOutsideOfExpectedArea_ThisTime then
+        MinInterval := TestedError
+      else
+        MaxInterval := TestedError;
+
+      if (GetAsyncKeyState(VK_CONTROL) < 0) and (GetAsyncKeyState(VK_SHIFT) < 0) and(GetAsyncKeyState(VK_F2) < 0) then
+        Break;
+
+      Application.ProcessMessages;
+      Sleep(10);
+
+      if FManuallyStopSearching then
+      begin
+        DisplayedMsg := 'Manually stopping searching for color error ' + ASearchedParamName + '.';
+        DoOnAddToLog(DisplayedMsg);
+        DetailedErrMsg := DetailedErrMsg + #13#10 + DisplayedMsg;
+        Break;
+      end;
+
+      if not Found and (LastValidValue <> -1) then //Found at least once.  This may prevent further searching, if the minimum value is somewhere in between Tested and LastValid.
+      begin
+        Found := True; //accept the current found value
+        Break;
+      end;
+    end; //while
+  finally
+    tmrBlinkCalcErrLevel.Enabled := False;
+    imgCalcMinErrLevel.Visible := False;
+  end;
+
+  FManuallyStopSearching := False;
+
+  if not Found and not FoundOutsideOfExpectedArea then
+  begin
+    if FoundOutsideOfExpectedArea then
+    begin
+      DisplayedMsg := 'The searched bitmap can be found outside of expected area.';
+      DoOnAddToLog(DisplayedMsg);
+      DetailedErrMsg := DetailedErrMsg + #13#10 + DisplayedMsg;
+    end;
+
+    DisplayedMsg := 'No proper color error ' + ASearchedParamName + ' found.';
+
+    if LastValidValue <> -1 then
+      DisplayedMsg := DisplayedMsg + ' The last potentally valid value: ' + IntToStr(LastValidValue);
+
+    DoOnAddToLog(DisplayedMsg);
+    DetailedErrMsg := DetailedErrMsg + #13#10 + DisplayedMsg;
+
+    if FVerboseSearchResults then
+      DisplayedMsg := DisplayedMsg + #13#10#13#10 + 'Search results: ' + #13#10 + DetailedErrMsg;
+
+    MessageBox(Handle, PChar(DisplayedMsg), PChar(Application.Title), MB_ICONINFORMATION);
+  end
+  else
+  begin
+    if LastValidValue = -1 then
+    begin
+      DisplayedMsg := 'No valid value found.';
+      DisplayedMsg := DisplayedMsg + #13#10 + 'Possible causes:';
+      DisplayedMsg := DisplayedMsg + #13#10 + 'The font color does not match the expected one.';
+      DisplayedMsg := DisplayedMsg + #13#10 + 'The other color error parameter has a value smaller than required.';
+      DisplayedMsg := DisplayedMsg + #13#10 + 'The searched bitmap does not fit the expected area.';
+      DoOnAddToLog(DisplayedMsg);
+      //DetailedErrMsg := DetailedErrMsg + #13#10 + DisplayedMsg;  //leave commented
+
+      if FVerboseSearchResults then
+        DisplayedMsg := DisplayedMsg + #13#10#13#10 + 'Search results:' + #13#10 + DetailedErrMsg;
+
+      MessageBox(Handle, PChar(DisplayedMsg), PChar(Application.Title), MB_ICONINFORMATION);
+    end
+    else
+    begin
+      if TestedError <> LastValidValue then
+        TestedError := LastValidValue; //update to the latest valid value
+
+      DisplayedMsg := 'A color error ' + ASearchedParamName + ' found for color matching: ' + IntToStr(TestedError) + '.';
+      DoOnAddToLog(DisplayedMsg);
+      //DetailedErrMsg := DetailedErrMsg + #13#10 + DisplayedMsg;  //leave commented
+
+      if FVerboseSearchResults then
+        DisplayedMsg := DisplayedMsg + #13#10#13#10 + 'Search results:' + #13#10 + DetailedErrMsg;
+
+      if MessageBox(Handle, PChar(DisplayedMsg + #13#10#13#10 + 'Do you want to update the action properties?'), PChar(Application.Title), MB_ICONQUESTION + MB_YESNO) = IDYES then
+        Result := TestedError;
+    end;
   end;
 end;
 
@@ -3806,7 +3912,7 @@ begin
 end;
 
 
-procedure TfrClickerFindControl.MenuItemStopCalculatingMinimumErrorLevelToMatchText(Sender: TObject);
+procedure TfrClickerFindControl.MenuItemStopCalculatingMinimumErrorLevelToMatchBitmap(Sender: TObject);
 begin
   FManuallyStopSearching := True;
 end;
@@ -3842,12 +3948,19 @@ begin
 end;
 
 
-procedure TfrClickerFindControl.MenuItemLoadBmpTextToSearchedAreaClick(Sender: TObject);
-var
-  i: Integer;
+procedure TfrClickerFindControl.MenuItemEnableVerboseSearchResults(Sender: TObject);
 begin
-  for i := 0 to Length(FBMPTextProfiles) - 1 do
-    FBMPTextProfiles[i].PreviewTextOnImage(FSearchAreaSearchedTextDbgImg);
+  FVerboseSearchResults := (Sender as TMenuItem).Checked;
+end;
+
+
+procedure TfrClickerFindControl.MenuItemLoadBmpTextToSearchedAreaClick(Sender: TObject);
+begin
+  FSearchAreaSearchedTextDbgImg.Tag := (Sender as TMenuItem).Tag;
+
+  if (FSearchAreaSearchedTextDbgImg.Tag > -1) and
+     (FSearchAreaSearchedTextDbgImg.Tag < Length(FBMPTextProfiles)) then
+    FBMPTextProfiles[FSearchAreaSearchedTextDbgImg.Tag].PreviewTextOnImage(FSearchAreaSearchedTextDbgImg);
 
   FSearchAreaSearchedTextDbgImg.Show;
 end;
@@ -4565,5 +4678,16 @@ begin
     end;
 end;
 
-end.
 
+procedure TfrClickerFindControl.UpdateOnTextPropeties;
+begin
+  if FSearchAreaSearchedTextDbgImg = nil then
+    Exit;
+
+  if (FSearchAreaSearchedTextDbgImg.Tag > -1) and
+     (FSearchAreaSearchedTextDbgImg.Tag < Length(FBMPTextProfiles)) then
+    FBMPTextProfiles[FSearchAreaSearchedTextDbgImg.Tag].PreviewTextOnImage(FSearchAreaSearchedTextDbgImg);
+end;
+
+
+end.

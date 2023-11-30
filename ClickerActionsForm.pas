@@ -319,11 +319,15 @@ type
     procedure LoadSettings(AIni: TMemIniFile);
     procedure SaveSettings(AIni: TMemIniFile);
 
+    class procedure LoadBmpFromInMemFileSystem(AFileName: string; ABmp: TBitmap; AInMemFileSystem: TInMemFileSystem);
+
     //public properties (because of creating new instances)
     property FullTemplatesDir: string read FFullTemplatesDir write SetFullTemplatesDir;  //no trailing backslash
     property ConfiguredRemoteAddress: string read GetConfiguredRemoteAddress;
     property ActionExecution: TActionExecution read GetActionExecution;
     property StopAllActionsOnDemand: Boolean read FStopAllActionsOnDemand write FStopAllActionsOnDemand;
+
+    property RenderedInMemFileSystem: TInMemFileSystem read FRenderedInMemFileSystem;  //for externally rendered images
 
     property OnCopyControlTextAndClassFromMainWindow: TOnCopyControlTextAndClassFromMainWindow read FOnCopyControlTextAndClassFromMainWindow write FOnCopyControlTextAndClassFromMainWindow;
     property OnRecordComponent: TOnRecordComponent read FOnRecordComponent write FOnRecordComponent;
@@ -389,7 +393,7 @@ begin
 end;
 
 
-procedure LoadBmpFromInMemFileSystem(AFileName: string; ABmp: TBitmap; AInMemFileSystem: TInMemFileSystem);
+class procedure TfrmClickerActions.LoadBmpFromInMemFileSystem(AFileName: string; ABmp: TBitmap; AInMemFileSystem: TInMemFileSystem);
 var
   MemStream: TMemoryStream;
 begin
@@ -715,6 +719,9 @@ begin
   FStopAllActionsOnDemand := False;
   PageControlMain.ActivePageIndex := 0;
   PageControlExecMode.ActivePageIndex := 0;
+  PageControlMain.Caption := 'Main';
+  PageControlExecMode.Caption := 'ExecMode';
+  PageControlPlayer.Caption := 'Player';
 
   colcmbTopLeftValid.AddItem('clOrange', TObject(QWord(CLabel_Orange)));
   colcmbTopLeftValid.AddItem('clLightGreen', TObject(QWord(CLabel_LightGreen)));

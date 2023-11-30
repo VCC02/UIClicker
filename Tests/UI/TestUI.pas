@@ -48,6 +48,7 @@ type
     procedure RunTestTemplateInClickerUnderTestWithDebuggingAndStepInto(ATestTemplate, AExpectedStepOverCount: string; AStopAfterSteppingInto: string = '0');
 
     procedure PrepareClickerUnderTestToReadItsVars;
+    procedure PrepareClickerUnderTestToLocalMode;
   public
     constructor Create; override;
   published
@@ -61,6 +62,9 @@ type
     procedure Test_ExecuteTemplateRemotelyWithDebugging_WithLoopedCall_AndStepInto;
     procedure Test_ExecuteTemplateRemotelyWithDebugging_AndStepIntoThenStop;
     procedure Test_ExecuteTemplateRemotelyWithDebugging_WithLoopedCall_AndStepIntoThenStop;
+
+    procedure Test_FindColorErrorFromGradientOnServer_ErrorLevel_SuccessVerbose;
+    procedure Test_FindColorErrorFromGradientOnServer_ErrorCount_SuccessVerbose;
 
     procedure AfterAll_AlwaysExecute;
   end;
@@ -353,6 +357,14 @@ begin
 end;
 
 
+procedure TTestUI.PrepareClickerUnderTestToLocalMode;
+begin
+  //Set $ExtraCaption$ variable in Client Driver, to 'ClientUnderTest', which is required by SetExecutionModeOnAppUnderTest.clktmpl
+  SetVariableOnTestDriverClient('$ExtraCaption$', 'ClientUnderTest');    //even after executing SetExecModeToServer.clktmpl, the caption should stay 'ClientUnderTest'
+  ExecuteTemplateOnTestDriver(FTemplatesDir + 'SetExecModeToLocal.clktmpl', CREParam_FileLocation_ValueDisk);
+end;
+
+
 procedure TTestUI.Test_ExecuteTemplateRemotely;
 begin
   TestServerAddress := CTestDriverServerAddress_Client;
@@ -502,6 +514,40 @@ begin
     TestServerAddress := CTestDriverServerAddress_Client; //restore
     ExecuteTemplateOnTestDriver(FTemplatesDir + 'SetExecModeToClient.clktmpl', CREParam_FileLocation_ValueDisk);
   end;
+end;
+
+
+procedure TTestUI.Test_FindColorErrorFromGradientOnServer_ErrorLevel_SuccessVerbose;
+begin
+  TestServerAddress := CTestDriverServerAddress_Client;
+  RunTestTemplateInClickerUnderTest('FindColorErrorFromGradientOnServer.clktmpl');
+
+  PrepareClickerUnderTestToLocalMode;
+  SetVariableOnTestDriverClient('$CalcItem$', 'Calculate minimum color error level to match bitmap...');
+  ExecuteTemplateOnTestDriver(ExtractFilePath(ParamStr(0)) + '..\..\TestDriver\ActionTemplates\FindMinErrorLevel.clktmpl', CREParam_FileLocation_ValueDisk);
+  PrepareClickerUnderTestToReadItsVars;
+
+  Sleep(500);
+
+  TestServerAddress := CTestDriverServerAddress_Client;
+  Expect(GetVarValueFromServer('$SearchResult$')).ToBe('True');
+end;
+
+
+procedure TTestUI.Test_FindColorErrorFromGradientOnServer_ErrorCount_SuccessVerbose;
+begin
+  TestServerAddress := CTestDriverServerAddress_Client;
+  RunTestTemplateInClickerUnderTest('FindColorErrorFromGradientOnServer.clktmpl');
+
+  PrepareClickerUnderTestToLocalMode;
+  SetVariableOnTestDriverClient('$CalcItem$', 'Calculate minimum color error count to match bitmap...');
+  ExecuteTemplateOnTestDriver(ExtractFilePath(ParamStr(0)) + '..\..\TestDriver\ActionTemplates\FindMinErrorLevel.clktmpl', CREParam_FileLocation_ValueDisk);
+  PrepareClickerUnderTestToReadItsVars;
+
+  Sleep(500);
+
+  TestServerAddress := CTestDriverServerAddress_Client;
+  Expect(GetVarValueFromServer('$SearchResult$')).ToBe('True');
 end;
 
 

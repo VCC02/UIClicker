@@ -90,6 +90,7 @@ type
     function HandleOnPictureOpenDialogExecute: Boolean;
     function HandleOnGetPictureOpenDialogFileName: string;
     function HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
+    function HandleOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
 
     procedure HandleOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
     procedure HandleOnSavePrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
@@ -477,6 +478,18 @@ begin
 end;
 
 
+function TfrmUIClickerMainForm.HandleOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
+begin
+  if frmClickerActions.RenderedInMemFileSystem.FileExistsInMem(AFileName) then
+  begin
+    frmClickerActions.LoadBmpFromInMemFileSystem(AFileName, ABitmap, frmClickerActions.RenderedInMemFileSystem);
+    Result := True;
+  end
+  else
+    Result := False;
+end;
+
+
 procedure TfrmUIClickerMainForm.HandleOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
 var
   MemStream: TMemoryStream;
@@ -559,14 +572,14 @@ begin
         try
           PmtvCompositor.OnEvaluateReplacementsFunc := HandleOnEvaluateReplacements;
           PmtvCompositor.OnLoadBitmap := HandleOnLoadBitmap;
+          PmtvCompositor.OnLoadRenderedBitmap := HandleOnLoadRenderedBitmap;
 
           UsingHighContrast := False; //update this if it will ever be an option from parameter
           if Length(Orders) > 0 then
           begin
             ABmp.Width := PmtvCompositor.GetMaxX(ABmp.Canvas, Primitives);
-            ABmp.Height := PmtvCompositor.GetMaxX(ABmp.Canvas, Primitives);
+            ABmp.Height := PmtvCompositor.GetMaxY(ABmp.Canvas, Primitives);
             PmtvCompositor.ComposePrimitives(ABmp, 0, UsingHighContrast, Primitives, Orders, PrimitiveSettings);
-
           end;
         finally
           PmtvCompositor.Free;

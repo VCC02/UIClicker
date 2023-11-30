@@ -780,6 +780,7 @@ begin
   FPrevSelectedPrimitiveNode := -1;
 
   PageControlActionExecution.ActivePageIndex := 0;
+  PageControlActionExecution.Caption := 'ActionExecution';
 end;
 
 
@@ -1808,7 +1809,7 @@ begin
     FOIFrame.ReloadPropertyItems(CCategory_ActionSpecific, CFindControl_MatchPrimitiveFiles_PropIndex);
   end
   else
-    MessageBox(Handle, 'Can''t get index of editing primitives filename. This is a bug', PChar(Application.Title), MB_ICONERROR);
+    MessageBox(Handle, 'Can''t get index of editing primitives filename. Please make sure the owner action is selected.', PChar(Application.Title), MB_ICONERROR);
 end;
 
 
@@ -2993,29 +2994,8 @@ end;
 
 
 procedure TfrClickerActions.BuildFontColorIconsList;
-var
-  i: Integer;
-  FontProfilesCount: Integer;
-  FG, BG: TColor;
 begin
-  FontProfilesCount := Length(FEditingAction^.FindControlOptions.MatchBitmapText);
-
-  imglstFontColorProperties.Clear;
-  for i := 0 to FontProfilesCount - 1 do
-  begin
-    FG := HexToInt(EvaluateReplacements(FEditingAction^.FindControlOptions.MatchBitmapText[i].ForegroundColor));
-    BG := HexToInt(EvaluateReplacements(FEditingAction^.FindControlOptions.MatchBitmapText[i].BackgroundColor));
-
-    imgFontColorBuffer.Canvas.Pen.Color := 1;
-
-    imgFontColorBuffer.Canvas.Brush.Color := FG;
-    imgFontColorBuffer.Canvas.Rectangle(0, 0, imgFontColorBuffer.Width, imgFontColorBuffer.Height);
-    imglstFontColorProperties.AddMasked(imgFontColorBuffer.Picture.Bitmap, 2);
-
-    imgFontColorBuffer.Canvas.Brush.Color := BG;
-    imgFontColorBuffer.Canvas.Rectangle(0, 0, imgFontColorBuffer.Width, imgFontColorBuffer.Height);
-    imglstFontColorProperties.AddMasked(imgFontColorBuffer.Picture.Bitmap, 2);
-  end;
+  BuildFontColorIcons(imglstFontColorProperties, FEditingAction^.FindControlOptions, EvaluateReplacements);
 end;
 
 
@@ -3616,6 +3596,9 @@ begin
               Exit;
             end;
 
+            CFindControl_MatchText_PropIndex:
+              frClickerFindControl.UpdateOnTextPropeties;
+
             CFindControl_MatchBitmapText_PropIndex:
             begin
               OldText := GetActionValueStr_FindControl_MatchBitmapText(FEditingAction, AItemIndex {no mod here});
@@ -3691,6 +3674,7 @@ begin
                 frClickerFindControl.BMPTextFontProfiles[i].UpdateSelectionLabelsFromCropInfo(FEditingAction^.FindControlOptions.MatchBitmapText[i]);
 
               TriggerOnControlsModified(ANewText <> OldText);
+              frClickerFindControl.UpdateOnTextPropeties;
               Exit;
             end;  //CFindControl_MatchBitmapText_PropIndex
 

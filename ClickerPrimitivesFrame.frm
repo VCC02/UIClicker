@@ -305,4 +305,12 @@ object frClickerPrimitives: TfrClickerPrimitives
     Left = 320
     Top = 144
   end
+  object imglstFontColorProperties: TImageList
+    Left = 64
+    Top = 192
+    Bitmap = {
+      4C7A040000001000000010000000260000000000000078DAEDD53101000008C3
+      303CA116B543C872C4429B640274BA055A6920F83F50E701FC199088
+    }
+  end
 end

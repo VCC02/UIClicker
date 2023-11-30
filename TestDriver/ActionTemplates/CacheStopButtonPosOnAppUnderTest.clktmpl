@@ -41,6 +41,7 @@ MatchBitmapText[0].CropLeft=
 MatchBitmapText[0].CropTop=
 MatchBitmapText[0].CropRight=
 MatchBitmapText[0].CropBottom=
+MatchBitmapText[0].IgnoreBackgroundColor=0
 MatchBitmapFiles=
 ColorError=0
 AllowedColorErrorCount=0
@@ -63,6 +64,9 @@ CachedControlLeft=
 CachedControlTop=
 MatchPrimitiveFiles=
 GetAllControls=0
+UseFastSearch=1
+FastSearchAllowedColorErrorCount=10
+IgnoredColors=
 
 [Action_1]
 ActionName=Set windows focus
@@ -96,7 +100,7 @@ MatchCriteria.WillMatchBitmapText=0
 MatchCriteria.WillMatchBitmapFiles=0
 MatchCriteria.WillMatchPrimitiveFiles=0
 MatchCriteria.SearchForControlMode=0
-MatchText=
+MatchText=Main
 MatchClassName=SysTabControl32
 MatchTextSeparator=
 MatchClassNameSeparator=
@@ -120,6 +124,7 @@ MatchBitmapText[0].CropLeft=
 MatchBitmapText[0].CropTop=
 MatchBitmapText[0].CropRight=
 MatchBitmapText[0].CropBottom=
+MatchBitmapText[0].IgnoreBackgroundColor=0
 MatchBitmapFiles=
 ColorError=0
 AllowedColorErrorCount=0
@@ -142,6 +147,9 @@ CachedControlLeft=
 CachedControlTop=
 MatchPrimitiveFiles=
 GetAllControls=0
+UseFastSearch=1
+FastSearchAllowedColorErrorCount=10
+IgnoredColors=
 
 [Action_3]
 ActionName=Find Stop button
@@ -236,6 +244,9 @@ CachedControlLeft=
 CachedControlTop=
 MatchPrimitiveFiles=
 GetAllControls=0
+UseFastSearch=1
+FastSearchAllowedColorErrorCount=10
+IgnoredColors=
 
 [Action_4]
 ActionName=Cache stop button position

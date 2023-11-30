@@ -181,6 +181,8 @@ const
   CSetPenPrimitive_EndCap_PropIndex = 4;
   CSetPenPrimitive_JoinStyle_PropIndex = 5;
 
+  CSetFontPrimitive_ForegroundColor_PropIndex = 0;
+  CSetFontPrimitive_BackgroundColor_PropIndex = 1;
   CSetFontPrimitive_FontName_PropIndex = 2;
 
   CImagePrimitive_Path_PropIndex = 4;

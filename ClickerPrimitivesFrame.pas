@@ -43,6 +43,7 @@ type
   TfrClickerPrimitives = class(TFrame)
     chkShowPrimitiveEdges: TCheckBox;
     chkHighContrast: TCheckBox;
+    imglstFontColorProperties: TImageList;
     imglstPreviewPrimitives: TImageList;
     imglstPrimitives: TImageList;
     imgFontColorBuffer: TImage;
@@ -104,6 +105,7 @@ type
     function AddPreviewTabWithImage(ATabName: string): TImage;
     procedure CreateAllPreviewPages;
     procedure BuildImgLstPreviewPrimitives;
+    procedure BuildFontColorIconsList;
     procedure ResizeFrameSectionsBySplitter(NewLeft: Integer);
 
     procedure GetOrderContentByIndex(AIndex: Integer; var ADestContent: TCompositionOrder);
@@ -331,6 +333,7 @@ begin
   chkHighContrast.Left := lblModified.Width + lblModified.Left + 20;
   chkShowPrimitiveEdges.Left := chkHighContrast.Left + chkHighContrast.Width + 20;
   chkShowPrimitiveEdges.Top := chkHighContrast.Top;
+  PageControlPreview.Caption := 'PreviewPrimitives';
 
   FOIEditorMenu := TPopupMenu.Create(Self);
 
@@ -561,6 +564,7 @@ begin
   CreateAllPreviewPages;
   RepaintAllCompositions;
   BuildImgLstPreviewPrimitives;
+  BuildFontColorIconsList;
   lblModified.Hide;
 end;
 
@@ -873,6 +877,7 @@ end;
 procedure TfrClickerPrimitives.chkHighContrastChange(Sender: TObject);
 begin
   BuildImgLstPreviewPrimitives;
+  BuildFontColorIconsList;
   RepaintAllCompositions;
   FOIFrame.RepaintOI;
 end;
@@ -1001,6 +1006,7 @@ begin
   end;
 
   BuildImgLstPreviewPrimitives;
+  BuildFontColorIconsList;
 end;
 
 
@@ -1047,6 +1053,7 @@ begin
   end;
 
   BuildImgLstPreviewPrimitives;
+  BuildFontColorIconsList;
 end;
 
 
@@ -1077,6 +1084,7 @@ begin
   end;
 
   BuildImgLstPreviewPrimitives;
+  BuildFontColorIconsList;
 end;
 
 
@@ -1163,6 +1171,7 @@ begin
   end;
 
   BuildImgLstPreviewPrimitives;
+  BuildFontColorIconsList;
 end;
 
 
@@ -1254,6 +1263,7 @@ begin
   end;
 
   BuildImgLstPreviewPrimitives;
+  BuildFontColorIconsList;
 end;
 
 
@@ -1597,6 +1607,20 @@ begin
 end;
 
 
+procedure TfrClickerPrimitives.BuildFontColorIconsList;
+var
+  DummyFindControlOptions: TClkFindControlOptions;
+  i, n: Integer;
+begin
+  SetLength(DummyFindControlOptions.MatchBitmapText, Length(FPrimitives));
+
+  for i := 0 to Length(FPrimitives) - 1 do
+    DummyFindControlOptions.MatchBitmapText[i] := FPrimitives[i].ClkSetFont;
+
+  BuildFontColorIcons(imglstFontColorProperties, DummyFindControlOptions, FOnEvaluateReplacementsFunc);
+end;
+
+
 function TfrClickerPrimitives.DoOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
 begin
   if not Assigned(FOnLoadBitmap) then
@@ -1920,7 +1944,19 @@ begin
         begin
           case ACategoryIndex of
             CCategory_Primitives:
-              ;
+            begin
+              if FPrimitives[APropertyIndex].PrimitiveType = CClkSetFontPrimitiveCmdIdx then
+              begin
+                if AItemIndex in [CSetFontPrimitive_ForegroundColor_PropIndex, CSetFontPrimitive_BackgroundColor_PropIndex] then
+                begin
+                  ImageList := imglstFontColorProperties;
+                  ImageIndex := APropertyIndex shl 1 + AItemIndex;
+
+                  if ImageIndex > imglstFontColorProperties.Count - 1 then
+                    BuildFontColorIconsList;
+                end;
+              end;
+            end;
 
             CCategory_Orders:
             begin
@@ -1930,7 +1966,7 @@ begin
           end;
         end;
       end;
-    end;
+    end; //column 1
   end; //case
 end;
 
@@ -1961,6 +1997,9 @@ begin
 
           if ANewText <> PrevValue then
             DoOnTriggerOnControlsModified;
+
+          if PmtvType = CClkSetFontPrimitiveCmdIdx then
+            BuildFontColorIconsList;
         end;
       end;
 

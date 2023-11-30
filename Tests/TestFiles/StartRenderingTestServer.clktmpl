@@ -1,5 +1,5 @@
 [Actions]
-Count=10
+Count=11
 Version=2
 
 [Action_0]
@@ -116,6 +116,23 @@ NewPositionEnabled=0
 NewSizeEnabled=0
 
 [Action_4]
+ActionName=Set a working position
+Action=WindowOperations
+ActionTimeout=0
+ActionEnabled=1
+ActionCondition=
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+WindowOperation=1
+NewX=100
+NewY=142
+NewWidth=
+NewHeight=
+NewPositionEnabled=1
+NewSizeEnabled=0
+
+[Action_5]
 ActionName=Find rendering server settings
 Action=FindControl
 ActionTimeout=3000
@@ -181,7 +198,7 @@ UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=
 
-[Action_5]
+[Action_6]
 ActionName=Cache grp
 Action=SetVar
 ActionTimeout=0
@@ -194,7 +211,7 @@ ListOfVarNames=$Grp_Left$$Grp_Top$$Grp_Right$$Grp_Bottom$$Grp_Width$$G
 ListOfVarValues=$Control_Left$$Control_Top$$Control_Right$$Control_Bottom$$Control_Width$$Control_Height$$Control_Class$$Control_Handle$
 ListOfVarEvalBefore=11111111
 
-[Action_6]
+[Action_7]
 ActionName=Find "Active" CheckBox
 Action=FindControl
 ActionTimeout=3000
@@ -260,7 +277,7 @@ UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=
 
-[Action_7]
+[Action_8]
 ActionName=Activate server module
 Action=Click
 ActionTimeout=0
@@ -296,7 +313,7 @@ DelayAfterMovingToDestination=50
 DelayAfterMouseDown=300
 MoveDuration=-1
 
-[Action_8]
+[Action_9]
 ActionName=Restore cached grp
 Action=SetVar
 ActionTimeout=0
@@ -309,7 +326,7 @@ ListOfVarNames=$Control_Left$$Control_Top$$Control_Right$$Control_Bottom$
 ListOfVarValues=$Grp_Left$$Grp_Top$$Grp_Right$$Grp_Bottom$$Grp_Width$$Grp_Height$$Grp_Class$$Grp_Handle$
 ListOfVarEvalBefore=11111111
 
-[Action_9]
+[Action_10]
 ActionName=Verify if server is listening
 Action=FindSubControl
 ActionTimeout=1000

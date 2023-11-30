@@ -112,6 +112,9 @@ begin
   begin
     ABmp.Canvas.Font.Color := HexToInt(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetFont.ForegroundColor));
     ABmp.Canvas.Brush.Color := HexToInt(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetFont.BackgroundColor));
+
+    if ABmp.Canvas.Brush.Color = $1FFFFFFF then
+      ABmp.Canvas.Brush.Style := bsClear;
   end;
 
   ABmp.Canvas.Font.Name := Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetFont.FontName);

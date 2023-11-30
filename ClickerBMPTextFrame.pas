@@ -179,6 +179,8 @@ type
 
   //TfrClickerBMPTextArr = array of TfrClickerBMPText;
 
+function GetFontQualityIndexByName(AQualityName: string): Integer;
+
 
 implementation
 

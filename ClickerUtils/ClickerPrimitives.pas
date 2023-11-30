@@ -80,6 +80,11 @@ begin
   APrimitive.ClkSetFont.FontQualityUsesReplacement := AIni.ReadBool(ASectionIndex, 'FontQualityUsesReplacement', False);
   APrimitive.ClkSetFont.FontQualityReplacement := AIni.ReadString(ASectionIndex, 'FontQualityReplacement', '$MyFontQuality$');
   APrimitive.ClkSetFont.ProfileName := AIni.ReadString(ASectionIndex, 'ProfileName', 'Default');
+  APrimitive.ClkSetFont.CropLeft := AIni.ReadString(ASectionIndex, 'CropLeft', '0');
+  APrimitive.ClkSetFont.CropTop := AIni.ReadString(ASectionIndex, 'CropTop', '0');
+  APrimitive.ClkSetFont.CropRight := AIni.ReadString(ASectionIndex, 'CropRight', '0');
+  APrimitive.ClkSetFont.CropBottom := AIni.ReadString(ASectionIndex, 'CropBottom', '0');
+  APrimitive.ClkSetFont.IgnoreBackgroundColor := AIni.ReadBool(ASectionIndex, 'IgnoreBackgroundColor', False);
 end;
 
 
@@ -262,6 +267,7 @@ begin
   AStringList.Add('CropTop=' + APrimitive.ClkSetFont.CropTop);
   AStringList.Add('CropRight=' + APrimitive.ClkSetFont.CropRight);
   AStringList.Add('CropBottom=' + APrimitive.ClkSetFont.CropBottom);
+  AStringList.Add('IgnoreBackgroundColor=' + IntToStr(Ord(APrimitive.ClkSetFont.IgnoreBackgroundColor)));
 end;
 
 
