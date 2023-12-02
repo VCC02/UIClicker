@@ -101,6 +101,8 @@ const
   CRECmd_ClearInMemFileSystem = 'ClearInMemFileSystem';
   CRECmd_SetVariable = 'SetVariable';
   CRECmd_TerminateWaitingForFileAvailability = 'TerminateWaitingForFileAvailability';  //three options, both loops, single file only, multi files only  (default both).  See CREParam_TerminateWaitingLoop params.
+  CRECmd_GetListOfRenderedFiles = 'GetListOfRenderedFiles'; //all filenames + hashes in the second in-mem file system (rendered files, received from a rendering server)
+  CRECmd_GetRenderedFile = 'GetRenderedFile';
   CRECmd_MouseDown = 'MouseDown';
   CRECmd_MouseUp = 'MouseUp';
 
@@ -121,6 +123,7 @@ const
   CREResp_FileExpectancy_ValueUnkown = 'Unkown';           //default response when the option is not handled by server
   CREResp_ReceivedFile = 'Received file';
   CREResp_TemplateLoaded = 'Loaded';
+  CREResp_FileNotFound = 'FileNotFound';
 
   CREResp_ErrParam = 'Err';
   CREResp_ErrResponseOK = 'OK';
@@ -161,6 +164,8 @@ function RecordComponentOnServer(ARemoteAddress: string; AHandle: THandle; AComp
 function ClearInMemFileSystem(ARemoteAddress: string): string;
 function SetVariable(ARemoteAddress, AVarName, AVarValue: string; AStackLevel: Integer): string;
 function TerminateWaitingForFileAvailability(ARemoteAddress, ALoopType: string; ACallAppProcMsg: Boolean = True): string;
+function GetListOfRenderedFilesFromServer(ARemoteAddress: string; ACallAppProcMsg: Boolean = True): string;
+function GetRenderedFileFromServer(ARemoteAddress: string; AFileName: string; AReceivedBmp: TBitmap): string; //Returns error message if any. Returns a bitmap with error as text if file not found.
 
 function SendMouseDown(ARemoteAddress: string; AMouseParams: TStringList): string;
 function SendMouseUp(ARemoteAddress: string; AMouseParams: TStringList): string;
@@ -575,6 +580,24 @@ begin
                                     CREParam_StackLevel + '=0' + '&' +
                                     CREParam_TerminateWaitingLoop + '=' + ALoopType,
                                     ACallAppProcMsg);
+end;
+
+
+function GetListOfRenderedFilesFromServer(ARemoteAddress: string; ACallAppProcMsg: Boolean = True): string;
+begin
+  Result := SendTextRequestToServer(ARemoteAddress + CRECmd_GetListOfRenderedFiles,
+                                    ACallAppProcMsg);
+end;
+
+
+function GetRenderedFileFromServer(ARemoteAddress: string; AFileName: string; AReceivedBmp: TBitmap): string; //Returns error message if any. Returns a bitmap with error as text if file not found.
+var
+  Link: string;
+begin
+  Link := ARemoteAddress + CRECmd_GetRenderedFile + '?' +
+                           CREParam_FileName + '=' + AFileName;
+
+  Result := SendGetBmpRequestToServer(Link, AReceivedBmp);
 end;
 
 

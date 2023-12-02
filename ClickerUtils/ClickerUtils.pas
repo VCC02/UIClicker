@@ -88,6 +88,8 @@ type
   TOnPictureOpenDialogExecute = function: Boolean of object;
   TOnGetPictureOpenDialogFileName = function: string of object;
 
+  TOnRetrieveRenderedBmpFromServer = procedure(FRemoteAddress, Fnm: string) of object;
+
 
 const
   CClkActionStr: array[TClkAction] of string = ('Click', 'ExecApp', 'FindControl', 'FindSubControl', 'SetControlText', 'CallTemplate', 'Sleep', 'SetVar', 'WindowOperations');
@@ -113,6 +115,7 @@ const
   CExtBmp_Cmd = 'Cmd';
   CExtBmp_Params = 'Params';
   CExtBmp_IncludeFilenameInRequest = 'IncludeFilenameInRequest';  //can be '0' or '1'
+  CExtBmp_FilenameMaxLen = 1024;
 
 
 type

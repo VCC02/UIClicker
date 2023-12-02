@@ -1,5 +1,5 @@
 [Actions]
-Count=21
+Count=23
 Version=2
 
 [Action_0]
@@ -484,7 +484,7 @@ FastSearchAllowedColorErrorCount=10
 IgnoredColors=
 
 [Action_11]
-ActionName=Cache current control
+ActionName=Cache MessageBox
 Action=SetVar
 ActionTimeout=0
 ActionEnabled=1
@@ -513,10 +513,10 @@ ListOfVarEvalBefore=
 ActionName=Verify results
 Action=FindSubControl
 ActionTimeout=1000
-ActionEnabled=0
+ActionEnabled=1
 ActionCondition=
-BreakpointExists=0
-BreakpointEnabled=0
+BreakpointExists=1
+BreakpointEnabled=1
 BreakpointCondition=
 MatchCriteria.WillMatchText=0
 MatchCriteria.WillMatchClassName=0
@@ -524,23 +524,23 @@ MatchCriteria.WillMatchBitmapText=1
 MatchCriteria.WillMatchBitmapFiles=0
 MatchCriteria.WillMatchPrimitiveFiles=0
 MatchCriteria.SearchForControlMode=0
-MatchText=
+MatchText=$ExpectedColorErrorMsg$
 MatchClassName=
 MatchTextSeparator=
 MatchClassNameSeparator=
-AllowToFail=0
+AllowToFail=1
 WaitForControlToGoAway=0
 MatchBitmapTextArr=1
-MatchBitmapText_Count=1
-MatchBitmapText[0].ForegroundColor=$Color_Window$
-MatchBitmapText[0].BackgroundColor=$Color_Highlight$
-MatchBitmapText[0].FontName=Tahoma
-MatchBitmapText[0].FontSize=8
+MatchBitmapText_Count=2
+MatchBitmapText[0].ForegroundColor=$Color_WindowText$
+MatchBitmapText[0].BackgroundColor=$Color_Window$
+MatchBitmapText[0].FontName=Segoe UI
+MatchBitmapText[0].FontSize=9
 MatchBitmapText[0].Bold=0
 MatchBitmapText[0].Italic=0
 MatchBitmapText[0].Underline=0
 MatchBitmapText[0].StrikeOut=0
-MatchBitmapText[0].FontQuality=3
+MatchBitmapText[0].FontQuality=5
 MatchBitmapText[0].FontQualityUsesReplacement=0
 MatchBitmapText[0].FontQualityReplacement=
 MatchBitmapText[0].ProfileName=Profile [0]
@@ -549,9 +549,26 @@ MatchBitmapText[0].CropTop=0
 MatchBitmapText[0].CropRight=0
 MatchBitmapText[0].CropBottom=0
 MatchBitmapText[0].IgnoreBackgroundColor=0
+MatchBitmapText[1].ForegroundColor=$Color_WindowText$
+MatchBitmapText[1].BackgroundColor=$Color_Window$
+MatchBitmapText[1].FontName=Segoe UI
+MatchBitmapText[1].FontSize=9
+MatchBitmapText[1].Bold=0
+MatchBitmapText[1].Italic=0
+MatchBitmapText[1].Underline=0
+MatchBitmapText[1].StrikeOut=0
+MatchBitmapText[1].FontQuality=4
+MatchBitmapText[1].FontQualityUsesReplacement=0
+MatchBitmapText[1].FontQualityReplacement=
+MatchBitmapText[1].ProfileName=Profile [1]
+MatchBitmapText[1].CropLeft=0
+MatchBitmapText[1].CropTop=0
+MatchBitmapText[1].CropRight=0
+MatchBitmapText[1].CropBottom=0
+MatchBitmapText[1].IgnoreBackgroundColor=0
 MatchBitmapFiles=
-ColorError=0
-AllowedColorErrorCount=0
+ColorError=5
+AllowedColorErrorCount=100
 MatchBitmapAlgorithm=0
 MatchBitmapAlgorithm_Grid_XMultipleOf=1
 MatchBitmapAlgorithm_Grid_YMultipleOf=1
@@ -559,13 +576,13 @@ MatchBitmapAlgorithm_Grid_XOffset=0
 MatchBitmapAlgorithm_Grid_YOffset=0
 InitialRectangle.Left=$Control_Left$
 InitialRectangle.Top=$Control_Top$
-InitialRectangle.Right=$Control_Right$
-InitialRectangle.Bottom=$Control_Bottom$
+InitialRectangle.Right=$Control_Left$
+InitialRectangle.Bottom=$Control_Top$
 UseWholeScreen=0
-InitialRectangle.LeftOffset=0
-InitialRectangle.TopOffset=0
-InitialRectangle.RightOffset=0
-InitialRectangle.BottomOffset=0
+InitialRectangle.LeftOffset=61
+InitialRectangle.TopOffset=37
+InitialRectangle.RightOffset=205
+InitialRectangle.BottomOffset=78
 StartSearchingWithCachedControl=0
 CachedControlLeft=
 CachedControlTop=
@@ -576,7 +593,20 @@ FastSearchAllowedColorErrorCount=10
 IgnoredColors=
 
 [Action_14]
-ActionName=Restore cached control
+ActionName=Set search result
+Action=SetVar
+ActionTimeout=0
+ActionEnabled=1
+ActionCondition=$LastAction_Status$==Successful
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+ListOfVarNames=$SearchResult$
+ListOfVarValues=True
+ListOfVarEvalBefore=
+
+[Action_15]
+ActionName=Restore MessageBox
 Action=SetVar
 ActionTimeout=0
 ActionEnabled=1
@@ -588,14 +618,40 @@ ListOfVarNames=$Control_Left$$Control_Top$$Control_Right$$Control_Bottom$
 ListOfVarValues=$My_Left$$My_Top$$My_Right$$My_Bottom$$My_Width$$My_Height$$My_Text$$My_Class$$My_Handle$
 ListOfVarEvalBefore=111111111
 
-[Action_15]
-ActionName=Find OK or Yes button
-Action=FindControl
-ActionTimeout=3000
+[Action_16]
+ActionName=Set default MsgBox btn
+Action=SetVar
+ActionTimeout=0
 ActionEnabled=1
 ActionCondition=
 BreakpointExists=0
 BreakpointEnabled=0
+BreakpointCondition=
+ListOfVarNames=$MsgBoxButton$$MsgBoxButtonEval$
+ListOfVarValues=OK,No,NO,&No,&NOFalse
+ListOfVarEvalBefore=
+
+[Action_17]
+ActionName=Set MsgBox btn to Yes
+Action=SetVar
+ActionTimeout=0
+ActionEnabled=1
+ActionCondition=$MsgBoxButtonEval$==True
+BreakpointExists=0
+BreakpointEnabled=1
+BreakpointCondition=
+ListOfVarNames=$MsgBoxButton$
+ListOfVarValues=OK,Yes,YES,&Yes,&YES
+ListOfVarEvalBefore=
+
+[Action_18]
+ActionName=Find OK, Yes or No btn
+Action=FindControl
+ActionTimeout=3000
+ActionEnabled=1
+ActionCondition=
+BreakpointExists=1
+BreakpointEnabled=1
 BreakpointCondition=
 MatchCriteria.WillMatchText=1
 MatchCriteria.WillMatchClassName=1
@@ -603,7 +659,7 @@ MatchCriteria.WillMatchBitmapText=0
 MatchCriteria.WillMatchBitmapFiles=0
 MatchCriteria.WillMatchPrimitiveFiles=0
 MatchCriteria.SearchForControlMode=0
-MatchText=OK,Yes,YES
+MatchText=$MsgBoxButton$
 MatchClassName=Button
 MatchTextSeparator=,
 MatchClassNameSeparator=
@@ -654,7 +710,7 @@ UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=
 
-[Action_16]
+[Action_19]
 ActionName=Close dialog
 Action=Click
 ActionTimeout=0
@@ -690,7 +746,7 @@ DelayAfterMovingToDestination=50
 DelayAfterMouseDown=200
 MoveDuration=-1
 
-[Action_17]
+[Action_20]
 ActionName=Wait for dialog to close
 Action=FindControl
 ActionTimeout=1000
@@ -756,7 +812,7 @@ UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=
 
-[Action_18]
+[Action_21]
 ActionName=Find server window
 Action=FindControl
 ActionTimeout=3000
@@ -822,7 +878,7 @@ UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=
 
-[Action_19]
+[Action_22]
 ActionName=Close rendering server
 Action=WindowOperations
 ActionTimeout=0
@@ -838,19 +894,6 @@ NewWidth=
 NewHeight=
 NewPositionEnabled=0
 NewSizeEnabled=0
-
-[Action_20]
-ActionName=Reset search result
-Action=SetVar
-ActionTimeout=0
-ActionEnabled=1
-ActionCondition=
-BreakpointExists=0
-BreakpointEnabled=0
-BreakpointCondition=
-ListOfVarNames=$SearchResult$$Comment$
-ListOfVarValues=TrueThe result should be set, based on the FindSubControl action above, called "Verify results".
-ListOfVarEvalBefore=
 
 [Notes]
 Content=

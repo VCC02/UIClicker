@@ -1610,7 +1610,7 @@ end;
 procedure TfrClickerPrimitives.BuildFontColorIconsList;
 var
   DummyFindControlOptions: TClkFindControlOptions;
-  i, n: Integer;
+  i: Integer;
 begin
   SetLength(DummyFindControlOptions.MatchBitmapText, Length(FPrimitives));
 

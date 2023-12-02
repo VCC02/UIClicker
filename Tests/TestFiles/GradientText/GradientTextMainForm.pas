@@ -138,6 +138,8 @@ begin
   frmGradientTextMain.lblCustomText.Font.StrikeThrough := FParams.Values['MatchBitmapText[0].StrikeOut'] = '1';
   frmGradientTextMain.lblCustomText.Font.Quality := TFontQuality(StrToIntDef(FParams.Values['MatchBitmapText[0].FontQuality'], 3));
 
+  frmGradientTextMain.lblCustomText.Transparent := frmGradientTextMain.lblCustomText.Color = $1FFFFFFF;
+
   frmGradientTextMain.lblCustomText.Hint := FParams.Text;
   frmGradientTextMain.lblCustomText.ShowHint := True;
 

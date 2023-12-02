@@ -170,6 +170,7 @@ type
   TfrClickerFindControl = class(TFrame)
     btnCopyFoundValues: TButton;
     btnDisplaySearchAreaDebuggingImage: TButton;
+    chkShowZoom: TCheckBox;
     chkIncludeSearchedBmpInZoom: TCheckBox;
     chkAutoCopyValuesToObjectInspector: TCheckBox;
     chkDisplayCroppingLines: TCheckBox;
@@ -3032,8 +3033,12 @@ var
 begin
   FSearchAreaControlDbgImg.ShowHint := False;
   FSearchAreaGridImg.ShowHint := False;
-  GetCursorPos(tp);
-  ShowZoom(tp.X + 50, tp.Y + 50);
+
+  if chkShowZoom.Checked then
+  begin
+    GetCursorPos(tp);
+    ShowZoom(tp.X + 50, tp.Y + 50);
+  end;
 end;
 
 

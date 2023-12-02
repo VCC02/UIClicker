@@ -12,7 +12,7 @@ BreakpointExists=0
 BreakpointEnabled=0
 BreakpointCondition=
 TemplateFileName=ArrangeOneActionWindowUnderTest.clktmpl
-ListOfCustomVarsAndValues=$ExtraCaption$=Server$NewX$=10$NewY$=330
+ListOfCustomVarsAndValues=$ExtraCaption$=Server$NewX$=10$NewY$=330$NewWidth$=1139$NewHeight$=761
 CallOnlyIfCondition=0
 CallOnlyIfConditionVarName=
 CallOnlyIfConditionVarValue=
@@ -35,7 +35,7 @@ BreakpointExists=0
 BreakpointEnabled=0
 BreakpointCondition=
 TemplateFileName=ArrangeOneActionWindowUnderTest.clktmpl
-ListOfCustomVarsAndValues=$ExtraCaption$=Client$NewX$=30$NewY$=490
+ListOfCustomVarsAndValues=$ExtraCaption$=Client$NewX$=30$NewY$=390$NewWidth$=1139$NewHeight$=761
 CallOnlyIfCondition=0
 CallOnlyIfConditionVarName=
 CallOnlyIfConditionVarValue=

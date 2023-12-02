@@ -315,6 +315,8 @@ type
     FOnGetFontFinderSettings: TOnRWFontFinderSettings;
     FOnSetFontFinderSettings: TOnRWFontFinderSettings;
 
+    FOnRetrieveRenderedBmpFromServer: TOnRetrieveRenderedBmpFromServer;
+
     vstActions: TVirtualStringTree;
     FPalette: TfrClickerActionsPalette;
     FLoggingFIFO: TPollingFIFO;
@@ -441,6 +443,8 @@ type
     function DoOnGetGridDrawingOption: TDisplayGridLineOption;
     procedure DoOnGetFontFinderSettings(var AFontFinderSettings: TFontFinderSettings);
     procedure DoOnSetFontFinderSettings(var AFontFinderSettings: TFontFinderSettings);
+
+    procedure DoOnRetrieveRenderedBmpFromServer(ARemoteAddress, AFnm: string);
 
     function PlayActionByNode(Node: PVirtualNode): Boolean;
     procedure PlaySelected;
@@ -569,6 +573,8 @@ type
     property OnGetGridDrawingOption: TOnGetGridDrawingOption write FOnGetGridDrawingOption;
     property OnGetFontFinderSettings: TOnRWFontFinderSettings write FOnGetFontFinderSettings;
     property OnSetFontFinderSettings: TOnRWFontFinderSettings write FOnSetFontFinderSettings;
+
+    property OnRetrieveRenderedBmpFromServer: TOnRetrieveRenderedBmpFromServer write FOnRetrieveRenderedBmpFromServer;
   end;
 
 
@@ -959,6 +965,8 @@ begin
   FOnGetGridDrawingOption := nil;
   FOnGetFontFinderSettings := nil;
   FOnSetFontFinderSettings := nil;
+
+  FOnRetrieveRenderedBmpFromServer := nil;
 
   FPalette := nil;
 
@@ -1705,8 +1713,10 @@ end;
 function TfrClickerActionsArr.DoExecuteRemoteActionAtIndex(AActionIndex: Integer): Boolean;
 var
   VarReplacements: TStringList;
-  Msg: string;
+  Msg, Fnm, FuncParams: string;
   TempBmp: TBitmap;
+  VarNames, VarValues: TStringList;
+  Idx, i: Integer;
 begin
   VarReplacements := TStringList.Create;
   try
@@ -1769,6 +1779,44 @@ begin
     finally
       TempBmp.Free;
     end;
+
+    Exit;
+  end;
+
+  if FClkActions[AActionIndex].ActionOptions.Action = acSetVar then
+  begin
+    VarNames := TStringList.Create;
+    VarValues := TStringList.Create;
+    try
+      VarNames.Text := FClkActions[AActionIndex].SetVarOptions.ListOfVarNames;
+      VarValues.Text := FClkActions[AActionIndex].SetVarOptions.ListOfVarValues;
+
+      Idx := -1;
+      for i := 0 to VarNames.Count - 1 do
+        if Pos('$RenderBmpExternally(', VarNames.Strings[i]) = 1 then   //this accepts 0 or more arguments to $RenderBmpExternally
+        begin
+          Idx := i;
+          Break;
+        end;
+
+      if Idx > -1 then
+      begin
+        FuncParams := EvaluateReplacements(VarNames.Strings[Idx]);    //this should be a #4#5 separated list of key-value pairs
+        VarValues.Text := FastReplace_45ToReturn(FuncParams);   //it's ok to reuse VarValues here
+        Fnm := VarValues.Values[CExtBmp_Filename];   //do not use CREParam_FileName here  (it's 'n' vs. 'N')
+        Fnm := Copy(Fnm, 1, CExtBmp_FilenameMaxLen);
+
+        if Fnm = '' then
+          AddToLog('Cannot get filename from $RenderBmpExternally()$ call, when retrieving bitmap from server.')
+        else
+          DoOnRetrieveRenderedBmpFromServer(FRemoteAddress, Fnm);
+      end;
+    finally
+      VarNames.Free;
+      VarValues.Free;
+    end;
+
+    Exit;
   end;
 end;
 
@@ -2007,6 +2055,15 @@ begin
     raise Exception.Create('OnSetFontFinderSettings not assigned.')
   else
     FOnSetFontFinderSettings(AFontFinderSettings);
+end;
+
+
+procedure TfrClickerActionsArr.DoOnRetrieveRenderedBmpFromServer(ARemoteAddress, AFnm: string);
+begin
+  if not Assigned(FOnRetrieveRenderedBmpFromServer) then
+    raise Exception.Create('OnOnRetrieveRenderedBmpFromServer not assigned.')
+  else
+    FOnRetrieveRenderedBmpFromServer(ARemoteAddress, AFnm);
 end;
 
 
@@ -3488,6 +3545,7 @@ begin
   NewAction.ListOfVarEvalBefore := FastReplace_45ToReturn('111111111');
 
   InsertSetVar(InsertIndex + 1, 'Cache current control', NewAction);
+  UpdateNodesCheckStateFromActions;
 end;
 
 
@@ -3508,6 +3566,7 @@ begin
   NewAction.ListOfVarEvalBefore := FastReplace_45ToReturn('111111111');
 
   InsertSetVar(InsertIndex + 1, 'Restore cached control', NewAction);
+  UpdateNodesCheckStateFromActions;
 end;
 
 
@@ -3686,7 +3745,7 @@ begin
           end;
         end
         else
-          raise Exception.Create('Unhandled format version: ' + FormatVersion);
+          MessageBox(Handle, PChar('Unhandled clipboard format version: ' + FormatVersion), PChar(Application.Title), MB_ICONERROR);
       finally
         SetLength(ClipboardClkActions, 0);
       end;

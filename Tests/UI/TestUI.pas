@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2022 VCC
+    Copyright (C) 2023 VCC
     creation date: Oct 2022
     initial release date: 30 Oct 2022
 
@@ -49,6 +49,7 @@ type
 
     procedure PrepareClickerUnderTestToReadItsVars;
     procedure PrepareClickerUnderTestToLocalMode;
+    procedure PrepareClickerUnderTestToClientMode;
   public
     constructor Create; override;
   published
@@ -61,10 +62,17 @@ type
     procedure Test_ExecuteTemplateRemotelyWithDebugging_AndStepInto;
     procedure Test_ExecuteTemplateRemotelyWithDebugging_WithLoopedCall_AndStepInto;
     procedure Test_ExecuteTemplateRemotelyWithDebugging_AndStepIntoThenStop;
-    procedure Test_ExecuteTemplateRemotelyWithDebugging_WithLoopedCall_AndStepIntoThenStop;
+    //procedure Test_ExecuteTemplateRemotelyWithDebugging_WithLoopedCall_AndStepIntoThenStop;
 
-    procedure Test_FindColorErrorFromGradientOnServer_ErrorLevel_SuccessVerbose;
-    procedure Test_FindColorErrorFromGradientOnServer_ErrorCount_SuccessVerbose;
+    procedure Test_FindColorErrorFromGradientOnServer_ErrorLevel_SuccessVerbose_NoUpdate;
+    procedure Test_FindColorErrorFromGradientOnServer_ErrorCount_SuccessVerbose_NoUpdate;
+
+          //remote execution is disabled for these tests, because the action is not updated, on the server side, by the searching algorithm
+          //when/if implemented, these tests should pass
+    //procedure Test_ExecuteTemplateRemotely_FindColorErrorFromGradientOnServer_ErrorLevel_SuccessVerbose;
+    //procedure Test_ExecuteTemplateRemotely_FindColorErrorFromGradientOnServer_ErrorCount_SuccessVerbose;
+
+    procedure Test_ExecuteTemplateRemotelyWithDebugging_WithLoopedCall_AndStepIntoThenStop; //moved from above, since it fails
 
     procedure AfterAll_AlwaysExecute;
   end;
@@ -107,6 +115,11 @@ const
   CTestClientAddress = 'http://127.0.0.1:' + CClientUnderTestServerPort + '/';                                //UIClicker-under-test client in server mode
   CTestDriverServerAddress_Server = 'http://127.0.0.1:' + CTestDriver_ServerPort_ForServerUnderTest + '/';    //UIClicker driver  (a different instance of UIClicker, which drives UIClicker-under-test)
   CTestDriverServerAddress_Client = 'http://127.0.0.1:' + CTestDriver_ServerPort_ForClientUnderTest + '/';    //UIClicker driver
+
+  CMinErrorLevelKeyword = 'level';
+  CMinErrorCountKeyword = 'count';
+  CMinErrorMsgBoxBtn_NoUpdate = 'False';
+  CMinErrorMsgBoxBtn_YesUpdate = 'True';
 
 
 implementation
@@ -365,6 +378,14 @@ begin
 end;
 
 
+procedure TTestUI.PrepareClickerUnderTestToClientMode;
+begin
+  //Set $ExtraCaption$ variable in Client Driver, to 'ClientUnderTest', which is required by SetExecutionModeOnAppUnderTest.clktmpl
+  SetVariableOnTestDriverClient('$ExtraCaption$', 'ClientUnderTest');    //even after executing SetExecModeToServer.clktmpl, the caption should stay 'ClientUnderTest'
+  ExecuteTemplateOnTestDriver(FTemplatesDir + 'SetExecModeToClient.clktmpl', CREParam_FileLocation_ValueDisk);
+end;
+
+
 procedure TTestUI.Test_ExecuteTemplateRemotely;
 begin
   TestServerAddress := CTestDriverServerAddress_Client;
@@ -498,6 +519,88 @@ begin
 end;
 
 
+procedure TTestUI.Test_FindColorErrorFromGradientOnServer_ErrorLevel_SuccessVerbose_NoUpdate;
+begin
+  TestServerAddress := CTestDriverServerAddress_Client;
+  RunTestTemplateInClickerUnderTest('FindColorErrorFromGradientOnServer.clktmpl');
+
+  PrepareClickerUnderTestToLocalMode;
+  SetVariableOnTestDriverClient('$CalcItem$', 'Calculate minimum color error ' + CMinErrorLevelKeyword + ' to match bitmap...');
+  SetVariableOnTestDriverClient('$ExpectedColorErrorMsg$', 'A color error ' + CMinErrorLevelKeyword + ' found');
+  SetVariableOnTestDriverClient('$MsgBoxButtonEval$', CMinErrorMsgBoxBtn_NoUpdate);
+
+  ExecuteTemplateOnTestDriver(ExtractFilePath(ParamStr(0)) + '..\..\TestDriver\ActionTemplates\FindMinErrorLevel.clktmpl', CREParam_FileLocation_ValueDisk);
+  PrepareClickerUnderTestToReadItsVars;
+
+  Sleep(500);
+
+  TestServerAddress := CTestDriverServerAddress_Client;
+  Expect(GetVarValueFromServer('$SearchResult$')).ToBe('True');
+end;
+
+
+procedure TTestUI.Test_FindColorErrorFromGradientOnServer_ErrorCount_SuccessVerbose_NoUpdate;
+begin
+  TestServerAddress := CTestDriverServerAddress_Client;
+  RunTestTemplateInClickerUnderTest('FindColorErrorFromGradientOnServer.clktmpl');
+
+  PrepareClickerUnderTestToLocalMode;
+  SetVariableOnTestDriverClient('$CalcItem$', 'Calculate minimum color error ' + CMinErrorCountKeyword + ' to match bitmap...');
+  SetVariableOnTestDriverClient('$ExpectedColorErrorMsg$', 'A color error ' + CMinErrorCountKeyword + ' found');
+  SetVariableOnTestDriverClient('$MsgBoxButtonEval$', CMinErrorMsgBoxBtn_NoUpdate);
+
+  ExecuteTemplateOnTestDriver(ExtractFilePath(ParamStr(0)) + '..\..\TestDriver\ActionTemplates\FindMinErrorLevel.clktmpl', CREParam_FileLocation_ValueDisk);
+  PrepareClickerUnderTestToReadItsVars;
+
+  Sleep(500);
+
+  TestServerAddress := CTestDriverServerAddress_Client;
+  Expect(GetVarValueFromServer('$SearchResult$')).ToBe('True');
+end;
+
+
+//procedure TTestUI.Test_ExecuteTemplateRemotely_FindColorErrorFromGradientOnServer_ErrorLevel_SuccessVerbose_NoUpdate;
+//begin
+//  TestServerAddress := CTestDriverServerAddress_Client;
+//  PrepareClickerUnderTestToClientMode;
+//  RunTestTemplateInClickerUnderTest('FindColorErrorFromGradientOnServer.clktmpl');
+//
+//  SetVariableOnTestDriverClient('$CalcItem$', 'Calculate minimum color error ' + CMinErrorLevelKeyword + ' to match bitmap...');
+//  SetVariableOnTestDriverClient('$ExpectedColorErrorMsg$', 'A color error ' + CMinErrorLevelKeyword + ' found');
+//  ExecuteTemplateOnTestDriver(ExtractFilePath(ParamStr(0)) + '..\..\TestDriver\ActionTemplates\FindMinErrorLevel.clktmpl', CREParam_FileLocation_ValueDisk);
+//
+//  SetVariableOnTestDriverClient('$MsgBoxButtonEval$', CMinErrorMsgBoxBtn_NoUpdate);
+//
+//  PrepareClickerUnderTestToReadItsVars;
+//
+//  Sleep(500);
+//
+//  TestServerAddress := CTestDriverServerAddress_Client;
+//  Expect(GetVarValueFromServer('$SearchResult$')).ToBe('True');
+//end;
+//
+//
+//procedure TTestUI.Test_ExecuteTemplateRemotely_FindColorErrorFromGradientOnServer_ErrorCount_SuccessVerbose_NoUpdate;
+//begin
+//  TestServerAddress := CTestDriverServerAddress_Client;
+//  PrepareClickerUnderTestToClientMode;
+//  RunTestTemplateInClickerUnderTest('FindColorErrorFromGradientOnServer.clktmpl');
+//
+//  SetVariableOnTestDriverClient('$CalcItem$', 'Calculate minimum color error ' + CMinErrorCountKeyword + ' to match bitmap...');
+//  SetVariableOnTestDriverClient('$ExpectedColorErrorMsg$', 'A color error ' + CMinErrorCountKeyword + ' found');
+//  ExecuteTemplateOnTestDriver(ExtractFilePath(ParamStr(0)) + '..\..\TestDriver\ActionTemplates\FindMinErrorLevel.clktmpl', CREParam_FileLocation_ValueDisk);
+//
+//  SetVariableOnTestDriverClient('$MsgBoxButtonEval$', CMinErrorMsgBoxBtn_NoUpdate);
+//
+//  PrepareClickerUnderTestToReadItsVars;
+//
+//  Sleep(500);
+//
+//  TestServerAddress := CTestDriverServerAddress_Client;
+//  Expect(GetVarValueFromServer('$SearchResult$')).ToBe('True');
+//end;
+
+
 procedure TTestUI.Test_ExecuteTemplateRemotelyWithDebugging_WithLoopedCall_AndStepIntoThenStop;  //this test fails because stopping the debugger on a looped call, is not yet implemented in UIClicker
 begin
   TestServerAddress := CTestDriverServerAddress_Client;
@@ -514,40 +617,6 @@ begin
     TestServerAddress := CTestDriverServerAddress_Client; //restore
     ExecuteTemplateOnTestDriver(FTemplatesDir + 'SetExecModeToClient.clktmpl', CREParam_FileLocation_ValueDisk);
   end;
-end;
-
-
-procedure TTestUI.Test_FindColorErrorFromGradientOnServer_ErrorLevel_SuccessVerbose;
-begin
-  TestServerAddress := CTestDriverServerAddress_Client;
-  RunTestTemplateInClickerUnderTest('FindColorErrorFromGradientOnServer.clktmpl');
-
-  PrepareClickerUnderTestToLocalMode;
-  SetVariableOnTestDriverClient('$CalcItem$', 'Calculate minimum color error level to match bitmap...');
-  ExecuteTemplateOnTestDriver(ExtractFilePath(ParamStr(0)) + '..\..\TestDriver\ActionTemplates\FindMinErrorLevel.clktmpl', CREParam_FileLocation_ValueDisk);
-  PrepareClickerUnderTestToReadItsVars;
-
-  Sleep(500);
-
-  TestServerAddress := CTestDriverServerAddress_Client;
-  Expect(GetVarValueFromServer('$SearchResult$')).ToBe('True');
-end;
-
-
-procedure TTestUI.Test_FindColorErrorFromGradientOnServer_ErrorCount_SuccessVerbose;
-begin
-  TestServerAddress := CTestDriverServerAddress_Client;
-  RunTestTemplateInClickerUnderTest('FindColorErrorFromGradientOnServer.clktmpl');
-
-  PrepareClickerUnderTestToLocalMode;
-  SetVariableOnTestDriverClient('$CalcItem$', 'Calculate minimum color error count to match bitmap...');
-  ExecuteTemplateOnTestDriver(ExtractFilePath(ParamStr(0)) + '..\..\TestDriver\ActionTemplates\FindMinErrorLevel.clktmpl', CREParam_FileLocation_ValueDisk);
-  PrepareClickerUnderTestToReadItsVars;
-
-  Sleep(500);
-
-  TestServerAddress := CTestDriverServerAddress_Client;
-  Expect(GetVarValueFromServer('$SearchResult$')).ToBe('True');
 end;
 
 

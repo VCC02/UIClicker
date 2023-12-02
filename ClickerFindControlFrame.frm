@@ -345,7 +345,7 @@ object frClickerFindControl: TfrClickerFindControl
       object lblPreviewControl_Height: TLabel
         Left = 472
         Height = 13
-        Top = 19
+        Top = 17
         Width = 84
         Caption = '$Control_Height$'
       end
@@ -669,6 +669,16 @@ object frClickerFindControl: TfrClickerFindControl
           426082
         }
         Visible = False
+      end
+      object chkShowZoom: TCheckBox
+        Left = 472
+        Height = 19
+        Top = 30
+        Width = 74
+        Caption = 'Show zoom'
+        Checked = True
+        State = cbChecked
+        TabOrder = 8
       end
     end
     object TabSheetActionFindSubControlPrimitives: TTabSheet

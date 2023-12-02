@@ -304,6 +304,8 @@ type
     procedure HandleOnGetFontFinderSettings(var AFontFinderSettings: TFontFinderSettings);
     procedure HandleOnSetFontFinderSettings(var AFontFinderSettings: TFontFinderSettings);
 
+    procedure HandleOnRetrieveRenderedBmpFromServer(ARemoteAddress, AFnm: string);
+
     procedure CreateRemainingUIComponents;
     function GetClickerActionsArrFrameByStackLevel(AStackLevel: Integer): TfrClickerActionsArr;
 
@@ -320,6 +322,7 @@ type
     procedure SaveSettings(AIni: TMemIniFile);
 
     class procedure LoadBmpFromInMemFileSystem(AFileName: string; ABmp: TBitmap; AInMemFileSystem: TInMemFileSystem);
+    class procedure SaveBmpToInMemFileSystem(AFileName: string; ABmp: TBitmap; AInMemFileSystem: TInMemFileSystem);
 
     //public properties (because of creating new instances)
     property FullTemplatesDir: string read FFullTemplatesDir write SetFullTemplatesDir;  //no trailing backslash
@@ -419,6 +422,19 @@ begin
   end;
 end;
 
+
+class procedure TfrmClickerActions.SaveBmpToInMemFileSystem(AFileName: string; ABmp: TBitmap; AInMemFileSystem: TInMemFileSystem);
+var
+  MemStream: TMemoryStream;
+begin
+  MemStream := TMemoryStream.Create;
+  try
+    ABmp.SaveToStream(MemStream);
+    AInMemFileSystem.SaveFileToMem(AFileName, MemStream.Memory, MemStream.Size);
+  finally
+    MemStream.Free;
+  end;
+end;
 
 procedure LoadPmtvFromInMemFileSystem(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings; AInMemFileSystem: TInMemFileSystem);
 var
@@ -896,6 +912,8 @@ begin
   frClickerActionsArrMain.OnGetFontFinderSettings := HandleOnGetFontFinderSettings;
   frClickerActionsArrMain.OnSetFontFinderSettings := HandleOnSetFontFinderSettings;
 
+  frClickerActionsArrMain.OnRetrieveRenderedBmpFromServer := HandleOnRetrieveRenderedBmpFromServer;
+
   frClickerActionsArrExperiment1.frClickerActions.PasteDebugValuesListFromMainExecutionList1.OnClick := frClickerActionsArrExperiment1PasteDebugValuesListFromMainExecutionList1Click;
   frClickerActionsArrExperiment2.frClickerActions.PasteDebugValuesListFromMainExecutionList1.OnClick := frClickerActionsArrExperiment2PasteDebugValuesListFromMainExecutionList1Click;
   frClickerActionsArrExperiment1.OnCopyControlTextAndClassFromMainWindow := HandleOnCopyControlTextAndClassFromMainWindow;
@@ -962,6 +980,9 @@ begin
   frClickerActionsArrExperiment2.OnGetFontFinderSettings := HandleOnGetFontFinderSettings;
   frClickerActionsArrExperiment1.OnSetFontFinderSettings := HandleOnSetFontFinderSettings;
   frClickerActionsArrExperiment2.OnSetFontFinderSettings := HandleOnSetFontFinderSettings;
+
+  frClickerActionsArrExperiment1.OnRetrieveRenderedBmpFromServer := HandleOnRetrieveRenderedBmpFromServer;
+  frClickerActionsArrExperiment2.OnRetrieveRenderedBmpFromServer := HandleOnRetrieveRenderedBmpFromServer;
 
   tmrStartup.Enabled := True;
 end;
@@ -1452,6 +1473,8 @@ begin
         NewFrame.OnGetFontFinderSettings := HandleOnGetFontFinderSettings;
         NewFrame.OnSetFontFinderSettings := HandleOnSetFontFinderSettings;
 
+        NewFrame.OnRetrieveRenderedBmpFromServer := HandleOnRetrieveRenderedBmpFromServer;
+
         if FAutoSwitchToExecutingTab or (FAutoEnableSwitchingTabsOnDebugging and IsDebugging) then
         begin
           PageControlPlayer.ActivePageIndex := PageControlPlayer.PageCount - 1;
@@ -1835,6 +1858,12 @@ begin
     begin
       Result := 'The "' + CExtBmp_Filename + '" parameter is empty or missing from parameter list.';
       Exit;
+    end;
+
+    if Length(Filename) > CExtBmp_FilenameMaxLen then
+    begin
+      Filename := Copy(Filename, 1, CExtBmp_FilenameMaxLen);
+      AddToLog('Truncating rendered bitmap filename to "' + Filename + '", because its length is greater than ' + IntToStr(CExtBmp_FilenameMaxLen) + '.');
     end;
 
     SrvAddrPort := ListOfParams.Values[CExtBmp_SrvAddrPort];   //something like 'http://127.0.0.1:15444/'
@@ -2418,9 +2447,11 @@ begin
 end;
 
 
-function ProcessServerCommand(ACmd: string; AParams: TStrings; AOutBmp: TBitmap; AGPStream: TMemoryStream): string;
+function ProcessServerCommand(ACmd: string; AParams: TStrings; AOutBmp: TBitmap; AGPStream: TMemoryStream; ARenderedInMemFileSystem: TInMemFileSystem): string;
 var
   SyncObj: TSyncHTTPCmd;
+  Fnm: string;
+  TempStream: TMemoryStream;
 begin
   try
     //ExecuteCommand requires a special handling with two parts: executing the actual command, then getting the debugging content
@@ -2456,6 +2487,32 @@ begin
     if ACmd = '/' + CRECmd_TestConnection then
     begin
       Result := CREResp_ConnectionOK;
+      Exit;
+    end;
+
+    if ACmd = '/' + CRECmd_GetRenderedFile then
+    begin
+      Fnm := Copy(AParams.Values[CREParam_FileName], 1, CExtBmp_FilenameMaxLen);
+      AddToLogFromThread('Requested rendered file: "' + Fnm + '"');
+
+      if (Fnm <> '') and ARenderedInMemFileSystem.FileExistsInMem(Fnm) then
+      begin
+        TempStream := TMemoryStream.Create;
+        try
+          ARenderedInMemFileSystem.LoadFileFromMemToStream(Fnm, TempStream);
+          TempStream.Position := 0;
+          AOutBmp.LoadFromStream(TempStream, TempStream.Size);
+          Result := '';
+        finally
+          TempStream.Free;
+        end;
+      end
+      else
+      begin
+        Result := CREResp_FileNotFound + ': ' + Fnm;
+        AddToLogFromThread('Requested rendered file not found: "' + Fnm + '"');
+      end;
+
       Exit;
     end;
 
@@ -2519,6 +2576,12 @@ begin
     Exit;
   end;
 
+  if Cmd = '/' + CRECmd_GetListOfRenderedFiles then
+  begin
+    AResponseInfo.ContentText := FRenderedInMemFileSystem.ListMemFilesWithHashAsString;
+    Exit;
+  end;
+
   if Cmd = '/' + CRECmd_GetCompInfoAtPoint then
   begin
     AResponseInfo.ContentText := GetCompAtPoint(ARequestInfo.Params);
@@ -2529,7 +2592,8 @@ begin
   if (Cmd = '/' + CRECmd_GetResultedDebugImage) or
      (Cmd = '/' + CRECmd_GetSearchAreaDebugImage) or
      (Cmd = '/' + CRECmd_GetScreenShotImage) or
-     (Cmd = '/' + CRECmd_GetCurrentlyRecordedScreenShotImage) then
+     (Cmd = '/' + CRECmd_GetCurrentlyRecordedScreenShotImage) or
+     (Cmd = '/' + CRECmd_GetRenderedFile) then
   begin
     Bmp := TBitmap.Create;
     GettingImage := True;
@@ -2547,7 +2611,7 @@ begin
     GPStream := nil;
 
   try
-    AResponseInfo.ContentText := ProcessServerCommand(Cmd, ARequestInfo.Params, Bmp, GPStream);
+    AResponseInfo.ContentText := ProcessServerCommand(Cmd, ARequestInfo.Params, Bmp, GPStream, FRenderedInMemFileSystem);
 
     if GettingImage then
     begin
@@ -3033,7 +3097,36 @@ begin
             frClickerActionsArrMain.AddToLog('Exception on stopping client thread. Maybe it''s already done: ' + E.Message);
         end;
 
-        Exit;
+        try
+          tk := GetTickCount64;
+          repeat
+            Application.ProcessMessages;
+            Sleep(10);
+
+            if FPollForMissingServerFiles.Done then
+            begin
+              frClickerActionsArrMain.AddToLog('Monitoring thread terminated.');
+              Break;
+            end;
+
+            if GetTickCount64 - tk > 1500 then
+            begin
+              frClickerActionsArrMain.AddToLog('Timeout waiting for monitoring thread to terminate. The thread is still running (probably waiting).');
+              Break;
+            end;
+          until False;
+
+          if not FPollForMissingServerFiles.Done then
+            Exit; //let the user switch back again
+        except
+          on E: Exception do
+            frClickerActionsArrMain.AddToLog('Exception waiting to stop client thread. Maybe it''s already done: ' + E.Message);
+        end;
+
+        frClickerActionsArrMain.AddToLog('Creating a new client thread...');
+        cmbExecMode.ItemIndex := 1; //force local mode, for now, then let the user switch again later
+        Sleep(10);
+        PageControlExecMode.ActivePageIndex := cmbExecMode.ItemIndex;
       end;
 
       FPollForMissingServerFiles := TPollForMissingServerFiles.Create(True);
@@ -3385,6 +3478,52 @@ end;
 procedure TfrmClickerActions.HandleOnSetFontFinderSettings(var AFontFinderSettings: TFontFinderSettings);
 begin
   FFontFinderSettings := AFontFinderSettings;
+end;
+
+
+procedure TfrmClickerActions.HandleOnRetrieveRenderedBmpFromServer(ARemoteAddress, AFnm: string);
+var
+  ReceivedList: TStringList;
+  ReceivedItem, BmpRes: string;
+  i, Idx: Integer;
+  Bmp: TBitmap;
+begin
+  ReceivedList := TStringList.Create;
+  try
+    ReceivedList.Text := GetListOfRenderedFilesFromServer(ARemoteAddress, False); // and verify if local file has the same hash
+
+    ReceivedItem := '';
+    Idx := -1;
+    for i := 0 to ReceivedList.Count - 1 do
+    begin
+      ReceivedItem := ReceivedList.Strings[i];
+
+      if Pos(AFnm + CDefaultInMemFileNameHashSeparator, ReceivedItem) = 1 then
+      begin
+        Idx := i;
+        Break;
+      end;
+    end;
+
+    if Idx > -1 then
+      if not FRenderedInMemFileSystem.FileExistsInMemWithHash(ReceivedItem) then
+      begin
+        AddToLog('Updating rendered bitmap: "' + AFnm + '"...');
+
+        Bmp := TBitmap.Create;
+        try
+          BmpRes := GetRenderedFileFromServer(ARemoteAddress, AFnm, Bmp);
+          AddToLog('Rendered bitmap updating result: ' + BmpRes);
+
+          if BmpRes = '' then
+            SaveBmpToInMemFileSystem(AFnm, Bmp, FRenderedInMemFileSystem);
+        finally
+          Bmp.Free;
+        end;
+      end;
+  finally
+    ReceivedList.Free;
+  end;
 end;
 
 end.

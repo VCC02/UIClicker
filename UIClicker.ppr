@@ -93,6 +93,12 @@ begin
 
       LogPath := ExtractFilePath(ParamStr(0)) + 'ClickerExceptions.txt';
       ExceptionLog.Add('This file was saved as: ' + LogPath);
+
+      try
+        ExceptionLog.Add('MainForm.Caption: ' + Application.MainForm.Caption);
+      except
+      end;
+
       ExceptionLog.SaveToFile(LogPath);
 
       LogPath := '"' + LogPath + '"';
@@ -143,6 +149,12 @@ begin
 
       LogPath := ExtractFilePath(ParamStr(0)) + 'ClickerUnhandledExceptions.txt';
       ExceptionLog.Add('This file was saved as: ' + LogPath);
+
+      try
+        ExceptionLog.Add('MainForm.Caption: ' + Application.MainForm.Caption);
+      except
+      end;
+
       ExceptionLog.SaveToFile(LogPath);
 
       LogPath := '"' + LogPath + '"';

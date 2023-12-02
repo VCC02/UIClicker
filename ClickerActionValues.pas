@@ -1977,7 +1977,8 @@ end;
 
 function GetPropertyHint_FindControl_IgnoredColors: string;
 begin
-  Result := 'Comma-separated list of colors. They can be 6-digit hex values (BGR format, without "0x" prefix) or var/replacements, which contain 6-digit hex values.' + #13#10 +
+  Result := 'Comma-separated list of colors, from searched bitmap.' + #13#10 +
+            'They can be 6-digit hex values (BGR format, without "0x" prefix) or var/replacements, which contain 6-digit hex values.' + #13#10 +
             'When empty, no color is ignored (except for text background color, if configured).';
 end;
 
