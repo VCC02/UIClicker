@@ -640,7 +640,8 @@ implementation
 {$R *.frm}
 
 uses
-  BitmapProcessing, Clipbrd, ClickerZoomPreviewForm, ClickerFontFinderSettingsForm;
+  BitmapProcessing, Clipbrd, ClickerZoomPreviewForm, ClickerFontFinderSettingsForm,
+  BitmapConv;
 
 
 //const
@@ -3876,12 +3877,15 @@ var
   PreviewFont: TFont;
   Options: PClkFindControlOptions;
   FGColor, BGColor: TColor;
+  Idx: Integer;
 begin
-  if Length(FBMPTextProfiles) > 0 then
+  Idx := FSearchAreaSearchedTextDbgImg.Tag;
+
+  if (Idx > -1) and (Idx < Length(FBMPTextProfiles)) then
   begin
-    PreviewFont := FBMPTextProfiles[0].frClickerBMPText.imgPreview.Canvas.Font;
-    FGColor := FBMPTextProfiles[0].frClickerBMPText.imgPreview.Canvas.Font.Color;
-    BGColor := FBMPTextProfiles[0].frClickerBMPText.imgPreview.Canvas.Brush.Color;
+    PreviewFont := FBMPTextProfiles[Idx].frClickerBMPText.imgPreview.Canvas.Font;
+    FGColor := FBMPTextProfiles[Idx].frClickerBMPText.imgPreview.Canvas.Font.Color;
+    BGColor := FBMPTextProfiles[Idx].frClickerBMPText.imgPreview.Canvas.Brush.Color;
   end
   else
   begin
@@ -3895,8 +3899,8 @@ begin
   begin
     if Length(Options^.MatchBitmapText) > 0 then
     begin
-      FGColor := StrToIntDef(EvaluateReplacements(Options^.MatchBitmapText[0].ForegroundColor), clWindowText);
-      BGColor := StrToIntDef(EvaluateReplacements(Options^.MatchBitmapText[0].BackgroundColor), clBtnFace);
+      FGColor := StrToIntDef(EvaluateReplacements(Options^.MatchBitmapText[Idx].ForegroundColor), clWindowText);
+      BGColor := StrToIntDef(EvaluateReplacements(Options^.MatchBitmapText[Idx].BackgroundColor), clBtnFace);
     end
     else
     begin
@@ -3906,7 +3910,7 @@ begin
   end;
 
   DoOnGetFontFinderSettings(FontFinderSettings);
-  if EditFontFinderSettings(FontFinderSettings, PreviewFont, FGColor, BGColor, Options^.MatchText) then
+  {if} EditFontFinderSettings(FontFinderSettings, PreviewFont, FGColor, BGColor, Options^.MatchText) {then} ;
     DoOnSetFontFinderSettings(FontFinderSettings);
 end;
 

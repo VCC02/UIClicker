@@ -366,7 +366,6 @@ type
     procedure OverlapGridImgOnDebugImg(ADebugAndGridBitmap: TBitmap);
     procedure CopyTextAndClassFromExternalProvider(AProviderName: string);
     procedure SetActionTimeoutToValue(AValue: Integer);
-    procedure ResizeFrameSectionsBySplitter(NewLeft: Integer);
     function GetIndexOfFirstModifiedPmtvFile: Integer;
     function GetIndexOfCurrentlyEditingPrimitivesFile: Integer;
 
@@ -487,6 +486,7 @@ type
     procedure UpdateUseWholeScreenLabel(AUseWholeScreen: Boolean);
     procedure RefreshActionName; //called by action list, when modifying the action name from there
     procedure ResetAllPmtvModifiedFlags; //called when users select a diffeent action from the one with modified pmtv files
+    procedure ResizeFrameSectionsBySplitter(NewLeft: Integer);
 
     procedure ClearControls;
 
@@ -1188,8 +1188,8 @@ end;
 procedure TfrClickerActions.FrameResize(Sender: TObject);
 var
   NewLeft: Integer;
-begin
-  NewLeft := pnlHorizSplitter.Left;
+begin                                   //this method doesn't seem to be called before showing the owner window/frame
+  NewLeft := pnlHorizSplitter.Left;     //that is why Width has its initial (small) value, causing NewLeft to adapt to it
 
   if NewLeft > Width - 260 then
     NewLeft := Width - 260;

@@ -760,4 +760,11 @@ object frmClickerActions: TfrmClickerActions
     Left = 592
     Top = 344
   end
+  object tmrDelayedShow: TTimer
+    Enabled = False
+    Interval = 100
+    OnTimer = tmrDelayedShowTimer
+    Left = 672
+    Top = 256
+  end
 end

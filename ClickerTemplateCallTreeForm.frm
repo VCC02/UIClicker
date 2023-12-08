@@ -1,16 +1,16 @@
 object frmClickerTemplateCallTree: TfrmClickerTemplateCallTree
-  Left = 487
+  Left = 484
   Height = 375
-  Top = 156
+  Top = 158
   Width = 564
   Caption = 'Clicker Template - Call tree'
   ClientHeight = 375
   ClientWidth = 564
   Constraints.MinHeight = 375
   Constraints.MinWidth = 564
+  LCLVersion = '8.2'
   OnCreate = FormCreate
   OnDestroy = FormDestroy
-  LCLVersion = '7.5'
   object memTemplates: TMemo
     Left = 8
     Height = 90
@@ -35,8 +35,8 @@ object frmClickerTemplateCallTree: TfrmClickerTemplateCallTree
     Width = 75
     Anchors = [akTop, akRight]
     Caption = 'Browse...'
-    OnClick = btnBrowseClick
     TabOrder = 1
+    OnClick = btnBrowseClick
   end
   object btnGenerate: TButton
     Left = 480
@@ -45,8 +45,8 @@ object frmClickerTemplateCallTree: TfrmClickerTemplateCallTree
     Width = 75
     Anchors = [akTop, akRight]
     Caption = 'Generate'
-    OnClick = btnGenerateClick
     TabOrder = 2
+    OnClick = btnGenerateClick
   end
   object vstCallTree: TVirtualStringTree
     Left = 8
@@ -58,16 +58,32 @@ object frmClickerTemplateCallTree: TfrmClickerTemplateCallTree
     Colors.UnfocusedSelectionColor = clGradientInactiveCaption
     DefaultText = 'Node'
     Header.AutoSizeIndex = -1
-    Header.Columns = <>
+    Header.Columns = <    
+      item
+        MinWidth = 450
+        Position = 0
+        Text = 'Template name / path'
+        Width = 450
+      end    
+      item
+        MinWidth = 700
+        Position = 1
+        Text = 'Icon path'
+        Width = 700
+      end>
     Header.DefaultHeight = 17
-    Header.MainColumn = -1
+    Header.Height = 17
+    Header.Options = [hoColumnResize, hoDrag, hoShowSortGlyphs, hoVisible]
+    Header.Style = hsFlatButtons
     ParentShowHint = False
     PopupMenu = pmTree
+    StateImages = imglstTemplateIcons
     TabOrder = 3
     TreeOptions.SelectionOptions = [toFullRowSelect]
     OnBeforeCellPaint = vstCallTreeBeforeCellPaint
     OnClick = vstCallTreeClick
     OnGetText = vstCallTreeGetText
+    OnGetImageIndex = vstCallTreeGetImageIndex
   end
   object lblCallTree: TLabel
     Left = 8
@@ -77,21 +93,21 @@ object frmClickerTemplateCallTree: TfrmClickerTemplateCallTree
     Caption = 'Call tree'
   end
   object chkDisplayFullPaths: TCheckBox
-    Left = 423
+    Left = 425
     Height = 19
     Top = 121
-    Width = 110
+    Width = 108
     Anchors = [akTop, akRight]
     Caption = 'Display full paths'
-    OnChange = chkDisplayFullPathsChange
     TabOrder = 4
+    OnChange = chkDisplayFullPathsChange
   end
   object chkFullPathComparison: TCheckBox
-    Left = 423
+    Left = 425
     Height = 19
     Hint = 'When checked, the full template path is verified, to identify a call.'
     Top = 96
-    Width = 132
+    Width = 130
     Anchors = [akTop, akRight]
     Caption = 'Full path comparison'
     ParentShowHint = False
@@ -113,11 +129,11 @@ object frmClickerTemplateCallTree: TfrmClickerTemplateCallTree
     Top = 328
     Width = 344
     Anchors = [akLeft, akRight, akBottom]
-    OnChange = edtSearchChange
     ParentShowHint = False
     ShowHint = True
     TabOrder = 6
     TextHint = 'Search'
+    OnChange = edtSearchChange
   end
   object cmbSearchMode: TComboBox
     Left = 440
@@ -131,10 +147,10 @@ object frmClickerTemplateCallTree: TfrmClickerTemplateCallTree
       'Hide items'
       'Highlight items'
     )
-    OnChange = cmbSearchModeChange
     Style = csOwnerDrawFixed
     TabOrder = 7
     Text = 'Hide items'
+    OnChange = cmbSearchModeChange
   end
   object lblSearchMode: TLabel
     Left = 366
@@ -169,5 +185,9 @@ object frmClickerTemplateCallTree: TfrmClickerTemplateCallTree
       Caption = 'Export to file...'
       OnClick = MenuItem_ExportClick
     end
+  end
+  object imglstTemplateIcons: TImageList
+    Left = 456
+    Top = 216
   end
 end

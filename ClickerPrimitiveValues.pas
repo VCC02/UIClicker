@@ -119,7 +119,7 @@ const
     (Name: 'Y1'; EditorType: etSpinText),
     (Name: 'X2'; EditorType: etSpinText),
     (Name: 'Y2'; EditorType: etSpinText),
-    (Name: 'Path'; EditorType: etFilePathWithArrow),
+    (Name: 'Path'; EditorType: etTextWithArrow),
     (Name: 'Stretch'; EditorType: etText),
     (Name: 'RenderedExternally'; EditorType: etText),
     (Name: 'Transparent'; EditorType: etText),

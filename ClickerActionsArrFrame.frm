@@ -6,11 +6,11 @@ object frClickerActionsArr: TfrClickerActionsArr
   Anchors = [akTop, akLeft, akRight, akBottom]
   ClientHeight = 644
   ClientWidth = 768
-  OnResize = FrameResize
   TabOrder = 0
   TabStop = True
-  DesignLeft = 86
-  DesignTop = 85
+  OnResize = FrameResize
+  DesignLeft = 85
+  DesignTop = 86
   object pnlActionsEditor: TPanel
     Left = 1
     Height = 396
@@ -31,6 +31,7 @@ object frClickerActionsArr: TfrClickerActionsArr
       Width = 685
       Caption = 'pnlfrClickerActions'
       Color = clYellow
+      ParentBackground = False
       ParentColor = False
       TabOrder = 0
       Visible = False
@@ -54,12 +55,12 @@ object frClickerActionsArr: TfrClickerActionsArr
       Top = 371
       Width = 760
       Anchors = [akLeft, akRight, akBottom]
-      OnExit = edtConsoleCommandExit
-      OnKeyDown = edtConsoleCommandKeyDown
-      OnKeyUp = edtConsoleCommandKeyUp
       ParentShowHint = False
       ShowHint = True
       TabOrder = 2
+      OnExit = edtConsoleCommandExit
+      OnKeyDown = edtConsoleCommandKeyDown
+      OnKeyUp = edtConsoleCommandKeyUp
     end
   end
   object pnlActions: TPanel
@@ -84,6 +85,7 @@ object frClickerActionsArr: TfrClickerActionsArr
       Width = 571
       Caption = 'pnlvstActions'
       Color = clYellow
+      ParentBackground = False
       ParentColor = False
       TabOrder = 0
       Visible = False
@@ -110,11 +112,11 @@ object frClickerActionsArr: TfrClickerActionsArr
       AutoSize = False
       Caption = 'Show Action #'
       Color = clDefault
-      OnClick = chkShowActionNumberClick
       ParentColor = False
       ParentShowHint = False
       ShowHint = True
       TabOrder = 2
+      OnClick = chkShowActionNumberClick
     end
     object lblModifiedStatus: TLabel
       Left = 224
@@ -165,8 +167,8 @@ object frClickerActionsArr: TfrClickerActionsArr
         1AFFFFFFFFFFFF000000FFFFFF39841A39841A39841A39841A39841A39841A39
         841A39841A39841AFFFFFF000000
       }
-      OnClick = spdbtnExtraSaveClick
       ParentFont = False
+      OnClick = spdbtnExtraSaveClick
     end
     object spdbtnExtraAdd: TSpeedButton
       Left = 637
@@ -185,8 +187,8 @@ object frClickerActionsArr: TfrClickerActionsArr
         1AFFFFFFFFFFFF000000FFFFFF39841A39841A39841A39841A39841A39841A39
         841A39841A39841AFFFFFF000000
       }
-      OnClick = spdbtnExtraAddClick
       ParentFont = False
+      OnClick = spdbtnExtraAddClick
     end
     object spdbtnUpdateAction: TSpeedButton
       Left = 576
@@ -196,9 +198,9 @@ object frClickerActionsArr: TfrClickerActionsArr
       Width = 79
       Anchors = [akTop, akRight]
       Caption = 'Update'
-      OnClick = spdbtnUpdateActionClick
       ShowHint = True
       ParentShowHint = False
+      OnClick = spdbtnUpdateActionClick
     end
     object spdbtnExtraRemove: TSpeedButton
       Left = 637
@@ -217,8 +219,8 @@ object frClickerActionsArr: TfrClickerActionsArr
         1AFFFFFFFFFFFF000000FFFFFF39841A39841A39841A39841A39841A39841A39
         841A39841A39841AFFFFFF000000
       }
-      OnClick = spdbtnExtraRemoveClick
       ParentFont = False
+      OnClick = spdbtnExtraRemoveClick
     end
     object spdbtnMoveUp: TSpeedButton
       Left = 576
@@ -238,10 +240,10 @@ object frClickerActionsArr: TfrClickerActionsArr
         FFFFFFFFFFFFFF000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFF39841AFFFFFFFF
         FFFFFFFFFFFFFFFFFFFFFF000000
       }
-      OnClick = spdbtnMoveUpClick
       ShowHint = True
       ParentFont = False
       ParentShowHint = False
+      OnClick = spdbtnMoveUpClick
     end
     object spdbtnMoveDown: TSpeedButton
       Left = 576
@@ -261,10 +263,10 @@ object frClickerActionsArr: TfrClickerActionsArr
         1AFFFFFFFFFFFF000000FFFFFF39841A39841A39841A39841A39841A39841A39
         841A39841A39841AFFFFFF000000
       }
-      OnClick = spdbtnMoveDownClick
       ShowHint = True
       ParentFont = False
       ParentShowHint = False
+      OnClick = spdbtnMoveDownClick
     end
     object chkResetVarsOnPlayAll: TCheckBox
       Left = 627
@@ -287,10 +289,10 @@ object frClickerActionsArr: TfrClickerActionsArr
       Anchors = [akTop, akRight]
       AutoSize = False
       Caption = 'Enable Debugger Keys'
-      OnClick = chkEnableDebuggerKeysClick
       ParentShowHint = False
       ShowHint = True
       TabOrder = 4
+      OnClick = chkEnableDebuggerKeysClick
     end
     object spdbtnPlaySelectedAction: TSpeedButton
       Left = 657
@@ -383,8 +385,8 @@ object frClickerActionsArr: TfrClickerActionsArr
         1AFFFFFFFFFFFF000000FFFFFF39841A39841A39841A39841A39841A39841A39
         841A39841A39841AFFFFFF000000
       }
-      OnClick = spdbtnExtraPlayAllClick
       ParentFont = False
+      OnClick = spdbtnExtraPlayAllClick
     end
     object spdbtnStopPlaying: TSpeedButton
       Left = 657
@@ -423,9 +425,9 @@ object frClickerActionsArr: TfrClickerActionsArr
         FFC9AEFFC9AEFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
         FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
       }
-      OnClick = spdbtnStopPlayingClick
       ShowHint = True
       ParentShowHint = False
+      OnClick = spdbtnStopPlayingClick
     end
     object spdbtnContinuePlayingAll: TSpeedButton
       Left = 657
@@ -464,9 +466,9 @@ object frClickerActionsArr: TfrClickerActionsArr
         FF000000FFFFFFFFFFFFFFFFFF000000000000000000000000FFFFFFFFFFFF00
         0000000000000000000000FFFFFFFFFFFF000000000000000000
       }
-      OnClick = spdbtnContinuePlayingAllClick
       ShowHint = True
       ParentShowHint = False
+      OnClick = spdbtnContinuePlayingAllClick
     end
     object spdbtnStepOver: TSpeedButton
       Left = 657
@@ -505,9 +507,9 @@ object frClickerActionsArr: TfrClickerActionsArr
         FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF00
         0000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
       }
-      OnClick = spdbtnStepOverClick
       ShowHint = True
       ParentShowHint = False
+      OnClick = spdbtnStepOverClick
     end
     object spdbtnStepInto: TSpeedButton
       Left = 657
@@ -546,9 +548,9 @@ object frClickerActionsArr: TfrClickerActionsArr
         FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
         FFFFFFFFFF000000000000000000000000000000000000000000
       }
-      OnClick = spdbtnStepIntoClick
       ShowHint = True
       ParentShowHint = False
+      OnClick = spdbtnStepIntoClick
     end
     object spdbtnPalette: TSpeedButton
       Left = 659
@@ -650,8 +652,8 @@ object frClickerActionsArr: TfrClickerActionsArr
         1AFFFFFFFFFFFF000000FFFFFF39841A39841A39841A39841A39841A39841A39
         841A39841A39841AFFFFFF000000
       }
-      OnClick = spdbtnExtraPlayActionClick
       ParentFont = False
+      OnClick = spdbtnExtraPlayActionClick
     end
     object spdbtnAddAction: TSpeedButton
       Left = 576
@@ -781,8 +783,20 @@ object frClickerActionsArr: TfrClickerActionsArr
         1AFFFFFFFFFFFF000000FFFFFF39841A39841A39841A39841A39841A39841A39
         841A39841A39841AFFFFFF000000
       }
-      OnClick = spdbtnExtraLoadClick
       ParentFont = False
+      OnClick = spdbtnExtraLoadClick
+    end
+    object imgTemplateIcon: TImage
+      Left = 600
+      Height = 32
+      Top = 89
+      Width = 32
+      Anchors = [akTop, akRight]
+      ParentShowHint = False
+      PopupMenu = pmTemplateIcon
+      ShowHint = True
+      Stretch = True
+      Transparent = True
     end
   end
   object pnlVertSplitter: TPanel
@@ -793,6 +807,7 @@ object frClickerActionsArr: TfrClickerActionsArr
     Width = 765
     Anchors = [akTop, akLeft, akRight]
     Color = 13041606
+    ParentBackground = False
     ParentColor = False
     TabOrder = 2
     OnMouseDown = pnlVertSplitterMouseDown
@@ -1529,6 +1544,29 @@ object frClickerActionsArr: TfrClickerActionsArr
     end
     object MenuItem_InMemReceivedAsServer: TMenuItem
       Caption = 'In-Memory - Received as server'
+    end
+  end
+  object pmTemplateIcon: TPopupMenu
+    Left = 536
+    Top = 96
+    object MenuItem_BrowseTemplateIcon: TMenuItem
+      Caption = 'Browse icon...'
+      OnClick = MenuItem_BrowseTemplateIconClick
+    end
+    object N4: TMenuItem
+      Caption = '-'
+    end
+    object MenuItem_ReplaceWith_TemplateDir: TMenuItem
+      Caption = 'Replace path to ActionTemplates with $TemplateDir$'
+      OnClick = MenuItem_ReplaceWith_TemplateDirClick
+    end
+    object MenuItem_ReplaceWith_SelfTemplateDir: TMenuItem
+      Caption = 'Replace path to this template with $SelfTemplateDir$'
+      OnClick = MenuItem_ReplaceWith_SelfTemplateDirClick
+    end
+    object MenuItem_ReplaceWith_AppDir: TMenuItem
+      Caption = 'Replace path to UIClicker with $AppDir$'
+      OnClick = MenuItem_ReplaceWith_AppDirClick
     end
   end
 end

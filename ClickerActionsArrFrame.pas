@@ -32,9 +32,10 @@ interface
 
 uses
   Windows, {Messages,} SysUtils, Variants, Classes, Graphics, Controls, Forms, Types,
-  Dialogs, ClickerActionsFrame, StdCtrls, VirtualTrees, ExtCtrls, Buttons,
+  Dialogs, ClickerActionsFrame, StdCtrls, VirtualTrees, ExtCtrls, Buttons, IniFiles,
   ImgList, Menus, ComCtrls, IdHTTP, ClickerIniFiles, ClickerUtils, InMemFileSystem,
-  ClickerActionsPaletteFrame, ClickerActionExecution, PollingFIFO, ClickerPrimitiveUtils;
+  ClickerActionsPaletteFrame, ClickerActionExecution, PollingFIFO, ClickerPrimitiveUtils,
+  ActiveX;
 
 type
   TOnExecuteRemoteActionAtIndex = function(AActionIndex, AStackLevel: Integer; AVarReplacements: TStringList; AIsDebugging: Boolean): Boolean of object;
@@ -49,6 +50,7 @@ type
     chkResetVarsOnPlayAll: TCheckBox;
     chkShowActionNumber: TCheckBox;
     edtConsoleCommand: TEdit;
+    imgTemplateIcon: TImage;
     imgWaitingInDebuggingMode: TImage;
     imglstActionHasCondition: TImageList;
     imglstActionExtraStatus: TImageList;
@@ -58,6 +60,11 @@ type
     lbeSearchAction: TLabeledEdit;
     lblModifiedStatus: TLabel;
     memLogErr: TMemo;
+    N4: TMenuItem;
+    MenuItem_ReplaceWith_AppDir: TMenuItem;
+    MenuItem_ReplaceWith_SelfTemplateDir: TMenuItem;
+    MenuItem_ReplaceWith_TemplateDir: TMenuItem;
+    MenuItem_BrowseTemplateIcon: TMenuItem;
     MenuItem_AddRestoreCachedControlAction: TMenuItem;
     MenuItem_AddCacheControlAction: TMenuItem;
     MenuItem_InMemReceivedAsServer: TMenuItem;
@@ -89,6 +96,7 @@ type
     pnlvstActions: TPanel;
     pmExtraPlayAction: TPopupMenu;
     pmExtraLoad: TPopupMenu;
+    pmTemplateIcon: TPopupMenu;
     Removeallactions1: TMenuItem;
     imglstActionStatus: TImageList;
     pmExtraAdd: TPopupMenu;
@@ -143,12 +151,16 @@ type
     procedure MenuItem_AddACallTemplateByFileClick(Sender: TObject);
     procedure MenuItem_AddCacheControlActionClick(Sender: TObject);
     procedure MenuItem_AddRestoreCachedControlActionClick(Sender: TObject);
+    procedure MenuItem_BrowseTemplateIconClick(Sender: TObject);
     procedure MenuItem_EditBreakPointClick(Sender: TObject);
     procedure MenuItem_PlayActionAndRestoreVarsClick(Sender: TObject);
     procedure MenuItem_RefactorSelectedActionsIntoATemplateClick(Sender: TObject
       );
     procedure MenuItem_ReplaceSelectedActionsWithATemplateCallClick(Sender: TObject
       );
+    procedure MenuItem_ReplaceWith_AppDirClick(Sender: TObject);
+    procedure MenuItem_ReplaceWith_SelfTemplateDirClick(Sender: TObject);
+    procedure MenuItem_ReplaceWith_TemplateDirClick(Sender: TObject);
     procedure MenuItem_SetActionStatusToAllowedFailedClick(Sender: TObject);
     procedure MenuItem_SetActionStatusToFailedClick(Sender: TObject);
     procedure MenuItem_SetActionStatusToSuccessfulClick(Sender: TObject);
@@ -221,6 +233,14 @@ type
     procedure tmrGlowUpdateButtonTimer(Sender: TObject);
     procedure vstActionsMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
+    procedure vstActionsDragAllowed(Sender: TBaseVirtualTree;
+      Node: PVirtualNode; Column: TColumnIndex; var Allowed: Boolean);
+    procedure vstActionsDragOver(Sender: TBaseVirtualTree;
+      Source: TObject; Shift: TShiftState; State: TDragState; const Pt: TPoint;
+      Mode: TDropMode; var Effect: DWORD; var Accept: Boolean);
+    procedure vstActionsDragDrop(Sender: TBaseVirtualTree;
+      Source: TObject; DataObject: IDataObject; Formats: TFormatArray;
+      Shift: TShiftState; const Pt: TPoint; var Effect: DWORD; Mode: TDropMode);
     procedure chkEnableDebuggerKeysClick(Sender: TObject);
     procedure tmrDebugKeysTimer(Sender: TObject);
     procedure Removeallactionsandclearfilename1Click(Sender: TObject);
@@ -230,6 +250,7 @@ type
     { Private declarations }
     FClkActions: TClkActionsRecArr;
     FTemplateNotes: string;
+    FTemplateIconPath: string;
     FActionExecution: TActionExecution;
     FEditingText: string;
 
@@ -381,6 +402,9 @@ type
     procedure SetModified(Value: Boolean);
     procedure UpdateModifiedLabel;
     procedure SaveTemplateIfModified;
+    procedure LoadTemplateIcon;
+    procedure SetTemplateIconHint;
+    procedure DrawDefaultTemplateIcon;
 
     procedure ResizeFrameSectionsBySplitter(NewTop: Integer);
 
@@ -401,7 +425,7 @@ type
 
     procedure LoadTemplate_V1(Ini: TClkIniReadonlyFile);
     procedure LoadTemplate_V2(Ini: TClkIniReadonlyFile);
-    procedure SaveTemplateWithCustomActions_V2(Fnm: string; var ACustomClkActions: TClkActionsRecArr; ANotes: string);
+    procedure SaveTemplateWithCustomActions_V2(Fnm: string; var ACustomClkActions: TClkActionsRecArr; ANotes, ATemplateIconPath: string);
     procedure SaveTemplate(Fnm: string);
 
     procedure DisplayDefaultEvalConsoleEditBox;
@@ -487,6 +511,9 @@ type
 
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
+
+    procedure LoadSettings(AIni: TMemIniFile; ASection, AIndentSuffix: string);
+    procedure SaveSettings(AIni: TMemIniFile; ASection, AIndentSuffix: string);
 
     function CreateIniReadonlyFileFromInMemFileSystem(AFnm: string; AInMemFileSystem: TInMemFileSystem): TClkIniReadonlyFile;
     procedure LoadTemplate(Fnm: string; AFileLocation: TFileLocation = flDisk; AInMemFileSystem: TInMemFileSystem = nil);
@@ -847,6 +874,9 @@ begin
   vstActions.OnMouseUp := vstActionsMouseUp;
   vstActions.OnKeyDown := vstActionsKeyDown;
   vstActions.OnKeyUp := vstActionsKeyUp;
+  vstActions.OnDragAllowed := vstActionsDragAllowed;
+  vstActions.OnDragOver := vstActionsDragOver;
+  vstActions.OnDragDrop := vstActionsDragDrop;
   vstActions.Colors.UnfocusedSelectionColor := clGradientInactiveCaption;
 
   NewColum := vstActions.Header.Columns.Add;
@@ -981,6 +1011,12 @@ begin
   FShouldStopAtBreakPoint := False;
   FPlayingAllActions := False;
 
+  imgTemplateIcon.Picture.Bitmap.Width := imgTemplateIcon.Width;
+  imgTemplateIcon.Picture.Bitmap.Height := imgTemplateIcon.Height;
+  imgTemplateIcon.Picture.Bitmap.PixelFormat := pf24bit;
+
+  DrawDefaultTemplateIcon;
+
   FEditingText := '';
 end;
 
@@ -994,6 +1030,56 @@ begin
   FFuncDescriptions.Free;
 
   inherited Destroy;
+end;
+
+
+procedure TfrClickerActionsArr.LoadSettings(AIni: TMemIniFile; ASection, AIndentSuffix: string);
+var
+  i: Integer;
+  Indent: string;
+  SplitterTop, SplitterLeft: Integer;
+begin
+  for i := 0 to vstActions.Header.Columns.Count - 1 do
+  begin
+    Indent := 'ColWidth_' + IntToStr(i) + '.' + AIndentSuffix;
+    vstActions.Header.Columns.Items[i].Width := AIni.ReadInteger(ASection, Indent, vstActions.Header.Columns.Items[i].Width);
+  end;
+
+  SplitterTop := AIni.ReadInteger(ASection, 'VertSplitterTop.' + AIndentSuffix, pnlVertSplitter.Top);
+  ResizeFrameSectionsBySplitter(SplitterTop);
+
+  SplitterLeft := AIni.ReadInteger(ASection, 'HorizSplitterLeft.' + AIndentSuffix, frClickerActions.pnlHorizSplitter.Left);
+  frClickerActions.ResizeFrameSectionsBySplitter(SplitterLeft);
+end;
+
+
+procedure TfrClickerActionsArr.SaveSettings(AIni: TMemIniFile; ASection, AIndentSuffix: string);
+var
+  i: Integer;
+  Indent: string;
+begin
+  for i := 0 to vstActions.Header.Columns.Count - 1 do
+  begin
+    Indent := 'ColWidth_' + IntToStr(i) + '.' + AIndentSuffix;
+    AIni.WriteInteger(ASection, Indent, vstActions.Header.Columns.Items[i].Width);
+  end;
+
+  AIni.WriteInteger(ASection, 'VertSplitterTop.' + AIndentSuffix, pnlVertSplitter.Top);
+  AIni.WriteInteger(ASection, 'HorizSplitterLeft.' + AIndentSuffix, frClickerActions.pnlHorizSplitter.Left);
+end;
+
+
+procedure TfrClickerActionsArr.DrawDefaultTemplateIcon;
+begin
+  imgTemplateIcon.Picture.Bitmap.Canvas.Pen.Color := clGreen;
+  imgTemplateIcon.Picture.Bitmap.Canvas.Brush.Color := clWhite;
+  imgTemplateIcon.Picture.Bitmap.Canvas.Rectangle(0, 0, imgTemplateIcon.Width, imgTemplateIcon.Height);
+  imgTemplateIcon.Picture.Bitmap.Canvas.Font.Color := clGreen;
+  imgTemplateIcon.Picture.Bitmap.Canvas.Font.Name := 'Tahoma';
+  imgTemplateIcon.Picture.Bitmap.Canvas.Font.Size := 8;
+  imgTemplateIcon.Picture.Bitmap.Canvas.Font.Quality := fqNonAntialiased;
+  imgTemplateIcon.Picture.Bitmap.Canvas.TextOut(3, 3, 'Tmpl');
+  imgTemplateIcon.Picture.Bitmap.Canvas.TextOut(3, 17, 'icon');
 end;
 
 
@@ -2510,7 +2596,7 @@ end;
 
 procedure TfrClickerActionsArr.LoadTemplate_V2(Ini: TClkIniReadonlyFile);
 begin
-  LoadTemplateToCustomActions_V2(Ini, FClkActions, FTemplateNotes);
+  LoadTemplateToCustomActions_V2(Ini, FClkActions, FTemplateNotes, FTemplateIconPath);
 end;
 
 
@@ -2614,6 +2700,8 @@ begin
 
       FormatVersion := Ini.ReadString('Actions', 'Version', '1');
 
+      FTemplateIconPath := ''; //init here
+
       if FormatVersion = '1' then
         LoadTemplate_V1(Ini)
       else
@@ -2621,6 +2709,9 @@ begin
           LoadTemplate_V2(Ini)
         else
           raise Exception.Create('Unhandled format version: ' + FormatVersion);
+
+      SetTemplateIconHint;
+      LoadTemplateIcon;
     finally
       Ini.Free;
     end;
@@ -2644,13 +2735,13 @@ begin
 end;
 
 
-procedure TfrClickerActionsArr.SaveTemplateWithCustomActions_V2(Fnm: string; var ACustomClkActions: TClkActionsRecArr; ANotes: string);
+procedure TfrClickerActionsArr.SaveTemplateWithCustomActions_V2(Fnm: string; var ACustomClkActions: TClkActionsRecArr; ANotes, ATemplateIconPath: string);
 var
   AStringList: TStringList;   //much faster than T(Mem)IniFile
 begin
   AStringList := TStringList.Create;
   try
-    SaveTemplateWithCustomActionsToStringList_V2(AStringList, ACustomClkActions, ANotes);
+    SaveTemplateWithCustomActionsToStringList_V2(AStringList, ACustomClkActions, ANotes, ATemplateIconPath);
     DoOnSaveTemplateToFile(AStringList, Fnm);
   finally
     AStringList.Free;
@@ -2664,7 +2755,7 @@ end;
 procedure TfrClickerActionsArr.SaveTemplate(Fnm: string);
 begin
   //SaveTemplateWithCustomActions(Fnm, FClkActions);
-  SaveTemplateWithCustomActions_V2(Fnm, FClkActions, FTemplateNotes);
+  SaveTemplateWithCustomActions_V2(Fnm, FClkActions, FTemplateNotes, FTemplateIconPath);
 end;
 
 
@@ -2889,9 +2980,9 @@ begin
   if (Node = nil) or (Node = vstActions.GetFirst) or (vstActions.RootNodeCount = 1) then
     Exit;
 
-  Ph := FClkActions[Node^.Index - 1];
-  FClkActions[Node^.Index - 1] := FClkActions[Node^.Index];      //to be replaced with a copy function
-  FClkActions[Node^.Index] := Ph;
+  CopyActionContent(FClkActions[Node^.Index - 1], Ph);
+  CopyActionContent(FClkActions[Node^.Index], FClkActions[Node^.Index - 1]);
+  CopyActionContent(Ph, FClkActions[Node^.Index]);
 
   UpdateNodeCheckStateFromAction(Node^.PrevSibling);
   UpdateNodeCheckStateFromAction(Node);
@@ -2913,9 +3004,9 @@ begin
   if (Node = nil) or (Node = vstActions.GetLast) or (vstActions.RootNodeCount = 1) then
     Exit;
 
-  Ph := FClkActions[Node^.Index + 1];
-  FClkActions[Node^.Index + 1] := FClkActions[Node^.Index];     //to be replaced with a copy function
-  FClkActions[Node^.Index] := Ph;
+  CopyActionContent(FClkActions[Node^.Index + 1], Ph);
+  CopyActionContent(FClkActions[Node^.Index], FClkActions[Node^.Index + 1]);
+  CopyActionContent(Ph, FClkActions[Node^.Index]);
 
   UpdateNodeCheckStateFromAction(Node^.NextSibling);
   UpdateNodeCheckStateFromAction(Node);
@@ -3226,6 +3317,62 @@ begin
 end;
 
 
+procedure TfrClickerActionsArr.vstActionsDragAllowed(Sender: TBaseVirtualTree;
+  Node: PVirtualNode; Column: TColumnIndex; var Allowed: Boolean);
+begin
+  Allowed := True;
+end;
+
+
+procedure TfrClickerActionsArr.vstActionsDragOver(Sender: TBaseVirtualTree;
+  Source: TObject; Shift: TShiftState; State: TDragState; const Pt: TPoint;
+  Mode: TDropMode; var Effect: DWORD; var Accept: Boolean);
+var
+  Node, SrcNode: PVirtualNode;
+begin
+  Accept := False;
+
+  if Sender <> Source then
+    Exit;
+
+  Node := (Sender as TVirtualStringTree).DropTargetNode;
+  SrcNode := (Source as TVirtualStringTree).FocusedNode;
+
+  Accept := Node <> SrcNode;
+end;
+
+
+procedure TfrClickerActionsArr.vstActionsDragDrop(Sender: TBaseVirtualTree;
+  Source: TObject; DataObject: IDataObject; Formats: TFormatArray;
+  Shift: TShiftState; const Pt: TPoint; var Effect: DWORD; Mode: TDropMode);
+var
+  Node, SrcNode: PVirtualNode;
+  Ph: TClkActionRec;
+begin
+  if Sender <> Source then
+    Exit;
+
+  Node := (Sender as TVirtualStringTree).DropTargetNode;
+  SrcNode := (Source as TVirtualStringTree).FocusedNode;
+
+  if not Assigned(Node) or not Assigned(SrcNode) then
+    Exit;
+
+  CopyActionContent(FClkActions[SrcNode^.Index], Ph);
+  CopyActionContent(FClkActions[Node^.Index], FClkActions[SrcNode^.Index]);
+  CopyActionContent(Ph, FClkActions[Node^.Index]);
+
+  UpdateNodeCheckStateFromAction(SrcNode);
+  UpdateNodeCheckStateFromAction(Node);
+
+  vstActions.ClearSelection;
+  vstActions.Selected[Node] := True;
+  vstActions.ScrollIntoView(Node, True);
+  vstActions.Repaint;
+  Modified := True;
+end;
+
+
 function TfrClickerActionsArr.ValidActionToBeAdded: Boolean;
 var
   CurrentAction: TClkAction;
@@ -3305,6 +3452,8 @@ begin
     ClearAllActions;
     frClickerActions.ClearControls;
     FTemplateNotes := '';
+    FTemplateIconPath := '';
+    DrawDefaultTemplateIcon;
   end;
 end;
 
@@ -3570,6 +3719,68 @@ begin
 end;
 
 
+procedure TfrClickerActionsArr.SetTemplateIconHint;
+begin
+  imgTemplateIcon.Hint := 'Template icon:' + #13#10 + FTemplateIconPath;
+end;
+
+
+procedure TfrClickerActionsArr.LoadTemplateIcon;
+var
+  ResolvedPath: string;
+begin
+  ResolvedPath := StringReplace(FTemplateIconPath, '$TemplateDir$', FFullTemplatesDir, [rfReplaceAll]);
+  ResolvedPath := StringReplace(ResolvedPath, '$SelfTemplateDir$', FFileName, [rfReplaceAll]);
+  ResolvedPath := StringReplace(ResolvedPath, '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
+
+  try
+    imgTemplateIcon.Picture.Bitmap.Width := imgTemplateIcon.Width;
+    imgTemplateIcon.Picture.Bitmap.Height := imgTemplateIcon.Height;
+
+    if DoOnFileExists(ResolvedPath) then
+      DoOnLoadBitmap(imgTemplateIcon.Picture.Bitmap, ResolvedPath)
+    else
+    begin
+      if ResolvedPath <> '' then
+      begin
+        imgTemplateIcon.Picture.Bitmap.Canvas.Font.Color := clGreen;
+        imgTemplateIcon.Picture.Bitmap.Canvas.Brush.Color := clYellow;
+        imgTemplateIcon.Picture.Bitmap.Canvas.TextOut(1, 1, 'Not');
+        imgTemplateIcon.Picture.Bitmap.Canvas.TextOut(1, 16, 'found');
+      end
+      else
+        DrawDefaultTemplateIcon;
+    end;
+  except
+    on E: Exception do
+    begin
+      imgTemplateIcon.Canvas.Font.Color := clRed;
+      imgTemplateIcon.Canvas.Brush.Color := clWhite;
+      imgTemplateIcon.Canvas.TextOut(10, 10, 'Error');
+      imgTemplateIcon.Hint := imgTemplateIcon.Hint + #13#10 + E.Message;
+    end;
+  end;
+end;
+
+
+procedure TfrClickerActionsArr.MenuItem_BrowseTemplateIconClick(Sender: TObject);
+begin
+  if not DoOnOpenDialogExecute('Supported formats (*.exe; *.bmp; *.png; *.jpg; *.jpeg; *.ico)|*.exe; *.bmp; *.png; *.jpg; *.jpeg; *.ico|' +
+                               'Executable files (*.exe)|*.exe|' +
+                               'Bitmap files (*.bmp)|*.bmp|' +
+                               'Png files (*.png)|*.png|' +
+                               'Jpeg files (*.jpg; *.jpeg)|*.jpg; *.jpeg|' +
+                               'Icons (*.ico)|*.ico|' +
+                               'All files (*.*)|*.*') then
+    Exit;
+
+  FTemplateIconPath := DoOnGetOpenDialogFileName;
+  SetTemplateIconHint;
+  LoadTemplateIcon;
+  Modified := True;
+end;
+
+
 procedure TfrClickerActionsArr.MenuItemEnableDisableBreakPointClick(
   Sender: TObject);
 begin
@@ -3699,7 +3910,7 @@ begin
   try
     GetSelectedActions(ActionsToCopy);
     try
-      SaveTemplateWithCustomActionsToStringList_V2(AStringList, ActionsToCopy, '');
+      SaveTemplateWithCustomActionsToStringList_V2(AStringList, ActionsToCopy, '', '');
       Clipboard.AsText := AStringList.Text;
     finally
       SetLength(ActionsToCopy, 0);
@@ -3718,7 +3929,7 @@ var
   FormatVersion: string;
   ClipboardClkActions: TClkActionsRecArr;
   Node: PVirtualNode;
-  DummyNotes: string;
+  DummyNotes, DummyIconPath: string;
 begin
   AStringList := TStringList.Create;
   try
@@ -3732,7 +3943,7 @@ begin
 
         if FormatVersion = '2' then
         begin
-          LoadTemplateToCustomActions_V2(Ini, ClipboardClkActions, DummyNotes);
+          LoadTemplateToCustomActions_V2(Ini, ClipboardClkActions, DummyNotes, DummyIconPath);
 
           vstActions.ClearSelection;
           Application.ProcessMessages;
@@ -3857,7 +4068,7 @@ begin
   SetLength(ActionsToRemove, 0);
   try
     GetSelectedActions(ActionsToRemove, NewClkActions);
-    SaveTemplateWithCustomActions_V2(DoOnGetSaveDialogFileName, NewClkActions, 'refactored actions');
+    SaveTemplateWithCustomActions_V2(DoOnGetSaveDialogFileName, NewClkActions, 'refactored actions', FTemplateIconPath);
     ReplaceSelectedActionsWithCallTemplate(ActionsToRemove, FirstSelectedIndex, DoOnGetSaveDialogFileName);
   finally
     SetLength(NewClkActions, 0);
@@ -3908,6 +4119,35 @@ begin
     SetLength(NewClkActions, 0);
     SetLength(ActionsToRemove, 0);
   end;
+end;
+
+
+procedure TfrClickerActionsArr.MenuItem_ReplaceWith_AppDirClick(Sender: TObject);
+begin
+  FTemplateIconPath := StringReplace(FTemplateIconPath, ExtractFileDir(ParamStr(0)), '$AppDir$', [rfReplaceAll]);
+  SetTemplateIconHint;
+  Modified := True;
+end;
+
+
+procedure TfrClickerActionsArr.MenuItem_ReplaceWith_SelfTemplateDirClick(
+  Sender: TObject);
+begin
+  FTemplateIconPath := StringReplace(FTemplateIconPath, FFileName, '$SelfTemplateDir$', [rfReplaceAll]);
+  SetTemplateIconHint;
+  Modified := True;
+end;
+
+
+procedure TfrClickerActionsArr.MenuItem_ReplaceWith_TemplateDirClick(
+  Sender: TObject);
+var
+  ResolvedTemplatesDir: string;
+begin
+  ResolvedTemplatesDir := StringReplace(FFullTemplatesDir, '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
+  FTemplateIconPath := StringReplace(FTemplateIconPath, ResolvedTemplatesDir, '$TemplateDir$', [rfReplaceAll]);
+  SetTemplateIconHint;
+  Modified := True;
 end;
 
 

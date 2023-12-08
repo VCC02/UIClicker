@@ -366,6 +366,8 @@ type
     MinFontSize: Integer;
     MaxFontSize: Integer;
     ShowAllFonts: Boolean;
+    WinRect: TRect;
+    ColWidths: TIntArr;
   end;
 
 
@@ -1380,6 +1382,7 @@ begin
     PrefixWithZerosArgs := StringReplace(PrefixWithZerosArgs, ' ', '', [rfReplaceAll]);
     PosComma := Pos(',', PrefixWithZerosArgs);
 
+    PrefixWithZerosOperand1Str := '';
     if PosComma > 0 then
     begin
       PrefixWithZerosOperand1Str := Copy(PrefixWithZerosArgs, 1, PosComma - 1);

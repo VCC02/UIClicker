@@ -77,7 +77,7 @@ implementation
 
 
 uses
-  SysUtils, Classes, Forms, BinSearchValues, Types, Math
+  SysUtils, Classes, Forms, BinSearchValues, Types, Math, BitmapConv
   , Clipbrd //for debugging only
   ;
 

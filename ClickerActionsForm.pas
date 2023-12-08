@@ -62,6 +62,7 @@ type
     constructor Create; override;
   end;
 
+  TOnReLoadSettings = procedure of object;
   TOnRecordComponent = procedure(ACompHandle: THandle; ATreeContentStream: TMemoryStream) of object;
   TOnGetCurrentlyRecordedScreenShotImage = procedure(ABmp: TBitmap) of object;
 
@@ -128,6 +129,7 @@ type
     TabSheetExecMainPlayer: TTabSheet;
     TabSheetExperiments1: TTabSheet;
     TabSheetExperiments2: TTabSheet;
+    tmrDelayedShow: TTimer;
     tmrUpdateSelectionColorsFromColorBoxes: TTimer;
     tmrUpdateColors: TTimer;
     tmrDisplayMissingFilesRequests: TTimer;
@@ -155,6 +157,7 @@ type
     procedure IdHTTPServer1Connect(AContext: TIdContext);
     procedure IdHTTPServer1Exception(AContext: TIdContext; AException: Exception
       );
+    procedure tmrDelayedShowTimer(Sender: TObject);
     procedure tmrDisplayMissingFilesRequestsTimer(Sender: TObject);
     procedure tmrStartupTimer(Sender: TObject);
     procedure tmrUpdateColorsTimer(Sender: TObject);
@@ -178,6 +181,9 @@ type
     FAutoEnableSwitchingTabsOnDebugging: Boolean;
     FFontFinderSettings: TFontFinderSettings;
 
+    FFirstDisplaying: Boolean;
+
+    FOnReLoadSettings: TOnReLoadSettings;
     FOnCopyControlTextAndClassFromMainWindow: TOnCopyControlTextAndClassFromMainWindow;
     FOnRecordComponent: TOnRecordComponent;
     FOnGetCurrentlyRecordedScreenShotImage: TOnGetCurrentlyRecordedScreenShotImage;
@@ -219,6 +225,7 @@ type
     function GetActionExecution: TActionExecution;
     procedure UpdatePreviewSelectionColorsFromColorBoxes;
 
+    procedure DoOnReLoadSettings;
     procedure DoOnRecordComponent(ACompHandle: THandle; ATreeContentStream: TMemoryStream);
     procedure DoOnGetCurrentlyRecordedScreenShotImage(ABmp: TBitmap);
 
@@ -332,6 +339,7 @@ type
 
     property RenderedInMemFileSystem: TInMemFileSystem read FRenderedInMemFileSystem;  //for externally rendered images
 
+    property OnReLoadSettings: TOnReLoadSettings read FOnReLoadSettings write FOnReLoadSettings;
     property OnCopyControlTextAndClassFromMainWindow: TOnCopyControlTextAndClassFromMainWindow read FOnCopyControlTextAndClassFromMainWindow write FOnCopyControlTextAndClassFromMainWindow;
     property OnRecordComponent: TOnRecordComponent read FOnRecordComponent write FOnRecordComponent;
     property OnGetCurrentlyRecordedScreenShotImage: TOnGetCurrentlyRecordedScreenShotImage read FOnGetCurrentlyRecordedScreenShotImage write FOnGetCurrentlyRecordedScreenShotImage;
@@ -541,6 +549,18 @@ begin
   FFontFinderSettings.MinFontSize := AIni.ReadInteger('ActionsWindow', 'MinFontSize', 7);
   FFontFinderSettings.MaxFontSize := AIni.ReadInteger('ActionsWindow', 'MaxFontSize', 9);
   FFontFinderSettings.ShowAllFonts := AIni.ReadBool('ActionsWindow', 'ShowAllFonts', False);
+  FFontFinderSettings.WinRect.Left := AIni.ReadInteger('FontFinderSettingsWindow', 'Left', Left);
+  FFontFinderSettings.WinRect.Top := AIni.ReadInteger('FontFinderSettingsWindow', 'Top', Top);
+  FFontFinderSettings.WinRect.Width := AIni.ReadInteger('FontFinderSettingsWindow', 'Width', Width);
+  FFontFinderSettings.WinRect.Height := AIni.ReadInteger('FontFinderSettingsWindow', 'Height', Height);
+
+  SetLength(FFontFinderSettings.ColWidths, AIni.ReadInteger('FontFinderSettingsWindow', 'ColWidthCount', 0));
+  for i := 0 to Length(FFontFinderSettings.ColWidths) - 1 do
+    FFontFinderSettings.ColWidths[i] := AIni.ReadInteger('FontFinderSettingsWindow', 'ColWidth_' + IntToStr(i), 200);
+
+  frClickerActionsArrMain.LoadSettings(AIni, 'ActionsWindow', 'Main');
+  frClickerActionsArrExperiment1.LoadSettings(AIni, 'ActionsWindow', 'Exp1');
+  frClickerActionsArrExperiment2.LoadSettings(AIni, 'ActionsWindow', 'Exp2');
 
   colcmbTopLeftValid.Selected := FPreviewSelectionColors.TopLeft_Valid;
   colcmbBotRightValid.Selected := FPreviewSelectionColors.BotRight_Valid;
@@ -619,6 +639,20 @@ begin
   AIni.WriteInteger('ActionsWindow', 'MinFontSize', FFontFinderSettings.MinFontSize);
   AIni.WriteInteger('ActionsWindow', 'MaxFontSize', FFontFinderSettings.MaxFontSize);
   AIni.WriteBool('ActionsWindow', 'ShowAllFonts', FFontFinderSettings.ShowAllFonts);
+  AIni.WriteInteger('ActionsWindow', 'MaxFontSize', FFontFinderSettings.MaxFontSize);
+
+  AIni.WriteInteger('FontFinderSettingsWindow', 'Left', FFontFinderSettings.WinRect.Left);
+  AIni.WriteInteger('FontFinderSettingsWindow', 'Top', FFontFinderSettings.WinRect.Top);
+  AIni.WriteInteger('FontFinderSettingsWindow', 'Width', FFontFinderSettings.WinRect.Width);
+  AIni.WriteInteger('FontFinderSettingsWindow', 'Height', FFontFinderSettings.WinRect.Height);
+
+  AIni.WriteInteger('FontFinderSettingsWindow', 'ColWidthCount', Length(FFontFinderSettings.ColWidths));
+  for i := 0 to Length(FFontFinderSettings.ColWidths) - 1 do
+    AIni.WriteInteger('FontFinderSettingsWindow', 'ColWidth_' + IntToStr(i), FFontFinderSettings.ColWidths[i]);
+
+  frClickerActionsArrMain.SaveSettings(AIni, 'ActionsWindow', 'Main');
+  frClickerActionsArrExperiment1.SaveSettings(AIni, 'ActionsWindow', 'Exp1');
+  frClickerActionsArrExperiment2.SaveSettings(AIni, 'ActionsWindow', 'Exp2');
 end;
 
 
@@ -705,6 +739,9 @@ begin
   FAutoSwitchToExecutingTab := False;
   FAutoEnableSwitchingTabsOnDebugging := False;
 
+  FFirstDisplaying := False;
+
+  FOnReLoadSettings := nil;
   FOnCopyControlTextAndClassFromMainWindow := nil;
   FOnRecordComponent := nil;
   FOnGetCurrentlyRecordedScreenShotImage := nil;
@@ -1043,6 +1080,20 @@ end;
 procedure TfrmClickerActions.FormShow(Sender: TObject);
 begin
   tmrUpdateColors.Enabled := True;
+
+  if not FFirstDisplaying then
+  begin
+    FFirstDisplaying := True;
+    tmrDelayedShow.Enabled := True;
+  end;
+end;
+
+
+procedure TfrmClickerActions.DoOnReLoadSettings;
+begin
+  if not Assigned(FOnReLoadSettings) then
+    Exit; //do not rais exceptions, because other tools, based on this window might not be updated yet
+  FOnReLoadSettings();
 end;
 
 
@@ -2790,6 +2841,12 @@ begin
       AddToLogFromThread('Server exception: ' + AException.Message);
   except
   end;
+end;
+
+procedure TfrmClickerActions.tmrDelayedShowTimer(Sender: TObject);
+begin
+  tmrDelayedShow.Enabled := False;
+  DoOnReLoadSettings;        //load settings again, after adjusting various frame widths/heights and positions
 end;
 
 

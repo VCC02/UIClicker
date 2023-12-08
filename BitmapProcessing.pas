@@ -31,7 +31,10 @@ unit BitmapProcessing;
 interface
 
 uses
-  Windows, SysUtils, Graphics, ExtCtrls, ClickerUtils;
+  {$IFDEF Windows}
+    Windows,
+  {$ENDIF}
+  SysUtils, Graphics, ExtCtrls, ClickerUtils;
 
 type                      //2048 is used as 2^11 = 2048, as an optimization. See CanvasToMat_24bit and CanvasToMat_32bit. The next higher resolution would be 4096 * 4096.
   TCanvasMat = array[0 .. 2048 * 2048] of SmallInt;//SmallInt may be better than Byte, because it is signed 16-bit
@@ -63,8 +66,6 @@ procedure AvgBitmapWithBitmap(ASrcABitmap, ASrcBBitmap, ADestBitmap: TBitmap; XO
 function BitmapsAreEqual(ASrcABitmap, ASrcBBitmap: TBitmap; AWidth, AHeight: Integer): Boolean;
 procedure GenerateGradientColors(AStartColor, AEndColor: TColor; APointCount: Integer; var AResult: TColorArr);
 procedure MakeImageContentTransparent(AImg: TImage);
-procedure WipeBitmap(ABitmap: TBitmap; NewWidth, NewHeight: Integer);
-procedure WipeImage(AImg: TImage; NewWidth, NewHeight: Integer);
 procedure DrawSearchGrid(AImg: TImage; AlgorithmSettings: TMatchBitmapAlgorithmSettings; AGridWidth, AGridHeight: Integer; AGridColor: TColor; ADisplayGridLineOption: TDisplayGridLineOption);
 
 
@@ -866,37 +867,6 @@ begin
 end;
 
 
-procedure DrawWipeRect(ACanvas: TCanvas; NewWidth, NewHeight: Integer);
-begin
-  ACanvas.Brush.Style := bsSolid;
-  ACanvas.Brush.Color := clWhite;
-  ACanvas.Pen.Color := clWhite;
-  ACanvas.Rectangle(0, 0, NewWidth {- 1}, NewHeight {- 1});
-end;
-
-
-procedure WipeBitmap(ABitmap: TBitmap; NewWidth, NewHeight: Integer);
-begin
-  ABitmap.Clear;
-  ABitmap.Width := NewWidth;
-  ABitmap.Height := NewHeight;
-  DrawWipeRect(ABitmap.Canvas, NewWidth, NewHeight);
-end;
-
-
-procedure WipeImage(AImg: TImage; NewWidth, NewHeight: Integer);
-begin
-  AImg.Picture.Clear;
-  AImg.Width := NewWidth;
-  AImg.Height := NewHeight;
-  AImg.Picture.Bitmap.Width := AImg.Width;
-  AImg.Picture.Bitmap.Height := AImg.Height;
-
-  DrawWipeRect(AImg.Canvas, NewWidth, NewHeight);
-  AImg.Repaint;
-end;
-
-
 procedure DrawSearchGrid(AImg: TImage; AlgorithmSettings: TMatchBitmapAlgorithmSettings; AGridWidth, AGridHeight: Integer; AGridColor: TColor; ADisplayGridLineOption: TDisplayGridLineOption);
 var
   x, y: Integer;
@@ -925,5 +895,6 @@ begin
     if x mod AlgorithmSettings.XMultipleOf = 0 then
       Line(AImg.Canvas, x, 1, x, AGridHeight - 1);
 end;
+
 
 end.

@@ -63,11 +63,14 @@ type
 
     procedure LoadSettings;
     procedure SaveSettings;
+    procedure SetHandles;
+
     procedure ComposePrimitiveOnBmp(ABmp: TBitmap; APmtvFile: string);
     function HandleOnEvaluateReplacements(s: string; Recursive: Boolean = True): string;
 
     procedure HandleOnCopyControlTextAndClassFromMainWindow(ACompProvider: string; out AControlText, AControlClass: string);
     function HandleOnGetConnectionAddress: string;
+    procedure HandleOnReLoadActionsWindowSettings;
     procedure HandleOnRecordComponent(ACompHandle: THandle; ATreeContentStream: TMemoryStream);
     function HandleOnGetSelectedCompFromRemoteWin: THandle;
     procedure HandleOnGetCurrentlyRecordedScreenShotImage(ABmp: TBitmap);
@@ -80,6 +83,7 @@ type
     procedure HandleOnSetOpenDialogInitialDir(AInitialDir: string);
     function HandleOnOpenDialogExecute(AFilter: string): Boolean;
     function HandleOnGetOpenDialogFileName: string;
+    function HandleOnGetFullTemplatesDir: string;
     procedure HandleOnSetSaveDialogInitialDir(AInitialDir: string);
     function HandleOnSaveDialogExecute(AFilter: string): Boolean;
     function HandleOnGetSaveDialogFileName: string;
@@ -128,10 +132,53 @@ implementation
 
 uses
   ClickerPreviewForm, ClickerWinInterpForm, ClickerWinInterpFrame, ClickerTemplateCallTreeForm,
-  ClickerActionsClient, IniFiles, ClickerFindControlFrame, ClickerRemoteScreenForm,
+  ClickerActionsClient, IniFiles, ClickerFindControlFrame, ClickerRemoteScreenForm, BitmapConv,
   ClickerUtils, ClickerPrimitives, ClickerActionsForm, ClickerPrimitivesCompositor;
 
 { TfrmUIClickerMainForm }
+
+
+procedure TfrmUIClickerMainForm.SetHandles;
+begin
+  frmClickerWinInterp.OnGetConnectionAddress := HandleOnGetConnectionAddress;
+  frmClickerWinInterp.OnGetSelectedCompFromRemoteWin := HandleOnGetSelectedCompFromRemoteWin;
+
+  frmClickerActions.OnCopyControlTextAndClassFromMainWindow := HandleOnCopyControlTextAndClassFromMainWindow;
+  frmClickerActions.OnReLoadSettings := HandleOnReLoadActionsWindowSettings;
+  frmClickerActions.OnRecordComponent := HandleOnRecordComponent;
+  frmClickerActions.OnGetCurrentlyRecordedScreenShotImage := HandleOnGetCurrentlyRecordedScreenShotImage;
+  frmClickerActions.OnFileExists := HandleOnFileExists;
+  frmClickerActions.OnTClkIniReadonlyFileCreate := HandleOnTClkIniReadonlyFileCreate;
+  frmClickerActions.OnSaveTemplateToFile := HandleOnSaveTemplateToFile;
+
+  frmClickerActions.OnSetOpenDialogMultiSelect := HandleOnSetOpenDialogMultiSelect;
+  frmClickerActions.OnSetOpenDialogInitialDir := HandleOnSetOpenDialogInitialDir;
+  frmClickerActions.OnOpenDialogExecute := HandleOnOpenDialogExecute;
+  frmClickerActions.OnGetOpenDialogFileName := HandleOnGetOpenDialogFileName;
+  frmClickerActions.OnSetSaveDialogInitialDir := HandleOnSetSaveDialogInitialDir;
+  frmClickerActions.OnSaveDialogExecute := HandleOnSaveDialogExecute;
+  frmClickerActions.OnGetSaveDialogFileName := HandleOnGetSaveDialogFileName;
+  frmClickerActions.OnSetSaveDialogFileName := HandleOnSetSaveDialogFileName;
+
+  frmClickerActions.OnSetPictureSetOpenDialogMultiSelect := HandleOnSetPictureSetOpenDialogMultiSelect;
+  frmClickerActions.OnSetPictureOpenDialogInitialDir := HandleOnSetPictureOpenDialogInitialDir;
+  frmClickerActions.OnPictureOpenDialogExecute := HandleOnPictureOpenDialogExecute;
+  frmClickerActions.OnGetPictureOpenDialogFileName := HandleOnGetPictureOpenDialogFileName;
+  frmClickerActions.OnLoadBitmap := HandleOnLoadBitmap;
+  frmClickerActions.OnLoadPrimitivesFile := HandleOnLoadPrimitivesFile;
+  frmClickerActions.OnSavePrimitivesFile := HandleOnSavePrimitivesFile;
+  frmClickerActions.OnGetSelfHandles := HandleOnGetSelfHandles;
+
+  frmClickerRemoteScreen.OnGetConnectionAddress := HandleOnGetConnectionAddress;
+
+  frmClickerTemplateCallTree.OnSetOpenDialogMultiSelect := HandleOnSetOpenDialogMultiSelect;
+  frmClickerTemplateCallTree.OnFileExists := HandleOnFileExists;
+  frmClickerTemplateCallTree.OnTClkIniReadonlyFileCreate := HandleOnTClkIniReadonlyFileCreate;
+  frmClickerTemplateCallTree.OnOpenDialogExecute := HandleOnOpenDialogExecute;
+  frmClickerTemplateCallTree.OnGetOpenDialogFileName := HandleOnGetOpenDialogFileName;
+  frmClickerTemplateCallTree.OnGetFullTemplatesDir := HandleOnGetFullTemplatesDir;
+  frmClickerTemplateCallTree.OnLoadBitmap := HandleOnLoadBitmap;
+end;
 
 
 procedure TfrmUIClickerMainForm.LoadSettings;
@@ -150,44 +197,11 @@ begin
     frmClickerWinInterp.LoadSettings(Ini);
     frmClickerTemplateCallTree.LoadSettings(Ini);
     frmClickerRemoteScreen.LoadSettings(Ini);
-
-    frmClickerActions.OnCopyControlTextAndClassFromMainWindow := HandleOnCopyControlTextAndClassFromMainWindow;
-    frmClickerRemoteScreen.OnGetConnectionAddress := HandleOnGetConnectionAddress;
-    frmClickerWinInterp.OnGetConnectionAddress := HandleOnGetConnectionAddress;
-    frmClickerWinInterp.OnGetSelectedCompFromRemoteWin := HandleOnGetSelectedCompFromRemoteWin;
-
-    frmClickerActions.OnRecordComponent := HandleOnRecordComponent;
-    frmClickerActions.OnGetCurrentlyRecordedScreenShotImage := HandleOnGetCurrentlyRecordedScreenShotImage;
-    frmClickerActions.OnFileExists := HandleOnFileExists;
-    frmClickerActions.OnTClkIniReadonlyFileCreate := HandleOnTClkIniReadonlyFileCreate;
-    frmClickerActions.OnSaveTemplateToFile := HandleOnSaveTemplateToFile;
-
-    frmClickerActions.OnSetOpenDialogMultiSelect := HandleOnSetOpenDialogMultiSelect;
-    frmClickerActions.OnSetOpenDialogInitialDir := HandleOnSetOpenDialogInitialDir;
-    frmClickerActions.OnOpenDialogExecute := HandleOnOpenDialogExecute;
-    frmClickerActions.OnGetOpenDialogFileName := HandleOnGetOpenDialogFileName;
-    frmClickerActions.OnSetSaveDialogInitialDir := HandleOnSetSaveDialogInitialDir;
-    frmClickerActions.OnSaveDialogExecute := HandleOnSaveDialogExecute;
-    frmClickerActions.OnGetSaveDialogFileName := HandleOnGetSaveDialogFileName;
-    frmClickerActions.OnSetSaveDialogFileName := HandleOnSetSaveDialogFileName;
-
-    frmClickerActions.OnSetPictureSetOpenDialogMultiSelect := HandleOnSetPictureSetOpenDialogMultiSelect;
-    frmClickerActions.OnSetPictureOpenDialogInitialDir := HandleOnSetPictureOpenDialogInitialDir;
-    frmClickerActions.OnPictureOpenDialogExecute := HandleOnPictureOpenDialogExecute;
-    frmClickerActions.OnGetPictureOpenDialogFileName := HandleOnGetPictureOpenDialogFileName;
-    frmClickerActions.OnLoadBitmap := HandleOnLoadBitmap;
-    frmClickerActions.OnLoadPrimitivesFile := HandleOnLoadPrimitivesFile;
-    frmClickerActions.OnSavePrimitivesFile := HandleOnSavePrimitivesFile;
-    frmClickerActions.OnGetSelfHandles := HandleOnGetSelfHandles;
-
-    frmClickerTemplateCallTree.OnSetOpenDialogMultiSelect := HandleOnSetOpenDialogMultiSelect;
-    frmClickerTemplateCallTree.OnFileExists := HandleOnFileExists;
-    frmClickerTemplateCallTree.OnTClkIniReadonlyFileCreate := HandleOnTClkIniReadonlyFileCreate;
-    frmClickerTemplateCallTree.OnOpenDialogExecute := HandleOnOpenDialogExecute;
-    frmClickerTemplateCallTree.OnGetOpenDialogFileName := HandleOnGetOpenDialogFileName;
   finally
     Ini.Free;
   end;
+
+  SetHandles;
 end;
 
 
@@ -332,6 +346,19 @@ begin
 end;
 
 
+procedure TfrmUIClickerMainForm.HandleOnReLoadActionsWindowSettings;
+var
+  Ini: TMemIniFile;
+begin
+  Ini := TMemIniFile.Create(ExtractFilePath(ParamStr(0)) + 'Clicker.ini');
+  try
+    frmClickerActions.LoadSettings(Ini);
+  finally
+    Ini.Free;
+  end;
+end;
+
+
 procedure TfrmUIClickerMainForm.HandleOnRecordComponent(ACompHandle: THandle; ATreeContentStream: TMemoryStream);
 var
   ImgMatrix: TColorArr;
@@ -407,6 +434,16 @@ begin
 end;
 
 
+function TfrmUIClickerMainForm.HandleOnGetFullTemplatesDir: string;
+begin
+  try
+    Result := frmClickerActions.FullTemplatesDir;
+  except
+    Result := ''; //in case frmClickerActions is nil
+  end;
+end;
+
+
 procedure TfrmUIClickerMainForm.HandleOnSetSaveDialogInitialDir(AInitialDir: string);
 begin
   SaveDialog1.InitialDir := AInitialDir;
@@ -463,18 +500,28 @@ end;
 
 function TfrmUIClickerMainForm.HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
 begin
-  if FileExists(AFileName) then
+  Result := FileExists(AFileName);
+
+  if Result then
   begin
     if UpperCase(ExtractFileExt(AFileName)) = '.BMP' then
       ABitmap.LoadFromFile(AFileName)
     else
       if UpperCase(ExtractFileExt(AFileName)) = '.PMTV' then
-        ComposePrimitiveOnBmp(ABitmap, AFileName);
-
-    Result := True;
-  end
-  else
-    Result := False;
+        ComposePrimitiveOnBmp(ABitmap, AFileName)
+      else
+        if UpperCase(ExtractFileExt(AFileName)) = '.EXE' then
+          DrawExeIconOnBmp(ABitmap, AFileName)
+        else
+          if (UpperCase(ExtractFileExt(AFileName)) = '.PNG') then
+            DrawPngOnBmp(ABitmap, AFileName)
+          else
+            if (UpperCase(ExtractFileExt(AFileName)) = '.JPG') or (UpperCase(ExtractFileExt(AFileName)) = '.JPEG') then
+              DrawJpgOnBmp(ABitmap, AFileName)
+            else
+              if (UpperCase(ExtractFileExt(AFileName)) = '.ICO') then
+                DrawIcoOnBmp(ABitmap, AFileName);
+  end;
 end;
 
 

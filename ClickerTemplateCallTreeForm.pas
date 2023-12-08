@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2022 VCC
+    Copyright (C) 2023 VCC
     creation date: Dec 2019
     initial release date: 13 Sep 2022
 
@@ -39,10 +39,12 @@ type
   TTemplateFile = record
     FilePath: string;
     FileName: string; //cached extracted name
+    IconPath: string;
     ClkActions: TClkActionsRecArr;
     Loaded: Boolean;
     Highlighted: Boolean;
     ItemVisible: Boolean;  //used on searching for files
+    IconIndex: Integer;
   end;
 
   PTemplateFile = ^TTemplateFile;
@@ -56,6 +58,9 @@ type
 
   PTmplDataRec = ^TTmplDataRec;
 
+  TOnGetFullTemplatesDir = function: string of object;
+
+
   { TfrmClickerTemplateCallTree }
 
   TfrmClickerTemplateCallTree = class(TForm)
@@ -65,6 +70,7 @@ type
     chkDisplayFullPaths: TCheckBox;
     cmbSearchMode: TComboBox;
     edtSearch: TEdit;
+    imglstTemplateIcons: TImageList;
     lblSearchMode: TLabel;
     lblSelectedPath: TLabel;
     lblCallTree: TLabel;
@@ -92,6 +98,9 @@ type
       TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex;
       CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
     procedure vstCallTreeClick(Sender: TObject);
+    procedure vstCallTreeGetImageIndex(Sender: TBaseVirtualTree;
+      Node: PVirtualNode; Kind: TVTImageKind; Column: TColumnIndex;
+      var Ghosted: Boolean; var ImageIndex: Integer);
     procedure vstCallTreeGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
       Column: TColumnIndex; TextType: TVSTTextType; var CellText: String);
   private
@@ -101,18 +110,22 @@ type
     FOnTClkIniReadonlyFileCreate: TOnTClkIniReadonlyFileCreate;
     FOnOpenDialogExecute: TOnOpenDialogExecute;
     FOnGetOpenDialogFileName: TOnGetOpenDialogFileName;
+    FOnGetFullTemplatesDir: TOnGetFullTemplatesDir;
+    FOnLoadBitmap: TOnLoadBitmap;
 
     procedure DoOnSetOpenDialogMultiSelect;
     function DoOnFileExists(const AFileName: string): Boolean;
     function DoOnTClkIniReadonlyFileCreate(AFileName: string): TClkIniReadonlyFile;
     function DoOnOpenDialogExecute(AFilter: string): Boolean;
     function DoOnGetOpenDialogFileName: string;
+    function DoOnGetFullTemplatesDir: string;
+    function DoOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
 
     procedure ResetItemVisibleFlagOnAllFiles;
     procedure MarkAllParentNodesAsVisible(ACurrentNode: PVirtualNode);
 
     procedure ClearContent;
-    procedure LoadTemplate(AFileName: string; var ACustomClkActions: TClkActionsRecArr);
+    procedure LoadTemplate(AFileName: string; var ACustomClkActions: TClkActionsRecArr; var ATemplateIconPath: string);
     procedure LoadAllTemplates;
     procedure AddTopLevelNodes;
     function GetTemplateIndexByPath(ASearchedPath: string; AFullPathCmp: Boolean): Integer;
@@ -120,6 +133,7 @@ type
     function TemplatePathFoundInParentNodes(Node: PVirtualNode; ASearchedPath: string): Boolean;
     procedure InsertCalledTemplates(Node: PVirtualNode; AFullPathCmp: Boolean; AListOfTopLevelNodesToDelete: TStringList);
     procedure GenerateCallTree;
+    procedure LoadTemplateIcons;
     function GetCallPath(Node: PVirtualNode): string;
   public
     procedure LoadSettings(AIni: TMemIniFile);
@@ -130,6 +144,8 @@ type
     property OnTClkIniReadonlyFileCreate: TOnTClkIniReadonlyFileCreate write FOnTClkIniReadonlyFileCreate;
     property OnOpenDialogExecute: TOnOpenDialogExecute write FOnOpenDialogExecute;
     property OnGetOpenDialogFileName: TOnGetOpenDialogFileName write FOnGetOpenDialogFileName;
+    property OnGetFullTemplatesDir: TOnGetFullTemplatesDir write FOnGetFullTemplatesDir;
+    property OnLoadBitmap: TOnLoadBitmap write FOnLoadBitmap;
   end;
 
 var
@@ -209,6 +225,24 @@ begin
 end;
 
 
+function TfrmClickerTemplateCallTree.DoOnGetFullTemplatesDir: string;
+begin
+  if not Assigned(FOnGetFullTemplatesDir) then
+    raise Exception.Create('OnGetFullTemplatesDir is not assigned.')
+  else
+    Result := FOnGetFullTemplatesDir;
+end;
+
+
+function TfrmClickerTemplateCallTree.DoOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
+begin
+  if not Assigned(FOnLoadBitmap) then
+    raise Exception.Create('OnLoadBitmap is not assigned.')
+  else
+    Result := FOnLoadBitmap(ABitmap, AFileName);
+end;
+
+
 procedure TfrmClickerTemplateCallTree.ClearContent;
 var
   i, j: Integer;
@@ -235,6 +269,8 @@ begin
   FOnTClkIniReadonlyFileCreate := nil;
   FOnOpenDialogExecute := nil;
   FOnGetOpenDialogFileName := nil;
+  FOnGetFullTemplatesDir := nil;
+  FOnLoadBitmap := nil;
 
   SetLength(FTemplateFiles, 0);
   vstCallTree.NodeDataSize := SizeOf(TTmplDataRec);
@@ -470,6 +506,18 @@ begin
 end;
 
 
+procedure TfrmClickerTemplateCallTree.vstCallTreeGetImageIndex(
+  Sender: TBaseVirtualTree; Node: PVirtualNode; Kind: TVTImageKind;
+  Column: TColumnIndex; var Ghosted: Boolean; var ImageIndex: Integer);
+var
+  NodeData: PTmplDataRec;
+begin
+  NodeData := vstCallTree.GetNodeData(Node);
+  if NodeData <> nil then
+    ImageIndex := NodeData^.Template^.IconIndex;
+end;
+
+
 procedure TfrmClickerTemplateCallTree.vstCallTreeGetText(
   Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex;
   TextType: TVSTTextType; var CellText: String);
@@ -479,17 +527,25 @@ begin
   try
     NodeData := vstCallTree.GetNodeData(Node);
 
-    if chkDisplayFullPaths.Checked then  //the Checked value can be cached if BeforePaint
-      CellText := NodeData^.Template^.FilePath
-    else
-      CellText := NodeData^.Template^.FileName;
+    case Column of
+      0:
+      begin
+        if chkDisplayFullPaths.Checked then  //the Checked value can be cached if BeforePaint
+          CellText := NodeData^.Template^.FilePath
+        else
+          CellText := NodeData^.Template^.FileName;
+      end;
+
+      1:
+        CellText := NodeData^.Template^.IconPath;
+    end;
   except
     CellText := 'bug';
   end;
 end;
 
 
-procedure TfrmClickerTemplateCallTree.LoadTemplate(AFileName: string; var ACustomClkActions: TClkActionsRecArr);
+procedure TfrmClickerTemplateCallTree.LoadTemplate(AFileName: string; var ACustomClkActions: TClkActionsRecArr; var ATemplateIconPath: string);
 var
   Ini: TClkIniReadonlyFile;
   FormatVersion: string;
@@ -499,12 +555,13 @@ begin
   try
     SetLength(ACustomClkActions, Ini.ReadInteger('Actions', 'Count', 0));
     FormatVersion := Ini.ReadString('Actions', 'Version', '1');
+    ATemplateIconPath := '';
 
     if FormatVersion = '1' then
       LoadTemplateToCustomActions_V1(Ini, ACustomClkActions)
     else
       if FormatVersion = '2' then
-        LoadTemplateToCustomActions_V2(Ini, ACustomClkActions, DummyNotes)
+        LoadTemplateToCustomActions_V2(Ini, ACustomClkActions, DummyNotes, ATemplateIconPath)
       else
         SetLength(ACustomClkActions, 0);
   finally
@@ -516,7 +573,7 @@ end;
 procedure TfrmClickerTemplateCallTree.LoadAllTemplates;
 var
   i: Integer;
-  Fnm: string;
+  Fnm, IconPath: string;
 begin
   if Length(FTemplateFiles) > 0 then
     ClearContent; //deallocate all structures, before adding new ones
@@ -533,8 +590,14 @@ begin
 
     if DoOnFileExists(Fnm) then
     begin
-      LoadTemplate(Fnm, FTemplateFiles[i]^.ClkActions);
+      LoadTemplate(Fnm, FTemplateFiles[i]^.ClkActions, IconPath);
       FTemplateFiles[i]^.Loaded := Length(FTemplateFiles[i]^.ClkActions) > 0;
+      FTemplateFiles[i]^.IconPath := IconPath;
+    end
+    else
+    begin
+      FTemplateFiles[i]^.Loaded := False;
+      FTemplateFiles[i]^.IconPath := '';
     end;
   end;
 end;
@@ -709,6 +772,66 @@ begin
 end;
 
 
+procedure TfrmClickerTemplateCallTree.LoadTemplateIcons;
+var
+  Node: PVirtualNode;
+  ResolvedPath: string;
+  NodeData: PTmplDataRec;
+  Bmp: TBitmap;
+  FullTemplatesDir: string;
+  Idx: Integer;
+begin
+  imglstTemplateIcons.Clear;
+
+  Node := vstCallTree.GetFirst;
+  if Node = nil then
+    Exit;
+
+  FullTemplatesDir := DoOnGetFullTemplatesDir;
+  Idx := -1;
+  repeat
+    NodeData := vstCallTree.GetNodeData(Node);
+    if NodeData <> nil then
+    begin
+      ResolvedPath := StringReplace(NodeData^.Template^.IconPath, '$TemplateDir$', FullTemplatesDir, [rfReplaceAll]);
+      ResolvedPath := StringReplace(ResolvedPath, '$SelfTemplateDir$', NodeData^.Template^.FilePath, [rfReplaceAll]);
+      ResolvedPath := StringReplace(ResolvedPath, '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
+
+      Bmp := TBitmap.Create;
+      try
+        try
+          Bmp.Width := 16;
+          Bmp.Height := 16;
+          Bmp.Canvas.Brush.Color := clWhite;
+          Bmp.Canvas.Pen.Color := clLime;
+          Bmp.Canvas.Rectangle(0, 0, Bmp.Width, Bmp.Height);
+
+          Inc(Idx);
+          NodeData^.Template^.IconIndex := Idx;
+          DoOnLoadBitmap(Bmp, ResolvedPath);
+
+          //Bmp.Canvas.Font.Color := clBlack;
+          //Bmp.Canvas.TextOut(0, 0, IntToStr(Idx));   //for debugging
+
+          imglstTemplateIcons.AddMasked(Bmp, clFuchsia);
+        except
+          on E: Exception do
+          begin
+            Bmp.Canvas.Font.Color := clRed;
+            Bmp.Canvas.Brush.Color := clWhite;
+            Bmp.Canvas.TextOut(10, 10, 'Error');
+          end;
+        end;
+      finally
+        Bmp.Free;
+      end;
+    end;
+
+    Node := vstCallTree.GetNext(Node);
+  until Node = nil;
+end;
+
+
 function TfrmClickerTemplateCallTree.GetCallPath(Node: PVirtualNode): string;
 var
   NodeData: PTmplDataRec;
@@ -766,6 +889,7 @@ begin
   vstCallTree.UpdateScrollBars(True);   //this may not be needed, since the search timer does the same
   vstCallTree.Repaint;
   lblSelectedPath.Caption := '';
+  LoadTemplateIcons;
 
   tmrSearch.Enabled := True;
 end;

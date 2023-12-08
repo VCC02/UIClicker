@@ -313,7 +313,8 @@ implementation
 
 
 uses
-  BitmapProcessing, ClickerTemplates, Clipbrd, ClickerActionsClient, imgList, Dialogs;
+  BitmapProcessing, ClickerTemplates, Clipbrd, ClickerActionsClient,
+  imgList, Dialogs, BitmapConv;
 
 
 procedure TfrClickerWinInterp.LoadSettings(AIni: TMemIniFile);
@@ -1265,7 +1266,7 @@ begin
 
   GeneratedActions := TStringList.Create;
   try
-    SaveTemplateWithCustomActionsToStringList_V2(GeneratedActions, ActionChain, '');
+    SaveTemplateWithCustomActionsToStringList_V2(GeneratedActions, ActionChain, '', '');
     Clipboard.AsText := GeneratedActions.Text;
   finally
     GeneratedActions.Free;

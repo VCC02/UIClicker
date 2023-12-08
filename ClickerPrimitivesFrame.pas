@@ -2338,16 +2338,21 @@ begin
           begin
             case AItemIndex of
               CImagePrimitive_Path_PropIndex:
-              begin
-                ListOfExternallyRenderedImages := TStringList.Create;
-                try
-                  DoOnGetListOfExternallyRenderedImages(ListOfExternallyRenderedImages);
-                  for i := 0 to ListOfExternallyRenderedImages.Count - 1 do
-                    AddMenuItemToPopupMenu(FOIEditorMenu, ListOfExternallyRenderedImages.Strings[i], MenuItem_SetExternallyRenderedFile, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-                finally
-                  ListOfExternallyRenderedImages.Free;
+                if DoOnEvaluateReplacementsFunc(FPrimitives[APropertyIndex].ClkImage.RenderedExternally) = '1' then
+                begin
+                  ListOfExternallyRenderedImages := TStringList.Create;
+                  try
+                    DoOnGetListOfExternallyRenderedImages(ListOfExternallyRenderedImages);
+                    for i := 0 to ListOfExternallyRenderedImages.Count - 1 do
+                      AddMenuItemToPopupMenu(FOIEditorMenu, ListOfExternallyRenderedImages.Strings[i], MenuItem_SetExternallyRenderedFile, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+                  finally
+                    ListOfExternallyRenderedImages.Free;
+                  end;
+                end
+                else
+                begin
+                  AddMenuItemToPopupMenu(FOIEditorMenu, 'Browse...', nil {MenuItem_SetExternallyRenderedFile}, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
                 end;
-              end;
             end; //case
           end;
 
