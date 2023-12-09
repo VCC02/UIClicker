@@ -9,8 +9,8 @@ object frClickerActionsArr: TfrClickerActionsArr
   TabOrder = 0
   TabStop = True
   OnResize = FrameResize
-  DesignLeft = 85
-  DesignTop = 86
+  DesignLeft = 86
+  DesignTop = 85
   object pnlActionsEditor: TPanel
     Left = 1
     Height = 396

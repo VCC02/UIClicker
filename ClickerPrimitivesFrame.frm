@@ -7,10 +7,10 @@ object frClickerPrimitives: TfrClickerPrimitives
   ClientWidth = 399
   Color = clDefault
   Constraints.MinWidth = 399
-  OnResize = FrameResize
   ParentBackground = False
   ParentColor = False
   TabOrder = 0
+  OnResize = FrameResize
   DesignLeft = 86
   DesignTop = 85
   object pnlvstOI: TPanel
@@ -29,6 +29,7 @@ object frClickerPrimitives: TfrClickerPrimitives
     Font.Color = clWindowText
     Font.Height = -11
     Font.Name = 'Tahoma'
+    ParentBackground = False
     ParentColor = False
     ParentFont = False
     TabOrder = 0
@@ -89,8 +90,8 @@ object frClickerPrimitives: TfrClickerPrimitives
       Top = 16
       Width = 119
       Anchors = [akTop, akLeft, akRight, akBottom]
-      TabOrder = 0
       Options = [nboDoChangeOnSetIndex]
+      TabOrder = 0
     end
     object lblMouseOnPreviewImg: TLabel
       Left = 0
@@ -147,22 +148,22 @@ object frClickerPrimitives: TfrClickerPrimitives
       Left = 24
       Height = 19
       Top = -2
-      Width = 92
+      Width = 90
       Caption = 'High contrast'
-      OnChange = chkHighContrastChange
       TabOrder = 1
+      OnChange = chkHighContrastChange
     end
     object chkShowPrimitiveEdges: TCheckBox
       Left = 18
       Height = 19
       Hint = 'Select a primitive in the list, to update the visual selection.'
       Top = 13
-      Width = 141
+      Width = 139
       Caption = 'Show primitive''s edges'
-      OnChange = chkShowPrimitiveEdgesChange
       ParentShowHint = False
       ShowHint = True
       TabOrder = 2
+      OnChange = chkShowPrimitiveEdgesChange
     end
   end
   object pnlHorizSplitter: TPanel
@@ -173,6 +174,7 @@ object frClickerPrimitives: TfrClickerPrimitives
     Width = 9
     Anchors = [akTop, akLeft, akBottom]
     Color = 13041606
+    ParentBackground = False
     ParentColor = False
     TabOrder = 2
     OnMouseDown = pnlHorizSplitterMouseDown

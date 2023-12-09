@@ -805,6 +805,7 @@ begin
   frClickerActionsArrExperiment2.InitFrame;
   frClickerActionsArrMain.InitFrame;
 
+
   for i := Low(TDisplayGridLineOption) to High(TDisplayGridLineOption) do
     cmbImgPreviewGridType.Items.Add(CDisplayGridLineOptionStr[i]);
 

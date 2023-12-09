@@ -476,6 +476,7 @@ type
     procedure PlaySelectedActionFromButton;
     procedure StopAllActionsFromButton;
 
+    procedure MoveAction(ASrcNode, ADestNode: PVirtualNode);
     function ValidActionToBeAdded: Boolean;
 
 
@@ -494,6 +495,7 @@ type
 
     procedure InsertCallTemplateForActionReplacing(AIndexToInsertAt: Integer; ATemplateFileName: string);
     procedure InsertSetVar(AIndexToInsertAt: Integer; AActionName: string; var ANewAction: TClkSetVarOptions);
+    procedure InsertAction(AIndexToInsertAt: Integer; var ANewAction: TClkActionRec);
 
     procedure GetSelectedActions(var ActionsToCopy: TClkActionsRecArr); overload;
     function GetSelectedActions(var AIndexArr: TIntegerDynArray; var AActionsArr: TClkActionsRecArr): Integer; overload;
@@ -855,6 +857,7 @@ begin
   //vstActions.PopupMenu := pmVstActions; //the menu will be poped up by code
   vstActions.StateImages := frClickerActions.imglstActions;
   vstActions.TabOrder := 0;
+  vstActions.TreeOptions.AutoOptions := [toAutoDropExpand, toAutoScrollOnExpand, toAutoSort, toAutoTristateTracking, toAutoChangeScale, toDisableAutoscrollOnEdit];
   vstActions.TreeOptions.MiscOptions := [toAcceptOLEDrop, toEditable, toCheckSupport, toFullRepaintOnResize, toInitOnSave, toToggleOnDblClick, toWheelPanning];
   vstActions.TreeOptions.PaintOptions := [toShowButtons, toShowDropmark, toShowRoot, toThemeAware, toUseBlendedImages];
   vstActions.TreeOptions.SelectionOptions := [toFullRowSelect, toMiddleClickSelect, {toRightClickSelect,} toMultiSelect];
@@ -3358,9 +3361,13 @@ begin
   if not Assigned(Node) or not Assigned(SrcNode) then
     Exit;
 
-  CopyActionContent(FClkActions[SrcNode^.Index], Ph);
-  CopyActionContent(FClkActions[Node^.Index], FClkActions[SrcNode^.Index]);
-  CopyActionContent(Ph, FClkActions[Node^.Index]);
+  MessageBox(Handle, 'Moving actions is not fully supported.', PChar(Application.Title), MB_ICONINFORMATION);
+  Exit;
+
+  //CopyActionContent(FClkActions[SrcNode^.Index], Ph);
+  //CopyActionContent(FClkActions[Node^.Index], FClkActions[SrcNode^.Index]);
+  //CopyActionContent(Ph, FClkActions[Node^.Index]);
+  MoveAction(SrcNode, Node);
 
   UpdateNodeCheckStateFromAction(SrcNode);
   UpdateNodeCheckStateFromAction(Node);
@@ -3370,6 +3377,23 @@ begin
   vstActions.ScrollIntoView(Node, True);
   vstActions.Repaint;
   Modified := True;
+end;
+
+
+procedure TfrClickerActionsArr.MoveAction(ASrcNode, ADestNode: PVirtualNode);  ///////////// there is a bug, which causes AV
+var
+  Ph: TClkActionRec;
+  SrcIdx, DestIdx: Integer;
+begin
+  if ASrcNode = ADestNode then
+    Exit;
+
+  SrcIdx := ASrcNode^.Index;
+  DestIdx := ADestNode^.Index;
+
+  CopyActionContent(FClkActions[SrcIdx], Ph);
+  RemoveAction(SrcIdx, False);
+  InsertAction(DestIdx, Ph);
 end;
 
 
@@ -3837,7 +3861,7 @@ begin
   SetLength(FClkActions, n + 1);
 
   for i := n downto AIndexToInsertAt + 1 do
-    FClkActions[i] := FClkActions[i - 1];
+    CopyActionContent(FClkActions[i - 1], FClkActions[i]); //FClkActions[i] := FClkActions[i - 1];
 
   FClkActions[AIndexToInsertAt].ActionDebuggingStatus := adsNone;
   FClkActions[AIndexToInsertAt].ActionOptions.Action := acCallTemplate;
@@ -3868,7 +3892,7 @@ begin
   SetLength(FClkActions, n + 1);
 
   for i := n downto AIndexToInsertAt + 1 do
-    FClkActions[i] := FClkActions[i - 1];
+    CopyActionContent(FClkActions[i - 1], FClkActions[i]); //FClkActions[i] := FClkActions[i - 1];
 
   FClkActions[AIndexToInsertAt].ActionDebuggingStatus := adsNone;
   FClkActions[AIndexToInsertAt].ActionOptions.Action := acSetVar;
@@ -3878,6 +3902,21 @@ begin
   FClkActions[AIndexToInsertAt].ActionOptions.ActionTimeout := 0;
   FClkActions[AIndexToInsertAt].SetVarOptions := ANewAction;
 
+  vstActions.RootNodeCount := Length(FClkActions);
+end;
+
+
+procedure TfrClickerActionsArr.InsertAction(AIndexToInsertAt: Integer; var ANewAction: TClkActionRec);
+var
+  i, n: Integer;
+begin
+  n := Length(FClkActions);
+  SetLength(FClkActions, n + 1);
+
+  for i := n downto AIndexToInsertAt + 1 do
+    CopyActionContent(FClkActions[i - 1], FClkActions[i]); //FClkActions[i] := FClkActions[i - 1];
+
+  CopyActionContent(ANewAction, FClkActions[AIndexToInsertAt]);
   vstActions.RootNodeCount := Length(FClkActions);
 end;
 
@@ -4645,7 +4684,7 @@ begin
   SetLength(FClkActions, n + 1);
 
   for i := n downto Node^.Index + 1 do
-    FClkActions[i] := FClkActions[i - 1];
+    CopyActionContent(FClkActions[i - 1], FClkActions[i]); //FClkActions[i] := FClkActions[i - 1];
 
   UpdateActionsArrFromControls(Node^.Index);
   FClkActions[Node^.Index].ActionStatus := asNotStarted;
@@ -4680,7 +4719,7 @@ begin
   SetLength(FClkActions, n + 1);
 
   for i := n downto Node^.Index + 2 do
-    FClkActions[i] := FClkActions[i - 1];
+    CopyActionContent(FClkActions[i - 1], FClkActions[i]); //FClkActions[i] := FClkActions[i - 1];
 
   NewIndex := Node^.Index + 1;
   UpdateActionsArrFromControls(NewIndex);
@@ -5052,7 +5091,7 @@ var
   i: Integer;
 begin
   for i := ActionIndex to Length(FClkActions) - 2 do
-    FClkActions[i] := FClkActions[i + 1];
+    CopyActionContent(FClkActions[i + 1], FClkActions[i]); //FClkActions[i] := FClkActions[i + 1];
 
   SetLength(FClkActions, Length(FClkActions) - 1);
 

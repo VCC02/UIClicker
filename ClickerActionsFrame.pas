@@ -5081,6 +5081,8 @@ begin
         frClickerFindControl.frClickerPrimitives.OnSavePrimitivesFile := HandleOnSavePrimitivesFile;
         frClickerFindControl.frClickerPrimitives.OnTriggerOnControlsModified := HandleOnPrimitivesTriggerOnControlsModified;
         frClickerFindControl.frClickerPrimitives.OnSaveFromMenu := HandleOnSaveFromMenu;
+        frClickerFindControl.frClickerPrimitives.OnPictureOpenDialogExecute := HandleOnPictureOpenDialogExecute;
+        frClickerFindControl.frClickerPrimitives.OnGetPictureOpenDialogFileName := HandleOnGetPictureOpenDialogFileName;
 
         PmtvFnm := PrimitiveFileNames.Strings[PropertyItemIndex];
         PmtvFnm := StringReplace(PmtvFnm, '$TemplateDir$', FFullTemplatesDir, [rfReplaceAll]);

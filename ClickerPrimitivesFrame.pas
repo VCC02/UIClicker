@@ -98,6 +98,8 @@ type
     FOnEvaluateReplacementsFunc: TEvaluateReplacementsFunc;
     FOnTriggerOnControlsModified: TOnTriggerOnControlsModified;
     FOnSaveFromMenu: TNotifyEvent;
+    FOnPictureOpenDialogExecute: TOnPictureOpenDialogExecute;
+    FOnGetPictureOpenDialogFileName: TOnGetPictureOpenDialogFileName;
 
     procedure CreateRemainingUIComponents;
 
@@ -124,6 +126,7 @@ type
     procedure MenuItem_AddPrimitiveToList(Sender: TObject);
     procedure MenuItem_SetValueFromEnumItem(Sender: TObject);
     procedure MenuItem_SetExternallyRenderedFile(Sender: TObject);
+    procedure MenuItem_BrowsePrimitivesImageFromDisk(Sender: TObject);
     procedure MenuItem_RemovePrimitiveFromList(Sender: TObject);
     procedure MenuItem_RemoveAllCompositionOrdersFromList(Sender: TObject);
     procedure MenuItem_AddCompositionOrderToList(Sender: TObject);
@@ -148,6 +151,8 @@ type
     function DoOnEvaluateReplacementsFunc(s: string; Recursive: Boolean = True): string;
     procedure DoOnTriggerOnControlsModified;
     procedure DoOnSaveFromMenu;
+    function DoOnPictureOpenDialogExecute: Boolean;
+    function DoOnGetPictureOpenDialogFileName: string;
 
     function EditFontProperties(APmtvType, APropertyIndex, AItemIndex: Integer; var ANewItems: string): Boolean;
 
@@ -231,6 +236,8 @@ type
     property OnEvaluateReplacementsFunc: TEvaluateReplacementsFunc write FOnEvaluateReplacementsFunc; //called by ComposePrimitives
     property OnTriggerOnControlsModified: TOnTriggerOnControlsModified write FOnTriggerOnControlsModified;
     property OnSaveFromMenu: TNotifyEvent write FOnSaveFromMenu;
+    property OnPictureOpenDialogExecute: TOnPictureOpenDialogExecute write FOnPictureOpenDialogExecute;
+    property OnGetPictureOpenDialogFileName: TOnGetPictureOpenDialogFileName write FOnGetPictureOpenDialogFileName;
   end;
 
 implementation
@@ -345,6 +352,8 @@ begin
   FOnEvaluateReplacementsFunc := nil;
   FOnTriggerOnControlsModified := nil;
   FOnSaveFromMenu := nil;
+  FOnPictureOpenDialogExecute := nil;
+  FOnGetPictureOpenDialogFileName := nil;
 end;
 
 
@@ -1121,6 +1130,38 @@ begin
 end;
 
 
+procedure TfrClickerPrimitives.MenuItem_BrowsePrimitivesImageFromDisk(Sender: TObject);
+var
+  MenuData: POIMenuItemData;
+  ValueStr: string;
+  TempPrimitiveType: Integer;
+begin
+  MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
+  try
+    if not DoOnPictureOpenDialogExecute then
+      Exit;
+
+    ValueStr := DoOnGetPictureOpenDialogFileName;
+
+    TempPrimitiveType := FPrimitives[MenuData^.PropertyIndex].PrimitiveType;
+    if TempPrimitiveType = -1 then
+    begin
+      MessageBox(Handle, 'The current primitive type is not implemented.', PChar(Application.Title), MB_ICONERROR);
+      Exit;
+    end;
+
+    CSetPrimitiveValueStrFunctions[TempPrimitiveType](FPrimitives[MenuData^.PropertyIndex], ValueStr, CImagePrimitive_Path_PropIndex);
+    FOIFrame.CancelCurrentEditing;
+    DoOnTriggerOnControlsModified;  //the pmtv file is modified, not the template
+
+    RepaintAllCompositions;
+    FOIFrame.RepaintNodeByLevel(MenuData.NodeLevel, MenuData.CategoryIndex, MenuData.PropertyIndex, MenuData.PropertyItemIndex);
+  finally
+    Dispose(MenuData);
+  end;
+end;
+
+
 procedure TfrClickerPrimitives.MenuItem_RemovePrimitiveFromList(Sender: TObject);
 var
   MenuData: POIMenuItemData;
@@ -1693,6 +1734,24 @@ begin
     FOnSaveFromMenu(Self)
   else
     raise Exception.Create('OnTriggerOnControlsModified not assigned.');
+end;
+
+
+function TfrClickerPrimitives.DoOnPictureOpenDialogExecute: Boolean;
+begin
+  if not Assigned(FOnPictureOpenDialogExecute) then
+    raise Exception.Create('OnPictureOpenDialogExecute not assigned.')
+  else
+    Result := FOnPictureOpenDialogExecute;
+end;
+
+
+function TfrClickerPrimitives.DoOnGetPictureOpenDialogFileName: string;
+begin
+  if not Assigned(FOnGetPictureOpenDialogFileName) then
+    raise Exception.Create('OnGetPictureOpenDialogFileName not assigned.')
+  else
+    Result := FOnGetPictureOpenDialogFileName;
 end;
 
 
@@ -2351,7 +2410,7 @@ begin
                 end
                 else
                 begin
-                  AddMenuItemToPopupMenu(FOIEditorMenu, 'Browse...', nil {MenuItem_SetExternallyRenderedFile}, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+                  AddMenuItemToPopupMenu(FOIEditorMenu, 'Browse...', MenuItem_BrowsePrimitivesImageFromDisk, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
                 end;
             end; //case
           end;

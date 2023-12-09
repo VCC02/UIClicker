@@ -8,9 +8,9 @@ object frClickerActions: TfrClickerActions
   ClientWidth = 1056
   Constraints.MinHeight = 260
   Constraints.MinWidth = 688
-  OnResize = FrameResize
   TabOrder = 0
   TabStop = True
+  OnResize = FrameResize
   DesignLeft = 86
   DesignTop = 85
   object PageControlActionExecution: TPageControl
@@ -54,6 +54,7 @@ object frClickerActions: TfrClickerActions
         Font.Color = clWindowText
         Font.Height = -11
         Font.Name = 'Tahoma'
+        ParentBackground = False
         ParentColor = False
         ParentFont = False
         TabOrder = 1
@@ -152,6 +153,7 @@ object frClickerActions: TfrClickerActions
         Width = 10
         Anchors = [akTop, akLeft, akBottom]
         Color = 13041606
+        ParentBackground = False
         ParentColor = False
         TabOrder = 3
         OnMouseDown = pnlHorizSplitterMouseDown
@@ -257,6 +259,7 @@ object frClickerActions: TfrClickerActions
         ClientHeight = 214
         ClientWidth = 696
         Color = clWindow
+        ParentBackground = False
         ParentColor = False
         PopupMenu = pmDebugImage
         TabOrder = 2
@@ -267,26 +270,26 @@ object frClickerActions: TfrClickerActions
           Top = 0
           Width = 2
           AutoSize = True
-          OnMouseEnter = imgDebugBmpMouseEnter
-          OnMouseLeave = imgDebugBmpMouseLeave
-          OnMouseMove = imgDebugBmpMouseMove
           Picture.Data = {
             07544269746D617046000000424D460000000000000036000000280000000200
             0000020000000100180000000000100000000000000000000000000000000000
             0000FFFFFFFFFFFF0000FFFFFFFFFFFF0000
           }
           PopupMenu = pmDebugImage
+          OnMouseEnter = imgDebugBmpMouseEnter
+          OnMouseLeave = imgDebugBmpMouseLeave
+          OnMouseMove = imgDebugBmpMouseMove
         end
         object imgDebugGrid: TImage
           Left = 14
           Height = 73
           Top = 13
           Width = 73
-          OnMouseMove = imgDebugBmpMouseMove
           ParentShowHint = False
           PopupMenu = pmDebugImage
           ShowHint = True
           Transparent = True
+          OnMouseMove = imgDebugBmpMouseMove
         end
       end
       object chkShowDebugGrid: TCheckBox
@@ -295,8 +298,8 @@ object frClickerActions: TfrClickerActions
         Top = -2
         Width = 67
         Caption = 'Show grid'
-        OnClick = chkShowDebugGridClick
         TabOrder = 0
+        OnClick = chkShowDebugGridClick
       end
       object lblMouseOnExecDbgImgBB: TLabel
         Left = 676

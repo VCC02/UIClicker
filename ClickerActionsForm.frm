@@ -41,10 +41,10 @@ object frmClickerActions: TfrmClickerActions
     000018300000180000000000000000200000002000000000000000000000FFFF
     0000
   }
+  LCLVersion = '8.2'
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnShow = FormShow
-  LCLVersion = '7.5'
   object PageControlMain: TPageControl
     Left = 8
     Height = 712
@@ -80,8 +80,8 @@ object frmClickerActions: TfrmClickerActions
         Top = 24
         Width = 25
         Caption = '...'
-        OnClick = btnBrowseActionTemplatesDirClick
         TabOrder = 1
+        OnClick = btnBrowseActionTemplatesDirClick
       end
       object grpVariables: TGroupBox
         Left = 640
@@ -135,12 +135,12 @@ object frmClickerActions: TfrmClickerActions
           'Client'
           'Server'
         )
-        OnChange = cmbExecModeChange
         ParentShowHint = False
         ShowHint = True
         Style = csOwnerDrawFixed
         TabOrder = 3
         Text = 'Local'
+        OnChange = cmbExecModeChange
       end
       object lblExecMode: TLabel
         Left = 8
@@ -197,8 +197,8 @@ object frmClickerActions: TfrmClickerActions
             Top = 16
             Width = 64
             Caption = 'Test'
-            OnClick = btnTestConnectionClick
             TabOrder = 1
+            OnClick = btnTestConnectionClick
           end
           object chkSetExperimentsToClientMode: TCheckBox
             Left = 8
@@ -273,8 +273,8 @@ object frmClickerActions: TfrmClickerActions
             Top = 34
             Width = 50
             Caption = 'Active'
-            OnChange = chkServerActiveChange
             TabOrder = 1
+            OnChange = chkServerActiveChange
           end
           object lblServerInfo: TLabel
             Left = 113
@@ -422,31 +422,32 @@ object frmClickerActions: TfrmClickerActions
           Font.Color = clWhite
           Font.Height = -11
           Font.Name = 'Tahoma'
+          ParentBackground = False
           ParentColor = False
           ParentFont = False
           TabOrder = 0
         end
         object chkDisplayActivity: TCheckBox
           Left = 83
-          Height = 19
+          Height = 17
           Top = 8
-          Width = 92
+          Width = 90
           Caption = 'Display activity'
           Checked = True
-          OnChange = chkDisplayActivityChange
           State = cbChecked
           TabOrder = 1
+          OnChange = chkDisplayActivityChange
         end
       end
       object chkStayOnTop: TCheckBox
-        Left = 552
-        Height = 19
+        Left = 554
+        Height = 17
         Top = 0
-        Width = 76
+        Width = 74
         Anchors = [akTop, akRight]
         Caption = 'Stay on top'
-        OnClick = chkStayOnTopClick
         TabOrder = 8
+        OnClick = chkStayOnTopClick
       end
       object chkAutoSwitchToExecutingTab: TCheckBox
         Left = 640
@@ -458,11 +459,11 @@ object frmClickerActions: TfrmClickerActions
         AutoSize = False
         Caption = 'Autoswitch to executing tab'
         Checked = True
-        OnChange = chkAutoSwitchToExecutingTabChange
         ParentShowHint = False
         ShowHint = True
         State = cbChecked
         TabOrder = 9
+        OnChange = chkAutoSwitchToExecutingTabChange
       end
       object chkAutoEnableSwitchingTabsOnDebugging: TCheckBox
         Left = 640
@@ -474,11 +475,11 @@ object frmClickerActions: TfrmClickerActions
         AutoSize = False
         Caption = 'Autoenable switching tabs on debugging'
         Checked = True
-        OnChange = chkAutoEnableSwitchingTabsOnDebuggingChange
         ParentShowHint = False
         ShowHint = True
         State = cbChecked
         TabOrder = 10
+        OnChange = chkAutoEnableSwitchingTabsOnDebuggingChange
       end
       object cmbImgPreviewGridType: TComboBox
         Left = 640
@@ -487,9 +488,9 @@ object frmClickerActions: TfrmClickerActions
         Width = 115
         Anchors = [akRight, akBottom]
         ItemHeight = 13
-        OnChange = cmbImgPreviewGridTypeChange
         Style = csOwnerDrawFixed
         TabOrder = 11
+        OnChange = cmbImgPreviewGridTypeChange
       end
       object lblGridType: TLabel
         Left = 640
@@ -516,8 +517,8 @@ object frmClickerActions: TfrmClickerActions
           Selected = clGreen
           Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbCustomColor, cbCustomColors]
           ItemHeight = 16
-          OnChange = colcmbTopLeftValidChange
           TabOrder = 0
+          OnChange = colcmbTopLeftValidChange
         end
         object colcmbBotRightValid: TColorBox
           Left = 104
@@ -527,8 +528,8 @@ object frmClickerActions: TfrmClickerActions
           Selected = clGreen
           Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbCustomColor, cbCustomColors]
           ItemHeight = 16
-          OnChange = colcmbBotRightValidChange
           TabOrder = 1
+          OnChange = colcmbBotRightValidChange
         end
         object colcmbTopLeftInvalid: TColorBox
           Left = 104
@@ -538,8 +539,8 @@ object frmClickerActions: TfrmClickerActions
           Selected = clGreen
           Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbCustomColor, cbCustomColors]
           ItemHeight = 16
-          OnChange = colcmbTopLeftInvalidChange
           TabOrder = 2
+          OnChange = colcmbTopLeftInvalidChange
         end
         object colcmbBotRightInvalid: TColorBox
           Left = 104
@@ -549,8 +550,8 @@ object frmClickerActions: TfrmClickerActions
           Selected = clGreen
           Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbCustomColor, cbCustomColors]
           ItemHeight = 16
-          OnChange = colcmbBotRightInvalidChange
           TabOrder = 3
+          OnChange = colcmbBotRightInvalidChange
         end
         object lblTopLeftValidColor: TLabel
           Left = 8
