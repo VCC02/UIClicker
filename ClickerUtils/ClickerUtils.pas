@@ -455,6 +455,7 @@ function GetCmdLineOptionValue(AOption: string): string;
 function RevPos(const ASubStr, AString: string; AOffset: Integer = 1): Integer;
 
 function ActionAsStringToTClkAction(ActionAsString: string): TClkAction;
+function GetNodeByIndex(AVst: TVirtualStringTree; AIndex: Integer): PVirtualNode;
 
 function ModifyBrightness(AColor: TColor; AAmount: Byte; ABrightnessOperation: TBrightnessOperation): TColor;
 procedure CreateSelectionLabels(AOwner: TComponent; AParent: TWinControl; var ALeftLabel, ATopLabel, ARightLabel, ABottomLabel: TLabel; ALeftColor, ATopColor, ARightColor, ABottomColor: TColor; AShouldBringToFront, ACreateWithPaintedLabel: Boolean);
@@ -2425,6 +2426,26 @@ begin
     end;
 end;
 
+
+function GetNodeByIndex(AVst: TVirtualStringTree; AIndex: Integer): PVirtualNode;
+var
+  Node: PVirtualNode;
+begin
+  Result := nil;
+  Node := AVst.GetFirst;
+  if Node = nil then
+    Exit;
+
+  repeat
+    if Integer(Node^.Index) = AIndex then
+    begin
+      Result := Node;
+      Break;
+    end;
+
+    Node := Node^.NextSibling;
+  until Node = nil;
+end;
 
 { TPaintedLabel }
 

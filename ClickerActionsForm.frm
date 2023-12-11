@@ -614,6 +614,9 @@ object frmClickerActions: TfrmClickerActions
             VertScrollBar.Tracking = True
             Anchors = [akTop, akLeft, akRight, akBottom]
             AutoScroll = False
+            Color = clDefault
+            ParentBackground = False
+            ParentColor = False
             TabOrder = 0
           end
         end

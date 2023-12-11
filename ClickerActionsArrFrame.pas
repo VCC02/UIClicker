@@ -60,6 +60,8 @@ type
     lbeSearchAction: TLabeledEdit;
     lblModifiedStatus: TLabel;
     memLogErr: TMemo;
+    MenuItem_CopyFullFilepathToClipboard: TMenuItem;
+    MenuItem_CopyFilenameToClipboard: TMenuItem;
     N4: TMenuItem;
     MenuItem_ReplaceWith_AppDir: TMenuItem;
     MenuItem_ReplaceWith_SelfTemplateDir: TMenuItem;
@@ -97,6 +99,7 @@ type
     pmExtraPlayAction: TPopupMenu;
     pmExtraLoad: TPopupMenu;
     pmTemplateIcon: TPopupMenu;
+    pmTemplateName: TPopupMenu;
     Removeallactions1: TMenuItem;
     imglstActionStatus: TImageList;
     pmExtraAdd: TPopupMenu;
@@ -152,6 +155,8 @@ type
     procedure MenuItem_AddCacheControlActionClick(Sender: TObject);
     procedure MenuItem_AddRestoreCachedControlActionClick(Sender: TObject);
     procedure MenuItem_BrowseTemplateIconClick(Sender: TObject);
+    procedure MenuItem_CopyFilenameToClipboardClick(Sender: TObject);
+    procedure MenuItem_CopyFullFilepathToClipboardClick(Sender: TObject);
     procedure MenuItem_EditBreakPointClick(Sender: TObject);
     procedure MenuItem_PlayActionAndRestoreVarsClick(Sender: TObject);
     procedure MenuItem_RefactorSelectedActionsIntoATemplateClick(Sender: TObject
@@ -3350,7 +3355,7 @@ procedure TfrClickerActionsArr.vstActionsDragDrop(Sender: TBaseVirtualTree;
   Shift: TShiftState; const Pt: TPoint; var Effect: DWORD; Mode: TDropMode);
 var
   Node, SrcNode: PVirtualNode;
-  Ph: TClkActionRec;
+  DestIdx: Integer;
 begin
   if Sender <> Source then
     Exit;
@@ -3361,20 +3366,20 @@ begin
   if not Assigned(Node) or not Assigned(SrcNode) then
     Exit;
 
-  MessageBox(Handle, 'Moving actions is not fully supported.', PChar(Application.Title), MB_ICONINFORMATION);
-  Exit;
+  DestIdx := Node^.Index;
 
-  //CopyActionContent(FClkActions[SrcNode^.Index], Ph);
-  //CopyActionContent(FClkActions[Node^.Index], FClkActions[SrcNode^.Index]);
-  //CopyActionContent(Ph, FClkActions[Node^.Index]);
   MoveAction(SrcNode, Node);
+  Node := GetNodeByIndex(DestIdx);
 
-  UpdateNodeCheckStateFromAction(SrcNode);
-  UpdateNodeCheckStateFromAction(Node);
+  if Node <> nil then
+  begin
+    UpdateNodesCheckStateFromActions;
 
-  vstActions.ClearSelection;
-  vstActions.Selected[Node] := True;
-  vstActions.ScrollIntoView(Node, True);
+    vstActions.ClearSelection;
+    vstActions.Selected[Node] := True;
+    vstActions.ScrollIntoView(Node, True);
+  end;
+
   vstActions.Repaint;
   Modified := True;
 end;
@@ -3471,7 +3476,7 @@ end;
 
 procedure TfrClickerActionsArr.btnNewClick(Sender: TObject);
 begin
-  if MessageBox(Handle, 'Are you sure you want to remove all actions from list and clear all controls?', PChar(Caption), MB_ICONQUESTION + MB_YESNO) = ID_YES then
+  if MessageBox(Handle, 'Are you sure you want to remove all actions from list and clear all controls?', PChar(Application.Title), MB_ICONQUESTION + MB_YESNO) = ID_YES then
   begin
     ClearAllActions;
     frClickerActions.ClearControls;
@@ -3802,6 +3807,20 @@ begin
   SetTemplateIconHint;
   LoadTemplateIcon;
   Modified := True;
+end;
+
+
+procedure TfrClickerActionsArr.MenuItem_CopyFilenameToClipboardClick(
+  Sender: TObject);
+begin
+  Clipboard.AsText := ExtractFileName(FFileName);
+end;
+
+
+procedure TfrClickerActionsArr.MenuItem_CopyFullFilepathToClipboardClick(
+  Sender: TObject);
+begin
+  Clipboard.AsText := FFileName;
 end;
 
 

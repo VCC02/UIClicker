@@ -43,6 +43,7 @@ type
     procedure ArrangeMainUIClickerWindows;
     procedure ArrangeUIClickerActionWindows;
 
+    procedure LoadTestTemplateInClickerUnderTest(ATestTemplate: string);
     procedure RunTestTemplateInClickerUnderTest(ATestTemplate: string);
     procedure RunTestTemplateInClickerUnderTestWithDebugging(ATestTemplate: string);
     procedure RunTestTemplateInClickerUnderTestWithDebuggingAndStepInto(ATestTemplate, AExpectedStepOverCount: string; AStopAfterSteppingInto: string = '0');
@@ -71,6 +72,8 @@ type
           //when/if implemented, these tests should pass
     //procedure Test_ExecuteTemplateRemotely_FindColorErrorFromGradientOnServer_ErrorLevel_SuccessVerbose;
     //procedure Test_ExecuteTemplateRemotely_FindColorErrorFromGradientOnServer_ErrorCount_SuccessVerbose;
+
+    procedure Test_DragAction_FromFirstPosToLastPos;
 
     procedure Test_ExecuteTemplateRemotelyWithDebugging_WithLoopedCall_AndStepIntoThenStop; //moved from above, since it fails
 
@@ -335,28 +338,32 @@ begin
 end;
 
 
-procedure TTestUI.RunTestTemplateInClickerUnderTest(ATestTemplate: string);
+procedure TTestUI.LoadTestTemplateInClickerUnderTest(ATestTemplate: string);
 begin
   SetVariableOnTestDriverClient('$TemplateToLoad$', FTemplatesDir + ATestTemplate);
   ExecuteTemplateOnTestDriver(FTemplatesDir + 'LoadCallerTemplateIntoAppUnderTest.clktmpl', CREParam_FileLocation_ValueDisk); //this loads BasicCaller into test client (the one which is in client mode)
+end;
+
+
+procedure TTestUI.RunTestTemplateInClickerUnderTest(ATestTemplate: string);
+begin
+  LoadTestTemplateInClickerUnderTest(ATestTemplate);
   ExecuteTemplateOnTestDriver(FTemplatesDir + 'PlayAllActionsFromAppUnderTest.clktmpl', CREParam_FileLocation_ValueDisk);
 end;
 
 
 procedure TTestUI.RunTestTemplateInClickerUnderTestWithDebugging(ATestTemplate: string);
 begin
-  SetVariableOnTestDriverClient('$TemplateToLoad$', FTemplatesDir + ATestTemplate);
-  ExecuteTemplateOnTestDriver(FTemplatesDir + 'LoadCallerTemplateIntoAppUnderTest.clktmpl', CREParam_FileLocation_ValueDisk); //this loads BasicCaller into test client (the one which is in client mode)
+  LoadTestTemplateInClickerUnderTest(ATestTemplate);
   ExecuteTemplateOnTestDriver(FTemplatesDir + 'PlayAllActionsFromAppUnderTestWithDebugging.clktmpl', CREParam_FileLocation_ValueDisk);
 end;
 
 
 procedure TTestUI.RunTestTemplateInClickerUnderTestWithDebuggingAndStepInto(ATestTemplate, AExpectedStepOverCount: string; AStopAfterSteppingInto: string = '0');
 begin
-  SetVariableOnTestDriverClient('$TemplateToLoad$', FTemplatesDir + ATestTemplate);
   SetVariableOnTestDriverClient('$ExpectedStepOverCount$', AExpectedStepOverCount); //how many times to click "Step Over" in the called template
   SetVariableOnTestDriverClient('$StopAfterSteppingInto$', AStopAfterSteppingInto);
-  ExecuteTemplateOnTestDriver(FTemplatesDir + 'LoadCallerTemplateIntoAppUnderTest.clktmpl', CREParam_FileLocation_ValueDisk); //this loads BasicCaller into test client (the one which is in client mode)
+  LoadTestTemplateInClickerUnderTest(ATestTemplate);
   ExecuteTemplateOnTestDriver(FTemplatesDir + 'PlayAllActionsFromAppUnderTestWithDebuggingAndSteppingInto.clktmpl', CREParam_FileLocation_ValueDisk);
 end;
 
@@ -599,6 +606,25 @@ end;
 //  TestServerAddress := CTestDriverServerAddress_Client;
 //  Expect(GetVarValueFromServer('$SearchResult$')).ToBe('True');
 //end;
+
+
+procedure TTestUI.Test_DragAction_FromFirstPosToLastPos;
+begin
+  TestServerAddress := CTestDriverServerAddress_Client;
+  LoadTestTemplateInClickerUnderTest('ActionsToDrag.clktmpl');
+
+  PrepareClickerUnderTestToLocalMode;
+  SetVariableOnTestDriverClient('$SourceAction$', '"ExecApp"');
+  SetVariableOnTestDriverClient('$DestinationAction$', '"Sleep"');
+
+  ExecuteTemplateOnTestDriver(ExtractFilePath(ParamStr(0)) + '..\..\TestDriver\ActionTemplates\DragActionOnAppUnderTest.clktmpl', CREParam_FileLocation_ValueDisk);
+  PrepareClickerUnderTestToReadItsVars;
+
+  Sleep(500);
+
+  TestServerAddress := CTestDriverServerAddress_Client;
+  Expect(GetVarValueFromServer('$SearchResult$')).ToBe('True');
+end;
 
 
 procedure TTestUI.Test_ExecuteTemplateRemotelyWithDebugging_WithLoopedCall_AndStepIntoThenStop;  //this test fails because stopping the debugger on a looped call, is not yet implemented in UIClicker

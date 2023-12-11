@@ -138,12 +138,16 @@ end;
 
 
 procedure MoveMouseCursorWithDuration(DestTp: TPoint; ADuration: Integer; ACallAppProcMsg: Boolean = True); //slow move, not teleporting
+const              //it seems that using Sleep calls, with args greater than 16, gives more accurate results than with lower values
+  CResolutionDiv = 4; //powers of two   .. A greater value means less Sleep calls, which should get closer to the overall requested duration.
+  CResolutionMul = 1 shl CResolutionDiv;
 var
   SrcTp: TPoint;
   IncX, IncY: Extended;
   IncXDist, IncYDist: Extended;
   IncCount, SleepDistance: Integer;
-  MaxDiff: Integer;
+  MaxDiff, SleepAmount: Integer;
+  DurationDiv: Extended; //Integer;
 begin
   if ADuration < 1 then
   begin
@@ -159,13 +163,18 @@ begin
   IncCount := 0;
   SleepDistance := MaxDiff shr 3;
 
-  IncXDist := (DestTp.X - SrcTp.X) / ADuration;
-  IncYDist := (DestTp.Y - SrcTp.Y) / ADuration;
+  SleepAmount := 1 shl CResolutionDiv;
+  DurationDiv := ADuration / CResolutionMul;
+  if DurationDiv = 0 then
+    DurationDiv := 1;
+
+  IncXDist := (DestTp.X - SrcTp.X) / DurationDiv;
+  IncYDist := (DestTp.Y - SrcTp.Y) / DurationDiv;
 
   repeat
     IncX := IncX + IncXDist;
     IncY := IncY + IncYDist;
-    Inc(IncCount);
+    Inc(IncCount, SleepAmount);
 
     SetCursorPos(Round(IncX), Round(IncY));
 
@@ -173,7 +182,7 @@ begin
       if (SleepDistance > 0) and (IncCount mod SleepDistance = 0) then
         Application.ProcessMessages;
 
-    Sleep(1);  //the loop should take ADuration iterations. Most likely, Sleep(1) will take longer than 1ms, so the loop will take a bit longer.
+    Sleep(SleepAmount);  //the loop will take a bit longer.
   until IncCount >= ADuration;
 
   //move mouse once again, to trigger MouseMove event   -  not sure if required or working

@@ -1,477 +1,31 @@
 [Actions]
-Count=42
+Count=30
 Version=2
 
 [Action_0]
-ActionName=Find Actions Window
-Action=FindControl
-ActionTimeout=10000
-ActionEnabled=1
-ActionCondition=
-BreakpointExists=0
-BreakpointEnabled=0
-BreakpointCondition=
-MatchCriteria.WillMatchText=1
-MatchCriteria.WillMatchClassName=1
-MatchCriteria.WillMatchBitmapText=0
-MatchCriteria.WillMatchBitmapFiles=0
-MatchCriteria.WillMatchPrimitiveFiles=0
-MatchCriteria.SearchForControlMode=2
-MatchText=UI Clicker Actions$IsAdminOnWine$ - ClientUnderTest
-MatchClassName=Window
-MatchTextSeparator=
-MatchClassNameSeparator=
-AllowToFail=0
-WaitForControlToGoAway=0
-MatchBitmapTextArr=1
-MatchBitmapText_Count=1
-MatchBitmapText[0].ForegroundColor=
-MatchBitmapText[0].BackgroundColor=
-MatchBitmapText[0].FontName=
-MatchBitmapText[0].FontSize=8
-MatchBitmapText[0].Bold=0
-MatchBitmapText[0].Italic=0
-MatchBitmapText[0].Underline=0
-MatchBitmapText[0].StrikeOut=0
-MatchBitmapText[0].FontQuality=0
-MatchBitmapText[0].FontQualityUsesReplacement=0
-MatchBitmapText[0].FontQualityReplacement=
-MatchBitmapText[0].ProfileName=Default
-MatchBitmapText[0].CropLeft=
-MatchBitmapText[0].CropTop=
-MatchBitmapText[0].CropRight=
-MatchBitmapText[0].CropBottom=
-MatchBitmapText[0].IgnoreBackgroundColor=0
-MatchBitmapFiles=
-ColorError=0
-AllowedColorErrorCount=0
-MatchBitmapAlgorithm=0
-MatchBitmapAlgorithm_Grid_XMultipleOf=1
-MatchBitmapAlgorithm_Grid_YMultipleOf=1
-MatchBitmapAlgorithm_Grid_XOffset=0
-MatchBitmapAlgorithm_Grid_YOffset=0
-InitialRectangle.Left=$Control_Left$
-InitialRectangle.Top=$Control_Top$
-InitialRectangle.Right=$Control_Right$
-InitialRectangle.Bottom=$Control_Bottom$
-UseWholeScreen=1
-InitialRectangle.LeftOffset=0
-InitialRectangle.TopOffset=0
-InitialRectangle.RightOffset=0
-InitialRectangle.BottomOffset=0
-StartSearchingWithCachedControl=0
-CachedControlLeft=
-CachedControlTop=
-MatchPrimitiveFiles=
-GetAllControls=0
-UseFastSearch=1
-FastSearchAllowedColorErrorCount=10
-IgnoredColors=
-
-[Action_1]
-ActionName=Bring to front
-Action=WindowOperations
-ActionTimeout=0
-ActionEnabled=1
-ActionCondition=
-BreakpointExists=0
-BreakpointEnabled=0
-BreakpointCondition=
-WindowOperation=0
-NewX=
-NewY=
-NewWidth=
-NewHeight=
-NewPositionEnabled=0
-NewSizeEnabled=0
-
-[Action_2]
-ActionName="Sleep"
-Action=Sleep
-ActionTimeout=0
-ActionEnabled=1
-ActionCondition=
-BreakpointExists=0
-BreakpointEnabled=0
-BreakpointCondition=
-Value=1000
-
-[Action_3]
-ActionName=Bring to front by clicking
-Action=Click
-ActionTimeout=0
-ActionEnabled=1
-ActionCondition=
-BreakpointExists=0
-BreakpointEnabled=0
-BreakpointCondition=
-XOffsetReference=0
-YOffsetReference=0
-XClickPointVar=
-YClickPointVar=
-XOffset=40
-YOffset=9
-MouseButton=0
-ClickWithCtrl=0
-ClickWithAlt=0
-ClickWithShift=0
-ClickWithDoubleClick=0
-LeaveMouse=0
-MoveWithoutClick=0
-Count=1
-ClickType=0
-XOffsetReferenceDest=0
-YOffsetReferenceDest=0
-XClickPointVarDest=
-YClickPointVarDest=
-XOffsetDest=
-YOffsetDest=
-MouseWheelType=0
-MouseWheelAmount=
-DelayAfterMovingToDestination=100
-DelayAfterMouseDown=300
-MoveDuration=-1
-
-[Action_4]
-ActionName="Sleep"
-Action=Sleep
-ActionTimeout=0
-ActionEnabled=1
-ActionCondition=
-BreakpointExists=0
-BreakpointEnabled=0
-BreakpointCondition=
-Value=300
-
-[Action_5]
-ActionName=Bring to front
-Action=WindowOperations
-ActionTimeout=0
-ActionEnabled=1
-ActionCondition=
-BreakpointExists=0
-BreakpointEnabled=0
-BreakpointCondition=
-WindowOperation=0
-NewX=
-NewY=
-NewWidth=
-NewHeight=
-NewPositionEnabled=0
-NewSizeEnabled=0
-
-[Action_6]
-ActionName=Find main PageControl
-Action=FindControl
+ActionName=GoToActionPlayer.clktmpl
+Action=CallTemplate
 ActionTimeout=1000
 ActionEnabled=1
 ActionCondition=
 BreakpointExists=0
 BreakpointEnabled=0
 BreakpointCondition=
-MatchCriteria.WillMatchText=1
-MatchCriteria.WillMatchClassName=1
-MatchCriteria.WillMatchBitmapText=0
-MatchCriteria.WillMatchBitmapFiles=0
-MatchCriteria.WillMatchPrimitiveFiles=0
-MatchCriteria.SearchForControlMode=0
-MatchText=Main
-MatchClassName=SysTabControl32
-MatchTextSeparator=
-MatchClassNameSeparator=
-AllowToFail=0
-WaitForControlToGoAway=0
-MatchBitmapTextArr=1
-MatchBitmapText_Count=1
-MatchBitmapText[0].ForegroundColor=
-MatchBitmapText[0].BackgroundColor=
-MatchBitmapText[0].FontName=
-MatchBitmapText[0].FontSize=8
-MatchBitmapText[0].Bold=0
-MatchBitmapText[0].Italic=0
-MatchBitmapText[0].Underline=0
-MatchBitmapText[0].StrikeOut=0
-MatchBitmapText[0].FontQuality=0
-MatchBitmapText[0].FontQualityUsesReplacement=0
-MatchBitmapText[0].FontQualityReplacement=
-MatchBitmapText[0].ProfileName=Default
-MatchBitmapText[0].CropLeft=
-MatchBitmapText[0].CropTop=
-MatchBitmapText[0].CropRight=
-MatchBitmapText[0].CropBottom=
-MatchBitmapText[0].IgnoreBackgroundColor=0
-MatchBitmapFiles=
-ColorError=0
-AllowedColorErrorCount=0
-MatchBitmapAlgorithm=0
-MatchBitmapAlgorithm_Grid_XMultipleOf=1
-MatchBitmapAlgorithm_Grid_YMultipleOf=1
-MatchBitmapAlgorithm_Grid_XOffset=0
-MatchBitmapAlgorithm_Grid_YOffset=0
-InitialRectangle.Left=$Control_Left$
-InitialRectangle.Top=$Control_Top$
-InitialRectangle.Right=$Control_Left$
-InitialRectangle.Bottom=$Control_Top$
-UseWholeScreen=0
-InitialRectangle.LeftOffset=13
-InitialRectangle.TopOffset=29
-InitialRectangle.RightOffset=320
-InitialRectangle.BottomOffset=48
-StartSearchingWithCachedControl=0
-CachedControlLeft=
-CachedControlTop=
-MatchPrimitiveFiles=
-GetAllControls=0
-UseFastSearch=1
-FastSearchAllowedColorErrorCount=10
-IgnoredColors=
+TemplateFileName=GoToActionPlayer.clktmpl
+ListOfCustomVarsAndValues=
+CallOnlyIfCondition=0
+CallOnlyIfConditionVarName=
+CallOnlyIfConditionVarValue=
+EvaluateBeforeCalling=0
+Loop.Enabled=0
+Loop.Counter=
+Loop.InitValue=
+Loop.EndValue=
+Loop.Direction=0
+Loop.BreakCondition=
+Loop.EvalBreakPosition=0
 
-[Action_7]
-ActionName=Find Template Execution tab
-Action=FindSubControl
-ActionTimeout=5000
-ActionEnabled=1
-ActionCondition=
-BreakpointExists=0
-BreakpointEnabled=0
-BreakpointCondition=
-MatchCriteria.WillMatchText=0
-MatchCriteria.WillMatchClassName=0
-MatchCriteria.WillMatchBitmapText=1
-MatchCriteria.WillMatchBitmapFiles=0
-MatchCriteria.WillMatchPrimitiveFiles=0
-MatchCriteria.SearchForControlMode=0
-MatchText=Template Execution
-MatchClassName=
-MatchTextSeparator=
-MatchClassNameSeparator=
-AllowToFail=0
-WaitForControlToGoAway=0
-MatchBitmapTextArr=1
-MatchBitmapText_Count=2
-MatchBitmapText[0].ForegroundColor=$Color_WindowText$
-MatchBitmapText[0].BackgroundColor=$Color_Window$
-MatchBitmapText[0].FontName=Tahoma
-MatchBitmapText[0].FontSize=8
-MatchBitmapText[0].Bold=0
-MatchBitmapText[0].Italic=0
-MatchBitmapText[0].Underline=0
-MatchBitmapText[0].StrikeOut=0
-MatchBitmapText[0].FontQuality=0
-MatchBitmapText[0].FontQualityUsesReplacement=0
-MatchBitmapText[0].FontQualityReplacement=
-MatchBitmapText[0].ProfileName=Selected tab
-MatchBitmapText[0].CropLeft=
-MatchBitmapText[0].CropTop=
-MatchBitmapText[0].CropRight=
-MatchBitmapText[0].CropBottom=
-MatchBitmapText[0].IgnoreBackgroundColor=0
-MatchBitmapText[1].ForegroundColor=$Color_WindowText$
-MatchBitmapText[1].BackgroundColor=EAEAEA
-MatchBitmapText[1].FontName=Tahoma
-MatchBitmapText[1].FontSize=8
-MatchBitmapText[1].Bold=0
-MatchBitmapText[1].Italic=0
-MatchBitmapText[1].Underline=0
-MatchBitmapText[1].StrikeOut=0
-MatchBitmapText[1].FontQuality=0
-MatchBitmapText[1].FontQualityUsesReplacement=0
-MatchBitmapText[1].FontQualityReplacement=
-MatchBitmapText[1].ProfileName=Unselected tab
-MatchBitmapText[1].CropLeft=
-MatchBitmapText[1].CropTop=
-MatchBitmapText[1].CropRight=
-MatchBitmapText[1].CropBottom=
-MatchBitmapText[1].IgnoreBackgroundColor=0
-MatchBitmapFiles=
-ColorError=10
-AllowedColorErrorCount=100
-MatchBitmapAlgorithm=0
-MatchBitmapAlgorithm_Grid_XMultipleOf=1
-MatchBitmapAlgorithm_Grid_YMultipleOf=1
-MatchBitmapAlgorithm_Grid_XOffset=0
-MatchBitmapAlgorithm_Grid_YOffset=0
-InitialRectangle.Left=$Control_Left$
-InitialRectangle.Top=$Control_Top$
-InitialRectangle.Right=$Control_Left$
-InitialRectangle.Bottom=$Control_Top$
-UseWholeScreen=0
-InitialRectangle.LeftOffset=76
-InitialRectangle.TopOffset=3
-InitialRectangle.RightOffset=225
-InitialRectangle.BottomOffset=20
-StartSearchingWithCachedControl=0
-CachedControlLeft=
-CachedControlTop=
-MatchPrimitiveFiles=
-GetAllControls=0
-UseFastSearch=1
-FastSearchAllowedColorErrorCount=10
-IgnoredColors=
-
-[Action_8]
-ActionName=Move mouse cursor over button (wine)
-Action=Click
-ActionTimeout=0
-ActionEnabled=1
-ActionCondition=$IsAdminOnWine$<>
-BreakpointExists=0
-BreakpointEnabled=0
-BreakpointCondition=
-XOffsetReference=0
-YOffsetReference=0
-XClickPointVar=$Control_Left$
-YClickPointVar=$Control_Top$
-XOffset=3
-YOffset=3
-MouseButton=0
-ClickWithCtrl=0
-ClickWithAlt=0
-ClickWithShift=0
-ClickWithDoubleClick=0
-LeaveMouse=1
-MoveWithoutClick=1
-Count=1
-ClickType=0
-XOffsetReferenceDest=0
-YOffsetReferenceDest=0
-XClickPointVarDest=$Control_Left$
-YClickPointVarDest=$Control_Top$
-XOffsetDest=0
-YOffsetDest=0
-MouseWheelType=0
-MouseWheelAmount=0
-DelayAfterMovingToDestination=50
-DelayAfterMouseDown=100
-MoveDuration=-1
-
-[Action_9]
-ActionName=Sleep
-Action=Sleep
-ActionTimeout=300
-ActionEnabled=1
-ActionCondition=$IsAdminOnWine$<>
-BreakpointExists=0
-BreakpointEnabled=0
-BreakpointCondition=
-Value=300
-
-[Action_10]
-ActionName=Select Template Execution
-Action=Click
-ActionTimeout=0
-ActionEnabled=1
-ActionCondition=
-BreakpointExists=0
-BreakpointEnabled=0
-BreakpointCondition=
-XOffsetReference=0
-YOffsetReference=0
-XClickPointVar=$Control_Left$
-YClickPointVar=$Control_Top$
-XOffset=3
-YOffset=3
-MouseButton=0
-ClickWithCtrl=0
-ClickWithAlt=0
-ClickWithShift=0
-ClickWithDoubleClick=0
-LeaveMouse=0
-MoveWithoutClick=0
-Count=1
-ClickType=0
-XOffsetReferenceDest=0
-YOffsetReferenceDest=0
-XClickPointVarDest=$Control_Left$
-YClickPointVarDest=$Control_Top$
-XOffsetDest=0
-YOffsetDest=0
-MouseWheelType=0
-MouseWheelAmount=0
-DelayAfterMovingToDestination=50
-DelayAfterMouseDown=100
-MoveDuration=-1
-
-[Action_11]
-ActionName=Find Action player
-Action=FindControl
-ActionTimeout=10000
-ActionEnabled=1
-ActionCondition=
-BreakpointExists=0
-BreakpointEnabled=0
-BreakpointCondition=
-MatchCriteria.WillMatchText=1
-MatchCriteria.WillMatchClassName=1
-MatchCriteria.WillMatchBitmapText=0
-MatchCriteria.WillMatchBitmapFiles=0
-MatchCriteria.WillMatchPrimitiveFiles=0
-MatchCriteria.SearchForControlMode=0
-MatchText=Player
-MatchClassName=SysTabControl32
-MatchTextSeparator=
-MatchClassNameSeparator=
-AllowToFail=0
-WaitForControlToGoAway=0
-MatchBitmapTextArr=1
-MatchBitmapText_Count=1
-MatchBitmapText[0].ForegroundColor=
-MatchBitmapText[0].BackgroundColor=
-MatchBitmapText[0].FontName=
-MatchBitmapText[0].FontSize=8
-MatchBitmapText[0].Bold=0
-MatchBitmapText[0].Italic=0
-MatchBitmapText[0].Underline=0
-MatchBitmapText[0].StrikeOut=0
-MatchBitmapText[0].FontQuality=0
-MatchBitmapText[0].FontQualityUsesReplacement=0
-MatchBitmapText[0].FontQualityReplacement=
-MatchBitmapText[0].ProfileName=Default
-MatchBitmapText[0].CropLeft=
-MatchBitmapText[0].CropTop=
-MatchBitmapText[0].CropRight=
-MatchBitmapText[0].CropBottom=
-MatchBitmapText[0].IgnoreBackgroundColor=0
-MatchBitmapFiles=
-ColorError=0
-AllowedColorErrorCount=0
-MatchBitmapAlgorithm=0
-MatchBitmapAlgorithm_Grid_XMultipleOf=1
-MatchBitmapAlgorithm_Grid_YMultipleOf=1
-MatchBitmapAlgorithm_Grid_XOffset=0
-MatchBitmapAlgorithm_Grid_YOffset=0
-InitialRectangle.Left=$Control_Left$
-InitialRectangle.Top=$Control_Top$
-InitialRectangle.Right=$Control_Right$
-InitialRectangle.Bottom=$Control_Bottom$
-UseWholeScreen=0
-InitialRectangle.LeftOffset=0
-InitialRectangle.TopOffset=26
-InitialRectangle.RightOffset=0
-InitialRectangle.BottomOffset=34
-StartSearchingWithCachedControl=0
-CachedControlLeft=
-CachedControlTop=
-MatchPrimitiveFiles=
-GetAllControls=0
-UseFastSearch=1
-FastSearchAllowedColorErrorCount=10
-IgnoredColors=
-
-[Action_12]
-ActionName=Cache player pos
-Action=SetVar
-ActionTimeout=0
-ActionEnabled=1
-ActionCondition=
-BreakpointExists=0
-BreakpointEnabled=0
-BreakpointCondition=
-ListOfVarNames=$Player_Left$$Player_Top$$Player_Right$$Player_Bottom$$Player_Width$$Player_Height$$Player_Text$$Player_Class$$My_Handle$
-ListOfVarValues=$Control_Left$$Control_Top$$Control_Right$$Control_Bottom$$Control_Width$$Control_Height$$Control_Text$$Control_Class$$Control_Handle$
-ListOfVarEvalBefore=111111111
-
-[Action_13]
+[Action_1]
 ActionName=Find "Find custom rendering" action
 Action=FindSubControl
 ActionTimeout=1000
@@ -622,7 +176,7 @@ UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=
 
-[Action_14]
+[Action_2]
 ActionName=Click "Find custom rendering" action
 Action=Click
 ActionTimeout=0
@@ -658,7 +212,7 @@ DelayAfterMovingToDestination=50
 DelayAfterMouseDown=200
 MoveDuration=-1
 
-[Action_15]
+[Action_3]
 ActionName=Restore player pos
 Action=SetVar
 ActionTimeout=0
@@ -671,7 +225,7 @@ ListOfVarNames=$Control_Left$$Control_Top$$Control_Right$$Control_Bottom$
 ListOfVarValues=$Player_Left$$Player_Top$$Player_Right$$Player_Bottom$$Player_Width$$Player_Height$$Player_Text$$Player_Class$$Player_Handle$
 ListOfVarEvalBefore=111111111
 
-[Action_16]
+[Action_4]
 ActionName=Find Search Area Page control
 Action=FindControl
 ActionTimeout=3000
@@ -737,7 +291,7 @@ UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=
 
-[Action_17]
+[Action_5]
 ActionName=Cache Search Area
 Action=SetVar
 ActionTimeout=0
@@ -750,7 +304,7 @@ ListOfVarNames=$SArea_Left$$SArea_Top$$SArea_Right$$SArea_Bottom$$SArea_
 ListOfVarValues=$Control_Left$$Control_Top$$Control_Right$$Control_Bottom$$Control_Width$$Control_Height$$Control_Text$$Control_Class$$Control_Handle$
 ListOfVarEvalBefore=111111111
 
-[Action_18]
+[Action_6]
 ActionName=Find Search Area tab
 Action=FindSubControl
 ActionTimeout=1000
@@ -833,7 +387,7 @@ UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=EAEAEA
 
-[Action_19]
+[Action_7]
 ActionName=Click Search Area tab
 Action=Click
 ActionTimeout=0
@@ -869,7 +423,7 @@ DelayAfterMovingToDestination=50
 DelayAfterMouseDown=200
 MoveDuration=-1
 
-[Action_20]
+[Action_8]
 ActionName=Restore Search Area
 Action=SetVar
 ActionTimeout=0
@@ -882,7 +436,7 @@ ListOfVarNames=$Control_Left$$Control_Top$$Control_Right$$Control_Bottom$
 ListOfVarValues=$SArea_Left$$SArea_Top$$SArea_Right$$SArea_Bottom$$SArea_Width$$SArea_Height$$SArea_Text$$SArea_Class$$SArea_Handle$
 ListOfVarEvalBefore=111111111
 
-[Action_21]
+[Action_9]
 ActionName=Find Display ImgDbg button
 Action=FindControl
 ActionTimeout=3000
@@ -948,7 +502,7 @@ UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=
 
-[Action_22]
+[Action_10]
 ActionName=Display
 Action=Click
 ActionTimeout=0
@@ -984,7 +538,7 @@ DelayAfterMovingToDestination=50
 DelayAfterMouseDown=200
 MoveDuration=-1
 
-[Action_23]
+[Action_11]
 ActionName=Restore Search Area
 Action=SetVar
 ActionTimeout=0
@@ -997,7 +551,7 @@ ListOfVarNames=$Control_Left$$Control_Top$$Control_Right$$Control_Bottom$
 ListOfVarValues=$SArea_Left$$SArea_Top$$SArea_Right$$SArea_Bottom$$SArea_Width$$SArea_Height$$SArea_Text$$SArea_Class$$SArea_Handle$
 ListOfVarEvalBefore=111111111
 
-[Action_24]
+[Action_12]
 ActionName=Define expected area
 Action=SetVar
 ActionTimeout=0
@@ -1010,14 +564,14 @@ ListOfVarNames=$ExpectedArea_Left$$ExpectedArea_Top$$ExpectedArea_Right$$E
 ListOfVarValues=28109225150
 ListOfVarEvalBefore=
 
-[Action_25]
+[Action_13]
 ActionName=Select Expected Area
 Action=Click
 ActionTimeout=0
 ActionEnabled=1
 ActionCondition=
-BreakpointExists=1
-BreakpointEnabled=1
+BreakpointExists=0
+BreakpointEnabled=0
 BreakpointCondition=
 XOffsetReference=0
 YOffsetReference=0
@@ -1046,27 +600,27 @@ DelayAfterMovingToDestination=100
 DelayAfterMouseDown=200
 MoveDuration=1000
 
-[Action_26]
+[Action_14]
 ActionName=Restore Search Area
 Action=SetVar
 ActionTimeout=0
 ActionEnabled=1
 ActionCondition=
 BreakpointExists=0
-BreakpointEnabled=1
+BreakpointEnabled=0
 BreakpointCondition=
 ListOfVarNames=$Control_Left$$Control_Top$$Control_Right$$Control_Bottom$$Control_Width$$Control_Height$$Control_Text$$Control_Class$$Control_Handle$
 ListOfVarValues=$SArea_Left$$SArea_Top$$SArea_Right$$SArea_Bottom$$SArea_Width$$SArea_Height$$SArea_Text$$SArea_Class$$SArea_Handle$
 ListOfVarEvalBefore=111111111
 
-[Action_27]
+[Action_15]
 ActionName=Find zoom checkbox
 Action=FindControl
 ActionTimeout=3000
 ActionEnabled=1
 ActionCondition=
 BreakpointExists=0
-BreakpointEnabled=1
+BreakpointEnabled=0
 BreakpointCondition=
 MatchCriteria.WillMatchText=1
 MatchCriteria.WillMatchClassName=1
@@ -1125,14 +679,14 @@ UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=
 
-[Action_28]
+[Action_16]
 ActionName=Verify if zoom is checked
 Action=FindSubControl
 ActionTimeout=1000
 ActionEnabled=1
 ActionCondition=
-BreakpointExists=1
-BreakpointEnabled=1
+BreakpointExists=0
+BreakpointEnabled=0
 BreakpointCondition=
 MatchCriteria.WillMatchText=0
 MatchCriteria.WillMatchClassName=0
@@ -1191,7 +745,7 @@ UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=FF00FF
 
-[Action_29]
+[Action_17]
 ActionName=Uncheck zoom
 Action=Click
 ActionTimeout=0
@@ -1227,27 +781,27 @@ DelayAfterMovingToDestination=50
 DelayAfterMouseDown=300
 MoveDuration=-1
 
-[Action_30]
+[Action_18]
 ActionName=Restore Search Area
 Action=SetVar
 ActionTimeout=0
 ActionEnabled=1
 ActionCondition=
 BreakpointExists=0
-BreakpointEnabled=1
+BreakpointEnabled=0
 BreakpointCondition=
 ListOfVarNames=$Control_Left$$Control_Top$$Control_Right$$Control_Bottom$$Control_Width$$Control_Height$$Control_Text$$Control_Class$$Control_Handle$
 ListOfVarValues=$SArea_Left$$SArea_Top$$SArea_Right$$SArea_Bottom$$SArea_Width$$SArea_Height$$SArea_Text$$SArea_Class$$SArea_Handle$
 ListOfVarEvalBefore=111111111
 
-[Action_31]
+[Action_19]
 ActionName=Right click on Search Area
 Action=Click
 ActionTimeout=0
 ActionEnabled=1
 ActionCondition=
-BreakpointExists=1
-BreakpointEnabled=1
+BreakpointExists=0
+BreakpointEnabled=0
 BreakpointCondition=
 XOffsetReference=0
 YOffsetReference=0
@@ -1276,7 +830,7 @@ DelayAfterMovingToDestination=50
 DelayAfterMouseDown=300
 MoveDuration=-1
 
-[Action_32]
+[Action_20]
 ActionName=Find pop-up menu
 Action=FindControl
 ActionTimeout=3000
@@ -1342,7 +896,7 @@ UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=
 
-[Action_33]
+[Action_21]
 ActionName=Find "Enable verbose.."
 Action=FindSubControl
 ActionTimeout=1000
@@ -1373,7 +927,7 @@ MatchBitmapText[0].Bold=0
 MatchBitmapText[0].Italic=0
 MatchBitmapText[0].Underline=0
 MatchBitmapText[0].StrikeOut=0
-MatchBitmapText[0].FontQuality=4
+MatchBitmapText[0].FontQuality=5
 MatchBitmapText[0].FontQualityUsesReplacement=0
 MatchBitmapText[0].FontQualityReplacement=
 MatchBitmapText[0].ProfileName=Profile [0]
@@ -1390,7 +944,7 @@ MatchBitmapText[1].Bold=0
 MatchBitmapText[1].Italic=0
 MatchBitmapText[1].Underline=0
 MatchBitmapText[1].StrikeOut=0
-MatchBitmapText[1].FontQuality=5
+MatchBitmapText[1].FontQuality=4
 MatchBitmapText[1].FontQualityUsesReplacement=0
 MatchBitmapText[1].FontQualityReplacement=
 MatchBitmapText[1].ProfileName=Profile [1]
@@ -1425,7 +979,7 @@ UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=
 
-[Action_34]
+[Action_22]
 ActionName=Reset ShouldEnableVerbose var
 Action=SetVar
 ActionTimeout=0
@@ -1438,7 +992,7 @@ ListOfVarNames=$ShouldEnableVerbose$
 ListOfVarValues=False
 ListOfVarEvalBefore=
 
-[Action_35]
+[Action_23]
 ActionName=Find check mark
 Action=FindSubControl
 ActionTimeout=1000
@@ -1504,7 +1058,7 @@ UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=FF00FF
 
-[Action_36]
+[Action_24]
 ActionName=Should enable item
 Action=SetVar
 ActionTimeout=0
@@ -1517,14 +1071,14 @@ ListOfVarNames=$ShouldEnableVerbose$
 ListOfVarValues=True
 ListOfVarEvalBefore=
 
-[Action_37]
+[Action_25]
 ActionName=Click "Enable verbose.."
 Action=Click
 ActionTimeout=0
 ActionEnabled=1
 ActionCondition=$ShouldEnableVerbose$==True
-BreakpointExists=0
-BreakpointEnabled=0
+BreakpointExists=1
+BreakpointEnabled=1
 BreakpointCondition=
 XOffsetReference=0
 YOffsetReference=0
@@ -1553,27 +1107,27 @@ DelayAfterMovingToDestination=50
 DelayAfterMouseDown=200
 MoveDuration=-1
 
-[Action_38]
+[Action_26]
 ActionName=Restore Search Area
 Action=SetVar
 ActionTimeout=0
 ActionEnabled=1
 ActionCondition=$ShouldEnableVerbose$==True
 BreakpointExists=0
-BreakpointEnabled=0
+BreakpointEnabled=1
 BreakpointCondition=
 ListOfVarNames=$Control_Left$$Control_Top$$Control_Right$$Control_Bottom$$Control_Width$$Control_Height$$Control_Text$$Control_Class$$Control_Handle$
 ListOfVarValues=$SArea_Left$$SArea_Top$$SArea_Right$$SArea_Bottom$$SArea_Width$$SArea_Height$$SArea_Text$$SArea_Class$$SArea_Handle$
 ListOfVarEvalBefore=111111111
 
-[Action_39]
+[Action_27]
 ActionName=Right click on Search Area
 Action=Click
 ActionTimeout=0
 ActionEnabled=1
 ActionCondition=$ShouldEnableVerbose$==True
 BreakpointExists=0
-BreakpointEnabled=0
+BreakpointEnabled=1
 BreakpointCondition=
 XOffsetReference=0
 YOffsetReference=0
@@ -1602,14 +1156,14 @@ DelayAfterMovingToDestination=50
 DelayAfterMouseDown=200
 MoveDuration=-1
 
-[Action_40]
+[Action_28]
 ActionName=Find pop-up menu
 Action=FindControl
 ActionTimeout=3000
 ActionEnabled=1
 ActionCondition=
-BreakpointExists=0
-BreakpointEnabled=0
+BreakpointExists=1
+BreakpointEnabled=1
 BreakpointCondition=
 MatchCriteria.WillMatchText=1
 MatchCriteria.WillMatchClassName=1
@@ -1668,7 +1222,7 @@ UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=
 
-[Action_41]
+[Action_29]
 ActionName=Find desired menu item
 Action=FindSubControl
 ActionTimeout=1000
@@ -1753,4 +1307,5 @@ IgnoredColors=
 
 [Notes]
 Content=
+TemplateIconPath=$AppDir$\DrvIcon.png
 

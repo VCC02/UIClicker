@@ -73,6 +73,7 @@ object frClickerActionsArr: TfrClickerActionsArr
     ClientWidth = 765
     Constraints.MinHeight = 235
     Constraints.MinWidth = 765
+    ParentBackground = False
     ParentColor = False
     ParentShowHint = False
     ShowHint = True
@@ -130,13 +131,14 @@ object frClickerActionsArr: TfrClickerActionsArr
       Font.Name = 'Tahoma'
       ParentFont = False
       ParentShowHint = False
+      PopupMenu = pmTemplateName
       ShowHint = True
     end
     object spdbtnLoadTemplate: TSpeedButton
-      Left = 304
+      Left = 302
       Height = 25
       Top = 207
-      Width = 106
+      Width = 108
       Anchors = [akLeft, akBottom]
       Caption = 'Load Template...'
       OnClick = btnLoadTemplateClick
@@ -595,6 +597,7 @@ object frClickerActionsArr: TfrClickerActionsArr
       Top = 192
       Width = 187
       Caption = 'pnlPalette'
+      ParentBackground = False
       TabOrder = 5
       Visible = False
     end
@@ -1567,6 +1570,18 @@ object frClickerActionsArr: TfrClickerActionsArr
     object MenuItem_ReplaceWith_AppDir: TMenuItem
       Caption = 'Replace path to UIClicker with $AppDir$'
       OnClick = MenuItem_ReplaceWith_AppDirClick
+    end
+  end
+  object pmTemplateName: TPopupMenu
+    Left = 223
+    Top = 261
+    object MenuItem_CopyFilenameToClipboard: TMenuItem
+      Caption = 'Copy filename to clipboard'
+      OnClick = MenuItem_CopyFilenameToClipboardClick
+    end
+    object MenuItem_CopyFullFilepathToClipboard: TMenuItem
+      Caption = 'Copy full filepath to clipboard'
+      OnClick = MenuItem_CopyFullFilepathToClipboardClick
     end
   end
 end

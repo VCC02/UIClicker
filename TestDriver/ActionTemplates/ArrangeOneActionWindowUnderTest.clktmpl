@@ -1,5 +1,5 @@
 [Actions]
-Count=5
+Count=6
 Version=2
 
 [Action_0]
@@ -237,6 +237,17 @@ FastSearchAllowedColorErrorCount=10
 IgnoredColors=
 
 [Action_4]
+ActionName=Wait for window to move itself
+Action=Sleep
+ActionTimeout=0
+ActionEnabled=1
+ActionCondition=
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+Value=1000
+
+[Action_5]
 ActionName=Move and resize window
 Action=WindowOperations
 ActionTimeout=0
@@ -255,4 +266,5 @@ NewSizeEnabled=1
 
 [Notes]
 Content=refactored actions
+TemplateIconPath=
 
