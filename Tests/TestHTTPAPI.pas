@@ -80,7 +80,7 @@ type
     procedure SendTerminateWaitingForFileAvailabilityRequest(ALoopType: string; ADelayBeforeRequest: Integer);
     procedure ExecuteSetControlTextActionWithMainUIClickerWindow(ASearchedCaption, ASetCaption: string);
 
-    function GetVarValueFromServer(AVarName: string): string;
+    function GetVarValueFromServer(AVarName: string; AStackIndex: Integer = 0): string;
 
     function HandleOnFileExists_Disk(const AFileName: string): Boolean;
     function HandleOnFileExists_Mem(const AFileName: string): Boolean;
@@ -437,12 +437,12 @@ begin
 end;
 
 
-function TTestHTTPAPI.GetVarValueFromServer(AVarName: string): string;
+function TTestHTTPAPI.GetVarValueFromServer(AVarName: string; AStackIndex: Integer = 0): string;
 var
   Response: string;
   ListOfVars: TStringList;
 begin
-  Response := FastReplace_87ToReturn(GetAllReplacementVars(FTestServerAddress, 0));
+  Response := FastReplace_87ToReturn(GetAllReplacementVars(FTestServerAddress, AStackIndex));
 
   ListOfVars := TStringList.Create;
   try

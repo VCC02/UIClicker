@@ -1,5 +1,5 @@
 [Actions]
-Count=31
+Count=37
 Version=2
 
 [Action_0]
@@ -696,7 +696,7 @@ DelayAfterMouseDown=100
 MoveDuration=-1
 
 [Action_14]
-ActionName=Find Step Over button icon - idle state
+ActionName=Find Step Over button icon - idle state (1)
 Action=FindSubControl
 ActionTimeout=1000
 ActionEnabled=1
@@ -762,6 +762,17 @@ FastSearchAllowedColorErrorCount=10
 IgnoredColors=
 
 [Action_15]
+ActionName=wait a bit before next click
+Action=Sleep
+ActionTimeout=0
+ActionEnabled=1
+ActionCondition=
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+Value=500
+
+[Action_16]
 ActionName=Find Step Over button icon - running state
 Action=FindSubControl
 ActionTimeout=2000
@@ -827,7 +838,7 @@ UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=
 
-[Action_16]
+[Action_17]
 ActionName=Step over (Sleep)
 Action=Click
 ActionTimeout=0
@@ -863,7 +874,7 @@ DelayAfterMovingToDestination=50
 DelayAfterMouseDown=100
 MoveDuration=-1
 
-[Action_17]
+[Action_18]
 ActionName=CacheStepInto
 Action=CallTemplate
 ActionTimeout=0
@@ -886,7 +897,7 @@ Loop.Direction=0
 Loop.BreakCondition=
 Loop.EvalBreakPosition=0
 
-[Action_18]
+[Action_19]
 ActionName=Find Step Into button icon - running state
 Action=FindSubControl
 ActionTimeout=2000
@@ -952,7 +963,7 @@ UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=
 
-[Action_19]
+[Action_20]
 ActionName=Step into (Call)
 Action=Click
 ActionTimeout=0
@@ -988,7 +999,7 @@ DelayAfterMovingToDestination=50
 DelayAfterMouseDown=100
 MoveDuration=-1
 
-[Action_20]
+[Action_21]
 ActionName=wait for tabs to change
 Action=Sleep
 ActionTimeout=0
@@ -999,7 +1010,7 @@ BreakpointEnabled=0
 BreakpointCondition=
 Value=200
 
-[Action_21]
+[Action_22]
 ActionName=Find Actions Window
 Action=FindControl
 ActionTimeout=1000
@@ -1065,7 +1076,7 @@ UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=
 
-[Action_22]
+[Action_23]
 ActionName=Find main PageControl
 Action=FindControl
 ActionTimeout=1000
@@ -1131,7 +1142,7 @@ UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=
 
-[Action_23]
+[Action_24]
 ActionName=Find player tabs
 Action=FindControl
 ActionTimeout=1000
@@ -1197,7 +1208,7 @@ UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=
 
-[Action_24]
+[Action_25]
 ActionName=Find TemplateToBeCalled tab (subtemplate)
 Action=FindSubControl
 ActionTimeout=1000
@@ -1280,7 +1291,7 @@ UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=
 
-[Action_25]
+[Action_26]
 ActionName=Make sure the tab is active
 Action=Click
 ActionTimeout=0
@@ -1316,14 +1327,14 @@ DelayAfterMovingToDestination=50
 DelayAfterMouseDown=100
 MoveDuration=-1
 
-[Action_26]
+[Action_27]
 ActionName=Stop execution (this should close the subtemplate on server as well)
 Action=Click
 ActionTimeout=0
 ActionEnabled=1
 ActionCondition=$StopAfterSteppingInto$==1
 BreakpointExists=0
-BreakpointEnabled=0
+BreakpointEnabled=1
 BreakpointCondition=
 XOffsetReference=3
 YOffsetReference=3
@@ -1352,7 +1363,7 @@ DelayAfterMovingToDestination=50
 DelayAfterMouseDown=100
 MoveDuration=-1
 
-[Action_27]
+[Action_28]
 ActionName=StepOverOnAppUnderTest
 Action=CallTemplate
 ActionTimeout=1000
@@ -1375,14 +1386,14 @@ Loop.Direction=0
 Loop.BreakCondition=
 Loop.EvalBreakPosition=0
 
-[Action_28]
+[Action_29]
 ActionName=VerifyIfTheSubTemplateIsClosed
 Action=CallTemplate
 ActionTimeout=1000
 ActionEnabled=1
 ActionCondition=
 BreakpointExists=0
-BreakpointEnabled=1
+BreakpointEnabled=0
 BreakpointCondition=
 TemplateFileName=VerifyIfTheSubTemplateIsClosed.clktmpl
 ListOfCustomVarsAndValues=
@@ -1398,8 +1409,21 @@ Loop.Direction=0
 Loop.BreakCondition=
 Loop.EvalBreakPosition=0
 
-[Action_29]
-ActionName=Find Step Over button icon - idle state
+[Action_30]
+ActionName=Init test status
+Action=SetVar
+ActionTimeout=0
+ActionEnabled=1
+ActionCondition=
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+ListOfVarNames=$TestResult$
+ListOfVarValues=True
+ListOfVarEvalBefore=
+
+[Action_31]
+ActionName=Find Step Over button icon - idle state (2)
 Action=FindSubControl
 ActionTimeout=15000
 ActionEnabled=1
@@ -1464,7 +1488,7 @@ UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=
 
-[Action_30]
+[Action_32]
 ActionName=Find Stop button icon - idle state
 Action=FindSubControl
 ActionTimeout=15000
@@ -1483,7 +1507,7 @@ MatchText=@
 MatchClassName=
 MatchTextSeparator=
 MatchClassNameSeparator=
-AllowToFail=0
+AllowToFail=1
 WaitForControlToGoAway=0
 MatchBitmapTextArr=1
 MatchBitmapText_Count=1
@@ -1530,6 +1554,135 @@ UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=
 
+[Action_33]
+ActionName=Set test status
+Action=SetVar
+ActionTimeout=0
+ActionEnabled=1
+ActionCondition=$LastAction_Status$==Allowed Failed
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+ListOfVarNames=$TestResult$
+ListOfVarValues=False
+ListOfVarEvalBefore=
+
+[Action_34]
+ActionName=Find Stop button icon - running state
+Action=FindSubControl
+ActionTimeout=1000
+ActionEnabled=1
+ActionCondition=$TestResult$==False
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+MatchCriteria.WillMatchText=0
+MatchCriteria.WillMatchClassName=0
+MatchCriteria.WillMatchBitmapText=1
+MatchCriteria.WillMatchBitmapFiles=0
+MatchCriteria.WillMatchPrimitiveFiles=0
+MatchCriteria.SearchForControlMode=0
+MatchText=@
+MatchClassName=
+MatchTextSeparator=
+MatchClassNameSeparator=
+AllowToFail=0
+WaitForControlToGoAway=0
+MatchBitmapTextArr=1
+MatchBitmapText_Count=1
+MatchBitmapText[0].ForegroundColor=2832EC
+MatchBitmapText[0].BackgroundColor=2832EC
+MatchBitmapText[0].FontName=Tahoma
+MatchBitmapText[0].FontSize=6
+MatchBitmapText[0].Bold=1
+MatchBitmapText[0].Italic=0
+MatchBitmapText[0].Underline=0
+MatchBitmapText[0].StrikeOut=0
+MatchBitmapText[0].FontQuality=0
+MatchBitmapText[0].FontQualityUsesReplacement=0
+MatchBitmapText[0].FontQualityReplacement=
+MatchBitmapText[0].ProfileName=Default
+MatchBitmapText[0].CropLeft=
+MatchBitmapText[0].CropTop=
+MatchBitmapText[0].CropRight=
+MatchBitmapText[0].CropBottom=
+MatchBitmapText[0].IgnoreBackgroundColor=0
+MatchBitmapFiles=
+ColorError=40
+AllowedColorErrorCount=40
+MatchBitmapAlgorithm=0
+MatchBitmapAlgorithm_Grid_XMultipleOf=1
+MatchBitmapAlgorithm_Grid_YMultipleOf=1
+MatchBitmapAlgorithm_Grid_XOffset=0
+MatchBitmapAlgorithm_Grid_YOffset=0
+InitialRectangle.Left=$Stop_Left$
+InitialRectangle.Top=$Stop_Top$
+InitialRectangle.Right=$Stop_Left$
+InitialRectangle.Bottom=$Stop_Top$
+UseWholeScreen=0
+InitialRectangle.LeftOffset=-17
+InitialRectangle.TopOffset=3
+InitialRectangle.RightOffset=-3
+InitialRectangle.BottomOffset=13
+StartSearchingWithCachedControl=0
+CachedControlLeft=
+CachedControlTop=
+MatchPrimitiveFiles=
+GetAllControls=0
+UseFastSearch=1
+FastSearchAllowedColorErrorCount=10
+IgnoredColors=
+
+[Action_35]
+ActionName=Click Stop button
+Action=Click
+ActionTimeout=0
+ActionEnabled=1
+ActionCondition=$TestResult$==False
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+XOffsetReference=0
+YOffsetReference=0
+XClickPointVar=$Control_Left$
+YClickPointVar=$Control_Top$
+XOffset=4
+YOffset=4
+MouseButton=0
+ClickWithCtrl=0
+ClickWithAlt=0
+ClickWithShift=0
+ClickWithDoubleClick=0
+LeaveMouse=0
+MoveWithoutClick=0
+Count=1
+ClickType=0
+XOffsetReferenceDest=0
+YOffsetReferenceDest=0
+XClickPointVarDest=$Control_Left$
+YClickPointVarDest=$Control_Top$
+XOffsetDest=7
+YOffsetDest=7
+MouseWheelType=0
+MouseWheelAmount=1
+DelayAfterMovingToDestination=50
+DelayAfterMouseDown=200
+MoveDuration=-1
+
+[Action_36]
+ActionName=Exit test with message
+Action=SetVar
+ActionTimeout=0
+ActionEnabled=1
+ActionCondition=$TestResult$==False
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+ListOfVarNames=$Exit(The execution should have stopped by itself)$
+ListOfVarValues=
+ListOfVarEvalBefore=
+
 [Notes]
 Content=ToDo:see "Step over (Sleep)  - should be replaced with a looped call (includin finding step over gray than yellow" action
+TemplateIconPath=
 

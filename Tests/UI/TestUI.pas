@@ -39,7 +39,7 @@ type
     //procedure TearDown; override;
 
     procedure StartAllUIClickerInstances;
-    procedure ExecuteTemplateOnTestDriver(ATemplatePath, AFileLocation: string);
+    procedure ExecuteTemplateOnTestDriver(ATemplatePath, AFileLocation: string; AAdditionalExpectedVar: string = ''; AAdditionalExpectedValue: string = '');
     procedure ArrangeMainUIClickerWindows;
     procedure ArrangeUIClickerActionWindows;
 
@@ -51,6 +51,8 @@ type
     procedure PrepareClickerUnderTestToReadItsVars;
     procedure PrepareClickerUnderTestToLocalMode;
     procedure PrepareClickerUnderTestToClientMode;
+
+    procedure DragAction_FromPosToPos(ASrcIdx, ADestIdx: Integer; const AActIdx: array of Byte);
   public
     constructor Create; override;
   published
@@ -73,7 +75,10 @@ type
     //procedure Test_ExecuteTemplateRemotely_FindColorErrorFromGradientOnServer_ErrorLevel_SuccessVerbose;
     //procedure Test_ExecuteTemplateRemotely_FindColorErrorFromGradientOnServer_ErrorCount_SuccessVerbose;
 
-    procedure Test_DragAction_FromFirstPosToLastPos;
+    procedure Test_DragAction_FromPos0ToPos4;
+    procedure Test_DragAction_FromPos4ToPos0;
+    procedure Test_DragAction_FromPos1ToPos4;
+    procedure Test_DragAction_FromPos4ToPos1;
 
     procedure Test_ExecuteTemplateRemotelyWithDebugging_WithLoopedCall_AndStepIntoThenStop; //moved from above, since it fails
 
@@ -237,7 +242,7 @@ begin
 end;
 
 
-procedure TTestUI.ExecuteTemplateOnTestDriver(ATemplatePath, AFileLocation: string);
+procedure TTestUI.ExecuteTemplateOnTestDriver(ATemplatePath, AFileLocation: string; AAdditionalExpectedVar: string = ''; AAdditionalExpectedValue: string = '');
 const
   CSecondExpectedErrMsg = 'Action condition is false.';
 var
@@ -263,6 +268,9 @@ begin
       on E: Exception do
         Expect(ListOfVars).WithItem('$ExecAction_Err$').OfValue(CSecondExpectedErrMsg, 'No error Allowed in test driver.');
     end;
+
+    if AAdditionalExpectedVar <> '' then
+      Expect(ListOfVars).WithItem(AAdditionalExpectedVar).OfValue(AAdditionalExpectedValue, 'Additional variable mismatch.');
   finally
     ListOfVars.Free;
   end;
@@ -526,107 +534,6 @@ begin
 end;
 
 
-procedure TTestUI.Test_FindColorErrorFromGradientOnServer_ErrorLevel_SuccessVerbose_NoUpdate;
-begin
-  TestServerAddress := CTestDriverServerAddress_Client;
-  RunTestTemplateInClickerUnderTest('FindColorErrorFromGradientOnServer.clktmpl');
-
-  PrepareClickerUnderTestToLocalMode;
-  SetVariableOnTestDriverClient('$CalcItem$', 'Calculate minimum color error ' + CMinErrorLevelKeyword + ' to match bitmap...');
-  SetVariableOnTestDriverClient('$ExpectedColorErrorMsg$', 'A color error ' + CMinErrorLevelKeyword + ' found');
-  SetVariableOnTestDriverClient('$MsgBoxButtonEval$', CMinErrorMsgBoxBtn_NoUpdate);
-
-  ExecuteTemplateOnTestDriver(ExtractFilePath(ParamStr(0)) + '..\..\TestDriver\ActionTemplates\FindMinErrorLevel.clktmpl', CREParam_FileLocation_ValueDisk);
-  PrepareClickerUnderTestToReadItsVars;
-
-  Sleep(500);
-
-  TestServerAddress := CTestDriverServerAddress_Client;
-  Expect(GetVarValueFromServer('$SearchResult$')).ToBe('True');
-end;
-
-
-procedure TTestUI.Test_FindColorErrorFromGradientOnServer_ErrorCount_SuccessVerbose_NoUpdate;
-begin
-  TestServerAddress := CTestDriverServerAddress_Client;
-  RunTestTemplateInClickerUnderTest('FindColorErrorFromGradientOnServer.clktmpl');
-
-  PrepareClickerUnderTestToLocalMode;
-  SetVariableOnTestDriverClient('$CalcItem$', 'Calculate minimum color error ' + CMinErrorCountKeyword + ' to match bitmap...');
-  SetVariableOnTestDriverClient('$ExpectedColorErrorMsg$', 'A color error ' + CMinErrorCountKeyword + ' found');
-  SetVariableOnTestDriverClient('$MsgBoxButtonEval$', CMinErrorMsgBoxBtn_NoUpdate);
-
-  ExecuteTemplateOnTestDriver(ExtractFilePath(ParamStr(0)) + '..\..\TestDriver\ActionTemplates\FindMinErrorLevel.clktmpl', CREParam_FileLocation_ValueDisk);
-  PrepareClickerUnderTestToReadItsVars;
-
-  Sleep(500);
-
-  TestServerAddress := CTestDriverServerAddress_Client;
-  Expect(GetVarValueFromServer('$SearchResult$')).ToBe('True');
-end;
-
-
-//procedure TTestUI.Test_ExecuteTemplateRemotely_FindColorErrorFromGradientOnServer_ErrorLevel_SuccessVerbose_NoUpdate;
-//begin
-//  TestServerAddress := CTestDriverServerAddress_Client;
-//  PrepareClickerUnderTestToClientMode;
-//  RunTestTemplateInClickerUnderTest('FindColorErrorFromGradientOnServer.clktmpl');
-//
-//  SetVariableOnTestDriverClient('$CalcItem$', 'Calculate minimum color error ' + CMinErrorLevelKeyword + ' to match bitmap...');
-//  SetVariableOnTestDriverClient('$ExpectedColorErrorMsg$', 'A color error ' + CMinErrorLevelKeyword + ' found');
-//  ExecuteTemplateOnTestDriver(ExtractFilePath(ParamStr(0)) + '..\..\TestDriver\ActionTemplates\FindMinErrorLevel.clktmpl', CREParam_FileLocation_ValueDisk);
-//
-//  SetVariableOnTestDriverClient('$MsgBoxButtonEval$', CMinErrorMsgBoxBtn_NoUpdate);
-//
-//  PrepareClickerUnderTestToReadItsVars;
-//
-//  Sleep(500);
-//
-//  TestServerAddress := CTestDriverServerAddress_Client;
-//  Expect(GetVarValueFromServer('$SearchResult$')).ToBe('True');
-//end;
-//
-//
-//procedure TTestUI.Test_ExecuteTemplateRemotely_FindColorErrorFromGradientOnServer_ErrorCount_SuccessVerbose_NoUpdate;
-//begin
-//  TestServerAddress := CTestDriverServerAddress_Client;
-//  PrepareClickerUnderTestToClientMode;
-//  RunTestTemplateInClickerUnderTest('FindColorErrorFromGradientOnServer.clktmpl');
-//
-//  SetVariableOnTestDriverClient('$CalcItem$', 'Calculate minimum color error ' + CMinErrorCountKeyword + ' to match bitmap...');
-//  SetVariableOnTestDriverClient('$ExpectedColorErrorMsg$', 'A color error ' + CMinErrorCountKeyword + ' found');
-//  ExecuteTemplateOnTestDriver(ExtractFilePath(ParamStr(0)) + '..\..\TestDriver\ActionTemplates\FindMinErrorLevel.clktmpl', CREParam_FileLocation_ValueDisk);
-//
-//  SetVariableOnTestDriverClient('$MsgBoxButtonEval$', CMinErrorMsgBoxBtn_NoUpdate);
-//
-//  PrepareClickerUnderTestToReadItsVars;
-//
-//  Sleep(500);
-//
-//  TestServerAddress := CTestDriverServerAddress_Client;
-//  Expect(GetVarValueFromServer('$SearchResult$')).ToBe('True');
-//end;
-
-
-procedure TTestUI.Test_DragAction_FromFirstPosToLastPos;
-begin
-  TestServerAddress := CTestDriverServerAddress_Client;
-  LoadTestTemplateInClickerUnderTest('ActionsToDrag.clktmpl');
-
-  PrepareClickerUnderTestToLocalMode;
-  SetVariableOnTestDriverClient('$SourceAction$', '"ExecApp"');
-  SetVariableOnTestDriverClient('$DestinationAction$', '"Sleep"');
-
-  ExecuteTemplateOnTestDriver(ExtractFilePath(ParamStr(0)) + '..\..\TestDriver\ActionTemplates\DragActionOnAppUnderTest.clktmpl', CREParam_FileLocation_ValueDisk);
-  PrepareClickerUnderTestToReadItsVars;
-
-  Sleep(500);
-
-  TestServerAddress := CTestDriverServerAddress_Client;
-  Expect(GetVarValueFromServer('$SearchResult$')).ToBe('True');
-end;
-
-
 procedure TTestUI.Test_ExecuteTemplateRemotelyWithDebugging_WithLoopedCall_AndStepIntoThenStop;  //this test fails because stopping the debugger on a looped call, is not yet implemented in UIClicker
 begin
   TestServerAddress := CTestDriverServerAddress_Client;
@@ -643,6 +550,138 @@ begin
     TestServerAddress := CTestDriverServerAddress_Client; //restore
     ExecuteTemplateOnTestDriver(FTemplatesDir + 'SetExecModeToClient.clktmpl', CREParam_FileLocation_ValueDisk);
   end;
+end;
+
+
+procedure TTestUI.Test_FindColorErrorFromGradientOnServer_ErrorLevel_SuccessVerbose_NoUpdate;
+begin
+  TestServerAddress := CTestDriverServerAddress_Client;
+  RunTestTemplateInClickerUnderTest('FindColorErrorFromGradientOnServer.clktmpl');
+
+  PrepareClickerUnderTestToLocalMode;
+  SetVariableOnTestDriverClient('$SearchResult$', 'False');
+  SetVariableOnTestDriverClient('$CalcItem$', 'Calculate minimum color error ' + CMinErrorLevelKeyword + ' to match bitmap...');
+  SetVariableOnTestDriverClient('$ExpectedColorErrorMsg$', 'A color error ' + CMinErrorLevelKeyword + ' found');
+  SetVariableOnTestDriverClient('$MsgBoxButtonEval$', CMinErrorMsgBoxBtn_NoUpdate);
+
+  ExecuteTemplateOnTestDriver(ExtractFilePath(ParamStr(0)) + '..\..\TestDriver\ActionTemplates\FindMinErrorLevel.clktmpl',
+                              CREParam_FileLocation_ValueDisk,
+                              '$SearchResult$',
+                              'True'
+                              );
+  PrepareClickerUnderTestToReadItsVars;
+end;
+
+
+procedure TTestUI.Test_FindColorErrorFromGradientOnServer_ErrorCount_SuccessVerbose_NoUpdate;
+begin
+  TestServerAddress := CTestDriverServerAddress_Client;
+  RunTestTemplateInClickerUnderTest('FindColorErrorFromGradientOnServer.clktmpl');
+
+  PrepareClickerUnderTestToLocalMode;
+  SetVariableOnTestDriverClient('$SearchResult$', 'False');
+  SetVariableOnTestDriverClient('$CalcItem$', 'Calculate minimum color error ' + CMinErrorCountKeyword + ' to match bitmap...');
+  SetVariableOnTestDriverClient('$ExpectedColorErrorMsg$', 'A color error ' + CMinErrorCountKeyword + ' found');
+  SetVariableOnTestDriverClient('$MsgBoxButtonEval$', CMinErrorMsgBoxBtn_NoUpdate);
+
+  ExecuteTemplateOnTestDriver(ExtractFilePath(ParamStr(0)) + '..\..\TestDriver\ActionTemplates\FindMinErrorLevel.clktmpl',
+                              CREParam_FileLocation_ValueDisk,
+                              '$SearchResult$',
+                              'True'
+                              );
+  PrepareClickerUnderTestToReadItsVars;
+end;
+
+
+//procedure TTestUI.Test_ExecuteTemplateRemotely_FindColorErrorFromGradientOnServer_ErrorLevel_SuccessVerbose_NoUpdate;
+//begin
+//  TestServerAddress := CTestDriverServerAddress_Client;
+//  PrepareClickerUnderTestToClientMode;
+//  RunTestTemplateInClickerUnderTest('FindColorErrorFromGradientOnServer.clktmpl');
+//
+//  SetVariableOnTestDriverClient('$SearchResult$', 'False');
+//  SetVariableOnTestDriverClient('$CalcItem$', 'Calculate minimum color error ' + CMinErrorLevelKeyword + ' to match bitmap...');
+//  SetVariableOnTestDriverClient('$ExpectedColorErrorMsg$', 'A color error ' + CMinErrorLevelKeyword + ' found');
+//  ExecuteTemplateOnTestDriver(ExtractFilePath(ParamStr(0)) + '..\..\TestDriver\ActionTemplates\FindMinErrorLevel.clktmpl',
+                              // CREParam_FileLocation_ValueDisk,
+                              //'$SearchResult$',
+                              //'True'
+                              //);
+//
+//  SetVariableOnTestDriverClient('$MsgBoxButtonEval$', CMinErrorMsgBoxBtn_NoUpdate);
+//
+//  PrepareClickerUnderTestToReadItsVars;
+//end;
+//
+//
+//procedure TTestUI.Test_ExecuteTemplateRemotely_FindColorErrorFromGradientOnServer_ErrorCount_SuccessVerbose_NoUpdate;
+//begin
+//  TestServerAddress := CTestDriverServerAddress_Client;
+//  PrepareClickerUnderTestToClientMode;
+//  RunTestTemplateInClickerUnderTest('FindColorErrorFromGradientOnServer.clktmpl');
+//
+//  SetVariableOnTestDriverClient('$SearchResult$', 'False');
+//  SetVariableOnTestDriverClient('$CalcItem$', 'Calculate minimum color error ' + CMinErrorCountKeyword + ' to match bitmap...');
+//  SetVariableOnTestDriverClient('$ExpectedColorErrorMsg$', 'A color error ' + CMinErrorCountKeyword + ' found');
+//  ExecuteTemplateOnTestDriver(ExtractFilePath(ParamStr(0)) + '..\..\TestDriver\ActionTemplates\FindMinErrorLevel.clktmpl',
+                            //  CREParam_FileLocation_ValueDisk,
+                            //'$SearchResult$',
+                            //'True'
+                            //);
+//
+//  SetVariableOnTestDriverClient('$MsgBoxButtonEval$', CMinErrorMsgBoxBtn_NoUpdate);
+//
+//  PrepareClickerUnderTestToReadItsVars;
+//end;
+
+
+procedure TTestUI.DragAction_FromPosToPos(ASrcIdx, ADestIdx: Integer; const AActIdx: array of Byte);
+const
+  CActionNamesToDrag: array[0..4] of string = ('"ExecApp"', '"FindControl"', '"FindSubControl"', '"SetControlText"', '"Sleep"');
+var
+  i: Integer;
+begin
+  TestServerAddress := CTestDriverServerAddress_Client;
+  LoadTestTemplateInClickerUnderTest('ActionsToDrag.clktmpl');
+
+  PrepareClickerUnderTestToLocalMode;
+  SetVariableOnTestDriverClient('$SearchResult$', 'False');
+  SetVariableOnTestDriverClient('$SourceAction$', CActionNamesToDrag[ASrcIdx]);
+  SetVariableOnTestDriverClient('$DestinationAction$', CActionNamesToDrag[ADestIdx]);
+
+  for i := 0 to 4 do
+    SetVariableOnTestDriverClient('$Act' +  IntToStr(i) + '$', CActionNamesToDrag[AActIdx[i]]);
+
+  ExecuteTemplateOnTestDriver(ExtractFilePath(ParamStr(0)) + '..\..\TestDriver\ActionTemplates\DragActionOnAppUnderTest.clktmpl',
+                              CREParam_FileLocation_ValueDisk,
+                              '$SearchResult$',
+                              'True'
+                              );
+  PrepareClickerUnderTestToReadItsVars;
+end;
+
+
+procedure TTestUI.Test_DragAction_FromPos0ToPos4;
+begin
+  DragAction_FromPosToPos(0, 4, [1, 2, 3, 4, 0]);
+end;
+
+
+procedure TTestUI.Test_DragAction_FromPos4ToPos0;
+begin
+  DragAction_FromPosToPos(4, 0, [4, 0, 1, 2, 3]);
+end;
+
+
+procedure TTestUI.Test_DragAction_FromPos1ToPos4;
+begin
+  DragAction_FromPosToPos(1, 4, [0, 2, 3, 4, 1]);
+end;
+
+
+procedure TTestUI.Test_DragAction_FromPos4ToPos1;
+begin
+  DragAction_FromPosToPos(4, 1, [0, 4, 1, 2, 3]);
 end;
 
 

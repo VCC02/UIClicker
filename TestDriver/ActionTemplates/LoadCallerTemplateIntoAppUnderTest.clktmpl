@@ -28,7 +28,7 @@ Loop.EvalBreakPosition=0
 [Action_1]
 ActionName=Find Show Action chk
 Action=FindControl
-ActionTimeout=1000
+ActionTimeout=10000
 ActionEnabled=1
 ActionCondition=
 BreakpointExists=0

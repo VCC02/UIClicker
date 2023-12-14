@@ -339,7 +339,7 @@ object frClickerActions: TfrClickerActions
   object imglstActions: TImageList
     Height = 24
     Width = 24
-    Left = 128
+    Left = 56
     Top = 224
     Bitmap = {
       4C7A1300000018000000180000009A0A00000000000078DAED9C6D6C14C719C7

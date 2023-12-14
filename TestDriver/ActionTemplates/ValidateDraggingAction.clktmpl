@@ -16,7 +16,7 @@ ListOfVarValues=$Player_Left$$Player_Top$$Player_Right$$Player_Bottom$$P
 ListOfVarEvalBefore=111111111
 
 [Action_1]
-ActionName=Validate FindControl action
+ActionName=Validate action 0
 Action=FindSubControl
 ActionTimeout=1000
 ActionEnabled=1
@@ -30,7 +30,7 @@ MatchCriteria.WillMatchBitmapText=1
 MatchCriteria.WillMatchBitmapFiles=0
 MatchCriteria.WillMatchPrimitiveFiles=0
 MatchCriteria.SearchForControlMode=0
-MatchText="FindControl"
+MatchText=$Act0$
 MatchClassName=
 MatchTextSeparator=
 MatchClassNameSeparator=
@@ -180,7 +180,7 @@ ListOfVarValues=$Player_Left$$Player_Top$$Player_Right$$Player_Bottom$$P
 ListOfVarEvalBefore=111111111
 
 [Action_3]
-ActionName=Validate FindSubControl action
+ActionName=Validate action 1
 Action=FindSubControl
 ActionTimeout=1000
 ActionEnabled=1
@@ -194,7 +194,7 @@ MatchCriteria.WillMatchBitmapText=1
 MatchCriteria.WillMatchBitmapFiles=0
 MatchCriteria.WillMatchPrimitiveFiles=0
 MatchCriteria.SearchForControlMode=0
-MatchText="FindSubControl"
+MatchText=$Act1$
 MatchClassName=
 MatchTextSeparator=
 MatchClassNameSeparator=
@@ -344,7 +344,7 @@ ListOfVarValues=$Player_Left$$Player_Top$$Player_Right$$Player_Bottom$$P
 ListOfVarEvalBefore=111111111
 
 [Action_5]
-ActionName=Validate SetControlText action
+ActionName=Validate action 2
 Action=FindSubControl
 ActionTimeout=1000
 ActionEnabled=1
@@ -358,7 +358,7 @@ MatchCriteria.WillMatchBitmapText=1
 MatchCriteria.WillMatchBitmapFiles=0
 MatchCriteria.WillMatchPrimitiveFiles=0
 MatchCriteria.SearchForControlMode=0
-MatchText="SetControlText"
+MatchText=$Act2$
 MatchClassName=
 MatchTextSeparator=
 MatchClassNameSeparator=
@@ -508,7 +508,7 @@ ListOfVarValues=$Player_Left$$Player_Top$$Player_Right$$Player_Bottom$$P
 ListOfVarEvalBefore=111111111
 
 [Action_7]
-ActionName=Validate Sleep action
+ActionName=Validate action 3
 Action=FindSubControl
 ActionTimeout=1000
 ActionEnabled=1
@@ -522,7 +522,7 @@ MatchCriteria.WillMatchBitmapText=1
 MatchCriteria.WillMatchBitmapFiles=0
 MatchCriteria.WillMatchPrimitiveFiles=0
 MatchCriteria.SearchForControlMode=0
-MatchText="Sleep"
+MatchText=$Act3$
 MatchClassName=
 MatchTextSeparator=
 MatchClassNameSeparator=
@@ -672,7 +672,7 @@ ListOfVarValues=$Player_Left$$Player_Top$$Player_Right$$Player_Bottom$$P
 ListOfVarEvalBefore=111111111
 
 [Action_9]
-ActionName=Validate ExecApp action
+ActionName=Validate action 4
 Action=FindSubControl
 ActionTimeout=1000
 ActionEnabled=1
@@ -686,7 +686,7 @@ MatchCriteria.WillMatchBitmapText=1
 MatchCriteria.WillMatchBitmapFiles=0
 MatchCriteria.WillMatchPrimitiveFiles=0
 MatchCriteria.SearchForControlMode=0
-MatchText="ExecApp"
+MatchText=$Act4$
 MatchClassName=
 MatchTextSeparator=
 MatchClassNameSeparator=

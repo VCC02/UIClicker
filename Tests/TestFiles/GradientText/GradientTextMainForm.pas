@@ -144,7 +144,12 @@ begin
   frmGradientTextMain.lblCustomText.ShowHint := True;
 
   if FSrcImg = frmGradientTextMain.imgGradient then
+  begin
     FDestBmp.Assign(FSrcImg.Picture.Bitmap);  //copy content from gradient image
+
+    if FParams.Values['IncludeTimestamp'] = 'Yes' then
+      FDestBmp.Canvas.TextOut(10, 20, DateTimeToStr(Now));  //useful for debugging / testing a new content on every request (see CRECmd_GetListOfRenderedFiles)
+  end;
 
   if FSrcImg = frmGradientTextMain.imgBrowserRendering then
   begin

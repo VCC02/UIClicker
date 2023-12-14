@@ -1,7 +1,7 @@
 object frmGradientTextMain: TfrmGradientTextMain
   Left = 100
   Height = 608
-  Top = 143
+  Top = 142
   Width = 623
   Caption = 'Gradient Text'
   ClientHeight = 608
@@ -13152,8 +13152,10 @@ object frmGradientTextMain: TfrmGradientTextMain
     Top = 8
     Width = 62
     Caption = 'Custom Text'
+    Color = clBackground
     Font.Height = -11
     Font.Quality = fqNonAntialiased
+    ParentColor = False
     ParentFont = False
     Transparent = False
     Visible = False

@@ -1,5 +1,5 @@
 [Actions]
-Count=30
+Count=31
 Version=2
 
 [Action_0]
@@ -1162,7 +1162,7 @@ Action=FindControl
 ActionTimeout=3000
 ActionEnabled=1
 ActionCondition=
-BreakpointExists=1
+BreakpointExists=0
 BreakpointEnabled=1
 BreakpointCondition=
 MatchCriteria.WillMatchText=1
@@ -1223,6 +1223,17 @@ FastSearchAllowedColorErrorCount=10
 IgnoredColors=
 
 [Action_29]
+ActionName=wait for menu to show (because of animation)
+Action=Sleep
+ActionTimeout=0
+ActionEnabled=1
+ActionCondition=
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+Value=500
+
+[Action_30]
 ActionName=Find desired menu item
 Action=FindSubControl
 ActionTimeout=1000

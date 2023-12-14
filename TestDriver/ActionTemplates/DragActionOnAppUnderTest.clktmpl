@@ -1,8 +1,21 @@
 [Actions]
-Count=19
+Count=20
 Version=2
 
 [Action_0]
+ActionName=Init test result
+Action=SetVar
+ActionTimeout=0
+ActionEnabled=1
+ActionCondition=
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+ListOfVarNames=$SearchResult$
+ListOfVarValues=NotSet
+ListOfVarEvalBefore=
+
+[Action_1]
 ActionName=GoToActionPlayer.clktmpl
 Action=CallTemplate
 ActionTimeout=1000
@@ -25,7 +38,7 @@ Loop.Direction=0
 Loop.BreakCondition=
 Loop.EvalBreakPosition=0
 
-[Action_1]
+[Action_2]
 ActionName=Restore player pos
 Action=SetVar
 ActionTimeout=0
@@ -38,7 +51,7 @@ ListOfVarNames=$Control_Left$$Control_Top$$Control_Right$$Control_Bottom$
 ListOfVarValues=$Player_Left$$Player_Top$$Player_Right$$Player_Bottom$$Player_Width$$Player_Height$$Player_Text$$Player_Class$$Player_Handle$
 ListOfVarEvalBefore=111111111
 
-[Action_2]
+[Action_3]
 ActionName=Find Source action
 Action=FindSubControl
 ActionTimeout=1000
@@ -189,7 +202,7 @@ UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=
 
-[Action_3]
+[Action_4]
 ActionName=Cache src action pos
 Action=SetVar
 ActionTimeout=0
@@ -202,7 +215,7 @@ ListOfVarNames=$SrcAct_Left$$SrcAct_Top$$SrcAct_Right$$SrcAct_Bottom$$Sr
 ListOfVarValues=$Control_Left$$Control_Top$$Control_Right$$Control_Bottom$$Control_Width$$Control_Height$$Control_Text$$Control_Class$$Control_Handle$
 ListOfVarEvalBefore=111111111
 
-[Action_4]
+[Action_5]
 ActionName=Restore player pos
 Action=SetVar
 ActionTimeout=0
@@ -215,7 +228,7 @@ ListOfVarNames=$Control_Left$$Control_Top$$Control_Right$$Control_Bottom$
 ListOfVarValues=$Player_Left$$Player_Top$$Player_Right$$Player_Bottom$$Player_Width$$Player_Height$$Player_Text$$Player_Class$$Player_Handle$
 ListOfVarEvalBefore=111111111
 
-[Action_5]
+[Action_6]
 ActionName=Find Destination action
 Action=FindSubControl
 ActionTimeout=1000
@@ -366,7 +379,7 @@ UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=
 
-[Action_6]
+[Action_7]
 ActionName=Cache dest action pos
 Action=SetVar
 ActionTimeout=0
@@ -379,7 +392,7 @@ ListOfVarNames=$DestAct_Left$$DestAct_Top$$DestAct_Right$$DestAct_Bottom$
 ListOfVarValues=$Control_Left$$Control_Top$$Control_Right$$Control_Bottom$$Control_Width$$Control_Height$$Control_Text$$Control_Class$$Control_Handle$
 ListOfVarEvalBefore=111111111
 
-[Action_7]
+[Action_8]
 ActionName=Drag src action over dest action
 Action=Click
 ActionTimeout=0
@@ -415,8 +428,8 @@ DelayAfterMovingToDestination=50
 DelayAfterMouseDown=200
 MoveDuration=300
 
-[Action_8]
-ActionName=ValidateDraggingAction0To4
+[Action_9]
+ActionName=ValidateDraggingAction
 Action=CallTemplate
 ActionTimeout=1000
 ActionEnabled=1
@@ -424,7 +437,7 @@ ActionCondition=
 BreakpointExists=0
 BreakpointEnabled=0
 BreakpointCondition=
-TemplateFileName=ValidateDraggingAction0To4.clktmpl
+TemplateFileName=ValidateDraggingAction.clktmpl
 ListOfCustomVarsAndValues=
 CallOnlyIfCondition=0
 CallOnlyIfConditionVarName=
@@ -438,7 +451,7 @@ Loop.Direction=0
 Loop.BreakCondition=
 Loop.EvalBreakPosition=0
 
-[Action_9]
+[Action_10]
 ActionName=Restore player pos
 Action=SetVar
 ActionTimeout=0
@@ -451,7 +464,7 @@ ListOfVarNames=$Control_Left$$Control_Top$$Control_Right$$Control_Bottom$
 ListOfVarValues=$Player_Left$$Player_Top$$Player_Right$$Player_Bottom$$Player_Width$$Player_Height$$Player_Text$$Player_Class$$Player_Handle$
 ListOfVarEvalBefore=111111111
 
-[Action_10]
+[Action_11]
 ActionName=Find New button
 Action=FindSubControl
 ActionTimeout=1000
@@ -534,7 +547,7 @@ UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=
 
-[Action_11]
+[Action_12]
 ActionName="Click"
 Action=Click
 ActionTimeout=0
@@ -570,7 +583,7 @@ DelayAfterMovingToDestination=50
 DelayAfterMouseDown=300
 MoveDuration=-1
 
-[Action_12]
+[Action_13]
 ActionName=Wait for save confirmation
 Action=FindControl
 ActionTimeout=3000
@@ -636,7 +649,7 @@ UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=
 
-[Action_13]
+[Action_14]
 ActionName=Cache MessageBox
 Action=SetVar
 ActionTimeout=0
@@ -649,7 +662,7 @@ ListOfVarNames=$MsgBox_Left$$MsgBox_Top$$MsgBox_Right$$MsgBox_Bottom$$Ms
 ListOfVarValues=$Control_Left$$Control_Top$$Control_Right$$Control_Bottom$$Control_Width$$Control_Height$$Control_Text$$Control_Class$$Control_Handle$
 ListOfVarEvalBefore=111111111
 
-[Action_14]
+[Action_15]
 ActionName=Find some text on MsgBox
 Action=FindSubControl
 ActionTimeout=1000
@@ -732,7 +745,7 @@ UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=
 
-[Action_15]
+[Action_16]
 ActionName=Restore MsgBox
 Action=SetVar
 ActionTimeout=0
@@ -745,7 +758,7 @@ ListOfVarNames=$Control_Left$$Control_Top$$Control_Right$$Control_Bottom$
 ListOfVarValues=$MsgBox_Left$$MsgBox_Top$$MsgBox_Right$$MsgBox_Bottom$$MsgBox_Width$$MsgBox_Height$$MsgBox_Text$$MsgBox_Class$$MsgBox_Handle$
 ListOfVarEvalBefore=111111111
 
-[Action_16]
+[Action_17]
 ActionName=Find "Yes" button
 Action=FindControl
 ActionTimeout=3000
@@ -811,7 +824,7 @@ UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=
 
-[Action_17]
+[Action_18]
 ActionName="Click"
 Action=Click
 ActionTimeout=0
@@ -847,7 +860,7 @@ DelayAfterMovingToDestination=50
 DelayAfterMouseDown=200
 MoveDuration=-1
 
-[Action_18]
+[Action_19]
 ActionName=Set test result
 Action=SetVar
 ActionTimeout=0
