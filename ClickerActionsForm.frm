@@ -1,7 +1,7 @@
 object frmClickerActions: TfrmClickerActions
   Left = 387
   Height = 720
-  Top = 43
+  Top = 128
   Width = 888
   Caption = 'UI Clicker Actions'
   ClientHeight = 720
@@ -49,16 +49,16 @@ object frmClickerActions: TfrmClickerActions
     Left = 8
     Height = 712
     Top = 0
-    Width = 877
+    Width = 872
     ActivePage = TabSheetSettings
-    Anchors = [akTop, akLeft, akRight, akBottom]
+    Anchors = [akTop, akLeft, akBottom]
     Images = imglstMainPage
     TabIndex = 0
     TabOrder = 0
     object TabSheetSettings: TTabSheet
       Caption = 'Settings'
       ClientHeight = 685
-      ClientWidth = 869
+      ClientWidth = 864
       ImageIndex = 0
       object lbePathToTemplates: TLabeledEdit
         Left = 8
@@ -84,7 +84,7 @@ object frmClickerActions: TfrmClickerActions
         OnClick = btnBrowseActionTemplatesDirClick
       end
       object grpVariables: TGroupBox
-        Left = 640
+        Left = 635
         Height = 412
         Top = 0
         Width = 226
@@ -440,7 +440,7 @@ object frmClickerActions: TfrmClickerActions
         end
       end
       object chkStayOnTop: TCheckBox
-        Left = 554
+        Left = 549
         Height = 17
         Top = 0
         Width = 74
@@ -450,7 +450,7 @@ object frmClickerActions: TfrmClickerActions
         OnClick = chkStayOnTopClick
       end
       object chkAutoSwitchToExecutingTab: TCheckBox
-        Left = 640
+        Left = 635
         Height = 19
         Hint = 'When checked, the current execution tab is focused (current subtemplate).'#13#10'Not showing the current execution tab, may be a performance improvement when there is no GPU acceleration available (e.g. on VMs).'#13#10'There is also a performance gain when executing looped CallTemplate actions.'#13#10'Automatically switching tabs, is needed for debbugging, to display the current action.'
         Top = 416
@@ -466,7 +466,7 @@ object frmClickerActions: TfrmClickerActions
         OnChange = chkAutoSwitchToExecutingTabChange
       end
       object chkAutoEnableSwitchingTabsOnDebugging: TCheckBox
-        Left = 640
+        Left = 635
         Height = 19
         Hint = 'When enabled, the execution tabs are switched, even if autoswitching is off.'
         Top = 440
@@ -482,7 +482,7 @@ object frmClickerActions: TfrmClickerActions
         OnChange = chkAutoEnableSwitchingTabsOnDebuggingChange
       end
       object cmbImgPreviewGridType: TComboBox
-        Left = 640
+        Left = 635
         Height = 19
         Top = 495
         Width = 115
@@ -493,7 +493,7 @@ object frmClickerActions: TfrmClickerActions
         OnChange = cmbImgPreviewGridTypeChange
       end
       object lblGridType: TLabel
-        Left = 640
+        Left = 635
         Height = 13
         Top = 478
         Width = 92
@@ -586,13 +586,13 @@ object frmClickerActions: TfrmClickerActions
     object TabSheetTemplateExec: TTabSheet
       Caption = 'Template Execution'
       ClientHeight = 685
-      ClientWidth = 869
+      ClientWidth = 864
       ImageIndex = 3
       object PageControlPlayer: TPageControl
         Left = 3
         Height = 681
         Top = 1
-        Width = 847
+        Width = 856
         ActivePage = TabSheetExecMainPlayer
         Anchors = [akTop, akLeft, akRight, akBottom]
         Images = imglstCalledTemplates
@@ -601,13 +601,13 @@ object frmClickerActions: TfrmClickerActions
         object TabSheetExecMainPlayer: TTabSheet
           Caption = 'Main Player'
           ClientHeight = 654
-          ClientWidth = 839
+          ClientWidth = 848
           ImageIndex = 0
           object scrboxMain: TScrollBox
             Left = 3
             Height = 647
             Top = 3
-            Width = 833
+            Width = 842
             HorzScrollBar.Smooth = True
             HorzScrollBar.Tracking = True
             VertScrollBar.Smooth = True

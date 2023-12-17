@@ -804,7 +804,7 @@ begin
   frClickerActionsArrExperiment1.InitFrame;
   frClickerActionsArrExperiment2.InitFrame;
   frClickerActionsArrMain.InitFrame;
-
+  PageControlMain.Anchors := PageControlMain.Anchors + [akRight];
 
   for i := Low(TDisplayGridLineOption) to High(TDisplayGridLineOption) do
     cmbImgPreviewGridType.Items.Add(CDisplayGridLineOptionStr[i]);

@@ -805,7 +805,7 @@ var
   ACmd, ErrMsg: string;
   i: Integer;
   AllParams: TStringList;
-  s, SelfAppDir: string;
+  s, SelfAppDir, TemplateDir: string;
 
   {$IFnDEF FPC}
     hwnd: THandle;
@@ -823,6 +823,17 @@ var
 begin
   SelfAppDir := ExtractFileDir(ParamStr(0));
   ACmd := EvaluateReplacements(AExecAppOptions.PathToApp);
+
+  TemplateDir := '';
+  if FSelfTemplateFileName = nil then
+    TemplateDir := 'FSelfTemplateFileName not set in ExecApp.'
+  else
+  begin
+    TemplateDir := ExtractFileDir(FSelfTemplateFileName^);
+    ACmd := StringReplace(ACmd, '$SelfTemplateDir$', TemplateDir, [rfReplaceAll]);
+    ACmd := StringReplace(ACmd, '$TemplateDir$', FFullTemplatesDir^, [rfReplaceAll]);
+  end;
+
   ACmd := StringReplace(ACmd, '$AppDir$', SelfAppDir, [rfReplaceAll]);
 
   Result := True;
@@ -1813,7 +1824,7 @@ var
   i: Integer;
   CustomVars: TStringList;
   KeyName, KeyValue, RowString: string;
-  Fnm: string;
+  Fnm, TemplateDir: string;
 begin
   Result := False;
   if not Assigned(FOnCallTemplate) then
@@ -1862,6 +1873,15 @@ begin
   end;
 
   Fnm := EvaluateReplacements(ACallTemplateOptions.TemplateFileName);
+  TemplateDir := '';
+  if FSelfTemplateFileName = nil then
+    TemplateDir := 'FSelfTemplateFileName not set in CallTemplate.'
+  else
+  begin
+    TemplateDir := ExtractFileDir(FSelfTemplateFileName^);
+    Fnm := StringReplace(Fnm, '$SelfTemplateDir$', TemplateDir, [rfReplaceAll]);
+    Fnm := StringReplace(Fnm, '$TemplateDir$', FFullTemplatesDir^, [rfReplaceAll]);
+  end;
 
   // the FileExists verification has to be done after checking CallOnlyIfCondition, to allow failing the action based on condition
 
