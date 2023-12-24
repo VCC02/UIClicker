@@ -42,6 +42,7 @@ type
   //TOnGetRemoteReplacementVars = procedure(AValLst: TValueListEditor) of object;
   TOnWaitForFileAvailability = procedure(AFileName: string) of object; //called in server mode, to add a filename to FIFO and wait until file exists
   TOnWaitForMultipleFilesAvailability = procedure(AListOfFiles: TStringList) of object;
+  TOnOpenCalledTemplateInExperimentTab = procedure(AExperimentIndex: Integer; ATemplatePath: string) of object;
 
   TActionNodeRec = record
     Action: TClkActionRec;
@@ -68,6 +69,8 @@ type
     lbeSearchAction: TLabeledEdit;
     lblModifiedStatus: TLabel;
     memLogErr: TMemo;
+    MenuItem_ResolvePathToAbsolute: TMenuItem;
+    MenuItem_OpenCalledTemplateInExperimentTab: TMenuItem;
     MenuItem_InsertActionAfterFirstSelected: TMenuItem;
     MenuItem_InsertActionBeforeFirstSelected: TMenuItem;
     MenuItem_CopyFullFilepathToClipboard: TMenuItem;
@@ -177,10 +180,12 @@ type
     procedure MenuItem_ReplaceWith_AppDirClick(Sender: TObject);
     procedure MenuItem_ReplaceWith_SelfTemplateDirClick(Sender: TObject);
     procedure MenuItem_ReplaceWith_TemplateDirClick(Sender: TObject);
+    procedure MenuItem_ResolvePathToAbsoluteClick(Sender: TObject);
     procedure MenuItem_SetActionStatusToAllowedFailedClick(Sender: TObject);
     procedure MenuItem_SetActionStatusToFailedClick(Sender: TObject);
     procedure MenuItem_SetActionStatusToSuccessfulClick(Sender: TObject);
     procedure MenuItem_GenericInsertActionOnFirstSelectedClick(Sender: TObject);
+    procedure MenuItem_GenericOpenCalledTemplateInExperimentTabClick(Sender: TObject);
     procedure pmVstActionsPopup(Sender: TObject);
     procedure pnlActionsClick(Sender: TObject);
     procedure pnlVertSplitterMouseDown(Sender: TObject; Button: TMouseButton;
@@ -357,6 +362,7 @@ type
     FOnSetFontFinderSettings: TOnRWFontFinderSettings;
 
     FOnRetrieveRenderedBmpFromServer: TOnRetrieveRenderedBmpFromServer;
+    FOnOpenCalledTemplateInExperimentTab: TOnOpenCalledTemplateInExperimentTab;
 
     vstActions: TVirtualStringTree;
     FPalette: TfrClickerActionsPalette;
@@ -417,7 +423,6 @@ type
     procedure FillInVarAndFuncDescriptions;
     procedure CreateRemainingUIComponents;
 
-    procedure LoadTemplateWithUIUpdate(AFileName: string; AFileLocation: TFileLocation = flDisk; AInMemFileSystem: TInMemFileSystem = nil);
     procedure SetFullTemplatesDir(Value: string);
     procedure SetModified(Value: Boolean);
     procedure UpdateModifiedLabel;
@@ -453,6 +458,8 @@ type
     procedure DisplayDefaultEvalConsoleEditBox;
     function EvaluateAssignmentExpression: Boolean;
     function EvaluateActionCondition(ActionIndex: Integer): Boolean;
+    function ResolveTemplatePath(APath: string; ACustomSelfTemplateDir: string = ''; ACustomAppDir: string = ''): string;
+    function EncodeTemplatePath(APath: string): string;
 
     procedure PrepareFilesInServer;
     function ExecuteActionAtIndex(AActionIndex: Integer): Boolean; //can be called by a server module (used when Clicker is in server mode)
@@ -491,6 +498,7 @@ type
     procedure DoOnSetFontFinderSettings(var AFontFinderSettings: TFontFinderSettings);
 
     procedure DoOnRetrieveRenderedBmpFromServer(ARemoteAddress, AFnm: string);
+    procedure DoOnOpenCalledTemplateInExperimentTab(AExperimentIndex: Integer; ATemplatePath: string);
 
     function PlayActionByNode(Node: PVirtualNode): Boolean;
     procedure PlaySelected;
@@ -542,6 +550,7 @@ type
     function CreateIniReadonlyFileFromInMemFileSystem(AFnm: string; AInMemFileSystem: TInMemFileSystem): TClkIniReadonlyFile;
     procedure LoadTemplate(Fnm: string; AFileLocation: TFileLocation = flDisk; AInMemFileSystem: TInMemFileSystem = nil);
     procedure LoadTemplateToActions(Fnm: string; var AActions: TClkActionsRecArr; AFileLocation: TFileLocation = flDisk; AInMemFileSystem: TInMemFileSystem = nil);
+    procedure LoadTemplateWithUIUpdate(AFileName: string; AFileLocation: TFileLocation = flDisk; AInMemFileSystem: TInMemFileSystem = nil);
     procedure SaveTemplateWithDialog;
     procedure SetVariables(ListOfVariables: TStrings);
     procedure SetAllActionsToNotStarted;
@@ -627,6 +636,7 @@ type
     property OnSetFontFinderSettings: TOnRWFontFinderSettings write FOnSetFontFinderSettings;
 
     property OnRetrieveRenderedBmpFromServer: TOnRetrieveRenderedBmpFromServer write FOnRetrieveRenderedBmpFromServer;
+    property OnOpenCalledTemplateInExperimentTab: TOnOpenCalledTemplateInExperimentTab write FOnOpenCalledTemplateInExperimentTab;
   end;
 
 
@@ -1029,6 +1039,7 @@ begin
   FOnSetFontFinderSettings := nil;
 
   FOnRetrieveRenderedBmpFromServer := nil;
+  FOnOpenCalledTemplateInExperimentTab := nil;
 
   FPalette := nil;
 
@@ -2182,6 +2193,15 @@ begin
     raise Exception.Create('OnOnRetrieveRenderedBmpFromServer not assigned.')
   else
     FOnRetrieveRenderedBmpFromServer(ARemoteAddress, AFnm);
+end;
+
+
+procedure TfrClickerActionsArr.DoOnOpenCalledTemplateInExperimentTab(AExperimentIndex: Integer; ATemplatePath: string);
+begin
+  if not Assigned(FOnOpenCalledTemplateInExperimentTab) then
+    raise Exception.Create('OnOpenCalledTemplateInExperimentTab not assigned.')
+  else
+    FOnOpenCalledTemplateInExperimentTab(AExperimentIndex, ATemplatePath);
 end;
 
 
@@ -3350,6 +3370,14 @@ begin
 
       TargetCanvas.Rectangle(CellRect);
     end;
+
+    else
+      if Node^.Parent <> vstActions.RootNode then
+      begin
+        TargetCanvas.Pen.Color := clWindow;
+        TargetCanvas.Brush.Color := cl3DLight;
+        TargetCanvas.Rectangle(CellRect);
+      end;
   end;
 end;
 
@@ -3682,9 +3710,7 @@ var
 begin
   NodeData := vstActions.GetNodeData(ANode);
   NodeData^.FullTemplatePath := EvaluateReplacements(ATemplateFileName);
-  NodeData^.FullTemplatePath := StringReplace(NodeData^.FullTemplatePath, '$SelfTemplateDir$', ATemplateDir, [rfReplaceAll]);
-  NodeData^.FullTemplatePath := StringReplace(NodeData^.FullTemplatePath, '$TemplateDir$', FFullTemplatesDir, [rfReplaceAll]);
-  NodeData^.FullTemplatePath := StringReplace(NodeData^.FullTemplatePath, '$AppDir$', AAppDir, [rfReplaceAll]);
+  NodeData^.FullTemplatePath := ResolveTemplatePath(NodeData^.FullTemplatePath, ATemplateDir, AAppDir);
 
   if NodeData^.FullTemplatePath = ExtractFileName(NodeData^.FullTemplatePath) then //there is no full path
     NodeData^.FullTemplatePath := FFullTemplatesDir + PathDelim + NodeData^.FullTemplatePath;
@@ -4026,9 +4052,7 @@ procedure TfrClickerActionsArr.LoadTemplateIcon;
 var
   ResolvedPath: string;
 begin
-  ResolvedPath := StringReplace(FTemplateIconPath, '$TemplateDir$', FFullTemplatesDir, [rfReplaceAll]);
-  ResolvedPath := StringReplace(ResolvedPath, '$SelfTemplateDir$', FFileName, [rfReplaceAll]);
-  ResolvedPath := StringReplace(ResolvedPath, '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
+  ResolvedPath := ResolveTemplatePath(FTemplateIconPath);
 
   try
     imgTemplateIcon.Picture.Bitmap.Width := imgTemplateIcon.Width;
@@ -4072,6 +4096,9 @@ begin
     Exit;
 
   FTemplateIconPath := DoOnGetOpenDialogFileName;
+  FTemplateIconPath := ResolveTemplatePath(FTemplateIconPath);  //make sure it is resolved, before encoding
+  FTemplateIconPath := EncodeTemplatePath(FTemplateIconPath);
+
   SetTemplateIconHint;
   LoadTemplateIcon;
   Modified := True;
@@ -4103,7 +4130,7 @@ begin
     Exit;
   end;
 
-  ClkActionRec := PClkActionRec(MenuItemEnableDisableBreakPoint.Tag);
+  ClkActionRec := {%H-}PClkActionRec(MenuItemEnableDisableBreakPoint.Tag);
   if ClkActionRec = nil then
     Exit;
 
@@ -4450,9 +4477,37 @@ begin
 end;
 
 
-procedure TfrClickerActionsArr.MenuItem_ReplaceWith_AppDirClick(Sender: TObject);
+function TfrClickerActionsArr.ResolveTemplatePath(APath: string; ACustomSelfTemplateDir: string = ''; ACustomAppDir: string = ''): string;
 begin
-  FTemplateIconPath := StringReplace(FTemplateIconPath, ExtractFileDir(ParamStr(0)), '$AppDir$', [rfReplaceAll]);
+  Result := StringReplace(APath, '$TemplateDir$', FFullTemplatesDir, [rfReplaceAll]);
+
+  if ACustomSelfTemplateDir = '' then
+    Result := StringReplace(Result, '$SelfTemplateDir$', ExtractFileDir(FFileName), [rfReplaceAll])
+  else
+    Result := StringReplace(Result, '$SelfTemplateDir$', ACustomSelfTemplateDir, [rfReplaceAll]);
+
+  if ACustomAppDir = '' then
+    Result := StringReplace(Result, '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll])
+  else
+    Result := StringReplace(Result, '$AppDir$', ACustomAppDir, [rfReplaceAll]);
+end;
+
+
+function TfrClickerActionsArr.EncodeTemplatePath(APath: string): string;
+begin
+  Result := StringReplace(APath, ExtractFileDir(FFileName), '$SelfTemplateDir$', [rfReplaceAll]);
+  Result := StringReplace(Result, FFullTemplatesDir, '$TemplateDir$', [rfReplaceAll]);
+  Result := StringReplace(Result, ExtractFileDir(ParamStr(0)), '$AppDir$', [rfReplaceAll])
+end;
+
+
+procedure TfrClickerActionsArr.MenuItem_ReplaceWith_AppDirClick(Sender: TObject);
+var
+  ResolvedPath: string;
+begin
+  ResolvedPath := ResolveTemplatePath(FTemplateIconPath);
+
+  FTemplateIconPath := StringReplace(ResolvedPath, ExtractFileDir(ParamStr(0)), '$AppDir$', [rfReplaceAll]);
   SetTemplateIconHint;
   Modified := True;
 end;
@@ -4460,8 +4515,12 @@ end;
 
 procedure TfrClickerActionsArr.MenuItem_ReplaceWith_SelfTemplateDirClick(
   Sender: TObject);
+var
+  ResolvedPath: string;
 begin
-  FTemplateIconPath := StringReplace(FTemplateIconPath, FFileName, '$SelfTemplateDir$', [rfReplaceAll]);
+  ResolvedPath := ResolveTemplatePath(FTemplateIconPath);
+
+  FTemplateIconPath := StringReplace(ResolvedPath, ExtractFileDir(FFileName), '$SelfTemplateDir$', [rfReplaceAll]);
   SetTemplateIconHint;
   Modified := True;
 end;
@@ -4470,10 +4529,21 @@ end;
 procedure TfrClickerActionsArr.MenuItem_ReplaceWith_TemplateDirClick(
   Sender: TObject);
 var
-  ResolvedTemplatesDir: string;
+  ResolvedPath: string;
 begin
-  ResolvedTemplatesDir := StringReplace(FFullTemplatesDir, '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
-  FTemplateIconPath := StringReplace(FTemplateIconPath, ResolvedTemplatesDir, '$TemplateDir$', [rfReplaceAll]);
+  ResolvedPath := ResolveTemplatePath(FTemplateIconPath);
+
+  FTemplateIconPath := StringReplace(ResolvedPath, FFullTemplatesDir, '$TemplateDir$', [rfReplaceAll]);
+  SetTemplateIconHint;
+  Modified := True;
+end;
+
+
+procedure TfrClickerActionsArr.MenuItem_ResolvePathToAbsoluteClick(
+  Sender: TObject);
+begin
+  FTemplateIconPath := ResolveTemplatePath(FTemplateIconPath);
+
   SetTemplateIconHint;
   Modified := True;
 end;
@@ -4574,6 +4644,27 @@ begin
 end;
 
 
+procedure TfrClickerActionsArr.MenuItem_GenericOpenCalledTemplateInExperimentTabClick(Sender: TObject);
+var
+  TempMenuItem: TMenuItem;
+  Node: PVirtualNode;
+  TemplatePath: string;
+begin
+  Node := vstActions.GetFirstSelected;
+  if (Node = nil) or ((Node <> nil) and (FClkActions[Node^.Index].ActionOptions.Action <> acCallTemplate)) then
+  begin
+    MessageBox(Handle, 'No CallTemplate action is selected.', PChar(Application.Title), MB_ICONINFORMATION);
+    Exit;
+  end;
+
+  TemplatePath := EvaluateReplacements(FClkActions[Node^.Index].CallTemplateOptions.TemplateFileName);
+  TemplatePath := ResolveTemplatePath(TemplatePath);
+
+  TempMenuItem := Sender as TMenuItem;
+  DoOnOpenCalledTemplateInExperimentTab(TempMenuItem.Tag, TemplatePath);
+end;
+
+
 procedure TfrClickerActionsArr.pmVstActionsPopup(Sender: TObject);
 type
   TFoundItem = record
@@ -4587,6 +4678,7 @@ var
   TempMenuItem: TMenuItem;
   k: TClkAction;
   Bmp: TBitmap;
+  Node: PVirtualNode;
 begin
   FoundItems[0].Item := nil;
   FoundItems[1].Item := nil;
@@ -4620,6 +4712,26 @@ begin
         TempMenuItem.Bitmap := Bmp;
         FoundItems[j].Item.Insert(FoundItems[j].Item.Count, TempMenuItem);
       end;
+
+  Node := vstActions.GetFirstSelected;
+  MenuItem_OpenCalledTemplateInExperimentTab.Enabled := (Node <> nil) and
+                                                        (vstActions.GetNodeLevel(Node) = 0) and
+                                                        (FClkActions[Node^.Index].ActionOptions.Action = acCallTemplate);
+
+  if MenuItem_OpenCalledTemplateInExperimentTab.Enabled then
+    MenuItem_OpenCalledTemplateInExperimentTab.Bitmap := MenuItem_AddACallTemplateByFile.Bitmap
+  else
+    MenuItem_OpenCalledTemplateInExperimentTab.Bitmap := nil;
+
+  MenuItem_OpenCalledTemplateInExperimentTab.Clear;
+  for j := 0 to 1 do //this should be replaced with an array when experiments are implemented as array
+  begin
+    TempMenuItem := TMenuItem.Create(pmVstActions);
+    TempMenuItem.Caption := 'Experiment ' + IntToStr(j + 1);
+    TempMenuItem.Tag := j;
+    TempMenuItem.OnClick := MenuItem_GenericOpenCalledTemplateInExperimentTabClick;
+    MenuItem_OpenCalledTemplateInExperimentTab.Insert(MenuItem_OpenCalledTemplateInExperimentTab.Count, TempMenuItem);
+  end;
 end;
 
 
@@ -4883,6 +4995,7 @@ begin
   FClkActions[AIndex].FindControlOptions.UseFastSearch := True;
   FClkActions[AIndex].FindControlOptions.FastSearchAllowedColorErrorCount := '10';
   FClkActions[AIndex].FindControlOptions.IgnoredColors := '';
+  FClkActions[AIndex].FindControlOptions.SleepySearch := False;
 
   SetLength(FClkActions[AIndex].FindControlOptions.MatchBitmapText, 1);
   FClkActions[AIndex].FindControlOptions.MatchBitmapText[0].ForegroundColor := '$Color_Window$';
@@ -4916,6 +5029,7 @@ begin
   FClkActions[AIndex].CallTemplateOptions.TemplateFileName := '';
   FClkActions[AIndex].CallTemplateOptions.ListOfCustomVarsAndValues := '';
   FClkActions[AIndex].CallTemplateOptions.EvaluateBeforeCalling := False;
+  FClkActions[AIndex].CallTemplateOptions.CallOnlyIfCondition := False; //still required, to prevent a pop-up, until the feature is removed
   FClkActions[AIndex].CallTemplateOptions.CallTemplateLoop.Enabled := False;
   FClkActions[AIndex].CallTemplateOptions.CallTemplateLoop.Counter := '';
   FClkActions[AIndex].CallTemplateOptions.CallTemplateLoop.InitValue := '';

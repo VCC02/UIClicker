@@ -113,14 +113,13 @@ implementation
 { Checklist for adding a new field to an action structure and its property in ObjectInspector.
   - In ClickerUtils.pas, add the new field to the desired structure (like)
   - In ClickerActionValues.pas, add the new field to structures, functions and constants (including count(s))
-  - Set default value for the new field when adding a new action (from palette)  - see TfrClickerActionsArr.FPaletteVsMouseUp
+  - Set default value for the new field when adding a new action (from palette)  - see TfrClickerActionsArr.OverwriteActionAtIndexWithDefault
   - In ClickerActonsArrFrame.pas, update action settings  (see UpdateActionsArrFromControls and UpdateControlsFromActionsArr) if required
   - In ClickerTemplates.pas, add new field (Load and Save). If the actions is FindControl or FindSubControl, the field has to be added to CopyActionContent, as well.
   - In ActionExecution.pas, handle the new field.
   - In ClickerActionProperties.pas, handle the new field.
   - In ClickerActionsFrame.pas, add new icon to the "imglst*" image list for that action.
   - In ClickerActionsFrame.pas, Add menu, hint, (and custom editors, if required). Some properties may have to be grayed-out depending on other properties (see HandleOnOIPaintText).
-  - In ClickerActionsClient.pas, add the new field
   - In ClickerClient.ppr, add the new field (in structure(s) and function(s)), then recompile the dll (ClickerClient)
   - In UIClickerTypes.py (and wrapper.py), add the new field and make sure it works
   - optionally, if the new field (as an ObjectInspector property) is related to other fields, so that it makes sense to be added right after them, and not at the end of the structure, then various other structures will have to be adjusted (including imglst icons)

@@ -556,9 +556,10 @@ end;
 procedure TTestUI.Test_FindColorErrorFromGradientOnServer_ErrorLevel_SuccessVerbose_NoUpdate;
 begin
   TestServerAddress := CTestDriverServerAddress_Client;
-  RunTestTemplateInClickerUnderTest('FindColorErrorFromGradientOnServer.clktmpl');
 
   PrepareClickerUnderTestToLocalMode;
+  RunTestTemplateInClickerUnderTest('FindColorErrorFromGradientOnServer.clktmpl');
+
   SetVariableOnTestDriverClient('$SearchResult$', 'False');
   SetVariableOnTestDriverClient('$CalcItem$', 'Calculate minimum color error ' + CMinErrorLevelKeyword + ' to match bitmap...');
   SetVariableOnTestDriverClient('$ExpectedColorErrorMsg$', 'A color error ' + CMinErrorLevelKeyword + ' found');
@@ -576,9 +577,10 @@ end;
 procedure TTestUI.Test_FindColorErrorFromGradientOnServer_ErrorCount_SuccessVerbose_NoUpdate;
 begin
   TestServerAddress := CTestDriverServerAddress_Client;
-  RunTestTemplateInClickerUnderTest('FindColorErrorFromGradientOnServer.clktmpl');
 
   PrepareClickerUnderTestToLocalMode;
+  RunTestTemplateInClickerUnderTest('FindColorErrorFromGradientOnServer.clktmpl');
+
   SetVariableOnTestDriverClient('$SearchResult$', 'False');
   SetVariableOnTestDriverClient('$CalcItem$', 'Calculate minimum color error ' + CMinErrorCountKeyword + ' to match bitmap...');
   SetVariableOnTestDriverClient('$ExpectedColorErrorMsg$', 'A color error ' + CMinErrorCountKeyword + ' found');

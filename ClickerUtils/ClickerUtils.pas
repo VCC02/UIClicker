@@ -248,6 +248,7 @@ type
     UseFastSearch: Boolean; //When True, the FindSubControl algorithm searches a 5px x 5px area first. If that matches, then it goes for full search. Make sure that FastSearchAllowedColorErrorCount has the right value.
     FastSearchAllowedColorErrorCount: string;  //-1 = Use calculated value (scaled down value of AllowedColorErrorCount). Other values are directly converted / used (including 0). Because the 5x5 area is small, a scaled down value, will often end up being 0, which won't allow a proper match.
     IgnoredColors: string; //CSV list of colors, which can be in hex format (6 digits) or var/replacements
+    SleepySearch: Boolean; //when True, theare are Sleep(1) calls, to prevent keeping a CPU core at 100%. However, because the thread switching takes usually longer than 1ms, a Sleep(1) call may take even 16ms. This results in slower searches.
   end;
 
   TClkSetTextOptions = record

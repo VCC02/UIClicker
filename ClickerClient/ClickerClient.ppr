@@ -124,6 +124,7 @@ type
     UseFastSearch: Boolean;
     FastSearchAllowedColorErrorCount: PWideChar;
     IgnoredColors: PWideChar;
+    SleepySearch: Boolean;
   end;
 
   PClkFindControlOptionsAPI = ^TClkFindControlOptionsAPI;
@@ -677,6 +678,7 @@ begin
   TempAction.FindControlOptions.UseFastSearch := AFindControlOptions^.UseFastSearch;
   SetPointedContentToString(@string(PWideChar(AFindControlOptions^.FastSearchAllowedColorErrorCount))[1], TempAction.FindControlOptions.FastSearchAllowedColorErrorCount);
   SetPointedContentToString(@string(PWideChar(AFindControlOptions^.IgnoredColors))[1], TempAction.FindControlOptions.IgnoredColors);
+  TempAction.FindControlOptions.SleepySearch := AFindControlOptions^.SleepySearch;
 
   AddActionToTemplate(TemplateFileName, TempAction);
   Result := 0;

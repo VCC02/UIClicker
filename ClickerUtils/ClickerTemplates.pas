@@ -179,6 +179,11 @@ begin
     ACustomActions[i].FindControlOptions.CachedControlTop := Ini.ReadString(SectionIndex, 'CachedControlTop_' + IterationStr, '');
 
     ACustomActions[i].FindControlOptions.MatchPrimitiveFiles := StringReplace(Ini.ReadString(SectionIndex, 'MatchPrimitiveFiles_' + IterationStr, ''), #4#5, #13#10, [rfReplaceAll]);
+    ACustomActions[i].FindControlOptions.GetAllControls := False;
+    ACustomActions[i].FindControlOptions.UseFastSearch := True;
+    ACustomActions[i].FindControlOptions.FastSearchAllowedColorErrorCount := '';
+    ACustomActions[i].FindControlOptions.IgnoredColors := '';
+    ACustomActions[i].FindControlOptions.SleepySearch := False;
 
     SectionIndex := Ini.GetSectionIndex('Actions.SetTextOptions');
     ACustomActions[i].SetTextOptions.Text := Ini.ReadString(SectionIndex, 'Text_' + IterationStr, '');
@@ -381,6 +386,7 @@ begin
   AFindControlOptions.UseFastSearch := Ini.ReadBool(SectionIndex, 'UseFastSearch', True);
   AFindControlOptions.FastSearchAllowedColorErrorCount := Ini.ReadString(SectionIndex, 'FastSearchAllowedColorErrorCount', '10');
   AFindControlOptions.IgnoredColors := Ini.ReadString(SectionIndex, 'IgnoredColors', '');
+  AFindControlOptions.SleepySearch := Ini.ReadBool(SectionIndex, 'SleepySearch', False);
 end;
 
 
@@ -790,6 +796,7 @@ begin
   AStringList.Add('FastSearchAllowedColorErrorCount=' + AActionFindControlOptions.FastSearchAllowedColorErrorCount);
 
   AStringList.Add('IgnoredColors=' + AActionFindControlOptions.IgnoredColors);
+  AStringList.Add('SleepySearch=' + IntToStr(Ord(AActionFindControlOptions.SleepySearch)));
 end;
 
 
@@ -943,6 +950,7 @@ begin             //Substructures, which do not contain pointers, can be directl
   ADest.FindControlOptions.UseFastSearch := ASrc.FindControlOptions.UseFastSearch;
   ADest.FindControlOptions.FastSearchAllowedColorErrorCount := ASrc.FindControlOptions.FastSearchAllowedColorErrorCount;
   ADest.FindControlOptions.IgnoredColors := ASrc.FindControlOptions.IgnoredColors;
+  ADest.FindControlOptions.SleepySearch := ASrc.FindControlOptions.SleepySearch;
 end;
 
 

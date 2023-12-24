@@ -794,7 +794,7 @@ begin
     if NodeData <> nil then
     begin
       ResolvedPath := StringReplace(NodeData^.Template^.IconPath, '$TemplateDir$', FullTemplatesDir, [rfReplaceAll]);
-      ResolvedPath := StringReplace(ResolvedPath, '$SelfTemplateDir$', NodeData^.Template^.FilePath, [rfReplaceAll]);
+      ResolvedPath := StringReplace(ResolvedPath, '$SelfTemplateDir$', ExtractFileDir(NodeData^.Template^.FilePath), [rfReplaceAll]);
       ResolvedPath := StringReplace(ResolvedPath, '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
 
       Bmp := TBitmap.Create;

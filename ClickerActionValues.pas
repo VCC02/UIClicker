@@ -56,7 +56,7 @@ const
   //Properties (counts)
   CPropCount_Click = 25;
   CPropCount_ExecApp = 7;
-  CPropCount_FindControl = 23;
+  CPropCount_FindControl = 24;
   CPropCount_FindSubControl = CPropCount_FindControl;
   CPropCount_SetText = 3;
   CPropCount_CallTemplate = 4;
@@ -123,6 +123,7 @@ const
   CFindControl_UseFastSearch_PropIndex = 20;
   CFindControl_FastSearchAllowedColorErrorCount_PropIndex = 21;
   CFindControl_IgnoredColors_PropIndex = 22;
+  CFindControl_SleepySearch_PropIndex = 23;
 
   CCallTemplate_TemplateFileName_PropIndex = 0; //property index in CallTemplate structure
   CCallTemplate_ListOfCustomVarsAndValues_PropIndex = 1;
@@ -254,7 +255,8 @@ const
     (Name: 'GetAllControls'; EditorType: etBooleanCombo; DataType: CDTBool),
     (Name: 'UseFastSearch'; EditorType: etBooleanCombo; DataType: CDTBool),
     (Name: 'FastSearchAllowedColorErrorCount'; EditorType: etText; DataType: CDTString),
-    (Name: 'IgnoredColors'; EditorType: etText; DataType: CDTString)
+    (Name: 'IgnoredColors'; EditorType: etText; DataType: CDTString),
+    (Name: 'SleepySearch'; EditorType: etBooleanCombo; DataType: CDTBool)
   );
 
   {$IFDEF SubProperties}
@@ -481,7 +483,8 @@ const
     nil, //GetAllControls
     nil, //UseFastSearch
     nil, //FastSearchAllowedColorErrorCount
-    nil  //IgnoredColors
+    nil, //IgnoredColors
+    nil  //SleepySearch
   );
 
   CCallTemplateGetActionValueStrFunctions: TGetCallTemplateValueStrFuncArr = (
@@ -561,7 +564,8 @@ const
     0, //GetAllControls: Boolean;
     0, //UseFastSearch: Boolean;
     0, //FastSearchAllowedColorErrorCount: Boolean;
-    0  //IgnoredColors: Boolean;
+    0, //IgnoredColors: string;
+    0  //SleepySearch: Boolean;
   );
 
   CSetTextEnumCounts: array[0..CPropCount_SetText - 1] of Integer = (
@@ -719,7 +723,8 @@ const
     nil, //GetAllControls
     nil, //UseFastSearch
     nil, //FastSearchAllowedColorErrorCount
-    nil  //IgnoredColors
+    nil, //IgnoredColors
+    nil  //SleepySearch
   );
 
   CSetTextEnumStrings: array[0..CPropCount_SetText - 1] of PArrayOfString = (
@@ -841,6 +846,7 @@ function GetPropertyHint_FindControl_GetAllControls: string;
 function GetPropertyHint_FindControl_UseFastSearch: string;
 function GetPropertyHint_FindControl_FastSearchAllowedColorErrorCount: string;
 function GetPropertyHint_FindControl_IgnoredColors: string;
+function GetPropertyHint_FindControl_SleepySearch: string;
 
 {$IFDEF SubProperties}
   function GetPropertyHint_FindControl_MatchCriteria_MatchBitmapText: string;
@@ -950,7 +956,8 @@ const
     @GetPropertyHint_FindControl_GetAllControls, // GetAllControls: Boolean;
     @GetPropertyHint_FindControl_UseFastSearch, // UseFastSearch: Boolean;
     @GetPropertyHint_FindControl_FastSearchAllowedColorErrorCount, // FastSearchAllowedColorErrorCount: string;
-    @GetPropertyHint_FindControl_IgnoredColors // IgnoredColors: string;
+    @GetPropertyHint_FindControl_IgnoredColors, // IgnoredColors: string;
+    @GetPropertyHint_FindControl_SleepySearch // SleepySearch: Boolean;
   );
 
 
@@ -1141,6 +1148,7 @@ begin
     20: Result := BoolToStr(AAction^.FindControlOptions.UseFastSearch, True);
     21: Result := AAction^.FindControlOptions.FastSearchAllowedColorErrorCount;
     22: Result := AAction^.FindControlOptions.IgnoredColors;
+    23: Result := BoolToStr(AAction^.FindControlOptions.SleepySearch, True);
     else
       Result := 'unknown';
   end;
@@ -1592,6 +1600,7 @@ begin
     20: AAction^.FindControlOptions.UseFastSearch := StrToBool(NewValue);
     21: AAction^.FindControlOptions.FastSearchAllowedColorErrorCount := NewValue;
     22: AAction^.FindControlOptions.IgnoredColors := NewValue;
+    23: AAction^.FindControlOptions.SleepySearch := StrToBool(NewValue);
     else
       ;
   end;
@@ -1842,14 +1851,14 @@ end;
 
 function GetPropertyHint_ExecApp_NoConsole: string;
 begin
-  Result := 'When checked, console applications are not displayed in a new window.' + #13#10 +
+  Result := 'When True, console applications are not displayed in a new window.' + #13#10 +
             'UI applications can create and display system consoles. For those applications, this option may cause problems if checked.';
 end;
 
 
 function GetPropertyHint_FindControl_AllowToFail: string;
 begin
-  Result := 'When checked, the execution flow does not stop if the searched (sub)control is not found.' + #13#10 +
+  Result := 'When True, the execution flow does not stop if the searched (sub)control is not found.' + #13#10 +
             'The "Allowed Failed" response can be used for conditional execution (call action).' + #13#10 +
             'When the action is allowed to fail and it fails, $LastAction_Status$ is set to "Allowed Failed".';
 end;
@@ -1980,6 +1989,13 @@ begin
   Result := 'Comma-separated list of colors, from searched bitmap.' + #13#10 +
             'They can be 6-digit hex values (BGR format, without "0x" prefix) or var/replacements, which contain 6-digit hex values.' + #13#10 +
             'When empty, no color is ignored (except for text background color, if configured).';
+end;
+
+
+function GetPropertyHint_FindControl_SleepySearch: string;
+begin
+  Result := 'When set to True, once in a while, at random times, a call to Sleep(1) is made, to avoid keeping a CPU core to 100%.' + #13#10 +
+            'Since thread switching is not that accurate, a call to Sleep(1) may take even 16ms. This will result in slower searches.';
 end;
 
 

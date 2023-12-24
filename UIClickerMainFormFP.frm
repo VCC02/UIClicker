@@ -8,9 +8,9 @@ object frmUIClickerMainForm: TfrmUIClickerMainForm
   ClientWidth = 320
   Constraints.MinHeight = 240
   Constraints.MinWidth = 320
+  LCLVersion = '8.2'
   OnClose = FormClose
   OnCreate = FormCreate
-  LCLVersion = '7.9'
   object bitbtnShowRemoteScreenShotForm: TBitBtn
     Left = 64
     Height = 25
@@ -45,8 +45,8 @@ object frmUIClickerMainForm: TfrmUIClickerMainForm
       16337616337616FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
       FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
     }
-    OnClick = btnShowRemoteScreenShotFormClick
     TabOrder = 0
+    OnClick = btnShowRemoteScreenShotFormClick
   end
   object bitbtnShowActionsForm: TBitBtn
     Left = 64
@@ -82,8 +82,8 @@ object frmUIClickerMainForm: TfrmUIClickerMainForm
       B51DE6B51DE6B5FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
       FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
     }
-    OnClick = btnShowActionsFormClick
     TabOrder = 1
+    OnClick = btnShowActionsFormClick
   end
   object bitbtnShowTemplateCallTree: TBitBtn
     Left = 64
@@ -119,8 +119,8 @@ object frmUIClickerMainForm: TfrmUIClickerMainForm
       FFFFFFFFFFFFFFFFFFFFFFFFFF4CB1224CB1224CB1224CB1224CB1224CB122FF
       FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
     }
-    OnClick = btnShowTemplateCallTreeClick
     TabOrder = 2
+    OnClick = btnShowTemplateCallTreeClick
   end
   object bitbtnShowWinInterp: TBitBtn
     Left = 64
@@ -156,8 +156,8 @@ object frmUIClickerMainForm: TfrmUIClickerMainForm
       FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
       FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
     }
-    OnClick = btnShowWinInterpClick
     TabOrder = 3
+    OnClick = btnShowWinInterpClick
   end
   object bitbtnShowPreviewForm: TBitBtn
     Left = 64
@@ -193,8 +193,8 @@ object frmUIClickerMainForm: TfrmUIClickerMainForm
       FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
       FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF
     }
-    OnClick = btnShowPreviewFormClick
     TabOrder = 4
+    OnClick = btnShowPreviewFormClick
   end
   object lblBitness: TLabel
     Left = 8

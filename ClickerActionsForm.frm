@@ -367,12 +367,13 @@ object frmClickerActions: TfrmClickerActions
         object memAllowedFileExtensionsForServer: TMemo
           Left = 8
           Height = 72
-          Hint = 'Only files of these types are allowed to be sent to server, when the server reports them as missing files.'#13#10'One extension per line is allowed.'
+          Hint = 'Only files of these types are allowed to be sent to server, when the server reports them as missing files.'#13#10'One extension per line is allowed.'#13#10#13#10'Settings example:'#13#10'.clktmpl'#13#10'.bmp'#13#10'.pmtv'
           Top = 8
           Width = 160
           Lines.Strings = (
             '.clktmpl'
             '.bmp'
+            '.pmtv'
           )
           ParentShowHint = False
           ScrollBars = ssVertical
@@ -393,7 +394,7 @@ object frmClickerActions: TfrmClickerActions
         object memAllowedFileDirsForServer: TMemo
           Left = 8
           Height = 96
-          Hint = 'Only files from the following directories and their subdirectories, are allowed to be sent to server, when the server reports them as missing files.'#13#10'One directory path per line is allowed.'
+          Hint = 'Only files from the following directories and their subdirectories, are allowed to be sent to server, when the server reports them as missing files.'#13#10'One directory path per line is allowed.'#13#10'$AppDir$ replacement is available.'#13#10#13#10'Settings example:'#13#10'$AppDir$\ActionTemplates'#13#10'$AppDir$\TestDriver\ActionTemplates'#13#10'$AppDir$\py\bmps'#13#10'$AppDir$\Tests\TestFiles'
           Top = 8
           Width = 248
           ParentShowHint = False

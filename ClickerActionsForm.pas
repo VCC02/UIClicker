@@ -312,6 +312,7 @@ type
     procedure HandleOnSetFontFinderSettings(var AFontFinderSettings: TFontFinderSettings);
 
     procedure HandleOnRetrieveRenderedBmpFromServer(ARemoteAddress, AFnm: string);
+    procedure HandleOnOpenCalledTemplateInExperimentTab(AExperimentIndex: Integer; ATemplatePath: string);
 
     procedure CreateRemainingUIComponents;
     function GetClickerActionsArrFrameByStackLevel(AStackLevel: Integer): TfrClickerActionsArr;
@@ -951,6 +952,7 @@ begin
   frClickerActionsArrMain.OnSetFontFinderSettings := HandleOnSetFontFinderSettings;
 
   frClickerActionsArrMain.OnRetrieveRenderedBmpFromServer := HandleOnRetrieveRenderedBmpFromServer;
+  frClickerActionsArrMain.OnOpenCalledTemplateInExperimentTab := HandleOnOpenCalledTemplateInExperimentTab;
 
   frClickerActionsArrExperiment1.frClickerActions.PasteDebugValuesListFromMainExecutionList1.OnClick := frClickerActionsArrExperiment1PasteDebugValuesListFromMainExecutionList1Click;
   frClickerActionsArrExperiment2.frClickerActions.PasteDebugValuesListFromMainExecutionList1.OnClick := frClickerActionsArrExperiment2PasteDebugValuesListFromMainExecutionList1Click;
@@ -1021,6 +1023,8 @@ begin
 
   frClickerActionsArrExperiment1.OnRetrieveRenderedBmpFromServer := HandleOnRetrieveRenderedBmpFromServer;
   frClickerActionsArrExperiment2.OnRetrieveRenderedBmpFromServer := HandleOnRetrieveRenderedBmpFromServer;
+  frClickerActionsArrExperiment1.OnOpenCalledTemplateInExperimentTab := HandleOnOpenCalledTemplateInExperimentTab;
+  frClickerActionsArrExperiment2.OnOpenCalledTemplateInExperimentTab := HandleOnOpenCalledTemplateInExperimentTab;
 
   tmrStartup.Enabled := True;
 end;
@@ -1526,6 +1530,7 @@ begin
         NewFrame.OnSetFontFinderSettings := HandleOnSetFontFinderSettings;
 
         NewFrame.OnRetrieveRenderedBmpFromServer := HandleOnRetrieveRenderedBmpFromServer;
+        NewFrame.OnOpenCalledTemplateInExperimentTab := HandleOnOpenCalledTemplateInExperimentTab;
 
         if FAutoSwitchToExecutingTab or (FAutoEnableSwitchingTabsOnDebugging and IsDebugging) then
         begin
@@ -3581,6 +3586,24 @@ begin
       end;
   finally
     ReceivedList.Free;
+  end;
+end;
+
+
+procedure TfrmClickerActions.HandleOnOpenCalledTemplateInExperimentTab(AExperimentIndex: Integer; ATemplatePath: string);
+begin
+  case AExperimentIndex of
+    0:
+    begin
+      frClickerActionsArrExperiment1.LoadTemplateWithUIUpdate(ATemplatePath);
+      PageControlMain.ActivePage := TabSheetExperiments1;
+    end;
+
+    1:
+    begin
+      frClickerActionsArrExperiment2.LoadTemplateWithUIUpdate(ATemplatePath);
+      PageControlMain.ActivePage := TabSheetExperiments2;
+    end;
   end;
 end;
 

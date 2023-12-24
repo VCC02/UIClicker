@@ -57,6 +57,7 @@ type
     procedure Test_ExecuteFindSubControlAction_UIClickerMain_BitnessLabelWithBadCropping_Height0;
     procedure Test_ExecuteFindSubControlAction_UIClickerMain_BitnessLabelWithBadCropping_NegativeHeight;
     procedure Test_ExecuteFindSubControlAction_UIClickerMain_BitnessLabel_WithFastSearch;
+    procedure Test_ExecuteFindSubControlAction_UIClickerMain_BitnessLabel_WithFastSearchAndSleepySearch;
     procedure Test_ExecuteFindSubControlAction_UIClickerMain_CustomLabel_IgnoreBG;
 
     procedure Test_ExecuteFindSubControlAction_UIClickerMain_WindowInterpreterButton_Disk;
@@ -386,7 +387,7 @@ end;
 
 procedure TTestLowLevelHTTPAPI.Test_ExecuteFindSubControlAction_UIClickerMain_BitnessLabel_WithFastSearch;
 const
-  CExpectedMultiplier = 16;
+  CExpectedMultiplier = 0.5; //without SleepySearch, there is not much difference
 var
   tk: QWord;
   FirstDuration, SecondDuration: QWord;
@@ -397,6 +398,25 @@ begin                                         //This test should be modified, to
 
   tk := GetTickCount64;
   ExecTestTemplate(TestServerAddress, '$AppDir$\Tests\TestFiles\FindBitOnMainWithFastSearch.clktmpl');
+  SecondDuration := GetTickCount64 - tk;
+
+  Expect(DWord(FirstDuration)).ToBeGreaterThan(Round(CExpectedMultiplier * SecondDuration), 'Expecting some performance gain.  ' + IntToStr(FirstDuration) + ' vs. ' + FloatToStr(CExpectedMultiplier) + ' * ' + IntToStr(SecondDuration));
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecuteFindSubControlAction_UIClickerMain_BitnessLabel_WithFastSearchAndSleepySearch;
+const
+  CExpectedMultiplier = 16;
+var
+  tk: QWord;
+  FirstDuration, SecondDuration: QWord;
+begin                                         //This test should be modified, to execute in-mem actions, i.e. FindSubControl, via API. Only the FindSubControl execution time should be measured.
+  tk := GetTickCount64;                       //It should generate some options with GenerateFindSubControlOptionsForMainUIClickerWindow_Bitness and modify them for this test.
+  ExecTestTemplate(TestServerAddress, '$AppDir$\Tests\TestFiles\FindBitOnMainNoFastSearchWithSleepySearch.clktmpl');
+  FirstDuration := GetTickCount64 - tk;
+
+  tk := GetTickCount64;
+  ExecTestTemplate(TestServerAddress, '$AppDir$\Tests\TestFiles\FindBitOnMainWithFastSearchWithSleepySearch.clktmpl');
   SecondDuration := GetTickCount64 - tk;
 
   Expect(DWord(FirstDuration)).ToBeGreaterThan(CExpectedMultiplier * SecondDuration, 'Expecting some performance gain.  ' + IntToStr(FirstDuration) + ' vs. ' + IntToStr(CExpectedMultiplier) + ' * ' + IntToStr(SecondDuration));

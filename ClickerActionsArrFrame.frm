@@ -804,7 +804,7 @@ object frClickerActionsArr: TfrClickerActionsArr
     object chkDisplayCalledTemplates: TCheckBox
       Left = 424
       Height = 18
-      Hint = 'Check this after loading a template, to display its called subtemplates (if any).'
+      Hint = 'Check this after loading a template, to display its called subtemplates (if any).'#13#10'Recheck to reload called subtemplates.'
       Top = 190
       Width = 150
       Anchors = [akRight, akBottom]
@@ -1260,6 +1260,9 @@ object frClickerActionsArr: TfrClickerActionsArr
         FFFF000000FFFFFF000000FFFFFFFFFFFF000000000000B0E4EF
       }
     end
+    object MenuItem_OpenCalledTemplateInExperimentTab: TMenuItem
+      Caption = 'Open called template in experiment tab'
+    end
     object N1: TMenuItem
       Caption = '-'
     end
@@ -1673,6 +1676,10 @@ object frClickerActionsArr: TfrClickerActionsArr
     object MenuItem_ReplaceWith_AppDir: TMenuItem
       Caption = 'Replace path to UIClicker with $AppDir$'
       OnClick = MenuItem_ReplaceWith_AppDirClick
+    end
+    object MenuItem_ResolvePathToAbsolute: TMenuItem
+      Caption = 'Resolve path to absolute'
+      OnClick = MenuItem_ResolvePathToAbsoluteClick
     end
   end
   object pmTemplateName: TPopupMenu

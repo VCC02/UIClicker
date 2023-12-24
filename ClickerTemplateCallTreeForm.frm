@@ -1,7 +1,7 @@
 object frmClickerTemplateCallTree: TfrmClickerTemplateCallTree
-  Left = 484
+  Left = 487
   Height = 375
-  Top = 158
+  Top = 156
   Width = 564
   Caption = 'Clicker Template - Call tree'
   ClientHeight = 375

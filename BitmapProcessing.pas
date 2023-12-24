@@ -59,7 +59,7 @@ type                      //2048 is used as 2^11 = 2048, as an optimization. See
 
 procedure Line(ACnv: TCanvas; x1, y1, x2, y2: Integer);
 procedure ScreenShot(SrcHandle: THandle; DestBitmap: TBitmap; XOffsetSrc, YOffsetSrc, Width, Height: Integer);
-function BitmapPosMatch(Algorithm: TMatchBitmapAlgorithm; AlgorithmSettings: TMatchBitmapAlgorithmSettings; SourceBitmap, SubBitmap: TBitmap; ColorErrorLevel: Integer; out SubCnvXOffset, SubCnvYOffset: Integer; TotalErrorCount, FastSearchColorErrorCount: Integer; AUseFastSearch, AIgnoreBackgroundColor: Boolean; ABackgroundColor: TColor; var AIgnoredColorsArr: TColorArr; AStopSearchOnDemand: PBoolean = nil; StopSearchOnMismatch: Boolean = True): Boolean;
+function BitmapPosMatch(Algorithm: TMatchBitmapAlgorithm; AlgorithmSettings: TMatchBitmapAlgorithmSettings; SourceBitmap, SubBitmap: TBitmap; ColorErrorLevel: Integer; out SubCnvXOffset, SubCnvYOffset: Integer; TotalErrorCount, FastSearchColorErrorCount: Integer; AUseFastSearch, AIgnoreBackgroundColor: Boolean; ABackgroundColor: TColor; var AIgnoredColorsArr: TColorArr; ASleepySearch: Byte; AStopSearchOnDemand: PBoolean = nil; StopSearchOnMismatch: Boolean = True): Boolean;
 function AvgTwoTrueColors(Color1, Color2: TColor): TColor;
 procedure AvgBitmapWithColor(ASrcBitmap, ADestBitmap: TBitmap; AColor: TColor; XOffset: Integer = -1; YOffset: Integer = -1; Width: Integer = -1; Height: Integer = -1); //if X, Y, W, H are specified, the function operates on that area only
 procedure AvgBitmapWithBitmap(ASrcABitmap, ASrcBBitmap, ADestBitmap: TBitmap; XOffset: Integer = -1; YOffset: Integer = -1; Width: Integer = -1; Height: Integer = -1);
@@ -76,12 +76,15 @@ uses
   Forms, Classes;
 
 
-procedure RandomSleep;
+procedure RandomSleep(ASleepySearch: Byte);
 begin
   if Random(8) = 7 then
   begin
-    Application.ProcessMessages;
-    Sleep(1);
+    if ASleepySearch and 2 = 2 then     //this should be 0 when using threaded search
+      Application.ProcessMessages;
+
+    if ASleepySearch and 1 = 1 then
+      Sleep(1);
   end;
 end;
 
@@ -107,7 +110,7 @@ begin
   try
     for i := 0 to Height - 1 do
     begin
-      ACanvasLine := ABitmap.ScanLine[i];
+      ACanvasLine := ABitmap.{%H-}ScanLine[i];
       i_shl_11 := i shl 11;                 // 2^11 = 2048  (see TCanvasMat datatype)
 
       for j := 0 to Width - 1 do
@@ -140,7 +143,7 @@ begin
   try
     for i := 0 to Height - 1 do
     begin
-      ACanvasLine := ABitmap.ScanLine[i];
+      ACanvasLine := ABitmap.{%H-}ScanLine[i];
       i_shl_11 := i shl 11;
 
       for j := 0 to Width - 1 do
@@ -173,7 +176,7 @@ begin
   try
     for i := 0 to Height - 1 do
     begin
-      ACanvasLine := ABitmap.ScanLine[i];
+      ACanvasLine := ABitmap.{%H-}ScanLine[i];
       i_shl_11 := i shl 11;                 // 2^11 = 2048  (see TCanvasMat datatype)
 
       for j := 0 to Width - 1 do
@@ -207,7 +210,7 @@ begin
   try
     for i := 0 to Height - 1 do
     begin
-      ACanvasLine := ABitmap.ScanLine[i];
+      ACanvasLine := ABitmap.{%H-}ScanLine[i];
       i_shl_11 := i shl 11;                 // 2^11 = 2048  (see TCanvasMat datatype)
 
       for j := 0 to Width - 1 do
@@ -395,7 +398,7 @@ begin
 end;
 
 
-function BitmapPosMatch_BruteForceWithOffset(SrcMat, SubMat: TRGBPCanvasMat; XOffset, YOffset, XAmount, YAmount, SrcWidth, SrcHeight, SubWidth, SubHeight, ColorErrorLevel: Integer; var SubCnvXOffset, SubCnvYOffset: Integer; TotalErrorCount: Integer; AIgnoreBackgroundColor: Boolean; ABackgroundColor: TColor; var AIgnoredColorsArr: TColorArr; AStopSearchOnDemand: PBoolean = nil; StopSearchOnMismatch: Boolean = True): Boolean;
+function BitmapPosMatch_BruteForceWithOffset(SrcMat, SubMat: TRGBPCanvasMat; XOffset, YOffset, XAmount, YAmount, SrcWidth, SrcHeight, SubWidth, SubHeight, ColorErrorLevel: Integer; var SubCnvXOffset, SubCnvYOffset: Integer; TotalErrorCount: Integer; AIgnoreBackgroundColor: Boolean; ABackgroundColor: TColor; var AIgnoredColorsArr: TColorArr; ASleepySearch: Byte; AStopSearchOnDemand: PBoolean = nil; StopSearchOnMismatch: Boolean = True): Boolean;
 var
   x, y: Integer;
 begin
@@ -415,12 +418,12 @@ begin
         Exit;
       end;
 
-      RandomSleep;
+      RandomSleep(ASleepySearch);
     end;
 end;
 
 
-function BitmapPosMatch_BruteForce(SrcMat, SubMat: TRGBPCanvasMat; SourceBitmap, SubBitmap: TBitmap; ColorErrorLevel: Integer; out SubCnvXOffset, SubCnvYOffset: Integer; TotalErrorCount, FastSearchColorErrorCount: Integer; AUseFastSearch: Boolean; AIgnoreBackgroundColor: Boolean; ABackgroundColor: TColor; var AIgnoredColorsArr: TColorArr; AStopSearchOnDemand: PBoolean = nil; StopSearchOnMismatch: Boolean = True): Boolean;
+function BitmapPosMatch_BruteForce(SrcMat, SubMat: TRGBPCanvasMat; SourceBitmap, SubBitmap: TBitmap; ColorErrorLevel: Integer; out SubCnvXOffset, SubCnvYOffset: Integer; TotalErrorCount, FastSearchColorErrorCount: Integer; AUseFastSearch: Boolean; AIgnoreBackgroundColor: Boolean; ABackgroundColor: TColor; var AIgnoredColorsArr: TColorArr; ASleepySearch: Byte; AStopSearchOnDemand: PBoolean = nil; StopSearchOnMismatch: Boolean = True): Boolean;
 const
   CPreSize = 5; //px
 var
@@ -446,7 +449,7 @@ begin                     //default optimization: searching a 5px x 5px area, th
 
   //old, full search  - to be used as an option
   if not AUseFastSearch then
-    Result := BitmapPosMatch_BruteForceWithOffset(SrcMat, SubMat, 0, 0, XAmount, YAmount, SrcWidth, SrcHeight, SubWidth, SubHeight, ColorErrorLevel, SubCnvXOffset, SubCnvYOffset, TotalErrorCount, AIgnoreBackgroundColor, ABackgroundColor, AIgnoredColorsArr, AStopSearchOnDemand)
+    Result := BitmapPosMatch_BruteForceWithOffset(SrcMat, SubMat, 0, 0, XAmount, YAmount, SrcWidth, SrcHeight, SubWidth, SubHeight, ColorErrorLevel, SubCnvXOffset, SubCnvYOffset, TotalErrorCount, AIgnoreBackgroundColor, ABackgroundColor, AIgnoredColorsArr, ASleepySearch, AStopSearchOnDemand)
   else
   begin
     if FastSearchColorErrorCount = -1 then
@@ -473,14 +476,14 @@ begin                     //default optimization: searching a 5px x 5px area, th
             Exit;
           end;
 
-          RandomSleep;
+          RandomSleep(ASleepySearch);
         end;
       end;
   end;
 end;
 
 
-function BitmapPosMatch_SimpleGrid_XYMultipleAndOffsets(SrcMat, SubMat: TRGBPCanvasMat; AlgorithmSettings: TMatchBitmapAlgorithmSettings; SourceBitmap, SubBitmap: TBitmap; ColorErrorLevel: Integer; out SubCnvXOffset, SubCnvYOffset: Integer; TotalErrorCount: Integer; AIgnoreBackgroundColor: Boolean; ABackgroundColor: TColor; var AIgnoredColorsArr: TColorArr; AStopSearchOnDemand: PBoolean = nil; StopSearchOnMismatch: Boolean = True): Boolean;
+function BitmapPosMatch_SimpleGrid_XYMultipleAndOffsets(SrcMat, SubMat: TRGBPCanvasMat; AlgorithmSettings: TMatchBitmapAlgorithmSettings; SourceBitmap, SubBitmap: TBitmap; ColorErrorLevel: Integer; out SubCnvXOffset, SubCnvYOffset: Integer; TotalErrorCount: Integer; AIgnoreBackgroundColor: Boolean; ABackgroundColor: TColor; var AIgnoredColorsArr: TColorArr; ASleepySearch: Byte; AStopSearchOnDemand: PBoolean = nil; StopSearchOnMismatch: Boolean = True): Boolean;
 var
   x, y: Integer;
   SrcWidth, SrcHeight: Integer;
@@ -523,13 +526,13 @@ begin
             Exit;
           end;
 
-          RandomSleep;
+          RandomSleep(ASleepySearch);
         end;
     end;
 end;
 
 
-function BitmapPosMatch(Algorithm: TMatchBitmapAlgorithm; AlgorithmSettings: TMatchBitmapAlgorithmSettings; SourceBitmap, SubBitmap: TBitmap; ColorErrorLevel: Integer; out SubCnvXOffset, SubCnvYOffset: Integer; TotalErrorCount, FastSearchColorErrorCount: Integer; AUseFastSearch, AIgnoreBackgroundColor: Boolean; ABackgroundColor: TColor; var AIgnoredColorsArr: TColorArr; AStopSearchOnDemand: PBoolean = nil; StopSearchOnMismatch: Boolean = True): Boolean;
+function BitmapPosMatch(Algorithm: TMatchBitmapAlgorithm; AlgorithmSettings: TMatchBitmapAlgorithmSettings; SourceBitmap, SubBitmap: TBitmap; ColorErrorLevel: Integer; out SubCnvXOffset, SubCnvYOffset: Integer; TotalErrorCount, FastSearchColorErrorCount: Integer; AUseFastSearch, AIgnoreBackgroundColor: Boolean; ABackgroundColor: TColor; var AIgnoredColorsArr: TColorArr; ASleepySearch: Byte; AStopSearchOnDemand: PBoolean = nil; StopSearchOnMismatch: Boolean = True): Boolean;
 const
   {%H-}CDebugSubBmpPath = 'E:\SubBmp.bmp';
 var
@@ -575,8 +578,8 @@ begin
     end;
 
     case Algorithm of
-      mbaBruteForce: Result := BitmapPosMatch_BruteForce(SrcMat, SubMat, SourceBitmap, SubBitmap, ColorErrorLevel, SubCnvXOffset, SubCnvYOffset, TotalErrorCount, FastSearchColorErrorCount, AUseFastSearch, AIgnoreBackgroundColor, ABackgroundColor, AIgnoredColorsArr, AStopSearchOnDemand, StopSearchOnMismatch);
-      mbaXYMultipleAndOffsets: Result := BitmapPosMatch_SimpleGrid_XYMultipleAndOffsets(SrcMat, SubMat, AlgorithmSettings, SourceBitmap, SubBitmap, ColorErrorLevel, SubCnvXOffset, SubCnvYOffset, TotalErrorCount, AIgnoreBackgroundColor, ABackgroundColor, AIgnoredColorsArr, AStopSearchOnDemand, StopSearchOnMismatch);
+      mbaBruteForce: Result := BitmapPosMatch_BruteForce(SrcMat, SubMat, SourceBitmap, SubBitmap, ColorErrorLevel, SubCnvXOffset, SubCnvYOffset, TotalErrorCount, FastSearchColorErrorCount, AUseFastSearch, AIgnoreBackgroundColor, ABackgroundColor, AIgnoredColorsArr, ASleepySearch, AStopSearchOnDemand, StopSearchOnMismatch);
+      mbaXYMultipleAndOffsets: Result := BitmapPosMatch_SimpleGrid_XYMultipleAndOffsets(SrcMat, SubMat, AlgorithmSettings, SourceBitmap, SubBitmap, ColorErrorLevel, SubCnvXOffset, SubCnvYOffset, TotalErrorCount, AIgnoreBackgroundColor, ABackgroundColor, AIgnoredColorsArr, ASleepySearch, AStopSearchOnDemand, StopSearchOnMismatch);
     else
       raise Exception.Create('Bitmap search algorithm #' + IntToStr(Ord(Algorithm)) + ' not implemented.');
     end;

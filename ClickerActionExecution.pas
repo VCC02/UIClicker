@@ -822,7 +822,7 @@ var
   {$ENDIF}
 begin
   SelfAppDir := ExtractFileDir(ParamStr(0));
-  ACmd := EvaluateReplacements(AExecAppOptions.PathToApp);
+  ACmd := AExecAppOptions.PathToApp;
 
   TemplateDir := '';
   if FSelfTemplateFileName = nil then
@@ -835,6 +835,7 @@ begin
   end;
 
   ACmd := StringReplace(ACmd, '$AppDir$', SelfAppDir, [rfReplaceAll]);
+  ACmd := EvaluateReplacements(ACmd);  //this call has to stay here, because the $SelfTemplateDir$ replacement is ''
 
   Result := True;
 
@@ -1219,6 +1220,10 @@ begin
   if Length(FindControlInputData.IgnoredColorsArr) > 0 then
     AddToLog('Ignoring colors: ' + AFindControlOptions.IgnoredColors);
 
+  FindControlInputData.SleepySearch := 2; //this allows a call to AppProcMsg, but does not use Sleep.
+  if AFindControlOptions.SleepySearch then
+    FindControlInputData.SleepySearch := FindControlInputData.SleepySearch or 1;  //2it 0 is SleepySearch. Bit 1 is AppProcMsg.
+
   for j := 0 to n - 1 do //number of font profiles
   begin
     if j > n - 1 then  //it seems that a FP bug allows "j" to go past n - 1. It may happen on EnumerateWindows only. At best, the memory is overwritten, which causes this behavior.
@@ -1358,6 +1363,7 @@ begin
 
       FindControlInputData.IgnoreBackgroundColor := AFindControlOptions.MatchBitmapText[j].IgnoreBackgroundColor;
       FindControlInputData.BackgroundColor := HexToInt(EvalBG);
+
 
       InitialTickCount := GetTickCount64;
       if AActionOptions.ActionTimeout < 0 then
@@ -1872,7 +1878,7 @@ begin
     end;
   end;
 
-  Fnm := EvaluateReplacements(ACallTemplateOptions.TemplateFileName);
+  Fnm := ACallTemplateOptions.TemplateFileName;
   TemplateDir := '';
   if FSelfTemplateFileName = nil then
     TemplateDir := 'FSelfTemplateFileName not set in CallTemplate.'
@@ -1886,6 +1892,7 @@ begin
   // the FileExists verification has to be done after checking CallOnlyIfCondition, to allow failing the action based on condition
 
   Fnm := StringReplace(Fnm, '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
+  Fnm := EvaluateReplacements(Fnm);  //this call has to stay here, after the $SelfTemplateDir$, $TemplateDir$ and $AppDir$ replacements, because $SelfTemplateDir$ will be evaluated to ''.
 
   if not FFileLocationOfDepsIsMem^ then
     if ExtractFileName(Fnm) = Fnm then  //Fnm does not contain a path
@@ -2510,6 +2517,7 @@ begin
     FindControlOptions.UseFastSearch := AListOfFindControlOptionsParams.Values['UseFastSearch'] <> '0';
     FindControlOptions.FastSearchAllowedColorErrorCount := AListOfFindControlOptionsParams.Values['FastSearchAllowedColorErrorCount'];
     FindControlOptions.IgnoredColors := AListOfFindControlOptionsParams.Values['IgnoredColors'];
+    FindControlOptions.SleepySearch := AListOfFindControlOptionsParams.Values['SleepySearch'] = '1';
 
     ActionOptions.ActionName := AListOfFindControlOptionsParams.Values['ActionName'];
     ActionOptions.ActionTimeout := Temp_ActionTimeout;

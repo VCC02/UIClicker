@@ -1,5 +1,5 @@
 [Actions]
-Count=31
+Count=32
 Version=2
 
 [Action_0]
@@ -552,6 +552,42 @@ ListOfVarValues=$SArea_Left$$SArea_Top$$SArea_Right$$SArea_Bottom$$SArea
 ListOfVarEvalBefore=111111111
 
 [Action_12]
+ActionName=Clear Expected Area Selection
+Action=Click
+ActionTimeout=0
+ActionEnabled=1
+ActionCondition=
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+XOffsetReference=0
+YOffsetReference=0
+XClickPointVar=$Control_Left$
+YClickPointVar=$Control_Top$
+XOffset=7
+YOffset=73
+MouseButton=0
+ClickWithCtrl=0
+ClickWithAlt=1
+ClickWithShift=0
+ClickWithDoubleClick=0
+LeaveMouse=0
+MoveWithoutClick=0
+Count=1
+ClickType=1
+XOffsetReferenceDest=0
+YOffsetReferenceDest=0
+XClickPointVarDest=$Control_Left$
+YClickPointVarDest=$Control_Top$
+XOffsetDest=11
+YOffsetDest=78
+MouseWheelType=0
+MouseWheelAmount=1
+DelayAfterMovingToDestination=100
+DelayAfterMouseDown=200
+MoveDuration=100
+
+[Action_13]
 ActionName=Define expected area
 Action=SetVar
 ActionTimeout=0
@@ -564,7 +600,7 @@ ListOfVarNames=$ExpectedArea_Left$$ExpectedArea_Top$$ExpectedArea_Right$$E
 ListOfVarValues=28109225150
 ListOfVarEvalBefore=
 
-[Action_13]
+[Action_14]
 ActionName=Select Expected Area
 Action=Click
 ActionTimeout=0
@@ -600,7 +636,7 @@ DelayAfterMovingToDestination=100
 DelayAfterMouseDown=200
 MoveDuration=1000
 
-[Action_14]
+[Action_15]
 ActionName=Restore Search Area
 Action=SetVar
 ActionTimeout=0
@@ -613,7 +649,7 @@ ListOfVarNames=$Control_Left$$Control_Top$$Control_Right$$Control_Bottom$
 ListOfVarValues=$SArea_Left$$SArea_Top$$SArea_Right$$SArea_Bottom$$SArea_Width$$SArea_Height$$SArea_Text$$SArea_Class$$SArea_Handle$
 ListOfVarEvalBefore=111111111
 
-[Action_15]
+[Action_16]
 ActionName=Find zoom checkbox
 Action=FindControl
 ActionTimeout=3000
@@ -679,7 +715,7 @@ UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=
 
-[Action_16]
+[Action_17]
 ActionName=Verify if zoom is checked
 Action=FindSubControl
 ActionTimeout=1000
@@ -745,7 +781,7 @@ UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=FF00FF
 
-[Action_17]
+[Action_18]
 ActionName=Uncheck zoom
 Action=Click
 ActionTimeout=0
@@ -781,7 +817,7 @@ DelayAfterMovingToDestination=50
 DelayAfterMouseDown=300
 MoveDuration=-1
 
-[Action_18]
+[Action_19]
 ActionName=Restore Search Area
 Action=SetVar
 ActionTimeout=0
@@ -794,7 +830,7 @@ ListOfVarNames=$Control_Left$$Control_Top$$Control_Right$$Control_Bottom$
 ListOfVarValues=$SArea_Left$$SArea_Top$$SArea_Right$$SArea_Bottom$$SArea_Width$$SArea_Height$$SArea_Text$$SArea_Class$$SArea_Handle$
 ListOfVarEvalBefore=111111111
 
-[Action_19]
+[Action_20]
 ActionName=Right click on Search Area
 Action=Click
 ActionTimeout=0
@@ -830,7 +866,7 @@ DelayAfterMovingToDestination=50
 DelayAfterMouseDown=300
 MoveDuration=-1
 
-[Action_20]
+[Action_21]
 ActionName=Find pop-up menu
 Action=FindControl
 ActionTimeout=3000
@@ -896,7 +932,7 @@ UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=
 
-[Action_21]
+[Action_22]
 ActionName=Find "Enable verbose.."
 Action=FindSubControl
 ActionTimeout=1000
@@ -979,7 +1015,7 @@ UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=
 
-[Action_22]
+[Action_23]
 ActionName=Reset ShouldEnableVerbose var
 Action=SetVar
 ActionTimeout=0
@@ -992,7 +1028,7 @@ ListOfVarNames=$ShouldEnableVerbose$
 ListOfVarValues=False
 ListOfVarEvalBefore=
 
-[Action_23]
+[Action_24]
 ActionName=Find check mark
 Action=FindSubControl
 ActionTimeout=1000
@@ -1058,26 +1094,26 @@ UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=FF00FF
 
-[Action_24]
+[Action_25]
 ActionName=Should enable item
 Action=SetVar
 ActionTimeout=0
 ActionEnabled=1
 ActionCondition=$LastAction_Status$==Allowed Failed
-BreakpointExists=0
-BreakpointEnabled=0
+BreakpointExists=1
+BreakpointEnabled=1
 BreakpointCondition=
 ListOfVarNames=$ShouldEnableVerbose$
 ListOfVarValues=True
 ListOfVarEvalBefore=
 
-[Action_25]
+[Action_26]
 ActionName=Click "Enable verbose.."
 Action=Click
 ActionTimeout=0
 ActionEnabled=1
 ActionCondition=$ShouldEnableVerbose$==True
-BreakpointExists=1
+BreakpointExists=0
 BreakpointEnabled=1
 BreakpointCondition=
 XOffsetReference=0
@@ -1107,7 +1143,7 @@ DelayAfterMovingToDestination=50
 DelayAfterMouseDown=200
 MoveDuration=-1
 
-[Action_26]
+[Action_27]
 ActionName=Restore Search Area
 Action=SetVar
 ActionTimeout=0
@@ -1120,13 +1156,13 @@ ListOfVarNames=$Control_Left$$Control_Top$$Control_Right$$Control_Bottom$
 ListOfVarValues=$SArea_Left$$SArea_Top$$SArea_Right$$SArea_Bottom$$SArea_Width$$SArea_Height$$SArea_Text$$SArea_Class$$SArea_Handle$
 ListOfVarEvalBefore=111111111
 
-[Action_27]
+[Action_28]
 ActionName=Right click on Search Area
 Action=Click
 ActionTimeout=0
 ActionEnabled=1
 ActionCondition=$ShouldEnableVerbose$==True
-BreakpointExists=0
+BreakpointExists=1
 BreakpointEnabled=1
 BreakpointCondition=
 XOffsetReference=0
@@ -1156,14 +1192,14 @@ DelayAfterMovingToDestination=50
 DelayAfterMouseDown=200
 MoveDuration=-1
 
-[Action_28]
+[Action_29]
 ActionName=Find pop-up menu
 Action=FindControl
 ActionTimeout=3000
 ActionEnabled=1
 ActionCondition=
 BreakpointExists=0
-BreakpointEnabled=1
+BreakpointEnabled=0
 BreakpointCondition=
 MatchCriteria.WillMatchText=1
 MatchCriteria.WillMatchClassName=1
@@ -1222,7 +1258,7 @@ UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=
 
-[Action_29]
+[Action_30]
 ActionName=wait for menu to show (because of animation)
 Action=Sleep
 ActionTimeout=0
@@ -1233,7 +1269,7 @@ BreakpointEnabled=0
 BreakpointCondition=
 Value=500
 
-[Action_30]
+[Action_31]
 ActionName=Find desired menu item
 Action=FindSubControl
 ActionTimeout=1000

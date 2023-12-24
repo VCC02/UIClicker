@@ -158,7 +158,8 @@ begin
             'GetAllControls' + '=' + IntToStr(Ord(AFindControlOptions.GetAllControls)) + '&' +
             'UseFastSearch' + '=' + IntToStr(Ord(AFindControlOptions.UseFastSearch)) + '&' +
             'FastSearchAllowedColorErrorCount' + '=' + AFindControlOptions.FastSearchAllowedColorErrorCount + '&' +
-            'IgnoredColors' + '=' + AFindControlOptions.IgnoredColors;
+            'IgnoredColors' + '=' + AFindControlOptions.IgnoredColors + '&' +
+            'SleepySearch' + '=' + IntToStr(Ord(AFindControlOptions.UseFastSearch));
 end;
 
 
