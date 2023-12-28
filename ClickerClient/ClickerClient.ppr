@@ -184,6 +184,22 @@ type
   PClkWindowOperationsAPI = ^TClkWindowOperationsAPI;
 
 
+  TClkLoadSetVarFromFileOptionsAPI = record
+    FileName: PWideChar;
+    SetVarActionName: PWideChar;
+  end;
+
+  PClkLoadSetVarFromFileOptionsAPI = ^TClkLoadSetVarFromFileOptionsAPI;
+
+
+  TClkSaveSetVarToFileOptionsAPI = record
+    FileName: PWideChar;
+    SetVarActionName: PWideChar;
+  end;
+
+  PClkSaveSetVarToFileOptionsAPI = ^TClkSaveSetVarToFileOptionsAPI;
+
+
   TClkFindControlMatchBitmapTextAPI = record
     ForegroundColor: PWideChar;
     BackgroundColor: PWideChar;
@@ -868,6 +884,16 @@ begin
       ListOfVarValues.Add('The number of items from ListOfVarValues or ListOfVarEvalBefore, does not match the number of items from ListOfVarNames.');
       ListOfVarEvalBefore.Add('0');
 
+      ListOfVarNames.Add('$DLL_Err_ListOfVarNames.Count$');
+      ListOfVarNames.Add('$DLL_Err_ListOfVarValues.Count$');
+      ListOfVarNames.Add('$DLL_Err_ListOfVarEvalBefore.Count$');
+      ListOfVarValues.Add(IntToStr(ListOfVarNames.Count));
+      ListOfVarValues.Add(IntToStr(ListOfVarValues.Count));
+      ListOfVarValues.Add(IntToStr(ListOfVarEvalBefore.Count));
+      ListOfVarEvalBefore.Add('0');
+      ListOfVarEvalBefore.Add('0');
+      ListOfVarEvalBefore.Add('0');
+
       TempAction.SetVarOptions.ListOfVarNames := ListOfVarNames.Text;
       TempAction.SetVarOptions.ListOfVarValues := ListOfVarValues.Text;
       TempAction.SetVarOptions.ListOfVarEvalBefore := ListOfVarEvalBefore.Text;
@@ -914,6 +940,68 @@ begin
   SetPointedContentToString(@string(PWideChar(AWindowOperationsOptions^.NewHeight))[1], TempAction.WindowOperationsOptions.NewHeight);
   TempAction.WindowOperationsOptions.NewPositionEnabled := AWindowOperationsOptions^.NewPositionEnabled;
   TempAction.WindowOperationsOptions.NewSizeEnabled := AWindowOperationsOptions^.NewSizeEnabled;
+
+  AddActionToTemplate(TemplateFileName, TempAction);
+  Result := 0;
+end;
+
+
+function AddLoadSetVarFromFileActionToTemplate(ATemplateFileName: Pointer;
+
+                                               AActionName: Pointer;
+                                               AActionTimeout: LongInt; //ms
+                                               AActionEnabled: Boolean;
+                                               AActionCondition: Pointer;
+
+                                               ALoadSetVarFromFileOptions: PClkLoadSetVarFromFileOptionsAPI
+
+                                              ): LongInt; cdecl;
+var
+  TemplateFileName: string;
+  TempAction: TClkActionRec;
+begin
+  if InMemFS = nil then
+  begin
+    Result := -1;
+    Exit;
+  end;
+
+  SetBasicActionOptions(ATemplateFileName, AActionName, acLoadSetVarFromFile, AActionTimeout, AActionEnabled, AActionCondition, TempAction, TemplateFileName);
+
+  //LoadSetVarFromFile stuff
+  SetPointedContentToString(@string(PWideChar(ALoadSetVarFromFileOptions^.FileName))[1], TempAction.LoadSetVarFromFileOptions.FileName);
+  SetPointedContentToString(@string(PWideChar(ALoadSetVarFromFileOptions^.SetVarActionName))[1], TempAction.LoadSetVarFromFileOptions.SetVarActionName);
+
+  AddActionToTemplate(TemplateFileName, TempAction);
+  Result := 0;
+end;
+
+
+function AddSaveSetVarToFileActionToTemplate(ATemplateFileName: Pointer;
+
+                                             AActionName: Pointer;
+                                             AActionTimeout: LongInt; //ms
+                                             AActionEnabled: Boolean;
+                                             AActionCondition: Pointer;
+
+                                             ASaveSetVarToFileOptions: PClkSaveSetVarToFileOptionsAPI
+
+                                            ): LongInt; cdecl;
+var
+  TemplateFileName: string;
+  TempAction: TClkActionRec;
+begin
+  if InMemFS = nil then
+  begin
+    Result := -1;
+    Exit;
+  end;
+
+  SetBasicActionOptions(ATemplateFileName, AActionName, acSaveSetVarToFile, AActionTimeout, AActionEnabled, AActionCondition, TempAction, TemplateFileName);
+
+  //SaveSetVarToFile stuff
+  SetPointedContentToString(@string(PWideChar(ASaveSetVarToFileOptions^.FileName))[1], TempAction.SaveSetVarToFileOptions.FileName);
+  SetPointedContentToString(@string(PWideChar(ASaveSetVarToFileOptions^.SetVarActionName))[1], TempAction.SaveSetVarToFileOptions.SetVarActionName);
 
   AddActionToTemplate(TemplateFileName, TempAction);
   Result := 0;
@@ -1250,6 +1338,8 @@ exports
   AddSleepActionToTemplate,
   AddSetVarActionToTemplate,
   AddWindowOperationsActionToTemplate,
+  AddLoadSetVarFromFileActionToTemplate,
+  AddSaveSetVarToFileActionToTemplate,
 
   AddFontProfileToFindSubControlAction,
 

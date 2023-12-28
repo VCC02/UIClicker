@@ -32,7 +32,7 @@ interface
 
 uses
   Windows, Classes, SysUtils, Forms, Graphics, ExtCtrls,
-  ClickerUtils, ClickerPrimitiveUtils, ClickerActionsFrame;
+  ClickerUtils, ClickerPrimitiveUtils, ClickerActionsFrame, ClickerIniFiles;
 
 
 type
@@ -44,6 +44,11 @@ type
   TOnSetEditorSleepInfo = procedure(AElapsedTime, ARemainingTime: string) of object;
   TOnGetSelfHandles = procedure(AListOfSelfHandles: TStringList) of object;
   TOnAddDefaultFontProfile = procedure(var AFindControlOptions: TClkFindControlOptions; var AActionOptions: TClkActionOptions) of object;
+
+  TOnGetSetVarActionByName = function(var AClkSetVarOptions: TClkSetVarOptions; AActionName: string): Boolean of object;  //used before saving the action to file
+  TOnUpdateSetVarActionByName = function(AClkSetVarOptions: TClkSetVarOptions; AActionName: string): Boolean of object;   //used after loading the action from file
+  TOnBackupVars = procedure(AAllVars: TStringList) of object;
+  TOnRestoreVars = procedure(AAllVars: TStringList) of object;
 
   TActionExecution = class
   private
@@ -78,6 +83,13 @@ type
     FOnGetGridDrawingOption: TOnGetGridDrawingOption;
     FOnLoadPrimitivesFile: TOnLoadPrimitivesFile;
 
+    FOnGetSetVarActionByName: TOnGetSetVarActionByName;
+    FOnUpdateSetVarActionByName: TOnUpdateSetVarActionByName;
+    FOnTClkIniReadonlyFileCreate: TOnTClkIniReadonlyFileCreate;
+    FOnSaveStringListToFile: TOnSaveTemplateToFile;
+    FOnBackupVars: TOnBackupVars;
+    //FOnRestoreVars: TOnRestoreVars;
+
     function GetActionVarValue(VarName: string): string;
     procedure SetActionVarValue(VarName, VarValue: string);
     function EvaluateReplacements(s: string; Recursive: Boolean = True): string;
@@ -111,6 +123,13 @@ type
     function DoOnGetGridDrawingOption: TOnGetGridDrawingOption;
     procedure DoOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
 
+    function DoOnGetSetVarActionByName(var AClkSetVarOptions: TClkSetVarOptions; AActionName: string): Boolean;
+    function DoOnUpdateSetVarActionByName(AClkSetVarOptions: TClkSetVarOptions; AActionName: string): Boolean;
+    function DoOnTClkIniReadonlyFileCreate(AFileName: string): TClkIniReadonlyFile;
+    procedure DoOnSaveStringListToFile(AStringList: TStringList; const AFileName: string);
+    procedure DoOnBackupVars(AAllVars: TStringList);
+    //procedure DoOnRestoreVars(AAllVars: TStringList);
+
     function HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     function HandleOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     function HandleOnEvaluateReplacements(s: string; Recursive: Boolean = True): string;
@@ -127,6 +146,8 @@ type
     function ExecuteSleepAction(var ASleepOptions: TClkSleepOptions; var AActionOptions: TClkActionOptions): Boolean;
     function ExecuteSetVarAction(var ASetVarOptions: TClkSetVarOptions): Boolean;
     function ExecuteWindowOperationsAction(var AWindowOperationsOptions: TClkWindowOperationsOptions): Boolean;
+    function ExecuteLoadSetVarFromFileAction(var ALoadSetVarFromFileOptions: TClkLoadSetVarFromFileOptions): Boolean;
+    function ExecuteSaveSetVarToFileAction(var ASaveSetVarToFileOptions: TClkSaveSetVarToFileOptions): Boolean;
 
     function ExecuteClickActionAsString(AListOfClickOptionsParams: TStrings): Boolean;
     function ExecuteExecAppActionAsString(AListOfExecAppOptionsParams: TStrings): Boolean;
@@ -136,6 +157,8 @@ type
     function ExecuteSleepActionAsString(AListOfSleepOptionsParams: TStrings): Boolean;
     function ExecuteSetVarActionAsString(AListOfSetVarOptionsParams: TStrings): Boolean;
     function ExecuteWindowOperationsActionAsString(AListOfWindowOperationsOptionsParams: TStrings): Boolean;
+    function ExecuteLoadSetVarFromFileActionAsString(AListOfSetVarOptionsParams: TStrings): Boolean;
+    function ExecuteSaveSetVarToFileActionAsString(AListOfSetVarOptionsParams: TStrings): Boolean;
 
     //using pointers for the following properties, because the values they are pointing to, can be updated later, not when this class is created
     property ClickerVars: TStringList write FClickerVars;  //not created here in this class, used from outside
@@ -168,6 +191,13 @@ type
     property OnAddDefaultFontProfile: TOnAddDefaultFontProfile write FOnAddDefaultFontProfile;
     property OnGetGridDrawingOption: TOnGetGridDrawingOption write FOnGetGridDrawingOption;
     property OnLoadPrimitivesFile: TOnLoadPrimitivesFile write FOnLoadPrimitivesFile;
+
+    property OnGetSetVarActionByName: TOnGetSetVarActionByName write FOnGetSetVarActionByName;
+    property OnUpdateSetVarActionByName: TOnUpdateSetVarActionByName write FOnUpdateSetVarActionByName;
+    property OnTClkIniReadonlyFileCreate: TOnTClkIniReadonlyFileCreate write FOnTClkIniReadonlyFileCreate;
+    property OnSaveStringListToFile: TOnSaveTemplateToFile write FOnSaveStringListToFile;
+    property OnBackupVars: TOnBackupVars write FOnBackupVars;
+    //property OnRestoreVars: TOnRestoreVars write FOnRestoreVars;
   end;
 
 
@@ -213,6 +243,13 @@ begin
   FOnAddDefaultFontProfile := nil;
   FOnGetGridDrawingOption := nil;
   FOnLoadPrimitivesFile := nil;
+
+  FOnGetSetVarActionByName := nil;
+  FOnUpdateSetVarActionByName := nil;
+  FOnTClkIniReadonlyFileCreate := nil;
+  FOnSaveStringListToFile := nil;
+  FOnBackupVars := nil;
+  //FOnRestoreVars := nil;
 end;
 
 
@@ -461,6 +498,12 @@ begin
 
     acWindowOperations:
       Result := GetWindowOperationsActionProperties(Action.WindowOperationsOptions);
+
+    acLoadSetVarFromFile:
+      Result := GetLoadSetVarFromFileActionProperties(Action.LoadSetVarFromFileOptions);
+
+    acSaveSetVarToFile:
+      Result := GetSaveSetVarToFileActionProperties(Action.SaveSetVarToFileOptions);
   end;
 end;
 
@@ -630,6 +673,60 @@ begin
   else
     FOnLoadPrimitivesFile(AFileName, APrimitives, AOrders, ASettings);
 end;
+
+
+function TActionExecution.DoOnGetSetVarActionByName(var AClkSetVarOptions: TClkSetVarOptions; AActionName: string): Boolean;
+begin
+  if not Assigned(FOnGetSetVarActionByName) then
+    raise Exception.Create('OnGetSetVarActionByName not assigned.')
+  else
+    Result := FOnGetSetVarActionByName(AClkSetVarOptions, AActionName);
+end;
+
+
+function TActionExecution.DoOnUpdateSetVarActionByName(AClkSetVarOptions: TClkSetVarOptions; AActionName: string): Boolean;
+begin
+  if not Assigned(FOnUpdateSetVarActionByName) then
+    raise Exception.Create('OnUpdateSetVarActionByName not assigned.')
+  else
+    Result := FOnUpdateSetVarActionByName(AClkSetVarOptions, AActionName);
+end;
+
+
+function TActionExecution.DoOnTClkIniReadonlyFileCreate(AFileName: string): TClkIniReadonlyFile;
+begin
+  if not Assigned(FOnTClkIniReadonlyFileCreate) then
+    raise Exception.Create('OnTClkIniReadonlyFileCreate not assigned.')
+  else
+    Result := FOnTClkIniReadonlyFileCreate(AFileName);
+end;
+
+
+procedure TActionExecution.DoOnSaveStringListToFile(AStringList: TStringList; const AFileName: string);
+begin
+  if not Assigned(FOnSaveStringListToFile) then
+    raise Exception.Create('OnSaveStringListToFile not assigned.')
+  else
+    FOnSaveStringListToFile(AStringList, AFileName);
+end;
+
+
+procedure TActionExecution.DoOnBackupVars(AAllVars: TStringList);
+begin
+  if not Assigned(FOnBackupVars) then
+    raise Exception.Create('OnBackupVars not assigned.')
+  else
+    FOnBackupVars(AAllVars);
+end;
+
+
+//procedure TActionExecution.DoOnRestoreVars(AAllVars: TStringList);
+//begin
+//  if not Assigned(FOnRestoreVars) then
+//    raise Exception.Create('OnRestoreVars not assigned.')
+//  else
+//    FOnRestoreVars(AAllVars);
+//end;
 
 
 procedure TActionExecution.ExecuteClickAction(var AClickOptions: TClkClickOptions);
@@ -2212,6 +2309,102 @@ begin
 end;
 
 
+//Loads action var values from file and updates action vars (to the list of action vars) mentioned by a SetVar action.
+//The SetVar action is used only as a list of var names. This way, the same SetVar action can be used on both loading and saving.
+function TActionExecution.ExecuteLoadSetVarFromFileAction(var ALoadSetVarFromFileOptions: TClkLoadSetVarFromFileOptions): Boolean;
+var
+  Ini: TClkIniReadonlyFile;
+  LoadedListOfVarNames, LoadedListOfVarValues, VarNamesToBeUpdated: TStringList;
+  i: Integer;
+  SetVarActionToBeUpdated: TClkSetVarOptions;
+begin
+  Result := False;
+  if not DoOnGetSetVarActionByName(SetVarActionToBeUpdated, ALoadSetVarFromFileOptions.SetVarActionName) then
+  begin
+    SetActionVarValue('$ExecAction_Err$', 'Error: SetVar action not found when executing LoadSetVarFromFile: "' + ALoadSetVarFromFileOptions.SetVarActionName + '".');
+    Exit;
+  end;
+
+  Ini := DoOnTClkIniReadonlyFileCreate(ALoadSetVarFromFileOptions.FileName);
+  LoadedListOfVarNames := TStringList.Create;
+  LoadedListOfVarValues := TStringList.Create;
+  VarNamesToBeUpdated := TStringList.Create;
+  try
+    LoadedListOfVarNames.Text := FastReplace_45ToReturn(Ini.ReadString('Vars', 'ListOfVarNames', ''));
+    LoadedListOfVarValues.Text := FastReplace_45ToReturn(Ini.ReadString('Vars', 'ListOfVarValues', ''));
+
+    if LoadedListOfVarNames.Count <> LoadedListOfVarValues.Count then
+    begin
+      SetActionVarValue('$ExecAction_Err$', 'Error: Loaded SetVar action has a different number of var names than var values: ' + IntToStr(LoadedListOfVarNames.Count) + ' vs. ' + IntToStr(LoadedListOfVarValues.Count));
+      Exit;
+    end;
+
+    VarNamesToBeUpdated.Text := SetVarActionToBeUpdated.ListOfVarNames;
+
+    for i := 0 to LoadedListOfVarNames.Count - 1 do    //this list might not match SetVarActionToBeUpdated.ListOfVarNames;
+      if VarNamesToBeUpdated.IndexOf(LoadedListOfVarNames.Strings[i]) <> -1 then  //only mentioned vars should be updated, not everything that comes from file
+        SetActionVarValue(LoadedListOfVarNames.Strings[i], LoadedListOfVarValues.Strings[i]);
+
+    Result := True;
+  finally
+    Ini.Free;
+    LoadedListOfVarNames.Free;
+    LoadedListOfVarValues.Free;
+    VarNamesToBeUpdated.Free;
+  end;
+end;
+
+
+//Takes action var values as they are, from the list of action vars, then saves them to file.
+//The SetVar action is used only as a list of var names. This way, the same SetVar action can be used on both loading and saving.
+function TActionExecution.ExecuteSaveSetVarToFileAction(var ASaveSetVarToFileOptions: TClkSaveSetVarToFileOptions): Boolean;
+var
+  Bkp, FileContent, VarNamesToBeSaved: TStringList;
+  SetVarActionToBeSaved: TClkSetVarOptions;
+  ListOfVarNames, ListOfVarValues: string;
+  i: Integer;
+  VarName: string;
+begin
+  Result := False;
+  if not DoOnGetSetVarActionByName(SetVarActionToBeSaved, ASaveSetVarToFileOptions.SetVarActionName) then
+  begin
+    SetActionVarValue('$ExecAction_Err$', 'Error: SetVar action not found when executing SaveSetVarToFile: "' + ASaveSetVarToFileOptions.SetVarActionName + '".');
+    Exit;
+  end;
+
+  Bkp := TStringList.Create;
+  VarNamesToBeSaved := TStringList.Create;
+  try
+    DoOnBackupVars(Bkp);
+    VarNamesToBeSaved.Text := SetVarActionToBeSaved.ListOfVarNames;
+
+    ListOfVarNames := '';
+    ListOfVarValues := '';
+    for i := 0 to VarNamesToBeSaved.Count - 1 do
+    begin
+      VarName := VarNamesToBeSaved.Strings[i];
+      ListOfVarNames := ListOfVarNames + VarName + #4#5;
+      ListOfVarValues := ListOfVarValues + Bkp.Values[VarName] + #4#5;
+    end;
+
+    FileContent := TStringList.Create;
+    try
+      FileContent.Add('[Vars]');
+      FileContent.Add('ListOfVarNames=' + ListOfVarNames);
+      FileContent.Add('ListOfVarValues=' + ListOfVarValues);
+
+      DoOnSaveStringListToFile(FileContent, ASaveSetVarToFileOptions.FileName);
+      Result := True;
+    finally
+      FileContent.Free;
+    end;
+  finally
+    Bkp.Free;
+    VarNamesToBeSaved.Free;
+  end;
+end;
+
+
 function TActionExecution.ExecuteClickActionAsString(AListOfClickOptionsParams: TStrings): Boolean;
 var
   ClickOptions: TClkClickOptions;
@@ -2671,6 +2864,40 @@ begin
     WindowOperationsOptions.NewSizeEnabled := AListOfWindowOperationsOptionsParams.Values['NewSizeEnabled'] = '1';
 
     Result := ExecuteWindowOperationsAction(WindowOperationsOptions);
+  finally
+    SetLastActionStatus(Result, False);
+  end;
+end;
+
+
+function TActionExecution.ExecuteLoadSetVarFromFileActionAsString(AListOfSetVarOptionsParams: TStrings): Boolean;
+var
+  LoadSetVarFromFileOptions: TClkLoadSetVarFromFileOptions;
+begin
+  Result := False;
+  SetActionVarValue('$ExecAction_Err$', '');
+  try
+    LoadSetVarFromFileOptions.FileName := AListOfSetVarOptionsParams.Values['FileName'];
+    LoadSetVarFromFileOptions.SetVarActionName := AListOfSetVarOptionsParams.Values['SetVarActionName'];
+
+    Result := ExecuteLoadSetVarFromFileAction(LoadSetVarFromFileOptions);
+  finally
+    SetLastActionStatus(Result, False);
+  end;
+end;
+
+
+function TActionExecution.ExecuteSaveSetVarToFileActionAsString(AListOfSetVarOptionsParams: TStrings): Boolean;
+var
+  SaveSetVarToFileOptions: TClkSaveSetVarToFileOptions;
+begin
+  Result := False;
+  SetActionVarValue('$ExecAction_Err$', '');
+  try
+    SaveSetVarToFileOptions.FileName := AListOfSetVarOptionsParams.Values['FileName'];
+    SaveSetVarToFileOptions.SetVarActionName := AListOfSetVarOptionsParams.Values['SetVarActionName'];
+
+    Result := ExecuteSaveSetVarToFileAction(SaveSetVarToFileOptions);
   finally
     SetLastActionStatus(Result, False);
   end;

@@ -118,7 +118,7 @@ implementation
   - In ClickerTemplates.pas, add new field (Load and Save). If the actions is FindControl or FindSubControl, the field has to be added to CopyActionContent, as well.
   - In ActionExecution.pas, handle the new field.
   - In ClickerActionProperties.pas, handle the new field.
-  - In ClickerActionsFrame.pas, add new icon to the "imglst*" image list for that action.
+  - In ClickerActionsFrame.pas, add new icon to the "imglst*" image list for that field.
   - In ClickerActionsFrame.pas, Add menu, hint, (and custom editors, if required). Some properties may have to be grayed-out depending on other properties (see HandleOnOIPaintText).
   - In ClickerClient.ppr, add the new field (in structure(s) and function(s)), then recompile the dll (ClickerClient)
   - In UIClickerTypes.py (and wrapper.py), add the new field and make sure it works
@@ -400,7 +400,7 @@ end;
 
 procedure TfrmUIClickerMainForm.HandleOnSaveTemplateToFile(AStringList: TStringList; const FileName: string);
 begin
-  AStringList.SaveToFile(FileName);
+  AStringList.SaveToFile(FileName);   //do not add extension to FileName, because this event handler is used for other text files as well
 end;
 
 

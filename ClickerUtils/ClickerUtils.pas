@@ -42,7 +42,10 @@ uses
 
 
 type
-  TClkAction = (acClick, acExecApp, acFindControl, acFindSubControl, acSetControlText, acCallTemplate, acSleep, acSetVar, acWindowOperations);
+  TClkAction = (acClick, acExecApp, acFindControl, acFindSubControl,
+                acSetControlText, acCallTemplate, acSleep, acSetVar, acWindowOperations,
+                acLoadSetVarFromFile, acSaveSetVarToFile);
+
   TClkSetTextControlType = (stEditBox, stComboBox, stKeystrokes);
   TSearchForControlMode = (sfcmGenGrid, sfcmEnumWindows, sfcmFindWindow);
   TWindowOperation = (woBringToFront, woMoveResize, woClose);
@@ -89,10 +92,13 @@ type
   TOnGetPictureOpenDialogFileName = function: string of object;
 
   TOnRetrieveRenderedBmpFromServer = procedure(FRemoteAddress, Fnm: string) of object;
+  TOnGetListOfAvailableSetVarActions = procedure(AListOfSetVarActions: TStringList) of object;
 
 
 const
-  CClkActionStr: array[TClkAction] of string = ('Click', 'ExecApp', 'FindControl', 'FindSubControl', 'SetControlText', 'CallTemplate', 'Sleep', 'SetVar', 'WindowOperations');
+  CClkActionStr: array[TClkAction] of string = ('Click', 'ExecApp', 'FindControl', 'FindSubControl',
+                                                'SetControlText', 'CallTemplate', 'Sleep', 'SetVar', 'WindowOperations',
+                                                'LoadSetVarFromFile', 'SaveSetVarToFile');
   CClkUnsetAction = 255; //TClkAction(255);
 
   //These constants are used to index an array, similar to enum values.  Please update TClickTypeStr if adding more constants to this "type".
@@ -296,6 +302,16 @@ type
     NewPositionEnabled, NewSizeEnabled: Boolean;
   end;
 
+  TClkLoadSetVarFromFileOptions = record
+    FileName: string;
+    SetVarActionName: string;
+  end;
+
+  TClkSaveSetVarToFileOptions = record
+    FileName: string;
+    SetVarActionName: string;
+  end;
+
   TActionBreakPoint = record
     Exists: Boolean; //when False, the action has no breakpoint
     Enabled: Boolean;
@@ -317,6 +333,8 @@ type
     SleepOptions: TClkSleepOptions;
     SetVarOptions: TClkSetVarOptions;
     WindowOperationsOptions: TClkWindowOperationsOptions;
+    LoadSetVarFromFileOptions: TClkLoadSetVarFromFileOptions;
+    SaveSetVarToFileOptions: TClkSaveSetVarToFileOptions;
   end;
 
   PClkActionRec = ^TClkActionRec;

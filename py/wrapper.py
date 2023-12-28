@@ -1,4 +1,4 @@
-#   Copyright (C) 2022 VCC
+#   Copyright (C) 2022-2023 VCC
 #   creation date: Jul 2022
 #   initial release date: 26 Jul 2022
 #
@@ -166,6 +166,20 @@ class TDllFunctionAddresses:
         return AddWindowOperationsActionToTemplateFuncRes
     
     
+    def GetAddLoadSetVarFromFileActionToTemplate(self):
+        AddLoadSetVarFromFileActionToTemplateProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, LPCWSTR, LONG, BOOLEAN, LPCWSTR, PLoadSetVarFromFileOptions)
+        AddLoadSetVarFromFileActionToTemplateParams = (1, "ATemplateFileName", 0), (1, "AActionName", 0), (1, "AActionTimeout", 0), (1, "AActionEnabled", 0), (1, "AActionCondition", 0), (1, "ALoadSetVarFromFileOptions", 0),
+        AddLoadSetVarFromFileActionToTemplateFuncRes = AddLoadSetVarFromFileActionToTemplateProto(("AddLoadSetVarFromFileActionToTemplate", self.DllHandle), AddLoadSetVarFromFileActionToTemplateParams)
+        return AddLoadSetVarFromFileActionToTemplateFuncRes
+    
+    
+    def GetAddSaveSetVarToFileActionToTemplate(self):
+        AddSaveSetVarToFileActionToTemplateProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, LPCWSTR, LONG, BOOLEAN, LPCWSTR, PSaveSetVarToFileOptions)
+        AddSaveSetVarToFileActionToTemplateParams = (1, "ATemplateFileName", 0), (1, "AActionName", 0), (1, "AActionTimeout", 0), (1, "AActionEnabled", 0), (1, "AActionCondition", 0), (1, "ASaveSetVarToFileOptions", 0),
+        AddSaveSetVarToFileActionToTemplateFuncRes = AddSaveSetVarToFileActionToTemplateProto(("AddSaveSetVarToFileActionToTemplate", self.DllHandle), AddSaveSetVarToFileActionToTemplateParams)
+        return AddSaveSetVarToFileActionToTemplateFuncRes
+    
+    
     def GetAddFontProfileToFindSubControlAction(self):
         AddFontProfileToFindSubControlActionProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, LONG, PClkFindControlMatchBitmapText)
         AddFontProfileToFindSubControlActionParams = (1, "ATemplateFileName", 0), (1, "AActionIndex", 0), (1, "AFindControlMatchBitmapText", 0),
@@ -288,6 +302,8 @@ class TDllFunctions:
         self.AddSleepActionToTemplateFunc = self.Addresses.GetAddSleepActionToTemplate()
         self.AddSetVarActionToTemplateFunc = self.Addresses.GetAddSetVarActionToTemplate()
         self.AddWindowOperationsActionToTemplateFunc = self.Addresses.GetAddWindowOperationsActionToTemplate()
+        self.AddLoadSetVarFromFileActionToTemplateFunc = self.Addresses.GetAddLoadSetVarFromFileActionToTemplate()
+        self.AddSaveSetVarToFileActionToTemplateFunc = self.Addresses.GetAddSaveSetVarToFileActionToTemplate()
         
         self.AddFontProfileToFindSubControlActionFunc = self.Addresses.GetAddFontProfileToFindSubControlAction()
         
@@ -459,8 +475,24 @@ class TDllFunctions:
             return AddWindowOperationsActionToTemplateResult
         except:
             return 'AV on AddWindowOperationsActionToTemplate'
-           
-            
+
+
+    def AddLoadSetVarFromFileActionToTemplate(self, ATemplateFileName, AActionName, AActionTimeout, AActionEnabled, AActionCondition, ALoadSetVarFromFileOptions):
+        try:
+            AddLoadSetVarFromFileActionToTemplateResult = self.AddLoadSetVarFromFileActionToTemplateFunc(ATemplateFileName, AActionName, AActionTimeout, AActionEnabled, AActionCondition, ALoadSetVarFromFileOptions)  #sending PWideChar, and converting to ANSI at dll
+            return AddLoadSetVarFromFileActionToTemplateResult
+        except:
+            return 'AV on AddLoadSetVarFromFileActionToTemplate'
+
+
+    def AddSaveSetVarToFileActionToTemplate(self, ATemplateFileName, AActionName, AActionTimeout, AActionEnabled, AActionCondition, ASaveSetVarToFileOptions):
+        try:
+            AddSaveSetVarToFileActionToTemplateResult = self.AddSaveSetVarToFileActionToTemplateFunc(ATemplateFileName, AActionName, AActionTimeout, AActionEnabled, AActionCondition, ASaveSetVarToFileOptions)  #sending PWideChar, and converting to ANSI at dll
+            return AddSaveSetVarToFileActionToTemplateResult
+        except:
+            return 'AV on AddSaveSetVarToFileActionToTemplate'
+
+
     def AddFontProfileToFindSubControlAction(self, ATemplateFileName, AActionIndex, AFindControlMatchBitmapText):
         try:
             AddFontProfileToFindSubControlActionResult = self.AddFontProfileToFindSubControlActionFunc(ATemplateFileName, AActionIndex, AFindControlMatchBitmapText)  #sending PWideChar, and converting to ANSI at dll
@@ -687,14 +719,27 @@ try:
     
     SleepOptions = GetDefaultSleepOptions()
     print("AddSleepActionToTemplate: ", DllFuncs.AddSleepActionToTemplate('VerifyClicking.clktmpl', 'Seventh', 0, True, '', ctypes.byref(SleepOptions)))
-
+    
     SetVarOptions = GetDefaultSetVarOptions()
+    SetVarOptions.ListOfVarNames = '$MyVar$'
+    SetVarOptions.ListOfVarValues = '30'
+    SetVarOptions.ListOfVarEvalBefore = '1'
     print("AddSetVarActionToTemplate: ", DllFuncs.AddSetVarActionToTemplate('VerifyClicking.clktmpl', 'Eighth', 0, True, '', ctypes.byref(SetVarOptions)))
-
+    
     WindowOperationsOptions = GetDefaultWindowOperationsOptions()
     print("AddWindowOperationsActionToTemplate: ", DllFuncs.AddWindowOperationsActionToTemplate('VerifyClicking.clktmpl', 'Nineth', 0, True, '', ctypes.byref(WindowOperationsOptions)))
-
-
+    
+    print("Execute SetVar for saving to ini: ", DllFuncs.ExecuteActionAtIndex(AActionIndex = 7, AStackLevel = 0)) #execute Eighth action
+    SaveSetVarToFileOptions = GetDefaultSaveSetVarToFileOptions()
+    SaveSetVarToFileOptions.FileName = '$AppDir$\\py\\bmps\\SetVar.ini'
+    SaveSetVarToFileOptions.SetVarActionName = 'Eighth'
+    print("AddSaveSetVarToFileActionToTemplate: ", DllFuncs.AddSaveSetVarToFileActionToTemplate('VerifyClicking.clktmpl', 'Tenth', 0, True, '', ctypes.byref(SaveSetVarToFileOptions)))
+    
+    LoadSetVarFromFileOptions = GetDefaultLoadSetVarFromFileOptions()
+    LoadSetVarFromFileOptions.FileName = '$AppDir$\\py\\bmps\\SetVar.ini'
+    LoadSetVarFromFileOptions.SetVarActionName = 'Eighth'
+    print("AddLoadSetVarFromFileActionToTemplate: ", DllFuncs.AddLoadSetVarFromFileActionToTemplate('VerifyClicking.clktmpl', 'Eleventh', 0, True, '', ctypes.byref(LoadSetVarFromFileOptions)))
+    
     print("PrepareFilesInServer: ", DllFuncs.PrepareFilesInServer('VerifyClicking.clktmpl'))
     
     print("ExecuteActionAtIndex: ", DllFuncs.ExecuteActionAtIndex(AActionIndex = 6, AStackLevel = 0))
@@ -706,6 +751,9 @@ try:
     print("GetListOfFilesFromClientInMem: ", DllFuncs.GetListOfFilesFromClientInMem())
     
     # #print("GetTemplateContentFromClientInMemAsString: ", DllFuncs.GetTemplateContentFromClientInMemAsString('VerifyClicking.clktmpl'))
+    print("ExecuteActionAtIndex: ", DllFuncs.ExecuteActionAtIndex(AActionIndex = 9, AStackLevel = 0)) #Save SetVar vars to ini.
+    ######## maybe modify the vars here, to verify later that loading them will update from ini
+    print("ExecuteActionAtIndex: ", DllFuncs.ExecuteActionAtIndex(AActionIndex = 10, AStackLevel = 0)) #Load SetVar vars from ini.
 
     print("FileProviderClientThreadDone: ", DllFuncs.FileProviderClientThreadDone())
     print("TerminateFileProviderClientThread: ", DllFuncs.TerminateFileProviderClientThread())

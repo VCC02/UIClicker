@@ -115,6 +115,8 @@ const
   CRECmd_ExecuteSleepAction = 'ExecuteSleepAction';
   CRECmd_ExecuteSetVarAction = 'ExecuteSetVarAction';
   CRECmd_ExecuteWindowOperationsAction = 'ExecuteWindowOperationsAction';
+  CRECmd_ExecuteLoadSetVarFromFile = 'ExecuteLoadSetVarFromFile';
+  CRECmd_ExecuteSaveSetVarToFile = 'ExecuteSaveSetVarToFile';
 
   CREResp_ConnectionOK = 'Connection ok';
   CREResp_RemoteExecResponseVar = '$RemoteExecResponse$';
@@ -179,7 +181,8 @@ function ExecuteCallTemplateAction(ARemoteAddress: string; ACallTemplateOptions:
 function ExecuteSleepAction(ARemoteAddress: string; ASleepOptions: TClkSleepOptions; AActionName: string; ACallAppProcMsg: Boolean = True): string;
 function ExecuteSetVarAction(ARemoteAddress: string; ASetVarOptions: TClkSetVarOptions; ACallAppProcMsg: Boolean = True): string;
 function ExecuteWindowOperationsAction(ARemoteAddress: string; AWindowOperationsOptions: TClkWindowOperationsOptions; ACallAppProcMsg: Boolean = True): string;
-
+function ExecuteLoadSetVarFromFileAction(ARemoteAddress: string; ALoadSetVarFromFileOptions: TClkLoadSetVarFromFileOptions; ACallAppProcMsg: Boolean = True): string;
+function ExecuteSaveSetVarToFileAction(ARemoteAddress: string; ASaveSetVarToFileOptions: TClkSaveSetVarToFileOptions; ACallAppProcMsg: Boolean = True): string;
 
 procedure GetListOfUsedFilesFromLoadedTemplate(var AClkActions: TClkActionsRecArr; AListOfFiles: TStringList);
 function SendMissingFilesToServer(ARemoteAddress: string; var AClkActions: TClkActionsRecArr): string;
@@ -720,6 +723,27 @@ begin
                                     ACallAppProcMsg
                                     );
 end;
+
+
+function ExecuteLoadSetVarFromFileAction(ARemoteAddress: string; ALoadSetVarFromFileOptions: TClkLoadSetVarFromFileOptions; ACallAppProcMsg: Boolean = True): string;
+begin
+  Result := SendTextRequestToServer(ARemoteAddress + CRECmd_ExecuteLoadSetVarFromFile + '?' +
+                                    CREParam_StackLevel + '=0' + '&' +   //use the main editor
+                                    GetLoadSetVarFromFileActionProperties(ALoadSetVarFromFileOptions),
+                                    ACallAppProcMsg
+                                    );
+end;
+
+
+function ExecuteSaveSetVarToFileAction(ARemoteAddress: string; ASaveSetVarToFileOptions: TClkSaveSetVarToFileOptions; ACallAppProcMsg: Boolean = True): string;
+begin
+  Result := SendTextRequestToServer(ARemoteAddress + CRECmd_ExecuteSaveSetVarToFile + '?' +
+                                    CREParam_StackLevel + '=0' + '&' +   //use the main editor
+                                    GetSaveSetVarToFileActionProperties(ASaveSetVarToFileOptions),
+                                    ACallAppProcMsg
+                                    );
+end;
+
 
 //==============================================================================
 //list of bmp files for now, but it can include all other files, which have to be sent to server

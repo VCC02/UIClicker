@@ -43,6 +43,8 @@ type
   { TfrClickerActions }
 
   TfrClickerActions = class(TFrame)
+    imglstLoadSetVarFromFileProperties: TImageList;
+    imglstSaveSetVarToFileProperties: TImageList;
     imglstMatchPrimitiveFilesProperties: TImageList;
     imgFontColorBuffer: TImage;
     imglstFontColorProperties: TImageList;
@@ -242,6 +244,8 @@ type
     procedure MenuItem_MoveFontProfileUpInPropertyListClick(Sender: TObject);
     procedure MenuItem_MoveFontProfileDownInPropertyListClick(Sender: TObject);
 
+    procedure MenuItem_BrowseSetVarFileInPropertyListClick(Sender: TObject);
+
     procedure MenuItemControl_EdgeRefGenericClick(Sender: TObject);
     procedure MenuItemCopyRefToClipboardClick(Sender: TObject);
     procedure MenuItemPasteRefFromClipboardClick(Sender: TObject);
@@ -311,6 +315,8 @@ type
     FOnGetFontFinderSettings: TOnRWFontFinderSettings;
     FOnSetFontFinderSettings: TOnRWFontFinderSettings;
 
+    FOnGetListOfAvailableSetVarActions: TOnGetListOfAvailableSetVarActions;
+
     //function GetListOfSetVarEntries: string;
     //procedure SetListOfSetVarEntries(Value: string);
 
@@ -348,6 +354,8 @@ type
     procedure DoOnGetFontFinderSettings(var AFontFinderSettings: TFontFinderSettings);
     procedure DoOnSetFontFinderSettings(var AFontFinderSettings: TFontFinderSettings);
 
+    procedure DoOnGetListOfAvailableSetVarActions(AListOfSetVarActions: TStringList);
+
     function GetInMemFS: TInMemFileSystem;
     procedure SetInMemFS(Value: TInMemFileSystem);
 
@@ -361,6 +369,7 @@ type
     function GetModifiedPmtvFiles: Boolean;
 
     procedure LocalTemplatesClick(Sender: TObject);
+    procedure AvailableSetVarClick(Sender: TObject);
     procedure BrowseTemplatesClick(Sender: TObject);
     procedure ClickerConditionEditorControlsModified;
     procedure OverlapGridImgOnDebugImg(ADebugAndGridBitmap: TBitmap);
@@ -480,6 +489,7 @@ type
     function ReverseEvaluateReplacements(AValue: string): string;
 
     procedure LoadListOfAvailableTemplates;
+    procedure LoadListOfAvailableSetVarActions;
     procedure SetDebugVariablesFromListOfStrings(AListOfStrings: string);
     procedure UpdatePageControlActionExecutionIcons;
     procedure UpdateControlWidthHeightLabels;
@@ -537,6 +547,8 @@ type
     property OnAddToLog: TOnAddToLog write FOnAddToLog;
     property OnGetFontFinderSettings: TOnRWFontFinderSettings write FOnGetFontFinderSettings;
     property OnSetFontFinderSettings: TOnRWFontFinderSettings write FOnSetFontFinderSettings;
+
+    property OnGetListOfAvailableSetVarActions: TOnGetListOfAvailableSetVarActions write FOnGetListOfAvailableSetVarActions;
   end;
 
 
@@ -773,6 +785,8 @@ begin
   FOnAddToLog := nil;
   FOnGetFontFinderSettings := nil;
   FOnSetFontFinderSettings := nil;
+
+  FOnGetListOfAvailableSetVarActions := nil;
 
   FShowDeprecatedControls := False;
   FEditingAction := @FEditingActionRec;
@@ -1287,6 +1301,7 @@ end;
 
 const
   CNoTemplatesMsg = 'No local templates available.';
+  CNoSetVarActionsMsg = 'No SetVar actions available.';
 
 procedure TfrClickerActions.LocalTemplatesClick(Sender: TObject);
 var
@@ -1301,6 +1316,30 @@ begin
   end;
 
   FEditingAction^.CallTemplateOptions.TemplateFileName := Fnm;
+  FOIFrame.CancelCurrentEditing;
+  FOIFrame.Repaint;   //ideally, RepaintNodeByLevel
+  TriggerOnControlsModified;
+end;
+
+
+procedure TfrClickerActions.AvailableSetVarClick(Sender: TObject);
+var
+  SetVarName: string;
+begin
+  SetVarName := StringReplace((Sender as TMenuItem).Caption, '&', '', [rfReplaceAll]);
+
+  if SetVarName = CNoSetVarActionsMsg then
+  begin
+    MessageBox(Handle, 'There are no available SetVar actions.', PChar(Application.Title), MB_ICONINFORMATION);
+    Exit;
+  end;
+
+  if CurrentlyEditingActionType = acLoadSetVarFromFile then
+    FEditingAction^.LoadSetVarFromFileOptions.SetVarActionName := SetVarName;
+
+  if CurrentlyEditingActionType = acSaveSetVarToFile then
+    FEditingAction^.SaveSetVarToFileOptions.SetVarActionName := SetVarName;
+
   FOIFrame.CancelCurrentEditing;
   FOIFrame.Repaint;   //ideally, RepaintNodeByLevel
   TriggerOnControlsModified;
@@ -1370,6 +1409,39 @@ begin
     end;
   finally
     AvailableTemplates.Free;
+  end;
+end;
+
+
+procedure TfrClickerActions.LoadListOfAvailableSetVarActions;
+var
+  AvailableSetVarActions: TStringList;
+  TempMenuItem, BaseMenuItem: TMenuItem;
+  i: Integer;
+begin
+  AvailableSetVarActions := TStringList.Create;
+  try
+    DoOnGetListOfAvailableSetVarActions(AvailableSetVarActions);
+
+    FPmLocalTemplates.Items.Clear;
+
+    if AvailableSetVarActions.Count = 0 then
+      AvailableSetVarActions.Add(CNoSetVarActionsMsg);
+
+    BaseMenuItem := TMenuItem.Create(Self);
+    BaseMenuItem.Caption := 'Available SetVar actions';
+    BaseMenuItem.OnClick := nil;
+    FPmLocalTemplates.Items.Add(BaseMenuItem);
+
+    for i := 0 to AvailableSetVarActions.Count - 1 do
+    begin
+      TempMenuItem := TMenuItem.Create(Self);
+      TempMenuItem.Caption := AvailableSetVarActions.Strings[i];
+      TempMenuItem.OnClick := AvailableSetVarClick;
+      FPmLocalTemplates.Items[0].Add(TempMenuItem);
+    end;
+  finally
+    AvailableSetVarActions.Free;
   end;
 end;
 
@@ -2029,6 +2101,15 @@ begin
     raise Exception.Create('OnSetFontFinderSettings not assigned.')
   else
     FOnSetFontFinderSettings(AFontFinderSettings);
+end;
+
+
+procedure TfrClickerActions.DoOnGetListOfAvailableSetVarActions(AListOfSetVarActions: TStringList);
+begin
+  if not Assigned(FOnGetListOfAvailableSetVarActions) then
+    raise Exception.Create('OnGetListOfAvailableSetVarActions not assigned.')
+  else
+    FOnGetListOfAvailableSetVarActions(AListOfSetVarActions);
 end;
 
 
@@ -2928,6 +3009,35 @@ begin
 end;
 
 
+procedure TfrClickerActions.MenuItem_BrowseSetVarFileInPropertyListClick(Sender: TObject);
+var
+  MenuData: POIMenuItemData;
+begin
+  MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
+  try
+    if not DoOnOpenDialogExecute('*.*') then
+      Exit;
+
+    case CurrentlyEditingActionType of
+      acLoadSetVarFromFile:
+        FEditingAction^.LoadSetVarFromFileOptions.FileName := DoOnGetOpenDialogFileName;
+
+      acSaveSetVarToFile:
+        FEditingAction^.SaveSetVarToFileOptions.FileName := DoOnGetOpenDialogFileName;
+
+      else
+        ;
+    end;
+
+    FOIFrame.CancelCurrentEditing;
+    FOIFrame.Repaint;   //ideally, RepaintNodeByLevel
+    TriggerOnControlsModified;
+  finally
+    Dispose(MenuData);
+  end;
+end;
+
+
 procedure TfrClickerActions.MenuItemControl_EdgeRefGenericClick(Sender: TObject);
 var
   s: string;
@@ -3499,6 +3609,12 @@ begin
 
               Ord(acWindowOperations):
                 ImageList := imglstWindowOperationsProperties;
+
+              Ord(acLoadSetVarFromFile):
+                ImageList := imglstLoadSetVarFromFileProperties;
+
+              Ord(acSaveSetVarToFile):
+                ImageList := imglstSaveSetVarToFileProperties;
             end;   //case
           end;
 
@@ -4593,190 +4709,215 @@ begin
 
     CCategory_ActionSpecific:
     begin
-      case APropertyIndex of
-        CFindControl_MatchText_PropIndex, CFindControl_MatchClassName_PropIndex:
-        begin
-          FOIEditorMenu.Items.Clear;
+      if CurrentlyEditingActionType in [acFindControl, acFindSubControl] then
+        case APropertyIndex of
+          CFindControl_MatchText_PropIndex, CFindControl_MatchClassName_PropIndex:
+          begin
+            FOIEditorMenu.Items.Clear;
 
-          AddMenuItemToPopupMenu(FOIEditorMenu, 'Copy values from preview window', MenuItem_CopyTextAndClassFromPreviewWindowClick,
-            ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+            AddMenuItemToPopupMenu(FOIEditorMenu, 'Copy values from preview window', MenuItem_CopyTextAndClassFromPreviewWindowClick,
+              ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
 
-          AddMenuItemToPopupMenu(FOIEditorMenu, 'Copy values from window interpreter', MenuItem_CopyTextAndClassFromWinInterpWindowClick,
-            ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+            AddMenuItemToPopupMenu(FOIEditorMenu, 'Copy values from window interpreter', MenuItem_CopyTextAndClassFromWinInterpWindowClick,
+              ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
 
-          AddMenuItemToPopupMenu(FOIEditorMenu, 'Copy values from remote screen', MenuItem_CopyTextAndClassFromRemoteScreenWindowClick,
-            ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+            AddMenuItemToPopupMenu(FOIEditorMenu, 'Copy values from remote screen', MenuItem_CopyTextAndClassFromRemoteScreenWindowClick,
+              ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
 
-          GetCursorPos(tp);
-          FOIEditorMenu.PopUp(tp.X, tp.Y);
-        end;
+            GetCursorPos(tp);
+            FOIEditorMenu.PopUp(tp.X, tp.Y);
+          end;
 
-        CFindControl_MatchBitmapText_PropIndex:
-          case ANodeLevel of
-            CPropertyLevel:
-            begin
-              FOIEditorMenu.Items.Clear;
-
-              AddMenuItemToPopupMenu(FOIEditorMenu, 'Add font profile', MenuItem_AddFontProfileToPropertyListClick,
-                ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-
-              if Length(FEditingAction^.FindControlOptions.MatchBitmapText) > 0 then
-                AddMenuItemToPopupMenu(FOIEditorMenu, '-', nil, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-
-              for i := 0 to Length(FEditingAction^.FindControlOptions.MatchBitmapText) - 1 do
+          CFindControl_MatchBitmapText_PropIndex:
+            case ANodeLevel of
+              CPropertyLevel:
               begin
-                BMPTxt := FEditingAction^.FindControlOptions.MatchBitmapText[i];
-                s := '  Name: ' + BMPTxt.ProfileName + '  (' + BMPTxt.FontName + ', ' + IntToStr(BMPTxt.FontSize) + ', ' + BMPTxt.ForegroundColor + ', ' + BMPTxt.BackgroundColor + ')';
-                AddMenuItemToPopupMenu(FOIEditorMenu, 'Remove font profile[' + IntToStr(i) + ']  ' + s, MenuItem_RemoveFontProfileFromPropertyListClick,
-                  ANodeLevel, ACategoryIndex, APropertyIndex, i);  //ItemIndex is not the real one. It points to the profile index.
+                FOIEditorMenu.Items.Clear;
+
+                AddMenuItemToPopupMenu(FOIEditorMenu, 'Add font profile', MenuItem_AddFontProfileToPropertyListClick,
+                  ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+
+                if Length(FEditingAction^.FindControlOptions.MatchBitmapText) > 0 then
+                  AddMenuItemToPopupMenu(FOIEditorMenu, '-', nil, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+
+                for i := 0 to Length(FEditingAction^.FindControlOptions.MatchBitmapText) - 1 do
+                begin
+                  BMPTxt := FEditingAction^.FindControlOptions.MatchBitmapText[i];
+                  s := '  Name: ' + BMPTxt.ProfileName + '  (' + BMPTxt.FontName + ', ' + IntToStr(BMPTxt.FontSize) + ', ' + BMPTxt.ForegroundColor + ', ' + BMPTxt.BackgroundColor + ')';
+                  AddMenuItemToPopupMenu(FOIEditorMenu, 'Remove font profile[' + IntToStr(i) + ']  ' + s, MenuItem_RemoveFontProfileFromPropertyListClick,
+                    ANodeLevel, ACategoryIndex, APropertyIndex, i);  //ItemIndex is not the real one. It points to the profile index.
+                end;
+
+                GetCursorPos(tp);
+                FOIEditorMenu.PopUp(tp.X, tp.Y);
               end;
 
-              GetCursorPos(tp);
-              FOIEditorMenu.PopUp(tp.X, tp.Y);
-            end;
+              CPropertyItemLevel:
+              begin
+                ItemIndexMod := AItemIndex mod CPropCount_FindControlMatchBitmapText;
+                ItemIndexDiv := AItemIndex div CPropCount_FindControlMatchBitmapText;
 
-            CPropertyItemLevel:
+                if ItemIndexMod = CFindControl_MatchBitmapText_ProfileName_PropItemIndex then
+                  if Length(FEditingAction^.FindControlOptions.MatchBitmapText) > 1 then  //add only if there are at least two profiles
+                  begin
+                    FOIEditorMenu.Items.Clear;
+
+                    AddMenuItemToPopupMenu(FOIEditorMenu, 'Move font profile up', MenuItem_MoveFontProfileUpInPropertyListClick,
+                      ANodeLevel, ACategoryIndex, APropertyIndex, ItemIndexDiv); //sending the profile index through item index arg
+
+                    AddMenuItemToPopupMenu(FOIEditorMenu, 'Move font profile down', MenuItem_MoveFontProfileDownInPropertyListClick,
+                      ANodeLevel, ACategoryIndex, APropertyIndex, ItemIndexDiv); //sending the profile index through item index arg
+
+                    GetCursorPos(tp);
+                    FOIEditorMenu.PopUp(tp.X, tp.Y);
+                  end;
+              end;
+            end; //case
+
+          CFindControl_MatchBitmapFiles_PropIndex:
+          begin
+            case ANodeLevel of
+              CPropertyLevel:
+              begin
+                FOIEditorMenu.Items.Clear;
+
+                /////////////////////////////////// To add to menu item handlers
+                /////////////////////////////////// Add also to browse buttons
+
+                AddMenuItemToPopupMenu(FOIEditorMenu, 'Add file(s) to this list...', MenuItem_AddBMPFilesToPropertyListClick,
+                  ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+
+                AddMenuItemToPopupMenu(FOIEditorMenu, 'Remove all files from this list...', MenuItem_RemoveAllBMPFilesFromPropertyListClick,
+                  ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+
+                GetCursorPos(tp);
+                FOIEditorMenu.PopUp(tp.X, tp.Y);
+              end;
+
+              CPropertyItemLevel:
+              begin
+                FOIEditorMenu.Items.Clear;
+
+                AddMenuItemToPopupMenu(FOIEditorMenu, 'Browse...', MenuItem_BrowseBMPFileFromPropertyListClick,
+                  ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+
+                AddMenuItemToPopupMenu(FOIEditorMenu, 'Remove file from list...', MenuItem_RemoveBMPFileFromPropertyListClick,
+                  ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+
+                AddMenuItemToPopupMenu(FOIEditorMenu, 'Move file up (one position)', MenuItem_MoveBMPFileUpInPropertyListClick,
+                  ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+
+                AddMenuItemToPopupMenu(FOIEditorMenu, 'Move file down (one position)', MenuItem_MoveBMPFileDownInPropertyListClick,
+                  ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+
+                GetCursorPos(tp);
+                FOIEditorMenu.PopUp(tp.X, tp.Y);
+              end;
+
+              else
+                ;
+            end;
+          end;
+
+          CFindControl_MatchPrimitiveFiles_PropIndex:
+          begin
+            case ANodeLevel of
+              CPropertyLevel:
+              begin
+                FOIEditorMenu.Items.Clear;
+
+                AddMenuItemToPopupMenu(FOIEditorMenu, 'Add existing file(s) to this list...', MenuItem_AddExistingPrimitiveFilesToPropertyListClick,
+                  ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+
+                AddMenuItemToPopupMenu(FOIEditorMenu, 'Add new file to this list...', MenuItem_AddNewPrimitiveFilesToPropertyListClick,
+                  ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+
+                AddMenuItemToPopupMenu(FOIEditorMenu, 'Remove all files from this list...', MenuItem_RemoveAllPrimitiveFilesFromPropertyListClick,
+                  ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+
+                GetCursorPos(tp);
+                FOIEditorMenu.PopUp(tp.X, tp.Y);
+              end;
+
+              CPropertyItemLevel:
+              begin
+                FOIEditorMenu.Items.Clear;
+
+                AddMenuItemToPopupMenu(FOIEditorMenu, 'Browse...', MenuItem_BrowsePrimitiveFileFromPropertyListClick,
+                  ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+                FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 0);
+
+                AddMenuItemToPopupMenu(FOIEditorMenu, 'Remove file from list...', MenuItem_RemovePrimitiveFileFromPropertyListClick,
+                  ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+                FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 1);
+
+                AddMenuItemToPopupMenu(FOIEditorMenu, 'Move file up (one position)', MenuItem_MovePrimitiveFileUpInPropertyListClick,
+                  ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+                FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 2);
+
+                AddMenuItemToPopupMenu(FOIEditorMenu, 'Move file down (one position)', MenuItem_MovePrimitiveFileDownInPropertyListClick,
+                  ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+                FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 3);
+
+                AddMenuItemToPopupMenu(FOIEditorMenu, '-', nil,
+                  ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+
+                AddMenuItemToPopupMenu(FOIEditorMenu, 'Save file', MenuItem_SavePrimitiveFileInPropertyListClick,
+                  ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+                FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 4);
+
+                AddMenuItemToPopupMenu(FOIEditorMenu, 'Save file as...', MenuItem_SavePrimitiveFileAsInPropertyListClick,
+                  ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+                FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 5);
+
+                AddMenuItemToPopupMenu(FOIEditorMenu, '-', nil,
+                  ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+
+                AddMenuItemToPopupMenu(FOIEditorMenu, 'Discard changes and reload file...', MenuItem_DiscardChangesAndReloadPrimitiveFileInPropertyListClick,
+                  ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+                FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 6);
+
+                GetCursorPos(tp);
+                FOIEditorMenu.PopUp(tp.X, tp.Y);
+              end;
+
+              else
+                ;
+            end;
+          end;  //CFindControl_MatchPrimitiveFiles_PropIndex
+        end; //case APropertyIndex
+
+      if CurrentlyEditingActionType = acCallTemplate then
+        case APropertyIndex of
+          CCallTemplate_TemplateFileName_PropIndex:
+          begin
+            if CurrentlyEditingActionType = acCallTemplate then
             begin
-              ItemIndexMod := AItemIndex mod CPropCount_FindControlMatchBitmapText;
-              ItemIndexDiv := AItemIndex div CPropCount_FindControlMatchBitmapText;
-
-              if ItemIndexMod = CFindControl_MatchBitmapText_ProfileName_PropItemIndex then
-                if Length(FEditingAction^.FindControlOptions.MatchBitmapText) > 1 then  //add only if there are at least two profiles
-                begin
-                  FOIEditorMenu.Items.Clear;
-
-                  AddMenuItemToPopupMenu(FOIEditorMenu, 'Move font profile up', MenuItem_MoveFontProfileUpInPropertyListClick,
-                    ANodeLevel, ACategoryIndex, APropertyIndex, ItemIndexDiv); //sending the profile index through item index arg
-
-                  AddMenuItemToPopupMenu(FOIEditorMenu, 'Move font profile down', MenuItem_MoveFontProfileDownInPropertyListClick,
-                    ANodeLevel, ACategoryIndex, APropertyIndex, ItemIndexDiv); //sending the profile index through item index arg
-
-                  GetCursorPos(tp);
-                  FOIEditorMenu.PopUp(tp.X, tp.Y);
-                end;
-            end;
-          end; //case
-
-        CFindControl_MatchBitmapFiles_PropIndex:
-        begin
-          case ANodeLevel of
-            CPropertyLevel:
-            begin
-              FOIEditorMenu.Items.Clear;
-
-              /////////////////////////////////// To add to menu item handlers
-              /////////////////////////////////// Add also to browse buttons
-
-              AddMenuItemToPopupMenu(FOIEditorMenu, 'Add file(s) to this list...', MenuItem_AddBMPFilesToPropertyListClick,
-                ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-
-              AddMenuItemToPopupMenu(FOIEditorMenu, 'Remove all files from this list...', MenuItem_RemoveAllBMPFilesFromPropertyListClick,
-                ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-
+              LoadListOfAvailableTemplates;
               GetCursorPos(tp);
-              FOIEditorMenu.PopUp(tp.X, tp.Y);
+              FPmLocalTemplates.PopUp(tp.X, tp.Y);
             end;
-
-            CPropertyItemLevel:
-            begin
-              FOIEditorMenu.Items.Clear;
-
-              AddMenuItemToPopupMenu(FOIEditorMenu, 'Browse...', MenuItem_BrowseBMPFileFromPropertyListClick,
-                ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-
-              AddMenuItemToPopupMenu(FOIEditorMenu, 'Remove file from list...', MenuItem_RemoveBMPFileFromPropertyListClick,
-                ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-
-              AddMenuItemToPopupMenu(FOIEditorMenu, 'Move file up (one position)', MenuItem_MoveBMPFileUpInPropertyListClick,
-                ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-
-              AddMenuItemToPopupMenu(FOIEditorMenu, 'Move file down (one position)', MenuItem_MoveBMPFileDownInPropertyListClick,
-                ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-
-              GetCursorPos(tp);
-              FOIEditorMenu.PopUp(tp.X, tp.Y);
-            end;
-
-            else
-              ;
           end;
         end;
 
-        CFindControl_MatchPrimitiveFiles_PropIndex:
-        begin
-          case ANodeLevel of
-            CPropertyLevel:
-            begin
-              FOIEditorMenu.Items.Clear;
-
-              AddMenuItemToPopupMenu(FOIEditorMenu, 'Add existing file(s) to this list...', MenuItem_AddExistingPrimitiveFilesToPropertyListClick,
+      if CurrentlyEditingActionType in [acLoadSetVarFromFile, acSaveSetVarToFile] then
+        case APropertyIndex of
+          CLoadSetVarFromFile_FileName_PropIndex:
+          begin
+            FOIEditorMenu.Items.Clear;
+            AddMenuItemToPopupMenu(FOIEditorMenu, 'Browse...', MenuItem_BrowseSetVarFileInPropertyListClick,
                 ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
 
-              AddMenuItemToPopupMenu(FOIEditorMenu, 'Add new file to this list...', MenuItem_AddNewPrimitiveFilesToPropertyListClick,
-                ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-
-              AddMenuItemToPopupMenu(FOIEditorMenu, 'Remove all files from this list...', MenuItem_RemoveAllPrimitiveFilesFromPropertyListClick,
-                ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-
-              GetCursorPos(tp);
-              FOIEditorMenu.PopUp(tp.X, tp.Y);
-            end;
-
-            CPropertyItemLevel:
-            begin
-              FOIEditorMenu.Items.Clear;
-
-              AddMenuItemToPopupMenu(FOIEditorMenu, 'Browse...', MenuItem_BrowsePrimitiveFileFromPropertyListClick,
-                ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-              FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 0);
-
-              AddMenuItemToPopupMenu(FOIEditorMenu, 'Remove file from list...', MenuItem_RemovePrimitiveFileFromPropertyListClick,
-                ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-              FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 1);
-
-              AddMenuItemToPopupMenu(FOIEditorMenu, 'Move file up (one position)', MenuItem_MovePrimitiveFileUpInPropertyListClick,
-                ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-              FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 2);
-
-              AddMenuItemToPopupMenu(FOIEditorMenu, 'Move file down (one position)', MenuItem_MovePrimitiveFileDownInPropertyListClick,
-                ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-              FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 3);
-
-              AddMenuItemToPopupMenu(FOIEditorMenu, '-', nil,
-                ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-
-              AddMenuItemToPopupMenu(FOIEditorMenu, 'Save file', MenuItem_SavePrimitiveFileInPropertyListClick,
-                ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-              FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 4);
-
-              AddMenuItemToPopupMenu(FOIEditorMenu, 'Save file as...', MenuItem_SavePrimitiveFileAsInPropertyListClick,
-                ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-              FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 5);
-
-              AddMenuItemToPopupMenu(FOIEditorMenu, '-', nil,
-                ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-
-              AddMenuItemToPopupMenu(FOIEditorMenu, 'Discard changes and reload file...', MenuItem_DiscardChangesAndReloadPrimitiveFileInPropertyListClick,
-                ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-              FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 6);
-
-              GetCursorPos(tp);
-              FOIEditorMenu.PopUp(tp.X, tp.Y);
-            end;
-
-            else
-              ;
+            FOIEditorMenu.PopUp;
           end;
-        end;
 
-        CCallTemplate_TemplateFileName_PropIndex:
-        begin
-          LoadListOfAvailableTemplates;
-          GetCursorPos(tp);
-          FPmLocalTemplates.PopUp(tp.X, tp.Y);
-        end;
-      end;
-    end;
+          CLoadSetVarFromFile_SetVarActionName_PropIndex:
+          begin
+            LoadListOfAvailableSetVarActions;
+            FPmLocalTemplates.PopUp;
+          end;
+        end; //case APropertyIndex
+    end; //CCategory_ActionSpecific
   end;
 end;
 

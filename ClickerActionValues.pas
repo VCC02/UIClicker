@@ -63,6 +63,8 @@ const
   CPropCount_Sleep = 1;
   CPropCount_SetVar = 1;
   CPropCount_WindowOperations = 7;
+  CPropCount_LoadSetVarFromFile = 2;
+  CPropCount_SaveSetVarToFile = 2;
 
   CMainPropCounts: array[0..Ord(High(TClkAction))] of Integer = (
     CPropCount_Click,
@@ -73,7 +75,9 @@ const
     CPropCount_CallTemplate,
     CPropCount_Sleep,
     CPropCount_SetVar,
-    CPropCount_WindowOperations
+    CPropCount_WindowOperations,
+    CPropCount_LoadSetVarFromFile,
+    CPropCount_SaveSetVarToFile
   );
 
   //Sub properties (counts)
@@ -176,6 +180,9 @@ const
   CWindowOperations_NewHeight_PropItemIndex = 4;
   CWindowOperations_NewPositionEnabled_PropItemIndex = 5;
   CWindowOperations_NewSizeEnabled_PropItemIndex = 6;
+
+  CLoadSetVarFromFile_FileName_PropIndex = 0;
+  CLoadSetVarFromFile_SetVarActionName_PropIndex = 1;
 
   CDTString = 'String';
   CDTEnum = 'Enum';
@@ -351,6 +358,16 @@ const
     (Name: 'NewSizeEnabled'; EditorType: etBooleanCombo; DataType: CDTBool)
   );
 
+  CLoadSetVarFromFileProperties: array[0..CPropCount_LoadSetVarFromFile - 1] of TOIPropDef = (
+    (Name: 'FileName'; EditorType: etTextWithArrow; DataType: CDTString),
+    (Name: 'SetVarActionName'; EditorType: etTextWithArrow; DataType: CDTString)
+  );
+
+  CSaveSetVarToFileProperties: array[0..CPropCount_LoadSetVarFromFile - 1] of TOIPropDef = (
+    (Name: 'FileName'; EditorType: etTextWithArrow; DataType: CDTString),
+    (Name: 'SetVarActionName'; EditorType: etTextWithArrow; DataType: CDTString)
+  );
+
 type
   TArrayOfProperties = array[0..0] of TOIPropDef;
   PArrayOfProperties = ^TArrayOfProperties;
@@ -389,7 +406,9 @@ const
     @CCallTemplateProperties,
     @CSleepProperties,
     @CSetVarProperties,
-    @CWindowOperationsProperties
+    @CWindowOperationsProperties,
+    @CLoadSetVarFromFileProperties,
+    @CSaveSetVarToFileProperties
   );
 
 
@@ -403,6 +422,8 @@ function GetActionValueStr_CallTemplate(AAction: PClkActionRec; APropertyIndex: 
 function GetActionValueStr_Sleep(AAction: PClkActionRec; APropertyIndex: Integer): string;
 function GetActionValueStr_SetVar(AAction: PClkActionRec; APropertyIndex: Integer): string;
 function GetActionValueStr_WindowOperations(AAction: PClkActionRec; APropertyIndex: Integer): string;
+function GetActionValueStr_LoadSetVarFromFile(AAction: PClkActionRec; APropertyIndex: Integer): string;
+function GetActionValueStr_SaveSetVarToFile(AAction: PClkActionRec; APropertyIndex: Integer): string;
 
 {$IFDEF SubProperties}
   function GetActionValueStr_FindControl_MatchCriteria(AAction: PClkActionRec; APropertyIndex: Integer): string;
@@ -424,6 +445,8 @@ procedure SetActionValueStr_CallTemplate(AAction: PClkActionRec; NewValue: strin
 procedure SetActionValueStr_Sleep(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
 procedure SetActionValueStr_SetVar(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
 procedure SetActionValueStr_WindowOperations(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
+procedure SetActionValueStr_LoadSetVarFromFile(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
+procedure SetActionValueStr_SaveSetVarToFile(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
 
 {$IFDEF SubProperties}
   procedure SetActionValueStr_FindControl_MatchCriteria(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
@@ -445,7 +468,9 @@ const
     GetActionValueStr_CallTemplate,
     GetActionValueStr_Sleep,
     GetActionValueStr_SetVar,
-    GetActionValueStr_WindowOperations
+    GetActionValueStr_WindowOperations,
+    GetActionValueStr_LoadSetVarFromFile,
+    GetActionValueStr_SaveSetVarToFile
   );
 
   CMainSetActionValueStrFunctions: TSetActionValueStrProcArr = (
@@ -457,7 +482,9 @@ const
     SetActionValueStr_CallTemplate,
     SetActionValueStr_Sleep,
     SetActionValueStr_SetVar,
-    SetActionValueStr_WindowOperations
+    SetActionValueStr_WindowOperations,
+    SetActionValueStr_LoadSetVarFromFile,
+    SetActionValueStr_SaveSetVarToFile
   );
 
   CFindControlGetActionValueStrFunctions: TGetFindControlValueStrFuncArr = (
@@ -599,6 +626,16 @@ const
     0  //NewSizeEnabled: Boolean;
   );
 
+  CLoadSetVarFromFileCounts: array[0..CPropCount_LoadSetVarFromFile - 1] of Integer = (
+    0, //FileName
+    0  //SetVarActionName
+  );
+
+  CSaveSetVarToFileCounts: array[0..CPropCount_SaveSetVarToFile - 1] of Integer = (
+    0, //FileName
+    0  //SetVarActionName
+  );
+
 
   CPropEnumCounts: array[TClkAction] of PArrayOfEnumCounts = (
     @CClickEnumCounts,
@@ -609,7 +646,9 @@ const
     @CCallTemplateEnumCounts,
     @CSleepEnumCounts,
     @CSetVarEnumCounts,
-    @CWindowOperationsCounts
+    @CWindowOperationsCounts,
+    @CLoadSetVarFromFileCounts,
+    @CSaveSetVarToFileCounts
   );
 
 
@@ -758,6 +797,16 @@ const
     nil  //NewSizeEnabled: Boolean;
   );
 
+  CLoadSetVarFromFileStrings: array[0..CPropCount_LoadSetVarFromFile - 1] of PArrayOfString = (
+    nil, //FileName
+    nil  //SetVarActionName
+  );
+
+  CSaveSetVarToFileStrings: array[0..CPropCount_SaveSetVarToFile - 1] of PArrayOfString = (
+    nil, //FileName
+    nil  //SetVarActionName
+  );
+
 
   CPropEnumStrings: array[TClkAction] of PArrayOfEnumStrings = (
     @CClickEnumStrings,
@@ -768,7 +817,9 @@ const
     @CCallTemplateEnumStrings,
     @CSleepEnumStrings,
     @CSetVarEnumStrings,
-    @CWindowOperationsStrings
+    @CWindowOperationsStrings,
+    @CLoadSetVarFromFileStrings,
+    @CSaveSetVarToFileStrings
   );
 
   {$IFDEF SubProperties}
@@ -889,6 +940,11 @@ function GetPropertyHint_CallTemplate_CallTemplateLoop: string;
 function GetPropertyHint_WindowOperations_NewXY: string;
 function GetPropertyHint_WindowOperations_NewWidthHeight: string;
 
+function GetPropertyHint_LoadSetVarFromFile_FileName: string;
+function GetPropertyHint_LoadSetVarFromFile_SetVarActionName: string;
+function GetPropertyHint_SaveSetVarToFile_FileName: string;
+function GetPropertyHint_SaveSetVarToFile_SetVarActionName: string;
+
 function GetPropertyHint_Sleep_Value: string;
 
 
@@ -997,6 +1053,17 @@ const
   );
 
 
+  CGetPropertyHint_LoadSetVarFromFile: array[0..CPropCount_LoadSetVarFromFile - 1] of TPropHintFunc = (
+    @GetPropertyHint_LoadSetVarFromFile_FileName, // FileName,
+    @GetPropertyHint_LoadSetVarFromFile_SetVarActionName  // SetVarActionName
+  );
+
+  CGetPropertyHint_SaveSetVarToFile: array[0..CPropCount_SaveSetVarToFile - 1] of TPropHintFunc = (
+    @GetPropertyHint_SaveSetVarToFile_FileName, // FileName,
+    @GetPropertyHint_SaveSetVarToFile_SetVarActionName  // SetVarActionName
+  );
+
+
   CGetPropertyHint_Actions: TPropHintFuncActionArr = (
     @CGetPropertyHint_Click,
     @CGetPropertyHint_ExecApp,
@@ -1006,7 +1073,9 @@ const
     @CGetPropertyHint_CallTemplate,
     @CGetPropertyHint_Sleep,
     @CGetPropertyHint_SetVar,
-    @CGetPropertyHint_WindowOperations
+    @CGetPropertyHint_WindowOperations,
+    @CGetPropertyHint_LoadSetVarFromFile,
+    @CGetPropertyHint_SaveSetVarToFile
   );
 
 
@@ -1316,6 +1385,27 @@ begin
   end;
 end;
 
+
+function GetActionValueStr_LoadSetVarFromFile(AAction: PClkActionRec; APropertyIndex: Integer): string;
+begin
+  case APropertyIndex of
+    0: Result := AAction^.LoadSetVarFromFileOptions.FileName;
+    1: Result := AAction^.LoadSetVarFromFileOptions.SetVarActionName;
+    else
+      Result := 'unknown';
+  end;
+end;
+
+
+function GetActionValueStr_SaveSetVarToFile(AAction: PClkActionRec; APropertyIndex: Integer): string;
+begin
+  case APropertyIndex of
+    0: Result := AAction^.SaveSetVarToFileOptions.FileName;
+    1: Result := AAction^.SaveSetVarToFileOptions.SetVarActionName;
+    else
+      Result := 'unknown';
+  end;
+end;
 
 //
 function XClickPointReference_AsStringToValue(AXClickPointReferenceAsString: string): TXClickPointReference;
@@ -1763,6 +1853,28 @@ begin
 end;
 
 
+procedure SetActionValueStr_LoadSetVarFromFile(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
+begin
+  case APropertyIndex of
+    0: AAction^.LoadSetVarFromFileOptions.FileName := NewValue;
+    1: AAction^.LoadSetVarFromFileOptions.SetVarActionName := NewValue;
+    else
+      ;
+  end;
+end;
+
+
+procedure SetActionValueStr_SaveSetVarToFile(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
+begin
+  case APropertyIndex of
+    0: AAction^.SaveSetVarToFileOptions.FileName := NewValue;
+    1: AAction^.SaveSetVarToFileOptions.SetVarActionName := NewValue;
+    else
+      ;
+  end;
+end;
+
+
 //
 function GetPropertyHintNoHint: string;
 begin
@@ -2162,6 +2274,32 @@ end;
 function GetPropertyHint_WindowOperations_NewWidthHeight: string;
 begin
   Result := 'Evaluates $Control_Width$ and $Control_Height$ variables and updates "New Width" and "New Height" to them.';
+end;
+
+
+function GetPropertyHint_LoadSetVarFromFile_FileName: string;
+begin
+  Result := 'Filename to load var values from, for SetVar action.';
+end;
+
+
+function GetPropertyHint_LoadSetVarFromFile_SetVarActionName: string;
+begin
+  Result := 'Name of the SetVar action, in the current action template, used for specifying the vars to be loaded from file.' + #13#10 +
+            'Only the left column of SetVar action is required.';
+end;
+
+
+function GetPropertyHint_SaveSetVarToFile_FileName: string;
+begin
+  Result := 'Filename to save var values to, from SetVar action.';
+end;
+
+
+function GetPropertyHint_SaveSetVarToFile_SetVarActionName: string;
+begin
+  Result := 'Name of the SetVar action, in the current action template, used for specifying the vars to be saved to file.' + #13#10 +
+            'Only the left column of SetVar action is required.';
 end;
 
 

@@ -2484,6 +2484,20 @@ begin
     Exit;
   end;
 
+  if ASyncObj.FCmd = '/' + CRECmd_ExecuteLoadSetVarFromFile then
+  begin
+    Result := CREResp_RemoteExecResponseVar + '=' + IntToStr(Ord(frClickerActionsArrMain.ActionExecution.ExecuteLoadSetVarFromFileActionAsString(ASyncObj.FParams)));
+    Result := Result + #8#7 + FastReplace_ReturnTo87(frClickerActionsArrMain.frClickerActions.vallstVariables.Strings.Text);
+    Exit;
+  end;
+
+  if ASyncObj.FCmd = '/' + CRECmd_ExecuteSaveSetVarToFile then
+  begin
+    Result := CREResp_RemoteExecResponseVar + '=' + IntToStr(Ord(frClickerActionsArrMain.ActionExecution.ExecuteSaveSetVarToFileActionAsString(ASyncObj.FParams)));
+    Result := Result + #8#7 + FastReplace_ReturnTo87(frClickerActionsArrMain.frClickerActions.vallstVariables.Strings.Text);
+    Exit;
+  end;
+
   Result := 'unknown command';  //default if no command is recognized
   frClickerActionsArrMain.AddToLog(Result + ': ' + ASyncObj.FCmd);
   ASyncObj.FErrCode := 2;
@@ -3606,6 +3620,7 @@ begin
     end;
   end;
 end;
+
 
 end.
 

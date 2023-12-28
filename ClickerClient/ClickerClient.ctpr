@@ -77,9 +77,10 @@
       </Unit>
       <Unit>
         <Filename Value="ClickerClientLoggingForm.pas"/>
-        <FRMtype Value="0"/>
+        <FRMtype Value="200"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="frmClickerClientLogging"/>
+        <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
       </Unit>
     </Units>

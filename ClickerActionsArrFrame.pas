@@ -412,6 +412,13 @@ type
     procedure HandleOnGetFontFinderSettings(var AFontFinderSettings: TFontFinderSettings);
     procedure HandleOnSetFontFinderSettings(var AFontFinderSettings: TFontFinderSettings);
 
+    function HandleOnGetSetVarActionByName(var AClkSetVarOptions: TClkSetVarOptions; AActionName: string): Boolean;
+    function HandleOnUpdateSetVarActionByName(AClkSetVarOptions: TClkSetVarOptions; AActionName: string): Boolean;
+    function HandleOnTClkIniReadonlyFileCreate(AFileName: string): TClkIniReadonlyFile;
+    procedure HandleOnSaveStringListToFile(AStringList: TStringList; const AFileName: string);
+    procedure HandleOnBackupVars(AAllVars: TStringList);
+    procedure HandleOnGetListOfAvailableSetVarActions(AListOfSetVarActions: TStringList);
+
     function GetInMemFS: TInMemFileSystem;
     procedure SetInMemFS(Value: TInMemFileSystem);
 
@@ -868,6 +875,8 @@ begin
   frClickerActions.OnGetFontFinderSettings := HandleOnGetFontFinderSettings;
   frClickerActions.OnSetFontFinderSettings := HandleOnSetFontFinderSettings;
 
+  frClickerActions.OnGetListOfAvailableSetVarActions := HandleOnGetListOfAvailableSetVarActions;
+
   //frClickerActions.OnControlsModified := ClickerActionsFrameOnControlsModified;   //this is set on frame initialization
 
   vstActions := TVirtualStringTree.Create(Self);
@@ -1004,6 +1013,11 @@ begin
   FActionExecution.OnAddDefaultFontProfile := HandleOnAddDefaultFontProfile;
   FActionExecution.OnGetGridDrawingOption := HandleOnGetGridDrawingOption;
   FActionExecution.OnLoadPrimitivesFile := HandleOnLoadPrimitivesFile;
+  FActionExecution.OnGetSetVarActionByName := HandleOnGetSetVarActionByName;
+  FActionExecution.OnUpdateSetVarActionByName := HandleOnUpdateSetVarActionByName;
+  FActionExecution.OnTClkIniReadonlyFileCreate := HandleOnTClkIniReadonlyFileCreate;
+  FActionExecution.OnSaveStringListToFile := HandleOnSaveStringListToFile;
+  FActionExecution.OnBackupVars := HandleOnBackupVars;
 
   FCmdConsoleHistory := TStringList.Create;
   FOnExecuteRemoteActionAtIndex := nil;
@@ -1444,6 +1458,64 @@ begin
 end;
 
 
+function TfrClickerActionsArr.HandleOnGetSetVarActionByName(var AClkSetVarOptions: TClkSetVarOptions; AActionName: string): Boolean;
+var
+  i: Integer;
+begin
+  Result := False;
+  for i := 0 to Length(FClkActions) - 1 do
+    if FClkActions[i].ActionOptions.ActionName = AActionName then
+    begin
+      AClkSetVarOptions := FClkActions[i].SetVarOptions;
+      Result := True;
+      Break;
+    end;
+end;
+
+
+function TfrClickerActionsArr.HandleOnUpdateSetVarActionByName(AClkSetVarOptions: TClkSetVarOptions; AActionName: string): Boolean;
+var
+  i: Integer;
+begin
+  Result := False;
+  for i := 0 to Length(FClkActions) - 1 do
+    if FClkActions[i].ActionOptions.ActionName = AActionName then
+    begin
+      FClkActions[i].SetVarOptions := AClkSetVarOptions;
+      Result := True;
+      Break;
+    end;
+end;
+
+
+function TfrClickerActionsArr.HandleOnTClkIniReadonlyFileCreate(AFileName: string): TClkIniReadonlyFile;
+begin
+  Result := DoOnTClkIniReadonlyFileCreate(ResolveTemplatePath(AFileName));
+end;
+
+
+procedure TfrClickerActionsArr.HandleOnSaveStringListToFile(AStringList: TStringList; const AFileName: string);
+begin
+  DoOnSaveTemplateToFile(AStringList, ResolveTemplatePath(AFileName));
+end;
+
+
+procedure TfrClickerActionsArr.HandleOnBackupVars(AAllVars: TStringList);
+begin
+  AAllVars.AddStrings(frClickerActions.vallstVariables.Strings);
+end;
+
+
+procedure TfrClickerActionsArr.HandleOnGetListOfAvailableSetVarActions(AListOfSetVarActions: TStringList);
+var
+  i: Integer;
+begin
+  for i := 0 to Length(FClkActions) - 1 do
+    if FClkActions[i].ActionOptions.Action = acSetVar then
+      AListOfSetVarActions.Add(FClkActions[i].ActionOptions.ActionName);
+end;
+
+
 procedure TfrClickerActionsArr.UpdateActionsArrFromControls(ActionIndex: Integer);
 //var
 //  i: Integer;
@@ -1760,6 +1832,8 @@ begin
     acSleep: Result := FActionExecution.ExecuteSleepAction(FClkActions[AActionIndex].SleepOptions, FClkActions[AActionIndex].ActionOptions);
     acSetVar: Result := FActionExecution.ExecuteSetVarAction(FClkActions[AActionIndex].SetVarOptions);
     acWindowOperations: Result := FActionExecution.ExecuteWindowOperationsAction(FClkActions[AActionIndex].WindowOperationsOptions);
+    acLoadSetVarFromFile: Result := FActionExecution.ExecuteLoadSetVarFromFileAction(FClkActions[AActionIndex].LoadSetVarFromFileOptions);
+    acSaveSetVarToFile: Result := FActionExecution.ExecuteSaveSetVarToFileAction(FClkActions[AActionIndex].SaveSetVarToFileOptions);
   end;  //case
 end;
 
@@ -3104,6 +3178,8 @@ begin
           acSleep: CellText := CurrentAction.SleepOptions.Value;
           acSetVar: CellText := FastReplace_ReturnTo45(CurrentAction.SetVarOptions.ListOfVarNames);
           acWindowOperations: CellText := IntToStr(Ord(CurrentAction.WindowOperationsOptions.Operation));
+          acLoadSetVarFromFile: CellText := CurrentAction.LoadSetVarFromFileOptions.SetVarActionName + '  from "' + CurrentAction.LoadSetVarFromFileOptions.FileName + '"';
+          acSaveSetVarToFile: CellText := CurrentAction.SaveSetVarToFileOptions.SetVarActionName + '  from "' + CurrentAction.SaveSetVarToFileOptions.FileName + '"';
         end;
       end;
       5: CellText := StringReplace(CurrentAction.FindControlOptions.MatchBitmapFiles, #13#10, ', ', [rfReplaceAll]);
@@ -5051,6 +5127,12 @@ begin
   FClkActions[AIndex].WindowOperationsOptions.NewHeight := '';
   FClkActions[AIndex].WindowOperationsOptions.NewPositionEnabled := False;
   FClkActions[AIndex].WindowOperationsOptions.NewSizeEnabled := False;
+
+  FClkActions[AIndex].LoadSetVarFromFileOptions.FileName := '';
+  FClkActions[AIndex].LoadSetVarFromFileOptions.SetVarActionName := '';
+
+  FClkActions[AIndex].SaveSetVarToFileOptions.FileName := '';
+  FClkActions[AIndex].SaveSetVarToFileOptions.SetVarActionName := '';
 end;
 
 

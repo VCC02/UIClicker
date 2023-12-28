@@ -40,6 +40,8 @@ function GetCallTemplateActionProperties(ACallTemplateOptions: TClkCallTemplateO
 function GetSleepActionProperties(ASleepOptions: TClkSleepOptions): string;
 function GetSetVarActionProperties(ASetVarOptions: TClkSetVarOptions): string;
 function GetWindowOperationsActionProperties(AWindowOperationsOptions: TClkWindowOperationsOptions): string;
+function GetLoadSetVarFromFileActionProperties(ALoadSetVarFromFileOptions: TClkLoadSetVarFromFileOptions): string;
+function GetSaveSetVarToFileActionProperties(ASaveSetVarToFileOptions: TClkSaveSetVarToFileOptions): string;
 
 
 implementation
@@ -210,6 +212,20 @@ begin
             'NewHeight' + '=' + AWindowOperationsOptions.NewHeight + '&' +
             'NewPositionEnabled' + '=' + IntToStr(Ord(AWindowOperationsOptions.NewPositionEnabled)) + '&' +
             'NewSizeEnabled' + '=' + IntToStr(Ord(AWindowOperationsOptions.NewSizeEnabled))
+end;
+
+
+function GetLoadSetVarFromFileActionProperties(ALoadSetVarFromFileOptions: TClkLoadSetVarFromFileOptions): string;
+begin
+  Result := 'FileName' + '=' + ALoadSetVarFromFileOptions.FileName + '&' +
+            'SetVarActionName' + '=' + ALoadSetVarFromFileOptions.SetVarActionName;
+end;
+
+
+function GetSaveSetVarToFileActionProperties(ASaveSetVarToFileOptions: TClkSaveSetVarToFileOptions): string;
+begin
+  Result := 'FileName' + '=' + ASaveSetVarToFileOptions.FileName + '&' +
+            'SetVarActionName' + '=' + ASaveSetVarToFileOptions.SetVarActionName;
 end;
 
 

@@ -444,6 +444,20 @@ begin
 end;
 
 
+procedure LoadAction_LoadSetVarFromFile(Ini: TClkIniReadonlyFile; SectionIndex: Integer; var ALoadSetVarFromFileOptions: TClkLoadSetVarFromFileOptions);
+begin
+  ALoadSetVarFromFileOptions.FileName := Ini.ReadString(SectionIndex, 'FileName', '');
+  ALoadSetVarFromFileOptions.SetVarActionName := Ini.ReadString(SectionIndex, 'SetVarActionName', '');
+end;
+
+
+procedure LoadAction_SaveSetVarToFile(Ini: TClkIniReadonlyFile; SectionIndex: Integer; var ASaveSetVarToFileOptions: TClkSaveSetVarToFileOptions);
+begin
+  ASaveSetVarToFileOptions.FileName := Ini.ReadString(SectionIndex, 'FileName', '');
+  ASaveSetVarToFileOptions.SetVarActionName := Ini.ReadString(SectionIndex, 'SetVarActionName', '');
+end;
+
+
 procedure LoadTemplateToCustomActions_V2(Ini: TClkIniReadonlyFile; var ACustomActions: TClkActionsRecArr; var ANotes, ATemplateIconPath: string);
 var
   IterationStr: string;
@@ -471,6 +485,8 @@ begin
       acSleep: LoadAction_Sleep(Ini, SectionIndex, ACustomActions[i].SleepOptions);
       acSetVar: LoadAction_SetVar(Ini, SectionIndex, ACustomActions[i].SetVarOptions);
       acWindowOperations: LoadAction_WindowOperations(Ini, SectionIndex, ACustomActions[i].WindowOperationsOptions);
+      acLoadSetVarFromFile: LoadAction_LoadSetVarFromFile(Ini, SectionIndex, ACustomActions[i].LoadSetVarFromFileOptions);
+      acSaveSetVarToFile: LoadAction_SaveSetVarToFile(Ini, SectionIndex, ACustomActions[i].SaveSetVarToFileOptions);
     end;
   end;
 
@@ -853,6 +869,20 @@ begin
 end;
 
 
+procedure AddAction_LoadSetVarFromFileToStringList(var AActionLoadSetVarFromFileOptions: TClkLoadSetVarFromFileOptions; AStringList: TStringList);
+begin
+  AStringList.Add('FileName=' + AActionLoadSetVarFromFileOptions.FileName);
+  AStringList.Add('SetVarActionName=' + AActionLoadSetVarFromFileOptions.SetVarActionName);
+end;
+
+
+procedure AddAction_SaveSetVarToFileToStringList(var AActionSaveSetVarToFileOptions: TClkSaveSetVarToFileOptions; AStringList: TStringList);
+begin
+  AStringList.Add('FileName=' + AActionSaveSetVarToFileOptions.FileName);
+  AStringList.Add('SetVarActionName=' + AActionSaveSetVarToFileOptions.SetVarActionName);
+end;
+
+
 procedure AddActionContentToStringList(var AAction: TClkActionRec; AStringList: TStringList);
 begin
   case AAction.ActionOptions.Action of
@@ -865,6 +895,8 @@ begin
     acSleep: AddAction_SleepToStringList(AAction.SleepOptions, AStringList);
     acSetVar: AddAction_SetVarToStringList(AAction.SetVarOptions, AStringList);
     acWindowOperations: AddAction_WindowOperationsToStringList(AAction.WindowOperationsOptions, AStringList);
+    acLoadSetVarFromFile: AddAction_LoadSetVarFromFileToStringList(AAction.LoadSetVarFromFileOptions, AStringList);
+    acSaveSetVarToFile: AddAction_SaveSetVarToFileToStringList(AAction.SaveSetVarToFileOptions, AStringList);
   end;
 end;
 
@@ -916,6 +948,8 @@ begin             //Substructures, which do not contain pointers, can be directl
   ADest.SleepOptions := ASrc.SleepOptions;
   ADest.SetVarOptions := ASrc.SetVarOptions;
   ADest.WindowOperationsOptions := ASrc.WindowOperationsOptions;
+  ADest.LoadSetVarFromFileOptions := ASrc.LoadSetVarFromFileOptions;
+  ADest.SaveSetVarToFileOptions := ASrc.SaveSetVarToFileOptions;
 
   ADest.FindControlOptions.MatchCriteria := ASrc.FindControlOptions.MatchCriteria;
   ADest.FindControlOptions.AllowToFail := ASrc.FindControlOptions.AllowToFail;

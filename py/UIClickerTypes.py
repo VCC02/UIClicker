@@ -410,6 +410,32 @@ def GetDefaultWindowOperationsOptions():
     return WindowOperationsOptions
 
 
+class TLoadSetVarFromFileOptions(Structure):
+    _fields_ = [("FileName", LPCWSTR),
+               ("SetVarActionName", LPCWSTR)]
+
+PLoadSetVarFromFileOptions = ctypes.POINTER(TLoadSetVarFromFileOptions)
+
+def GetDefaultLoadSetVarFromFileOptions():
+    LoadSetVarFromFileOptions = TLoadSetVarFromFileOptions()
+    LoadSetVarFromFileOptions.FileName = ''
+    LoadSetVarFromFileOptions.SetVarActionName = ''
+    return LoadSetVarFromFileOptions
+
+
+class TSaveSetVarToFileOptions(Structure):
+    _fields_ = [("FileName", LPCWSTR),
+               ("SetVarActionName", LPCWSTR)]
+
+PSaveSetVarToFileOptions = ctypes.POINTER(TSaveSetVarToFileOptions)
+
+def GetDefaultSaveSetVarToFileOptions():
+    SaveSetVarToFileOptions = TSaveSetVarToFileOptions()
+    SaveSetVarToFileOptions.FileName = ''
+    SaveSetVarToFileOptions.SetVarActionName = ''
+    return SaveSetVarToFileOptions
+
+
 ########################
 #Font profile structure. MatchBitmapText field from TFindControlOptions is a dynamic array of TClkFindControlMatchBitmapText.
 class TClkFindControlMatchBitmapText(Structure):
