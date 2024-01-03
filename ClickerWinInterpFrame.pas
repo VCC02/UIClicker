@@ -1132,6 +1132,7 @@ begin
   AAction.FindControlOptions.MatchCriteria.WillMatchText := True;
   AAction.FindControlOptions.MatchCriteria.WillMatchBitmapText := False;
   AAction.FindControlOptions.MatchCriteria.WillMatchBitmapFiles := False;
+  AAction.FindControlOptions.MatchCriteria.WillMatchPrimitiveFiles := False;
 
   AAction.FindControlOptions.MatchText := ACompData^.CompRec.Text;
   AAction.FindControlOptions.MatchClassName := ACompData^.CompRec.ClassName;
@@ -1194,6 +1195,11 @@ begin
   AAction.ClickOptions.YClickPointVarDest := '$Control_Top$';
   AAction.ClickOptions.XOffsetDest := '0';
   AAction.ClickOptions.YOffsetDest := '0';
+  AAction.ClickOptions.MouseWheelType := mwtVert;
+  AAction.ClickOptions.MouseWheelAmount := '1';
+  AAction.ClickOptions.DelayAfterMovingToDestination := '50';
+  AAction.ClickOptions.DelayAfterMouseDown := '200';
+  AAction.ClickOptions.MoveDuration := '-1';
 end;
 
 

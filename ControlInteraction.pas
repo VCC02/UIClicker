@@ -68,7 +68,7 @@ type
 procedure SetControlText(hw: THandle; NewText: string);
 procedure SelectComboBoxItem(hw: THandle; StartIndex: Integer; TextToSelect: string);
 
-function MatchControlByBitmap(Algorithm: TMatchBitmapAlgorithm; AlgorithmSettings: TMatchBitmapAlgorithmSettings; CompAtPoint: TCompRec; InputData: TFindControlInputData; out SubCnvXOffset, SubCnvYOffset: Integer; AStopAllActionsOnDemand: PBoolean; ADisplayGridLineOption: TDisplayGridLineOption): Boolean;
+function MatchControlByBitmap(Algorithm: TMatchBitmapAlgorithm; AlgorithmSettings: TMatchBitmapAlgorithmSettings; CompAtPoint: TCompRec; InputData: TFindControlInputData; out SubCnvXOffset, SubCnvYOffset: Integer; var AFoundBitmaps: TCompRecArr; AStopAllActionsOnDemand: PBoolean; ADisplayGridLineOption: TDisplayGridLineOption): Boolean;
 function FindControlOnScreen(Algorithm: TMatchBitmapAlgorithm; AlgorithmSettings: TMatchBitmapAlgorithmSettings; InputData: TFindControlInputData; AInitialTickCount, ATimeout: Cardinal; AStopAllActionsOnDemand: PBoolean; var AResultedControl: TCompRecArr; ADisplayGridLineOption: TDisplayGridLineOption): Boolean;
 function FindWindowOnScreenByCaptionOrClass(InputData: TFindControlInputData; AInitialTickCount, ATimeout: Cardinal; AStopAllActionsOnDemand: PBoolean; out AResultedControl: TCompRec): Boolean;
 function FindWindowOnScreenByCaptionAndClass(InputData: TFindControlInputData; AInitialTickCount, ATimeout: Cardinal; AStopAllActionsOnDemand: PBoolean; var AResultedControls: TCompRecArr): Boolean;
@@ -475,7 +475,7 @@ begin
   DebugDisplayLeft := DebugBmp.Width;  //yes, width
 
   DebugBmp.Width := DebugDisplayLeft + Max(DebugBmp.Width, 400);  //400.. for long filenames
-  DebugBmp.Height := Max(DebugBmp.Height, 100); //use Max to allow displaying text
+  DebugBmp.Height := Max(Max(DebugBmp.Height + 40, BitmapToSearchFor.Height shl 1 + 80), 100); //use Max to allow displaying text
 
   if DebugBmp.Width < 1 then //it may happen, if DebugDisplayLeft is negative
     DebugBmp.Width := 1;
@@ -594,7 +594,9 @@ end;
 
 //Searches for BitmapToSearchFor in the bitmap of a component defined by ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height
 //SrcCompSearchAreaBitmap - bitmap with source component, defined by InitRect
-function MatchByBitmap(Algorithm: TMatchBitmapAlgorithm; AlgorithmSettings: TMatchBitmapAlgorithmSettings; ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height: Integer; BitmapToSearchFor, SrcCompSearchAreaBitmap: TBitmap; CompHandle: THandle; ColorErr, AllowedColorErrCnt, FastSearchAllowedColorErrCnt: Integer; out SubCnvXOffset, SubCnvYOffset: Integer; AUseFastSearch, AIgnoreBackgroundColor: Boolean; ABackgroundColor: TColor; var AIgnoredColorsArr: TColorArr; ASleepySearch: Byte; AStopAllActionsOnDemand: PBoolean): Boolean;
+function MatchByBitmap(Algorithm: TMatchBitmapAlgorithm; AlgorithmSettings: TMatchBitmapAlgorithmSettings; ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height: Integer; BitmapToSearchFor, SrcCompSearchAreaBitmap: TBitmap; CompHandle: THandle; ColorErr, AllowedColorErrCnt, FastSearchAllowedColorErrCnt: Integer; out SubCnvXOffset, SubCnvYOffset: Integer; var AFoundBitmaps: TCompRecArr; AUseFastSearch, AIgnoreBackgroundColor, AGetAllBitmaps: Boolean; ABackgroundColor: TColor; var AIgnoredColorsArr: TColorArr; ASleepySearch: Byte; AStopAllActionsOnDemand: PBoolean): Boolean;
+var
+  i: Integer;
 begin
   Result := False;
                        //SrcCompSearchAreaBitmap is the cropped area, from where BitmapToSearchFor is searched for.
@@ -603,18 +605,25 @@ begin
 
   SubCnvXOffset := -1;  //for debugging..
   SubCnvYOffset := -1;  //for debugging..
-  if BitmapPosMatch(Algorithm, AlgorithmSettings, SrcCompSearchAreaBitmap, BitmapToSearchFor, ColorErr, SubCnvXOffset, SubCnvYOffset, AllowedColorErrCnt, FastSearchAllowedColorErrCnt, AUseFastSearch, AIgnoreBackgroundColor, ABackgroundColor, AIgnoredColorsArr, ASleepySearch, AStopAllActionsOnDemand) then
+  if BitmapPosMatch(Algorithm, AlgorithmSettings, SrcCompSearchAreaBitmap, BitmapToSearchFor, ColorErr, SubCnvXOffset, SubCnvYOffset, AFoundBitmaps, AllowedColorErrCnt, FastSearchAllowedColorErrCnt, AUseFastSearch, AIgnoreBackgroundColor, AGetAllBitmaps, ABackgroundColor, AIgnoredColorsArr, ASleepySearch, AStopAllActionsOnDemand) then
   begin
     Result := True;
     Inc(SubCnvXOffset, ScrShot_Left);
     Inc(SubCnvYOffset, ScrShot_Top);
+
+    //if AGetAllBitmaps then  //the for loop should run regardless, because there can be one array element, which should be updated to global coords
+    for i := 0 to Length(AFoundBitmaps) - 1 do
+    begin
+      Inc(AFoundBitmaps[i].XOffsetFromParent, ScrShot_Left);
+      Inc(AFoundBitmaps[i].YOffsetFromParent, ScrShot_Top);
+    end;
   end;
 end;
 
 
 //Searches for BitmapToSearchFor in the bitmap of a component defined by ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height
 //SrcCompSearchAreaBitmap - bitmap with source component, defined by InitRect
-function MatchControlByBitmap(Algorithm: TMatchBitmapAlgorithm; AlgorithmSettings: TMatchBitmapAlgorithmSettings; CompAtPoint: TCompRec; InputData: TFindControlInputData; out SubCnvXOffset, SubCnvYOffset: Integer; AStopAllActionsOnDemand: PBoolean; ADisplayGridLineOption: TDisplayGridLineOption): Boolean;
+function MatchControlByBitmap(Algorithm: TMatchBitmapAlgorithm; AlgorithmSettings: TMatchBitmapAlgorithmSettings; CompAtPoint: TCompRec; InputData: TFindControlInputData; out SubCnvXOffset, SubCnvYOffset: Integer;  var AFoundBitmaps: TCompRecArr; AStopAllActionsOnDemand: PBoolean; ADisplayGridLineOption: TDisplayGridLineOption): Boolean;
 var
   ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height, CompWith, CompHeight: Integer;
   SrcCompSearchAreaBitmap: TBitmap;
@@ -646,8 +655,10 @@ begin
                               InputData.FastSearchAllowedColorErrorCount,
                               SubCnvXOffset,
                               SubCnvYOffset,
+                              AFoundBitmaps,
                               InputData.UseFastSearch,
                               InputData.IgnoreBackgroundColor,
+                              InputData.GetAllHandles,          // GetAllBitmaps is the FindSubControl's version of GetAllHandles
                               InputData.BackgroundColor,
                               InputData.IgnoredColorsArr,
                               InputData.SleepySearch,
@@ -683,12 +694,14 @@ function MatchControl(var CompAtPoint: TCompRec;
                       InputData: TFindControlInputData;
                       AStopAllActionsOnDemand: PBoolean;
                       {var} AvailableControls: TCompRecArr; //Do not pass by reference. Let it create a copy, so that any modification will not affect "source" components (search area).
+                      var AFoundSubControls: TCompRecArr; //used when searching with FindSubControl and InputData.GetAllHandles is True
                       ListOfControlTexts, ListOfControlClasses: TStringList;
                       ADisplayGridLineOption: TDisplayGridLineOption
                       ): Boolean;
 var
   FoundClass, FoundText, FoundBmp: Boolean;
   SubCnvXOffset, SubCnvYOffset: Integer;
+  i: Integer;
 begin
   FoundClass := True;
   FoundText := True;
@@ -719,13 +732,27 @@ begin
       SetLength(AvailableControls, Length(AvailableControls) + 1);
       AvailableControls[Length(AvailableControls) - 1] := CompAtPoint;
 
-      FoundBmp := MatchControlByBitmap(Algorithm, AlgorithmSettings, CompAtPoint, InputData, SubCnvXOffset, SubCnvYOffset, AStopAllActionsOnDemand, ADisplayGridLineOption);
+      FoundBmp := MatchControlByBitmap(Algorithm, AlgorithmSettings, CompAtPoint, InputData, SubCnvXOffset, SubCnvYOffset, AFoundSubControls, AStopAllActionsOnDemand, ADisplayGridLineOption);
     end
     else
       FoundBmp := False;
 
     if FoundBmp and InputData.SearchAsSubControl then    //yes, this "if" should be inside mmBitmap condition
     begin
+      for i := 0 to Length(AFoundSubControls) - 1 do
+      begin
+        AFoundSubControls[i].Handle := CompAtPoint.Handle;
+        AFoundSubControls[i].IsSubControl := CompAtPoint.IsSubControl;
+        AFoundSubControls[i].ClassName := CompAtPoint.ClassName;
+        AFoundSubControls[i].Text := CompAtPoint.Text;
+        AFoundSubControls[i].ComponentRectangle := CompAtPoint.ComponentRectangle;
+
+        Inc(AFoundSubControls[i].ComponentRectangle.Left, AFoundSubControls[i].XOffsetFromParent);
+        Inc(AFoundSubControls[i].ComponentRectangle.Top, AFoundSubControls[i].YOffsetFromParent);
+        AFoundSubControls[i].ComponentRectangle.Right := AFoundSubControls[i].ComponentRectangle.Left + InputData.BitmapToSearchFor.Width;
+        AFoundSubControls[i].ComponentRectangle.Bottom := AFoundSubControls[i].ComponentRectangle.Top + InputData.BitmapToSearchFor.Height;
+      end;
+
       CompAtPoint.XOffsetFromParent := SubCnvXOffset;
       CompAtPoint.YOffsetFromParent := SubCnvYOffset;
 
@@ -757,12 +784,13 @@ end;
 
 function FindControlOnScreen(Algorithm: TMatchBitmapAlgorithm; AlgorithmSettings: TMatchBitmapAlgorithmSettings; InputData: TFindControlInputData; AInitialTickCount, ATimeout: Cardinal; AStopAllActionsOnDemand: PBoolean; var AResultedControl: TCompRecArr; ADisplayGridLineOption: TDisplayGridLineOption): Boolean;
 var
-  i, j, k: Integer;
+  i, j, k, cc: Integer;
   tp: TPoint;
   CompAtPoint: TCompRec;
   XValues, YValues: TIntArrArr;
   ListOfControlTexts, ListOfControlClasses: TStringList;
   AvailableControls: TCompRecArr;
+  FoundSubControls: TCompRecArr;
   GlobalSearchAreaWidth, GlobalSearchAreaHeight: Integer;
   MatchingMethodsRec: TMatchingMethodsRec;
   InputDataForCaching: TFindControlInputData;
@@ -774,6 +802,7 @@ begin
   ListOfControlTexts := TStringList.Create;
   ListOfControlClasses := TStringList.Create;
   SetLength(AvailableControls, 0);
+  SetLength(FoundSubControls, 0);
   try
     ListOfControlTexts.Text := StringReplace(InputData.Text, InputData.TextSeparator, #13#10, [rfReplaceAll]);             //no fast replace here :( , because the separator can be anything
     ListOfControlClasses.Text := StringReplace(InputData.ClassName, InputData.ClassNameSeparator, #13#10, [rfReplaceAll]); //no fast replace here :( , because the separator can be anything
@@ -823,6 +852,7 @@ begin
                       InputDataForCaching,
                       AStopAllActionsOnDemand,
                       AvailableControls,
+                      FoundSubControls,
                       ListOfControlTexts,
                       ListOfControlClasses,
                       ADisplayGridLineOption) then
@@ -878,15 +908,25 @@ begin
                             InputData,
                             AStopAllActionsOnDemand,
                             AvailableControls,
+                            FoundSubControls,
                             ListOfControlTexts,
                             ListOfControlClasses,
                             ADisplayGridLineOption) then
             begin
-              if GetControlHandleIndexInResultedControls(AResultedControl, CompAtPoint.Handle) = -1 then
+              if (MatchingMethodsRec.Matching_BitmapText or
+                  MatchingMethodsRec.Matching_BitmapFiles or
+                  MatchingMethodsRec.Matching_PrimitiveFiles) and InputData.GetAllHandles then //SubControl
               begin
-                SetLength(AResultedControl, Length(AResultedControl) + 1);
-                AResultedControl[Length(AResultedControl) - 1] := CompAtPoint;
-              end;
+                SetLength(AResultedControl, Length(FoundSubControls));
+                for cc := 0 to Length(FoundSubControls) - 1 do
+                  AResultedControl[cc] := FoundSubControls[cc];
+              end
+              else
+                if GetControlHandleIndexInResultedControls(AResultedControl, CompAtPoint.Handle) = -1 then
+                begin
+                  SetLength(AResultedControl, Length(AResultedControl) + 1);
+                  AResultedControl[Length(AResultedControl) - 1] := CompAtPoint;
+                end;
 
               Result := True;
 
@@ -918,6 +958,7 @@ begin
     ListOfControlTexts.Free;
     ListOfControlClasses.Free;
     SetLength(AvailableControls, 0);
+    SetLength(FoundSubControls, 0);
   end;
 end;
 

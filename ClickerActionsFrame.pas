@@ -4169,13 +4169,6 @@ begin
         TargetCanvas.Font.Color := clGray;
         Exit;
       end;
-
-      if ((APropertyIndex in [CFindControl_GetAllControls_PropIndex])  //probably, there are more properties, which are not used on FindSubControl
-                              and (CurrentlyEditingActionType = acFindSubControl)) then
-      begin
-        TargetCanvas.Font.Color := clGray;
-        Exit;
-      end;
     end;
 
 
@@ -4214,6 +4207,13 @@ begin
       if CurrentlyEditingActionType = acFindControl then
         if APropertyIndex in [CFindControl_MatchBitmapText_PropIndex .. CFindControl_MatchBitmapAlgorithmSettings_PropIndex,
                               CFindControl_MatchPrimitiveFiles_PropIndex] then     //not that many subproperties
+        begin
+          TargetCanvas.Font.Color := clGray;
+          Exit;
+        end;
+
+      if (APropertyIndex in [CFindControl_MatchBitmapAlgorithmSettings_PropIndex]) and
+         (FEditingAction^.FindControlOptions.MatchBitmapAlgorithm <> mbaXYMultipleAndOffsets) then
       begin
         TargetCanvas.Font.Color := clGray;
         Exit;

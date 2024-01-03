@@ -5,9 +5,9 @@ object frClickerWinInterp: TfrClickerWinInterp
   Width = 893
   ClientHeight = 501
   ClientWidth = 893
-  OnResize = FrameResize
   ParentBackground = False
   TabOrder = 0
+  OnResize = FrameResize
   DesignLeft = 86
   DesignTop = 85
   object pnlFrameBK: TPanel
@@ -50,8 +50,8 @@ object frClickerWinInterp: TfrClickerWinInterp
         Width = 97
         Anchors = [akLeft, akBottom]
         Caption = 'Start Recording'
-        OnClick = btnStartRecClick
         TabOrder = 1
+        OnClick = btnStartRecClick
       end
       object btnStopRec: TButton
         Left = 273
@@ -60,8 +60,8 @@ object frClickerWinInterp: TfrClickerWinInterp
         Width = 97
         Anchors = [akLeft, akBottom]
         Caption = 'Stop Recording'
-        OnClick = btnStopRecClick
         TabOrder = 2
+        OnClick = btnStopRecClick
       end
       object prbRecording: TProgressBar
         Left = 273
@@ -76,7 +76,7 @@ object frClickerWinInterp: TfrClickerWinInterp
         Left = 273
         Height = 19
         Top = 372
-        Width = 140
+        Width = 138
         Anchors = [akLeft, akBottom]
         Caption = 'Minimize on recording'
         TabOrder = 4
@@ -108,13 +108,13 @@ object frClickerWinInterp: TfrClickerWinInterp
         Left = 0
         Height = 19
         Top = 372
-        Width = 181
+        Width = 179
         Anchors = [akLeft, akBottom]
         Caption = 'Highlight selected component'
         Checked = True
-        OnChange = chkHighlightSelectedComponentChange
         State = cbChecked
         TabOrder = 6
+        OnChange = chkHighlightSelectedComponentChange
       end
       object rdgrpLayers: TRadioGroup
         Left = 0
@@ -140,8 +140,8 @@ object frClickerWinInterp: TfrClickerWinInterp
           'Avg(Screenshot, Green Comp Rect)'
           'Avg(Screenshot, Assigned Comp Rect)'
         )
-        OnClick = rdgrpLayersClick
         TabOrder = 7
+        OnClick = rdgrpLayersClick
       end
       object lblHighlightingLabels: TLabel
         Left = 273
@@ -159,10 +159,10 @@ object frClickerWinInterp: TfrClickerWinInterp
         Width = 75
         Anchors = [akLeft, akBottom]
         Caption = 'Export...'
-        OnClick = btnExportClick
         ParentShowHint = False
         ShowHint = True
         TabOrder = 8
+        OnClick = btnExportClick
       end
       object btnSaveTree: TButton
         Left = 273
@@ -172,10 +172,10 @@ object frClickerWinInterp: TfrClickerWinInterp
         Width = 75
         Anchors = [akLeft, akBottom]
         Caption = 'Save Tree...'
-        OnClick = btnSaveTreeClick
         ParentShowHint = False
         ShowHint = True
         TabOrder = 9
+        OnClick = btnSaveTreeClick
       end
       object btnLoadTree: TButton
         Left = 273
@@ -185,10 +185,10 @@ object frClickerWinInterp: TfrClickerWinInterp
         Width = 75
         Anchors = [akLeft, akBottom]
         Caption = 'Load Tree...'
-        OnClick = btnLoadTreeClick
         ParentShowHint = False
         ShowHint = True
         TabOrder = 10
+        OnClick = btnLoadTreeClick
       end
       object spdbtnExtraRecording: TSpeedButton
         Left = 369
@@ -207,8 +207,8 @@ object frClickerWinInterp: TfrClickerWinInterp
           1AFFFFFFFFFFFF000000FFFFFF39841A39841A39841A39841A39841A39841A39
           841A39841A39841AFFFFFF000000
         }
-        OnClick = spdbtnExtraRecordingClick
         ParentFont = False
+        OnClick = spdbtnExtraRecordingClick
       end
       object imgSpinner: TImage
         Left = 371
@@ -258,6 +258,7 @@ object frClickerWinInterp: TfrClickerWinInterp
         Anchors = [akTop, akLeft, akRight, akBottom]
         Caption = 'pnlvstComponents'
         Color = clYellow
+        ParentBackground = False
         ParentColor = False
         TabOrder = 11
       end
@@ -268,8 +269,8 @@ object frClickerWinInterp: TfrClickerWinInterp
         Width = 184
         Anchors = [akLeft, akBottom]
         ItemHeight = 16
-        OnSelect = colboxHighlightingLabelsSelect
         TabOrder = 12
+        OnSelect = colboxHighlightingLabelsSelect
       end
     end
     object pnlDrag: TPanel
@@ -280,6 +281,7 @@ object frClickerWinInterp: TfrClickerWinInterp
       Width = 322
       Caption = 'Drag the mouse cursor, from this box to the target window'
       Color = clYellow
+      ParentBackground = False
       ParentColor = False
       ParentShowHint = False
       ShowHint = True
@@ -315,68 +317,68 @@ object frClickerWinInterp: TfrClickerWinInterp
         Height = 121
         Top = 28
         Width = 121
-        OnMouseDown = imgScannedWindowMouseDown
-        OnMouseMove = imgScannedWindowMouseMove
         PopupMenu = pmScreenshot
         Visible = False
+        OnMouseDown = imgScannedWindowMouseDown
+        OnMouseMove = imgScannedWindowMouseMove
       end
       object imgAvgScreenshotAndGreenComp: TImage
         Left = 56
         Height = 121
         Top = 56
         Width = 121
-        OnMouseDown = imgScannedWindowMouseDown
-        OnMouseMove = imgScannedWindowMouseMove
         PopupMenu = pmScreenshot
         Visible = False
+        OnMouseDown = imgScannedWindowMouseDown
+        OnMouseMove = imgScannedWindowMouseMove
       end
       object imgAvgScreenshotAndAssignedComp: TImage
         Left = 84
         Height = 121
         Top = 84
         Width = 121
-        OnMouseDown = imgScannedWindowMouseDown
-        OnMouseMove = imgScannedWindowMouseMove
         PopupMenu = pmScreenshot
         Visible = False
+        OnMouseDown = imgScannedWindowMouseDown
+        OnMouseMove = imgScannedWindowMouseMove
       end
       object imgScannedWindow: TImage
         Left = 0
         Height = 121
         Top = 0
         Width = 121
+        PopupMenu = pmScreenshot
         OnMouseDown = imgScannedWindowMouseDown
         OnMouseMove = imgScannedWindowMouseMove
-        PopupMenu = pmScreenshot
       end
       object imgLiveScreenshot: TImage
         Left = 113
         Height = 121
         Top = 113
         Width = 121
-        OnMouseDown = imgLiveScreenshotMouseDown
         Visible = False
+        OnMouseDown = imgLiveScreenshotMouseDown
       end
       object imgHandleColors: TImage
         Left = 144
         Height = 121
         Top = 144
         Width = 121
-        OnMouseDown = imgScannedWindowMouseDown
-        OnMouseMove = imgScannedWindowMouseMove
         PopupMenu = pmScreenshot
         Visible = False
+        OnMouseDown = imgScannedWindowMouseDown
+        OnMouseMove = imgScannedWindowMouseMove
       end
       object imgScannedWindowWithText: TImage
         Left = 172
         Height = 121
         Top = 172
         Width = 121
-        OnMouseDown = imgScannedWindowMouseDown
-        OnMouseMove = imgScannedWindowMouseMove
         ParentShowHint = False
         PopupMenu = pmScreenshot
         Visible = False
+        OnMouseDown = imgScannedWindowMouseDown
+        OnMouseMove = imgScannedWindowMouseMove
       end
     end
     object pnlHorizSplitter: TPanel
@@ -387,6 +389,7 @@ object frClickerWinInterp: TfrClickerWinInterp
       Width = 11
       Anchors = [akTop, akLeft, akBottom]
       Color = 13041606
+      ParentBackground = False
       ParentColor = False
       TabOrder = 4
       OnMouseDown = pnlHorizSplitterMouseDown

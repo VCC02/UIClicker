@@ -1163,6 +1163,53 @@ function TActionExecution.ExecuteFindControlAction(var AFindControlOptions: TClk
     SetActionVarValue('$DebugVar_SubCnvYOffset$', IntToStr(AControl.YOffsetFromParent));
   end;
 
+  procedure UpdateActionVarValuesFromResultedControlArr(var AResultedControlArr: TCompRecArr);
+  var
+    Control_Width, Control_Height: Integer;
+    AllControl_Lefts_Str: string;
+    AllControl_Tops_Str: string;
+    AllControl_Rights_Str: string;
+    AllControl_Bottoms_Str: string;
+    AllControl_Widths_Str: string;
+    AllControl_Heights_Str: string;
+    AllHalf_Control_Widths_Str: string;
+    AllHalf_Control_Heights_Str: string;
+    i: Integer;
+  begin
+    AllControl_Lefts_Str := '';
+    AllControl_Tops_Str := '';
+    AllControl_Rights_Str := '';
+    AllControl_Bottoms_Str := '';
+    AllControl_Widths_Str := '';
+    AllControl_Heights_Str := '';
+    AllHalf_Control_Widths_Str := '';
+    AllHalf_Control_Heights_Str := '';
+
+    for i := 0 to Length(AResultedControlArr) - 1 do
+    begin
+      Control_Width := AResultedControlArr[i].ComponentRectangle.Right - AResultedControlArr[i].ComponentRectangle.Left;
+      Control_Height := AResultedControlArr[i].ComponentRectangle.Bottom - AResultedControlArr[i].ComponentRectangle.Top;
+
+      AllControl_Lefts_Str := AllControl_Lefts_Str + IntToStr(AResultedControlArr[i].ComponentRectangle.Left) + #4#5;
+      AllControl_Tops_Str := AllControl_Tops_Str + IntToStr(AResultedControlArr[i].ComponentRectangle.Top) + #4#5;
+      AllControl_Rights_Str := AllControl_Rights_Str + IntToStr(AResultedControlArr[i].ComponentRectangle.Right) + #4#5;
+      AllControl_Bottoms_Str := AllControl_Bottoms_Str + IntToStr(AResultedControlArr[i].ComponentRectangle.Bottom) + #4#5;
+      AllControl_Widths_Str := AllControl_Widths_Str + IntToStr(Control_Width) + #4#5;
+      AllControl_Heights_Str := AllControl_Heights_Str + IntToStr(Control_Height) + #4#5;
+      AllHalf_Control_Widths_Str := AllHalf_Control_Widths_Str + IntToStr(Control_Width shr 1) + #4#5;
+      AllHalf_Control_Heights_Str := AllHalf_Control_Heights_Str + IntToStr(Control_Height shr 1) + #4#5;
+    end;
+
+    SetActionVarValue('$AllControl_Lefts$', AllControl_Lefts_Str);
+    SetActionVarValue('$AllControl_Tops$', AllControl_Tops_Str);
+    SetActionVarValue('$AllControl_Rights$', AllControl_Rights_Str);
+    SetActionVarValue('$AllControl_Bottoms$', AllControl_Bottoms_Str);
+    SetActionVarValue('$AllControl_Widths$', AllControl_Widths_Str);
+    SetActionVarValue('$AllControl_Heights$', AllControl_Heights_Str);
+    SetActionVarValue('$AllHalf_Control_Widths$', AllHalf_Control_Widths_Str);
+    SetActionVarValue('$AllHalf_Control_Heights$', AllHalf_Control_Heights_Str);
+  end;
+
   procedure SetDbgImgPos(AMatchBitmapAlgorithm: TMatchBitmapAlgorithm; AFindControlInputData: TFindControlInputData; AResultedControl: TCompRec);
   begin
     case AFindControlOptions.MatchBitmapAlgorithm of
@@ -1183,13 +1230,22 @@ function TActionExecution.ExecuteFindControlAction(var AFindControlOptions: TClk
   procedure SetAllControl_Handles_FromResultedControlArr(var AResultedControlArr: TCompRecArr);
   var
     i: Integer;
-    s: string;
+    s, xs, ys: string;
   begin
     s := '';
+    xs := '';
+    ys := '';
+
     for i := 0 to Length(AResultedControlArr) - 1 do
+    begin
       s := s + IntToStr(AResultedControlArr[i].Handle) + #4#5;
+      xs := xs + IntToStr(AResultedControlArr[i].XOffsetFromParent) + #4#5;
+      ys := ys + IntToStr(AResultedControlArr[i].YOffsetFromParent) + #4#5;
+    end;
 
     SetActionVarValue('$AllControl_Handles$', s);
+    SetActionVarValue('$AllControl_XOffsets$', xs);
+    SetActionVarValue('$AllControl_YOffsets$', ys);
   end;
 
   procedure IgnoredColorsStrToArr(AIgnoredColorsStr: string; var AIgnoredColorsArr: TColorArr);
@@ -1501,7 +1557,10 @@ begin
                 frClickerActions.DebuggingInfoAvailable := True;
 
                 if AFindControlOptions.GetAllControls then
+                begin
                   SetAllControl_Handles_FromResultedControlArr(ResultedControlArr);
+                  UpdateActionVarValuesFromResultedControlArr(ResultedControlArr);
+                end;
 
                 Result := True;
                 AddToLog('Found text: "' + AFindControlOptions.MatchText + '" in ' + IntToStr(GetTickCount64 - InitialTickCount) + 'ms.');
@@ -1575,8 +1634,11 @@ begin
                   UpdateActionVarValuesFromControl(ResultedControlArr[0]);
                   frClickerActions.DebuggingInfoAvailable := True;
 
-                  //if AFindControlOptions.GetAllControls then
-                  //  SetAllControl_Handles_FromResultedControlArr(ResultedControlArr);
+                  if AFindControlOptions.GetAllControls then
+                  begin
+                    SetAllControl_Handles_FromResultedControlArr(ResultedControlArr);
+                    UpdateActionVarValuesFromResultedControlArr(ResultedControlArr);
+                  end;
 
                   Result := True;
                   Exit;  //to prevent further searching for other bitmap files
@@ -1674,8 +1736,11 @@ begin
                       UpdateActionVarValuesFromControl(ResultedControlArr[0]);
                       frClickerActions.DebuggingInfoAvailable := True;
 
-                      //if AFindControlOptions.GetAllControls then
-                      //  SetAllControl_Handles_FromResultedControlArr(ResultedControlArr);
+                      if AFindControlOptions.GetAllControls then
+                      begin
+                        SetAllControl_Handles_FromResultedControlArr(ResultedControlArr);
+                        UpdateActionVarValuesFromResultedControlArr(ResultedControlArr);
+                      end;
 
                       AddToLog('Matched by primitives file: "' + ExtractFileName(ListOfPrimitiveFiles.Strings[i]) + '"  at order ' + IntToStr(k) + '.  Bmp w/h: ' + IntToStr(FindControlInputData.BitmapToSearchFor.Width) + ' / ' + IntToStr(FindControlInputData.BitmapToSearchFor.Height));
 

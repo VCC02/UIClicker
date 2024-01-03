@@ -5009,7 +5009,7 @@ begin
   FClkActions[AIndex].ClickOptions.ClickWithCtrl := False;
   FClkActions[AIndex].ClickOptions.ClickWithAlt := False;
   FClkActions[AIndex].ClickOptions.ClickWithShift := False;
-  //FClkActions[AIndex].ClickOptions.ClickWithDoubleClick := False;
+  FClkActions[AIndex].ClickOptions.ClickWithDoubleClick := False;  //deprecated, but the code is still active
   FClkActions[AIndex].ClickOptions.Count := 1;
   FClkActions[AIndex].ClickOptions.LeaveMouse := False;
   FClkActions[AIndex].ClickOptions.MoveWithoutClick := False;
@@ -5038,6 +5038,7 @@ begin
   FClkActions[AIndex].FindControlOptions.MatchCriteria.WillMatchClassName := FClkActions[AIndex].ActionOptions.Action = acFindControl;
   FClkActions[AIndex].FindControlOptions.MatchCriteria.WillMatchBitmapText := FClkActions[AIndex].ActionOptions.Action = acFindSubControl;
   FClkActions[AIndex].FindControlOptions.MatchCriteria.WillMatchBitmapFiles := False;
+  FClkActions[AIndex].FindControlOptions.MatchCriteria.WillMatchPrimitiveFiles := False;
   FClkActions[AIndex].FindControlOptions.MatchCriteria.SearchForControlMode := sfcmGenGrid;
   FClkActions[AIndex].FindControlOptions.AllowToFail := False;
   FClkActions[AIndex].FindControlOptions.MatchText := '';
