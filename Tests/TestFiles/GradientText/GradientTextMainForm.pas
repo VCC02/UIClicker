@@ -52,9 +52,11 @@ type
     IdSchedulerOfThreadPool1: TIdSchedulerOfThreadPool;
     imgBrowserRendering: TImage;
     imgGradient: TImage;
+    lblServerLog: TLabel;
     lblCustomText: TLabel;
     lbeServerModePort: TLabeledEdit;
     lblServerInfo: TLabel;
+    memLog: TMemo;
     trbTestTrackBar: TTrackBar;
     procedure btnResetTrackBarClick(Sender: TObject);
     procedure btnResetTrackBarMouseDown(Sender: TObject; Button: TMouseButton;
@@ -76,7 +78,7 @@ type
     procedure ProcessGetImageRequest(AParams: TStrings; ADestBmp: TBitmap; ASrcImg: TImage);
     function ProcessPutRenderingResult(AIn: string): string;
   public
-
+    procedure AddToLog(s: string);
   end;
 
 
@@ -120,12 +122,21 @@ var
   ButtonTk: QWord;
   TrackBarTk: QWord;
 
+  DrawingLabels: array of TLabel;
+
 
 {TSyncObj}
 
 procedure TSyncObj.DoSynchronize;
+var
+  TextCount, i: Integer;
+  IndexStr: string;
 begin
-  frmGradientTextMain.lblCustomText.Visible := FParams.Values['MatchText'] <> '';
+  frmGradientTextMain.AddToLog('Setting label..  Full params string: ' + #13#10 + FParams.Text);
+  TextCount := StrToIntDef(FParams.Values['TextCount'], 1);
+  frmGradientTextMain.lblCustomText.Visible := (FParams.Values['MatchText'] <> '') and (TextCount = 1);
+
+  frmGradientTextMain.AddToLog('Label count: ' + IntToStr(TextCount));
 
   frmGradientTextMain.lblCustomText.Caption := FParams.Values['MatchText'];
   frmGradientTextMain.lblCustomText.Font.Color := HexToInt(FParams.Values['MatchBitmapText[0].ForegroundColor']);
@@ -142,6 +153,36 @@ begin
 
   frmGradientTextMain.lblCustomText.Hint := FParams.Text;
   frmGradientTextMain.lblCustomText.ShowHint := True;
+
+  if TextCount > 1 then
+  begin
+    SetLength(DrawingLabels, TextCount);
+
+    for i := 0 to Length(DrawingLabels) - 1 do
+    begin
+      IndexStr := IntToStr(i);
+
+      DrawingLabels[i] := TLabel.Create(frmGradientTextMain);
+      DrawingLabels[i].Parent := frmGradientTextMain;
+      DrawingLabels[i].Left := StrToIntDef(FParams.Values['Left[' + IndexStr + ']'], 10);
+      DrawingLabels[i].Top := StrToIntDef(FParams.Values['Top[' + IndexStr + ']'], 10);
+      DrawingLabels[i].Caption := FParams.Values['MatchText[' + IndexStr + ']'];
+      DrawingLabels[i].Color := frmGradientTextMain.lblCustomText.Color;
+      DrawingLabels[i].Font.Color := frmGradientTextMain.lblCustomText.Font.Color;
+      DrawingLabels[i].Font.Name := frmGradientTextMain.lblCustomText.Font.Name;
+      DrawingLabels[i].Font.Size := frmGradientTextMain.lblCustomText.Font.Size;
+      DrawingLabels[i].Font.Bold := frmGradientTextMain.lblCustomText.Font.Bold;
+      DrawingLabels[i].Font.Italic := frmGradientTextMain.lblCustomText.Font.Italic;
+      DrawingLabels[i].Font.Underline := frmGradientTextMain.lblCustomText.Font.Underline;
+      DrawingLabels[i].Font.StrikeThrough := frmGradientTextMain.lblCustomText.Font.StrikeThrough;
+      DrawingLabels[i].Font.Quality := frmGradientTextMain.lblCustomText.Font.Quality;
+      DrawingLabels[i].Transparent := frmGradientTextMain.lblCustomText.Transparent;
+
+      DrawingLabels[i].Hint := DrawingLabels[i].Caption;
+      DrawingLabels[i].ShowHint := True;
+      DrawingLabels[i].Visible := True;
+    end;
+  end;
 
   if FSrcImg = frmGradientTextMain.imgGradient then
   begin
@@ -204,6 +245,12 @@ begin
   imgGradient.Canvas.Font.Quality := fqNonAntialiased;
   imgGradient.Canvas.Brush.Style := bsClear;
   imgGradient.Canvas.TextOut(10, 150, 'This is the searched text.');
+end;
+
+
+procedure TfrmGradientTextMain.AddToLog(s: string);
+begin
+  memLog.Lines.Add(s);
 end;
 
 

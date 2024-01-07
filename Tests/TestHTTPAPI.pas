@@ -76,7 +76,7 @@ type
     procedure CopyFileFromDiskToInMemFS(ADiskFileName, AInMemFileName: string);
     procedure CopyMultipleFilesFromDiskToInMemFS(AListOfFiles: string);
 
-    procedure SetupTargetWindowFor_FindSubControl(ACustomFormCaption: string = 'UI Clicker Main');
+    procedure SetupTargetWindowFor_FindSubControl(ACustomFormCaption: string = 'UI Clicker Main'; ASearchForControlMode: TSearchForControlMode = sfcmGenGrid);
     procedure SendTerminateWaitingForFileAvailabilityRequest(ALoopType: string; ADelayBeforeRequest: Integer);
     procedure ExecuteSetControlTextActionWithMainUIClickerWindow(ASearchedCaption, ASetCaption: string);
 
@@ -368,7 +368,7 @@ begin
 end;
 
 
-procedure TTestHTTPAPI.SetupTargetWindowFor_FindSubControl(ACustomFormCaption: string = 'UI Clicker Main');
+procedure TTestHTTPAPI.SetupTargetWindowFor_FindSubControl(ACustomFormCaption: string = 'UI Clicker Main'; ASearchForControlMode: TSearchForControlMode = sfcmGenGrid);
 var
   WindowOperationsOptions: TClkWindowOperationsOptions;
   FindControlOptions: TClkFindControlOptions;
@@ -377,6 +377,7 @@ var
   ListOfVars: TStringList;
 begin
   GenerateFindControlOptionsForMainUIClickerWindow(FindControlOptions, False, ACustomFormCaption);
+  FindControlOptions.MatchCriteria.SearchForControlMode := ASearchForControlMode;
   Response := FastReplace_87ToReturn(ExecuteFindControlAction(FTestServerAddress, FindControlOptions, 'Setup UIClicker Main', 1000, CREParam_FileLocation_ValueMem));
 
   ListOfVars := TStringList.Create;

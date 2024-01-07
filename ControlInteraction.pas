@@ -426,10 +426,11 @@ begin
 end;
 
 
-procedure DisplayDebugBmpForSuccessfulMatch(BitmapToSearchFor, DebugBmp: TBitmap; ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height: Integer; SubCnvXOffset, SubCnvYOffset: Integer; ATransparentFoundSelection: Boolean);
+procedure DisplayDebugBmpForSuccessfulMatch(BitmapToSearchFor, DebugBmp: TBitmap; ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height: Integer; SubCnvXOffset, SubCnvYOffset: Integer; var AFoundBitmaps: TCompRecArr; ATransparentFoundSelection: Boolean);
 var
   DebugDisplayLeft: Integer; //This is the value backup of the debug screenshot width, before increasing it. Debug information is displayed starting at this value
   BmpWithFoundSelection: TBitmap;
+  i: Integer;
 
   procedure DrawFoundSelection;
   begin
@@ -438,6 +439,32 @@ var
     Line(DebugBmp.Canvas, SubCnvXOffset + BitmapToSearchFor.Width - 1, 0, SubCnvXOffset + BitmapToSearchFor.Width - 1, DebugBmp.Height);  //vert
     Line(DebugBmp.Canvas, 0, SubCnvYOffset, DebugDisplayLeft, SubCnvYOffset);   //horiz
     Line(DebugBmp.Canvas, 0, SubCnvYOffset + BitmapToSearchFor.Height - 1, DebugDisplayLeft, SubCnvYOffset + BitmapToSearchFor.Height - 1); //horiz
+  end;
+
+  procedure DrawFoundSelectionBand(AIndex: Integer);
+  var
+    SubX, SubY: Integer;
+    VRect, HRect: TRect;
+  begin
+    SubX := AFoundBitmaps[i].XOffsetFromParent;
+    SubY := AFoundBitmaps[i].YOffsetFromParent;
+
+    DebugBmp.Canvas.Pen.Color := $00AA44;
+    DebugBmp.Canvas.Brush.Color := $44FF88;
+    DebugBmp.Canvas.Brush.Style := bsSolid;
+
+    VRect.Left := SubX;
+    VRect.Top := SubY - 10;
+    VRect.Right := SubX + BitmapToSearchFor.Width;
+    VRect.Bottom := SubY + BitmapToSearchFor.Height + 10;
+
+    HRect.Left := SubX - 10;
+    HRect.Top := SubY;
+    HRect.Right := SubX + BitmapToSearchFor.Width + 10;
+    HRect.Bottom := SubY + BitmapToSearchFor.Height;
+
+    DebugBmp.Canvas.Rectangle(VRect);
+    DebugBmp.Canvas.Rectangle(HRect);
   end;
 begin
   DebugDisplayLeft := DebugBmp.Width;  //yes, width
@@ -464,6 +491,21 @@ begin
   end
   else
     DrawFoundSelection;
+
+  if Length(AFoundBitmaps) > 1 then
+  begin
+    BmpWithFoundSelection := TBitmap.Create;
+    try
+      BmpWithFoundSelection.Assign(DebugBmp);
+
+      for i := 0 to Length(AFoundBitmaps) - 1 do
+        DrawFoundSelectionBand(i);
+
+      AvgBitmapWithBitmap(DebugBmp, BmpWithFoundSelection, DebugBmp);
+    finally
+      BmpWithFoundSelection.Free;
+    end;
+  end;
 end;
 
 
@@ -623,7 +665,7 @@ end;
 
 //Searches for BitmapToSearchFor in the bitmap of a component defined by ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height
 //SrcCompSearchAreaBitmap - bitmap with source component, defined by InitRect
-function MatchControlByBitmap(Algorithm: TMatchBitmapAlgorithm; AlgorithmSettings: TMatchBitmapAlgorithmSettings; CompAtPoint: TCompRec; InputData: TFindControlInputData; out SubCnvXOffset, SubCnvYOffset: Integer;  var AFoundBitmaps: TCompRecArr; AStopAllActionsOnDemand: PBoolean; ADisplayGridLineOption: TDisplayGridLineOption): Boolean;
+function MatchControlByBitmap(Algorithm: TMatchBitmapAlgorithm; AlgorithmSettings: TMatchBitmapAlgorithmSettings; CompAtPoint: TCompRec; InputData: TFindControlInputData; out SubCnvXOffset, SubCnvYOffset: Integer; var AFoundBitmaps: TCompRecArr; AStopAllActionsOnDemand: PBoolean; ADisplayGridLineOption: TDisplayGridLineOption): Boolean;
 var
   ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height, CompWith, CompHeight: Integer;
   SrcCompSearchAreaBitmap: TBitmap;
@@ -667,7 +709,7 @@ begin
     if InputData.DebugBitmap <> nil then
     begin
       if FoundBmp then
-        DisplayDebugBmpForSuccessfulMatch(InputData.BitmapToSearchFor, InputData.DebugBitmap, ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height, SubCnvXOffset, SubCnvYOffset, ADisplayGridLineOption = loTransparentSolid)
+        DisplayDebugBmpForSuccessfulMatch(InputData.BitmapToSearchFor, InputData.DebugBitmap, ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height, SubCnvXOffset, SubCnvYOffset, AFoundBitmaps, ADisplayGridLineOption = loTransparentSolid)
       else
         DisplayDebugBmpForFailedMatch(InputData.BitmapToSearchFor, SrcCompSearchAreaBitmap, InputData.DebugBitmap, ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height, SubCnvXOffset, SubCnvYOffset, InputData.MatchingMethods, InputData.DebugTemplateName, InputData.Text, InputData.UseFastSearch, InputData.IgnoreBackgroundColor, InputData.BackgroundColor);
 

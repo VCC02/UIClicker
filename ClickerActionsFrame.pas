@@ -3458,7 +3458,7 @@ begin
               Result := TempStringList.Strings[AItemIndex];
             except
               on E: Exception do
-                Result := E.Message + '  ' + IntToStr(AItemIndex) + '   ' + IntToStr(TempStringList.Count - 1);
+                Result := E.Message + '  ' + IntToStr(AItemIndex) + '   ' + IntToStr(TempStringList.Count - 1) + '    The ObjectInspector might be out of sync.' ;
             end;
           finally
             TempStringList.Free;

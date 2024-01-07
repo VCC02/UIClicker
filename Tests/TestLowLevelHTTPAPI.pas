@@ -66,6 +66,12 @@ type
     procedure Test_ExecuteFindSubControlAction_UIClickerMain_PmtvPreviewButton_Mem;
     procedure Test_ExecuteFindSubControlAction_RenderingServer_PmtvGradientWithText;
     procedure Test_ExecuteFindSubControlAction_RenderingServer_PmtvGradientOnBrowser;
+    procedure Test_ExecuteFindSubControlAction_RenderingServer_MultiText;
+    procedure Test_ExecuteFindSubControlAction_RenderingServer_MultiTextWithTwoProfiles;
+    procedure Test_ExecuteFindSubControlAction_RenderingServer_MultiBmp;
+    procedure Test_ExecuteFindSubControlAction_RenderingServer_MultiBmpWithTwoProfiles;
+    procedure Test_ExecuteFindSubControlAction_RenderingServer_MultiPmtv;
+    procedure Test_ExecuteFindSubControlAction_RenderingServer_MultiPmtvWithTwoProfiles;
 
     procedure Test_ExecuteSetControlTextAction_HappyFlow;
     procedure Test_ExecuteCallTemplate_HappyFlow;
@@ -87,9 +93,8 @@ uses
   ClickerActionsClient, ClickerUtils, ActionsStuff, Controls, ClickerFileProviderClient;
 
 
-procedure ExecTestTemplate(ATestServerAddress, ATemplateName: string);
+function ExecTestTemplate(ATestServerAddress, ATemplateName: string): string;
 var
-  Response: string;
   CallTemplateOptions: TClkCallTemplateOptions;
 begin
   CallTemplateOptions.TemplateFileName := ATemplateName;
@@ -99,8 +104,8 @@ begin
   CallTemplateOptions.CallTemplateLoop.Direction := ldInc;
   CallTemplateOptions.CallTemplateLoop.EvalBreakPosition := lebpAfterContent;
 
-  Response := FastReplace_87ToReturn(ExecuteCallTemplateAction(ATestServerAddress, CallTemplateOptions, False, False, CREParam_FileLocation_ValueDisk));
-  ExpectSuccessfulAction(Response);
+  Result := FastReplace_87ToReturn(ExecuteCallTemplateAction(ATestServerAddress, CallTemplateOptions, False, False, CREParam_FileLocation_ValueDisk));
+  ExpectSuccessfulAction(Result);
 end;
 
 
@@ -527,11 +532,127 @@ begin                                         //This test should be modified, to
 end;
 
 
+procedure TTestLowLevelHTTPAPI.Test_ExecuteFindSubControlAction_RenderingServer_MultiText;
+var
+  Res: TStringList;
+begin                                         //This test should be modified, to execute in-mem actions, i.e. FindSubControl, via API. Only the FindSubControl execution time should be measured.
+                                              //It should generate some options with GenerateFindSubControlOptionsForMainUIClickerWindow_Bitness and modify them for this test.
+  SetVariable(TestServerAddress, '$AllControl_XOffsets$', 'Erased', 0);
+  SetVariable(TestServerAddress, '$AllControl_TOffsets$', 'Erased', 0);
+
+  Res := TStringList.Create;
+  try
+    Res.Text := ExecTestTemplate(TestServerAddress, '$AppDir$\Tests\TestFiles\RenderMultiTextOnServer.clktmpl');
+    Expect(Res).WithItem('$AllControl_XOffsets$').ToContain('5829858298');
+    Expect(Res).WithItem('$AllControl_YOffsets$').ToContain('9191121121');
+  finally
+    Res.Free;
+  end;
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecuteFindSubControlAction_RenderingServer_MultiTextWithTwoProfiles;
+var
+  Res: TStringList;
+begin                                         //This test should be modified, to execute in-mem actions, i.e. FindSubControl, via API. Only the FindSubControl execution time should be measured.
+                                              //It should generate some options with GenerateFindSubControlOptionsForMainUIClickerWindow_Bitness and modify them for this test.
+  SetVariable(TestServerAddress, '$AllControl_XOffsets$', 'Erased', 0);
+  SetVariable(TestServerAddress, '$AllControl_TOffsets$', 'Erased', 0);
+
+  Res := TStringList.Create;
+  try
+    Res.Text := ExecTestTemplate(TestServerAddress, '$AppDir$\Tests\TestFiles\RenderMultiTextOnServerWithTwoProfiles.clktmpl');
+    Expect(Res).WithItem('$AllControl_XOffsets$').ToContain('5829858298181421181421');
+    Expect(Res).WithItem('$AllControl_YOffsets$').ToContain('9191121121116116146146');
+  finally
+    Res.Free;
+  end;
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecuteFindSubControlAction_RenderingServer_MultiBmp;
+var
+  Res: TStringList;
+begin                                         //This test should be modified, to execute in-mem actions, i.e. FindSubControl, via API. Only the FindSubControl execution time should be measured.
+                                              //It should generate some options with GenerateFindSubControlOptionsForMainUIClickerWindow_Bitness and modify them for this test.
+  SetVariable(TestServerAddress, '$AllControl_XOffsets$', 'Erased', 0);
+  SetVariable(TestServerAddress, '$AllControl_TOffsets$', 'Erased', 0);
+
+  Res := TStringList.Create;
+  try
+    Res.Text := ExecTestTemplate(TestServerAddress, '$AppDir$\Tests\TestFiles\RenderMultiBmpOnServer.clktmpl');
+    Expect(Res).WithItem('$AllControl_XOffsets$').ToContain('5829858298');
+    Expect(Res).WithItem('$AllControl_YOffsets$').ToContain('9191121121');
+  finally
+    Res.Free;
+  end;
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecuteFindSubControlAction_RenderingServer_MultiBmpWithTwoProfiles;
+var
+  Res: TStringList;
+begin                                         //This test should be modified, to execute in-mem actions, i.e. FindSubControl, via API. Only the FindSubControl execution time should be measured.
+                                              //It should generate some options with GenerateFindSubControlOptionsForMainUIClickerWindow_Bitness and modify them for this test.
+  SetVariable(TestServerAddress, '$AllControl_XOffsets$', 'Erased', 0);
+  SetVariable(TestServerAddress, '$AllControl_TOffsets$', 'Erased', 0);
+
+  Res := TStringList.Create;
+  try
+    Res.Text := ExecTestTemplate(TestServerAddress, '$AppDir$\Tests\TestFiles\RenderMultiBmpOnServerWithTwoProfiles.clktmpl');
+    Expect(Res).WithItem('$AllControl_XOffsets$').ToContain('5829858298181421181421');
+    Expect(Res).WithItem('$AllControl_YOffsets$').ToContain('9191121121116116146146');
+  finally
+    Res.Free;
+  end;
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecuteFindSubControlAction_RenderingServer_MultiPmtv;
+var
+  Res: TStringList;
+begin                                         //This test should be modified, to execute in-mem actions, i.e. FindSubControl, via API. Only the FindSubControl execution time should be measured.
+                                              //It should generate some options with GenerateFindSubControlOptionsForMainUIClickerWindow_Bitness and modify them for this test.
+  SetVariable(TestServerAddress, '$AllControl_XOffsets$', 'Erased', 0);
+  SetVariable(TestServerAddress, '$AllControl_TOffsets$', 'Erased', 0);
+
+  Res := TStringList.Create;
+  try
+    Res.Text := ExecTestTemplate(TestServerAddress, '$AppDir$\Tests\TestFiles\RenderMultiPmtvOnServer.clktmpl');
+    Expect(Res).WithItem('$AllControl_XOffsets$').ToContain('5829858298');
+    Expect(Res).WithItem('$AllControl_YOffsets$').ToContain('9191121121');
+  finally
+    Res.Free;
+  end;
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecuteFindSubControlAction_RenderingServer_MultiPmtvWithTwoProfiles;
+var
+  Res: TStringList;
+begin                                         //This test should be modified, to execute in-mem actions, i.e. FindSubControl, via API. Only the FindSubControl execution time should be measured.
+                                              //It should generate some options with GenerateFindSubControlOptionsForMainUIClickerWindow_Bitness and modify them for this test.
+  SetVariable(TestServerAddress, '$AllControl_XOffsets$', 'Erased', 0);
+  SetVariable(TestServerAddress, '$AllControl_TOffsets$', 'Erased', 0);
+
+  Res := TStringList.Create;
+  try
+    Res.Text := ExecTestTemplate(TestServerAddress, '$AppDir$\Tests\TestFiles\RenderMultiPmtvOnServerWithTwoProfiles.clktmpl');
+    Expect(Res).WithItem('$AllControl_XOffsets$').ToContain('5829858298181421181421');
+    Expect(Res).WithItem('$AllControl_YOffsets$').ToContain('9191121121116116146146');
+  finally
+    Res.Free;
+  end;
+end;
+
+
 procedure TTestLowLevelHTTPAPI.Test_ExecuteSetControlTextAction_HappyFlow;
 const
   OldCaption = 'UI Clicker Main';
   NewCaption = 'UI Clicker Main [Modified]';
 begin
+  SetupTargetWindowFor_FindSubControl(OldCaption, sfcmFindWindow);  //this is required, because the window might be covered by other windows (e.g. the browser from a previous test)
+
   try
     ExecuteSetControlTextActionWithMainUIClickerWindow(OldCaption, NewCaption);
   finally

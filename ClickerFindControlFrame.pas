@@ -2434,17 +2434,17 @@ begin
     FSearchAreaControlDbgImg.Picture.Bitmap.Width := FSearchAreaControlDbgImg.Width;
     FSearchAreaControlDbgImg.Picture.Bitmap.Height := FSearchAreaControlDbgImg.Height;
 
-    if SearchAreaControlHandle = 0 then
-    begin
-      FSearchAreaControlDbgImg.Canvas.Pen.Color := clRed;
-      FSearchAreaControlDbgImg.Canvas.Brush.Color := clWhite;
-      FSearchAreaControlDbgImg.Canvas.Rectangle(0, 0, FSearchAreaControlDbgImg.Width - 1, FSearchAreaControlDbgImg.Height - 1);
-
-      Line(FSearchAreaControlDbgImg.Canvas, 0, 0, FSearchAreaControlDbgImg.Width, FSearchAreaControlDbgImg.Height);
-      FSearchAreaControlDbgImg.Canvas.TextOut(10, 10, 'Invalid bk handle.');
-      FSearchAreaControlDbgImg.Canvas.TextOut(10, 30, 'Can''t get bmp.');
-    end
-    else
+    //if SearchAreaControlHandle = 0 then
+    //begin
+    //  FSearchAreaControlDbgImg.Canvas.Pen.Color := clRed;
+    //  FSearchAreaControlDbgImg.Canvas.Brush.Color := clWhite;
+    //  FSearchAreaControlDbgImg.Canvas.Rectangle(0, 0, FSearchAreaControlDbgImg.Width - 1, FSearchAreaControlDbgImg.Height - 1);
+    //
+    //  Line(FSearchAreaControlDbgImg.Canvas, 0, 0, FSearchAreaControlDbgImg.Width, FSearchAreaControlDbgImg.Height);
+    //  FSearchAreaControlDbgImg.Canvas.TextOut(10, 10, 'Invalid bk handle.');
+    //  FSearchAreaControlDbgImg.Canvas.TextOut(10, 30, 'Can''t get bmp.');
+    //end
+    //else
       ScreenShot(SearchAreaControlHandle,
                  FSearchAreaControlDbgImg.Picture.Bitmap,
                  SearchAreaControlRect.Left,

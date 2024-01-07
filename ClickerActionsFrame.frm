@@ -152,9 +152,14 @@ object frClickerActions: TfrClickerActions
         Top = 0
         Width = 10
         Anchors = [akTop, akLeft, akBottom]
+        Caption = 'ActionEditorSplitter'
         Color = 13041606
+        Font.Color = 13041606
+        Font.Height = -11
+        Font.Name = 'Tahoma'
         ParentBackground = False
         ParentColor = False
+        ParentFont = False
         TabOrder = 3
         OnMouseDown = pnlHorizSplitterMouseDown
         OnMouseMove = pnlHorizSplitterMouseMove

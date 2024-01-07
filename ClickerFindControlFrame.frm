@@ -52,6 +52,7 @@ object frClickerFindControl: TfrClickerFindControl
           Font.Color = clBlack
           Font.Height = -11
           Font.Name = 'Tahoma'
+          ParentBackground = False
           ParentColor = False
           ParentFont = False
           ParentShowHint = False
@@ -116,8 +117,8 @@ object frClickerFindControl: TfrClickerFindControl
           Top = 112
           Width = 180
           Caption = 'Copy values from found control'
-          OnClick = btnCopyFoundValuesClick
           TabOrder = 5
+          OnClick = btnCopyFoundValuesClick
         end
         object spdbtnExtraCopyValueWindows: TSpeedButton
           Left = 187
@@ -135,8 +136,8 @@ object frClickerFindControl: TfrClickerFindControl
             1AFFFFFFFFFFFF000000FFFFFF39841A39841A39841A39841A39841A39841A39
             841A39841A39841AFFFFFF000000
           }
-          OnClick = spdbtnExtraCopyValueWindowsClick
           ParentFont = False
+          OnClick = spdbtnExtraCopyValueWindowsClick
         end
       end
     end
@@ -163,8 +164,8 @@ object frClickerFindControl: TfrClickerFindControl
         Width = 122
         Anchors = [akLeft, akBottom]
         Caption = 'Display cropping lines'
-        OnChange = chkDisplayCroppingLinesChange
         TabOrder = 1
+        OnChange = chkDisplayCroppingLinesChange
       end
     end
     object TabSheetActionFindSubControlSearchArea: TTabSheet
@@ -190,8 +191,8 @@ object frClickerFindControl: TfrClickerFindControl
         Top = 0
         Width = 105
         Caption = 'Display dbg img'
-        OnClick = btnDisplaySearchAreaDebuggingImageClick
         TabOrder = 0
+        OnClick = btnDisplaySearchAreaDebuggingImageClick
       end
       object spdbtnDisplaySearchAreaDbgImgMenu: TSpeedButton
         Left = 448
@@ -210,9 +211,9 @@ object frClickerFindControl: TfrClickerFindControl
           1AFFFFFFFFFFFF000000FFFFFF39841A39841A39841A39841A39841A39841A39
           841A39841A39841AFFFFFF000000
         }
-        OnClick = spdbtnDisplaySearchAreaDbgImgMenuClick
         ShowHint = True
         ParentShowHint = False
+        OnClick = spdbtnDisplaySearchAreaDbgImgMenuClick
       end
       object chkShowBMPFileDbgImg: TCheckBox
         Left = 80
@@ -223,11 +224,11 @@ object frClickerFindControl: TfrClickerFindControl
         AutoSize = False
         Caption = 'Show BMP'
         Checked = True
-        OnClick = chkShowBMPFileDbgImgClick
         ParentShowHint = False
         ShowHint = True
         State = cbChecked
         TabOrder = 1
+        OnClick = chkShowBMPFileDbgImgClick
       end
       object chkShowBMPTextDbgImg: TCheckBox
         Left = 160
@@ -238,11 +239,11 @@ object frClickerFindControl: TfrClickerFindControl
         AutoSize = False
         Caption = 'Show Text'
         Checked = True
-        OnClick = chkShowBMPTextDbgImgClick
         ParentShowHint = False
         ShowHint = True
         State = cbChecked
         TabOrder = 2
+        OnClick = chkShowBMPTextDbgImgClick
       end
       object lblReservedSpaceForDbgImg: TLabel
         Left = 0
@@ -253,6 +254,7 @@ object frClickerFindControl: TfrClickerFindControl
         AutoSize = False
         Caption = 'Reserved space'#13#10'for DbgImg'
         Color = clYellow
+        ParentColor = False
         Transparent = False
         Visible = False
       end
@@ -482,10 +484,10 @@ object frClickerFindControl: TfrClickerFindControl
         Top = 1
         Width = 67
         Caption = 'Show grid'
-        OnChange = chkShowGridOnBMPPreviewChange
         ParentShowHint = False
         ShowHint = True
         TabOrder = 4
+        OnChange = chkShowGridOnBMPPreviewChange
       end
       object lstMatchPrimitiveFiles: TListBox
         Left = 768
@@ -512,6 +514,7 @@ object frClickerFindControl: TfrClickerFindControl
         Width = 13
         AutoSize = False
         Color = 10156169
+        ParentColor = False
         ParentShowHint = False
         ShowHint = True
         Transparent = False
@@ -532,6 +535,7 @@ object frClickerFindControl: TfrClickerFindControl
         Width = 74
         Caption = 'Whole screen'
         Color = 14874574
+        ParentBackground = False
         ParentColor = False
         ParentShowHint = False
         ShowHint = True

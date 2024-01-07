@@ -13167,6 +13167,25 @@ object frmGradientTextMain: TfrmGradientTextMain
     Width = 320
     AutoSize = True
   end
+  object lblServerLog: TLabel
+    Left = 344
+    Height = 15
+    Top = 368
+    Width = 72
+    Anchors = [akRight, akBottom]
+    AutoSize = False
+    Caption = 'Server log:'
+  end
+  object memLog: TMemo
+    Left = 344
+    Height = 218
+    Top = 384
+    Width = 269
+    Anchors = [akTop, akLeft, akRight, akBottom]
+    ScrollBars = ssBoth
+    TabOrder = 2
+    WordWrap = False
+  end
   object IdSchedulerOfThreadPool1: TIdSchedulerOfThreadPool
     MaxThreads = 30
     PoolSize = 10
