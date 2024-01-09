@@ -352,7 +352,7 @@ type
 
   TVarReplArr = array of TVarRepl;
 
-  TCompRec = record
+  TCompRec = record          //Please update CompRecsAreEqual function if modifying structure
     Handle: THandle;
     ClassName: string;
     Text: string;
@@ -479,6 +479,7 @@ function GetNodeByIndex(AVst: TVirtualStringTree; AIndex: Integer): PVirtualNode
 function ModifyBrightness(AColor: TColor; AAmount: Byte; ABrightnessOperation: TBrightnessOperation): TColor;
 procedure CreateSelectionLabels(AOwner: TComponent; AParent: TWinControl; var ALeftLabel, ATopLabel, ARightLabel, ABottomLabel: TLabel; ALeftColor, ATopColor, ARightColor, ABottomColor: TColor; AShouldBringToFront, ACreateWithPaintedLabel: Boolean);
 
+procedure CopyPartialResultsToFinalResult(var AResultedControlArr, APartialResultedControlArr: TCompRecArr);
 
 var
   UseWideStringsOnGetControlText: Boolean = False;
@@ -2537,6 +2538,49 @@ begin
   ATopLabel.Transparent := False;
   ARightLabel.Transparent := False;
   ABottomLabel.Transparent := False;
+end;
+
+
+function CompRecsAreEqual(ARecA, ARecB: TCompRec): Boolean;
+begin
+  Result := True;
+  Result := Result and (ARecA.Handle = ARecB.Handle);
+  Result := Result and (ARecA.ClassName = ARecB.ClassName);
+  Result := Result and (ARecA.Text = ARecB.Text);
+  Result := Result and (ARecA.ComponentRectangle = ARecB.ComponentRectangle);
+  Result := Result and (ARecA.IsSubControl = ARecB.IsSubControl);
+  Result := Result and (ARecA.MouseXOffset = ARecB.MouseXOffset);
+  Result := Result and (ARecA.MouseYOffset = ARecB.MouseYOffset);
+  Result := Result and (ARecA.XOffsetFromParent = ARecB.XOffsetFromParent);
+  Result := Result and (ARecA.YOffsetFromParent = ARecB.YOffsetFromParent);
+end;
+
+
+function PartialResultExistsInFinalResult(var AResultedControlArr: TCompRecArr; APartialResultedControl: TCompRec): Boolean;
+var
+  i: Integer;
+begin
+  Result := False;
+
+  for i := 0 to Length(AResultedControlArr) - 1 do
+    if CompRecsAreEqual(AResultedControlArr[i], APartialResultedControl) then
+    begin
+      Result := True;
+      Exit;
+    end;
+end;
+
+
+procedure CopyPartialResultsToFinalResult(var AResultedControlArr, APartialResultedControlArr: TCompRecArr);
+var
+  i: Integer;
+begin
+  for i := 0 to Length(APartialResultedControlArr) - 1 do
+    if not PartialResultExistsInFinalResult(AResultedControlArr, APartialResultedControlArr[i]) then
+    begin
+      SetLength(AResultedControlArr, Length(AResultedControlArr) + 1);
+      AResultedControlArr[Length(AResultedControlArr) - 1] := APartialResultedControlArr[i];
+    end;
 end;
 
 end.

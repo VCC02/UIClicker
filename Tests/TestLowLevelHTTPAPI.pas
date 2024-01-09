@@ -35,6 +35,8 @@ uses
 type
 
   TTestLowLevelHTTPAPI = class(TTestHTTPAPI)
+  private
+    procedure Test_FindSubControl_MultiFind(AFnm, AExpectedXOffsets, AExpectedYOffsets: string);
   public
     constructor Create; override;
   published
@@ -66,12 +68,18 @@ type
     procedure Test_ExecuteFindSubControlAction_UIClickerMain_PmtvPreviewButton_Mem;
     procedure Test_ExecuteFindSubControlAction_RenderingServer_PmtvGradientWithText;
     procedure Test_ExecuteFindSubControlAction_RenderingServer_PmtvGradientOnBrowser;
+
     procedure Test_ExecuteFindSubControlAction_RenderingServer_MultiText;
     procedure Test_ExecuteFindSubControlAction_RenderingServer_MultiTextWithTwoProfiles;
     procedure Test_ExecuteFindSubControlAction_RenderingServer_MultiBmp;
     procedure Test_ExecuteFindSubControlAction_RenderingServer_MultiBmpWithTwoProfiles;
     procedure Test_ExecuteFindSubControlAction_RenderingServer_MultiPmtv;
     procedure Test_ExecuteFindSubControlAction_RenderingServer_MultiPmtvWithTwoProfiles;
+    procedure Test_ExecuteFindSubControlAction_RenderingServer_MultiTextWithTwoProfilesAndOneBmp;
+    procedure Test_ExecuteFindSubControlAction_RenderingServer_MultiTextWithTwoProfilesAndOnePmtv;
+    procedure Test_ExecuteFindSubControlAction_RenderingServer_MultiTextWithTwoProfilesAndOneBmpAndOnePmtv;
+    procedure Test_ExecuteFindSubControlAction_RenderingServer_MultiTextWithTwoProfilesAndTextAndOneBmpAndOnePmtv;
+    procedure Test_ExecuteFindSubControlAction_RenderingServer_MultiTextWithTwoProfilesAndTextAndPmtvWithTwoOrders;
 
     procedure Test_ExecuteSetControlTextAction_HappyFlow;
     procedure Test_ExecuteCallTemplate_HappyFlow;
@@ -532,117 +540,125 @@ begin                                         //This test should be modified, to
 end;
 
 
-procedure TTestLowLevelHTTPAPI.Test_ExecuteFindSubControlAction_RenderingServer_MultiText;
+procedure TTestLowLevelHTTPAPI.Test_FindSubControl_MultiFind(AFnm, AExpectedXOffsets, AExpectedYOffsets: string);
 var
   Res: TStringList;
 begin                                         //This test should be modified, to execute in-mem actions, i.e. FindSubControl, via API. Only the FindSubControl execution time should be measured.
                                               //It should generate some options with GenerateFindSubControlOptionsForMainUIClickerWindow_Bitness and modify them for this test.
   SetVariable(TestServerAddress, '$AllControl_XOffsets$', 'Erased', 0);
-  SetVariable(TestServerAddress, '$AllControl_TOffsets$', 'Erased', 0);
+  SetVariable(TestServerAddress, '$AllControl_YOffsets$', 'Erased', 0);
 
   Res := TStringList.Create;
   try
-    Res.Text := ExecTestTemplate(TestServerAddress, '$AppDir$\Tests\TestFiles\RenderMultiTextOnServer.clktmpl');
-    Expect(Res).WithItem('$AllControl_XOffsets$').ToContain('5829858298');
-    Expect(Res).WithItem('$AllControl_YOffsets$').ToContain('9191121121');
+    Res.Text := ExecTestTemplate(TestServerAddress, '$AppDir$\Tests\TestFiles\' + AFnm);
+    Expect(Res).WithItem('$AllControl_XOffsets$').ToContain(AExpectedXOffsets);
+    Expect(Res).WithItem('$AllControl_YOffsets$').ToContain(AExpectedYOffsets);
   finally
     Res.Free;
   end;
+end;
+
+
+const
+  CExpected_X_Profile0 = '5829858298';
+  CExpected_Y_Profile0 = '9191121121';
+  CExpected_X_Profile1 = '181421181421';
+  CExpected_Y_Profile1 = '116116146146';
+  CExpected_X_Profile01 = CExpected_X_Profile0 + CExpected_X_Profile1;
+  CExpected_Y_Profile01 = CExpected_Y_Profile0 + CExpected_Y_Profile1;
+  CExpected_X_ExtProfile01 = '108368238498' + CExpected_X_Profile01;
+  CExpected_Y_ExtProfile01 = '56566161' + CExpected_Y_Profile01;
+  CExpected_X_Profile10 = CExpected_X_Profile1 + CExpected_X_Profile0;
+  CExpected_Y_Profile10 = CExpected_Y_Profile1 + CExpected_Y_Profile0;
+  CExpected_X_ExtProfile10 = '108368238498' + CExpected_X_Profile10;
+  CExpected_Y_ExtProfile10 = '56566161' + CExpected_Y_Profile10;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecuteFindSubControlAction_RenderingServer_MultiText;
+begin
+  Test_FindSubControl_MultiFind('RenderMultiTextOnServer.clktmpl',
+                                CExpected_X_Profile0,
+                                CExpected_Y_Profile0);
 end;
 
 
 procedure TTestLowLevelHTTPAPI.Test_ExecuteFindSubControlAction_RenderingServer_MultiTextWithTwoProfiles;
-var
-  Res: TStringList;
-begin                                         //This test should be modified, to execute in-mem actions, i.e. FindSubControl, via API. Only the FindSubControl execution time should be measured.
-                                              //It should generate some options with GenerateFindSubControlOptionsForMainUIClickerWindow_Bitness and modify them for this test.
-  SetVariable(TestServerAddress, '$AllControl_XOffsets$', 'Erased', 0);
-  SetVariable(TestServerAddress, '$AllControl_TOffsets$', 'Erased', 0);
-
-  Res := TStringList.Create;
-  try
-    Res.Text := ExecTestTemplate(TestServerAddress, '$AppDir$\Tests\TestFiles\RenderMultiTextOnServerWithTwoProfiles.clktmpl');
-    Expect(Res).WithItem('$AllControl_XOffsets$').ToContain('5829858298181421181421');
-    Expect(Res).WithItem('$AllControl_YOffsets$').ToContain('9191121121116116146146');
-  finally
-    Res.Free;
-  end;
+begin
+  Test_FindSubControl_MultiFind('RenderMultiTextOnServerWithTwoProfiles.clktmpl',
+                                CExpected_X_Profile01,
+                                CExpected_Y_Profile01);
 end;
 
 
 procedure TTestLowLevelHTTPAPI.Test_ExecuteFindSubControlAction_RenderingServer_MultiBmp;
-var
-  Res: TStringList;
-begin                                         //This test should be modified, to execute in-mem actions, i.e. FindSubControl, via API. Only the FindSubControl execution time should be measured.
-                                              //It should generate some options with GenerateFindSubControlOptionsForMainUIClickerWindow_Bitness and modify them for this test.
-  SetVariable(TestServerAddress, '$AllControl_XOffsets$', 'Erased', 0);
-  SetVariable(TestServerAddress, '$AllControl_TOffsets$', 'Erased', 0);
-
-  Res := TStringList.Create;
-  try
-    Res.Text := ExecTestTemplate(TestServerAddress, '$AppDir$\Tests\TestFiles\RenderMultiBmpOnServer.clktmpl');
-    Expect(Res).WithItem('$AllControl_XOffsets$').ToContain('5829858298');
-    Expect(Res).WithItem('$AllControl_YOffsets$').ToContain('9191121121');
-  finally
-    Res.Free;
-  end;
+begin
+  Test_FindSubControl_MultiFind('RenderMultiBmpOnServer.clktmpl',
+                                CExpected_X_Profile0,
+                                CExpected_Y_Profile0);
 end;
 
 
 procedure TTestLowLevelHTTPAPI.Test_ExecuteFindSubControlAction_RenderingServer_MultiBmpWithTwoProfiles;
-var
-  Res: TStringList;
-begin                                         //This test should be modified, to execute in-mem actions, i.e. FindSubControl, via API. Only the FindSubControl execution time should be measured.
-                                              //It should generate some options with GenerateFindSubControlOptionsForMainUIClickerWindow_Bitness and modify them for this test.
-  SetVariable(TestServerAddress, '$AllControl_XOffsets$', 'Erased', 0);
-  SetVariable(TestServerAddress, '$AllControl_TOffsets$', 'Erased', 0);
-
-  Res := TStringList.Create;
-  try
-    Res.Text := ExecTestTemplate(TestServerAddress, '$AppDir$\Tests\TestFiles\RenderMultiBmpOnServerWithTwoProfiles.clktmpl');
-    Expect(Res).WithItem('$AllControl_XOffsets$').ToContain('5829858298181421181421');
-    Expect(Res).WithItem('$AllControl_YOffsets$').ToContain('9191121121116116146146');
-  finally
-    Res.Free;
-  end;
+begin
+  Test_FindSubControl_MultiFind('RenderMultiBmpOnServerWithTwoProfiles.clktmpl',
+                                CExpected_X_Profile01,
+                                CExpected_Y_Profile01);
 end;
 
 
 procedure TTestLowLevelHTTPAPI.Test_ExecuteFindSubControlAction_RenderingServer_MultiPmtv;
-var
-  Res: TStringList;
 begin                                         //This test should be modified, to execute in-mem actions, i.e. FindSubControl, via API. Only the FindSubControl execution time should be measured.
-                                              //It should generate some options with GenerateFindSubControlOptionsForMainUIClickerWindow_Bitness and modify them for this test.
-  SetVariable(TestServerAddress, '$AllControl_XOffsets$', 'Erased', 0);
-  SetVariable(TestServerAddress, '$AllControl_TOffsets$', 'Erased', 0);
-
-  Res := TStringList.Create;
-  try
-    Res.Text := ExecTestTemplate(TestServerAddress, '$AppDir$\Tests\TestFiles\RenderMultiPmtvOnServer.clktmpl');
-    Expect(Res).WithItem('$AllControl_XOffsets$').ToContain('5829858298');
-    Expect(Res).WithItem('$AllControl_YOffsets$').ToContain('9191121121');
-  finally
-    Res.Free;
-  end;
+  Test_FindSubControl_MultiFind('RenderMultiPmtvOnServer.clktmpl',
+                                CExpected_X_Profile0,
+                                CExpected_Y_Profile0);
 end;
 
 
 procedure TTestLowLevelHTTPAPI.Test_ExecuteFindSubControlAction_RenderingServer_MultiPmtvWithTwoProfiles;
-var
-  Res: TStringList;
-begin                                         //This test should be modified, to execute in-mem actions, i.e. FindSubControl, via API. Only the FindSubControl execution time should be measured.
-                                              //It should generate some options with GenerateFindSubControlOptionsForMainUIClickerWindow_Bitness and modify them for this test.
-  SetVariable(TestServerAddress, '$AllControl_XOffsets$', 'Erased', 0);
-  SetVariable(TestServerAddress, '$AllControl_TOffsets$', 'Erased', 0);
+begin
+  Test_FindSubControl_MultiFind('RenderMultiPmtvOnServerWithTwoProfiles.clktmpl',
+                                CExpected_X_Profile01,
+                                CExpected_Y_Profile01);
+end;
 
-  Res := TStringList.Create;
-  try
-    Res.Text := ExecTestTemplate(TestServerAddress, '$AppDir$\Tests\TestFiles\RenderMultiPmtvOnServerWithTwoProfiles.clktmpl');
-    Expect(Res).WithItem('$AllControl_XOffsets$').ToContain('5829858298181421181421');
-    Expect(Res).WithItem('$AllControl_YOffsets$').ToContain('9191121121116116146146');
-  finally
-    Res.Free;
-  end;
+
+procedure TTestLowLevelHTTPAPI.Test_ExecuteFindSubControlAction_RenderingServer_MultiTextWithTwoProfilesAndOneBmp;
+begin
+  Test_FindSubControl_MultiFind('RenderMultiTextOnServerWithTwoProfilesAndOneBmp.clktmpl',
+                                CExpected_X_Profile01,
+                                CExpected_Y_Profile01);
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecuteFindSubControlAction_RenderingServer_MultiTextWithTwoProfilesAndOnePmtv;
+begin
+  Test_FindSubControl_MultiFind('RenderMultiTextOnServerWithTwoProfilesAndOnePmtv.clktmpl',
+                                CExpected_X_Profile01,
+                                CExpected_Y_Profile01);
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecuteFindSubControlAction_RenderingServer_MultiTextWithTwoProfilesAndOneBmpAndOnePmtv;
+begin
+  Test_FindSubControl_MultiFind('RenderMultiTextOnServerWithTwoProfilesAndOneBmpAndOnePmtv.clktmpl',
+                                CExpected_X_Profile01,
+                                CExpected_Y_Profile01);
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecuteFindSubControlAction_RenderingServer_MultiTextWithTwoProfilesAndTextAndOneBmpAndOnePmtv;
+begin
+  Test_FindSubControl_MultiFind('RenderMultiTextOnServerWithTwoProfilesAndTextAndOneBmpAndOnePmtv.clktmpl',
+                                CExpected_X_ExtProfile01,
+                                CExpected_Y_ExtProfile01);
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecuteFindSubControlAction_RenderingServer_MultiTextWithTwoProfilesAndTextAndPmtvWithTwoOrders;
+begin
+  Test_FindSubControl_MultiFind('RenderMultiTextOnServerWithTwoProfilesAndTextAndPmtvWithTwoOrders.clktmpl',
+                                CExpected_X_ExtProfile10,
+                                CExpected_Y_ExtProfile10);
 end;
 
 

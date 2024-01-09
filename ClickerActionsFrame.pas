@@ -4184,6 +4184,14 @@ begin
 
     if (ANodeData.Level = CPropertyItemLevel) and (CurrentlyEditingActionType in [acFindControl, acFindSubControl]) then
     begin
+      if APropertyIndex = CFindControl_MatchCriteria_PropIndex then
+        if (CurrentlyEditingActionType = acFindControl) and (APropertyItemIndex in [CFindControl_MatchCriteria_WillMatchBitmapText_PropItemIndex, CFindControl_MatchCriteria_WillMatchBitmapFiles_PropItemIndex, CFindControl_MatchCriteria_WillMatchPrimitiveFiles_PropItemIndex]) or
+           (CurrentlyEditingActionType = acFindSubControl) and (APropertyItemIndex in [CFindControl_MatchCriteria_WillMatchText_PropItemIndex, CFindControl_MatchCriteria_WillMatchClassName_PropItemIndex]) then
+        begin
+          TargetCanvas.Font.Color := clGray;
+          Exit;;
+        end;
+
       if APropertyIndex = CFindControl_MatchPrimitiveFiles_PropIndex then
       begin
         ListOfPrimitiveFiles_Modified := TStringList.Create;   //instead of parsing this list on every tree paint action, the "modified" flags could be stored in some array of (paths + modified)

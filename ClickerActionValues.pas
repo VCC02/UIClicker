@@ -135,8 +135,12 @@ const
 
   CCallTemplate_CallTemplateLoopProperties_BreakCondition_PropItemIndex = 5;
 
+  CFindControl_MatchCriteria_WillMatchText_PropItemIndex = 0;
+  CFindControl_MatchCriteria_WillMatchClassName_PropItemIndex = 1;
   CFindControl_MatchCriteria_WillMatchBitmapText_PropItemIndex = 2;
-  CFindControl_MatchCriteria_SearchForControlMode_PropItemIndex = 4;
+  CFindControl_MatchCriteria_WillMatchBitmapFiles_PropItemIndex = 3;
+  CFindControl_MatchCriteria_WillMatchPrimitiveFiles_PropItemIndex = 4;
+  CFindControl_MatchCriteria_SearchForControlMode_PropItemIndex = 5;
 
   CFindControl_MatchBitmapText_ForegroundColor_PropItemIndex = 0;   //property index in FindControl.MatchBitmapText structure
   CFindControl_MatchBitmapText_BackgroundColor_PropItemIndex = 1;   //property index in FindControl.MatchBitmapText structure

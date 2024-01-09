@@ -442,9 +442,11 @@ var
   end;
 
   procedure DrawFoundSelectionBand(AIndex: Integer);
+  const
+    CBandThickness = 5;
   var
     SubX, SubY: Integer;
-    VRect, HRect: TRect;
+    HRectLeft, VRectTop, HRectRight, VRectBottom: TRect;
   begin
     SubX := AFoundBitmaps[i].XOffsetFromParent;
     SubY := AFoundBitmaps[i].YOffsetFromParent;
@@ -453,18 +455,30 @@ var
     DebugBmp.Canvas.Brush.Color := $44FF88;
     DebugBmp.Canvas.Brush.Style := bsSolid;
 
-    VRect.Left := SubX;
-    VRect.Top := SubY - 10;
-    VRect.Right := SubX + BitmapToSearchFor.Width;
-    VRect.Bottom := SubY + BitmapToSearchFor.Height + 10;
+    HRectLeft.Left := SubX - CBandThickness;
+    HRectLeft.Top := SubY;
+    HRectLeft.Right := SubX {- 1};
+    HRectLeft.Bottom := SubY + BitmapToSearchFor.Height;
 
-    HRect.Left := SubX - 10;
-    HRect.Top := SubY;
-    HRect.Right := SubX + BitmapToSearchFor.Width + 10;
-    HRect.Bottom := SubY + BitmapToSearchFor.Height;
+    VRectTop.Left := SubX;
+    VRectTop.Top := SubY - CBandThickness;
+    VRectTop.Right := SubX + BitmapToSearchFor.Width;
+    VRectTop.Bottom := SubY {- 1};
 
-    DebugBmp.Canvas.Rectangle(VRect);
-    DebugBmp.Canvas.Rectangle(HRect);
+    HRectRight.Left := SubX + BitmapToSearchFor.Width {+ 1};
+    HRectRight.Top := SubY;
+    HRectRight.Right := SubX + BitmapToSearchFor.Width + CBandThickness;
+    HRectRight.Bottom := SubY + BitmapToSearchFor.Height;
+
+    VRectBottom.Left := SubX;
+    VRectBottom.Top := SubY + BitmapToSearchFor.Height {+ 1};
+    VRectBottom.Right := SubX + BitmapToSearchFor.Width;
+    VRectBottom.Bottom := SubY + BitmapToSearchFor.Height + CBandThickness;
+
+    DebugBmp.Canvas.Rectangle(HRectLeft);
+    DebugBmp.Canvas.Rectangle(VRectTop);
+    DebugBmp.Canvas.Rectangle(HRectRight);
+    DebugBmp.Canvas.Rectangle(VRectBottom);
   end;
 begin
   DebugDisplayLeft := DebugBmp.Width;  //yes, width
