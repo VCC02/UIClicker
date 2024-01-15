@@ -37,14 +37,13 @@ uses
   //{$ELSE}
     Windows,
   //{$ENDIF}
-  SysUtils, Classes, VirtualTrees, Graphics, Controls, StdCtrls,
-  IdGlobal, DCPmd5, ClickerIniFiles;
+  SysUtils, Classes, ClickerIniFiles, Graphics, Controls, StdCtrls;
 
 
 type
   TClkAction = (acClick, acExecApp, acFindControl, acFindSubControl,
                 acSetControlText, acCallTemplate, acSleep, acSetVar, acWindowOperations,
-                acLoadSetVarFromFile, acSaveSetVarToFile);
+                acLoadSetVarFromFile, acSaveSetVarToFile, acPlugin);     //please update CInsertActionOffset constant in ClickerActionsArrFrame, if there will be more than 30 action types
 
   TClkSetTextControlType = (stEditBox, stComboBox, stKeystrokes);
   TSearchForControlMode = (sfcmGenGrid, sfcmEnumWindows, sfcmFindWindow);
@@ -93,12 +92,15 @@ type
 
   TOnRetrieveRenderedBmpFromServer = procedure(FRemoteAddress, Fnm: string) of object;
   TOnGetListOfAvailableSetVarActions = procedure(AListOfSetVarActions: TStringList) of object;
+  TOnGetListOfAvailableActions = procedure(AListOfActions: TStringList) of object;
 
+  TOnExecuteActionByName = function(AActionName: string): Boolean of object;
+  TOnSetVar = procedure(AVarName, AVarValue: string) of object;
 
 const
   CClkActionStr: array[TClkAction] of string = ('Click', 'ExecApp', 'FindControl', 'FindSubControl',
                                                 'SetControlText', 'CallTemplate', 'Sleep', 'SetVar', 'WindowOperations',
-                                                'LoadSetVarFromFile', 'SaveSetVarToFile');
+                                                'LoadSetVarFromFile', 'SaveSetVarToFile', 'Plugin');
   CClkUnsetAction = 255; //TClkAction(255);
 
   //These constants are used to index an array, similar to enum values.  Please update TClickTypeStr if adding more constants to this "type".
@@ -312,6 +314,13 @@ type
     SetVarActionName: string;
   end;
 
+  TClkPluginOptions = record
+    FileName: string;
+    ListOfPropertiesAndValues: string;    //CRLF separated items of key=value format    - displayed on ObjectInspector
+    ListOfPropertiesAndTypes: string;     //CRLF separated items of key=value format    - set using <Plugin>.LoadToGetProperties after loading ListOfPropertiesAndValues from template. This field is not saved to template.
+    CachedCount: Integer;                 //used to speed up ObjectInspector            - set after loading template, from ListOfPropertiesAndTypes   - not displayed on ObjectInspector
+  end;
+
   TActionBreakPoint = record
     Exists: Boolean; //when False, the action has no breakpoint
     Enabled: Boolean;
@@ -335,11 +344,13 @@ type
     WindowOperationsOptions: TClkWindowOperationsOptions;
     LoadSetVarFromFileOptions: TClkLoadSetVarFromFileOptions;
     SaveSetVarToFileOptions: TClkSaveSetVarToFileOptions;
+    PluginOptions: TClkPluginOptions;
   end;
 
   PClkActionRec = ^TClkActionRec;
 
   TClkActionsRecArr = array of TClkActionRec;
+  PClkActionsRecArr = ^TClkActionsRecArr;
 
   TIntArr = array of Integer;
   TColorArr = array of TColor;
@@ -404,11 +415,10 @@ type
   TOnGetGridDrawingOption = function: TDisplayGridLineOption of object;
   TOnGetActionProperties = function(AActionName: string): PClkActionRec of object;
   TOnRWFontFinderSettings = procedure(var AFontFinderSettings: TFontFinderSettings) of object;
-
+  TOnModifyPluginProperty = procedure(AAction: PClkActionRec) of object;
 
 const
   CActionStatusStr: array[TActionStatus] of string = ('Not Started', 'Failed', 'Successful', 'In Progress', 'Allowed Failed');
-  CBoolToCheckState: array[Boolean] of TCheckState = (csUncheckedNormal, csCheckedNormal);
 
   CCompNotEqual = '<>';        //all these comparison operators should be two characters long
   CCompEqual = '==';
@@ -461,10 +471,6 @@ procedure RawExpressionToParts(RawExpression: string; out Op1, Op2, OpEq: string
 function MatchCriteriaToString(Criteria: TClkFindControlMatchCriteria): string;
 function EvaluateActionCondition(AActionCondition: string; AEvalReplacementsFunc: TEvaluateReplacementsFunc): Boolean;
 
-function ArrOfByteToHex(var AArr: TIdBytes): string;
-function ComputeHash(AFileContent: Pointer; AFileSize: Int64): string;
-function GetFileHash(AFileName: string): string;
-
 
 function GetControlText(hw: THandle): string;
 function GetWindowClassRec(HW: THandle): TCompRec; overload;
@@ -474,7 +480,6 @@ function GetCmdLineOptionValue(AOption: string): string;
 function RevPos(const ASubStr, AString: string; AOffset: Integer = 1): Integer;
 
 function ActionAsStringToTClkAction(ActionAsString: string): TClkAction;
-function GetNodeByIndex(AVst: TVirtualStringTree; AIndex: Integer): PVirtualNode;
 
 function ModifyBrightness(AColor: TColor; AAmount: Byte; ABrightnessOperation: TBrightnessOperation): TColor;
 procedure CreateSelectionLabels(AOwner: TComponent; AParent: TWinControl; var ALeftLabel, ATopLabel, ARightLabel, ABottomLabel: TLabel; ALeftColor, ATopColor, ARightColor, ABottomColor: TColor; AShouldBringToFront, ACreateWithPaintedLabel: Boolean);
@@ -2279,54 +2284,6 @@ begin
 end;
 
 
-function ArrOfByteToHex(var AArr: TIdBytes): string;
-var
-  i: Integer;
-begin
-  Result := '';
-  for i := 0 to Length(AArr) - 1 do
-    Result := Result + IntToHex(AArr[i], 2);
-end;
-
-
-function ComputeHash(AFileContent: Pointer; AFileSize: Int64): string;
-var
-  DCP_md5: TDCP_md5;
-  BinHash: TIdBytes;
-begin
-  DCP_md5 := TDCP_md5.Create(nil);
-  try
-    SetLength(BinHash, 20);
-    try
-      DCP_md5.Init;
-      DCP_md5.Update(AFileContent^, AFileSize);
-      DCP_md5.Final(BinHash[0]);
-
-      SetLength(BinHash, 16);
-      Result := ArrOfByteToHex(BinHash);
-    finally
-      SetLength(BinHash, 0);
-    end;
-  finally
-    DCP_md5.Free;
-  end;
-end;
-
-
-function GetFileHash(AFileName: string): string;
-var
-  Stream: TMemoryStream;
-begin
-  Stream := TMemoryStream.Create;
-  try
-    Stream.LoadFromFile(AFileName);
-    Result := ComputeHash(Stream.Memory, Stream.Size);
-  finally
-    Stream.Free;
-  end;
-end;
-
-
 function GetControlText(HW: THandle): string;
 var
   TextLength: Integer;
@@ -2446,26 +2403,6 @@ begin
     end;
 end;
 
-
-function GetNodeByIndex(AVst: TVirtualStringTree; AIndex: Integer): PVirtualNode;
-var
-  Node: PVirtualNode;
-begin
-  Result := nil;
-  Node := AVst.GetFirst;
-  if Node = nil then
-    Exit;
-
-  repeat
-    if Integer(Node^.Index) = AIndex then
-    begin
-      Result := Node;
-      Break;
-    end;
-
-    Node := Node^.NextSibling;
-  until Node = nil;
-end;
 
 { TPaintedLabel }
 

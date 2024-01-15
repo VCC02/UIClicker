@@ -458,6 +458,13 @@ begin
 end;
 
 
+procedure LoadAction_Plugin(Ini: TClkIniReadonlyFile; SectionIndex: Integer; var APluginOptions: TClkPluginOptions);
+begin
+  APluginOptions.FileName := Ini.ReadString(SectionIndex, 'FileName', '');
+  APluginOptions.ListOfPropertiesAndValues := FastReplace_45ToReturn(Ini.ReadString(SectionIndex, 'ListOfPropertiesAndValues', ''));
+end;
+
+
 procedure LoadTemplateToCustomActions_V2(Ini: TClkIniReadonlyFile; var ACustomActions: TClkActionsRecArr; var ANotes, ATemplateIconPath: string);
 var
   IterationStr: string;
@@ -487,6 +494,7 @@ begin
       acWindowOperations: LoadAction_WindowOperations(Ini, SectionIndex, ACustomActions[i].WindowOperationsOptions);
       acLoadSetVarFromFile: LoadAction_LoadSetVarFromFile(Ini, SectionIndex, ACustomActions[i].LoadSetVarFromFileOptions);
       acSaveSetVarToFile: LoadAction_SaveSetVarToFile(Ini, SectionIndex, ACustomActions[i].SaveSetVarToFileOptions);
+      acPlugin: LoadAction_Plugin(Ini, SectionIndex, ACustomActions[i].PluginOptions);
     end;
   end;
 
@@ -883,6 +891,13 @@ begin
 end;
 
 
+procedure AddAction_PluginToStringList(var AActionPluginOptions: TClkPluginOptions; AStringList: TStringList);
+begin
+  AStringList.Add('FileName=' + AActionPluginOptions.FileName);
+  AStringList.Add('ListOfPropertiesAndValues=' + FastReplace_ReturnTo45(AActionPluginOptions.ListOfPropertiesAndValues));
+end;
+
+
 procedure AddActionContentToStringList(var AAction: TClkActionRec; AStringList: TStringList);
 begin
   case AAction.ActionOptions.Action of
@@ -897,6 +912,7 @@ begin
     acWindowOperations: AddAction_WindowOperationsToStringList(AAction.WindowOperationsOptions, AStringList);
     acLoadSetVarFromFile: AddAction_LoadSetVarFromFileToStringList(AAction.LoadSetVarFromFileOptions, AStringList);
     acSaveSetVarToFile: AddAction_SaveSetVarToFileToStringList(AAction.SaveSetVarToFileOptions, AStringList);
+    acPlugin: AddAction_PluginToStringList(AAction.PluginOptions, AStringList);
   end;
 end;
 
@@ -950,6 +966,7 @@ begin             //Substructures, which do not contain pointers, can be directl
   ADest.WindowOperationsOptions := ASrc.WindowOperationsOptions;
   ADest.LoadSetVarFromFileOptions := ASrc.LoadSetVarFromFileOptions;
   ADest.SaveSetVarToFileOptions := ASrc.SaveSetVarToFileOptions;
+  ADest.PluginOptions := ASrc.PluginOptions;
 
   ADest.FindControlOptions.MatchCriteria := ASrc.FindControlOptions.MatchCriteria;
   ADest.FindControlOptions.AllowToFail := ASrc.FindControlOptions.AllowToFail;

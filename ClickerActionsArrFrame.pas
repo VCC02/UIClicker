@@ -51,6 +51,10 @@ type
 
   PActionNodeRec = ^TActionNodeRec;
 
+
+  //TActionPluginArr = array of TActionPlugin;   //for now, there will be no list of plugins
+
+
   { TfrClickerActionsArr }
 
   TfrClickerActionsArr = class(TFrame)
@@ -418,6 +422,9 @@ type
     procedure HandleOnSaveStringListToFile(AStringList: TStringList; const AFileName: string);
     procedure HandleOnBackupVars(AAllVars: TStringList);
     procedure HandleOnGetListOfAvailableSetVarActions(AListOfSetVarActions: TStringList);
+    procedure HandleOnGetListOfAvailableActions(AListOfSetVarActions: TStringList);
+    function HandleOnExecuteActionByName(AActionName: string): Boolean;
+    procedure HandleOnModifyPluginProperty(AAction: PClkActionRec);
 
     function GetInMemFS: TInMemFileSystem;
     procedure SetInMemFS(Value: TInMemFileSystem);
@@ -457,6 +464,9 @@ type
     procedure SetAFontFromClkActions(AFont: TFont; ActionIndex: Integer);
     procedure UpdateNodeCheckStateFromAction(Node: PVirtualNode);
 
+    procedure SetActionPropertiesFromPlugin(var AAction: TClkActionRec);
+    procedure SetPropertiesFromPlugins;
+
     procedure LoadTemplate_V1(Ini: TClkIniReadonlyFile);
     procedure LoadTemplate_V2(Ini: TClkIniReadonlyFile);
     procedure SaveTemplateWithCustomActions_V2(Fnm: string; var ACustomClkActions: TClkActionsRecArr; ANotes, ATemplateIconPath: string);
@@ -465,7 +475,6 @@ type
     procedure DisplayDefaultEvalConsoleEditBox;
     function EvaluateAssignmentExpression: Boolean;
     function EvaluateActionCondition(ActionIndex: Integer): Boolean;
-    function ResolveTemplatePath(APath: string; ACustomSelfTemplateDir: string = ''; ACustomAppDir: string = ''): string;
     function EncodeTemplatePath(APath: string): string;
 
     procedure PrepareFilesInServer;
@@ -578,6 +587,7 @@ type
     function SetCurrentClientTemplateInServer(ASendFileOnly: Boolean = False): string;
 
     procedure AddToLog(s: string);
+    function ResolveTemplatePath(APath: string; ACustomSelfTemplateDir: string = ''; ACustomAppDir: string = ''): string;
 
     procedure InitFrame;
 
@@ -659,7 +669,8 @@ implementation
 uses
   ValEdit, Math, ClickerTemplates, BitmapConv,
   BitmapProcessing, Clipbrd, ClickerConditionEditorForm, ClickerActionsClient,
-  ClickerTemplateNotesForm, AutoCompleteForm;
+  ClickerTemplateNotesForm, AutoCompleteForm, ClickerExtraUtils,
+  ClickerActionPluginLoader;
 
 
 const
@@ -754,6 +765,9 @@ begin
     TempVarDescriptions.Add('$DebugVar_BitmapText$=[String] This is a debugging variable. It is updated by FindSubControl action, with the searched bitmap text. If the text is empty, the variable contains an error message, which helps the user understand why the action fails.');
     TempVarDescriptions.Add('$DbgCurrentAction$=[String] This is a debugging variable. It is updated in server mode with an error message, when attempting to execute an out of index action, or an action from an empty template.');
     TempVarDescriptions.Add('$DbgPlayAllActions$=[String] This is a debugging variable. It is updated in server mode with debugging information about action execution state. It is useful during remote debugging, when the server waits for client to close a template.');
+    TempVarDescriptions.Add('$PluginError$=[String] This is an error message, set by an action plugin, after its failed execution.');
+    TempVarDescriptions.Add('$AppBitness$=[String] This variable is automatically set to i386 or x86_64, depending on executable bitness.');
+    TempVarDescriptions.Add('$OSBitness$=[String] This variable is automatically set to win32 or win64, depending on OS bitness.');
 
     for i := 0 to FVarDescriptions.Count - 1 do
       FVarDescriptions.Strings[i] := TempVarDescriptions.Values[FVarDescriptions.Strings[i]];
@@ -876,6 +890,8 @@ begin
   frClickerActions.OnSetFontFinderSettings := HandleOnSetFontFinderSettings;
 
   frClickerActions.OnGetListOfAvailableSetVarActions := HandleOnGetListOfAvailableSetVarActions;
+  frClickerActions.OnGetListOfAvailableActions := HandleOnGetListOfAvailableActions;
+  frClickerActions.OnModifyPluginProperty := HandleOnModifyPluginProperty;
 
   //frClickerActions.OnControlsModified := ClickerActionsFrameOnControlsModified;   //this is set on frame initialization
 
@@ -1018,6 +1034,7 @@ begin
   FActionExecution.OnTClkIniReadonlyFileCreate := HandleOnTClkIniReadonlyFileCreate;
   FActionExecution.OnSaveStringListToFile := HandleOnSaveStringListToFile;
   FActionExecution.OnBackupVars := HandleOnBackupVars;
+  FActionExecution.OnExecuteActionByName := HandleOnExecuteActionByName;
 
   FCmdConsoleHistory := TStringList.Create;
   FOnExecuteRemoteActionAtIndex := nil;
@@ -1506,6 +1523,31 @@ begin
 end;
 
 
+function TfrClickerActionsArr.HandleOnExecuteActionByName(AActionName: string): Boolean;
+var
+  i, ActionIndex: Integer;
+begin
+  AddToLog('Executing action "' + AActionName + '" by name, from plugin...');
+
+  ActionIndex := -1;
+  for i := 0 to Length(FClkActions) - 1 do
+    if FClkActions[i].ActionOptions.ActionName = AActionName then
+    begin
+      ActionIndex := i;
+      Break;
+    end;
+
+  if ActionIndex = -1 then
+  begin
+    AddToLog('Action "' + AActionName + '" not found, when executing by name, from plugin.');
+    Result := False;
+    Exit;
+  end;
+
+  Result := ExecuteActionAtIndex(ActionIndex);
+end;
+
+
 procedure TfrClickerActionsArr.HandleOnGetListOfAvailableSetVarActions(AListOfSetVarActions: TStringList);
 var
   i: Integer;
@@ -1513,6 +1555,22 @@ begin
   for i := 0 to Length(FClkActions) - 1 do
     if FClkActions[i].ActionOptions.Action = acSetVar then
       AListOfSetVarActions.Add(FClkActions[i].ActionOptions.ActionName);
+end;
+
+
+procedure TfrClickerActionsArr.HandleOnGetListOfAvailableActions(AListOfSetVarActions: TStringList);
+var
+  i: Integer;
+begin
+  for i := 0 to Length(FClkActions) - 1 do
+    AListOfSetVarActions.Add(FClkActions[i].ActionOptions.ActionName);
+end;
+
+
+procedure TfrClickerActionsArr.HandleOnModifyPluginProperty(AAction: PClkActionRec);
+begin
+  if DoOnFileExists(ResolveTemplatePath(AAction.PluginOptions.FileName)) then
+    SetActionPropertiesFromPlugin(AAction^);
 end;
 
 
@@ -1834,6 +1892,7 @@ begin
     acWindowOperations: Result := FActionExecution.ExecuteWindowOperationsAction(FClkActions[AActionIndex].WindowOperationsOptions);
     acLoadSetVarFromFile: Result := FActionExecution.ExecuteLoadSetVarFromFileAction(FClkActions[AActionIndex].LoadSetVarFromFileOptions);
     acSaveSetVarToFile: Result := FActionExecution.ExecuteSaveSetVarToFileAction(FClkActions[AActionIndex].SaveSetVarToFileOptions);
+    acPlugin: Result := FActionExecution.ExecutePluginAction(FClkActions[AActionIndex].PluginOptions, @FClkActions, frClickerActions.vallstVariables.Strings, ResolveTemplatePath(FClkActions[AActionIndex].PluginOptions.FileName));
   end;  //case
 end;
 
@@ -2431,7 +2490,7 @@ end;
 
 function TfrClickerActionsArr.GetNodeByIndex(ANodeIndex: Integer): PVirtualNode;
 begin
-  Result := ClickerUtils.GetNodeByIndex(vstActions, ANodeIndex);
+  Result := ClickerExtraUtils.GetNodeByIndex(vstActions, ANodeIndex);
 end;
 
 
@@ -2699,6 +2758,83 @@ begin
 end;
 
 
+function IsSameListOfProperties(AListOfPropertiesAndValues, AListOfPropertiesAndTypes: TStringList): Boolean;
+var
+  i: Integer;
+begin
+  Result := False;
+  if AListOfPropertiesAndValues.Count <> AListOfPropertiesAndTypes.Count then
+    Exit;
+
+  for i := 0 to AListOfPropertiesAndValues.Count - 1 do
+    if AListOfPropertiesAndValues.Names[i] <> AListOfPropertiesAndTypes.Names[i] then
+      Exit;
+
+  Result := True;
+end;
+
+
+function RebuildListOfPropertiesAndValuesFromTypes(AInitialListOfPropertiesAndValues, AListOfPropertiesAndTypes: TStringList): string;
+var
+  i: Integer;
+  TempName: string;
+begin
+  Result := '';
+  for i := 0 to AListOfPropertiesAndTypes.Count - 1 do
+  begin
+    TempName := AListOfPropertiesAndTypes.Names[i];
+    Result := Result + TempName + '=' + AInitialListOfPropertiesAndValues.Values[TempName] + #13#10;
+  end;
+end;
+
+
+procedure TfrClickerActionsArr.SetActionPropertiesFromPlugin(var AAction: TClkActionRec);
+var
+  ActionPlugin: TActionPlugin;
+  ResolvedPluginPath: string;
+  ListOfProperties, ListOfPropertiesAndValue_Work: TStringList;
+begin
+  ResolvedPluginPath := ResolveTemplatePath(AAction.PluginOptions.FileName);
+
+  if not ActionPlugin.LoadToGetProperties(ResolvedPluginPath) then
+  begin
+    AddToLog('Error loading plugin on getting properties: ' + ActionPlugin.Err);
+    Exit;
+  end;
+
+  try
+    AAction.PluginOptions.ListOfPropertiesAndTypes := ActionPlugin.GetListOfProperties;
+  finally
+    if not ActionPlugin.Unload then
+      AddToLog('Error unloading plugin on getting properties: ' + ActionPlugin.Err);
+  end;
+
+  ListOfProperties := TStringList.Create;
+  ListOfPropertiesAndValue_Work := TStringList.Create;
+  try
+    ListOfProperties.Text := AAction.PluginOptions.ListOfPropertiesAndTypes;
+    ListOfPropertiesAndValue_Work.Text := AAction.PluginOptions.ListOfPropertiesAndValues;
+    AAction.PluginOptions.CachedCount := ListOfProperties.Count;
+
+    if not IsSameListOfProperties(ListOfProperties, ListOfPropertiesAndValue_Work) then
+      AAction.PluginOptions.ListOfPropertiesAndValues := RebuildListOfPropertiesAndValuesFromTypes(ListOfPropertiesAndValue_Work, ListOfProperties);
+  finally
+    ListOfProperties.Free;
+    ListOfPropertiesAndValue_Work.Free;
+  end;
+end;
+
+
+procedure TfrClickerActionsArr.SetPropertiesFromPlugins;
+var
+  i: Integer;
+begin
+  for i := 0 to Length(FClkActions) - 1 do
+    if FClkActions[i].ActionOptions.Action = acPlugin then
+      SetActionPropertiesFromPlugin(FClkActions[i]);
+end;
+
+
 procedure TfrClickerActionsArr.LoadTemplate_V1(Ini: TClkIniReadonlyFile);
 begin
   LoadTemplateToCustomActions_V1(Ini, FClkActions);
@@ -2708,6 +2844,7 @@ end;
 procedure TfrClickerActionsArr.LoadTemplate_V2(Ini: TClkIniReadonlyFile);
 begin
   LoadTemplateToCustomActions_V2(Ini, FClkActions, FTemplateNotes, FTemplateIconPath);
+  SetPropertiesFromPlugins;
 end;
 
 
@@ -3180,6 +3317,7 @@ begin
           acWindowOperations: CellText := IntToStr(Ord(CurrentAction.WindowOperationsOptions.Operation));
           acLoadSetVarFromFile: CellText := CurrentAction.LoadSetVarFromFileOptions.SetVarActionName + '  from "' + CurrentAction.LoadSetVarFromFileOptions.FileName + '"';
           acSaveSetVarToFile: CellText := CurrentAction.SaveSetVarToFileOptions.SetVarActionName + '  from "' + CurrentAction.SaveSetVarToFileOptions.FileName + '"';
+          acPlugin: CellText := CurrentAction.PluginOptions.FileName;
         end;
       end;
       5: CellText := StringReplace(CurrentAction.FindControlOptions.MatchBitmapFiles, #13#10, ', ', [rfReplaceAll]);
@@ -5134,6 +5272,9 @@ begin
 
   FClkActions[AIndex].SaveSetVarToFileOptions.FileName := '';
   FClkActions[AIndex].SaveSetVarToFileOptions.SetVarActionName := '';
+
+  FClkActions[AIndex].PluginOptions.FileName := '';
+  FClkActions[AIndex].PluginOptions.ListOfPropertiesAndValues := '';
 end;
 
 
@@ -6112,5 +6253,6 @@ begin
       memLogErr.Lines.Add('Exception on adding to log: ' + E.Message);
   end;
 end;
+
 
 end.

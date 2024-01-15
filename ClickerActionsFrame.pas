@@ -54,6 +54,7 @@ type
     imglstMatchBitmapAlgorithmSettingsProperties: TImageList;
     imglstActionProperties: TImageList;
     imglstCallTemplateLoopProperties: TImageList;
+    imglstPluginProperties: TImageList;
     imglstWindowOperationsProperties: TImageList;
     imglstSleepProperties: TImageList;
     imglstExecAppProperties: TImageList;
@@ -245,6 +246,7 @@ type
     procedure MenuItem_MoveFontProfileDownInPropertyListClick(Sender: TObject);
 
     procedure MenuItem_BrowseSetVarFileInPropertyListClick(Sender: TObject);
+    procedure MenuItem_BrowsePluginFileInPropertyListClick(Sender: TObject);
 
     procedure MenuItemControl_EdgeRefGenericClick(Sender: TObject);
     procedure MenuItemCopyRefToClipboardClick(Sender: TObject);
@@ -316,6 +318,8 @@ type
     FOnSetFontFinderSettings: TOnRWFontFinderSettings;
 
     FOnGetListOfAvailableSetVarActions: TOnGetListOfAvailableSetVarActions;
+    FOnGetListOfAvailableActions: TOnGetListOfAvailableActions;
+    FOnModifyPluginProperty: TOnModifyPluginProperty;
 
     //function GetListOfSetVarEntries: string;
     //procedure SetListOfSetVarEntries(Value: string);
@@ -355,6 +359,8 @@ type
     procedure DoOnSetFontFinderSettings(var AFontFinderSettings: TFontFinderSettings);
 
     procedure DoOnGetListOfAvailableSetVarActions(AListOfSetVarActions: TStringList);
+    procedure DoOnGetListOfAvailableActions(AListOfActions: TStringList);
+    procedure DoOnModifyPluginProperty(AAction: PClkActionRec);
 
     function GetInMemFS: TInMemFileSystem;
     procedure SetInMemFS(Value: TInMemFileSystem);
@@ -370,6 +376,7 @@ type
 
     procedure LocalTemplatesClick(Sender: TObject);
     procedure AvailableSetVarClick(Sender: TObject);
+    procedure AvailablePluginPropertiesClick(Sender: TObject);
     procedure BrowseTemplatesClick(Sender: TObject);
     procedure ClickerConditionEditorControlsModified;
     procedure OverlapGridImgOnDebugImg(ADebugAndGridBitmap: TBitmap);
@@ -490,6 +497,7 @@ type
 
     procedure LoadListOfAvailableTemplates;
     procedure LoadListOfAvailableSetVarActions;
+    procedure LoadListOfAvailableActionsForPlugin(APropertyIndexToUpdate: Integer);
     procedure SetDebugVariablesFromListOfStrings(AListOfStrings: string);
     procedure UpdatePageControlActionExecutionIcons;
     procedure UpdateControlWidthHeightLabels;
@@ -549,6 +557,8 @@ type
     property OnSetFontFinderSettings: TOnRWFontFinderSettings write FOnSetFontFinderSettings;
 
     property OnGetListOfAvailableSetVarActions: TOnGetListOfAvailableSetVarActions write FOnGetListOfAvailableSetVarActions;
+    property OnGetListOfAvailableActions: TOnGetListOfAvailableActions write FOnGetListOfAvailableActions;
+    property OnModifyPluginProperty: TOnModifyPluginProperty write FOnModifyPluginProperty;
   end;
 
 
@@ -787,6 +797,8 @@ begin
   FOnSetFontFinderSettings := nil;
 
   FOnGetListOfAvailableSetVarActions := nil;
+  FOnGetListOfAvailableActions := nil;
+  FOnModifyPluginProperty := nil;
 
   FShowDeprecatedControls := False;
   FEditingAction := @FEditingActionRec;
@@ -1346,6 +1358,30 @@ begin
 end;
 
 
+procedure TfrClickerActions.AvailablePluginPropertiesClick(Sender: TObject);
+var
+  ActionName: string;
+  ListOfProperties: TStringList;
+  PropertyIndex: Integer;
+begin
+  ActionName := StringReplace((Sender as TMenuItem).Caption, '&', '', [rfReplaceAll]);
+  PropertyIndex := (Sender as TMenuItem).Tag;
+
+  ListOfProperties := TStringList.Create;
+  try
+    ListOfProperties.Text := FEditingAction^.PluginOptions.ListOfPropertiesAndValues;
+    ListOfProperties.ValueFromIndex[PropertyIndex] := ActionName;
+    FEditingAction^.PluginOptions.ListOfPropertiesAndValues := ListOfProperties.Text;
+  finally
+    ListOfProperties.Free;
+  end;
+
+  FOIFrame.CancelCurrentEditing;
+  FOIFrame.Repaint;   //ideally, RepaintNodeByLevel
+  TriggerOnControlsModified;
+end;
+
+
 
 procedure TfrClickerActions.BrowseTemplatesClick(Sender: TObject);
 begin
@@ -1442,6 +1478,40 @@ begin
     end;
   finally
     AvailableSetVarActions.Free;
+  end;
+end;
+
+
+procedure TfrClickerActions.LoadListOfAvailableActionsForPlugin(APropertyIndexToUpdate: Integer);
+var
+  AvailableActions: TStringList;
+  TempMenuItem, BaseMenuItem: TMenuItem;
+  i: Integer;
+begin
+  AvailableActions := TStringList.Create;
+  try
+    DoOnGetListOfAvailableActions(AvailableActions);
+
+    FPmLocalTemplates.Items.Clear;
+
+    if AvailableActions.Count = 0 then
+      AvailableActions.Add(CNoSetVarActionsMsg);
+
+    BaseMenuItem := TMenuItem.Create(Self);
+    BaseMenuItem.Caption := 'Available actions';
+    BaseMenuItem.OnClick := nil;
+    FPmLocalTemplates.Items.Add(BaseMenuItem);
+
+    for i := 0 to AvailableActions.Count - 1 do
+    begin
+      TempMenuItem := TMenuItem.Create(Self);
+      TempMenuItem.Caption := AvailableActions.Strings[i];
+      TempMenuItem.OnClick := AvailablePluginPropertiesClick;
+      TempMenuItem.Tag := APropertyIndexToUpdate;
+      FPmLocalTemplates.Items[0].Add(TempMenuItem);
+    end;
+  finally
+    AvailableActions.Free;
   end;
 end;
 
@@ -2110,6 +2180,24 @@ begin
     raise Exception.Create('OnGetListOfAvailableSetVarActions not assigned.')
   else
     FOnGetListOfAvailableSetVarActions(AListOfSetVarActions);
+end;
+
+
+procedure TfrClickerActions.DoOnGetListOfAvailableActions(AListOfActions: TStringList);
+begin
+  if not Assigned(FOnGetListOfAvailableActions) then
+    raise Exception.Create('OnGetListOfAvailableActions not assigned.')
+  else
+    FOnGetListOfAvailableActions(AListOfActions);
+end;
+
+
+procedure TfrClickerActions.DoOnModifyPluginProperty(AAction: PClkActionRec);
+begin
+  if not Assigned(FOnModifyPluginProperty) then
+    raise Exception.Create('OnModifyPluginProperty not assigned.')
+  else
+    FOnModifyPluginProperty(AAction);
 end;
 
 
@@ -3038,6 +3126,29 @@ begin
 end;
 
 
+procedure TfrClickerActions.MenuItem_BrowsePluginFileInPropertyListClick(Sender: TObject);
+var
+  MenuData: POIMenuItemData;
+begin
+  MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
+  try
+    if not DoOnOpenDialogExecute('Dll files (*.dll)|*.dll|All files (*.*)|*.*') then
+      Exit;
+
+    FEditingAction^.PluginOptions.FileName := DoOnGetOpenDialogFileName;
+
+    FOIFrame.CancelCurrentEditing;
+    FOIFrame.Repaint;   //ideally, RepaintNodeByLevel
+    TriggerOnControlsModified;
+
+    DoOnModifyPluginProperty(FEditingAction);
+    tmrReloadOIContent.Enabled := True;
+  finally
+    Dispose(MenuData);
+  end;
+end;
+
+
 procedure TfrClickerActions.MenuItemControl_EdgeRefGenericClick(Sender: TObject);
 var
   s: string;
@@ -3148,6 +3259,9 @@ begin
         Result := 0 //no action is selected
       else
         Result := CMainPropCounts[EditingActionType];
+
+      if CurrentlyEditingActionType = acPlugin then
+        Result := Result + FEditingAction.PluginOptions.CachedCount;
     end;
 
     else
@@ -3167,6 +3281,7 @@ const
   CNotUsedStr = '   [Not used]';
 var
   EditingActionType: Integer;
+  ListOfProperties: TStringList;
 begin
   case ACategoryIndex of
     CCategory_Common:
@@ -3178,7 +3293,24 @@ begin
       if EditingActionType = CClkUnsetAction then
         Result := '?'
       else
-        Result := CMainProperties[EditingActionType]^[APropertyIndex].Name;
+      begin
+        if (CurrentlyEditingActionType = acPlugin) and (APropertyIndex > CPlugin_FileName_PropIndex) then
+        begin
+          ListOfProperties := TStringList.Create;
+          try
+            ListOfProperties.Text := FEditingAction.PluginOptions.ListOfPropertiesAndTypes;
+            try
+              Result := ListOfProperties.Names[APropertyIndex - 1];
+            except
+              Result := 'bug on getting name';
+            end;
+          finally
+            ListOfProperties.Free;
+          end;
+        end
+        else
+          Result := CMainProperties[EditingActionType]^[APropertyIndex].Name;
+      end;
 
       if CurrentlyEditingActionType in [acFindControl, acFindSubControl] then
       begin
@@ -3208,7 +3340,7 @@ begin
               Result := Result + CNotUsedStr;
         end;
       end;
-    end;
+    end; //action specific
 
     else
       Result := '???';
@@ -3238,8 +3370,16 @@ begin
         PropDef.Name := '?'
       else
       begin
-        PropDef := CMainProperties[EditingActionType]^[APropertyIndex];
-        Result := CMainGetActionValueStrFunctions[CurrentlyEditingActionType](FEditingAction, APropertyIndex);
+        if (CurrentlyEditingActionType = acPlugin) and (APropertyIndex > CPlugin_FileName_PropIndex) then
+        begin
+          PropDef.EditorType := etTextWithArrow;  /////////////////////// should be decoded somehow from FEditingAction.PluginOptions.ListOfPropertiesAndTypes
+          Result := CMainGetActionValueStrFunctions[CurrentlyEditingActionType](FEditingAction, APropertyIndex);
+        end
+        else
+        begin
+          PropDef := CMainProperties[EditingActionType]^[APropertyIndex];
+          Result := CMainGetActionValueStrFunctions[CurrentlyEditingActionType](FEditingAction, APropertyIndex);
+        end;
       end;
     end;
 
@@ -3317,7 +3457,6 @@ begin
           Result := 0;
       end;
     end;
-
   end;   //case EditingActionType
 end;
 
@@ -3510,7 +3649,12 @@ begin
       else
       begin
         if AItemIndex = -1 then
-          Result := CMainProperties[EditingActionType]^[APropertyIndex].DataType
+        begin
+          if (CurrentlyEditingActionType = acPlugin) and (APropertyIndex > CPlugin_FileName_PropIndex) then
+            Result := 'String'
+          else
+            Result := CMainProperties[EditingActionType]^[APropertyIndex].DataType
+        end
         else
         begin
           case EditingActionType of
@@ -3615,6 +3759,13 @@ begin
 
               Ord(acSaveSetVarToFile):
                 ImageList := imglstSaveSetVarToFileProperties;
+
+              Ord(acPlugin):
+              begin
+                ImageList := imglstPluginProperties;
+                if APropertyIndex > CPlugin_FileName_PropIndex then
+                  ImageIndex := 1;
+              end;
             end;   //case
           end;
 
@@ -3918,7 +4069,14 @@ begin
       OldText := CMainGetActionValueStrFunctions[CurrentlyEditingActionType](FEditingAction, APropertyIndex);
       CMainSetActionValueStrFunctions[CurrentlyEditingActionType](FEditingAction, ANewText, APropertyIndex);
       TriggerOnControlsModified(ANewText <> OldText);
-    end;
+
+      if FEditingAction^.ActionOptions.Action = acPlugin then
+        if APropertyIndex = CPlugin_FileName_PropIndex then
+        begin
+          DoOnModifyPluginProperty(FEditingAction);
+          tmrReloadOIContent.Enabled := True;
+        end;
+    end; //Action specific
 
     else
       ;
@@ -4053,7 +4211,10 @@ begin
           Exit;
         end;
 
-      Result := CPropEnumCounts[CurrentlyEditingActionType]^[APropertyIndex];
+      if (CurrentlyEditingActionType = acPlugin) and (APropertyIndex > CPlugin_FileName_PropIndex) then
+        Result := 0
+      else
+        Result := CPropEnumCounts[CurrentlyEditingActionType]^[APropertyIndex];
     end;
 
     else
@@ -4107,7 +4268,10 @@ begin
           Exit;
         end;
 
-      AEnumItemName := CPropEnumStrings[CurrentlyEditingActionType]^[APropertyIndex]^[AEnumItemIndex];
+      if (CurrentlyEditingActionType = acPlugin) and (APropertyIndex > CPlugin_FileName_PropIndex) then
+        AEnumItemName := ''
+      else
+        AEnumItemName := CPropEnumStrings[CurrentlyEditingActionType]^[APropertyIndex]^[AEnumItemIndex];
     end;
 
     else
@@ -4473,7 +4637,12 @@ begin
   if ACategoryIndex = CCategory_ActionSpecific then
   begin
     if ANodeLevel = CPropertyLevel then
-      AHint := CGetPropertyHint_Actions[CurrentlyEditingActionType]^[APropertyIndex];
+    begin
+      if (CurrentlyEditingActionType = acPlugin) and (APropertyIndex > CPlugin_FileName_PropIndex) then
+        AHint := 'Plugin-specific property'
+      else
+        AHint := CGetPropertyHint_Actions[CurrentlyEditingActionType]^[APropertyIndex];
+    end;
 
     case CurrentlyEditingActionType of
       acExecApp:
@@ -4925,6 +5094,26 @@ begin
             FPmLocalTemplates.PopUp;
           end;
         end; //case APropertyIndex
+
+      if CurrentlyEditingActionType = acPlugin then
+      begin
+        case APropertyIndex of
+          CPlugin_FileName_PropIndex:
+          begin
+            FOIEditorMenu.Items.Clear;
+            AddMenuItemToPopupMenu(FOIEditorMenu, 'Browse...', MenuItem_BrowsePluginFileInPropertyListClick,
+                ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+
+            FOIEditorMenu.PopUp;
+          end;
+
+          else
+          begin
+            LoadListOfAvailableActionsForPlugin(APropertyIndex - 1);
+            FPmLocalTemplates.PopUp;
+          end;
+        end; //case APropertyIndex
+      end; //plugin
     end; //CCategory_ActionSpecific
   end;
 end;

@@ -65,6 +65,7 @@ const
   CPropCount_WindowOperations = 7;
   CPropCount_LoadSetVarFromFile = 2;
   CPropCount_SaveSetVarToFile = 2;
+  CPropCount_Plugin = 1;
 
   CMainPropCounts: array[0..Ord(High(TClkAction))] of Integer = (
     CPropCount_Click,
@@ -77,7 +78,8 @@ const
     CPropCount_SetVar,
     CPropCount_WindowOperations,
     CPropCount_LoadSetVarFromFile,
-    CPropCount_SaveSetVarToFile
+    CPropCount_SaveSetVarToFile,
+    CPropCount_Plugin
   );
 
   //Sub properties (counts)
@@ -187,6 +189,8 @@ const
 
   CLoadSetVarFromFile_FileName_PropIndex = 0;
   CLoadSetVarFromFile_SetVarActionName_PropIndex = 1;
+
+  CPlugin_FileName_PropIndex = 0;
 
   CDTString = 'String';
   CDTEnum = 'Enum';
@@ -367,9 +371,13 @@ const
     (Name: 'SetVarActionName'; EditorType: etTextWithArrow; DataType: CDTString)
   );
 
-  CSaveSetVarToFileProperties: array[0..CPropCount_LoadSetVarFromFile - 1] of TOIPropDef = (
+  CSaveSetVarToFileProperties: array[0..CPropCount_SaveSetVarToFile - 1] of TOIPropDef = (
     (Name: 'FileName'; EditorType: etTextWithArrow; DataType: CDTString),
     (Name: 'SetVarActionName'; EditorType: etTextWithArrow; DataType: CDTString)
+  );
+
+  CPluginProperties: array[0..CPropCount_Plugin - 1] of TOIPropDef = (
+    (Name: 'FileName'; EditorType: etTextWithArrow; DataType: CDTString)
   );
 
 type
@@ -412,7 +420,8 @@ const
     @CSetVarProperties,
     @CWindowOperationsProperties,
     @CLoadSetVarFromFileProperties,
-    @CSaveSetVarToFileProperties
+    @CSaveSetVarToFileProperties,
+    @CPluginProperties
   );
 
 
@@ -428,6 +437,7 @@ function GetActionValueStr_SetVar(AAction: PClkActionRec; APropertyIndex: Intege
 function GetActionValueStr_WindowOperations(AAction: PClkActionRec; APropertyIndex: Integer): string;
 function GetActionValueStr_LoadSetVarFromFile(AAction: PClkActionRec; APropertyIndex: Integer): string;
 function GetActionValueStr_SaveSetVarToFile(AAction: PClkActionRec; APropertyIndex: Integer): string;
+function GetActionValueStr_Plugin(AAction: PClkActionRec; APropertyIndex: Integer): string;
 
 {$IFDEF SubProperties}
   function GetActionValueStr_FindControl_MatchCriteria(AAction: PClkActionRec; APropertyIndex: Integer): string;
@@ -451,6 +461,7 @@ procedure SetActionValueStr_SetVar(AAction: PClkActionRec; NewValue: string; APr
 procedure SetActionValueStr_WindowOperations(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
 procedure SetActionValueStr_LoadSetVarFromFile(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
 procedure SetActionValueStr_SaveSetVarToFile(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
+procedure SetActionValueStr_Plugin(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
 
 {$IFDEF SubProperties}
   procedure SetActionValueStr_FindControl_MatchCriteria(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
@@ -474,7 +485,8 @@ const
     GetActionValueStr_SetVar,
     GetActionValueStr_WindowOperations,
     GetActionValueStr_LoadSetVarFromFile,
-    GetActionValueStr_SaveSetVarToFile
+    GetActionValueStr_SaveSetVarToFile,
+    GetActionValueStr_Plugin
   );
 
   CMainSetActionValueStrFunctions: TSetActionValueStrProcArr = (
@@ -488,7 +500,8 @@ const
     SetActionValueStr_SetVar,
     SetActionValueStr_WindowOperations,
     SetActionValueStr_LoadSetVarFromFile,
-    SetActionValueStr_SaveSetVarToFile
+    SetActionValueStr_SaveSetVarToFile,
+    SetActionValueStr_Plugin
   );
 
   CFindControlGetActionValueStrFunctions: TGetFindControlValueStrFuncArr = (
@@ -640,6 +653,10 @@ const
     0  //SetVarActionName
   );
 
+  CPluginCounts: array[0..CPropCount_Plugin - 1] of Integer = (
+    0  //FileName
+  );
+
 
   CPropEnumCounts: array[TClkAction] of PArrayOfEnumCounts = (
     @CClickEnumCounts,
@@ -652,7 +669,8 @@ const
     @CSetVarEnumCounts,
     @CWindowOperationsCounts,
     @CLoadSetVarFromFileCounts,
-    @CSaveSetVarToFileCounts
+    @CSaveSetVarToFileCounts,
+    @CPluginCounts
   );
 
 
@@ -811,6 +829,10 @@ const
     nil  //SetVarActionName
   );
 
+  CPluginStrings: array[0..CPropCount_Plugin - 1] of PArrayOfString = (
+    nil  //FileName
+  );
+
 
   CPropEnumStrings: array[TClkAction] of PArrayOfEnumStrings = (
     @CClickEnumStrings,
@@ -823,7 +845,8 @@ const
     @CSetVarEnumStrings,
     @CWindowOperationsStrings,
     @CLoadSetVarFromFileStrings,
-    @CSaveSetVarToFileStrings
+    @CSaveSetVarToFileStrings,
+    @CPluginStrings
   );
 
   {$IFDEF SubProperties}
@@ -948,6 +971,7 @@ function GetPropertyHint_LoadSetVarFromFile_FileName: string;
 function GetPropertyHint_LoadSetVarFromFile_SetVarActionName: string;
 function GetPropertyHint_SaveSetVarToFile_FileName: string;
 function GetPropertyHint_SaveSetVarToFile_SetVarActionName: string;
+function GetPropertyHint_Plugin_FileName: string;
 
 function GetPropertyHint_Sleep_Value: string;
 
@@ -1067,6 +1091,11 @@ const
     @GetPropertyHint_SaveSetVarToFile_SetVarActionName  // SetVarActionName
   );
 
+  CGetPropertyHint_Plugin: array[0..CPropCount_Plugin - 1] of TPropHintFunc = (
+    @GetPropertyHint_Plugin_FileName  // FileName,
+  );
+
+
 
   CGetPropertyHint_Actions: TPropHintFuncActionArr = (
     @CGetPropertyHint_Click,
@@ -1079,7 +1108,8 @@ const
     @CGetPropertyHint_SetVar,
     @CGetPropertyHint_WindowOperations,
     @CGetPropertyHint_LoadSetVarFromFile,
-    @CGetPropertyHint_SaveSetVarToFile
+    @CGetPropertyHint_SaveSetVarToFile,
+    @CGetPropertyHint_Plugin
   );
 
 
@@ -1410,6 +1440,30 @@ begin
       Result := 'unknown';
   end;
 end;
+
+
+function GetActionValueStr_Plugin(AAction: PClkActionRec; APropertyIndex: Integer): string;
+var
+  TempStringList: TStringList;
+begin
+  case APropertyIndex of
+    0: Result := AAction^.PluginOptions.FileName;
+    else
+    begin
+      Result := '';
+      TempStringList := TStringList.Create;
+      try
+        TempStringList.Text := AAction^.PluginOptions.ListOfPropertiesAndValues;
+
+        if APropertyIndex - 1 < TempStringList.Count then
+          Result := TempStringList.ValueFromIndex[APropertyIndex - 1];
+      finally
+        TempStringList.Free;
+      end;
+    end;
+  end;
+end;
+
 
 //
 function XClickPointReference_AsStringToValue(AXClickPointReferenceAsString: string): TXClickPointReference;
@@ -1879,6 +1933,31 @@ begin
 end;
 
 
+procedure SetActionValueStr_Plugin(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
+var
+  TempStringList: TStringList;
+begin
+  case APropertyIndex of
+    0: AAction^.PluginOptions.FileName := NewValue;
+    else
+    begin
+      TempStringList := TStringList.Create;
+      try
+        TempStringList.Text := AAction^.PluginOptions.ListOfPropertiesAndValues;
+
+        if APropertyIndex - 1 < TempStringList.Count then
+        begin
+          TempStringList.ValueFromIndex[APropertyIndex - 1] := NewValue;
+          AAction^.PluginOptions.ListOfPropertiesAndValues := TempStringList.Text;
+        end;
+      finally
+        TempStringList.Free;
+      end;
+    end;
+  end;
+end;
+
+
 //
 function GetPropertyHintNoHint: string;
 begin
@@ -2304,6 +2383,14 @@ function GetPropertyHint_SaveSetVarToFile_SetVarActionName: string;
 begin
   Result := 'Name of the SetVar action, in the current action template, used for specifying the vars to be saved to file.' + #13#10 +
             'Only the left column of SetVar action is required.';
+end;
+
+
+function GetPropertyHint_Plugin_FileName: string;
+begin
+  Result := 'Filename of the dll.' + #13#10 +
+            'When changing value of this property, the dll is loaded to get its list of custom properties.' + #13#10 +
+            'That list is also loaded on template loading.';
 end;
 
 

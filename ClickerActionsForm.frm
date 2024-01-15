@@ -95,7 +95,7 @@ object frmClickerActions: TfrmClickerActions
         TabOrder = 2
         object memVariables: TMemo
           Left = 10
-          Height = 380
+          Height = 368
           Top = 0
           Width = 203
           Anchors = [akTop, akLeft, akRight, akBottom]

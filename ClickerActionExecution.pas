@@ -89,6 +89,7 @@ type
     FOnSaveStringListToFile: TOnSaveTemplateToFile;
     FOnBackupVars: TOnBackupVars;
     //FOnRestoreVars: TOnRestoreVars;
+    FOnExecuteActionByName: TOnExecuteActionByName;
 
     function GetActionVarValue(VarName: string): string;
     procedure SetActionVarValue(VarName, VarValue: string);
@@ -100,6 +101,8 @@ type
     function GetActionProperties(AActionName: string): string;
 
     procedure AddToLog(s: string);
+    function DoOnExecuteActionByName(AActionName: string): Boolean;
+    procedure DoOnSetVar(AVarName, AVarValue: string);
 
     procedure SetLastActionStatus(AActionResult, AAlowedToFail: Boolean);
     function CheckManualStopCondition: Boolean;
@@ -148,6 +151,7 @@ type
     function ExecuteWindowOperationsAction(var AWindowOperationsOptions: TClkWindowOperationsOptions): Boolean;
     function ExecuteLoadSetVarFromFileAction(var ALoadSetVarFromFileOptions: TClkLoadSetVarFromFileOptions): Boolean;
     function ExecuteSaveSetVarToFileAction(var ASaveSetVarToFileOptions: TClkSaveSetVarToFileOptions): Boolean;
+    function ExecutePluginAction(var APluginOptions: TClkPluginOptions; AAllActions: PClkActionsRecArr; AListOfAllVars: TStringList; AResolvedPluginPath: string): Boolean;
 
     function ExecuteClickActionAsString(AListOfClickOptionsParams: TStrings): Boolean;
     function ExecuteExecAppActionAsString(AListOfExecAppOptionsParams: TStrings): Boolean;
@@ -159,6 +163,7 @@ type
     function ExecuteWindowOperationsActionAsString(AListOfWindowOperationsOptionsParams: TStrings): Boolean;
     function ExecuteLoadSetVarFromFileActionAsString(AListOfSetVarOptionsParams: TStrings): Boolean;
     function ExecuteSaveSetVarToFileActionAsString(AListOfSetVarOptionsParams: TStrings): Boolean;
+    function ExecutePluginActionAsString(APluginOptionsParams: TStrings): Boolean;
 
     //using pointers for the following properties, because the values they are pointing to, can be updated later, not when this class is created
     property ClickerVars: TStringList write FClickerVars;  //not created here in this class, used from outside
@@ -198,6 +203,7 @@ type
     property OnSaveStringListToFile: TOnSaveTemplateToFile write FOnSaveStringListToFile;
     property OnBackupVars: TOnBackupVars write FOnBackupVars;
     //property OnRestoreVars: TOnRestoreVars write FOnRestoreVars;
+    property OnExecuteActionByName: TOnExecuteActionByName write FOnExecuteActionByName;
   end;
 
 
@@ -211,7 +217,8 @@ uses
   {$ELSE}
     Process,
   {$ENDIF}
-  ControlInteraction, IdHTTP, ClickerPrimitivesCompositor, ClickerActionProperties;
+  ControlInteraction, IdHTTP, ClickerPrimitivesCompositor, ClickerActionProperties,
+  ClickerActionPluginLoader, ClickerActionPlugins;
 
 
 constructor TActionExecution.Create;
@@ -250,6 +257,7 @@ begin
   FOnSaveStringListToFile := nil;
   FOnBackupVars := nil;
   //FOnRestoreVars := nil;
+  FOnExecuteActionByName := nil;
 end;
 
 
@@ -504,6 +512,9 @@ begin
 
     acSaveSetVarToFile:
       Result := GetSaveSetVarToFileActionProperties(Action.SaveSetVarToFileOptions);
+
+    acPlugin:
+      Result := GetPluginActionProperties(Action.PluginOptions);
   end;
 end;
 
@@ -727,6 +738,21 @@ end;
 //  else
 //    FOnRestoreVars(AAllVars);
 //end;
+
+
+function TActionExecution.DoOnExecuteActionByName(AActionName: string): Boolean;
+begin
+  if not Assigned(FOnExecuteActionByName) then
+    raise Exception.Create('OnExecuteActionByName not assigned.');
+
+  Result := FOnExecuteActionByName(AActionName);
+end;
+
+
+procedure TActionExecution.DoOnSetVar(AVarName, AVarValue: string);
+begin
+  SetActionVarValue(AVarName, AVarValue);
+end;
 
 
 procedure TActionExecution.ExecuteClickAction(var AClickOptions: TClkClickOptions);
@@ -1227,7 +1253,7 @@ function TActionExecution.ExecuteFindControlAction(var AFindControlOptions: TClk
     end; //case
   end;
 
-  procedure SetAllControl_Handles_FromResultedControlArr(var AResultedControlArr: TCompRecArr);
+  procedure SetAllControl_Handles_FromResultedControlArr(var AResultedControlArr: TCompRecArr; AMatchSource, ADetailedMatchSource: string);
   var
     i: Integer;
     s, xs, ys: string;
@@ -1246,6 +1272,9 @@ function TActionExecution.ExecuteFindControlAction(var AFindControlOptions: TClk
     SetActionVarValue('$AllControl_Handles$', s);
     SetActionVarValue('$AllControl_XOffsets$', xs);
     SetActionVarValue('$AllControl_YOffsets$', ys);
+
+    SetActionVarValue('$AllControl_MatchSource$', AMatchSource);
+    SetActionVarValue('$AllControl_DetailedMatchSource$', ADetailedMatchSource);
   end;
 
   procedure IgnoredColorsStrToArr(AIgnoredColorsStr: string; var AIgnoredColorsArr: TColorArr);
@@ -1274,11 +1303,12 @@ function TActionExecution.ExecuteFindControlAction(var AFindControlOptions: TClk
   end;
 
 var
-  i, j, k, n: Integer;
+  i, j, k, n, ii: Integer;
   ListOfBitmapFiles, ListOfPrimitiveFiles: TStringList;
   ResultedControl: TCompRec;
   ResultedControlArr, PartialResultedControlArr: TCompRecArr;
   ResultedControlArr_Text, ResultedControlArr_Bmp, ResultedControlArr_Pmtv: TCompRecArr;
+  MatchSource, DetailedMatchSource: string;
   InitialTickCount, Timeout: QWord;
   FindControlInputData, WorkFindControlInputData: TFindControlInputData;
   StopAllActionsOnDemandAddr: Pointer;
@@ -1539,7 +1569,7 @@ begin
           frClickerActions.DebuggingInfoAvailable := True;
 
           if AFindControlOptions.GetAllControls then
-            SetAllControl_Handles_FromResultedControlArr(ResultedControlArr);
+            SetAllControl_Handles_FromResultedControlArr(ResultedControlArr, '', '');
 
           Exit;  //to prevent further searching for bitmap files
         end;
@@ -1554,7 +1584,7 @@ begin
 
         if AFindControlOptions.GetAllControls then
         begin
-          SetAllControl_Handles_FromResultedControlArr(ResultedControlArr);
+          SetAllControl_Handles_FromResultedControlArr(ResultedControlArr, '', '');
           UpdateActionVarValuesFromResultedControlArr(ResultedControlArr);
         end;
       end;
@@ -1569,6 +1599,8 @@ begin
   SetLength(ResultedControlArr_Bmp, 0);
   SetLength(ResultedControlArr_Pmtv, 0);
 
+  MatchSource := '';
+  DetailedMatchSource := '';
   try
     if AFindControlOptions.MatchCriteria.WillMatchBitmapText then
     begin
@@ -1663,11 +1695,19 @@ begin
               //end;
 
               CopyPartialResultsToFinalResult(ResultedControlArr_Text, PartialResultedControlArr);
+
               Result := True;
               AddToLog('Found text: "' + AFindControlOptions.MatchText + '" in ' + IntToStr(GetTickCount64 - InitialTickCount) + 'ms.');
 
               if AFindControlOptions.GetAllControls then
+              begin
                 AddToLog('Result count: ' + IntToStr(Length(PartialResultedControlArr)));
+                for ii := 0 to Length(PartialResultedControlArr) - 1 do
+                begin
+                  MatchSource := MatchSource + 'txt[' + IntToStr(j) + ']' + #4#5;
+                  DetailedMatchSource := DetailedMatchSource + 'txt[' + IntToStr(j) + '][0]' + #4#5;  //hardcoded to [0] as no other subfeature is implemented
+                end;
+              end;
 
               if not AFindControlOptions.GetAllControls then
                 Exit;  //to prevent further searching for bitmap files, primitives or other text profiles
@@ -1761,6 +1801,11 @@ begin
                 //UpdateActionVarValuesFromResultedControlArr(ResultedControlArr);
 
                 AddToLog('Result count: ' + IntToStr(Length(PartialResultedControlArr)));
+                for ii := 0 to Length(PartialResultedControlArr) - 1 do
+                begin
+                  MatchSource := MatchSource + 'bmp[' + IntToStr(i) + ']' + #4#5;
+                  DetailedMatchSource := DetailedMatchSource + 'bmp[' + IntToStr(i) + '][0]' + #4#5;  //hardcoded to [0] as no other subfeature is implemented
+                end;
               end
               else
                 Exit;  //to prevent further searching for other bitmap files
@@ -1874,7 +1919,14 @@ begin
                   AddToLog('Matched by primitives file: "' + ExtractFileName(ListOfPrimitiveFiles.Strings[i]) + '"  at order ' + IntToStr(k) + '.  Bmp w/h: ' + IntToStr(FindControlInputData.BitmapToSearchFor.Width) + ' / ' + IntToStr(FindControlInputData.BitmapToSearchFor.Height) + '  Result count: ' + IntToStr(Length(ResultedControlArr)));
 
                   if AFindControlOptions.GetAllControls then
+                  begin
                     AddToLog('Result count: ' + IntToStr(Length(PartialResultedControlArr)));
+                    for ii := 0 to Length(PartialResultedControlArr) - 1 do
+                    begin
+                      MatchSource := MatchSource + 'pmtv[' + IntToStr(i * Length(TempOrders) + k) + ']' + #4#5;
+                      DetailedMatchSource := DetailedMatchSource + 'pmtv[' + IntToStr(i) + '][' + IntToStr(k) + ']' + #4#5;
+                    end;
+                  end;
 
                   if not AFindControlOptions.GetAllControls then
                   begin
@@ -1925,7 +1977,7 @@ begin
 
         if AFindControlOptions.GetAllControls then
         begin
-          SetAllControl_Handles_FromResultedControlArr(ResultedControlArr);
+          SetAllControl_Handles_FromResultedControlArr(ResultedControlArr, MatchSource, DetailedMatchSource);
           UpdateActionVarValuesFromResultedControlArr(ResultedControlArr);
         end;
       end;
@@ -2612,6 +2664,39 @@ begin
 end;
 
 
+function TActionExecution.ExecutePluginAction(var APluginOptions: TClkPluginOptions; AAllActions: PClkActionsRecArr; AListOfAllVars: TStringList; AResolvedPluginPath: string): Boolean;
+var
+  ActionPlugin: TActionPlugin;
+  tk: Int64;
+begin
+  Result := False;
+
+  AddToLog('Executing plugin on a template with ' + IntToStr(Length(AAllActions^)) + ' action(s)...');
+
+  tk := GetTickCount64;
+  try
+    if not ActionPlugin.LoadToExecute(AResolvedPluginPath, AddToLog, DoOnExecuteActionByName, DoOnSetVar, AAllActions, AListOfAllVars) then
+    begin
+      AddToLog(ActionPlugin.Err);
+      Exit;
+    end;
+
+    try
+      Result := ActionPlugin.ExecutePlugin(APluginOptions.ListOfPropertiesAndValues);
+      if not Result then
+        AddToLog('Plugin execution failed with: ' + GetActionVarValue(CActionPlugin_ExecutionResultErrorVar))
+      else
+        AddToLog('Plugin execution result placed in : "' + CActionPlugin_ExecutionResultVar + '" variable.');
+    finally
+      if not ActionPlugin.Unload then
+        AddToLog(ActionPlugin.Err);
+    end;
+  finally
+    AddToLog('Plugin executed in ' + IntToStr(GetTickCount64 - tk) + 'ms.  Total action count: ' + IntToStr(Length(AAllActions^)) + ' action(s)...');
+  end;
+end;
+
+
 function TActionExecution.ExecuteClickActionAsString(AListOfClickOptionsParams: TStrings): Boolean;
 var
   ClickOptions: TClkClickOptions;
@@ -3105,6 +3190,35 @@ begin
     SaveSetVarToFileOptions.SetVarActionName := AListOfSetVarOptionsParams.Values['SetVarActionName'];
 
     Result := ExecuteSaveSetVarToFileAction(SaveSetVarToFileOptions);
+  finally
+    SetLastActionStatus(Result, False);
+  end;
+end;
+
+
+function TActionExecution.ExecutePluginActionAsString(APluginOptionsParams: TStrings): Boolean;
+var
+  PluginOptions: TClkPluginOptions;
+  TempAllActions: TClkActionsRecArr;
+  TempListOfAllVars: TStringList;
+begin
+  Result := False;
+  SetActionVarValue('$ExecAction_Err$', '');
+  try
+    PluginOptions.FileName := APluginOptionsParams.Values['FileName'];
+    PluginOptions.ListOfPropertiesAndValues := FastReplace_45ToReturn(APluginOptionsParams.Values['ListOfPropertiesAndValues']);
+
+    ///////////////////////// ToDo: TActionExecution should have access to AllActions, ListOfAllVars and ResolvedPluginPath
+    SetLength(TempAllActions, 1);
+    TempAllActions[0].ActionOptions.Action := acFindSubControl;
+    TempAllActions[0].ActionOptions.ActionName := 'Some action';
+
+    TempListOfAllVars := TStringList.Create;
+    try
+      Result := ExecutePluginAction(PluginOptions, @TempAllActions, TempListOfAllVars, PluginOptions.FileName);
+    finally
+      TempListOfAllVars.Free;
+    end;
   finally
     SetLastActionStatus(Result, False);
   end;

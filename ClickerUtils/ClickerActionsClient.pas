@@ -197,7 +197,8 @@ implementation
 
 
 uses
-  IdHTTP, Forms, ClickerTemplates, InMemFileSystem, ClickerActionProperties;
+  IdHTTP, Forms, ClickerTemplates, InMemFileSystem, ClickerActionProperties,
+  ClickerExtraUtils;
 
 
 {TClientThread}

@@ -62,6 +62,7 @@ type
     constructor Create; override;
   end;
 
+
   TOnReLoadSettings = procedure of object;
   TOnRecordComponent = procedure(ACompHandle: THandle; ATreeContentStream: TMemoryStream) of object;
   TOnGetCurrentlyRecordedScreenShotImage = procedure(ABmp: TBitmap) of object;
@@ -378,7 +379,8 @@ implementation
 
 
 uses
-  BitmapProcessing, ClickerActionsClient, MouseStuff, ClickerPrimitives;
+  BitmapProcessing, ClickerActionsClient, MouseStuff, ClickerPrimitives,
+  ClickerExtraUtils;
 
 
 const
@@ -876,6 +878,20 @@ begin
   memVariables.Lines.Add('$AppDir$=' + ExtractFileDir(ParamStr(0)));
   memVariables.Lines.Add('$TemplateDir$=' + FFullTemplatesDir);
   memVariables.Lines.Add('$SelfTemplateDir$=' + frClickerActionsArrMain.FileName);   //frClickerActionsArrMain.FileName is empty here, because no template is being executed at this point
+
+  {$IFDEF CPU64}
+    memVariables.Lines.Add('$AppBitness$=x86_64');
+  {$ELSE}
+    memVariables.Lines.Add('$AppBitness$=i386');
+  {$ENDIF}
+
+  {$IFDEF Windows}
+    {$IFDEF CPU64}
+      memVariables.Lines.Add('$OSBitness$=win64');
+    {$ELSE}
+      memVariables.Lines.Add('$OSBitness$=win32');
+    {$ENDIF}
+  {$ENDIF}
 
   frClickerActionsArrExperiment1.SetVariables(memVariables.Lines);
   frClickerActionsArrExperiment2.SetVariables(memVariables.Lines);
@@ -2862,6 +2878,7 @@ begin
   except
   end;
 end;
+
 
 procedure TfrmClickerActions.tmrDelayedShowTimer(Sender: TObject);
 begin

@@ -42,6 +42,7 @@ function GetSetVarActionProperties(ASetVarOptions: TClkSetVarOptions): string;
 function GetWindowOperationsActionProperties(AWindowOperationsOptions: TClkWindowOperationsOptions): string;
 function GetLoadSetVarFromFileActionProperties(ALoadSetVarFromFileOptions: TClkLoadSetVarFromFileOptions): string;
 function GetSaveSetVarToFileActionProperties(ASaveSetVarToFileOptions: TClkSaveSetVarToFileOptions): string;
+function GetPluginActionProperties(PluginOptions: TClkPluginOptions): string;
 
 
 implementation
@@ -228,6 +229,12 @@ begin
             'SetVarActionName' + '=' + ASaveSetVarToFileOptions.SetVarActionName;
 end;
 
+
+function GetPluginActionProperties(PluginOptions: TClkPluginOptions): string;
+begin
+  Result := 'FileName' + '=' + PluginOptions.FileName + '&' +
+            'ListOfPropertiesAndValues' + '=' + FastReplace_ReturnTo45(PluginOptions.ListOfPropertiesAndValues);
+end;
 
 end.
 
