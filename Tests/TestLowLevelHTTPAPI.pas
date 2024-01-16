@@ -37,6 +37,8 @@ type
   TTestLowLevelHTTPAPI = class(TTestHTTPAPI)
   private
     procedure Test_FindSubControl_MultiFind(AFnm, AExpectedXOffsets, AExpectedYOffsets: string);
+    function GetPluginPath: string;
+    procedure Test_ExecutePlugin(APluginVarsAndValues, AExpectedErr: string);
   public
     constructor Create; override;
   published
@@ -91,6 +93,14 @@ type
     procedure Test_ExecuteSetVar_HappyFlow_NoEval;
     procedure Test_ExecuteSetVar_HappyFlow_NoEvalWithVarName;
     procedure Test_ExecuteSetVar_HappyFlow_EvalBefore;
+
+    procedure Test_ExecutePlugin_EmptyFileName;
+    procedure Test_ExecutePlugin_BadPlugin_ValidExe;
+    procedure Test_ExecutePlugin_BadPlugin_InvalidExe;
+    procedure Test_ExecutePlugin_EmptyListOfVars_EmptyTemplate;
+    procedure Test_ExecutePlugin_EmptyListOfVars_WithDummyActions;
+    procedure Test_ExecutePlugin_ValidVarsSetToNonExistentActions_EmptyTemplate;
+    procedure Test_ExecutePlugin_ValidVarsSetToNonExistentActions_WithDummyActions;
   end;
 
 
@@ -121,6 +131,17 @@ constructor TTestLowLevelHTTPAPI.Create;
 begin
   inherited Create;
   TestServerAddress := CTestServerAddress;
+end;
+
+
+function TTestLowLevelHTTPAPI.GetPluginPath: string;
+var
+  AppBitness: string;
+  OSBitness: string;
+begin
+  AppBitness := GetVarValueFromServer('$AppBitness$');
+  OSBitness := GetVarValueFromServer('$OSBitness$');
+  Result := '$AppDir$\..\UIClickerFindWindowsPlugin\lib\' + AppBitness + '-' + OSBitness + '\UIClickerFindWindows.dll';
 end;
 
 
@@ -881,6 +902,113 @@ begin
 
   ExpectSuccessfulAction(Response);
   Expect(GetVarValueFromServer(CVarName)).ToBe(CVarNewValue);
+end;
+
+
+const
+  CPluginVarsAndValues = 'FindSubControlTopLeftCorner=aFindSubControlBotLeftCorner=bFindSubControlTopRightCorner=cFindSubControlBotRightCorner=dFindSubControlLeftEdge=eFindSubControlTopEdge=fFindSubControlRightEdge=gFindSubControlBottomEdge=h';
+  CExpectedErr_RunOnEmptyTemplate = 'This plugin does not run on an empty template.';
+  CExpectedErr_NotAllRequiredActions = 'Not all the required FindSubControl actions are found in the current template.  PluginSettings: ';
+
+procedure TTestLowLevelHTTPAPI.Test_ExecutePlugin_EmptyFileName;
+const
+  CVarName = '$ExecAction_Err$';
+  CVarNewValue = 'Plugin not found at: "".';
+  CVarInitValue = 'dummy';
+var
+  PluginOptions: TClkPluginOptions;
+begin
+  Expect(SetVariable(TestServerAddress, CVarName, CVarInitValue, 0)).ToBe(CREResp_Done);
+  Expect(GetVarValueFromServer(CVarName)).ToBe(CVarInitValue);
+  GeneratePluginOptions(PluginOptions, '', '');
+
+  ExecutePluginAction(TestServerAddress, PluginOptions);
+  Expect(GetVarValueFromServer(CVarName)).ToBe(CVarNewValue);
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecutePlugin_BadPlugin_ValidExe;
+const
+  CVarName = '$ExecAction_Err$';
+  CVarNewValue = 'Cannot get address of ExecutePlugin.';  //Plugin not found at: "$AppDir$\UIClicker.exe".
+  CVarInitValue = 'dummy';
+var
+  PluginOptions: TClkPluginOptions;
+begin
+  Expect(SetVariable(TestServerAddress, CVarName, CVarInitValue, 0)).ToBe(CREResp_Done);
+  Expect(GetVarValueFromServer(CVarName)).ToBe(CVarInitValue);
+  GeneratePluginOptions(PluginOptions, '$AppDir$\UIClicker.exe', '');
+
+  ExecutePluginAction(TestServerAddress, PluginOptions);
+  Expect(GetVarValueFromServer(CVarName)).ToBe(CVarNewValue);
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecutePlugin_BadPlugin_InvalidExe;
+const
+  CVarName = '$ExecAction_Err$';
+  CVarNewValue = 'Invalid plugin at: ';
+  CVarInitValue = 'dummy';
+var
+  PluginOptions: TClkPluginOptions;
+  IniPath: string;
+begin
+  Expect(SetVariable(TestServerAddress, CVarName, CVarInitValue, 0)).ToBe(CREResp_Done);
+  Expect(GetVarValueFromServer(CVarName)).ToBe(CVarInitValue);
+  GeneratePluginOptions(PluginOptions, '$AppDir$\Clicker.ini', '');
+
+  IniPath := ExtractFilePath(ExtractFileDir(ParamStr(0))) + 'Clicker.ini';
+  ExecutePluginAction(TestServerAddress, PluginOptions);
+  Expect(GetVarValueFromServer(CVarName)).ToBe(CVarNewValue + '"' + IniPath + '".');
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecutePlugin(APluginVarsAndValues, AExpectedErr: string);
+const
+  CVarName = '$PluginError$';
+  CVarName2 = '$ExecAction_Err$';
+  CVarInitValue = '';
+var
+  PluginOptions: TClkPluginOptions;
+begin
+  Expect(SetVariable(TestServerAddress, CVarName, CVarInitValue, 0)).ToBe(CREResp_Done);
+  Expect(GetVarValueFromServer(CVarName)).ToBe(CVarInitValue);
+
+  GeneratePluginOptions(PluginOptions, GetPluginPath, '');
+  ExecutePluginAction(TestServerAddress, PluginOptions);
+
+  Expect(FastReplace_ReturnTo45(FastReplace_68ToReturn(GetVarValueFromServer(CVarName)))).ToBe(AExpectedErr);
+  Expect(GetVarValueFromServer(CVarName2)).ToBe('');
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecutePlugin_EmptyListOfVars_EmptyTemplate;
+begin
+  SendEmptyTemplateToServerThenLoad;
+  Test_ExecutePlugin('', CExpectedErr_RunOnEmptyTemplate);
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecutePlugin_EmptyListOfVars_WithDummyActions;
+begin
+  CreateTestTemplateInMem;
+  SendTemplateFromInMemToServerThenLoad(CTestTemplateFileName);
+  Test_ExecutePlugin('', CExpectedErr_NotAllRequiredActions);
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecutePlugin_ValidVarsSetToNonExistentActions_EmptyTemplate;
+begin
+  SendEmptyTemplateToServerThenLoad;
+  Test_ExecutePlugin(CPluginVarsAndValues, CExpectedErr_RunOnEmptyTemplate);
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecutePlugin_ValidVarsSetToNonExistentActions_WithDummyActions;
+begin
+  CreateTestTemplateInMem;
+  SendTemplateFromInMemToServerThenLoad(CTestTemplateFileName);
+  Test_ExecutePlugin(CPluginVarsAndValues, CExpectedErr_NotAllRequiredActions);
 end;
 
 

@@ -424,7 +424,9 @@ type
     procedure HandleOnGetListOfAvailableSetVarActions(AListOfSetVarActions: TStringList);
     procedure HandleOnGetListOfAvailableActions(AListOfSetVarActions: TStringList);
     function HandleOnExecuteActionByName(AActionName: string): Boolean;
+    function HandleOnGetAllActions: PClkActionsRecArr;
     procedure HandleOnModifyPluginProperty(AAction: PClkActionRec);
+    function HandleOnResolveTemplatePath(APath: string; ACustomSelfTemplateDir: string = ''; ACustomAppDir: string = ''): string;
 
     function GetInMemFS: TInMemFileSystem;
     procedure SetInMemFS(Value: TInMemFileSystem);
@@ -1035,6 +1037,8 @@ begin
   FActionExecution.OnSaveStringListToFile := HandleOnSaveStringListToFile;
   FActionExecution.OnBackupVars := HandleOnBackupVars;
   FActionExecution.OnExecuteActionByName := HandleOnExecuteActionByName;
+  FActionExecution.OnGetAllActions := HandleOnGetAllActions;
+  FActionExecution.OnResolveTemplatePath := HandleOnResolveTemplatePath;
 
   FCmdConsoleHistory := TStringList.Create;
   FOnExecuteRemoteActionAtIndex := nil;
@@ -1545,6 +1549,18 @@ begin
   end;
 
   Result := ExecuteActionAtIndex(ActionIndex);
+end;
+
+
+function TfrClickerActionsArr.HandleOnGetAllActions: PClkActionsRecArr;
+begin
+  Result := @FClkActions;
+end;
+
+
+function TfrClickerActionsArr.HandleOnResolveTemplatePath(APath: string; ACustomSelfTemplateDir: string = ''; ACustomAppDir: string = ''): string;
+begin
+  Result := ResolveTemplatePath(APath, ACustomSelfTemplateDir, ACustomAppDir);
 end;
 
 
@@ -2793,10 +2809,19 @@ var
   ActionPlugin: TActionPlugin;
   ResolvedPluginPath: string;
   ListOfProperties, ListOfPropertiesAndValue_Work: TStringList;
+  LoadingResult: Boolean;
 begin
   ResolvedPluginPath := ResolveTemplatePath(AAction.PluginOptions.FileName);
 
-  if not ActionPlugin.LoadToGetProperties(ResolvedPluginPath) then
+  LoadingResult := False;
+  try
+    LoadingResult := ActionPlugin.LoadToGetProperties(ResolvedPluginPath)
+  except
+    on E: Exception do
+      AddToLog('Exception on loading plugin for getting properties: "' + E.Message + '". ' + SysErrorMessage(GetLastOSError));
+  end;
+
+  if not LoadingResult then
   begin
     AddToLog('Error loading plugin on getting properties: ' + ActionPlugin.Err);
     Exit;

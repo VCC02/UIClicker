@@ -2514,6 +2514,13 @@ begin
     Exit;
   end;
 
+  if ASyncObj.FCmd = '/' + CRECmd_ExecutePlugin then
+  begin
+    Result := CREResp_RemoteExecResponseVar + '=' + IntToStr(Ord(frClickerActionsArrMain.ActionExecution.ExecutePluginActionAsString(ASyncObj.FParams)));
+    Result := Result + #8#7 + FastReplace_ReturnTo87(frClickerActionsArrMain.frClickerActions.vallstVariables.Strings.Text);
+    Exit;
+  end;
+
   Result := 'unknown command';  //default if no command is recognized
   frClickerActionsArrMain.AddToLog(Result + ': ' + ASyncObj.FCmd);
   ASyncObj.FErrCode := 2;

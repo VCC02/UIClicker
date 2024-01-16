@@ -117,6 +117,7 @@ const
   CRECmd_ExecuteWindowOperationsAction = 'ExecuteWindowOperationsAction';
   CRECmd_ExecuteLoadSetVarFromFile = 'ExecuteLoadSetVarFromFile';
   CRECmd_ExecuteSaveSetVarToFile = 'ExecuteSaveSetVarToFile';
+  CRECmd_ExecutePlugin = 'ExecutePlugin';
 
   CREResp_ConnectionOK = 'Connection ok';
   CREResp_RemoteExecResponseVar = '$RemoteExecResponse$';
@@ -183,6 +184,7 @@ function ExecuteSetVarAction(ARemoteAddress: string; ASetVarOptions: TClkSetVarO
 function ExecuteWindowOperationsAction(ARemoteAddress: string; AWindowOperationsOptions: TClkWindowOperationsOptions; ACallAppProcMsg: Boolean = True): string;
 function ExecuteLoadSetVarFromFileAction(ARemoteAddress: string; ALoadSetVarFromFileOptions: TClkLoadSetVarFromFileOptions; ACallAppProcMsg: Boolean = True): string;
 function ExecuteSaveSetVarToFileAction(ARemoteAddress: string; ASaveSetVarToFileOptions: TClkSaveSetVarToFileOptions; ACallAppProcMsg: Boolean = True): string;
+function ExecutePluginAction(ARemoteAddress: string; APluginOptions: TClkPluginOptions; ACallAppProcMsg: Boolean = True): string;
 
 procedure GetListOfUsedFilesFromLoadedTemplate(var AClkActions: TClkActionsRecArr; AListOfFiles: TStringList);
 function SendMissingFilesToServer(ARemoteAddress: string; var AClkActions: TClkActionsRecArr): string;
@@ -741,6 +743,16 @@ begin
   Result := SendTextRequestToServer(ARemoteAddress + CRECmd_ExecuteSaveSetVarToFile + '?' +
                                     CREParam_StackLevel + '=0' + '&' +   //use the main editor
                                     GetSaveSetVarToFileActionProperties(ASaveSetVarToFileOptions),
+                                    ACallAppProcMsg
+                                    );
+end;
+
+
+function ExecutePluginAction(ARemoteAddress: string; APluginOptions: TClkPluginOptions; ACallAppProcMsg: Boolean = True): string;
+begin
+  Result := SendTextRequestToServer(ARemoteAddress + CRECmd_ExecutePlugin + '?' +
+                                    CREParam_StackLevel + '=0' + '&' +   //use the main editor
+                                    GetPluginActionProperties(APluginOptions),
                                     ACallAppProcMsg
                                     );
 end;

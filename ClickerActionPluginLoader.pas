@@ -209,6 +209,12 @@ begin
   AllActions := AAllActions;
   AllVars := AAllVars;
 
+  if not FileExists(Path) then
+  begin
+    Err := 'Plugin not found at: "' + Path + '".';
+    Exit;
+  end;
+
   PluginHandle := LoadLibrary(Path);
   Loaded := PluginHandle > 0;
 
@@ -219,13 +225,31 @@ begin
     Func.ExecutePluginFunc := GetProcedureAddress(PluginHandle, 'ExecutePlugin');
     if @Func.ExecutePluginFunc = nil then
     begin
-      Err := 'Cannot get address of ExecutePlugin';
+      Err := 'Cannot get address of ExecutePlugin.';
+      Unload;
+      Exit;
+    end;
+
+    Func.GetAPIVersionFunc := GetProcedureAddress(PluginHandle, 'GetAPIVersion');
+    if @Func.GetAPIVersionFunc = nil then
+    begin
+      Err := 'Cannot get address of GetAPIVersion.';
+      Unload;
+      Exit;
+    end;
+
+    if GetAPIVersion <> CActionPlugin_APIVersion then
+    begin
+      Err := 'The plugin''s API vesion (' + IntToStr(GetAPIVersion) + ') does not match UIClicker''s API version (' + IntToStr(CActionPlugin_APIVersion) + ').';
       Unload;
       Exit;
     end;
   end
   else
-    Err := GetLoadErrorStr + '   ' + SysErrorMessage(GetLastOSError);
+  begin
+    Err := 'Invalid plugin at: "' + Path + '".';
+    Exit;
+  end;
 
   Result := True;
 end;
@@ -254,9 +278,27 @@ begin
       Unload;
       Exit;
     end;
+
+    Func.GetAPIVersionFunc := GetProcedureAddress(PluginHandle, 'GetAPIVersion');
+    if @Func.GetAPIVersionFunc = nil then
+    begin
+      Err := 'Cannot get address of GetAPIVersion.';
+      Unload;
+      Exit;
+    end;
+
+    if GetAPIVersion <> CActionPlugin_APIVersion then
+    begin
+      Err := 'The plugin''s API vesion (' + IntToStr(GetAPIVersion) + ') does not match UIClicker''s API version (' + IntToStr(CActionPlugin_APIVersion) + ').';
+      Unload;
+      Exit;
+    end;
   end
   else
-    Err := GetLoadErrorStr + '   ' + SysErrorMessage(GetLastOSError);
+  begin
+    Err := 'Invalid plugin at: "' + Path + '".';
+    Exit;
+  end;
 
   Result := True;
 end;
@@ -274,7 +316,7 @@ begin
       Exit;
     end
     else
-      Err := '';
+      ;
   end;
 
   Result := True;

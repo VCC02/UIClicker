@@ -1,4 +1,4 @@
-#   Copyright (C) 2022-2023 VCC
+#   Copyright (C) 2022-2024 VCC
 #   creation date: Jul 2022
 #   initial release date: 26 Jul 2022
 #
@@ -179,6 +179,12 @@ class TDllFunctionAddresses:
         AddSaveSetVarToFileActionToTemplateFuncRes = AddSaveSetVarToFileActionToTemplateProto(("AddSaveSetVarToFileActionToTemplate", self.DllHandle), AddSaveSetVarToFileActionToTemplateParams)
         return AddSaveSetVarToFileActionToTemplateFuncRes
     
+    def GetAddPluginActionToTemplate(self):
+        AddPluginActionToTemplateProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, LPCWSTR, LONG, BOOLEAN, LPCWSTR, PPluginOptions)
+        AddPluginActionToTemplateParams = (1, "ATemplateFileName", 0), (1, "AActionName", 0), (1, "AActionTimeout", 0), (1, "AActionEnabled", 0), (1, "AActionCondition", 0), (1, "APluginOptions", 0),
+        AddPluginActionToTemplateFuncRes = AddPluginActionToTemplateProto(("AddPluginActionToTemplate", self.DllHandle), AddPluginActionToTemplateParams)
+        return AddPluginActionToTemplateFuncRes
+    
     
     def GetAddFontProfileToFindSubControlAction(self):
         AddFontProfileToFindSubControlActionProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, LONG, PClkFindControlMatchBitmapText)
@@ -304,6 +310,7 @@ class TDllFunctions:
         self.AddWindowOperationsActionToTemplateFunc = self.Addresses.GetAddWindowOperationsActionToTemplate()
         self.AddLoadSetVarFromFileActionToTemplateFunc = self.Addresses.GetAddLoadSetVarFromFileActionToTemplate()
         self.AddSaveSetVarToFileActionToTemplateFunc = self.Addresses.GetAddSaveSetVarToFileActionToTemplate()
+        self.AddPluginActionToTemplateFunc = self.Addresses.GetAddPluginActionToTemplate()
         
         self.AddFontProfileToFindSubControlActionFunc = self.Addresses.GetAddFontProfileToFindSubControlAction()
         
@@ -491,6 +498,14 @@ class TDllFunctions:
             return AddSaveSetVarToFileActionToTemplateResult
         except:
             return 'AV on AddSaveSetVarToFileActionToTemplate'
+
+
+    def AddPluginActionToTemplate(self, ATemplateFileName, AActionName, AActionTimeout, AActionEnabled, AActionCondition, APluginOptions):
+        try:
+            AddPluginActionToTemplateResult = self.AddPluginActionToTemplateFunc(ATemplateFileName, AActionName, AActionTimeout, AActionEnabled, AActionCondition, APluginOptions)  #sending PWideChar, and converting to ANSI at dll
+            return AddPluginActionToTemplateResult
+        except:
+            return 'AV on AddPluginActionToTemplate'
 
 
     def AddFontProfileToFindSubControlAction(self, ATemplateFileName, AActionIndex, AFindControlMatchBitmapText):
@@ -754,6 +769,14 @@ try:
     print("ExecuteActionAtIndex: ", DllFuncs.ExecuteActionAtIndex(AActionIndex = 9, AStackLevel = 0)) #Save SetVar vars to ini.
     ######## maybe modify the vars here, to verify later that loading them will update from ini
     print("ExecuteActionAtIndex: ", DllFuncs.ExecuteActionAtIndex(AActionIndex = 10, AStackLevel = 0)) #Load SetVar vars from ini.
+
+    PluginOptions = GetDefaultPluginOptions()
+    PluginOptions.FileName = '$AppDir$\\..\\UIClickerFindWindowsPlugin\\lib\\x86_64-win64\\UIClickerFindWindowsPlugin.dll'
+    PluginOptions.ListOfPropertiesAndValues
+    PluginOptions.SetVarActionName = 'The plugin'
+
+    print("ExecuteActionAtIndex: ", DllFuncs.ExecuteActionAtIndex(AActionIndex = 11, AStackLevel = 0)) #plugin.
+
 
     print("FileProviderClientThreadDone: ", DllFuncs.FileProviderClientThreadDone())
     print("TerminateFileProviderClientThread: ", DllFuncs.TerminateFileProviderClientThread())

@@ -416,6 +416,7 @@ type
   TOnGetActionProperties = function(AActionName: string): PClkActionRec of object;
   TOnRWFontFinderSettings = procedure(var AFontFinderSettings: TFontFinderSettings) of object;
   TOnModifyPluginProperty = procedure(AAction: PClkActionRec) of object;
+  TOnGetAllActions = function: PClkActionsRecArr of object;
 
 const
   CActionStatusStr: array[TActionStatus] of string = ('Not Started', 'Failed', 'Successful', 'In Progress', 'Allowed Failed');

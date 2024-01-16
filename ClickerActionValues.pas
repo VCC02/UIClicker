@@ -65,7 +65,7 @@ const
   CPropCount_WindowOperations = 7;
   CPropCount_LoadSetVarFromFile = 2;
   CPropCount_SaveSetVarToFile = 2;
-  CPropCount_Plugin = 1;
+  CPropCount_Plugin = 1;  //Static properties, defined here. A plugin can report additional properties, which are not counted by this constant.
 
   CMainPropCounts: array[0..Ord(High(TClkAction))] of Integer = (
     CPropCount_Click,
@@ -1941,13 +1941,16 @@ begin
     0: AAction^.PluginOptions.FileName := NewValue;
     else
     begin
+      Dec(APropertyIndex, CPropCount_Plugin);  //adjust offset
+
       TempStringList := TStringList.Create;
       try
-        TempStringList.Text := AAction^.PluginOptions.ListOfPropertiesAndValues;
+        TempStringList.Text := AAction^.PluginOptions.ListOfPropertiesAndValues;  //this list does not contain properties defined in this file
 
-        if APropertyIndex - 1 < TempStringList.Count then
+        if APropertyIndex < TempStringList.Count then
         begin
-          TempStringList.ValueFromIndex[APropertyIndex - 1] := NewValue;
+          //Do not use: "TempStringList.ValueFromIndex[APropertyIndex] := NewValue" !!!  It removes the entire item from list if NewValue = '':
+          TempStringList.Strings[APropertyIndex] := TempStringList.Names[APropertyIndex] + '=' + NewValue;
           AAction^.PluginOptions.ListOfPropertiesAndValues := TempStringList.Text;
         end;
       finally

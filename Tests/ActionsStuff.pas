@@ -93,6 +93,7 @@ procedure GenerateSleepOptions(var ASleepOptions: TClkSleepOptions; AValue: stri
 procedure GenerateSetVarOptions_OneVar(var ASetVarOptions: TClkSetVarOptions; AVar, AValue: string; AEvalBefore: Boolean = False);
 procedure GenerateWindowOperationsOptionsForFindControlSetup(var AWindowOperationsOptions: TClkWindowOperationsOptions; AOperation: TWindowOperation);
 procedure GenerateWindowOperationsOptionsForMouseWheelSetup(var AWindowOperationsOptions: TClkWindowOperationsOptions; AOperation: TWindowOperation);
+procedure GeneratePluginOptions(var APluginOptions: TClkPluginOptions; AFileName, AListOfPropertiesAndValues: string);
 
 
 implementation
@@ -518,6 +519,13 @@ begin
   AWindowOperationsOptions.NewHeight := '';
   AWindowOperationsOptions.NewPositionEnabled := False;
   AWindowOperationsOptions.NewSizeEnabled := False;
+end;
+
+
+procedure GeneratePluginOptions(var APluginOptions: TClkPluginOptions; AFileName, AListOfPropertiesAndValues: string);
+begin
+  APluginOptions.FileName := AFileName;
+  APluginOptions.ListOfPropertiesAndValues := AListOfPropertiesAndValues;
 end;
 
 end.

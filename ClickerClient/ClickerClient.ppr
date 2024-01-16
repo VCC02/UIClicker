@@ -200,6 +200,14 @@ type
   PClkSaveSetVarToFileOptionsAPI = ^TClkSaveSetVarToFileOptionsAPI;
 
 
+  TClkPluginOptionsAPI = record
+    FileName: PWideChar;
+    ListOfPropertiesAndValues: PWideChar;
+  end;
+
+  PClkPluginOptionsAPI = ^TClkPluginOptionsAPI;
+
+
   TClkFindControlMatchBitmapTextAPI = record
     ForegroundColor: PWideChar;
     BackgroundColor: PWideChar;
@@ -1008,6 +1016,37 @@ begin
 end;
 
 
+function AddPluginActionToTemplate(ATemplateFileName: Pointer;
+
+                                   AActionName: Pointer;
+                                   AActionTimeout: LongInt; //ms
+                                   AActionEnabled: Boolean;
+                                   AActionCondition: Pointer;
+
+                                   APluginOptions: PClkPluginOptionsAPI
+
+                                  ): LongInt; cdecl;
+var
+  TemplateFileName: string;
+  TempAction: TClkActionRec;
+begin
+  if InMemFS = nil then
+  begin
+    Result := -1;
+    Exit;
+  end;
+
+  SetBasicActionOptions(ATemplateFileName, AActionName, acPlugin, AActionTimeout, AActionEnabled, AActionCondition, TempAction, TemplateFileName);
+
+  //Plugin stuff
+  SetPointedContentToString(@string(PWideChar(APluginOptions^.FileName))[1], TempAction.PluginOptions.FileName);
+  SetPointedContentToString(@string(PWideChar(APluginOptions^.ListOfPropertiesAndValues))[1], TempAction.PluginOptions.ListOfPropertiesAndValues);
+
+  AddActionToTemplate(TemplateFileName, TempAction);
+  Result := 0;
+end;
+
+
 function AddFontProfileToFindSubControlActionInTemplate(ATemplateFileName: string; ActionIndex: Integer; AFindControlMatchBitmapText: TClkFindControlMatchBitmapText): Integer;
 var
   ClkActions: TClkActionsRecArr;
@@ -1340,6 +1379,7 @@ exports
   AddWindowOperationsActionToTemplate,
   AddLoadSetVarFromFileActionToTemplate,
   AddSaveSetVarToFileActionToTemplate,
+  AddPluginActionToTemplate,
 
   AddFontProfileToFindSubControlAction,
 

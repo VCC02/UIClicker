@@ -436,6 +436,19 @@ def GetDefaultSaveSetVarToFileOptions():
     return SaveSetVarToFileOptions
 
 
+class TPluginOptions(Structure):
+    _fields_ = [("FileName", LPCWSTR),
+               ("ListOfPropertiesAndValues", LPCWSTR)]
+
+PPluginOptions = ctypes.POINTER(TPluginOptions)
+
+def GetDefaultPluginOptions():
+    PluginOptions = TPluginOptions()
+    PluginOptions.FileName = ''
+    PluginOptions.ListOfPropertiesAndValues = ''
+    return PluginOptions
+
+
 ########################
 #Font profile structure. MatchBitmapText field from TFindControlOptions is a dynamic array of TClkFindControlMatchBitmapText.
 class TClkFindControlMatchBitmapText(Structure):

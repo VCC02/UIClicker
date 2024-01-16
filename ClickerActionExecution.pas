@@ -50,6 +50,8 @@ type
   TOnBackupVars = procedure(AAllVars: TStringList) of object;
   TOnRestoreVars = procedure(AAllVars: TStringList) of object;
 
+  TOnResolveTemplatePath = function(APath: string; ACustomSelfTemplateDir: string = ''; ACustomAppDir: string = ''): string of object;
+
   TActionExecution = class
   private
     FClickerVars: TStringList;  //not created here in this class, used from outside
@@ -90,6 +92,8 @@ type
     FOnBackupVars: TOnBackupVars;
     //FOnRestoreVars: TOnRestoreVars;
     FOnExecuteActionByName: TOnExecuteActionByName;
+    FOnGetAllActions: TOnGetAllActions;
+    FOnResolveTemplatePath: TOnResolveTemplatePath;
 
     function GetActionVarValue(VarName: string): string;
     procedure SetActionVarValue(VarName, VarValue: string);
@@ -103,6 +107,8 @@ type
     procedure AddToLog(s: string);
     function DoOnExecuteActionByName(AActionName: string): Boolean;
     procedure DoOnSetVar(AVarName, AVarValue: string);
+    function DoOnGetAllActions: PClkActionsRecArr;
+    function DoOnResolveTemplatePath(APath: string; ACustomSelfTemplateDir: string = ''; ACustomAppDir: string = ''): string;
 
     procedure SetLastActionStatus(AActionResult, AAlowedToFail: Boolean);
     function CheckManualStopCondition: Boolean;
@@ -204,6 +210,8 @@ type
     property OnBackupVars: TOnBackupVars write FOnBackupVars;
     //property OnRestoreVars: TOnRestoreVars write FOnRestoreVars;
     property OnExecuteActionByName: TOnExecuteActionByName write FOnExecuteActionByName;
+    property OnGetAllActions: TOnGetAllActions write FOnGetAllActions;
+    property OnResolveTemplatePath: TOnResolveTemplatePath write FOnResolveTemplatePath;
   end;
 
 
@@ -258,6 +266,8 @@ begin
   FOnBackupVars := nil;
   //FOnRestoreVars := nil;
   FOnExecuteActionByName := nil;
+  FOnGetAllActions := nil;
+  FOnResolveTemplatePath := nil;
 end;
 
 
@@ -752,6 +762,24 @@ end;
 procedure TActionExecution.DoOnSetVar(AVarName, AVarValue: string);
 begin
   SetActionVarValue(AVarName, AVarValue);
+end;
+
+
+function TActionExecution.DoOnGetAllActions: PClkActionsRecArr;
+begin
+  if not Assigned(FOnGetAllActions) then
+    raise Exception.Create('OnGetAllActions not assigned.');
+
+  Result := FOnGetAllActions();
+end;
+
+
+function TActionExecution.DoOnResolveTemplatePath(APath: string; ACustomSelfTemplateDir: string = ''; ACustomAppDir: string = ''): string;
+begin
+  if not Assigned(FOnResolveTemplatePath) then
+    raise Exception.Create('OnResolveTemplatePath not assigned.');
+
+  Result := FOnResolveTemplatePath(APath, ACustomSelfTemplateDir, ACustomAppDir);
 end;
 
 
@@ -2677,6 +2705,7 @@ begin
   try
     if not ActionPlugin.LoadToExecute(AResolvedPluginPath, AddToLog, DoOnExecuteActionByName, DoOnSetVar, AAllActions, AListOfAllVars) then
     begin
+      SetActionVarValue('$ExecAction_Err$', ActionPlugin.Err);
       AddToLog(ActionPlugin.Err);
       Exit;
     end;
@@ -3199,23 +3228,21 @@ end;
 function TActionExecution.ExecutePluginActionAsString(APluginOptionsParams: TStrings): Boolean;
 var
   PluginOptions: TClkPluginOptions;
-  TempAllActions: TClkActionsRecArr;
+  TempAllActions: PClkActionsRecArr;
   TempListOfAllVars: TStringList;
 begin
   Result := False;
   SetActionVarValue('$ExecAction_Err$', '');
   try
-    PluginOptions.FileName := APluginOptionsParams.Values['FileName'];
+    PluginOptions.FileName := DoOnResolveTemplatePath(APluginOptionsParams.Values['FileName']);
     PluginOptions.ListOfPropertiesAndValues := FastReplace_45ToReturn(APluginOptionsParams.Values['ListOfPropertiesAndValues']);
 
-    ///////////////////////// ToDo: TActionExecution should have access to AllActions, ListOfAllVars and ResolvedPluginPath
-    SetLength(TempAllActions, 1);
-    TempAllActions[0].ActionOptions.Action := acFindSubControl;
-    TempAllActions[0].ActionOptions.ActionName := 'Some action';
+    TempAllActions := DoOnGetAllActions;
 
     TempListOfAllVars := TStringList.Create;
     try
-      Result := ExecutePluginAction(PluginOptions, @TempAllActions, TempListOfAllVars, PluginOptions.FileName);
+      DoOnBackupVars(TempListOfAllVars);
+      Result := ExecutePluginAction(PluginOptions, TempAllActions, TempListOfAllVars, PluginOptions.FileName);
     finally
       TempListOfAllVars.Free;
     end;

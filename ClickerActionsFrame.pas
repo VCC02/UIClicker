@@ -1370,7 +1370,10 @@ begin
   ListOfProperties := TStringList.Create;
   try
     ListOfProperties.Text := FEditingAction^.PluginOptions.ListOfPropertiesAndValues;
-    ListOfProperties.ValueFromIndex[PropertyIndex] := ActionName;
+
+    if ActionName <> '' then  //verification required, otherwise the item is deleted from list
+      ListOfProperties.ValueFromIndex[PropertyIndex] := ActionName;
+
     FEditingAction^.PluginOptions.ListOfPropertiesAndValues := ListOfProperties.Text;
   finally
     ListOfProperties.Free;
@@ -1402,7 +1405,6 @@ var
   ASearchRec: TSearchRec;
   SearchResult: Integer;
   Dir: string;
-  //SelectedTemplate: string;
   TempMenuItem, BaseMenuItem: TMenuItem;
   i: Integer;
 begin
@@ -3129,13 +3131,19 @@ end;
 procedure TfrClickerActions.MenuItem_BrowsePluginFileInPropertyListClick(Sender: TObject);
 var
   MenuData: POIMenuItemData;
+  PathToFileName: string;
 begin
   MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
   try
     if not DoOnOpenDialogExecute('Dll files (*.dll)|*.dll|All files (*.*)|*.*') then
       Exit;
 
-    FEditingAction^.PluginOptions.FileName := DoOnGetOpenDialogFileName;
+    PathToFileName := DoOnGetOpenDialogFileName;
+
+    if ExtractFileDrive(ParamStr(0)) = ExtractFileDrive(PathToFileName) then
+      FEditingAction^.PluginOptions.FileName := '$AppDir$\' + ExtractRelativePath(ExtractFilePath(ParamStr(0)), PathToFileName)
+    else
+      FEditingAction^.PluginOptions.FileName := PathToFileName;
 
     FOIFrame.CancelCurrentEditing;
     FOIFrame.Repaint;   //ideally, RepaintNodeByLevel
@@ -3352,6 +3360,7 @@ function TfrClickerActions.HandleOnOIGetPropertyValue(ACategoryIndex, APropertyI
 var
   EditingActionType: Integer;
   PropDef: TOIPropDef;
+  ListOfProperties: TStringList;
 begin
   PropDef.EditorType := etNone;
   Result := '';
@@ -3372,7 +3381,14 @@ begin
       begin
         if (CurrentlyEditingActionType = acPlugin) and (APropertyIndex > CPlugin_FileName_PropIndex) then
         begin
-          PropDef.EditorType := etTextWithArrow;  /////////////////////// should be decoded somehow from FEditingAction.PluginOptions.ListOfPropertiesAndTypes
+          ListOfProperties := TStringList.Create;
+          try
+            ListOfProperties.Text := FEditingAction.PluginOptions.ListOfPropertiesAndTypes;
+            PropDef.EditorType := StrToTOIEditorType('et' + ListOfProperties.ValueFromIndex[APropertyIndex - CPropCount_Plugin]);
+          finally
+            ListOfProperties.Free;
+          end;
+
           Result := CMainGetActionValueStrFunctions[CurrentlyEditingActionType](FEditingAction, APropertyIndex);
         end
         else
@@ -5109,7 +5125,7 @@ begin
 
           else
           begin
-            LoadListOfAvailableActionsForPlugin(APropertyIndex - 1);
+            LoadListOfAvailableActionsForPlugin(APropertyIndex - CPropCount_Plugin);
             FPmLocalTemplates.PopUp;
           end;
         end; //case APropertyIndex
