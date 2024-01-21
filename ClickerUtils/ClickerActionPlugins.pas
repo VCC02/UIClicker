@@ -69,10 +69,6 @@ const
   CActionPlugin_APIVersion = 1;
   CActionPlugin_ExecutionResultErrorVar = '$PluginError$';
 
-  CActionPlugin_ExecutionResultVar_XOffset = '$DecodedWindows_XOffset$';
-  CActionPlugin_ExecutionResultVar_YOffset = '$DecodedWindows_YOffset$';
-  CActionPlugin_ExecutionResultVar_Width = '$DecodedWindows_Width$';
-  CActionPlugin_ExecutionResultVar_Height = '$DecodedWindows_Height$';
   CActionPlugin_ExecutionResultVar = '$DecodedWindows$';  //deprecated - to be removed
 
 implementation
