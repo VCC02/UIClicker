@@ -36,16 +36,20 @@ uses
 
 
 type
+  TIsBreakPoint = (NoBreakPoint, IsBreakPoint);
+
   //Plugin callbacks:
   TOnActionPlugin_GetActionCount = function(APluginReference: Pointer): Integer; cdecl;  //a plugin calls this function, to get the number of actions in the current template from UIClicker
   TOnActionPlugin_GetActionInfoByIndex = procedure(APluginReference: Pointer; AIndex: Integer; AActionName: Pointer; ANameLength, AActionType: PDWord); cdecl; //a plugin calls this function, to get the action structure of an action
   TOnActionPlugin_ExecuteAction = function(APluginReference: Pointer; AActionName: Pointer): Boolean; cdecl;
   TOnActionPlugin_GetAllTemplateVars = procedure(APluginReference: Pointer; AAllTemplateVars: Pointer; AVarsLength: PDWord); cdecl;  //AAllTemplateVars are encoded as CRLF separated key=value strings, ready to be used on a TStringlist
   TOnActionPlugin_SetTemplateVar = procedure(APluginReference: Pointer; AVarName, AVarValue: Pointer); cdecl;
+  TOnActionPlugin_DebugPoint = function(APluginReference: Pointer; APointName, ALogMsg: Pointer; AIsBreakPoint: TIsBreakPoint): Boolean; //The handler should return True, to continue execution. If False, the dll should exit ExecutePluginFunc (when users stop the execution).
 
   //Plugin procedures / functions:
   TGetAPIVersion = function: DWord; cdecl;
   TGetListOfProperties = procedure(AListOfProperties: Pointer; AListOfPropertiesLen: PDWord); cdecl;
+  TGetListOfDebugPoints = procedure(AListOfDebugPoints: Pointer; AListOfDebugPointsLen: PDWord); cdecl;
 
   TExecutePlugin = function(APluginReference: Pointer;                 //UIClicker passes the plugin reference to the plugin, then the plugin calls some callbacks with that reference
                             AListOfPluginSettings: Pointer;            //similar to a TStringList.Text content
@@ -55,23 +59,44 @@ type
                             AOnActionPlugin_GetActionInfoByIndex: TOnActionPlugin_GetActionInfoByIndex;
                             AOnActionPlugin_ExecuteAction: TOnActionPlugin_ExecuteAction;
                             AOnActionPlugin_GetAllTemplateVars: TOnActionPlugin_GetAllTemplateVars;
-                            AOnActionPlugin_SetTemplateVar: TOnActionPlugin_SetTemplateVar): Boolean; cdecl;
+                            AOnActionPlugin_SetTemplateVar: TOnActionPlugin_SetTemplateVar;
+                            AOnActionPlugin_DebugPoint: TOnActionPlugin_DebugPoint): Boolean; cdecl;
 
 
   TActionPluginFunc = record
     GetAPIVersionFunc: TGetAPIVersion;
     GetListOfPropertiesProc: TGetListOfProperties;
+    GetListOfDebugPoints: TGetListOfDebugPoints;
     ExecutePluginFunc: TExecutePlugin;
   end;
 
 
 const
-  CActionPlugin_APIVersion = 1;
+  CActionPlugin_APIVersion = 2;
   CActionPlugin_ExecutionResultErrorVar = '$PluginError$';
 
   CActionPlugin_ExecutionResultVar = '$DecodedWindows$';  //deprecated - to be removed
 
+var
+  DefaultOnActionPlugin_DebugPoint: TOnActionPlugin_DebugPoint;
+  DefaultPluginReference: Pointer;
+
+function DbgPoint(APointName, ALogMsg: string; AIsBreakPoint: TIsBreakPoint = NoBreakPoint): Boolean;
+
 implementation
 
+
+function DbgPoint(APointName, ALogMsg: string; AIsBreakPoint: TIsBreakPoint = NoBreakPoint): Boolean;
+begin
+  if @DefaultOnActionPlugin_DebugPoint <> nil then
+    Result := DefaultOnActionPlugin_DebugPoint(DefaultPluginReference, @APointName[1], @ALogMsg[1], AIsBreakPoint)
+  else
+    Result := True;
+end;
+
+
+begin
+  DefaultOnActionPlugin_DebugPoint := nil;
+  DefaultPluginReference := nil;
 end.
 

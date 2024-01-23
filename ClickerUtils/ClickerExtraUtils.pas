@@ -40,6 +40,7 @@ function ArrOfByteToHex(var AArr: TIdBytes): string;
 function ComputeHash(AFileContent: Pointer; AFileSize: Int64): string;
 function GetFileHash(AFileName: string): string;
 function GetNodeByIndex(AVst: TVirtualStringTree; AIndex: Integer): PVirtualNode;
+procedure SelectNodeByIndex(AVst: TVirtualStringTree; AIndex: Integer; AScrollIntoView: Boolean = False; ACenter: Boolean = False);
 
 
 implementation
@@ -111,6 +112,21 @@ begin
 
     Node := Node^.NextSibling;
   until Node = nil;
+end;
+
+
+procedure SelectNodeByIndex(AVst: TVirtualStringTree; AIndex: Integer; AScrollIntoView: Boolean = False; ACenter: Boolean = False);
+var
+  Node: PVirtualNode;
+begin
+  Node := GetNodeByIndex(AVst, AIndex);
+  if Node = nil then
+    Exit;
+
+  AVst.Selected[Node] := True;
+
+  if AScrollIntoView then
+    AVst.ScrollIntoView(Node, ACenter);
 end;
 
 end.

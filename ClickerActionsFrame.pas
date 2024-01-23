@@ -35,7 +35,7 @@ uses
   VirtualTrees, ExtCtrls, StdCtrls, ComCtrls, ImgList, Buttons, Grids, ValEdit,
   Menus, ClickerUtils, ClickerConditionEditorFrame,
   ClickerFindControlFrame, ClickerExecAppFrame, ClickerSetVarFrame,
-  ClickerCallTemplateFrame, ClickerSleepFrame,
+  ClickerCallTemplateFrame, ClickerSleepFrame, ClickerPluginFrame,
   Types, InMemFileSystem, ObjectInspectorFrame,
   ClickerPrimitiveUtils;
 
@@ -321,6 +321,10 @@ type
     FOnGetListOfAvailableActions: TOnGetListOfAvailableActions;
     FOnModifyPluginProperty: TOnModifyPluginProperty;
 
+    FOnPluginDbgStop: TOnPluginDbgStop;
+    FOnPluginDbgContinueAll: TOnPluginDbgContinueAll;
+    FOnPluginDbgStepOver: TOnPluginDbgStepOver;
+
     //function GetListOfSetVarEntries: string;
     //procedure SetListOfSetVarEntries(Value: string);
 
@@ -361,6 +365,10 @@ type
     procedure DoOnGetListOfAvailableSetVarActions(AListOfSetVarActions: TStringList);
     procedure DoOnGetListOfAvailableActions(AListOfActions: TStringList);
     procedure DoOnModifyPluginProperty(AAction: PClkActionRec);
+
+    procedure DoOnPluginDbgStop;
+    procedure DoOnPluginDbgContinueAll;
+    procedure DoOnPluginDbgStepOver;
 
     function GetInMemFS: TInMemFileSystem;
     procedure SetInMemFS(Value: TInMemFileSystem);
@@ -420,6 +428,10 @@ type
     procedure HandleOnSaveFromMenu(Sender: TObject);
     procedure HandleOnGetFontFinderSettings(var AFontFinderSettings: TFontFinderSettings);
     procedure HandleOnSetFontFinderSettings(var AFontFinderSettings: TFontFinderSettings);
+
+    procedure HandleOnPluginDbgStop;
+    procedure HandleOnPluginDbgContinueAll;
+    procedure HandleOnPluginDbgStepOver;
 
     ///////////////////////////// OI
     function EditFontProperties(AItemIndexDiv: Integer; var ANewItems: string): Boolean;
@@ -488,6 +500,7 @@ type
     frClickerSetVar: TfrClickerSetVar;
     frClickerCallTemplate: TfrClickerCallTemplate;
     frClickerSleep: TfrClickerSleep;
+    frClickerPlugin: TfrClickerPlugin;
 
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -559,6 +572,10 @@ type
     property OnGetListOfAvailableSetVarActions: TOnGetListOfAvailableSetVarActions write FOnGetListOfAvailableSetVarActions;
     property OnGetListOfAvailableActions: TOnGetListOfAvailableActions write FOnGetListOfAvailableActions;
     property OnModifyPluginProperty: TOnModifyPluginProperty write FOnModifyPluginProperty;
+
+    property OnPluginDbgStop: TOnPluginDbgStop write FOnPluginDbgStop;
+    property OnPluginDbgContinueAll: TOnPluginDbgContinueAll write FOnPluginDbgContinueAll;
+    property OnPluginDbgStepOver: TOnPluginDbgStepOver write FOnPluginDbgStepOver;
   end;
 
 
@@ -689,6 +706,17 @@ begin
   frClickerSleep.Height := pnlExtra.Height - 3;
   frClickerSleep.Visible := False;
 
+  frClickerPlugin := TfrClickerPlugin.Create(Self);
+  frClickerPlugin.Parent := pnlExtra;
+  frClickerPlugin.Left := 3;
+  frClickerPlugin.Top := 3;
+  frClickerPlugin.Width := pnlExtra.Width - 3;
+  frClickerPlugin.Height := pnlExtra.Height - 3;
+  frClickerPlugin.Anchors := [akLeft, akTop, akBottom, akRight];
+  frClickerPlugin.Visible := False;
+  frClickerPlugin.OnPluginDbgStop := HandleOnPluginDbgStop;
+  frClickerPlugin.OnPluginDbgContinueAll := HandleOnPluginDbgContinueAll;
+  frClickerPlugin.OnPluginDbgStepOver := HandleOnPluginDbgStepOver;
 
 
   FPmLocalTemplates := TPopupMenu.Create(Self);
@@ -799,6 +827,10 @@ begin
   FOnGetListOfAvailableSetVarActions := nil;
   FOnGetListOfAvailableActions := nil;
   FOnModifyPluginProperty := nil;
+
+  FOnPluginDbgStop := nil;
+  FOnPluginDbgContinueAll := nil;
+  FOnPluginDbgStepOver := nil;
 
   FShowDeprecatedControls := False;
   FEditingAction := @FEditingActionRec;
@@ -1115,17 +1147,30 @@ end;
 
 
 procedure TfrClickerActions.MenuItem_ReplaceWithAppDirClick(Sender: TObject);
+var
+  PathToFileName: string;
 begin
   try
     if Assigned(FLastClickedTVTEdit) then
+      PathToFileName := FLastClickedTVTEdit.Text
+    else
+      if Assigned(FLastClickedEdit) then
+        PathToFileName := FLastClickedEdit.Text
+      else
+        PathToFileName := '';
+
+    if ExtractFileDrive(ParamStr(0)) = ExtractFileDrive(PathToFileName) then
+      PathToFileName := '$AppDir$\' + ExtractRelativePath(ExtractFilePath(ParamStr(0)), PathToFileName);
+
+    if Assigned(FLastClickedTVTEdit) then
     begin
-      FLastClickedTVTEdit.Text := StringReplace(FLastClickedTVTEdit.Text, ExtractFileDir(ParamStr(0)), '$AppDir$', [rfReplaceAll]);
+      FLastClickedTVTEdit.Text := PathToFileName; //StringReplace(FLastClickedTVTEdit.Text, ExtractFileDir(ParamStr(0)), '$AppDir$', [rfReplaceAll]);
       FOIFrame.EditingText := FLastClickedTVTEdit.Text;
     end;
 
     if Assigned(FLastClickedEdit) then
     begin
-      FLastClickedEdit.Text := StringReplace(FLastClickedEdit.Text, ExtractFileDir(ParamStr(0)), '$AppDir$', [rfReplaceAll]);
+      FLastClickedEdit.Text := PathToFileName; //StringReplace(FLastClickedEdit.Text, ExtractFileDir(ParamStr(0)), '$AppDir$', [rfReplaceAll]);
       if Assigned(FLastClickedEdit.OnChange) then
         FLastClickedEdit.OnChange(FLastClickedEdit);
     end;
@@ -1969,6 +2014,24 @@ begin
 end;
 
 
+procedure TfrClickerActions.HandleOnPluginDbgStop;
+begin
+  DoOnPluginDbgStop;
+end;
+
+
+procedure TfrClickerActions.HandleOnPluginDbgContinueAll;
+begin
+  DoOnPluginDbgContinueAll;
+end;
+
+
+procedure TfrClickerActions.HandleOnPluginDbgStepOver;
+begin
+  DoOnPluginDbgStepOver;
+end;
+
+
 function TfrClickerActions.DoOnEditCallTemplateBreakCondition(var AActionCondition: string): Boolean;
 begin
   if not Assigned(FOnEditCallTemplateBreakCondition) then
@@ -2203,6 +2266,33 @@ begin
 end;
 
 
+procedure TfrClickerActions.DoOnPluginDbgStop;
+begin
+  if not Assigned(FOnPluginDbgStop) then
+    raise Exception.Create('OnPluginDbgStop not assigned.');
+
+  FOnPluginDbgStop();
+end;
+
+
+procedure TfrClickerActions.DoOnPluginDbgContinueAll;
+begin
+  if not Assigned(FOnPluginDbgContinueAll) then
+    raise Exception.Create('OnPluginDbgContinueAll not assigned.');
+
+  FOnPluginDbgContinueAll();
+end;
+
+
+procedure TfrClickerActions.DoOnPluginDbgStepOver;
+begin
+  if not Assigned(FOnPluginDbgStepOver) then
+    raise Exception.Create('OnPluginDbgStepOver not assigned.');
+
+  FOnPluginDbgStepOver();
+end;
+
+
 //////////////////////////// OI
 
 function TfrClickerActions.GetCurrentlyEditingActionType: TClkAction;
@@ -2229,6 +2319,7 @@ begin
       frClickerSetVar.Hide;
       frClickerCallTemplate.Hide;
       frClickerSleep.Hide;
+      frClickerPlugin.Hide;
     end;
 
     acFindControl, acFindSubControl:
@@ -2239,6 +2330,7 @@ begin
       frClickerSetVar.Hide;
       frClickerCallTemplate.Hide;
       frClickerSleep.Hide;
+      frClickerPlugin.Hide;
     end;
 
     acSetVar:
@@ -2249,6 +2341,7 @@ begin
       frClickerSetVar.BringToFront;
       frClickerCallTemplate.Hide;
       frClickerSleep.Hide;
+      frClickerPlugin.Hide;
     end;
 
     acCallTemplate:
@@ -2259,6 +2352,7 @@ begin
       frClickerCallTemplate.Show;
       frClickerCallTemplate.BringToFront;
       frClickerSleep.Hide;
+      frClickerPlugin.Hide;
     end;
 
     acSleep:
@@ -2269,6 +2363,18 @@ begin
       frClickerCallTemplate.Hide;
       frClickerSleep.Show;
       frClickerSleep.BringToFront;
+      frClickerPlugin.Hide;
+    end;
+
+    acPlugin:
+    begin
+      frClickerExecApp.Hide;
+      frClickerFindControl.Hide;
+      frClickerSetVar.Hide;
+      frClickerCallTemplate.Hide;
+      frClickerSleep.Hide;
+      frClickerPlugin.Show;
+      frClickerPlugin.BringToFront;
     end;
 
     else
@@ -2278,6 +2384,7 @@ begin
       frClickerSetVar.Hide;
       frClickerCallTemplate.Hide;
       frClickerSleep.Hide;
+      frClickerPlugin.Hide;
 
       pnlCover.Left := 0;
       pnlCover.Top := 0;
@@ -3102,18 +3209,24 @@ end;
 procedure TfrClickerActions.MenuItem_BrowseSetVarFileInPropertyListClick(Sender: TObject);
 var
   MenuData: POIMenuItemData;
+  PathToFileName: string;
 begin
   MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
   try
     if not DoOnOpenDialogExecute('*.*') then
       Exit;
 
+    PathToFileName := DoOnGetOpenDialogFileName;
+
+    if ExtractFileDrive(ParamStr(0)) = ExtractFileDrive(PathToFileName) then
+      PathToFileName := '$AppDir$\' + ExtractRelativePath(ExtractFilePath(ParamStr(0)), PathToFileName);
+
     case CurrentlyEditingActionType of
       acLoadSetVarFromFile:
-        FEditingAction^.LoadSetVarFromFileOptions.FileName := DoOnGetOpenDialogFileName;
+        FEditingAction^.LoadSetVarFromFileOptions.FileName := PathToFileName;
 
       acSaveSetVarToFile:
-        FEditingAction^.SaveSetVarToFileOptions.FileName := DoOnGetOpenDialogFileName;
+        FEditingAction^.SaveSetVarToFileOptions.FileName := PathToFileName;
 
       else
         ;
@@ -3141,9 +3254,9 @@ begin
     PathToFileName := DoOnGetOpenDialogFileName;
 
     if ExtractFileDrive(ParamStr(0)) = ExtractFileDrive(PathToFileName) then
-      FEditingAction^.PluginOptions.FileName := '$AppDir$\' + ExtractRelativePath(ExtractFilePath(ParamStr(0)), PathToFileName)
-    else
-      FEditingAction^.PluginOptions.FileName := PathToFileName;
+      PathToFileName := '$AppDir$\' + ExtractRelativePath(ExtractFilePath(ParamStr(0)), PathToFileName);
+
+    FEditingAction^.PluginOptions.FileName := PathToFileName;
 
     FOIFrame.CancelCurrentEditing;
     FOIFrame.Repaint;   //ideally, RepaintNodeByLevel

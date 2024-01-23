@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectSession>
+    <PathDelim Value="\"/>
+    <Version Value="12"/>
+    <BuildModes Active="Default"/>
+    <Units>
+      <Unit>
+        <Filename Value="ClkDbgSym.ppr"/>
+        <FRMtype Value="0"/>
+        <IsPartOfProject Value="True"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="0"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="36"/>
+        <CursorPos X="33" Y="41"/>
+        <UsageCount Value="24"/>
+        <Loaded Value="True"/>
+      </Unit>
+    </Units>
+    <JumpHistory HistoryIndex="29">
+      <Position>
+        <Filename Value="ClkDbgSym.ppr"/>
+        <Caret Line="77" TopLine="72"/>
+      </Position>
+      <Position>
+        <Filename Value="ClkDbgSym.ppr"/>
+        <Caret Line="79" TopLine="72"/>
+      </Position>
+      <Position>
+        <Filename Value="ClkDbgSym.ppr"/>
+        <Caret Line="80" TopLine="72"/>
+      </Position>
+      <Position>
+        <Filename Value="ClkDbgSym.ppr"/>
+        <Caret Line="82" TopLine="72"/>
+      </Position>
+      <Position>
+        <Filename Value="ClkDbgSym.ppr"/>
+        <Caret Line="83" TopLine="72"/>
+      </Position>
+      <Position>
+        <Filename Value="ClkDbgSym.ppr"/>
+        <Caret Line="85" TopLine="72"/>
+      </Position>
+      <Position>
+        <Filename Value="ClkDbgSym.ppr"/>
+        <Caret Line="86" TopLine="72"/>
+      </Position>
+      <Position>
+        <Filename Value="ClkDbgSym.ppr"/>
+        <Caret Line="88" TopLine="72"/>
+      </Position>
+      <Position>
+        <Filename Value="ClkDbgSym.ppr"/>
+        <Caret Line="77" TopLine="72"/>
+      </Position>
+      <Position>
+        <Filename Value="ClkDbgSym.ppr"/>
+        <Caret Line="102" TopLine="81"/>
+      </Position>
+      <Position>
+        <Filename Value="ClkDbgSym.ppr"/>
+        <Caret Line="80" TopLine="67"/>
+      </Position>
+      <Position>
+        <Filename Value="ClkDbgSym.ppr"/>
+        <Caret Line="82" TopLine="67"/>
+      </Position>
+      <Position>
+        <Filename Value="ClkDbgSym.ppr"/>
+        <Caret Line="83" TopLine="67"/>
+      </Position>
+      <Position>
+        <Filename Value="ClkDbgSym.ppr"/>
+        <Caret Line="85" TopLine="67"/>
+      </Position>
+      <Position>
+        <Filename Value="ClkDbgSym.ppr"/>
+        <Caret Line="86" TopLine="64"/>
+      </Position>
+      <Position>
+        <Filename Value="ClkDbgSym.ppr"/>
+        <Caret Line="88" TopLine="66"/>
+      </Position>
+      <Position>
+        <Filename Value="ClkDbgSym.ppr"/>
+        <Caret Line="77" TopLine="66"/>
+      </Position>
+      <Position>
+        <Filename Value="ClkDbgSym.ppr"/>
+        <Caret Line="79" TopLine="66"/>
+      </Position>
+      <Position>
+        <Filename Value="ClkDbgSym.ppr"/>
+        <Caret Line="80" TopLine="66"/>
+      </Position>
+      <Position>
+        <Filename Value="ClkDbgSym.ppr"/>
+        <Caret Line="82" TopLine="66"/>
+      </Position>
+      <Position>
+        <Filename Value="ClkDbgSym.ppr"/>
+        <Caret Line="83" TopLine="66"/>
+      </Position>
+      <Position>
+        <Filename Value="ClkDbgSym.ppr"/>
+        <Caret Line="85" TopLine="66"/>
+      </Position>
+      <Position>
+        <Filename Value="ClkDbgSym.ppr"/>
+        <Caret Line="86" TopLine="66"/>
+      </Position>
+      <Position>
+        <Filename Value="ClkDbgSym.ppr"/>
+        <Caret Line="88" TopLine="66"/>
+      </Position>
+      <Position>
+        <Filename Value="ClkDbgSym.ppr"/>
+        <Caret Line="77" TopLine="66"/>
+      </Position>
+      <Position>
+        <Filename Value="ClkDbgSym.ppr"/>
+        <Caret Line="90" TopLine="80"/>
+      </Position>
+      <Position>
+        <Filename Value="ClkDbgSym.ppr"/>
+        <Caret Line="91" TopLine="80"/>
+      </Position>
+      <Position>
+        <Filename Value="ClkDbgSym.ppr"/>
+        <Caret Line="92" TopLine="80"/>
+      </Position>
+      <Position>
+        <Filename Value="ClkDbgSym.ppr"/>
+        <Caret Line="93" TopLine="83"/>
+      </Position>
+      <Position>
+        <Filename Value="ClkDbgSym.ppr"/>
+        <Caret Line="95" TopLine="83"/>
+      </Position>
+    </JumpHistory>
+    <RunParams>
+      <FormatVersion Value="2"/>
+      <Modes ActiveMode="default">
+        <Mode Name="default">
+          <local>
+            <CommandLineParams Value="&quot;$(ProjPath)..\..\..\UIClickerFindWindowsPlugin\lib\$(TargetCPU)-$(TargetOS)\UIClickerFindWindows.DbgSym&quot; &quot;$(ProjPath)..\..\..\UIClickerFindWindowsPlugin\UIClickerFindWindows.ppr&quot;"/>
+          </local>
+        </Mode>
+      </Modes>
+    </RunParams>
+    <HistoryLists>
+      <List Name="LaunchingApplication" Type="File" Count="4">
+        <Item1 Value="C:\Windows\system32\cmd.exe /C ${TargetCmdLine}"/>
+        <Item2 Value="${CmdExe} ${TargetCmdLine}"/>
+        <Item3 Value="&quot;$(Pas2JSBrowser)&quot; &quot;$(Pas2JSProjectURL)&quot;"/>
+        <Item4 Value="$(Pas2JSBrowser) &quot;$(Pas2JSProjectURL)&quot;"/>
+      </List>
+      <List Name="CommandLineParameters" Count="4">
+        <Item1 Value="&quot;$(ProjPath)..\..\..\UIClickerFindWindowsPlugin\lib\$(TargetCPU)-$(TargetOS)\UIClickerFindWindows.DbgSym&quot; &quot;$(ProjPath)..\..\..\UIClickerFindWindowsPlugin\UIClickerFindWindows.ppr&quot;"/>
+        <Item2 Value="&quot;$(ProjPath)..\..\..\UIClickerFindWindowsPlugin\UIClickerFindWindows.ppr&quot;"/>
+        <Item3 Value="&quot;$(ProjPath)..\..\UIClickerFindWindowsPlugin\UIClickerFindWindows.ppr&quot;"/>
+        <Item4 Value="&quot;$(ProjPath)\..\..\UIClickerFindWindowsPlugin\UIClickerFindWindows.ppr&quot;"/>
+      </List>
+    </HistoryLists>
+  </ProjectSession>
+</CONFIG>

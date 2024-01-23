@@ -324,6 +324,8 @@ type
     FUseLocalDebugger: Boolean;
     FFileLocationOfDepsIsMem: Boolean;
     FClosingTemplate: Boolean;  //set to true by ExitTemplateFromRemote when the template should be closed (after it stays open as called template)
+    FPluginStepOver: Boolean;
+    FPluginContinueAll: Boolean;
 
     FRemoteAddress: string; //and port
 
@@ -427,6 +429,11 @@ type
     function HandleOnGetAllActions: PClkActionsRecArr;
     procedure HandleOnModifyPluginProperty(AAction: PClkActionRec);
     function HandleOnResolveTemplatePath(APath: string; ACustomSelfTemplateDir: string = ''; ACustomAppDir: string = ''): string;
+    procedure HandleOnSetDebugPoint(ADebugPoint: string);
+
+    procedure HandleOnPluginDbgStop;
+    procedure HandleOnPluginDbgContinueAll;
+    procedure HandleOnPluginDbgStepOver;
 
     function GetInMemFS: TInMemFileSystem;
     procedure SetInMemFS(Value: TInMemFileSystem);
@@ -895,6 +902,10 @@ begin
   frClickerActions.OnGetListOfAvailableActions := HandleOnGetListOfAvailableActions;
   frClickerActions.OnModifyPluginProperty := HandleOnModifyPluginProperty;
 
+  frClickerActions.OnPluginDbgStop := HandleOnPluginDbgStop;
+  frClickerActions.OnPluginDbgContinueAll := HandleOnPluginDbgContinueAll;
+  frClickerActions.OnPluginDbgStepOver := HandleOnPluginDbgStepOver;
+
   //frClickerActions.OnControlsModified := ClickerActionsFrameOnControlsModified;   //this is set on frame initialization
 
   vstActions := TVirtualStringTree.Create(Self);
@@ -1014,6 +1025,8 @@ begin
   FActionExecution.FullTemplatesDir := @FFullTemplatesDir;
   FActionExecution.StackLevel := @FStackLevel;
   FActionExecution.ExecutesRemotely := @FExecutesRemotely;
+  FActionExecution.PluginStepOver := @FPluginStepOver;
+  FActionExecution.PluginContinueAll := @FPluginContinueAll;
   FActionExecution.OwnerFrame := Self;
   FActionExecution.frClickerActions := frClickerActions;
   FActionExecution.OnSetEditorEnabledState := HandleOnSetEditorEnabledState;
@@ -1039,6 +1052,7 @@ begin
   FActionExecution.OnExecuteActionByName := HandleOnExecuteActionByName;
   FActionExecution.OnGetAllActions := HandleOnGetAllActions;
   FActionExecution.OnResolveTemplatePath := HandleOnResolveTemplatePath;
+  FActionExecution.OnSetDebugPoint := HandleOnSetDebugPoint;
 
   FCmdConsoleHistory := TStringList.Create;
   FOnExecuteRemoteActionAtIndex := nil;
@@ -1096,6 +1110,8 @@ begin
   DrawDefaultTemplateIcon;
 
   FEditingText := '';
+  FPluginStepOver := False;
+  FPluginContinueAll := False;
 end;
 
 
@@ -1564,6 +1580,12 @@ begin
 end;
 
 
+procedure TfrClickerActionsArr.HandleOnSetDebugPoint(ADebugPoint: string);
+begin
+  frClickerActions.frClickerPlugin.SelectLineByContent(ADebugPoint);
+end;
+
+
 procedure TfrClickerActionsArr.HandleOnGetListOfAvailableSetVarActions(AListOfSetVarActions: TStringList);
 var
   i: Integer;
@@ -1585,8 +1607,26 @@ end;
 
 procedure TfrClickerActionsArr.HandleOnModifyPluginProperty(AAction: PClkActionRec);
 begin
-  if DoOnFileExists(ResolveTemplatePath(AAction.PluginOptions.FileName)) then
+  if DoOnFileExists(ResolveTemplatePath(AAction^.PluginOptions.FileName)) then
     SetActionPropertiesFromPlugin(AAction^);
+end;
+
+
+procedure TfrClickerActionsArr.HandleOnPluginDbgStop;
+begin
+  StopAllActionsFromButton;
+end;
+
+
+procedure TfrClickerActionsArr.HandleOnPluginDbgContinueAll;
+begin
+  FPluginContinueAll := True;  //will be reset by plugin TActionPlugin.ExecutePlugin, via pointer
+end;
+
+
+procedure TfrClickerActionsArr.HandleOnPluginDbgStepOver;
+begin
+  FPluginStepOver := True; //will be reset by plugin handler, via pointer
 end;
 
 
@@ -1718,6 +1758,9 @@ begin
     for i := 0 to frClickerActions.frClickerFindControl.GetBMPTextFontProfilesCount - 1 do
       frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].UpdateSelectionLabelsFromCropInfo(FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i]);
   end;
+
+  if frClickerActions.CurrentlyEditingActionType = acPlugin then
+    frClickerActions.frClickerPlugin.LoadDebugSymbols(ExtractFullFileNameNoExt(ResolveTemplatePath(FClkActions[ActionIndex].PluginOptions.FileName)) + '.DbgSym');
 end;
 
 
@@ -1908,7 +1951,7 @@ begin
     acWindowOperations: Result := FActionExecution.ExecuteWindowOperationsAction(FClkActions[AActionIndex].WindowOperationsOptions);
     acLoadSetVarFromFile: Result := FActionExecution.ExecuteLoadSetVarFromFileAction(FClkActions[AActionIndex].LoadSetVarFromFileOptions);
     acSaveSetVarToFile: Result := FActionExecution.ExecuteSaveSetVarToFileAction(FClkActions[AActionIndex].SaveSetVarToFileOptions);
-    acPlugin: Result := FActionExecution.ExecutePluginAction(FClkActions[AActionIndex].PluginOptions, @FClkActions, frClickerActions.vallstVariables.Strings, ResolveTemplatePath(FClkActions[AActionIndex].PluginOptions.FileName));
+    acPlugin: Result := FActionExecution.ExecutePluginAction(FClkActions[AActionIndex].PluginOptions, @FClkActions, frClickerActions.vallstVariables.Strings, ResolveTemplatePath(FClkActions[AActionIndex].PluginOptions.FileName), FContinuePlayingBySteppingInto, {FShouldStopAtBreakPoint replaced by FDebugging} FDebugging);
   end;  //case
 end;
 
@@ -2435,6 +2478,9 @@ begin
     Exit; //do not show a dialog here
 
   PlayActionByNode(Node);
+
+  if FClkActions[Node^.Index].ActionOptions.Action = acPlugin then
+    frClickerActions.frClickerPlugin.DoneDebuging;
 end;
 
 
@@ -2544,7 +2590,7 @@ end;
 
 function TfrClickerActionsArr.PlayAllActions(IsDebugging: Boolean = False; StartAtSelected: Boolean = False): Boolean;
 var
-  Node, OldNode, LastNode: PVirtualNode;
+  Node: PVirtualNode;
   ClosingTemplateResponse: string;
   tk: QWord;
   IsAtBreakPoint: Boolean;
@@ -2602,12 +2648,11 @@ begin
       ResetDebuggingStatusOnAllActions;
 
       try
-        LastNode := vstActions.GetLast;
         repeat
           FClkActions[Node^.Index].ActionOptions.ExecutionIndex := IntToStr(Node^.Index);  //required by FindSubControl, to update the UI, when adding a default font profile
           HighlightCurrentlyExecutedAction(Node);
 
-          spdbtnStepInto.Enabled := IsDebugging and (FClkActions[Node^.Index].ActionOptions.Action = acCallTemplate);
+          spdbtnStepInto.Enabled := IsDebugging and (FClkActions[Node^.Index].ActionOptions.Action in [acCallTemplate, acPlugin]);
 
           IsAtBreakPoint := ShouldStopActionAtBreakpoint(FClkActions[Node^.Index].ActionBreakPoint);
           if IsAtBreakPoint then
@@ -2694,10 +2739,13 @@ begin
             end;
           end;
 
-          if FClkActions[Node^.Index].ActionOptions.Action = acCallTemplate then
+          if FClkActions[Node^.Index].ActionOptions.Action in [acCallTemplate, acPlugin] then
           begin
             FContinuePlayingBySteppingInto := False; //reset flag for next execution
             //spdbtnContinuePlayingInto.Enabled := False;
+
+            if FClkActions[Node^.Index].ActionOptions.Action = acPlugin then
+              frClickerActions.frClickerPlugin.DoneDebuging;
           end;
 
           /////// debugging icons
@@ -2705,11 +2753,10 @@ begin
           vstActions.InvalidateNode(Node);
           /////// debugging icons
 
-          OldNode := Node;
           Node := Node^.NextSibling;
           vstActions.RepaintNode(Node);
           Application.ProcessMessages;
-        until (OldNode = LastNode) or not FPlaying;
+        until (Node = nil) or not FPlaying;
       finally
         spdbtnContinuePlayingAll.Enabled := False;
         spdbtnStepOver.Enabled := False;
@@ -4547,6 +4594,10 @@ begin
             FClkActions[Length(FClkActions) - 1] := ClipboardClkActions[i];    //to be replaced with a copy function
             vstActions.RootNodeCount := Length(FClkActions);
             vstActions.Selected[vstActions.GetLast] := True;
+
+            if FClkActions[Length(FClkActions) - 1].ActionOptions.Action = acPlugin then
+              if DoOnFileExists(ResolveTemplatePath(FClkActions[Length(FClkActions) - 1].PluginOptions.FileName)) then
+                SetActionPropertiesFromPlugin(FClkActions[Length(FClkActions) - 1]);
           end;
         end
         else

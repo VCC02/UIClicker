@@ -1,0 +1,132 @@
+{
+    Copyright (C) 2024 VCC
+    creation date: 14 Jan 2024
+    initial release date: 15 Jan 2024
+
+    author: VCC
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"),
+    to deal in the Software without restriction, including without limitation
+    the rights to use, copy, modify, merge, publish, distribute, sublicense,
+    and/or sell copies of the Software, and to permit persons to whom the
+    Software is furnished to do so, subject to the following conditions:
+    The above copyright notice and this permission notice shall be included
+    in all copies or substantial portions of the Software.
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+    IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+    DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+    TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
+    OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+}
+
+
+//This tool creates high-level debug symbols for UIClicker, from plugin projects.
+//The full path to symbols file (<PluginProjectName>.DbgSym is expected to be found as the first argument.
+//The next arguments should be the source files, which contain "DbgPoint" calls.
+
+program ClkDbgSym;
+
+{$H+}
+//{$mode objfpc}
+{$mode Delphi}
+
+uses
+  {$IFDEF UNIX}
+  cthreads,
+  {$ENDIF}
+  SysUtils, Classes, Math
+  { you can add units after this };
+
+function ExtractFileNameNoExt(AFnm: string): string;
+var
+  FnmWithExt: string;
+  PosExt: Integer;
+begin
+  FnmWithExt := ExtractFileName(AFnm);
+  PosExt := Pos(ExtractFileExt(FnmWithExt), FnmWithExt);
+
+  if PosExt > 0 then
+    Result := Copy(FnmWithExt, 1, PosExt - 1)
+  else
+    Result := FnmWithExt;
+end;
+
+
+var
+  i, j: Integer;
+  SrcContent, DbgSymContent: TStringList;
+  s, SrcName, DestName: string;
+  PosDbgPoint, DbgPointIdx: Integer;
+  PosComment: Integer; //Only comments starting on the same line, are suported. If the line is already in a multi-line comment, it is read as non-commented.
+begin
+  if ParamCount > 1 then
+  begin
+    SrcContent := TStringList.Create;
+    DbgSymContent := TStringList.Create;
+    try
+      DestName := ParamStr(1);  //first argument is the destination file name ( .DbgSym)
+
+      for i := 2 to ParamCount do
+      begin
+        DbgSymContent.Add('[' + ParamStr(i) + ']');
+
+        if FileExists(ParamStr(i)) then
+        begin
+          SrcName := ParamStr(i);
+          SrcContent.LoadFromFile(SrcName);
+
+          DbgPointIdx := 0;
+          for j := 0 to SrcContent.Count - 1 do
+          begin
+            s := SrcContent.Strings[j];
+            PosDbgPoint := Pos('  DbgPoint(', s);
+
+            if PosDbgPoint = 0 then
+              PosDbgPoint := Pos('if DbgPoint(', s);
+
+            if PosDbgPoint = 0 then
+              PosDbgPoint := Pos('if not DbgPoint(', s);
+
+            if PosDbgPoint > 0 then
+            begin
+              PosComment := 0;
+              PosComment := Max(PosComment, Pos('//', s));
+              PosComment := Max(PosComment, Pos('{', s));
+              PosComment := Max(PosComment, Pos('(*', s));
+              PosComment := Max(PosComment, Pos('/*', s));  // 'c'-comment
+
+              if (PosComment = 0) or (PosComment > PosDbgPoint + Length('DbgPoint(')) then
+              begin
+                DbgSymContent.Add('DbgPointIdx_' + IntToStr(j) + '=' + s);
+                Inc(DbgPointIdx);
+              end;
+            end;
+          end;
+        end //if FileExists
+        else
+          DbgSymContent.Add('LineCount=-1');  //Source file not found
+
+        DbgSymContent.Add('');
+      end; //for input files
+
+      try
+        DbgSymContent.SaveToFile(DestName);
+      except
+        on E: Exception do
+        begin
+          try
+            WriteLn('Cannot save file: "' + DestName + '"   Ex: ' + E.Message);
+          except
+            //can't call WriteLn
+          end;
+        end;
+      end;
+    finally
+      SrcContent.Free;
+      DbgSymContent.Free;
+    end;
+  end;
+end.
+

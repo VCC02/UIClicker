@@ -54,6 +54,8 @@ type
     function ReadString(SectionIndex: Integer; const Ident, Default: string): string; overload;
     function ReadInteger(SectionIndex: Integer; const Ident: string; Default: Longint): Longint; overload;
     function ReadBool(SectionIndex: Integer; const Ident: string; Default: Boolean): Boolean; overload;
+
+    procedure ReadSection(SectionIndex: Integer; Dest: TStringList);
   end;
 
   
@@ -265,5 +267,13 @@ begin
   Result := ReadInteger(SectionIndex, Ident, Ord(Default)) = 1;
 end;
 
+
+procedure TClkIniReadonlyFile.ReadSection(SectionIndex: Integer; Dest: TStringList);
+begin
+  if (SectionIndex < 0) or (SectionIndex > Length(FSectionContents) - 1) then
+    raise Exception.Create('Section index out of bounds: ' + IntToStr(SectionIndex) + ' in ReadSection.');
+
+  Dest.AddStrings(FSectionContents[SectionIndex]);
+end;
 
 end.

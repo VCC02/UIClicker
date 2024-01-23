@@ -47,8 +47,9 @@ uses
   ClickerPrimitiveUtils, ClickerPrimitivesFrame, ClickerPrimitiveValues,
   ClickerPrimitives, ClickerOIUtils, ClickerActionProperties,
   ClickerPrimitivesCompositor, ClickerPrimitivesCompEditors,
-  ClickerWinInterpFrame, ClickerFontFinderSettingsForm, BitmapConv, 
-  ClickerActionPlugins, ClickerActionPluginLoader, DllUtils, ClickerExtraUtils;
+  ClickerWinInterpFrame, ClickerFontFinderSettingsForm, BitmapConv,
+  ClickerActionPlugins, ClickerActionPluginLoader, DllUtils, ClickerExtraUtils,
+  ClickerPluginFrame;
 
 {$R *.res}
 

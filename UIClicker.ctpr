@@ -378,6 +378,14 @@
         <Filename Value="ClickerClient\DllUtils.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
+      <Unit>
+        <Filename Value="ClickerPluginFrame.pas"/>
+        <FRMtype Value="400"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="frClickerPlugin"/>
+        <HasResources Value="True"/>
+        <ResourceBaseClass Value="Frame"/>
+      </Unit>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

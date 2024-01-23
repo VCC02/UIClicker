@@ -44,6 +44,10 @@ type
     OnAddToLog: TOnAddToLog;
     OnExecuteActionByName: TOnExecuteActionByName;
     OnSetVar: TOnSetVar;
+    OnSetDebugPoint: TOnSetDebugPoint;
+    FIsDebugging, FShouldStopAtBreakPoint: Boolean;
+    FStopAllActionsOnDemandFromParent, FPluginContinueAll: PBoolean;
+    FStepOver: PBoolean;
 
     AllActions: PClkActionsRecArr;
     AllVars: TStringList;
@@ -52,8 +56,9 @@ type
     procedure DoAddToLog(s: string);
     function DoExecuteActionByName(AActionName: string): Boolean;
     procedure DoSetVar(AVarName, AVarValue: string);
+    procedure DoSetDebugPoint(ADebugPoint: string);
 
-    function LoadToExecute(APath: string; AOnAddToLog: TOnAddToLog; AOnExecuteActionByName: TOnExecuteActionByName; AOnSetVar: TOnSetVar; AAllActions: PClkActionsRecArr = nil; AAllVars: TStringList = nil): Boolean;
+    function LoadToExecute(APath: string; AOnAddToLog: TOnAddToLog; AOnExecuteActionByName: TOnExecuteActionByName; AOnSetVar: TOnSetVar; AOnSetDebugPoint: TOnSetDebugPoint; IsDebugging, AShouldStopAtBreakPoint: Boolean; AStopAllActionsOnDemandFromParent, AStepOver, APluginContinueAll: PBoolean; AAllActions: PClkActionsRecArr = nil; AAllVars: TStringList = nil): Boolean;
     function LoadToGetProperties(APath: string): Boolean;
     function Unload: Boolean;
 
@@ -69,7 +74,7 @@ implementation
 
 
 uses
-  DllUtils;
+  DllUtils, Forms;
 
 
 //APluginReference amd AIndex is used as input param.
@@ -150,7 +155,7 @@ begin
 end;
 
 
-procedure DoOnActionPlugin_SetTemplateVar(APluginReference: Pointer; AVarName, AVarValue: Pointer); cdecl;
+procedure DoOnActionPlugin_SetTemplateVar_Callback(APluginReference: Pointer; AVarName, AVarValue: Pointer); cdecl;
 var
   ActionPlugin: PActionPlugin;
   VarName, VarValue: string;
@@ -165,6 +170,61 @@ begin
     on E: Exception do
       ActionPlugin^.DoAddToLog('Plugin loader: ' + E.Message);
   end;
+end;
+
+
+function DoOnActionPlugin_DebugPoint_Callback(APluginReference: Pointer; APointName, ALogMsg: Pointer; AIsBreakPoint: TIsBreakPoint): Boolean; //The handler should return True, to continue execution. If False, the dll should exit ExecutePluginFunc (when users stop the execution).
+var
+  ActionPlugin: PActionPlugin;
+  PointName, LogMsg: string;
+begin
+  Result := False;
+
+  try
+    ActionPlugin := APluginReference;
+    SetPointedContentToString(APointName, PointName);
+    SetPointedContentToString(ALogMsg, LogMsg);
+
+    if ActionPlugin^.FIsDebugging and ((ActionPlugin^.FPluginContinueAll <> nil) and not ActionPlugin^.FPluginContinueAll^) then
+    begin
+      ActionPlugin^.DoAddToLog('Entering plugin debug point "' + PointName + ':' + LogMsg);
+      ActionPlugin^.DoSetDebugPoint(PointName);
+      try
+        repeat
+          Sleep(1);
+          Application.ProcessMessages;
+
+          if ((ActionPlugin^.FStepOver <> nil) and ActionPlugin^.FStepOver^) or
+             (GetAsyncKeyState(VK_F8) < 0) then
+          begin
+            if ActionPlugin^.FStepOver <> nil then
+              ActionPlugin^.FStepOver^ := False;    //Reset flag
+
+            Sleep(200);
+            Break;
+          end;
+
+          if ((ActionPlugin^.FPluginContinueAll <> nil) and ActionPlugin^.FPluginContinueAll^) or
+             (GetAsyncKeyState(VK_F9) < 0) then
+          begin
+            //Do not reset the FPluginContinueAll flag here.
+            Break;
+          end;
+
+          if ((ActionPlugin^.FStopAllActionsOnDemandFromParent <> nil) and ActionPlugin^.FStopAllActionsOnDemandFromParent^) or
+             ((GetAsyncKeyState(VK_CONTROL) < 0) and (GetAsyncKeyState(VK_SHIFT) < 0) and (GetAsyncKeyState(VK_F2) < 0)) then
+            Exit;
+        until False;
+      finally
+        ActionPlugin^.DoAddToLog('Exiting plugin debug point "' + PointName);
+      end;
+    end;
+  except
+    on E: Exception do
+      ActionPlugin^.DoAddToLog('Plugin loader: ' + E.Message);
+  end;
+
+  Result := True;
 end;
 
 
@@ -194,7 +254,14 @@ begin
 end;
 
 
-function TActionPlugin.LoadToExecute(APath: string; AOnAddToLog: TOnAddToLog; AOnExecuteActionByName: TOnExecuteActionByName; AOnSetVar: TOnSetVar; AAllActions: PClkActionsRecArr = nil; AAllVars: TStringList = nil): Boolean;
+procedure TActionPlugin.DoSetDebugPoint(ADebugPoint: string);
+begin
+  if Assigned(OnSetDebugPoint) then
+    OnSetDebugPoint(ADebugPoint);
+end;
+
+
+function TActionPlugin.LoadToExecute(APath: string; AOnAddToLog: TOnAddToLog; AOnExecuteActionByName: TOnExecuteActionByName; AOnSetVar: TOnSetVar; AOnSetDebugPoint: TOnSetDebugPoint; IsDebugging, AShouldStopAtBreakPoint: Boolean; AStopAllActionsOnDemandFromParent, AStepOver, APluginContinueAll: PBoolean; AAllActions: PClkActionsRecArr = nil; AAllVars: TStringList = nil): Boolean;
 begin
   Result := False;
 
@@ -205,6 +272,13 @@ begin
   OnAddToLog := AOnAddToLog;
   OnExecuteActionByName := AOnExecuteActionByName;
   OnSetVar := AOnSetVar;
+  OnSetDebugPoint := AOnSetDebugPoint;
+
+  FIsDebugging := IsDebugging;
+  FShouldStopAtBreakPoint := AShouldStopAtBreakPoint;
+  FStopAllActionsOnDemandFromParent := AStopAllActionsOnDemandFromParent;
+  FStepOver := AStepOver;
+  FPluginContinueAll := APluginContinueAll;
 
   AllActions := AAllActions;
   AllVars := AAllVars;
@@ -354,14 +428,23 @@ begin
 
   ListOfPluginSettingsLen := Length(AListOfPropertiesAndValues);
 
-  Result := Func.ExecutePluginFunc(@Self,
-                                   @AListOfPropertiesAndValues[1],
-                                   @ListOfPluginSettingsLen,
-                                   DoOnActionPlugin_GetActionCount_Callback,
-                                   DoOnActionPlugin_GetActionInfoByIndex_Callback,
-                                   DoOnActionPlugin_ExecuteAction_Callback,
-                                   DoOnActionPlugin_GetAllTemplateVars_Callback,
-                                   DoOnActionPlugin_SetTemplateVar);
+  if FPluginContinueAll <> nil then
+    FPluginContinueAll^ := False; //reset flag before execution
+
+  try
+    Result := Func.ExecutePluginFunc(@Self,
+                                     @AListOfPropertiesAndValues[1],
+                                     @ListOfPluginSettingsLen,
+                                     DoOnActionPlugin_GetActionCount_Callback,
+                                     DoOnActionPlugin_GetActionInfoByIndex_Callback,
+                                     DoOnActionPlugin_ExecuteAction_Callback,
+                                     DoOnActionPlugin_GetAllTemplateVars_Callback,
+                                     DoOnActionPlugin_SetTemplateVar_Callback,
+                                     DoOnActionPlugin_DebugPoint_Callback);
+  finally
+    if FPluginContinueAll <> nil then
+      FPluginContinueAll^ := False; //reset flag after execution
+  end;
 end;
 
 end.

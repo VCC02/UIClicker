@@ -1677,7 +1677,8 @@ begin
         end;
 
         NewFrame.frClickerActions.frClickerConditionEditor.ClearActionConditionPreview; //destroy string lists and set array length to 0
-      finally
+        NewFrame.Visible := False;  //It seems that there is a race condition, which causes the frame to stay visible and keep some dangling pointers. If set to hidden, before being destroyed, might fix the issue.
+      finally                       //The bug is reproduced when pressing the Stop button and a CallTemplate or Plugin action is next to be executed.
         NewFrame.Free;
       end;
     finally

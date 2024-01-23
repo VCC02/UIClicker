@@ -57,6 +57,8 @@ type
     FClickerVars: TStringList;  //not created here in this class, used from outside
     FStopAllActionsOnDemandFromParent: PBoolean;
     FStopAllActionsOnDemand: PBoolean;
+    FPluginStepOver: PBoolean;
+    FPluginContinueAll: PBoolean;
     FSelfTemplateFileName: PString;
     FExecutingActionFromRemote: PBoolean;
     FFileLocationOfDepsIsMem: PBoolean;
@@ -94,6 +96,7 @@ type
     FOnExecuteActionByName: TOnExecuteActionByName;
     FOnGetAllActions: TOnGetAllActions;
     FOnResolveTemplatePath: TOnResolveTemplatePath;
+    FOnSetDebugPoint: TOnSetDebugPoint;
 
     function GetActionVarValue(VarName: string): string;
     procedure SetActionVarValue(VarName, VarValue: string);
@@ -106,9 +109,10 @@ type
 
     procedure AddToLog(s: string);
     function DoOnExecuteActionByName(AActionName: string): Boolean;
-    procedure DoOnSetVar(AVarName, AVarValue: string);
+
     function DoOnGetAllActions: PClkActionsRecArr;
     function DoOnResolveTemplatePath(APath: string; ACustomSelfTemplateDir: string = ''; ACustomAppDir: string = ''): string;
+    procedure DoOnSetDebugPoint(ADebugPoint: string);
 
     procedure SetLastActionStatus(AActionResult, AAlowedToFail: Boolean);
     function CheckManualStopCondition: Boolean;
@@ -142,6 +146,9 @@ type
     function HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     function HandleOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     function HandleOnEvaluateReplacements(s: string; Recursive: Boolean = True): string;
+
+    procedure HandleOnSetVar(AVarName, AVarValue: string);
+    procedure HandleOnSetDebugPoint(ADebugPoint: string);
   public
     constructor Create;
     destructor Destroy; override;
@@ -157,7 +164,7 @@ type
     function ExecuteWindowOperationsAction(var AWindowOperationsOptions: TClkWindowOperationsOptions): Boolean;
     function ExecuteLoadSetVarFromFileAction(var ALoadSetVarFromFileOptions: TClkLoadSetVarFromFileOptions): Boolean;
     function ExecuteSaveSetVarToFileAction(var ASaveSetVarToFileOptions: TClkSaveSetVarToFileOptions): Boolean;
-    function ExecutePluginAction(var APluginOptions: TClkPluginOptions; AAllActions: PClkActionsRecArr; AListOfAllVars: TStringList; AResolvedPluginPath: string): Boolean;
+    function ExecutePluginAction(var APluginOptions: TClkPluginOptions; AAllActions: PClkActionsRecArr; AListOfAllVars: TStringList; AResolvedPluginPath: string; IsDebugging, AShouldStopAtBreakPoint: Boolean): Boolean;
 
     function ExecuteClickActionAsString(AListOfClickOptionsParams: TStrings): Boolean;
     function ExecuteExecAppActionAsString(AListOfExecAppOptionsParams: TStrings): Boolean;
@@ -175,6 +182,9 @@ type
     property ClickerVars: TStringList write FClickerVars;  //not created here in this class, used from outside
     property StopAllActionsOnDemandFromParent: PBoolean write FStopAllActionsOnDemandFromParent;
     property StopAllActionsOnDemand: PBoolean write FStopAllActionsOnDemand;
+    property PluginStepOver: PBoolean write FPluginStepOver;
+    property PluginContinueAll: PBoolean write FPluginContinueAll;
+
     property SelfTemplateFileName: PString write FSelfTemplateFileName;
     property ExecutingActionFromRemote: PBoolean write FExecutingActionFromRemote;
     property FileLocationOfDepsIsMem: PBoolean write FFileLocationOfDepsIsMem;
@@ -212,6 +222,7 @@ type
     property OnExecuteActionByName: TOnExecuteActionByName write FOnExecuteActionByName;
     property OnGetAllActions: TOnGetAllActions write FOnGetAllActions;
     property OnResolveTemplatePath: TOnResolveTemplatePath write FOnResolveTemplatePath;
+    property OnSetDebugPoint: TOnSetDebugPoint write FOnSetDebugPoint;
   end;
 
 
@@ -241,6 +252,9 @@ begin
   FExecutesRemotely := nil;
   FOwnerFrame := nil;
 
+  FPluginStepOver := nil;
+  FPluginContinueAll := nil;
+
   FOnAddToLog := nil;
   FOnSetEditorEnabledState := nil;
   FOnSetEditorTimeoutProgressBarMax := nil;
@@ -268,6 +282,7 @@ begin
   FOnExecuteActionByName := nil;
   FOnGetAllActions := nil;
   FOnResolveTemplatePath := nil;
+  FOnSetDebugPoint := nil;
 end;
 
 
@@ -759,12 +774,6 @@ begin
 end;
 
 
-procedure TActionExecution.DoOnSetVar(AVarName, AVarValue: string);
-begin
-  SetActionVarValue(AVarName, AVarValue);
-end;
-
-
 function TActionExecution.DoOnGetAllActions: PClkActionsRecArr;
 begin
   if not Assigned(FOnGetAllActions) then
@@ -780,6 +789,15 @@ begin
     raise Exception.Create('OnResolveTemplatePath not assigned.');
 
   Result := FOnResolveTemplatePath(APath, ACustomSelfTemplateDir, ACustomAppDir);
+end;
+
+
+procedure TActionExecution.DoOnSetDebugPoint(ADebugPoint: string);
+begin
+  if not Assigned(FOnSetDebugPoint) then
+    raise Exception.Create('OnSetDebugPoint not assigned.');
+
+  FOnSetDebugPoint(ADebugPoint);
 end;
 
 
@@ -2692,7 +2710,7 @@ begin
 end;
 
 
-function TActionExecution.ExecutePluginAction(var APluginOptions: TClkPluginOptions; AAllActions: PClkActionsRecArr; AListOfAllVars: TStringList; AResolvedPluginPath: string): Boolean;
+function TActionExecution.ExecutePluginAction(var APluginOptions: TClkPluginOptions; AAllActions: PClkActionsRecArr; AListOfAllVars: TStringList; AResolvedPluginPath: string; IsDebugging, AShouldStopAtBreakPoint: Boolean): Boolean;
 var
   ActionPlugin: TActionPlugin;
   tk: Int64;
@@ -2700,10 +2718,12 @@ begin
   Result := False;
 
   AddToLog('Executing plugin on a template with ' + IntToStr(Length(AAllActions^)) + ' action(s)...');
+  if IsDebugging then
+    AddToLog('Plugin debugging is active. It can be stepped over using F8 shortcut, or stopped using Ctrl-Shift-F2 shortcut.');
 
   tk := GetTickCount64;
   try
-    if not ActionPlugin.LoadToExecute(AResolvedPluginPath, AddToLog, DoOnExecuteActionByName, DoOnSetVar, AAllActions, AListOfAllVars) then
+    if not ActionPlugin.LoadToExecute(AResolvedPluginPath, AddToLog, DoOnExecuteActionByName, HandleOnSetVar, HandleOnSetDebugPoint, IsDebugging, AShouldStopAtBreakPoint, FStopAllActionsOnDemand{FromParent}, FPluginStepOver, FPluginContinueAll, AAllActions, AListOfAllVars) then
     begin
       SetActionVarValue('$ExecAction_Err$', ActionPlugin.Err);
       AddToLog(ActionPlugin.Err);
@@ -2715,7 +2735,7 @@ begin
       if not Result then
         AddToLog('Plugin execution failed with: ' + GetActionVarValue(CActionPlugin_ExecutionResultErrorVar))
       else
-        AddToLog('Plugin execution result placed in : "' + CActionPlugin_ExecutionResultVar + '" variable.');
+        AddToLog('Plugin executed successfully.');
     finally
       if not ActionPlugin.Unload then
         AddToLog(ActionPlugin.Err);
@@ -3230,19 +3250,21 @@ var
   PluginOptions: TClkPluginOptions;
   TempAllActions: PClkActionsRecArr;
   TempListOfAllVars: TStringList;
+  IsDebugging: Boolean;
 begin
   Result := False;
   SetActionVarValue('$ExecAction_Err$', '');
   try
     PluginOptions.FileName := DoOnResolveTemplatePath(APluginOptionsParams.Values['FileName']);
     PluginOptions.ListOfPropertiesAndValues := FastReplace_45ToReturn(APluginOptionsParams.Values['ListOfPropertiesAndValues']);
+    IsDebugging := APluginOptionsParams.Values['IsDebugging'] = '1';
 
     TempAllActions := DoOnGetAllActions;
 
     TempListOfAllVars := TStringList.Create;
     try
       DoOnBackupVars(TempListOfAllVars);
-      Result := ExecutePluginAction(PluginOptions, TempAllActions, TempListOfAllVars, PluginOptions.FileName);
+      Result := ExecutePluginAction(PluginOptions, TempAllActions, TempListOfAllVars, PluginOptions.FileName, IsDebugging, IsDebugging); //passing two IsDebugging params. ToDo:  review the logic
     finally
       TempListOfAllVars.Free;
     end;
@@ -3268,6 +3290,18 @@ end;
 function TActionExecution.HandleOnEvaluateReplacements(s: string; Recursive: Boolean = True): string;
 begin
   Result := EvaluateReplacements(s, Recursive);
+end;
+
+
+procedure TActionExecution.HandleOnSetVar(AVarName, AVarValue: string);
+begin
+  SetActionVarValue(AVarName, AVarValue);
+end;
+
+
+procedure TActionExecution.HandleOnSetDebugPoint(ADebugPoint: string);
+begin
+  DoOnSetDebugPoint(ADebugPoint);
 end;
 
 end.

@@ -96,6 +96,7 @@ type
 
   TOnExecuteActionByName = function(AActionName: string): Boolean of object;
   TOnSetVar = procedure(AVarName, AVarValue: string) of object;
+  TOnSetDebugPoint = procedure(ADebugPoint: string) of object;
 
 const
   CClkActionStr: array[TClkAction] of string = ('Click', 'ExecApp', 'FindControl', 'FindSubControl',
@@ -486,6 +487,9 @@ function ModifyBrightness(AColor: TColor; AAmount: Byte; ABrightnessOperation: T
 procedure CreateSelectionLabels(AOwner: TComponent; AParent: TWinControl; var ALeftLabel, ATopLabel, ARightLabel, ABottomLabel: TLabel; ALeftColor, ATopColor, ARightColor, ABottomColor: TColor; AShouldBringToFront, ACreateWithPaintedLabel: Boolean);
 
 procedure CopyPartialResultsToFinalResult(var AResultedControlArr, APartialResultedControlArr: TCompRecArr);
+
+function ExtractFileNameNoExt(AFnm: string): string;
+function ExtractFullFileNameNoExt(AFnm: string): string;
 
 var
   UseWideStringsOnGetControlText: Boolean = False;
@@ -2519,6 +2523,36 @@ begin
       SetLength(AResultedControlArr, Length(AResultedControlArr) + 1);
       AResultedControlArr[Length(AResultedControlArr) - 1] := APartialResultedControlArr[i];
     end;
+end;
+
+
+function ExtractFileNameNoExt(AFnm: string): string;
+var
+  FnmWithExt: string;
+  PosExt: Integer;
+begin
+  FnmWithExt := ExtractFileName(AFnm);
+  PosExt := Pos(ExtractFileExt(FnmWithExt), FnmWithExt);
+
+  if PosExt > 0 then
+    Result := Copy(FnmWithExt, 1, PosExt - 1)
+  else
+    Result := FnmWithExt;
+end;
+
+
+function ExtractFullFileNameNoExt(AFnm: string): string;
+var
+  FnmWithExt: string;
+  PosExt: Integer;
+begin
+  FnmWithExt := AFnm;
+  PosExt := Pos(ExtractFileExt(FnmWithExt), FnmWithExt);
+
+  if PosExt > 0 then
+    Result := Copy(FnmWithExt, 1, PosExt - 1)
+  else
+    Result := FnmWithExt;
 end;
 
 end.
