@@ -230,6 +230,7 @@ type
     TabSheetActionFindSubControlBMPText: TTabSheet;
     TabSheetActionFindSubControlSearchArea: TTabSheet;
     TabSheetActionFindSubControlText: TTabSheet;
+    tmrHandleSelectionKeys: TTimer;
     tmrBlinkCalcErrLevel: TTimer;
     tmrDrawZoom: TTimer;
     tmrUpdateGrid: TTimer;
@@ -255,6 +256,7 @@ type
     procedure tabctrlBMPTextChange(Sender: TObject);
     procedure tmrBlinkCalcErrLevelTimer(Sender: TObject);
     procedure tmrDrawZoomTimer(Sender: TObject);
+    procedure tmrHandleSelectionKeysTimer(Sender: TObject);
     procedure tmrUpdateGridTimer(Sender: TObject);
     procedure tmrUpdateSearchAreaOffsetEditBoxesTimer(Sender: TObject);
 
@@ -296,6 +298,7 @@ type
     FSelectionHold: Boolean;
     //FMouseDownGlobalPos: TPoint;
     FMouseDownSelPos: TPoint;
+    FLatestMovedSelectionLine: Integer;
 
     FMouseDownGlobalPos: TPoint;
     FMouseDownComponentPos: TPoint;
@@ -1055,6 +1058,7 @@ begin
   FVerboseSearchResults := False;
   FDragging := False;
   FInMemFS := nil;
+  FLatestMovedSelectionLine := -1;
 
   FGridDrawingOption := loDot;
 
@@ -1567,6 +1571,33 @@ begin
 end;
 
 
+procedure TfrClickerFindControl.tmrHandleSelectionKeysTimer(Sender: TObject);
+begin
+  if GetAsyncKeyState(VK_ESCAPE) < 0 then
+  begin
+    case FLatestMovedSelectionLine of
+      0:
+        FTransparent_LeftMouseMove(FTransparent_SearchAreaLeftLimitLabel, [], -1, -1);
+
+      1:
+        FTransparent_TopMouseMove(FTransparent_SearchAreaTopLimitLabel, [], -1, -1);
+
+      2:
+        FTransparent_RightMouseMove(FTransparent_SearchAreaRightLimitLabel, [], -1, -1);
+
+      3:
+        FTransparent_BottomMouseMove(FTransparent_SearchAreaBottomLimitLabel, [], -1, -1);
+    end;
+
+    if FLatestMovedSelectionLine in [0..3] then
+    begin
+      tmrHandleSelectionKeys.Enabled := False;
+      DoOnAddToLog('Cancelling search area editing...');
+    end;
+  end;
+end;
+
+
 procedure TfrClickerFindControl.tmrUpdateGridTimer(Sender: TObject);
 begin
   tmrUpdateGrid.Enabled := False;
@@ -1896,14 +1927,16 @@ var
 begin
   for i := 0 to FSearchAreaDbgImgSearchedBmpMenu.Items.Count - 1 do
     if FSearchAreaDbgImgSearchedBmpMenu.Items.Items[i].Bitmap <> nil then
-    begin
-      try
-        FSearchAreaDbgImgSearchedBmpMenu.Items.Items[i].Bitmap.Free;
-        FSearchAreaDbgImgSearchedBmpMenu.Items.Items[i].Bitmap := nil;
-      except
-        //double free
+      if (FSearchAreaDbgImgSearchedBmpMenu.Items.Items[i].Bitmap.Width = 16) and  //extra verification of bitmap validity
+         (FSearchAreaDbgImgSearchedBmpMenu.Items.Items[i].Bitmap.Height = 16) then
+      begin
+        try
+          FSearchAreaDbgImgSearchedBmpMenu.Items.Items[i].Bitmap.Free;
+          FSearchAreaDbgImgSearchedBmpMenu.Items.Items[i].Bitmap := nil;
+        except
+          //double free
+        end;
       end;
-    end;
 
   FSearchAreaDbgImgSearchedBmpMenu.Items.Clear;
 
@@ -1989,38 +2022,53 @@ var
   MenuItem: TMenuItem;
   i: Integer;
 begin
-  PopulateDbgImgExtraMenuWithTxtItems;
-
-  if lstMatchBitmapFiles.Items.Count > 0 then
-  begin
-    MenuItem := TMenuItem.Create(FSearchAreaMenu);
-    MenuItem.Caption := '-';
-    FSearchAreaDbgImgSearchedBmpMenu.Items.Add(MenuItem);
-
-    for i := 0 to lstMatchBitmapFiles.Items.Count - 1 do
-    begin
-      MenuItem := TMenuItem.Create(FSearchAreaDbgImgSearchedBmpMenu);
-      MenuItem.Caption := lstMatchBitmapFiles.Items.Strings[i];
-      MenuItem.OnClick := MenuItemGenericLoadBmpToSearchedAreaClick;
-      MenuItem.Enabled := DoOnFileExists(lstMatchBitmapFiles.Items.Strings[i]);
-      FSearchAreaDbgImgSearchedBmpMenu.Items.Add(MenuItem);
-    end;
+  try
+    PopulateDbgImgExtraMenuWithTxtItems;
+  except
+    on E: Exception do
+      MessageBox(Handle, PChar('Ex on PopulateDbgImgExtraMenuWithTxtItems: ' + E.Message), PChar(Application.Title), MB_ICONINFORMATION);
   end;
 
-  if lstMatchPrimitiveFiles.Items.Count > 0 then
-  begin
-    MenuItem := TMenuItem.Create(FSearchAreaMenu);
-    MenuItem.Caption := '-';
-    FSearchAreaDbgImgSearchedBmpMenu.Items.Add(MenuItem);
-
-    for i := 0 to lstMatchPrimitiveFiles.Items.Count - 1 do
+  try
+    if lstMatchBitmapFiles.Items.Count > 0 then
     begin
-      MenuItem := TMenuItem.Create(FSearchAreaDbgImgSearchedBmpMenu);
-      MenuItem.Caption := lstMatchPrimitiveFiles.Items.Strings[i];
-      MenuItem.OnClick := MenuItemGenericLoadBmpToSearchedAreaClick;
-      MenuItem.Enabled := DoOnFileExists(lstMatchPrimitiveFiles.Items.Strings[i]);
+      MenuItem := TMenuItem.Create(FSearchAreaMenu);
+      MenuItem.Caption := '-';
       FSearchAreaDbgImgSearchedBmpMenu.Items.Add(MenuItem);
+
+      for i := 0 to lstMatchBitmapFiles.Items.Count - 1 do
+      begin
+        MenuItem := TMenuItem.Create(FSearchAreaDbgImgSearchedBmpMenu);
+        MenuItem.Caption := lstMatchBitmapFiles.Items.Strings[i];
+        MenuItem.OnClick := MenuItemGenericLoadBmpToSearchedAreaClick;
+        MenuItem.Enabled := DoOnFileExists(lstMatchBitmapFiles.Items.Strings[i]);
+        FSearchAreaDbgImgSearchedBmpMenu.Items.Add(MenuItem);
+      end;
     end;
+  except
+    on E: Exception do
+      MessageBox(Handle, PChar('Ex on PopulateDbgImgExtraMenu - bmp: ' + E.Message), PChar(Application.Title), MB_ICONINFORMATION);
+  end;
+
+  try
+    if lstMatchPrimitiveFiles.Items.Count > 0 then
+    begin
+      MenuItem := TMenuItem.Create(FSearchAreaMenu);
+      MenuItem.Caption := '-';
+      FSearchAreaDbgImgSearchedBmpMenu.Items.Add(MenuItem);
+
+      for i := 0 to lstMatchPrimitiveFiles.Items.Count - 1 do
+      begin
+        MenuItem := TMenuItem.Create(FSearchAreaDbgImgSearchedBmpMenu);
+        MenuItem.Caption := lstMatchPrimitiveFiles.Items.Strings[i];
+        MenuItem.OnClick := MenuItemGenericLoadBmpToSearchedAreaClick;
+        MenuItem.Enabled := DoOnFileExists(lstMatchPrimitiveFiles.Items.Strings[i]);
+        FSearchAreaDbgImgSearchedBmpMenu.Items.Add(MenuItem);
+      end;
+    end;
+  except
+    on E: Exception do
+      MessageBox(Handle, PChar('Ex on PopulateDbgImgExtraMenu - pmtv: ' + E.Message), PChar(Application.Title), MB_ICONINFORMATION);
   end;
 end;
 
@@ -4096,6 +4144,8 @@ begin
   begin
     FMouseDownSelPos.X := FTransparent_SearchAreaLeftLimitLabel.Left; //component coordinates on the window
     FSelectionHold := True;
+    FLatestMovedSelectionLine := 0;
+    tmrHandleSelectionKeys.Enabled := True;
   end;
 end;
 
@@ -4114,7 +4164,15 @@ begin
   if Sender is TLabel then
   begin
     CurrentLabel := Sender as TLabel;
-    NewLeft := FMouseDownSelPos.X + tp.X - FMouseDownGlobalPos.X;
+
+    if GetAsyncKeyState(VK_ESCAPE) < 0 then
+    begin
+      NewLeft := FMouseDownSelPos.X;
+      FSelectionHold := False;
+    end
+    else
+      NewLeft := FMouseDownSelPos.X + tp.X - FMouseDownGlobalPos.X;
+
     if NewLeft <> CurrentLabel.Left then
       DoOnTriggerOnControlsModified;
 
@@ -4134,6 +4192,8 @@ procedure TfrClickerFindControl.FTransparent_LeftMouseUp(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
   FSelectionHold := False;
+  FLatestMovedSelectionLine := -1;
+  tmrHandleSelectionKeys.Enabled := False;
 end;
 
 
@@ -4149,6 +4209,8 @@ begin
   begin
     FMouseDownSelPos.X := FTransparent_SearchAreaRightLimitLabel.Left; //component coordinates on the window
     FSelectionHold := True;
+    FLatestMovedSelectionLine := 2;
+    tmrHandleSelectionKeys.Enabled := True;
   end;
 end;
 
@@ -4167,7 +4229,15 @@ begin
   if Sender is TLabel then
   begin
     CurrentLabel := Sender as TLabel;
-    NewLeft := FMouseDownSelPos.X + tp.X - FMouseDownGlobalPos.X;
+
+    if GetAsyncKeyState(VK_ESCAPE) < 0 then
+    begin
+      NewLeft := FMouseDownSelPos.X;
+      FSelectionHold := False;
+    end
+    else
+      NewLeft := FMouseDownSelPos.X + tp.X - FMouseDownGlobalPos.X;
+
     if NewLeft <> CurrentLabel.Left then
       DoOnTriggerOnControlsModified;
 
@@ -4187,6 +4257,8 @@ procedure TfrClickerFindControl.FTransparent_RightMouseUp(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
   FSelectionHold := False;
+  FLatestMovedSelectionLine := -1;
+  tmrHandleSelectionKeys.Enabled := False;
 end;
 
 
@@ -4202,6 +4274,8 @@ begin
   begin
     FMouseDownSelPos.Y := FTransparent_SearchAreaTopLimitLabel.Top; //component coordinates on the window
     FSelectionHold := True;
+    FLatestMovedSelectionLine := 1;
+    tmrHandleSelectionKeys.Enabled := True;
   end;
 end;
 
@@ -4220,7 +4294,15 @@ begin
   if Sender is TLabel then
   begin
     CurrentLabel := Sender as TLabel;
-    NewTop := FMouseDownSelPos.Y + tp.Y - FMouseDownGlobalPos.Y;
+
+    if GetAsyncKeyState(VK_ESCAPE) < 0 then
+    begin
+      NewTop := FMouseDownSelPos.Y;
+      FSelectionHold := False;
+    end
+    else
+      NewTop := FMouseDownSelPos.Y + tp.Y - FMouseDownGlobalPos.Y;
+
     if NewTop <> CurrentLabel.Top then
       DoOnTriggerOnControlsModified;
 
@@ -4240,6 +4322,8 @@ procedure TfrClickerFindControl.FTransparent_TopMouseUp(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
   FSelectionHold := False;
+  FLatestMovedSelectionLine := 0;
+  tmrHandleSelectionKeys.Enabled := False;
 end;
 
 
@@ -4255,6 +4339,8 @@ begin
   begin
     FMouseDownSelPos.Y := FTransparent_SearchAreaBottomLimitLabel.Top; //component coordinates on the window
     FSelectionHold := True;
+    FLatestMovedSelectionLine := 3;
+    tmrHandleSelectionKeys.Enabled := True;
   end;
 end;
 
@@ -4273,7 +4359,15 @@ begin
   if Sender is TLabel then
   begin
     CurrentLabel := Sender as TLabel;
-    NewTop := FMouseDownSelPos.Y + tp.Y - FMouseDownGlobalPos.Y;
+
+    if GetAsyncKeyState(VK_ESCAPE) < 0 then
+    begin
+      NewTop := FMouseDownSelPos.Y;
+      FSelectionHold := False;
+    end
+    else
+      NewTop := FMouseDownSelPos.Y + tp.Y - FMouseDownGlobalPos.Y;
+
     if NewTop <> CurrentLabel.Top then
       DoOnTriggerOnControlsModified;
 
@@ -4293,6 +4387,8 @@ procedure TfrClickerFindControl.FTransparent_BottomMouseUp(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
   FSelectionHold := False;
+  FLatestMovedSelectionLine := -1;
+  tmrHandleSelectionKeys.Enabled := False;
 end;
 
 

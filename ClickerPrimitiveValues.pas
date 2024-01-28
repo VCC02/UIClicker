@@ -185,6 +185,10 @@ const
   CSetFontPrimitive_BackgroundColor_PropIndex = 1;
   CSetFontPrimitive_FontName_PropIndex = 2;
 
+  CImagePrimitive_X1_PropIndex = 0;
+  CImagePrimitive_Y1_PropIndex = 1;
+  CImagePrimitive_X2_PropIndex = 2;
+  CImagePrimitive_Y2_PropIndex = 3;
   CImagePrimitive_Path_PropIndex = 4;
   CImagePrimitive_Stretch_PropIndex = 5;
   CImagePrimitive_RenderedExternally_PropIndex = 6;
@@ -192,6 +196,17 @@ const
   CImagePrimitive_TransparentMode_PropIndex = 8;
   CImagePrimitive_TransparentColor_PropIndex = 9;
 
+  CLinePrimitive_X1_PropIndex = 0;
+  CLinePrimitive_Y1_PropIndex = 1;
+  CLinePrimitive_X2_PropIndex = 2;
+  CLinePrimitive_Y2_PropIndex = 3;
+  CLinePrimitive_ShowEndpointPixel_PropIndex = 4;
+
+  CRectPrimitive_X1_PropIndex = 0;
+  CRectPrimitive_Y1_PropIndex = 1;
+  CRectPrimitive_X2_PropIndex = 2;
+  CRectPrimitive_Y2_PropIndex = 3;
+  CRectPrimitive_ExtendToEndpointCorner_PropIndex = 4;
 
 type
   TArrayOfProperties = array[0..0] of TOIPropDef;

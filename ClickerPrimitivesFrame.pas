@@ -2304,45 +2304,105 @@ begin
         CPropertyItemLevel:
         begin
           PmtvType := FPrimitives[APropertyIndex].PrimitiveType;
-          if PmtvType = CClkImagePrimitiveCmdIdx then
-          begin
-            case AItemIndex of
-              CImagePrimitive_Stretch_PropIndex:
-              begin
-                AHint := 'Set this to 1 or True, to stretch the image to the maximum available size of the composition.';
-                AShowHint := True;
-              end;
+          case PmtvType of
+            CClkImagePrimitiveCmdIdx:
+            begin
+              AShowHint := True;
 
-              CImagePrimitive_RenderedExternally_PropIndex:
-              begin
-                AHint := 'Set this to 1 or True, to load an externally rendered bmp (i.e. received from a server).' + #13#10 +
-                         'The image is identified by path and "stored" in a separate in-mem file system (not the same one used on client-server execution).';
-                AShowHint := True;
-              end;
+              case AItemIndex of
+                CImagePrimitive_X1_PropIndex:
+                  AHint := 'Current value: ' + DoOnEvaluateReplacementsFunc(FPrimitives[APropertyIndex].ClkImage.X1);
 
-              CImagePrimitive_Transparent_PropIndex:
-              begin
-                AHint := 'Set this to 1 or True, to have one of the colors as the transparency color.';
-                AShowHint := True;
-              end;
+                CImagePrimitive_Y1_PropIndex:
+                  AHint := 'Current value: ' + DoOnEvaluateReplacementsFunc(FPrimitives[APropertyIndex].ClkImage.Y1);
 
-              CImagePrimitive_TransparentMode_PropIndex:
-              begin
-                AHint := 'Set this to 0 or Auto, or 1 or Fixed.';
-                AShowHint := True;
-              end;
+                CImagePrimitive_X2_PropIndex:
+                  AHint := 'Current value: ' + DoOnEvaluateReplacementsFunc(FPrimitives[APropertyIndex].ClkImage.X2);
 
-              CImagePrimitive_TransparentColor_PropIndex:
-              begin
-                AHint := '6-digit hexa number (BGR), for a simple color, or 8-digit hexa number for a special system color.' + #13#10;
-                AHint := AHint + 'When using the value 20000000 (clDefault is a special system color), the transparency color is read from the bottom-left pixel of the image.' + #13#10;
-                AHint := AHint + 'Available special system colors: ' + #13#10;
-                AHint := AHint + '1FFFFFFF   (clNone)' + #13#10;
-                AHint := AHint + '20000000   (clDefault)';
-                AShowHint := True;
-              end;
-            end; //case
-          end; //if
+                CImagePrimitive_Y2_PropIndex:
+                  AHint := 'Current value: ' + DoOnEvaluateReplacementsFunc(FPrimitives[APropertyIndex].ClkImage.Y2);
+
+                CImagePrimitive_Stretch_PropIndex:
+                begin
+                  AHint := 'Set this to 1 or True, to stretch the image to the maximum available size of the composition.' + #13#10;
+                  AHint := AHint + 'Current value: ' + DoOnEvaluateReplacementsFunc(FPrimitives[APropertyIndex].ClkImage.Stretch);
+                end;
+
+                CImagePrimitive_RenderedExternally_PropIndex:
+                begin
+                  AHint := 'Set this to 1 or True, to load an externally rendered bmp (i.e. received from a server).' + #13#10 +
+                           'The image is identified by path and "stored" in a separate in-mem file system (not the same one used on client-server execution).' + #13#10;
+                  AHint := AHint + 'Current value: ' + DoOnEvaluateReplacementsFunc(FPrimitives[APropertyIndex].ClkImage.RenderedExternally);
+                end;
+
+                CImagePrimitive_Transparent_PropIndex:
+                begin
+                  AHint := 'Set this to 1 or True, to have one of the colors as the transparency color.' + #13#10;
+                  AHint := AHint + 'Current value: ' + DoOnEvaluateReplacementsFunc(FPrimitives[APropertyIndex].ClkImage.Transparent);
+                end;
+
+                CImagePrimitive_TransparentMode_PropIndex:
+                begin
+                  AHint := 'Set this to 0 or Auto, or 1 or Fixed.' + #13#10;
+                  AHint := AHint + 'Current value: ' + DoOnEvaluateReplacementsFunc(FPrimitives[APropertyIndex].ClkImage.TransparentMode);
+                end;
+
+                CImagePrimitive_TransparentColor_PropIndex:
+                begin
+                  AHint := '6-digit hexa number (BGR), for a simple color, or 8-digit hexa number for a special system color.' + #13#10;
+                  AHint := AHint + 'When using the value 20000000 (clDefault is a special system color), the transparency color is read from the bottom-left pixel of the image.' + #13#10;
+                  AHint := AHint + 'Available special system colors: ' + #13#10;
+                  AHint := AHint + '1FFFFFFF   (clNone)' + #13#10;
+                  AHint := AHint + '20000000   (clDefault)' + #13#10;
+                  AHint := AHint + 'Current value: ' + DoOnEvaluateReplacementsFunc(FPrimitives[APropertyIndex].ClkImage.TransparentColor);
+                end;
+              end; //case
+            end; //CClkImagePrimitiveCmdIdx
+
+            CClkLinePrimitiveCmdIdx:
+            begin
+              AShowHint := True;
+
+              case AItemIndex of
+                CLinePrimitive_X1_PropIndex:
+                  AHint := 'Current value: ' + DoOnEvaluateReplacementsFunc(FPrimitives[APropertyIndex].ClkLine.X1);
+
+                CLinePrimitive_Y1_PropIndex:
+                  AHint := 'Current value: ' + DoOnEvaluateReplacementsFunc(FPrimitives[APropertyIndex].ClkLine.Y1);
+
+                CLinePrimitive_X2_PropIndex:
+                  AHint := 'Current value: ' + DoOnEvaluateReplacementsFunc(FPrimitives[APropertyIndex].ClkLine.X2);
+
+                CLinePrimitive_Y2_PropIndex:
+                  AHint := 'Current value: ' + DoOnEvaluateReplacementsFunc(FPrimitives[APropertyIndex].ClkLine.Y2);
+
+                CLinePrimitive_ShowEndpointPixel_PropIndex:
+                  AHint := 'Current value: ' + DoOnEvaluateReplacementsFunc(FPrimitives[APropertyIndex].ClkLine.ShowEndpointPixel);
+              end; //case
+            end; //CClkLinePrimitiveCmdIdx
+
+            CClkRectPrimitiveCmdIdx:
+            begin
+              AShowHint := True;
+
+              case AItemIndex of
+                CRectPrimitive_X1_PropIndex:
+                  AHint := 'Current value: ' + DoOnEvaluateReplacementsFunc(FPrimitives[APropertyIndex].ClkRect.X1);
+
+                CRectPrimitive_Y1_PropIndex:
+                  AHint := 'Current value: ' + DoOnEvaluateReplacementsFunc(FPrimitives[APropertyIndex].ClkRect.Y1);
+
+                CRectPrimitive_X2_PropIndex:
+                  AHint := 'Current value: ' + DoOnEvaluateReplacementsFunc(FPrimitives[APropertyIndex].ClkRect.X2);
+
+                CRectPrimitive_Y2_PropIndex:
+                  AHint := 'Current value: ' + DoOnEvaluateReplacementsFunc(FPrimitives[APropertyIndex].ClkRect.Y2);
+
+                CRectPrimitive_ExtendToEndpointCorner_PropIndex:
+                  AHint := 'Current value: ' + DoOnEvaluateReplacementsFunc(FPrimitives[APropertyIndex].ClkRect.ExtendToEndpointCorner);
+              end; //case
+            end; //CClkRectPrimitiveCmdIdx
+          end; //case
         end; //item leve
       end; //case
     end; //CCategory_Primitives

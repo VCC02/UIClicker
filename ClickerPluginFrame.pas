@@ -54,9 +54,11 @@ type
     lblPluginDebugging: TLabel;
     spdbtnContinuePlayingAll: TSpeedButton;
     spdbtnStepOver: TSpeedButton;
+    spdbtnScrollToCurrentLine: TSpeedButton;
     spdbtnStopPlaying: TSpeedButton;
     vstPluginDebugging: TVirtualStringTree;
     procedure spdbtnContinuePlayingAllClick(Sender: TObject);
+    procedure spdbtnScrollToCurrentLineClick(Sender: TObject);
     procedure spdbtnStepOverClick(Sender: TObject);
     procedure spdbtnStopPlayingClick(Sender: TObject);
     procedure vstPluginDebuggingBeforeCellPaint(Sender: TBaseVirtualTree;
@@ -68,11 +70,15 @@ type
     procedure vstPluginDebuggingGetText(Sender: TBaseVirtualTree;
       Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
       var CellText: string);
+    procedure vstPluginDebuggingPaintText(Sender: TBaseVirtualTree;
+      const TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex;
+      TextType: TVSTTextType);
   private
     FSourceFiles: TDbgSourceFileArr;
     FSelectedLine: Integer;
     FSelectedSourceFileIndex: Integer;
     FAllDbgLinesFromSelectedFile: TIntArr;
+    FCachedLineContent: string;
 
     FOnPluginDbgStop: TOnPluginDbgStop;
     FOnPluginDbgContinueAll: TOnPluginDbgContinueAll;
@@ -117,6 +123,7 @@ begin
 
   FSelectedLine := -1;
   FSelectedSourceFileIndex := -1;
+  FCachedLineContent := '';
 end;
 
 
@@ -144,9 +151,29 @@ begin
     if (FSelectedSourceFileIndex = -1) or (FSelectedLine = -1) then
       Exit;
 
-    CellText := FSourceFiles[FSelectedSourceFileIndex].Content.Strings[Node^.Index];
+    case Column of
+      0:
+        CellText := IntToStr(Integer(Node^.Index) + 1);
+
+      1:
+        CellText := FSourceFiles[FSelectedSourceFileIndex].Content.Strings[Node^.Index];
+    end;
   except
     CellText := 'bug';
+  end;
+end;
+
+
+procedure TfrClickerPlugin.vstPluginDebuggingPaintText(
+  Sender: TBaseVirtualTree; const TargetCanvas: TCanvas; Node: PVirtualNode;
+  Column: TColumnIndex; TextType: TVSTTextType);
+begin
+  case Column of
+    0:
+      TargetCanvas.Font.Color := clGray;
+
+    1:
+      TargetCanvas.Font.Color := clWindowText;
   end;
 end;
 
@@ -164,14 +191,33 @@ procedure TfrClickerPlugin.vstPluginDebuggingBeforeCellPaint(
 var
   i: Integer;
 begin
-  for i := 0 to Length(FAllDbgLinesFromSelectedFile) - 1 do
-    if Integer(Node^.Index) = FAllDbgLinesFromSelectedFile[i] then
+  case Column of
+    0:
     begin
-      TargetCanvas.Pen.Color := $CCFFCC;
-      TargetCanvas.Brush.Color := TargetCanvas.Pen.Color;
-      TargetCanvas.Rectangle(CellRect);
-      Break;
+      //TargetCanvas.Pen.Color := clSilver;
+      //TargetCanvas.Brush.Color := TargetCanvas.Pen.Color;
+      //TargetCanvas.Rectangle(CellRect);
     end;
+
+    1:
+    begin
+      if Integer(Node^.Index) = FSelectedLine then
+      begin
+        TargetCanvas.Pen.Color := $FFBBCC;
+        TargetCanvas.Brush.Color := TargetCanvas.Pen.Color;
+        TargetCanvas.Rectangle(CellRect);
+      end
+      else
+        for i := 0 to Length(FAllDbgLinesFromSelectedFile) - 1 do
+          if Integer(Node^.Index) = FAllDbgLinesFromSelectedFile[i] then
+          begin
+            TargetCanvas.Pen.Color := $CCFFCC;
+            TargetCanvas.Brush.Color := TargetCanvas.Pen.Color;
+            TargetCanvas.Rectangle(CellRect);
+            Break;
+          end;
+    end;
+  end; //case
 end;
 
 
@@ -181,18 +227,24 @@ procedure TfrClickerPlugin.vstPluginDebuggingGetImageIndex(
 var
   i: Integer;
 begin
-  ImageIndex := 0;
+  case Column of
+    0:
+    begin
+      ImageIndex := 0;
 
-  if Integer(Node^.Index) = FSelectedLine then
-    ImageIndex := 1
-  else
-  begin
-    for i := 0 to Length(FAllDbgLinesFromSelectedFile) - 1 do
-      if Integer(Node^.Index) = FAllDbgLinesFromSelectedFile[i] then
+      if Integer(Node^.Index) = FSelectedLine then
+        ImageIndex := 1
+      else
       begin
-        ImageIndex := 2;
-        Break;
+        for i := 0 to Length(FAllDbgLinesFromSelectedFile) - 1 do
+          if Integer(Node^.Index) = FAllDbgLinesFromSelectedFile[i] then
+          begin
+            ImageIndex := 2;
+            Break;
+          end;
       end;
+    end; //0
+
   end;
 end;
 
@@ -200,6 +252,17 @@ end;
 procedure TfrClickerPlugin.spdbtnContinuePlayingAllClick(Sender: TObject);
 begin
   DoOnPluginDbgContinueAll;
+end;
+
+
+procedure TfrClickerPlugin.spdbtnScrollToCurrentLineClick(Sender: TObject);
+var
+  Node: PVirtualNode;
+begin
+  Node := GetNodeByIndex(vstPluginDebugging, FSelectedLine);
+
+  if Node <> nil then
+    vstPluginDebugging.ScrollIntoView(Node, True);
 end;
 
 
@@ -273,6 +336,9 @@ begin
     finally
       Ini.Free;
     end;
+
+    if FCachedLineContent <> '' then
+      SelectLineByContent(FCachedLineContent);  //called when manually switching actions in list
   end
   else
     lblMsg.Caption := 'Debug symbols file "' + ADbgSymFnm + '" not found.';
@@ -320,6 +386,7 @@ begin
 
   if FSelectedSourceFileIndex > -1 then
   begin
+    FCachedLineContent := ALineContent;
     vstPluginDebugging.Color := clDefault;
     vstPluginDebugging.RootNodeCount := FSourceFiles[FSelectedSourceFileIndex].Content.Count;
     SelectNodeByIndex(vstPluginDebugging, FSelectedLine, True, True);
@@ -350,6 +417,8 @@ begin
   spdbtnStopPlaying.Visible := False;
   spdbtnContinuePlayingAll.Visible := False;
   spdbtnStepOver.Visible := False;
+
+  FCachedLineContent := ''; //clear, so that next time, the frame won't load its content, unless required
 end;
 
 end.

@@ -479,10 +479,10 @@ object frClickerFindControl: TfrClickerFindControl
       end
       object chkShowGridOnBMPPreview: TCheckBox
         Left = 0
-        Height = 19
+        Height = 17
         Hint = 'This will not be saved in project.'#13#10'Right-click for grid options.'
         Top = 1
-        Width = 67
+        Width = 65
         Caption = 'Show grid'
         ParentShowHint = False
         ShowHint = True
@@ -521,9 +521,9 @@ object frClickerFindControl: TfrClickerFindControl
       end
       object chkIncludeSearchedBmpInZoom: TCheckBox
         Left = 0
-        Height = 19
+        Height = 17
         Top = 25
-        Width = 164
+        Width = 162
         Caption = 'Include searched bmp in zoom'
         TabOrder = 6
       end
@@ -676,9 +676,9 @@ object frClickerFindControl: TfrClickerFindControl
       end
       object chkShowZoom: TCheckBox
         Left = 472
-        Height = 19
+        Height = 17
         Top = 30
-        Width = 74
+        Width = 72
         Caption = 'Show zoom'
         Checked = True
         State = cbChecked
@@ -785,5 +785,12 @@ object frClickerFindControl: TfrClickerFindControl
     OnTimer = tmrBlinkCalcErrLevelTimer
     Left = 648
     Top = 159
+  end
+  object tmrHandleSelectionKeys: TTimer
+    Enabled = False
+    Interval = 10
+    OnTimer = tmrHandleSelectionKeysTimer
+    Left = 376
+    Top = 192
   end
 end

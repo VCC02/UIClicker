@@ -75,7 +75,6 @@ const
   CActionPlugin_APIVersion = 2;
   CActionPlugin_ExecutionResultErrorVar = '$PluginError$';
 
-  CActionPlugin_ExecutionResultVar = '$DecodedWindows$';  //deprecated - to be removed
 
 var
   DefaultOnActionPlugin_DebugPoint: TOnActionPlugin_DebugPoint;

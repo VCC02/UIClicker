@@ -3421,7 +3421,10 @@ begin
           try
             ListOfProperties.Text := FEditingAction.PluginOptions.ListOfPropertiesAndTypes;
             try
-              Result := ListOfProperties.Names[APropertyIndex - 1];
+              if (APropertyIndex - 1 < ListOfProperties.Count) and (ListOfProperties.Count > 0) then
+                Result := ListOfProperties.Names[APropertyIndex - 1]
+              else
+                Result := '[Err: Index out of bounds: ' + IntToStr(APropertyIndex - 1) + ']';
             except
               Result := 'bug on getting name';
             end;
@@ -3497,7 +3500,11 @@ begin
           ListOfProperties := TStringList.Create;
           try
             ListOfProperties.Text := FEditingAction.PluginOptions.ListOfPropertiesAndTypes;
-            PropDef.EditorType := StrToTOIEditorType('et' + ListOfProperties.ValueFromIndex[APropertyIndex - CPropCount_Plugin]);
+
+            if (APropertyIndex - CPropCount_Plugin < ListOfProperties.Count) and (ListOfProperties.Count > 0) then
+              PropDef.EditorType := StrToTOIEditorType('et' + ListOfProperties.ValueFromIndex[APropertyIndex - CPropCount_Plugin])
+            else
+              PropDef.EditorType := etUserEditor; //index out of bounds
           finally
             ListOfProperties.Free;
           end;
