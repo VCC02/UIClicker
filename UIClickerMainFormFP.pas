@@ -132,7 +132,7 @@ implementation
 uses
   ClickerPreviewForm, ClickerWinInterpForm, ClickerWinInterpFrame, ClickerTemplateCallTreeForm,
   ClickerActionsClient, IniFiles, ClickerFindControlFrame, ClickerRemoteScreenForm, BitmapConv,
-  ClickerUtils, ClickerPrimitives, ClickerActionsForm, ClickerPrimitivesCompositor;
+  ClickerUtils, ClickerPrimitives, ClickerActionsForm, ClickerPrimitivesCompositor, Math;
 
 { TfrmUIClickerMainForm }
 
@@ -186,10 +186,10 @@ var
 begin
   Ini := TMemIniFile.Create(ExtractFilePath(ParamStr(0)) + 'Clicker.ini');
   try
-    Left := Ini.ReadInteger('MainWindow', 'Left', Left);
-    Top := Ini.ReadInteger('MainWindow', 'Top', Top);
-    Width := Ini.ReadInteger('MainWindow', 'Width', Width);
-    Height := Ini.ReadInteger('MainWindow', 'Height', Height);
+    Left := Ini.ReadInteger('MainWindow', 'Left', Min(Left, Screen.DesktopWidth - 60));
+    Top := Ini.ReadInteger('MainWindow', 'Top', Min(Top, Screen.DesktopHeight - 60));
+    Width := Ini.ReadInteger('MainWindow', 'Width', Min(Width, Screen.DesktopWidth - 40));
+    Height := Ini.ReadInteger('MainWindow', 'Height', Min(Height, Screen.DesktopHeight - 40));
 
     frmClickerControlPreview.LoadSettings(Ini);
     frmClickerActions.LoadSettings(Ini);
@@ -215,10 +215,10 @@ begin
 
   Ini := TMemIniFile.Create(ExtractFilePath(ParamStr(0)) + 'Clicker.ini');
   try
-    Ini.WriteInteger('MainWindow', 'Left', Left);
-    Ini.WriteInteger('MainWindow', 'Top', Top);
-    Ini.WriteInteger('MainWindow', 'Width', Width);
-    Ini.WriteInteger('MainWindow', 'Height', Height);
+    Ini.WriteInteger('MainWindow', 'Left', Min(Left, Screen.DesktopWidth - 60));
+    Ini.WriteInteger('MainWindow', 'Top', Min(Top, Screen.DesktopHeight - 60));
+    Ini.WriteInteger('MainWindow', 'Width', Min(Width, Screen.DesktopWidth - 40));
+    Ini.WriteInteger('MainWindow', 'Height', Min(Height, Screen.DesktopHeight - 40));
 
     frmClickerControlPreview.SaveSettings(Ini);
     frmClickerActions.SaveSettings(Ini);

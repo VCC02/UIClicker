@@ -164,19 +164,19 @@ uses
 
 procedure TfrmClickerTemplateCallTree.LoadSettings(AIni: TMemIniFile);
 begin
-  Left := AIni.ReadInteger('CallTreeWindow', 'Left', Left);
-  Top := AIni.ReadInteger('CallTreeWindow', 'Top', Top);
-  Width := AIni.ReadInteger('CallTreeWindow', 'Width', Width);
-  Height := AIni.ReadInteger('CallTreeWindow', 'Height', Height);
+  Left := AIni.ReadInteger('CallTreeWindow', 'Left', Min(Left, Screen.DesktopWidth - 60));
+  Top := AIni.ReadInteger('CallTreeWindow', 'Top', Min(Top, Screen.DesktopHeight - 60));
+  Width := AIni.ReadInteger('CallTreeWindow', 'Width', Min(Width, Screen.DesktopWidth - 40));
+  Height := AIni.ReadInteger('CallTreeWindow', 'Height', Min(Height, Screen.DesktopHeight - 40));
 end;
 
 
 procedure TfrmClickerTemplateCallTree.SaveSettings(AIni: TMemIniFile);
 begin
-  AIni.WriteInteger('CallTreeWindow', 'Left', Left);
-  AIni.WriteInteger('CallTreeWindow', 'Top', Top);
-  AIni.WriteInteger('CallTreeWindow', 'Width', Width);
-  AIni.WriteInteger('CallTreeWindow', 'Height', Height);
+  AIni.WriteInteger('CallTreeWindow', 'Left', Min(Left, Screen.DesktopWidth - 60));
+  AIni.WriteInteger('CallTreeWindow', 'Top', Min(Top, Screen.DesktopHeight - 60));
+  AIni.WriteInteger('CallTreeWindow', 'Width', Min(Width, Screen.DesktopWidth - 40));
+  AIni.WriteInteger('CallTreeWindow', 'Height', Min(Height, Screen.DesktopHeight - 40));
 end;
 
 

@@ -6,6 +6,6 @@ object frmClickerWinInterp: TfrmClickerWinInterp
   Caption = 'Clicker Window Interpreter'
   Constraints.MinHeight = 501
   Constraints.MinWidth = 893
+  LCLVersion = '8.2'
   OnCreate = FormCreate
-  LCLVersion = '7.5'
 end

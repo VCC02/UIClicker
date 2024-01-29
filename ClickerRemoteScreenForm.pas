@@ -103,19 +103,19 @@ uses
 
 procedure TfrmClickerRemoteScreen.LoadSettings(AIni: TMemIniFile);
 begin
-  Left := AIni.ReadInteger('RemoteScreenWindow', 'Left', Left);
-  Top := AIni.ReadInteger('RemoteScreenWindow', 'Top', Top);
-  Width := AIni.ReadInteger('RemoteScreenWindow', 'Width', Width);
-  Height := AIni.ReadInteger('RemoteScreenWindow', 'Height', Height);
+  Left := AIni.ReadInteger('RemoteScreenWindow', 'Left', Min(Left, Screen.DesktopWidth - 60));
+  Top := AIni.ReadInteger('RemoteScreenWindow', 'Top', Min(Top, Screen.DesktopHeight - 60));
+  Width := AIni.ReadInteger('RemoteScreenWindow', 'Width', Min(Width, Screen.DesktopWidth - 40));
+  Height := AIni.ReadInteger('RemoteScreenWindow', 'Height', Min(Height, Screen.DesktopHeight - 40));
 end;
 
 
 procedure TfrmClickerRemoteScreen.SaveSettings(AIni: TMemIniFile);
 begin
-  AIni.WriteInteger('RemoteScreenWindow', 'Left', Left);
-  AIni.WriteInteger('RemoteScreenWindow', 'Top', Top);
-  AIni.WriteInteger('RemoteScreenWindow', 'Width', Width);
-  AIni.WriteInteger('RemoteScreenWindow', 'Height', Height);
+  AIni.WriteInteger('RemoteScreenWindow', 'Left', Min(Left, Screen.DesktopWidth - 60));
+  AIni.WriteInteger('RemoteScreenWindow', 'Top', Min(Top, Screen.DesktopHeight - 60));
+  AIni.WriteInteger('RemoteScreenWindow', 'Width', Min(Width, Screen.DesktopWidth - 40));
+  AIni.WriteInteger('RemoteScreenWindow', 'Height', Min(Height, Screen.DesktopHeight - 40));
 end;
 
 

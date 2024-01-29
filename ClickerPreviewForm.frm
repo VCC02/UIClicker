@@ -13,8 +13,8 @@ object frmClickerControlPreview: TfrmClickerControlPreview
   Font.Height = -11
   Font.Name = 'Tahoma'
   FormStyle = fsStayOnTop
+  LCLVersion = '8.2'
   OnCreate = FormCreate
-  LCLVersion = '7.8'
   object lblInstructions: TLabel
     Left = 24
     Height = 13
@@ -43,6 +43,7 @@ object frmClickerControlPreview: TfrmClickerControlPreview
     Anchors = [akTop, akLeft, akRight, akBottom]
     ClientHeight = 817
     ClientWidth = 797
+    ParentBackground = False
     TabOrder = 0
     object pnlBase: TPanel
       Left = 0
@@ -52,6 +53,7 @@ object frmClickerControlPreview: TfrmClickerControlPreview
       ClientHeight = 756
       ClientWidth = 762
       Color = clSkyBlue
+      ParentBackground = False
       ParentColor = False
       TabOrder = 0
       object imgScreenshot: TImage
@@ -69,6 +71,7 @@ object frmClickerControlPreview: TfrmClickerControlPreview
         Top = 0
         Width = 714
         Color = 33023
+        ParentBackground = False
         ParentColor = False
         TabOrder = 0
       end
@@ -78,6 +81,7 @@ object frmClickerControlPreview: TfrmClickerControlPreview
         Top = 17
         Width = 10
         Color = 33023
+        ParentBackground = False
         ParentColor = False
         TabOrder = 1
       end
@@ -88,6 +92,7 @@ object frmClickerControlPreview: TfrmClickerControlPreview
         Width = 9
         BevelOuter = bvNone
         Color = clRed
+        ParentBackground = False
         ParentColor = False
         TabOrder = 2
         Visible = False
@@ -99,6 +104,7 @@ object frmClickerControlPreview: TfrmClickerControlPreview
         Width = 185
         BevelOuter = bvNone
         Color = clRed
+        ParentBackground = False
         ParentColor = False
         TabOrder = 3
         Visible = False
@@ -110,6 +116,7 @@ object frmClickerControlPreview: TfrmClickerControlPreview
         Width = 11
         BevelOuter = bvNone
         Color = clRed
+        ParentBackground = False
         ParentColor = False
         TabOrder = 4
         Visible = False
@@ -121,6 +128,7 @@ object frmClickerControlPreview: TfrmClickerControlPreview
         Width = 185
         BevelOuter = bvNone
         Color = clRed
+        ParentBackground = False
         ParentColor = False
         TabOrder = 5
         Visible = False
@@ -135,6 +143,7 @@ object frmClickerControlPreview: TfrmClickerControlPreview
     Caption = 'WinInfo'
     ClientHeight = 186
     ClientWidth = 357
+    ParentBackground = False
     TabOrder = 1
     object lbeHandle: TLabeledEdit
       Left = 1
@@ -243,6 +252,7 @@ object frmClickerControlPreview: TfrmClickerControlPreview
       Font.Color = clBlack
       Font.Height = -11
       Font.Name = 'Tahoma'
+      ParentBackground = False
       ParentColor = False
       ParentFont = False
       ParentShowHint = False
@@ -261,6 +271,7 @@ object frmClickerControlPreview: TfrmClickerControlPreview
     Caption = 'Test Set Control Text'
     ClientHeight = 92
     ClientWidth = 226
+    ParentBackground = False
     TabOrder = 2
     object lbeTestSetControlTextHandle: TLabeledEdit
       Left = 14
@@ -278,8 +289,8 @@ object frmClickerControlPreview: TfrmClickerControlPreview
       Top = 65
       Width = 89
       Caption = 'Set'
-      OnClick = btnTestSetControlTextClick
       TabOrder = 1
+      OnClick = btnTestSetControlTextClick
     end
     object rdgrpTestSetTextControlType: TRadioGroup
       Left = 116
@@ -303,6 +314,7 @@ object frmClickerControlPreview: TfrmClickerControlPreview
         'EditBox'
         'ComboBox'
       )
+      ParentBackground = False
       ParentShowHint = False
       ShowHint = True
       TabOrder = 2
@@ -320,47 +332,47 @@ object frmClickerControlPreview: TfrmClickerControlPreview
   end
   object chkStayOnTop: TCheckBox
     Left = 264
-    Height = 19
+    Height = 17
     Top = 810
-    Width = 76
+    Width = 74
     Caption = 'Stay on top'
     Checked = True
-    OnClick = chkStayOnTopClick
     State = cbChecked
     TabOrder = 3
+    OnClick = chkStayOnTopClick
   end
   object chkScanningTimer: TCheckBox
     Left = 8
-    Height = 19
+    Height = 17
     Hint = 'Check this, to allow scanning the control under mouse cursor, when Ctrl+Shift keys are down.'
     Top = 14
-    Width = 177
+    Width = 175
     Caption = 'Screenshots scanning timer'
     Color = clBtnFace
     Font.Color = 185
     Font.Height = -11
     Font.Name = 'Tahoma'
     Font.Style = [fsBold]
-    OnChange = chkScanningTimerChange
     ParentColor = False
     ParentFont = False
     ParentShowHint = False
     ShowHint = True
     TabOrder = 4
+    OnChange = chkScanningTimerChange
   end
   object chkNoKeysScanningTimer: TCheckBox
     Left = 208
-    Height = 19
+    Height = 17
     Top = 14
-    Width = 151
+    Width = 149
     Caption = 'No keys scanning timer'
     Font.Color = clWindowText
     Font.Height = -11
     Font.Name = 'Tahoma'
     Font.Style = [fsBold]
-    OnChange = chkNoKeysScanningTimerChange
     ParentFont = False
     TabOrder = 5
+    OnChange = chkNoKeysScanningTimerChange
   end
   object pnlImageSelection: TPanel
     Left = 0
@@ -370,6 +382,7 @@ object frmClickerControlPreview: TfrmClickerControlPreview
     Caption = 'pnlImageSelection'
     ClientHeight = 480
     ClientWidth = 371
+    ParentBackground = False
     TabOrder = 6
     object lblCropImage: TLabel
       Left = 8
@@ -411,8 +424,8 @@ object frmClickerControlPreview: TfrmClickerControlPreview
       Height = 33
       Top = 73
       Width = 337
-      OnChange = trbCropLeftChange
       Position = 3
+      OnChange = trbCropLeftChange
       TabOrder = 0
     end
     object trbCropRight: TTrackBar
@@ -420,9 +433,9 @@ object frmClickerControlPreview: TfrmClickerControlPreview
       Height = 32
       Top = 96
       Width = 337
-      OnChange = trbCropRightChange
       Position = 8
       TickMarks = tmTopLeft
+      OnChange = trbCropRightChange
       TabOrder = 1
     end
     object trbCropTop: TTrackBar
@@ -430,9 +443,9 @@ object frmClickerControlPreview: TfrmClickerControlPreview
       Height = 337
       Top = 126
       Width = 33
-      OnChange = trbCropTopChange
       Orientation = trVertical
       Position = 3
+      OnChange = trbCropTopChange
       TabOrder = 2
     end
     object trbCropBottom: TTrackBar
@@ -440,20 +453,20 @@ object frmClickerControlPreview: TfrmClickerControlPreview
       Height = 337
       Top = 126
       Width = 32
-      OnChange = trbCropBottomChange
       Orientation = trVertical
       Position = 8
       TickMarks = tmTopLeft
+      OnChange = trbCropBottomChange
       TabOrder = 3
     end
     object chkShowCropRectangle: TCheckBox
       Left = 8
-      Height = 19
+      Height = 17
       Top = 3
-      Width = 123
+      Width = 121
       Caption = 'Show Crop Rectangle'
-      OnClick = chkShowCropRectangleClick
       TabOrder = 4
+      OnClick = chkShowCropRectangleClick
     end
     object scrboxCrop: TScrollBox
       Left = 85
@@ -471,6 +484,7 @@ object frmClickerControlPreview: TfrmClickerControlPreview
       ClientHeight = 277
       ClientWidth = 280
       Color = clSkyBlue
+      ParentBackground = False
       ParentColor = False
       TabOrder = 5
       object imgCrop: TImage
@@ -486,8 +500,8 @@ object frmClickerControlPreview: TfrmClickerControlPreview
       Top = 429
       Width = 150
       Max = 4
-      OnChange = trbCropZoomChange
       Position = 0
+      OnChange = trbCropZoomChange
       TabOrder = 6
     end
     object btnSaveImage: TButton
@@ -496,8 +510,8 @@ object frmClickerControlPreview: TfrmClickerControlPreview
       Top = 42
       Width = 101
       Caption = 'Save image as...'
-      OnClick = btnSaveImageClick
       TabOrder = 7
+      OnClick = btnSaveImageClick
     end
     object btnSelectionRectangleColor: TButton
       Left = 138
@@ -505,8 +519,8 @@ object frmClickerControlPreview: TfrmClickerControlPreview
       Top = 11
       Width = 119
       Caption = 'Sel Rectangle Color...'
-      OnClick = btnSelectionRectangleColorClick
       TabOrder = 8
+      OnClick = btnSelectionRectangleColorClick
     end
     object btnSelectFull: TButton
       Left = 4
@@ -514,8 +528,8 @@ object frmClickerControlPreview: TfrmClickerControlPreview
       Top = 42
       Width = 75
       Caption = 'Select Full'
-      OnClick = btnSelectFullClick
       TabOrder = 9
+      OnClick = btnSelectFullClick
     end
     object btnCopyImageToClipboard: TButton
       Left = 265
@@ -523,8 +537,8 @@ object frmClickerControlPreview: TfrmClickerControlPreview
       Top = 42
       Width = 104
       Caption = 'Copy To Clipboard'
-      OnClick = btnCopyImageToClipboardClick
       TabOrder = 10
+      OnClick = btnCopyImageToClipboardClick
     end
     object lblZoom: TLabel
       Left = 85

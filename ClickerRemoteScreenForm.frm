@@ -8,8 +8,8 @@ object frmClickerRemoteScreen: TfrmClickerRemoteScreen
   ClientWidth = 767
   Constraints.MinHeight = 385
   Constraints.MinWidth = 767
+  LCLVersion = '8.2'
   OnCreate = FormCreate
-  LCLVersion = '7.5'
   object btnRefreshScreenshot: TButton
     Left = 8
     Height = 25
@@ -17,10 +17,10 @@ object frmClickerRemoteScreen: TfrmClickerRemoteScreen
     Top = 0
     Width = 115
     Caption = 'Refresh screenshot'
-    OnClick = btnRefreshScreenshotClick
     ParentShowHint = False
     ShowHint = True
     TabOrder = 0
+    OnClick = btnRefreshScreenshotClick
   end
   object scrboxScannedComponents: TScrollBox
     Left = 0
@@ -141,8 +141,8 @@ object frmClickerRemoteScreen: TfrmClickerRemoteScreen
       1AFFFFFFFFFFFF000000FFFFFF39841A39841A39841A39841A39841A39841A39
       841A39841A39841AFFFFFF000000
     }
-    OnClick = spdbtnExtraRefreshClick
     ParentFont = False
+    OnClick = spdbtnExtraRefreshClick
   end
   object pmExtraRefresh: TPopupMenu
     Left = 229

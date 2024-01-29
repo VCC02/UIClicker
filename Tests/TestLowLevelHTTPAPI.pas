@@ -908,7 +908,7 @@ end;
 const
   CPluginVarsAndValues = 'FindSubControlTopLeftCorner=aFindSubControlBotLeftCorner=bFindSubControlTopRightCorner=cFindSubControlBotRightCorner=dFindSubControlLeftEdge=eFindSubControlTopEdge=fFindSubControlRightEdge=gFindSubControlBottomEdge=h';
   CExpectedErr_RunOnEmptyTemplate = 'This plugin does not run on an empty template.';
-  CExpectedErr_NotAllRequiredActions = 'Not all the required FindSubControl actions are found in the current template.  PluginSettings: ';
+  CExpectedErr_WrongNumberOfProperties = 'The plugin is configured with a wrong number of properties: 0, instead of the expected';
 
 procedure TTestLowLevelHTTPAPI.Test_ExecutePlugin_EmptyFileName;
 const
@@ -977,7 +977,7 @@ begin
   GeneratePluginOptions(PluginOptions, GetPluginPath, '');
   ExecutePluginAction(TestServerAddress, PluginOptions);
 
-  Expect(FastReplace_ReturnTo45(FastReplace_68ToReturn(GetVarValueFromServer(CVarName)))).ToBe(AExpectedErr);
+  Expect(FastReplace_ReturnTo45(FastReplace_68ToReturn(GetVarValueFromServer(CVarName)))).ToContain(AExpectedErr);
   Expect(GetVarValueFromServer(CVarName2)).ToBe('');
 end;
 
@@ -993,7 +993,7 @@ procedure TTestLowLevelHTTPAPI.Test_ExecutePlugin_EmptyListOfVars_WithDummyActio
 begin
   CreateTestTemplateInMem;
   SendTemplateFromInMemToServerThenLoad(CTestTemplateFileName);
-  Test_ExecutePlugin('', CExpectedErr_NotAllRequiredActions);
+  Test_ExecutePlugin('', CExpectedErr_WrongNumberOfProperties);
 end;
 
 
@@ -1008,7 +1008,7 @@ procedure TTestLowLevelHTTPAPI.Test_ExecutePlugin_ValidVarsSetToNonExistentActio
 begin
   CreateTestTemplateInMem;
   SendTemplateFromInMemToServerThenLoad(CTestTemplateFileName);
-  Test_ExecutePlugin(CPluginVarsAndValues, CExpectedErr_NotAllRequiredActions);
+  Test_ExecutePlugin(CPluginVarsAndValues, CExpectedErr_WrongNumberOfProperties);
 end;
 
 

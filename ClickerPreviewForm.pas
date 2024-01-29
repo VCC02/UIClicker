@@ -158,20 +158,20 @@ uses
 
 procedure TfrmClickerControlPreview.LoadSettings(AIni: TMemIniFile);
 begin
-  Left := AIni.ReadInteger('PreviewWindow', 'Left', Left);
-  Top := AIni.ReadInteger('PreviewWindow', 'Top', Top);
-  Width := AIni.ReadInteger('PreviewWindow', 'Width', Width);
-  Height := AIni.ReadInteger('PreviewWindow', 'Height', Height);
+  Left := AIni.ReadInteger('PreviewWindow', 'Left', Min(Left, Screen.DesktopWidth - 60));
+  Top := AIni.ReadInteger('PreviewWindow', 'Top', Min(Top, Screen.DesktopHeight - 60));
+  Width := AIni.ReadInteger('PreviewWindow', 'Width', Min(Width, Screen.DesktopWidth - 40));
+  Height := AIni.ReadInteger('PreviewWindow', 'Height', Min(Height, Screen.DesktopHeight - 40));
   chkStayOnTop.Checked := AIni.ReadBool('PreviewWindow', 'StayOnTop', chkStayOnTop.Checked);
 end;
 
 
 procedure TfrmClickerControlPreview.SaveSettings(AIni: TMemIniFile);
 begin
-  AIni.WriteInteger('PreviewWindow', 'Left', Left);
-  AIni.WriteInteger('PreviewWindow', 'Top', Top);
-  AIni.WriteInteger('PreviewWindow', 'Width', Width);
-  AIni.WriteInteger('PreviewWindow', 'Height', Height);
+  AIni.WriteInteger('PreviewWindow', 'Left', Min(Left, Screen.DesktopWidth - 60));
+  AIni.WriteInteger('PreviewWindow', 'Top', Min(Top, Screen.DesktopHeight - 60));
+  AIni.WriteInteger('PreviewWindow', 'Width', Min(Width, Screen.DesktopWidth - 40));
+  AIni.WriteInteger('PreviewWindow', 'Height', Min(Height, Screen.DesktopHeight - 40));
   AIni.WriteBool('PreviewWindow', 'StayOnTop', chkStayOnTop.Checked);
 end;
 

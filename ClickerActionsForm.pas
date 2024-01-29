@@ -498,10 +498,11 @@ procedure TfrmClickerActions.LoadSettings(AIni: TMemIniFile);
 var
   i, n: Integer;
 begin
-  Left := AIni.ReadInteger('ActionsWindow', 'Left', Left);
-  Top := AIni.ReadInteger('ActionsWindow', 'Top', Top);
-  Width := AIni.ReadInteger('ActionsWindow', 'Width', Width);
-  Height := AIni.ReadInteger('ActionsWindow', 'Height', Height);
+  Left := AIni.ReadInteger('ActionsWindow', 'Left', Min(Left, Screen.DesktopWidth - 60));
+  Top := AIni.ReadInteger('ActionsWindow', 'Top', Min(Top, Screen.DesktopHeight - 60));
+  Width := AIni.ReadInteger('ActionsWindow', 'Width', Min(Width, Screen.DesktopWidth - 40));
+  Height := AIni.ReadInteger('ActionsWindow', 'Height', Min(Height, Screen.DesktopHeight - 40));
+
   chkStayOnTop.Checked := AIni.ReadBool('ActionsWindow', 'StayOnTop', chkStayOnTop.Checked);
   PageControlMain.ActivePageIndex := AIni.ReadInteger('ActionsWindow', 'ActivePageIndex', PageControlMain.ActivePageIndex);
 
@@ -594,10 +595,11 @@ procedure TfrmClickerActions.SaveSettings(AIni: TMemIniFile);
 var
   i, n: Integer;
 begin
-  AIni.WriteInteger('ActionsWindow', 'Left', Left);
-  AIni.WriteInteger('ActionsWindow', 'Top', Top);
-  AIni.WriteInteger('ActionsWindow', 'Width', Width);
-  AIni.WriteInteger('ActionsWindow', 'Height', Height);
+  AIni.WriteInteger('ActionsWindow', 'Left', Min(Left, Screen.DesktopWidth - 60));
+  AIni.WriteInteger('ActionsWindow', 'Top', Min(Top, Screen.DesktopHeight - 60));
+  AIni.WriteInteger('ActionsWindow', 'Width', Min(Width, Screen.DesktopWidth - 40));
+  AIni.WriteInteger('ActionsWindow', 'Height', Min(Height, Screen.DesktopHeight - 40));
+
   AIni.WriteBool('ActionsWindow', 'StayOnTop', chkStayOnTop.Checked);
   AIni.WriteInteger('ActionsWindow', 'ActivePageIndex', PageControlMain.ActivePageIndex);
 

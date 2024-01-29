@@ -74,6 +74,8 @@ implementation
 
 {$R *.frm}
 
+uses
+  Math;
 
 { TfrmClickerWinInterp }
 
@@ -128,10 +130,10 @@ end;
 
 procedure TfrmClickerWinInterp.LoadSettings(AIni: TMemIniFile);
 begin
-  Left := AIni.ReadInteger('WinInterpWindow', 'Left', Left);
-  Top := AIni.ReadInteger('WinInterpWindow', 'Top', Top);
-  Width := AIni.ReadInteger('WinInterpWindow', 'Width', Width);
-  Height := AIni.ReadInteger('WinInterpWindow', 'Height', Height);
+  Left := AIni.ReadInteger('WinInterpWindow', 'Left', Min(Left, Screen.DesktopWidth - 60));
+  Top := AIni.ReadInteger('WinInterpWindow', 'Top', Min(Top, Screen.DesktopHeight - 60));
+  Width := AIni.ReadInteger('WinInterpWindow', 'Width', Min(Width, Screen.DesktopWidth - 40));
+  Height := AIni.ReadInteger('WinInterpWindow', 'Height', Min(Height, Screen.DesktopHeight - 40));
 
   FWinInterpFrame.LoadSettings(AIni);
 end;
@@ -139,10 +141,10 @@ end;
 
 procedure TfrmClickerWinInterp.SaveSettings(AIni: TMemIniFile);
 begin
-  AIni.WriteInteger('WinInterpWindow', 'Left', Left);
-  AIni.WriteInteger('WinInterpWindow', 'Top', Top);
-  AIni.WriteInteger('WinInterpWindow', 'Width', Width);
-  AIni.WriteInteger('WinInterpWindow', 'Height', Height);
+  AIni.WriteInteger('WinInterpWindow', 'Left', Min(Left, Screen.DesktopWidth - 60));
+  AIni.WriteInteger('WinInterpWindow', 'Top', Min(Top, Screen.DesktopHeight - 60));
+  AIni.WriteInteger('WinInterpWindow', 'Width', Min(Width, Screen.DesktopWidth - 40));
+  AIni.WriteInteger('WinInterpWindow', 'Height', Min(Height, Screen.DesktopHeight - 40));
 
   FWinInterpFrame.SaveSettings(AIni);
 end;
