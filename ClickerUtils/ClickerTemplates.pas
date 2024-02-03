@@ -184,6 +184,7 @@ begin
     ACustomActions[i].FindControlOptions.FastSearchAllowedColorErrorCount := '';
     ACustomActions[i].FindControlOptions.IgnoredColors := '';
     ACustomActions[i].FindControlOptions.SleepySearch := False;
+    ACustomActions[i].FindControlOptions.StopSearchOnMismatch := True;
 
     SectionIndex := Ini.GetSectionIndex('Actions.SetTextOptions');
     ACustomActions[i].SetTextOptions.Text := Ini.ReadString(SectionIndex, 'Text_' + IterationStr, '');
@@ -387,6 +388,7 @@ begin
   AFindControlOptions.FastSearchAllowedColorErrorCount := Ini.ReadString(SectionIndex, 'FastSearchAllowedColorErrorCount', '10');
   AFindControlOptions.IgnoredColors := Ini.ReadString(SectionIndex, 'IgnoredColors', '');
   AFindControlOptions.SleepySearch := Ini.ReadBool(SectionIndex, 'SleepySearch', False);
+  AFindControlOptions.StopSearchOnMismatch := Ini.ReadBool(SectionIndex, 'StopSearchOnMismatch', True);
 end;
 
 
@@ -821,6 +823,7 @@ begin
 
   AStringList.Add('IgnoredColors=' + AActionFindControlOptions.IgnoredColors);
   AStringList.Add('SleepySearch=' + IntToStr(Ord(AActionFindControlOptions.SleepySearch)));
+  AStringList.Add('StopSearchOnMismatch=' + IntToStr(Ord(AActionFindControlOptions.StopSearchOnMismatch)));
 end;
 
 
@@ -1002,6 +1005,7 @@ begin             //Substructures, which do not contain pointers, can be directl
   ADest.FindControlOptions.FastSearchAllowedColorErrorCount := ASrc.FindControlOptions.FastSearchAllowedColorErrorCount;
   ADest.FindControlOptions.IgnoredColors := ASrc.FindControlOptions.IgnoredColors;
   ADest.FindControlOptions.SleepySearch := ASrc.FindControlOptions.SleepySearch;
+  ADest.FindControlOptions.StopSearchOnMismatch := ASrc.FindControlOptions.StopSearchOnMismatch;
 end;
 
 

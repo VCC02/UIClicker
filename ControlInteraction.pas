@@ -62,13 +62,14 @@ type
     BackgroundColor: TColor;
     IgnoredColorsArr: TIntArr;
     SleepySearch: Byte;
+    StopSearchOnMismatch: Boolean;
   end;
 
 
 procedure SetControlText(hw: THandle; NewText: string);
 procedure SelectComboBoxItem(hw: THandle; StartIndex: Integer; TextToSelect: string);
 
-function MatchControlByBitmap(Algorithm: TMatchBitmapAlgorithm; AlgorithmSettings: TMatchBitmapAlgorithmSettings; CompAtPoint: TCompRec; InputData: TFindControlInputData; out SubCnvXOffset, SubCnvYOffset: Integer; var AFoundBitmaps: TCompRecArr; AStopAllActionsOnDemand: PBoolean; ADisplayGridLineOption: TDisplayGridLineOption): Boolean;
+function MatchControlByBitmap(Algorithm: TMatchBitmapAlgorithm; AlgorithmSettings: TMatchBitmapAlgorithmSettings; CompAtPoint: TCompRec; InputData: TFindControlInputData; out SubCnvXOffset, SubCnvYOffset, AResultedErrorCount: Integer; var AFoundBitmaps: TCompRecArr; AStopAllActionsOnDemand: PBoolean; ADisplayGridLineOption: TDisplayGridLineOption): Boolean;
 function FindControlOnScreen(Algorithm: TMatchBitmapAlgorithm; AlgorithmSettings: TMatchBitmapAlgorithmSettings; InputData: TFindControlInputData; AInitialTickCount, ATimeout: Cardinal; AStopAllActionsOnDemand: PBoolean; var AResultedControl: TCompRecArr; ADisplayGridLineOption: TDisplayGridLineOption): Boolean;
 function FindWindowOnScreenByCaptionOrClass(InputData: TFindControlInputData; AInitialTickCount, ATimeout: Cardinal; AStopAllActionsOnDemand: PBoolean; out AResultedControl: TCompRec): Boolean;
 function FindWindowOnScreenByCaptionAndClass(InputData: TFindControlInputData; AInitialTickCount, ATimeout: Cardinal; AStopAllActionsOnDemand: PBoolean; var AResultedControls: TCompRecArr): Boolean;
@@ -650,7 +651,21 @@ end;
 
 //Searches for BitmapToSearchFor in the bitmap of a component defined by ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height
 //SrcCompSearchAreaBitmap - bitmap with source component, defined by InitRect
-function MatchByBitmap(Algorithm: TMatchBitmapAlgorithm; AlgorithmSettings: TMatchBitmapAlgorithmSettings; ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height: Integer; BitmapToSearchFor, SrcCompSearchAreaBitmap: TBitmap; CompHandle: THandle; ColorErr, AllowedColorErrCnt, FastSearchAllowedColorErrCnt: Integer; out SubCnvXOffset, SubCnvYOffset: Integer; var AFoundBitmaps: TCompRecArr; AUseFastSearch, AIgnoreBackgroundColor, AGetAllBitmaps: Boolean; ABackgroundColor: TColor; var AIgnoredColorsArr: TColorArr; ASleepySearch: Byte; AStopAllActionsOnDemand: PBoolean): Boolean;
+function MatchByBitmap(Algorithm: TMatchBitmapAlgorithm;
+                      AlgorithmSettings: TMatchBitmapAlgorithmSettings;
+                      ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height: Integer;
+                      BitmapToSearchFor, SrcCompSearchAreaBitmap: TBitmap;
+                      CompHandle: THandle;
+                      ColorErr, AllowedColorErrCnt, FastSearchAllowedColorErrCnt: Integer;
+                      out SubCnvXOffset, SubCnvYOffset: Integer;
+                      var AFoundBitmaps: TCompRecArr;
+                      AUseFastSearch, AIgnoreBackgroundColor, AGetAllBitmaps: Boolean;
+                      ABackgroundColor: TColor;
+                      var AIgnoredColorsArr: TColorArr;
+                      ASleepySearch: Byte;
+                      AStopSearchOnMismatch: Boolean;
+                      out AResultedErrorCount: Integer;
+                      AStopAllActionsOnDemand: PBoolean): Boolean;
 var
   i: Integer;
 begin
@@ -661,7 +676,7 @@ begin
 
   SubCnvXOffset := -1;  //for debugging..
   SubCnvYOffset := -1;  //for debugging..
-  if BitmapPosMatch(Algorithm, AlgorithmSettings, SrcCompSearchAreaBitmap, BitmapToSearchFor, ColorErr, SubCnvXOffset, SubCnvYOffset, AFoundBitmaps, AllowedColorErrCnt, FastSearchAllowedColorErrCnt, AUseFastSearch, AIgnoreBackgroundColor, AGetAllBitmaps, ABackgroundColor, AIgnoredColorsArr, ASleepySearch, AStopAllActionsOnDemand) then
+  if BitmapPosMatch(Algorithm, AlgorithmSettings, SrcCompSearchAreaBitmap, BitmapToSearchFor, ColorErr, SubCnvXOffset, SubCnvYOffset, AFoundBitmaps, AllowedColorErrCnt, FastSearchAllowedColorErrCnt, AUseFastSearch, AIgnoreBackgroundColor, AGetAllBitmaps, ABackgroundColor, AIgnoredColorsArr, ASleepySearch, AResultedErrorCount, AStopAllActionsOnDemand, AStopSearchOnMismatch) then
   begin
     Result := True;
     Inc(SubCnvXOffset, ScrShot_Left);
@@ -679,7 +694,7 @@ end;
 
 //Searches for BitmapToSearchFor in the bitmap of a component defined by ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height
 //SrcCompSearchAreaBitmap - bitmap with source component, defined by InitRect
-function MatchControlByBitmap(Algorithm: TMatchBitmapAlgorithm; AlgorithmSettings: TMatchBitmapAlgorithmSettings; CompAtPoint: TCompRec; InputData: TFindControlInputData; out SubCnvXOffset, SubCnvYOffset: Integer; var AFoundBitmaps: TCompRecArr; AStopAllActionsOnDemand: PBoolean; ADisplayGridLineOption: TDisplayGridLineOption): Boolean;
+function MatchControlByBitmap(Algorithm: TMatchBitmapAlgorithm; AlgorithmSettings: TMatchBitmapAlgorithmSettings; CompAtPoint: TCompRec; InputData: TFindControlInputData; out SubCnvXOffset, SubCnvYOffset, AResultedErrorCount: Integer; var AFoundBitmaps: TCompRecArr; AStopAllActionsOnDemand: PBoolean; ADisplayGridLineOption: TDisplayGridLineOption): Boolean;
 var
   ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height, CompWith, CompHeight: Integer;
   SrcCompSearchAreaBitmap: TBitmap;
@@ -718,6 +733,8 @@ begin
                               InputData.BackgroundColor,
                               InputData.IgnoredColorsArr,
                               InputData.SleepySearch,
+                              InputData.StopSearchOnMismatch,
+                              AResultedErrorCount,
                               AStopAllActionsOnDemand);
 
     if InputData.DebugBitmap <> nil then
@@ -788,7 +805,7 @@ begin
       SetLength(AvailableControls, Length(AvailableControls) + 1);
       AvailableControls[Length(AvailableControls) - 1] := CompAtPoint;
 
-      FoundBmp := MatchControlByBitmap(Algorithm, AlgorithmSettings, CompAtPoint, InputData, SubCnvXOffset, SubCnvYOffset, AFoundSubControls, AStopAllActionsOnDemand, ADisplayGridLineOption);
+      FoundBmp := MatchControlByBitmap(Algorithm, AlgorithmSettings, CompAtPoint, InputData, SubCnvXOffset, SubCnvYOffset, CompAtPoint.ResultedErrorCount, AFoundSubControls, AStopAllActionsOnDemand, ADisplayGridLineOption);
     end
     else
       FoundBmp := False;
@@ -1009,6 +1026,13 @@ begin
     finally
       ClearUsedValues(XValues);
       ClearUsedValues(YValues);
+
+      if not InputData.StopSearchOnMismatch then
+        if Length(AResultedControl) = 0 then
+        begin
+          SetLength(AResultedControl, Length(AResultedControl) + 1);
+          AResultedControl[Length(AResultedControl) - 1] := CompAtPoint;
+        end;
     end;
   finally
     ListOfControlTexts.Free;

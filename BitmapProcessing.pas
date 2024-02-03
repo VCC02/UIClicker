@@ -71,6 +71,7 @@ function BitmapPosMatch(Algorithm: TMatchBitmapAlgorithm;
                         ABackgroundColor: TColor;
                         var AIgnoredColorsArr: TColorArr;
                         ASleepySearch: Byte;
+                        out AResultedErrorCount: Integer;
                         AStopSearchOnDemand: PBoolean = nil;
                         StopSearchOnMismatch: Boolean = True): Boolean;
 
@@ -403,16 +404,28 @@ begin
 end;
 
 
-function CanvasPosMatch(SrcMat, SubMat: TRGBPCanvasMat; SubCnvXOffset, SubCnvYOffset, SrcCnvWidth, SrcCnvHeight, SubCnvWidth, SubCnvHeight, ColorErrorLevel, AcceptedErrorCount: Integer; AIgnoreBackgroundColor: Boolean; ABackgroundColor: TColor; var AIgnoredColorsArr: TColorArr; AStopSearchOnDemand: PBoolean = nil; StopSearchOnMismatch: Boolean = True): Boolean;
+function CanvasPosMatch(SrcMat, SubMat: TRGBPCanvasMat; SubCnvXOffset, SubCnvYOffset, SrcCnvWidth, SrcCnvHeight, SubCnvWidth, SubCnvHeight, ColorErrorLevel, AcceptedErrorCount: Integer; AIgnoreBackgroundColor: Boolean; ABackgroundColor: TColor; var AIgnoredColorsArr: TColorArr; out AResultedErrorCount: Integer; AStopSearchOnDemand: PBoolean = nil; StopSearchOnMismatch: Boolean = True): Boolean;
 begin
   if StopSearchOnMismatch then
-    Result := CanvasPos(SrcMat, SubMat, SubCnvXOffset, SubCnvYOffset, SrcCnvWidth, SrcCnvHeight, SubCnvWidth, SubCnvHeight, ColorErrorLevel, AIgnoreBackgroundColor, ABackgroundColor, AIgnoredColorsArr, AStopSearchOnDemand, AcceptedErrorCount) < AcceptedErrorCount + 1
+    AResultedErrorCount := CanvasPos(SrcMat, SubMat, SubCnvXOffset, SubCnvYOffset, SrcCnvWidth, SrcCnvHeight, SubCnvWidth, SubCnvHeight, ColorErrorLevel, AIgnoreBackgroundColor, ABackgroundColor, AIgnoredColorsArr, AStopSearchOnDemand, AcceptedErrorCount)
   else
-    Result := CanvasPos(SrcMat, SubMat, SubCnvXOffset, SubCnvYOffset, SrcCnvWidth, SrcCnvHeight, SubCnvWidth, SubCnvHeight, ColorErrorLevel, AIgnoreBackgroundColor, ABackgroundColor, AIgnoredColorsArr, AStopSearchOnDemand) < AcceptedErrorCount + 1;
+    AResultedErrorCount := CanvasPos(SrcMat, SubMat, SubCnvXOffset, SubCnvYOffset, SrcCnvWidth, SrcCnvHeight, SubCnvWidth, SubCnvHeight, ColorErrorLevel, AIgnoreBackgroundColor, ABackgroundColor, AIgnoredColorsArr, AStopSearchOnDemand);
+
+  Result := AResultedErrorCount < AcceptedErrorCount + 1;
 end;
 
 
-function BitmapPosMatch_BruteForceWithOffset(SrcMat, SubMat: TRGBPCanvasMat; XOffset, YOffset, XAmount, YAmount, SrcWidth, SrcHeight, SubWidth, SubHeight, ColorErrorLevel: Integer; var SubCnvXOffset, SubCnvYOffset: Integer; TotalErrorCount: Integer; AIgnoreBackgroundColor: Boolean; ABackgroundColor: TColor; var AIgnoredColorsArr: TColorArr; ASleepySearch: Byte; AStopSearchOnDemand: PBoolean = nil; StopSearchOnMismatch: Boolean = True): Boolean;
+function BitmapPosMatch_BruteForceWithOffset(SrcMat, SubMat: TRGBPCanvasMat;
+                                             XOffset, YOffset, XAmount, YAmount, SrcWidth, SrcHeight, SubWidth, SubHeight, ColorErrorLevel: Integer;
+                                             var SubCnvXOffset, SubCnvYOffset: Integer;
+                                             TotalErrorCount: Integer;
+                                             AIgnoreBackgroundColor: Boolean;
+                                             ABackgroundColor: TColor;
+                                             var AIgnoredColorsArr: TColorArr;
+                                             ASleepySearch: Byte;
+                                             out AResultedErrorCount: Integer;
+                                             AStopSearchOnDemand: PBoolean = nil;
+                                             StopSearchOnMismatch: Boolean = True): Boolean;
 var
   x, y: Integer;
   //Res: TPointArr;
@@ -425,7 +438,7 @@ begin
       if (AStopSearchOnDemand <> nil) and AStopSearchOnDemand^ then
         Exit;
 
-      if CanvasPosMatch(SrcMat, SubMat, x, y, SrcWidth, SrcHeight, SubWidth, SubHeight, ColorErrorLevel, TotalErrorCount, AIgnoreBackgroundColor, ABackgroundColor, AIgnoredColorsArr, AStopSearchOnDemand, StopSearchOnMismatch) then
+      if CanvasPosMatch(SrcMat, SubMat, x, y, SrcWidth, SrcHeight, SubWidth, SubHeight, ColorErrorLevel, TotalErrorCount, AIgnoreBackgroundColor, ABackgroundColor, AIgnoredColorsArr, AResultedErrorCount, AStopSearchOnDemand, StopSearchOnMismatch) then
       begin
         Result := True;
         SubCnvXOffset := x;
@@ -448,6 +461,7 @@ function BitmapPosMatch_BruteForce(SrcMat, SubMat: TRGBPCanvasMat;
                                    ABackgroundColor: TColor;
                                    var AIgnoredColorsArr: TColorArr;
                                    ASleepySearch: Byte;
+                                   out AResultedErrorCount: Integer;
                                    AStopSearchOnDemand: PBoolean = nil;
                                    StopSearchOnMismatch: Boolean = True): Boolean;
 const
@@ -475,7 +489,7 @@ begin                     //default optimization: searching a 5px x 5px area, th
 
   //old, full search  - to be used as an option
   if not AUseFastSearch then
-    Result := BitmapPosMatch_BruteForceWithOffset(SrcMat, SubMat, 0, 0, XAmount, YAmount, SrcWidth, SrcHeight, SubWidth, SubHeight, ColorErrorLevel, SubCnvXOffset, SubCnvYOffset, TotalErrorCount, AIgnoreBackgroundColor, ABackgroundColor, AIgnoredColorsArr, ASleepySearch, AStopSearchOnDemand)
+    Result := BitmapPosMatch_BruteForceWithOffset(SrcMat, SubMat, 0, 0, XAmount, YAmount, SrcWidth, SrcHeight, SubWidth, SubHeight, ColorErrorLevel, SubCnvXOffset, SubCnvYOffset, TotalErrorCount, AIgnoreBackgroundColor, ABackgroundColor, AIgnoredColorsArr, ASleepySearch, AResultedErrorCount, AStopSearchOnDemand)
   else
   begin
     if FastSearchColorErrorCount = -1 then
@@ -486,15 +500,15 @@ begin                     //default optimization: searching a 5px x 5px area, th
     PreSizeX := Min(SubWidth, CPreSize);
     PreSizeY := Min(SubHeight, CPreSize);
 
-    for yy := 0 to YAmount do
+    for yy := 0 to YAmount do                //AResultedErrorCount makes sense only when the searched bitmap has the same size as the area in which it is searched for
       for xx := 0 to XAmount do
       begin
         if (AStopSearchOnDemand <> nil) and AStopSearchOnDemand^ then
           Exit;
                                                                                                                            //Avoid ignoring on "pre-search", because of false positives. Those would cause a longer search time.
-        if CanvasPosMatch(SrcMat, SubMat, xx, yy, SrcWidth, SrcHeight, PreSizeX, PreSizeY, ColorErrorLevel, PreErrorCount, AIgnoreBackgroundColor {False}, ABackgroundColor, AIgnoredColorsArr, AStopSearchOnDemand, StopSearchOnMismatch) then
+        if CanvasPosMatch(SrcMat, SubMat, xx, yy, SrcWidth, SrcHeight, PreSizeX, PreSizeY, ColorErrorLevel, PreErrorCount, AIgnoreBackgroundColor {False}, ABackgroundColor, AIgnoredColorsArr, AResultedErrorCount, AStopSearchOnDemand, StopSearchOnMismatch) then
         begin
-          if CanvasPosMatch(SrcMat, SubMat, xx, yy, SrcWidth, SrcHeight, SubWidth, SubHeight, ColorErrorLevel, TotalErrorCount, AIgnoreBackgroundColor, ABackgroundColor, AIgnoredColorsArr, AStopSearchOnDemand, StopSearchOnMismatch) then
+          if CanvasPosMatch(SrcMat, SubMat, xx, yy, SrcWidth, SrcHeight, SubWidth, SubHeight, ColorErrorLevel, TotalErrorCount, AIgnoreBackgroundColor, ABackgroundColor, AIgnoredColorsArr, AResultedErrorCount, AStopSearchOnDemand, StopSearchOnMismatch) then
           begin
             Result := True;
             SubCnvXOffset := xx;
@@ -502,6 +516,7 @@ begin                     //default optimization: searching a 5px x 5px area, th
             SetLength(AFoundBitmaps, Length(AFoundBitmaps) + 1);
             AFoundBitmaps[Length(AFoundBitmaps) - 1].XOffsetFromParent := xx;
             AFoundBitmaps[Length(AFoundBitmaps) - 1].YOffsetFromParent := yy;
+            AFoundBitmaps[Length(AFoundBitmaps) - 1].ResultedErrorCount := AResultedErrorCount;
 
             if not AGetAllBitmaps then
               Exit;                      //stop only if a single bitmap result is expected
@@ -525,6 +540,7 @@ function BitmapPosMatch_SimpleGrid_XYMultipleAndOffsets(SrcMat, SubMat: TRGBPCan
                                                         ABackgroundColor: TColor;
                                                         var AIgnoredColorsArr: TColorArr;
                                                         ASleepySearch: Byte;
+                                                        out AResultedErrorCount: Integer;
                                                         AStopSearchOnDemand: PBoolean = nil;
                                                         StopSearchOnMismatch: Boolean = True): Boolean;
 var
@@ -561,7 +577,7 @@ begin
           if (AStopSearchOnDemand <> nil) and AStopSearchOnDemand^ then
             Exit;
 
-          if CanvasPosMatch(SrcMat, SubMat, x, y, SrcWidth, SrcHeight, SubWidth, SubHeight, ColorErrorLevel, TotalErrorCount, AIgnoreBackgroundColor, ABackgroundColor, AIgnoredColorsArr, AStopSearchOnDemand, StopSearchOnMismatch) then
+          if CanvasPosMatch(SrcMat, SubMat, x, y, SrcWidth, SrcHeight, SubWidth, SubHeight, ColorErrorLevel, TotalErrorCount, AIgnoreBackgroundColor, ABackgroundColor, AIgnoredColorsArr, AResultedErrorCount, AStopSearchOnDemand, StopSearchOnMismatch) then
           begin
             Result := True;
             SubCnvXOffset := x;
@@ -591,6 +607,7 @@ function BitmapPosMatch(Algorithm: TMatchBitmapAlgorithm;
                         ABackgroundColor: TColor;
                         var AIgnoredColorsArr: TColorArr;
                         ASleepySearch: Byte;
+                        out AResultedErrorCount: Integer;
                         AStopSearchOnDemand: PBoolean = nil;
                         StopSearchOnMismatch: Boolean = True): Boolean;
 const
@@ -638,8 +655,8 @@ begin
     end;
 
     case Algorithm of
-      mbaBruteForce: Result := BitmapPosMatch_BruteForce(SrcMat, SubMat, SourceBitmap, SubBitmap, ColorErrorLevel, SubCnvXOffset, SubCnvYOffset, AFoundBitmaps, TotalErrorCount, FastSearchColorErrorCount, AUseFastSearch, AIgnoreBackgroundColor, AGetAllBitmaps, ABackgroundColor, AIgnoredColorsArr, ASleepySearch, AStopSearchOnDemand, StopSearchOnMismatch);
-      mbaXYMultipleAndOffsets: Result := BitmapPosMatch_SimpleGrid_XYMultipleAndOffsets(SrcMat, SubMat, AlgorithmSettings, SourceBitmap, SubBitmap, ColorErrorLevel, SubCnvXOffset, SubCnvYOffset, AFoundBitmaps, TotalErrorCount, AIgnoreBackgroundColor, AGetAllBitmaps, ABackgroundColor, AIgnoredColorsArr, ASleepySearch, AStopSearchOnDemand, StopSearchOnMismatch);
+      mbaBruteForce: Result := BitmapPosMatch_BruteForce(SrcMat, SubMat, SourceBitmap, SubBitmap, ColorErrorLevel, SubCnvXOffset, SubCnvYOffset, AFoundBitmaps, TotalErrorCount, FastSearchColorErrorCount, AUseFastSearch, AIgnoreBackgroundColor, AGetAllBitmaps, ABackgroundColor, AIgnoredColorsArr, ASleepySearch, AResultedErrorCount, AStopSearchOnDemand, StopSearchOnMismatch);
+      mbaXYMultipleAndOffsets: Result := BitmapPosMatch_SimpleGrid_XYMultipleAndOffsets(SrcMat, SubMat, AlgorithmSettings, SourceBitmap, SubBitmap, ColorErrorLevel, SubCnvXOffset, SubCnvYOffset, AFoundBitmaps, TotalErrorCount, AIgnoreBackgroundColor, AGetAllBitmaps, ABackgroundColor, AIgnoredColorsArr, ASleepySearch, AResultedErrorCount, AStopSearchOnDemand, StopSearchOnMismatch);
     else
       raise Exception.Create('Bitmap search algorithm #' + IntToStr(Ord(Algorithm)) + ' not implemented.');
     end;

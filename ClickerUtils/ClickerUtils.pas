@@ -258,6 +258,7 @@ type
     FastSearchAllowedColorErrorCount: string;  //-1 = Use calculated value (scaled down value of AllowedColorErrorCount). Other values are directly converted / used (including 0). Because the 5x5 area is small, a scaled down value, will often end up being 0, which won't allow a proper match.
     IgnoredColors: string; //CSV list of colors, which can be in hex format (6 digits) or var/replacements
     SleepySearch: Boolean; //when True, theare are Sleep(1) calls, to prevent keeping a CPU core at 100%. However, because the thread switching takes usually longer than 1ms, a Sleep(1) call may take even 16ms. This results in slower searches.
+    StopSearchOnMismatch: Boolean; //Defaults to True. When False, the loops continue, in order to get the total pixel error count.
   end;
 
   TClkSetTextOptions = record
@@ -375,6 +376,7 @@ type
     MouseYOffset: Integer;       //relative to the mouee cursor at the time of updating handle
     XOffsetFromParent: Integer;  //field updated when searching for bitmap
     YOffsetFromParent: Integer;  //field updated when searching for bitmap
+    ResultedErrorCount: Integer; //field updated when searching for bitmap
   end;
 
   TCompRecArr = array of TCompRec;

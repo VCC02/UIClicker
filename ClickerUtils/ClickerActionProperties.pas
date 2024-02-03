@@ -162,7 +162,8 @@ begin
             'UseFastSearch' + '=' + IntToStr(Ord(AFindControlOptions.UseFastSearch)) + '&' +
             'FastSearchAllowedColorErrorCount' + '=' + AFindControlOptions.FastSearchAllowedColorErrorCount + '&' +
             'IgnoredColors' + '=' + AFindControlOptions.IgnoredColors + '&' +
-            'SleepySearch' + '=' + IntToStr(Ord(AFindControlOptions.UseFastSearch));
+            'SleepySearch' + '=' + IntToStr(Ord(AFindControlOptions.SleepySearch)) + '&' +
+            'StopSearchOnMismatch' + '=' + IntToStr(Ord(AFindControlOptions.StopSearchOnMismatch));
 end;
 
 

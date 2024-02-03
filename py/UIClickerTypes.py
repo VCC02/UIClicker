@@ -1,4 +1,4 @@
-#   Copyright (C) 2022-2023 VCC
+#   Copyright (C) 2022-2024 VCC
 #   creation date: Aug 2022
 #   initial release date: 10 Aug 2022
 #
@@ -243,7 +243,8 @@ class TFindControlOptions(Structure):
                ("UseFastSearch", BOOLEAN),
                ("FastSearchAllowedColorErrorCount", LPCWSTR),
                ("IgnoredColors", LPCWSTR),
-               ("SleepySearch", BOOLEAN)]
+               ("SleepySearch", BOOLEAN),
+               ("StopSearchOnMismatch", BOOLEAN)]
 
 PFindControlOptions = ctypes.POINTER(TFindControlOptions)
 
@@ -297,6 +298,7 @@ def GetDefaultFindControlOptions():
     FindControlOptions.FastSearchAllowedColorErrorCount = '10'
     FindControlOptions.IgnoredColors = ''
     FindControlOptions.SleepySearch = False
+    FindControlOptions.StopSearchOnMismatch = True
     return FindControlOptions
 
 

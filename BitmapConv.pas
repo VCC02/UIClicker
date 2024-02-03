@@ -122,15 +122,11 @@ procedure DrawPngOnBmp(ABitmap: TBitmap; AFileName: string);
 var
   TempPng: TPNGImage;
 begin
-  WipeBitmap(ABitmap, 32, 32);
-
   TempPng := TPNGImage.Create;
   try
     TempPng.LoadFromFile(AFileName);
+    WipeBitmap(ABitmap, TempPng.Width, TempPng.Height);
 
-    ABitmap.Canvas.Pen.Color := clWhite;
-    ABitmap.Canvas.Brush.Color := clWhite;
-    ABitmap.Canvas.Rectangle(0, 0, ABitmap.Canvas.Width, ABitmap.Canvas.Height);
     ABitmap.Canvas.Draw(0, 0, TempPng);
   finally
     TempPng.Free;
@@ -142,15 +138,11 @@ procedure DrawJpgOnBmp(ABitmap: TBitmap; AFileName: string);
 var
   TempJpg: TJPEGImage;
 begin
-  WipeBitmap(ABitmap, 32, 32);
-
   TempJpg := TJPEGImage.Create;
   try
     TempJpg.LoadFromFile(AFileName);
+    WipeBitmap(ABitmap, TempJpg.Width, TempJpg.Height);
 
-    ABitmap.Canvas.Pen.Color := clWhite;
-    ABitmap.Canvas.Brush.Color := clWhite;
-    ABitmap.Canvas.Rectangle(0, 0, ABitmap.Canvas.Width, ABitmap.Canvas.Height);
     ABitmap.Canvas.Draw(0, 0, TempJpg);
   finally
     TempJpg.Free;
@@ -162,15 +154,11 @@ procedure DrawIcoOnBmp(ABitmap: TBitmap; AFileName: string);
 var
   TempIco: TIcon;
 begin
-  WipeBitmap(ABitmap, 32, 32);
-
   TempIco := TIcon.Create;
   try
     TempIco.LoadFromFile(AFileName);
+    WipeBitmap(ABitmap, TempIco.Width, TempIco.Height);
 
-    ABitmap.Canvas.Pen.Color := clWhite;
-    ABitmap.Canvas.Brush.Color := clWhite;
-    ABitmap.Canvas.Rectangle(0, 0, ABitmap.Canvas.Width, ABitmap.Canvas.Height);
     ABitmap.Canvas.Draw(0, 0, TempIco);
   finally
     TempIco.Free;

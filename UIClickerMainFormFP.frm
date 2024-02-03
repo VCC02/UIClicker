@@ -221,7 +221,7 @@ object frmUIClickerMainForm: TfrmUIClickerMainForm
     Top = 184
   end
   object OpenPictureDialog1: TOpenPictureDialog
-    Filter = 'Bitmap files (*.bmp)|*.bmp|All files (*.*)|*.*'
+    Filter = 'Bitmap files (*.bmp)|*.bmp|Png files (*.png)|*.png|Jpg/Jpeg files (*.jpg; *.jpeg)|*.jpg;*.jpeg|Ico files (*.ico)|*.ico|All files (*.*)|*.*'
     Left = 248
     Top = 117
   end

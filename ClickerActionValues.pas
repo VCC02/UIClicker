@@ -56,7 +56,7 @@ const
   //Properties (counts)
   CPropCount_Click = 25;
   CPropCount_ExecApp = 7;
-  CPropCount_FindControl = 24;
+  CPropCount_FindControl = 25;
   CPropCount_FindSubControl = CPropCount_FindControl;
   CPropCount_SetText = 3;
   CPropCount_CallTemplate = 4;
@@ -130,6 +130,7 @@ const
   CFindControl_FastSearchAllowedColorErrorCount_PropIndex = 21;
   CFindControl_IgnoredColors_PropIndex = 22;
   CFindControl_SleepySearch_PropIndex = 23;
+  CFindControl_StopSearchOnMismatch_PropIndex = 24;
 
   CCallTemplate_TemplateFileName_PropIndex = 0; //property index in CallTemplate structure
   CCallTemplate_ListOfCustomVarsAndValues_PropIndex = 1;
@@ -271,7 +272,8 @@ const
     (Name: 'UseFastSearch'; EditorType: etBooleanCombo; DataType: CDTBool),
     (Name: 'FastSearchAllowedColorErrorCount'; EditorType: etText; DataType: CDTString),
     (Name: 'IgnoredColors'; EditorType: etText; DataType: CDTString),
-    (Name: 'SleepySearch'; EditorType: etBooleanCombo; DataType: CDTBool)
+    (Name: 'SleepySearch'; EditorType: etBooleanCombo; DataType: CDTBool),
+    (Name: 'StopSearchOnMismatch'; EditorType: etBooleanCombo; DataType: CDTBool)
   );
 
   {$IFDEF SubProperties}
@@ -528,7 +530,8 @@ const
     nil, //UseFastSearch
     nil, //FastSearchAllowedColorErrorCount
     nil, //IgnoredColors
-    nil  //SleepySearch
+    nil, //SleepySearch
+    nil  //StopSearchOnMismatch
   );
 
   CCallTemplateGetActionValueStrFunctions: TGetCallTemplateValueStrFuncArr = (
@@ -609,6 +612,7 @@ const
     0, //UseFastSearch: Boolean;
     0, //FastSearchAllowedColorErrorCount: Boolean;
     0, //IgnoredColors: string;
+    0, //StopSearchOnMismatch: Boolean;
     0  //SleepySearch: Boolean;
   );
 
@@ -785,7 +789,8 @@ const
     nil, //UseFastSearch
     nil, //FastSearchAllowedColorErrorCount
     nil, //IgnoredColors
-    nil  //SleepySearch
+    nil, //SleepySearch
+    nil  //StopSearchOnMismatch
   );
 
   CSetTextEnumStrings: array[0..CPropCount_SetText - 1] of PArrayOfString = (
@@ -925,6 +930,7 @@ function GetPropertyHint_FindControl_UseFastSearch: string;
 function GetPropertyHint_FindControl_FastSearchAllowedColorErrorCount: string;
 function GetPropertyHint_FindControl_IgnoredColors: string;
 function GetPropertyHint_FindControl_SleepySearch: string;
+function GetPropertyHint_FindControl_StopSearchOnMismatch: string;
 
 {$IFDEF SubProperties}
   function GetPropertyHint_FindControl_MatchCriteria_MatchBitmapText: string;
@@ -1041,7 +1047,8 @@ const
     @GetPropertyHint_FindControl_UseFastSearch, // UseFastSearch: Boolean;
     @GetPropertyHint_FindControl_FastSearchAllowedColorErrorCount, // FastSearchAllowedColorErrorCount: string;
     @GetPropertyHint_FindControl_IgnoredColors, // IgnoredColors: string;
-    @GetPropertyHint_FindControl_SleepySearch // SleepySearch: Boolean;
+    @GetPropertyHint_FindControl_SleepySearch, // SleepySearch: Boolean;
+    @GetPropertyHint_FindControl_StopSearchOnMismatch // StopSearchOnMismatch: Boolean;
   );
 
 
@@ -1252,6 +1259,7 @@ begin
     21: Result := AAction^.FindControlOptions.FastSearchAllowedColorErrorCount;
     22: Result := AAction^.FindControlOptions.IgnoredColors;
     23: Result := BoolToStr(AAction^.FindControlOptions.SleepySearch, True);
+    24: Result := BoolToStr(AAction^.FindControlOptions.StopSearchOnMismatch, True);
     else
       Result := 'unknown';
   end;
@@ -1749,6 +1757,7 @@ begin
     21: AAction^.FindControlOptions.FastSearchAllowedColorErrorCount := NewValue;
     22: AAction^.FindControlOptions.IgnoredColors := NewValue;
     23: AAction^.FindControlOptions.SleepySearch := StrToBool(NewValue);
+    24: AAction^.FindControlOptions.StopSearchOnMismatch := StrToBool(NewValue);
     else
       ;
   end;
@@ -2194,6 +2203,15 @@ function GetPropertyHint_FindControl_SleepySearch: string;
 begin
   Result := 'When set to True, once in a while, at random times, a call to Sleep(1) is made, to avoid keeping a CPU core to 100%.' + #13#10 +
             'Since thread switching is not that accurate, a call to Sleep(1) may take even 16ms. This will result in slower searches.';
+end;
+
+
+function GetPropertyHint_FindControl_StopSearchOnMismatch: string;
+begin
+  Result := 'When set to False, the search continues, to get the total pixel error count and the action result is "Successful"' + #13#10 +
+            'This is useful when the searched bitmap has the same size (both width and height) as the area it is searched from.' + #13#10 +
+            'When set to False, the result (total errored pixel count) is placed into $ResultedErrorCount$.' + #13#10 +
+            'If the action fails when set to True, the result is usually greater than the value of AllowedColorErrorCount property.';
 end;
 
 

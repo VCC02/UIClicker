@@ -1212,7 +1212,7 @@ function TActionExecution.ExecuteFindControlAction(var AFindControlOptions: TClk
   //  clSystemColor = $FF000000;
 {$ENDIF}
 
-  procedure UpdateActionVarValuesFromControl(AControl: TCompRec);
+  procedure UpdateActionVarValuesFromControl(AControl: TCompRec; AUpdate_ResultedErrorCount: Boolean = False);
   var
     Control_Width, Control_Height: Integer;
   begin
@@ -1233,6 +1233,9 @@ function TActionExecution.ExecuteFindControlAction(var AFindControlOptions: TClk
     SetActionVarValue('$Control_Handle$', IntToStr(AControl.Handle));
     SetActionVarValue('$DebugVar_SubCnvXOffset$', IntToStr(AControl.XOffsetFromParent));
     SetActionVarValue('$DebugVar_SubCnvYOffset$', IntToStr(AControl.YOffsetFromParent));
+
+    if AUpdate_ResultedErrorCount then
+      SetActionVarValue('$ResultedErrorCount$', IntToStr(AControl.ResultedErrorCount));
   end;
 
   procedure UpdateActionVarValuesFromResultedControlArr(var AResultedControlArr: TCompRecArr);
@@ -1302,17 +1305,19 @@ function TActionExecution.ExecuteFindControlAction(var AFindControlOptions: TClk
   procedure SetAllControl_Handles_FromResultedControlArr(var AResultedControlArr: TCompRecArr; AMatchSource, ADetailedMatchSource: string);
   var
     i: Integer;
-    s, xs, ys: string;
+    s, xs, ys, ErrCnts: string;
   begin
     s := '';
     xs := '';
     ys := '';
+    ErrCnts := '';
 
     for i := 0 to Length(AResultedControlArr) - 1 do
     begin
       s := s + IntToStr(AResultedControlArr[i].Handle) + #4#5;
       xs := xs + IntToStr(AResultedControlArr[i].XOffsetFromParent) + #4#5;
       ys := ys + IntToStr(AResultedControlArr[i].YOffsetFromParent) + #4#5;
+      ErrCnts := ErrCnts + IntToStr(AResultedControlArr[i].ResultedErrorCount) + #4#5;
     end;
 
     SetActionVarValue('$AllControl_Handles$', s);
@@ -1321,6 +1326,7 @@ function TActionExecution.ExecuteFindControlAction(var AFindControlOptions: TClk
 
     SetActionVarValue('$AllControl_MatchSource$', AMatchSource);
     SetActionVarValue('$AllControl_DetailedMatchSource$', ADetailedMatchSource);
+    SetActionVarValue('$AllControl_ResultedErrorCount$', ErrCnts);
   end;
 
   procedure IgnoredColorsStrToArr(AIgnoredColorsStr: string; var AIgnoredColorsArr: TColorArr);
@@ -1366,6 +1372,7 @@ var
   TempPrimitiveSettings: TPrimitiveSettings;
   PrimitivesCompositor: TPrimitivesCompositor;
   PrimitiveFound: Boolean;
+  FindControlOnScreen_Result: Boolean;
 begin
   Result := False;
 
@@ -1453,8 +1460,9 @@ begin
 
   FindControlInputData.SleepySearch := 2; //this allows a call to AppProcMsg, but does not use Sleep.
   if AFindControlOptions.SleepySearch then
-    FindControlInputData.SleepySearch := FindControlInputData.SleepySearch or 1;  //2it 0 is SleepySearch. Bit 1 is AppProcMsg.
+    FindControlInputData.SleepySearch := FindControlInputData.SleepySearch or 1;  //Bit 0 is SleepySearch. Bit 1 is AppProcMsg.
 
+  FindControlInputData.StopSearchOnMismatch := AFindControlOptions.StopSearchOnMismatch;
 
   /////////////////////////////Moved section    - because GlobalSearchArea has to stay stable between "for j" iterations
   if AFindControlOptions.UseWholeScreen then
@@ -1552,7 +1560,6 @@ begin
     //MessageBox(Handle, 'Using local stop on demand.', PChar(Caption), MB_ICONINFORMATION);
     StopAllActionsOnDemandAddr := FStopAllActionsOnDemand;
   end;
-
 
   if not IsSubControl then
   begin  //FindControl
@@ -1729,9 +1736,13 @@ begin
           try
             SetLength(PartialResultedControlArr, 0);
             WorkFindControlInputData := FindControlInputData;
-            if FindControlOnScreen(AFindControlOptions.MatchBitmapAlgorithm, AFindControlOptions.MatchBitmapAlgorithmSettings, WorkFindControlInputData, InitialTickCount, Timeout, StopAllActionsOnDemandAddr, PartialResultedControlArr, DoOnGetGridDrawingOption) then
+            FindControlOnScreen_Result := FindControlOnScreen(AFindControlOptions.MatchBitmapAlgorithm, AFindControlOptions.MatchBitmapAlgorithmSettings, WorkFindControlInputData, InitialTickCount, Timeout, StopAllActionsOnDemandAddr, PartialResultedControlArr, DoOnGetGridDrawingOption);
+            if FindControlOnScreen_Result or not FindControlInputData.StopSearchOnMismatch then
             begin
-              UpdateActionVarValuesFromControl(PartialResultedControlArr[0]);
+              if not FindControlOnScreen_Result and not FindControlInputData.StopSearchOnMismatch then
+                AddToLog('Can''t find the subcontrol (text), but the searching went further, to get the error count. See $ResultedErrorCount$.');
+
+              UpdateActionVarValuesFromControl(PartialResultedControlArr[0], not FindControlInputData.StopSearchOnMismatch);
               //frClickerActions.DebuggingInfoAvailable := True;
               //
               //if AFindControlOptions.GetAllControls then
@@ -1833,9 +1844,13 @@ begin
 
             SetLength(PartialResultedControlArr, 0);
             WorkFindControlInputData := FindControlInputData;
-            if FindControlOnScreen(AFindControlOptions.MatchBitmapAlgorithm, AFindControlOptions.MatchBitmapAlgorithmSettings, WorkFindControlInputData, InitialTickCount, Timeout, StopAllActionsOnDemandAddr, PartialResultedControlArr, DoOnGetGridDrawingOption) then
+            FindControlOnScreen_Result := FindControlOnScreen(AFindControlOptions.MatchBitmapAlgorithm, AFindControlOptions.MatchBitmapAlgorithmSettings, WorkFindControlInputData, InitialTickCount, Timeout, StopAllActionsOnDemandAddr, PartialResultedControlArr, DoOnGetGridDrawingOption);
+            if FindControlOnScreen_Result or not FindControlInputData.StopSearchOnMismatch then
             begin
-              UpdateActionVarValuesFromControl(PartialResultedControlArr[0]);
+              if not FindControlOnScreen_Result and not FindControlInputData.StopSearchOnMismatch then
+                AddToLog('Can''t find the subcontrol (bmp), but the searching went further, to get the error count. See $ResultedErrorCount$.');
+
+              UpdateActionVarValuesFromControl(PartialResultedControlArr[0], not FindControlInputData.StopSearchOnMismatch);
               frClickerActions.DebuggingInfoAvailable := True;
 
               CopyPartialResultsToFinalResult(ResultedControlArr_Bmp, PartialResultedControlArr);
@@ -1954,10 +1969,14 @@ begin
 
                 SetLength(PartialResultedControlArr, 0);
                 WorkFindControlInputData := FindControlInputData;
-                if FindControlOnScreen(AFindControlOptions.MatchBitmapAlgorithm, AFindControlOptions.MatchBitmapAlgorithmSettings, WorkFindControlInputData, InitialTickCount, Timeout, StopAllActionsOnDemandAddr, PartialResultedControlArr, DoOnGetGridDrawingOption) then
+                FindControlOnScreen_Result := FindControlOnScreen(AFindControlOptions.MatchBitmapAlgorithm, AFindControlOptions.MatchBitmapAlgorithmSettings, WorkFindControlInputData, InitialTickCount, Timeout, StopAllActionsOnDemandAddr, PartialResultedControlArr, DoOnGetGridDrawingOption);
+                if FindControlOnScreen_Result or not FindControlInputData.StopSearchOnMismatch then
                 begin
+                  if not FindControlOnScreen_Result and not FindControlInputData.StopSearchOnMismatch then
+                    AddToLog('Can''t find the subcontrol (pmtv), but the searching went further, to get the error count. See $ResultedErrorCount$.');
+
                   PrimitiveFound := True;
-                  UpdateActionVarValuesFromControl(PartialResultedControlArr[0]);
+                  UpdateActionVarValuesFromControl(PartialResultedControlArr[0], not FindControlInputData.StopSearchOnMismatch);
                   frClickerActions.DebuggingInfoAvailable := True;
 
                   CopyPartialResultsToFinalResult(ResultedControlArr_Pmtv, PartialResultedControlArr);
@@ -3052,6 +3071,7 @@ begin
     FindControlOptions.FastSearchAllowedColorErrorCount := AListOfFindControlOptionsParams.Values['FastSearchAllowedColorErrorCount'];
     FindControlOptions.IgnoredColors := AListOfFindControlOptionsParams.Values['IgnoredColors'];
     FindControlOptions.SleepySearch := AListOfFindControlOptionsParams.Values['SleepySearch'] = '1';
+    FindControlOptions.StopSearchOnMismatch := AListOfFindControlOptionsParams.Values['StopSearchOnMismatch'] <> '0';
 
     ActionOptions.ActionName := AListOfFindControlOptionsParams.Values['ActionName'];
     ActionOptions.ActionTimeout := Temp_ActionTimeout;

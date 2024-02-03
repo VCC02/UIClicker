@@ -777,6 +777,7 @@ begin
     TempVarDescriptions.Add('$PluginError$=[String] This is an error message, set by an action plugin, after its failed execution.');
     TempVarDescriptions.Add('$AppBitness$=[String] This variable is automatically set to i386 or x86_64, depending on executable bitness.');
     TempVarDescriptions.Add('$OSBitness$=[String] This variable is automatically set to win32 or win64, depending on OS bitness.');
+    TempVarDescriptions.Add('$ResultedErrorCount$=[String] This is the numer of mismatching pixels, after executing a FindSubControl action.');
 
     for i := 0 to FVarDescriptions.Count - 1 do
       FVarDescriptions.Strings[i] := TempVarDescriptions.Values[FVarDescriptions.Strings[i]];
@@ -5287,6 +5288,7 @@ begin
   FClkActions[AIndex].FindControlOptions.FastSearchAllowedColorErrorCount := '10';
   FClkActions[AIndex].FindControlOptions.IgnoredColors := '';
   FClkActions[AIndex].FindControlOptions.SleepySearch := False;
+  FClkActions[AIndex].FindControlOptions.StopSearchOnMismatch := True;
 
   SetLength(FClkActions[AIndex].FindControlOptions.MatchBitmapText, 1);
   FClkActions[AIndex].FindControlOptions.MatchBitmapText[0].ForegroundColor := '$Color_Window$';
@@ -5978,8 +5980,11 @@ procedure TfrClickerActionsArr.ClearAllActions;
 var
   UnsetActionValue: Byte;
 begin
+  vstActions.ClearSelection;       //ClearSelection and ..
+  vstActions.RootNodeCount := 0;   //set RootNodeCount before clearing the array, otherwise an AV may happen in VST
+  Application.ProcessMessages;
   SetLength(FClkActions, 0);
-  vstActions.RootNodeCount := 0;
+
   FileName := '';
   Modified := True; //to update displayed FileName
   Modified := False;   //false for clearing filename
