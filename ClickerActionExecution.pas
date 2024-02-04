@@ -1943,6 +1943,7 @@ begin
 
             PrimitivesCompositor := TPrimitivesCompositor.Create;
             try
+              PrimitivesCompositor.FileIndex := i;
               PrimitivesCompositor.OnEvaluateReplacementsFunc := HandleOnEvaluateReplacements;
               PrimitivesCompositor.OnLoadBitmap := HandleOnLoadBitmap;
               PrimitivesCompositor.OnLoadRenderedBitmap := HandleOnLoadRenderedBitmap;
@@ -2133,94 +2134,110 @@ end;
 function TActionExecution.ExecuteSetControlTextAction(var ASetTextOptions: TClkSetTextOptions): Boolean;
 var
   Control_Handle: THandle;
-  i, j, Idx: Integer;
+  i, j, k, Idx: Integer;
   TextToSend: string;
   KeyStrokes: array of TINPUT;
   Err: Integer;
   ErrStr: string;
   DelayBetweenKeyStrokesInt: Integer;
+  Count: Integer;
 begin
   Result := True;
 
   Control_Handle := StrToIntDef(GetActionVarValue('$Control_Handle$'), 0);
   TextToSend := EvaluateReplacements(ASetTextOptions.Text);
   TextToSend := EvaluateHTTP(TextToSend);
+  Count := StrToIntDef(EvaluateReplacements(ASetTextOptions.Count), 1);
 
-  case ASetTextOptions.ControlType of
-    stEditBox: SetControlText(Control_Handle, TextToSend);
+  if ASetTextOptions.ControlType = stKeystrokes then
+    DelayBetweenKeyStrokesInt := StrToIntDef(EvaluateReplacements(ASetTextOptions.DelayBetweenKeyStrokes), 0)
+  else
+    DelayBetweenKeyStrokesInt := 0;
 
-    stComboBox: SelectComboBoxItem(Control_Handle, 0, TextToSend);
+  for k := 1 to Count do
+  begin
+    case ASetTextOptions.ControlType of
+      stEditBox: SetControlText(Control_Handle, TextToSend);
 
-    stKeystrokes:
-    begin
-      DelayBetweenKeyStrokesInt := StrToIntDef(EvaluateReplacements(ASetTextOptions.DelayBetweenKeyStrokes), 0);
+      stComboBox: SelectComboBoxItem(Control_Handle, 0, TextToSend);
 
-      SetLength(KeyStrokes, Length(TextToSend) shl 1);
-      try
-        for i := 0 to Length(TextToSend) - 1 do   //string len, not array len
-        begin
-          Idx := i shl 1;
-          KeyStrokes[Idx]._Type := INPUT_KEYBOARD; //not sure if needed
-          KeyStrokes[Idx].ki.wVk := 0;
-          KeyStrokes[Idx].ki.wScan := Ord(TextToSend[i + 1]);
-          KeyStrokes[Idx].ki.dwFlags := KEYEVENTF_UNICODE; //0;
-          KeyStrokes[Idx].ki.Time := 0;
-          KeyStrokes[Idx].ki.ExtraInfo := 0;
-
-          KeyStrokes[Idx + 1]._Type := INPUT_KEYBOARD; //not sure if needed
-          KeyStrokes[Idx + 1].ki.wVk := 0;
-          KeyStrokes[Idx + 1].ki.wScan := Ord(TextToSend[i + 1]);
-          KeyStrokes[Idx + 1].ki.dwFlags := KEYEVENTF_UNICODE or KEYEVENTF_KEYUP;
-          KeyStrokes[Idx + 1].ki.Time := 0;
-          KeyStrokes[Idx + 1].ki.ExtraInfo := 0;
-        end;
-
-        SetLastError(0);
-        if DelayBetweenKeyStrokesInt = 0 then
-        begin
-          if Integer(SendInput(Length(KeyStrokes), @KeyStrokes[0], SizeOf(TINPUT))) <> Length(KeyStrokes) then
+      stKeystrokes:
+      begin
+        SetLength(KeyStrokes, Length(TextToSend) shl 1);
+        try
+          for i := 0 to Length(TextToSend) - 1 do   //string len, not array len
           begin
-            Err := GetLastOSError;
-            ErrStr := 'KeyStrokes error: ' + IntToStr(Err) + '  ' + SysErrorMessage(GetLastOSError) + '  Keystrokes count: ' + IntToStr(Length(KeyStrokes));
-            SetActionVarValue('$ExecAction_Err$', ErrStr);
-            Result := False;
+            Idx := i shl 1;
+            KeyStrokes[Idx]._Type := INPUT_KEYBOARD; //not sure if needed
+            KeyStrokes[Idx].ki.wVk := 0;
+            KeyStrokes[Idx].ki.wScan := Ord(TextToSend[i + 1]);
+            KeyStrokes[Idx].ki.dwFlags := KEYEVENTF_UNICODE; //0;
+            KeyStrokes[Idx].ki.Time := 0;
+            KeyStrokes[Idx].ki.ExtraInfo := 0;
+
+            KeyStrokes[Idx + 1]._Type := INPUT_KEYBOARD; //not sure if needed
+            KeyStrokes[Idx + 1].ki.wVk := 0;
+            KeyStrokes[Idx + 1].ki.wScan := Ord(TextToSend[i + 1]);
+            KeyStrokes[Idx + 1].ki.dwFlags := KEYEVENTF_UNICODE or KEYEVENTF_KEYUP;
+            KeyStrokes[Idx + 1].ki.Time := 0;
+            KeyStrokes[Idx + 1].ki.ExtraInfo := 0;
           end;
-        end
-        else
-        begin
-          for i := 0 to Length(TextToSend) - 1 do
+
+          SetLastError(0);
+          if DelayBetweenKeyStrokesInt = 0 then
           begin
-            if Integer(SendInput(2, @KeyStrokes[i shl 1], SizeOf(TINPUT))) <> 2 then
+            if Integer(SendInput(Length(KeyStrokes), @KeyStrokes[0], SizeOf(TINPUT))) <> Length(KeyStrokes) then
             begin
               Err := GetLastOSError;
               ErrStr := 'KeyStrokes error: ' + IntToStr(Err) + '  ' + SysErrorMessage(GetLastOSError) + '  Keystrokes count: ' + IntToStr(Length(KeyStrokes));
               SetActionVarValue('$ExecAction_Err$', ErrStr);
               Result := False;
             end;
-
-            for j := 1 to DelayBetweenKeyStrokesInt do
+          end
+          else
+          begin
+            for i := 0 to Length(TextToSend) - 1 do
             begin
-              Sleep(1);
+              if Integer(SendInput(2, @KeyStrokes[i shl 1], SizeOf(TINPUT))) <> 2 then
+              begin
+                Err := GetLastOSError;
+                ErrStr := 'KeyStrokes error: ' + IntToStr(Err) + '  ' + SysErrorMessage(GetLastOSError) + '  Keystrokes count: ' + IntToStr(Length(KeyStrokes));
+                SetActionVarValue('$ExecAction_Err$', ErrStr);
+                Result := False;
+              end;
+
+              for j := 1 to DelayBetweenKeyStrokesInt do
+              begin
+                Sleep(1);  //this is way longer than a ms, but it allows checking for stop condition
+
+                if CheckManualStopCondition then
+                begin
+                  Result := False;
+                  Break;     //break inner for
+                end;
+              end;
 
               if CheckManualStopCondition then
               begin
                 Result := False;
-                Break;     //break inner for
+                Break;       //break outer for
               end;
             end;
-
-            if CheckManualStopCondition then
-            begin
-              Result := False;
-              Break;       //break outer for
-            end;
-          end;
-        end; //using delays
-      finally
-        SetLength(KeyStrokes, 0);
+          end; //using delays
+        finally
+          SetLength(KeyStrokes, 0);
+        end;
       end;
+    end; //case
+
+    if CheckManualStopCondition then
+    begin
+      Result := False;
+      Break;     //break for k
     end;
-  end; //case
+
+    Sleep(DelayBetweenKeyStrokesInt);
+  end; //for k
 end;
 
 

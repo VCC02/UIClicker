@@ -58,7 +58,7 @@ const
   CPropCount_ExecApp = 7;
   CPropCount_FindControl = 25;
   CPropCount_FindSubControl = CPropCount_FindControl;
-  CPropCount_SetText = 3;
+  CPropCount_SetText = 4;
   CPropCount_CallTemplate = 4;
   CPropCount_Sleep = 1;
   CPropCount_SetVar = 1;
@@ -328,7 +328,8 @@ const
   CSetTextProperties: array[0..CPropCount_SetText - 1] of TOIPropDef = (   //Description:  Most edit boxes and combo boxes can be set, using the first two options.  However, depending on their usage on the target application, this approach might not be enough.  For edit boxes, the action can be configured to use key strokes.  For combo boxes, this action will have to be replaced by multiple actions, to open the box, finding text, selecting etc.
     (Name: 'Text'; EditorType: etText; DataType: CDTString),                                    //Description:  The proper control type has to be selected, for the proper API call. Uses $Control_Handle$ variable.    HTTP calls are available, as var values, using the following format: $http://<server:port>/[params]$
     (Name: 'ControlType'; EditorType: etEnumCombo; DataType: CDTEnum),                          //Description:  Uses WM_SETTEXT or CB_SELECTSTRING messages or emulates keystrokes..
-    (Name: 'DelayBetweenKeyStrokes'; EditorType: etText; DataType: CDTString)
+    (Name: 'DelayBetweenKeyStrokes'; EditorType: etText; DataType: CDTString),
+    (Name: 'Count'; EditorType: etSpinText; DataType: CDTString)
   );
 
   CCallTemplateProperties: array[0..CPropCount_CallTemplate - 1] of TOIPropDef = (
@@ -619,7 +620,8 @@ const
   CSetTextEnumCounts: array[0..CPropCount_SetText - 1] of Integer = (
     0, //Text: string;
     Ord(High(TClkSetTextControlType)) + 1,
-    0  //DelayBetweenKeyStrokes: string;
+    0, //DelayBetweenKeyStrokes: string;
+    0  //Count: string;
   );
 
   CCallTemplateEnumCounts: array[0..CPropCount_CallTemplate - 1] of Integer = (
@@ -796,7 +798,8 @@ const
   CSetTextEnumStrings: array[0..CPropCount_SetText - 1] of PArrayOfString = (
     nil, //Text: string;
     @CClkSetTextControlTypeStr,
-    nil  //DelayBetweenKeyStrokes: string;
+    nil, //DelayBetweenKeyStrokes: string;
+    nil  //Count: string;
   );
 
   CCallTemplateEnumStrings: array[0..CPropCount_CallTemplate - 1] of PArrayOfString = (
@@ -952,7 +955,8 @@ function GetPropertyHint_SetText: string;
 {$IFDEF SubProperties}
   function GetPropertyHint_SetText_Text: string;
   function GetPropertyHint_SetText_ControlType: string;
-  function GetPropertyHint_DelayBetweenKeyStrokes_Text: string;
+  function GetPropertyHint_DelayBetweenKeyStrokes: string;
+  function GetPropertyHint_Count: string;
 {$ENDIF}
 
 
@@ -1055,7 +1059,8 @@ const
   CGetPropertyHint_SetText: array[0..CPropCount_SetText - 1] of TPropHintFunc = (
     @GetPropertyHint_SetText_Text, // Text: string;
     @GetPropertyHint_SetText_ControlType,  // ControlType: TClkSetTextControlType;
-    @GetPropertyHint_DelayBetweenKeyStrokes_Text // DelayBetweenKeyStrokes: string;
+    @GetPropertyHint_DelayBetweenKeyStrokes, // DelayBetweenKeyStrokes: string;
+    @GetPropertyHint_Count // Count: string;
   );
 
 
@@ -1355,6 +1360,7 @@ begin
     0: Result := AAction^.SetTextOptions.Text;
     1: Result := CClkSetTextControlTypeStr[AAction^.SetTextOptions.ControlType];
     2: Result := AAction^.SetTextOptions.DelayBetweenKeyStrokes;
+    3: Result := AAction^.SetTextOptions.Count;
     else
       Result := 'unknown';
   end;
@@ -1847,6 +1853,7 @@ begin
     0: AAction^.SetTextOptions.Text := NewValue;
     1: AAction^.SetTextOptions.ControlType := ClkSetTextControlType_AsStringToValue(NewValue);
     2: AAction^.SetTextOptions.DelayBetweenKeyStrokes := NewValue;
+    3: AAction^.SetTextOptions.Count := NewValue;
     else
       ;
   end;
@@ -2305,9 +2312,15 @@ begin
 end;
 
 
-function GetPropertyHint_DelayBetweenKeyStrokes_Text: string;
+function GetPropertyHint_DelayBetweenKeyStrokes: string;
 begin
   Result := 'For keystrokes only. Measured in ms.'#13#10'A value of 0 or empty string, results in no delay.';
+end;
+
+
+function GetPropertyHint_Count: string;
+begin
+  Result := 'Repeats setting/sending the keystrokes "Count" times.';
 end;
 
 

@@ -6,8 +6,8 @@ object frClickerSetVar: TfrClickerSetVar
   Anchors = [akTop, akLeft, akRight, akBottom]
   ClientHeight = 269
   ClientWidth = 790
-  OnResize = FrameResize
   TabOrder = 0
+  OnResize = FrameResize
   DesignLeft = 86
   DesignTop = 85
   object pnlHorizSplitter: TPanel
@@ -18,6 +18,7 @@ object frClickerSetVar: TfrClickerSetVar
     Width = 11
     Anchors = [akTop, akLeft, akBottom]
     Color = 13041606
+    ParentBackground = False
     ParentColor = False
     TabOrder = 0
     OnMouseDown = pnlHorizSplitterMouseDown
@@ -119,10 +120,10 @@ object frClickerSetVar: TfrClickerSetVar
         FFFFFFFFFFFFFF000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFF39841AFFFFFFFF
         FFFFFFFFFFFFFFFFFFFFFF000000
       }
-      OnClick = spdbtnMoveUpClick
       ShowHint = True
       ParentFont = False
       ParentShowHint = False
+      OnClick = spdbtnMoveUpClick
     end
     object spdbtnMoveDown: TSpeedButton
       Left = 24
@@ -142,10 +143,21 @@ object frClickerSetVar: TfrClickerSetVar
         1AFFFFFFFFFFFF000000FFFFFF39841A39841A39841A39841A39841A39841A39
         841A39841A39841AFFFFFF000000
       }
-      OnClick = spdbtnMoveDownClick
       ShowHint = True
       ParentFont = False
       ParentShowHint = False
+      OnClick = spdbtnMoveDownClick
+    end
+    object lblSetVarWarning: TLabel
+      Left = 72
+      Height = 15
+      Hint = 'Because of a limitation of saving these values, please do not use plain #4#5 separators.'#13#10'Use $#4#5$ replacement instead.'
+      Top = 247
+      Width = 326
+      Anchors = [akLeft, akBottom]
+      Caption = 'Do not use plain ASCII #4#5 characters in var names or values!'
+      ParentShowHint = False
+      ShowHint = True
     end
   end
   object pnlFunctions: TPanel
@@ -235,6 +247,7 @@ object frClickerSetVar: TfrClickerSetVar
       AutoSize = False
       Caption = 'Available functions and special vars:'
       Color = clBtnFace
+      ParentColor = False
       ParentShowHint = False
       ShowHint = True
       Transparent = False

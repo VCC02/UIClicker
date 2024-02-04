@@ -83,6 +83,7 @@ type
     FOrders: TCompositionOrderArr; //array of orders  - i.e. array of array of indexes.
     FPrimitiveSettings: TPrimitiveSettings;
     FCurrentMousePosOnPreviewImg: TPoint;
+    FFileIndex: Integer; //primitives file index in the list of MatchPrimitiveFiles property
 
     FHold: Boolean;
     FSplitterMouseDownGlobalPos: TPoint;
@@ -100,6 +101,8 @@ type
     FOnSaveFromMenu: TNotifyEvent;
     FOnPictureOpenDialogExecute: TOnPictureOpenDialogExecute;
     FOnGetPictureOpenDialogFileName: TOnGetPictureOpenDialogFileName;
+
+    //procedure SetFileIndex(Value: Integer);
 
     procedure CreateRemainingUIComponents;
 
@@ -227,6 +230,8 @@ type
     procedure ComposePrimitives(ABmp: TBitmap; AOrderIndex: Integer);
     procedure RepaintAllCompositions;
     function GetOrderCount: Integer;
+
+    property FileIndex: Integer read FFileIndex write FFileIndex {SetFileIndex}; //primitives file index in the list of MatchPrimitiveFiles property;
 
     property OnLoadBitmap: TOnLoadBitmap write FOnLoadBitmap;
     property OnLoadRenderedBitmap: TOnLoadRenderedBitmap write FOnLoadRenderedBitmap;
@@ -540,6 +545,7 @@ var
 begin
   PmtvCompositor := TPrimitivesCompositor.Create;
   try
+    PmtvCompositor.FileIndex := FFileIndex;
     PmtvCompositor.OnEvaluateReplacementsFunc := HandleOnEvaluateReplacementsFunc;
     PmtvCompositor.OnLoadBitmap := HandleOnLoadBitmap;
     PmtvCompositor.OnLoadRenderedBitmap := HandleOnLoadRenderedBitmap;
@@ -1568,6 +1574,7 @@ begin
   SetLength(CurrentPrimitive, 1);
   PmtvCompositor := TPrimitivesCompositor.Create;
   try
+    PmtvCompositor.FileIndex := FFileIndex;
     PmtvCompositor.OnEvaluateReplacementsFunc := HandleOnEvaluateReplacementsFunc;
     PmtvCompositor.OnLoadBitmap := HandleOnLoadBitmap;
     PmtvCompositor.OnLoadRenderedBitmap := HandleOnLoadRenderedBitmap;

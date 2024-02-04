@@ -468,7 +468,7 @@ type
     procedure ExtraLoadInMemFileClick(Sender: TObject);
 
     procedure UpdateNodesCheckStateFromActions;
-    procedure RemoveAction(ActionIndex: Integer; AClearSelectionAfterRemoving: Boolean = True);
+    procedure RemoveAction(ActionIndex: Integer; AClearSelectionAfterRemoving: Boolean = True; AUpdateRootNodeCount: Boolean = True);
     procedure RemoveSelectedActions;
     procedure SetAFontFromClkActions(AFont: TFont; ActionIndex: Integer);
     procedure UpdateNodeCheckStateFromAction(Node: PVirtualNode);
@@ -4665,6 +4665,7 @@ var
 begin
   n := Length(AActionIndexArrToReplace);
   //remove selected
+  vstActions.ClearSelection;
   for i := n - 1 downto 0 do
     RemoveAction(AActionIndexArrToReplace[i]);  //use a for to remove actions, because the vst is reset and refreshed at every call, so a  Node := Node^.PrevSibling will not work
 
@@ -5318,6 +5319,7 @@ begin
   FClkActions[AIndex].SetTextOptions.Text := '';
   FClkActions[AIndex].SetTextOptions.ControlType := stEditBox;
   FClkActions[AIndex].SetTextOptions.DelayBetweenKeyStrokes := '0';
+  FClkActions[AIndex].SetTextOptions.Count := '1';
 
   FClkActions[AIndex].CallTemplateOptions.TemplateFileName := '';
   FClkActions[AIndex].CallTemplateOptions.ListOfCustomVarsAndValues := '';
@@ -5897,19 +5899,24 @@ begin
 end;
 
 
-procedure TfrClickerActionsArr.RemoveAction(ActionIndex: Integer; AClearSelectionAfterRemoving: Boolean = True);
+procedure TfrClickerActionsArr.RemoveAction(ActionIndex: Integer; AClearSelectionAfterRemoving: Boolean = True; AUpdateRootNodeCount: Boolean = True);
 var
   i: Integer;
 begin
+  if Length(FClkActions) = 0 then
+    Exit;
+
   for i := ActionIndex to Length(FClkActions) - 2 do
     CopyActionContent(FClkActions[i + 1], FClkActions[i]); //FClkActions[i] := FClkActions[i + 1];
-
-  SetLength(FClkActions, Length(FClkActions) - 1);
 
   if AClearSelectionAfterRemoving then
     vstActions.RootNodeCount := 0; //to reinit nodes
 
-  vstActions.RootNodeCount := Length(FClkActions);
+  if AUpdateRootNodeCount then
+    vstActions.RootNodeCount := Length(FClkActions) - 1;
+
+  SetLength(FClkActions, Length(FClkActions) - 1);
+
   UpdateNodesCheckStateFromActions;
 end;
 
@@ -5917,6 +5924,8 @@ end;
 procedure TfrClickerActionsArr.RemoveSelectedActions;
 var
   Node: PVirtualNode;
+  IdxArr: TIntArr;
+  i: Integer;
 begin
   Node := vstActions.GetFirstSelected;
 
@@ -5931,9 +5940,13 @@ begin
   begin
     vstActions.BeginUpdate;
     try
+      SetLength(IdxArr, 0);
       repeat
         if vstActions.Selected[Node] then
-          RemoveAction(Node^.Index, False);
+        begin
+          SetLength(IdxArr, Length(IdxArr) + 1);
+          IdxArr[Length(IdxArr) - 1] := Node^.Index;
+        end;
 
         Node := Node^.PrevSibling;
       until Node = nil;
@@ -5941,12 +5954,28 @@ begin
       vstActions.EndUpdate;
     end;
 
-    vstActions.Repaint;
-    Modified := True;
-    StopGlowingUpdateButton;
+    if Length(IdxArr) > 0 then
+    begin
+      vstActions.ClearSelection;  //the selected actions will be deleted, so make sure they are not selected anymore
 
-    vstActions.ClearSelection;
-  end;
+      vstActions.BeginUpdate;
+      try
+        for i := 0 to Length(IdxArr) - 1 do
+          RemoveAction(IdxArr[i], False, True);
+
+        if Length(FClkActions) > 0 then
+          vstActions.RootNodeCount := Length(FClkActions);  //this should not be required if RemoveAction updates RootNodeCount
+      finally
+        SetLength(IdxArr, 0);
+        vstActions.EndUpdate;
+      end;
+
+      vstActions.Repaint;
+      Modified := True;
+      StopGlowingUpdateButton;
+      vstActions.ClearSelection;
+    end;
+  end; //confirmation
 end;
 
 

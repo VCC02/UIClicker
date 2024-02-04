@@ -265,6 +265,7 @@ type
     Text: string;
     ControlType: TClkSetTextControlType;
     DelayBetweenKeyStrokes: string; //Available on stKeystrokes only. It is measured in ms.
+    Count: string;
   end;
 
   TLoopDirection = (ldInc, ldDec, ldAuto);

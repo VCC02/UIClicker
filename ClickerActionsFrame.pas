@@ -4885,6 +4885,20 @@ begin
             FLastClickedEdit := nil;
             APopupMenu := pmPathReplacements;
             AHint := '$AppDir$ replacement is available';
+
+            if APropertyIndex = CFindControl_MatchPrimitiveFiles_PropIndex then
+            begin
+              AHint := AHint + #13#10;
+              AHint := AHint + 'Every .pmtv file has an index in this list.' + #13#10 +
+                               'It can be read using the $FileIndex$ variable, from any primitives property.' + #13#10#13#10 +
+                               'For example if a primitives file requires two colors, $BorderLineColor$ and $BorderRectColor$,' + #13#10 +
+                               'They can be set using a SetVar action as, e.g.:' + #13#10#13#10 +
+                               '429419$#4#5$D3D3D3$#4#5$150088$#4#5$' + #13#10 +
+                               '56C221$#4#5$EBEBEB$#4#5$277FFF$#4#5$' + #13#10#13#10 +
+                               'Then used by the primitives file as:' + #13#10#13#10 +
+                               '$GetTextItem($BorderLineColor$,$FileIndex$)$' + #13#10 +
+                               '$GetTextItem($BorderRectColor$,$FileIndex$)$';
+            end;
           end;
         end; //case
       end; //FindControl
@@ -5547,6 +5561,7 @@ begin
         FPrevSelectedPrimitiveNode := PropertyItemIndex;
 
         frClickerFindControl.CreateClickerPrimitivesFrame;
+        frClickerFindControl.frClickerPrimitives.FileIndex := PropertyItemIndex;
         frClickerFindControl.frClickerPrimitives.OnEvaluateReplacementsFunc := HandleOnEvaluateReplacementsFunc;
         frClickerFindControl.frClickerPrimitives.OnLoadBitmap := HandleOnLoadBitmap;
         frClickerFindControl.frClickerPrimitives.OnLoadRenderedBitmap := HandleOnLoadRenderedBitmap;

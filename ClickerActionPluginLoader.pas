@@ -185,11 +185,12 @@ begin
     SetPointedContentToString(APointName, PointName);
     SetPointedContentToString(ALogMsg, LogMsg);
 
-    if ActionPlugin^.FIsDebugging and ((ActionPlugin^.FPluginContinueAll <> nil) and not ActionPlugin^.FPluginContinueAll^) then
-    begin
-      ActionPlugin^.DoAddToLog('Entering plugin debug point "' + PointName + ':' + LogMsg);
-      ActionPlugin^.DoSetDebugPoint(PointName);
-      try
+    ActionPlugin^.DoAddToLog('Entering plugin debug point "' + PointName + ':' + LogMsg + '".');
+    try
+      if ActionPlugin^.FIsDebugging and ((ActionPlugin^.FPluginContinueAll <> nil) and not ActionPlugin^.FPluginContinueAll^) then
+      begin
+        ActionPlugin^.DoSetDebugPoint(PointName);
+
         repeat
           Sleep(1);
           Application.ProcessMessages;
@@ -215,9 +216,9 @@ begin
              ((GetAsyncKeyState(VK_CONTROL) < 0) and (GetAsyncKeyState(VK_SHIFT) < 0) and (GetAsyncKeyState(VK_F2) < 0)) then
             Exit;
         until False;
-      finally
-        ActionPlugin^.DoAddToLog('Exiting plugin debug point "' + PointName);
       end;
+    finally
+      ActionPlugin^.DoAddToLog('Exiting plugin debug point "' + PointName);
     end;
   except
     on E: Exception do

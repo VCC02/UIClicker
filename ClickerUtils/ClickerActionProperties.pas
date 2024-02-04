@@ -171,7 +171,8 @@ function GetSetControlTextActionProperties(ASetTextOptions: TClkSetTextOptions):
 begin
   Result := 'Text' + '=' + ASetTextOptions.Text + '&' +
             'ControlType' + '=' + IntToStr(Ord(ASetTextOptions.ControlType)) + '&' +
-            'DelayBetweenKeyStrokes' + '=' + ASetTextOptions.DelayBetweenKeyStrokes;
+            'DelayBetweenKeyStrokes' + '=' + ASetTextOptions.DelayBetweenKeyStrokes + '&' +
+            'Count' + '=' + ASetTextOptions.Count;
 end;
 
 

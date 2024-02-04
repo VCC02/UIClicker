@@ -39,6 +39,7 @@ uses
 type
   TPrimitivesCompositor = class
   private
+    FFileIndex: Integer; //primitives file index in the list of MatchPrimitiveFiles property
     FOnEvaluateReplacementsFunc: TEvaluateReplacementsFunc;
     FOnLoadBitmap: TOnLoadBitmap;
     FOnLoadRenderedBitmap: TOnLoadRenderedBitmap;
@@ -55,6 +56,8 @@ type
 
     function GetMaxX(ADestCanvas: TCanvas; var APrimitives: TPrimitiveRecArr): Integer;
     function GetMaxY(ADestCanvas: TCanvas; var APrimitives: TPrimitiveRecArr): Integer;
+
+    property FileIndex: Integer read FFileIndex write FFileIndex; //primitives file index in the list of MatchPrimitiveFiles property
 
     property OnEvaluateReplacementsFunc: TEvaluateReplacementsFunc write FOnEvaluateReplacementsFunc;
     property OnLoadBitmap: TOnLoadBitmap write FOnLoadBitmap;
@@ -331,6 +334,8 @@ constructor TPrimitivesCompositor.Create;
 begin
   inherited Create;
 
+  FFileIndex := 0; //assume first file, unless explicitly updated
+
   FOnEvaluateReplacementsFunc := nil;
   FOnLoadBitmap := nil;
   FOnLoadRenderedBitmap := nil;
@@ -339,6 +344,9 @@ end;
 
 function TPrimitivesCompositor.DoOnEvaluateReplacementsFunc(s: string; Recursive: Boolean = True): string;
 begin
+  if Pos('$FileIndex$', s) > 0 then    // $FileIndex$ var is available for primitives only
+    s := StringReplace(s, '$FileIndex$', IntToStr(FFileIndex), [rfReplaceAll]);
+
   if not Assigned(FOnEvaluateReplacementsFunc) then
     raise Exception.Create('OnEvaluateReplacementsFunc not assigned.')
   else

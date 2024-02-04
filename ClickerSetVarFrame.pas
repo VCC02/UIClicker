@@ -38,6 +38,7 @@ type
 
   TfrClickerSetVar = class(TFrame)
     imglstSetVar: TImageList;
+    lblSetVarWarning: TLabel;
     lblAvailableFunctions: TLabel;
     lblSetVarToHttpInfo: TLabel;
     memAvailableFunctions: TMemo;

@@ -189,6 +189,7 @@ begin
     SectionIndex := Ini.GetSectionIndex('Actions.SetTextOptions');
     ACustomActions[i].SetTextOptions.Text := Ini.ReadString(SectionIndex, 'Text_' + IterationStr, '');
     ACustomActions[i].SetTextOptions.ControlType := TClkSetTextControlType(Ini.ReadInteger(SectionIndex, 'ControlType_' + IterationStr, Integer(stEditBox)));
+    ACustomActions[i].SetTextOptions.Count := Ini.ReadString(SectionIndex, 'Count_' + IterationStr, '1');
 
     SectionIndex := Ini.GetSectionIndex('Actions.CallTemplateOptions');
     ACustomActions[i].CallTemplateOptions.TemplateFileName := Ini.ReadString(SectionIndex, 'TemplateFileName_' + IterationStr, '');
@@ -397,6 +398,7 @@ begin
   ASetTextOptions.Text := Ini.ReadString(SectionIndex, 'Text', '');
   ASetTextOptions.ControlType := TClkSetTextControlType(Min(Ini.ReadInteger(SectionIndex, 'ControlType', Integer(stEditBox)), Integer(High(TClkSetTextControlType))));
   ASetTextOptions.DelayBetweenKeyStrokes := Ini.ReadString(SectionIndex, 'DelayBetweenKeyStrokes', '0');
+  ASetTextOptions.Count := Ini.ReadString(SectionIndex, 'Count', '1');
 end;
 
 
@@ -832,6 +834,7 @@ begin
   AStringList.Add('Text=' + AActionSetTextOptions.Text);
   AStringList.Add('ControlType=' + IntToStr(Ord(AActionSetTextOptions.ControlType)));
   AStringList.Add('DelayBetweenKeyStrokes=' + AActionSetTextOptions.DelayBetweenKeyStrokes);
+  AStringList.Add('Count=' + AActionSetTextOptions.Count);
 end;
 
 
