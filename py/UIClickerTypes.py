@@ -316,7 +316,8 @@ def GetDefaultFindSubControlOptions():
 class TSetControlTextOptions(Structure):
     _fields_ = [("Text", LPCWSTR),
                ("ControlType", LONG), #TClkSetTextControlType
-               ("DelayBetweenKeyStrokes", LPCWSTR)]
+               ("DelayBetweenKeyStrokes", LPCWSTR),
+               ("Count", LPCWSTR)]
 
 PSetControlTextOptions = ctypes.POINTER(TSetControlTextOptions)
 
@@ -325,6 +326,7 @@ def GetDefaultSetControlTextOptions():
     SetControlTextOptions.Text = 'New text'
     SetControlTextOptions.ControlType = TClkSetTextControlType.stEditBox
     SetControlTextOptions.DelayBetweenKeyStrokes = '0'
+    SetControlTextOptions.Count = '1'
     return SetControlTextOptions
 
 

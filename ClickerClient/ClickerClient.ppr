@@ -135,6 +135,7 @@ type
     Text: PWideChar;
     ControlType: TClkSetTextControlType;
     DelayBetweenKeyStrokes: PWideChar;
+    Count: PWideChar;
   end;
 
   PClkSetTextOptionsAPI = ^TClkSetTextOptionsAPI;
@@ -767,6 +768,7 @@ begin
   SetPointedContentToString(@string(PWideChar(ASetControlTextOptions^.Text))[1], TempAction.SetTextOptions.Text);
   TempAction.SetTextOptions.ControlType := ASetControlTextOptions^.ControlType;
   SetPointedContentToString(@string(PWideChar(ASetControlTextOptions^.DelayBetweenKeyStrokes))[1], TempAction.SetTextOptions.DelayBetweenKeyStrokes);
+  SetPointedContentToString(@string(PWideChar(ASetControlTextOptions^.Count))[1], TempAction.SetTextOptions.Count);
 
   AddActionToTemplate(TemplateFileName, TempAction);
   Result := 0;
