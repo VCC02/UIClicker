@@ -10,7 +10,7 @@ object frClickerActionsArr: TfrClickerActionsArr
   TabStop = True
   OnResize = FrameResize
   DesignLeft = 86
-  DesignTop = 85
+  DesignTop = 86
   object pnlActionsEditor: TPanel
     Left = 1
     Height = 396
@@ -395,9 +395,9 @@ object frClickerActionsArr: TfrClickerActionsArr
       Height = 25
       Hint = 'Ctrl-Shift-F2'
       Top = 53
-      Width = 107
+      Width = 90
       Anchors = [akTop, akRight]
-      Caption = 'Stop                  '
+      Caption = 'Stop             '
       Enabled = False
       Glyph.Data = {
         36030000424D3603000000000000360000002800000010000000100000000100
@@ -812,6 +812,26 @@ object frClickerActionsArr: TfrClickerActionsArr
       Caption = 'Display called templates'
       TabOrder = 6
       OnChange = chkDisplayCalledTemplatesChange
+    end
+    object spdbtnExtraPlayAll1: TSpeedButton
+      Left = 746
+      Height = 25
+      Top = 53
+      Width = 18
+      Anchors = [akTop, akRight]
+      Font.Color = clWindowText
+      Glyph.Data = {
+        EA000000424DEA0000000000000036000000280000000B000000050000000100
+        180000000000B400000000000000000000000000000000000000FFFFFFFFFFFF
+        FFFFFFFFFFFFFFFFFF39841AFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF000000FFFF
+        FFFFFFFFFFFFFFFFFFFF39841A39841A39841AFFFFFFFFFFFFFFFFFFFFFFFF00
+        0000FFFFFFFFFFFFFFFFFF39841A39841A39841A39841A39841AFFFFFFFFFFFF
+        FFFFFF000000FFFFFFFFFFFF39841A39841A39841A39841A39841A39841A3984
+        1AFFFFFFFFFFFF000000FFFFFF39841A39841A39841A39841A39841A39841A39
+        841A39841A39841AFFFFFF000000
+      }
+      ParentFont = False
+      OnClick = spdbtnExtraPlayAll1Click
     end
   end
   object pnlVertSplitter: TPanel
@@ -1692,6 +1712,14 @@ object frClickerActionsArr: TfrClickerActionsArr
     object MenuItem_CopyFullFilepathToClipboard: TMenuItem
       Caption = 'Copy full filepath to clipboard'
       OnClick = MenuItem_CopyFullFilepathToClipboardClick
+    end
+  end
+  object pmExtraStop: TPopupMenu
+    Left = 520
+    Top = 288
+    object MenuItem_StopWaitingForFilesAvailability: TMenuItem
+      Caption = 'Stop waiting for files availability'
+      OnClick = MenuItem_StopWaitingForFilesAvailabilityClick
     end
   end
 end

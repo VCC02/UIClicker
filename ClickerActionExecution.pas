@@ -40,6 +40,7 @@ type
   TOnSetEditorTimeoutProgressBarMax = procedure(AMaxValue: Integer) of object;
   TOnSetEditorTimeoutProgressBarPosition = procedure(APositionValue: Integer) of object;
   TOnWaitForBitmapsAvailability = procedure(ListOfBitmapFiles: TStringList) of object;
+  TOnTerminateWaitForMultipleFilesAvailability = procedure of object;
   TOnCallTemplate = function(Sender: TObject; AFileNameToCall: string; ListOfVariables: TStrings; DebugBitmap: TBitmap; DebugGridImage: TImage; IsDebugging, AShouldStopAtBreakPoint: Boolean; AStackLevel: Integer; AExecutesRemotely: Boolean): Boolean of object;
   TOnSetEditorSleepInfo = procedure(AElapsedTime, ARemainingTime: string) of object;
   TOnGetSelfHandles = procedure(AListOfSelfHandles: TStringList) of object;
@@ -1820,7 +1821,10 @@ begin
           //end;
 
           if FExecutingActionFromRemote^ and FFileLocationOfDepsIsMem^ then
+          begin
+            AddToLog('Might wait for some bitmap files to be present in memory..');
             DoOnWaitForBitmapsAvailability(ListOfBitmapFiles);
+          end;
 
           //resolving the $AppDir$ replacement after having all files available
           for i := 0 to ListOfBitmapFiles.Count - 1 do
@@ -1913,8 +1917,11 @@ begin
           //end;
 
           if FExecutingActionFromRemote^ and FFileLocationOfDepsIsMem^ then
+          begin
+            AddToLog('Might wait for some primitives files to be present in memory..');
             DoOnWaitForBitmapsAvailability(ListOfPrimitiveFiles);    //might also work for pmtv files
                                                                      //ComposePrimitive_Image also has to wait for bmp files
+          end;
 
           //resolving the $AppDir$ replacement after having all files available
           for i := 0 to ListOfPrimitiveFiles.Count - 1 do

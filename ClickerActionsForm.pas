@@ -273,6 +273,7 @@ type
     procedure HandleOnWaitForFileAvailability(AFileName: string); //ClickerActionsArrFrame instances call this, to add a filename to FIFO
     procedure HandleOnWaitForMultipleFilesAvailability(AListOfFiles: TStringList); //ClickerActionsArrFrame instances call this, to add multiple filenames to FIFO
     procedure HandleOnWaitForBitmapsAvailability(AListOfBitmapFiles: TStringList);  //ClickerActionsArrFrame instances call this, to add multiple bmps to FIFO, if not found
+    procedure HandleOnTerminateWaitForMultipleFilesAvailability;
 
     function HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     function HandleOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
@@ -940,6 +941,7 @@ begin
   frClickerActionsArrMain.OnWaitForFileAvailability := HandleOnWaitForFileAvailability;
   frClickerActionsArrMain.OnWaitForMultipleFilesAvailability := HandleOnWaitForMultipleFilesAvailability;
   frClickerActionsArrMain.OnWaitForBitmapsAvailability := HandleOnWaitForBitmapsAvailability;
+  frClickerActionsArrMain.OnTerminateWaitForMultipleFilesAvailability := HandleOnTerminateWaitForMultipleFilesAvailability;
   frClickerActionsArrMain.OnLoadBitmap := HandleOnLoadBitmap;
   frClickerActionsArrMain.OnLoadRenderedBitmap := HandleOnLoadRenderedBitmap;
   frClickerActionsArrMain.OnGetListOfExternallyRenderedImages := HandleOnGetListOfExternallyRenderedImages;
@@ -985,6 +987,8 @@ begin
   frClickerActionsArrExperiment2.OnWaitForMultipleFilesAvailability := HandleOnWaitForMultipleFilesAvailability;
   frClickerActionsArrExperiment1.OnWaitForBitmapsAvailability := HandleOnWaitForBitmapsAvailability;
   frClickerActionsArrExperiment2.OnWaitForBitmapsAvailability := HandleOnWaitForBitmapsAvailability;
+  frClickerActionsArrExperiment1.OnTerminateWaitForMultipleFilesAvailability := HandleOnTerminateWaitForMultipleFilesAvailability;
+  frClickerActionsArrExperiment2.OnTerminateWaitForMultipleFilesAvailability := HandleOnTerminateWaitForMultipleFilesAvailability;
   frClickerActionsArrExperiment1.OnLoadBitmap := HandleOnLoadBitmap;
   frClickerActionsArrExperiment2.OnLoadBitmap := HandleOnLoadBitmap;
   frClickerActionsArrExperiment1.OnLoadRenderedBitmap := HandleOnLoadRenderedBitmap;
@@ -1516,6 +1520,7 @@ begin
         NewFrame.OnWaitForFileAvailability := HandleOnWaitForFileAvailability;
         NewFrame.OnWaitForMultipleFilesAvailability := HandleOnWaitForMultipleFilesAvailability;
         NewFrame.OnWaitForBitmapsAvailability := HandleOnWaitForBitmapsAvailability;
+        NewFrame.OnTerminateWaitForMultipleFilesAvailability := HandleOnTerminateWaitForMultipleFilesAvailability;
 
         NewFrame.OnLoadBitmap := HandleOnLoadBitmap;
         NewFrame.OnLoadRenderedBitmap := HandleOnLoadRenderedBitmap;
@@ -1838,6 +1843,12 @@ begin
   finally
     ListOfNonExistentBmps.Free;
   end;
+end;
+
+
+procedure TfrmClickerActions.HandleOnTerminateWaitForMultipleFilesAvailability;
+begin
+  FTerminateWaitForMultipleFilesAvailability := True;
 end;
 
 

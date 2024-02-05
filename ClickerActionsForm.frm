@@ -1,7 +1,7 @@
 object frmClickerActions: TfrmClickerActions
-  Left = 387
+  Left = 385
   Height = 720
-  Top = 128
+  Top = 129
   Width = 888
   Caption = 'UI Clicker Actions'
   ClientHeight = 720
@@ -41,7 +41,7 @@ object frmClickerActions: TfrmClickerActions
     000018300000180000000000000000200000002000000000000000000000FFFF
     0000
   }
-  LCLVersion = '8.2'
+  LCLVersion = '8.3'
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnShow = FormShow

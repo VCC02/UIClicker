@@ -73,6 +73,7 @@ type
     lbeSearchAction: TLabeledEdit;
     lblModifiedStatus: TLabel;
     memLogErr: TMemo;
+    MenuItem_StopWaitingForFilesAvailability: TMenuItem;
     MenuItem_ResolvePathToAbsolute: TMenuItem;
     MenuItem_OpenCalledTemplateInExperimentTab: TMenuItem;
     MenuItem_InsertActionAfterFirstSelected: TMenuItem;
@@ -117,6 +118,7 @@ type
     pmExtraLoad: TPopupMenu;
     pmTemplateIcon: TPopupMenu;
     pmTemplateName: TPopupMenu;
+    pmExtraStop: TPopupMenu;
     Removeallactions1: TMenuItem;
     imglstActionStatus: TImageList;
     pmExtraAdd: TPopupMenu;
@@ -130,6 +132,7 @@ type
     spdbtnExtraAdd: TSpeedButton;
     spdbtnExtraPlayAll: TSpeedButton;
     spdbtnExtraPlayAction: TSpeedButton;
+    spdbtnExtraPlayAll1: TSpeedButton;
     spdbtnExtraRemove: TSpeedButton;
     spdbtnExtraSave: TSpeedButton;
     spdbtnExtraLoad: TSpeedButton;
@@ -190,6 +193,7 @@ type
     procedure MenuItem_SetActionStatusToSuccessfulClick(Sender: TObject);
     procedure MenuItem_GenericInsertActionOnFirstSelectedClick(Sender: TObject);
     procedure MenuItem_GenericOpenCalledTemplateInExperimentTabClick(Sender: TObject);
+    procedure MenuItem_StopWaitingForFilesAvailabilityClick(Sender: TObject);
     procedure pmVstActionsPopup(Sender: TObject);
     procedure pnlActionsClick(Sender: TObject);
     procedure pnlVertSplitterMouseDown(Sender: TObject; Button: TMouseButton;
@@ -200,6 +204,7 @@ type
       Shift: TShiftState; X, Y: Integer);
     procedure spdbtnExtraLoadClick(Sender: TObject);
     procedure spdbtnExtraPlayActionClick(Sender: TObject);
+    procedure spdbtnExtraPlayAll1Click(Sender: TObject);
     procedure spdbtnPaletteClick(Sender: TObject);
     procedure spdbtnTemplateNotesClick(Sender: TObject);
     procedure spdbtnUpdateActionClick(Sender: TObject);
@@ -338,6 +343,7 @@ type
     FOnWaitForFileAvailability: TOnWaitForFileAvailability;
     FOnWaitForMultipleFilesAvailability: TOnWaitForMultipleFilesAvailability;
     FOnWaitForBitmapsAvailability: TOnWaitForBitmapsAvailability;
+    FOnTerminateWaitForMultipleFilesAvailability: TOnTerminateWaitForMultipleFilesAvailability;
     FOnLoadBitmap: TOnLoadBitmap;
     FOnLoadRenderedBitmap: TOnLoadRenderedBitmap;
     FOnRenderBmpExternally: TOnRenderBmpExternally;
@@ -493,6 +499,7 @@ type
     procedure DoWaitForFileAvailability(AFileName: string);
     procedure DoWaitForMultipleFilesAvailability(AListOfFiles: TStringList);
     procedure DoWaitForBitmapsAvailability(AListOfFiles: TStringList);
+    procedure DoOnTerminateWaitForMultipleFilesAvailability;
     function DoOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     function DoOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     function DoOnRenderBmpExternally(AFilename: string): string;
@@ -632,6 +639,7 @@ type
     property OnWaitForFileAvailability: TOnWaitForFileAvailability read FOnWaitForFileAvailability write FOnWaitForFileAvailability;
     property OnWaitForMultipleFilesAvailability: TOnWaitForMultipleFilesAvailability read FOnWaitForMultipleFilesAvailability write FOnWaitForMultipleFilesAvailability;
     property OnWaitForBitmapsAvailability: TOnWaitForBitmapsAvailability read FOnWaitForBitmapsAvailability write FOnWaitForBitmapsAvailability;
+    property OnTerminateWaitForMultipleFilesAvailability: TOnTerminateWaitForMultipleFilesAvailability write FOnTerminateWaitForMultipleFilesAvailability;
     property OnLoadBitmap: TOnLoadBitmap read FOnLoadBitmap write FOnLoadBitmap;
     property OnLoadRenderedBitmap: TOnLoadRenderedBitmap read FOnLoadRenderedBitmap write FOnLoadRenderedBitmap;
     property OnRenderBmpExternally: TOnRenderBmpExternally read FOnRenderBmpExternally write FOnRenderBmpExternally;
@@ -1059,6 +1067,12 @@ begin
   FOnExecuteRemoteActionAtIndex := nil;
   FOnCopyControlTextAndClassFromMainWindow := nil;
   FOnGetExtraSearchAreaDebuggingImageWithStackLevel := nil;
+
+  FOnWaitForFileAvailability := nil;
+  FOnWaitForMultipleFilesAvailability := nil;
+  FOnWaitForBitmapsAvailability := nil;
+  FOnTerminateWaitForMultipleFilesAvailability := nil;
+
   FOnLoadBitmap := nil;
   FOnLoadRenderedBitmap := nil;
   FOnRenderBmpExternally := nil;
@@ -2161,6 +2175,13 @@ procedure TfrClickerActionsArr.DoWaitForBitmapsAvailability(AListOfFiles: TStrin
 begin
   if Assigned(FOnWaitForBitmapsAvailability) then
     FOnWaitForBitmapsAvailability(AListOfFiles);
+end;
+
+
+procedure TfrClickerActionsArr.DoOnTerminateWaitForMultipleFilesAvailability;
+begin
+  if Assigned(FOnTerminateWaitForMultipleFilesAvailability) then
+    FOnTerminateWaitForMultipleFilesAvailability();
 end;
 
 
@@ -4957,6 +4978,13 @@ begin
 end;
 
 
+procedure TfrClickerActionsArr.MenuItem_StopWaitingForFilesAvailabilityClick(
+  Sender: TObject);
+begin
+  DoOnTerminateWaitForMultipleFilesAvailability;
+end;
+
+
 procedure TfrClickerActionsArr.pmVstActionsPopup(Sender: TObject);
 type
   TFoundItem = record
@@ -5163,6 +5191,12 @@ var
 begin
   GetCursorPos(tp);
   pmExtraPlayAction.Popup(tp.X, tp.Y);
+end;
+
+
+procedure TfrClickerActionsArr.spdbtnExtraPlayAll1Click(Sender: TObject);
+begin
+  pmExtraStop.PopUp;
 end;
 
 

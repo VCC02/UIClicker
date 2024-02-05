@@ -117,11 +117,20 @@ begin
     ACustomActions[i].ClickOptions.YClickPointVarDest := Ini.ReadString(SectionIndex, 'YClickPointVarDest_' + IterationStr, '$Control_Top$');
     ACustomActions[i].ClickOptions.XOffsetDest := Ini.ReadString(SectionIndex, 'XOffsetDest_' + IterationStr, '0');
     ACustomActions[i].ClickOptions.YOffsetDest := Ini.ReadString(SectionIndex, 'YOffsetDest_' + IterationStr, '0');
+    ACustomActions[i].ClickOptions.MouseWheelType := mwtVert;
+    ACustomActions[i].ClickOptions.MouseWheelAmount := '0';
+    ACustomActions[i].ClickOptions.DelayAfterMovingToDestination := '50';
+    ACustomActions[i].ClickOptions.DelayAfterMouseDown := '100';
+    ACustomActions[i].ClickOptions.MoveDuration := '-1';
 
     SectionIndex := Ini.GetSectionIndex('Actions.ExecAppOptions');
     ACustomActions[i].ExecAppOptions.PathToApp := Ini.ReadString(SectionIndex, 'PathToApp_' + IterationStr, '');
     ACustomActions[i].ExecAppOptions.ListOfParams := StringReplace(Ini.ReadString(SectionIndex, 'ListOfParams_' + IterationStr, ''), #4#5, #13#10, [rfReplaceAll]);
     ACustomActions[i].ExecAppOptions.WaitForApp := Ini.ReadBool(SectionIndex, 'WaitForApp_' + IterationStr, False);
+    ACustomActions[i].ExecAppOptions.AppStdIn := '';
+    ACustomActions[i].ExecAppOptions.CurrentDir := '';
+    ACustomActions[i].ExecAppOptions.UseInheritHandles := uihOnlyWithStdInOut;
+    ACustomActions[i].ExecAppOptions.NoConsole := False;
 
     SectionIndex := Ini.GetSectionIndex('Actions.FindControlOptions');
     ACustomActions[i].FindControlOptions.MatchCriteria.WillMatchText := Ini.ReadBool(SectionIndex, 'MatchCriteria.WillMatchText_' + IterationStr, True);
