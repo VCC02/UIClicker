@@ -36,15 +36,13 @@ uses
 
 
 type
-  TIsBreakPoint = (NoBreakPoint, IsBreakPoint);
-
   //Plugin callbacks:
   TOnActionPlugin_GetActionCount = function(APluginReference: Pointer): Integer; cdecl;  //a plugin calls this function, to get the number of actions in the current template from UIClicker
   TOnActionPlugin_GetActionInfoByIndex = procedure(APluginReference: Pointer; AIndex: Integer; AActionName: Pointer; ANameLength, AActionType: PDWord); cdecl; //a plugin calls this function, to get the action structure of an action
   TOnActionPlugin_ExecuteAction = function(APluginReference: Pointer; AActionName: Pointer): Boolean; cdecl;
   TOnActionPlugin_GetAllTemplateVars = procedure(APluginReference: Pointer; AAllTemplateVars: Pointer; AVarsLength: PDWord); cdecl;  //AAllTemplateVars are encoded as CRLF separated key=value strings, ready to be used on a TStringlist
   TOnActionPlugin_SetTemplateVar = procedure(APluginReference: Pointer; AVarName, AVarValue: Pointer); cdecl;
-  TOnActionPlugin_DebugPoint = function(APluginReference: Pointer; APointName, ALogMsg: Pointer; AIsBreakPoint: TIsBreakPoint): Boolean; //The handler should return True, to continue execution. If False, the dll should exit ExecutePluginFunc (when users stop the execution).
+  TOnActionPlugin_DebugPoint = function(APluginReference: Pointer; APointName, ALogMsg: Pointer): Boolean; //The handler should return True, to continue execution. If False, the dll should exit ExecutePluginFunc (when users stop the execution).
 
   //Plugin procedures / functions:
   TGetAPIVersion = function: DWord; cdecl;
@@ -72,23 +70,24 @@ type
 
 
 const
-  CActionPlugin_APIVersion = 2;
+  CActionPlugin_APIVersion = 3;
   CActionPlugin_ExecutionResultErrorVar = '$PluginError$';
+  CBeforePluginExecution_DbgLineContent = 'Before plugin execution.';
 
 
 var
   DefaultOnActionPlugin_DebugPoint: TOnActionPlugin_DebugPoint;
   DefaultPluginReference: Pointer;
 
-function DbgPoint(APointName, ALogMsg: string; AIsBreakPoint: TIsBreakPoint = NoBreakPoint): Boolean;
+function DbgPoint(APointName, ALogMsg: string): Boolean;
 
 implementation
 
 
-function DbgPoint(APointName, ALogMsg: string; AIsBreakPoint: TIsBreakPoint = NoBreakPoint): Boolean;
+function DbgPoint(APointName, ALogMsg: string): Boolean;
 begin
   if @DefaultOnActionPlugin_DebugPoint <> nil then
-    Result := DefaultOnActionPlugin_DebugPoint(DefaultPluginReference, @APointName[1], @ALogMsg[1], AIsBreakPoint)
+    Result := DefaultOnActionPlugin_DebugPoint(DefaultPluginReference, @APointName[1], @ALogMsg[1])
   else
     Result := True;
 end;

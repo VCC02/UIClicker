@@ -2168,11 +2168,20 @@ begin
     else
       btnDisplaySearchAreaDebuggingImage.Caption := 'Re-display dbg img';
 
+    SearchAreaControlHandle := StrToIntDef(EvaluateReplacements('$Control_Handle$'), 0);
     SearchAreaControlRect.Left := 0;//StrToIntDef(EvaluateReplacements('$Control_Left$'), 0);
     SearchAreaControlRect.Top := 0;//StrToIntDef(EvaluateReplacements('$Control_Top$'), 0);
-    SearchAreaControlRect.Width := StrToIntDef(EvaluateReplacements('$Control_Width$'), 300);
-    SearchAreaControlRect.Height := StrToIntDef(EvaluateReplacements('$Control_Height$'), 300);
-    SearchAreaControlHandle := StrToIntDef(EvaluateReplacements('$Control_Handle$'), 0);
+
+    if SearchAreaControlHandle = 0 then
+    begin
+      SearchAreaControlRect.Width := Screen.Width;
+      SearchAreaControlRect.Height := Screen.Height;
+    end
+    else
+    begin
+      SearchAreaControlRect.Width := StrToIntDef(EvaluateReplacements('$Control_Width$'), 300);
+      SearchAreaControlRect.Height := StrToIntDef(EvaluateReplacements('$Control_Height$'), 300);
+    end;
 
     if FSearchAreaOutOfImgImg = nil then
     begin

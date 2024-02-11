@@ -12,7 +12,7 @@ object frClickerActions: TfrClickerActions
   TabStop = True
   OnResize = FrameResize
   DesignLeft = 86
-  DesignTop = 85
+  DesignTop = 86
   object PageControlActionExecution: TPageControl
     Left = 0
     Height = 276

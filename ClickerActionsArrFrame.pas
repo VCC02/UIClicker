@@ -435,11 +435,14 @@ type
     function HandleOnGetAllActions: PClkActionsRecArr;
     procedure HandleOnModifyPluginProperty(AAction: PClkActionRec);
     function HandleOnResolveTemplatePath(APath: string; ACustomSelfTemplateDir: string = ''; ACustomAppDir: string = ''): string;
+
     procedure HandleOnSetDebugPoint(ADebugPoint: string);
+    function HandleOnIsAtBreakPoint(ADebugPoint: string): Boolean;
 
     procedure HandleOnPluginDbgStop;
     procedure HandleOnPluginDbgContinueAll;
     procedure HandleOnPluginDbgStepOver;
+    function HandleOnPluginDbgRequestLineNumber(out ALineContent: string): Integer;
 
     function GetInMemFS: TInMemFileSystem;
     procedure SetInMemFS(Value: TInMemFileSystem);
@@ -631,6 +634,9 @@ type
     property PreviewSelectionColors: TSelectionColors write SetPreviewSelectionColors;
     property PlayingAllActions: Boolean read FPlayingAllActions;
 
+    property PluginContinueAll: Boolean write FPluginContinueAll;
+    property PluginStepOver: Boolean write FPluginStepOver;
+
     property OnCallTemplate: TOnCallTemplate read FOnCallTemplate write FOnCallTemplate;
     property OnExecuteRemoteActionAtIndex: TOnExecuteRemoteActionAtIndex read FOnExecuteRemoteActionAtIndex write FOnExecuteRemoteActionAtIndex;
     property OnCopyControlTextAndClassFromMainWindow: TOnCopyControlTextAndClassFromMainWindow read FOnCopyControlTextAndClassFromMainWindow write FOnCopyControlTextAndClassFromMainWindow;
@@ -687,7 +693,7 @@ uses
   ValEdit, Math, ClickerTemplates, BitmapConv,
   BitmapProcessing, Clipbrd, ClickerConditionEditorForm, ClickerActionsClient,
   ClickerTemplateNotesForm, AutoCompleteForm, ClickerExtraUtils,
-  ClickerActionPluginLoader;
+  ClickerActionPluginLoader, ClickerActionPlugins;
 
 
 const
@@ -914,6 +920,7 @@ begin
   frClickerActions.OnPluginDbgStop := HandleOnPluginDbgStop;
   frClickerActions.OnPluginDbgContinueAll := HandleOnPluginDbgContinueAll;
   frClickerActions.OnPluginDbgStepOver := HandleOnPluginDbgStepOver;
+  frClickerActions.OnPluginDbgRequestLineNumber := HandleOnPluginDbgRequestLineNumber;
 
   //frClickerActions.OnControlsModified := ClickerActionsFrameOnControlsModified;   //this is set on frame initialization
 
@@ -1062,6 +1069,7 @@ begin
   FActionExecution.OnGetAllActions := HandleOnGetAllActions;
   FActionExecution.OnResolveTemplatePath := HandleOnResolveTemplatePath;
   FActionExecution.OnSetDebugPoint := HandleOnSetDebugPoint;
+  FActionExecution.OnIsAtBreakPoint := HandleOnIsAtBreakPoint;
 
   FCmdConsoleHistory := TStringList.Create;
   FOnExecuteRemoteActionAtIndex := nil;
@@ -1601,6 +1609,12 @@ begin
 end;
 
 
+function TfrClickerActionsArr.HandleOnIsAtBreakPoint(ADebugPoint: string): Boolean;
+begin
+  Result := frClickerActions.frClickerPlugin.IsAtBreakPoint(ADebugPoint);
+end;
+
+
 procedure TfrClickerActionsArr.HandleOnGetListOfAvailableSetVarActions(AListOfSetVarActions: TStringList);
 var
   i: Integer;
@@ -1629,19 +1643,44 @@ end;
 
 procedure TfrClickerActionsArr.HandleOnPluginDbgStop;
 begin
-  StopAllActionsFromButton;
+  if not FExecutesRemotely then
+    StopAllActionsFromButton
+  else
+    StopRemoteTemplateExecution(RemoteAddress, FStackLevel, False);   //FStackLevel may be wrong if the server has multiple loaded templates
 end;
 
 
 procedure TfrClickerActionsArr.HandleOnPluginDbgContinueAll;
 begin
-  FPluginContinueAll := True;  //will be reset by plugin TActionPlugin.ExecutePlugin, via pointer
+  if not FExecutesRemotely then
+    FPluginContinueAll := True  //will be reset by plugin TActionPlugin.ExecutePlugin, via pointer
+  else
+    SendPluginCmd(RemoteAddress, CREParam_Plugin_ContinueAll, FStackLevel, False);
 end;
 
 
 procedure TfrClickerActionsArr.HandleOnPluginDbgStepOver;
 begin
-  FPluginStepOver := True; //will be reset by plugin handler, via pointer
+  if not FExecutesRemotely then
+    FPluginStepOver := True //will be reset by plugin handler, via pointer
+  else
+    SendPluginCmd(RemoteAddress, CREParam_Plugin_StepOver, FStackLevel, False);
+end;
+
+
+function TfrClickerActionsArr.HandleOnPluginDbgRequestLineNumber(out ALineContent: string): Integer;
+var
+  Response: string;
+begin
+  Result := -1;
+  if FExecutesRemotely then
+  begin
+    Response := SendPluginCmd(RemoteAddress, CREParam_Plugin_RequestLineNumber, FStackLevel, False);
+    Result := StrToIntDef(Copy(Response, 1, Pos('=', Response) - 1), -1);
+    ALineContent := Copy(Response, Pos('=', Response) + 1, MaxInt);
+
+    //AddToLog('SelectedLine response (client): "' + IntToStr(Result) + '"  : "' + ALineContent + '".'); //for debugging
+  end;
 end;
 
 
@@ -2059,10 +2098,35 @@ begin
     try
       VarReplacements.AddStrings(frClickerActions.vallstVariables.Strings); //init with something, in case the server can't be reached
 
-      Result := LocalOnExecuteRemoteActionAtIndex(AActionIndex, FStackLevel, VarReplacements, FContinuePlayingBySteppingInto);
+      if FContinuePlayingBySteppingInto {AIsDebugging} then
+        if FClkActions[AActionIndex].ActionOptions.Action = acPlugin then
+        begin
+          try
+            frClickerActions.frClickerPlugin.EnableRequestLineNumber;
+            frClickerActions.frClickerPlugin.SelectLineByContent(CBeforePluginExecution_DbgLineContent);
+          except
+            on E: Exception do
+              AddToLog('Ex on displaying plugin content for debugging: ' + E.Message);
+          end;
+        end;
 
-      frClickerActions.vallstVariables.Strings.Clear;
-      frClickerActions.vallstVariables.Strings.AddStrings(VarReplacements);
+      try
+        Result := LocalOnExecuteRemoteActionAtIndex(AActionIndex, FStackLevel, VarReplacements, FContinuePlayingBySteppingInto);
+
+        frClickerActions.vallstVariables.Strings.Clear;
+        frClickerActions.vallstVariables.Strings.AddStrings(VarReplacements);
+      finally
+        if FContinuePlayingBySteppingInto {AIsDebugging} then
+          if FClkActions[AActionIndex].ActionOptions.Action = acPlugin then
+          begin
+            try
+              frClickerActions.frClickerPlugin.DisableRequestLineNumber;
+            except
+              on E: Exception do
+                AddToLog('Ex on displaying plugin content for debugging: ' + E.Message);
+            end;
+          end;
+      end;  //try
     except
       on E: Exception do
       begin
@@ -2962,11 +3026,13 @@ var
   Ini: TClkIniReadonlyFile;
   FormatVersion: string;
   ActionCount: Integer;
-  ErrMsg: string;
+  ErrMsg, WaitingMsg: string;
 begin
   vstActions.Clear; //to reset the node checkboxes
 
   Fnm := StringReplace(Fnm, '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
+  WaitingMsg := 'Waiting for file availability: ' + Fnm + '   Timeout: ' + IntToStr(CWaitForFileAvailabilityTimeout div 1000) + 's.';
+  WaitingMsg := WaitingMsg + #13#10 + 'There is a "stop waiting" button, next to the "Stop action" button.';
 
   try
     case AFileLocation of      ///////////////////// ToDo:   refactoring !!!!!!!!!!!!!!
@@ -2989,7 +3055,7 @@ begin
       begin
         if not AInMemFileSystem.FileExistsInMem(Fnm) then
         begin
-          AddToLog('Waiting for file availability: ' + Fnm);
+          AddToLog(WaitingMsg);
           DoWaitForFileAvailability(Fnm);
         end;
 
@@ -3003,7 +3069,7 @@ begin
         begin
           if not AInMemFileSystem.FileExistsInMem(Fnm) then
           begin
-            AddToLog('Waiting for file availability: ' + Fnm);
+            AddToLog(WaitingMsg);
             DoWaitForFileAvailability(Fnm);
           end;
 
@@ -3014,7 +3080,7 @@ begin
       begin
         if not AInMemFileSystem.FileExistsInMem(Fnm) then
         begin
-          AddToLog('Waiting for file availability: ' + Fnm);
+          AddToLog(WaitingMsg);
           DoWaitForFileAvailability(Fnm);
         end;
 

@@ -98,6 +98,7 @@ type
     FOnGetAllActions: TOnGetAllActions;
     FOnResolveTemplatePath: TOnResolveTemplatePath;
     FOnSetDebugPoint: TOnSetDebugPoint;
+    FOnIsAtBreakPoint: TOnIsAtBreakPoint;
 
     function GetActionVarValue(VarName: string): string;
     procedure SetActionVarValue(VarName, VarValue: string);
@@ -114,6 +115,7 @@ type
     function DoOnGetAllActions: PClkActionsRecArr;
     function DoOnResolveTemplatePath(APath: string; ACustomSelfTemplateDir: string = ''; ACustomAppDir: string = ''): string;
     procedure DoOnSetDebugPoint(ADebugPoint: string);
+    function DoOnIsAtBreakPoint(ADebugPoint: string): Boolean;
 
     procedure SetLastActionStatus(AActionResult, AAlowedToFail: Boolean);
     function CheckManualStopCondition: Boolean;
@@ -150,6 +152,7 @@ type
 
     procedure HandleOnSetVar(AVarName, AVarValue: string);
     procedure HandleOnSetDebugPoint(ADebugPoint: string);
+    function HandleOnIsAtBreakPoint(ADebugPoint: string): Boolean;
   public
     constructor Create;
     destructor Destroy; override;
@@ -224,6 +227,7 @@ type
     property OnGetAllActions: TOnGetAllActions write FOnGetAllActions;
     property OnResolveTemplatePath: TOnResolveTemplatePath write FOnResolveTemplatePath;
     property OnSetDebugPoint: TOnSetDebugPoint write FOnSetDebugPoint;
+    property OnIsAtBreakPoint: TOnIsAtBreakPoint write FOnIsAtBreakPoint;
   end;
 
 
@@ -284,6 +288,7 @@ begin
   FOnGetAllActions := nil;
   FOnResolveTemplatePath := nil;
   FOnSetDebugPoint := nil;
+  FOnIsAtBreakPoint := nil;
 end;
 
 
@@ -799,6 +804,15 @@ begin
     raise Exception.Create('OnSetDebugPoint not assigned.');
 
   FOnSetDebugPoint(ADebugPoint);
+end;
+
+
+function TActionExecution.DoOnIsAtBreakPoint(ADebugPoint: string): Boolean;
+begin
+  if not Assigned(FOnIsAtBreakPoint) then
+    raise Exception.Create('OnIsAtBreakPoint not assigned.');
+
+  Result := FOnIsAtBreakPoint(ADebugPoint);
 end;
 
 
@@ -2766,7 +2780,7 @@ begin
 
   tk := GetTickCount64;
   try
-    if not ActionPlugin.LoadToExecute(AResolvedPluginPath, AddToLog, DoOnExecuteActionByName, HandleOnSetVar, HandleOnSetDebugPoint, IsDebugging, AShouldStopAtBreakPoint, FStopAllActionsOnDemand{FromParent}, FPluginStepOver, FPluginContinueAll, AAllActions, AListOfAllVars) then
+    if not ActionPlugin.LoadToExecute(AResolvedPluginPath, AddToLog, DoOnExecuteActionByName, HandleOnSetVar, HandleOnSetDebugPoint, HandleOnIsAtBreakPoint, IsDebugging, AShouldStopAtBreakPoint, FStopAllActionsOnDemand{FromParent}, FPluginStepOver, FPluginContinueAll, AAllActions, AListOfAllVars) then
     begin
       SetActionVarValue('$ExecAction_Err$', ActionPlugin.Err);
       AddToLog(ActionPlugin.Err);
@@ -3346,6 +3360,12 @@ end;
 procedure TActionExecution.HandleOnSetDebugPoint(ADebugPoint: string);
 begin
   DoOnSetDebugPoint(ADebugPoint);
+end;
+
+
+function TActionExecution.HandleOnIsAtBreakPoint(ADebugPoint: string): Boolean;
+begin
+  Result := DoOnIsAtBreakPoint(ADebugPoint);
 end;
 
 end.

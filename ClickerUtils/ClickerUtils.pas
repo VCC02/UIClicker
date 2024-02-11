@@ -97,6 +97,7 @@ type
   TOnExecuteActionByName = function(AActionName: string): Boolean of object;
   TOnSetVar = procedure(AVarName, AVarValue: string) of object;
   TOnSetDebugPoint = procedure(ADebugPoint: string) of object;
+  TOnIsAtBreakPoint = function(ADebugPoint: string): Boolean of object;
 
 const
   CClkActionStr: array[TClkAction] of string = ('Click', 'ExecApp', 'FindControl', 'FindSubControl',

@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2022 VCC
+    Copyright (C) 2024 VCC
     creation date: Dec 2019
     initial release date: 26 Jul 2022
 
@@ -35,6 +35,7 @@ type
   TPollForMissingServerFilesProcessingEvent = procedure of object;
   TOnLogMissingServerFile = procedure(AMsg: string) of object;
   TOnLoadMissingFileContent = procedure(AFileName: string; AFileContent: TMemoryStream) of object;
+  TOnDenyFile = procedure(AFileName: string) of object;
 
   TPollForMissingServerFiles = class(TThread)
   private
@@ -53,12 +54,14 @@ type
     FOnFileExists: TOnFileExists;
     FOnLogMissingServerFile: TOnLogMissingServerFile;
     FOnLoadMissingFileContent: TOnLoadMissingFileContent;
+    FOnDenyFile: TOnDenyFile;
 
     procedure DoOnBeforeRequestingListOfMissingFiles;
     procedure DoOnAfterRequestingListOfMissingFiles;
     function DoOnFileExists(const AFileName: string): Boolean;
     procedure DoOnLogMissingServerFile(AMsg: string);
     procedure DoOnLoadMissingFileContent(AFileName: string; AFileContent: TMemoryStream);
+    procedure DoOnDenyFile(AFileName: string);
 
     procedure AddUniqueMessageToLog(AMsg: string);
     function FileIsAllowed(AFileName: string; out ADenyReason: string): Boolean;
@@ -85,6 +88,7 @@ type
     property OnFileExists: TOnFileExists write FOnFileExists;
     property OnLogMissingServerFile: TOnLogMissingServerFile write FOnLogMissingServerFile;
     property OnLoadMissingFileContent: TOnLoadMissingFileContent write FOnLoadMissingFileContent;
+    property OnDenyFile: TOnDenyFile write FOnDenyFile;
   end;
 
 
@@ -114,6 +118,7 @@ begin
   FOnFileExists := nil;
   FOnLogMissingServerFile := nil;
   FOnLoadMissingFileContent := nil;
+  FOnDenyFile := nil;
 
   InitializeCriticalSection(FCritSec);
   FLogOutput := TStringList.Create;
@@ -167,6 +172,15 @@ begin
     raise Exception.Create('OnLoadMissingFileContent is not assigned.')
   else
     FOnLoadMissingFileContent(AFileName, AFileContent);
+end;
+
+
+procedure TPollForMissingServerFiles.DoOnDenyFile(AFileName: string);
+begin
+  if not Assigned(FOnDenyFile) then
+    raise Exception.Create('OnDenyFile is not assigned.')
+  else
+    FOnDenyFile(AFileName);
 end;
 
 
@@ -335,6 +349,7 @@ begin
     if not FileIsAllowed(AList.Strings[i], DenyReason) then
     begin
       AddUniqueMessageToLog('Requested file "' + AList.Strings[i] + '" is not allowed to be sent to server. DenyReason: ' + DenyReason);
+      DoOnDenyFile(AList.Strings[i]);
       AList.Delete(i);
     end;
 end;

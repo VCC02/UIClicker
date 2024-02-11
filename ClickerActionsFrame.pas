@@ -324,6 +324,7 @@ type
     FOnPluginDbgStop: TOnPluginDbgStop;
     FOnPluginDbgContinueAll: TOnPluginDbgContinueAll;
     FOnPluginDbgStepOver: TOnPluginDbgStepOver;
+    FOnPluginDbgRequestLineNumber: TOnPluginDbgRequestLineNumber;
 
     //function GetListOfSetVarEntries: string;
     //procedure SetListOfSetVarEntries(Value: string);
@@ -369,6 +370,7 @@ type
     procedure DoOnPluginDbgStop;
     procedure DoOnPluginDbgContinueAll;
     procedure DoOnPluginDbgStepOver;
+    function DoOnPluginDbgRequestLineNumber(out ALineContent: string): Integer;
 
     function GetInMemFS: TInMemFileSystem;
     procedure SetInMemFS(Value: TInMemFileSystem);
@@ -432,6 +434,7 @@ type
     procedure HandleOnPluginDbgStop;
     procedure HandleOnPluginDbgContinueAll;
     procedure HandleOnPluginDbgStepOver;
+    function HandleOnPluginDbgRequestLineNumber(out ALineContent: string): Integer;
 
     ///////////////////////////// OI
     function EditFontProperties(AItemIndexDiv: Integer; var ANewItems: string): Boolean;
@@ -576,6 +579,7 @@ type
     property OnPluginDbgStop: TOnPluginDbgStop write FOnPluginDbgStop;
     property OnPluginDbgContinueAll: TOnPluginDbgContinueAll write FOnPluginDbgContinueAll;
     property OnPluginDbgStepOver: TOnPluginDbgStepOver write FOnPluginDbgStepOver;
+    property OnPluginDbgRequestLineNumber: TOnPluginDbgRequestLineNumber write FOnPluginDbgRequestLineNumber;
   end;
 
 
@@ -717,6 +721,7 @@ begin
   frClickerPlugin.OnPluginDbgStop := HandleOnPluginDbgStop;
   frClickerPlugin.OnPluginDbgContinueAll := HandleOnPluginDbgContinueAll;
   frClickerPlugin.OnPluginDbgStepOver := HandleOnPluginDbgStepOver;
+  frClickerPlugin.OnPluginDbgRequestLineNumber := HandleOnPluginDbgRequestLineNumber;
 
 
   FPmLocalTemplates := TPopupMenu.Create(Self);
@@ -831,6 +836,7 @@ begin
   FOnPluginDbgStop := nil;
   FOnPluginDbgContinueAll := nil;
   FOnPluginDbgStepOver := nil;
+  FOnPluginDbgRequestLineNumber := nil;
 
   FShowDeprecatedControls := False;
   FEditingAction := @FEditingActionRec;
@@ -2032,6 +2038,12 @@ begin
 end;
 
 
+function TfrClickerActions.HandleOnPluginDbgRequestLineNumber(out ALineContent: string): Integer;
+begin
+  Result := DoOnPluginDbgRequestLineNumber(ALineContent);
+end;
+
+
 function TfrClickerActions.DoOnEditCallTemplateBreakCondition(var AActionCondition: string): Boolean;
 begin
   if not Assigned(FOnEditCallTemplateBreakCondition) then
@@ -2292,6 +2304,14 @@ begin
   FOnPluginDbgStepOver();
 end;
 
+
+function TfrClickerActions.DoOnPluginDbgRequestLineNumber(out ALineContent: string): Integer;
+begin
+  if not Assigned(FOnPluginDbgRequestLineNumber) then
+    raise Exception.Create('OnPluginDbgRequestLineNumber not assigned.');
+
+  Result := FOnPluginDbgRequestLineNumber(ALineContent);
+end;
 
 //////////////////////////// OI
 

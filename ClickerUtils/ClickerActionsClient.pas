@@ -54,6 +54,8 @@ type
 
 const
   CDefaultNoTemplate = 'NoName.clktmpl';
+  CWaitForFileAvailabilityTimeout = 300000; //5min / file, if waiting for a single file
+  CWaitForMultipleFilesAvailabilityTimeout = 60000;  //1min / file, if waiting for a multiple file
 
 const
   CREParam_ActionIdx = 'ActionIdx';
@@ -75,11 +77,16 @@ const
   CREParam_DebugParam = 'Dbg';
   CREParam_Var = 'Var';
   CREParam_Value = 'Value';
+  CREParam_Cmd = 'Cmd';
 
   CREParam_TerminateWaitingLoop = 'Loop'; //loop type can be one of the following values: All, Single, Multi
   CREParam_TerminateWaitingLoop_ValueAll = 'All';  //both loops, for single file and multiple files
   CREParam_TerminateWaitingLoop_ValueSingle = 'Single'; //terminates the loop waiting for a single file
   CREParam_TerminateWaitingLoop_ValueMulti = 'Multi';   //terminates the loop waiting for multiple files
+
+  CREParam_Plugin_ContinueAll = 'ContinueAll';
+  CREParam_Plugin_StepOver = 'StepOver';
+  CREParam_Plugin_RequestLineNumber = 'RequestLineNumber';
 
   CRECmd_TestConnection = 'TestConnection';
   CRECmd_ExecuteCommandAtIndex = 'ExecuteCommandAtIndex';
@@ -105,6 +112,7 @@ const
   CRECmd_GetRenderedFile = 'GetRenderedFile';
   CRECmd_MouseDown = 'MouseDown';
   CRECmd_MouseUp = 'MouseUp';
+  CRECmd_PluginCmd = 'PluginCmd'; //requires additional parameters to decide what command to do. It is used to "remote click" plugin debugging buttons.   see CREParam_Plugin_ContinueAll
 
   CRECmd_ExecuteClickAction = 'ExecuteClickAction';
   CRECmd_ExecuteExecAppAction = 'ExecuteExecAppAction';
@@ -127,6 +135,7 @@ const
   CREResp_ReceivedFile = 'Received file';
   CREResp_TemplateLoaded = 'Loaded';
   CREResp_FileNotFound = 'FileNotFound';
+  CREResp_PluginDebuggingNotAvailable = 'PluginDebuggingNotAvailable'; //the plugin debugging frame is not created, probably because the request is made outside of a plugin debugging session
 
   CREResp_ErrParam = 'Err';
   CREResp_ErrResponseOK = 'OK';
@@ -149,7 +158,7 @@ function SendGetFileRequestToServer(AFullLink: string; AStream: TMemoryStream): 
 //function SendFileToServer(AFullLink: string; AFileContent, AResponseStream: TMemoryStream; ACallAppProcMsg: Boolean = True): string; overload; //expose this only if needed
 function SendFileToServer(AFullLink: string; AFileContent: TMemoryStream; ACallAppProcMsg: Boolean = True): string; overload;
 
-function StopRemoteTemplateExecution(ARemoteAddress: string; AStackLevel: Integer): string;
+function StopRemoteTemplateExecution(ARemoteAddress: string; AStackLevel: Integer; ACallAppProcMsg: Boolean = True): string;
 function ExitRemoteTemplate(ARemoteAddress: string; AStackLevel: Integer): string;  //called by client, to send a request to server to close a tab
 function GetAllReplacementVars(ARemoteAddress: string; AStackLevel: Integer): string;
 function GetDebugImageFromServer(ARemoteAddress: string; AStackLevel: Integer; AReceivedBmp: TBitmap; AWithGrid: Boolean): string; //returns error message if any
@@ -166,12 +175,13 @@ function GetCompInfoAtPoint(ARemoteAddress: string; X, Y: Integer): string;
 function RecordComponentOnServer(ARemoteAddress: string; AHandle: THandle; AComponentContent: TMemoryStream): string;
 function ClearInMemFileSystem(ARemoteAddress: string): string;
 function SetVariable(ARemoteAddress, AVarName, AVarValue: string; AStackLevel: Integer): string;
-function TerminateWaitingForFileAvailability(ARemoteAddress, ALoopType: string; ACallAppProcMsg: Boolean = True): string;
+function TerminateWaitingForFileAvailability(ARemoteAddress, ALoopType: string; AStackLevel: Integer; ACallAppProcMsg: Boolean = True): string;
 function GetListOfRenderedFilesFromServer(ARemoteAddress: string; ACallAppProcMsg: Boolean = True): string;
 function GetRenderedFileFromServer(ARemoteAddress: string; AFileName: string; AReceivedBmp: TBitmap): string; //Returns error message if any. Returns a bitmap with error as text if file not found.
 
 function SendMouseDown(ARemoteAddress: string; AMouseParams: TStringList): string;
 function SendMouseUp(ARemoteAddress: string; AMouseParams: TStringList): string;
+function SendPluginCmd(ARemoteAddress: string; APluginCmd: string; AStackLevel: Integer; ACallAppProcMsg: Boolean = True): string;
 
 function ExecuteClickAction(ARemoteAddress: string; AClickOptions: TClkClickOptions; ACallAppProcMsg: Boolean = True): string;
 function ExecuteExecAppAction(ARemoteAddress: string; AExecAppOptions: TClkExecAppOptions; AActionName: string; AActionTimeout: Integer; ACallAppProcMsg: Boolean = True): string;
@@ -383,10 +393,11 @@ begin
 end;
 
 
-function StopRemoteTemplateExecution(ARemoteAddress: string; AStackLevel: Integer): string;
+function StopRemoteTemplateExecution(ARemoteAddress: string; AStackLevel: Integer; ACallAppProcMsg: Boolean = True): string;
 begin
   Result := SendTextRequestToServer(ARemoteAddress + CRECmd_StopTemplateExecution + '?' +
-                                    CREParam_StackLevel + '=' + IntToStr(AStackLevel));
+                                    CREParam_StackLevel + '=' + IntToStr(AStackLevel),
+                                    ACallAppProcMsg);
 end;
 
 
@@ -580,10 +591,10 @@ begin
 end;
 
 
-function TerminateWaitingForFileAvailability(ARemoteAddress, ALoopType: string; ACallAppProcMsg: Boolean = True): string;
+function TerminateWaitingForFileAvailability(ARemoteAddress, ALoopType: string; AStackLevel: Integer; ACallAppProcMsg: Boolean = True): string;
 begin
   Result := SendTextRequestToServer(ARemoteAddress + CRECmd_TerminateWaitingForFileAvailability + '?' +
-                                    CREParam_StackLevel + '=0' + '&' +
+                                    CREParam_StackLevel + '=' + IntToStr(AStackLevel) + '&' +
                                     CREParam_TerminateWaitingLoop + '=' + ALoopType,
                                     ACallAppProcMsg);
 end;
@@ -620,6 +631,14 @@ begin
   Result := SendTextRequestToServer(ARemoteAddress + CRECmd_MouseUp + '?' +
                                     CREParam_StackLevel + '=0' + '&' +
                                     StringReplace(AMouseParams.Text, #13#10, '&', [rfReplaceAll]));
+end;
+
+
+function SendPluginCmd(ARemoteAddress: string; APluginCmd: string; AStackLevel: Integer; ACallAppProcMsg: Boolean = True): string;
+begin
+  Result := SendTextRequestToServer(ARemoteAddress + CRECmd_PluginCmd + '?' +
+                                    CREParam_StackLevel + '=' + IntToStr(AStackLevel) + '&' +
+                                    CREParam_Cmd + '=' + APluginCmd);
 end;
 
 

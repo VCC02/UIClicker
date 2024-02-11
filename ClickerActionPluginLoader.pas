@@ -45,9 +45,13 @@ type
     OnExecuteActionByName: TOnExecuteActionByName;
     OnSetVar: TOnSetVar;
     OnSetDebugPoint: TOnSetDebugPoint;
+    OnIsAtBreakPoint: TOnIsAtBreakPoint;
+
     FIsDebugging, FShouldStopAtBreakPoint: Boolean;
     FStopAllActionsOnDemandFromParent, FPluginContinueAll: PBoolean;
     FStepOver: PBoolean;
+    FIsFirstExecution: Boolean; //Flag, used to stop the execution, to allow the user to set breakpoints
+    FContinueAfterBreakPoint: Boolean;
 
     AllActions: PClkActionsRecArr;
     AllVars: TStringList;
@@ -57,8 +61,9 @@ type
     function DoExecuteActionByName(AActionName: string): Boolean;
     procedure DoSetVar(AVarName, AVarValue: string);
     procedure DoSetDebugPoint(ADebugPoint: string);
+    function DoIsAtBreakPoint(ADebugPoint: string): Boolean;
 
-    function LoadToExecute(APath: string; AOnAddToLog: TOnAddToLog; AOnExecuteActionByName: TOnExecuteActionByName; AOnSetVar: TOnSetVar; AOnSetDebugPoint: TOnSetDebugPoint; IsDebugging, AShouldStopAtBreakPoint: Boolean; AStopAllActionsOnDemandFromParent, AStepOver, APluginContinueAll: PBoolean; AAllActions: PClkActionsRecArr = nil; AAllVars: TStringList = nil): Boolean;
+    function LoadToExecute(APath: string; AOnAddToLog: TOnAddToLog; AOnExecuteActionByName: TOnExecuteActionByName; AOnSetVar: TOnSetVar; AOnSetDebugPoint: TOnSetDebugPoint; AOnIsAtBreakPoint: TOnIsAtBreakPoint; IsDebugging, AShouldStopAtBreakPoint: Boolean; AStopAllActionsOnDemandFromParent, AStepOver, APluginContinueAll: PBoolean; AAllActions: PClkActionsRecArr = nil; AAllVars: TStringList = nil): Boolean;
     function LoadToGetProperties(APath: string): Boolean;
     function Unload: Boolean;
 
@@ -173,10 +178,42 @@ begin
 end;
 
 
-function DoOnActionPlugin_DebugPoint_Callback(APluginReference: Pointer; APointName, ALogMsg: Pointer; AIsBreakPoint: TIsBreakPoint): Boolean; //The handler should return True, to continue execution. If False, the dll should exit ExecutePluginFunc (when users stop the execution).
+procedure WaitInDebuggingMode(AActionPlugin: PActionPlugin);
+begin
+  repeat
+    Sleep(1);
+    Application.ProcessMessages;
+
+    if ((AActionPlugin^.FStepOver <> nil) and AActionPlugin^.FStepOver^) or
+       (GetAsyncKeyState(VK_F8) < 0) then
+    begin
+      if AActionPlugin^.FStepOver <> nil then
+        AActionPlugin^.FStepOver^ := False;    //Reset flag
+
+      Sleep(200);
+      Break;
+    end;
+
+    if ((AActionPlugin^.FPluginContinueAll <> nil) and AActionPlugin^.FPluginContinueAll^) or
+       (GetAsyncKeyState(VK_F9) < 0) then
+    begin
+      //Do not reset the FPluginContinueAll flag here.
+      Break;
+    end;
+
+    if ((AActionPlugin^.FStopAllActionsOnDemandFromParent <> nil) and AActionPlugin^.FStopAllActionsOnDemandFromParent^) or
+       ((GetAsyncKeyState(VK_CONTROL) < 0) and (GetAsyncKeyState(VK_SHIFT) < 0) and (GetAsyncKeyState(VK_F2) < 0)) then
+      Exit;
+  until False;
+end;
+
+
+function DoOnActionPlugin_DebugPoint_Callback(APluginReference: Pointer; APointName, ALogMsg: Pointer): Boolean; //The handler should return True, to continue execution. If False, the dll should exit ExecutePluginFunc (when users stop the execution).
 var
   ActionPlugin: PActionPlugin;
   PointName, LogMsg: string;
+  IsAtBreakPoint: Boolean;
+  ContinueAll: Boolean;
 begin
   Result := False;
 
@@ -187,35 +224,28 @@ begin
 
     ActionPlugin^.DoAddToLog('Entering plugin debug point "' + PointName + ':' + LogMsg + '".');
     try
-      if ActionPlugin^.FIsDebugging and ((ActionPlugin^.FPluginContinueAll <> nil) and not ActionPlugin^.FPluginContinueAll^) then
+      ActionPlugin^.DoSetDebugPoint(PointName);
+      IsAtBreakPoint := ActionPlugin^.DoIsAtBreakPoint(PointName);
+      ContinueAll := (ActionPlugin^.FPluginContinueAll <> nil) and ActionPlugin^.FPluginContinueAll^;
+
+      if ContinueAll then
       begin
-        ActionPlugin^.DoSetDebugPoint(PointName);
+        ActionPlugin^.FContinueAfterBreakPoint := False;
 
-        repeat
-          Sleep(1);
-          Application.ProcessMessages;
+        if IsAtBreakPoint then
+        begin
+          ContinueAll := False;
+          if ActionPlugin^.FPluginContinueAll <> nil then
+            ActionPlugin^.FPluginContinueAll^ := False;   //allow stopping at next breakpoint
+        end;
+      end;
 
-          if ((ActionPlugin^.FStepOver <> nil) and ActionPlugin^.FStepOver^) or
-             (GetAsyncKeyState(VK_F8) < 0) then
-          begin
-            if ActionPlugin^.FStepOver <> nil then
-              ActionPlugin^.FStepOver^ := False;    //Reset flag
+      if ActionPlugin^.FIsDebugging and (IsAtBreakPoint or ActionPlugin^.FContinueAfterBreakPoint) and not ContinueAll then
+      begin
+        if IsAtBreakPoint then
+          ActionPlugin^.FContinueAfterBreakPoint := True;  //allow entering here after first hitting a breakpoint
 
-            Sleep(200);
-            Break;
-          end;
-
-          if ((ActionPlugin^.FPluginContinueAll <> nil) and ActionPlugin^.FPluginContinueAll^) or
-             (GetAsyncKeyState(VK_F9) < 0) then
-          begin
-            //Do not reset the FPluginContinueAll flag here.
-            Break;
-          end;
-
-          if ((ActionPlugin^.FStopAllActionsOnDemandFromParent <> nil) and ActionPlugin^.FStopAllActionsOnDemandFromParent^) or
-             ((GetAsyncKeyState(VK_CONTROL) < 0) and (GetAsyncKeyState(VK_SHIFT) < 0) and (GetAsyncKeyState(VK_F2) < 0)) then
-            Exit;
-        until False;
+        WaitInDebuggingMode(ActionPlugin);
       end;
     finally
       ActionPlugin^.DoAddToLog('Exiting plugin debug point "' + PointName);
@@ -262,7 +292,16 @@ begin
 end;
 
 
-function TActionPlugin.LoadToExecute(APath: string; AOnAddToLog: TOnAddToLog; AOnExecuteActionByName: TOnExecuteActionByName; AOnSetVar: TOnSetVar; AOnSetDebugPoint: TOnSetDebugPoint; IsDebugging, AShouldStopAtBreakPoint: Boolean; AStopAllActionsOnDemandFromParent, AStepOver, APluginContinueAll: PBoolean; AAllActions: PClkActionsRecArr = nil; AAllVars: TStringList = nil): Boolean;
+function TActionPlugin.DoIsAtBreakPoint(ADebugPoint: string): Boolean;
+begin
+  if Assigned(OnIsAtBreakPoint) then
+    Result := OnIsAtBreakPoint(ADebugPoint)
+  else
+    Result := True; //break if not assigned
+end;
+
+
+function TActionPlugin.LoadToExecute(APath: string; AOnAddToLog: TOnAddToLog; AOnExecuteActionByName: TOnExecuteActionByName; AOnSetVar: TOnSetVar; AOnSetDebugPoint: TOnSetDebugPoint; AOnIsAtBreakPoint: TOnIsAtBreakPoint; IsDebugging, AShouldStopAtBreakPoint: Boolean; AStopAllActionsOnDemandFromParent, AStepOver, APluginContinueAll: PBoolean; AAllActions: PClkActionsRecArr = nil; AAllVars: TStringList = nil): Boolean;
 begin
   Result := False;
 
@@ -274,6 +313,7 @@ begin
   OnExecuteActionByName := AOnExecuteActionByName;
   OnSetVar := AOnSetVar;
   OnSetDebugPoint := AOnSetDebugPoint;
+  OnIsAtBreakPoint := AOnIsAtBreakPoint;
 
   FIsDebugging := IsDebugging;
   FShouldStopAtBreakPoint := AShouldStopAtBreakPoint;
@@ -423,6 +463,7 @@ end;
 function TActionPlugin.ExecutePlugin(AListOfPropertiesAndValues: string): Boolean;
 var
   ListOfPluginSettingsLen: DWord;
+  ActionPlugin: PActionPlugin;
 begin
   if @Func.ExecutePluginFunc = nil then
     raise Exception.Create('Plugin function not set: ExecutePlugin');
@@ -432,8 +473,18 @@ begin
   if FPluginContinueAll <> nil then
     FPluginContinueAll^ := False; //reset flag before execution
 
+  ActionPlugin := @Self;
+
+  FContinueAfterBreakPoint := False;  //used at pausing the execution at first debug point, to allow the user to set breakpoints
+
+  if ActionPlugin^.FIsDebugging and ((ActionPlugin^.FPluginContinueAll <> nil) and not ActionPlugin^.FPluginContinueAll^) then
+  begin
+    ActionPlugin^.DoSetDebugPoint(CBeforePluginExecution_DbgLineContent);
+    WaitInDebuggingMode(ActionPlugin);
+  end;
+
   try
-    Result := Func.ExecutePluginFunc(@Self,
+    Result := Func.ExecutePluginFunc(ActionPlugin,
                                      @AListOfPropertiesAndValues[1],
                                      @ListOfPluginSettingsLen,
                                      DoOnActionPlugin_GetActionCount_Callback,

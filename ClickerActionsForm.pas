@@ -286,6 +286,7 @@ type
 
     procedure HandleLogMissingServerFile(AMsg: string);
     procedure HandleOnLoadMissingFileContent(AFileName: string; AFileContent: TMemoryStream);
+    procedure HandleOnDenyFile(AFileName: string);
 
     procedure HandleOnBeforeRequestingListOfMissingFiles;  //client thread calls this, without UI sync
     procedure HandleOnAfterRequestingListOfMissingFiles;   //client thread calls this, without UI sync
@@ -1778,9 +1779,10 @@ begin
     if FTerminateWaitForFileAvailability then
     begin
       FTerminateWaitForFileAvailability := False;
+      AddToLog('No more waiting for file availability. Stopped on demand.');
       Exit;
     end;
-  until GetTickCount64 - tk > 300000; //if file is not received from client in 5min, simply exit and let the action fail
+  until GetTickCount64 - tk > CWaitForFileAvailabilityTimeout; //if file is not received from client in 5min, simply exit and let the action fail
 end;
 
 
@@ -1821,7 +1823,7 @@ begin
         FTerminateWaitForMultipleFilesAvailability := False;
         Exit;
       end;
-    until GetTickCount64 - tk > 60000 * TempListOfFiles.Count; //if file is not received from client in 1min, simply exit and let the action fail
+    until GetTickCount64 - tk > CWaitForMultipleFilesAvailabilityTimeout * TempListOfFiles.Count; //if file is not received from client in 1min, simply exit and let the action fail
   finally
     TempListOfFiles.Free;
   end;
@@ -1848,6 +1850,7 @@ end;
 
 procedure TfrmClickerActions.HandleOnTerminateWaitForMultipleFilesAvailability;
 begin
+  FTerminateWaitForFileAvailability := True; //stop also this one
   FTerminateWaitForMultipleFilesAvailability := True;
 end;
 
@@ -2386,6 +2389,33 @@ begin
 
     frClickerActionsArrMain.AddToLog('The waiting loops should be terminated (on request).');
     Result := CREResp_Done;
+    Exit;
+  end;
+
+  if ASyncObj.FCmd = '/' + CRECmd_PluginCmd then
+  begin                               //ASyncObj.FFrame.StackLevel should be set automatically
+    if ASyncObj.FParams.Values[CREParam_Cmd] = CREParam_Plugin_ContinueAll then
+      ASyncObj.FFrame.PluginContinueAll := True;
+
+    if ASyncObj.FParams.Values[CREParam_Cmd] = CREParam_Plugin_StepOver then
+      ASyncObj.FFrame.PluginStepOver := True;
+
+    Result := CREResp_Done; //this response is for above commands
+
+    if ASyncObj.FParams.Values[CREParam_Cmd] = CREParam_Plugin_RequestLineNumber then
+    begin
+      try
+        Result := ASyncObj.FFrame.frClickerActions.frClickerPlugin.SelectedLine;
+        AddToLog('SelectedLine response: "' + Result + '".');
+      except
+        on E: Exception do
+        begin
+          Result := CREResp_PluginDebuggingNotAvailable;
+          AddToLog(CREResp_PluginDebuggingNotAvailable + ' exception: ' + E.Message);
+        end;
+      end;
+    end;
+
     Exit;
   end;
 
@@ -3254,6 +3284,7 @@ begin
       FPollForMissingServerFiles.OnFileExists := HandleOnFileExists;
       FPollForMissingServerFiles.OnLogMissingServerFile := HandleLogMissingServerFile;
       FPollForMissingServerFiles.OnLoadMissingFileContent := HandleOnLoadMissingFileContent;
+      FPollForMissingServerFiles.OnDenyFile := HandleOnDenyFile;
       FPollForMissingServerFiles.Start;
 
       frClickerActionsArrMain.AddToLog('Started "missing files" monitoring thread for client mode.');
@@ -3485,6 +3516,16 @@ begin
     Sleep(300); //maybe the file is in use by another thread, so wait a bit, then load again
     AFileContent.LoadFromFile(AFileName);
   end;
+end;
+
+
+procedure TfrmClickerActions.HandleOnDenyFile(AFileName: string);
+var
+  Response: string;
+begin                //This handler is executed by a different thread, not the UI one.
+  AddToLog('Sending a "' + CRECmd_TerminateWaitingForFileAvailability + '" command to server, because of denied file: "' + AFileName + '".');
+  Response := TerminateWaitingForFileAvailability(ConfiguredRemoteAddress, CREParam_TerminateWaitingLoop_ValueAll, 0, False);
+  AddToLog('"TerminateWaitingForFileAvailability" response: ' + Response);
 end;
 
 
