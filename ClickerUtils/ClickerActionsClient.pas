@@ -87,6 +87,10 @@ const
   CREParam_Plugin_ContinueAll = 'ContinueAll';
   CREParam_Plugin_StepOver = 'StepOver';
   CREParam_Plugin_RequestLineNumber = 'RequestLineNumber';
+  CREParam_Plugin_SetBreakpoint = 'SetBreakpoint';
+  CREParam_Plugin_SetBreakpoint_LineIndex = 'LineIndex';
+  CREParam_Plugin_SetBreakpoint_SelectedSourceFileIndex = 'SelectedSourceFileIndex';
+  CREParam_Plugin_SetBreakpoint_Enabled = 'Enabled';
 
   CRECmd_TestConnection = 'TestConnection';
   CRECmd_ExecuteCommandAtIndex = 'ExecuteCommandAtIndex';

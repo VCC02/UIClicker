@@ -77,6 +77,7 @@ type
 
     function HandleOnFileExists(const FileName: string): Boolean;
     function HandleOnTClkIniReadonlyFileCreate(AFileName: string): TClkIniReadonlyFile;
+    function HandleOnTClkIniFileCreate(AFileName: string): TClkIniFile;
     procedure HandleOnSaveTemplateToFile(AStringList: TStringList; const FileName: string);
 
     procedure HandleOnSetOpenDialogMultiSelect;
@@ -148,6 +149,7 @@ begin
   frmClickerActions.OnGetCurrentlyRecordedScreenShotImage := HandleOnGetCurrentlyRecordedScreenShotImage;
   frmClickerActions.OnFileExists := HandleOnFileExists;
   frmClickerActions.OnTClkIniReadonlyFileCreate := HandleOnTClkIniReadonlyFileCreate;
+  frmClickerActions.OnTClkIniFileCreate := HandleOnTClkIniFileCreate;
   frmClickerActions.OnSaveTemplateToFile := HandleOnSaveTemplateToFile;
 
   frmClickerActions.OnSetOpenDialogMultiSelect := HandleOnSetOpenDialogMultiSelect;
@@ -395,6 +397,12 @@ end;
 function TfrmUIClickerMainForm.HandleOnTClkIniReadonlyFileCreate(AFileName: string): TClkIniReadonlyFile;
 begin
   Result := TClkIniReadonlyFile.Create(AFileName);
+end;
+
+
+function TfrmUIClickerMainForm.HandleOnTClkIniFileCreate(AFileName: string): TClkIniFile;
+begin
+  Result := TClkIniFile.Create(AFileName);
 end;
 
 

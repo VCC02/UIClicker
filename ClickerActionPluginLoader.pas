@@ -79,7 +79,7 @@ implementation
 
 
 uses
-  DllUtils, Forms;
+  DllUtils, Forms, ClickerActionsClient;
 
 
 //APluginReference amd AIndex is used as input param.
@@ -203,6 +203,9 @@ begin
 
     if ((AActionPlugin^.FStopAllActionsOnDemandFromParent <> nil) and AActionPlugin^.FStopAllActionsOnDemandFromParent^) or
        ((GetAsyncKeyState(VK_CONTROL) < 0) and (GetAsyncKeyState(VK_SHIFT) < 0) and (GetAsyncKeyState(VK_F2) < 0)) then
+      Exit;
+
+    if GeneralClosingApp then  //there are other loops which will have to be stopped this way
       Exit;
   until False;
 end;

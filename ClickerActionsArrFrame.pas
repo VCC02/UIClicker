@@ -325,7 +325,7 @@ type
 
     FRemoteExActionIndex: Integer;
     FRemoteExCmdResult: Boolean;
-    FExecutingActionFromRemote: Boolean;
+    FExecutingActionFromRemote: Boolean;   //Server mode
     FUseLocalDebugger: Boolean;
     FFileLocationOfDepsIsMem: Boolean;
     FClosingTemplate: Boolean;  //set to true by ExitTemplateFromRemote when the template should be closed (after it stays open as called template)
@@ -353,6 +353,7 @@ type
 
     FOnFileExists: TOnFileExists;
     FOnTClkIniReadonlyFileCreate: TOnTClkIniReadonlyFileCreate;
+    FOnTClkIniFileCreate: TOnTClkIniFileCreate;
     FOnSaveTemplateToFile: TOnSaveTemplateToFile;
 
     FOnSetOpenDialogMultiSelect: TOnSetOpenDialogMultiSelect;
@@ -427,6 +428,7 @@ type
     function HandleOnGetSetVarActionByName(var AClkSetVarOptions: TClkSetVarOptions; AActionName: string): Boolean;
     function HandleOnUpdateSetVarActionByName(AClkSetVarOptions: TClkSetVarOptions; AActionName: string): Boolean;
     function HandleOnTClkIniReadonlyFileCreate(AFileName: string): TClkIniReadonlyFile;
+    function HandleOnTClkIniFileCreate(AFileName: string): TClkIniFile;
     procedure HandleOnSaveStringListToFile(AStringList: TStringList; const AFileName: string);
     procedure HandleOnBackupVars(AAllVars: TStringList);
     procedure HandleOnGetListOfAvailableSetVarActions(AListOfSetVarActions: TStringList);
@@ -442,7 +444,8 @@ type
     procedure HandleOnPluginDbgStop;
     procedure HandleOnPluginDbgContinueAll;
     procedure HandleOnPluginDbgStepOver;
-    function HandleOnPluginDbgRequestLineNumber(out ALineContent: string): Integer;
+    function HandleOnPluginDbgRequestLineNumber(out ALineContent, ADbgSymFile: string): Integer;
+    procedure HandleOnPluginDbgSetBreakpoint(ALineIndex, ASelectedSourceFileIndex: Integer; AEnabled: Boolean);
 
     function GetInMemFS: TInMemFileSystem;
     procedure SetInMemFS(Value: TInMemFileSystem);
@@ -512,6 +515,7 @@ type
 
     function DoOnFileExists(const AFileName: string): Boolean;
     function DoOnTClkIniReadonlyFileCreate(AFileName: string): TClkIniReadonlyFile;
+    function DoOnTClkIniFileCreate(AFileName: string): TClkIniFile;
     procedure DoOnSaveTemplateToFile(AStringList: TStringList; const AFileName: string);
 
     procedure DoOnSetOpenDialogMultiSelect;
@@ -655,6 +659,7 @@ type
 
     property OnFileExists: TOnFileExists write FOnFileExists;
     property OnTClkIniReadonlyFileCreate: TOnTClkIniReadonlyFileCreate write FOnTClkIniReadonlyFileCreate;
+    property OnTClkIniFileCreate: TOnTClkIniFileCreate write FOnTClkIniFileCreate;
     property OnSaveTemplateToFile: TOnSaveTemplateToFile write FOnSaveTemplateToFile;
 
     property OnSetOpenDialogMultiSelect: TOnSetOpenDialogMultiSelect write FOnSetOpenDialogMultiSelect;
@@ -921,6 +926,8 @@ begin
   frClickerActions.OnPluginDbgContinueAll := HandleOnPluginDbgContinueAll;
   frClickerActions.OnPluginDbgStepOver := HandleOnPluginDbgStepOver;
   frClickerActions.OnPluginDbgRequestLineNumber := HandleOnPluginDbgRequestLineNumber;
+  frClickerActions.OnPluginDbgSetBreakpoint := HandleOnPluginDbgSetBreakpoint;
+  frClickerActions.OnTClkIniFileCreate := HandleOnTClkIniFileCreate;
 
   //frClickerActions.OnControlsModified := ClickerActionsFrameOnControlsModified;   //this is set on frame initialization
 
@@ -1090,6 +1097,7 @@ begin
 
   FOnFileExists := nil;
   FOnTClkIniReadonlyFileCreate := nil;
+  FOnTClkIniFileCreate := nil;
   FOnSaveTemplateToFile := nil;
 
   FOnSetOpenDialogMultiSelect := nil;
@@ -1554,6 +1562,12 @@ begin
 end;
 
 
+function TfrClickerActionsArr.HandleOnTClkIniFileCreate(AFileName: string): TClkIniFile;
+begin
+  Result := DoOnTClkIniFileCreate(AFileName);
+end;
+
+
 procedure TfrClickerActionsArr.HandleOnSaveStringListToFile(AStringList: TStringList; const AFileName: string);
 begin
   DoOnSaveTemplateToFile(AStringList, ResolveTemplatePath(AFileName));
@@ -1569,6 +1583,8 @@ end;
 function TfrClickerActionsArr.HandleOnExecuteActionByName(AActionName: string): Boolean;
 var
   i, ActionIndex: Integer;
+  LoadedNewFile: Boolean;
+  OldDbgSymFnm: string;
 begin
   AddToLog('Executing action "' + AActionName + '" by name, from plugin...');
 
@@ -1587,7 +1603,21 @@ begin
     Exit;
   end;
 
-  Result := ExecuteActionAtIndex(ActionIndex);
+  OldDbgSymFnm := frClickerActions.frClickerPlugin.DbgSymFnm;
+  LoadedNewFile := False;
+  if FExecutingActionFromRemote then
+    if frClickerActions.CurrentlyEditingActionType = acPlugin then
+    begin
+      LoadedNewFile := True;
+      AddToLog('Loading debug symbols file into debugger: ' + ExtractFullFileNameNoExt(ResolveTemplatePath(FClkActions[ActionIndex].PluginOptions.FileName)) + '.DbgSym');
+      frClickerActions.frClickerPlugin.LoadDebugSymbols(ExtractFullFileNameNoExt(ResolveTemplatePath(FClkActions[ActionIndex].PluginOptions.FileName)) + '.DbgSym');
+    end;
+  try
+    Result := ExecuteActionAtIndex(ActionIndex);
+  finally
+    if FExecutingActionFromRemote and LoadedNewFile and (OldDbgSymFnm <> '') then
+      frClickerActions.frClickerPlugin.LoadDebugSymbols(OldDbgSymFnm);
+  end;
 end;
 
 
@@ -1668,7 +1698,7 @@ begin
 end;
 
 
-function TfrClickerActionsArr.HandleOnPluginDbgRequestLineNumber(out ALineContent: string): Integer;
+function TfrClickerActionsArr.HandleOnPluginDbgRequestLineNumber(out ALineContent, ADbgSymFile: string): Integer;
 var
   Response: string;
 begin
@@ -1678,8 +1708,25 @@ begin
     Response := SendPluginCmd(RemoteAddress, CREParam_Plugin_RequestLineNumber, FStackLevel, False);
     Result := StrToIntDef(Copy(Response, 1, Pos('=', Response) - 1), -1);
     ALineContent := Copy(Response, Pos('=', Response) + 1, MaxInt);
-
+    ADbgSymFile := Copy(ALineContent, Pos(#2, ALineContent) + 1, MaxInt);
+    ALineContent := Copy(ALineContent, 1, Pos(#2, ALineContent) - 1);
     //AddToLog('SelectedLine response (client): "' + IntToStr(Result) + '"  : "' + ALineContent + '".'); //for debugging
+  end;
+end;
+
+
+procedure TfrClickerActionsArr.HandleOnPluginDbgSetBreakpoint(ALineIndex, ASelectedSourceFileIndex: Integer; AEnabled: Boolean);
+var
+  BreakPointCmd: string;
+begin
+  if FExecutesRemotely then
+  begin
+    BreakPointCmd := CREParam_Plugin_SetBreakpoint_LineIndex + '=' + IntToStr(ALineIndex) + '&' +
+                     CREParam_Plugin_SetBreakpoint_SelectedSourceFileIndex + '=' + IntToStr(ASelectedSourceFileIndex) + '&' +
+                     CREParam_Plugin_SetBreakpoint_Enabled + '=' + IntToStr(Ord(AEnabled));
+
+    AddToLog('Setting breakpoint in server, at line: ' + IntToStr(ALineIndex) + ', from file index: ' + IntToStr(ASelectedSourceFileIndex) + ', to: ' + BoolToStr(AEnabled, 'Enabled', 'Disabled'));
+    AddToLog('Setting result: ' + SendPluginCmd(RemoteAddress, CREParam_Plugin_SetBreakpoint + '&' + BreakPointCmd, FStackLevel, False));
   end;
 end;
 
@@ -2318,6 +2365,15 @@ begin
     raise Exception.Create('OnTClkIniReadonlyFileCreate is not assigned.')
   else
     Result := FOnTClkIniReadonlyFileCreate(AFileName);
+end;
+
+
+function TfrClickerActionsArr.DoOnTClkIniFileCreate(AFileName: string): TClkIniFile;
+begin
+  if not Assigned(FOnTClkIniFileCreate) then
+    raise Exception.Create('OnTClkIniFileCreate is not assigned.')
+  else
+    Result := FOnTClkIniFileCreate(AFileName);
 end;
 
 

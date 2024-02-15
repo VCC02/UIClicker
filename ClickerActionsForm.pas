@@ -195,6 +195,7 @@ type
 
     FOnFileExists: TOnFileExists;
     FOnTClkIniReadonlyFileCreate: TOnTClkIniReadonlyFileCreate;
+    FOnTClkIniFileCreate: TOnTClkIniFileCreate;
     FOnSaveTemplateToFile: TOnSaveTemplateToFile;
 
     FOnSetOpenDialogMultiSelect: TOnSetOpenDialogMultiSelect;
@@ -237,6 +238,7 @@ type
     procedure DoOnGetSelfHandles(AListOfSelfHandles: TStringList);
 
     function DoOnTClkIniReadonlyFileCreate(AFileName: string): TClkIniReadonlyFile;
+    function DoOnTClkIniFileCreate(AFileName: string): TClkIniFile;
     procedure DoOnSaveTemplateToFile(AStringList: TStringList; const AFileName: string);
 
     procedure DoOnSetOpenDialogMultiSelect;
@@ -294,6 +296,7 @@ type
     function HandleOnComputeInMemFileHash(AFileContent: Pointer; AFileSize: Int64): string;
 
     function HandleOnTClkIniReadonlyFileCreate(AFileName: string): TClkIniReadonlyFile;
+    function HandleOnTClkIniFileCreate(AFileName: string): TClkIniFile;
     procedure HandleOnSaveTemplateToFile(AStringList: TStringList; const FileName: string);
 
     procedure HandleOnSetOpenDialogMultiSelect;
@@ -354,6 +357,7 @@ type
 
     property OnFileExists: TOnFileExists write FOnFileExists;
     property OnTClkIniReadonlyFileCreate: TOnTClkIniReadonlyFileCreate write FOnTClkIniReadonlyFileCreate;
+    property OnTClkIniFileCreate: TOnTClkIniFileCreate write FOnTClkIniFileCreate;
     property OnSaveTemplateToFile: TOnSaveTemplateToFile write FOnSaveTemplateToFile;
 
     property OnSetOpenDialogMultiSelect: TOnSetOpenDialogMultiSelect write FOnSetOpenDialogMultiSelect;
@@ -760,6 +764,7 @@ begin
 
   FOnFileExists := nil;
   FOnTClkIniReadonlyFileCreate := nil;
+  FOnTClkIniFileCreate := nil;
   FOnSaveTemplateToFile := nil;
 
   FOnSetOpenDialogMultiSelect := nil;
@@ -952,6 +957,7 @@ begin
   frClickerActionsArrMain.OnFileExists := HandleOnFileExists;
   frClickerActionsArrMain.ActionExecution.OnGetSelfHandles := HandleOnGetSelfHandles;
   frClickerActionsArrMain.OnTClkIniReadonlyFileCreate := HandleOnTClkIniReadonlyFileCreate;
+  frClickerActionsArrMain.OnTClkIniFileCreate := HandleOnTClkIniFileCreate;
   frClickerActionsArrMain.OnSaveTemplateToFile := HandleOnSaveTemplateToFile;
 
   frClickerActionsArrMain.OnSetOpenDialogMultiSelect := HandleOnSetOpenDialogMultiSelect;
@@ -1008,6 +1014,8 @@ begin
   frClickerActionsArrExperiment2.ActionExecution.OnGetSelfHandles := HandleOnGetSelfHandles;
   frClickerActionsArrExperiment1.OnTClkIniReadonlyFileCreate := HandleOnTClkIniReadonlyFileCreate;
   frClickerActionsArrExperiment2.OnTClkIniReadonlyFileCreate := HandleOnTClkIniReadonlyFileCreate;
+  frClickerActionsArrExperiment1.OnTClkIniFileCreate := HandleOnTClkIniFileCreate;
+  frClickerActionsArrExperiment2.OnTClkIniFileCreate := HandleOnTClkIniFileCreate;
   frClickerActionsArrExperiment1.OnSaveTemplateToFile := HandleOnSaveTemplateToFile;
   frClickerActionsArrExperiment2.OnSaveTemplateToFile := HandleOnSaveTemplateToFile;
 
@@ -1194,6 +1202,15 @@ begin
     raise Exception.Create('OnTClkIniReadonlyFileCreate is not assigned.')
   else
     Result := FOnTClkIniReadonlyFileCreate(AFileName);
+end;
+
+
+function TfrmClickerActions.DoOnTClkIniFileCreate(AFileName: string): TClkIniFile;
+begin
+  if not Assigned(FOnTClkIniFileCreate) then
+    raise Exception.Create('OnTClkIniFileCreate is not assigned.')
+  else
+    Result := FOnTClkIniFileCreate(AFileName);
 end;
 
 
@@ -1533,6 +1550,7 @@ begin
         NewFrame.ActionExecution.OnGetSelfHandles := HandleOnGetSelfHandles;
 
         NewFrame.OnTClkIniReadonlyFileCreate := HandleOnTClkIniReadonlyFileCreate;
+        NewFrame.OnTClkIniFileCreate := HandleOnTClkIniFileCreate;
         NewFrame.OnSaveTemplateToFile := HandleOnSaveTemplateToFile;
 
         NewFrame.OnSetOpenDialogMultiSelect := HandleOnSetOpenDialogMultiSelect;
@@ -2399,6 +2417,14 @@ begin
 
     if ASyncObj.FParams.Values[CREParam_Cmd] = CREParam_Plugin_StepOver then
       ASyncObj.FFrame.PluginStepOver := True;
+
+    if ASyncObj.FParams.Values[CREParam_Cmd] = CREParam_Plugin_SetBreakpoint then
+    begin
+      ASyncObj.FFrame.AddToLog('Setting breakpoint cmd: ' + FastReplace_ReturnToCSV(ASyncObj.FParams.Text));
+      ASyncObj.FFrame.frClickerActions.frClickerPlugin.SetBreakpoint(StrToIntDef(ASyncObj.FParams.Values[CREParam_Plugin_SetBreakpoint_LineIndex], -1),
+                                                                     StrToIntDef(ASyncObj.FParams.Values[CREParam_Plugin_SetBreakpoint_SelectedSourceFileIndex], -1),
+                                                                     ASyncObj.FParams.Values[CREParam_Plugin_SetBreakpoint_Enabled] = '1');
+    end;
 
     Result := CREResp_Done; //this response is for above commands
 
@@ -3532,6 +3558,12 @@ end;
 function TfrmClickerActions.HandleOnTClkIniReadonlyFileCreate(AFileName: string): TClkIniReadonlyFile;
 begin
   Result := DoOnTClkIniReadonlyFileCreate(AFileName);
+end;
+
+
+function TfrmClickerActions.HandleOnTClkIniFileCreate(AFileName: string): TClkIniFile;
+begin
+  Result := DoOnTClkIniFileCreate(AFileName);
 end;
 
 

@@ -77,6 +77,7 @@ type
 
   TOnFileExists = function(const AFileName: string): Boolean of object;
   TOnTClkIniReadonlyFileCreate = function(AFileName: string): TClkIniReadonlyFile of object;
+  TOnTClkIniFileCreate = function(AFileName: string): TClkIniFile of object;
   TOnSaveTemplateToFile = procedure(AStringList: TStringList; const AFileName: string) of object;
 
   TOnSetOpenDialogInitialDir = procedure(AInitialDir: string) of object;

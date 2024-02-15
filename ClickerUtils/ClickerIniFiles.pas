@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2022 VCC
+    Copyright (C) 2024 VCC
     creation date: Dec 2019
     initial release date: 26 Jul 2022
 
@@ -31,7 +31,7 @@ uses
 type
   TClkIniReadonlyFile = class(TObject)  //an implementation without trimming the values
   private
-    FSections, FFileContent: TStringList;    //ToDo  see if TStringHash has better speed results
+    FSections: TStringList;    //ToDo  see if TStringHash has better speed results
     FSectionContents: array of TStringList; //not sure if this is the best way to store the contents, but it is easy to understand
 
     procedure LoadSections(ASourceContent: TStringList); overload;
@@ -56,6 +56,39 @@ type
     function ReadBool(SectionIndex: Integer; const Ident: string; Default: Boolean): Boolean; overload;
 
     procedure ReadSection(SectionIndex: Integer; Dest: TStringList);
+  end;
+
+
+  TClkIniFileOpenMode = (omStringList, omMemoryStream, omFileName);
+  TClkIniFileWriteSectionMode = (smAddValues, smReplaceSection);  //smAddValues will add new values, without verifying if their keys already exist.  smReplaceSection discards existing section content.
+                                                                  //ToDo: add smUpdateValues, which merges the new content with the existing one
+
+  TClkIniFile = class(TClkIniReadonlyFile)     //This class does not support comments. They will be discarded/lost when calling UpdateFile.
+  private
+    FClkIniFileOpenMode: TClkIniFileOpenMode;
+    FFileName: string;
+
+    procedure CreateSection(ANewSectionName: string);
+  public
+    constructor Create(ASourceContent: TStringList); overload;
+    constructor Create(ASourceContent: TMemoryStream); overload;
+    constructor Create(const FileName: string); overload;
+    constructor Create; overload;
+    destructor Destroy; override;
+
+    procedure GetFileContent(AContent: TStringList); overload;
+    procedure GetFileContent(AContent: TMemoryStream); overload;
+    procedure UpdateFile;
+
+    procedure WriteString(const Section, Ident, Value: string); overload;
+    procedure WriteInteger(const Section, Ident: string; Value: Longint); overload;
+    procedure WriteBool(const Section, Ident: string; Value: Boolean); overload;
+
+    procedure WriteString(SectionIndex: Integer; const Ident, Value: string; ANewSectionName: string = ''); overload;  //If SectionIndex is negative or out of range, the new section is created. That also requires that ANewSectionName is a non-empty.
+    procedure WriteInteger(SectionIndex: Integer; const Ident: string; Value: Longint; ANewSectionName: string = ''); overload;   //If SectionIndex is negative or out of range, the new section is created. That also requires that ANewSectionName is a non-empty.
+    procedure WriteBool(SectionIndex: Integer; const Ident: string; Value: Boolean; ANewSectionName: string = ''); overload;   //If SectionIndex is negative or out of range, the new section is created. That also requires that ANewSectionName is a non-empty.
+
+    procedure WriteSection(SectionIndex: Integer; Src: TStringList; ANewSectionName: string = ''; AWriteSectionMode: TClkIniFileWriteSectionMode = smReplaceSection); //If SectionIndex is negative or out of range, the new section is created. That also requires that ANewSectionName is a non-empty.
   end;
 
   
@@ -154,13 +187,15 @@ end;
 
 
 procedure TClkIniReadonlyFile.LoadSections(FileName: string);
+var
+  FileContent: TStringList;
 begin
-  FFileContent := TStringList.Create;
+  FileContent := TStringList.Create;
   try
-    FFileContent.LoadFromFile(FileName);
-    LoadSections(FFileContent);
+    FileContent.LoadFromFile(FileName);
+    LoadSections(FileContent);
   finally
-    FFileContent.Free;
+    FileContent.Free;
   end;
 end;
 
@@ -186,12 +221,12 @@ begin
 end;
 
 
-function GetIndentPairValue(ASection: TStringList; Ident: string; out Value: string): Boolean;   //returns True if found
+function GetIndentPairValue(ASection: TStringList; Ident: string; out Value: string): Integer;   //returns line index if found
 var
   i, PosEqual: Integer;
   KeyValue, Key: string;
 begin
-  Result := False;
+  Result := -1;
   for i := 0 to ASection.Count - 1 do
   begin
     KeyValue := ASection.Strings[i];
@@ -201,7 +236,7 @@ begin
     if Key = Ident then
     begin
       Value := Copy(KeyValue, PosEqual + 1, MaxInt);
-      Result := True;
+      Result := i;
       Exit;
     end;
   end;
@@ -220,7 +255,7 @@ begin
     Exit;
   end;
 
-  if GetIndentPairValue(FSectionContents[SectionIndex], Ident, Value) then
+  if GetIndentPairValue(FSectionContents[SectionIndex], Ident, Value) > -1 then
     Result := Value
   else
     Result := Default;
@@ -249,7 +284,7 @@ begin
     Exit;
   end;
   
-  if GetIndentPairValue(FSectionContents[SectionIndex], Ident, Value) then
+  if GetIndentPairValue(FSectionContents[SectionIndex], Ident, Value) > -1 then
     Result := Value
   else
     Result := Default;
@@ -275,5 +310,187 @@ begin
 
   Dest.AddStrings(FSectionContents[SectionIndex]);
 end;
+
+
+{TClkIniFile}
+
+
+constructor TClkIniFile.Create(ASourceContent: TStringList);
+begin
+  inherited Create(ASourceContent);
+  FClkIniFileOpenMode := omStringList;
+  FFileName := '';
+end;
+
+
+constructor TClkIniFile.Create(ASourceContent: TMemoryStream);
+begin
+  inherited Create(ASourceContent);
+  FClkIniFileOpenMode := omMemoryStream;
+  FFileName := '';
+end;
+
+
+constructor TClkIniFile.Create(const FileName: string);
+begin
+  inherited Create(FileName);
+  FClkIniFileOpenMode := omFileName;
+  FFileName := FileName;
+end;
+
+
+constructor TClkIniFile.Create;
+begin
+  inherited Create;
+end;
+
+
+destructor TClkIniFile.Destroy;
+begin
+  inherited Destroy;
+end;
+
+
+procedure TClkIniFile.GetFileContent(AContent: TStringList);
+var
+  i, j: Integer;
+begin
+  for i := 0 to Length(FSectionContents) - 1 do
+  begin
+    AContent.Add('[' + FSections.Strings[i] + ']');
+
+    for j := 0 to FSectionContents[i].Count - 1 do
+      AContent.Add(FSectionContents[i].Strings[j]);
+
+    AContent.Add('');
+  end;
+end;
+
+
+procedure TClkIniFile.GetFileContent(AContent: TMemoryStream);
+var
+  FileContent: TStringList;
+begin
+  FileContent := TStringList.Create;
+  try
+    GetFileContent(FileContent);
+    FileContent.SaveToStream(AContent);
+  finally
+    FileContent.Free;
+  end;
+end;
+
+
+procedure TClkIniFile.UpdateFile;
+var
+  FileContent: TStringList;
+begin
+  if FClkIniFileOpenMode = omFileName then
+  begin
+    FileContent := TStringList.Create;
+    try
+      GetFileContent(FileContent);
+      FileContent.SaveToFile(FFileName);
+    finally
+      FileContent.Free;
+    end;
+  end;
+end;
+
+
+procedure TClkIniFile.CreateSection(ANewSectionName: string);
+begin
+  FSections.Add(ANewSectionName);
+  SetLength(FSectionContents, Length(FSectionContents) + 1);
+  FSectionContents[Length(FSectionContents) - 1] := TStringList.Create;
+end;
+
+
+procedure TClkIniFile.WriteString(const Section, Ident, Value: string);
+var
+  SectionIndex, LineIndex: Integer;
+  OldValue: string;
+begin
+  SectionIndex := GetSectionIndex(Section);
+  if SectionIndex = -1 then
+  begin
+    FSections.Add(Section);
+    SetLength(FSectionContents, Length(FSectionContents) + 1);
+
+    FSectionContents[Length(FSectionContents) - 1] := TStringList.Create;
+    SectionIndex := FSections.Count - 1;
+  end;
+
+  LineIndex := GetIndentPairValue(FSectionContents[SectionIndex], Ident, OldValue);
+  if LineIndex > -1 then
+    FSectionContents[SectionIndex].Strings[LineIndex] := Ident + '=' + Value
+  else
+    FSectionContents[SectionIndex].Add(Ident + '=' + Value);
+end;
+
+
+procedure TClkIniFile.WriteInteger(const Section, Ident: string; Value: Longint);
+begin
+  WriteString(Section, Ident, IntToStr(Value));
+end;
+
+
+procedure TClkIniFile.WriteBool(const Section, Ident: string; Value: Boolean);
+begin
+  WriteString(Section, Ident, IntToStr(Ord(Value)));
+end;
+
+
+procedure TClkIniFile.WriteString(SectionIndex: Integer; const Ident, Value: string; ANewSectionName: string = '');
+var
+  LineIndex: Integer;
+  OldValue: string;
+begin
+  if (SectionIndex < 0) or (SectionIndex > Length(FSectionContents) - 1) then
+  begin
+    if ANewSectionName = '' then
+      raise Exception.Create('Section name cannot be empty when writing a value.');
+
+    CreateSection(ANewSectionName);
+    SectionIndex := Length(FSectionContents) - 1;
+  end;
+
+  LineIndex := GetIndentPairValue(FSectionContents[SectionIndex], Ident, OldValue);
+  if LineIndex > -1 then
+    FSectionContents[SectionIndex].Strings[LineIndex] := Ident + '=' + Value
+  else
+    FSectionContents[SectionIndex].Add(Ident + '=' + Value);
+end;
+
+
+procedure TClkIniFile.WriteInteger(SectionIndex: Integer; const Ident: string; Value: Longint; ANewSectionName: string = '');
+begin
+  WriteString(SectionIndex, Ident, IntToStr(Value), ANewSectionName);
+end;
+
+
+procedure TClkIniFile.WriteBool(SectionIndex: Integer; const Ident: string; Value: Boolean; ANewSectionName: string = '');
+begin
+  WriteString(SectionIndex, Ident, IntToStr(Ord(Value)), ANewSectionName);
+end;
+
+
+procedure TClkIniFile.WriteSection(SectionIndex: Integer; Src: TStringList; ANewSectionName: string = ''; AWriteSectionMode: TClkIniFileWriteSectionMode = smReplaceSection);
+begin
+  if (SectionIndex < 0) or (SectionIndex > Length(FSectionContents) - 1) then
+  begin
+    if ANewSectionName = '' then
+      raise Exception.Create('Section name cannot be empty when creating a new section.');
+
+    CreateSection(ANewSectionName);
+    SectionIndex := Length(FSectionContents) - 1;
+  end;
+
+  if AWriteSectionMode = smReplaceSection then
+    FSectionContents[SectionIndex].Clear;
+
+  FSectionContents[SectionIndex].AddStrings(Src);
+end;
+
 
 end.

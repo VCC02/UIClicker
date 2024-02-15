@@ -37,7 +37,7 @@ uses
   ClickerFindControlFrame, ClickerExecAppFrame, ClickerSetVarFrame,
   ClickerCallTemplateFrame, ClickerSleepFrame, ClickerPluginFrame,
   Types, InMemFileSystem, ObjectInspectorFrame,
-  ClickerPrimitiveUtils;
+  ClickerPrimitiveUtils, ClickerIniFiles;
 
 type
   { TfrClickerActions }
@@ -325,6 +325,8 @@ type
     FOnPluginDbgContinueAll: TOnPluginDbgContinueAll;
     FOnPluginDbgStepOver: TOnPluginDbgStepOver;
     FOnPluginDbgRequestLineNumber: TOnPluginDbgRequestLineNumber;
+    FOnPluginDbgSetBreakpoint: TOnPluginDbgSetBreakpoint;
+    FOnTClkIniFileCreate: TOnTClkIniFileCreate;
 
     //function GetListOfSetVarEntries: string;
     //procedure SetListOfSetVarEntries(Value: string);
@@ -370,7 +372,9 @@ type
     procedure DoOnPluginDbgStop;
     procedure DoOnPluginDbgContinueAll;
     procedure DoOnPluginDbgStepOver;
-    function DoOnPluginDbgRequestLineNumber(out ALineContent: string): Integer;
+    function DoOnPluginDbgRequestLineNumber(out ALineContent, ADbgSymFile: string): Integer;
+    procedure DoOnPluginDbgSetBreakpoint(ALineIndex, ASelectedSourceFileIndex: Integer; AEnabled: Boolean);
+    function DoOnTClkIniFileCreate(AFileName: string): TClkIniFile;
 
     function GetInMemFS: TInMemFileSystem;
     procedure SetInMemFS(Value: TInMemFileSystem);
@@ -434,7 +438,10 @@ type
     procedure HandleOnPluginDbgStop;
     procedure HandleOnPluginDbgContinueAll;
     procedure HandleOnPluginDbgStepOver;
-    function HandleOnPluginDbgRequestLineNumber(out ALineContent: string): Integer;
+    function HandleOnPluginDbgRequestLineNumber(out ALineContent, ADbgSymFile: string): Integer;
+    procedure HandleOnPluginDbgSetBreakpoint(ALineIndex, ASelectedSourceFileIndex: Integer; AEnabled: Boolean);
+
+    function HandleOnTClkIniFileCreate(AFileName: string): TClkIniFile;
 
     ///////////////////////////// OI
     function EditFontProperties(AItemIndexDiv: Integer; var ANewItems: string): Boolean;
@@ -580,6 +587,8 @@ type
     property OnPluginDbgContinueAll: TOnPluginDbgContinueAll write FOnPluginDbgContinueAll;
     property OnPluginDbgStepOver: TOnPluginDbgStepOver write FOnPluginDbgStepOver;
     property OnPluginDbgRequestLineNumber: TOnPluginDbgRequestLineNumber write FOnPluginDbgRequestLineNumber;
+    property OnPluginDbgSetBreakpoint: TOnPluginDbgSetBreakpoint write FOnPluginDbgSetBreakpoint;
+    property OnTClkIniFileCreate: TOnTClkIniFileCreate write FOnTClkIniFileCreate;
   end;
 
 
@@ -722,7 +731,8 @@ begin
   frClickerPlugin.OnPluginDbgContinueAll := HandleOnPluginDbgContinueAll;
   frClickerPlugin.OnPluginDbgStepOver := HandleOnPluginDbgStepOver;
   frClickerPlugin.OnPluginDbgRequestLineNumber := HandleOnPluginDbgRequestLineNumber;
-
+  frClickerPlugin.OnPluginDbgSetBreakpoint := HandleOnPluginDbgSetBreakpoint;
+  frClickerPlugin.OnTClkIniFileCreate := HandleOnTClkIniFileCreate;
 
   FPmLocalTemplates := TPopupMenu.Create(Self);
 
@@ -837,6 +847,8 @@ begin
   FOnPluginDbgContinueAll := nil;
   FOnPluginDbgStepOver := nil;
   FOnPluginDbgRequestLineNumber := nil;
+  FOnPluginDbgSetBreakpoint := nil;
+  FOnTClkIniFileCreate := nil;
 
   FShowDeprecatedControls := False;
   FEditingAction := @FEditingActionRec;
@@ -2038,9 +2050,21 @@ begin
 end;
 
 
-function TfrClickerActions.HandleOnPluginDbgRequestLineNumber(out ALineContent: string): Integer;
+function TfrClickerActions.HandleOnPluginDbgRequestLineNumber(out ALineContent, ADbgSymFile: string): Integer;
 begin
-  Result := DoOnPluginDbgRequestLineNumber(ALineContent);
+  Result := DoOnPluginDbgRequestLineNumber(ALineContent, ADbgSymFile);
+end;
+
+
+procedure TfrClickerActions.HandleOnPluginDbgSetBreakpoint(ALineIndex, ASelectedSourceFileIndex: Integer; AEnabled: Boolean);
+begin
+  DoOnPluginDbgSetBreakpoint(ALineIndex, ASelectedSourceFileIndex, AEnabled);
+end;
+
+
+function TfrClickerActions.HandleOnTClkIniFileCreate(AFileName: string): TClkIniFile;
+begin
+  Result := DoOnTClkIniFileCreate(AFileName);
 end;
 
 
@@ -2305,12 +2329,30 @@ begin
 end;
 
 
-function TfrClickerActions.DoOnPluginDbgRequestLineNumber(out ALineContent: string): Integer;
+function TfrClickerActions.DoOnPluginDbgRequestLineNumber(out ALineContent, ADbgSymFile: string): Integer;
 begin
   if not Assigned(FOnPluginDbgRequestLineNumber) then
     raise Exception.Create('OnPluginDbgRequestLineNumber not assigned.');
 
-  Result := FOnPluginDbgRequestLineNumber(ALineContent);
+  Result := FOnPluginDbgRequestLineNumber(ALineContent, ADbgSymFile);
+end;
+
+
+procedure TfrClickerActions.DoOnPluginDbgSetBreakpoint(ALineIndex, ASelectedSourceFileIndex: Integer; AEnabled: Boolean);
+begin
+  if not Assigned(FOnPluginDbgSetBreakpoint) then
+    raise Exception.Create('OnPluginDbgSetBreakpoint not assigned.');
+
+  FOnPluginDbgSetBreakpoint(ALineIndex, ASelectedSourceFileIndex, AEnabled);
+end;
+
+
+function TfrClickerActions.DoOnTClkIniFileCreate(AFileName: string): TClkIniFile;
+begin
+  if not Assigned(FOnTClkIniFileCreate) then
+    raise Exception.Create('OnTClkIniFileCreate not assigned.');
+
+  Result := FOnTClkIniFileCreate(AFileName);
 end;
 
 //////////////////////////// OI

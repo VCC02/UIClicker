@@ -30,13 +30,14 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, ExtCtrls, Buttons, StdCtrls,
-  VirtualTrees, Graphics, ClickerUtils;
+  VirtualTrees, Graphics, ClickerUtils, ClickerIniFiles;
 
 type
   TOnPluginDbgStop = procedure of object;
   TOnPluginDbgContinueAll = procedure of object;
   TOnPluginDbgStepOver = procedure of object;
-  TOnPluginDbgRequestLineNumber = function(out ALineContent: string): Integer of object;
+  TOnPluginDbgRequestLineNumber = function(out ALineContent, ADbgSymFile: string): Integer of object;
+  TOnPluginDbgSetBreakpoint = procedure(ALineIndex, ASelectedSourceFileIndex: Integer; AEnabled: Boolean) of object;
 
   TDbgSourceFile = record
     Fnm: string;
@@ -100,6 +101,9 @@ type
     FOnPluginDbgContinueAll: TOnPluginDbgContinueAll;
     FOnPluginDbgStepOver: TOnPluginDbgStepOver;
     FOnPluginDbgRequestLineNumber: TOnPluginDbgRequestLineNumber;
+    FOnPluginDbgSetBreakpoint: TOnPluginDbgSetBreakpoint;
+
+    FOnTClkIniFileCreate: TOnTClkIniFileCreate;
 
     function GetSelectedLine: string;
 
@@ -111,11 +115,15 @@ type
     function GetIndexOfDbgLine(ALineIndex: Integer): Integer;
     function LineIndexIsADebugPoint(AIndex: Integer): Boolean;
     procedure UpdateDebugSymbolsFileWithBreakPoints;
+    function ToggleBreakpoint(ALineIndex, ASelectedSourceFileIndex: Integer): Boolean;  //returns the new state
 
     procedure DoOnPluginDbgStop;
     procedure DoOnPluginDbgContinueAll;
     procedure DoOnPluginDbgStepOver;
-    function DoOnPluginDbgRequestLineNumber(ALineContent: string): Integer;
+    function DoOnPluginDbgRequestLineNumber(out ALineContent, ADbgSymFile: string): Integer;
+    procedure DoOnPluginDbgSetBreakpoint(ALineIndex, ASelectedSourceFileIndex: Integer; AEnabled: Boolean);
+
+    function DoOnTClkIniFileCreate(AFileName: string): TClkIniFile;
   public
     constructor Create(TheOwner: TComponent); override;
     destructor Destroy; override;
@@ -127,13 +135,18 @@ type
 
     procedure EnableRequestLineNumber;
     procedure DisableRequestLineNumber;
+    procedure SetBreakpoint(ALineIndex, ASelectedSourceFileIndex: Integer; AEnabled: Boolean);
 
     property SelectedLine: string read GetSelectedLine;
+    property DbgSymFnm: string read FDbgSymFnm;
 
     property OnPluginDbgStop: TOnPluginDbgStop write FOnPluginDbgStop;
     property OnPluginDbgContinueAll: TOnPluginDbgContinueAll write FOnPluginDbgContinueAll;
     property OnPluginDbgStepOver: TOnPluginDbgStepOver write FOnPluginDbgStepOver;
     property OnPluginDbgRequestLineNumber: TOnPluginDbgRequestLineNumber write FOnPluginDbgRequestLineNumber;
+    property OnPluginDbgSetBreakpoint: TOnPluginDbgSetBreakpoint write FOnPluginDbgSetBreakpoint;
+
+    property OnTClkIniFileCreate: TOnTClkIniFileCreate write FOnTClkIniFileCreate;
   end;
 
 implementation
@@ -142,7 +155,7 @@ implementation
 
 
 uses
-  ClickerExtraUtils, ClickerIniFiles, IniFiles, ClickerActionPlugins;
+  ClickerExtraUtils, ClickerActionPlugins;
 
 
 constructor TfrClickerPlugin.Create(TheOwner: TComponent);
@@ -155,6 +168,10 @@ begin
   FOnPluginDbgStop := nil;
   FOnPluginDbgContinueAll := nil;
   FOnPluginDbgStepOver := nil;
+  FOnPluginDbgRequestLineNumber := nil;
+  FOnPluginDbgSetBreakpoint := nil;
+
+  FOnTClkIniFileCreate := nil;
 
   FSelectedLine := -1;
   FLineIntoView := -1;
@@ -205,7 +222,7 @@ end;
 
 function TfrClickerPlugin.GetSelectedLine: string;
 begin
-  Result := IntToStr(FSelectedLine) + '=' + FCachedLineContent;
+  Result := IntToStr(FSelectedLine) + '=' + FCachedLineContent + #2 + FDbgSymFnm;
 end;
 
 
@@ -248,30 +265,71 @@ begin
 end;
 
 
+procedure TfrClickerPlugin.SetBreakpoint(ALineIndex, ASelectedSourceFileIndex: Integer; AEnabled: Boolean);
+var
+  BreakpointLineStr: string;
+  IndexOfBreakpointInList: Integer;
+  Node: PVirtualNode;
+begin
+  if (ALineIndex = -1) or (ASelectedSourceFileIndex = -1) then
+    Exit;
+
+  BreakpointLineStr := IntToStr(ALineIndex);
+
+  IndexOfBreakpointInList := FBreakPointsArr[ASelectedSourceFileIndex].IndexOf(BreakpointLineStr);
+
+  if IndexOfBreakpointInList <> -1 then  //breakpoint already set
+  begin
+    if not AEnabled then
+      FBreakPointsArr[ASelectedSourceFileIndex].Delete(IndexOfBreakpointInList)
+  end
+  else
+    if AEnabled and LineIndexIsADebugPoint(ALineIndex) then
+      FBreakPointsArr[ASelectedSourceFileIndex].Add(BreakpointLineStr);
+
+  Node := GetNodeByIndex(vstPluginDebugging, ALineIndex);
+  if Node <> nil then
+    vstPluginDebugging.InvalidateNode(Node);
+
+  UpdateDebugSymbolsFileWithBreakPoints;
+end;
+
+
+function TfrClickerPlugin.ToggleBreakpoint(ALineIndex, ASelectedSourceFileIndex: Integer): Boolean;
+var
+  BreakpointLineStr: string;
+  IndexOfBreakpointInList: Integer;
+begin
+  Result := False;
+  BreakpointLineStr := IntToStr(ALineIndex);
+
+  IndexOfBreakpointInList := FBreakPointsArr[ASelectedSourceFileIndex].IndexOf(BreakpointLineStr);
+
+  if IndexOfBreakpointInList <> -1 then  //breakpoint already set
+    FBreakPointsArr[ASelectedSourceFileIndex].Delete(IndexOfBreakpointInList)
+  else
+    if LineIndexIsADebugPoint(ALineIndex) then
+    begin
+      FBreakPointsArr[ASelectedSourceFileIndex].Add(BreakpointLineStr);
+      Result := True;
+    end;
+
+  vstPluginDebugging.InvalidateNode(FHitTestInfo.HitNode);
+  UpdateDebugSymbolsFileWithBreakPoints;
+end;
+
+
 procedure TfrClickerPlugin.vstPluginDebuggingMouseUp(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 var
-  BreakpointLine: Integer;
-  BreakpointLineStr: string;
-  IndexOfBreakpointInList: Integer;
+  BreakPointEnabled: Boolean;
 begin
   vstPluginDebugging.GetHitTestInfoAt(X, Y, True, FHitTestInfo);
   if FHitTestInfo.HitNode <> nil then
     if (FHitTestInfo.HitColumn = 0) and (X < imglstPluginDebugging.Width + Integer(vstPluginDebugging.Indent) + 12) then
     begin
-      BreakpointLine := FHitTestInfo.HitNode.Index;
-      BreakpointLineStr := IntToStr(BreakpointLine);
-
-      IndexOfBreakpointInList := FBreakPointsArr[FSelectedSourceFileIndex].IndexOf(BreakpointLineStr);
-
-      if IndexOfBreakpointInList <> -1 then  //breakpoint already set
-        FBreakPointsArr[FSelectedSourceFileIndex].Delete(IndexOfBreakpointInList)
-      else
-        if LineIndexIsADebugPoint(BreakpointLine) then
-          FBreakPointsArr[FSelectedSourceFileIndex].Add(BreakpointLineStr);
-
-      vstPluginDebugging.InvalidateNode(FHitTestInfo.HitNode);
-      UpdateDebugSymbolsFileWithBreakPoints;
+      BreakPointEnabled := ToggleBreakpoint(FHitTestInfo.HitNode.Index, FSelectedSourceFileIndex);
+      DoOnPluginDbgSetBreakpoint(FHitTestInfo.HitNode.Index, FSelectedSourceFileIndex, BreakPointEnabled);  //this notifies the server about changing the breakpoint
     end;
 end;
 
@@ -309,25 +367,19 @@ end;
 procedure TfrClickerPlugin.tmrRequestLineNumberTimer(Sender: TObject);
 var
   RemoteLineNumber: Integer;
-  TempLineContent: string;
+  TempLineContent, TempDbgSymFile: string;
 begin
-  RemoteLineNumber := DoOnPluginDbgRequestLineNumber(TempLineContent);
+  RemoteLineNumber := DoOnPluginDbgRequestLineNumber(TempLineContent, TempDbgSymFile);
 
   if (RemoteLineNumber > -1) and (FSelectedLine <> RemoteLineNumber) then
   begin
     try
       FSelectedLine := RemoteLineNumber;
-      //SelectLineByContent(TempLineContent);   //uncomment this, and remove/comment next line after fixing the parsing/updating issue
 
-      FCachedLineContent := FSourceFiles[FSelectedSourceFileIndex].Content.Strings[RemoteLineNumber];
-      vstPluginDebugging.RootNodeCount := FSourceFiles[FSelectedSourceFileIndex].Content.Count;  //Instead of function header, it should stop at first debug point, but that is not available yet. It requires a call to UpdateSelectedSourceFileAndLineFromDbgName with a valid debug point name.
-      SelectNodeByIndex(vstPluginDebugging, FSelectedLine, True, True);  //"function" is case sensitive
-      lblMsg.Caption := 'File: ' + FSourceFiles[FSelectedSourceFileIndex].Fnm;
-      lblMsg.Hint := lblMsg.Hint + #13#10 + 'Line: ' + IntToStr(FSelectedLine + 1);
+      if FDbgSymFnm <> TempDbgSymFile then
+        LoadDebugSymbols(TempDbgSymFile);
 
-      spdbtnStopPlaying.Visible := True;
-      spdbtnContinuePlayingAll.Visible := True;
-      spdbtnStepOver.Visible := True;
+      SelectLineByContent(TempLineContent);
     except
       on E: Exception do
       begin
@@ -472,7 +524,12 @@ end;
 
 procedure TfrClickerPlugin.spdbtnStepOverClick(Sender: TObject);
 begin
-  DoOnPluginDbgStepOver;
+  spdbtnStepOver.Enabled := False;
+  try
+    DoOnPluginDbgStepOver;
+  finally
+    spdbtnStepOver.Enabled := True;
+  end;
 end;
 
 
@@ -503,18 +560,36 @@ begin
 end;
 
 
-function TfrClickerPlugin.DoOnPluginDbgRequestLineNumber(ALineContent: string): Integer;
+function TfrClickerPlugin.DoOnPluginDbgRequestLineNumber(out ALineContent, ADbgSymFile: string): Integer;
 begin
   if not Assigned(FOnPluginDbgRequestLineNumber) then
     raise Exception.Create('PluginDbgRequestLineNumber not assigned.');
 
-  Result := FOnPluginDbgRequestLineNumber(ALineContent);
+  Result := FOnPluginDbgRequestLineNumber(ALineContent, ADbgSymFile);
+end;
+
+
+procedure TfrClickerPlugin.DoOnPluginDbgSetBreakpoint(ALineIndex, ASelectedSourceFileIndex: Integer; AEnabled: Boolean);
+begin
+  if not Assigned(FOnPluginDbgSetBreakpoint) then
+    raise Exception.Create('OnSetPluginDbgBreakpoint not assigned.');
+
+  FOnPluginDbgSetBreakpoint(ALineIndex, ASelectedSourceFileIndex, AEnabled);
+end;
+
+
+function TfrClickerPlugin.DoOnTClkIniFileCreate(AFileName: string): TClkIniFile;
+begin
+  if not Assigned(FOnTClkIniFileCreate) then
+    raise Exception.Create('OnTClkIniFileCreate not assigned.');
+
+  Result := FOnTClkIniFileCreate(AFileName);
 end;
 
 
 procedure TfrClickerPlugin.UpdateDebugSymbolsFileWithBreakPoints;
 var
-  Ini: TMemIniFile;
+  Ini: TClkIniFile;
   CurrentSourceFileName: string;
   BreakPointCount, i: Integer;
 begin
@@ -524,7 +599,7 @@ begin
   if FSelectedSourceFileIndex = -1 then
     Exit;
 
-  Ini := TMemIniFile.Create(FDbgSymFnm);
+  Ini := DoOnTClkIniFileCreate(FDbgSymFnm);
   try
     CurrentSourceFileName := FSourceFiles[FSelectedSourceFileIndex].Fnm;
     BreakPointCount := FBreakPointsArr[FSelectedSourceFileIndex].Count;
@@ -534,7 +609,7 @@ begin
     for i := 0 to BreakPointCount - 1 do
       Ini.WriteString(CurrentSourceFileName, 'BrkPointIdx' + IntToStr(i), FBreakPointsArr[FSelectedSourceFileIndex].Strings[i]);   //   no '_' after 'BrkPointIdx', to avoid being loaded as simple debug point
 
-    Ini.UpdateFile;
+    Ini.UpdateFile;  //this should not be called if both client and server are running on the same machine, because they would update the same file
   finally
     Ini.Free;
   end;
@@ -543,7 +618,7 @@ end;
 
 procedure TfrClickerPlugin.LoadDebugSymbols(ADbgSymFnm: string);
 var
-  Ini: TClkIniReadonlyFile;
+  Ini: TClkIniFile;
   i, j: Integer;
   BreakPointCount: Integer;
   CurrentSourceFileName: string;
@@ -557,7 +632,7 @@ begin
     lblMsg.Caption := 'Debug symbols file "' + ADbgSymFnm + '".';
     FDbgSymFnm := ADbgSymFnm;
 
-    Ini := TClkIniReadonlyFile.Create(ADbgSymFnm);
+    Ini := TClkIniFile.Create(ADbgSymFnm);
     try
       ClearSourceFilesArr;
       SetLength(FSourceFiles, Ini.GetSectionCount);
@@ -565,7 +640,7 @@ begin
       if Length(FBreakPointsArr) <> Ini.GetSectionCount then //all items must be reallocated and their contents be updated
       begin
         ClearBreakPointsArr;
-        SetLength(FBreakPointsArr, Ini.GetSectionCount);
+        SetLength(FBreakPointsArr, Ini.GetSectionCount);  //number of source files in the current plugin
 
         for i := 0 to Length(FSourceFiles) - 1 do
         begin
@@ -657,8 +732,11 @@ end;
 procedure TfrClickerPlugin.SelectLineByContent(ALineContent: string);
 begin
   vstPluginDebugging.RootNodeCount := 0;
-  lblMsg.Hint := ALineContent;
+  lblMsg.Hint := 'LineContent: "' + ALineContent + '"';
   lblMsg.ShowHint := True;
+
+  if Pos(#2, ALineContent) > 0 then
+    ALineContent := Copy(ALineContent, 1, Pos(#2, ALineContent) - 1);
 
   //vstPluginDebugging.SetFocus;  //this can be reenabled after implenting a property, which tells this frame that is is running in local/client mode
 
@@ -703,7 +781,8 @@ begin
   else
   begin
     vstPluginDebugging.Color := $CCCCFF;
-    lblMsg.Caption := '';
+    lblMsg.Caption := 'Source file is not selected.';
+    lblMsg.Hint := lblMsg.Hint + #13#10 + 'The current debug symbols file: ' + #13#10 + '"' + FDbgSymFnm + '"' + #13#10 + 'may not match the source file.';
   end;
 
   try
