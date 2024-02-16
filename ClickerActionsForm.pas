@@ -1099,6 +1099,18 @@ begin
   except
   end;
 
+  try   //wait 300ms more, for any other loop that might be using this flag
+    tk := GetTickCount64;
+    repeat
+      if FPollForMissingServerFiles.Done then    //client mode
+        Break;
+
+      Application.ProcessMessages;
+      Sleep(1);
+    until GetTickCount64 - tk > 300;
+  except
+  end;
+
   FreeAndNil(FFileAvailabilityFIFO); //destroy the FIFO before the in-mem filesystem
   FreeAndNil(FInMemFileSystem);
   FreeAndNil(FRenderedInMemFileSystem);
@@ -1470,6 +1482,8 @@ begin
     NewTabSheet.Caption := ExtractFileName(AFileNameToCall);
     NewTabSheet.PageControl := PageControlPlayer;
     NewTabSheet.ImageIndex := 0;
+    NewTabSheet.Width := TabSheetExecMainPlayer.Width;
+    NewTabSheet.Height := TabSheetExecMainPlayer.Height;
 
     ABtn := TButton.Create(NewTabSheet);
     ABtn.Parent := NewTabSheet;
