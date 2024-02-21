@@ -43,6 +43,9 @@ type
   { TfrClickerActions }
 
   TfrClickerActions = class(TFrame)
+    chkShowDebugGrid: TCheckBox;
+    imgDebugBmp: TImage;
+    imgDebugGrid: TImage;
     imglstLoadSetVarFromFileProperties: TImageList;
     imglstSaveSetVarToFileProperties: TImageList;
     imglstMatchPrimitiveFilesProperties: TImageList;
@@ -64,9 +67,13 @@ type
     imglstClickProperties: TImageList;
     imglstCallTemplateProperties: TImageList;
     imglstSetVarProperties: TImageList;
+    lblBitmaps: TLabel;
+    lblDebugBitmapXMouseOffset: TLabel;
+    lblDebugBitmapYMouseOffset: TLabel;
     lblMouseOnExecDbgImgBB: TLabel;
     lblMouseOnExecDbgImgGG: TLabel;
     lblMouseOnExecDbgImgRR: TLabel;
+    lblVarReplacements: TLabel;
     MenuItem_ReplaceWithTemplateDir: TMenuItem;
     MenuItem_ReplaceWithAppDir: TMenuItem;
     MenuItem_SetFromControlWidthAndHeight: TMenuItem;
@@ -112,6 +119,8 @@ type
     MenuItemCopySearchAreaSearchBmpImgToClipboard: TMenuItem;
     MenuItemCopySearchAreaBkImgToClipboard: TMenuItem;
     MenuItemGenericLoadBmpToSearchedArea: TMenuItem;
+    pnlHorizSplitterResults: TPanel;
+    pnlResults: TPanel;
     pmStandardControlRefVars: TPopupMenu;
     pmStandardColorVariables: TPopupMenu;
     pnlActionConditions: TPanel;
@@ -119,19 +128,18 @@ type
     pnlCover: TPanel;
     pnlExtra: TPanel;
     pnlHorizSplitter: TPanel;
+    pnlVars: TPanel;
     pnlvstOI: TPanel;
     N10001: TMenuItem;
     N100001: TMenuItem;
     N01: TMenuItem;
     N300001: TMenuItem;
     pmPathReplacements: TPopupMenu;
+    scrboxDebugBmp: TScrollBox;
     tmrDrawZoom: TTimer;
     tmrReloadOIContent: TTimer;
     AddCustomVarRow1: TMenuItem;
     RemoveCustomVarRow1: TMenuItem;
-    vallstVariables: TValueListEditor;
-    scrboxDebugBmp: TScrollBox;
-    imgDebugBmp: TImage;
     MenuItemSavePreviewImage: TMenuItem;
     MenuItemCopyPreviewImage: TMenuItem;
     imglstActions: TImageList;
@@ -139,11 +147,7 @@ type
     CopyDebugValuesListToClipboard1: TMenuItem;
     PasteDebugValuesListFromClipboard1: TMenuItem;
     PasteDebugValuesListFromMainExecutionList1: TMenuItem;
-    lblDebugBitmapXMouseOffset: TLabel;
-    lblDebugBitmapYMouseOffset: TLabel;
     MenuItemErasePreviewImage: TMenuItem;
-    chkShowDebugGrid: TCheckBox;
-    imgDebugGrid: TImage;
     PageControlActionExecution: TPageControl;
     TabSheetAction: TTabSheet;
     TabSheetCondition: TTabSheet;
@@ -155,13 +159,12 @@ type
     MenuItemSaveDebugImage: TMenuItem;
     MenuItemCopyDebugImage: TMenuItem;
     MenuItemEraseDebugImage: TMenuItem;
-    lblVarReplacements: TLabel;
-    lblBitmaps: TLabel;
     MenuItemRemoveExpressionPart: TMenuItem;
     MenuItemRemoveTerm: TMenuItem;
     N1: TMenuItem;
     AddVariable1: TMenuItem;
     RemoveVariable1: TMenuItem;
+    vallstVariables: TValueListEditor;
     procedure chkWaitForControlToGoAwayChange(Sender: TObject);
     procedure FrameResize(Sender: TObject);
     procedure lbeFindCachedControlLeftChange(Sender: TObject);
@@ -177,6 +180,12 @@ type
       Y: Integer);
     procedure pnlHorizSplitterMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
+    procedure pnlHorizSplitterResultsMouseDown(Sender: TObject;
+      Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+    procedure pnlHorizSplitterResultsMouseMove(Sender: TObject;
+      Shift: TShiftState; X, Y: Integer);
+    procedure pnlHorizSplitterResultsMouseUp(Sender: TObject;
+      Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 
     procedure scrboxDebugBmpMouseWheel(Sender: TObject; Shift: TShiftState;
       WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
@@ -255,6 +264,7 @@ type
     { Private declarations }
     FBMPsDir: string;
     FHold: Boolean;
+    FHoldResults: Boolean;
     FSplitterMouseDownGlobalPos: TPoint;
     FSplitterMouseDownImagePos: TPoint;
 
@@ -528,6 +538,7 @@ type
     procedure RefreshActionName; //called by action list, when modifying the action name from there
     procedure ResetAllPmtvModifiedFlags; //called when users select a diffeent action from the one with modified pmtv files
     procedure ResizeFrameSectionsBySplitter(NewLeft: Integer);
+    procedure ResizeFrameSectionsBySplitterResults(NewLeft: Integer);
 
     procedure ClearControls;
 
@@ -798,6 +809,7 @@ begin
 
   FFullTemplatesDir := 'Non-existentFolder'; //ExtractFilePath(ParamStr(0)) + 'ActionTemplates'; //init value can be overridden by external wrapper
   FHold := False;
+  FHoldResults := False;
 
   FSearchAreaScrBox := nil;
   FSearchAreaSearchedBmpDbgImg := nil;
@@ -1284,6 +1296,12 @@ begin                                   //this method doesn't seem to be called 
     NewLeft := Width - 260;
 
   ResizeFrameSectionsBySplitter(NewLeft);
+
+  NewLeft := pnlHorizSplitterResults.Left;
+  if NewLeft > Width - 260 then
+    NewLeft := Width - 260;
+
+  ResizeFrameSectionsBySplitterResults(NewLeft);
 end;
 
 
@@ -1300,6 +1318,22 @@ begin
   pnlExtra.Left := pnlHorizSplitter.Left + pnlHorizSplitter.Width;
   pnlExtra.Width := TabSheetAction.Width - pnlExtra.Left;
   pnlvstOI.Width := pnlHorizSplitter.Left;
+end;
+
+
+procedure TfrClickerActions.ResizeFrameSectionsBySplitterResults(NewLeft: Integer);
+begin
+  if NewLeft < pnlVars.Constraints.MinWidth then
+    NewLeft := pnlVars.Constraints.MinWidth;
+
+  if NewLeft > Width - 260 then
+    NewLeft := Width - 260;
+
+  pnlHorizSplitterResults.Left := NewLeft;
+
+  pnlResults.Left := pnlHorizSplitterResults.Left + pnlHorizSplitterResults.Width;
+  pnlResults.Width := TabSheetDebugging.Width - pnlResults.Left;
+  pnlVars.Width := pnlHorizSplitterResults.Left;
 end;
 
 
@@ -1356,6 +1390,48 @@ procedure TfrClickerActions.pnlHorizSplitterMouseUp(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
   FHold := False;
+end;
+
+
+procedure TfrClickerActions.pnlHorizSplitterResultsMouseDown(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  if Shift <> [ssLeft] then
+    Exit;
+
+  if not FHoldResults then
+  begin
+    GetCursorPos(FSplitterMouseDownGlobalPos);
+
+    FSplitterMouseDownImagePos.X := pnlHorizSplitterResults.Left;
+    FHoldResults := True;
+  end;
+end;
+
+
+procedure TfrClickerActions.pnlHorizSplitterResultsMouseMove(Sender: TObject;
+  Shift: TShiftState; X, Y: Integer);
+var
+  tp: TPoint;
+  NewLeft: Integer;
+begin
+  if Shift <> [ssLeft] then
+    Exit;
+
+  if not FHoldResults then
+    Exit;
+
+  GetCursorPos(tp);
+  NewLeft := FSplitterMouseDownImagePos.X + tp.X - FSplitterMouseDownGlobalPos.X;
+
+  ResizeFrameSectionsBySplitterResults(NewLeft);
+end;
+
+
+procedure TfrClickerActions.pnlHorizSplitterResultsMouseUp(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  FHoldResults := False;
 end;
 
 

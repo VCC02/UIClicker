@@ -12,13 +12,13 @@ object frClickerActions: TfrClickerActions
   TabStop = True
   OnResize = FrameResize
   DesignLeft = 86
-  DesignTop = 86
+  DesignTop = 85
   object PageControlActionExecution: TPageControl
     Left = 0
     Height = 276
     Top = 0
     Width = 1052
-    ActivePage = TabSheetAction
+    ActivePage = TabSheetDebugging
     Anchors = [akTop, akLeft, akRight, akBottom]
     Font.Color = clWindowText
     Font.Height = -11
@@ -26,7 +26,7 @@ object frClickerActions: TfrClickerActions
     Font.Style = [fsBold]
     Images = imglstActionExecution
     ParentFont = False
-    TabIndex = 0
+    TabIndex = 2
     TabOrder = 0
     TabPosition = tpLeft
     object TabSheetAction: TTabSheet
@@ -194,150 +194,194 @@ object frClickerActions: TfrClickerActions
       Font.Name = 'Tahoma'
       ImageIndex = 2
       ParentFont = False
-      object lblDebugBitmapXMouseOffset: TLabel
-        Left = 544
-        Height = 13
+      object pnlVars: TPanel
+        Left = 0
+        Height = 268
         Top = 0
-        Width = 27
-        Caption = 'mx: 0'
-      end
-      object lblDebugBitmapYMouseOffset: TLabel
-        Left = 613
-        Height = 13
-        Top = 0
-        Width = 27
-        Caption = 'my: 0'
-      end
-      object lblVarReplacements: TLabel
-        Left = 3
-        Height = 13
-        Top = 0
-        Width = 120
-        Caption = 'Variables / Replacements'
-      end
-      object lblBitmaps: TLabel
-        Left = 341
-        Height = 13
-        Top = 0
-        Width = 37
-        Caption = 'Bitmaps'
-      end
-      object vallstVariables: TValueListEditor
-        Left = 3
-        Height = 218
-        Hint = 'These variables can be manually edited in place for every action. They are reset when playing all actions. Right-click for options.'
-        Top = 18
-        Width = 332
+        Width = 336
         Anchors = [akTop, akLeft, akBottom]
-        DefaultColWidth = 170
-        FixedCols = 0
-        ParentShowHint = False
-        PopupMenu = pmDebugVars
-        RowCount = 2
-        ScrollBars = ssVertical
-        ShowHint = True
-        TabOrder = 1
-        DisplayOptions = [doColumnTitles, doKeyColFixed]
-        KeyOptions = [keyEdit, keyUnique]
-        TitleCaptions.Strings = (
-          'Variable'
-          'Value'
-        )
-        OnValidate = vallstVariablesValidate
-        ColWidths = (
-          170
-          162
-        )
+        BevelOuter = bvNone
+        ClientHeight = 268
+        ClientWidth = 336
+        Constraints.MinHeight = 208
+        Constraints.MinWidth = 336
+        TabOrder = 0
+        object lblVarReplacements: TLabel
+          Left = 3
+          Height = 13
+          Top = 0
+          Width = 120
+          Caption = 'Variables / Replacements'
+        end
+        object vallstVariables: TValueListEditor
+          Left = 2
+          Height = 246
+          Hint = 'These variables can be manually edited in place for every action. They are reset when playing all actions. Right-click for options.'
+          Top = 18
+          Width = 332
+          Anchors = [akTop, akLeft, akRight, akBottom]
+          DefaultColWidth = 170
+          FixedCols = 0
+          ParentShowHint = False
+          PopupMenu = pmDebugVars
+          RowCount = 2
+          ScrollBars = ssVertical
+          ShowHint = True
+          TabOrder = 0
+          DisplayOptions = [doColumnTitles, doKeyColFixed]
+          KeyOptions = [keyEdit, keyUnique]
+          TitleCaptions.Strings = (
+            'Variable'
+            'Value'
+          )
+          OnValidate = vallstVariablesValidate
+          ColWidths = (
+            170
+            162
+          )
+        end
       end
-      object scrboxDebugBmp: TScrollBox
-        Left = 341
-        Height = 218
-        Top = 18
-        Width = 700
-        HorzScrollBar.Page = 87
-        HorzScrollBar.Smooth = True
-        HorzScrollBar.Tracking = True
-        VertScrollBar.Page = 86
-        VertScrollBar.Smooth = True
-        VertScrollBar.Tracking = True
+      object pnlResults: TPanel
+        Left = 347
+        Height = 268
+        Top = 0
+        Width = 677
         Anchors = [akTop, akLeft, akRight, akBottom]
-        ClientHeight = 214
-        ClientWidth = 696
-        Color = clWindow
+        Caption = 'pnlResults'
+        ClientHeight = 268
+        ClientWidth = 677
+        TabOrder = 1
+        object lblBitmaps: TLabel
+          Left = 2
+          Height = 13
+          Top = 0
+          Width = 37
+          Caption = 'Bitmaps'
+        end
+        object chkShowDebugGrid: TCheckBox
+          Left = 117
+          Height = 17
+          Top = 0
+          Width = 65
+          Caption = 'Show grid'
+          TabOrder = 0
+          OnClick = chkShowDebugGridClick
+        end
+        object lblDebugBitmapXMouseOffset: TLabel
+          Left = 205
+          Height = 13
+          Top = 0
+          Width = 27
+          Caption = 'mx: 0'
+        end
+        object lblDebugBitmapYMouseOffset: TLabel
+          Left = 274
+          Height = 13
+          Top = 0
+          Width = 27
+          Caption = 'my: 0'
+        end
+        object lblMouseOnExecDbgImgBB: TLabel
+          Left = 337
+          Height = 13
+          Top = 0
+          Width = 12
+          Caption = 'BB'
+          Font.Color = 16734553
+          Font.Height = -11
+          Font.Name = 'Tahoma'
+          ParentFont = False
+        end
+        object lblMouseOnExecDbgImgGG: TLabel
+          Left = 353
+          Height = 13
+          Top = 0
+          Width = 14
+          Caption = 'GG'
+          Font.Color = clGreen
+          Font.Height = -11
+          Font.Name = 'Tahoma'
+          ParentFont = False
+        end
+        object lblMouseOnExecDbgImgRR: TLabel
+          Left = 369
+          Height = 13
+          Top = 0
+          Width = 14
+          Caption = 'RR'
+          Font.Color = 187
+          Font.Height = -11
+          Font.Name = 'Tahoma'
+          ParentFont = False
+        end
+        object scrboxDebugBmp: TScrollBox
+          Left = 2
+          Height = 246
+          Top = 18
+          Width = 672
+          HorzScrollBar.Page = 87
+          HorzScrollBar.Smooth = True
+          HorzScrollBar.Tracking = True
+          VertScrollBar.Page = 86
+          VertScrollBar.Smooth = True
+          VertScrollBar.Tracking = True
+          Anchors = [akTop, akLeft, akRight, akBottom]
+          ClientHeight = 242
+          ClientWidth = 668
+          Color = clWindow
+          ParentBackground = False
+          ParentColor = False
+          PopupMenu = pmDebugImage
+          TabOrder = 1
+          OnMouseWheel = scrboxDebugBmpMouseWheel
+          object imgDebugBmp: TImage
+            Left = 0
+            Height = 2
+            Top = 0
+            Width = 2
+            AutoSize = True
+            Picture.Data = {
+              07544269746D617046000000424D460000000000000036000000280000000200
+              0000020000000100180000000000100000000000000000000000000000000000
+              0000FFFFFFFFFFFF0000FFFFFFFFFFFF0000
+            }
+            PopupMenu = pmDebugImage
+            OnMouseEnter = imgDebugBmpMouseEnter
+            OnMouseLeave = imgDebugBmpMouseLeave
+            OnMouseMove = imgDebugBmpMouseMove
+          end
+          object imgDebugGrid: TImage
+            Left = 14
+            Height = 73
+            Top = 13
+            Width = 73
+            ParentShowHint = False
+            PopupMenu = pmDebugImage
+            ShowHint = True
+            Transparent = True
+            OnMouseMove = imgDebugBmpMouseMove
+          end
+        end
+      end
+      object pnlHorizSplitterResults: TPanel
+        Cursor = crHSplit
+        Left = 337
+        Height = 268
+        Top = 0
+        Width = 10
+        Anchors = [akTop, akLeft, akBottom]
+        Caption = 'ResultsSplitter'
+        Color = 13041606
+        Font.Color = 13041606
+        Font.Height = -11
+        Font.Name = 'Tahoma'
         ParentBackground = False
         ParentColor = False
-        PopupMenu = pmDebugImage
+        ParentFont = False
         TabOrder = 2
-        OnMouseWheel = scrboxDebugBmpMouseWheel
-        object imgDebugBmp: TImage
-          Left = 0
-          Height = 2
-          Top = 0
-          Width = 2
-          AutoSize = True
-          Picture.Data = {
-            07544269746D617046000000424D460000000000000036000000280000000200
-            0000020000000100180000000000100000000000000000000000000000000000
-            0000FFFFFFFFFFFF0000FFFFFFFFFFFF0000
-          }
-          PopupMenu = pmDebugImage
-          OnMouseEnter = imgDebugBmpMouseEnter
-          OnMouseLeave = imgDebugBmpMouseLeave
-          OnMouseMove = imgDebugBmpMouseMove
-        end
-        object imgDebugGrid: TImage
-          Left = 14
-          Height = 73
-          Top = 13
-          Width = 73
-          ParentShowHint = False
-          PopupMenu = pmDebugImage
-          ShowHint = True
-          Transparent = True
-          OnMouseMove = imgDebugBmpMouseMove
-        end
-      end
-      object chkShowDebugGrid: TCheckBox
-        Left = 456
-        Height = 19
-        Top = -2
-        Width = 67
-        Caption = 'Show grid'
-        TabOrder = 0
-        OnClick = chkShowDebugGridClick
-      end
-      object lblMouseOnExecDbgImgBB: TLabel
-        Left = 676
-        Height = 13
-        Top = 0
-        Width = 12
-        Caption = 'BB'
-        Font.Color = 16734553
-        Font.Height = -11
-        Font.Name = 'Tahoma'
-        ParentFont = False
-      end
-      object lblMouseOnExecDbgImgGG: TLabel
-        Left = 692
-        Height = 13
-        Top = 0
-        Width = 14
-        Caption = 'GG'
-        Font.Color = clGreen
-        Font.Height = -11
-        Font.Name = 'Tahoma'
-        ParentFont = False
-      end
-      object lblMouseOnExecDbgImgRR: TLabel
-        Left = 708
-        Height = 13
-        Top = 0
-        Width = 14
-        Caption = 'RR'
-        Font.Color = 187
-        Font.Height = -11
-        Font.Name = 'Tahoma'
-        ParentFont = False
+        OnMouseDown = pnlHorizSplitterResultsMouseDown
+        OnMouseMove = pnlHorizSplitterResultsMouseMove
+        OnMouseUp = pnlHorizSplitterResultsMouseUp
       end
     end
   end

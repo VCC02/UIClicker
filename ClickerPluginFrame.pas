@@ -62,6 +62,7 @@ type
     spdbtnStopPlaying: TSpeedButton;
     spdbtnGoToPrevDbgPoint: TSpeedButton;
     spdbtnGoToNextDbgPoint: TSpeedButton;
+    tmrColorLabel: TTimer;
     tmrRequestLineNumber: TTimer;
     vstPluginDebugging: TVirtualStringTree;
     procedure spdbtnContinuePlayingAllClick(Sender: TObject);
@@ -70,6 +71,7 @@ type
     procedure spdbtnScrollToCurrentLineClick(Sender: TObject);
     procedure spdbtnStepOverClick(Sender: TObject);
     procedure spdbtnStopPlayingClick(Sender: TObject);
+    procedure tmrColorLabelTimer(Sender: TObject);
     procedure tmrRequestLineNumberTimer(Sender: TObject);
     procedure vstPluginDebuggingBeforeCellPaint(Sender: TBaseVirtualTree;
       TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex;
@@ -116,6 +118,8 @@ type
     function LineIndexIsADebugPoint(AIndex: Integer): Boolean;
     procedure UpdateDebugSymbolsFileWithBreakPoints;
     function ToggleBreakpoint(ALineIndex, ASelectedSourceFileIndex: Integer): Boolean;  //returns the new state
+    procedure StartLabelTimer;
+    procedure UpdateMsgLabel(ANewMsg: string);
 
     procedure DoOnPluginDbgStop;
     procedure DoOnPluginDbgContinueAll;
@@ -155,7 +159,7 @@ implementation
 
 
 uses
-  ClickerExtraUtils, ClickerActionPlugins;
+  ClickerExtraUtils, ClickerActionPlugins, BitmapProcessing;
 
 
 constructor TfrClickerPlugin.Create(TheOwner: TComponent);
@@ -361,6 +365,42 @@ end;
 procedure TfrClickerPlugin.spdbtnStopPlayingClick(Sender: TObject);
 begin
   DoOnPluginDbgStop;
+end;
+
+
+procedure TfrClickerPlugin.UpdateMsgLabel(ANewMsg: string);
+begin
+  if lblMsg.Caption <> ANewMsg then
+  begin
+    lblMsg.Caption := ANewMsg;
+    StartLabelTimer;
+  end;
+end;
+
+
+procedure TfrClickerPlugin.StartLabelTimer;
+begin
+  tmrColorLabel.Tag := 16;
+  tmrColorLabel.Enabled := True;
+end;
+
+
+procedure TfrClickerPlugin.tmrColorLabelTimer(Sender: TObject);
+var
+  ColScaling: Integer;
+begin
+  ColScaling := (16 - tmrColorLabel.Tag) shl 4;
+  if ColScaling > 255 then
+    ColScaling := 255;
+
+  lblMsg.Color := AvgTwoTrueColors(ColScaling shl 16 + clLime + ColScaling, clWhite);
+
+  tmrColorLabel.Tag := tmrColorLabel.Tag - 1;
+  if tmrColorLabel.Tag = -1 then
+  begin
+    lblMsg.Color := clBtnFace;
+    tmrColorLabel.Enabled := False;
+  end;
 end;
 
 
@@ -629,7 +669,7 @@ begin
 
   if FileExists(ADbgSymFnm) then
   begin
-    lblMsg.Caption := 'Debug symbols file "' + ADbgSymFnm + '".';
+    UpdateMsgLabel('Debug symbols file "' + ADbgSymFnm + '".');
     FDbgSymFnm := ADbgSymFnm;
 
     Ini := TClkIniFile.Create(ADbgSymFnm);
@@ -679,7 +719,7 @@ begin
       SelectLineByContent(FCachedLineContent);  //called when manually switching actions in list
   end
   else
-    lblMsg.Caption := 'Debug symbols file "' + ADbgSymFnm + '" not found.';
+    UpdateMsgLabel('Debug symbols file "' + ADbgSymFnm + '" not found.');
 end;
 
 
@@ -746,7 +786,7 @@ begin
   begin
     vstPluginDebugging.Color := clDefault;
 
-    if Length(FSourceFiles) > 0 then
+    if (Length(FSourceFiles) > 0) and (FSelectedSourceFileIndex < Length(FSourceFiles)) then
     begin
       if FSelectedSourceFileIndex = -1 then
         FSelectedSourceFileIndex := 0;
@@ -757,7 +797,7 @@ begin
       FCachedLineContent := ALineContent;
       vstPluginDebugging.RootNodeCount := FSourceFiles[FSelectedSourceFileIndex].Content.Count;  //Instead of function header, it should stop at first debug point, but that is not available yet. It requires a call to UpdateSelectedSourceFileAndLineFromDbgName with a valid debug point name.
       SelectNodeByIndex(vstPluginDebugging, FSelectedLine, True, True);  //"function" is case sensitive
-      lblMsg.Caption := 'File: ' + FSourceFiles[FSelectedSourceFileIndex].Fnm;
+      UpdateMsgLabel('File: ' + FSourceFiles[FSelectedSourceFileIndex].Fnm);
       lblMsg.Hint := lblMsg.Hint + #13#10 + 'Line: ' + IntToStr(FSelectedLine + 1);
 
       spdbtnStopPlaying.Visible := True;
@@ -768,20 +808,20 @@ begin
     Exit;
   end;
 
-  if FSelectedSourceFileIndex > -1 then
+  if (FSelectedSourceFileIndex > -1) and (FSelectedSourceFileIndex < Length(FSourceFiles)) then
   begin
     FCachedLineContent := ALineContent;
     vstPluginDebugging.Color := clDefault;
     vstPluginDebugging.RootNodeCount := FSourceFiles[FSelectedSourceFileIndex].Content.Count;
     SelectNodeByIndex(vstPluginDebugging, FSelectedLine, True, True);
 
-    lblMsg.Caption := 'File: ' + FSourceFiles[FSelectedSourceFileIndex].Fnm;
+    UpdateMsgLabel('File: ' + FSourceFiles[FSelectedSourceFileIndex].Fnm);
     lblMsg.Hint := lblMsg.Hint + #13#10 + 'Line: ' + IntToStr(FSelectedLine + 1);
   end
   else
   begin
     vstPluginDebugging.Color := $CCCCFF;
-    lblMsg.Caption := 'Source file is not selected.';
+    UpdateMsgLabel('Source file is not selected.');
     lblMsg.Hint := lblMsg.Hint + #13#10 + 'The current debug symbols file: ' + #13#10 + '"' + FDbgSymFnm + '"' + #13#10 + 'may not match the source file.';
   end;
 

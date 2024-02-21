@@ -221,6 +221,8 @@ object frClickerPlugin: TfrClickerPlugin
     Width = 18
     Anchors = [akLeft, akBottom]
     Caption = 'File'
+    ParentColor = False
+    Transparent = False
   end
   object lblPluginDebugging: TLabel
     Left = 36
@@ -349,6 +351,13 @@ object frClickerPlugin: TfrClickerPlugin
     Enabled = False
     OnTimer = tmrRequestLineNumberTimer
     Left = 408
+    Top = 80
+  end
+  object tmrColorLabel: TTimer
+    Enabled = False
+    Interval = 100
+    OnTimer = tmrColorLabelTimer
+    Left = 544
     Top = 80
   end
 end

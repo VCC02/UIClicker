@@ -251,7 +251,7 @@ begin
         WaitInDebuggingMode(ActionPlugin);
       end;
     finally
-      ActionPlugin^.DoAddToLog('Exiting plugin debug point "' + PointName);
+      ActionPlugin^.DoAddToLog('Exiting plugin debug point "' + PointName + '".');
     end;
   except
     on E: Exception do

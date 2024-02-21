@@ -1369,8 +1369,19 @@ function TActionExecution.ExecuteFindControlAction(var AFindControlOptions: TClk
     end;
   end;
 
+  procedure AddInfoToMatchSource(AMatchSourceInfo, ADetailedMatchSourceInfo: string; ACount: Integer; var AMatchSource, ADetailedMatchSource: string);
+  var
+    ii: Integer;
+  begin
+    for ii := 0 to ACount - 1 do
+    begin
+      AMatchSource := AMatchSource + AMatchSourceInfo + #4#5;                         //see $AllControl_MatchSource$ var
+      ADetailedMatchSource := ADetailedMatchSource + ADetailedMatchSourceInfo + #4#5; //see $AllControl_DetailedMatchSource$ var
+    end;
+  end;
+
 var
-  i, j, k, n, ii: Integer;
+  i, j, k, n: Integer;
   ListOfBitmapFiles, ListOfPrimitiveFiles: TStringList;
   ResultedControl: TCompRec;
   ResultedControlArr, PartialResultedControlArr: TCompRecArr;
@@ -1774,11 +1785,7 @@ begin
               if AFindControlOptions.GetAllControls then
               begin
                 AddToLog('Result count: ' + IntToStr(Length(PartialResultedControlArr)));
-                for ii := 0 to Length(PartialResultedControlArr) - 1 do
-                begin
-                  MatchSource := MatchSource + 'txt[' + IntToStr(j) + ']' + #4#5;
-                  DetailedMatchSource := DetailedMatchSource + 'txt[' + IntToStr(j) + '][0]' + #4#5;  //hardcoded to [0] as no other subfeature is implemented
-                end;
+                AddInfoToMatchSource('txt[' + IntToStr(j) + ']', 'txt[' + IntToStr(j) + '][0]', Length(PartialResultedControlArr), MatchSource, DetailedMatchSource); //hardcoded to [0] as no other subfeature is implemented
               end;
 
               if not AFindControlOptions.GetAllControls then
@@ -1797,6 +1804,9 @@ begin
         if Result and not AFindControlOptions.GetAllControls then
           Break;
       end;  //for j  - font profiles
+
+      AddToLog('MatchSource: ' + MatchSource);
+      AddToLog('DetailedMatchSource: ' + DetailedMatchSource);
     end; //WillMatchBitmapText
 
 
@@ -1880,11 +1890,7 @@ begin
                 //UpdateActionVarValuesFromResultedControlArr(ResultedControlArr);
 
                 AddToLog('Result count: ' + IntToStr(Length(PartialResultedControlArr)));
-                for ii := 0 to Length(PartialResultedControlArr) - 1 do
-                begin
-                  MatchSource := MatchSource + 'bmp[' + IntToStr(i) + ']' + #4#5;
-                  DetailedMatchSource := DetailedMatchSource + 'bmp[' + IntToStr(i) + '][0]' + #4#5;  //hardcoded to [0] as no other subfeature is implemented
-                end;
+                AddInfoToMatchSource('bmp[' + IntToStr(i) + ']', 'bmp[' + IntToStr(i) + '][0]', Length(PartialResultedControlArr), MatchSource, DetailedMatchSource); //hardcoded to [0] as no other subfeature is implemented
               end
               else
                 Exit;  //to prevent further searching for other bitmap files
@@ -1900,6 +1906,9 @@ begin
       finally
         FindControlInputData.BitmapToSearchFor.Free;
       end;
+
+      AddToLog('MatchSource: ' + MatchSource);
+      AddToLog('DetailedMatchSource: ' + DetailedMatchSource);
     end; //WillMatchBitmapFiles
 
     if AFindControlOptions.MatchCriteria.WillMatchPrimitiveFiles then
@@ -2008,11 +2017,7 @@ begin
                   if AFindControlOptions.GetAllControls then
                   begin
                     AddToLog('Result count: ' + IntToStr(Length(PartialResultedControlArr)));
-                    for ii := 0 to Length(PartialResultedControlArr) - 1 do
-                    begin
-                      MatchSource := MatchSource + 'pmtv[' + IntToStr(i * Length(TempOrders) + k) + ']' + #4#5;
-                      DetailedMatchSource := DetailedMatchSource + 'pmtv[' + IntToStr(i) + '][' + IntToStr(k) + ']' + #4#5;
-                    end;
+                    AddInfoToMatchSource('pmtv[' + IntToStr(i * Length(TempOrders) + k) + ']', 'pmtv[' + IntToStr(i) + '][' + IntToStr(k) + ']', Length(PartialResultedControlArr), MatchSource, DetailedMatchSource);
                   end;
 
                   if not AFindControlOptions.GetAllControls then
@@ -2049,6 +2054,9 @@ begin
       finally
         FindControlInputData.BitmapToSearchFor.Free;
       end;
+
+      AddToLog('MatchSource: ' + MatchSource);
+      AddToLog('DetailedMatchSource: ' + DetailedMatchSource);
     end; //WillMatchPrimitiveFiles
   finally
     if Result then

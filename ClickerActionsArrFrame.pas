@@ -1175,6 +1175,9 @@ begin
 
   SplitterLeft := AIni.ReadInteger(ASection, 'HorizSplitterLeft.' + AIndentSuffix, frClickerActions.pnlHorizSplitter.Left);
   frClickerActions.ResizeFrameSectionsBySplitter(SplitterLeft);
+
+  SplitterLeft := AIni.ReadInteger(ASection, 'HorizSplitterLeftResults.' + AIndentSuffix, frClickerActions.pnlHorizSplitterResults.Left);
+  frClickerActions.ResizeFrameSectionsBySplitterResults(SplitterLeft);
 end;
 
 
@@ -1191,6 +1194,7 @@ begin
 
   AIni.WriteInteger(ASection, 'VertSplitterTop.' + AIndentSuffix, pnlVertSplitter.Top);
   AIni.WriteInteger(ASection, 'HorizSplitterLeft.' + AIndentSuffix, frClickerActions.pnlHorizSplitter.Left);
+  AIni.WriteInteger(ASection, 'HorizSplitterLeftResults.' + AIndentSuffix, frClickerActions.pnlHorizSplitterResults.Left);
 end;
 
 
