@@ -32,7 +32,7 @@ interface
 
 uses
   Windows, SysUtils, Variants, Classes, Graphics, Controls, Forms, Dialogs,
-  VirtualTrees, ExtCtrls, StdCtrls, ComCtrls, ImgList, Buttons, Grids, ValEdit,
+  VirtualTrees, ExtCtrls, StdCtrls, ComCtrls, ImgList, Buttons,
   Menus, ClickerUtils, ClickerConditionEditorFrame,
   ClickerFindControlFrame, ClickerExecAppFrame, ClickerSetVarFrame,
   ClickerCallTemplateFrame, ClickerSleepFrame, ClickerPluginFrame,
@@ -40,9 +40,16 @@ uses
   ClickerPrimitiveUtils, ClickerIniFiles;
 
 type
+  TVarNodeRec = record
+    VarName, VarValue: string;
+  end;
+
+  PVarNodeRec = ^TVarNodeRec;
+
   { TfrClickerActions }
 
   TfrClickerActions = class(TFrame)
+    chkDecodeVariables: TCheckBox;
     chkShowDebugGrid: TCheckBox;
     imgDebugBmp: TImage;
     imgDebugGrid: TImage;
@@ -136,6 +143,8 @@ type
     N300001: TMenuItem;
     pmPathReplacements: TPopupMenu;
     scrboxDebugBmp: TScrollBox;
+    tmrEditClkVariables: TTimer;
+    tmrClkVariables: TTimer;
     tmrDrawZoom: TTimer;
     tmrReloadOIContent: TTimer;
     AddCustomVarRow1: TMenuItem;
@@ -164,7 +173,8 @@ type
     N1: TMenuItem;
     AddVariable1: TMenuItem;
     RemoveVariable1: TMenuItem;
-    vallstVariables: TValueListEditor;
+    vstVariables: TVirtualStringTree;
+    procedure chkDecodeVariablesChange(Sender: TObject);
     procedure chkWaitForControlToGoAwayChange(Sender: TObject);
     procedure FrameResize(Sender: TObject);
     procedure lbeFindCachedControlLeftChange(Sender: TObject);
@@ -190,7 +200,9 @@ type
     procedure scrboxDebugBmpMouseWheel(Sender: TObject; Shift: TShiftState;
       WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
     procedure spdbtnDisplaySearchAreaDbgImgMenuClick(Sender: TObject);
+    procedure tmrClkVariablesTimer(Sender: TObject);
     procedure tmrDrawZoomTimer(Sender: TObject);
+    procedure tmrEditClkVariablesTimer(Sender: TObject);
     procedure tmrReloadOIContentTimer(Sender: TObject);
 
     procedure CopyDebugValuesListToClipboard1Click(Sender: TObject);
@@ -260,10 +272,25 @@ type
     procedure MenuItemControl_EdgeRefGenericClick(Sender: TObject);
     procedure MenuItemCopyRefToClipboardClick(Sender: TObject);
     procedure MenuItemPasteRefFromClipboardClick(Sender: TObject);
+    procedure vstVariablesCreateEditor(Sender: TBaseVirtualTree;
+      Node: PVirtualNode; Column: TColumnIndex; out EditLink: IVTEditLink);
+    procedure vstVariablesEdited(Sender: TBaseVirtualTree; Node: PVirtualNode;
+      Column: TColumnIndex);
+    procedure vstVariablesEditing(Sender: TBaseVirtualTree; Node: PVirtualNode;
+      Column: TColumnIndex; var Allowed: boolean);
+    procedure vstVariablesGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
+      Column: TColumnIndex; TextType: TVSTTextType; var CellText: string);
+    procedure vstVariablesMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure vstVariablesNewText(Sender: TBaseVirtualTree; Node: PVirtualNode;
+      Column: TColumnIndex; const NewText: string);
   private
     { Private declarations }
     FBMPsDir: string;
+    FEditingText: string;
+    FTextEditorEditBox: TEdit;
     FHold: Boolean;
+    FHitInfo: THitInfo;
     FHoldResults: Boolean;
     FSplitterMouseDownGlobalPos: TPoint;
     FSplitterMouseDownImagePos: TPoint;
@@ -292,6 +319,13 @@ type
     FCurrentlyEditingPrimitiveFileName: string;   //this is updated by OnLoad and OnSave handlers, which have the resolved file name
     FLastClickedTVTEdit: TVTEdit;
     FLastClickedEdit: TEdit;
+
+    FClkVariables: TStringList;
+
+    FlblResultSelLeft: TLabel;
+    FlblResultSelTop: TLabel;
+    FlblResultSelRight: TLabel;
+    FlblResultSelBottom: TLabel;
 
     FPmLocalTemplates: TPopupMenu;
     FOIFrame: TfrObjectInspector;
@@ -385,6 +419,13 @@ type
     function DoOnPluginDbgRequestLineNumber(out ALineContent, ADbgSymFile: string): Integer;
     procedure DoOnPluginDbgSetBreakpoint(ALineIndex, ASelectedSourceFileIndex: Integer; AEnabled: Boolean);
     function DoOnTClkIniFileCreate(AFileName: string): TClkIniFile;
+
+    procedure ClkVariablesOnChange(Sender: TObject);
+    procedure AddDecodedVarToNode(ANode: PVirtualNode; ARecursionLevel: Integer);
+    procedure CreateSelectionLabelsForResult;
+    function GetSubVarByIndex(AMainVarValue: string; ASubVarIndex: Integer): string;
+    procedure GetDecodedVarDetails(AParentVarName: string; ASubVarIndex: Integer; out X, Y, W, H: Integer);
+    procedure SelectAreaFromDecodedVariable(ANodeData: PVarNodeRec; ASubVarIndex: Integer);
 
     function GetInMemFS: TInMemFileSystem;
     procedure SetInMemFS(Value: TInMemFileSystem);
@@ -559,6 +600,8 @@ type
     property GridDrawingOption: TDisplayGridLineOption write SetGridDrawingOption;
     property PreviewSelectionColors: TSelectionColors write SetPreviewSelectionColors;
     property ModifiedPmtvFiles: Boolean read GetModifiedPmtvFiles;
+
+    property ClkVariables: TStringList read FClkVariables;
 
     property OnCopyControlTextAndClassFromMainWindow: TOnCopyControlTextAndClassFromMainWindow read FOnCopyControlTextAndClassFromMainWindow write FOnCopyControlTextAndClassFromMainWindow;
     property OnGetExtraSearchAreaDebuggingImage: TOnGetExtraSearchAreaDebuggingImage write FOnGetExtraSearchAreaDebuggingImage;
@@ -810,6 +853,7 @@ begin
   FFullTemplatesDir := 'Non-existentFolder'; //ExtractFilePath(ParamStr(0)) + 'ActionTemplates'; //init value can be overridden by external wrapper
   FHold := False;
   FHoldResults := False;
+  FEditingText := '';
 
   FSearchAreaScrBox := nil;
   FSearchAreaSearchedBmpDbgImg := nil;
@@ -820,6 +864,13 @@ begin
   FLastClickedTVTEdit := nil;
   FLastClickedEdit := nil;
   FOIEditorMenu := TPopupMenu.Create(Self);
+  FClkVariables := TStringList.Create;
+  FClkVariables.OnChange := ClkVariablesOnChange;
+
+  FlblResultSelLeft := nil;
+  FlblResultSelTop := nil;
+  FlblResultSelRight := nil;
+  FlblResultSelBottom := nil;
 
   FOnCopyControlTextAndClassFromMainWindow := nil;
   FOnGetExtraSearchAreaDebuggingImage := nil;
@@ -878,6 +929,7 @@ begin
   FSetVarContent_Values.Free;
   FSetVarContent_EvalBefore.Free;
   FOIEditorMenu.Free;
+  FreeAndNil(FClkVariables);
 
   inherited Destroy;
 end;
@@ -885,7 +937,7 @@ end;
 
 function TfrClickerActions.EvaluateReplacements(VarName: string; Recursive: Boolean = True): string;
 begin
-  Result := EvaluateAllReplacements(vallstVariables.Strings, VarName, Recursive);
+  Result := EvaluateAllReplacements(FClkVariables, VarName, Recursive);
 end;
 
 
@@ -894,10 +946,10 @@ var
   i: Integer;
 begin
   Result := '';
-  for i := 0 to vallstVariables.Strings.Count - 1 do
-    if vallstVariables.Strings.ValueFromIndex[i] = AValue then
+  for i := 0 to FClkVariables.Count - 1 do
+    if FClkVariables.ValueFromIndex[i] = AValue then
     begin
-      Result := vallstVariables.Strings.Names[i];
+      Result := FClkVariables.Names[i];
       Break;
     end;
 end;
@@ -912,6 +964,29 @@ begin
 
   if Assigned(imgDebugBmp.Picture.Bitmap) then
     SetZoomContent(imgDebugBmp.Picture.Bitmap, FCurrentMousePosOnPreviewImg.X, FCurrentMousePosOnPreviewImg.Y, tp.X + 50, tp.Y + 50);
+end;
+
+
+procedure TfrClickerActions.tmrEditClkVariablesTimer(Sender: TObject);
+var
+  TempBounds: TRect;
+begin
+  tmrEditClkVariables.Enabled := False;
+  if FHitInfo.HitNode = nil then
+    Exit;
+
+  vstVariables.EditNode(FHitInfo.HitNode, FHitInfo.HitColumn);
+
+  if FHitInfo.HitColumn in [0..1] then
+    if Assigned(vstVariables.EditLink) then
+    begin
+      TempBounds := vstVariables.EditLink.GetBounds;
+      TempBounds.Left := TempBounds.Left - 2;
+      TempBounds.Right := Max(TempBounds.Right, TempBounds.Left + vstVariables.Header.Columns[FHitInfo.HitColumn].MinWidth);
+      vstVariables.EditLink.SetBounds(TempBounds);
+
+      FTextEditorEditBox.Height := vstVariables.DefaultNodeHeight;
+    end;
 end;
 
 
@@ -951,18 +1026,33 @@ begin
 end;
 
 
-procedure TfrClickerActions.RemoveVariable1Click(Sender: TObject);
+procedure TfrClickerActions.ClkVariablesOnChange(Sender: TObject);
 begin
-  if vallstVariables.Selection.Top - 1 < FPredefinedVarCount - 1 then
+  tmrClkVariables.Enabled := True;
+end;
+
+
+procedure TfrClickerActions.RemoveVariable1Click(Sender: TObject);
+var
+  Node: PVirtualNode;
+begin
+  Node := vstVariables.GetFirstSelected;
+  if Node = nil then
   begin
-    MessageBox(Handle, 'Predefined variables are required.', '', MB_ICONINFORMATION);
+    MessageBox(Handle, 'Please select a variable to be removed.', PChar(Application.Title), MB_ICONINFORMATION);
     Exit;
   end;
 
-  if MessageBox(Handle, PChar('Remove variable?' + #13#10 + vallstVariables.Strings[vallstVariables.Selection.Top - 1]), 'Selection', MB_ICONQUESTION + MB_YESNO) = IDNO then
+  if Integer(Node^.Index) < FPredefinedVarCount - 1 then
+  begin
+    MessageBox(Handle, 'Predefined variables are required.', PChar(Application.Title), MB_ICONINFORMATION);
+    Exit;
+  end;
+
+  if MessageBox(Handle, PChar('Remove variable?' + #13#10 + FClkVariables.Strings[Node^.Index]), PChar(Application.Title), MB_ICONQUESTION + MB_YESNO) = IDNO then
     Exit;
 
-  vallstVariables.Strings.Delete(vallstVariables.Selection.Top - 1);
+  FClkVariables.Delete(Node^.Index);
 end;
 
 
@@ -1002,7 +1092,7 @@ begin
       Key := Copy(KeyValue, 1, Pos('=', KeyValue) - 1);
       Value := Copy(KeyValue, Pos('=', KeyValue) + 1, MaxInt);
 
-      vallstVariables.Values[Key] := Value;
+      FClkVariables.Values[Key] := Value;
     end;  
   finally
     AStringList.Free;
@@ -1013,7 +1103,7 @@ end;
 procedure TfrClickerActions.CopyDebugValuesListToClipboard1Click(
   Sender: TObject);
 begin
-  Clipboard.AsText := vallstVariables.Strings.Text;
+  Clipboard.AsText := FClkVariables.Text;
 end;
 
 
@@ -1123,6 +1213,265 @@ begin
 end;
 
 
+procedure TfrClickerActions.AddDecodedVarToNode(ANode: PVirtualNode; ARecursionLevel: Integer);
+var
+  Node: PVirtualNode;
+  ChNode: PVirtualNode;
+  NodeData: PVarNodeRec;
+  ChNodeData: PVarNodeRec;
+  i: Integer;
+  SubVars: TStringList;
+begin
+  NodeData := vstVariables.GetNodeData(ANode);
+  NodeData^.VarName := FClkVariables.Names[ANode^.Index];
+  NodeData^.VarValue := FClkVariables.ValueFromIndex[ANode^.Index];
+
+  SubVars := TStringList.Create;
+  try
+    SubVars.Text := FastReplace_45ToReturn(NodeData^.VarValue);
+    for i := 0 to SubVars.Count - 1 do
+    begin
+      ChNode := vstVariables.AddChild(ANode);
+      ChNodeData := vstVariables.GetNodeData(ChNode);
+      ChNodeData^.VarName := NodeData^.VarName + '[' + IntToStr(i) + ']';
+      ChNodeData^.VarValue := SubVars.Strings[i];
+    end;
+  finally
+    SubVars.Free;
+  end;
+
+  if ARecursionLevel > 20 then
+    Exit;
+
+  Node := ANode.FirstChild;
+  if Node = nil then
+    Exit;
+
+  repeat
+    NodeData := vstVariables.GetNodeData(Node);
+
+    if Pos(#4#5, NodeData^.VarValue) > 0 then
+      AddDecodedVarToNode(Node, ARecursionLevel + 1);
+
+    Node := Node^.NextSibling;
+  until Node = nil;
+end;
+
+
+procedure TfrClickerActions.chkDecodeVariablesChange(Sender: TObject);
+var
+  Node: PVirtualNode;
+begin
+  if FlblResultSelLeft <> nil then
+  begin
+    FlblResultSelLeft.Visible := chkDecodeVariables.Checked;
+    FlblResultSelTop.Visible := chkDecodeVariables.Checked;
+    FlblResultSelRight.Visible := chkDecodeVariables.Checked;
+    FlblResultSelBottom.Visible := chkDecodeVariables.Checked;
+  end;
+
+  Node := vstVariables.GetFirst;
+  if Node = nil then
+    Exit;
+
+  repeat
+    if Node^.ChildCount > 0 then
+      vstVariables.DeleteChildren(Node);
+
+    Node := Node^.NextSibling;
+  until Node = nil;
+
+  if not chkDecodeVariables.Checked then
+    Exit;
+
+  Node := vstVariables.GetFirst;
+  repeat
+    if Pos(#4#5, FClkVariables.ValueFromIndex[Node^.Index]) > 0 then
+      AddDecodedVarToNode(Node, 0);
+
+    Node := Node^.NextSibling;
+  until Node = nil;
+end;
+
+
+procedure TfrClickerActions.CreateSelectionLabelsForResult;
+begin
+  if FlblResultSelLeft = nil then
+  begin
+    FlblResultSelLeft := TLabel.Create(Self);
+    FlblResultSelTop := TLabel.Create(Self);
+    FlblResultSelRight := TLabel.Create(Self);
+    FlblResultSelBottom := TLabel.Create(Self);
+
+    FlblResultSelLeft.Parent := scrboxDebugBmp;
+    FlblResultSelTop.Parent := scrboxDebugBmp;
+    FlblResultSelRight.Parent := scrboxDebugBmp;
+    FlblResultSelBottom.Parent := scrboxDebugBmp;
+
+    FlblResultSelLeft.Transparent := False;
+    FlblResultSelTop.Transparent := False;
+    FlblResultSelRight.Transparent := False;
+    FlblResultSelBottom.Transparent := False;
+
+    FlblResultSelLeft.Caption := '';
+    FlblResultSelTop.Caption := '';
+    FlblResultSelRight.Caption := '';
+    FlblResultSelBottom.Caption := '';
+
+    FlblResultSelLeft.AutoSize := False;
+    FlblResultSelTop.AutoSize := False;
+    FlblResultSelRight.AutoSize := False;
+    FlblResultSelBottom.AutoSize := False;
+
+    FlblResultSelLeft.Width := 1;
+    FlblResultSelTop.Width := scrboxDebugBmp.Width;
+    FlblResultSelRight.Width := 1;
+    FlblResultSelBottom.Width := FlblResultSelTop.Width;
+
+    FlblResultSelLeft.Height := scrboxDebugBmp.Height;
+    FlblResultSelTop.Height := 1;
+    FlblResultSelRight.Height := FlblResultSelLeft.Width;
+    FlblResultSelBottom.Height := 1;
+
+    FlblResultSelLeft.Anchors := [akLeft, akTop, akBottom];
+    FlblResultSelTop.Anchors := [akLeft, akTop, akRight];
+    FlblResultSelRight.Anchors := [akLeft, akTop, akBottom];
+    FlblResultSelBottom.Anchors := [akLeft, akTop, akRight];
+
+    FlblResultSelLeft.Color := clGreen;
+    FlblResultSelTop.Color := clGreen;
+    FlblResultSelRight.Color := clMaroon;
+    FlblResultSelBottom.Color := clMaroon;
+
+    FlblResultSelBottom.Visible := True;
+    FlblResultSelTop.Visible := True;
+    FlblResultSelRight.Visible := True;
+    FlblResultSelBottom.Visible := True;
+
+    FlblResultSelBottom.BringToFront;
+    FlblResultSelTop.BringToFront;
+    FlblResultSelRight.BringToFront;
+    FlblResultSelBottom.BringToFront;
+  end;
+end;
+
+
+function TfrClickerActions.GetSubVarByIndex(AMainVarValue: string; ASubVarIndex: Integer): string;
+var
+  SubVars: TStringList;
+begin
+  SubVars := TStringList.Create;
+  try
+    SubVars.Text := FastReplace_45ToReturn(AMainVarValue);
+
+    if ASubVarIndex > SubVars.Count - 1 then
+    begin
+      Result := '10'; //a valid value, to set the label there
+      Exit;
+    end;
+
+    Result := SubVars.Strings[ASubVarIndex];
+  finally
+    SubVars.Free;
+  end;
+end;
+
+
+procedure TfrClickerActions.GetDecodedVarDetails(AParentVarName: string; ASubVarIndex: Integer; out X, Y, W, H: Integer);
+var
+  XVarIdx, YVarIdx, WVarIdx, HVarIdx: Integer;
+  XVarValue, YVarValue, WVarValue, HVarValue: string;
+begin
+  X := -1;
+  Y := -1;
+  W := -1;
+  H := -1;
+  XVarIdx := -1;
+  YVarIdx := -1;
+  WVarIdx := -1;
+  HVarIdx := -1;
+
+  if (AParentVarName = '$AllControl_XOffsets$') or
+     (AParentVarName = '$AllControl_YOffsets$') or
+     (AParentVarName = '$AllControl_Lefts$') or
+     (AParentVarName = '$AllControl_Tops$') or
+     (AParentVarName = '$AllControl_Rights$') or
+     (AParentVarName = '$AllControl_Bottoms$') or
+     (AParentVarName = '$AllControl_Widths$') or
+     (AParentVarName = '$AllControl_Heights$') then
+  begin
+    XVarIdx := FClkVariables.IndexOfName('$AllControl_XOffsets$');  //use XOffsets, because the value is relative to parent control
+    YVarIdx := FClkVariables.IndexOfName('$AllControl_YOffsets$');  //use YOffsets, because the value is relative to parent control
+    WVarIdx := FClkVariables.IndexOfName('$AllControl_Widths$');
+    HVarIdx := FClkVariables.IndexOfName('$AllControl_Heights$');
+  end;
+
+  if (AParentVarName = '$DecodedWindows_XOffset$') or
+     (AParentVarName = '$DecodedWindows_YOffset$') or
+     (AParentVarName = '$DecodedWindows_Control_Lefts$') or
+     (AParentVarName = '$DecodedWindows_Control_Tops$') or
+     (AParentVarName = '$DecodedWindows_Control_Rights$') or
+     (AParentVarName = '$DecodedWindows_Control_Bottoms$') or
+     (AParentVarName = '$DecodedWindows_Control_Width$') or
+     (AParentVarName = '$DecodedWindows_Control_Height$') then
+  begin
+    XVarIdx := FClkVariables.IndexOfName('$DecodedWindows_XOffset$');  //use XOffsets, because the value is relative to parent control
+    YVarIdx := FClkVariables.IndexOfName('$DecodedWindows_YOffset$');  //use YOffsets, because the value is relative to parent control
+    WVarIdx := FClkVariables.IndexOfName('$DecodedWindows_Control_Width$');
+    HVarIdx := FClkVariables.IndexOfName('$DecodedWindows_Control_Height$');
+  end;
+
+  if (AParentVarName = '$DecodedWindows_XOffset_WE$') or
+     (AParentVarName = '$DecodedWindows_YOffset_WE$') or
+     (AParentVarName = '$DecodedWindows_Control_Lefts_WE$') or
+     (AParentVarName = '$DecodedWindows_Control_Tops_WE$') or
+     (AParentVarName = '$DecodedWindows_Control_Rights_WE$') or
+     (AParentVarName = '$DecodedWindows_Control_Bottoms_WE$') or
+     (AParentVarName = '$DecodedWindows_Control_Width_WE$') or
+     (AParentVarName = '$DecodedWindows_Control_Height_WE$') then
+  begin
+    XVarIdx := FClkVariables.IndexOfName('$DecodedWindows_XOffset_WE$');  //use XOffsets, because the value is relative to parent control
+    YVarIdx := FClkVariables.IndexOfName('$DecodedWindows_YOffset_WE$');  //use YOffsets, because the value is relative to parent control
+    WVarIdx := FClkVariables.IndexOfName('$DecodedWindows_Control_Width_WE$');
+    HVarIdx := FClkVariables.IndexOfName('$DecodedWindows_Control_Height_WE$');
+  end;
+
+  if XVarIdx <> - 1 then
+    XVarValue := GetSubVarByIndex(FClkVariables.ValueFromIndex[XVarIdx], ASubVarIndex);
+
+  if YVarIdx <> - 1 then
+    YVarValue := GetSubVarByIndex(FClkVariables.ValueFromIndex[YVarIdx], ASubVarIndex);
+
+  if WVarIdx <> - 1 then
+    WVarValue := GetSubVarByIndex(FClkVariables.ValueFromIndex[WVarIdx], ASubVarIndex);
+
+  if HVarIdx <> - 1 then
+    HVarValue := GetSubVarByIndex(FClkVariables.ValueFromIndex[HVarIdx], ASubVarIndex);
+
+  X := StrToIntDef(XVarValue, 4);
+  Y := StrToIntDef(YVarValue, 4);
+  W := StrToIntDef(WVarValue, 4);
+  H := StrToIntDef(HVarValue, 4);
+end;
+
+
+procedure TfrClickerActions.SelectAreaFromDecodedVariable(ANodeData: PVarNodeRec; ASubVarIndex: Integer);
+var
+  ParentVarName: string;
+  X, Y, W, H: Integer;
+begin
+  CreateSelectionLabelsForResult;
+
+  ParentVarName := Copy(ANodeData^.VarName, 1, Pos('$[', ANodeData^.VarName));
+
+  GetDecodedVarDetails(ParentVarName, ASubVarIndex, X, Y, W, H);
+  FlblResultSelLeft.Left := X;
+  FlblResultSelTop.Top := Y;
+  FlblResultSelRight.Left := X + W;
+  FlblResultSelBottom.Top := Y + H;
+end;
+
+
 procedure TfrClickerActions.scrboxDebugBmpMouseWheel(Sender: TObject;
   Shift: TShiftState; WheelDelta: Integer; MousePos: TPoint;
   var Handled: Boolean);
@@ -1161,6 +1510,14 @@ var
 begin
   GetCursorPos(tp);
   FSearchAreaDbgImgSearchedBmpMenu.PopUp(tp.X, tp.Y);
+end;
+
+
+procedure TfrClickerActions.tmrClkVariablesTimer(Sender: TObject);
+begin
+  tmrClkVariables.Enabled := False;
+  vstVariables.RootNodeCount := FClkVariables.Count;
+  vstVariables.Repaint;
 end;
 
 
@@ -1757,7 +2114,7 @@ end;
 
 procedure TfrClickerActions.AddVariable1Click(Sender: TObject);
 begin
-  vallstVariables.Strings.Add('');
+  FClkVariables.Add('');
 end;
 
 
@@ -3470,6 +3827,124 @@ begin
     on E: Exception do
       MessageBox(Handle, PChar('EditBox is not available.' + #13#10 + E.Message), PChar(Application.MainForm.Caption), MB_ICONERROR);
   end;
+end;
+
+
+procedure TfrClickerActions.vstVariablesCreateEditor(Sender: TBaseVirtualTree;
+  Node: PVirtualNode; Column: TColumnIndex; out EditLink: IVTEditLink);
+var
+  TempStringEditLink: TStringEditLink;
+begin
+  TempStringEditLink := TStringEditLink.Create;
+  EditLink := TempStringEditLink;
+
+  FTextEditorEditBox := TEdit(TCustomEdit(TempStringEditLink.Edit));
+  FTextEditorEditBox.Font.Name := 'Tahoma';
+  FTextEditorEditBox.Font.Size := 8;
+  //FTextEditorEditBox.Height := vstVariables.DefaultNodeHeight - 3;  //set again in timer
+
+  FTextEditorEditBox.Show;
+end;
+
+
+procedure TfrClickerActions.vstVariablesEdited(Sender: TBaseVirtualTree;
+  Node: PVirtualNode; Column: TColumnIndex);
+begin
+  case Column of
+    0:
+      FClkVariables.Strings[Node^.Index] := FEditingText + '=' + FClkVariables.ValueFromIndex[Node^.Index];
+
+    1:
+      FClkVariables.Strings[Node^.Index] := FClkVariables.Names[Node^.Index] + '=' + FEditingText;
+      //do not use FClkVariables.ValueFromIndex[Node^.Index] := FEditingText;  because it deletes items
+  end;
+end;
+
+
+procedure TfrClickerActions.vstVariablesEditing(Sender: TBaseVirtualTree;
+  Node: PVirtualNode; Column: TColumnIndex; var Allowed: boolean);
+begin
+  Allowed := True;
+
+  case Column of
+    0:
+      FEditingText := FClkVariables.Names[Node^.Index];
+
+    1:
+      FEditingText := FClkVariables.ValueFromIndex[Node^.Index];
+  end;
+end;
+
+
+procedure TfrClickerActions.vstVariablesNewText(Sender: TBaseVirtualTree;
+  Node: PVirtualNode; Column: TColumnIndex; const NewText: string);
+begin
+  FEditingText := NewText;
+end;
+
+
+procedure TfrClickerActions.vstVariablesGetText(Sender: TBaseVirtualTree;
+  Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
+  var CellText: string);
+var
+  NodeData: PVarNodeRec;
+begin
+  try
+    if Node^.Parent = vstVariables.RootNode then
+    begin
+      case Column of
+        0:
+          CellText := FClkVariables.Names[Node^.Index];
+
+        1:
+          CellText := FClkVariables.ValueFromIndex[Node^.Index];
+      end;
+    end
+    else
+    begin
+      NodeData := vstVariables.GetNodeData(Node);
+      if not Assigned(NodeData) then
+      begin
+        CellText := 'N/A';
+        Exit;
+      end;
+
+      case Column of
+        0:
+          CellText := NodeData^.VarName;
+
+        1:
+          CellText := NodeData^.VarValue;
+      end;
+    end;
+  except
+    CellText := '';
+    tmrClkVariables.Enabled := True; //Trigger a repaint
+  end;
+end;
+
+
+procedure TfrClickerActions.vstVariablesMouseDown(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var
+  NodeData: PVarNodeRec;
+begin
+  vstVariables.GetHitTestInfoAt(X, Y, True, FHitInfo);
+
+  if FHitInfo.HitColumn in [0..1] then
+    if FHitInfo.HitNode^.Parent = vstVariables.RootNode then
+      tmrEditClkVariables.Enabled := True
+    else
+    begin
+      if FlblResultSelLeft = nil then
+        CreateSelectionLabelsForResult;
+
+      NodeData := vstVariables.GetNodeData(FHitInfo.HitNode);
+      if NodeData = nil then
+        Exit;
+
+      SelectAreaFromDecodedVariable(NodeData, FHitInfo.HitNode^.Index);
+    end;
 end;
 
 

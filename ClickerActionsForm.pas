@@ -1406,9 +1406,9 @@ begin
 
   TempStream := TMemoryStream.Create;
   try
-    frClickerActionsArrMain.frClickerActions.vallstVariables.Strings.SaveToStream(TempStream);
+    frClickerActionsArrMain.frClickerActions.ClkVariables.SaveToStream(TempStream);
     TempStream.Position := 0;
-    frClickerActionsArrExperiment1.frClickerActions.vallstVariables.Strings.LoadFromStream(TempStream);
+    frClickerActionsArrExperiment1.frClickerActions.ClkVariables.LoadFromStream(TempStream);
   finally
     TempStream.Free;
   end;
@@ -1451,9 +1451,9 @@ begin
 
   TempStream := TMemoryStream.Create;
   try
-    frClickerActionsArrMain.frClickerActions.vallstVariables.Strings.SaveToStream(TempStream);
+    frClickerActionsArrMain.frClickerActions.ClkVariables.SaveToStream(TempStream);
     TempStream.Position := 0;
-    frClickerActionsArrExperiment2.frClickerActions.vallstVariables.Strings.LoadFromStream(TempStream);
+    frClickerActionsArrExperiment2.frClickerActions.ClkVariables.LoadFromStream(TempStream);
   finally
     TempStream.Free;
   end;
@@ -1523,10 +1523,6 @@ begin
         NewFrame.Height := frClickerActionsArrMain.Height;
 
         ABtn.Tag := PtrInt(NewFrame);
-
-        //NewFrame.frClickerActions.vallstVariables.FixedCols := 1;
-        NewFrame.frClickerActions.vallstVariables.ColWidths[1] := 130;
-        //NewFrame.frClickerActions.vallstVariables.ColWidths[0] := 120;
 
         NewFrame.ShouldStopAtBreakPoint := AShouldStopAtBreakPoint;
         NewFrame.StackLevel := AStackLevel + 1;
@@ -1739,14 +1735,14 @@ end;
 procedure TfrmClickerActions.frClickerActionsArrExperiment1PasteDebugValuesListFromMainExecutionList1Click(
   Sender: TObject);
 begin
-  frClickerActionsArrExperiment1.frClickerActions.SetDebugVariablesFromListOfStrings(frClickerActionsArrMain.frClickerActions.vallstVariables.Strings.Text);
+  frClickerActionsArrExperiment1.frClickerActions.SetDebugVariablesFromListOfStrings(frClickerActionsArrMain.frClickerActions.ClkVariables.Text);
 end;
 
 
 procedure TfrmClickerActions.frClickerActionsArrExperiment2PasteDebugValuesListFromMainExecutionList1Click(
   Sender: TObject);
 begin
-  frClickerActionsArrExperiment2.frClickerActions.SetDebugVariablesFromListOfStrings(frClickerActionsArrMain.frClickerActions.vallstVariables.Strings.Text);
+  frClickerActionsArrExperiment2.frClickerActions.SetDebugVariablesFromListOfStrings(frClickerActionsArrMain.frClickerActions.ClkVariables.Text);
 end;
 
 
@@ -2163,6 +2159,17 @@ end;
 
 //called in server mode
 function TfrmClickerActions.ProcessServerCmd(ASyncObj: TSyncHTTPCmd): string;
+
+  function GetClkVariables87Obj: string;  //using ASyncObj, to be able to call different experiments
+  begin
+    Result := FastReplace_ReturnTo87(ASyncObj.FFrame.frClickerActions.ClkVariables.Text);
+  end;
+
+  function GetClkVariables87: string;  //probably the same as above, although ASyncObj may point to a different frame
+  begin
+    Result := FastReplace_ReturnTo87(frClickerActionsArrMain.frClickerActions.ClkVariables.Text);
+  end;
+
 var
   TabIdx: Integer;
   IsDebuggingFromClient: Boolean;
@@ -2217,7 +2224,7 @@ begin
   if ASyncObj.FCmd = '/' + CRECmd_GetExecuteCommandAtIndexResult then  //Not always called by client. It is usually called as a local request from ProcessServerCommand.
   begin
     Result := CREResp_RemoteExecResponseVar + '=' + IntToStr(Ord(ASyncObj.FFrame.RemoteExCmdResult));
-    Result := Result + #8#7 + FastReplace_ReturnTo87(ASyncObj.FFrame.frClickerActions.vallstVariables.Strings.Text);
+    Result := Result + #8#7 + GetClkVariables87Obj;
     Exit;
   end;
 
@@ -2241,7 +2248,7 @@ begin
 
   if ASyncObj.FCmd = '/' + CRECmd_GetAllReplacementVars then
   begin   //similar to CRECmd_GetExecuteCommandAtIndexResult, but return the var list, without executing an action
-    Result := FastReplace_ReturnTo87(ASyncObj.FFrame.frClickerActions.vallstVariables.Strings.Text);
+    Result := GetClkVariables87Obj;
     Exit;
   end;
 
@@ -2476,14 +2483,14 @@ begin
   if ASyncObj.FCmd = '/' + CRECmd_ExecuteClickAction then
   begin
     Result := CREResp_RemoteExecResponseVar + '=' + IntToStr(Ord(frClickerActionsArrMain.ActionExecution.ExecuteClickActionAsString(ASyncObj.FParams)));
-    Result := Result + #8#7 + FastReplace_ReturnTo87(frClickerActionsArrMain.frClickerActions.vallstVariables.Strings.Text);
+    Result := Result + #8#7 + GetClkVariables87;
     Exit;
   end;
 
   if ASyncObj.FCmd = '/' + CRECmd_ExecuteExecAppAction then
   begin
     Result := CREResp_RemoteExecResponseVar + '=' + IntToStr(Ord(frClickerActionsArrMain.ActionExecution.ExecuteExecAppActionAsString(ASyncObj.FParams)));
-    Result := Result + #8#7 + FastReplace_ReturnTo87(frClickerActionsArrMain.frClickerActions.vallstVariables.Strings.Text);
+    Result := Result + #8#7 + GetClkVariables87;
     Exit;
   end;
 
@@ -2497,7 +2504,7 @@ begin
         frClickerActionsArrMain.StopAllActionsOnDemandFromParent^ := False; //set this to avoid stopping child instances
 
       Result := CREResp_RemoteExecResponseVar + '=' + IntToStr(Ord(frClickerActionsArrMain.ActionExecution.ExecuteFindControlActionAsString(ASyncObj.FParams, False)));
-      Result := Result + #8#7 + FastReplace_ReturnTo87(frClickerActionsArrMain.frClickerActions.vallstVariables.Strings.Text);
+      Result := Result + #8#7 + GetClkVariables87;
     finally
       frClickerActionsArrMain.ExecutingActionFromRemote := False;
       frClickerActionsArrMain.FileLocationOfDepsIsMem := False;
@@ -2517,7 +2524,7 @@ begin
         frClickerActionsArrMain.StopAllActionsOnDemandFromParent^ := False; //set this to avoid stopping child instances
 
       Result := CREResp_RemoteExecResponseVar + '=' + IntToStr(Ord(frClickerActionsArrMain.ActionExecution.ExecuteFindControlActionAsString(ASyncObj.FParams, True)));
-      Result := Result + #8#7 + FastReplace_ReturnTo87(frClickerActionsArrMain.frClickerActions.vallstVariables.Strings.Text);
+      Result := Result + #8#7 + GetClkVariables87;
     finally
       frClickerActionsArrMain.ExecutingActionFromRemote := False;
       frClickerActionsArrMain.FileLocationOfDepsIsMem := False;
@@ -2529,7 +2536,7 @@ begin
   if ASyncObj.FCmd = '/' + CRECmd_ExecuteSetControlTextAction then
   begin
     Result := CREResp_RemoteExecResponseVar + '=' + IntToStr(Ord(frClickerActionsArrMain.ActionExecution.ExecuteSetControlTextActionAsString(ASyncObj.FParams)));
-    Result := Result + #8#7 + FastReplace_ReturnTo87(frClickerActionsArrMain.frClickerActions.vallstVariables.Strings.Text);
+    Result := Result + #8#7 + GetClkVariables87;
     Exit;
   end;
 
@@ -2547,7 +2554,7 @@ begin
         frClickerActionsArrMain.StopAllActionsOnDemandFromParent^ := False; //set this to avoid stopping child instances
 
       Result := CREResp_RemoteExecResponseVar + '=' + IntToStr(Ord(frClickerActionsArrMain.ActionExecution.ExecuteCallTemplateActionAsString(ASyncObj.FParams)));
-      Result := Result + #8#7 + FastReplace_ReturnTo87(frClickerActionsArrMain.frClickerActions.vallstVariables.Strings.Text);
+      Result := Result + #8#7 + GetClkVariables87;
     finally
       frClickerActionsArrMain.ExecutingActionFromRemote := False;
       frClickerActionsArrMain.FileLocationOfDepsIsMem := False;
@@ -2566,42 +2573,42 @@ begin
       frClickerActionsArrMain.StopAllActionsOnDemandFromParent^ := False; //set this to avoid stopping child instances
 
     Result := CREResp_RemoteExecResponseVar + '=' + IntToStr(Ord(frClickerActionsArrMain.ActionExecution.ExecuteSleepActionAsString(ASyncObj.FParams)));
-    Result := Result + #8#7 + FastReplace_ReturnTo87(frClickerActionsArrMain.frClickerActions.vallstVariables.Strings.Text);
+    Result := Result + #8#7 + GetClkVariables87;
     Exit;
   end;
 
   if ASyncObj.FCmd = '/' + CRECmd_ExecuteSetVarAction then
   begin
     Result := CREResp_RemoteExecResponseVar + '=' + IntToStr(Ord(frClickerActionsArrMain.ActionExecution.ExecuteSetVarActionAsString(ASyncObj.FParams)));
-    Result := Result + #8#7 + FastReplace_ReturnTo87(frClickerActionsArrMain.frClickerActions.vallstVariables.Strings.Text);
+    Result := Result + #8#7 + GetClkVariables87;
     Exit;
   end;
 
   if ASyncObj.FCmd = '/' + CRECmd_ExecuteWindowOperationsAction then
   begin
     Result := CREResp_RemoteExecResponseVar + '=' + IntToStr(Ord(frClickerActionsArrMain.ActionExecution.ExecuteWindowOperationsActionAsString(ASyncObj.FParams)));
-    Result := Result + #8#7 + FastReplace_ReturnTo87(frClickerActionsArrMain.frClickerActions.vallstVariables.Strings.Text);
+    Result := Result + #8#7 + GetClkVariables87;
     Exit;
   end;
 
   if ASyncObj.FCmd = '/' + CRECmd_ExecuteLoadSetVarFromFile then
   begin
     Result := CREResp_RemoteExecResponseVar + '=' + IntToStr(Ord(frClickerActionsArrMain.ActionExecution.ExecuteLoadSetVarFromFileActionAsString(ASyncObj.FParams)));
-    Result := Result + #8#7 + FastReplace_ReturnTo87(frClickerActionsArrMain.frClickerActions.vallstVariables.Strings.Text);
+    Result := Result + #8#7 + GetClkVariables87;
     Exit;
   end;
 
   if ASyncObj.FCmd = '/' + CRECmd_ExecuteSaveSetVarToFile then
   begin
     Result := CREResp_RemoteExecResponseVar + '=' + IntToStr(Ord(frClickerActionsArrMain.ActionExecution.ExecuteSaveSetVarToFileActionAsString(ASyncObj.FParams)));
-    Result := Result + #8#7 + FastReplace_ReturnTo87(frClickerActionsArrMain.frClickerActions.vallstVariables.Strings.Text);
+    Result := Result + #8#7 + GetClkVariables87;
     Exit;
   end;
 
   if ASyncObj.FCmd = '/' + CRECmd_ExecutePlugin then
   begin
     Result := CREResp_RemoteExecResponseVar + '=' + IntToStr(Ord(frClickerActionsArrMain.ActionExecution.ExecutePluginActionAsString(ASyncObj.FParams)));
-    Result := Result + #8#7 + FastReplace_ReturnTo87(frClickerActionsArrMain.frClickerActions.vallstVariables.Strings.Text);
+    Result := Result + #8#7 + GetClkVariables87;
     Exit;
   end;
 

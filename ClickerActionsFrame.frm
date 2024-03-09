@@ -213,32 +213,58 @@ object frClickerActions: TfrClickerActions
           Width = 120
           Caption = 'Variables / Replacements'
         end
-        object vallstVariables: TValueListEditor
-          Left = 2
-          Height = 246
+        object vstVariables: TVirtualStringTree
+          Left = 3
+          Height = 253
           Hint = 'These variables can be manually edited in place for every action. They are reset when playing all actions. Right-click for options.'
           Top = 18
-          Width = 332
+          Width = 331
           Anchors = [akTop, akLeft, akRight, akBottom]
-          DefaultColWidth = 170
-          FixedCols = 0
+          DefaultText = 'Node'
+          EditDelay = 10
+          Header.AutoSizeIndex = 0
+          Header.Columns = <          
+            item
+              MinWidth = 130
+              Position = 0
+              Text = 'Variable'
+              Width = 130
+            end          
+            item
+              MinWidth = 150
+              Position = 1
+              Text = 'Value'
+              Width = 150
+            end>
+          Header.Height = 21
+          Header.Options = [hoColumnResize, hoDrag, hoShowSortGlyphs, hoVisible]
+          Header.Style = hsFlatButtons
           ParentShowHint = False
           PopupMenu = pmDebugVars
-          RowCount = 2
-          ScrollBars = ssVertical
           ShowHint = True
           TabOrder = 0
-          DisplayOptions = [doColumnTitles, doKeyColFixed]
-          KeyOptions = [keyEdit, keyUnique]
-          TitleCaptions.Strings = (
-            'Variable'
-            'Value'
-          )
-          OnValidate = vallstVariablesValidate
-          ColWidths = (
-            170
-            162
-          )
+          TreeOptions.AutoOptions = [toAutoDropExpand, toAutoScrollOnExpand, toAutoSort, toAutoTristateTracking, toDisableAutoscrollOnFocus, toAutoChangeScale, toDisableAutoscrollOnEdit]
+          TreeOptions.MiscOptions = [toAcceptOLEDrop, toEditable, toFullRepaintOnResize, toInitOnSave, toToggleOnDblClick, toWheelPanning]
+          TreeOptions.PaintOptions = [toShowButtons, toShowDropmark, toShowHorzGridLines, toShowRoot, toShowTreeLines, toShowVertGridLines, toThemeAware, toUseBlendedImages, toFullVertGridLines]
+          TreeOptions.SelectionOptions = [toFullRowSelect]
+          OnCreateEditor = vstVariablesCreateEditor
+          OnEdited = vstVariablesEdited
+          OnEditing = vstVariablesEditing
+          OnGetText = vstVariablesGetText
+          OnMouseDown = vstVariablesMouseDown
+          OnNewText = vstVariablesNewText
+        end
+        object chkDecodeVariables: TCheckBox
+          Left = 160
+          Height = 17
+          Hint = 'When checked, all variables, containing ASCII4 ASCII5 (#4#5) characters, are decoded as list of values and appear as subvariables.'#13#10'When a subvariable, with a numeric value, is selected, multiple selection lines appear on the resulted bitmap.'#13#10'The following variables are decoded for selecting an area on the resulted bitmap:'#13#10#13#10'$AllControl_XOffsets$, $AllControl_YOffsets$, $AllControl_Lefts$, $AllControl_Tops$ etc'#13#10'$DecodedWindows_XOffset$, $DecodedWindows_YOffset$, $DecodedWindows_Control_Lefts$, $DecodedWindows_Control_Tops$ etc'#13#10'$DecodedWindows_XOffset_WE$, $DecodedWindows_YOffset_WE$, $DecodedWindows_Control_Lefts_WE$, $DecodedWindows_Control_Tops_WE$ etc'
+          Top = 0
+          Width = 100
+          Caption = 'Decode variables'
+          ParentShowHint = False
+          ShowHint = True
+          TabOrder = 1
+          OnChange = chkDecodeVariablesChange
         end
       end
       object pnlResults: TPanel
@@ -1607,5 +1633,19 @@ object frClickerActions: TfrClickerActions
       311D59493A5157D2395353E8C3CFCDBBB03D18C53C615DD603FB3473AE39AC93
       BEEF57AF7F0030FB22C7
     }
+  end
+  object tmrClkVariables: TTimer
+    Enabled = False
+    Interval = 1
+    OnTimer = tmrClkVariablesTimer
+    Left = 88
+    Top = 168
+  end
+  object tmrEditClkVariables: TTimer
+    Enabled = False
+    Interval = 10
+    OnTimer = tmrEditClkVariablesTimer
+    Left = 85
+    Top = 79
   end
 end

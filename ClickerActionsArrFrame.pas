@@ -695,7 +695,7 @@ implementation
 
 
 uses
-  ValEdit, Math, ClickerTemplates, BitmapConv,
+  Math, ClickerTemplates, BitmapConv,
   BitmapProcessing, Clipbrd, ClickerConditionEditorForm, ClickerActionsClient,
   ClickerTemplateNotesForm, AutoCompleteForm, ClickerExtraUtils,
   ClickerActionPluginLoader, ClickerActionPlugins;
@@ -720,7 +720,7 @@ const
 var
   i: Integer;
 begin
-  AListOfVars.AddStrings(frClickerActions.vallstVariables.Cols[0]);
+  AListOfVars.AddStrings(frClickerActions.ClkVariables);
   if AListOfVars.Count > 0 then
     if AListOfVars[0] = 'Variable' then
       AListOfVars.Delete(0);
@@ -1038,7 +1038,7 @@ begin
   CreateRemainingUIComponents;
 
   FActionExecution := TActionExecution.Create;
-  FActionExecution.ClickerVars := frClickerActions.vallstVariables.Strings;
+  FActionExecution.ClickerVars := frClickerActions.ClkVariables;
   FActionExecution.StopAllActionsOnDemand := @FStopAllActionsOnDemand;
   FActionExecution.StopAllActionsOnDemandFromParent := FStopAllActionsOnDemandFromParent;
   FActionExecution.OnAddToLog := AddToLog;
@@ -1178,6 +1178,9 @@ begin
 
   SplitterLeft := AIni.ReadInteger(ASection, 'HorizSplitterLeftResults.' + AIndentSuffix, frClickerActions.pnlHorizSplitterResults.Left);
   frClickerActions.ResizeFrameSectionsBySplitterResults(SplitterLeft);
+
+  frClickerActions.vstVariables.Header.Columns.Items[0].Width := AIni.ReadInteger(ASection, 'Variables_0.' + AIndentSuffix, frClickerActions.vstVariables.Header.Columns.Items[0].Width);
+  frClickerActions.vstVariables.Header.Columns.Items[1].Width := AIni.ReadInteger(ASection, 'Variables_1.' + AIndentSuffix, frClickerActions.vstVariables.Header.Columns.Items[1].Width);
 end;
 
 
@@ -1195,6 +1198,9 @@ begin
   AIni.WriteInteger(ASection, 'VertSplitterTop.' + AIndentSuffix, pnlVertSplitter.Top);
   AIni.WriteInteger(ASection, 'HorizSplitterLeft.' + AIndentSuffix, frClickerActions.pnlHorizSplitter.Left);
   AIni.WriteInteger(ASection, 'HorizSplitterLeftResults.' + AIndentSuffix, frClickerActions.pnlHorizSplitterResults.Left);
+
+  AIni.WriteInteger(ASection, 'Variables_0.' + AIndentSuffix, frClickerActions.vstVariables.Header.Columns.Items[0].Width);
+  AIni.WriteInteger(ASection, 'Variables_1.' + AIndentSuffix, frClickerActions.vstVariables.Header.Columns.Items[1].Width);
 end;
 
 
@@ -1454,7 +1460,7 @@ begin
   if Node = nil then
     MessageBox(Handle, 'No action is selected. Please select a FindSubControl action.', PChar(Application.Title), MB_ICONERROR);
 
-  VarsBkp := frClickerActions.vallstVariables.Strings.Text;
+  VarsBkp := frClickerActions.ClkVariables.Text;
   BkpErrorLevel := FClkActions[Node^.Index].FindControlOptions.ColorError;
   BkpErrorCount := FClkActions[Node^.Index].FindControlOptions.AllowedColorErrorCount;
   BkpFastSearchErrorCount := FClkActions[Node^.Index].FindControlOptions.FastSearchAllowedColorErrorCount;
@@ -1498,7 +1504,7 @@ begin
       AFoundArea.Height := -1;
     end;
   finally
-    frClickerActions.vallstVariables.Strings.Text := VarsBkp;
+    frClickerActions.ClkVariables.Text := VarsBkp;
     FClkActions[Node^.Index].FindControlOptions.ColorError := BkpErrorLevel;
     FClkActions[Node^.Index].FindControlOptions.AllowedColorErrorCount := BkpErrorCount;
     FClkActions[Node^.Index].FindControlOptions.FastSearchAllowedColorErrorCount := BkpFastSearchErrorCount;
@@ -1580,7 +1586,7 @@ end;
 
 procedure TfrClickerActionsArr.HandleOnBackupVars(AAllVars: TStringList);
 begin
-  AAllVars.AddStrings(frClickerActions.vallstVariables.Strings);
+  AAllVars.AddStrings(frClickerActions.ClkVariables);
 end;
 
 
@@ -1920,7 +1926,7 @@ end;
 
 function TfrClickerActionsArr.GetActionVarValue(VarName: string): string;
 begin
-  Result := frClickerActions.vallstVariables.Values[VarName];
+  Result := frClickerActions.ClkVariables.Values[VarName];
 end;
 
 
@@ -1963,7 +1969,7 @@ end;
 
 procedure TfrClickerActionsArr.SetActionVarValue(VarName, VarValue: string);
 begin
-  frClickerActions.vallstVariables.Values[VarName] := FastReplace_ReturnTo68(VarValue);
+  frClickerActions.ClkVariables.Values[VarName] := FastReplace_ReturnTo68(VarValue);
   if VarName = '$ExecAction_Err$' then
     AddToLog(DateTimeToStr(Now) + '  ' + VarValue);
 end;
@@ -2056,7 +2062,7 @@ begin
     acWindowOperations: Result := FActionExecution.ExecuteWindowOperationsAction(FClkActions[AActionIndex].WindowOperationsOptions);
     acLoadSetVarFromFile: Result := FActionExecution.ExecuteLoadSetVarFromFileAction(FClkActions[AActionIndex].LoadSetVarFromFileOptions);
     acSaveSetVarToFile: Result := FActionExecution.ExecuteSaveSetVarToFileAction(FClkActions[AActionIndex].SaveSetVarToFileOptions);
-    acPlugin: Result := FActionExecution.ExecutePluginAction(FClkActions[AActionIndex].PluginOptions, @FClkActions, frClickerActions.vallstVariables.Strings, ResolveTemplatePath(FClkActions[AActionIndex].PluginOptions.FileName), FContinuePlayingBySteppingInto, {FShouldStopAtBreakPoint replaced by FDebugging} FDebugging);
+    acPlugin: Result := FActionExecution.ExecutePluginAction(FClkActions[AActionIndex].PluginOptions, @FClkActions, frClickerActions.ClkVariables, ResolveTemplatePath(FClkActions[AActionIndex].PluginOptions.FileName), FContinuePlayingBySteppingInto, {FShouldStopAtBreakPoint replaced by FDebugging} FDebugging);
   end;  //case
 end;
 
@@ -2147,7 +2153,7 @@ begin
   VarReplacements := TStringList.Create;
   try
     try
-      VarReplacements.AddStrings(frClickerActions.vallstVariables.Strings); //init with something, in case the server can't be reached
+      VarReplacements.AddStrings(frClickerActions.ClkVariables); //init with something, in case the server can't be reached
 
       if FContinuePlayingBySteppingInto {AIsDebugging} then
         if FClkActions[AActionIndex].ActionOptions.Action = acPlugin then
@@ -2164,8 +2170,8 @@ begin
       try
         Result := LocalOnExecuteRemoteActionAtIndex(AActionIndex, FStackLevel, VarReplacements, FContinuePlayingBySteppingInto);
 
-        frClickerActions.vallstVariables.Strings.Clear;
-        frClickerActions.vallstVariables.Strings.AddStrings(VarReplacements);
+        frClickerActions.ClkVariables.Clear;
+        frClickerActions.ClkVariables.AddStrings(VarReplacements);
       finally
         if FContinuePlayingBySteppingInto {AIsDebugging} then
           if FClkActions[AActionIndex].ActionOptions.Action = acPlugin then
@@ -2944,7 +2950,7 @@ begin
     for i := 0 to OverridenValues.Count - 1 do
     begin
       Key := Copy(OverridenValues.Strings[i], 1, Pos('=', OverridenValues.Strings[i]) - 1);
-      frClickerActions.vallstVariables.Values[Key] := Copy(OverridenValues.Strings[i], Pos('=', OverridenValues.Strings[i]) + 1, MaxInt);
+      frClickerActions.ClkVariables.Values[Key] := Copy(OverridenValues.Strings[i], Pos('=', OverridenValues.Strings[i]) + 1, MaxInt);
     end;
   end;
 
@@ -2952,7 +2958,7 @@ begin
   FStopAllActionsOnDemand := False;
   try
     Result := PlayAllActions(IsDebugging);
-    ListOfVariables.Text := frClickerActions.vallstVariables.Strings.Text;  //pass all variables on to next template
+    ListOfVariables.Text := frClickerActions.ClkVariables.Text;  //pass all variables on to next template
   finally
     FPlaying := False;
     //FStopAllActionsOnDemand := False;     //not sure if needed
@@ -2962,8 +2968,8 @@ end;
 
 procedure TfrClickerActionsArr.SetVariables(ListOfVariables: TStrings);
 begin
-  frClickerActions.vallstVariables.Strings.Clear;
-  frClickerActions.vallstVariables.Strings.AddStrings(ListOfVariables);  
+  frClickerActions.ClkVariables.Clear;
+  frClickerActions.ClkVariables.AddStrings(ListOfVariables);
 end;
 
 
@@ -4594,12 +4600,12 @@ var
 begin
   BackupList := TStringList.Create;
   try
-    BackupList.Text := frClickerActions.vallstVariables.Strings.Text;
+    BackupList.Text := frClickerActions.ClkVariables.Text;
     try
       PrepareFilesInServer;
       PlaySelected;
     finally
-      frClickerActions.vallstVariables.Strings.Text := BackupList.Text;
+      frClickerActions.ClkVariables.Text := BackupList.Text;
     end;
   finally
     BackupList.Free;
@@ -6312,9 +6318,6 @@ begin
   FContinuePlayingAll := False;
   FContinuePlayingNext := False;
   FContinuePlayingBySteppingInto := False;
-
-  //frClickerActions.vallstVariables.FixedCols := 1;  let it be editable
-  frClickerActions.vallstVariables.ColWidths[1] := 130;
 
   frClickerActions.OnControlsModified := ClickerActionsFrameOnControlsModified;
   FPreviousSelectedNode := nil;
