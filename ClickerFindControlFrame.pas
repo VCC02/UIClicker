@@ -209,6 +209,7 @@ type
     lblReservedSpaceForDbgImg: TLabel;
     lstMatchBitmapFiles: TListBox;
     lstMatchPrimitiveFiles: TListBox;
+    MenuItemSetToSystemMenu: TMenuItem;
     MenuItem_CopyTextAndClassFromRemoteScreenWindow: TMenuItem;
     MenuItem_CopyTextAndClassFromWinInterpWindow: TMenuItem;
     MenuItem_CopyTextAndClassFromPreviewWindow: TMenuItem;
@@ -244,6 +245,7 @@ type
     procedure chkShowBMPFileDbgImgClick(Sender: TObject);
     procedure chkShowBMPTextDbgImgClick(Sender: TObject);
     procedure chkShowGridOnBMPPreviewChange(Sender: TObject);
+    procedure MenuItemSetToSystemMenuClick(Sender: TObject);
     procedure PageControlMatchChange(Sender: TObject);
     procedure pnlDragMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
@@ -633,9 +635,10 @@ type
   end;
 
 const
-  CPreviewWindow = 'Preview';
-  CWinInterpWindow = 'WinInterp';
-  CRemoteScreenWindow = 'RemoteScreen';
+  CExtProvPreviewWindow = 'Preview';
+  CExtProvWinInterpWindow = 'WinInterp';
+  CExtProvRemoteScreenWindow = 'RemoteScreen';
+  CExtProvSystemMenu = 'SystemMenu';
 
 
 implementation
@@ -1880,21 +1883,27 @@ end;
 procedure TfrClickerFindControl.CopyTextAndClassFromPreviewWindowClick(
   Sender: TObject);
 begin
-  CopyTextAndClassFromExternalProvider(CPreviewWindow);
+  CopyTextAndClassFromExternalProvider(CExtProvPreviewWindow);
 end;
 
 
 procedure TfrClickerFindControl.CopyTextAndClassFromRemoteScreenWindowClick(
   Sender: TObject);
 begin
-  CopyTextAndClassFromExternalProvider(CRemoteScreenWindow);
+  CopyTextAndClassFromExternalProvider(CExtProvRemoteScreenWindow);
 end;
 
 
 procedure TfrClickerFindControl.CopyTextAndClassFromWinInterpWindowClick(
   Sender: TObject);
 begin
-  CopyTextAndClassFromExternalProvider(CWinInterpWindow);
+  CopyTextAndClassFromExternalProvider(CExtProvWinInterpWindow);
+end;
+
+
+procedure TfrClickerFindControl.MenuItemSetToSystemMenuClick(Sender: TObject);
+begin
+  CopyTextAndClassFromExternalProvider(CExtProvSystemMenu);
 end;
 
 

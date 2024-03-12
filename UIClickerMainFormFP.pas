@@ -315,24 +315,31 @@ end;
 
 procedure TfrmUIClickerMainForm.HandleOnCopyControlTextAndClassFromMainWindow(ACompProvider: string; out AControlText, AControlClass: string);
 begin
-  if ACompProvider = CPreviewWindow then
+  if ACompProvider = CExtProvPreviewWindow then
   begin
     AControlText := frmClickerControlPreview.lbeText.Text;
     AControlClass := frmClickerControlPreview.lbeClass.Text;
     Exit;
   end;
 
-  if ACompProvider = CWinInterpWindow then
+  if ACompProvider = CExtProvWinInterpWindow then
   begin
     AControlText := frmClickerWinInterp.SelectedComponentText;
     AControlClass := frmClickerWinInterp.SelectedComponentClassName;
     Exit;
   end;
 
-  if ACompProvider = CRemoteScreenWindow then
+  if ACompProvider = CExtProvRemoteScreenWindow then
   begin
     AControlText := frmClickerRemoteScreen.SelectedComponentText;
     AControlClass := frmClickerRemoteScreen.SelectedComponentClassName;
+    Exit;
+  end;
+
+  if ACompProvider = CExtProvSystemMenu then
+  begin
+    AControlText := '';
+    AControlClass := '#32768';
     Exit;
   end;
 

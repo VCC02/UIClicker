@@ -211,8 +211,16 @@ type
 
     procedure imgDebugBmpMouseEnter(Sender: TObject);
     procedure imgDebugBmpMouseLeave(Sender: TObject);
-    procedure imgDebugBmpMouseMove(Sender: TObject; Shift: TShiftState; X,
-      Y: Integer);
+    procedure imgDebugBmpMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+
+    procedure FlblResultSelVertMouseEnter(Sender: TObject);
+    procedure FlblResultSelVertMouseLeave(Sender: TObject);
+    procedure FlblResultSelVertMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+
+    procedure FlblResultSelHorizMouseEnter(Sender: TObject);
+    procedure FlblResultSelHorizMouseLeave(Sender: TObject);
+    procedure FlblResultSelHorizMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+
     procedure chkShowDebugGridClick(Sender: TObject);
     procedure MenuItemSaveDebugImageClick(Sender: TObject);
     procedure MenuItemCopyDebugImageClick(Sender: TObject);
@@ -241,6 +249,7 @@ type
     procedure MenuItem_CopyTextAndClassFromPreviewWindowClick(Sender: TObject);
     procedure MenuItem_CopyTextAndClassFromWinInterpWindowClick(Sender: TObject);
     procedure MenuItem_CopyTextAndClassFromRemoteScreenWindowClick(Sender: TObject);
+    procedure MenuItem_SetTextAndClassAsSystemMenuClick(Sender: TObject);
 
     procedure MenuItem_AddBMPFilesToPropertyListClick(Sender: TObject);
     procedure MenuItem_RemoveAllBMPFilesFromPropertyListClick(Sender: TObject);
@@ -262,7 +271,10 @@ type
     procedure SavePrimitivesFileFromMenu(AFileIndex: Integer);
 
     procedure MenuItem_AddFontProfileToPropertyListClick(Sender: TObject);
+    procedure MenuItem_AddFontProfileWithAntialiasedAndClearTypeToPropertyListClick(Sender: TObject);
+    procedure MenuItem_AddFontProfileWithNonAntialiasedAndAntialiasedAndClearTypeToPropertyListClick(Sender: TObject);
     procedure MenuItem_RemoveFontProfileFromPropertyListClick(Sender: TObject);
+    procedure MenuItem_DuplicateFontProfileClick(Sender: TObject);
     procedure MenuItem_MoveFontProfileUpInPropertyListClick(Sender: TObject);
     procedure MenuItem_MoveFontProfileDownInPropertyListClick(Sender: TObject);
 
@@ -449,6 +461,9 @@ type
     procedure SetActionTimeoutToValue(AValue: Integer);
     function GetIndexOfFirstModifiedPmtvFile: Integer;
     function GetIndexOfCurrentlyEditingPrimitivesFile: Integer;
+
+    function AddFontProfileToActionFromMenu(AForegroundColor, ABackgroundColor, AFontName: string; AFontSize: Integer; AFontQuality: TFontQuality): Integer;
+    function GetUniqueProfileName(n: Integer): string;
 
     procedure HandleOnUpdateBitmapAlgorithmSettings;
     procedure HandleOnTriggerOnControlsModified;
@@ -1020,6 +1035,64 @@ begin
 end;
 
 
+procedure TfrClickerActions.FlblResultSelVertMouseEnter(Sender: TObject);
+var
+  tp: TPoint;
+begin
+  imgDebugBmp.ShowHint := False;
+  GetCursorPos(tp);
+  ShowZoom(tp.X + 50, tp.Y + 50);
+end;
+
+
+procedure TfrClickerActions.FlblResultSelVertMouseLeave(Sender: TObject);
+begin
+  imgDebugBmp.ShowHint := True;
+  HideZoom;
+end;
+
+
+procedure TfrClickerActions.FlblResultSelVertMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+begin
+  lblDebugBitmapXMouseOffset.Caption := 'mx: ' + IntToStr((Sender as TLabel).Left);
+  lblDebugBitmapYMouseOffset.Caption := 'my: ' + IntToStr(Y);
+  SetLabelsFromMouseOverExecDbgImgPixelColor(imgDebugBmp.Canvas.Pixels[X, Y]);
+
+  FCurrentMousePosOnPreviewImg.X := (Sender as TLabel).Left;
+  FCurrentMousePosOnPreviewImg.Y := Y;
+  tmrDrawZoom.Enabled := True;
+end;
+
+
+procedure TfrClickerActions.FlblResultSelHorizMouseEnter(Sender: TObject);
+var
+  tp: TPoint;
+begin
+  imgDebugBmp.ShowHint := False;
+  GetCursorPos(tp);
+  ShowZoom(tp.X + 50, tp.Y + 50);
+end;
+
+
+procedure TfrClickerActions.FlblResultSelHorizMouseLeave(Sender: TObject);
+begin
+  imgDebugBmp.ShowHint := True;
+  HideZoom;
+end;
+
+
+procedure TfrClickerActions.FlblResultSelHorizMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+begin
+  lblDebugBitmapXMouseOffset.Caption := 'mx: ' + IntToStr(X);
+  lblDebugBitmapYMouseOffset.Caption := 'my: ' + IntToStr((Sender as TLabel).Top);
+  SetLabelsFromMouseOverExecDbgImgPixelColor(imgDebugBmp.Canvas.Pixels[X, Y]);
+
+  FCurrentMousePosOnPreviewImg.X := X;
+  FCurrentMousePosOnPreviewImg.Y := (Sender as TLabel).Top;
+  tmrDrawZoom.Enabled := True;
+end;
+
+
 procedure TfrClickerActions.rdgrpSearchForControlModeClick(Sender: TObject);
 begin
   TriggerOnControlsModified;
@@ -1343,15 +1416,30 @@ begin
     FlblResultSelRight.Color := clMaroon;
     FlblResultSelBottom.Color := clMaroon;
 
-    FlblResultSelBottom.Visible := True;
+    FlblResultSelLeft.Visible := True;
     FlblResultSelTop.Visible := True;
     FlblResultSelRight.Visible := True;
     FlblResultSelBottom.Visible := True;
 
-    FlblResultSelBottom.BringToFront;
+    FlblResultSelLeft.BringToFront;
     FlblResultSelTop.BringToFront;
     FlblResultSelRight.BringToFront;
     FlblResultSelBottom.BringToFront;
+
+    FlblResultSelLeft.OnMouseEnter := FlblResultSelVertMouseEnter;
+    FlblResultSelTop.OnMouseEnter := FlblResultSelHorizMouseEnter;
+    FlblResultSelRight.OnMouseEnter := FlblResultSelVertMouseEnter;
+    FlblResultSelBottom.OnMouseEnter := FlblResultSelHorizMouseEnter;
+
+    FlblResultSelLeft.OnMouseLeave := FlblResultSelVertMouseLeave;
+    FlblResultSelTop.OnMouseLeave := FlblResultSelHorizMouseLeave;
+    FlblResultSelRight.OnMouseLeave := FlblResultSelVertMouseLeave;
+    FlblResultSelBottom.OnMouseLeave := FlblResultSelHorizMouseLeave;
+
+    FlblResultSelLeft.OnMouseMove := FlblResultSelVertMouseMove;
+    FlblResultSelTop.OnMouseMove := FlblResultSelHorizMouseMove;
+    FlblResultSelRight.OnMouseMove := FlblResultSelVertMouseMove;
+    FlblResultSelBottom.OnMouseMove := FlblResultSelHorizMouseMove;
   end;
 end;
 
@@ -3003,21 +3091,28 @@ end;
 
 procedure TfrClickerActions.MenuItem_CopyTextAndClassFromPreviewWindowClick(Sender: TObject);
 begin
-  CopyTextAndClassFromExternalProvider(CPreviewWindow);
+  CopyTextAndClassFromExternalProvider(CExtProvPreviewWindow);
   FreeOIPopupMenu(Sender);
 end;
 
 
 procedure TfrClickerActions.MenuItem_CopyTextAndClassFromWinInterpWindowClick(Sender: TObject);
 begin
-  CopyTextAndClassFromExternalProvider(CWinInterpWindow);
+  CopyTextAndClassFromExternalProvider(CExtProvWinInterpWindow);
   FreeOIPopupMenu(Sender);
 end;
 
 
 procedure TfrClickerActions.MenuItem_CopyTextAndClassFromRemoteScreenWindowClick(Sender: TObject);
 begin
-  CopyTextAndClassFromExternalProvider(CRemoteScreenWindow);
+  CopyTextAndClassFromExternalProvider(CExtProvRemoteScreenWindow);
+  FreeOIPopupMenu(Sender);
+end;
+
+
+procedure TfrClickerActions.MenuItem_SetTextAndClassAsSystemMenuClick(Sender: TObject);
+begin
+  CopyTextAndClassFromExternalProvider(CExtProvSystemMenu);
   FreeOIPopupMenu(Sender);
 end;
 
@@ -3564,52 +3659,64 @@ begin
 end;
 
 
+function TfrClickerActions.GetUniqueProfileName(n: Integer): string;
+var
+  AttemptCount: Integer;
+begin
+  Result := 'Profile [' + IntToStr(n) + ']';
+
+  AttemptCount := 0;
+  while frClickerFindControl.GetFontProfileIndexByName(Result) <> -1 do
+  begin
+    Result := Result + 'A';
+    Inc(AttemptCount);
+
+    if AttemptCount > 1000 then
+      raise Exception.Create('Can''t generate a new font profile name.');
+  end;
+end;
+
+
+//Returns the index of the new item  (i.e. the previous length of MatchBitmapText array.
+function TfrClickerActions.AddFontProfileToActionFromMenu(AForegroundColor, ABackgroundColor, AFontName: string; AFontSize: Integer; AFontQuality: TFontQuality): Integer;
+var
+  n: Integer;
+begin
+  n := Length(FEditingAction^.FindControlOptions.MatchBitmapText);
+  SetLength(FEditingAction^.FindControlOptions.MatchBitmapText, n + 1);
+
+  FEditingAction^.FindControlOptions.MatchBitmapText[n].ForegroundColor := AForegroundColor;
+  FEditingAction^.FindControlOptions.MatchBitmapText[n].BackgroundColor := ABackgroundColor;
+  FEditingAction^.FindControlOptions.MatchBitmapText[n].FontName := AFontName;
+  FEditingAction^.FindControlOptions.MatchBitmapText[n].FontSize := AFontSize;
+  FEditingAction^.FindControlOptions.MatchBitmapText[n].FontQualityReplacement := '';
+  FEditingAction^.FindControlOptions.MatchBitmapText[n].FontQuality := AFontQuality;
+  FEditingAction^.FindControlOptions.MatchBitmapText[n].FontQualityUsesReplacement := False;
+  FEditingAction^.FindControlOptions.MatchBitmapText[n].Bold := False;
+  FEditingAction^.FindControlOptions.MatchBitmapText[n].Italic := False;
+  FEditingAction^.FindControlOptions.MatchBitmapText[n].Underline := False;
+  FEditingAction^.FindControlOptions.MatchBitmapText[n].StrikeOut := False;
+  FEditingAction^.FindControlOptions.MatchBitmapText[n].CropLeft := '0';
+  FEditingAction^.FindControlOptions.MatchBitmapText[n].CropTop := '0';
+  FEditingAction^.FindControlOptions.MatchBitmapText[n].CropRight := '0';
+  FEditingAction^.FindControlOptions.MatchBitmapText[n].CropBottom := '0';
+  FEditingAction^.FindControlOptions.MatchBitmapText[n].ProfileName := GetUniqueProfileName(n);
+
+  frClickerFindControl.AddNewFontProfile(FEditingAction^.FindControlOptions.MatchBitmapText[n]);
+  BuildFontColorIconsList;
+
+  Result := n;
+end;
+
+
 procedure TfrClickerActions.MenuItem_AddFontProfileToPropertyListClick(Sender: TObject);
 var
   MenuData: POIMenuItemData;
   n: Integer;
-
-  function GetUniqueProfileName: string;
-  var
-    AttemptCount: Integer;
-  begin
-    Result := 'Profile [' + IntToStr(n) + ']';
-
-    AttemptCount := 0;
-    while frClickerFindControl.GetFontProfileIndexByName(Result) <> -1 do
-    begin
-      Result := Result + 'A';
-      Inc(AttemptCount);
-
-      if AttemptCount > 1000 then
-        raise Exception.Create('Can''t generate a new font profile name.');
-    end;
-  end;
 begin
   MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
   try
-    n := Length(FEditingAction^.FindControlOptions.MatchBitmapText);
-    SetLength(FEditingAction^.FindControlOptions.MatchBitmapText, n + 1);
-
-    FEditingAction^.FindControlOptions.MatchBitmapText[n].ForegroundColor := '$Color_Window$';
-    FEditingAction^.FindControlOptions.MatchBitmapText[n].BackgroundColor := '$Color_Highlight$';
-    FEditingAction^.FindControlOptions.MatchBitmapText[n].FontName := 'Tahoma';
-    FEditingAction^.FindControlOptions.MatchBitmapText[n].FontSize := 8;
-    FEditingAction^.FindControlOptions.MatchBitmapText[n].FontQualityReplacement := '';
-    FEditingAction^.FindControlOptions.MatchBitmapText[n].FontQuality := fqNonAntialiased;
-    FEditingAction^.FindControlOptions.MatchBitmapText[n].FontQualityUsesReplacement := False;
-    FEditingAction^.FindControlOptions.MatchBitmapText[n].Bold := False;
-    FEditingAction^.FindControlOptions.MatchBitmapText[n].Italic := False;
-    FEditingAction^.FindControlOptions.MatchBitmapText[n].Underline := False;
-    FEditingAction^.FindControlOptions.MatchBitmapText[n].StrikeOut := False;
-    FEditingAction^.FindControlOptions.MatchBitmapText[n].CropLeft := '0';
-    FEditingAction^.FindControlOptions.MatchBitmapText[n].CropTop := '0';
-    FEditingAction^.FindControlOptions.MatchBitmapText[n].CropRight := '0';
-    FEditingAction^.FindControlOptions.MatchBitmapText[n].CropBottom := '0';
-    FEditingAction^.FindControlOptions.MatchBitmapText[n].ProfileName := GetUniqueProfileName;
-
-    frClickerFindControl.AddNewFontProfile(FEditingAction^.FindControlOptions.MatchBitmapText[n]);
-    BuildFontColorIconsList;
+    n := AddFontProfileToActionFromMenu('$Color_Window$', '$Color_Highlight$', 'Tahoma', 8, fqNonAntialiased);
 
     FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex);
     TriggerOnControlsModified;
@@ -3621,6 +3728,52 @@ begin
     Dispose(MenuData);
   end;
 end;
+
+
+procedure TfrClickerActions.MenuItem_AddFontProfileWithAntialiasedAndClearTypeToPropertyListClick(Sender: TObject);
+var
+  MenuData: POIMenuItemData;
+  n: Integer;
+begin
+  MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
+  try
+    n := AddFontProfileToActionFromMenu('$Color_WindowText$', '$Color_Btnface$', 'Segoe UI', 9, fqAntialiased);
+    n := AddFontProfileToActionFromMenu('$Color_WindowText$', '$Color_Btnface$', 'Segoe UI', 9, fqCleartype);
+
+    FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex);
+    TriggerOnControlsModified;
+
+    FOIFrame.SelectNode(CPropertyItemLevel, MenuData^.CategoryIndex, MenuData^.PropertyIndex, n * CPropCount_FindControlMatchBitmapText);
+    FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, MenuData^.CategoryIndex, MenuData^.PropertyIndex, n * CPropCount_FindControlMatchBitmapText, True, True);
+    FOIFrame.FocusOI;
+  finally
+    Dispose(MenuData);
+  end;
+end;
+
+
+procedure TfrClickerActions.MenuItem_AddFontProfileWithNonAntialiasedAndAntialiasedAndClearTypeToPropertyListClick(Sender: TObject);
+var
+  MenuData: POIMenuItemData;
+  n: Integer;
+begin
+  MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
+  try
+    n := AddFontProfileToActionFromMenu('$Color_WindowText$', '$Color_Btnface$', 'Segoe UI', 9, fqNonAntialiased);
+    n := AddFontProfileToActionFromMenu('$Color_WindowText$', '$Color_Btnface$', 'Segoe UI', 9, fqAntialiased);
+    n := AddFontProfileToActionFromMenu('$Color_WindowText$', '$Color_Btnface$', 'Segoe UI', 9, fqCleartype);
+
+    FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex);
+    TriggerOnControlsModified;
+
+    FOIFrame.SelectNode(CPropertyItemLevel, MenuData^.CategoryIndex, MenuData^.PropertyIndex, n * CPropCount_FindControlMatchBitmapText);
+    FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, MenuData^.CategoryIndex, MenuData^.PropertyIndex, n * CPropCount_FindControlMatchBitmapText, True, True);
+    FOIFrame.FocusOI;
+  finally
+    Dispose(MenuData);
+  end;
+end;
+
 
 
 procedure TfrClickerActions.MenuItem_RemoveFontProfileFromPropertyListClick(Sender: TObject);
@@ -3647,6 +3800,34 @@ begin
 
     frClickerFindControl.RemoveFontProfileByIndex(MenuData^.PropertyItemIndex);
     TriggerOnControlsModified;
+  finally
+    Dispose(MenuData);
+  end;
+end;
+
+
+procedure TfrClickerActions.MenuItem_DuplicateFontProfileClick(Sender: TObject);
+var
+  MenuData: POIMenuItemData;
+  n: Integer;
+begin
+  MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
+  try
+    n := Length(FEditingAction^.FindControlOptions.MatchBitmapText);
+    SetLength(FEditingAction^.FindControlOptions.MatchBitmapText, n + 1);
+
+    FEditingAction^.FindControlOptions.MatchBitmapText[n] := FEditingAction^.FindControlOptions.MatchBitmapText[MenuData^.PropertyItemIndex];
+    FEditingAction^.FindControlOptions.MatchBitmapText[n].ProfileName := GetUniqueProfileName(n);
+
+    frClickerFindControl.AddNewFontProfile(FEditingAction^.FindControlOptions.MatchBitmapText[n]);
+    BuildFontColorIconsList;
+
+    FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex);
+    TriggerOnControlsModified;
+
+    FOIFrame.SelectNode(CPropertyItemLevel, MenuData^.CategoryIndex, MenuData^.PropertyIndex, n * CPropCount_FindControlMatchBitmapText);
+    FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, MenuData^.CategoryIndex, MenuData^.PropertyIndex, n * CPropCount_FindControlMatchBitmapText, True, True);
+    FOIFrame.FocusOI;
   finally
     Dispose(MenuData);
   end;
@@ -5664,6 +5845,9 @@ begin
             AddMenuItemToPopupMenu(FOIEditorMenu, 'Copy values from remote screen', MenuItem_CopyTextAndClassFromRemoteScreenWindowClick,
               ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
 
+            AddMenuItemToPopupMenu(FOIEditorMenu, 'Set to system menu', MenuItem_SetTextAndClassAsSystemMenuClick,
+              ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+
             GetCursorPos(tp);
             FOIEditorMenu.PopUp(tp.X, tp.Y);
           end;
@@ -5674,7 +5858,13 @@ begin
               begin
                 FOIEditorMenu.Items.Clear;
 
-                AddMenuItemToPopupMenu(FOIEditorMenu, 'Add font profile', MenuItem_AddFontProfileToPropertyListClick,
+                AddMenuItemToPopupMenu(FOIEditorMenu, 'Add default font profile', MenuItem_AddFontProfileToPropertyListClick,
+                  ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+
+                AddMenuItemToPopupMenu(FOIEditorMenu, 'Add two commonly used font profiles (with Antialiased and ClearType)', MenuItem_AddFontProfileWithAntialiasedAndClearTypeToPropertyListClick,
+                  ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+
+                AddMenuItemToPopupMenu(FOIEditorMenu, 'Add three commonly used font profiles (with NonAntialiased, Antialiased and ClearType)', MenuItem_AddFontProfileWithNonAntialiasedAndAntialiasedAndClearTypeToPropertyListClick,
                   ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
 
                 if Length(FEditingAction^.FindControlOptions.MatchBitmapText) > 0 then
@@ -5685,6 +5875,17 @@ begin
                   BMPTxt := FEditingAction^.FindControlOptions.MatchBitmapText[i];
                   s := '  Name: ' + BMPTxt.ProfileName + '  (' + BMPTxt.FontName + ', ' + IntToStr(BMPTxt.FontSize) + ', ' + BMPTxt.ForegroundColor + ', ' + BMPTxt.BackgroundColor + ')';
                   AddMenuItemToPopupMenu(FOIEditorMenu, 'Remove font profile[' + IntToStr(i) + ']  ' + s, MenuItem_RemoveFontProfileFromPropertyListClick,
+                    ANodeLevel, ACategoryIndex, APropertyIndex, i);  //ItemIndex is not the real one. It points to the profile index.
+                end;
+
+                if Length(FEditingAction^.FindControlOptions.MatchBitmapText) > 0 then
+                  AddMenuItemToPopupMenu(FOIEditorMenu, '-', nil, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+
+                for i := 0 to Length(FEditingAction^.FindControlOptions.MatchBitmapText) - 1 do
+                begin
+                  BMPTxt := FEditingAction^.FindControlOptions.MatchBitmapText[i];
+                  s := '  Name: ' + BMPTxt.ProfileName + '  (' + BMPTxt.FontName + ', ' + IntToStr(BMPTxt.FontSize) + ', ' + BMPTxt.ForegroundColor + ', ' + BMPTxt.BackgroundColor + ')';
+                  AddMenuItemToPopupMenu(FOIEditorMenu, 'Duplicate font profile[' + IntToStr(i) + ']  ' + s, MenuItem_DuplicateFontProfileClick,
                     ANodeLevel, ACategoryIndex, APropertyIndex, i);  //ItemIndex is not the real one. It points to the profile index.
                 end;
 

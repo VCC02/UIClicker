@@ -757,6 +757,10 @@ object frClickerFindControl: TfrClickerFindControl
       Caption = 'Copy values from remote screen'
       OnClick = CopyTextAndClassFromRemoteScreenWindowClick
     end
+    object MenuItemSetToSystemMenu: TMenuItem
+      Caption = 'Set to system menu'
+      OnClick = MenuItemSetToSystemMenuClick
+    end
   end
   object tmrUpdateSearchAreaOffsetEditBoxes: TTimer
     Enabled = False
