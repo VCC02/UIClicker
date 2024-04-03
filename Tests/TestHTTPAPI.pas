@@ -173,7 +173,7 @@ begin
     until GetTickCount64 - tk > FDelayBeforeRequest;
 
     try
-      FResult := TerminateWaitingForFileAvailability(FTestServerAddress, FLoopType, False);
+      FResult := TerminateWaitingForFileAvailability(FTestServerAddress, FLoopType, 0, False);
 
       if FResult <> CREResp_Done then
         raise Exception.Create(FResult);
