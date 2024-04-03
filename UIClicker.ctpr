@@ -386,6 +386,10 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Frame"/>
       </Unit>
+      <Unit>
+        <Filename Value="ClickerUtils\ClickerFileProviderUtils.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -442,6 +446,9 @@
       </Item>
       <Item>
         <Name Value="EInOutError"/>
+      </Item>
+      <Item>
+        <Name Value="EIdSchedulerMaxThreadsExceeded"/>
       </Item>
     </Exceptions>
   </Debugging>

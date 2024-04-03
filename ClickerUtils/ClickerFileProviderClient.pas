@@ -21,6 +21,7 @@
     OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 }
 
+
 unit ClickerFileProviderClient;
 
 {$mode ObjFPC}{$H+}
@@ -28,7 +29,7 @@ unit ClickerFileProviderClient;
 interface
 
 uses
-  Windows, Classes, SysUtils, ClickerUtils;
+  Windows, Classes, SysUtils, ClickerUtils, ClickerFileProviderUtils;
 
 
 type
@@ -37,17 +38,16 @@ type
   TOnLoadMissingFileContent = procedure(AFileName: string; AFileContent: TMemoryStream) of object;
   TOnDenyFile = procedure(AFileName: string) of object;
 
+
   TPollForMissingServerFiles = class(TThread)
   private
     FRemoteAddress: string;
     FDone: Boolean;
     FConnectTimeout: Integer;
-    FListOfAccessibleDirs: TStringList;
-    FListOfAccessibleFileExtensions: TStringList;
-    FFullTemplatesDir: string;
 
     FCritSec: TRTLCriticalSection;
     FLogOutput: TStringList;
+    FFileProvider: TFileProvider;
 
     FOnBeforeRequestingListOfMissingFiles: TPollForMissingServerFilesProcessingEvent;
     FOnAfterRequestingListOfMissingFiles: TPollForMissingServerFilesProcessingEvent;
@@ -64,8 +64,9 @@ type
     procedure DoOnDenyFile(AFileName: string);
 
     procedure AddUniqueMessageToLog(AMsg: string);
-    function FileIsAllowed(AFileName: string; out ADenyReason: string): Boolean;
     procedure RemoveDeniedFilesFromList(AList: TStringList);
+
+    procedure SetFullTemplatesDir(Value: string);
   protected
     procedure Execute; override;
   public
@@ -81,7 +82,7 @@ type
     property RemoteAddress: string read FRemoteAddress write FRemoteAddress;
     property Done: Boolean read FDone;
     property ConnectTimeout: Integer read FConnectTimeout write FConnectTimeout;
-    property FullTemplatesDir: string read FFullTemplatesDir write FFullTemplatesDir;
+    property FullTemplatesDir: string write SetFullTemplatesDir;
 
     property OnBeforeRequestingListOfMissingFiles: TPollForMissingServerFilesProcessingEvent read FOnBeforeRequestingListOfMissingFiles write FOnBeforeRequestingListOfMissingFiles;
     property OnAfterRequestingListOfMissingFiles: TPollForMissingServerFilesProcessingEvent read FOnAfterRequestingListOfMissingFiles write FOnAfterRequestingListOfMissingFiles;
@@ -108,10 +109,9 @@ uses
 constructor TPollForMissingServerFiles.Create(CreateSuspended: Boolean {$IFDEF FPC}; const StackSize: SizeUInt = DefaultStackSize {$ENDIF});
 begin
   inherited Create(CreateSuspended, StackSize);
-  FListOfAccessibleDirs := TStringList.Create;
-  FListOfAccessibleFileExtensions := TStringList.Create;
-  FFullTemplatesDir := '';
   FDone := False;
+  FFileProvider := TFileProvider.Create;
+  FFileProvider.FullTemplatesDir := '';
 
   FOnBeforeRequestingListOfMissingFiles := nil;
   FOnAfterRequestingListOfMissingFiles := nil;
@@ -127,12 +127,41 @@ end;
 
 destructor TPollForMissingServerFiles.Destroy;
 begin
-  FreeAndNil(FListOfAccessibleDirs);
-  FreeAndNil(FListOfAccessibleFileExtensions);
   DeleteCriticalSection(FCritSec);
   FreeAndNil(FLogOutput);
+  FFileProvider.Free;
 
   inherited Destroy;
+end;
+
+
+procedure TPollForMissingServerFiles.SetFullTemplatesDir(Value: string);
+begin
+  FFileProvider.FullTemplatesDir := Value;
+end;
+
+
+procedure TPollForMissingServerFiles.AddListOfAccessibleDirs(AList: TStrings); overload;
+begin
+  FFileProvider.AddListOfAccessibleDirs(AList);
+end;
+
+
+procedure TPollForMissingServerFiles.AddListOfAccessibleFileExtensions(AList: TStrings); overload;
+begin
+  FFileProvider.AddListOfAccessibleFileExtensions(AList);
+end;
+
+
+procedure TPollForMissingServerFiles.AddListOfAccessibleDirs(AListOfDirsStr: string); overload;
+begin
+  FFileProvider.AddListOfAccessibleDirs(AListOfDirsStr);
+end;
+
+
+procedure TPollForMissingServerFiles.AddListOfAccessibleFileExtensions(AListOfExtensionsStr: string); overload;
+begin
+  FFileProvider.AddListOfAccessibleFileExtensions(AListOfExtensionsStr);
 end;
 
 
@@ -199,136 +228,6 @@ begin
 end;
 
 
-function TPollForMissingServerFiles.FileIsAllowed(AFileName: string; out ADenyReason: string): Boolean;
-const
-  CFileExtensionNotAllowed = 'File extension is not allowed.';
-  CFileOutOfAllowedDirs = 'File is outside of allowed directories.';
-  CFileFromUpperDirs = 'Also, paths are not allowed to contain ".." directories.';
-var
-  FileExt, FilePath: string;
-  i: Integer;
-  FoundExt, FoundDir: Boolean;
-  CurrentItem: string;
-  TempFullTemplatesDir: string;
-begin
-  Result := False;
-  ADenyReason := '';
-
-  AFileName := UpperCase(AFileName);
-  FileExt := ExtractFileExt(AFileName);
-
-  CurrentItem := '.CLKTMPL';
-  FoundExt := False;
-  for i := 0 to FListOfAccessibleFileExtensions.Count - 1 do
-  begin
-    CurrentItem := FListOfAccessibleFileExtensions.Strings[i];
-    if CurrentItem = FileExt then
-    begin
-      FoundExt := True;
-      Break;
-    end;
-  end;
-
-  if not FoundExt then
-  begin
-    ADenyReason := CFileExtensionNotAllowed;
-    Exit;
-  end;
-
-  TempFullTemplatesDir := UpperCase(StringReplace(FFullTemplatesDir, '$APPDIR$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]));
-
-  if (AFileName <> '') and (AFileName[1] = PathDelim) then   //resolve relative paths to TemplatesDir
-    AFileName := UpperCase(TempFullTemplatesDir + AFileName);
-
-  AFileName := UpperCase(StringReplace(AFileName, '$APPDIR$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]));
-  AFileName := UpperCase(StringReplace(AFileName, '$TEMPLATEDIR$', TempFullTemplatesDir, [rfReplaceAll]));
-
-  if ExtractFileName(AFileName) = AFileName then //files without paths are expected to be found in $AppDir$\ActionTemplates
-    AFileName := UpperCase(TempFullTemplatesDir + PathDelim + AFileName);
-
-  FoundDir := False;
-  FilePath := ExtractFilePath(AFileName);
-
-  for i := 0 to FListOfAccessibleDirs.Count - 1 do
-  begin
-    CurrentItem := FListOfAccessibleDirs.Strings[i];  //these are already UpperCase, as set from outside
-    if (CurrentItem > '') and (CurrentItem[Length(CurrentItem)] <> PathDelim) then
-      CurrentItem := CurrentItem + PathDelim;  //make sure there are consistent results, regardless of the last '\' existence
-
-    if ((Pos(CurrentItem, FilePath) = 1) or (Pos(ExtractFileDir(AFileName), CurrentItem) > 1)) and
-       (Pos('..', CurrentItem) = 0) then
-    begin
-      FoundDir := True;
-      Break;
-    end;
-  end;
-
-  if not FoundDir then
-  begin
-    ADenyReason := CFileOutOfAllowedDirs;
-
-    if Pos('..', CurrentItem) > 0 then
-      ADenyReason := ADenyReason + ' ' + CFileFromUpperDirs;
-
-    //AddUniqueMessageToLog('Denied: "' + AFileName + '" from "' + FastReplace_ReturnTo45(FListOfAccessibleDirs.Text) + '"');  //for debugging
-    Exit;
-  end;
-
-  Result := True;
-end;
-
-
-procedure TPollForMissingServerFiles.AddListOfAccessibleDirs(AList: TStrings); overload;
-var
-  i: Integer;
-  CurrentItem: string;
-begin
-  for i := 0 to AList.Count - 1 do
-  begin
-    CurrentItem := AList.Strings[i];
-    CurrentItem := StringReplace(CurrentItem, '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
-    FListOfAccessibleDirs.Add(UpperCase(CurrentItem));
-  end;
-end;
-
-
-procedure TPollForMissingServerFiles.AddListOfAccessibleFileExtensions(AList: TStrings); overload;
-var
-  i: Integer;
-begin
-  for i := 0 to AList.Count - 1 do
-    FListOfAccessibleFileExtensions.Add(UpperCase(AList.Strings[i]));
-end;
-
-
-procedure TPollForMissingServerFiles.AddListOfAccessibleDirs(AListOfDirsStr: string); overload;
-var
-  List: TStringList;
-begin
-  List := TStringList.Create;
-  try
-    List.Text := AListOfDirsStr;
-    AddListOfAccessibleDirs(List);
-  finally
-    List.Free;
-  end;
-end;
-
-
-procedure TPollForMissingServerFiles.AddListOfAccessibleFileExtensions(AListOfExtensionsStr: string); overload;
-var
-  List: TStringList;
-begin
-  List := TStringList.Create;
-  try
-    List.Text := AListOfExtensionsStr;
-    AddListOfAccessibleFileExtensions(List);
-  finally
-    List.Free;
-  end;
-end;
-
-
 procedure TPollForMissingServerFiles.GetLogContent(AList: TStrings);
 begin
   EnterCriticalSection(FCritSec);
@@ -346,7 +245,7 @@ var
   DenyReason: string;
 begin
   for i := AList.Count - 1 downto 0 do
-    if not FileIsAllowed(AList.Strings[i], DenyReason) then
+    if not FFileProvider.FileIsAllowed(AList.Strings[i], DenyReason) then
     begin
       AddUniqueMessageToLog('Requested file "' + AList.Strings[i] + '" is not allowed to be sent to server. DenyReason: ' + DenyReason);
       DoOnDenyFile(AList.Strings[i]);

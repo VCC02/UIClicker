@@ -32,7 +32,8 @@ unit ClickerActionPluginLoader;
 interface
 
 uses
-  Windows, Classes, SysUtils, ClickerUtils, ClickerActionPlugins, dynlibs;
+  Windows, Classes, SysUtils, Graphics, dynlibs,
+  ClickerUtils, ClickerActionPlugins;
 
 
 type
@@ -46,6 +47,8 @@ type
     OnSetVar: TOnSetVar;
     OnSetDebugPoint: TOnSetDebugPoint;
     OnIsAtBreakPoint: TOnIsAtBreakPoint;
+    OnLoadBitmap: TOnLoadBitmap;
+    OnLoadRenderedBitmap: TOnLoadRenderedBitmap;
 
     FIsDebugging, FShouldStopAtBreakPoint: Boolean;
     FStopAllActionsOnDemandFromParent, FPluginContinueAll: PBoolean;
@@ -53,6 +56,11 @@ type
     FIsFirstExecution: Boolean; //Flag, used to stop the execution, to allow the user to set breakpoints
     FContinueAfterBreakPoint: Boolean;
 
+    FFullTemplatesDir: string;
+    FAllowedFileDirsForServer: string;
+    FAllowedFileExtensionsForServer: string;
+
+    ResultBmp: TBitmap;
     AllActions: PClkActionsRecArr;
     AllVars: TStringList;
 
@@ -63,7 +71,26 @@ type
     procedure DoSetDebugPoint(ADebugPoint: string);
     function DoIsAtBreakPoint(ADebugPoint: string): Boolean;
 
-    function LoadToExecute(APath: string; AOnAddToLog: TOnAddToLog; AOnExecuteActionByName: TOnExecuteActionByName; AOnSetVar: TOnSetVar; AOnSetDebugPoint: TOnSetDebugPoint; AOnIsAtBreakPoint: TOnIsAtBreakPoint; IsDebugging, AShouldStopAtBreakPoint: Boolean; AStopAllActionsOnDemandFromParent, AStepOver, APluginContinueAll: PBoolean; AAllActions: PClkActionsRecArr = nil; AAllVars: TStringList = nil): Boolean;
+    function LoadToExecute(APath: string;
+                           AOnAddToLog: TOnAddToLog;
+                           AOnExecuteActionByName: TOnExecuteActionByName;
+                           AOnSetVar: TOnSetVar;
+                           AOnSetDebugPoint: TOnSetDebugPoint;
+                           AOnIsAtBreakPoint: TOnIsAtBreakPoint;
+                           AOnLoadBitmap: TOnLoadBitmap;
+                           AOnLoadRenderedBitmap: TOnLoadRenderedBitmap;
+                           IsDebugging,
+                           AShouldStopAtBreakPoint: Boolean;
+                           AStopAllActionsOnDemandFromParent,
+                           AStepOver,
+                           APluginContinueAll: PBoolean;
+                           AResultBmp: TBitmap;
+                           AFullTemplatesDir,
+                           AAllowedFileDirsForServer,
+                           AAllowedFileExtensionsForServer: string;
+                           AAllActions: PClkActionsRecArr = nil;
+                           AAllVars: TStringList = nil): Boolean;
+
     function LoadToGetProperties(APath: string): Boolean;
     function Unload: Boolean;
 
@@ -211,7 +238,7 @@ begin
 end;
 
 
-function DoOnActionPlugin_DebugPoint_Callback(APluginReference: Pointer; APointName, ALogMsg: Pointer): Boolean; //The handler should return True, to continue execution. If False, the dll should exit ExecutePluginFunc (when users stop the execution).
+function DoOnActionPlugin_DebugPoint_Callback(APluginReference: Pointer; APointName, ALogMsg: Pointer): Boolean; cdecl; //The handler should return True, to continue execution. If False, the dll should exit ExecutePluginFunc (when users stop the execution).
 var
   ActionPlugin: PActionPlugin;
   PointName, LogMsg: string;
@@ -262,6 +289,123 @@ begin
 end;
 
 
+procedure DoOnActionPlugin_AddToLog_Callback(APluginReference: Pointer; ALogMsg: Pointer); cdecl;
+var
+  ActionPlugin: PActionPlugin;
+  LogMsg: string;
+begin
+  try
+    ActionPlugin := APluginReference;
+    SetPointedContentToString(ALogMsg, LogMsg);
+    ActionPlugin^.DoAddToLog('[Plugin]: ' + LogMsg);
+  except
+    on E: Exception do
+      ActionPlugin^.DoAddToLog('Plugin loader: ' + E.Message);
+  end;
+end;
+
+
+procedure DoOnActionPlugin_SetResultImg(APluginReference: Pointer; AResultIdx0, AResultIdx1, AResultIdx2: Integer; AStreamContent: Pointer; AStreamSize: Int64; AImgWidth, AImgHeight: Integer); cdecl;
+var
+  ActionPlugin: PActionPlugin;
+  TempStream: TMemoryStream;
+begin
+  try
+    ActionPlugin := APluginReference;
+    ActionPlugin^.DoAddToLog('Plugin called OnActionPlugin_SetResultImg');
+
+    if ActionPlugin^.ResultBmp = nil then
+    begin
+      ActionPlugin^.DoAddToLog('Plugin called with ResultBmp set to nil.');
+      Exit;
+    end;
+
+    TempStream := TMemoryStream.Create;
+    try
+      TempStream.SetSize(AStreamSize);
+      Move(AStreamContent^, TempStream.Memory^, AStreamSize);
+
+      TempStream.Position := 0;
+      ActionPlugin^.ResultBmp.LoadFromStream(TempStream);
+
+      ActionPlugin^.DoAddToLog('Plugin result image size: ' + IntToStr(ActionPlugin^.ResultBmp.Width) + ':' + IntToStr(ActionPlugin^.ResultBmp.Height) + '  (' + IntToStr(TempStream.Size) + ' bytes).');
+    finally
+      TempStream.Free;
+    end;
+  except
+    on E: Exception do
+      ActionPlugin^.DoAddToLog('Ex when plugin called OnActionPlugin_SetResultImg: ' + E.Message);
+  end;
+end;
+
+
+//AFileLocation is expected to match TFileLocation from InMemFileSystem
+function DoOnActionPlugin_GetFileContent(APluginReference: Pointer; AFileName, ACallReference: Pointer; AFileLocation: Byte; AOnFileContent: TOnFileContent): Boolean; cdecl;
+var
+  ActionPlugin: PActionPlugin;
+  TempMemSteam: TMemoryStream;
+  TempBmp: Graphics.TBitmap;
+  Fnm: string;
+  Allowed: Boolean;
+begin
+  ActionPlugin := APluginReference;
+  Result := True;
+
+  SetPointedContentToString(AFileName, Fnm);
+  Allowed := True; /////////////////////////////////////////////////////////////  verifiy if file is allowed to be read (ext and location permissions)
+
+  if not Allowed or not FileExists(Fnm) then
+  begin
+    Result := False;
+    Exit;
+  end;
+
+  TempMemSteam := TMemoryStream.Create;
+  TempBmp := TBitmap.Create;
+  try
+    case AFileLocation of
+      0: //flDisk
+        if not ActionPlugin^.OnLoadBitmap(TempBmp, Fnm) then   //returns True if file loaded, and False if file not found
+        begin
+          Result := False;
+          Exit;
+        end;
+
+      1: //flMem
+        if not ActionPlugin^.OnLoadRenderedBitmap(TempBmp, Fnm) then   //returns True if file loaded, and False if file not found
+        begin
+          Result := False;
+          Exit;
+        end;
+
+      else
+      begin
+        ActionPlugin.DoAddToLog('Error: unhandled bitmap location type: ' + IntToStr(AFileLocation) + '.');
+        Result := False;
+        Exit;
+      end;
+    end;  //case
+
+    TempBmp.SaveToStream(TempMemSteam);
+    AOnFileContent(ACallReference, TempMemSteam.Memory, TempMemSteam.Size);
+  finally
+    TempMemSteam.Free;
+    TempBmp.Free;
+  end;
+end;
+
+
+procedure DoOnActionPlugin_GetAllowedFilesInfo(APluginReference: Pointer; AFullTemplatesDir, AAllowedFileDirsForServer, AAllowedFileExtensionsForServer: Pointer); cdecl;
+var
+  ActionPlugin: PActionPlugin;
+begin
+  ActionPlugin := APluginReference;
+  SetPointedContentFromString(ActionPlugin^.FFullTemplatesDir, AFullTemplatesDir);
+  SetPointedContentFromString(ActionPlugin^.FAllowedFileDirsForServer, AAllowedFileDirsForServer);
+  SetPointedContentFromString(ActionPlugin^.FAllowedFileExtensionsForServer, AAllowedFileExtensionsForServer);
+end;
+
+
 procedure TActionPlugin.DoAddToLog(s: string);
 begin
   if Assigned(OnAddToLog) then
@@ -304,7 +448,25 @@ begin
 end;
 
 
-function TActionPlugin.LoadToExecute(APath: string; AOnAddToLog: TOnAddToLog; AOnExecuteActionByName: TOnExecuteActionByName; AOnSetVar: TOnSetVar; AOnSetDebugPoint: TOnSetDebugPoint; AOnIsAtBreakPoint: TOnIsAtBreakPoint; IsDebugging, AShouldStopAtBreakPoint: Boolean; AStopAllActionsOnDemandFromParent, AStepOver, APluginContinueAll: PBoolean; AAllActions: PClkActionsRecArr = nil; AAllVars: TStringList = nil): Boolean;
+function TActionPlugin.LoadToExecute(APath: string;
+                                     AOnAddToLog: TOnAddToLog;
+                                     AOnExecuteActionByName: TOnExecuteActionByName;
+                                     AOnSetVar: TOnSetVar;
+                                     AOnSetDebugPoint: TOnSetDebugPoint;
+                                     AOnIsAtBreakPoint: TOnIsAtBreakPoint;
+                                     AOnLoadBitmap: TOnLoadBitmap;
+                                     AOnLoadRenderedBitmap: TOnLoadRenderedBitmap;
+                                     IsDebugging,
+                                     AShouldStopAtBreakPoint: Boolean;
+                                     AStopAllActionsOnDemandFromParent,
+                                     AStepOver,
+                                     APluginContinueAll: PBoolean;
+                                     AResultBmp: TBitmap;
+                                     AFullTemplatesDir,
+                                     AAllowedFileDirsForServer,
+                                     AAllowedFileExtensionsForServer: string;
+                                     AAllActions: PClkActionsRecArr = nil;
+                                     AAllVars: TStringList = nil): Boolean;
 begin
   Result := False;
 
@@ -317,12 +479,19 @@ begin
   OnSetVar := AOnSetVar;
   OnSetDebugPoint := AOnSetDebugPoint;
   OnIsAtBreakPoint := AOnIsAtBreakPoint;
+  OnLoadBitmap := AOnLoadBitmap;
+  OnLoadRenderedBitmap := AOnLoadRenderedBitmap;
 
   FIsDebugging := IsDebugging;
   FShouldStopAtBreakPoint := AShouldStopAtBreakPoint;
   FStopAllActionsOnDemandFromParent := AStopAllActionsOnDemandFromParent;
   FStepOver := AStepOver;
   FPluginContinueAll := APluginContinueAll;
+
+  ResultBmp := AResultBmp;
+  FFullTemplatesDir := AFullTemplatesDir;
+  FAllowedFileDirsForServer := AAllowedFileDirsForServer;
+  FAllowedFileExtensionsForServer := AAllowedFileExtensionsForServer;
 
   AllActions := AAllActions;
   AllVars := AAllVars;
@@ -495,7 +664,11 @@ begin
                                      DoOnActionPlugin_ExecuteAction_Callback,
                                      DoOnActionPlugin_GetAllTemplateVars_Callback,
                                      DoOnActionPlugin_SetTemplateVar_Callback,
-                                     DoOnActionPlugin_DebugPoint_Callback);
+                                     DoOnActionPlugin_DebugPoint_Callback,
+                                     DoOnActionPlugin_AddToLog_Callback,
+                                     DoOnActionPlugin_SetResultImg,
+                                     DoOnActionPlugin_GetFileContent,
+                                     DoOnActionPlugin_GetAllowedFilesInfo);
   finally
     if FPluginContinueAll <> nil then
       FPluginContinueAll^ := False; //reset flag after execution

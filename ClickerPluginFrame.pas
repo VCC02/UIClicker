@@ -843,7 +843,11 @@ var
 begin
   try
     ExtractSelectedSourceFileAndLineFromDbgName(ADebugPoint, TempSelectedLine, TempSelectedSourceFileIndex, TempAllDbgLinesFromSelectedFile);
-    Result := FBreakPointsArr[TempSelectedSourceFileIndex].IndexOf(IntToStr(TempSelectedLine)) > -1;
+
+    if (TempSelectedSourceFileIndex > -1) and (TempSelectedSourceFileIndex < Length(FBreakPointsArr)) then
+      Result := FBreakPointsArr[TempSelectedSourceFileIndex].IndexOf(IntToStr(TempSelectedLine)) > -1
+    else
+      Result := True; //same as in except
   except
     Result := True;
   end;

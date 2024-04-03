@@ -36,13 +36,21 @@ uses
 
 
 type
+  //Callbacks of callbacks:
+  TOnFileContent = procedure(ACallReference, AStreamContent: Pointer; AStreamSize: Int64); cdecl;
+
   //Plugin callbacks:
   TOnActionPlugin_GetActionCount = function(APluginReference: Pointer): Integer; cdecl;  //a plugin calls this function, to get the number of actions in the current template from UIClicker
   TOnActionPlugin_GetActionInfoByIndex = procedure(APluginReference: Pointer; AIndex: Integer; AActionName: Pointer; ANameLength, AActionType: PDWord); cdecl; //a plugin calls this function, to get the action structure of an action
   TOnActionPlugin_ExecuteAction = function(APluginReference: Pointer; AActionName: Pointer): Boolean; cdecl;
   TOnActionPlugin_GetAllTemplateVars = procedure(APluginReference: Pointer; AAllTemplateVars: Pointer; AVarsLength: PDWord); cdecl;  //AAllTemplateVars are encoded as CRLF separated key=value strings, ready to be used on a TStringlist
   TOnActionPlugin_SetTemplateVar = procedure(APluginReference: Pointer; AVarName, AVarValue: Pointer); cdecl;
-  TOnActionPlugin_DebugPoint = function(APluginReference: Pointer; APointName, ALogMsg: Pointer): Boolean; //The handler should return True, to continue execution. If False, the dll should exit ExecutePluginFunc (when users stop the execution).
+  TOnActionPlugin_DebugPoint = function(APluginReference: Pointer; APointName, ALogMsg: Pointer): Boolean; cdecl; //The handler should return True, to continue execution. If False, the dll should exit ExecutePluginFunc (when users stop the execution).
+  TOnActionPlugin_AddToLog = procedure(APluginReference: Pointer; ALogMsg: Pointer); cdecl;
+  TOnActionPlugin_SetResultImg = procedure(APluginReference: Pointer; AResultIdx0, AResultIdx1, AResultIdx2: Integer; AStreamContent: Pointer; AStreamSize: Int64; AImgWidth, AImgHeight: Integer); cdecl; //Used when the plugin implements FindSubControl functionality. Then, AResultIdx0, AResultIdx1 and AResultIdx2 are result dimensions (e.g. AResultIdx0 can identify FindSubControl type (BmpTxt, Bmp file, Pmtv file), AResultIdx1 can identiy TextProfile index, or Bmp file index or Pmtv file index, while AResultIdx2 can identify Pmtv composition order).
+  TOnActionPlugin_LoadBitmap = function(APluginReference: Pointer; AFileName, ACallReference: Pointer; AFileLocation: Byte; AOnFileContent: TOnFileContent): Boolean; cdecl;  //a plugin calls this function, to get the bitmap content (from disk or rendered-externally-in-mem FS). The function returns False if the file is not found. UIClicker calls AOnFileContent callback to set the file content in plugin if the file is found and it is allowed to be accessed. The ACallReference argument is passed to OnFileContent callback, for keeping track of that call. It can be a pointer to an object.
+  TOnActionPlugin_GetAllowedFilesInfo = procedure(APluginReference: Pointer; AFullTemplatesDir, AAllowedFileDirsForServer, AAllowedFileExtensionsForServer: Pointer); cdecl; //Called by plugin when the file to be loaded will be sent to a remote location, so file location/extension "permissions" should be verified. For local files, this is not needed, as this is the behavior of the executable itself.
+
 
   //Plugin procedures / functions:
   TGetAPIVersion = function: DWord; cdecl;
@@ -58,7 +66,11 @@ type
                             AOnActionPlugin_ExecuteAction: TOnActionPlugin_ExecuteAction;
                             AOnActionPlugin_GetAllTemplateVars: TOnActionPlugin_GetAllTemplateVars;
                             AOnActionPlugin_SetTemplateVar: TOnActionPlugin_SetTemplateVar;
-                            AOnActionPlugin_DebugPoint: TOnActionPlugin_DebugPoint): Boolean; cdecl;
+                            AOnActionPlugin_DebugPoint: TOnActionPlugin_DebugPoint;
+                            AOnActionPlugin_AddToLog: TOnActionPlugin_AddToLog;
+                            AOnActionPlugin_SetResultImg: TOnActionPlugin_SetResultImg;
+                            AOnActionPlugin_LoadBitmap: TOnActionPlugin_LoadBitmap;
+                            AOnActionPlugin_GetAllowedFilesInfo: TOnActionPlugin_GetAllowedFilesInfo): Boolean; cdecl;
 
 
   TActionPluginFunc = record
@@ -70,7 +82,7 @@ type
 
 
 const
-  CActionPlugin_APIVersion = 3;
+  CActionPlugin_APIVersion = 4;
   CActionPlugin_ExecutionResultErrorVar = '$PluginError$';
   CBeforePluginExecution_DbgLineContent = 'Before plugin execution.';
 

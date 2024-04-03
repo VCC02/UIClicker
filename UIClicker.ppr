@@ -49,7 +49,7 @@ uses
   ClickerPrimitivesCompositor, ClickerPrimitivesCompEditors,
   ClickerWinInterpFrame, ClickerFontFinderSettingsForm, BitmapConv,
   ClickerActionPlugins, ClickerActionPluginLoader, DllUtils, ClickerExtraUtils,
-  ClickerPluginFrame;
+  ClickerPluginFrame, ClickerFileProviderUtils;
 
 {$R *.res}
 

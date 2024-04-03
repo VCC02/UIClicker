@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2023 VCC
+    Copyright (C) 2024 VCC
     creation date: Dec 2019
     initial release date: 13 Sep 2022
 
@@ -594,6 +594,13 @@ begin
   BMPsDir := AIni.ReadString('Dirs', 'BMPsDir', '');
 
   lbePathToTemplates.Text := StringReplace(FullTemplatesDir, ExtractFileDir(ParamStr(0)), '$AppDir$', [rfReplaceAll]);
+
+  frClickerActionsArrExperiment1.AllowedFileDirsForServer := memAllowedFileDirsForServer.Lines.Text;
+  frClickerActionsArrExperiment2.AllowedFileDirsForServer := memAllowedFileDirsForServer.Lines.Text;
+  frClickerActionsArrMain.AllowedFileDirsForServer := memAllowedFileDirsForServer.Lines.Text;
+  frClickerActionsArrExperiment1.AllowedFileExtensionsForServer := memAllowedFileExtensionsForServer.Lines.Text;
+  frClickerActionsArrExperiment2.AllowedFileExtensionsForServer := memAllowedFileExtensionsForServer.Lines.Text;
+  frClickerActionsArrMain.AllowedFileExtensionsForServer := memAllowedFileExtensionsForServer.Lines.Text;
 end;
 
 
@@ -909,6 +916,14 @@ begin
   frClickerActionsArrExperiment1.OnCallTemplate := nil;
   frClickerActionsArrExperiment2.OnCallTemplate := nil;
   frClickerActionsArrMain.OnCallTemplate := frClickerActionsArrOnCallTemplate;
+
+  //Set above, when loading settings from ini.
+  //frClickerActionsArrExperiment1.AllowedFileDirsForServer := memAllowedFileDirsForServer.Lines.Text;
+  //frClickerActionsArrExperiment2.AllowedFileDirsForServer := memAllowedFileDirsForServer.Lines.Text;
+  //frClickerActionsArrMain.AllowedFileDirsForServer := memAllowedFileDirsForServer.Lines.Text;
+  //frClickerActionsArrExperiment1.AllowedFileExtensionsForServer := memAllowedFileExtensionsForServer.Lines.Text;
+  //frClickerActionsArrExperiment2.AllowedFileExtensionsForServer := memAllowedFileExtensionsForServer.Lines.Text;
+  //frClickerActionsArrMain.AllowedFileExtensionsForServer := memAllowedFileExtensionsForServer.Lines.Text;
 
   frClickerActionsArrExperiment1.InMemFS := FInMemFileSystem;
   frClickerActionsArrExperiment2.InMemFS := FInMemFileSystem;
@@ -1531,6 +1546,8 @@ begin
         NewFrame.UseLocalDebugger := frClickerActionsArrMain.UseLocalDebugger;
         NewFrame.FileLocationOfDepsIsMem := frClickerActionsArrMain.FileLocationOfDepsIsMem;
         NewFrame.FullTemplatesDir := FFullTemplatesDir;
+        NewFrame.AllowedFileDirsForServer := memAllowedFileDirsForServer.Lines.Text;
+        NewFrame.AllowedFileExtensionsForServer := memAllowedFileExtensionsForServer.Lines.Text;
         NewFrame.RemoteAddress := frClickerActionsArrMain.RemoteAddress;
         NewFrame.InMemFS := FInMemFileSystem;
         //do not set FRenderedInMemFileSystem here
@@ -3324,6 +3341,8 @@ begin
       FPollForMissingServerFiles := TPollForMissingServerFiles.Create(True);
       FPollForMissingServerFiles.RemoteAddress := lbeClientModeServerAddress.Text;
       FPollForMissingServerFiles.ConnectTimeout := StrToIntDef(lbeConnectTimeout.Text, 1000);
+      FPollForMissingServerFiles.FullTemplatesDir := FFullTemplatesDir;
+
       FPollForMissingServerFiles.AddListOfAccessibleDirs(memAllowedFileDirsForServer.Lines);
       FPollForMissingServerFiles.AddListOfAccessibleFileExtensions(memAllowedFileExtensionsForServer.Lines);
       FPollForMissingServerFiles.OnBeforeRequestingListOfMissingFiles := HandleOnBeforeRequestingListOfMissingFiles;

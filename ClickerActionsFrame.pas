@@ -3737,8 +3737,8 @@ var
 begin
   MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
   try
-    n := AddFontProfileToActionFromMenu('$Color_WindowText$', '$Color_Btnface$', 'Segoe UI', 9, fqAntialiased);
-    n := AddFontProfileToActionFromMenu('$Color_WindowText$', '$Color_Btnface$', 'Segoe UI', 9, fqCleartype);
+    n := AddFontProfileToActionFromMenu('$Color_WindowText$', '$Color_BtnFace$', 'Segoe UI', 9, fqAntialiased);
+    n := AddFontProfileToActionFromMenu('$Color_WindowText$', '$Color_BtnFace$', 'Segoe UI', 9, fqCleartype);
 
     FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex);
     TriggerOnControlsModified;
@@ -3759,9 +3759,9 @@ var
 begin
   MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
   try
-    n := AddFontProfileToActionFromMenu('$Color_WindowText$', '$Color_Btnface$', 'Segoe UI', 9, fqNonAntialiased);
-    n := AddFontProfileToActionFromMenu('$Color_WindowText$', '$Color_Btnface$', 'Segoe UI', 9, fqAntialiased);
-    n := AddFontProfileToActionFromMenu('$Color_WindowText$', '$Color_Btnface$', 'Segoe UI', 9, fqCleartype);
+    n := AddFontProfileToActionFromMenu('$Color_WindowText$', '$Color_BtnFace$', 'Segoe UI', 9, fqNonAntialiased);
+    n := AddFontProfileToActionFromMenu('$Color_WindowText$', '$Color_BtnFace$', 'Segoe UI', 9, fqAntialiased);
+    n := AddFontProfileToActionFromMenu('$Color_WindowText$', '$Color_BtnFace$', 'Segoe UI', 9, fqCleartype);
 
     FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex);
     TriggerOnControlsModified;

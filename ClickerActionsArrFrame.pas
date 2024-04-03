@@ -316,6 +316,8 @@ type
     F9_State: Byte;
 
     FFullTemplatesDir: string;
+    FAllowedFileDirsForServer: string;
+    FAllowedFileExtensionsForServer: string;
     FCmdConsoleHistory: TStringList;
 
     FExecutesRemotely: Boolean;
@@ -620,6 +622,8 @@ type
     property StopAllActionsOnDemandFromParent: PBoolean read FStopAllActionsOnDemandFromParent write FStopAllActionsOnDemandFromParent;
     //property Debugging: Boolean read FDebugging write FDebugging;
     property FullTemplatesDir: string read FFullTemplatesDir write SetFullTemplatesDir;  //no trailing backslash
+    property AllowedFileDirsForServer: string write FAllowedFileDirsForServer;
+    property AllowedFileExtensionsForServer: string write FAllowedFileExtensionsForServer;
 
     property ExecutesRemotely: Boolean read FExecutesRemotely write FExecutesRemotely;  //used in client mode
     property StackLevel: Integer read FStackLevel write FStackLevel;
@@ -1051,6 +1055,8 @@ begin
   FActionExecution.PluginStepOver := @FPluginStepOver;
   FActionExecution.PluginContinueAll := @FPluginContinueAll;
   FActionExecution.OwnerFrame := Self;
+  FActionExecution.AllowedFileDirsForServer := @FAllowedFileDirsForServer;
+  FActionExecution.AllowedFileExtensionsForServer := @FAllowedFileExtensionsForServer;
   FActionExecution.frClickerActions := frClickerActions;
   FActionExecution.OnSetEditorEnabledState := HandleOnSetEditorEnabledState;
   FActionExecution.OnSetEditorTimeoutProgressBarMax := HandleOnSetEditorTimeoutProgressBarMax;

@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2023 VCC
+    Copyright (C) 2024 VCC
     creation date: Dec 2019
     initial release date: 13 Sep 2022
 
@@ -67,6 +67,9 @@ type
     FStackLevel: PInteger;
     FExecutesRemotely: PBoolean;
     FOwnerFrame: TObject;
+
+    FAllowedFileDirsForServer: PString;
+    FAllowedFileExtensionsForServer: PString;
 
     FfrClickerActions: TfrClickerActions;  ///////////////////////// temp
 
@@ -197,6 +200,9 @@ type
     property ExecutesRemotely: PBoolean write FExecutesRemotely;
     property OwnerFrame: TObject write FOwnerFrame;
 
+    property AllowedFileDirsForServer: PString write FAllowedFileDirsForServer;
+    property AllowedFileExtensionsForServer: PString write FAllowedFileExtensionsForServer;
+
     property frClickerActions: TfrClickerActions read FfrClickerActions write FfrClickerActions;  //not created here in this class, used from outside    ///////////////////////// temp
 
     property OnAddToLog: TOnAddToLog write FOnAddToLog;
@@ -256,6 +262,9 @@ begin
   FStackLevel := nil;
   FExecutesRemotely := nil;
   FOwnerFrame := nil;
+
+  FAllowedFileDirsForServer := nil;
+  FAllowedFileExtensionsForServer := nil;
 
   FPluginStepOver := nil;
   FPluginContinueAll := nil;
@@ -572,6 +581,8 @@ begin
   end;
 end;
 
+
+//function HandleOnLoadAllowedBitmap: ;
 
 procedure TActionExecution.DoOnSetEditorEnabledState(AEnabled: Boolean);
 begin
@@ -2786,9 +2797,36 @@ begin
   if IsDebugging then
     AddToLog('Plugin debugging is active. It can be stepped over using F8 shortcut, or stopped using Ctrl-Shift-F2 shortcut.');
 
+  //clear debug image
+  frClickerActions.imgDebugBmp.Width := 300;    //some default values
+  frClickerActions.imgDebugBmp.Height := 300;
+  frClickerActions.imgDebugBmp.Picture.Bitmap.Width := frClickerActions.imgDebugBmp.Width;
+  frClickerActions.imgDebugBmp.Picture.Bitmap.Height := frClickerActions.imgDebugBmp.Height;
+  frClickerActions.imgDebugBmp.Canvas.Pen.Color := clWhite;
+  frClickerActions.imgDebugBmp.Canvas.Brush.Color := clWhite;
+  frClickerActions.imgDebugBmp.Canvas.Rectangle(0, 0, frClickerActions.imgDebugBmp.Width, frClickerActions.imgDebugBmp.Height);
+
   tk := GetTickCount64;
   try
-    if not ActionPlugin.LoadToExecute(AResolvedPluginPath, AddToLog, DoOnExecuteActionByName, HandleOnSetVar, HandleOnSetDebugPoint, HandleOnIsAtBreakPoint, IsDebugging, AShouldStopAtBreakPoint, FStopAllActionsOnDemand{FromParent}, FPluginStepOver, FPluginContinueAll, AAllActions, AListOfAllVars) then
+    if not ActionPlugin.LoadToExecute(AResolvedPluginPath,
+                                      AddToLog,
+                                      DoOnExecuteActionByName,
+                                      HandleOnSetVar,
+                                      HandleOnSetDebugPoint,
+                                      HandleOnIsAtBreakPoint,
+                                      FOnLoadBitmap,
+                                      FOnLoadRenderedBitmap,
+                                      IsDebugging,
+                                      AShouldStopAtBreakPoint,
+                                      FStopAllActionsOnDemand{FromParent},
+                                      FPluginStepOver,
+                                      FPluginContinueAll,
+                                      frClickerActions.imgDebugBmp.Picture.Bitmap,
+                                      FFullTemplatesDir^,
+                                      FAllowedFileDirsForServer^,
+                                      FAllowedFileExtensionsForServer^,
+                                      AAllActions,
+                                      AListOfAllVars) then
     begin
       SetActionVarValue('$ExecAction_Err$', ActionPlugin.Err);
       AddToLog(ActionPlugin.Err);
@@ -2805,6 +2843,9 @@ begin
       if not ActionPlugin.Unload then
         AddToLog(ActionPlugin.Err);
     end;
+
+    frClickerActions.imgDebugBmp.Width := frClickerActions.imgDebugBmp.Picture.Bitmap.Width;
+    frClickerActions.imgDebugBmp.Height := frClickerActions.imgDebugBmp.Picture.Bitmap.Height;
   finally
     AddToLog('Plugin executed in ' + IntToStr(GetTickCount64 - tk) + 'ms.  Total action count: ' + IntToStr(Length(AAllActions^)) + ' action(s)...');
   end;
