@@ -220,6 +220,9 @@ type
     IgnoreBackgroundColor: Boolean;
   end;
 
+  TImageSource = (isScreenshot, isFile);
+  TImageSourceFileNameLocation = (isflDisk, isflMem); //A reduced version of TFileLocation from InMemFileSystem. Used when TImageSource is set to isFile.
+
   PClkFindControlMatchBitmapText = ^TClkFindControlMatchBitmapText;
 
   TClkFindControlMatchBitmapTextArr = array of TClkFindControlMatchBitmapText;
@@ -261,6 +264,9 @@ type
     IgnoredColors: string; //CSV list of colors, which can be in hex format (6 digits) or var/replacements
     SleepySearch: Boolean; //when True, theare are Sleep(1) calls, to prevent keeping a CPU core at 100%. However, because the thread switching takes usually longer than 1ms, a Sleep(1) call may take even 16ms. This results in slower searches.
     StopSearchOnMismatch: Boolean; //Defaults to True. When False, the loops continue, in order to get the total pixel error count.
+    ImageSource: TImageSource;  //Defaults to isScreenshot. When set to isScreenshot, FindSubControl calls ScreenShot. When set to isFile, FindSubControl uses a bmp from disk or InMem FS (see ImageSourceFileNameLocation).
+    SourceFileName: string; //can be a bmp file from disk or from externally rendered InMem FS
+    ImageSourceFileNameLocation: TImageSourceFileNameLocation; //can be disk or externally rendered bmp from InMem FS
   end;
 
   TClkSetTextOptions = record
@@ -450,6 +456,8 @@ const
   CMouseWheelTypeStr: array[TMouseWheelType] of string = ('mwtVert', 'mwtHoriz');
   CExecAppUseInheritHandlesStr: array[TExecAppUseInheritHandles] of string = ('uihNo', 'uihYes', 'uihOnlyWithStdInOut');
   CMatchBitmapAlgorithmStr: array[TMatchBitmapAlgorithm] of string = ('mbaBruteForce', 'mbaXYMultipleAndOffsets');
+  CImageSourceStr: array[TImageSource] of string = ('isScreenshot', 'isFile');
+  CImageSourceFileNameLocationStr: array[TImageSourceFileNameLocation] of string = ('isflDisk', 'isflMem');
   CClkSetTextControlTypeStr: array[TClkSetTextControlType] of string = ('stEditBox', 'stComboBox', 'stKeystrokes');
   CWindowOperationStr: array[TWindowOperation] of string = ('woBringToFront', 'woMoveResize', 'woClose');
   CSearchForControlModeStr: array[TSearchForControlMode] of string = ('sfcmGenGrid', 'sfcmEnumWindows', 'sfcmFindWindow');

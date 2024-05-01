@@ -44,6 +44,7 @@ type
     ClassNameSeparator, TextSeparator: string;
     DebugBitmap: TBitmap; //image on debugging tab
     BitmapToSearchFor: TBitmap;
+    BitmapToSearchOn: TBitmap; //used when not using Screenshot
     DebugGrid: TImage;
     MatchingMethods: TMatchingMethods;
     GlobalSearchArea: TRect;
@@ -63,6 +64,7 @@ type
     IgnoredColorsArr: TIntArr;
     SleepySearch: Byte;
     StopSearchOnMismatch: Boolean;
+    ImageSource: TImageSource;
   end;
 
 
@@ -707,8 +709,20 @@ begin
   CompWith := CompAtPoint.ComponentRectangle.Right - CompAtPoint.ComponentRectangle.Left;
   CompHeight := CompAtPoint.ComponentRectangle.Bottom - CompAtPoint.ComponentRectangle.Top;
 
-  if InputData.DebugBitmap <> nil then
-    ScreenShot(CompAtPoint.Handle, InputData.DebugBitmap, 0, 0, CompWith, CompHeight);  //call this here, before calling MatchByBitmap, to have a screenshot on debug image, while searching :)
+  if InputData.ImageSource = isScreenshot then
+  begin
+    if InputData.DebugBitmap <> nil then
+      ScreenShot(CompAtPoint.Handle, InputData.DebugBitmap, 0, 0, CompWith, CompHeight);  //call this here, before calling MatchByBitmap, to have a screenshot on debug image, while searching :)
+  end
+  else
+  begin
+    if InputData.DebugBitmap <> nil then
+    begin
+      //InputData.DebugBitmap.Canvas.Draw(0, 0, InputData.BitmapToSearchOn); //this leads to out of memory
+
+      ScreenShot(InputData.BitmapToSearchOn.Canvas.Handle, InputData.DebugBitmap, 0, 0, CompWith, CompHeight);
+    end;
+  end;
 
   SrcCompSearchAreaBitmap := TBitmap.Create;
   try

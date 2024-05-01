@@ -149,6 +149,20 @@ begin
 end;
 
 
+procedure DoOnActionPlugin_GetActionContentByIndex_Callback(APluginReference: Pointer; AIndex: Integer; AActionContent: Pointer; AContentLength: PDWord); cdecl; //A plugin calls this function, to get the action structure of an action. The content has the same format as the one used to serialize the action using the http API.
+var
+  ActionPlugin: PActionPlugin;
+begin
+  try
+    ActionPlugin := APluginReference;
+
+  except
+    on E: Exception do
+      ActionPlugin^.DoAddToLog('Plugin loader: ' + E.Message);
+  end;
+end;
+
+
 //APluginReference amd AActionName are used as input params.
 function DoOnActionPlugin_ExecuteAction_Callback(APluginReference: Pointer; AActionName: Pointer): Boolean; cdecl;
 var
@@ -403,6 +417,16 @@ begin
   SetPointedContentFromString(ActionPlugin^.FFullTemplatesDir, AFullTemplatesDir);
   SetPointedContentFromString(ActionPlugin^.FAllowedFileDirsForServer, AAllowedFileDirsForServer);
   SetPointedContentFromString(ActionPlugin^.FAllowedFileExtensionsForServer, AAllowedFileExtensionsForServer);
+end;
+
+
+procedure DoOnActionPlugin_SetBitmap(APluginReference: Pointer; AFileName: Pointer; AStreamContent: Pointer; AStreamSize: Int64; AImgWidth, AImgHeight: Integer); cdecl; //A plugin may call this function multiple times if it has multiple bitmaps to give back to UIClicker, which stores the bitmap in rendered-externally-in-mem FS.
+var
+  ActionPlugin: PActionPlugin;
+begin
+  ActionPlugin := APluginReference;
+  //ToDo: save to FInMemFileSystem;
+  //
 end;
 
 
@@ -661,6 +685,7 @@ begin
                                      @ListOfPluginSettingsLen,
                                      DoOnActionPlugin_GetActionCount_Callback,
                                      DoOnActionPlugin_GetActionInfoByIndex_Callback,
+                                     DoOnActionPlugin_GetActionContentByIndex_Callback,
                                      DoOnActionPlugin_ExecuteAction_Callback,
                                      DoOnActionPlugin_GetAllTemplateVars_Callback,
                                      DoOnActionPlugin_SetTemplateVar_Callback,
@@ -668,7 +693,8 @@ begin
                                      DoOnActionPlugin_AddToLog_Callback,
                                      DoOnActionPlugin_SetResultImg,
                                      DoOnActionPlugin_GetFileContent,
-                                     DoOnActionPlugin_GetAllowedFilesInfo);
+                                     DoOnActionPlugin_GetAllowedFilesInfo,
+                                     DoOnActionPlugin_SetBitmap);
   finally
     if FPluginContinueAll <> nil then
       FPluginContinueAll^ := False; //reset flag after execution

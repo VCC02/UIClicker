@@ -692,9 +692,9 @@ begin
     BitBlt(destBitmap.Canvas.Handle,
           0, //X   x-coord of destination upper-left corner
           0, //Y   y-coord of destination upper-left corner
-          Width,
-          Height,
-          DC,
+          Width,   //src and dest width
+          Height,  //src and dest height
+          DC,      //src DC
           XOffsetSrc,     //offset for source
           YOffsetSrc,     //offset for source
           SRCCOPY);

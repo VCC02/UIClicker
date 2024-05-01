@@ -5462,6 +5462,9 @@ begin
   FClkActions[AIndex].FindControlOptions.IgnoredColors := '';
   FClkActions[AIndex].FindControlOptions.SleepySearch := False;
   FClkActions[AIndex].FindControlOptions.StopSearchOnMismatch := True;
+  FClkActions[AIndex].FindControlOptions.ImageSource := isScreenshot;
+  FClkActions[AIndex].FindControlOptions.SourceFileName := '';
+  FClkActions[AIndex].FindControlOptions.ImageSourceFileNameLocation := isflMem;
 
   SetLength(FClkActions[AIndex].FindControlOptions.MatchBitmapText, 1);
   FClkActions[AIndex].FindControlOptions.MatchBitmapText[0].ForegroundColor := '$Color_Window$';

@@ -56,7 +56,7 @@ const
   //Properties (counts)
   CPropCount_Click = 25;
   CPropCount_ExecApp = 7;
-  CPropCount_FindControl = 25;
+  CPropCount_FindControl = 28;
   CPropCount_FindSubControl = CPropCount_FindControl;
   CPropCount_SetText = 4;
   CPropCount_CallTemplate = 4;
@@ -131,6 +131,9 @@ const
   CFindControl_IgnoredColors_PropIndex = 22;
   CFindControl_SleepySearch_PropIndex = 23;
   CFindControl_StopSearchOnMismatch_PropIndex = 24;
+  CFindControl_ImageSource_PropIndex = 25;
+  CFindControl_SourceFileName_PropIndex = 26;
+  CFindControl_ImageSourceFileNameLocation_PropIndex = 27;
 
   CCallTemplate_TemplateFileName_PropIndex = 0; //property index in CallTemplate structure
   CCallTemplate_ListOfCustomVarsAndValues_PropIndex = 1;
@@ -273,7 +276,10 @@ const
     (Name: 'FastSearchAllowedColorErrorCount'; EditorType: etText; DataType: CDTString),
     (Name: 'IgnoredColors'; EditorType: etText; DataType: CDTString),
     (Name: 'SleepySearch'; EditorType: etBooleanCombo; DataType: CDTBool),
-    (Name: 'StopSearchOnMismatch'; EditorType: etBooleanCombo; DataType: CDTBool)
+    (Name: 'StopSearchOnMismatch'; EditorType: etBooleanCombo; DataType: CDTBool),
+    (Name: 'ImageSource'; EditorType: etEnumCombo; DataType: CDTEnum),
+    (Name: 'SourceFileName'; EditorType: etTextWithArrow; DataType: CDTString),
+    (Name: 'ImageSourceFileNameLocation'; EditorType: etEnumCombo; DataType: CDTEnum)
   );
 
   {$IFDEF SubProperties}
@@ -532,7 +538,10 @@ const
     nil, //FastSearchAllowedColorErrorCount
     nil, //IgnoredColors
     nil, //SleepySearch
-    nil  //StopSearchOnMismatch
+    nil, //StopSearchOnMismatch
+    nil, //ImageSource
+    nil, //SourceFileName
+    nil  //ImageSourceFileNameLocation
   );
 
   CCallTemplateGetActionValueStrFunctions: TGetCallTemplateValueStrFuncArr = (
@@ -614,7 +623,10 @@ const
     0, //FastSearchAllowedColorErrorCount: Boolean;
     0, //IgnoredColors: string;
     0, //StopSearchOnMismatch: Boolean;
-    0  //SleepySearch: Boolean;
+    0, //SleepySearch: Boolean;
+    Ord(High(TImageSource)) + 1, //ImageSource: TImageSource;
+    0, //SourceFileName: string;
+    Ord(High(TImageSourceFileNameLocation)) + 1  //ImageSourceFileNameLocation: TImageSourceFileNameLocation;
   );
 
   CSetTextEnumCounts: array[0..CPropCount_SetText - 1] of Integer = (
@@ -792,7 +804,10 @@ const
     nil, //FastSearchAllowedColorErrorCount
     nil, //IgnoredColors
     nil, //SleepySearch
-    nil  //StopSearchOnMismatch
+    nil, //StopSearchOnMismatch
+    @CImageSourceStr,
+    nil, //SourceFileName
+    @CImageSourceFileNameLocationStr
   );
 
   CSetTextEnumStrings: array[0..CPropCount_SetText - 1] of PArrayOfString = (
@@ -934,6 +949,9 @@ function GetPropertyHint_FindControl_FastSearchAllowedColorErrorCount: string;
 function GetPropertyHint_FindControl_IgnoredColors: string;
 function GetPropertyHint_FindControl_SleepySearch: string;
 function GetPropertyHint_FindControl_StopSearchOnMismatch: string;
+function GetPropertyHint_FindControl_ImageSource: string;
+function GetPropertyHint_FindControl_SourceFileName: string;
+function GetPropertyHint_FindControl_ImageSourceFileNameLocation: string;
 
 {$IFDEF SubProperties}
   function GetPropertyHint_FindControl_MatchCriteria_MatchBitmapText: string;
@@ -1052,7 +1070,10 @@ const
     @GetPropertyHint_FindControl_FastSearchAllowedColorErrorCount, // FastSearchAllowedColorErrorCount: string;
     @GetPropertyHint_FindControl_IgnoredColors, // IgnoredColors: string;
     @GetPropertyHint_FindControl_SleepySearch, // SleepySearch: Boolean;
-    @GetPropertyHint_FindControl_StopSearchOnMismatch // StopSearchOnMismatch: Boolean;
+    @GetPropertyHint_FindControl_StopSearchOnMismatch, // StopSearchOnMismatch: Boolean;
+    @GetPropertyHint_FindControl_ImageSource, // ImageSource: TImageSource;
+    @GetPropertyHint_FindControl_SourceFileName, //SourceFileName: string;
+    @GetPropertyHint_FindControl_ImageSourceFileNameLocation //ImageSourceFileNameLocation: TImageSourceFileLocation;
   );
 
 
@@ -1282,6 +1303,9 @@ begin
     22: Result := AAction^.FindControlOptions.IgnoredColors;
     23: Result := BoolToStr(AAction^.FindControlOptions.SleepySearch, True);
     24: Result := BoolToStr(AAction^.FindControlOptions.StopSearchOnMismatch, True);
+    25: Result := CImageSourceStr[AAction^.FindControlOptions.ImageSource];
+    26: Result := AAction^.FindControlOptions.SourceFileName;
+    27: Result := CImageSourceFileNameLocationStr[AAction^.FindControlOptions.ImageSourceFileNameLocation];
     else
       Result := 'unknown';
   end;
@@ -1619,6 +1643,34 @@ begin
 end;
 
 
+function ImageSource_AsStringToValue(AImageSourceAsString: string): TImageSource;
+var
+  i: TImageSource;
+begin
+  Result := isScreenshot;
+  for i := Low(TImageSource) to High(TImageSource) do
+    if CImageSourceStr[i] = AImageSourceAsString then
+    begin
+      Result := i;
+      Exit;
+    end;
+end;
+
+
+function ImageSourceFileNameLocation_AsStringToValue(AImageSourceFileNameLocationAsString: string): TImageSourceFileNameLocation;
+var
+  i: TImageSourceFileNameLocation;
+begin
+  Result := isflDisk;
+  for i := Low(TImageSourceFileNameLocation) to High(TImageSourceFileNameLocation) do
+    if CImageSourceFileNameLocationStr[i] = AImageSourceFileNameLocationAsString then
+    begin
+      Result := i;
+      Exit;
+    end;
+end;
+
+
 function FontQuality_AsStringToValue(AFontQualityAsString: string): TFontQuality;
 var
   i: TFontQuality;
@@ -1781,6 +1833,9 @@ begin
     22: AAction^.FindControlOptions.IgnoredColors := NewValue;
     23: AAction^.FindControlOptions.SleepySearch := StrToBool(NewValue);
     24: AAction^.FindControlOptions.StopSearchOnMismatch := StrToBool(NewValue);
+    25: AAction^.FindControlOptions.ImageSource := ImageSource_AsStringToValue(NewValue);
+    26: AAction^.FindControlOptions.SourceFileName := NewValue;
+    27: AAction^.FindControlOptions.ImageSourceFileNameLocation := ImageSourceFileNameLocation_AsStringToValue(NewValue);
     else
       ;
   end;
@@ -2232,10 +2287,30 @@ end;
 
 function GetPropertyHint_FindControl_StopSearchOnMismatch: string;
 begin
-  Result := 'When set to False, the search continues, to get the total pixel error count and the action result is "Successful"' + #13#10 +
+  Result := 'When set to False, the search continues, to get the total pixel error count. The action result will be set to "Successful".' + #13#10 +
             'This is useful when the searched bitmap has the same size (both width and height) as the area it is searched from.' + #13#10 +
             'When set to False, the result (total errored pixel count) is placed into $ResultedErrorCount$.' + #13#10 +
             'If the action fails when set to True, the result is usually greater than the value of AllowedColorErrorCount property.';
+end;
+
+
+function GetPropertyHint_FindControl_ImageSource: string;
+begin
+  Result := 'When set to isScreenshot, FindSubControl takes screenshot from selected area, where it searches for a bitmap.' + #13#10 +
+            'When set to isFile, FindSubControl uses a bmp from disk or "externally-rendered" In-Mem file system.';
+end;
+
+
+function GetPropertyHint_FindControl_SourceFileName: string;
+begin
+  Result := 'Used when ImageSource is set to isFile.' + #13#10 +
+            'This is a full path to a bmp from disk or "externally-rendered" In-Mem file system.';
+end;
+
+
+function GetPropertyHint_FindControl_ImageSourceFileNameLocation: string;
+begin
+  Result := 'When ImageSource is set to isFile, ImageSourceFileNameLocation selects between disk and "externally-rendered" In-Mem file system.';
 end;
 
 

@@ -1391,6 +1391,20 @@ function TActionExecution.ExecuteFindControlAction(var AFindControlOptions: TClk
     end;
   end;
 
+  procedure LoadBitmapToSearchOn(AFindControlInputData: TFindControlInputData);
+  begin
+    if AFindControlOptions.ImageSource = isFile then
+    begin
+      case AFindControlOptions.ImageSourceFileNameLocation of
+        isflDisk:
+          DoOnLoadBitmap(AFindControlInputData.BitmapToSearchOn, AFindControlOptions.SourceFileName);
+
+        isflMem:
+          DoOnLoadRenderedBitmap(AFindControlInputData.BitmapToSearchOn, AFindControlOptions.SourceFileName);
+      end;
+    end;
+  end;
+
 var
   i, j, k, n: Integer;
   ListOfBitmapFiles, ListOfPrimitiveFiles: TStringList;
@@ -1701,8 +1715,10 @@ begin
           Break;
 
         FindControlInputData.BitmapToSearchFor := TBitmap.Create;
+        FindControlInputData.BitmapToSearchOn := TBitmap.Create;
         try
           FindControlInputData.BitmapToSearchFor.PixelFormat := pf24bit;
+          LoadBitmapToSearchOn(FindControlInputData);
 
           //if AFindControlOptions.MatchCriteria.WillMatchBitmapText then
           begin
@@ -1773,7 +1789,15 @@ begin
           try
             SetLength(PartialResultedControlArr, 0);
             WorkFindControlInputData := FindControlInputData;
-            FindControlOnScreen_Result := FindControlOnScreen(AFindControlOptions.MatchBitmapAlgorithm, AFindControlOptions.MatchBitmapAlgorithmSettings, WorkFindControlInputData, InitialTickCount, Timeout, StopAllActionsOnDemandAddr, PartialResultedControlArr, DoOnGetGridDrawingOption);
+            FindControlOnScreen_Result := FindControlOnScreen(AFindControlOptions.MatchBitmapAlgorithm,
+                                                              AFindControlOptions.MatchBitmapAlgorithmSettings,
+                                                              WorkFindControlInputData,
+                                                              InitialTickCount,
+                                                              Timeout,
+                                                              StopAllActionsOnDemandAddr,
+                                                              PartialResultedControlArr,
+                                                              DoOnGetGridDrawingOption);
+
             if FindControlOnScreen_Result or not FindControlInputData.StopSearchOnMismatch then
             begin
               if not FindControlOnScreen_Result and not FindControlInputData.StopSearchOnMismatch then
@@ -1810,6 +1834,7 @@ begin
           end;
         finally
           FindControlInputData.BitmapToSearchFor.Free;
+          FindControlInputData.BitmapToSearchOn.Free;
         end;
 
         if Result and not AFindControlOptions.GetAllControls then
@@ -1824,8 +1849,11 @@ begin
     if mmBitmapFiles in FindControlInputData.MatchingMethods then
     begin
       FindControlInputData.BitmapToSearchFor := TBitmap.Create;
+      FindControlInputData.BitmapToSearchOn := TBitmap.Create;
       try
         FindControlInputData.BitmapToSearchFor.PixelFormat := pf24bit;
+        LoadBitmapToSearchOn(FindControlInputData);
+
         ListOfBitmapFiles := TStringList.Create;
         try
           ListOfBitmapFiles.Text := AFindControlOptions.MatchBitmapFiles;
@@ -1883,7 +1911,15 @@ begin
 
             SetLength(PartialResultedControlArr, 0);
             WorkFindControlInputData := FindControlInputData;
-            FindControlOnScreen_Result := FindControlOnScreen(AFindControlOptions.MatchBitmapAlgorithm, AFindControlOptions.MatchBitmapAlgorithmSettings, WorkFindControlInputData, InitialTickCount, Timeout, StopAllActionsOnDemandAddr, PartialResultedControlArr, DoOnGetGridDrawingOption);
+            FindControlOnScreen_Result := FindControlOnScreen(AFindControlOptions.MatchBitmapAlgorithm,
+                                                              AFindControlOptions.MatchBitmapAlgorithmSettings,
+                                                              WorkFindControlInputData,
+                                                              InitialTickCount,
+                                                              Timeout,
+                                                              StopAllActionsOnDemandAddr,
+                                                              PartialResultedControlArr,
+                                                              DoOnGetGridDrawingOption);
+
             if FindControlOnScreen_Result or not FindControlInputData.StopSearchOnMismatch then
             begin
               if not FindControlOnScreen_Result and not FindControlInputData.StopSearchOnMismatch then
@@ -1916,6 +1952,7 @@ begin
         end;
       finally
         FindControlInputData.BitmapToSearchFor.Free;
+        FindControlInputData.BitmapToSearchOn.Free;
       end;
 
       AddToLog('MatchSource: ' + MatchSource);
@@ -1925,8 +1962,11 @@ begin
     if AFindControlOptions.MatchCriteria.WillMatchPrimitiveFiles then
     begin
       FindControlInputData.BitmapToSearchFor := TBitmap.Create;
+      FindControlInputData.BitmapToSearchOn := TBitmap.Create;
       try
         FindControlInputData.BitmapToSearchFor.PixelFormat := pf24bit;
+        LoadBitmapToSearchOn(FindControlInputData);
+
         ListOfPrimitiveFiles := TStringList.Create;
         try
           ListOfPrimitiveFiles.Text := AFindControlOptions.MatchPrimitiveFiles;
@@ -2011,7 +2051,15 @@ begin
 
                 SetLength(PartialResultedControlArr, 0);
                 WorkFindControlInputData := FindControlInputData;
-                FindControlOnScreen_Result := FindControlOnScreen(AFindControlOptions.MatchBitmapAlgorithm, AFindControlOptions.MatchBitmapAlgorithmSettings, WorkFindControlInputData, InitialTickCount, Timeout, StopAllActionsOnDemandAddr, PartialResultedControlArr, DoOnGetGridDrawingOption);
+                FindControlOnScreen_Result := FindControlOnScreen(AFindControlOptions.MatchBitmapAlgorithm,
+                                                                  AFindControlOptions.MatchBitmapAlgorithmSettings,
+                                                                  WorkFindControlInputData,
+                                                                  InitialTickCount,
+                                                                  Timeout,
+                                                                  StopAllActionsOnDemandAddr,
+                                                                  PartialResultedControlArr,
+                                                                  DoOnGetGridDrawingOption);
+
                 if FindControlOnScreen_Result or not FindControlInputData.StopSearchOnMismatch then
                 begin
                   if not FindControlOnScreen_Result and not FindControlInputData.StopSearchOnMismatch then
@@ -2064,6 +2112,7 @@ begin
         end;
       finally
         FindControlInputData.BitmapToSearchFor.Free;
+        FindControlInputData.BitmapToSearchOn.Free;
       end;
 
       AddToLog('MatchSource: ' + MatchSource);
@@ -2152,7 +2201,7 @@ begin
                                      '" in ' + FSelfTemplateFileName^ +
                                      '  AttemptCount=' + IntToStr(AttemptCount) +
                                      '  Search: ' +
-                                     '  $Control_Left$=' + EvaluateReplacements('$Control_Left$') + //sasme as "global...", but are required here, to be displayed in caller template log
+                                     '  $Control_Left$=' + EvaluateReplacements('$Control_Left$') + //same as "global...", but are required here, to be displayed in caller template log
                                      '  $Control_Top$=' + EvaluateReplacements('$Control_Top$') +
                                      '  $Control_Right$=' + EvaluateReplacements('$Control_Right$') +
                                      '  $Control_Bottom$=' + EvaluateReplacements('$Control_Bottom$') +
@@ -2844,8 +2893,8 @@ begin
         AddToLog(ActionPlugin.Err);
     end;
 
-    frClickerActions.imgDebugBmp.Width := frClickerActions.imgDebugBmp.Picture.Bitmap.Width;
-    frClickerActions.imgDebugBmp.Height := frClickerActions.imgDebugBmp.Picture.Bitmap.Height;
+    frClickerActions.imgDebugBmp.Width := Max(10, Min(frClickerActions.imgDebugBmp.Picture.Bitmap.Width, 7680));   //Limit to 8K resolution for now. Sometimes, imgDebugBmp might not be initialized, causing AVs (div by 0 or heap overflow).
+    frClickerActions.imgDebugBmp.Height := Max(10, Min(frClickerActions.imgDebugBmp.Picture.Bitmap.Height, 4320)); //Limit to 8K resolution for now.
   finally
     AddToLog('Plugin executed in ' + IntToStr(GetTickCount64 - tk) + 'ms.  Total action count: ' + IntToStr(Length(AAllActions^)) + ' action(s)...');
   end;
