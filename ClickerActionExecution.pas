@@ -1699,6 +1699,8 @@ begin
   FindControlInputData.DebugBitmap := frClickerActions.imgDebugBmp.Picture.Bitmap;
   FindControlInputData.DebugGrid := frClickerActions.imgDebugGrid;
 
+  FindControlInputData.ImageSource := AFindControlOptions.ImageSource;
+
   SetLength(ResultedControlArr_Text, 0);
   SetLength(ResultedControlArr_Bmp, 0);
   SetLength(ResultedControlArr_Pmtv, 0);
@@ -3057,6 +3059,8 @@ var
   Temp_SearchForControlMode: Integer;
   Temp_MatchBitmapTextCount: Integer;
   Temp_MatchBitmapAlgorithm: Integer;
+  Temp_ImageSource: Integer;
+  Temp_ImageSourceFileNameLocation: Integer;
   Temp_ActionTimeout: Int64;
   Temp_FontSize: Integer;
   Temp_FontQuality: Integer;
@@ -3092,6 +3096,20 @@ begin
     if (Temp_ActionTimeout < 0) or (Temp_ActionTimeout > 2147483647) then
     begin
       SetActionVarValue('$ExecAction_Err$', 'ActionTimeout is out of range.');
+      Exit;
+    end;
+
+    Temp_ImageSource := StrToIntDef(AListOfFindControlOptionsParams.Values['ImageSource'], Ord(isScreenshot));
+    if (Temp_ImageSource < 0) or (Temp_ImageSource > Ord(High(TImageSource))) then
+    begin
+      SetActionVarValue('$ExecAction_Err$', 'ImageSource is out of range.');
+      Exit;
+    end;
+
+    Temp_ImageSourceFileNameLocation := StrToIntDef(AListOfFindControlOptionsParams.Values['ImageSourceFileNameLocation'], Ord(isflMem));
+    if (Temp_ImageSourceFileNameLocation < 0) or (Temp_ImageSourceFileNameLocation > Ord(High(TImageSourceFileNameLocation))) then
+    begin
+      SetActionVarValue('$ExecAction_Err$', 'ImageSourceFileNameLocation is out of range.');
       Exit;
     end;
 
@@ -3208,6 +3226,10 @@ begin
     FindControlOptions.IgnoredColors := AListOfFindControlOptionsParams.Values['IgnoredColors'];
     FindControlOptions.SleepySearch := AListOfFindControlOptionsParams.Values['SleepySearch'] = '1';
     FindControlOptions.StopSearchOnMismatch := AListOfFindControlOptionsParams.Values['StopSearchOnMismatch'] <> '0';
+
+    FindControlOptions.ImageSource := TImageSource(Temp_ImageSource);
+    FindControlOptions.SourceFileName := AListOfFindControlOptionsParams.Values['SourceFileName'];
+    FindControlOptions.ImageSourceFileNameLocation := TImageSourceFileNameLocation(Temp_ImageSourceFileNameLocation);
 
     ActionOptions.ActionName := AListOfFindControlOptionsParams.Values['ActionName'];
     ActionOptions.ActionTimeout := Temp_ActionTimeout;

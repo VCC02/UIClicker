@@ -656,7 +656,8 @@ end;
 function MatchByBitmap(Algorithm: TMatchBitmapAlgorithm;
                       AlgorithmSettings: TMatchBitmapAlgorithmSettings;
                       ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height: Integer;
-                      BitmapToSearchFor, SrcCompSearchAreaBitmap: TBitmap;
+                      BitmapToSearchFor, SrcCompSearchAreaBitmap, BitmapToSearchOn: TBitmap;
+                      ImageSource: TImageSource;
                       CompHandle: THandle;
                       ColorErr, AllowedColorErrCnt, FastSearchAllowedColorErrCnt: Integer;
                       out SubCnvXOffset, SubCnvYOffset: Integer;
@@ -673,7 +674,15 @@ var
 begin
   Result := False;
                        //SrcCompSearchAreaBitmap is the cropped area, from where BitmapToSearchFor is searched for.
-  ScreenShot(CompHandle, SrcCompSearchAreaBitmap, ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height);
+
+  if ImageSource = isScreenshot then
+    ScreenShot(CompHandle, SrcCompSearchAreaBitmap, ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height)
+  else
+  begin
+    ScreenShot(BitmapToSearchOn.Canvas.Handle, SrcCompSearchAreaBitmap, 0, 0, ScrShot_Width, ScrShot_Height);
+    //SrcCompSearchAreaBitmap.Canvas.Draw(0, 0, BitmapToSearchOn);
+  end;
+
   //DbgSaveScreenshotContent(SrcCompSearchAreaBitmap);   ////////////////////// keep commented for production code, also a path has to be updated, see above
 
   SubCnvXOffset := -1;  //for debugging..
@@ -698,7 +707,7 @@ end;
 //SrcCompSearchAreaBitmap - bitmap with source component, defined by InitRect
 function MatchControlByBitmap(Algorithm: TMatchBitmapAlgorithm; AlgorithmSettings: TMatchBitmapAlgorithmSettings; CompAtPoint: TCompRec; InputData: TFindControlInputData; out SubCnvXOffset, SubCnvYOffset, AResultedErrorCount: Integer; var AFoundBitmaps: TCompRecArr; AStopAllActionsOnDemand: PBoolean; ADisplayGridLineOption: TDisplayGridLineOption): Boolean;
 var
-  ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height, CompWith, CompHeight: Integer;
+  ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height, CompWidth, CompHeight: Integer;
   SrcCompSearchAreaBitmap: TBitmap;
   FoundBmp: Boolean;
 begin
@@ -706,21 +715,26 @@ begin
   ScrShot_Top := InputData.GlobalSearchArea.Top - CompAtPoint.ComponentRectangle.Top - 0;
   ScrShot_Width := InputData.GlobalSearchArea.Right - InputData.GlobalSearchArea.Left + 1;
   ScrShot_Height := InputData.GlobalSearchArea.Bottom - InputData.GlobalSearchArea.Top + 1;
-  CompWith := CompAtPoint.ComponentRectangle.Right - CompAtPoint.ComponentRectangle.Left;
+  CompWidth := CompAtPoint.ComponentRectangle.Right - CompAtPoint.ComponentRectangle.Left;
   CompHeight := CompAtPoint.ComponentRectangle.Bottom - CompAtPoint.ComponentRectangle.Top;
 
   if InputData.ImageSource = isScreenshot then
   begin
     if InputData.DebugBitmap <> nil then
-      ScreenShot(CompAtPoint.Handle, InputData.DebugBitmap, 0, 0, CompWith, CompHeight);  //call this here, before calling MatchByBitmap, to have a screenshot on debug image, while searching :)
+      ScreenShot(CompAtPoint.Handle, InputData.DebugBitmap, 0, 0, CompWidth, CompHeight);  //call this here, before calling MatchByBitmap, to have a screenshot on debug image, while searching :)
   end
   else
   begin
     if InputData.DebugBitmap <> nil then
-    begin
+    begin  //In work
       //InputData.DebugBitmap.Canvas.Draw(0, 0, InputData.BitmapToSearchOn); //this leads to out of memory
 
-      ScreenShot(InputData.BitmapToSearchOn.Canvas.Handle, InputData.DebugBitmap, 0, 0, CompWith, CompHeight);
+      //CompWidth := InputData.BitmapToSearchOn.Width;
+      //CompHeight := InputData.BitmapToSearchOn.Height;
+      //ScreenShot(InputData.BitmapToSearchOn.Canvas.Handle, InputData.DebugBitmap, 0, 0, CompWidth, CompHeight);
+
+      ScrShot_Width := InputData.BitmapToSearchOn.Width;
+      ScrShot_Height := InputData.BitmapToSearchOn.Height;
     end;
   end;
 
@@ -734,6 +748,8 @@ begin
                               ScrShot_Height,
                               InputData.BitmapToSearchFor,
                               SrcCompSearchAreaBitmap,  //used for debugging
+                              InputData.BitmapToSearchOn,
+                              InputData.ImageSource,
                               CompAtPoint.Handle,
                               InputData.ColorError,
                               InputData.AllowedColorErrorCount,
