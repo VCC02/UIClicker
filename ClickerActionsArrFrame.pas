@@ -859,7 +859,7 @@ begin
     TempFuncDescriptions.Add('$CRLF$=Returns a CRLF sequence.');
     TempFuncDescriptions.Add('$#4#5$=Returns a ASCII #4#5 sequence.');
     TempFuncDescriptions.Add('$Now$=Returns current datetime.');
-    TempFuncDescriptions.Add('$RenderBmpExternally()$=Sends an http request to a server, for rendering a bitmap, using the supplied list of parameters (from right column of a SetVar action). These parameters are encoded as a #4#5 separated <key>eq<value> strings. The required parameters are (without quotes): "' + CExtBmp_SrvAddrPort + '", "' + CExtBmp_Cmd + '", "' + CExtBmp_Filename + '". The optional parameters are (without quotes): "' + CExtBmp_Params + '" and "' + CExtBmp_IncludeFilenameInRequest + '". When provided, "' + CExtBmp_Params + '" are "&"-separated key%3Dvalue pairs. When "' + CExtBmp_IncludeFilenameInRequest + '" is 1, the filename is added to request. The result is placed in $ExternallyRenderedBmpResult$ variable. If successful, the result is set to empty string, otherwise it is set to an error message. The received bitmap is "stored" in an in-mem file system. The function must be called from the left column of SetVar action.');
+    TempFuncDescriptions.Add('$RenderBmpExternally()$=Sends an http request to a server, for rendering a bitmap, using the supplied list of parameters (from right column of a SetVar action). These parameters are encoded as a "$#4#5$" separated <key>eq<value> strings. Notice the use of "$#4#5$" variable, not its actual value. The required parameters are (without quotes): "' + CExtBmp_SrvAddrPort + '", "' + CExtBmp_Cmd + '", "' + CExtBmp_Filename + '". The optional parameters are (without quotes): "' + CExtBmp_Params + '" and "' + CExtBmp_IncludeFilenameInRequest + '". When provided, "' + CExtBmp_Params + '" are "&"-separated key%3Dvalue pairs. When "' + CExtBmp_IncludeFilenameInRequest + '" is 1, the filename is added to request. The result is placed in $ExternallyRenderedBmpResult$ variable. If successful, the result is set to empty string, otherwise it is set to an error message. The received bitmap is "stored" in an in-mem file system. The function must be called from the left column of SetVar action. Argument example: SrvAddrPort=http://127.0.0.1:53444$#4#5$Cmd=GetGradientImage$#4#5$Filename=I:\TheResult.bmp$#4#5$Params=IncludeTimestamp%3DYes&TextCount%3D1');
     TempFuncDescriptions.Add('$GetActionProperties()$=Sets the $ActionPropertiesResult$ variable to an &-separated list of action properties and their values, from the current template. The action is identified by name, and this name has to be provided in the right column of a SetVar action. If the action is not found by name (which is case sensitive), the result is set to an error message. The function must be called from the left column.');
 
     for i := 0 to FFuncDescriptions.Count - 1 do
@@ -5462,6 +5462,9 @@ begin
   FClkActions[AIndex].FindControlOptions.IgnoredColors := '';
   FClkActions[AIndex].FindControlOptions.SleepySearch := False;
   FClkActions[AIndex].FindControlOptions.StopSearchOnMismatch := True;
+  FClkActions[AIndex].FindControlOptions.ImageSource := isScreenshot;
+  FClkActions[AIndex].FindControlOptions.SourceFileName := '';
+  FClkActions[AIndex].FindControlOptions.ImageSourceFileNameLocation := isflMem;
 
   SetLength(FClkActions[AIndex].FindControlOptions.MatchBitmapText, 1);
   FClkActions[AIndex].FindControlOptions.MatchBitmapText[0].ForegroundColor := '$Color_Window$';

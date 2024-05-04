@@ -194,6 +194,9 @@ begin
     ACustomActions[i].FindControlOptions.IgnoredColors := '';
     ACustomActions[i].FindControlOptions.SleepySearch := False;
     ACustomActions[i].FindControlOptions.StopSearchOnMismatch := True;
+    ACustomActions[i].FindControlOptions.ImageSource := isScreenshot;
+    ACustomActions[i].FindControlOptions.SourceFileName := '';
+    ACustomActions[i].FindControlOptions.ImageSourceFileNameLocation := isflMem;
 
     SectionIndex := Ini.GetSectionIndex('Actions.SetTextOptions');
     ACustomActions[i].SetTextOptions.Text := Ini.ReadString(SectionIndex, 'Text_' + IterationStr, '');
@@ -399,6 +402,9 @@ begin
   AFindControlOptions.IgnoredColors := Ini.ReadString(SectionIndex, 'IgnoredColors', '');
   AFindControlOptions.SleepySearch := Ini.ReadBool(SectionIndex, 'SleepySearch', False);
   AFindControlOptions.StopSearchOnMismatch := Ini.ReadBool(SectionIndex, 'StopSearchOnMismatch', True);
+  AFindControlOptions.ImageSource := TImageSource(Min(Ini.ReadInteger(SectionIndex, 'ImageSource', Ord(isScreenshot)), Integer(High(TImageSource))));
+  AFindControlOptions.SourceFileName := Ini.ReadString(SectionIndex, 'SourceFileName', '');
+  AFindControlOptions.ImageSourceFileNameLocation := TImageSourceFileNameLocation(Min(Ini.ReadInteger(SectionIndex, 'ImageSourceFileNameLocation', Ord(isflMem)), Integer(High(TImageSourceFileNameLocation))));
 end;
 
 
@@ -835,6 +841,10 @@ begin
   AStringList.Add('IgnoredColors=' + AActionFindControlOptions.IgnoredColors);
   AStringList.Add('SleepySearch=' + IntToStr(Ord(AActionFindControlOptions.SleepySearch)));
   AStringList.Add('StopSearchOnMismatch=' + IntToStr(Ord(AActionFindControlOptions.StopSearchOnMismatch)));
+
+  AStringList.Add('ImageSource=' + IntToStr(Ord(AActionFindControlOptions.ImageSource)));
+  AStringList.Add('SourceFileName=' + AActionFindControlOptions.SourceFileName);
+  AStringList.Add('ImageSourceFileNameLocation=' + IntToStr(Ord(AActionFindControlOptions.ImageSourceFileNameLocation)));
 end;
 
 
@@ -1018,6 +1028,10 @@ begin             //Substructures, which do not contain pointers, can be directl
   ADest.FindControlOptions.IgnoredColors := ASrc.FindControlOptions.IgnoredColors;
   ADest.FindControlOptions.SleepySearch := ASrc.FindControlOptions.SleepySearch;
   ADest.FindControlOptions.StopSearchOnMismatch := ASrc.FindControlOptions.StopSearchOnMismatch;
+
+  ADest.FindControlOptions.ImageSource := ASrc.FindControlOptions.ImageSource;
+  ADest.FindControlOptions.SourceFileName := ASrc.FindControlOptions.SourceFileName;
+  ADest.FindControlOptions.ImageSourceFileNameLocation := ASrc.FindControlOptions.ImageSourceFileNameLocation;
 end;
 
 

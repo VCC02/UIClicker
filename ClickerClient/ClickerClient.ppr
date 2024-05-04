@@ -126,6 +126,9 @@ type
     IgnoredColors: PWideChar;
     SleepySearch: Boolean;
     StopSearchOnMismatch: Boolean;
+    ImageSource: TImageSource;
+    SourceFileName: PWideChar;
+    ImageSourceFileNameLocation: TImageSourceFileNameLocation;
   end;
 
   PClkFindControlOptionsAPI = ^TClkFindControlOptionsAPI;
@@ -706,6 +709,10 @@ begin
   SetPointedContentToString(@string(PWideChar(AFindControlOptions^.IgnoredColors))[1], TempAction.FindControlOptions.IgnoredColors);
   TempAction.FindControlOptions.SleepySearch := AFindControlOptions^.SleepySearch;
   TempAction.FindControlOptions.StopSearchOnMismatch := AFindControlOptions^.StopSearchOnMismatch;
+
+  TempAction.FindControlOptions.ImageSource := TImageSource(AFindControlOptions^.ImageSource);
+  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.SourceFileName))[1], TempAction.FindControlOptions.SourceFileName);
+  TempAction.FindControlOptions.ImageSourceFileNameLocation := TImageSourceFileNameLocation(AFindControlOptions^.ImageSourceFileNameLocation);
 
   AddActionToTemplate(TemplateFileName, TempAction);
   Result := 0;

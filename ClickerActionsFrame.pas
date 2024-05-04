@@ -270,6 +270,10 @@ type
     procedure MenuItem_DiscardChangesAndReloadPrimitiveFileInPropertyListClick(Sender: TObject);
     procedure SavePrimitivesFileFromMenu(AFileIndex: Integer);
 
+    procedure MenuItem_BrowseImageSourceFromPropertyListClick(Sender: TObject);
+    procedure MenuItem_NoImageSourceInInMemPropertyListClick(Sender: TObject);
+    procedure MenuItem_SetFileNameFromInMemPropertyListClick(Sender: TObject);
+
     procedure MenuItem_AddFontProfileToPropertyListClick(Sender: TObject);
     procedure MenuItem_AddFontProfileWithAntialiasedAndClearTypeToPropertyListClick(Sender: TObject);
     procedure MenuItem_AddFontProfileWithNonAntialiasedAndAntialiasedAndClearTypeToPropertyListClick(Sender: TObject);
@@ -3659,6 +3663,57 @@ begin
 end;
 
 
+procedure TfrClickerActions.MenuItem_BrowseImageSourceFromPropertyListClick(Sender: TObject);
+var
+  MenuData: POIMenuItemData;
+begin
+  MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
+  try
+    //DoOnSetPictureOpenDialogInitialDir();
+    if not DoOnPictureOpenDialogExecute then
+      Exit;
+
+    FEditingAction^.FindControlOptions.SourceFileName := DoOnGetPictureOpenDialogFileName;
+    FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex, True);  //this closes the editor
+    TriggerOnControlsModified;
+  finally
+    Dispose(MenuData);
+  end;
+end;
+
+
+procedure TfrClickerActions.MenuItem_NoImageSourceInInMemPropertyListClick(Sender: TObject);
+var
+  MenuData: POIMenuItemData;
+begin
+  MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
+  try
+    MessageBox(Handle, 'No files in In-Mem file system. They are usually saved by the $RenderBmpExternally()$ function or by plugins.', PChar(Application.Title), MB_ICONINFORMATION);
+  finally
+    Dispose(MenuData);
+  end;
+end;
+
+
+procedure TfrClickerActions.MenuItem_SetFileNameFromInMemPropertyListClick(Sender: TObject);
+var
+  MenuData: POIMenuItemData;
+  Fnm: string;
+begin
+  MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
+  try
+    Fnm := StringReplace(MenuData.MenuItemCaption, '&', '', [rfReplaceAll]);
+    Fnm := Copy(Fnm, 1, Pos(#8#7, Fnm) - 1);
+
+    FEditingAction^.FindControlOptions.SourceFileName := Fnm;
+    FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex, True);  //this closes the editor
+    TriggerOnControlsModified;
+  finally
+    Dispose(MenuData);
+  end;
+end;
+
+
 function TfrClickerActions.GetUniqueProfileName(n: Integer): string;
 var
   AttemptCount: Integer;
@@ -5257,8 +5312,16 @@ begin
       if ((APropertyIndex in [CFindControl_MatchBitmapText_PropIndex .. CFindControl_MatchBitmapAlgorithmSettings_PropIndex,
                               CFindControl_ColorError_PropIndex .. CFindControl_AllowedColorErrorCount_PropIndex,
                               CFindControl_MatchPrimitiveFiles_PropIndex,
-                              CFindControl_UseFastSearch_PropIndex .. CFindControl_StopSearchOnMismatch_PropIndex])
+                              CFindControl_UseFastSearch_PropIndex .. CFindControl_ImageSourceFileNameLocation_PropIndex])
                               and (CurrentlyEditingActionType = acFindControl)) then
+      begin
+        TargetCanvas.Font.Color := clGray;
+        Exit;
+      end;
+
+      if ((APropertyIndex in [CFindControl_SourceFileName_PropIndex, CFindControl_ImageSourceFileNameLocation_PropIndex])
+         and (FEditingAction^.FindControlOptions.ImageSource = isScreenshot)
+         and (CurrentlyEditingActionType = acFindSubControl)) then
       begin
         TargetCanvas.Font.Color := clGray;
         Exit;
@@ -5669,7 +5732,7 @@ begin
             end;
           end; //init rect
 
-          CFindControl_MatchBitmapFiles_PropIndex, CFindControl_MatchPrimitiveFiles_PropIndex:
+          CFindControl_MatchBitmapFiles_PropIndex, CFindControl_MatchPrimitiveFiles_PropIndex, CFindControl_SourceFileName_PropIndex:
           begin
             if Sender is TVTEdit then
               FLastClickedTVTEdit := Sender as TVTEdit
@@ -5808,6 +5871,7 @@ var
   s: string;
   BMPTxt: TClkFindControlMatchBitmapText;
   ItemIndexMod, ItemIndexDiv: Integer;
+  TempListOfExternallyRenderedImages: TStringList;
 begin
   case ACategoryIndex of
     CCategory_Common:
@@ -5941,15 +6005,19 @@ begin
 
                 AddMenuItemToPopupMenu(FOIEditorMenu, 'Browse...', MenuItem_BrowseBMPFileFromPropertyListClick,
                   ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+                FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 0);
 
                 AddMenuItemToPopupMenu(FOIEditorMenu, 'Remove file from list...', MenuItem_RemoveBMPFileFromPropertyListClick,
                   ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+                FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 1);
 
                 AddMenuItemToPopupMenu(FOIEditorMenu, 'Move file up (one position)', MenuItem_MoveBMPFileUpInPropertyListClick,
                   ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+                FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 2);
 
                 AddMenuItemToPopupMenu(FOIEditorMenu, 'Move file down (one position)', MenuItem_MoveBMPFileDownInPropertyListClick,
                   ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+                FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 3);
 
                 GetCursorPos(tp);
                 FOIEditorMenu.PopUp(tp.X, tp.Y);
@@ -6026,6 +6094,49 @@ begin
                 ;
             end;
           end;  //CFindControl_MatchPrimitiveFiles_PropIndex
+
+          CFindControl_SourceFileName_PropIndex:
+          begin
+            if ANodeLevel = CPropertyLevel then
+            begin
+              FOIEditorMenu.Items.Clear;
+
+              case FEditingAction^.FindControlOptions.ImageSourceFileNameLocation of
+                isflDisk:
+                begin
+                  AddMenuItemToPopupMenu(FOIEditorMenu, 'Browse...', MenuItem_BrowseImageSourceFromPropertyListClick,
+                    ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+                  FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 0);
+                end;
+
+                isflMem:
+                begin
+                  TempListOfExternallyRenderedImages := TStringList.Create;
+                  try
+                    DoOnGetListOfExternallyRenderedImages(TempListOfExternallyRenderedImages);
+
+                    if TempListOfExternallyRenderedImages.Count = 0 then
+                    begin
+                      AddMenuItemToPopupMenu(FOIEditorMenu, 'No files in externally rendered In-Mem file system', MenuItem_NoImageSourceInInMemPropertyListClick, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+                      FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstFindControlProperties, CFindControl_ImageSourceFileNameLocation_PropIndex);
+                    end
+                    else
+                      for i := 0 to TempListOfExternallyRenderedImages.Count - 1 do
+                      begin
+                        AddMenuItemToPopupMenu(FOIEditorMenu, TempListOfExternallyRenderedImages.Strings[i], MenuItem_SetFileNameFromInMemPropertyListClick,
+                          ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+                        FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstFindControlProperties, CFindControl_ImageSourceFileNameLocation_PropIndex);
+                      end;
+                  finally
+                    TempListOfExternallyRenderedImages.Free;
+                  end;
+                end;
+              end;
+
+              GetCursorPos(tp);
+              FOIEditorMenu.PopUp(tp.X, tp.Y);
+            end;
+          end;
         end; //case APropertyIndex
 
       if CurrentlyEditingActionType = acCallTemplate then

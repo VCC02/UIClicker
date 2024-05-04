@@ -310,7 +310,7 @@ procedure TTestHTTPAPI.CreateCallableTestTemplateInMem_WithCallTemplate(ATestTem
 var
   CallTemplateOptions: TClkCallTemplateOptions;
 begin
-  CreateCallableTestTemplateInMem(ATestTemplateFileName, AVarName, AVarValue, ASleepValue);
+  CreateCallableTestTemplateInMem(ATestTemplateFileName, AVarName, AVarValue, ASleepValue, AEvalBefore);     //using the same AEvalBefore as for the GenerateCallTemplateOptions call
 
   GenerateCallTemplateOptions(CallTemplateOptions, ACalledTemplateName, AListOfVarsAndValues, AEvalBefore);
   AddCallTemplateActionToTemplate(ATestTemplateFileName, 'call ' + ATestTemplateFileName, 0, True, '', CallTemplateOptions, FInMemFS);

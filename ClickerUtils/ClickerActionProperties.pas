@@ -163,7 +163,10 @@ begin
             'FastSearchAllowedColorErrorCount' + '=' + AFindControlOptions.FastSearchAllowedColorErrorCount + '&' +
             'IgnoredColors' + '=' + AFindControlOptions.IgnoredColors + '&' +
             'SleepySearch' + '=' + IntToStr(Ord(AFindControlOptions.SleepySearch)) + '&' +
-            'StopSearchOnMismatch' + '=' + IntToStr(Ord(AFindControlOptions.StopSearchOnMismatch));
+            'StopSearchOnMismatch' + '=' + IntToStr(Ord(AFindControlOptions.StopSearchOnMismatch)) + '&' +
+            'ImageSource' + '=' + IntToStr(Ord(AFindControlOptions.ImageSource)) + '&' +
+            'SourceFileName' + '=' + AFindControlOptions.SourceFileName + '&' +
+            'ImageSourceFileNameLocation' + '=' + IntToStr(Ord(AFindControlOptions.ImageSourceFileNameLocation));
 end;
 
 

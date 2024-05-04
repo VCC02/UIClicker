@@ -89,6 +89,15 @@ class TFontQuality: #(Enum):
     fqCleartype = 5
     fqCleartypeNatural = 6
 
+class TImageSource: #(Enum):
+    isScreenshot = 0
+    isFile = 1
+
+class TImageSourceFileNameLocation: #(Enum):
+    isflDisk = 0
+    isflMem = 1
+
+
 class TClkSetTextControlType: #(Enum):
     stEditBox = 0
     stComboBox = 1
@@ -244,7 +253,11 @@ class TFindControlOptions(Structure):
                ("FastSearchAllowedColorErrorCount", LPCWSTR),
                ("IgnoredColors", LPCWSTR),
                ("SleepySearch", BOOLEAN),
-               ("StopSearchOnMismatch", BOOLEAN)]
+               ("StopSearchOnMismatch", BOOLEAN),
+               ("ImageSource", LONG), #TImageSource)
+               ("SourceFileName", LPCWSTR),
+               ("ImageSourceFileNameLocation", LONG)  #TImageSourceFileNameLocation)
+               ]
 
 PFindControlOptions = ctypes.POINTER(TFindControlOptions)
 
@@ -290,15 +303,19 @@ def GetDefaultFindControlOptions():
     FindControlOptions.StartSearchingWithCachedControl = False
     FindControlOptions.CachedControlLeft = ''
     FindControlOptions.CachedControlTop = ''
-    
+
     FindControlOptions.MatchPrimitiveFiles = '' #'FileExample1.pmtv\r\nFileExample2.pmtv\r\nFileExample3.pmtv'
     FindControlOptions.GetAllControls = False
-    
+
     FindControlOptions.UseFastSearch = True
     FindControlOptions.FastSearchAllowedColorErrorCount = '10'
     FindControlOptions.IgnoredColors = ''
     FindControlOptions.SleepySearch = False
     FindControlOptions.StopSearchOnMismatch = True
+
+    FindControlOptions.ImageSource = TImageSource.isScreenshot
+    FindControlOptions.SourceFileName = ''
+    FindControlOptions.ImageSourceFileNameLocation = TImageSourceFileNameLocation.isflMem
     return FindControlOptions
 
 
