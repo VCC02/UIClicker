@@ -1392,17 +1392,30 @@ function TActionExecution.ExecuteFindControlAction(var AFindControlOptions: TClk
   end;
 
   procedure LoadBitmapToSearchOn(AFindControlInputData: TFindControlInputData);
+  var
+    Res: Boolean;
+    Fnm: string;
   begin
     if AFindControlOptions.ImageSource = isFile then
     begin
+      Res := True;
+      Fnm := DoOnResolveTemplatePath(AFindControlOptions.SourceFileName);
+
       case AFindControlOptions.ImageSourceFileNameLocation of
         isflDisk:
-          DoOnLoadBitmap(AFindControlInputData.BitmapToSearchOn, AFindControlOptions.SourceFileName);
+          Res := DoOnLoadBitmap(AFindControlInputData.BitmapToSearchOn, Fnm);
 
         isflMem:
-          DoOnLoadRenderedBitmap(AFindControlInputData.BitmapToSearchOn, AFindControlOptions.SourceFileName);
+          Res := DoOnLoadRenderedBitmap(AFindControlInputData.BitmapToSearchOn, Fnm);
       end;
-    end;
+
+      if not Res then
+        AddToLog('Cannot load BitmapToSearchOn.  FileNameLocation = ' +
+                 CImageSourceFileNameLocationStr[AFindControlOptions.ImageSourceFileNameLocation] +
+                 '  FileName = "' + Fnm + '"');
+    end
+    else
+      AddToLog('BitmapToSearchOn not used... Using screenshot.');
   end;
 
 var

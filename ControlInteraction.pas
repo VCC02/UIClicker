@@ -679,8 +679,8 @@ begin
     ScreenShot(CompHandle, SrcCompSearchAreaBitmap, ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height)
   else
   begin
-    ScreenShot(BitmapToSearchOn.Canvas.Handle, SrcCompSearchAreaBitmap, 0, 0, ScrShot_Width, ScrShot_Height);
-    //SrcCompSearchAreaBitmap.Canvas.Draw(0, 0, BitmapToSearchOn);
+    WipeBitmap(SrcCompSearchAreaBitmap, BitmapToSearchOn.Width, BitmapToSearchOn.Height);
+    SrcCompSearchAreaBitmap.Canvas.Draw(0, 0, BitmapToSearchOn);
   end;
 
   //DbgSaveScreenshotContent(SrcCompSearchAreaBitmap);   ////////////////////// keep commented for production code, also a path has to be updated, see above
@@ -726,15 +726,10 @@ begin
   else
   begin
     if InputData.DebugBitmap <> nil then
-    begin  //In work
-      //InputData.DebugBitmap.Canvas.Draw(0, 0, InputData.BitmapToSearchOn); //this leads to out of memory
-
-      //CompWidth := InputData.BitmapToSearchOn.Width;
-      //CompHeight := InputData.BitmapToSearchOn.Height;
-      //ScreenShot(InputData.BitmapToSearchOn.Canvas.Handle, InputData.DebugBitmap, 0, 0, CompWidth, CompHeight);
-
-      ScrShot_Width := InputData.BitmapToSearchOn.Width;
-      ScrShot_Height := InputData.BitmapToSearchOn.Height;
+    begin
+      //Do not modify ScrShot_Width or ScrShot_Height!
+      WipeBitmap(InputData.DebugBitmap, InputData.BitmapToSearchOn.Width, InputData.BitmapToSearchOn.Height);
+      InputData.DebugBitmap.Canvas.Draw(0, 0, InputData.BitmapToSearchOn);
     end;
   end;
 
