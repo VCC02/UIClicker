@@ -1818,6 +1818,9 @@ begin
               if not FindControlOnScreen_Result and not FindControlInputData.StopSearchOnMismatch then
                 AddToLog('Can''t find the subcontrol (text), but the searching went further, to get the error count. See $ResultedErrorCount$.');
 
+              if Length(PartialResultedControlArr) = 0 then  //it looks like FindControlOnScreen may return with an empty array and a result set to True
+                SetLength(PartialResultedControlArr, 1);
+
               UpdateActionVarValuesFromControl(PartialResultedControlArr[0], not FindControlInputData.StopSearchOnMismatch);
               //frClickerActions.DebuggingInfoAvailable := True;
               //
@@ -1939,6 +1942,9 @@ begin
             begin
               if not FindControlOnScreen_Result and not FindControlInputData.StopSearchOnMismatch then
                 AddToLog('Can''t find the subcontrol (bmp), but the searching went further, to get the error count. See $ResultedErrorCount$.');
+
+              if Length(PartialResultedControlArr) = 0 then  //it looks like FindControlOnScreen may return with an empty array and a result set to True
+                SetLength(PartialResultedControlArr, 1);
 
               UpdateActionVarValuesFromControl(PartialResultedControlArr[0], not FindControlInputData.StopSearchOnMismatch);
               frClickerActions.DebuggingInfoAvailable := True;
@@ -2079,6 +2085,9 @@ begin
                 begin
                   if not FindControlOnScreen_Result and not FindControlInputData.StopSearchOnMismatch then
                     AddToLog('Can''t find the subcontrol (pmtv), but the searching went further, to get the error count. See $ResultedErrorCount$.');
+
+                  if Length(PartialResultedControlArr) = 0 then  //it looks like FindControlOnScreen may return with an empty array and a result set to True
+                    SetLength(PartialResultedControlArr, 1);
 
                   PrimitiveFound := True;
                   UpdateActionVarValuesFromControl(PartialResultedControlArr[0], not FindControlInputData.StopSearchOnMismatch);
@@ -3116,6 +3125,7 @@ begin
     if (Temp_ImageSource < 0) or (Temp_ImageSource > Ord(High(TImageSource))) then
     begin
       SetActionVarValue('$ExecAction_Err$', 'ImageSource is out of range.');
+      AddToLog('ImageSource is out of range.  ImageSource = ' + IntToStr(Temp_ImageSource));
       Exit;
     end;
 
@@ -3123,6 +3133,7 @@ begin
     if (Temp_ImageSourceFileNameLocation < 0) or (Temp_ImageSourceFileNameLocation > Ord(High(TImageSourceFileNameLocation))) then
     begin
       SetActionVarValue('$ExecAction_Err$', 'ImageSourceFileNameLocation is out of range.');
+      AddToLog('ImageSource is out of range.  ImageSourceFileNameLocation = ' + IntToStr(Temp_ImageSourceFileNameLocation));
       Exit;
     end;
 

@@ -39,6 +39,9 @@ type
     procedure Test_FindSubControl_MultiFind(AFnm, AExpectedXOffsets, AExpectedYOffsets: string);
     function GetPluginPath: string;
     procedure Test_ExecutePlugin(APluginVarsAndValues, AExpectedErr: string);
+
+    procedure Test_FindSubControl_RenderExternalBackground;
+    procedure CloseRenderingServer;
   public
     constructor Create; override;
   published
@@ -82,6 +85,9 @@ type
     procedure Test_ExecuteFindSubControlAction_RenderingServer_MultiTextWithTwoProfilesAndOneBmpAndOnePmtv;
     procedure Test_ExecuteFindSubControlAction_RenderingServer_MultiTextWithTwoProfilesAndTextAndOneBmpAndOnePmtv;
     procedure Test_ExecuteFindSubControlAction_RenderingServer_MultiTextWithTwoProfilesAndTextAndPmtvWithTwoOrders;
+
+    procedure Test_FindSubControl_ExternalBackground_isflDisk;
+    procedure Test_FindSubControl_ExternalBackground_isflMem;
 
     procedure Test_ExecuteSetControlTextAction_HappyFlow;
     procedure Test_ExecuteCallTemplate_HappyFlow;
@@ -680,6 +686,63 @@ begin
   Test_FindSubControl_MultiFind('RenderMultiTextOnServerWithTwoProfilesAndTextAndPmtvWithTwoOrders.clktmpl',
                                 CExpected_X_ExtProfile10,
                                 CExpected_Y_ExtProfile10);
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_FindSubControl_RenderExternalBackground;
+const
+  CPathToExternalRenderingServer = '$AppDir$\Tests\TestFiles\StartRenderingTestServer.clktmpl';
+  CRenderBmpCmd = 'SrvAddrPort=http://127.0.0.1:53444$#4#5$Cmd=GetGradientImage$#4#5$Filename=I:\TheResult.bmp$#4#5$Params=IncludeTimestamp%3DYes&TextCount%3D1';
+var
+  CallTemplateOptions: TClkCallTemplateOptions;
+begin
+  //Expect(SendLoadTemplateInExecListRequest(TestServerAddress, CPathToExternalRenderingServer, 0)).ToBe(CREResp_TemplateLoaded);  //This command tells UIClicker to load the template from InMem FS, but the file is on disk. See ExecuteCallTemplateAction below.
+  GenerateCallTemplateOptions(CallTemplateOptions, CPathToExternalRenderingServer, '', False);
+  ExpectSuccessfulAction(FastReplace_87ToReturn(ExecuteCallTemplateAction(TestServerAddress, CallTemplateOptions, False, False, CREParam_FileLocation_ValueDisk, True)));
+
+  CreateCallableTestTemplateInMem('ExtBk.clktmpl', '$RenderBmpExternally()$', CRenderBmpCmd, '0', True);
+  SendTemplateFromInMemToServerThenLoad('ExtBk.clktmpl');
+
+  ExpectSuccessfulAction(FastReplace_87ToReturn(Send_ExecuteCommandAtIndex_ToServer(0, 0)));  // $RenderBmpExternally()$
+
+  Expect(GetVarValueFromServer('$ExternallyRenderedBmpResult$', 0)).ToBe('', 'The rendering error message should be empty.');
+end;
+
+
+procedure TTestLowLevelHTTPAPI.CloseRenderingServer;
+const
+  CPathToCloseExternalRenderingServer = '$AppDir$\Tests\TestFiles\CloseRenderingServer.clktmpl';
+var
+  CallTemplateOptions: TClkCallTemplateOptions;
+begin
+  GenerateCallTemplateOptions(CallTemplateOptions, CPathToCloseExternalRenderingServer, '', False);
+  ExpectSuccessfulAction(FastReplace_87ToReturn(ExecuteCallTemplateAction(TestServerAddress, CallTemplateOptions, False, False, CREParam_FileLocation_ValueDisk, True)));
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_FindSubControl_ExternalBackground_isflDisk;
+const
+  CExtBk = '$AppDir$\Tests\TestFiles\MyLongText_GreenBlue.bmp';  //used with isflDisk
+var
+  FindControlOptions: TClkFindControlOptions;
+begin
+  GenerateFindSubControlOptionsForLoadedBackgroundBmp(FindControlOptions, False, CExtBk);
+  ExpectSuccessfulAction(FastReplace_87ToReturn(ExecuteFindSubControlAction(TestServerAddress, FindControlOptions, 'FindExtBmpFileFromDisk', 1000, CREParam_FileLocation_ValueDisk, True)));
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_FindSubControl_ExternalBackground_isflMem;
+var
+  FindControlOptions: TClkFindControlOptions;
+begin
+  Test_FindSubControl_RenderExternalBackground;
+  GenerateFindSubControlOptionsForExtRenderingText(FindControlOptions, False, 'I:\TheResult.bmp');
+
+  try
+    ExpectSuccessfulAction(FastReplace_87ToReturn(ExecuteFindSubControlAction(TestServerAddress, FindControlOptions, 'FindExtBmp', 1000, CREParam_FileLocation_ValueDisk, True)));
+  finally
+    CloseRenderingServer;  //close it anyway, so that other tests can run
+  end;
 end;
 
 

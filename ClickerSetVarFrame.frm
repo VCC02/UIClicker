@@ -156,6 +156,8 @@ object frClickerSetVar: TfrClickerSetVar
       Width = 326
       Anchors = [akLeft, akBottom]
       Caption = 'Do not use plain ASCII #4#5 characters in var names or values!'
+      Font.Color = clMaroon
+      ParentFont = False
       ParentShowHint = False
       ShowHint = True
     end
