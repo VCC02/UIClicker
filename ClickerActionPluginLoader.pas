@@ -49,6 +49,7 @@ type
     OnIsAtBreakPoint: TOnIsAtBreakPoint;
     OnLoadBitmap: TOnLoadBitmap;
     OnLoadRenderedBitmap: TOnLoadRenderedBitmap;
+    OnSaveFileToExtRenderingInMemFS: TOnSaveFileToExtRenderingInMemFS;
 
     FIsDebugging, FShouldStopAtBreakPoint: Boolean;
     FStopAllActionsOnDemandFromParent, FPluginContinueAll: PBoolean;
@@ -79,6 +80,7 @@ type
                            AOnIsAtBreakPoint: TOnIsAtBreakPoint;
                            AOnLoadBitmap: TOnLoadBitmap;
                            AOnLoadRenderedBitmap: TOnLoadRenderedBitmap;
+                           AOnSaveFileToExtRenderingInMemFS: TOnSaveFileToExtRenderingInMemFS;
                            IsDebugging,
                            AShouldStopAtBreakPoint: Boolean;
                            AStopAllActionsOnDemandFromParent,
@@ -106,7 +108,7 @@ implementation
 
 
 uses
-  DllUtils, Forms, ClickerActionsClient;
+  DllUtils, Forms, ClickerActionsClient, ClickerActionProperties;
 
 
 //APluginReference amd AIndex is used as input param.
@@ -152,10 +154,57 @@ end;
 procedure DoOnActionPlugin_GetActionContentByIndex_Callback(APluginReference: Pointer; AIndex: Integer; AActionContent: Pointer; AContentLength: PDWord); cdecl; //A plugin calls this function, to get the action structure of an action. The content has the same format as the one used to serialize the action using the http API.
 var
   ActionPlugin: PActionPlugin;
+  ActionContentStr: string;
 begin
   try
     ActionPlugin := APluginReference;
 
+    if (AIndex < 0) or (AIndex > Length(ActionPlugin^.AllActions^) - 1) then
+    begin
+      AContentLength^ := 0;
+      Exit;
+    end;
+
+    ActionContentStr := '';
+    case ActionPlugin^.AllActions^[AIndex].ActionOptions.Action of
+      acClick:
+        ActionContentStr := GetClickActionProperties(ActionPlugin^.AllActions^[AIndex].ClickOptions);
+
+      acExecApp:
+        ActionContentStr := GetExecAppActionProperties(ActionPlugin^.AllActions^[AIndex].ExecAppOptions);
+
+      acFindControl, acFindSubControl:
+        ActionContentStr := GetFindControlActionProperties(ActionPlugin^.AllActions^[AIndex].FindControlOptions);
+
+      acSetControlText:
+        ActionContentStr := GetSetControlTextActionProperties(ActionPlugin^.AllActions^[AIndex].SetTextOptions);
+
+      acCallTemplate:
+        ActionContentStr := GetCallTemplateActionProperties(ActionPlugin^.AllActions^[AIndex].CallTemplateOptions);
+
+      acSleep:
+        ActionContentStr := GetSleepActionProperties(ActionPlugin^.AllActions^[AIndex].SleepOptions);
+
+      acSetVar:
+        ActionContentStr := GetSetVarActionProperties(ActionPlugin^.AllActions^[AIndex].SetVarOptions);
+
+      acWindowOperations:
+        ActionContentStr := GetWindowOperationsActionProperties(ActionPlugin^.AllActions^[AIndex].WindowOperationsOptions);
+
+      acLoadSetVarFromFile:
+        ActionContentStr := GetLoadSetVarFromFileActionProperties(ActionPlugin^.AllActions^[AIndex].LoadSetVarFromFileOptions);
+
+      acSaveSetVarToFile:
+        ActionContentStr := GetSaveSetVarToFileActionProperties(ActionPlugin^.AllActions^[AIndex].SaveSetVarToFileOptions);
+
+      acPlugin:
+        ActionContentStr := GetPluginActionProperties(ActionPlugin^.AllActions^[AIndex].PluginOptions);
+
+      else
+        ActionContentStr := 'Not implemented';
+    end;
+
+    AContentLength^ := SetPointedContentFromString(ActionContentStr, AActionContent);
   except
     on E: Exception do
       ActionPlugin^.DoAddToLog('Plugin loader: ' + E.Message);
@@ -423,10 +472,15 @@ end;
 procedure DoOnActionPlugin_SetBitmap(APluginReference: Pointer; AFileName: Pointer; AStreamContent: Pointer; AStreamSize: Int64; AImgWidth, AImgHeight: Integer); cdecl; //A plugin may call this function multiple times if it has multiple bitmaps to give back to UIClicker, which stores the bitmap in rendered-externally-in-mem FS.
 var
   ActionPlugin: PActionPlugin;
+  TempFileName: string;
 begin
   ActionPlugin := APluginReference;
-  //ToDo: save to FInMemFileSystem;
-  //
+  SetPointedContentToString(AFileName, TempFileName);
+
+  if not Assigned(ActionPlugin.OnSaveFileToExtRenderingInMemFS) then
+    raise Exception.Create('OnSaveFileToExtRenderingInMemFS not assigned.');
+
+  ActionPlugin.OnSaveFileToExtRenderingInMemFS(TempFileName, AStreamContent, AStreamSize);
 end;
 
 
@@ -480,6 +534,7 @@ function TActionPlugin.LoadToExecute(APath: string;
                                      AOnIsAtBreakPoint: TOnIsAtBreakPoint;
                                      AOnLoadBitmap: TOnLoadBitmap;
                                      AOnLoadRenderedBitmap: TOnLoadRenderedBitmap;
+                                     AOnSaveFileToExtRenderingInMemFS: TOnSaveFileToExtRenderingInMemFS;
                                      IsDebugging,
                                      AShouldStopAtBreakPoint: Boolean;
                                      AStopAllActionsOnDemandFromParent,
@@ -505,6 +560,7 @@ begin
   OnIsAtBreakPoint := AOnIsAtBreakPoint;
   OnLoadBitmap := AOnLoadBitmap;
   OnLoadRenderedBitmap := AOnLoadRenderedBitmap;
+  OnSaveFileToExtRenderingInMemFS := AOnSaveFileToExtRenderingInMemFS;
 
   FIsDebugging := IsDebugging;
   FShouldStopAtBreakPoint := AShouldStopAtBreakPoint;

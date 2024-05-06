@@ -79,6 +79,7 @@ type
   TOnTClkIniReadonlyFileCreate = function(AFileName: string): TClkIniReadonlyFile of object;
   TOnTClkIniFileCreate = function(AFileName: string): TClkIniFile of object;
   TOnSaveTemplateToFile = procedure(AStringList: TStringList; const AFileName: string) of object;
+  TOnSaveFileToExtRenderingInMemFS = procedure(AFileName: string; AContent: Pointer; AFileSize: Int64) of object;
 
   TOnSetOpenDialogInitialDir = procedure(AInitialDir: string) of object;
   TOnSetOpenDialogMultiSelect = procedure of object; //the dialog is set to allow multiple files to be selected, then it is restored automatically to single file

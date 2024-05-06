@@ -378,6 +378,7 @@ type
 
     FOnRetrieveRenderedBmpFromServer: TOnRetrieveRenderedBmpFromServer;
     FOnOpenCalledTemplateInExperimentTab: TOnOpenCalledTemplateInExperimentTab;
+    FOnSaveFileToExtRenderingInMemFS: TOnSaveFileToExtRenderingInMemFS;
 
     vstActions: TVirtualStringTree;
     FPalette: TfrClickerActionsPalette;
@@ -439,6 +440,7 @@ type
     function HandleOnGetAllActions: PClkActionsRecArr;
     procedure HandleOnModifyPluginProperty(AAction: PClkActionRec);
     function HandleOnResolveTemplatePath(APath: string; ACustomSelfTemplateDir: string = ''; ACustomAppDir: string = ''): string;
+    procedure HandleOnSaveFileToExtRenderingInMemFS(AFileName: string; AContent: Pointer; AFileSize: Int64);
 
     procedure HandleOnSetDebugPoint(ADebugPoint: string);
     function HandleOnIsAtBreakPoint(ADebugPoint: string): Boolean;
@@ -540,6 +542,7 @@ type
 
     procedure DoOnRetrieveRenderedBmpFromServer(ARemoteAddress, AFnm: string);
     procedure DoOnOpenCalledTemplateInExperimentTab(AExperimentIndex: Integer; ATemplatePath: string);
+    procedure DoOnSaveFileToExtRenderingInMemFS(AFileName: string; AContent: Pointer; AFileSize: Int64);
 
     function PlayActionByNode(Node: PVirtualNode): Boolean;
     procedure PlaySelected;
@@ -686,6 +689,7 @@ type
 
     property OnRetrieveRenderedBmpFromServer: TOnRetrieveRenderedBmpFromServer write FOnRetrieveRenderedBmpFromServer;
     property OnOpenCalledTemplateInExperimentTab: TOnOpenCalledTemplateInExperimentTab write FOnOpenCalledTemplateInExperimentTab;
+    property OnSaveFileToExtRenderingInMemFS: TOnSaveFileToExtRenderingInMemFS write FOnSaveFileToExtRenderingInMemFS;
   end;
 
 
@@ -1083,6 +1087,7 @@ begin
   FActionExecution.OnResolveTemplatePath := HandleOnResolveTemplatePath;
   FActionExecution.OnSetDebugPoint := HandleOnSetDebugPoint;
   FActionExecution.OnIsAtBreakPoint := HandleOnIsAtBreakPoint;
+  FActionExecution.OnSaveFileToExtRenderingInMemFS := HandleOnSaveFileToExtRenderingInMemFS;
 
   FCmdConsoleHistory := TStringList.Create;
   FOnExecuteRemoteActionAtIndex := nil;
@@ -1126,6 +1131,7 @@ begin
 
   FOnRetrieveRenderedBmpFromServer := nil;
   FOnOpenCalledTemplateInExperimentTab := nil;
+  FOnSaveFileToExtRenderingInMemFS := nil;
 
   FPalette := nil;
 
@@ -1658,6 +1664,12 @@ end;
 function TfrClickerActionsArr.HandleOnIsAtBreakPoint(ADebugPoint: string): Boolean;
 begin
   Result := frClickerActions.frClickerPlugin.IsAtBreakPoint(ADebugPoint);
+end;
+
+
+procedure TfrClickerActionsArr.HandleOnSaveFileToExtRenderingInMemFS(AFileName: string; AContent: Pointer; AFileSize: Int64);
+begin
+  DoOnSaveFileToExtRenderingInMemFS(AFileName, AContent, AFileSize);
 end;
 
 
@@ -2552,6 +2564,15 @@ begin
     raise Exception.Create('OnOpenCalledTemplateInExperimentTab not assigned.')
   else
     FOnOpenCalledTemplateInExperimentTab(AExperimentIndex, ATemplatePath);
+end;
+
+
+procedure TfrClickerActionsArr.DoOnSaveFileToExtRenderingInMemFS(AFileName: string; AContent: Pointer; AFileSize: Int64);
+begin
+  if not Assigned(FOnSaveFileToExtRenderingInMemFS) then
+    raise Exception.Create('OnSaveFileToExtRenderingInMemFS not assigned.')
+  else
+    FOnSaveFileToExtRenderingInMemFS(AFileName, AContent, AFileSize);
 end;
 
 

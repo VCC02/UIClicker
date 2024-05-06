@@ -32,7 +32,8 @@ interface
 
 uses
   Windows, Classes, SysUtils, Forms, Graphics, ExtCtrls,
-  ClickerUtils, ClickerPrimitiveUtils, ClickerActionsFrame, ClickerIniFiles;
+  ClickerUtils, ClickerPrimitiveUtils, ClickerActionsFrame, ClickerIniFiles,
+  InMemFileSystem;
 
 
 type
@@ -103,6 +104,8 @@ type
     FOnSetDebugPoint: TOnSetDebugPoint;
     FOnIsAtBreakPoint: TOnIsAtBreakPoint;
 
+    FOnSaveFileToExtRenderingInMemFS: TOnSaveFileToExtRenderingInMemFS;
+
     function GetActionVarValue(VarName: string): string;
     procedure SetActionVarValue(VarName, VarValue: string);
     function EvaluateReplacements(s: string; Recursive: Boolean = True): string;
@@ -147,6 +150,7 @@ type
     function DoOnTClkIniReadonlyFileCreate(AFileName: string): TClkIniReadonlyFile;
     procedure DoOnSaveStringListToFile(AStringList: TStringList; const AFileName: string);
     procedure DoOnBackupVars(AAllVars: TStringList);
+    procedure DoOnSaveFileToExtRenderingInMemFS(AFileName: string; AContent: Pointer; AFileSize: Int64);
     //procedure DoOnRestoreVars(AAllVars: TStringList);
 
     function HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
@@ -156,6 +160,7 @@ type
     procedure HandleOnSetVar(AVarName, AVarValue: string);
     procedure HandleOnSetDebugPoint(ADebugPoint: string);
     function HandleOnIsAtBreakPoint(ADebugPoint: string): Boolean;
+    procedure HandleOnSaveFileToExtRenderingInMemFS(AFileName: string; AContent: Pointer; AFileSize: Int64);
   public
     constructor Create;
     destructor Destroy; override;
@@ -234,6 +239,8 @@ type
     property OnResolveTemplatePath: TOnResolveTemplatePath write FOnResolveTemplatePath;
     property OnSetDebugPoint: TOnSetDebugPoint write FOnSetDebugPoint;
     property OnIsAtBreakPoint: TOnIsAtBreakPoint write FOnIsAtBreakPoint;
+
+    property OnSaveFileToExtRenderingInMemFS: TOnSaveFileToExtRenderingInMemFS write FOnSaveFileToExtRenderingInMemFS;
   end;
 
 
@@ -298,6 +305,8 @@ begin
   FOnResolveTemplatePath := nil;
   FOnSetDebugPoint := nil;
   FOnIsAtBreakPoint := nil;
+
+  FOnSaveFileToExtRenderingInMemFS := nil;
 end;
 
 
@@ -770,6 +779,15 @@ begin
     raise Exception.Create('OnBackupVars not assigned.')
   else
     FOnBackupVars(AAllVars);
+end;
+
+
+procedure TActionExecution.DoOnSaveFileToExtRenderingInMemFS(AFileName: string; AContent: Pointer; AFileSize: Int64);
+begin
+  if not Assigned(FOnSaveFileToExtRenderingInMemFS) then
+    raise Exception.Create('OnSaveFileToExtRenderingInMemFS not assigned.')
+  else
+    FOnSaveFileToExtRenderingInMemFS(AFileName, AContent, AFileSize);
 end;
 
 
@@ -2889,6 +2907,7 @@ begin
                                       HandleOnIsAtBreakPoint,
                                       FOnLoadBitmap,
                                       FOnLoadRenderedBitmap,
+                                      HandleOnSaveFileToExtRenderingInMemFS,
                                       IsDebugging,
                                       AShouldStopAtBreakPoint,
                                       FStopAllActionsOnDemand{FromParent},
@@ -3511,6 +3530,12 @@ end;
 function TActionExecution.HandleOnIsAtBreakPoint(ADebugPoint: string): Boolean;
 begin
   Result := DoOnIsAtBreakPoint(ADebugPoint);
+end;
+
+
+procedure TActionExecution.HandleOnSaveFileToExtRenderingInMemFS(AFileName: string; AContent: Pointer; AFileSize: Int64);
+begin
+  DoOnSaveFileToExtRenderingInMemFS(AFileName, AContent, AFileSize);
 end;
 
 end.

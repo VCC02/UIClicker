@@ -319,6 +319,7 @@ type
 
     procedure HandleOnRetrieveRenderedBmpFromServer(ARemoteAddress, AFnm: string);
     procedure HandleOnOpenCalledTemplateInExperimentTab(AExperimentIndex: Integer; ATemplatePath: string);
+    procedure HandleOnSaveFileToExtRenderingInMemFS(AFileName: string; AContent: Pointer; AFileSize: Int64);
 
     procedure CreateRemainingUIComponents;
     function GetClickerActionsArrFrameByStackLevel(AStackLevel: Integer): TfrClickerActionsArr;
@@ -995,6 +996,7 @@ begin
 
   frClickerActionsArrMain.OnRetrieveRenderedBmpFromServer := HandleOnRetrieveRenderedBmpFromServer;
   frClickerActionsArrMain.OnOpenCalledTemplateInExperimentTab := HandleOnOpenCalledTemplateInExperimentTab;
+  frClickerActionsArrMain.OnSaveFileToExtRenderingInMemFS := HandleOnSaveFileToExtRenderingInMemFS;
 
   frClickerActionsArrExperiment1.frClickerActions.PasteDebugValuesListFromMainExecutionList1.OnClick := frClickerActionsArrExperiment1PasteDebugValuesListFromMainExecutionList1Click;
   frClickerActionsArrExperiment2.frClickerActions.PasteDebugValuesListFromMainExecutionList1.OnClick := frClickerActionsArrExperiment2PasteDebugValuesListFromMainExecutionList1Click;
@@ -1071,6 +1073,9 @@ begin
   frClickerActionsArrExperiment2.OnRetrieveRenderedBmpFromServer := HandleOnRetrieveRenderedBmpFromServer;
   frClickerActionsArrExperiment1.OnOpenCalledTemplateInExperimentTab := HandleOnOpenCalledTemplateInExperimentTab;
   frClickerActionsArrExperiment2.OnOpenCalledTemplateInExperimentTab := HandleOnOpenCalledTemplateInExperimentTab;
+
+  frClickerActionsArrExperiment1.OnSaveFileToExtRenderingInMemFS := HandleOnSaveFileToExtRenderingInMemFS;
+  frClickerActionsArrExperiment2.OnSaveFileToExtRenderingInMemFS := HandleOnSaveFileToExtRenderingInMemFS;
 
   tmrStartup.Enabled := True;
 end;
@@ -1600,6 +1605,7 @@ begin
 
         NewFrame.OnRetrieveRenderedBmpFromServer := HandleOnRetrieveRenderedBmpFromServer;
         NewFrame.OnOpenCalledTemplateInExperimentTab := HandleOnOpenCalledTemplateInExperimentTab;
+        NewFrame.OnSaveFileToExtRenderingInMemFS := HandleOnSaveFileToExtRenderingInMemFS;
 
         if FAutoSwitchToExecutingTab or (FAutoEnableSwitchingTabsOnDebugging and IsDebugging) then
         begin
@@ -3772,6 +3778,11 @@ begin
   end;
 end;
 
+
+procedure TfrmClickerActions.HandleOnSaveFileToExtRenderingInMemFS(AFileName: string; AContent: Pointer; AFileSize: Int64);
+begin
+  FRenderedInMemFileSystem.SaveFileToMem(AFileName, AContent, AFileSize);
+end;
 
 end.
 

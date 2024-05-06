@@ -43,6 +43,7 @@ function GetWindowOperationsActionProperties(AWindowOperationsOptions: TClkWindo
 function GetLoadSetVarFromFileActionProperties(ALoadSetVarFromFileOptions: TClkLoadSetVarFromFileOptions): string;
 function GetSaveSetVarToFileActionProperties(ASaveSetVarToFileOptions: TClkSaveSetVarToFileOptions): string;
 function GetPluginActionProperties(PluginOptions: TClkPluginOptions): string;
+//when adding new Get<ActionType>Properties functions, please update DoOnActionPlugin_GetActionContentByIndex_Callback from ClickerActionPluginLoader.pas
 
 
 implementation
