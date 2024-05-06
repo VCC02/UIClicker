@@ -2260,7 +2260,7 @@ begin
   Control_Handle := StrToIntDef(GetActionVarValue('$Control_Handle$'), 0);
   TextToSend := EvaluateReplacements(ASetTextOptions.Text);
   TextToSend := EvaluateHTTP(TextToSend);
-  Count := StrToIntDef(EvaluateReplacements(ASetTextOptions.Count), 1);
+  Count := Min(65535, Max(0, StrToIntDef(EvaluateReplacements(ASetTextOptions.Count), 1)));
 
   if ASetTextOptions.ControlType = stKeystrokes then
     DelayBetweenKeyStrokesInt := StrToIntDef(EvaluateReplacements(ASetTextOptions.DelayBetweenKeyStrokes), 0)
@@ -3284,6 +3284,7 @@ begin
     SetTextOptions.Text := AListOfSetControlTextOptionsParams.Values['Text'];
     SetTextOptions.ControlType := TClkSetTextControlType(Temp_ControlType);
     SetTextOptions.DelayBetweenKeyStrokes := AListOfSetControlTextOptionsParams.Values['DelayBetweenKeyStrokes'];
+    SetTextOptions.Count := AListOfSetControlTextOptionsParams.Values['Count'];
 
     Result := ExecuteSetControlTextAction(SetTextOptions);
   finally

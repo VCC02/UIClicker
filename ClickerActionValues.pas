@@ -2400,19 +2400,23 @@ end;
 
 function GetPropertyHint_SetText_ControlType: string;
 begin
-  Result := 'Uses WM_SETTEXT or CB_SELECTSTRING messages or emulates keystrokes.';
+  Result := 'Uses WM_SETTEXT or CB_SELECTSTRING messages or emulates keystrokes.' + #13#10 +
+            'When using keystrokes, the target control has to be already focused (e.g. by a click action).';
 end;
 
 
 function GetPropertyHint_DelayBetweenKeyStrokes: string;
 begin
-  Result := 'For keystrokes only. Measured in ms.'#13#10'A value of 0 or empty string, results in no delay.';
+  Result := 'For keystrokes only. Measured in ms.'#13#10'A value of 0 or empty string, results in no delay.' + #13#10 +
+            'When using keystrokes, the target control has to be already focused (e.g. by a click action).';
 end;
 
 
 function GetPropertyHint_Count: string;
 begin
-  Result := 'Repeats setting/sending the keystrokes "Count" times.';
+  Result := 'Repeats setting/sending the keystrokes "Count" times.' + #13#10 +
+            'Replacements are available.' + #13#10 +
+            'Valid range: 0..65535';
 end;
 
 
