@@ -186,8 +186,8 @@ type
     function ExecuteSleepActionAsString(AListOfSleepOptionsParams: TStrings): Boolean;
     function ExecuteSetVarActionAsString(AListOfSetVarOptionsParams: TStrings): Boolean;
     function ExecuteWindowOperationsActionAsString(AListOfWindowOperationsOptionsParams: TStrings): Boolean;
-    function ExecuteLoadSetVarFromFileActionAsString(AListOfSetVarOptionsParams: TStrings): Boolean;
-    function ExecuteSaveSetVarToFileActionAsString(AListOfSetVarOptionsParams: TStrings): Boolean;
+    function ExecuteLoadSetVarFromFileActionAsString(AListOfLoadSetVarOptionsParams: TStrings): Boolean;
+    function ExecuteSaveSetVarToFileActionAsString(AListOfSaveSetVarOptionsParams: TStrings): Boolean;
     function ExecutePluginActionAsString(APluginOptionsParams: TStrings): Boolean;
 
     //using pointers for the following properties, because the values they are pointing to, can be updated later, not when this class is created
@@ -2947,99 +2947,17 @@ end;
 function TActionExecution.ExecuteClickActionAsString(AListOfClickOptionsParams: TStrings): Boolean;
 var
   ClickOptions: TClkClickOptions;
-  Temp_XClickPointReference: Integer;
-  Temp_YClickPointReference: Integer;
-  Temp_MouseButton, Temp_MouseWheelType: Integer;
-  Temp_XClickPointReferenceDest: Integer;
-  Temp_YClickPointReferenceDest: Integer;
-  Temp_ClickType: Integer;
-  Temp_Count: Int64;
+  Err: string;
 begin
   Result := False;
   SetActionVarValue('$ExecAction_Err$', '');
   try
-    Temp_XClickPointReference := StrToIntDef(AListOfClickOptionsParams.Values['XClickPointReference'], 0);
-    if (Temp_XClickPointReference < 0) or (Temp_XClickPointReference > Ord(High(TXClickPointReference))) then
+    Err := SetClickActionProperties(AListOfClickOptionsParams, ClickOptions);
+    if Err <> '' then
     begin
-      SetActionVarValue('$ExecAction_Err$', 'XClickPointReference is out of range.');
+      SetActionVarValue('$ExecAction_Err$', Err);
       Exit;
     end;
-
-    Temp_YClickPointReference := StrToIntDef(AListOfClickOptionsParams.Values['YClickPointReference'], 0);
-    if (Temp_YClickPointReference < 0) or (Temp_YClickPointReference > Ord(High(TYClickPointReference))) then
-    begin
-      SetActionVarValue('$ExecAction_Err$', 'YClickPointReference is out of range.');
-      Exit;
-    end;
-
-    Temp_MouseButton := StrToIntDef(AListOfClickOptionsParams.Values['MouseButton'], Ord(mbLeft));
-    if (Temp_MouseButton < 0) or (Temp_MouseButton > Ord(High(TMouseButton))) then
-    begin
-      SetActionVarValue('$ExecAction_Err$', 'MouseButton is out of range.');
-      Exit;
-    end;
-
-    Temp_MouseWheelType := StrToIntDef(AListOfClickOptionsParams.Values['MouseWheelType'], Ord(mwtVert));
-    if (Temp_MouseWheelType < 0) or (Temp_MouseWheelType > Ord(High(TMouseWheelType))) then
-    begin
-      SetActionVarValue('$ExecAction_Err$', 'MouseWheelType is out of range.');
-      Exit;
-    end;
-
-    Temp_XClickPointReferenceDest := StrToIntDef(AListOfClickOptionsParams.Values['XClickPointReferenceDest'], 0);
-    if (Temp_XClickPointReferenceDest < 0) or (Temp_XClickPointReferenceDest > Ord(High(TXClickPointReference))) then
-    begin
-      SetActionVarValue('$ExecAction_Err$', 'XClickPointReferenceDest is out of range.');
-      Exit;
-    end;
-
-    Temp_YClickPointReferenceDest := StrToIntDef(AListOfClickOptionsParams.Values['YClickPointReferenceDest'], 0);
-    if (Temp_YClickPointReferenceDest < 0) or (Temp_YClickPointReferenceDest > Ord(High(TYClickPointReference))) then
-    begin
-      SetActionVarValue('$ExecAction_Err$', 'YClickPointReferenceDest is out of range.');
-      Exit;
-    end;
-
-    Temp_ClickType := StrToIntDef(AListOfClickOptionsParams.Values['ClickType'], CClickType_Click);
-    if (Temp_ClickType < 0) or (Temp_ClickType > CClickType_Count - 1) then
-    begin
-      SetActionVarValue('$ExecAction_Err$', 'ClickType is out of range.');
-      Exit;
-    end;
-
-    Temp_Count := StrToInt64Def(AListOfClickOptionsParams.Values['Count'], 1);
-    if (Temp_Count < 1) or (Temp_Count > Int64(MaxLongint)) then
-    begin
-      SetActionVarValue('$ExecAction_Err$', 'Count is out of range.');
-      Exit;
-    end;
-
-    ClickOptions.XClickPointReference := TXClickPointReference(Temp_XClickPointReference);
-    ClickOptions.YClickPointReference := TYClickPointReference(Temp_YClickPointReference);
-    ClickOptions.XClickPointVar := AListOfClickOptionsParams.Values['XClickPointVar'];
-    ClickOptions.YClickPointVar := AListOfClickOptionsParams.Values['YClickPointVar'];
-    ClickOptions.XOffset := AListOfClickOptionsParams.Values['XOffset'];
-    ClickOptions.YOffset := AListOfClickOptionsParams.Values['YOffset'];
-    ClickOptions.MouseButton := TMouseButton(Temp_MouseButton);
-    ClickOptions.ClickWithCtrl := AListOfClickOptionsParams.Values['ClickWithCtrl'] = '1';
-    ClickOptions.ClickWithAlt := AListOfClickOptionsParams.Values['ClickWithAlt'] = '1';
-    ClickOptions.ClickWithShift := AListOfClickOptionsParams.Values['ClickWithShift'] = '1';
-    ClickOptions.ClickWithDoubleClick := AListOfClickOptionsParams.Values['ClickWithDoubleClick'] = '1';
-    ClickOptions.Count := Temp_Count;
-    ClickOptions.LeaveMouse := AListOfClickOptionsParams.Values['LeaveMouse'] = '1';
-    ClickOptions.MoveWithoutClick := AListOfClickOptionsParams.Values['MoveWithoutClick'] = '1';
-    ClickOptions.ClickType := Temp_ClickType;    //see CClickType_Click and CClickType_Drag
-    ClickOptions.XClickPointReferenceDest := TXClickPointReference(Temp_XClickPointReferenceDest);
-    ClickOptions.YClickPointReferenceDest := TYClickPointReference(Temp_YClickPointReferenceDest);
-    ClickOptions.XClickPointVarDest := AListOfClickOptionsParams.Values['XClickPointVarDest'];
-    ClickOptions.YClickPointVarDest := AListOfClickOptionsParams.Values['YClickPointVarDest'];
-    ClickOptions.XOffsetDest := AListOfClickOptionsParams.Values['XOffsetDest'];
-    ClickOptions.YOffsetDest := AListOfClickOptionsParams.Values['YOffsetDest'];
-    ClickOptions.MouseWheelType := TMouseWheelType(Temp_MouseWheelType);
-    ClickOptions.MouseWheelAmount := AListOfClickOptionsParams.Values['MouseWheelAmount'];
-    ClickOptions.DelayAfterMovingToDestination := AListOfClickOptionsParams.Values['DelayAfterMovingToDestination'];
-    ClickOptions.DelayAfterMouseDown := AListOfClickOptionsParams.Values['DelayAfterMouseDown'];
-    ClickOptions.MoveDuration := AListOfClickOptionsParams.Values['MoveDuration'];
 
     Result := ExecuteMultiClickAction(ClickOptions);
   finally
@@ -3052,37 +2970,17 @@ function TActionExecution.ExecuteExecAppActionAsString(AListOfExecAppOptionsPara
 var
   ExecAppOptions: TClkExecAppOptions;
   ActionOptions: TClkActionOptions;
-  Temp_UseInheritHandles: Integer;
-  Temp_ActionTimeout: Int64;
+  Err: string;
 begin
   Result := False;
   SetActionVarValue('$ExecAction_Err$', '');
   try
-    Temp_UseInheritHandles := StrToIntDef(AListOfExecAppOptionsParams.Values['UseInheritHandles'], 0);
-    if (Temp_UseInheritHandles < 0) or (Temp_UseInheritHandles > Ord(High(TExecAppUseInheritHandles))) then
+    Err := SetExecAppActionProperties(AListOfExecAppOptionsParams, ExecAppOptions, ActionOptions);
+    if Err <> '' then
     begin
-      SetActionVarValue('$ExecAction_Err$', 'UseInheritHandles is out of range.');
+      SetActionVarValue('$ExecAction_Err$', Err);
       Exit;
     end;
-
-    Temp_ActionTimeout := StrToIntDef(AListOfExecAppOptionsParams.Values['ActionTimeout'], 1000);
-    if (Temp_ActionTimeout < 0) or (Temp_ActionTimeout > 2147483647) then
-    begin
-      SetActionVarValue('$ExecAction_Err$', 'ActionTimeout is out of range.');
-      Exit;
-    end;
-
-    ExecAppOptions.PathToApp := AListOfExecAppOptionsParams.Values['PathToApp'];
-    ExecAppOptions.ListOfParams := FastReplace_45ToReturn(AListOfExecAppOptionsParams.Values['ListOfParams']);
-    ExecAppOptions.WaitForApp := AListOfExecAppOptionsParams.Values['WaitForApp'] = '1';
-    ExecAppOptions.AppStdIn := AListOfExecAppOptionsParams.Values['AppStdIn'];
-    ExecAppOptions.CurrentDir := AListOfExecAppOptionsParams.Values['CurrentDir'];
-    ExecAppOptions.UseInheritHandles := TExecAppUseInheritHandles(Temp_UseInheritHandles);
-    ExecAppOptions.NoConsole := AListOfExecAppOptionsParams.Values['NoConsole'] = '1';
-
-    ActionOptions.ActionName := AListOfExecAppOptionsParams.Values['ActionName'];
-    ActionOptions.ActionTimeout := Temp_ActionTimeout;
-    ActionOptions.Action := acExecApp;
 
     Result := ExecuteExecAppAction(ExecAppOptions, ActionOptions);
   finally
@@ -3092,191 +2990,20 @@ end;
 
 
 function TActionExecution.ExecuteFindControlActionAsString(AListOfFindControlOptionsParams: TStrings; AIsSubControl: Boolean): Boolean;
-const
-  CActionType: array[Boolean] of TClkAction = (acFindControl, acFindSubControl);
 var
   FindControlOptions: TClkFindControlOptions;
   ActionOptions: TClkActionOptions;
-  Temp_SearchForControlMode: Integer;
-  Temp_MatchBitmapTextCount: Integer;
-  Temp_MatchBitmapAlgorithm: Integer;
-  Temp_ImageSource: Integer;
-  Temp_ImageSourceFileNameLocation: Integer;
-  Temp_ActionTimeout: Int64;
-  Temp_FontSize: Integer;
-  Temp_FontQuality: Integer;
-  Temp_CropLeft, Temp_CropTop, Temp_CropRight, Temp_CropBottom: string;
-  i: Integer;
-  Prefix: string;
+  Err: string;
 begin
   Result := False;
   SetActionVarValue('$ExecAction_Err$', '');
   try
-    Temp_SearchForControlMode := StrToIntDef(AListOfFindControlOptionsParams.Values['MatchCriteria.SearchForControlMode'], 0);
-    if (Temp_SearchForControlMode < 0) or (Temp_SearchForControlMode > Ord(High(TSearchForControlMode))) then
+    Err := SetFindControlActionProperties(AListOfFindControlOptionsParams, AIsSubControl, AddToLog, FindControlOptions, ActionOptions);
+    if Err <> '' then
     begin
-      SetActionVarValue('$ExecAction_Err$', 'MatchCriteria.SearchForControlMode is out of range.');
+      SetActionVarValue('$ExecAction_Err$', Err);
       Exit;
     end;
-
-    Temp_MatchBitmapTextCount := StrToIntDef(AListOfFindControlOptionsParams.Values['MatchBitmapText.Count'], 0);
-    if (Temp_MatchBitmapTextCount < 0) or (Temp_MatchBitmapTextCount > 100) then
-    begin
-      SetActionVarValue('$ExecAction_Err$', 'MatchBitmapText.Count is out of range.');
-      Exit;
-    end;
-
-    Temp_MatchBitmapAlgorithm := StrToIntDef(AListOfFindControlOptionsParams.Values['MatchBitmapAlgorithm'], 0);
-    if (Temp_MatchBitmapAlgorithm < 0) or (Temp_MatchBitmapAlgorithm > Ord(High(TMatchBitmapAlgorithm))) then
-    begin
-      SetActionVarValue('$ExecAction_Err$', 'MatchBitmapAlgorithm is out of range.');
-      Exit;
-    end;
-
-    Temp_ActionTimeout := StrToIntDef(AListOfFindControlOptionsParams.Values['ActionTimeout'], 1000);
-    if (Temp_ActionTimeout < 0) or (Temp_ActionTimeout > 2147483647) then
-    begin
-      SetActionVarValue('$ExecAction_Err$', 'ActionTimeout is out of range.');
-      Exit;
-    end;
-
-    Temp_ImageSource := StrToIntDef(AListOfFindControlOptionsParams.Values['ImageSource'], Ord(isScreenshot));
-    if (Temp_ImageSource < 0) or (Temp_ImageSource > Ord(High(TImageSource))) then
-    begin
-      SetActionVarValue('$ExecAction_Err$', 'ImageSource is out of range.');
-      AddToLog('ImageSource is out of range.  ImageSource = ' + IntToStr(Temp_ImageSource));
-      Exit;
-    end;
-
-    Temp_ImageSourceFileNameLocation := StrToIntDef(AListOfFindControlOptionsParams.Values['ImageSourceFileNameLocation'], Ord(isflMem));
-    if (Temp_ImageSourceFileNameLocation < 0) or (Temp_ImageSourceFileNameLocation > Ord(High(TImageSourceFileNameLocation))) then
-    begin
-      SetActionVarValue('$ExecAction_Err$', 'ImageSourceFileNameLocation is out of range.');
-      AddToLog('ImageSource is out of range.  ImageSourceFileNameLocation = ' + IntToStr(Temp_ImageSourceFileNameLocation));
-      Exit;
-    end;
-
-    FindControlOptions.MatchCriteria.SearchForControlMode := TSearchForControlMode(Temp_SearchForControlMode);
-    FindControlOptions.MatchCriteria.WillMatchText := AListOfFindControlOptionsParams.Values['MatchCriteria.WillMatchText'] = '1';
-    FindControlOptions.MatchCriteria.WillMatchClassName := AListOfFindControlOptionsParams.Values['MatchCriteria.WillMatchClassName'] = '1';
-    FindControlOptions.MatchCriteria.WillMatchBitmapText := AListOfFindControlOptionsParams.Values['MatchCriteria.WillMatchBitmapText'] = '1';
-    FindControlOptions.MatchCriteria.WillMatchBitmapFiles := AListOfFindControlOptionsParams.Values['MatchCriteria.WillMatchBitmapFiles'] = '1';
-    FindControlOptions.MatchCriteria.WillMatchPrimitiveFiles := AListOfFindControlOptionsParams.Values['MatchCriteria.WillMatchPrimitiveFiles'] = '1';
-
-    FindControlOptions.AllowToFail := AListOfFindControlOptionsParams.Values['AllowToFail'] = '1';
-    FindControlOptions.MatchText := AListOfFindControlOptionsParams.Values['MatchText'];
-    FindControlOptions.MatchClassName := AListOfFindControlOptionsParams.Values['MatchClassName'];
-    FindControlOptions.MatchTextSeparator := AListOfFindControlOptionsParams.Values['MatchTextSeparator'];
-    FindControlOptions.MatchClassNameSeparator := AListOfFindControlOptionsParams.Values['MatchClassNameSeparator'];
-    SetLength(FindControlOptions.MatchBitmapText, Temp_MatchBitmapTextCount);
-
-    for i := 0 to Temp_MatchBitmapTextCount - 1 do
-    begin
-      Prefix := 'MatchBitmapText[' + IntToStr(i) + '].';
-
-      Temp_FontSize := StrToIntDef(AListOfFindControlOptionsParams.Values[Prefix + 'FontSize'], 8);
-      if (Temp_FontSize < 2) or (Temp_FontSize > 200) then
-      begin
-        SetActionVarValue('$ExecAction_Err$', Prefix + 'FontSize is out of range.');
-        Exit;
-      end;
-
-      Temp_FontQuality := StrToIntDef(AListOfFindControlOptionsParams.Values[Prefix + 'FontQuality'], 0);
-      if (Temp_FontQuality < 0) or (Temp_FontQuality > Ord(High(TFontQuality))) then
-      begin
-        SetActionVarValue('$ExecAction_Err$', Prefix + 'FontQuality is out of range.');
-        Exit;
-      end;
-
-      Temp_CropLeft := AListOfFindControlOptionsParams.Values[Prefix + 'CropLeft'];
-      Temp_CropTop := AListOfFindControlOptionsParams.Values[Prefix + 'CropTop'];
-      Temp_CropRight := AListOfFindControlOptionsParams.Values[Prefix + 'CropRight'];
-      Temp_CropBottom := AListOfFindControlOptionsParams.Values[Prefix + 'CropBottom'];
-
-      if StrToIntDef(Temp_CropLeft, 0) < 0 then
-      begin
-        SetActionVarValue('$ExecAction_Err$', Prefix + 'CropLeft is out of range.');
-        Exit;
-      end;
-
-      if StrToIntDef(Temp_CropTop, 0) < 0 then
-      begin
-        SetActionVarValue('$ExecAction_Err$', Prefix + 'CropTop is out of range.');
-        Exit;
-      end;
-
-      if StrToIntDef(Temp_CropRight, 0) < 0 then
-      begin
-        SetActionVarValue('$ExecAction_Err$', Prefix + 'CropRight is out of range.');
-        Exit;
-      end;
-
-      if StrToIntDef(Temp_CropBottom, 0) < 0 then
-      begin
-        SetActionVarValue('$ExecAction_Err$', Prefix + 'CropBottom is out of range.');
-        Exit;
-      end;
-
-      FindControlOptions.MatchBitmapText[i].ForegroundColor := AListOfFindControlOptionsParams.Values[Prefix + 'ForegroundColor'];
-      FindControlOptions.MatchBitmapText[i].BackgroundColor := AListOfFindControlOptionsParams.Values[Prefix + 'BackgroundColor'];
-      FindControlOptions.MatchBitmapText[i].FontName := AListOfFindControlOptionsParams.Values[Prefix + 'FontName'];
-      FindControlOptions.MatchBitmapText[i].FontSize := Temp_FontSize;
-      FindControlOptions.MatchBitmapText[i].Bold := AListOfFindControlOptionsParams.Values[Prefix + 'Bold'] = '1';
-      FindControlOptions.MatchBitmapText[i].Italic := AListOfFindControlOptionsParams.Values[Prefix + 'Italic'] = '1';
-      FindControlOptions.MatchBitmapText[i].Underline := AListOfFindControlOptionsParams.Values[Prefix + 'Underline'] = '1';
-      FindControlOptions.MatchBitmapText[i].StrikeOut := AListOfFindControlOptionsParams.Values[Prefix + 'StrikeOut'] = '1';
-      FindControlOptions.MatchBitmapText[i].FontQuality := TFontQuality(Temp_FontQuality);
-      FindControlOptions.MatchBitmapText[i].FontQualityUsesReplacement := AListOfFindControlOptionsParams.Values[Prefix + 'FontQualityUsesReplacement'] = '1';
-      FindControlOptions.MatchBitmapText[i].FontQualityReplacement := AListOfFindControlOptionsParams.Values[Prefix + 'FontQualityReplacement'];
-      FindControlOptions.MatchBitmapText[i].ProfileName := AListOfFindControlOptionsParams.Values[Prefix + 'ProfileName'];
-      FindControlOptions.MatchBitmapText[i].CropLeft := Temp_CropLeft;
-      FindControlOptions.MatchBitmapText[i].CropTop := Temp_CropTop;
-      FindControlOptions.MatchBitmapText[i].CropRight := Temp_CropRight;
-      FindControlOptions.MatchBitmapText[i].CropBottom := Temp_CropBottom;
-      FindControlOptions.MatchBitmapText[i].IgnoreBackgroundColor := AListOfFindControlOptionsParams.Values[Prefix + 'IgnoreBackgroundColor'] = '1';
-    end;
-
-    FindControlOptions.MatchBitmapFiles := FastReplace_45ToReturn(AListOfFindControlOptionsParams.Values['MatchBitmapFiles']); //ListOfStrings
-    FindControlOptions.MatchBitmapAlgorithm := TMatchBitmapAlgorithm(Temp_MatchBitmapAlgorithm);
-
-    FindControlOptions.MatchBitmapAlgorithmSettings.XMultipleOf := StrToIntDef(AListOfFindControlOptionsParams.Values['MatchBitmapAlgorithmSettings.XMultipleOf'], 0);
-    FindControlOptions.MatchBitmapAlgorithmSettings.YMultipleOf := StrToIntDef(AListOfFindControlOptionsParams.Values['MatchBitmapAlgorithmSettings.YMultipleOf'], 0);
-    FindControlOptions.MatchBitmapAlgorithmSettings.XOffset := StrToIntDef(AListOfFindControlOptionsParams.Values['MatchBitmapAlgorithmSettings.XOffset'], 0);
-    FindControlOptions.MatchBitmapAlgorithmSettings.YOffset := StrToIntDef(AListOfFindControlOptionsParams.Values['MatchBitmapAlgorithmSettings.YOffset'], 0);
-
-    FindControlOptions.InitialRectangle.Left := AListOfFindControlOptionsParams.Values['InitialRectangle.Left'];
-    FindControlOptions.InitialRectangle.Top := AListOfFindControlOptionsParams.Values['InitialRectangle.Top'];
-    FindControlOptions.InitialRectangle.Right := AListOfFindControlOptionsParams.Values['InitialRectangle.Right'];
-    FindControlOptions.InitialRectangle.Bottom := AListOfFindControlOptionsParams.Values['InitialRectangle.Bottom'];
-    FindControlOptions.InitialRectangle.LeftOffset := AListOfFindControlOptionsParams.Values['InitialRectangle.LeftOffset'];
-    FindControlOptions.InitialRectangle.TopOffset := AListOfFindControlOptionsParams.Values['InitialRectangle.TopOffset'];
-    FindControlOptions.InitialRectangle.RightOffset := AListOfFindControlOptionsParams.Values['InitialRectangle.RightOffset'];
-    FindControlOptions.InitialRectangle.BottomOffset := AListOfFindControlOptionsParams.Values['InitialRectangle.BottomOffset'];
-
-    FindControlOptions.UseWholeScreen := AListOfFindControlOptionsParams.Values['UseWholeScreen'] = '1';
-    FindControlOptions.ColorError := AListOfFindControlOptionsParams.Values['ColorError'];  //string, to allow var replacements
-    FindControlOptions.AllowedColorErrorCount := AListOfFindControlOptionsParams.Values['AllowedColorErrorCount'];  //Number of pixels allowed to mismatch
-    FindControlOptions.WaitForControlToGoAway := AListOfFindControlOptionsParams.Values['WaitForControlToGoAway'] = '1';
-    FindControlOptions.StartSearchingWithCachedControl := AListOfFindControlOptionsParams.Values['StartSearchingWithCachedControl'] = '1';
-    FindControlOptions.CachedControlLeft := AListOfFindControlOptionsParams.Values['CachedControlLeft'];
-    FindControlOptions.CachedControlTop := AListOfFindControlOptionsParams.Values['CachedControlTop'];
-
-    FindControlOptions.MatchPrimitiveFiles := FastReplace_45ToReturn(AListOfFindControlOptionsParams.Values['MatchPrimitiveFiles']); //ListOfStrings
-    FindControlOptions.GetAllControls := AListOfFindControlOptionsParams.Values['GetAllControls'] = '1';
-
-    FindControlOptions.UseFastSearch := AListOfFindControlOptionsParams.Values['UseFastSearch'] <> '0';
-    FindControlOptions.FastSearchAllowedColorErrorCount := AListOfFindControlOptionsParams.Values['FastSearchAllowedColorErrorCount'];
-    FindControlOptions.IgnoredColors := AListOfFindControlOptionsParams.Values['IgnoredColors'];
-    FindControlOptions.SleepySearch := AListOfFindControlOptionsParams.Values['SleepySearch'] = '1';
-    FindControlOptions.StopSearchOnMismatch := AListOfFindControlOptionsParams.Values['StopSearchOnMismatch'] <> '0';
-
-    FindControlOptions.ImageSource := TImageSource(Temp_ImageSource);
-    FindControlOptions.SourceFileName := AListOfFindControlOptionsParams.Values['SourceFileName'];
-    FindControlOptions.ImageSourceFileNameLocation := TImageSourceFileNameLocation(Temp_ImageSourceFileNameLocation);
-
-    ActionOptions.ActionName := AListOfFindControlOptionsParams.Values['ActionName'];
-    ActionOptions.ActionTimeout := Temp_ActionTimeout;
-    ActionOptions.Action := CActionType[AIsSubControl];
 
     Result := ExecuteFindControlActionWithTimeout(FindControlOptions, ActionOptions, AIsSubControl);
   finally
@@ -3288,22 +3015,17 @@ end;
 function TActionExecution.ExecuteSetControlTextActionAsString(AListOfSetControlTextOptionsParams: TStrings): Boolean;
 var
   SetTextOptions: TClkSetTextOptions;
-  Temp_ControlType: Integer;
+  Err: string;
 begin
   Result := False;
   SetActionVarValue('$ExecAction_Err$', '');
   try
-    Temp_ControlType := StrToIntDef(AListOfSetControlTextOptionsParams.Values['ControlType'], 0);
-    if (Temp_ControlType < 0) or (Temp_ControlType > Ord(High(TClkSetTextControlType))) then
+    Err := SetSetControlTextActionProperties(AListOfSetControlTextOptionsParams, SetTextOptions);
+    if Err <> '' then
     begin
-      SetActionVarValue('$ExecAction_Err$', 'ControlType is out of range.');
+      SetActionVarValue('$ExecAction_Err$', Err);
       Exit;
     end;
-
-    SetTextOptions.Text := AListOfSetControlTextOptionsParams.Values['Text'];
-    SetTextOptions.ControlType := TClkSetTextControlType(Temp_ControlType);
-    SetTextOptions.DelayBetweenKeyStrokes := AListOfSetControlTextOptionsParams.Values['DelayBetweenKeyStrokes'];
-    SetTextOptions.Count := AListOfSetControlTextOptionsParams.Values['Count'];
 
     Result := ExecuteSetControlTextAction(SetTextOptions);
   finally
@@ -3315,43 +3037,21 @@ end;
 function TActionExecution.ExecuteCallTemplateActionAsString(AListOfCallTemplateOptionsParams: TStrings): Boolean;
 var
   CallTemplateOptions: TClkCallTemplateOptions;
-  Temp_LoopDirection: Integer;
-  Temp_LoopEvalBreakPosition: Integer;
   IsDebugging: Boolean;
+  Err: string;
 begin
   Result := False;
   SetActionVarValue('$ExecAction_Err$', '');
   try
-    Temp_LoopDirection := StrToIntDef(AListOfCallTemplateOptionsParams.Values['Loop.Direction'], 0);
-    if (Temp_LoopDirection < 0) or (Temp_LoopDirection > Ord(High(TLoopDirection))) then
-    begin
-      SetActionVarValue('$ExecAction_Err$', 'Loop.Direction is out of range.');
-      Exit;
-    end;
-
-    Temp_LoopEvalBreakPosition := StrToIntDef(AListOfCallTemplateOptionsParams.Values['Loop.EvalBreakPosition'], 0);
-    if (Temp_LoopEvalBreakPosition < 0) or (Temp_LoopEvalBreakPosition > Ord(High(TLoopEvalBreakPosition))) then
-    begin
-      SetActionVarValue('$ExecAction_Err$', 'Loop.EvalBreakPosition is out of range.');
-      Exit;
-    end;
-
-    CallTemplateOptions.TemplateFileName := AListOfCallTemplateOptionsParams.Values['TemplateFileName'];
-    CallTemplateOptions.ListOfCustomVarsAndValues := AListOfCallTemplateOptionsParams.Values['ListOfCustomVarsAndValues'];
-    CallTemplateOptions.CallOnlyIfCondition := False;       //deprecated - must be set to False, to prevent error messages
-    CallTemplateOptions.CallOnlyIfConditionVarName := '';   //deprecated
-    CallTemplateOptions.CallOnlyIfConditionVarValue := '';  //deprecated
-    CallTemplateOptions.EvaluateBeforeCalling := AListOfCallTemplateOptionsParams.Values['EvaluateBeforeCalling'] = '1';
-
-    CallTemplateOptions.CallTemplateLoop.Enabled := AListOfCallTemplateOptionsParams.Values['Loop.Enabled'] = '1'; //When False, the CallTemplate action is executed once, as before. Else, it may be executed or not, based on loop settings.
-    CallTemplateOptions.CallTemplateLoop.Counter := AListOfCallTemplateOptionsParams.Values['Loop.Counter'];
-    CallTemplateOptions.CallTemplateLoop.InitValue := AListOfCallTemplateOptionsParams.Values['Loop.InitValue'];
-    CallTemplateOptions.CallTemplateLoop.EndValue := AListOfCallTemplateOptionsParams.Values['Loop.EndValue'];
-    CallTemplateOptions.CallTemplateLoop.Direction := TLoopDirection(Temp_LoopDirection);
-    CallTemplateOptions.CallTemplateLoop.BreakCondition := FastReplace_45ToReturn(AListOfCallTemplateOptionsParams.Values['Loop.BreakCondition']); //uses the same format as TClkActionOptions.ActionCondition
-    CallTemplateOptions.CallTemplateLoop.EvalBreakPosition := TLoopEvalBreakPosition(Temp_LoopEvalBreakPosition);
-
     IsDebugging := AListOfCallTemplateOptionsParams.Values['IsDebugging'] = '1';
+
+    Err := SetCallTemplateActionProperties(AListOfCallTemplateOptionsParams, CallTemplateOptions);
+    if Err <> '' then
+    begin
+      SetActionVarValue('$ExecAction_Err$', Err);
+      Exit;
+    end;
+
     Result := ExecuteLoopedCallTemplateAction(CallTemplateOptions, IsDebugging, IsDebugging); //not sure if AShouldStopAtBreakPoint should be the same as IsDebugging or if it should be another http param
 
     if not Result then
@@ -3368,15 +3068,17 @@ function TActionExecution.ExecuteSleepActionAsString(AListOfSleepOptionsParams: 
 var
   SleepOptions: TClkSleepOptions;
   ActionOptions: TClkActionOptions;
+  Err: string;
 begin
   Result := False;
   SetActionVarValue('$ExecAction_Err$', '');
   try
-    SleepOptions.Value := AListOfSleepOptionsParams.Values['Value'];
-
-    ActionOptions.ActionName := AListOfSleepOptionsParams.Values['ActionName'];
-    ActionOptions.ActionTimeout := 0;
-    ActionOptions.Action := acSleep;
+    Err := SetSleepActionProperties(AListOfSleepOptionsParams, SleepOptions, ActionOptions);
+    if Err <> '' then
+    begin
+      SetActionVarValue('$ExecAction_Err$', Err);
+      Exit;
+    end;
 
     Result := ExecuteSleepAction(SleepOptions, ActionOptions);
   finally
@@ -3388,13 +3090,17 @@ end;
 function TActionExecution.ExecuteSetVarActionAsString(AListOfSetVarOptionsParams: TStrings): Boolean;
 var
   SetVarOptions: TClkSetVarOptions;
+  Err: string;
 begin
   Result := False;
   SetActionVarValue('$ExecAction_Err$', '');
   try
-    SetVarOptions.ListOfVarNames := FastReplace_45ToReturn(AListOfSetVarOptionsParams.Values['ListOfVarNames']);
-    SetVarOptions.ListOfVarValues := FastReplace_45ToReturn(AListOfSetVarOptionsParams.Values['ListOfVarValues']);
-    SetVarOptions.ListOfVarEvalBefore := FastReplace_45ToReturn(AListOfSetVarOptionsParams.Values['ListOfVarEvalBefore']);
+    Err := SetSetVarActionProperties(AListOfSetVarOptionsParams, SetVarOptions);
+    if Err <> '' then
+    begin
+      SetActionVarValue('$ExecAction_Err$', Err);
+      Exit;
+    end;
 
     Result := ExecuteSetVarAction(SetVarOptions);
   finally
@@ -3406,25 +3112,17 @@ end;
 function TActionExecution.ExecuteWindowOperationsActionAsString(AListOfWindowOperationsOptionsParams: TStrings): Boolean;
 var
   WindowOperationsOptions: TClkWindowOperationsOptions;
-  Temp_Operation: Integer;
+  Err: string;
 begin
   Result := False;
   SetActionVarValue('$ExecAction_Err$', '');
   try
-    Temp_Operation := StrToIntDef(AListOfWindowOperationsOptionsParams.Values['Operation'], 0);
-    if (Temp_Operation < 0) or (Temp_Operation > Ord(High(TWindowOperation))) then
+    Err := SetWindowOperationsActionProperties(AListOfWindowOperationsOptionsParams, WindowOperationsOptions);
+    if Err <> '' then
     begin
-      SetActionVarValue('$ExecAction_Err$', 'Operation is out of range.');
+      SetActionVarValue('$ExecAction_Err$', Err);
       Exit;
     end;
-
-    WindowOperationsOptions.Operation := TWindowOperation(Temp_Operation);
-    WindowOperationsOptions.NewX := AListOfWindowOperationsOptionsParams.Values['NewX'];
-    WindowOperationsOptions.NewY := AListOfWindowOperationsOptionsParams.Values['NewY'];
-    WindowOperationsOptions.NewWidth := AListOfWindowOperationsOptionsParams.Values['NewWidth'];
-    WindowOperationsOptions.NewHeight := AListOfWindowOperationsOptionsParams.Values['NewHeight'];
-    WindowOperationsOptions.NewPositionEnabled := AListOfWindowOperationsOptionsParams.Values['NewPositionEnabled'] = '1';
-    WindowOperationsOptions.NewSizeEnabled := AListOfWindowOperationsOptionsParams.Values['NewSizeEnabled'] = '1';
 
     Result := ExecuteWindowOperationsAction(WindowOperationsOptions);
   finally
@@ -3433,15 +3131,20 @@ begin
 end;
 
 
-function TActionExecution.ExecuteLoadSetVarFromFileActionAsString(AListOfSetVarOptionsParams: TStrings): Boolean;
+function TActionExecution.ExecuteLoadSetVarFromFileActionAsString(AListOfLoadSetVarOptionsParams: TStrings): Boolean;
 var
   LoadSetVarFromFileOptions: TClkLoadSetVarFromFileOptions;
+  Err: string;
 begin
   Result := False;
   SetActionVarValue('$ExecAction_Err$', '');
   try
-    LoadSetVarFromFileOptions.FileName := AListOfSetVarOptionsParams.Values['FileName'];
-    LoadSetVarFromFileOptions.SetVarActionName := AListOfSetVarOptionsParams.Values['SetVarActionName'];
+    Err := SetLoadSetVarFromFileActionProperties(AListOfLoadSetVarOptionsParams, LoadSetVarFromFileOptions);
+    if Err <> '' then
+    begin
+      SetActionVarValue('$ExecAction_Err$', Err);
+      Exit;
+    end;
 
     Result := ExecuteLoadSetVarFromFileAction(LoadSetVarFromFileOptions);
   finally
@@ -3450,15 +3153,20 @@ begin
 end;
 
 
-function TActionExecution.ExecuteSaveSetVarToFileActionAsString(AListOfSetVarOptionsParams: TStrings): Boolean;
+function TActionExecution.ExecuteSaveSetVarToFileActionAsString(AListOfSaveSetVarOptionsParams: TStrings): Boolean;
 var
   SaveSetVarToFileOptions: TClkSaveSetVarToFileOptions;
+  Err: string;
 begin
   Result := False;
   SetActionVarValue('$ExecAction_Err$', '');
   try
-    SaveSetVarToFileOptions.FileName := AListOfSetVarOptionsParams.Values['FileName'];
-    SaveSetVarToFileOptions.SetVarActionName := AListOfSetVarOptionsParams.Values['SetVarActionName'];
+    Err := SetSaveSetVarToFileActionProperties(AListOfSaveSetVarOptionsParams, SaveSetVarToFileOptions);
+    if Err <> '' then
+    begin
+      SetActionVarValue('$ExecAction_Err$', Err);
+      Exit;
+    end;
 
     Result := ExecuteSaveSetVarToFileAction(SaveSetVarToFileOptions);
   finally
@@ -3473,20 +3181,25 @@ var
   TempAllActions: PClkActionsRecArr;
   TempListOfAllVars: TStringList;
   IsDebugging: Boolean;
+  Err: string;
 begin
   Result := False;
   SetActionVarValue('$ExecAction_Err$', '');
   try
-    PluginOptions.FileName := DoOnResolveTemplatePath(APluginOptionsParams.Values['FileName']);
-    PluginOptions.ListOfPropertiesAndValues := FastReplace_45ToReturn(APluginOptionsParams.Values['ListOfPropertiesAndValues']);
-    IsDebugging := APluginOptionsParams.Values['IsDebugging'] = '1';
+    Err := SetPluginActionProperties(APluginOptionsParams, PluginOptions);
+    if Err <> '' then
+    begin
+      SetActionVarValue('$ExecAction_Err$', Err);
+      Exit;
+    end;
 
+    IsDebugging := APluginOptionsParams.Values['IsDebugging'] = '1';
     TempAllActions := DoOnGetAllActions;
 
     TempListOfAllVars := TStringList.Create;
     try
       DoOnBackupVars(TempListOfAllVars);
-      Result := ExecutePluginAction(PluginOptions, TempAllActions, TempListOfAllVars, PluginOptions.FileName, IsDebugging, IsDebugging); //passing two IsDebugging params. ToDo:  review the logic
+      Result := ExecutePluginAction(PluginOptions, TempAllActions, TempListOfAllVars, DoOnResolveTemplatePath(PluginOptions.FileName), IsDebugging, IsDebugging); //passing two IsDebugging params. ToDo:  review the logic
     finally
       TempListOfAllVars.Free;
     end;
