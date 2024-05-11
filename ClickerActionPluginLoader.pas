@@ -50,6 +50,8 @@ type
     OnLoadBitmap: TOnLoadBitmap;
     OnLoadRenderedBitmap: TOnLoadRenderedBitmap;
     OnSaveFileToExtRenderingInMemFS: TOnSaveFileToExtRenderingInMemFS;
+    OnUpdatePropertyIcons: TOnUpdatePropertyIcons;
+    OnUpdatePropertyDetails: TOnUpdatePropertyDetails;
 
     FIsDebugging, FShouldStopAtBreakPoint: Boolean;
     FStopAllActionsOnDemandFromParent, FPluginContinueAll: PBoolean;
@@ -93,7 +95,8 @@ type
                            AAllActions: PClkActionsRecArr = nil;
                            AAllVars: TStringList = nil): Boolean;
 
-    function LoadToGetProperties(APath: string): Boolean;
+    function LoadToGetProperties(APath: string;
+                                 AOnUpdatePropertyIcons: TOnUpdatePropertyIcons): Boolean;
     function Unload: Boolean;
 
     function GetAPIVersion: DWord;
@@ -417,9 +420,10 @@ begin
   SetPointedContentToString(AFileName, Fnm);
   Allowed := True; /////////////////////////////////////////////////////////////  verifiy if file is allowed to be read (ext and location permissions)
 
-  if not Allowed or not FileExists(Fnm) then
+  if not Allowed then
   begin
     Result := False;
+    ActionPlugin.DoAddToLog('Error: a plugin attempts to load a file which is not allowed in ActionPlugin_GetFileContent: "' + Fnm + '".');
     Exit;
   end;
 
@@ -431,6 +435,7 @@ begin
         if not ActionPlugin^.OnLoadBitmap(TempBmp, Fnm) then   //returns True if file loaded, and False if file not found
         begin
           Result := False;
+          ActionPlugin.DoAddToLog('Error: file not found in ActionPlugin_GetFileContent (Disk): "' + Fnm + '".');
           Exit;
         end;
 
@@ -438,6 +443,7 @@ begin
         if not ActionPlugin^.OnLoadRenderedBitmap(TempBmp, Fnm) then   //returns True if file loaded, and False if file not found
         begin
           Result := False;
+          ActionPlugin.DoAddToLog('Error: file not found in ActionPlugin_GetFileContent (Mem): "' + Fnm + '".');
           Exit;
         end;
 
@@ -481,6 +487,17 @@ begin
     raise Exception.Create('OnSaveFileToExtRenderingInMemFS not assigned.');
 
   ActionPlugin.OnSaveFileToExtRenderingInMemFS(TempFileName, AStreamContent, AStreamSize);
+end;
+
+
+function DoOnActionPlugin_Screenshot(APluginReference: Pointer; AActionName: Pointer): Boolean; cdecl;
+var
+  ActionPlugin: PActionPlugin;
+  TempFileName: string;
+begin
+  ActionPlugin := APluginReference;
+  ActionPlugin.DoAddToLog('OnActionPlugin_Screenshot not implemented'); /////////////////////// ToDo
+  Result := True; //the actual OnScreenshot
 end;
 
 
@@ -622,7 +639,8 @@ begin
 end;
 
 
-function TActionPlugin.LoadToGetProperties(APath: string): Boolean;
+function TActionPlugin.LoadToGetProperties(APath: string;
+                                           AOnUpdatePropertyIcons: TOnUpdatePropertyIcons): Boolean;
 begin
   Result := False;
 
@@ -660,6 +678,8 @@ begin
       Unload;
       Exit;
     end;
+
+    OnUpdatePropertyIcons := AOnUpdatePropertyIcons;
   end
   else
   begin
@@ -699,6 +719,15 @@ begin
 end;
 
 
+procedure DoOnActionPlugin_UpdatePropertyIcons(APluginReference: Pointer; AStreamContent: Pointer; AStreamSize: Int64); cdecl;
+var
+  ActionPlugin: PActionPlugin;
+begin
+  ActionPlugin := APluginReference;
+  ActionPlugin.OnUpdatePropertyIcons(AStreamContent, AStreamSize);
+end;
+
+
 function TActionPlugin.GetListOfProperties: string;
 var
   Len: DWord;
@@ -707,7 +736,11 @@ begin
     raise Exception.Create('Plugin function not set: GetListOfProperties');
 
   SetLength(Result, CMaxSharedStringLength);
-  Func.GetListOfPropertiesProc(@Result[1], @Len);
+  Func.GetListOfPropertiesProc(@Self,
+                               @Result[1],
+                               @Len,
+                               @DoOnActionPlugin_UpdatePropertyIcons
+                               );
   SetLength(Result, Len);
 end;
 
@@ -750,7 +783,8 @@ begin
                                      DoOnActionPlugin_SetResultImg,
                                      DoOnActionPlugin_GetFileContent,
                                      DoOnActionPlugin_GetAllowedFilesInfo,
-                                     DoOnActionPlugin_SetBitmap);
+                                     DoOnActionPlugin_SetBitmap,
+                                     DoOnActionPlugin_Screenshot);
   finally
     if FPluginContinueAll <> nil then
       FPluginContinueAll^ := False; //reset flag after execution

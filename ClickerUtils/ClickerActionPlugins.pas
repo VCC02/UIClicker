@@ -39,7 +39,10 @@ type
   //Callbacks of callbacks:
   TOnFileContent = procedure(ACallReference, AStreamContent: Pointer; AStreamSize: Int64); cdecl;
 
-  //Plugin callbacks:
+  //Plugin property callbacks:
+  TOnActionPlugin_UpdatePropertyIcons = procedure(APluginReference: Pointer; AStreamContent: Pointer; AStreamSize: Int64); cdecl; //A plugin calls this procedure to update the TImageList component in UIClicker, used on displaying plugin properties. This callback will be called for every property. UIClicker has to clear and add fixed icons to the image list, prior to calling TGetListOfProperties. On every call of this callback, UIClicker has to add a new bitmap to the image list.
+
+  //Plugin execution callbacks:
   TOnActionPlugin_GetActionCount = function(APluginReference: Pointer): Integer; cdecl;  //a plugin calls this function, to get the number of actions in the current template from UIClicker
   TOnActionPlugin_GetActionInfoByIndex = procedure(APluginReference: Pointer; AIndex: Integer; AActionName: Pointer; ANameLength, AActionType: PDWord); cdecl; //A plugin calls this function, to get the action name and type of an action.
   TOnActionPlugin_GetActionContentByIndex = procedure(APluginReference: Pointer; AIndex: Integer; AActionContent: Pointer; AContentLength: PDWord); cdecl; //A plugin calls this function, to get the action structure of an action. The content has the same format as the one used to serialize the action using the http API.
@@ -52,12 +55,17 @@ type
   TOnActionPlugin_LoadBitmap = function(APluginReference: Pointer; AFileName, ACallReference: Pointer; AFileLocation: Byte; AOnFileContent: TOnFileContent): Boolean; cdecl;  //A plugin calls this function, to get the bitmap content (from disk or rendered-externally-in-mem FS). The function returns False if the file is not found. UIClicker calls AOnFileContent callback to set the file content in plugin if the file is found and it is allowed to be accessed. The ACallReference argument is passed to OnFileContent callback, for keeping track of that call. It can be a pointer to an object.
   TOnActionPlugin_GetAllowedFilesInfo = procedure(APluginReference: Pointer; AFullTemplatesDir, AAllowedFileDirsForServer, AAllowedFileExtensionsForServer: Pointer); cdecl; //Called by plugin when the file to be loaded will be sent to a remote location, so file location/extension "permissions" should be verified. For local files, this is not needed, as this is the behavior of the executable itself.
   TOnActionPlugin_SetBitmap = procedure(APluginReference: Pointer; AFileName: Pointer; AStreamContent: Pointer; AStreamSize: Int64; AImgWidth, AImgHeight: Integer); cdecl; //A plugin may call this function multiple times if it has multiple bitmaps to give back to UIClicker, which stores the bitmap in rendered-externally-in-mem FS.
+  TOnActionPlugin_Screenshot = function(APluginReference: Pointer; AActionName: Pointer): Boolean; cdecl;  //A plugin may call this function, to take a screenshot, using the settings from a FindSubControl action (specified by AActionName). Returns False if the cropping settings are wrong (e.g. may result in negative sizes)
 
 
   //Plugin procedures / functions:
   TGetAPIVersion = function: DWord; cdecl;
-  TGetListOfProperties = procedure(AListOfProperties: Pointer; AListOfPropertiesLen: PDWord); cdecl;
-  TGetListOfDebugPoints = procedure(AListOfDebugPoints: Pointer; AListOfDebugPointsLen: PDWord); cdecl;
+  TGetListOfProperties = procedure(APluginReference: Pointer;                 //UIClicker passes the plugin reference to the plugin, then the plugin calls some callbacks with that reference
+                                   AListOfProperties: Pointer;
+                                   AListOfPropertiesLen: PDWord;
+
+                                   AOnActionPlugin_UpdatePropertyIcons: TOnActionPlugin_UpdatePropertyIcons); cdecl;
+  //TGetListOfDebugPoints = procedure(AListOfDebugPoints: Pointer; AListOfDebugPointsLen: PDWord); cdecl;
 
   TExecutePlugin = function(APluginReference: Pointer;                 //UIClicker passes the plugin reference to the plugin, then the plugin calls some callbacks with that reference
                             AListOfPluginSettings: Pointer;            //similar to a TStringList.Text content
@@ -74,19 +82,21 @@ type
                             AOnActionPlugin_SetResultImg: TOnActionPlugin_SetResultImg;
                             AOnActionPlugin_LoadBitmap: TOnActionPlugin_LoadBitmap;
                             AOnActionPlugin_GetAllowedFilesInfo: TOnActionPlugin_GetAllowedFilesInfo;
-                            AOnActionPlugin_SetBitmap: TOnActionPlugin_SetBitmap): Boolean; cdecl;
+                            AOnActionPlugin_SetBitmap: TOnActionPlugin_SetBitmap;
+                            AOnActionPlugin_Screenshot: TOnActionPlugin_Screenshot
+                            ): Boolean; cdecl;
 
 
   TActionPluginFunc = record
     GetAPIVersionFunc: TGetAPIVersion;
     GetListOfPropertiesProc: TGetListOfProperties;
-    GetListOfDebugPoints: TGetListOfDebugPoints;
+    //GetListOfDebugPoints: TGetListOfDebugPoints;
     ExecutePluginFunc: TExecutePlugin;
   end;
 
 
 const
-  CActionPlugin_APIVersion = 5;
+  CActionPlugin_APIVersion = 6;
   CActionPlugin_ExecutionResultErrorVar = '$PluginError$';
   CBeforePluginExecution_DbgLineContent = 'Before plugin execution.';
 

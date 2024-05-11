@@ -929,6 +929,11 @@ begin
   frClickerActionsArrExperiment1.InMemFS := FInMemFileSystem;
   frClickerActionsArrExperiment2.InMemFS := FInMemFileSystem;
   frClickerActionsArrMain.InMemFS := FInMemFileSystem;
+
+  frClickerActionsArrExperiment1.ExtRenderingInMemFS := FRenderedInMemFileSystem;
+  frClickerActionsArrExperiment2.ExtRenderingInMemFS := FRenderedInMemFileSystem;
+  frClickerActionsArrMain.ExtRenderingInMemFS := FRenderedInMemFileSystem;
+
   //do not set FRenderedInMemFileSystem here, as it is used for externally rendered images, not for other files
 
   frClickerActionsArrExperiment1.GridDrawingOption := TDisplayGridLineOption(cmbImgPreviewGridType.ItemIndex);
@@ -1555,6 +1560,7 @@ begin
         NewFrame.AllowedFileExtensionsForServer := memAllowedFileExtensionsForServer.Lines.Text;
         NewFrame.RemoteAddress := frClickerActionsArrMain.RemoteAddress;
         NewFrame.InMemFS := FInMemFileSystem;
+        NewFrame.ExtRenderingInMemFS := FRenderedInMemFileSystem;
         //do not set FRenderedInMemFileSystem here
         NewFrame.GridDrawingOption := TDisplayGridLineOption(cmbImgPreviewGridType.ItemIndex);
 

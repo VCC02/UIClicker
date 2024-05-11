@@ -453,6 +453,8 @@ type
 
     function GetInMemFS: TInMemFileSystem;
     procedure SetInMemFS(Value: TInMemFileSystem);
+    function GetExtRenderingInMemFS: TInMemFileSystem;
+    procedure SetExtRenderingInMemFS(Value: TInMemFileSystem);
 
     procedure SetGridDrawingOption(Value: TDisplayGridLineOption);
     procedure SetPreviewSelectionColors(Value: TSelectionColors);
@@ -543,6 +545,8 @@ type
     procedure DoOnRetrieveRenderedBmpFromServer(ARemoteAddress, AFnm: string);
     procedure DoOnOpenCalledTemplateInExperimentTab(AExperimentIndex: Integer; ATemplatePath: string);
     procedure DoOnSaveFileToExtRenderingInMemFS(AFileName: string; AContent: Pointer; AFileSize: Int64);
+
+    procedure DoOnUpdatePropertyIcons(AStreamContent: Pointer; AStreamSize: Int64);
 
     function PlayActionByNode(Node: PVirtualNode): Boolean;
     procedure PlaySelected;
@@ -638,6 +642,7 @@ type
     property RemoteAddress: string read FRemoteAddress write FRemoteAddress;
 
     property InMemFS: TInMemFileSystem read GetInMemFS write SetInMemFS;
+    property ExtRenderingInMemFS: TInMemFileSystem read GetExtRenderingInMemFS write SetExtRenderingInMemFS;
     property ActionExecution: TActionExecution read FActionExecution;
     property ShouldStopAtBreakPoint: Boolean {read FShouldStopAtBreakPoint} write FShouldStopAtBreakPoint;
 
@@ -1256,12 +1261,14 @@ end;
 
 function TfrClickerActionsArr.HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
 begin
+  AFileName := ResolveTemplatePath(AFileName); //////////////////// Added for plugin. Not sure how it affects unresolved path, which may be validated from allowed dirs.
   Result := DoOnLoadBitmap(ABitmap, AFileName);
 end;
 
 
 function TfrClickerActionsArr.HandleOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
 begin
+  AFileName := ResolveTemplatePath(AFileName); //////////////////// Added for plugin. Not sure how it affects unresolved path, which may be validated from allowed dirs.
   Result := DoOnLoadRenderedBitmap(ABitmap, AFileName);
 end;
 
@@ -2576,6 +2583,28 @@ begin
 end;
 
 
+procedure TfrClickerActionsArr.DoOnUpdatePropertyIcons(AStreamContent: Pointer; AStreamSize: Int64);
+var
+  Bmp: TBitmap;
+  MemStream: TMemoryStream;
+begin
+  MemStream := TMemoryStream.Create;
+  Bmp := TBitmap.Create;
+  try
+    MemStream.SetSize(AStreamSize);
+    Move(AStreamContent^, MemStream.Memory^, AStreamSize);
+    MemStream.Position := 0;
+    Bmp.LoadFromStream(MemStream, AStreamSize);
+
+    //MessageBox(Handle, PChar('Adding icon' + #13#10 + 'Of size: ' + IntToStr(AStreamSize) + '  ' + IntToStr(Bmp.Width) + ':' + IntToStr(Bmp.Height)), 'Arr', 0);
+    frClickerActions.imglstPluginProperties.AddMasked(Bmp, clFuchsia);
+  finally
+    MemStream.Free;
+    Bmp.Free;
+  end;
+end;
+
+
 function TfrClickerActionsArr.PlayActionByNode(Node: PVirtualNode): Boolean;
 var
   ActionIndex: Integer;
@@ -3041,10 +3070,16 @@ begin
 
   LoadingResult := False;
   try
-    LoadingResult := ActionPlugin.LoadToGetProperties(ResolvedPluginPath)
+    frClickerActions.imglstPluginProperties.Clear;
+    frClickerActions.imglstPluginProperties.AddMasked(frClickerActions.imgPluginFileName.Picture.Bitmap, clFuchsia);
+
+    LoadingResult := ActionPlugin.LoadToGetProperties(ResolvedPluginPath, DoOnUpdatePropertyIcons);
   except
     on E: Exception do
+    begin
       AddToLog('Exception on loading plugin for getting properties: "' + E.Message + '". ' + SysErrorMessage(GetLastOSError));
+      frClickerActions.imglstPluginProperties.AddMasked(frClickerActions.imgPlugin.Picture.Bitmap, clFuchsia);
+    end;
   end;
 
   if not LoadingResult then
@@ -3064,10 +3099,10 @@ begin
   ListOfPropertiesAndValue_Work := TStringList.Create;
   try
     ListOfProperties.Text := AAction.PluginOptions.ListOfPropertiesAndTypes;
-    ListOfPropertiesAndValue_Work.Text := AAction.PluginOptions.ListOfPropertiesAndValues;
+    ListOfPropertiesAndValue_Work.Text := AAction.PluginOptions.ListOfPropertiesAndValues; //values are saved in .clktmpl files
     AAction.PluginOptions.CachedCount := ListOfProperties.Count;
 
-    if not IsSameListOfProperties(ListOfProperties, ListOfPropertiesAndValue_Work) then
+    if not IsSameListOfProperties(ListOfProperties, ListOfPropertiesAndValue_Work) then   //verifies names only
       AAction.PluginOptions.ListOfPropertiesAndValues := RebuildListOfPropertiesAndValuesFromTypes(ListOfPropertiesAndValue_Work, ListOfProperties);
   finally
     ListOfProperties.Free;
@@ -6397,6 +6432,18 @@ end;
 procedure TfrClickerActionsArr.SetInMemFS(Value: TInMemFileSystem);
 begin
   frClickerActions.InMemFS := Value;
+end;
+
+
+function TfrClickerActionsArr.GetExtRenderingInMemFS: TInMemFileSystem;
+begin
+  Result := frClickerActions.ExtRenderingInMemFS;
+end;
+
+
+procedure TfrClickerActionsArr.SetExtRenderingInMemFS(Value: TInMemFileSystem);
+begin
+  frClickerActions.ExtRenderingInMemFS := Value;
 end;
 
 

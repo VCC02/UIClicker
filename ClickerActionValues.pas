@@ -196,12 +196,13 @@ const
 
   CPlugin_FileName_PropIndex = 0;
 
-  CDTString = 'String';
-  CDTEnum = 'Enum';
-  CDTBool = 'Boolean';
-  CDTInteger = 'Integer';
-  CDTStructure = 'Structure';
-  CDTArray = 'Array';
+  //Moved to ClickerUtils
+  //CDTString = 'String';
+  //CDTEnum = 'Enum';
+  //CDTBool = 'Boolean';
+  //CDTInteger = 'Integer';
+  //CDTStructure = 'Structure';
+  //CDTArray = 'Array';
 
 
   //Properties
@@ -651,7 +652,7 @@ const
     0  //ListOfVarNamesValuesAndEvalBefore
   );
 
-  CWindowOperationsCounts: array[0..CPropCount_WindowOperations - 1] of Integer = (
+  CWindowOperationsEnumCounts: array[0..CPropCount_WindowOperations - 1] of Integer = (
     Ord(High(TWindowOperation)) + 1,
     0, //NewX,
     0, //NewY,
@@ -661,17 +662,17 @@ const
     0  //NewSizeEnabled: Boolean;
   );
 
-  CLoadSetVarFromFileCounts: array[0..CPropCount_LoadSetVarFromFile - 1] of Integer = (
+  CLoadSetVarFromFileEnumCounts: array[0..CPropCount_LoadSetVarFromFile - 1] of Integer = (
     0, //FileName
     0  //SetVarActionName
   );
 
-  CSaveSetVarToFileCounts: array[0..CPropCount_SaveSetVarToFile - 1] of Integer = (
+  CSaveSetVarToFileEnumCounts: array[0..CPropCount_SaveSetVarToFile - 1] of Integer = (
     0, //FileName
     0  //SetVarActionName
   );
 
-  CPluginCounts: array[0..CPropCount_Plugin - 1] of Integer = (
+  CPluginEnumCounts: array[0..CPropCount_Plugin - 1] of Integer = (
     0  //FileName
   );
 
@@ -685,10 +686,10 @@ const
     @CCallTemplateEnumCounts,
     @CSleepEnumCounts,
     @CSetVarEnumCounts,
-    @CWindowOperationsCounts,
-    @CLoadSetVarFromFileCounts,
-    @CSaveSetVarToFileCounts,
-    @CPluginCounts
+    @CWindowOperationsEnumCounts,
+    @CLoadSetVarFromFileEnumCounts,
+    @CSaveSetVarToFileEnumCounts,
+    @CPluginEnumCounts
   );
 
 
@@ -832,7 +833,7 @@ const
     nil  //ListOfVarNamesValuesAndEvalBefore
   );
 
-  CWindowOperationsStrings: array[0..CPropCount_WindowOperations - 1] of PArrayOfString = (
+  CWindowOperationsEnumStrings: array[0..CPropCount_WindowOperations - 1] of PArrayOfString = (
     @CWindowOperationStr,
     nil, //NewX,
     nil, //NewY,
@@ -842,17 +843,17 @@ const
     nil  //NewSizeEnabled: Boolean;
   );
 
-  CLoadSetVarFromFileStrings: array[0..CPropCount_LoadSetVarFromFile - 1] of PArrayOfString = (
+  CLoadSetVarFromFileEnumStrings: array[0..CPropCount_LoadSetVarFromFile - 1] of PArrayOfString = (
     nil, //FileName
     nil  //SetVarActionName
   );
 
-  CSaveSetVarToFileStrings: array[0..CPropCount_SaveSetVarToFile - 1] of PArrayOfString = (
+  CSaveSetVarToFileEnumStrings: array[0..CPropCount_SaveSetVarToFile - 1] of PArrayOfString = (
     nil, //FileName
     nil  //SetVarActionName
   );
 
-  CPluginStrings: array[0..CPropCount_Plugin - 1] of PArrayOfString = (
+  CPluginEnumStrings: array[0..CPropCount_Plugin - 1] of PArrayOfString = (
     nil  //FileName
   );
 
@@ -866,10 +867,10 @@ const
     @CCallTemplateEnumStrings,
     @CSleepEnumStrings,
     @CSetVarEnumStrings,
-    @CWindowOperationsStrings,
-    @CLoadSetVarFromFileStrings,
-    @CSaveSetVarToFileStrings,
-    @CPluginStrings
+    @CWindowOperationsEnumStrings,
+    @CLoadSetVarFromFileEnumStrings,
+    @CSaveSetVarToFileEnumStrings,
+    @CPluginEnumStrings
   );
 
   {$IFDEF SubProperties}

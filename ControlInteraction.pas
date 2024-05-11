@@ -730,6 +730,7 @@ begin
       //Do not modify ScrShot_Width or ScrShot_Height!
       WipeBitmap(InputData.DebugBitmap, InputData.BitmapToSearchOn.Width, InputData.BitmapToSearchOn.Height);
       InputData.DebugBitmap.Canvas.Draw(0, 0, InputData.BitmapToSearchOn);
+      //ScreenShot(InputData.BitmapToSearchOn.Handle, InputData.DebugBitmap, ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height);  //ToDo
     end;
   end;
 

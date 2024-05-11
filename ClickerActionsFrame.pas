@@ -51,6 +51,7 @@ type
   TfrClickerActions = class(TFrame)
     chkDecodeVariables: TCheckBox;
     chkShowDebugGrid: TCheckBox;
+    imgPluginFileName: TImage;
     imgDebugBmp: TImage;
     imgDebugGrid: TImage;
     imglstLoadSetVarFromFileProperties: TImageList;
@@ -74,6 +75,7 @@ type
     imglstClickProperties: TImageList;
     imglstCallTemplateProperties: TImageList;
     imglstSetVarProperties: TImageList;
+    imgPlugin: TImage;
     lblBitmaps: TLabel;
     lblDebugBitmapXMouseOffset: TLabel;
     lblDebugBitmapYMouseOffset: TLabel;
@@ -445,6 +447,8 @@ type
 
     function GetInMemFS: TInMemFileSystem;
     procedure SetInMemFS(Value: TInMemFileSystem);
+    function GetExtRenderingInMemFS: TInMemFileSystem;
+    procedure SetExtRenderingInMemFS(Value: TInMemFileSystem);
 
     procedure SetLabelsFromMouseOverExecDbgImgPixelColor(APixelColor: TColor);
 
@@ -612,6 +616,7 @@ type
 
     property ListOfCustomVariables: string read GetListOfCustomVariables write SetListOfCustomVariables;
     property InMemFS: TInMemFileSystem read GetInMemFS write SetInMemFS;
+    property ExtRenderingInMemFS: TInMemFileSystem read GetExtRenderingInMemFS write SetExtRenderingInMemFS;
 
     property CurrentlyEditingActionType: TClkAction read GetCurrentlyEditingActionType write SetCurrentlyEditingActionType;
     property EditingAction: PClkActionRec read FEditingAction; //the pointer is not writable from outside, only the content
@@ -2268,6 +2273,18 @@ end;
 procedure TfrClickerActions.SetInMemFS(Value: TInMemFileSystem);
 begin
   frClickerFindControl.InMemFS := Value;
+end;
+
+
+function TfrClickerActions.GetExtRenderingInMemFS: TInMemFileSystem;
+begin
+  Result := frClickerFindControl.ExtRenderingInMemFS;
+end;
+
+
+procedure TfrClickerActions.SetExtRenderingInMemFS(Value: TInMemFileSystem);
+begin
+  frClickerFindControl.ExtRenderingInMemFS := Value;
 end;
 
 
@@ -4326,6 +4343,7 @@ var
   EditingActionType: Integer;
   PropDef: TOIPropDef;
   ListOfProperties: TStringList;
+  PropDetails: string;
 begin
   PropDef.EditorType := etNone;
   Result := '';
@@ -4351,7 +4369,10 @@ begin
             ListOfProperties.Text := FEditingAction.PluginOptions.ListOfPropertiesAndTypes;
 
             if (APropertyIndex - CPropCount_Plugin < ListOfProperties.Count) and (ListOfProperties.Count > 0) then
-              PropDef.EditorType := StrToTOIEditorType('et' + ListOfProperties.ValueFromIndex[APropertyIndex - CPropCount_Plugin])
+            begin
+              PropDetails := ListOfProperties.ValueFromIndex[APropertyIndex - CPropCount_Plugin];
+              PropDef.EditorType := StrToTOIEditorType('et' + Copy(PropDetails, 1, Pos(#8#7, PropDetails) - 1));
+            end
             else
               PropDef.EditorType := etUserEditor; //index out of bounds
           finally
@@ -4616,6 +4637,31 @@ begin
 end;
 
 
+function GetPluginPropertyAttribute(AListOfPropertiesAndTypes, AAttrName: string; APropertyIndex: Integer): string;
+var
+  ListOfProperties: TStringList;
+  PropDetails: string;
+begin
+  ListOfProperties := TStringList.Create;
+  try
+    ListOfProperties.Text := AListOfPropertiesAndTypes;
+
+    if (APropertyIndex - CPropCount_Plugin < ListOfProperties.Count) and (ListOfProperties.Count > 0) then
+    begin
+      PropDetails := ListOfProperties.ValueFromIndex[APropertyIndex - CPropCount_Plugin];
+
+      Result := Copy(PropDetails, Pos(#8#7 + AAttrName + '=', PropDetails) + 2, MaxInt);  //at this point, Result contains multiple attributes
+      Result := Copy(Result, 1, Pos(#8#7, Result) - 1);  //at this point, Result is AAttrName + '=' + [some datatype]
+      Delete(Result, 1, Length(AAttrName + '='));
+
+      //DoOnAddToLog('Plugin prop DataType[' + IntToStr(APropertyIndex - CPropCount_Plugin) + ']: ' + Result);
+    end
+  finally
+    ListOfProperties.Free;
+  end;
+end;
+
+
 function TfrClickerActions.HandleOnUIGetDataTypeName(ACategoryIndex, APropertyIndex, AItemIndex: Integer): string;
 var
   EditingActionType: Integer;
@@ -4636,7 +4682,7 @@ begin
         if AItemIndex = -1 then
         begin
           if (CurrentlyEditingActionType = acPlugin) and (APropertyIndex > CPlugin_FileName_PropIndex) then
-            Result := 'String'
+            Result := GetPluginPropertyAttribute(FEditingAction.PluginOptions.ListOfPropertiesAndTypes, 'DataType', APropertyIndex)
           else
             Result := CMainProperties[EditingActionType]^[APropertyIndex].DataType
         end
@@ -4748,8 +4794,8 @@ begin
               Ord(acPlugin):
               begin
                 ImageList := imglstPluginProperties;
-                if APropertyIndex > CPlugin_FileName_PropIndex then
-                  ImageIndex := 1;
+                //if APropertyIndex > CPlugin_FileName_PropIndex then
+                //  ImageIndex := 1;
               end;
             end;   //case
           end;
@@ -5197,7 +5243,10 @@ begin
         end;
 
       if (CurrentlyEditingActionType = acPlugin) and (APropertyIndex > CPlugin_FileName_PropIndex) then
-        Result := 0
+      begin
+        //Result := 0
+        Result := StrToIntDef(GetPluginPropertyAttribute(FEditingAction.PluginOptions.ListOfPropertiesAndTypes, 'EnumCounts', APropertyIndex), 0);
+      end
       else
         Result := CPropEnumCounts[CurrentlyEditingActionType]^[APropertyIndex];
     end;
@@ -5212,6 +5261,7 @@ procedure TfrClickerActions.HandleOnOIGetEnumConst(ANodeLevel, ACategoryIndex, A
 var
   EditingActionType: Integer;
   ItemIndexMod: Integer;
+  ListOfEnumValues: TStringList;
 begin
   AEnumItemName := '';
 
@@ -5254,7 +5304,20 @@ begin
         end;
 
       if (CurrentlyEditingActionType = acPlugin) and (APropertyIndex > CPlugin_FileName_PropIndex) then
-        AEnumItemName := ''
+      begin
+        AEnumItemName := GetPluginPropertyAttribute(FEditingAction.PluginOptions.ListOfPropertiesAndTypes, 'EnumStrings', APropertyIndex);
+        ListOfEnumValues := TStringList.Create;
+        try
+          ListOfEnumValues.Text := FastReplace_45ToReturn(AEnumItemName);
+          try
+            AEnumItemName := ListOfEnumValues.Strings[AEnumItemIndex];
+          except
+            AEnumItemName := 'item out of bounds'
+          end;
+        finally
+          ListOfEnumValues.Free;
+        end;
+      end
       else
         AEnumItemName := CPropEnumStrings[CurrentlyEditingActionType]^[APropertyIndex]^[AEnumItemIndex];
     end;
@@ -5804,6 +5867,10 @@ begin
           end;
         end;
       end;
+
+      acPlugin:
+        if APropertyIndex > CPlugin_FileName_PropIndex then
+          AHint := FastReplace_45ToReturn(GetPluginPropertyAttribute(FEditingAction.PluginOptions.ListOfPropertiesAndTypes, 'Hint', APropertyIndex));
 
       else
         ;

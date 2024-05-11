@@ -36,7 +36,10 @@ procedure LoadTemplateToCustomActions_V2(Ini: TClkIniReadonlyFile; var ACustomAc
 
 //procedure SaveTemplateWithCustomActions_V1(Fnm: string; ACustomActions: TClkActionsRecArr); //not used anymore
 procedure SaveTemplateWithCustomActionsToStringList_V2(AStringList: TStringList; var ACustomActions: TClkActionsRecArr; ANotes, ATemplateIconPath: string);
+
+procedure CopyFindControlActionContent(ASrc: TClkFindControlOptions; var ADest: TClkFindControlOptions);
 procedure CopyActionContent(ASrc: TClkActionRec; var ADest: TClkActionRec);
+
 procedure GetTemplateContentAsMemoryStream(var ATemplateContent: TClkActionsRecArr; ANotes, ATemplateIconPath: string; AFileContentMem: TMemoryStream);
 procedure GetTemplateContentFromMemoryStream(var ACustomActions: TClkActionsRecArr; var ANotes, ATemplateIconPath: string; AFileContentMem: TMemoryStream);
 
@@ -973,9 +976,53 @@ begin
 end;
 
 
-procedure CopyActionContent(ASrc: TClkActionRec; var ADest: TClkActionRec);
+procedure CopyFindControlActionContent(ASrc: TClkFindControlOptions; var ADest: TClkFindControlOptions);
 var
   i: Integer;
+begin
+  ADest.MatchCriteria := ASrc.MatchCriteria;
+  ADest.AllowToFail := ASrc.AllowToFail;
+  ADest.MatchText := ASrc.MatchText;
+  ADest.MatchClassName := ASrc.MatchClassName;
+  ADest.MatchTextSeparator := ASrc.MatchTextSeparator;
+  ADest.MatchClassNameSeparator := ASrc.MatchClassNameSeparator;
+  //ADest.MatchBitmapText: TClkFindControlMatchBitmapTextArr;      //this cannot be directly assigned, it's an array
+  ADest.MatchBitmapFiles := ASrc.MatchBitmapFiles;
+  ADest.MatchBitmapAlgorithm := ASrc.MatchBitmapAlgorithm;
+  ADest.MatchBitmapAlgorithmSettings := ASrc.MatchBitmapAlgorithmSettings;
+  ADest.InitialRectangle := ASrc.InitialRectangle;
+  ADest.UseWholeScreen := ASrc.UseWholeScreen;
+  ADest.ColorError := ASrc.ColorError;
+  ADest.AllowedColorErrorCount := ASrc.AllowedColorErrorCount;
+  ADest.WaitForControlToGoAway := ASrc.WaitForControlToGoAway;
+
+  ADest.StartSearchingWithCachedControl := ASrc.StartSearchingWithCachedControl;
+  ADest.CachedControlLeft := ASrc.CachedControlLeft;
+  ADest.CachedControlTop := ASrc.CachedControlTop;
+
+  ADest.MatchPrimitiveFiles := ASrc.MatchPrimitiveFiles;
+  ADest.MatchPrimitiveFiles_Modified := ASrc.MatchPrimitiveFiles_Modified;
+
+  SetLength(ADest.MatchBitmapText, Length(ASrc.MatchBitmapText));
+
+  for i := 0 to Length(ADest.MatchBitmapText) - 1 do
+    ADest.MatchBitmapText[i] := ASrc.MatchBitmapText[i];
+
+  ADest.GetAllControls := ASrc.GetAllControls;
+
+  ADest.UseFastSearch := ASrc.UseFastSearch;
+  ADest.FastSearchAllowedColorErrorCount := ASrc.FastSearchAllowedColorErrorCount;
+  ADest.IgnoredColors := ASrc.IgnoredColors;
+  ADest.SleepySearch := ASrc.SleepySearch;
+  ADest.StopSearchOnMismatch := ASrc.StopSearchOnMismatch;
+
+  ADest.ImageSource := ASrc.ImageSource;
+  ADest.SourceFileName := ASrc.SourceFileName;
+  ADest.ImageSourceFileNameLocation := ASrc.ImageSourceFileNameLocation;
+end;
+
+
+procedure CopyActionContent(ASrc: TClkActionRec; var ADest: TClkActionRec);
 begin             //Substructures, which do not contain pointers, can be directly, copied. The others have to be manually copied.
   ADest.ActionDebuggingStatus := ASrc.ActionDebuggingStatus;
   ADest.ActionStatus := ASrc.ActionStatus;
@@ -993,45 +1040,7 @@ begin             //Substructures, which do not contain pointers, can be directl
   ADest.SaveSetVarToFileOptions := ASrc.SaveSetVarToFileOptions;
   ADest.PluginOptions := ASrc.PluginOptions;
 
-  ADest.FindControlOptions.MatchCriteria := ASrc.FindControlOptions.MatchCriteria;
-  ADest.FindControlOptions.AllowToFail := ASrc.FindControlOptions.AllowToFail;
-  ADest.FindControlOptions.MatchText := ASrc.FindControlOptions.MatchText;
-  ADest.FindControlOptions.MatchClassName := ASrc.FindControlOptions.MatchClassName;
-  ADest.FindControlOptions.MatchTextSeparator := ASrc.FindControlOptions.MatchTextSeparator;
-  ADest.FindControlOptions.MatchClassNameSeparator := ASrc.FindControlOptions.MatchClassNameSeparator;
-  //ADest.FindControlOptions.MatchBitmapText: TClkFindControlMatchBitmapTextArr;      //this cannot be directly assigned, it's an array
-  ADest.FindControlOptions.MatchBitmapFiles := ASrc.FindControlOptions.MatchBitmapFiles;
-  ADest.FindControlOptions.MatchBitmapAlgorithm := ASrc.FindControlOptions.MatchBitmapAlgorithm;
-  ADest.FindControlOptions.MatchBitmapAlgorithmSettings := ASrc.FindControlOptions.MatchBitmapAlgorithmSettings;
-  ADest.FindControlOptions.InitialRectangle := ASrc.FindControlOptions.InitialRectangle;
-  ADest.FindControlOptions.UseWholeScreen := ASrc.FindControlOptions.UseWholeScreen;
-  ADest.FindControlOptions.ColorError := ASrc.FindControlOptions.ColorError;
-  ADest.FindControlOptions.AllowedColorErrorCount := ASrc.FindControlOptions.AllowedColorErrorCount;
-  ADest.FindControlOptions.WaitForControlToGoAway := ASrc.FindControlOptions.WaitForControlToGoAway;
-
-  ADest.FindControlOptions.StartSearchingWithCachedControl := ASrc.FindControlOptions.StartSearchingWithCachedControl;
-  ADest.FindControlOptions.CachedControlLeft := ASrc.FindControlOptions.CachedControlLeft;
-  ADest.FindControlOptions.CachedControlTop := ASrc.FindControlOptions.CachedControlTop;
-
-  ADest.FindControlOptions.MatchPrimitiveFiles := ASrc.FindControlOptions.MatchPrimitiveFiles;
-  ADest.FindControlOptions.MatchPrimitiveFiles_Modified := ASrc.FindControlOptions.MatchPrimitiveFiles_Modified;
-
-  SetLength(ADest.FindControlOptions.MatchBitmapText, Length(ASrc.FindControlOptions.MatchBitmapText));
-
-  for i := 0 to Length(ADest.FindControlOptions.MatchBitmapText) - 1 do
-    ADest.FindControlOptions.MatchBitmapText[i] := ASrc.FindControlOptions.MatchBitmapText[i];
-
-  ADest.FindControlOptions.GetAllControls := ASrc.FindControlOptions.GetAllControls;
-
-  ADest.FindControlOptions.UseFastSearch := ASrc.FindControlOptions.UseFastSearch;
-  ADest.FindControlOptions.FastSearchAllowedColorErrorCount := ASrc.FindControlOptions.FastSearchAllowedColorErrorCount;
-  ADest.FindControlOptions.IgnoredColors := ASrc.FindControlOptions.IgnoredColors;
-  ADest.FindControlOptions.SleepySearch := ASrc.FindControlOptions.SleepySearch;
-  ADest.FindControlOptions.StopSearchOnMismatch := ASrc.FindControlOptions.StopSearchOnMismatch;
-
-  ADest.FindControlOptions.ImageSource := ASrc.FindControlOptions.ImageSource;
-  ADest.FindControlOptions.SourceFileName := ASrc.FindControlOptions.SourceFileName;
-  ADest.FindControlOptions.ImageSourceFileNameLocation := ASrc.FindControlOptions.ImageSourceFileNameLocation;
+  CopyFindControlActionContent(ASrc.FindControlOptions, ADest.FindControlOptions);
 end;
 
 

@@ -278,6 +278,7 @@ type
     FSearchAreaGridImg: TImage;
     FSearchAreaDbgImgSearchedBmpMenu: TPopupMenu;
     FSearchAreaMenu: TPopupMenu;
+    FDisplayDbgImgMenu: TPopupMenu; //menu with list of files from External rendering InMem FS
     FSearchAreaOutOfImgImg: TImage;    //yellow image
 
     FSkipDrawingGrid: Boolean; //to be reset after use
@@ -319,6 +320,7 @@ type
 
     FBMPTextProfiles: TFontProfileArr;
     FInMemFS: TInMemFileSystem; //not created in this unit, set from outside as an existing instance
+    FExtRenderingInMemFS: TInMemFileSystem; //not created in this unit, set from outside as an existing instance
     FfrClickerPrimitives: TfrClickerPrimitives;
     FGridLineOptionMenu: TPopupMenu;
 
@@ -427,6 +429,8 @@ type
     procedure MenuItemFindFontNameAndSizeToMatchText(Sender: TObject);
     procedure MenuItemEditSettingsForFontNameAndSizeSearching(Sender: TObject);
     procedure MenuItemStopFindFontNameAndSizeToMatchText(Sender: TObject);
+
+    procedure MenuItemLoadImageSourceBmpToImgDbgClick(Sender: TObject);
 
     procedure MenuItemLoadBmpTextToSearchedAreaClick(Sender: TObject);
     procedure MenuItemUnloadBmpTextFromSearchedAreaClick(Sender: TObject);
@@ -604,6 +608,7 @@ type
     property SelectedBMPTextTab: Integer read GetSelectedBMPTextTab write SetSelectedBMPTextTab;
 
     property InMemFS: TInMemFileSystem read FInMemFS write FInMemFS;
+    property ExtRenderingInMemFS: TInMemFileSystem read FExtRenderingInMemFS write FExtRenderingInMemFS;
     property SearchAreaControlDbgImg: TImage read FSearchAreaControlDbgImg;
     property frClickerPrimitives: TfrClickerPrimitives read FfrClickerPrimitives;
     property GridDrawingOption: TDisplayGridLineOption read FGridDrawingOption write SetGridDrawingOption;
@@ -2152,6 +2157,8 @@ var
   ControlLeft: Integer;
   ControlTop: Integer;
   FindControlOptions: PClkFindControlOptions;
+  InMemFiles: TMemFileArr;
+  i: Integer;
 begin
   try
     if FSearchAreaScrBox = nil then
@@ -2305,6 +2312,7 @@ begin
 
       /////////
       FSearchAreaMenu := TPopupMenu.Create(Self);
+      FDisplayDbgImgMenu := TPopupMenu.Create(Self);
 
       MenuItem := TMenuItem.Create(FSearchAreaMenu);
       MenuItem.Caption := 'Copy background image to clipboard';
@@ -2511,12 +2519,48 @@ begin
     //  FSearchAreaControlDbgImg.Canvas.TextOut(10, 30, 'Can''t get bmp.');
     //end
     //else
+
+    if FindControlOptions.ImageSource = isScreenshot then
       ScreenShot(SearchAreaControlHandle,
                  FSearchAreaControlDbgImg.Picture.Bitmap,
                  SearchAreaControlRect.Left,
                  SearchAreaControlRect.Top,
                  SearchAreaControlRect.Width,
-                 SearchAreaControlRect.Height);
+                 SearchAreaControlRect.Height)
+    else
+      if FindControlOptions.ImageSourceFileNameLocation = isflDisk then
+      begin
+        if not DoOnLoadBitmap(FSearchAreaControlDbgImg.Picture.Bitmap, FindControlOptions.SourceFileName) then
+          MessageBox(Handle, PChar('File not found: ' + #13#10 + FindControlOptions.SourceFileName), PChar(Application.Title), MB_ICONERROR)
+        else
+        begin
+          FSearchAreaControlDbgImg.Width := FSearchAreaControlDbgImg.Picture.Bitmap.Width;
+          FSearchAreaControlDbgImg.Height := FSearchAreaControlDbgImg.Picture.Bitmap.Height;
+        end;
+      end
+      else
+      begin
+        FDisplayDbgImgMenu.Items.Clear;
+
+        FExtRenderingInMemFS.ListMemFiles(InMemFiles);
+
+        if Length(InMemFiles) > 0 then
+        begin
+          for i := 0 to Length(InMemFiles) - 1 do
+          begin
+            MenuItem := TMenuItem.Create(FDisplayDbgImgMenu);
+            MenuItem.Caption := InMemFiles[i].Name;
+            MenuItem.OnClick := MenuItemLoadImageSourceBmpToImgDbgClick;
+            MenuItem.Bitmap := imgCopyBkImg.Picture.Bitmap;
+            FDisplayDbgImgMenu.Items.Add(MenuItem);
+          end;
+          SetLength(InMemFiles, 0);
+
+          FDisplayDbgImgMenu.PopUp;
+        end
+        else
+          MessageBox(Handle, 'The InMem file system is empty.', PChar(Caption), MB_ICONINFORMATION);
+      end;
   except
     on E: Exception do
       MessageBox(Handle, PChar('Debug img: ' + E.Message), PChar(Caption), MB_ICONERROR);
@@ -4026,6 +4070,30 @@ end;
 procedure TfrClickerFindControl.MenuItemEnableVerboseSearchResults(Sender: TObject);
 begin
   FVerboseSearchResults := (Sender as TMenuItem).Checked;
+end;
+
+
+procedure TfrClickerFindControl.MenuItemLoadImageSourceBmpToImgDbgClick(Sender: TObject);
+var
+  Fnm: string;
+  MemStream: TMemoryStream;
+  Bmp: TBitmap;
+begin
+  Fnm := StringReplace((Sender as TMenuItem).Caption, '&', '', [rfReplaceAll]);
+
+  MemStream := TMemoryStream.Create;
+  Bmp := TBitmap.Create;
+  try
+    FExtRenderingInMemFS.LoadFileFromMemToStream(Fnm, MemStream);
+    MemStream.Position := 0;
+    FSearchAreaControlDbgImg.Picture.Bitmap.LoadFromStream(MemStream);
+
+    FSearchAreaControlDbgImg.Width := FSearchAreaControlDbgImg.Picture.Bitmap.Width;
+    FSearchAreaControlDbgImg.Height := FSearchAreaControlDbgImg.Picture.Bitmap.Height;
+  finally
+    MemStream.Free;
+    Bmp.Free;
+  end;
 end;
 
 
