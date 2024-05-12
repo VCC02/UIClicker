@@ -81,6 +81,8 @@ type
   TOnSaveTemplateToFile = procedure(AStringList: TStringList; const AFileName: string) of object;
   TOnSaveFileToExtRenderingInMemFS = procedure(AFileName: string; AContent: Pointer; AFileSize: Int64) of object;
 
+  TOnScreenshotByActionName = function(AActionName: string): Boolean of object;
+
   TOnUpdatePropertyIcons = procedure(AStreamContent: Pointer; AStreamSize: Int64) of object;
   TOnUpdatePropertyDetails = procedure(AStreamContent: Pointer; AStreamSize: Int64) of object;
 

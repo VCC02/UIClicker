@@ -55,7 +55,7 @@ type
   TOnActionPlugin_LoadBitmap = function(APluginReference: Pointer; AFileName, ACallReference: Pointer; AFileLocation: Byte; AOnFileContent: TOnFileContent): Boolean; cdecl;  //A plugin calls this function, to get the bitmap content (from disk or rendered-externally-in-mem FS). The function returns False if the file is not found. UIClicker calls AOnFileContent callback to set the file content in plugin if the file is found and it is allowed to be accessed. The ACallReference argument is passed to OnFileContent callback, for keeping track of that call. It can be a pointer to an object.
   TOnActionPlugin_GetAllowedFilesInfo = procedure(APluginReference: Pointer; AFullTemplatesDir, AAllowedFileDirsForServer, AAllowedFileExtensionsForServer: Pointer); cdecl; //Called by plugin when the file to be loaded will be sent to a remote location, so file location/extension "permissions" should be verified. For local files, this is not needed, as this is the behavior of the executable itself.
   TOnActionPlugin_SetBitmap = procedure(APluginReference: Pointer; AFileName: Pointer; AStreamContent: Pointer; AStreamSize: Int64; AImgWidth, AImgHeight: Integer); cdecl; //A plugin may call this function multiple times if it has multiple bitmaps to give back to UIClicker, which stores the bitmap in rendered-externally-in-mem FS.
-  TOnActionPlugin_Screenshot = function(APluginReference: Pointer; AActionName: Pointer): Boolean; cdecl;  //A plugin may call this function, to take a screenshot, using the settings from a FindSubControl action (specified by AActionName). Returns False if the cropping settings are wrong (e.g. may result in negative sizes)
+  TOnActionPlugin_Screenshot = function(APluginReference: Pointer; AActionName: Pointer): Boolean; cdecl;  //A plugin may call this function, to take a screenshot, using the settings from a FindSubControl action (specified by AActionName). Returns False if the cropping settings are wrong (e.g. may result in negative sizes). It requires a FindControl action to be executed before the plugin action, to properly set the search area. The screenshot is saved to ExtRendering InMem file system, using the CScreenshotFilename name.
 
 
   //Plugin procedures / functions:
@@ -99,6 +99,7 @@ const
   CActionPlugin_APIVersion = 6;
   CActionPlugin_ExecutionResultErrorVar = '$PluginError$';
   CBeforePluginExecution_DbgLineContent = 'Before plugin execution.';
+  CScreenshotFilename = 'Screenshot.bmp';
 
 
 var

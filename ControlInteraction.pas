@@ -71,6 +71,7 @@ type
 procedure SetControlText(hw: THandle; NewText: string);
 procedure SelectComboBoxItem(hw: THandle; StartIndex: Integer; TextToSelect: string);
 
+procedure ComputeScreenshotArea(var InputData: TFindControlInputData; var CompAtPoint: TCompRec; out ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height, CompWidth, CompHeight: Integer);
 function MatchControlByBitmap(Algorithm: TMatchBitmapAlgorithm; AlgorithmSettings: TMatchBitmapAlgorithmSettings; CompAtPoint: TCompRec; InputData: TFindControlInputData; out SubCnvXOffset, SubCnvYOffset, AResultedErrorCount: Integer; var AFoundBitmaps: TCompRecArr; AStopAllActionsOnDemand: PBoolean; ADisplayGridLineOption: TDisplayGridLineOption): Boolean;
 function FindControlOnScreen(Algorithm: TMatchBitmapAlgorithm; AlgorithmSettings: TMatchBitmapAlgorithmSettings; InputData: TFindControlInputData; AInitialTickCount, ATimeout: Cardinal; AStopAllActionsOnDemand: PBoolean; var AResultedControl: TCompRecArr; ADisplayGridLineOption: TDisplayGridLineOption): Boolean;
 function FindWindowOnScreenByCaptionOrClass(InputData: TFindControlInputData; AInitialTickCount, ATimeout: Cardinal; AStopAllActionsOnDemand: PBoolean; out AResultedControl: TCompRec): Boolean;
@@ -703,6 +704,17 @@ begin
 end;
 
 
+procedure ComputeScreenshotArea(var InputData: TFindControlInputData; var CompAtPoint: TCompRec; out ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height, CompWidth, CompHeight: Integer);
+begin
+  ScrShot_Left := InputData.GlobalSearchArea.Left - CompAtPoint.ComponentRectangle.Left - 0;      //InputData.GlobalSearchArea.Left > hwc.ComponentRectangle.Left  when the offset defined in UI is positive
+  ScrShot_Top := InputData.GlobalSearchArea.Top - CompAtPoint.ComponentRectangle.Top - 0;
+  ScrShot_Width := InputData.GlobalSearchArea.Right - InputData.GlobalSearchArea.Left + 1;
+  ScrShot_Height := InputData.GlobalSearchArea.Bottom - InputData.GlobalSearchArea.Top + 1;
+  CompWidth := CompAtPoint.ComponentRectangle.Right - CompAtPoint.ComponentRectangle.Left;
+  CompHeight := CompAtPoint.ComponentRectangle.Bottom - CompAtPoint.ComponentRectangle.Top;
+end;
+
+
 //Searches for BitmapToSearchFor in the bitmap of a component defined by ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height
 //SrcCompSearchAreaBitmap - bitmap with source component, defined by InitRect
 function MatchControlByBitmap(Algorithm: TMatchBitmapAlgorithm; AlgorithmSettings: TMatchBitmapAlgorithmSettings; CompAtPoint: TCompRec; InputData: TFindControlInputData; out SubCnvXOffset, SubCnvYOffset, AResultedErrorCount: Integer; var AFoundBitmaps: TCompRecArr; AStopAllActionsOnDemand: PBoolean; ADisplayGridLineOption: TDisplayGridLineOption): Boolean;
@@ -711,12 +723,7 @@ var
   SrcCompSearchAreaBitmap: TBitmap;
   FoundBmp: Boolean;
 begin
-  ScrShot_Left := InputData.GlobalSearchArea.Left - CompAtPoint.ComponentRectangle.Left - 0;      //InputData.GlobalSearchArea.Left > hwc.ComponentRectangle.Left  when the offset defined in UI is positive
-  ScrShot_Top := InputData.GlobalSearchArea.Top - CompAtPoint.ComponentRectangle.Top - 0;
-  ScrShot_Width := InputData.GlobalSearchArea.Right - InputData.GlobalSearchArea.Left + 1;
-  ScrShot_Height := InputData.GlobalSearchArea.Bottom - InputData.GlobalSearchArea.Top + 1;
-  CompWidth := CompAtPoint.ComponentRectangle.Right - CompAtPoint.ComponentRectangle.Left;
-  CompHeight := CompAtPoint.ComponentRectangle.Bottom - CompAtPoint.ComponentRectangle.Top;
+  ComputeScreenshotArea(InputData, CompAtPoint, ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height, CompWidth, CompHeight);
 
   if InputData.ImageSource = isScreenshot then
   begin

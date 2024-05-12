@@ -50,6 +50,7 @@ type
     OnLoadBitmap: TOnLoadBitmap;
     OnLoadRenderedBitmap: TOnLoadRenderedBitmap;
     OnSaveFileToExtRenderingInMemFS: TOnSaveFileToExtRenderingInMemFS;
+    OnScreenshotByActionName: TOnScreenshotByActionName;
     OnUpdatePropertyIcons: TOnUpdatePropertyIcons;
     OnUpdatePropertyDetails: TOnUpdatePropertyDetails;
 
@@ -83,6 +84,7 @@ type
                            AOnLoadBitmap: TOnLoadBitmap;
                            AOnLoadRenderedBitmap: TOnLoadRenderedBitmap;
                            AOnSaveFileToExtRenderingInMemFS: TOnSaveFileToExtRenderingInMemFS;
+                           AOnScreenshotByActionName: TOnScreenshotByActionName;
                            IsDebugging,
                            AShouldStopAtBreakPoint: Boolean;
                            AStopAllActionsOnDemandFromParent,
@@ -493,11 +495,15 @@ end;
 function DoOnActionPlugin_Screenshot(APluginReference: Pointer; AActionName: Pointer): Boolean; cdecl;
 var
   ActionPlugin: PActionPlugin;
-  TempFileName: string;
+  TempActionName: string;
 begin
   ActionPlugin := APluginReference;
-  ActionPlugin.DoAddToLog('OnActionPlugin_Screenshot not implemented'); /////////////////////// ToDo
-  Result := True; //the actual OnScreenshot
+  SetPointedContentToString(AActionName, TempActionName);
+
+  if not Assigned(ActionPlugin.OnScreenshotByActionName) then
+    raise Exception.Create('OnScreenshotByActionName not assigned.');
+
+  Result := ActionPlugin.OnScreenshotByActionName(TempActionName);
 end;
 
 
@@ -552,6 +558,7 @@ function TActionPlugin.LoadToExecute(APath: string;
                                      AOnLoadBitmap: TOnLoadBitmap;
                                      AOnLoadRenderedBitmap: TOnLoadRenderedBitmap;
                                      AOnSaveFileToExtRenderingInMemFS: TOnSaveFileToExtRenderingInMemFS;
+                                     AOnScreenshotByActionName: TOnScreenshotByActionName;
                                      IsDebugging,
                                      AShouldStopAtBreakPoint: Boolean;
                                      AStopAllActionsOnDemandFromParent,
@@ -578,6 +585,7 @@ begin
   OnLoadBitmap := AOnLoadBitmap;
   OnLoadRenderedBitmap := AOnLoadRenderedBitmap;
   OnSaveFileToExtRenderingInMemFS := AOnSaveFileToExtRenderingInMemFS;
+  OnScreenshotByActionName := AOnScreenshotByActionName;
 
   FIsDebugging := IsDebugging;
   FShouldStopAtBreakPoint := AShouldStopAtBreakPoint;

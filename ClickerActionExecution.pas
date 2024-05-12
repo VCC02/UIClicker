@@ -33,7 +33,7 @@ interface
 uses
   Windows, Classes, SysUtils, Forms, Graphics, ExtCtrls,
   ClickerUtils, ClickerPrimitiveUtils, ClickerActionsFrame, ClickerIniFiles,
-  InMemFileSystem;
+  InMemFileSystem, ControlInteraction;
 
 
 type
@@ -128,6 +128,7 @@ type
 
     procedure ExecuteClickAction(var AClickOptions: TClkClickOptions);
     function ExecuteFindControlAction(var AFindControlOptions: TClkFindControlOptions; var AActionOptions: TClkActionOptions; IsSubControl: Boolean): Boolean; //returns True if found
+    function FillInFindControlInputData(var AFindControlOptions: TClkFindControlOptions; var AActionOptions: TClkActionOptions; IsSubControl: Boolean; out FindControlInputData: TFindControlInputData; out FontProfilesCount: Integer): Boolean;
 
     procedure DoOnSetEditorEnabledState(AEnabled: Boolean);
     procedure DoOnSetEditorTimeoutProgressBarMax(AMaxValue: Integer);
@@ -161,6 +162,7 @@ type
     procedure HandleOnSetDebugPoint(ADebugPoint: string);
     function HandleOnIsAtBreakPoint(ADebugPoint: string): Boolean;
     procedure HandleOnSaveFileToExtRenderingInMemFS(AFileName: string; AContent: Pointer; AFileSize: Int64);
+    function HandleOnScreenshotByActionName(AActionName: string): Boolean;
   public
     constructor Create;
     destructor Destroy; override;
@@ -254,8 +256,8 @@ uses
   {$ELSE}
     Process,
   {$ENDIF}
-  ControlInteraction, IdHTTP, ClickerPrimitivesCompositor, ClickerActionProperties,
-  ClickerActionPluginLoader, ClickerActionPlugins;
+  IdHTTP, ClickerPrimitivesCompositor, ClickerActionProperties,
+  ClickerActionPluginLoader, ClickerActionPlugins, BitmapProcessing;
 
 
 constructor TActionExecution.Create;
@@ -1249,6 +1251,202 @@ begin
 end;
 
 
+function TActionExecution.FillInFindControlInputData(var AFindControlOptions: TClkFindControlOptions; var AActionOptions: TClkActionOptions; IsSubControl: Boolean; out FindControlInputData: TFindControlInputData; out FontProfilesCount: Integer): Boolean;
+  procedure IgnoredColorsStrToArr(AIgnoredColorsStr: string; var AIgnoredColorsArr: TColorArr);
+  var
+    i: Integer;
+    ColorsStr: string;
+    ListOfIgnoredColors: TStringList;
+  begin
+    if AIgnoredColorsStr <> '' then
+    begin
+      ListOfIgnoredColors := TStringList.Create;
+      try
+        ListOfIgnoredColors.Text := StringReplace(AIgnoredColorsStr, ',', #13#10, [rfReplaceAll]);
+
+        SetLength(AIgnoredColorsArr, ListOfIgnoredColors.Count);
+        for i := 0 to ListOfIgnoredColors.Count - 1 do
+        begin
+          ColorsStr := Trim(ListOfIgnoredColors.Strings[i]);    //a bit ugly to reuse the variable
+          ColorsStr := EvaluateReplacements(ColorsStr);
+          AIgnoredColorsArr[i] := HexToInt(ColorsStr);
+        end;
+      finally
+        ListOfIgnoredColors.Free;
+      end;
+    end;
+  end;
+begin
+  Result := True;
+
+  FindControlInputData.MatchingMethods := [];
+  if AFindControlOptions.MatchCriteria.WillMatchText then
+    FindControlInputData.MatchingMethods := FindControlInputData.MatchingMethods + [mmText];
+
+  if AFindControlOptions.MatchCriteria.WillMatchClassName then
+    FindControlInputData.MatchingMethods := FindControlInputData.MatchingMethods + [mmClass];
+
+  if AFindControlOptions.MatchCriteria.WillMatchBitmapText then
+    FindControlInputData.MatchingMethods := FindControlInputData.MatchingMethods + [mmBitmapText];
+
+  if AFindControlOptions.MatchCriteria.WillMatchBitmapFiles then
+    FindControlInputData.MatchingMethods := FindControlInputData.MatchingMethods + [mmBitmapFiles];
+
+  if AFindControlOptions.MatchCriteria.WillMatchPrimitiveFiles then
+    FindControlInputData.MatchingMethods := FindControlInputData.MatchingMethods + [mmPrimitiveFiles];
+
+  FindControlInputData.SearchAsSubControl := IsSubControl;
+  FindControlInputData.DebugBitmap := nil;
+
+  FindControlInputData.ClassName := EvaluateReplacements(AFindControlOptions.MatchClassName);
+  FindControlInputData.Text := EvaluateReplacements(AFindControlOptions.MatchText, True);
+  FindControlInputData.GetAllHandles := AFindControlOptions.GetAllControls;
+
+  if AFindControlOptions.MatchCriteria.WillMatchBitmapText then
+    if FindControlInputData.Text = '' then
+    begin
+      SetActionVarValue('$ExecAction_Err$', 'The searched text is empty.');
+      SetActionVarValue('$DebugVar_BitmapText$', 'Matching an empty string will lead to a false match.');
+      Result := False;
+      Exit;
+    end;
+
+  FindControlInputData.ClassNameSeparator := AFindControlOptions.MatchClassNameSeparator;
+  FindControlInputData.TextSeparator := AFindControlOptions.MatchTextSeparator;
+  FindControlInputData.ColorError := StrToIntDef(EvaluateReplacements(AFindControlOptions.ColorError), 0);
+  FindControlInputData.AllowedColorErrorCount := StrToIntDef(EvaluateReplacements(AFindControlOptions.AllowedColorErrorCount), 0);
+  FindControlInputData.DebugTemplateName := FSelfTemplateFileName^;
+
+  FontProfilesCount := Length(AFindControlOptions.MatchBitmapText);
+  if FontProfilesCount = 0 then
+  begin
+    AddToLog('Adding default font profile to action: "' + AActionOptions.ActionName + '", of ' + CClkActionStr[AActionOptions.Action] + ' type.');
+    DoOnAddDefaultFontProfile(AFindControlOptions, AActionOptions); //Currently, both FindControl and FindSubControl require a default font profile, because of the "for j" loop below. Once these two actions are split, only FindSubControl will require it.
+    FontProfilesCount := Length(AFindControlOptions.MatchBitmapText);
+  end;
+
+  FindControlInputData.StartSearchingWithCachedControl := AFindControlOptions.StartSearchingWithCachedControl;
+  FindControlInputData.CachedControlLeft := StrToIntDef(EvaluateReplacements(AFindControlOptions.CachedControlLeft), 0);
+  FindControlInputData.CachedControlTop := StrToIntDef(EvaluateReplacements(AFindControlOptions.CachedControlTop), 0);
+
+  if AFindControlOptions.GetAllControls then
+    if not IsSubControl then
+      SetActionVarValue('$AllControl_Handles$', '');
+
+  FindControlInputData.UseFastSearch := AFindControlOptions.UseFastSearch;
+  if FindControlInputData.UseFastSearch then
+    FindControlInputData.FastSearchAllowedColorErrorCount := StrToIntDef(EvaluateReplacements(AFindControlOptions.FastSearchAllowedColorErrorCount), -1)
+  else
+    FindControlInputData.FastSearchAllowedColorErrorCount := 0; //not used anyway
+
+  if IsSubControl then
+    AddToLog('Searching with:  ColorError = ' + IntToStr(FindControlInputData.ColorError) +
+             '   AllowedColorErrorCount = ' + IntToStr(FindControlInputData.AllowedColorErrorCount) +
+             '   FastSearchAllowedColorErrorCount = ' + IntToStr(FindControlInputData.FastSearchAllowedColorErrorCount));
+
+  IgnoredColorsStrToArr(AFindControlOptions.IgnoredColors, FindControlInputData.IgnoredColorsArr);
+  if Length(FindControlInputData.IgnoredColorsArr) > 0 then
+    AddToLog('Ignoring colors: ' + AFindControlOptions.IgnoredColors);
+
+  FindControlInputData.SleepySearch := 2; //this allows a call to AppProcMsg, but does not use Sleep.
+  if AFindControlOptions.SleepySearch then
+    FindControlInputData.SleepySearch := FindControlInputData.SleepySearch or 1;  //Bit 0 is SleepySearch. Bit 1 is AppProcMsg.
+
+  FindControlInputData.StopSearchOnMismatch := AFindControlOptions.StopSearchOnMismatch;
+
+  /////////////////////////////Moved section    - because GlobalSearchArea has to stay stable between "for j" iterations
+  if AFindControlOptions.UseWholeScreen then
+  begin
+    FindControlInputData.GlobalSearchArea.Left := 0;
+    FindControlInputData.GlobalSearchArea.Top := 0;
+    FindControlInputData.GlobalSearchArea.Right := Screen.Width;
+    FindControlInputData.GlobalSearchArea.Bottom := Screen.Height;
+  end
+  else
+  begin
+    FindControlInputData.GlobalSearchArea.Left := StrToIntDef(EvaluateReplacements(AFindControlOptions.InitialRectangle.Left), 0);
+    FindControlInputData.GlobalSearchArea.Top := StrToIntDef(EvaluateReplacements(AFindControlOptions.InitialRectangle.Top), 0);
+    FindControlInputData.GlobalSearchArea.Right := StrToIntDef(EvaluateReplacements(AFindControlOptions.InitialRectangle.Right), 0);
+    FindControlInputData.GlobalSearchArea.Bottom := StrToIntDef(EvaluateReplacements(AFindControlOptions.InitialRectangle.Bottom), 0);
+  end;
+
+  if not AFindControlOptions.WaitForControlToGoAway then  //Do not move this if statement, because GlobalSearchArea is modified below:
+  begin
+    AddToLog('Find (Sub)Control with text = "' + FindControlInputData.Text + '"' +
+             '    GetAllControls is set to ' + BoolToStr(AFindControlOptions.GetAllControls, True) +
+             '    SearchMode: ' + CSearchForControlModeStr[AFindControlOptions.MatchCriteria.SearchForControlMode]);
+
+    AddToLog('Raw GlobalSearchArea.Left = ' + IntToStr(FindControlInputData.GlobalSearchArea.Left));
+    AddToLog('Raw GlobalSearchArea.Top = ' + IntToStr(FindControlInputData.GlobalSearchArea.Top));
+    AddToLog('Raw GlobalSearchArea.Right = ' + IntToStr(FindControlInputData.GlobalSearchArea.Right));
+    AddToLog('Raw GlobalSearchArea.Bottom = ' + IntToStr(FindControlInputData.GlobalSearchArea.Bottom));
+  end;
+
+  FindControlInputData.InitialRectangleOffsets.Left := StrToIntDef(EvaluateReplacements(AFindControlOptions.InitialRectangle.LeftOffset), 0);
+  FindControlInputData.InitialRectangleOffsets.Top := StrToIntDef(EvaluateReplacements(AFindControlOptions.InitialRectangle.TopOffset), 0);
+  FindControlInputData.InitialRectangleOffsets.Right := StrToIntDef(EvaluateReplacements(AFindControlOptions.InitialRectangle.RightOffset), 0);
+  FindControlInputData.InitialRectangleOffsets.Bottom := StrToIntDef(EvaluateReplacements(AFindControlOptions.InitialRectangle.BottomOffset), 0);
+
+  Inc(FindControlInputData.GlobalSearchArea.Left, FindControlInputData.InitialRectangleOffsets.Left);
+  Inc(FindControlInputData.GlobalSearchArea.Top, FindControlInputData.InitialRectangleOffsets.Top);
+  Inc(FindControlInputData.GlobalSearchArea.Right, FindControlInputData.InitialRectangleOffsets.Right);
+  Inc(FindControlInputData.GlobalSearchArea.Bottom, FindControlInputData.InitialRectangleOffsets.Bottom);
+
+  if not AFindControlOptions.WaitForControlToGoAway then
+  begin
+    AddToLog('(With Offset) GlobalSearchArea.Left = ' + IntToStr(FindControlInputData.GlobalSearchArea.Left));
+    AddToLog('(With Offset) GlobalSearchArea.Top = ' + IntToStr(FindControlInputData.GlobalSearchArea.Top));
+    AddToLog('(With Offset) GlobalSearchArea.Right = ' + IntToStr(FindControlInputData.GlobalSearchArea.Right));
+    AddToLog('(With Offset) GlobalSearchArea.Bottom = ' + IntToStr(FindControlInputData.GlobalSearchArea.Bottom));
+  end;
+  /////////////////////////////End of moved section
+
+  if (FindControlInputData.GlobalSearchArea.Right - FindControlInputData.GlobalSearchArea.Left < 1) or
+     (FindControlInputData.GlobalSearchArea.Bottom - FindControlInputData.GlobalSearchArea.Top < 1) then
+  begin
+    frClickerActions.imgDebugBmp.Picture.Bitmap.Width := 300;
+    frClickerActions.imgDebugBmp.Picture.Bitmap.Height := 300;
+    frClickerActions.imgDebugBmp.Canvas.Brush.Color := clWhite;
+    frClickerActions.imgDebugBmp.Canvas.Pen.Color := clRed;
+    frClickerActions.imgDebugBmp.Canvas.Font.Color := clRed;
+    frClickerActions.imgDebugBmp.Canvas.TextOut(0, 0, 'Invalid search area:   ');
+    frClickerActions.imgDebugBmp.Canvas.TextOut(0, 15, 'Rectangle width: ' + IntToStr(FindControlInputData.GlobalSearchArea.Right - FindControlInputData.GlobalSearchArea.Left) + '   ');
+    frClickerActions.imgDebugBmp.Canvas.TextOut(0, 30, 'Rectangle height: ' + IntToStr(FindControlInputData.GlobalSearchArea.Bottom - FindControlInputData.GlobalSearchArea.Top) + '   ');
+    frClickerActions.imgDebugBmp.Canvas.TextOut(0, 45, 'Please verify offsets.   ');
+
+    frClickerActions.imgDebugBmp.Canvas.TextOut(0, 65, 'GlobalRectangle left (with offset): ' + IntToStr(FindControlInputData.GlobalSearchArea.Left) + '   ');
+    frClickerActions.imgDebugBmp.Canvas.TextOut(0, 80, 'GlobalRectangle top (with offset): ' + IntToStr(FindControlInputData.GlobalSearchArea.Top) + '   ');
+    frClickerActions.imgDebugBmp.Canvas.TextOut(0, 95, 'GlobalRectangle right (with offset): ' + IntToStr(FindControlInputData.GlobalSearchArea.Right) + '   ');
+    frClickerActions.imgDebugBmp.Canvas.TextOut(0, 110, 'GlobalRectangle bottom (with offset): ' + IntToStr(FindControlInputData.GlobalSearchArea.Bottom) + '   ');
+
+    frClickerActions.imgDebugBmp.Canvas.TextOut(0, 135, 'Left offset: ' + IntToStr(FindControlInputData.InitialRectangleOffsets.Left) + '   ');
+    frClickerActions.imgDebugBmp.Canvas.TextOut(0, 150, 'Top offset: ' + IntToStr(FindControlInputData.InitialRectangleOffsets.Top) + '   ');
+    frClickerActions.imgDebugBmp.Canvas.TextOut(0, 165, 'Right offset: ' + IntToStr(FindControlInputData.InitialRectangleOffsets.Right) + '   ');
+    frClickerActions.imgDebugBmp.Canvas.TextOut(0, 180, 'Bottom offset: ' + IntToStr(FindControlInputData.InitialRectangleOffsets.Bottom) + '   ');
+
+    frClickerActions.imgDebugBmp.Canvas.TextOut(0, 210, 'FileName: '+ ExtractFileName(FSelfTemplateFileName^));
+    frClickerActions.imgDebugBmp.Canvas.TextOut(0, 225, 'Action: "' + AActionOptions.ActionName + '"');
+
+    AddToLog('Exiting find control, because the search area is negative.');
+    AddToLog('');
+
+    Result := False;
+    Exit;
+  end;
+
+  if FindControlInputData.MatchingMethods = [] then   //section moved from above (although useful there), to allow refactoring
+  begin
+    SetActionVarValue('$ExecAction_Err$', 'No match criteria set. Action: ' + AActionOptions.ActionName);
+    AddToLog('No match criteria set.');
+    Result := False;
+  end;
+
+  FindControlInputData.DebugBitmap := frClickerActions.imgDebugBmp.Picture.Bitmap;
+  FindControlInputData.DebugGrid := frClickerActions.imgDebugGrid;
+
+  FindControlInputData.ImageSource := AFindControlOptions.ImageSource;
+end;
+
 //this function should eventually be split into FindControl and FindSubControl
 function TActionExecution.ExecuteFindControlAction(var AFindControlOptions: TClkFindControlOptions; var AActionOptions: TClkActionOptions; IsSubControl: Boolean): Boolean; //returns True if found
 {$IFDEF FPC}
@@ -1373,31 +1571,6 @@ function TActionExecution.ExecuteFindControlAction(var AFindControlOptions: TClk
     SetActionVarValue('$AllControl_ResultedErrorCount$', ErrCnts);
   end;
 
-  procedure IgnoredColorsStrToArr(AIgnoredColorsStr: string; var AIgnoredColorsArr: TColorArr);
-  var
-    i: Integer;
-    ColorsStr: string;
-    ListOfIgnoredColors: TStringList;
-  begin
-    if AIgnoredColorsStr <> '' then
-    begin
-      ListOfIgnoredColors := TStringList.Create;
-      try
-        ListOfIgnoredColors.Text := StringReplace(AIgnoredColorsStr, ',', #13#10, [rfReplaceAll]);
-
-        SetLength(AIgnoredColorsArr, ListOfIgnoredColors.Count);
-        for i := 0 to ListOfIgnoredColors.Count - 1 do
-        begin
-          ColorsStr := Trim(ListOfIgnoredColors.Strings[i]);    //a bit ugly to reuse the variable
-          ColorsStr := EvaluateReplacements(ColorsStr);
-          AIgnoredColorsArr[i] := HexToInt(ColorsStr);
-        end;
-      finally
-        ListOfIgnoredColors.Free;
-      end;
-    end;
-  end;
-
   procedure AddInfoToMatchSource(AMatchSourceInfo, ADetailedMatchSourceInfo: string; ACount: Integer; var AMatchSource, ADetailedMatchSource: string);
   var
     ii: Integer;
@@ -1464,167 +1637,8 @@ begin
   ResultedControl.XOffsetFromParent := 0; //init here, in case FindControlOnScreen does not update it
   ResultedControl.YOffsetFromParent := 0; //init here, in case FindControlOnScreen does not update it
 
-  FindControlInputData.MatchingMethods := [];
-  if AFindControlOptions.MatchCriteria.WillMatchText then
-    FindControlInputData.MatchingMethods := FindControlInputData.MatchingMethods + [mmText];
-
-  if AFindControlOptions.MatchCriteria.WillMatchClassName then
-    FindControlInputData.MatchingMethods := FindControlInputData.MatchingMethods + [mmClass];
-
-  if AFindControlOptions.MatchCriteria.WillMatchBitmapText then
-    FindControlInputData.MatchingMethods := FindControlInputData.MatchingMethods + [mmBitmapText];
-
-  if AFindControlOptions.MatchCriteria.WillMatchBitmapFiles then
-    FindControlInputData.MatchingMethods := FindControlInputData.MatchingMethods + [mmBitmapFiles];
-
-  if AFindControlOptions.MatchCriteria.WillMatchPrimitiveFiles then
-    FindControlInputData.MatchingMethods := FindControlInputData.MatchingMethods + [mmPrimitiveFiles];
-
-  if FindControlInputData.MatchingMethods = [] then
-  begin
-    SetActionVarValue('$ExecAction_Err$', 'No match criteria set. Action: ' + AActionOptions.ActionName);
-    AddToLog('No match criteria set.');
-    Result := False;
-  end;
-
-  FindControlInputData.SearchAsSubControl := IsSubControl;
-  FindControlInputData.DebugBitmap := nil;
-
-  FindControlInputData.ClassName := EvaluateReplacements(AFindControlOptions.MatchClassName);
-  FindControlInputData.Text := EvaluateReplacements(AFindControlOptions.MatchText, True);
-  FindControlInputData.GetAllHandles := AFindControlOptions.GetAllControls;
-
-  if AFindControlOptions.MatchCriteria.WillMatchBitmapText then
-    if FindControlInputData.Text = '' then
-    begin
-      SetActionVarValue('$ExecAction_Err$', 'The searched text is empty.');
-      SetActionVarValue('$DebugVar_BitmapText$', 'Matching an empty string will lead to a false match.');
-      Result := False;
-      Exit;
-    end;
-
-  FindControlInputData.ClassNameSeparator := AFindControlOptions.MatchClassNameSeparator;
-  FindControlInputData.TextSeparator := AFindControlOptions.MatchTextSeparator;
-  FindControlInputData.ColorError := StrToIntDef(EvaluateReplacements(AFindControlOptions.ColorError), 0);
-  FindControlInputData.AllowedColorErrorCount := StrToIntDef(EvaluateReplacements(AFindControlOptions.AllowedColorErrorCount), 0);
-  FindControlInputData.DebugTemplateName := FSelfTemplateFileName^;
-
-  n := Length(AFindControlOptions.MatchBitmapText);
-  if n = 0 then
-  begin
-    AddToLog('Adding default font profile to action: "' + AActionOptions.ActionName + '", of ' + CClkActionStr[AActionOptions.Action] + ' type.');
-    DoOnAddDefaultFontProfile(AFindControlOptions, AActionOptions); //Currently, both FindControl and FindSubControl require a default font profile, because of the "for j" loop below. Once these two actions are split, only FindSubControl will require it.
-    n := Length(AFindControlOptions.MatchBitmapText);
-  end;
-
-  FindControlInputData.StartSearchingWithCachedControl := AFindControlOptions.StartSearchingWithCachedControl;
-  FindControlInputData.CachedControlLeft := StrToIntDef(EvaluateReplacements(AFindControlOptions.CachedControlLeft), 0);
-  FindControlInputData.CachedControlTop := StrToIntDef(EvaluateReplacements(AFindControlOptions.CachedControlTop), 0);
-
-  if AFindControlOptions.GetAllControls then
-    if not IsSubControl then
-      SetActionVarValue('$AllControl_Handles$', '');
-
-  FindControlInputData.UseFastSearch := AFindControlOptions.UseFastSearch;
-  if FindControlInputData.UseFastSearch then
-    FindControlInputData.FastSearchAllowedColorErrorCount := StrToIntDef(EvaluateReplacements(AFindControlOptions.FastSearchAllowedColorErrorCount), -1)
-  else
-    FindControlInputData.FastSearchAllowedColorErrorCount := 0; //not used anyway
-
-  if IsSubControl then
-    AddToLog('Searching with:  ColorError = ' + IntToStr(FindControlInputData.ColorError) +
-             '   AllowedColorErrorCount = ' + IntToStr(FindControlInputData.AllowedColorErrorCount) +
-             '   FastSearchAllowedColorErrorCount = ' + IntToStr(FindControlInputData.FastSearchAllowedColorErrorCount));
-
-  IgnoredColorsStrToArr(AFindControlOptions.IgnoredColors, FindControlInputData.IgnoredColorsArr);
-  if Length(FindControlInputData.IgnoredColorsArr) > 0 then
-    AddToLog('Ignoring colors: ' + AFindControlOptions.IgnoredColors);
-
-  FindControlInputData.SleepySearch := 2; //this allows a call to AppProcMsg, but does not use Sleep.
-  if AFindControlOptions.SleepySearch then
-    FindControlInputData.SleepySearch := FindControlInputData.SleepySearch or 1;  //Bit 0 is SleepySearch. Bit 1 is AppProcMsg.
-
-  FindControlInputData.StopSearchOnMismatch := AFindControlOptions.StopSearchOnMismatch;
-
-  /////////////////////////////Moved section    - because GlobalSearchArea has to stay stable between "for j" iterations
-  if AFindControlOptions.UseWholeScreen then
-  begin
-    FindControlInputData.GlobalSearchArea.Left := 0;
-    FindControlInputData.GlobalSearchArea.Top := 0;
-    FindControlInputData.GlobalSearchArea.Right := Screen.Width;
-    FindControlInputData.GlobalSearchArea.Bottom := Screen.Height;
-  end
-  else
-  begin
-    FindControlInputData.GlobalSearchArea.Left := StrToIntDef(EvaluateReplacements(AFindControlOptions.InitialRectangle.Left), 0);
-    FindControlInputData.GlobalSearchArea.Top := StrToIntDef(EvaluateReplacements(AFindControlOptions.InitialRectangle.Top), 0);
-    FindControlInputData.GlobalSearchArea.Right := StrToIntDef(EvaluateReplacements(AFindControlOptions.InitialRectangle.Right), 0);
-    FindControlInputData.GlobalSearchArea.Bottom := StrToIntDef(EvaluateReplacements(AFindControlOptions.InitialRectangle.Bottom), 0);
-  end;
-
-  if not AFindControlOptions.WaitForControlToGoAway then
-  begin
-    AddToLog('Find (Sub)Control with text = "' + FindControlInputData.Text + '"' +
-             '    GetAllControls is set to ' + BoolToStr(AFindControlOptions.GetAllControls, True) +
-             '    SearchMode: ' + CSearchForControlModeStr[AFindControlOptions.MatchCriteria.SearchForControlMode]);
-
-    AddToLog('Raw GlobalSearchArea.Left = ' + IntToStr(FindControlInputData.GlobalSearchArea.Left));
-    AddToLog('Raw GlobalSearchArea.Top = ' + IntToStr(FindControlInputData.GlobalSearchArea.Top));
-    AddToLog('Raw GlobalSearchArea.Right = ' + IntToStr(FindControlInputData.GlobalSearchArea.Right));
-    AddToLog('Raw GlobalSearchArea.Bottom = ' + IntToStr(FindControlInputData.GlobalSearchArea.Bottom));
-  end;
-
-  FindControlInputData.InitialRectangleOffsets.Left := StrToIntDef(EvaluateReplacements(AFindControlOptions.InitialRectangle.LeftOffset), 0);
-  FindControlInputData.InitialRectangleOffsets.Top := StrToIntDef(EvaluateReplacements(AFindControlOptions.InitialRectangle.TopOffset), 0);
-  FindControlInputData.InitialRectangleOffsets.Right := StrToIntDef(EvaluateReplacements(AFindControlOptions.InitialRectangle.RightOffset), 0);
-  FindControlInputData.InitialRectangleOffsets.Bottom := StrToIntDef(EvaluateReplacements(AFindControlOptions.InitialRectangle.BottomOffset), 0);
-
-  Inc(FindControlInputData.GlobalSearchArea.Left, FindControlInputData.InitialRectangleOffsets.Left);
-  Inc(FindControlInputData.GlobalSearchArea.Top, FindControlInputData.InitialRectangleOffsets.Top);
-  Inc(FindControlInputData.GlobalSearchArea.Right, FindControlInputData.InitialRectangleOffsets.Right);
-  Inc(FindControlInputData.GlobalSearchArea.Bottom, FindControlInputData.InitialRectangleOffsets.Bottom);
-
-  if not AFindControlOptions.WaitForControlToGoAway then
-  begin
-    AddToLog('(With Offset) GlobalSearchArea.Left = ' + IntToStr(FindControlInputData.GlobalSearchArea.Left));
-    AddToLog('(With Offset) GlobalSearchArea.Top = ' + IntToStr(FindControlInputData.GlobalSearchArea.Top));
-    AddToLog('(With Offset) GlobalSearchArea.Right = ' + IntToStr(FindControlInputData.GlobalSearchArea.Right));
-    AddToLog('(With Offset) GlobalSearchArea.Bottom = ' + IntToStr(FindControlInputData.GlobalSearchArea.Bottom));
-  end;
-  /////////////////////////////End of moved section
-
-  if (FindControlInputData.GlobalSearchArea.Right - FindControlInputData.GlobalSearchArea.Left < 1) or
-     (FindControlInputData.GlobalSearchArea.Bottom - FindControlInputData.GlobalSearchArea.Top < 1) then
-  begin
-    frClickerActions.imgDebugBmp.Picture.Bitmap.Width := 300;
-    frClickerActions.imgDebugBmp.Picture.Bitmap.Height := 300;
-    frClickerActions.imgDebugBmp.Canvas.Brush.Color := clWhite;
-    frClickerActions.imgDebugBmp.Canvas.Pen.Color := clRed;
-    frClickerActions.imgDebugBmp.Canvas.Font.Color := clRed;
-    frClickerActions.imgDebugBmp.Canvas.TextOut(0, 0, 'Invalid search area:   ');
-    frClickerActions.imgDebugBmp.Canvas.TextOut(0, 15, 'Rectangle width: ' + IntToStr(FindControlInputData.GlobalSearchArea.Right - FindControlInputData.GlobalSearchArea.Left) + '   ');
-    frClickerActions.imgDebugBmp.Canvas.TextOut(0, 30, 'Rectangle height: ' + IntToStr(FindControlInputData.GlobalSearchArea.Bottom - FindControlInputData.GlobalSearchArea.Top) + '   ');
-    frClickerActions.imgDebugBmp.Canvas.TextOut(0, 45, 'Please verify offsets.   ');
-
-    frClickerActions.imgDebugBmp.Canvas.TextOut(0, 65, 'GlobalRectangle left (with offset): ' + IntToStr(FindControlInputData.GlobalSearchArea.Left) + '   ');
-    frClickerActions.imgDebugBmp.Canvas.TextOut(0, 80, 'GlobalRectangle top (with offset): ' + IntToStr(FindControlInputData.GlobalSearchArea.Top) + '   ');
-    frClickerActions.imgDebugBmp.Canvas.TextOut(0, 95, 'GlobalRectangle right (with offset): ' + IntToStr(FindControlInputData.GlobalSearchArea.Right) + '   ');
-    frClickerActions.imgDebugBmp.Canvas.TextOut(0, 110, 'GlobalRectangle bottom (with offset): ' + IntToStr(FindControlInputData.GlobalSearchArea.Bottom) + '   ');
-
-    frClickerActions.imgDebugBmp.Canvas.TextOut(0, 135, 'Left offset: ' + IntToStr(FindControlInputData.InitialRectangleOffsets.Left) + '   ');
-    frClickerActions.imgDebugBmp.Canvas.TextOut(0, 150, 'Top offset: ' + IntToStr(FindControlInputData.InitialRectangleOffsets.Top) + '   ');
-    frClickerActions.imgDebugBmp.Canvas.TextOut(0, 165, 'Right offset: ' + IntToStr(FindControlInputData.InitialRectangleOffsets.Right) + '   ');
-    frClickerActions.imgDebugBmp.Canvas.TextOut(0, 180, 'Bottom offset: ' + IntToStr(FindControlInputData.InitialRectangleOffsets.Bottom) + '   ');
-
-    frClickerActions.imgDebugBmp.Canvas.TextOut(0, 210, 'FileName: '+ ExtractFileName(FSelfTemplateFileName^));
-    frClickerActions.imgDebugBmp.Canvas.TextOut(0, 225, 'Action: "' + AActionOptions.ActionName + '"');
-
-    AddToLog('Exiting find control, because the search area is negative.');
-    AddToLog('');
-
-    Result := False;
+  if not FillInFindControlInputData(AFindControlOptions, AActionOptions, IsSubControl, FindControlInputData, n) then
     Exit;
-  end;
 
   InitialTickCount := GetTickCount64;
   if AActionOptions.ActionTimeout < 0 then
@@ -1726,11 +1740,6 @@ begin
 
     Exit;
   end; //FindControl
-
-  FindControlInputData.DebugBitmap := frClickerActions.imgDebugBmp.Picture.Bitmap;
-  FindControlInputData.DebugGrid := frClickerActions.imgDebugGrid;
-
-  FindControlInputData.ImageSource := AFindControlOptions.ImageSource;
 
   SetLength(ResultedControlArr_Text, 0);
   SetLength(ResultedControlArr_Bmp, 0);
@@ -2908,6 +2917,7 @@ begin
                                       FOnLoadBitmap,
                                       FOnLoadRenderedBitmap,
                                       HandleOnSaveFileToExtRenderingInMemFS,
+                                      HandleOnScreenshotByActionName,
                                       IsDebugging,
                                       AShouldStopAtBreakPoint,
                                       FStopAllActionsOnDemand{FromParent},
@@ -3249,6 +3259,65 @@ end;
 procedure TActionExecution.HandleOnSaveFileToExtRenderingInMemFS(AFileName: string; AContent: Pointer; AFileSize: Int64);
 begin
   DoOnSaveFileToExtRenderingInMemFS(AFileName, AContent, AFileSize);
+end;
+
+
+function TActionExecution.HandleOnScreenshotByActionName(AActionName: string): Boolean;
+var
+  ActionContent: PClkActionRec;
+  AActionOptions: TClkActionOptions;
+  IsSubControl: Boolean;
+  FindControlInputData: TFindControlInputData;
+  TxtProfileCount: Integer;
+  CompAtPoint: TCompRec;
+  tp: TPoint;
+  ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height, CompWidth, CompHeight: Integer;
+  MemStream: TMemoryStream;
+begin
+  Result := False;
+
+  // This screenshot works with FindSubControl only (no FindControl). Its input settings should be the values of all variables set by a FindControl action, executed prior to this screenshot.
+
+  ActionContent := DoOnGetActionProperties(AActionName);
+
+  if ActionContent = nil then
+  begin
+    AddToLog('Action not found (' + AActionName + ') when taking a screenshot.');
+    Exit;
+  end;
+
+  if not FillInFindControlInputData(ActionContent^.FindControlOptions, AActionOptions, IsSubControl, FindControlInputData, TxtProfileCount) then
+    Exit;
+
+  AddToLog('Taking screenshot by action: ' + AActionName);
+
+  tp.X := FindControlInputData.GlobalSearchArea.Left;
+  tp.Y := FindControlInputData.GlobalSearchArea.Top;
+
+  CompAtPoint := GetWindowClassRec(tp);
+  CompAtPoint.XOffsetFromParent := 0;
+  CompAtPoint.YOffsetFromParent := 0;
+
+  ComputeScreenshotArea(FindControlInputData, CompAtPoint, ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height, CompWidth, CompHeight);
+
+  if FindControlInputData.DebugBitmap <> nil then
+  begin
+    ScreenShot(CompAtPoint.Handle, FindControlInputData.DebugBitmap, ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height);
+
+    MemStream := TMemoryStream.Create;
+    try
+      FindControlInputData.DebugBitmap.SaveToStream(MemStream);
+      DoOnSaveFileToExtRenderingInMemFS('Screenshot.bmp', MemStream.Memory, MemStream.Size);
+    finally
+      MemStream.Free;
+    end;
+
+    AddToLog('ScrShot_Left: ' + IntToStr(ScrShot_Left) + '  ScrShot_Top:' + IntToStr(ScrShot_Top));
+    AddToLog('CompWidth: ' + IntToStr(CompHeight) + '  CompHeight:' + IntToStr(CompHeight));
+    AddToLog('CompHandle: ' + IntToStr(CompAtPoint.Handle) + '  ControlClass: ' + CompAtPoint.ClassName);
+
+    Result := True;
+  end;
 end;
 
 end.
