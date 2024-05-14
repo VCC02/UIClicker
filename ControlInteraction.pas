@@ -682,6 +682,8 @@ begin
   begin
     WipeBitmap(SrcCompSearchAreaBitmap, BitmapToSearchOn.Width, BitmapToSearchOn.Height);
     SrcCompSearchAreaBitmap.Canvas.Draw(0, 0, BitmapToSearchOn);
+    ScrShot_Left := 0;
+    ScrShot_Top := 0;
   end;
 
   //DbgSaveScreenshotContent(SrcCompSearchAreaBitmap);   ////////////////////// keep commented for production code, also a path has to be updated, see above
@@ -737,7 +739,6 @@ begin
       //Do not modify ScrShot_Width or ScrShot_Height!
       WipeBitmap(InputData.DebugBitmap, InputData.BitmapToSearchOn.Width, InputData.BitmapToSearchOn.Height);
       InputData.DebugBitmap.Canvas.Draw(0, 0, InputData.BitmapToSearchOn);
-      //ScreenShot(InputData.BitmapToSearchOn.Handle, InputData.DebugBitmap, ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height);  //ToDo
     end;
   end;
 
