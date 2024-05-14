@@ -195,6 +195,7 @@ type
     imgUpdateLeftTopOffsets: TImage;
     imgCopyBkImg: TImage;
     imgUpdateLeftTopRightBottomOffsets: TImage;
+    lblSelectionLine_Left: TLabel;
     lblColorUnderCursor: TLabel;
     lblColorUnderCursorPreview: TLabel;
     lblPrimitivesInfo: TLabel;
@@ -207,6 +208,9 @@ type
     lblPreviewControl_Height: TLabel;
     lblPreviewControl_Width: TLabel;
     lblReservedSpaceForDbgImg: TLabel;
+    lblSelectionLine_Right: TLabel;
+    lblSelectionLine_Top: TLabel;
+    lblSelectionLine_Bottom: TLabel;
     lstMatchBitmapFiles: TListBox;
     lstMatchPrimitiveFiles: TListBox;
     MenuItemSetToSystemMenu: TMenuItem;
@@ -2998,6 +3002,12 @@ begin
     FSearchAreaTopLimitLabel.Color := FPreviewSelectionColors.TopLeft_Invalid; // clRed;
     FSearchAreaBottomLimitLabel.Color := FPreviewSelectionColors.BotRight_Invalid; // clMaroon;
   end;
+
+  //it would be nice for the following code to have its own method, called from everywhere, but it's easier from here
+  lblSelectionLine_Left.Caption := 'Selection line left: ' + IntToStr(FSearchAreaLeftLimitLabel.Left);
+  lblSelectionLine_Top.Caption := 'Selection line top: ' + IntToStr(FSearchAreaTopLimitLabel.Top);
+  lblSelectionLine_Right.Caption := 'Selection line right: ' + IntToStr(FSearchAreaRightLimitLabel.Left);
+  lblSelectionLine_Bottom.Caption := 'Selection line bottom: ' + IntToStr(FSearchAreaBottomLimitLabel.Top);
 end;
 
 

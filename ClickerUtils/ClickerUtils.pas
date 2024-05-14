@@ -489,6 +489,7 @@ function FastReplace_87ToReturn(s: string): string; //should be used for remote 
 function FastReplace_87To45(s: string): string;
 function FastReplace_45To87(s: string): string;
 function FastReplace_ReturnToCSV(s: string): string;
+function FastReplace_0To1(s: string): string;
 
 function GetIsUserAnAdmin: string;
 
@@ -742,6 +743,17 @@ begin
         s[i] := ' ';
 
   Result := s;
+end;
+
+
+function FastReplace_0To1(s: string): string;
+var
+  i: Integer;
+begin
+  Result := s;
+  for i := 1 to Length(Result) do
+    if Result[i] = #0 then
+      Result[i] := #1;
 end;
 
 

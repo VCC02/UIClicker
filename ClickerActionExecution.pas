@@ -3307,7 +3307,7 @@ begin
     MemStream := TMemoryStream.Create;
     try
       FindControlInputData.DebugBitmap.SaveToStream(MemStream);
-      DoOnSaveFileToExtRenderingInMemFS('Screenshot.bmp', MemStream.Memory, MemStream.Size);
+      DoOnSaveFileToExtRenderingInMemFS(CScreenshotFilename, MemStream.Memory, MemStream.Size);
     finally
       MemStream.Free;
     end;
