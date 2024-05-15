@@ -2943,11 +2943,35 @@ begin
     TempMemStream := TMemoryStream.Create;
     try
       TempMemStream.CopyFrom(ARequestInfo.PostStream, ARequestInfo.PostStream.Size);
-      FInMemFileSystem.SaveFileToMem(Fnm, TempMemStream.Memory, TempMemStream.Size);
+      FInMemFileSystem.SaveFileToMem(Fnm, TempMemStream.Memory, TempMemStream.Size);   //FInMemFileSystem is used for general purpose files (including bitmaps) in server mode.
 
       Msg := 'Received file: "' + Fnm + '"  of ' + IntToStr(TempMemStream.Size) + ' bytes in size.';
       AddToLogFromThread(Msg);
       RespondWithText(Msg);
+    finally
+      TempMemStream.Free;
+    end;
+
+    Exit;
+  end;
+
+  if ARequestInfo.Document = '/' + CRECmd_SetRenderedFile then
+  begin
+    Fnm := ARequestInfo.Params.Values[CREParam_FileName];
+    if Trim(Fnm) = '' then
+    begin
+      RespondWithText('Expecting a valid filename.');
+      Exit;
+    end;
+
+    TempMemStream := TMemoryStream.Create;
+    try
+      TempMemStream.CopyFrom(ARequestInfo.PostStream, ARequestInfo.PostStream.Size);
+      FRenderedInMemFileSystem.SaveFileToMem(Fnm, TempMemStream.Memory, TempMemStream.Size);   //FRenderedInMemFileSystem is used for bitmaps
+
+      Msg := 'Received file: "' + Fnm + '"  of ' + IntToStr(TempMemStream.Size) + ' bytes in size (for ExtRndInMemFS).';
+      AddToLogFromThread(Msg);
+      RespondWithText(CREResp_ErrResponseOK);
     finally
       TempMemStream.Free;
     end;

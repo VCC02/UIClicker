@@ -473,6 +473,8 @@ type
     function AddFontProfileToActionFromMenu(AForegroundColor, ABackgroundColor, AFontName: string; AFontSize: Integer; AFontQuality: TFontQuality): Integer;
     function GetUniqueProfileName(n: Integer): string;
 
+    function DummyEvaluateReplacements(VarName: string; Recursive: Boolean = True): string; //returns VarName
+
     procedure HandleOnUpdateBitmapAlgorithmSettings;
     procedure HandleOnTriggerOnControlsModified;
     function HandleOnEvaluateReplacements(s: string): string;
@@ -3749,6 +3751,12 @@ begin
 end;
 
 
+function TfrClickerActions.DummyEvaluateReplacements(VarName: string; Recursive: Boolean = True): string; //returns VarName
+begin
+  Result := VarName;
+end;
+
+
 //Returns the index of the new item  (i.e. the previous length of MatchBitmapText array.
 function TfrClickerActions.AddFontProfileToActionFromMenu(AForegroundColor, ABackgroundColor, AFontName: string; AFontSize: Integer; AFontQuality: TFontQuality): Integer;
 var
@@ -4641,20 +4649,24 @@ function GetPluginPropertyAttribute(AListOfPropertiesAndTypes, AAttrName: string
 var
   ListOfProperties: TStringList;
   PropDetails: string;
+  PropertyIndexDiff: Integer;
 begin
+  Result := '';
+
   ListOfProperties := TStringList.Create;
   try
     ListOfProperties.Text := AListOfPropertiesAndTypes;
+    PropertyIndexDiff := APropertyIndex - CPropCount_Plugin;
 
-    if (APropertyIndex - CPropCount_Plugin < ListOfProperties.Count) and (ListOfProperties.Count > 0) then
+    if (PropertyIndexDiff > -1) and (PropertyIndexDiff < ListOfProperties.Count) and (ListOfProperties.Count > 0) then
     begin
-      PropDetails := ListOfProperties.ValueFromIndex[APropertyIndex - CPropCount_Plugin];
+      PropDetails := ListOfProperties.ValueFromIndex[PropertyIndexDiff];
 
       Result := Copy(PropDetails, Pos(#8#7 + AAttrName + '=', PropDetails) + 2, MaxInt);  //at this point, Result contains multiple attributes
       Result := Copy(Result, 1, Pos(#8#7, Result) - 1);  //at this point, Result is AAttrName + '=' + [some datatype]
       Delete(Result, 1, Length(AAttrName + '='));
 
-      //DoOnAddToLog('Plugin prop DataType[' + IntToStr(APropertyIndex - CPropCount_Plugin) + ']: ' + Result);
+      //DoOnAddToLog('Plugin prop DataType[' + IntToStr(PropertyIndexDiff) + ']: ' + Result);
     end
   finally
     ListOfProperties.Free;
@@ -5328,11 +5340,31 @@ begin
 end;
 
 
+function PropertyValueReplace(s, AListOfPropertiesAndValues: string): string; //replaces all 'PropertyValue[<index>]' with the actual value
+var
+  TempListOfPropertiesAndValues: TStringList;
+  i: Integer;
+begin
+  Result := s;
+
+  TempListOfPropertiesAndValues := TStringList.Create;
+  try
+    TempListOfPropertiesAndValues.Text := AListOfPropertiesAndValues;
+
+    for i := 0 to TempListOfPropertiesAndValues.Count - 1 do
+      Result := StringReplace(Result, 'PropertyValue[' + IntToStr(i) + ']', TempListOfPropertiesAndValues.ValueFromIndex[i], [rfReplaceAll]);
+  finally
+    TempListOfPropertiesAndValues.Free;
+  end;
+end;
+
+
 procedure TfrClickerActions.HandleOnOIPaintText(ANodeData: TNodeDataPropertyRec; ACategoryIndex, APropertyIndex, APropertyItemIndex: Integer;
   const TargetCanvas: TCanvas; Column: TColumnIndex; var TextType: TVSTTextType);
 var
   ListOfPrimitiveFiles_Modified: TStringList;
   ClickTypeIsNotDrag: Boolean;
+  PluginPropertyEnabled: string;
 begin
   if ANodeData.Level = 0 then
   begin
@@ -5448,6 +5480,24 @@ begin
       end;
     end; //acFindControl, acFindSubControl
 
+    if (ANodeData.Level = CPropertyLevel) and (CurrentlyEditingActionType = acPlugin) then
+    begin
+      PluginPropertyEnabled := GetPluginPropertyAttribute(FEditingAction.PluginOptions.ListOfPropertiesAndTypes, 'Enabled', APropertyIndex);
+      if PluginPropertyEnabled <> '' then
+      begin
+        try
+          PluginPropertyEnabled := PropertyValueReplace(PluginPropertyEnabled, FEditingAction.PluginOptions.ListOfPropertiesAndValues);
+        except
+          on E: Exception do
+            DoOnAddToLog('Cannot evaluate plugin property value: ' + E.Message);
+        end;
+        if not ClickerUtils.EvaluateActionCondition(PluginPropertyEnabled, DummyEvaluateReplacements) then
+        begin
+          TargetCanvas.Font.Color := clGray;
+          Exit;
+        end;
+      end;
+    end;
   end;  //CCategory_ActionSpecific
 end;
 

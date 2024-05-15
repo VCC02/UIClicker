@@ -113,7 +113,8 @@ const
   CRECmd_SetVariable = 'SetVariable';
   CRECmd_TerminateWaitingForFileAvailability = 'TerminateWaitingForFileAvailability';  //three options, both loops, single file only, multi files only  (default both).  See CREParam_TerminateWaitingLoop params.
   CRECmd_GetListOfRenderedFiles = 'GetListOfRenderedFiles'; //all filenames + hashes in the second in-mem file system (rendered files, received from a rendering server)
-  CRECmd_GetRenderedFile = 'GetRenderedFile';
+  CRECmd_GetRenderedFile = 'GetRenderedFile';  //Retreives a bitmap file from ExternalRenderingInMem file system. Files can be added here by executing $RenderBmpExternally()$ or they can be saved by plugins.
+  CRECmd_SetRenderedFile = 'SetRenderedFile';  //Adds or updates a bitmap file to the ExternalRenderingInMem file system.
   CRECmd_MouseDown = 'MouseDown';
   CRECmd_MouseUp = 'MouseUp';
   CRECmd_PluginCmd = 'PluginCmd'; //requires additional parameters to decide what command to do. It is used to "remote click" plugin debugging buttons.   see CREParam_Plugin_ContinueAll
