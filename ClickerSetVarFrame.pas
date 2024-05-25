@@ -90,6 +90,7 @@ type
     FSetVarContent_Vars: TStringList;
     FSetVarContent_Values: TStringList;
     FSetVarContent_EvalBefore: TStringList;
+    FFailOnException: Boolean;
 
     FSetVarMouseUpHitInfo: THitInfo;
     FSetVarEditingText: string;
@@ -131,6 +132,7 @@ begin
   FSetVarContent_Vars := TStringList.Create;
   FSetVarContent_Values := TStringList.Create;
   FSetVarContent_EvalBefore := TStringList.Create;
+  FFailOnException := False;
 
   FHold := False;
 
@@ -155,6 +157,7 @@ begin
   Result.ListOfVarNames := FSetVarContent_Vars.Text;
   Result.ListOfVarValues := FSetVarContent_Values.Text;
   Result.ListOfVarEvalBefore := FSetVarContent_EvalBefore.Text;
+  Result.FailOnException := FFailOnException;
 end;
 
 
@@ -180,6 +183,7 @@ begin
   FSetVarContent_Vars.Text := Value.ListOfVarNames;
   FSetVarContent_Values.Text := Value.ListOfVarValues;
   FSetVarContent_EvalBefore.Text := Value.ListOfVarEvalBefore;
+  FFailOnException := Value.FailOnException;
 
   //if Integer(vstSetVar.RootNodeCount) <> FSetVarContent_Vars.Count then  //Leave this commented! The new list might have the same length (with different content), so refresh the vst.
   begin

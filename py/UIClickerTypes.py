@@ -396,7 +396,8 @@ def GetDefaultSleepOptions():
 class TSetVarOptions(Structure):
     _fields_ = [("ListOfVarNames", LPCWSTR),
                ("ListOfVarValues", LPCWSTR),
-               ("ListOfVarEvalBefore", LPCWSTR)]
+               ("ListOfVarEvalBefore", LPCWSTR),
+               ("FailOnException", BOOLEAN)]
 
 PSetVarOptions = ctypes.POINTER(TSetVarOptions)
 
@@ -405,6 +406,7 @@ def GetDefaultSetVarOptions():
     SetVarOptions.ListOfVarNames = ''    #example  '$MyVar$1\r\n$MyVar$2\r\n$MyVar$3\r\n$MyVar$4'
     SetVarOptions.ListOfVarValues = '' #example  'Val1\r\nVal2\r\nVal3\r\nVal4'
     SetVarOptions.ListOfVarEvalBefore = ''     #example  '1\r\n1\r\n0\r\n1'
+    SetVarOptions.FailOnException = False
     return SetVarOptions
 
 

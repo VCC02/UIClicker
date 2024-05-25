@@ -109,11 +109,45 @@ type
   PActionPlugin = ^TActionPlugin;
 
 
+function DecodePluginPropertyFromAttribute(AValue, AAttrName: string): string;
+function GetPluginAdditionalPropertyAttribute(AListOfPropertiesAndTypes, AAttrName: string; APropertyIndexNoOffset: Integer): string;
+
+
 implementation
 
 
 uses
   DllUtils, Forms, ClickerActionsClient, ClickerActionProperties;
+
+
+function DecodePluginPropertyFromAttribute(AValue, AAttrName: string): string;
+begin
+  Result := Copy(AValue, Pos(#8#7 + AAttrName + '=', AValue) + 2, MaxInt);  //at this point, Result contains multiple attributes
+  Result := Copy(Result, 1, Pos(#8#7, Result) - 1);  //at this point, Result is AAttrName + '=' + [some datatype]
+  Delete(Result, 1, Length(AAttrName + '='));
+end;
+
+
+function GetPluginAdditionalPropertyAttribute(AListOfPropertiesAndTypes, AAttrName: string; APropertyIndexNoOffset: Integer): string;
+var
+  ListOfProperties: TStringList;
+begin
+  Result := '';
+
+  ListOfProperties := TStringList.Create;
+  try
+    ListOfProperties.Text := AListOfPropertiesAndTypes;
+
+    if (APropertyIndexNoOffset > -1) and (APropertyIndexNoOffset < ListOfProperties.Count) and (ListOfProperties.Count > 0) then
+    begin
+      Result := DecodePluginPropertyFromAttribute(ListOfProperties.ValueFromIndex[APropertyIndexNoOffset], AAttrName);
+
+      //DoOnAddToLog('Plugin prop DataType[' + IntToStr(APropertyIndexNoOffset) + ']: ' + Result);
+    end
+  finally
+    ListOfProperties.Free;
+  end;
+end;
 
 
 //APluginReference amd AIndex is used as input param.

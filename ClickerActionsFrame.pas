@@ -275,6 +275,7 @@ type
     procedure MenuItem_BrowseImageSourceFromPropertyListClick(Sender: TObject);
     procedure MenuItem_NoImageSourceInInMemPropertyListClick(Sender: TObject);
     procedure MenuItem_SetFileNameFromInMemPropertyListClick(Sender: TObject);
+    procedure MenuItem_BrowseFileNameFromInMemPropertyListClick(Sender: TObject);
 
     procedure MenuItem_AddFontProfileToPropertyListClick(Sender: TObject);
     procedure MenuItem_AddFontProfileWithAntialiasedAndClearTypeToPropertyListClick(Sender: TObject);
@@ -692,7 +693,8 @@ implementation
 
 
 uses
-  Clipbrd, ClickerActionValues, ClickerOIUtils, ClickerZoomPreviewForm;
+  Clipbrd, ClickerActionValues, ClickerOIUtils, ClickerZoomPreviewForm,
+  ClickerActionPluginLoader, ClickerActionPlugins, InMemFileSystemBrowserForm;
 
 
 function ActionStatusStrToActionStatus(AString: string): TActionStatus;
@@ -3733,6 +3735,21 @@ begin
 end;
 
 
+procedure TfrClickerActions.MenuItem_BrowseFileNameFromInMemPropertyListClick(Sender: TObject);
+var
+  MenuData: POIMenuItemData;
+  Fnm: string;
+begin
+  Fnm := BrowseInMemFSFile(ExtRenderingInMemFS);
+  if Fnm <> '' then
+  begin
+    FEditingAction^.FindControlOptions.SourceFileName := Fnm;
+    FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex, True);  //this closes the editor
+    TriggerOnControlsModified;
+  end;
+end;
+
+
 function TfrClickerActions.GetUniqueProfileName(n: Integer): string;
 var
   AttemptCount: Integer;
@@ -4386,16 +4403,13 @@ begin
           finally
             ListOfProperties.Free;
           end;
-
-          Result := CMainGetActionValueStrFunctions[CurrentlyEditingActionType](FEditingAction, APropertyIndex);
         end
         else
-        begin
           PropDef := CMainProperties[EditingActionType]^[APropertyIndex];
-          Result := CMainGetActionValueStrFunctions[CurrentlyEditingActionType](FEditingAction, APropertyIndex);
-        end;
-      end;
-    end;
+
+        Result := CMainGetActionValueStrFunctions[CurrentlyEditingActionType](FEditingAction, APropertyIndex);
+      end; //CClkUnsetAction
+    end;  //CCategory_ActionSpecific
 
     else
       PropDef.Name := '???';
@@ -4646,31 +4660,8 @@ end;
 
 
 function GetPluginPropertyAttribute(AListOfPropertiesAndTypes, AAttrName: string; APropertyIndex: Integer): string;
-var
-  ListOfProperties: TStringList;
-  PropDetails: string;
-  PropertyIndexDiff: Integer;
 begin
-  Result := '';
-
-  ListOfProperties := TStringList.Create;
-  try
-    ListOfProperties.Text := AListOfPropertiesAndTypes;
-    PropertyIndexDiff := APropertyIndex - CPropCount_Plugin;
-
-    if (PropertyIndexDiff > -1) and (PropertyIndexDiff < ListOfProperties.Count) and (ListOfProperties.Count > 0) then
-    begin
-      PropDetails := ListOfProperties.ValueFromIndex[PropertyIndexDiff];
-
-      Result := Copy(PropDetails, Pos(#8#7 + AAttrName + '=', PropDetails) + 2, MaxInt);  //at this point, Result contains multiple attributes
-      Result := Copy(Result, 1, Pos(#8#7, Result) - 1);  //at this point, Result is AAttrName + '=' + [some datatype]
-      Delete(Result, 1, Length(AAttrName + '='));
-
-      //DoOnAddToLog('Plugin prop DataType[' + IntToStr(PropertyIndexDiff) + ']: ' + Result);
-    end
-  finally
-    ListOfProperties.Free;
-  end;
+  Result := GetPluginAdditionalPropertyAttribute(AListOfPropertiesAndTypes, AAttrName, APropertyIndex - CPropCount_Plugin);
 end;
 
 
@@ -4694,7 +4685,7 @@ begin
         if AItemIndex = -1 then
         begin
           if (CurrentlyEditingActionType = acPlugin) and (APropertyIndex > CPlugin_FileName_PropIndex) then
-            Result := GetPluginPropertyAttribute(FEditingAction.PluginOptions.ListOfPropertiesAndTypes, 'DataType', APropertyIndex)
+            Result := GetPluginPropertyAttribute(FEditingAction.PluginOptions.ListOfPropertiesAndTypes, CPluginPropertyAttr_DataType, APropertyIndex)
           else
             Result := CMainProperties[EditingActionType]^[APropertyIndex].DataType
         end
@@ -5257,7 +5248,7 @@ begin
       if (CurrentlyEditingActionType = acPlugin) and (APropertyIndex > CPlugin_FileName_PropIndex) then
       begin
         //Result := 0
-        Result := StrToIntDef(GetPluginPropertyAttribute(FEditingAction.PluginOptions.ListOfPropertiesAndTypes, 'EnumCounts', APropertyIndex), 0);
+        Result := StrToIntDef(GetPluginPropertyAttribute(FEditingAction.PluginOptions.ListOfPropertiesAndTypes, CPluginPropertyAttr_EnumCounts, APropertyIndex), 0);
       end
       else
         Result := CPropEnumCounts[CurrentlyEditingActionType]^[APropertyIndex];
@@ -5317,7 +5308,7 @@ begin
 
       if (CurrentlyEditingActionType = acPlugin) and (APropertyIndex > CPlugin_FileName_PropIndex) then
       begin
-        AEnumItemName := GetPluginPropertyAttribute(FEditingAction.PluginOptions.ListOfPropertiesAndTypes, 'EnumStrings', APropertyIndex);
+        AEnumItemName := GetPluginPropertyAttribute(FEditingAction.PluginOptions.ListOfPropertiesAndTypes, CPluginPropertyAttr_EnumStrings, APropertyIndex);
         ListOfEnumValues := TStringList.Create;
         try
           ListOfEnumValues.Text := FastReplace_45ToReturn(AEnumItemName);
@@ -5482,7 +5473,7 @@ begin
 
     if (ANodeData.Level = CPropertyLevel) and (CurrentlyEditingActionType = acPlugin) then
     begin
-      PluginPropertyEnabled := GetPluginPropertyAttribute(FEditingAction.PluginOptions.ListOfPropertiesAndTypes, 'Enabled', APropertyIndex);
+      PluginPropertyEnabled := GetPluginPropertyAttribute(FEditingAction.PluginOptions.ListOfPropertiesAndTypes, CPluginPropertyAttr_Enabled, APropertyIndex);
       if PluginPropertyEnabled <> '' then
       begin
         try
@@ -5920,7 +5911,7 @@ begin
 
       acPlugin:
         if APropertyIndex > CPlugin_FileName_PropIndex then
-          AHint := FastReplace_45ToReturn(GetPluginPropertyAttribute(FEditingAction.PluginOptions.ListOfPropertiesAndTypes, 'Hint', APropertyIndex));
+          AHint := FastReplace_45ToReturn(GetPluginPropertyAttribute(FEditingAction.PluginOptions.ListOfPropertiesAndTypes, CPluginPropertyAttr_Hint, APropertyIndex));
 
       else
         ;
@@ -6238,12 +6229,20 @@ begin
                       FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstFindControlProperties, CFindControl_ImageSourceFileNameLocation_PropIndex);
                     end
                     else
+                    begin
+                      AddMenuItemToPopupMenu(FOIEditorMenu, 'Browse with preview...', MenuItem_BrowseFileNameFromInMemPropertyListClick,
+                        ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+                      FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 0);
+
+                      AddMenuItemToPopupMenu(FOIEditorMenu, '-', nil, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+
                       for i := 0 to TempListOfExternallyRenderedImages.Count - 1 do
                       begin
                         AddMenuItemToPopupMenu(FOIEditorMenu, TempListOfExternallyRenderedImages.Strings[i], MenuItem_SetFileNameFromInMemPropertyListClick,
                           ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
                         FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstFindControlProperties, CFindControl_ImageSourceFileNameLocation_PropIndex);
                       end;
+                    end;
                   finally
                     TempListOfExternallyRenderedImages.Free;
                   end;
@@ -6373,7 +6372,7 @@ begin
         end;
 
         acSetVar:
-          if APropertyIndex = CSetVar_ListOfVarNamesValuesAndEvalBefore then
+          if APropertyIndex = CSetVar_ListOfVarNamesValuesAndEvalBefore_PropItemIndex then
           begin
             frClickerSetVar.SetListOfSetVars(FEditingAction^.SetVarOptions);
             frClickerSetVar.BringToFront;

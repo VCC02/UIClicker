@@ -33,14 +33,12 @@ interface
 
 uses
   Classes, SysUtils,
-  IdGlobal, DCPmd5, VirtualTrees;
+  IdGlobal, DCPmd5;
 
 
 function ArrOfByteToHex(var AArr: TIdBytes): string;
 function ComputeHash(AFileContent: Pointer; AFileSize: Int64): string;
 function GetFileHash(AFileName: string): string;
-function GetNodeByIndex(AVst: TVirtualStringTree; AIndex: Integer): PVirtualNode;
-procedure SelectNodeByIndex(AVst: TVirtualStringTree; AIndex: Integer; AScrollIntoView: Boolean = False; ACenter: Boolean = False);
 
 
 implementation
@@ -93,41 +91,6 @@ begin
   end;
 end;
 
-
-function GetNodeByIndex(AVst: TVirtualStringTree; AIndex: Integer): PVirtualNode;
-var
-  Node: PVirtualNode;
-begin
-  Result := nil;
-  Node := AVst.GetFirst;
-  if Node = nil then
-    Exit;
-
-  repeat
-    if Integer(Node^.Index) = AIndex then
-    begin
-      Result := Node;
-      Break;
-    end;
-
-    Node := Node^.NextSibling;
-  until Node = nil;
-end;
-
-
-procedure SelectNodeByIndex(AVst: TVirtualStringTree; AIndex: Integer; AScrollIntoView: Boolean = False; ACenter: Boolean = False);
-var
-  Node: PVirtualNode;
-begin
-  Node := GetNodeByIndex(AVst, AIndex);
-  if Node = nil then
-    Exit;
-
-  AVst.Selected[Node] := True;
-
-  if AScrollIntoView then
-    AVst.ScrollIntoView(Node, ACenter);
-end;
 
 end.
 

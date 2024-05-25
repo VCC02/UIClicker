@@ -313,6 +313,8 @@ type
     ListOfVarNames: string;
     ListOfVarValues: string;
     ListOfVarEvalBefore: string;
+    FailOnException: Boolean;
+    //See ClickerSetVarFrame if adding new fields! All fields have to be assigned manually in getter and setter.
   end;
 
   TClkWindowOperationsOptions = record
@@ -336,6 +338,7 @@ type
     ListOfPropertiesAndValues: string;    //CRLF separated items of key=value format    - displayed on ObjectInspector
     ListOfPropertiesAndTypes: string;     //CRLF separated items of key=value format    - set using <Plugin>.LoadToGetProperties after loading ListOfPropertiesAndValues from template. This field is not saved to template.
     CachedCount: Integer;                 //used to speed up ObjectInspector            - set after loading template, from ListOfPropertiesAndTypes   - not displayed on ObjectInspector
+    ListOfInitValues: string;             //CRLF separated list of values
   end;
 
   TActionBreakPoint = record

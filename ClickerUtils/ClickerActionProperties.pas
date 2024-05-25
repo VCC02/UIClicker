@@ -224,7 +224,8 @@ function GetSetVarActionProperties(ASetVarOptions: TClkSetVarOptions): string;
 begin
   Result := 'ListOfVarNames' + '=' + FastReplace_ReturnTo45(ASetVarOptions.ListOfVarNames) + '&' +
             'ListOfVarValues' + '=' + FastReplace_ReturnTo45(ASetVarOptions.ListOfVarValues) + '&' +
-            'ListOfVarEvalBefore' + '=' + FastReplace_ReturnTo45(ASetVarOptions.ListOfVarEvalBefore);
+            'ListOfVarEvalBefore' + '=' + FastReplace_ReturnTo45(ASetVarOptions.ListOfVarEvalBefore) + '&' +
+            'FailOnException' + '=' + IntToStr(Ord(ASetVarOptions.FailOnException));
 end;
 
 
@@ -663,6 +664,7 @@ begin
   ASetVarOptions.ListOfVarNames := FastReplace_45ToReturn(AListOfSetVarOptionsParams.Values['ListOfVarNames']);
   ASetVarOptions.ListOfVarValues := FastReplace_45ToReturn(AListOfSetVarOptionsParams.Values['ListOfVarValues']);
   ASetVarOptions.ListOfVarEvalBefore := FastReplace_45ToReturn(AListOfSetVarOptionsParams.Values['ListOfVarEvalBefore']);
+  ASetVarOptions.FailOnException := AListOfSetVarOptionsParams.Values['FailOnException'] = '1';
 end;
 
 

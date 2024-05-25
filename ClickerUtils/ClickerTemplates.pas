@@ -222,6 +222,7 @@ begin
     ACustomActions[i].SetVarOptions.ListOfVarNames := StringReplace(Ini.ReadString(SectionIndex, 'ListOfVarNames_' + IterationStr, ''), #4#5, #13#10, [rfReplaceAll]);
     ACustomActions[i].SetVarOptions.ListOfVarValues := StringReplace(Ini.ReadString(SectionIndex, 'ListOfVarValues_' + IterationStr, ''), #4#5, #13#10, [rfReplaceAll]);
     ACustomActions[i].SetVarOptions.ListOfVarEvalBefore := StringReplace(Ini.ReadString(SectionIndex, 'ListOfVarEvalBefore_' + IterationStr, ''), #4#5, #13#10, [rfReplaceAll]);
+    ACustomActions[i].SetVarOptions.FailOnException := False;
 
     AdjustListOfVarEvalBeforeCount(ACustomActions[i].SetVarOptions);
   end;
@@ -451,6 +452,7 @@ begin
   ASetVarOptions.ListOfVarValues := FastReplace_45ToReturn(Ini.ReadString(SectionIndex, 'ListOfVarValues', ''));
   ASetVarOptions.ListOfVarEvalBefore := FastReplace_45ToReturn(Ini.ReadString(SectionIndex, 'ListOfVarEvalBefore', ''));
   AdjustListOfVarEvalBeforeCount(ASetVarOptions);
+  ASetVarOptions.FailOnException := Ini.ReadBool(SectionIndex, 'FailOnException', False);
 end;
 
 
@@ -890,6 +892,7 @@ begin
   AStringList.Add('ListOfVarNames=' + FastReplace_ReturnTo45(AActionSetVarOptions.ListOfVarNames));
   AStringList.Add('ListOfVarValues=' + FastReplace_ReturnTo45(AActionSetVarOptions.ListOfVarValues));
   AStringList.Add('ListOfVarEvalBefore=' + FastReplace_ReturnTo45(AActionSetVarOptions.ListOfVarEvalBefore));
+  AStringList.Add('FailOnException=' + IntToStr(Ord(AActionSetVarOptions.FailOnException)));
 end;
 
 

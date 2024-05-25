@@ -101,6 +101,13 @@ const
   CBeforePluginExecution_DbgLineContent = 'Before plugin execution.';
   CScreenshotFilename = 'Screenshot.bmp';
 
+  CPluginPropertyAttr_DataType = 'DataType';
+  CPluginPropertyAttr_EnumCounts = 'EnumCounts';
+  CPluginPropertyAttr_EnumStrings = 'EnumStrings';
+  CPluginPropertyAttr_Hint = 'Hint';
+  CPluginPropertyAttr_Enabled = 'Enabled';
+  CPluginPropertyAttr_DefaultValue = 'DefaultValue';
+
 
 var
   DefaultOnActionPlugin_DebugPoint: TOnActionPlugin_DebugPoint;

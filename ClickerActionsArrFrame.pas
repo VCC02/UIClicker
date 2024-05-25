@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2023 VCC
+    Copyright (C) 2024 VCC
     creation date: Dec 2019
     initial release date: 13 Sep 2022
 
@@ -710,7 +710,7 @@ implementation
 uses
   Math, ClickerTemplates, BitmapConv,
   BitmapProcessing, Clipbrd, ClickerConditionEditorForm, ClickerActionsClient,
-  ClickerTemplateNotesForm, AutoCompleteForm, ClickerExtraUtils,
+  ClickerTemplateNotesForm, AutoCompleteForm, ClickerVstUtils,
   ClickerActionPluginLoader, ClickerActionPlugins;
 
 
@@ -2760,7 +2760,7 @@ end;
 
 function TfrClickerActionsArr.GetNodeByIndex(ANodeIndex: Integer): PVirtualNode;
 begin
-  Result := ClickerExtraUtils.GetNodeByIndex(vstActions, ANodeIndex);
+  Result := ClickerVstUtils.GetNodeByIndex(vstActions, ANodeIndex);
 end;
 
 
@@ -3051,10 +3051,22 @@ var
   TempName: string;
 begin
   Result := '';
-  for i := 0 to AListOfPropertiesAndTypes.Count - 1 do
+
+  if AInitialListOfPropertiesAndValues.Count > 0 then
   begin
-    TempName := AListOfPropertiesAndTypes.Names[i];
-    Result := Result + TempName + '=' + AInitialListOfPropertiesAndValues.Values[TempName] + #13#10;
+    for i := 0 to AListOfPropertiesAndTypes.Count - 1 do
+    begin
+      TempName := AListOfPropertiesAndTypes.Names[i];
+      Result := Result + TempName + '=' + AInitialListOfPropertiesAndValues.Values[TempName] + #13#10;
+    end;
+  end
+  else
+  begin
+    for i := 0 to AListOfPropertiesAndTypes.Count - 1 do
+    begin
+      TempName := AListOfPropertiesAndTypes.Names[i];
+      Result := Result + TempName + '=' + DecodePluginPropertyFromAttribute(AListOfPropertiesAndTypes.ValueFromIndex[i], CPluginPropertyAttr_DefaultValue) + #13#10;
+    end;
   end;
 end;
 
@@ -5569,6 +5581,7 @@ begin
   FClkActions[AIndex].SetVarOptions.ListOfVarNames := '';
   FClkActions[AIndex].SetVarOptions.ListOfVarValues := '';
   FClkActions[AIndex].SetVarOptions.ListOfVarEvalBefore := '';
+  FClkActions[AIndex].SetVarOptions.FailOnException := False;
 
   FClkActions[AIndex].WindowOperationsOptions.Operation := woBringToFront;
   FClkActions[AIndex].WindowOperationsOptions.NewX := '';
@@ -5586,6 +5599,7 @@ begin
 
   FClkActions[AIndex].PluginOptions.FileName := '';
   FClkActions[AIndex].PluginOptions.ListOfPropertiesAndValues := '';
+  FClkActions[AIndex].PluginOptions.ListOfPropertiesAndTypes := '';
 end;
 
 

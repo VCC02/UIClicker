@@ -42,14 +42,14 @@ uses
   ClickerActionsPaletteFrame, UIClickerMainFormFP, ClickerRemoteScreenForm,
   ClickerPreviewForm, ClickerActionExecution, ClickerTemplateNotesForm,
   ClickerZoomPreviewForm, ObjectInspectorFrame, AutoCompleteForm,
-  ClickerActionValues, ClickerExecAppFrame, ClickerSetVarFrame,
-  ClickerSleepFrame, ClickerCallTemplateFrame, ClickerUtils,
+  InMemFileSystemBrowserForm, ClickerActionValues, ClickerExecAppFrame,
+  ClickerSetVarFrame, ClickerSleepFrame, ClickerCallTemplateFrame, ClickerUtils,
   ClickerPrimitiveUtils, ClickerPrimitivesFrame, ClickerPrimitiveValues,
   ClickerPrimitives, ClickerOIUtils, ClickerActionProperties,
   ClickerPrimitivesCompositor, ClickerPrimitivesCompEditors,
   ClickerWinInterpFrame, ClickerFontFinderSettingsForm, BitmapConv,
   ClickerActionPlugins, ClickerActionPluginLoader, DllUtils, ClickerExtraUtils,
-  ClickerPluginFrame, ClickerFileProviderUtils;
+  ClickerPluginFrame, ClickerFileProviderUtils, ClickerVstUtils;
 
 {$R *.res}
 

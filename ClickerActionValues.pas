@@ -61,7 +61,7 @@ const
   CPropCount_SetText = 4;
   CPropCount_CallTemplate = 4;
   CPropCount_Sleep = 1;
-  CPropCount_SetVar = 1;
+  CPropCount_SetVar = 2;
   CPropCount_WindowOperations = 7;
   CPropCount_LoadSetVarFromFile = 2;
   CPropCount_SaveSetVarToFile = 2;
@@ -173,7 +173,8 @@ const
   CFindControl_InitialRectangle_RightOffset_PropItemIndex = 6;
   CFindControl_InitialRectangle_BottomOffset_PropItemIndex = 7;
 
-  CSetVar_ListOfVarNamesValuesAndEvalBefore = 0;
+  CSetVar_ListOfVarNamesValuesAndEvalBefore_PropItemIndex = 0;
+  CSetVar_FailOnException_PropItemIndex = 1;
 
   CCallTemplate_CallTemplateLoop_Enabled_PropItemIndex = 0;
   CCallTemplate_CallTemplateLoop_Counter_PropItemIndex = 1;
@@ -363,7 +364,8 @@ const
   );
 
   CSetVarProperties: array[0..CPropCount_SetVar - 1] of TOIPropDef = (
-    (Name: 'ListOfVarNamesValuesAndEvalBefore'; EditorType: etUserEditor; DataType: CDTStructure) //structure   (no sub properties)
+    (Name: 'ListOfVarNamesValuesAndEvalBefore'; EditorType: etUserEditor; DataType: CDTStructure), //structure   (no sub properties)
+    (Name: 'FailOnException'; EditorType: etBooleanCombo; DataType: CDTBool)
   );
 
   CWindowOperationsProperties: array[0..CPropCount_WindowOperations - 1] of TOIPropDef = (
@@ -649,7 +651,8 @@ const
   );
 
   CSetVarEnumCounts: array[0..CPropCount_SetVar - 1] of Integer = (
-    0  //ListOfVarNamesValuesAndEvalBefore
+    0,  //ListOfVarNamesValuesAndEvalBefore
+    0   //FailOnException
   );
 
   CWindowOperationsEnumCounts: array[0..CPropCount_WindowOperations - 1] of Integer = (
@@ -830,7 +833,8 @@ const
   );
 
   CSetVarEnumStrings: array[0..CPropCount_SetVar - 1] of PArrayOfString = (
-    nil  //ListOfVarNamesValuesAndEvalBefore
+    nil,  //ListOfVarNamesValuesAndEvalBefore
+    nil   //FailOnException
   );
 
   CWindowOperationsEnumStrings: array[0..CPropCount_WindowOperations - 1] of PArrayOfString = (
@@ -1004,6 +1008,8 @@ function GetPropertyHint_Plugin_FileName: string;
 
 function GetPropertyHint_Sleep_Value: string;
 
+function GetPropertyHint_SetVar_FailOnException: string;
+
 
 const
   CGetPropertyHint_Click: array[0..CPropCount_Click - 1] of TPropHintFunc = (
@@ -1100,7 +1106,8 @@ const
 
 
   CGetPropertyHint_SetVar: array[0..CPropCount_SetVar - 1] of TPropHintFunc = (
-    @GetPropertyHintNoHint //ListOfVarNamesValuesAndEvalBefore
+    @GetPropertyHintNoHint, //ListOfVarNamesValuesAndEvalBefore
+    @GetPropertyHint_SetVar_FailOnException  //FailOnException
   );
 
 
@@ -1454,6 +1461,7 @@ function GetActionValueStr_SetVar(AAction: PClkActionRec; APropertyIndex: Intege
 begin
   case APropertyIndex of
     0: Result := '';   //ListOfVarNamesValuesAndEvalBefore  - this requires a custom editor
+    1: Result := BoolToStr(AAction^.SetVarOptions.FailOnException, True);
     else
       Result := 'unknown';
   end;
@@ -1978,6 +1986,7 @@ procedure SetActionValueStr_SetVar(AAction: PClkActionRec; NewValue: string; APr
 begin
   case APropertyIndex of
     0: ;   //ListOfVarNamesValuesAndEvalBefore  - this requires a custom editor
+    1: AAction^.SetVarOptions.FailOnException := StrToBool(NewValue);
     else
       ;
   end;
@@ -2532,6 +2541,12 @@ begin
             'Waiting for the proper event or control property, is the right way to solve a race condition. Use the "sleep" action if the event/property is not available.';
 end;
 
+
+function GetPropertyHint_SetVar_FailOnException: string;
+begin
+  Result := 'If set to True, the action fails on the first exception.' + #13#10 +
+            'Otherwise, the action continues with a variable, set to the error message.';
+end;
 
 end.
 

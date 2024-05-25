@@ -56,6 +56,7 @@ const
   CDefaultNoTemplate = 'NoName.clktmpl';
   CWaitForFileAvailabilityTimeout = 300000; //5min / file, if waiting for a single file
   CWaitForMultipleFilesAvailabilityTimeout = 60000;  //1min / file, if waiting for a multiple file
+  CClientExceptionPrefix = 'Client exception: ';
 
 const
   CREParam_ActionIdx = 'ActionIdx';
@@ -250,7 +251,7 @@ begin
     end;
   except
     on E: Exception do
-      FResult := 'Client exception: ' + E.Message;
+      FResult := CClientExceptionPrefix + E.Message;
   end;
 
   FDone := True;

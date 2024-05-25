@@ -175,6 +175,7 @@ type
     ListOfVarNames: PWideChar;
     ListOfVarValues: PWideChar;
     ListOfVarEvalBefore: PWideChar;
+    FailOnException: Boolean;
   end;
 
   PClkSetVarOptionsAPI = ^TClkSetVarOptionsAPI;
@@ -880,6 +881,7 @@ begin
   SetPointedContentToString(@string(PWideChar(ASetVarOptions^.ListOfVarNames))[1], TempAction.SetVarOptions.ListOfVarNames);
   SetPointedContentToString(@string(PWideChar(ASetVarOptions^.ListOfVarValues))[1], TempAction.SetVarOptions.ListOfVarValues);
   SetPointedContentToString(@string(PWideChar(ASetVarOptions^.ListOfVarEvalBefore))[1], TempAction.SetVarOptions.ListOfVarEvalBefore);
+  TempAction.SetVarOptions.FailOnException := ASetVarOptions^.FailOnException;
 
   Result := 0;
 

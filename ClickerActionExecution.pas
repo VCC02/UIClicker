@@ -111,7 +111,7 @@ type
     function EvaluateReplacements(s: string; Recursive: Boolean = True): string;
     procedure AppendErrorMessageToActionVar(NewErrMsg: string);
     procedure PrependErrorMessageToActionVar(NewErrMsg: string);
-    function EvaluateHTTP(AValue: string): string;
+    function EvaluateHTTP(AValue: string; out AGeneratedException: Boolean): string;
     procedure PreviewTextOnBmp(var AFindControlOptions: TClkFindControlOptions; AEvaluatedText: string; AProfileIndex: Integer; ASearchedBmp: TBitmap);
     function GetActionProperties(AActionName: string): string;
 
@@ -257,7 +257,8 @@ uses
     Process,
   {$ENDIF}
   IdHTTP, ClickerPrimitivesCompositor, ClickerActionProperties,
-  ClickerActionPluginLoader, ClickerActionPlugins, BitmapProcessing;
+  ClickerActionPluginLoader, ClickerActionPlugins, BitmapProcessing,
+  ClickerActionsClient;
 
 
 constructor TActionExecution.Create;
@@ -355,11 +356,12 @@ begin
 end;
 
 
-function TActionExecution.EvaluateHTTP(AValue: string): string;
+function TActionExecution.EvaluateHTTP(AValue: string; out AGeneratedException: Boolean): string;
 var
   TempIdHTTP: TIdHTTP;
 begin
   Result := AValue;
+  AGeneratedException := False;
 
   if (Pos('$HTTP://', UpperCase(AValue)) > 0) or (Pos('$HTTPS://', UpperCase(AValue)) > 0) then
     if AValue[Length(AValue)] = '$' then
@@ -380,6 +382,7 @@ begin
         on E: Exception do
         begin
           Result := E.Message;
+          AGeneratedException := True;
           AppendErrorMessageToActionVar(Result);
         end;
       end;
@@ -2281,12 +2284,13 @@ var
   ErrStr: string;
   DelayBetweenKeyStrokesInt: Integer;
   Count: Integer;
+  GeneratedException: Boolean;
 begin
   Result := True;
 
   Control_Handle := StrToIntDef(GetActionVarValue('$Control_Handle$'), 0);
   TextToSend := EvaluateReplacements(ASetTextOptions.Text);
-  TextToSend := EvaluateHTTP(TextToSend);
+  TextToSend := EvaluateHTTP(TextToSend, GeneratedException);
   Count := Min(65535, Max(0, StrToIntDef(EvaluateReplacements(ASetTextOptions.Count), 1)));
 
   if ASetTextOptions.ControlType = stKeystrokes then
@@ -2409,6 +2413,7 @@ var
   CustomVars: TStringList;
   KeyName, KeyValue, RowString: string;
   Fnm, TemplateDir: string;
+  GeneratedException: Boolean;
 begin
   Result := False;
   if not Assigned(FOnCallTemplate) then
@@ -2427,7 +2432,7 @@ begin
         RowString := CustomVars.Strings[i];
         KeyName := Copy(RowString, 1, Pos('=', RowString) - 1);
         KeyValue := Copy(RowString, Pos('=', RowString) + 1, MaxInt);
-        KeyValue := EvaluateHTTP(KeyValue);
+        KeyValue := EvaluateHTTP(KeyValue, GeneratedException);
 
         if ACallTemplateOptions.EvaluateBeforeCalling then
           SetActionVarValue(KeyName, EvaluateReplacements(KeyValue))
@@ -2649,7 +2654,9 @@ var
   TempListOfSetVarEvalBefore: TStringList;
   i, j: Integer;
   VarName, VarValue: string;
+  RenderBmpExternallyResult: string;
   ListOfSelfHandles: TStringList;
+  GeneratedException: Boolean;
 begin
   Result := False;
   TempListOfSetVarNames := TStringList.Create;
@@ -2709,10 +2716,25 @@ begin
       if TempListOfSetVarEvalBefore.Strings[i] = '1' then
         VarValue := EvaluateReplacements(VarValue);
 
-      VarValue := EvaluateHTTP(VarValue);
+      VarValue := EvaluateHTTP(VarValue, GeneratedException);
+      if GeneratedException then
+        if ASetVarOptions.FailOnException then
+        begin
+          SetActionVarValue('$ExecAction_Err$', VarValue);
+          Exit;
+        end;
 
       if (Pos('$RenderBmpExternally(', VarName) = 1) and (VarName[Length(VarName)] = '$') and (VarName[Length(VarName) - 1] = ')') then
-        SetActionVarValue('$ExternallyRenderedBmpResult$', DoOnRenderBmpExternally(VarValue));
+      begin
+        RenderBmpExternallyResult := DoOnRenderBmpExternally(VarValue);
+        SetActionVarValue('$ExternallyRenderedBmpResult$', RenderBmpExternallyResult);
+        if Pos(CClientExceptionPrefix, RenderBmpExternallyResult) = 1 then
+          if ASetVarOptions.FailOnException then
+          begin
+            SetActionVarValue('$ExecAction_Err$', RenderBmpExternallyResult);
+            Exit;
+          end;
+      end;
 
       if (Pos('$GetActionProperties(', VarName) = 1) and (VarName[Length(VarName)] = '$') and (VarName[Length(VarName) - 1] = ')') then
         SetActionVarValue('$ActionPropertiesResult$', GetActionProperties(VarValue));
