@@ -3979,13 +3979,58 @@ end;
 
 
 procedure TfrClickerActionsArr.HandleActionSelection;
+const
+  CControlsModifiedMsg = 'There are changed properties for the selected action. By selecting another action, you will discard those changes. You can click Update to record the changes to the action list.'#13#10#13#10'Go back to previous action/content?';
+  CModifiedPmtvFilesMsg = 'One or more primitives files are modified for the selected action. By selecting another action, you will discard those changes.'#13#10#13#10'Go back to previous action/content?';
+
+  function ReturnToModifiedGenericAction: Boolean; //returns True if should return
+  begin
+    Result := False;
+
+    if frClickerActions.ControlsModified then
+      if MessageBox(Handle, PChar(CControlsModifiedMsg), '', MB_ICONWARNING + MB_YESNO) = IDYES then
+      begin
+        vstActions.ClearSelection;
+        if FPreviousSelectedNode <> nil then
+          vstActions.Selected[FPreviousSelectedNode] := True;
+
+        Result := True;
+      end;
+  end;
+
+  function ReturnToModifiedFindSubControlWIthPmtvAction: Boolean; //returns True if should return
+  begin
+    Result := False;
+
+    if frClickerActions.ModifiedPmtvFiles then
+      if MessageBox(Handle, PChar(CModifiedPmtvFilesMsg), '', MB_ICONWARNING + MB_YESNO) = IDYES then
+      begin
+        vstActions.ClearSelection;
+        if FPreviousSelectedNode <> nil then
+          vstActions.Selected[FPreviousSelectedNode] := True;
+
+        Result := True;
+      end
+      else
+        frClickerActions.ResetAllPmtvModifiedFlags;  //reset the flags, so that next time this action is selected, the files won't appear as modified
+  end;
+
 var
   Node: PVirtualNode;
 begin
   Node := vstActions.GetFirstSelected;
 
-  if Node = nil then
+  if Node = nil then  //no action is selected, so verify if an action just got deselected
+  begin
+    if not ReturnToModifiedGenericAction and not ReturnToModifiedFindSubControlWIthPmtvAction then
+    begin
+      frClickerActions.CurrentlyEditingActionType := {%H-}TClkAction(MaxInt); //use an invalid value, to hide all editors
+      StopGlowingUpdateButton;
+      frClickerActions.UpdatePageControlActionExecutionIcons;
+    end;
+
     Exit;
+  end;
 
   if FActionsHitInfo.HitNode = nil then
     Exit;
@@ -3993,23 +4038,11 @@ begin
   if Node^.Parent <> vstActions.RootNode then
     Exit;
 
-  if frClickerActions.ControlsModified then
-    if MessageBox(Handle, PChar('There are changed properties for the selected action. By selecting another action, you will discard those changes. You can click Update to record the changes to the action list.'#13#10#13#10'Go back to previous action/content?'), '', MB_ICONWARNING + MB_YESNO) = IDYES then
-    begin
-      vstActions.ClearSelection;
-      vstActions.Selected[FPreviousSelectedNode] := True;
-      Exit;
-    end;
+  if ReturnToModifiedGenericAction then
+    Exit;
 
-  if frClickerActions.ModifiedPmtvFiles then
-    if MessageBox(Handle, PChar('One or more primitives files are modified for the selected action. By selecting another action, you will discard those changes.'#13#10#13#10'Go back to previous action/content?'), '', MB_ICONWARNING + MB_YESNO) = IDYES then
-    begin
-      vstActions.ClearSelection;
-      vstActions.Selected[FPreviousSelectedNode] := True;
-      Exit;
-    end
-    else
-      frClickerActions.ResetAllPmtvModifiedFlags;  //reset the flags, so that next time this action is selected, the files won't appear as modified
+  if ReturnToModifiedFindSubControlWIthPmtvAction then
+    Exit;
 
   UpdateControlsFromActionsArr(Node^.Index);
   StopGlowingUpdateButton;

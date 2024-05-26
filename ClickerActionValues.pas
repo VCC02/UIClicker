@@ -2545,7 +2545,8 @@ end;
 function GetPropertyHint_SetVar_FailOnException: string;
 begin
   Result := 'If set to True, the action fails on the first exception.' + #13#10 +
-            'Otherwise, the action continues with a variable, set to the error message.';
+            'Otherwise, the action continues with a variable, set to the error message.' + #13#10 +
+            'As an example, when calling $RenderBmpExternally()$, the result might be a connection error message. If FailOnException is True, the action fails.';
 end;
 
 end.
