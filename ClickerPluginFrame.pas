@@ -159,7 +159,7 @@ implementation
 
 
 uses
-  ClickerExtraUtils, ClickerActionPlugins, BitmapProcessing;
+  ClickerExtraUtils, ClickerActionPlugins, BitmapProcessing, ClickerVstUtils;
 
 
 constructor TfrClickerPlugin.Create(TheOwner: TComponent);

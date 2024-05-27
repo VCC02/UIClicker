@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2023 VCC
+    Copyright (C) 2024 VCC
     creation date: Dec 2019
     initial release date: 13 Sep 2022
 
@@ -133,6 +133,8 @@ type
     procedure SetCropRectangleByTrb;
     procedure DrawCroppedImage;
     procedure ScanTargetControl;
+
+    procedure scrboxMouseWheel(Sender: TObject; Shift: TShiftState; WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
   public
     { Public declarations }
     procedure LoadSettings(AIni: TMemIniFile);
@@ -528,6 +530,8 @@ end;
 procedure TfrmClickerControlPreview.tmrStartupTimer(Sender: TObject);
 begin
   tmrStartup.Enabled := False;
+  scrboxScreenshot.OnMouseWheel := scrboxMouseWheel;
+  scrboxCrop.OnMouseWheel := scrboxMouseWheel;
 end;
 
 
@@ -578,6 +582,29 @@ end;
 procedure TfrmClickerControlPreview.trbCropZoomChange(Sender: TObject);
 begin
   DrawCroppedImage;
+end;
+
+
+procedure TfrmClickerControlPreview.scrboxMouseWheel(
+  Sender: TObject; Shift: TShiftState; WheelDelta: Integer; MousePos: TPoint;
+  var Handled: Boolean);
+var
+  Factor: Integer;
+  TempScrBox: TScrollBox;
+begin
+  if ssCtrl in Shift then
+    Factor := 1
+  else
+    Factor := 3;
+
+  TempScrBox := Sender as TScrollBox;
+
+  if ssShift in Shift then
+    TempScrBox.HorzScrollBar.Position := TempScrBox.HorzScrollBar.Position - WheelDelta div Factor
+  else
+    TempScrBox.VertScrollBar.Position := TempScrBox.VertScrollBar.Position - WheelDelta div Factor;
+
+  Handled := True;
 end;
 
 

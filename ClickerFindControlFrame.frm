@@ -684,61 +684,70 @@ object frClickerFindControl: TfrClickerFindControl
         State = cbChecked
         TabOrder = 8
       end
-      object lblSelectionLine_Left: TLabel
+      object pnlSelectionLinesInfo: TPanel
         Left = 472
-        Height = 13
-        Top = 51
-        Width = 94
-        Caption = 'Selection line left: 0'
-        Color = clBlack
-        Font.Color = 33023
-        Font.Height = -11
-        Font.Name = 'Tahoma'
-        ParentColor = False
-        ParentFont = False
-        Transparent = False
-      end
-      object lblSelectionLine_Top: TLabel
-        Left = 472
-        Height = 13
-        Top = 72
-        Width = 94
-        Caption = 'Selection line top: 0'
-        Color = clBlack
-        Font.Color = 33023
-        Font.Height = -11
-        Font.Name = 'Tahoma'
-        ParentColor = False
-        ParentFont = False
-        Transparent = False
-      end
-      object lblSelectionLine_Bottom: TLabel
-        Left = 472
-        Height = 13
-        Top = 117
-        Width = 112
-        Caption = 'Selection line bottom: 0'
-        Color = clBlack
-        Font.Color = 49152
-        Font.Height = -11
-        Font.Name = 'Tahoma'
-        ParentColor = False
-        ParentFont = False
-        Transparent = False
-      end
-      object lblSelectionLine_Right: TLabel
-        Left = 472
-        Height = 13
-        Top = 96
-        Width = 100
-        Caption = 'Selection line right: 0'
-        Color = clBlack
-        Font.Color = 49152
-        Font.Height = -11
-        Font.Name = 'Tahoma'
-        ParentColor = False
-        ParentFont = False
-        Transparent = False
+        Height = 88
+        Top = 48
+        Width = 168
+        ClientHeight = 88
+        ClientWidth = 168
+        TabOrder = 9
+        object lblSelectionLine_Left: TLabel
+          Left = 4
+          Height = 13
+          Top = 4
+          Width = 97
+          Caption = 'Selection line left:  0'
+          Color = clBlack
+          Font.Color = 33023
+          Font.Height = -11
+          Font.Name = 'Tahoma'
+          ParentColor = False
+          ParentFont = False
+          Transparent = False
+        end
+        object lblSelectionLine_Top: TLabel
+          Left = 4
+          Height = 13
+          Top = 24
+          Width = 97
+          Caption = 'Selection line top:  0'
+          Color = clBlack
+          Font.Color = 33023
+          Font.Height = -11
+          Font.Name = 'Tahoma'
+          ParentColor = False
+          ParentFont = False
+          Transparent = False
+        end
+        object lblSelectionLine_Right: TLabel
+          Left = 4
+          Height = 13
+          Top = 44
+          Width = 103
+          Caption = 'Selection line right:  0'
+          Color = clBlack
+          Font.Color = 49152
+          Font.Height = -11
+          Font.Name = 'Tahoma'
+          ParentColor = False
+          ParentFont = False
+          Transparent = False
+        end
+        object lblSelectionLine_Bottom: TLabel
+          Left = 4
+          Height = 13
+          Top = 64
+          Width = 115
+          Caption = 'Selection line bottom:  0'
+          Color = clBlack
+          Font.Color = 49152
+          Font.Height = -11
+          Font.Name = 'Tahoma'
+          ParentColor = False
+          ParentFont = False
+          Transparent = False
+        end
       end
     end
     object TabSheetActionFindSubControlPrimitives: TTabSheet

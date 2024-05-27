@@ -195,7 +195,6 @@ type
     imgUpdateLeftTopOffsets: TImage;
     imgCopyBkImg: TImage;
     imgUpdateLeftTopRightBottomOffsets: TImage;
-    lblSelectionLine_Left: TLabel;
     lblColorUnderCursor: TLabel;
     lblColorUnderCursorPreview: TLabel;
     lblPrimitivesInfo: TLabel;
@@ -208,9 +207,10 @@ type
     lblPreviewControl_Height: TLabel;
     lblPreviewControl_Width: TLabel;
     lblReservedSpaceForDbgImg: TLabel;
+    lblSelectionLine_Bottom: TLabel;
+    lblSelectionLine_Left: TLabel;
     lblSelectionLine_Right: TLabel;
     lblSelectionLine_Top: TLabel;
-    lblSelectionLine_Bottom: TLabel;
     lstMatchBitmapFiles: TListBox;
     lstMatchPrimitiveFiles: TListBox;
     MenuItemSetToSystemMenu: TMenuItem;
@@ -225,6 +225,7 @@ type
     MenuItemPasteRefFromClipboard: TMenuItem;
     N3: TMenuItem;
     PageControlMatch: TPageControl;
+    pnlSelectionLinesInfo: TPanel;
     pnlUseWholeScreen: TPanel;
     pnlDrag: TPanel;
     pmExtraCopyValueWindows: TPopupMenu;
@@ -2184,6 +2185,7 @@ begin
       FSearchAreaScrBox.OnMouseWheel := FSearchAreaScrBoxMouseWheel;
       FSearchAreaScrBox.ShowHint := False;
       FSearchAreaScrBox.ParentShowHint := False;
+      pnlSelectionLinesInfo.Anchors := [akRight, akTop];
     end
     else
       btnDisplaySearchAreaDebuggingImage.Caption := 'Re-display dbg img';

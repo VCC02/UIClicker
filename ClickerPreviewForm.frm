@@ -13,7 +13,7 @@ object frmClickerControlPreview: TfrmClickerControlPreview
   Font.Height = -11
   Font.Name = 'Tahoma'
   FormStyle = fsStayOnTop
-  LCLVersion = '8.2'
+  LCLVersion = '8.3'
   OnCreate = FormCreate
   object lblInstructions: TLabel
     Left = 24
