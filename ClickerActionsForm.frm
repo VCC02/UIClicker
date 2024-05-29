@@ -1,7 +1,7 @@
 object frmClickerActions: TfrmClickerActions
-  Left = 385
+  Left = 387
   Height = 720
-  Top = 129
+  Top = 128
   Width = 888
   Caption = 'UI Clicker Actions'
   ClientHeight = 720
@@ -41,7 +41,7 @@ object frmClickerActions: TfrmClickerActions
     000018300000180000000000000000200000002000000000000000000000FFFF
     0000
   }
-  LCLVersion = '8.3'
+  LCLVersion = '8.2'
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnShow = FormShow
@@ -394,7 +394,7 @@ object frmClickerActions: TfrmClickerActions
         object memAllowedFileDirsForServer: TMemo
           Left = 8
           Height = 96
-          Hint = 'Only files from the following directories and their subdirectories, are allowed to be sent to server, when the server reports them as missing files.'#13#10'One directory path per line is allowed.'#13#10'$AppDir$ replacement is available.'#13#10#13#10'Settings example:'#13#10'$AppDir$\ActionTemplates'#13#10'$AppDir$\TestDriver\ActionTemplates'#13#10'$AppDir$\py\bmps'#13#10'$AppDir$\Tests\TestFiles'
+          Hint = 'Only files from the following directories and their subdirectories, are allowed to be sent to server, when the server reports them as missing files.'#13#10'One directory path per line is allowed.'#13#10'The same list of allowed directories will be used when plugins load files from externally-rendered In-Mem file system.'#13#10'$AppDir$ replacement is available.'#13#10#13#10'Settings example:'#13#10'$AppDir$\ActionTemplates'#13#10'$AppDir$\TestDriver\ActionTemplates'#13#10'$AppDir$\py\bmps'#13#10'$AppDir$\Tests\TestFiles'
           Top = 8
           Width = 248
           ParentShowHint = False

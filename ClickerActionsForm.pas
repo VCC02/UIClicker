@@ -1915,6 +1915,7 @@ end;
 function TfrmClickerActions.HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
 begin
   Result := False;
+
   if CExpectedFileLocation[frClickerActionsArrMain.FileLocationOfDepsIsMem] = flMem then
   begin
     if not FInMemFileSystem.FileExistsInMem(AFileName) then
@@ -3813,6 +3814,10 @@ procedure TfrmClickerActions.HandleOnSaveFileToExtRenderingInMemFS(AFileName: st
 begin
   FRenderedInMemFileSystem.SaveFileToMem(AFileName, AContent, AFileSize);
 end;
+
+
+initialization
+  frmClickerActions := nil;
 
 end.
 

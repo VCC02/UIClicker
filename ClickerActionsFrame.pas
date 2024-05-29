@@ -1537,6 +1537,11 @@ begin
     HVarIdx := FClkVariables.IndexOfName('$DecodedWindows_Control_Height_WE$');
   end;
 
+  XVarValue := '';
+  YVarValue := '';
+  WVarValue := '';
+  HVarValue := '';
+
   if XVarIdx <> - 1 then
     XVarValue := GetSubVarByIndex(FClkVariables.ValueFromIndex[XVarIdx], ASubVarIndex);
 
@@ -4622,10 +4627,13 @@ begin
           try
             TempStringList.Text := FEditingAction^.FindControlOptions.MatchPrimitiveFiles;
             try
-              Result := TempStringList.Strings[AItemIndex];
+              if AItemIndex < TempStringList.Count then
+                Result := TempStringList.Strings[AItemIndex]
+              else
+                Result := 'The ObjectInspector might be out of sync.';
             except
               on E: Exception do
-                Result := E.Message + '  ' + IntToStr(AItemIndex) + '   ' + IntToStr(TempStringList.Count - 1) + '    The ObjectInspector might be out of sync.' ;
+                Result := E.Message + '  ' + IntToStr(AItemIndex) + '   ' + IntToStr(TempStringList.Count - 1) + '    The ObjectInspector might be out of sync.';
             end;
           finally
             TempStringList.Free;
@@ -5442,8 +5450,16 @@ begin
           ListOfPrimitiveFiles_Modified.Text := FEditingAction^.FindControlOptions.MatchPrimitiveFiles_Modified;
 
           try
-            if ListOfPrimitiveFiles_Modified.Strings[APropertyItemIndex] = '1' then
-              TargetCanvas.Font.Color := clRed;
+            if APropertyItemIndex < ListOfPrimitiveFiles_Modified.Count then
+            begin
+              if ListOfPrimitiveFiles_Modified.Strings[APropertyItemIndex] = '1' then
+                TargetCanvas.Font.Color := clRed;
+            end
+            else
+            begin
+              TargetCanvas.Font.Color := clWhite;
+              TargetCanvas.Brush.Color := clRed;
+            end;
           except
             TargetCanvas.Font.Color := clWhite;
             TargetCanvas.Brush.Color := clRed;
