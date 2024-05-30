@@ -3745,12 +3745,17 @@ var
   MenuData: POIMenuItemData;
   Fnm: string;
 begin
-  Fnm := BrowseInMemFSFile(ExtRenderingInMemFS);
-  if Fnm <> '' then
-  begin
-    FEditingAction^.FindControlOptions.SourceFileName := Fnm;
-    FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex, True);  //this closes the editor
-    TriggerOnControlsModified;
+  MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
+  try
+    Fnm := BrowseInMemFSFile(ExtRenderingInMemFS);
+    if Fnm <> '' then
+    begin
+      FEditingAction^.FindControlOptions.SourceFileName := Fnm;
+      FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex, True);  //this closes the editor
+      TriggerOnControlsModified;
+    end;
+  finally
+    Dispose(MenuData);
   end;
 end;
 
