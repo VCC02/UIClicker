@@ -114,6 +114,7 @@ type
     function EvaluateHTTP(AValue: string; out AGeneratedException: Boolean): string;
     procedure PreviewTextOnBmp(var AFindControlOptions: TClkFindControlOptions; AEvaluatedText: string; AProfileIndex: Integer; ASearchedBmp: TBitmap);
     function GetActionProperties(AActionName: string): string;
+    function ResolveAllowedFileDirs(AAllowedFileDirsForServer: string): string;
 
     procedure AddToLog(s: string);
     function DoOnExecuteActionByName(AActionName: string): Boolean;
@@ -850,6 +851,24 @@ begin
 end;
 
 
+function TActionExecution.ResolveAllowedFileDirs(AAllowedFileDirsForServer: string): string;
+var
+  ListOfDirs: TStringList;
+  i: Integer;
+begin
+  ListOfDirs := TStringList.Create;
+  try
+    ListOfDirs.Text := AAllowedFileDirsForServer;
+
+    Result := '';
+    for i := 0 to ListOfDirs.Count - 1 do
+      Result := Result + DoOnResolveTemplatePath(ListOfDirs.Strings[i]) + #13#10;
+  finally
+    ListOfDirs.Free;
+  end;
+end;
+
+
 procedure TActionExecution.ExecuteClickAction(var AClickOptions: TClkClickOptions);
 var
   MouseParams: TStringList;
@@ -1449,6 +1468,7 @@ begin
 
   FindControlInputData.ImageSource := AFindControlOptions.ImageSource;
 end;
+
 
 //this function should eventually be split into FindControl and FindSubControl
 function TActionExecution.ExecuteFindControlAction(var AFindControlOptions: TClkFindControlOptions; var AActionOptions: TClkActionOptions; IsSubControl: Boolean): Boolean; //returns True if found
@@ -2947,7 +2967,7 @@ begin
                                       FPluginContinueAll,
                                       frClickerActions.imgDebugBmp.Picture.Bitmap,
                                       FFullTemplatesDir^,
-                                      FAllowedFileDirsForServer^,
+                                      FAllowedFileDirsForServer^, //ResolvedAllowedFileDirs,
                                       FAllowedFileExtensionsForServer^,
                                       AAllActions,
                                       AListOfAllVars) then
