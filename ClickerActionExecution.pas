@@ -2223,7 +2223,7 @@ end;
 
 function TActionExecution.ExecuteFindControlActionWithTimeout(var AFindControlOptions: TClkFindControlOptions; var AActionOptions: TClkActionOptions; IsSubControl: Boolean): Boolean; //returns True if found
 var
-  tk: QWord;
+  tk, CurrentActionElapsedTime: QWord;
   AttemptCount: Integer;
 begin
   tk := GetTickCount64;
@@ -2264,7 +2264,8 @@ begin
     if Result then
       Break;
 
-    frClickerActions.prbTimeout.Position := GetTickCount64 - tk;
+    CurrentActionElapsedTime := GetTickCount64 - tk;
+    frClickerActions.prbTimeout.Position := CurrentActionElapsedTime;
     Application.ProcessMessages;
 
     Inc(AttemptCount);
@@ -2273,6 +2274,7 @@ begin
     begin
       PrependErrorMessageToActionVar('Timeout at "' + AActionOptions.ActionName +
                                      '" in ' + FSelfTemplateFileName^ +
+                                     '  ActionTimeout=' + IntToStr(AActionOptions.ActionTimeout) + ' Duration=' + IntToStr(CurrentActionElapsedTime) +
                                      '  AttemptCount=' + IntToStr(AttemptCount) +
                                      '  Search: ' +
                                      '  $Control_Left$=' + EvaluateReplacements('$Control_Left$') + //same as "global...", but are required here, to be displayed in caller template log

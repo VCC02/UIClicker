@@ -664,8 +664,8 @@ begin
                                     CREParam_StackLevel + '=0' + '&' +   //use the main editor
                                     GetExecAppActionProperties(AExecAppOptions) + '&' +
 
-                                    'ActionName' + '=' + AActionName + '&' +
-                                    'ActionTimeout' + '=' + IntToStr(AActionTimeout),
+                                    CPropertyName_ActionName + '=' + AActionName + '&' +
+                                    CPropertyName_ActionTimeout + '=' + IntToStr(AActionTimeout),
                                     ACallAppProcMsg
                                     );
 end;
@@ -677,8 +677,8 @@ begin
                                     CREParam_StackLevel + '=0' + '&' +   //use the main editor
                                     GetFindControlActionProperties(AFindControlOptions) + '&' +
 
-                                    'ActionName' + '=' + AActionName + '&' +
-                                    'ActionTimeout' + '=' + IntToStr(AActionTimeout) + '&' +
+                                    CPropertyName_ActionName + '=' + AActionName + '&' +
+                                    CPropertyName_ActionTimeout + '=' + IntToStr(AActionTimeout) + '&' +
                                     CREParam_FileLocation + '=' + AFileLocation,
                                     ACallAppProcMsg
                                     );
@@ -727,7 +727,7 @@ begin
   Result := SendTextRequestToServer(ARemoteAddress + CRECmd_ExecuteSleepAction + '?' +
                                     CREParam_StackLevel + '=0' + '&' +   //use the main editor
                                     GetSleepActionProperties(ASleepOptions) + '&' +
-                                    'ActionName' + '=' + AActionName,
+                                    CPropertyName_ActionName + '=' + AActionName,
                                     ACallAppProcMsg
                                     );
 end;

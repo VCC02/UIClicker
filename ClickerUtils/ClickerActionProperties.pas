@@ -32,6 +32,11 @@ uses
   Classes, SysUtils, ClickerUtils;
 
 
+const
+  CPropertyName_ActionName = 'ActionName';
+  CPropertyName_ActionTimeout = 'ActionTimeout';
+
+
 function GetClickActionProperties(AClickOptions: TClkClickOptions): string;
 function GetExecAppActionProperties(AExecAppOptions: TClkExecAppOptions): string;
 function GetFindControlActionProperties(AFindControlOptions: TClkFindControlOptions): string;
@@ -374,7 +379,7 @@ begin
     Exit;
   end;
 
-  Temp_ActionTimeout := StrToIntDef(AListOfExecAppOptionsParams.Values['ActionTimeout'], 1000);
+  Temp_ActionTimeout := StrToIntDef(AListOfExecAppOptionsParams.Values[CPropertyName_ActionTimeout], 1000);
   if (Temp_ActionTimeout < 0) or (Temp_ActionTimeout > 2147483647) then
   begin
     Result := 'ActionTimeout is out of range.';
@@ -389,7 +394,7 @@ begin
   AExecAppOptions.UseInheritHandles := TExecAppUseInheritHandles(Temp_UseInheritHandles);
   AExecAppOptions.NoConsole := AListOfExecAppOptionsParams.Values['NoConsole'] = '1';
 
-  AActionOptions.ActionName := AListOfExecAppOptionsParams.Values['ActionName'];
+  AActionOptions.ActionName := AListOfExecAppOptionsParams.Values[CPropertyName_ActionName];
   AActionOptions.ActionTimeout := Temp_ActionTimeout;
   AActionOptions.Action := acExecApp;
 end;
@@ -434,7 +439,7 @@ begin
     Exit;
   end;
 
-  Temp_ActionTimeout := StrToIntDef(AListOfFindControlOptionsParams.Values['ActionTimeout'], 1000);
+  Temp_ActionTimeout := StrToIntDef(AListOfFindControlOptionsParams.Values[CPropertyName_ActionTimeout], 1000);
   if (Temp_ActionTimeout < 0) or (Temp_ActionTimeout > 2147483647) then
   begin
     Result := 'ActionTimeout is out of range.';
@@ -581,7 +586,7 @@ begin
   AFindControlOptions.SourceFileName := AListOfFindControlOptionsParams.Values['SourceFileName'];
   AFindControlOptions.ImageSourceFileNameLocation := TImageSourceFileNameLocation(Temp_ImageSourceFileNameLocation);
 
-  AActionOptions.ActionName := AListOfFindControlOptionsParams.Values['ActionName'];
+  AActionOptions.ActionName := AListOfFindControlOptionsParams.Values[CPropertyName_ActionName];
   AActionOptions.ActionTimeout := Temp_ActionTimeout;
   AActionOptions.Action := CActionType[AIsSubControl];
 end;
@@ -651,7 +656,7 @@ begin
 
   ASleepOptions.Value := AListOfSleepOptionsParams.Values['Value'];
 
-  AActionOptions.ActionName := AListOfSleepOptionsParams.Values['ActionName'];
+  AActionOptions.ActionName := AListOfSleepOptionsParams.Values[CPropertyName_ActionName];
   AActionOptions.ActionTimeout := 0;
   AActionOptions.Action := acSleep;
 end;
