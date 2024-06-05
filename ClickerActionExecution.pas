@@ -2679,6 +2679,7 @@ var
   RenderBmpExternallyResult: string;
   ListOfSelfHandles: TStringList;
   GeneratedException: Boolean;
+  TempBmp: TBitmap;
 begin
   Result := False;
   TempListOfSetVarNames := TStringList.Create;
@@ -2760,6 +2761,50 @@ begin
 
       if (Pos('$GetActionProperties(', VarName) = 1) and (VarName[Length(VarName)] = '$') and (VarName[Length(VarName) - 1] = ')') then
         SetActionVarValue('$ActionPropertiesResult$', GetActionProperties(VarValue));
+
+      if (Pos('$GetImageDimensions(', VarName) = 1) and (VarName[Length(VarName)] = '$') and (VarName[Length(VarName) - 1] = ')') then
+      begin
+        TempBmp := TBitmap.Create;
+        try
+          if DoOnLoadBitmap(TempBmp, VarValue) then
+          begin
+            SetActionVarValue('$ImageWidth$', IntToStr(TempBmp.Width));
+            SetActionVarValue('$ImageHeight$', IntToStr(TempBmp.Height));
+            Result := True;
+          end
+          else
+            if ASetVarOptions.FailOnException then
+            begin
+              SetActionVarValue('$ExecAction_Err$', 'File not found: "' + VarValue + '".');
+              Result := False;
+              Exit;
+            end;
+        finally
+          TempBmp.Free;
+        end;
+      end;
+
+      if (Pos('$GetExternallyRenderedImageDimensions(', VarName) = 1) and (VarName[Length(VarName)] = '$') and (VarName[Length(VarName) - 1] = ')') then
+      begin
+        TempBmp := TBitmap.Create;
+        try
+          if DoOnLoadRenderedBitmap(TempBmp, VarValue) then
+          begin
+            SetActionVarValue('$ExtImageWidth$', IntToStr(TempBmp.Width));
+            SetActionVarValue('$ExtImageHeight$', IntToStr(TempBmp.Height));
+            Result := True;
+          end
+          else
+            if ASetVarOptions.FailOnException then
+            begin
+              SetActionVarValue('$ExecAction_Err$', 'File not found: "' + VarValue + '".');
+              Result := False;
+              Exit;
+            end;
+        finally
+          TempBmp.Free;
+        end;
+      end;
 
       SetActionVarValue(VarName, VarValue);
     end;

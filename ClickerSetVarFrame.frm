@@ -232,6 +232,8 @@ object frClickerSetVar: TfrClickerSetVar
         '$Now$'
         '$RenderBmpExternally()$'
         '$GetActionProperties()$'
+        '$GetImageDimensions()$'
+        '$GetExternallyRenderedImageDimensions()$'
       )
       ParentShowHint = False
       ReadOnly = True

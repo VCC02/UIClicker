@@ -720,7 +720,7 @@ const
 
 procedure TfrClickerActionsArr.FillInWithAllVars(AListOfVars: TStringList);
 const
-  CMissingVars: array[0..7] of string = (
+  CMissingVars: array[0..11] of string = (
     '$ExitCode$',
     '$frmUIClickerMainForm_Handle$',
     '$frmClickerControlPreview_Handle$',
@@ -728,7 +728,11 @@ const
     '$frmClickerWinInterp_Handle$',
     '$frmClickerTemplateCallTree_Handle$',
     '$frmClickerRemoteScreen_Handle$',
-    '$frmClickerZoomPreview_Handle$'
+    '$frmClickerZoomPreview_Handle$',
+    '$ImageWidth$',
+    '$ImageHeight$',
+    '$ExtImageWidth$',
+    '$ExtImageHeight$'
   );
 var
   i: Integer;
@@ -810,6 +814,10 @@ begin
     TempVarDescriptions.Add('$AppBitness$=[String] This variable is automatically set to i386 or x86_64, depending on executable bitness.');
     TempVarDescriptions.Add('$OSBitness$=[String] This variable is automatically set to win32 or win64, depending on OS bitness.');
     TempVarDescriptions.Add('$ResultedErrorCount$=[String] This is the numer of mismatching pixels, after executing a FindSubControl action.');
+    TempVarDescriptions.Add('$ImageWidth$=[Numeric] This is the width of a bitmap, loaded with $GetImageDimensions()$ function.');
+    TempVarDescriptions.Add('$ImageHeight$=[Numeric] This is the height of a bitmap, loaded with $GetImageDimensions()$ function.');
+    TempVarDescriptions.Add('$ExtImageWidth$=[Numeric] This is the width of a bitmap, loaded with GetExternallyRenderedImageDimensions()$ function.');
+    TempVarDescriptions.Add('$ExtImageHeight$=[Numeric] This is the height of a bitmap, loaded with GetExternallyRenderedImageDimensions()$ function.');
 
     for i := 0 to FVarDescriptions.Count - 1 do
       FVarDescriptions.Strings[i] := TempVarDescriptions.Values[FVarDescriptions.Strings[i]];
@@ -870,6 +878,8 @@ begin
     TempFuncDescriptions.Add('$Now$=Returns current datetime.');
     TempFuncDescriptions.Add('$RenderBmpExternally()$=Sends an http request to a server, for rendering a bitmap, using the supplied list of parameters (from right column of a SetVar action). These parameters are encoded as a "$#4#5$" separated <key>eq<value> strings. Notice the use of "$#4#5$" variable, not its actual value. The required parameters are (without quotes): "' + CExtBmp_SrvAddrPort + '", "' + CExtBmp_Cmd + '", "' + CExtBmp_Filename + '". The optional parameters are (without quotes): "' + CExtBmp_Params + '" and "' + CExtBmp_IncludeFilenameInRequest + '". When provided, "' + CExtBmp_Params + '" are "&"-separated key%3Dvalue pairs. When "' + CExtBmp_IncludeFilenameInRequest + '" is 1, the filename is added to request. The result is placed in $ExternallyRenderedBmpResult$ variable. If successful, the result is set to empty string, otherwise it is set to an error message. The received bitmap is "stored" in an in-mem file system. The function must be called from the left column of SetVar action. Argument example: SrvAddrPort=http://127.0.0.1:53444$#4#5$Cmd=GetGradientImage$#4#5$Filename=I:\TheResult.bmp$#4#5$Params=IncludeTimestamp%3DYes&TextCount%3D1');
     TempFuncDescriptions.Add('$GetActionProperties()$=Sets the $ActionPropertiesResult$ variable to an &-separated list of action properties and their values, from the current template. The action is identified by name, and this name has to be provided in the right column of a SetVar action. If the action is not found by name (which is case sensitive), the result is set to an error message. The function must be called from the left column.');
+    TempFuncDescriptions.Add('$GetImageDimensions()$=Loads a bitmap from disk or the server''s in-mem file system (depending on operation mode) and sets the $ImageWidth$ and $ImageHeight$ variables to the width and height of the loaded image. If the file does not exist, then $ExecAction_Err$ is set to an error message. When FailOnException property is True, and the file is not found, the action fails.');
+    TempFuncDescriptions.Add('$GetExternallyRenderedImageDimensions()$=Loads a bitmap from the externally rendered in-mem file system and sets the $ExtImageWidth$ and $ExtImageHeight$ variables to the width and height of the loaded image. If the file does not exist, then $ExecAction_Err$ is set to an error message. When FailOnException property is True, and the file is not found, the action fails.');
 
     for i := 0 to FFuncDescriptions.Count - 1 do
     begin
