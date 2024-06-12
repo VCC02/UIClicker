@@ -256,7 +256,8 @@ class TFindControlOptions(Structure):
                ("StopSearchOnMismatch", BOOLEAN),
                ("ImageSource", LONG), #TImageSource)
                ("SourceFileName", LPCWSTR),
-               ("ImageSourceFileNameLocation", LONG)  #TImageSourceFileNameLocation)
+               ("ImageSourceFileNameLocation", LONG),  #TImageSourceFileNameLocation)
+               ("PrecisionTimeout", BOOLEAN)
                ]
 
 PFindControlOptions = ctypes.POINTER(TFindControlOptions)
@@ -316,6 +317,8 @@ def GetDefaultFindControlOptions():
     FindControlOptions.ImageSource = TImageSource.isScreenshot
     FindControlOptions.SourceFileName = ''
     FindControlOptions.ImageSourceFileNameLocation = TImageSourceFileNameLocation.isflMem
+
+    FindControlOptions.PrecisionTimeout = False
     return FindControlOptions
 
 

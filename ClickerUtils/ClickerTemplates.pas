@@ -200,6 +200,7 @@ begin
     ACustomActions[i].FindControlOptions.ImageSource := isScreenshot;
     ACustomActions[i].FindControlOptions.SourceFileName := '';
     ACustomActions[i].FindControlOptions.ImageSourceFileNameLocation := isflMem;
+    ACustomActions[i].FindControlOptions.PrecisionTimeout := False;
 
     SectionIndex := Ini.GetSectionIndex('Actions.SetTextOptions');
     ACustomActions[i].SetTextOptions.Text := Ini.ReadString(SectionIndex, 'Text_' + IterationStr, '');
@@ -409,6 +410,7 @@ begin
   AFindControlOptions.ImageSource := TImageSource(Min(Ini.ReadInteger(SectionIndex, 'ImageSource', Ord(isScreenshot)), Integer(High(TImageSource))));
   AFindControlOptions.SourceFileName := Ini.ReadString(SectionIndex, 'SourceFileName', '');
   AFindControlOptions.ImageSourceFileNameLocation := TImageSourceFileNameLocation(Min(Ini.ReadInteger(SectionIndex, 'ImageSourceFileNameLocation', Ord(isflMem)), Integer(High(TImageSourceFileNameLocation))));
+  AFindControlOptions.PrecisionTimeout := Ini.ReadBool(SectionIndex, 'PrecisionTimeout', False);
 end;
 
 
@@ -850,6 +852,8 @@ begin
   AStringList.Add('ImageSource=' + IntToStr(Ord(AActionFindControlOptions.ImageSource)));
   AStringList.Add('SourceFileName=' + AActionFindControlOptions.SourceFileName);
   AStringList.Add('ImageSourceFileNameLocation=' + IntToStr(Ord(AActionFindControlOptions.ImageSourceFileNameLocation)));
+
+  AStringList.Add('PrecisionTimeout=' + IntToStr(Ord(AActionFindControlOptions.PrecisionTimeout)));
 end;
 
 
@@ -1022,6 +1026,8 @@ begin
   ADest.ImageSource := ASrc.ImageSource;
   ADest.SourceFileName := ASrc.SourceFileName;
   ADest.ImageSourceFileNameLocation := ASrc.ImageSourceFileNameLocation;
+
+  ADest.PrecisionTimeout := ASrc.PrecisionTimeout;
 end;
 
 

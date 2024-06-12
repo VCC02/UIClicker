@@ -56,7 +56,7 @@ const
   //Properties (counts)
   CPropCount_Click = 25;
   CPropCount_ExecApp = 7;
-  CPropCount_FindControl = 28;
+  CPropCount_FindControl = 29;
   CPropCount_FindSubControl = CPropCount_FindControl;
   CPropCount_SetText = 4;
   CPropCount_CallTemplate = 4;
@@ -134,6 +134,7 @@ const
   CFindControl_ImageSource_PropIndex = 25;
   CFindControl_SourceFileName_PropIndex = 26;
   CFindControl_ImageSourceFileNameLocation_PropIndex = 27;
+  CFindControl_PrecisionTimeout_PropIndex = 28;
 
   CCallTemplate_TemplateFileName_PropIndex = 0; //property index in CallTemplate structure
   CCallTemplate_ListOfCustomVarsAndValues_PropIndex = 1;
@@ -281,7 +282,8 @@ const
     (Name: 'StopSearchOnMismatch'; EditorType: etBooleanCombo; DataType: CDTBool),
     (Name: 'ImageSource'; EditorType: etEnumCombo; DataType: CDTEnum),
     (Name: 'SourceFileName'; EditorType: etTextWithArrow; DataType: CDTString),
-    (Name: 'ImageSourceFileNameLocation'; EditorType: etEnumCombo; DataType: CDTEnum)
+    (Name: 'ImageSourceFileNameLocation'; EditorType: etEnumCombo; DataType: CDTEnum),
+    (Name: 'PrecisionTimeout'; EditorType: etBooleanCombo; DataType: CDTBool)
   );
 
   {$IFDEF SubProperties}
@@ -544,7 +546,8 @@ const
     nil, //StopSearchOnMismatch
     nil, //ImageSource
     nil, //SourceFileName
-    nil  //ImageSourceFileNameLocation
+    nil, //ImageSourceFileNameLocation
+    nil  //PrecisionTimeout
   );
 
   CCallTemplateGetActionValueStrFunctions: TGetCallTemplateValueStrFuncArr = (
@@ -629,7 +632,8 @@ const
     0, //SleepySearch: Boolean;
     Ord(High(TImageSource)) + 1, //ImageSource: TImageSource;
     0, //SourceFileName: string;
-    Ord(High(TImageSourceFileNameLocation)) + 1  //ImageSourceFileNameLocation: TImageSourceFileNameLocation;
+    Ord(High(TImageSourceFileNameLocation)) + 1,  //ImageSourceFileNameLocation: TImageSourceFileNameLocation;
+    0  //PrecisionTimeout: Boolean;
   );
 
   CSetTextEnumCounts: array[0..CPropCount_SetText - 1] of Integer = (
@@ -811,7 +815,8 @@ const
     nil, //StopSearchOnMismatch
     @CImageSourceStr,
     nil, //SourceFileName
-    @CImageSourceFileNameLocationStr
+    @CImageSourceFileNameLocationStr,
+    nil  //PrecisionTimeout
   );
 
   CSetTextEnumStrings: array[0..CPropCount_SetText - 1] of PArrayOfString = (
@@ -957,6 +962,7 @@ function GetPropertyHint_FindControl_StopSearchOnMismatch: string;
 function GetPropertyHint_FindControl_ImageSource: string;
 function GetPropertyHint_FindControl_SourceFileName: string;
 function GetPropertyHint_FindControl_ImageSourceFileNameLocation: string;
+function GetPropertyHint_FindControl_PrecisionTimeout: string;
 
 {$IFDEF SubProperties}
   function GetPropertyHint_FindControl_MatchCriteria_MatchBitmapText: string;
@@ -1080,7 +1086,8 @@ const
     @GetPropertyHint_FindControl_StopSearchOnMismatch, // StopSearchOnMismatch: Boolean;
     @GetPropertyHint_FindControl_ImageSource, // ImageSource: TImageSource;
     @GetPropertyHint_FindControl_SourceFileName, //SourceFileName: string;
-    @GetPropertyHint_FindControl_ImageSourceFileNameLocation //ImageSourceFileNameLocation: TImageSourceFileLocation;
+    @GetPropertyHint_FindControl_ImageSourceFileNameLocation, //ImageSourceFileNameLocation: TImageSourceFileLocation;
+    @GetPropertyHint_FindControl_PrecisionTimeout
   );
 
 
@@ -1314,6 +1321,7 @@ begin
     25: Result := CImageSourceStr[AAction^.FindControlOptions.ImageSource];
     26: Result := AAction^.FindControlOptions.SourceFileName;
     27: Result := CImageSourceFileNameLocationStr[AAction^.FindControlOptions.ImageSourceFileNameLocation];
+    28: Result := BoolToStr(AAction^.FindControlOptions.PrecisionTimeout, True);
     else
       Result := 'unknown';
   end;
@@ -1845,6 +1853,7 @@ begin
     25: AAction^.FindControlOptions.ImageSource := ImageSource_AsStringToValue(NewValue);
     26: AAction^.FindControlOptions.SourceFileName := NewValue;
     27: AAction^.FindControlOptions.ImageSourceFileNameLocation := ImageSourceFileNameLocation_AsStringToValue(NewValue);
+    28: AAction^.FindControlOptions.PrecisionTimeout := StrToBool(NewValue);
     else
       ;
   end;
@@ -2321,6 +2330,15 @@ end;
 function GetPropertyHint_FindControl_ImageSourceFileNameLocation: string;
 begin
   Result := 'When ImageSource is set to isFile, ImageSourceFileNameLocation selects between disk and "externally-rendered" In-Mem file system.';
+end;
+
+
+function GetPropertyHint_FindControl_PrecisionTimeout: string;
+begin
+  Result := 'When PrecisionTimeout is set to True, the match bitmap algorithm is stopped by timeout.' + #13#10 +
+            'Otherwise, the timeout is verified between whole match attempts only, which usually take longer than the configured timeout.' + #13#10 +
+            'When using this option, the bitmap algorithm requires slightly more CPU overhead.' + #13#10 +
+            'This option might be required to be set to True, on plugins which implement timeouts on FindSubControl calls.';
 end;
 
 

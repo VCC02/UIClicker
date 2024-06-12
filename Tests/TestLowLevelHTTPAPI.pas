@@ -89,6 +89,8 @@ type
     procedure Test_FindSubControl_ExternalBackground_isflDisk;
     procedure Test_FindSubControl_ExternalBackground_isflMem;
 
+    procedure Test_FindSubControl_PrecisionTimeout;
+
     procedure Test_ExecuteSetControlTextAction_HappyFlow;
     procedure Test_ExecuteCallTemplate_HappyFlow;
     procedure Test_ExecuteCallTemplateWithSubTemplate_HappyFlow;
@@ -743,6 +745,37 @@ begin
   finally
     CloseRenderingServer;  //close it anyway, so that other tests can run
   end;
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_FindSubControl_PrecisionTimeout;
+var
+  FindControlOptions: TClkFindControlOptions;
+  tk1, tk2: QWord;
+  Response: string;
+begin
+  GenerateFindSubControlOptionsForFullScreenshot(FindControlOptions, False);
+  FindControlOptions.UseFastSearch := False;
+  SetLength(FindControlOptions.MatchBitmapText, 3);
+  FindControlOptions.MatchBitmapText[1] := FindControlOptions.MatchBitmapText[0];
+  FindControlOptions.MatchBitmapText[2] := FindControlOptions.MatchBitmapText[0];
+  FindControlOptions.MatchBitmapText[1].ProfileName := 'two';
+  FindControlOptions.MatchBitmapText[2].ProfileName := 'three';
+  FindControlOptions.MatchBitmapText[1].BackgroundColor := '00FFFF'; //yellow
+  FindControlOptions.MatchBitmapText[2].BackgroundColor := '00FF88'; //green
+
+  tk1 := GetTickCount64;
+  Response := ExecuteFindSubControlAction(TestServerAddress, FindControlOptions, 'FindTxtOnDesktop_FullDuration', 1000, CREParam_FileLocation_ValueDisk, True);
+  ExpectFailedAction(FastReplace_87ToReturn(Response), 'Timeout at "FindTxtOnDesktop_FullDuration" in');
+  tk1 := GetTickCount64 - tk1;
+
+  FindControlOptions.PrecisionTimeout := True;
+  tk2 := GetTickCount64;
+  Response := ExecuteFindSubControlAction(TestServerAddress, FindControlOptions, 'FindTxtOnDesktop_FastTimeout', 1000, CREParam_FileLocation_ValueDisk, True);
+  ExpectFailedAction(FastReplace_87ToReturn(Response), 'Timeout');
+  tk2 := GetTickCount64 - tk2;
+
+  Expect(DWord(tk1)).ToBeGreaterThan(DWord(tk2 + 100), 'Without PrecisionTimeout, the duration should be greater.');
 end;
 
 

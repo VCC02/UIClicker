@@ -129,6 +129,7 @@ type
     ImageSource: TImageSource;
     SourceFileName: PWideChar;
     ImageSourceFileNameLocation: TImageSourceFileNameLocation;
+    PrecisionTimeout: Boolean;
   end;
 
   PClkFindControlOptionsAPI = ^TClkFindControlOptionsAPI;
@@ -714,6 +715,8 @@ begin
   TempAction.FindControlOptions.ImageSource := TImageSource(AFindControlOptions^.ImageSource);
   SetPointedContentToString(@string(PWideChar(AFindControlOptions^.SourceFileName))[1], TempAction.FindControlOptions.SourceFileName);
   TempAction.FindControlOptions.ImageSourceFileNameLocation := TImageSourceFileNameLocation(AFindControlOptions^.ImageSourceFileNameLocation);
+
+  TempAction.FindControlOptions.PrecisionTimeout := AFindControlOptions^.PrecisionTimeout;
 
   AddActionToTemplate(TemplateFileName, TempAction);
   Result := 0;

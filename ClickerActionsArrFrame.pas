@@ -5576,6 +5576,7 @@ begin
   FClkActions[AIndex].FindControlOptions.ImageSource := isScreenshot;
   FClkActions[AIndex].FindControlOptions.SourceFileName := '';
   FClkActions[AIndex].FindControlOptions.ImageSourceFileNameLocation := isflMem;
+  FClkActions[AIndex].FindControlOptions.PrecisionTimeout := False;
 
   SetLength(FClkActions[AIndex].FindControlOptions.MatchBitmapText, 1);
   FClkActions[AIndex].FindControlOptions.MatchBitmapText[0].ForegroundColor := '$Color_Window$';

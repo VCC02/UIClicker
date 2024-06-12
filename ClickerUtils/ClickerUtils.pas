@@ -273,6 +273,7 @@ type
     ImageSource: TImageSource;  //Defaults to isScreenshot. When set to isScreenshot, FindSubControl calls ScreenShot. When set to isFile, FindSubControl uses a bmp from disk or InMem FS (see ImageSourceFileNameLocation).
     SourceFileName: string; //can be a bmp file from disk or from externally rendered InMem FS
     ImageSourceFileNameLocation: TImageSourceFileNameLocation; //can be disk or externally rendered bmp from InMem FS
+    PrecisionTimeout: Boolean;  //When True, the bitmap searching algorithm verifies the timeout. This is a bit of extra overhead, which may slow down the search.
   end;
 
   TClkSetTextOptions = record

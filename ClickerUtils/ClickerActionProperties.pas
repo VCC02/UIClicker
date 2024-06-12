@@ -190,7 +190,8 @@ begin
             'StopSearchOnMismatch' + '=' + IntToStr(Ord(AFindControlOptions.StopSearchOnMismatch)) + '&' +
             'ImageSource' + '=' + IntToStr(Ord(AFindControlOptions.ImageSource)) + '&' +
             'SourceFileName' + '=' + AFindControlOptions.SourceFileName + '&' +
-            'ImageSourceFileNameLocation' + '=' + IntToStr(Ord(AFindControlOptions.ImageSourceFileNameLocation));
+            'ImageSourceFileNameLocation' + '=' + IntToStr(Ord(AFindControlOptions.ImageSourceFileNameLocation)) + '&' +
+            'PrecisionTimeout' + '=' + IntToStr(Ord(AFindControlOptions.PrecisionTimeout));
 end;
 
 
@@ -585,6 +586,8 @@ begin
   AFindControlOptions.ImageSource := TImageSource(Temp_ImageSource);
   AFindControlOptions.SourceFileName := AListOfFindControlOptionsParams.Values['SourceFileName'];
   AFindControlOptions.ImageSourceFileNameLocation := TImageSourceFileNameLocation(Temp_ImageSourceFileNameLocation);
+
+  AFindControlOptions.PrecisionTimeout := AListOfFindControlOptionsParams.Values['PrecisionTimeout'] = '1';
 
   AActionOptions.ActionName := AListOfFindControlOptionsParams.Values[CPropertyName_ActionName];
   AActionOptions.ActionTimeout := Temp_ActionTimeout;

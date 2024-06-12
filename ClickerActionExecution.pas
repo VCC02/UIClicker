@@ -128,7 +128,7 @@ type
     function CheckManualStopCondition: Boolean;
 
     procedure ExecuteClickAction(var AClickOptions: TClkClickOptions);
-    function ExecuteFindControlAction(var AFindControlOptions: TClkFindControlOptions; var AActionOptions: TClkActionOptions; IsSubControl: Boolean): Boolean; //returns True if found
+    function ExecuteFindControlAction(var AFindControlOptions: TClkFindControlOptions; var AActionOptions: TClkActionOptions; IsSubControl: Boolean; AOutsideTickCount: QWord): Boolean; //returns True if found
     function FillInFindControlInputData(var AFindControlOptions: TClkFindControlOptions; var AActionOptions: TClkActionOptions; IsSubControl: Boolean; out FindControlInputData: TFindControlInputData; out FontProfilesCount: Integer): Boolean;
 
     procedure DoOnSetEditorEnabledState(AEnabled: Boolean);
@@ -1471,7 +1471,7 @@ end;
 
 
 //this function should eventually be split into FindControl and FindSubControl
-function TActionExecution.ExecuteFindControlAction(var AFindControlOptions: TClkFindControlOptions; var AActionOptions: TClkActionOptions; IsSubControl: Boolean): Boolean; //returns True if found
+function TActionExecution.ExecuteFindControlAction(var AFindControlOptions: TClkFindControlOptions; var AActionOptions: TClkActionOptions; IsSubControl: Boolean; AOutsideTickCount: QWord): Boolean; //returns True if found
 {$IFDEF FPC}
   //const
   //  clSystemColor = $FF000000;
@@ -1669,6 +1669,9 @@ begin
   else
     Timeout := AActionOptions.ActionTimeout;
 
+  FindControlInputData.OutsideTickCount := AOutsideTickCount;
+  FindControlInputData.PrecisionTimeout := Timeout;
+
   if FStopAllActionsOnDemandFromParent <> nil then
   begin
     //MessageBox(Handle, 'Using global stop on demand.', PChar(Caption), MB_ICONINFORMATION);
@@ -1691,7 +1694,13 @@ begin
           try
             SetLength(PartialResultedControlArr, 0);
             WorkFindControlInputData := FindControlInputData;
-            if FindControlOnScreen(AFindControlOptions.MatchBitmapAlgorithm, AFindControlOptions.MatchBitmapAlgorithmSettings, WorkFindControlInputData, InitialTickCount, Timeout, StopAllActionsOnDemandAddr, PartialResultedControlArr, DoOnGetGridDrawingOption) then
+            if FindControlOnScreen(AFindControlOptions.MatchBitmapAlgorithm,
+                                   AFindControlOptions.MatchBitmapAlgorithmSettings,
+                                   WorkFindControlInputData,
+                                   InitialTickCount,
+                                   StopAllActionsOnDemandAddr,
+                                   PartialResultedControlArr,
+                                   DoOnGetGridDrawingOption) then
             begin
               UpdateActionVarValuesFromControl(PartialResultedControlArr[0]);
               //frClickerActions.DebuggingInfoAvailable := True;
@@ -1858,7 +1867,6 @@ begin
                                                               AFindControlOptions.MatchBitmapAlgorithmSettings,
                                                               WorkFindControlInputData,
                                                               InitialTickCount,
-                                                              Timeout,
                                                               StopAllActionsOnDemandAddr,
                                                               PartialResultedControlArr,
                                                               DoOnGetGridDrawingOption);
@@ -1983,7 +1991,6 @@ begin
                                                               AFindControlOptions.MatchBitmapAlgorithmSettings,
                                                               WorkFindControlInputData,
                                                               InitialTickCount,
-                                                              Timeout,
                                                               StopAllActionsOnDemandAddr,
                                                               PartialResultedControlArr,
                                                               DoOnGetGridDrawingOption);
@@ -2126,7 +2133,6 @@ begin
                                                                   AFindControlOptions.MatchBitmapAlgorithmSettings,
                                                                   WorkFindControlInputData,
                                                                   InitialTickCount,
-                                                                  Timeout,
                                                                   StopAllActionsOnDemandAddr,
                                                                   PartialResultedControlArr,
                                                                   DoOnGetGridDrawingOption);
@@ -2223,7 +2229,7 @@ end;
 
 function TActionExecution.ExecuteFindControlActionWithTimeout(var AFindControlOptions: TClkFindControlOptions; var AActionOptions: TClkActionOptions; IsSubControl: Boolean): Boolean; //returns True if found
 var
-  tk, CurrentActionElapsedTime: QWord;
+  tk, CurrentActionElapsedTime, OutsideTickCount: QWord;
   AttemptCount: Integer;
 begin
   tk := GetTickCount64;
@@ -2231,6 +2237,11 @@ begin
   frClickerActions.prbTimeout.Position := 0;
   Result := False;
   AttemptCount := 0;
+
+  if AFindControlOptions.PrecisionTimeout then
+    OutsideTickCount := tk
+  else
+    OutsideTickCount := 0; //0 means "do not use PrecisionTimeout".
 
   repeat
     if (GetAsyncKeyState(VK_CONTROL) < 0) and (GetAsyncKeyState(VK_SHIFT) < 0) and (GetAsyncKeyState(VK_F2) < 0) then
@@ -2253,7 +2264,16 @@ begin
       Break;
     end;
 
-    Result := ExecuteFindControlAction(AFindControlOptions, AActionOptions, IsSubControl);
+    try
+      Result := ExecuteFindControlAction(AFindControlOptions, AActionOptions, IsSubControl, OutsideTickCount);
+      //AddToLog('Find(Sub)Control result at attempt no #' + IntToStr(AttemptCount) + ': ' + BoolToStr(Result, 'True', 'False'));
+    except
+      on E: EBmpMatchTimeout do
+      begin
+        Result := False;
+        AddToLog(E.Message);
+      end;
+    end;
 
     if AFindControlOptions.WaitForControlToGoAway then  //the control should not be found
       Result := not Result;
@@ -2274,7 +2294,8 @@ begin
     begin
       PrependErrorMessageToActionVar('Timeout at "' + AActionOptions.ActionName +
                                      '" in ' + FSelfTemplateFileName^ +
-                                     '  ActionTimeout=' + IntToStr(AActionOptions.ActionTimeout) + ' Duration=' + IntToStr(CurrentActionElapsedTime) +
+                                     '  ActionTimeout=' + IntToStr(AActionOptions.ActionTimeout) +
+                                     '  Duration=' + IntToStr(CurrentActionElapsedTime) +
                                      '  AttemptCount=' + IntToStr(AttemptCount) +
                                      '  Search: ' +
                                      '  $Control_Left$=' + EvaluateReplacements('$Control_Left$') + //same as "global...", but are required here, to be displayed in caller template log

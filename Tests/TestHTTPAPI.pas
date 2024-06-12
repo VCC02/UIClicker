@@ -106,7 +106,8 @@ const
 
 procedure ExpectSuccessfulAction(AListOfVars: TStringList); overload;
 procedure ExpectSuccessfulAction(AListOfVars: string); overload;
-procedure ExpectFailedAction(AListOfVars: TStringList; APartOfErrorMessage: string);
+procedure ExpectFailedAction(AListOfVars: TStringList; APartOfErrorMessage: string); overload;
+procedure ExpectFailedAction(AListOfVars, APartOfErrorMessage: string); overload;
 procedure ExpectAllowedFailedAction(AListOfVars: TStringList);
 
 
@@ -144,6 +145,20 @@ begin
   Expect(AListOfVars).WithItem('$ExecAction_Err$', 'list of vars').ToContain(APartOfErrorMessage, 'An error is expected.');
   Expect(AListOfVars).WithItem(CREResp_RemoteExecResponseVar, 'list of vars').OfValue('0', 'Expected failed action.');
   Expect(AListOfVars).WithItem('$LastAction_Status$').OfValue('Failed');
+end;
+
+
+procedure ExpectFailedAction(AListOfVars, APartOfErrorMessage: string);
+var
+  TempListOfVars: TStringList;
+begin
+  TempListOfVars := TStringList.Create;
+  try
+    TempListOfVars.Text := AListOfVars;
+    ExpectFailedAction(TempListOfVars, APartOfErrorMessage);
+  finally
+    TempListOfVars.Free;
+  end;
 end;
 
 
