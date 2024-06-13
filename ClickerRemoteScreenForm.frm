@@ -8,7 +8,7 @@ object frmClickerRemoteScreen: TfrmClickerRemoteScreen
   ClientWidth = 767
   Constraints.MinHeight = 385
   Constraints.MinWidth = 767
-  LCLVersion = '8.2'
+  LCLVersion = '8.4'
   OnCreate = FormCreate
   object btnRefreshScreenshot: TButton
     Left = 8

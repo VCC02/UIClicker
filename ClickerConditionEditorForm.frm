@@ -10,7 +10,7 @@ object frmClickerConditionEditor: TfrmClickerConditionEditor
   Constraints.MinWidth = 888
   OnClose = FormClose
   OnCreate = FormCreate
-  LCLVersion = '7.5'
+  LCLVersion = '8.4'
   object pnlActionConditions: TPanel
     Left = 0
     Height = 272

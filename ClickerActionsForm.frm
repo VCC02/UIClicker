@@ -41,7 +41,7 @@ object frmClickerActions: TfrmClickerActions
     000018300000180000000000000000200000002000000000000000000000FFFF
     0000
   }
-  LCLVersion = '8.2'
+  LCLVersion = '8.4'
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnShow = FormShow

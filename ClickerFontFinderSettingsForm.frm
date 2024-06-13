@@ -11,7 +11,7 @@ object frmClickerFontFinderSettings: TfrmClickerFontFinderSettings
   OnClose = FormClose
   OnCreate = FormCreate
   OnDestroy = FormDestroy
-  LCLVersion = '7.5'
+  LCLVersion = '8.4'
   object vstFonts: TVirtualStringTree
     Left = 8
     Height = 160

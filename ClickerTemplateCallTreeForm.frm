@@ -8,7 +8,7 @@ object frmClickerTemplateCallTree: TfrmClickerTemplateCallTree
   ClientWidth = 564
   Constraints.MinHeight = 375
   Constraints.MinWidth = 564
-  LCLVersion = '8.2'
+  LCLVersion = '8.4'
   OnCreate = FormCreate
   OnDestroy = FormDestroy
   object memTemplates: TMemo

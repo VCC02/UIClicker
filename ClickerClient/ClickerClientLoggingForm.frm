@@ -7,7 +7,7 @@ object frmClickerClientLogging: TfrmClickerClientLogging
   ClientHeight = 255
   ClientWidth = 831
   OnClose = FormClose
-  LCLVersion = '7.9'
+  LCLVersion = '8.4'
   object memLog: TMemo
     Left = 8
     Height = 240

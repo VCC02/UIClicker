@@ -6,7 +6,7 @@ object frmClickerTemplateNotes: TfrmClickerTemplateNotes
   Caption = 'Clicker Template Notes'
   ClientHeight = 240
   ClientWidth = 320
-  LCLVersion = '7.5'
+  LCLVersion = '8.4'
   object memNotes: TMemo
     Left = 8
     Height = 194

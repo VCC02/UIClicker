@@ -8,7 +8,7 @@ object frmUIClickerMainForm: TfrmUIClickerMainForm
   ClientWidth = 320
   Constraints.MinHeight = 240
   Constraints.MinWidth = 320
-  LCLVersion = '8.2'
+  LCLVersion = '8.4'
   OnClose = FormClose
   OnCreate = FormCreate
   object bitbtnShowRemoteScreenShotForm: TBitBtn
