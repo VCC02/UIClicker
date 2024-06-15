@@ -632,6 +632,12 @@ begin
   DebugBmp.Canvas.Pen.Color := $000080FF;
   DebugBmp.Canvas.Pen.Style := psDot;
   DebugBmp.Canvas.Rectangle(ScrShot_Left, ScrShot_Top, ScrShot_Left + ScrShot_Width, ScrShot_Top + ScrShot_Height);
+
+  {}  //for debuging
+  //DebugBmp.Canvas.Pen.Color := clAqua;
+  //DebugBmp.Canvas.Rectangle(ScrShot_Left - 1, ScrShot_Top - 1, ScrShot_Left + ScrShot_Width + 1, ScrShot_Top + ScrShot_Height + 1);
+  {}
+
   DebugBmp.Canvas.Pen.Style := psSolid;
 end;
 
@@ -1021,7 +1027,17 @@ begin
     begin
       tp.X := InputData.CachedControlLeft;
       tp.Y := InputData.CachedControlTop;
-      CompAtPoint := GetWindowClassRec(tp);
+
+      if InputData.ImageSource = isScreenshot then
+        CompAtPoint := GetWindowClassRec(tp)
+      else
+      begin
+        CompAtPoint.ComponentRectangle.Left := 0;
+        CompAtPoint.ComponentRectangle.Top := 0;
+        CompAtPoint.ComponentRectangle.Width := 100;  //Not used. Set to a "valid" value, in case it will be used later.
+        CompAtPoint.ComponentRectangle.Height := 100; //Not used. Set to a "valid" value, in case it will be used later.
+      end;
+
       CompAtPoint.MouseXOffset := 0;
       CompAtPoint.MouseYOffset := 0;
 
@@ -1096,7 +1112,17 @@ begin
           begin
             tp.X := XValues[k][j] + InputData.GlobalSearchArea.Left;
             tp.Y := YValues[k][i] + InputData.GlobalSearchArea.Top;
-            CompAtPoint := GetWindowClassRec(tp);
+
+            if InputData.ImageSource = isScreenshot then
+              CompAtPoint := GetWindowClassRec(tp)
+            else
+            begin
+              CompAtPoint.ComponentRectangle.Left := 0;
+              CompAtPoint.ComponentRectangle.Top := 0;
+              CompAtPoint.ComponentRectangle.Width := 100;  //Not used. Set to a "valid" value, in case it will be used later.
+              CompAtPoint.ComponentRectangle.Height := 100; //Not used. Set to a "valid" value, in case it will be used later.
+            end;
+
             CompAtPoint.XOffsetFromParent := 0;
             CompAtPoint.YOffsetFromParent := 0;
 
