@@ -47,6 +47,12 @@ type
     lblFontNames: TLabel;
     lblPreviewSize: TLabel;
     lblPreviewText: TLabel;
+    MenuItem_InvertCheckedState: TMenuItem;
+    MenuItem_InvertSelection: TMenuItem;
+    N3: TMenuItem;
+    MenuItem_SelectAllCheckedByClearingSelection: TMenuItem;
+    MenuItem_SelectAllCheckedByPreservingSelection: TMenuItem;
+    N2: TMenuItem;
     MenuItem_UnCheckAllSelected: TMenuItem;
     MenuItem_CheckAllSelected: TMenuItem;
     N1: TMenuItem;
@@ -68,6 +74,11 @@ type
     procedure lbeSearchChange(Sender: TObject);
     procedure MenuItem_CheckAllClick(Sender: TObject);
     procedure MenuItem_CheckAllSelectedClick(Sender: TObject);
+    procedure MenuItem_InvertCheckedStateClick(Sender: TObject);
+    procedure MenuItem_InvertSelectionClick(Sender: TObject);
+    procedure MenuItem_SelectAllCheckedByClearingSelectionClick(Sender: TObject
+      );
+    procedure MenuItem_SelectAllCheckedByPreservingSelectionClick(Sender: TObject);
     procedure MenuItem_UnCheckAllClick(Sender: TObject);
     procedure MenuItem_UnCheckAllSelectedClick(Sender: TObject);
     procedure spnedtPreviewSizeChange(Sender: TObject);
@@ -94,6 +105,9 @@ type
 
     procedure SetVSTCheckStates;
     procedure SetCheckedStateToAll(AState, ASelectedOnly: Boolean);
+    procedure SelectAllChecked(AClearSelection: Boolean);
+    procedure InvertSelection;
+    procedure InvertCheckedState;
     procedure RefreshDisplayFontSettings;
     procedure HandleNodeChecked;
   public
@@ -204,6 +218,34 @@ procedure TfrmClickerFontFinderSettings.MenuItem_CheckAllSelectedClick(
   Sender: TObject);
 begin
   SetCheckedStateToAll(True, True);
+end;
+
+
+procedure TfrmClickerFontFinderSettings.MenuItem_InvertCheckedStateClick(
+  Sender: TObject);
+begin
+  InvertCheckedState;
+end;
+
+
+procedure TfrmClickerFontFinderSettings.MenuItem_InvertSelectionClick(
+  Sender: TObject);
+begin
+  InvertSelection;
+end;
+
+
+procedure TfrmClickerFontFinderSettings.MenuItem_SelectAllCheckedByClearingSelectionClick
+  (Sender: TObject);
+begin
+  SelectAllChecked(True);
+end;
+
+
+procedure TfrmClickerFontFinderSettings.MenuItem_SelectAllCheckedByPreservingSelectionClick(
+  Sender: TObject);
+begin
+  SelectAllChecked(False);
 end;
 
 
@@ -395,6 +437,62 @@ begin
   repeat
     if not ASelectedOnly or (ASelectedOnly and vstFonts.Selected[Node]) then  //this should be simplified
       vstFonts.CheckState[Node] := CBoolToChecked[AState];
+
+    Node := Node^.NextSibling;
+  until Node = nil;
+end;
+
+
+procedure TfrmClickerFontFinderSettings.SelectAllChecked(AClearSelection: Boolean);
+var
+  Node: PVirtualNode;
+begin
+  Node := vstFonts.GetFirst;
+  if Node = nil then
+    Exit;
+
+  if AClearSelection then
+    vstFonts.ClearSelection;
+
+  repeat
+    if vstFonts.CheckState[Node] = csCheckedNormal then
+      vstFonts.Selected[Node] := True;
+
+    Node := Node^.NextSibling;
+  until Node = nil;
+end;
+
+
+procedure TfrmClickerFontFinderSettings.InvertSelection;
+var
+  Node: PVirtualNode;
+begin
+  Node := vstFonts.GetFirst;
+  if Node = nil then
+    Exit;
+
+  repeat
+    vstFonts.Selected[Node] := not vstFonts.Selected[Node];
+
+    Node := Node^.NextSibling;
+  until Node = nil;
+end;
+
+
+procedure TfrmClickerFontFinderSettings.InvertCheckedState;
+var
+  Node: PVirtualNode;
+begin
+  Node := vstFonts.GetFirst;
+  if Node = nil then
+    Exit;
+
+  repeat
+    if vstFonts.CheckState[Node] = csCheckedNormal then
+      vstFonts.CheckState[Node] := csUncheckedNormal
+    else
+      if vstFonts.CheckState[Node] = csUncheckedNormal then
+        vstFonts.CheckState[Node] := csCheckedNormal;
 
     Node := Node^.NextSibling;
   until Node = nil;

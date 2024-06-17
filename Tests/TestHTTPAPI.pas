@@ -70,7 +70,7 @@ type
     procedure SendMultipleTestFilesToServer(AFileNames: PStrArr; AFileNamesLength: Integer; ABaseContent: string);
     function Send_ExecuteCommandAtIndex_ToServer(AActionIdx, AStackLevel: Integer): string;
     procedure CreateTestTemplateInMem;
-    procedure CreateCallableTestTemplateInMem(ATestTemplateFileName, AVarName, AVarValue: string; ASleepValue: string = '0'; AEvalBefore: Boolean = False);
+    procedure CreateCallableTestTemplateInMem(ATestTemplateFileName, AVarName, AVarValue: string; ASleepValue: string = '0'; AEvalBefore: Boolean = False; AFailOnException: Boolean = False);
     procedure CreateCallableTestTemplateInMem_WithCallTemplate(ATestTemplateFileName, AVarName, AVarValue: string; ACalledTemplateName, AListOfVarsAndValues: string; AEvalBefore: Boolean; ASleepValue: string = '0');
 
     procedure CopyFileFromDiskToInMemFS(ADiskFileName, AInMemFileName: string);
@@ -309,12 +309,14 @@ begin
 end;
 
 
-procedure TTestHTTPAPI.CreateCallableTestTemplateInMem(ATestTemplateFileName, AVarName, AVarValue: string; ASleepValue: string = '0'; AEvalBefore: Boolean = False);
+procedure TTestHTTPAPI.CreateCallableTestTemplateInMem(ATestTemplateFileName, AVarName, AVarValue: string; ASleepValue: string = '0'; AEvalBefore: Boolean = False; AFailOnException: Boolean = False);
 var
   SetVarOptions: TClkSetVarOptions;
   SleepOptions: TClkSleepOptions;
 begin
   GenerateSetVarOptions_OneVar(SetVarOptions, AVarName, AVarValue, AEvalBefore);
+  SetVarOptions.FailOnException := AFailOnException;
+
   GenerateSleepOptions(SleepOptions, ASleepValue);
   AddSetVarActionToTemplate(ATestTemplateFileName, '1', 0, True, '', SetVarOptions, FInMemFS);
   AddSleepActionToTemplate(ATestTemplateFileName, 'dbg', 0, True, '', SleepOptions, FInMemFS);

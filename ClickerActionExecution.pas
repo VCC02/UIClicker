@@ -1364,7 +1364,8 @@ begin
   if IsSubControl then
     AddToLog('Searching with:  ColorError = ' + IntToStr(FindControlInputData.ColorError) +
              '   AllowedColorErrorCount = ' + IntToStr(FindControlInputData.AllowedColorErrorCount) +
-             '   FastSearchAllowedColorErrorCount = ' + IntToStr(FindControlInputData.FastSearchAllowedColorErrorCount));
+             '   FastSearchAllowedColorErrorCount = ' + IntToStr(FindControlInputData.FastSearchAllowedColorErrorCount) +
+             '   PrecisionTimeout = ' + BoolToStr(AFindControlOptions.PrecisionTimeout, 'True', 'False'));
 
   IgnoredColorsStrToArr(AFindControlOptions.IgnoredColors, FindControlInputData.IgnoredColorsArr);
   if Length(FindControlInputData.IgnoredColorsArr) > 0 then

@@ -702,7 +702,7 @@ begin
   GenerateCallTemplateOptions(CallTemplateOptions, CPathToExternalRenderingServer, '', False);
   ExpectSuccessfulAction(FastReplace_87ToReturn(ExecuteCallTemplateAction(TestServerAddress, CallTemplateOptions, False, False, CREParam_FileLocation_ValueDisk, True)));
 
-  CreateCallableTestTemplateInMem('ExtBk.clktmpl', '$RenderBmpExternally()$', CRenderBmpCmd, '0', True);
+  CreateCallableTestTemplateInMem('ExtBk.clktmpl', '$RenderBmpExternally()$', CRenderBmpCmd, '0', True, True);
   SendTemplateFromInMemToServerThenLoad('ExtBk.clktmpl');
 
   ExpectSuccessfulAction(FastReplace_87ToReturn(Send_ExecuteCommandAtIndex_ToServer(0, 0)));  // $RenderBmpExternally()$

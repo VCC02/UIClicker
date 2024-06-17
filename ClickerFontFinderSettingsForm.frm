@@ -8,10 +8,10 @@ object frmClickerFontFinderSettings: TfrmClickerFontFinderSettings
   ClientWidth = 529
   Constraints.MinHeight = 289
   Constraints.MinWidth = 510
+  LCLVersion = '8.4'
   OnClose = FormClose
   OnCreate = FormCreate
   OnDestroy = FormDestroy
-  LCLVersion = '8.4'
   object vstFonts: TVirtualStringTree
     Left = 8
     Height = 160
@@ -105,17 +105,17 @@ object frmClickerFontFinderSettings: TfrmClickerFontFinderSettings
     Caption = 'Max size'
   end
   object chkShowAllFonts: TCheckBox
-    Left = 425
+    Left = 427
     Height = 19
     Hint = 'When unchecked, only the used fonts are displayed'
     Top = 68
-    Width = 94
+    Width = 92
     Anchors = [akTop, akRight]
     Caption = 'Show all fonts'
-    OnChange = chkShowAllFontsChange
     ParentShowHint = False
     ShowHint = True
     TabOrder = 3
+    OnChange = chkShowAllFontsChange
   end
   object grpPreview: TGroupBox
     Left = 8
@@ -142,8 +142,8 @@ object frmClickerFontFinderSettings: TfrmClickerFontFinderSettings
     Width = 75
     Anchors = [akTop, akRight]
     Caption = 'OK'
-    OnClick = btnOKClick
     TabOrder = 5
+    OnClick = btnOKClick
   end
   object btnCancel: TButton
     Left = 444
@@ -152,8 +152,8 @@ object frmClickerFontFinderSettings: TfrmClickerFontFinderSettings
     Width = 75
     Anchors = [akTop, akRight]
     Caption = 'Cancel'
-    OnClick = btnCancelClick
     TabOrder = 6
+    OnClick = btnCancelClick
   end
   object spnedtPreviewSize: TSpinEdit
     Left = 350
@@ -163,9 +163,9 @@ object frmClickerFontFinderSettings: TfrmClickerFontFinderSettings
     Anchors = [akTop, akRight]
     MaxValue = 100
     MinValue = 7
-    OnChange = spnedtPreviewSizeChange
     TabOrder = 7
     Value = 8
+    OnChange = spnedtPreviewSizeChange
   end
   object lblPreviewSize: TLabel
     Left = 350
@@ -222,6 +222,28 @@ object frmClickerFontFinderSettings: TfrmClickerFontFinderSettings
     object MenuItem_UnCheckAllSelected: TMenuItem
       Caption = 'Uncheck all selected'
       OnClick = MenuItem_UnCheckAllSelectedClick
+    end
+    object N2: TMenuItem
+      Caption = '-'
+    end
+    object MenuItem_SelectAllCheckedByPreservingSelection: TMenuItem
+      Caption = 'Select all checked (preserve current selection)'
+      OnClick = MenuItem_SelectAllCheckedByPreservingSelectionClick
+    end
+    object MenuItem_SelectAllCheckedByClearingSelection: TMenuItem
+      Caption = 'Select all checked (clear current selection first)'
+      OnClick = MenuItem_SelectAllCheckedByClearingSelectionClick
+    end
+    object N3: TMenuItem
+      Caption = '-'
+    end
+    object MenuItem_InvertSelection: TMenuItem
+      Caption = 'Invert selection'
+      OnClick = MenuItem_InvertSelectionClick
+    end
+    object MenuItem_InvertCheckedState: TMenuItem
+      Caption = 'Invert checked state'
+      OnClick = MenuItem_InvertCheckedStateClick
     end
   end
 end

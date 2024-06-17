@@ -530,8 +530,8 @@ begin
 
   AFindControlOptions.InitialRectangle.Left := '0';
   AFindControlOptions.InitialRectangle.Top := '0';
-  AFindControlOptions.InitialRectangle.Right := '1';   //it has to be greater than Left
-  AFindControlOptions.InitialRectangle.Bottom := '1';  //it has to be greater than Top
+  AFindControlOptions.InitialRectangle.Right := '597';   //it has to be greater than Left
+  AFindControlOptions.InitialRectangle.Bottom := '232';  //it has to be greater than Top
   AFindControlOptions.InitialRectangle.LeftOffset := '0';
   AFindControlOptions.InitialRectangle.TopOffset := '0';
   AFindControlOptions.InitialRectangle.RightOffset := '0';
@@ -712,6 +712,7 @@ begin
   ASetVarOptions.ListOfVarNames := AVar;
   ASetVarOptions.ListOfVarValues := AValue;
   ASetVarOptions.ListOfVarEvalBefore := IntToStr(Ord(AEvalBefore));
+  ASetVarOptions.FailOnException := False;
 end;
 
 

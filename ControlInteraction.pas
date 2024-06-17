@@ -716,6 +716,7 @@ function MatchByBitmap(Algorithm: TMatchBitmapAlgorithm;
                        AStopAllActionsOnDemand: PBoolean): Boolean;
 var
   i: Integer;
+  SrcRect, DestRect: TRect;
 begin
   Result := False;
                        //SrcCompSearchAreaBitmap is the cropped area, from where BitmapToSearchFor is searched for.
@@ -724,10 +725,19 @@ begin
     ScreenShot(CompHandle, SrcCompSearchAreaBitmap, ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height)
   else
   begin
-    WipeBitmap(SrcCompSearchAreaBitmap, BitmapToSearchOn.Width, BitmapToSearchOn.Height);
-    SrcCompSearchAreaBitmap.Canvas.Draw(0, 0, BitmapToSearchOn);
-    ScrShot_Left := 0;
-    ScrShot_Top := 0;
+    WipeBitmap(SrcCompSearchAreaBitmap, ScrShot_Width, ScrShot_Height);
+
+    SrcRect.Left := ScrShot_Left;
+    SrcRect.Top := ScrShot_Top;
+    SrcRect.Width := ScrShot_Width;
+    SrcRect.Height := ScrShot_Height;
+
+    DestRect.Left := 0;
+    DestRect.Top := 0;
+    DestRect.Width := ScrShot_Width;
+    DestRect.Height := ScrShot_Height;
+
+    SrcCompSearchAreaBitmap.Canvas.CopyRect(DestRect, BitmapToSearchOn.Canvas, SrcRect);
   end;
 
   //DbgSaveScreenshotContent(SrcCompSearchAreaBitmap);   ////////////////////// keep commented for production code, also a path has to be updated, see above

@@ -2368,9 +2368,14 @@ end;
 
 
 {$IFDEF SubProperties}
+  const
+    CAdditonalInfo_InitialRectangle =  #13#10 +
+              'The current selection calculations expect that Left, Top, Right and Bottom subproperties use $Control_Left$, $Control_Top$, $Control_Right$ and $Control_Bottom$ variables.' + #13#10 +
+              'If they are not used, then please manually clear the values of these variables in the list (Debugging tab), and then set the area.';
   function GetPropertyHint_FindControl_InitialRectangle(AEdge: string): string;
   begin
-    Result := AEdge + ' edge of the search area. Variable replacements are available.';
+    Result := AEdge + ' edge of the search area. Variable replacements are available.' + #13#10 +
+              CAdditonalInfo_InitialRectangle;
   end;
 
 
@@ -2404,7 +2409,8 @@ end;
               'They are relative to the evaluated versions of Left/Top/Right/Bottom edges of search area.' + #13#10#13#10 +
               'These values should be valid (i.e. configured) before executing the action, not after.' + #13#10 +
               'When setting the search area and the offset values, make sure the previous action is the last executed action.' + #13#10 +
-              'Also it has to be successfully executed. Otherwise, the reference values will be wrong.';
+              'Also it has to be successfully executed. Otherwise, the reference values will be wrong.' + #13#10 +
+              CAdditonalInfo_InitialRectangle;
   end;
 
 {$ENDIF}
