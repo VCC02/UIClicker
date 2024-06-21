@@ -98,6 +98,7 @@ type
 const
   CActionPlugin_APIVersion = 6;
   CActionPlugin_ExecutionResultErrorVar = '$PluginError$';
+  CActionPlugin_DebuggingVar = '$PluginDebugging$';
   CBeforePluginExecution_DbgLineContent = 'Before plugin execution.';
   CScreenshotFilename = 'Screenshot.bmp';
 

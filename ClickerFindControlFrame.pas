@@ -1660,6 +1660,8 @@ var
   AlgorithmSettings: TMatchBitmapAlgorithmSettings;
   FindControlOptions: PClkFindControlOptions;
   NoGridAreaImg: TImage;
+
+  //SrcRect, DestRect: TRect;
 begin
   if FSearchAreaControlDbgImg = nil then
     Exit;
@@ -1677,11 +1679,13 @@ begin
   FSearchAreaGridImg.Transparent := True;
 
   WipeImage(FSearchAreaGridImg, FSearchAreaControlDbgImg.Width, FSearchAreaControlDbgImg.Height);
+
   FSearchAreaGridImg.Picture.Bitmap.TransparentColor := clWhite;
 
   if chkShowGridOnBMPPreview.Checked then
   begin
     if ADisplayGridLineOption = loTransparentSolid then
+    begin
       BitBlt(FSearchAreaGridImg.Canvas.Handle,
              0,
              0,
@@ -1702,6 +1706,19 @@ begin
       //int nXSrc,   // x-coordinate of source upper-left corner
       //int nYSrc,   // y-coordinate of source upper-left corner
       //DWORD dwRop  // raster operation code
+
+      //SrcRect.Left := FSearchAreaGridImg.Left;
+      //SrcRect.Top := FSearchAreaGridImg.Top;
+      //SrcRect.Right := FSearchAreaControlDbgImg.Width - FSearchAreaGridImg.Left;
+      //SrcRect.Bottom := FSearchAreaControlDbgImg.Height - FSearchAreaGridImg.Top;
+      //
+      //DestRect.Left := 0;
+      //DestRect.Top := 0;
+      //DestRect.Right := SrcRect.Right;
+      //DestRect.Bottom := SrcRect.Bottom;
+      //
+      //FSearchAreaGridImg.Picture.Bitmap.Canvas.CopyRect(DestRect, FSearchAreaControlDbgImg.Canvas, SrcRect);
+    end;
 
     DrawSearchGrid(FSearchAreaGridImg, AlgorithmSettings, FSearchAreaControlDbgImg.Width, FSearchAreaControlDbgImg.Height, $00C9AEFF, ADisplayGridLineOption);
 

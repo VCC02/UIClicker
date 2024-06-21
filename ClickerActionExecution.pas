@@ -3054,7 +3054,11 @@ begin
         AddToLog('Plugin executed successfully.');
     finally
       if not ActionPlugin.Unload then
-        AddToLog(ActionPlugin.Err);
+        AddToLog('Error unloading plugin: "' + ActionPlugin.Err + '".')
+      else
+        AddToLog('Plugin unloaded successfully.');
+
+      ActionPlugin.PluginHandle := 0;
     end;
 
     frClickerActions.imgDebugBmp.Width := Max(10, Min(frClickerActions.imgDebugBmp.Picture.Bitmap.Width, 7680));   //Limit to 8K resolution for now. Sometimes, imgDebugBmp might not be initialized, causing AVs (div by 0 or heap overflow).

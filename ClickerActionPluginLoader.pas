@@ -739,7 +739,8 @@ begin
 
   if Loaded then
   begin
-    if not UnloadLibrary(PluginHandle) then
+    //if not UnloadLibrary(PluginHandle) then
+    if not FreeLibrary(PluginHandle) then
     begin
       Err := SysErrorMessage(GetLastOSError);
       Exit;

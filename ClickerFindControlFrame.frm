@@ -15,7 +15,7 @@ object frClickerFindControl: TfrClickerFindControl
     Height = 250
     Top = 0
     Width = 877
-    ActivePage = TabSheetActionFindSubControlPrimitives
+    ActivePage = TabSheetActionFindSubControlSearchArea
     Anchors = [akTop, akLeft, akRight, akBottom]
     Constraints.MinHeight = 201
     Constraints.MinWidth = 250
@@ -24,7 +24,7 @@ object frClickerFindControl: TfrClickerFindControl
     Images = imglstFindCriteria
     ParentFont = False
     ParentShowHint = False
-    TabIndex = 3
+    TabIndex = 2
     TabOrder = 0
     OnChange = PageControlMatchChange
     object TabSheetActionFindSubControlText: TTabSheet
@@ -247,9 +247,9 @@ object frClickerFindControl: TfrClickerFindControl
       end
       object lblReservedSpaceForDbgImg: TLabel
         Left = 0
-        Height = 173
-        Top = 48
-        Width = 464
+        Height = 149
+        Top = 72
+        Width = 553
         Anchors = [akTop, akLeft, akRight, akBottom]
         AutoSize = False
         Caption = 'Reserved space'#13#10'for DbgImg'
@@ -685,12 +685,12 @@ object frClickerFindControl: TfrClickerFindControl
         TabOrder = 8
       end
       object pnlSelectionLinesInfo: TPanel
-        Left = 472
-        Height = 88
+        Left = 0
+        Height = 23
         Top = 48
-        Width = 168
-        ClientHeight = 88
-        ClientWidth = 168
+        Width = 553
+        ClientHeight = 23
+        ClientWidth = 553
         TabOrder = 9
         object lblSelectionLine_Left: TLabel
           Left = 4
@@ -707,9 +707,9 @@ object frClickerFindControl: TfrClickerFindControl
           Transparent = False
         end
         object lblSelectionLine_Top: TLabel
-          Left = 4
+          Left = 128
           Height = 13
-          Top = 24
+          Top = 4
           Width = 97
           Caption = 'Selection line top:  0'
           Color = clBlack
@@ -721,9 +721,9 @@ object frClickerFindControl: TfrClickerFindControl
           Transparent = False
         end
         object lblSelectionLine_Right: TLabel
-          Left = 4
+          Left = 256
           Height = 13
-          Top = 44
+          Top = 4
           Width = 103
           Caption = 'Selection line right:  0'
           Color = clBlack
@@ -735,9 +735,9 @@ object frClickerFindControl: TfrClickerFindControl
           Transparent = False
         end
         object lblSelectionLine_Bottom: TLabel
-          Left = 4
+          Left = 392
           Height = 13
-          Top = 64
+          Top = 4
           Width = 115
           Caption = 'Selection line bottom:  0'
           Color = clBlack

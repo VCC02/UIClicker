@@ -168,6 +168,7 @@ function StopRemoteTemplateExecution(ARemoteAddress: string; AStackLevel: Intege
 function ExitRemoteTemplate(ARemoteAddress: string; AStackLevel: Integer): string;  //called by client, to send a request to server to close a tab
 function GetAllReplacementVars(ARemoteAddress: string; AStackLevel: Integer): string;
 function GetDebugImageFromServer(ARemoteAddress: string; AStackLevel: Integer; AReceivedBmp: TBitmap; AWithGrid: Boolean): string; //returns error message if any
+function GetDebugImageFromServerAsStream(ARemoteAddress: string; AStackLevel: Integer; AReceivedStream: TMemoryStream; AWithGrid: Boolean): string; //returns error message if any
 function GetSearchAreaDebugImageFromServer(ARemoteAddress: string; AStackLevel: Integer; AReceivedBmp: TBitmap): string; //returns error message if any
 function SendTemplateContentToServer(ARemoteAddress, AFileName: string; var ACustomClkActions: TClkActionsRecArr): string;
 function SendLoadTemplateInExecListRequest(ARemoteAddress, AFileName: string; AStackLevel: Integer): string;
@@ -431,6 +432,18 @@ begin
                            CREParam_Grid + '=' + IntToStr(Ord(AWithGrid));
 
   Result := SendGetBmpRequestToServer(Link, AReceivedBmp);
+end;
+
+
+function GetDebugImageFromServerAsStream(ARemoteAddress: string; AStackLevel: Integer; AReceivedStream: TMemoryStream; AWithGrid: Boolean): string; //returns error message if any
+var
+  Link: string;
+begin
+  Link := ARemoteAddress + CRECmd_GetResultedDebugImage + '?' +
+                           CREParam_StackLevel + '=' + IntToStr(AStackLevel) + '&' +
+                           CREParam_Grid + '=' + IntToStr(Ord(AWithGrid));
+
+  Result := SendGetFileRequestToServer(Link, AReceivedStream);
 end;
 
 
