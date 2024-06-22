@@ -500,6 +500,8 @@ function GetIsUserAnAdmin: string;
 function EvaluateAllReplacements(AListOfVars: TStringList; s: string; Recursive: Boolean = True): string;
 function CreateDirWithSubDirs(ADir: string): Boolean;
 function HexToInt(s: string): Cardinal;
+function StringToHex(AStr: string): string;   //converts 'abc' to '616263'
+function HexToString(AHex: string): string;   //converts '616263' to 'abc'
 
 procedure RawExpressionToParts(RawExpression: string; out Op1, Op2, OpEq: string);
 function MatchCriteriaToString(Criteria: TClkFindControlMatchCriteria): string;
@@ -2206,6 +2208,49 @@ begin
   for i := Length(s) downto 1 do
     if s[i] in ['0'..'9', 'a'..'f', 'A'..'F'] then
       Result := Result + HexaDigitToByte(s[i]) * Pow16(Length(s) - i);
+end;
+
+
+function StringToHex(AStr: string): string;   //converts 'abc' to '616263'
+var
+  i, i2: Integer;
+  TempHexVal: string;
+begin
+  if Length(AStr) = 0 then
+  begin
+    Result := '';
+    Exit;
+  end;
+
+  SetLength(Result, Length(AStr) shl 1);
+  for i := 1 to Length(AStr) do
+  begin
+    TempHexVal := IntToHex(Ord(Astr[i]), 2);
+    i2 := (i - 1) shl 1 + 1;
+    Move(TempHexVal[1], Result[i2], 2);
+  end;
+end;
+
+
+function HexToString(AHex: string): string;   //converts '616263' to 'abc'
+var
+  i, i2: Integer;
+  TempByte: Byte;
+begin
+  if Length(AHex) = 0 then
+  begin
+    Result := '';
+    Exit;
+  end;
+
+  SetLength(Result, Length(AHex) shr 1);
+
+  for i := 1 to Length(Result) do
+  begin
+    i2 := (i - 1) shl 1 + 1;
+    TempByte := HexToInt(Copy(AHex, i2, 2));
+    Result[i] := Chr(TempByte);
+  end;
 end;
 
 

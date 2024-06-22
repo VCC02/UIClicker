@@ -2188,7 +2188,7 @@ begin
       FSearchAreaScrBox := TScrollBox.Create(Self);
       FSearchAreaScrBox.Parent := TabSheetActionFindSubControlSearchArea;
       FSearchAreaScrBox.Width := lblReservedSpaceForDbgImg.Width; // TabSheetActionFindSubControlSearchArea.Width - btnDisplaySearchAreaDebuggingImage.Left - 10; //130;
-      FSearchAreaScrBox.Height := TabSheetActionFindSubControlSearchArea.Height - 20 - 30; //120;
+      FSearchAreaScrBox.Height := TabSheetActionFindSubControlSearchArea.Height - 20 - 30 - pnlSelectionLinesInfo.Height;
       FSearchAreaScrBox.Left := lblReservedSpaceForDbgImg.Left;
       FSearchAreaScrBox.Top := lblReservedSpaceForDbgImg.Top;
       FSearchAreaScrBox.Anchors := [akBottom, akLeft, akRight, akTop];
