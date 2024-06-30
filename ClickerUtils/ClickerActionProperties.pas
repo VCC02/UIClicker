@@ -191,7 +191,9 @@ begin
             'ImageSource' + '=' + IntToStr(Ord(AFindControlOptions.ImageSource)) + '&' +
             'SourceFileName' + '=' + AFindControlOptions.SourceFileName + '&' +
             'ImageSourceFileNameLocation' + '=' + IntToStr(Ord(AFindControlOptions.ImageSourceFileNameLocation)) + '&' +
-            'PrecisionTimeout' + '=' + IntToStr(Ord(AFindControlOptions.PrecisionTimeout));
+            'PrecisionTimeout' + '=' + IntToStr(Ord(AFindControlOptions.PrecisionTimeout)) + '&' +
+            'FullBackgroundImageInResult' + '=' + IntToStr(Ord(AFindControlOptions.FullBackgroundImageInResult))
+            ;
 end;
 
 
@@ -588,6 +590,7 @@ begin
   AFindControlOptions.ImageSourceFileNameLocation := TImageSourceFileNameLocation(Temp_ImageSourceFileNameLocation);
 
   AFindControlOptions.PrecisionTimeout := AListOfFindControlOptionsParams.Values['PrecisionTimeout'] = '1';
+  AFindControlOptions.FullBackgroundImageInResult := AListOfFindControlOptionsParams.Values['FullBackgroundImageInResult'] = '1';
 
   AActionOptions.ActionName := AListOfFindControlOptionsParams.Values[CPropertyName_ActionName];
   AActionOptions.ActionTimeout := Temp_ActionTimeout;

@@ -67,6 +67,7 @@ type
     ImageSource: TImageSource;
     OutsideTickCount: QWord;
     PrecisionTimeout: QWord;
+    FullBackgroundImageInResult: Boolean;
   end;
 
 
@@ -93,6 +94,11 @@ function FindControlOnScreen(Algorithm: TMatchBitmapAlgorithm;
 
 function FindWindowOnScreenByCaptionOrClass(InputData: TFindControlInputData; AInitialTickCount, ATimeout: Cardinal; AStopAllActionsOnDemand: PBoolean; out AResultedControl: TCompRec): Boolean;
 function FindWindowOnScreenByCaptionAndClass(InputData: TFindControlInputData; AInitialTickCount, ATimeout: Cardinal; AStopAllActionsOnDemand: PBoolean; var AResultedControls: TCompRecArr): Boolean;
+
+
+const
+  CDebugBitmapBevelWidth = 10;//px  - "bevel" thickness around the searched bitmap
+  CDebugBitmapBevelHeight = 10;//px
 
 
 implementation
@@ -447,11 +453,12 @@ begin
 end;
 
 
-procedure DisplayDebugBmpForSuccessfulMatch(BitmapToSearchFor, DebugBmp: TBitmap; ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height: Integer; SubCnvXOffset, SubCnvYOffset: Integer; var AFoundBitmaps: TCompRecArr; ATransparentFoundSelection: Boolean);
+procedure DisplayDebugBmpForSuccessfulMatch(BitmapToSearchFor, DebugBmp: TBitmap; ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height: Integer; SubCnvXOffset, SubCnvYOffset: Integer; var AFoundBitmaps: TCompRecArr; ATransparentFoundSelection, AFullBackgroundImageInResult: Boolean);
 var
   DebugDisplayLeft: Integer; //This is the value backup of the debug screenshot width, before increasing it. Debug information is displayed starting at this value
   BmpWithFoundSelection: TBitmap;
   i: Integer;
+  TempBmp: TBitmap;
 
   procedure DrawFoundSelection;
   begin
@@ -469,8 +476,8 @@ var
     SubX, SubY: Integer;
     HRectLeft, VRectTop, HRectRight, VRectBottom: TRect;
   begin
-    SubX := AFoundBitmaps[i].XOffsetFromParent;
-    SubY := AFoundBitmaps[i].YOffsetFromParent;
+    SubX := AFoundBitmaps[AIndex].XOffsetFromParent;
+    SubY := AFoundBitmaps[AIndex].YOffsetFromParent;
 
     DebugBmp.Canvas.Pen.Color := $00AA44;
     DebugBmp.Canvas.Brush.Color := $44FF88;
@@ -501,6 +508,9 @@ var
     DebugBmp.Canvas.Rectangle(HRectRight);
     DebugBmp.Canvas.Rectangle(VRectBottom);
   end;
+
+var
+  DestRect, SrcRect: TRect;
 begin
   DebugDisplayLeft := DebugBmp.Width;  //yes, width
 
@@ -541,27 +551,73 @@ begin
       BmpWithFoundSelection.Free;
     end;
   end;
+
+  if Length(AFoundBitmaps) = 1 then   //So far, do this for a single result only. This should get the maximum width and height values from all bitmaps in AFoundBitmaps array.
+    if not AFullBackgroundImageInResult then
+    begin
+      TempBmp := TBitmap.Create;
+      try
+        TempBmp.SetSize(BitmapToSearchFor.Width + CDebugBitmapBevelWidth shl 1, BitmapToSearchFor.Height + CDebugBitmapBevelHeight shl 1);
+
+        SrcRect.Left := SubCnvXOffset - CDebugBitmapBevelWidth;
+        SrcRect.Top := SubCnvYOffset - CDebugBitmapBevelWidth;
+        SrcRect.Width := BitmapToSearchFor.Width + CDebugBitmapBevelWidth shl 1;
+        SrcRect.Height := BitmapToSearchFor.Height + CDebugBitmapBevelHeight shl 1;
+
+        DestRect.Left := 0;
+        DestRect.Top := 0;
+        DestRect.Width := SrcRect.Width;
+        DestRect.Height := SrcRect.Height;
+
+        TempBmp.Canvas.CopyRect(DestRect, DebugBmp.Canvas, SrcRect);
+
+        DebugBmp.Clear;
+        DebugBmp.SetSize(DestRect.Width, DestRect.Height);
+        DebugBmp.Assign(TempBmp);
+      finally
+        TempBmp.Free;
+      end;
+    end;
 end;
 
 
-procedure DisplayDebugBmpForFailedMatch(BitmapToSearchFor, SrcCompSearchAreaBitmap, DebugBmp: TBitmap; ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height: Integer; SubCnvXOffset, SubCnvYOffset: Integer; AMatchingMethods: TMatchingMethods; DebugTemplateName, SearchedText: string; AUsingFastSearch, AIgnoreBackgroundColor: Boolean; ABackgroundColor: TColor);
+procedure DisplayDebugBmpForFailedMatch(BitmapToSearchFor, SrcCompSearchAreaBitmap, DebugBmp: TBitmap;
+                                        ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height: Integer;
+                                        SubCnvXOffset, SubCnvYOffset: Integer;
+                                        AMatchingMethods: TMatchingMethods;
+                                        DebugTemplateName, SearchedText: string;
+                                        AUsingFastSearch, AIgnoreBackgroundColor, AFullBackgroundImageInResult: Boolean;
+                                        ABackgroundColor: TColor);
 var
   DebugDisplayLeft: Integer; //This is the value backup of the debug screenshot width, before increasing it. Debug information is displayed starting at this value
   DebugDrawingX, DebugDrawingY: Integer;
   TempWidth, TempHeight: Integer;
   TempBmp: TBitmap;
+  DebugInfoBrushStyle: TBrushStyle;
 begin
   TempWidth := DebugBmp.Width;
   TempHeight := DebugBmp.Height;
-  DebugDisplayLeft := TempWidth;  //yes, width
+
+  if not AFullBackgroundImageInResult then
+  begin
+    DebugDisplayLeft := ScrShot_Left + ScrShot_Width;
+    DebugInfoBrushStyle := bsSolid;
+    TempWidth := DebugDisplayLeft + 50 + DebugBmp.Canvas.TextWidth(DebugTemplateName);
+    TempHeight := Max(130, ScrShot_Top + ScrShot_Height);
+  end
+  else
+  begin
+    DebugDisplayLeft := TempWidth;  //yes, width
+    DebugInfoBrushStyle := bsClear;
+  end;
 
   TempBmp := TBitmap.Create;
   try
     //The following two lines are very slow, so use a temporary bitmap (TempBmp) to resize.
     //DebugBmp.Width := DebugDisplayLeft + Max(TempWidth, 400);  //400.. for long filenames
-    //DebugBmp.Height := Max(Max(TempHeight + 40, BitmapToSearchFor.Height shl 1 + 80), 100); //use Max to allow displaying text
+    //DebugBmp.Height := Max(Max(TempHeight + 50, BitmapToSearchFor.Height shl 1 + 80), 100); //use Max to allow displaying text
 
-    TempBmp.SetSize(DebugDisplayLeft + Max(TempWidth, 400), Max(Max(TempHeight + 40, BitmapToSearchFor.Height shl 1 + 80), 100)); //Width: 400.. for long filenames,   Height: use Max to allow displaying text
+    TempBmp.SetSize(DebugDisplayLeft + Max(TempWidth, 400), Max(Max(TempHeight + 50, BitmapToSearchFor.Height shl 1 + 80), 100)); //Width: 400.. for long filenames,   Height: use Max to allow displaying text
     TempBmp.Canvas.Draw(0, 0, DebugBmp);
     DebugBmp.Clear;
     DebugBmp.Width := TempBmp.Width;
@@ -585,11 +641,12 @@ begin
   if mmBitmapText in AMatchingMethods then
   begin
     DebugBmp.Transparent := False;
-    DebugBmp.Canvas.Brush.Style := bsClear;
+    DebugBmp.Canvas.Brush.Style := DebugInfoBrushStyle;
     DebugBmp.Canvas.Font.Color := $2244FF;//clRed;
     DebugBmp.Canvas.TextOut(DebugDrawingX, 0, 'Generated by: ' + DebugTemplateName);
     DebugBmp.Canvas.TextOut(DebugDrawingX, 15, 'Text not found: ' + SearchedText);
-    DebugBmp.Canvas.Draw(DebugDrawingX, 30, BitmapToSearchFor);
+
+    DebugBmp.Canvas.Brush.Style := DebugInfoBrushStyle;
     DebugBmp.Canvas.TextOut(DebugDrawingX, 30 + TempHeight + 10, 'BitmapToSearchFor w/h: ' + IntToStr(TempWidth) + ' x ' + IntToStr(TempHeight));
     DebugBmp.Canvas.TextOut(DebugDrawingX, 30 + TempHeight + 25, 'PixelFormat: ' + IntToStr(PIXELFORMAT_BPP[BitmapToSearchFor.PixelFormat]) + '-bit');
     DebugBmp.Canvas.TextOut(DebugDrawingX, 30 + TempHeight + 40, 'Using FastSearch: ' + BoolToStr(AUsingFastSearch, 'Yes', 'No'));
@@ -602,12 +659,16 @@ begin
     DebugBmp.Canvas.Brush.Style := bsSolid;
     DebugBmp.Canvas.Brush.Color := ABackgroundColor;
     DebugBmp.Canvas.Rectangle(DebugDrawingX + 200, 30 + TempHeight + 55, DebugDrawingX + 230, 30 + TempHeight + 70 + 13);
+    DebugBmp.Canvas.Brush.Color := clBlack;
+
+    DebugBmp.Canvas.Brush.Style := bsSolid;
+    DebugBmp.Canvas.Draw(DebugDrawingX, 30, BitmapToSearchFor);
   end;
 
   if (mmBitmapFiles in AMatchingMethods) or
      (mmPrimitiveFiles in AMatchingMethods) then
   begin
-    DebugBmp.Canvas.Brush.Style := bsClear;
+    DebugBmp.Canvas.Brush.Style := DebugInfoBrushStyle;
     DebugBmp.Canvas.Font.Color := clRed;
     DebugBmp.Canvas.TextOut(DebugDrawingX, 0, 'Generated by: ' + DebugTemplateName);
     DebugBmp.Canvas.TextOut(DebugDrawingX, 15, 'Bitmap not found:');
@@ -621,14 +682,14 @@ begin
     DebugBmp.Canvas.Draw(DebugDrawingX, DebugDrawingY, SrcCompSearchAreaBitmap);
 
     //draw a green dotted rectangle around search area, displayed under "In:' section
-    DebugBmp.Canvas.Brush.Style := bsClear;
+    DebugBmp.Canvas.Brush.Style := bsClear; //this should stay bsClear
     DebugBmp.Canvas.Pen.Color := clLime;
     DebugBmp.Canvas.Pen.Style := psDot;
     DebugBmp.Canvas.Rectangle(DebugDrawingX, DebugDrawingY, DebugDrawingX + SrcCompSearchAreaBitmap.Width, DebugDrawingY + SrcCompSearchAreaBitmap.Height);
     DebugBmp.Canvas.Pen.Style := psSolid;
   end;
 
-  DebugBmp.Canvas.Brush.Style := bsClear;
+  DebugBmp.Canvas.Brush.Style := bsClear;   //this should stay bsClear
   DebugBmp.Canvas.Pen.Color := $000080FF;
   DebugBmp.Canvas.Pen.Style := psDot;
   DebugBmp.Canvas.Rectangle(ScrShot_Left, ScrShot_Top, ScrShot_Left + ScrShot_Width, ScrShot_Top + ScrShot_Height);
@@ -859,7 +920,7 @@ begin
       begin  //same calls as below (DisplayDebugBmpForFailedMatch and DisplayDebugGrid, for the failed case)
         if InputData.DebugBitmap <> nil then
         begin
-          DisplayDebugBmpForFailedMatch(InputData.BitmapToSearchFor, SrcCompSearchAreaBitmap, InputData.DebugBitmap, ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height, SubCnvXOffset, SubCnvYOffset, InputData.MatchingMethods, InputData.DebugTemplateName, InputData.Text, InputData.UseFastSearch, InputData.IgnoreBackgroundColor, InputData.BackgroundColor);
+          DisplayDebugBmpForFailedMatch(InputData.BitmapToSearchFor, SrcCompSearchAreaBitmap, InputData.DebugBitmap, ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height, SubCnvXOffset, SubCnvYOffset, InputData.MatchingMethods, InputData.DebugTemplateName, InputData.Text, InputData.UseFastSearch, InputData.IgnoreBackgroundColor, InputData.FullBackgroundImageInResult, InputData.BackgroundColor);
           DisplayDebugGrid(Algorithm, AlgorithmSettings, InputData.DebugGrid, ScrShot_Width, ScrShot_Height, ADisplayGridLineOption);
         end;
 
@@ -870,9 +931,9 @@ begin
     if InputData.DebugBitmap <> nil then
     begin
       if FoundBmp then
-        DisplayDebugBmpForSuccessfulMatch(InputData.BitmapToSearchFor, InputData.DebugBitmap, ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height, SubCnvXOffset, SubCnvYOffset, AFoundBitmaps, ADisplayGridLineOption = loTransparentSolid)
+        DisplayDebugBmpForSuccessfulMatch(InputData.BitmapToSearchFor, InputData.DebugBitmap, ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height, SubCnvXOffset, SubCnvYOffset, AFoundBitmaps, ADisplayGridLineOption = loTransparentSolid, InputData.FullBackgroundImageInResult)
       else
-        DisplayDebugBmpForFailedMatch(InputData.BitmapToSearchFor, SrcCompSearchAreaBitmap, InputData.DebugBitmap, ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height, SubCnvXOffset, SubCnvYOffset, InputData.MatchingMethods, InputData.DebugTemplateName, InputData.Text, InputData.UseFastSearch, InputData.IgnoreBackgroundColor, InputData.BackgroundColor);
+        DisplayDebugBmpForFailedMatch(InputData.BitmapToSearchFor, SrcCompSearchAreaBitmap, InputData.DebugBitmap, ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height, SubCnvXOffset, SubCnvYOffset, InputData.MatchingMethods, InputData.DebugTemplateName, InputData.Text, InputData.UseFastSearch, InputData.IgnoreBackgroundColor, InputData.FullBackgroundImageInResult, InputData.BackgroundColor);
 
       DisplayDebugGrid(Algorithm, AlgorithmSettings, InputData.DebugGrid, ScrShot_Width, ScrShot_Height, ADisplayGridLineOption);
     end;

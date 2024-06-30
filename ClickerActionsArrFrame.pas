@@ -3095,7 +3095,8 @@ begin
     frClickerActions.imglstPluginProperties.Clear;
     frClickerActions.imglstPluginProperties.AddMasked(frClickerActions.imgPluginFileName.Picture.Bitmap, clFuchsia);
 
-    LoadingResult := ActionPlugin.LoadToGetProperties(ResolvedPluginPath, DoOnUpdatePropertyIcons);
+    ActionPlugin.Loaded := False;
+    LoadingResult := ActionPlugin.LoadToGetProperties(ResolvedPluginPath, DoOnUpdatePropertyIcons, AddToLog);
   except
     on E: Exception do
     begin
@@ -3113,7 +3114,7 @@ begin
   try
     AAction.PluginOptions.ListOfPropertiesAndTypes := ActionPlugin.GetListOfProperties;
   finally
-    if not ActionPlugin.Unload then
+    if not ActionPlugin.Unload(AddToLog) then
       AddToLog('Error unloading plugin on getting properties: ' + ActionPlugin.Err);
   end;
 
@@ -5220,6 +5221,9 @@ begin
   end;
 
   TemplatePath := EvaluateReplacements(FClkActions[Node^.Index].CallTemplateOptions.TemplateFileName);
+  //if TemplatePath = ExtractFileName(TemplatePath) then //there is no path, only the filename
+  //  TemplatePath := FFullTemplatesDir + PathDelim + TemplatePath;
+
   TemplatePath := ResolveTemplatePath(TemplatePath);
 
   TempMenuItem := Sender as TMenuItem;
@@ -5577,6 +5581,7 @@ begin
   FClkActions[AIndex].FindControlOptions.SourceFileName := '';
   FClkActions[AIndex].FindControlOptions.ImageSourceFileNameLocation := isflMem;
   FClkActions[AIndex].FindControlOptions.PrecisionTimeout := False;
+  FClkActions[AIndex].FindControlOptions.FullBackgroundImageInResult := True;
 
   SetLength(FClkActions[AIndex].FindControlOptions.MatchBitmapText, 1);
   FClkActions[AIndex].FindControlOptions.MatchBitmapText[0].ForegroundColor := '$Color_Window$';

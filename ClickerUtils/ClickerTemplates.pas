@@ -201,6 +201,7 @@ begin
     ACustomActions[i].FindControlOptions.SourceFileName := '';
     ACustomActions[i].FindControlOptions.ImageSourceFileNameLocation := isflMem;
     ACustomActions[i].FindControlOptions.PrecisionTimeout := False;
+    ACustomActions[i].FindControlOptions.FullBackgroundImageInResult := True;
 
     SectionIndex := Ini.GetSectionIndex('Actions.SetTextOptions');
     ACustomActions[i].SetTextOptions.Text := Ini.ReadString(SectionIndex, 'Text_' + IterationStr, '');
@@ -411,6 +412,7 @@ begin
   AFindControlOptions.SourceFileName := Ini.ReadString(SectionIndex, 'SourceFileName', '');
   AFindControlOptions.ImageSourceFileNameLocation := TImageSourceFileNameLocation(Min(Ini.ReadInteger(SectionIndex, 'ImageSourceFileNameLocation', Ord(isflMem)), Integer(High(TImageSourceFileNameLocation))));
   AFindControlOptions.PrecisionTimeout := Ini.ReadBool(SectionIndex, 'PrecisionTimeout', False);
+  AFindControlOptions.FullBackgroundImageInResult := Ini.ReadBool(SectionIndex, 'FullBackgroundImageInResult', True);
 end;
 
 
@@ -854,6 +856,7 @@ begin
   AStringList.Add('ImageSourceFileNameLocation=' + IntToStr(Ord(AActionFindControlOptions.ImageSourceFileNameLocation)));
 
   AStringList.Add('PrecisionTimeout=' + IntToStr(Ord(AActionFindControlOptions.PrecisionTimeout)));
+  AStringList.Add('FullBackgroundImageInResult=' + IntToStr(Ord(AActionFindControlOptions.FullBackgroundImageInResult)));
 end;
 
 
@@ -1028,6 +1031,7 @@ begin
   ADest.ImageSourceFileNameLocation := ASrc.ImageSourceFileNameLocation;
 
   ADest.PrecisionTimeout := ASrc.PrecisionTimeout;
+  ADest.FullBackgroundImageInResult := ASrc.FullBackgroundImageInResult;
 end;
 
 

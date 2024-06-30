@@ -56,7 +56,7 @@ const
   //Properties (counts)
   CPropCount_Click = 25;
   CPropCount_ExecApp = 7;
-  CPropCount_FindControl = 29;
+  CPropCount_FindControl = 30;
   CPropCount_FindSubControl = CPropCount_FindControl;
   CPropCount_SetText = 4;
   CPropCount_CallTemplate = 4;
@@ -135,6 +135,7 @@ const
   CFindControl_SourceFileName_PropIndex = 26;
   CFindControl_ImageSourceFileNameLocation_PropIndex = 27;
   CFindControl_PrecisionTimeout_PropIndex = 28;
+  CFindControl_FullBackgroundImageInResult_PropIndex = 29;
 
   CCallTemplate_TemplateFileName_PropIndex = 0; //property index in CallTemplate structure
   CCallTemplate_ListOfCustomVarsAndValues_PropIndex = 1;
@@ -283,7 +284,8 @@ const
     (Name: 'ImageSource'; EditorType: etEnumCombo; DataType: CDTEnum),
     (Name: 'SourceFileName'; EditorType: etTextWithArrow; DataType: CDTString),
     (Name: 'ImageSourceFileNameLocation'; EditorType: etEnumCombo; DataType: CDTEnum),
-    (Name: 'PrecisionTimeout'; EditorType: etBooleanCombo; DataType: CDTBool)
+    (Name: 'PrecisionTimeout'; EditorType: etBooleanCombo; DataType: CDTBool),
+    (Name: 'FullBackgroundImageInResult'; EditorType: etBooleanCombo; DataType: CDTBool)
   );
 
   {$IFDEF SubProperties}
@@ -547,7 +549,8 @@ const
     nil, //ImageSource
     nil, //SourceFileName
     nil, //ImageSourceFileNameLocation
-    nil  //PrecisionTimeout
+    nil, //PrecisionTimeout
+    nil  //FullBackgroundImageInResult
   );
 
   CCallTemplateGetActionValueStrFunctions: TGetCallTemplateValueStrFuncArr = (
@@ -633,7 +636,8 @@ const
     Ord(High(TImageSource)) + 1, //ImageSource: TImageSource;
     0, //SourceFileName: string;
     Ord(High(TImageSourceFileNameLocation)) + 1,  //ImageSourceFileNameLocation: TImageSourceFileNameLocation;
-    0  //PrecisionTimeout: Boolean;
+    0, //PrecisionTimeout: Boolean;
+    0  //FullBackgroundImageInResult
   );
 
   CSetTextEnumCounts: array[0..CPropCount_SetText - 1] of Integer = (
@@ -816,7 +820,8 @@ const
     @CImageSourceStr,
     nil, //SourceFileName
     @CImageSourceFileNameLocationStr,
-    nil  //PrecisionTimeout
+    nil, //PrecisionTimeout
+    nil  //FullBackgroundImageInResult
   );
 
   CSetTextEnumStrings: array[0..CPropCount_SetText - 1] of PArrayOfString = (
@@ -963,6 +968,7 @@ function GetPropertyHint_FindControl_ImageSource: string;
 function GetPropertyHint_FindControl_SourceFileName: string;
 function GetPropertyHint_FindControl_ImageSourceFileNameLocation: string;
 function GetPropertyHint_FindControl_PrecisionTimeout: string;
+function GetPropertyHint_FindControl_FullBackgroundImageInResult: string;
 
 {$IFDEF SubProperties}
   function GetPropertyHint_FindControl_MatchCriteria_MatchBitmapText: string;
@@ -1087,7 +1093,8 @@ const
     @GetPropertyHint_FindControl_ImageSource, // ImageSource: TImageSource;
     @GetPropertyHint_FindControl_SourceFileName, //SourceFileName: string;
     @GetPropertyHint_FindControl_ImageSourceFileNameLocation, //ImageSourceFileNameLocation: TImageSourceFileLocation;
-    @GetPropertyHint_FindControl_PrecisionTimeout
+    @GetPropertyHint_FindControl_PrecisionTimeout, //PrecisionTimeout: Boolean
+    @GetPropertyHint_FindControl_FullBackgroundImageInResult  //FullBackgroundImageInResult: Boolean
   );
 
 
@@ -1322,6 +1329,7 @@ begin
     26: Result := AAction^.FindControlOptions.SourceFileName;
     27: Result := CImageSourceFileNameLocationStr[AAction^.FindControlOptions.ImageSourceFileNameLocation];
     28: Result := BoolToStr(AAction^.FindControlOptions.PrecisionTimeout, True);
+    29: Result := BoolToStr(AAction^.FindControlOptions.FullBackgroundImageInResult, True);
     else
       Result := 'unknown';
   end;
@@ -1854,6 +1862,7 @@ begin
     26: AAction^.FindControlOptions.SourceFileName := NewValue;
     27: AAction^.FindControlOptions.ImageSourceFileNameLocation := ImageSourceFileNameLocation_AsStringToValue(NewValue);
     28: AAction^.FindControlOptions.PrecisionTimeout := StrToBool(NewValue);
+    29: AAction^.FindControlOptions.FullBackgroundImageInResult := StrToBool(NewValue);
     else
       ;
   end;
@@ -2339,6 +2348,14 @@ begin
             'Otherwise, the timeout is verified between whole match attempts only, which usually take longer than the configured timeout.' + #13#10 +
             'When using this option, the bitmap algorithm requires slightly more CPU overhead.' + #13#10 +
             'This option might be required to be set to True, on plugins which implement timeouts on FindSubControl calls.';
+end;
+
+
+function GetPropertyHint_FindControl_FullBackgroundImageInResult: string;
+begin
+  Result := 'When True, the resulted debugging image contains the initial background image.' + #13#10 +
+            'Otherwise, only the debuging info is present, i.e. the searched area or found area, text color if applicable etc.' + #13#10 +
+            'This is useful to set to False, when requesting a large resulted image.';
 end;
 
 

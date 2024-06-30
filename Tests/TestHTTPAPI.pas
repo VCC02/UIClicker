@@ -400,7 +400,7 @@ begin
   ListOfVars := TStringList.Create;
   try
     ListOfVars.Text := Response;
-    Expect(ListOfVars).WithItem('$LastAction_Status$').DifferentThanValue(CActionStatusStr[asFailed]);
+    Expect(ListOfVars).WithItem('$LastAction_Status$').DifferentThanValue(CActionStatusStr[asFailed], 'Cannot find main window of UIClicker.');
     UIClickerMainHandle := StrToIntDef(ListOfVars.Values['$Control_Handle$'], 0);
   finally
     ListOfVars.Free;

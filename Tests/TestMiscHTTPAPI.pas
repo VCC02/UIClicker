@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2022 VCC
+    Copyright (C) 2024 VCC
     creation date: Aug 2022
     initial release date: 25 Aug 2022
 
@@ -35,13 +35,20 @@ uses
 type
 
   TTestMiscHTTPAPI = class(TTestHTTPAPI)
+  private
+    procedure Test_GetDebugImageFromServerWithSizeOption(AFullSize, ABmpFound: Boolean);
   public
     constructor Create; override;
   published
     procedure Test_TestConnection;
     procedure Test_SetVariable_HappyFlow;
     procedure Test_SetVariable_BadStackLevel;
-    procedure Test_GetDebugImageFromServer;
+
+    procedure Test_GetDebugImageFromServer_FullSize_Found;
+    procedure Test_GetDebugImageFromServer_MinimumSize_Found;
+    procedure Test_GetDebugImageFromServer_FullSize_NotFound;
+    procedure Test_GetDebugImageFromServer_MinimumSize_NotFound;
+
     procedure Test_GetDebugImageFromServer_BadStackIndex;
   end;
 
@@ -93,7 +100,7 @@ begin
 end;
 
 
-procedure TTestMiscHTTPAPI.Test_GetDebugImageFromServer;
+procedure TTestMiscHTTPAPI.Test_GetDebugImageFromServerWithSizeOption(AFullSize, ABmpFound: Boolean);
 var
   Response: string;
   FindSubControlOptions: TClkFindControlOptions;
@@ -101,6 +108,11 @@ var
 begin
   SetupTargetWindowFor_FindSubControl;
   GenerateFindSubControlOptionsForMainUIClickerWindow_Bitness(FindSubControlOptions, False);
+  FindSubControlOptions.FullBackgroundImageInResult := AFullSize;
+
+  if not ABmpFound then
+    FindSubControlOptions.MatchText := 'some non-existent text';
+
   ExecuteFindSubControlAction(TestServerAddress, FindSubControlOptions, 'Test GetDebugImageFromServer on UIClicker Main', 3000, CREParam_FileLocation_ValueMem);
 
   Bmp := TBitmap.Create;
@@ -108,11 +120,59 @@ begin
     Response := GetDebugImageFromServer(TestServerAddress, 0, Bmp, False);
     Expect(Response).ToBe('');
 
-    Expect(Bmp.Width).ToBe(400);
-    Expect(Bmp.Height).ToBe(279);
+    if ABmpFound then
+    begin
+      if AFullSize then
+      begin
+        Expect(Bmp.Width).ToBe(400);
+        Expect(Bmp.Height).ToBe(279);
+      end
+      else
+      begin
+        Expect(Bmp.Width).ToBe(39);
+        Expect(Bmp.Height).ToBe(35);
+      end;
+    end
+    else
+    begin
+      if AFullSize then
+      begin
+        Expect(Bmp.Width).ToBe(736);
+        Expect(Bmp.Height).ToBe(329);
+      end
+      else
+      begin
+        Expect(Bmp.Width).ToBe(487);
+        Expect(Bmp.Height).ToBe(330);
+      end;
+    end;
   finally
     Bmp.Free;
   end;
+end;
+
+
+procedure TTestMiscHTTPAPI.Test_GetDebugImageFromServer_FullSize_Found;
+begin
+  Test_GetDebugImageFromServerWithSizeOption(True, True);
+end;
+
+
+procedure TTestMiscHTTPAPI.Test_GetDebugImageFromServer_MinimumSize_Found;
+begin
+  Test_GetDebugImageFromServerWithSizeOption(False, True);
+end;
+
+
+procedure TTestMiscHTTPAPI.Test_GetDebugImageFromServer_FullSize_NotFound;
+begin
+  Test_GetDebugImageFromServerWithSizeOption(True, False);
+end;
+
+
+procedure TTestMiscHTTPAPI.Test_GetDebugImageFromServer_MinimumSize_NotFound;
+begin
+  Test_GetDebugImageFromServerWithSizeOption(False, False);
 end;
 
 

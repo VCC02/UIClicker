@@ -1468,6 +1468,7 @@ begin
   FindControlInputData.DebugGrid := frClickerActions.imgDebugGrid;
 
   FindControlInputData.ImageSource := AFindControlOptions.ImageSource;
+  FindControlInputData.FullBackgroundImageInResult := AFindControlOptions.FullBackgroundImageInResult;
 end;
 
 
@@ -1551,21 +1552,56 @@ function TActionExecution.ExecuteFindControlAction(var AFindControlOptions: TClk
     SetActionVarValue('$AllHalf_Control_Heights$', AllHalf_Control_Heights_Str);
   end;
 
-  procedure SetDbgImgPos(AMatchBitmapAlgorithm: TMatchBitmapAlgorithm; AFindControlInputData: TFindControlInputData; AResultedControl: TCompRec);
+  procedure SetDbgImgPos(AMatchBitmapAlgorithm: TMatchBitmapAlgorithm; AFindControlInputData: TFindControlInputData; AResultedControl: TCompRec; AFindControlOnScreen_Result: Boolean);
   begin
-    case AFindControlOptions.MatchBitmapAlgorithm of
-      mbaBruteForce:
-      begin
-        frClickerActions.imgDebugGrid.Left := AResultedControl.XOffsetFromParent;
-        frClickerActions.imgDebugGrid.Top := AResultedControl.YOffsetFromParent;
-      end;
+    if AFindControlInputData.FullBackgroundImageInResult then
+    begin
+      case AFindControlOptions.MatchBitmapAlgorithm of
+        mbaBruteForce:
+        begin
+          frClickerActions.imgDebugGrid.Left := AResultedControl.XOffsetFromParent;
+          frClickerActions.imgDebugGrid.Top := AResultedControl.YOffsetFromParent;
+        end;
 
-      mbaXYMultipleAndOffsets:
-      begin
-        frClickerActions.imgDebugGrid.Left := AFindControlInputData.InitialRectangleOffsets.Left;
-        frClickerActions.imgDebugGrid.Top := AFindControlInputData.InitialRectangleOffsets.Top;
-      end;
-    end; //case
+        mbaXYMultipleAndOffsets:
+        begin
+          frClickerActions.imgDebugGrid.Left := AFindControlInputData.InitialRectangleOffsets.Left;
+          frClickerActions.imgDebugGrid.Top := AFindControlInputData.InitialRectangleOffsets.Top;
+        end;
+      end; //case
+    end
+    else
+    begin
+      case AFindControlOptions.MatchBitmapAlgorithm of
+        mbaBruteForce:
+        begin
+          if AFindControlOptions.FullBackgroundImageInResult then
+          begin
+            frClickerActions.imgDebugGrid.Left := CDebugBitmapBevelWidth - AFindControlOptions.MatchBitmapAlgorithmSettings.XOffset; //AResultedControl.XOffsetFromParent;
+            frClickerActions.imgDebugGrid.Top := CDebugBitmapBevelHeight - AFindControlOptions.MatchBitmapAlgorithmSettings.YOffset; //AResultedControl.YOffsetFromParent;
+          end
+          else
+          begin
+            frClickerActions.imgDebugGrid.Left := CDebugBitmapBevelWidth;
+            frClickerActions.imgDebugGrid.Top := CDebugBitmapBevelHeight;
+          end
+        end;
+
+        mbaXYMultipleAndOffsets:
+        begin
+          if AFindControlOnScreen_Result then
+          begin
+            frClickerActions.imgDebugGrid.Left := CDebugBitmapBevelWidth - AFindControlOptions.MatchBitmapAlgorithmSettings.XOffset;
+            frClickerActions.imgDebugGrid.Top := CDebugBitmapBevelHeight - AFindControlOptions.MatchBitmapAlgorithmSettings.YOffset;
+          end
+          else
+          begin  //not found
+            frClickerActions.imgDebugGrid.Left := AFindControlInputData.InitialRectangleOffsets.Left;
+            frClickerActions.imgDebugGrid.Top := AFindControlInputData.InitialRectangleOffsets.Top;
+          end
+        end;
+      end; //case
+    end
   end;
 
   procedure SetAllControl_Handles_FromResultedControlArr(var AResultedControlArr: TCompRecArr; AMatchSource, ADetailedMatchSource: string);
@@ -1695,13 +1731,15 @@ begin
           try
             SetLength(PartialResultedControlArr, 0);
             WorkFindControlInputData := FindControlInputData;
-            if FindControlOnScreen(AFindControlOptions.MatchBitmapAlgorithm,
-                                   AFindControlOptions.MatchBitmapAlgorithmSettings,
-                                   WorkFindControlInputData,
-                                   InitialTickCount,
-                                   StopAllActionsOnDemandAddr,
-                                   PartialResultedControlArr,
-                                   DoOnGetGridDrawingOption) then
+
+            FindControlOnScreen_Result := FindControlOnScreen(AFindControlOptions.MatchBitmapAlgorithm,
+                                                              AFindControlOptions.MatchBitmapAlgorithmSettings,
+                                                              WorkFindControlInputData,
+                                                              InitialTickCount,
+                                                              StopAllActionsOnDemandAddr,
+                                                              PartialResultedControlArr,
+                                                              DoOnGetGridDrawingOption);
+            if FindControlOnScreen_Result then
             begin
               UpdateActionVarValuesFromControl(PartialResultedControlArr[0]);
               //frClickerActions.DebuggingInfoAvailable := True;
@@ -1726,7 +1764,7 @@ begin
             if Length(PartialResultedControlArr) > 0 then
               ResultedControl := PartialResultedControlArr[0];  //ResultedControl has some fields, initialized before the search. If no result is found, then call SetDbgImgPos with those values.
 
-            SetDbgImgPos(AFindControlOptions.MatchBitmapAlgorithm, WorkFindControlInputData, ResultedControl);
+            SetDbgImgPos(AFindControlOptions.MatchBitmapAlgorithm, WorkFindControlInputData, ResultedControl, FindControlOnScreen_Result);
           end;
         end;
       end;   //sfcmGenGrid
@@ -1907,7 +1945,7 @@ begin
             if Length(PartialResultedControlArr) > 0 then
               ResultedControl := PartialResultedControlArr[0];  //ResultedControl has some fields, initialized before the search. If no result is found, then call SetDbgImgPos with those values.
 
-            SetDbgImgPos(AFindControlOptions.MatchBitmapAlgorithm, WorkFindControlInputData, ResultedControl);
+            SetDbgImgPos(AFindControlOptions.MatchBitmapAlgorithm, WorkFindControlInputData, ResultedControl, FindControlOnScreen_Result);
           end;
         finally
           FindControlInputData.BitmapToSearchFor.Free;
@@ -2027,7 +2065,7 @@ begin
           if Length(PartialResultedControlArr) > 0 then
             ResultedControl := PartialResultedControlArr[0];
 
-          SetDbgImgPos(AFindControlOptions.MatchBitmapAlgorithm, WorkFindControlInputData, ResultedControl);
+          SetDbgImgPos(AFindControlOptions.MatchBitmapAlgorithm, WorkFindControlInputData, ResultedControl, FindControlOnScreen_Result);
         end;
       finally
         FindControlInputData.BitmapToSearchFor.Free;
@@ -2189,7 +2227,7 @@ begin
           if Length(PartialResultedControlArr) > 0 then
             ResultedControl := PartialResultedControlArr[0];
 
-          SetDbgImgPos(AFindControlOptions.MatchBitmapAlgorithm, WorkFindControlInputData, ResultedControl);
+          SetDbgImgPos(AFindControlOptions.MatchBitmapAlgorithm, WorkFindControlInputData, ResultedControl, FindControlOnScreen_Result);
         end;
       finally
         FindControlInputData.BitmapToSearchFor.Free;
@@ -3019,6 +3057,7 @@ begin
 
   tk := GetTickCount64;
   try
+    ActionPlugin.Loaded := False;
     if not ActionPlugin.LoadToExecute(AResolvedPluginPath,
                                       AddToLog,
                                       DoOnExecuteActionByName,
@@ -3053,7 +3092,7 @@ begin
       else
         AddToLog('Plugin executed successfully.');
     finally
-      if not ActionPlugin.Unload then
+      if not ActionPlugin.Unload(AddToLog) then
         AddToLog('Error unloading plugin: "' + ActionPlugin.Err + '".')
       else
         AddToLog('Plugin unloaded successfully.');

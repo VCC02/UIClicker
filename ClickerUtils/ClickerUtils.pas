@@ -32,11 +32,11 @@ unit ClickerUtils;
 interface
 
 uses
-  //{$IFDEF FPC}
-  //  LCLIntf,
-  //{$ELSE}
+  {$IFDEF Windows}
     Windows,
-  //{$ENDIF}
+  {$ELSE}
+    LCLIntf, LCLType,
+  {$ENDIF}
   SysUtils, Classes, ClickerIniFiles, Graphics, Controls, StdCtrls;
 
 
@@ -274,6 +274,7 @@ type
     SourceFileName: string; //can be a bmp file from disk or from externally rendered InMem FS
     ImageSourceFileNameLocation: TImageSourceFileNameLocation; //can be disk or externally rendered bmp from InMem FS
     PrecisionTimeout: Boolean;  //When True, the bitmap searching algorithm verifies the timeout. This is a bit of extra overhead, which may slow down the search.
+    FullBackgroundImageInResult: Boolean; //When True, the resulted debugging image contains the background image. Defaults to True for backwards compatibility.
   end;
 
   TClkSetTextOptions = record
@@ -533,7 +534,10 @@ implementation
 
 
 uses
-  ShellAPI, Forms, Messages;
+  {$IFDEF Windows}
+    ShellAPI,
+  {$ENDIF}
+  Forms, Messages, Math;
 
 
 {#13#10 -> #4#5}
@@ -774,18 +778,20 @@ var
 begin
   Result := '  [admin unknown]';
 
-  DllHandle := LoadLibrary(shell32);
-  if DllHandle <> 0 then
-  begin
-    {$IFDEF FPC}
-      IsUserAnAdmin := TIsUserAnAdmin(GetProcAddress(DllHandle, 'IsUserAnAdmin'));
-    {$ELSE}
-      @IsUserAnAdmin := GetProcAddress(DllHandle, 'IsUserAnAdmin');
-    {$ENDIF}
-    Result := CResult[IsUserAnAdmin()];
-
-    FreeLibrary(DllHandle);
-  end;
+  {$IFDEF Windows}
+    DllHandle := LoadLibrary(shell32);
+    if DllHandle <> 0 then
+    begin
+      {$IFDEF FPC}
+        IsUserAnAdmin := TIsUserAnAdmin(GetProcAddress(DllHandle, 'IsUserAnAdmin'));
+      {$ELSE}
+        @IsUserAnAdmin := GetProcAddress(DllHandle, 'IsUserAnAdmin');
+      {$ENDIF}
+      Result := CResult[IsUserAnAdmin()];
+  
+      FreeLibrary(DllHandle);
+    end;
+  {$ENDIF}
 end;
 
 
@@ -2382,13 +2388,16 @@ var
   TextLength: Integer;
 begin
   Result := '';
-  TextLength := SendMessage(HW, WM_GETTEXTLENGTH, 0, 0);
-  if TextLength <> 0 then
-  begin
-    SetLength(Result, TextLength shl 1 + 2);  //Allocating twice the size, might be extreme, but better safe than crash. Still not sure about UTF8 compatibility for 4-byte chars.
-    SendMessage(HW, WM_GETTEXT, TextLength + 1, {%H-}PtrInt(@Result[1]));
-    SetLength(Result, TextLength);
-  end;
+
+  {$IFDEF Windows}
+    TextLength := SendMessage(HW, WM_GETTEXTLENGTH, 0, 0);
+    if TextLength <> 0 then
+    begin
+      SetLength(Result, TextLength shl 1 + 2);  //Allocating twice the size, might be extreme, but better safe than crash. Still not sure about UTF8 compatibility for 4-byte chars.
+      SendMessage(HW, WM_GETTEXT, TextLength + 1, {%H-}PtrInt(@Result[1]));
+      SetLength(Result, TextLength);
+    end;
+  {$ENDIF}
 end;
 
 
@@ -2399,18 +2408,21 @@ var
   WideTempBuffer: PWideChar;
 begin
   Result := '';
-  TextLength := SendMessage(HW, WM_GETTEXTLENGTH, 0, 0);
-  if TextLength <> 0 then
-  begin
-    SetLength(Result, TextLength shl 1 + 2);  //Allocating twice the size, might be extreme, but better safe than crash. Still not sure about UTF8 compatibility for 4-byte chars.
 
-    SetLength(TempBuffer, Length(Result) shl 1);
-    SendMessageW(HW, WM_GETTEXT, TextLength + 1, {%H-}PtrInt(@TempBuffer[0]));     // W
-    WideTempBuffer := @TempBuffer[0];
-    Result := string(WideTempBuffer);
+  {$IFDEF Windows}
+    TextLength := SendMessage(HW, WM_GETTEXTLENGTH, 0, 0);
+    if TextLength <> 0 then
+    begin
+      SetLength(Result, TextLength shl 1 + 2);  //Allocating twice the size, might be extreme, but better safe than crash. Still not sure about UTF8 compatibility for 4-byte chars.
 
-    SetLength(Result, TextLength);
-  end;
+      SetLength(TempBuffer, Length(Result) shl 1);
+      SendMessageW(HW, WM_GETTEXT, TextLength + 1, {%H-}PtrInt(@TempBuffer[0]));     // W
+      WideTempBuffer := @TempBuffer[0];
+      Result := string(WideTempBuffer);
+
+      SetLength(Result, TextLength);
+    end;
+  {$ENDIF}
 end;
 
 
@@ -2421,9 +2433,11 @@ begin
   Result.Handle := HW;
 
   try
-    if GetClassName(HW, CompName, Length(CompName) - 1) > 0 then
-      Result.ClassName := string(CompName)
-    else
+    {$IFDEF Windows}
+      if GetClassName(HW, CompName, Length(CompName) - 1) > 0 then
+        Result.ClassName := string(CompName)
+      else
+    {$ENDIF}
       Result.ClassName := '';
   except
     on E: Exception do

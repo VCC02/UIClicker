@@ -130,6 +130,7 @@ type
     SourceFileName: PWideChar;
     ImageSourceFileNameLocation: TImageSourceFileNameLocation;
     PrecisionTimeout: Boolean;
+    FullBackgroundImageInResult: Boolean;
   end;
 
   PClkFindControlOptionsAPI = ^TClkFindControlOptionsAPI;
@@ -717,6 +718,7 @@ begin
   TempAction.FindControlOptions.ImageSourceFileNameLocation := TImageSourceFileNameLocation(AFindControlOptions^.ImageSourceFileNameLocation);
 
   TempAction.FindControlOptions.PrecisionTimeout := AFindControlOptions^.PrecisionTimeout;
+  TempAction.FindControlOptions.FullBackgroundImageInResult := AFindControlOptions^.FullBackgroundImageInResult;
 
   AddActionToTemplate(TemplateFileName, TempAction);
   Result := 0;

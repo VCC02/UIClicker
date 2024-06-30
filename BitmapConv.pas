@@ -36,7 +36,6 @@ uses
   {$ENDIF}
   SysUtils, Graphics, ExtCtrls;
 
-
 procedure WipeBitmap(ABitmap: TBitmap; NewWidth, NewHeight: Integer);
 procedure WipeImage(AImg: TImage; NewWidth, NewHeight: Integer);
 
@@ -51,32 +50,35 @@ implementation
 
 procedure DrawWipeRect(ACanvas: TCanvas; NewWidth, NewHeight: Integer);
 begin
-  ACanvas.Brush.Style := bsSolid;
-  ACanvas.Brush.Color := clWhite;
-  ACanvas.Pen.Color := clWhite;
-  ACanvas.Rectangle(0, 0, NewWidth {- 1}, NewHeight {- 1});
+  ACanvas.Lock;
+  try
+    ACanvas.Brush.Style := bsSolid;
+    ACanvas.Brush.Color := clWhite;
+    ACanvas.Pen.Color := clWhite;
+    ACanvas.Rectangle(0, 0, NewWidth {- 1}, NewHeight {- 1});
+  finally
+    ACanvas.Unlock
+  end;
 end;
 
 
 procedure WipeBitmap(ABitmap: TBitmap; NewWidth, NewHeight: Integer);
 begin
-  ABitmap.Clear;
-  ABitmap.Width := NewWidth;
-  ABitmap.Height := NewHeight;
+  //ABitmap.Clear;
+  ABitmap.SetSize(NewWidth, NewHeight);
   DrawWipeRect(ABitmap.Canvas, NewWidth, NewHeight);
 end;
 
 
 procedure WipeImage(AImg: TImage; NewWidth, NewHeight: Integer);
 begin
-  AImg.Picture.Clear;
+  //AImg.Picture.Clear;
   AImg.Width := NewWidth;
   AImg.Height := NewHeight;
-  AImg.Picture.Bitmap.Width := AImg.Width;
-  AImg.Picture.Bitmap.Height := AImg.Height;
+  AImg.Picture.Bitmap.SetSize(NewWidth, NewHeight);
 
   DrawWipeRect(AImg.Canvas, NewWidth, NewHeight);
-  AImg.Repaint;
+  //AImg.Repaint;
 end;
 
 

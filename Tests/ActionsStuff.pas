@@ -345,6 +345,7 @@ begin
   AFindControlOptions.ImageSourceFileNameLocation := isflMem;
 
   AFindControlOptions.PrecisionTimeout := False;
+  AFindControlOptions.FullBackgroundImageInResult := True;
 end;
 
 
@@ -405,6 +406,7 @@ begin
   AFindControlOptions.ImageSourceFileNameLocation := isflMem;
 
   AFindControlOptions.PrecisionTimeout := False;
+  AFindControlOptions.FullBackgroundImageInResult := True;
 end;
 
 
@@ -450,6 +452,7 @@ begin
   AFindControlOptions.ImageSourceFileNameLocation := isflMem;
 
   AFindControlOptions.PrecisionTimeout := False;
+  AFindControlOptions.FullBackgroundImageInResult := True;
 end;
 
 
@@ -495,6 +498,7 @@ begin
   AFindControlOptions.ImageSourceFileNameLocation := isflMem;
 
   AFindControlOptions.PrecisionTimeout := False;
+  AFindControlOptions.FullBackgroundImageInResult := True;
 end;
 
 
@@ -556,6 +560,7 @@ begin
   AFindControlOptions.ImageSourceFileNameLocation := isflMem;
 
   AFindControlOptions.PrecisionTimeout := False;
+  AFindControlOptions.FullBackgroundImageInResult := True;
 end;
 
 
@@ -617,6 +622,7 @@ begin
   AFindControlOptions.ImageSourceFileNameLocation := isflDisk;
 
   AFindControlOptions.PrecisionTimeout := False;
+  AFindControlOptions.FullBackgroundImageInResult := True;
 end;
 
 
@@ -678,6 +684,7 @@ begin
   AFindControlOptions.ImageSourceFileNameLocation := isflMem;
 
   AFindControlOptions.PrecisionTimeout := False;
+  AFindControlOptions.FullBackgroundImageInResult := True;
 end;
 
 

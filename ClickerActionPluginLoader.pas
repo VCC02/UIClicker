@@ -98,8 +98,9 @@ type
                            AAllVars: TStringList = nil): Boolean;
 
     function LoadToGetProperties(APath: string;
-                                 AOnUpdatePropertyIcons: TOnUpdatePropertyIcons): Boolean;
-    function Unload: Boolean;
+                                 AOnUpdatePropertyIcons: TOnUpdatePropertyIcons;
+                                 AOnAddToLog: TOnAddToLog): Boolean;
+    function Unload(AOnAddToLog: TOnAddToLog): Boolean;
 
     function GetAPIVersion: DWord;
     function GetListOfProperties: string;
@@ -543,8 +544,13 @@ end;
 
 procedure TActionPlugin.DoAddToLog(s: string);
 begin
-  if Assigned(OnAddToLog) then
-    OnAddToLog(s);
+  try
+    if Assigned(OnAddToLog) then
+      OnAddToLog(s);
+  except
+    on E: Exception do
+      MessageBoxFunction(PChar('Ex: ' + s), 'Plugin loader', 0);
+  end;
 end;
 
 
@@ -606,12 +612,15 @@ function TActionPlugin.LoadToExecute(APath: string;
                                      AAllVars: TStringList = nil): Boolean;
 begin
   Result := False;
+  OnAddToLog := AOnAddToLog;
 
   if Loaded then
-    Unload;
+  begin
+    DoAddToLog('Plugin already loaded. Unloading first...');
+    Unload(AOnAddToLog);
+  end;
 
   Path := APath;
-  OnAddToLog := AOnAddToLog;
   OnExecuteActionByName := AOnExecuteActionByName;
   OnSetVar := AOnSetVar;
   OnSetDebugPoint := AOnSetDebugPoint;
@@ -641,18 +650,20 @@ begin
     Exit;
   end;
 
-  PluginHandle := LoadLibrary(Path);
+  DoAddToLog('Loading plugin for execute...');
+  PluginHandle := Windows.LoadLibraryA(PChar(Path)); //LoadLibrary(Path);
   Loaded := PluginHandle > 0;
 
   if Loaded then
   begin
     Err := '';
+    DoAddToLog('Plugin loaded, with handle ' + IntToStr(PluginHandle));
 
     Func.ExecutePluginFunc := GetProcedureAddress(PluginHandle, 'ExecutePlugin');
     if @Func.ExecutePluginFunc = nil then
     begin
       Err := 'Cannot get address of ExecutePlugin.';
-      Unload;
+      Unload(AOnAddToLog);
       Exit;
     end;
 
@@ -660,14 +671,14 @@ begin
     if @Func.GetAPIVersionFunc = nil then
     begin
       Err := 'Cannot get address of GetAPIVersion.';
-      Unload;
+      Unload(AOnAddToLog);
       Exit;
     end;
 
     if GetAPIVersion <> CActionPlugin_APIVersion then
     begin
       Err := 'The plugin''s API vesion (' + IntToStr(GetAPIVersion) + ') does not match UIClicker''s API version (' + IntToStr(CActionPlugin_APIVersion) + ').';
-      Unload;
+      Unload(AOnAddToLog);
       Exit;
     end;
   end
@@ -682,27 +693,31 @@ end;
 
 
 function TActionPlugin.LoadToGetProperties(APath: string;
-                                           AOnUpdatePropertyIcons: TOnUpdatePropertyIcons): Boolean;
+                                           AOnUpdatePropertyIcons: TOnUpdatePropertyIcons;
+                                           AOnAddToLog: TOnAddToLog): Boolean;
 begin
   Result := False;
+  OnAddToLog := AOnAddToLog;
 
   if Loaded then
-    Unload;
+    Unload(AOnAddToLog);
 
   Path := APath;
 
-  PluginHandle := LoadLibrary(Path);
+  DoAddToLog('Loading plugin for getting properties...');
+  PluginHandle := Windows.LoadLibraryA(PChar(Path));
   Loaded := PluginHandle > 0;
 
   if Loaded then
   begin
     Err := '';
+    DoAddToLog('Plugin loaded, with handle ' + IntToStr(PluginHandle));
 
     Func.GetListOfPropertiesProc := GetProcedureAddress(PluginHandle, 'GetListOfProperties');
     if @Func.GetListOfPropertiesProc = nil then
     begin
       Err := 'Cannot get address of GetListOfProperties';
-      Unload;
+      Unload(AOnAddToLog);
       Exit;
     end;
 
@@ -710,14 +725,14 @@ begin
     if @Func.GetAPIVersionFunc = nil then
     begin
       Err := 'Cannot get address of GetAPIVersion.';
-      Unload;
+      Unload(AOnAddToLog);
       Exit;
     end;
 
     if GetAPIVersion <> CActionPlugin_APIVersion then
     begin
       Err := 'The plugin''s API vesion (' + IntToStr(GetAPIVersion) + ') does not match UIClicker''s API version (' + IntToStr(CActionPlugin_APIVersion) + ').';
-      Unload;
+      Unload(AOnAddToLog);
       Exit;
     end;
 
@@ -733,20 +748,22 @@ begin
 end;
 
 
-function TActionPlugin.Unload: Boolean;
+function TActionPlugin.Unload(AOnAddToLog: TOnAddToLog): Boolean;
 begin
   Result := False;
+  OnAddToLog := AOnAddToLog;
 
   if Loaded then
   begin
+    DoAddToLog('Unloading plugin with handle ' + IntToStr(PluginHandle) + '...');
     //if not UnloadLibrary(PluginHandle) then
-    if not FreeLibrary(PluginHandle) then
+    if not Windows.FreeLibrary(PluginHandle) then
     begin
       Err := SysErrorMessage(GetLastOSError);
       Exit;
     end
     else
-      ;
+      DoAddToLog('Plugin unloaded...');
   end;
 
   Result := True;
