@@ -2594,6 +2594,7 @@ end;
 procedure TfrClickerFindControl.btnDisplaySearchAreaDebuggingImageClick(Sender: TObject);
 var
   TempBmp: TBitmap;
+  FindControlOptions: PClkFindControlOptions;
 begin
   DisplayDebuggingImage;  //call this, before working with FSearchAreaControlDbgImg, because it might be nil, so it has to be created
 
@@ -2612,6 +2613,9 @@ begin
   finally
     TempBmp.Free;
   end;
+
+  FindControlOptions := DoOnGetFindControlOptions;
+  UpdateSearchAreaLabelsFromKeysOnInitRect(FindControlOptions.InitialRectangle);
 end;
 
 
