@@ -485,6 +485,49 @@ const
   CLoopEvalBreakPositionStr: array[TLoopEvalBreakPosition] of string  = ('lebpAfterContent', 'lebpBeforeContent');
 
 
+type
+  TKeyAction = (kaDownUp, kaDown, kaUp);
+
+  TKeyType = record
+    IsSpecial: Boolean; //True for keys like VK_DELETE, VK_LEFT, VK_RIGHT, VK_F3
+    KeyCode: Word;
+    Action: TKeyAction;
+  end;
+
+  TKeyTypeArr = array of TKeyType;
+
+
+const
+  CSpecialKeyCount = 65;
+  CSpecialKeyReplacements: array[0..CSpecialKeyCount - 1] of string = (                     //PgUp and PgDown are added here for convenience
+    'Delete', 'Backspace', 'Cancel', 'Insert', 'Home', 'End', 'Left', 'Right', 'Up', 'Down', 'PgUp', 'PgDown', 'Prior', 'Next',
+    'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12',
+    'Control', 'LControl', 'RControl', 'Shift', 'LShift', 'RShift', 'Menu', 'LMenu', 'RMenu',
+    'ControlUp', 'LControlUp', 'RControlUp', 'ShiftUp', 'LShiftUp', 'RShiftUp', 'MenuUp', 'LMenuUp', 'RMenuUp',
+    'ControlDown', 'LControlDown', 'RControlDown', 'ShiftDown', 'LShiftDown', 'RShiftDown', 'MenuDown', 'LMenuDown', 'RMenuDown',
+    'Apps', 'LWin', 'RWin', 'Tab', 'Clear', 'Return', 'Pause', 'Capital', 'Select', 'Print', 'Execute', 'Snapshot'
+    //Others to be added if required...
+  );
+
+  CSpecialKeyCodes: array[0..CSpecialKeyCount - 1] of Word = (
+    VK_DELETE, VK_BACK, VK_CANCEL, VK_INSERT, VK_HOME, VK_END, VK_LEFT, VK_RIGHT, VK_UP, VK_DOWN, VK_PRIOR, VK_NEXT, VK_PRIOR, VK_NEXT,
+    VK_F1, VK_F2, VK_F3, VK_F4, VK_F5, VK_F6, VK_F7, VK_F8, VK_F9, VK_F10, VK_F11, VK_F12,
+    VK_CONTROL, VK_LCONTROL, VK_RCONTROL, VK_SHIFT, VK_LSHIFT, VK_RSHIFT, VK_MENU, VK_LMENU, VK_RMENU,
+    VK_CONTROL, VK_LCONTROL, VK_RCONTROL, VK_SHIFT, VK_LSHIFT, VK_RSHIFT, VK_MENU, VK_LMENU, VK_RMENU,
+    VK_CONTROL, VK_LCONTROL, VK_RCONTROL, VK_SHIFT, VK_LSHIFT, VK_RSHIFT, VK_MENU, VK_LMENU, VK_RMENU,
+    VK_APPS, VK_LWIN, VK_RWIN, VK_TAB, VK_CLEAR, VK_RETURN, VK_PAUSE, VK_CAPITAL, VK_SELECT, VK_PRINT, VK_EXECUTE, VK_SNAPSHOT
+  );
+
+  CSpecialKeyActions: array[0..CSpecialKeyCount - 1] of TKeyAction = (
+    kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp,
+    kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp,
+    kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp,
+    kaUp, kaUp, kaUp, kaUp, kaUp, kaUp, kaUp, kaUp, kaUp,
+    kaDown, kaDown, kaDown, kaDown, kaDown, kaDown, kaDown, kaDown, kaDown,
+    kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp
+  );
+
+
 function FastReplace_ReturnTo45(s: string): string;
 function FastReplace_45ToReturn(s: string): string;
 function FastReplace_ReturnTo68(s: string): string; //used for storing CRLF (replaced by #6#8) inside a CRLF separated list of variables

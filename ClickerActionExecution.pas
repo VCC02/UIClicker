@@ -2357,22 +2357,108 @@ end;
 
 
 function TActionExecution.ExecuteSetControlTextAction(var ASetTextOptions: TClkSetTextOptions): Boolean;
+  function PosKeyReplacement(AText: string; out AFoundReplacement: string; out AKeyCode: Word; out AKeyAction: TKeyAction): Integer;
+  var
+    Start, Stop: Integer;
+    s: string;
+    i: Integer;
+  begin
+    Result := 0;
+
+    Start := Pos('$', AText);
+    if Start = 0 then
+      Exit;
+
+    s := Copy(AText, Start + 1, MaxInt);
+    Stop := Pos('$', s);
+    if Stop = 0 then
+      Exit;
+
+    s := Copy(s, 1, Stop - 1); // s should not contain any '$' at this point
+
+    for i := 0 to CSpecialKeyCount - 1 do
+      if s = CSpecialKeyReplacements[i] then
+      begin
+        AFoundReplacement := '$' + s + '$';
+        AKeyCode := CSpecialKeyCodes[i];
+        AKeyAction := CSpecialKeyActions[i];
+        Result := Start;
+      end;
+  end;
+
+
+  procedure ParseSpecialKeys(var ATextToSend: string; var AKeyTypes: TKeyTypeArr);
+  var
+    i, PosRpl: Integer;
+    FoundReplacement: string;
+    KeyCode: Word;
+    KeyAction: TKeyAction;
+  begin
+    SetLength(AKeyTypes, Length(ATextToSend));
+
+    for i := 0 to Length(AKeyTypes) - 1 do
+      AKeyTypes[i].IsSpecial := False;
+
+    repeat
+      PosRpl := PosKeyReplacement(ATextToSend, FoundReplacement, KeyCode, KeyAction);
+
+      if PosRpl > 0 then
+      begin
+        Delete(ATextToSend, PosRpl, Length(FoundReplacement) - 1);
+        ATextToSend[PosRpl] := #14; // 
+        Delete(AKeyTypes, PosRpl - 1, Length(FoundReplacement) - 1);  //PosRpl - 1, because dynamic arrays are 0-indexed
+
+        AKeyTypes[PosRpl - 1].IsSpecial := True;
+        AKeyTypes[PosRpl - 1].KeyCode := KeyCode;
+        AKeyTypes[PosRpl - 1].Action := KeyAction;
+      end
+      else
+        Break;
+    until False;
+  end;
+
 var
   Control_Handle: THandle;
-  i, j, k, Idx: Integer;
+  i, k, Idx: Integer;
   TextToSend: string;
+  //s: string; //for debugging
   KeyStrokes: array of TINPUT;
+  KeyTypes: TKeyTypeArr;
   Err: Integer;
   ErrStr: string;
   DelayBetweenKeyStrokesInt: Integer;
   Count: Integer;
   GeneratedException: Boolean;
+  tk, tk2: QWord;
+  Pos14_InInitialText: Boolean;
 begin
   Result := True;
 
   Control_Handle := StrToIntDef(GetActionVarValue('$Control_Handle$'), 0);
   TextToSend := EvaluateReplacements(ASetTextOptions.Text);
   TextToSend := EvaluateHTTP(TextToSend, GeneratedException);
+
+  Pos14_InInitialText := Pos(#14, TextToSend) > 0;
+  ParseSpecialKeys(TextToSend, KeyTypes);
+
+  if ASetTextOptions.ControlType in [stEditBox, stComboBox] then
+    if (Pos(#14, TextToSend) > 0) and not Pos14_InInitialText then
+      AddToLog('[SetText] Warning: Special keys are not supported in "EditBox" and "ComboBox" mode. Please use "Keystrokes" mode.');
+
+  if Length(TextToSend) <> Length(KeyTypes) then
+  begin
+    ErrStr := 'SetText parsing error: ' + IntToStr(Length(TextToSend)) + ' / ' + IntToStr(Length(KeyTypes)) + ' "' + TextToSend + '"';
+    AddToLog(ErrStr);
+    SetActionVarValue('$ExecAction_Err$', ErrStr);
+    Result := False;
+  end;
+
+  //AddToLog('[SetText]: "' + TextToSend + '"');    //for debugging
+  //s := '';
+  //for i := 0 to Length(KeyTypes) - 1 do
+  //  s := s + IntToStr(Ord(KeyTypes[i].IsSpecial));
+  //AddToLog('[SetText]: "' + s + '"');
+
   Count := Min(65535, Max(0, StrToIntDef(EvaluateReplacements(ASetTextOptions.Count), 1)));
 
   if ASetTextOptions.ControlType = stKeystrokes then
@@ -2407,6 +2493,18 @@ begin
             KeyStrokes[Idx + 1].ki.dwFlags := KEYEVENTF_UNICODE or KEYEVENTF_KEYUP;
             KeyStrokes[Idx + 1].ki.Time := 0;
             KeyStrokes[Idx + 1].ki.ExtraInfo := 0;
+
+            if KeyTypes[i].IsSpecial then
+            begin
+              KeyStrokes[Idx].ki.wScan := 0;
+              KeyStrokes[Idx + 1].ki.wScan := 0;
+
+              if KeyTypes[i].Action in [kaDownUp, kaDown] then
+                KeyStrokes[Idx].ki.wVk := KeyTypes[i].KeyCode;
+
+              if KeyTypes[i].Action in [kaDownUp, kaUp] then
+                KeyStrokes[Idx + 1].ki.wVk := KeyTypes[i].KeyCode;
+            end;
           end;
 
           SetLastError(0);
@@ -2424,24 +2522,32 @@ begin
           begin
             for i := 0 to Length(TextToSend) - 1 do
             begin
-              if Integer(SendInput(2, @KeyStrokes[i shl 1], SizeOf(TINPUT))) <> 2 then
-              begin
-                Err := GetLastOSError;
-                ErrStr := 'KeyStrokes error: ' + IntToStr(Err) + '  ' + SysErrorMessage(GetLastOSError) + '  Keystrokes count: ' + IntToStr(Length(KeyStrokes));
-                SetActionVarValue('$ExecAction_Err$', ErrStr);
-                Result := False;
+              //if KeyTypes[i].Action = kaDown then
+              //  keybd_event(KeyTypes[i].KeyCode, 0, 0, 0);    //to be enabled if SendInput doesn't properly simulate key combinations
+              try
+                if Integer(SendInput(2, @KeyStrokes[i shl 1], SizeOf(TINPUT))) <> 2 then
+                begin
+                  Err := GetLastOSError;
+                  ErrStr := 'KeyStrokes error: ' + IntToStr(Err) + '  ' + SysErrorMessage(GetLastOSError) + '  Keystrokes count: ' + IntToStr(Length(KeyStrokes));
+                  SetActionVarValue('$ExecAction_Err$', ErrStr);
+                  Result := False;
+                end;
+              finally
+                //if KeyTypes[i].Action = kaUp then
+                //  keybd_event(KeyTypes[i].KeyCode, 0, KEYEVENTF_KEYUP, 0);  //to be enabled if SendInput doesn't properly simulate key combinations
               end;
 
-              for j := 1 to DelayBetweenKeyStrokesInt do
-              begin
-                Sleep(1);  //this is way longer than a ms, but it allows checking for stop condition
+              tk2 := GetTickCount64;
+              repeat
+                //Sleep(1);
+                Application.ProcessMessages;
 
                 if CheckManualStopCondition then
                 begin
                   Result := False;
-                  Break;     //break inner for
+                  Break;     //break for k
                 end;
-              end;
+              until GetTickCount64 - tk2 >= DelayBetweenKeyStrokesInt;
 
               if CheckManualStopCondition then
               begin
@@ -2456,13 +2562,24 @@ begin
       end;
     end; //case
 
+    Application.ProcessMessages;
     if CheckManualStopCondition then
     begin
       Result := False;
       Break;     //break for k
     end;
 
-    Sleep(DelayBetweenKeyStrokesInt);
+    tk := GetTickCount64;
+    repeat
+      //Sleep(1);
+      Application.ProcessMessages;
+
+      if CheckManualStopCondition then
+      begin
+        Result := False;
+        Break;     //break for k
+      end;
+    until GetTickCount64 - tk >= DelayBetweenKeyStrokesInt;   //it's ok to have DelayBetweenKeyStrokesInt between iterations
   end; //for k
 end;
 
@@ -3086,6 +3203,8 @@ begin
     end;
 
     try
+      SetActionVarValue('$ExecAction_Err$', '');
+      SetActionVarValue(CActionPlugin_ExecutionResultErrorVar, '');
       Result := ActionPlugin.ExecutePlugin(APluginOptions.ListOfPropertiesAndValues);
       if not Result then
         AddToLog('Plugin execution failed with: ' + GetActionVarValue(CActionPlugin_ExecutionResultErrorVar))

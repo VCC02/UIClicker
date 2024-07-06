@@ -2443,9 +2443,23 @@ end;
 
 
 function GetPropertyHint_SetText_Text: string;
+var
+  i: Integer;
 begin
   Result := 'The proper control type has to be selected, for the proper API call. Uses $Control_Handle$ variable.' + #13#10 +
-            'HTTP calls are available, as var values, using the following format: $http://<server:port>/[params]$';
+            'HTTP calls are available, as var values, using the following format: $http://<server:port>/[params]$' + #13#10 +
+            'For special keys, please use from the following available replacements:'+ #13#10#13#10;
+
+  for i := 0 to CSpecialKeyCount - 1 do
+  begin
+    Result := Result + '$' + CSpecialKeyReplacements[i] + '$';
+
+    if i < CSpecialKeyCount - 1 then
+      Result := Result + ', ';
+
+    if i and $F = $F then
+      Result := Result + #13#10;
+  end;
 end;
 
 
