@@ -121,6 +121,11 @@ uses
   DllUtils, Forms, ClickerActionsClient, ClickerActionProperties;
 
 
+var
+  LoadedPluginsCritSec: TRTLCriticalSection;
+  LoadedPluginHandles: TStringList;
+
+
 function DecodePluginPropertyFromAttribute(AValue, AAttrName: string): string;
 begin
   Result := Copy(AValue, Pos(#8#7 + AAttrName + '=', AValue) + 2, MaxInt);  //at this point, Result contains multiple attributes
@@ -542,6 +547,19 @@ begin
 end;
 
 
+function DoOnActionPlugin_CheckStopAllActionsOnDemand(APluginReference: Pointer): Boolean; cdecl;
+var
+  ActionPlugin: PActionPlugin;
+begin
+  ActionPlugin := APluginReference;
+
+  if not Assigned(ActionPlugin.OnScreenshotByActionName) then
+    raise Exception.Create('OnScreenshotByActionName not assigned.');
+
+  Result := ActionPlugin.FStopAllActionsOnDemandFromParent^;
+end;
+
+
 procedure TActionPlugin.DoAddToLog(s: string);
 begin
   try
@@ -586,6 +604,43 @@ begin
     Result := OnIsAtBreakPoint(ADebugPoint)
   else
     Result := True; //break if not assigned
+end;
+
+
+procedure AddPluginHandleToList(APluginHandle: THandle);
+var
+  PluginHandleStr: string;
+begin
+  EnterCriticalSection(LoadedPluginsCritSec);
+  try
+    PluginHandleStr := IntToStr(APluginHandle);
+    if LoadedPluginHandles.IndexOf(PluginHandleStr) = -1 then
+      LoadedPluginHandles.Add(PluginHandleStr)
+    else
+      raise Exception.Create('Another plugin instance already exists for the same plugin.');
+  finally
+    LeaveCriticalSection(LoadedPluginsCritSec);
+  end;
+end;
+
+
+procedure RemovePluginHandleFromList(APluginHandle: THandle);
+var
+  PluginHandleStr: string;
+  Idx: Integer;
+begin
+  EnterCriticalSection(LoadedPluginsCritSec);
+  try
+    PluginHandleStr := IntToStr(APluginHandle);
+    Idx := LoadedPluginHandles.IndexOf(PluginHandleStr);
+
+    if Idx = -1 then
+      raise Exception.Create('Attempting to remove a plugin instance which does not exist: ' + PluginHandleStr)
+    else
+      LoadedPluginHandles.Delete(Idx);
+  finally
+    LeaveCriticalSection(LoadedPluginsCritSec);
+  end;
 end;
 
 
@@ -680,6 +735,18 @@ begin
       Err := 'The plugin''s API vesion (' + IntToStr(GetAPIVersion) + ') does not match UIClicker''s API version (' + IntToStr(CActionPlugin_APIVersion) + ').';
       Unload(AOnAddToLog);
       Exit;
+    end;
+
+    try
+      AddPluginHandleToList(PluginHandle);
+      DoAddToLog('Added plugin handle to list: ' + IntToStr(PluginHandle));
+    except
+      on E: Exception do
+      begin
+        Err := 'Plugin loaded, but it has the same handle as an existing instance. Multiple instances are not supported. ' + E.Message + ' Unloading...';
+        Unload(AOnAddToLog);
+        Exit;
+      end;
     end;
   end
   else
@@ -820,36 +887,57 @@ begin
 
   ActionPlugin := @Self;
 
-  FContinueAfterBreakPoint := False;  //used at pausing the execution at first debug point, to allow the user to set breakpoints
-
-  if ActionPlugin^.FIsDebugging and ((ActionPlugin^.FPluginContinueAll <> nil) and not ActionPlugin^.FPluginContinueAll^) then
-  begin
-    ActionPlugin^.DoSetDebugPoint(CBeforePluginExecution_DbgLineContent);
-    WaitInDebuggingMode(ActionPlugin);
-  end;
-
   try
-    Result := Func.ExecutePluginFunc(ActionPlugin,
-                                     @AListOfPropertiesAndValues[1],
-                                     @ListOfPluginSettingsLen,
-                                     DoOnActionPlugin_GetActionCount_Callback,
-                                     DoOnActionPlugin_GetActionInfoByIndex_Callback,
-                                     DoOnActionPlugin_GetActionContentByIndex_Callback,
-                                     DoOnActionPlugin_ExecuteAction_Callback,
-                                     DoOnActionPlugin_GetAllTemplateVars_Callback,
-                                     DoOnActionPlugin_SetTemplateVar_Callback,
-                                     DoOnActionPlugin_DebugPoint_Callback,
-                                     DoOnActionPlugin_AddToLog_Callback,
-                                     DoOnActionPlugin_SetResultImg,
-                                     DoOnActionPlugin_GetFileContent,
-                                     DoOnActionPlugin_GetAllowedFilesInfo,
-                                     DoOnActionPlugin_SetBitmap,
-                                     DoOnActionPlugin_Screenshot);
+    FContinueAfterBreakPoint := False;  //used at pausing the execution at first debug point, to allow the user to set breakpoints
+
+    if ActionPlugin^.FIsDebugging and ((ActionPlugin^.FPluginContinueAll <> nil) and not ActionPlugin^.FPluginContinueAll^) then
+    begin
+      ActionPlugin^.DoSetDebugPoint(CBeforePluginExecution_DbgLineContent);
+      WaitInDebuggingMode(ActionPlugin);
+    end;
+
+    try
+      Result := Func.ExecutePluginFunc(ActionPlugin,
+                                       @AListOfPropertiesAndValues[1],
+                                       @ListOfPluginSettingsLen,
+                                       DoOnActionPlugin_GetActionCount_Callback,
+                                       DoOnActionPlugin_GetActionInfoByIndex_Callback,
+                                       DoOnActionPlugin_GetActionContentByIndex_Callback,
+                                       DoOnActionPlugin_ExecuteAction_Callback,
+                                       DoOnActionPlugin_GetAllTemplateVars_Callback,
+                                       DoOnActionPlugin_SetTemplateVar_Callback,
+                                       DoOnActionPlugin_DebugPoint_Callback,
+                                       DoOnActionPlugin_AddToLog_Callback,
+                                       DoOnActionPlugin_SetResultImg,
+                                       DoOnActionPlugin_GetFileContent,
+                                       DoOnActionPlugin_GetAllowedFilesInfo,
+                                       DoOnActionPlugin_SetBitmap,
+                                       DoOnActionPlugin_Screenshot,
+                                       DoOnActionPlugin_CheckStopAllActionsOnDemand);
+    finally
+      if FPluginContinueAll <> nil then
+        FPluginContinueAll^ := False; //reset flag after execution
+    end;
   finally
-    if FPluginContinueAll <> nil then
-      FPluginContinueAll^ := False; //reset flag after execution
+    try
+      RemovePluginHandleFromList(PluginHandle);
+      DoAddToLog('Removed plugin handle from list: ' + IntToStr(PluginHandle));
+    except
+      on E: Exception do
+        DoAddToLog(E.Message);
+    end;
   end;
 end;
+
+
+initialization
+  InitCriticalSection(LoadedPluginsCritSec);
+  LoadedPluginHandles := TStringList.Create;
+
+
+finalization
+  DoneCriticalSection(LoadedPluginsCritSec);
+  LoadedPluginHandles.Free;
 
 end.
 

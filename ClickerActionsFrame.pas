@@ -1138,7 +1138,14 @@ begin
   if MessageBox(Handle, PChar('Remove variable?' + #13#10 + FClkVariables.Strings[Node^.Index]), PChar(Application.Title), MB_ICONQUESTION + MB_YESNO) = IDNO then
     Exit;
 
-  FClkVariables.Delete(Node^.Index);
+  vstVariables.Enabled := False;
+  try
+    FClkVariables.Delete(Node^.Index);
+  finally
+    vstVariables.RootNodeCount := vstVariables.RootNodeCount - 1;
+    vstVariables.Repaint;
+    vstVariables.Enabled := True;
+  end;
 end;
 
 

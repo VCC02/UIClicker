@@ -18,7 +18,7 @@ object frClickerActions: TfrClickerActions
     Height = 276
     Top = 0
     Width = 1052
-    ActivePage = TabSheetDebugging
+    ActivePage = TabSheetAction
     Anchors = [akTop, akLeft, akRight, akBottom]
     Font.Color = clWindowText
     Font.Height = -11
@@ -26,7 +26,7 @@ object frClickerActions: TfrClickerActions
     Font.Style = [fsBold]
     Images = imglstActionExecution
     ParentFont = False
-    TabIndex = 2
+    TabIndex = 0
     TabOrder = 0
     TabPosition = tpLeft
     object TabSheetAction: TTabSheet
@@ -220,6 +220,7 @@ object frClickerActions: TfrClickerActions
           Top = 18
           Width = 331
           Anchors = [akTop, akLeft, akRight, akBottom]
+          Colors.UnfocusedSelectionColor = clGradientInactiveCaption
           DefaultText = 'Node'
           EditDelay = 10
           Header.AutoSizeIndex = 0
