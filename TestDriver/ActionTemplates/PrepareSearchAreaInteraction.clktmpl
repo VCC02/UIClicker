@@ -176,6 +176,12 @@ UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=
 SleepySearch=0
+StopSearchOnMismatch=1
+ImageSource=0
+SourceFileName=
+ImageSourceFileNameLocation=1
+PrecisionTimeout=0
+FullBackgroundImageInResult=1
 
 [Action_2]
 ActionName=Click "Find custom rendering" action
@@ -225,6 +231,7 @@ BreakpointCondition=
 ListOfVarNames=$Control_Left$$Control_Top$$Control_Right$$Control_Bottom$$Control_Width$$Control_Height$$Control_Text$$Control_Class$$Control_Handle$
 ListOfVarValues=$Player_Left$$Player_Top$$Player_Right$$Player_Bottom$$Player_Width$$Player_Height$$Player_Text$$Player_Class$$Player_Handle$
 ListOfVarEvalBefore=111111111
+FailOnException=0
 
 [Action_4]
 ActionName=Find action editor splitter
@@ -292,6 +299,12 @@ UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=
 SleepySearch=0
+StopSearchOnMismatch=1
+ImageSource=0
+SourceFileName=
+ImageSourceFileNameLocation=1
+PrecisionTimeout=0
+FullBackgroundImageInResult=1
 
 [Action_5]
 ActionName=Drag to the left
@@ -341,6 +354,7 @@ BreakpointCondition=
 ListOfVarNames=$Control_Left$$Control_Top$$Control_Right$$Control_Bottom$$Control_Width$$Control_Height$$Control_Text$$Control_Class$$Control_Handle$
 ListOfVarValues=$Player_Left$$Player_Top$$Player_Right$$Player_Bottom$$Player_Width$$Player_Height$$Player_Text$$Player_Class$$Player_Handle$
 ListOfVarEvalBefore=111111111
+FailOnException=0
 
 [Action_7]
 ActionName=Find Search Area Page control
@@ -408,6 +422,12 @@ UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=
 SleepySearch=0
+StopSearchOnMismatch=1
+ImageSource=0
+SourceFileName=
+ImageSourceFileNameLocation=1
+PrecisionTimeout=0
+FullBackgroundImageInResult=1
 
 [Action_8]
 ActionName=Cache Search Area
@@ -421,6 +441,7 @@ BreakpointCondition=
 ListOfVarNames=$SArea_Left$$SArea_Top$$SArea_Right$$SArea_Bottom$$SArea_Width$$SArea_Height$$SArea_Text$$SArea_Class$$SArea_Handle$
 ListOfVarValues=$Control_Left$$Control_Top$$Control_Right$$Control_Bottom$$Control_Width$$Control_Height$$Control_Text$$Control_Class$$Control_Handle$
 ListOfVarEvalBefore=111111111
+FailOnException=0
 
 [Action_9]
 ActionName=Find Search Area tab
@@ -505,6 +526,12 @@ UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=EAEAEA
 SleepySearch=0
+StopSearchOnMismatch=1
+ImageSource=0
+SourceFileName=
+ImageSourceFileNameLocation=1
+PrecisionTimeout=0
+FullBackgroundImageInResult=1
 
 [Action_10]
 ActionName=Click Search Area tab
@@ -554,6 +581,7 @@ BreakpointCondition=
 ListOfVarNames=$Control_Left$$Control_Top$$Control_Right$$Control_Bottom$$Control_Width$$Control_Height$$Control_Text$$Control_Class$$Control_Handle$
 ListOfVarValues=$SArea_Left$$SArea_Top$$SArea_Right$$SArea_Bottom$$SArea_Width$$SArea_Height$$SArea_Text$$SArea_Class$$SArea_Handle$
 ListOfVarEvalBefore=111111111
+FailOnException=0
 
 [Action_12]
 ActionName=Find Display ImgDbg button
@@ -621,6 +649,12 @@ UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=
 SleepySearch=0
+StopSearchOnMismatch=1
+ImageSource=0
+SourceFileName=
+ImageSourceFileNameLocation=1
+PrecisionTimeout=0
+FullBackgroundImageInResult=1
 
 [Action_13]
 ActionName=Display
@@ -670,6 +704,7 @@ BreakpointCondition=
 ListOfVarNames=$Control_Left$$Control_Top$$Control_Right$$Control_Bottom$$Control_Width$$Control_Height$$Control_Text$$Control_Class$$Control_Handle$
 ListOfVarValues=$SArea_Left$$SArea_Top$$SArea_Right$$SArea_Bottom$$SArea_Width$$SArea_Height$$SArea_Text$$SArea_Class$$SArea_Handle$
 ListOfVarEvalBefore=111111111
+FailOnException=0
 
 [Action_15]
 ActionName=Clear Expected Area Selection
@@ -685,7 +720,7 @@ YOffsetReference=0
 XClickPointVar=$Control_Left$
 YClickPointVar=$Control_Top$
 XOffset=7
-YOffset=73
+YOffset=97
 MouseButton=0
 ClickWithCtrl=0
 ClickWithAlt=1
@@ -700,7 +735,7 @@ YOffsetReferenceDest=0
 XClickPointVarDest=$Control_Left$
 YClickPointVarDest=$Control_Top$
 XOffsetDest=11
-YOffsetDest=78
+YOffsetDest=102
 MouseWheelType=0
 MouseWheelAmount=1
 DelayAfterMovingToDestination=100
@@ -717,8 +752,9 @@ BreakpointExists=0
 BreakpointEnabled=0
 BreakpointCondition=
 ListOfVarNames=$ExpectedArea_Left$$ExpectedArea_Top$$ExpectedArea_Right$$ExpectedArea_Bottom$
-ListOfVarValues=28109225150
+ListOfVarValues=28133225174
 ListOfVarEvalBefore=
+FailOnException=0
 
 [Action_17]
 ActionName=Select Expected Area
@@ -768,6 +804,7 @@ BreakpointCondition=
 ListOfVarNames=$Control_Left$$Control_Top$$Control_Right$$Control_Bottom$$Control_Width$$Control_Height$$Control_Text$$Control_Class$$Control_Handle$
 ListOfVarValues=$SArea_Left$$SArea_Top$$SArea_Right$$SArea_Bottom$$SArea_Width$$SArea_Height$$SArea_Text$$SArea_Class$$SArea_Handle$
 ListOfVarEvalBefore=111111111
+FailOnException=0
 
 [Action_19]
 ActionName=Find zoom checkbox
@@ -835,6 +872,12 @@ UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=
 SleepySearch=0
+StopSearchOnMismatch=1
+ImageSource=0
+SourceFileName=
+ImageSourceFileNameLocation=1
+PrecisionTimeout=0
+FullBackgroundImageInResult=1
 
 [Action_20]
 ActionName=Verify if zoom is checked
@@ -902,6 +945,12 @@ UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=FF00FF
 SleepySearch=0
+StopSearchOnMismatch=1
+ImageSource=0
+SourceFileName=
+ImageSourceFileNameLocation=1
+PrecisionTimeout=0
+FullBackgroundImageInResult=1
 
 [Action_21]
 ActionName=Uncheck zoom
@@ -951,6 +1000,7 @@ BreakpointCondition=
 ListOfVarNames=$Control_Left$$Control_Top$$Control_Right$$Control_Bottom$$Control_Width$$Control_Height$$Control_Text$$Control_Class$$Control_Handle$
 ListOfVarValues=$SArea_Left$$SArea_Top$$SArea_Right$$SArea_Bottom$$SArea_Width$$SArea_Height$$SArea_Text$$SArea_Class$$SArea_Handle$
 ListOfVarEvalBefore=111111111
+FailOnException=0
 
 [Action_23]
 ActionName=Right click on Search Area
@@ -1054,6 +1104,12 @@ UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=
 SleepySearch=0
+StopSearchOnMismatch=1
+ImageSource=0
+SourceFileName=
+ImageSourceFileNameLocation=1
+PrecisionTimeout=0
+FullBackgroundImageInResult=1
 
 [Action_25]
 ActionName=Find "Enable verbose.."
@@ -1138,6 +1194,12 @@ UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=
 SleepySearch=0
+StopSearchOnMismatch=1
+ImageSource=0
+SourceFileName=
+ImageSourceFileNameLocation=1
+PrecisionTimeout=0
+FullBackgroundImageInResult=1
 
 [Action_26]
 ActionName=Reset ShouldEnableVerbose var
@@ -1151,6 +1213,7 @@ BreakpointCondition=
 ListOfVarNames=$ShouldEnableVerbose$
 ListOfVarValues=False
 ListOfVarEvalBefore=
+FailOnException=0
 
 [Action_27]
 ActionName=Find check mark
@@ -1218,6 +1281,12 @@ UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=FF00FF
 SleepySearch=0
+StopSearchOnMismatch=1
+ImageSource=0
+SourceFileName=
+ImageSourceFileNameLocation=1
+PrecisionTimeout=0
+FullBackgroundImageInResult=1
 
 [Action_28]
 ActionName=Should enable item
@@ -1231,6 +1300,7 @@ BreakpointCondition=
 ListOfVarNames=$ShouldEnableVerbose$
 ListOfVarValues=True
 ListOfVarEvalBefore=
+FailOnException=0
 
 [Action_29]
 ActionName=Click "Enable verbose.."
@@ -1280,6 +1350,7 @@ BreakpointCondition=
 ListOfVarNames=$Control_Left$$Control_Top$$Control_Right$$Control_Bottom$$Control_Width$$Control_Height$$Control_Text$$Control_Class$$Control_Handle$
 ListOfVarValues=$SArea_Left$$SArea_Top$$SArea_Right$$SArea_Bottom$$SArea_Width$$SArea_Height$$SArea_Text$$SArea_Class$$SArea_Handle$
 ListOfVarEvalBefore=111111111
+FailOnException=0
 
 [Action_31]
 ActionName=Right click on Search Area
@@ -1383,6 +1454,12 @@ UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=
 SleepySearch=0
+StopSearchOnMismatch=1
+ImageSource=0
+SourceFileName=
+ImageSourceFileNameLocation=1
+PrecisionTimeout=0
+FullBackgroundImageInResult=1
 
 [Action_33]
 ActionName=wait for menu to show (because of animation)
@@ -1478,6 +1555,12 @@ UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=
 SleepySearch=0
+StopSearchOnMismatch=1
+ImageSource=0
+SourceFileName=
+ImageSourceFileNameLocation=1
+PrecisionTimeout=0
+FullBackgroundImageInResult=1
 
 [Notes]
 Content=
