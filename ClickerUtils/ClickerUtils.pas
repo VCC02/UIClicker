@@ -498,33 +498,42 @@ type
 
 
 const
-  CSpecialKeyCount = 65;
+  CSpecialKeyCount = 96;
   CSpecialKeyReplacements: array[0..CSpecialKeyCount - 1] of string = (                     //PgUp and PgDown are added here for convenience
     'Delete', 'Backspace', 'Cancel', 'Insert', 'Home', 'End', 'Left', 'Right', 'Up', 'Down', 'PgUp', 'PgDown', 'Prior', 'Next',
     'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12',
+    'F13', 'F14', 'F15', 'F16', 'F17', 'F18', 'F19', 'F20', 'F21', 'F22', 'F23', 'F24',
     'Control', 'LControl', 'RControl', 'Shift', 'LShift', 'RShift', 'Menu', 'LMenu', 'RMenu',
     'ControlUp', 'LControlUp', 'RControlUp', 'ShiftUp', 'LShiftUp', 'RShiftUp', 'MenuUp', 'LMenuUp', 'RMenuUp',
     'ControlDown', 'LControlDown', 'RControlDown', 'ShiftDown', 'LShiftDown', 'RShiftDown', 'MenuDown', 'LMenuDown', 'RMenuDown',
-    'Apps', 'LWin', 'RWin', 'Tab', 'Clear', 'Return', 'Pause', 'Capital', 'Select', 'Print', 'Execute', 'Snapshot'
+    'Apps', 'LWin', 'RWin', 'Tab', 'Clear', 'Return', 'Pause', 'Capital', 'Select', 'Print', 'Execute', 'Snapshot',
+    'NumLock', 'NumPad0', 'NumPad1', 'NumPad2', 'NumPad3', 'NumPad4', 'NumPad5', 'NumPad6', 'NumPad7', 'NumPad8', 'NumPad9',
+    'Scroll', 'BrowserBack', 'BrowserForward', 'BrowserRefresh', 'BrowserStop', 'BrowserSearch', 'BrowserFavorites', 'BrowserHome'
     //Others to be added if required...
   );
 
   CSpecialKeyCodes: array[0..CSpecialKeyCount - 1] of Word = (
     VK_DELETE, VK_BACK, VK_CANCEL, VK_INSERT, VK_HOME, VK_END, VK_LEFT, VK_RIGHT, VK_UP, VK_DOWN, VK_PRIOR, VK_NEXT, VK_PRIOR, VK_NEXT,
     VK_F1, VK_F2, VK_F3, VK_F4, VK_F5, VK_F6, VK_F7, VK_F8, VK_F9, VK_F10, VK_F11, VK_F12,
+    VK_F13, VK_F14, VK_F15, VK_F16, VK_F17, VK_F18, VK_F19, VK_F20, VK_F21, VK_F22, VK_F23, VK_F24,
     VK_CONTROL, VK_LCONTROL, VK_RCONTROL, VK_SHIFT, VK_LSHIFT, VK_RSHIFT, VK_MENU, VK_LMENU, VK_RMENU,
     VK_CONTROL, VK_LCONTROL, VK_RCONTROL, VK_SHIFT, VK_LSHIFT, VK_RSHIFT, VK_MENU, VK_LMENU, VK_RMENU,
     VK_CONTROL, VK_LCONTROL, VK_RCONTROL, VK_SHIFT, VK_LSHIFT, VK_RSHIFT, VK_MENU, VK_LMENU, VK_RMENU,
-    VK_APPS, VK_LWIN, VK_RWIN, VK_TAB, VK_CLEAR, VK_RETURN, VK_PAUSE, VK_CAPITAL, VK_SELECT, VK_PRINT, VK_EXECUTE, VK_SNAPSHOT
+    VK_APPS, VK_LWIN, VK_RWIN, VK_TAB, VK_CLEAR, VK_RETURN, VK_PAUSE, VK_CAPITAL, VK_SELECT, VK_PRINT, VK_EXECUTE, VK_SNAPSHOT,
+    VK_NUMLOCK, VK_NUMPAD0, VK_NUMPAD1, VK_NUMPAD2, VK_NUMPAD3, VK_NUMPAD4, VK_NUMPAD5, VK_NUMPAD6, VK_NUMPAD7, VK_NUMPAD8, VK_NUMPAD9,
+    VK_SCROLL, VK_BROWSER_BACK, VK_BROWSER_FORWARD, VK_BROWSER_REFRESH, VK_BROWSER_STOP, VK_BROWSER_SEARCH, VK_BROWSER_FAVORITES, VK_BROWSER_HOME
   );
 
   CSpecialKeyActions: array[0..CSpecialKeyCount - 1] of TKeyAction = (
     kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp,
     kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp,
+    kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp,
     kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp,
     kaUp, kaUp, kaUp, kaUp, kaUp, kaUp, kaUp, kaUp, kaUp,
     kaDown, kaDown, kaDown, kaDown, kaDown, kaDown, kaDown, kaDown, kaDown,
-    kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp
+    kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp,
+    kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp,
+    kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp
   );
 
 

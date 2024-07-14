@@ -756,22 +756,25 @@ var
 begin
   GenerateFindSubControlOptionsForFullScreenshot(FindControlOptions, False);
   FindControlOptions.UseFastSearch := False;
-  SetLength(FindControlOptions.MatchBitmapText, 3);
+  SetLength(FindControlOptions.MatchBitmapText, 4);
   FindControlOptions.MatchBitmapText[1] := FindControlOptions.MatchBitmapText[0];
   FindControlOptions.MatchBitmapText[2] := FindControlOptions.MatchBitmapText[0];
+  FindControlOptions.MatchBitmapText[3] := FindControlOptions.MatchBitmapText[0];
   FindControlOptions.MatchBitmapText[1].ProfileName := 'two';
   FindControlOptions.MatchBitmapText[2].ProfileName := 'three';
+  FindControlOptions.MatchBitmapText[3].ProfileName := 'four';
   FindControlOptions.MatchBitmapText[1].BackgroundColor := '00FFFF'; //yellow
   FindControlOptions.MatchBitmapText[2].BackgroundColor := '00FF88'; //green
+  FindControlOptions.MatchBitmapText[3].BackgroundColor := '44AADD'; //orange
 
   tk1 := GetTickCount64;
-  Response := ExecuteFindSubControlAction(TestServerAddress, FindControlOptions, 'FindTxtOnDesktop_FullDuration', 1000, CREParam_FileLocation_ValueDisk, True);
+  Response := ExecuteFindSubControlAction(TestServerAddress, FindControlOptions, 'FindTxtOnDesktop_FullDuration', 2000, CREParam_FileLocation_ValueDisk, True);
   ExpectFailedAction(FastReplace_87ToReturn(Response), 'Timeout at "FindTxtOnDesktop_FullDuration" in');
   tk1 := GetTickCount64 - tk1;
 
   FindControlOptions.PrecisionTimeout := True;
   tk2 := GetTickCount64;
-  Response := ExecuteFindSubControlAction(TestServerAddress, FindControlOptions, 'FindTxtOnDesktop_FastTimeout', 1000, CREParam_FileLocation_ValueDisk, True);
+  Response := ExecuteFindSubControlAction(TestServerAddress, FindControlOptions, 'FindTxtOnDesktop_FastTimeout', 2000, CREParam_FileLocation_ValueDisk, True);
   ExpectFailedAction(FastReplace_87ToReturn(Response), 'Timeout');
   tk2 := GetTickCount64 - tk2;
 

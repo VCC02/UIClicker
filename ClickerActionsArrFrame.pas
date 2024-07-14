@@ -5220,11 +5220,13 @@ begin
     Exit;
   end;
 
-  TemplatePath := EvaluateReplacements(FClkActions[Node^.Index].CallTemplateOptions.TemplateFileName);
-  //if TemplatePath = ExtractFileName(TemplatePath) then //there is no path, only the filename
-  //  TemplatePath := FFullTemplatesDir + PathDelim + TemplatePath;
+  TemplatePath := FClkActions[Node^.Index].CallTemplateOptions.TemplateFileName;
+  TemplatePath := ResolveTemplatePath(TemplatePath); //this uses $SelfTemplateDir$, which is not a standard variable. It will be evaluated to ''.
 
-  TemplatePath := ResolveTemplatePath(TemplatePath);
+  if TemplatePath = ExtractFileName(TemplatePath) then //there is no path, only the filename
+    TemplatePath := FFullTemplatesDir + PathDelim + TemplatePath;
+
+  TemplatePath := EvaluateReplacements(TemplatePath);
 
   TempMenuItem := Sender as TMenuItem;
   DoOnOpenCalledTemplateInExperimentTab(TempMenuItem.Tag, TemplatePath);

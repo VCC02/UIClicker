@@ -328,14 +328,19 @@ begin
 
   WaitForDriverStartup;
 
-  if FIsWine then
-  begin
-    GeneralConnectTimeout := 10000;
-    SetVariableOnTestDriverClient('$IsAdminOnWine$', '  [Is admin]');
-    Application.MainForm.Caption := Application.MainForm.Caption  + '  $IsAdminOnWine$';
-  end
-  else
-    SetVariableOnTestDriverClient('$IsAdminOnWine$', ''); // a single #13#10 results in an empty string item in a TStringList. Still, better send '', to allow the expectation to match ''. UIClicker should convert this one '', into a new line.
+  try
+    if FIsWine then
+    begin
+      GeneralConnectTimeout := 10000;
+      SetVariableOnTestDriverClient('$IsAdminOnWine$', '  [Is admin]');
+      Application.MainForm.Caption := Application.MainForm.Caption  + '  $IsAdminOnWine$';
+    end
+    else
+      SetVariableOnTestDriverClient('$IsAdminOnWine$', ''); // a single #13#10 results in an empty string item in a TStringList. Still, better send '', to allow the expectation to match ''. UIClicker should convert this one '', into a new line.
+  except
+    on E: Exception do
+      raise Exception.Create('Please verify if UIClicker is built for testing (including the test driver). ' + E.Message);
+  end;
 
   ArrangeMainUIClickerWindows;      //Setting window position from ini file, works on Wine. Setting from UIClicker does not (yet).
   Sleep(500);                       //these sleep calls should be replaced by some waiting loops
