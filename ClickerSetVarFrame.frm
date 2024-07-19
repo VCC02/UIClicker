@@ -234,6 +234,10 @@ object frClickerSetVar: TfrClickerSetVar
         '$GetActionProperties()$'
         '$GetImageDimensions()$'
         '$GetExternallyRenderedImageDimensions()$'
+        '$FullHistogramDisk()$'
+        '$FullHistogramExternallyRendered()$'
+        '$PartialHistogramDisk()$'
+        '$PartialHistogramExternallyRendered()$'
       )
       ParentShowHint = False
       ReadOnly = True

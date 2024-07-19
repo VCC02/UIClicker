@@ -87,6 +87,7 @@ function BitmapsAreEqual(ASrcABitmap, ASrcBBitmap: TBitmap; AWidth, AHeight: Int
 procedure GenerateGradientColors(AStartColor, AEndColor: TColor; APointCount: Integer; var AResult: TColorArr);
 procedure MakeImageContentTransparent(AImg: TImage);
 procedure DrawSearchGrid(AImg: TImage; AlgorithmSettings: TMatchBitmapAlgorithmSettings; AGridWidth, AGridHeight: Integer; AGridColor: TColor; ADisplayGridLineOption: TDisplayGridLineOption);
+procedure GetHistogram(ABitmap: TBitmap; var AHist, AHistColorCounts: TIntArr);
 
 
 implementation
@@ -113,6 +114,119 @@ procedure Line(ACnv: TCanvas; x1, y1, x2, y2: Integer);
 begin
   ACnv.MoveTo(x1, y1);
   ACnv.LineTo(x2, y2);
+end;
+
+
+function ColorIndexInIntArr(AColor: TColor; var AArr: TIntArr): Integer;
+var
+  i: Integer;
+begin
+  Result := -1;
+  for i := 0 to Length(AArr) - 1 do
+    if AArr[i] = AColor then
+    begin
+      Result := i;
+      Break;
+    end;
+end;
+
+
+procedure Histogram_24bit(ABitmap: TBitmap; var AHist, AHistColorCounts: TIntArr);
+var
+  i, j, Index: Integer;
+  ACanvasLine: ^TScanLineArr;
+  AColorRec: TRGBRec;
+  Width, Height: Integer;
+  TempColor: TColor;
+begin
+  Width := ABitmap.Width;   //to avoid calling a getter inside the for loop
+  Height := ABitmap.Height; //to avoid calling a getter inside the for loop
+
+  ABitmap.BeginUpdate;  //added for FP (as recommended)
+  try
+    for i := 0 to Height - 1 do
+    begin
+      ACanvasLine := ABitmap.{%H-}ScanLine[i];
+
+      for j := 0 to Width - 1 do
+      begin
+        AColorRec := ACanvasLine[j];
+
+        TempColor := TColor((@AColorRec)^) and $FFFFFF;
+        Index := ColorIndexInIntArr(TempColor, AHist);
+
+        if Index = -1 then
+        begin
+          SetLength(AHist, Length(AHist) + 1);
+          SetLength(AHistColorCounts, Length(AHistColorCounts) + 1);
+
+          AHist[Length(AHist) - 1] := TempColor;
+          AHistColorCounts[Length(AHistColorCounts) - 1] := 1;
+        end
+        else
+          Inc(AHistColorCounts[Index]);
+      end;
+    end;
+  finally
+    ABitmap.EndUpdate;
+  end;
+end;
+
+
+procedure Histogram_32bit(ABitmap: TBitmap; var AHist, AHistColorCounts: TIntArr);
+var
+  i, j, Index: Integer;
+  ACanvasLine: ^TScanLineAlphaArr;   //notice alpha
+  AColorRec: TRGBAlphaRec;           //notice alpha
+  Width, Height: Integer;
+  TempColor: TColor;
+begin
+  Width := ABitmap.Width;   //to avoid calling a getter inside the for loop
+  Height := ABitmap.Height; //to avoid calling a getter inside the for loop
+
+  ABitmap.BeginUpdate;  //added for FP (as recommended)
+  try
+    for i := 0 to Height - 1 do
+    begin
+      ACanvasLine := ABitmap.{%H-}ScanLine[i];
+
+      for j := 0 to Width - 1 do
+      begin
+        AColorRec := ACanvasLine[j];
+
+        TempColor := TColor((@AColorRec)^) and $FFFFFF; //same $FFFFFF, because the result has to be a color without alpha
+        Index := ColorIndexInIntArr(TempColor, AHist);
+
+        if Index = -1 then
+        begin
+          SetLength(AHist, Length(AHist) + 1);
+          SetLength(AHistColorCounts, Length(AHistColorCounts) + 1);
+
+          AHist[Length(AHist) - 1] := TempColor;
+          AHistColorCounts[Length(AHistColorCounts) - 1] := 1;
+        end
+        else
+          Inc(AHistColorCounts[Index]);
+      end;
+    end;
+  finally
+    ABitmap.EndUpdate;
+  end;
+end;
+
+
+procedure GetHistogram(ABitmap: TBitmap; var AHist, AHistColorCounts: TIntArr);
+begin
+  case ABitmap.PixelFormat of
+    pf24bit:
+      Histogram_24bit(ABitmap, AHist, AHistColorCounts);
+
+    pf32bit:
+      Histogram_32bit(ABitmap, AHist, AHistColorCounts);
+
+    else
+      raise Exception.Create('Unsupported PixelFormat when computing histogram. Format index: ' + IntToStr(Ord(ABitmap.PixelFormat)));
+  end;
 end;
 
 

@@ -2847,6 +2847,34 @@ end;
 
 
 function TActionExecution.ExecuteSetVarAction(var ASetVarOptions: TClkSetVarOptions): Boolean;
+  function GetHistogramResult(var AHistogramResult: TIntArr; ACount: Integer = 0): string;
+  var
+    i, CountItems: Integer;
+  begin
+    Result := '';
+    if ACount <= 0 then
+      CountItems := Length(AHistogramResult)
+    else
+      CountItems := Min(ACount, Length(AHistogramResult));
+
+    for i := 0 to CountItems - 1 do
+      Result := Result + IntToHex(AHistogramResult[i], 6) + #4#5;
+  end;
+
+
+  function GetHistogramColorCountsResult(var AHistogramResult: TIntArr; ACount: Integer = 0): string;
+  var
+    i, CountItems: Integer;
+  begin
+    Result := '';
+    if ACount <= 0 then
+      CountItems := Length(AHistogramResult)
+    else
+      CountItems := Min(ACount, Length(AHistogramResult));
+
+    for i := 0 to CountItems - 1 do
+      Result := Result + IntToStr(AHistogramResult[i]) + #4#5;
+  end;
 var
   TempListOfSetVarNames: TStringList;
   TempListOfSetVarValues: TStringList;
@@ -2857,6 +2885,8 @@ var
   ListOfSelfHandles: TStringList;
   GeneratedException: Boolean;
   TempBmp: TBitmap;
+  HistogramResult, HistogramColorCountsResult: TIntArr;
+  HistItemCount: Integer;
 begin
   Result := False;
   TempListOfSetVarNames := TStringList.Create;
@@ -2969,6 +2999,100 @@ begin
           begin
             SetActionVarValue('$ExtImageWidth$', IntToStr(TempBmp.Width));
             SetActionVarValue('$ExtImageHeight$', IntToStr(TempBmp.Height));
+            Result := True;
+          end
+          else
+            if ASetVarOptions.FailOnException then
+            begin
+              SetActionVarValue('$ExecAction_Err$', 'File not found: "' + VarValue + '".');
+              Result := False;
+              Exit;
+            end;
+        finally
+          TempBmp.Free;
+        end;
+      end;
+
+      if (Pos('$FullHistogramDisk(', VarName) = 1) and (VarName[Length(VarName)] = '$') and (VarName[Length(VarName) - 1] = ')') then
+      begin
+        TempBmp := TBitmap.Create;
+        try
+          if DoOnLoadBitmap(TempBmp, VarValue) then
+          begin
+            GetHistogram(TempBmp, HistogramResult, HistogramColorCountsResult);
+            SetActionVarValue('$HistogramResult$', GetHistogramResult(HistogramResult));
+            SetActionVarValue('$HistogramColorCountsResult$', GetHistogramColorCountsResult(HistogramColorCountsResult));
+            Result := True;
+          end
+          else
+            if ASetVarOptions.FailOnException then
+            begin
+              SetActionVarValue('$ExecAction_Err$', 'File not found: "' + VarValue + '".');
+              Result := False;
+              Exit;
+            end;
+        finally
+          TempBmp.Free;
+        end;
+      end;
+
+      if (Pos('$FullHistogramExternallyRendered(', VarName) = 1) and (VarName[Length(VarName)] = '$') and (VarName[Length(VarName) - 1] = ')') then
+      begin
+        TempBmp := TBitmap.Create;
+        try
+          if DoOnLoadRenderedBitmap(TempBmp, VarValue) then
+          begin
+            GetHistogram(TempBmp, HistogramResult, HistogramColorCountsResult);
+            SetActionVarValue('$HistogramResult$', GetHistogramResult(HistogramResult));
+            SetActionVarValue('$HistogramColorCountsResult$', GetHistogramColorCountsResult(HistogramColorCountsResult));
+            Result := True;
+          end
+          else
+            if ASetVarOptions.FailOnException then
+            begin
+              SetActionVarValue('$ExecAction_Err$', 'File not found: "' + VarValue + '".');
+              Result := False;
+              Exit;
+            end;
+        finally
+          TempBmp.Free;
+        end;
+      end;
+
+      if (Pos('$PartialHistogramDisk(', VarName) = 1) and (VarName[Length(VarName)] = '$') and (VarName[Length(VarName) - 1] = ')') then
+      begin
+        TempBmp := TBitmap.Create;
+        try
+          if DoOnLoadBitmap(TempBmp, VarValue) then
+          begin
+            GetHistogram(TempBmp, HistogramResult, HistogramColorCountsResult);
+            HistItemCount := StrToIntDef(GetActionVarValue('$HistogramItemCount$'), 10);
+            SetActionVarValue('$HistogramResult$', GetHistogramResult(HistogramResult, HistItemCount));
+            SetActionVarValue('$HistogramColorCountsResult$', GetHistogramColorCountsResult(HistogramColorCountsResult, HistItemCount));
+            Result := True;
+          end
+          else
+            if ASetVarOptions.FailOnException then
+            begin
+              SetActionVarValue('$ExecAction_Err$', 'File not found: "' + VarValue + '".');
+              Result := False;
+              Exit;
+            end;
+        finally
+          TempBmp.Free;
+        end;
+      end;
+
+      if (Pos('$PartialHistogramExternallyRendered(', VarName) = 1) and (VarName[Length(VarName)] = '$') and (VarName[Length(VarName) - 1] = ')') then
+      begin
+        TempBmp := TBitmap.Create;
+        try
+          if DoOnLoadRenderedBitmap(TempBmp, VarValue) then
+          begin
+            GetHistogram(TempBmp, HistogramResult, HistogramColorCountsResult);
+            HistItemCount := StrToIntDef(GetActionVarValue('$HistogramItemCount$'), 10);
+            SetActionVarValue('$HistogramResult$', GetHistogramResult(HistogramResult, HistItemCount));
+            SetActionVarValue('$HistogramColorCountsResult$', GetHistogramColorCountsResult(HistogramColorCountsResult, HistItemCount));
             Result := True;
           end
           else
