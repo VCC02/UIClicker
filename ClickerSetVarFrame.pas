@@ -50,7 +50,9 @@ type
     pmSetVars: TPopupMenu;
     pnlHorizSplitter: TPanel;
     spdbtnMoveDown: TSpeedButton;
+    spdbtnNewVariable: TSpeedButton;
     spdbtnMoveUp: TSpeedButton;
+    spdbtnRemoveSelectedVariable: TSpeedButton;
     tmrEditSetVars: TTimer;
     vstSetVar: TVirtualStringTree;
     procedure FrameResize(Sender: TObject);
@@ -64,6 +66,8 @@ type
       Shift: TShiftState; X, Y: Integer);
     procedure spdbtnMoveDownClick(Sender: TObject);
     procedure spdbtnMoveUpClick(Sender: TObject);
+    procedure spdbtnNewVariableClick(Sender: TObject);
+    procedure spdbtnRemoveSelectedVariableClick(Sender: TObject);
     procedure tmrEditSetVarsTimer(Sender: TObject);
     procedure vstSetVarChecked(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure vstSetVarChecking(Sender: TBaseVirtualTree; Node: PVirtualNode;
@@ -105,6 +109,8 @@ type
     procedure UpdateNodeCheckStateFromEvalBefore(ANode: PVirtualNode);
     procedure ResizeFrameSectionsBySplitter(NewLeft: Integer);
     procedure UpdateVstCheckStates;
+    procedure AddNewVariable;
+    procedure RemoveSetVar;
 
     procedure DoOnTriggerOnControlsModified;
   public
@@ -345,7 +351,7 @@ begin
 end;
 
 
-procedure TfrClickerSetVar.MenuItem_AddSetVarClick(Sender: TObject);
+procedure TfrClickerSetVar.AddNewVariable;
 begin
   FSetVarContent_Vars.Add('');
   FSetVarContent_Values.Add('');
@@ -357,7 +363,7 @@ begin
 end;
 
 
-procedure TfrClickerSetVar.MenuItem_RemoveSetVarClick(Sender: TObject);
+procedure TfrClickerSetVar.RemoveSetVar;
 var
   Node: PVirtualNode;
 begin
@@ -379,6 +385,18 @@ begin
   UpdateVstCheckStates;
   vstSetVar.Repaint;
   DoOnTriggerOnControlsModified;
+end;
+
+
+procedure TfrClickerSetVar.MenuItem_AddSetVarClick(Sender: TObject);
+begin
+  AddNewVariable;
+end;
+
+
+procedure TfrClickerSetVar.MenuItem_RemoveSetVarClick(Sender: TObject);
+begin
+  RemoveSetVar;
 end;
 
 
@@ -481,6 +499,18 @@ begin
   vstSetVar.ScrollIntoView(Node, True);
   vstSetVar.Repaint;
   DoOnTriggerOnControlsModified;
+end;
+
+
+procedure TfrClickerSetVar.spdbtnNewVariableClick(Sender: TObject);
+begin
+  AddNewVariable;
+end;
+
+
+procedure TfrClickerSetVar.spdbtnRemoveSelectedVariableClick(Sender: TObject);
+begin
+  RemoveSetVar;
 end;
 
 

@@ -133,14 +133,18 @@ end;
 
 procedure Histogram_24bit(ABitmap: TBitmap; var AHist, AHistColorCounts: TIntArr);
 var
-  i, j, Index: Integer;
+  i, j: Integer;
   ACanvasLine: ^TScanLineArr;
   AColorRec: TRGBRec;
   Width, Height: Integer;
   TempColor: TColor;
+  ColorCounts: TIntArr;
 begin
   Width := ABitmap.Width;   //to avoid calling a getter inside the for loop
   Height := ABitmap.Height; //to avoid calling a getter inside the for loop
+
+  SetLength(ColorCounts, $FFFFFF + 1);
+  FillChar(ColorCounts[0], Length(ColorCounts) * SizeOf(Integer), 0);
 
   ABitmap.BeginUpdate;  //added for FP (as recommended)
   try
@@ -152,37 +156,41 @@ begin
       begin
         AColorRec := ACanvasLine[j];
 
-        TempColor := TColor((@AColorRec)^) and $FFFFFF;
-        Index := ColorIndexInIntArr(TempColor, AHist);
-
-        if Index = -1 then
-        begin
-          SetLength(AHist, Length(AHist) + 1);
-          SetLength(AHistColorCounts, Length(AHistColorCounts) + 1);
-
-          AHist[Length(AHist) - 1] := TempColor;
-          AHistColorCounts[Length(AHistColorCounts) - 1] := 1;
-        end
-        else
-          Inc(AHistColorCounts[Index]);
+        TempColor := AColorRec.B shl 16 + AColorRec.G shl 8 + AColorRec.R;
+        Inc(ColorCounts[TempColor]);
       end;
     end;
   finally
     ABitmap.EndUpdate;
   end;
+
+  for i := 0 to Length(ColorCounts) - 1 do
+    if ColorCounts[i] > 0 then
+    begin
+      SetLength(AHist, Length(AHist) + 1);
+      SetLength(AHistColorCounts, Length(AHistColorCounts) + 1);
+
+      AHist[Length(AHist) - 1] := i;
+      AHistColorCounts[Length(AHistColorCounts) - 1] := ColorCounts[i];
+    end;
+  SetLength(ColorCounts, 0);
 end;
 
 
 procedure Histogram_32bit(ABitmap: TBitmap; var AHist, AHistColorCounts: TIntArr);
 var
-  i, j, Index: Integer;
+  i, j: Integer;
   ACanvasLine: ^TScanLineAlphaArr;   //notice alpha
   AColorRec: TRGBAlphaRec;           //notice alpha
   Width, Height: Integer;
   TempColor: TColor;
+  ColorCounts: TIntArr;
 begin
   Width := ABitmap.Width;   //to avoid calling a getter inside the for loop
   Height := ABitmap.Height; //to avoid calling a getter inside the for loop
+
+  SetLength(ColorCounts, $FFFFFF + 1);
+  FillChar(ColorCounts[0], Length(ColorCounts) * SizeOf(Integer), 0);
 
   ABitmap.BeginUpdate;  //added for FP (as recommended)
   try
@@ -194,24 +202,24 @@ begin
       begin
         AColorRec := ACanvasLine[j];
 
-        TempColor := TColor((@AColorRec)^) and $FFFFFF; //same $FFFFFF, because the result has to be a color without alpha
-        Index := ColorIndexInIntArr(TempColor, AHist);
-
-        if Index = -1 then
-        begin
-          SetLength(AHist, Length(AHist) + 1);
-          SetLength(AHistColorCounts, Length(AHistColorCounts) + 1);
-
-          AHist[Length(AHist) - 1] := TempColor;
-          AHistColorCounts[Length(AHistColorCounts) - 1] := 1;
-        end
-        else
-          Inc(AHistColorCounts[Index]);
+        TempColor := AColorRec.B shl 16 + AColorRec.G shl 8 + AColorRec.R;
+        Inc(ColorCounts[TempColor]);
       end;
     end;
   finally
     ABitmap.EndUpdate;
   end;
+
+  for i := 0 to Length(ColorCounts) - 1 do
+    if ColorCounts[i] > 0 then
+    begin
+      SetLength(AHist, Length(AHist) + 1);
+      SetLength(AHistColorCounts, Length(AHistColorCounts) + 1);
+
+      AHist[Length(AHist) - 1] := i;
+      AHistColorCounts[Length(AHistColorCounts) - 1] := ColorCounts[i];
+    end;
+  SetLength(ColorCounts, 0);
 end;
 
 

@@ -2887,6 +2887,7 @@ var
   TempBmp: TBitmap;
   HistogramResult, HistogramColorCountsResult: TIntArr;
   HistItemCount: Integer;
+  tk: QWord;
 begin
   Result := False;
   TempListOfSetVarNames := TStringList.Create;
@@ -3015,6 +3016,7 @@ begin
 
       if (Pos('$FullHistogramDisk(', VarName) = 1) and (VarName[Length(VarName)] = '$') and (VarName[Length(VarName) - 1] = ')') then
       begin
+        tk := GetTickCount64;
         TempBmp := TBitmap.Create;
         try
           if DoOnLoadBitmap(TempBmp, VarValue) then
@@ -3033,11 +3035,13 @@ begin
             end;
         finally
           TempBmp.Free;
+          AddToLog('Histogram computed in ' + IntToStr(GetTickCount64 - tk) + 'ms.  Found ' + IntToStr(Length(HistogramResult)) + ' item(s).');
         end;
       end;
 
       if (Pos('$FullHistogramExternallyRendered(', VarName) = 1) and (VarName[Length(VarName)] = '$') and (VarName[Length(VarName) - 1] = ')') then
       begin
+        tk := GetTickCount64;
         TempBmp := TBitmap.Create;
         try
           if DoOnLoadRenderedBitmap(TempBmp, VarValue) then
@@ -3056,11 +3060,13 @@ begin
             end;
         finally
           TempBmp.Free;
+          AddToLog('Histogram computed in ' + IntToStr(GetTickCount64 - tk) + 'ms.  Found ' + IntToStr(Length(HistogramResult)) + ' item(s).');
         end;
       end;
 
       if (Pos('$PartialHistogramDisk(', VarName) = 1) and (VarName[Length(VarName)] = '$') and (VarName[Length(VarName) - 1] = ')') then
       begin
+        tk := GetTickCount64;
         TempBmp := TBitmap.Create;
         try
           if DoOnLoadBitmap(TempBmp, VarValue) then
@@ -3080,11 +3086,13 @@ begin
             end;
         finally
           TempBmp.Free;
+          AddToLog('Histogram computed in ' + IntToStr(GetTickCount64 - tk) + 'ms.  Found ' + IntToStr(Length(HistogramResult)) + ' item(s).');
         end;
       end;
 
       if (Pos('$PartialHistogramExternallyRendered(', VarName) = 1) and (VarName[Length(VarName)] = '$') and (VarName[Length(VarName) - 1] = ')') then
       begin
+        tk := GetTickCount64;
         TempBmp := TBitmap.Create;
         try
           if DoOnLoadRenderedBitmap(TempBmp, VarValue) then
@@ -3104,6 +3112,7 @@ begin
             end;
         finally
           TempBmp.Free;
+          AddToLog('Histogram computed in ' + IntToStr(GetTickCount64 - tk) + 'ms.  Found ' + IntToStr(Length(HistogramResult)) + ' item(s).');
         end;
       end;
 
