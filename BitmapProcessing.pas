@@ -94,7 +94,7 @@ implementation
 
 
 uses
-  Forms, Classes;
+  Forms, Classes, IntegerList;
 
 
 procedure RandomSleep(ASleepySearch: Byte);
@@ -128,6 +128,47 @@ begin
       Result := i;
       Break;
     end;
+end;
+
+
+function CompFunc({const} a, b: Int64): Integer;
+begin
+  a := a shr 32;  //discard colors
+  b := b shr 32;
+
+  if a > b then
+    Result := -1
+  else
+    if a = b then
+      Result := 0
+    else
+      Result := 1;
+end;
+
+
+procedure SortHistogram(var AHist, AHistColorCounts: TIntArr);
+var
+  SortingArray: TInt64List;
+  Item64: Int64;
+  i: Integer;
+begin
+  SortingArray := TInt64List.Create;
+  try
+    SortingArray.Capacity := Length(AHist);
+    for i := 0 to Length(AHist) - 1 do
+      SortingArray.Add(AHist[i] or (Int64(AHistColorCounts[i]) shl 32));
+
+    SortingArray.Sort(@CompFunc);
+
+    for i := 0 to Length(AHist) - 1 do
+    begin
+      Item64 := SortingArray.Items[i];
+      AHist[i] := Item64;
+      AHistColorCounts[i] := Item64 shr 32;
+    end;
+  finally
+    SortingArray.Free;
+  end;
 end;
 
 
@@ -173,7 +214,9 @@ begin
       AHist[Length(AHist) - 1] := i;
       AHistColorCounts[Length(AHistColorCounts) - 1] := ColorCounts[i];
     end;
+
   SetLength(ColorCounts, 0);
+  SortHistogram(AHist, AHistColorCounts);
 end;
 
 
@@ -219,7 +262,9 @@ begin
       AHist[Length(AHist) - 1] := i;
       AHistColorCounts[Length(AHistColorCounts) - 1] := ColorCounts[i];
     end;
+
   SetLength(ColorCounts, 0);
+  SortHistogram(AHist, AHistColorCounts);
 end;
 
 
