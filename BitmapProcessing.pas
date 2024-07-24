@@ -46,6 +46,11 @@ type                      //2048 is used as 2^11 = 2048, as an optimization. See
     PB: PCanvasMat;
   end;
 
+  THeapCanvasMat = record
+    Mat: array of array of SmallInt;
+    OffsetX, OffsetY, Width, Height: Integer; //defines the cropped area from the original bitmap
+  end;
+
   TRGBRec = record   //24-bit pixels
     B, G, R: Byte;
   end;
@@ -172,7 +177,7 @@ begin
 end;
 
 
-procedure Histogram_24bit(ABitmap: TBitmap; var AHist, AHistColorCounts: TIntArr);
+procedure SizedHistogram_24bit(ABitmap: TBitmap; ALeft, ATop, AWidth, AHeight: Integer; var AHist, AHistColorCounts: TIntArr);
 var
   i, j: Integer;
   ACanvasLine: ^TScanLineArr;
@@ -181,19 +186,77 @@ var
   TempColor: TColor;
   ColorCounts: TIntArr;
 begin
-  Width := ABitmap.Width;   //to avoid calling a getter inside the for loop
-  Height := ABitmap.Height; //to avoid calling a getter inside the for loop
+  Width := Max(AWidth, 1);
+  Height := Max(AHeight, 1);
+  ALeft := Max(ALeft, 0);
+  ATop := Max(ATop, 0);
 
   SetLength(ColorCounts, $FFFFFF + 1);
   FillChar(ColorCounts[0], Length(ColorCounts) * SizeOf(Integer), 0);
 
   ABitmap.BeginUpdate;  //added for FP (as recommended)
   try
-    for i := 0 to Height - 1 do
+    for i := ATop to Height - 1 do
     begin
       ACanvasLine := ABitmap.{%H-}ScanLine[i];
 
-      for j := 0 to Width - 1 do
+      for j := ALeft to Width - 1 do
+      begin
+        AColorRec := ACanvasLine[j];
+
+        TempColor := AColorRec.B shl 16 + AColorRec.G shl 8 + AColorRec.R;
+        Inc(ColorCounts[TempColor]);
+      end;
+    end;
+  finally
+    ABitmap.EndUpdate;
+  end;
+
+  for i := 0 to Length(ColorCounts) - 1 do
+    if ColorCounts[i] > 0 then
+    begin
+      SetLength(AHist, Length(AHist) + 1);
+      SetLength(AHistColorCounts, Length(AHistColorCounts) + 1);
+
+      AHist[Length(AHist) - 1] := i;
+      AHistColorCounts[Length(AHistColorCounts) - 1] := ColorCounts[i];
+    end;
+
+  SetLength(ColorCounts, 0);
+  SortHistogram(AHist, AHistColorCounts);
+end;
+
+
+procedure Histogram_24bit(ABitmap: TBitmap; var AHist, AHistColorCounts: TIntArr);
+begin
+  SizedHistogram_24bit(ABitmap, 0, 0, ABitmap.Width, ABitmap.Height, AHist, AHistColorCounts);
+end;
+
+
+procedure SizedHistogram_32bit(ABitmap: TBitmap; ALeft, ATop, AWidth, AHeight: Integer; var AHist, AHistColorCounts: TIntArr);
+var
+  i, j: Integer;
+  ACanvasLine: ^TScanLineAlphaArr;   //notice alpha
+  AColorRec: TRGBAlphaRec;           //notice alpha
+  Width, Height: Integer;
+  TempColor: TColor;
+  ColorCounts: TIntArr;
+begin
+  Width := Max(AWidth, 1);
+  Height := Max(AHeight, 1);
+  ALeft := Max(ALeft, 0);
+  ATop := Max(ATop, 0);
+
+  SetLength(ColorCounts, $FFFFFF + 1);
+  FillChar(ColorCounts[0], Length(ColorCounts) * SizeOf(Integer), 0);
+
+  ABitmap.BeginUpdate;  //added for FP (as recommended)
+  try
+    for i := ATop to Height - 1 do
+    begin
+      ACanvasLine := ABitmap.{%H-}ScanLine[i];
+
+      for j := ALeft to Width - 1 do
       begin
         AColorRec := ACanvasLine[j];
 
@@ -221,50 +284,23 @@ end;
 
 
 procedure Histogram_32bit(ABitmap: TBitmap; var AHist, AHistColorCounts: TIntArr);
-var
-  i, j: Integer;
-  ACanvasLine: ^TScanLineAlphaArr;   //notice alpha
-  AColorRec: TRGBAlphaRec;           //notice alpha
-  Width, Height: Integer;
-  TempColor: TColor;
-  ColorCounts: TIntArr;
 begin
-  Width := ABitmap.Width;   //to avoid calling a getter inside the for loop
-  Height := ABitmap.Height; //to avoid calling a getter inside the for loop
+  SizedHistogram_32bit(ABitmap, 0, 0, ABitmap.Width, ABitmap.Height, AHist, AHistColorCounts);
+end;
 
-  SetLength(ColorCounts, $FFFFFF + 1);
-  FillChar(ColorCounts[0], Length(ColorCounts) * SizeOf(Integer), 0);
 
-  ABitmap.BeginUpdate;  //added for FP (as recommended)
-  try
-    for i := 0 to Height - 1 do
-    begin
-      ACanvasLine := ABitmap.{%H-}ScanLine[i];
+procedure GetSizedHistogram(ABitmap: TBitmap; ALeft, ATop, AWidth, AHeight: Integer; var AHist, AHistColorCounts: TIntArr);
+begin
+  case ABitmap.PixelFormat of
+    pf24bit:
+      SizedHistogram_24bit(ABitmap, ALeft, ATop, AWidth, AHeight, AHist, AHistColorCounts);
 
-      for j := 0 to Width - 1 do
-      begin
-        AColorRec := ACanvasLine[j];
+    pf32bit:
+      SizedHistogram_32bit(ABitmap, ALeft, ATop, AWidth, AHeight, AHist, AHistColorCounts);
 
-        TempColor := AColorRec.B shl 16 + AColorRec.G shl 8 + AColorRec.R;
-        Inc(ColorCounts[TempColor]);
-      end;
-    end;
-  finally
-    ABitmap.EndUpdate;
+    else
+      raise Exception.Create('Unsupported PixelFormat when computing histogram. Format index: ' + IntToStr(Ord(ABitmap.PixelFormat)));
   end;
-
-  for i := 0 to Length(ColorCounts) - 1 do
-    if ColorCounts[i] > 0 then
-    begin
-      SetLength(AHist, Length(AHist) + 1);
-      SetLength(AHistColorCounts, Length(AHistColorCounts) + 1);
-
-      AHist[Length(AHist) - 1] := i;
-      AHistColorCounts[Length(AHistColorCounts) - 1] := ColorCounts[i];
-    end;
-
-  SetLength(ColorCounts, 0);
-  SortHistogram(AHist, AHistColorCounts);
 end;
 
 
@@ -602,6 +638,58 @@ begin
     AResultedErrorCount := CanvasPos(SrcMat, SubMat, SubCnvXOffset, SubCnvYOffset, SrcCnvWidth, SrcCnvHeight, SubCnvWidth, SubCnvHeight, ColorErrorLevel, AIgnoreBackgroundColor, ABackgroundColor, AIgnoredColorsArr, AOutsideTickCount, APrecisionTimeout, AStopSearchOnDemand);
 
   Result := AResultedErrorCount < AcceptedErrorCount + 1;
+end;
+
+
+//ABkBmp is usually not the initial background bitmap. It is a cropped area from it, based on some generated grid.
+//ASearchedBmp is usually the initial searched bitmap.
+//ALeft, ATop, AWidth, AHeight are the area definition parameters for cropping the background bitmap.
+//AMinPercentColorMatch sets how much of the ASearchedBmp histogram data should be found in ABkBmp histogram data.
+//AMostSignificantColorCount sets how many items from the histogram arrays should be verified.
+//AColorErrorLevel is the difference between the two compared colors, for every color channel (R, G, B). It is possible that a scaled value is required, compared to the one entered by a user as a FindSubControl property.
+function MatchAreaByHistogram(ABkBmp, ASearchedBmp: TBitmap;
+                              ALeft, ATop, AWidth, AHeight: Integer;
+                              AMinPercentColorMatch: Double;
+                              AMostSignificantColorCount, AColorErrorLevel: Integer): Boolean;
+var
+  BkHist, BkHistColorCounts: TIntArr;              //The function assumes that the two histograms are sorted
+  SearchedHist, SearchedHistColorCounts: TIntArr;
+  i, j: Integer;
+  CurrentColorPercent: Double;
+  MatchPercents: array of Double;
+  BackgroundColor_R, BackgroundColor_G, BackgroundColor_B: SmallInt;
+  SearchedColor_R, SearchedColor_G, SearchedColor_B: SmallInt;
+begin
+  GetSizedHistogram(ABkBmp, ALeft, ATop, AWidth, AHeight, BkHist, BkHistColorCounts);
+  GetHistogram(ASearchedBmp, SearchedHist, SearchedHistColorCounts);
+  SetLength(MatchPercents, Min(AMostSignificantColorCount, Length(SearchedHist)));  //Assumes that Length(SearchedHist) < Length(BkHist). Otherwise, nothing will be found, as expected.
+
+  for i := 0 to Length(MatchPercents) - 1 do
+    MatchPercents[i] := 0;
+
+  for i := 0 to Min(AMostSignificantColorCount, Length(SearchedHist)) - 1 do
+    for j := 0 to Min(AMostSignificantColorCount, Length(BkHist)) - 1 do
+    begin
+      SysRedGreenBlue(BkHist[j], BackgroundColor_R, BackgroundColor_G, BackgroundColor_B);
+      SysRedGreenBlue(SearchedHist[j], SearchedColor_R, SearchedColor_G, SearchedColor_B);
+
+      if ColorMatches(BackgroundColor_R, BackgroundColor_G, BackgroundColor_B,
+                      SearchedColor_R, SearchedColor_G, SearchedColor_B,
+                      AColorErrorLevel) then
+      begin
+        CurrentColorPercent := SearchedHistColorCounts[i] / Max(BkHistColorCounts[j], 1);
+        if Double(MatchPercents[i]) < CurrentColorPercent then
+          MatchPercents[i] := CurrentColorPercent;
+      end;
+    end;
+
+  Result := True;
+  for i := 0 to Length(MatchPercents) - 1 do
+    if MatchPercents[i] < AMinPercentColorMatch then
+    begin
+      Result := False;
+      Break;
+    end;
 end;
 
 

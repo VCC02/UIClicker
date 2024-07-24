@@ -3118,6 +3118,7 @@ begin
 
       SetActionVarValue(VarName, VarValue);
     end;
+
   finally
     TempListOfSetVarNames.Free;
     TempListOfSetVarValues.Free;
