@@ -2888,6 +2888,7 @@ var
   HistogramResult, HistogramColorCountsResult: TIntArr;
   HistItemCount: Integer;
   tk: QWord;
+  TemplateDir: string;
 begin
   Result := False;
   TempListOfSetVarNames := TStringList.Create;
@@ -2945,7 +2946,21 @@ begin
       end;
 
       if TempListOfSetVarEvalBefore.Strings[i] = '1' then
+      begin
+        TemplateDir := '';
+        if FSelfTemplateFileName = nil then
+          TemplateDir := 'FSelfTemplateFileName not set in SetVar.'
+        else
+        begin
+          TemplateDir := ExtractFileDir(FSelfTemplateFileName^);
+          VarValue := StringReplace(VarValue, '$SelfTemplateDir$', TemplateDir, [rfReplaceAll]);
+          VarValue := StringReplace(VarValue, '$TemplateDir$', FFullTemplatesDir^, [rfReplaceAll]);
+        end;
+
+        VarValue := StringReplace(VarValue, '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
+
         VarValue := EvaluateReplacements(VarValue);
+      end;
 
       VarValue := EvaluateHTTP(VarValue, GeneratedException);
       if GeneratedException then

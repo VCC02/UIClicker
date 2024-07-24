@@ -30,7 +30,7 @@ interface
 
 uses
   Windows, Classes, SysUtils, Forms, Controls, Menus, ExtCtrls, StdCtrls,
-  Buttons, VirtualTrees, ClickerUtils;
+  Buttons, Dialogs, VirtualTrees, ClickerUtils;
 
 type
 
@@ -42,6 +42,10 @@ type
     lblAvailableFunctions: TLabel;
     lblSetVarToHttpInfo: TLabel;
     memAvailableFunctions: TMemo;
+    MenuItem_ReplaceWithSelfTemplateDir: TMenuItem;
+    MenuItem_ReplaceWithTemplateDir: TMenuItem;
+    MenuItem_ReplaceWithAppDir: TMenuItem;
+    MenuItem_BrowseFile: TMenuItem;
     MenuItem_AddSetVar: TMenuItem;
     MenuItem_RemoveSetVar: TMenuItem;
     N4: TMenuItem;
@@ -49,6 +53,7 @@ type
     pnlFunctions: TPanel;
     pmSetVars: TPopupMenu;
     pnlHorizSplitter: TPanel;
+    pmVarsEditor: TPopupMenu;
     spdbtnMoveDown: TSpeedButton;
     spdbtnNewVariable: TSpeedButton;
     spdbtnMoveUp: TSpeedButton;
@@ -57,7 +62,11 @@ type
     vstSetVar: TVirtualStringTree;
     procedure FrameResize(Sender: TObject);
     procedure MenuItem_AddSetVarClick(Sender: TObject);
+    procedure MenuItem_BrowseFileClick(Sender: TObject);
     procedure MenuItem_RemoveSetVarClick(Sender: TObject);
+    procedure MenuItem_ReplaceWithAppDirClick(Sender: TObject);
+    procedure MenuItem_ReplaceWithSelfTemplateDirClick(Sender: TObject);
+    procedure MenuItem_ReplaceWithTemplateDirClick(Sender: TObject);
     procedure pnlHorizSplitterMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure pnlHorizSplitterMouseMove(Sender: TObject; Shift: TShiftState; X,
@@ -72,6 +81,8 @@ type
     procedure vstSetVarChecked(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure vstSetVarChecking(Sender: TBaseVirtualTree; Node: PVirtualNode;
       var NewState: TCheckState; var Allowed: Boolean);
+    procedure vstSetVarCreateEditor(Sender: TBaseVirtualTree;
+      Node: PVirtualNode; Column: TColumnIndex; out EditLink: IVTEditLink);
     procedure vstSetVarDblClick(Sender: TObject);
     procedure vstSetVarEdited(Sender: TBaseVirtualTree; Node: PVirtualNode;
       Column: TColumnIndex);
@@ -104,15 +115,22 @@ type
     FSplitterMouseDownGlobalPos: TPoint;
     FSplitterMouseDownImagePos: TPoint;
 
+    FTextEditorEditBox: TEdit;  //pointer to the built-in editor
+
     FOnTriggerOnControlsModified: TOnTriggerOnControlsModified;
+    FOnGetFullTemplatesDir: TOnGetFullTemplatesDir;
+    FOnGetSelfTemplatesDir: TOnGetFullTemplatesDir;
 
     procedure UpdateNodeCheckStateFromEvalBefore(ANode: PVirtualNode);
     procedure ResizeFrameSectionsBySplitter(NewLeft: Integer);
     procedure UpdateVstCheckStates;
     procedure AddNewVariable;
     procedure RemoveSetVar;
+    procedure SetVSTEditBoxByTyping(ATextToSend: string);
 
     procedure DoOnTriggerOnControlsModified;
+    function DoOnGetFullTemplatesDir: string;
+    function DoOnGetSelfTemplatesDir: string;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -121,6 +139,8 @@ type
     procedure SetListOfSetVars(Value: TClkSetVarOptions);
 
     property OnTriggerOnControlsModified: TOnTriggerOnControlsModified write FOnTriggerOnControlsModified;
+    property OnGetFullTemplatesDir: TOnGetFullTemplatesDir write FOnGetFullTemplatesDir;
+    property OnGetSelfTemplatesDir: TOnGetFullTemplatesDir write FOnGetSelfTemplatesDir;
   end;
 
 
@@ -143,8 +163,11 @@ begin
   FHold := False;
 
   FOnTriggerOnControlsModified := nil;
+  FOnGetFullTemplatesDir := nil;
+  FOnGetSelfTemplatesDir := nil;
 
   FSetVarUpdatedVstText := False;
+  FTextEditorEditBox := nil;
 end;
 
 
@@ -210,6 +233,24 @@ begin
 end;
 
 
+function TfrClickerSetVar.DoOnGetFullTemplatesDir: string;
+begin
+  if not Assigned(FOnGetFullTemplatesDir) then
+    raise Exception.Create('OnGetFullTemplatesDir not assigned.')
+  else
+    Result := FOnGetFullTemplatesDir();
+end;
+
+
+function TfrClickerSetVar.DoOnGetSelfTemplatesDir: string;
+begin
+  if not Assigned(FOnGetSelfTemplatesDir) then
+    raise Exception.Create('OnGetSelfTemplatesDir not assigned.')
+  else
+    Result := FOnGetSelfTemplatesDir();
+end;
+
+
 procedure TfrClickerSetVar.tmrEditSetVarsTimer(Sender: TObject);
 begin
   tmrEditSetVars.Enabled := False;
@@ -233,6 +274,20 @@ procedure TfrClickerSetVar.vstSetVarChecking(Sender: TBaseVirtualTree;
   Node: PVirtualNode; var NewState: TCheckState; var Allowed: Boolean);
 begin
   Allowed := True;
+end;
+
+
+procedure TfrClickerSetVar.vstSetVarCreateEditor(Sender: TBaseVirtualTree;
+  Node: PVirtualNode; Column: TColumnIndex; out EditLink: IVTEditLink);
+var
+  TempStringEditLink: TStringEditLink;
+begin
+  TempStringEditLink := TStringEditLink.Create;
+  EditLink := TempStringEditLink;
+
+  FTextEditorEditBox := TEdit(TCustomEdit(TempStringEditLink.Edit));
+  FTextEditorEditBox.PopupMenu := pmVarsEditor;
+  FTextEditorEditBox.Show;
 end;
 
 
@@ -281,6 +336,8 @@ begin
     else
       MessageBox(Handle, 'Editing wrong column (bug)', PChar(Application.Title), MB_ICONERROR);
   end;
+
+  FTextEditorEditBox := nil;
 end;
 
 
@@ -394,9 +451,90 @@ begin
 end;
 
 
+procedure TfrClickerSetVar.SetVSTEditBoxByTyping(ATextToSend: string);
+var
+  KeyStrokes: array of TINPUT;
+  i, Idx: Integer;
+begin
+  if Assigned(FTextEditorEditBox) then
+  begin
+    //FTextEditorEditBox.Text := ATextToSend;   //It seems that VTV doesn't get the message, so "type" the whole content.
+
+    FTextEditorEditBox.Text := '';
+    FTextEditorEditBox.SetFocus; //just in case
+
+    SetLength(KeyStrokes, Length(ATextToSend) shl 1);
+
+    for i := 0 to Length(ATextToSend) - 1 do   //string len, not array len
+    begin
+      Idx := i shl 1;
+      KeyStrokes[Idx]._Type := INPUT_KEYBOARD; //not sure if needed
+      KeyStrokes[Idx].ki.wVk := 0;
+      KeyStrokes[Idx].ki.wScan := Ord(ATextToSend[i + 1]);
+      KeyStrokes[Idx].ki.dwFlags := KEYEVENTF_UNICODE; //0;
+      KeyStrokes[Idx].ki.Time := 0;
+      KeyStrokes[Idx].ki.ExtraInfo := 0;
+
+      KeyStrokes[Idx + 1]._Type := INPUT_KEYBOARD; //not sure if needed
+      KeyStrokes[Idx + 1].ki.wVk := 0;
+      KeyStrokes[Idx + 1].ki.wScan := Ord(ATextToSend[i + 1]);
+      KeyStrokes[Idx + 1].ki.dwFlags := KEYEVENTF_UNICODE or KEYEVENTF_KEYUP;
+      KeyStrokes[Idx + 1].ki.Time := 0;
+      KeyStrokes[Idx + 1].ki.ExtraInfo := 0;
+    end;
+
+    SendInput(Length(KeyStrokes), @KeyStrokes[0], SizeOf(TINPUT));
+  end;
+end;
+
+
+procedure TfrClickerSetVar.MenuItem_BrowseFileClick(Sender: TObject);
+var
+  OpenDialog: TOpenDialog;
+begin
+  OpenDialog := TOpenDialog.Create(nil);
+  try
+    if not OpenDialog.Execute then
+      Exit;
+
+    SetVSTEditBoxByTyping(OpenDialog.FileName);
+  finally
+    OpenDialog.Free;
+  end;
+end;
+
+
 procedure TfrClickerSetVar.MenuItem_RemoveSetVarClick(Sender: TObject);
 begin
   RemoveSetVar;
+end;
+
+
+procedure TfrClickerSetVar.MenuItem_ReplaceWithAppDirClick(Sender: TObject);
+var
+  NewValue: string;
+begin
+  NewValue := StringReplace(FTextEditorEditBox.Text, ExtractFilePath(ParamStr(0)), '$AppDir$' + PathDelim, [rfReplaceAll]);
+  SetVSTEditBoxByTyping(NewValue);
+end;
+
+
+procedure TfrClickerSetVar.MenuItem_ReplaceWithTemplateDirClick(Sender: TObject);
+var
+  NewValue: string;
+begin
+  NewValue := StringReplace(FTextEditorEditBox.Text, DoOnGetFullTemplatesDir, '$TemplateDir$' {+ PathDelim}, [rfReplaceAll]);
+  SetVSTEditBoxByTyping(NewValue);
+end;
+
+
+procedure TfrClickerSetVar.MenuItem_ReplaceWithSelfTemplateDirClick(
+  Sender: TObject);
+var
+  NewValue: string;
+begin
+  NewValue := StringReplace(FTextEditorEditBox.Text, DoOnGetSelfTemplatesDir, '$SelfTemplateDir$' {+ PathDelim}, [rfReplaceAll]);
+  SetVSTEditBoxByTyping(NewValue);
 end;
 
 

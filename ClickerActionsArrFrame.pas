@@ -442,6 +442,8 @@ type
     function HandleOnResolveTemplatePath(APath: string; ACustomSelfTemplateDir: string = ''; ACustomAppDir: string = ''): string;
     procedure HandleOnSaveFileToExtRenderingInMemFS(AFileName: string; AContent: Pointer; AFileSize: Int64);
 
+    function HandleOnClickerSetVarFrame_OnGetSelfTemplatesDir: string;
+
     procedure HandleOnSetDebugPoint(ADebugPoint: string);
     function HandleOnIsAtBreakPoint(ADebugPoint: string): Boolean;
 
@@ -955,6 +957,8 @@ begin
   frClickerActions.OnPluginDbgRequestLineNumber := HandleOnPluginDbgRequestLineNumber;
   frClickerActions.OnPluginDbgSetBreakpoint := HandleOnPluginDbgSetBreakpoint;
   frClickerActions.OnTClkIniFileCreate := HandleOnTClkIniFileCreate;
+
+  frClickerActions.OnGetSelfTemplatesDir := HandleOnClickerSetVarFrame_OnGetSelfTemplatesDir;
 
   //frClickerActions.OnControlsModified := ClickerActionsFrameOnControlsModified;   //this is set on frame initialization
 
@@ -1608,6 +1612,12 @@ end;
 function TfrClickerActionsArr.HandleOnTClkIniFileCreate(AFileName: string): TClkIniFile;
 begin
   Result := DoOnTClkIniFileCreate(AFileName);
+end;
+
+
+function TfrClickerActionsArr.HandleOnClickerSetVarFrame_OnGetSelfTemplatesDir: string;
+begin
+  Result := ExtractFileDir(FFileName);
 end;
 
 
@@ -4230,6 +4240,7 @@ begin
   n := Length(FClkActions);
   SetLength(FClkActions, n + 1);
 
+  FClkActions[n].ActionOptions.Action := acClick; //some default
   UpdateActionsArrFromControls(n);
   FClkActions[n].ActionStatus := asNotStarted;
   FClkActions[n].ActionOptions.ActionEnabled := True;

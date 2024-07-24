@@ -391,6 +391,8 @@ type
     FOnPluginDbgSetBreakpoint: TOnPluginDbgSetBreakpoint;
     FOnTClkIniFileCreate: TOnTClkIniFileCreate;
 
+    FOnGetSelfTemplatesDir: TOnGetFullTemplatesDir;
+
     //function GetListOfSetVarEntries: string;
     //procedure SetListOfSetVarEntries(Value: string);
 
@@ -438,6 +440,8 @@ type
     function DoOnPluginDbgRequestLineNumber(out ALineContent, ADbgSymFile: string): Integer;
     procedure DoOnPluginDbgSetBreakpoint(ALineIndex, ASelectedSourceFileIndex: Integer; AEnabled: Boolean);
     function DoOnTClkIniFileCreate(AFileName: string): TClkIniFile;
+
+    function DoOnGetSelfTemplatesDir: string;
 
     procedure ClkVariablesOnChange(Sender: TObject);
     procedure AddDecodedVarToNode(ANode: PVirtualNode; ARecursionLevel: Integer);
@@ -502,6 +506,8 @@ type
 
     procedure HandleOnClickerExecAppFrame_OnTriggerOnControlsModified;
     procedure HandleOnClickerSetVarFrame_OnTriggerOnControlsModified;
+    function HandleOnClickerSetVarFrame_OnGetFullTemplatesDir: string;
+    function HandleOnClickerSetVarFrame_OnGetSelfTemplatesDir: string;
     procedure HandleOnClickerCallTemplateFrame_OnTriggerOnControlsModified;
 
     function HandleOnEvaluateReplacementsFunc(s: string; Recursive: Boolean = True): string;
@@ -670,6 +676,8 @@ type
     property OnPluginDbgRequestLineNumber: TOnPluginDbgRequestLineNumber write FOnPluginDbgRequestLineNumber;
     property OnPluginDbgSetBreakpoint: TOnPluginDbgSetBreakpoint write FOnPluginDbgSetBreakpoint;
     property OnTClkIniFileCreate: TOnTClkIniFileCreate write FOnTClkIniFileCreate;
+
+    property OnGetSelfTemplatesDir: TOnGetFullTemplatesDir write FOnGetSelfTemplatesDir;
   end;
 
 
@@ -777,6 +785,8 @@ begin
   frClickerSetVar := TfrClickerSetVar.Create(Self);
   frClickerSetVar.Parent := pnlExtra;
   frClickerSetVar.OnTriggerOnControlsModified := HandleOnClickerSetVarFrame_OnTriggerOnControlsModified;
+  frClickerSetVar.OnGetFullTemplatesDir := HandleOnClickerSetVarFrame_OnGetFullTemplatesDir;
+  frClickerSetVar.OnGetSelfTemplatesDir := HandleOnClickerSetVarFrame_OnGetSelfTemplatesDir;
   frClickerSetVar.Left := 3;
   frClickerSetVar.Top := 3;
   frClickerSetVar.Width := pnlExtra.Width - 3;
@@ -940,6 +950,8 @@ begin
   FOnPluginDbgRequestLineNumber := nil;
   FOnPluginDbgSetBreakpoint := nil;
   FOnTClkIniFileCreate := nil;
+
+  FOnGetSelfTemplatesDir := nil;
 
   FShowDeprecatedControls := False;
   FEditingAction := @FEditingActionRec;
@@ -2477,6 +2489,18 @@ begin
 end;
 
 
+function TfrClickerActions.HandleOnClickerSetVarFrame_OnGetFullTemplatesDir: string;
+begin
+  Result := FFullTemplatesDir;
+end;
+
+
+function TfrClickerActions.HandleOnClickerSetVarFrame_OnGetSelfTemplatesDir: string;
+begin
+  Result := DoOnGetSelfTemplatesDir;
+end;
+
+
 procedure TfrClickerActions.HandleOnClickerCallTemplateFrame_OnTriggerOnControlsModified;
 begin
   FEditingAction.CallTemplateOptions.ListOfCustomVarsAndValues := frClickerCallTemplate.GetListOfCustomVariables;
@@ -2912,6 +2936,16 @@ begin
 
   Result := FOnTClkIniFileCreate(AFileName);
 end;
+
+
+function TfrClickerActions.DoOnGetSelfTemplatesDir: string;
+begin
+  if not Assigned(FOnGetSelfTemplatesDir) then
+    raise Exception.Create('OnGetSelfTemplatesDir not assigned.')
+  else
+    Result := FOnGetSelfTemplatesDir();
+end;
+
 
 //////////////////////////// OI
 

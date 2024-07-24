@@ -106,6 +106,8 @@ type
   TOnSetDebugPoint = procedure(ADebugPoint: string) of object;
   TOnIsAtBreakPoint = function(ADebugPoint: string): Boolean of object;
 
+  TOnGetFullTemplatesDir = function: string of object;
+
 const
   CClkActionStr: array[TClkAction] of string = ('Click', 'ExecApp', 'FindControl', 'FindSubControl',
                                                 'SetControlText', 'CallTemplate', 'Sleep', 'SetVar', 'WindowOperations',
