@@ -443,6 +443,7 @@ type
     procedure HandleOnSaveFileToExtRenderingInMemFS(AFileName: string; AContent: Pointer; AFileSize: Int64);
 
     function HandleOnClickerSetVarFrame_OnGetSelfTemplatesDir: string;
+    procedure HandleOnClickerSetVarFrame_OnShowAutoComplete(AEdit: TEdit);
 
     procedure HandleOnSetDebugPoint(ADebugPoint: string);
     function HandleOnIsAtBreakPoint(ADebugPoint: string): Boolean;
@@ -476,6 +477,7 @@ type
     procedure AddCalledTemplateToNode(ANode: PVirtualNode; ATemplateFileName, ATemplateDir, AAppDir: string; ARecursionLevel: Integer);
 
     procedure ResizeFrameSectionsBySplitter(NewTop: Integer);
+    procedure ShowAutoCompleteWindow(AEdit: TEdit);
 
     procedure UpdateActionsArrFromControls(ActionIndex: Integer);
     procedure UpdateControlsFromActionsArr(ActionIndex: Integer);
@@ -959,6 +961,7 @@ begin
   frClickerActions.OnTClkIniFileCreate := HandleOnTClkIniFileCreate;
 
   frClickerActions.OnGetSelfTemplatesDir := HandleOnClickerSetVarFrame_OnGetSelfTemplatesDir;
+  frClickerActions.OnShowAutoComplete := HandleOnClickerSetVarFrame_OnShowAutoComplete;
 
   //frClickerActions.OnControlsModified := ClickerActionsFrameOnControlsModified;   //this is set on frame initialization
 
@@ -1621,6 +1624,12 @@ begin
 end;
 
 
+procedure TfrClickerActionsArr.HandleOnClickerSetVarFrame_OnShowAutoComplete(AEdit: TEdit);
+begin
+  ShowAutoCompleteWindow(AEdit);
+end;
+
+
 procedure TfrClickerActionsArr.HandleOnSaveStringListToFile(AStringList: TStringList; const AFileName: string);
 begin
   DoOnSaveTemplateToFile(AStringList, ResolveTemplatePath(AFileName));
@@ -1719,7 +1728,7 @@ var
   i: Integer;
 begin
   for i := 0 to Length(FClkActions) - 1 do
-    AListOfSetVarActions.Add(FClkActions[i].ActionOptions.ActionName);
+    AListOfSetVarActions.Add(FClkActions[i].ActionOptions.ActionName + #4#5 + IntToStr(Ord(FClkActions[i].ActionOptions.Action)));
 end;
 
 
@@ -4509,32 +4518,41 @@ begin
 end;
 
 
-procedure TfrClickerActionsArr.edtConsoleCommandKeyUp(Sender: TObject;
-  var Key: Word; Shift: TShiftState);
+procedure TfrClickerActionsArr.ShowAutoCompleteWindow(AEdit: TEdit);
 var
   TempVars: TStringList;
   TempFuncs: TStringList;
+begin
+  FillInVarAndFuncDescriptions;
+
+  TempVars := TStringList.Create;
+  TempFuncs := TStringList.Create;
+  try
+    FillInWithAllVars(TempVars);
+    FillInWithAllFuncs(TempFuncs);
+    ShowAutoComplete(AEdit, TempVars, TempFuncs, FVarDescriptions, FFuncDescriptions);
+  finally
+    TempVars.Free;
+    TempFuncs.Free;
+  end;
+
+  if AutoCompleteVisible then
+    ShowAutoComplete(AEdit, nil, nil, FVarDescriptions, FFuncDescriptions);
+end;
+
+
+procedure TfrClickerActionsArr.edtConsoleCommandKeyUp(Sender: TObject;
+  var Key: Word; Shift: TShiftState);
 begin
   if Key = VK_SPACE then
     if ssCtrl in Shift then
     begin
       Key := 0;
-      FillInVarAndFuncDescriptions;
-
-      TempVars := TStringList.Create;
-      TempFuncs := TStringList.Create;
-      try
-        FillInWithAllVars(TempVars);
-        FillInWithAllFuncs(TempFuncs);
-        ShowAutoComplete(edtConsoleCommand, TempVars, TempFuncs, FVarDescriptions, FFuncDescriptions);
-      finally
-        TempVars.Free;
-        TempFuncs.Free;
-      end;
+      ShowAutoCompleteWindow(edtConsoleCommand);
     end;
 
-  if AutoCompleteVisible then
-    ShowAutoComplete(edtConsoleCommand, nil, nil, FVarDescriptions, FFuncDescriptions);
+  //if AutoCompleteVisible then
+  //  ShowAutoComplete(edtConsoleCommand, nil, nil, FVarDescriptions, FFuncDescriptions);
 end;
 
 

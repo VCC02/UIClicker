@@ -786,6 +786,9 @@ begin
     ScreenShot(CompHandle, SrcCompSearchAreaBitmap, ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height)
   else
   begin
+    ScrShot_Width := Min(ScrShot_Width, BitmapToSearchOn.Width);
+    ScrShot_Height := Min(ScrShot_Height, BitmapToSearchOn.Height);
+
     WipeBitmap(SrcCompSearchAreaBitmap, ScrShot_Width, ScrShot_Height);
 
     SrcRect.Left := ScrShot_Left;

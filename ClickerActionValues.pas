@@ -119,6 +119,7 @@ const
   CFindControl_MatchClassName_PropIndex = 3;  //property index in FindControl structure
   CFindControl_MatchBitmapText_PropIndex = 6; //property index in FindControl structure
   CFindControl_MatchBitmapFiles_PropIndex = 7; //property index in FindControl structure   - list of files
+  CFindControl_MatchBitmapAlgorithm_PropIndex = 8;
   CFindControl_MatchBitmapAlgorithmSettings_PropIndex = 9;
   CFindControl_InitialRectangle_PropIndex = 10;
   CFindControl_UseWholeScreen_PropIndex = 11;
@@ -951,6 +952,7 @@ function GetPropertyHint_FindControl_MatchText: string;
 function GetPropertyHint_FindControl_MatchClassName: string;
 function GetPropertyHint_FindControl_MatchBitmapText: string;
 function GetPropertyHint_FindControl_MatchBitmapFiles: string;
+function GetPropertyHint_FindControl_MatchBitmapAlgorithm: string;
 function GetPropertyHint_FindControl_UseWholeScreen: string;
 function GetPropertyHint_FindControl_ColorError: string;
 function GetPropertyHint_FindControl_AllowedColorErrorCount: string;
@@ -1073,7 +1075,7 @@ const
     @GetPropertyHintNoHint, // MatchClassNameSeparator: string;
     @GetPropertyHint_FindControl_MatchBitmapText, // MatchBitmapText: TClkFindControlMatchBitmapTextArr;
     @GetPropertyHint_FindControl_MatchBitmapFiles, // MatchBitmapFiles: string; //ListOfStrings
-    @GetPropertyHintNoHint, // MatchBitmapAlgorithm: TMatchBitmapAlgorithm;
+    @GetPropertyHint_FindControl_MatchBitmapAlgorithm, // MatchBitmapAlgorithm: TMatchBitmapAlgorithm;
     @GetPropertyHintNoHint, // MatchBitmapAlgorithmSettings: TMatchBitmapAlgorithmSettings;
     @GetPropertyHintNoHint, // InitialRectangle: TRectString;
     @GetPropertyHint_FindControl_UseWholeScreen, // UseWholeScreen: Boolean;
@@ -2206,6 +2208,16 @@ begin
 end;
 
 
+function GetPropertyHint_FindControl_MatchBitmapAlgorithm: string;
+begin
+  Result := 'This is the "high-level" algorithm, used for defining the points, where the searched bitmap is compared to an area from the background bitmap.' + #13#10 +
+            '- For mbaBruteForce, the searched bitmap is compared on every x:y point, which allows the searched bitmap to fit into the background.' + #13#10 +
+            '- When mbaXYMultipleAndOffsets is selected, a grid is generated, which expects the searched bitmap to start (top-left corner) on one of the grid points.' + #13#10 +
+            '- The mbaRawHistogramZones algorithm (currently in work) generates a grid, with the resolution, matching the searched bitmap size, then computes the histogram of each resulted zone.' + #13#10 +
+            '    If the significant colors from every zone histogram, match the searced bitmap''s significant colors, then the brute-force search is used on those specific zones.';
+end;
+
+
 function GetPropertyHint_FindControl_UseWholeScreen: string;
 begin
   Result := 'Use the whole screen as search area, if True.' + #13#10 +
@@ -2325,20 +2337,21 @@ end;
 function GetPropertyHint_FindControl_ImageSource: string;
 begin
   Result := 'When set to isScreenshot, FindSubControl takes screenshot from selected area, where it searches for a bitmap.' + #13#10 +
-            'When set to isFile, FindSubControl uses a bmp from disk or "externally-rendered" In-Mem file system.';
+            'When set to isFile, FindSubControl uses a (background) bmp from disk or "externally-rendered" In-Mem file system.';
 end;
 
 
 function GetPropertyHint_FindControl_SourceFileName: string;
 begin
   Result := 'Used when ImageSource is set to isFile.' + #13#10 +
-            'This is a full path to a bmp from disk or "externally-rendered" In-Mem file system.';
+            'This is a full path to a (background) bmp from disk or "externally-rendered" In-Mem file system.';
 end;
 
 
 function GetPropertyHint_FindControl_ImageSourceFileNameLocation: string;
 begin
-  Result := 'When ImageSource is set to isFile, ImageSourceFileNameLocation selects between disk and "externally-rendered" In-Mem file system.';
+  Result := 'When ImageSource is set to isFile, ImageSourceFileNameLocation selects between disk and "externally-rendered" In-Mem file system.' + #13#10 +
+            'This is the (background) bmp, where the txt/bmp/pmtv are searched on.';
 end;
 
 

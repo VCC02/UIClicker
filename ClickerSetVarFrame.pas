@@ -58,6 +58,7 @@ type
     spdbtnNewVariable: TSpeedButton;
     spdbtnMoveUp: TSpeedButton;
     spdbtnRemoveSelectedVariable: TSpeedButton;
+    tmrCreateEditor: TTimer;
     tmrEditSetVars: TTimer;
     vstSetVar: TVirtualStringTree;
     procedure FrameResize(Sender: TObject);
@@ -77,6 +78,7 @@ type
     procedure spdbtnMoveUpClick(Sender: TObject);
     procedure spdbtnNewVariableClick(Sender: TObject);
     procedure spdbtnRemoveSelectedVariableClick(Sender: TObject);
+    procedure tmrCreateEditorTimer(Sender: TObject);
     procedure tmrEditSetVarsTimer(Sender: TObject);
     procedure vstSetVarChecked(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure vstSetVarChecking(Sender: TBaseVirtualTree; Node: PVirtualNode;
@@ -120,6 +122,7 @@ type
     FOnTriggerOnControlsModified: TOnTriggerOnControlsModified;
     FOnGetFullTemplatesDir: TOnGetFullTemplatesDir;
     FOnGetSelfTemplatesDir: TOnGetFullTemplatesDir;
+    FOnShowAutoComplete: TOnShowAutoComplete;
 
     procedure UpdateNodeCheckStateFromEvalBefore(ANode: PVirtualNode);
     procedure ResizeFrameSectionsBySplitter(NewLeft: Integer);
@@ -131,6 +134,11 @@ type
     procedure DoOnTriggerOnControlsModified;
     function DoOnGetFullTemplatesDir: string;
     function DoOnGetSelfTemplatesDir: string;
+    procedure DoOnShowAutoComplete(AEdit: TEdit);
+
+    procedure edtTextEditorExit(Sender: TObject);
+    procedure edtTextEditorKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+    procedure edtTextEditorKeyUp(Sender: TObject; var Key: Word; Shift: TShiftState);
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -141,10 +149,15 @@ type
     property OnTriggerOnControlsModified: TOnTriggerOnControlsModified write FOnTriggerOnControlsModified;
     property OnGetFullTemplatesDir: TOnGetFullTemplatesDir write FOnGetFullTemplatesDir;
     property OnGetSelfTemplatesDir: TOnGetFullTemplatesDir write FOnGetSelfTemplatesDir;
+    property OnShowAutoComplete: TOnShowAutoComplete write FOnShowAutoComplete;
   end;
 
 
 implementation
+
+
+uses
+  AutoCompleteForm;
 
 {$R *.frm}
 
@@ -165,6 +178,7 @@ begin
   FOnTriggerOnControlsModified := nil;
   FOnGetFullTemplatesDir := nil;
   FOnGetSelfTemplatesDir := nil;
+  FOnShowAutoComplete := nil;
 
   FSetVarUpdatedVstText := False;
   FTextEditorEditBox := nil;
@@ -251,6 +265,15 @@ begin
 end;
 
 
+procedure TfrClickerSetVar.DoOnShowAutoComplete(AEdit: TEdit);
+begin
+  if not Assigned(FOnShowAutoComplete) then
+    raise Exception.Create('OnShowAutoComplete not assigned.')
+  else
+    FOnShowAutoComplete(AEdit);
+end;
+
+
 procedure TfrClickerSetVar.tmrEditSetVarsTimer(Sender: TObject);
 begin
   tmrEditSetVars.Enabled := False;
@@ -285,9 +308,37 @@ begin
   TempStringEditLink := TStringEditLink.Create;
   EditLink := TempStringEditLink;
 
+  //tmrCreateEditor.Enabled := True;
   FTextEditorEditBox := TEdit(TCustomEdit(TempStringEditLink.Edit));
+
   FTextEditorEditBox.PopupMenu := pmVarsEditor;
+  //FTextEditorEditBox.OnExit := edtTextEditorExit;
+  //FTextEditorEditBox.OnKeyDown := edtTextEditorKeyDown;
+  //FTextEditorEditBox.OnKeyUp := edtTextEditorKeyUp;
+
   FTextEditorEditBox.Show;
+
+  Application.ProcessMessages;
+  FTextEditorEditBox.SetFocus;
+end;
+
+
+procedure TfrClickerSetVar.tmrCreateEditorTimer(Sender: TObject);
+begin
+  tmrCreateEditor.Enabled := False;
+  //FTextEditorEditBox := TEdit.Create(Self);
+  //FTextEditorEditBox.Parent := vstSetVar;
+  //FTextEditorEditBox.Left := vstSetVar.Left;
+  //FTextEditorEditBox.Top := vstSetVar.Top + 30;
+  //FTextEditorEditBox.Width := 100;
+  //
+  //FTextEditorEditBox.PopupMenu := pmVarsEditor;
+  //FTextEditorEditBox.OnExit := edtTextEditorExit;
+  //FTextEditorEditBox.OnKeyDown := edtTextEditorKeyDown;
+  //FTextEditorEditBox.OnKeyUp := edtTextEditorKeyUp;
+  //
+  //FTextEditorEditBox.Show;
+  //FTextEditorEditBox.SetFocus;
 end;
 
 
@@ -672,6 +723,47 @@ begin
   vstSetVar.ScrollIntoView(Node, True);
   vstSetVar.Repaint;
   DoOnTriggerOnControlsModified;
+end;
+
+
+procedure TfrClickerSetVar.edtTextEditorExit(Sender: TObject);
+begin
+  if Assigned(frmAutoComplete) and not frmAutoComplete.Focused then  //if AutoCompleteVisible then
+    CloseAutoComplete
+  //else
+  //begin
+  //  FSetVarEditingText := FTextEditorEditBox.Text;
+  //  FSetVarUpdatedVstText := True;
+  //  FreeAndNil(FTextEditorEditBox);
+  //end;
+end;
+
+
+procedure TfrClickerSetVar.edtTextEditorKeyDown(Sender: TObject;
+  var Key: Word; Shift: TShiftState);
+begin
+  if Key = VK_SPACE then
+    if ssCtrl in Shift then
+    begin
+      Key := 0;
+      Exit;
+    end;
+
+  if Key in [VK_RETURN, VK_ESCAPE] then
+    if AutoCompleteVisible then
+      CloseAutoComplete;
+end;
+
+
+procedure TfrClickerSetVar.edtTextEditorKeyUp(Sender: TObject;
+  var Key: Word; Shift: TShiftState);
+begin
+  if Key = VK_SPACE then
+    if ssCtrl in Shift then
+    begin
+      Key := 0;
+      DoOnShowAutoComplete(TEdit(TCustomEdit(Sender)));
+    end;
 end;
 
 

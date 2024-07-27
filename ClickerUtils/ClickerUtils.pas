@@ -107,6 +107,7 @@ type
   TOnIsAtBreakPoint = function(ADebugPoint: string): Boolean of object;
 
   TOnGetFullTemplatesDir = function: string of object;
+  TOnShowAutoComplete = procedure(AEdit: TEdit) of object;
 
 const
   CClkActionStr: array[TClkAction] of string = ('Click', 'ExecApp', 'FindControl', 'FindSubControl',
@@ -236,7 +237,7 @@ type
   TClkFindControlMatchBitmapTextArr = array of TClkFindControlMatchBitmapText;
 
   //once implemented, do not change the order of these values, because they are saved in files as integers
-  TMatchBitmapAlgorithm = (mbaBruteForce, mbaXYMultipleAndOffsets);
+  TMatchBitmapAlgorithm = (mbaBruteForce, mbaXYMultipleAndOffsets, mbaRawHistogramZones);
 
   TMatchBitmapAlgorithmSettings = record
     XMultipleOf: Integer;
@@ -476,7 +477,7 @@ const
   CMouseButtonStr: array[TMouseButton] of string = ('mbLeft', 'mbRight', 'mbMiddle', 'mbExtra1', 'mbExtra2');
   CMouseWheelTypeStr: array[TMouseWheelType] of string = ('mwtVert', 'mwtHoriz');
   CExecAppUseInheritHandlesStr: array[TExecAppUseInheritHandles] of string = ('uihNo', 'uihYes', 'uihOnlyWithStdInOut');
-  CMatchBitmapAlgorithmStr: array[TMatchBitmapAlgorithm] of string = ('mbaBruteForce', 'mbaXYMultipleAndOffsets');
+  CMatchBitmapAlgorithmStr: array[TMatchBitmapAlgorithm] of string = ('mbaBruteForce', 'mbaXYMultipleAndOffsets', 'mbaRawHistogramZones');
   CImageSourceStr: array[TImageSource] of string = ('isScreenshot', 'isFile');
   CImageSourceFileNameLocationStr: array[TImageSourceFileNameLocation] of string = ('isflDisk', 'isflMem');
   CClkSetTextControlTypeStr: array[TClkSetTextControlType] of string = ('stEditBox', 'stComboBox', 'stKeystrokes');

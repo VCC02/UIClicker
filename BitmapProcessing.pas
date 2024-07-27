@@ -641,43 +641,37 @@ begin
 end;
 
 
-//ABkBmp is usually not the initial background bitmap. It is a cropped area from it, based on some generated grid.
-//ASearchedBmp is usually the initial searched bitmap.
-//ALeft, ATop, AWidth, AHeight are the area definition parameters for cropping the background bitmap.
-//AMinPercentColorMatch sets how much of the ASearchedBmp histogram data should be found in ABkBmp histogram data.
+//ABkHist, ABkHistColorCounts define the background histogram
+//ASearchedHist, ASearchedHistColorCounts define the searched bitmap histogram
+//AMinPercentColorMatch sets how much of the ASearchedBmp histogram data should be found in ABkBmp histogram data. The value is expected to be from 0 to 1.
 //AMostSignificantColorCount sets how many items from the histogram arrays should be verified.
 //AColorErrorLevel is the difference between the two compared colors, for every color channel (R, G, B). It is possible that a scaled value is required, compared to the one entered by a user as a FindSubControl property.
-function MatchAreaByHistogram(ABkBmp, ASearchedBmp: TBitmap;
-                              ALeft, ATop, AWidth, AHeight: Integer;
+function MatchAreaByHistogram(var ABkHist, ABkHistColorCounts, ASearchedHist, ASearchedHistColorCounts: TIntArr;   //The function assumes that the two histograms are sorted
                               AMinPercentColorMatch: Double;
                               AMostSignificantColorCount, AColorErrorLevel: Integer): Boolean;
 var
-  BkHist, BkHistColorCounts: TIntArr;              //The function assumes that the two histograms are sorted
-  SearchedHist, SearchedHistColorCounts: TIntArr;
   i, j: Integer;
   CurrentColorPercent: Double;
   MatchPercents: array of Double;
   BackgroundColor_R, BackgroundColor_G, BackgroundColor_B: SmallInt;
   SearchedColor_R, SearchedColor_G, SearchedColor_B: SmallInt;
 begin
-  GetSizedHistogram(ABkBmp, ALeft, ATop, AWidth, AHeight, BkHist, BkHistColorCounts);
-  GetHistogram(ASearchedBmp, SearchedHist, SearchedHistColorCounts);
-  SetLength(MatchPercents, Min(AMostSignificantColorCount, Length(SearchedHist)));  //Assumes that Length(SearchedHist) < Length(BkHist). Otherwise, nothing will be found, as expected.
+  SetLength(MatchPercents, Min(AMostSignificantColorCount, Length(ASearchedHist)));  //Assumes that Length(ASearchedHist) < Length(ABkHist). Otherwise, nothing will be found, as expected.
 
   for i := 0 to Length(MatchPercents) - 1 do
     MatchPercents[i] := 0;
 
-  for i := 0 to Min(AMostSignificantColorCount, Length(SearchedHist)) - 1 do
-    for j := 0 to Min(AMostSignificantColorCount, Length(BkHist)) - 1 do
+  for i := 0 to Min(AMostSignificantColorCount, Length(ASearchedHist)) - 1 do
+    for j := 0 to Min(AMostSignificantColorCount, Length(ABkHist)) - 1 do
     begin
-      SysRedGreenBlue(BkHist[j], BackgroundColor_R, BackgroundColor_G, BackgroundColor_B);
-      SysRedGreenBlue(SearchedHist[j], SearchedColor_R, SearchedColor_G, SearchedColor_B);
+      SysRedGreenBlue(ABkHist[j], BackgroundColor_R, BackgroundColor_G, BackgroundColor_B);
+      SysRedGreenBlue(ASearchedHist[j], SearchedColor_R, SearchedColor_G, SearchedColor_B);
 
       if ColorMatches(BackgroundColor_R, BackgroundColor_G, BackgroundColor_B,
                       SearchedColor_R, SearchedColor_G, SearchedColor_B,
                       AColorErrorLevel) then
       begin
-        CurrentColorPercent := SearchedHistColorCounts[i] / Max(BkHistColorCounts[j], 1);
+        CurrentColorPercent := ASearchedHistColorCounts[i] / Max(ABkHistColorCounts[j], 1);
         if Double(MatchPercents[i]) < CurrentColorPercent then
           MatchPercents[i] := CurrentColorPercent;
       end;
@@ -685,11 +679,15 @@ begin
 
   Result := True;
   for i := 0 to Length(MatchPercents) - 1 do
+  begin
+    //MessageBox(0, PChar('i = ' + IntToStr(i) + '  val = ' + FloatToStr(MatchPercents[i])), 'Match percents', MB_ICONINFORMATION);
+
     if MatchPercents[i] < AMinPercentColorMatch then
     begin
       Result := False;
       Break;
     end;
+  end;
 end;
 
 
@@ -755,7 +753,7 @@ end;
 
 
 function BitmapPosMatch_BruteForce(SrcMat, SubMat: TRGBPCanvasMat;
-                                   SourceBitmap, SubBitmap: TBitmap;
+                                   ASourceBitmapWidth, ASourceBitmapHeight, ASubBitmapWidth, ASubBitmapHeight: Integer;
                                    ColorErrorLevel: Integer;
                                    out SubCnvXOffset, SubCnvYOffset: Integer;
                                    var AFoundBitmaps: TCompRecArr;
@@ -783,10 +781,10 @@ begin                     //default optimization: searching a 5px x 5px area, th
   SubCnvXOffset := -1;
   SubCnvYOffset := -1;
 
-  SrcWidth := SourceBitmap.Width;
-  SrcHeight := SourceBitmap.Height;
-  SubWidth := SubBitmap.Width;
-  SubHeight := SubBitmap.Height;
+  SrcWidth := ASourceBitmapWidth;
+  SrcHeight := ASourceBitmapHeight;
+  SubWidth := ASubBitmapWidth;
+  SubHeight := ASubBitmapHeight;
   
   XAmount := SrcWidth - SubWidth;  // +1 ????
   YAmount := SrcHeight - SubHeight;  // +1 ????
@@ -936,6 +934,130 @@ begin
 end;
 
 
+function BitmapPosMatch_RawHistogramMatchingZones(SrcMat, SubMat: TRGBPCanvasMat;
+                                                  SourceBitmap, SubBitmap: TBitmap;
+                                                  ColorErrorLevel: Integer;
+                                                  out SubCnvXOffset, SubCnvYOffset: Integer;
+                                                  var AFoundBitmaps: TCompRecArr;
+                                                  TotalErrorCount, FastSearchColorErrorCount: Integer;
+                                                  AUseFastSearch, AIgnoreBackgroundColor, AGetAllBitmaps: Boolean;
+                                                  ABackgroundColor: TColor;
+                                                  var AIgnoredColorsArr: TColorArr;
+                                                  ASleepySearch: Byte;
+                                                  AOutsideTickCount, APrecisionTimeout: QWord;
+                                                  out AResultedErrorCount: Integer;
+                                                  AStopSearchOnDemand: PBoolean = nil;
+                                                  StopSearchOnMismatch: Boolean = True): Boolean;
+const
+  CMostSignificantColorCount: Integer = 10;
+var
+  BkHist, BkHistColorCounts, SearchedHist, SearchedHistColorCounts: TIntArr;
+  x, y, ZonesCountX, ZonesCountY: Integer;
+  ZoneLeft, ZoneTop, ZoneWidth, ZoneHeight, BkWidth, BkHeight: Integer;
+begin
+  Result := False;
+  if (SourceBitmap.Width = 0) or (SubBitmap.Width = 0) or (SourceBitmap.Height = 0) or (SubBitmap.Height = 0) then
+    Exit;
+
+  GetHistogram(SubBitmap, SearchedHist, SearchedHistColorCounts);
+  try
+    BkWidth := SourceBitmap.Width;
+    BkHeight := SourceBitmap.Height;
+
+    ZonesCountX := BkWidth div SubBitmap.Width;    //the remainder wouldn't be able to match anyway, so using "div" should be ok
+    ZonesCountY := BkHeight div SubBitmap.Height;
+    ZoneWidth := SubBitmap.Width;
+    ZoneHeight := SubBitmap.Height;
+
+    SubCnvXOffset := -1;
+    SubCnvYOffset := -1;
+
+    for y := 0 to ZonesCountY - 1 do
+    begin
+      ZoneTop := y * ZoneHeight;
+      if (AStopSearchOnDemand <> nil) and AStopSearchOnDemand^ then
+        Exit;
+
+      for x := 0 to ZonesCountX - 1 do
+      begin
+        if (AStopSearchOnDemand <> nil) and AStopSearchOnDemand^ then
+          Exit;
+
+        if (AOutsideTickCount > 0) and (GetTickCount64 - AOutsideTickCount > APrecisionTimeout) then
+          raise EBmpMatchTimeout.Create('PrecisionTimeout on searching for SubControl.'); //Exit;
+
+        ZoneLeft := x * ZoneWidth;
+        GetSizedHistogram(SourceBitmap, ZoneLeft, ZoneTop, ZoneWidth, ZoneHeight, BkHist, BkHistColorCounts);
+        try
+          Result := MatchAreaByHistogram(BkHist, BkHistColorCounts, SearchedHist, SearchedHistColorCounts, 56 / 100, CMostSignificantColorCount, ColorErrorLevel + 10);
+          if Result then
+          begin
+            //MessageBox(0, PChar('Matched by histogram at x = ' + IntToStr(x) + '  y = ' + IntToStr(y)), 'Bmp proc', MB_ICONINFORMATION);
+            //if BitmapPosMatch_BruteForce(SrcMat,
+            //                             SubMat,
+            //                             ZoneWidth,
+            //                             ZoneHeight,
+            //                             ZoneWidth,
+            //                             ZoneHeight,
+            //                             ColorErrorLevel,
+            //                             SubCnvXOffset,
+            //                             SubCnvYOffset,
+            //                             AFoundBitmaps,
+            //                             TotalErrorCount,
+            //                             FastSearchColorErrorCount,
+            //                             AUseFastSearch,
+            //                             AIgnoreBackgroundColor,
+            //                             AGetAllBitmaps,
+            //                             ABackgroundColor,
+            //                             AIgnoredColorsArr,
+            //                             ASleepySearch,
+            //                             AOutsideTickCount,
+            //                             APrecisionTimeout,
+            //                             AResultedErrorCount,
+            //                             AStopSearchOnDemand,
+            //                             StopSearchOnMismatch) then
+            if BitmapPosMatch_BruteForceWithOffset(SrcMat,
+                                                   SubMat,
+                                                   ZoneLeft, //XOffset,
+                                                   ZoneTop, //YOffset,
+                                                   ZoneWidth {shr 1}, //XAmount,
+                                                   ZoneHeight {shr 1}, //YAmount,
+                                                   ZoneWidth shl 1 - 1,  //SrcWidth aka background width        -1, because ZoneWidth shl 1 belongs to the next zone
+                                                   ZoneHeight shl 1 - 1, //SrcHeight aka background height      -1, because ZoneWidth shl 1 belongs to the next zone
+                                                   ZoneWidth,  //SubWidth
+                                                   ZoneHeight, //SubHeight
+                                                   ColorErrorLevel,
+                                                   SubCnvXOffset,
+                                                   SubCnvYOffset,
+                                                   TotalErrorCount,
+                                                   AIgnoreBackgroundColor,
+                                                   ABackgroundColor,
+                                                   AIgnoredColorsArr,
+                                                   ASleepySearch,
+                                                   AOutsideTickCount,
+                                                   APrecisionTimeout,
+                                                   AResultedErrorCount,
+                                                   AStopSearchOnDemand) then
+            begin
+              Result := True;
+              Exit; //no mult result for this algorithm :(
+            end;
+          end;  //matched by histogram
+        finally
+          SetLength(BkHist, 0);
+          SetLength(BkHistColorCounts, 0);
+        end;
+
+        RandomSleep(ASleepySearch);
+      end;
+    end;
+  finally
+    SetLength(SearchedHist, 0);
+    SetLength(SearchedHistColorCounts, 0);
+  end;
+end;
+
+
 function BitmapPosMatch(Algorithm: TMatchBitmapAlgorithm;
                         AlgorithmSettings: TMatchBitmapAlgorithmSettings;
                         SourceBitmap, SubBitmap: TBitmap;
@@ -999,8 +1121,10 @@ begin
       mbaBruteForce:
         Result := BitmapPosMatch_BruteForce(SrcMat,
                                             SubMat,
-                                            SourceBitmap,
-                                            SubBitmap,
+                                            SourceBitmap.Width,
+                                            SourceBitmap.Height,
+                                            SubBitmap.Width,
+                                            SubBitmap.Height,
                                             ColorErrorLevel,
                                             SubCnvXOffset,
                                             SubCnvYOffset,
@@ -1040,6 +1164,28 @@ begin
                                                                  AResultedErrorCount,
                                                                  AStopSearchOnDemand,
                                                                  StopSearchOnMismatch);
+      mbaRawHistogramZones:
+        Result := BitmapPosMatch_RawHistogramMatchingZones(SrcMat,
+                                                           SubMat,
+                                                           SourceBitmap,
+                                                           SubBitmap,
+                                                           ColorErrorLevel,
+                                                           SubCnvXOffset,
+                                                           SubCnvYOffset,
+                                                           AFoundBitmaps,
+                                                           TotalErrorCount,
+                                                           FastSearchColorErrorCount,
+                                                           AUseFastSearch,
+                                                           AIgnoreBackgroundColor,
+                                                           AGetAllBitmaps,
+                                                           ABackgroundColor,
+                                                           AIgnoredColorsArr,
+                                                           ASleepySearch,
+                                                           AOutsideTickCount,
+                                                           APrecisionTimeout,
+                                                           AResultedErrorCount,
+                                                           AStopSearchOnDemand,
+                                                           StopSearchOnMismatch);
     else
       raise Exception.Create('Bitmap search algorithm #' + IntToStr(Ord(Algorithm)) + ' not implemented.');
     end;

@@ -488,4 +488,11 @@ object frClickerSetVar: TfrClickerSetVar
       OnClick = MenuItem_ReplaceWithSelfTemplateDirClick
     end
   end
+  object tmrCreateEditor: TTimer
+    Enabled = False
+    Interval = 1
+    OnTimer = tmrCreateEditorTimer
+    Left = 326
+    Top = 38
+  end
 end

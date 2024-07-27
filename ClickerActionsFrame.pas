@@ -392,6 +392,7 @@ type
     FOnTClkIniFileCreate: TOnTClkIniFileCreate;
 
     FOnGetSelfTemplatesDir: TOnGetFullTemplatesDir;
+    FOnShowAutoComplete: TOnShowAutoComplete;
 
     //function GetListOfSetVarEntries: string;
     //procedure SetListOfSetVarEntries(Value: string);
@@ -442,6 +443,7 @@ type
     function DoOnTClkIniFileCreate(AFileName: string): TClkIniFile;
 
     function DoOnGetSelfTemplatesDir: string;
+    procedure DoOnShowAutoComplete(AEdit: TEdit);
 
     procedure ClkVariablesOnChange(Sender: TObject);
     procedure AddDecodedVarToNode(ANode: PVirtualNode; ARecursionLevel: Integer);
@@ -508,6 +510,7 @@ type
     procedure HandleOnClickerSetVarFrame_OnTriggerOnControlsModified;
     function HandleOnClickerSetVarFrame_OnGetFullTemplatesDir: string;
     function HandleOnClickerSetVarFrame_OnGetSelfTemplatesDir: string;
+    procedure HandleOnClickerSetVarFrame_OnShowAutoComplete(AEdit: TEdit);
     procedure HandleOnClickerCallTemplateFrame_OnTriggerOnControlsModified;
 
     function HandleOnEvaluateReplacementsFunc(s: string; Recursive: Boolean = True): string;
@@ -678,6 +681,7 @@ type
     property OnTClkIniFileCreate: TOnTClkIniFileCreate write FOnTClkIniFileCreate;
 
     property OnGetSelfTemplatesDir: TOnGetFullTemplatesDir write FOnGetSelfTemplatesDir;
+    property OnShowAutoComplete: TOnShowAutoComplete write FOnShowAutoComplete;
   end;
 
 
@@ -787,6 +791,7 @@ begin
   frClickerSetVar.OnTriggerOnControlsModified := HandleOnClickerSetVarFrame_OnTriggerOnControlsModified;
   frClickerSetVar.OnGetFullTemplatesDir := HandleOnClickerSetVarFrame_OnGetFullTemplatesDir;
   frClickerSetVar.OnGetSelfTemplatesDir := HandleOnClickerSetVarFrame_OnGetSelfTemplatesDir;
+  frClickerSetVar.OnShowAutoComplete := HandleOnClickerSetVarFrame_OnShowAutoComplete;
   frClickerSetVar.Left := 3;
   frClickerSetVar.Top := 3;
   frClickerSetVar.Width := pnlExtra.Width - 3;
@@ -952,6 +957,7 @@ begin
   FOnTClkIniFileCreate := nil;
 
   FOnGetSelfTemplatesDir := nil;
+  FOnShowAutoComplete := nil;
 
   FShowDeprecatedControls := False;
   FEditingAction := @FEditingActionRec;
@@ -2077,6 +2083,7 @@ var
   AvailableSetVarActions: TStringList;
   TempMenuItem, BaseMenuItem: TMenuItem;
   i: Integer;
+  Bmp: TBitmap;
 begin
   AvailableSetVarActions := TStringList.Create;
   try
@@ -2097,6 +2104,17 @@ begin
       TempMenuItem := TMenuItem.Create(Self);
       TempMenuItem.Caption := AvailableSetVarActions.Strings[i];
       TempMenuItem.OnClick := AvailableSetVarClick;
+
+      Bmp := TBitmap.Create;
+      Bmp.PixelFormat := pf24bit;
+      Bmp.Width := 16;
+      Bmp.Height := 16;
+      Bmp.Canvas.Pen.Color := clWhite;
+      Bmp.Canvas.Brush.Color := clWhite;
+      Bmp.Canvas.Rectangle(0, 0, 16, 16);
+      imglstActions16.Draw(bmp.Canvas, 0, 0, Integer(TClkAction(acSetVar)), dsNormal, itImage);
+      TempMenuItem.Bitmap := Bmp;
+
       FPmLocalTemplates.Items[0].Add(TempMenuItem);
     end;
   finally
@@ -2110,6 +2128,9 @@ var
   AvailableActions: TStringList;
   TempMenuItem, BaseMenuItem: TMenuItem;
   i: Integer;
+  Bmp: TBitmap;
+  ActionStr: string;
+  ActionType: Integer;
 begin
   AvailableActions := TStringList.Create;
   try
@@ -2127,10 +2148,24 @@ begin
 
     for i := 0 to AvailableActions.Count - 1 do
     begin
+      ActionStr := AvailableActions.Strings[i];
+      ActionType := StrToIntDef(Copy(ActionStr, Pos(#4#5, ActionStr) + 2, MaxInt), 0);
+
       TempMenuItem := TMenuItem.Create(Self);
-      TempMenuItem.Caption := AvailableActions.Strings[i];
+      TempMenuItem.Caption := Copy(ActionStr, 1, Pos(#4#5, ActionStr) - 1);
       TempMenuItem.OnClick := AvailablePluginPropertiesClick;
       TempMenuItem.Tag := APropertyIndexToUpdate;
+
+      Bmp := TBitmap.Create;
+      Bmp.PixelFormat := pf24bit;
+      Bmp.Width := 16;
+      Bmp.Height := 16;
+      Bmp.Canvas.Pen.Color := clWhite;
+      Bmp.Canvas.Brush.Color := clWhite;
+      Bmp.Canvas.Rectangle(0, 0, 16, 16);
+      imglstActions16.Draw(bmp.Canvas, 0, 0, ActionType, dsNormal, itImage);
+      TempMenuItem.Bitmap := Bmp;
+
       FPmLocalTemplates.Items[0].Add(TempMenuItem);
     end;
   finally
@@ -2498,6 +2533,12 @@ end;
 function TfrClickerActions.HandleOnClickerSetVarFrame_OnGetSelfTemplatesDir: string;
 begin
   Result := DoOnGetSelfTemplatesDir;
+end;
+
+
+procedure TfrClickerActions.HandleOnClickerSetVarFrame_OnShowAutoComplete(AEdit: TEdit);
+begin
+  DoOnShowAutoComplete(AEdit);
 end;
 
 
@@ -2944,6 +2985,15 @@ begin
     raise Exception.Create('OnGetSelfTemplatesDir not assigned.')
   else
     Result := FOnGetSelfTemplatesDir();
+end;
+
+
+procedure TfrClickerActions.DoOnShowAutoComplete(AEdit: TEdit);
+begin
+  if not Assigned(FOnShowAutoComplete) then
+    raise Exception.Create('OnShowAutoComplete not assigned.')
+  else
+    FOnShowAutoComplete(AEdit);
 end;
 
 

@@ -1969,6 +1969,11 @@ begin
         FindControlInputData.BitmapToSearchFor.PixelFormat := pf24bit;
         LoadBitmapToSearchOn(FindControlInputData);
 
+        if AFindControlOptions.ImageSource = isFile then
+          AddToLog('Background file: "' + AFindControlOptions.SourceFileName +
+                   '"  Width = ' + IntToStr(FindControlInputData.BitmapToSearchOn.Width) +
+                   '   Height = ' + IntToStr(FindControlInputData.BitmapToSearchOn.Height));
+
         ListOfBitmapFiles := TStringList.Create;
         try
           ListOfBitmapFiles.Text := AFindControlOptions.MatchBitmapFiles;
@@ -2345,6 +2350,7 @@ begin
                                      '  $Control_Class$="' + EvaluateReplacements('$Control_Class$') + '"' +
                                      '  SearchedText="' + EvaluateReplacements(AFindControlOptions.MatchText) + '"' +
                                      '  SearchedClass="' + EvaluateReplacements(AFindControlOptions.MatchClassName) + '"' +
+                                     '  MatchBitmapAlgorithm="' + CMatchBitmapAlgorithmStr[AFindControlOptions.MatchBitmapAlgorithm] + '"' +
                                      '  ');
       Break;
     end;
