@@ -51,6 +51,7 @@ type
   TfrClickerActions = class(TFrame)
     chkDecodeVariables: TCheckBox;
     chkShowDebugGrid: TCheckBox;
+    imglstMatchByHistogramSettings: TImageList;
     imgPluginFileName: TImage;
     imgDebugBmp: TImage;
     imgDebugGrid: TImage;
@@ -4571,6 +4572,9 @@ begin
           end;
         end;
 
+        CFindControl_MatchByHistogramSettings_PropIndex:
+          Result := CPropCount_FindControlMatchByHistogramSettings;
+
         else
           Result := 0;
       end;
@@ -4645,6 +4649,9 @@ begin
             ListOfPrimitiveFiles_Modified.Free;
           end;
         end;  //CFindControl_MatchPrimitiveFiles_PropIndex
+
+        CFindControl_MatchByHistogramSettings_PropIndex:
+          Result := CFindControl_MatchByHistogramSettingsProperties[AItemIndex].Name;
 
         else
           Result := '';
@@ -4738,6 +4745,10 @@ begin
           AEditorType := etTextWithArrow;
           Exit;
         end;
+
+        CFindControl_MatchByHistogramSettings_PropIndex:
+          PropDef := CFindControl_MatchByHistogramSettingsProperties[AItemIndex];
+
         else
           ;
       end;
@@ -4810,6 +4821,9 @@ begin
 
                 CFindControl_InitialRectangle_PropIndex:
                   Result := CFindControl_InitialRectangleProperties[AItemIndex].DataType;
+
+                CFindControl_MatchByHistogramSettings_PropIndex:
+                  Result := CFindControl_MatchByHistogramSettingsProperties[AItemIndex].DataType;
               end;
             end;
 
@@ -4930,6 +4944,9 @@ begin
 
                   CFindControl_InitialRectangle_PropIndex:
                     ImageList := imglstInitialRectangleProperties;
+
+                  CFindControl_MatchByHistogramSettings_PropIndex:
+                    ImageList := imglstMatchByHistogramSettings;
                 end;
               end;
 
@@ -5181,6 +5198,15 @@ begin
 
               Exit;
             end;
+
+            CFindControl_MatchByHistogramSettings_PropIndex:
+            begin
+              OldText := GetActionValueStr_FindControl_MatchByHistogramSettings(FEditingAction, AItemIndex);
+              SetActionValueStr_FindControl_MatchByHistogramSettings(FEditingAction, ANewText, AItemIndex);
+              TriggerOnControlsModified(ANewText <> OldText);
+              Exit;
+            end;
+
             else
               ;
           end;
@@ -5502,7 +5528,7 @@ begin
       if ((APropertyIndex in [CFindControl_MatchBitmapText_PropIndex .. CFindControl_MatchBitmapAlgorithmSettings_PropIndex,
                               CFindControl_ColorError_PropIndex .. CFindControl_AllowedColorErrorCount_PropIndex,
                               CFindControl_MatchPrimitiveFiles_PropIndex,
-                              CFindControl_UseFastSearch_PropIndex .. CFindControl_FullBackgroundImageInResult_PropIndex])
+                              CFindControl_UseFastSearch_PropIndex .. CFindControl_MatchByHistogramSettings_PropIndex])
                               and (CurrentlyEditingActionType = acFindControl)) then
       begin
         TargetCanvas.Font.Color := clGray;
@@ -5569,7 +5595,7 @@ begin
 
       if CurrentlyEditingActionType = acFindControl then
         if APropertyIndex in [CFindControl_MatchBitmapText_PropIndex .. CFindControl_MatchBitmapAlgorithmSettings_PropIndex,
-                              CFindControl_MatchPrimitiveFiles_PropIndex] then     //not that many subproperties
+                              CFindControl_MatchPrimitiveFiles_PropIndex, CFindControl_MatchByHistogramSettings_PropIndex] then     //not that many subproperties
         begin
           TargetCanvas.Font.Color := clGray;
           Exit;
@@ -5581,6 +5607,14 @@ begin
         TargetCanvas.Font.Color := clGray;
         Exit;
       end;
+
+      if CurrentlyEditingActionType = acFindSubControl then
+        if (APropertyIndex in [CFindControl_MatchByHistogramSettings_PropIndex]) and
+           (FEditingAction^.FindControlOptions.MatchBitmapAlgorithm <> mbaRawHistogramZones) then
+        begin
+          TargetCanvas.Font.Color := clGray;
+          Exit;
+        end;
     end; //acFindControl, acFindSubControl
 
     if (ANodeData.Level = CPropertyLevel) and (CurrentlyEditingActionType = acPlugin) then
@@ -5972,6 +6006,11 @@ begin
                                '$GetTextItem($BorderLineColor$,$FileIndex$)$' + #13#10 +
                                '$GetTextItem($BorderRectColor$,$FileIndex$)$';
             end;
+          end;
+
+          CFindControl_MatchByHistogramSettings_PropIndex:
+          begin
+            AHint := CGetPropertyHint_FindControlMatchByHistogramSettings_Items[AItemIndex];
           end;
         end; //case
       end; //FindControl
@@ -6667,6 +6706,14 @@ begin
 
         frClickerFindControl.UpdateSearchAreaLabelsFromKeysOnInitRect(FEditingAction^.FindControlOptions.InitialRectangle); //call this, to update the grid
       end;
+
+      CFindControl_MatchByHistogramSettings_PropIndex:
+        if AItemIndex in [CFindControl_MatchByHistogramSettings_MinPercentColorMatch_PropItemIndex .. CFindControl_MatchByHistogramSettings_MostSignificantColorCountInBackgroundBmp_PropItemIndex] then
+        begin
+          OldValue := GetActionValueStr_FindControl_MatchByHistogramSettings(FEditingAction, AItemIndex);
+          SetActionValueStr_FindControl_MatchByHistogramSettings(FEditingAction, ANewValue, AItemIndex);
+          TriggerOnControlsModified(ANewValue <> OldValue);
+        end;
     end; //case
   end;
 end;

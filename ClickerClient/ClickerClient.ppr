@@ -99,6 +99,13 @@ type
     LeftOffset, TopOffset, RightOffset, BottomOffset: PWideChar;
   end;
 
+  TMatchByHistogramSettingsAPI = record
+    MinPercentColorMatch: PWideChar;
+    MostSignificantColorCountInSubBmp: PWideChar;
+    MostSignificantColorCountInBackgroundBmp: PWideChar;
+  end;
+
+
   TClkFindControlOptionsAPI = record
     DummyField: Integer;    //required for proper alignment (otherwise, there is an AV in Python)
     MatchCriteria: TClkFindControlMatchCriteriaAPI;
@@ -131,6 +138,7 @@ type
     ImageSourceFileNameLocation: TImageSourceFileNameLocation;
     PrecisionTimeout: Boolean;
     FullBackgroundImageInResult: Boolean;
+    MatchByHistogramSettings: TMatchByHistogramSettingsAPI;
   end;
 
   PClkFindControlOptionsAPI = ^TClkFindControlOptionsAPI;
@@ -719,6 +727,10 @@ begin
 
   TempAction.FindControlOptions.PrecisionTimeout := AFindControlOptions^.PrecisionTimeout;
   TempAction.FindControlOptions.FullBackgroundImageInResult := AFindControlOptions^.FullBackgroundImageInResult;
+
+  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.MatchByHistogramSettings.MinPercentColorMatch))[1], TempAction.FindControlOptions.MatchByHistogramSettings.MinPercentColorMatch);
+  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.MatchByHistogramSettings.MostSignificantColorCountInSubBmp))[1], TempAction.FindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInSubBmp);
+  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp))[1], TempAction.FindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp);
 
   AddActionToTemplate(TemplateFileName, TempAction);
   Result := 0;

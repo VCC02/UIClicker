@@ -192,7 +192,11 @@ begin
             'SourceFileName' + '=' + AFindControlOptions.SourceFileName + '&' +
             'ImageSourceFileNameLocation' + '=' + IntToStr(Ord(AFindControlOptions.ImageSourceFileNameLocation)) + '&' +
             'PrecisionTimeout' + '=' + IntToStr(Ord(AFindControlOptions.PrecisionTimeout)) + '&' +
-            'FullBackgroundImageInResult' + '=' + IntToStr(Ord(AFindControlOptions.FullBackgroundImageInResult))
+            'FullBackgroundImageInResult' + '=' + IntToStr(Ord(AFindControlOptions.FullBackgroundImageInResult)) + '&' +
+
+            'MatchByHistogramSettings.MinPercentColorMatch' + '=' + AFindControlOptions.MatchByHistogramSettings.MinPercentColorMatch + '&' +
+            'MatchByHistogramSettings.MostSignificantColorCountInSubBmp' + '=' + AFindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInSubBmp + '&' +
+            'MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp' + '=' + AFindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp
             ;
 end;
 
@@ -591,6 +595,10 @@ begin
 
   AFindControlOptions.PrecisionTimeout := AListOfFindControlOptionsParams.Values['PrecisionTimeout'] = '1';
   AFindControlOptions.FullBackgroundImageInResult := AListOfFindControlOptionsParams.Values['FullBackgroundImageInResult'] = '1';
+
+  AFindControlOptions.MatchByHistogramSettings.MinPercentColorMatch := AListOfFindControlOptionsParams.Values['MatchByHistogramSettings.MinPercentColorMatch'];
+  AFindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInSubBmp := AListOfFindControlOptionsParams.Values['MatchByHistogramSettings.MostSignificantColorCountInSubBmp'];
+  AFindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp := AListOfFindControlOptionsParams.Values['MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp'];
 
   AActionOptions.ActionName := AListOfFindControlOptionsParams.Values[CPropertyName_ActionName];
   AActionOptions.ActionTimeout := Temp_ActionTimeout;

@@ -56,7 +56,7 @@ const
   //Properties (counts)
   CPropCount_Click = 25;
   CPropCount_ExecApp = 7;
-  CPropCount_FindControl = 30;
+  CPropCount_FindControl = 31;
   CPropCount_FindSubControl = CPropCount_FindControl;
   CPropCount_SetText = 4;
   CPropCount_CallTemplate = 4;
@@ -87,6 +87,7 @@ const
   CPropCount_FindControlMatchBitmapText = 17;
   CPropCount_FindControlMatchBitmapAlgorithmSettings = 4;
   CPropCount_FindControlInitialRectangle = 8;
+  CPropCount_FindControlMatchByHistogramSettings = 3;
 
   CPropCount_CallTemplateLoop = 7;
 
@@ -137,6 +138,7 @@ const
   CFindControl_ImageSourceFileNameLocation_PropIndex = 27;
   CFindControl_PrecisionTimeout_PropIndex = 28;
   CFindControl_FullBackgroundImageInResult_PropIndex = 29;
+  CFindControl_MatchByHistogramSettings_PropIndex = 30;
 
   CCallTemplate_TemplateFileName_PropIndex = 0; //property index in CallTemplate structure
   CCallTemplate_ListOfCustomVarsAndValues_PropIndex = 1;
@@ -175,6 +177,10 @@ const
   CFindControl_InitialRectangle_TopOffset_PropItemIndex = 5;
   CFindControl_InitialRectangle_RightOffset_PropItemIndex = 6;
   CFindControl_InitialRectangle_BottomOffset_PropItemIndex = 7;
+
+  CFindControl_MatchByHistogramSettings_MinPercentColorMatch_PropItemIndex = 0;
+  CFindControl_MatchByHistogramSettings_MostSignificantColorCountInSubBmp_PropItemIndex = 1;
+  CFindControl_MatchByHistogramSettings_MostSignificantColorCountInBackgroundBmp_PropItemIndex = 2;
 
   CSetVar_ListOfVarNamesValuesAndEvalBefore_PropItemIndex = 0;
   CSetVar_FailOnException_PropItemIndex = 1;
@@ -286,7 +292,8 @@ const
     (Name: 'SourceFileName'; EditorType: etTextWithArrow; DataType: CDTString),
     (Name: 'ImageSourceFileNameLocation'; EditorType: etEnumCombo; DataType: CDTEnum),
     (Name: 'PrecisionTimeout'; EditorType: etBooleanCombo; DataType: CDTBool),
-    (Name: 'FullBackgroundImageInResult'; EditorType: etBooleanCombo; DataType: CDTBool)
+    (Name: 'FullBackgroundImageInResult'; EditorType: etBooleanCombo; DataType: CDTBool),
+    (Name: 'MatchByHistogramSettings'; EditorType: etNone; DataType: CDTStructure)
   );
 
   {$IFDEF SubProperties}
@@ -335,6 +342,12 @@ const
       (Name: 'TopOffset'; EditorType: etSpinText; DataType: CDTString),
       (Name: 'RightOffset'; EditorType: etSpinText; DataType: CDTString),
       (Name: 'BottomOffset'; EditorType: etSpinText; DataType: CDTString)
+    );
+
+    CFindControl_MatchByHistogramSettingsProperties: array[0..CPropCount_FindControlMatchByHistogramSettings - 1] of TOIPropDef = (
+      (Name: 'MinPercentColorMatch'; EditorType: etSpinText; DataType: CDTString),
+      (Name: 'MostSignificantColorCountInSubBmp'; EditorType: etSpinText; DataType: CDTString),
+      (Name: 'MostSignificantColorCountInBackgroundBmp'; EditorType: etSpinText; DataType: CDTString)
     );
   {$ENDIF}
 
@@ -461,6 +474,7 @@ function GetActionValueStr_Plugin(AAction: PClkActionRec; APropertyIndex: Intege
   function GetActionValueStr_FindControl_MatchBitmapText(AAction: PClkActionRec; APropertyIndex: Integer): string;
   function GetActionValueStr_FindControl_MatchBitmapAlgorithmSettings(AAction: PClkActionRec; APropertyIndex: Integer): string;
   function GetActionValueStr_FindControl_InitialRectangle(AAction: PClkActionRec; APropertyIndex: Integer): string;
+  function GetActionValueStr_FindControl_MatchByHistogramSettings(AAction: PClkActionRec; APropertyIndex: Integer): string;
 
   function GetActionValueStr_CallTemplate_CallTemplateLoop(AAction: PClkActionRec; APropertyIndex: Integer): string;
 {$ENDIF}
@@ -485,6 +499,7 @@ procedure SetActionValueStr_Plugin(AAction: PClkActionRec; NewValue: string; APr
   procedure SetActionValueStr_FindControl_MatchBitmapText(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
   procedure SetActionValueStr_FindControl_MatchBitmapAlgorithmSettings(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
   procedure SetActionValueStr_FindControl_InitialRectangle(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
+  procedure SetActionValueStr_FindControl_MatchByHistogramSettings(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
 
   procedure SetActionValueStr_CallTemplate_CallTemplateLoop(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
 {$ENDIF}
@@ -551,7 +566,8 @@ const
     nil, //SourceFileName
     nil, //ImageSourceFileNameLocation
     nil, //PrecisionTimeout
-    nil  //FullBackgroundImageInResult
+    nil, //FullBackgroundImageInResult
+    GetActionValueStr_FindControl_MatchByHistogramSettings  //MatchByHistogramSettings
   );
 
   CCallTemplateGetActionValueStrFunctions: TGetCallTemplateValueStrFuncArr = (
@@ -638,7 +654,8 @@ const
     0, //SourceFileName: string;
     Ord(High(TImageSourceFileNameLocation)) + 1,  //ImageSourceFileNameLocation: TImageSourceFileNameLocation;
     0, //PrecisionTimeout: Boolean;
-    0  //FullBackgroundImageInResult
+    0, //FullBackgroundImageInResult
+    0  //MatchByHistogramSettings: TMatchByHistogramSettings;
   );
 
   CSetTextEnumCounts: array[0..CPropCount_SetText - 1] of Integer = (
@@ -822,7 +839,8 @@ const
     nil, //SourceFileName
     @CImageSourceFileNameLocationStr,
     nil, //PrecisionTimeout
-    nil  //FullBackgroundImageInResult
+    nil, //FullBackgroundImageInResult
+    nil  //MatchByHistogramSettings
   );
 
   CSetTextEnumStrings: array[0..CPropCount_SetText - 1] of PArrayOfString = (
@@ -971,6 +989,7 @@ function GetPropertyHint_FindControl_SourceFileName: string;
 function GetPropertyHint_FindControl_ImageSourceFileNameLocation: string;
 function GetPropertyHint_FindControl_PrecisionTimeout: string;
 function GetPropertyHint_FindControl_FullBackgroundImageInResult: string;
+function GetPropertyHint_FindControl_MatchByHistogramSettings: string;
 
 {$IFDEF SubProperties}
   function GetPropertyHint_FindControl_MatchCriteria_MatchBitmapText: string;
@@ -984,6 +1003,12 @@ function GetPropertyHint_FindControl_FullBackgroundImageInResult: string;
   function GetPropertyHint_FindControl_InitialRectangle_Right: string;
   function GetPropertyHint_FindControl_InitialRectangle_Bottom: string;
   function GetPropertyHint_FindControl_InitialRectangle_Offsets: string;
+{$ENDIF}
+
+{$IFDEF SubProperties}
+  function GetPropertyHint_FindControl_MatchByHistogramSettings_MinPercentColorMatch: string;
+  function GetPropertyHint_FindControl_MatchByHistogramSettings_MostSignificantColorCountInSubBmp: string;
+  function GetPropertyHint_FindControl_MatchByHistogramSettings_MostSignificantColorCountInBackgroundBmp: string;
 {$ENDIF}
 
 
@@ -1096,7 +1121,8 @@ const
     @GetPropertyHint_FindControl_SourceFileName, //SourceFileName: string;
     @GetPropertyHint_FindControl_ImageSourceFileNameLocation, //ImageSourceFileNameLocation: TImageSourceFileLocation;
     @GetPropertyHint_FindControl_PrecisionTimeout, //PrecisionTimeout: Boolean
-    @GetPropertyHint_FindControl_FullBackgroundImageInResult  //FullBackgroundImageInResult: Boolean
+    @GetPropertyHint_FindControl_FullBackgroundImageInResult,  //FullBackgroundImageInResult: Boolean
+    @GetPropertyHint_FindControl_MatchByHistogramSettings //MatchByHistogramSettings: TMatchByHistogramSettings;
   );
 
 
@@ -1188,6 +1214,12 @@ const
     @GetPropertyHint_FindControl_InitialRectangle_Offsets, //TopOffset
     @GetPropertyHint_FindControl_InitialRectangle_Offsets, //RightOffset
     @GetPropertyHint_FindControl_InitialRectangle_Offsets  //BottomOffset
+  );
+
+  CGetPropertyHint_FindControlMatchByHistogramSettings_Items: array[0..CPropCount_FindControlMatchByHistogramSettings - 1] of TPropHintFunc = (
+    @GetPropertyHint_FindControl_MatchByHistogramSettings_MinPercentColorMatch, //MinPercentColorMatch
+    @GetPropertyHint_FindControl_MatchByHistogramSettings_MostSignificantColorCountInSubBmp,  //MostSignificantColorCountInSubBmp
+    @GetPropertyHint_FindControl_MatchByHistogramSettings_MostSignificantColorCountInBackgroundBmp  //MostSignificantColorCountInBackgroundBmp
   );
 
 
@@ -1332,6 +1364,7 @@ begin
     27: Result := CImageSourceFileNameLocationStr[AAction^.FindControlOptions.ImageSourceFileNameLocation];
     28: Result := BoolToStr(AAction^.FindControlOptions.PrecisionTimeout, True);
     29: Result := BoolToStr(AAction^.FindControlOptions.FullBackgroundImageInResult, True);
+    30: Result := '';
     else
       Result := 'unknown';
   end;
@@ -1414,6 +1447,18 @@ end;
       5: Result := AAction^.FindControlOptions.InitialRectangle.TopOffset;
       6: Result := AAction^.FindControlOptions.InitialRectangle.RightOffset;
       7: Result := AAction^.FindControlOptions.InitialRectangle.BottomOffset;
+      else
+        Result := 'unknown';
+    end;
+  end;
+
+
+  function GetActionValueStr_FindControl_MatchByHistogramSettings(AAction: PClkActionRec; APropertyIndex: Integer): string;
+  begin
+    case APropertyIndex of
+      0: Result := AAction^.FindControlOptions.MatchByHistogramSettings.MinPercentColorMatch;
+      1: Result := AAction^.FindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInSubBmp;
+      2: Result := AAction^.FindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp;
       else
         Result := 'unknown';
     end;
@@ -1865,6 +1910,7 @@ begin
     27: AAction^.FindControlOptions.ImageSourceFileNameLocation := ImageSourceFileNameLocation_AsStringToValue(NewValue);
     28: AAction^.FindControlOptions.PrecisionTimeout := StrToBool(NewValue);
     29: AAction^.FindControlOptions.FullBackgroundImageInResult := StrToBool(NewValue);
+    30: ;  //MatchByHistogramSettings
     else
       ;
   end;
@@ -1941,6 +1987,18 @@ end;
       5: AAction^.FindControlOptions.InitialRectangle.TopOffset := NewValue;
       6: AAction^.FindControlOptions.InitialRectangle.RightOffset := NewValue;
       7: AAction^.FindControlOptions.InitialRectangle.BottomOffset := NewValue;
+      else
+        ;
+    end;
+  end;
+
+
+  procedure SetActionValueStr_FindControl_MatchByHistogramSettings(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
+  begin
+    case APropertyIndex of
+      0: AAction^.FindControlOptions.MatchByHistogramSettings.MinPercentColorMatch := NewValue;
+      1: AAction^.FindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInSubBmp := NewValue;
+      2: AAction^.FindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp := NewValue;
       else
         ;
     end;
@@ -2372,6 +2430,11 @@ begin
 end;
 
 
+function GetPropertyHint_FindControl_MatchByHistogramSettings: string;
+begin
+  Result := 'Settings available when matching by histogram.';
+end;
+
 {$IFDEF SubProperties}
   function GetPropertyHint_FindControl_MatchCriteria_MatchBitmapText: string;
   begin
@@ -2442,7 +2505,38 @@ end;
               'Also it has to be successfully executed. Otherwise, the reference values will be wrong.' + #13#10 +
               CAdditonalInfo_InitialRectangle;
   end;
+{$ENDIF}
 
+{$IFDEF SubProperties}
+  function GetPropertyHint_FindControl_MatchByHistogramSettings_MinPercentColorMatch: string;
+  begin
+    Result := 'MinPercentColorMatch sets how much of the searched bitmap histogram data should be found in background bitmap histogram data.' + #13#10 +
+              'Only identical colors are compared (the most significant ones). Each of them should match at least this amount.' + #13#10 +
+              'The percent is calculated as the ratio between the number of pixels of a particular color, from searched bitmap,' + #13#10 +
+              'and the number of pixels of the same color, from the background bitmap, in a zone, defined by the search grid.' + #13#10 +
+              'The value is expected to be from 0 to 100 (without the "%" symbol).';
+  end;
+
+
+  function GetPropertyHint_FindControl_MatchByHistogramSettings_MostSignificantColorCountInSubBmp: string;
+  begin
+    Result := 'MostSignificantColorCountInSubBmp sets how many of the most significant colors of the searched bitmap histogram, are compared.' + #13#10 +
+              'Both histograms are sorted automatically, so that the most significant colors are compared only (those colors with the most number of pixels).' + #13#10 +
+              'If at least one of the configured most significant colors is not found, the algorithm stops (the action fails).' + #13#10 +
+              'If all of the comparisons are above the configured MinPercentColorMatch value, the algorithm proceeds with "bruteforce" matching in that particular zone.' + #13#10 +
+              'The default value is 10 and should be less than or equal to MostSignificantColorCountInBackgroundBmp.';
+  end;
+
+
+  function GetPropertyHint_FindControl_MatchByHistogramSettings_MostSignificantColorCountInBackgroundBmp: string;
+  begin
+    Result := 'MostSignificantColorCountInBackgroundBmp sets how many of the most significant colors of the background bitmap histograms, are available to be compared.' + #13#10 +
+              'Both histograms are sorted automatically, so that the most significant colors are compared only (those colors with the most number of pixels).' + #13#10 +
+              'If at least one of the configured most significant colors is not found, the algorithm stops (the action fails).' + #13#10 +
+              'If all of the comparisons are above the configured MinPercentColorMatch value, the algorithm proceeds with "bruteforce" matching in that particular zone.' + #13#10 +
+              'The default value is 15 and should be greater than or equal to MostSignificantColorCountInSubBmp.' + #13#10 +
+              'This value has to be greater than or equal to MostSignificantColorCountInSubBmp, because the zone to be compared may have a histogram with different significant colors.';
+  end;
 {$ENDIF}
 
 

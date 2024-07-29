@@ -227,6 +227,11 @@ class TRectString(Structure):
                ("BottomOffset", LPCWSTR)]
 
 
+class TMatchByHistogramSettings(Structure):
+    _fields_ = [("MinPercentColorMatch", LPCWSTR),
+               ("MostSignificantColorCountInSubBmp", LPCWSTR),
+               ("MostSignificantColorCountInBackgroundBmp", LPCWSTR)]
+
 class TFindControlOptions(Structure):
     _fields_ = [("DummyField", LONG),
                ("MatchCriteria", TClkFindControlMatchCriteria),
@@ -321,6 +326,11 @@ def GetDefaultFindControlOptions():
 
     FindControlOptions.PrecisionTimeout = False
     FindControlOptions.FullBackgroundImageInResult = True
+
+    MatchByHistogramSettings.MinPercentColorMatch = '50'
+    MatchByHistogramSettings.MostSignificantColorCountInSubBmp = '10'
+    MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp = '15'
+
     return FindControlOptions
 
 

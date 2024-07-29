@@ -246,6 +246,12 @@ type
     YOffset: Integer;
   end;
 
+  TMatchByHistogramSettings = record
+    MinPercentColorMatch: string;
+    MostSignificantColorCountInSubBmp: string;
+    MostSignificantColorCountInBackgroundBmp: string;
+  end;
+
   TClkFindControlOptions = record
     MatchCriteria: TClkFindControlMatchCriteria;
     AllowToFail: Boolean;
@@ -278,6 +284,7 @@ type
     ImageSourceFileNameLocation: TImageSourceFileNameLocation; //can be disk or externally rendered bmp from InMem FS
     PrecisionTimeout: Boolean;  //When True, the bitmap searching algorithm verifies the timeout. This is a bit of extra overhead, which may slow down the search.
     FullBackgroundImageInResult: Boolean; //When True, the resulted debugging image contains the background image. Defaults to True for backwards compatibility.
+    MatchByHistogramSettings: TMatchByHistogramSettings; //used when MatchBitmapAlgorithm is mbaRawHistogramZones
   end;
 
   TClkSetTextOptions = record

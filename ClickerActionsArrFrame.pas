@@ -5617,6 +5617,9 @@ begin
   FClkActions[AIndex].FindControlOptions.ImageSourceFileNameLocation := isflMem;
   FClkActions[AIndex].FindControlOptions.PrecisionTimeout := False;
   FClkActions[AIndex].FindControlOptions.FullBackgroundImageInResult := True;
+  FClkActions[AIndex].FindControlOptions.MatchByHistogramSettings.MinPercentColorMatch := '50';
+  FClkActions[AIndex].FindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInSubBmp := '10';
+  FClkActions[AIndex].FindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp := '15';
 
   SetLength(FClkActions[AIndex].FindControlOptions.MatchBitmapText, 1);
   FClkActions[AIndex].FindControlOptions.MatchBitmapText[0].ForegroundColor := '$Color_Window$';

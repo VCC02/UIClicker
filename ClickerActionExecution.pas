@@ -1298,6 +1298,9 @@ function TActionExecution.FillInFindControlInputData(var AFindControlOptions: TC
       end;
     end;
   end;
+
+var
+  LocalFormatSettings: TFormatSettings;
 begin
   Result := True;
 
@@ -1469,6 +1472,12 @@ begin
 
   FindControlInputData.ImageSource := AFindControlOptions.ImageSource;
   FindControlInputData.FullBackgroundImageInResult := AFindControlOptions.FullBackgroundImageInResult;
+
+  LocalFormatSettings := FormatSettings;
+  LocalFormatSettings.DecimalSeparator := '.';  //ensure consistency between templates
+  FindControlInputData.MatchByHistogramNumericSettings.MinPercentColorMatch := StrToFloatDef(EvaluateReplacements(AFindControlOptions.MatchByHistogramSettings.MinPercentColorMatch), 50, LocalFormatSettings);
+  FindControlInputData.MatchByHistogramNumericSettings.MostSignificantColorCountInSubBmp := StrToIntDef(EvaluateReplacements(AFindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInSubBmp), 10);
+  FindControlInputData.MatchByHistogramNumericSettings.MostSignificantColorCountInBackgroundBmp := StrToIntDef(EvaluateReplacements(AFindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp), 15);
 end;
 
 
@@ -1557,7 +1566,7 @@ function TActionExecution.ExecuteFindControlAction(var AFindControlOptions: TClk
     if AFindControlInputData.FullBackgroundImageInResult then
     begin
       case AFindControlOptions.MatchBitmapAlgorithm of
-        mbaBruteForce:
+        mbaBruteForce, mbaRawHistogramZones:
         begin
           frClickerActions.imgDebugGrid.Left := AResultedControl.XOffsetFromParent;
           frClickerActions.imgDebugGrid.Top := AResultedControl.YOffsetFromParent;
@@ -1573,7 +1582,7 @@ function TActionExecution.ExecuteFindControlAction(var AFindControlOptions: TClk
     else
     begin
       case AFindControlOptions.MatchBitmapAlgorithm of
-        mbaBruteForce:
+        mbaBruteForce, mbaRawHistogramZones:
         begin
           if AFindControlOptions.FullBackgroundImageInResult then
           begin

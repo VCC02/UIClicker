@@ -64,6 +64,12 @@ type                      //2048 is used as 2^11 = 2048, as an optimization. See
   EBmpMatchTimeout = class(Exception)
 
   end;
+
+  TMatchByHistogramNumericSettings = record
+    MinPercentColorMatch: Double;
+    MostSignificantColorCountInSubBmp: Integer;
+    MostSignificantColorCountInBackgroundBmp: Integer;
+  end;
   
 
 procedure Line(ACnv: TCanvas; x1, y1, x2, y2: Integer);
@@ -71,6 +77,7 @@ procedure ScreenShot(SrcHandle: THandle; DestBitmap: TBitmap; XOffsetSrc, YOffse
 
 function BitmapPosMatch(Algorithm: TMatchBitmapAlgorithm;
                         AlgorithmSettings: TMatchBitmapAlgorithmSettings;
+                        AMatchByHistogramNumericSettings: TMatchByHistogramNumericSettings;
                         SourceBitmap, SubBitmap: TBitmap;
                         ColorErrorLevel: Integer;
                         out SubCnvXOffset, SubCnvYOffset: Integer;
@@ -641,6 +648,24 @@ begin
 end;
 
 
+function FMax(a, b: Double): Double;
+begin
+  if a > b then
+    Result := a
+  else
+    Result := b;
+end;
+
+
+function FMin(a, b: Double): Double;
+begin
+  if a < b then
+    Result := a
+  else
+    Result := b;
+end;
+
+
 //ABkHist, ABkHistColorCounts define the background histogram
 //ASearchedHist, ASearchedHistColorCounts define the searched bitmap histogram
 //AMinPercentColorMatch sets how much of the ASearchedBmp histogram data should be found in ABkBmp histogram data. The value is expected to be from 0 to 1.
@@ -648,7 +673,7 @@ end;
 //AColorErrorLevel is the difference between the two compared colors, for every color channel (R, G, B). It is possible that a scaled value is required, compared to the one entered by a user as a FindSubControl property.
 function MatchAreaByHistogram(var ABkHist, ABkHistColorCounts, ASearchedHist, ASearchedHistColorCounts: TIntArr;   //The function assumes that the two histograms are sorted
                               AMinPercentColorMatch: Double;
-                              AMostSignificantColorCount, AColorErrorLevel: Integer): Boolean;
+                              AMostSignificantColorCountInSubBmp, AMostSignificantColorCountInBackgroundBmp: Integer): Boolean;
 var
   i, j: Integer;
   CurrentColorPercent: Double;
@@ -656,26 +681,29 @@ var
   BackgroundColor_R, BackgroundColor_G, BackgroundColor_B: SmallInt;
   SearchedColor_R, SearchedColor_G, SearchedColor_B: SmallInt;
 begin
-  SetLength(MatchPercents, Min(AMostSignificantColorCount, Length(ASearchedHist)));  //Assumes that Length(ASearchedHist) < Length(ABkHist). Otherwise, nothing will be found, as expected.
+  SetLength(MatchPercents, Min(AMostSignificantColorCountInSubBmp, Length(ASearchedHist)));  //Assumes that Length(ASearchedHist) < Length(ABkHist). Otherwise, nothing will be found, as expected.
 
   for i := 0 to Length(MatchPercents) - 1 do
     MatchPercents[i] := 0;
 
-  for i := 0 to Min(AMostSignificantColorCount, Length(ASearchedHist)) - 1 do
-    for j := 0 to Min(AMostSignificantColorCount, Length(ABkHist)) - 1 do
+  for i := 0 to Min(AMostSignificantColorCountInSubBmp, Length(ASearchedHist)) - 1 do
+    for j := 0 to Min(AMostSignificantColorCountInBackgroundBmp, Length(ABkHist)) - 1 do
     begin
-      SysRedGreenBlue(ABkHist[j], BackgroundColor_R, BackgroundColor_G, BackgroundColor_B);
-      SysRedGreenBlue(ASearchedHist[j], SearchedColor_R, SearchedColor_G, SearchedColor_B);
-
-      if ColorMatches(BackgroundColor_R, BackgroundColor_G, BackgroundColor_B,
-                      SearchedColor_R, SearchedColor_G, SearchedColor_B,
-                      AColorErrorLevel) then
+      //SysRedGreenBlue(ABkHist[j], BackgroundColor_R, BackgroundColor_G, BackgroundColor_B);
+      //SysRedGreenBlue(ASearchedHist[j], SearchedColor_R, SearchedColor_G, SearchedColor_B);
+      //
+      //if ColorMatches(BackgroundColor_R, BackgroundColor_G, BackgroundColor_B,
+      //                SearchedColor_R, SearchedColor_G, SearchedColor_B,
+      //                AColorErrorLevel) then
+      if ABkHist[j] = ASearchedHist[j] then
       begin
         CurrentColorPercent := ASearchedHistColorCounts[i] / Max(ABkHistColorCounts[j], 1);
         if Double(MatchPercents[i]) < CurrentColorPercent then
           MatchPercents[i] := CurrentColorPercent;
       end;
     end;
+
+  AMinPercentColorMatch := FMax(0, FMin(100, AMinPercentColorMatch));
 
   Result := True;
   for i := 0 to Length(MatchPercents) - 1 do
@@ -945,11 +973,11 @@ function BitmapPosMatch_RawHistogramMatchingZones(SrcMat, SubMat: TRGBPCanvasMat
                                                   var AIgnoredColorsArr: TColorArr;
                                                   ASleepySearch: Byte;
                                                   AOutsideTickCount, APrecisionTimeout: QWord;
+                                                  AMinPercentColorMatch: Double;
+                                                  AMostSignificantColorCountInSubBmp, AMostSignificantColorCountInBackgroundBmp: Integer;
                                                   out AResultedErrorCount: Integer;
                                                   AStopSearchOnDemand: PBoolean = nil;
                                                   StopSearchOnMismatch: Boolean = True): Boolean;
-const
-  CMostSignificantColorCount: Integer = 10;
 var
   BkHist, BkHistColorCounts, SearchedHist, SearchedHistColorCounts: TIntArr;
   x, y, ZonesCountX, ZonesCountY: Integer;
@@ -972,6 +1000,8 @@ begin
     SubCnvXOffset := -1;
     SubCnvYOffset := -1;
 
+    AMinPercentColorMatch := AMinPercentColorMatch  / 100;
+
     for y := 0 to ZonesCountY - 1 do
     begin
       ZoneTop := y * ZoneHeight;
@@ -989,10 +1019,17 @@ begin
         ZoneLeft := x * ZoneWidth;
         GetSizedHistogram(SourceBitmap, ZoneLeft, ZoneTop, ZoneWidth, ZoneHeight, BkHist, BkHistColorCounts);
         try
-          Result := MatchAreaByHistogram(BkHist, BkHistColorCounts, SearchedHist, SearchedHistColorCounts, 56 / 100, CMostSignificantColorCount, ColorErrorLevel + 10);
+          Result := MatchAreaByHistogram(BkHist,
+                                         BkHistColorCounts,
+                                         SearchedHist,
+                                         SearchedHistColorCounts,
+                                         AMinPercentColorMatch,
+                                         AMostSignificantColorCountInSubBmp,
+                                         AMostSignificantColorCountInBackgroundBmp);
+
           if Result then
           begin
-            //MessageBox(0, PChar('Matched by histogram at x = ' + IntToStr(x) + '  y = ' + IntToStr(y)), 'Bmp proc', MB_ICONINFORMATION);
+            MessageBox(0, PChar('Matched by histogram at x = ' + IntToStr(x) + '  y = ' + IntToStr(y)), 'Bmp proc', MB_ICONINFORMATION);
             //if BitmapPosMatch_BruteForce(SrcMat,
             //                             SubMat,
             //                             ZoneWidth,
@@ -1060,6 +1097,7 @@ end;
 
 function BitmapPosMatch(Algorithm: TMatchBitmapAlgorithm;
                         AlgorithmSettings: TMatchBitmapAlgorithmSettings;
+                        AMatchByHistogramNumericSettings: TMatchByHistogramNumericSettings;
                         SourceBitmap, SubBitmap: TBitmap;
                         ColorErrorLevel: Integer;
                         out SubCnvXOffset, SubCnvYOffset: Integer;
@@ -1183,6 +1221,9 @@ begin
                                                            ASleepySearch,
                                                            AOutsideTickCount,
                                                            APrecisionTimeout,
+                                                           AMatchByHistogramNumericSettings.MinPercentColorMatch,
+                                                           AMatchByHistogramNumericSettings.MostSignificantColorCountInSubBmp,
+                                                           AMatchByHistogramNumericSettings.MostSignificantColorCountInBackgroundBmp,
                                                            AResultedErrorCount,
                                                            AStopSearchOnDemand,
                                                            StopSearchOnMismatch);

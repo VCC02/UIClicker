@@ -68,6 +68,7 @@ type
     OutsideTickCount: QWord;
     PrecisionTimeout: QWord;
     FullBackgroundImageInResult: Boolean;
+    MatchByHistogramNumericSettings: TMatchByHistogramNumericSettings;
   end;
 
 
@@ -760,6 +761,7 @@ end;
 //SrcCompSearchAreaBitmap - bitmap with source component, defined by InitRect
 function MatchByBitmap(Algorithm: TMatchBitmapAlgorithm;
                        AlgorithmSettings: TMatchBitmapAlgorithmSettings;
+                       AMatchByHistogramNumericSettings: TMatchByHistogramNumericSettings;
                        ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height: Integer;
                        BitmapToSearchFor, SrcCompSearchAreaBitmap, BitmapToSearchOn: TBitmap;
                        ImageSource: TImageSource;
@@ -810,6 +812,7 @@ begin
   SubCnvYOffset := -1;  //for debugging..
   if BitmapPosMatch(Algorithm,
                     AlgorithmSettings,
+                    AMatchByHistogramNumericSettings,
                     SrcCompSearchAreaBitmap,
                     BitmapToSearchFor,
                     ColorErr,
@@ -892,6 +895,7 @@ begin
     try
       FoundBmp := MatchByBitmap(Algorithm,
                                 AlgorithmSettings,
+                                InputData.MatchByHistogramNumericSettings,
                                 ScrShot_Left,
                                 ScrShot_Top,
                                 ScrShot_Width,
