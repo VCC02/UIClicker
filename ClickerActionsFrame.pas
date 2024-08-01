@@ -394,6 +394,7 @@ type
 
     FOnGetSelfTemplatesDir: TOnGetFullTemplatesDir;
     FOnShowAutoComplete: TOnShowAutoComplete;
+    FOnUpdateActionScrollIndex: TOnUpdateActionScrollIndex;
 
     //function GetListOfSetVarEntries: string;
     //procedure SetListOfSetVarEntries(Value: string);
@@ -445,6 +446,7 @@ type
 
     function DoOnGetSelfTemplatesDir: string;
     procedure DoOnShowAutoComplete(AEdit: TEdit);
+    procedure DoOnUpdateActionScrollIndex(AActionScrollIndex: string);
 
     procedure ClkVariablesOnChange(Sender: TObject);
     procedure AddDecodedVarToNode(ANode: PVirtualNode; ARecursionLevel: Integer);
@@ -589,6 +591,7 @@ type
 
     procedure HandleOnOIAfterSpinTextEditorChanging(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; var ANewValue: string);
     procedure HandleOnOISelectedNode(NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex, Column: Integer; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+    procedure HandleOnOIFirstVisibleNode(NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex: Integer);
   public
     { Public declarations }
     frClickerConditionEditor: TfrClickerConditionEditor;  //public, because it is accessed from outside :(
@@ -616,6 +619,7 @@ type
     procedure ResetAllPmtvModifiedFlags; //called when users select a diffeent action from the one with modified pmtv files
     procedure ResizeFrameSectionsBySplitter(NewLeft: Integer);
     procedure ResizeFrameSectionsBySplitterResults(NewLeft: Integer);
+    procedure BringOIPropertyIntoView(NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex: Integer);
 
     procedure ClearControls;
 
@@ -683,6 +687,7 @@ type
 
     property OnGetSelfTemplatesDir: TOnGetFullTemplatesDir write FOnGetSelfTemplatesDir;
     property OnShowAutoComplete: TOnShowAutoComplete write FOnShowAutoComplete;
+    property OnUpdateActionScrollIndex: TOnUpdateActionScrollIndex write FOnUpdateActionScrollIndex;
   end;
 
 
@@ -692,6 +697,11 @@ const
   {$IFDEF FPC}
     ID_YES = IDYES;  //from Delphi
   {$ENDIF}
+
+  COIScrollInfo_NodeLevel = 'NodeLevel';
+  COIScrollInfo_CategoryIndex = 'CategoryIndex';
+  COIScrollInfo_PropertyIndex = 'PropertyIndex';
+  COIScrollInfo_PropertyItemIndex = 'PropertyItemIndex';
 
 
 function ActionStatusStrToActionStatus(AString: string): TActionStatus;  
@@ -875,6 +885,7 @@ begin
   FOIFrame.OnOIBrowseFile := HandleOnOIBrowseFile;
   FOIFrame.OnOIAfterSpinTextEditorChanging := HandleOnOIAfterSpinTextEditorChanging;
   FOIFrame.OnOISelectedNode := HandleOnOISelectedNode;
+  FOIFrame.OnOIFirstVisibleNode := HandleOnOIFirstVisibleNode;
 
   FOIFrame.Visible := True;
 
@@ -959,6 +970,7 @@ begin
 
   FOnGetSelfTemplatesDir := nil;
   FOnShowAutoComplete := nil;
+  FOnUpdateActionScrollIndex := nil;
 
   FShowDeprecatedControls := False;
   FEditingAction := @FEditingActionRec;
@@ -1823,6 +1835,12 @@ begin
   pnlResults.Left := pnlHorizSplitterResults.Left + pnlHorizSplitterResults.Width;
   pnlResults.Width := TabSheetDebugging.Width - pnlResults.Left;
   pnlVars.Width := pnlHorizSplitterResults.Left;
+end;
+
+
+procedure TfrClickerActions.BringOIPropertyIntoView(NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex: Integer);
+begin
+  FOIFrame.ScrollToNode(NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex);
 end;
 
 
@@ -2995,6 +3013,15 @@ begin
     raise Exception.Create('OnShowAutoComplete not assigned.')
   else
     FOnShowAutoComplete(AEdit);
+end;
+
+
+procedure TfrClickerActions.DoOnUpdateActionScrollIndex(AActionScrollIndex: string);
+begin
+  if not Assigned(FOnUpdateActionScrollIndex) then
+    raise Exception.Create('OnUpdateActionScrollIndex not assigned.')
+  else
+    FOnUpdateActionScrollIndex(AActionScrollIndex);
 end;
 
 
@@ -6786,6 +6813,16 @@ begin
     end;
 end;
 
+
+procedure TfrClickerActions.HandleOnOIFirstVisibleNode(NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex: Integer);
+begin
+  FEditingAction^.ScrollIndex := COIScrollInfo_NodeLevel + '=' + IntToStr(NodeLevel) + #13#10 +
+                                 COIScrollInfo_CategoryIndex + '=' + IntToStr(CategoryIndex) + #13#10 +
+                                 COIScrollInfo_PropertyIndex + '=' + IntToStr(PropertyIndex) + #13#10 +
+                                 COIScrollInfo_PropertyItemIndex + '=' + IntToStr(PropertyItemIndex);
+
+  DoOnUpdateActionScrollIndex(FEditingAction^.ScrollIndex);
+end;
 
 end.
 

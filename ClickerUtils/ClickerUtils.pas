@@ -108,6 +108,7 @@ type
 
   TOnGetFullTemplatesDir = function: string of object;
   TOnShowAutoComplete = procedure(AEdit: TEdit) of object;
+  TOnUpdateActionScrollIndex = procedure(AActionScrollIndex: string) of object;
 
 const
   CClkActionStr: array[TClkAction] of string = ('Click', 'ExecApp', 'FindControl', 'FindSubControl',
@@ -364,8 +365,9 @@ type
     ActionBreakPoint: TActionBreakPoint;
     ActionStatus: TActionStatus;
     ActionSkipped: Boolean; //this should be false before executing an action, and true after the action, only if the condition is false
-
     ActionOptions: TClkActionOptions;
+    ScrollIndex: string; //used by ObjectInspector, not saved
+
     ClickOptions: TClkClickOptions;
     ExecAppOptions: TClkExecAppOptions;
     FindControlOptions: TClkFindControlOptions;

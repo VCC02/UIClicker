@@ -444,6 +444,7 @@ type
 
     function HandleOnClickerSetVarFrame_OnGetSelfTemplatesDir: string;
     procedure HandleOnClickerSetVarFrame_OnShowAutoComplete(AEdit: TEdit);
+    procedure HandleOnUpdateActionScrollIndex(AActionScrollIndex: string);
 
     procedure HandleOnSetDebugPoint(ADebugPoint: string);
     function HandleOnIsAtBreakPoint(ADebugPoint: string): Boolean;
@@ -962,6 +963,7 @@ begin
 
   frClickerActions.OnGetSelfTemplatesDir := HandleOnClickerSetVarFrame_OnGetSelfTemplatesDir;
   frClickerActions.OnShowAutoComplete := HandleOnClickerSetVarFrame_OnShowAutoComplete;
+  frClickerActions.OnUpdateActionScrollIndex := HandleOnUpdateActionScrollIndex;
 
   //frClickerActions.OnControlsModified := ClickerActionsFrameOnControlsModified;   //this is set on frame initialization
 
@@ -1630,6 +1632,18 @@ begin
 end;
 
 
+procedure TfrClickerActionsArr.HandleOnUpdateActionScrollIndex(AActionScrollIndex: string);
+var
+  Node: PVirtualNode;
+begin
+  Node := vstActions.GetFirstSelected;
+  if Node = nil then
+    Exit;
+
+  FClkActions[Node^.Index].ScrollIndex := AActionScrollIndex;
+end;
+
+
 procedure TfrClickerActionsArr.HandleOnSaveStringListToFile(AStringList: TStringList; const AFileName: string);
 begin
   DoOnSaveTemplateToFile(AStringList, ResolveTemplatePath(AFileName));
@@ -1855,6 +1869,8 @@ procedure TfrClickerActionsArr.UpdateControlsFromActionsArr(ActionIndex: Integer
 var
   i: Integer;
   TempProfileName: string;
+  NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex: Integer;
+  Action_ScrollInfo: TStringList;
 begin
   frClickerActions.frClickerConditionEditor.DisplayActionCondition(FClkActions[ActionIndex].ActionOptions.ActionCondition);
 
@@ -1930,6 +1946,23 @@ begin
 
   if frClickerActions.CurrentlyEditingActionType = acPlugin then
     frClickerActions.frClickerPlugin.LoadDebugSymbols(ExtractFullFileNameNoExt(ResolveTemplatePath(FClkActions[ActionIndex].PluginOptions.FileName)) + '.DbgSym');
+
+  if FClkActions[ActionIndex].ScrollIndex <> '' then
+  begin
+    Action_ScrollInfo := TStringList.Create;
+    try
+      Action_ScrollInfo.Text := FClkActions[ActionIndex].ScrollIndex;
+
+      NodeLevel := StrToIntDef(Action_ScrollInfo.Values[COIScrollInfo_NodeLevel], -1);
+      CategoryIndex := StrToIntDef(Action_ScrollInfo.Values[COIScrollInfo_CategoryIndex], -1);
+      PropertyIndex := StrToIntDef(Action_ScrollInfo.Values[COIScrollInfo_PropertyIndex], -1);
+      PropertyItemIndex := StrToIntDef(Action_ScrollInfo.Values[COIScrollInfo_PropertyItemIndex], -1);
+
+      frClickerActions.BringOIPropertyIntoView(NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex);
+    finally
+      Action_ScrollInfo.Free;
+    end;
+  end;
 end;
 
 
