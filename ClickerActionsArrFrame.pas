@@ -2874,10 +2874,12 @@ var
   ClosingTemplateResponse: string;
   tk: QWord;
   IsAtBreakPoint: Boolean;
+  LastExecutionActionResult: Boolean;
 begin
   FPlayingAllActions := True;
   try
     Result := False;
+    LastExecutionActionResult := True;
 
     if IsDebugging and FExecutingActionFromRemote and (FStackLevel > 0) and not FUseLocalDebugger then  //  this loop allows receiving missing files
     begin
@@ -2990,7 +2992,9 @@ begin
           spdbtnStepInto.Enabled := False; //disable button while executing
           try
             if Node^.CheckState = csCheckedNormal then
-              if not PlayActionByNode(Node) then               //    Execution happens here
+            begin
+              LastExecutionActionResult := PlayActionByNode(Node);   //    Execution happens here
+              if not LastExecutionActionResult then
               begin
                 //MessageBox(Handle, PChar('Action[' + IntToStr(Node^.Index) + '] failed...' + #13#10 + 'Err=' + GetActionVarValue('$ExecAction_Err$') + #13#10 + 'Caller=' + FCallerName + #13#10 + 'LoadedFile: '+ FFileName), PChar(Caption), MB_ICONERROR);
 
@@ -3020,6 +3024,7 @@ begin
 
                   Exit;   //exit template
                 end;
+            end;
           finally
             //restore button states
             if IsDebugging then
@@ -3061,7 +3066,7 @@ begin
           ClosingTemplateResponse := ExitRemoteTemplate(FRemoteAddress, FStackLevel);
           AddToLog(DateTimeToStr(Now) + '  Sent request to close remote template at index ' + IntToStr(FStackLevel) +  '  ' + ClosingTemplateResponse);
 
-          if FStopAllActionsOnDemand or GeneralClosingApp then
+          if FStopAllActionsOnDemand or GeneralClosingApp or not LastExecutionActionResult then
           begin
             ClosingTemplateResponse := StopRemoteTemplateExecution(FRemoteAddress, FStackLevel);
             AddToLog(DateTimeToStr(Now) + '  Sent request to stop remote template execution at index ' + IntToStr(FStackLevel) +  '  ' + ClosingTemplateResponse);
