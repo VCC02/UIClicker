@@ -2183,7 +2183,7 @@ begin
     begin
       AddToLog('Should send template and other files to server...');
       AddToLog(SetCurrentClientTemplateInServer);
-      AddToLog(SendMissingFilesToServer);
+      //AddToLog(SendMissingFilesToServer);  //keep commented, to let the server request its missing files
     end;
 end;
 
