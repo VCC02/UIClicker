@@ -461,6 +461,11 @@ var
   ListOfVars: TStringList;
 begin
   Response := FastReplace_87ToReturn(GetAllReplacementVars(FTestServerAddress, AStackIndex));
+  if Pos(#13#10, Response) = 0 then
+  begin
+    Result := Response;  //maybe, an error message
+    Exit;
+  end;
 
   ListOfVars := TStringList.Create;
   try

@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2023 VCC
+    Copyright (C) 2024 VCC
     creation date: Oct 2022
     initial release date: 30 Oct 2022
 
@@ -80,7 +80,7 @@ type
     procedure Test_DragAction_FromPos1ToPos4;
     procedure Test_DragAction_FromPos4ToPos1;
 
-    procedure Test_ExecuteTemplateRemotelyWithDebugging_WithLoopedCall_AndStepIntoThenStop; //moved from above, since it fails
+    procedure Test_ExecuteTemplateRemotelyWithDebugging_WithLoopedCall_AndStepIntoThenStop;
 
     procedure AfterAll_AlwaysExecute;
   end;
@@ -408,6 +408,8 @@ end;
 
 procedure TTestUI.Test_ExecuteTemplateRemotely;
 begin
+  PrepareClickerUnderTestToClientMode;
+
   TestServerAddress := CTestDriverServerAddress_Client;
   RunTestTemplateInClickerUnderTest('BasicCaller.clktmpl');
   PrepareClickerUnderTestToReadItsVars;
@@ -420,13 +422,14 @@ begin
     Expect(GetVarValueFromServer('$VarToBeIncremented$')).ToBe('1');  //this var is initialized to 0 in BasicCaller.clktmpl
   finally
     TestServerAddress := CTestDriverServerAddress_Client; //restore
-    ExecuteTemplateOnTestDriver(FTemplatesDir + 'SetExecModeToClient.clktmpl', CREParam_FileLocation_ValueDisk);
   end;
 end;
 
 
 procedure TTestUI.Test_ExecuteTemplateRemotely_WithLoopedCall;
 begin
+  PrepareClickerUnderTestToClientMode;
+
   TestServerAddress := CTestDriverServerAddress_Client;
   RunTestTemplateInClickerUnderTest('BasicLoopedCaller.clktmpl');
   PrepareClickerUnderTestToReadItsVars;
@@ -439,13 +442,14 @@ begin
     Expect(GetVarValueFromServer('$VarToBeIncremented$')).ToBe('10');  //this var is initialized to 0 in BasicCaller.clktmpl
   finally
     TestServerAddress := CTestDriverServerAddress_Client; //restore
-    ExecuteTemplateOnTestDriver(FTemplatesDir + 'SetExecModeToClient.clktmpl', CREParam_FileLocation_ValueDisk);
   end;
 end;
 
 
 procedure TTestUI.Test_ExecuteTemplateRemotelyWithDebugging;
 begin
+  PrepareClickerUnderTestToClientMode;
+
   TestServerAddress := CTestDriverServerAddress_Client;
   RunTestTemplateInClickerUnderTestWithDebugging('BasicCaller.clktmpl');
   PrepareClickerUnderTestToReadItsVars;
@@ -458,13 +462,14 @@ begin
     Expect(GetVarValueFromServer('$VarToBeIncremented$')).ToBe('1');  //this var is initialized to 0 in BasicCaller.clktmpl
   finally
     TestServerAddress := CTestDriverServerAddress_Client; //restore
-    ExecuteTemplateOnTestDriver(FTemplatesDir + 'SetExecModeToClient.clktmpl', CREParam_FileLocation_ValueDisk);
   end;
 end;
 
 
 procedure TTestUI.Test_ExecuteTemplateRemotelyWithDebugging_WithLoopedCall;
 begin
+  PrepareClickerUnderTestToClientMode;
+
   TestServerAddress := CTestDriverServerAddress_Client;
   RunTestTemplateInClickerUnderTestWithDebugging('BasicLoopedCaller.clktmpl');
   PrepareClickerUnderTestToReadItsVars;
@@ -477,13 +482,14 @@ begin
     Expect(GetVarValueFromServer('$VarToBeIncremented$')).ToBe('10');  //this var is initialized to 0 in BasicCaller.clktmpl
   finally
     TestServerAddress := CTestDriverServerAddress_Client; //restore
-    ExecuteTemplateOnTestDriver(FTemplatesDir + 'SetExecModeToClient.clktmpl', CREParam_FileLocation_ValueDisk);
   end;
 end;
 
 
 procedure TTestUI.Test_ExecuteTemplateRemotelyWithDebugging_AndStepInto;
 begin
+  PrepareClickerUnderTestToClientMode;
+
   TestServerAddress := CTestDriverServerAddress_Client;
   RunTestTemplateInClickerUnderTestWithDebuggingAndStepInto('BasicCaller.clktmpl', '1');
   PrepareClickerUnderTestToReadItsVars;
@@ -496,13 +502,14 @@ begin
     Expect(GetVarValueFromServer('$VarToBeIncremented$')).ToBe('1');  //this var is initialized to 0 in BasicCaller.clktmpl
   finally
     TestServerAddress := CTestDriverServerAddress_Client; //restore
-    ExecuteTemplateOnTestDriver(FTemplatesDir + 'SetExecModeToClient.clktmpl', CREParam_FileLocation_ValueDisk);
   end;
 end;
 
 
 procedure TTestUI.Test_ExecuteTemplateRemotelyWithDebugging_WithLoopedCall_AndStepInto;
 begin
+  PrepareClickerUnderTestToClientMode;
+
   TestServerAddress := CTestDriverServerAddress_Client;
   RunTestTemplateInClickerUnderTestWithDebuggingAndStepInto('BasicLoopedCaller.clktmpl', '10');
   PrepareClickerUnderTestToReadItsVars;
@@ -515,13 +522,14 @@ begin
     Expect(GetVarValueFromServer('$VarToBeIncremented$')).ToBe('10');  //this var is initialized to 0 in BasicCaller.clktmpl
   finally
     TestServerAddress := CTestDriverServerAddress_Client; //restore
-    ExecuteTemplateOnTestDriver(FTemplatesDir + 'SetExecModeToClient.clktmpl', CREParam_FileLocation_ValueDisk);
   end;
 end;
 
 
 procedure TTestUI.Test_ExecuteTemplateRemotelyWithDebugging_AndStepIntoThenStop;
 begin
+  PrepareClickerUnderTestToClientMode;
+
   TestServerAddress := CTestDriverServerAddress_Client;
   RunTestTemplateInClickerUnderTestWithDebuggingAndStepInto('BasicCaller.clktmpl', '1', '1');
   PrepareClickerUnderTestToReadItsVars;
@@ -534,13 +542,14 @@ begin
     Expect(GetVarValueFromServer('$VarToBeIncremented$')).ToBe('0');  //this var is initialized to 0 in BasicCaller.clktmpl
   finally                                                      //expecting 0 if stopped
     TestServerAddress := CTestDriverServerAddress_Client; //restore
-    ExecuteTemplateOnTestDriver(FTemplatesDir + 'SetExecModeToClient.clktmpl', CREParam_FileLocation_ValueDisk);
   end;
 end;
 
 
-procedure TTestUI.Test_ExecuteTemplateRemotelyWithDebugging_WithLoopedCall_AndStepIntoThenStop;  //this test fails because stopping the debugger on a looped call, is not yet implemented in UIClicker
+procedure TTestUI.Test_ExecuteTemplateRemotelyWithDebugging_WithLoopedCall_AndStepIntoThenStop;
 begin
+  PrepareClickerUnderTestToClientMode;
+
   TestServerAddress := CTestDriverServerAddress_Client;
   RunTestTemplateInClickerUnderTestWithDebuggingAndStepInto('BasicLoopedCaller.clktmpl', '10', '1');
   PrepareClickerUnderTestToReadItsVars;
@@ -550,10 +559,9 @@ begin
   TestServerAddress := CTestClientAddress;
   try
     //connect to ClientUnderTest instance, which is now running in server mode and read its variables
-    Expect(GetVarValueFromServer('$VarToBeIncremented$')).ToBe('0');  //this var is initialized to 0 in BasicCaller.clktmpl
+    Expect(GetVarValueFromServer('$VarToBeIncremented$')).ToBe('0', '$VarToBeIncremented$ should be reset to 0.  $DbgPlayAllActions$ is ' + GetVarValueFromServer('$DbgPlayAllActions$'));  //this var is initialized to 0 in BasicCaller.clktmpl
   finally                                                      //expecting 0 if stopped
     TestServerAddress := CTestDriverServerAddress_Client; //restore
-    ExecuteTemplateOnTestDriver(FTemplatesDir + 'SetExecModeToClient.clktmpl', CREParam_FileLocation_ValueDisk);
   end;
 end;
 

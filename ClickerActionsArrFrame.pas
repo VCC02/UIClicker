@@ -2899,7 +2899,7 @@ begin
 
         if GeneralClosingApp then
           Break;
-      until FClosingTemplate or (GetTickCount64 - tk > 3600000);  //1h
+      until FClosingTemplate or (GetTickCount64 - tk > 3600000);  //1h    //FClosingTemplate is set to True by client, using CRECmd_ExitTemplate
       imgWaitingInPreDebuggingMode.Hide;
 
       SetActionVarValue('$DbgPlayAllActions$', 'ClosingTemplate at stack level' + IntToStr(FStackLevel));
@@ -3060,6 +3060,14 @@ begin
         try
           ClosingTemplateResponse := ExitRemoteTemplate(FRemoteAddress, FStackLevel);
           AddToLog(DateTimeToStr(Now) + '  Sent request to close remote template at index ' + IntToStr(FStackLevel) +  '  ' + ClosingTemplateResponse);
+
+          if FStopAllActionsOnDemand or GeneralClosingApp then
+          begin
+            ClosingTemplateResponse := StopRemoteTemplateExecution(FRemoteAddress, FStackLevel);
+            AddToLog(DateTimeToStr(Now) + '  Sent request to stop remote template execution at index ' + IntToStr(FStackLevel) +  '  ' + ClosingTemplateResponse);
+
+            //(if not enough, then) send one more ExitRemoteTemplate request, if another frame is created by a CallTemplate loop at server side
+          end;
         except
           on E: Exception do
             AddToLog(DateTimeToStr(Now) + '  Error closing remote template at index ' + IntToStr(FStackLevel) + '  ' + E.Message);

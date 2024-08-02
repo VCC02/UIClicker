@@ -2273,7 +2273,7 @@ begin
   if ASyncObj.FCmd = '/' + CRECmd_ExitTemplate then
   begin
     ASyncObj.FFrame.ExitTemplateFromRemote;
-    frClickerActionsArrMain.AddToLog('Closing template at stack level ' + IntToStr(ASyncObj.FFrame.StackLevel));
+    frClickerActionsArrMain.AddToLog('Closing template at stack level ' + IntToStr(ASyncObj.FFrame.StackLevel) + '  Frame FileName: ' + ExtractFileName(ASyncObj.FFrame.FileName));
     ASyncObj.FFrame.AddToLog('Closing template at stack level ' + IntToStr(ASyncObj.FFrame.StackLevel));
     Exit;
   end;
