@@ -43,6 +43,8 @@ type
     RemoveCustomVarRow1: TMenuItem;
     spdbtnMoveDown: TSpeedButton;
     spdbtnMoveUp: TSpeedButton;
+    spdbtnNewVariable: TSpeedButton;
+    spdbtnRemoveSelectedVariable: TSpeedButton;
     tmrEditCustomVars: TTimer;
     vallstCustomVariables: TValueListEditor;
     vstCustomVariables: TVirtualStringTree;
@@ -50,6 +52,8 @@ type
     procedure RemoveCustomVarRow1Click(Sender: TObject);
     procedure spdbtnMoveDownClick(Sender: TObject);
     procedure spdbtnMoveUpClick(Sender: TObject);
+    procedure spdbtnNewVariableClick(Sender: TObject);
+    procedure spdbtnRemoveSelectedVariableClick(Sender: TObject);
     procedure tmrEditCustomVarsTimer(Sender: TObject);
     procedure vstCustomVariablesDblClick(Sender: TObject);
     procedure vstCustomVariablesEdited(Sender: TBaseVirtualTree;
@@ -73,6 +77,9 @@ type
     FOnTriggerOnControlsModified: TOnTriggerOnControlsModified;
 
     procedure DoOnTriggerOnControlsModified;
+
+    procedure AddNewVariable;
+    procedure RemoveVar;
   public
     constructor Create(AOwner: TComponent); override;
 
@@ -135,7 +142,7 @@ begin
 end;
 
 
-procedure TfrClickerCallTemplate.AddCustomVarRow1Click(Sender: TObject);
+procedure TfrClickerCallTemplate.AddNewVariable;
 begin
   vallstCustomVariables.Strings.Add('');
   vstCustomVariables.RootNodeCount := vallstCustomVariables.Strings.Count;
@@ -147,7 +154,7 @@ begin
 end;
 
 
-procedure TfrClickerCallTemplate.RemoveCustomVarRow1Click(Sender: TObject);
+procedure TfrClickerCallTemplate.RemoveVar;
 var
   Node: PVirtualNode;
 begin
@@ -174,6 +181,18 @@ begin
     DoOnTriggerOnControlsModified;
   except
   end;
+end;
+
+
+procedure TfrClickerCallTemplate.AddCustomVarRow1Click(Sender: TObject);
+begin
+  AddNewVariable;
+end;
+
+
+procedure TfrClickerCallTemplate.RemoveCustomVarRow1Click(Sender: TObject);
+begin
+  RemoveVar;
 end;
 
 
@@ -216,6 +235,19 @@ begin
   vstCustomVariables.ScrollIntoView(Node, True);
   vstCustomVariables.Repaint;
   DoOnTriggerOnControlsModified;
+end;
+
+
+procedure TfrClickerCallTemplate.spdbtnNewVariableClick(Sender: TObject);
+begin
+  AddNewVariable;
+end;
+
+
+procedure TfrClickerCallTemplate.spdbtnRemoveSelectedVariableClick(
+  Sender: TObject);
+begin
+  RemoveVar;
 end;
 
 
