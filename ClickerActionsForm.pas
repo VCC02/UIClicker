@@ -1082,6 +1082,8 @@ begin
   frClickerActionsArrExperiment1.OnSaveFileToExtRenderingInMemFS := HandleOnSaveFileToExtRenderingInMemFS;
   frClickerActionsArrExperiment2.OnSaveFileToExtRenderingInMemFS := HandleOnSaveFileToExtRenderingInMemFS;
 
+  AddToLog('ProcessID: ' + IntToStr(GetProcessID));
+
   tmrStartup.Enabled := True;
 end;
 
@@ -1101,7 +1103,7 @@ begin
       repeat
         Application.ProcessMessages;
         Sleep(1);
-      until GetTickCount64 - tk > 1000;
+      until (GetTickCount64 - tk > 2000) or not IdHTTPServer1.Active;
     end;
   except
   end;

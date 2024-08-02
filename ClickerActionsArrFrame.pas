@@ -2765,7 +2765,13 @@ begin
   imgWaitingInDebuggingMode.Hint := 'Waiting in debugging mode.' + #13#10 + 'Call stack level: ' + IntToStr(imgWaitingInDebuggingMode.Tag);
   try
     repeat
+      if GeneralClosingApp then
+        Break;
+
       Application.ProcessMessages;
+
+      if GeneralClosingApp then
+        Break;
 
       if FStopAllActionsOnDemandFromParent <> nil then
         if FStopAllActionsOnDemandFromParent^ then
@@ -2882,6 +2888,17 @@ begin
       repeat
         Application.ProcessMessages;
         Sleep(2);
+
+        if FStopAllActionsOnDemandFromParent <> nil then
+          if FStopAllActionsOnDemandFromParent^ then
+          begin
+            FStopAllActionsOnDemandFromParent^ := False; // reset flag, to allow CallTemplate actions to be executed
+            FStopAllActionsOnDemand := True;
+            Exit;
+          end;
+
+        if GeneralClosingApp then
+          Break;
       until FClosingTemplate or (GetTickCount64 - tk > 3600000);  //1h
       imgWaitingInPreDebuggingMode.Hide;
 
