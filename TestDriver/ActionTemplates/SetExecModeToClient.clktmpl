@@ -27,4 +27,5 @@ Loop.EvalBreakPosition=0
 
 [Notes]
 Content=
+TemplateIconPath=$SelfTemplateDir$\..\DrvIcon.png
 

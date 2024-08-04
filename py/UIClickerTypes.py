@@ -263,7 +263,8 @@ class TFindControlOptions(Structure):
                ("SourceFileName", LPCWSTR),
                ("ImageSourceFileNameLocation", LONG),  #TImageSourceFileNameLocation)
                ("PrecisionTimeout", BOOLEAN),
-               ("FullBackgroundImageInResult", BOOLEAN)
+               ("FullBackgroundImageInResult", BOOLEAN),
+               ("MatchByHistogramSettings", TMatchByHistogramSettings)
                ]
 
 PFindControlOptions = ctypes.POINTER(TFindControlOptions)
@@ -327,9 +328,9 @@ def GetDefaultFindControlOptions():
     FindControlOptions.PrecisionTimeout = False
     FindControlOptions.FullBackgroundImageInResult = True
 
-    MatchByHistogramSettings.MinPercentColorMatch = '50'
-    MatchByHistogramSettings.MostSignificantColorCountInSubBmp = '10'
-    MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp = '15'
+    FindControlOptions.MatchByHistogramSettings.MinPercentColorMatch = '50'
+    FindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInSubBmp = '10'
+    FindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp = '15'
 
     return FindControlOptions
 

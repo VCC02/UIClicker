@@ -255,5 +255,5 @@ NewSizeEnabled=0
 
 [Notes]
 Content=
-TemplateIconPath=$AppDir$\TestDriver\ClientUnderTestIcon.png
+TemplateIconPath=$SelfTemplateDir$\..\ClientUnderTestIcon.png
 

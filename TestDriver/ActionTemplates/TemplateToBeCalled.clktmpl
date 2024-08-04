@@ -14,8 +14,9 @@ BreakpointCondition=
 ListOfVarNames=$Var0$$Var1$$VarToBeIncremented$
 ListOfVarValues=01$Sum($VarToBeIncremented$,1)$
 ListOfVarEvalBefore=1
+FailOnException=0
 
 [Notes]
 Content=
-TemplateIconPath=
+TemplateIconPath=$SelfTemplateDir$\..\ClientUnderTestIcon.png
 

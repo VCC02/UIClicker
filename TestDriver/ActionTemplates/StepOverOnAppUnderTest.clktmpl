@@ -67,6 +67,16 @@ GetAllControls=0
 UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=
+SleepySearch=0
+StopSearchOnMismatch=1
+ImageSource=0
+SourceFileName=
+ImageSourceFileNameLocation=1
+PrecisionTimeout=0
+FullBackgroundImageInResult=1
+MatchByHistogramSettings.MinPercentColorMatch=50
+MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
+MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 
 [Action_1]
 ActionName=Step over
@@ -169,6 +179,16 @@ GetAllControls=0
 UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=
+SleepySearch=0
+StopSearchOnMismatch=1
+ImageSource=0
+SourceFileName=
+ImageSourceFileNameLocation=1
+PrecisionTimeout=0
+FullBackgroundImageInResult=1
+MatchByHistogramSettings.MinPercentColorMatch=50
+MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
+MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 
 [Action_3]
 ActionName="Sleep"
@@ -183,5 +203,5 @@ Value=300
 
 [Notes]
 Content=refactored actions
-TemplateIconPath=
+TemplateIconPath=$SelfTemplateDir$\..\DrvIcon.png
 

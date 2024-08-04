@@ -1670,7 +1670,6 @@ object frClickerActionsArr: TfrClickerActionsArr
     Top = 232
     object MenuItem_RecentFiles: TMenuItem
       Caption = 'Recent Files'
-      Enabled = False
     end
     object MenuItem_InMemReceivedAsServer: TMenuItem
       Caption = 'In-Memory - Received as server'

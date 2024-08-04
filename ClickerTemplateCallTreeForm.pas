@@ -58,8 +58,6 @@ type
 
   PTmplDataRec = ^TTmplDataRec;
 
-  TOnGetFullTemplatesDir = function: string of object;
-
 
   { TfrmClickerTemplateCallTree }
 

@@ -463,6 +463,9 @@
       <Item>
         <Name Value="EIdSchedulerMaxThreadsExceeded"/>
       </Item>
+      <Item>
+        <Name Value="EIdSocketError"/>
+      </Item>
     </Exceptions>
   </Debugging>
 </CONFIG>

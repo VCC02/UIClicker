@@ -67,6 +67,16 @@ GetAllControls=0
 UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=
+SleepySearch=0
+StopSearchOnMismatch=1
+ImageSource=0
+SourceFileName=
+ImageSourceFileNameLocation=1
+PrecisionTimeout=0
+FullBackgroundImageInResult=1
+MatchByHistogramSettings.MinPercentColorMatch=50
+MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
+MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 
 [Action_1]
 ActionName=Find main PageControl (works on visible windows only)
@@ -133,6 +143,16 @@ GetAllControls=0
 UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=
+SleepySearch=0
+StopSearchOnMismatch=1
+ImageSource=0
+SourceFileName=
+ImageSourceFileNameLocation=1
+PrecisionTimeout=0
+FullBackgroundImageInResult=1
+MatchByHistogramSettings.MinPercentColorMatch=50
+MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
+MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 
 [Action_2]
 ActionName=Find page
@@ -199,6 +219,16 @@ GetAllControls=0
 UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=
+SleepySearch=0
+StopSearchOnMismatch=1
+ImageSource=0
+SourceFileName=
+ImageSourceFileNameLocation=1
+PrecisionTimeout=0
+FullBackgroundImageInResult=1
+MatchByHistogramSettings.MinPercentColorMatch=50
+MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
+MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 
 [Action_3]
 ActionName=Find ExecMode PageControl (works on visible windows only)
@@ -265,6 +295,16 @@ GetAllControls=0
 UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=
+SleepySearch=0
+StopSearchOnMismatch=1
+ImageSource=0
+SourceFileName=
+ImageSourceFileNameLocation=1
+PrecisionTimeout=0
+FullBackgroundImageInResult=1
+MatchByHistogramSettings.MinPercentColorMatch=50
+MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
+MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 
 [Action_4]
 ActionName=Find ServerMode tab
@@ -331,6 +371,16 @@ GetAllControls=0
 UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=
+SleepySearch=0
+StopSearchOnMismatch=1
+ImageSource=0
+SourceFileName=
+ImageSourceFileNameLocation=1
+PrecisionTimeout=0
+FullBackgroundImageInResult=1
+MatchByHistogramSettings.MinPercentColorMatch=50
+MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
+MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 
 [Action_5]
 ActionName=Select tab (should already be selected)
@@ -433,6 +483,16 @@ GetAllControls=0
 UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=
+SleepySearch=0
+StopSearchOnMismatch=1
+ImageSource=0
+SourceFileName=
+ImageSourceFileNameLocation=1
+PrecisionTimeout=0
+FullBackgroundImageInResult=1
+MatchByHistogramSettings.MinPercentColorMatch=50
+MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
+MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 
 [Action_7]
 ActionName=Find Port editbox
@@ -499,6 +559,16 @@ GetAllControls=0
 UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=
+SleepySearch=0
+StopSearchOnMismatch=1
+ImageSource=0
+SourceFileName=
+ImageSourceFileNameLocation=1
+PrecisionTimeout=0
+FullBackgroundImageInResult=1
+MatchByHistogramSettings.MinPercentColorMatch=50
+MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
+MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 
 [Action_8]
 ActionName=SetControlText
@@ -512,6 +582,7 @@ BreakpointCondition=
 Text=$ListeningPort$
 ControlType=0
 DelayBetweenKeyStrokes=0
+Count=1
 
 [Action_9]
 ActionName=Find Server mode page
@@ -578,6 +649,16 @@ GetAllControls=0
 UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=
+SleepySearch=0
+StopSearchOnMismatch=1
+ImageSource=0
+SourceFileName=
+ImageSourceFileNameLocation=1
+PrecisionTimeout=0
+FullBackgroundImageInResult=1
+MatchByHistogramSettings.MinPercentColorMatch=50
+MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
+MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 
 [Action_10]
 ActionName=Find Active CheckBox
@@ -644,6 +725,16 @@ GetAllControls=0
 UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=
+SleepySearch=0
+StopSearchOnMismatch=1
+ImageSource=0
+SourceFileName=
+ImageSourceFileNameLocation=1
+PrecisionTimeout=0
+FullBackgroundImageInResult=1
+MatchByHistogramSettings.MinPercentColorMatch=50
+MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
+MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 
 [Action_11]
 ActionName=Check Activate
@@ -683,4 +774,5 @@ MoveDuration=-1
 
 [Notes]
 Content=refactored actions
+TemplateIconPath=$SelfTemplateDir$\..\DrvIcon.png
 

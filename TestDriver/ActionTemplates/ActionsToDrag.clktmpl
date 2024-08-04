@@ -177,5 +177,5 @@ Value=1000
 
 [Notes]
 Content=
-TemplateIconPath=$AppDir$\TestDriver\ClientUnderTestIcon.png
+TemplateIconPath=$SelfTemplateDir$\..\ClientUnderTestIcon.png
 

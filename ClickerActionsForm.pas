@@ -183,6 +183,7 @@ type
     FFontFinderSettings: TFontFinderSettings;
 
     FFirstDisplaying: Boolean;
+    FRecentTemplates: TStringList;
 
     FOnReLoadSettings: TOnReLoadSettings;
     FOnCopyControlTextAndClassFromMainWindow: TOnCopyControlTextAndClassFromMainWindow;
@@ -320,6 +321,9 @@ type
     procedure HandleOnRetrieveRenderedBmpFromServer(ARemoteAddress, AFnm: string);
     procedure HandleOnOpenCalledTemplateInExperimentTab(AExperimentIndex: Integer; ATemplatePath: string);
     procedure HandleOnSaveFileToExtRenderingInMemFS(AFileName: string; AContent: Pointer; AFileSize: Int64);
+
+    procedure HandleOnAddFileNameToRecent(AFileName: string);
+    procedure HandleOnGetListOfRecentFiles(AList: TStringList);
 
     procedure CreateRemainingUIComponents;
     function GetClickerActionsArrFrameByStackLevel(AStackLevel: Integer): TfrClickerActionsArr;
@@ -602,6 +606,11 @@ begin
   frClickerActionsArrExperiment1.AllowedFileExtensionsForServer := memAllowedFileExtensionsForServer.Lines.Text;
   frClickerActionsArrExperiment2.AllowedFileExtensionsForServer := memAllowedFileExtensionsForServer.Lines.Text;
   frClickerActionsArrMain.AllowedFileExtensionsForServer := memAllowedFileExtensionsForServer.Lines.Text;
+
+  FRecentTemplates.Clear;
+  n := AIni.ReadInteger('RecentFiles', 'Count', 0);       //AIni.ReadSection('RecentFiles', FRecentTemplates); would be better, because it doesn't require every item to have its own key. That may be available after replacing TMemIniFile with UIClicker's ini.
+  for i := 0 to n - 1 do
+    FRecentTemplates.Add(AIni.ReadString('RecentFiles', 'File_' + IntToStr(i), ''));
 end;
 
 
@@ -672,6 +681,11 @@ begin
   frClickerActionsArrMain.SaveSettings(AIni, 'ActionsWindow', 'Main');
   frClickerActionsArrExperiment1.SaveSettings(AIni, 'ActionsWindow', 'Exp1');
   frClickerActionsArrExperiment2.SaveSettings(AIni, 'ActionsWindow', 'Exp2');
+
+  n := FRecentTemplates.Count;
+  AIni.WriteInteger('RecentFiles', 'Count', n);       //AIni.ReadSection('RecentFiles', FRecentTemplates); would be better, because it doesn't require every item to have its own key. That may be available after replacing TMemIniFile with UIClicker's ini.
+  for i := 0 to n - 1 do
+    AIni.WriteString('RecentFiles', 'File_' + IntToStr(i), FRecentTemplates.Strings[i]);
 end;
 
 
@@ -795,6 +809,8 @@ begin
   PageControlMain.Caption := 'Main';
   PageControlExecMode.Caption := 'ExecMode';
   PageControlPlayer.Caption := 'Player';
+
+  FRecentTemplates := TStringList.Create;
 
   colcmbTopLeftValid.AddItem('clOrange', TObject(QWord(CLabel_Orange)));
   colcmbTopLeftValid.AddItem('clLightGreen', TObject(QWord(CLabel_LightGreen)));
@@ -1003,6 +1019,9 @@ begin
   frClickerActionsArrMain.OnOpenCalledTemplateInExperimentTab := HandleOnOpenCalledTemplateInExperimentTab;
   frClickerActionsArrMain.OnSaveFileToExtRenderingInMemFS := HandleOnSaveFileToExtRenderingInMemFS;
 
+  frClickerActionsArrMain.OnAddFileNameToRecent := HandleOnAddFileNameToRecent;
+  frClickerActionsArrMain.OnGetListOfRecentFiles := HandleOnGetListOfRecentFiles;
+
   frClickerActionsArrExperiment1.frClickerActions.PasteDebugValuesListFromMainExecutionList1.OnClick := frClickerActionsArrExperiment1PasteDebugValuesListFromMainExecutionList1Click;
   frClickerActionsArrExperiment2.frClickerActions.PasteDebugValuesListFromMainExecutionList1.OnClick := frClickerActionsArrExperiment2PasteDebugValuesListFromMainExecutionList1Click;
   frClickerActionsArrExperiment1.OnCopyControlTextAndClassFromMainWindow := HandleOnCopyControlTextAndClassFromMainWindow;
@@ -1082,6 +1101,11 @@ begin
   frClickerActionsArrExperiment1.OnSaveFileToExtRenderingInMemFS := HandleOnSaveFileToExtRenderingInMemFS;
   frClickerActionsArrExperiment2.OnSaveFileToExtRenderingInMemFS := HandleOnSaveFileToExtRenderingInMemFS;
 
+  frClickerActionsArrExperiment1.OnAddFileNameToRecent := HandleOnAddFileNameToRecent;
+  frClickerActionsArrExperiment2.OnAddFileNameToRecent := HandleOnAddFileNameToRecent;
+  frClickerActionsArrExperiment1.OnGetListOfRecentFiles := HandleOnGetListOfRecentFiles;
+  frClickerActionsArrExperiment2.OnGetListOfRecentFiles := HandleOnGetListOfRecentFiles;
+
   AddToLog('ProcessID: ' + IntToStr(GetProcessID));
 
   tmrStartup.Enabled := True;
@@ -1093,6 +1117,7 @@ var
   tk: QWord;
 begin
   GeneralClosingApp := True;  //prevent waiting for response loops to keep going
+  FreeAndNil(FRecentTemplates);
 
   try
     if IdHTTPServer1.Active then
@@ -1615,6 +1640,9 @@ begin
         NewFrame.OnOpenCalledTemplateInExperimentTab := HandleOnOpenCalledTemplateInExperimentTab;
         NewFrame.OnSaveFileToExtRenderingInMemFS := HandleOnSaveFileToExtRenderingInMemFS;
 
+        NewFrame.OnAddFileNameToRecent := HandleOnAddFileNameToRecent;
+        NewFrame.OnGetListOfRecentFiles := HandleOnGetListOfRecentFiles;
+
         if FAutoSwitchToExecutingTab or (FAutoEnableSwitchingTabsOnDebugging and IsDebugging) then
         begin
           PageControlPlayer.ActivePageIndex := PageControlPlayer.PageCount - 1;
@@ -1647,8 +1675,10 @@ begin
               NewFrame.FileName := StringReplace(NewFrame.FileName, '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
 
               frmClickerActions.AddToLog('[client] Sending template (" ' + NewFrame.FileName + ' ") and other missing files to server..');
-              frmClickerActions.AddToLog('[client] ' + NewFrame.SetCurrentClientTemplateInServer(True));
-              frmClickerActions.AddToLog('[client] ' + NewFrame.SendMissingFilesToServer);
+              //frmClickerActions.AddToLog('[client response] ' + NewFrame.SetCurrentClientTemplateInServer(True)); //do not use SetCurrentClientTemplateInServer, because it sends files event if outside of permitted folders
+              frmClickerActions.AddToLog('[client response] ' + SendLoadTemplateInExecListRequest(NewFrame.RemoteAddress, NewFrame.FileName, NewFrame.StackLevel)); //instead of SendMissingFilesToServer
+
+              //frmClickerActions.AddToLog('[client] ' + NewFrame.SendMissingFilesToServer);
             end;
           end
           else
@@ -3815,6 +3845,20 @@ end;
 procedure TfrmClickerActions.HandleOnSaveFileToExtRenderingInMemFS(AFileName: string; AContent: Pointer; AFileSize: Int64);
 begin
   FRenderedInMemFileSystem.SaveFileToMem(AFileName, AContent, AFileSize);
+end;
+
+
+procedure TfrmClickerActions.HandleOnAddFileNameToRecent(AFileName: string);
+begin
+  if FRecentTemplates.IndexOf(AFileName) = -1 then
+    if UpperCase(ExtractFileExt(AFileName)) = '.CLKTMPL' then
+      FRecentTemplates.Add(AFileName);
+end;
+
+
+procedure TfrmClickerActions.HandleOnGetListOfRecentFiles(AList: TStringList);
+begin
+  AList.Assign(FRecentTemplates);
 end;
 
 

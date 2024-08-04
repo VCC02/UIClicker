@@ -14,6 +14,7 @@ BreakpointCondition=
 ListOfVarNames=$VarToBeIncremented$
 ListOfVarValues=0
 ListOfVarEvalBefore=
+FailOnException=0
 
 [Action_1]
 ActionName=Let the driver find the stop button
@@ -51,4 +52,5 @@ Loop.EvalBreakPosition=0
 
 [Notes]
 Content=
+TemplateIconPath=$SelfTemplateDir$\..\ClientUnderTestIcon.png
 

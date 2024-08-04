@@ -473,5 +473,5 @@ ListOfVarEvalBefore=111111111
 
 [Notes]
 Content=refactored actions
-TemplateIconPath=$AppDir$\DrvIcon.png
+TemplateIconPath=$SelfTemplateDir$\..\DrvIcon.png
 

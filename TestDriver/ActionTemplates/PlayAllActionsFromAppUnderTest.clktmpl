@@ -90,6 +90,16 @@ GetAllControls=0
 UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=
+SleepySearch=0
+StopSearchOnMismatch=1
+ImageSource=0
+SourceFileName=
+ImageSourceFileNameLocation=1
+PrecisionTimeout=0
+FullBackgroundImageInResult=1
+MatchByHistogramSettings.MinPercentColorMatch=50
+MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
+MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 
 [Action_2]
 ActionName=Find main PageControl
@@ -156,6 +166,16 @@ GetAllControls=0
 UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=
+SleepySearch=0
+StopSearchOnMismatch=1
+ImageSource=0
+SourceFileName=
+ImageSourceFileNameLocation=1
+PrecisionTimeout=0
+FullBackgroundImageInResult=1
+MatchByHistogramSettings.MinPercentColorMatch=50
+MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
+MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 
 [Action_3]
 ActionName=Find Play All button
@@ -222,6 +242,16 @@ GetAllControls=0
 UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=
+SleepySearch=0
+StopSearchOnMismatch=1
+ImageSource=0
+SourceFileName=
+ImageSourceFileNameLocation=1
+PrecisionTimeout=0
+FullBackgroundImageInResult=1
+MatchByHistogramSettings.MinPercentColorMatch=50
+MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
+MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 
 [Action_4]
 ActionName=Move mouse cursor over button (wine)
@@ -331,4 +361,5 @@ Loop.EvalBreakPosition=0
 
 [Notes]
 Content=
+TemplateIconPath=$SelfTemplateDir$\..\DrvIcon.png
 

@@ -875,5 +875,5 @@ ListOfVarEvalBefore=
 
 [Notes]
 Content=
-TemplateIconPath=$AppDir$\DrvIcon.png
+TemplateIconPath=$SelfTemplateDir$\..\DrvIcon.png
 

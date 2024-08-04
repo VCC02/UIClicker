@@ -44,6 +44,9 @@ type
   TOnWaitForMultipleFilesAvailability = procedure(AListOfFiles: TStringList) of object;
   TOnOpenCalledTemplateInExperimentTab = procedure(AExperimentIndex: Integer; ATemplatePath: string) of object;
 
+  TOnAddFileNameToRecent = procedure(AFileName: string) of object;
+  TOnGetListOfRecentFiles = procedure(AList: TStringList) of object;
+
   TActionNodeRec = record
     Action: TClkActionRec;
     FullTemplatePath: string;
@@ -380,6 +383,9 @@ type
     FOnOpenCalledTemplateInExperimentTab: TOnOpenCalledTemplateInExperimentTab;
     FOnSaveFileToExtRenderingInMemFS: TOnSaveFileToExtRenderingInMemFS;
 
+    FOnAddFileNameToRecent: TOnAddFileNameToRecent;
+    FOnGetListOfRecentFiles: TOnGetListOfRecentFiles;
+
     vstActions: TVirtualStringTree;
     FPalette: TfrClickerActionsPalette;
     FLoggingFIFO: TPollingFIFO;
@@ -470,7 +476,7 @@ type
 
     procedure SetFullTemplatesDir(Value: string);
     procedure SetModified(Value: Boolean);
-    procedure UpdateModifiedLabel;
+    procedure UpdateModifiedLabel(AFileLocation: TFileLocation = flDisk);
     procedure SaveTemplateIfModified;
     procedure LoadTemplateIcon;
     procedure SetTemplateIconHint;
@@ -489,6 +495,7 @@ type
     procedure FPaletteVsMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 
     procedure ExtraLoadInMemFileClick(Sender: TObject);
+    procedure ExtraLoadRecentFileClick(Sender: TObject);
 
     procedure UpdateNodesCheckStateFromActions;
     procedure RemoveAction(ActionIndex: Integer; AClearSelectionAfterRemoving: Boolean = True; AUpdateRootNodeCount: Boolean = True);
@@ -552,6 +559,9 @@ type
     procedure DoOnSaveFileToExtRenderingInMemFS(AFileName: string; AContent: Pointer; AFileSize: Int64);
 
     procedure DoOnUpdatePropertyIcons(AStreamContent: Pointer; AStreamSize: Int64);
+
+    procedure DoOnAddFileNameToRecent(AFileName: string);
+    procedure DoOnGetListOfRecentFiles(AList: TStringList);
 
     function PlayActionByNode(Node: PVirtualNode): Boolean;
     procedure PlaySelected;
@@ -700,6 +710,9 @@ type
     property OnRetrieveRenderedBmpFromServer: TOnRetrieveRenderedBmpFromServer write FOnRetrieveRenderedBmpFromServer;
     property OnOpenCalledTemplateInExperimentTab: TOnOpenCalledTemplateInExperimentTab write FOnOpenCalledTemplateInExperimentTab;
     property OnSaveFileToExtRenderingInMemFS: TOnSaveFileToExtRenderingInMemFS write FOnSaveFileToExtRenderingInMemFS;
+
+    property OnAddFileNameToRecent: TOnAddFileNameToRecent write FOnAddFileNameToRecent;
+    property OnGetListOfRecentFiles: TOnGetListOfRecentFiles write FOnGetListOfRecentFiles;
   end;
 
 
@@ -1160,6 +1173,9 @@ begin
   FOnRetrieveRenderedBmpFromServer := nil;
   FOnOpenCalledTemplateInExperimentTab := nil;
   FOnSaveFileToExtRenderingInMemFS := nil;
+
+  FOnAddFileNameToRecent := nil;
+  FOnGetListOfRecentFiles := nil;
 
   FPalette := nil;
 
@@ -1966,17 +1982,23 @@ begin
 end;
 
 
-procedure TfrClickerActionsArr.UpdateModifiedLabel;
+procedure TfrClickerActionsArr.UpdateModifiedLabel(AFileLocation: TFileLocation = flDisk);
+var
+  s: string;
 begin
+  s := '';
+  if AFileLocation = flMem then
+    s := ' [Mem]';
+
   if FModified then
   begin
-    lblModifiedStatus.Caption := 'Modified: ' + ExtractFileName(FFileName);
+    lblModifiedStatus.Caption := 'Modified' + s + ': ' + ExtractFileName(FFileName);
     lblModifiedStatus.Font.Color := $000429FF;
     spdbtnSaveTemplate.Font.Color := $00241CED;
   end
   else
   begin
-    lblModifiedStatus.Caption := 'Up to date: ' + ExtractFileName(FFileName);
+    lblModifiedStatus.Caption := 'Up to date' + s + ': ' + ExtractFileName(FFileName);
     lblModifiedStatus.Font.Color := $00007500;
     spdbtnSaveTemplate.Font.Color := clWindowText;
   end;
@@ -2182,7 +2204,11 @@ begin
     if FStackLevel = 0 then  //Load only the main file. The others should be automatically handled by server.
     begin
       AddToLog('Should send template and other files to server...');
-      AddToLog(SetCurrentClientTemplateInServer);
+
+      if FFileName = '' then
+        AddToLog(SetCurrentClientTemplateInServer) //send the current template (whis is not saved to a file (disk or mem)
+      else
+        AddToLog(SendLoadTemplateInExecListRequest(FRemoteAddress, FFileName, FStackLevel));  //AddToLog(SetCurrentClientTemplateInServer);   //this is required, to load the template into editor
       //AddToLog(SendMissingFilesToServer);  //keep commented, to let the server request its missing files
     end;
 end;
@@ -2668,6 +2694,24 @@ begin
     MemStream.Free;
     Bmp.Free;
   end;
+end;
+
+
+procedure TfrClickerActionsArr.DoOnAddFileNameToRecent(AFileName: string);
+begin
+  if not Assigned(FOnAddFileNameToRecent) then
+    raise Exception.Create('OnAddFileNameToRecent not assigned.')
+  else
+    FOnAddFileNameToRecent(AFileName);
+end;
+
+
+procedure TfrClickerActionsArr.DoOnGetListOfRecentFiles(AList: TStringList);
+begin
+  if not Assigned(FOnGetListOfRecentFiles) then
+    raise Exception.Create('OnGetListOfRecentFiles not assigned.')
+  else
+    FOnGetListOfRecentFiles(AList);
 end;
 
 
@@ -3286,6 +3330,7 @@ begin
         end;
 
         Ini := DoOnTClkIniReadonlyFileCreate(Fnm);
+        DoOnAddFileNameToRecent(Fnm);
       end;
 
       flMem:
@@ -3301,7 +3346,10 @@ begin
 
       flDiskThenMem:
         if DoOnFileExists(Fnm) then
-          Ini := DoOnTClkIniReadonlyFileCreate(Fnm)
+        begin
+          Ini := DoOnTClkIniReadonlyFileCreate(Fnm);
+          DoOnAddFileNameToRecent(Fnm);
+        end
         else
         begin
           if not AInMemFileSystem.FileExistsInMem(Fnm) then
@@ -3332,6 +3380,7 @@ begin
           end;
 
           Ini := DoOnTClkIniReadonlyFileCreate(Fnm);
+          DoOnAddFileNameToRecent(Fnm);
         end;
       end;
     end;
@@ -3375,7 +3424,7 @@ begin
   vstActions.RootNodeCount := Length(FClkActions);
   vstActions.Repaint;
 
-  UpdateModifiedLabel;  //required for first loading, when Modified is still False
+  UpdateModifiedLabel(AFileLocation);  //required for first loading, when Modified is still False
   StopGlowingUpdateButton; //required here, because LoadTemplate can be called from parent of frame
 end;
 
@@ -5506,13 +5555,53 @@ begin
 end;
 
 
+procedure TfrClickerActionsArr.ExtraLoadRecentFileClick(Sender: TObject); //disk files only
+var
+  Fnm: string;
+begin
+  Fnm := (Sender as TMenuItem).Caption;
+  Fnm := StringReplace(Fnm, '&', '', [rfReplaceAll]);
+
+  LoadTemplateWithUIUpdate(Fnm, flDisk);
+
+  SaveTemplateIfModified;
+
+  FFileName := Fnm; //update before loading, to allow properly displaying the label
+  lblModifiedStatus.Hint := FFileName;
+  LoadTemplate(FFileName, flDisk); //load with full path
+
+  frClickerActions.ClearControls;
+  StopGlowingUpdateButton;
+end;
+
+
 procedure TfrClickerActionsArr.spdbtnExtraLoadClick(Sender: TObject);
 var
   tp: TPoint;
   i: Integer;
   MenuItem: TMenuItem;
-  ListOfMemFiles: TStringList;
+  ListOfRecentFiles, ListOfMemFiles: TStringList;
+  SelfExePath: string;
 begin
+  pmExtraLoad.Items[0].Clear;
+
+  ListOfRecentFiles := TStringList.Create;
+  try
+    DoOnGetListOfRecentFiles(ListOfRecentFiles);
+    SelfExePath := ExtractFileDir(ParamStr(0));
+
+    for i := 0 to ListOfRecentFiles.Count - 1 do
+    begin
+      MenuItem := TMenuItem.Create(Self);
+      MenuItem.Caption := StringReplace(ListOfRecentFiles.Strings[i], SelfExePath, '$AppDir$', [rfReplaceAll]);
+      MenuItem.OnClick := ExtraLoadRecentFileClick;
+      MenuItem.Bitmap := spdbtnPlaySelectedAction.Glyph;
+      pmExtraLoad.Items[0].Add(MenuItem);
+    end;
+  finally
+    ListOfRecentFiles.Free;
+  end;
+
   pmExtraLoad.Items[1].Clear;
 
   ListOfMemFiles := TStringList.Create;
@@ -5524,9 +5613,9 @@ begin
       MenuItem := TMenuItem.Create(Self);
       MenuItem.Caption := ListOfMemFiles.Strings[i];
       MenuItem.OnClick := ExtraLoadInMemFileClick;
+      MenuItem.Bitmap := spdbtnPlaySelectedAction.Glyph;
       pmExtraLoad.Items[1].Add(MenuItem);
     end;
-
   finally
     ListOfMemFiles.Free;
   end;
