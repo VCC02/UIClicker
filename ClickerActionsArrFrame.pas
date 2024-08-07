@@ -76,6 +76,7 @@ type
     lbeSearchAction: TLabeledEdit;
     lblModifiedStatus: TLabel;
     memLogErr: TMemo;
+    MenuItemPasteActionsFromClipboardAfterTheFirstSelected: TMenuItem;
     MenuItem_StopWaitingForFilesAvailability: TMenuItem;
     MenuItem_ResolvePathToAbsolute: TMenuItem;
     MenuItem_OpenCalledTemplateInExperimentTab: TMenuItem;
@@ -103,7 +104,7 @@ type
     N2: TMenuItem;
     MenuItem_EditBreakPoint: TMenuItem;
     MenuItemEnableDisableBreakPoint: TMenuItem;
-    MenuItemPasteActionsFromClipboard: TMenuItem;
+    MenuItemPasteActionsFromClipboardAtTheEnd: TMenuItem;
     MenuItemCopySelectedActionsToClipboard: TMenuItem;
     N1: TMenuItem;
     MenuItem_ReplaceSelectedActionsWithATemplateCall: TMenuItem;
@@ -174,7 +175,9 @@ type
     procedure FrameResize(Sender: TObject);
     procedure MenuItemCopySelectedActionsToClipboardClick(Sender: TObject);
     procedure MenuItemEnableDisableBreakPointClick(Sender: TObject);
-    procedure MenuItemPasteActionsFromClipboardClick(Sender: TObject);
+    procedure MenuItemPasteActionsFromClipboardAfterTheFirstSelectedClick(
+      Sender: TObject);
+    procedure MenuItemPasteActionsFromClipboardAtTheEndClick(Sender: TObject);
     procedure MenuItem_AddACallTemplateByFileClick(Sender: TObject);
     procedure MenuItem_AddCacheControlActionClick(Sender: TObject);
     procedure MenuItem_AddRestoreCachedControlActionClick(Sender: TObject);
@@ -574,7 +577,7 @@ type
 
 
     procedure CopySelectedActionsToClipboard;
-    procedure PasteActionsFromClipboard;
+    procedure PasteActionsFromClipboard(APasteIndex: Integer);
 
     function EvaluateReplacements(s: string; Recursive: Boolean = True): string;
     function EvaluateHTTP(AValue: string): string;
@@ -4206,12 +4209,29 @@ end;
 
 procedure TfrClickerActionsArr.vstActionsKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
+var
+  Node: PVirtualNode;
+  PasteIndex: Integer;
 begin
   if ssCtrl in Shift then
   begin
     case Key of
-      Ord('C'): CopySelectedActionsToClipboard;
-      Ord('V'): PasteActionsFromClipboard;
+      Ord('C'):
+        CopySelectedActionsToClipboard;
+
+      Ord('V'):
+      begin
+        Node := nil;
+        PasteIndex := -1;
+
+        if ssShift in Shift then
+        begin
+          Node := vstActions.GetFirstSelected;
+          PasteIndex := Node^.Index;
+        end;
+
+        PasteActionsFromClipboard(PasteIndex);
+      end
       else
     end;
   end;
@@ -4675,10 +4695,10 @@ begin
 end;
 
 
-procedure TfrClickerActionsArr.MenuItemPasteActionsFromClipboardClick(
+procedure TfrClickerActionsArr.MenuItemPasteActionsFromClipboardAtTheEndClick(
   Sender: TObject);
 begin
-  PasteActionsFromClipboard;
+  PasteActionsFromClipboard(-1);
 end;
 
 
@@ -4843,6 +4863,28 @@ begin
 end;
 
 
+procedure TfrClickerActionsArr.MenuItemPasteActionsFromClipboardAfterTheFirstSelectedClick
+  (Sender: TObject);
+var
+  Node: PVirtualNode;
+begin
+  if vstActions.RootNodeCount = 0 then
+  begin
+    PasteActionsFromClipboard(-1);
+    Exit;
+  end;
+
+  Node := vstActions.GetFirstSelected;
+  if Node = nil then
+  begin
+    MessageBox(Handle, 'No action selected. Please select one.', PChar(Application.Title), MB_ICONINFORMATION);
+    Exit;
+  end;
+
+  PasteActionsFromClipboard(Node^.Index);
+end;
+
+
 procedure TfrClickerActionsArr.MenuItem_EditBreakPointClick(Sender: TObject);
 begin
   if FActionsHitInfo.HitNode = nil then
@@ -4979,7 +5021,7 @@ begin
 end;
 
 
-procedure TfrClickerActionsArr.PasteActionsFromClipboard;
+procedure TfrClickerActionsArr.PasteActionsFromClipboard(APasteIndex: Integer);
 var
   i: Integer;
   AStringList: TStringList;
@@ -5005,17 +5047,36 @@ begin
 
           vstActions.ClearSelection;
           Application.ProcessMessages;
-          for i := 0 to Length(ClipboardClkActions) - 1 do
-          begin
-            SetLength(FClkActions, Length(FClkActions) + 1);
-            FClkActions[Length(FClkActions) - 1] := ClipboardClkActions[i];    //to be replaced with a copy function
-            vstActions.RootNodeCount := Length(FClkActions);
-            vstActions.Selected[vstActions.GetLast] := True;
 
-            if FClkActions[Length(FClkActions) - 1].ActionOptions.Action = acPlugin then
-              if DoOnFileExists(ResolveTemplatePath(FClkActions[Length(FClkActions) - 1].PluginOptions.FileName)) then
-                SetActionPropertiesFromPlugin(FClkActions[Length(FClkActions) - 1]);
-          end;
+          if APasteIndex > -1 then
+          begin
+            for i := Length(ClipboardClkActions) - 1 downto 0 do
+            begin
+              InsertAction(APasteIndex + 1, ClipboardClkActions[i]);
+
+              Node := GetNodeByIndex(APasteIndex + i + 1);
+              if Node <> nil then
+                vstActions.Selected[Node] := True;
+            end;
+
+            vstActions.RootNodeCount := Length(FClkActions);
+
+            if FClkActions[APasteIndex].ActionOptions.Action = acPlugin then
+              if DoOnFileExists(ResolveTemplatePath(FClkActions[APasteIndex].PluginOptions.FileName)) then
+                SetActionPropertiesFromPlugin(FClkActions[APasteIndex]);
+          end
+          else
+            for i := 0 to Length(ClipboardClkActions) - 1 do
+            begin
+              SetLength(FClkActions, Length(FClkActions) + 1);
+              FClkActions[Length(FClkActions) - 1] := ClipboardClkActions[i];    //to be replaced with a copy function
+              vstActions.RootNodeCount := Length(FClkActions);
+              vstActions.Selected[vstActions.GetLast] := True;
+
+              if FClkActions[Length(FClkActions) - 1].ActionOptions.Action = acPlugin then
+                if DoOnFileExists(ResolveTemplatePath(FClkActions[Length(FClkActions) - 1].PluginOptions.FileName)) then
+                  SetActionPropertiesFromPlugin(FClkActions[Length(FClkActions) - 1]);
+            end;
         end
         else
           MessageBox(Handle, PChar('Unhandled clipboard format version: ' + FormatVersion), PChar(Application.Title), MB_ICONERROR);
@@ -5490,6 +5551,10 @@ begin
 
   pnlActionsEditor.Top := pnlVertSplitter.Top + pnlVertSplitter.Height;
   pnlActions.Height := pnlVertSplitter.Top;
+
+  pnlVertSplitter.Width := Width - 3;   //these corrections are required, because the width anchors seem to be ignored right after setting top and height
+  pnlActionsEditor.Width := Width - 3;
+  pnlActions.Width := Width - 3;
 end;
 
 

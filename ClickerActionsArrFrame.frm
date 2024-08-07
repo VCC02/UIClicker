@@ -6,6 +6,9 @@ object frClickerActionsArr: TfrClickerActionsArr
   Anchors = [akTop, akLeft, akRight, akBottom]
   ClientHeight = 644
   ClientWidth = 768
+  Color = clDefault
+  ParentBackground = False
+  ParentColor = False
   TabOrder = 0
   TabStop = True
   OnResize = FrameResize
@@ -22,6 +25,7 @@ object frClickerActionsArr: TfrClickerActionsArr
     ClientHeight = 396
     ClientWidth = 765
     Constraints.MinHeight = 396
+    ParentBackground = False
     ParentColor = False
     TabOrder = 0
     object pnlfrClickerActions: TPanel
@@ -1291,9 +1295,13 @@ object frClickerActionsArr: TfrClickerActionsArr
       Caption = 'Copy selected actions to clipboard'
       OnClick = MenuItemCopySelectedActionsToClipboardClick
     end
-    object MenuItemPasteActionsFromClipboard: TMenuItem
-      Caption = 'Paste actions from clipboard'
-      OnClick = MenuItemPasteActionsFromClipboardClick
+    object MenuItemPasteActionsFromClipboardAtTheEnd: TMenuItem
+      Caption = 'Paste actions from clipboard (at the end of the list)'
+      OnClick = MenuItemPasteActionsFromClipboardAtTheEndClick
+    end
+    object MenuItemPasteActionsFromClipboardAfterTheFirstSelected: TMenuItem
+      Caption = 'Paste actions from clipboard (after the first selected action)'
+      OnClick = MenuItemPasteActionsFromClipboardAfterTheFirstSelectedClick
     end
     object N3: TMenuItem
       Caption = '-'
