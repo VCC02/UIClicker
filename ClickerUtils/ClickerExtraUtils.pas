@@ -32,13 +32,14 @@ unit ClickerExtraUtils;
 interface
 
 uses
-  Classes, SysUtils,
+  Classes, SysUtils, Graphics, ImgList, Controls,
   IdGlobal, DCPmd5;
 
 
 function ArrOfByteToHex(var AArr: TIdBytes): string;
 function ComputeHash(AFileContent: Pointer; AFileSize: Int64): string;
 function GetFileHash(AFileName: string): string;
+function CreateBitmapForMenu(AImageList: TImageList; AImageIndex: Integer): TBitmap;
 
 
 implementation
@@ -89,6 +90,18 @@ begin
   finally
     Stream.Free;
   end;
+end;
+
+
+function CreateBitmapForMenu(AImageList: TImageList; AImageIndex: Integer): TBitmap;
+begin
+  Result := TBitmap.Create;
+  Result.Width := 16;
+  Result.Height := 16;
+  Result.Canvas.Pen.Color := clWhite - 1;
+  Result.Canvas.Brush.Color := clWhite;
+  Result.Canvas.Rectangle(0, 0, Result.Width, Result.Height);
+  AImageList.Draw(Result.Canvas, 0, 0, AImageIndex, dsNormal, itImage);
 end;
 
 

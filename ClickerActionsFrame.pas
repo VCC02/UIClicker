@@ -537,7 +537,6 @@ type
 
     procedure FreeOIPopupMenu(Sender: TObject);
     procedure BuildFontColorIconsList;
-    function CreateBitmapForMenu(AImageList: TImageList; AImageIndex: Integer): TBitmap;
 
     function HandleOnOIGetCategoryCount: Integer;
     function HandleOnOIGetCategory(AIndex: Integer): string;
@@ -717,7 +716,8 @@ implementation
 
 uses
   Clipbrd, ClickerActionValues, ClickerOIUtils, ClickerZoomPreviewForm,
-  ClickerActionPluginLoader, ClickerActionPlugins, InMemFileSystemBrowserForm;
+  ClickerActionPluginLoader, ClickerActionPlugins, InMemFileSystemBrowserForm,
+  ClickerExtraUtils;
 
 
 function ActionStatusStrToActionStatus(AString: string): TActionStatus;
@@ -4358,18 +4358,6 @@ end;
 procedure TfrClickerActions.BuildFontColorIconsList;
 begin
   BuildFontColorIcons(imglstFontColorProperties, FEditingAction^.FindControlOptions, EvaluateReplacements);
-end;
-
-
-function TfrClickerActions.CreateBitmapForMenu(AImageList: TImageList; AImageIndex: Integer): TBitmap;
-begin
-  Result := TBitmap.Create;
-  Result.Width := 16;
-  Result.Height := 16;
-  Result.Canvas.Pen.Color := clWhite - 1;
-  Result.Canvas.Brush.Color := clWhite;
-  Result.Canvas.Rectangle(0, 0, Result.Width, Result.Height);
-  AImageList.Draw(Result.Canvas, 0, 0, AImageIndex, dsNormal, itImage);
 end;
 
 

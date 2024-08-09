@@ -45,6 +45,7 @@ type
     chkHighContrast: TCheckBox;
     imglstFontColorProperties: TImageList;
     imglstPreviewPrimitives: TImageList;
+    imglstPrimitivesEditorMenu: TImageList;
     imglstPrimitives: TImageList;
     imgFontColorBuffer: TImage;
     lblModified: TLabel;
@@ -252,7 +253,7 @@ implementation
 
 uses
   ClickerPrimitiveValues, ClickerOIUtils, ClickerPrimitivesCompositor, ClickerZoomPreviewForm,
-  FPCanvas, Clipbrd, Dialogs;
+  ClickerExtraUtils, FPCanvas, Clipbrd, Dialogs;
 
 
 const
@@ -2559,10 +2560,17 @@ begin
           FOIEditorMenu.Items.Clear;
 
           AddMenuItemToPopupMenu(FOIEditorMenu, 'Add composition order to list', MenuItem_AddCompositionOrderToList, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+          FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstPrimitivesEditorMenu, 0);
+
           AddMenuItemToPopupMenu(FOIEditorMenu, '-', nil, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+
           AddMenuItemToPopupMenu(FOIEditorMenu, 'Remove all composition orders from list...', MenuItem_RemoveAllCompositionOrdersFromList, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+          FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstPrimitivesEditorMenu, 1);
+
           AddMenuItemToPopupMenu(FOIEditorMenu, '-', nil, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+
           AddMenuItemToPopupMenu(FOIEditorMenu, 'Repaint all compositions', MenuItem_RepaintAllCompositions, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+          FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstPrimitivesEditorMenu, 2);
 
           GetCursorPos(tp);
           FOIEditorMenu.PopUp(tp.X, tp.Y);

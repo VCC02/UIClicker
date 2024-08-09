@@ -81,6 +81,7 @@ type
     procedure Test_DragAction_FromPos4ToPos1;
 
     procedure Test_ExecuteTemplateRemotelyWithDebugging_WithLoopedCall_AndStepIntoThenStop;
+    procedure Test_ExecuteTemplateRemotelyWithDebugging_ToVerifyIfCallTemplateWorksAfterStopping;
 
     procedure AfterAll_AlwaysExecute;
   end;
@@ -551,6 +552,27 @@ begin
   PrepareClickerUnderTestToClientMode;
 
   TestServerAddress := CTestDriverServerAddress_Client;
+  RunTestTemplateInClickerUnderTestWithDebuggingAndStepInto('BasicLoopedCaller.clktmpl', '10', '1');
+  PrepareClickerUnderTestToReadItsVars;
+
+  Sleep(500);
+
+  TestServerAddress := CTestClientAddress;
+  try
+    //connect to ClientUnderTest instance, which is now running in server mode and read its variables
+    Expect(GetVarValueFromServer('$VarToBeIncremented$')).ToBe('0', '$VarToBeIncremented$ should be reset to 0.  $DbgPlayAllActions$ is ' + GetVarValueFromServer('$DbgPlayAllActions$'));  //this var is initialized to 0 in BasicCaller.clktmpl
+  finally                                                      //expecting 0 if stopped
+    TestServerAddress := CTestDriverServerAddress_Client; //restore
+  end;
+end;
+
+
+procedure TTestUI.Test_ExecuteTemplateRemotelyWithDebugging_ToVerifyIfCallTemplateWorksAfterStopping;  //this is a combination of above AndStepIntoThenStop and WithLoopedCall_AndStepIntoThenStop
+begin
+  PrepareClickerUnderTestToClientMode;
+
+  TestServerAddress := CTestDriverServerAddress_Client;
+  RunTestTemplateInClickerUnderTestWithDebuggingAndStepInto('BasicCaller.clktmpl', '1', '1');
   RunTestTemplateInClickerUnderTestWithDebuggingAndStepInto('BasicLoopedCaller.clktmpl', '10', '1');
   PrepareClickerUnderTestToReadItsVars;
 
