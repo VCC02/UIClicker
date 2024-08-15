@@ -4420,7 +4420,7 @@ var
   ChNodeData: PActionNodeRec;
   CalledTemplateContent: TClkActionsRecArr;
   i: Integer;
-  TemplateFileName: string;
+  CalledTemplateFileName, SelfFileName: string;
 begin
   NodeData := vstActions.GetNodeData(ANode);
   NodeData^.FullTemplatePath := EvaluateReplacements(ATemplateFileName);
@@ -4429,7 +4429,9 @@ begin
   if NodeData^.FullTemplatePath = ExtractFileName(NodeData^.FullTemplatePath) then //there is no full path
     NodeData^.FullTemplatePath := FFullTemplatesDir + PathDelim + NodeData^.FullTemplatePath;
 
-  LoadTemplateToActions(NodeData^.FullTemplatePath, CalledTemplateContent);
+  SelfFileName := NodeData^.FullTemplatePath;
+
+  LoadTemplateToActions(SelfFileName, CalledTemplateContent);
 
   for i := 0 to Length(CalledTemplateContent) - 1 do
   begin
@@ -4452,8 +4454,9 @@ begin
     NodeData := vstActions.GetNodeData(Node);
     if NodeData^.Action.ActionOptions.Action = acCallTemplate then
     begin
-      TemplateFileName := NodeData^.Action.CallTemplateOptions.TemplateFileName;
-      AddCalledTemplateToNode(Node, TemplateFileName, ATemplateDir, AAppDir, ARecursionLevel + 1);
+      CalledTemplateFileName := NodeData^.Action.CallTemplateOptions.TemplateFileName;
+      CalledTemplateFileName := StringReplace(CalledTemplateFileName, '$SelfTemplateDir$', ExtractFileDir(SelfFileName), [rfReplaceAll]);
+      AddCalledTemplateToNode(Node, CalledTemplateFileName, ATemplateDir, AAppDir, ARecursionLevel + 1);
     end;
 
     Node := Node^.NextSibling;
@@ -4464,7 +4467,7 @@ end;
 procedure TfrClickerActionsArr.chkDisplayCalledTemplatesChange(Sender: TObject);
 var
   Node: PVirtualNode;
-  TemplateDir, AppDir, TemplateFileName: string;
+  TemplateDir, AppDir, CalledTemplateFileName: string;
 begin
   Node := vstActions.GetFirst;
   if Node = nil then
@@ -4481,13 +4484,18 @@ begin
     Exit;
 
   Node := vstActions.GetFirst;
-  TemplateDir := ExtractFileDir(FFileName);
+  {if Pos('$SelfTemplateDir$', FFileName) > 0 then
+    TemplateDir := StringReplace(FFileName, '$SelfTemplateDir$', ExtractFileDir(FFileName), [rfReplaceAll])
+  else}
+    TemplateDir := ExtractFileDir(FFileName);
+
   AppDir := ExtractFileDir(ParamStr(0));
   repeat
     if FClkActions[Node^.Index].ActionOptions.Action = acCallTemplate then
     begin
-      TemplateFileName := FClkActions[Node^.Index].CallTemplateOptions.TemplateFileName;
-      AddCalledTemplateToNode(Node, TemplateFileName, TemplateDir, AppDir, 0);
+      CalledTemplateFileName := FClkActions[Node^.Index].CallTemplateOptions.TemplateFileName;
+      CalledTemplateFileName := StringReplace(CalledTemplateFileName, '$SelfTemplateDir$', ExtractFileDir(FFileName), [rfReplaceAll]);
+      AddCalledTemplateToNode(Node, CalledTemplateFileName, TemplateDir, AppDir, 0);
     end;
 
     Node := Node^.NextSibling;

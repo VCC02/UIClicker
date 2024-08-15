@@ -11,7 +11,7 @@ ActionCondition=
 BreakpointExists=0
 BreakpointEnabled=0
 BreakpointCondition=
-TemplateFileName=PrepareSearchAreaInteraction.clktmpl
+TemplateFileName=$SelfTemplateDir$\PrepareSearchAreaInteraction.clktmpl
 ListOfCustomVarsAndValues=
 CallOnlyIfCondition=0
 CallOnlyIfConditionVarName=
@@ -126,6 +126,16 @@ GetAllControls=0
 UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=
+SleepySearch=0
+StopSearchOnMismatch=1
+ImageSource=0
+SourceFileName=
+ImageSourceFileNameLocation=1
+PrecisionTimeout=0
+FullBackgroundImageInResult=1
+MatchByHistogramSettings.MinPercentColorMatch=50
+MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
+MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 
 [Action_3]
 ActionName=Cache current control
@@ -139,6 +149,7 @@ BreakpointCondition=
 ListOfVarNames=$My_Left$$My_Top$$My_Right$$My_Bottom$$My_Width$$My_Height$$My_Text$$My_Class$$My_Handle$
 ListOfVarValues=$Control_Left$$Control_Top$$Control_Right$$Control_Bottom$$Control_Width$$Control_Height$$Control_Text$$Control_Class$$Control_Handle$
 ListOfVarEvalBefore=111111111
+FailOnException=0
 
 [Action_4]
 ActionName=Verify a bit of text
@@ -222,6 +233,16 @@ GetAllControls=0
 UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=
+SleepySearch=0
+StopSearchOnMismatch=1
+ImageSource=0
+SourceFileName=
+ImageSourceFileNameLocation=1
+PrecisionTimeout=0
+FullBackgroundImageInResult=1
+MatchByHistogramSettings.MinPercentColorMatch=50
+MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
+MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 
 [Action_5]
 ActionName=Restore cached control
@@ -235,6 +256,7 @@ BreakpointCondition=
 ListOfVarNames=$Control_Left$$Control_Top$$Control_Right$$Control_Bottom$$Control_Width$$Control_Height$$Control_Text$$Control_Class$$Control_Handle$
 ListOfVarValues=$My_Left$$My_Top$$My_Right$$My_Bottom$$My_Width$$My_Height$$My_Text$$My_Class$$My_Handle$
 ListOfVarEvalBefore=111111111
+FailOnException=0
 
 [Action_6]
 ActionName=Find Yes button
@@ -301,6 +323,16 @@ GetAllControls=0
 UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=
+SleepySearch=0
+StopSearchOnMismatch=1
+ImageSource=0
+SourceFileName=
+ImageSourceFileNameLocation=1
+PrecisionTimeout=0
+FullBackgroundImageInResult=1
+MatchByHistogramSettings.MinPercentColorMatch=50
+MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
+MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 
 [Action_7]
 ActionName=Click Yes
@@ -350,6 +382,7 @@ BreakpointCondition=
 ListOfVarNames=$Control_Left$$Control_Top$$Control_Right$$Control_Bottom$$Control_Width$$Control_Height$$Control_Text$$Control_Class$$Control_Handle$
 ListOfVarValues=$My_Left$$My_Top$$My_Right$$My_Bottom$$My_Width$$My_Height$$My_Text$$My_Class$$My_Handle$
 ListOfVarEvalBefore=111111111
+FailOnException=0
 
 [Action_9]
 ActionName=Wait for dialog to close
@@ -416,6 +449,16 @@ GetAllControls=0
 UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=
+SleepySearch=0
+StopSearchOnMismatch=1
+ImageSource=0
+SourceFileName=
+ImageSourceFileNameLocation=1
+PrecisionTimeout=0
+FullBackgroundImageInResult=1
+MatchByHistogramSettings.MinPercentColorMatch=50
+MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
+MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 
 [Action_10]
 ActionName=Wait for search results
@@ -482,6 +525,16 @@ GetAllControls=0
 UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=
+SleepySearch=0
+StopSearchOnMismatch=1
+ImageSource=0
+SourceFileName=
+ImageSourceFileNameLocation=1
+PrecisionTimeout=0
+FullBackgroundImageInResult=1
+MatchByHistogramSettings.MinPercentColorMatch=50
+MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
+MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 
 [Action_11]
 ActionName=Cache MessageBox
@@ -495,6 +548,7 @@ BreakpointCondition=
 ListOfVarNames=$My_Left$$My_Top$$My_Right$$My_Bottom$$My_Width$$My_Height$$My_Text$$My_Class$$My_Handle$
 ListOfVarValues=$Control_Left$$Control_Top$$Control_Right$$Control_Bottom$$Control_Width$$Control_Height$$Control_Text$$Control_Class$$Control_Handle$
 ListOfVarEvalBefore=111111111
+FailOnException=0
 
 [Action_12]
 ActionName=Reset search result
@@ -508,6 +562,7 @@ BreakpointCondition=
 ListOfVarNames=$SearchResult$
 ListOfVarValues=False
 ListOfVarEvalBefore=
+FailOnException=0
 
 [Action_13]
 ActionName=Verify results
@@ -591,6 +646,16 @@ GetAllControls=0
 UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=
+SleepySearch=0
+StopSearchOnMismatch=1
+ImageSource=0
+SourceFileName=
+ImageSourceFileNameLocation=1
+PrecisionTimeout=0
+FullBackgroundImageInResult=1
+MatchByHistogramSettings.MinPercentColorMatch=50
+MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
+MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 
 [Action_14]
 ActionName=Set search result
@@ -604,6 +669,7 @@ BreakpointCondition=
 ListOfVarNames=$SearchResult$
 ListOfVarValues=True
 ListOfVarEvalBefore=
+FailOnException=0
 
 [Action_15]
 ActionName=Restore MessageBox
@@ -617,6 +683,7 @@ BreakpointCondition=
 ListOfVarNames=$Control_Left$$Control_Top$$Control_Right$$Control_Bottom$$Control_Width$$Control_Height$$Control_Text$$Control_Class$$Control_Handle$
 ListOfVarValues=$My_Left$$My_Top$$My_Right$$My_Bottom$$My_Width$$My_Height$$My_Text$$My_Class$$My_Handle$
 ListOfVarEvalBefore=111111111
+FailOnException=0
 
 [Action_16]
 ActionName=Set default MsgBox btn
@@ -630,6 +697,7 @@ BreakpointCondition=
 ListOfVarNames=$MsgBoxButton$$MsgBoxButtonEval$
 ListOfVarValues=OK,No,NO,&No,&NOFalse
 ListOfVarEvalBefore=
+FailOnException=0
 
 [Action_17]
 ActionName=Set MsgBox btn to Yes
@@ -643,6 +711,7 @@ BreakpointCondition=
 ListOfVarNames=$MsgBoxButton$
 ListOfVarValues=OK,Yes,YES,&Yes,&YES
 ListOfVarEvalBefore=
+FailOnException=0
 
 [Action_18]
 ActionName=Find OK, Yes or No btn
@@ -709,6 +778,16 @@ GetAllControls=0
 UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=
+SleepySearch=0
+StopSearchOnMismatch=1
+ImageSource=0
+SourceFileName=
+ImageSourceFileNameLocation=1
+PrecisionTimeout=0
+FullBackgroundImageInResult=1
+MatchByHistogramSettings.MinPercentColorMatch=50
+MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
+MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 
 [Action_19]
 ActionName=Close dialog
@@ -811,6 +890,16 @@ GetAllControls=0
 UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=
+SleepySearch=0
+StopSearchOnMismatch=1
+ImageSource=0
+SourceFileName=
+ImageSourceFileNameLocation=1
+PrecisionTimeout=0
+FullBackgroundImageInResult=1
+MatchByHistogramSettings.MinPercentColorMatch=50
+MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
+MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 
 [Action_21]
 ActionName=Find server window
@@ -877,6 +966,16 @@ GetAllControls=0
 UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
 IgnoredColors=
+SleepySearch=0
+StopSearchOnMismatch=1
+ImageSource=0
+SourceFileName=
+ImageSourceFileNameLocation=1
+PrecisionTimeout=0
+FullBackgroundImageInResult=1
+MatchByHistogramSettings.MinPercentColorMatch=50
+MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
+MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 
 [Action_22]
 ActionName=Close rendering server

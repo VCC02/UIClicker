@@ -52,6 +52,7 @@ type
     chkDecodeVariables: TCheckBox;
     chkShowDebugGrid: TCheckBox;
     imglstMatchByHistogramSettings: TImageList;
+    imglstUsedMatchCriteria: TImageList;
     imgPluginFileName: TImage;
     imgDebugBmp: TImage;
     imgDebugGrid: TImage;
@@ -566,6 +567,9 @@ type
     procedure HandleOnOIBeforeCellPaint(ANodeData: TNodeDataPropertyRec; ACategoryIndex, APropertyIndex, APropertyItemIndex: Integer;
       TargetCanvas: TCanvas; Column: TColumnIndex; CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
 
+    procedure HandleOnOIAfterCellPaint(ANodeData: TNodeDataPropertyRec; ACategoryIndex, APropertyIndex, APropertyItemIndex: Integer;
+      TargetCanvas: TCanvas; Column: TColumnIndex; const CellRect: TRect);
+
     procedure HandleOnTextEditorMouseDown(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer;
       Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 
@@ -874,6 +878,7 @@ begin
   FOIFrame.OnOIGetEnumConst := HandleOnOIGetEnumConst;
   FOIFrame.OnOIPaintText := HandleOnOIPaintText;
   FOIFrame.OnOIBeforeCellPaint := HandleOnOIBeforeCellPaint;
+  FOIFrame.OnOIAfterCellPaint := HandleOnOIAfterCellPaint;
   FOIFrame.OnOITextEditorMouseDown := HandleOnTextEditorMouseDown;
   FOIFrame.OnOITextEditorMouseMove := HandleOnTextEditorMouseMove;
   FOIFrame.OnOITextEditorKeyUp := HandleOnOITextEditorKeyUp;
@@ -5677,6 +5682,52 @@ begin
       TargetCanvas.Brush.Color := NewColor;
       TargetCanvas.Rectangle(CellRect);
     end;
+end;
+
+
+procedure TfrClickerActions.HandleOnOIAfterCellPaint(ANodeData: TNodeDataPropertyRec; ACategoryIndex, APropertyIndex, APropertyItemIndex: Integer;
+  TargetCanvas: TCanvas; Column: TColumnIndex; const CellRect: TRect);
+const
+  CIconYOffset = 3;
+var
+  CurrentIconPos: Integer;
+begin
+  if CurrentlyEditingActionType in [acFindControl, acFindSubControl] then
+    if (ACategoryIndex = CCategory_ActionSpecific) and (APropertyIndex = CFindControl_MatchCriteria_PropIndex) and (APropertyItemIndex = -1) then
+      if Column = 1 then
+      begin
+        CurrentIconPos := CellRect.Left + 2;
+
+        if FEditingAction^.FindControlOptions.MatchCriteria.WillMatchText then
+        begin
+          imglstUsedMatchCriteria.Draw(TargetCanvas, CurrentIconPos, CIconYOffset, CFindControl_MatchCriteria_WillMatchText_PropItemIndex, dsNormal, itImage);
+          Inc(CurrentIconPos, 18);
+        end;
+
+        if FEditingAction^.FindControlOptions.MatchCriteria.WillMatchClassName then
+        begin
+          imglstUsedMatchCriteria.Draw(TargetCanvas, CurrentIconPos, CIconYOffset, CFindControl_MatchCriteria_WillMatchClassName_PropItemIndex, dsNormal, itImage);
+          Inc(CurrentIconPos, 18);
+        end;
+
+        if FEditingAction^.FindControlOptions.MatchCriteria.WillMatchBitmapText then
+        begin
+          imglstUsedMatchCriteria.Draw(TargetCanvas, CurrentIconPos, CIconYOffset, CFindControl_MatchCriteria_WillMatchBitmapText_PropItemIndex, dsNormal, itImage);
+          Inc(CurrentIconPos, 18);
+        end;
+
+        if FEditingAction^.FindControlOptions.MatchCriteria.WillMatchBitmapFiles then
+        begin
+          imglstUsedMatchCriteria.Draw(TargetCanvas, CurrentIconPos, CIconYOffset, CFindControl_MatchCriteria_WillMatchBitmapFiles_PropItemIndex, dsNormal, itImage);
+          Inc(CurrentIconPos, 18);
+        end;
+
+        if FEditingAction^.FindControlOptions.MatchCriteria.WillMatchPrimitiveFiles then
+        begin
+          imglstUsedMatchCriteria.Draw(TargetCanvas, CurrentIconPos, CIconYOffset, CFindControl_MatchCriteria_WillMatchPrimitiveFiles_PropItemIndex, dsNormal, itImage);
+          Inc(CurrentIconPos, 18);
+        end;
+      end;
 end;
 
 

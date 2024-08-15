@@ -1319,21 +1319,21 @@ begin
   case APropertyIndex of
     0:
     begin
-      Result := '';  //MatchCriteria
-      if AAction^.FindControlOptions.MatchCriteria.WillMatchText then
-        Result := Result + '[Text] ';
-
-      if AAction^.FindControlOptions.MatchCriteria.WillMatchClassName then
-        Result := Result + '[Class] ';
-
-      if AAction^.FindControlOptions.MatchCriteria.WillMatchBitmapText then
-        Result := Result + '[bmptxt] ';
-
-      if AAction^.FindControlOptions.MatchCriteria.WillMatchBitmapFiles then
-        Result := Result + '[.bmp] ';
-
-      if AAction^.FindControlOptions.MatchCriteria.WillMatchPrimitiveFiles then
-        Result := Result + '[.pmtv] ';
+      Result := '';  //MatchCriteria     Replaced by icons.
+      //if AAction^.FindControlOptions.MatchCriteria.WillMatchText then
+      //  Result := Result + '[Text] ';
+      //
+      //if AAction^.FindControlOptions.MatchCriteria.WillMatchClassName then
+      //  Result := Result + '[Class] ';
+      //
+      //if AAction^.FindControlOptions.MatchCriteria.WillMatchBitmapText then
+      //  Result := Result + '[bmptxt] ';
+      //
+      //if AAction^.FindControlOptions.MatchCriteria.WillMatchBitmapFiles then
+      //  Result := Result + '[.bmp] ';
+      //
+      //if AAction^.FindControlOptions.MatchCriteria.WillMatchPrimitiveFiles then
+      //  Result := Result + '[.pmtv] ';
     end;
     1: Result := BoolToStr(AAction^.FindControlOptions.AllowToFail, True);
     2: Result := AAction^.FindControlOptions.MatchText;

@@ -248,7 +248,7 @@ MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 
 [Action_4]
-ActionName=Cache step over button position
+ActionName=Cache step into button position
 Action=SetVar
 ActionTimeout=0
 ActionEnabled=1

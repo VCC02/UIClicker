@@ -11,7 +11,7 @@ ActionCondition=
 BreakpointExists=0
 BreakpointEnabled=0
 BreakpointCondition=
-TemplateFileName=GoToActionPlayer.clktmpl
+TemplateFileName=$SelfTemplateDir$\GoToActionPlayer.clktmpl
 ListOfCustomVarsAndValues=
 CallOnlyIfCondition=0
 CallOnlyIfConditionVarName=
@@ -182,6 +182,9 @@ SourceFileName=
 ImageSourceFileNameLocation=1
 PrecisionTimeout=0
 FullBackgroundImageInResult=1
+MatchByHistogramSettings.MinPercentColorMatch=50
+MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
+MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 
 [Action_2]
 ActionName=Click "Find custom rendering" action
@@ -305,6 +308,9 @@ SourceFileName=
 ImageSourceFileNameLocation=1
 PrecisionTimeout=0
 FullBackgroundImageInResult=1
+MatchByHistogramSettings.MinPercentColorMatch=50
+MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
+MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 
 [Action_5]
 ActionName=Drag to the left
@@ -428,6 +434,9 @@ SourceFileName=
 ImageSourceFileNameLocation=1
 PrecisionTimeout=0
 FullBackgroundImageInResult=1
+MatchByHistogramSettings.MinPercentColorMatch=50
+MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
+MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 
 [Action_8]
 ActionName=Cache Search Area
@@ -532,6 +541,9 @@ SourceFileName=
 ImageSourceFileNameLocation=1
 PrecisionTimeout=0
 FullBackgroundImageInResult=1
+MatchByHistogramSettings.MinPercentColorMatch=50
+MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
+MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 
 [Action_10]
 ActionName=Click Search Area tab
@@ -655,6 +667,9 @@ SourceFileName=
 ImageSourceFileNameLocation=1
 PrecisionTimeout=0
 FullBackgroundImageInResult=1
+MatchByHistogramSettings.MinPercentColorMatch=50
+MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
+MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 
 [Action_13]
 ActionName=Display
@@ -878,6 +893,9 @@ SourceFileName=
 ImageSourceFileNameLocation=1
 PrecisionTimeout=0
 FullBackgroundImageInResult=1
+MatchByHistogramSettings.MinPercentColorMatch=50
+MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
+MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 
 [Action_20]
 ActionName=Verify if zoom is checked
@@ -951,6 +969,9 @@ SourceFileName=
 ImageSourceFileNameLocation=1
 PrecisionTimeout=0
 FullBackgroundImageInResult=1
+MatchByHistogramSettings.MinPercentColorMatch=50
+MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
+MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 
 [Action_21]
 ActionName=Uncheck zoom
@@ -1110,6 +1131,9 @@ SourceFileName=
 ImageSourceFileNameLocation=1
 PrecisionTimeout=0
 FullBackgroundImageInResult=1
+MatchByHistogramSettings.MinPercentColorMatch=50
+MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
+MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 
 [Action_25]
 ActionName=Find "Enable verbose.."
@@ -1200,6 +1224,9 @@ SourceFileName=
 ImageSourceFileNameLocation=1
 PrecisionTimeout=0
 FullBackgroundImageInResult=1
+MatchByHistogramSettings.MinPercentColorMatch=50
+MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
+MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 
 [Action_26]
 ActionName=Reset ShouldEnableVerbose var
@@ -1287,6 +1314,9 @@ SourceFileName=
 ImageSourceFileNameLocation=1
 PrecisionTimeout=0
 FullBackgroundImageInResult=1
+MatchByHistogramSettings.MinPercentColorMatch=50
+MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
+MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 
 [Action_28]
 ActionName=Should enable item
@@ -1460,6 +1490,9 @@ SourceFileName=
 ImageSourceFileNameLocation=1
 PrecisionTimeout=0
 FullBackgroundImageInResult=1
+MatchByHistogramSettings.MinPercentColorMatch=50
+MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
+MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 
 [Action_33]
 ActionName=wait for menu to show (because of animation)
@@ -1561,6 +1594,9 @@ SourceFileName=
 ImageSourceFileNameLocation=1
 PrecisionTimeout=0
 FullBackgroundImageInResult=1
+MatchByHistogramSettings.MinPercentColorMatch=50
+MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
+MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 
 [Notes]
 Content=
