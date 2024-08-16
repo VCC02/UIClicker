@@ -1,5 +1,5 @@
 [Actions]
-Count=37
+Count=38
 Version=2
 
 [Action_0]
@@ -565,7 +565,7 @@ DelayAfterMouseDown=100
 MoveDuration=-1
 
 [Action_10]
-ActionName=Find Stop button icon - running state
+ActionName=Find Stop button icon - running state 1
 Action=FindSubControl
 ActionTimeout=1000
 ActionEnabled=0
@@ -1560,18 +1560,15 @@ Loop.BreakCondition=
 Loop.EvalBreakPosition=0
 
 [Action_30]
-ActionName=Init test status
-Action=SetVar
+ActionName=wait for the animation to end
+Action=Sleep
 ActionTimeout=0
 ActionEnabled=1
 ActionCondition=
 BreakpointExists=0
 BreakpointEnabled=0
 BreakpointCondition=
-ListOfVarNames=$TestResult$
-ListOfVarValues=True
-ListOfVarEvalBefore=
-FailOnException=0
+Value=1500
 
 [Action_31]
 ActionName=Find Step Over button icon - idle state (2)
@@ -1580,7 +1577,7 @@ ActionTimeout=15000
 ActionEnabled=1
 ActionCondition=
 BreakpointExists=0
-BreakpointEnabled=0
+BreakpointEnabled=1
 BreakpointCondition=
 MatchCriteria.WillMatchText=0
 MatchCriteria.WillMatchClassName=0
@@ -1626,8 +1623,8 @@ InitialRectangle.Top=$StepOver_Top$
 InitialRectangle.Right=$StepOver_Left$
 InitialRectangle.Bottom=$StepOver_Top$
 UseWholeScreen=0
-InitialRectangle.LeftOffset=-17
-InitialRectangle.TopOffset=3
+InitialRectangle.LeftOffset=-21
+InitialRectangle.TopOffset=-9
 InitialRectangle.RightOffset=-3
 InitialRectangle.BottomOffset=13
 StartSearchingWithCachedControl=0
@@ -1650,6 +1647,20 @@ MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 
 [Action_32]
+ActionName=Init test status
+Action=SetVar
+ActionTimeout=0
+ActionEnabled=1
+ActionCondition=
+BreakpointExists=0
+BreakpointEnabled=1
+BreakpointCondition=
+ListOfVarNames=$TestResult$$StopButtonState$
+ListOfVarValues=Truenot set yet
+ListOfVarEvalBefore=
+FailOnException=0
+
+[Action_33]
 ActionName=Find Stop button icon - idle state
 Action=FindSubControl
 ActionTimeout=15000
@@ -1660,8 +1671,8 @@ BreakpointEnabled=0
 BreakpointCondition=
 MatchCriteria.WillMatchText=0
 MatchCriteria.WillMatchClassName=0
-MatchCriteria.WillMatchBitmapText=1
-MatchCriteria.WillMatchBitmapFiles=0
+MatchCriteria.WillMatchBitmapText=0
+MatchCriteria.WillMatchBitmapFiles=1
 MatchCriteria.WillMatchPrimitiveFiles=0
 MatchCriteria.SearchForControlMode=0
 MatchText=@
@@ -1689,9 +1700,9 @@ MatchBitmapText[0].CropTop=
 MatchBitmapText[0].CropRight=
 MatchBitmapText[0].CropBottom=
 MatchBitmapText[0].IgnoreBackgroundColor=0
-MatchBitmapFiles=
-ColorError=40
-AllowedColorErrorCount=40
+MatchBitmapFiles=$TemplateDir$\Bmps\StopButtonIcon_Idle.png
+ColorError=17
+AllowedColorErrorCount=8
 MatchBitmapAlgorithm=0
 MatchBitmapAlgorithm_Grid_XMultipleOf=1
 MatchBitmapAlgorithm_Grid_YMultipleOf=1
@@ -1702,10 +1713,10 @@ InitialRectangle.Top=$Stop_Top$
 InitialRectangle.Right=$Stop_Left$
 InitialRectangle.Bottom=$Stop_Top$
 UseWholeScreen=0
-InitialRectangle.LeftOffset=-17
-InitialRectangle.TopOffset=3
-InitialRectangle.RightOffset=-3
-InitialRectangle.BottomOffset=13
+InitialRectangle.LeftOffset=-25
+InitialRectangle.TopOffset=-5
+InitialRectangle.RightOffset=0
+InitialRectangle.BottomOffset=18
 StartSearchingWithCachedControl=0
 CachedControlLeft=
 CachedControlTop=
@@ -1725,22 +1736,22 @@ MatchByHistogramSettings.MinPercentColorMatch=50
 MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 
-[Action_33]
+[Action_34]
 ActionName=Set test status
 Action=SetVar
 ActionTimeout=0
 ActionEnabled=1
 ActionCondition=$LastAction_Status$==Allowed Failed
 BreakpointExists=0
-BreakpointEnabled=0
+BreakpointEnabled=1
 BreakpointCondition=
-ListOfVarNames=$TestResult$
-ListOfVarValues=False
-ListOfVarEvalBefore=
+ListOfVarNames=$TestResult$$StopButtonState$
+ListOfVarValues=FalseStop button as idle - not found
+ListOfVarEvalBefore=
 FailOnException=0
 
-[Action_34]
-ActionName=Find Stop button icon - running state
+[Action_35]
+ActionName=Find Stop button icon - running state 2
 Action=FindSubControl
 ActionTimeout=1000
 ActionEnabled=1
@@ -1750,8 +1761,8 @@ BreakpointEnabled=0
 BreakpointCondition=
 MatchCriteria.WillMatchText=0
 MatchCriteria.WillMatchClassName=0
-MatchCriteria.WillMatchBitmapText=1
-MatchCriteria.WillMatchBitmapFiles=0
+MatchCriteria.WillMatchBitmapText=0
+MatchCriteria.WillMatchBitmapFiles=1
 MatchCriteria.WillMatchPrimitiveFiles=0
 MatchCriteria.SearchForControlMode=0
 MatchText=@
@@ -1779,7 +1790,7 @@ MatchBitmapText[0].CropTop=
 MatchBitmapText[0].CropRight=
 MatchBitmapText[0].CropBottom=
 MatchBitmapText[0].IgnoreBackgroundColor=0
-MatchBitmapFiles=
+MatchBitmapFiles=$TemplateDir$\Bmps\StopButtonIcon_Running.png
 ColorError=40
 AllowedColorErrorCount=40
 MatchBitmapAlgorithm=0
@@ -1792,10 +1803,10 @@ InitialRectangle.Top=$Stop_Top$
 InitialRectangle.Right=$Stop_Left$
 InitialRectangle.Bottom=$Stop_Top$
 UseWholeScreen=0
-InitialRectangle.LeftOffset=-17
-InitialRectangle.TopOffset=3
+InitialRectangle.LeftOffset=-24
+InitialRectangle.TopOffset=-4
 InitialRectangle.RightOffset=-3
-InitialRectangle.BottomOffset=13
+InitialRectangle.BottomOffset=16
 StartSearchingWithCachedControl=0
 CachedControlLeft=
 CachedControlTop=
@@ -1815,7 +1826,7 @@ MatchByHistogramSettings.MinPercentColorMatch=50
 MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 
-[Action_35]
+[Action_36]
 ActionName=Click Stop button
 Action=Click
 ActionTimeout=0
@@ -1851,7 +1862,7 @@ DelayAfterMovingToDestination=50
 DelayAfterMouseDown=200
 MoveDuration=-1
 
-[Action_36]
+[Action_37]
 ActionName=Exit test with message
 Action=SetVar
 ActionTimeout=0
