@@ -921,8 +921,9 @@ const
   CGetSelfHandles_FuncName = '$GetSelfHandles(';
   CGetKeyNameFromPair_FuncName = '$GetKeyNameFromPair(';
   CGetKeyValueFromPair_FuncName = '$GetKeyValueFromPair(';
+  CGetWindowLongPtr_FuncName = '$GetWindowLongPtr(';
 
-  CBuiltInFunctionCount = 40;
+  CBuiltInFunctionCount = 41;
   CBuiltInFunctions: array[0..CBuiltInFunctionCount - 1] of string = (
     CRandom_FuncName,
     CSum_FuncName,
@@ -963,7 +964,8 @@ const
     CDecBrightnessB_FuncName,
     CGetSelfHandles_FuncName,
     CGetKeyNameFromPair_FuncName,
-    CGetKeyValueFromPair_FuncName
+    CGetKeyValueFromPair_FuncName,
+    CGetWindowLongPtr_FuncName
   );
 
 
@@ -2034,6 +2036,46 @@ begin
 end;
 
 
+function ReplaceGetWindowLongPtr(AListOfVars: TStringList; s: string): string;
+var
+  PosComma: Integer;
+  GetWindowLongPtrArgs, InitialGetWindowLongPtrArgs: string;
+  GetWindowLongPtrOperand1, GetWindowLongPtrOperand2: Integer;
+  GetWindowLongPtrOperand1Str, GetWindowLongPtrOperand2Str: string;
+  ResultValueStr: string;
+begin
+  GetWindowLongPtrArgs := ExtractFuncArgs(CGetWindowLongPtr_FuncName, s);
+  InitialGetWindowLongPtrArgs := GetWindowLongPtrArgs;
+
+  if GetWindowLongPtrArgs = '' then
+    ResultValueStr := '0'
+  else
+  begin
+    GetWindowLongPtrArgs := ReplaceOnce(AListOfVars, GetWindowLongPtrArgs, False);
+    GetWindowLongPtrArgs := StringReplace(GetWindowLongPtrArgs, ' ', '', [rfReplaceAll]);
+    PosComma := Pos(',', GetWindowLongPtrArgs);
+
+    if PosComma > 0 then
+    begin
+      GetWindowLongPtrOperand1Str := Copy(GetWindowLongPtrArgs, 1, PosComma - 1);
+      GetWindowLongPtrOperand2Str := Copy(GetWindowLongPtrArgs, PosComma + 1, MaxInt);
+
+      GetWindowLongPtrOperand1 := StrToIntDef(GetWindowLongPtrOperand1Str, 0);
+      GetWindowLongPtrOperand2 := StrToIntDef(GetWindowLongPtrOperand2Str, 0);
+    end
+    else
+    begin
+      GetWindowLongPtrOperand1 := StrToIntDef(ReplaceOnce(AListOfVars, '$Control_Handle$', False), 0);
+      GetWindowLongPtrOperand2 := StrToIntDef(GetWindowLongPtrArgs, 0);
+    end;
+
+    ResultValueStr := IntToStr(GetWindowLongPtr(GetWindowLongPtrOperand1, GetWindowLongPtrOperand2));
+  end;
+
+  Result := StringReplace(s, CGetWindowLongPtr_FuncName + InitialGetWindowLongPtrArgs + ')$', ResultValueStr, [rfReplaceAll]);
+end;
+
+
 function ReplaceOnce(AListOfVars: TStringList; s: string; AReplaceRandom: Boolean = True): string;
 var
   i: Integer;
@@ -2178,6 +2220,9 @@ begin
 
   if Pos(CGetKeyValueFromPair_FuncName, s) > 0 then
     s := ReplaceGetKeyValueFromPair(s);
+
+  if Pos(CGetWindowLongPtr_FuncName, s) > 0 then
+    s := ReplaceGetWindowLongPtr(AListOfVars, s);
 
   Result := s;
 end;

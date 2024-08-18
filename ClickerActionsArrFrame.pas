@@ -905,6 +905,7 @@ begin
     TempFuncDescriptions.Add('$FullHistogramExternallyRendered()$=Loads a bitmap from the externally rendered in-mem file system and counts the number of pixels for each unique color, then sets the $HistogramResult$ variable to a #4#5-separated list of 6-digit hex values and $HistogramColorCountsResult$ to their color counts. The function should be called from a SetVar action and the file name has to be in its right column. If the file does not exist, then $ExecAction_Err$ is set to an error message. When FailOnException property is True, and the file is not found, the action fails. $ItemCount($HistogramResult$)$ can be used to count the items.');
     TempFuncDescriptions.Add('$PartialHistogramDisk()$=Loads a bitmap from disk and counts the number of pixels for each unique color, then sets the $HistogramResult$ variable to a #4#5-separated list of 6-digit hex values and $HistogramColorCountsResult$ to their color counts. The number of items is limited to the value of $HistogramItemCount$ variable. The function should be called from a SetVar action and the file name has to be in its right column. If the file does not exist, then $ExecAction_Err$ is set to an error message. When FailOnException property is True, and the file is not found, the action fails.');
     TempFuncDescriptions.Add('$PartialHistogramExternallyRendered()$=Loads a bitmap from the externally rendered in-mem file system and counts the number of pixels for each unique color, then sets the $HistogramResult$ variable to a #4#5-separated list of 6-digit hex values and $HistogramColorCountsResult$ to their color counts. The number of items is limited to the value of $HistogramItemCount$ variable. The function should be called from a SetVar action and the file name has to be in its right column. If the file does not exist, then $ExecAction_Err$ is set to an error message. When FailOnException property is True, and the file is not found, the action fails.');
+    TempFuncDescriptions.Add('$GetWindowLongPtr(<ControlHandle>, <Index>)$=Returns info about a control, specified by its handle and the info index. For details, see MSDN. Examples for index values are -4, for WNDPROC, -6 for HINSTANCE, -8 for HWNDPARENT, -21 for USERDATA, -12 for ID etc.');
 
     for i := 0 to FFuncDescriptions.Count - 1 do
     begin
@@ -4691,8 +4692,8 @@ begin
       ShowAutoCompleteWindow(edtConsoleCommand);
     end;
 
-  //if AutoCompleteVisible then
-  //  ShowAutoComplete(edtConsoleCommand, nil, nil, FVarDescriptions, FFuncDescriptions);
+  if AutoCompleteVisible then
+    UpdateAutoComplete(edtConsoleCommand);
 end;
 
 
