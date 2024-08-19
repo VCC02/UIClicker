@@ -922,8 +922,9 @@ const
   CGetKeyNameFromPair_FuncName = '$GetKeyNameFromPair(';
   CGetKeyValueFromPair_FuncName = '$GetKeyValueFromPair(';
   CGetWindowLongPtr_FuncName = '$GetWindowLongPtr(';
+  CGetWindowProcessId_FuncName = '$GetWindowProcessId(';
 
-  CBuiltInFunctionCount = 41;
+  CBuiltInFunctionCount = 42;
   CBuiltInFunctions: array[0..CBuiltInFunctionCount - 1] of string = (
     CRandom_FuncName,
     CSum_FuncName,
@@ -965,7 +966,8 @@ const
     CGetSelfHandles_FuncName,
     CGetKeyNameFromPair_FuncName,
     CGetKeyValueFromPair_FuncName,
-    CGetWindowLongPtr_FuncName
+    CGetWindowLongPtr_FuncName,
+    CGetWindowProcessId_FuncName
   );
 
 
@@ -2076,6 +2078,25 @@ begin
 end;
 
 
+function ReplaceGetWindowProcessId(AListOfVars: TStringList; s: string): string;
+var
+  ItemArgs, InitialItemArgs: string;
+  ProcID, Res: DWORD;
+begin
+  ItemArgs := ExtractFuncArgs(CGetWindowProcessId_FuncName, s);
+  InitialItemArgs := ItemArgs;
+
+  Res := GetWindowThreadProcessId(StrToIntDef(ItemArgs, 0), @ProcID);
+  if Res > 0 then
+    Result := StringReplace(s, CGetWindowProcessId_FuncName + InitialItemArgs + ')$', IntToStr(ProcID), [rfReplaceAll])
+  else
+  begin
+    AListOfVars.Values['$ExecAction_Err$'] := SysErrorMessage(GetLastOSError);
+    Result := '0';
+  end;
+end;
+
+
 function ReplaceOnce(AListOfVars: TStringList; s: string; AReplaceRandom: Boolean = True): string;
 var
   i: Integer;
@@ -2223,6 +2244,9 @@ begin
 
   if Pos(CGetWindowLongPtr_FuncName, s) > 0 then
     s := ReplaceGetWindowLongPtr(AListOfVars, s);
+
+  if Pos(CGetWindowProcessId_FuncName, s) > 0 then
+    s := ReplaceGetWindowProcessId(AListOfVars, s);
 
   Result := s;
 end;

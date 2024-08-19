@@ -322,6 +322,7 @@ object frClickerSetVar: TfrClickerSetVar
         '$PartialHistogramDisk()$'
         '$PartialHistogramExternallyRendered()$'
         '$GetWindowLongPtr(<ControlHandle>, <Index>)$'
+        '$GetWindowProcessId(<ControlHandle>)$'
       )
       ParentShowHint = False
       ReadOnly = True
