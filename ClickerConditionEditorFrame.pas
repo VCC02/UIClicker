@@ -33,7 +33,7 @@ interface
 
 uses
   Windows, Classes, SysUtils, Forms, Controls, ExtCtrls, StdCtrls, Buttons, Menus,
-  Graphics, VirtualTrees;
+  Graphics, VirtualTrees, ClickerUtils;
 
 type
   TOnControlsModified = procedure of object;
@@ -91,6 +91,7 @@ type
     procedure vstActionConditionsMouseUp(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure vstActionConditionsNewText(Sender: TBaseVirtualTree;
       Node: PVirtualNode; Column: TColumnIndex; {$IFDEF FPC} const {$ENDIF} NewText: {$IFDEF FPC} string {$ELSE} WideString {$ENDIF});
+    procedure vstActionConditionsColumnResize(Sender: TVTHeader; Column: TColumnIndex);
   private
     FOnControlsModified: TOnControlsModified;
     FActionConditionsHeaderHitInfo: THitInfo;
@@ -98,8 +99,13 @@ type
     FUpdatedVstText: Boolean;
     FActionConditionForPreview: array of TStringList;
     FEditingText: string;
+    FColumnWidths: TIntArr;
+    FAddingColumn: Boolean;
 
     vstActionConditions: TVirtualStringTree;
+
+    function GetColumnWidths(Index: Integer): Integer;
+    procedure SetColumnWidths(Index: Integer; NewValue: Integer);
 
     procedure CreateRemainingUIComponents;
     procedure TriggerOnControlsModified;
@@ -108,10 +114,14 @@ type
     procedure SetConditionOperator(ANewOperator: string);
   public
     constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
+
     procedure ClearActionConditionPreview;
     function ConditionsAvailable: Boolean; //returns True if the editor has any conditions loaded
     function GetActionCondition: string; //serialize
     procedure DisplayActionCondition(ACondition: string);
+
+    property ColumnWidths[Index: Integer]: Integer read GetColumnWidths write SetColumnWidths;
 
     property OnControlsModified: TOnControlsModified read FOnControlsModified write FOnControlsModified;
   end;
@@ -120,10 +130,6 @@ type
 implementation
 
 {$R *.frm}
-
-
-uses
-  ClickerUtils;
 
 
 { TfrClickerConditionEditor }
@@ -138,6 +144,20 @@ begin
   lblLastActionStatusValidValues.Caption := '$LastAction_Status$ valid values (no quotes): ';
   for i := Low(TActionStatus) to High(TActionStatus) do
     lblLastActionStatusValidValues.Caption := lblLastActionStatusValidValues.Caption + '"' + CActionStatusStr[i] + '"  ';
+
+  SetLength(FColumnWidths, 4 * 5);
+  FAddingColumn := False;
+end;
+
+
+destructor TfrClickerConditionEditor.Destroy;
+var
+  i: Integer;
+begin
+  for i := 0 to vstActionConditions.Header.Columns.Count - 1 do
+    ColumnWidths[i] := vstActionConditions.Header.Columns.Items[i].Width;
+
+  inherited Destroy;
 end;
 
 
@@ -183,6 +203,7 @@ begin
   vstActionConditions.OnMouseDown := vstActionConditionsMouseDown;
   vstActionConditions.OnMouseUp := vstActionConditionsMouseUp;
   vstActionConditions.OnNewText := vstActionConditionsNewText;
+  vstActionConditions.OnColumnResize := vstActionConditionsColumnResize;
   vstActionConditions.Colors.UnfocusedSelectionColor := clGradientInactiveCaption;
 end;
 
@@ -213,33 +234,54 @@ procedure TfrClickerConditionEditor.AddExpressionColumns(IsLastColumn: Boolean);
 var
   AColumn: TVirtualTreeColumn;
 begin
-  AColumn := vstActionConditions.Header.Columns.Add;
-  AColumn.Text := '(Op1';
-  AColumn.MinWidth := 100;
-  AColumn.Width := AColumn.MinWidth;
-  AColumn.Alignment := taCenter;
+  FAddingColumn := True;
+  try
+    AColumn := vstActionConditions.Header.Columns.Add;
+    AColumn.Text := '(Op1';
+    AColumn.MinWidth := 100;
+    AColumn.Width := Max(AColumn.MinWidth, ColumnWidths[vstActionConditions.Header.Columns.Count - 1]);
+    AColumn.Alignment := taCenter;
 
-  AColumn := vstActionConditions.Header.Columns.Add;
-  AColumn.Text := 'Eq';
-  AColumn.MinWidth := 25;
-  AColumn.Width := AColumn.MinWidth;
-  AColumn.Alignment := taCenter;
+    AColumn := vstActionConditions.Header.Columns.Add;
+    AColumn.Text := 'Eq';
+    AColumn.MinWidth := 25;
+    AColumn.Width := Max(AColumn.MinWidth, ColumnWidths[vstActionConditions.Header.Columns.Count - 1]);
+    AColumn.Alignment := taCenter;
 
-  AColumn := vstActionConditions.Header.Columns.Add;
-  AColumn.Text := 'Op2)';
-  AColumn.MinWidth := 100;
-  AColumn.Width := AColumn.MinWidth;
-  AColumn.Alignment := taCenter;
+    AColumn := vstActionConditions.Header.Columns.Add;
+    AColumn.Text := 'Op2)';
+    AColumn.MinWidth := 100;
+    AColumn.Width := Max(AColumn.MinWidth, ColumnWidths[vstActionConditions.Header.Columns.Count - 1]);
+    AColumn.Alignment := taCenter;
 
-  AColumn := vstActionConditions.Header.Columns.Add;
-  if not IsLastColumn then
-    AColumn.Text := 'AND'
+    AColumn := vstActionConditions.Header.Columns.Add;
+    if not IsLastColumn then
+      AColumn.Text := 'AND'
+    else
+      AColumn.Text := 'OR';
+
+    AColumn.MinWidth := 45;
+    AColumn.Width := Max(AColumn.MinWidth, ColumnWidths[vstActionConditions.Header.Columns.Count - 1]);
+    AColumn.Alignment := taCenter;
+  finally
+    FAddingColumn := False;
+  end;
+end;
+
+
+function TfrClickerConditionEditor.GetColumnWidths(Index: Integer): Integer;
+begin
+  if (Index > -1) and (Index < Length(FColumnWidths)) then
+    Result := FColumnWidths[Index]
   else
-    AColumn.Text := 'OR';
+    Result := 100; //some default
+end;
 
-  AColumn.MinWidth := 45;
-  AColumn.Width := AColumn.MinWidth;
-  AColumn.Alignment := taCenter;
+
+procedure TfrClickerConditionEditor.SetColumnWidths(Index: Integer; NewValue: Integer);
+begin
+  if (Index > -1) and (Index < Length(FColumnWidths)) then
+    FColumnWidths[Index] := NewValue;
 end;
 
 
@@ -502,6 +544,16 @@ begin
   FEditingText := NewText;
   Randomize;
   FUpdatedVstText := True;
+end;
+
+
+procedure TfrClickerConditionEditor.vstActionConditionsColumnResize(Sender: TVTHeader; Column: TColumnIndex);
+begin
+  if not FAddingColumn then   //This handler is called by the VST, both when manually resizing columns and when creating columns and setting their width in code.
+  begin
+    if (Column > -1) and (Column < Length(FColumnWidths)) then
+      FColumnWidths[Column] := vstActionConditions.Header.Columns.Items[Column].Width;
+  end;
 end;
 
 

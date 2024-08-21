@@ -1242,6 +1242,12 @@ begin
 
   frClickerActions.vstVariables.Header.Columns.Items[0].Width := AIni.ReadInteger(ASection, 'Variables_0.' + AIndentSuffix, frClickerActions.vstVariables.Header.Columns.Items[0].Width);
   frClickerActions.vstVariables.Header.Columns.Items[1].Width := AIni.ReadInteger(ASection, 'Variables_1.' + AIndentSuffix, frClickerActions.vstVariables.Header.Columns.Items[1].Width);
+
+  for i := 0 to 20 - 1 do
+  begin
+    Indent := 'ActionCond.ColWidth_' + IntToStr(i) + '.' + AIndentSuffix;
+    frClickerActions.frClickerConditionEditor.ColumnWidths[i] := AIni.ReadInteger(ASection, Indent, 100);
+  end;
 end;
 
 
@@ -1262,6 +1268,12 @@ begin
 
   AIni.WriteInteger(ASection, 'Variables_0.' + AIndentSuffix, frClickerActions.vstVariables.Header.Columns.Items[0].Width);
   AIni.WriteInteger(ASection, 'Variables_1.' + AIndentSuffix, frClickerActions.vstVariables.Header.Columns.Items[1].Width);
+
+  for i := 0 to 20 - 1 do
+  begin
+    Indent := 'ActionCond.ColWidth_' + IntToStr(i) + '.' + AIndentSuffix;
+    AIni.WriteInteger(ASection, Indent, frClickerActions.frClickerConditionEditor.ColumnWidths[i]);
+  end;
 end;
 
 
@@ -3760,7 +3772,7 @@ begin
         case CurrentAction.ActionOptions.Action of
           acClick: CellText := IntToStr(CurrentAction.ClickOptions.ClickType);
           acExecApp: CellText := ExtractFileName(CurrentAction.ExecAppOptions.PathToApp);
-          acFindControl, acFindSubControl: CellText := CurrentAction.FindControlOptions.MatchText + ' / ' + CurrentAction.FindControlOptions.MatchClassName;
+          acFindControl, acFindSubControl: CellText := CurrentAction.FindControlOptions.MatchText + ' / ' + CurrentAction.FindControlOptions.MatchClassName + ' / ' + BoolToStr(CurrentAction.FindControlOptions.UseWholeScreen, '[WholeScreen]', '');
           acSetControlText: CellText := CurrentAction.SetTextOptions.Text;
           acCallTemplate: CellText := ExtractFileName(CurrentAction.CallTemplateOptions.TemplateFileName);
           acSleep: CellText := CurrentAction.SleepOptions.Value;
@@ -4025,10 +4037,13 @@ begin
     4:
     begin
       try
-        if ((FClkActions[Node^.Index].ActionOptions.Action = acFindControl) or (FClkActions[Node^.Index].ActionOptions.Action = acFindSubControl)) and
-         (FClkActions[Node^.Index].FindControlOptions.MatchCriteria.WillMatchBitmapText or FClkActions[Node^.Index].FindControlOptions.MatchCriteria.WillMatchBitmapFiles) then
-        TargetCanvas.Brush.Color := HexToInt(EvaluateReplacements(FClkActions[Node^.Index].FindControlOptions.MatchBitmapText[0].BackgroundColor))
-        ;
+        if (FClkActions[Node^.Index].ActionOptions.Action = acFindControl) or (FClkActions[Node^.Index].ActionOptions.Action = acFindSubControl) then
+          if FClkActions[Node^.Index].FindControlOptions.UseWholeScreen then
+            TargetCanvas.Brush.Color := clLime
+          else
+            if (FClkActions[Node^.Index].FindControlOptions.MatchCriteria.WillMatchBitmapText or FClkActions[Node^.Index].FindControlOptions.MatchCriteria.WillMatchBitmapFiles) then
+              TargetCanvas.Brush.Color := HexToInt(EvaluateReplacements(FClkActions[Node^.Index].FindControlOptions.MatchBitmapText[0].BackgroundColor))
+              ;
       except
         TargetCanvas.Brush.Color := clRed;
       end;

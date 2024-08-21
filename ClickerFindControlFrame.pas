@@ -180,6 +180,7 @@ type
     edtFoundControlInfo: TEdit;
     grpFindControlDetailsOnWindow: TGroupBox;
     imgCalcMinErrLevel: TImage;
+    imgEraseImage: TImage;
     imgFindFontNameAndSize: TImage;
     imgCopyColorUnderMouseCursorImg: TImage;
     imgStopFindFontNameAndSize: TImage;
@@ -423,6 +424,8 @@ type
     procedure MenuItemCopySearchAreaAllToClipboardClick(Sender: TObject);
     procedure MenuItemCopySearchAreaSelectedAreaFromBkToClipboardClick(Sender: TObject);
     procedure MenuItemCopyColorUnderMouseCursorToClipboardClick(Sender: TObject);
+    procedure MenuItemErasePreviewImage(Sender: TObject);
+
     procedure MenuItemUpdateLeftAndTopOffsetsFromPreviewTextImageToEditboxes(Sender: TObject);
     procedure MenuItemUpdateLeftTopRightBottomOffsetsFromPreviewTextImageToEditboxes(Sender: TObject);
     procedure MenuItemCalculateMinimumErrorLevelToMatchBitmap(Sender: TObject);
@@ -2374,6 +2377,13 @@ begin
       FSearchAreaMenu.Items.Add(MenuItem);
 
       MenuItem := TMenuItem.Create(FSearchAreaMenu);
+      MenuItem.Caption := 'Erase image...';
+      MenuItem.OnClick := MenuItemErasePreviewImage;
+      MenuItem.Bitmap := imgEraseImage.Picture.Bitmap;
+      FSearchAreaMenu.Items.Add(MenuItem);
+
+
+      MenuItem := TMenuItem.Create(FSearchAreaMenu);
       MenuItem.Caption := '-';
       FSearchAreaMenu.Items.Add(MenuItem);
 
@@ -3535,6 +3545,15 @@ end;
 procedure TfrClickerFindControl.MenuItemCopyColorUnderMouseCursorToClipboardClick(Sender: TObject);
 begin
   Clipboard.AsText := lblMouseOnDbgImgBB.Caption + lblMouseOnDbgImgGG.Caption + lblMouseOnDbgImgRR.Caption;
+end;
+
+
+procedure TfrClickerFindControl.MenuItemErasePreviewImage(Sender: TObject);
+begin
+  if MessageBox(Handle, 'Are you sure you want to erase the image?', PChar(Application.Title), MB_ICONQUESTION + MB_YESNO) = IDNO then
+    Exit;
+
+  WipeImage(FSearchAreaControlDbgImg, FSearchAreaControlDbgImg.Width, FSearchAreaControlDbgImg.Height);
 end;
 
 
