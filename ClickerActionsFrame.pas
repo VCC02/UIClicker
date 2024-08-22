@@ -46,6 +46,8 @@ type
 
   PVarNodeRec = ^TVarNodeRec;
 
+  TOnGetLoadedTemplateFileName = function: string of object;
+
   { TfrClickerActions }
 
   TfrClickerActions = class(TFrame)
@@ -85,6 +87,7 @@ type
     lblMouseOnExecDbgImgGG: TLabel;
     lblMouseOnExecDbgImgRR: TLabel;
     lblVarReplacements: TLabel;
+    MenuItem_ReplaceWithSelfTemplateDir: TMenuItem;
     MenuItem_ReplaceWithTemplateDir: TMenuItem;
     MenuItem_ReplaceWithAppDir: TMenuItem;
     MenuItem_SetFromControlWidthAndHeight: TMenuItem;
@@ -184,6 +187,7 @@ type
     procedure lbeFindCachedControlLeftChange(Sender: TObject);
     procedure lbeFindCachedControlTopChange(Sender: TObject);
     procedure MenuItem_ReplaceWithAppDirClick(Sender: TObject);
+    procedure MenuItem_ReplaceWithSelfTemplateDirClick(Sender: TObject);
     procedure MenuItem_ReplaceWithTemplateDirClick(Sender: TObject);
     procedure MenuItem_SetFromControlLeftAndTopClick(Sender: TObject);
     procedure MenuItem_SetFromControlWidthAndHeightClick(Sender: TObject);
@@ -396,6 +400,7 @@ type
     FOnGetSelfTemplatesDir: TOnGetFullTemplatesDir;
     FOnShowAutoComplete: TOnShowAutoComplete;
     FOnUpdateActionScrollIndex: TOnUpdateActionScrollIndex;
+    FOnGetLoadedTemplateFileName: TOnGetLoadedTemplateFileName;
 
     //function GetListOfSetVarEntries: string;
     //procedure SetListOfSetVarEntries(Value: string);
@@ -448,6 +453,7 @@ type
     function DoOnGetSelfTemplatesDir: string;
     procedure DoOnShowAutoComplete(AEdit: TEdit);
     procedure DoOnUpdateActionScrollIndex(AActionScrollIndex: string);
+    function DoOnGetLoadedTemplateFileName: string;
 
     procedure ClkVariablesOnChange(Sender: TObject);
     procedure AddDecodedVarToNode(ANode: PVirtualNode; ARecursionLevel: Integer);
@@ -691,6 +697,7 @@ type
     property OnGetSelfTemplatesDir: TOnGetFullTemplatesDir write FOnGetSelfTemplatesDir;
     property OnShowAutoComplete: TOnShowAutoComplete write FOnShowAutoComplete;
     property OnUpdateActionScrollIndex: TOnUpdateActionScrollIndex write FOnUpdateActionScrollIndex;
+    property OnGetLoadedTemplateFileName: TOnGetLoadedTemplateFileName write FOnGetLoadedTemplateFileName;
   end;
 
 
@@ -976,6 +983,7 @@ begin
   FOnGetSelfTemplatesDir := nil;
   FOnShowAutoComplete := nil;
   FOnUpdateActionScrollIndex := nil;
+  FOnGetLoadedTemplateFileName := nil;
 
   FShowDeprecatedControls := False;
   FEditingAction := @FEditingActionRec;
@@ -1696,7 +1704,7 @@ begin
         PathToFileName := '';
 
     if ExtractFileDrive(ParamStr(0)) = ExtractFileDrive(PathToFileName) then
-      PathToFileName := '$AppDir$\' + ExtractRelativePath(ExtractFilePath(ParamStr(0)), PathToFileName);
+      PathToFileName := '$AppDir$' + PathDelim + ExtractRelativePath(ExtractFilePath(ParamStr(0)), PathToFileName);
 
     if Assigned(FLastClickedTVTEdit) then
     begin
@@ -1718,17 +1726,64 @@ end;
 
 
 procedure TfrClickerActions.MenuItem_ReplaceWithTemplateDirClick(Sender: TObject);
+var
+  PathToFileName: string;
 begin
   try
     if Assigned(FLastClickedTVTEdit) then
+      PathToFileName := FLastClickedTVTEdit.Text
+    else
+      if Assigned(FLastClickedEdit) then
+        PathToFileName := FLastClickedEdit.Text
+      else
+        PathToFileName := '';
+
+    PathToFileName := StringReplace(PathToFileName, FFullTemplatesDir, '$TemplateDir$', [rfReplaceAll]);
+
+    if Assigned(FLastClickedTVTEdit) then
     begin
-      FLastClickedTVTEdit.Text := StringReplace(FLastClickedTVTEdit.Text, FFullTemplatesDir, '$TemplateDir$', [rfReplaceAll]);
+      FLastClickedTVTEdit.Text := PathToFileName;
       FOIFrame.EditingText := FLastClickedTVTEdit.Text;
     end;
 
     if Assigned(FLastClickedEdit) then
     begin
-      FLastClickedEdit.Text := StringReplace(FLastClickedEdit.Text, FFullTemplatesDir, '$TemplateDir$', [rfReplaceAll]);
+      FLastClickedEdit.Text := PathToFileName;
+      if Assigned(FLastClickedEdit.OnChange) then
+        FLastClickedEdit.OnChange(FLastClickedEdit);
+    end;
+  except
+    on E: Exception do
+      MessageBox(Handle, PChar('EditBox is not available.' + #13#10 + E.Message), PChar(Application.MainForm.Caption), MB_ICONERROR);
+  end;
+end;
+
+
+procedure TfrClickerActions.MenuItem_ReplaceWithSelfTemplateDirClick(
+  Sender: TObject);
+var
+  PathToFileName: string;
+begin
+  try
+    if Assigned(FLastClickedTVTEdit) then
+      PathToFileName := FLastClickedTVTEdit.Text
+    else
+      if Assigned(FLastClickedEdit) then
+        PathToFileName := FLastClickedEdit.Text
+      else
+        PathToFileName := '';
+                                                                    //path to template
+    PathToFileName := StringReplace(PathToFileName, ExtractFileDir(DoOnGetLoadedTemplateFileName), '$SelfTemplateDir$', [rfReplaceAll]);
+
+    if Assigned(FLastClickedTVTEdit) then
+    begin
+      FLastClickedTVTEdit.Text := PathToFileName;
+      FOIFrame.EditingText := FLastClickedTVTEdit.Text;
+    end;
+
+    if Assigned(FLastClickedEdit) then
+    begin
+      FLastClickedEdit.Text := PathToFileName;
       if Assigned(FLastClickedEdit.OnChange) then
         FLastClickedEdit.OnChange(FLastClickedEdit);
     end;
@@ -3027,6 +3082,15 @@ begin
     raise Exception.Create('OnUpdateActionScrollIndex not assigned.')
   else
     FOnUpdateActionScrollIndex(AActionScrollIndex);
+end;
+
+
+function TfrClickerActions.DoOnGetLoadedTemplateFileName: string;
+begin
+  if not Assigned(FOnGetLoadedTemplateFileName) then
+    raise Exception.Create('OnGetLoadedTemplateFileName not assigned.')
+  else
+    Result := FOnGetLoadedTemplateFileName();
 end;
 
 

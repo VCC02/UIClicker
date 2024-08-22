@@ -1669,6 +1669,10 @@ object frClickerActions: TfrClickerActions
       Caption = 'Replace part of the path with $TemplateDir$'
       OnClick = MenuItem_ReplaceWithTemplateDirClick
     end
+    object MenuItem_ReplaceWithSelfTemplateDir: TMenuItem
+      Caption = 'Replace part of the path with $SelfTemplateDir$'
+      OnClick = MenuItem_ReplaceWithSelfTemplateDirClick
+    end
   end
   object imglstLoadSetVarFromFileProperties: TImageList
     Left = 512

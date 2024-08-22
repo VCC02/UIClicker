@@ -454,6 +454,7 @@ type
     function HandleOnClickerSetVarFrame_OnGetSelfTemplatesDir: string;
     procedure HandleOnClickerSetVarFrame_OnShowAutoComplete(AEdit: TEdit);
     procedure HandleOnUpdateActionScrollIndex(AActionScrollIndex: string);
+    function HandleOnGetLoadedTemplateFileName: string;
 
     procedure HandleOnSetDebugPoint(ADebugPoint: string);
     function HandleOnIsAtBreakPoint(ADebugPoint: string): Boolean;
@@ -982,6 +983,7 @@ begin
   frClickerActions.OnGetSelfTemplatesDir := HandleOnClickerSetVarFrame_OnGetSelfTemplatesDir;
   frClickerActions.OnShowAutoComplete := HandleOnClickerSetVarFrame_OnShowAutoComplete;
   frClickerActions.OnUpdateActionScrollIndex := HandleOnUpdateActionScrollIndex;
+  frClickerActions.OnGetLoadedTemplateFileName := HandleOnGetLoadedTemplateFileName;
 
   //frClickerActions.OnControlsModified := ClickerActionsFrameOnControlsModified;   //this is set on frame initialization
 
@@ -1674,6 +1676,12 @@ begin
     Exit;
 
   FClkActions[Node^.Index].ScrollIndex := AActionScrollIndex;
+end;
+
+
+function TfrClickerActionsArr.HandleOnGetLoadedTemplateFileName: string;
+begin
+  Result := FFileName;
 end;
 
 
