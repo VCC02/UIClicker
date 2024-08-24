@@ -109,7 +109,7 @@ begin
     Exit;
   end;
 
-  TempFullTemplatesDir := UpperCase(StringReplace(FFullTemplatesDir, '$APPDIR$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]));
+  TempFullTemplatesDir := UpperCase(StringReplace(UpperCase(FFullTemplatesDir), '$APPDIR$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]));
 
   if (AFileName <> '') and (AFileName[1] = PathDelim) then   //resolve relative paths to TemplatesDir
     AFileName := UpperCase(TempFullTemplatesDir + AFileName);

@@ -3438,9 +3438,9 @@ begin
     on E: Exception do
     begin
       if not FExecutingActionFromRemote then
-        MessageBox(Handle, PChar('Exception when loading template: ' + E.Message + #13#10 + 'File location: ' + IntToStr(Ord(AFileLocation))), PChar(Caption), MB_ICONINFORMATION)
+        MessageBox(Handle, PChar('Exception when loading template: ' + E.Message + #13#10 + 'File location: ' + CFileLocationStr[AFileLocation]), PChar(Caption), MB_ICONINFORMATION)
       else
-        raise Exception.Create('Exception when loading template: ' + E.Message + #13#10 + 'File location: ' + IntToStr(Ord(AFileLocation)));
+        raise Exception.Create('Exception when loading template: ' + E.Message + #13#10 + 'File location: ' + CFileLocationStr[AFileLocation]);
     end;
   end;
 

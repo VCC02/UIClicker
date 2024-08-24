@@ -2626,7 +2626,7 @@ var
   i: Integer;
   CustomVars: TStringList;
   KeyName, KeyValue, RowString: string;
-  Fnm, TemplateDir: string;
+  Fnm, TemplateDir, LocalSelfTemplateFileName: string;
   GeneratedException: Boolean;
 begin
   Result := False;
@@ -2678,12 +2678,16 @@ begin
   Fnm := ACallTemplateOptions.TemplateFileName;
   TemplateDir := '';
   if FSelfTemplateFileName = nil then
-    TemplateDir := 'FSelfTemplateFileName not set in CallTemplate.'
+  begin
+    TemplateDir := 'FSelfTemplateFileName not set in CallTemplate.';
+    LocalSelfTemplateFileName := '';
+  end
   else
   begin
     TemplateDir := ExtractFileDir(FSelfTemplateFileName^);
     Fnm := StringReplace(Fnm, '$SelfTemplateDir$', TemplateDir, [rfReplaceAll]);
     Fnm := StringReplace(Fnm, '$TemplateDir$', FFullTemplatesDir^, [rfReplaceAll]);
+    LocalSelfTemplateFileName := FSelfTemplateFileName^;
   end;
 
   // the FileExists verification has to be done after checking CallOnlyIfCondition, to allow failing the action based on condition
@@ -2703,6 +2707,7 @@ begin
   if FOwnerFrame = nil then
     raise Exception.Create('FOwnerFrame is not assigned.');
 
+  AddToLog('Calling template: "' + Fnm + '",  from "' + LocalSelfTemplateFileName + '".');
   //do not verify here if the file exists or not, because this verification is done by FOnCallTemplate, both for disk and in-mem FS
   Result := FOnCallTemplate(FOwnerFrame, Fnm, FClickerVars, frClickerActions.imgDebugBmp.Picture.Bitmap, frClickerActions.imgDebugGrid, IsDebugging, AShouldStopAtBreakPoint, FStackLevel^, FExecutesRemotely^);
 

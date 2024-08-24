@@ -158,6 +158,9 @@ type
     procedure IdHTTPServer1Connect(AContext: TIdContext);
     procedure IdHTTPServer1Exception(AContext: TIdContext; AException: Exception
       );
+    procedure lbePathToTemplatesChange(Sender: TObject);
+    procedure lbePathToTemplatesKeyUp(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
     procedure tmrDelayedShowTimer(Sender: TObject);
     procedure tmrDisplayMissingFilesRequestsTimer(Sender: TObject);
     procedure tmrStartupTimer(Sender: TObject);
@@ -3064,6 +3067,31 @@ begin
 end;
 
 
+procedure TfrmClickerActions.lbePathToTemplatesChange(Sender: TObject);
+begin
+  lbePathToTemplates.Hint := 'The $AppDir$ replacement is available.';
+
+  if Pos('..', lbePathToTemplates.Text) > 0 then //there may be files or folder names with two dots which will not be allowed because of this
+  begin
+    lbePathToTemplates.Font.Color := clRed;
+    lbePathToTemplates.Hint := lbePathToTemplates.Hint + #13#10#13#10 +
+                               'The ".." folder name is not allowed in paths, because UIClicker''s file provider does not allow it.';
+  end
+  else
+    lbePathToTemplates.Font.Color := clWindowText;
+end;
+
+
+procedure TfrmClickerActions.lbePathToTemplatesKeyUp(Sender: TObject;
+  var Key: Word; Shift: TShiftState);
+begin
+  FullTemplatesDir := lbePathToTemplates.Text;
+  if FFullTemplatesDir > '' then
+    if FFullTemplatesDir[Length(FFullTemplatesDir)] = '\' then
+      FFullTemplatesDir := Copy(FFullTemplatesDir, 1, Length(FFullTemplatesDir) - 1);
+end;
+
+
 procedure TfrmClickerActions.tmrDelayedShowTimer(Sender: TObject);
 begin
   tmrDelayedShow.Enabled := False;
@@ -3658,9 +3686,9 @@ procedure TfrmClickerActions.HandleOnDenyFile(AFileName: string);
 var
   Response: string;
 begin                //This handler is executed by a different thread, not the UI one.
-  AddToLog('Sending a "' + CRECmd_TerminateWaitingForFileAvailability + '" command to server, because of denied file: "' + AFileName + '".');
+  AddToLogFromThread('Sending a "' + CRECmd_TerminateWaitingForFileAvailability + '" command to server, because of denied file: "' + AFileName + '".');
   Response := TerminateWaitingForFileAvailability(ConfiguredRemoteAddress, CREParam_TerminateWaitingLoop_ValueAll, 0, False);
-  AddToLog('"TerminateWaitingForFileAvailability" response: ' + Response);
+  AddToLogFromThread('"TerminateWaitingForFileAvailability" response: ' + Response);
 end;
 
 

@@ -73,6 +73,8 @@ object frmClickerActions: TfrmClickerActions
         ShowHint = True
         TabOrder = 0
         Text = '$AppDir$\ActionTemplates'
+        OnChange = lbePathToTemplatesChange
+        OnKeyUp = lbePathToTemplatesKeyUp
       end
       object btnBrowseActionTemplatesDir: TButton
         Left = 296
@@ -269,9 +271,9 @@ object frmClickerActions: TfrmClickerActions
           end
           object chkServerActive: TCheckBox
             Left = 206
-            Height = 19
+            Height = 17
             Top = 34
-            Width = 50
+            Width = 48
             Caption = 'Active'
             TabOrder = 1
             OnChange = chkServerActiveChange
@@ -319,10 +321,10 @@ object frmClickerActions: TfrmClickerActions
           end
           object chkKeepAlive: TCheckBox
             Left = 81
-            Height = 19
+            Height = 17
             Hint = 'The file monitoring thread, from client side, can benefit from keeping connection alive.'#13#10'It is also useful to prevent opening a new socket for every request (every 200ms).'#13#10'For most cases, leave this checked.'
             Top = 34
-            Width = 69
+            Width = 67
             Caption = 'Keep alive'
             Checked = True
             State = cbChecked
