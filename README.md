@@ -92,7 +92,6 @@ Limitations in the first version(s):
  - No native support for "understanding" the structure of a complex window control (e.g. getting live the state of a custom track bar cursor, or the text displayed on a scrollable page). Users have to implement some kind of logic to bring such a control into a known state, to properly interact with it.
    The WinInterp tool provides a static way of getting the structure of a control (or a whole window), but not the current state. Detecting subcontrols (e.g. a clickable text/button without an allocated handle) can be done using WinInterp window, but it is very slow and CPU demanding.
    Various UI frameworks, like Qt5, prefer implementing UIs with a minimum number of used handles (for low resource usage), which makes most of the generated UI look like a blank window for control finding. All the clickable parts, without handles have to be searched as subcontrols (with image recognition).
- - No support for special keys when simulating keystrokes (Ctrl, Alt, Shift, F1, F2 etc). Only text generating keys are implemented for now.
  - The action editor allows pasting actions, only to the end of the list. The same when dragging a new action from palette.
  - No high-level building blocks for finding controls or getting their state.
  - Debugger shortcut keys are not configurable.
@@ -103,7 +102,7 @@ General limitations (very low priority and high effort to improve):
  - No native Linux support, because of Windows specific API usage. Most application code would compile for Linux, but the image recongition might need a different API or be completly removed.
    Some application features should still work under Wine (at least in Win 8.1 compatibility mode).
    WinInterp kind of works, but it is very slow. Overall, the application is difficult to use under Linux+Wine.
- - The application supports only a few action types (9 low level actions, in the first version), and the flow control is pretty limited. The exposed HTTP API might allow an external tool/script to call these actions with a more advanced logic.
+ - The application supports only a few action types, and the flow control is pretty limited. The exposed HTTP API might allow an external tool/script to call these actions with a more advanced logic.
  - No OCR support. When text reading is required (as opposed to pregenerated text recognition), external tools have to be called.
  - The high exe size (4MB+) comes from inefficient linking. Not much to do about it. On every new compiler version, bigger libraries will cause the resulted executable to grow.
  - Limited support for loops when executing actions. Actions can be called multiple times by using CallTemplate action.
