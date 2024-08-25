@@ -1,5 +1,5 @@
 [Actions]
-Count=34
+Count=35
 Version=2
 
 [Action_0]
@@ -14,6 +14,7 @@ BreakpointCondition=
 ListOfVarNames=$GetSelfHandles()$$UpdateRes$
 ListOfVarValues=$UpdateControlInfo($frmUIClickerMainForm_Handle$)$
 ListOfVarEvalBefore=1
+FailOnException=0
 
 [Action_1]
 ActionName=Bring to front
@@ -71,6 +72,7 @@ MatchBitmapText[0].CropLeft=0
 MatchBitmapText[0].CropTop=0
 MatchBitmapText[0].CropRight=0
 MatchBitmapText[0].CropBottom=0
+MatchBitmapText[0].IgnoreBackgroundColor=0
 MatchBitmapText[1].ForegroundColor=$Color_WindowText$
 MatchBitmapText[1].BackgroundColor=$Color_BtnFace$
 MatchBitmapText[1].FontName=Segoe UI
@@ -87,6 +89,7 @@ MatchBitmapText[1].CropLeft=0
 MatchBitmapText[1].CropTop=0
 MatchBitmapText[1].CropRight=0
 MatchBitmapText[1].CropBottom=0
+MatchBitmapText[1].IgnoreBackgroundColor=0
 MatchBitmapText[2].ForegroundColor=$Color_WindowText$
 MatchBitmapText[2].BackgroundColor=FCF0E4
 MatchBitmapText[2].FontName=Segoe UI
@@ -103,6 +106,7 @@ MatchBitmapText[2].CropLeft=0
 MatchBitmapText[2].CropTop=0
 MatchBitmapText[2].CropRight=0
 MatchBitmapText[2].CropBottom=0
+MatchBitmapText[2].IgnoreBackgroundColor=0
 MatchBitmapText[3].ForegroundColor=$Color_WindowText$
 MatchBitmapText[3].BackgroundColor=$Color_BtnFace$
 MatchBitmapText[3].FontName=Segoe UI
@@ -119,6 +123,7 @@ MatchBitmapText[3].CropLeft=0
 MatchBitmapText[3].CropTop=0
 MatchBitmapText[3].CropRight=0
 MatchBitmapText[3].CropBottom=0
+MatchBitmapText[3].IgnoreBackgroundColor=0
 MatchBitmapFiles=
 ColorError=30
 AllowedColorErrorCount=500
@@ -141,6 +146,19 @@ CachedControlLeft=
 CachedControlTop=
 MatchPrimitiveFiles=
 GetAllControls=0
+UseFastSearch=1
+FastSearchAllowedColorErrorCount=10
+IgnoredColors=
+SleepySearch=0
+StopSearchOnMismatch=1
+ImageSource=0
+SourceFileName=
+ImageSourceFileNameLocation=1
+PrecisionTimeout=0
+FullBackgroundImageInResult=1
+MatchByHistogramSettings.MinPercentColorMatch=50
+MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
+MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 
 [Action_3]
 ActionName=Open WinInterp
@@ -174,6 +192,9 @@ XOffsetDest=7
 YOffsetDest=7
 MouseWheelType=0
 MouseWheelAmount=1
+DelayAfterMovingToDestination=50
+DelayAfterMouseDown=100
+MoveDuration=-1
 
 [Action_4]
 ActionName=Update Control to WinInterp
@@ -187,6 +208,7 @@ BreakpointCondition=
 ListOfVarNames=$UpdateRes$
 ListOfVarValues=$UpdateControlInfo($frmClickerWinInterp_Handle$)$
 ListOfVarEvalBefore=1
+FailOnException=0
 
 [Action_5]
 ActionName=Find Drag panel
@@ -227,6 +249,7 @@ MatchBitmapText[0].CropLeft=0
 MatchBitmapText[0].CropTop=0
 MatchBitmapText[0].CropRight=0
 MatchBitmapText[0].CropBottom=0
+MatchBitmapText[0].IgnoreBackgroundColor=0
 MatchBitmapFiles=
 ColorError=0
 AllowedColorErrorCount=0
@@ -249,6 +272,19 @@ CachedControlLeft=
 CachedControlTop=
 MatchPrimitiveFiles=
 GetAllControls=0
+UseFastSearch=1
+FastSearchAllowedColorErrorCount=10
+IgnoredColors=
+SleepySearch=0
+StopSearchOnMismatch=1
+ImageSource=0
+SourceFileName=
+ImageSourceFileNameLocation=1
+PrecisionTimeout=0
+FullBackgroundImageInResult=1
+MatchByHistogramSettings.MinPercentColorMatch=50
+MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
+MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 
 [Action_6]
 ActionName=Drag mouse to set target
@@ -282,6 +318,9 @@ XOffsetDest=7
 YOffsetDest=7
 MouseWheelType=0
 MouseWheelAmount=1
+DelayAfterMovingToDestination=50
+DelayAfterMouseDown=100
+MoveDuration=-1
 
 [Action_7]
 ActionName=Update Control to WinInterp
@@ -295,6 +334,7 @@ BreakpointCondition=
 ListOfVarNames=$UpdateRes$
 ListOfVarValues=$UpdateControlInfo($frmClickerWinInterp_Handle$)$
 ListOfVarEvalBefore=1
+FailOnException=0
 
 [Action_8]
 ActionName=Find StartRecording
@@ -335,6 +375,7 @@ MatchBitmapText[0].CropLeft=0
 MatchBitmapText[0].CropTop=0
 MatchBitmapText[0].CropRight=0
 MatchBitmapText[0].CropBottom=0
+MatchBitmapText[0].IgnoreBackgroundColor=0
 MatchBitmapFiles=
 ColorError=0
 AllowedColorErrorCount=0
@@ -357,6 +398,19 @@ CachedControlLeft=
 CachedControlTop=
 MatchPrimitiveFiles=
 GetAllControls=0
+UseFastSearch=1
+FastSearchAllowedColorErrorCount=10
+IgnoredColors=
+SleepySearch=0
+StopSearchOnMismatch=1
+ImageSource=0
+SourceFileName=
+ImageSourceFileNameLocation=1
+PrecisionTimeout=0
+FullBackgroundImageInResult=1
+MatchByHistogramSettings.MinPercentColorMatch=50
+MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
+MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 
 [Action_9]
 ActionName=Click StartRecording
@@ -390,6 +444,9 @@ XOffsetDest=7
 YOffsetDest=7
 MouseWheelType=0
 MouseWheelAmount=1
+DelayAfterMovingToDestination=50
+DelayAfterMouseDown=100
+MoveDuration=-1
 
 [Action_10]
 ActionName=Update Control to WinInterp
@@ -403,11 +460,23 @@ BreakpointCondition=
 ListOfVarNames=$UpdateRes$
 ListOfVarValues=$UpdateControlInfo($frmClickerWinInterp_Handle$)$
 ListOfVarEvalBefore=1
+FailOnException=0
 
 [Action_11]
+ActionName=Wait for animation
+Action=Sleep
+ActionTimeout=0
+ActionEnabled=1
+ActionCondition=
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+Value=1000
+
+[Action_12]
 ActionName=Find  (msctls_progress32)
 Action=FindControl
-ActionTimeout=5000
+ActionTimeout=7000
 ActionEnabled=1
 ActionCondition=
 BreakpointExists=0
@@ -443,6 +512,7 @@ MatchBitmapText[0].CropLeft=0
 MatchBitmapText[0].CropTop=0
 MatchBitmapText[0].CropRight=0
 MatchBitmapText[0].CropBottom=0
+MatchBitmapText[0].IgnoreBackgroundColor=0
 MatchBitmapFiles=
 ColorError=0
 AllowedColorErrorCount=0
@@ -465,8 +535,21 @@ CachedControlLeft=
 CachedControlTop=
 MatchPrimitiveFiles=
 GetAllControls=0
+UseFastSearch=1
+FastSearchAllowedColorErrorCount=10
+IgnoredColors=
+SleepySearch=0
+StopSearchOnMismatch=1
+ImageSource=0
+SourceFileName=
+ImageSourceFileNameLocation=1
+PrecisionTimeout=0
+FullBackgroundImageInResult=1
+MatchByHistogramSettings.MinPercentColorMatch=50
+MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
+MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 
-[Action_12]
+[Action_13]
 ActionName=Confirm 100%
 Action=FindSubControl
 ActionTimeout=1000
@@ -505,6 +588,7 @@ MatchBitmapText[0].CropLeft=0
 MatchBitmapText[0].CropTop=0
 MatchBitmapText[0].CropRight=0
 MatchBitmapText[0].CropBottom=0
+MatchBitmapText[0].IgnoreBackgroundColor=0
 MatchBitmapFiles=
 ColorError=10
 AllowedColorErrorCount=40
@@ -527,8 +611,21 @@ CachedControlLeft=
 CachedControlTop=
 MatchPrimitiveFiles=
 GetAllControls=0
+UseFastSearch=1
+FastSearchAllowedColorErrorCount=10
+IgnoredColors=
+SleepySearch=0
+StopSearchOnMismatch=1
+ImageSource=0
+SourceFileName=
+ImageSourceFileNameLocation=1
+PrecisionTimeout=0
+FullBackgroundImageInResult=1
+MatchByHistogramSettings.MinPercentColorMatch=50
+MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
+MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 
-[Action_13]
+[Action_14]
 ActionName=Update Control to WinInterp
 Action=SetVar
 ActionTimeout=0
@@ -540,8 +637,9 @@ BreakpointCondition=
 ListOfVarNames=$UpdateRes$
 ListOfVarValues=$UpdateControlInfo($frmClickerWinInterp_Handle$)$
 ListOfVarEvalBefore=1
+FailOnException=0
 
-[Action_14]
+[Action_15]
 ActionName=Find ComboBox
 Action=FindControl
 ActionTimeout=3000
@@ -580,6 +678,7 @@ MatchBitmapText[0].CropLeft=0
 MatchBitmapText[0].CropTop=0
 MatchBitmapText[0].CropRight=0
 MatchBitmapText[0].CropBottom=0
+MatchBitmapText[0].IgnoreBackgroundColor=0
 MatchBitmapFiles=
 ColorError=0
 AllowedColorErrorCount=0
@@ -602,8 +701,21 @@ CachedControlLeft=
 CachedControlTop=
 MatchPrimitiveFiles=
 GetAllControls=0
+UseFastSearch=1
+FastSearchAllowedColorErrorCount=10
+IgnoredColors=
+SleepySearch=0
+StopSearchOnMismatch=1
+ImageSource=0
+SourceFileName=
+ImageSourceFileNameLocation=1
+PrecisionTimeout=0
+FullBackgroundImageInResult=1
+MatchByHistogramSettings.MinPercentColorMatch=50
+MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
+MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 
-[Action_15]
+[Action_16]
 ActionName=Cache ComboBox
 Action=SetVar
 ActionTimeout=0
@@ -615,8 +727,9 @@ BreakpointCondition=
 ListOfVarNames=$Combo_Left$$Combo_Top$$Combo_Bot$
 ListOfVarValues=$Control_Left$$Control_Top$$Control_Bottom$
 ListOfVarEvalBefore=111
+FailOnException=0
 
-[Action_16]
+[Action_17]
 ActionName=Drop ComboBox
 Action=Click
 ActionTimeout=0
@@ -648,8 +761,11 @@ XOffsetDest=7
 YOffsetDest=7
 MouseWheelType=0
 MouseWheelAmount=1
+DelayAfterMovingToDestination=50
+DelayAfterMouseDown=100
+MoveDuration=-1
 
-[Action_17]
+[Action_18]
 ActionName=wait a bit,to open
 Action=Sleep
 ActionTimeout=0
@@ -660,7 +776,7 @@ BreakpointEnabled=0
 BreakpointCondition=
 Value=300
 
-[Action_18]
+[Action_19]
 ActionName=Wait for ComboBox.ListBox
 Action=FindControl
 ActionTimeout=2000
@@ -699,6 +815,7 @@ MatchBitmapText[0].CropLeft=0
 MatchBitmapText[0].CropTop=0
 MatchBitmapText[0].CropRight=0
 MatchBitmapText[0].CropBottom=0
+MatchBitmapText[0].IgnoreBackgroundColor=0
 MatchBitmapFiles=
 ColorError=0
 AllowedColorErrorCount=0
@@ -721,8 +838,21 @@ CachedControlLeft=
 CachedControlTop=
 MatchPrimitiveFiles=
 GetAllControls=0
+UseFastSearch=1
+FastSearchAllowedColorErrorCount=10
+IgnoredColors=
+SleepySearch=0
+StopSearchOnMismatch=1
+ImageSource=0
+SourceFileName=
+ImageSourceFileNameLocation=1
+PrecisionTimeout=0
+FullBackgroundImageInResult=1
+MatchByHistogramSettings.MinPercentColorMatch=50
+MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
+MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 
-[Action_19]
+[Action_20]
 ActionName=Restore cached ComboBox
 Action=SetVar
 ActionTimeout=0
@@ -734,8 +864,9 @@ BreakpointCondition=
 ListOfVarNames=$Control_Left$$Control_Top$$Control_Bottom$
 ListOfVarValues=$Combo_Left$$Combo_Top$$Combo_Bot$
 ListOfVarEvalBefore=111
+FailOnException=0
 
-[Action_20]
+[Action_21]
 ActionName=Close ComboBox
 Action=Click
 ActionTimeout=0
@@ -767,8 +898,11 @@ XOffsetDest=7
 YOffsetDest=7
 MouseWheelType=0
 MouseWheelAmount=1
+DelayAfterMovingToDestination=50
+DelayAfterMouseDown=100
+MoveDuration=-1
 
-[Action_21]
+[Action_22]
 ActionName=Scroll to the first item
 Action=Click
 ActionTimeout=0
@@ -800,8 +934,11 @@ XOffsetDest=7
 YOffsetDest=7
 MouseWheelType=0
 MouseWheelAmount=60
+DelayAfterMovingToDestination=50
+DelayAfterMouseDown=100
+MoveDuration=-1
 
-[Action_22]
+[Action_23]
 ActionName=Scroll to clMaroon
 Action=Click
 ActionTimeout=0
@@ -833,8 +970,11 @@ XOffsetDest=7
 YOffsetDest=7
 MouseWheelType=0
 MouseWheelAmount=-1
+DelayAfterMovingToDestination=50
+DelayAfterMouseDown=100
+MoveDuration=-1
 
-[Action_23]
+[Action_24]
 ActionName=Verify if clMaroon is selected
 Action=FindControl
 ActionTimeout=1000
@@ -873,6 +1013,7 @@ MatchBitmapText[0].CropLeft=0
 MatchBitmapText[0].CropTop=0
 MatchBitmapText[0].CropRight=0
 MatchBitmapText[0].CropBottom=0
+MatchBitmapText[0].IgnoreBackgroundColor=0
 MatchBitmapFiles=
 ColorError=0
 AllowedColorErrorCount=0
@@ -895,15 +1036,28 @@ CachedControlLeft=
 CachedControlTop=
 MatchPrimitiveFiles=
 GetAllControls=0
+UseFastSearch=1
+FastSearchAllowedColorErrorCount=10
+IgnoredColors=
+SleepySearch=0
+StopSearchOnMismatch=1
+ImageSource=0
+SourceFileName=
+ImageSourceFileNameLocation=1
+PrecisionTimeout=0
+FullBackgroundImageInResult=1
+MatchByHistogramSettings.MinPercentColorMatch=50
+MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
+MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 
-[Action_24]
+[Action_25]
 ActionName=Scroll to clOlive
 Action=Click
 ActionTimeout=0
 ActionEnabled=1
 ActionCondition=
-BreakpointExists=0
-BreakpointEnabled=0
+BreakpointExists=1
+BreakpointEnabled=1
 BreakpointCondition=
 XOffsetReference=0
 YOffsetReference=0
@@ -928,15 +1082,18 @@ XOffsetDest=7
 YOffsetDest=7
 MouseWheelType=0
 MouseWheelAmount=-2
+DelayAfterMovingToDestination=50
+DelayAfterMouseDown=100
+MoveDuration=-1
 
-[Action_25]
+[Action_26]
 ActionName=Verify if clOlive is selected
 Action=FindControl
 ActionTimeout=1000
 ActionEnabled=1
 ActionCondition=
-BreakpointExists=1
-BreakpointEnabled=1
+BreakpointExists=0
+BreakpointEnabled=0
 BreakpointCondition=
 MatchCriteria.WillMatchText=1
 MatchCriteria.WillMatchClassName=1
@@ -968,6 +1125,7 @@ MatchBitmapText[0].CropLeft=0
 MatchBitmapText[0].CropTop=0
 MatchBitmapText[0].CropRight=0
 MatchBitmapText[0].CropBottom=0
+MatchBitmapText[0].IgnoreBackgroundColor=0
 MatchBitmapFiles=
 ColorError=0
 AllowedColorErrorCount=0
@@ -990,8 +1148,21 @@ CachedControlLeft=
 CachedControlTop=
 MatchPrimitiveFiles=
 GetAllControls=0
+UseFastSearch=1
+FastSearchAllowedColorErrorCount=10
+IgnoredColors=
+SleepySearch=0
+StopSearchOnMismatch=1
+ImageSource=0
+SourceFileName=
+ImageSourceFileNameLocation=1
+PrecisionTimeout=0
+FullBackgroundImageInResult=1
+MatchByHistogramSettings.MinPercentColorMatch=50
+MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
+MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 
-[Action_26]
+[Action_27]
 ActionName=Scroll to clOrange
 Action=Click
 ActionTimeout=0
@@ -1023,8 +1194,11 @@ XOffsetDest=7
 YOffsetDest=7
 MouseWheelType=0
 MouseWheelAmount=-60
+DelayAfterMovingToDestination=50
+DelayAfterMouseDown=100
+MoveDuration=-1
 
-[Action_27]
+[Action_28]
 ActionName=Verify if clOrange is selected
 Action=FindControl
 ActionTimeout=1000
@@ -1063,6 +1237,7 @@ MatchBitmapText[0].CropLeft=0
 MatchBitmapText[0].CropTop=0
 MatchBitmapText[0].CropRight=0
 MatchBitmapText[0].CropBottom=0
+MatchBitmapText[0].IgnoreBackgroundColor=0
 MatchBitmapFiles=
 ColorError=0
 AllowedColorErrorCount=0
@@ -1085,8 +1260,21 @@ CachedControlLeft=
 CachedControlTop=
 MatchPrimitiveFiles=
 GetAllControls=0
+UseFastSearch=1
+FastSearchAllowedColorErrorCount=10
+IgnoredColors=
+SleepySearch=0
+StopSearchOnMismatch=1
+ImageSource=0
+SourceFileName=
+ImageSourceFileNameLocation=1
+PrecisionTimeout=0
+FullBackgroundImageInResult=1
+MatchByHistogramSettings.MinPercentColorMatch=50
+MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
+MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 
-[Action_28]
+[Action_29]
 ActionName=Update Control to WinInterp
 Action=SetVar
 ActionTimeout=0
@@ -1098,8 +1286,9 @@ BreakpointCondition=
 ListOfVarNames=$UpdateRes$
 ListOfVarValues=$UpdateControlInfo($frmClickerWinInterp_Handle$)$
 ListOfVarEvalBefore=1
+FailOnException=0
 
-[Action_29]
+[Action_30]
 ActionName=Click on Drag panel from screenshot
 Action=Click
 ActionTimeout=0
@@ -1131,21 +1320,25 @@ XOffsetDest=7
 YOffsetDest=7
 MouseWheelType=0
 MouseWheelAmount=1
+DelayAfterMovingToDestination=50
+DelayAfterMouseDown=100
+MoveDuration=-1
 
-[Action_30]
+[Action_31]
 ActionName=Update Control to WinInterp
 Action=SetVar
 ActionTimeout=0
 ActionEnabled=1
 ActionCondition=
 BreakpointExists=0
-BreakpointEnabled=0
+BreakpointEnabled=1
 BreakpointCondition=
 ListOfVarNames=$UpdateRes$
 ListOfVarValues=$UpdateControlInfo($frmClickerWinInterp_Handle$)$
 ListOfVarEvalBefore=1
+FailOnException=0
 
-[Action_31]
+[Action_32]
 ActionName=Find a selection line
 Action=FindSubControl
 ActionTimeout=1000
@@ -1184,6 +1377,7 @@ MatchBitmapText[0].CropLeft=0
 MatchBitmapText[0].CropTop=0
 MatchBitmapText[0].CropRight=0
 MatchBitmapText[0].CropBottom=0
+MatchBitmapText[0].IgnoreBackgroundColor=0
 MatchBitmapFiles=
 ColorError=0
 AllowedColorErrorCount=0
@@ -1206,21 +1400,35 @@ CachedControlLeft=
 CachedControlTop=
 MatchPrimitiveFiles=$AppDir$\Tests\TestFiles\WinInterpTopSelectionLine.pmtv
 GetAllControls=0
+UseFastSearch=1
+FastSearchAllowedColorErrorCount=10
+IgnoredColors=
+SleepySearch=0
+StopSearchOnMismatch=1
+ImageSource=0
+SourceFileName=
+ImageSourceFileNameLocation=1
+PrecisionTimeout=0
+FullBackgroundImageInResult=1
+MatchByHistogramSettings.MinPercentColorMatch=50
+MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
+MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 
-[Action_32]
+[Action_33]
 ActionName=Update Control to WinInterp
 Action=SetVar
 ActionTimeout=0
 ActionEnabled=1
 ActionCondition=
 BreakpointExists=0
-BreakpointEnabled=1
+BreakpointEnabled=0
 BreakpointCondition=
 ListOfVarNames=$UpdateRes$
 ListOfVarValues=$UpdateControlInfo($frmClickerWinInterp_Handle$)$
 ListOfVarEvalBefore=1
+FailOnException=0
 
-[Action_33]
+[Action_34]
 ActionName=Close WinInterp
 Action=WindowOperations
 ActionTimeout=0
@@ -1239,4 +1447,5 @@ NewSizeEnabled=0
 
 [Notes]
 Content=
+TemplateIconPath=
 
