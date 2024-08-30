@@ -510,7 +510,7 @@ type
 
 
 const
-  CSpecialKeyCount = 96;
+  CSpecialKeyCount = 140;
   CSpecialKeyReplacements: array[0..CSpecialKeyCount - 1] of string = (                     //PgUp and PgDown are added here for convenience
     'Delete', 'Backspace', 'Cancel', 'Insert', 'Home', 'End', 'Left', 'Right', 'Up', 'Down', 'PgUp', 'PgDown', 'Prior', 'Next',
     'F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12',
@@ -518,9 +518,13 @@ const
     'Control', 'LControl', 'RControl', 'Shift', 'LShift', 'RShift', 'Menu', 'LMenu', 'RMenu',
     'ControlUp', 'LControlUp', 'RControlUp', 'ShiftUp', 'LShiftUp', 'RShiftUp', 'MenuUp', 'LMenuUp', 'RMenuUp',
     'ControlDown', 'LControlDown', 'RControlDown', 'ShiftDown', 'LShiftDown', 'RShiftDown', 'MenuDown', 'LMenuDown', 'RMenuDown',
-    'Apps', 'LWin', 'RWin', 'Tab', 'Clear', 'Return', 'Pause', 'Capital', 'Select', 'Print', 'Execute', 'Snapshot',
+    'Apps', 'LWin', 'RWin', 'LWinUp', 'RWinUp', 'LWinDown', 'RWinDown', 'Tab', 'Clear', 'Return', 'Pause', 'Capital', 'Select', 'Print', 'Execute', 'Snapshot',
     'NumLock', 'NumPad0', 'NumPad1', 'NumPad2', 'NumPad3', 'NumPad4', 'NumPad5', 'NumPad6', 'NumPad7', 'NumPad8', 'NumPad9',
-    'Scroll', 'BrowserBack', 'BrowserForward', 'BrowserRefresh', 'BrowserStop', 'BrowserSearch', 'BrowserFavorites', 'BrowserHome'
+    'Scroll', 'BrowserBack', 'BrowserForward', 'BrowserRefresh', 'BrowserStop', 'BrowserSearch', 'BrowserFavorites', 'BrowserHome',
+    'Esc', 'EscUp', 'EscDown', 'Space',
+    'Key0', 'Key1', 'Key2', 'Key3', 'Key4', 'Key5', 'Key6', 'Key7', 'Key8', 'Key9',
+    'KeyA', 'KeyB', 'KeyC', 'KeyD', 'KeyE', 'KeyF', 'KeyG', 'KeyH', 'KeyI', 'KeyJ', 'KeyK', 'KeyL', 'KeyM', 'KeyN', 'KeyO', 'KeyP', 'KeyQ', 'KeyR', 'KeyS', 'KeyT', 'KeyU', 'KeyV', 'KeyW', 'KeyX', 'KeyY', 'KeyZ'
+    //'Key!', 'Key"', 'Key#', 'KeyDollar', 'Key%', 'Key&', 'Key''', 'Key(', 'Key)', 'Key*', 'Key+', 'Key,', 'Key-', 'Key.', 'Key/'  //require more testing, as their ordinal values do not match as they do for other keys
     //Others to be added if required...
   );
 
@@ -531,9 +535,13 @@ const
     VK_CONTROL, VK_LCONTROL, VK_RCONTROL, VK_SHIFT, VK_LSHIFT, VK_RSHIFT, VK_MENU, VK_LMENU, VK_RMENU,
     VK_CONTROL, VK_LCONTROL, VK_RCONTROL, VK_SHIFT, VK_LSHIFT, VK_RSHIFT, VK_MENU, VK_LMENU, VK_RMENU,
     VK_CONTROL, VK_LCONTROL, VK_RCONTROL, VK_SHIFT, VK_LSHIFT, VK_RSHIFT, VK_MENU, VK_LMENU, VK_RMENU,
-    VK_APPS, VK_LWIN, VK_RWIN, VK_TAB, VK_CLEAR, VK_RETURN, VK_PAUSE, VK_CAPITAL, VK_SELECT, VK_PRINT, VK_EXECUTE, VK_SNAPSHOT,
+    VK_APPS, VK_LWIN, VK_RWIN, VK_LWIN, VK_RWIN, VK_LWIN, VK_RWIN, VK_TAB, VK_CLEAR, VK_RETURN, VK_PAUSE, VK_CAPITAL, VK_SELECT, VK_PRINT, VK_EXECUTE, VK_SNAPSHOT,
     VK_NUMLOCK, VK_NUMPAD0, VK_NUMPAD1, VK_NUMPAD2, VK_NUMPAD3, VK_NUMPAD4, VK_NUMPAD5, VK_NUMPAD6, VK_NUMPAD7, VK_NUMPAD8, VK_NUMPAD9,
-    VK_SCROLL, VK_BROWSER_BACK, VK_BROWSER_FORWARD, VK_BROWSER_REFRESH, VK_BROWSER_STOP, VK_BROWSER_SEARCH, VK_BROWSER_FAVORITES, VK_BROWSER_HOME
+    VK_SCROLL, VK_BROWSER_BACK, VK_BROWSER_FORWARD, VK_BROWSER_REFRESH, VK_BROWSER_STOP, VK_BROWSER_SEARCH, VK_BROWSER_FAVORITES, VK_BROWSER_HOME,
+    VK_ESCAPE, VK_ESCAPE, VK_ESCAPE, 32,
+    Ord(0), Ord(1), Ord(2), Ord(3), Ord(4), Ord(5), Ord(6), Ord(7), Ord(8), Ord(9),
+    Ord('A'), Ord('B'), Ord('C'), Ord('D'), Ord('E'), Ord('F'), Ord('G'), Ord('H'), Ord('I'), Ord('J'), Ord('K'), Ord('L'), Ord('M'), Ord('N'), Ord('O'), Ord('P'), Ord('Q'), Ord('R'), Ord('S'), Ord('T'), Ord('U'), Ord('V'), Ord('W'), Ord('X'), Ord('Y'), Ord('Z')
+    //Ord('!'), Ord('"'), Ord('#'), Ord('$'), Ord('%'), Ord('&'), Ord(''''), Ord('('), Ord(')'), Ord('*'), Ord('+'), Ord(','), Ord('-'), Ord('.'), Ord('/')
   );
 
   CSpecialKeyActions: array[0..CSpecialKeyCount - 1] of TKeyAction = (
@@ -543,9 +551,13 @@ const
     kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp,
     kaUp, kaUp, kaUp, kaUp, kaUp, kaUp, kaUp, kaUp, kaUp,
     kaDown, kaDown, kaDown, kaDown, kaDown, kaDown, kaDown, kaDown, kaDown,
-    kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp,
+    kaDownUp, kaDownUp, kaDownUp, kaUp, kaUp, kaDown, kaDown, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp,
     kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp,
-    kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp
+    kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp,
+    kaDownUp, kaUp, kaDown, kaDownUp,
+    kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp,
+    kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp
+    //kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp, kaDownUp
   );
 
 

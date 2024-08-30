@@ -53,6 +53,7 @@ type
     procedure PrepareClickerUnderTestToClientMode;
 
     procedure DragAction_FromPosToPos(ASrcIdx, ADestIdx: Integer; const AActIdx: array of Byte);
+    procedure AutoCompleteTextInConsoleEditBox(ATypedEditBoxContent, AFunctionNameToDoubleClick, AExpectedResult: string);
   public
     constructor Create; override;
   published
@@ -82,6 +83,8 @@ type
 
     procedure Test_ExecuteTemplateRemotelyWithDebugging_WithLoopedCall_AndStepIntoThenStop;
     procedure Test_ExecuteTemplateRemotelyWithDebugging_ToVerifyIfCallTemplateWorksAfterStopping;
+
+    procedure TestAutoComplete_EmptyEditBox;
 
     procedure AfterAll_AlwaysExecute;
   end;
@@ -719,6 +722,29 @@ end;
 procedure TTestUI.Test_DragAction_FromPos4ToPos1;
 begin
   DragAction_FromPosToPos(4, 1, [0, 4, 1, 2, 3]);
+end;
+
+
+procedure TTestUI.AutoCompleteTextInConsoleEditBox(ATypedEditBoxContent, AFunctionNameToDoubleClick, AExpectedResult: string);
+begin
+  TestServerAddress := CTestDriverServerAddress_Client;
+
+  PrepareClickerUnderTestToLocalMode;
+  SetVariableOnTestDriverClient('$AutoCompleteTextToType$', ATypedEditBoxContent);
+  SetVariableOnTestDriverClient('$FuncNameToDoubleClick$', AFunctionNameToDoubleClick);
+
+  ExecuteTemplateOnTestDriver(ExtractFilePath(ParamStr(0)) + '..\..\TestDriver\ActionTemplates\AutoCompleteTextOnAppUnderTest.clktmpl',
+                              CREParam_FileLocation_ValueDisk,
+                              '$Control_Text$',
+                              AExpectedResult
+                              );
+  PrepareClickerUnderTestToReadItsVars;
+end;
+
+
+procedure TTestUI.TestAutoComplete_EmptyEditBox;
+begin
+  AutoCompleteTextInConsoleEditBox('', 'ExtractFileName(<PathToFile>)', '$ExtractFileName(<PathToFile>)$');
 end;
 
 

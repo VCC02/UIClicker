@@ -2567,6 +2567,10 @@ begin
     if i and $F = $F then
       Result := Result + #13#10;
   end;
+
+  Result := Result + #13#10;
+  Result := Result + #13#10;
+  Result := Result + 'As a limitation, when using special keys, it might be required that the other keys to be also used as special, e.g.: $ControlDown$$Space$$ControlUp$';
 end;
 
 

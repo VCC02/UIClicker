@@ -2515,10 +2515,16 @@ begin
               KeyStrokes[Idx + 1].ki.wScan := 0;
 
               if KeyTypes[i].Action in [kaDownUp, kaDown] then
+              begin
                 KeyStrokes[Idx].ki.wVk := KeyTypes[i].KeyCode;
+                KeyStrokes[Idx].ki.dwFlags := 0;
+              end;
 
               if KeyTypes[i].Action in [kaDownUp, kaUp] then
+              begin
                 KeyStrokes[Idx + 1].ki.wVk := KeyTypes[i].KeyCode;
+                KeyStrokes[Idx + 1].ki.dwFlags := 0 or KEYEVENTF_KEYUP;
+              end;
             end;
           end;
 
