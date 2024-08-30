@@ -85,6 +85,12 @@ type
     procedure Test_ExecuteTemplateRemotelyWithDebugging_ToVerifyIfCallTemplateWorksAfterStopping;
 
     procedure TestAutoComplete_EmptyEditBox;
+    procedure TestAutoComplete_PartialFunctionNameOnly;
+    procedure TestAutoComplete_FullFunctionNameOnly;
+    procedure TestAutoComplete_VarAssignmentToPartialFunctionNameOnly;
+    procedure TestAutoComplete_VarAssignmentToFullFunctionNameOnly;
+    procedure TestAutoComplete_VarAssignmentAndBlanksToPartialFunctionNameOnly;
+    procedure TestAutoComplete_VarAssignmentAndBlanksToFullFunctionNameOnly;
 
     procedure AfterAll_AlwaysExecute;
   end;
@@ -745,6 +751,42 @@ end;
 procedure TTestUI.TestAutoComplete_EmptyEditBox;
 begin
   AutoCompleteTextInConsoleEditBox('', 'ExtractFileName(<PathToFile>)', '$ExtractFileName(<PathToFile>)$');
+end;
+
+
+procedure TTestUI.TestAutoComplete_PartialFunctionNameOnly;
+begin
+  AutoCompleteTextInConsoleEditBox('Get', 'GetActionProperties()', '$GetActionProperties()$');
+end;
+
+
+procedure TTestUI.TestAutoComplete_FullFunctionNameOnly;
+begin
+  AutoCompleteTextInConsoleEditBox('GetActionProperties', 'GetActionProperties()', '$GetActionProperties()$');
+end;
+
+
+procedure TTestUI.TestAutoComplete_VarAssignmentToPartialFunctionNameOnly;
+begin
+  AutoCompleteTextInConsoleEditBox('$a$=$Get', 'GetActionProperties()', '$a$=$GetActionProperties()$');
+end;
+
+
+procedure TTestUI.TestAutoComplete_VarAssignmentToFullFunctionNameOnly;
+begin
+  AutoCompleteTextInConsoleEditBox('$a$=$GetActionProperties', 'GetActionProperties()', '$a$=$GetActionProperties()$');
+end;
+
+
+procedure TTestUI.TestAutoComplete_VarAssignmentAndBlanksToPartialFunctionNameOnly;
+begin
+  AutoCompleteTextInConsoleEditBox('$a$ = $Get', 'GetActionProperties()', '$a$ = $GetActionProperties()$');
+end;
+
+
+procedure TTestUI.TestAutoComplete_VarAssignmentAndBlanksToFullFunctionNameOnly;
+begin
+  AutoCompleteTextInConsoleEditBox('$a$ = $GetActionProperties', 'GetActionProperties()', '$a$ = $GetActionProperties()$');
 end;
 
 
