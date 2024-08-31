@@ -678,8 +678,8 @@ var
   i, j: Integer;
   CurrentColorPercent: Double;
   MatchPercents: array of Double;
-  BackgroundColor_R, BackgroundColor_G, BackgroundColor_B: SmallInt;
-  SearchedColor_R, SearchedColor_G, SearchedColor_B: SmallInt;
+  //BackgroundColor_R, BackgroundColor_G, BackgroundColor_B: SmallInt;
+  //SearchedColor_R, SearchedColor_G, SearchedColor_B: SmallInt;
 begin
   SetLength(MatchPercents, Min(AMostSignificantColorCountInSubBmp, Length(ASearchedHist)));  //Assumes that Length(ASearchedHist) < Length(ABkHist). Otherwise, nothing will be found, as expected.
 

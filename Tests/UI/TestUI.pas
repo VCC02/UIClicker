@@ -91,7 +91,7 @@ type
     procedure TestAutoComplete_VarAssignmentToPartialFunctionNameOnly;
     procedure TestAutoComplete_VarAssignmentToFullFunctionNameOnly;
     procedure TestAutoComplete_VarAssignmentToEmpty;
-    procedure TestAutoComplete_VarAssignmentToNumericConstantThenDifferentSelection;
+    procedure TestAutoComplete_VarAssignmentToNumericConstantAndThenDifferentSelection;
     procedure TestAutoComplete_VarAssignmentAndBlanksToPartialFunctionNameOnly;
     procedure TestAutoComplete_VarAssignmentAndBlanksToFullFunctionNameOnly;
 
@@ -741,7 +741,18 @@ begin
   TestServerAddress := CTestDriverServerAddress_Client;
 
   PrepareClickerUnderTestToLocalMode;
-  SetVariableOnTestDriverClient('$AutoCompleteTextToType$', ATypedEditBoxContent);
+
+  if Pos('$', ATypedEditBoxContent) > 0 then
+  begin
+    SetVariableOnTestDriverClient('$AutoCompleteTextToType_Part1$', Copy(ATypedEditBoxContent, 1, Pos('$', ATypedEditBoxContent)));
+    SetVariableOnTestDriverClient('$AutoCompleteTextToType_Part2$', Copy(ATypedEditBoxContent, Pos('$', ATypedEditBoxContent) + 1, MaxInt));
+  end
+  else
+  begin
+    SetVariableOnTestDriverClient('$AutoCompleteTextToType_Part2$', '');
+    SetVariableOnTestDriverClient('$AutoCompleteTextToType_Part1$', ATypedEditBoxContent);
+  end;
+
   SetVariableOnTestDriverClient('$FuncNameToDoubleClick$', AFunctionNameToDoubleClick);
 
   ExecuteTemplateOnTestDriver(ExtractFilePath(ParamStr(0)) + '..\..\TestDriver\ActionTemplates\AutoCompleteTextOnAppUnderTest.clktmpl',
@@ -789,9 +800,9 @@ begin
 end;
 
 
-procedure TTestUI.TestAutoComplete_VarAssignmentToNumericConstantThenDifferentSelection;
+procedure TTestUI.TestAutoComplete_VarAssignmentToNumericConstantAndThenDifferentSelection;
 begin
-  AutoCompleteTextInConsoleEditBox('$Desktop_Width$=1920', 'Screen_Width$=1920', '$Desktop_Width$=1290$Screen_Width$=1920');
+  AutoCompleteTextInConsoleEditBox('$Desktop_Width$=1920', 'Screen_Width$=1920', '$Desktop_Width$=1920$Screen_Width$=1920');
 end;
 
 
