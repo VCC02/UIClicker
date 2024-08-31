@@ -59,6 +59,7 @@ type
     procedure GetTreeContent(AStream: TMemoryStream);
     procedure RecordComponent(AInterprettedHandle: THandle; var ImgMatrix: TColorArr; var ImgHWMatrix: THandleArr);
     procedure GetCurrentlyRecordedScreenShotImage(ABmp: TBitmap);
+    procedure SaveImages(ABasePath: string);
 
     property SelectedComponentText: string read GetSelectedComponentText;
     property SelectedComponentClassName: string read GetSelectedComponentClassName;
@@ -167,6 +168,11 @@ begin
   FWinInterpFrame.GetCurrentlyRecordedScreenShotImage(ABmp);
 end;
 
+
+procedure TfrmClickerWinInterp.SaveImages(ABasePath: string);
+begin
+  FWinInterpFrame.SaveImages(ABasePath);
+end;
 
 
 end.

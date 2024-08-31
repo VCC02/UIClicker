@@ -216,6 +216,8 @@ type
     FOnPictureOpenDialogExecute: TOnPictureOpenDialogExecute;
     FOnGetPictureOpenDialogFileName: TOnGetPictureOpenDialogFileName;
 
+    FOnGenerateAndSaveTreeWithWinInterp: TOnGenerateAndSaveTreeWithWinInterp;
+
     //frClickerActionsArrMain: TfrClickerActionsArr;    //eventually, these fields should be made private again, and accessed through methods
     //frClickerActionsArrExperiment1: TfrClickerActionsArr;
     //frClickerActionsArrExperiment2: TfrClickerActionsArr;
@@ -258,6 +260,8 @@ type
     procedure DoOnSetPictureOpenDialogInitialDir(AInitialDir: string);
     function DoOnPictureOpenDialogExecute: Boolean;
     function DoOnGetPictureOpenDialogFileName: string;
+
+    function DoOnGenerateAndSaveTreeWithWinInterp(AHandle: THandle; ATreeFileName: string): Boolean;
 
     procedure MenuItemOpenTemplateAsExp1Click(Sender: TObject);
     procedure MenuItemOpenTemplateAsExp2Click(Sender: TObject);
@@ -327,6 +331,7 @@ type
 
     procedure HandleOnAddFileNameToRecent(AFileName: string);
     procedure HandleOnGetListOfRecentFiles(AList: TStringList);
+    function HandleOnGenerateAndSaveTreeWithWinInterp(AHandle: THandle; ATreeFileName: string): Boolean;
 
     procedure CreateRemainingUIComponents;
     function GetClickerActionsArrFrameByStackLevel(AStackLevel: Integer): TfrClickerActionsArr;
@@ -381,6 +386,8 @@ type
     property OnSetPictureOpenDialogInitialDir: TOnSetPictureOpenDialogInitialDir write FOnSetPictureOpenDialogInitialDir;
     property OnPictureOpenDialogExecute: TOnPictureOpenDialogExecute write FOnPictureOpenDialogExecute;
     property OnGetPictureOpenDialogFileName: TOnGetPictureOpenDialogFileName write FOnGetPictureOpenDialogFileName;
+
+    property OnGenerateAndSaveTreeWithWinInterp: TOnGenerateAndSaveTreeWithWinInterp write FOnGenerateAndSaveTreeWithWinInterp;
   end;
 
 
@@ -805,6 +812,7 @@ begin
   FOnSetPictureOpenDialogInitialDir := nil;
   FOnPictureOpenDialogExecute := nil;
   FOnGetPictureOpenDialogFileName := nil;
+  FOnGenerateAndSaveTreeWithWinInterp := nil;
 
   FStopAllActionsOnDemand := False;
   PageControlMain.ActivePageIndex := 0;
@@ -1024,6 +1032,7 @@ begin
 
   frClickerActionsArrMain.OnAddFileNameToRecent := HandleOnAddFileNameToRecent;
   frClickerActionsArrMain.OnGetListOfRecentFiles := HandleOnGetListOfRecentFiles;
+  frClickerActionsArrMain.OnGenerateAndSaveTreeWithWinInterp := HandleOnGenerateAndSaveTreeWithWinInterp;
 
   frClickerActionsArrExperiment1.frClickerActions.PasteDebugValuesListFromMainExecutionList1.OnClick := frClickerActionsArrExperiment1PasteDebugValuesListFromMainExecutionList1Click;
   frClickerActionsArrExperiment2.frClickerActions.PasteDebugValuesListFromMainExecutionList1.OnClick := frClickerActionsArrExperiment2PasteDebugValuesListFromMainExecutionList1Click;
@@ -1108,6 +1117,8 @@ begin
   frClickerActionsArrExperiment2.OnAddFileNameToRecent := HandleOnAddFileNameToRecent;
   frClickerActionsArrExperiment1.OnGetListOfRecentFiles := HandleOnGetListOfRecentFiles;
   frClickerActionsArrExperiment2.OnGetListOfRecentFiles := HandleOnGetListOfRecentFiles;
+  frClickerActionsArrExperiment1.OnGenerateAndSaveTreeWithWinInterp := HandleOnGenerateAndSaveTreeWithWinInterp;
+  frClickerActionsArrExperiment2.OnGenerateAndSaveTreeWithWinInterp := HandleOnGenerateAndSaveTreeWithWinInterp;
 
   AddToLog('ProcessID: ' + IntToStr(GetProcessID));
 
@@ -1398,6 +1409,15 @@ begin
 end;
 
 
+function TfrmClickerActions.DoOnGenerateAndSaveTreeWithWinInterp(AHandle: THandle; ATreeFileName: string): Boolean;
+begin
+  if not Assigned(FOnGenerateAndSaveTreeWithWinInterp) then
+    raise Exception.Create('OnGenerateAndSaveTreeWithWinInterp not assigned.')
+  else
+    Result := FOnGenerateAndSaveTreeWithWinInterp(AHandle, ATreeFileName);
+end;
+
+
 function TfrmClickerActions.GetClickerActionsArrFrameByStackLevel(AStackLevel: Integer): TfrClickerActionsArr;
 var
   i: Integer;
@@ -1645,6 +1665,7 @@ begin
 
         NewFrame.OnAddFileNameToRecent := HandleOnAddFileNameToRecent;
         NewFrame.OnGetListOfRecentFiles := HandleOnGetListOfRecentFiles;
+        NewFrame.OnGenerateAndSaveTreeWithWinInterp := HandleOnGenerateAndSaveTreeWithWinInterp;
 
         if FAutoSwitchToExecutingTab or (FAutoEnableSwitchingTabsOnDebugging and IsDebugging) then
         begin
@@ -3887,6 +3908,12 @@ end;
 procedure TfrmClickerActions.HandleOnGetListOfRecentFiles(AList: TStringList);
 begin
   AList.Assign(FRecentTemplates);
+end;
+
+
+function TfrmClickerActions.HandleOnGenerateAndSaveTreeWithWinInterp(AHandle: THandle; ATreeFileName: string): Boolean;
+begin
+  Result := DoOnGenerateAndSaveTreeWithWinInterp(AHandle, ATreeFileName);
 end;
 
 

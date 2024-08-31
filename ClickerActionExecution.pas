@@ -105,6 +105,7 @@ type
     FOnIsAtBreakPoint: TOnIsAtBreakPoint;
 
     FOnSaveFileToExtRenderingInMemFS: TOnSaveFileToExtRenderingInMemFS;
+    FOnGenerateAndSaveTreeWithWinInterp: TOnGenerateAndSaveTreeWithWinInterp;
 
     function GetActionVarValue(VarName: string): string;
     procedure SetActionVarValue(VarName, VarValue: string);
@@ -154,6 +155,7 @@ type
     procedure DoOnBackupVars(AAllVars: TStringList);
     procedure DoOnSaveFileToExtRenderingInMemFS(AFileName: string; AContent: Pointer; AFileSize: Int64);
     //procedure DoOnRestoreVars(AAllVars: TStringList);
+    function DoOnGenerateAndSaveTreeWithWinInterp(AHandle: THandle; ATreeFileName: string): Boolean;
 
     function HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     function HandleOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
@@ -244,6 +246,7 @@ type
     property OnIsAtBreakPoint: TOnIsAtBreakPoint write FOnIsAtBreakPoint;
 
     property OnSaveFileToExtRenderingInMemFS: TOnSaveFileToExtRenderingInMemFS write FOnSaveFileToExtRenderingInMemFS;
+    property OnGenerateAndSaveTreeWithWinInterp: TOnGenerateAndSaveTreeWithWinInterp write FOnGenerateAndSaveTreeWithWinInterp;
   end;
 
 
@@ -311,6 +314,7 @@ begin
   FOnIsAtBreakPoint := nil;
 
   FOnSaveFileToExtRenderingInMemFS := nil;
+  FOnGenerateAndSaveTreeWithWinInterp := nil;
 end;
 
 
@@ -804,6 +808,15 @@ end;
 //  else
 //    FOnRestoreVars(AAllVars);
 //end;
+
+
+function TActionExecution.DoOnGenerateAndSaveTreeWithWinInterp(AHandle: THandle; ATreeFileName: string): Boolean;
+begin
+  if not Assigned(FOnGenerateAndSaveTreeWithWinInterp) then
+    raise Exception.Create('OnGenerateAndSaveTreeWithWinInterp not assigned.')
+  else
+    Result := FOnGenerateAndSaveTreeWithWinInterp(AHandle, ATreeFileName);
+end;
 
 
 function TActionExecution.DoOnExecuteActionByName(AActionName: string): Boolean;
@@ -3155,6 +3168,22 @@ begin
           TempBmp.Free;
           AddToLog('Histogram computed in ' + IntToStr(GetTickCount64 - tk) + 'ms.  Found ' + IntToStr(Length(HistogramResult)) + ' item(s).');
         end;
+      end;
+
+      if (Pos('$GenerateAndSaveTree(', VarName) = 1) and (VarName[Length(VarName)] = '$') and (VarName[Length(VarName) - 1] = ')') then
+      begin
+        if DoOnGenerateAndSaveTreeWithWinInterp(StrToIntDef(EvaluateReplacements('$Control_Handle$'), 0),  VarValue) then   //path to .tree file
+        begin
+          //SetActionVarValue('$Tree$', VarValue);
+          Result := True;
+        end
+        else
+          if ASetVarOptions.FailOnException then
+          begin
+            SetActionVarValue('$ExecAction_Err$', 'File not found: "' + VarValue + '".');
+            Result := False;
+            Exit;
+          end;
       end;
 
       SetActionVarValue(VarName, VarValue);

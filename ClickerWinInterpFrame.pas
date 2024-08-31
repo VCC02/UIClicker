@@ -283,7 +283,6 @@ type
 
     procedure RectsToTree(var ADiffRects: TCompRecArr; var ImgMatrix: TColorArr; var ImgHWMatrix: THandleArr);
     procedure LoadImages(ABasePath: string);
-    procedure SaveImages(ABasePath: string);
 
     property HighlightingLinesColor: TColor read GetHighlightingLinesColor write SetHighlightingLinesColor;
     property SelectedLayer: Integer read GetSelectedLayer write SetSelectedLayer;
@@ -297,6 +296,7 @@ type
     procedure GetTreeContent(AStream: TMemoryStream);
     procedure RecordComponent(AInterprettedHandle: THandle; var ImgMatrix: TColorArr; var ImgHWMatrix: THandleArr);
     procedure GetCurrentlyRecordedScreenShotImage(ABmp: TBitmap);
+    procedure SaveImages(ABasePath: string);
 
     property SelectedComponentText: string read FSelectedComponentText;
     property SelectedComponentClassName: string read FSelectedComponentClassName;

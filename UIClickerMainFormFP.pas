@@ -100,6 +100,7 @@ type
     procedure HandleOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
     procedure HandleOnSavePrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
     procedure HandleOnGetSelfHandles(AListOfSelfHandles: TStringList);
+    function HandleOnGenerateAndSaveTreeWithWinInterp(AHandle: THandle; ATreeFileName: string): Boolean;
   public
     property AllFormsAreCreated: Boolean write FAllFormsAreCreated;
   end;
@@ -169,6 +170,7 @@ begin
   frmClickerActions.OnLoadPrimitivesFile := HandleOnLoadPrimitivesFile;
   frmClickerActions.OnSavePrimitivesFile := HandleOnSavePrimitivesFile;
   frmClickerActions.OnGetSelfHandles := HandleOnGetSelfHandles;
+  frmClickerActions.OnGenerateAndSaveTreeWithWinInterp := HandleOnGenerateAndSaveTreeWithWinInterp;
 
   frmClickerRemoteScreen.OnGetConnectionAddress := HandleOnGetConnectionAddress;
 
@@ -604,6 +606,38 @@ begin
       except
       end;
     end;
+end;
+
+
+function TfrmUIClickerMainForm.HandleOnGenerateAndSaveTreeWithWinInterp(AHandle: THandle; ATreeFileName: string): Boolean;
+var
+  ImgMatrix: TColorArr;
+  ImgHWMatrix: THandleArr;
+  TreeContent: TMemoryStream;
+begin
+  Result := False;
+
+  //if AHandle = 0 then
+  //begin
+  //  Result := False;
+  //  Exit;
+  //end;
+  //
+  TreeContent := TMemoryStream.Create;
+  try
+    frmClickerWinInterp.RecordComponent(AHandle, ImgMatrix, ImgHWMatrix);
+    frmClickerWinInterp.GetTreeContent(TreeContent);
+
+    TreeContent.Position := 0;
+    TreeContent.SaveToFile(ATreeFileName);
+    frmClickerWinInterp.SaveImages(ATreeFileName);
+
+    Result := True;
+  finally
+    SetLength(ImgMatrix, 0);
+    SetLength(ImgHWMatrix, 0);
+    TreeContent.Free;
+  end;
 end;
 
 
