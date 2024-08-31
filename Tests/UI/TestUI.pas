@@ -54,6 +54,7 @@ type
 
     procedure DragAction_FromPosToPos(ASrcIdx, ADestIdx: Integer; const AActIdx: array of Byte);
     procedure AutoCompleteTextInConsoleEditBox(ATypedEditBoxContent, AFunctionNameToDoubleClick, AExpectedResult: string);
+    procedure AddActionButton(AActionNameToSelect: string);
   public
     constructor Create; override;
   published
@@ -89,8 +90,12 @@ type
     procedure TestAutoComplete_FullFunctionNameOnly;
     procedure TestAutoComplete_VarAssignmentToPartialFunctionNameOnly;
     procedure TestAutoComplete_VarAssignmentToFullFunctionNameOnly;
+    procedure TestAutoComplete_VarAssignmentToEmpty;
+    procedure TestAutoComplete_VarAssignmentToNumericConstantThenDifferentSelection;
     procedure TestAutoComplete_VarAssignmentAndBlanksToPartialFunctionNameOnly;
     procedure TestAutoComplete_VarAssignmentAndBlanksToFullFunctionNameOnly;
+
+    procedure TestAddActionButton_HappyFlow;
 
     procedure AfterAll_AlwaysExecute;
   end;
@@ -778,6 +783,18 @@ begin
 end;
 
 
+procedure TTestUI.TestAutoComplete_VarAssignmentToEmpty;
+begin
+  AutoCompleteTextInConsoleEditBox('$a$=', 'GetActionProperties()', '$a$=$GetActionProperties()$');
+end;
+
+
+procedure TTestUI.TestAutoComplete_VarAssignmentToNumericConstantThenDifferentSelection;
+begin
+  AutoCompleteTextInConsoleEditBox('$Desktop_Width$=1920', 'Screen_Width$=1920', '$Desktop_Width$=1290$Screen_Width$=1920');
+end;
+
+
 procedure TTestUI.TestAutoComplete_VarAssignmentAndBlanksToPartialFunctionNameOnly;
 begin
   AutoCompleteTextInConsoleEditBox('$a$ = $Get', 'GetActionProperties()', '$a$ = $GetActionProperties()$');
@@ -787,6 +804,29 @@ end;
 procedure TTestUI.TestAutoComplete_VarAssignmentAndBlanksToFullFunctionNameOnly;
 begin
   AutoCompleteTextInConsoleEditBox('$a$ = $GetActionProperties', 'GetActionProperties()', '$a$ = $GetActionProperties()$');
+end;
+
+
+procedure TTestUI.AddActionButton(AActionNameToSelect: string);
+begin
+  TestServerAddress := CTestDriverServerAddress_Client;
+  LoadTestTemplateInClickerUnderTest('DuplicateActionFromAddActionButton.clktmpl');
+
+  PrepareClickerUnderTestToLocalMode;
+  SetVariableOnTestDriverClient('$ActionNameToSelect$', AActionNameToSelect);
+
+  ExecuteTemplateOnTestDriver(ExtractFilePath(ParamStr(0)) + '..\..\TestDriver\ActionTemplates\AddActionButtonOnAppUnderTest.clktmpl',
+                              CREParam_FileLocation_ValueDisk,
+                              '$LastAction_Status$',
+                              'Successful'
+                              );
+  PrepareClickerUnderTestToReadItsVars;
+end;
+
+
+procedure TTestUI.TestAddActionButton_HappyFlow;
+begin
+  AddActionButton('GenerateAndSaveTree');
 end;
 
 

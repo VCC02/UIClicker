@@ -11,7 +11,7 @@ ActionCondition=
 BreakpointExists=0
 BreakpointEnabled=0
 BreakpointCondition=
-TemplateFileName=FindConsoleEditBox.clktmpl
+TemplateFileName=$SelfTemplateDir$\FindConsoleEditBox.clktmpl
 ListOfCustomVarsAndValues=
 CallOnlyIfCondition=0
 CallOnlyIfConditionVarName=
@@ -1157,5 +1157,5 @@ MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 
 [Notes]
 Content=
-TemplateIconPath=
+TemplateIconPath=$SelfTemplateDir$\..\DrvIcon.png
 

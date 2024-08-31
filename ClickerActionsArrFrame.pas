@@ -388,6 +388,7 @@ type
 
     FOnAddFileNameToRecent: TOnAddFileNameToRecent;
     FOnGetListOfRecentFiles: TOnGetListOfRecentFiles;
+    FOnGenerateAndSaveTreeWithWinInterp: TOnGenerateAndSaveTreeWithWinInterp;
 
     vstActions: TVirtualStringTree;
     FPalette: TfrClickerActionsPalette;
@@ -464,6 +465,8 @@ type
     procedure HandleOnPluginDbgStepOver;
     function HandleOnPluginDbgRequestLineNumber(out ALineContent, ADbgSymFile: string): Integer;
     procedure HandleOnPluginDbgSetBreakpoint(ALineIndex, ASelectedSourceFileIndex: Integer; AEnabled: Boolean);
+
+    function HandleOnGenerateAndSaveTreeWithWinInterp(AHandle: THandle; ATreeFileName: string): Boolean;
 
     function GetInMemFS: TInMemFileSystem;
     procedure SetInMemFS(Value: TInMemFileSystem);
@@ -566,6 +569,7 @@ type
 
     procedure DoOnAddFileNameToRecent(AFileName: string);
     procedure DoOnGetListOfRecentFiles(AList: TStringList);
+    function DoOnGenerateAndSaveTreeWithWinInterp(AHandle: THandle; ATreeFileName: string): Boolean;
 
     function PlayActionByNode(Node: PVirtualNode): Boolean;
     procedure PlaySelected;
@@ -717,6 +721,7 @@ type
 
     property OnAddFileNameToRecent: TOnAddFileNameToRecent write FOnAddFileNameToRecent;
     property OnGetListOfRecentFiles: TOnGetListOfRecentFiles write FOnGetListOfRecentFiles;
+    property OnGenerateAndSaveTreeWithWinInterp: TOnGenerateAndSaveTreeWithWinInterp write FOnGenerateAndSaveTreeWithWinInterp;
   end;
 
 
@@ -1136,6 +1141,7 @@ begin
   FActionExecution.OnSetDebugPoint := HandleOnSetDebugPoint;
   FActionExecution.OnIsAtBreakPoint := HandleOnIsAtBreakPoint;
   FActionExecution.OnSaveFileToExtRenderingInMemFS := HandleOnSaveFileToExtRenderingInMemFS;
+  FActionExecution.OnGenerateAndSaveTreeWithWinInterp := HandleOnGenerateAndSaveTreeWithWinInterp;
 
   FCmdConsoleHistory := TStringList.Create;
   FOnExecuteRemoteActionAtIndex := nil;
@@ -1183,6 +1189,7 @@ begin
 
   FOnAddFileNameToRecent := nil;
   FOnGetListOfRecentFiles := nil;
+  FOnGenerateAndSaveTreeWithWinInterp := nil;
 
   FPalette := nil;
 
@@ -1851,6 +1858,12 @@ begin
     AddToLog('Setting breakpoint in server, at line: ' + IntToStr(ALineIndex) + ', from file index: ' + IntToStr(ASelectedSourceFileIndex) + ', to: ' + BoolToStr(AEnabled, 'Enabled', 'Disabled'));
     AddToLog('Setting result: ' + SendPluginCmd(RemoteAddress, CREParam_Plugin_SetBreakpoint + '&' + BreakPointCmd, FStackLevel, False));
   end;
+end;
+
+
+function TfrClickerActionsArr.HandleOnGenerateAndSaveTreeWithWinInterp(AHandle: THandle; ATreeFileName: string): Boolean;
+begin
+  Result := DoOnGenerateAndSaveTreeWithWinInterp(AHandle, ATreeFileName);
 end;
 
 
@@ -2737,6 +2750,15 @@ begin
     raise Exception.Create('OnGetListOfRecentFiles not assigned.')
   else
     FOnGetListOfRecentFiles(AList);
+end;
+
+
+function TfrClickerActionsArr.DoOnGenerateAndSaveTreeWithWinInterp(AHandle: THandle; ATreeFileName: string): Boolean;
+begin
+  if not Assigned(FOnGenerateAndSaveTreeWithWinInterp) then
+    raise Exception.Create('OnGenerateAndSaveTreeWithWinInterp not assigned.')
+  else
+    Result := FOnGenerateAndSaveTreeWithWinInterp(AHandle, ATreeFileName);
 end;
 
 
@@ -4411,10 +4433,15 @@ begin
   FClkActions[n].ActionStatus := asNotStarted;
   FClkActions[n].ActionOptions.ActionEnabled := True;
 
-  vstActions.RootNodeCount := 0;  //to reinit nodes
-  vstActions.RootNodeCount := Length(FClkActions);
-  vstActions.Repaint;
-  Modified := True;
+  vstActions.BeginUpdate;
+  try
+    vstActions.Clear;  //to reinit nodes
+    vstActions.RootNodeCount := Length(FClkActions);
+    vstActions.Repaint;
+    Modified := True;
+  finally
+    vstActions.EndUpdate;
+  end;
 
   Node := vstActions.GetLast;
   vstActions.Selected[Node] := True;
