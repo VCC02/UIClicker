@@ -142,7 +142,7 @@ begin
       end
       else
       begin
-        Expect(Bmp.Width).ToBe(487);
+        Expect(Bmp.Width).ToBeGreaterThanOrEqualTo(487); //Can be greater than, if a template with a long path is already loaded. That template has nothing to do with this result.
         Expect(Bmp.Height).ToBe(330);
       end;
     end;

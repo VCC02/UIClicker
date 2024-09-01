@@ -466,7 +466,7 @@ type
     function HandleOnPluginDbgRequestLineNumber(out ALineContent, ADbgSymFile: string): Integer;
     procedure HandleOnPluginDbgSetBreakpoint(ALineIndex, ASelectedSourceFileIndex: Integer; AEnabled: Boolean);
 
-    function HandleOnGenerateAndSaveTreeWithWinInterp(AHandle: THandle; ATreeFileName: string): Boolean;
+    function HandleOnGenerateAndSaveTreeWithWinInterp(AHandle: THandle; ATreeFileName: string; AStep: Integer; AUseMouseSwipe: Boolean): Boolean;
 
     function GetInMemFS: TInMemFileSystem;
     procedure SetInMemFS(Value: TInMemFileSystem);
@@ -569,7 +569,7 @@ type
 
     procedure DoOnAddFileNameToRecent(AFileName: string);
     procedure DoOnGetListOfRecentFiles(AList: TStringList);
-    function DoOnGenerateAndSaveTreeWithWinInterp(AHandle: THandle; ATreeFileName: string): Boolean;
+    function DoOnGenerateAndSaveTreeWithWinInterp(AHandle: THandle; ATreeFileName: string; AStep: Integer; AUseMouseSwipe: Boolean): Boolean;
 
     function PlayActionByNode(Node: PVirtualNode): Boolean;
     procedure PlaySelected;
@@ -913,7 +913,7 @@ begin
     TempFuncDescriptions.Add('$PartialHistogramExternallyRendered()$=Loads a bitmap from the externally rendered in-mem file system and counts the number of pixels for each unique color, then sets the $HistogramResult$ variable to a #4#5-separated list of 6-digit hex values and $HistogramColorCountsResult$ to their color counts. The number of items is limited to the value of $HistogramItemCount$ variable. The function should be called from a SetVar action and the file name has to be in its right column. If the file does not exist, then $ExecAction_Err$ is set to an error message. When FailOnException property is True, and the file is not found, the action fails.');
     TempFuncDescriptions.Add('$GetWindowLongPtr(<ControlHandle>, <Index>)$=Returns info about a control, specified by its handle and the info index. For details, see MSDN. Examples for index values are -4, for WNDPROC, -6 for HINSTANCE, -8 for HWNDPARENT, -21 for USERDATA, -12 for ID etc.');
     TempFuncDescriptions.Add('$GetWindowProcessId(<ControlHandle>)$=Returns the process ID, which owns the control, specified by the handle. Most of the time, the handle belongs to a window. Any other control from that window should return the same process ID. If the handle is invalid, the function returns 0 and sets the $ExecAction_Err$ variable to "Invalid window handle.".');
-    TempFuncDescriptions.Add('$GenerateAndSaveTree(<TreePath>)$=Calls the built-in WinInterpreter scan function, identified by $Control_Handle$, to generate the tree of controls. Then, the tree is saved to file (provided by <TreePath>) and also it is accompanied by its screenshots in the same directory.');
+    TempFuncDescriptions.Add('$GenerateAndSaveTree(<TreePath>[,<Step>[,<UseMouseSwipe>]])$=Calls the built-in WinInterpreter scan function, identified by $Control_Handle$, to generate the tree of controls. Then, the tree is saved to file (provided by <TreePath>) and also it is accompanied by its screenshots in the same directory. Step, if provided should resolve to an integer, greater than 1, which sets the step in pixels for the scanning accuracy. UseMouseSwipe, if provided and is either 1 or True, will use the "MouseSwipe" scanning algorithm (see WinInterp window), which is slower, but may find subcontrols.');
 
     for i := 0 to FFuncDescriptions.Count - 1 do
     begin
@@ -1862,9 +1862,9 @@ begin
 end;
 
 
-function TfrClickerActionsArr.HandleOnGenerateAndSaveTreeWithWinInterp(AHandle: THandle; ATreeFileName: string): Boolean;
+function TfrClickerActionsArr.HandleOnGenerateAndSaveTreeWithWinInterp(AHandle: THandle; ATreeFileName: string; AStep: Integer; AUseMouseSwipe: Boolean): Boolean;
 begin
-  Result := DoOnGenerateAndSaveTreeWithWinInterp(AHandle, ATreeFileName);
+  Result := DoOnGenerateAndSaveTreeWithWinInterp(AHandle, ATreeFileName, AStep, AUseMouseSwipe);
 end;
 
 
@@ -2754,12 +2754,12 @@ begin
 end;
 
 
-function TfrClickerActionsArr.DoOnGenerateAndSaveTreeWithWinInterp(AHandle: THandle; ATreeFileName: string): Boolean;
+function TfrClickerActionsArr.DoOnGenerateAndSaveTreeWithWinInterp(AHandle: THandle; ATreeFileName: string; AStep: Integer; AUseMouseSwipe: Boolean): Boolean;
 begin
   if not Assigned(FOnGenerateAndSaveTreeWithWinInterp) then
     raise Exception.Create('OnGenerateAndSaveTreeWithWinInterp not assigned.')
   else
-    Result := FOnGenerateAndSaveTreeWithWinInterp(AHandle, ATreeFileName);
+    Result := FOnGenerateAndSaveTreeWithWinInterp(AHandle, ATreeFileName, AStep, AUseMouseSwipe);
 end;
 
 

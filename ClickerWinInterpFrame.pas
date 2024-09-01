@@ -294,7 +294,9 @@ type
     procedure SaveSettings(AIni: TMemIniFile);
 
     procedure GetTreeContent(AStream: TMemoryStream);
-    procedure RecordComponent(AInterprettedHandle: THandle; var ImgMatrix: TColorArr; var ImgHWMatrix: THandleArr);
+    procedure RecordComponent(AInterprettedHandle: THandle; var ImgMatrix: TColorArr; var ImgHWMatrix: THandleArr; AStep: Integer = 1);
+    procedure RecordWithMouseSwipe(AInterprettedHandle: THandle; AStep: Integer = 1);
+
     procedure GetCurrentlyRecordedScreenShotImage(ABmp: TBitmap);
     procedure SaveImages(ABasePath: string);
 
@@ -1344,7 +1346,7 @@ begin
 end;
 
 
-procedure TfrClickerWinInterp.MenuItemRecordWithMouseSwipeClick(Sender: TObject);
+procedure TfrClickerWinInterp.RecordWithMouseSwipe(AInterprettedHandle: THandle; AStep: Integer = 1);
 var
   InitBmp, CurrentBmp: TBitmap;
   rct: TRect;
@@ -1357,34 +1359,15 @@ var
   ImgMatrix: TColorArr;
   ImgHWMatrix: array of THandle;
   tk, Duration: QWord;
-  EstimatedDuration: Double;
 begin
-  if FInterprettedHandle = 0 then
-  begin
-    pnlDrag.Color := clRed;
-    MessageBox(Handle, 'Please set the target control (or window) before recording it.', PChar(Caption), MB_ICONINFORMATION);
-    pnlDrag.Color := clYellow;
-    Exit;
-  end;
-
   FDoneRec := False;
-  if GetWindowRect(FInterprettedHandle, rct) = False then
-    Exit;
-
-  EstimatedDuration := (rct.Width * rct.Height * 4.3) / 60000;   //2.6 for a small window   - also depends on CPU and GPU speed
-  if MessageBox(Handle,
-                PChar('Recording with mouse swipe, will take a very long time, while keeping busy at least a CPU core. The scanning can be stopped with the Esc key.' + #13#10 +
-                      'Control size: ' + IntToStr(rct.Width) + ' x ' + IntToStr(rct.Height) + #13#10 +
-                      'Estimated recording time: ' + FloatToStr(EstimatedDuration) + ' min' + #13#10 +
-                      'Continue?'),
-                PChar(Caption),
-                MB_ICONQUESTION + MB_YESNO) = IDNO then
+  if GetWindowRect(AInterprettedHandle, rct) = False then
     Exit;
 
   SetLength(ImgMatrix, 0);
   SetLength(ImgHWMatrix, 0);
 
-  RecordComponent(FInterprettedHandle, ImgMatrix, ImgHWMatrix);
+  RecordComponent(AInterprettedHandle, ImgMatrix, ImgHWMatrix, AStep);
 
   if Length(ImgMatrix) = 0 then
     Exit;
@@ -1394,7 +1377,6 @@ begin
 
   //no need to call DoOnClearWinInterp here, because it is called internally by RecordComponent
 
-  memCompInfo.Lines.Add('Estimated duration: ' + FloatToStr(EstimatedDuration) + ' min.');
   tk := GetTickCount64;
 
   w := rct.Width; //rct.Width and rct.Height are functions, so better use some local vars
@@ -1409,7 +1391,7 @@ begin
     prbRecording.Max := 1;
 
   if chkMinimizeWhileRecording.Checked then
-    if FInterprettedHandle <> Handle then
+    if AInterprettedHandle <> Handle then
     begin
       //WindowState := wsMinimized;
       Application.Minimize;
@@ -1427,9 +1409,9 @@ begin
     InitBmp := TBitmap.Create;
     CurrentBmp := TBitmap.Create;
     try
-      ScreenShot(FInterprettedHandle, InitBmp, 0, 0, w, h);
+      ScreenShot(AInterprettedHandle, InitBmp, 0, 0, w, h);
 
-      Step := 1; //StrToIntDef(lbeStep.Text, 1);
+      Step := AStep;
       y := 0;
       repeat
         Inc(y, Step);
@@ -1442,7 +1424,7 @@ begin
           CurrentY := y + rct.Top;
 
           SetCursorPos(CurrentX, CurrentY);
-          ScreenShot(FInterprettedHandle, CurrentBmp, 0, 0, w, h);
+          ScreenShot(AInterprettedHandle, CurrentBmp, 0, 0, w, h);
 
           if not BitmapsAreEqual(InitBmp, CurrentBmp, w, h) then
           begin
@@ -1533,7 +1515,7 @@ begin
     imgSpinnerDiff.Visible := False;
 
     if chkMinimizeWhileRecording.Checked then
-      if FInterprettedHandle <> Handle then
+      if AInterprettedHandle <> Handle then
       begin
         //WindowState := wsNormal;
         Application.Restore;
@@ -1542,10 +1524,45 @@ begin
 
   Duration := GetTickCount64 - tk;
   memCompInfo.Lines.Add('Recording with mouse swipe duration: ' + IntToStr(Duration) + 'ms   ~= ' + FloatToStr(Duration / 60000) + ' min.');
-
-  vstComponents.Repaint;
   lblGauge.Caption := '100%';
   prbRecording.Position := 0;
+end;
+
+
+procedure TfrClickerWinInterp.MenuItemRecordWithMouseSwipeClick(Sender: TObject);
+var
+  rct: TRect;
+  EstimatedDuration: Double;
+  Step: Integer;
+begin
+  if FInterprettedHandle = 0 then
+  begin
+    pnlDrag.Color := clRed;
+    MessageBox(Handle, 'Please set the target control (or window) before recording it.', PChar(Caption), MB_ICONINFORMATION);
+    pnlDrag.Color := clYellow;
+    Exit;
+  end;
+
+  if GetWindowRect(FInterprettedHandle, rct) = False then
+    Exit;
+
+  Step := Max(1, StrToIntDef(lbeStep.Text, 1)); //bug: If Step is greater than 1, the algorithm detects subcontrol edges on every Step number of pixels. I.e. it does not merge areas.
+
+  memCompInfo.Lines.Add('Estimated duration: ' + FloatToStr(EstimatedDuration) + ' min.');
+  EstimatedDuration := (rct.Width * rct.Height * 4.3) / 60000 / Double(Step);   //2.6 for a small window   - also depends on CPU and GPU speed
+
+  if MessageBox(Handle,
+                PChar('Recording with mouse swipe, will take a very long time, while keeping busy at least a CPU core. The scanning can be stopped with the Esc key.' + #13#10 +
+                      'Control size: ' + IntToStr(rct.Width) + ' x ' + IntToStr(rct.Height) + #13#10 +
+                      'Estimated recording time: ' + FloatToStr(EstimatedDuration) + ' min' + #13#10 +
+                      'Continue?'),
+                PChar(Caption),
+                MB_ICONQUESTION + MB_YESNO) = IDNO then
+    Exit;
+
+  RecordWithMouseSwipe(FInterprettedHandle, Step);
+
+  vstComponents.Repaint;
 end;
 
 
@@ -2210,7 +2227,7 @@ begin
 end;
 
 
-procedure TfrClickerWinInterp.RecordComponent(AInterprettedHandle: THandle; var ImgMatrix: TColorArr; var ImgHWMatrix: THandleArr);
+procedure TfrClickerWinInterp.RecordComponent(AInterprettedHandle: THandle; var ImgMatrix: TColorArr; var ImgHWMatrix: THandleArr; AStep: Integer = 1);
 var
   x, y, Step, YLine: Integer;
   tp: TPoint;
@@ -2263,11 +2280,14 @@ begin
   if prbRecording.Max = 0 then
     prbRecording.Max := 1;
 
-  Step := StrToIntDef(lbeStep.Text, 1);
+  if AStep = 1 then
+    Step := AStep
+  else
+    Step := Max(1, StrToIntDef(lbeStep.Text, 1));
 
   if Step = 1 then
   begin
-    SetLength(ImgMatrix, prbRecording.Max);
+    SetLength(ImgMatrix, prbRecording.Max);    //these arrays are used only when Step = 1
     SetLength(ImgHWMatrix, prbRecording.Max);
   end;
 

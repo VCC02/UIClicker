@@ -261,7 +261,7 @@ type
     function DoOnPictureOpenDialogExecute: Boolean;
     function DoOnGetPictureOpenDialogFileName: string;
 
-    function DoOnGenerateAndSaveTreeWithWinInterp(AHandle: THandle; ATreeFileName: string): Boolean;
+    function DoOnGenerateAndSaveTreeWithWinInterp(AHandle: THandle; ATreeFileName: string; AStep: Integer; AUseMouseSwipe: Boolean): Boolean;
 
     procedure MenuItemOpenTemplateAsExp1Click(Sender: TObject);
     procedure MenuItemOpenTemplateAsExp2Click(Sender: TObject);
@@ -331,7 +331,7 @@ type
 
     procedure HandleOnAddFileNameToRecent(AFileName: string);
     procedure HandleOnGetListOfRecentFiles(AList: TStringList);
-    function HandleOnGenerateAndSaveTreeWithWinInterp(AHandle: THandle; ATreeFileName: string): Boolean;
+    function HandleOnGenerateAndSaveTreeWithWinInterp(AHandle: THandle; ATreeFileName: string; AStep: Integer; AUseMouseSwipe: Boolean): Boolean;
 
     procedure CreateRemainingUIComponents;
     function GetClickerActionsArrFrameByStackLevel(AStackLevel: Integer): TfrClickerActionsArr;
@@ -1409,12 +1409,12 @@ begin
 end;
 
 
-function TfrmClickerActions.DoOnGenerateAndSaveTreeWithWinInterp(AHandle: THandle; ATreeFileName: string): Boolean;
+function TfrmClickerActions.DoOnGenerateAndSaveTreeWithWinInterp(AHandle: THandle; ATreeFileName: string; AStep: Integer; AUseMouseSwipe: Boolean): Boolean;
 begin
   if not Assigned(FOnGenerateAndSaveTreeWithWinInterp) then
     raise Exception.Create('OnGenerateAndSaveTreeWithWinInterp not assigned.')
   else
-    Result := FOnGenerateAndSaveTreeWithWinInterp(AHandle, ATreeFileName);
+    Result := FOnGenerateAndSaveTreeWithWinInterp(AHandle, ATreeFileName, AStep, AUseMouseSwipe);
 end;
 
 
@@ -3911,9 +3911,9 @@ begin
 end;
 
 
-function TfrmClickerActions.HandleOnGenerateAndSaveTreeWithWinInterp(AHandle: THandle; ATreeFileName: string): Boolean;
+function TfrmClickerActions.HandleOnGenerateAndSaveTreeWithWinInterp(AHandle: THandle; ATreeFileName: string; AStep: Integer; AUseMouseSwipe: Boolean): Boolean;
 begin
-  Result := DoOnGenerateAndSaveTreeWithWinInterp(AHandle, ATreeFileName);
+  Result := DoOnGenerateAndSaveTreeWithWinInterp(AHandle, ATreeFileName, AStep, AUseMouseSwipe);
 end;
 
 

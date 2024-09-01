@@ -57,7 +57,8 @@ type
     procedure SaveSettings(AIni: TMemIniFile);
 
     procedure GetTreeContent(AStream: TMemoryStream);
-    procedure RecordComponent(AInterprettedHandle: THandle; var ImgMatrix: TColorArr; var ImgHWMatrix: THandleArr);
+    procedure RecordComponent(AInterprettedHandle: THandle; var ImgMatrix: TColorArr; var ImgHWMatrix: THandleArr; AStep: Integer = 1);
+    procedure RecordWithMouseSwipe(AInterprettedHandle: THandle; AStep: Integer = 1);
     procedure GetCurrentlyRecordedScreenShotImage(ABmp: TBitmap);
     procedure SaveImages(ABasePath: string);
 
@@ -157,9 +158,15 @@ begin
 end;
 
 
-procedure TfrmClickerWinInterp.RecordComponent(AInterprettedHandle: THandle; var ImgMatrix: TColorArr; var ImgHWMatrix: THandleArr);
+procedure TfrmClickerWinInterp.RecordComponent(AInterprettedHandle: THandle; var ImgMatrix: TColorArr; var ImgHWMatrix: THandleArr; AStep: Integer = 1);
 begin
-  FWinInterpFrame.RecordComponent(AInterprettedHandle, ImgMatrix, ImgHWMatrix);
+  FWinInterpFrame.RecordComponent(AInterprettedHandle, ImgMatrix, ImgHWMatrix, AStep);
+end;
+
+
+procedure TfrmClickerWinInterp.RecordWithMouseSwipe(AInterprettedHandle: THandle; AStep: Integer = 1);
+begin
+  FWinInterpFrame.RecordWithMouseSwipe(AInterprettedHandle, AStep);
 end;
 
 

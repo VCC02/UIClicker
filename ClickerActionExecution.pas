@@ -155,7 +155,7 @@ type
     procedure DoOnBackupVars(AAllVars: TStringList);
     procedure DoOnSaveFileToExtRenderingInMemFS(AFileName: string; AContent: Pointer; AFileSize: Int64);
     //procedure DoOnRestoreVars(AAllVars: TStringList);
-    function DoOnGenerateAndSaveTreeWithWinInterp(AHandle: THandle; ATreeFileName: string): Boolean;
+    function DoOnGenerateAndSaveTreeWithWinInterp(AHandle: THandle; ATreeFileName: string; AStep: Integer; AUseMouseSwipe: Boolean): Boolean;
 
     function HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     function HandleOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
@@ -810,12 +810,12 @@ end;
 //end;
 
 
-function TActionExecution.DoOnGenerateAndSaveTreeWithWinInterp(AHandle: THandle; ATreeFileName: string): Boolean;
+function TActionExecution.DoOnGenerateAndSaveTreeWithWinInterp(AHandle: THandle; ATreeFileName: string; AStep: Integer; AUseMouseSwipe: Boolean): Boolean;
 begin
   if not Assigned(FOnGenerateAndSaveTreeWithWinInterp) then
     raise Exception.Create('OnGenerateAndSaveTreeWithWinInterp not assigned.')
   else
-    Result := FOnGenerateAndSaveTreeWithWinInterp(AHandle, ATreeFileName);
+    Result := FOnGenerateAndSaveTreeWithWinInterp(AHandle, ATreeFileName, AStep, AUseMouseSwipe);
 end;
 
 
@@ -2900,7 +2900,6 @@ function TActionExecution.ExecuteSetVarAction(var ASetVarOptions: TClkSetVarOpti
       Result := Result + IntToHex(AHistogramResult[i], 6) + #4#5;
   end;
 
-
   function GetHistogramColorCountsResult(var AHistogramResult: TIntArr; ACount: Integer = 0): string;
   var
     i, CountItems: Integer;
@@ -2914,12 +2913,45 @@ function TActionExecution.ExecuteSetVarAction(var ASetVarOptions: TClkSetVarOpti
     for i := 0 to CountItems - 1 do
       Result := Result + IntToStr(AHistogramResult[i]) + #4#5;
   end;
+
+  procedure GetTreeArgsFromArgsStr(AFuncArgs: string; out ATreePath: string; out AStep: Integer; out AUseMouseSwipe: Boolean);
+  var
+    ListOfFuncArgs: TStringList;
+    UseMouseSwipeStr: string;
+  begin
+    ATreePath := '$TemplateDir$\DefaultTree.tree';
+    AStep := 1;
+    AUseMouseSwipe := False;
+
+    ListOfFuncArgs := TStringList.Create;
+    try
+      ListOfFuncArgs.Text := StringReplace(AFuncArgs, ',', #13#10, [rfReplaceAll]);
+
+      if ListOfFuncArgs.Count > 0 then
+        ATreePath := Trim(ListOfFuncArgs.Strings[0]);
+
+      ATreePath := EvaluateReplacements(ATreePath);
+      ATreePath := DoOnResolveTemplatePath(ATreePath); //outside of if statement, because it is initialized with $TemplateDir$
+
+      if ListOfFuncArgs.Count > 1 then
+        AStep := StrToIntDef(EvaluateReplacements(Trim(ListOfFuncArgs.Strings[1])), 1);
+
+      if ListOfFuncArgs.Count > 2 then
+      begin
+        UseMouseSwipeStr := Trim(ListOfFuncArgs.Strings[2]);
+        AUseMouseSwipe := (UseMouseSwipeStr = '1') or (UpperCase(UseMouseSwipeStr) = 'TRUE');
+      end;
+    finally
+      ListOfFuncArgs.Free;
+    end;
+  end;
+
 var
   TempListOfSetVarNames: TStringList;
   TempListOfSetVarValues: TStringList;
   TempListOfSetVarEvalBefore: TStringList;
   i, j: Integer;
-  VarName, VarValue: string;
+  VarName, VarValue, FuncArgs: string;
   RenderBmpExternallyResult: string;
   ListOfSelfHandles: TStringList;
   GeneratedException: Boolean;
@@ -2928,6 +2960,9 @@ var
   HistItemCount: Integer;
   tk: QWord;
   TemplateDir: string;
+  TreePath: string;
+  TreeStep: Integer;
+  TreeUseMouseSwipe: Boolean;
 begin
   Result := False;
   TempListOfSetVarNames := TStringList.Create;
@@ -3172,7 +3207,11 @@ begin
 
       if (Pos('$GenerateAndSaveTree(', VarName) = 1) and (VarName[Length(VarName)] = '$') and (VarName[Length(VarName) - 1] = ')') then
       begin
-        if DoOnGenerateAndSaveTreeWithWinInterp(StrToIntDef(EvaluateReplacements('$Control_Handle$'), 0),  VarValue) then   //path to .tree file
+        FuncArgs := Copy(VarName, Pos('(', VarName) + 1, MaxInt);
+        FuncArgs := Copy(FuncArgs, 1, Length(FuncArgs) - 2);
+        GetTreeArgsFromArgsStr(FuncArgs, TreePath, TreeStep, TreeUseMouseSwipe);
+
+        if DoOnGenerateAndSaveTreeWithWinInterp(StrToIntDef(EvaluateReplacements('$Control_Handle$'), 0), TreePath, TreeStep, TreeUseMouseSwipe) then   //path to .tree file
         begin
           //SetActionVarValue('$Tree$', VarValue);
           Result := True;
@@ -3184,10 +3223,13 @@ begin
             Result := False;
             Exit;
           end;
+
+        VarName := ''; //Prevent creating a variable, named $GenerateAndSaveTree(...)$
       end;
 
-      SetActionVarValue(VarName, VarValue);
-    end;
+      if VarName > '' then
+        SetActionVarValue(VarName, VarValue);  //Do not move or delete this line. It is what SetVar does, it updates variables. VarName may be set to '', if a "Left-column" function is called.
+    end;  //for i := 0 to TempListOfSetVarNames.Count - 1 do
 
   finally
     TempListOfSetVarNames.Free;

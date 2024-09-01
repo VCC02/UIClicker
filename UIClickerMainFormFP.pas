@@ -100,7 +100,7 @@ type
     procedure HandleOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
     procedure HandleOnSavePrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
     procedure HandleOnGetSelfHandles(AListOfSelfHandles: TStringList);
-    function HandleOnGenerateAndSaveTreeWithWinInterp(AHandle: THandle; ATreeFileName: string): Boolean;
+    function HandleOnGenerateAndSaveTreeWithWinInterp(AHandle: THandle; ATreeFileName: string; AStep: Integer; AUseMouseSwipe: Boolean): Boolean;
   public
     property AllFormsAreCreated: Boolean write FAllFormsAreCreated;
   end;
@@ -609,7 +609,7 @@ begin
 end;
 
 
-function TfrmUIClickerMainForm.HandleOnGenerateAndSaveTreeWithWinInterp(AHandle: THandle; ATreeFileName: string): Boolean;
+function TfrmUIClickerMainForm.HandleOnGenerateAndSaveTreeWithWinInterp(AHandle: THandle; ATreeFileName: string; AStep: Integer; AUseMouseSwipe: Boolean): Boolean;
 var
   ImgMatrix: TColorArr;
   ImgHWMatrix: THandleArr;
@@ -625,7 +625,11 @@ begin
   //
   TreeContent := TMemoryStream.Create;
   try
-    frmClickerWinInterp.RecordComponent(AHandle, ImgMatrix, ImgHWMatrix);
+    if AUseMouseSwipe then
+      frmClickerWinInterp.RecordWithMouseSwipe(AHandle, AStep)
+    else
+      frmClickerWinInterp.RecordComponent(AHandle, ImgMatrix, ImgHWMatrix, AStep);
+
     frmClickerWinInterp.GetTreeContent(TreeContent);
 
     TreeContent.Position := 0;

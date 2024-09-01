@@ -323,7 +323,7 @@ object frClickerSetVar: TfrClickerSetVar
         '$PartialHistogramExternallyRendered()$'
         '$GetWindowLongPtr(<ControlHandle>, <Index>)$'
         '$GetWindowProcessId(<ControlHandle>)$'
-        '$GenerateAndSaveTree(<TreePath>)$'
+        '$GenerateAndSaveTree(<TreePath>[,<Step>[,<UseMouseSwipe>]])$'
       )
       ParentShowHint = False
       ReadOnly = True
