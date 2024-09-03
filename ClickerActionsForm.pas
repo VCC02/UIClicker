@@ -937,6 +937,9 @@ begin
     {$ENDIF}
   {$ENDIF}
 
+  memVariables.Lines.Add('$SelfActionName$=');
+  memVariables.Lines.Add('$SelfActionIndex$=-1');
+
   frClickerActionsArrExperiment1.SetVariables(memVariables.Lines);
   frClickerActionsArrExperiment2.SetVariables(memVariables.Lines);
   frClickerActionsArrMain.SetVariables(memVariables.Lines);

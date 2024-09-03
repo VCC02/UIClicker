@@ -747,7 +747,7 @@ const
 
 procedure TfrClickerActionsArr.FillInWithAllVars(AListOfVars: TStringList);
 const
-  CMissingVars: array[0..11] of string = (
+  CMissingVars: array[0..13] of string = (
     '$ExitCode$',
     '$frmUIClickerMainForm_Handle$',
     '$frmClickerControlPreview_Handle$',
@@ -759,7 +759,9 @@ const
     '$ImageWidth$',
     '$ImageHeight$',
     '$ExtImageWidth$',
-    '$ExtImageHeight$'
+    '$ExtImageHeight$',
+    '$SelfActionName$',
+    '$SelfActionIndex$'
   );
 var
   i: Integer;
@@ -845,6 +847,8 @@ begin
     TempVarDescriptions.Add('$ImageHeight$=[Numeric] This is the height of a bitmap, loaded with $GetImageDimensions()$ function.');
     TempVarDescriptions.Add('$ExtImageWidth$=[Numeric] This is the width of a bitmap, loaded with GetExternallyRenderedImageDimensions()$ function.');
     TempVarDescriptions.Add('$ExtImageHeight$=[Numeric] This is the height of a bitmap, loaded with GetExternallyRenderedImageDimensions()$ function.');
+    TempVarDescriptions.Add('$SelfActionName$=[String] Name of the action, which is currently being executed. A template can have multiple actions with the same name, so make sure they are uniquely named for a proper identification.');
+    TempVarDescriptions.Add('$SelfActionIndex$=[Numeric] Index of the action, which is currently being executed.');
 
     for i := 0 to FVarDescriptions.Count - 1 do
       FVarDescriptions.Strings[i] := TempVarDescriptions.Values[FVarDescriptions.Strings[i]];
@@ -2198,6 +2202,8 @@ begin
   Result := True;
 
   SetActionVarValue('$ExecAction_Err$', '');
+  SetActionVarValue('$SelfActionName$', FClkActions[AActionIndex].ActionOptions.ActionName);
+  SetActionVarValue('$SelfActionIndex$', IntToStr(AActionIndex));
 
   if (AActionIndex < 0) or (AActionIndex > Length(FClkActions) - 1) then
     raise Exception.Create('ActionIndex out of bounds: ' + IntToStr(AActionIndex));
