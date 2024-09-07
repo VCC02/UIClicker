@@ -2668,6 +2668,7 @@ begin
       ResolvedFileName := ListOfPrimitiveFiles.Strings[i];
       ResolvedFileName := StringReplace(ResolvedFileName, '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
       ResolvedFileName := StringReplace(ResolvedFileName, '$TemplateDir$', FFullTemplatesDir, [rfReplaceAll]);
+      ResolvedFileName := StringReplace(ResolvedFileName, '$SelfTemplateDir$', ExtractFileDir(DoOnGetLoadedTemplateFileName), [rfReplaceAll]);
       ResolvedFileName := EvaluateReplacements(ResolvedFileName);
 
       if UpperCase(ResolvedFileName) = UpperCaseName then     //this requires the list to have unique filenames
@@ -3768,7 +3769,11 @@ begin
     PmtvFnm := ListOfFiles.Strings[AFileIndex];
     PmtvFnm := StringReplace(PmtvFnm, '$TemplateDir$', FFullTemplatesDir, [rfReplaceAll]);
     PmtvFnm := StringReplace(PmtvFnm, '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
+    PmtvFnm := StringReplace(PmtvFnm, '$SelfTemplateDir$', ExtractFileDir(DoOnGetLoadedTemplateFileName), [rfReplaceAll]);
     PmtvFnm := EvaluateReplacements(PmtvFnm);
+
+    DoOnAddToLog('Saving primitives file: "' + PmtvFnm + '"');
+
     frClickerFindControl.frClickerPrimitives.SaveFile(PmtvFnm);
 
     //maybe the following three lines, should be moved to the OnSave handler
@@ -3814,6 +3819,7 @@ begin
       PmtvFnm := ListOfFiles.Strings[MenuData^.PropertyItemIndex];
       PmtvFnm := StringReplace(PmtvFnm, '$TemplateDir$', FFullTemplatesDir, [rfReplaceAll]);
       PmtvFnm := StringReplace(PmtvFnm, '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
+      PmtvFnm := StringReplace(PmtvFnm, '$SelfTemplateDir$', ExtractFileDir(DoOnGetLoadedTemplateFileName), [rfReplaceAll]);
       PmtvFnm := EvaluateReplacements(PmtvFnm);
 
       DoOnSetSaveDialogInitialDir(ExtractFileDir(PmtvFnm));
@@ -6906,7 +6912,10 @@ begin
         PmtvFnm := PrimitiveFileNames.Strings[PropertyItemIndex];
         PmtvFnm := StringReplace(PmtvFnm, '$TemplateDir$', FFullTemplatesDir, [rfReplaceAll]);
         PmtvFnm := StringReplace(PmtvFnm, '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
+        PmtvFnm := StringReplace(PmtvFnm, '$SelfTemplateDir$', ExtractFileDir(DoOnGetLoadedTemplateFileName), [rfReplaceAll]);
         PmtvFnm := EvaluateReplacements(PmtvFnm);
+
+        DoOnAddToLog('Loading primitives file: "' + ExpandFileName(PmtvFnm) + '".');
 
         frClickerFindControl.frClickerPrimitives.LoadFile(PmtvFnm);
       finally

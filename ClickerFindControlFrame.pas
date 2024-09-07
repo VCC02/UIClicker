@@ -183,6 +183,7 @@ type
     imgEraseImage: TImage;
     imgFindFontNameAndSize: TImage;
     imgCopyColorUnderMouseCursorImg: TImage;
+    imgScreenshot: TImage;
     imgStopFindFontNameAndSize: TImage;
     imgFindFontNameAndSizeSettings: TImage;
     imgStopCalcMinErrLevel: TImage;
@@ -196,6 +197,7 @@ type
     imgUpdateLeftTopOffsets: TImage;
     imgCopyBkImg: TImage;
     imgUpdateLeftTopRightBottomOffsets: TImage;
+    lblPreviewSelectedControl: TLabel;
     lblColorUnderCursor: TLabel;
     lblColorUnderCursorPreview: TLabel;
     lblPrimitivesInfo: TLabel;
@@ -226,10 +228,12 @@ type
     MenuItemPasteRefFromClipboard: TMenuItem;
     N3: TMenuItem;
     PageControlMatch: TPageControl;
+    pnlBase: TPanel;
     pnlSelectionLinesInfo: TPanel;
     pnlUseWholeScreen: TPanel;
     pnlDrag: TPanel;
     pmExtraCopyValueWindows: TPopupMenu;
+    scrboxScreenshot: TScrollBox;
     spdbtnDisplaySearchAreaDbgImgMenu: TSpeedButton;
     spdbtnExtraCopyValueWindows: TSpeedButton;
     tabctrlBMPText: TTabControl;
@@ -1808,6 +1812,7 @@ procedure TfrClickerFindControl.pnlDragMouseMove(Sender: TObject;
 var
   tp: TPoint;
   Comp: TCompRec;
+  CompWidth, CompHeight: Integer;
 begin
   if FDragging then
   begin
@@ -1822,6 +1827,26 @@ begin
 
     if pnlDrag.Color <> clLime then
       pnlDrag.Color := clLime;
+
+    CompWidth := Comp.ComponentRectangle.Right - Comp.ComponentRectangle.Left;
+    CompHeight := Comp.ComponentRectangle.Bottom - Comp.ComponentRectangle.Top;
+
+    if CompWidth > 16383 then
+      CompWidth := 16383;
+
+    if CompHeight > 16383 then
+      CompHeight := 16383;
+
+    try
+      imgScreenshot.Width := CompWidth;             //AV here after debugging, then reloading a template while debugging and pressing Continue (AV), then pressing Ctrl key to enter here
+      imgScreenshot.Height := CompHeight;
+      pnlBase.Width := imgScreenshot.Left + imgScreenshot.Width + 3;
+      pnlBase.Height := imgScreenshot.Top + imgScreenshot.Height + 3;
+      pnlBase.Color := clYellow;
+
+      ScreenShot(Comp.Handle, imgScreenshot.Picture.Bitmap, 0, 0, CompWidth, CompHeight);
+    except
+    end;
   end;
 end;
 

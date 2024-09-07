@@ -91,10 +91,10 @@ object frClickerFindControl: TfrClickerFindControl
         end
         object chkAutoCopyValuesToObjectInspector: TCheckBox
           Left = 8
-          Height = 19
+          Height = 17
           Hint = 'When checked, the contents of "Found control text" and "Found control class" editboxes, are copied to the "Match Text" and "Match Class Name" properties in Object Inspector, after dragging the mouse cursor to a control.'
           Top = 91
-          Width = 197
+          Width = 195
           Caption = 'Autocopy values to Object Inspector'
           Checked = True
           State = cbChecked
@@ -140,6 +140,50 @@ object frClickerFindControl: TfrClickerFindControl
           OnClick = spdbtnExtraCopyValueWindowsClick
         end
       end
+      object scrboxScreenshot: TScrollBox
+        Left = 352
+        Height = 195
+        Top = 24
+        Width = 512
+        HorzScrollBar.Increment = 49
+        HorzScrollBar.Page = 491
+        HorzScrollBar.Smooth = True
+        HorzScrollBar.Tracking = True
+        VertScrollBar.Increment = 17
+        VertScrollBar.Page = 174
+        VertScrollBar.Smooth = True
+        VertScrollBar.Tracking = True
+        Anchors = [akTop, akLeft, akRight, akBottom]
+        ClientHeight = 174
+        ClientWidth = 491
+        ParentBackground = False
+        TabOrder = 1
+        object pnlBase: TPanel
+          Left = 0
+          Height = 195
+          Top = 0
+          Width = 504
+          ClientHeight = 195
+          ClientWidth = 504
+          Color = 11796479
+          ParentBackground = False
+          ParentColor = False
+          TabOrder = 0
+          object imgScreenshot: TImage
+            Left = 3
+            Height = 192
+            Top = 3
+            Width = 504
+          end
+        end
+      end
+      object lblPreviewSelectedControl: TLabel
+        Left = 352
+        Height = 13
+        Top = 8
+        Width = 38
+        Caption = 'Preview'
+      end
     end
     object TabSheetActionFindSubControlBMPText: TTabSheet
       Caption = 'BMP Text'
@@ -159,9 +203,9 @@ object frClickerFindControl: TfrClickerFindControl
       end
       object chkDisplayCroppingLines: TCheckBox
         Left = 0
-        Height = 19
-        Top = 200
-        Width = 122
+        Height = 17
+        Top = 202
+        Width = 120
         Anchors = [akLeft, akBottom]
         Caption = 'Display cropping lines'
         TabOrder = 1
