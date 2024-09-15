@@ -125,7 +125,7 @@ var
   ExceptionLog: TStringList;
   LogPath: string;
 begin
-  try //use another try..excempt, just in case parsing the stack would raise more exceptions
+  try //use another try..except, just in case parsing the stack would raise more exceptions
     {$IFDEF TestBuild}
       if GetCmdLineOptionValue('--EnableSavingExceptionToFile') = 'No' then
         Exit;

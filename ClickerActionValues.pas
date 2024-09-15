@@ -45,12 +45,17 @@ type
   end;
 
 const
-  CCategoryCount = 2;
+  CCategoryCount = 2;  //Although there actions with more than two categories, maybe it's better to keep this value as used by most of the actions.
 
   CCategory_Common = 0;
   CCategory_ActionSpecific = 1;
+  CCategory_EditedAction = 2;
 
-  CCategories: array[0..CCategoryCount - 1] of string = ('Common', 'Action specific');
+  CCategory_Name_Common = 'Common';
+  CCategory_Name_ActionSpecific = 'Action specific';
+  CCategory_Name_EditedAction = 'Edited action';
+
+  CCategories: array[0..CCategoryCount - 1] of string = (CCategory_Name_Common, CCategory_Name_ActionSpecific);
   CPropCount_Common = 4;  //Action name, Action type, Action Timeout, StopOnError
 
   //Properties (counts)
@@ -66,6 +71,7 @@ const
   CPropCount_LoadSetVarFromFile = 2;
   CPropCount_SaveSetVarToFile = 2;
   CPropCount_Plugin = 1;  //Static properties, defined here. A plugin can report additional properties, which are not counted by this constant.
+  CPropCount_EditTemplate = 5; //Static properties, defined here.  ListOfEnabledProperties and CachedCount do not have to be displayed. They are not directly editable from OI.
 
   CMainPropCounts: array[0..Ord(High(TClkAction))] of Integer = (
     CPropCount_Click,
@@ -79,7 +85,8 @@ const
     CPropCount_WindowOperations,
     CPropCount_LoadSetVarFromFile,
     CPropCount_SaveSetVarToFile,
-    CPropCount_Plugin
+    CPropCount_Plugin,
+    CPropCount_EditTemplate
   );
 
   //Sub properties (counts)
@@ -410,6 +417,14 @@ const
     (Name: 'FileName'; EditorType: etTextWithArrow; DataType: CDTString)
   );
 
+  CEditTemplateProperties: array[0..CPropCount_EditTemplate - 1] of TOIPropDef = (
+    (Name: 'Operation'; EditorType: etEnumCombo; DataType: CDTEnum),
+    (Name: 'WhichTemplate'; EditorType: etEnumCombo; DataType: CDTEnum),
+    (Name: 'TemplateFileName'; EditorType: etTextWithArrow; DataType: CDTString),
+    (Name: 'EditedActionName'; EditorType: etTextWithArrow; DataType: CDTString),
+    (Name: 'EditedActionType'; EditorType: etEnumCombo; DataType: CDTString)
+  );
+
 type
   TArrayOfProperties = array[0..0] of TOIPropDef;
   PArrayOfProperties = ^TArrayOfProperties;
@@ -440,18 +455,19 @@ type
 
 const
   CMainProperties: TArrayOfPropertiesArr = (
-    @CClickProperties,
-    @CExecAppProperties,
-    @CFindControlProperties,
-    @CFindControlProperties,
-    @CSetTextProperties,
-    @CCallTemplateProperties,
-    @CSleepProperties,
-    @CSetVarProperties,
-    @CWindowOperationsProperties,
-    @CLoadSetVarFromFileProperties,
-    @CSaveSetVarToFileProperties,
-    @CPluginProperties
+    @CClickProperties,                      //0
+    @CExecAppProperties,                    //1
+    @CFindControlProperties,                //2
+    @CFindControlProperties,                //3
+    @CSetTextProperties,                    //4
+    @CCallTemplateProperties,               //5
+    @CSleepProperties,                      //6
+    @CSetVarProperties,                     //7
+    @CWindowOperationsProperties,           //8
+    @CLoadSetVarFromFileProperties,         //9
+    @CSaveSetVarToFileProperties,           //10
+    @CPluginProperties,                     //11
+    @CEditTemplateProperties                //12
   );
 
 
@@ -468,6 +484,7 @@ function GetActionValueStr_WindowOperations(AAction: PClkActionRec; APropertyInd
 function GetActionValueStr_LoadSetVarFromFile(AAction: PClkActionRec; APropertyIndex: Integer): string;
 function GetActionValueStr_SaveSetVarToFile(AAction: PClkActionRec; APropertyIndex: Integer): string;
 function GetActionValueStr_Plugin(AAction: PClkActionRec; APropertyIndex: Integer): string;
+function GetActionValueStr_EditTemplate(AAction: PClkActionRec; APropertyIndex: Integer): string;
 
 {$IFDEF SubProperties}
   function GetActionValueStr_FindControl_MatchCriteria(AAction: PClkActionRec; APropertyIndex: Integer): string;
@@ -493,6 +510,7 @@ procedure SetActionValueStr_WindowOperations(AAction: PClkActionRec; NewValue: s
 procedure SetActionValueStr_LoadSetVarFromFile(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
 procedure SetActionValueStr_SaveSetVarToFile(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
 procedure SetActionValueStr_Plugin(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
+procedure SetActionValueStr_EditTemplate(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
 
 {$IFDEF SubProperties}
   procedure SetActionValueStr_FindControl_MatchCriteria(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
@@ -518,7 +536,8 @@ const
     GetActionValueStr_WindowOperations,
     GetActionValueStr_LoadSetVarFromFile,
     GetActionValueStr_SaveSetVarToFile,
-    GetActionValueStr_Plugin
+    GetActionValueStr_Plugin,
+    GetActionValueStr_EditTemplate
   );
 
   CMainSetActionValueStrFunctions: TSetActionValueStrProcArr = (
@@ -533,7 +552,8 @@ const
     SetActionValueStr_WindowOperations,
     SetActionValueStr_LoadSetVarFromFile,
     SetActionValueStr_SaveSetVarToFile,
-    SetActionValueStr_Plugin
+    SetActionValueStr_Plugin,
+    SetActionValueStr_EditTemplate
   );
 
   CFindControlGetActionValueStrFunctions: TGetFindControlValueStrFuncArr = (
@@ -705,6 +725,14 @@ const
     0  //FileName
   );
 
+  CEditTemplateEnumCounts: array[0..CPropCount_EditTemplate - 1] of Integer = (
+    Ord(High(TEditTemplateOperation)) + 1,
+    Ord(High(TEditTemplateWhichTemplate)) + 1,
+    0,  //TemplateFileName
+    0,  //EditedActionName,
+    Ord(High(TClkAction)) + 1
+  );
+
 
   CPropEnumCounts: array[TClkAction] of PArrayOfEnumCounts = (
     @CClickEnumCounts,
@@ -718,7 +746,8 @@ const
     @CWindowOperationsEnumCounts,
     @CLoadSetVarFromFileEnumCounts,
     @CSaveSetVarToFileEnumCounts,
-    @CPluginEnumCounts
+    @CPluginEnumCounts,
+    @CEditTemplateEnumCounts
   );
 
 
@@ -890,6 +919,14 @@ const
     nil  //FileName
   );
 
+  CEditTemplateEnumStrings: array[0..CPropCount_EditTemplate - 1] of PArrayOfString = (
+    @CEditTemplateOperationStr,
+    @CEditTemplateWhichTemplateStr,
+    nil,  //TemplateFileName
+    nil,  //EditedActionName
+    @CClkActionStr
+  );
+
 
   CPropEnumStrings: array[TClkAction] of PArrayOfEnumStrings = (
     @CClickEnumStrings,
@@ -903,7 +940,8 @@ const
     @CWindowOperationsEnumStrings,
     @CLoadSetVarFromFileEnumStrings,
     @CSaveSetVarToFileEnumStrings,
-    @CPluginEnumStrings
+    @CPluginEnumStrings,
+    @CEditTemplateEnumStrings
   );
 
   {$IFDEF SubProperties}
@@ -946,6 +984,164 @@ const
       @CLoopEvalBreakPositionStr
     );
   {$ENDIF}
+
+
+/////////////////////////////////////
+
+//IsExp =  property, which can be expanded in OI, i.e. a structure or an array of items/structures.
+//0 = cannot be expanded
+//1 - can always be expanded, like a structure
+//2 - can be expanded, but not always (e.g. an array of files)
+  CActionIsExp: array[0..CPropCount_Common - 1] of Integer = (
+    0,
+    0, //TClkAction
+    0,
+    0
+  );
+
+  CClickIsExp: array[0..CPropCount_Click - 1] of Integer = (
+    0, //TXClickPointReference
+    0, //TYClickPointReference
+    0, //XClickPointVar: string;
+    0, //YClickPointVar: string;
+    0, //XOffset,
+    0, //YOffset;
+    0, //TMouseButton
+    0, //ClickWithCtrl: Boolean;
+    0, //ClickWithAlt: Boolean;
+    0, //ClickWithShift: Boolean;
+    0, //Count: Integer;
+    0, //LeaveMouse: Boolean;
+    0, //MoveWithoutClick: Boolean;
+    0, //CClickType_Count, //ClickType: Integer;
+    0, //TXClickPointReference
+    0, //TYClickPointReference
+    0, //XClickPointVarDest: string;
+    0, //YClickPointVarDest: string;
+    0, //XOffsetDest
+    0, //YOffsetDest
+    0, //TMouseWheelType
+    0, //MouseWheelAmount: string;
+    0, //DelayAfterMovingToDestination: string;
+    0, //DelayAfterMouseDown: string;
+    0 //MoveDuration: string;
+  );
+
+  CExecAppIsExp: array[0..CPropCount_ExecApp - 1] of Integer = (
+    0, //PathToApp: string;
+    0, //ListOfParams: string;
+    0, //WaitForApp: Boolean;
+    0, //AppStdIn: string;
+    0, //CurrentDir: string;
+    0, //TExecAppUseInheritHandles
+    0 //NoConsole: Boolean;
+  );
+
+  CFindControlIsExp: array[0..CPropCount_FindControl - 1] of Integer = (
+    1, //MatchCriteria: TClkFindControlMatchCriteria;
+    0, //AllowToFail: Boolean;
+    0, //MatchText: string;
+    0, //MatchClassName: string;
+    0, //MatchTextSeparator: string;
+    0, //MatchClassNameSeparator: string;
+    2, //MatchBitmapText: TClkFindControlMatchBitmapTextArr;   //althoug unusable without items, the OI allows removing all items
+    2, //MatchBitmapFiles: string; //ListOfStrings
+    0, //TMatchBitmapAlgorithm
+    1, //MatchBitmapAlgorithmSettings: TMatchBitmapAlgorithmSettings;
+    1, //InitialRectangle: TRectString;
+    0, //UseWholeScreen: Boolean;
+    0, //ColorError: string;  //string, to allow var replacements
+    0, //AllowedColorErrorCount: string;  //Number of pixels allowed to mismatch
+    0, //WaitForControlToGoAway: Boolean;
+    0, //StartSearchingWithCachedControl: Boolean;
+    0, //CachedControlLeft: string;
+    0, //CachedControlTop: string;
+    2, //MatchPrimitiveFiles
+    0, //GetAllControls: Boolean;
+    0, //UseFastSearch: Boolean;
+    0, //FastSearchAllowedColorErrorCount: Boolean;
+    0, //IgnoredColors: string;
+    0, //StopSearchOnMismatch: Boolean;
+    0, //SleepySearch: Boolean;
+    0, //ImageSource: TImageSource;
+    0, //SourceFileName: string;
+    0,  //ImageSourceFileNameLocation: TImageSourceFileNameLocation;
+    0, //PrecisionTimeout: Boolean;
+    0, //FullBackgroundImageInResult
+    1  //MatchByHistogramSettings: TMatchByHistogramSettings;
+  );
+
+  CSetTextIsExp: array[0..CPropCount_SetText - 1] of Integer = (
+    0, //Text: string;
+    0, //TClkSetTextControlType
+    0, //DelayBetweenKeyStrokes: string;
+    0  //Count: string;
+  );
+
+  CCallTemplateIsExp: array[0..CPropCount_CallTemplate - 1] of Integer = (
+    0, //TemplateFileName: string;
+    0, //ListOfCustomVarsAndValues: string;
+    0, //EvaluateBeforeCalling: Boolean;
+    1  //CallTemplateLoop: TClkCallTemplateLoop;
+  );
+
+  CSleepIsExp: array[0..CPropCount_Sleep - 1] of Integer = (
+    0  //Value: string;
+  );
+
+  CSetVarIsExp: array[0..CPropCount_SetVar - 1] of Integer = (
+    0,  //ListOfVarNamesValuesAndEvalBefore
+    0   //FailOnException
+  );
+
+  CWindowOperationsIsExp: array[0..CPropCount_WindowOperations - 1] of Integer = (
+    0, //TWindowOperation
+    0, //NewX,
+    0, //NewY,
+    0, //NewWidth,
+    0, //NewHeight
+    0, //NewPositionEnabled,
+    0  //NewSizeEnabled: Boolean;
+  );
+
+  CLoadSetVarFromFileIsExp: array[0..CPropCount_LoadSetVarFromFile - 1] of Integer = (
+    0, //FileName
+    0  //SetVarActionName
+  );
+
+  CSaveSetVarToFileIsExp: array[0..CPropCount_SaveSetVarToFile - 1] of Integer = (
+    0, //FileName
+    0  //SetVarActionName
+  );
+
+  CPluginIsExp: array[0..CPropCount_Plugin - 1] of Integer = (
+    0  //FileName
+  );
+
+  CEditTemplateIsExp: array[0..CPropCount_EditTemplate - 1] of Integer = (
+    0,  //TEditTemplateOperation
+    0,  //TEditTemplateWhichTemplate
+    0,  //TemplateFileName
+    0,  //EditedActionName,
+    0   //TClkAction
+  );
+
+
+  CPropIsExp: array[TClkAction] of PArrayOfEnumCounts = (
+    @CClickIsExp,
+    @CExecAppIsExp,
+    @CFindControlIsExp,
+    @CFindControlIsExp,
+    @CSetTextIsExp,
+    @CCallTemplateIsExp,
+    @CSleepIsExp,
+    @CSetVarIsExp,
+    @CWindowOperationsIsExp,
+    @CLoadSetVarFromFileIsExp,
+    @CSaveSetVarToFileIsExp,
+    @CPluginIsExp,
+    @CEditTemplateIsExp
+  );
 
 
 function GetPropertyHintNoHint: string;
@@ -1049,6 +1245,11 @@ function GetPropertyHint_Sleep_Value: string;
 
 function GetPropertyHint_SetVar_FailOnException: string;
 
+function GetPropertyHint_EditTemplate_Operation: string;
+function GetPropertyHint_EditTemplate_WhichTemplate: string;
+function GetPropertyHint_EditTemplate_TemplateFileName: string;
+function GetPropertyHint_EditTemplate_EditedActionName: string;
+function GetPropertyHint_EditTemplate_EditedActionType: string;
 
 const
   CGetPropertyHint_Click: array[0..CPropCount_Click - 1] of TPropHintFunc = (
@@ -1178,6 +1379,14 @@ const
     @GetPropertyHint_Plugin_FileName  // FileName,
   );
 
+  CGetPropertyHint_EditTemplate: array[0..CPropCount_EditTemplate - 1] of TPropHintFunc = (
+    @GetPropertyHint_EditTemplate_Operation,  // Operation,
+    @GetPropertyHint_EditTemplate_WhichTemplate,  // WhichTemplate,
+    @GetPropertyHint_EditTemplate_TemplateFileName,  // TemplateFileName,
+    @GetPropertyHint_EditTemplate_EditedActionName,
+    @GetPropertyHint_EditTemplate_EditedActionType
+  );
+
 
 
   CGetPropertyHint_Actions: TPropHintFuncActionArr = (
@@ -1192,7 +1401,8 @@ const
     @CGetPropertyHint_WindowOperations,
     @CGetPropertyHint_LoadSetVarFromFile,
     @CGetPropertyHint_SaveSetVarToFile,
-    @CGetPropertyHint_Plugin
+    @CGetPropertyHint_Plugin,
+    @CGetPropertyHint_EditTemplate
   );
 
 
@@ -1592,6 +1802,20 @@ begin
 end;
 
 
+function GetActionValueStr_EditTemplate(AAction: PClkActionRec; APropertyIndex: Integer): string;
+begin
+  case APropertyIndex of
+    0: Result := CEditTemplateOperationStr[AAction^.EditTemplateOptions.Operation];
+    1: Result := CEditTemplateWhichTemplateStr[AAction^.EditTemplateOptions.WhichTemplate];
+    2: Result := AAction^.EditTemplateOptions.TemplateFileName;
+    3: Result := AAction^.EditTemplateOptions.EditedActionName;
+    4: Result := CClkActionStr[AAction^.EditTemplateOptions.EditedActionType];
+    else
+      Result := 'unknown';
+  end;
+end;
+
+
 //
 function XClickPointReference_AsStringToValue(AXClickPointReferenceAsString: string): TXClickPointReference;
 var
@@ -1806,6 +2030,48 @@ begin
   Result := woBringToFront;
   for i := Low(TWindowOperation) to High(TWindowOperation) do
     if CWindowOperationStr[i] = AWindowOperationAsString then
+    begin
+      Result := i;
+      Exit;
+    end;
+end;
+
+
+function EditTemplateOperation_AsStringToValue(AEditTemplateOperationAsString: string): TEditTemplateOperation;
+var
+  i: TEditTemplateOperation;
+begin
+  Result := etoUpdateAction;
+  for i := Low(TEditTemplateOperation) to High(TEditTemplateOperation) do
+    if CEditTemplateOperationStr[i] = AEditTemplateOperationAsString then
+    begin
+      Result := i;
+      Exit;
+    end;
+end;
+
+
+function EditTemplateWhichTemplate_AsStringToValue(AEditTemplateWhichTemplate: string): TEditTemplateWhichTemplate;
+var
+  i: TEditTemplateWhichTemplate;
+begin
+  Result := etwtSelf;
+  for i := Low(TEditTemplateWhichTemplate) to High(TEditTemplateWhichTemplate) do
+    if CEditTemplateWhichTemplateStr[i] = AEditTemplateWhichTemplate then
+    begin
+      Result := i;
+      Exit;
+    end;
+end;
+
+
+function EditTemplateEditedActionType_AsStringToValue(AEditTemplateEditedActionType: string): TClkAction;
+var
+  i: TClkAction;
+begin
+  Result := acClick;
+  for i := Low(TClkAction) to High(TClkAction) do
+    if CClkActionStr[i] = AEditTemplateEditedActionType then
     begin
       Result := i;
       Exit;
@@ -2133,6 +2399,20 @@ begin
         TempStringList.Free;
       end;
     end;
+  end;
+end;
+
+
+procedure SetActionValueStr_EditTemplate(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
+begin
+  case APropertyIndex of
+    0: AAction^.EditTemplateOptions.Operation := EditTemplateOperation_AsStringToValue(NewValue);
+    1: AAction^.EditTemplateOptions.WhichTemplate := EditTemplateWhichTemplate_AsStringToValue(NewValue);
+    2: AAction^.EditTemplateOptions.TemplateFileName := NewValue;
+    3: AAction^.EditTemplateOptions.EditedActionName := NewValue;
+    4: AAction^.EditTemplateOptions.EditedActionType := EditTemplateEditedActionType_AsStringToValue(NewValue);
+    else
+      ;
   end;
 end;
 
@@ -2713,6 +2993,36 @@ begin
   Result := 'If set to True, the action fails on the first exception.' + #13#10 +
             'Otherwise, the action continues with a variable, set to the error message.' + #13#10 +
             'As an example, when calling $RenderBmpExternally()$, the result might be a connection error message. If FailOnException is True, the action fails.';
+end;
+
+
+function GetPropertyHint_EditTemplate_Operation: string;
+begin
+  Result := '';
+end;
+
+
+function GetPropertyHint_EditTemplate_WhichTemplate: string;
+begin
+  Result := 'The action can edit this template or load an existing template and modify it.';
+end;
+
+
+function GetPropertyHint_EditTemplate_TemplateFileName: string;
+begin
+  Result := 'Used when WhichTemplate is set to etwtOther.';
+end;
+
+
+function GetPropertyHint_EditTemplate_EditedActionName: string;
+begin
+  Result := 'Used to identify the action to be created, edited or deleted.';
+end;
+
+
+function GetPropertyHint_EditTemplate_EditedActionType: string;
+begin
+  Result := 'Used when getting or setting action properties.';
 end;
 
 end.

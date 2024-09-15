@@ -76,6 +76,7 @@ begin
   FActions := TStringList.Create;
   FImages := nil;
   FOwnerPanel := nil;
+  vstActionsPalette.Caption := 'ActionsPalette';
 end;
 
 

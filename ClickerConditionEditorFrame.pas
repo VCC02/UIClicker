@@ -43,6 +43,12 @@ type
   TfrClickerConditionEditor = class(TFrame)
     imglstComparisonOperators: TImageList;
     lblLastActionStatusValidValues: TLabel;
+    MenuItemIntGreaterThanOrEqual: TMenuItem;
+    MenuItemIntLessThanOrEqual: TMenuItem;
+    MenuItemIntLessThan: TMenuItem;
+    MenuItemIntGreaterThan: TMenuItem;
+    MenuItemIntEqual: TMenuItem;
+    MenuItemIntNotEqual: TMenuItem;
     MenuItem_AddPrefixWithZerosEqualsNumber: TMenuItem;
     MenuItemEqual: TMenuItem;
     MenuItemGreaterThan: TMenuItem;
@@ -64,6 +70,12 @@ type
     procedure MenuItemEqualClick(Sender: TObject);
     procedure MenuItemGreaterThanClick(Sender: TObject);
     procedure MenuItemGreaterThanOrEqualClick(Sender: TObject);
+    procedure MenuItemIntEqualClick(Sender: TObject);
+    procedure MenuItemIntGreaterThanClick(Sender: TObject);
+    procedure MenuItemIntGreaterThanOrEqualClick(Sender: TObject);
+    procedure MenuItemIntLessThanClick(Sender: TObject);
+    procedure MenuItemIntLessThanOrEqualClick(Sender: TObject);
+    procedure MenuItemIntNotEqualClick(Sender: TObject);
     procedure MenuItemLessThanClick(Sender: TObject);
     procedure MenuItemLessThanOrEqualClick(Sender: TObject);
     procedure MenuItemNotEqualClick(Sender: TObject);
@@ -722,6 +734,42 @@ procedure TfrClickerConditionEditor.MenuItemGreaterThanOrEqualClick(
   Sender: TObject);
 begin
   SetConditionOperator(CCompGreaterThanOrEqual);
+end;
+
+
+procedure TfrClickerConditionEditor.MenuItemIntEqualClick(Sender: TObject);
+begin
+  SetConditionOperator(CIntCompEqual);
+end;
+
+
+procedure TfrClickerConditionEditor.MenuItemIntGreaterThanClick(Sender: TObject);
+begin
+  SetConditionOperator(CIntCompGreaterThan);
+end;
+
+
+procedure TfrClickerConditionEditor.MenuItemIntGreaterThanOrEqualClick(Sender: TObject);
+begin
+  SetConditionOperator(CIntCompGreaterThanOrEqual);
+end;
+
+
+procedure TfrClickerConditionEditor.MenuItemIntLessThanClick(Sender: TObject);
+begin
+  SetConditionOperator(CIntCompLessThan);
+end;
+
+
+procedure TfrClickerConditionEditor.MenuItemIntLessThanOrEqualClick(Sender: TObject);
+begin
+  SetConditionOperator(CIntCompLessThanOrEqual);
+end;
+
+
+procedure TfrClickerConditionEditor.MenuItemIntNotEqualClick(Sender: TObject);
+begin
+  SetConditionOperator(CIntCompNotEqual);
 end;
 
 

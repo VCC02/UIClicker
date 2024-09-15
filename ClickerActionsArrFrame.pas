@@ -293,6 +293,7 @@ type
     FTemplateIconPath: string;
     FActionExecution: TActionExecution;
     FEditingText: string;
+    FClkEditedActionByEditTemplate: TClkActionRec; //Used as a working action when setting properties from OI on an EditTemplate action. Otherwise, it just takes memory. It is easier to have this allocated here, because it is deallocated automatically when destroying the whole object.
 
     FModified: Boolean;
     FStopAllActionsOnDemand: Boolean;
@@ -495,6 +496,7 @@ type
 
     procedure UpdateActionsArrFromControls(ActionIndex: Integer);
     procedure UpdateControlsFromActionsArr(ActionIndex: Integer);
+    procedure SetActionToDefault(var AAction: TClkActionRec; ANewActionType: TClkAction);
     procedure OverwriteActionAtIndexWithDefault(AIndex: Integer; ANewActionType: TClkAction);
 
     procedure FPaletteVstMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
@@ -738,7 +740,7 @@ uses
   Math, ClickerTemplates, BitmapConv,
   BitmapProcessing, Clipbrd, ClickerConditionEditorForm, ClickerActionsClient,
   ClickerTemplateNotesForm, AutoCompleteForm, ClickerVstUtils,
-  ClickerActionPluginLoader, ClickerActionPlugins;
+  ClickerActionPluginLoader, ClickerActionPlugins, ClickerActionProperties;
 
 
 const
@@ -2006,6 +2008,12 @@ begin
   if frClickerActions.CurrentlyEditingActionType = acPlugin then
     frClickerActions.frClickerPlugin.LoadDebugSymbols(ExtractFullFileNameNoExt(ResolveTemplatePath(FClkActions[ActionIndex].PluginOptions.FileName)) + '.DbgSym');
 
+  if frClickerActions.CurrentlyEditingActionType = acEditTemplate then
+  begin
+    frClickerActions.EditingAction^.EditTemplateOptions.EditingAction := @FClkEditedActionByEditTemplate;
+    SetActionToDefault(FClkEditedActionByEditTemplate, frClickerActions.EditingAction^.EditTemplateOptions.EditedActionType);
+  end;
+
   if FClkActions[ActionIndex].ScrollIndex <> '' then
   begin
     Action_ScrollInfo := TStringList.Create;
@@ -2221,6 +2229,7 @@ begin
     acLoadSetVarFromFile: Result := FActionExecution.ExecuteLoadSetVarFromFileAction(FClkActions[AActionIndex].LoadSetVarFromFileOptions);
     acSaveSetVarToFile: Result := FActionExecution.ExecuteSaveSetVarToFileAction(FClkActions[AActionIndex].SaveSetVarToFileOptions);
     acPlugin: Result := FActionExecution.ExecutePluginAction(FClkActions[AActionIndex].PluginOptions, @FClkActions, frClickerActions.ClkVariables, ResolveTemplatePath(FClkActions[AActionIndex].PluginOptions.FileName), FContinuePlayingBySteppingInto, {FShouldStopAtBreakPoint replaced by FDebugging} FDebugging);
+    acEditTemplate: Result := False;
   end;  //case
 end;
 
@@ -3818,6 +3827,7 @@ begin
           acLoadSetVarFromFile: CellText := CurrentAction.LoadSetVarFromFileOptions.SetVarActionName + '  from "' + CurrentAction.LoadSetVarFromFileOptions.FileName + '"';
           acSaveSetVarToFile: CellText := CurrentAction.SaveSetVarToFileOptions.SetVarActionName + '  from "' + CurrentAction.SaveSetVarToFileOptions.FileName + '"';
           acPlugin: CellText := CurrentAction.PluginOptions.FileName;
+          acEditTemplate: CellText := CEditTemplateOperationStr[CurrentAction.EditTemplateOptions.Operation];
         end;
       end;
       5: CellText := StringReplace(CurrentAction.FindControlOptions.MatchBitmapFiles, #13#10, ', ', [rfReplaceAll]);
@@ -4201,7 +4211,7 @@ const
       end;
   end;
 
-  function ReturnToModifiedFindSubControlWIthPmtvAction: Boolean; //returns True if should return
+  function ReturnToModifiedFindSubControlWithPmtvAction: Boolean; //returns True if should return
   begin
     Result := False;
 
@@ -4225,7 +4235,7 @@ begin
 
   if Node = nil then  //no action is selected, so verify if an action just got deselected
   begin
-    if not ReturnToModifiedGenericAction and not ReturnToModifiedFindSubControlWIthPmtvAction then
+    if not ReturnToModifiedGenericAction and not ReturnToModifiedFindSubControlWithPmtvAction then
     begin
       frClickerActions.CurrentlyEditingActionType := {%H-}TClkAction(MaxInt); //use an invalid value, to hide all editors
       StopGlowingUpdateButton;
@@ -4244,7 +4254,7 @@ begin
   if ReturnToModifiedGenericAction then
     Exit;
 
-  if ReturnToModifiedFindSubControlWIthPmtvAction then
+  if ReturnToModifiedFindSubControlWithPmtvAction then
     Exit;
 
   UpdateControlsFromActionsArr(Node^.Index);
@@ -5805,172 +5815,45 @@ begin
 end;
 
 
+procedure TfrClickerActionsArr.SetActionToDefault(var AAction: TClkActionRec; ANewActionType: TClkAction);
+begin
+  AAction.ActionOptions.Action := ANewActionType;
+  AAction.ActionOptions.ActionCondition := '';
+  AAction.ActionOptions.ActionEnabled := True;
+  AAction.ActionOptions.ActionName := '"' + CClkActionStr[AAction.ActionOptions.Action] + '"';
+  AAction.ActionOptions.ActionTimeout := 0;
+  AAction.ActionOptions.ExecutionIndex := '';
+  AAction.ActionStatus := asNotStarted;
+  AAction.ActionSkipped := False;
+  AAction.ActionBreakPoint.Condition := '';
+  AAction.ActionBreakPoint.Enabled := False;
+  AAction.ActionBreakPoint.Exists := False;
+  AAction.ActionDebuggingStatus := adsNone;
+
+  if AAction.ActionOptions.Action = acFindSubControl then
+    AAction.ActionOptions.ActionTimeout := 1000;
+
+  if AAction.ActionOptions.Action = acFindControl then
+    AAction.ActionOptions.ActionTimeout := 3000;
+
+  GetDefaultPropertyValues_Click(AAction.ClickOptions);
+  GetDefaultPropertyValues_ExecApp(AAction.ExecAppOptions);
+  GetDefaultPropertyValues_FindControl(AAction.FindControlOptions, AAction.ActionOptions.Action = acFindSubControl);
+  GetDefaultPropertyValues_SetControlText(AAction.SetTextOptions);
+  GetDefaultPropertyValues_CallTemplate(AAction.CallTemplateOptions);
+  GetDefaultPropertyValues_Sleep(AAction.SleepOptions);
+  GetDefaultPropertyValues_SetVar(AAction.SetVarOptions);
+  GetDefaultPropertyValues_WindowOperations(AAction.WindowOperationsOptions);
+  GetDefaultPropertyValues_LoadSetVarFromFile(AAction.LoadSetVarFromFileOptions);
+  GetDefaultPropertyValues_SaveSetVarToFile(AAction.SaveSetVarToFileOptions);
+  GetDefaultPropertyValues_Plugin(AAction.PluginOptions);
+  GetDefaultPropertyValues_EditTemplate(AAction.EditTemplateOptions);
+end;
+
+
 procedure TfrClickerActionsArr.OverwriteActionAtIndexWithDefault(AIndex: Integer; ANewActionType: TClkAction);
 begin
-  FClkActions[AIndex].ActionOptions.Action := ANewActionType;
-  FClkActions[AIndex].ActionOptions.ActionCondition := '';
-  FClkActions[AIndex].ActionOptions.ActionEnabled := True;
-  FClkActions[AIndex].ActionOptions.ActionName := '"' + CClkActionStr[FClkActions[AIndex].ActionOptions.Action] + '"';
-  FClkActions[AIndex].ActionOptions.ActionTimeout := 0;
-  FClkActions[AIndex].ActionOptions.ExecutionIndex := '';
-  FClkActions[AIndex].ActionStatus := asNotStarted;
-  FClkActions[AIndex].ActionSkipped := False;
-  FClkActions[AIndex].ActionBreakPoint.Condition := '';
-  FClkActions[AIndex].ActionBreakPoint.Enabled := False;
-  FClkActions[AIndex].ActionBreakPoint.Exists := False;
-  FClkActions[AIndex].ActionDebuggingStatus := adsNone;
-
-  //Important default values    ///////////////////////////////// ToDo  replace these with some default values
-  FClkActions[AIndex].ClickOptions.XClickPointReference := xrefLeft;
-  FClkActions[AIndex].ClickOptions.YClickPointReference := yrefTop;
-  FClkActions[AIndex].ClickOptions.XClickPointVar := '$Control_Left$';
-  FClkActions[AIndex].ClickOptions.YClickPointVar := '$Control_Top$';
-  FClkActions[AIndex].ClickOptions.XOffset := '4';
-  FClkActions[AIndex].ClickOptions.YOffset := '4';
-  FClkActions[AIndex].ClickOptions.MouseButton := mbLeft;
-  FClkActions[AIndex].ClickOptions.ClickWithCtrl := False;
-  FClkActions[AIndex].ClickOptions.ClickWithAlt := False;
-  FClkActions[AIndex].ClickOptions.ClickWithShift := False;
-  FClkActions[AIndex].ClickOptions.ClickWithDoubleClick := False;  //deprecated, but the code is still active
-  FClkActions[AIndex].ClickOptions.Count := 1;
-  FClkActions[AIndex].ClickOptions.LeaveMouse := False;
-  FClkActions[AIndex].ClickOptions.MoveWithoutClick := False;
-  FClkActions[AIndex].ClickOptions.ClickType := CClickType_Click;
-  FClkActions[AIndex].ClickOptions.XClickPointReferenceDest := xrefLeft;
-  FClkActions[AIndex].ClickOptions.YClickPointReferenceDest := yrefTop;
-  FClkActions[AIndex].ClickOptions.XClickPointVarDest := '$Control_Left$';
-  FClkActions[AIndex].ClickOptions.YClickPointVarDest := '$Control_Top$';
-  FClkActions[AIndex].ClickOptions.XOffsetDest := '7';
-  FClkActions[AIndex].ClickOptions.YOffsetDest := '7';
-  FClkActions[AIndex].ClickOptions.MouseWheelType := mwtVert;
-  FClkActions[AIndex].ClickOptions.MouseWheelAmount := '1';
-  FClkActions[AIndex].ClickOptions.DelayAfterMovingToDestination := '50';
-  FClkActions[AIndex].ClickOptions.DelayAfterMouseDown := '200';
-  FClkActions[AIndex].ClickOptions.MoveDuration := '-1';
-
-  FClkActions[AIndex].ExecAppOptions.PathToApp := '';
-  FClkActions[AIndex].ExecAppOptions.ListOfParams := '';
-  FClkActions[AIndex].ExecAppOptions.WaitForApp := False;
-  FClkActions[AIndex].ExecAppOptions.AppStdIn := '';
-  FClkActions[AIndex].ExecAppOptions.CurrentDir := '';
-  FClkActions[AIndex].ExecAppOptions.UseInheritHandles := uihNo;
-  FClkActions[AIndex].ExecAppOptions.NoConsole := False;
-
-  FClkActions[AIndex].FindControlOptions.MatchCriteria.WillMatchText := FClkActions[AIndex].ActionOptions.Action = acFindControl;
-  FClkActions[AIndex].FindControlOptions.MatchCriteria.WillMatchClassName := FClkActions[AIndex].ActionOptions.Action = acFindControl;
-  FClkActions[AIndex].FindControlOptions.MatchCriteria.WillMatchBitmapText := FClkActions[AIndex].ActionOptions.Action = acFindSubControl;
-  FClkActions[AIndex].FindControlOptions.MatchCriteria.WillMatchBitmapFiles := False;
-  FClkActions[AIndex].FindControlOptions.MatchCriteria.WillMatchPrimitiveFiles := False;
-  FClkActions[AIndex].FindControlOptions.MatchCriteria.SearchForControlMode := sfcmGenGrid;
-  FClkActions[AIndex].FindControlOptions.AllowToFail := False;
-  FClkActions[AIndex].FindControlOptions.MatchText := '';
-  FClkActions[AIndex].FindControlOptions.MatchClassName := '';
-  FClkActions[AIndex].FindControlOptions.MatchTextSeparator := '';
-  FClkActions[AIndex].FindControlOptions.MatchClassNameSeparator := '';
-  FClkActions[AIndex].FindControlOptions.MatchBitmapFiles := '';
-  FClkActions[AIndex].FindControlOptions.MatchBitmapAlgorithm := mbaBruteForce;
-  FClkActions[AIndex].FindControlOptions.MatchBitmapAlgorithmSettings.XMultipleOf := 1;
-  FClkActions[AIndex].FindControlOptions.MatchBitmapAlgorithmSettings.YMultipleOf := 1;
-  FClkActions[AIndex].FindControlOptions.MatchBitmapAlgorithmSettings.XOffset := 0;
-  FClkActions[AIndex].FindControlOptions.MatchBitmapAlgorithmSettings.YOffset := 0;
-  FClkActions[AIndex].FindControlOptions.InitialRectangle.Left := '$Control_Left$';
-  FClkActions[AIndex].FindControlOptions.InitialRectangle.Top := '$Control_Top$';
-  FClkActions[AIndex].FindControlOptions.InitialRectangle.Right := '$Control_Right$';
-  FClkActions[AIndex].FindControlOptions.InitialRectangle.Bottom := '$Control_Bottom$';
-  FClkActions[AIndex].FindControlOptions.InitialRectangle.LeftOffset := '0';
-  FClkActions[AIndex].FindControlOptions.InitialRectangle.TopOffset := '0';
-  FClkActions[AIndex].FindControlOptions.InitialRectangle.RightOffset := '0';
-  FClkActions[AIndex].FindControlOptions.InitialRectangle.BottomOffset := '0';
-  FClkActions[AIndex].FindControlOptions.UseWholeScreen := FClkActions[AIndex].ActionOptions.Action = acFindControl;
-  FClkActions[AIndex].FindControlOptions.ColorError := '0';
-  FClkActions[AIndex].FindControlOptions.AllowedColorErrorCount := '0';
-  FClkActions[AIndex].FindControlOptions.WaitForControlToGoAway := False;
-  FClkActions[AIndex].FindControlOptions.StartSearchingWithCachedControl := False;
-  FClkActions[AIndex].FindControlOptions.CachedControlLeft := '';
-  FClkActions[AIndex].FindControlOptions.CachedControlTop := '';
-  FClkActions[AIndex].FindControlOptions.MatchPrimitiveFiles := '';
-  FClkActions[AIndex].FindControlOptions.MatchPrimitiveFiles_Modified := '';
-  FClkActions[AIndex].FindControlOptions.GetAllControls := False;
-  FClkActions[AIndex].FindControlOptions.UseFastSearch := True;
-  FClkActions[AIndex].FindControlOptions.FastSearchAllowedColorErrorCount := '10';
-  FClkActions[AIndex].FindControlOptions.IgnoredColors := '';
-  FClkActions[AIndex].FindControlOptions.SleepySearch := False;
-  FClkActions[AIndex].FindControlOptions.StopSearchOnMismatch := True;
-  FClkActions[AIndex].FindControlOptions.ImageSource := isScreenshot;
-  FClkActions[AIndex].FindControlOptions.SourceFileName := '';
-  FClkActions[AIndex].FindControlOptions.ImageSourceFileNameLocation := isflMem;
-  FClkActions[AIndex].FindControlOptions.PrecisionTimeout := False;
-  FClkActions[AIndex].FindControlOptions.FullBackgroundImageInResult := True;
-  FClkActions[AIndex].FindControlOptions.MatchByHistogramSettings.MinPercentColorMatch := '50';
-  FClkActions[AIndex].FindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInSubBmp := '10';
-  FClkActions[AIndex].FindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp := '15';
-
-  SetLength(FClkActions[AIndex].FindControlOptions.MatchBitmapText, 1);
-  FClkActions[AIndex].FindControlOptions.MatchBitmapText[0].ForegroundColor := '$Color_Window$';
-  FClkActions[AIndex].FindControlOptions.MatchBitmapText[0].BackgroundColor := '$Color_Highlight$';
-  FClkActions[AIndex].FindControlOptions.MatchBitmapText[0].FontName := 'Tahoma';
-  FClkActions[AIndex].FindControlOptions.MatchBitmapText[0].FontSize := 8;
-  FClkActions[AIndex].FindControlOptions.MatchBitmapText[0].FontQualityReplacement := '';
-  FClkActions[AIndex].FindControlOptions.MatchBitmapText[0].FontQuality := fqNonAntialiased;
-  FClkActions[AIndex].FindControlOptions.MatchBitmapText[0].FontQualityUsesReplacement := False;
-  FClkActions[AIndex].FindControlOptions.MatchBitmapText[0].Bold := False;
-  FClkActions[AIndex].FindControlOptions.MatchBitmapText[0].Italic := False;
-  FClkActions[AIndex].FindControlOptions.MatchBitmapText[0].Underline := False;
-  FClkActions[AIndex].FindControlOptions.MatchBitmapText[0].StrikeOut := False;
-  FClkActions[AIndex].FindControlOptions.MatchBitmapText[0].CropLeft := '0';
-  FClkActions[AIndex].FindControlOptions.MatchBitmapText[0].CropTop := '0';
-  FClkActions[AIndex].FindControlOptions.MatchBitmapText[0].CropRight := '0';
-  FClkActions[AIndex].FindControlOptions.MatchBitmapText[0].CropBottom := '0';
-  FClkActions[AIndex].FindControlOptions.MatchBitmapText[0].IgnoreBackgroundColor := False;
-  FClkActions[AIndex].FindControlOptions.MatchBitmapText[0].ProfileName := CDefaultFontProfileName;
-
-  if FClkActions[AIndex].ActionOptions.Action = acFindSubControl then
-    FClkActions[AIndex].ActionOptions.ActionTimeout := 1000;
-
-  if FClkActions[AIndex].ActionOptions.Action = acFindControl then
-    FClkActions[AIndex].ActionOptions.ActionTimeout := 3000;
-
-  FClkActions[AIndex].SetTextOptions.Text := '';
-  FClkActions[AIndex].SetTextOptions.ControlType := stEditBox;
-  FClkActions[AIndex].SetTextOptions.DelayBetweenKeyStrokes := '0';
-  FClkActions[AIndex].SetTextOptions.Count := '1';
-
-  FClkActions[AIndex].CallTemplateOptions.TemplateFileName := '';
-  FClkActions[AIndex].CallTemplateOptions.ListOfCustomVarsAndValues := '';
-  FClkActions[AIndex].CallTemplateOptions.EvaluateBeforeCalling := False;
-  FClkActions[AIndex].CallTemplateOptions.CallOnlyIfCondition := False; //still required, to prevent a pop-up, until the feature is removed
-  FClkActions[AIndex].CallTemplateOptions.CallTemplateLoop.Enabled := False;
-  FClkActions[AIndex].CallTemplateOptions.CallTemplateLoop.Counter := '';
-  FClkActions[AIndex].CallTemplateOptions.CallTemplateLoop.InitValue := '';
-  FClkActions[AIndex].CallTemplateOptions.CallTemplateLoop.EndValue := '';
-  FClkActions[AIndex].CallTemplateOptions.CallTemplateLoop.Direction := ldInc;
-  FClkActions[AIndex].CallTemplateOptions.CallTemplateLoop.BreakCondition := '';
-  FClkActions[AIndex].CallTemplateOptions.CallTemplateLoop.EvalBreakPosition := lebpBeforeContent;
-
-  FClkActions[AIndex].SleepOptions.Value := '1000';
-
-  FClkActions[AIndex].SetVarOptions.ListOfVarNames := '';
-  FClkActions[AIndex].SetVarOptions.ListOfVarValues := '';
-  FClkActions[AIndex].SetVarOptions.ListOfVarEvalBefore := '';
-  FClkActions[AIndex].SetVarOptions.FailOnException := False;
-
-  FClkActions[AIndex].WindowOperationsOptions.Operation := woBringToFront;
-  FClkActions[AIndex].WindowOperationsOptions.NewX := '';
-  FClkActions[AIndex].WindowOperationsOptions.NewY := '';
-  FClkActions[AIndex].WindowOperationsOptions.NewWidth := '';
-  FClkActions[AIndex].WindowOperationsOptions.NewHeight := '';
-  FClkActions[AIndex].WindowOperationsOptions.NewPositionEnabled := False;
-  FClkActions[AIndex].WindowOperationsOptions.NewSizeEnabled := False;
-
-  FClkActions[AIndex].LoadSetVarFromFileOptions.FileName := '';
-  FClkActions[AIndex].LoadSetVarFromFileOptions.SetVarActionName := '';
-
-  FClkActions[AIndex].SaveSetVarToFileOptions.FileName := '';
-  FClkActions[AIndex].SaveSetVarToFileOptions.SetVarActionName := '';
-
-  FClkActions[AIndex].PluginOptions.FileName := '';
-  FClkActions[AIndex].PluginOptions.ListOfPropertiesAndValues := '';
-  FClkActions[AIndex].PluginOptions.ListOfPropertiesAndTypes := '';
+  SetActionToDefault(FClkActions[AIndex], ANewActionType);
 end;
 
 
@@ -6526,7 +6409,7 @@ begin
     CopyActionContent(FClkActions[i + 1], FClkActions[i]); //FClkActions[i] := FClkActions[i + 1];
 
   if AClearSelectionAfterRemoving then
-    vstActions.RootNodeCount := 0; //to reinit nodes
+    vstActions.Clear; // vstActions.RootNodeCount := 0; //to reinit nodes
 
   if AUpdateRootNodeCount then
     vstActions.RootNodeCount := Length(FClkActions) - 1;
@@ -6605,8 +6488,9 @@ procedure TfrClickerActionsArr.Removeallactions1Click(Sender: TObject);
 begin
   if MessageBox(Handle, 'Are you sure you want to remove all actions from list?', PChar(Caption), MB_ICONQUESTION + MB_YESNO) = ID_YES then
   begin
+    vstActions.Clear; // vstActions.RootNodeCount := 0;
     SetLength(FClkActions, 0);
-    vstActions.RootNodeCount := 0;
+
     Modified := True;
     StopGlowingUpdateButton;
   end;
@@ -6626,7 +6510,7 @@ var
   UnsetActionValue: Byte;
 begin
   vstActions.ClearSelection;       //ClearSelection and ..
-  vstActions.RootNodeCount := 0;   //set RootNodeCount before clearing the array, otherwise an AV may happen in VST
+  vstActions.Clear; // vstActions.RootNodeCount := 0;   //set RootNodeCount before clearing the array, otherwise an AV may happen in VST
   Application.ProcessMessages;
   SetLength(FClkActions, 0);
 

@@ -48,6 +48,7 @@ function GetWindowOperationsActionProperties(AWindowOperationsOptions: TClkWindo
 function GetLoadSetVarFromFileActionProperties(ALoadSetVarFromFileOptions: TClkLoadSetVarFromFileOptions): string;
 function GetSaveSetVarToFileActionProperties(ASaveSetVarToFileOptions: TClkSaveSetVarToFileOptions): string;
 function GetPluginActionProperties(PluginOptions: TClkPluginOptions): string;
+function GetEditTemplateActionProperties(AEditTemplateOptions: TClkEditTemplateOptions): string;
 //when adding new Get<ActionType>Properties functions, please update DoOnActionPlugin_GetActionContentByIndex_Callback from ClickerActionPluginLoader.pas
 
 
@@ -63,6 +64,21 @@ function SetWindowOperationsActionProperties(AListOfWindowOperationsOptionsParam
 function SetLoadSetVarFromFileActionProperties(AListOfLoadSetVarOptionsParams: TStrings; out ALoadSetVarFromFileOptions: TClkLoadSetVarFromFileOptions): string;
 function SetSaveSetVarToFileActionProperties(AListOfSaveSetVarOptionsParams: TStrings; out ASaveSetVarToFileOptions: TClkSaveSetVarToFileOptions): string;
 function SetPluginActionProperties(APluginOptionsParams: TStrings; out APluginOptions: TClkPluginOptions): string;
+function SetEditTemplateActionProperties(AListOfEditTemplateOptionsParams: TStrings; out AEditTemplateOptions: TClkEditTemplateOptions): string;
+
+
+procedure GetDefaultPropertyValues_Click(var AClickOptions: TClkClickOptions);
+procedure GetDefaultPropertyValues_ExecApp(var AExecAppOptions: TClkExecAppOptions);
+procedure GetDefaultPropertyValues_FindControl(var AFindControlOptions: TClkFindControlOptions; AIsSubControl: Boolean = False);
+procedure GetDefaultPropertyValues_SetControlText(var ASetControlTextOptions: TClkSetTextOptions);
+procedure GetDefaultPropertyValues_CallTemplate(var ACallTemplateOptions: TClkCallTemplateOptions);
+procedure GetDefaultPropertyValues_Sleep(var ASleepOptions: TClkSleepOptions);
+procedure GetDefaultPropertyValues_SetVar(var ASetVarOptions: TClkSetVarOptions);
+procedure GetDefaultPropertyValues_WindowOperations(var AWindowOperationsOptions: TClkWindowOperationsOptions);
+procedure GetDefaultPropertyValues_LoadSetVarFromFile(var ALoadSetVarFromFileOptions: TClkLoadSetVarFromFileOptions);
+procedure GetDefaultPropertyValues_SaveSetVarToFile(var ASaveSetVarToFileOptions: TClkSaveSetVarToFileOptions);
+procedure GetDefaultPropertyValues_Plugin(var APluginOptions: TClkPluginOptions);
+procedure GetDefaultPropertyValues_EditTemplate(var AEditTemplateOptions: TClkEditTemplateOptions);
 
 
 implementation
@@ -249,7 +265,7 @@ begin
             'NewWidth' + '=' + AWindowOperationsOptions.NewWidth + '&' +
             'NewHeight' + '=' + AWindowOperationsOptions.NewHeight + '&' +
             'NewPositionEnabled' + '=' + IntToStr(Ord(AWindowOperationsOptions.NewPositionEnabled)) + '&' +
-            'NewSizeEnabled' + '=' + IntToStr(Ord(AWindowOperationsOptions.NewSizeEnabled))
+            'NewSizeEnabled' + '=' + IntToStr(Ord(AWindowOperationsOptions.NewSizeEnabled));
 end;
 
 
@@ -273,6 +289,17 @@ begin
             'ListOfPropertiesAndValues' + '=' + FastReplace_ReturnTo45(PluginOptions.ListOfPropertiesAndValues);
 end;
 
+
+function GetEditTemplateActionProperties(AEditTemplateOptions: TClkEditTemplateOptions): string;
+begin
+  Result := 'Operation' + '=' + IntToStr(Ord(AEditTemplateOptions.Operation)) + '&' +
+            'WhichTemplate' + '=' + IntToStr(Ord(AEditTemplateOptions.WhichTemplate)) + '&' +
+            'TemplateFileName' + '=' + AEditTemplateOptions.TemplateFileName + '&' +
+            'ListOfEnabledProperties' + '=' + FastReplace_ReturnTo45(AEditTemplateOptions.ListOfEnabledProperties) + '&' +
+            'EditedActionName' + '=' + AEditTemplateOptions.EditedActionName + '&' +
+            'EditedActionType' + '=' + IntToStr(Ord(AEditTemplateOptions.EditedActionType)) + '&' +
+            'NewActionName' + '=' + AEditTemplateOptions.NewActionName + '&';
+end;
 
 
 function SetClickActionProperties(AListOfClickOptionsParams: TStrings; out AClickOptions: TClkClickOptions): string; //returns error if any, or emptry string for success
@@ -734,6 +761,254 @@ begin
 
   APluginOptions.FileName := APluginOptionsParams.Values['FileName'];
   APluginOptions.ListOfPropertiesAndValues := FastReplace_45ToReturn(APluginOptionsParams.Values['ListOfPropertiesAndValues']);
+end;
+
+
+function SetEditTemplateActionProperties(AListOfEditTemplateOptionsParams: TStrings; out AEditTemplateOptions: TClkEditTemplateOptions): string;
+var
+  Temp_Operation, Temp_WhichTemplate, Temp_EditedActionType: Integer;
+begin
+  Result := '';
+
+  Temp_Operation := StrToIntDef(AListOfEditTemplateOptionsParams.Values['Operation'], 0);
+  if (Temp_Operation < 0) or (Temp_Operation > Ord(High(TWindowOperation))) then
+  begin
+    Result := 'Operation is out of range.';
+    Exit;
+  end;
+
+  Temp_WhichTemplate := StrToIntDef(AListOfEditTemplateOptionsParams.Values['WhichTemplate'], 0);
+  if (Temp_WhichTemplate < 0) or (Temp_WhichTemplate > Ord(High(TEditTemplateWhichTemplate))) then
+  begin
+    Result := 'WhichTemplate is out of range.';
+    Exit;
+  end;
+
+  Temp_EditedActionType := StrToIntDef(AListOfEditTemplateOptionsParams.Values['EditedActionType'], 0);
+  if (Temp_EditedActionType < 0) or (Temp_EditedActionType > Ord(High(TClkAction))) then
+  begin
+    Result := 'EditedActionType is out of range.';
+    Exit;
+  end;
+
+  AEditTemplateOptions.Operation := TEditTemplateOperation(Temp_Operation);
+  AEditTemplateOptions.WhichTemplate := TEditTemplateWhichTemplate(Temp_WhichTemplate);
+  AEditTemplateOptions.TemplateFileName := AListOfEditTemplateOptionsParams.Values['TemplateFileName'];
+  AEditTemplateOptions.ListOfEnabledProperties := FastReplace_45ToReturn(AListOfEditTemplateOptionsParams.Values['ListOfEnabledProperties']);
+  AEditTemplateOptions.EditedActionName := AListOfEditTemplateOptionsParams.Values['EditedActionName'];
+  AEditTemplateOptions.EditedActionType := TClkAction(Temp_EditedActionType);
+  AEditTemplateOptions.NewActionName := AListOfEditTemplateOptionsParams.Values['NewActionName'];
+
+  //Set "private" propeties to some valid values:
+  AEditTemplateOptions.CachedCount := 0;
+  AEditTemplateOptions.PluginOptionsCachedCount := 0;
+  AEditTemplateOptions.EditingAction := nil;
+end;
+
+
+procedure GetDefaultPropertyValues_Click(var AClickOptions: TClkClickOptions);
+begin
+  AClickOptions.XClickPointReference := xrefLeft;
+  AClickOptions.YClickPointReference := yrefTop;
+  AClickOptions.XClickPointVar := '$Control_Left$';
+  AClickOptions.YClickPointVar := '$Control_Top$';
+  AClickOptions.XOffset := '4';
+  AClickOptions.YOffset := '4';
+  AClickOptions.MouseButton := mbLeft;
+  AClickOptions.ClickWithCtrl := False;
+  AClickOptions.ClickWithAlt := False;
+  AClickOptions.ClickWithShift := False;
+  AClickOptions.ClickWithDoubleClick := False;  //deprecated, but the code is still active
+  AClickOptions.Count := 1;
+  AClickOptions.LeaveMouse := False;
+  AClickOptions.MoveWithoutClick := False;
+  AClickOptions.ClickType := CClickType_Click;
+  AClickOptions.XClickPointReferenceDest := xrefLeft;
+  AClickOptions.YClickPointReferenceDest := yrefTop;
+  AClickOptions.XClickPointVarDest := '$Control_Left$';
+  AClickOptions.YClickPointVarDest := '$Control_Top$';
+  AClickOptions.XOffsetDest := '7';
+  AClickOptions.YOffsetDest := '7';
+  AClickOptions.MouseWheelType := mwtVert;
+  AClickOptions.MouseWheelAmount := '1';
+  AClickOptions.DelayAfterMovingToDestination := '50';
+  AClickOptions.DelayAfterMouseDown := '200';
+  AClickOptions.MoveDuration := '-1';
+end;
+
+
+procedure GetDefaultPropertyValues_ExecApp(var AExecAppOptions: TClkExecAppOptions);
+begin
+  AExecAppOptions.PathToApp := '';
+  AExecAppOptions.ListOfParams := '';
+  AExecAppOptions.WaitForApp := False;
+  AExecAppOptions.AppStdIn := '';
+  AExecAppOptions.CurrentDir := '';
+  AExecAppOptions.UseInheritHandles := uihNo;
+  AExecAppOptions.NoConsole := False;
+end;
+
+
+procedure GetDefaultPropertyValues_FindControl(var AFindControlOptions: TClkFindControlOptions; AIsSubControl: Boolean = False);
+begin
+  AFindControlOptions.MatchCriteria.WillMatchText := not AIsSubControl;
+  AFindControlOptions.MatchCriteria.WillMatchClassName := not AIsSubControl;
+  AFindControlOptions.MatchCriteria.WillMatchBitmapText := AIsSubControl;
+  AFindControlOptions.MatchCriteria.WillMatchBitmapFiles := False;
+  AFindControlOptions.MatchCriteria.WillMatchPrimitiveFiles := False;
+  AFindControlOptions.MatchCriteria.SearchForControlMode := sfcmGenGrid;
+  AFindControlOptions.AllowToFail := False;
+  AFindControlOptions.MatchText := '';
+  AFindControlOptions.MatchClassName := '';
+  AFindControlOptions.MatchTextSeparator := '';
+  AFindControlOptions.MatchClassNameSeparator := '';
+  AFindControlOptions.MatchBitmapFiles := '';
+  AFindControlOptions.MatchBitmapAlgorithm := mbaBruteForce;
+  AFindControlOptions.MatchBitmapAlgorithmSettings.XMultipleOf := 1;
+  AFindControlOptions.MatchBitmapAlgorithmSettings.YMultipleOf := 1;
+  AFindControlOptions.MatchBitmapAlgorithmSettings.XOffset := 0;
+  AFindControlOptions.MatchBitmapAlgorithmSettings.YOffset := 0;
+  AFindControlOptions.InitialRectangle.Left := '$Control_Left$';
+  AFindControlOptions.InitialRectangle.Top := '$Control_Top$';
+  AFindControlOptions.InitialRectangle.Right := '$Control_Right$';
+  AFindControlOptions.InitialRectangle.Bottom := '$Control_Bottom$';
+  AFindControlOptions.InitialRectangle.LeftOffset := '0';
+  AFindControlOptions.InitialRectangle.TopOffset := '0';
+  AFindControlOptions.InitialRectangle.RightOffset := '0';
+  AFindControlOptions.InitialRectangle.BottomOffset := '0';
+  AFindControlOptions.UseWholeScreen := not AIsSubControl;
+  AFindControlOptions.ColorError := '0';
+  AFindControlOptions.AllowedColorErrorCount := '0';
+  AFindControlOptions.WaitForControlToGoAway := False;
+  AFindControlOptions.StartSearchingWithCachedControl := False;
+  AFindControlOptions.CachedControlLeft := '';
+  AFindControlOptions.CachedControlTop := '';
+  AFindControlOptions.MatchPrimitiveFiles := '';
+  AFindControlOptions.MatchPrimitiveFiles_Modified := '';
+  AFindControlOptions.GetAllControls := False;
+  AFindControlOptions.UseFastSearch := True;
+  AFindControlOptions.FastSearchAllowedColorErrorCount := '10';
+  AFindControlOptions.IgnoredColors := '';
+  AFindControlOptions.SleepySearch := False;
+  AFindControlOptions.StopSearchOnMismatch := True;
+  AFindControlOptions.ImageSource := isScreenshot;
+  AFindControlOptions.SourceFileName := '';
+  AFindControlOptions.ImageSourceFileNameLocation := isflMem;
+  AFindControlOptions.PrecisionTimeout := False;
+  AFindControlOptions.FullBackgroundImageInResult := True;
+  AFindControlOptions.MatchByHistogramSettings.MinPercentColorMatch := '50';
+  AFindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInSubBmp := '10';
+  AFindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp := '15';
+
+  SetLength(AFindControlOptions.MatchBitmapText, 1);
+  AFindControlOptions.MatchBitmapText[0].ForegroundColor := '$Color_Window$';
+  AFindControlOptions.MatchBitmapText[0].BackgroundColor := '$Color_Highlight$';
+  AFindControlOptions.MatchBitmapText[0].FontName := 'Tahoma';
+  AFindControlOptions.MatchBitmapText[0].FontSize := 8;
+  AFindControlOptions.MatchBitmapText[0].FontQualityReplacement := '';
+  AFindControlOptions.MatchBitmapText[0].FontQuality := fqNonAntialiased;
+  AFindControlOptions.MatchBitmapText[0].FontQualityUsesReplacement := False;
+  AFindControlOptions.MatchBitmapText[0].Bold := False;
+  AFindControlOptions.MatchBitmapText[0].Italic := False;
+  AFindControlOptions.MatchBitmapText[0].Underline := False;
+  AFindControlOptions.MatchBitmapText[0].StrikeOut := False;
+  AFindControlOptions.MatchBitmapText[0].CropLeft := '0';
+  AFindControlOptions.MatchBitmapText[0].CropTop := '0';
+  AFindControlOptions.MatchBitmapText[0].CropRight := '0';
+  AFindControlOptions.MatchBitmapText[0].CropBottom := '0';
+  AFindControlOptions.MatchBitmapText[0].IgnoreBackgroundColor := False;
+  AFindControlOptions.MatchBitmapText[0].ProfileName := CDefaultFontProfileName;
+end;
+
+
+procedure GetDefaultPropertyValues_SetControlText(var ASetControlTextOptions: TClkSetTextOptions);
+begin
+  ASetControlTextOptions.Text := '';
+  ASetControlTextOptions.ControlType := stEditBox;
+  ASetControlTextOptions.DelayBetweenKeyStrokes := '0';
+  ASetControlTextOptions.Count := '1';
+end;
+
+
+procedure GetDefaultPropertyValues_CallTemplate(var ACallTemplateOptions: TClkCallTemplateOptions);
+begin
+  ACallTemplateOptions.TemplateFileName := '';
+  ACallTemplateOptions.ListOfCustomVarsAndValues := '';
+  ACallTemplateOptions.EvaluateBeforeCalling := False;
+  ACallTemplateOptions.CallOnlyIfCondition := False; //still required, to prevent a pop-up, until the feature is removed
+  ACallTemplateOptions.CallTemplateLoop.Enabled := False;
+  ACallTemplateOptions.CallTemplateLoop.Counter := '';
+  ACallTemplateOptions.CallTemplateLoop.InitValue := '';
+  ACallTemplateOptions.CallTemplateLoop.EndValue := '';
+  ACallTemplateOptions.CallTemplateLoop.Direction := ldInc;
+  ACallTemplateOptions.CallTemplateLoop.BreakCondition := '';
+  ACallTemplateOptions.CallTemplateLoop.EvalBreakPosition := lebpBeforeContent;
+end;
+
+
+procedure GetDefaultPropertyValues_Sleep(var ASleepOptions: TClkSleepOptions);
+begin
+  ASleepOptions.Value := '1000';
+end;
+
+
+procedure GetDefaultPropertyValues_SetVar(var ASetVarOptions: TClkSetVarOptions);
+begin
+  ASetVarOptions.ListOfVarNames := '';
+  ASetVarOptions.ListOfVarValues := '';
+  ASetVarOptions.ListOfVarEvalBefore := '';
+  ASetVarOptions.FailOnException := False;
+end;
+
+
+procedure GetDefaultPropertyValues_WindowOperations(var AWindowOperationsOptions: TClkWindowOperationsOptions);
+begin
+  AWindowOperationsOptions.Operation := woBringToFront;
+  AWindowOperationsOptions.NewX := '';
+  AWindowOperationsOptions.NewY := '';
+  AWindowOperationsOptions.NewWidth := '';
+  AWindowOperationsOptions.NewHeight := '';
+  AWindowOperationsOptions.NewPositionEnabled := False;
+  AWindowOperationsOptions.NewSizeEnabled := False;
+end;
+
+
+procedure GetDefaultPropertyValues_LoadSetVarFromFile(var ALoadSetVarFromFileOptions: TClkLoadSetVarFromFileOptions);
+begin
+  ALoadSetVarFromFileOptions.FileName := '';
+  ALoadSetVarFromFileOptions.SetVarActionName := '';
+end;
+
+
+procedure GetDefaultPropertyValues_SaveSetVarToFile(var ASaveSetVarToFileOptions: TClkSaveSetVarToFileOptions);
+begin
+  ASaveSetVarToFileOptions.FileName := '';
+  ASaveSetVarToFileOptions.SetVarActionName := '';
+end;
+
+
+procedure GetDefaultPropertyValues_Plugin(var APluginOptions: TClkPluginOptions);
+begin
+  APluginOptions.FileName := '';
+  APluginOptions.ListOfPropertiesAndValues := '';
+  APluginOptions.ListOfPropertiesAndTypes := '';
+  APluginOptions.CachedCount := 0;
+  APluginOptions.ListOfInitValues := '';
+end;
+
+
+procedure GetDefaultPropertyValues_EditTemplate(var AEditTemplateOptions: TClkEditTemplateOptions);
+begin
+  AEditTemplateOptions.Operation := etoUpdateAction;
+  AEditTemplateOptions.WhichTemplate := etwtSelf;
+  AEditTemplateOptions.TemplateFileName := '';
+  AEditTemplateOptions.ListOfEnabledProperties := '';
+  AEditTemplateOptions.CachedCount := 0;
+  AEditTemplateOptions.PluginOptionsCachedCount := 0;
+  AEditTemplateOptions.EditingAction := nil;
+  AEditTemplateOptions.EditedActionName := '';
+  AEditTemplateOptions.EditedActionType := acClick; //TClkAction(CClkUnsetAction); // acClick;
+  AEditTemplateOptions.NewActionName := '';
 end;
 
 end.

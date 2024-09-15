@@ -1065,6 +1065,7 @@ begin             //Substructures, which do not contain pointers, can be directl
   ADest.LoadSetVarFromFileOptions := ASrc.LoadSetVarFromFileOptions;
   ADest.SaveSetVarToFileOptions := ASrc.SaveSetVarToFileOptions;
   ADest.PluginOptions := ASrc.PluginOptions;
+  ADest.EditTemplateOptions := ASrc.EditTemplateOptions;
 
   CopyFindControlActionContent(ASrc.FindControlOptions, ADest.FindControlOptions);
 end;

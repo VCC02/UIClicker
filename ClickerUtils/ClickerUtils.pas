@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2023 VCC
+    Copyright (C) 2024 VCC
     creation date: Dec 2019
     initial release date: 26 Jul 2022
 
@@ -43,7 +43,7 @@ uses
 type
   TClkAction = (acClick, acExecApp, acFindControl, acFindSubControl,
                 acSetControlText, acCallTemplate, acSleep, acSetVar, acWindowOperations,
-                acLoadSetVarFromFile, acSaveSetVarToFile, acPlugin);     //please update CInsertActionOffset constant in ClickerActionsArrFrame, if there will be more than 30 action types
+                acLoadSetVarFromFile, acSaveSetVarToFile, acPlugin, acEditTemplate);     //please update CInsertActionOffset constant in ClickerActionsArrFrame, if there will be more than 30 action types
 
   TClkSetTextControlType = (stEditBox, stComboBox, stKeystrokes);
   TSearchForControlMode = (sfcmGenGrid, sfcmEnumWindows, sfcmFindWindow);
@@ -113,7 +113,7 @@ type
 const
   CClkActionStr: array[TClkAction] of string = ('Click', 'ExecApp', 'FindControl', 'FindSubControl',
                                                 'SetControlText', 'CallTemplate', 'Sleep', 'SetVar', 'WindowOperations',
-                                                'LoadSetVarFromFile', 'SaveSetVarToFile', 'Plugin');
+                                                'LoadSetVarFromFile', 'SaveSetVarToFile', 'Plugin', 'EditTemplate');
   CClkUnsetAction = 255; //TClkAction(255);
 
   //These constants are used to index an array, similar to enum values.  Please update TClickTypeStr if adding more constants to this "type".
@@ -354,6 +354,26 @@ type
     ListOfInitValues: string;             //CRLF separated list of values
   end;
 
+  TEditTemplateOperation = (etoUpdateAction, etoMoveAction, etoDeleteAction, etoDuplicateAction, etoEnableAction, etoDisableAction, etoExecuteAction, etoSaveTemplate, etoGetProperty, etoSetProperty);
+  TEditTemplateWhichTemplate = (etwtSelf, etwtOther);
+
+  PClkActionRec = ^TClkActionRec;
+
+  TClkEditTemplateOptions = record
+    Operation: TEditTemplateOperation;
+    WhichTemplate: TEditTemplateWhichTemplate;
+    TemplateFileName: string; //used when WhichTemplate is set to etwtOther
+    ListOfEnabledProperties: string;      //CRLF separated list of values  (first level of properties)
+
+    CachedCount: Integer;                 //used to speed up ObjectInspector            - set after loading template, from ListOfEnabledProperties
+    PluginOptionsCachedCount: Integer;    //Same as PluginOptions.CachedCount when EditAction points to a plugin. It should be updated the same way a TClkPluginOptions is updated.
+    EditingAction: PClkActionRec;         //Pointer to the currently edited action. Used by OI.
+
+    EditedActionName: string;             //Used to identify the action.  Both the EditedActionType and ActionName have to match if they point to an existing action.
+    EditedActionType: TClkAction;         //Action type which is being edited by EditTemplate action. The type has to be set in advance, because the edited template might not be available to tell which type the edited action is going to be.
+    NewActionName: string;                //Used when renaming the action
+  end;
+
   TActionBreakPoint = record
     Exists: Boolean; //when False, the action has no breakpoint
     Enabled: Boolean;
@@ -379,9 +399,10 @@ type
     LoadSetVarFromFileOptions: TClkLoadSetVarFromFileOptions;
     SaveSetVarToFileOptions: TClkSaveSetVarToFileOptions;
     PluginOptions: TClkPluginOptions;
+    EditTemplateOptions: TClkEditTemplateOptions;
   end;
 
-  PClkActionRec = ^TClkActionRec;
+
 
   TClkActionsRecArr = array of TClkActionRec;
   PClkActionsRecArr = ^TClkActionsRecArr;
@@ -463,7 +484,19 @@ const
   CCompGreaterThan = '>?';
   CCompLessThanOrEqual = '<=';
   CCompGreaterThanOrEqual = '>=';
-  CComparisonOperators: array[0..5] of string = (CCompNotEqual, CCompEqual, CCompLessThan, CCompGreaterThan, CCompLessThanOrEqual, CCompGreaterThanOrEqual);
+
+  //IntComp:  #1 - "=", #2 - "<",  #3 - ">"    //all these comparison operators should be two characters long
+  CIntCompNotEqual = #2#3; //'<>'
+  CIntCompEqual = #1#1;  //'=='
+  CIntCompLessThan = #2'?';   //'<?'
+  CIntCompGreaterThan = #3'?';  //'>?'
+  CIntCompLessThanOrEqual = #2#1; //'<='
+  CIntCompGreaterThanOrEqual = #3#1;  // '>='
+
+  CComparisonOperators: array[0..11] of string = (
+    CCompNotEqual, CCompEqual, CCompLessThan, CCompGreaterThan, CCompLessThanOrEqual, CCompGreaterThanOrEqual,
+    CIntCompNotEqual, CIntCompEqual, CIntCompLessThan, CIntCompGreaterThan, CIntCompLessThanOrEqual, CIntCompGreaterThanOrEqual
+  );
 
   //property types
   CDTString = 'String';
@@ -495,7 +528,9 @@ const
   CSearchForControlModeStr: array[TSearchForControlMode] of string = ('sfcmGenGrid', 'sfcmEnumWindows', 'sfcmFindWindow');
   CFontQualityStr: array[TFontQuality] of string = ('fqDefault', 'fqDraft', 'fqProof', 'fqNonAntialiased', 'fqAntialiased', 'fqCleartype', 'fqCleartypeNatural');
   CLoopDirectionStr: array[TLoopDirection] of string = ('ldInc', 'ldDec', 'ldAuto');
-  CLoopEvalBreakPositionStr: array[TLoopEvalBreakPosition] of string  = ('lebpAfterContent', 'lebpBeforeContent');
+  CLoopEvalBreakPositionStr: array[TLoopEvalBreakPosition] of string = ('lebpAfterContent', 'lebpBeforeContent');
+  CEditTemplateOperationStr: array[TEditTemplateOperation] of string = ('etoUpdateAction', 'etoMoveAction', 'etoDeleteAction', 'etoDuplicateAction', 'etoEnableAction', 'etoDisableAction', 'etoExecuteAction', 'etoSaveTemplate', 'etoGetProperty', 'etoSetProperty');
+  CEditTemplateWhichTemplateStr: array[TEditTemplateWhichTemplate] of string = ('etwtSelf', 'etwtOther');
 
 
 type
@@ -2513,7 +2548,25 @@ begin
                     if OpEq = CCompGreaterThanOrEqual then
                       EvalResult := AEvalReplacementsFunc(Op1) >= AEvalReplacementsFunc(Op2)
                     else
-                      raise Exception.Create('operator "' + OpEq + '" not implemented in EvaluateActionCondition.');
+                      if OpEq = CIntCompNotEqual then  //Int
+                        EvalResult := StrToIntDef(AEvalReplacementsFunc(Op1), 0) <> StrToIntDef(AEvalReplacementsFunc(Op2), 0)
+                      else
+                        if OpEq = CIntCompEqual then
+                          EvalResult := StrToIntDef(AEvalReplacementsFunc(Op1), 0) = StrToIntDef(AEvalReplacementsFunc(Op2), 0)
+                        else
+                          if OpEq = CIntCompLessThan then
+                            EvalResult := StrToIntDef(AEvalReplacementsFunc(Op1), 0) < StrToIntDef(AEvalReplacementsFunc(Op2), 0)
+                          else
+                            if OpEq = CIntCompGreaterThan then
+                              EvalResult := StrToIntDef(AEvalReplacementsFunc(Op1), 0) > StrToIntDef(AEvalReplacementsFunc(Op2), 0)
+                            else
+                              if OpEq = CIntCompLessThanOrEqual then
+                                EvalResult := StrToIntDef(AEvalReplacementsFunc(Op1), 0) <= StrToIntDef(AEvalReplacementsFunc(Op2), 0)
+                              else
+                                if OpEq = CIntCompGreaterThanOrEqual then
+                                  EvalResult := StrToIntDef(AEvalReplacementsFunc(Op1), 0) >= StrToIntDef(AEvalReplacementsFunc(Op2), 0)
+                                else
+                                  raise Exception.Create('operator "' + OpEq + '" not implemented in EvaluateActionCondition.');
 
           PartialResult := PartialResult and EvalResult;
         end; //for j

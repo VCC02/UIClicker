@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2022 VCC
+    Copyright (C) 2024 VCC
     creation date: Oct 2022
     initial release date: 30 Oct 2022
 
@@ -29,12 +29,24 @@ unit UIActionsStuff;
 interface
 
 uses
-  Classes, SysUtils, ClickerUtils, InMemFileSystem;
+  Classes, SysUtils, ClickerUtils, InMemFileSystem, ClickerActionValues;
+
+type
+  TOIInteractionData = record
+    BasicPropertyInfo: TOIPropDef;   //name and editor type
+    //PropertyName: string;
+    PropertyNamesToExpand: string; //0 = do not expand, it doesn't have subproperties.  1 = should expand, to access subproperties
+    PropertyValue: string; //what to expect, or what to set
+    //EditorType: string; //how to interact with the OI editor for that particular property
+  end;
+
+  TOIInteractionDataArr = array of TOIInteractionData;
 
 
 procedure GenerateExecAppOptionsForTestDriver(var AExecAppOptions: TClkExecAppOptions; AExeArgs: string);
 procedure LoadTemplateFromDiskIntoInMemFS(ATemplateName: string; AInMemFS: TInMemFileSystem);
 
+procedure ListOfSerializedPropertiesToOIInteractionData(AListOfSerProps: string; ABasicPropInfo: PArrayOfProperties; APropIsXP: PArrayOfEnumCounts; APropCnt: Integer; var AProperties: TOIInteractionDataArr);
 
 implementation
 
@@ -60,6 +72,28 @@ begin
     AInMemFS.SaveFileToMem(ATemplateName, MemStream.Memory, MemStream.Size);
   finally
     MemStream.Free;
+  end;
+end;
+
+
+procedure ListOfSerializedPropertiesToOIInteractionData(AListOfSerProps: string; ABasicPropInfo: PArrayOfProperties; APropIsXP: PArrayOfEnumCounts; APropCnt: Integer; var AProperties: TOIInteractionDataArr);
+var
+  ListOfSerProps: TStringList;   //this contains default values
+  i: Integer;
+begin
+  ListOfSerProps := TStringList.Create;
+  try
+    ListOfSerProps.Text := StringReplace(AListOfSerProps, '&', #13#10, [rfReplaceAll]);
+
+    SetLength(AProperties, APropCnt);
+    for i := 0 to APropCnt - 1 do
+    begin
+      AProperties[i].BasicPropertyInfo := ABasicPropInfo^[i];
+      AProperties[i].PropertyNamesToExpand := IntToStr(APropIsXP^[i]);
+      AProperties[i].PropertyValue := ListOfSerProps.Values[AProperties[i].BasicPropertyInfo.Name];
+    end;
+  finally
+    ListOfSerProps.Free;
   end;
 end;
 

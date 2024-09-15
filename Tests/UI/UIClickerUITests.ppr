@@ -27,8 +27,9 @@ program UIClickerUITests;
 {$mode objfpc}{$H+}
 
 uses
-  Interfaces, Forms, Expectations, InMemFileSystem, ClickerActionsClient,
-  ClickerUtils, TestHTTPAPI, TestUI, GuiTestRunner, UIActionsStuff;
+  Interfaces, Forms, Expectations, InMemFileSystem, ObjectInspectorFrame,
+  ClickerActionsClient, ClickerUtils, ClickerActionProperties, TestHTTPAPI,
+  ClickerActionValues, TestUI, GuiTestRunner, UIActionsStuff;
 
 {$R *.res}
 

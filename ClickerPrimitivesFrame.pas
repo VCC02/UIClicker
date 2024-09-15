@@ -169,8 +169,8 @@ type
     function HandleOnOIGetListPropertyItemCount(ACategoryIndex, APropertyIndex: Integer): Integer;
     function HandleOnOIGetListPropertyItemName(ACategoryIndex, APropertyIndex, AItemIndex: Integer): string;
     function HandleOnOIGetListPropertyItemValue(ACategoryIndex, APropertyIndex, AItemIndex: Integer; var AEditorType: TOIEditorType): string;
-    function HandleOnUIGetDataTypeName(ACategoryIndex, APropertyIndex, AItemIndex: Integer): string;
-    function HandleOnUIGetExtraInfo(ACategoryIndex, APropertyIndex, AItemIndex: Integer): string;
+    function HandleOnOIGetDataTypeName(ACategoryIndex, APropertyIndex, AItemIndex: Integer): string;
+    function HandleOnOIGetExtraInfo(ACategoryIndex, APropertyIndex, AItemIndex: Integer): string;
 
     procedure HandleOnOIGetImageIndexEx(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; Kind: TVTImageKind;
       Column: TColumnIndex; var Ghosted: Boolean; var ImageIndex: Integer; var ImageList: TCustomImageList);
@@ -289,8 +289,8 @@ begin
   FOIFrame.OnOIGetListPropertyItemCount := HandleOnOIGetListPropertyItemCount;
   FOIFrame.OnOIGetListPropertyItemName := HandleOnOIGetListPropertyItemName;
   FOIFrame.OnOIGetListPropertyItemValue := HandleOnOIGetListPropertyItemValue;
-  FOIFrame.OnUIGetDataTypeName := HandleOnUIGetDataTypeName;
-  FOIFrame.OnUIGetExtraInfo := HandleOnUIGetExtraInfo;
+  FOIFrame.OnOIGetDataTypeName := HandleOnOIGetDataTypeName;
+  FOIFrame.OnOIGetExtraInfo := HandleOnOIGetExtraInfo;
   FOIFrame.OnOIGetImageIndexEx := HandleOnOIGetImageIndexEx;
   FOIFrame.OnOIEditedText := HandleOnOIEditedText;
   FOIFrame.OnOIEditItems := HandleOnOIEditItems;
@@ -1928,13 +1928,13 @@ begin
 end;
 
 
-function TfrClickerPrimitives.HandleOnUIGetDataTypeName(ACategoryIndex, APropertyIndex, AItemIndex: Integer): string;
+function TfrClickerPrimitives.HandleOnOIGetDataTypeName(ACategoryIndex, APropertyIndex, AItemIndex: Integer): string;
 begin
   Result := '';
 end;
 
 
-function TfrClickerPrimitives.HandleOnUIGetExtraInfo(ACategoryIndex, APropertyIndex, AItemIndex: Integer): string;
+function TfrClickerPrimitives.HandleOnOIGetExtraInfo(ACategoryIndex, APropertyIndex, AItemIndex: Integer): string;
 begin
   Result := '';
 end;
