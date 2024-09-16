@@ -335,9 +335,9 @@ EvaluateBeforeCalling=0
 Loop.Enabled=1
 Loop.Counter=$i$
 Loop.InitValue=0
-Loop.EndValue=80
+Loop.EndValue=30
 Loop.Direction=0
-Loop.BreakCondition=$PropertyFound$==Successful
+Loop.BreakCondition=$PropertyFound$==Successful$ValueFound$==Successful
 Loop.EvalBreakPosition=0
 
 [Action_8]
@@ -345,7 +345,7 @@ ActionName=Exit template if property not found
 Action=SetVar
 ActionTimeout=0
 ActionEnabled=1
-ActionCondition=$LastAction_Status$<>Successful
+ActionCondition=$LastAction_Status$<>Successful$PropertyFound$<>Successful$PropertyFound$<>Successful
 BreakpointExists=0
 BreakpointEnabled=0
 BreakpointCondition=
@@ -359,14 +359,14 @@ ActionName=Select property if found (for debugging)
 Action=Click
 ActionTimeout=0
 ActionEnabled=1
-ActionCondition=$PropertyFound$==Successful
+ActionCondition=$PropertyFound$==Successful$ValueFound$==Successful
 BreakpointExists=0
 BreakpointEnabled=0
 BreakpointCondition=
-XOffsetReference=0
-YOffsetReference=0
-XClickPointVar=$Control_Left$
-YClickPointVar=$Control_Top$
+XOffsetReference=3
+YOffsetReference=3
+XClickPointVar=$PropertyNameLeft$
+YClickPointVar=$PropertyNameTop$
 XOffset=4
 YOffset=4
 MouseButton=0

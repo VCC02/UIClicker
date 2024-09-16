@@ -493,9 +493,19 @@ const
   CIntCompLessThanOrEqual = #2#1; //'<='
   CIntCompGreaterThanOrEqual = #3#1;  // '>='
 
-  CComparisonOperators: array[0..11] of string = (
+  //ExtComp:  #14 - "=", #15 - "<",  #16 - ">"    //all these comparison operators should be two characters long
+  CExtCompNotEqual = #15#16; //'<>'
+  CExtCompEqual = #14#14;  //'=='
+  CExtCompLessThan = #15'?';   //'<?'
+  CExtCompGreaterThan = #16'?';  //'>?'
+  CExtCompLessThanOrEqual = #15#14; //'<='
+  CExtCompGreaterThanOrEqual = #16#14;  // '>='
+
+  CComparisonOperatorsCount = 18;
+  CComparisonOperators: array[0..CComparisonOperatorsCount - 1] of string = (
     CCompNotEqual, CCompEqual, CCompLessThan, CCompGreaterThan, CCompLessThanOrEqual, CCompGreaterThanOrEqual,
-    CIntCompNotEqual, CIntCompEqual, CIntCompLessThan, CIntCompGreaterThan, CIntCompLessThanOrEqual, CIntCompGreaterThanOrEqual
+    CIntCompNotEqual, CIntCompEqual, CIntCompLessThan, CIntCompGreaterThan, CIntCompLessThanOrEqual, CIntCompGreaterThanOrEqual,
+    CExtCompNotEqual, CExtCompEqual, CExtCompLessThan, CExtCompGreaterThan, CExtCompLessThanOrEqual, CExtCompGreaterThanOrEqual
   );
 
   //property types
@@ -2497,13 +2507,167 @@ begin
 end;
 
 
+function EvalCmp_StrNotEqual(AOp1, AOp2: string): Boolean;
+begin
+  Result := AOp1 <> AOp2;
+end;
+
+
+function EvalCmp_StrEqual(AOp1, AOp2: string): Boolean;
+begin
+  Result := AOp1 = AOp2;
+end;
+
+
+function EvalCmp_StrLessThan(AOp1, AOp2: string): Boolean;
+begin
+  Result := AOp1 < AOp2;
+end;
+
+
+function EvalCmp_StrGreaterThan(AOp1, AOp2: string): Boolean;
+begin
+  Result := AOp1 > AOp2;
+end;
+
+
+function EvalCmp_StrLessThanOrEqual(AOp1, AOp2: string): Boolean;
+begin
+  Result := AOp1 <= AOp2;
+end;
+
+
+function EvalCmp_StrGreaterThanOrEqual(AOp1, AOp2: string): Boolean;
+begin
+  Result := AOp1 >= AOp2;
+end;
+
+
+function EvalCmp_IntNotEqual(AOp1, AOp2: string): Boolean;
+begin
+  Result := StrToIntDef(AOp1, 0) <> StrToIntDef(AOp2, 0);
+end;
+
+
+function EvalCmp_IntEqual(AOp1, AOp2: string): Boolean;
+begin
+  Result := StrToIntDef(AOp1, 0) = StrToIntDef(AOp2, 0);
+end;
+
+
+function EvalCmp_IntLessThan(AOp1, AOp2: string): Boolean;
+begin
+  Result := StrToIntDef(AOp1, 0) < StrToIntDef(AOp2, 0);
+end;
+
+
+function EvalCmp_IntGreaterThan(AOp1, AOp2: string): Boolean;
+begin
+  Result := StrToIntDef(AOp1, 0) > StrToIntDef(AOp2, 0);
+end;
+
+
+function EvalCmp_IntLessThanOrEqual(AOp1, AOp2: string): Boolean;
+begin
+  Result := StrToIntDef(AOp1, 0) <= StrToIntDef(AOp2, 0);
+end;
+
+
+function EvalCmp_IntGreaterThanOrEqual(AOp1, AOp2: string): Boolean;
+begin
+  Result := StrToIntDef(AOp1, 0) >= StrToIntDef(AOp2, 0);
+end;
+
+
+function EvalCmp_ExtNotEqual(AOp1, AOp2: string): Boolean;
+begin
+  Result := StrToFloatDef(AOp1, 0) <> StrToFloatDef(AOp2, 0);
+end;
+
+
+function EvalCmp_ExtEqual(AOp1, AOp2: string): Boolean;
+begin
+  Result := StrToFloatDef(AOp1, 0) = StrToFloatDef(AOp2, 0);
+end;
+
+
+function EvalCmp_ExtLessThan(AOp1, AOp2: string): Boolean;
+begin
+  Result := StrToFloatDef(AOp1, 0) < StrToFloatDef(AOp2, 0);
+end;
+
+
+function EvalCmp_ExtGreaterThan(AOp1, AOp2: string): Boolean;
+begin
+  Result := StrToFloatDef(AOp1, 0) > StrToFloatDef(AOp2, 0);
+end;
+
+
+function EvalCmp_ExtLessThanOrEqual(AOp1, AOp2: string): Boolean;
+begin
+  Result := StrToFloatDef(AOp1, 0) <= StrToFloatDef(AOp2, 0);
+end;
+
+
+function EvalCmp_ExtGreaterThanOrEqual(AOp1, AOp2: string): Boolean;
+begin
+  Result := StrToFloatDef(AOp1, 0) >= StrToFloatDef(AOp2, 0);
+end;
+
+
+type
+  TEvalCmpFunc = function(AOp1, AOp2: string): Boolean;
+
+const
+  CEvalCmpFunctions: array[0..CComparisonOperatorsCount - 1] of TEvalCmpFunc = (
+    //String comparisons
+    @EvalCmp_StrNotEqual,
+    @EvalCmp_StrEqual,
+    @EvalCmp_StrLessThan,
+    @EvalCmp_StrGreaterThan,
+    @EvalCmp_StrLessThanOrEqual,
+    @EvalCmp_StrGreaterThanOrEqual,
+
+    //Integer comparisons
+    @EvalCmp_IntNotEqual,
+    @EvalCmp_IntEqual,
+    @EvalCmp_IntLessThan,
+    @EvalCmp_IntGreaterThan,
+    @EvalCmp_IntLessThanOrEqual,
+    @EvalCmp_IntGreaterThanOrEqual,
+
+    //Extended comparisons
+    @EvalCmp_ExtNotEqual,
+    @EvalCmp_ExtEqual,
+    @EvalCmp_ExtLessThan,
+    @EvalCmp_ExtGreaterThan,
+    @EvalCmp_ExtLessThanOrEqual,
+    @EvalCmp_ExtGreaterThanOrEqual
+  );
+
+
+function EvaluatePartialActionCondition(AEvalOp1, AEvalOp2, AOpEq: string): Boolean;
+var
+  i: Integer;
+begin
+  for i := 0 to CComparisonOperatorsCount - 1 do
+    if AOpEq = CComparisonOperators[i] then
+    begin
+      Result := CEvalCmpFunctions[i](AEvalOp1, AEvalOp2);
+      Exit;
+    end;
+
+  raise Exception.Create('operator "' + AOpEq + '" not implemented in EvaluatePartialActionCondition.');
+end;
+
+
 function EvaluateActionCondition(AActionCondition: string; AEvalReplacementsFunc: TEvaluateReplacementsFunc): Boolean;
 var
   RawCondition: string;
   AStringList, AConditionPart: TStringList;
   i, j: Integer;
   PartialResult, EvalResult: Boolean;
-  Op1, Op2, OpEq: string;
+  Op1, Op2, OpEq, EvalOp1, EvalOp2: string;
 begin
   Result := False;
   EvalResult := False;
@@ -2529,45 +2693,10 @@ begin
         begin
           RawCondition := AConditionPart.Strings[j];
           RawExpressionToParts(RawCondition, Op1, Op2, OpEq);
+          EvalOp1 := AEvalReplacementsFunc(Op1);
+          EvalOp2 := AEvalReplacementsFunc(Op2);
 
-          if OpEq = CCompNotEqual then
-            EvalResult := AEvalReplacementsFunc(Op1) <> AEvalReplacementsFunc(Op2)
-          else
-            if OpEq = CCompEqual then
-              EvalResult := AEvalReplacementsFunc(Op1) = AEvalReplacementsFunc(Op2)
-            else
-              if OpEq = CCompLessThan then
-                EvalResult := AEvalReplacementsFunc(Op1) < AEvalReplacementsFunc(Op2)
-              else
-                if OpEq = CCompGreaterThan then
-                  EvalResult := AEvalReplacementsFunc(Op1) > AEvalReplacementsFunc(Op2)
-                else
-                  if OpEq = CCompLessThanOrEqual then
-                    EvalResult := AEvalReplacementsFunc(Op1) <= AEvalReplacementsFunc(Op2)
-                  else
-                    if OpEq = CCompGreaterThanOrEqual then
-                      EvalResult := AEvalReplacementsFunc(Op1) >= AEvalReplacementsFunc(Op2)
-                    else
-                      if OpEq = CIntCompNotEqual then  //Int
-                        EvalResult := StrToIntDef(AEvalReplacementsFunc(Op1), 0) <> StrToIntDef(AEvalReplacementsFunc(Op2), 0)
-                      else
-                        if OpEq = CIntCompEqual then
-                          EvalResult := StrToIntDef(AEvalReplacementsFunc(Op1), 0) = StrToIntDef(AEvalReplacementsFunc(Op2), 0)
-                        else
-                          if OpEq = CIntCompLessThan then
-                            EvalResult := StrToIntDef(AEvalReplacementsFunc(Op1), 0) < StrToIntDef(AEvalReplacementsFunc(Op2), 0)
-                          else
-                            if OpEq = CIntCompGreaterThan then
-                              EvalResult := StrToIntDef(AEvalReplacementsFunc(Op1), 0) > StrToIntDef(AEvalReplacementsFunc(Op2), 0)
-                            else
-                              if OpEq = CIntCompLessThanOrEqual then
-                                EvalResult := StrToIntDef(AEvalReplacementsFunc(Op1), 0) <= StrToIntDef(AEvalReplacementsFunc(Op2), 0)
-                              else
-                                if OpEq = CIntCompGreaterThanOrEqual then
-                                  EvalResult := StrToIntDef(AEvalReplacementsFunc(Op1), 0) >= StrToIntDef(AEvalReplacementsFunc(Op2), 0)
-                                else
-                                  raise Exception.Create('operator "' + OpEq + '" not implemented in EvaluateActionCondition.');
-
+          EvalResult := EvaluatePartialActionCondition(EvalOp1, EvalOp2, OpEq);
           PartialResult := PartialResult and EvalResult;
         end; //for j
       finally

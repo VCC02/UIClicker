@@ -5770,7 +5770,6 @@ begin  //
       end;
     end;
 
-
     if (ANodeData.Level = CPropertyLevel) and (CurrentlyEditingActionType = acWindowOperations) then
       if APropertyIndex in [CWindowOperations_NewX_PropItemIndex .. CWindowOperations_NewSizeEnabled_PropItemIndex] then
         if (FEditingAction^.WindowOperationsOptions.Operation <> woMoveResize) or
@@ -5842,6 +5841,15 @@ begin  //
           Exit;
         end;
     end; //acFindControl, acFindSubControl
+
+    if (ANodeData.Level = CPropertyItemLevel) and (CurrentlyEditingActionType = acCallTemplate) then
+      if APropertyIndex = CCallTemplate_CallTemplateLoop_PropIndex then
+        if APropertyItemIndex in [CCallTemplate_CallTemplateLoop_Counter_PropItemIndex .. CCallTemplate_CallTemplateLoop_EvalBreakPosition_PropItemIndex] then
+          if not FEditingAction^.CallTemplateOptions.CallTemplateLoop.Enabled then
+          begin
+            TargetCanvas.Font.Color := clGray;
+            Exit;
+          end;
 
     if (ANodeData.Level = CPropertyLevel) and (CurrentlyEditingActionType = acPlugin) then
     begin

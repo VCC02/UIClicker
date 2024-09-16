@@ -1153,6 +1153,7 @@ function GetPropertyHint_Click_YOffset: string;
 function GetPropertyHint_Click_LeaveMouse: string;
 function GetPropertyHint_Click_DelayAfterMovingToDestination: string;
 function GetPropertyHint_Click_DelayAfterMouseDown: string;
+function GetPropertyHint_Click_MouseWheelAmount: string;
 function GetPropertyHint_Click_MoveDuration: string;
 
 function GetPropertyHint_ExecApp_PathToApp: string;
@@ -1274,7 +1275,7 @@ const
     @GetPropertyHintNoHint, // XOffsetDest
     @GetPropertyHintNoHint, // YOffsetDest
     @GetPropertyHintNoHint, // MouseWheelType: TMouseWheelType;
-    @GetPropertyHintNoHint, // MouseWheelAmount: string;
+    @GetPropertyHint_Click_MouseWheelAmount, // MouseWheelAmount: string;
     @GetPropertyHint_Click_DelayAfterMovingToDestination,
     @GetPropertyHint_Click_DelayAfterMouseDown,
     @GetPropertyHint_Click_MoveDuration
@@ -2467,6 +2468,12 @@ end;
 function GetPropertyHint_Click_DelayAfterMouseDown: string;
 begin
   Result := 'Delay in ms, between mouse down and mouse up events, of a click operation.';
+end;
+
+
+function GetPropertyHint_Click_MouseWheelAmount: string;
+begin
+  Result := 'Positive values will scroll up. Negative values will scroll down.';
 end;
 
 
