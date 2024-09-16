@@ -586,7 +586,7 @@ type
     procedure CopySelectedActionsToClipboard;
     procedure PasteActionsFromClipboard(APasteIndex: Integer);
 
-    function EvaluateReplacements(s: string; Recursive: Boolean = True): string;
+    function EvaluateReplacements(s: string; Recursive: Boolean = True; AEvalTextCount: Integer = -1): string;
     function EvaluateHTTP(AValue: string): string;
 
     function GetNodeByIndex(ANodeIndex: Integer): PVirtualNode;
@@ -2082,9 +2082,9 @@ begin
 end;
 
 
-function TfrClickerActionsArr.EvaluateReplacements(s: string; Recursive: Boolean = True): string;
+function TfrClickerActionsArr.EvaluateReplacements(s: string; Recursive: Boolean = True; AEvalTextCount: Integer = -1): string;
 begin
-  Result := frClickerActions.EvaluateReplacements(s, Recursive);
+  Result := frClickerActions.EvaluateReplacements(s, Recursive, AEvalTextCount);
 end;
 
 

@@ -58,7 +58,7 @@ type
 
   TOnAddToLog = procedure(s: string) of object;
 
-  TEvaluateReplacementsFunc = function(s: string; Recursive: Boolean = True): string of object;
+  TEvaluateReplacementsFunc = function(s: string; Recursive: Boolean = True; AEvalTextCount: Integer = -1): string of object;
   TOnTriggerOnControlsModified = procedure of object;
   TOnEvaluateReplacements = function(s: string): string of object;
   TOnReverseEvaluateReplacements = function(s: string): string of object;
@@ -286,6 +286,7 @@ type
     PrecisionTimeout: Boolean;  //When True, the bitmap searching algorithm verifies the timeout. This is a bit of extra overhead, which may slow down the search.
     FullBackgroundImageInResult: Boolean; //When True, the resulted debugging image contains the background image. Defaults to True for backwards compatibility.
     MatchByHistogramSettings: TMatchByHistogramSettings; //used when MatchBitmapAlgorithm is mbaRawHistogramZones
+    EvaluateTextCount: string; //-1 = default (1000 "recursive" evaluations), 0 = no evaluations, >1 = EvaluateTextCount "recursive" evaluations
   end;
 
   TClkSetTextOptions = record
@@ -620,7 +621,7 @@ function FastReplace_0To1(s: string): string;
 
 function GetIsUserAnAdmin: string;
 
-function EvaluateAllReplacements(AListOfVars: TStringList; s: string; Recursive: Boolean = True): string;
+function EvaluateAllReplacements(AListOfVars: TStringList; s: string; Recursive: Boolean = True; AEvalTextCount: Integer = -1): string;
 function CreateDirWithSubDirs(ADir: string): Boolean;
 function HexToInt(s: string): Cardinal;
 function StringToHex(AStr: string): string;   //converts 'abc' to '616263'
@@ -2310,7 +2311,7 @@ begin
 end;
 
 
-function EvaluateAllReplacements(AListOfVars: TStringList; s: string; Recursive: Boolean = True): string;
+function EvaluateAllReplacements(AListOfVars: TStringList; s: string; Recursive: Boolean = True; AEvalTextCount: Integer = -1): string;
 var
   temp_s: string;
   i: Integer;
@@ -2321,13 +2322,23 @@ begin
     Exit;
   end;
 
+  if AEvalTextCount = 0 then
+  begin
+    Result := s;
+    Exit;
+  end;
+
   temp_s := ReplaceOnce(AListOfVars, s);
 
   if Recursive and (Pos('$', temp_s) > 0) then
   begin
-    i := 0;
+    i := 1;
     repeat
       Result := temp_s;
+
+      if i = AEvalTextCount then  // "=", not ">=", because AEvalTextCount is -1, by default
+        Break;
+
       temp_s := ReplaceOnce(AListOfVars, Result);
       if temp_s = Result then //no replacements found
         Break;

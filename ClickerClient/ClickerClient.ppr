@@ -139,6 +139,7 @@ type
     PrecisionTimeout: Boolean;
     FullBackgroundImageInResult: Boolean;
     MatchByHistogramSettings: TMatchByHistogramSettingsAPI;
+    EvaluateTextCount: PWideChar;
   end;
 
   PClkFindControlOptionsAPI = ^TClkFindControlOptionsAPI;
@@ -731,6 +732,8 @@ begin
   SetPointedContentToString(@string(PWideChar(AFindControlOptions^.MatchByHistogramSettings.MinPercentColorMatch))[1], TempAction.FindControlOptions.MatchByHistogramSettings.MinPercentColorMatch);
   SetPointedContentToString(@string(PWideChar(AFindControlOptions^.MatchByHistogramSettings.MostSignificantColorCountInSubBmp))[1], TempAction.FindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInSubBmp);
   SetPointedContentToString(@string(PWideChar(AFindControlOptions^.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp))[1], TempAction.FindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp);
+
+  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.EvaluateTextCount))[1], TempAction.FindControlOptions.EvaluateTextCount);
 
   AddActionToTemplate(TemplateFileName, TempAction);
   Result := 0;

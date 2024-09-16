@@ -109,7 +109,7 @@ type
 
     function GetActionVarValue(VarName: string): string;
     procedure SetActionVarValue(VarName, VarValue: string);
-    function EvaluateReplacements(s: string; Recursive: Boolean = True): string;
+    function EvaluateReplacements(s: string; Recursive: Boolean = True; AEvalTextCount: Integer = -1): string;
     procedure AppendErrorMessageToActionVar(NewErrMsg: string);
     procedure PrependErrorMessageToActionVar(NewErrMsg: string);
     function EvaluateHTTP(AValue: string; out AGeneratedException: Boolean): string;
@@ -159,7 +159,7 @@ type
 
     function HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     function HandleOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
-    function HandleOnEvaluateReplacements(s: string; Recursive: Boolean = True): string;
+    function HandleOnEvaluateReplacements(s: string; Recursive: Boolean = True; AEvalTextCount: Integer = -1): string;
 
     procedure HandleOnSetVar(AVarName, AVarValue: string);
     procedure HandleOnSetDebugPoint(ADebugPoint: string);
@@ -343,9 +343,9 @@ begin
 end;
 
 
-function TActionExecution.EvaluateReplacements(s: string; Recursive: Boolean = True): string;
+function TActionExecution.EvaluateReplacements(s: string; Recursive: Boolean = True; AEvalTextCount: Integer = -1): string;
 begin
-  Result := EvaluateAllReplacements(FClickerVars, s, Recursive);
+  Result := EvaluateAllReplacements(FClickerVars, s, Recursive, AEvalTextCount);
 end;
 
 
@@ -1314,6 +1314,7 @@ function TActionExecution.FillInFindControlInputData(var AFindControlOptions: TC
 
 var
   LocalFormatSettings: TFormatSettings;
+  TempEvalTextCount: Integer;
 begin
   Result := True;
 
@@ -1336,8 +1337,10 @@ begin
   FindControlInputData.SearchAsSubControl := IsSubControl;
   FindControlInputData.DebugBitmap := nil;
 
+  TempEvalTextCount := StrToIntDef(EvaluateReplacements(AFindControlOptions.EvaluateTextCount), -1);
+
   FindControlInputData.ClassName := EvaluateReplacements(AFindControlOptions.MatchClassName);
-  FindControlInputData.Text := EvaluateReplacements(AFindControlOptions.MatchText, True);
+  FindControlInputData.Text := EvaluateReplacements(AFindControlOptions.MatchText, True, TempEvalTextCount);
   FindControlInputData.GetAllHandles := AFindControlOptions.GetAllControls;
 
   if AFindControlOptions.MatchCriteria.WillMatchBitmapText then
@@ -3751,9 +3754,9 @@ begin
 end;
 
 
-function TActionExecution.HandleOnEvaluateReplacements(s: string; Recursive: Boolean = True): string;
+function TActionExecution.HandleOnEvaluateReplacements(s: string; Recursive: Boolean = True; AEvalTextCount: Integer = -1): string;
 begin
-  Result := EvaluateReplacements(s, Recursive);
+  Result := EvaluateReplacements(s, Recursive, AEvalTextCount);
 end;
 
 

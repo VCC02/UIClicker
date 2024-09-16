@@ -66,7 +66,7 @@ type
     procedure SetHandles;
 
     procedure ComposePrimitiveOnBmp(ABmp: TBitmap; APmtvFile: string);
-    function HandleOnEvaluateReplacements(s: string; Recursive: Boolean = True): string;
+    function HandleOnEvaluateReplacements(s: string; Recursive: Boolean = True; AEvalTextCount: Integer = -1): string;
 
     procedure HandleOnCopyControlTextAndClassFromMainWindow(ACompProvider: string; out AControlText, AControlClass: string);
     function HandleOnGetConnectionAddress: string;
@@ -693,9 +693,9 @@ begin
 end;
 
 
-function TfrmUIClickerMainForm.HandleOnEvaluateReplacements(s: string; Recursive: Boolean = True): string;  //this handler is used in this unit only
+function TfrmUIClickerMainForm.HandleOnEvaluateReplacements(s: string; Recursive: Boolean = True; AEvalTextCount: Integer = -1): string;  //this handler is used in this unit only
 begin
-  Result := frmClickerActions.frClickerActionsArrMain.frClickerActions.EvaluateReplacements(s, Recursive);
+  Result := frmClickerActions.frClickerActionsArrMain.frClickerActions.EvaluateReplacements(s, Recursive, AEvalTextCount);
 end;
 
 end.

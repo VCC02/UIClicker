@@ -207,6 +207,8 @@ begin
     ACustomActions[i].FindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInSubBmp := '10';
     ACustomActions[i].FindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp := '15';
 
+    ACustomActions[i].FindControlOptions.EvaluateTextCount := '-1';
+
     SectionIndex := Ini.GetSectionIndex('Actions.SetTextOptions');
     ACustomActions[i].SetTextOptions.Text := Ini.ReadString(SectionIndex, 'Text_' + IterationStr, '');
     ACustomActions[i].SetTextOptions.ControlType := TClkSetTextControlType(Ini.ReadInteger(SectionIndex, 'ControlType_' + IterationStr, Integer(stEditBox)));
@@ -421,6 +423,8 @@ begin
   AFindControlOptions.MatchByHistogramSettings.MinPercentColorMatch := Ini.ReadString(SectionIndex, 'MatchByHistogramSettings.MinPercentColorMatch', '50');
   AFindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInSubBmp := Ini.ReadString(SectionIndex, 'MatchByHistogramSettings.MostSignificantColorCountInSubBmp', '10');
   AFindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp := Ini.ReadString(SectionIndex, 'MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp', '15');
+
+  AFindControlOptions.EvaluateTextCount := Ini.ReadString(SectionIndex, 'EvaluateTextCount', '-1');
 end;
 
 
@@ -869,6 +873,8 @@ begin
   AStringList.Add('MatchByHistogramSettings.MinPercentColorMatch=' + AActionFindControlOptions.MatchByHistogramSettings.MinPercentColorMatch);
   AStringList.Add('MatchByHistogramSettings.MostSignificantColorCountInSubBmp=' + AActionFindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInSubBmp);
   AStringList.Add('MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=' + AActionFindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp);
+
+  AStringList.Add('EvaluateTextCount=' + AActionFindControlOptions.EvaluateTextCount);
 end;
 
 
@@ -1045,6 +1051,8 @@ begin
   ADest.PrecisionTimeout := ASrc.PrecisionTimeout;
   ADest.FullBackgroundImageInResult := ASrc.FullBackgroundImageInResult;
   ADest.MatchByHistogramSettings := ASrc.MatchByHistogramSettings;
+
+  ADest.EvaluateTextCount := ASrc.EvaluateTextCount;
 end;
 
 

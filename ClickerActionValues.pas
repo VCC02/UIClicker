@@ -61,7 +61,7 @@ const
   //Properties (counts)
   CPropCount_Click = 25;
   CPropCount_ExecApp = 7;
-  CPropCount_FindControl = 31;
+  CPropCount_FindControl = 32;
   CPropCount_FindSubControl = CPropCount_FindControl;
   CPropCount_SetText = 4;
   CPropCount_CallTemplate = 4;
@@ -146,6 +146,7 @@ const
   CFindControl_PrecisionTimeout_PropIndex = 28;
   CFindControl_FullBackgroundImageInResult_PropIndex = 29;
   CFindControl_MatchByHistogramSettings_PropIndex = 30;
+  CFindControl_EvaluateTextCount_PropIndex = 31;
 
   CCallTemplate_TemplateFileName_PropIndex = 0; //property index in CallTemplate structure
   CCallTemplate_ListOfCustomVarsAndValues_PropIndex = 1;
@@ -300,7 +301,8 @@ const
     (Name: 'ImageSourceFileNameLocation'; EditorType: etEnumCombo; DataType: CDTEnum),
     (Name: 'PrecisionTimeout'; EditorType: etBooleanCombo; DataType: CDTBool),
     (Name: 'FullBackgroundImageInResult'; EditorType: etBooleanCombo; DataType: CDTBool),
-    (Name: 'MatchByHistogramSettings'; EditorType: etNone; DataType: CDTStructure)
+    (Name: 'MatchByHistogramSettings'; EditorType: etNone; DataType: CDTStructure),
+    (Name: 'EvaluateTextCount'; EditorType: etSpinText; DataType: CDTString)
   );
 
   {$IFDEF SubProperties}
@@ -587,7 +589,8 @@ const
     nil, //ImageSourceFileNameLocation
     nil, //PrecisionTimeout
     nil, //FullBackgroundImageInResult
-    GetActionValueStr_FindControl_MatchByHistogramSettings  //MatchByHistogramSettings
+    GetActionValueStr_FindControl_MatchByHistogramSettings,  //MatchByHistogramSettings
+    nil
   );
 
   CCallTemplateGetActionValueStrFunctions: TGetCallTemplateValueStrFuncArr = (
@@ -675,7 +678,8 @@ const
     Ord(High(TImageSourceFileNameLocation)) + 1,  //ImageSourceFileNameLocation: TImageSourceFileNameLocation;
     0, //PrecisionTimeout: Boolean;
     0, //FullBackgroundImageInResult
-    0  //MatchByHistogramSettings: TMatchByHistogramSettings;
+    0, //MatchByHistogramSettings: TMatchByHistogramSettings;
+    0  //EvaluateTextCount
   );
 
   CSetTextEnumCounts: array[0..CPropCount_SetText - 1] of Integer = (
@@ -869,7 +873,8 @@ const
     @CImageSourceFileNameLocationStr,
     nil, //PrecisionTimeout
     nil, //FullBackgroundImageInResult
-    nil  //MatchByHistogramSettings
+    nil, //MatchByHistogramSettings
+    nil  //EvaluateTextCount
   );
 
   CSetTextEnumStrings: array[0..CPropCount_SetText - 1] of PArrayOfString = (
@@ -1068,7 +1073,8 @@ const
     0,  //ImageSourceFileNameLocation: TImageSourceFileNameLocation;
     0, //PrecisionTimeout: Boolean;
     0, //FullBackgroundImageInResult
-    1  //MatchByHistogramSettings: TMatchByHistogramSettings;
+    1, //MatchByHistogramSettings: TMatchByHistogramSettings;
+    0  //EvaluateTextCount
   );
 
   CSetTextIsExp: array[0..CPropCount_SetText - 1] of Integer = (
@@ -1187,6 +1193,7 @@ function GetPropertyHint_FindControl_ImageSourceFileNameLocation: string;
 function GetPropertyHint_FindControl_PrecisionTimeout: string;
 function GetPropertyHint_FindControl_FullBackgroundImageInResult: string;
 function GetPropertyHint_FindControl_MatchByHistogramSettings: string;
+function GetPropertyHint_FindControl_EvaluateTextCount: string;
 
 {$IFDEF SubProperties}
   function GetPropertyHint_FindControl_MatchCriteria_MatchBitmapText: string;
@@ -1324,7 +1331,8 @@ const
     @GetPropertyHint_FindControl_ImageSourceFileNameLocation, //ImageSourceFileNameLocation: TImageSourceFileLocation;
     @GetPropertyHint_FindControl_PrecisionTimeout, //PrecisionTimeout: Boolean
     @GetPropertyHint_FindControl_FullBackgroundImageInResult,  //FullBackgroundImageInResult: Boolean
-    @GetPropertyHint_FindControl_MatchByHistogramSettings //MatchByHistogramSettings: TMatchByHistogramSettings;
+    @GetPropertyHint_FindControl_MatchByHistogramSettings, //MatchByHistogramSettings: TMatchByHistogramSettings;
+    @GetPropertyHint_FindControl_EvaluateTextCount //EvaluateTextCount: string;
   );
 
 
@@ -1576,6 +1584,7 @@ begin
     28: Result := BoolToStr(AAction^.FindControlOptions.PrecisionTimeout, True);
     29: Result := BoolToStr(AAction^.FindControlOptions.FullBackgroundImageInResult, True);
     30: Result := '';
+    31: Result := AAction^.FindControlOptions.EvaluateTextCount;
     else
       Result := 'unknown';
   end;
@@ -2178,6 +2187,7 @@ begin
     28: AAction^.FindControlOptions.PrecisionTimeout := StrToBool(NewValue);
     29: AAction^.FindControlOptions.FullBackgroundImageInResult := StrToBool(NewValue);
     30: ;  //MatchByHistogramSettings
+    31: AAction^.FindControlOptions.EvaluateTextCount := NewValue;
     else
       ;
   end;
@@ -2721,6 +2731,15 @@ function GetPropertyHint_FindControl_MatchByHistogramSettings: string;
 begin
   Result := 'Settings available when matching by histogram.';
 end;
+
+
+function GetPropertyHint_FindControl_EvaluateTextCount: string;
+begin
+  Result := 'When -1, the searched text is not evaluated either until no more variables are extracted from it, or a hardcoded number of iterations (e.g. 1000) is reached.' + #13#10 +
+            'When 0, the searched text is not evaluated. This allows a string, which contains the "$" character to be searched as it is.' + #13#10 +
+            'When greater than 0, that number of iterations is used to count how many times the string is evaluated.';
+end;
+
 
 {$IFDEF SubProperties}
   function GetPropertyHint_FindControl_MatchCriteria_MatchBitmapText: string;

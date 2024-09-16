@@ -490,7 +490,7 @@ type
     function AddFontProfileToActionFromMenu(AForegroundColor, ABackgroundColor, AFontName: string; AFontSize: Integer; AFontQuality: TFontQuality): Integer;
     function GetUniqueProfileName(n: Integer): string;
 
-    function DummyEvaluateReplacements(VarName: string; Recursive: Boolean = True): string; //returns VarName
+    function DummyEvaluateReplacements(VarName: string; Recursive: Boolean = True; AEvalTextCount: Integer = -1): string; //returns VarName
 
     procedure HandleOnUpdateBitmapAlgorithmSettings;
     procedure HandleOnTriggerOnControlsModified;
@@ -523,7 +523,7 @@ type
     procedure HandleOnClickerSetVarFrame_OnShowAutoComplete(AEdit: TEdit);
     procedure HandleOnClickerCallTemplateFrame_OnTriggerOnControlsModified;
 
-    function HandleOnEvaluateReplacementsFunc(s: string; Recursive: Boolean = True): string;
+    function HandleOnEvaluateReplacementsFunc(s: string; Recursive: Boolean = True; AEvalTextCount: Integer = -1): string;
     procedure HandleOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
     procedure HandleOnSavePrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
     procedure HandleOnPrimitivesTriggerOnControlsModified;
@@ -614,7 +614,7 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
 
-    function EvaluateReplacements(VarName: string; Recursive: Boolean = True): string;
+    function EvaluateReplacements(VarName: string; Recursive: Boolean = True; AEvalTextCount: Integer = -1): string;
     function ReverseEvaluateReplacements(AValue: string): string;
 
     procedure LoadListOfAvailableTemplates;
@@ -1008,9 +1008,9 @@ begin
 end;
 
 
-function TfrClickerActions.EvaluateReplacements(VarName: string; Recursive: Boolean = True): string;
+function TfrClickerActions.EvaluateReplacements(VarName: string; Recursive: Boolean = True; AEvalTextCount: Integer = -1): string;
 begin
-  Result := EvaluateAllReplacements(FClkVariables, VarName, Recursive);
+  Result := EvaluateAllReplacements(FClkVariables, VarName, Recursive, AEvalTextCount);
 end;
 
 
@@ -2629,9 +2629,9 @@ begin
 end;
 
 
-function TfrClickerActions.HandleOnEvaluateReplacementsFunc(s: string; Recursive: Boolean = True): string;
+function TfrClickerActions.HandleOnEvaluateReplacementsFunc(s: string; Recursive: Boolean = True; AEvalTextCount: Integer = -1): string;
 begin
-  Result := EvaluateReplacements(s, Recursive);
+  Result := EvaluateReplacements(s, Recursive, AEvalTextCount);
 end;
 
 
@@ -3973,7 +3973,7 @@ begin
 end;
 
 
-function TfrClickerActions.DummyEvaluateReplacements(VarName: string; Recursive: Boolean = True): string; //returns VarName
+function TfrClickerActions.DummyEvaluateReplacements(VarName: string; Recursive: Boolean = True; AEvalTextCount: Integer = -1): string; //returns VarName
 begin
   Result := VarName;
 end;

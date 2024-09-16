@@ -212,7 +212,9 @@ begin
 
             'MatchByHistogramSettings.MinPercentColorMatch' + '=' + AFindControlOptions.MatchByHistogramSettings.MinPercentColorMatch + '&' +
             'MatchByHistogramSettings.MostSignificantColorCountInSubBmp' + '=' + AFindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInSubBmp + '&' +
-            'MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp' + '=' + AFindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp
+            'MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp' + '=' + AFindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp + '&' +
+
+            'EvaluateTextCount' + '=' + AFindControlOptions.EvaluateTextCount
             ;
 end;
 
@@ -627,6 +629,8 @@ begin
   AFindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInSubBmp := AListOfFindControlOptionsParams.Values['MatchByHistogramSettings.MostSignificantColorCountInSubBmp'];
   AFindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp := AListOfFindControlOptionsParams.Values['MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp'];
 
+  AFindControlOptions.EvaluateTextCount := AListOfFindControlOptionsParams.Values['EvaluateTextCount'];
+
   AActionOptions.ActionName := AListOfFindControlOptionsParams.Values[CPropertyName_ActionName];
   AActionOptions.ActionTimeout := Temp_ActionTimeout;
   AActionOptions.Action := CActionType[AIsSubControl];
@@ -899,6 +903,7 @@ begin
   AFindControlOptions.MatchByHistogramSettings.MinPercentColorMatch := '50';
   AFindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInSubBmp := '10';
   AFindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp := '15';
+  AFindControlOptions.EvaluateTextCount := '-1';
 
   SetLength(AFindControlOptions.MatchBitmapText, 1);
   AFindControlOptions.MatchBitmapText[0].ForegroundColor := '$Color_Window$';

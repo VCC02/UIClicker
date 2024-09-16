@@ -152,7 +152,7 @@ type
     procedure DoOnGetListOfExternallyRenderedImages(AListOfExternallyRenderedImages: TStringList);
     procedure DoOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
     procedure DoOnSavePrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
-    function DoOnEvaluateReplacementsFunc(s: string; Recursive: Boolean = True): string;
+    function DoOnEvaluateReplacementsFunc(s: string; Recursive: Boolean = True; AEvalTextCount: Integer = -1): string;
     procedure DoOnTriggerOnControlsModified;
     procedure DoOnSaveFromMenu;
     function DoOnPictureOpenDialogExecute: Boolean;
@@ -218,7 +218,7 @@ type
     procedure HandleOnOIDragOver(NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex, SrcNodeLevel, SrcCategoryIndex, SrcPropertyIndex, SrcPropertyItemIndex: Integer; Shift: TShiftState; State: TDragState; const Pt: TPoint; Mode: TDropMode; var Effect: DWORD; var Accept: Boolean);
     procedure HandleOnOIDragDrop(NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex, SrcNodeLevel, SrcCategoryIndex, SrcPropertyIndex, SrcPropertyItemIndex: Integer; Shift: TShiftState; const Pt: TPoint; var Effect: DWORD; Mode: TDropMode);
 
-    function HandleOnEvaluateReplacementsFunc(s: string; Recursive: Boolean = True): string;
+    function HandleOnEvaluateReplacementsFunc(s: string; Recursive: Boolean = True; AEvalTextCount: Integer = -1): string;
     function HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     function HandleOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
   public
@@ -1715,12 +1715,12 @@ begin
 end;
 
 
-function TfrClickerPrimitives.DoOnEvaluateReplacementsFunc(s: string; Recursive: Boolean = True): string;
+function TfrClickerPrimitives.DoOnEvaluateReplacementsFunc(s: string; Recursive: Boolean = True; AEvalTextCount: Integer = -1): string;
 begin
   if not Assigned(FOnEvaluateReplacementsFunc) then
     raise Exception.Create('OnEvaluateReplacementsFunc not assigned.')
   else
-    Result := FOnEvaluateReplacementsFunc(s, Recursive);
+    Result := FOnEvaluateReplacementsFunc(s, Recursive, AEvalTextCount);
 end;
 
 
@@ -2793,9 +2793,9 @@ end;
 
 //Primitive compositor handlers
 
-function TfrClickerPrimitives.HandleOnEvaluateReplacementsFunc(s: string; Recursive: Boolean = True): string;
+function TfrClickerPrimitives.HandleOnEvaluateReplacementsFunc(s: string; Recursive: Boolean = True; AEvalTextCount: Integer = -1): string;
 begin
-  Result := DoOnEvaluateReplacementsFunc(s, Recursive);
+  Result := DoOnEvaluateReplacementsFunc(s, Recursive, AEvalTextCount);
 end;
 
 
