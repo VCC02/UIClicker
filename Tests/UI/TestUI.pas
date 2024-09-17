@@ -889,8 +889,8 @@ begin
 
     ExecuteTemplateOnTestDriver(ExtractFilePath(ParamStr(0)) + '..\..\TestDriver\ActionTemplates\VerifyOIDefaultValuesOnAppUnderTest.clktmpl',
                                 CREParam_FileLocation_ValueDisk,
-                                '', //'$Control_Text$',
-                                '' //AExpectedResult
+                                '$ValueFound$',
+                                'Successful'
                                 );
   end;
 

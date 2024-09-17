@@ -100,6 +100,7 @@ FullBackgroundImageInResult=1
 MatchByHistogramSettings.MinPercentColorMatch=50
 MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
+EvaluateTextCount=-1
 
 [Action_2]
 ActionName=Cache player tabs
@@ -190,6 +191,7 @@ FullBackgroundImageInResult=1
 MatchByHistogramSettings.MinPercentColorMatch=50
 MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
+EvaluateTextCount=-1
 
 [Action_4]
 ActionName=Find OI
@@ -266,6 +268,7 @@ FullBackgroundImageInResult=1
 MatchByHistogramSettings.MinPercentColorMatch=50
 MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
+EvaluateTextCount=-1
 
 [Action_5]
 ActionName=Cache OI
@@ -345,7 +348,7 @@ ActionName=Exit template if property not found
 Action=SetVar
 ActionTimeout=0
 ActionEnabled=1
-ActionCondition=$LastAction_Status$<>Successful$PropertyFound$<>Successful$PropertyFound$<>Successful
+ActionCondition=$LastAction_Status$<>Successful$PropertyFound$<>Successful$ValueFound$<>Successful
 BreakpointExists=0
 BreakpointEnabled=0
 BreakpointCondition=
