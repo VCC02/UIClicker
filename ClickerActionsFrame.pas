@@ -54,6 +54,7 @@ type
     chkDecodeVariables: TCheckBox;
     chkShowDebugGrid: TCheckBox;
     imglstMatchByHistogramSettings: TImageList;
+    imglstEditTemplateProperties: TImageList;
     imglstUsedMatchCriteria: TImageList;
     imgPluginFileName: TImage;
     imgDebugBmp: TImage;
@@ -4518,7 +4519,7 @@ begin
 end;
 
 
-function OIGetPropertyName_ActionSpecific(AEditingAction: PClkActionRec; APropertyIndex: Integer): string;
+function OIGetPropertyName_ActionSpecific(AEditingAction: PClkActionRec; ALiveEditingActionType: TClkAction; APropertyIndex: Integer): string;
 const
   CNotUsedStr = '   [Not used]';
 var
@@ -4531,12 +4532,12 @@ begin
     Exit;
   end;
 
-  EditingActionType := Integer(AEditingAction^.ActionOptions.Action);
+  EditingActionType := Integer(ALiveEditingActionType);
   if EditingActionType = CClkUnsetAction then
     Result := '?'
   else
   begin
-    if (AEditingAction^.ActionOptions.Action = acPlugin) and (APropertyIndex > CPlugin_FileName_PropIndex) then
+    if (ALiveEditingActionType = acPlugin) and (APropertyIndex > CPlugin_FileName_PropIndex) then  //intially used AEditingAction^.ActionOptions.Action
     begin
       ListOfProperties := TStringList.Create;
       try
@@ -4570,7 +4571,7 @@ begin
     end;
   end;
 
-  if AEditingAction^.ActionOptions.Action in [acFindControl, acFindSubControl] then
+  if ALiveEditingActionType in [acFindControl, acFindSubControl] then   //intially used AEditingAction^.ActionOptions.Action
   begin
     if APropertyIndex = CFindControl_MatchBitmapText_PropIndex then
       Result := Result + ' [0..' + IntToStr(Length(AEditingAction^.FindControlOptions.MatchBitmapText) - 1) + ']';
@@ -4612,7 +4613,7 @@ begin
 
     CCategory_ActionSpecific:
     begin
-      Result := OIGetPropertyName_ActionSpecific(FEditingAction, APropertyIndex);
+      Result := OIGetPropertyName_ActionSpecific(FEditingAction, CurrentlyEditingActionType, APropertyIndex);
     end; //action specific
 
     CCategory_EditedAction:
@@ -4622,7 +4623,7 @@ begin
         Result := '?'
       else
       begin
-        Result := OIGetPropertyName_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, APropertyIndex);
+        Result := OIGetPropertyName_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, APropertyIndex);
       end;
     end
 
@@ -4631,12 +4632,12 @@ begin
   end;
   except
     on E: Exception do
-      MessageBox(Handle, 'AV', PChar('UC HandleOnOIGetPropertyName' + #13#10 + E.Message), 0);
+      Result := 'AV ' + E.Message;//MessageBox(Handle, 'AV', PChar('UC HandleOnOIGetPropertyName' + #13#10 + E.Message), 0);
   end;
 end;
 
 
-function OIGetPropertyValue_ActionSpecific(AEditingAction: PClkActionRec; APropertyIndex: Integer; var APropDef: TOIPropDef): string;
+function OIGetPropertyValue_ActionSpecific(AEditingAction: PClkActionRec; ALiveEditingActionType: TClkAction; APropertyIndex: Integer; var APropDef: TOIPropDef): string;
 var
   EditingActionType: Integer;
   ListOfProperties: TStringList;
@@ -4651,12 +4652,12 @@ begin
   end;
 
   try
-    EditingActionType := Integer(AEditingAction^.ActionOptions.Action);  //this was CurrentlyEditingActionType;
+    EditingActionType := Integer(ALiveEditingActionType);  //this was CurrentlyEditingActionType;
     if EditingActionType = CClkUnsetAction then
       APropDef.Name := '?'
     else
     begin
-      if (AEditingAction^.ActionOptions.Action = acPlugin) and (APropertyIndex > CPlugin_FileName_PropIndex) then
+      if (ALiveEditingActionType = acPlugin) and (APropertyIndex > CPlugin_FileName_PropIndex) then    //initially used AEditingAction^.ActionOptions.Action
       begin
         ListOfProperties := TStringList.Create;
         try
@@ -4679,8 +4680,8 @@ begin
           APropDef := CMainProperties[EditingActionType]^[APropertyIndex]
       end;
 
-      if (APropertyIndex < CMainPropCounts[EditingActionType]) or (AEditingAction^.ActionOptions.Action = acPlugin) then
-        Result := CMainGetActionValueStrFunctions[AEditingAction^.ActionOptions.Action](AEditingAction, APropertyIndex)
+      if (APropertyIndex < CMainPropCounts[EditingActionType]) or (ALiveEditingActionType = acPlugin) then    //initially used AEditingAction^.ActionOptions.Action
+        Result := CMainGetActionValueStrFunctions[ALiveEditingActionType](AEditingAction, APropertyIndex)
       else
         Result := '[bug. bad init]';
     end; //CClkUnsetAction
@@ -4708,12 +4709,12 @@ begin
 
     CCategory_ActionSpecific:
     begin
-      Result := OIGetPropertyValue_ActionSpecific(FEditingAction, APropertyIndex, PropDef);
+      Result := OIGetPropertyValue_ActionSpecific(FEditingAction, CurrentlyEditingActionType, APropertyIndex, PropDef);
     end;  //CCategory_ActionSpecific
 
     CCategory_EditedAction:
     begin
-      Result := OIGetPropertyValue_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, APropertyIndex, PropDef);
+      Result := OIGetPropertyValue_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, APropertyIndex, PropDef);
     end
 
     else
@@ -4722,7 +4723,8 @@ begin
 
   AEditorType := PropDef.EditorType;
   except
-    MessageBox(Handle, 'AV', 'UC HandleOnOIGetPropertyValue', 0);
+    on E: Exception do
+      Result := 'AV ' + E.Message;//MessageBox(Handle, 'AV', 'UC HandleOnOIGetPropertyValue', 0);
   end;
 end;
 
@@ -5140,6 +5142,9 @@ begin  //
                 //if APropertyIndex > CPlugin_FileName_PropIndex then
                 //  ImageIndex := 1;
               end;
+
+              Ord(acEditTemplate):
+                ImageList := imglstEditTemplateProperties;
             end;   //case
           end;
 

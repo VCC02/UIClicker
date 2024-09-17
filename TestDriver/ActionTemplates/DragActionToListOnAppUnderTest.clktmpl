@@ -1,5 +1,5 @@
 [Actions]
-Count=31
+Count=37
 Version=2
 
 [Action_0]
@@ -100,6 +100,7 @@ FullBackgroundImageInResult=1
 MatchByHistogramSettings.MinPercentColorMatch=50
 MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
+EvaluateTextCount=-1
 
 [Action_2]
 ActionName=Cache player tabs
@@ -190,6 +191,7 @@ FullBackgroundImageInResult=1
 MatchByHistogramSettings.MinPercentColorMatch=50
 MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
+EvaluateTextCount=-1
 
 [Action_4]
 ActionName=Cache Action Palette button
@@ -316,6 +318,7 @@ FullBackgroundImageInResult=1
 MatchByHistogramSettings.MinPercentColorMatch=50
 MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
+EvaluateTextCount=-1
 
 [Action_7]
 ActionName=Move cursor over palette
@@ -534,6 +537,7 @@ FullBackgroundImageInResult=1
 MatchByHistogramSettings.MinPercentColorMatch=50
 MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
+EvaluateTextCount=-1
 
 [Action_11]
 ActionName=Reset drag offset
@@ -733,6 +737,7 @@ FullBackgroundImageInResult=1
 MatchByHistogramSettings.MinPercentColorMatch=50
 MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
+EvaluateTextCount=-1
 
 [Action_17]
 ActionName=Select action
@@ -771,7 +776,7 @@ DelayAfterMouseDown=200
 MoveDuration=-1
 
 [Action_18]
-ActionName=Restore player cached control
+ActionName=Restore player position
 Action=SetVar
 ActionTimeout=0
 ActionEnabled=1
@@ -785,6 +790,260 @@ ListOfVarEvalBefore=111111111
 FailOnException=0
 
 [Action_19]
+ActionName=Find action editor splitter
+Action=FindControl
+ActionTimeout=10000
+ActionEnabled=1
+ActionCondition=
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+MatchCriteria.WillMatchText=1
+MatchCriteria.WillMatchClassName=0
+MatchCriteria.WillMatchBitmapText=0
+MatchCriteria.WillMatchBitmapFiles=0
+MatchCriteria.WillMatchPrimitiveFiles=0
+MatchCriteria.SearchForControlMode=0
+MatchText=ActionEditorSplitter
+MatchClassName=Window
+MatchTextSeparator=
+MatchClassNameSeparator=
+AllowToFail=0
+WaitForControlToGoAway=0
+MatchBitmapTextArr=1
+MatchBitmapText_Count=1
+MatchBitmapText[0].ForegroundColor=$Color_Window$
+MatchBitmapText[0].BackgroundColor=$Color_Highlight$
+MatchBitmapText[0].FontName=Tahoma
+MatchBitmapText[0].FontSize=8
+MatchBitmapText[0].Bold=0
+MatchBitmapText[0].Italic=0
+MatchBitmapText[0].Underline=0
+MatchBitmapText[0].StrikeOut=0
+MatchBitmapText[0].FontQuality=3
+MatchBitmapText[0].FontQualityUsesReplacement=0
+MatchBitmapText[0].FontQualityReplacement=
+MatchBitmapText[0].ProfileName=Profile [0]
+MatchBitmapText[0].CropLeft=0
+MatchBitmapText[0].CropTop=0
+MatchBitmapText[0].CropRight=0
+MatchBitmapText[0].CropBottom=0
+MatchBitmapText[0].IgnoreBackgroundColor=0
+MatchBitmapFiles=
+ColorError=0
+AllowedColorErrorCount=0
+MatchBitmapAlgorithm=0
+MatchBitmapAlgorithm_Grid_XMultipleOf=1
+MatchBitmapAlgorithm_Grid_YMultipleOf=1
+MatchBitmapAlgorithm_Grid_XOffset=0
+MatchBitmapAlgorithm_Grid_YOffset=0
+InitialRectangle.Left=$Control_Left$
+InitialRectangle.Top=$Control_Top$
+InitialRectangle.Right=$Control_Right$
+InitialRectangle.Bottom=$Control_Bottom$
+UseWholeScreen=0
+InitialRectangle.LeftOffset=0
+InitialRectangle.TopOffset=0
+InitialRectangle.RightOffset=0
+InitialRectangle.BottomOffset=0
+StartSearchingWithCachedControl=0
+CachedControlLeft=
+CachedControlTop=
+MatchPrimitiveFiles=
+GetAllControls=0
+UseFastSearch=1
+FastSearchAllowedColorErrorCount=10
+IgnoredColors=
+SleepySearch=0
+StopSearchOnMismatch=1
+ImageSource=0
+SourceFileName=
+ImageSourceFileNameLocation=1
+PrecisionTimeout=0
+FullBackgroundImageInResult=1
+MatchByHistogramSettings.MinPercentColorMatch=50
+MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
+MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
+EvaluateTextCount=-1
+
+[Action_20]
+ActionName=Drag to the left (reset to a "known" pos)
+Action=Click
+ActionTimeout=0
+ActionEnabled=1
+ActionCondition=
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+XOffsetReference=0
+YOffsetReference=0
+XClickPointVar=$Control_Left$
+YClickPointVar=$Control_Top$
+XOffset=4
+YOffset=4
+MouseButton=0
+ClickWithCtrl=0
+ClickWithAlt=0
+ClickWithShift=0
+ClickWithDoubleClick=0
+LeaveMouse=0
+MoveWithoutClick=0
+Count=1
+ClickType=1
+XOffsetReferenceDest=0
+YOffsetReferenceDest=0
+XClickPointVarDest=$Control_Left$
+YClickPointVarDest=$Control_Top$
+XOffsetDest=-400
+YOffsetDest=7
+MouseWheelType=0
+MouseWheelAmount=1
+DelayAfterMovingToDestination=50
+DelayAfterMouseDown=200
+MoveDuration=100
+
+[Action_21]
+ActionName=Restore player pos
+Action=SetVar
+ActionTimeout=0
+ActionEnabled=1
+ActionCondition=
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+ListOfVarNames=$Control_Left$$Control_Top$$Control_Right$$Control_Bottom$$Control_Width$$Control_Height$$Control_Text$$Control_Class$$Control_Handle$
+ListOfVarValues=$Player_Left$$Player_Top$$Player_Right$$Player_Bottom$$Player_Width$$Player_Height$$Player_Text$$Player_Class$$Player_Handle$
+ListOfVarEvalBefore=111111111
+FailOnException=0
+
+[Action_22]
+ActionName=Find action editor splitter
+Action=FindControl
+ActionTimeout=10000
+ActionEnabled=1
+ActionCondition=
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+MatchCriteria.WillMatchText=1
+MatchCriteria.WillMatchClassName=0
+MatchCriteria.WillMatchBitmapText=0
+MatchCriteria.WillMatchBitmapFiles=0
+MatchCriteria.WillMatchPrimitiveFiles=0
+MatchCriteria.SearchForControlMode=0
+MatchText=ActionEditorSplitter
+MatchClassName=Window
+MatchTextSeparator=
+MatchClassNameSeparator=
+AllowToFail=0
+WaitForControlToGoAway=0
+MatchBitmapTextArr=1
+MatchBitmapText_Count=1
+MatchBitmapText[0].ForegroundColor=$Color_Window$
+MatchBitmapText[0].BackgroundColor=$Color_Highlight$
+MatchBitmapText[0].FontName=Tahoma
+MatchBitmapText[0].FontSize=8
+MatchBitmapText[0].Bold=0
+MatchBitmapText[0].Italic=0
+MatchBitmapText[0].Underline=0
+MatchBitmapText[0].StrikeOut=0
+MatchBitmapText[0].FontQuality=3
+MatchBitmapText[0].FontQualityUsesReplacement=0
+MatchBitmapText[0].FontQualityReplacement=
+MatchBitmapText[0].ProfileName=Profile [0]
+MatchBitmapText[0].CropLeft=0
+MatchBitmapText[0].CropTop=0
+MatchBitmapText[0].CropRight=0
+MatchBitmapText[0].CropBottom=0
+MatchBitmapText[0].IgnoreBackgroundColor=0
+MatchBitmapFiles=
+ColorError=0
+AllowedColorErrorCount=0
+MatchBitmapAlgorithm=0
+MatchBitmapAlgorithm_Grid_XMultipleOf=1
+MatchBitmapAlgorithm_Grid_YMultipleOf=1
+MatchBitmapAlgorithm_Grid_XOffset=0
+MatchBitmapAlgorithm_Grid_YOffset=0
+InitialRectangle.Left=$Control_Left$
+InitialRectangle.Top=$Control_Top$
+InitialRectangle.Right=$Control_Right$
+InitialRectangle.Bottom=$Control_Bottom$
+UseWholeScreen=0
+InitialRectangle.LeftOffset=0
+InitialRectangle.TopOffset=0
+InitialRectangle.RightOffset=0
+InitialRectangle.BottomOffset=0
+StartSearchingWithCachedControl=0
+CachedControlLeft=
+CachedControlTop=
+MatchPrimitiveFiles=
+GetAllControls=0
+UseFastSearch=1
+FastSearchAllowedColorErrorCount=10
+IgnoredColors=
+SleepySearch=0
+StopSearchOnMismatch=1
+ImageSource=0
+SourceFileName=
+ImageSourceFileNameLocation=1
+PrecisionTimeout=0
+FullBackgroundImageInResult=1
+MatchByHistogramSettings.MinPercentColorMatch=50
+MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
+MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
+EvaluateTextCount=-1
+
+[Action_23]
+ActionName=Drag to the destination (so that Value column is visible)
+Action=Click
+ActionTimeout=0
+ActionEnabled=1
+ActionCondition=
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+XOffsetReference=0
+YOffsetReference=0
+XClickPointVar=$Control_Left$
+YClickPointVar=$Control_Top$
+XOffset=4
+YOffset=4
+MouseButton=0
+ClickWithCtrl=0
+ClickWithAlt=0
+ClickWithShift=0
+ClickWithDoubleClick=0
+LeaveMouse=0
+MoveWithoutClick=0
+Count=1
+ClickType=1
+XOffsetReferenceDest=0
+YOffsetReferenceDest=0
+XClickPointVarDest=$Control_Left$
+YClickPointVarDest=$Control_Top$
+XOffsetDest=120
+YOffsetDest=7
+MouseWheelType=0
+MouseWheelAmount=1
+DelayAfterMovingToDestination=50
+DelayAfterMouseDown=200
+MoveDuration=100
+
+[Action_24]
+ActionName=Restore player cached control
+Action=SetVar
+ActionTimeout=0
+ActionEnabled=1
+ActionCondition=
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+ListOfVarNames=$Control_Left$$Control_Top$$Control_Right$$Control_Bottom$$Control_Width$$Control_Height$$Control_Text$$Control_Class$$Control_Handle$
+ListOfVarValues=$Player_Left$$Player_Top$$Player_Right$$Player_Bottom$$Player_Width$$Player_Height$$Player_Text$$Player_Class$$Player_Handle$
+ListOfVarEvalBefore=111111111
+FailOnException=0
+
+[Action_25]
 ActionName=Find OI
 Action=FindControl
 ActionTimeout=3000
@@ -859,8 +1118,9 @@ FullBackgroundImageInResult=1
 MatchByHistogramSettings.MinPercentColorMatch=50
 MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
+EvaluateTextCount=-1
 
-[Action_20]
+[Action_26]
 ActionName=Cache OI Left
 Action=SetVar
 ActionTimeout=0
@@ -874,7 +1134,7 @@ ListOfVarValues=$Control_Left$
 ListOfVarEvalBefore=1
 FailOnException=0
 
-[Action_21]
+[Action_27]
 ActionName=Move cursor over OI
 Action=Click
 ActionTimeout=0
@@ -910,7 +1170,7 @@ DelayAfterMovingToDestination=50
 DelayAfterMouseDown=200
 MoveDuration=-1
 
-[Action_22]
+[Action_28]
 ActionName=Scroll to the top
 Action=Click
 ActionTimeout=0
@@ -946,7 +1206,7 @@ DelayAfterMovingToDestination=50
 DelayAfterMouseDown=200
 MoveDuration=-1
 
-[Action_23]
+[Action_29]
 ActionName=Find "Value" column title in OI
 Action=FindSubControl
 ActionTimeout=1000
@@ -1021,8 +1281,9 @@ FullBackgroundImageInResult=1
 MatchByHistogramSettings.MinPercentColorMatch=50
 MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
+EvaluateTextCount=-1
 
-[Action_24]
+[Action_30]
 ActionName=Focus OI
 Action=WindowOperations
 ActionTimeout=0
@@ -1039,7 +1300,7 @@ NewHeight=
 NewPositionEnabled=0
 NewSizeEnabled=0
 
-[Action_25]
+[Action_31]
 ActionName=Cache OI "Value" column Left
 Action=SetVar
 ActionTimeout=0
@@ -1053,7 +1314,7 @@ ListOfVarValues=$Control_Left$
 ListOfVarEvalBefore=1
 FailOnException=0
 
-[Action_26]
+[Action_32]
 ActionName=Move cursor over column splitter
 Action=Click
 ActionTimeout=0
@@ -1089,7 +1350,7 @@ DelayAfterMovingToDestination=50
 DelayAfterMouseDown=200
 MoveDuration=-1
 
-[Action_27]
+[Action_33]
 ActionName=Drag the column splitter if the column is too narrow
 Action=Click
 ActionTimeout=0
@@ -1125,7 +1386,7 @@ DelayAfterMovingToDestination=150
 DelayAfterMouseDown=300
 MoveDuration=-1
 
-[Action_28]
+[Action_34]
 ActionName=MouseDown
 Action=Click
 ActionTimeout=0
@@ -1161,7 +1422,7 @@ DelayAfterMovingToDestination=50
 DelayAfterMouseDown=200
 MoveDuration=-1
 
-[Action_29]
+[Action_35]
 ActionName=MoveMove
 Action=Click
 ActionTimeout=0
@@ -1197,7 +1458,7 @@ DelayAfterMovingToDestination=50
 DelayAfterMouseDown=200
 MoveDuration=-1
 
-[Action_30]
+[Action_36]
 ActionName=MouseUp
 Action=Click
 ActionTimeout=0
