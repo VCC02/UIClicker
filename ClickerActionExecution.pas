@@ -182,6 +182,7 @@ type
     function ExecuteLoadSetVarFromFileAction(var ALoadSetVarFromFileOptions: TClkLoadSetVarFromFileOptions): Boolean;
     function ExecuteSaveSetVarToFileAction(var ASaveSetVarToFileOptions: TClkSaveSetVarToFileOptions): Boolean;
     function ExecutePluginAction(var APluginOptions: TClkPluginOptions; AAllActions: PClkActionsRecArr; AListOfAllVars: TStringList; AResolvedPluginPath: string; IsDebugging, AShouldStopAtBreakPoint: Boolean): Boolean;
+    function ExecuteEditTemplateAction(var AEditTemplateOptions: TClkEditTemplateOptions): Boolean;
 
     function ExecuteClickActionAsString(AListOfClickOptionsParams: TStrings): Boolean;
     function ExecuteExecAppActionAsString(AListOfExecAppOptionsParams: TStrings): Boolean;
@@ -193,7 +194,8 @@ type
     function ExecuteWindowOperationsActionAsString(AListOfWindowOperationsOptionsParams: TStrings): Boolean;
     function ExecuteLoadSetVarFromFileActionAsString(AListOfLoadSetVarOptionsParams: TStrings): Boolean;
     function ExecuteSaveSetVarToFileActionAsString(AListOfSaveSetVarOptionsParams: TStrings): Boolean;
-    function ExecutePluginActionAsString(APluginOptionsParams: TStrings): Boolean;
+    function ExecutePluginActionAsString(AListOfPluginOptionsParams: TStrings): Boolean;
+    function ExecuteEditTemplateActionAsString(AListOfEditTemplateOptionsParams: TStrings): Boolean;
 
     //using pointers for the following properties, because the values they are pointing to, can be updated later, not when this class is created
     property ClickerVars: TStringList write FClickerVars;  //not created here in this class, used from outside
@@ -574,6 +576,9 @@ begin
 
     acPlugin:
       Result := GetPluginActionProperties(Action.PluginOptions);
+
+    acEditTemplate:
+      Result := GetEditTemplateActionProperties(Action.EditTemplateOptions);
   end;
 end;
 
@@ -3476,6 +3481,18 @@ begin
 end;
 
 
+function TActionExecution.ExecuteEditTemplateAction(var AEditTemplateOptions: TClkEditTemplateOptions): Boolean;
+begin
+  Result := False;
+  //case AEditTemplateOptions.Operation of
+  //  etoUpdateAction:
+  //  begin
+  //
+  //  end;
+  //end;
+end;
+
+
 function TActionExecution.ExecuteClickActionAsString(AListOfClickOptionsParams: TStrings): Boolean;
 var
   ClickOptions: TClkClickOptions;
@@ -3707,7 +3724,7 @@ begin
 end;
 
 
-function TActionExecution.ExecutePluginActionAsString(APluginOptionsParams: TStrings): Boolean;
+function TActionExecution.ExecutePluginActionAsString(AListOfPluginOptionsParams: TStrings): Boolean;
 var
   PluginOptions: TClkPluginOptions;
   TempAllActions: PClkActionsRecArr;
@@ -3718,14 +3735,14 @@ begin
   Result := False;
   SetActionVarValue('$ExecAction_Err$', '');
   try
-    Err := SetPluginActionProperties(APluginOptionsParams, PluginOptions);
+    Err := SetPluginActionProperties(AListOfPluginOptionsParams, PluginOptions);
     if Err <> '' then
     begin
       SetActionVarValue('$ExecAction_Err$', Err);
       Exit;
     end;
 
-    IsDebugging := APluginOptionsParams.Values['IsDebugging'] = '1';
+    IsDebugging := AListOfPluginOptionsParams.Values['IsDebugging'] = '1';
     TempAllActions := DoOnGetAllActions;
 
     TempListOfAllVars := TStringList.Create;
@@ -3735,6 +3752,28 @@ begin
     finally
       TempListOfAllVars.Free;
     end;
+  finally
+    SetLastActionStatus(Result, False);
+  end;
+end;
+
+
+function TActionExecution.ExecuteEditTemplateActionAsString(AListOfEditTemplateOptionsParams: TStrings): Boolean;
+var
+  EditTemplateOptions: TClkEditTemplateOptions;
+  Err: string;
+begin
+  Result := False;
+  SetActionVarValue('$ExecAction_Err$', '');
+  try
+    Err := SetEditTemplateActionProperties(AListOfEditTemplateOptionsParams, EditTemplateOptions);
+    if Err <> '' then
+    begin
+      SetActionVarValue('$ExecAction_Err$', Err);
+      Exit;
+    end;
+
+    Result := ExecuteEditTemplateAction(EditTemplateOptions);
   finally
     SetLastActionStatus(Result, False);
   end;

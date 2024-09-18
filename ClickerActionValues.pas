@@ -71,7 +71,7 @@ const
   CPropCount_LoadSetVarFromFile = 2;
   CPropCount_SaveSetVarToFile = 2;
   CPropCount_Plugin = 1;  //Static properties, defined here. A plugin can report additional properties, which are not counted by this constant.
-  CPropCount_EditTemplate = 5; //Static properties, defined here.  ListOfEnabledProperties and CachedCount do not have to be displayed. They are not directly editable from OI.
+  CPropCount_EditTemplate = 6; //Static properties, defined here.  ListOfEnabledProperties and CachedCount do not have to be displayed. They are not directly editable from OI.
 
   CMainPropCounts: array[0..Ord(High(TClkAction))] of Integer = (
     CPropCount_Click,
@@ -424,7 +424,8 @@ const
     (Name: 'WhichTemplate'; EditorType: etEnumCombo; DataType: CDTEnum),
     (Name: 'TemplateFileName'; EditorType: etTextWithArrow; DataType: CDTString),
     (Name: 'EditedActionName'; EditorType: etTextWithArrow; DataType: CDTString),
-    (Name: 'EditedActionType'; EditorType: etEnumCombo; DataType: CDTString)
+    (Name: 'EditedActionType'; EditorType: etEnumCombo; DataType: CDTString),
+    (Name: 'NewActionName'; EditorType: etTextWithArrow; DataType: CDTString)
   );
 
 type
@@ -734,7 +735,8 @@ const
     Ord(High(TEditTemplateWhichTemplate)) + 1,
     0,  //TemplateFileName
     0,  //EditedActionName,
-    Ord(High(TClkAction)) + 1
+    Ord(High(TClkAction)) + 1,
+    0  //NewActionName
   );
 
 
@@ -929,7 +931,8 @@ const
     @CEditTemplateWhichTemplateStr,
     nil,  //TemplateFileName
     nil,  //EditedActionName
-    @CClkActionStr
+    @CClkActionStr,
+    nil   //NewActionName
   );
 
 
@@ -1129,7 +1132,8 @@ const
     0,  //TEditTemplateWhichTemplate
     0,  //TemplateFileName
     0,  //EditedActionName,
-    0   //TClkAction
+    0,  //TClkAction
+    0   //NewActionName
   );
 
 
@@ -1258,6 +1262,7 @@ function GetPropertyHint_EditTemplate_WhichTemplate: string;
 function GetPropertyHint_EditTemplate_TemplateFileName: string;
 function GetPropertyHint_EditTemplate_EditedActionName: string;
 function GetPropertyHint_EditTemplate_EditedActionType: string;
+function GetPropertyHint_EditTemplate_NewActionName: string;
 
 const
   CGetPropertyHint_Click: array[0..CPropCount_Click - 1] of TPropHintFunc = (
@@ -1393,7 +1398,8 @@ const
     @GetPropertyHint_EditTemplate_WhichTemplate,  // WhichTemplate,
     @GetPropertyHint_EditTemplate_TemplateFileName,  // TemplateFileName,
     @GetPropertyHint_EditTemplate_EditedActionName,
-    @GetPropertyHint_EditTemplate_EditedActionType
+    @GetPropertyHint_EditTemplate_EditedActionType,
+    @GetPropertyHint_EditTemplate_NewActionName
   );
 
 
@@ -1820,6 +1826,7 @@ begin
     2: Result := AAction^.EditTemplateOptions.TemplateFileName;
     3: Result := AAction^.EditTemplateOptions.EditedActionName;
     4: Result := CClkActionStr[AAction^.EditTemplateOptions.EditedActionType];
+    5: Result := AAction^.EditTemplateOptions.NewActionName;
     else
       Result := 'unknown';
   end;
@@ -2422,6 +2429,7 @@ begin
     2: AAction^.EditTemplateOptions.TemplateFileName := NewValue;
     3: AAction^.EditTemplateOptions.EditedActionName := NewValue;
     4: AAction^.EditTemplateOptions.EditedActionType := EditTemplateEditedActionType_AsStringToValue(NewValue);
+    6: AAction^.EditTemplateOptions.NewActionName := NewValue;
     else
       ;
   end;
@@ -3049,6 +3057,12 @@ end;
 function GetPropertyHint_EditTemplate_EditedActionType: string;
 begin
   Result := 'Used when getting or setting action properties.';
+end;
+
+
+function GetPropertyHint_EditTemplate_NewActionName: string;
+begin
+  Result := 'Used when renaming an action.';
 end;
 
 end.

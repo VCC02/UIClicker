@@ -232,6 +232,20 @@ begin
     ACustomActions[i].SetVarOptions.ListOfVarEvalBefore := StringReplace(Ini.ReadString(SectionIndex, 'ListOfVarEvalBefore_' + IterationStr, ''), #4#5, #13#10, [rfReplaceAll]);
     ACustomActions[i].SetVarOptions.FailOnException := False;
 
+    ACustomActions[i].WindowOperationsOptions.Operation := woBringToFront;
+
+    ACustomActions[i].LoadSetVarFromFileOptions.FileName := '';
+    ACustomActions[i].LoadSetVarFromFileOptions.SetVarActionName := '';
+
+    ACustomActions[i].SaveSetVarToFileOptions.FileName := '';
+    ACustomActions[i].SaveSetVarToFileOptions.SetVarActionName := '';
+
+    ACustomActions[i].PluginOptions.FileName := '';
+
+    ACustomActions[i].EditTemplateOptions.Operation := etoUpdateAction;
+    ACustomActions[i].EditTemplateOptions.WhichTemplate := etwtSelf;
+    ACustomActions[i].EditTemplateOptions.TemplateFileName := '';
+
     AdjustListOfVarEvalBeforeCount(ACustomActions[i].SetVarOptions);
   end;
 end;
@@ -505,6 +519,21 @@ begin
 end;
 
 
+procedure LoadAction_EditTemplate(Ini: TClkIniReadonlyFile; SectionIndex: Integer; var AEditTemplateOptions: TClkEditTemplateOptions);
+begin
+  AEditTemplateOptions.Operation := TEditTemplateOperation(Min(Ini.ReadInteger(SectionIndex, 'Operation', Integer(etoUpdateAction)), Integer(High(TEditTemplateOperation))));
+  AEditTemplateOptions.WhichTemplate := TEditTemplateWhichTemplate(Min(Ini.ReadInteger(SectionIndex, 'WhichTemplate', Integer(etwtSelf)), Integer(High(TEditTemplateWhichTemplate))));
+  AEditTemplateOptions.TemplateFileName := Ini.ReadString(SectionIndex, 'TemplateFileName', '');
+  AEditTemplateOptions.ListOfEnabledProperties := FastReplace_45ToReturn(Ini.ReadString(SectionIndex, 'ListOfEnabledProperties', ''));
+  AEditTemplateOptions.CachedCount := 0;
+  AEditTemplateOptions.PluginOptionsCachedCount := 0;
+  AEditTemplateOptions.EditingAction := nil;
+  AEditTemplateOptions.EditedActionName := Ini.ReadString(SectionIndex, 'EditedActionName', '');
+  AEditTemplateOptions.EditedActionType := TClkAction(Min(Ini.ReadInteger(SectionIndex, 'EditedActionType', Integer(acClick)), Integer(High(TClkAction))));
+  AEditTemplateOptions.NewActionName := Ini.ReadString(SectionIndex, 'NewActionName', '');
+end;
+
+
 procedure LoadTemplateToCustomActions_V2(Ini: TClkIniReadonlyFile; var ACustomActions: TClkActionsRecArr; var ANotes, ATemplateIconPath: string);
 var
   IterationStr: string;
@@ -535,6 +564,7 @@ begin
       acLoadSetVarFromFile: LoadAction_LoadSetVarFromFile(Ini, SectionIndex, ACustomActions[i].LoadSetVarFromFileOptions);
       acSaveSetVarToFile: LoadAction_SaveSetVarToFile(Ini, SectionIndex, ACustomActions[i].SaveSetVarToFileOptions);
       acPlugin: LoadAction_Plugin(Ini, SectionIndex, ACustomActions[i].PluginOptions);
+      acEditTemplate: LoadAction_EditTemplate(Ini, SectionIndex, ACustomActions[i].EditTemplateOptions);
     end;
   end;
 
@@ -954,6 +984,18 @@ begin
 end;
 
 
+procedure AddAction_EditTemplateToStringList(var AActionEditTemplateOptions: TClkEditTemplateOptions; AStringList: TStringList);
+begin
+  AStringList.Add('Operation=' + IntToStr(Ord(AActionEditTemplateOptions.Operation)));
+  AStringList.Add('WhichTemplate=' + IntToStr(Ord(AActionEditTemplateOptions.WhichTemplate)));
+  AStringList.Add('TemplateFileName=' + AActionEditTemplateOptions.TemplateFileName);
+  AStringList.Add('ListOfEnabledProperties=' + FastReplace_ReturnTo45(AActionEditTemplateOptions.ListOfEnabledProperties));
+  AStringList.Add('EditedActionName=' + AActionEditTemplateOptions.EditedActionName);
+  AStringList.Add('EditedActionType=' + IntToStr(Ord(AActionEditTemplateOptions.EditedActionType)));
+  AStringList.Add('NewActionName=' + AActionEditTemplateOptions.NewActionName);
+end;
+
+
 procedure AddActionContentToStringList(var AAction: TClkActionRec; AStringList: TStringList);
 begin
   case AAction.ActionOptions.Action of
@@ -969,6 +1011,7 @@ begin
     acLoadSetVarFromFile: AddAction_LoadSetVarFromFileToStringList(AAction.LoadSetVarFromFileOptions, AStringList);
     acSaveSetVarToFile: AddAction_SaveSetVarToFileToStringList(AAction.SaveSetVarToFileOptions, AStringList);
     acPlugin: AddAction_PluginToStringList(AAction.PluginOptions, AStringList);
+    acEditTemplate: AddAction_EditTemplateToStringList(AAction.EditTemplateOptions, AStringList)
   end;
 end;
 

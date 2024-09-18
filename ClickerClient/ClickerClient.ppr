@@ -225,6 +225,19 @@ type
   PClkPluginOptionsAPI = ^TClkPluginOptionsAPI;
 
 
+  TClkEditTemplateOptionsAPI = record
+    Operation: TEditTemplateOperation;
+    WhichTemplate: TEditTemplateWhichTemplate;
+    TemplateFileName: PWideChar;
+    ListOfEnabledProperties: PWideChar;
+    EditedActionName: PWideChar;
+    EditedActionType: TClkAction;
+    NewActionName: PWideChar;
+  end;
+
+  PClkEditTemplateOptionsAPI = ^TClkEditTemplateOptionsAPI;
+
+
   TClkFindControlMatchBitmapTextAPI = record
     ForegroundColor: PWideChar;
     BackgroundColor: PWideChar;
@@ -1080,6 +1093,42 @@ begin
 end;
 
 
+function AddEditTemplateActionToTemplate(ATemplateFileName: Pointer;
+
+                                         AActionName: Pointer;
+                                         AActionTimeout: LongInt; //ms
+                                         AActionEnabled: Boolean;
+                                         AActionCondition: Pointer;
+
+                                         AEditTemplateOptions: PClkEditTemplateOptionsAPI
+
+                                        ): LongInt; cdecl;
+var
+  TemplateFileName: string;
+  TempAction: TClkActionRec;
+begin
+  if InMemFS = nil then
+  begin
+    Result := -1;
+    Exit;
+  end;
+
+  SetBasicActionOptions(ATemplateFileName, AActionName, acPlugin, AActionTimeout, AActionEnabled, AActionCondition, TempAction, TemplateFileName);
+
+  //Plugin stuff
+  TempAction.EditTemplateOptions.Operation := AEditTemplateOptions^.Operation;
+  TempAction.EditTemplateOptions.WhichTemplate := AEditTemplateOptions^.WhichTemplate;
+  SetPointedContentToString(@string(PWideChar(AEditTemplateOptions^.TemplateFileName))[1], TempAction.EditTemplateOptions.TemplateFileName);
+  SetPointedContentToString(@string(PWideChar(AEditTemplateOptions^.ListOfEnabledProperties))[1], TempAction.EditTemplateOptions.ListOfEnabledProperties);
+  SetPointedContentToString(@string(PWideChar(AEditTemplateOptions^.EditedActionName))[1], TempAction.EditTemplateOptions.EditedActionName);
+  TempAction.EditTemplateOptions.EditedActionType := AEditTemplateOptions^.EditedActionType;
+  SetPointedContentToString(@string(PWideChar(AEditTemplateOptions^.NewActionName))[1], TempAction.EditTemplateOptions.NewActionName);
+
+  AddActionToTemplate(TemplateFileName, TempAction);
+  Result := 0;
+end;
+
+
 function AddFontProfileToFindSubControlActionInTemplate(ATemplateFileName: string; ActionIndex: Integer; AFindControlMatchBitmapText: TClkFindControlMatchBitmapText): Integer;
 var
   ClkActions: TClkActionsRecArr;
@@ -1413,6 +1462,7 @@ exports
   AddLoadSetVarFromFileActionToTemplate,
   AddSaveSetVarToFileActionToTemplate,
   AddPluginActionToTemplate,
+  AddEditTemplateActionToTemplate,
 
   AddFontProfileToFindSubControlAction,
 

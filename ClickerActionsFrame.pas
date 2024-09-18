@@ -557,6 +557,9 @@ type
     function HandleOnOIGetDataTypeName(ACategoryIndex, APropertyIndex, AItemIndex: Integer): string;
     function HandleOnOIGetExtraInfo(ACategoryIndex, APropertyIndex, AItemIndex: Integer): string;
 
+    procedure OIGetImageIndexEx_ActionSpecific(ALiveEditingActionType: TClkAction; ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; Kind: TVTImageKind;
+      Column: TColumnIndex; var Ghosted: Boolean; var ImageIndex: Integer; var ImageList: TCustomImageList);
+
     procedure HandleOnOIGetImageIndexEx(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; Kind: TVTImageKind;
       Column: TColumnIndex; var Ghosted: Boolean; var ImageIndex: Integer; var ImageList: TCustomImageList);
     procedure HandleOnOIEditedText(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; ANewText: string);
@@ -4467,54 +4470,53 @@ var
   EditedActionTypeByEditTemplate: TClkAction;
 begin
   try
-  case ACategoryIndex of
-    CCategory_Common:
-      Result := CPropCount_Common;
+    case ACategoryIndex of
+      CCategory_Common:
+        Result := CPropCount_Common;
 
-    CCategory_ActionSpecific:
-    begin
-      EditingActionType := Integer(CurrentlyEditingActionType);
-      if EditingActionType = CClkUnsetAction then
-        Result := 0 //no action is selected
-      else
-        Result := CMainPropCounts[EditingActionType];
-
-      if CurrentlyEditingActionType = acPlugin then
-        Result := Result + FEditingAction.PluginOptions.CachedCount;
-    end;
-
-    CCategory_EditedAction:
-    begin
-      EditingActionType := Integer(CurrentlyEditingActionType);
-
-      if CurrentlyEditingActionType = acEditTemplate then
+      CCategory_ActionSpecific:
       begin
-        EditedActionTypeByEditTemplate := FEditingAction^.EditTemplateOptions.EditedActionType;
-
+        EditingActionType := Integer(CurrentlyEditingActionType);
         if EditingActionType = CClkUnsetAction then
           Result := 0 //no action is selected
         else
-          Result := CMainPropCounts[Max(0, Integer(EditedActionTypeByEditTemplate))];
+          Result := CMainPropCounts[EditingActionType];
 
-        if EditedActionTypeByEditTemplate = acPlugin then
-          Result := Result + FEditingAction^.EditTemplateOptions.PluginOptionsCachedCount;
-      end
+        if CurrentlyEditingActionType = acPlugin then
+          Result := Result + FEditingAction.PluginOptions.CachedCount;
+      end;
+
+      CCategory_EditedAction:
+      begin
+        EditingActionType := Integer(CurrentlyEditingActionType);
+
+        if CurrentlyEditingActionType = acEditTemplate then
+        begin
+          EditedActionTypeByEditTemplate := FEditingAction^.EditTemplateOptions.EditedActionType;
+
+          if EditingActionType = CClkUnsetAction then
+            Result := 0 //no action is selected
+          else
+            Result := CMainPropCounts[Max(0, Integer(EditedActionTypeByEditTemplate))];
+
+          if EditedActionTypeByEditTemplate = acPlugin then
+            Result := Result + FEditingAction^.EditTemplateOptions.PluginOptionsCachedCount;
+        end
+        else
+          Result := 0; //some default
+      end;
+
       else
-        Result := 0; //some default
+        Result := 0;
     end;
 
-    else
+    if Result > 500 then   //This will hide some bugs (for now). At least it will prevent crashes and memory overuse.
+      Result := 500;
+
+    if Result < 0 then
       Result := 0;
-  end;
-
-  if Result > 500 then   //This will hide some bugs (for now). At least it will prevent crashes and memory overuse.
-    Result := 500;
-
-  if Result < 0 then
-    Result := 0;
-
   except
-    MessageBox(Handle, 'AV', 'UC HandleOnOIGetPropertyCount', 0);
+    Result := 0; //MessageBox(Handle, 'AV', 'UC HandleOnOIGetPropertyCount', 0);
   end;
 end;
 
@@ -4607,29 +4609,29 @@ var
   EditingActionType: Integer;
 begin
   try
-  case ACategoryIndex of
-    CCategory_Common:
-      Result := CCommonProperties[APropertyIndex].Name;
+    case ACategoryIndex of
+      CCategory_Common:
+        Result := CCommonProperties[APropertyIndex].Name;
 
-    CCategory_ActionSpecific:
-    begin
-      Result := OIGetPropertyName_ActionSpecific(FEditingAction, CurrentlyEditingActionType, APropertyIndex);
-    end; //action specific
-
-    CCategory_EditedAction:
-    begin
-      EditingActionType := Integer(CurrentlyEditingActionType);
-      if (EditingActionType = CClkUnsetAction) or (CurrentlyEditingActionType <> acEditTemplate) then
-        Result := '?'
-      else
+      CCategory_ActionSpecific:
       begin
-        Result := OIGetPropertyName_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, APropertyIndex);
-      end;
-    end
+        Result := OIGetPropertyName_ActionSpecific(FEditingAction, CurrentlyEditingActionType, APropertyIndex);
+      end; //action specific
 
-    else
-      Result := '???';
-  end;
+      CCategory_EditedAction:
+      begin
+        EditingActionType := Integer(CurrentlyEditingActionType);
+        if (EditingActionType = CClkUnsetAction) or (CurrentlyEditingActionType <> acEditTemplate) then
+          Result := '?'
+        else
+        begin
+          Result := OIGetPropertyName_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, APropertyIndex);
+        end;
+      end
+
+      else
+        Result := '???';
+    end;
   except
     on E: Exception do
       Result := 'AV ' + E.Message;//MessageBox(Handle, 'AV', PChar('UC HandleOnOIGetPropertyName' + #13#10 + E.Message), 0);
@@ -4700,28 +4702,28 @@ begin
   PropDef.EditorType := etNone;
   Result := '';
   try
-  case ACategoryIndex of
-    CCategory_Common:
-    begin
-      PropDef := CCommonProperties[APropertyIndex];
-      Result := GetActionValueStr_Action(FEditingAction, APropertyIndex);
+    case ACategoryIndex of
+      CCategory_Common:
+      begin
+        PropDef := CCommonProperties[APropertyIndex];
+        Result := GetActionValueStr_Action(FEditingAction, APropertyIndex);
+      end;
+
+      CCategory_ActionSpecific:
+      begin
+        Result := OIGetPropertyValue_ActionSpecific(FEditingAction, CurrentlyEditingActionType, APropertyIndex, PropDef);
+      end;  //CCategory_ActionSpecific
+
+      CCategory_EditedAction:
+      begin
+        Result := OIGetPropertyValue_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, APropertyIndex, PropDef);
+      end
+
+      else
+        PropDef.Name := '???';
     end;
 
-    CCategory_ActionSpecific:
-    begin
-      Result := OIGetPropertyValue_ActionSpecific(FEditingAction, CurrentlyEditingActionType, APropertyIndex, PropDef);
-    end;  //CCategory_ActionSpecific
-
-    CCategory_EditedAction:
-    begin
-      Result := OIGetPropertyValue_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, APropertyIndex, PropDef);
-    end
-
-    else
-      PropDef.Name := '???';
-  end;
-
-  AEditorType := PropDef.EditorType;
+    AEditorType := PropDef.EditorType;
   except
     on E: Exception do
       Result := 'AV ' + E.Message;//MessageBox(Handle, 'AV', 'UC HandleOnOIGetPropertyValue', 0);
@@ -4729,16 +4731,14 @@ begin
 end;
 
 
-function TfrClickerActions.HandleOnOIGetListPropertyItemCount(ACategoryIndex, APropertyIndex: Integer): Integer;
+function OIGetListPropertyItemCount_ActionSpecific(AEditingAction: PClkActionRec; ALiveEditingActionType: TClkAction; ACategoryIndex, APropertyIndex: Integer): Integer;
 var
   EditingActionType: Integer;
   TempStringList: TStringList;
 begin
   Result := 0;
-  if ACategoryIndex = CCategory_Common then
-    Exit; //no subproperties here
-  try
-  EditingActionType := Integer(CurrentlyEditingActionType);
+
+  EditingActionType := Integer(ALiveEditingActionType);
   if EditingActionType = CClkUnsetAction then
     Exit;
 
@@ -4750,13 +4750,13 @@ begin
           Result := CPropCount_FindControlMatchCriteria;
 
         CFindControl_MatchBitmapText_PropIndex:
-          Result := CPropCount_FindControlMatchBitmapText * Length(FEditingAction^.FindControlOptions.MatchBitmapText);  //frClickerFindControl.GetBMPTextFontProfilesCount;
+          Result := CPropCount_FindControlMatchBitmapText * Length(AEditingAction^.FindControlOptions.MatchBitmapText);  //frClickerFindControl.GetBMPTextFontProfilesCount;
 
         CFindControl_MatchBitmapFiles_PropIndex:
         begin
           TempStringList := TStringList.Create;
           try
-            TempStringList.Text := FEditingAction^.FindControlOptions.MatchBitmapFiles;
+            TempStringList.Text := AEditingAction^.FindControlOptions.MatchBitmapFiles;
             Result := TempStringList.Count;
           finally
             TempStringList.Free;
@@ -4773,7 +4773,7 @@ begin
         begin
           TempStringList := TStringList.Create;
           try
-            TempStringList.Text := FEditingAction^.FindControlOptions.MatchPrimitiveFiles;
+            TempStringList.Text := AEditingAction^.FindControlOptions.MatchPrimitiveFiles;
             Result := TempStringList.Count;
           finally
             TempStringList.Free;
@@ -4799,8 +4799,28 @@ begin
       end;
     end;
   end;   //case EditingActionType
+end;
+
+
+function TfrClickerActions.HandleOnOIGetListPropertyItemCount(ACategoryIndex, APropertyIndex: Integer): Integer;
+begin
+  Result := 0;
+  if ACategoryIndex = CCategory_Common then
+    Exit; //no subproperties here
+
+  try
+    case ACategoryIndex of
+      CCategory_Common:
+        ;
+
+      CCategory_ActionSpecific:
+        Result := OIGetListPropertyItemCount_ActionSpecific(FEditingAction, CurrentlyEditingActionType, ACategoryIndex, APropertyIndex);
+
+      CCategory_EditedAction:
+        Result := OIGetListPropertyItemCount_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ACategoryIndex, APropertyIndex);
+    end;
   except
-    MessageBox(Handle, 'AV', 'UC HandleOnOIGetListPropertyItemCount', 0);
+    Result := 0; //MessageBox(Handle, 'AV', 'UC HandleOnOIGetListPropertyItemCount', 0);
   end;
 end;
 
@@ -4998,9 +5018,56 @@ begin
 end;
 
 
-function TfrClickerActions.HandleOnOIGetDataTypeName(ACategoryIndex, APropertyIndex, AItemIndex: Integer): string;
+function OIGetDataTypeName_ActionSpecific(AEditingAction: PClkActionRec; ALiveEditingActionType: TClkAction; ACategoryIndex, APropertyIndex, AItemIndex: Integer): string;
 var
   EditingActionType: Integer;
+begin
+  EditingActionType := Integer(ALiveEditingActionType);
+
+  if EditingActionType = CClkUnsetAction then
+    Result := '?'
+  else
+  begin
+    if AItemIndex = -1 then
+    begin
+      if (ALiveEditingActionType = acPlugin) and (APropertyIndex > CPlugin_FileName_PropIndex) then
+        Result := GetPluginPropertyAttribute(AEditingAction.PluginOptions.ListOfPropertiesAndTypes, CPluginPropertyAttr_DataType, APropertyIndex)
+      else
+        Result := CMainProperties[EditingActionType]^[APropertyIndex].DataType
+    end
+    else
+    begin
+      case EditingActionType of
+        Ord(acFindControl), Ord(acFindSubControl):
+        begin
+          case APropertyIndex of
+            CFindControl_MatchCriteria_PropIndex:
+              Result := CFindControl_MatchCriteriaProperties[AItemIndex].DataType;
+
+            CFindControl_MatchBitmapText_PropIndex:
+              Result := CFindControl_MatchBitmapTextProperties[AItemIndex mod CPropCount_FindControlMatchBitmapText].DataType;
+
+            CFindControl_MatchBitmapAlgorithmSettings_PropIndex:
+              Result := CFindControl_MatchBitmapAlgorithmSettingsProperties[AItemIndex].DataType;
+
+            CFindControl_InitialRectangle_PropIndex:
+              Result := CFindControl_InitialRectangleProperties[AItemIndex].DataType;
+
+            CFindControl_MatchByHistogramSettings_PropIndex:
+              Result := CFindControl_MatchByHistogramSettingsProperties[AItemIndex].DataType;
+          end;
+        end;
+
+        Ord(acCallTemplate):
+          if APropertyIndex = CCallTemplate_CallTemplateLoop_PropIndex then
+            Result := CCallTemplate_CallTemplateLoopProperties[AItemIndex].DataType;
+      end;
+    end; //else
+  end;
+end;
+
+
+function TfrClickerActions.HandleOnOIGetDataTypeName(ACategoryIndex, APropertyIndex, AItemIndex: Integer): string;
 begin  //
   Result := '';
   try
@@ -5009,58 +5076,16 @@ begin  //
       Result := CCommonProperties[APropertyIndex].DataType;
 
     CCategory_ActionSpecific:
-    begin
-      EditingActionType := Integer(CurrentlyEditingActionType);
-      if EditingActionType = CClkUnsetAction then
-        Result := '?'
-      else
-      begin
-        if AItemIndex = -1 then
-        begin
-          if (CurrentlyEditingActionType = acPlugin) and (APropertyIndex > CPlugin_FileName_PropIndex) then
-            Result := GetPluginPropertyAttribute(FEditingAction.PluginOptions.ListOfPropertiesAndTypes, CPluginPropertyAttr_DataType, APropertyIndex)
-          else
-            Result := CMainProperties[EditingActionType]^[APropertyIndex].DataType
-        end
-        else
-        begin
-          case EditingActionType of
-            Ord(acFindControl), Ord(acFindSubControl):
-            begin
-              case APropertyIndex of
-                CFindControl_MatchCriteria_PropIndex:
-                  Result := CFindControl_MatchCriteriaProperties[AItemIndex].DataType;
-
-                CFindControl_MatchBitmapText_PropIndex:
-                  Result := CFindControl_MatchBitmapTextProperties[AItemIndex mod CPropCount_FindControlMatchBitmapText].DataType;
-
-                CFindControl_MatchBitmapAlgorithmSettings_PropIndex:
-                  Result := CFindControl_MatchBitmapAlgorithmSettingsProperties[AItemIndex].DataType;
-
-                CFindControl_InitialRectangle_PropIndex:
-                  Result := CFindControl_InitialRectangleProperties[AItemIndex].DataType;
-
-                CFindControl_MatchByHistogramSettings_PropIndex:
-                  Result := CFindControl_MatchByHistogramSettingsProperties[AItemIndex].DataType;
-              end;
-            end;
-
-            Ord(acCallTemplate):
-              if APropertyIndex = CCallTemplate_CallTemplateLoop_PropIndex then
-                Result := CCallTemplate_CallTemplateLoopProperties[AItemIndex].DataType;
-          end;
-        end; //else
-      end;
-    end;
+      Result := OIGetDataTypeName_ActionSpecific(FEditingAction, CurrentlyEditingActionType, ACategoryIndex, APropertyIndex, AItemIndex);
 
     CCategory_EditedAction:
-      Result := '---';
+      Result := OIGetDataTypeName_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ACategoryIndex, APropertyIndex, AItemIndex);
 
     else
       Result := '???';
   end;
   except
-    MessageBox(Handle, 'AV', 'UC HandleOnOIGetDataTypeName', 0);
+    Result := 'AV'; //MessageBox(Handle, 'AV', 'UC HandleOnOIGetDataTypeName', 0);
   end;
 end;
 
@@ -5071,141 +5096,159 @@ begin
 end;
 
 
+procedure TfrClickerActions.OIGetImageIndexEx_ActionSpecific(ALiveEditingActionType: TClkAction; ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; Kind: TVTImageKind;
+  Column: TColumnIndex; var Ghosted: Boolean; var ImageIndex: Integer; var ImageList: TCustomImageList);
+var
+  ItemIndexMod, ItemIndexDiv: Integer;
+  EditingActionType: Integer;
+begin
+  EditingActionType := Integer(ALiveEditingActionType);
+
+  if Column = 0 then
+  begin
+    case ANodeLevel of
+      CCategoryLevel:
+      begin
+        ImageList := imglstActions16;
+        ImageIndex := EditingActionType;
+      end;
+
+      CPropertyLevel:
+      begin
+        ImageIndex := APropertyIndex;
+
+        case EditingActionType of
+          Ord(acClick):
+            ImageList := imglstClickProperties;
+
+          Ord(acExecApp):
+            ImageList := imglstExecAppProperties;
+
+          Ord(acFindControl), Ord(acFindSubControl):
+            ImageList := imglstFindControlProperties;
+
+          Ord(acSetControlText):
+            ImageList := imglstSetTextProperties;
+
+          Ord(acCallTemplate):
+            ImageList := imglstCallTemplateProperties;
+
+          Ord(acSleep):
+            ImageList := imglstSleepProperties;
+
+          Ord(acSetVar):
+            ImageList := imglstSetVarProperties;
+
+          Ord(acWindowOperations):
+            ImageList := imglstWindowOperationsProperties;
+
+          Ord(acLoadSetVarFromFile):
+            ImageList := imglstLoadSetVarFromFileProperties;
+
+          Ord(acSaveSetVarToFile):
+            ImageList := imglstSaveSetVarToFileProperties;
+
+          Ord(acPlugin):
+          begin
+            ImageList := imglstPluginProperties;
+            //if APropertyIndex > CPlugin_FileName_PropIndex then
+            //  ImageIndex := 1;
+          end;
+
+          Ord(acEditTemplate):
+            ImageList := imglstEditTemplateProperties;
+        end;   //case
+      end;
+
+      CPropertyItemLevel:
+      begin
+        ImageIndex := AItemIndex;
+
+        case EditingActionType of
+          Ord(acFindControl), Ord(acFindSubControl):
+          begin
+            case APropertyIndex of
+              CFindControl_MatchCriteria_PropIndex:
+                ImageList := imglstMatchCriteriaProperties;
+
+              CFindControl_MatchBitmapText_PropIndex:
+              begin
+                ItemIndexMod := AItemIndex mod CPropCount_FindControlMatchBitmapText;
+                ImageIndex := ItemIndexMod;
+                ImageList := imglstMatchBitmapTextProperties;
+              end;
+
+              CFindControl_MatchBitmapAlgorithmSettings_PropIndex:
+                ImageList := imglstMatchBitmapAlgorithmSettingsProperties;
+
+              CFindControl_InitialRectangle_PropIndex:
+                ImageList := imglstInitialRectangleProperties;
+
+              CFindControl_MatchByHistogramSettings_PropIndex:
+                ImageList := imglstMatchByHistogramSettings;
+            end;
+          end;
+
+          Ord(acCallTemplate):
+            ImageList := imglstCallTemplateLoopProperties;
+        end;
+      end;
+    end; //case
+  end; // Column = 0
+
+  if Column = 1 then
+    if ANodeLevel = CPropertyItemLevel then
+      if EditingActionType in [Ord(acFindControl), Ord(acFindSubControl)] then
+        if APropertyIndex = CFindControl_MatchBitmapText_PropIndex then
+        begin
+          ItemIndexMod := AItemIndex mod CPropCount_FindControlMatchBitmapText;
+          ItemIndexDiv := AItemIndex div CPropCount_FindControlMatchBitmapText;
+
+          if ItemIndexMod in [CFindControl_MatchBitmapText_ForegroundColor_PropItemIndex, CFindControl_MatchBitmapText_BackgroundColor_PropItemIndex] then
+          begin
+            ImageList := imglstFontColorProperties;
+            ImageIndex := ItemIndexDiv shl 1 + ItemIndexMod;
+
+            if ImageIndex > imglstFontColorProperties.Count - 1 then
+              BuildFontColorIconsList;
+          end;
+        end;
+end;
+
+
 procedure TfrClickerActions.HandleOnOIGetImageIndexEx(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; Kind: TVTImageKind;
   Column: TColumnIndex; var Ghosted: Boolean; var ImageIndex: Integer; var ImageList: TCustomImageList);
 var
   EditingActionType: Integer;
-  ItemIndexMod, ItemIndexDiv: Integer;
 begin  //
   EditingActionType := Integer(CurrentlyEditingActionType);
   try
-  case ACategoryIndex of
-    CCategory_Common:
-      if Column = 0 then
+    case ACategoryIndex of
+      CCategory_Common:
+        if Column = 0 then
+        begin
+          ImageList := imglstActionProperties;
+          ImageIndex := APropertyIndex;
+        end;
+
+      CCategory_ActionSpecific:
       begin
-        ImageList := imglstActionProperties;
-        ImageIndex := APropertyIndex;
+        if EditingActionType = CClkUnsetAction then
+          Exit;
+
+        OIGetImageIndexEx_ActionSpecific(CurrentlyEditingActionType, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, Kind, Column, Ghosted, ImageIndex, ImageList);
       end;
 
-    CCategory_ActionSpecific:
-    begin
-      if EditingActionType = CClkUnsetAction then
-        Exit;
-
-      if Column = 0 then
+      CCategory_EditedAction:
       begin
-        case ANodeLevel of
-          CCategoryLevel:
-          begin
-            ImageList := imglstActions16;
-            ImageIndex := EditingActionType;
-          end;
+        if EditingActionType = CClkUnsetAction then
+          Exit;
 
-          CPropertyLevel:
-          begin
-            ImageIndex := APropertyIndex;
-
-            case EditingActionType of
-              Ord(acClick):
-                ImageList := imglstClickProperties;
-
-              Ord(acExecApp):
-                ImageList := imglstExecAppProperties;
-
-              Ord(acFindControl), Ord(acFindSubControl):
-                ImageList := imglstFindControlProperties;
-
-              Ord(acSetControlText):
-                ImageList := imglstSetTextProperties;
-
-              Ord(acCallTemplate):
-                ImageList := imglstCallTemplateProperties;
-
-              Ord(acSleep):
-                ImageList := imglstSleepProperties;
-
-              Ord(acSetVar):
-                ImageList := imglstSetVarProperties;
-
-              Ord(acWindowOperations):
-                ImageList := imglstWindowOperationsProperties;
-
-              Ord(acLoadSetVarFromFile):
-                ImageList := imglstLoadSetVarFromFileProperties;
-
-              Ord(acSaveSetVarToFile):
-                ImageList := imglstSaveSetVarToFileProperties;
-
-              Ord(acPlugin):
-              begin
-                ImageList := imglstPluginProperties;
-                //if APropertyIndex > CPlugin_FileName_PropIndex then
-                //  ImageIndex := 1;
-              end;
-
-              Ord(acEditTemplate):
-                ImageList := imglstEditTemplateProperties;
-            end;   //case
-          end;
-
-          CPropertyItemLevel:
-          begin
-            ImageIndex := AItemIndex;
-
-            case EditingActionType of
-              Ord(acFindControl), Ord(acFindSubControl):
-              begin
-                case APropertyIndex of
-                  CFindControl_MatchCriteria_PropIndex:
-                    ImageList := imglstMatchCriteriaProperties;
-
-                  CFindControl_MatchBitmapText_PropIndex:
-                  begin
-                    ItemIndexMod := AItemIndex mod CPropCount_FindControlMatchBitmapText;
-                    ImageIndex := ItemIndexMod;
-                    ImageList := imglstMatchBitmapTextProperties;
-                  end;
-
-                  CFindControl_MatchBitmapAlgorithmSettings_PropIndex:
-                    ImageList := imglstMatchBitmapAlgorithmSettingsProperties;
-
-                  CFindControl_InitialRectangle_PropIndex:
-                    ImageList := imglstInitialRectangleProperties;
-
-                  CFindControl_MatchByHistogramSettings_PropIndex:
-                    ImageList := imglstMatchByHistogramSettings;
-                end;
-              end;
-
-              Ord(acCallTemplate):
-                ImageList := imglstCallTemplateLoopProperties;
-            end;
-          end;
-        end; //case
-      end; // Column = 0
-
-      if Column = 1 then
-        if ANodeLevel = CPropertyItemLevel then
-          if EditingActionType in [Ord(acFindControl), Ord(acFindSubControl)] then
-            if APropertyIndex = CFindControl_MatchBitmapText_PropIndex then
-            begin
-              ItemIndexMod := AItemIndex mod CPropCount_FindControlMatchBitmapText;
-              ItemIndexDiv := AItemIndex div CPropCount_FindControlMatchBitmapText;
-
-              if ItemIndexMod in [CFindControl_MatchBitmapText_ForegroundColor_PropItemIndex, CFindControl_MatchBitmapText_BackgroundColor_PropItemIndex] then
-              begin
-                ImageList := imglstFontColorProperties;
-                ImageIndex := ItemIndexDiv shl 1 + ItemIndexMod;
-
-                if ImageIndex > imglstFontColorProperties.Count - 1 then
-                  BuildFontColorIconsList;
-              end;
-            end;
+        OIGetImageIndexEx_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, Kind, Column, Ghosted, ImageIndex, ImageList);
+      end;
     end;
-  end;
-
   except
-    MessageBox(Handle, 'AV', 'UC HandleOnOIGetImageIndexEx', 0);
+    ImageIndex := -1; //MessageBox(Handle, 'AV', 'UC HandleOnOIGetImageIndexEx', 0);
   end;
 end;
 

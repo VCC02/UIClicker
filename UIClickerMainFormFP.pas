@@ -115,7 +115,7 @@ implementation
 { Checklist for adding a new field to an action structure and its property in ObjectInspector.
   - In ClickerUtils.pas, add the new field to the desired structure (like)
   - In ClickerActionValues.pas, add the new field to structures, functions and constants (including count(s))
-  - Set default value for the new field when adding a new action (from palette)  - see TfrClickerActionsArr.OverwriteActionAtIndexWithDefault
+  - Set default value for the new field when adding a new action (from palette)  - see TfrClickerActionsArr.OverwriteActionAtIndexWithDefault  and also ClickerActionProperties.pas
   - In ClickerActionsArrFrame.pas, update action settings  (see UpdateActionsArrFromControls and UpdateControlsFromActionsArr) if required   (mostly when adding new font/text properties)
   - In ClickerTemplates.pas, add new field (Load and Save). If the action is FindControl or FindSubControl, the field has to be added to CopyActionContent, as well.
   - In ActionExecution.pas, handle the new field.
