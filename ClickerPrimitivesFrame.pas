@@ -2442,7 +2442,7 @@ begin
         begin
           FOIEditorMenu.Items.Clear;
 
-          AddMenuItemToPopupMenu(FOIEditorMenu, CRemovePrimitiveMenuPrefix + '"' + FPrimitives[APropertyIndex].PrimitiveName + '"', MenuItem_RemovePrimitiveFromList, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+          AddMenuItemToPopupMenu(FOIEditorMenu, CRemovePrimitiveMenuPrefix + '"' + FPrimitives[APropertyIndex].PrimitiveName + '"', MenuItem_RemovePrimitiveFromList, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, nil);
 
           GetCursorPos(tp);
           FOIEditorMenu.PopUp(tp.X, tp.Y);
@@ -2456,7 +2456,7 @@ begin
           for i := 0 to CPrimitivesPropEnumCounts[FPrimitives[APropertyIndex].PrimitiveType]^[AItemIndex] - 1 do
           begin
             EnumItemName := CPrimitivesPropEnumStrings[FPrimitives[APropertyIndex].PrimitiveType]^[AItemIndex]^[i];
-            AddMenuItemToPopupMenu(FOIEditorMenu, EnumItemName, MenuItem_SetValueFromEnumItem, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+            AddMenuItemToPopupMenu(FOIEditorMenu, EnumItemName, MenuItem_SetValueFromEnumItem, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, nil);
           end;
 
           //menus for other types of properties
@@ -2471,14 +2471,14 @@ begin
                   try
                     DoOnGetListOfExternallyRenderedImages(ListOfExternallyRenderedImages);
                     for i := 0 to ListOfExternallyRenderedImages.Count - 1 do
-                      AddMenuItemToPopupMenu(FOIEditorMenu, ListOfExternallyRenderedImages.Strings[i], MenuItem_SetExternallyRenderedFile, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+                      AddMenuItemToPopupMenu(FOIEditorMenu, ListOfExternallyRenderedImages.Strings[i], MenuItem_SetExternallyRenderedFile, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, nil);
                   finally
                     ListOfExternallyRenderedImages.Free;
                   end;
                 end
                 else
                 begin
-                  AddMenuItemToPopupMenu(FOIEditorMenu, 'Browse...', MenuItem_BrowsePrimitivesImageFromDisk, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+                  AddMenuItemToPopupMenu(FOIEditorMenu, 'Browse...', MenuItem_BrowsePrimitivesImageFromDisk, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, nil);
                 end;
             end; //case
           end;
@@ -2498,7 +2498,7 @@ begin
         begin
           FOIEditorMenu.Items.Clear;
 
-          AddMenuItemToPopupMenu(FOIEditorMenu, CRemoveOrderMenuPrefix + '"' + FOrders[APropertyIndex].Name + '"', MenuItem_RemoveCompositionOrderFromList, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+          AddMenuItemToPopupMenu(FOIEditorMenu, CRemoveOrderMenuPrefix + '"' + FOrders[APropertyIndex].Name + '"', MenuItem_RemoveCompositionOrderFromList, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, nil);
 
           GetCursorPos(tp);
           FOIEditorMenu.PopUp(tp.X, tp.Y);
@@ -2525,7 +2525,7 @@ begin
 
           for i := 0 to CPrimitiveTypeCount - 1 do
           begin
-            AddMenuItemToPopupMenu(FOIEditorMenu, CAddPrimitiveMenuPrefix + CPrimitiveNames[i], MenuItem_AddPrimitiveToList, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+            AddMenuItemToPopupMenu(FOIEditorMenu, CAddPrimitiveMenuPrefix + CPrimitiveNames[i], MenuItem_AddPrimitiveToList, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, nil);
             imgFontColorBuffer.Canvas.Pen.Color := clWhite;
             imgFontColorBuffer.Canvas.Brush.Color := clWhite;
             imgFontColorBuffer.Canvas.Rectangle(0, 0, imgFontColorBuffer.Width, imgFontColorBuffer.Height);
@@ -2539,8 +2539,8 @@ begin
             FOIEditorMenu.Items.Items[i].Bitmap.Canvas.Draw(0, 0, imgFontColorBuffer.Picture.Graphic);
           end;
 
-          AddMenuItemToPopupMenu(FOIEditorMenu, '-', nil, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-          AddMenuItemToPopupMenu(FOIEditorMenu, 'Remove all primitives from list...', MenuItem_RemoveAllPrimitivesFromList, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+          AddMenuItemToPopupMenu(FOIEditorMenu, '-', nil, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, nil);
+          AddMenuItemToPopupMenu(FOIEditorMenu, 'Remove all primitives from list...', MenuItem_RemoveAllPrimitivesFromList, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, nil);
 
           GetCursorPos(tp);
           FOIEditorMenu.PopUp(tp.X, tp.Y);
@@ -2559,17 +2559,17 @@ begin
         begin
           FOIEditorMenu.Items.Clear;
 
-          AddMenuItemToPopupMenu(FOIEditorMenu, 'Add composition order to list', MenuItem_AddCompositionOrderToList, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+          AddMenuItemToPopupMenu(FOIEditorMenu, 'Add composition order to list', MenuItem_AddCompositionOrderToList, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, nil);
           FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstPrimitivesEditorMenu, 0);
 
-          AddMenuItemToPopupMenu(FOIEditorMenu, '-', nil, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+          AddMenuItemToPopupMenu(FOIEditorMenu, '-', nil, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, nil);
 
-          AddMenuItemToPopupMenu(FOIEditorMenu, 'Remove all composition orders from list...', MenuItem_RemoveAllCompositionOrdersFromList, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+          AddMenuItemToPopupMenu(FOIEditorMenu, 'Remove all composition orders from list...', MenuItem_RemoveAllCompositionOrdersFromList, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, nil);
           FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstPrimitivesEditorMenu, 1);
 
-          AddMenuItemToPopupMenu(FOIEditorMenu, '-', nil, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+          AddMenuItemToPopupMenu(FOIEditorMenu, '-', nil, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, nil);
 
-          AddMenuItemToPopupMenu(FOIEditorMenu, 'Repaint all compositions', MenuItem_RepaintAllCompositions, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+          AddMenuItemToPopupMenu(FOIEditorMenu, 'Repaint all compositions', MenuItem_RepaintAllCompositions, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, nil);
           FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstPrimitivesEditorMenu, 2);
 
           GetCursorPos(tp);

@@ -491,7 +491,7 @@ type
     function AddFontProfileToActionFromMenu(AForegroundColor, ABackgroundColor, AFontName: string; AFontSize: Integer; AFontQuality: TFontQuality): Integer;
     function GetUniqueProfileName(n: Integer): string;
 
-    function DummyEvaluateReplacements(VarName: string; Recursive: Boolean = True; AEvalTextCount: Integer = -1): string; //returns VarName
+    class function DummyEvaluateReplacements(VarName: string; Recursive: Boolean = True; AEvalTextCount: Integer = -1): string; //returns VarName
 
     procedure HandleOnUpdateBitmapAlgorithmSettings;
     procedure HandleOnTriggerOnControlsModified;
@@ -541,7 +541,7 @@ type
     function HandleOnTClkIniFileCreate(AFileName: string): TClkIniFile;
 
     ///////////////////////////// OI
-    function EditFontProperties(AItemIndexDiv: Integer; var ANewItems: string): Boolean;
+    function EditFontProperties(AEditingAction: PClkActionRec; AItemIndexDiv: Integer; var ANewItems: string): Boolean;
 
     procedure FreeOIPopupMenu(Sender: TObject);
     procedure BuildFontColorIconsList;
@@ -562,7 +562,11 @@ type
 
     procedure HandleOnOIGetImageIndexEx(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; Kind: TVTImageKind;
       Column: TColumnIndex; var Ghosted: Boolean; var ImageIndex: Integer; var ImageList: TCustomImageList);
+
+    procedure OIEditedText_ActionSpecific(AEditingAction: PClkActionRec; ALiveEditingActionType: TClkAction; ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; ANewText: string);
     procedure HandleOnOIEditedText(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; ANewText: string);
+
+    function OIEditItems_ActionSpecific(AEditingAction: PClkActionRec; ALiveEditingActionType: TClkAction; ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; var ANewItems: string): Boolean;
     function HandleOnOIEditItems(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; var ANewItems: string): Boolean;
 
     function HandleOnOIGetColorConstsCount(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer): Integer;
@@ -580,30 +584,48 @@ type
     procedure HandleOnOIAfterCellPaint(ANodeData: TNodeDataPropertyRec; ACategoryIndex, APropertyIndex, APropertyItemIndex: Integer;
       TargetCanvas: TCanvas; Column: TColumnIndex; const CellRect: TRect);
 
+    procedure TextEditorMouseDown_ActionSpecific(AEditingAction: PClkActionRec; ACategoryIndex, APropertyIndex, AItemIndex: Integer;
+      Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure HandleOnTextEditorMouseDown(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer;
       Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 
+    function TextEditorMouseMove_ActionSpecific(AEditingAction: PClkActionRec; ACategoryIndex, APropertyIndex, AItemIndex: Integer;
+      Sender: TObject; Shift: TShiftState; X, Y: Integer): Boolean;
     function HandleOnTextEditorMouseMove(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer;
       Sender: TObject; Shift: TShiftState; X, Y: Integer): Boolean;
 
+    procedure OITextEditorKeyUp_ActionSpecific(AEditingAction: PClkActionRec; ACategoryIndex, APropertyIndex, AItemIndex: Integer; Sender: TObject);
     procedure HandleOnOITextEditorKeyUp(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer;
       Sender: TObject; var Key: Word; Shift: TShiftState);
 
     procedure HandleOnOITextEditorKeyDown(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer;
       Sender: TObject; var Key: Word; Shift: TShiftState);
 
+    procedure OIEditorAssignMenuAndTooltip_ActionSpecific(AEditingAction: PClkActionRec; ALiveEditingActionType: TClkAction; ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer;
+      Sender: TObject; var APopupMenu: TPopupMenu; var AHint: string; var AShowHint: Boolean);
     procedure HandleOnOIEditorAssignMenuAndTooltip(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer;
       Sender: TObject; var APopupMenu: TPopupMenu; var AHint: string; var AShowHint: Boolean);
 
     procedure HandleOnOIGetFileDialogSettings(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; var AFilter, AInitDir: string);
+
+    procedure OIArrowEditorClick_ActionSpecific(AEditingAction: PClkActionRec; ALiveEditingActionType: TClkAction; ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer);
     procedure HandleOnOIArrowEditorClick(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer);
+
+    procedure OIUserEditorClick_ActionSpecific(AEditingAction: PClkActionRec; ALiveEditingActionType: TClkAction; ACategoryIndex, APropertyIndex, AItemIndex: Integer; var ARepaintValue: Boolean);
     procedure HandleOnOIUserEditorClick(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; var ARepaintValue: Boolean);
 
+    function OIBrowseFile_ActionSpecific(ALiveEditingActionType: TClkAction; ACategoryIndex, APropertyIndex, AItemIndex: Integer;
+      AFilter, ADialogInitDir: string; var Handled: Boolean; AReturnMultipleFiles: Boolean = False): string;
     function HandleOnOIBrowseFile(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer;
       AFilter, ADialogInitDir: string; var Handled: Boolean; AReturnMultipleFiles: Boolean = False): string;
 
+    procedure OIAfterSpinTextEditorChanging_ActionSpecific(AEditingAction: PClkActionRec; ALiveEditingActionType: TClkAction; ACategoryIndex, APropertyIndex, AItemIndex: Integer; var ANewValue: string);
     procedure HandleOnOIAfterSpinTextEditorChanging(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; var ANewValue: string);
+
+    procedure HandleOnOISelectedNode_ActionSpecific(AEditingAction: PClkActionRec; ALiveEditingActionType: TClkAction; NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex, Column: Integer; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure HandleOnOISelectedNode(NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex, Column: Integer; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+
+    procedure OIFirstVisibleNode_ActionSpecific(AEditingAction: PClkActionRec; NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex: Integer);
     procedure HandleOnOIFirstVisibleNode(NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex: Integer);
   public
     { Public declarations }
@@ -3354,13 +3376,13 @@ begin
   try
     ListOfFiles := TStringList.Create;
     try
-      ListOfFiles.Text := FEditingAction^.FindControlOptions.MatchBitmapFiles;
+      ListOfFiles.Text := MenuData.TempEditingAction^.FindControlOptions.MatchBitmapFiles;
       ListOfFiles.Text := ListOfFiles.Text + DoOnGetPictureOpenDialogFileName;
-      FEditingAction^.FindControlOptions.MatchBitmapFiles := ListOfFiles.Text;
+      MenuData.TempEditingAction^.FindControlOptions.MatchBitmapFiles := ListOfFiles.Text;
 
       FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex);
       TriggerOnControlsModified;
-      frClickerFindControl.UpdateListsOfSearchFiles(EditingAction^.FindControlOptions.MatchBitmapFiles, EditingAction^.FindControlOptions.MatchPrimitiveFiles);
+      frClickerFindControl.UpdateListsOfSearchFiles(MenuData.TempEditingAction^.FindControlOptions.MatchBitmapFiles, MenuData.TempEditingAction^.FindControlOptions.MatchPrimitiveFiles);
     finally
       ListOfFiles.Free;
     end;
@@ -3402,14 +3424,14 @@ begin
 
     ListOfFiles := TStringList.Create;
     try
-      ListOfFiles.Text := FEditingAction^.FindControlOptions.MatchBitmapFiles;
+      ListOfFiles.Text := MenuData.TempEditingAction^.FindControlOptions.MatchBitmapFiles;
       ListOfFiles.Strings[MenuData^.PropertyItemIndex] := DoOnGetPictureOpenDialogFileName;
-      FEditingAction^.FindControlOptions.MatchBitmapFiles := ListOfFiles.Text;
+      MenuData.TempEditingAction^.FindControlOptions.MatchBitmapFiles := ListOfFiles.Text;
 
       FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex, True);
 
       TriggerOnControlsModified;
-      frClickerFindControl.UpdateListsOfSearchFiles(EditingAction^.FindControlOptions.MatchBitmapFiles, EditingAction^.FindControlOptions.MatchPrimitiveFiles);
+      frClickerFindControl.UpdateListsOfSearchFiles(MenuData.TempEditingAction^.FindControlOptions.MatchBitmapFiles, MenuData.TempEditingAction^.FindControlOptions.MatchPrimitiveFiles);
     finally
       ListOfFiles.Free;
     end;
@@ -3522,21 +3544,21 @@ begin
     ListOfFiles := TStringList.Create;
     ListOfFiles_Modified := TStringList.Create;
     try
-      ListOfFiles.Text := FEditingAction^.FindControlOptions.MatchPrimitiveFiles;
+      ListOfFiles.Text := MenuData.TempEditingAction^.FindControlOptions.MatchPrimitiveFiles;
       OldCount := ListOfFiles.Count;
       ListOfFiles.Text := ListOfFiles.Text + DoOnGetOpenDialogFileName;
-      FEditingAction^.FindControlOptions.MatchPrimitiveFiles := ListOfFiles.Text;
+      MenuData.TempEditingAction^.FindControlOptions.MatchPrimitiveFiles := ListOfFiles.Text;
 
-      ListOfFiles_Modified.Text := FEditingAction^.FindControlOptions.MatchPrimitiveFiles_Modified;
+      ListOfFiles_Modified.Text := MenuData.TempEditingAction^.FindControlOptions.MatchPrimitiveFiles_Modified;
 
       for i := OldCount to ListOfFiles.Count - 1 do
         ListOfFiles_Modified.Add('0');
 
-      FEditingAction^.FindControlOptions.MatchPrimitiveFiles_Modified := ListOfFiles_Modified.Text;
+      MenuData.TempEditingAction^.FindControlOptions.MatchPrimitiveFiles_Modified := ListOfFiles_Modified.Text;
 
       FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex);
       TriggerOnControlsModified;
-      frClickerFindControl.UpdateListsOfSearchFiles(EditingAction^.FindControlOptions.MatchBitmapFiles, EditingAction^.FindControlOptions.MatchPrimitiveFiles);
+      frClickerFindControl.UpdateListsOfSearchFiles(MenuData.TempEditingAction^.FindControlOptions.MatchBitmapFiles, MenuData.TempEditingAction^.FindControlOptions.MatchPrimitiveFiles);
     finally
       ListOfFiles.Free;
       ListOfFiles_Modified.Free;
@@ -3622,23 +3644,23 @@ begin
     ListOfFiles := TStringList.Create;
     ListOfFiles_Modified := TStringList.Create;
     try
-      ListOfFiles_Modified.Text := FEditingAction^.FindControlOptions.MatchPrimitiveFiles_Modified;
+      ListOfFiles_Modified.Text := MenuData.TempEditingAction^.FindControlOptions.MatchPrimitiveFiles_Modified;
 
       if ListOfFiles_Modified.Strings[MenuData^.PropertyItemIndex] = '1' then
         if MessageBox(Handle, 'The file is modified. Do you want to set this to another file and discard all changes?', PChar(Application.Title), MB_ICONQUESTION + MB_YESNO) = IDNO then
           Exit;
 
-      ListOfFiles.Text := FEditingAction^.FindControlOptions.MatchPrimitiveFiles;
+      ListOfFiles.Text := MenuData.TempEditingAction^.FindControlOptions.MatchPrimitiveFiles;
       ListOfFiles.Strings[MenuData^.PropertyItemIndex] := DoOnGetOpenDialogFileName;
-      FEditingAction^.FindControlOptions.MatchPrimitiveFiles := ListOfFiles.Text;
+      MenuData.TempEditingAction^.FindControlOptions.MatchPrimitiveFiles := ListOfFiles.Text;
 
       ListOfFiles_Modified.Strings[MenuData^.PropertyItemIndex] := '0';
-      FEditingAction^.FindControlOptions.MatchPrimitiveFiles_Modified := ListOfFiles_Modified.Text;
+      MenuData.TempEditingAction^.FindControlOptions.MatchPrimitiveFiles_Modified := ListOfFiles_Modified.Text;
 
       FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex, True);
 
       TriggerOnControlsModified;
-      frClickerFindControl.UpdateListsOfSearchFiles(EditingAction^.FindControlOptions.MatchBitmapFiles, EditingAction^.FindControlOptions.MatchPrimitiveFiles);
+      frClickerFindControl.UpdateListsOfSearchFiles(MenuData.TempEditingAction^.FindControlOptions.MatchBitmapFiles, MenuData.TempEditingAction^.FindControlOptions.MatchPrimitiveFiles);
     finally
       ListOfFiles.Free;
       ListOfFiles_Modified.Free;
@@ -3977,7 +3999,7 @@ begin
 end;
 
 
-function TfrClickerActions.DummyEvaluateReplacements(VarName: string; Recursive: Boolean = True; AEvalTextCount: Integer = -1): string; //returns VarName
+class function TfrClickerActions.DummyEvaluateReplacements(VarName: string; Recursive: Boolean = True; AEvalTextCount: Integer = -1): string; //returns VarName
 begin
   Result := VarName;
 end;
@@ -4825,17 +4847,15 @@ begin
 end;
 
 
-function TfrClickerActions.HandleOnOIGetListPropertyItemName(ACategoryIndex, APropertyIndex, AItemIndex: Integer): string;
+function OIGetListPropertyItemName_ActionSpecific(AEditingAction: PClkActionRec; ALiveEditingActionType: TClkAction; ACategoryIndex, APropertyIndex, AItemIndex: Integer): string;
 var
   EditingActionType: Integer;
   ItemIndexMod, ItemIndexDiv: Integer;
   ListOfPrimitiveFiles_Modified: TStringList;
 begin
   Result := '';
-  if ACategoryIndex = CCategory_Common then
-    Exit;
-  try
-  EditingActionType := Integer(CurrentlyEditingActionType);
+
+  EditingActionType := Integer(ALiveEditingActionType);
   if EditingActionType = CClkUnsetAction then
     Exit;
 
@@ -4868,7 +4888,7 @@ begin
 
           ListOfPrimitiveFiles_Modified := TStringList.Create;
           try
-            ListOfPrimitiveFiles_Modified.Text := FEditingAction^.FindControlOptions.MatchPrimitiveFiles_Modified;
+            ListOfPrimitiveFiles_Modified.Text := AEditingAction^.FindControlOptions.MatchPrimitiveFiles_Modified;
             try
               if ListOfPrimitiveFiles_Modified.Strings[AItemIndex] = '1' then
                 Result := Result + '  (* Modified)';
@@ -4901,25 +4921,39 @@ begin
     end;
 
   end;   //case EditingActionType
+end;
+
+
+function TfrClickerActions.HandleOnOIGetListPropertyItemName(ACategoryIndex, APropertyIndex, AItemIndex: Integer): string;
+begin
+  Result := '';
+
+  try
+    case ACategoryIndex of
+      CCategory_Common:
+        ;
+
+      CCategory_ActionSpecific:
+        Result := OIGetListPropertyItemName_ActionSpecific(FEditingAction, CurrentlyEditingActionType, ACategoryIndex, APropertyIndex, AItemIndex);
+
+      CCategory_EditedAction:
+        Result := OIGetListPropertyItemName_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ACategoryIndex, APropertyIndex, AItemIndex);
+    end;
   except
-    MessageBox(Handle, 'AV', 'UC HandleOnOIGetListPropertyItemName', 0);
+    Result := 'AV'; //MessageBox(Handle, 'AV', 'UC HandleOnOIGetListPropertyItemName', 0);
   end;
 end;
 
 
-function TfrClickerActions.HandleOnOIGetListPropertyItemValue(ACategoryIndex, APropertyIndex, AItemIndex: Integer; var AEditorType: TOIEditorType): string;
+function OIGetListPropertyItemValue_ActionSpecific(AEditingAction: PClkActionRec; ALiveEditingActionType: TClkAction; ACategoryIndex, APropertyIndex, AItemIndex: Integer; var AEditorType: TOIEditorType; var APropDef: TOIPropDef): string;
 var
   EditingActionType: Integer;
-  PropDef: TOIPropDef;
   TempStringList: TStringList;
 begin
   Result := '';
   AEditorType := etNone;
 
-  if ACategoryIndex = CCategory_Common then
-    Exit;
-  try
-  EditingActionType := Integer(CurrentlyEditingActionType);
+  EditingActionType := Integer(ALiveEditingActionType);
   if EditingActionType = CClkUnsetAction then
     Exit;
 
@@ -4928,16 +4962,16 @@ begin
     begin
       case APropertyIndex of
         CFindControl_MatchCriteria_PropIndex:
-          PropDef := CFindControl_MatchCriteriaProperties[AItemIndex];
+          APropDef := CFindControl_MatchCriteriaProperties[AItemIndex];
 
         CFindControl_MatchBitmapText_PropIndex:
-          PropDef := CFindControl_MatchBitmapTextProperties[AItemIndex mod CPropCount_FindControlMatchBitmapText];
+          APropDef := CFindControl_MatchBitmapTextProperties[AItemIndex mod CPropCount_FindControlMatchBitmapText];
 
         CFindControl_MatchBitmapFiles_PropIndex:
         begin
           TempStringList := TStringList.Create;
           try
-            TempStringList.Text := FEditingAction^.FindControlOptions.MatchBitmapFiles;
+            TempStringList.Text := AEditingAction^.FindControlOptions.MatchBitmapFiles;
             try
               Result := TempStringList.Strings[AItemIndex];
             except
@@ -4953,16 +4987,16 @@ begin
         end;
 
         CFindControl_MatchBitmapAlgorithmSettings_PropIndex:
-          PropDef := CFindControl_MatchBitmapAlgorithmSettingsProperties[AItemIndex];
+          APropDef := CFindControl_MatchBitmapAlgorithmSettingsProperties[AItemIndex];
 
         CFindControl_InitialRectangle_PropIndex:
-          PropDef := CFindControl_InitialRectangleProperties[AItemIndex];
+          APropDef := CFindControl_InitialRectangleProperties[AItemIndex];
 
         CFindControl_MatchPrimitiveFiles_PropIndex:
         begin
           TempStringList := TStringList.Create;
           try
-            TempStringList.Text := FEditingAction^.FindControlOptions.MatchPrimitiveFiles;
+            TempStringList.Text := AEditingAction^.FindControlOptions.MatchPrimitiveFiles;
             try
               if AItemIndex < TempStringList.Count then
                 Result := TempStringList.Strings[AItemIndex]
@@ -4981,31 +5015,51 @@ begin
         end;
 
         CFindControl_MatchByHistogramSettings_PropIndex:
-          PropDef := CFindControl_MatchByHistogramSettingsProperties[AItemIndex];
+          APropDef := CFindControl_MatchByHistogramSettingsProperties[AItemIndex];
 
         else
           ;
       end;
 
-      Result := CFindControlGetActionValueStrFunctions[APropertyIndex](FEditingAction, AItemIndex);
+      Result := CFindControlGetActionValueStrFunctions[APropertyIndex](AEditingAction, AItemIndex);
     end;
 
     Ord(acCallTemplate):
     begin
       case APropertyIndex of
         CCallTemplate_CallTemplateLoop_PropIndex:
-          PropDef := CCallTemplate_CallTemplateLoopProperties[AItemIndex];
+          APropDef := CCallTemplate_CallTemplateLoopProperties[AItemIndex];
 
         else
           ;
       end;
 
-      Result := CCallTemplateGetActionValueStrFunctions[APropertyIndex](FEditingAction, AItemIndex);
+      Result := CCallTemplateGetActionValueStrFunctions[APropertyIndex](AEditingAction, AItemIndex);
     end;
   end;   //case EditingActionType
+end;
 
+
+function TfrClickerActions.HandleOnOIGetListPropertyItemValue(ACategoryIndex, APropertyIndex, AItemIndex: Integer; var AEditorType: TOIEditorType): string;
+var
+  PropDef: TOIPropDef;
+begin
+  Result := '';
+  AEditorType := etNone;
+
+  try
+    case ACategoryIndex of
+      CCategory_Common:
+        ;
+
+      CCategory_ActionSpecific:
+        Result := OIGetListPropertyItemValue_ActionSpecific(FEditingAction, CurrentlyEditingActionType, ACategoryIndex, APropertyIndex, AItemIndex, AEditorType, PropDef);
+
+      CCategory_EditedAction:
+        Result := OIGetListPropertyItemValue_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ACategoryIndex, APropertyIndex, AItemIndex, AEditorType, PropDef);
+    end;
   except
-    MessageBox(Handle, 'AV', 'UC HandleOnOIGetListPropertyItemValue', 0);
+    //MessageBox(Handle, 'AV', 'UC HandleOnOIGetListPropertyItemValue', 0);
   end;
 
   AEditorType := PropDef.EditorType;
@@ -5253,12 +5307,257 @@ begin  //
 end;
 
 
-procedure TfrClickerActions.HandleOnOIEditedText(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; ANewText: string);
+procedure TfrClickerActions.OIEditedText_ActionSpecific(AEditingAction: PClkActionRec; ALiveEditingActionType: TClkAction; ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; ANewText: string);
 var
   EditingActionType: Integer;
   TempStringList, ListOfFiles_Modified: TStringList;
   ItemIndexMod, ItemIndexDiv: Integer;
   FoundProfileIndex, i, ImageIndex: Integer;
+  OldText: string;
+begin
+  EditingActionType := Integer(ALiveEditingActionType);
+  if EditingActionType = CClkUnsetAction then
+    Exit;
+
+  case EditingActionType of
+    Ord(acFindControl), Ord(acFindSubControl):
+    begin
+      case APropertyIndex of
+        CFindControl_MatchCriteria_PropIndex:
+        begin
+          OldText := GetActionValueStr_FindControl_MatchCriteria(AEditingAction, AItemIndex);
+          SetActionValueStr_FindControl_MatchCriteria(AEditingAction, ANewText, AItemIndex);
+          TriggerOnControlsModified(ANewText <> OldText);
+          Exit;
+        end;
+
+        CFindControl_MatchText_PropIndex:
+          frClickerFindControl.UpdateOnTextPropeties;
+
+        CFindControl_MatchBitmapText_PropIndex:
+        begin
+          OldText := GetActionValueStr_FindControl_MatchBitmapText(AEditingAction, AItemIndex {no mod here});
+
+          if ANodeLevel = CPropertyItemLevel then
+          begin
+            ItemIndexMod := AItemIndex mod CPropCount_FindControlMatchBitmapText;
+            ItemIndexDiv := AItemIndex div CPropCount_FindControlMatchBitmapText;
+
+            case ItemIndexMod of
+              CFindControl_MatchBitmapText_ForegroundColor_PropItemIndex, CFindControl_MatchBitmapText_BackgroundColor_PropItemIndex:
+              begin
+                imgFontColorBuffer.Canvas.Pen.Color := 1;
+                imgFontColorBuffer.Canvas.Brush.Color := HexToInt(EvaluateReplacements(ANewText));
+                imgFontColorBuffer.Canvas.Rectangle(0, 0, imgFontColorBuffer.Width, imgFontColorBuffer.Height);
+
+                ImageIndex := ItemIndexDiv shl 1 + ItemIndexMod;    //shl 1 means that there are two items / pair  (FG and BG)
+                if ImageIndex > imglstFontColorProperties.Count - 1 then
+                  BuildFontColorIconsList;
+
+                imglstFontColorProperties.ReplaceMasked(ImageIndex, imgFontColorBuffer.Picture.Bitmap, 2);
+              end;
+
+              CFindControl_MatchBitmapText_CropLeft:
+              begin
+                if StrToIntDef(ANewText, 0) < 0 then
+                  ANewText := '0';
+
+                AEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv].CropLeft := ANewText;
+                frClickerFindControl.BMPTextFontProfiles[ItemIndexDiv].UpdateSelectionLabelsFromCropInfo(AEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv]);
+              end;
+
+              CFindControl_MatchBitmapText_CropTop:
+              begin
+                if StrToIntDef(ANewText, 0) < 0 then
+                  ANewText := '0';
+
+                AEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv].CropTop := ANewText;
+                frClickerFindControl.BMPTextFontProfiles[ItemIndexDiv].UpdateSelectionLabelsFromCropInfo(AEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv]);
+              end;
+
+              CFindControl_MatchBitmapText_CropRight:
+              begin
+                if StrToIntDef(ANewText, 0) < 0 then
+                  ANewText := '0';
+
+                AEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv].CropRight := ANewText;
+                frClickerFindControl.BMPTextFontProfiles[ItemIndexDiv].UpdateSelectionLabelsFromCropInfo(AEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv]);
+              end;
+
+              CFindControl_MatchBitmapText_CropBottom:
+              begin
+                if StrToIntDef(ANewText, 0) < 0 then
+                  ANewText := '0';
+
+                AEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv].CropBottom := ANewText;
+                frClickerFindControl.BMPTextFontProfiles[ItemIndexDiv].UpdateSelectionLabelsFromCropInfo(AEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv]);
+              end;
+
+              CFindControl_MatchBitmapText_ProfileName_PropItemIndex:
+              begin
+                FoundProfileIndex := frClickerFindControl.GetFontProfileIndexByName(ANewText);
+                if (FoundProfileIndex > -1) and (FoundProfileIndex <> ItemIndexDiv) then
+                  raise Exception.Create('Font profile name already exists. Please use a different one.');
+              end;
+            end; //case  ItemIndexMod
+          end;
+
+          SetActionValueStr_FindControl_MatchBitmapText(AEditingAction, ANewText, AItemIndex {no mod here});
+          frClickerFindControl.PreviewText;
+
+          for i := 0 to Length(AEditingAction^.FindControlOptions.MatchBitmapText) - 1 do
+            frClickerFindControl.BMPTextFontProfiles[i].UpdateSelectionLabelsFromCropInfo(AEditingAction^.FindControlOptions.MatchBitmapText[i]);
+
+          TriggerOnControlsModified(ANewText <> OldText);
+          frClickerFindControl.UpdateOnTextPropeties;
+          Exit;
+        end;  //CFindControl_MatchBitmapText_PropIndex
+
+        CFindControl_MatchBitmapFiles_PropIndex:
+        begin
+          TempStringList := TStringList.Create;
+          try
+            case ANodeLevel of
+              CPropertyLevel:
+              begin
+                OldText := AEditingAction^.FindControlOptions.MatchBitmapFiles;
+                AEditingAction^.FindControlOptions.MatchBitmapFiles := ANewText;
+                FOIFrame.ReloadPropertyItems(ACategoryIndex, APropertyIndex);
+
+                TriggerOnControlsModified(ANewText <> OldText);
+                frClickerFindControl.UpdateListsOfSearchFiles(EditingAction^.FindControlOptions.MatchBitmapFiles, EditingAction^.FindControlOptions.MatchPrimitiveFiles);
+              end;
+
+              CPropertyItemLevel:
+              begin
+                TempStringList.Text := AEditingAction^.FindControlOptions.MatchBitmapFiles;    //read
+                OldText := TempStringList.Strings[AItemIndex];
+                TempStringList.Strings[AItemIndex] := ANewText;                                //modify
+                AEditingAction^.FindControlOptions.MatchBitmapFiles := TempStringList.Text;    //write
+
+                TriggerOnControlsModified(ANewText <> OldText);
+                frClickerFindControl.UpdateListsOfSearchFiles(EditingAction^.FindControlOptions.MatchBitmapFiles, EditingAction^.FindControlOptions.MatchPrimitiveFiles);
+              end;
+            end;
+          finally
+            TempStringList.Free;
+          end;
+
+          Exit;
+        end;
+
+        CFindControl_MatchBitmapAlgorithmSettings_PropIndex:
+        begin
+          OldText := GetActionValueStr_FindControl_MatchBitmapAlgorithmSettings(AEditingAction, AItemIndex);
+          SetActionValueStr_FindControl_MatchBitmapAlgorithmSettings(AEditingAction, ANewText, AItemIndex);
+          TriggerOnControlsModified(ANewText <> OldText);
+          Exit;
+        end;
+
+        CFindControl_InitialRectangle_PropIndex:
+        begin
+          OldText := GetActionValueStr_FindControl_InitialRectangle(AEditingAction, AItemIndex);
+          SetActionValueStr_FindControl_InitialRectangle(AEditingAction, ANewText, AItemIndex);
+          TriggerOnControlsModified(ANewText <> OldText);
+          Exit;
+        end;
+
+        CFindControl_UseWholeScreen_PropIndex:   //this call will have to take into account, the screen edges or vars as search area limits
+        begin
+          frClickerFindControl.UpdateSearchAreaLabelsFromKeysOnInitRect(AEditingAction^.FindControlOptions.InitialRectangle);
+          frClickerFindControl.UpdateUseWholeScreenLabel(StrToBool(ANewText));
+        end;
+
+        CFindControl_MatchPrimitiveFiles_PropIndex:
+        begin
+          TempStringList := TStringList.Create;
+          try
+            case ANodeLevel of
+              CPropertyLevel:
+              begin
+                OldText := AEditingAction^.FindControlOptions.MatchPrimitiveFiles;
+                AEditingAction^.FindControlOptions.MatchPrimitiveFiles := ANewText;
+
+                AEditingAction^.FindControlOptions.MatchPrimitiveFiles_Modified := '';
+                ListOfFiles_Modified := TStringList.Create;
+                try
+                  ListOfFiles_Modified.Text := AEditingAction^.FindControlOptions.MatchPrimitiveFiles;
+                  for i := 0 to ListOfFiles_Modified.Count - 1 do
+                    AEditingAction^.FindControlOptions.MatchPrimitiveFiles_Modified := AEditingAction^.FindControlOptions.MatchPrimitiveFiles_Modified + '0'#13#10;
+                finally
+                  ListOfFiles_Modified.Free;
+                end;
+
+                FOIFrame.ReloadPropertyItems(ACategoryIndex, APropertyIndex);
+
+                TriggerOnControlsModified(ANewText <> OldText);
+                frClickerFindControl.UpdateListsOfSearchFiles(EditingAction^.FindControlOptions.MatchBitmapFiles, EditingAction^.FindControlOptions.MatchPrimitiveFiles);
+              end;
+
+              CPropertyItemLevel:
+              begin
+                TempStringList.Text := AEditingAction^.FindControlOptions.MatchPrimitiveFiles;    //read
+                OldText := TempStringList.Strings[AItemIndex];
+                TempStringList.Strings[AItemIndex] := ANewText;                                   //modify
+                AEditingAction^.FindControlOptions.MatchPrimitiveFiles := TempStringList.Text;    //write
+
+                TriggerOnControlsModified(ANewText <> OldText);
+                frClickerFindControl.UpdateListsOfSearchFiles(EditingAction^.FindControlOptions.MatchBitmapFiles, EditingAction^.FindControlOptions.MatchPrimitiveFiles);
+              end;
+            end;
+          finally
+            TempStringList.Free;
+          end;
+
+          Exit;
+        end;
+
+        CFindControl_MatchByHistogramSettings_PropIndex:
+        begin
+          OldText := GetActionValueStr_FindControl_MatchByHistogramSettings(AEditingAction, AItemIndex);
+          SetActionValueStr_FindControl_MatchByHistogramSettings(AEditingAction, ANewText, AItemIndex);
+          TriggerOnControlsModified(ANewText <> OldText);
+          Exit;
+        end;
+
+        else
+          ;
+      end;
+    end; //FindControl  case
+
+    Ord(acCallTemplate):
+    begin
+      case APropertyIndex of
+        CCallTemplate_CallTemplateLoop_PropIndex:
+        begin
+          OldText := GetActionValueStr_CallTemplate_CallTemplateLoop(AEditingAction, AItemIndex);
+          SetActionValueStr_CallTemplate_CallTemplateLoop(AEditingAction, ANewText, AItemIndex);
+          TriggerOnControlsModified(ANewText <> OldText);
+          Exit;
+        end;
+
+        else
+          ;
+      end;
+    end; //CallTemplate  case
+  end;   //case EditingActionType
+
+  //default handler for main properties
+  OldText := CMainGetActionValueStrFunctions[ALiveEditingActionType](AEditingAction, APropertyIndex);
+  CMainSetActionValueStrFunctions[ALiveEditingActionType](AEditingAction, ANewText, APropertyIndex);
+  TriggerOnControlsModified(ANewText <> OldText);
+
+  if AEditingAction^.ActionOptions.Action = acPlugin then
+    if APropertyIndex = CPlugin_FileName_PropIndex then
+    begin
+      DoOnModifyPluginProperty(AEditingAction);
+      tmrReloadOIContent.Enabled := True;
+    end;
+end;
+
+
+procedure TfrClickerActions.HandleOnOIEditedText(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; ANewText: string);
+var
   OldText: string;
 begin
   case ACategoryIndex of
@@ -5275,246 +5574,10 @@ begin
     end;
 
     CCategory_ActionSpecific:
-    begin
-      EditingActionType := Integer(CurrentlyEditingActionType);
-      if EditingActionType = CClkUnsetAction then
-        Exit;
+      OIEditedText_ActionSpecific(FEditingAction, CurrentlyEditingActionType, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, ANewText);
 
-      case EditingActionType of
-        Ord(acFindControl), Ord(acFindSubControl):
-        begin
-          case APropertyIndex of
-            CFindControl_MatchCriteria_PropIndex:
-            begin
-              OldText := GetActionValueStr_FindControl_MatchCriteria(FEditingAction, AItemIndex);
-              SetActionValueStr_FindControl_MatchCriteria(FEditingAction, ANewText, AItemIndex);
-              TriggerOnControlsModified(ANewText <> OldText);
-              Exit;
-            end;
-
-            CFindControl_MatchText_PropIndex:
-              frClickerFindControl.UpdateOnTextPropeties;
-
-            CFindControl_MatchBitmapText_PropIndex:
-            begin
-              OldText := GetActionValueStr_FindControl_MatchBitmapText(FEditingAction, AItemIndex {no mod here});
-
-              if ANodeLevel = CPropertyItemLevel then
-              begin
-                ItemIndexMod := AItemIndex mod CPropCount_FindControlMatchBitmapText;
-                ItemIndexDiv := AItemIndex div CPropCount_FindControlMatchBitmapText;
-
-                case ItemIndexMod of
-                  CFindControl_MatchBitmapText_ForegroundColor_PropItemIndex, CFindControl_MatchBitmapText_BackgroundColor_PropItemIndex:
-                  begin
-                    imgFontColorBuffer.Canvas.Pen.Color := 1;
-                    imgFontColorBuffer.Canvas.Brush.Color := HexToInt(EvaluateReplacements(ANewText));
-                    imgFontColorBuffer.Canvas.Rectangle(0, 0, imgFontColorBuffer.Width, imgFontColorBuffer.Height);
-
-                    ImageIndex := ItemIndexDiv shl 1 + ItemIndexMod;    //shl 1 means that there are two items / pair  (FG and BG)
-                    if ImageIndex > imglstFontColorProperties.Count - 1 then
-                      BuildFontColorIconsList;
-
-                    imglstFontColorProperties.ReplaceMasked(ImageIndex, imgFontColorBuffer.Picture.Bitmap, 2);
-                  end;
-
-                  CFindControl_MatchBitmapText_CropLeft:
-                  begin
-                    if StrToIntDef(ANewText, 0) < 0 then
-                      ANewText := '0';
-
-                    FEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv].CropLeft := ANewText;
-                    frClickerFindControl.BMPTextFontProfiles[ItemIndexDiv].UpdateSelectionLabelsFromCropInfo(FEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv]);
-                  end;
-
-                  CFindControl_MatchBitmapText_CropTop:
-                  begin
-                    if StrToIntDef(ANewText, 0) < 0 then
-                      ANewText := '0';
-
-                    FEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv].CropTop := ANewText;
-                    frClickerFindControl.BMPTextFontProfiles[ItemIndexDiv].UpdateSelectionLabelsFromCropInfo(FEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv]);
-                  end;
-
-                  CFindControl_MatchBitmapText_CropRight:
-                  begin
-                    if StrToIntDef(ANewText, 0) < 0 then
-                      ANewText := '0';
-
-                    FEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv].CropRight := ANewText;
-                    frClickerFindControl.BMPTextFontProfiles[ItemIndexDiv].UpdateSelectionLabelsFromCropInfo(FEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv]);
-                  end;
-
-                  CFindControl_MatchBitmapText_CropBottom:
-                  begin
-                    if StrToIntDef(ANewText, 0) < 0 then
-                      ANewText := '0';
-
-                    FEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv].CropBottom := ANewText;
-                    frClickerFindControl.BMPTextFontProfiles[ItemIndexDiv].UpdateSelectionLabelsFromCropInfo(FEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv]);
-                  end;
-
-                  CFindControl_MatchBitmapText_ProfileName_PropItemIndex:
-                  begin
-                    FoundProfileIndex := frClickerFindControl.GetFontProfileIndexByName(ANewText);
-                    if (FoundProfileIndex > -1) and (FoundProfileIndex <> ItemIndexDiv) then
-                      raise Exception.Create('Font profile name already exists. Please use a different one.');
-                  end;
-                end; //case  ItemIndexMod
-              end;
-
-              SetActionValueStr_FindControl_MatchBitmapText(FEditingAction, ANewText, AItemIndex {no mod here});
-              frClickerFindControl.PreviewText;
-
-              for i := 0 to Length(FEditingAction^.FindControlOptions.MatchBitmapText) - 1 do
-                frClickerFindControl.BMPTextFontProfiles[i].UpdateSelectionLabelsFromCropInfo(FEditingAction^.FindControlOptions.MatchBitmapText[i]);
-
-              TriggerOnControlsModified(ANewText <> OldText);
-              frClickerFindControl.UpdateOnTextPropeties;
-              Exit;
-            end;  //CFindControl_MatchBitmapText_PropIndex
-
-            CFindControl_MatchBitmapFiles_PropIndex:
-            begin
-              TempStringList := TStringList.Create;
-              try
-                case ANodeLevel of
-                  CPropertyLevel:
-                  begin
-                    OldText := FEditingAction^.FindControlOptions.MatchBitmapFiles;
-                    FEditingAction^.FindControlOptions.MatchBitmapFiles := ANewText;
-                    FOIFrame.ReloadPropertyItems(ACategoryIndex, APropertyIndex);
-
-                    TriggerOnControlsModified(ANewText <> OldText);
-                    frClickerFindControl.UpdateListsOfSearchFiles(EditingAction^.FindControlOptions.MatchBitmapFiles, EditingAction^.FindControlOptions.MatchPrimitiveFiles);
-                  end;
-
-                  CPropertyItemLevel:
-                  begin
-                    TempStringList.Text := FEditingAction^.FindControlOptions.MatchBitmapFiles;    //read
-                    OldText := TempStringList.Strings[AItemIndex];
-                    TempStringList.Strings[AItemIndex] := ANewText;                                //modify
-                    FEditingAction^.FindControlOptions.MatchBitmapFiles := TempStringList.Text;    //write
-
-                    TriggerOnControlsModified(ANewText <> OldText);
-                    frClickerFindControl.UpdateListsOfSearchFiles(EditingAction^.FindControlOptions.MatchBitmapFiles, EditingAction^.FindControlOptions.MatchPrimitiveFiles);
-                  end;
-                end;
-              finally
-                TempStringList.Free;
-              end;
-
-              Exit;
-            end;
-
-            CFindControl_MatchBitmapAlgorithmSettings_PropIndex:
-            begin
-              OldText := GetActionValueStr_FindControl_MatchBitmapAlgorithmSettings(FEditingAction, AItemIndex);
-              SetActionValueStr_FindControl_MatchBitmapAlgorithmSettings(FEditingAction, ANewText, AItemIndex);
-              TriggerOnControlsModified(ANewText <> OldText);
-              Exit;
-            end;
-
-            CFindControl_InitialRectangle_PropIndex:
-            begin
-              OldText := GetActionValueStr_FindControl_InitialRectangle(FEditingAction, AItemIndex);
-              SetActionValueStr_FindControl_InitialRectangle(FEditingAction, ANewText, AItemIndex);
-              TriggerOnControlsModified(ANewText <> OldText);
-              Exit;
-            end;
-
-            CFindControl_UseWholeScreen_PropIndex:   //this call will have to take into account, the screen edges or vars as search area limits
-            begin
-              frClickerFindControl.UpdateSearchAreaLabelsFromKeysOnInitRect(FEditingAction^.FindControlOptions.InitialRectangle);
-              frClickerFindControl.UpdateUseWholeScreenLabel(StrToBool(ANewText));
-            end;
-
-            CFindControl_MatchPrimitiveFiles_PropIndex:
-            begin
-              TempStringList := TStringList.Create;
-              try
-                case ANodeLevel of
-                  CPropertyLevel:
-                  begin
-                    OldText := FEditingAction^.FindControlOptions.MatchPrimitiveFiles;
-                    FEditingAction^.FindControlOptions.MatchPrimitiveFiles := ANewText;
-
-                    FEditingAction^.FindControlOptions.MatchPrimitiveFiles_Modified := '';
-                    ListOfFiles_Modified := TStringList.Create;
-                    try
-                      ListOfFiles_Modified.Text := FEditingAction^.FindControlOptions.MatchPrimitiveFiles;
-                      for i := 0 to ListOfFiles_Modified.Count - 1 do
-                        FEditingAction^.FindControlOptions.MatchPrimitiveFiles_Modified := FEditingAction^.FindControlOptions.MatchPrimitiveFiles_Modified + '0'#13#10;
-                    finally
-                      ListOfFiles_Modified.Free;
-                    end;
-
-                    FOIFrame.ReloadPropertyItems(ACategoryIndex, APropertyIndex);
-
-                    TriggerOnControlsModified(ANewText <> OldText);
-                    frClickerFindControl.UpdateListsOfSearchFiles(EditingAction^.FindControlOptions.MatchBitmapFiles, EditingAction^.FindControlOptions.MatchPrimitiveFiles);
-                  end;
-
-                  CPropertyItemLevel:
-                  begin
-                    TempStringList.Text := FEditingAction^.FindControlOptions.MatchPrimitiveFiles;    //read
-                    OldText := TempStringList.Strings[AItemIndex];
-                    TempStringList.Strings[AItemIndex] := ANewText;                                   //modify
-                    FEditingAction^.FindControlOptions.MatchPrimitiveFiles := TempStringList.Text;    //write
-
-                    TriggerOnControlsModified(ANewText <> OldText);
-                    frClickerFindControl.UpdateListsOfSearchFiles(EditingAction^.FindControlOptions.MatchBitmapFiles, EditingAction^.FindControlOptions.MatchPrimitiveFiles);
-                  end;
-                end;
-              finally
-                TempStringList.Free;
-              end;
-
-              Exit;
-            end;
-
-            CFindControl_MatchByHistogramSettings_PropIndex:
-            begin
-              OldText := GetActionValueStr_FindControl_MatchByHistogramSettings(FEditingAction, AItemIndex);
-              SetActionValueStr_FindControl_MatchByHistogramSettings(FEditingAction, ANewText, AItemIndex);
-              TriggerOnControlsModified(ANewText <> OldText);
-              Exit;
-            end;
-
-            else
-              ;
-          end;
-        end; //FindControl  case
-
-        Ord(acCallTemplate):
-        begin
-          case APropertyIndex of
-            CCallTemplate_CallTemplateLoop_PropIndex:
-            begin
-              OldText := GetActionValueStr_CallTemplate_CallTemplateLoop(FEditingAction, AItemIndex);
-              SetActionValueStr_CallTemplate_CallTemplateLoop(FEditingAction, ANewText, AItemIndex);
-              TriggerOnControlsModified(ANewText <> OldText);
-              Exit;
-            end;
-
-            else
-              ;
-          end;
-        end; //CallTemplate  case
-      end;   //case EditingActionType
-
-      //default handler for main properties
-      OldText := CMainGetActionValueStrFunctions[CurrentlyEditingActionType](FEditingAction, APropertyIndex);
-      CMainSetActionValueStrFunctions[CurrentlyEditingActionType](FEditingAction, ANewText, APropertyIndex);
-      TriggerOnControlsModified(ANewText <> OldText);
-
-      if FEditingAction^.ActionOptions.Action = acPlugin then
-        if APropertyIndex = CPlugin_FileName_PropIndex then
-        begin
-          DoOnModifyPluginProperty(FEditingAction);
-          tmrReloadOIContent.Enabled := True;
-        end;
-    end; //Action specific
+    CCategory_EditedAction:
+      OIEditedText_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, ANewText);
 
     else
       ;
@@ -5522,7 +5585,7 @@ begin
 end;
 
 
-function TfrClickerActions.EditFontProperties(AItemIndexDiv: Integer; var ANewItems: string): Boolean;
+function TfrClickerActions.EditFontProperties(AEditingAction: PClkActionRec; AItemIndexDiv: Integer; var ANewItems: string): Boolean;
 var
   TempFontDialog: TFontDialog;
 begin
@@ -5531,18 +5594,18 @@ begin
   TempFontDialog := TFontDialog.Create(nil);
   try
     TempFontDialog.Font.Name := ANewItems;
-    TempFontDialog.Font.Size := FEditingAction^.FindControlOptions.MatchBitmapText[AItemIndexDiv].FontSize;
+    TempFontDialog.Font.Size := AEditingAction^.FindControlOptions.MatchBitmapText[AItemIndexDiv].FontSize;
 
-    if FEditingAction^.FindControlOptions.MatchBitmapText[AItemIndexDiv].Bold then
+    if AEditingAction^.FindControlOptions.MatchBitmapText[AItemIndexDiv].Bold then
       TempFontDialog.Font.Style := TempFontDialog.Font.Style + [fsBold];
 
-    if FEditingAction^.FindControlOptions.MatchBitmapText[AItemIndexDiv].Italic then
+    if AEditingAction^.FindControlOptions.MatchBitmapText[AItemIndexDiv].Italic then
       TempFontDialog.Font.Style := TempFontDialog.Font.Style + [fsItalic];
 
-    if FEditingAction^.FindControlOptions.MatchBitmapText[AItemIndexDiv].Underline then
+    if AEditingAction^.FindControlOptions.MatchBitmapText[AItemIndexDiv].Underline then
       TempFontDialog.Font.Style := TempFontDialog.Font.Style + [fsUnderline];
 
-    if FEditingAction^.FindControlOptions.MatchBitmapText[AItemIndexDiv].StrikeOut then
+    if AEditingAction^.FindControlOptions.MatchBitmapText[AItemIndexDiv].StrikeOut then
       TempFontDialog.Font.Style := TempFontDialog.Font.Style + [fsStrikeOut];
 
     if not TempFontDialog.Execute then
@@ -5551,44 +5614,58 @@ begin
     ANewItems := TempFontDialog.Font.Name;
     Result := True;
 
-    FEditingAction^.FindControlOptions.MatchBitmapText[AItemIndexDiv].FontName := ANewItems; //redundant, because the OI will call another handler for the property itself
-    FEditingAction^.FindControlOptions.MatchBitmapText[AItemIndexDiv].FontSize := TempFontDialog.Font.Size;
-    FEditingAction^.FindControlOptions.MatchBitmapText[AItemIndexDiv].Bold := fsBold in TempFontDialog.Font.Style;
-    FEditingAction^.FindControlOptions.MatchBitmapText[AItemIndexDiv].Italic := fsItalic in TempFontDialog.Font.Style;
-    FEditingAction^.FindControlOptions.MatchBitmapText[AItemIndexDiv].Underline := fsUnderline in TempFontDialog.Font.Style;
-    FEditingAction^.FindControlOptions.MatchBitmapText[AItemIndexDiv].StrikeOut := fsStrikeOut in TempFontDialog.Font.Style;
+    AEditingAction^.FindControlOptions.MatchBitmapText[AItemIndexDiv].FontName := ANewItems; //redundant, because the OI will call another handler for the property itself
+    AEditingAction^.FindControlOptions.MatchBitmapText[AItemIndexDiv].FontSize := TempFontDialog.Font.Size;
+    AEditingAction^.FindControlOptions.MatchBitmapText[AItemIndexDiv].Bold := fsBold in TempFontDialog.Font.Style;
+    AEditingAction^.FindControlOptions.MatchBitmapText[AItemIndexDiv].Italic := fsItalic in TempFontDialog.Font.Style;
+    AEditingAction^.FindControlOptions.MatchBitmapText[AItemIndexDiv].Underline := fsUnderline in TempFontDialog.Font.Style;
+    AEditingAction^.FindControlOptions.MatchBitmapText[AItemIndexDiv].StrikeOut := fsStrikeOut in TempFontDialog.Font.Style;
   finally
     TempFontDialog.Free;
   end;
 end;
 
 
-function TfrClickerActions.HandleOnOIEditItems(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; var ANewItems: string): Boolean;
+function TfrClickerActions.OIEditItems_ActionSpecific(AEditingAction: PClkActionRec; ALiveEditingActionType: TClkAction; ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; var ANewItems: string): Boolean;
 var
   EditingActionType: Integer;
   ItemIndexDiv, ItemIndexMod: Integer;
 begin
   Result := False;
-  if ACategoryIndex = CCategory_ActionSpecific then
-  begin
-    EditingActionType := Integer(CurrentlyEditingActionType);
-    if EditingActionType = CClkUnsetAction then
-      Exit;
 
-    if EditingActionType in [Ord(acFindControl), Ord(acFindSubControl)] then
-      if APropertyIndex = CFindControl_MatchBitmapText_PropIndex then
+  EditingActionType := Integer(ALiveEditingActionType);
+  if EditingActionType = CClkUnsetAction then
+    Exit;
+
+  if EditingActionType in [Ord(acFindControl), Ord(acFindSubControl)] then
+    if APropertyIndex = CFindControl_MatchBitmapText_PropIndex then
+    begin
+      ItemIndexDiv := AItemIndex div CPropCount_FindControlMatchBitmapText;
+      ItemIndexMod := AItemIndex mod CPropCount_FindControlMatchBitmapText;
+
+      if ItemIndexMod = CFindControl_MatchBitmapText_FontName_PropItemIndex then
       begin
-        ItemIndexDiv := AItemIndex div CPropCount_FindControlMatchBitmapText;
-        ItemIndexMod := AItemIndex mod CPropCount_FindControlMatchBitmapText;
+        Result := EditFontProperties(AEditingAction, ItemIndexDiv, ANewItems);
 
-        if ItemIndexMod = CFindControl_MatchBitmapText_FontName_PropItemIndex then
-        begin
-          Result := EditFontProperties(ItemIndexDiv, ANewItems);
-
-          if Result then
-            TriggerOnControlsModified;
-        end;
+        if Result then
+          TriggerOnControlsModified;
       end;
+    end;
+end;
+
+
+function TfrClickerActions.HandleOnOIEditItems(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; var ANewItems: string): Boolean;
+begin
+  Result := False;
+  case ACategoryIndex of
+    CCategory_Common:
+      ;
+
+    CCategory_ActionSpecific:
+      Result := OIEditItems_ActionSpecific(FEditingAction, CurrentlyEditingActionType, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, ANewItems);
+
+    CCategory_EditedAction:
+      Result := OIEditItems_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, ANewItems);
   end;
 end;
 
@@ -5605,10 +5682,55 @@ begin
 end;
 
 
-function TfrClickerActions.HandleOnOIGetEnumConstsCount(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer): Integer;
+function OIGetEnumConstsCount_ActionSpecific(AEditingAction: PClkActionRec; ALiveEditingActionType: TClkAction; ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer): Integer;
 var
   EditingActionType: Integer;
   ItemIndexMod: Integer;
+begin
+  Result := 0;
+
+  EditingActionType := Integer(ALiveEditingActionType);
+  if EditingActionType = CClkUnsetAction then
+    Exit;
+
+  if ALiveEditingActionType in [acFindControl, acFindSubControl] then
+  begin
+    if APropertyIndex = CFindControl_MatchCriteria_PropIndex then
+    begin
+      Result := CFindControl_MatchCriteriaEnumCounts[AItemIndex];
+      Exit;
+    end;
+
+    if APropertyIndex = CFindControl_MatchBitmapText_PropIndex then
+    begin
+      ItemIndexMod := AItemIndex mod CPropCount_FindControlMatchBitmapText;
+      Result := CFindControl_MatchBitmapTextEnumCounts[ItemIndexMod];
+
+      if ItemIndexMod = CFindControl_MatchBitmapText_FontName_PropItemIndex then
+        Result := Screen.Fonts.Count;
+
+      Exit;
+    end;
+  end;
+
+  if ALiveEditingActionType = acCallTemplate then
+    if APropertyIndex = CCallTemplate_CallTemplateLoop_PropIndex then
+    begin
+      Result := CCallTemplate_CallTemplateLoopEnumCounts[AItemIndex];
+      Exit;
+    end;
+
+  if (ALiveEditingActionType = acPlugin) and (APropertyIndex > CPlugin_FileName_PropIndex) then
+  begin
+    //Result := 0
+    Result := StrToIntDef(GetPluginPropertyAttribute(AEditingAction.PluginOptions.ListOfPropertiesAndTypes, CPluginPropertyAttr_EnumCounts, APropertyIndex), 0);
+  end
+  else
+    Result := CPropEnumCounts[ALiveEditingActionType]^[APropertyIndex];
+end;
+
+
+function TfrClickerActions.HandleOnOIGetEnumConstsCount(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer): Integer;
 begin
   Result := 0;
 
@@ -5617,46 +5739,10 @@ begin
       Result := CActionEnumCounts[APropertyIndex];
 
     CCategory_ActionSpecific:
-    begin
-      EditingActionType := Integer(CurrentlyEditingActionType);
-      if EditingActionType = CClkUnsetAction then
-        Exit;
+      Result := OIGetEnumConstsCount_ActionSpecific(FEditingAction, CurrentlyEditingActionType, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
 
-      if CurrentlyEditingActionType in [acFindControl, acFindSubControl] then
-      begin
-        if APropertyIndex = CFindControl_MatchCriteria_PropIndex then
-        begin
-          Result := CFindControl_MatchCriteriaEnumCounts[AItemIndex];
-          Exit;
-        end;
-
-        if APropertyIndex = CFindControl_MatchBitmapText_PropIndex then
-        begin
-          ItemIndexMod := AItemIndex mod CPropCount_FindControlMatchBitmapText;
-          Result := CFindControl_MatchBitmapTextEnumCounts[ItemIndexMod];
-
-          if ItemIndexMod = CFindControl_MatchBitmapText_FontName_PropItemIndex then
-            Result := Screen.Fonts.Count;
-
-          Exit;
-        end;
-      end;
-
-      if CurrentlyEditingActionType = acCallTemplate then
-        if APropertyIndex = CCallTemplate_CallTemplateLoop_PropIndex then
-        begin
-          Result := CCallTemplate_CallTemplateLoopEnumCounts[AItemIndex];
-          Exit;
-        end;
-
-      if (CurrentlyEditingActionType = acPlugin) and (APropertyIndex > CPlugin_FileName_PropIndex) then
-      begin
-        //Result := 0
-        Result := StrToIntDef(GetPluginPropertyAttribute(FEditingAction.PluginOptions.ListOfPropertiesAndTypes, CPluginPropertyAttr_EnumCounts, APropertyIndex), 0);
-      end
-      else
-        Result := CPropEnumCounts[CurrentlyEditingActionType]^[APropertyIndex];
-    end;
+    CCategory_EditedAction:
+      Result := OIGetEnumConstsCount_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
 
     else
       Result := 0;
@@ -5664,11 +5750,65 @@ begin
 end;
 
 
-procedure TfrClickerActions.HandleOnOIGetEnumConst(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEnumItemIndex: Integer; var AEnumItemName: string);
+procedure OIGetEnumConst_ActionSpecific(AEditingAction: PClkActionRec; ALiveEditingActionType: TClkAction; ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEnumItemIndex: Integer; var AEnumItemName: string);
 var
   EditingActionType: Integer;
   ItemIndexMod: Integer;
   ListOfEnumValues: TStringList;
+begin
+  EditingActionType := Integer(ALiveEditingActionType);
+  if EditingActionType = CClkUnsetAction then
+    Exit;
+
+  if ALiveEditingActionType in [acFindControl, acFindSubControl] then
+  begin
+    if APropertyIndex = CFindControl_MatchCriteria_PropIndex then
+    begin
+      AEnumItemName := CFindControl_MatchCriteriaEnumStrings[AItemIndex]^[AEnumItemIndex];
+      Exit;
+    end;
+
+    if APropertyIndex = CFindControl_MatchBitmapText_PropIndex then
+    begin
+      ItemIndexMod := AItemIndex mod CPropCount_FindControlMatchBitmapText;
+
+      if ItemIndexMod = CFindControl_MatchBitmapText_FontName_PropItemIndex then
+        AEnumItemName := Screen.Fonts.Strings[AEnumItemIndex]
+      else
+        AEnumItemName := CFindControl_MatchBitmapTextEnumStrings[ItemIndexMod]^[AEnumItemIndex];
+
+      Exit;
+    end;
+  end;
+
+  if ALiveEditingActionType = acCallTemplate then
+    if APropertyIndex = CCallTemplate_CallTemplateLoop_PropIndex then
+    begin
+      AEnumItemName := CCallTemplate_CallTemplateLoopEnumStrings[AItemIndex]^[AEnumItemIndex];
+      Exit;
+    end;
+
+  if (ALiveEditingActionType = acPlugin) and (APropertyIndex > CPlugin_FileName_PropIndex) then
+  begin
+    AEnumItemName := GetPluginPropertyAttribute(AEditingAction.PluginOptions.ListOfPropertiesAndTypes, CPluginPropertyAttr_EnumStrings, APropertyIndex);
+    ListOfEnumValues := TStringList.Create;
+    try
+      ListOfEnumValues.Text := FastReplace_45ToReturn(AEnumItemName);
+      try
+        AEnumItemName := ListOfEnumValues.Strings[AEnumItemIndex];
+      except
+        AEnumItemName := 'item out of bounds'
+      end;
+    finally
+      ListOfEnumValues.Free;
+    end;
+  end
+  else
+    AEnumItemName := CPropEnumStrings[ALiveEditingActionType]^[APropertyIndex]^[AEnumItemIndex];
+end;
+
+
+procedure TfrClickerActions.HandleOnOIGetEnumConst(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEnumItemIndex: Integer; var AEnumItemName: string);
 begin
   AEnumItemName := '';
 
@@ -5677,57 +5817,10 @@ begin
       AEnumItemName := CActionEnumStrings[APropertyIndex]^[AEnumItemIndex];
 
     CCategory_ActionSpecific:
-    begin
-      EditingActionType := Integer(CurrentlyEditingActionType);
-      if EditingActionType = CClkUnsetAction then
-        Exit;
+      OIGetEnumConst_ActionSpecific(FEditingAction, CurrentlyEditingActionType, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEnumItemIndex, AEnumItemName);
 
-      if CurrentlyEditingActionType in [acFindControl, acFindSubControl] then
-      begin
-        if APropertyIndex = CFindControl_MatchCriteria_PropIndex then
-        begin
-          AEnumItemName := CFindControl_MatchCriteriaEnumStrings[AItemIndex]^[AEnumItemIndex];
-          Exit;
-        end;
-
-        if APropertyIndex = CFindControl_MatchBitmapText_PropIndex then
-        begin
-          ItemIndexMod := AItemIndex mod CPropCount_FindControlMatchBitmapText;
-
-          if ItemIndexMod = CFindControl_MatchBitmapText_FontName_PropItemIndex then
-            AEnumItemName := Screen.Fonts.Strings[AEnumItemIndex]
-          else
-            AEnumItemName := CFindControl_MatchBitmapTextEnumStrings[ItemIndexMod]^[AEnumItemIndex];
-
-          Exit;
-        end;
-      end;
-
-      if CurrentlyEditingActionType = acCallTemplate then
-        if APropertyIndex = CCallTemplate_CallTemplateLoop_PropIndex then
-        begin
-          AEnumItemName := CCallTemplate_CallTemplateLoopEnumStrings[AItemIndex]^[AEnumItemIndex];
-          Exit;
-        end;
-
-      if (CurrentlyEditingActionType = acPlugin) and (APropertyIndex > CPlugin_FileName_PropIndex) then
-      begin
-        AEnumItemName := GetPluginPropertyAttribute(FEditingAction.PluginOptions.ListOfPropertiesAndTypes, CPluginPropertyAttr_EnumStrings, APropertyIndex);
-        ListOfEnumValues := TStringList.Create;
-        try
-          ListOfEnumValues.Text := FastReplace_45ToReturn(AEnumItemName);
-          try
-            AEnumItemName := ListOfEnumValues.Strings[AEnumItemIndex];
-          except
-            AEnumItemName := 'item out of bounds'
-          end;
-        finally
-          ListOfEnumValues.Free;
-        end;
-      end
-      else
-        AEnumItemName := CPropEnumStrings[CurrentlyEditingActionType]^[APropertyIndex]^[AEnumItemIndex];
-    end;
+    CCategory_EditedAction:
+      OIGetEnumConst_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEnumItemIndex, AEnumItemName);
 
     else
       AEnumItemName := '';
@@ -5754,44 +5847,36 @@ begin
 end;
 
 
-procedure TfrClickerActions.HandleOnOIPaintText(ANodeData: TNodeDataPropertyRec; ACategoryIndex, APropertyIndex, APropertyItemIndex: Integer;
-  const TargetCanvas: TCanvas; Column: TColumnIndex; var TextType: TVSTTextType);
+procedure OIPaintText_ActionSpecific(AEditingAction: PClkActionRec; ALiveEditingActionType: TClkAction; ANodeData: TNodeDataPropertyRec; ACategoryIndex, APropertyIndex, APropertyItemIndex: Integer;
+  const TargetCanvas: TCanvas; Column: TColumnIndex; var TextType: TVSTTextType; AOnAddToLog: TOnAddToLog);
 var
   ListOfPrimitiveFiles_Modified: TStringList;
   ClickTypeIsNotDrag: Boolean;
   PluginPropertyEnabled: string;
-begin  //
-  if ANodeData.Level = 0 then
-  begin
-    TargetCanvas.Font.Style := [fsBold];
-    Exit;
-  end;
-
-  if (ACategoryIndex = CCategory_ActionSpecific) and (Column = 1) then
-  begin
-    if (ANodeData.Level = CPropertyLevel) and (CurrentlyEditingActionType = acClick) then
+begin
+  if (ANodeData.Level = CPropertyLevel) and (ALiveEditingActionType = acClick) then
     begin
-      ClickTypeIsNotDrag := FEditingAction^.ClickOptions.ClickType <> CClickType_Drag;
+      ClickTypeIsNotDrag := AEditingAction^.ClickOptions.ClickType <> CClickType_Drag;
 
-      if ((APropertyIndex = CClick_XClickPointVar_PropIndex) and (FEditingAction^.ClickOptions.XClickPointReference <> xrefVar)) or
-         ((APropertyIndex = CClick_YClickPointVar_PropIndex) and (FEditingAction^.ClickOptions.YClickPointReference <> yrefVar)) or
+      if ((APropertyIndex = CClick_XClickPointVar_PropIndex) and (AEditingAction^.ClickOptions.XClickPointReference <> xrefVar)) or
+         ((APropertyIndex = CClick_YClickPointVar_PropIndex) and (AEditingAction^.ClickOptions.YClickPointReference <> yrefVar)) or
          ((APropertyIndex = CClick_XClickPointReferenceDest_PropIndex) and ClickTypeIsNotDrag) or
          ((APropertyIndex = CClick_YClickPointReferenceDest_PropIndex) and ClickTypeIsNotDrag) or
-         ((APropertyIndex = CClick_XClickPointVarDest_PropIndex) and ((FEditingAction^.ClickOptions.XClickPointReferenceDest <> xrefVar) or ClickTypeIsNotDrag)) or
-         ((APropertyIndex = CClick_YClickPointVarDest_PropIndex) and ((FEditingAction^.ClickOptions.YClickPointReferenceDest <> yrefVar) or ClickTypeIsNotDrag)) or
+         ((APropertyIndex = CClick_XClickPointVarDest_PropIndex) and ((AEditingAction^.ClickOptions.XClickPointReferenceDest <> xrefVar) or ClickTypeIsNotDrag)) or
+         ((APropertyIndex = CClick_YClickPointVarDest_PropIndex) and ((AEditingAction^.ClickOptions.YClickPointReferenceDest <> yrefVar) or ClickTypeIsNotDrag)) or
          ((APropertyIndex = CClick_XOffsetDest_PropIndex) and ClickTypeIsNotDrag) or
          ((APropertyIndex = CClick_YOffsetDest_PropIndex) and ClickTypeIsNotDrag) or
-         ((APropertyIndex = CClick_MouseWheelType_PropIndex) and (FEditingAction^.ClickOptions.ClickType <> CClickType_Wheel)) or
-         ((APropertyIndex = CClick_MouseWheelAmount_PropIndex) and (FEditingAction^.ClickOptions.ClickType <> CClickType_Wheel)) or
-         ((APropertyIndex = CClick_LeaveMouse_PropIndex) and (FEditingAction^.ClickOptions.ClickType in [CClickType_Drag, CClickType_Wheel])) or
-         ((APropertyIndex in [CClick_DelayAfterMovingToDestination_PropIndex .. CClick_MoveDuration_PropIndex]) and (FEditingAction^.ClickOptions.ClickType in [CClickType_ButtonDown, CClickType_ButtonUp, CClickType_Wheel])) then
+         ((APropertyIndex = CClick_MouseWheelType_PropIndex) and (AEditingAction^.ClickOptions.ClickType <> CClickType_Wheel)) or
+         ((APropertyIndex = CClick_MouseWheelAmount_PropIndex) and (AEditingAction^.ClickOptions.ClickType <> CClickType_Wheel)) or
+         ((APropertyIndex = CClick_LeaveMouse_PropIndex) and (AEditingAction^.ClickOptions.ClickType in [CClickType_Drag, CClickType_Wheel])) or
+         ((APropertyIndex in [CClick_DelayAfterMovingToDestination_PropIndex .. CClick_MoveDuration_PropIndex]) and (AEditingAction^.ClickOptions.ClickType in [CClickType_ButtonDown, CClickType_ButtonUp, CClickType_Wheel])) then
       begin
         TargetCanvas.Font.Color := clGray;
         Exit;
       end;
     end;  //acClick
 
-    if (ANodeData.Level = CPropertyLevel) and (CurrentlyEditingActionType in [acFindControl, acFindSubControl]) then
+    if (ANodeData.Level = CPropertyLevel) and (ALiveEditingActionType in [acFindControl, acFindSubControl]) then
     begin
       if (APropertyIndex in [CFindControl_MatchBitmapFiles_PropIndex, CFindControl_MatchPrimitiveFiles_PropIndex]) then
       begin
@@ -5803,36 +5888,36 @@ begin  //
                               CFindControl_ColorError_PropIndex .. CFindControl_AllowedColorErrorCount_PropIndex,
                               CFindControl_MatchPrimitiveFiles_PropIndex,
                               CFindControl_UseFastSearch_PropIndex .. CFindControl_MatchByHistogramSettings_PropIndex])
-                              and (CurrentlyEditingActionType = acFindControl)) then
+                              and (ALiveEditingActionType = acFindControl)) then
       begin
         TargetCanvas.Font.Color := clGray;
         Exit;
       end;
 
       if ((APropertyIndex in [CFindControl_SourceFileName_PropIndex, CFindControl_ImageSourceFileNameLocation_PropIndex])
-         and (FEditingAction^.FindControlOptions.ImageSource = isScreenshot)
-         and (CurrentlyEditingActionType = acFindSubControl)) then
+         and (AEditingAction^.FindControlOptions.ImageSource = isScreenshot)
+         and (ALiveEditingActionType = acFindSubControl)) then
       begin
         TargetCanvas.Font.Color := clGray;
         Exit;
       end;
     end;
 
-    if (ANodeData.Level = CPropertyLevel) and (CurrentlyEditingActionType = acWindowOperations) then
+    if (ANodeData.Level = CPropertyLevel) and (ALiveEditingActionType = acWindowOperations) then
       if APropertyIndex in [CWindowOperations_NewX_PropItemIndex .. CWindowOperations_NewSizeEnabled_PropItemIndex] then
-        if (FEditingAction^.WindowOperationsOptions.Operation <> woMoveResize) or
-          (not FEditingAction^.WindowOperationsOptions.NewPositionEnabled) and (APropertyIndex in [CWindowOperations_NewX_PropItemIndex, CWindowOperations_NewY_PropItemIndex]) or
-          (not FEditingAction^.WindowOperationsOptions.NewSizeEnabled) and (APropertyIndex in [CWindowOperations_NewWidth_PropItemIndex, CWindowOperations_NewHeight_PropItemIndex]) then
+        if (AEditingAction^.WindowOperationsOptions.Operation <> woMoveResize) or
+          (not AEditingAction^.WindowOperationsOptions.NewPositionEnabled) and (APropertyIndex in [CWindowOperations_NewX_PropItemIndex, CWindowOperations_NewY_PropItemIndex]) or
+          (not AEditingAction^.WindowOperationsOptions.NewSizeEnabled) and (APropertyIndex in [CWindowOperations_NewWidth_PropItemIndex, CWindowOperations_NewHeight_PropItemIndex]) then
         begin
           TargetCanvas.Font.Color := clGray;
           Exit;
         end;
 
-    if (ANodeData.Level = CPropertyItemLevel) and (CurrentlyEditingActionType in [acFindControl, acFindSubControl]) then
+    if (ANodeData.Level = CPropertyItemLevel) and (ALiveEditingActionType in [acFindControl, acFindSubControl]) then
     begin
       if APropertyIndex = CFindControl_MatchCriteria_PropIndex then
-        if (CurrentlyEditingActionType = acFindControl) and (APropertyItemIndex in [CFindControl_MatchCriteria_WillMatchBitmapText_PropItemIndex, CFindControl_MatchCriteria_WillMatchBitmapFiles_PropItemIndex, CFindControl_MatchCriteria_WillMatchPrimitiveFiles_PropItemIndex]) or
-           (CurrentlyEditingActionType = acFindSubControl) and (APropertyItemIndex in [CFindControl_MatchCriteria_WillMatchText_PropItemIndex, CFindControl_MatchCriteria_WillMatchClassName_PropItemIndex]) then
+        if (ALiveEditingActionType = acFindControl) and (APropertyItemIndex in [CFindControl_MatchCriteria_WillMatchBitmapText_PropItemIndex, CFindControl_MatchCriteria_WillMatchBitmapFiles_PropItemIndex, CFindControl_MatchCriteria_WillMatchPrimitiveFiles_PropItemIndex]) or
+           (ALiveEditingActionType = acFindSubControl) and (APropertyItemIndex in [CFindControl_MatchCriteria_WillMatchText_PropItemIndex, CFindControl_MatchCriteria_WillMatchClassName_PropItemIndex]) then
         begin
           TargetCanvas.Font.Color := clGray;
           Exit;;
@@ -5842,7 +5927,7 @@ begin  //
       begin
         ListOfPrimitiveFiles_Modified := TStringList.Create;   //instead of parsing this list on every tree paint action, the "modified" flags could be stored in some array of (paths + modified)
         try
-          ListOfPrimitiveFiles_Modified.Text := FEditingAction^.FindControlOptions.MatchPrimitiveFiles_Modified;
+          ListOfPrimitiveFiles_Modified.Text := AEditingAction^.FindControlOptions.MatchPrimitiveFiles_Modified;
 
           try
             if APropertyItemIndex < ListOfPrimitiveFiles_Modified.Count then
@@ -5866,7 +5951,7 @@ begin  //
         end;
       end; //primitives
 
-      if CurrentlyEditingActionType = acFindControl then
+      if ALiveEditingActionType = acFindControl then
         if APropertyIndex in [CFindControl_MatchBitmapText_PropIndex .. CFindControl_MatchBitmapAlgorithmSettings_PropIndex,
                               CFindControl_MatchPrimitiveFiles_PropIndex, CFindControl_MatchByHistogramSettings_PropIndex] then     //not that many subproperties
         begin
@@ -5875,60 +5960,84 @@ begin  //
         end;
 
       if (APropertyIndex in [CFindControl_MatchBitmapAlgorithmSettings_PropIndex]) and
-         (FEditingAction^.FindControlOptions.MatchBitmapAlgorithm <> mbaXYMultipleAndOffsets) then
+         (AEditingAction^.FindControlOptions.MatchBitmapAlgorithm <> mbaXYMultipleAndOffsets) then
       begin
         TargetCanvas.Font.Color := clGray;
         Exit;
       end;
 
-      if CurrentlyEditingActionType = acFindSubControl then
+      if ALiveEditingActionType = acFindSubControl then
         if (APropertyIndex in [CFindControl_MatchByHistogramSettings_PropIndex]) and
-           (FEditingAction^.FindControlOptions.MatchBitmapAlgorithm <> mbaRawHistogramZones) then
+           (AEditingAction^.FindControlOptions.MatchBitmapAlgorithm <> mbaRawHistogramZones) then
         begin
           TargetCanvas.Font.Color := clGray;
           Exit;
         end;
     end; //acFindControl, acFindSubControl
 
-    if (ANodeData.Level = CPropertyItemLevel) and (CurrentlyEditingActionType = acCallTemplate) then
+    if (ANodeData.Level = CPropertyItemLevel) and (ALiveEditingActionType = acCallTemplate) then
       if APropertyIndex = CCallTemplate_CallTemplateLoop_PropIndex then
         if APropertyItemIndex in [CCallTemplate_CallTemplateLoop_Counter_PropItemIndex .. CCallTemplate_CallTemplateLoop_EvalBreakPosition_PropItemIndex] then
-          if not FEditingAction^.CallTemplateOptions.CallTemplateLoop.Enabled then
+          if not AEditingAction^.CallTemplateOptions.CallTemplateLoop.Enabled then
           begin
             TargetCanvas.Font.Color := clGray;
             Exit;
           end;
 
-    if (ANodeData.Level = CPropertyLevel) and (CurrentlyEditingActionType = acPlugin) then
+    if (ANodeData.Level = CPropertyLevel) and (ALiveEditingActionType = acPlugin) then
     begin
-      PluginPropertyEnabled := GetPluginPropertyAttribute(FEditingAction.PluginOptions.ListOfPropertiesAndTypes, CPluginPropertyAttr_Enabled, APropertyIndex);
+      PluginPropertyEnabled := GetPluginPropertyAttribute(AEditingAction.PluginOptions.ListOfPropertiesAndTypes, CPluginPropertyAttr_Enabled, APropertyIndex);
       if PluginPropertyEnabled <> '' then
       begin
         try
-          PluginPropertyEnabled := PropertyValueReplace(PluginPropertyEnabled, FEditingAction.PluginOptions.ListOfPropertiesAndValues);
+          PluginPropertyEnabled := PropertyValueReplace(PluginPropertyEnabled, AEditingAction.PluginOptions.ListOfPropertiesAndValues);
         except
           on E: Exception do
-            DoOnAddToLog('Cannot evaluate plugin property value: ' + E.Message);
+            AOnAddToLog('Cannot evaluate plugin property value: ' + E.Message);
         end;
-        if not ClickerUtils.EvaluateActionCondition(PluginPropertyEnabled, DummyEvaluateReplacements) then
+        if not ClickerUtils.EvaluateActionCondition(PluginPropertyEnabled, TfrClickerActions.DummyEvaluateReplacements) then
         begin
           TargetCanvas.Font.Color := clGray;
           Exit;
         end;
       end;
     end;
-  end;  //CCategory_ActionSpecific
 end;
 
 
-procedure TfrClickerActions.HandleOnOIBeforeCellPaint(ANodeData: TNodeDataPropertyRec; ACategoryIndex, APropertyIndex, APropertyItemIndex: Integer;
-  TargetCanvas: TCanvas; Column: TColumnIndex; CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
+procedure TfrClickerActions.HandleOnOIPaintText(ANodeData: TNodeDataPropertyRec; ACategoryIndex, APropertyIndex, APropertyItemIndex: Integer;
+  const TargetCanvas: TCanvas; Column: TColumnIndex; var TextType: TVSTTextType);
+begin  //
+  if ANodeData.Level = 0 then
+  begin
+    TargetCanvas.Font.Style := [fsBold];
+    Exit;
+  end;
+
+  if Column = 1 then
+  begin
+    case ACategoryIndex of
+      CCategory_Common:
+        ;
+
+      CCategory_ActionSpecific:
+        OIPaintText_ActionSpecific(FEditingAction, CurrentlyEditingActionType, ANodeData, ACategoryIndex, APropertyIndex, APropertyItemIndex, TargetCanvas, Column, TextType, DoOnAddToLog);
+
+      CCategory_EditedAction:
+        OIPaintText_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ANodeData, ACategoryIndex, APropertyIndex, APropertyItemIndex, TargetCanvas, Column, TextType, DoOnAddToLog);
+    end;
+  end;
+end;
+
+
+procedure OIBeforeCellPaint_ActionSpecific(ALiveEditingActionType: TClkAction; ACategoryIndex, APropertyIndex, APropertyItemIndex: Integer;
+  TargetCanvas: TCanvas; Column: TColumnIndex; CellRect: TRect; ASelectedBMPTextTabIdx: Integer);
 var
   ItemIndexDiv: Integer;
   NewColor: TColor;
 begin
-  if CurrentlyEditingActionType in [acFindControl, acFindSubControl] then
-    if (ACategoryIndex = CCategory_ActionSpecific) and (APropertyIndex = CFindControl_MatchBitmapText_PropIndex) then
+  if ALiveEditingActionType in [acFindControl, acFindSubControl] then
+    if APropertyIndex = CFindControl_MatchBitmapText_PropIndex then
     begin
       ItemIndexDiv := APropertyItemIndex div CPropCount_FindControlMatchBitmapText;
 
@@ -5937,7 +6046,7 @@ begin
       else
         NewColor := $97E0FF;   //light orange
 
-      if ItemIndexDiv = frClickerFindControl.SelectedBMPTextTab then
+      if ItemIndexDiv = ASelectedBMPTextTabIdx then
         NewColor := ModifyBrightness(NewColor, 30, boDec);
 
       TargetCanvas.Pen.Color := NewColor;
@@ -5947,97 +6056,149 @@ begin
 end;
 
 
-procedure TfrClickerActions.HandleOnOIAfterCellPaint(ANodeData: TNodeDataPropertyRec; ACategoryIndex, APropertyIndex, APropertyItemIndex: Integer;
-  TargetCanvas: TCanvas; Column: TColumnIndex; const CellRect: TRect);
+procedure TfrClickerActions.HandleOnOIBeforeCellPaint(ANodeData: TNodeDataPropertyRec; ACategoryIndex, APropertyIndex, APropertyItemIndex: Integer;
+  TargetCanvas: TCanvas; Column: TColumnIndex; CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
+begin
+  case ACategoryIndex of
+    CCategory_Common:
+      ;
+
+    CCategory_ActionSpecific:
+      OIBeforeCellPaint_ActionSpecific(CurrentlyEditingActionType, ACategoryIndex, APropertyIndex, APropertyItemIndex, TargetCanvas, Column, CellRect, frClickerFindControl.SelectedBMPTextTab);
+
+    CCategory_EditedAction:
+      OIBeforeCellPaint_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ACategoryIndex, APropertyIndex, APropertyItemIndex, TargetCanvas, Column, CellRect, frClickerFindControl.SelectedBMPTextTab);
+  end;
+end;
+
+
+procedure OIAfterCellPaint_ActionSpecific(AEditingAction: PClkActionRec; ALiveEditingActionType: TClkAction; ACategoryIndex, APropertyIndex, APropertyItemIndex: Integer; TargetCanvas: TCanvas; Column: TColumnIndex; const CellRect: TRect; ASrcImgLst: TImageList);
 const
   CIconYOffset = 3;
 var
   CurrentIconPos: Integer;
 begin
-  if CurrentlyEditingActionType in [acFindControl, acFindSubControl] then
-    if (ACategoryIndex = CCategory_ActionSpecific) and (APropertyIndex = CFindControl_MatchCriteria_PropIndex) and (APropertyItemIndex = -1) then
+  if ALiveEditingActionType in [acFindControl, acFindSubControl] then
+    if (APropertyIndex = CFindControl_MatchCriteria_PropIndex) and (APropertyItemIndex = -1) then
       if Column = 1 then
       begin
         CurrentIconPos := CellRect.Left + 2;
 
-        if FEditingAction^.FindControlOptions.MatchCriteria.WillMatchText then
+        if AEditingAction^.FindControlOptions.MatchCriteria.WillMatchText then
         begin
-          imglstUsedMatchCriteria.Draw(TargetCanvas, CurrentIconPos, CIconYOffset, CFindControl_MatchCriteria_WillMatchText_PropItemIndex, dsNormal, itImage);
+          ASrcImgLst.Draw(TargetCanvas, CurrentIconPos, CIconYOffset, CFindControl_MatchCriteria_WillMatchText_PropItemIndex, dsNormal, itImage);
           Inc(CurrentIconPos, 18);
         end;
 
-        if FEditingAction^.FindControlOptions.MatchCriteria.WillMatchClassName then
+        if AEditingAction^.FindControlOptions.MatchCriteria.WillMatchClassName then
         begin
-          imglstUsedMatchCriteria.Draw(TargetCanvas, CurrentIconPos, CIconYOffset, CFindControl_MatchCriteria_WillMatchClassName_PropItemIndex, dsNormal, itImage);
+          ASrcImgLst.Draw(TargetCanvas, CurrentIconPos, CIconYOffset, CFindControl_MatchCriteria_WillMatchClassName_PropItemIndex, dsNormal, itImage);
           Inc(CurrentIconPos, 18);
         end;
 
-        if FEditingAction^.FindControlOptions.MatchCriteria.WillMatchBitmapText then
+        if AEditingAction^.FindControlOptions.MatchCriteria.WillMatchBitmapText then
         begin
-          imglstUsedMatchCriteria.Draw(TargetCanvas, CurrentIconPos, CIconYOffset, CFindControl_MatchCriteria_WillMatchBitmapText_PropItemIndex, dsNormal, itImage);
+          ASrcImgLst.Draw(TargetCanvas, CurrentIconPos, CIconYOffset, CFindControl_MatchCriteria_WillMatchBitmapText_PropItemIndex, dsNormal, itImage);
           Inc(CurrentIconPos, 18);
         end;
 
-        if FEditingAction^.FindControlOptions.MatchCriteria.WillMatchBitmapFiles then
+        if AEditingAction^.FindControlOptions.MatchCriteria.WillMatchBitmapFiles then
         begin
-          imglstUsedMatchCriteria.Draw(TargetCanvas, CurrentIconPos, CIconYOffset, CFindControl_MatchCriteria_WillMatchBitmapFiles_PropItemIndex, dsNormal, itImage);
+          ASrcImgLst.Draw(TargetCanvas, CurrentIconPos, CIconYOffset, CFindControl_MatchCriteria_WillMatchBitmapFiles_PropItemIndex, dsNormal, itImage);
           Inc(CurrentIconPos, 18);
         end;
 
-        if FEditingAction^.FindControlOptions.MatchCriteria.WillMatchPrimitiveFiles then
+        if AEditingAction^.FindControlOptions.MatchCriteria.WillMatchPrimitiveFiles then
         begin
-          imglstUsedMatchCriteria.Draw(TargetCanvas, CurrentIconPos, CIconYOffset, CFindControl_MatchCriteria_WillMatchPrimitiveFiles_PropItemIndex, dsNormal, itImage);
+          ASrcImgLst.Draw(TargetCanvas, CurrentIconPos, CIconYOffset, CFindControl_MatchCriteria_WillMatchPrimitiveFiles_PropItemIndex, dsNormal, itImage);
           Inc(CurrentIconPos, 18);
         end;
       end;
 end;
 
 
-procedure TfrClickerActions.HandleOnTextEditorMouseDown(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer;
-  Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
-var
-  ItemIndexMod, ItemIndexDiv: Integer;
+procedure TfrClickerActions.HandleOnOIAfterCellPaint(ANodeData: TNodeDataPropertyRec; ACategoryIndex, APropertyIndex, APropertyItemIndex: Integer;
+  TargetCanvas: TCanvas; Column: TColumnIndex; const CellRect: TRect);
 begin
-  if (ACategoryIndex = CCategory_ActionSpecific) and (APropertyIndex = CFindControl_InitialRectangle_PropIndex) then
-  begin
-    case AItemIndex of
-      CFindControl_InitialRectangle_LeftOffset_PropItemIndex:
-        frClickerFindControl.UpdateOnSearchRectLeftOffsetMouseDown(FEditingAction^.FindControlOptions.InitialRectangle, Sender as TVTEdit, Button, Shift, X, Y);
+  case ACategoryIndex of
+    CCategory_Common:
+      ;
 
-      CFindControl_InitialRectangle_TopOffset_PropItemIndex:
-        frClickerFindControl.UpdateOnSearchRectTopOffsetMouseDown(FEditingAction^.FindControlOptions.InitialRectangle, Sender as TVTEdit, Button, Shift, X, Y);
+    CCategory_ActionSpecific:
+      OIAfterCellPaint_ActionSpecific(FEditingAction, CurrentlyEditingActionType, ACategoryIndex, APropertyIndex, APropertyItemIndex, TargetCanvas, Column, CellRect, imglstUsedMatchCriteria);
 
-      CFindControl_InitialRectangle_RightOffset_PropItemIndex:
-        frClickerFindControl.UpdateOnSearchRectRightOffsetMouseDown(FEditingAction^.FindControlOptions.InitialRectangle, Sender as TVTEdit, Button, Shift, X, Y);
-
-      CFindControl_InitialRectangle_BottomOffset_PropItemIndex:
-        frClickerFindControl.UpdateOnSearchRectBottomOffsetMouseDown(FEditingAction^.FindControlOptions.InitialRectangle, Sender as TVTEdit, Button, Shift, X, Y);
-    end;
-  end;
-
-  if (ACategoryIndex = CCategory_ActionSpecific) and (APropertyIndex = CFindControl_MatchBitmapText_PropIndex) then
-  begin
-    ItemIndexMod := AItemIndex mod CPropCount_FindControlMatchBitmapText;
-    ItemIndexDiv := AItemIndex div CPropCount_FindControlMatchBitmapText;
-
-    case ItemIndexMod of
-      CFindControl_MatchBitmapText_CropLeft:
-        frClickerFindControl.UpdateOnTextCroppingLeftMouseDown(FEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv], Sender as TVTEdit, Button, Shift, X, Y);
-
-      CFindControl_MatchBitmapText_CropTop:
-        frClickerFindControl.UpdateOnTextCroppingTopMouseDown(FEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv], Sender as TVTEdit, Button, Shift, X, Y);
-
-      CFindControl_MatchBitmapText_CropRight:
-        frClickerFindControl.UpdateOnTextCroppingRightMouseDown(FEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv], Sender as TVTEdit, Button, Shift, X, Y);
-
-      CFindControl_MatchBitmapText_CropBottom:
-        frClickerFindControl.UpdateOnTextCroppingBottomMouseDown(FEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv], Sender as TVTEdit, Button, Shift, X, Y);
-    end;
+    CCategory_EditedAction:
+      OIAfterCellPaint_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ACategoryIndex, APropertyIndex, APropertyItemIndex, TargetCanvas, Column, CellRect, imglstUsedMatchCriteria);
   end;
 end;
 
 
-function TfrClickerActions.HandleOnTextEditorMouseMove(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer;
+procedure TfrClickerActions.TextEditorMouseDown_ActionSpecific(AEditingAction: PClkActionRec; ACategoryIndex, APropertyIndex, AItemIndex: Integer;
+  Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var
+  ItemIndexMod, ItemIndexDiv: Integer;
+begin
+  case APropertyIndex of
+    CFindControl_InitialRectangle_PropIndex:
+    begin
+      case AItemIndex of
+        CFindControl_InitialRectangle_LeftOffset_PropItemIndex:
+          frClickerFindControl.UpdateOnSearchRectLeftOffsetMouseDown(AEditingAction^.FindControlOptions.InitialRectangle, Sender as TVTEdit, Button, Shift, X, Y);
+
+        CFindControl_InitialRectangle_TopOffset_PropItemIndex:
+          frClickerFindControl.UpdateOnSearchRectTopOffsetMouseDown(AEditingAction^.FindControlOptions.InitialRectangle, Sender as TVTEdit, Button, Shift, X, Y);
+
+        CFindControl_InitialRectangle_RightOffset_PropItemIndex:
+          frClickerFindControl.UpdateOnSearchRectRightOffsetMouseDown(AEditingAction^.FindControlOptions.InitialRectangle, Sender as TVTEdit, Button, Shift, X, Y);
+
+        CFindControl_InitialRectangle_BottomOffset_PropItemIndex:
+          frClickerFindControl.UpdateOnSearchRectBottomOffsetMouseDown(AEditingAction^.FindControlOptions.InitialRectangle, Sender as TVTEdit, Button, Shift, X, Y);
+      end;
+    end;
+
+    CFindControl_MatchBitmapText_PropIndex:
+    begin
+      ItemIndexMod := AItemIndex mod CPropCount_FindControlMatchBitmapText;
+      ItemIndexDiv := AItemIndex div CPropCount_FindControlMatchBitmapText;
+
+      case ItemIndexMod of
+        CFindControl_MatchBitmapText_CropLeft:
+          frClickerFindControl.UpdateOnTextCroppingLeftMouseDown(AEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv], Sender as TVTEdit, Button, Shift, X, Y);
+
+        CFindControl_MatchBitmapText_CropTop:
+          frClickerFindControl.UpdateOnTextCroppingTopMouseDown(AEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv], Sender as TVTEdit, Button, Shift, X, Y);
+
+        CFindControl_MatchBitmapText_CropRight:
+          frClickerFindControl.UpdateOnTextCroppingRightMouseDown(AEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv], Sender as TVTEdit, Button, Shift, X, Y);
+
+        CFindControl_MatchBitmapText_CropBottom:
+          frClickerFindControl.UpdateOnTextCroppingBottomMouseDown(AEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv], Sender as TVTEdit, Button, Shift, X, Y);
+      end;
+    end;
+
+    else
+      ;
+  end;
+end;
+
+
+procedure TfrClickerActions.HandleOnTextEditorMouseDown(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer;
+  Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  case ACategoryIndex of
+    CCategory_Common:
+      ;
+
+    CCategory_ActionSpecific:
+      TextEditorMouseDown_ActionSpecific(FEditingAction, ACategoryIndex, APropertyIndex, AItemIndex, Sender, Button, Shift, X, Y);
+
+    CCategory_EditedAction:
+      TextEditorMouseDown_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, ACategoryIndex, APropertyIndex, AItemIndex, Sender, Button, Shift, X, Y);
+  end;
+end;
+
+
+function TfrClickerActions.TextEditorMouseMove_ActionSpecific(AEditingAction: PClkActionRec; ACategoryIndex, APropertyIndex, AItemIndex: Integer;
   Sender: TObject; Shift: TShiftState; X, Y: Integer): Boolean;
 var
   ItemIndexMod, ItemIndexDiv: Integer;
@@ -6045,144 +6206,179 @@ var
 begin
   Result := False;
 
-  if (ACategoryIndex = CCategory_ActionSpecific) and (APropertyIndex = CFindControl_InitialRectangle_PropIndex) then
-  begin
-    case AItemIndex of
-      CFindControl_InitialRectangle_LeftOffset_PropItemIndex:
-      begin
-        OldValue := FEditingAction^.FindControlOptions.InitialRectangle.LeftOffset;
-        frClickerFindControl.UpdateOnSearchRectLeftOffsetMouseMove(FEditingAction^.FindControlOptions.InitialRectangle, Sender as TVTEdit, Shift, X, Y);
-        TriggerOnControlsModified(FEditingAction^.FindControlOptions.InitialRectangle.LeftOffset <> OldValue);
-        Result := True;
-      end;
+  case APropertyIndex of
+    CFindControl_InitialRectangle_PropIndex:
+    begin
+      case AItemIndex of
+        CFindControl_InitialRectangle_LeftOffset_PropItemIndex:
+        begin
+          OldValue := AEditingAction^.FindControlOptions.InitialRectangle.LeftOffset;
+          frClickerFindControl.UpdateOnSearchRectLeftOffsetMouseMove(AEditingAction^.FindControlOptions.InitialRectangle, Sender as TVTEdit, Shift, X, Y);
+          TriggerOnControlsModified(AEditingAction^.FindControlOptions.InitialRectangle.LeftOffset <> OldValue);
+          Result := True;
+        end;
 
-      CFindControl_InitialRectangle_TopOffset_PropItemIndex:
-      begin
-        OldValue := FEditingAction^.FindControlOptions.InitialRectangle.TopOffset;
-        frClickerFindControl.UpdateOnSearchRectTopOffsetMouseMove(FEditingAction^.FindControlOptions.InitialRectangle, Sender as TVTEdit, Shift, X, Y);
-        TriggerOnControlsModified(FEditingAction^.FindControlOptions.InitialRectangle.TopOffset <> OldValue);
-        Result := True;
-      end;
+        CFindControl_InitialRectangle_TopOffset_PropItemIndex:
+        begin
+          OldValue := AEditingAction^.FindControlOptions.InitialRectangle.TopOffset;
+          frClickerFindControl.UpdateOnSearchRectTopOffsetMouseMove(AEditingAction^.FindControlOptions.InitialRectangle, Sender as TVTEdit, Shift, X, Y);
+          TriggerOnControlsModified(AEditingAction^.FindControlOptions.InitialRectangle.TopOffset <> OldValue);
+          Result := True;
+        end;
 
-      CFindControl_InitialRectangle_RightOffset_PropItemIndex:
-      begin
-        OldValue := FEditingAction^.FindControlOptions.InitialRectangle.RightOffset;
-        frClickerFindControl.UpdateOnSearchRectRightOffsetMouseMove(FEditingAction^.FindControlOptions.InitialRectangle, Sender as TVTEdit, Shift, X, Y);
-        TriggerOnControlsModified(FEditingAction^.FindControlOptions.InitialRectangle.RightOffset <> OldValue);
-        Result := True;
-      end;
+        CFindControl_InitialRectangle_RightOffset_PropItemIndex:
+        begin
+          OldValue := AEditingAction^.FindControlOptions.InitialRectangle.RightOffset;
+          frClickerFindControl.UpdateOnSearchRectRightOffsetMouseMove(AEditingAction^.FindControlOptions.InitialRectangle, Sender as TVTEdit, Shift, X, Y);
+          TriggerOnControlsModified(AEditingAction^.FindControlOptions.InitialRectangle.RightOffset <> OldValue);
+          Result := True;
+        end;
 
-      CFindControl_InitialRectangle_BottomOffset_PropItemIndex:
-      begin
-        OldValue := FEditingAction^.FindControlOptions.InitialRectangle.BottomOffset;
-        frClickerFindControl.UpdateOnSearchRectBottomOffsetMouseMove(FEditingAction^.FindControlOptions.InitialRectangle, Sender as TVTEdit, Shift, X, Y);
-        TriggerOnControlsModified(FEditingAction^.FindControlOptions.InitialRectangle.BottomOffset <> OldValue);
-        Result := True;
-      end;
-    end;
-  end;
-
-  if (ACategoryIndex = CCategory_ActionSpecific) and (APropertyIndex = CFindControl_MatchBitmapText_PropIndex) then
-  begin
-    ItemIndexMod := AItemIndex mod CPropCount_FindControlMatchBitmapText;
-    ItemIndexDiv := AItemIndex div CPropCount_FindControlMatchBitmapText;
-
-    case ItemIndexMod of
-      CFindControl_MatchBitmapText_CropLeft:
-      begin
-        OldValue := FEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv].CropLeft;
-        frClickerFindControl.UpdateOnTextCroppingLeftMouseMove(FEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv], Sender as TVTEdit, Shift, X, Y, ItemIndexDiv);
-        frClickerFindControl.SelectedBMPTextTab := ItemIndexDiv;
-        TriggerOnControlsModified(FEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv].CropLeft <> OldValue);
-        Result := True;
-      end;
-
-      CFindControl_MatchBitmapText_CropTop:
-      begin
-        OldValue := FEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv].CropTop;
-        frClickerFindControl.UpdateOnTextCroppingTopMouseMove(FEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv], Sender as TVTEdit, Shift, X, Y, ItemIndexDiv);
-        frClickerFindControl.SelectedBMPTextTab := ItemIndexDiv;
-        TriggerOnControlsModified(FEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv].CropTop <> OldValue);
-        Result := True;
-      end;
-
-      CFindControl_MatchBitmapText_CropRight:
-      begin
-        OldValue := FEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv].CropRight;
-        frClickerFindControl.UpdateOnTextCroppingRightMouseMove(FEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv], Sender as TVTEdit, Shift, X, Y, ItemIndexDiv);
-        frClickerFindControl.SelectedBMPTextTab := ItemIndexDiv;
-        TriggerOnControlsModified(FEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv].CropRight <> OldValue);
-        Result := True;
-      end;
-
-      CFindControl_MatchBitmapText_CropBottom:
-      begin
-        OldValue := FEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv].CropBottom;
-        frClickerFindControl.UpdateOnTextCroppingBottomMouseMove(FEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv], Sender as TVTEdit, Shift, X, Y, ItemIndexDiv);
-        frClickerFindControl.SelectedBMPTextTab := ItemIndexDiv;
-        TriggerOnControlsModified(FEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv].CropBottom <> OldValue);
-        Result := True;
+        CFindControl_InitialRectangle_BottomOffset_PropItemIndex:
+        begin
+          OldValue := AEditingAction^.FindControlOptions.InitialRectangle.BottomOffset;
+          frClickerFindControl.UpdateOnSearchRectBottomOffsetMouseMove(AEditingAction^.FindControlOptions.InitialRectangle, Sender as TVTEdit, Shift, X, Y);
+          TriggerOnControlsModified(AEditingAction^.FindControlOptions.InitialRectangle.BottomOffset <> OldValue);
+          Result := True;
+        end;
       end;
     end;
+
+    CFindControl_MatchBitmapText_PropIndex:
+    begin
+      ItemIndexMod := AItemIndex mod CPropCount_FindControlMatchBitmapText;
+      ItemIndexDiv := AItemIndex div CPropCount_FindControlMatchBitmapText;
+
+      case ItemIndexMod of
+        CFindControl_MatchBitmapText_CropLeft:
+        begin
+          OldValue := AEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv].CropLeft;
+          frClickerFindControl.UpdateOnTextCroppingLeftMouseMove(AEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv], Sender as TVTEdit, Shift, X, Y, ItemIndexDiv);
+          frClickerFindControl.SelectedBMPTextTab := ItemIndexDiv;
+          TriggerOnControlsModified(AEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv].CropLeft <> OldValue);
+          Result := True;
+        end;
+
+        CFindControl_MatchBitmapText_CropTop:
+        begin
+          OldValue := AEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv].CropTop;
+          frClickerFindControl.UpdateOnTextCroppingTopMouseMove(AEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv], Sender as TVTEdit, Shift, X, Y, ItemIndexDiv);
+          frClickerFindControl.SelectedBMPTextTab := ItemIndexDiv;
+          TriggerOnControlsModified(AEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv].CropTop <> OldValue);
+          Result := True;
+        end;
+
+        CFindControl_MatchBitmapText_CropRight:
+        begin
+          OldValue := AEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv].CropRight;
+          frClickerFindControl.UpdateOnTextCroppingRightMouseMove(AEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv], Sender as TVTEdit, Shift, X, Y, ItemIndexDiv);
+          frClickerFindControl.SelectedBMPTextTab := ItemIndexDiv;
+          TriggerOnControlsModified(AEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv].CropRight <> OldValue);
+          Result := True;
+        end;
+
+        CFindControl_MatchBitmapText_CropBottom:
+        begin
+          OldValue := AEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv].CropBottom;
+          frClickerFindControl.UpdateOnTextCroppingBottomMouseMove(AEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv], Sender as TVTEdit, Shift, X, Y, ItemIndexDiv);
+          frClickerFindControl.SelectedBMPTextTab := ItemIndexDiv;
+          TriggerOnControlsModified(AEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv].CropBottom <> OldValue);
+          Result := True;
+        end;
+      end;
+    end;
+
+    else
+      ;
+  end; //case
+end;
+
+
+function TfrClickerActions.HandleOnTextEditorMouseMove(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer;
+  Sender: TObject; Shift: TShiftState; X, Y: Integer): Boolean;
+begin
+  Result := False;
+
+  case ACategoryIndex of
+    CCategory_Common:
+      ;
+
+    CCategory_ActionSpecific:
+      Result := TextEditorMouseMove_ActionSpecific(FEditingAction, ACategoryIndex, APropertyIndex, AItemIndex, Sender, Shift, X, Y);
+
+    CCategory_EditedAction:
+      Result := TextEditorMouseMove_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, ACategoryIndex, APropertyIndex, AItemIndex, Sender, Shift, X, Y);
   end;
 end;
 
 
-procedure TfrClickerActions.HandleOnOITextEditorKeyUp(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer;
-  Sender: TObject; var Key: Word; Shift: TShiftState);
+procedure TfrClickerActions.OITextEditorKeyUp_ActionSpecific(AEditingAction: PClkActionRec; ACategoryIndex, APropertyIndex, AItemIndex: Integer; Sender: TObject);
 var
   i: Integer;
   ItemIndexMod, ItemIndexDiv: Integer;
   OldValue, NewValue: string;
 begin
-  if ACategoryIndex = CCategory_ActionSpecific then
-  begin
-    if FEditingAction^.ActionOptions.Action in [acFindControl, acFindSubControl] then
-      case APropertyIndex of
-        CFindControl_MatchText_PropIndex:
-        begin
-          TriggerOnControlsModified(FEditingAction^.FindControlOptions.MatchText <> TVTEdit(Sender).Text);
-          FEditingAction^.FindControlOptions.MatchText := TVTEdit(Sender).Text;
+  if AEditingAction^.ActionOptions.Action in [acFindControl, acFindSubControl] then
+    case APropertyIndex of
+      CFindControl_MatchText_PropIndex:
+      begin
+        TriggerOnControlsModified(AEditingAction^.FindControlOptions.MatchText <> TVTEdit(Sender).Text);
+        AEditingAction^.FindControlOptions.MatchText := TVTEdit(Sender).Text;
 
-          frClickerFindControl.PreviewText;
-          for i := 0 to Length(FEditingAction^.FindControlOptions.MatchBitmapText) - 1 do
-            frClickerFindControl.BMPTextFontProfiles[i].UpdateSelectionLabelsFromCropInfo(FEditingAction^.FindControlOptions.MatchBitmapText[i]);
+        frClickerFindControl.PreviewText;
+        for i := 0 to Length(AEditingAction^.FindControlOptions.MatchBitmapText) - 1 do
+          frClickerFindControl.BMPTextFontProfiles[i].UpdateSelectionLabelsFromCropInfo(AEditingAction^.FindControlOptions.MatchBitmapText[i]);
+      end;
+
+      CFindControl_MatchBitmapText_PropIndex:
+      begin
+        ItemIndexMod := AItemIndex mod CPropCount_FindControlMatchBitmapText;
+        ItemIndexDiv := AItemIndex div CPropCount_FindControlMatchBitmapText;
+
+        if ItemIndexMod = CFindControl_MatchBitmapText_ProfileName_PropItemIndex then
+        begin
+          AEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv].ProfileName := TVTEdit(Sender).Text;
+          frClickerFindControl.UpdateFontProfileName(ItemIndexDiv, TVTEdit(Sender).Text);
         end;
 
-        CFindControl_MatchBitmapText_PropIndex:
-        begin
-          ItemIndexMod := AItemIndex mod CPropCount_FindControlMatchBitmapText;
-          ItemIndexDiv := AItemIndex div CPropCount_FindControlMatchBitmapText;
+        frClickerFindControl.PreviewText;
+      end;
 
-          if ItemIndexMod = CFindControl_MatchBitmapText_ProfileName_PropItemIndex then
-          begin
-            FEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv].ProfileName := TVTEdit(Sender).Text;
-            frClickerFindControl.UpdateFontProfileName(ItemIndexDiv, TVTEdit(Sender).Text);
-          end;
+      CFindControl_MatchBitmapAlgorithmSettings_PropIndex:
+      begin
+        OldValue := GetActionValueStr_FindControl_MatchBitmapAlgorithmSettings(AEditingAction, AItemIndex);
+        NewValue := TVTEdit(Sender).Text;
+        SetActionValueStr_FindControl_MatchBitmapAlgorithmSettings(AEditingAction, NewValue, AItemIndex);
+        TriggerOnControlsModified(NewValue <> OldValue);
 
-          frClickerFindControl.PreviewText;
-        end;
+        frClickerFindControl.UpdateSearchAreaLabelsFromKeysOnInitRect(AEditingAction^.FindControlOptions.InitialRectangle); //call this, to update the grid
+      end;
 
-        CFindControl_MatchBitmapAlgorithmSettings_PropIndex:
-        begin
-          OldValue := GetActionValueStr_FindControl_MatchBitmapAlgorithmSettings(FEditingAction, AItemIndex);
-          NewValue := TVTEdit(Sender).Text;
-          SetActionValueStr_FindControl_MatchBitmapAlgorithmSettings(FEditingAction, NewValue, AItemIndex);
-          TriggerOnControlsModified(NewValue <> OldValue);
+      CFindControl_InitialRectangle_PropIndex:
+      begin
+        OldValue := GetActionValueStr_FindControl_InitialRectangle(AEditingAction, AItemIndex);
+        NewValue := TVTEdit(Sender).Text;
+        SetActionValueStr_FindControl_InitialRectangle(AEditingAction, NewValue, AItemIndex);
+        TriggerOnControlsModified(NewValue <> OldValue);
 
-          frClickerFindControl.UpdateSearchAreaLabelsFromKeysOnInitRect(FEditingAction^.FindControlOptions.InitialRectangle); //call this, to update the grid
-        end;
+        frClickerFindControl.UpdateSearchAreaLabelsFromKeysOnInitRect(AEditingAction^.FindControlOptions.InitialRectangle);
+      end; //init rect
+    end; //case
+end;
 
-        CFindControl_InitialRectangle_PropIndex:
-        begin
-          OldValue := GetActionValueStr_FindControl_InitialRectangle(FEditingAction, AItemIndex);
-          NewValue := TVTEdit(Sender).Text;
-          SetActionValueStr_FindControl_InitialRectangle(FEditingAction, NewValue, AItemIndex);
-          TriggerOnControlsModified(NewValue <> OldValue);
 
-          frClickerFindControl.UpdateSearchAreaLabelsFromKeysOnInitRect(FEditingAction^.FindControlOptions.InitialRectangle);
-        end; //init rect
-      end; //case
+procedure TfrClickerActions.HandleOnOITextEditorKeyUp(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer;
+  Sender: TObject; var Key: Word; Shift: TShiftState);
+begin
+  case ACategoryIndex of
+    CCategory_Common:
+      ;
+
+    CCategory_ActionSpecific:
+      OITextEditorKeyUp_ActionSpecific(FEditingAction, ACategoryIndex, APropertyIndex, AItemIndex, Sender);
+
+    CCategory_EditedAction:
+      OITextEditorKeyUp_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, ACategoryIndex, APropertyIndex, AItemIndex, Sender);
   end;
 end;
 
@@ -6196,7 +6392,7 @@ begin
 end;
 
 
-procedure TfrClickerActions.HandleOnOIEditorAssignMenuAndTooltip(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer;
+procedure TfrClickerActions.OIEditorAssignMenuAndTooltip_ActionSpecific(AEditingAction: PClkActionRec; ALiveEditingActionType: TClkAction; ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer;
   Sender: TObject; var APopupMenu: TPopupMenu; var AHint: string; var AShowHint: Boolean);
 var
   TempValue: string;
@@ -6205,17 +6401,15 @@ begin
   AHint := '';
   AShowHint := True;
 
-  if ACategoryIndex = CCategory_ActionSpecific then
-  begin
-    if ANodeLevel = CPropertyLevel then
+  if ANodeLevel = CPropertyLevel then
     begin
-      if (CurrentlyEditingActionType = acPlugin) and (APropertyIndex > CPlugin_FileName_PropIndex) then
+      if (ALiveEditingActionType = acPlugin) and (APropertyIndex > CPlugin_FileName_PropIndex) then
         AHint := 'Plugin-specific property'
       else
-        AHint := CGetPropertyHint_Actions[CurrentlyEditingActionType]^[APropertyIndex];
+        AHint := CGetPropertyHint_Actions[ALiveEditingActionType]^[APropertyIndex];
     end;
 
-    case CurrentlyEditingActionType of
+    case ALiveEditingActionType of
       acExecApp:
       begin
         case APropertyIndex of
@@ -6276,7 +6470,7 @@ begin
                   FLastClickedTVTEdit := Sender as TVTEdit;
                   FLastClickedEdit := nil;
                   APopupMenu := pmStandardControlRefVars;
-                  TempValue := FEditingAction^.FindControlOptions.InitialRectangle.Left;
+                  TempValue := AEditingAction^.FindControlOptions.InitialRectangle.Left;
                   AHint := AHint + #13#10 + TempValue + ' = ' + EvaluateReplacements(TempValue);
                 end;
 
@@ -6285,7 +6479,7 @@ begin
                   FLastClickedTVTEdit := Sender as TVTEdit;
                   FLastClickedEdit := nil;
                   APopupMenu := pmStandardControlRefVars;
-                  TempValue := FEditingAction^.FindControlOptions.InitialRectangle.Top;
+                  TempValue := AEditingAction^.FindControlOptions.InitialRectangle.Top;
                   AHint := AHint + #13#10 + TempValue + ' = ' + EvaluateReplacements(TempValue);
                 end;
 
@@ -6294,7 +6488,7 @@ begin
                   FLastClickedTVTEdit := Sender as TVTEdit;
                   FLastClickedEdit := nil;
                   APopupMenu := pmStandardControlRefVars;
-                  TempValue := FEditingAction^.FindControlOptions.InitialRectangle.Right;
+                  TempValue := AEditingAction^.FindControlOptions.InitialRectangle.Right;
                   AHint := AHint + #13#10 + TempValue + ' = ' + EvaluateReplacements(TempValue);
                 end;
 
@@ -6303,7 +6497,7 @@ begin
                   FLastClickedTVTEdit := Sender as TVTEdit;
                   FLastClickedEdit := nil;
                   APopupMenu := pmStandardControlRefVars;
-                  TempValue := FEditingAction^.FindControlOptions.InitialRectangle.Bottom;
+                  TempValue := AEditingAction^.FindControlOptions.InitialRectangle.Bottom;
                   AHint := AHint + #13#10 + TempValue + ' = ' + EvaluateReplacements(TempValue);
                 end;
               end;
@@ -6390,30 +6584,43 @@ begin
 
       acPlugin:
         if APropertyIndex > CPlugin_FileName_PropIndex then
-          AHint := FastReplace_45ToReturn(GetPluginPropertyAttribute(FEditingAction.PluginOptions.ListOfPropertiesAndTypes, CPluginPropertyAttr_Hint, APropertyIndex));
+          AHint := FastReplace_45ToReturn(GetPluginPropertyAttribute(AEditingAction.PluginOptions.ListOfPropertiesAndTypes, CPluginPropertyAttr_Hint, APropertyIndex));
 
       else
         ;
-    end;  //case CurrentlyEditingActionType
+    end;  //case ALiveEditingActionType
+end;
+
+
+procedure TfrClickerActions.HandleOnOIEditorAssignMenuAndTooltip(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer;
+  Sender: TObject; var APopupMenu: TPopupMenu; var AHint: string; var AShowHint: Boolean);
+begin
+  APopupMenu := nil;
+  AHint := '';
+  AShowHint := True;
+
+  case ACategoryIndex of
+    CCategory_Common:
+      ;
+
+    CCategory_ActionSpecific:
+      OIEditorAssignMenuAndTooltip_ActionSpecific(FEditingAction, CurrentlyEditingActionType, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, Sender, APopupMenu, AHint, AShowHint);
+
+    CCategory_EditedAction:
+      OIEditorAssignMenuAndTooltip_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, Sender, APopupMenu, AHint, AShowHint);
   end;
 end;
 
 
-procedure TfrClickerActions.HandleOnOIGetFileDialogSettings(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; var AFilter, AInitDir: string);
+procedure OIGetFileDialogSettings_ActionSpecific(ALiveEditingActionType: TClkAction; ACategoryIndex, APropertyIndex, AItemIndex: Integer; ABMPsDir: string; var AFilter, AInitDir: string);
 var
   EditingActionType: Integer;
 begin
-  AFilter := '';
-  AInitDir := '';
-
-  if ACategoryIndex <> CCategory_ActionSpecific then
-    Exit;
-
-  EditingActionType := Integer(CurrentlyEditingActionType);
+  EditingActionType := Integer(ALiveEditingActionType);
   if EditingActionType = CClkUnsetAction then
     Exit;
 
-  case CurrentlyEditingActionType of
+  case ALiveEditingActionType of
     acExecApp:
       if APropertyIndex = CExecApp_PathToApp_PropIndex then
       begin
@@ -6427,13 +6634,13 @@ begin
         CFindControl_MatchBitmapFiles_PropIndex:
         begin
           AFilter := 'Bitmap files (*.bmp)|*.bmp|All files (*.*)|*.*';
-          AInitDir := FBMPsDir;
+          AInitDir := ABMPsDir;
         end;
 
         CFindControl_MatchPrimitiveFiles_PropIndex:
         begin
           AFilter := 'Primitives files (*.pmtv)|*.pmtv|All files (*.*)|*.*';
-          AInitDir := FBMPsDir;
+          AInitDir := ABMPsDir;
         end;
       end;
     end;
@@ -6451,7 +6658,25 @@ begin
 end;
 
 
-procedure TfrClickerActions.HandleOnOIArrowEditorClick(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer);
+procedure TfrClickerActions.HandleOnOIGetFileDialogSettings(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; var AFilter, AInitDir: string);
+begin
+  AFilter := '';
+  AInitDir := '';
+
+  case ACategoryIndex of
+    CCategory_Common:
+      ;
+
+    CCategory_ActionSpecific:
+      OIGetFileDialogSettings_ActionSpecific(CurrentlyEditingActionType, ACategoryIndex, APropertyIndex, AItemIndex, FBMPsDir, AFilter, AInitDir);
+
+    CCategory_EditedAction:
+      OIGetFileDialogSettings_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ACategoryIndex, APropertyIndex, AItemIndex, FBMPsDir, AFilter, AInitDir);
+  end;
+end;
+
+
+procedure TfrClickerActions.OIArrowEditorClick_ActionSpecific(AEditingAction: PClkActionRec; ALiveEditingActionType: TClkAction; ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer);
 var
   tp: TPoint;
   i: Integer;
@@ -6460,6 +6685,324 @@ var
   ItemIndexMod, ItemIndexDiv: Integer;
   TempListOfExternallyRenderedImages: TStringList;
 begin
+  case ALiveEditingActionType of
+    acFindControl, acFindSubControl:
+    begin
+      case APropertyIndex of
+        CFindControl_MatchText_PropIndex, CFindControl_MatchClassName_PropIndex:
+        begin
+          FOIEditorMenu.Items.Clear;
+
+          AddMenuItemToPopupMenu(FOIEditorMenu, 'Copy values from preview window', MenuItem_CopyTextAndClassFromPreviewWindowClick,
+            ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+
+          AddMenuItemToPopupMenu(FOIEditorMenu, 'Copy values from window interpreter', MenuItem_CopyTextAndClassFromWinInterpWindowClick,
+            ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+
+          AddMenuItemToPopupMenu(FOIEditorMenu, 'Copy values from remote screen', MenuItem_CopyTextAndClassFromRemoteScreenWindowClick,
+            ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+
+          AddMenuItemToPopupMenu(FOIEditorMenu, 'Set to system menu', MenuItem_SetTextAndClassAsSystemMenuClick,
+            ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+
+          GetCursorPos(tp);
+          FOIEditorMenu.PopUp(tp.X, tp.Y);
+        end;
+
+        CFindControl_MatchBitmapText_PropIndex:
+          case ANodeLevel of
+            CPropertyLevel:
+            begin
+              FOIEditorMenu.Items.Clear;
+
+              AddMenuItemToPopupMenu(FOIEditorMenu, 'Add default font profile', MenuItem_AddFontProfileToPropertyListClick,
+                ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+
+              AddMenuItemToPopupMenu(FOIEditorMenu, 'Add two commonly used font profiles (with Antialiased and ClearType)', MenuItem_AddFontProfileWithAntialiasedAndClearTypeToPropertyListClick,
+                ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+
+              AddMenuItemToPopupMenu(FOIEditorMenu, 'Add three commonly used font profiles (with NonAntialiased, Antialiased and ClearType)', MenuItem_AddFontProfileWithNonAntialiasedAndAntialiasedAndClearTypeToPropertyListClick,
+                ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+
+              if Length(FEditingAction^.FindControlOptions.MatchBitmapText) > 0 then
+                AddMenuItemToPopupMenu(FOIEditorMenu, '-', nil, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+
+              for i := 0 to Length(FEditingAction^.FindControlOptions.MatchBitmapText) - 1 do
+              begin
+                BMPTxt := FEditingAction^.FindControlOptions.MatchBitmapText[i];
+                s := '  Name: ' + BMPTxt.ProfileName + '  (' + BMPTxt.FontName + ', ' + IntToStr(BMPTxt.FontSize) + ', ' + BMPTxt.ForegroundColor + ', ' + BMPTxt.BackgroundColor + ')';
+                AddMenuItemToPopupMenu(FOIEditorMenu, 'Remove font profile[' + IntToStr(i) + ']  ' + s, MenuItem_RemoveFontProfileFromPropertyListClick,
+                  ANodeLevel, ACategoryIndex, APropertyIndex, i, AEditingAction);  //ItemIndex is not the real one. It points to the profile index.
+              end;
+
+              if Length(FEditingAction^.FindControlOptions.MatchBitmapText) > 0 then
+                AddMenuItemToPopupMenu(FOIEditorMenu, '-', nil, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+
+              for i := 0 to Length(FEditingAction^.FindControlOptions.MatchBitmapText) - 1 do
+              begin
+                BMPTxt := FEditingAction^.FindControlOptions.MatchBitmapText[i];
+                s := '  Name: ' + BMPTxt.ProfileName + '  (' + BMPTxt.FontName + ', ' + IntToStr(BMPTxt.FontSize) + ', ' + BMPTxt.ForegroundColor + ', ' + BMPTxt.BackgroundColor + ')';
+                AddMenuItemToPopupMenu(FOIEditorMenu, 'Duplicate font profile[' + IntToStr(i) + ']  ' + s, MenuItem_DuplicateFontProfileClick,
+                  ANodeLevel, ACategoryIndex, APropertyIndex, i, AEditingAction);  //ItemIndex is not the real one. It points to the profile index.
+              end;
+
+              GetCursorPos(tp);
+              FOIEditorMenu.PopUp(tp.X, tp.Y);
+            end;
+
+            CPropertyItemLevel:
+            begin
+              ItemIndexMod := AItemIndex mod CPropCount_FindControlMatchBitmapText;
+              ItemIndexDiv := AItemIndex div CPropCount_FindControlMatchBitmapText;
+
+              if ItemIndexMod = CFindControl_MatchBitmapText_ProfileName_PropItemIndex then
+                if Length(FEditingAction^.FindControlOptions.MatchBitmapText) > 1 then  //add only if there are at least two profiles
+                begin
+                  FOIEditorMenu.Items.Clear;
+
+                  AddMenuItemToPopupMenu(FOIEditorMenu, 'Move font profile up', MenuItem_MoveFontProfileUpInPropertyListClick,
+                    ANodeLevel, ACategoryIndex, APropertyIndex, ItemIndexDiv, AEditingAction); //sending the profile index through item index arg
+
+                  AddMenuItemToPopupMenu(FOIEditorMenu, 'Move font profile down', MenuItem_MoveFontProfileDownInPropertyListClick,
+                    ANodeLevel, ACategoryIndex, APropertyIndex, ItemIndexDiv, AEditingAction); //sending the profile index through item index arg
+
+                  GetCursorPos(tp);
+                  FOIEditorMenu.PopUp(tp.X, tp.Y);
+                end;
+            end;
+          end; //case
+
+        CFindControl_MatchBitmapFiles_PropIndex:
+        begin
+          case ANodeLevel of
+            CPropertyLevel:
+            begin
+              FOIEditorMenu.Items.Clear;
+
+              /////////////////////////////////// To add to menu item handlers
+              /////////////////////////////////// Add also to browse buttons
+
+              AddMenuItemToPopupMenu(FOIEditorMenu, 'Add file(s) to this list...', MenuItem_AddBMPFilesToPropertyListClick,
+                ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+
+              AddMenuItemToPopupMenu(FOIEditorMenu, 'Remove all files from this list...', MenuItem_RemoveAllBMPFilesFromPropertyListClick,
+                ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+
+              GetCursorPos(tp);
+              FOIEditorMenu.PopUp(tp.X, tp.Y);
+            end;
+
+            CPropertyItemLevel:
+            begin
+              FOIEditorMenu.Items.Clear;
+
+              AddMenuItemToPopupMenu(FOIEditorMenu, 'Browse...', MenuItem_BrowseBMPFileFromPropertyListClick,
+                ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+              FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 0);
+
+              AddMenuItemToPopupMenu(FOIEditorMenu, 'Remove file from list...', MenuItem_RemoveBMPFileFromPropertyListClick,
+                ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+              FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 1);
+
+              AddMenuItemToPopupMenu(FOIEditorMenu, 'Move file up (one position)', MenuItem_MoveBMPFileUpInPropertyListClick,
+                ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+              FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 2);
+
+              AddMenuItemToPopupMenu(FOIEditorMenu, 'Move file down (one position)', MenuItem_MoveBMPFileDownInPropertyListClick,
+                ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+              FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 3);
+
+              GetCursorPos(tp);
+              FOIEditorMenu.PopUp(tp.X, tp.Y);
+            end;
+
+            else
+              ;
+          end;
+        end;
+
+        CFindControl_MatchPrimitiveFiles_PropIndex:
+        begin
+          case ANodeLevel of
+            CPropertyLevel:
+            begin
+              FOIEditorMenu.Items.Clear;
+
+              AddMenuItemToPopupMenu(FOIEditorMenu, 'Add existing file(s) to this list...', MenuItem_AddExistingPrimitiveFilesToPropertyListClick,
+                ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+
+              AddMenuItemToPopupMenu(FOIEditorMenu, 'Add new file to this list...', MenuItem_AddNewPrimitiveFilesToPropertyListClick,
+                ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+
+              AddMenuItemToPopupMenu(FOIEditorMenu, 'Remove all files from this list...', MenuItem_RemoveAllPrimitiveFilesFromPropertyListClick,
+                ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+
+              GetCursorPos(tp);
+              FOIEditorMenu.PopUp(tp.X, tp.Y);
+            end;
+
+            CPropertyItemLevel:
+            begin
+              FOIEditorMenu.Items.Clear;
+
+              AddMenuItemToPopupMenu(FOIEditorMenu, 'Browse...', MenuItem_BrowsePrimitiveFileFromPropertyListClick,
+                ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+              FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 0);
+
+              AddMenuItemToPopupMenu(FOIEditorMenu, 'Remove file from list...', MenuItem_RemovePrimitiveFileFromPropertyListClick,
+                ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+              FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 1);
+
+              AddMenuItemToPopupMenu(FOIEditorMenu, 'Move file up (one position)', MenuItem_MovePrimitiveFileUpInPropertyListClick,
+                ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+              FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 2);
+
+              AddMenuItemToPopupMenu(FOIEditorMenu, 'Move file down (one position)', MenuItem_MovePrimitiveFileDownInPropertyListClick,
+                ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+              FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 3);
+
+              AddMenuItemToPopupMenu(FOIEditorMenu, '-', nil,
+                ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+
+              AddMenuItemToPopupMenu(FOIEditorMenu, 'Save file', MenuItem_SavePrimitiveFileInPropertyListClick,
+                ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+              FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 4);
+
+              AddMenuItemToPopupMenu(FOIEditorMenu, 'Save file as...', MenuItem_SavePrimitiveFileAsInPropertyListClick,
+                ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+              FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 5);
+
+              AddMenuItemToPopupMenu(FOIEditorMenu, '-', nil,
+                ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+
+              AddMenuItemToPopupMenu(FOIEditorMenu, 'Discard changes and reload file...', MenuItem_DiscardChangesAndReloadPrimitiveFileInPropertyListClick,
+                ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+              FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 6);
+
+              GetCursorPos(tp);
+              FOIEditorMenu.PopUp(tp.X, tp.Y);
+            end;
+
+            else
+              ;
+          end;
+        end;  //CFindControl_MatchPrimitiveFiles_PropIndex
+
+        CFindControl_SourceFileName_PropIndex:
+        begin
+          if ANodeLevel = CPropertyLevel then
+          begin
+            FOIEditorMenu.Items.Clear;
+
+            case FEditingAction^.FindControlOptions.ImageSourceFileNameLocation of
+              isflDisk:
+              begin
+                AddMenuItemToPopupMenu(FOIEditorMenu, 'Browse...', MenuItem_BrowseImageSourceFromPropertyListClick,
+                  ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+                FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 0);
+              end;
+
+              isflMem:
+              begin
+                TempListOfExternallyRenderedImages := TStringList.Create;
+                try
+                  DoOnGetListOfExternallyRenderedImages(TempListOfExternallyRenderedImages);
+
+                  if TempListOfExternallyRenderedImages.Count = 0 then
+                  begin
+                    AddMenuItemToPopupMenu(FOIEditorMenu, 'No files in externally rendered In-Mem file system', MenuItem_NoImageSourceInInMemPropertyListClick, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+                    FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstFindControlProperties, CFindControl_ImageSourceFileNameLocation_PropIndex);
+                  end
+                  else
+                  begin
+                    AddMenuItemToPopupMenu(FOIEditorMenu, 'Browse with preview...', MenuItem_BrowseFileNameFromInMemPropertyListClick,
+                      ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+                    FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 0);
+
+                    AddMenuItemToPopupMenu(FOIEditorMenu, '-', nil, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+
+                    for i := 0 to TempListOfExternallyRenderedImages.Count - 1 do
+                    begin
+                      AddMenuItemToPopupMenu(FOIEditorMenu, TempListOfExternallyRenderedImages.Strings[i], MenuItem_SetFileNameFromInMemPropertyListClick,
+                        ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+                      FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstFindControlProperties, CFindControl_ImageSourceFileNameLocation_PropIndex);
+                    end;
+                  end;
+                finally
+                  TempListOfExternallyRenderedImages.Free;
+                end;
+              end;
+            end;
+
+            GetCursorPos(tp);
+            FOIEditorMenu.PopUp(tp.X, tp.Y);
+          end;
+        end;
+      end; //case APropertyIndex
+    end; //FindControl, FindSubControl
+
+    acCallTemplate:
+    begin
+      case APropertyIndex of
+        CCallTemplate_TemplateFileName_PropIndex:
+        begin
+          LoadListOfAvailableTemplates;
+          GetCursorPos(tp);
+          FPmLocalTemplates.PopUp(tp.X, tp.Y);
+        end;
+      end;
+    end;
+
+    acLoadSetVarFromFile, acSaveSetVarToFile:
+    begin
+      case APropertyIndex of
+        CLoadSetVarFromFile_FileName_PropIndex:
+        begin
+          FOIEditorMenu.Items.Clear;
+          AddMenuItemToPopupMenu(FOIEditorMenu, 'Browse...', MenuItem_BrowseSetVarFileInPropertyListClick,
+              ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+
+          FOIEditorMenu.PopUp;
+        end;
+
+        CLoadSetVarFromFile_SetVarActionName_PropIndex:
+        begin
+          LoadListOfAvailableSetVarActions;
+          FPmLocalTemplates.PopUp;
+        end;
+      end; //case APropertyIndex
+    end;
+
+    acPlugin:
+    begin
+      case APropertyIndex of
+        CPlugin_FileName_PropIndex:
+        begin
+          FOIEditorMenu.Items.Clear;
+          AddMenuItemToPopupMenu(FOIEditorMenu, 'Browse...', MenuItem_BrowsePluginFileInPropertyListClick,
+              ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+
+          FOIEditorMenu.PopUp;
+        end;
+
+        else
+        begin
+          LoadListOfAvailableActionsForPlugin(APropertyIndex - CPropCount_Plugin);
+          FPmLocalTemplates.PopUp;
+        end;
+      end; //case APropertyIndex
+    end; //plugin
+
+    else
+      ;
+  end; //case ALiveEditingActionType
+end;
+
+
+procedure TfrClickerActions.HandleOnOIArrowEditorClick(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer);
+var
+  tp: TPoint;
+begin
   case ACategoryIndex of
     CCategory_Common:
       case APropertyIndex of
@@ -6467,10 +7010,10 @@ begin
         begin
           FOIEditorMenu.Items.Clear;
 
-          AddMenuItemToPopupMenu(FOIEditorMenu, '0', MenuItem_SetActionTimeoutFromOI, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-          AddMenuItemToPopupMenu(FOIEditorMenu, '1000', MenuItem_SetActionTimeoutFromOI, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-          AddMenuItemToPopupMenu(FOIEditorMenu, '10000', MenuItem_SetActionTimeoutFromOI, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-          AddMenuItemToPopupMenu(FOIEditorMenu, '30000', MenuItem_SetActionTimeoutFromOI, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+          AddMenuItemToPopupMenu(FOIEditorMenu, '0', MenuItem_SetActionTimeoutFromOI, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, FEditingAction);
+          AddMenuItemToPopupMenu(FOIEditorMenu, '1000', MenuItem_SetActionTimeoutFromOI, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, FEditingAction);
+          AddMenuItemToPopupMenu(FOIEditorMenu, '10000', MenuItem_SetActionTimeoutFromOI, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, FEditingAction);
+          AddMenuItemToPopupMenu(FOIEditorMenu, '30000', MenuItem_SetActionTimeoutFromOI, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, FEditingAction);
 
           GetCursorPos(tp);
           FOIEditorMenu.PopUp(tp.X, tp.Y);
@@ -6480,318 +7023,75 @@ begin
       end;
 
     CCategory_ActionSpecific:
+      OIArrowEditorClick_ActionSpecific(FEditingAction, CurrentlyEditingActionType, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+
+    CCategory_EditedAction:
+      OIArrowEditorClick_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+  end;
+end;
+
+
+procedure TfrClickerActions.OIUserEditorClick_ActionSpecific(AEditingAction: PClkActionRec; ALiveEditingActionType: TClkAction; ACategoryIndex, APropertyIndex, AItemIndex: Integer; var ARepaintValue: Boolean);
+var
+  EditingActionType: Integer;
+  Condition: string;
+begin
+  EditingActionType := Integer(ALiveEditingActionType);
+  if EditingActionType = CClkUnsetAction then
+    Exit;
+
+  case ALiveEditingActionType of
+    acExecApp:
+      if APropertyIndex = CExecApp_ListOfParams_PropIndex then
+      begin
+        frClickerExecApp.BringToFront;  //MessageBox(Handle, 'Param list editor', 'Files', MB_ICONINFORMATION);
+      end;
+
+    acFindControl, acFindSubControl:
+      if APropertyIndex in [CFindControl_MatchBitmapFiles_PropIndex, CFindControl_MatchPrimitiveFiles_PropIndex] then
+      begin
+        //MessageBox(Handle, 'File list editor', 'Files', MB_ICONINFORMATION);
+        TriggerOnControlsModified;
+      end;
+
+    acCallTemplate:
     begin
-      if CurrentlyEditingActionType in [acFindControl, acFindSubControl] then
-        case APropertyIndex of
-          CFindControl_MatchText_PropIndex, CFindControl_MatchClassName_PropIndex:
-          begin
-            FOIEditorMenu.Items.Clear;
-
-            AddMenuItemToPopupMenu(FOIEditorMenu, 'Copy values from preview window', MenuItem_CopyTextAndClassFromPreviewWindowClick,
-              ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-
-            AddMenuItemToPopupMenu(FOIEditorMenu, 'Copy values from window interpreter', MenuItem_CopyTextAndClassFromWinInterpWindowClick,
-              ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-
-            AddMenuItemToPopupMenu(FOIEditorMenu, 'Copy values from remote screen', MenuItem_CopyTextAndClassFromRemoteScreenWindowClick,
-              ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-
-            AddMenuItemToPopupMenu(FOIEditorMenu, 'Set to system menu', MenuItem_SetTextAndClassAsSystemMenuClick,
-              ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-
-            GetCursorPos(tp);
-            FOIEditorMenu.PopUp(tp.X, tp.Y);
-          end;
-
-          CFindControl_MatchBitmapText_PropIndex:
-            case ANodeLevel of
-              CPropertyLevel:
-              begin
-                FOIEditorMenu.Items.Clear;
-
-                AddMenuItemToPopupMenu(FOIEditorMenu, 'Add default font profile', MenuItem_AddFontProfileToPropertyListClick,
-                  ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-
-                AddMenuItemToPopupMenu(FOIEditorMenu, 'Add two commonly used font profiles (with Antialiased and ClearType)', MenuItem_AddFontProfileWithAntialiasedAndClearTypeToPropertyListClick,
-                  ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-
-                AddMenuItemToPopupMenu(FOIEditorMenu, 'Add three commonly used font profiles (with NonAntialiased, Antialiased and ClearType)', MenuItem_AddFontProfileWithNonAntialiasedAndAntialiasedAndClearTypeToPropertyListClick,
-                  ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-
-                if Length(FEditingAction^.FindControlOptions.MatchBitmapText) > 0 then
-                  AddMenuItemToPopupMenu(FOIEditorMenu, '-', nil, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-
-                for i := 0 to Length(FEditingAction^.FindControlOptions.MatchBitmapText) - 1 do
-                begin
-                  BMPTxt := FEditingAction^.FindControlOptions.MatchBitmapText[i];
-                  s := '  Name: ' + BMPTxt.ProfileName + '  (' + BMPTxt.FontName + ', ' + IntToStr(BMPTxt.FontSize) + ', ' + BMPTxt.ForegroundColor + ', ' + BMPTxt.BackgroundColor + ')';
-                  AddMenuItemToPopupMenu(FOIEditorMenu, 'Remove font profile[' + IntToStr(i) + ']  ' + s, MenuItem_RemoveFontProfileFromPropertyListClick,
-                    ANodeLevel, ACategoryIndex, APropertyIndex, i);  //ItemIndex is not the real one. It points to the profile index.
-                end;
-
-                if Length(FEditingAction^.FindControlOptions.MatchBitmapText) > 0 then
-                  AddMenuItemToPopupMenu(FOIEditorMenu, '-', nil, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-
-                for i := 0 to Length(FEditingAction^.FindControlOptions.MatchBitmapText) - 1 do
-                begin
-                  BMPTxt := FEditingAction^.FindControlOptions.MatchBitmapText[i];
-                  s := '  Name: ' + BMPTxt.ProfileName + '  (' + BMPTxt.FontName + ', ' + IntToStr(BMPTxt.FontSize) + ', ' + BMPTxt.ForegroundColor + ', ' + BMPTxt.BackgroundColor + ')';
-                  AddMenuItemToPopupMenu(FOIEditorMenu, 'Duplicate font profile[' + IntToStr(i) + ']  ' + s, MenuItem_DuplicateFontProfileClick,
-                    ANodeLevel, ACategoryIndex, APropertyIndex, i);  //ItemIndex is not the real one. It points to the profile index.
-                end;
-
-                GetCursorPos(tp);
-                FOIEditorMenu.PopUp(tp.X, tp.Y);
-              end;
-
-              CPropertyItemLevel:
-              begin
-                ItemIndexMod := AItemIndex mod CPropCount_FindControlMatchBitmapText;
-                ItemIndexDiv := AItemIndex div CPropCount_FindControlMatchBitmapText;
-
-                if ItemIndexMod = CFindControl_MatchBitmapText_ProfileName_PropItemIndex then
-                  if Length(FEditingAction^.FindControlOptions.MatchBitmapText) > 1 then  //add only if there are at least two profiles
-                  begin
-                    FOIEditorMenu.Items.Clear;
-
-                    AddMenuItemToPopupMenu(FOIEditorMenu, 'Move font profile up', MenuItem_MoveFontProfileUpInPropertyListClick,
-                      ANodeLevel, ACategoryIndex, APropertyIndex, ItemIndexDiv); //sending the profile index through item index arg
-
-                    AddMenuItemToPopupMenu(FOIEditorMenu, 'Move font profile down', MenuItem_MoveFontProfileDownInPropertyListClick,
-                      ANodeLevel, ACategoryIndex, APropertyIndex, ItemIndexDiv); //sending the profile index through item index arg
-
-                    GetCursorPos(tp);
-                    FOIEditorMenu.PopUp(tp.X, tp.Y);
-                  end;
-              end;
-            end; //case
-
-          CFindControl_MatchBitmapFiles_PropIndex:
-          begin
-            case ANodeLevel of
-              CPropertyLevel:
-              begin
-                FOIEditorMenu.Items.Clear;
-
-                /////////////////////////////////// To add to menu item handlers
-                /////////////////////////////////// Add also to browse buttons
-
-                AddMenuItemToPopupMenu(FOIEditorMenu, 'Add file(s) to this list...', MenuItem_AddBMPFilesToPropertyListClick,
-                  ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-
-                AddMenuItemToPopupMenu(FOIEditorMenu, 'Remove all files from this list...', MenuItem_RemoveAllBMPFilesFromPropertyListClick,
-                  ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-
-                GetCursorPos(tp);
-                FOIEditorMenu.PopUp(tp.X, tp.Y);
-              end;
-
-              CPropertyItemLevel:
-              begin
-                FOIEditorMenu.Items.Clear;
-
-                AddMenuItemToPopupMenu(FOIEditorMenu, 'Browse...', MenuItem_BrowseBMPFileFromPropertyListClick,
-                  ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-                FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 0);
-
-                AddMenuItemToPopupMenu(FOIEditorMenu, 'Remove file from list...', MenuItem_RemoveBMPFileFromPropertyListClick,
-                  ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-                FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 1);
-
-                AddMenuItemToPopupMenu(FOIEditorMenu, 'Move file up (one position)', MenuItem_MoveBMPFileUpInPropertyListClick,
-                  ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-                FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 2);
-
-                AddMenuItemToPopupMenu(FOIEditorMenu, 'Move file down (one position)', MenuItem_MoveBMPFileDownInPropertyListClick,
-                  ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-                FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 3);
-
-                GetCursorPos(tp);
-                FOIEditorMenu.PopUp(tp.X, tp.Y);
-              end;
-
-              else
-                ;
-            end;
-          end;
-
-          CFindControl_MatchPrimitiveFiles_PropIndex:
-          begin
-            case ANodeLevel of
-              CPropertyLevel:
-              begin
-                FOIEditorMenu.Items.Clear;
-
-                AddMenuItemToPopupMenu(FOIEditorMenu, 'Add existing file(s) to this list...', MenuItem_AddExistingPrimitiveFilesToPropertyListClick,
-                  ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-
-                AddMenuItemToPopupMenu(FOIEditorMenu, 'Add new file to this list...', MenuItem_AddNewPrimitiveFilesToPropertyListClick,
-                  ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-
-                AddMenuItemToPopupMenu(FOIEditorMenu, 'Remove all files from this list...', MenuItem_RemoveAllPrimitiveFilesFromPropertyListClick,
-                  ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-
-                GetCursorPos(tp);
-                FOIEditorMenu.PopUp(tp.X, tp.Y);
-              end;
-
-              CPropertyItemLevel:
-              begin
-                FOIEditorMenu.Items.Clear;
-
-                AddMenuItemToPopupMenu(FOIEditorMenu, 'Browse...', MenuItem_BrowsePrimitiveFileFromPropertyListClick,
-                  ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-                FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 0);
-
-                AddMenuItemToPopupMenu(FOIEditorMenu, 'Remove file from list...', MenuItem_RemovePrimitiveFileFromPropertyListClick,
-                  ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-                FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 1);
-
-                AddMenuItemToPopupMenu(FOIEditorMenu, 'Move file up (one position)', MenuItem_MovePrimitiveFileUpInPropertyListClick,
-                  ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-                FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 2);
-
-                AddMenuItemToPopupMenu(FOIEditorMenu, 'Move file down (one position)', MenuItem_MovePrimitiveFileDownInPropertyListClick,
-                  ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-                FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 3);
-
-                AddMenuItemToPopupMenu(FOIEditorMenu, '-', nil,
-                  ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-
-                AddMenuItemToPopupMenu(FOIEditorMenu, 'Save file', MenuItem_SavePrimitiveFileInPropertyListClick,
-                  ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-                FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 4);
-
-                AddMenuItemToPopupMenu(FOIEditorMenu, 'Save file as...', MenuItem_SavePrimitiveFileAsInPropertyListClick,
-                  ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-                FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 5);
-
-                AddMenuItemToPopupMenu(FOIEditorMenu, '-', nil,
-                  ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-
-                AddMenuItemToPopupMenu(FOIEditorMenu, 'Discard changes and reload file...', MenuItem_DiscardChangesAndReloadPrimitiveFileInPropertyListClick,
-                  ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-                FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 6);
-
-                GetCursorPos(tp);
-                FOIEditorMenu.PopUp(tp.X, tp.Y);
-              end;
-
-              else
-                ;
-            end;
-          end;  //CFindControl_MatchPrimitiveFiles_PropIndex
-
-          CFindControl_SourceFileName_PropIndex:
-          begin
-            if ANodeLevel = CPropertyLevel then
-            begin
-              FOIEditorMenu.Items.Clear;
-
-              case FEditingAction^.FindControlOptions.ImageSourceFileNameLocation of
-                isflDisk:
-                begin
-                  AddMenuItemToPopupMenu(FOIEditorMenu, 'Browse...', MenuItem_BrowseImageSourceFromPropertyListClick,
-                    ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-                  FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 0);
-                end;
-
-                isflMem:
-                begin
-                  TempListOfExternallyRenderedImages := TStringList.Create;
-                  try
-                    DoOnGetListOfExternallyRenderedImages(TempListOfExternallyRenderedImages);
-
-                    if TempListOfExternallyRenderedImages.Count = 0 then
-                    begin
-                      AddMenuItemToPopupMenu(FOIEditorMenu, 'No files in externally rendered In-Mem file system', MenuItem_NoImageSourceInInMemPropertyListClick, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-                      FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstFindControlProperties, CFindControl_ImageSourceFileNameLocation_PropIndex);
-                    end
-                    else
-                    begin
-                      AddMenuItemToPopupMenu(FOIEditorMenu, 'Browse with preview...', MenuItem_BrowseFileNameFromInMemPropertyListClick,
-                        ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-                      FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 0);
-
-                      AddMenuItemToPopupMenu(FOIEditorMenu, '-', nil, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-
-                      for i := 0 to TempListOfExternallyRenderedImages.Count - 1 do
-                      begin
-                        AddMenuItemToPopupMenu(FOIEditorMenu, TempListOfExternallyRenderedImages.Strings[i], MenuItem_SetFileNameFromInMemPropertyListClick,
-                          ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-                        FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstFindControlProperties, CFindControl_ImageSourceFileNameLocation_PropIndex);
-                      end;
-                    end;
-                  finally
-                    TempListOfExternallyRenderedImages.Free;
-                  end;
-                end;
-              end;
-
-              GetCursorPos(tp);
-              FOIEditorMenu.PopUp(tp.X, tp.Y);
-            end;
-          end;
-        end; //case APropertyIndex
-
-      if CurrentlyEditingActionType = acCallTemplate then
-        case APropertyIndex of
-          CCallTemplate_TemplateFileName_PropIndex:
-          begin
-            if CurrentlyEditingActionType = acCallTemplate then
-            begin
-              LoadListOfAvailableTemplates;
-              GetCursorPos(tp);
-              FPmLocalTemplates.PopUp(tp.X, tp.Y);
-            end;
-          end;
+      case APropertyIndex of
+        CCallTemplate_ListOfCustomVarsAndValues_PropIndex:
+        begin
+          frClickerCallTemplate.SetListOfCustomVariables(AEditingAction^.CallTemplateOptions.ListOfCustomVarsAndValues);
+          //TriggerOnControlsModified;
         end;
 
-      if CurrentlyEditingActionType in [acLoadSetVarFromFile, acSaveSetVarToFile] then
-        case APropertyIndex of
-          CLoadSetVarFromFile_FileName_PropIndex:
+        CCallTemplate_CallTemplateLoop_PropIndex:
+          if AItemIndex = CCallTemplate_CallTemplateLoopProperties_BreakCondition_PropItemIndex then
           begin
-            FOIEditorMenu.Items.Clear;
-            AddMenuItemToPopupMenu(FOIEditorMenu, 'Browse...', MenuItem_BrowseSetVarFileInPropertyListClick,
-                ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-
-            FOIEditorMenu.PopUp;
+            Condition := AEditingAction^.CallTemplateOptions.CallTemplateLoop.BreakCondition;
+            if DoOnEditCallTemplateBreakCondition(Condition) then
+            begin
+              TriggerOnControlsModified(AEditingAction^.CallTemplateOptions.CallTemplateLoop.BreakCondition <> Condition);
+              AEditingAction^.CallTemplateOptions.CallTemplateLoop.BreakCondition := Condition;
+            end;
           end;
+      end;
+    end;
 
-          CLoadSetVarFromFile_SetVarActionName_PropIndex:
-          begin
-            LoadListOfAvailableSetVarActions;
-            FPmLocalTemplates.PopUp;
-          end;
-        end; //case APropertyIndex
-
-      if CurrentlyEditingActionType = acPlugin then
+    acSetVar:
+      if APropertyIndex = CSetVar_ListOfVarNamesValuesAndEvalBefore_PropItemIndex then
       begin
-        case APropertyIndex of
-          CPlugin_FileName_PropIndex:
-          begin
-            FOIEditorMenu.Items.Clear;
-            AddMenuItemToPopupMenu(FOIEditorMenu, 'Browse...', MenuItem_BrowsePluginFileInPropertyListClick,
-                ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+        frClickerSetVar.SetListOfSetVars(AEditingAction^.SetVarOptions);
+        frClickerSetVar.BringToFront;
+        //MessageBox(Handle, 'SetVar editor', 'Files', MB_ICONINFORMATION);
+      end;
 
-            FOIEditorMenu.PopUp;
-          end;
-
-          else
-          begin
-            LoadListOfAvailableActionsForPlugin(APropertyIndex - CPropCount_Plugin);
-            FPmLocalTemplates.PopUp;
-          end;
-        end; //case APropertyIndex
-      end; //plugin
-    end; //CCategory_ActionSpecific
-  end;
+    else
+      ;
+  end;   //case
 end;
 
 
 procedure TfrClickerActions.HandleOnOIUserEditorClick(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; var ARepaintValue: Boolean);
 var
-  EditingActionType: Integer;
   Condition: string;
 begin
   case ACategoryIndex of
@@ -6809,68 +7109,95 @@ begin
     end;
 
     CCategory_ActionSpecific:
-    begin
-      EditingActionType := Integer(CurrentlyEditingActionType);
-      if EditingActionType = CClkUnsetAction then
-        Exit;
+      OIUserEditorClick_ActionSpecific(FEditingAction, CurrentlyEditingActionType, ACategoryIndex, APropertyIndex, AItemIndex, ARepaintValue);
 
-      case CurrentlyEditingActionType of
-        acExecApp:
-          if APropertyIndex = CExecApp_ListOfParams_PropIndex then
-          begin
-            frClickerExecApp.BringToFront;  //MessageBox(Handle, 'Param list editor', 'Files', MB_ICONINFORMATION);
-          end;
+    CCategory_EditedAction:
+      OIUserEditorClick_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ACategoryIndex, APropertyIndex, AItemIndex, ARepaintValue);
+  end; //case
+end;
 
-        acFindControl, acFindSubControl:
-          if APropertyIndex in [CFindControl_MatchBitmapFiles_PropIndex, CFindControl_MatchPrimitiveFiles_PropIndex] then
-          begin
-            //MessageBox(Handle, 'File list editor', 'Files', MB_ICONINFORMATION);
-            TriggerOnControlsModified;
-          end;
 
-        acCallTemplate:
-        begin
-          case APropertyIndex of
-            CCallTemplate_ListOfCustomVarsAndValues_PropIndex:
-            begin
-              frClickerCallTemplate.SetListOfCustomVariables(FEditingAction^.CallTemplateOptions.ListOfCustomVarsAndValues);
-              //TriggerOnControlsModified;
-            end;
+function TfrClickerActions.OIBrowseFile_ActionSpecific(ALiveEditingActionType: TClkAction; ACategoryIndex, APropertyIndex, AItemIndex: Integer;
+  AFilter, ADialogInitDir: string; var Handled: Boolean; AReturnMultipleFiles: Boolean = False): string;
+var
+  EditingActionType: Integer;
+  AOpenDialog: TOpenDialog;
+begin
+  EditingActionType := Integer(ALiveEditingActionType);
+  if EditingActionType = CClkUnsetAction then
+    Exit;
 
-            CCallTemplate_CallTemplateLoop_PropIndex:
-              if AItemIndex = CCallTemplate_CallTemplateLoopProperties_BreakCondition_PropItemIndex then
-              begin
-                Condition := FEditingAction^.CallTemplateOptions.CallTemplateLoop.BreakCondition;
-                if DoOnEditCallTemplateBreakCondition(Condition) then
-                begin
-                  TriggerOnControlsModified(FEditingAction^.CallTemplateOptions.CallTemplateLoop.BreakCondition <> Condition);
-                  FEditingAction^.CallTemplateOptions.CallTemplateLoop.BreakCondition := Condition;
-                end;
-              end;
-          end;
+  case ALiveEditingActionType of
+    acExecApp:
+      if APropertyIndex = CExecApp_PathToApp_PropIndex then
+      begin
+        AOpenDialog := TOpenDialog.Create(nil);
+        try
+          AOpenDialog.InitialDir := ExtractFileDir(ParamStr(0));
+          AOpenDialog.Filter := AFilter;
+
+          if AOpenDialog.Execute then
+            Result := AOpenDialog.FileName;
+
+          Handled := True;
+        finally
+          AOpenDialog.Free;
         end;
+      end;
 
-        acSetVar:
-          if APropertyIndex = CSetVar_ListOfVarNamesValuesAndEvalBefore_PropItemIndex then
-          begin
-            frClickerSetVar.SetListOfSetVars(FEditingAction^.SetVarOptions);
-            frClickerSetVar.BringToFront;
-            //MessageBox(Handle, 'SetVar editor', 'Files', MB_ICONINFORMATION);
-          end;
+    acFindControl, acFindSubControl:
+    begin
+      if APropertyIndex = CFindControl_MatchBitmapText_PropIndex then
+        Handled := True; //do nothing, this is not a file path
+
+      if APropertyIndex = CFindControl_MatchBitmapFiles_PropIndex then
+      begin
+        DoOnSetPictureOpenDialogInitialDir(ADialogInitDir);
+        DoOnSetPictureSetOpenDialogMultiSelect;
+
+        if DoOnPictureOpenDialogExecute then
+          Result := DoOnGetPictureOpenDialogFileName;
+
+        Handled := True;
+      end;
+
+      if APropertyIndex = CFindControl_MatchPrimitiveFiles_PropIndex then
+      begin
+        DoOnSetOpenDialogInitialDir(ADialogInitDir);
+        DoOnSetOpenDialogMultiSelect;
+
+        if DoOnOpenDialogExecute(CPrimitivesDialogFilter) then
+          Result := DoOnGetOpenDialogFileName;
+
+        Handled := True;
+      end;
+    end;
+
+    acCallTemplate:
+    begin
+      case APropertyIndex of
+        CCallTemplate_TemplateFileName_PropIndex:
+        begin
+          DoOnSetOpenDialogInitialDir(ADialogInitDir);
+          if DoOnOpenDialogExecute(CTemplateDialogFilter) then
+            Result := DoOnGetOpenDialogFileName;
+
+          Handled := True;
+        end;
 
         else
           ;
-      end;   //case
-    end; //CCategory_ActionSpecific
-  end; //case
+      end;
+    end;
+
+    else
+      ;
+  end;   //case
 end;
 
 
 function TfrClickerActions.HandleOnOIBrowseFile(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer;
   AFilter, ADialogInitDir: string; var Handled: Boolean; AReturnMultipleFiles: Boolean = False): string;
-var
-  EditingActionType: Integer;
-  AOpenDialog: TOpenDialog;
 begin
   Result := '';
 
@@ -6879,99 +7206,30 @@ begin
       ;
 
     CCategory_ActionSpecific:
-    begin
-      EditingActionType := Integer(CurrentlyEditingActionType);
-      if EditingActionType = CClkUnsetAction then
-        Exit;
+      Result := OIBrowseFile_ActionSpecific(CurrentlyEditingActionType, ACategoryIndex, APropertyIndex, AItemIndex, AFilter, ADialogInitDir, Handled, AReturnMultipleFiles);
 
-      case CurrentlyEditingActionType of
-        acExecApp:
-          if APropertyIndex = CExecApp_PathToApp_PropIndex then
-          begin
-            AOpenDialog := TOpenDialog.Create(nil);
-            try
-              AOpenDialog.InitialDir := ExtractFileDir(ParamStr(0));
-              AOpenDialog.Filter := AFilter;
-
-              if AOpenDialog.Execute then
-                Result := AOpenDialog.FileName;
-
-              Handled := True;
-            finally
-              AOpenDialog.Free;
-            end;
-          end;
-
-        acFindControl, acFindSubControl:
-        begin
-          if APropertyIndex = CFindControl_MatchBitmapText_PropIndex then
-            Handled := True; //do nothing, this is not a file path
-
-          if APropertyIndex = CFindControl_MatchBitmapFiles_PropIndex then
-          begin
-            DoOnSetPictureOpenDialogInitialDir(ADialogInitDir);
-            DoOnSetPictureSetOpenDialogMultiSelect;
-
-            if DoOnPictureOpenDialogExecute then
-              Result := DoOnGetPictureOpenDialogFileName;
-
-            Handled := True;
-          end;
-
-          if APropertyIndex = CFindControl_MatchPrimitiveFiles_PropIndex then
-          begin
-            DoOnSetOpenDialogInitialDir(ADialogInitDir);
-            DoOnSetOpenDialogMultiSelect;
-
-            if DoOnOpenDialogExecute(CPrimitivesDialogFilter) then
-              Result := DoOnGetOpenDialogFileName;
-
-            Handled := True;
-          end;
-        end;
-
-        acCallTemplate:
-        begin
-          case APropertyIndex of
-            CCallTemplate_TemplateFileName_PropIndex:
-            begin
-              DoOnSetOpenDialogInitialDir(ADialogInitDir);
-              if DoOnOpenDialogExecute(CTemplateDialogFilter) then
-                Result := DoOnGetOpenDialogFileName;
-
-              Handled := True;
-            end;
-
-            else
-              ;
-          end;
-        end;
-
-        else
-          ;
-      end;   //case
-    end; //CCategory_ActionSpecific
+    CCategory_EditedAction:
+      Result := OIBrowseFile_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ACategoryIndex, APropertyIndex, AItemIndex, AFilter, ADialogInitDir, Handled, AReturnMultipleFiles);
   end; //case
 end;
 
 
-procedure TfrClickerActions.HandleOnOIAfterSpinTextEditorChanging(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; var ANewValue: string);
+procedure TfrClickerActions.OIAfterSpinTextEditorChanging_ActionSpecific(AEditingAction: PClkActionRec; ALiveEditingActionType: TClkAction; ACategoryIndex, APropertyIndex, AItemIndex: Integer; var ANewValue: string);
 var
   ItemIndexMod, ItemIndexDiv: Integer;
   OldValue: string;
 begin
-  if (CurrentlyEditingActionType in [acFindControl, acFindSubControl]) and
-     (ACategoryIndex = CCategory_ActionSpecific) then
+  if ALiveEditingActionType in [acFindControl, acFindSubControl] then
   begin
     case APropertyIndex of
       CFindControl_InitialRectangle_PropIndex:
         if AItemIndex in [CFindControl_InitialRectangle_LeftOffset_PropItemIndex .. CFindControl_InitialRectangle_BottomOffset_PropItemIndex] then
         begin
-          OldValue := GetActionValueStr_FindControl_InitialRectangle(FEditingAction, AItemIndex);
-          SetActionValueStr_FindControl_InitialRectangle(FEditingAction, ANewValue, AItemIndex);
+          OldValue := GetActionValueStr_FindControl_InitialRectangle(AEditingAction, AItemIndex);
+          SetActionValueStr_FindControl_InitialRectangle(AEditingAction, ANewValue, AItemIndex);
           TriggerOnControlsModified(ANewValue <> OldValue);
 
-          frClickerFindControl.UpdateSearchAreaLabelsFromKeysOnInitRect(FEditingAction^.FindControlOptions.InitialRectangle);
+          frClickerFindControl.UpdateSearchAreaLabelsFromKeysOnInitRect(AEditingAction^.FindControlOptions.InitialRectangle);
         end;
 
       CFindControl_MatchBitmapText_PropIndex:
@@ -6982,45 +7240,45 @@ begin
         case ItemIndexMod of
           CFindControl_MatchBitmapText_CropLeft:
           begin
-            OldValue := FEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv].CropLeft;
-            FEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv].CropLeft := ANewValue;
+            OldValue := AEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv].CropLeft;
+            AEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv].CropLeft := ANewValue;
             if StrToIntDef(ANewValue, 0) < 0 then
               ANewValue := '0';
 
-            frClickerFindControl.BMPTextFontProfiles[ItemIndexDiv].UpdateSelectionLabelsFromCropInfo(FEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv]);
+            frClickerFindControl.BMPTextFontProfiles[ItemIndexDiv].UpdateSelectionLabelsFromCropInfo(AEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv]);
             TriggerOnControlsModified(ANewValue <> OldValue);
           end;
 
           CFindControl_MatchBitmapText_CropTop:
           begin
-            OldValue := FEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv].CropTop;
-            FEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv].CropTop := ANewValue;
+            OldValue := AEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv].CropTop;
+            AEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv].CropTop := ANewValue;
             if StrToIntDef(ANewValue, 0) < 0 then
               ANewValue := '0';
 
-            frClickerFindControl.BMPTextFontProfiles[ItemIndexDiv].UpdateSelectionLabelsFromCropInfo(FEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv]);
+            frClickerFindControl.BMPTextFontProfiles[ItemIndexDiv].UpdateSelectionLabelsFromCropInfo(AEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv]);
             TriggerOnControlsModified(ANewValue <> OldValue);
           end;
 
           CFindControl_MatchBitmapText_CropRight:
           begin
-            OldValue := FEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv].CropRight;
-            FEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv].CropRight := ANewValue;
+            OldValue := AEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv].CropRight;
+            AEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv].CropRight := ANewValue;
             if StrToIntDef(ANewValue, 0) < 0 then
               ANewValue := '0';
 
-            frClickerFindControl.BMPTextFontProfiles[ItemIndexDiv].UpdateSelectionLabelsFromCropInfo(FEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv]);
+            frClickerFindControl.BMPTextFontProfiles[ItemIndexDiv].UpdateSelectionLabelsFromCropInfo(AEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv]);
             TriggerOnControlsModified(ANewValue <> OldValue);
           end;
 
           CFindControl_MatchBitmapText_CropBottom:
           begin
-            OldValue := FEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv].CropBottom;
-            FEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv].CropBottom := ANewValue;
+            OldValue := AEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv].CropBottom;
+            AEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv].CropBottom := ANewValue;
             if StrToIntDef(ANewValue, 0) < 0 then
               ANewValue := '0';
 
-            frClickerFindControl.BMPTextFontProfiles[ItemIndexDiv].UpdateSelectionLabelsFromCropInfo(FEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv]);
+            frClickerFindControl.BMPTextFontProfiles[ItemIndexDiv].UpdateSelectionLabelsFromCropInfo(AEditingAction^.FindControlOptions.MatchBitmapText[ItemIndexDiv]);
             TriggerOnControlsModified(ANewValue <> OldValue);
           end;
         end;
@@ -7028,18 +7286,18 @@ begin
 
       CFindControl_MatchBitmapAlgorithmSettings_PropIndex:
       begin
-        OldValue := GetActionValueStr_FindControl_MatchBitmapAlgorithmSettings(FEditingAction, AItemIndex);
-        SetActionValueStr_FindControl_MatchBitmapAlgorithmSettings(FEditingAction, ANewValue, AItemIndex);
+        OldValue := GetActionValueStr_FindControl_MatchBitmapAlgorithmSettings(AEditingAction, AItemIndex);
+        SetActionValueStr_FindControl_MatchBitmapAlgorithmSettings(AEditingAction, ANewValue, AItemIndex);
         TriggerOnControlsModified(ANewValue <> OldValue);
 
-        frClickerFindControl.UpdateSearchAreaLabelsFromKeysOnInitRect(FEditingAction^.FindControlOptions.InitialRectangle); //call this, to update the grid
+        frClickerFindControl.UpdateSearchAreaLabelsFromKeysOnInitRect(AEditingAction^.FindControlOptions.InitialRectangle); //call this, to update the grid
       end;
 
       CFindControl_MatchByHistogramSettings_PropIndex:
         if AItemIndex in [CFindControl_MatchByHistogramSettings_MinPercentColorMatch_PropItemIndex .. CFindControl_MatchByHistogramSettings_MostSignificantColorCountInBackgroundBmp_PropItemIndex] then
         begin
-          OldValue := GetActionValueStr_FindControl_MatchByHistogramSettings(FEditingAction, AItemIndex);
-          SetActionValueStr_FindControl_MatchByHistogramSettings(FEditingAction, ANewValue, AItemIndex);
+          OldValue := GetActionValueStr_FindControl_MatchByHistogramSettings(AEditingAction, AItemIndex);
+          SetActionValueStr_FindControl_MatchByHistogramSettings(AEditingAction, ANewValue, AItemIndex);
           TriggerOnControlsModified(ANewValue <> OldValue);
         end;
     end; //case
@@ -7047,7 +7305,22 @@ begin
 end;
 
 
-procedure TfrClickerActions.HandleOnOISelectedNode(NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex, Column: Integer; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+procedure TfrClickerActions.HandleOnOIAfterSpinTextEditorChanging(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; var ANewValue: string);
+begin
+  case ACategoryIndex of
+    CCategory_Common:
+      ;
+
+    CCategory_ActionSpecific:
+      OIAfterSpinTextEditorChanging_ActionSpecific(FEditingAction, CurrentlyEditingActionType, ACategoryIndex, APropertyIndex, AItemIndex, ANewValue);
+
+    CCategory_EditedAction:
+      OIAfterSpinTextEditorChanging_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ACategoryIndex, APropertyIndex, AItemIndex, ANewValue);
+  end;
+end;
+
+
+procedure TfrClickerActions.HandleOnOISelectedNode_ActionSpecific(AEditingAction: PClkActionRec; ALiveEditingActionType: TClkAction; NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex, Column: Integer; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 var
   PrimitiveFileNames: TStringList;
   PrimitiveFile_Modified: TStringList;
@@ -7055,8 +7328,7 @@ var
   PmtvFnm: string;
 begin
   //load primitives frame
-  if (CurrentlyEditingActionType in [acFindControl, acFindSubControl]) and
-     (CategoryIndex = CCategory_ActionSpecific) then
+  if CurrentlyEditingActionType in [acFindControl, acFindSubControl] then
     if (NodeLevel = CPropertyItemLevel) and (PropertyIndex = CFindControl_MatchPrimitiveFiles_PropIndex) then
     begin
       PrimitiveFileNames := TStringList.Create;
@@ -7118,14 +7390,44 @@ begin
 end;
 
 
-procedure TfrClickerActions.HandleOnOIFirstVisibleNode(NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex: Integer);
+procedure TfrClickerActions.HandleOnOISelectedNode(NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex, Column: Integer; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
-  FEditingAction^.ScrollIndex := COIScrollInfo_NodeLevel + '=' + IntToStr(NodeLevel) + #13#10 +
+  case CategoryIndex of
+    CCategory_Common:
+      ;
+
+    CCategory_ActionSpecific:
+      HandleOnOISelectedNode_ActionSpecific(FEditingAction, CurrentlyEditingActionType, NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex, Column, Button, Shift, X, Y);
+
+    CCategory_EditedAction:
+      HandleOnOISelectedNode_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex, Column, Button, Shift, X, Y);
+  end;
+end;
+
+
+procedure TfrClickerActions.OIFirstVisibleNode_ActionSpecific(AEditingAction: PClkActionRec; NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex: Integer);
+begin
+  AEditingAction^.ScrollIndex := COIScrollInfo_NodeLevel + '=' + IntToStr(NodeLevel) + #13#10 +
                                  COIScrollInfo_CategoryIndex + '=' + IntToStr(CategoryIndex) + #13#10 +
                                  COIScrollInfo_PropertyIndex + '=' + IntToStr(PropertyIndex) + #13#10 +
                                  COIScrollInfo_PropertyItemIndex + '=' + IntToStr(PropertyItemIndex);
 
-  DoOnUpdateActionScrollIndex(FEditingAction^.ScrollIndex);
+  DoOnUpdateActionScrollIndex(AEditingAction^.ScrollIndex);
+end;
+
+
+procedure TfrClickerActions.HandleOnOIFirstVisibleNode(NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex: Integer);
+begin
+  case CategoryIndex of
+    CCategory_Common:
+      ;
+
+    CCategory_ActionSpecific:
+      OIFirstVisibleNode_ActionSpecific(FEditingAction, NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex);
+
+    CCategory_EditedAction:
+      OIFirstVisibleNode_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex);
+  end;
 end;
 
 end.
