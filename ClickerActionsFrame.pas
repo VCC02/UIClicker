@@ -627,6 +627,10 @@ type
 
     procedure OIFirstVisibleNode_ActionSpecific(AEditingAction: PClkActionRec; NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex: Integer);
     procedure HandleOnOIFirstVisibleNode(NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex: Integer);
+
+    procedure HandleOnOIInitNode(NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex: Integer; var ACheckType: TCheckType; var ACheckState: TCheckState; var ANodeHeight: Word);
+    procedure HandleOnOIChecked(NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex: Integer; ACheckState: TCheckState);
+    procedure HandleOnOIChecking(NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex: Integer; ACheckState: TCheckState; var ANewState: TCheckState; var AAllowed: Boolean);
   public
     { Public declarations }
     frClickerConditionEditor: TfrClickerConditionEditor;  //public, because it is accessed from outside :(
@@ -924,6 +928,9 @@ begin
   FOIFrame.OnOIAfterSpinTextEditorChanging := HandleOnOIAfterSpinTextEditorChanging;
   FOIFrame.OnOISelectedNode := HandleOnOISelectedNode;
   FOIFrame.OnOIFirstVisibleNode := HandleOnOIFirstVisibleNode;
+  FOIFrame.OnOIInitNode := HandleOnOIInitNode;
+  FOIFrame.OnOIChecked := HandleOnOIChecked;
+  FOIFrame.OnOIChecking := HandleOnOIChecking;
 
   FOIFrame.Visible := True;
 
@@ -7428,6 +7435,41 @@ begin
     CCategory_EditedAction:
       OIFirstVisibleNode_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex);
   end;
+end;
+
+
+procedure TfrClickerActions.HandleOnOIInitNode(NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex: Integer; var ACheckType: TCheckType; var ACheckState: TCheckState; var ANodeHeight: Word);
+var
+  DatatypeName: string;
+begin
+  if CategoryIndex = CCategory_EditedAction then
+    if NodeLevel in [CPropertyLevel, CPropertyItemLevel] then
+    begin
+      ACheckType := ctCheckBox;
+      ACheckState := csUncheckedNormal; ///////////  should be read from action data
+
+      DatatypeName := OIGetDataTypeName_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, CategoryIndex, PropertyIndex, PropertyItemIndex);
+      if (DatatypeName = 'Structure') or (DatatypeName = 'Array') then
+        ACheckState := csMixedPressed;
+    end;
+end;
+
+
+procedure TfrClickerActions.HandleOnOIChecked(NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex: Integer; ACheckState: TCheckState);
+begin
+
+end;
+
+
+procedure TfrClickerActions.HandleOnOIChecking(NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex: Integer; ACheckState: TCheckState; var ANewState: TCheckState; var AAllowed: Boolean);
+var
+  DatatypeName: string;
+begin
+  AAllowed := (CategoryIndex = CCategory_EditedAction) and (NodeLevel in [CPropertyLevel, CPropertyItemLevel]);
+
+  DatatypeName := OIGetDataTypeName_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, CategoryIndex, PropertyIndex, PropertyItemIndex);
+  if (DatatypeName = 'Structure') or (DatatypeName = 'Array') then
+    AAllowed := False;
 end;
 
 end.
