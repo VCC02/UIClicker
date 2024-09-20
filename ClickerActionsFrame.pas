@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2023 VCC
+    Copyright (C) 2024 VCC
     creation date: Dec 2019
     initial release date: 13 Sep 2022
 
@@ -5132,19 +5132,19 @@ function TfrClickerActions.HandleOnOIGetDataTypeName(ACategoryIndex, APropertyIn
 begin  //
   Result := '';
   try
-  case ACategoryIndex of
-    CCategory_Common:
-      Result := CCommonProperties[APropertyIndex].DataType;
+    case ACategoryIndex of
+      CCategory_Common:
+        Result := CCommonProperties[APropertyIndex].DataType;
 
-    CCategory_ActionSpecific:
-      Result := OIGetDataTypeName_ActionSpecific(FEditingAction, CurrentlyEditingActionType, ACategoryIndex, APropertyIndex, AItemIndex);
+      CCategory_ActionSpecific:
+        Result := OIGetDataTypeName_ActionSpecific(FEditingAction, CurrentlyEditingActionType, ACategoryIndex, APropertyIndex, AItemIndex);
 
-    CCategory_EditedAction:
-      Result := OIGetDataTypeName_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ACategoryIndex, APropertyIndex, AItemIndex);
+      CCategory_EditedAction:
+        Result := OIGetDataTypeName_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ACategoryIndex, APropertyIndex, AItemIndex);
 
-    else
-      Result := '???';
-  end;
+      else
+        Result := '???';
+    end;
   except
     Result := 'AV'; //MessageBox(Handle, 'AV', 'UC HandleOnOIGetDataTypeName', 0);
   end;
@@ -5567,27 +5567,32 @@ procedure TfrClickerActions.HandleOnOIEditedText(ANodeLevel, ACategoryIndex, APr
 var
   OldText: string;
 begin
-  case ACategoryIndex of
-    CCategory_Common:
-    begin
-      OldText := GetActionValueStr_Action(FEditingAction, APropertyIndex);
-      SetActionValueStr_Action(FEditingAction, ANewText, APropertyIndex);
-      FCurrentlyEditingActionType := Ord(FEditingAction^.ActionOptions.Action);
+  try
+    case ACategoryIndex of
+      CCategory_Common:
+      begin
+        OldText := GetActionValueStr_Action(FEditingAction, APropertyIndex);
+        SetActionValueStr_Action(FEditingAction, ANewText, APropertyIndex);
+        FCurrentlyEditingActionType := Ord(FEditingAction^.ActionOptions.Action);
 
-      CurrentlyEditingActionType := FEditingAction^.ActionOptions.Action;
+        CurrentlyEditingActionType := FEditingAction^.ActionOptions.Action;
 
-      TriggerOnControlsModified(ANewText <> OldText);
-      tmrReloadOIContent.Enabled := True;
+        TriggerOnControlsModified(ANewText <> OldText);
+        tmrReloadOIContent.Enabled := True;
+      end;
+
+      CCategory_ActionSpecific:
+        OIEditedText_ActionSpecific(FEditingAction, CurrentlyEditingActionType, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, ANewText);
+
+      CCategory_EditedAction:
+        OIEditedText_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, ANewText);
+
+      else
+        ;
     end;
-
-    CCategory_ActionSpecific:
-      OIEditedText_ActionSpecific(FEditingAction, CurrentlyEditingActionType, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, ANewText);
-
-    CCategory_EditedAction:
-      OIEditedText_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, ANewText);
-
-    else
-      ;
+  except
+    on E: Exception do
+      DoOnAddToLog('Ex on setting property value at: ' + IntToStr(ACategoryIndex) + ' /' +  IntToStr(APropertyIndex) + IntToStr(AItemIndex) + '.  Msg: ' + E.Message);
   end;
 end;
 
@@ -5664,15 +5669,21 @@ end;
 function TfrClickerActions.HandleOnOIEditItems(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; var ANewItems: string): Boolean;
 begin
   Result := False;
-  case ACategoryIndex of
-    CCategory_Common:
-      ;
 
-    CCategory_ActionSpecific:
-      Result := OIEditItems_ActionSpecific(FEditingAction, CurrentlyEditingActionType, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, ANewItems);
+  try
+    case ACategoryIndex of
+      CCategory_Common:
+        ;
 
-    CCategory_EditedAction:
-      Result := OIEditItems_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, ANewItems);
+      CCategory_ActionSpecific:
+        Result := OIEditItems_ActionSpecific(FEditingAction, CurrentlyEditingActionType, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, ANewItems);
+
+      CCategory_EditedAction:
+        Result := OIEditItems_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, ANewItems);
+    end;
+  except
+    on E: Exception do
+      DoOnAddToLog('Ex on setting subproperty value (items) at: ' + IntToStr(ACategoryIndex) + ' /' +  IntToStr(APropertyIndex) + IntToStr(AItemIndex) + '.  Msg: ' + E.Message);
   end;
 end;
 
@@ -5741,18 +5752,21 @@ function TfrClickerActions.HandleOnOIGetEnumConstsCount(ANodeLevel, ACategoryInd
 begin
   Result := 0;
 
-  case ACategoryIndex of
-    CCategory_Common:
-      Result := CActionEnumCounts[APropertyIndex];
+  try
+    case ACategoryIndex of
+      CCategory_Common:
+        Result := CActionEnumCounts[APropertyIndex];
 
-    CCategory_ActionSpecific:
-      Result := OIGetEnumConstsCount_ActionSpecific(FEditingAction, CurrentlyEditingActionType, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+      CCategory_ActionSpecific:
+        Result := OIGetEnumConstsCount_ActionSpecific(FEditingAction, CurrentlyEditingActionType, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
 
-    CCategory_EditedAction:
-      Result := OIGetEnumConstsCount_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+      CCategory_EditedAction:
+        Result := OIGetEnumConstsCount_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
 
-    else
-      Result := 0;
+      else
+        Result := 0;
+    end;
+  except
   end;
 end;
 
@@ -5819,18 +5833,21 @@ procedure TfrClickerActions.HandleOnOIGetEnumConst(ANodeLevel, ACategoryIndex, A
 begin
   AEnumItemName := '';
 
-  case ACategoryIndex of
-    CCategory_Common:
-      AEnumItemName := CActionEnumStrings[APropertyIndex]^[AEnumItemIndex];
+  try
+    case ACategoryIndex of
+      CCategory_Common:
+        AEnumItemName := CActionEnumStrings[APropertyIndex]^[AEnumItemIndex];
 
-    CCategory_ActionSpecific:
-      OIGetEnumConst_ActionSpecific(FEditingAction, CurrentlyEditingActionType, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEnumItemIndex, AEnumItemName);
+      CCategory_ActionSpecific:
+        OIGetEnumConst_ActionSpecific(FEditingAction, CurrentlyEditingActionType, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEnumItemIndex, AEnumItemName);
 
-    CCategory_EditedAction:
-      OIGetEnumConst_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEnumItemIndex, AEnumItemName);
+      CCategory_EditedAction:
+        OIGetEnumConst_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEnumItemIndex, AEnumItemName);
 
-    else
-      AEnumItemName := '';
+      else
+        AEnumItemName := '';
+    end;
+  except
   end;
 end;
 
@@ -6021,18 +6038,21 @@ begin  //
     Exit;
   end;
 
-  if Column = 1 then
-  begin
-    case ACategoryIndex of
-      CCategory_Common:
-        ;
+  try
+    if Column = 1 then
+    begin
+      case ACategoryIndex of
+        CCategory_Common:
+          ;
 
-      CCategory_ActionSpecific:
-        OIPaintText_ActionSpecific(FEditingAction, CurrentlyEditingActionType, ANodeData, ACategoryIndex, APropertyIndex, APropertyItemIndex, TargetCanvas, Column, TextType, DoOnAddToLog);
+        CCategory_ActionSpecific:
+          OIPaintText_ActionSpecific(FEditingAction, CurrentlyEditingActionType, ANodeData, ACategoryIndex, APropertyIndex, APropertyItemIndex, TargetCanvas, Column, TextType, DoOnAddToLog);
 
-      CCategory_EditedAction:
-        OIPaintText_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ANodeData, ACategoryIndex, APropertyIndex, APropertyItemIndex, TargetCanvas, Column, TextType, DoOnAddToLog);
+        CCategory_EditedAction:
+          OIPaintText_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ANodeData, ACategoryIndex, APropertyIndex, APropertyItemIndex, TargetCanvas, Column, TextType, DoOnAddToLog);
+      end;
     end;
+  except
   end;
 end;
 
@@ -6066,15 +6086,18 @@ end;
 procedure TfrClickerActions.HandleOnOIBeforeCellPaint(ANodeData: TNodeDataPropertyRec; ACategoryIndex, APropertyIndex, APropertyItemIndex: Integer;
   TargetCanvas: TCanvas; Column: TColumnIndex; CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
 begin
-  case ACategoryIndex of
-    CCategory_Common:
-      ;
+  try
+    case ACategoryIndex of
+      CCategory_Common:
+        ;
 
-    CCategory_ActionSpecific:
-      OIBeforeCellPaint_ActionSpecific(CurrentlyEditingActionType, ACategoryIndex, APropertyIndex, APropertyItemIndex, TargetCanvas, Column, CellRect, frClickerFindControl.SelectedBMPTextTab);
+      CCategory_ActionSpecific:
+        OIBeforeCellPaint_ActionSpecific(CurrentlyEditingActionType, ACategoryIndex, APropertyIndex, APropertyItemIndex, TargetCanvas, Column, CellRect, frClickerFindControl.SelectedBMPTextTab);
 
-    CCategory_EditedAction:
-      OIBeforeCellPaint_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ACategoryIndex, APropertyIndex, APropertyItemIndex, TargetCanvas, Column, CellRect, frClickerFindControl.SelectedBMPTextTab);
+      CCategory_EditedAction:
+        OIBeforeCellPaint_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ACategoryIndex, APropertyIndex, APropertyItemIndex, TargetCanvas, Column, CellRect, frClickerFindControl.SelectedBMPTextTab);
+    end;
+  except
   end;
 end;
 
@@ -6127,15 +6150,18 @@ end;
 procedure TfrClickerActions.HandleOnOIAfterCellPaint(ANodeData: TNodeDataPropertyRec; ACategoryIndex, APropertyIndex, APropertyItemIndex: Integer;
   TargetCanvas: TCanvas; Column: TColumnIndex; const CellRect: TRect);
 begin
-  case ACategoryIndex of
-    CCategory_Common:
-      ;
+  try
+    case ACategoryIndex of
+      CCategory_Common:
+        ;
 
-    CCategory_ActionSpecific:
-      OIAfterCellPaint_ActionSpecific(FEditingAction, CurrentlyEditingActionType, ACategoryIndex, APropertyIndex, APropertyItemIndex, TargetCanvas, Column, CellRect, imglstUsedMatchCriteria);
+      CCategory_ActionSpecific:
+        OIAfterCellPaint_ActionSpecific(FEditingAction, CurrentlyEditingActionType, ACategoryIndex, APropertyIndex, APropertyItemIndex, TargetCanvas, Column, CellRect, imglstUsedMatchCriteria);
 
-    CCategory_EditedAction:
-      OIAfterCellPaint_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ACategoryIndex, APropertyIndex, APropertyItemIndex, TargetCanvas, Column, CellRect, imglstUsedMatchCriteria);
+      CCategory_EditedAction:
+        OIAfterCellPaint_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ACategoryIndex, APropertyIndex, APropertyItemIndex, TargetCanvas, Column, CellRect, imglstUsedMatchCriteria);
+    end;
+  except
   end;
 end;
 
@@ -6192,15 +6218,18 @@ end;
 procedure TfrClickerActions.HandleOnTextEditorMouseDown(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer;
   Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
-  case ACategoryIndex of
-    CCategory_Common:
-      ;
+  try
+    case ACategoryIndex of
+      CCategory_Common:
+        ;
 
-    CCategory_ActionSpecific:
-      TextEditorMouseDown_ActionSpecific(FEditingAction, ACategoryIndex, APropertyIndex, AItemIndex, Sender, Button, Shift, X, Y);
+      CCategory_ActionSpecific:
+        TextEditorMouseDown_ActionSpecific(FEditingAction, ACategoryIndex, APropertyIndex, AItemIndex, Sender, Button, Shift, X, Y);
 
-    CCategory_EditedAction:
-      TextEditorMouseDown_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, ACategoryIndex, APropertyIndex, AItemIndex, Sender, Button, Shift, X, Y);
+      CCategory_EditedAction:
+        TextEditorMouseDown_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, ACategoryIndex, APropertyIndex, AItemIndex, Sender, Button, Shift, X, Y);
+    end;
+  except
   end;
 end;
 
@@ -6306,15 +6335,18 @@ function TfrClickerActions.HandleOnTextEditorMouseMove(ANodeLevel, ACategoryInde
 begin
   Result := False;
 
-  case ACategoryIndex of
-    CCategory_Common:
-      ;
+  try
+    case ACategoryIndex of
+      CCategory_Common:
+        ;
 
-    CCategory_ActionSpecific:
-      Result := TextEditorMouseMove_ActionSpecific(FEditingAction, ACategoryIndex, APropertyIndex, AItemIndex, Sender, Shift, X, Y);
+      CCategory_ActionSpecific:
+        Result := TextEditorMouseMove_ActionSpecific(FEditingAction, ACategoryIndex, APropertyIndex, AItemIndex, Sender, Shift, X, Y);
 
-    CCategory_EditedAction:
-      Result := TextEditorMouseMove_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, ACategoryIndex, APropertyIndex, AItemIndex, Sender, Shift, X, Y);
+      CCategory_EditedAction:
+        Result := TextEditorMouseMove_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, ACategoryIndex, APropertyIndex, AItemIndex, Sender, Shift, X, Y);
+    end;
+  except
   end;
 end;
 
@@ -6377,15 +6409,18 @@ end;
 procedure TfrClickerActions.HandleOnOITextEditorKeyUp(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer;
   Sender: TObject; var Key: Word; Shift: TShiftState);
 begin
-  case ACategoryIndex of
-    CCategory_Common:
-      ;
+  try
+    case ACategoryIndex of
+      CCategory_Common:
+        ;
 
-    CCategory_ActionSpecific:
-      OITextEditorKeyUp_ActionSpecific(FEditingAction, ACategoryIndex, APropertyIndex, AItemIndex, Sender);
+      CCategory_ActionSpecific:
+        OITextEditorKeyUp_ActionSpecific(FEditingAction, ACategoryIndex, APropertyIndex, AItemIndex, Sender);
 
-    CCategory_EditedAction:
-      OITextEditorKeyUp_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, ACategoryIndex, APropertyIndex, AItemIndex, Sender);
+      CCategory_EditedAction:
+        OITextEditorKeyUp_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, ACategoryIndex, APropertyIndex, AItemIndex, Sender);
+    end;
+  except
   end;
 end;
 
@@ -6606,15 +6641,18 @@ begin
   AHint := '';
   AShowHint := True;
 
-  case ACategoryIndex of
-    CCategory_Common:
-      ;
+  try
+    case ACategoryIndex of
+      CCategory_Common:
+        ;
 
-    CCategory_ActionSpecific:
-      OIEditorAssignMenuAndTooltip_ActionSpecific(FEditingAction, CurrentlyEditingActionType, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, Sender, APopupMenu, AHint, AShowHint);
+      CCategory_ActionSpecific:
+        OIEditorAssignMenuAndTooltip_ActionSpecific(FEditingAction, CurrentlyEditingActionType, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, Sender, APopupMenu, AHint, AShowHint);
 
-    CCategory_EditedAction:
-      OIEditorAssignMenuAndTooltip_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, Sender, APopupMenu, AHint, AShowHint);
+      CCategory_EditedAction:
+        OIEditorAssignMenuAndTooltip_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, Sender, APopupMenu, AHint, AShowHint);
+    end;
+  except
   end;
 end;
 
@@ -6670,15 +6708,18 @@ begin
   AFilter := '';
   AInitDir := '';
 
-  case ACategoryIndex of
-    CCategory_Common:
-      ;
+  try
+    case ACategoryIndex of
+      CCategory_Common:
+        ;
 
-    CCategory_ActionSpecific:
-      OIGetFileDialogSettings_ActionSpecific(CurrentlyEditingActionType, ACategoryIndex, APropertyIndex, AItemIndex, FBMPsDir, AFilter, AInitDir);
+      CCategory_ActionSpecific:
+        OIGetFileDialogSettings_ActionSpecific(CurrentlyEditingActionType, ACategoryIndex, APropertyIndex, AItemIndex, FBMPsDir, AFilter, AInitDir);
 
-    CCategory_EditedAction:
-      OIGetFileDialogSettings_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ACategoryIndex, APropertyIndex, AItemIndex, FBMPsDir, AFilter, AInitDir);
+      CCategory_EditedAction:
+        OIGetFileDialogSettings_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ACategoryIndex, APropertyIndex, AItemIndex, FBMPsDir, AFilter, AInitDir);
+    end;
+  except
   end;
 end;
 
@@ -7010,30 +7051,33 @@ procedure TfrClickerActions.HandleOnOIArrowEditorClick(ANodeLevel, ACategoryInde
 var
   tp: TPoint;
 begin
-  case ACategoryIndex of
-    CCategory_Common:
-      case APropertyIndex of
-        CMain_ActionTimeout_PropIndex:
-        begin
-          FOIEditorMenu.Items.Clear;
+  try
+    case ACategoryIndex of
+      CCategory_Common:
+        case APropertyIndex of
+          CMain_ActionTimeout_PropIndex:
+          begin
+            FOIEditorMenu.Items.Clear;
 
-          AddMenuItemToPopupMenu(FOIEditorMenu, '0', MenuItem_SetActionTimeoutFromOI, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, FEditingAction);
-          AddMenuItemToPopupMenu(FOIEditorMenu, '1000', MenuItem_SetActionTimeoutFromOI, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, FEditingAction);
-          AddMenuItemToPopupMenu(FOIEditorMenu, '10000', MenuItem_SetActionTimeoutFromOI, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, FEditingAction);
-          AddMenuItemToPopupMenu(FOIEditorMenu, '30000', MenuItem_SetActionTimeoutFromOI, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, FEditingAction);
+            AddMenuItemToPopupMenu(FOIEditorMenu, '0', MenuItem_SetActionTimeoutFromOI, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, FEditingAction);
+            AddMenuItemToPopupMenu(FOIEditorMenu, '1000', MenuItem_SetActionTimeoutFromOI, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, FEditingAction);
+            AddMenuItemToPopupMenu(FOIEditorMenu, '10000', MenuItem_SetActionTimeoutFromOI, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, FEditingAction);
+            AddMenuItemToPopupMenu(FOIEditorMenu, '30000', MenuItem_SetActionTimeoutFromOI, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, FEditingAction);
 
-          GetCursorPos(tp);
-          FOIEditorMenu.PopUp(tp.X, tp.Y);
-        end
-        else
-          ;
-      end;
+            GetCursorPos(tp);
+            FOIEditorMenu.PopUp(tp.X, tp.Y);
+          end
+          else
+            ;
+        end;
 
-    CCategory_ActionSpecific:
-      OIArrowEditorClick_ActionSpecific(FEditingAction, CurrentlyEditingActionType, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+      CCategory_ActionSpecific:
+        OIArrowEditorClick_ActionSpecific(FEditingAction, CurrentlyEditingActionType, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
 
-    CCategory_EditedAction:
-      OIArrowEditorClick_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+      CCategory_EditedAction:
+        OIArrowEditorClick_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+    end;
+  except
   end;
 end;
 
@@ -7101,26 +7145,29 @@ procedure TfrClickerActions.HandleOnOIUserEditorClick(ANodeLevel, ACategoryIndex
 var
   Condition: string;
 begin
-  case ACategoryIndex of
-    CCategory_Common:
-    begin
-      if APropertyIndex = CMain_ActionCondition_PropIndex then
+  try
+    case ACategoryIndex of
+      CCategory_Common:
       begin
-        Condition := FEditingAction^.ActionOptions.ActionCondition;
-        if DoOnEditCallTemplateBreakCondition(Condition) then
+        if APropertyIndex = CMain_ActionCondition_PropIndex then
         begin
-          TriggerOnControlsModified(FEditingAction^.ActionOptions.ActionCondition <> Condition);
-          FEditingAction^.ActionOptions.ActionCondition := Condition;
+          Condition := FEditingAction^.ActionOptions.ActionCondition;
+          if DoOnEditCallTemplateBreakCondition(Condition) then
+          begin
+            TriggerOnControlsModified(FEditingAction^.ActionOptions.ActionCondition <> Condition);
+            FEditingAction^.ActionOptions.ActionCondition := Condition;
+          end;
         end;
       end;
-    end;
 
-    CCategory_ActionSpecific:
-      OIUserEditorClick_ActionSpecific(FEditingAction, CurrentlyEditingActionType, ACategoryIndex, APropertyIndex, AItemIndex, ARepaintValue);
+      CCategory_ActionSpecific:
+        OIUserEditorClick_ActionSpecific(FEditingAction, CurrentlyEditingActionType, ACategoryIndex, APropertyIndex, AItemIndex, ARepaintValue);
 
-    CCategory_EditedAction:
-      OIUserEditorClick_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ACategoryIndex, APropertyIndex, AItemIndex, ARepaintValue);
-  end; //case
+      CCategory_EditedAction:
+        OIUserEditorClick_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ACategoryIndex, APropertyIndex, AItemIndex, ARepaintValue);
+    end; //case
+  except
+  end;
 end;
 
 
@@ -7208,16 +7255,19 @@ function TfrClickerActions.HandleOnOIBrowseFile(ANodeLevel, ACategoryIndex, APro
 begin
   Result := '';
 
-  case ACategoryIndex of
-    CCategory_Common:
-      ;
+  try
+    case ACategoryIndex of
+      CCategory_Common:
+        ;
 
-    CCategory_ActionSpecific:
-      Result := OIBrowseFile_ActionSpecific(CurrentlyEditingActionType, ACategoryIndex, APropertyIndex, AItemIndex, AFilter, ADialogInitDir, Handled, AReturnMultipleFiles);
+      CCategory_ActionSpecific:
+        Result := OIBrowseFile_ActionSpecific(CurrentlyEditingActionType, ACategoryIndex, APropertyIndex, AItemIndex, AFilter, ADialogInitDir, Handled, AReturnMultipleFiles);
 
-    CCategory_EditedAction:
-      Result := OIBrowseFile_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ACategoryIndex, APropertyIndex, AItemIndex, AFilter, ADialogInitDir, Handled, AReturnMultipleFiles);
-  end; //case
+      CCategory_EditedAction:
+        Result := OIBrowseFile_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ACategoryIndex, APropertyIndex, AItemIndex, AFilter, ADialogInitDir, Handled, AReturnMultipleFiles);
+    end; //case
+  except
+  end;
 end;
 
 
@@ -7314,15 +7364,18 @@ end;
 
 procedure TfrClickerActions.HandleOnOIAfterSpinTextEditorChanging(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; var ANewValue: string);
 begin
-  case ACategoryIndex of
-    CCategory_Common:
-      ;
+  try
+    case ACategoryIndex of
+      CCategory_Common:
+        ;
 
-    CCategory_ActionSpecific:
-      OIAfterSpinTextEditorChanging_ActionSpecific(FEditingAction, CurrentlyEditingActionType, ACategoryIndex, APropertyIndex, AItemIndex, ANewValue);
+      CCategory_ActionSpecific:
+        OIAfterSpinTextEditorChanging_ActionSpecific(FEditingAction, CurrentlyEditingActionType, ACategoryIndex, APropertyIndex, AItemIndex, ANewValue);
 
-    CCategory_EditedAction:
-      OIAfterSpinTextEditorChanging_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ACategoryIndex, APropertyIndex, AItemIndex, ANewValue);
+      CCategory_EditedAction:
+        OIAfterSpinTextEditorChanging_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ACategoryIndex, APropertyIndex, AItemIndex, ANewValue);
+    end;
+  except
   end;
 end;
 
@@ -7399,15 +7452,18 @@ end;
 
 procedure TfrClickerActions.HandleOnOISelectedNode(NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex, Column: Integer; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
-  case CategoryIndex of
-    CCategory_Common:
-      ;
+  try
+    case CategoryIndex of
+      CCategory_Common:
+        ;
 
-    CCategory_ActionSpecific:
-      HandleOnOISelectedNode_ActionSpecific(FEditingAction, CurrentlyEditingActionType, NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex, Column, Button, Shift, X, Y);
+      CCategory_ActionSpecific:
+        HandleOnOISelectedNode_ActionSpecific(FEditingAction, CurrentlyEditingActionType, NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex, Column, Button, Shift, X, Y);
 
-    CCategory_EditedAction:
-      HandleOnOISelectedNode_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex, Column, Button, Shift, X, Y);
+      CCategory_EditedAction:
+        HandleOnOISelectedNode_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex, Column, Button, Shift, X, Y);
+    end;
+  except
   end;
 end;
 
@@ -7425,15 +7481,18 @@ end;
 
 procedure TfrClickerActions.HandleOnOIFirstVisibleNode(NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex: Integer);
 begin
-  case CategoryIndex of
-    CCategory_Common:
-      ;
+  try
+    case CategoryIndex of
+      CCategory_Common:
+        ;
 
-    CCategory_ActionSpecific:
-      OIFirstVisibleNode_ActionSpecific(FEditingAction, NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex);
+      CCategory_ActionSpecific:
+        OIFirstVisibleNode_ActionSpecific(FEditingAction, NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex);
 
-    CCategory_EditedAction:
-      OIFirstVisibleNode_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex);
+      CCategory_EditedAction:
+        OIFirstVisibleNode_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex);
+    end;
+  except
   end;
 end;
 
