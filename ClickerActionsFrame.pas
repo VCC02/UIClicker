@@ -4502,6 +4502,27 @@ begin  //
 end;
 
 
+function OIGetPropertyCount_ActionSpecific(AEditingAction: PClkActionRec; ALiveEditingActionType: TClkAction; ACategoryIndex: Integer): Integer;
+var
+  EditingActionType: Integer;
+begin
+  if AEditingAction = nil then
+  begin
+    Result := 0;
+    Exit;
+  end;
+
+  EditingActionType := Integer(ALiveEditingActionType);
+  if EditingActionType = CClkUnsetAction then
+    Result := 0 //no action is selected
+  else
+    Result := CMainPropCounts[EditingActionType];
+
+  if ALiveEditingActionType = acPlugin then
+    Result := Result + AEditingAction.PluginOptions.CachedCount;
+end;
+
+
 function TfrClickerActions.HandleOnOIGetPropertyCount(ACategoryIndex: Integer): Integer;
 var
   EditingActionType: Integer;
@@ -4513,36 +4534,38 @@ begin
         Result := CPropCount_Common;
 
       CCategory_ActionSpecific:
-      begin
-        EditingActionType := Integer(CurrentlyEditingActionType);
-        if EditingActionType = CClkUnsetAction then
-          Result := 0 //no action is selected
-        else
-          Result := CMainPropCounts[EditingActionType];
-
-        if CurrentlyEditingActionType = acPlugin then
-          Result := Result + FEditingAction.PluginOptions.CachedCount;
-      end;
+        Result := OIGetPropertyCount_ActionSpecific(FEditingAction, CurrentlyEditingActionType, ACategoryIndex);
+      //begin
+      //  EditingActionType := Integer(CurrentlyEditingActionType);
+      //  if EditingActionType = CClkUnsetAction then
+      //    Result := 0 //no action is selected
+      //  else
+      //    Result := CMainPropCounts[EditingActionType];
+      //
+      //  if CurrentlyEditingActionType = acPlugin then
+      //    Result := Result + FEditingAction.PluginOptions.CachedCount;
+      //end;
 
       CCategory_EditedAction:
-      begin
-        EditingActionType := Integer(CurrentlyEditingActionType);
-
-        if CurrentlyEditingActionType = acEditTemplate then
-        begin
-          EditedActionTypeByEditTemplate := FEditingAction^.EditTemplateOptions.EditedActionType;
-
-          if EditingActionType = CClkUnsetAction then
-            Result := 0 //no action is selected
-          else
-            Result := CMainPropCounts[Max(0, Integer(EditedActionTypeByEditTemplate))];
-
-          if EditedActionTypeByEditTemplate = acPlugin then
-            Result := Result + FEditingAction^.EditTemplateOptions.PluginOptionsCachedCount;
-        end
-        else
-          Result := 0; //some default
-      end;
+        Result := OIGetPropertyCount_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ACategoryIndex);
+      //begin
+      //  EditingActionType := Integer(CurrentlyEditingActionType);
+      //
+      //  if CurrentlyEditingActionType = acEditTemplate then
+      //  begin
+      //    EditedActionTypeByEditTemplate := FEditingAction^.EditTemplateOptions.EditedActionType;
+      //
+      //    if EditingActionType = CClkUnsetAction then
+      //      Result := 0 //no action is selected
+      //    else
+      //      Result := CMainPropCounts[Max(0, Integer(EditedActionTypeByEditTemplate))];
+      //
+      //    if EditedActionTypeByEditTemplate = acPlugin then
+      //      Result := Result + FEditingAction^.EditTemplateOptions.PluginOptionsCachedCount;
+      //  end
+      //  else
+      //    Result := 0; //some default
+      //end;
 
       else
         Result := 0;

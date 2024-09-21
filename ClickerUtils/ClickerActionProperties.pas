@@ -67,8 +67,8 @@ function SetSaveSetVarToFileActionProperties(AListOfSaveSetVarOptionsParams: TSt
 function SetPluginActionProperties(APluginOptionsParams: TStrings; out APluginOptions: TClkPluginOptions): string;
 function SetEditTemplateActionProperties(AListOfEditTemplateOptionsParams: TStrings; out AEditTemplateOptions: TClkEditTemplateOptions): string;
 
-function SetActionProperties(AListOfOptionsParams: TStrings; AActionType: TClkAction; out AActionOptions: TClkActionRec): string; overload; //it outputs only the options, without the action metadata
-function SetActionProperties(AListOfOptionsParams: string; AActionType: TClkAction; out AActionOptions: TClkActionRec): string; overload; //it outputs only the options, without the action metadata
+function SetActionProperties(AListOfOptionsParams: TStrings; AActionType: TClkAction; var AActionOptions: TClkActionRec): string; overload; //it outputs only the options, without the action metadata
+function SetActionProperties(AListOfOptionsParams: string; AActionType: TClkAction; var AActionOptions: TClkActionRec): string; overload; //it outputs only the options, without the action metadata
 
 procedure GetDefaultPropertyValues_Click(var AClickOptions: TClkClickOptions);
 procedure GetDefaultPropertyValues_ExecApp(var AExecAppOptions: TClkExecAppOptions);
@@ -834,7 +834,7 @@ begin
 end;
 
 
-function SetActionProperties(AListOfOptionsParams: TStrings; AActionType: TClkAction; out AActionOptions: TClkActionRec): string; overload; //it outputs only the options, without the action metadata
+function SetActionProperties(AListOfOptionsParams: TStrings; AActionType: TClkAction; var AActionOptions: TClkActionRec): string; overload; //it outputs only the options, without the action metadata
 var
   DummyActionOptions: TClkActionOptions;
 begin
@@ -854,11 +854,11 @@ begin
     acEditTemplate: Result := SetEditTemplateActionProperties(AListOfOptionsParams, AActionOptions.EditTemplateOptions);
   end;
 
-  //AActionOptions.ActionOptions.Action := AActionType;  //uncomment if needed
+  AActionOptions.ActionOptions.Action := AActionType;  //uncomment if needed
 end;
 
 
-function SetActionProperties(AListOfOptionsParams: string; AActionType: TClkAction; out AActionOptions: TClkActionRec): string; overload; //it outputs only the options, without the action metadata
+function SetActionProperties(AListOfOptionsParams: string; AActionType: TClkAction; var AActionOptions: TClkActionRec): string; overload; //it outputs only the options, without the action metadata
 var
   SerProperties: TStringList;
 begin
