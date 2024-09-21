@@ -51,6 +51,7 @@ function GetPluginActionProperties(PluginOptions: TClkPluginOptions): string;
 function GetEditTemplateActionProperties(AEditTemplateOptions: TClkEditTemplateOptions): string;
 //when adding new Get<ActionType>Properties functions, please update DoOnActionPlugin_GetActionContentByIndex_Callback from ClickerActionPluginLoader.pas
 
+function GetActionPropertiesByType(var AAction: TClkActionRec): string;
 
 //The Set<ActionType>Properties functions return an error if any, or emptry string for success.
 function SetClickActionProperties(AListOfClickOptionsParams: TStrings; out AClickOptions: TClkClickOptions): string;
@@ -66,6 +67,8 @@ function SetSaveSetVarToFileActionProperties(AListOfSaveSetVarOptionsParams: TSt
 function SetPluginActionProperties(APluginOptionsParams: TStrings; out APluginOptions: TClkPluginOptions): string;
 function SetEditTemplateActionProperties(AListOfEditTemplateOptionsParams: TStrings; out AEditTemplateOptions: TClkEditTemplateOptions): string;
 
+function SetActionProperties(AListOfOptionsParams: TStrings; AActionType: TClkAction; out AActionOptions: TClkActionRec): string; overload; //it outputs only the options, without the action metadata
+function SetActionProperties(AListOfOptionsParams: string; AActionType: TClkAction; out AActionOptions: TClkActionRec): string; overload; //it outputs only the options, without the action metadata
 
 procedure GetDefaultPropertyValues_Click(var AClickOptions: TClkClickOptions);
 procedure GetDefaultPropertyValues_ExecApp(var AExecAppOptions: TClkExecAppOptions);
@@ -301,6 +304,27 @@ begin
             'EditedActionName' + '=' + AEditTemplateOptions.EditedActionName + '&' +
             'EditedActionType' + '=' + IntToStr(Ord(AEditTemplateOptions.EditedActionType)) + '&' +
             'NewActionName' + '=' + AEditTemplateOptions.NewActionName + '&';
+end;
+
+
+function GetActionPropertiesByType(var AAction: TClkActionRec): string;
+begin
+  Result := '';
+  case AAction.ActionOptions.Action of
+    acClick: Result := GetClickActionProperties(AAction.ClickOptions);
+    acExecApp: Result := GetExecAppActionProperties(AAction.ExecAppOptions);
+    acFindControl:    Result := GetFindControlActionProperties(AAction.FindControlOptions);
+    acFindSubControl: Result := GetFindControlActionProperties(AAction.FindControlOptions);
+    acSetControlText: Result := GetSetControlTextActionProperties(AAction.SetTextOptions);
+    acCallTemplate: Result := GetCallTemplateActionProperties(AAction.CallTemplateOptions);
+    acSleep: Result := GetSleepActionProperties(AAction.SleepOptions);
+    acSetVar: Result := GetSetVarActionProperties(AAction.SetVarOptions);
+    acWindowOperations: Result := GetWindowOperationsActionProperties(AAction.WindowOperationsOptions);
+    acLoadSetVarFromFile: Result := GetLoadSetVarFromFileActionProperties(AAction.LoadSetVarFromFileOptions);
+    acSaveSetVarToFile: Result := GetSaveSetVarToFileActionProperties(AAction.SaveSetVarToFileOptions);
+    acPlugin: Result := GetPluginActionProperties(AAction.PluginOptions);
+    acEditTemplate: Result := GetEditTemplateActionProperties(AAction.EditTemplateOptions);
+  end;
 end;
 
 
@@ -810,6 +834,44 @@ begin
 end;
 
 
+function SetActionProperties(AListOfOptionsParams: TStrings; AActionType: TClkAction; out AActionOptions: TClkActionRec): string; overload; //it outputs only the options, without the action metadata
+var
+  DummyActionOptions: TClkActionOptions;
+begin
+  case AActionType of
+    acClick: Result := SetClickActionProperties(AListOfOptionsParams, AActionOptions.ClickOptions);
+    acExecApp: Result := SetExecAppActionProperties(AListOfOptionsParams, AActionOptions.ExecAppOptions, DummyActionOptions);
+    acFindControl:    Result := SetFindControlActionProperties(AListOfOptionsParams, False, nil, AActionOptions.FindControlOptions, DummyActionOptions);
+    acFindSubControl: Result := SetFindControlActionProperties(AListOfOptionsParams, True, nil, AActionOptions.FindControlOptions, DummyActionOptions);
+    acSetControlText: Result := SetSetControlTextActionProperties(AListOfOptionsParams, AActionOptions.SetTextOptions);
+    acCallTemplate: Result := SetCallTemplateActionProperties(AListOfOptionsParams, AActionOptions.CallTemplateOptions);
+    acSleep: Result := SetSleepActionProperties(AListOfOptionsParams, AActionOptions.SleepOptions, DummyActionOptions);
+    acSetVar: Result := SetSetVarActionProperties(AListOfOptionsParams, AActionOptions.SetVarOptions);
+    acWindowOperations: Result := SetWindowOperationsActionProperties(AListOfOptionsParams, AActionOptions.WindowOperationsOptions);
+    acLoadSetVarFromFile: Result := SetLoadSetVarFromFileActionProperties(AListOfOptionsParams, AActionOptions.LoadSetVarFromFileOptions);
+    acSaveSetVarToFile: Result := SetSaveSetVarToFileActionProperties(AListOfOptionsParams, AActionOptions.SaveSetVarToFileOptions);
+    acPlugin: Result := SetPluginActionProperties(AListOfOptionsParams, AActionOptions.PluginOptions);
+    acEditTemplate: Result := SetEditTemplateActionProperties(AListOfOptionsParams, AActionOptions.EditTemplateOptions);
+  end;
+
+  //AActionOptions.ActionOptions.Action := AActionType;  //uncomment if needed
+end;
+
+
+function SetActionProperties(AListOfOptionsParams: string; AActionType: TClkAction; out AActionOptions: TClkActionRec): string; overload; //it outputs only the options, without the action metadata
+var
+  SerProperties: TStringList;
+begin
+  SerProperties := TStringList.Create;
+  try
+    SerProperties.Text := StringReplace(AListOfOptionsParams, '&', #13#10, [rfReplaceAll]);
+    Result := SetActionProperties(SerProperties, AActionType, AActionOptions);
+  finally
+    SerProperties.Free;
+  end;
+end;
+
+
 procedure GetDefaultPropertyValues_Click(var AClickOptions: TClkClickOptions);
 begin
   AClickOptions.XClickPointReference := xrefLeft;
@@ -1003,6 +1065,8 @@ end;
 
 
 procedure GetDefaultPropertyValues_EditTemplate(var AEditTemplateOptions: TClkEditTemplateOptions);
+var
+  ClickOptions: TClkClickOptions;
 begin
   AEditTemplateOptions.Operation := etoUpdateAction;
   AEditTemplateOptions.WhichTemplate := etwtSelf;
@@ -1014,6 +1078,9 @@ begin
   AEditTemplateOptions.EditedActionName := '';
   AEditTemplateOptions.EditedActionType := acClick; //TClkAction(CClkUnsetAction); // acClick;
   AEditTemplateOptions.NewActionName := '';
+
+  GetDefaultPropertyValues_Click(ClickOptions);
+  AEditTemplateOptions.ListOfEditedProperties := GetClickActionProperties(ClickOptions);
 end;
 
 end.

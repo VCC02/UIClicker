@@ -364,6 +364,8 @@ type
     Operation: TEditTemplateOperation;
     WhichTemplate: TEditTemplateWhichTemplate;
     TemplateFileName: string; //used when WhichTemplate is set to etwtOther
+
+    ListOfEditedProperties: string;       //serialized properties for the selected action (see the EditedActionType field)
     ListOfEnabledProperties: string;      //CRLF separated list of values  (first level of properties)
 
     CachedCount: Integer;                 //used to speed up ObjectInspector            - set after loading template, from ListOfEnabledProperties
@@ -479,6 +481,9 @@ type
 const
   CActionStatusStr: array[TActionStatus] of string = ('Not Started', 'Failed', 'Successful', 'In Progress', 'Allowed Failed');
 
+  CPropSeparatorInt = #18; //This separator is used to replace the '&' character when storing properties in serialed form in memory ("internally"). This format can also be used when saving properties to disk.
+  CPropSeparatorSer = '&'; //This separator is used for serializing properties.
+
   CCompNotEqual = '<>';        //all these comparison operators should be two characters long
   CCompEqual = '==';
   CCompLessThan = '<?';
@@ -501,6 +506,8 @@ const
   CExtCompGreaterThan = #16'?';  //'>?'
   CExtCompLessThanOrEqual = #15#14; //'<='
   CExtCompGreaterThanOrEqual = #16#14;  // '>='
+
+  //If adding new datatypes or operations, please avoid #18 as encoding character, since it is used by EditTemplate action for serializing properties
 
   CComparisonOperatorsCount = 18;
   CComparisonOperators: array[0..CComparisonOperatorsCount - 1] of string = (

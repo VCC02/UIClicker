@@ -1922,6 +1922,8 @@ begin
 
   FClkActions[ActionIndex].CallTemplateOptions.ListOfCustomVarsAndValues := FastReplace_ReturnTo45(frClickerActions.ListOfCustomVariables);
 
+  frClickerActions.EditingAction^.EditTemplateOptions.ListOfEditedProperties := StringReplace(GetActionPropertiesByType(FClkEditedActionByEditTemplate), CPropSeparatorSer, CPropSeparatorInt, [rfReplaceAll]);
+  //AddToLog('Updating ListOfEditedProperties to ' + frClickerActions.EditingAction^.EditTemplateOptions.ListOfEditedProperties);
   CopyActionContent(frClickerActions.EditingAction^, FClkActions[ActionIndex]);  //uncomment this after removing above code
 end;
 
@@ -1932,6 +1934,7 @@ var
   TempProfileName: string;
   NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex: Integer;
   Action_ScrollInfo: TStringList;
+  SerErr: string;
 begin
   frClickerActions.frClickerConditionEditor.DisplayActionCondition(FClkActions[ActionIndex].ActionOptions.ActionCondition);
 
@@ -2008,10 +2011,18 @@ begin
   if frClickerActions.CurrentlyEditingActionType = acPlugin then
     frClickerActions.frClickerPlugin.LoadDebugSymbols(ExtractFullFileNameNoExt(ResolveTemplatePath(FClkActions[ActionIndex].PluginOptions.FileName)) + '.DbgSym');
 
-  if frClickerActions.CurrentlyEditingActionType = acEditTemplate then
+  if (frClickerActions.CurrentlyEditingActionType = acEditTemplate) and (frClickerActions.EditingAction <> nil) then
   begin
     frClickerActions.EditingAction^.EditTemplateOptions.EditingAction := @FClkEditedActionByEditTemplate;
-    SetActionToDefault(FClkEditedActionByEditTemplate, frClickerActions.EditingAction^.EditTemplateOptions.EditedActionType);
+    //SetActionToDefault(FClkEditedActionByEditTemplate, frClickerActions.EditingAction^.EditTemplateOptions.EditedActionType);
+
+    //AddToLog('Setting FClkEditedActionByEditTemplate to ' + frClickerActions.EditingAction^.EditTemplateOptions.ListOfEditedProperties);
+    SerErr := SetActionProperties(StringReplace(frClickerActions.EditingAction^.EditTemplateOptions.ListOfEditedProperties, CPropSeparatorInt, CPropSeparatorSer, [rfReplaceAll]),
+                                  frClickerActions.EditingAction^.EditTemplateOptions.EditedActionType,
+                                  FClkEditedActionByEditTemplate); //converts from serialized ListOfEditedProperties to structured FClkEditedActionByEditTemplate
+
+    if SerErr <> '' then
+      AddToLog(SerErr);
   end;
 
   if FClkActions[ActionIndex].ScrollIndex <> '' then
