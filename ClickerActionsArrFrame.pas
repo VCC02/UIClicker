@@ -293,7 +293,6 @@ type
     FTemplateIconPath: string;
     FActionExecution: TActionExecution;
     FEditingText: string;
-    FClkEditedActionByEditTemplate: TClkActionRec; //Used as a working action when setting properties from OI on an EditTemplate action. Otherwise, it just takes memory. It is easier to have this allocated here, because it is deallocated automatically when destroying the whole object.
 
     FModified: Boolean;
     FStopAllActionsOnDemand: Boolean;
@@ -1922,10 +1921,8 @@ begin
 
   FClkActions[ActionIndex].CallTemplateOptions.ListOfCustomVarsAndValues := FastReplace_ReturnTo45(frClickerActions.ListOfCustomVariables);
 
-  if (FClkActions[ActionIndex].ActionOptions.Action = acEditTemplate) and (frClickerActions.EditingAction <> nil) then
-    frClickerActions.EditingAction^.EditTemplateOptions.EditingAction := @FClkEditedActionByEditTemplate;
-
-  frClickerActions.EditingAction^.EditTemplateOptions.ListOfEditedProperties := StringReplace(GetActionPropertiesByType(FClkEditedActionByEditTemplate), CPropSeparatorSer, CPropSeparatorInt, [rfReplaceAll]);
+  frClickerActions.SerializeEditTemplateEditingAction;
+  //frClickerActions.EditingAction^.EditTemplateOptions.ListOfEditedProperties := StringReplace(GetActionPropertiesByType(FClkEditedActionByEditTemplate), CPropSeparatorSer, CPropSeparatorInt, [rfReplaceAll]);
   //AddToLog('Updating ListOfEditedProperties to ' + frClickerActions.EditingAction^.EditTemplateOptions.ListOfEditedProperties);
 
   CopyActionContent(frClickerActions.EditingAction^, FClkActions[ActionIndex]);  //uncomment this after removing above code
@@ -1938,7 +1935,6 @@ var
   TempProfileName: string;
   NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex: Integer;
   Action_ScrollInfo: TStringList;
-  SerErr: string;
 begin
   frClickerActions.frClickerConditionEditor.DisplayActionCondition(FClkActions[ActionIndex].ActionOptions.ActionCondition);
 
@@ -2002,7 +1998,10 @@ begin
   frClickerActions.frClickerExecApp.memExecAppParams.Lines.Text := FClkActions[ActionIndex].ExecAppOptions.ListOfParams;
   frClickerActions.frClickerSetVar.SetListOfSetVars(FClkActions[ActionIndex].SetVarOptions);
 
-  frClickerActions.CurrentlyEditingActionType := TClkAction(FClkActions[ActionIndex].ActionOptions.Action);
+  //if (FClkActions[ActionIndex].ActionOptions.Action = acEditTemplate) and (frClickerActions.EditingAction <> nil) then
+  //  frClickerActions.SerializeEditTemplateEditingAction;   //if called here, before setting CurrentlyEditingActionType, there will be no default values in OI
+
+  frClickerActions.CurrentlyEditingActionType := FClkActions[ActionIndex].ActionOptions.Action;
 
   if frClickerActions.CurrentlyEditingActionType = acFindSubControl then
   begin
@@ -2017,17 +2016,10 @@ begin
 
   if (frClickerActions.CurrentlyEditingActionType = acEditTemplate) and (frClickerActions.EditingAction <> nil) then
   begin
-    frClickerActions.EditingAction^.EditTemplateOptions.EditingAction := @FClkEditedActionByEditTemplate;
-    //SetActionToDefault(FClkEditedActionByEditTemplate, frClickerActions.EditingAction^.EditTemplateOptions.EditedActionType);
-
-    //AddToLog('Setting FClkEditedActionByEditTemplate to ' + frClickerActions.EditingAction^.EditTemplateOptions.ListOfEditedProperties);
-    SerErr := SetActionProperties(StringReplace(frClickerActions.EditingAction^.EditTemplateOptions.ListOfEditedProperties, CPropSeparatorInt, CPropSeparatorSer, [rfReplaceAll]),
-                                  frClickerActions.EditingAction^.EditTemplateOptions.EditedActionType,
-                                  FClkEditedActionByEditTemplate); //converts from serialized ListOfEditedProperties to structured FClkEditedActionByEditTemplate
-
-    if SerErr <> '' then
-      AddToLog(SerErr);
-  end;
+    frClickerActions.DeserializeEditTemplateEditingAction;
+    frClickerActions.CurrentlyEditingActionType := {%H-}TClkAction(CClkUnsetAction); //something to cause the setter to be called
+    frClickerActions.CurrentlyEditingActionType := FClkActions[ActionIndex].ActionOptions.Action;
+  end; //it's ugly to reload the OI multiple times, but this is an easy fix
 
   if FClkActions[ActionIndex].ScrollIndex <> '' then
   begin
@@ -5905,13 +5897,8 @@ begin
     //OverwriteActionAtIndexWithDefault(n, TClkAction(Node^.Index));
 
     if (TClkAction(Node^.Index) = acEditTemplate) and (frClickerActions.EditingAction <> nil) then
-    begin
-      frClickerActions.EditingAction^.EditTemplateOptions.EditingAction := @FClkEditedActionByEditTemplate;
-      frClickerActions.EditingAction^.EditTemplateOptions.ListOfEditedProperties := StringReplace(GetActionPropertiesByType(FClkEditedActionByEditTemplate), CPropSeparatorSer, CPropSeparatorInt, [rfReplaceAll]);
+      frClickerActions.SerializeEditTemplateEditingAction;
 
-      FClkActions[n].EditTemplateOptions.EditingAction := frClickerActions.EditingAction^.EditTemplateOptions.EditingAction;
-      FClkActions[n].EditTemplateOptions.ListOfEditedProperties := frClickerActions.EditingAction^.EditTemplateOptions.ListOfEditedProperties;
-    end;
     frClickerActions.CurrentlyEditingActionType := TClkAction(Node^.Index);
 
     vstActions.RootNodeCount := Length(FClkActions);

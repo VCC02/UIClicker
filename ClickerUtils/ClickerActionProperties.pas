@@ -830,7 +830,6 @@ begin
   //Set "private" propeties to some valid values:
   AEditTemplateOptions.CachedCount := 0;
   AEditTemplateOptions.PluginOptionsCachedCount := 0;
-  AEditTemplateOptions.EditingAction := nil;
 end;
 
 
@@ -1074,7 +1073,6 @@ begin
   AEditTemplateOptions.ListOfEnabledProperties := '';
   AEditTemplateOptions.CachedCount := 0;
   AEditTemplateOptions.PluginOptionsCachedCount := 0;
-  AEditTemplateOptions.EditingAction := nil;
   AEditTemplateOptions.EditedActionName := '';
   AEditTemplateOptions.EditedActionType := acClick; //TClkAction(CClkUnsetAction); // acClick;
   AEditTemplateOptions.NewActionName := '';

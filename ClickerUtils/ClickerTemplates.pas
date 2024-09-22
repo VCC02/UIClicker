@@ -527,7 +527,6 @@ begin
   AEditTemplateOptions.ListOfEnabledProperties := FastReplace_45ToReturn(Ini.ReadString(SectionIndex, 'ListOfEnabledProperties', ''));
   AEditTemplateOptions.CachedCount := 0;
   AEditTemplateOptions.PluginOptionsCachedCount := 0;
-  AEditTemplateOptions.EditingAction := nil;
   AEditTemplateOptions.EditedActionName := Ini.ReadString(SectionIndex, 'EditedActionName', '');
   AEditTemplateOptions.EditedActionType := TClkAction(Min(Ini.ReadInteger(SectionIndex, 'EditedActionType', Integer(acClick)), Integer(High(TClkAction))));
   AEditTemplateOptions.NewActionName := Ini.ReadString(SectionIndex, 'NewActionName', '');

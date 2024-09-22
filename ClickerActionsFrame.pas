@@ -323,6 +323,8 @@ type
 
     FEditingActionRec: TClkActionRec;
     FEditingAction: PClkActionRec;
+    FEditTemplateOptions_EditingAction: PClkActionRec;
+    FClkEditedActionByEditTemplate: TClkActionRec; //Used as a working action when setting properties from OI on an EditTemplate action. Otherwise, it just takes memory. It is easier to have this allocated here, because it is deallocated automatically when destroying the whole object.
     FPrevSelectedPrimitiveNode: Integer;
 
     FOnControlsModified: TNotifyEvent;
@@ -661,6 +663,8 @@ type
     procedure BringOIPropertyIntoView(NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex: Integer);
 
     procedure ClearControls;
+    procedure SerializeEditTemplateEditingAction;
+    procedure DeserializeEditTemplateEditingAction;
 
     property BMPsDir: string read FBMPsDir write FBMPsDir;  /////////////////////////// to be removed
     property ControlsModified: Boolean read FControlsModified write FControlsModified;
@@ -758,7 +762,7 @@ implementation
 uses
   Clipbrd, ClickerActionValues, ClickerOIUtils, ClickerZoomPreviewForm,
   ClickerActionPluginLoader, ClickerActionPlugins, InMemFileSystemBrowserForm,
-  ClickerExtraUtils;
+  ClickerExtraUtils, ClickerActionProperties;
 
 
 function ActionStatusStrToActionStatus(AString: string): TActionStatus;
@@ -1021,6 +1025,7 @@ begin
 
   FShowDeprecatedControls := False;
   FEditingAction := @FEditingActionRec;
+  FEditTemplateOptions_EditingAction := @FClkEditedActionByEditTemplate;
   FCurrentlyEditingPrimitiveFileName := '';
   FPrevSelectedPrimitiveNode := -1;
 
@@ -2420,6 +2425,24 @@ begin
   FOIFrame.ReloadContent;
 end;
 
+
+procedure TfrClickerActions.SerializeEditTemplateEditingAction;
+begin
+  FEditingAction^.EditTemplateOptions.ListOfEditedProperties := StringReplace(GetActionPropertiesByType(FClkEditedActionByEditTemplate), CPropSeparatorSer, CPropSeparatorInt, [rfReplaceAll]);
+end;
+
+
+procedure TfrClickerActions.DeserializeEditTemplateEditingAction;
+var
+  SerErr: string;
+begin
+  SerErr := SetActionProperties(StringReplace(FEditingAction^.EditTemplateOptions.ListOfEditedProperties, CPropSeparatorInt, CPropSeparatorSer, [rfReplaceAll]),
+                                FEditingAction^.EditTemplateOptions.EditedActionType,
+                                FClkEditedActionByEditTemplate); //converts from serialized ListOfEditedProperties to structured FClkEditedActionByEditTemplate
+
+  if SerErr <> '' then
+    DoOnAddToLog(SerErr);
+end;
 
 
 procedure TfrClickerActions.UpdatePageControlActionExecutionIcons;
@@ -4524,9 +4547,6 @@ end;
 
 
 function TfrClickerActions.HandleOnOIGetPropertyCount(ACategoryIndex: Integer): Integer;
-//var
-//  EditingActionType: Integer;
-//  EditedActionTypeByEditTemplate: TClkAction;
 begin
   Result := 0;
   try
@@ -4536,38 +4556,10 @@ begin
 
       CCategory_ActionSpecific:
         Result := OIGetPropertyCount_ActionSpecific(FEditingAction, CurrentlyEditingActionType, ACategoryIndex);
-      //begin
-      //  EditingActionType := Integer(CurrentlyEditingActionType);
-      //  if EditingActionType = CClkUnsetAction then
-      //    Result := 0 //no action is selected
-      //  else
-      //    Result := CMainPropCounts[EditingActionType];
-      //
-      //  if CurrentlyEditingActionType = acPlugin then
-      //    Result := Result + FEditingAction.PluginOptions.CachedCount;
-      //end;
 
       CCategory_EditedAction:
-        if FEditingAction^.EditTemplateOptions.EditingAction <> nil then
-          Result := OIGetPropertyCount_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ACategoryIndex);
-      //begin
-      //  EditingActionType := Integer(CurrentlyEditingActionType);
-      //
-      //  if CurrentlyEditingActionType = acEditTemplate then
-      //  begin
-      //    EditedActionTypeByEditTemplate := FEditingAction^.EditTemplateOptions.EditedActionType;
-      //
-      //    if EditingActionType = CClkUnsetAction then
-      //      Result := 0 //no action is selected
-      //    else
-      //      Result := CMainPropCounts[Max(0, Integer(EditedActionTypeByEditTemplate))];
-      //
-      //    if EditedActionTypeByEditTemplate = acPlugin then
-      //      Result := Result + FEditingAction^.EditTemplateOptions.PluginOptionsCachedCount;
-      //  end
-      //  else
-      //    Result := 0; //some default
-      //end;
+        if FEditTemplateOptions_EditingAction <> nil then
+          Result := OIGetPropertyCount_ActionSpecific(FEditTemplateOptions_EditingAction, FEditTemplateOptions_EditingAction.ActionOptions.Action, ACategoryIndex);
 
       else
         Result := 0;
@@ -4668,8 +4660,6 @@ end;
 
 
 function TfrClickerActions.HandleOnOIGetPropertyName(ACategoryIndex, APropertyIndex: Integer): string;
-var
-  EditingActionType: Integer;
 begin
   Result := 'Not set';
 
@@ -4679,21 +4669,11 @@ begin
         Result := CCommonProperties[APropertyIndex].Name;
 
       CCategory_ActionSpecific:
-      begin
         Result := OIGetPropertyName_ActionSpecific(FEditingAction, CurrentlyEditingActionType, APropertyIndex);
-      end; //action specific
 
       CCategory_EditedAction:
-      begin
-        EditingActionType := Integer(CurrentlyEditingActionType);
-        if (EditingActionType = CClkUnsetAction) or (CurrentlyEditingActionType <> acEditTemplate) then
-          Result := '?'
-        else
-        begin
-          if FEditingAction^.EditTemplateOptions.EditingAction <> nil then
-            Result := OIGetPropertyName_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, APropertyIndex);
-        end;
-      end
+        if FEditTemplateOptions_EditingAction <> nil then
+          Result := OIGetPropertyName_ActionSpecific(FEditTemplateOptions_EditingAction, FEditTemplateOptions_EditingAction.ActionOptions.Action, APropertyIndex);
 
       else
         Result := '???';
@@ -4776,15 +4756,11 @@ begin
       end;
 
       CCategory_ActionSpecific:
-      begin
         Result := OIGetPropertyValue_ActionSpecific(FEditingAction, CurrentlyEditingActionType, APropertyIndex, PropDef);
-      end;  //CCategory_ActionSpecific
 
       CCategory_EditedAction:
-      begin
-        if FEditingAction^.EditTemplateOptions.EditingAction <> nil then
-          Result := OIGetPropertyValue_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, APropertyIndex, PropDef);
-      end
+        if FEditTemplateOptions_EditingAction <> nil then
+          Result := OIGetPropertyValue_ActionSpecific(FEditTemplateOptions_EditingAction, FEditTemplateOptions_EditingAction.ActionOptions.Action, APropertyIndex, PropDef);
 
       else
         PropDef.Name := '???';
@@ -4886,8 +4862,8 @@ begin
         Result := OIGetListPropertyItemCount_ActionSpecific(FEditingAction, CurrentlyEditingActionType, ACategoryIndex, APropertyIndex);
 
       CCategory_EditedAction:
-        if FEditingAction^.EditTemplateOptions.EditingAction <> nil then
-          Result := OIGetListPropertyItemCount_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ACategoryIndex, APropertyIndex);
+        if FEditTemplateOptions_EditingAction <> nil then
+          Result := OIGetListPropertyItemCount_ActionSpecific(FEditTemplateOptions_EditingAction, FEditTemplateOptions_EditingAction.ActionOptions.Action, ACategoryIndex, APropertyIndex);
     end;
   except
     Result := 0; //MessageBox(Handle, 'AV', 'UC HandleOnOIGetListPropertyItemCount', 0);
@@ -4991,8 +4967,8 @@ begin
         Result := OIGetListPropertyItemName_ActionSpecific(FEditingAction, CurrentlyEditingActionType, ACategoryIndex, APropertyIndex, AItemIndex);
 
       CCategory_EditedAction:
-        if FEditingAction^.EditTemplateOptions.EditingAction <> nil then
-          Result := OIGetListPropertyItemName_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ACategoryIndex, APropertyIndex, AItemIndex);
+        if FEditTemplateOptions_EditingAction <> nil then
+          Result := OIGetListPropertyItemName_ActionSpecific(FEditTemplateOptions_EditingAction, FEditTemplateOptions_EditingAction.ActionOptions.Action, ACategoryIndex, APropertyIndex, AItemIndex);
     end;
   except
     Result := 'AV'; //MessageBox(Handle, 'AV', 'UC HandleOnOIGetListPropertyItemName', 0);
@@ -5117,8 +5093,8 @@ begin
         Result := OIGetListPropertyItemValue_ActionSpecific(FEditingAction, CurrentlyEditingActionType, ACategoryIndex, APropertyIndex, AItemIndex, AEditorType, PropDef);
 
       CCategory_EditedAction:
-        if FEditingAction^.EditTemplateOptions.EditingAction <> nil then
-          Result := OIGetListPropertyItemValue_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ACategoryIndex, APropertyIndex, AItemIndex, AEditorType, PropDef);
+        if FEditTemplateOptions_EditingAction <> nil then
+          Result := OIGetListPropertyItemValue_ActionSpecific(FEditTemplateOptions_EditingAction, FEditTemplateOptions_EditingAction.ActionOptions.Action, ACategoryIndex, APropertyIndex, AItemIndex, AEditorType, PropDef);
     end;
   except
     //MessageBox(Handle, 'AV', 'UC HandleOnOIGetListPropertyItemValue', 0);
@@ -5201,8 +5177,8 @@ begin  //
         Result := OIGetDataTypeName_ActionSpecific(FEditingAction, CurrentlyEditingActionType, ACategoryIndex, APropertyIndex, AItemIndex);
 
       CCategory_EditedAction:
-        if FEditingAction^.EditTemplateOptions.EditingAction <> nil then
-          Result := OIGetDataTypeName_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ACategoryIndex, APropertyIndex, AItemIndex);
+        if FEditTemplateOptions_EditingAction <> nil then
+          Result := OIGetDataTypeName_ActionSpecific(FEditTemplateOptions_EditingAction, FEditTemplateOptions_EditingAction.ActionOptions.Action, ACategoryIndex, APropertyIndex, AItemIndex);
 
       else
         Result := '???';
@@ -5367,8 +5343,8 @@ begin  //
         if EditingActionType = CClkUnsetAction then
           Exit;
 
-        if FEditingAction^.EditTemplateOptions.EditingAction <> nil then
-          OIGetImageIndexEx_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, Kind, Column, Ghosted, ImageIndex, ImageList);
+        if FEditTemplateOptions_EditingAction <> nil then
+          OIGetImageIndexEx_ActionSpecific(FEditTemplateOptions_EditingAction.ActionOptions.Action, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, Kind, Column, Ghosted, ImageIndex, ImageList);
       end;
     end;
   except
@@ -5629,11 +5605,13 @@ begin
 
   if AEditingAction^.ActionOptions.Action = acEditTemplate then
     if APropertyIndex = CEditTemplate_EditedActionType_PropIndex then
-      if AEditingAction^.EditTemplateOptions.EditingAction <> nil then
+      if FEditTemplateOptions_EditingAction <> nil then
       begin                                                                 //it seems that it's not enough to update from here
-        if Length(AEditingAction^.EditTemplateOptions.EditingAction^.FindControlOptions.MatchBitmapText) = 0 then
-          SetLength(AEditingAction^.EditTemplateOptions.EditingAction^.FindControlOptions.MatchBitmapText, frClickerFindControl.GetBMPTextFontProfilesCount);
-        //tmrReloadOIContent.Enabled := True;  //the action has to be updated before reloading the OI
+        if Length(FEditTemplateOptions_EditingAction^.FindControlOptions.MatchBitmapText) = 0 then
+          SetLength(FEditTemplateOptions_EditingAction^.FindControlOptions.MatchBitmapText, frClickerFindControl.GetBMPTextFontProfilesCount);
+
+        SerializeEditTemplateEditingAction;
+        //tmrReloadOIContent.Enabled := True;  //the action has to be updated outside, to FClkActions, before reloading the OI
       end;
 end;
 
@@ -5660,8 +5638,12 @@ begin
         OIEditedText_ActionSpecific(FEditingAction, CurrentlyEditingActionType, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, ANewText);
 
       CCategory_EditedAction:
-        if FEditingAction^.EditTemplateOptions.EditingAction <> nil then
-          OIEditedText_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, ANewText);
+        if FEditTemplateOptions_EditingAction <> nil then
+        begin
+          OIEditedText_ActionSpecific(FEditTemplateOptions_EditingAction, FEditTemplateOptions_EditingAction.ActionOptions.Action, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, ANewText);
+          //if FEditingAction^.ActionOptions.Action = acEditTemplate then
+          //  FEditingAction^.EditTemplateOptions.ListOfEditedProperties := StringReplace(GetActionPropertiesByType(FEditingAction^), CPropSeparatorSer, CPropSeparatorInt, [rfReplaceAll]);
+        end
 
       else
         ;
@@ -5761,8 +5743,8 @@ begin
         Result := OIEditItems_ActionSpecific(FEditingAction, CurrentlyEditingActionType, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, ANewItems);
 
       CCategory_EditedAction:
-        if FEditingAction^.EditTemplateOptions.EditingAction <> nil then
-          Result := OIEditItems_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, ANewItems);
+        if FEditTemplateOptions_EditingAction <> nil then
+          Result := OIEditItems_ActionSpecific(FEditTemplateOptions_EditingAction, FEditTemplateOptions_EditingAction.ActionOptions.Action, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, ANewItems);
     end;
   except
     on E: Exception do
@@ -5847,8 +5829,8 @@ begin
         Result := OIGetEnumConstsCount_ActionSpecific(FEditingAction, CurrentlyEditingActionType, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
 
       CCategory_EditedAction:
-        if FEditingAction^.EditTemplateOptions.EditingAction <> nil then
-          Result := OIGetEnumConstsCount_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+        if FEditTemplateOptions_EditingAction <> nil then
+          Result := OIGetEnumConstsCount_ActionSpecific(FEditTemplateOptions_EditingAction, FEditTemplateOptions_EditingAction.ActionOptions.Action, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
 
       else
         Result := 0;
@@ -5932,8 +5914,8 @@ begin
         OIGetEnumConst_ActionSpecific(FEditingAction, CurrentlyEditingActionType, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEnumItemIndex, AEnumItemName);
 
       CCategory_EditedAction:
-        if FEditingAction^.EditTemplateOptions.EditingAction <> nil then
-          OIGetEnumConst_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEnumItemIndex, AEnumItemName);
+        if FEditTemplateOptions_EditingAction <> nil then
+          OIGetEnumConst_ActionSpecific(FEditTemplateOptions_EditingAction, FEditTemplateOptions_EditingAction.ActionOptions.Action, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEnumItemIndex, AEnumItemName);
 
       else
         AEnumItemName := '';
@@ -6143,8 +6125,8 @@ begin  //
           OIPaintText_ActionSpecific(FEditingAction, CurrentlyEditingActionType, ANodeData, ACategoryIndex, APropertyIndex, APropertyItemIndex, TargetCanvas, Column, TextType, DoOnAddToLog);
 
         CCategory_EditedAction:
-          if FEditingAction^.EditTemplateOptions.EditingAction <> nil then
-            OIPaintText_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ANodeData, ACategoryIndex, APropertyIndex, APropertyItemIndex, TargetCanvas, Column, TextType, DoOnAddToLog);
+          if FEditTemplateOptions_EditingAction <> nil then
+            OIPaintText_ActionSpecific(FEditTemplateOptions_EditingAction, FEditTemplateOptions_EditingAction.ActionOptions.Action, ANodeData, ACategoryIndex, APropertyIndex, APropertyItemIndex, TargetCanvas, Column, TextType, DoOnAddToLog);
       end;
     end;
   except
@@ -6190,8 +6172,8 @@ begin
         OIBeforeCellPaint_ActionSpecific(CurrentlyEditingActionType, ACategoryIndex, APropertyIndex, APropertyItemIndex, TargetCanvas, Column, CellRect, frClickerFindControl.SelectedBMPTextTab);
 
       CCategory_EditedAction:
-        if FEditingAction^.EditTemplateOptions.EditingAction <> nil then
-          OIBeforeCellPaint_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ACategoryIndex, APropertyIndex, APropertyItemIndex, TargetCanvas, Column, CellRect, frClickerFindControl.SelectedBMPTextTab);
+        if FEditTemplateOptions_EditingAction <> nil then
+          OIBeforeCellPaint_ActionSpecific(FEditTemplateOptions_EditingAction.ActionOptions.Action, ACategoryIndex, APropertyIndex, APropertyItemIndex, TargetCanvas, Column, CellRect, frClickerFindControl.SelectedBMPTextTab);
     end;
   except
   end;
@@ -6258,8 +6240,8 @@ begin
         OIAfterCellPaint_ActionSpecific(FEditingAction, CurrentlyEditingActionType, ACategoryIndex, APropertyIndex, APropertyItemIndex, TargetCanvas, Column, CellRect, imglstUsedMatchCriteria);
 
       CCategory_EditedAction:
-        if FEditingAction^.EditTemplateOptions.EditingAction <> nil then
-          OIAfterCellPaint_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ACategoryIndex, APropertyIndex, APropertyItemIndex, TargetCanvas, Column, CellRect, imglstUsedMatchCriteria);
+        if FEditTemplateOptions_EditingAction <> nil then
+          OIAfterCellPaint_ActionSpecific(FEditTemplateOptions_EditingAction, FEditTemplateOptions_EditingAction.ActionOptions.Action, ACategoryIndex, APropertyIndex, APropertyItemIndex, TargetCanvas, Column, CellRect, imglstUsedMatchCriteria);
     end;
   except
   end;
@@ -6330,8 +6312,8 @@ begin
         TextEditorMouseDown_ActionSpecific(FEditingAction, ACategoryIndex, APropertyIndex, AItemIndex, Sender, Button, Shift, X, Y);
 
       CCategory_EditedAction:
-        if FEditingAction^.EditTemplateOptions.EditingAction <> nil then
-          TextEditorMouseDown_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, ACategoryIndex, APropertyIndex, AItemIndex, Sender, Button, Shift, X, Y);
+        if FEditTemplateOptions_EditingAction <> nil then
+          TextEditorMouseDown_ActionSpecific(FEditTemplateOptions_EditingAction, ACategoryIndex, APropertyIndex, AItemIndex, Sender, Button, Shift, X, Y);
     end;
   except
   end;
@@ -6450,8 +6432,8 @@ begin
         Result := TextEditorMouseMove_ActionSpecific(FEditingAction, ACategoryIndex, APropertyIndex, AItemIndex, Sender, Shift, X, Y);
 
       CCategory_EditedAction:
-        if FEditingAction^.EditTemplateOptions.EditingAction <> nil then
-          Result := TextEditorMouseMove_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, ACategoryIndex, APropertyIndex, AItemIndex, Sender, Shift, X, Y);
+        if FEditTemplateOptions_EditingAction <> nil then
+          Result := TextEditorMouseMove_ActionSpecific(FEditTemplateOptions_EditingAction, ACategoryIndex, APropertyIndex, AItemIndex, Sender, Shift, X, Y);
     end;
   except
   end;
@@ -6528,8 +6510,8 @@ begin
         OITextEditorKeyUp_ActionSpecific(FEditingAction, ACategoryIndex, APropertyIndex, AItemIndex, Sender);
 
       CCategory_EditedAction:
-        if FEditingAction^.EditTemplateOptions.EditingAction <> nil then
-          OITextEditorKeyUp_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, ACategoryIndex, APropertyIndex, AItemIndex, Sender);
+        if FEditTemplateOptions_EditingAction <> nil then
+          OITextEditorKeyUp_ActionSpecific(FEditTemplateOptions_EditingAction, ACategoryIndex, APropertyIndex, AItemIndex, Sender);
     end;
   except
   end;
@@ -6764,8 +6746,8 @@ begin
         OIEditorAssignMenuAndTooltip_ActionSpecific(FEditingAction, CurrentlyEditingActionType, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, Sender, APopupMenu, AHint, AShowHint);
 
       CCategory_EditedAction:
-        if FEditingAction^.EditTemplateOptions.EditingAction <> nil then
-          OIEditorAssignMenuAndTooltip_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, Sender, APopupMenu, AHint, AShowHint);
+        if FEditTemplateOptions_EditingAction <> nil then
+          OIEditorAssignMenuAndTooltip_ActionSpecific(FEditTemplateOptions_EditingAction, FEditTemplateOptions_EditingAction.ActionOptions.Action, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, Sender, APopupMenu, AHint, AShowHint);
     end;
   except
   end;
@@ -6832,8 +6814,8 @@ begin
         OIGetFileDialogSettings_ActionSpecific(CurrentlyEditingActionType, ACategoryIndex, APropertyIndex, AItemIndex, FBMPsDir, AFilter, AInitDir);
 
       CCategory_EditedAction:
-        if FEditingAction^.EditTemplateOptions.EditingAction <> nil then
-          OIGetFileDialogSettings_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ACategoryIndex, APropertyIndex, AItemIndex, FBMPsDir, AFilter, AInitDir);
+        if FEditTemplateOptions_EditingAction <> nil then
+          OIGetFileDialogSettings_ActionSpecific(FEditTemplateOptions_EditingAction.ActionOptions.Action, ACategoryIndex, APropertyIndex, AItemIndex, FBMPsDir, AFilter, AInitDir);
     end;
   except
   end;
@@ -7194,8 +7176,8 @@ begin
         OIArrowEditorClick_ActionSpecific(FEditingAction, CurrentlyEditingActionType, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
 
       CCategory_EditedAction:
-        if FEditingAction^.EditTemplateOptions.EditingAction <> nil then
-          OIArrowEditorClick_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+        if FEditTemplateOptions_EditingAction <> nil then
+          OIArrowEditorClick_ActionSpecific(FEditTemplateOptions_EditingAction, FEditTemplateOptions_EditingAction.ActionOptions.Action, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
     end;
   except
   end;
@@ -7287,8 +7269,8 @@ begin
         OIUserEditorClick_ActionSpecific(FEditingAction, CurrentlyEditingActionType, ACategoryIndex, APropertyIndex, AItemIndex, ARepaintValue);
 
       CCategory_EditedAction:
-        if FEditingAction^.EditTemplateOptions.EditingAction <> nil then
-          OIUserEditorClick_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ACategoryIndex, APropertyIndex, AItemIndex, ARepaintValue);
+        if FEditTemplateOptions_EditingAction <> nil then
+          OIUserEditorClick_ActionSpecific(FEditTemplateOptions_EditingAction, FEditTemplateOptions_EditingAction.ActionOptions.Action, ACategoryIndex, APropertyIndex, AItemIndex, ARepaintValue);
     end; //case
   except
   end;
@@ -7388,8 +7370,8 @@ begin
         Result := OIBrowseFile_ActionSpecific(CurrentlyEditingActionType, ACategoryIndex, APropertyIndex, AItemIndex, AFilter, ADialogInitDir, Handled, AReturnMultipleFiles);
 
       CCategory_EditedAction:
-        if FEditingAction^.EditTemplateOptions.EditingAction <> nil then
-          Result := OIBrowseFile_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ACategoryIndex, APropertyIndex, AItemIndex, AFilter, ADialogInitDir, Handled, AReturnMultipleFiles);
+        if FEditTemplateOptions_EditingAction <> nil then
+          Result := OIBrowseFile_ActionSpecific(FEditTemplateOptions_EditingAction.ActionOptions.Action, ACategoryIndex, APropertyIndex, AItemIndex, AFilter, ADialogInitDir, Handled, AReturnMultipleFiles);
     end; //case
   except
   end;
@@ -7501,8 +7483,8 @@ begin
         OIAfterSpinTextEditorChanging_ActionSpecific(FEditingAction, CurrentlyEditingActionType, ACategoryIndex, APropertyIndex, AItemIndex, ANewValue);
 
       CCategory_EditedAction:
-        if FEditingAction^.EditTemplateOptions.EditingAction <> nil then
-          OIAfterSpinTextEditorChanging_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ACategoryIndex, APropertyIndex, AItemIndex, ANewValue);
+        if FEditTemplateOptions_EditingAction <> nil then
+          OIAfterSpinTextEditorChanging_ActionSpecific(FEditTemplateOptions_EditingAction, FEditTemplateOptions_EditingAction.ActionOptions.Action, ACategoryIndex, APropertyIndex, AItemIndex, ANewValue);
     end;
   except
   end;
@@ -7590,8 +7572,8 @@ begin
         HandleOnOISelectedNode_ActionSpecific(FEditingAction, CurrentlyEditingActionType, NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex, Column, Button, Shift, X, Y);
 
       CCategory_EditedAction:
-        if FEditingAction^.EditTemplateOptions.EditingAction <> nil then
-          HandleOnOISelectedNode_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex, Column, Button, Shift, X, Y);
+        if FEditTemplateOptions_EditingAction <> nil then
+          HandleOnOISelectedNode_ActionSpecific(FEditTemplateOptions_EditingAction, FEditTemplateOptions_EditingAction.ActionOptions.Action, NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex, Column, Button, Shift, X, Y);
     end;
   except
   end;
@@ -7623,8 +7605,8 @@ begin
         OIFirstVisibleNode_ActionSpecific(FEditingAction, NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex);
 
       CCategory_EditedAction:
-        if FEditingAction^.EditTemplateOptions.EditingAction <> nil then
-          OIFirstVisibleNode_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex);
+        if FEditTemplateOptions_EditingAction <> nil then
+          OIFirstVisibleNode_ActionSpecific(FEditTemplateOptions_EditingAction, NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex);
     end;
   except
   end;
@@ -7636,14 +7618,14 @@ var
   DatatypeName: string;
 begin
   try
-  if FEditingAction^.EditTemplateOptions.EditingAction <> nil then
+  if FEditTemplateOptions_EditingAction <> nil then
     if CategoryIndex = CCategory_EditedAction then
       if NodeLevel in [CPropertyLevel, CPropertyItemLevel] then
       begin
         ACheckType := ctCheckBox;
         ACheckState := csUncheckedNormal; ///////////  should be read from action data
 
-        DatatypeName := OIGetDataTypeName_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, CategoryIndex, PropertyIndex, PropertyItemIndex);
+        DatatypeName := OIGetDataTypeName_ActionSpecific(FEditTemplateOptions_EditingAction, FEditTemplateOptions_EditingAction.ActionOptions.Action, CategoryIndex, PropertyIndex, PropertyItemIndex);
         if (DatatypeName = 'Structure') or (DatatypeName = 'Array') then
           ACheckState := csMixedPressed;
       end;
@@ -7665,9 +7647,9 @@ var
 begin
   AAllowed := (CategoryIndex = CCategory_EditedAction) and (NodeLevel in [CPropertyLevel, CPropertyItemLevel]);
 
-  if FEditingAction^.EditTemplateOptions.EditingAction <> nil then
+  if FEditTemplateOptions_EditingAction <> nil then
   begin
-    DatatypeName := OIGetDataTypeName_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, CategoryIndex, PropertyIndex, PropertyItemIndex);
+    DatatypeName := OIGetDataTypeName_ActionSpecific(FEditTemplateOptions_EditingAction, FEditTemplateOptions_EditingAction.ActionOptions.Action, CategoryIndex, PropertyIndex, PropertyItemIndex);
     if (DatatypeName = 'Structure') or (DatatypeName = 'Array') then
       AAllowed := False;
   end;
