@@ -4524,10 +4524,11 @@ end;
 
 
 function TfrClickerActions.HandleOnOIGetPropertyCount(ACategoryIndex: Integer): Integer;
-var
-  EditingActionType: Integer;
-  EditedActionTypeByEditTemplate: TClkAction;
+//var
+//  EditingActionType: Integer;
+//  EditedActionTypeByEditTemplate: TClkAction;
 begin
+  Result := 0;
   try
     case ACategoryIndex of
       CCategory_Common:
@@ -4547,7 +4548,8 @@ begin
       //end;
 
       CCategory_EditedAction:
-        Result := OIGetPropertyCount_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ACategoryIndex);
+        if FEditingAction^.EditTemplateOptions.EditingAction <> nil then
+          Result := OIGetPropertyCount_ActionSpecific(FEditingAction^.EditTemplateOptions.EditingAction, FEditingAction^.EditTemplateOptions.EditingAction.ActionOptions.Action, ACategoryIndex);
       //begin
       //  EditingActionType := Integer(CurrentlyEditingActionType);
       //
@@ -5624,6 +5626,15 @@ begin
       DoOnModifyPluginProperty(AEditingAction);
       tmrReloadOIContent.Enabled := True;
     end;
+
+  if AEditingAction^.ActionOptions.Action = acEditTemplate then
+    if APropertyIndex = CEditTemplate_EditedActionType_PropIndex then
+      if AEditingAction^.EditTemplateOptions.EditingAction <> nil then
+      begin                                                                 //it seems that it's not enough to update from here
+        if Length(AEditingAction^.EditTemplateOptions.EditingAction^.FindControlOptions.MatchBitmapText) = 0 then
+          SetLength(AEditingAction^.EditTemplateOptions.EditingAction^.FindControlOptions.MatchBitmapText, frClickerFindControl.GetBMPTextFontProfilesCount);
+        //tmrReloadOIContent.Enabled := True;  //the action has to be updated before reloading the OI
+      end;
 end;
 
 

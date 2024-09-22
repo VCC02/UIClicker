@@ -214,6 +214,13 @@ const
 
   CPlugin_FileName_PropIndex = 0;
 
+  CEditTemplate_Operation_PropIndex = 0;
+  CEditTemplate_WhichTemplate_PropIndex = 1;
+  CEditTemplate_TemplateFileName_PropIndex = 2;
+  CEditTemplate_EditedActionName_PropIndex = 3;
+  CEditTemplate_EditedActionType_PropIndex = 4;
+  CEditTemplate_NewActionName_PropIndex = 5;
+
   //Moved to ClickerUtils
   //CDTString = 'String';
   //CDTEnum = 'Enum';

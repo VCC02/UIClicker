@@ -1922,8 +1922,12 @@ begin
 
   FClkActions[ActionIndex].CallTemplateOptions.ListOfCustomVarsAndValues := FastReplace_ReturnTo45(frClickerActions.ListOfCustomVariables);
 
+  if (FClkActions[ActionIndex].ActionOptions.Action = acEditTemplate) and (frClickerActions.EditingAction <> nil) then
+    frClickerActions.EditingAction^.EditTemplateOptions.EditingAction := @FClkEditedActionByEditTemplate;
+
   frClickerActions.EditingAction^.EditTemplateOptions.ListOfEditedProperties := StringReplace(GetActionPropertiesByType(FClkEditedActionByEditTemplate), CPropSeparatorSer, CPropSeparatorInt, [rfReplaceAll]);
   //AddToLog('Updating ListOfEditedProperties to ' + frClickerActions.EditingAction^.EditTemplateOptions.ListOfEditedProperties);
+
   CopyActionContent(frClickerActions.EditingAction^, FClkActions[ActionIndex]);  //uncomment this after removing above code
 end;
 
@@ -5895,8 +5899,20 @@ begin
     n := Length(FClkActions);
     SetLength(FClkActions, n + 1);
 
-    UpdateActionsArrFromControls(n); ///////////////////////////////// ToDo  replace this call with some default values
     OverwriteActionAtIndexWithDefault(n, TClkAction(Node^.Index));
+
+    //UpdateActionsArrFromControls(n); ///////////////////////////////// ToDo  replace this call with some default values     //was used for initializing FindControl's "Match" properties
+    //OverwriteActionAtIndexWithDefault(n, TClkAction(Node^.Index));
+
+    if (TClkAction(Node^.Index) = acEditTemplate) and (frClickerActions.EditingAction <> nil) then
+    begin
+      frClickerActions.EditingAction^.EditTemplateOptions.EditingAction := @FClkEditedActionByEditTemplate;
+      frClickerActions.EditingAction^.EditTemplateOptions.ListOfEditedProperties := StringReplace(GetActionPropertiesByType(FClkEditedActionByEditTemplate), CPropSeparatorSer, CPropSeparatorInt, [rfReplaceAll]);
+
+      FClkActions[n].EditTemplateOptions.EditingAction := frClickerActions.EditingAction^.EditTemplateOptions.EditingAction;
+      FClkActions[n].EditTemplateOptions.ListOfEditedProperties := frClickerActions.EditingAction^.EditTemplateOptions.ListOfEditedProperties;
+    end;
+    frClickerActions.CurrentlyEditingActionType := TClkAction(Node^.Index);
 
     vstActions.RootNodeCount := Length(FClkActions);
     UpdateNodesCheckStateFromActions;
@@ -5904,7 +5920,7 @@ begin
     if not frClickerActions.ControlsModified then
     begin
       vstActions.ClearSelection;
-      LoadActionIntoEditorByIndex(n);
+      LoadActionIntoEditorByIndex(n);  //calls UpdateControlsFromActionsArr(Node^.Index);  which copies from FClkActions[ActionIndex] to frClickerActions.EditingAction^
       StopGlowingUpdateButton;
     end;
 
@@ -5997,6 +6013,15 @@ begin
   FClkActions[Node^.Index].ActionStatus := asNotStarted;
   FClkActions[Node^.Index].ActionOptions.ActionEnabled := True;
 
+  //if (FClkActions[Node^.Index].ActionOptions.Action = acEditTemplate) and (frClickerActions.EditingAction <> nil) then
+  //begin
+  //  frClickerActions.EditingAction^.EditTemplateOptions.EditingAction := @FClkEditedActionByEditTemplate;
+  //  frClickerActions.EditingAction^.EditTemplateOptions.ListOfEditedProperties := StringReplace(GetActionPropertiesByType(FClkEditedActionByEditTemplate), CPropSeparatorSer, CPropSeparatorInt, [rfReplaceAll]);
+  //
+  //  FClkActions[Node^.Index].EditTemplateOptions.EditingAction := frClickerActions.EditingAction^.EditTemplateOptions.EditingAction;
+  //  FClkActions[Node^.Index].EditTemplateOptions.ListOfEditedProperties := frClickerActions.EditingAction^.EditTemplateOptions.ListOfEditedProperties;
+  //end;
+
   vstActions.RootNodeCount := Length(FClkActions);
   UpdateNodesCheckStateFromActions;
 
@@ -6032,6 +6057,15 @@ begin
   UpdateActionsArrFromControls(NewIndex);
   FClkActions[NewIndex].ActionStatus := asNotStarted;
   FClkActions[NewIndex].ActionOptions.ActionEnabled := True;
+
+  //if (FClkActions[Node^.Index].ActionOptions.Action = acEditTemplate) and (frClickerActions.EditingAction <> nil) then
+  //begin
+  //  frClickerActions.EditingAction^.EditTemplateOptions.EditingAction := @FClkEditedActionByEditTemplate;
+  //  frClickerActions.EditingAction^.EditTemplateOptions.ListOfEditedProperties := StringReplace(GetActionPropertiesByType(FClkEditedActionByEditTemplate), CPropSeparatorSer, CPropSeparatorInt, [rfReplaceAll]);
+  //
+  //  FClkActions[Node^.Index].EditTemplateOptions.EditingAction := frClickerActions.EditingAction^.EditTemplateOptions.EditingAction;
+  //  FClkActions[Node^.Index].EditTemplateOptions.ListOfEditedProperties := frClickerActions.EditingAction^.EditTemplateOptions.ListOfEditedProperties;
+  //end;
 
   vstActions.RootNodeCount := Length(FClkActions);
   UpdateNodesCheckStateFromActions;
