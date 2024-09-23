@@ -456,6 +456,7 @@ type
     procedure HandleOnClickerSetVarFrame_OnShowAutoComplete(AEdit: TEdit);
     procedure HandleOnUpdateActionScrollIndex(AActionScrollIndex: string);
     function HandleOnGetLoadedTemplateFileName: string;
+    procedure HandleOnChangeEditTemplateEditingActionType;
 
     procedure HandleOnSetDebugPoint(ADebugPoint: string);
     function HandleOnIsAtBreakPoint(ADebugPoint: string): Boolean;
@@ -995,6 +996,7 @@ begin
   frClickerActions.OnShowAutoComplete := HandleOnClickerSetVarFrame_OnShowAutoComplete;
   frClickerActions.OnUpdateActionScrollIndex := HandleOnUpdateActionScrollIndex;
   frClickerActions.OnGetLoadedTemplateFileName := HandleOnGetLoadedTemplateFileName;
+  frClickerActions.OnChangeEditTemplateEditingActionType := HandleOnChangeEditTemplateEditingActionType;
 
   //frClickerActions.OnControlsModified := ClickerActionsFrameOnControlsModified;   //this is set on frame initialization
 
@@ -1695,6 +1697,26 @@ end;
 function TfrClickerActionsArr.HandleOnGetLoadedTemplateFileName: string;
 begin
   Result := FFileName;
+end;
+
+
+procedure TfrClickerActionsArr.HandleOnChangeEditTemplateEditingActionType;
+var
+  Node: PVirtualNode;
+  ActionIndex: Integer;
+begin
+  Node := vstActions.GetFirstSelected;
+  if Node = nil then
+    Exit;
+
+  ActionIndex := Node^.Index;
+
+  if FClkActions[ActionIndex].ActionOptions.Action <> acEditTemplate then
+    Exit;
+
+  frClickerActions.CurrentlyEditingActionType := {%H-}TClkAction(CClkUnsetAction); //something to cause the setter to be called
+  Application.ProcessMessages;
+  frClickerActions.CurrentlyEditingActionType := FClkActions[ActionIndex].ActionOptions.Action;
 end;
 
 

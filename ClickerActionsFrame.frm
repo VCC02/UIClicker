@@ -1841,4 +1841,11 @@ object frClickerActions: TfrClickerActions
       AFFF5FC9602251
     }
   end
+  object tmrOnChangeEditTemplateEditingActionType: TTimer
+    Enabled = False
+    Interval = 10
+    OnTimer = tmrOnChangeEditTemplateEditingActionTypeTimer
+    Left = 828
+    Top = 120
+  end
 end

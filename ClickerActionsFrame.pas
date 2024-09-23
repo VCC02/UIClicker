@@ -47,6 +47,7 @@ type
   PVarNodeRec = ^TVarNodeRec;
 
   TOnGetLoadedTemplateFileName = function: string of object;
+  TOnChangeEditTemplateEditingActionType = procedure of object;
 
   { TfrClickerActions }
 
@@ -151,6 +152,7 @@ type
     N300001: TMenuItem;
     pmPathReplacements: TPopupMenu;
     scrboxDebugBmp: TScrollBox;
+    tmrOnChangeEditTemplateEditingActionType: TTimer;
     tmrEditClkVariables: TTimer;
     tmrClkVariables: TTimer;
     tmrDrawZoom: TTimer;
@@ -212,6 +214,7 @@ type
     procedure tmrClkVariablesTimer(Sender: TObject);
     procedure tmrDrawZoomTimer(Sender: TObject);
     procedure tmrEditClkVariablesTimer(Sender: TObject);
+    procedure tmrOnChangeEditTemplateEditingActionTypeTimer(Sender: TObject);
     procedure tmrReloadOIContentTimer(Sender: TObject);
 
     procedure CopyDebugValuesListToClipboard1Click(Sender: TObject);
@@ -404,6 +407,7 @@ type
     FOnShowAutoComplete: TOnShowAutoComplete;
     FOnUpdateActionScrollIndex: TOnUpdateActionScrollIndex;
     FOnGetLoadedTemplateFileName: TOnGetLoadedTemplateFileName;
+    FOnChangeEditTemplateEditingActionType: TOnChangeEditTemplateEditingActionType;
 
     //function GetListOfSetVarEntries: string;
     //procedure SetListOfSetVarEntries(Value: string);
@@ -415,7 +419,7 @@ type
     procedure SetDebuggingInfoAvailable(Value: Boolean);
     procedure TriggerOnControlsModified(AExtraCondition: Boolean = True);
 
-    function DoOnEditCallTemplateBreakCondition(var AActionCondition: string): Boolean;
+    function DoOnEditCallTemplateBreakCondition(var FClkEditedActionByEditTemplateCondition: string): Boolean;
     function DoOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     function DoOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     procedure DoOnGetListOfExternallyRenderedImages(AListOfExternallyRenderedImages: TStringList);
@@ -444,7 +448,7 @@ type
 
     procedure DoOnGetListOfAvailableSetVarActions(AListOfSetVarActions: TStringList);
     procedure DoOnGetListOfAvailableActions(AListOfActions: TStringList);
-    procedure DoOnModifyPluginProperty(AAction: PClkActionRec);
+    procedure DoOnModifyPluginProperty(FClkEditedActionByEditTemplate: PClkActionRec);
 
     procedure DoOnPluginDbgStop;
     procedure DoOnPluginDbgContinueAll;
@@ -455,8 +459,9 @@ type
 
     function DoOnGetSelfTemplatesDir: string;
     procedure DoOnShowAutoComplete(AEdit: TEdit);
-    procedure DoOnUpdateActionScrollIndex(AActionScrollIndex: string);
+    procedure DoOnUpdateActionScrollIndex(FClkEditedActionByEditTemplateScrollIndex: string);
     function DoOnGetLoadedTemplateFileName: string;
+    procedure DoOnChangeEditTemplateEditingActionType;
 
     procedure ClkVariablesOnChange(Sender: TObject);
     procedure AddDecodedVarToNode(ANode: PVirtualNode; ARecursionLevel: Integer);
@@ -732,6 +737,7 @@ type
     property OnShowAutoComplete: TOnShowAutoComplete write FOnShowAutoComplete;
     property OnUpdateActionScrollIndex: TOnUpdateActionScrollIndex write FOnUpdateActionScrollIndex;
     property OnGetLoadedTemplateFileName: TOnGetLoadedTemplateFileName write FOnGetLoadedTemplateFileName;
+    property OnChangeEditTemplateEditingActionType: TOnChangeEditTemplateEditingActionType write FOnChangeEditTemplateEditingActionType;
   end;
 
 
@@ -1022,6 +1028,7 @@ begin
   FOnShowAutoComplete := nil;
   FOnUpdateActionScrollIndex := nil;
   FOnGetLoadedTemplateFileName := nil;
+  FOnChangeEditTemplateEditingActionType := nil;
 
   FShowDeprecatedControls := False;
   FEditingAction := @FEditingActionRec;
@@ -1098,6 +1105,14 @@ begin
 
       FTextEditorEditBox.Height := vstVariables.DefaultNodeHeight;
     end;
+end;
+
+
+procedure TfrClickerActions.tmrOnChangeEditTemplateEditingActionTypeTimer(
+  Sender: TObject);
+begin
+  tmrOnChangeEditTemplateEditingActionType.Enabled := False;
+  DoOnChangeEditTemplateEditingActionType;
 end;
 
 
@@ -2828,12 +2843,12 @@ begin
 end;
 
 
-function TfrClickerActions.DoOnEditCallTemplateBreakCondition(var AActionCondition: string): Boolean;
+function TfrClickerActions.DoOnEditCallTemplateBreakCondition(var FClkEditedActionByEditTemplateCondition: string): Boolean;
 begin
   if not Assigned(FOnEditCallTemplateBreakCondition) then
     raise Exception.Create('OnEditCallTemplateBreakCondition not assigned.')
   else
-    Result := FOnEditCallTemplateBreakCondition(AActionCondition);
+    Result := FOnEditCallTemplateBreakCondition(FClkEditedActionByEditTemplateCondition);
 end;
 
 
@@ -3053,12 +3068,12 @@ begin
 end;
 
 
-procedure TfrClickerActions.DoOnModifyPluginProperty(AAction: PClkActionRec);
+procedure TfrClickerActions.DoOnModifyPluginProperty(FClkEditedActionByEditTemplate: PClkActionRec);
 begin
   if not Assigned(FOnModifyPluginProperty) then
     raise Exception.Create('OnModifyPluginProperty not assigned.')
   else
-    FOnModifyPluginProperty(AAction);
+    FOnModifyPluginProperty(FClkEditedActionByEditTemplate);
 end;
 
 
@@ -3134,12 +3149,12 @@ begin
 end;
 
 
-procedure TfrClickerActions.DoOnUpdateActionScrollIndex(AActionScrollIndex: string);
+procedure TfrClickerActions.DoOnUpdateActionScrollIndex(FClkEditedActionByEditTemplateScrollIndex: string);
 begin
   if not Assigned(FOnUpdateActionScrollIndex) then
     raise Exception.Create('OnUpdateActionScrollIndex not assigned.')
   else
-    FOnUpdateActionScrollIndex(AActionScrollIndex);
+    FOnUpdateActionScrollIndex(FClkEditedActionByEditTemplateScrollIndex);
 end;
 
 
@@ -3149,6 +3164,15 @@ begin
     raise Exception.Create('OnGetLoadedTemplateFileName not assigned.')
   else
     Result := FOnGetLoadedTemplateFileName();
+end;
+
+
+procedure TfrClickerActions.DoOnChangeEditTemplateEditingActionType;
+begin
+  if not Assigned(FOnChangeEditTemplateEditingActionType) then
+    raise Exception.Create('OnChangeEditTemplateEditingActionType not assigned.')
+  else
+    FOnChangeEditTemplateEditingActionType;
 end;
 
 
@@ -5606,12 +5630,32 @@ begin
   if AEditingAction^.ActionOptions.Action = acEditTemplate then
     if APropertyIndex = CEditTemplate_EditedActionType_PropIndex then
       if FEditTemplateOptions_EditingAction <> nil then
-      begin                                                                 //it seems that it's not enough to update from here
+      begin
+        FClkEditedActionByEditTemplate.ActionOptions.Action := AEditingAction^.EditTemplateOptions.EditedActionType;
         if Length(FEditTemplateOptions_EditingAction^.FindControlOptions.MatchBitmapText) = 0 then
           SetLength(FEditTemplateOptions_EditingAction^.FindControlOptions.MatchBitmapText, frClickerFindControl.GetBMPTextFontProfilesCount);
 
+        //These will set the action options to default, discarding user settings. Maybe there is a way to verifiy if the fields are empty and only then they should be updated.
+        if ANewText <> OldText then
+        begin
+          GetDefaultPropertyValues_Click(FClkEditedActionByEditTemplate.ClickOptions);
+          GetDefaultPropertyValues_ExecApp(FClkEditedActionByEditTemplate.ExecAppOptions);
+          GetDefaultPropertyValues_FindControl(FClkEditedActionByEditTemplate.FindControlOptions, FClkEditedActionByEditTemplate.ActionOptions.Action = acFindSubControl);
+          GetDefaultPropertyValues_SetControlText(FClkEditedActionByEditTemplate.SetTextOptions);
+          GetDefaultPropertyValues_CallTemplate(FClkEditedActionByEditTemplate.CallTemplateOptions);
+          GetDefaultPropertyValues_Sleep(FClkEditedActionByEditTemplate.SleepOptions);
+          GetDefaultPropertyValues_SetVar(FClkEditedActionByEditTemplate.SetVarOptions);
+          GetDefaultPropertyValues_WindowOperations(FClkEditedActionByEditTemplate.WindowOperationsOptions);
+          GetDefaultPropertyValues_LoadSetVarFromFile(FClkEditedActionByEditTemplate.LoadSetVarFromFileOptions);
+          GetDefaultPropertyValues_SaveSetVarToFile(FClkEditedActionByEditTemplate.SaveSetVarToFileOptions);
+          GetDefaultPropertyValues_Plugin(FClkEditedActionByEditTemplate.PluginOptions);
+          GetDefaultPropertyValues_EditTemplate(FClkEditedActionByEditTemplate.EditTemplateOptions);
+
+          FClkEditedActionByEditTemplate.ActionOptions.Action := AEditingAction^.EditTemplateOptions.EditedActionType; //call again after resetting by GetDefaultPropertyValues_EditTemplate
+        end;
+
         SerializeEditTemplateEditingAction;
-        //tmrReloadOIContent.Enabled := True;  //the action has to be updated outside, to FClkActions, before reloading the OI
+        tmrOnChangeEditTemplateEditingActionType.Enabled := True;
       end;
 end;
 

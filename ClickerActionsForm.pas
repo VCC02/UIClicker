@@ -1171,8 +1171,9 @@ begin
   try   //wait 300ms more, for any other loop that might be using this flag
     tk := GetTickCount64;
     repeat
-      if FPollForMissingServerFiles.Done then    //client mode
-        Break;
+      if FPollForMissingServerFiles <> nil then
+        if FPollForMissingServerFiles.Done then    //client mode
+          Break;
 
       Application.ProcessMessages;
       Sleep(1);
