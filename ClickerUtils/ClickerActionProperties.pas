@@ -82,7 +82,23 @@ procedure GetDefaultPropertyValues_LoadSetVarFromFile(var ALoadSetVarFromFileOpt
 procedure GetDefaultPropertyValues_SaveSetVarToFile(var ASaveSetVarToFileOptions: TClkSaveSetVarToFileOptions);
 procedure GetDefaultPropertyValues_Plugin(var APluginOptions: TClkPluginOptions);
 procedure GetDefaultPropertyValues_EditTemplate(var AEditTemplateOptions: TClkEditTemplateOptions);
+//if adding new action types, please update ClickeActionsFrame, which calls all of the above
 
+//These actions return True if their string properties, which are not '' by default, are now set to ''.
+//This will happen after serializing properties from ''.
+function IsActionEmpty_Click(var AClickOptions: TClkClickOptions): Boolean;
+function IsActionEmpty_ExecApp(var AExecAppOptions: TClkExecAppOptions): Boolean;
+function IsActionEmpty_FindControl(var AFindControlOptions: TClkFindControlOptions): Boolean;
+function IsActionEmpty_SetControlText(var ASetControlTextOptions: TClkSetTextOptions): Boolean;
+function IsActionEmpty_CallTemplate(var ACallTemplateOptions: TClkCallTemplateOptions): Boolean;
+function IsActionEmpty_Sleep(var ASleepOptions: TClkSleepOptions): Boolean;
+function IsActionEmpty_SetVar(var ASetVarOptions: TClkSetVarOptions): Boolean;
+function IsActionEmpty_WindowOperations(var AWindowOperationsOptions: TClkWindowOperationsOptions): Boolean;
+function IsActionEmpty_LoadSetVarFromFile(var ALoadSetVarFromFileOptions: TClkLoadSetVarFromFileOptions): Boolean;
+function IsActionEmpty_SaveSetVarToFile(var ASaveSetVarToFileOptions: TClkSaveSetVarToFileOptions): Boolean;
+function IsActionEmpty_Plugin(var APluginOptions: TClkPluginOptions): Boolean;
+function IsActionEmpty_EditTemplate(var AEditTemplateOptions: TClkEditTemplateOptions): Boolean;
+//if adding new action types, please update ClickeActionsFrame, which calls all of the above
 
 implementation
 
@@ -1079,6 +1095,99 @@ begin
 
   GetDefaultPropertyValues_Click(ClickOptions);
   AEditTemplateOptions.ListOfEditedProperties := GetClickActionProperties(ClickOptions);
+end;
+
+
+function IsActionEmpty_Click(var AClickOptions: TClkClickOptions): Boolean;
+begin
+  Result := (AClickOptions.XClickPointVar = '') and (AClickOptions.YClickPointVar = '') and
+            (AClickOptions.XOffset = '') and (AClickOptions.YOffset = '') and
+            (AClickOptions.XClickPointVarDest = '') and (AClickOptions.YClickPointVarDest = '') and
+            (AClickOptions.XOffsetDest = '') and (AClickOptions.YOffsetDest = '') and
+            (AClickOptions.MouseWheelAmount = '') and
+            (AClickOptions.DelayAfterMovingToDestination = '') and
+            (AClickOptions.DelayAfterMouseDown = '') and
+            (AClickOptions.MoveDuration = '');
+end;
+
+
+function IsActionEmpty_ExecApp(var AExecAppOptions: TClkExecAppOptions): Boolean;
+begin
+  Result := (AExecAppOptions.PathToApp = '') and (AExecAppOptions.ListOfParams = '') and
+            (AExecAppOptions.AppStdIn = '') and (AExecAppOptions.CurrentDir = '');
+end;
+
+
+function IsActionEmpty_FindControl(var AFindControlOptions: TClkFindControlOptions): Boolean;
+begin
+  Result := (AFindControlOptions.InitialRectangle.Left = '') and
+            (AFindControlOptions.InitialRectangle.Top = '') and
+            (AFindControlOptions.InitialRectangle.Right = '') and
+            (AFindControlOptions.InitialRectangle.Bottom = '') and
+            (AFindControlOptions.InitialRectangle.LeftOffset = '') and
+            (AFindControlOptions.InitialRectangle.TopOffset = '') and
+            (AFindControlOptions.InitialRectangle.RightOffset = '') and
+            (AFindControlOptions.InitialRectangle.BottomOffset = '') and
+            (AFindControlOptions.ColorError = '') and
+            (AFindControlOptions.AllowedColorErrorCount = '') and
+            (AFindControlOptions.MatchByHistogramSettings.MinPercentColorMatch = '') and
+            (AFindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInSubBmp = '') and
+            (AFindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp = '');
+end;
+
+
+function IsActionEmpty_SetControlText(var ASetControlTextOptions: TClkSetTextOptions): Boolean;
+begin
+  Result := (ASetControlTextOptions.DelayBetweenKeyStrokes = '') and
+            (ASetControlTextOptions.Count = '');
+end;
+
+
+function IsActionEmpty_CallTemplate(var ACallTemplateOptions: TClkCallTemplateOptions): Boolean;
+begin
+  Result := False; //there is no default value, different than ''
+end;
+
+
+function IsActionEmpty_Sleep(var ASleepOptions: TClkSleepOptions): Boolean;
+begin
+  Result := ASleepOptions.Value = '';
+end;
+
+
+function IsActionEmpty_SetVar(var ASetVarOptions: TClkSetVarOptions): Boolean;
+begin
+  Result := False; //there is no default value, different than ''
+end;
+
+
+function IsActionEmpty_WindowOperations(var AWindowOperationsOptions: TClkWindowOperationsOptions): Boolean;
+begin
+  Result := False; //there is no default value, different than ''
+end;
+
+
+function IsActionEmpty_LoadSetVarFromFile(var ALoadSetVarFromFileOptions: TClkLoadSetVarFromFileOptions): Boolean;
+begin
+  Result := False; //there is no default value, different than ''
+end;
+
+
+function IsActionEmpty_SaveSetVarToFile(var ASaveSetVarToFileOptions: TClkSaveSetVarToFileOptions): Boolean;
+begin
+  Result := False; //there is no default value, different than ''
+end;
+
+
+function IsActionEmpty_Plugin(var APluginOptions: TClkPluginOptions): Boolean;
+begin
+  Result := False; //there is no default value, different than ''
+end;
+
+
+function IsActionEmpty_EditTemplate(var AEditTemplateOptions: TClkEditTemplateOptions): Boolean;
+begin
+  Result := False; //there is no default value, different than ''
 end;
 
 end.
