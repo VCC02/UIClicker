@@ -419,7 +419,7 @@ type
     procedure SetDebuggingInfoAvailable(Value: Boolean);
     procedure TriggerOnControlsModified(AExtraCondition: Boolean = True);
 
-    function DoOnEditCallTemplateBreakCondition(var FClkEditedActionByEditTemplateCondition: string): Boolean;
+    function DoOnEditCallTemplateBreakCondition(var AActionCondition: string): Boolean;
     function DoOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     function DoOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     procedure DoOnGetListOfExternallyRenderedImages(AListOfExternallyRenderedImages: TStringList);
@@ -448,7 +448,7 @@ type
 
     procedure DoOnGetListOfAvailableSetVarActions(AListOfSetVarActions: TStringList);
     procedure DoOnGetListOfAvailableActions(AListOfActions: TStringList);
-    procedure DoOnModifyPluginProperty(FClkEditedActionByEditTemplate: PClkActionRec);
+    procedure DoOnModifyPluginProperty(AAction: PClkActionRec);
 
     procedure DoOnPluginDbgStop;
     procedure DoOnPluginDbgContinueAll;
@@ -459,7 +459,7 @@ type
 
     function DoOnGetSelfTemplatesDir: string;
     procedure DoOnShowAutoComplete(AEdit: TEdit);
-    procedure DoOnUpdateActionScrollIndex(FClkEditedActionByEditTemplateScrollIndex: string);
+    procedure DoOnUpdateActionScrollIndex(AActionScrollIndex: string);
     function DoOnGetLoadedTemplateFileName: string;
     procedure DoOnChangeEditTemplateEditingActionType;
 
@@ -2843,12 +2843,12 @@ begin
 end;
 
 
-function TfrClickerActions.DoOnEditCallTemplateBreakCondition(var FClkEditedActionByEditTemplateCondition: string): Boolean;
+function TfrClickerActions.DoOnEditCallTemplateBreakCondition(var AActionCondition: string): Boolean;
 begin
   if not Assigned(FOnEditCallTemplateBreakCondition) then
     raise Exception.Create('OnEditCallTemplateBreakCondition not assigned.')
   else
-    Result := FOnEditCallTemplateBreakCondition(FClkEditedActionByEditTemplateCondition);
+    Result := FOnEditCallTemplateBreakCondition(AActionCondition);
 end;
 
 
@@ -3068,12 +3068,12 @@ begin
 end;
 
 
-procedure TfrClickerActions.DoOnModifyPluginProperty(FClkEditedActionByEditTemplate: PClkActionRec);
+procedure TfrClickerActions.DoOnModifyPluginProperty(AAction: PClkActionRec);
 begin
   if not Assigned(FOnModifyPluginProperty) then
     raise Exception.Create('OnModifyPluginProperty not assigned.')
   else
-    FOnModifyPluginProperty(FClkEditedActionByEditTemplate);
+    FOnModifyPluginProperty(AAction);
 end;
 
 
@@ -3149,12 +3149,12 @@ begin
 end;
 
 
-procedure TfrClickerActions.DoOnUpdateActionScrollIndex(FClkEditedActionByEditTemplateScrollIndex: string);
+procedure TfrClickerActions.DoOnUpdateActionScrollIndex(AActionScrollIndex: string);
 begin
   if not Assigned(FOnUpdateActionScrollIndex) then
     raise Exception.Create('OnUpdateActionScrollIndex not assigned.')
   else
-    FOnUpdateActionScrollIndex(FClkEditedActionByEditTemplateScrollIndex);
+    FOnUpdateActionScrollIndex(AActionScrollIndex);
 end;
 
 
