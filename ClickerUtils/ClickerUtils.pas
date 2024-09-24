@@ -622,6 +622,8 @@ function FastReplace_ReturnTo87(s: string): string; //should be used for remote 
 function FastReplace_87ToReturn(s: string): string; //should be used for remote execution only
 function FastReplace_87To45(s: string): string;
 function FastReplace_45To87(s: string): string;
+function FastReplace_1920To45(s: string): string;
+function FastReplace_45To1920(s: string): string;
 function FastReplace_ReturnToCSV(s: string): string;
 function FastReplace_0To1(s: string): string;
 
@@ -654,6 +656,8 @@ procedure CopyPartialResultsToFinalResult(var AResultedControlArr, APartialResul
 
 function ExtractFileNameNoExt(AFnm: string): string;
 function ExtractFullFileNameNoExt(AFnm: string): string;
+
+function InitListOfZerosByItemCount(AList: string): string;
 
 var
   UseWideStringsOnGetControlText: Boolean = False;
@@ -856,6 +860,54 @@ begin
       begin
         s[i] := #8;
         s[i + 1] := #7;
+        Continue;
+      end;
+
+  Result := s;
+end;
+
+
+function FastReplace_1920To45(s: string): string;
+var
+  i, n: Integer;
+begin
+  n := Pos(#19, s);
+  if n = 0 then
+  begin
+    Result := s;
+    Exit;
+  end;
+
+  for i := n to Length(s) - 1 do
+    if s[i] = #19 then
+      if s[i + 1] = #20 then
+      begin
+        s[i] := #4;
+        s[i + 1] := #5;
+        Continue;
+      end;
+
+  Result := s;
+end;
+
+
+function FastReplace_45To1920(s: string): string;
+var
+  i, n: Integer;
+begin
+  n := Pos(#4, s);
+  if n = 0 then
+  begin
+    Result := s;
+    Exit;
+  end;
+
+  for i := n to Length(s) - 1 do
+    if s[i] = #4 then
+      if s[i + 1] = #5 then
+      begin
+        s[i] := #19;
+        s[i + 1] := #20;
         Continue;
       end;
 
@@ -3000,6 +3052,26 @@ begin
     Result := Copy(FnmWithExt, 1, PosExt - 1)
   else
     Result := FnmWithExt;
+end;
+
+
+function InitListOfZerosByItemCount(AList: string): string;
+var
+  i: Integer;
+  s: string;
+  ListOfPrimitiveFiles: TStringList;
+begin
+  ListOfPrimitiveFiles := TStringList.Create;
+  try
+    ListOfPrimitiveFiles.Text := AList;
+    s := '';
+    for i := 0 to ListOfPrimitiveFiles.Count - 1 do
+      s := s + '0' + #13#10;
+
+    Result := s;
+  finally
+    ListOfPrimitiveFiles.Free;
+  end;
 end;
 
 end.

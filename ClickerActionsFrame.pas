@@ -2459,6 +2459,26 @@ begin
 
   if SerErr <> '' then
     DoOnAddToLog(SerErr);
+
+  case FEditingAction^.EditTemplateOptions.EditedActionType of
+    acExecApp:
+      frClickerExecApp.memExecAppParams.Lines.Text := FEditTemplateOptions_EditingAction.ExecAppOptions.ListOfParams;
+
+    acFindControl, acFindSubControl:
+      FEditTemplateOptions_EditingAction^.FindControlOptions.MatchPrimitiveFiles_Modified := InitListOfZerosByItemCount(FEditTemplateOptions_EditingAction^.FindControlOptions.MatchPrimitiveFiles);
+
+    acCallTemplate:
+      ListOfCustomVariables := FastReplace_45ToReturn(FEditTemplateOptions_EditingAction.CallTemplateOptions.ListOfCustomVarsAndValues);
+
+    acSetVar:
+      frClickerSetVar.SetListOfSetVars(FEditTemplateOptions_EditingAction.SetVarOptions);
+
+    acPlugin:
+      DoOnModifyPluginProperty(FEditTemplateOptions_EditingAction);
+
+    else
+      ;
+  end;
 end;
 
 
@@ -2648,8 +2668,16 @@ begin
   GetEditingActionObjectByActionType^.FindControlOptions.MatchText := AMatchText;
   GetEditingActionObjectByActionType^.FindControlOptions.MatchClassName := AMatchClassName;
 
-  FOIFrame.RepaintNodeByLevel(CPropertyLevel, CCategory_ActionSpecific, CFindControl_MatchText_PropIndex, -1, True);
-  FOIFrame.RepaintNodeByLevel(CPropertyLevel, CCategory_ActionSpecific, CFindControl_MatchClassName_PropIndex, -1, True);
+  if CurrentlyEditingActionType = acEditTemplate then
+  begin
+    FOIFrame.RepaintNodeByLevel(CPropertyLevel, CCategory_EditedAction, CFindControl_MatchText_PropIndex, -1, True);
+    FOIFrame.RepaintNodeByLevel(CPropertyLevel, CCategory_EditedAction, CFindControl_MatchClassName_PropIndex, -1, True);
+  end
+  else
+  begin
+    FOIFrame.RepaintNodeByLevel(CPropertyLevel, CCategory_ActionSpecific, CFindControl_MatchText_PropIndex, -1, True);
+    FOIFrame.RepaintNodeByLevel(CPropertyLevel, CCategory_ActionSpecific, CFindControl_MatchClassName_PropIndex, -1, True);
+  end;
 end;
 
 
@@ -3202,6 +3230,94 @@ end;
 
 
 procedure TfrClickerActions.SetCurrentlyEditingActionType(Value: TClkAction);
+  procedure SwitchEditorFrame(AActionType: TClkAction);
+  begin
+    case AActionType of
+      acExecApp:
+      begin
+        frClickerExecApp.Show;
+        frClickerExecApp.BringToFront;
+        frClickerFindControl.Hide;
+        frClickerSetVar.Hide;
+        frClickerCallTemplate.Hide;
+        frClickerSleep.Hide;
+        frClickerPlugin.Hide;
+      end;
+
+      acFindControl, acFindSubControl:
+      begin
+        frClickerExecApp.Hide;
+        frClickerFindControl.Show;
+        frClickerFindControl.BringToFront;
+        frClickerSetVar.Hide;
+        frClickerCallTemplate.Hide;
+        frClickerSleep.Hide;
+        frClickerPlugin.Hide;
+      end;
+
+      acSetVar:
+      begin
+        frClickerExecApp.Hide;
+        frClickerFindControl.Hide;
+        frClickerSetVar.Show;
+        frClickerSetVar.BringToFront;
+        frClickerCallTemplate.Hide;
+        frClickerSleep.Hide;
+        frClickerPlugin.Hide;
+      end;
+
+      acCallTemplate:
+      begin
+        frClickerExecApp.Hide;
+        frClickerFindControl.Hide;
+        frClickerSetVar.Hide;
+        frClickerCallTemplate.Show;
+        frClickerCallTemplate.BringToFront;
+        frClickerSleep.Hide;
+        frClickerPlugin.Hide;
+      end;
+
+      acSleep:
+      begin
+        frClickerExecApp.Hide;
+        frClickerFindControl.Hide;
+        frClickerSetVar.Hide;
+        frClickerCallTemplate.Hide;
+        frClickerSleep.Show;
+        frClickerSleep.BringToFront;
+        frClickerPlugin.Hide;
+      end;
+
+      acPlugin:
+      begin
+        frClickerExecApp.Hide;
+        frClickerFindControl.Hide;
+        frClickerSetVar.Hide;
+        frClickerCallTemplate.Hide;
+        frClickerSleep.Hide;
+        frClickerPlugin.Show;
+        frClickerPlugin.BringToFront;
+      end;
+
+      else
+      begin
+        frClickerExecApp.Hide;
+        frClickerFindControl.Hide;
+        frClickerSetVar.Hide;
+        frClickerCallTemplate.Hide;
+        frClickerSleep.Hide;
+        frClickerPlugin.Hide;
+
+        pnlCover.Left := 0;
+        pnlCover.Top := 0;
+        pnlCover.Width := pnlExtra.Width;
+        pnlCover.Height := pnlExtra.Height;
+        pnlCover.Show;
+        pnlCover.BringToFront;
+      end;
+    end;
+  end;
+
 begin
   FCurrentlyEditingActionType := Ord(Value);
   BuildFontColorIconsList;
@@ -3210,90 +3326,10 @@ begin
 
   pnlCover.Hide;
 
-  case Value of
-    acExecApp:
-    begin
-      frClickerExecApp.Show;
-      frClickerExecApp.BringToFront;
-      frClickerFindControl.Hide;
-      frClickerSetVar.Hide;
-      frClickerCallTemplate.Hide;
-      frClickerSleep.Hide;
-      frClickerPlugin.Hide;
-    end;
-
-    acFindControl, acFindSubControl:
-    begin
-      frClickerExecApp.Hide;
-      frClickerFindControl.Show;
-      frClickerFindControl.BringToFront;
-      frClickerSetVar.Hide;
-      frClickerCallTemplate.Hide;
-      frClickerSleep.Hide;
-      frClickerPlugin.Hide;
-    end;
-
-    acSetVar:
-    begin
-      frClickerExecApp.Hide;
-      frClickerFindControl.Hide;
-      frClickerSetVar.Show;
-      frClickerSetVar.BringToFront;
-      frClickerCallTemplate.Hide;
-      frClickerSleep.Hide;
-      frClickerPlugin.Hide;
-    end;
-
-    acCallTemplate:
-    begin
-      frClickerExecApp.Hide;
-      frClickerFindControl.Hide;
-      frClickerSetVar.Hide;
-      frClickerCallTemplate.Show;
-      frClickerCallTemplate.BringToFront;
-      frClickerSleep.Hide;
-      frClickerPlugin.Hide;
-    end;
-
-    acSleep:
-    begin
-      frClickerExecApp.Hide;
-      frClickerFindControl.Hide;
-      frClickerSetVar.Hide;
-      frClickerCallTemplate.Hide;
-      frClickerSleep.Show;
-      frClickerSleep.BringToFront;
-      frClickerPlugin.Hide;
-    end;
-
-    acPlugin:
-    begin
-      frClickerExecApp.Hide;
-      frClickerFindControl.Hide;
-      frClickerSetVar.Hide;
-      frClickerCallTemplate.Hide;
-      frClickerSleep.Hide;
-      frClickerPlugin.Show;
-      frClickerPlugin.BringToFront;
-    end;
-
-    else
-    begin
-      frClickerExecApp.Hide;
-      frClickerFindControl.Hide;
-      frClickerSetVar.Hide;
-      frClickerCallTemplate.Hide;
-      frClickerSleep.Hide;
-      frClickerPlugin.Hide;
-
-      pnlCover.Left := 0;
-      pnlCover.Top := 0;
-      pnlCover.Width := pnlExtra.Width;
-      pnlCover.Height := pnlExtra.Height;
-      pnlCover.Show;
-      pnlCover.BringToFront;
-    end;
-  end;
+  if Value = acEditTemplate then
+    SwitchEditorFrame(FEditingAction^.EditTemplateOptions.EditedActionType)
+  else
+    SwitchEditorFrame(Value);
 end;
 
 
@@ -4646,8 +4682,8 @@ begin
       try
         ListOfProperties.Text := AEditingAction^.PluginOptions.ListOfPropertiesAndTypes;
         try
-          if (APropertyIndex - 1 < ListOfProperties.Count) and (ListOfProperties.Count > 0) then
-            Result := ListOfProperties.Names[APropertyIndex - 1]
+          if (APropertyIndex - CPropCount_Plugin < ListOfProperties.Count) and (ListOfProperties.Count > 0) then
+            Result := ListOfProperties.Names[APropertyIndex - CPropCount_Plugin]
           else
             Result := '[Err: Index out of bounds: ' + IntToStr(APropertyIndex - 1) + ']';
         except

@@ -4272,7 +4272,7 @@ begin
   begin
     if not ReturnToModifiedGenericAction and not ReturnToModifiedFindSubControlWithPmtvAction then
     begin
-      frClickerActions.CurrentlyEditingActionType := {%H-}TClkAction(MaxInt); //use an invalid value, to hide all editors
+      frClickerActions.CurrentlyEditingActionType := {%H-}TClkAction(CClkUnsetAction); //use an invalid value, to hide all editors
       StopGlowingUpdateButton;
       frClickerActions.UpdatePageControlActionExecutionIcons;
     end;

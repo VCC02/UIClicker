@@ -245,6 +245,8 @@ begin
     ACustomActions[i].EditTemplateOptions.Operation := etoUpdateAction;
     ACustomActions[i].EditTemplateOptions.WhichTemplate := etwtSelf;
     ACustomActions[i].EditTemplateOptions.TemplateFileName := '';
+    ACustomActions[i].EditTemplateOptions.ListOfEditedProperties := '';
+    ACustomActions[i].EditTemplateOptions.ListOfEnabledProperties := '';
 
     AdjustListOfVarEvalBeforeCount(ACustomActions[i].SetVarOptions);
   end;
@@ -315,8 +317,7 @@ end;
 procedure LoadAction_FindControl(Ini: TClkIniReadonlyFile; SectionIndex: Integer; var AFindControlOptions: TClkFindControlOptions);
 var
   i, n: Integer;
-  Indent, s: string;
-  ListOfPrimitiveFiles: TStringList;
+  Indent: string;
 begin
   AFindControlOptions.MatchCriteria.WillMatchText := Ini.ReadBool(SectionIndex, 'MatchCriteria.WillMatchText', True);
   AFindControlOptions.MatchCriteria.WillMatchClassName := Ini.ReadBool(SectionIndex, 'MatchCriteria.WillMatchClassName', True);
@@ -410,17 +411,7 @@ begin
   AFindControlOptions.CachedControlTop := Ini.ReadString(SectionIndex, 'CachedControlTop', '');
 
   AFindControlOptions.MatchPrimitiveFiles := FastReplace_45ToReturn(Ini.ReadString(SectionIndex, 'MatchPrimitiveFiles', ''));
-  ListOfPrimitiveFiles := TStringList.Create;
-  try
-    ListOfPrimitiveFiles.Text := AFindControlOptions.MatchPrimitiveFiles;
-    s := '';
-    for i := 0 to ListOfPrimitiveFiles.Count - 1 do
-      s := s + '0' + #13#10;
-
-    AFindControlOptions.MatchPrimitiveFiles_Modified := s;
-  finally
-    ListOfPrimitiveFiles.Free;
-  end;
+  AFindControlOptions.MatchPrimitiveFiles_Modified := InitListOfZerosByItemCount(AFindControlOptions.MatchPrimitiveFiles);
 
   AFindControlOptions.GetAllControls := Ini.ReadBool(SectionIndex, 'GetAllControls', False);
   AFindControlOptions.UseFastSearch := Ini.ReadBool(SectionIndex, 'UseFastSearch', True);
@@ -524,6 +515,7 @@ begin
   AEditTemplateOptions.Operation := TEditTemplateOperation(Min(Ini.ReadInteger(SectionIndex, 'Operation', Integer(etoUpdateAction)), Integer(High(TEditTemplateOperation))));
   AEditTemplateOptions.WhichTemplate := TEditTemplateWhichTemplate(Min(Ini.ReadInteger(SectionIndex, 'WhichTemplate', Integer(etwtSelf)), Integer(High(TEditTemplateWhichTemplate))));
   AEditTemplateOptions.TemplateFileName := Ini.ReadString(SectionIndex, 'TemplateFileName', '');
+  AEditTemplateOptions.ListOfEditedProperties := FastReplace_45To1920(Ini.ReadString(SectionIndex, 'ListOfEditedProperties', ''));
   AEditTemplateOptions.ListOfEnabledProperties := FastReplace_45ToReturn(Ini.ReadString(SectionIndex, 'ListOfEnabledProperties', ''));
   AEditTemplateOptions.CachedCount := 0;
   AEditTemplateOptions.PluginOptionsCachedCount := 0;
@@ -988,6 +980,7 @@ begin
   AStringList.Add('Operation=' + IntToStr(Ord(AActionEditTemplateOptions.Operation)));
   AStringList.Add('WhichTemplate=' + IntToStr(Ord(AActionEditTemplateOptions.WhichTemplate)));
   AStringList.Add('TemplateFileName=' + AActionEditTemplateOptions.TemplateFileName);
+  AStringList.Add('ListOfEditedProperties=' + FastReplace_45To1920(FastReplace_ReturnTo45(AActionEditTemplateOptions.ListOfEditedProperties)));
   AStringList.Add('ListOfEnabledProperties=' + FastReplace_ReturnTo45(AActionEditTemplateOptions.ListOfEnabledProperties));
   AStringList.Add('EditedActionName=' + AActionEditTemplateOptions.EditedActionName);
   AStringList.Add('EditedActionType=' + IntToStr(Ord(AActionEditTemplateOptions.EditedActionType)));

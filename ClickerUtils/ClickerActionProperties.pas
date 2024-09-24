@@ -48,7 +48,7 @@ function GetWindowOperationsActionProperties(AWindowOperationsOptions: TClkWindo
 function GetLoadSetVarFromFileActionProperties(ALoadSetVarFromFileOptions: TClkLoadSetVarFromFileOptions): string;
 function GetSaveSetVarToFileActionProperties(ASaveSetVarToFileOptions: TClkSaveSetVarToFileOptions): string;
 function GetPluginActionProperties(PluginOptions: TClkPluginOptions): string;
-function GetEditTemplateActionProperties(AEditTemplateOptions: TClkEditTemplateOptions): string;
+function GetEditTemplateActionProperties(AEditTemplateOptions: TClkEditTemplateOptions; AIncludeListOfEditedProperties: Boolean = False): string;
 //when adding new Get<ActionType>Properties functions, please update DoOnActionPlugin_GetActionContentByIndex_Callback from ClickerActionPluginLoader.pas
 
 function GetActionPropertiesByType(var AAction: TClkActionRec): string;
@@ -65,7 +65,7 @@ function SetWindowOperationsActionProperties(AListOfWindowOperationsOptionsParam
 function SetLoadSetVarFromFileActionProperties(AListOfLoadSetVarOptionsParams: TStrings; out ALoadSetVarFromFileOptions: TClkLoadSetVarFromFileOptions): string;
 function SetSaveSetVarToFileActionProperties(AListOfSaveSetVarOptionsParams: TStrings; out ASaveSetVarToFileOptions: TClkSaveSetVarToFileOptions): string;
 function SetPluginActionProperties(APluginOptionsParams: TStrings; out APluginOptions: TClkPluginOptions): string;
-function SetEditTemplateActionProperties(AListOfEditTemplateOptionsParams: TStrings; out AEditTemplateOptions: TClkEditTemplateOptions): string;
+function SetEditTemplateActionProperties(AListOfEditTemplateOptionsParams: TStrings; out AEditTemplateOptions: TClkEditTemplateOptions; AIncludeListOfEditedProperties: Boolean = False): string;
 
 function SetActionProperties(AListOfOptionsParams: TStrings; AActionType: TClkAction; var AActionOptions: TClkActionRec): string; overload; //it outputs only the options, without the action metadata
 function SetActionProperties(AListOfOptionsParams: string; AActionType: TClkAction; var AActionOptions: TClkActionRec): string; overload; //it outputs only the options, without the action metadata
@@ -311,11 +311,16 @@ begin
 end;
 
 
-function GetEditTemplateActionProperties(AEditTemplateOptions: TClkEditTemplateOptions): string;
+function GetEditTemplateActionProperties(AEditTemplateOptions: TClkEditTemplateOptions; AIncludeListOfEditedProperties: Boolean = False): string;
 begin
   Result := 'Operation' + '=' + IntToStr(Ord(AEditTemplateOptions.Operation)) + '&' +
             'WhichTemplate' + '=' + IntToStr(Ord(AEditTemplateOptions.WhichTemplate)) + '&' +
-            'TemplateFileName' + '=' + AEditTemplateOptions.TemplateFileName + '&' +
+            'TemplateFileName' + '=' + AEditTemplateOptions.TemplateFileName + '&';
+
+            if AIncludeListOfEditedProperties then  //this should be true when serializing for http
+              Result := Result + 'ListOfEditedProperties' + '=' + FastReplace_1920To45(AEditTemplateOptions.ListOfEditedProperties) + '&'; //ListOfEditedProperties stores a #18 separated list of key=value strings
+
+  Result := Result +
             'ListOfEnabledProperties' + '=' + FastReplace_ReturnTo45(AEditTemplateOptions.ListOfEnabledProperties) + '&' +
             'EditedActionName' + '=' + AEditTemplateOptions.EditedActionName + '&' +
             'EditedActionType' + '=' + IntToStr(Ord(AEditTemplateOptions.EditedActionType)) + '&' +
@@ -808,7 +813,7 @@ begin
 end;
 
 
-function SetEditTemplateActionProperties(AListOfEditTemplateOptionsParams: TStrings; out AEditTemplateOptions: TClkEditTemplateOptions): string;
+function SetEditTemplateActionProperties(AListOfEditTemplateOptionsParams: TStrings; out AEditTemplateOptions: TClkEditTemplateOptions; AIncludeListOfEditedProperties: Boolean = False): string;
 var
   Temp_Operation, Temp_WhichTemplate, Temp_EditedActionType: Integer;
 begin
@@ -838,6 +843,10 @@ begin
   AEditTemplateOptions.Operation := TEditTemplateOperation(Temp_Operation);
   AEditTemplateOptions.WhichTemplate := TEditTemplateWhichTemplate(Temp_WhichTemplate);
   AEditTemplateOptions.TemplateFileName := AListOfEditTemplateOptionsParams.Values['TemplateFileName'];
+
+  if AIncludeListOfEditedProperties then
+    AEditTemplateOptions.ListOfEditedProperties := FastReplace_45To1920(AListOfEditTemplateOptionsParams.Values['ListOfEditedProperties']);
+
   AEditTemplateOptions.ListOfEnabledProperties := FastReplace_45ToReturn(AListOfEditTemplateOptionsParams.Values['ListOfEnabledProperties']);
   AEditTemplateOptions.EditedActionName := AListOfEditTemplateOptionsParams.Values['EditedActionName'];
   AEditTemplateOptions.EditedActionType := TClkAction(Temp_EditedActionType);
@@ -879,6 +888,8 @@ var
 begin
   SerProperties := TStringList.Create;
   try
+    AListOfOptionsParams := FastReplace_ReturnTo45(AListOfOptionsParams); //just in case if there are lists with #13#10
+    AListOfOptionsParams := FastReplace_1920To45(AListOfOptionsParams);
     SerProperties.Text := StringReplace(AListOfOptionsParams, '&', #13#10, [rfReplaceAll]);
     Result := SetActionProperties(SerProperties, AActionType, AActionOptions);
   finally
