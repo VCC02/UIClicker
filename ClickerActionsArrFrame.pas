@@ -1963,7 +1963,7 @@ begin
   /////the new content, instead of editboxes and checkboxes
   CopyActionContent(FClkActions[ActionIndex], frClickerActions.EditingAction^);
 
-  if frClickerActions.CurrentlyEditingActionType = acFindSubControl then
+  {if frClickerActions.CurrentlyEditingActionType = acFindSubControl then
   begin
     //the number of items from MatchBitmapText has to match the number of frames from FBMPTextFrames
     frClickerActions.frClickerFindControl.CreateBMPTextFrames(Length(FClkActions[ActionIndex].FindControlOptions.MatchBitmapText)); //do not use SetLength(frClickerActions.FBMPTextFrames, Length(FClkActions[ActionIndex].FindControlOptions.MatchBitmapText));
@@ -2008,17 +2008,17 @@ begin
 
     frClickerActions.frClickerFindControl.UpdateListsOfSearchFiles(FClkActions[ActionIndex].FindControlOptions.MatchBitmapFiles, FClkActions[ActionIndex].FindControlOptions.MatchPrimitiveFiles);
     frClickerActions.frClickerFindControl.UpdateBitmapAlgorithmSettings;
-  end;
+  end;}
 
   frClickerActions.LoadListOfAvailableTemplates;
 
   frClickerActions.ListOfCustomVariables := FastReplace_45ToReturn(FClkActions[ActionIndex].CallTemplateOptions.ListOfCustomVarsAndValues);
 
-  if frClickerActions.CurrentlyEditingActionType = acFindSubControl then
+  {if frClickerActions.CurrentlyEditingActionType = acFindSubControl then
     frClickerActions.frClickerFindControl.UpdatePreviewIcons;
 
   frClickerActions.UpdateControlWidthHeightLabels;
-  frClickerActions.UpdateUseWholeScreenLabel(FClkActions[ActionIndex].FindControlOptions.UseWholeScreen);
+  frClickerActions.UpdateUseWholeScreenLabel(FClkActions[ActionIndex].FindControlOptions.UseWholeScreen);}
 
   if frClickerActions.CurrentlyEditingActionType = acFindSubControl then
     frClickerActions.frClickerFindControl.UpdateSearchAreaLabelsFromKeysOnInitRect(FClkActions[ActionIndex].FindControlOptions.InitialRectangle);
@@ -2031,13 +2031,16 @@ begin
 
   frClickerActions.CurrentlyEditingActionType := FClkActions[ActionIndex].ActionOptions.Action;
 
-  if frClickerActions.CurrentlyEditingActionType = acFindSubControl then
+  {if frClickerActions.CurrentlyEditingActionType = acFindSubControl then
   begin
     frClickerActions.frClickerFindControl.PreviewText;
 
     for i := 0 to frClickerActions.frClickerFindControl.GetBMPTextFontProfilesCount - 1 do
       frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].UpdateSelectionLabelsFromCropInfo(FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i]);
-  end;
+  end;}
+
+  if frClickerActions.CurrentlyEditingActionType in [acFindControl, acFindSubControl] then
+    frClickerActions.UpdateFindSubControlInternalStructuresFromAction(@FClkActions[ActionIndex]);
 
   if frClickerActions.CurrentlyEditingActionType = acPlugin then
     frClickerActions.frClickerPlugin.LoadDebugSymbols(ExtractFullFileNameNoExt(ResolveTemplatePath(FClkActions[ActionIndex].PluginOptions.FileName)) + '.DbgSym');
