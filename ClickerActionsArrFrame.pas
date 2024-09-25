@@ -1150,6 +1150,8 @@ begin
   FActionExecution.OnIsAtBreakPoint := HandleOnIsAtBreakPoint;
   FActionExecution.OnSaveFileToExtRenderingInMemFS := HandleOnSaveFileToExtRenderingInMemFS;
   FActionExecution.OnGenerateAndSaveTreeWithWinInterp := HandleOnGenerateAndSaveTreeWithWinInterp;
+  FActionExecution.OnFileExists := HandleOnFileExists;
+  FActionExecution.OnSaveTemplateToFile := HandleOnSaveStringListToFile; //HandleOnSaveTemplateToFile;
 
   FCmdConsoleHistory := TStringList.Create;
   FOnExecuteRemoteActionAtIndex := nil;
@@ -1953,8 +1955,6 @@ end;
 
 procedure TfrClickerActionsArr.UpdateControlsFromActionsArr(ActionIndex: Integer);
 var
-  i: Integer;
-  TempProfileName: string;
   NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex: Integer;
   Action_ScrollInfo: TStringList;
 begin

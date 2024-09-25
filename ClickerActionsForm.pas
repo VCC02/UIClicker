@@ -2702,6 +2702,13 @@ begin
     Exit;
   end;
 
+  if ASyncObj.FCmd = '/' + CRECmd_ExecuteEditTemplate then
+  begin
+    Result := CREResp_RemoteExecResponseVar + '=' + IntToStr(Ord(frClickerActionsArrMain.ActionExecution.ExecuteEditTemplateActionAsString(ASyncObj.FParams)));
+    Result := Result + #8#7 + GetClkVariables87;
+    Exit;
+  end;
+
   Result := 'unknown command';  //default if no command is recognized
   frClickerActionsArrMain.AddToLog(Result + ': ' + ASyncObj.FCmd);
   ASyncObj.FErrCode := 2;

@@ -7846,9 +7846,174 @@ begin
 end;
 
 
-procedure TfrClickerActions.HandleOnOIChecked(NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex: Integer; ACheckState: TCheckState);
+function OIGetPropertyName_ForChecking_ActionSpecific(AEditingAction: PClkActionRec; ALiveEditingActionType: TClkAction; APropertyIndex: Integer): string;
+var
+  EditingActionType: Integer;
+  ListOfProperties: TStringList;
 begin
+  if AEditingAction = nil then
+  begin
+    Result := CActionIsNil;
+    Exit;
+  end;
 
+  EditingActionType := Integer(ALiveEditingActionType);
+  if EditingActionType = CClkUnsetAction then
+    Result := '?'
+  else
+  begin
+    if (ALiveEditingActionType = acPlugin) and (APropertyIndex > CPlugin_FileName_PropIndex) then  //intially used AEditingAction^.ActionOptions.Action
+    begin
+      ListOfProperties := TStringList.Create;
+      try
+        ListOfProperties.Text := AEditingAction^.PluginOptions.ListOfPropertiesAndTypes;
+        try
+          if (APropertyIndex - CPropCount_Plugin < ListOfProperties.Count) and (ListOfProperties.Count > 0) then
+            Result := ListOfProperties.Names[APropertyIndex - CPropCount_Plugin]
+          else
+            Result := '[Err: Index out of bounds: ' + IntToStr(APropertyIndex - 1) + ']';
+        except
+          Result := 'bug on getting name';
+        end;
+      finally
+        ListOfProperties.Free;
+      end;
+    end
+    else
+    begin
+      try
+        if APropertyIndex < CMainPropCounts[EditingActionType] then
+          Result := CMainProperties[EditingActionType]^[APropertyIndex].Name
+        else
+          Result := 'bug on getting name.';
+      except
+        on E: Exception do
+        begin
+          Result := 'bug on getting name.';
+          //MessageBox(0, PChar('AV' + #13#10 + Result + #13#10 + E.Message), 'UC OIGetPropertyName', 0);
+        end;
+      end;
+    end;
+  end;
+end;
+
+
+function OIGetListPropertyItemName_ForChecking_ActionSpecific(AEditingAction: PClkActionRec; ALiveEditingActionType: TClkAction; ACategoryIndex, APropertyIndex, AItemIndex: Integer): string;
+var
+  EditingActionType: Integer;
+  ItemIndexMod, ItemIndexDiv: Integer;
+begin
+  Result := '';
+
+  if AEditingAction = nil then
+  begin
+    Result := CActionIsNil;
+    Exit;
+  end;
+
+  EditingActionType := Integer(ALiveEditingActionType);
+  if EditingActionType = CClkUnsetAction then
+    Exit;
+
+  case EditingActionType of
+    Ord(acFindControl), Ord(acFindSubControl):
+    begin
+      case APropertyIndex of
+        CFindControl_MatchCriteria_PropIndex:
+          Result := CFindControl_MatchCriteriaProperties[AItemIndex].Name;
+
+        CFindControl_MatchBitmapText_PropIndex:
+        begin
+          ItemIndexMod := AItemIndex mod CPropCount_FindControlMatchBitmapText;
+          ItemIndexDiv := AItemIndex div CPropCount_FindControlMatchBitmapText;
+          Result := '[' + IntToStr(ItemIndexDiv) + '].' + CFindControl_MatchBitmapTextProperties[ItemIndexMod].Name;
+        end;
+
+        CFindControl_MatchBitmapFiles_PropIndex:
+          Result := 'File[' + IntToStr(AItemIndex) + ']';
+
+        CFindControl_MatchBitmapAlgorithmSettings_PropIndex:
+          Result := CFindControl_MatchBitmapAlgorithmSettingsProperties[AItemIndex].Name;
+
+        CFindControl_InitialRectangle_PropIndex:
+          Result := CFindControl_InitialRectangleProperties[AItemIndex].Name;
+
+        CFindControl_MatchPrimitiveFiles_PropIndex:
+        begin
+          Result := 'File[' + IntToStr(AItemIndex) + ']';
+        end;  //CFindControl_MatchPrimitiveFiles_PropIndex
+
+        CFindControl_MatchByHistogramSettings_PropIndex:
+          Result := CFindControl_MatchByHistogramSettingsProperties[AItemIndex].Name;
+
+        else
+          Result := '';
+      end;
+    end;
+
+    Ord(acCallTemplate):
+    begin
+      case APropertyIndex of
+        CCallTemplate_CallTemplateLoop_PropIndex:
+          Result := CCallTemplate_CallTemplateLoopProperties[AItemIndex].Name;
+
+        else
+          Result := '';
+      end;
+    end;
+
+  end;   //case EditingActionType
+end;
+
+
+procedure TfrClickerActions.HandleOnOIChecked(NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex: Integer; ACheckState: TCheckState);
+var
+  PropertyName: string;
+  PropertyNameWithoutDot: Boolean; //those with name and '['
+  ListOfProperties: TStringList;
+  Idx: Integer;
+begin
+  if CategoryIndex <> CCategory_EditedAction then
+    Exit;
+
+  if FEditTemplateOptions_EditingAction = nil then
+    Exit;
+
+  PropertyName := OIGetPropertyName_ForChecking_ActionSpecific(FEditTemplateOptions_EditingAction, FEditTemplateOptions_EditingAction.ActionOptions.Action, PropertyIndex);
+  if PropertyItemIndex <> -1 then
+  begin
+    PropertyNameWithoutDot := (FEditTemplateOptions_EditingAction.ActionOptions.Action in [acFindControl, acFindSubControl]) and (PropertyIndex = CFindControl_MatchBitmapText_PropIndex);
+    if not PropertyNameWithoutDot then
+      PropertyName := PropertyName + '.';
+
+    PropertyName := PropertyName + OIGetListPropertyItemName_ForChecking_ActionSpecific(FEditTemplateOptions_EditingAction, FEditTemplateOptions_EditingAction.ActionOptions.Action, CategoryIndex, PropertyIndex, PropertyItemIndex);
+  end;
+
+  ListOfProperties := TStringList.Create;
+  try
+    ListOfProperties.Text := FastReplace_45ToReturn(FEditTemplateOptions_EditingAction.EditTemplateOptions.ListOfEnabledProperties);
+
+    Idx := ListOfProperties.IndexOf(PropertyName);
+    if Idx = -1 then //not in the list
+    begin
+      if ACheckState = csCheckedNormal then
+        ListOfProperties.Add(PropertyName)
+      else
+        ; //nothing to do
+    end
+    else
+    begin //in the list
+      if ACheckState = csUncheckedNormal then
+        ListOfProperties.Delete(Idx)
+      else
+        ; //nothing to do
+    end;
+
+    FEditTemplateOptions_EditingAction.EditTemplateOptions.ListOfEnabledProperties := FastReplace_ReturnTo45(ListOfProperties.Text);
+    DoOnAddToLog('List: ' + FEditTemplateOptions_EditingAction.EditTemplateOptions.ListOfEnabledProperties);
+  finally
+    ListOfProperties.Free;
+  end;
 end;
 
 

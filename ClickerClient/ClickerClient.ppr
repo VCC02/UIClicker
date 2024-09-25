@@ -229,6 +229,7 @@ type
     Operation: TEditTemplateOperation;
     WhichTemplate: TEditTemplateWhichTemplate;
     TemplateFileName: PWideChar;
+    ListOfEditedProperties: PWideChar;
     ListOfEnabledProperties: PWideChar;
     EditedActionName: PWideChar;
     EditedActionType: TClkAction;
@@ -1119,6 +1120,7 @@ begin
   TempAction.EditTemplateOptions.Operation := AEditTemplateOptions^.Operation;
   TempAction.EditTemplateOptions.WhichTemplate := AEditTemplateOptions^.WhichTemplate;
   SetPointedContentToString(@string(PWideChar(AEditTemplateOptions^.TemplateFileName))[1], TempAction.EditTemplateOptions.TemplateFileName);
+  SetPointedContentToString(@string(PWideChar(AEditTemplateOptions^.ListOfEditedProperties))[1], TempAction.EditTemplateOptions.ListOfEditedProperties);
   SetPointedContentToString(@string(PWideChar(AEditTemplateOptions^.ListOfEnabledProperties))[1], TempAction.EditTemplateOptions.ListOfEnabledProperties);
   SetPointedContentToString(@string(PWideChar(AEditTemplateOptions^.EditedActionName))[1], TempAction.EditTemplateOptions.EditedActionName);
   TempAction.EditTemplateOptions.EditedActionType := AEditTemplateOptions^.EditedActionType;

@@ -103,6 +103,8 @@ type
     FOnResolveTemplatePath: TOnResolveTemplatePath;
     FOnSetDebugPoint: TOnSetDebugPoint;
     FOnIsAtBreakPoint: TOnIsAtBreakPoint;
+    FOnFileExists: TOnFileExists;
+    FOnSaveTemplateToFile: TOnSaveTemplateToFile;
 
     FOnSaveFileToExtRenderingInMemFS: TOnSaveFileToExtRenderingInMemFS;
     FOnGenerateAndSaveTreeWithWinInterp: TOnGenerateAndSaveTreeWithWinInterp;
@@ -156,6 +158,8 @@ type
     procedure DoOnSaveFileToExtRenderingInMemFS(AFileName: string; AContent: Pointer; AFileSize: Int64);
     //procedure DoOnRestoreVars(AAllVars: TStringList);
     function DoOnGenerateAndSaveTreeWithWinInterp(AHandle: THandle; ATreeFileName: string; AStep: Integer; AUseMouseSwipe: Boolean): Boolean;
+    function DoOnFileExists(const FileName: string): Boolean;
+    procedure DoOnSaveTemplateToFile(AStringList: TStringList; const AFileName: string);
 
     function HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     function HandleOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
@@ -246,6 +250,8 @@ type
     property OnResolveTemplatePath: TOnResolveTemplatePath write FOnResolveTemplatePath;
     property OnSetDebugPoint: TOnSetDebugPoint write FOnSetDebugPoint;
     property OnIsAtBreakPoint: TOnIsAtBreakPoint write FOnIsAtBreakPoint;
+    property OnFileExists: TOnFileExists write FOnFileExists;
+    property OnSaveTemplateToFile: TOnSaveTemplateToFile write FOnSaveTemplateToFile;
 
     property OnSaveFileToExtRenderingInMemFS: TOnSaveFileToExtRenderingInMemFS write FOnSaveFileToExtRenderingInMemFS;
     property OnGenerateAndSaveTreeWithWinInterp: TOnGenerateAndSaveTreeWithWinInterp write FOnGenerateAndSaveTreeWithWinInterp;
@@ -264,7 +270,7 @@ uses
   {$ENDIF}
   IdHTTP, ClickerPrimitivesCompositor, ClickerActionProperties,
   ClickerActionPluginLoader, ClickerActionPlugins, BitmapProcessing,
-  ClickerActionsClient;
+  ClickerActionsClient, ClickerTemplates;
 
 
 constructor TActionExecution.Create;
@@ -314,6 +320,8 @@ begin
   FOnResolveTemplatePath := nil;
   FOnSetDebugPoint := nil;
   FOnIsAtBreakPoint := nil;
+  FOnFileExists := nil;
+  FOnSaveTemplateToFile := nil;
 
   FOnSaveFileToExtRenderingInMemFS := nil;
   FOnGenerateAndSaveTreeWithWinInterp := nil;
@@ -866,6 +874,24 @@ begin
     raise Exception.Create('OnIsAtBreakPoint not assigned.');
 
   Result := FOnIsAtBreakPoint(ADebugPoint);
+end;
+
+
+function TActionExecution.DoOnFileExists(const FileName: string): Boolean;
+begin
+  if not Assigned(FOnFileExists) then
+    raise Exception.Create('OnFileExists not assigned.');
+
+  Result := FOnFileExists(FileName);
+end;
+
+
+procedure TActionExecution.DoOnSaveTemplateToFile(AStringList: TStringList; const AFileName: string);
+begin
+  if not Assigned(FOnSaveTemplateToFile) then
+    raise Exception.Create('OnSaveTemplateToFile is not assigned.')
+  else
+    FOnSaveTemplateToFile(AStringList, AFileName);
 end;
 
 
@@ -3482,14 +3508,108 @@ end;
 
 
 function TActionExecution.ExecuteEditTemplateAction(var AEditTemplateOptions: TClkEditTemplateOptions): Boolean;
+  function GetActionIndexByName(AClkActions: TClkActionsRecArr; AName: string): Integer;
+  var
+    i: Integer;
+  begin
+    Result := -1;
+    for i := 0 to Length(AClkActions) - 1 do
+      if AClkActions[i].ActionOptions.ActionName = AEditTemplateOptions.EditedActionName then
+      begin
+        Result := i;
+        Break;
+      end;
+  end;
+
+var
+  Ini: TClkIniReadonlyFile;
+  ClkActions: TClkActionsRecArr;
+  Notes, IconPath: string;
+  i, Idx: Integer;
+  TemplateContent: TStringList;
 begin
   Result := False;
-  //case AEditTemplateOptions.Operation of
-  //  etoUpdateAction:
-  //  begin
-  //
-  //  end;
-  //end;
+
+  case AEditTemplateOptions.Operation of
+    etoUpdateAction:
+    begin
+      case AEditTemplateOptions.WhichTemplate of
+        etwtSelf:
+          ;
+
+        etwtOther:
+          ;
+      end;
+    end;
+
+    etoMoveAction:
+      ;
+
+    etoDeleteAction:
+    begin
+      if not DoOnFileExists(AEditTemplateOptions.TemplateFileName) then
+      begin
+        SetActionVarValue('$ExecAction_Err$', CREResp_FileNotFound);
+        Exit;
+      end;
+
+      Ini := DoOnTClkIniReadonlyFileCreate(AEditTemplateOptions.TemplateFileName);  //LoadTemplate
+      try
+        LoadTemplateToCustomActions_V2(Ini, ClkActions, Notes, IconPath);
+
+        if Length(ClkActions) = 0 then
+        begin
+          SetActionVarValue('$ExecAction_Err$', '');  //exiting without an error
+          Exit;
+        end;
+
+        Idx := GetActionIndexByName(ClkActions, AEditTemplateOptions.EditedActionName);
+        if Idx = -1 then
+        begin
+          SetActionVarValue('$ExecAction_Err$', CREResp_ActionNotFound);
+          Exit;
+        end;
+
+        for i := Idx to Length(ClkActions) - 2 do
+          CopyActionContent(ClkActions[i + 1], ClkActions[i]);
+
+        SetLength(ClkActions, Length(ClkActions) - 1);
+
+        TemplateContent := TStringList.Create;
+        try
+          SaveTemplateWithCustomActionsToStringList_V2(TemplateContent, ClkActions, Notes, IconPath);
+          DoOnSaveTemplateToFile(TemplateContent, AEditTemplateOptions.TemplateFileName);
+        finally
+          TemplateContent.Free;
+        end;
+      finally
+        Ini.Free;
+      end;
+
+      Result := True;
+    end;
+
+    etoDuplicateAction:
+      ;
+
+    etoEnableAction:
+      ;
+
+    etoDisableAction:
+      ;
+
+    etoExecuteAction:
+      ;
+
+    etoSaveTemplate:
+      ;
+
+    etoGetProperty:
+      ;
+
+    etoSetProperty:
+      ;
+  end;
 end;
 
 
