@@ -53,6 +53,7 @@ type
   TOnRestoreVars = procedure(AAllVars: TStringList) of object;
 
   TOnResolveTemplatePath = function(APath: string; ACustomSelfTemplateDir: string = ''; ACustomAppDir: string = ''): string of object;
+  TOnExecuteActionByContent = function(var AAllActions: TClkActionsRecArr; AActionIndex: Integer): Boolean of object;
 
   TActionExecution = class
   private
@@ -108,6 +109,7 @@ type
 
     FOnSaveFileToExtRenderingInMemFS: TOnSaveFileToExtRenderingInMemFS;
     FOnGenerateAndSaveTreeWithWinInterp: TOnGenerateAndSaveTreeWithWinInterp;
+    FOnExecuteActionByContent: TOnExecuteActionByContent;
 
     function GetActionVarValue(VarName: string): string;
     procedure SetActionVarValue(VarName, VarValue: string);
@@ -160,6 +162,7 @@ type
     function DoOnGenerateAndSaveTreeWithWinInterp(AHandle: THandle; ATreeFileName: string; AStep: Integer; AUseMouseSwipe: Boolean): Boolean;
     function DoOnFileExists(const FileName: string): Boolean;
     procedure DoOnSaveTemplateToFile(AStringList: TStringList; const AFileName: string);
+    function DoOnExecuteActionByContent(var AAllActions: TClkActionsRecArr; AActionIndex: Integer): Boolean;
 
     function HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     function HandleOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
@@ -255,6 +258,7 @@ type
 
     property OnSaveFileToExtRenderingInMemFS: TOnSaveFileToExtRenderingInMemFS write FOnSaveFileToExtRenderingInMemFS;
     property OnGenerateAndSaveTreeWithWinInterp: TOnGenerateAndSaveTreeWithWinInterp write FOnGenerateAndSaveTreeWithWinInterp;
+    property OnExecuteActionByContent: TOnExecuteActionByContent write FOnExecuteActionByContent;
   end;
 
 
@@ -325,6 +329,7 @@ begin
 
   FOnSaveFileToExtRenderingInMemFS := nil;
   FOnGenerateAndSaveTreeWithWinInterp := nil;
+  FOnExecuteActionByContent := nil;
 end;
 
 
@@ -892,6 +897,15 @@ begin
     raise Exception.Create('OnSaveTemplateToFile is not assigned.')
   else
     FOnSaveTemplateToFile(AStringList, AFileName);
+end;
+
+
+function TActionExecution.DoOnExecuteActionByContent(var AAllActions: TClkActionsRecArr; AActionIndex: Integer): Boolean;
+begin
+  if not Assigned(FOnExecuteActionByContent) then
+    raise Exception.Create('OnExecuteActionByContent not assigned.');
+
+  Result := FOnExecuteActionByContent(AAllActions, AActionIndex);
 end;
 
 
@@ -3527,6 +3541,11 @@ function TActionExecution.ExecuteEditTemplateAction(var AEditTemplateOptions: TC
     AClkAction.ActionOptions.Action := AEditTemplateOptions.EditedActionType;
     AClkAction.ActionOptions.ActionCondition := AEditTemplateOptions.EditedActionCondition;
     AClkAction.ActionOptions.ActionTimeout := AEditTemplateOptions.EditedActionTimeout;
+    AClkAction.ActionOptions.ActionEnabled := True;
+    AClkAction.ActionOptions.ExecutionIndex := '';
+    AClkAction.ActionStatus := asNotStarted;
+    AClkAction.ActionSkipped := False;
+    AClkAction.ActionDebuggingStatus := adsNone;
     AClkAction.ActionBreakPoint.Exists := False;
     AClkAction.ActionBreakPoint.Enabled := False;
     AClkAction.ActionBreakPoint.Condition := '';
@@ -3554,6 +3573,8 @@ var
   Notes, IconPath: string;
   i, Idx, DestIdx: Integer;
   TemplateContent: TStringList;
+  TempProperties, TempEnabledProperties, TempEditedProperties: TStringList;
+  PropertyName, NewPropertyValue, ActionProperties: string;
 begin
   Result := False;
 
@@ -3669,10 +3690,34 @@ begin
             //All the properties to be found in AEditTemplateOptions.ListOfEnabledProperties will be returned in $Property_<PropertyName>_Value$ variables.
           end;
 
-          etoSetProperty:
-          begin
-            //AEditTemplateOptions.ListOfEnabledProperties;
-            //AEditTemplateOptions.ListOfEditedProperties;
+          etoSetProperty:                         ///////////////// ToDo  fix decoding
+          begin      //read-modify-write
+            TempProperties := TStringList.Create;
+            TempEnabledProperties := TStringList.Create;
+            TempEditedProperties := TStringList.Create;
+            try
+              ActionProperties := GetActionPropertiesByType(ClkActions[Idx]);
+              TempProperties.Text := StringReplace(ActionProperties, {'&'} CPropSeparatorInt, #13#10, [rfReplaceAll]);
+              TempEnabledProperties.Text := FastReplace_45ToReturn(AEditTemplateOptions.ListOfEnabledProperties);
+              TempEditedProperties.Text := StringReplace(AEditTemplateOptions.ListOfEditedProperties, CPropSeparatorInt, #13#10, [rfReplaceAll]);
+
+              /////////////////////// For plugin, the ListOfPropertiesAndValues property has to be unpacked (#4#5-> #13#10), updated, then repacked.
+              /////////////////////// TempEnabledProperties won't even see the ListOfPropertiesAndValues key, only its content (value, which is a list of key=value)
+              for i := 0 to TempEnabledProperties.Count - 1 do
+              begin
+                PropertyName := TempEnabledProperties.Strings[i];
+                NewPropertyValue := TempEditedProperties.Values[PropertyName];
+                TempProperties.Values[PropertyName] := NewPropertyValue;
+              end;
+
+              SetActionProperties(TempProperties, AEditTemplateOptions.EditedActionType, ClkActions[Idx]);
+            finally
+              TempProperties.Free;
+              TempEnabledProperties.Free;
+              TempEditedProperties.Free;
+            end;
+
+            Result := True;
           end;
 
           etoSetCondition:
@@ -3688,21 +3733,25 @@ begin
           end;
 
           etoExecuteAction:
-            ;
+            Result := DoOnExecuteActionByContent(ClkActions, Idx);
 
           etoSaveTemplate: //The advantage of having a Save command is that a template can be edited in memory, partially executed then saved (or not).
-          begin
-            TemplateContent := TStringList.Create;
-            try
-              SaveTemplateWithCustomActionsToStringList_V2(TemplateContent, ClkActions, Notes, IconPath);
-              DoOnSaveTemplateToFile(TemplateContent, AEditTemplateOptions.TemplateFileName);
-            finally
-              TemplateContent.Free;
-            end;
-
+          begin            //This command makes sense for the currently loaded file (the etwtSelf option).
+            AddToLog('Nothing to save.');
             Result := True;
           end;
         end;  //case
+
+        if Result and (AEditTemplateOptions.Operation <> etoExecuteAction) then   //etoExecuteAction is not an editing operation
+        begin  //The file is saved almost every time for the etwtOther option (successful editing operations only).
+          TemplateContent := TStringList.Create;
+          try
+            SaveTemplateWithCustomActionsToStringList_V2(TemplateContent, ClkActions, Notes, IconPath);
+            DoOnSaveTemplateToFile(TemplateContent, AEditTemplateOptions.TemplateFileName);
+          finally
+            TemplateContent.Free;
+          end;
+        end;
       finally
         Ini.Free;
       end;

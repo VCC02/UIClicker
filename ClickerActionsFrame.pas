@@ -637,6 +637,7 @@ type
     procedure OIFirstVisibleNode_ActionSpecific(AEditingAction: PClkActionRec; NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex: Integer);
     procedure HandleOnOIFirstVisibleNode(NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex: Integer);
 
+    function GetPropertyName_ForChecking_ActionSpecific(AEditingAction: PClkActionRec; ALiveEditingActionType: TClkAction; ACategoryIndex, APropertyIndex, AItemIndex: Integer): string;
     procedure HandleOnOIInitNode(NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex: Integer; var ACheckType: TCheckType; var ACheckState: TCheckState; var ANodeHeight: Word);
     procedure HandleOnOIChecked(NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex: Integer; ACheckState: TCheckState);
     procedure HandleOnOIChecking(NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex: Integer; ACheckState: TCheckState; var ANewState: TCheckState; var AAllowed: Boolean);
@@ -2446,6 +2447,7 @@ end;
 
 procedure TfrClickerActions.SerializeEditTemplateEditingAction;
 begin
+  FEditingAction^.EditTemplateOptions := FClkEditedActionByEditTemplate.EditTemplateOptions;
   FEditingAction^.EditTemplateOptions.ListOfEditedProperties := StringReplace(GetActionPropertiesByType(FClkEditedActionByEditTemplate), CPropSeparatorSer, CPropSeparatorInt, [rfReplaceAll]);
 end;
 
@@ -2516,6 +2518,8 @@ procedure TfrClickerActions.DeserializeEditTemplateEditingAction;
 var
   SerErr: string;
 begin
+  FClkEditedActionByEditTemplate.EditTemplateOptions := FEditingAction^.EditTemplateOptions;
+
   SerErr := SetActionProperties(StringReplace(FEditingAction^.EditTemplateOptions.ListOfEditedProperties, CPropSeparatorInt, CPropSeparatorSer, [rfReplaceAll]),
                                 FEditingAction^.EditTemplateOptions.EditedActionType,
                                 FClkEditedActionByEditTemplate); //converts from serialized ListOfEditedProperties to structured FClkEditedActionByEditTemplate
@@ -7824,28 +7828,6 @@ begin
 end;
 
 
-procedure TfrClickerActions.HandleOnOIInitNode(NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex: Integer; var ACheckType: TCheckType; var ACheckState: TCheckState; var ANodeHeight: Word);
-var
-  DatatypeName: string;
-begin
-  try
-  if FEditTemplateOptions_EditingAction <> nil then
-    if CategoryIndex = CCategory_EditedAction then
-      if NodeLevel in [CPropertyLevel, CPropertyItemLevel] then
-      begin
-        ACheckType := ctCheckBox;
-        ACheckState := csUncheckedNormal; ///////////  should be read from action data
-
-        DatatypeName := OIGetDataTypeName_ActionSpecific(FEditTemplateOptions_EditingAction, FEditTemplateOptions_EditingAction.ActionOptions.Action, CategoryIndex, PropertyIndex, PropertyItemIndex);
-        if (DatatypeName = 'Structure') or (DatatypeName = 'Array') then
-          ACheckState := csMixedPressed;
-      end;
-  except
-    //not sure what, but something crashes here
-  end;
-end;
-
-
 function OIGetPropertyName_ForChecking_ActionSpecific(AEditingAction: PClkActionRec; ALiveEditingActionType: TClkAction; APropertyIndex: Integer): string;
 var
   EditingActionType: Integer;
@@ -7966,10 +7948,60 @@ begin
 end;
 
 
+function TfrClickerActions.GetPropertyName_ForChecking_ActionSpecific(AEditingAction: PClkActionRec; ALiveEditingActionType: TClkAction; ACategoryIndex, APropertyIndex, AItemIndex: Integer): string;
+var
+  PropertyNameWithoutDot: Boolean; //those with name and '['
+begin
+  Result := OIGetPropertyName_ForChecking_ActionSpecific(AEditingAction, ALiveEditingActionType, APropertyIndex);
+  if AItemIndex <> -1 then
+  begin
+    PropertyNameWithoutDot := (ALiveEditingActionType in [acFindControl, acFindSubControl]) and (APropertyIndex = CFindControl_MatchBitmapText_PropIndex);
+    if not PropertyNameWithoutDot then
+      Result := Result + '.';
+
+    Result := Result + OIGetListPropertyItemName_ForChecking_ActionSpecific(AEditingAction, ALiveEditingActionType, ACategoryIndex, APropertyIndex, AItemIndex);
+  end;
+end;
+
+
+procedure TfrClickerActions.HandleOnOIInitNode(NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex: Integer; var ACheckType: TCheckType; var ACheckState: TCheckState; var ANodeHeight: Word);
+var
+  DatatypeName: string;
+  PropertyName: string;
+  ListOfProperties: TStringList;
+begin
+  try
+    if FEditTemplateOptions_EditingAction <> nil then
+      if CategoryIndex = CCategory_EditedAction then
+        if NodeLevel in [CPropertyLevel, CPropertyItemLevel] then
+        begin
+          ACheckType := ctCheckBox;
+          ACheckState := csUncheckedNormal;
+
+          PropertyName := GetPropertyName_ForChecking_ActionSpecific(FEditTemplateOptions_EditingAction, FEditTemplateOptions_EditingAction.ActionOptions.Action, CategoryIndex, PropertyIndex, PropertyItemIndex);
+
+          ListOfProperties := TStringList.Create;
+          try                             // a bit of overhead to decode the same list for all properties
+            ListOfProperties.Text := FastReplace_45ToReturn(FEditTemplateOptions_EditingAction.EditTemplateOptions.ListOfEnabledProperties);
+            if ListOfProperties.IndexOf(PropertyName) <> -1 then
+              ACheckState := csCheckedNormal;
+          finally
+            ListOfProperties.Free;
+          end;
+
+          DatatypeName := OIGetDataTypeName_ActionSpecific(FEditTemplateOptions_EditingAction, FEditTemplateOptions_EditingAction.ActionOptions.Action, CategoryIndex, PropertyIndex, PropertyItemIndex);
+          if (DatatypeName = 'Structure') or (DatatypeName = 'Array') then
+            ACheckState := csMixedPressed;
+        end;
+  except
+    //not sure what, but something crashes here
+  end;
+end;
+
+
 procedure TfrClickerActions.HandleOnOIChecked(NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex: Integer; ACheckState: TCheckState);
 var
   PropertyName: string;
-  PropertyNameWithoutDot: Boolean; //those with name and '['
   ListOfProperties: TStringList;
   Idx: Integer;
 begin
@@ -7979,15 +8011,7 @@ begin
   if FEditTemplateOptions_EditingAction = nil then
     Exit;
 
-  PropertyName := OIGetPropertyName_ForChecking_ActionSpecific(FEditTemplateOptions_EditingAction, FEditTemplateOptions_EditingAction.ActionOptions.Action, PropertyIndex);
-  if PropertyItemIndex <> -1 then
-  begin
-    PropertyNameWithoutDot := (FEditTemplateOptions_EditingAction.ActionOptions.Action in [acFindControl, acFindSubControl]) and (PropertyIndex = CFindControl_MatchBitmapText_PropIndex);
-    if not PropertyNameWithoutDot then
-      PropertyName := PropertyName + '.';
-
-    PropertyName := PropertyName + OIGetListPropertyItemName_ForChecking_ActionSpecific(FEditTemplateOptions_EditingAction, FEditTemplateOptions_EditingAction.ActionOptions.Action, CategoryIndex, PropertyIndex, PropertyItemIndex);
-  end;
+  PropertyName := GetPropertyName_ForChecking_ActionSpecific(FEditTemplateOptions_EditingAction, FEditTemplateOptions_EditingAction.ActionOptions.Action, CategoryIndex, PropertyIndex, PropertyItemIndex);
 
   ListOfProperties := TStringList.Create;
   try
@@ -8011,6 +8035,7 @@ begin
 
     FEditTemplateOptions_EditingAction.EditTemplateOptions.ListOfEnabledProperties := FastReplace_ReturnTo45(ListOfProperties.Text);
     DoOnAddToLog('List: ' + FEditTemplateOptions_EditingAction.EditTemplateOptions.ListOfEnabledProperties);
+    TriggerOnControlsModified;
   finally
     ListOfProperties.Free;
   end;

@@ -443,6 +443,7 @@ type
     function HandleOnTClkIniReadonlyFileCreate(AFileName: string): TClkIniReadonlyFile;
     function HandleOnTClkIniFileCreate(AFileName: string): TClkIniFile;
     procedure HandleOnSaveStringListToFile(AStringList: TStringList; const AFileName: string);
+    function HandleOnExecuteActionByContent(var AAllActions: TClkActionsRecArr; AActionIndex: Integer): Boolean;
     procedure HandleOnBackupVars(AAllVars: TStringList);
     procedure HandleOnGetListOfAvailableSetVarActions(AListOfSetVarActions: TStringList);
     procedure HandleOnGetListOfAvailableActions(AListOfSetVarActions: TStringList);
@@ -526,6 +527,7 @@ type
     function EncodeTemplatePath(APath: string): string;
 
     procedure PrepareFilesInServer;
+    function ExecuteActionByContent(var AAllActions: TClkActionsRecArr; AActionIndex: Integer): Boolean;
     function ExecuteActionAtIndex(AActionIndex: Integer): Boolean; //can be called by a server module (used when Clicker is in server mode)
     function LocalOnExecuteRemoteActionAtIndex(AActionIndex, AStackLevel: Integer; AVarReplacements: TStringList; AIsDebugging: Boolean): Boolean;
     function DoExecuteRemoteActionAtIndex(AActionIndex: Integer): Boolean;
@@ -1152,6 +1154,7 @@ begin
   FActionExecution.OnGenerateAndSaveTreeWithWinInterp := HandleOnGenerateAndSaveTreeWithWinInterp;
   FActionExecution.OnFileExists := HandleOnFileExists;
   FActionExecution.OnSaveTemplateToFile := HandleOnSaveStringListToFile; //HandleOnSaveTemplateToFile;
+  FActionExecution.OnExecuteActionByContent := HandleOnExecuteActionByContent;
 
   FCmdConsoleHistory := TStringList.Create;
   FOnExecuteRemoteActionAtIndex := nil;
@@ -1728,6 +1731,12 @@ begin
 end;
 
 
+function TfrClickerActionsArr.HandleOnExecuteActionByContent(var AAllActions: TClkActionsRecArr; AActionIndex: Integer): Boolean;
+begin
+  Result := ExecuteActionByContent(AAllActions, AActionIndex);
+end;
+
+
 procedure TfrClickerActionsArr.HandleOnBackupVars(AAllVars: TStringList);
 begin
   AAllVars.AddStrings(frClickerActions.ClkVariables);
@@ -2243,32 +2252,38 @@ begin
 end;
 
 
-function TfrClickerActionsArr.ExecuteActionAtIndex(AActionIndex: Integer): Boolean;
+function TfrClickerActionsArr.ExecuteActionByContent(var AAllActions: TClkActionsRecArr; AActionIndex: Integer): Boolean;
 begin
   Result := True;
 
   SetActionVarValue('$ExecAction_Err$', '');
-  SetActionVarValue('$SelfActionName$', FClkActions[AActionIndex].ActionOptions.ActionName);
+  SetActionVarValue('$SelfActionName$', AAllActions[AActionIndex].ActionOptions.ActionName);
   SetActionVarValue('$SelfActionIndex$', IntToStr(AActionIndex));
 
+  case AAllActions[AActionIndex].ActionOptions.Action of
+    acClick: Result := FActionExecution.ExecuteMultiClickAction(AAllActions[AActionIndex].ClickOptions);
+    acExecApp: Result := FActionExecution.ExecuteExecAppAction(AAllActions[AActionIndex].ExecAppOptions, AAllActions[AActionIndex].ActionOptions);
+    acFindControl: Result := FActionExecution.ExecuteFindControlActionWithTimeout(AAllActions[AActionIndex].FindControlOptions, AAllActions[AActionIndex].ActionOptions, False);
+    acFindSubControl: Result := FActionExecution.ExecuteFindControlActionWithTimeout(AAllActions[AActionIndex].FindControlOptions, AAllActions[AActionIndex].ActionOptions, True);
+    acSetControlText: Result := FActionExecution.ExecuteSetControlTextAction(AAllActions[AActionIndex].SetTextOptions);
+    acCallTemplate: Result := FActionExecution.ExecuteLoopedCallTemplateAction(AAllActions[AActionIndex].CallTemplateOptions, FContinuePlayingBySteppingInto, {FShouldStopAtBreakPoint replaced by FDebugging} FDebugging);
+    acSleep: Result := FActionExecution.ExecuteSleepAction(AAllActions[AActionIndex].SleepOptions, AAllActions[AActionIndex].ActionOptions);
+    acSetVar: Result := FActionExecution.ExecuteSetVarAction(AAllActions[AActionIndex].SetVarOptions);
+    acWindowOperations: Result := FActionExecution.ExecuteWindowOperationsAction(AAllActions[AActionIndex].WindowOperationsOptions);
+    acLoadSetVarFromFile: Result := FActionExecution.ExecuteLoadSetVarFromFileAction(AAllActions[AActionIndex].LoadSetVarFromFileOptions);
+    acSaveSetVarToFile: Result := FActionExecution.ExecuteSaveSetVarToFileAction(AAllActions[AActionIndex].SaveSetVarToFileOptions);
+    acPlugin: Result := FActionExecution.ExecutePluginAction(AAllActions[AActionIndex].PluginOptions, @AAllActions, frClickerActions.ClkVariables, ResolveTemplatePath(AAllActions[AActionIndex].PluginOptions.FileName), FContinuePlayingBySteppingInto, {FShouldStopAtBreakPoint replaced by FDebugging} FDebugging);
+    acEditTemplate: Result := FActionExecution.ExecuteEditTemplateAction(AAllActions[AActionIndex].EditTemplateOptions);
+  end;  //case
+end;
+
+
+function TfrClickerActionsArr.ExecuteActionAtIndex(AActionIndex: Integer): Boolean;
+begin
   if (AActionIndex < 0) or (AActionIndex > Length(FClkActions) - 1) then
     raise Exception.Create('ActionIndex out of bounds: ' + IntToStr(AActionIndex));
 
-  case FClkActions[AActionIndex].ActionOptions.Action of
-    acClick: Result := FActionExecution.ExecuteMultiClickAction(FClkActions[AActionIndex].ClickOptions);
-    acExecApp: Result := FActionExecution.ExecuteExecAppAction(FClkActions[AActionIndex].ExecAppOptions, FClkActions[AActionIndex].ActionOptions);
-    acFindControl: Result := FActionExecution.ExecuteFindControlActionWithTimeout(FClkActions[AActionIndex].FindControlOptions, FClkActions[AActionIndex].ActionOptions, False);
-    acFindSubControl: Result := FActionExecution.ExecuteFindControlActionWithTimeout(FClkActions[AActionIndex].FindControlOptions, FClkActions[AActionIndex].ActionOptions, True);
-    acSetControlText: Result := FActionExecution.ExecuteSetControlTextAction(FClkActions[AActionIndex].SetTextOptions);
-    acCallTemplate: Result := FActionExecution.ExecuteLoopedCallTemplateAction(FClkActions[AActionIndex].CallTemplateOptions, FContinuePlayingBySteppingInto, {FShouldStopAtBreakPoint replaced by FDebugging} FDebugging);
-    acSleep: Result := FActionExecution.ExecuteSleepAction(FClkActions[AActionIndex].SleepOptions, FClkActions[AActionIndex].ActionOptions);
-    acSetVar: Result := FActionExecution.ExecuteSetVarAction(FClkActions[AActionIndex].SetVarOptions);
-    acWindowOperations: Result := FActionExecution.ExecuteWindowOperationsAction(FClkActions[AActionIndex].WindowOperationsOptions);
-    acLoadSetVarFromFile: Result := FActionExecution.ExecuteLoadSetVarFromFileAction(FClkActions[AActionIndex].LoadSetVarFromFileOptions);
-    acSaveSetVarToFile: Result := FActionExecution.ExecuteSaveSetVarToFileAction(FClkActions[AActionIndex].SaveSetVarToFileOptions);
-    acPlugin: Result := FActionExecution.ExecutePluginAction(FClkActions[AActionIndex].PluginOptions, @FClkActions, frClickerActions.ClkVariables, ResolveTemplatePath(FClkActions[AActionIndex].PluginOptions.FileName), FContinuePlayingBySteppingInto, {FShouldStopAtBreakPoint replaced by FDebugging} FDebugging);
-    acEditTemplate: Result := FActionExecution.ExecuteEditTemplateAction(FClkActions[AActionIndex].EditTemplateOptions);
-  end;  //case
+  Result := ExecuteActionByContent(FClkActions, AActionIndex);
 end;
 
 
