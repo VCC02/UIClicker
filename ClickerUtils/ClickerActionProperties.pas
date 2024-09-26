@@ -82,7 +82,7 @@ procedure GetDefaultPropertyValues_LoadSetVarFromFile(var ALoadSetVarFromFileOpt
 procedure GetDefaultPropertyValues_SaveSetVarToFile(var ASaveSetVarToFileOptions: TClkSaveSetVarToFileOptions);
 procedure GetDefaultPropertyValues_Plugin(var APluginOptions: TClkPluginOptions);
 procedure GetDefaultPropertyValues_EditTemplate(var AEditTemplateOptions: TClkEditTemplateOptions);
-//if adding new action types, please update ClickeActionsFrame, which calls all of the above
+//if adding new action types, please update ClickeActionsFrame and ExecuteEditTemplateAction, which call all of the above
 
 //These actions return True if their string properties, which are not '' by default, are now set to ''.
 //This will happen after serializing properties from ''.
@@ -1094,7 +1094,7 @@ procedure GetDefaultPropertyValues_EditTemplate(var AEditTemplateOptions: TClkEd
 var
   ClickOptions: TClkClickOptions;
 begin
-  AEditTemplateOptions.Operation := etoUpdateAction;
+  AEditTemplateOptions.Operation := etoNewAction;
   AEditTemplateOptions.WhichTemplate := etwtSelf;
   AEditTemplateOptions.TemplateFileName := '';
   AEditTemplateOptions.ListOfEnabledProperties := '';

@@ -242,7 +242,7 @@ begin
 
     ACustomActions[i].PluginOptions.FileName := '';
 
-    ACustomActions[i].EditTemplateOptions.Operation := etoUpdateAction;
+    ACustomActions[i].EditTemplateOptions.Operation := etoNewAction;
     ACustomActions[i].EditTemplateOptions.WhichTemplate := etwtSelf;
     ACustomActions[i].EditTemplateOptions.TemplateFileName := '';
     ACustomActions[i].EditTemplateOptions.ListOfEditedProperties := '';
@@ -512,7 +512,7 @@ end;
 
 procedure LoadAction_EditTemplate(Ini: TClkIniReadonlyFile; SectionIndex: Integer; var AEditTemplateOptions: TClkEditTemplateOptions);
 begin
-  AEditTemplateOptions.Operation := TEditTemplateOperation(Min(Ini.ReadInteger(SectionIndex, 'Operation', Integer(etoUpdateAction)), Integer(High(TEditTemplateOperation))));
+  AEditTemplateOptions.Operation := TEditTemplateOperation(Min(Ini.ReadInteger(SectionIndex, 'Operation', Integer(etoNewAction)), Integer(High(TEditTemplateOperation))));
   AEditTemplateOptions.WhichTemplate := TEditTemplateWhichTemplate(Min(Ini.ReadInteger(SectionIndex, 'WhichTemplate', Integer(etwtSelf)), Integer(High(TEditTemplateWhichTemplate))));
   AEditTemplateOptions.TemplateFileName := Ini.ReadString(SectionIndex, 'TemplateFileName', '');
   AEditTemplateOptions.ListOfEditedProperties := FastReplace_45To1920(Ini.ReadString(SectionIndex, 'ListOfEditedProperties', ''));

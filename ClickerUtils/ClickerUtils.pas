@@ -355,7 +355,7 @@ type
     ListOfInitValues: string;             //CRLF separated list of values
   end;
 
-  TEditTemplateOperation = (etoUpdateAction, etoMoveAction, etoDeleteAction, etoDuplicateAction, etoEnableAction, etoDisableAction, etoExecuteAction, etoSaveTemplate, etoGetProperty, etoSetProperty);
+  TEditTemplateOperation = (etoNewAction, etoUpdateAction, etoMoveAction, etoDeleteAction, etoDuplicateAction, etoRenameAction, etoEnableAction, etoDisableAction, etoGetProperty, etoSetProperty, etoSetCondition, etoSetTimeout, etoExecuteAction, etoSaveTemplate);
   TEditTemplateWhichTemplate = (etwtSelf, etwtOther);
 
   PClkActionRec = ^TClkActionRec;
@@ -373,7 +373,9 @@ type
 
     EditedActionName: string;             //Used to identify the action.  Both the EditedActionType and ActionName have to match if they point to an existing action.
     EditedActionType: TClkAction;         //Action type which is being edited by EditTemplate action. The type has to be set in advance, because the edited template might not be available to tell which type the edited action is going to be.
-    NewActionName: string;                //Used when renaming the action
+    EditedActionCondition: string;        //Used when setting action condition
+    EditedActionTimeout: Integer;         //Used when setting action timeout
+    NewActionName: string;                //Used when renaming and duplicating the action
   end;
 
   TActionBreakPoint = record
@@ -546,7 +548,7 @@ const
   CFontQualityStr: array[TFontQuality] of string = ('fqDefault', 'fqDraft', 'fqProof', 'fqNonAntialiased', 'fqAntialiased', 'fqCleartype', 'fqCleartypeNatural');
   CLoopDirectionStr: array[TLoopDirection] of string = ('ldInc', 'ldDec', 'ldAuto');
   CLoopEvalBreakPositionStr: array[TLoopEvalBreakPosition] of string = ('lebpAfterContent', 'lebpBeforeContent');
-  CEditTemplateOperationStr: array[TEditTemplateOperation] of string = ('etoUpdateAction', 'etoMoveAction', 'etoDeleteAction', 'etoDuplicateAction', 'etoEnableAction', 'etoDisableAction', 'etoExecuteAction', 'etoSaveTemplate', 'etoGetProperty', 'etoSetProperty');
+  CEditTemplateOperationStr: array[TEditTemplateOperation] of string = ('etoNewAction', 'etoUpdateAction', 'etoMoveAction', 'etoDeleteAction', 'etoDuplicateAction', 'etoRenameAction', 'etoEnableAction', 'etoDisableAction', 'etoGetProperty', 'etoSetProperty', 'etoSetCondition', 'etoSetTimeout', 'etoExecuteAction', 'etoSaveTemplate');
   CEditTemplateWhichTemplateStr: array[TEditTemplateWhichTemplate] of string = ('etwtSelf', 'etwtOther');
 
 

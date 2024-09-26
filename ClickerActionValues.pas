@@ -2065,7 +2065,7 @@ function EditTemplateOperation_AsStringToValue(AEditTemplateOperationAsString: s
 var
   i: TEditTemplateOperation;
 begin
-  Result := etoUpdateAction;
+  Result := etoNewAction;
   for i := Low(TEditTemplateOperation) to High(TEditTemplateOperation) do
     if CEditTemplateOperationStr[i] = AEditTemplateOperationAsString then
     begin
