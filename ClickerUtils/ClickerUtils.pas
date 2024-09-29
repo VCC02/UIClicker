@@ -626,6 +626,8 @@ function FastReplace_87To45(s: string): string;
 function FastReplace_45To87(s: string): string;
 function FastReplace_1920To45(s: string): string;
 function FastReplace_45To1920(s: string): string;
+function FastReplace_1920ToReturn(s: string): string;
+function FastReplace_ReturnTo1920(s: string): string;
 function FastReplace_ReturnToCSV(s: string): string;
 function FastReplace_0To1(s: string): string;
 
@@ -907,6 +909,54 @@ begin
   for i := n to Length(s) - 1 do
     if s[i] = #4 then
       if s[i + 1] = #5 then
+      begin
+        s[i] := #19;
+        s[i + 1] := #20;
+        Continue;
+      end;
+
+  Result := s;
+end;
+
+
+function FastReplace_1920ToReturn(s: string): string;
+var
+  i, n: Integer;
+begin
+  n := Pos(#19, s);
+  if n = 0 then
+  begin
+    Result := s;
+    Exit;
+  end;
+
+  for i := n to Length(s) - 1 do
+    if s[i] = #19 then
+      if s[i + 1] = #20 then
+      begin
+        s[i] := #13;
+        s[i + 1] := #10;
+        Continue;
+      end;
+
+  Result := s;
+end;
+
+
+function FastReplace_ReturnTo1920(s: string): string;
+var
+  i, n: Integer;
+begin
+  n := Pos(#13, s);
+  if n = 0 then
+  begin
+    Result := s;
+    Exit;
+  end;
+
+  for i := n to Length(s) - 1 do
+    if s[i] = #13 then
+      if s[i + 1] = #10 then
       begin
         s[i] := #19;
         s[i + 1] := #20;

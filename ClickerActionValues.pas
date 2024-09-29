@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2023 VCC
+    Copyright (C) 2024 VCC
     creation date: Feb 2023
     initial release date: 02 Feb 2023
 
@@ -71,7 +71,7 @@ const
   CPropCount_LoadSetVarFromFile = 2;
   CPropCount_SaveSetVarToFile = 2;
   CPropCount_Plugin = 1;  //Static properties, defined here. A plugin can report additional properties, which are not counted by this constant.
-  CPropCount_EditTemplate = 6; //Static properties, defined here.  ListOfEnabledProperties and CachedCount do not have to be displayed. They are not directly editable from OI.
+  CPropCount_EditTemplate = 8; //Static properties, defined here.  ListOfEnabledProperties and CachedCount do not have to be displayed. They are not directly editable from OI.
 
   CMainPropCounts: array[0..Ord(High(TClkAction))] of Integer = (
     CPropCount_Click,
@@ -219,7 +219,10 @@ const
   CEditTemplate_TemplateFileName_PropIndex = 2;
   CEditTemplate_EditedActionName_PropIndex = 3;
   CEditTemplate_EditedActionType_PropIndex = 4;
-  CEditTemplate_NewActionName_PropIndex = 5;
+  CEditTemplate_EditedActionCondition_PropIndex = 5;
+  CEditTemplate_EditedActionTimeout_PropIndex = 6;
+  CEditTemplate_NewActionName_PropIndex = 7;
+
 
   //Moved to ClickerUtils
   //CDTString = 'String';
@@ -432,6 +435,8 @@ const
     (Name: 'TemplateFileName'; EditorType: etTextWithArrow; DataType: CDTString),
     (Name: 'EditedActionName'; EditorType: etTextWithArrow; DataType: CDTString),
     (Name: 'EditedActionType'; EditorType: etEnumCombo; DataType: CDTString),
+    (Name: 'EditedActionCondition'; EditorType: etUserEditor; DataType: CDTString),
+    (Name: 'EditedActionTimeout'; EditorType: etTextWithArrow; DataType: CDTInteger),
     (Name: 'NewActionName'; EditorType: etTextWithArrow; DataType: CDTString)
   );
 
@@ -743,7 +748,9 @@ const
     0,  //TemplateFileName
     0,  //EditedActionName,
     Ord(High(TClkAction)) + 1,
-    0  //NewActionName
+    0, //NewActionName
+    0,
+    0
   );
 
 
@@ -939,7 +946,9 @@ const
     nil,  //TemplateFileName
     nil,  //EditedActionName
     @CClkActionStr,
-    nil   //NewActionName
+    nil,  //NewActionName
+    nil,
+    nil
   );
 
 
@@ -1140,7 +1149,9 @@ const
     0,  //TemplateFileName
     0,  //EditedActionName,
     0,  //TClkAction
-    0   //NewActionName
+    0,  //NewActionName
+    0,  //EditedActionCondition
+    0   //EditedActionTimeout
   );
 
 
@@ -1269,6 +1280,8 @@ function GetPropertyHint_EditTemplate_WhichTemplate: string;
 function GetPropertyHint_EditTemplate_TemplateFileName: string;
 function GetPropertyHint_EditTemplate_EditedActionName: string;
 function GetPropertyHint_EditTemplate_EditedActionType: string;
+function GetPropertyHint_EditTemplate_EditedActionCondition: string;
+function GetPropertyHint_EditTemplate_EditedActionTimeout: string;
 function GetPropertyHint_EditTemplate_NewActionName: string;
 
 const
@@ -1406,6 +1419,8 @@ const
     @GetPropertyHint_EditTemplate_TemplateFileName,  // TemplateFileName,
     @GetPropertyHint_EditTemplate_EditedActionName,
     @GetPropertyHint_EditTemplate_EditedActionType,
+    @GetPropertyHint_EditTemplate_EditedActionCondition,
+    @GetPropertyHint_EditTemplate_EditedActionTimeout,
     @GetPropertyHint_EditTemplate_NewActionName
   );
 
@@ -1833,7 +1848,9 @@ begin
     2: Result := AAction^.EditTemplateOptions.TemplateFileName;
     3: Result := AAction^.EditTemplateOptions.EditedActionName;
     4: Result := CClkActionStr[AAction^.EditTemplateOptions.EditedActionType];
-    5: Result := AAction^.EditTemplateOptions.NewActionName;
+    5: Result := AAction^.EditTemplateOptions.EditedActionCondition;
+    6: Result := IntToStr(AAction^.EditTemplateOptions.EditedActionTimeout);
+    7: Result := AAction^.EditTemplateOptions.NewActionName;
     else
       Result := 'unknown';
   end;
@@ -2079,7 +2096,7 @@ function EditTemplateWhichTemplate_AsStringToValue(AEditTemplateWhichTemplate: s
 var
   i: TEditTemplateWhichTemplate;
 begin
-  Result := etwtSelf;
+  Result := etwtOther;
   for i := Low(TEditTemplateWhichTemplate) to High(TEditTemplateWhichTemplate) do
     if CEditTemplateWhichTemplateStr[i] = AEditTemplateWhichTemplate then
     begin
@@ -2436,7 +2453,9 @@ begin
     2: AAction^.EditTemplateOptions.TemplateFileName := NewValue;
     3: AAction^.EditTemplateOptions.EditedActionName := NewValue;
     4: AAction^.EditTemplateOptions.EditedActionType := EditTemplateEditedActionType_AsStringToValue(NewValue);
-    6: AAction^.EditTemplateOptions.NewActionName := NewValue;
+    5: AAction^.EditTemplateOptions.EditedActionCondition := NewValue;
+    6: AAction^.EditTemplateOptions.EditedActionTimeout := StrToIntDef(NewValue, 1000);
+    7: AAction^.EditTemplateOptions.NewActionName := NewValue;
     else
       ;
   end;
@@ -3039,7 +3058,45 @@ end;
 
 function GetPropertyHint_EditTemplate_Operation: string;
 begin
-  Result := '';
+  Result := 'There are various operations available for EditTemplate. Some of them return an error in $ExecAction_Err$ variable when the action fails.' + #13#10;
+            Result := Result +
+            'If WhichTemplate is set to etwtSelf, the EditTemplate execution is applied to this template. The actions have to exist in the current template (except when creating a new one).' + #13#10;
+            Result := Result +
+            '    The template is not automatically saved. It requires another EditTemplate action, set to etoSaveTemplate operation. This allows multiple EditTemplate editings on a single save.' + #13#10#13#10;
+            Result := Result +
+            'If WhichTemplate is set to etwtOther, the template is automatically loaded, then saved when successfully edited. An example of an operation which does not edit, is etoExecuteAction.' + #13#10#13#10;
+            Result := Result +
+            'etoNewAction - Creates a new action and places it at the end of the template. The action name should not be in the list, otherwise it returns an error.' + #13#10;
+            Result := Result +
+            '    All the available properties from this EditTemplate action will be copied to the new action.' + #13#10#13#10;
+            Result := Result +
+            'etoUpdateAction - Updates an existing action with the properties from this EditTemplate action.' + #13#10;
+            Result := Result +
+            'etoMoveAction - Moves the action, specified by the EditedActionName property, to the position of the action, specified by the NewActionName property.' + #13#10;
+            Result := Result +
+            '    If NewActionName is '''', then the action is moved to the end of the list. If the action, specified by NewActionName, does not exist, it returns an error.' + #13#10#13#10;
+            Result := Result +
+            'etoDeleteAction - Deletes an action, specified by the EditedActionName property, from the template.' + #13#10#13#10;
+            Result := Result +
+            'etoRenameAction - Renames the action, specified by the EditedActionName property, to the name, specified by the NewActionName property.' + #13#10;
+            Result := Result +
+            '    If the new name already exists, it returns an error.' + #13#10#13#10;
+            Result := Result +
+            'etoEnableAction - Enables an action, specified by the EditedActionName property.' + #13#10#13#10;
+            Result := Result +
+            'etoDisableAction - Disables an action, specified by the EditedActionName property.' + #13#10#13#10;
+            Result := Result +
+            'etoGetProperty - Returns all the checked properties of an action, specified by the EditedActionName property, as variables, in the form of $Property_<PropertyName>_Value$.' + #13#10#13#10;
+            Result := Result +
+            'etoSetProperty - Sets all the checked properties of an action, specified by the EditedActionName property.' + #13#10#13#10;
+            Result := Result +
+            'etoSetCondition - Sets the action condition of an action, specified by the EditedActionName property.' + #13#10#13#10;
+            Result := Result +
+            'etoSetTimeout - Sets the action timeout of an action, specified by the EditedActionName property.' + #13#10#13#10;
+            Result := Result +
+            'etoExecuteAction - Executes the action, specified by the EditedActionName property, in the context (list of variables) of the current template.' + #13#10#13#10;
+            Result := Result +
+            'etoSaveTemplate - Saves the current template. Used only when the WhichTemplate property is set to etwtSelf.';
 end;
 
 
@@ -3067,9 +3124,21 @@ begin
 end;
 
 
+function GetPropertyHint_EditTemplate_EditedActionCondition: string;
+begin
+  Result := 'Used when getting or setting action condition.';
+end;
+
+
+function GetPropertyHint_EditTemplate_EditedActionTimeout: string;
+begin
+  Result := 'Used when getting or setting action timeout.';
+end;
+
+
 function GetPropertyHint_EditTemplate_NewActionName: string;
 begin
-  Result := 'Used when renaming an action.';
+  Result := 'Used when moving, duplicating and renaming an action.';
 end;
 
 end.

@@ -73,6 +73,7 @@ function SetActionProperties(AListOfOptionsParams: string; AActionType: TClkActi
 procedure GetDefaultPropertyValues_Click(var AClickOptions: TClkClickOptions);
 procedure GetDefaultPropertyValues_ExecApp(var AExecAppOptions: TClkExecAppOptions);
 procedure GetDefaultPropertyValues_FindControl(var AFindControlOptions: TClkFindControlOptions; AIsSubControl: Boolean = False);
+procedure GetDefaultPropertyValues_FindControl_MatchBitmapText(var AMatchBitmapText: TClkFindControlMatchBitmapText);
 procedure GetDefaultPropertyValues_SetControlText(var ASetControlTextOptions: TClkSetTextOptions);
 procedure GetDefaultPropertyValues_CallTemplate(var ACallTemplateOptions: TClkCallTemplateOptions);
 procedure GetDefaultPropertyValues_Sleep(var ASleepOptions: TClkSleepOptions);
@@ -324,6 +325,8 @@ begin
             'ListOfEnabledProperties' + '=' + FastReplace_ReturnTo45(AEditTemplateOptions.ListOfEnabledProperties) + '&' +
             'EditedActionName' + '=' + AEditTemplateOptions.EditedActionName + '&' +
             'EditedActionType' + '=' + IntToStr(Ord(AEditTemplateOptions.EditedActionType)) + '&' +
+            'EditedActionCondition' + '=' + AEditTemplateOptions.EditedActionCondition + '&' +
+            'EditedActionTimeout' + '=' + IntToStr(AEditTemplateOptions.EditedActionTimeout) + '&' +
             'NewActionName' + '=' + AEditTemplateOptions.NewActionName + '&';
 end;
 
@@ -826,7 +829,7 @@ begin
     Exit;
   end;
 
-  Temp_WhichTemplate := StrToIntDef(AListOfEditTemplateOptionsParams.Values['WhichTemplate'], 0);
+  Temp_WhichTemplate := StrToIntDef(AListOfEditTemplateOptionsParams.Values['WhichTemplate'], Ord(etwtOther));
   if (Temp_WhichTemplate < 0) or (Temp_WhichTemplate > Ord(High(TEditTemplateWhichTemplate))) then
   begin
     Result := 'WhichTemplate is out of range.';
@@ -850,6 +853,8 @@ begin
   AEditTemplateOptions.ListOfEnabledProperties := FastReplace_45ToReturn(AListOfEditTemplateOptionsParams.Values['ListOfEnabledProperties']);
   AEditTemplateOptions.EditedActionName := AListOfEditTemplateOptionsParams.Values['EditedActionName'];
   AEditTemplateOptions.EditedActionType := TClkAction(Temp_EditedActionType);
+  AEditTemplateOptions.EditedActionCondition := AListOfEditTemplateOptionsParams.Values['EditedActionCondition'];
+  AEditTemplateOptions.EditedActionTimeout := StrToIntDef(AListOfEditTemplateOptionsParams.Values['EditedActionTimeout'], 1000);
   AEditTemplateOptions.NewActionName := AListOfEditTemplateOptionsParams.Values['NewActionName'];
 
   //Set "private" propeties to some valid values:
@@ -941,6 +946,28 @@ begin
 end;
 
 
+procedure GetDefaultPropertyValues_FindControl_MatchBitmapText(var AMatchBitmapText: TClkFindControlMatchBitmapText);
+begin
+  AMatchBitmapText.ForegroundColor := '$Color_Window$';
+  AMatchBitmapText.BackgroundColor := '$Color_Highlight$';
+  AMatchBitmapText.FontName := 'Tahoma';
+  AMatchBitmapText.FontSize := 8;
+  AMatchBitmapText.FontQualityReplacement := '';
+  AMatchBitmapText.FontQuality := fqNonAntialiased;
+  AMatchBitmapText.FontQualityUsesReplacement := False;
+  AMatchBitmapText.Bold := False;
+  AMatchBitmapText.Italic := False;
+  AMatchBitmapText.Underline := False;
+  AMatchBitmapText.StrikeOut := False;
+  AMatchBitmapText.CropLeft := '0';
+  AMatchBitmapText.CropTop := '0';
+  AMatchBitmapText.CropRight := '0';
+  AMatchBitmapText.CropBottom := '0';
+  AMatchBitmapText.IgnoreBackgroundColor := False;
+  AMatchBitmapText.ProfileName := CDefaultFontProfileName;
+end;
+
+
 procedure GetDefaultPropertyValues_FindControl(var AFindControlOptions: TClkFindControlOptions; AIsSubControl: Boolean = False);
 begin
   AFindControlOptions.MatchCriteria.WillMatchText := not AIsSubControl;
@@ -994,23 +1021,7 @@ begin
   AFindControlOptions.EvaluateTextCount := '-1';
 
   SetLength(AFindControlOptions.MatchBitmapText, 1);
-  AFindControlOptions.MatchBitmapText[0].ForegroundColor := '$Color_Window$';
-  AFindControlOptions.MatchBitmapText[0].BackgroundColor := '$Color_Highlight$';
-  AFindControlOptions.MatchBitmapText[0].FontName := 'Tahoma';
-  AFindControlOptions.MatchBitmapText[0].FontSize := 8;
-  AFindControlOptions.MatchBitmapText[0].FontQualityReplacement := '';
-  AFindControlOptions.MatchBitmapText[0].FontQuality := fqNonAntialiased;
-  AFindControlOptions.MatchBitmapText[0].FontQualityUsesReplacement := False;
-  AFindControlOptions.MatchBitmapText[0].Bold := False;
-  AFindControlOptions.MatchBitmapText[0].Italic := False;
-  AFindControlOptions.MatchBitmapText[0].Underline := False;
-  AFindControlOptions.MatchBitmapText[0].StrikeOut := False;
-  AFindControlOptions.MatchBitmapText[0].CropLeft := '0';
-  AFindControlOptions.MatchBitmapText[0].CropTop := '0';
-  AFindControlOptions.MatchBitmapText[0].CropRight := '0';
-  AFindControlOptions.MatchBitmapText[0].CropBottom := '0';
-  AFindControlOptions.MatchBitmapText[0].IgnoreBackgroundColor := False;
-  AFindControlOptions.MatchBitmapText[0].ProfileName := CDefaultFontProfileName;
+  GetDefaultPropertyValues_FindControl_MatchBitmapText(AFindControlOptions.MatchBitmapText[0]);
 end;
 
 
@@ -1095,13 +1106,15 @@ var
   ClickOptions: TClkClickOptions;
 begin
   AEditTemplateOptions.Operation := etoNewAction;
-  AEditTemplateOptions.WhichTemplate := etwtSelf;
+  AEditTemplateOptions.WhichTemplate := etwtOther;
   AEditTemplateOptions.TemplateFileName := '';
   AEditTemplateOptions.ListOfEnabledProperties := '';
   AEditTemplateOptions.CachedCount := 0;
   AEditTemplateOptions.PluginOptionsCachedCount := 0;
   AEditTemplateOptions.EditedActionName := '';
   AEditTemplateOptions.EditedActionType := acClick; //TClkAction(CClkUnsetAction); // acClick;
+  AEditTemplateOptions.EditedActionCondition := '';
+  AEditTemplateOptions.EditedActionTimeout := 1000;
   AEditTemplateOptions.NewActionName := '';
 
   GetDefaultPropertyValues_Click(ClickOptions);

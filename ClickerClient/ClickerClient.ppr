@@ -233,6 +233,8 @@ type
     ListOfEnabledProperties: PWideChar;
     EditedActionName: PWideChar;
     EditedActionType: TClkAction;
+    EditedActionCondition: PWideChar;
+    EditedActionTimeout: LongInt;
     NewActionName: PWideChar;
   end;
 
@@ -1124,6 +1126,8 @@ begin
   SetPointedContentToString(@string(PWideChar(AEditTemplateOptions^.ListOfEnabledProperties))[1], TempAction.EditTemplateOptions.ListOfEnabledProperties);
   SetPointedContentToString(@string(PWideChar(AEditTemplateOptions^.EditedActionName))[1], TempAction.EditTemplateOptions.EditedActionName);
   TempAction.EditTemplateOptions.EditedActionType := AEditTemplateOptions^.EditedActionType;
+  SetPointedContentToString(@string(PWideChar(AEditTemplateOptions^.EditedActionCondition))[1], TempAction.EditTemplateOptions.EditedActionCondition);
+  TempAction.EditTemplateOptions.EditedActionTimeout := AEditTemplateOptions^.EditedActionTimeout;
   SetPointedContentToString(@string(PWideChar(AEditTemplateOptions^.NewActionName))[1], TempAction.EditTemplateOptions.NewActionName);
 
   AddActionToTemplate(TemplateFileName, TempAction);

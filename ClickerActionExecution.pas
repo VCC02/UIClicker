@@ -3521,6 +3521,262 @@ begin
 end;
 
 
+procedure UpdateActionProperties(var AEditTemplateOptions: TClkEditTemplateOptions; AEditedClkAction: PClkActionRec);
+  function ArrayPropertyChecked(AListOfProperties: TStringList; APropertyName: string): Boolean;  // at least one property from the font profile is checked
+  var
+    i: Integer;
+  begin               //IndexOf with Pos
+    Result := False;
+
+    for i := 0 to AListOfProperties.Count - 1 do
+    begin
+      if Pos(APropertyName, AListOfProperties.Strings[i]) = 1 then
+      begin
+        Result := True;
+        Exit;
+      end;
+    end;
+  end;
+
+  function FontProfileChecked(AListOfProperties: TStringList; AProfileIndexStr: string): Boolean;  // at least one property from the font profile is checked
+  begin
+    Result := ArrayPropertyChecked(AListOfProperties, 'MatchBitmapText[' + AProfileIndexStr + '].');
+  end;
+
+  function MatchFilesChecked(AListOfProperties: TStringList; APropertyName, AFileName: string): Boolean;
+  var
+    i, Idx: Integer;
+    BmpFiles: TStringList;
+  begin
+    Result := False;
+
+    Idx := AListOfProperties.IndexOfName(APropertyName);
+    if Idx = -1 then
+      Exit;
+
+    BmpFiles := TStringList.Create;
+    try
+      BmpFiles.Text := FastReplace_1920ToReturn(AListOfProperties.ValueFromIndex[Idx]);
+      Result := BmpFiles.IndexOf(AFileName) > -1;
+    finally
+      BmpFiles.Free;
+    end;
+  end;
+
+  function FileNamesAsString(AListOfProperties: TStringList; APropertyName: string): string;
+  var
+    i, Idx: Integer;
+  begin
+    Result := '';
+
+    Idx := AListOfProperties.IndexOfName(APropertyName);
+    if Idx = -1 then
+      Exit;
+
+    Result := FastReplace_1920ToReturn(AListOfProperties.ValueFromIndex[Idx]);
+  end;
+
+
+  function MatchBitmapFilesChecked(AListOfProperties: TStringList; AFileName: string): Boolean;
+  begin
+    Result := MatchFilesChecked(AListOfProperties, 'MatchBitmapFiles', AFileName);
+  end;
+
+  function MatchPrimitiveFilesChecked(AListOfProperties: TStringList; AFileName: string): Boolean;
+  begin
+    Result := MatchFilesChecked(AListOfProperties, 'MatchPrimitiveFiles', AFileName);
+  end;
+
+var
+  TempProperties, TempEnabledProperties, TempEditedProperties: TStringList;
+  ListOfMatchBitmapFiles, ListOfMatchPrimitiveFiles: TStringList;
+  PropertyName, OldPropertyValue, NewPropertyValue, ActionProperties, s: string;
+  ListOfOldPluginProperties, ListOfNewPluginProperties: TStringList;
+  i, j, n: Integer;
+  MaxSrcProfileIndex: Integer;
+  Fnm: string;
+begin
+  TempProperties := TStringList.Create;
+  TempEnabledProperties := TStringList.Create;
+  TempEditedProperties := TStringList.Create;
+  try
+    TempEnabledProperties.Text := FastReplace_45ToReturn(AEditTemplateOptions.ListOfEnabledProperties);
+    TempEditedProperties.Text := StringReplace(AEditTemplateOptions.ListOfEditedProperties, CPropSeparatorInt, #13#10, [rfReplaceAll]);
+
+    //Example for plugins:
+    //TempEditedProperties[0] becomes 'FileName=$AppDir$\..\UIClickerFindWindowsPlugin\lib\i386-win32\UIClickerFindWindows.dll'
+    //TempEditedProperties[1] becomes 'ListOfPropertiesAndValues=FindSubControlTopLeftCorner=ab'#$13#$14'FindSubControlBotLeftCorner=cd'#$13#$14'FindSubControlTopRightCorner=ef'#$13#$14'FindSubControlBotRightCorner=gh'#$13#$14'FindSubControlLeftEdge=ij'#$13#$14'FindSubControlTopEdge=kl'#$13#$14'FindSubControlRightEdge=mn'#$13#$14'FindSubControlBottomEdge=op'#$13#$14'ParentFindControl=qr'#$13#$14'BorderThickness=6'#$13#$14'MatchWindowEdges=True'#$13#$14
+    //
+    //TempEnabledProperties[0] becomes 'FileName'
+    //TempEnabledProperties[1] becomes 'FindSubControlTopLeftCorner'
+    //TempEnabledProperties[2] becomes 'FindSubControlBotLeftCorner'
+    //TempEnabledProperties[3] becomes 'FindSubControlTopRightCorner'
+
+    //TempProperties[0] becomes 'FileName=$AppDir$\..\UIClickerFindWindowsPlugin\lib\i386-win32\UIClickerFindWindows.dll'
+    //TempProperties[1] becomes 'ListOfPropertiesAndValues='
+
+    // For plugin, the ListOfPropertiesAndValues property has to be unpacked (#4#5-> #13#10), updated, then repacked.
+    // TempEnabledProperties won't even see the ListOfPropertiesAndValues key, only its content (value, which is a list of key=value)
+
+    if AEditTemplateOptions.EditedActionType in [acFindControl, acFindSubControl] then
+    begin
+      MaxSrcProfileIndex := -1;
+      for i := 0 to 30 - 1 do  //verifying 30 profiles, since this is a large number
+        if FontProfileChecked(TempEditedProperties, IntToStr(i)) then
+          MaxSrcProfileIndex := i;
+
+      if Length(AEditedClkAction^.FindControlOptions.MatchBitmapText) < MaxSrcProfileIndex + 1 then
+      begin
+        //Verify if the missing profiles are checked. If yes, add them.
+
+        for i := Length(AEditedClkAction^.FindControlOptions.MatchBitmapText) to MaxSrcProfileIndex do
+          if FontProfileChecked(TempEditedProperties, IntToStr(i)) then
+          begin
+            n := Length(AEditedClkAction^.FindControlOptions.MatchBitmapText);
+            SetLength(AEditedClkAction^.FindControlOptions.MatchBitmapText, n + 1);
+            GetDefaultPropertyValues_FindControl_MatchBitmapText(AEditedClkAction^.FindControlOptions.MatchBitmapText[n]);
+          end;
+      end;
+
+      //ToDo:  add only checked bmp paths, not all of them     TempEnabledProperties should have the same number of items as Fnm (converted to list)
+      //ToDo:  add only checked pmtv paths, not all of them
+
+      ListOfMatchBitmapFiles := TStringList.Create;
+      try
+        ListOfMatchBitmapFiles.Text := FastReplace_45ToReturn(AEditedClkAction^.FindControlOptions.MatchBitmapFiles);  //this is empty for a new action
+        for i := ListOfMatchBitmapFiles.Count - 1 downto 0 do
+          if MatchBitmapFilesChecked(TempEditedProperties, ListOfMatchBitmapFiles.Strings[i]) then
+            ListOfMatchBitmapFiles.Delete(i);  //if the file exists in the new list, then remove it from the old list, because it will be added
+
+        Fnm := FileNamesAsString(TempEditedProperties, 'MatchBitmapFiles');
+        if Fnm > '' then
+        begin
+          if ListOfMatchBitmapFiles.Count > 0 then
+            ListOfMatchBitmapFiles.Text := ListOfMatchBitmapFiles.Text + #13#10 + Fnm
+          else
+            ListOfMatchBitmapFiles.Text := Fnm;
+        end;
+
+        AEditedClkAction^.FindControlOptions.MatchBitmapFiles := FastReplace_ReturnTo45(ListOfMatchBitmapFiles.Text);
+      finally
+        ListOfMatchBitmapFiles.Free;
+      end;
+
+      ListOfMatchPrimitiveFiles := TStringList.Create;
+      try
+        ListOfMatchPrimitiveFiles.Text := FastReplace_45ToReturn(AEditedClkAction^.FindControlOptions.MatchPrimitiveFiles); //this is empty for a new action
+        for i := ListOfMatchPrimitiveFiles.Count - 1 downto 0 do
+          if MatchPrimitiveFilesChecked(TempEditedProperties, ListOfMatchPrimitiveFiles.Strings[i]) then
+            ListOfMatchPrimitiveFiles.Delete(i);
+
+        Fnm := FileNamesAsString(TempEditedProperties, 'MatchPrimitiveFiles');
+        if Fnm > '' then
+        begin
+          if ListOfMatchBitmapFiles.Count > 0 then
+            ListOfMatchPrimitiveFiles.Text := ListOfMatchPrimitiveFiles.Text + #13#10 + Fnm
+          else
+            ListOfMatchPrimitiveFiles.Text := Fnm;
+        end;
+
+        AEditedClkAction^.FindControlOptions.MatchPrimitiveFiles := FastReplace_ReturnTo45(ListOfMatchPrimitiveFiles.Text);
+      finally
+        ListOfMatchPrimitiveFiles.Free;
+      end;
+    end;
+
+    ActionProperties := GetActionPropertiesByType(AEditedClkAction^);
+    ActionProperties := StringReplace(ActionProperties, CPropSeparatorSer, #13#10, [rfReplaceAll]);
+    TempProperties.Text := StringReplace(ActionProperties, {'&'} CPropSeparatorInt, #13#10, [rfReplaceAll]);
+
+    for i := 0 to TempProperties.Count - 1 do
+    begin
+      PropertyName := TempProperties.Names[i];
+      NewPropertyValue := TempEditedProperties.Values[PropertyName];   //ValueFromIndex should work, but it is gets out of sync (for some reason), then a wrong value is returned.
+
+      if AEditTemplateOptions.EditedActionType = acPlugin then
+      begin
+        OldPropertyValue := TempProperties.ValueFromIndex[i];
+
+        //For plugins, if the property is ListOfPropertiesAndValues, its value is of <Property=Value>#19#20<Property=Value>#19#20 format
+        if PropertyName = 'ListOfPropertiesAndValues' then
+        begin
+          ListOfNewPluginProperties := TStringList.Create;
+          ListOfOldPluginProperties := TStringList.Create;
+          try
+            ListOfOldPluginProperties.Text := FastReplace_45ToReturn(OldPropertyValue);
+            ListOfNewPluginProperties.Text := FastReplace_1920ToReturn(NewPropertyValue); //it contains only the checked properties
+
+            s := '';
+            for j := 0 to ListOfNewPluginProperties.Count - 1 do
+              if TempEnabledProperties.IndexOf(ListOfNewPluginProperties.Names[j]) > -1 then //PropertyName enabled
+                s := s + ListOfNewPluginProperties.Names[j] + '=' + ListOfNewPluginProperties.ValueFromIndex[j] + #4#5
+              else
+                s := s + ListOfNewPluginProperties.Names[j] + '=' + ListOfOldPluginProperties.Values[ListOfNewPluginProperties.Names[j]] + #4#5;  //using ListOfPluginProperties.Names[j] instead of ValueFromIndex[j], because this list might not contain all plugin properties. It contains only the checked ones.
+
+            //[might not be needed] If there are properties in ListOfOldPluginProperties, which are not in ListOfNewPluginProperties, then they should be added here.  Also, not sure if the property order matters.
+            for j := 0 to ListOfOldPluginProperties.Count - 1 do
+              if ListOfNewPluginProperties.IndexOfName(ListOfOldPluginProperties.Names[j]) = -1 then
+                s := s + ListOfOldPluginProperties.Strings[j] + #4#5;
+
+            TempProperties.ValueFromIndex[i] := s;
+          finally
+            ListOfNewPluginProperties.Free;
+            ListOfOldPluginProperties.Free;
+          end;
+        end  //ListOfPropertiesAndValues
+        else  //other property (most likely FileName)
+          if TempEnabledProperties.IndexOf(PropertyName) > -1 then //enabled
+            TempProperties.ValueFromIndex[i] := NewPropertyValue;
+      end //is plugin
+      else //is some other action type
+        if TempEnabledProperties.IndexOf(PropertyName) > -1 then //enabled
+          TempProperties.ValueFromIndex[i] := NewPropertyValue;
+    end;
+
+    SetActionProperties(TempProperties, AEditTemplateOptions.EditedActionType, AEditedClkAction^);
+  finally
+    TempProperties.Free;
+    TempEnabledProperties.Free;
+    TempEditedProperties.Free;
+  end;
+end;
+
+
+procedure UpdateActionByEditTemplate(var AEditTemplateOptions: TClkEditTemplateOptions; AClkAction: PClkActionRec);
+begin
+  AClkAction.ActionOptions.ActionName := AEditTemplateOptions.EditedActionName;
+  AClkAction.ActionOptions.Action := AEditTemplateOptions.EditedActionType;
+  AClkAction.ActionOptions.ActionCondition := AEditTemplateOptions.EditedActionCondition;
+  AClkAction.ActionOptions.ActionTimeout := AEditTemplateOptions.EditedActionTimeout;
+  AClkAction.ActionOptions.ActionEnabled := True;
+  AClkAction.ActionOptions.ExecutionIndex := '';
+  AClkAction.ActionStatus := asNotStarted;
+  AClkAction.ActionSkipped := False;
+  AClkAction.ActionDebuggingStatus := adsNone;
+  AClkAction.ActionBreakPoint.Exists := False;
+  AClkAction.ActionBreakPoint.Enabled := False;
+  AClkAction.ActionBreakPoint.Condition := '';
+
+  if AEditTemplateOptions.Operation = etoNewAction then
+  begin
+    GetDefaultPropertyValues_Click(AClkAction.ClickOptions);
+    GetDefaultPropertyValues_ExecApp(AClkAction.ExecAppOptions);
+    GetDefaultPropertyValues_FindControl(AClkAction.FindControlOptions, AClkAction.ActionOptions.Action = acFindSubControl);
+    GetDefaultPropertyValues_SetControlText(AClkAction.SetTextOptions);
+    GetDefaultPropertyValues_CallTemplate(AClkAction.CallTemplateOptions);
+    GetDefaultPropertyValues_Sleep(AClkAction.SleepOptions);
+    GetDefaultPropertyValues_SetVar(AClkAction.SetVarOptions);
+    GetDefaultPropertyValues_WindowOperations(AClkAction.WindowOperationsOptions);
+    GetDefaultPropertyValues_LoadSetVarFromFile(AClkAction.LoadSetVarFromFileOptions);
+    GetDefaultPropertyValues_SaveSetVarToFile(AClkAction.SaveSetVarToFileOptions);
+    GetDefaultPropertyValues_Plugin(AClkAction.PluginOptions);
+    GetDefaultPropertyValues_EditTemplate(AClkAction.EditTemplateOptions);
+  end;
+
+  UpdateActionProperties(AEditTemplateOptions, AClkAction);
+end;
+
+
 function TActionExecution.ExecuteEditTemplateAction(var AEditTemplateOptions: TClkEditTemplateOptions): Boolean;
   function GetActionIndexByName(var AClkActions: TClkActionsRecArr; AName: string): Integer;
   var
@@ -3535,52 +3791,20 @@ function TActionExecution.ExecuteEditTemplateAction(var AEditTemplateOptions: TC
       end;
   end;
 
-  procedure UpdateAction(var AClkAction: TClkActionRec);
-  begin
-    AClkAction.ActionOptions.ActionName := AEditTemplateOptions.EditedActionName;
-    AClkAction.ActionOptions.Action := AEditTemplateOptions.EditedActionType;
-    AClkAction.ActionOptions.ActionCondition := AEditTemplateOptions.EditedActionCondition;
-    AClkAction.ActionOptions.ActionTimeout := AEditTemplateOptions.EditedActionTimeout;
-    AClkAction.ActionOptions.ActionEnabled := True;
-    AClkAction.ActionOptions.ExecutionIndex := '';
-    AClkAction.ActionStatus := asNotStarted;
-    AClkAction.ActionSkipped := False;
-    AClkAction.ActionDebuggingStatus := adsNone;
-    AClkAction.ActionBreakPoint.Exists := False;
-    AClkAction.ActionBreakPoint.Enabled := False;
-    AClkAction.ActionBreakPoint.Condition := '';
-
-    GetDefaultPropertyValues_Click(AClkAction.ClickOptions);
-    GetDefaultPropertyValues_ExecApp(AClkAction.ExecAppOptions);
-    GetDefaultPropertyValues_FindControl(AClkAction.FindControlOptions, AClkAction.ActionOptions.Action = acFindSubControl);
-    GetDefaultPropertyValues_SetControlText(AClkAction.SetTextOptions);
-    GetDefaultPropertyValues_CallTemplate(AClkAction.CallTemplateOptions);
-    GetDefaultPropertyValues_Sleep(AClkAction.SleepOptions);
-    GetDefaultPropertyValues_SetVar(AClkAction.SetVarOptions);
-    GetDefaultPropertyValues_WindowOperations(AClkAction.WindowOperationsOptions);
-    GetDefaultPropertyValues_LoadSetVarFromFile(AClkAction.LoadSetVarFromFileOptions);
-    GetDefaultPropertyValues_SaveSetVarToFile(AClkAction.SaveSetVarToFileOptions);
-    GetDefaultPropertyValues_Plugin(AClkAction.PluginOptions);
-    GetDefaultPropertyValues_EditTemplate(AClkAction.EditTemplateOptions);
-
-    //AEditTemplateOptions.ListOfEnabledProperties;
-    //AEditTemplateOptions.ListOfEditedProperties;
-  end;
-
 var
   Ini: TClkIniReadonlyFile;
   ClkActions: TClkActionsRecArr;
   Notes, IconPath: string;
   i, Idx, DestIdx: Integer;
   TemplateContent: TStringList;
-  TempProperties, TempEnabledProperties, TempEditedProperties: TStringList;
-  PropertyName, NewPropertyValue, ActionProperties: string;
 begin
   Result := False;
 
   case AEditTemplateOptions.WhichTemplate of
     etwtSelf:
-      ;
+    begin
+      SetActionVarValue('$ExecAction_Err$', 'etwtSelf - Not implemented');
+    end;
 
     etwtOther:
     begin
@@ -3608,7 +3832,13 @@ begin
             SetActionVarValue('$ExecAction_Err$', CREResp_ActionNotFound);
             Exit;
           end;
-        end;
+        end
+        else
+          if AEditTemplateOptions.Operation = etoNewAction then
+          begin //the action should exist already
+            SetActionVarValue('$ExecAction_Err$', CREResp_ActionAlreadyExists);
+            Exit;
+          end;
 
         //etoNewAction, etoMoveAction, etoDeleteAction, etoDuplicateAction, etoRenameAction, etoEnableAction, etoDisableAction, etoGetProperty, etoSetProperty, etoSetCondition, etoExecuteAction, etoSaveTemplate
         case AEditTemplateOptions.Operation of
@@ -3616,13 +3846,13 @@ begin
           begin
             SetLength(ClkActions, Length(ClkActions) + 1);
             Idx := Length(ClkActions) - 1;
-            UpdateAction(ClkActions[Idx]);
+            UpdateActionByEditTemplate(AEditTemplateOptions, @ClkActions[Idx]);
             Result := True;
           end;
 
           etoUpdateAction:
           begin
-            UpdateAction(ClkActions[Idx]);
+            UpdateActionByEditTemplate(AEditTemplateOptions, @ClkActions[Idx]);
             Result := True;
           end;
 
@@ -3690,33 +3920,9 @@ begin
             //All the properties to be found in AEditTemplateOptions.ListOfEnabledProperties will be returned in $Property_<PropertyName>_Value$ variables.
           end;
 
-          etoSetProperty:                         ///////////////// ToDo  fix decoding
+          etoSetProperty:
           begin      //read-modify-write
-            TempProperties := TStringList.Create;
-            TempEnabledProperties := TStringList.Create;
-            TempEditedProperties := TStringList.Create;
-            try
-              ActionProperties := GetActionPropertiesByType(ClkActions[Idx]);
-              TempProperties.Text := StringReplace(ActionProperties, {'&'} CPropSeparatorInt, #13#10, [rfReplaceAll]);
-              TempEnabledProperties.Text := FastReplace_45ToReturn(AEditTemplateOptions.ListOfEnabledProperties);
-              TempEditedProperties.Text := StringReplace(AEditTemplateOptions.ListOfEditedProperties, CPropSeparatorInt, #13#10, [rfReplaceAll]);
-
-              /////////////////////// For plugin, the ListOfPropertiesAndValues property has to be unpacked (#4#5-> #13#10), updated, then repacked.
-              /////////////////////// TempEnabledProperties won't even see the ListOfPropertiesAndValues key, only its content (value, which is a list of key=value)
-              for i := 0 to TempEnabledProperties.Count - 1 do
-              begin
-                PropertyName := TempEnabledProperties.Strings[i];
-                NewPropertyValue := TempEditedProperties.Values[PropertyName];
-                TempProperties.Values[PropertyName] := NewPropertyValue;
-              end;
-
-              SetActionProperties(TempProperties, AEditTemplateOptions.EditedActionType, ClkActions[Idx]);
-            finally
-              TempProperties.Free;
-              TempEnabledProperties.Free;
-              TempEditedProperties.Free;
-            end;
-
+            UpdateActionProperties(AEditTemplateOptions, @ClkActions[Idx]);
             Result := True;
           end;
 

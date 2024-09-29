@@ -257,6 +257,7 @@ type
 
     ///////////////////////////// OI
     procedure MenuItem_SetActionTimeoutFromOI(Sender: TObject);
+    procedure MenuItem_SetEditedActionTimeoutFromOI(Sender: TObject);
 
     procedure MenuItem_CopyTextAndClassFromPreviewWindowClick(Sender: TObject);
     procedure MenuItem_CopyTextAndClassFromWinInterpWindowClick(Sender: TObject);
@@ -297,6 +298,7 @@ type
 
     procedure MenuItem_BrowseSetVarFileInPropertyListClick(Sender: TObject);
     procedure MenuItem_BrowsePluginFileInPropertyListClick(Sender: TObject);
+    procedure MenuItem_BrowseEditTemplateFileInPropertyListClick(Sender: TObject);
 
     procedure MenuItemControl_EdgeRefGenericClick(Sender: TObject);
     procedure MenuItemCopyRefToClipboardClick(Sender: TObject);
@@ -394,6 +396,7 @@ type
 
     FOnGetListOfAvailableSetVarActions: TOnGetListOfAvailableSetVarActions;
     FOnGetListOfAvailableActions: TOnGetListOfAvailableActions;
+    FOnTClkIniReadonlyFileCreate: TOnTClkIniReadonlyFileCreate;
     FOnModifyPluginProperty: TOnModifyPluginProperty;
 
     FOnPluginDbgStop: TOnPluginDbgStop;
@@ -448,6 +451,7 @@ type
 
     procedure DoOnGetListOfAvailableSetVarActions(AListOfSetVarActions: TStringList);
     procedure DoOnGetListOfAvailableActions(AListOfActions: TStringList);
+    function DoOnTClkIniReadonlyFileCreate(AFileName: string): TClkIniReadonlyFile;
     procedure DoOnModifyPluginProperty(AAction: PClkActionRec);
 
     procedure DoOnPluginDbgStop;
@@ -488,6 +492,9 @@ type
     procedure LocalTemplatesClick(Sender: TObject);
     procedure AvailableSetVarClick(Sender: TObject);
     procedure AvailablePluginPropertiesClick(Sender: TObject);
+    procedure AvailableEditingActionPropertiesClick_Cat_ActionSpecific(Sender: TObject);
+    procedure AvailableEditingActionPropertiesClick_Cat_EditingAction(Sender: TObject);
+
     procedure BrowseTemplatesClick(Sender: TObject);
     procedure ClickerConditionEditorControlsModified;
     procedure OverlapGridImgOnDebugImg(ADebugAndGridBitmap: TBitmap);
@@ -660,6 +667,8 @@ type
     procedure LoadListOfAvailableTemplates;
     procedure LoadListOfAvailableSetVarActions;
     procedure LoadListOfAvailableActionsForPlugin(APropertyIndexToUpdate: Integer);
+    procedure LoadListOfAvailableActionsForEditTemplate(APropertyIndexToUpdate: Integer; AEditingAction: PClkActionRec);
+
     procedure SetDebugVariablesFromListOfStrings(AListOfStrings: string);
     procedure UpdatePageControlActionExecutionIcons;
     procedure UpdateControlWidthHeightLabels;
@@ -728,6 +737,7 @@ type
 
     property OnGetListOfAvailableSetVarActions: TOnGetListOfAvailableSetVarActions write FOnGetListOfAvailableSetVarActions;
     property OnGetListOfAvailableActions: TOnGetListOfAvailableActions write FOnGetListOfAvailableActions;
+    property OnTClkIniReadonlyFileCreate: TOnTClkIniReadonlyFileCreate write FOnTClkIniReadonlyFileCreate;
     property OnModifyPluginProperty: TOnModifyPluginProperty write FOnModifyPluginProperty;
 
     property OnPluginDbgStop: TOnPluginDbgStop write FOnPluginDbgStop;
@@ -772,7 +782,7 @@ implementation
 uses
   Clipbrd, ClickerActionValues, ClickerOIUtils, ClickerZoomPreviewForm,
   ClickerActionPluginLoader, ClickerActionPlugins, InMemFileSystemBrowserForm,
-  ClickerExtraUtils, ClickerActionProperties;
+  ClickerExtraUtils, ClickerActionProperties, ClickerTemplates;
 
 
 function ActionStatusStrToActionStatus(AString: string): TActionStatus;
@@ -1019,6 +1029,7 @@ begin
 
   FOnGetListOfAvailableSetVarActions := nil;
   FOnGetListOfAvailableActions := nil;
+  FOnTClkIniReadonlyFileCreate := nil;
   FOnModifyPluginProperty := nil;
 
   FOnPluginDbgStop := nil;
@@ -2078,6 +2089,7 @@ end;
 const
   CNoTemplatesMsg = 'No local templates available.';
   CNoSetVarActionsMsg = 'No SetVar actions available.';
+  CNoActionsMsg = 'No actions available.';
 
 procedure TfrClickerActions.LocalTemplatesClick(Sender: TObject);
 var
@@ -2148,6 +2160,65 @@ begin
   TriggerOnControlsModified;
 end;
 
+
+procedure TfrClickerActions.AvailableEditingActionPropertiesClick_Cat_ActionSpecific(Sender: TObject);
+var
+  ActionName: string;
+  ActionType: TClkAction;
+  //OldType: TClkAction;
+  ActionTypeInt: Integer;
+begin
+  ActionName := StringReplace((Sender as TMenuItem).Caption, '&', '', [rfReplaceAll]);
+  ActionTypeInt := Max(Min((Sender as TMenuItem).Tag shr 16, Ord(High(TClkAction))), Ord(Low(TClkAction)));
+  ActionType := TClkAction(ActionTypeInt);
+
+  //GetEditingActionObjectByActionType^.EditTemplateOptions.EditedActionName := ActionName; //editing action
+  FEditingAction^.EditTemplateOptions.EditedActionName := ActionName;                       //action specific
+
+  //OldType := FEditingAction^.EditTemplateOptions.EditedActionType;
+  FEditingAction^.EditTemplateOptions.EditedActionType := ActionType;                       //type
+
+  FOIFrame.CancelCurrentEditing;
+
+  //if ActionType <> OldType then
+  //begin
+  //  SerializeEditTemplateEditingAction;
+  //  tmrOnChangeEditTemplateEditingActionType.Enabled := True;
+  //end;
+
+  FOIFrame.Repaint;   //ideally, RepaintNodeByLevel
+  TriggerOnControlsModified;
+end;
+
+
+procedure TfrClickerActions.AvailableEditingActionPropertiesClick_Cat_EditingAction(Sender: TObject);
+var
+  ActionName: string;
+  ActionType: TClkAction;
+  //OldType: TClkAction;
+  ActionTypeInt: Integer;
+begin
+  ActionName := StringReplace((Sender as TMenuItem).Caption, '&', '', [rfReplaceAll]);
+  ActionTypeInt := Max(Min((Sender as TMenuItem).Tag shr 16, Ord(High(TClkAction))), Ord(Low(TClkAction)));
+  ActionType := TClkAction(ActionTypeInt);
+
+  GetEditingActionObjectByActionType^.EditTemplateOptions.EditedActionName := ActionName;  //editing action
+  //FEditingAction^.EditTemplateOptions.EditedActionName := ActionName;                    //action specific
+
+  //OldType := GetEditingActionObjectByActionType^.EditTemplateOptions.EditedActionType;
+  GetEditingActionObjectByActionType^.EditTemplateOptions.EditedActionType := ActionType;  //type
+
+  FOIFrame.CancelCurrentEditing;
+
+  //if ActionType <> OldType then
+  //begin
+  //  SerializeEditTemplateEditingAction;
+  //  tmrOnChangeEditTemplateEditingActionType.Enabled := True;
+  //end;
+
+  FOIFrame.Repaint;   //ideally, RepaintNodeByLevel
+  TriggerOnControlsModified;
+end;
 
 
 procedure TfrClickerActions.BrowseTemplatesClick(Sender: TObject);
@@ -2311,6 +2382,80 @@ begin
 end;
 
 
+procedure TfrClickerActions.LoadListOfAvailableActionsForEditTemplate(APropertyIndexToUpdate: Integer; AEditingAction: PClkActionRec);
+var
+  AvailableActions: TStringList;
+  TempMenuItem, BaseMenuItem: TMenuItem;
+  i: Integer;
+  Bmp: TBitmap;
+  ActionStr: string;
+  ActionType: Integer;
+  Ini: TClkIniReadonlyFile;
+  LocalClkActions: TClkActionsRecArr;
+  Notes, IconPath: string;
+begin
+  AvailableActions := TStringList.Create;
+  try
+    if AEditingAction^.EditTemplateOptions.WhichTemplate = etwtSelf then
+      DoOnGetListOfAvailableActions(AvailableActions)
+    else
+    begin
+      if DoOnFileExists(AEditingAction^.EditTemplateOptions.TemplateFileName) then
+      begin
+        Ini := DoOnTClkIniReadonlyFileCreate(AEditingAction^.EditTemplateOptions.TemplateFileName);  //LoadTemplate
+        try
+          LoadTemplateToCustomActions_V2(Ini, LocalClkActions, Notes, IconPath);
+          for i := 0 to Length(LocalClkActions) - 1 do
+            AvailableActions.Add(LocalClkActions[i].ActionOptions.ActionName + #4#5 + IntToStr(Ord(LocalClkActions[i].ActionOptions.Action)));
+        finally
+          Ini.Free;
+        end;
+      end;
+    end;
+
+    FPmLocalTemplates.Items.Clear;
+
+    if AvailableActions.Count = 0 then
+      AvailableActions.Add(CNoActionsMsg + #4#5 + IntToStr(CClkUnsetAction));
+
+    BaseMenuItem := TMenuItem.Create(Self);
+    BaseMenuItem.Caption := 'Available actions';
+    BaseMenuItem.OnClick := nil;
+    FPmLocalTemplates.Items.Add(BaseMenuItem);
+
+    for i := 0 to AvailableActions.Count - 1 do
+    begin
+      ActionStr := AvailableActions.Strings[i];
+      ActionType := StrToIntDef(Copy(ActionStr, Pos(#4#5, ActionStr) + 2, MaxInt), 0);
+
+      TempMenuItem := TMenuItem.Create(Self);
+      TempMenuItem.Caption := Copy(ActionStr, 1, Pos(#4#5, ActionStr) - 1);
+
+      if AEditingAction = FEditingAction then
+        TempMenuItem.OnClick := AvailableEditingActionPropertiesClick_Cat_ActionSpecific
+      else
+        TempMenuItem.OnClick := AvailableEditingActionPropertiesClick_Cat_EditingAction;
+
+      TempMenuItem.Tag := APropertyIndexToUpdate or (ActionType shl 16); //This limits the number of actions and the number of types to 65536.
+
+      Bmp := TBitmap.Create;
+      Bmp.PixelFormat := pf24bit;
+      Bmp.Width := 16;
+      Bmp.Height := 16;
+      Bmp.Canvas.Pen.Color := clWhite;
+      Bmp.Canvas.Brush.Color := clWhite;
+      Bmp.Canvas.Rectangle(0, 0, 16, 16);
+      imglstActions16.Draw(bmp.Canvas, 0, 0, ActionType, dsNormal, itImage);
+      TempMenuItem.Bitmap := Bmp;
+
+      FPmLocalTemplates.Items[0].Add(TempMenuItem);
+    end;
+  finally
+    AvailableActions.Free;
+  end;
+end;
+
+
 procedure TfrClickerActions.OverlapGridImgOnDebugImg(ADebugAndGridBitmap: TBitmap);
 begin
   ADebugAndGridBitmap.Width := imgDebugBmp.Picture.Bitmap.Width;
@@ -2447,7 +2592,7 @@ end;
 
 procedure TfrClickerActions.SerializeEditTemplateEditingAction;
 begin
-  FEditingAction^.EditTemplateOptions := FClkEditedActionByEditTemplate.EditTemplateOptions;
+  FEditingAction^.EditTemplateOptions.ListOfEnabledProperties := FClkEditedActionByEditTemplate.EditTemplateOptions.ListOfEnabledProperties;
   FEditingAction^.EditTemplateOptions.ListOfEditedProperties := StringReplace(GetActionPropertiesByType(FClkEditedActionByEditTemplate), CPropSeparatorSer, CPropSeparatorInt, [rfReplaceAll]);
 end;
 
@@ -2518,7 +2663,7 @@ procedure TfrClickerActions.DeserializeEditTemplateEditingAction;
 var
   SerErr: string;
 begin
-  FClkEditedActionByEditTemplate.EditTemplateOptions := FEditingAction^.EditTemplateOptions;
+  FClkEditedActionByEditTemplate.EditTemplateOptions.ListOfEnabledProperties := FEditingAction^.EditTemplateOptions.ListOfEnabledProperties;
 
   SerErr := SetActionProperties(StringReplace(FEditingAction^.EditTemplateOptions.ListOfEditedProperties, CPropSeparatorInt, CPropSeparatorSer, [rfReplaceAll]),
                                 FEditingAction^.EditTemplateOptions.EditedActionType,
@@ -3183,6 +3328,15 @@ begin
 end;
 
 
+function TfrClickerActions.DoOnTClkIniReadonlyFileCreate(AFileName: string): TClkIniReadonlyFile;
+begin
+  if not Assigned(FOnTClkIniReadonlyFileCreate) then
+    raise Exception.Create('OnTClkIniReadonlyFileCreate is not assigned.')
+  else
+    Result := FOnTClkIniReadonlyFileCreate(AFileName);
+end;
+
+
 procedure TfrClickerActions.DoOnModifyPluginProperty(AAction: PClkActionRec);
 begin
   if not Assigned(FOnModifyPluginProperty) then
@@ -3499,6 +3653,26 @@ begin
   try
     ValueStr := StringReplace(MenuData^.MenuItemCaption, '&', '', [rfReplaceAll]);
     SetActionTimeoutToValue(StrToIntDef(ValueStr, 0));
+    TriggerOnControlsModified;
+  finally
+    Dispose(MenuData);
+  end;
+end;
+
+
+procedure TfrClickerActions.MenuItem_SetEditedActionTimeoutFromOI(Sender: TObject);
+var
+  MenuData: POIMenuItemData;
+  ValueStr: string;
+begin
+  MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
+  try
+    ValueStr := StringReplace(MenuData^.MenuItemCaption, '&', '', [rfReplaceAll]);
+
+    FOIFrame.CancelCurrentEditing;
+    MenuData^.TempEditingAction^.EditTemplateOptions.EditedActionTimeout := StrToIntDef(ValueStr, 0);
+    FOIFrame.RepaintNodeByLevel(CPropertyLevel, CCategory_ActionSpecific, CEditTemplate_EditedActionTimeout_PropIndex, -1);
+
     TriggerOnControlsModified;
   finally
     Dispose(MenuData);
@@ -4450,6 +4624,34 @@ begin
 
     DoOnModifyPluginProperty(MenuData^.TempEditingAction);
     tmrReloadOIContent.Enabled := True;
+  finally
+    Dispose(MenuData);
+  end;
+end;
+
+
+procedure TfrClickerActions.MenuItem_BrowseEditTemplateFileInPropertyListClick(Sender: TObject);
+var
+  MenuData: POIMenuItemData;
+  PathToFileName: string;
+begin
+  MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
+  try
+    if not DoOnOpenDialogExecute('UIClicker template files (*.clktmpl)|*.clktmpl|All files (*.*)|*.*') then
+      Exit;
+
+    PathToFileName := DoOnGetOpenDialogFileName;
+
+    if ExtractFileDrive(ParamStr(0)) = ExtractFileDrive(PathToFileName) then
+      PathToFileName := '$AppDir$\' + ExtractRelativePath(ExtractFilePath(ParamStr(0)), PathToFileName);
+
+    MenuData^.TempEditingAction^.EditTemplateOptions.TemplateFileName := PathToFileName;
+
+    FOIFrame.CancelCurrentEditing;
+    FOIFrame.Repaint;   //ideally, RepaintNodeByLevel
+    TriggerOnControlsModified;
+
+    DoOnModifyPluginProperty(MenuData^.TempEditingAction);
   finally
     Dispose(MenuData);
   end;
@@ -5760,15 +5962,16 @@ begin
       tmrReloadOIContent.Enabled := True;
     end;
 
-  if AEditingAction^.ActionOptions.Action = acEditTemplate then
-    if APropertyIndex = CEditTemplate_EditedActionType_PropIndex then
+  if AEditingAction <> @FClkEditedActionByEditTemplate then    //This prevents loading the OI when changing the edited action type.
+  if AEditingAction^.ActionOptions.Action = acEditTemplate then       // Only the editing action should be verified here. The edited action should be avoided.
+    if APropertyIndex = CEditTemplate_EditedActionType_PropIndex then // AEditingAction will get both editing and edited.
       if FEditTemplateOptions_EditingAction <> nil then
       begin
         FClkEditedActionByEditTemplate.ActionOptions.Action := AEditingAction^.EditTemplateOptions.EditedActionType;
         if Length(FEditTemplateOptions_EditingAction^.FindControlOptions.MatchBitmapText) = 0 then
           SetLength(FEditTemplateOptions_EditingAction^.FindControlOptions.MatchBitmapText, frClickerFindControl.GetBMPTextFontProfilesCount);
 
-        //These will set the action options to default, discarding user settings. Maybe there is a way to verifiy if the fields are empty and only then they should be updated.
+        //These will set the action options to default, discarding user settings.
         if ANewText <> OldText then
         begin
           SetEmptyEditedActionByEditTemplateToDefault;
@@ -6149,7 +6352,7 @@ begin
 end;
 
 
-procedure OIPaintText_ActionSpecific(AEditingAction: PClkActionRec; ALiveEditingActionType: TClkAction; ANodeData: TNodeDataPropertyRec; ACategoryIndex, APropertyIndex, APropertyItemIndex: Integer;
+procedure OIPaintText_ActionSpecific(AEditingAction, AFEditingAction: PClkActionRec; ALiveEditingActionType: TClkAction; ANodeData: TNodeDataPropertyRec; ACategoryIndex, APropertyIndex, APropertyItemIndex: Integer;
   const TargetCanvas: TCanvas; Column: TColumnIndex; var TextType: TVSTTextType; AOnAddToLog: TOnAddToLog);
 var
   ListOfPrimitiveFiles_Modified: TStringList;
@@ -6317,6 +6520,52 @@ begin
         end;
       end;
     end;
+
+  if (ACategoryIndex = CCategory_EditedAction) and (AFEditingAction^.ActionOptions.Action = acEditTemplate) then   //do not replace with ALiveEditingActionType!. It is FEditingAction on purpose.
+    if not (AFEditingAction^.EditTemplateOptions.Operation in [etoNewAction, etoUpdateAction, etoSetProperty, etoGetProperty]) then
+    begin
+      TargetCanvas.Font.Color := clGray;
+      Exit;
+    end;
+
+  if (ANodeData.Level = CPropertyLevel) and (ALiveEditingActionType = acEditTemplate) then
+  begin
+    case APropertyIndex of
+      CEditTemplate_TemplateFileName_PropIndex:
+        if AEditingAction^.EditTemplateOptions.WhichTemplate = etwtSelf then
+        begin
+          TargetCanvas.Font.Color := clGray;
+          Exit;
+        end;
+
+      CEditTemplate_EditedActionName_PropIndex:
+        ;
+
+      CEditTemplate_EditedActionCondition_PropIndex:
+        if not (AEditingAction^.EditTemplateOptions.Operation in [etoNewAction, etoUpdateAction, etoSetCondition]) then
+        begin
+          TargetCanvas.Font.Color := clGray;
+          Exit;
+        end;
+
+      CEditTemplate_EditedActionTimeout_PropIndex:
+        if not (AEditingAction^.EditTemplateOptions.Operation in [etoNewAction, etoUpdateAction, etoSetTimeout]) then
+        begin
+          TargetCanvas.Font.Color := clGray;
+          Exit;
+        end;
+
+      CEditTemplate_NewActionName_PropIndex:
+        if not (AEditingAction^.EditTemplateOptions.Operation in [etoMoveAction, etoDuplicateAction, etoRenameAction]) then
+        begin
+          TargetCanvas.Font.Color := clGray;
+          Exit;
+        end;
+
+      else
+        ;
+    end;  //case APropertyIndex
+  end;
 end;
 
 
@@ -6337,11 +6586,11 @@ begin  //
           ;
 
         CCategory_ActionSpecific:
-          OIPaintText_ActionSpecific(FEditingAction, CurrentlyEditingActionType, ANodeData, ACategoryIndex, APropertyIndex, APropertyItemIndex, TargetCanvas, Column, TextType, DoOnAddToLog);
+          OIPaintText_ActionSpecific(FEditingAction, FEditingAction, CurrentlyEditingActionType, ANodeData, ACategoryIndex, APropertyIndex, APropertyItemIndex, TargetCanvas, Column, TextType, DoOnAddToLog);
 
         CCategory_EditedAction:
           if FEditTemplateOptions_EditingAction <> nil then
-            OIPaintText_ActionSpecific(FEditTemplateOptions_EditingAction, FEditTemplateOptions_EditingAction.ActionOptions.Action, ANodeData, ACategoryIndex, APropertyIndex, APropertyItemIndex, TargetCanvas, Column, TextType, DoOnAddToLog);
+            OIPaintText_ActionSpecific(FEditTemplateOptions_EditingAction, FEditingAction, FEditTemplateOptions_EditingAction.ActionOptions.Action, ANodeData, ACategoryIndex, APropertyIndex, APropertyItemIndex, TargetCanvas, Column, TextType, DoOnAddToLog);
       end;
     end;
   except
@@ -7357,6 +7606,46 @@ begin
       end; //case APropertyIndex
     end; //plugin
 
+    acEditTemplate:
+    begin
+      case APropertyIndex of
+        CEditTemplate_TemplateFileName_PropIndex:
+        begin
+          FOIEditorMenu.Items.Clear;
+          AddMenuItemToPopupMenu(FOIEditorMenu, 'Browse...', MenuItem_BrowseEditTemplateFileInPropertyListClick,
+              ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+
+          FOIEditorMenu.PopUp;
+        end;
+
+        CEditTemplate_EditedActionName_PropIndex:
+        begin
+          LoadListOfAvailableActionsForEditTemplate(APropertyIndex, AEditingAction);
+          FPmLocalTemplates.PopUp;
+        end;
+
+        CEditTemplate_EditedActionTimeout_PropIndex:
+        begin
+          FOIEditorMenu.Items.Clear;
+
+          AddMenuItemToPopupMenu(FOIEditorMenu, '0', MenuItem_SetEditedActionTimeoutFromOI, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, FEditingAction);
+          AddMenuItemToPopupMenu(FOIEditorMenu, '1000', MenuItem_SetEditedActionTimeoutFromOI, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, FEditingAction);
+          AddMenuItemToPopupMenu(FOIEditorMenu, '10000', MenuItem_SetEditedActionTimeoutFromOI, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, FEditingAction);
+          AddMenuItemToPopupMenu(FOIEditorMenu, '30000', MenuItem_SetEditedActionTimeoutFromOI, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, FEditingAction);
+
+          FOIEditorMenu.PopUp;
+        end;
+
+        CEditTemplate_NewActionName_PropIndex:
+        begin
+
+        end;
+
+        else
+          ;
+      end; //case APropertyIndex
+    end //acEditTemplate
+
     else
       ;
   end; //case ALiveEditingActionType
@@ -7364,8 +7653,6 @@ end;
 
 
 procedure TfrClickerActions.HandleOnOIArrowEditorClick(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer);
-var
-  tp: TPoint;
 begin
   try
     case ACategoryIndex of
@@ -7380,8 +7667,7 @@ begin
             AddMenuItemToPopupMenu(FOIEditorMenu, '10000', MenuItem_SetActionTimeoutFromOI, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, FEditingAction);
             AddMenuItemToPopupMenu(FOIEditorMenu, '30000', MenuItem_SetActionTimeoutFromOI, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, FEditingAction);
 
-            GetCursorPos(tp);
-            FOIEditorMenu.PopUp(tp.X, tp.Y);
+            FOIEditorMenu.PopUp;
           end
           else
             ;
@@ -7453,6 +7739,17 @@ begin
         frClickerSetVar.SetListOfSetVars(AEditingAction^.SetVarOptions);
         frClickerSetVar.BringToFront;
         //MessageBox(Handle, 'SetVar editor', 'Files', MB_ICONINFORMATION);
+      end;
+
+    acEditTemplate:
+      if APropertyIndex = CEditTemplate_EditedActionCondition_PropIndex then
+      begin
+        Condition := AEditingAction^.EditTemplateOptions.EditedActionCondition;
+        if DoOnEditCallTemplateBreakCondition(Condition) then
+        begin
+          TriggerOnControlsModified(AEditingAction^.EditTemplateOptions.EditedActionCondition <> Condition);
+          AEditingAction^.EditTemplateOptions.EditedActionCondition := Condition;
+        end;
       end;
 
     else
@@ -8034,7 +8331,7 @@ begin
     end;
 
     FEditTemplateOptions_EditingAction.EditTemplateOptions.ListOfEnabledProperties := FastReplace_ReturnTo45(ListOfProperties.Text);
-    DoOnAddToLog('List: ' + FEditTemplateOptions_EditingAction.EditTemplateOptions.ListOfEnabledProperties);
+    //DoOnAddToLog('List: ' + FEditTemplateOptions_EditingAction.EditTemplateOptions.ListOfEnabledProperties);
     TriggerOnControlsModified;
   finally
     ListOfProperties.Free;

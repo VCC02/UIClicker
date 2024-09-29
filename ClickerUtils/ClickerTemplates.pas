@@ -243,7 +243,7 @@ begin
     ACustomActions[i].PluginOptions.FileName := '';
 
     ACustomActions[i].EditTemplateOptions.Operation := etoNewAction;
-    ACustomActions[i].EditTemplateOptions.WhichTemplate := etwtSelf;
+    ACustomActions[i].EditTemplateOptions.WhichTemplate := etwtOther;
     ACustomActions[i].EditTemplateOptions.TemplateFileName := '';
     ACustomActions[i].EditTemplateOptions.ListOfEditedProperties := '';
     ACustomActions[i].EditTemplateOptions.ListOfEnabledProperties := '';
@@ -513,7 +513,7 @@ end;
 procedure LoadAction_EditTemplate(Ini: TClkIniReadonlyFile; SectionIndex: Integer; var AEditTemplateOptions: TClkEditTemplateOptions);
 begin
   AEditTemplateOptions.Operation := TEditTemplateOperation(Min(Ini.ReadInteger(SectionIndex, 'Operation', Integer(etoNewAction)), Integer(High(TEditTemplateOperation))));
-  AEditTemplateOptions.WhichTemplate := TEditTemplateWhichTemplate(Min(Ini.ReadInteger(SectionIndex, 'WhichTemplate', Integer(etwtSelf)), Integer(High(TEditTemplateWhichTemplate))));
+  AEditTemplateOptions.WhichTemplate := TEditTemplateWhichTemplate(Min(Ini.ReadInteger(SectionIndex, 'WhichTemplate', Integer(etwtOther)), Integer(High(TEditTemplateWhichTemplate))));
   AEditTemplateOptions.TemplateFileName := Ini.ReadString(SectionIndex, 'TemplateFileName', '');
   AEditTemplateOptions.ListOfEditedProperties := FastReplace_45To1920(Ini.ReadString(SectionIndex, 'ListOfEditedProperties', ''));
   AEditTemplateOptions.ListOfEnabledProperties := FastReplace_45ToReturn(Ini.ReadString(SectionIndex, 'ListOfEnabledProperties', ''));
@@ -521,6 +521,8 @@ begin
   AEditTemplateOptions.PluginOptionsCachedCount := 0;
   AEditTemplateOptions.EditedActionName := Ini.ReadString(SectionIndex, 'EditedActionName', '');
   AEditTemplateOptions.EditedActionType := TClkAction(Min(Ini.ReadInteger(SectionIndex, 'EditedActionType', Integer(acClick)), Integer(High(TClkAction))));
+  AEditTemplateOptions.EditedActionCondition := Ini.ReadString(SectionIndex, 'EditedActionCondition', '');
+  AEditTemplateOptions.EditedActionTimeout := Ini.ReadInteger(SectionIndex, 'EditedActionTimeout', 1000);
   AEditTemplateOptions.NewActionName := Ini.ReadString(SectionIndex, 'NewActionName', '');
 end;
 
@@ -984,6 +986,8 @@ begin
   AStringList.Add('ListOfEnabledProperties=' + FastReplace_ReturnTo45(AActionEditTemplateOptions.ListOfEnabledProperties));
   AStringList.Add('EditedActionName=' + AActionEditTemplateOptions.EditedActionName);
   AStringList.Add('EditedActionType=' + IntToStr(Ord(AActionEditTemplateOptions.EditedActionType)));
+  AStringList.Add('EditedActionCondition=' + AActionEditTemplateOptions.EditedActionCondition);
+  AStringList.Add('EditedActionTimeout=' + IntToStr(AActionEditTemplateOptions.EditedActionTimeout));
   AStringList.Add('NewActionName=' + AActionEditTemplateOptions.NewActionName);
 end;
 
@@ -1003,7 +1007,7 @@ begin
     acLoadSetVarFromFile: AddAction_LoadSetVarFromFileToStringList(AAction.LoadSetVarFromFileOptions, AStringList);
     acSaveSetVarToFile: AddAction_SaveSetVarToFileToStringList(AAction.SaveSetVarToFileOptions, AStringList);
     acPlugin: AddAction_PluginToStringList(AAction.PluginOptions, AStringList);
-    acEditTemplate: AddAction_EditTemplateToStringList(AAction.EditTemplateOptions, AStringList)
+    acEditTemplate: AddAction_EditTemplateToStringList(AAction.EditTemplateOptions, AStringList);
   end;
 end;
 

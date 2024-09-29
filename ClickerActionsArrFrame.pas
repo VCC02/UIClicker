@@ -985,6 +985,7 @@ begin
 
   frClickerActions.OnGetListOfAvailableSetVarActions := HandleOnGetListOfAvailableSetVarActions;
   frClickerActions.OnGetListOfAvailableActions := HandleOnGetListOfAvailableActions;
+  frClickerActions.OnTClkIniReadonlyFileCreate := HandleOnTClkIniReadonlyFileCreate;
   frClickerActions.OnModifyPluginProperty := HandleOnModifyPluginProperty;
 
   frClickerActions.OnPluginDbgStop := HandleOnPluginDbgStop;
@@ -2052,7 +2053,10 @@ begin
     frClickerActions.UpdateFindSubControlInternalStructuresFromAction(@FClkActions[ActionIndex]);
 
   if frClickerActions.CurrentlyEditingActionType = acPlugin then
+  begin
     frClickerActions.frClickerPlugin.LoadDebugSymbols(ExtractFullFileNameNoExt(ResolveTemplatePath(FClkActions[ActionIndex].PluginOptions.FileName)) + '.DbgSym');
+    SetActionPropertiesFromPlugin(FClkActions[ActionIndex]);
+  end;
 
   if (frClickerActions.CurrentlyEditingActionType = acEditTemplate) and (frClickerActions.EditingAction <> nil) then
   begin
@@ -3756,7 +3760,7 @@ begin
   //  vstActions.StateImages := frClickerActions.imglstActions;
 
   case Column of
-    0:
+    0:  //action name
     begin
       if not CurrentAction^.ActionBreakPoint.Exists then
         ImageList := imglstCurrentDebuggingAction
@@ -3786,13 +3790,13 @@ begin
       end;
     end;
 
-    1:
+    1:  //action type
     begin
       ImageList := frClickerActions.imglstActions;
       ImageIndex := Ord(CurrentAction^.ActionOptions.Action);
     end;
 
-    2:
+    2:  //status (+ timeout)
     begin
       if CurrentAction^.ActionSkipped then
       begin
@@ -3806,10 +3810,19 @@ begin
       end;
     end;
 
-    3:
+    3:  //condition / misc
     begin
       ImageList := imglstActionHasCondition;
       ImageIndex := Ord(CurrentAction^.ActionOptions.ActionCondition > '');
+    end;
+
+    4:  //text
+    begin
+      if CurrentAction^.ActionOptions.Action = acEditTemplate then
+      begin
+        ImageList := frClickerActions.imglstActions;
+        ImageIndex := Ord(CurrentAction^.EditTemplateOptions.EditedActionType);
+      end;
     end;
   end;
 end;
