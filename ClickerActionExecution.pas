@@ -3543,29 +3543,32 @@ procedure UpdateActionProperties(var AEditTemplateOptions: TClkEditTemplateOptio
     Result := ArrayPropertyChecked(AListOfProperties, 'MatchBitmapText[' + AProfileIndexStr + '].');
   end;
 
-  function MatchFilesChecked(AListOfProperties: TStringList; APropertyName, AFileName: string): Boolean;
+  //function MatchFilesChecked(AListOfProperties: TStringList; APropertyName, AFileName: string): Boolean;
+  //var
+  //  Idx: Integer;
+  //  BmpFiles: TStringList;
+  //begin
+  //  Result := False;
+  //
+  //  Idx := AListOfProperties.IndexOfName(APropertyName);
+  //  if Idx = -1 then
+  //    Exit;
+  //
+  //  BmpFiles := TStringList.Create;
+  //  try
+  //    BmpFiles.Text := FastReplace_1920ToReturn(AListOfProperties.ValueFromIndex[Idx]);
+  //    Result := BmpFiles.IndexOf(AFileName) > -1;
+  //  finally
+  //    BmpFiles.Free;
+  //  end;
+  //end;
+
+  function FileNamesAsString(AListOfProperties, AListOfEnabledProperties: TStringList; APropertyName: string): string;
   var
     i, Idx: Integer;
-    BmpFiles: TStringList;
-  begin
-    Result := False;
-
-    Idx := AListOfProperties.IndexOfName(APropertyName);
-    if Idx = -1 then
-      Exit;
-
-    BmpFiles := TStringList.Create;
-    try
-      BmpFiles.Text := FastReplace_1920ToReturn(AListOfProperties.ValueFromIndex[Idx]);
-      Result := BmpFiles.IndexOf(AFileName) > -1;
-    finally
-      BmpFiles.Free;
-    end;
-  end;
-
-  function FileNamesAsString(AListOfProperties: TStringList; APropertyName: string): string;
-  var
-    i, Idx: Integer;
+    EnabledPropertyName: string;
+    FilteredResult: TStringList;
+    IsFiltered: Boolean;
   begin
     Result := '';
 
@@ -3574,18 +3577,39 @@ procedure UpdateActionProperties(var AEditTemplateOptions: TClkEditTemplateOptio
       Exit;
 
     Result := FastReplace_1920ToReturn(AListOfProperties.ValueFromIndex[Idx]);
+    //the result has to be filtered by AListOfEnabledProperties
+    FilteredResult := TStringList.Create;
+    try
+      FilteredResult.Text := Result;
+      IsFiltered := False;
+
+      for i := FilteredResult.Count - 1 downto 0 do
+      begin
+        EnabledPropertyName := APropertyName + '.File[' + IntToStr(i) + ']';
+        if AListOfEnabledProperties.IndexOf(EnabledPropertyName) = -1 then
+        begin
+          FilteredResult.Delete(i);
+          IsFiltered := True;
+        end;
+      end;
+
+      if IsFiltered then
+        Result := FilteredResult.Text;
+    finally
+      FilteredResult.Free;
+    end;
   end;
 
-
-  function MatchBitmapFilesChecked(AListOfProperties: TStringList; AFileName: string): Boolean;
-  begin
-    Result := MatchFilesChecked(AListOfProperties, 'MatchBitmapFiles', AFileName);
-  end;
-
-  function MatchPrimitiveFilesChecked(AListOfProperties: TStringList; AFileName: string): Boolean;
-  begin
-    Result := MatchFilesChecked(AListOfProperties, 'MatchPrimitiveFiles', AFileName);
-  end;
+//
+//  function MatchBitmapFilesChecked(AListOfProperties: TStringList; AFileName: string): Boolean;
+//  begin
+//    Result := MatchFilesChecked(AListOfProperties, 'MatchBitmapFiles', AFileName);
+//  end;
+//
+//  function MatchPrimitiveFilesChecked(AListOfProperties: TStringList; AFileName: string): Boolean;
+//  begin
+//    Result := MatchFilesChecked(AListOfProperties, 'MatchPrimitiveFiles', AFileName);
+//  end;
 
 var
   TempProperties, TempEnabledProperties, TempEditedProperties: TStringList;
@@ -3603,20 +3627,25 @@ begin
     TempEnabledProperties.Text := FastReplace_45ToReturn(AEditTemplateOptions.ListOfEnabledProperties);
     TempEditedProperties.Text := StringReplace(AEditTemplateOptions.ListOfEditedProperties, CPropSeparatorInt, #13#10, [rfReplaceAll]);
 
-    //Example for plugins:
-    //TempEditedProperties[0] becomes 'FileName=$AppDir$\..\UIClickerFindWindowsPlugin\lib\i386-win32\UIClickerFindWindows.dll'
-    //TempEditedProperties[1] becomes 'ListOfPropertiesAndValues=FindSubControlTopLeftCorner=ab'#$13#$14'FindSubControlBotLeftCorner=cd'#$13#$14'FindSubControlTopRightCorner=ef'#$13#$14'FindSubControlBotRightCorner=gh'#$13#$14'FindSubControlLeftEdge=ij'#$13#$14'FindSubControlTopEdge=kl'#$13#$14'FindSubControlRightEdge=mn'#$13#$14'FindSubControlBottomEdge=op'#$13#$14'ParentFindControl=qr'#$13#$14'BorderThickness=6'#$13#$14'MatchWindowEdges=True'#$13#$14
+    //Example for FindControl, FindSubControl:
+    //TempEditedProperties[0] becomes ''    //TBD
+    //TempEditedProperties[1] becomes ''    //TBD
     //
-    //TempEnabledProperties[0] becomes 'FileName'
-    //TempEnabledProperties[1] becomes 'FindSubControlTopLeftCorner'
-    //TempEnabledProperties[2] becomes 'FindSubControlBotLeftCorner'
-    //TempEnabledProperties[3] becomes 'FindSubControlTopRightCorner'
+    //TempEnabledProperties[0] becomes 'MatchBitmapText[0].ForegroundColor'
+    //TempEnabledProperties[1] becomes 'MatchBitmapText[0].BackgroundColor'
+    //TempEnabledProperties[2] becomes 'MatchBitmapText[0].FontName'
+    //TempEnabledProperties[3] becomes 'MatchBitmapFiles.File[0]'
+    //TempEnabledProperties[4] becomes 'MatchBitmapFiles.File[1]'
+    //TempEnabledProperties[5] becomes 'MatchBitmapFiles.File[2]'
+    //TempEnabledProperties[6] becomes 'MatchPrimitiveFiles.File[1]'
+    //TempEnabledProperties[7] becomes 'MatchPrimitiveFiles.File[0]'
+    //TempEnabledProperties[8] becomes 'MatchBitmapText[1].FontName'
+    //TempEnabledProperties[9] becomes 'MatchBitmapText[1].BackgroundColor'
+    //TempEnabledProperties[10] becomes 'MatchBitmapText[1].ForegroundColor'
+    //TempEnabledProperties[11] becomes 'MatchBitmapText[1].FontSize'
 
-    //TempProperties[0] becomes 'FileName=$AppDir$\..\UIClickerFindWindowsPlugin\lib\i386-win32\UIClickerFindWindows.dll'
-    //TempProperties[1] becomes 'ListOfPropertiesAndValues='
-
-    // For plugin, the ListOfPropertiesAndValues property has to be unpacked (#4#5-> #13#10), updated, then repacked.
-    // TempEnabledProperties won't even see the ListOfPropertiesAndValues key, only its content (value, which is a list of key=value)
+    //TempProperties[0] becomes ''          //TBD
+    //TempProperties[1] becomes ''          //TBD
 
     if AEditTemplateOptions.EditedActionType in [acFindControl, acFindSubControl] then
     begin
@@ -3638,24 +3667,12 @@ begin
           end;
       end;
 
-      //ToDo:  add only checked bmp paths, not all of them     TempEnabledProperties should have the same number of items as Fnm (converted to list)
-      //ToDo:  add only checked pmtv paths, not all of them
-
       ListOfMatchBitmapFiles := TStringList.Create;
       try
         ListOfMatchBitmapFiles.Text := FastReplace_45ToReturn(AEditedClkAction^.FindControlOptions.MatchBitmapFiles);  //this is empty for a new action
-        for i := ListOfMatchBitmapFiles.Count - 1 downto 0 do
-          if MatchBitmapFilesChecked(TempEditedProperties, ListOfMatchBitmapFiles.Strings[i]) then
-            ListOfMatchBitmapFiles.Delete(i);  //if the file exists in the new list, then remove it from the old list, because it will be added
 
-        Fnm := FileNamesAsString(TempEditedProperties, 'MatchBitmapFiles');
-        if Fnm > '' then
-        begin
-          if ListOfMatchBitmapFiles.Count > 0 then
-            ListOfMatchBitmapFiles.Text := ListOfMatchBitmapFiles.Text + #13#10 + Fnm
-          else
-            ListOfMatchBitmapFiles.Text := Fnm;
-        end;
+        Fnm := FileNamesAsString(TempEditedProperties, TempEnabledProperties, 'MatchBitmapFiles');
+        ListOfMatchBitmapFiles.Text := Fnm;
 
         AEditedClkAction^.FindControlOptions.MatchBitmapFiles := FastReplace_ReturnTo45(ListOfMatchBitmapFiles.Text);
       finally
@@ -3665,18 +3682,9 @@ begin
       ListOfMatchPrimitiveFiles := TStringList.Create;
       try
         ListOfMatchPrimitiveFiles.Text := FastReplace_45ToReturn(AEditedClkAction^.FindControlOptions.MatchPrimitiveFiles); //this is empty for a new action
-        for i := ListOfMatchPrimitiveFiles.Count - 1 downto 0 do
-          if MatchPrimitiveFilesChecked(TempEditedProperties, ListOfMatchPrimitiveFiles.Strings[i]) then
-            ListOfMatchPrimitiveFiles.Delete(i);
 
-        Fnm := FileNamesAsString(TempEditedProperties, 'MatchPrimitiveFiles');
-        if Fnm > '' then
-        begin
-          if ListOfMatchBitmapFiles.Count > 0 then
-            ListOfMatchPrimitiveFiles.Text := ListOfMatchPrimitiveFiles.Text + #13#10 + Fnm
-          else
-            ListOfMatchPrimitiveFiles.Text := Fnm;
-        end;
+        Fnm := FileNamesAsString(TempEditedProperties, TempEnabledProperties, 'MatchPrimitiveFiles');
+        ListOfMatchPrimitiveFiles.Text := Fnm;
 
         AEditedClkAction^.FindControlOptions.MatchPrimitiveFiles := FastReplace_ReturnTo45(ListOfMatchPrimitiveFiles.Text);
       finally
@@ -3687,6 +3695,21 @@ begin
     ActionProperties := GetActionPropertiesByType(AEditedClkAction^);
     ActionProperties := StringReplace(ActionProperties, CPropSeparatorSer, #13#10, [rfReplaceAll]);
     TempProperties.Text := StringReplace(ActionProperties, {'&'} CPropSeparatorInt, #13#10, [rfReplaceAll]);
+
+    //Example for plugins:
+    //TempEditedProperties[0] becomes 'FileName=$AppDir$\..\UIClickerFindWindowsPlugin\lib\i386-win32\UIClickerFindWindows.dll'
+    //TempEditedProperties[1] becomes 'ListOfPropertiesAndValues=FindSubControlTopLeftCorner=ab'#$13#$14'FindSubControlBotLeftCorner=cd'#$13#$14'FindSubControlTopRightCorner=ef'#$13#$14'FindSubControlBotRightCorner=gh'#$13#$14'FindSubControlLeftEdge=ij'#$13#$14'FindSubControlTopEdge=kl'#$13#$14'FindSubControlRightEdge=mn'#$13#$14'FindSubControlBottomEdge=op'#$13#$14'ParentFindControl=qr'#$13#$14'BorderThickness=6'#$13#$14'MatchWindowEdges=True'#$13#$14
+    //
+    //TempEnabledProperties[0] becomes 'FileName'
+    //TempEnabledProperties[1] becomes 'FindSubControlTopLeftCorner'
+    //TempEnabledProperties[2] becomes 'FindSubControlBotLeftCorner'
+    //TempEnabledProperties[3] becomes 'FindSubControlTopRightCorner'
+
+    //TempProperties[0] becomes 'FileName=$AppDir$\..\UIClickerFindWindowsPlugin\lib\i386-win32\UIClickerFindWindows.dll'
+    //TempProperties[1] becomes 'ListOfPropertiesAndValues='
+
+    // For plugin, the ListOfPropertiesAndValues property has to be unpacked (#4#5-> #13#10), updated, then repacked.
+    // TempEnabledProperties won't even see the ListOfPropertiesAndValues key, only its content (value, which is a list of key=value)
 
     for i := 0 to TempProperties.Count - 1 do
     begin

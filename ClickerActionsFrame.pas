@@ -5473,6 +5473,8 @@ function OIGetDataTypeName_ActionSpecific(AEditingAction: PClkActionRec; ALiveEd
 var
   EditingActionType: Integer;
 begin
+  Result := '';
+
   if AEditingAction = nil then
   begin
     Result := CActionIsNil;
@@ -5504,11 +5506,17 @@ begin
             CFindControl_MatchBitmapText_PropIndex:
               Result := CFindControl_MatchBitmapTextProperties[AItemIndex mod CPropCount_FindControlMatchBitmapText].DataType;
 
+            CFindControl_MatchBitmapFiles_PropIndex:
+              Result := CDTString;
+
             CFindControl_MatchBitmapAlgorithmSettings_PropIndex:
               Result := CFindControl_MatchBitmapAlgorithmSettingsProperties[AItemIndex].DataType;
 
             CFindControl_InitialRectangle_PropIndex:
               Result := CFindControl_InitialRectangleProperties[AItemIndex].DataType;
+
+            CFindControl_MatchPrimitiveFiles_PropIndex:
+              Result := CDTString;
 
             CFindControl_MatchByHistogramSettings_PropIndex:
               Result := CFindControl_MatchByHistogramSettingsProperties[AItemIndex].DataType;
