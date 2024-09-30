@@ -3543,26 +3543,6 @@ procedure UpdateActionProperties(var AEditTemplateOptions: TClkEditTemplateOptio
     Result := ArrayPropertyChecked(AListOfProperties, 'MatchBitmapText[' + AProfileIndexStr + '].');
   end;
 
-  //function MatchFilesChecked(AListOfProperties: TStringList; APropertyName, AFileName: string): Boolean;
-  //var
-  //  Idx: Integer;
-  //  BmpFiles: TStringList;
-  //begin
-  //  Result := False;
-  //
-  //  Idx := AListOfProperties.IndexOfName(APropertyName);
-  //  if Idx = -1 then
-  //    Exit;
-  //
-  //  BmpFiles := TStringList.Create;
-  //  try
-  //    BmpFiles.Text := FastReplace_1920ToReturn(AListOfProperties.ValueFromIndex[Idx]);
-  //    Result := BmpFiles.IndexOf(AFileName) > -1;
-  //  finally
-  //    BmpFiles.Free;
-  //  end;
-  //end;
-
   function FileNamesAsString(AListOfProperties, AListOfEnabledProperties: TStringList; APropertyName: string): string;
   var
     i, Idx: Integer;
@@ -3599,17 +3579,6 @@ procedure UpdateActionProperties(var AEditTemplateOptions: TClkEditTemplateOptio
       FilteredResult.Free;
     end;
   end;
-
-//
-//  function MatchBitmapFilesChecked(AListOfProperties: TStringList; AFileName: string): Boolean;
-//  begin
-//    Result := MatchFilesChecked(AListOfProperties, 'MatchBitmapFiles', AFileName);
-//  end;
-//
-//  function MatchPrimitiveFilesChecked(AListOfProperties: TStringList; AFileName: string): Boolean;
-//  begin
-//    Result := MatchFilesChecked(AListOfProperties, 'MatchPrimitiveFiles', AFileName);
-//  end;
 
 var
   TempProperties, TempEnabledProperties, TempEditedProperties: TStringList;
@@ -3654,6 +3623,8 @@ begin
         if FontProfileChecked(TempEditedProperties, IntToStr(i)) then
           MaxSrcProfileIndex := i;
 
+      SetLength(AEditedClkAction^.FindControlOptions.MatchBitmapText, 0);  //Without this line, old profiles are kept if their index is above MaxSrcProfileIndex.
+                                                                           //However, there is no other way of deleting them, rather than deleting all.
       if Length(AEditedClkAction^.FindControlOptions.MatchBitmapText) < MaxSrcProfileIndex + 1 then
       begin
         //Verify if the missing profiles are checked. If yes, add them.
@@ -3711,50 +3682,81 @@ begin
     // For plugin, the ListOfPropertiesAndValues property has to be unpacked (#4#5-> #13#10), updated, then repacked.
     // TempEnabledProperties won't even see the ListOfPropertiesAndValues key, only its content (value, which is a list of key=value)
 
+    //MessageBoxFunction(PChar(TempEnabledProperties.Text), 'TempEnabledProperties', 0); //for debugging only
+
     for i := 0 to TempProperties.Count - 1 do
     begin
       PropertyName := TempProperties.Names[i];
       NewPropertyValue := TempEditedProperties.Values[PropertyName];   //ValueFromIndex should work, but it is gets out of sync (for some reason), then a wrong value is returned.
 
-      if AEditTemplateOptions.EditedActionType = acPlugin then
-      begin
-        OldPropertyValue := TempProperties.ValueFromIndex[i];
-
-        //For plugins, if the property is ListOfPropertiesAndValues, its value is of <Property=Value>#19#20<Property=Value>#19#20 format
-        if PropertyName = 'ListOfPropertiesAndValues' then
+      case AEditTemplateOptions.EditedActionType of
+        acPlugin:
         begin
-          ListOfNewPluginProperties := TStringList.Create;
-          ListOfOldPluginProperties := TStringList.Create;
-          try
-            ListOfOldPluginProperties.Text := FastReplace_45ToReturn(OldPropertyValue);
-            ListOfNewPluginProperties.Text := FastReplace_1920ToReturn(NewPropertyValue); //it contains only the checked properties
+          OldPropertyValue := TempProperties.ValueFromIndex[i];
 
-            s := '';
-            for j := 0 to ListOfNewPluginProperties.Count - 1 do
-              if TempEnabledProperties.IndexOf(ListOfNewPluginProperties.Names[j]) > -1 then //PropertyName enabled
-                s := s + ListOfNewPluginProperties.Names[j] + '=' + ListOfNewPluginProperties.ValueFromIndex[j] + #4#5
-              else
-                s := s + ListOfNewPluginProperties.Names[j] + '=' + ListOfOldPluginProperties.Values[ListOfNewPluginProperties.Names[j]] + #4#5;  //using ListOfPluginProperties.Names[j] instead of ValueFromIndex[j], because this list might not contain all plugin properties. It contains only the checked ones.
+          //For plugins, if the property is ListOfPropertiesAndValues, its value is of <Property=Value>#19#20<Property=Value>#19#20 format
+          if PropertyName = 'ListOfPropertiesAndValues' then
+          begin
+            ListOfNewPluginProperties := TStringList.Create;
+            ListOfOldPluginProperties := TStringList.Create;
+            try
+              ListOfOldPluginProperties.Text := FastReplace_45ToReturn(OldPropertyValue);
+              ListOfNewPluginProperties.Text := FastReplace_1920ToReturn(NewPropertyValue); //it contains only the checked properties
 
-            //[might not be needed] If there are properties in ListOfOldPluginProperties, which are not in ListOfNewPluginProperties, then they should be added here.  Also, not sure if the property order matters.
-            for j := 0 to ListOfOldPluginProperties.Count - 1 do
-              if ListOfNewPluginProperties.IndexOfName(ListOfOldPluginProperties.Names[j]) = -1 then
-                s := s + ListOfOldPluginProperties.Strings[j] + #4#5;
+              s := '';
+              for j := 0 to ListOfNewPluginProperties.Count - 1 do
+                if TempEnabledProperties.IndexOf(ListOfNewPluginProperties.Names[j]) > -1 then //PropertyName enabled
+                  s := s + ListOfNewPluginProperties.Names[j] + '=' + ListOfNewPluginProperties.ValueFromIndex[j] + #4#5
+                else
+                  s := s + ListOfNewPluginProperties.Names[j] + '=' + ListOfOldPluginProperties.Values[ListOfNewPluginProperties.Names[j]] + #4#5;  //using ListOfPluginProperties.Names[j] instead of ValueFromIndex[j], because this list might not contain all plugin properties. It contains only the checked ones.
 
-            TempProperties.ValueFromIndex[i] := s;
-          finally
-            ListOfNewPluginProperties.Free;
-            ListOfOldPluginProperties.Free;
-          end;
-        end  //ListOfPropertiesAndValues
-        else  //other property (most likely FileName)
+              //[might not be needed] If there are properties in ListOfOldPluginProperties, which are not in ListOfNewPluginProperties, then they should be added here.  Also, not sure if the property order matters.
+              for j := 0 to ListOfOldPluginProperties.Count - 1 do
+                if ListOfNewPluginProperties.IndexOfName(ListOfOldPluginProperties.Names[j]) = -1 then
+                  s := s + ListOfOldPluginProperties.Strings[j] + #4#5;
+
+              TempProperties.ValueFromIndex[i] := s;
+            finally
+              ListOfNewPluginProperties.Free;
+              ListOfOldPluginProperties.Free;
+            end;
+          end  //ListOfPropertiesAndValues
+          else  //other property (most likely FileName)
+            if TempEnabledProperties.IndexOf(PropertyName) > -1 then //enabled
+              TempProperties.ValueFromIndex[i] := NewPropertyValue;
+        end; //is plugin
+
+        acCallTemplate:
+        begin
+          if PropertyName = 'ListOfCustomVarsAndValues' then
+            NewPropertyValue := FastReplace_1920To45(NewPropertyValue);
+
+          if Pos('Loop.', PropertyName) = 1 then
+            PropertyName := 'CallTemplate' + PropertyName;
+
           if TempEnabledProperties.IndexOf(PropertyName) > -1 then //enabled
             TempProperties.ValueFromIndex[i] := NewPropertyValue;
-      end //is plugin
-      else //is some other action type
-        if TempEnabledProperties.IndexOf(PropertyName) > -1 then //enabled
-          TempProperties.ValueFromIndex[i] := NewPropertyValue;
-    end;
+        end;
+
+        acSetVar:
+        begin
+          if (PropertyName = 'ListOfVarNames') or
+             (PropertyName = 'ListOfVarValues') or
+             (PropertyName = 'ListOfVarEvalBefore') then
+          begin
+            PropertyName := 'ListOfVarNamesValuesAndEvalBefore';
+            NewPropertyValue := FastReplace_1920To45(NewPropertyValue);
+          end;
+
+          if TempEnabledProperties.IndexOf(PropertyName) > -1 then //enabled
+            TempProperties.ValueFromIndex[i] := NewPropertyValue;
+        end;
+
+        else //is some other action type
+          if TempEnabledProperties.IndexOf(PropertyName) > -1 then //enabled
+            TempProperties.ValueFromIndex[i] := NewPropertyValue;
+      end; //case
+    end; //for
 
     SetActionProperties(TempProperties, AEditTemplateOptions.EditedActionType, AEditedClkAction^);
   finally

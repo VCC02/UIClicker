@@ -5335,13 +5335,13 @@ begin
 end;
 
 
-function OIGetListPropertyItemValue_ActionSpecific(AEditingAction: PClkActionRec; ALiveEditingActionType: TClkAction; ACategoryIndex, APropertyIndex, AItemIndex: Integer; var AEditorType: TOIEditorType; var APropDef: TOIPropDef): string;
+function OIGetListPropertyItemValue_ActionSpecific(AEditingAction: PClkActionRec; ALiveEditingActionType: TClkAction; ACategoryIndex, APropertyIndex, AItemIndex: Integer; {var AEditorType: TOIEditorType;} var APropDef: TOIPropDef): string;
 var
   EditingActionType: Integer;
   TempStringList: TStringList;
 begin
   Result := '';
-  AEditorType := etNone;
+  APropDef.EditorType := etNone; //AEditorType := etNone;
 
   if AEditingAction = nil then
   begin
@@ -5378,7 +5378,7 @@ begin
             TempStringList.Free;
           end;
 
-          AEditorType := etTextWithArrow;
+          APropDef.EditorType := etTextWithArrow; //AEditorType := etTextWithArrow;
           Exit;
         end;
 
@@ -5406,7 +5406,7 @@ begin
             TempStringList.Free;
           end;
 
-          AEditorType := etTextWithArrow;
+          APropDef.EditorType := etTextWithArrow; //AEditorType := etTextWithArrow;
           Exit;
         end;
 
@@ -5449,11 +5449,11 @@ begin
         ;
 
       CCategory_ActionSpecific:
-        Result := OIGetListPropertyItemValue_ActionSpecific(FEditingAction, CurrentlyEditingActionType, ACategoryIndex, APropertyIndex, AItemIndex, AEditorType, PropDef);
+        Result := OIGetListPropertyItemValue_ActionSpecific(FEditingAction, CurrentlyEditingActionType, ACategoryIndex, APropertyIndex, AItemIndex, {AEditorType,} PropDef);
 
       CCategory_EditedAction:
         if FEditTemplateOptions_EditingAction <> nil then
-          Result := OIGetListPropertyItemValue_ActionSpecific(FEditTemplateOptions_EditingAction, FEditTemplateOptions_EditingAction.ActionOptions.Action, ACategoryIndex, APropertyIndex, AItemIndex, AEditorType, PropDef);
+          Result := OIGetListPropertyItemValue_ActionSpecific(FEditTemplateOptions_EditingAction, FEditTemplateOptions_EditingAction.ActionOptions.Action, ACategoryIndex, APropertyIndex, AItemIndex, {AEditorType,} PropDef);
     end;
   except
     //MessageBox(Handle, 'AV', 'UC HandleOnOIGetListPropertyItemValue', 0);
@@ -6967,6 +6967,17 @@ begin
         frClickerFindControl.UpdateSearchAreaLabelsFromKeysOnInitRect(AEditingAction^.FindControlOptions.InitialRectangle);
       end; //init rect
     end; //case
+
+  //if AEditingAction^.ActionOptions.Action = acPlugin then
+  //  if APropertyIndex = CPlugin_FileName_PropIndex then
+  //  begin
+  //    NewValue := TVTEdit(Sender).Text;
+  //    if DoOnFileExists(NewValue) then
+  //    begin
+  //      DoOnModifyPluginProperty(AEditingAction);
+  //      tmrReloadOIContent.Enabled := True;   //reloading the OI will discard the new value, unfortunately
+  //    end;
+  //  end;
 end;
 
 

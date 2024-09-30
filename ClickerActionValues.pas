@@ -379,7 +379,7 @@ const
 
   CCallTemplateProperties: array[0..CPropCount_CallTemplate - 1] of TOIPropDef = (
     (Name: 'TemplateFileName'; EditorType: etTextWithArrow; DataType: CDTString),           //Description:  Replacements are available    //Description[arrow button]:   Templates from the local dir
-    (Name: 'ListOfCustomVarsAndValues'; EditorType: etUserEditor; DataType: CDTStructure),
+    (Name: 'ListOfCustomVarsAndValues'; EditorType: etUserEditor; DataType: CDTString),
     (Name: 'EvaluateBeforeCalling'; EditorType: etBooleanCombo; DataType: CDTBool),           //Description:  If unchecked, the values are passed as strings.
     (Name: 'CallTemplateLoop'; EditorType: etNone; DataType: CDTStructure)       //structure       //Description:  What does not work, is closing subtemplates when remote debugging.  So, do not click the stop button when remote debugging CallTemplate actions with loops.
   );
@@ -401,7 +401,7 @@ const
   );
 
   CSetVarProperties: array[0..CPropCount_SetVar - 1] of TOIPropDef = (
-    (Name: 'ListOfVarNamesValuesAndEvalBefore'; EditorType: etUserEditor; DataType: CDTStructure), //structure   (no sub properties)
+    (Name: 'ListOfVarNamesValuesAndEvalBefore'; EditorType: etUserEditor; DataType: CDTString), //structure   (no sub properties). Using string, to allow the property to be checked when edited by EditTemplate action.
     (Name: 'FailOnException'; EditorType: etBooleanCombo; DataType: CDTBool)
   );
 
