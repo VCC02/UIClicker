@@ -665,8 +665,8 @@ type
     function ReverseEvaluateReplacements(AValue: string): string;
 
     procedure LoadListOfAvailableTemplates;
-    procedure LoadListOfAvailableSetVarActions;
-    procedure LoadListOfAvailableActionsForPlugin(APropertyIndexToUpdate: Integer);
+    procedure LoadListOfAvailableSetVarActions(AEditingAction: PClkActionRec);
+    procedure LoadListOfAvailableActionsForPlugin(APropertyIndexToUpdate: Integer; AEditingAction: PClkActionRec);
     procedure LoadListOfAvailableActionsForEditTemplate(APropertyIndexToUpdate: Integer; AEditingAction: PClkActionRec);
 
     procedure SetDebugVariablesFromListOfStrings(AListOfStrings: string);
@@ -2286,16 +2286,35 @@ begin
 end;
 
 
-procedure TfrClickerActions.LoadListOfAvailableSetVarActions;
+procedure TfrClickerActions.LoadListOfAvailableSetVarActions(AEditingAction: PClkActionRec);
 var
   AvailableSetVarActions: TStringList;
   TempMenuItem, BaseMenuItem: TMenuItem;
   i: Integer;
   Bmp: TBitmap;
+  Ini: TClkIniReadonlyFile;
+  LocalClkActions: TClkActionsRecArr;
+  Notes, IconPath: string;
 begin
   AvailableSetVarActions := TStringList.Create;
   try
-    DoOnGetListOfAvailableSetVarActions(AvailableSetVarActions);
+    if AEditingAction^.EditTemplateOptions.WhichTemplate = etwtSelf then
+      DoOnGetListOfAvailableSetVarActions(AvailableSetVarActions)
+    else
+    begin
+      if DoOnFileExists(AEditingAction^.EditTemplateOptions.TemplateFileName) then
+      begin
+        Ini := DoOnTClkIniReadonlyFileCreate(AEditingAction^.EditTemplateOptions.TemplateFileName);  //LoadTemplate
+        try
+          LoadTemplateToCustomActions_V2(Ini, LocalClkActions, Notes, IconPath);
+          for i := 0 to Length(LocalClkActions) - 1 do
+            if LocalClkActions[i].ActionOptions.Action = acSetVar then
+              AvailableSetVarActions.Add(LocalClkActions[i].ActionOptions.ActionName);
+        finally
+          Ini.Free;
+        end;
+      end;
+    end;
 
     FPmLocalTemplates.Items.Clear;
 
@@ -2331,7 +2350,7 @@ begin
 end;
 
 
-procedure TfrClickerActions.LoadListOfAvailableActionsForPlugin(APropertyIndexToUpdate: Integer);
+procedure TfrClickerActions.LoadListOfAvailableActionsForPlugin(APropertyIndexToUpdate: Integer; AEditingAction: PClkActionRec);
 var
   AvailableActions: TStringList;
   TempMenuItem, BaseMenuItem: TMenuItem;
@@ -2339,10 +2358,28 @@ var
   Bmp: TBitmap;
   ActionStr: string;
   ActionType: Integer;
+  Ini: TClkIniReadonlyFile;
+  LocalClkActions: TClkActionsRecArr;
+  Notes, IconPath: string;
 begin
   AvailableActions := TStringList.Create;
   try
-    DoOnGetListOfAvailableActions(AvailableActions);
+    if AEditingAction^.EditTemplateOptions.WhichTemplate = etwtSelf then
+      DoOnGetListOfAvailableActions(AvailableActions)
+    else
+    begin
+      if DoOnFileExists(AEditingAction^.EditTemplateOptions.TemplateFileName) then
+      begin
+        Ini := DoOnTClkIniReadonlyFileCreate(AEditingAction^.EditTemplateOptions.TemplateFileName);  //LoadTemplate
+        try
+          LoadTemplateToCustomActions_V2(Ini, LocalClkActions, Notes, IconPath);
+          for i := 0 to Length(LocalClkActions) - 1 do
+            AvailableActions.Add(LocalClkActions[i].ActionOptions.ActionName + #4#5 + IntToStr(Ord(LocalClkActions[i].ActionOptions.Action)));
+        finally
+          Ini.Free;
+        end;
+      end;
+    end;
 
     FPmLocalTemplates.Items.Clear;
 
@@ -7599,7 +7636,12 @@ begin
 
         CLoadSetVarFromFile_SetVarActionName_PropIndex:
         begin
-          LoadListOfAvailableSetVarActions;
+          if AEditingAction = @FClkEditedActionByEditTemplate then
+          begin
+            AEditingAction^.EditTemplateOptions.WhichTemplate := FEditingAction^.EditTemplateOptions.WhichTemplate;
+            AEditingAction^.EditTemplateOptions.TemplateFileName := FEditingAction^.EditTemplateOptions.TemplateFileName;
+          end;
+          LoadListOfAvailableSetVarActions(AEditingAction);
           FPmLocalTemplates.PopUp;
         end;
       end; //case APropertyIndex
@@ -7619,7 +7661,13 @@ begin
 
         else
         begin
-          LoadListOfAvailableActionsForPlugin(APropertyIndex - CPropCount_Plugin);
+          if AEditingAction = @FClkEditedActionByEditTemplate then
+          begin
+            AEditingAction^.EditTemplateOptions.WhichTemplate := FEditingAction^.EditTemplateOptions.WhichTemplate;
+            AEditingAction^.EditTemplateOptions.TemplateFileName := FEditingAction^.EditTemplateOptions.TemplateFileName;
+          end;
+
+          LoadListOfAvailableActionsForPlugin(APropertyIndex - CPropCount_Plugin, AEditingAction);
           FPmLocalTemplates.PopUp;
         end;
       end; //case APropertyIndex

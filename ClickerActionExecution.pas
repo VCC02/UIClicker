@@ -3802,6 +3802,121 @@ begin
 end;
 
 
+procedure GetPropertiesForEditTemplate(var AEditTemplateOptions: TClkEditTemplateOptions; AEditedClkAction: PClkActionRec; AListOfNames, AListOfValues: TStringList);
+var
+  TempProperties, TempEnabledProperties, TempEditedProperties: TStringList;
+  ActionProperties, PropertyName, PropertyValue, OldPropertyValue: string;
+  i, j: Integer;
+  ListOfOldPluginProperties, ListOfNewPluginProperties: TStringList;
+begin
+  TempProperties := TStringList.Create;
+  TempEnabledProperties := TStringList.Create;
+  TempEditedProperties := TStringList.Create;
+  try
+    TempEnabledProperties.Text := FastReplace_45ToReturn(AEditTemplateOptions.ListOfEnabledProperties);
+    TempEditedProperties.Text := StringReplace(AEditTemplateOptions.ListOfEditedProperties, CPropSeparatorInt, #13#10, [rfReplaceAll]);
+
+    ActionProperties := GetActionPropertiesByType(AEditedClkAction^);
+    ActionProperties := StringReplace(ActionProperties, CPropSeparatorSer, #13#10, [rfReplaceAll]);
+    TempProperties.Text := StringReplace(ActionProperties, {'&'} CPropSeparatorInt, #13#10, [rfReplaceAll]);
+
+    for i := 0 to TempProperties.Count - 1 do
+    begin
+      PropertyName := TempProperties.Names[i];
+      PropertyValue := TempProperties.ValueFromIndex[i]; //TempEditedProperties.Values[PropertyName];   //ValueFromIndex should work, but it is gets out of sync (for some reason), then a wrong value is returned.
+
+      case AEditTemplateOptions.EditedActionType of
+        //ToDo implement bmp and pmtv path decoding for FindControl and FindSubControl
+
+        acPlugin:  //In work ////////////////////////////////
+        begin
+          OldPropertyValue := TempProperties.ValueFromIndex[i];
+
+          //For plugins, if the property is ListOfPropertiesAndValues, its value is of <Property=Value>#19#20<Property=Value>#19#20 format
+          if PropertyName = 'ListOfPropertiesAndValues' then
+          begin
+            ListOfNewPluginProperties := TStringList.Create;
+            ListOfOldPluginProperties := TStringList.Create;
+            try
+              ListOfOldPluginProperties.Text := FastReplace_45ToReturn(OldPropertyValue);
+              ListOfNewPluginProperties.Text := FastReplace_1920ToReturn(PropertyValue); //it contains only the checked properties
+
+              for j := 0 to ListOfNewPluginProperties.Count - 1 do
+                if TempEnabledProperties.IndexOf(ListOfNewPluginProperties.Names[j]) > -1 then //PropertyName enabled
+                begin
+                  AListOfNames.Add(ListOfNewPluginProperties.Names[j]);
+                  AListOfValues.Add({ListOfNewPluginProperties}ListOfOldPluginProperties.ValueFromIndex[j]);
+                end;
+            finally
+              ListOfNewPluginProperties.Free;
+              ListOfOldPluginProperties.Free;
+            end;
+          end  //ListOfPropertiesAndValues
+          else  //other property (most likely FileName)
+          begin
+            if TempEnabledProperties.IndexOf(PropertyName) > -1 then //enabled
+            begin
+              AListOfNames.Add(PropertyName);
+              AListOfValues.Add(PropertyValue);
+            end;
+          end;
+        end; //is plugin
+
+        acCallTemplate:
+        begin
+          if PropertyName = 'ListOfCustomVarsAndValues' then
+            PropertyValue := FastReplace_1920To45(PropertyValue);
+
+          if Pos('Loop.', PropertyName) = 1 then
+            PropertyName := 'CallTemplate' + PropertyName;
+
+          if TempEnabledProperties.IndexOf(PropertyName) > -1 then //enabled
+          begin
+            AListOfNames.Add(PropertyName);
+            AListOfValues.Add(PropertyValue);
+          end;
+        end;
+
+        acSetVar:
+        begin
+          if (PropertyName = 'ListOfVarNames') or
+             (PropertyName = 'ListOfVarValues') or
+             (PropertyName = 'ListOfVarEvalBefore') then
+          begin
+            PropertyValue := FastReplace_1920ToReturn(PropertyValue);
+
+            if TempEnabledProperties.IndexOf('ListOfVarNamesValuesAndEvalBefore') > -1 then //enabled
+            begin
+              AListOfNames.Add(PropertyName);
+              AListOfValues.Add(PropertyValue);
+            end;
+          end
+          else
+            if TempEnabledProperties.IndexOf(PropertyName) > -1 then //enabled
+            begin
+              AListOfNames.Add(PropertyName);
+              AListOfValues.Add(PropertyValue);
+            end;
+        end;
+
+        else //is some other action type
+        begin
+          if TempEnabledProperties.IndexOf(PropertyName) > -1 then //enabled
+          begin
+            AListOfNames.Add(PropertyName);
+            AListOfValues.Add(PropertyValue);
+          end;
+        end;
+      end; //case  AEditTemplateOptions.EditedActionType
+    end; //fori
+  finally
+    TempProperties.Free;
+    TempEnabledProperties.Free;
+    TempEditedProperties.Free;
+  end;
+end;
+
+
 function TActionExecution.ExecuteEditTemplateAction(var AEditTemplateOptions: TClkEditTemplateOptions): Boolean;
   function GetActionIndexByName(var AClkActions: TClkActionsRecArr; AName: string): Integer;
   var
@@ -3822,6 +3937,7 @@ var
   Notes, IconPath: string;
   i, Idx, DestIdx: Integer;
   TemplateContent: TStringList;
+  LocalListOfPropertyNames, LocalListOfPropertyValues: TStringList;
 begin
   Result := False;
 
@@ -3943,6 +4059,19 @@ begin
           etoGetProperty:
           begin
             //All the properties to be found in AEditTemplateOptions.ListOfEnabledProperties will be returned in $Property_<PropertyName>_Value$ variables.
+
+            LocalListOfPropertyNames := TStringList.Create;
+            LocalListOfPropertyValues := TStringList.Create;
+            try
+              GetPropertiesForEditTemplate(AEditTemplateOptions, @ClkActions[Idx], LocalListOfPropertyNames, LocalListOfPropertyValues);
+              for i := 0 to LocalListOfPropertyNames.Count - 1 do
+                SetActionVarValue('$Property_' + LocalListOfPropertyNames.Strings[i] + '_Value$', LocalListOfPropertyValues.Strings[i]);
+            finally
+              LocalListOfPropertyNames.Free;
+              LocalListOfPropertyValues.Free;
+            end;
+
+            Result := True;
           end;
 
           etoSetProperty:
@@ -3973,7 +4102,7 @@ begin
           end;
         end;  //case
 
-        if Result and (AEditTemplateOptions.Operation <> etoExecuteAction) then   //etoExecuteAction is not an editing operation
+        if Result and (not (AEditTemplateOptions.Operation in [etoExecuteAction, etoGetProperty])) then   //etoExecuteAction is not an editing operation
         begin  //The file is saved almost every time for the etwtOther option (successful editing operations only).
           TemplateContent := TStringList.Create;
           try
