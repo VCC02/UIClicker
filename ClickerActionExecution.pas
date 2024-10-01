@@ -3808,6 +3808,30 @@ var
   ActionProperties, PropertyName, PropertyValue, OldPropertyValue: string;
   i, j: Integer;
   ListOfOldPluginProperties, ListOfNewPluginProperties: TStringList;
+
+  procedure AddFindSubControlFilesFromProperty(APropertyName: string);
+  var
+    j: Integer;
+    SubPropertyName: string;
+    ListOfFiles: TStringList;
+  begin
+    ListOfFiles := TStringList.Create;
+    try
+      ListOfFiles.Text := FastReplace_45ToReturn(PropertyValue);
+      for j := 0 to ListOfFiles.Count - 1 do
+      begin
+        SubPropertyName := APropertyName + '.File[' + IntToStr(j) + ']';
+        if TempEnabledProperties.IndexOf(SubPropertyName) > -1 then
+        begin
+          AListOfNames.Add(SubPropertyName);
+          AListOfValues.Add(ListOfFiles.Strings[j]);
+        end;
+      end;
+    finally
+      ListOfFiles.Free;
+    end;
+  end;
+
 begin
   TempProperties := TStringList.Create;
   TempEnabledProperties := TStringList.Create;
@@ -3820,13 +3844,25 @@ begin
     ActionProperties := StringReplace(ActionProperties, CPropSeparatorSer, #13#10, [rfReplaceAll]);
     TempProperties.Text := StringReplace(ActionProperties, {'&'} CPropSeparatorInt, #13#10, [rfReplaceAll]);
 
+    //MessageBoxFunction(PChar(TempEnabledProperties.Text), 'TempEnabledProperties', 0); //for debugging only
+
     for i := 0 to TempProperties.Count - 1 do
     begin
       PropertyName := TempProperties.Names[i];
       PropertyValue := TempProperties.ValueFromIndex[i]; //TempEditedProperties.Values[PropertyName];   //ValueFromIndex should work, but it is gets out of sync (for some reason), then a wrong value is returned.
 
       case AEditTemplateOptions.EditedActionType of
-        //ToDo implement bmp and pmtv path decoding for FindControl and FindSubControl
+        acFindControl, acFindSubControl:
+        begin
+          if (PropertyName = 'MatchBitmapFiles') or (PropertyName = 'MatchPrimitiveFiles') then
+            AddFindSubControlFilesFromProperty(PropertyName)
+          else
+            if TempEnabledProperties.IndexOf(PropertyName) > -1 then //enabled
+            begin
+              AListOfNames.Add(PropertyName);
+              AListOfValues.Add(PropertyValue);
+            end;
+        end;
 
         acPlugin:  //In work ////////////////////////////////
         begin
@@ -3839,13 +3875,15 @@ begin
             ListOfOldPluginProperties := TStringList.Create;
             try
               ListOfOldPluginProperties.Text := FastReplace_45ToReturn(OldPropertyValue);
+
+              PropertyValue := TempEditedProperties.Values[PropertyName];
               ListOfNewPluginProperties.Text := FastReplace_1920ToReturn(PropertyValue); //it contains only the checked properties
 
               for j := 0 to ListOfNewPluginProperties.Count - 1 do
                 if TempEnabledProperties.IndexOf(ListOfNewPluginProperties.Names[j]) > -1 then //PropertyName enabled
                 begin
                   AListOfNames.Add(ListOfNewPluginProperties.Names[j]);
-                  AListOfValues.Add({ListOfNewPluginProperties}ListOfOldPluginProperties.ValueFromIndex[j]);
+                  AListOfValues.Add(ListOfOldPluginProperties.Values[ListOfNewPluginProperties.Names[j]]);  /////////////// bad [j]
                 end;
             finally
               ListOfNewPluginProperties.Free;
@@ -3899,7 +3937,7 @@ begin
             end;
         end;
 
-        else //is some other action type
+        else //it's some other action type
         begin
           if TempEnabledProperties.IndexOf(PropertyName) > -1 then //enabled
           begin
@@ -3908,7 +3946,7 @@ begin
           end;
         end;
       end; //case  AEditTemplateOptions.EditedActionType
-    end; //fori
+    end; //for i
   finally
     TempProperties.Free;
     TempEnabledProperties.Free;

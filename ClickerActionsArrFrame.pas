@@ -3893,7 +3893,7 @@ begin
           acLoadSetVarFromFile: CellText := CurrentAction.LoadSetVarFromFileOptions.SetVarActionName + '  from "' + CurrentAction.LoadSetVarFromFileOptions.FileName + '"';
           acSaveSetVarToFile: CellText := CurrentAction.SaveSetVarToFileOptions.SetVarActionName + '  from "' + CurrentAction.SaveSetVarToFileOptions.FileName + '"';
           acPlugin: CellText := CurrentAction.PluginOptions.FileName;
-          acEditTemplate: CellText := CEditTemplateOperationStr[CurrentAction.EditTemplateOptions.Operation];
+          acEditTemplate: CellText := CEditTemplateOperationStr[CurrentAction.EditTemplateOptions.Operation] + ' (' + CEditTemplateWhichTemplateStr[CurrentAction.EditTemplateOptions.WhichTemplate] + ')';
         end;
       end;
       5: CellText := StringReplace(CurrentAction.FindControlOptions.MatchBitmapFiles, #13#10, ', ', [rfReplaceAll]);
