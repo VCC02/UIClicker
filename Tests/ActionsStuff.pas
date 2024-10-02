@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2023 VCC
+    Copyright (C) 2024 VCC
     creation date: Aug 2022
     initial release date: 14 Aug 2022
 
@@ -44,6 +44,43 @@ function AddClickActionToTemplate(ATemplateFileName: string;
                                   ): LongInt;
 
 
+function AddExecAppActionToTemplate(ATemplateFileName: string;
+
+                                    AActionName: string;
+                                    AActionTimeout: LongInt; //ms
+                                    AActionEnabled: Boolean;
+                                    AActionCondition: string;
+
+                                    AExecAppOptions: TClkExecAppOptions;
+                                    AInMemFS: TInMemFileSystem
+                                    ): LongInt;
+
+
+function AddFindControlActionToTemplate(ATemplateFileName: string;
+
+                                        AActionName: string;
+                                        AActionTimeout: LongInt; //ms
+                                        AActionEnabled: Boolean;
+                                        AActionCondition: string;
+
+                                        AFindControlOptions: TClkFindControlOptions;
+                                        AInMemFS: TInMemFileSystem;
+                                        AIsSubControl: Boolean = False
+                                        ): LongInt;
+
+
+function AddSetControlTextActionToTemplate(ATemplateFileName: string;
+
+                                           AActionName: string;
+                                           AActionTimeout: LongInt; //ms
+                                           AActionEnabled: Boolean;
+                                           AActionCondition: string;
+
+                                           ASetControlTextOptions: TClkSetTextOptions;
+                                           AInMemFS: TInMemFileSystem
+                                           ): LongInt;
+
+
 function AddCallTemplateActionToTemplate(ATemplateFileName: string;
 
                                          AActionName: string;
@@ -79,6 +116,66 @@ function AddSetVarActionToTemplate(ATemplateFileName: string;
                                    AInMemFS: TInMemFileSystem
                                    ): LongInt;
 
+
+function AddWindowOperationsActionToTemplate(ATemplateFileName: string;
+
+                                             AActionName: string;
+                                             AActionTimeout: LongInt; //ms
+                                             AActionEnabled: Boolean;
+                                             AActionCondition: string;
+
+                                             AWindowOperationsOptions: TClkWindowOperationsOptions;
+                                             AInMemFS: TInMemFileSystem
+                                             ): LongInt;
+
+
+function AddLoadSetVarFromFileActionToTemplate(ATemplateFileName: string;
+
+                                               AActionName: string;
+                                               AActionTimeout: LongInt; //ms
+                                               AActionEnabled: Boolean;
+                                               AActionCondition: string;
+
+                                               ALoadSetVarFromFileOptions: TClkLoadSetVarFromFileOptions;
+                                               AInMemFS: TInMemFileSystem
+                                               ): LongInt;
+
+function AddSaveSetVarToFileActionToTemplate(ATemplateFileName: string;
+
+                                             AActionName: string;
+                                             AActionTimeout: LongInt; //ms
+                                             AActionEnabled: Boolean;
+                                             AActionCondition: string;
+
+                                             ASaveSetVarToFileOptions: TClkSaveSetVarToFileOptions;
+                                             AInMemFS: TInMemFileSystem
+                                             ): LongInt;
+
+
+function AddPluginActionToTemplate(ATemplateFileName: string;
+
+                                   AActionName: string;
+                                   AActionTimeout: LongInt; //ms
+                                   AActionEnabled: Boolean;
+                                   AActionCondition: string;
+
+                                   APluginOptions: TClkPluginOptions;
+                                   AInMemFS: TInMemFileSystem
+                                   ): LongInt;
+
+
+function AddEditTemplateActionToTemplate(ATemplateFileName: string;
+
+                                         AActionName: string;
+                                         AActionTimeout: LongInt; //ms
+                                         AActionEnabled: Boolean;
+                                         AActionCondition: string;
+
+                                         AEditTemplateOptions: TClkEditTemplateOptions;
+                                         AInMemFS: TInMemFileSystem
+                                         ): LongInt;
+
+
 procedure GetDefaultClickOptions(var AClickOptions: TClkClickOptions);
 procedure GenerateClickOptionsForLeaveMouse(X, Y: Integer; var AClickOptions: TClkClickOptions);
 procedure GenerateClickOptionsForMouseWheel(AWheelType: TMouseWheelType; AAmount: Integer; var AClickOptions: TClkClickOptions);
@@ -99,13 +196,14 @@ procedure GenerateSetVarOptions_OneVar(var ASetVarOptions: TClkSetVarOptions; AV
 procedure GenerateWindowOperationsOptionsForFindControlSetup(var AWindowOperationsOptions: TClkWindowOperationsOptions; AOperation: TWindowOperation);
 procedure GenerateWindowOperationsOptionsForMouseWheelSetup(var AWindowOperationsOptions: TClkWindowOperationsOptions; AOperation: TWindowOperation);
 procedure GeneratePluginOptions(var APluginOptions: TClkPluginOptions; AFileName, AListOfPropertiesAndValues: string);
+procedure GenerateEditTemplateOptions(var AEditTemplateOptions: TClkEditTemplateOptions; AActionType: TClkAction; AOperation: TEditTemplateOperation; AWhichTemplate: TEditTemplateWhichTemplate; ATemplateFileName: string);
 
 
 implementation
 
 
 uses
-  Controls, ClickerTemplates, Graphics, Forms;
+  Controls, ClickerTemplates, ClickerActionProperties, Graphics, Forms;
 
 
 procedure AddActionToTemplate(ATemplateFileName: string; AClkAction: TClkActionRec; AInMemFS: TInMemFileSystem);
@@ -169,8 +267,81 @@ var
 begin
   SetBasicActionOptions(ATemplateFileName, AActionName, acClick, AActionTimeout, AActionEnabled, AActionCondition, TempAction);
 
-  //click stuff
+  //Click stuff
   TempAction.ClickOptions := AClickOptions;
+
+  AddActionToTemplate(ATemplateFileName, TempAction, AInMemFS);
+  Result := 0;
+end;
+
+
+function AddExecAppActionToTemplate(ATemplateFileName: string;
+
+                                    AActionName: string;
+                                    AActionTimeout: LongInt; //ms
+                                    AActionEnabled: Boolean;
+                                    AActionCondition: string;
+
+                                    AExecAppOptions: TClkExecAppOptions;
+                                    AInMemFS: TInMemFileSystem
+                                    ): LongInt;
+var
+  TempAction: TClkActionRec;
+begin
+  SetBasicActionOptions(ATemplateFileName, AActionName, acExecApp, AActionTimeout, AActionEnabled, AActionCondition, TempAction);
+
+  //ExecApp stuff
+  TempAction.ExecAppOptions := AExecAppOptions;
+
+  AddActionToTemplate(ATemplateFileName, TempAction, AInMemFS);
+  Result := 0;
+end;
+
+
+function AddFindControlActionToTemplate(ATemplateFileName: string;
+
+                                        AActionName: string;
+                                        AActionTimeout: LongInt; //ms
+                                        AActionEnabled: Boolean;
+                                        AActionCondition: string;
+
+                                        AFindControlOptions: TClkFindControlOptions;
+                                        AInMemFS: TInMemFileSystem;
+                                        AIsSubControl: Boolean = False
+                                        ): LongInt;
+var
+  TempAction: TClkActionRec;
+begin
+  if not AIsSubControl then
+    SetBasicActionOptions(ATemplateFileName, AActionName, acFindControl, AActionTimeout, AActionEnabled, AActionCondition, TempAction)
+  else
+    SetBasicActionOptions(ATemplateFileName, AActionName, acFindSubControl, AActionTimeout, AActionEnabled, AActionCondition, TempAction);
+
+  //FindControl stuff
+  TempAction.FindControlOptions := AFindControlOptions;
+
+  AddActionToTemplate(ATemplateFileName, TempAction, AInMemFS);
+  Result := 0;
+end;
+
+
+function AddSetControlTextActionToTemplate(ATemplateFileName: string;
+
+                                           AActionName: string;
+                                           AActionTimeout: LongInt; //ms
+                                           AActionEnabled: Boolean;
+                                           AActionCondition: string;
+
+                                           ASetControlTextOptions: TClkSetTextOptions;
+                                           AInMemFS: TInMemFileSystem
+                                           ): LongInt;
+var
+  TempAction: TClkActionRec;
+begin
+  SetBasicActionOptions(ATemplateFileName, AActionName, acSetControlText, AActionTimeout, AActionEnabled, AActionCondition, TempAction);
+
+  //SetControlText stuff
+  TempAction.SetTextOptions := ASetControlTextOptions;
 
   AddActionToTemplate(ATemplateFileName, TempAction, AInMemFS);
   Result := 0;
@@ -238,8 +409,123 @@ var
 begin
   SetBasicActionOptions(ATemplateFileName, AActionName, acSetVar, AActionTimeout, AActionEnabled, AActionCondition, TempAction);
 
-  //click stuff
+  //SetVar stuff
   TempAction.SetVarOptions := ASetVarOptions;
+
+  AddActionToTemplate(ATemplateFileName, TempAction, AInMemFS);
+  Result := 0;
+end;
+
+
+function AddWindowOperationsActionToTemplate(ATemplateFileName: string;
+
+                                             AActionName: string;
+                                             AActionTimeout: LongInt; //ms
+                                             AActionEnabled: Boolean;
+                                             AActionCondition: string;
+
+                                             AWindowOperationsOptions: TClkWindowOperationsOptions;
+                                             AInMemFS: TInMemFileSystem
+                                             ): LongInt;
+var
+  TempAction: TClkActionRec;
+begin
+  SetBasicActionOptions(ATemplateFileName, AActionName, acWindowOperations, AActionTimeout, AActionEnabled, AActionCondition, TempAction);
+
+  //WindowOperations stuff
+  TempAction.WindowOperationsOptions := AWindowOperationsOptions;
+
+  AddActionToTemplate(ATemplateFileName, TempAction, AInMemFS);
+  Result := 0;
+end;
+
+
+function AddLoadSetVarFromFileActionToTemplate(ATemplateFileName: string;
+
+                                               AActionName: string;
+                                               AActionTimeout: LongInt; //ms
+                                               AActionEnabled: Boolean;
+                                               AActionCondition: string;
+
+                                               ALoadSetVarFromFileOptions: TClkLoadSetVarFromFileOptions;
+                                               AInMemFS: TInMemFileSystem
+                                               ): LongInt;
+var
+  TempAction: TClkActionRec;
+begin
+  SetBasicActionOptions(ATemplateFileName, AActionName, acLoadSetVarFromFile, AActionTimeout, AActionEnabled, AActionCondition, TempAction);
+
+  //LoadSetVarFromFile stuff
+  TempAction.LoadSetVarFromFileOptions := ALoadSetVarFromFileOptions;
+
+  AddActionToTemplate(ATemplateFileName, TempAction, AInMemFS);
+  Result := 0;
+end;
+
+
+function AddSaveSetVarToFileActionToTemplate(ATemplateFileName: string;
+
+                                             AActionName: string;
+                                             AActionTimeout: LongInt; //ms
+                                             AActionEnabled: Boolean;
+                                             AActionCondition: string;
+
+                                             ASaveSetVarToFileOptions: TClkSaveSetVarToFileOptions;
+                                             AInMemFS: TInMemFileSystem
+                                             ): LongInt;
+var
+  TempAction: TClkActionRec;
+begin
+  SetBasicActionOptions(ATemplateFileName, AActionName, acSaveSetVarToFile, AActionTimeout, AActionEnabled, AActionCondition, TempAction);
+
+  //SaveSetVarToFile stuff
+  TempAction.SaveSetVarToFileOptions := ASaveSetVarToFileOptions;
+
+  AddActionToTemplate(ATemplateFileName, TempAction, AInMemFS);
+  Result := 0;
+end;
+
+
+function AddPluginActionToTemplate(ATemplateFileName: string;
+
+                                   AActionName: string;
+                                   AActionTimeout: LongInt; //ms
+                                   AActionEnabled: Boolean;
+                                   AActionCondition: string;
+
+                                   APluginOptions: TClkPluginOptions;
+                                   AInMemFS: TInMemFileSystem
+                                   ): LongInt;
+var
+  TempAction: TClkActionRec;
+begin
+  SetBasicActionOptions(ATemplateFileName, AActionName, acPlugin, AActionTimeout, AActionEnabled, AActionCondition, TempAction);
+
+  //Plugin stuff
+  TempAction.PluginOptions := APluginOptions;
+
+  AddActionToTemplate(ATemplateFileName, TempAction, AInMemFS);
+  Result := 0;
+end;
+
+
+function AddEditTemplateActionToTemplate(ATemplateFileName: string;
+
+                                         AActionName: string;
+                                         AActionTimeout: LongInt; //ms
+                                         AActionEnabled: Boolean;
+                                         AActionCondition: string;
+
+                                         AEditTemplateOptions: TClkEditTemplateOptions;
+                                         AInMemFS: TInMemFileSystem
+                                         ): LongInt;
+var
+  TempAction: TClkActionRec;
+begin
+  SetBasicActionOptions(ATemplateFileName, AActionName, acEditTemplate, AActionTimeout, AActionEnabled, AActionCondition, TempAction);
+
+  //EditTemplate stuff
+  TempAction.EditTemplateOptions := AEditTemplateOptions;
 
   AddActionToTemplate(ATemplateFileName, TempAction, AInMemFS);
   Result := 0;
@@ -751,6 +1037,176 @@ procedure GeneratePluginOptions(var APluginOptions: TClkPluginOptions; AFileName
 begin
   APluginOptions.FileName := AFileName;
   APluginOptions.ListOfPropertiesAndValues := AListOfPropertiesAndValues;
+end;
+
+
+procedure GenerateEditTemplateOptions(var AEditTemplateOptions: TClkEditTemplateOptions; AActionType: TClkAction; AOperation: TEditTemplateOperation; AWhichTemplate: TEditTemplateWhichTemplate; ATemplateFileName: string);
+var
+  TempAction: TClkActionRec;
+begin
+  AEditTemplateOptions.Operation := AOperation;
+  AEditTemplateOptions.WhichTemplate := AWhichTemplate;
+  AEditTemplateOptions.TemplateFileName := ATemplateFileName;
+  AEditTemplateOptions.ListOfEditedProperties := '';
+  AEditTemplateOptions.ListOfEnabledProperties := '';
+  AEditTemplateOptions.EditedActionName := 'Test' + CClkActionStr[AActionType];
+  AEditTemplateOptions.EditedActionType := AActionType;
+  AEditTemplateOptions.EditedActionCondition := '$FirstVar$==$SecondVar$';
+  AEditTemplateOptions.EditedActionTimeout := 3333;
+  AEditTemplateOptions.NewActionName :='New_' + AEditTemplateOptions.EditedActionName;
+
+  case AActionType of
+    acClick:
+    begin
+      GetDefaultPropertyValues_Click(TempAction.ClickOptions);
+
+      if AOperation in [etoNewAction, etoUpdateAction] then
+      begin
+        TempAction.ClickOptions.XClickPointReference := xrefWidth;
+        TempAction.ClickOptions.XClickPointVar := '$JustAnotherVar$';
+        TempAction.ClickOptions.MoveDuration := '77';
+      end
+      else
+      begin                                                              //use some predefined values, which should be returned in case of error
+        TempAction.ClickOptions.XClickPointReference := xrefAbsolute;
+        TempAction.ClickOptions.XClickPointVar := '$BadValueFromTest$';
+        TempAction.ClickOptions.MoveDuration := 'AnotherBadValueFromTest';
+      end;
+
+      AEditTemplateOptions.ListOfEditedProperties := GetClickActionProperties(TempAction.ClickOptions);
+      AEditTemplateOptions.ListOfEnabledProperties := 'XClickPointReference' + #13#10 +
+                                                      'XClickPointVar' + #13#10 +
+                                                      'MoveDuration';
+    end;
+
+    acExecApp:
+    begin
+      GetDefaultPropertyValues_ExecApp(TempAction.ExecAppOptions);
+
+      if AOperation in [etoNewAction, etoUpdateAction] then
+      begin
+        TempAction.ExecAppOptions.PathToApp := 'path to destination';
+        TempAction.ExecAppOptions.AppStdIn := 'something typed into app console';
+      end
+      else
+      begin                                                             //use some predefined values, which should be returned in case of error
+        TempAction.ExecAppOptions.PathToApp := 'bad path';
+        TempAction.ExecAppOptions.AppStdIn := 'unknown console';
+      end;
+
+      AEditTemplateOptions.ListOfEditedProperties := GetExecAppActionProperties(TempAction.ExecAppOptions);
+      AEditTemplateOptions.ListOfEnabledProperties := 'PathToApp' + #13#10 +
+                                                      'AppStdIn';
+    end;
+
+    acFindControl:
+    begin
+      GetDefaultPropertyValues_FindControl(TempAction.FindControlOptions, False);
+      AEditTemplateOptions.ListOfEditedProperties := GetFindControlActionProperties(TempAction.FindControlOptions);
+      AEditTemplateOptions.ListOfEnabledProperties := 'MatchCriteria.WillMatchText' + #13#10 +
+                                                      'MatchCriteria.WillMatchClassName' + #13#10 +
+                                                      'MatchText' + #13#10 +
+                                                      'MatchClassName' + #13#10 +
+                                                      'UseWholeScreen';
+    end;
+
+    acFindSubControl:
+    begin
+      GetDefaultPropertyValues_FindControl(TempAction.FindControlOptions, True);
+      AEditTemplateOptions.ListOfEditedProperties := GetFindControlActionProperties(TempAction.FindControlOptions);
+      AEditTemplateOptions.ListOfEnabledProperties := 'MatchCriteria.WillMatchText' + #13#10 +
+                                                      'MatchCriteria.WillMatchClassName' + #13#10 +
+                                                      'MatchBitmapText[0].ForegroundColor' + #13#10 +
+                                                      'MatchBitmapText[0].BackgroundColor' + #13#10 +
+                                                      'MatchBitmapText[1].FontName' + #13#10 +
+                                                      'MatchBitmapText[1].FontSize' + #13#10 +
+                                                      'UseWholeScreen';
+    end;
+
+    acSetControlText:
+    begin
+      GetDefaultPropertyValues_SetControlText(TempAction.SetTextOptions);
+      AEditTemplateOptions.ListOfEditedProperties := GetSetControlTextActionProperties(TempAction.SetTextOptions);
+      AEditTemplateOptions.ListOfEnabledProperties := 'Text' + #13#10 +
+                                                      'ControlType' + #13#10 +
+                                                      'Count';
+    end;
+
+    acCallTemplate:
+    begin
+      GetDefaultPropertyValues_CallTemplate(TempAction.CallTemplateOptions);
+      AEditTemplateOptions.ListOfEditedProperties := GetCallTemplateActionProperties(TempAction.CallTemplateOptions);
+      AEditTemplateOptions.ListOfEnabledProperties := 'TemplateFileName' + #13#10 +
+                                                      'ListOfCustomVarsAndValues' + #13#10 +
+                                                      'CallTemplateLoop.Counter';
+    end;
+
+    acSleep:
+    begin
+      GetDefaultPropertyValues_Sleep(TempAction.SleepOptions);
+      AEditTemplateOptions.ListOfEditedProperties := GetSleepActionProperties(TempAction.SleepOptions);
+      AEditTemplateOptions.ListOfEnabledProperties := 'Value';
+    end;
+
+    acSetVar:
+    begin
+      GetDefaultPropertyValues_SetVar(TempAction.SetVarOptions);
+      AEditTemplateOptions.ListOfEditedProperties := GetSetVarActionProperties(TempAction.SetVarOptions);
+      AEditTemplateOptions.ListOfEnabledProperties := 'ListOfVarNamesValuesAndEvalBefore' + #13#10 +
+                                                      'FailOnException';
+    end;
+
+    acWindowOperations:
+    begin
+      GetDefaultPropertyValues_WindowOperations(TempAction.WindowOperationsOptions);
+      AEditTemplateOptions.ListOfEditedProperties := GetWindowOperationsActionProperties(TempAction.WindowOperationsOptions);
+      AEditTemplateOptions.ListOfEnabledProperties := 'NewX' + #13#10 +
+                                                      'NewY';
+    end;
+
+    acLoadSetVarFromFile:
+    begin
+      GetDefaultPropertyValues_LoadSetVarFromFile(TempAction.LoadSetVarFromFileOptions);
+      AEditTemplateOptions.ListOfEditedProperties := GetLoadSetVarFromFileActionProperties(TempAction.LoadSetVarFromFileOptions);
+      AEditTemplateOptions.ListOfEnabledProperties := 'FileName' + #13#10 +
+                                                      'SetVarActionName';
+    end;
+
+    acSaveSetVarToFile:
+    begin
+      GetDefaultPropertyValues_SaveSetVarToFile(TempAction.SaveSetVarToFileOptions);
+      AEditTemplateOptions.ListOfEditedProperties := GetSaveSetVarToFileActionProperties(TempAction.SaveSetVarToFileOptions);
+      AEditTemplateOptions.ListOfEnabledProperties := 'FileName' + #13#10 +
+                                                      'SetVarActionName';
+    end;
+
+    acPlugin:
+    begin
+      GetDefaultPropertyValues_Plugin(TempAction.PluginOptions);
+
+      if AOperation in [etoNewAction, etoUpdateAction] then
+      begin
+        TempAction.PluginOptions.FileName := '$AppDir$\..\UIClickerFindWindowsPlugin\lib\i386-win32\UIClickerFindWindows.dll';
+        TempAction.PluginOptions.ListOfPropertiesAndValues := 'FindSubControlTopLeftCorner=30FindSubControlBotLeftCorner=40';
+      end
+      else
+      begin                                                             //use some predefined values, which should be returned in case of error
+        TempAction.PluginOptions.FileName := 'bad path';
+        TempAction.PluginOptions.ListOfPropertiesAndValues := 'unknown values';
+      end;
+
+      AEditTemplateOptions.ListOfEditedProperties := GetPluginActionProperties(TempAction.PluginOptions);
+      //AEditTemplateOptions.ListOfEnabledProperties := 'FileName' + #13#10 +
+      //                                                'ListOfPropertiesAndValues';   //this is the wrong wayof setting it
+
+      AEditTemplateOptions.ListOfEnabledProperties := 'FileName' + #13#10 +
+                                                      'FindSubControlTopLeftCorner' + #13#10 +
+                                                      'FindSubControlBotLeftCorner';
+    end;
+
+    acEditTemplate:
+
+  end; //case
 end;
 
 end.

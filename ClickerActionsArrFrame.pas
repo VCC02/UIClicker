@@ -443,6 +443,10 @@ type
     function HandleOnTClkIniReadonlyFileCreate(AFileName: string): TClkIniReadonlyFile;
     function HandleOnTClkIniFileCreate(AFileName: string): TClkIniFile;
     procedure HandleOnSaveStringListToFile(AStringList: TStringList; const AFileName: string);
+    function HandleOnExecuteActionByContent(var AAllActions: TClkActionsRecArr; AActionIndex: Integer): Boolean;
+    procedure HandleOnLoadTemplateToActions(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; out ANotes, AIconPath: string; AWaitForFileAvailability: Boolean = False);
+    procedure HandleOnSaveCompleteTemplateToFile(Fnm: string; var AActions: TClkActionsRecArr;  AWhichTemplate: TEditTemplateWhichTemplate; ANotes, AIconPath: string);
+
     procedure HandleOnBackupVars(AAllVars: TStringList);
     procedure HandleOnGetListOfAvailableSetVarActions(AListOfSetVarActions: TStringList);
     procedure HandleOnGetListOfAvailableActions(AListOfSetVarActions: TStringList);
@@ -456,6 +460,7 @@ type
     procedure HandleOnClickerSetVarFrame_OnShowAutoComplete(AEdit: TEdit);
     procedure HandleOnUpdateActionScrollIndex(AActionScrollIndex: string);
     function HandleOnGetLoadedTemplateFileName: string;
+    procedure HandleOnChangeEditTemplateEditingActionType;
 
     procedure HandleOnSetDebugPoint(ADebugPoint: string);
     function HandleOnIsAtBreakPoint(ADebugPoint: string): Boolean;
@@ -495,6 +500,7 @@ type
 
     procedure UpdateActionsArrFromControls(ActionIndex: Integer);
     procedure UpdateControlsFromActionsArr(ActionIndex: Integer);
+    procedure SetActionToDefault(var AAction: TClkActionRec; ANewActionType: TClkAction);
     procedure OverwriteActionAtIndexWithDefault(AIndex: Integer; ANewActionType: TClkAction);
 
     procedure FPaletteVstMouseDown(Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
@@ -524,6 +530,7 @@ type
     function EncodeTemplatePath(APath: string): string;
 
     procedure PrepareFilesInServer;
+    function ExecuteActionByContent(var AAllActions: TClkActionsRecArr; AActionIndex: Integer): Boolean;
     function ExecuteActionAtIndex(AActionIndex: Integer): Boolean; //can be called by a server module (used when Clicker is in server mode)
     function LocalOnExecuteRemoteActionAtIndex(AActionIndex, AStackLevel: Integer; AVarReplacements: TStringList; AIsDebugging: Boolean): Boolean;
     function DoExecuteRemoteActionAtIndex(AActionIndex: Integer): Boolean;
@@ -584,7 +591,7 @@ type
     procedure CopySelectedActionsToClipboard;
     procedure PasteActionsFromClipboard(APasteIndex: Integer);
 
-    function EvaluateReplacements(s: string; Recursive: Boolean = True): string;
+    function EvaluateReplacements(s: string; Recursive: Boolean = True; AEvalTextCount: Integer = -1): string;
     function EvaluateHTTP(AValue: string): string;
 
     function GetNodeByIndex(ANodeIndex: Integer): PVirtualNode;
@@ -620,7 +627,7 @@ type
 
     function CreateIniReadonlyFileFromInMemFileSystem(AFnm: string; AInMemFileSystem: TInMemFileSystem): TClkIniReadonlyFile;
     procedure LoadTemplate(Fnm: string; AFileLocation: TFileLocation = flDisk; AInMemFileSystem: TInMemFileSystem = nil);
-    procedure LoadTemplateToActions(Fnm: string; var AActions: TClkActionsRecArr; AFileLocation: TFileLocation = flDisk; AInMemFileSystem: TInMemFileSystem = nil);
+    procedure LoadTemplateToActions(Fnm: string; var AActions: TClkActionsRecArr; out ANotes, AIconPath: string; AFileLocation: TFileLocation = flDisk; AInMemFileSystem: TInMemFileSystem = nil; AWaitForFileAvailability: Boolean = False);
     procedure LoadTemplateWithUIUpdate(AFileName: string; AFileLocation: TFileLocation = flDisk; AInMemFileSystem: TInMemFileSystem = nil);
     procedure SaveTemplateWithDialog;
     procedure SetVariables(ListOfVariables: TStrings);
@@ -738,7 +745,7 @@ uses
   Math, ClickerTemplates, BitmapConv,
   BitmapProcessing, Clipbrd, ClickerConditionEditorForm, ClickerActionsClient,
   ClickerTemplateNotesForm, AutoCompleteForm, ClickerVstUtils,
-  ClickerActionPluginLoader, ClickerActionPlugins;
+  ClickerActionPluginLoader, ClickerActionPlugins, ClickerActionProperties;
 
 
 const
@@ -981,6 +988,7 @@ begin
 
   frClickerActions.OnGetListOfAvailableSetVarActions := HandleOnGetListOfAvailableSetVarActions;
   frClickerActions.OnGetListOfAvailableActions := HandleOnGetListOfAvailableActions;
+  frClickerActions.OnTClkIniReadonlyFileCreate := HandleOnTClkIniReadonlyFileCreate;
   frClickerActions.OnModifyPluginProperty := HandleOnModifyPluginProperty;
 
   frClickerActions.OnPluginDbgStop := HandleOnPluginDbgStop;
@@ -994,6 +1002,7 @@ begin
   frClickerActions.OnShowAutoComplete := HandleOnClickerSetVarFrame_OnShowAutoComplete;
   frClickerActions.OnUpdateActionScrollIndex := HandleOnUpdateActionScrollIndex;
   frClickerActions.OnGetLoadedTemplateFileName := HandleOnGetLoadedTemplateFileName;
+  frClickerActions.OnChangeEditTemplateEditingActionType := HandleOnChangeEditTemplateEditingActionType;
 
   //frClickerActions.OnControlsModified := ClickerActionsFrameOnControlsModified;   //this is set on frame initialization
 
@@ -1147,6 +1156,11 @@ begin
   FActionExecution.OnIsAtBreakPoint := HandleOnIsAtBreakPoint;
   FActionExecution.OnSaveFileToExtRenderingInMemFS := HandleOnSaveFileToExtRenderingInMemFS;
   FActionExecution.OnGenerateAndSaveTreeWithWinInterp := HandleOnGenerateAndSaveTreeWithWinInterp;
+  FActionExecution.OnFileExists := HandleOnFileExists;
+  FActionExecution.OnSaveTemplateToFile := HandleOnSaveStringListToFile; //HandleOnSaveTemplateToFile;
+  FActionExecution.OnExecuteActionByContent := HandleOnExecuteActionByContent;
+  FActionExecution.OnLoadTemplateToActions := HandleOnLoadTemplateToActions;
+  FActionExecution.OnSaveCompleteTemplateToFile := HandleOnSaveCompleteTemplateToFile;
 
   FCmdConsoleHistory := TStringList.Create;
   FOnExecuteRemoteActionAtIndex := nil;
@@ -1697,9 +1711,103 @@ begin
 end;
 
 
+procedure TfrClickerActionsArr.HandleOnChangeEditTemplateEditingActionType;
+var
+  Node: PVirtualNode;
+  ActionIndex: Integer;
+begin
+  Node := vstActions.GetFirstSelected;
+  if Node = nil then
+    Exit;
+
+  ActionIndex := Node^.Index;
+
+  if FClkActions[ActionIndex].ActionOptions.Action <> acEditTemplate then
+    Exit;
+
+  frClickerActions.CurrentlyEditingActionType := {%H-}TClkAction(CClkUnsetAction); //something to cause the setter to be called
+  Application.ProcessMessages;
+  frClickerActions.CurrentlyEditingActionType := FClkActions[ActionIndex].ActionOptions.Action;
+end;
+
+
 procedure TfrClickerActionsArr.HandleOnSaveStringListToFile(AStringList: TStringList; const AFileName: string);
 begin
   DoOnSaveTemplateToFile(AStringList, ResolveTemplatePath(AFileName));
+end;
+
+
+function TfrClickerActionsArr.HandleOnExecuteActionByContent(var AAllActions: TClkActionsRecArr; AActionIndex: Integer): Boolean;
+begin
+  Result := ExecuteActionByContent(AAllActions, AActionIndex);
+end;
+
+
+procedure TfrClickerActionsArr.HandleOnLoadTemplateToActions(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; out ANotes, AIconPath: string; AWaitForFileAvailability: Boolean = False);
+const
+  CLoc: array[Boolean] of TFileLocation = (flDisk, flMem);
+var
+  i: Integer;
+begin
+  if AWhichTemplate = etwtSelf then
+  begin
+    SetLength(AActions, Length(FClkActions));
+
+    for i := 0 to Length(FClkActions) - 1 do
+      CopyActionContent(FClkActions[i], AActions[i]);
+  end
+  else
+    LoadTemplateToActions(Fnm, AActions, ANotes, AIconPath, CLoc[FExecutingActionFromRemote], InMemFS, AWaitForFileAvailability);
+end;
+
+
+procedure TfrClickerActionsArr.HandleOnSaveCompleteTemplateToFile(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; ANotes, AIconPath: string);
+var
+  TempStringList: TStringList;   //much faster than T(Mem)IniFile
+  MemStream: TMemoryStream;
+  i: Integer;
+begin
+  if AWhichTemplate = etwtSelf then
+  begin
+    SetLength(FClkActions, Length(AActions));
+
+    for i := 0 to Length(FClkActions) - 1 do
+      CopyActionContent(AActions[i], FClkActions[i]);
+
+    try
+      if Integer(vstActions.RootNodeCount) <> Length(FClkActions) then
+      begin
+        vstActions.RootNodeCount := Length(FClkActions);
+        vstActions.Repaint;
+        SetPropertiesFromPlugins;
+      end;
+    except
+      on E: Exception do
+        AddToLog('Ex on updating self actions from EditTmplate: ' + E.Message);
+    end;
+  end
+  else
+  begin
+    TempStringList := TStringList.Create;
+    try
+      SaveTemplateWithCustomActionsToStringList_V2(TempStringList, AActions, ANotes, AIconPath);
+
+      if FExecutingActionFromRemote then //save to in-mem
+      begin
+        MemStream := TMemoryStream.Create;
+        try
+          TempStringList.SaveToStream(MemStream);
+          InMemFS.SaveFileToMem(Fnm, MemStream.Memory, MemStream.Size);
+        finally
+          MemStream.Free;
+        end;
+      end
+      else //save to disk
+        DoOnSaveTemplateToFile(TempStringList, ResolveTemplatePath(Fnm));
+    finally
+      TempStringList.Free;
+    end;
+  end;
 end;
 
 
@@ -1920,14 +2028,16 @@ begin
 
   FClkActions[ActionIndex].CallTemplateOptions.ListOfCustomVarsAndValues := FastReplace_ReturnTo45(frClickerActions.ListOfCustomVariables);
 
+  frClickerActions.SerializeEditTemplateEditingAction;
+  //frClickerActions.EditingAction^.EditTemplateOptions.ListOfEditedProperties := StringReplace(GetActionPropertiesByType(FClkEditedActionByEditTemplate), CPropSeparatorSer, CPropSeparatorInt, [rfReplaceAll]);
+  //AddToLog('Updating ListOfEditedProperties to ' + frClickerActions.EditingAction^.EditTemplateOptions.ListOfEditedProperties);
+
   CopyActionContent(frClickerActions.EditingAction^, FClkActions[ActionIndex]);  //uncomment this after removing above code
 end;
 
 
 procedure TfrClickerActionsArr.UpdateControlsFromActionsArr(ActionIndex: Integer);
 var
-  i: Integer;
-  TempProfileName: string;
   NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex: Integer;
   Action_ScrollInfo: TStringList;
 begin
@@ -1936,75 +2046,97 @@ begin
   /////the new content, instead of editboxes and checkboxes
   CopyActionContent(FClkActions[ActionIndex], frClickerActions.EditingAction^);
 
-  //the number of items from MatchBitmapText has to match the number of frames from FBMPTextFrames
-  frClickerActions.frClickerFindControl.CreateBMPTextFrames(Length(FClkActions[ActionIndex].FindControlOptions.MatchBitmapText)); //do not use SetLength(frClickerActions.FBMPTextFrames, Length(FClkActions[ActionIndex].FindControlOptions.MatchBitmapText));
-
-  for i := 0 to frClickerActions.frClickerFindControl.GetBMPTextFontProfilesCount - 1 do  //this part is still required when selecting an action
+  {if frClickerActions.CurrentlyEditingActionType = acFindSubControl then
   begin
-    frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].MatchBitmapTextFGColor := FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].ForegroundColor;
-    frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].MatchBitmapTextBGColor := FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].BackgroundColor;
-    //frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].FGColor := HexToInt(EvaluateReplacements(FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].ForegroundColor));
-    //frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].BGColor := HexToInt(EvaluateReplacements(FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].BackgroundColor));
-    frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].MatchBitmapTextFontName := FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].FontName;
-    frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].MatchBitmapTextSize := IntToStr(FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].FontSize);
-    frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].Bold := FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].Bold;
-    frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].Italic:= FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].Italic;
-    frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].Underline := FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].Underline;
-    frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].StrikeOut := FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].StrikeOut;
+    //the number of items from MatchBitmapText has to match the number of frames from FBMPTextFrames
+    frClickerActions.frClickerFindControl.CreateBMPTextFrames(Length(FClkActions[ActionIndex].FindControlOptions.MatchBitmapText)); //do not use SetLength(frClickerActions.FBMPTextFrames, Length(FClkActions[ActionIndex].FindControlOptions.MatchBitmapText));
 
-    if FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].FontQualityUsesReplacement then
+    for i := 0 to frClickerActions.frClickerFindControl.GetBMPTextFontProfilesCount - 1 do  //this part is still required when selecting an action
     begin
-      frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].MatchBitmapTextFontQualityIndex := Integer(High(TFontQuality)) + 1;
-      frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].FontQualityReplacement := FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].FontQualityReplacement;
-    end
-    else
-      frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].MatchBitmapTextFontQualityIndex := Integer(FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].FontQuality);
+      frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].MatchBitmapTextFGColor := FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].ForegroundColor;
+      frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].MatchBitmapTextBGColor := FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].BackgroundColor;
+      //frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].FGColor := HexToInt(EvaluateReplacements(FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].ForegroundColor));
+      //frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].BGColor := HexToInt(EvaluateReplacements(FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].BackgroundColor));
+      frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].MatchBitmapTextFontName := FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].FontName;
+      frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].MatchBitmapTextSize := IntToStr(FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].FontSize);
+      frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].Bold := FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].Bold;
+      frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].Italic:= FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].Italic;
+      frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].Underline := FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].Underline;
+      frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].StrikeOut := FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].StrikeOut;
 
-    TempProfileName := FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].ProfileName;
-    //frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].ProfileName := TempProfileName;
-    //frClickerActions.frClickerFindControl.tabctrlBMPText.Tabs.Strings[i] := TempProfileName;     //remove these calls if UpdateFontProfileName works as expected
-    frClickerActions.frClickerFindControl.UpdateFontProfileName(i, TempProfileName);
+      if FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].FontQualityUsesReplacement then
+      begin
+        frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].MatchBitmapTextFontQualityIndex := Integer(High(TFontQuality)) + 1;
+        frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].FontQualityReplacement := FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].FontQualityReplacement;
+      end
+      else
+        frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].MatchBitmapTextFontQualityIndex := Integer(FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].FontQuality);
 
-    frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].CropLeft := FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].CropLeft;
-    frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].CropTop := FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].CropTop;
-    frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].CropRight := FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].CropRight;
-    frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].CropBottom := FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].CropBottom;
+      TempProfileName := FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].ProfileName;
+      //frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].ProfileName := TempProfileName;
+      //frClickerActions.frClickerFindControl.tabctrlBMPText.Tabs.Strings[i] := TempProfileName;     //remove these calls if UpdateFontProfileName works as expected
+      frClickerActions.frClickerFindControl.UpdateFontProfileName(i, TempProfileName);
 
-    frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].IgnoreBackgroundColor := FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].IgnoreBackgroundColor;
+      frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].CropLeft := FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].CropLeft;
+      frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].CropTop := FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].CropTop;
+      frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].CropRight := FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].CropRight;
+      frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].CropBottom := FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].CropBottom;
 
-    //frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].UpdateSelectionLabelsFromCropEditBoxes;  //replaced below with other call
-  end;
+      frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].IgnoreBackgroundColor := FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i].IgnoreBackgroundColor;
 
-  frClickerActions.frClickerFindControl.SetBMPTextFrameVisibility;
+      //frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].UpdateSelectionLabelsFromCropEditBoxes;  //replaced below with other call
+    end;
 
-  frClickerActions.frClickerFindControl.UpdateListsOfSearchFiles(FClkActions[ActionIndex].FindControlOptions.MatchBitmapFiles, FClkActions[ActionIndex].FindControlOptions.MatchPrimitiveFiles);
-  frClickerActions.frClickerFindControl.UpdateBitmapAlgorithmSettings;
+    frClickerActions.frClickerFindControl.SetBMPTextFrameVisibility;
+
+    frClickerActions.frClickerFindControl.UpdateListsOfSearchFiles(FClkActions[ActionIndex].FindControlOptions.MatchBitmapFiles, FClkActions[ActionIndex].FindControlOptions.MatchPrimitiveFiles);
+    frClickerActions.frClickerFindControl.UpdateBitmapAlgorithmSettings;
+  end;}
 
   frClickerActions.LoadListOfAvailableTemplates;
 
   frClickerActions.ListOfCustomVariables := FastReplace_45ToReturn(FClkActions[ActionIndex].CallTemplateOptions.ListOfCustomVarsAndValues);
 
-  frClickerActions.frClickerFindControl.UpdatePreviewIcons;
+  {if frClickerActions.CurrentlyEditingActionType = acFindSubControl then
+    frClickerActions.frClickerFindControl.UpdatePreviewIcons;
 
   frClickerActions.UpdateControlWidthHeightLabels;
-  frClickerActions.UpdateUseWholeScreenLabel(FClkActions[ActionIndex].FindControlOptions.UseWholeScreen);
-  frClickerActions.frClickerFindControl.UpdateSearchAreaLabelsFromKeysOnInitRect(FClkActions[ActionIndex].FindControlOptions.InitialRectangle);
+  frClickerActions.UpdateUseWholeScreenLabel(FClkActions[ActionIndex].FindControlOptions.UseWholeScreen);}
+
+  if frClickerActions.CurrentlyEditingActionType = acFindSubControl then
+    frClickerActions.frClickerFindControl.UpdateSearchAreaLabelsFromKeysOnInitRect(FClkActions[ActionIndex].FindControlOptions.InitialRectangle);
 
   frClickerActions.frClickerExecApp.memExecAppParams.Lines.Text := FClkActions[ActionIndex].ExecAppOptions.ListOfParams;
   frClickerActions.frClickerSetVar.SetListOfSetVars(FClkActions[ActionIndex].SetVarOptions);
 
-  frClickerActions.CurrentlyEditingActionType := TClkAction(FClkActions[ActionIndex].ActionOptions.Action);
+  //if (FClkActions[ActionIndex].ActionOptions.Action = acEditTemplate) and (frClickerActions.EditingAction <> nil) then
+  //  frClickerActions.SerializeEditTemplateEditingAction;   //if called here, before setting CurrentlyEditingActionType, there will be no default values in OI
 
-  if frClickerActions.CurrentlyEditingActionType = acFindSubControl then
+  frClickerActions.CurrentlyEditingActionType := FClkActions[ActionIndex].ActionOptions.Action;
+
+  {if frClickerActions.CurrentlyEditingActionType = acFindSubControl then
   begin
     frClickerActions.frClickerFindControl.PreviewText;
 
     for i := 0 to frClickerActions.frClickerFindControl.GetBMPTextFontProfilesCount - 1 do
       frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].UpdateSelectionLabelsFromCropInfo(FClkActions[ActionIndex].FindControlOptions.MatchBitmapText[i]);
-  end;
+  end;}
+
+  if frClickerActions.CurrentlyEditingActionType in [acFindControl, acFindSubControl] then
+    frClickerActions.UpdateFindSubControlInternalStructuresFromAction(@FClkActions[ActionIndex]);
 
   if frClickerActions.CurrentlyEditingActionType = acPlugin then
+  begin
     frClickerActions.frClickerPlugin.LoadDebugSymbols(ExtractFullFileNameNoExt(ResolveTemplatePath(FClkActions[ActionIndex].PluginOptions.FileName)) + '.DbgSym');
+    SetActionPropertiesFromPlugin(FClkActions[ActionIndex]);
+  end;
+
+  if (frClickerActions.CurrentlyEditingActionType = acEditTemplate) and (frClickerActions.EditingAction <> nil) then
+  begin
+    frClickerActions.DeserializeEditTemplateEditingAction;
+    frClickerActions.CurrentlyEditingActionType := {%H-}TClkAction(CClkUnsetAction); //something to cause the setter to be called
+    frClickerActions.CurrentlyEditingActionType := FClkActions[ActionIndex].ActionOptions.Action;
+  end; //it's ugly to reload the OI multiple times, but this is an easy fix
 
   if FClkActions[ActionIndex].ScrollIndex <> '' then
   begin
@@ -2074,9 +2206,9 @@ begin
 end;
 
 
-function TfrClickerActionsArr.EvaluateReplacements(s: string; Recursive: Boolean = True): string;
+function TfrClickerActionsArr.EvaluateReplacements(s: string; Recursive: Boolean = True; AEvalTextCount: Integer = -1): string;
 begin
-  Result := frClickerActions.EvaluateReplacements(s, Recursive);
+  Result := frClickerActions.EvaluateReplacements(s, Recursive, AEvalTextCount);
 end;
 
 
@@ -2197,31 +2329,38 @@ begin
 end;
 
 
-function TfrClickerActionsArr.ExecuteActionAtIndex(AActionIndex: Integer): Boolean;
+function TfrClickerActionsArr.ExecuteActionByContent(var AAllActions: TClkActionsRecArr; AActionIndex: Integer): Boolean;
 begin
   Result := True;
 
   SetActionVarValue('$ExecAction_Err$', '');
-  SetActionVarValue('$SelfActionName$', FClkActions[AActionIndex].ActionOptions.ActionName);
+  SetActionVarValue('$SelfActionName$', AAllActions[AActionIndex].ActionOptions.ActionName);
   SetActionVarValue('$SelfActionIndex$', IntToStr(AActionIndex));
 
+  case AAllActions[AActionIndex].ActionOptions.Action of
+    acClick: Result := FActionExecution.ExecuteMultiClickAction(AAllActions[AActionIndex].ClickOptions);
+    acExecApp: Result := FActionExecution.ExecuteExecAppAction(AAllActions[AActionIndex].ExecAppOptions, AAllActions[AActionIndex].ActionOptions);
+    acFindControl: Result := FActionExecution.ExecuteFindControlActionWithTimeout(AAllActions[AActionIndex].FindControlOptions, AAllActions[AActionIndex].ActionOptions, False);
+    acFindSubControl: Result := FActionExecution.ExecuteFindControlActionWithTimeout(AAllActions[AActionIndex].FindControlOptions, AAllActions[AActionIndex].ActionOptions, True);
+    acSetControlText: Result := FActionExecution.ExecuteSetControlTextAction(AAllActions[AActionIndex].SetTextOptions);
+    acCallTemplate: Result := FActionExecution.ExecuteLoopedCallTemplateAction(AAllActions[AActionIndex].CallTemplateOptions, FContinuePlayingBySteppingInto, {FShouldStopAtBreakPoint replaced by FDebugging} FDebugging);
+    acSleep: Result := FActionExecution.ExecuteSleepAction(AAllActions[AActionIndex].SleepOptions, AAllActions[AActionIndex].ActionOptions);
+    acSetVar: Result := FActionExecution.ExecuteSetVarAction(AAllActions[AActionIndex].SetVarOptions);
+    acWindowOperations: Result := FActionExecution.ExecuteWindowOperationsAction(AAllActions[AActionIndex].WindowOperationsOptions);
+    acLoadSetVarFromFile: Result := FActionExecution.ExecuteLoadSetVarFromFileAction(AAllActions[AActionIndex].LoadSetVarFromFileOptions);
+    acSaveSetVarToFile: Result := FActionExecution.ExecuteSaveSetVarToFileAction(AAllActions[AActionIndex].SaveSetVarToFileOptions);
+    acPlugin: Result := FActionExecution.ExecutePluginAction(AAllActions[AActionIndex].PluginOptions, @AAllActions, frClickerActions.ClkVariables, ResolveTemplatePath(AAllActions[AActionIndex].PluginOptions.FileName), FContinuePlayingBySteppingInto, {FShouldStopAtBreakPoint replaced by FDebugging} FDebugging);
+    acEditTemplate: Result := FActionExecution.ExecuteEditTemplateAction(AAllActions[AActionIndex].EditTemplateOptions);
+  end;  //case
+end;
+
+
+function TfrClickerActionsArr.ExecuteActionAtIndex(AActionIndex: Integer): Boolean;
+begin
   if (AActionIndex < 0) or (AActionIndex > Length(FClkActions) - 1) then
     raise Exception.Create('ActionIndex out of bounds: ' + IntToStr(AActionIndex));
 
-  case FClkActions[AActionIndex].ActionOptions.Action of
-    acClick: Result := FActionExecution.ExecuteMultiClickAction(FClkActions[AActionIndex].ClickOptions);
-    acExecApp: Result := FActionExecution.ExecuteExecAppAction(FClkActions[AActionIndex].ExecAppOptions, FClkActions[AActionIndex].ActionOptions);
-    acFindControl: Result := FActionExecution.ExecuteFindControlActionWithTimeout(FClkActions[AActionIndex].FindControlOptions, FClkActions[AActionIndex].ActionOptions, False);
-    acFindSubControl: Result := FActionExecution.ExecuteFindControlActionWithTimeout(FClkActions[AActionIndex].FindControlOptions, FClkActions[AActionIndex].ActionOptions, True);
-    acSetControlText: Result := FActionExecution.ExecuteSetControlTextAction(FClkActions[AActionIndex].SetTextOptions);
-    acCallTemplate: Result := FActionExecution.ExecuteLoopedCallTemplateAction(FClkActions[AActionIndex].CallTemplateOptions, FContinuePlayingBySteppingInto, {FShouldStopAtBreakPoint replaced by FDebugging} FDebugging);
-    acSleep: Result := FActionExecution.ExecuteSleepAction(FClkActions[AActionIndex].SleepOptions, FClkActions[AActionIndex].ActionOptions);
-    acSetVar: Result := FActionExecution.ExecuteSetVarAction(FClkActions[AActionIndex].SetVarOptions);
-    acWindowOperations: Result := FActionExecution.ExecuteWindowOperationsAction(FClkActions[AActionIndex].WindowOperationsOptions);
-    acLoadSetVarFromFile: Result := FActionExecution.ExecuteLoadSetVarFromFileAction(FClkActions[AActionIndex].LoadSetVarFromFileOptions);
-    acSaveSetVarToFile: Result := FActionExecution.ExecuteSaveSetVarToFileAction(FClkActions[AActionIndex].SaveSetVarToFileOptions);
-    acPlugin: Result := FActionExecution.ExecutePluginAction(FClkActions[AActionIndex].PluginOptions, @FClkActions, frClickerActions.ClkVariables, ResolveTemplatePath(FClkActions[AActionIndex].PluginOptions.FileName), FContinuePlayingBySteppingInto, {FShouldStopAtBreakPoint replaced by FDebugging} FDebugging);
-  end;  //case
+  Result := ExecuteActionByContent(FClkActions, AActionIndex);
 end;
 
 
@@ -3483,14 +3622,19 @@ begin
 end;
 
 
-procedure TfrClickerActionsArr.LoadTemplateToActions(Fnm: string; var AActions: TClkActionsRecArr; AFileLocation: TFileLocation = flDisk; AInMemFileSystem: TInMemFileSystem = nil);
+procedure TfrClickerActionsArr.LoadTemplateToActions(Fnm: string; var AActions: TClkActionsRecArr; out ANotes, AIconPath: string; AFileLocation: TFileLocation = flDisk; AInMemFileSystem: TInMemFileSystem = nil; AWaitForFileAvailability: Boolean = False);
 var
   Ini: TClkIniReadonlyFile;
   FormatVersion: string;
   ActionCount: Integer;
-  DummyNotes, DummyTemplateIconPath: string;
+  WaitingMsg: string;
 begin
   Fnm := StringReplace(Fnm, '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
+  ANotes := '';
+  AIconPath := '';
+
+  WaitingMsg := 'Waiting for file availability: ' + Fnm + '   Timeout: ' + IntToStr(CWaitForFileAvailabilityTimeout div 1000) + 's.';
+  WaitingMsg := WaitingMsg + #13#10 + 'There is a "stop waiting" button, next to the "Stop action" button.';
 
   try
     case AFileLocation of      ///////////////////// ToDo:   refactoring !!!!!!!!!!!!!!
@@ -3505,7 +3649,15 @@ begin
       flMem:
       begin
         if not AInMemFileSystem.FileExistsInMem(Fnm) then
-          Exit;
+        begin
+          if AWaitForFileAvailability then
+          begin
+            AddToLog(WaitingMsg);
+            DoWaitForFileAvailability(Fnm);
+          end
+          else
+            Exit;
+        end;
 
         Ini := CreateIniReadonlyFileFromInMemFileSystem(Fnm, AInMemFileSystem);
       end;
@@ -3516,13 +3668,28 @@ begin
         else
         begin
           if not AInMemFileSystem.FileExistsInMem(Fnm) then
-            Exit;
+          begin
+            if AWaitForFileAvailability then
+            begin
+              AddToLog(WaitingMsg);
+              DoWaitForFileAvailability(Fnm);
+            end
+            else
+              Exit;
+          end;
 
           Ini := CreateIniReadonlyFileFromInMemFileSystem(Fnm, AInMemFileSystem);
         end;
 
       flMemThenDisk:
       begin
+        if not AInMemFileSystem.FileExistsInMem(Fnm) then
+          if AWaitForFileAvailability then
+          begin
+            AddToLog(WaitingMsg);
+            DoWaitForFileAvailability(Fnm);
+          end;
+
         if AInMemFileSystem.FileExistsInMem(Fnm) then
           Ini := CreateIniReadonlyFileFromInMemFileSystem(Fnm, AInMemFileSystem)
         else
@@ -3544,7 +3711,7 @@ begin
         LoadTemplateToCustomActions_V1(Ini, AActions)
       else
         if FormatVersion = '2' then
-          LoadTemplateToCustomActions_V2(Ini, AActions, DummyNotes, DummyTemplateIconPath)
+          LoadTemplateToCustomActions_V2(Ini, AActions, ANotes, AIconPath)
         else
           //raise Exception.Create('Unhandled format version: ' + FormatVersion)
           ;
@@ -3694,7 +3861,7 @@ begin
   //  vstActions.StateImages := frClickerActions.imglstActions;
 
   case Column of
-    0:
+    0:  //action name
     begin
       if not CurrentAction^.ActionBreakPoint.Exists then
         ImageList := imglstCurrentDebuggingAction
@@ -3724,13 +3891,13 @@ begin
       end;
     end;
 
-    1:
+    1:  //action type
     begin
       ImageList := frClickerActions.imglstActions;
       ImageIndex := Ord(CurrentAction^.ActionOptions.Action);
     end;
 
-    2:
+    2:  //status (+ timeout)
     begin
       if CurrentAction^.ActionSkipped then
       begin
@@ -3744,10 +3911,19 @@ begin
       end;
     end;
 
-    3:
+    3:  //condition / misc
     begin
       ImageList := imglstActionHasCondition;
       ImageIndex := Ord(CurrentAction^.ActionOptions.ActionCondition > '');
+    end;
+
+    4:  //text
+    begin
+      if CurrentAction^.ActionOptions.Action = acEditTemplate then
+      begin
+        ImageList := frClickerActions.imglstActions;
+        ImageIndex := Ord(CurrentAction^.EditTemplateOptions.EditedActionType);
+      end;
     end;
   end;
 end;
@@ -3818,6 +3994,7 @@ begin
           acLoadSetVarFromFile: CellText := CurrentAction.LoadSetVarFromFileOptions.SetVarActionName + '  from "' + CurrentAction.LoadSetVarFromFileOptions.FileName + '"';
           acSaveSetVarToFile: CellText := CurrentAction.SaveSetVarToFileOptions.SetVarActionName + '  from "' + CurrentAction.SaveSetVarToFileOptions.FileName + '"';
           acPlugin: CellText := CurrentAction.PluginOptions.FileName;
+          acEditTemplate: CellText := CEditTemplateOperationStr[CurrentAction.EditTemplateOptions.Operation] + ' (' + CEditTemplateWhichTemplateStr[CurrentAction.EditTemplateOptions.WhichTemplate] + ')';
         end;
       end;
       5: CellText := StringReplace(CurrentAction.FindControlOptions.MatchBitmapFiles, #13#10, ', ', [rfReplaceAll]);
@@ -4201,7 +4378,7 @@ const
       end;
   end;
 
-  function ReturnToModifiedFindSubControlWIthPmtvAction: Boolean; //returns True if should return
+  function ReturnToModifiedFindSubControlWithPmtvAction: Boolean; //returns True if should return
   begin
     Result := False;
 
@@ -4225,9 +4402,9 @@ begin
 
   if Node = nil then  //no action is selected, so verify if an action just got deselected
   begin
-    if not ReturnToModifiedGenericAction and not ReturnToModifiedFindSubControlWIthPmtvAction then
+    if not ReturnToModifiedGenericAction and not ReturnToModifiedFindSubControlWithPmtvAction then
     begin
-      frClickerActions.CurrentlyEditingActionType := {%H-}TClkAction(MaxInt); //use an invalid value, to hide all editors
+      frClickerActions.CurrentlyEditingActionType := {%H-}TClkAction(CClkUnsetAction); //use an invalid value, to hide all editors
       StopGlowingUpdateButton;
       frClickerActions.UpdatePageControlActionExecutionIcons;
     end;
@@ -4244,7 +4421,7 @@ begin
   if ReturnToModifiedGenericAction then
     Exit;
 
-  if ReturnToModifiedFindSubControlWIthPmtvAction then
+  if ReturnToModifiedFindSubControlWithPmtvAction then
     Exit;
 
   UpdateControlsFromActionsArr(Node^.Index);
@@ -4480,6 +4657,7 @@ var
   CalledTemplateContent: TClkActionsRecArr;
   i: Integer;
   CalledTemplateFileName, SelfFileName: string;
+  DummyNotes, DummyIconPath: string;
 begin
   NodeData := vstActions.GetNodeData(ANode);
   NodeData^.FullTemplatePath := EvaluateReplacements(ATemplateFileName);
@@ -4490,7 +4668,7 @@ begin
 
   SelfFileName := NodeData^.FullTemplatePath;
 
-  LoadTemplateToActions(SelfFileName, CalledTemplateContent);
+  LoadTemplateToActions(SelfFileName, CalledTemplateContent, DummyNotes, DummyIconPath);
 
   for i := 0 to Length(CalledTemplateContent) - 1 do
   begin
@@ -5805,172 +5983,45 @@ begin
 end;
 
 
+procedure TfrClickerActionsArr.SetActionToDefault(var AAction: TClkActionRec; ANewActionType: TClkAction);
+begin
+  AAction.ActionOptions.Action := ANewActionType;
+  AAction.ActionOptions.ActionCondition := '';
+  AAction.ActionOptions.ActionEnabled := True;
+  AAction.ActionOptions.ActionName := '"' + CClkActionStr[AAction.ActionOptions.Action] + '"';
+  AAction.ActionOptions.ActionTimeout := 0;
+  AAction.ActionOptions.ExecutionIndex := '';
+  AAction.ActionStatus := asNotStarted;
+  AAction.ActionSkipped := False;
+  AAction.ActionBreakPoint.Condition := '';
+  AAction.ActionBreakPoint.Enabled := False;
+  AAction.ActionBreakPoint.Exists := False;
+  AAction.ActionDebuggingStatus := adsNone;
+
+  if AAction.ActionOptions.Action = acFindSubControl then
+    AAction.ActionOptions.ActionTimeout := 1000;
+
+  if AAction.ActionOptions.Action = acFindControl then
+    AAction.ActionOptions.ActionTimeout := 3000;
+
+  GetDefaultPropertyValues_Click(AAction.ClickOptions);
+  GetDefaultPropertyValues_ExecApp(AAction.ExecAppOptions);
+  GetDefaultPropertyValues_FindControl(AAction.FindControlOptions, AAction.ActionOptions.Action = acFindSubControl);
+  GetDefaultPropertyValues_SetControlText(AAction.SetTextOptions);
+  GetDefaultPropertyValues_CallTemplate(AAction.CallTemplateOptions);
+  GetDefaultPropertyValues_Sleep(AAction.SleepOptions);
+  GetDefaultPropertyValues_SetVar(AAction.SetVarOptions);
+  GetDefaultPropertyValues_WindowOperations(AAction.WindowOperationsOptions);
+  GetDefaultPropertyValues_LoadSetVarFromFile(AAction.LoadSetVarFromFileOptions);
+  GetDefaultPropertyValues_SaveSetVarToFile(AAction.SaveSetVarToFileOptions);
+  GetDefaultPropertyValues_Plugin(AAction.PluginOptions);
+  GetDefaultPropertyValues_EditTemplate(AAction.EditTemplateOptions);
+end;
+
+
 procedure TfrClickerActionsArr.OverwriteActionAtIndexWithDefault(AIndex: Integer; ANewActionType: TClkAction);
 begin
-  FClkActions[AIndex].ActionOptions.Action := ANewActionType;
-  FClkActions[AIndex].ActionOptions.ActionCondition := '';
-  FClkActions[AIndex].ActionOptions.ActionEnabled := True;
-  FClkActions[AIndex].ActionOptions.ActionName := '"' + CClkActionStr[FClkActions[AIndex].ActionOptions.Action] + '"';
-  FClkActions[AIndex].ActionOptions.ActionTimeout := 0;
-  FClkActions[AIndex].ActionOptions.ExecutionIndex := '';
-  FClkActions[AIndex].ActionStatus := asNotStarted;
-  FClkActions[AIndex].ActionSkipped := False;
-  FClkActions[AIndex].ActionBreakPoint.Condition := '';
-  FClkActions[AIndex].ActionBreakPoint.Enabled := False;
-  FClkActions[AIndex].ActionBreakPoint.Exists := False;
-  FClkActions[AIndex].ActionDebuggingStatus := adsNone;
-
-  //Important default values    ///////////////////////////////// ToDo  replace these with some default values
-  FClkActions[AIndex].ClickOptions.XClickPointReference := xrefLeft;
-  FClkActions[AIndex].ClickOptions.YClickPointReference := yrefTop;
-  FClkActions[AIndex].ClickOptions.XClickPointVar := '$Control_Left$';
-  FClkActions[AIndex].ClickOptions.YClickPointVar := '$Control_Top$';
-  FClkActions[AIndex].ClickOptions.XOffset := '4';
-  FClkActions[AIndex].ClickOptions.YOffset := '4';
-  FClkActions[AIndex].ClickOptions.MouseButton := mbLeft;
-  FClkActions[AIndex].ClickOptions.ClickWithCtrl := False;
-  FClkActions[AIndex].ClickOptions.ClickWithAlt := False;
-  FClkActions[AIndex].ClickOptions.ClickWithShift := False;
-  FClkActions[AIndex].ClickOptions.ClickWithDoubleClick := False;  //deprecated, but the code is still active
-  FClkActions[AIndex].ClickOptions.Count := 1;
-  FClkActions[AIndex].ClickOptions.LeaveMouse := False;
-  FClkActions[AIndex].ClickOptions.MoveWithoutClick := False;
-  FClkActions[AIndex].ClickOptions.ClickType := CClickType_Click;
-  FClkActions[AIndex].ClickOptions.XClickPointReferenceDest := xrefLeft;
-  FClkActions[AIndex].ClickOptions.YClickPointReferenceDest := yrefTop;
-  FClkActions[AIndex].ClickOptions.XClickPointVarDest := '$Control_Left$';
-  FClkActions[AIndex].ClickOptions.YClickPointVarDest := '$Control_Top$';
-  FClkActions[AIndex].ClickOptions.XOffsetDest := '7';
-  FClkActions[AIndex].ClickOptions.YOffsetDest := '7';
-  FClkActions[AIndex].ClickOptions.MouseWheelType := mwtVert;
-  FClkActions[AIndex].ClickOptions.MouseWheelAmount := '1';
-  FClkActions[AIndex].ClickOptions.DelayAfterMovingToDestination := '50';
-  FClkActions[AIndex].ClickOptions.DelayAfterMouseDown := '200';
-  FClkActions[AIndex].ClickOptions.MoveDuration := '-1';
-
-  FClkActions[AIndex].ExecAppOptions.PathToApp := '';
-  FClkActions[AIndex].ExecAppOptions.ListOfParams := '';
-  FClkActions[AIndex].ExecAppOptions.WaitForApp := False;
-  FClkActions[AIndex].ExecAppOptions.AppStdIn := '';
-  FClkActions[AIndex].ExecAppOptions.CurrentDir := '';
-  FClkActions[AIndex].ExecAppOptions.UseInheritHandles := uihNo;
-  FClkActions[AIndex].ExecAppOptions.NoConsole := False;
-
-  FClkActions[AIndex].FindControlOptions.MatchCriteria.WillMatchText := FClkActions[AIndex].ActionOptions.Action = acFindControl;
-  FClkActions[AIndex].FindControlOptions.MatchCriteria.WillMatchClassName := FClkActions[AIndex].ActionOptions.Action = acFindControl;
-  FClkActions[AIndex].FindControlOptions.MatchCriteria.WillMatchBitmapText := FClkActions[AIndex].ActionOptions.Action = acFindSubControl;
-  FClkActions[AIndex].FindControlOptions.MatchCriteria.WillMatchBitmapFiles := False;
-  FClkActions[AIndex].FindControlOptions.MatchCriteria.WillMatchPrimitiveFiles := False;
-  FClkActions[AIndex].FindControlOptions.MatchCriteria.SearchForControlMode := sfcmGenGrid;
-  FClkActions[AIndex].FindControlOptions.AllowToFail := False;
-  FClkActions[AIndex].FindControlOptions.MatchText := '';
-  FClkActions[AIndex].FindControlOptions.MatchClassName := '';
-  FClkActions[AIndex].FindControlOptions.MatchTextSeparator := '';
-  FClkActions[AIndex].FindControlOptions.MatchClassNameSeparator := '';
-  FClkActions[AIndex].FindControlOptions.MatchBitmapFiles := '';
-  FClkActions[AIndex].FindControlOptions.MatchBitmapAlgorithm := mbaBruteForce;
-  FClkActions[AIndex].FindControlOptions.MatchBitmapAlgorithmSettings.XMultipleOf := 1;
-  FClkActions[AIndex].FindControlOptions.MatchBitmapAlgorithmSettings.YMultipleOf := 1;
-  FClkActions[AIndex].FindControlOptions.MatchBitmapAlgorithmSettings.XOffset := 0;
-  FClkActions[AIndex].FindControlOptions.MatchBitmapAlgorithmSettings.YOffset := 0;
-  FClkActions[AIndex].FindControlOptions.InitialRectangle.Left := '$Control_Left$';
-  FClkActions[AIndex].FindControlOptions.InitialRectangle.Top := '$Control_Top$';
-  FClkActions[AIndex].FindControlOptions.InitialRectangle.Right := '$Control_Right$';
-  FClkActions[AIndex].FindControlOptions.InitialRectangle.Bottom := '$Control_Bottom$';
-  FClkActions[AIndex].FindControlOptions.InitialRectangle.LeftOffset := '0';
-  FClkActions[AIndex].FindControlOptions.InitialRectangle.TopOffset := '0';
-  FClkActions[AIndex].FindControlOptions.InitialRectangle.RightOffset := '0';
-  FClkActions[AIndex].FindControlOptions.InitialRectangle.BottomOffset := '0';
-  FClkActions[AIndex].FindControlOptions.UseWholeScreen := FClkActions[AIndex].ActionOptions.Action = acFindControl;
-  FClkActions[AIndex].FindControlOptions.ColorError := '0';
-  FClkActions[AIndex].FindControlOptions.AllowedColorErrorCount := '0';
-  FClkActions[AIndex].FindControlOptions.WaitForControlToGoAway := False;
-  FClkActions[AIndex].FindControlOptions.StartSearchingWithCachedControl := False;
-  FClkActions[AIndex].FindControlOptions.CachedControlLeft := '';
-  FClkActions[AIndex].FindControlOptions.CachedControlTop := '';
-  FClkActions[AIndex].FindControlOptions.MatchPrimitiveFiles := '';
-  FClkActions[AIndex].FindControlOptions.MatchPrimitiveFiles_Modified := '';
-  FClkActions[AIndex].FindControlOptions.GetAllControls := False;
-  FClkActions[AIndex].FindControlOptions.UseFastSearch := True;
-  FClkActions[AIndex].FindControlOptions.FastSearchAllowedColorErrorCount := '10';
-  FClkActions[AIndex].FindControlOptions.IgnoredColors := '';
-  FClkActions[AIndex].FindControlOptions.SleepySearch := False;
-  FClkActions[AIndex].FindControlOptions.StopSearchOnMismatch := True;
-  FClkActions[AIndex].FindControlOptions.ImageSource := isScreenshot;
-  FClkActions[AIndex].FindControlOptions.SourceFileName := '';
-  FClkActions[AIndex].FindControlOptions.ImageSourceFileNameLocation := isflMem;
-  FClkActions[AIndex].FindControlOptions.PrecisionTimeout := False;
-  FClkActions[AIndex].FindControlOptions.FullBackgroundImageInResult := True;
-  FClkActions[AIndex].FindControlOptions.MatchByHistogramSettings.MinPercentColorMatch := '50';
-  FClkActions[AIndex].FindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInSubBmp := '10';
-  FClkActions[AIndex].FindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp := '15';
-
-  SetLength(FClkActions[AIndex].FindControlOptions.MatchBitmapText, 1);
-  FClkActions[AIndex].FindControlOptions.MatchBitmapText[0].ForegroundColor := '$Color_Window$';
-  FClkActions[AIndex].FindControlOptions.MatchBitmapText[0].BackgroundColor := '$Color_Highlight$';
-  FClkActions[AIndex].FindControlOptions.MatchBitmapText[0].FontName := 'Tahoma';
-  FClkActions[AIndex].FindControlOptions.MatchBitmapText[0].FontSize := 8;
-  FClkActions[AIndex].FindControlOptions.MatchBitmapText[0].FontQualityReplacement := '';
-  FClkActions[AIndex].FindControlOptions.MatchBitmapText[0].FontQuality := fqNonAntialiased;
-  FClkActions[AIndex].FindControlOptions.MatchBitmapText[0].FontQualityUsesReplacement := False;
-  FClkActions[AIndex].FindControlOptions.MatchBitmapText[0].Bold := False;
-  FClkActions[AIndex].FindControlOptions.MatchBitmapText[0].Italic := False;
-  FClkActions[AIndex].FindControlOptions.MatchBitmapText[0].Underline := False;
-  FClkActions[AIndex].FindControlOptions.MatchBitmapText[0].StrikeOut := False;
-  FClkActions[AIndex].FindControlOptions.MatchBitmapText[0].CropLeft := '0';
-  FClkActions[AIndex].FindControlOptions.MatchBitmapText[0].CropTop := '0';
-  FClkActions[AIndex].FindControlOptions.MatchBitmapText[0].CropRight := '0';
-  FClkActions[AIndex].FindControlOptions.MatchBitmapText[0].CropBottom := '0';
-  FClkActions[AIndex].FindControlOptions.MatchBitmapText[0].IgnoreBackgroundColor := False;
-  FClkActions[AIndex].FindControlOptions.MatchBitmapText[0].ProfileName := CDefaultFontProfileName;
-
-  if FClkActions[AIndex].ActionOptions.Action = acFindSubControl then
-    FClkActions[AIndex].ActionOptions.ActionTimeout := 1000;
-
-  if FClkActions[AIndex].ActionOptions.Action = acFindControl then
-    FClkActions[AIndex].ActionOptions.ActionTimeout := 3000;
-
-  FClkActions[AIndex].SetTextOptions.Text := '';
-  FClkActions[AIndex].SetTextOptions.ControlType := stEditBox;
-  FClkActions[AIndex].SetTextOptions.DelayBetweenKeyStrokes := '0';
-  FClkActions[AIndex].SetTextOptions.Count := '1';
-
-  FClkActions[AIndex].CallTemplateOptions.TemplateFileName := '';
-  FClkActions[AIndex].CallTemplateOptions.ListOfCustomVarsAndValues := '';
-  FClkActions[AIndex].CallTemplateOptions.EvaluateBeforeCalling := False;
-  FClkActions[AIndex].CallTemplateOptions.CallOnlyIfCondition := False; //still required, to prevent a pop-up, until the feature is removed
-  FClkActions[AIndex].CallTemplateOptions.CallTemplateLoop.Enabled := False;
-  FClkActions[AIndex].CallTemplateOptions.CallTemplateLoop.Counter := '';
-  FClkActions[AIndex].CallTemplateOptions.CallTemplateLoop.InitValue := '';
-  FClkActions[AIndex].CallTemplateOptions.CallTemplateLoop.EndValue := '';
-  FClkActions[AIndex].CallTemplateOptions.CallTemplateLoop.Direction := ldInc;
-  FClkActions[AIndex].CallTemplateOptions.CallTemplateLoop.BreakCondition := '';
-  FClkActions[AIndex].CallTemplateOptions.CallTemplateLoop.EvalBreakPosition := lebpBeforeContent;
-
-  FClkActions[AIndex].SleepOptions.Value := '1000';
-
-  FClkActions[AIndex].SetVarOptions.ListOfVarNames := '';
-  FClkActions[AIndex].SetVarOptions.ListOfVarValues := '';
-  FClkActions[AIndex].SetVarOptions.ListOfVarEvalBefore := '';
-  FClkActions[AIndex].SetVarOptions.FailOnException := False;
-
-  FClkActions[AIndex].WindowOperationsOptions.Operation := woBringToFront;
-  FClkActions[AIndex].WindowOperationsOptions.NewX := '';
-  FClkActions[AIndex].WindowOperationsOptions.NewY := '';
-  FClkActions[AIndex].WindowOperationsOptions.NewWidth := '';
-  FClkActions[AIndex].WindowOperationsOptions.NewHeight := '';
-  FClkActions[AIndex].WindowOperationsOptions.NewPositionEnabled := False;
-  FClkActions[AIndex].WindowOperationsOptions.NewSizeEnabled := False;
-
-  FClkActions[AIndex].LoadSetVarFromFileOptions.FileName := '';
-  FClkActions[AIndex].LoadSetVarFromFileOptions.SetVarActionName := '';
-
-  FClkActions[AIndex].SaveSetVarToFileOptions.FileName := '';
-  FClkActions[AIndex].SaveSetVarToFileOptions.SetVarActionName := '';
-
-  FClkActions[AIndex].PluginOptions.FileName := '';
-  FClkActions[AIndex].PluginOptions.ListOfPropertiesAndValues := '';
-  FClkActions[AIndex].PluginOptions.ListOfPropertiesAndTypes := '';
+  SetActionToDefault(FClkActions[AIndex], ANewActionType);
 end;
 
 
@@ -6001,8 +6052,15 @@ begin
     n := Length(FClkActions);
     SetLength(FClkActions, n + 1);
 
-    UpdateActionsArrFromControls(n); ///////////////////////////////// ToDo  replace this call with some default values
     OverwriteActionAtIndexWithDefault(n, TClkAction(Node^.Index));
+
+    //UpdateActionsArrFromControls(n); ///////////////////////////////// ToDo  replace this call with some default values     //was used for initializing FindControl's "Match" properties
+    //OverwriteActionAtIndexWithDefault(n, TClkAction(Node^.Index));
+
+    if (TClkAction(Node^.Index) = acEditTemplate) and (frClickerActions.EditingAction <> nil) then
+      frClickerActions.SerializeEditTemplateEditingAction;
+
+    frClickerActions.CurrentlyEditingActionType := TClkAction(Node^.Index);
 
     vstActions.RootNodeCount := Length(FClkActions);
     UpdateNodesCheckStateFromActions;
@@ -6010,7 +6068,7 @@ begin
     if not frClickerActions.ControlsModified then
     begin
       vstActions.ClearSelection;
-      LoadActionIntoEditorByIndex(n);
+      LoadActionIntoEditorByIndex(n);  //calls UpdateControlsFromActionsArr(Node^.Index);  which copies from FClkActions[ActionIndex] to frClickerActions.EditingAction^
       StopGlowingUpdateButton;
     end;
 
@@ -6103,6 +6161,15 @@ begin
   FClkActions[Node^.Index].ActionStatus := asNotStarted;
   FClkActions[Node^.Index].ActionOptions.ActionEnabled := True;
 
+  //if (FClkActions[Node^.Index].ActionOptions.Action = acEditTemplate) and (frClickerActions.EditingAction <> nil) then
+  //begin
+  //  frClickerActions.EditingAction^.EditTemplateOptions.EditingAction := @FClkEditedActionByEditTemplate;
+  //  frClickerActions.EditingAction^.EditTemplateOptions.ListOfEditedProperties := StringReplace(GetActionPropertiesByType(FClkEditedActionByEditTemplate), CPropSeparatorSer, CPropSeparatorInt, [rfReplaceAll]);
+  //
+  //  FClkActions[Node^.Index].EditTemplateOptions.EditingAction := frClickerActions.EditingAction^.EditTemplateOptions.EditingAction;
+  //  FClkActions[Node^.Index].EditTemplateOptions.ListOfEditedProperties := frClickerActions.EditingAction^.EditTemplateOptions.ListOfEditedProperties;
+  //end;
+
   vstActions.RootNodeCount := Length(FClkActions);
   UpdateNodesCheckStateFromActions;
 
@@ -6138,6 +6205,15 @@ begin
   UpdateActionsArrFromControls(NewIndex);
   FClkActions[NewIndex].ActionStatus := asNotStarted;
   FClkActions[NewIndex].ActionOptions.ActionEnabled := True;
+
+  //if (FClkActions[Node^.Index].ActionOptions.Action = acEditTemplate) and (frClickerActions.EditingAction <> nil) then
+  //begin
+  //  frClickerActions.EditingAction^.EditTemplateOptions.EditingAction := @FClkEditedActionByEditTemplate;
+  //  frClickerActions.EditingAction^.EditTemplateOptions.ListOfEditedProperties := StringReplace(GetActionPropertiesByType(FClkEditedActionByEditTemplate), CPropSeparatorSer, CPropSeparatorInt, [rfReplaceAll]);
+  //
+  //  FClkActions[Node^.Index].EditTemplateOptions.EditingAction := frClickerActions.EditingAction^.EditTemplateOptions.EditingAction;
+  //  FClkActions[Node^.Index].EditTemplateOptions.ListOfEditedProperties := frClickerActions.EditingAction^.EditTemplateOptions.ListOfEditedProperties;
+  //end;
 
   vstActions.RootNodeCount := Length(FClkActions);
   UpdateNodesCheckStateFromActions;
@@ -6526,7 +6602,7 @@ begin
     CopyActionContent(FClkActions[i + 1], FClkActions[i]); //FClkActions[i] := FClkActions[i + 1];
 
   if AClearSelectionAfterRemoving then
-    vstActions.RootNodeCount := 0; //to reinit nodes
+    vstActions.Clear; // vstActions.RootNodeCount := 0; //to reinit nodes
 
   if AUpdateRootNodeCount then
     vstActions.RootNodeCount := Length(FClkActions) - 1;
@@ -6605,8 +6681,9 @@ procedure TfrClickerActionsArr.Removeallactions1Click(Sender: TObject);
 begin
   if MessageBox(Handle, 'Are you sure you want to remove all actions from list?', PChar(Caption), MB_ICONQUESTION + MB_YESNO) = ID_YES then
   begin
+    vstActions.Clear; // vstActions.RootNodeCount := 0;
     SetLength(FClkActions, 0);
-    vstActions.RootNodeCount := 0;
+
     Modified := True;
     StopGlowingUpdateButton;
   end;
@@ -6626,7 +6703,7 @@ var
   UnsetActionValue: Byte;
 begin
   vstActions.ClearSelection;       //ClearSelection and ..
-  vstActions.RootNodeCount := 0;   //set RootNodeCount before clearing the array, otherwise an AV may happen in VST
+  vstActions.Clear; // vstActions.RootNodeCount := 0;   //set RootNodeCount before clearing the array, otherwise an AV may happen in VST
   Application.ProcessMessages;
   SetLength(FClkActions, 0);
 

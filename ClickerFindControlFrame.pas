@@ -759,6 +759,9 @@ end;
 
 procedure TFontProfile.SetMatchBitmapTextFGColor(Value: string);
 begin
+  if FFindControlMatchBitmapText = nil then
+    raise Exception.Create('FFindControlMatchBitmapText is nil.');  //Not all properties will have this check. It is here to point to a potential bug.
+
   FFindControlMatchBitmapText^.ForegroundColor := Value;
 end;
 

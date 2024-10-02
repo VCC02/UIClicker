@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2023 VCC
+    Copyright (C) 2024 VCC
     creation date: Dec 2019
     initial release date: 26 Jul 2022
 
@@ -207,6 +207,8 @@ begin
     ACustomActions[i].FindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInSubBmp := '10';
     ACustomActions[i].FindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp := '15';
 
+    ACustomActions[i].FindControlOptions.EvaluateTextCount := '-1';
+
     SectionIndex := Ini.GetSectionIndex('Actions.SetTextOptions');
     ACustomActions[i].SetTextOptions.Text := Ini.ReadString(SectionIndex, 'Text_' + IterationStr, '');
     ACustomActions[i].SetTextOptions.ControlType := TClkSetTextControlType(Ini.ReadInteger(SectionIndex, 'ControlType_' + IterationStr, Integer(stEditBox)));
@@ -229,6 +231,22 @@ begin
     ACustomActions[i].SetVarOptions.ListOfVarValues := StringReplace(Ini.ReadString(SectionIndex, 'ListOfVarValues_' + IterationStr, ''), #4#5, #13#10, [rfReplaceAll]);
     ACustomActions[i].SetVarOptions.ListOfVarEvalBefore := StringReplace(Ini.ReadString(SectionIndex, 'ListOfVarEvalBefore_' + IterationStr, ''), #4#5, #13#10, [rfReplaceAll]);
     ACustomActions[i].SetVarOptions.FailOnException := False;
+
+    ACustomActions[i].WindowOperationsOptions.Operation := woBringToFront;
+
+    ACustomActions[i].LoadSetVarFromFileOptions.FileName := '';
+    ACustomActions[i].LoadSetVarFromFileOptions.SetVarActionName := '';
+
+    ACustomActions[i].SaveSetVarToFileOptions.FileName := '';
+    ACustomActions[i].SaveSetVarToFileOptions.SetVarActionName := '';
+
+    ACustomActions[i].PluginOptions.FileName := '';
+
+    ACustomActions[i].EditTemplateOptions.Operation := etoNewAction;
+    ACustomActions[i].EditTemplateOptions.WhichTemplate := etwtOther;
+    ACustomActions[i].EditTemplateOptions.TemplateFileName := '';
+    ACustomActions[i].EditTemplateOptions.ListOfEditedProperties := '';
+    ACustomActions[i].EditTemplateOptions.ListOfEnabledProperties := '';
 
     AdjustListOfVarEvalBeforeCount(ACustomActions[i].SetVarOptions);
   end;
@@ -299,8 +317,7 @@ end;
 procedure LoadAction_FindControl(Ini: TClkIniReadonlyFile; SectionIndex: Integer; var AFindControlOptions: TClkFindControlOptions);
 var
   i, n: Integer;
-  Indent, s: string;
-  ListOfPrimitiveFiles: TStringList;
+  Indent: string;
 begin
   AFindControlOptions.MatchCriteria.WillMatchText := Ini.ReadBool(SectionIndex, 'MatchCriteria.WillMatchText', True);
   AFindControlOptions.MatchCriteria.WillMatchClassName := Ini.ReadBool(SectionIndex, 'MatchCriteria.WillMatchClassName', True);
@@ -394,17 +411,7 @@ begin
   AFindControlOptions.CachedControlTop := Ini.ReadString(SectionIndex, 'CachedControlTop', '');
 
   AFindControlOptions.MatchPrimitiveFiles := FastReplace_45ToReturn(Ini.ReadString(SectionIndex, 'MatchPrimitiveFiles', ''));
-  ListOfPrimitiveFiles := TStringList.Create;
-  try
-    ListOfPrimitiveFiles.Text := AFindControlOptions.MatchPrimitiveFiles;
-    s := '';
-    for i := 0 to ListOfPrimitiveFiles.Count - 1 do
-      s := s + '0' + #13#10;
-
-    AFindControlOptions.MatchPrimitiveFiles_Modified := s;
-  finally
-    ListOfPrimitiveFiles.Free;
-  end;
+  AFindControlOptions.MatchPrimitiveFiles_Modified := InitListOfZerosByItemCount(AFindControlOptions.MatchPrimitiveFiles);
 
   AFindControlOptions.GetAllControls := Ini.ReadBool(SectionIndex, 'GetAllControls', False);
   AFindControlOptions.UseFastSearch := Ini.ReadBool(SectionIndex, 'UseFastSearch', True);
@@ -421,6 +428,8 @@ begin
   AFindControlOptions.MatchByHistogramSettings.MinPercentColorMatch := Ini.ReadString(SectionIndex, 'MatchByHistogramSettings.MinPercentColorMatch', '50');
   AFindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInSubBmp := Ini.ReadString(SectionIndex, 'MatchByHistogramSettings.MostSignificantColorCountInSubBmp', '10');
   AFindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp := Ini.ReadString(SectionIndex, 'MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp', '15');
+
+  AFindControlOptions.EvaluateTextCount := Ini.ReadString(SectionIndex, 'EvaluateTextCount', '-1');
 end;
 
 
@@ -501,6 +510,21 @@ begin
 end;
 
 
+procedure LoadAction_EditTemplate(Ini: TClkIniReadonlyFile; SectionIndex: Integer; var AEditTemplateOptions: TClkEditTemplateOptions);
+begin
+  AEditTemplateOptions.Operation := TEditTemplateOperation(Min(Ini.ReadInteger(SectionIndex, 'Operation', Integer(etoNewAction)), Integer(High(TEditTemplateOperation))));
+  AEditTemplateOptions.WhichTemplate := TEditTemplateWhichTemplate(Min(Ini.ReadInteger(SectionIndex, 'WhichTemplate', Integer(etwtOther)), Integer(High(TEditTemplateWhichTemplate))));
+  AEditTemplateOptions.TemplateFileName := Ini.ReadString(SectionIndex, 'TemplateFileName', '');
+  AEditTemplateOptions.ListOfEditedProperties := FastReplace_45To1920(Ini.ReadString(SectionIndex, 'ListOfEditedProperties', ''));
+  AEditTemplateOptions.ListOfEnabledProperties := FastReplace_45ToReturn(Ini.ReadString(SectionIndex, 'ListOfEnabledProperties', ''));
+  AEditTemplateOptions.EditedActionName := Ini.ReadString(SectionIndex, 'EditedActionName', '');
+  AEditTemplateOptions.EditedActionType := TClkAction(Min(Ini.ReadInteger(SectionIndex, 'EditedActionType', Integer(acClick)), Integer(High(TClkAction))));
+  AEditTemplateOptions.EditedActionCondition := Ini.ReadString(SectionIndex, 'EditedActionCondition', '');
+  AEditTemplateOptions.EditedActionTimeout := Ini.ReadInteger(SectionIndex, 'EditedActionTimeout', 1000);
+  AEditTemplateOptions.NewActionName := Ini.ReadString(SectionIndex, 'NewActionName', '');
+end;
+
+
 procedure LoadTemplateToCustomActions_V2(Ini: TClkIniReadonlyFile; var ACustomActions: TClkActionsRecArr; var ANotes, ATemplateIconPath: string);
 var
   IterationStr: string;
@@ -531,6 +555,7 @@ begin
       acLoadSetVarFromFile: LoadAction_LoadSetVarFromFile(Ini, SectionIndex, ACustomActions[i].LoadSetVarFromFileOptions);
       acSaveSetVarToFile: LoadAction_SaveSetVarToFile(Ini, SectionIndex, ACustomActions[i].SaveSetVarToFileOptions);
       acPlugin: LoadAction_Plugin(Ini, SectionIndex, ACustomActions[i].PluginOptions);
+      acEditTemplate: LoadAction_EditTemplate(Ini, SectionIndex, ACustomActions[i].EditTemplateOptions);
     end;
   end;
 
@@ -869,6 +894,8 @@ begin
   AStringList.Add('MatchByHistogramSettings.MinPercentColorMatch=' + AActionFindControlOptions.MatchByHistogramSettings.MinPercentColorMatch);
   AStringList.Add('MatchByHistogramSettings.MostSignificantColorCountInSubBmp=' + AActionFindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInSubBmp);
   AStringList.Add('MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=' + AActionFindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp);
+
+  AStringList.Add('EvaluateTextCount=' + AActionFindControlOptions.EvaluateTextCount);
 end;
 
 
@@ -948,6 +975,21 @@ begin
 end;
 
 
+procedure AddAction_EditTemplateToStringList(var AActionEditTemplateOptions: TClkEditTemplateOptions; AStringList: TStringList);
+begin
+  AStringList.Add('Operation=' + IntToStr(Ord(AActionEditTemplateOptions.Operation)));
+  AStringList.Add('WhichTemplate=' + IntToStr(Ord(AActionEditTemplateOptions.WhichTemplate)));
+  AStringList.Add('TemplateFileName=' + AActionEditTemplateOptions.TemplateFileName);
+  AStringList.Add('ListOfEditedProperties=' + FastReplace_45To1920(FastReplace_ReturnTo45(AActionEditTemplateOptions.ListOfEditedProperties)));
+  AStringList.Add('ListOfEnabledProperties=' + FastReplace_ReturnTo45(AActionEditTemplateOptions.ListOfEnabledProperties));
+  AStringList.Add('EditedActionName=' + AActionEditTemplateOptions.EditedActionName);
+  AStringList.Add('EditedActionType=' + IntToStr(Ord(AActionEditTemplateOptions.EditedActionType)));
+  AStringList.Add('EditedActionCondition=' + AActionEditTemplateOptions.EditedActionCondition);
+  AStringList.Add('EditedActionTimeout=' + IntToStr(AActionEditTemplateOptions.EditedActionTimeout));
+  AStringList.Add('NewActionName=' + AActionEditTemplateOptions.NewActionName);
+end;
+
+
 procedure AddActionContentToStringList(var AAction: TClkActionRec; AStringList: TStringList);
 begin
   case AAction.ActionOptions.Action of
@@ -963,6 +1005,7 @@ begin
     acLoadSetVarFromFile: AddAction_LoadSetVarFromFileToStringList(AAction.LoadSetVarFromFileOptions, AStringList);
     acSaveSetVarToFile: AddAction_SaveSetVarToFileToStringList(AAction.SaveSetVarToFileOptions, AStringList);
     acPlugin: AddAction_PluginToStringList(AAction.PluginOptions, AStringList);
+    acEditTemplate: AddAction_EditTemplateToStringList(AAction.EditTemplateOptions, AStringList);
   end;
 end;
 
@@ -1045,6 +1088,8 @@ begin
   ADest.PrecisionTimeout := ASrc.PrecisionTimeout;
   ADest.FullBackgroundImageInResult := ASrc.FullBackgroundImageInResult;
   ADest.MatchByHistogramSettings := ASrc.MatchByHistogramSettings;
+
+  ADest.EvaluateTextCount := ASrc.EvaluateTextCount;
 end;
 
 
@@ -1065,6 +1110,7 @@ begin             //Substructures, which do not contain pointers, can be directl
   ADest.LoadSetVarFromFileOptions := ASrc.LoadSetVarFromFileOptions;
   ADest.SaveSetVarToFileOptions := ASrc.SaveSetVarToFileOptions;
   ADest.PluginOptions := ASrc.PluginOptions;
+  ADest.EditTemplateOptions := ASrc.EditTemplateOptions;
 
   CopyFindControlActionContent(ASrc.FindControlOptions, ADest.FindControlOptions);
 end;

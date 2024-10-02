@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2023 VCC
+    Copyright (C) 2024 VCC
     creation date: Mar 2023
     initial release date: 10 Mar 2023
 
@@ -38,12 +38,13 @@ type
     OwnerMenu: TPopupMenu;
     NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex: Integer;
     MenuItemCaption: string;
+    TempEditingAction: PClkActionRec;
   end;
   POIMenuItemData = ^TOIMenuItemData;
 
 
 procedure AddMenuItemToPopupMenu(APopupMenu: TPopupMenu; ACaption: TCaption; AHandler: TNotifyEvent;
-  ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer);
+  ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; AEditingAction: PClkActionRec);
 
 procedure BuildFontColorIcons(AImgLst: TImageList; var AFindControlOptions: TClkFindControlOptions; AEvaluateReplacementsFunc: TEvaluateReplacementsFunc);
 
@@ -52,7 +53,7 @@ implementation
 
 
 procedure AddMenuItemToPopupMenu(APopupMenu: TPopupMenu; ACaption: TCaption; AHandler: TNotifyEvent;
-  ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer);
+  ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; AEditingAction: PClkActionRec);
 var
   MenuData: POIMenuItemData;
   MenuItem: TMenuItem;
@@ -69,6 +70,7 @@ begin
   MenuData^.PropertyIndex := APropertyIndex;
   MenuData^.PropertyItemIndex := AItemIndex;
   MenuData^.MenuItemCaption := ACaption;
+  MenuData^.TempEditingAction := AEditingAction;
 
   APopupMenu.Items.Add(MenuItem);
 end;

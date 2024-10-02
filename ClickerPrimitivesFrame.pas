@@ -152,7 +152,7 @@ type
     procedure DoOnGetListOfExternallyRenderedImages(AListOfExternallyRenderedImages: TStringList);
     procedure DoOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
     procedure DoOnSavePrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
-    function DoOnEvaluateReplacementsFunc(s: string; Recursive: Boolean = True): string;
+    function DoOnEvaluateReplacementsFunc(s: string; Recursive: Boolean = True; AEvalTextCount: Integer = -1): string;
     procedure DoOnTriggerOnControlsModified;
     procedure DoOnSaveFromMenu;
     function DoOnPictureOpenDialogExecute: Boolean;
@@ -169,8 +169,8 @@ type
     function HandleOnOIGetListPropertyItemCount(ACategoryIndex, APropertyIndex: Integer): Integer;
     function HandleOnOIGetListPropertyItemName(ACategoryIndex, APropertyIndex, AItemIndex: Integer): string;
     function HandleOnOIGetListPropertyItemValue(ACategoryIndex, APropertyIndex, AItemIndex: Integer; var AEditorType: TOIEditorType): string;
-    function HandleOnUIGetDataTypeName(ACategoryIndex, APropertyIndex, AItemIndex: Integer): string;
-    function HandleOnUIGetExtraInfo(ACategoryIndex, APropertyIndex, AItemIndex: Integer): string;
+    function HandleOnOIGetDataTypeName(ACategoryIndex, APropertyIndex, AItemIndex: Integer): string;
+    function HandleOnOIGetExtraInfo(ACategoryIndex, APropertyIndex, AItemIndex: Integer): string;
 
     procedure HandleOnOIGetImageIndexEx(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; Kind: TVTImageKind;
       Column: TColumnIndex; var Ghosted: Boolean; var ImageIndex: Integer; var ImageList: TCustomImageList);
@@ -218,7 +218,7 @@ type
     procedure HandleOnOIDragOver(NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex, SrcNodeLevel, SrcCategoryIndex, SrcPropertyIndex, SrcPropertyItemIndex: Integer; Shift: TShiftState; State: TDragState; const Pt: TPoint; Mode: TDropMode; var Effect: DWORD; var Accept: Boolean);
     procedure HandleOnOIDragDrop(NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex, SrcNodeLevel, SrcCategoryIndex, SrcPropertyIndex, SrcPropertyItemIndex: Integer; Shift: TShiftState; const Pt: TPoint; var Effect: DWORD; Mode: TDropMode);
 
-    function HandleOnEvaluateReplacementsFunc(s: string; Recursive: Boolean = True): string;
+    function HandleOnEvaluateReplacementsFunc(s: string; Recursive: Boolean = True; AEvalTextCount: Integer = -1): string;
     function HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     function HandleOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
   public
@@ -289,8 +289,8 @@ begin
   FOIFrame.OnOIGetListPropertyItemCount := HandleOnOIGetListPropertyItemCount;
   FOIFrame.OnOIGetListPropertyItemName := HandleOnOIGetListPropertyItemName;
   FOIFrame.OnOIGetListPropertyItemValue := HandleOnOIGetListPropertyItemValue;
-  FOIFrame.OnUIGetDataTypeName := HandleOnUIGetDataTypeName;
-  FOIFrame.OnUIGetExtraInfo := HandleOnUIGetExtraInfo;
+  FOIFrame.OnOIGetDataTypeName := HandleOnOIGetDataTypeName;
+  FOIFrame.OnOIGetExtraInfo := HandleOnOIGetExtraInfo;
   FOIFrame.OnOIGetImageIndexEx := HandleOnOIGetImageIndexEx;
   FOIFrame.OnOIEditedText := HandleOnOIEditedText;
   FOIFrame.OnOIEditItems := HandleOnOIEditItems;
@@ -1715,12 +1715,12 @@ begin
 end;
 
 
-function TfrClickerPrimitives.DoOnEvaluateReplacementsFunc(s: string; Recursive: Boolean = True): string;
+function TfrClickerPrimitives.DoOnEvaluateReplacementsFunc(s: string; Recursive: Boolean = True; AEvalTextCount: Integer = -1): string;
 begin
   if not Assigned(FOnEvaluateReplacementsFunc) then
     raise Exception.Create('OnEvaluateReplacementsFunc not assigned.')
   else
-    Result := FOnEvaluateReplacementsFunc(s, Recursive);
+    Result := FOnEvaluateReplacementsFunc(s, Recursive, AEvalTextCount);
 end;
 
 
@@ -1928,13 +1928,13 @@ begin
 end;
 
 
-function TfrClickerPrimitives.HandleOnUIGetDataTypeName(ACategoryIndex, APropertyIndex, AItemIndex: Integer): string;
+function TfrClickerPrimitives.HandleOnOIGetDataTypeName(ACategoryIndex, APropertyIndex, AItemIndex: Integer): string;
 begin
   Result := '';
 end;
 
 
-function TfrClickerPrimitives.HandleOnUIGetExtraInfo(ACategoryIndex, APropertyIndex, AItemIndex: Integer): string;
+function TfrClickerPrimitives.HandleOnOIGetExtraInfo(ACategoryIndex, APropertyIndex, AItemIndex: Integer): string;
 begin
   Result := '';
 end;
@@ -2442,7 +2442,7 @@ begin
         begin
           FOIEditorMenu.Items.Clear;
 
-          AddMenuItemToPopupMenu(FOIEditorMenu, CRemovePrimitiveMenuPrefix + '"' + FPrimitives[APropertyIndex].PrimitiveName + '"', MenuItem_RemovePrimitiveFromList, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+          AddMenuItemToPopupMenu(FOIEditorMenu, CRemovePrimitiveMenuPrefix + '"' + FPrimitives[APropertyIndex].PrimitiveName + '"', MenuItem_RemovePrimitiveFromList, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, nil);
 
           GetCursorPos(tp);
           FOIEditorMenu.PopUp(tp.X, tp.Y);
@@ -2456,7 +2456,7 @@ begin
           for i := 0 to CPrimitivesPropEnumCounts[FPrimitives[APropertyIndex].PrimitiveType]^[AItemIndex] - 1 do
           begin
             EnumItemName := CPrimitivesPropEnumStrings[FPrimitives[APropertyIndex].PrimitiveType]^[AItemIndex]^[i];
-            AddMenuItemToPopupMenu(FOIEditorMenu, EnumItemName, MenuItem_SetValueFromEnumItem, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+            AddMenuItemToPopupMenu(FOIEditorMenu, EnumItemName, MenuItem_SetValueFromEnumItem, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, nil);
           end;
 
           //menus for other types of properties
@@ -2471,14 +2471,14 @@ begin
                   try
                     DoOnGetListOfExternallyRenderedImages(ListOfExternallyRenderedImages);
                     for i := 0 to ListOfExternallyRenderedImages.Count - 1 do
-                      AddMenuItemToPopupMenu(FOIEditorMenu, ListOfExternallyRenderedImages.Strings[i], MenuItem_SetExternallyRenderedFile, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+                      AddMenuItemToPopupMenu(FOIEditorMenu, ListOfExternallyRenderedImages.Strings[i], MenuItem_SetExternallyRenderedFile, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, nil);
                   finally
                     ListOfExternallyRenderedImages.Free;
                   end;
                 end
                 else
                 begin
-                  AddMenuItemToPopupMenu(FOIEditorMenu, 'Browse...', MenuItem_BrowsePrimitivesImageFromDisk, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+                  AddMenuItemToPopupMenu(FOIEditorMenu, 'Browse...', MenuItem_BrowsePrimitivesImageFromDisk, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, nil);
                 end;
             end; //case
           end;
@@ -2498,7 +2498,7 @@ begin
         begin
           FOIEditorMenu.Items.Clear;
 
-          AddMenuItemToPopupMenu(FOIEditorMenu, CRemoveOrderMenuPrefix + '"' + FOrders[APropertyIndex].Name + '"', MenuItem_RemoveCompositionOrderFromList, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+          AddMenuItemToPopupMenu(FOIEditorMenu, CRemoveOrderMenuPrefix + '"' + FOrders[APropertyIndex].Name + '"', MenuItem_RemoveCompositionOrderFromList, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, nil);
 
           GetCursorPos(tp);
           FOIEditorMenu.PopUp(tp.X, tp.Y);
@@ -2525,7 +2525,7 @@ begin
 
           for i := 0 to CPrimitiveTypeCount - 1 do
           begin
-            AddMenuItemToPopupMenu(FOIEditorMenu, CAddPrimitiveMenuPrefix + CPrimitiveNames[i], MenuItem_AddPrimitiveToList, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+            AddMenuItemToPopupMenu(FOIEditorMenu, CAddPrimitiveMenuPrefix + CPrimitiveNames[i], MenuItem_AddPrimitiveToList, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, nil);
             imgFontColorBuffer.Canvas.Pen.Color := clWhite;
             imgFontColorBuffer.Canvas.Brush.Color := clWhite;
             imgFontColorBuffer.Canvas.Rectangle(0, 0, imgFontColorBuffer.Width, imgFontColorBuffer.Height);
@@ -2539,8 +2539,8 @@ begin
             FOIEditorMenu.Items.Items[i].Bitmap.Canvas.Draw(0, 0, imgFontColorBuffer.Picture.Graphic);
           end;
 
-          AddMenuItemToPopupMenu(FOIEditorMenu, '-', nil, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
-          AddMenuItemToPopupMenu(FOIEditorMenu, 'Remove all primitives from list...', MenuItem_RemoveAllPrimitivesFromList, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+          AddMenuItemToPopupMenu(FOIEditorMenu, '-', nil, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, nil);
+          AddMenuItemToPopupMenu(FOIEditorMenu, 'Remove all primitives from list...', MenuItem_RemoveAllPrimitivesFromList, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, nil);
 
           GetCursorPos(tp);
           FOIEditorMenu.PopUp(tp.X, tp.Y);
@@ -2559,17 +2559,17 @@ begin
         begin
           FOIEditorMenu.Items.Clear;
 
-          AddMenuItemToPopupMenu(FOIEditorMenu, 'Add composition order to list', MenuItem_AddCompositionOrderToList, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+          AddMenuItemToPopupMenu(FOIEditorMenu, 'Add composition order to list', MenuItem_AddCompositionOrderToList, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, nil);
           FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstPrimitivesEditorMenu, 0);
 
-          AddMenuItemToPopupMenu(FOIEditorMenu, '-', nil, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+          AddMenuItemToPopupMenu(FOIEditorMenu, '-', nil, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, nil);
 
-          AddMenuItemToPopupMenu(FOIEditorMenu, 'Remove all composition orders from list...', MenuItem_RemoveAllCompositionOrdersFromList, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+          AddMenuItemToPopupMenu(FOIEditorMenu, 'Remove all composition orders from list...', MenuItem_RemoveAllCompositionOrdersFromList, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, nil);
           FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstPrimitivesEditorMenu, 1);
 
-          AddMenuItemToPopupMenu(FOIEditorMenu, '-', nil, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+          AddMenuItemToPopupMenu(FOIEditorMenu, '-', nil, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, nil);
 
-          AddMenuItemToPopupMenu(FOIEditorMenu, 'Repaint all compositions', MenuItem_RepaintAllCompositions, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex);
+          AddMenuItemToPopupMenu(FOIEditorMenu, 'Repaint all compositions', MenuItem_RepaintAllCompositions, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, nil);
           FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstPrimitivesEditorMenu, 2);
 
           GetCursorPos(tp);
@@ -2793,9 +2793,9 @@ end;
 
 //Primitive compositor handlers
 
-function TfrClickerPrimitives.HandleOnEvaluateReplacementsFunc(s: string; Recursive: Boolean = True): string;
+function TfrClickerPrimitives.HandleOnEvaluateReplacementsFunc(s: string; Recursive: Boolean = True; AEvalTextCount: Integer = -1): string;
 begin
-  Result := DoOnEvaluateReplacementsFunc(s, Recursive);
+  Result := DoOnEvaluateReplacementsFunc(s, Recursive, AEvalTextCount);
 end;
 
 

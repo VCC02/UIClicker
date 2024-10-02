@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2023 VCC
+    Copyright (C) 2024 VCC
     creation date: Dec 2019
     initial release date: 26 Jul 2022
 
@@ -132,6 +132,7 @@ const
   CRECmd_ExecuteLoadSetVarFromFile = 'ExecuteLoadSetVarFromFile';
   CRECmd_ExecuteSaveSetVarToFile = 'ExecuteSaveSetVarToFile';
   CRECmd_ExecutePlugin = 'ExecutePlugin';
+  CRECmd_ExecuteEditTemplate = 'ExecuteEditTemplate';
 
   CREResp_ConnectionOK = 'Connection ok';
   CREResp_RemoteExecResponseVar = '$RemoteExecResponse$';
@@ -142,6 +143,9 @@ const
   CREResp_TemplateLoaded = 'Loaded';
   CREResp_FileNotFound = 'FileNotFound';
   CREResp_PluginDebuggingNotAvailable = 'PluginDebuggingNotAvailable'; //the plugin debugging frame is not created, probably because the request is made outside of a plugin debugging session
+
+  CREResp_ActionNotFound = 'ActionNotFound';
+  CREResp_ActionAlreadyExists = 'ActionAlreadyExists';
 
   CREResp_ErrParam = 'Err';
   CREResp_ErrResponseOK = 'OK';
@@ -202,6 +206,7 @@ function ExecuteWindowOperationsAction(ARemoteAddress: string; AWindowOperations
 function ExecuteLoadSetVarFromFileAction(ARemoteAddress: string; ALoadSetVarFromFileOptions: TClkLoadSetVarFromFileOptions; ACallAppProcMsg: Boolean = True): string;
 function ExecuteSaveSetVarToFileAction(ARemoteAddress: string; ASaveSetVarToFileOptions: TClkSaveSetVarToFileOptions; ACallAppProcMsg: Boolean = True): string;
 function ExecutePluginAction(ARemoteAddress: string; APluginOptions: TClkPluginOptions; ACallAppProcMsg: Boolean = True): string;
+function ExecuteEditTemplateAction(ARemoteAddress: string; AEditTemplateOptions: TClkEditTemplateOptions; ACallAppProcMsg: Boolean = True): string;
 
 procedure GetListOfUsedFilesFromLoadedTemplate(var AClkActions: TClkActionsRecArr; AListOfFiles: TStringList);
 function SendMissingFilesToServer(ARemoteAddress: string; var AClkActions: TClkActionsRecArr): string;
@@ -791,6 +796,16 @@ begin
   Result := SendTextRequestToServer(ARemoteAddress + CRECmd_ExecutePlugin + '?' +
                                     CREParam_StackLevel + '=0' + '&' +   //use the main editor
                                     GetPluginActionProperties(APluginOptions),
+                                    ACallAppProcMsg
+                                    );
+end;
+
+
+function ExecuteEditTemplateAction(ARemoteAddress: string; AEditTemplateOptions: TClkEditTemplateOptions; ACallAppProcMsg: Boolean = True): string;
+begin
+  Result := SendTextRequestToServer(ARemoteAddress + CRECmd_ExecuteEditTemplate + '?' +
+                                    CREParam_StackLevel + '=0' + '&' +   //use the main editor
+                                    GetEditTemplateActionProperties(AEditTemplateOptions, True),
                                     ACallAppProcMsg
                                     );
 end;

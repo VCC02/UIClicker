@@ -1171,8 +1171,9 @@ begin
   try   //wait 300ms more, for any other loop that might be using this flag
     tk := GetTickCount64;
     repeat
-      if FPollForMissingServerFiles.Done then    //client mode
-        Break;
+      if FPollForMissingServerFiles <> nil then
+        if FPollForMissingServerFiles.Done then    //client mode
+          Break;
 
       Application.ProcessMessages;
       Sleep(1);
@@ -2696,8 +2697,31 @@ begin
 
   if ASyncObj.FCmd = '/' + CRECmd_ExecutePlugin then
   begin
-    Result := CREResp_RemoteExecResponseVar + '=' + IntToStr(Ord(frClickerActionsArrMain.ActionExecution.ExecutePluginActionAsString(ASyncObj.FParams)));
-    Result := Result + #8#7 + GetClkVariables87;
+    RemoteState := ASyncObj.FFrame.ExecutingActionFromRemote;
+    try
+      frClickerActionsArrMain.ExecutingActionFromRemote := True;
+
+      Result := CREResp_RemoteExecResponseVar + '=' + IntToStr(Ord(frClickerActionsArrMain.ActionExecution.ExecutePluginActionAsString(ASyncObj.FParams)));
+      Result := Result + #8#7 + GetClkVariables87;
+    finally
+      ASyncObj.FFrame.ExecutingActionFromRemote := RemoteState //restore, in case the server is running unattended
+    end;
+
+    Exit;
+  end;
+
+  if ASyncObj.FCmd = '/' + CRECmd_ExecuteEditTemplate then
+  begin
+    RemoteState := ASyncObj.FFrame.ExecutingActionFromRemote;
+    try
+      frClickerActionsArrMain.ExecutingActionFromRemote := True;
+
+      Result := CREResp_RemoteExecResponseVar + '=' + IntToStr(Ord(frClickerActionsArrMain.ActionExecution.ExecuteEditTemplateActionAsString(ASyncObj.FParams)));
+      Result := Result + #8#7 + GetClkVariables87;
+    finally
+      ASyncObj.FFrame.ExecutingActionFromRemote := RemoteState //restore, in case the server is running unattended
+    end;
+
     Exit;
   end;
 
@@ -3674,6 +3698,15 @@ begin
   TempFileName := FileName;
   TempFileName := StringReplace(TempFileName, '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
   TempFileName := StringReplace(TempFileName, '$TemplateDir$', FFullTemplatesDir, [rfReplaceAll]);
+  ////////////////////////////// '$SelfTemplateDir$' depends on the caller frame
+
+  //Result := False;         //It seems that templates end up here without setting FileLocationOfDepsIsMem to flMem.
+  //
+  //if CExpectedFileLocation[frClickerActionsArrMain.FileLocationOfDepsIsMem] = flMem then  ////////////////////////////// ToDo: handle also other frames than frClickerActionsArrMain
+  //  Result := FInMemFileSystem.FileExistsInMem(TempFileName)
+  //else
+  //  if CExpectedFileLocation[frClickerActionsArrMain.FileLocationOfDepsIsMem] = flDisk then ////////////////////////////// ToDo: handle also other frames than frClickerActionsArrMain
+  //    Result := DoOnFileExists(TempFileName);
 
   Result := DoOnFileExists(TempFileName);
 end;

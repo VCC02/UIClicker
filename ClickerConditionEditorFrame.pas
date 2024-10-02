@@ -43,6 +43,18 @@ type
   TfrClickerConditionEditor = class(TFrame)
     imglstComparisonOperators: TImageList;
     lblLastActionStatusValidValues: TLabel;
+    MenuItemExtNotEqual: TMenuItem;
+    MenuItemExtEqual: TMenuItem;
+    MenuItemExtLessThan: TMenuItem;
+    MenuItemExtGreaterThan: TMenuItem;
+    MenuItemExtLessThanOrEqual: TMenuItem;
+    MenuItemExtGreaterThanOrEqual: TMenuItem;
+    MenuItemIntGreaterThanOrEqual: TMenuItem;
+    MenuItemIntLessThanOrEqual: TMenuItem;
+    MenuItemIntLessThan: TMenuItem;
+    MenuItemIntGreaterThan: TMenuItem;
+    MenuItemIntEqual: TMenuItem;
+    MenuItemIntNotEqual: TMenuItem;
     MenuItem_AddPrefixWithZerosEqualsNumber: TMenuItem;
     MenuItemEqual: TMenuItem;
     MenuItemGreaterThan: TMenuItem;
@@ -62,8 +74,20 @@ type
     spdbtnAddOR: TSpeedButton;
     tmrEditingCondition: TTimer;
     procedure MenuItemEqualClick(Sender: TObject);
+    procedure MenuItemExtEqualClick(Sender: TObject);
+    procedure MenuItemExtGreaterThanClick(Sender: TObject);
+    procedure MenuItemExtGreaterThanOrEqualClick(Sender: TObject);
+    procedure MenuItemExtLessThanClick(Sender: TObject);
+    procedure MenuItemExtLessThanOrEqualClick(Sender: TObject);
+    procedure MenuItemExtNotEqualClick(Sender: TObject);
     procedure MenuItemGreaterThanClick(Sender: TObject);
     procedure MenuItemGreaterThanOrEqualClick(Sender: TObject);
+    procedure MenuItemIntEqualClick(Sender: TObject);
+    procedure MenuItemIntGreaterThanClick(Sender: TObject);
+    procedure MenuItemIntGreaterThanOrEqualClick(Sender: TObject);
+    procedure MenuItemIntLessThanClick(Sender: TObject);
+    procedure MenuItemIntLessThanOrEqualClick(Sender: TObject);
+    procedure MenuItemIntNotEqualClick(Sender: TObject);
     procedure MenuItemLessThanClick(Sender: TObject);
     procedure MenuItemLessThanOrEqualClick(Sender: TObject);
     procedure MenuItemNotEqualClick(Sender: TObject);
@@ -74,6 +98,7 @@ type
     procedure MenuItem_AddLastActionStatusEqualsSuccessfulClick(Sender: TObject
       );
     procedure MenuItem_AddPrefixWithZerosEqualsNumberClick(Sender: TObject);
+    procedure pmActionConditionsEvalPopup(Sender: TObject);
     procedure spdbtnAddANDClick(Sender: TObject);
     procedure spdbtnAddORClick(Sender: TObject);
     procedure tmrEditingConditionTimer(Sender: TObject);
@@ -112,6 +137,7 @@ type
 
     procedure AddExpressionColumns(IsLastColumn: Boolean);
     procedure SetConditionOperator(ANewOperator: string);
+    function GetClickedConditionOperatorIndex: Integer;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -130,6 +156,10 @@ type
 implementation
 
 {$R *.frm}
+
+
+uses
+  ImgList;
 
 
 { TfrClickerConditionEditor }
@@ -339,6 +369,24 @@ begin
 
   vstActionConditions.RepaintNode(FActionConditionsMouseUpHitInfo.HitNode);
   TriggerOnControlsModified;
+end;
+
+
+function TfrClickerConditionEditor.GetClickedConditionOperatorIndex: Integer;
+var
+  Op1, Op2, OpEq, RawExpr: string;
+  i: Integer;
+begin
+  RawExpr := FActionConditionForPreview[FActionConditionsMouseUpHitInfo.HitNode^.Index].Strings[FActionConditionsMouseUpHitInfo.HitColumn shr 2]; //var==var    or   var<>var
+  RawExpressionToParts(RawExpr, Op1, Op2, OpEq);
+
+  Result := -1;
+  for i := 0 to CComparisonOperatorsCount - 1 do
+    if OpEq = CComparisonOperators[i] then
+    begin
+      Result := i;
+      Exit;
+    end;
 end;
 
 
@@ -700,6 +748,42 @@ begin
 end;
 
 
+procedure TfrClickerConditionEditor.MenuItemExtEqualClick(Sender: TObject);
+begin
+  SetConditionOperator(CExtCompEqual);
+end;
+
+
+procedure TfrClickerConditionEditor.MenuItemExtGreaterThanClick(Sender: TObject);
+begin
+  SetConditionOperator(CExtCompGreaterThan);
+end;
+
+
+procedure TfrClickerConditionEditor.MenuItemExtGreaterThanOrEqualClick(Sender: TObject);
+begin
+  SetConditionOperator(CExtCompGreaterThanOrEqual);
+end;
+
+
+procedure TfrClickerConditionEditor.MenuItemExtLessThanClick(Sender: TObject);
+begin
+  SetConditionOperator(CExtCompLessThan);
+end;
+
+
+procedure TfrClickerConditionEditor.MenuItemExtLessThanOrEqualClick(Sender: TObject);
+begin
+  SetConditionOperator(CExtCompLessThanOrEqual);
+end;
+
+
+procedure TfrClickerConditionEditor.MenuItemExtNotEqualClick(Sender: TObject);
+begin
+  SetConditionOperator(CExtCompNotEqual);
+end;
+
+
 procedure TfrClickerConditionEditor.MenuItemLessThanClick(Sender: TObject);
 begin
   SetConditionOperator(CCompLessThan);
@@ -722,6 +806,42 @@ procedure TfrClickerConditionEditor.MenuItemGreaterThanOrEqualClick(
   Sender: TObject);
 begin
   SetConditionOperator(CCompGreaterThanOrEqual);
+end;
+
+
+procedure TfrClickerConditionEditor.MenuItemIntEqualClick(Sender: TObject);
+begin
+  SetConditionOperator(CIntCompEqual);
+end;
+
+
+procedure TfrClickerConditionEditor.MenuItemIntGreaterThanClick(Sender: TObject);
+begin
+  SetConditionOperator(CIntCompGreaterThan);
+end;
+
+
+procedure TfrClickerConditionEditor.MenuItemIntGreaterThanOrEqualClick(Sender: TObject);
+begin
+  SetConditionOperator(CIntCompGreaterThanOrEqual);
+end;
+
+
+procedure TfrClickerConditionEditor.MenuItemIntLessThanClick(Sender: TObject);
+begin
+  SetConditionOperator(CIntCompLessThan);
+end;
+
+
+procedure TfrClickerConditionEditor.MenuItemIntLessThanOrEqualClick(Sender: TObject);
+begin
+  SetConditionOperator(CIntCompLessThanOrEqual);
+end;
+
+
+procedure TfrClickerConditionEditor.MenuItemIntNotEqualClick(Sender: TObject);
+begin
+  SetConditionOperator(CIntCompNotEqual);
 end;
 
 
@@ -812,6 +932,25 @@ begin
   vstActionConditions.Repaint;
 
   TriggerOnControlsModified;
+end;
+
+
+procedure TfrClickerConditionEditor.pmActionConditionsEvalPopup(Sender: TObject);
+var
+  i, CurrentOperator: Integer;
+begin
+  CurrentOperator := GetClickedConditionOperatorIndex;
+
+  for i := 0 to pmActionConditionsEval.Items.Count - 1 do
+  begin
+    pmActionConditionsEval.Items.Items[i].Bitmap.SetSize(16, 16);
+    pmActionConditionsEval.Items.Items[i].Bitmap.Canvas.Pen.Color := clWhite;
+    pmActionConditionsEval.Items.Items[i].Bitmap.Canvas.Brush.Color := clWhite;
+    pmActionConditionsEval.Items.Items[i].Bitmap.Canvas.Rectangle(0, 0, 16, 16);
+
+    imglstComparisonOperators.Draw(pmActionConditionsEval.Items.Items[i].Bitmap.Canvas, 0, 0, i, dsNormal, itImage);
+    pmActionConditionsEval.Items.Items[i].Checked := i = CurrentOperator;
+  end;
 end;
 
 

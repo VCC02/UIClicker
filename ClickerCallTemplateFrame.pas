@@ -296,7 +296,7 @@ begin
     begin
       if vallstCustomVariables.Strings.ValueFromIndex[Node^.Index] <> FCustomVarsEditingText then
       begin
-        vallstCustomVariables.Strings.ValueFromIndex[Node^.Index] := FCustomVarsEditingText;
+        vallstCustomVariables.Strings.Strings[Node^.Index] := vallstCustomVariables.Strings.Names[Node^.Index] + '=' + FCustomVarsEditingText; //vallstCustomVariables.Strings.ValueFromIndex[Node^.Index] := FCustomVarsEditingText; //Do not set ValueFromIndex !!!
         DoOnTriggerOnControlsModified;
       end;
     end;

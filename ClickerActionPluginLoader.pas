@@ -245,6 +245,9 @@ begin
       acPlugin:
         ActionContentStr := GetPluginActionProperties(ActionPlugin^.AllActions^[AIndex].PluginOptions);
 
+      acEditTemplate:
+        ActionContentStr := GetEditTemplateActionProperties(ActionPlugin^.AllActions^[AIndex].EditTemplateOptions);
+
       else
         ActionContentStr := 'Not implemented';
     end;

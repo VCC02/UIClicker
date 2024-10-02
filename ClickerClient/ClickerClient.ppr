@@ -139,6 +139,7 @@ type
     PrecisionTimeout: Boolean;
     FullBackgroundImageInResult: Boolean;
     MatchByHistogramSettings: TMatchByHistogramSettingsAPI;
+    EvaluateTextCount: PWideChar;
   end;
 
   PClkFindControlOptionsAPI = ^TClkFindControlOptionsAPI;
@@ -222,6 +223,22 @@ type
   end;
 
   PClkPluginOptionsAPI = ^TClkPluginOptionsAPI;
+
+
+  TClkEditTemplateOptionsAPI = record
+    Operation: TEditTemplateOperation;
+    WhichTemplate: TEditTemplateWhichTemplate;
+    TemplateFileName: PWideChar;
+    ListOfEditedProperties: PWideChar;
+    ListOfEnabledProperties: PWideChar;
+    EditedActionName: PWideChar;
+    EditedActionType: TClkAction;
+    EditedActionCondition: PWideChar;
+    EditedActionTimeout: LongInt;
+    NewActionName: PWideChar;
+  end;
+
+  PClkEditTemplateOptionsAPI = ^TClkEditTemplateOptionsAPI;
 
 
   TClkFindControlMatchBitmapTextAPI = record
@@ -732,6 +749,8 @@ begin
   SetPointedContentToString(@string(PWideChar(AFindControlOptions^.MatchByHistogramSettings.MostSignificantColorCountInSubBmp))[1], TempAction.FindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInSubBmp);
   SetPointedContentToString(@string(PWideChar(AFindControlOptions^.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp))[1], TempAction.FindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp);
 
+  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.EvaluateTextCount))[1], TempAction.FindControlOptions.EvaluateTextCount);
+
   AddActionToTemplate(TemplateFileName, TempAction);
   Result := 0;
 end;
@@ -1077,6 +1096,45 @@ begin
 end;
 
 
+function AddEditTemplateActionToTemplate(ATemplateFileName: Pointer;
+
+                                         AActionName: Pointer;
+                                         AActionTimeout: LongInt; //ms
+                                         AActionEnabled: Boolean;
+                                         AActionCondition: Pointer;
+
+                                         AEditTemplateOptions: PClkEditTemplateOptionsAPI
+
+                                        ): LongInt; cdecl;
+var
+  TemplateFileName: string;
+  TempAction: TClkActionRec;
+begin
+  if InMemFS = nil then
+  begin
+    Result := -1;
+    Exit;
+  end;
+
+  SetBasicActionOptions(ATemplateFileName, AActionName, acPlugin, AActionTimeout, AActionEnabled, AActionCondition, TempAction, TemplateFileName);
+
+  //Plugin stuff
+  TempAction.EditTemplateOptions.Operation := AEditTemplateOptions^.Operation;
+  TempAction.EditTemplateOptions.WhichTemplate := AEditTemplateOptions^.WhichTemplate;
+  SetPointedContentToString(@string(PWideChar(AEditTemplateOptions^.TemplateFileName))[1], TempAction.EditTemplateOptions.TemplateFileName);
+  SetPointedContentToString(@string(PWideChar(AEditTemplateOptions^.ListOfEditedProperties))[1], TempAction.EditTemplateOptions.ListOfEditedProperties);
+  SetPointedContentToString(@string(PWideChar(AEditTemplateOptions^.ListOfEnabledProperties))[1], TempAction.EditTemplateOptions.ListOfEnabledProperties);
+  SetPointedContentToString(@string(PWideChar(AEditTemplateOptions^.EditedActionName))[1], TempAction.EditTemplateOptions.EditedActionName);
+  TempAction.EditTemplateOptions.EditedActionType := AEditTemplateOptions^.EditedActionType;
+  SetPointedContentToString(@string(PWideChar(AEditTemplateOptions^.EditedActionCondition))[1], TempAction.EditTemplateOptions.EditedActionCondition);
+  TempAction.EditTemplateOptions.EditedActionTimeout := AEditTemplateOptions^.EditedActionTimeout;
+  SetPointedContentToString(@string(PWideChar(AEditTemplateOptions^.NewActionName))[1], TempAction.EditTemplateOptions.NewActionName);
+
+  AddActionToTemplate(TemplateFileName, TempAction);
+  Result := 0;
+end;
+
+
 function AddFontProfileToFindSubControlActionInTemplate(ATemplateFileName: string; ActionIndex: Integer; AFindControlMatchBitmapText: TClkFindControlMatchBitmapText): Integer;
 var
   ClkActions: TClkActionsRecArr;
@@ -1410,6 +1468,7 @@ exports
   AddLoadSetVarFromFileActionToTemplate,
   AddSaveSetVarToFileActionToTemplate,
   AddPluginActionToTemplate,
+  AddEditTemplateActionToTemplate,
 
   AddFontProfileToFindSubControlAction,
 

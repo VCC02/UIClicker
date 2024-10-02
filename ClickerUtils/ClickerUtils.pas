@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2023 VCC
+    Copyright (C) 2024 VCC
     creation date: Dec 2019
     initial release date: 26 Jul 2022
 
@@ -43,7 +43,7 @@ uses
 type
   TClkAction = (acClick, acExecApp, acFindControl, acFindSubControl,
                 acSetControlText, acCallTemplate, acSleep, acSetVar, acWindowOperations,
-                acLoadSetVarFromFile, acSaveSetVarToFile, acPlugin);     //please update CInsertActionOffset constant in ClickerActionsArrFrame, if there will be more than 30 action types
+                acLoadSetVarFromFile, acSaveSetVarToFile, acPlugin, acEditTemplate);     //please update CInsertActionOffset constant in ClickerActionsArrFrame, if there will be more than 30 action types
 
   TClkSetTextControlType = (stEditBox, stComboBox, stKeystrokes);
   TSearchForControlMode = (sfcmGenGrid, sfcmEnumWindows, sfcmFindWindow);
@@ -58,7 +58,7 @@ type
 
   TOnAddToLog = procedure(s: string) of object;
 
-  TEvaluateReplacementsFunc = function(s: string; Recursive: Boolean = True): string of object;
+  TEvaluateReplacementsFunc = function(s: string; Recursive: Boolean = True; AEvalTextCount: Integer = -1): string of object;
   TOnTriggerOnControlsModified = procedure of object;
   TOnEvaluateReplacements = function(s: string): string of object;
   TOnReverseEvaluateReplacements = function(s: string): string of object;
@@ -113,7 +113,7 @@ type
 const
   CClkActionStr: array[TClkAction] of string = ('Click', 'ExecApp', 'FindControl', 'FindSubControl',
                                                 'SetControlText', 'CallTemplate', 'Sleep', 'SetVar', 'WindowOperations',
-                                                'LoadSetVarFromFile', 'SaveSetVarToFile', 'Plugin');
+                                                'LoadSetVarFromFile', 'SaveSetVarToFile', 'Plugin', 'EditTemplate');
   CClkUnsetAction = 255; //TClkAction(255);
 
   //These constants are used to index an array, similar to enum values.  Please update TClickTypeStr if adding more constants to this "type".
@@ -286,6 +286,7 @@ type
     PrecisionTimeout: Boolean;  //When True, the bitmap searching algorithm verifies the timeout. This is a bit of extra overhead, which may slow down the search.
     FullBackgroundImageInResult: Boolean; //When True, the resulted debugging image contains the background image. Defaults to True for backwards compatibility.
     MatchByHistogramSettings: TMatchByHistogramSettings; //used when MatchBitmapAlgorithm is mbaRawHistogramZones
+    EvaluateTextCount: string; //-1 = default (1000 "recursive" evaluations), 0 = no evaluations, >1 = EvaluateTextCount "recursive" evaluations
   end;
 
   TClkSetTextOptions = record
@@ -354,6 +355,26 @@ type
     ListOfInitValues: string;             //CRLF separated list of values
   end;
 
+  TEditTemplateOperation = (etoNewAction, etoUpdateAction, etoMoveAction, etoDeleteAction, etoDuplicateAction, etoRenameAction, etoEnableAction, etoDisableAction, etoGetProperty, etoSetProperty, etoSetCondition, etoSetTimeout, etoExecuteAction, etoSaveTemplate);
+  TEditTemplateWhichTemplate = (etwtSelf, etwtOther);
+
+  PClkActionRec = ^TClkActionRec;
+
+  TClkEditTemplateOptions = record
+    Operation: TEditTemplateOperation;
+    WhichTemplate: TEditTemplateWhichTemplate;
+    TemplateFileName: string; //used when WhichTemplate is set to etwtOther
+
+    ListOfEditedProperties: string;       //serialized properties for the selected action (see the EditedActionType field)   #18 separated list of values
+    ListOfEnabledProperties: string;      //CRLF separated list of values
+
+    EditedActionName: string;             //Used to identify the action.  Both the EditedActionType and ActionName have to match if they point to an existing action.
+    EditedActionType: TClkAction;         //Action type which is being edited by EditTemplate action. The type has to be set in advance, because the edited template might not be available to tell which type the edited action is going to be.
+    EditedActionCondition: string;        //Used when setting action condition
+    EditedActionTimeout: Integer;         //Used when setting action timeout
+    NewActionName: string;                //Used when renaming and duplicating the action
+  end;
+
   TActionBreakPoint = record
     Exists: Boolean; //when False, the action has no breakpoint
     Enabled: Boolean;
@@ -379,9 +400,10 @@ type
     LoadSetVarFromFileOptions: TClkLoadSetVarFromFileOptions;
     SaveSetVarToFileOptions: TClkSaveSetVarToFileOptions;
     PluginOptions: TClkPluginOptions;
+    EditTemplateOptions: TClkEditTemplateOptions;
   end;
 
-  PClkActionRec = ^TClkActionRec;
+
 
   TClkActionsRecArr = array of TClkActionRec;
   PClkActionsRecArr = ^TClkActionsRecArr;
@@ -457,13 +479,40 @@ type
 const
   CActionStatusStr: array[TActionStatus] of string = ('Not Started', 'Failed', 'Successful', 'In Progress', 'Allowed Failed');
 
+  CPropSeparatorInt = #18; //This separator is used to replace the '&' character when storing properties in serialed form in memory ("internally"). This format can also be used when saving properties to disk.
+  CPropSeparatorSer = '&'; //This separator is used for serializing properties.
+
   CCompNotEqual = '<>';        //all these comparison operators should be two characters long
   CCompEqual = '==';
   CCompLessThan = '<?';
   CCompGreaterThan = '>?';
   CCompLessThanOrEqual = '<=';
   CCompGreaterThanOrEqual = '>=';
-  CComparisonOperators: array[0..5] of string = (CCompNotEqual, CCompEqual, CCompLessThan, CCompGreaterThan, CCompLessThanOrEqual, CCompGreaterThanOrEqual);
+
+  //IntComp:  #1 - "=", #2 - "<",  #3 - ">"    //all these comparison operators should be two characters long
+  CIntCompNotEqual = #2#3; //'<>'
+  CIntCompEqual = #1#1;  //'=='
+  CIntCompLessThan = #2'?';   //'<?'
+  CIntCompGreaterThan = #3'?';  //'>?'
+  CIntCompLessThanOrEqual = #2#1; //'<='
+  CIntCompGreaterThanOrEqual = #3#1;  // '>='
+
+  //ExtComp:  #14 - "=", #15 - "<",  #16 - ">"    //all these comparison operators should be two characters long
+  CExtCompNotEqual = #15#16; //'<>'
+  CExtCompEqual = #14#14;  //'=='
+  CExtCompLessThan = #15'?';   //'<?'
+  CExtCompGreaterThan = #16'?';  //'>?'
+  CExtCompLessThanOrEqual = #15#14; //'<='
+  CExtCompGreaterThanOrEqual = #16#14;  // '>='
+
+  //If adding new datatypes or operations, please avoid #18 as encoding character, since it is used by EditTemplate action for serializing properties
+
+  CComparisonOperatorsCount = 18;
+  CComparisonOperators: array[0..CComparisonOperatorsCount - 1] of string = (
+    CCompNotEqual, CCompEqual, CCompLessThan, CCompGreaterThan, CCompLessThanOrEqual, CCompGreaterThanOrEqual,
+    CIntCompNotEqual, CIntCompEqual, CIntCompLessThan, CIntCompGreaterThan, CIntCompLessThanOrEqual, CIntCompGreaterThanOrEqual,
+    CExtCompNotEqual, CExtCompEqual, CExtCompLessThan, CExtCompGreaterThan, CExtCompLessThanOrEqual, CExtCompGreaterThanOrEqual
+  );
 
   //property types
   CDTString = 'String';
@@ -495,7 +544,9 @@ const
   CSearchForControlModeStr: array[TSearchForControlMode] of string = ('sfcmGenGrid', 'sfcmEnumWindows', 'sfcmFindWindow');
   CFontQualityStr: array[TFontQuality] of string = ('fqDefault', 'fqDraft', 'fqProof', 'fqNonAntialiased', 'fqAntialiased', 'fqCleartype', 'fqCleartypeNatural');
   CLoopDirectionStr: array[TLoopDirection] of string = ('ldInc', 'ldDec', 'ldAuto');
-  CLoopEvalBreakPositionStr: array[TLoopEvalBreakPosition] of string  = ('lebpAfterContent', 'lebpBeforeContent');
+  CLoopEvalBreakPositionStr: array[TLoopEvalBreakPosition] of string = ('lebpAfterContent', 'lebpBeforeContent');
+  CEditTemplateOperationStr: array[TEditTemplateOperation] of string = ('etoNewAction', 'etoUpdateAction', 'etoMoveAction', 'etoDeleteAction', 'etoDuplicateAction', 'etoRenameAction', 'etoEnableAction', 'etoDisableAction', 'etoGetProperty', 'etoSetProperty', 'etoSetCondition', 'etoSetTimeout', 'etoExecuteAction', 'etoSaveTemplate');
+  CEditTemplateWhichTemplateStr: array[TEditTemplateWhichTemplate] of string = ('etwtSelf', 'etwtOther');
 
 
 type
@@ -570,12 +621,16 @@ function FastReplace_ReturnTo87(s: string): string; //should be used for remote 
 function FastReplace_87ToReturn(s: string): string; //should be used for remote execution only
 function FastReplace_87To45(s: string): string;
 function FastReplace_45To87(s: string): string;
+function FastReplace_1920To45(s: string): string;
+function FastReplace_45To1920(s: string): string;
+function FastReplace_1920ToReturn(s: string): string;
+function FastReplace_ReturnTo1920(s: string): string;
 function FastReplace_ReturnToCSV(s: string): string;
 function FastReplace_0To1(s: string): string;
 
 function GetIsUserAnAdmin: string;
 
-function EvaluateAllReplacements(AListOfVars: TStringList; s: string; Recursive: Boolean = True): string;
+function EvaluateAllReplacements(AListOfVars: TStringList; s: string; Recursive: Boolean = True; AEvalTextCount: Integer = -1): string;
 function CreateDirWithSubDirs(ADir: string): Boolean;
 function HexToInt(s: string): Cardinal;
 function StringToHex(AStr: string): string;   //converts 'abc' to '616263'
@@ -602,6 +657,8 @@ procedure CopyPartialResultsToFinalResult(var AResultedControlArr, APartialResul
 
 function ExtractFileNameNoExt(AFnm: string): string;
 function ExtractFullFileNameNoExt(AFnm: string): string;
+
+function InitListOfZerosByItemCount(AList: string): string;
 
 var
   UseWideStringsOnGetControlText: Boolean = False;
@@ -804,6 +861,102 @@ begin
       begin
         s[i] := #8;
         s[i + 1] := #7;
+        Continue;
+      end;
+
+  Result := s;
+end;
+
+
+function FastReplace_1920To45(s: string): string;
+var
+  i, n: Integer;
+begin
+  n := Pos(#19, s);
+  if n = 0 then
+  begin
+    Result := s;
+    Exit;
+  end;
+
+  for i := n to Length(s) - 1 do
+    if s[i] = #19 then
+      if s[i + 1] = #20 then
+      begin
+        s[i] := #4;
+        s[i + 1] := #5;
+        Continue;
+      end;
+
+  Result := s;
+end;
+
+
+function FastReplace_45To1920(s: string): string;
+var
+  i, n: Integer;
+begin
+  n := Pos(#4, s);
+  if n = 0 then
+  begin
+    Result := s;
+    Exit;
+  end;
+
+  for i := n to Length(s) - 1 do
+    if s[i] = #4 then
+      if s[i + 1] = #5 then
+      begin
+        s[i] := #19;
+        s[i + 1] := #20;
+        Continue;
+      end;
+
+  Result := s;
+end;
+
+
+function FastReplace_1920ToReturn(s: string): string;
+var
+  i, n: Integer;
+begin
+  n := Pos(#19, s);
+  if n = 0 then
+  begin
+    Result := s;
+    Exit;
+  end;
+
+  for i := n to Length(s) - 1 do
+    if s[i] = #19 then
+      if s[i + 1] = #20 then
+      begin
+        s[i] := #13;
+        s[i + 1] := #10;
+        Continue;
+      end;
+
+  Result := s;
+end;
+
+
+function FastReplace_ReturnTo1920(s: string): string;
+var
+  i, n: Integer;
+begin
+  n := Pos(#13, s);
+  if n = 0 then
+  begin
+    Result := s;
+    Exit;
+  end;
+
+  for i := n to Length(s) - 1 do
+    if s[i] = #13 then
+      if s[i + 1] = #10 then
+      begin
+        s[i] := #19;
+        s[i + 1] := #20;
         Continue;
       end;
 
@@ -2265,7 +2418,7 @@ begin
 end;
 
 
-function EvaluateAllReplacements(AListOfVars: TStringList; s: string; Recursive: Boolean = True): string;
+function EvaluateAllReplacements(AListOfVars: TStringList; s: string; Recursive: Boolean = True; AEvalTextCount: Integer = -1): string;
 var
   temp_s: string;
   i: Integer;
@@ -2276,13 +2429,23 @@ begin
     Exit;
   end;
 
+  if AEvalTextCount = 0 then
+  begin
+    Result := s;
+    Exit;
+  end;
+
   temp_s := ReplaceOnce(AListOfVars, s);
 
   if Recursive and (Pos('$', temp_s) > 0) then
   begin
-    i := 0;
+    i := 1;
     repeat
       Result := temp_s;
+
+      if i = AEvalTextCount then  // "=", not ">=", because AEvalTextCount is -1, by default
+        Break;
+
       temp_s := ReplaceOnce(AListOfVars, Result);
       if temp_s = Result then //no replacements found
         Break;
@@ -2462,13 +2625,167 @@ begin
 end;
 
 
+function EvalCmp_StrNotEqual(AOp1, AOp2: string): Boolean;
+begin
+  Result := AOp1 <> AOp2;
+end;
+
+
+function EvalCmp_StrEqual(AOp1, AOp2: string): Boolean;
+begin
+  Result := AOp1 = AOp2;
+end;
+
+
+function EvalCmp_StrLessThan(AOp1, AOp2: string): Boolean;
+begin
+  Result := AOp1 < AOp2;
+end;
+
+
+function EvalCmp_StrGreaterThan(AOp1, AOp2: string): Boolean;
+begin
+  Result := AOp1 > AOp2;
+end;
+
+
+function EvalCmp_StrLessThanOrEqual(AOp1, AOp2: string): Boolean;
+begin
+  Result := AOp1 <= AOp2;
+end;
+
+
+function EvalCmp_StrGreaterThanOrEqual(AOp1, AOp2: string): Boolean;
+begin
+  Result := AOp1 >= AOp2;
+end;
+
+
+function EvalCmp_IntNotEqual(AOp1, AOp2: string): Boolean;
+begin
+  Result := StrToIntDef(AOp1, 0) <> StrToIntDef(AOp2, 0);
+end;
+
+
+function EvalCmp_IntEqual(AOp1, AOp2: string): Boolean;
+begin
+  Result := StrToIntDef(AOp1, 0) = StrToIntDef(AOp2, 0);
+end;
+
+
+function EvalCmp_IntLessThan(AOp1, AOp2: string): Boolean;
+begin
+  Result := StrToIntDef(AOp1, 0) < StrToIntDef(AOp2, 0);
+end;
+
+
+function EvalCmp_IntGreaterThan(AOp1, AOp2: string): Boolean;
+begin
+  Result := StrToIntDef(AOp1, 0) > StrToIntDef(AOp2, 0);
+end;
+
+
+function EvalCmp_IntLessThanOrEqual(AOp1, AOp2: string): Boolean;
+begin
+  Result := StrToIntDef(AOp1, 0) <= StrToIntDef(AOp2, 0);
+end;
+
+
+function EvalCmp_IntGreaterThanOrEqual(AOp1, AOp2: string): Boolean;
+begin
+  Result := StrToIntDef(AOp1, 0) >= StrToIntDef(AOp2, 0);
+end;
+
+
+function EvalCmp_ExtNotEqual(AOp1, AOp2: string): Boolean;
+begin
+  Result := StrToFloatDef(AOp1, 0) <> StrToFloatDef(AOp2, 0);
+end;
+
+
+function EvalCmp_ExtEqual(AOp1, AOp2: string): Boolean;
+begin
+  Result := StrToFloatDef(AOp1, 0) = StrToFloatDef(AOp2, 0);
+end;
+
+
+function EvalCmp_ExtLessThan(AOp1, AOp2: string): Boolean;
+begin
+  Result := StrToFloatDef(AOp1, 0) < StrToFloatDef(AOp2, 0);
+end;
+
+
+function EvalCmp_ExtGreaterThan(AOp1, AOp2: string): Boolean;
+begin
+  Result := StrToFloatDef(AOp1, 0) > StrToFloatDef(AOp2, 0);
+end;
+
+
+function EvalCmp_ExtLessThanOrEqual(AOp1, AOp2: string): Boolean;
+begin
+  Result := StrToFloatDef(AOp1, 0) <= StrToFloatDef(AOp2, 0);
+end;
+
+
+function EvalCmp_ExtGreaterThanOrEqual(AOp1, AOp2: string): Boolean;
+begin
+  Result := StrToFloatDef(AOp1, 0) >= StrToFloatDef(AOp2, 0);
+end;
+
+
+type
+  TEvalCmpFunc = function(AOp1, AOp2: string): Boolean;
+
+const
+  CEvalCmpFunctions: array[0..CComparisonOperatorsCount - 1] of TEvalCmpFunc = (
+    //String comparisons
+    @EvalCmp_StrNotEqual,
+    @EvalCmp_StrEqual,
+    @EvalCmp_StrLessThan,
+    @EvalCmp_StrGreaterThan,
+    @EvalCmp_StrLessThanOrEqual,
+    @EvalCmp_StrGreaterThanOrEqual,
+
+    //Integer comparisons
+    @EvalCmp_IntNotEqual,
+    @EvalCmp_IntEqual,
+    @EvalCmp_IntLessThan,
+    @EvalCmp_IntGreaterThan,
+    @EvalCmp_IntLessThanOrEqual,
+    @EvalCmp_IntGreaterThanOrEqual,
+
+    //Extended comparisons
+    @EvalCmp_ExtNotEqual,
+    @EvalCmp_ExtEqual,
+    @EvalCmp_ExtLessThan,
+    @EvalCmp_ExtGreaterThan,
+    @EvalCmp_ExtLessThanOrEqual,
+    @EvalCmp_ExtGreaterThanOrEqual
+  );
+
+
+function EvaluatePartialActionCondition(AEvalOp1, AEvalOp2, AOpEq: string): Boolean;
+var
+  i: Integer;
+begin
+  for i := 0 to CComparisonOperatorsCount - 1 do
+    if AOpEq = CComparisonOperators[i] then
+    begin
+      Result := CEvalCmpFunctions[i](AEvalOp1, AEvalOp2);
+      Exit;
+    end;
+
+  raise Exception.Create('operator "' + AOpEq + '" not implemented in EvaluatePartialActionCondition.');
+end;
+
+
 function EvaluateActionCondition(AActionCondition: string; AEvalReplacementsFunc: TEvaluateReplacementsFunc): Boolean;
 var
   RawCondition: string;
   AStringList, AConditionPart: TStringList;
   i, j: Integer;
   PartialResult, EvalResult: Boolean;
-  Op1, Op2, OpEq: string;
+  Op1, Op2, OpEq, EvalOp1, EvalOp2: string;
 begin
   Result := False;
   EvalResult := False;
@@ -2494,27 +2811,10 @@ begin
         begin
           RawCondition := AConditionPart.Strings[j];
           RawExpressionToParts(RawCondition, Op1, Op2, OpEq);
+          EvalOp1 := AEvalReplacementsFunc(Op1);
+          EvalOp2 := AEvalReplacementsFunc(Op2);
 
-          if OpEq = CCompNotEqual then
-            EvalResult := AEvalReplacementsFunc(Op1) <> AEvalReplacementsFunc(Op2)
-          else
-            if OpEq = CCompEqual then
-              EvalResult := AEvalReplacementsFunc(Op1) = AEvalReplacementsFunc(Op2)
-            else
-              if OpEq = CCompLessThan then
-                EvalResult := AEvalReplacementsFunc(Op1) < AEvalReplacementsFunc(Op2)
-              else
-                if OpEq = CCompGreaterThan then
-                  EvalResult := AEvalReplacementsFunc(Op1) > AEvalReplacementsFunc(Op2)
-                else
-                  if OpEq = CCompLessThanOrEqual then
-                    EvalResult := AEvalReplacementsFunc(Op1) <= AEvalReplacementsFunc(Op2)
-                  else
-                    if OpEq = CCompGreaterThanOrEqual then
-                      EvalResult := AEvalReplacementsFunc(Op1) >= AEvalReplacementsFunc(Op2)
-                    else
-                      raise Exception.Create('operator "' + OpEq + '" not implemented in EvaluateActionCondition.');
-
+          EvalResult := EvaluatePartialActionCondition(EvalOp1, EvalOp2, OpEq);
           PartialResult := PartialResult and EvalResult;
         end; //for j
       finally
@@ -2801,6 +3101,26 @@ begin
     Result := Copy(FnmWithExt, 1, PosExt - 1)
   else
     Result := FnmWithExt;
+end;
+
+
+function InitListOfZerosByItemCount(AList: string): string;
+var
+  i: Integer;
+  s: string;
+  ListOfPrimitiveFiles: TStringList;
+begin
+  ListOfPrimitiveFiles := TStringList.Create;
+  try
+    ListOfPrimitiveFiles.Text := AList;
+    s := '';
+    for i := 0 to ListOfPrimitiveFiles.Count - 1 do
+      s := s + '0' + #13#10;
+
+    Result := s;
+  finally
+    ListOfPrimitiveFiles.Free;
+  end;
 end;
 
 end.

@@ -53,6 +53,9 @@ type
   TOnRestoreVars = procedure(AAllVars: TStringList) of object;
 
   TOnResolveTemplatePath = function(APath: string; ACustomSelfTemplateDir: string = ''; ACustomAppDir: string = ''): string of object;
+  TOnExecuteActionByContent = function(var AAllActions: TClkActionsRecArr; AActionIndex: Integer): Boolean of object;
+  TOnLoadTemplateToActions = procedure(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; out ANotes, AIconPath: string; AWaitForFileAvailability: Boolean = False) of object;
+  TOnSaveCompleteTemplateToFile = procedure(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; ANotes, AIconPath: string) of object;
 
   TActionExecution = class
   private
@@ -103,13 +106,18 @@ type
     FOnResolveTemplatePath: TOnResolveTemplatePath;
     FOnSetDebugPoint: TOnSetDebugPoint;
     FOnIsAtBreakPoint: TOnIsAtBreakPoint;
+    FOnFileExists: TOnFileExists;
+    FOnSaveTemplateToFile: TOnSaveTemplateToFile;
 
     FOnSaveFileToExtRenderingInMemFS: TOnSaveFileToExtRenderingInMemFS;
     FOnGenerateAndSaveTreeWithWinInterp: TOnGenerateAndSaveTreeWithWinInterp;
+    FOnExecuteActionByContent: TOnExecuteActionByContent;
+    FOnLoadTemplateToActions: TOnLoadTemplateToActions;
+    FOnSaveCompleteTemplateToFile: TOnSaveCompleteTemplateToFile;
 
     function GetActionVarValue(VarName: string): string;
     procedure SetActionVarValue(VarName, VarValue: string);
-    function EvaluateReplacements(s: string; Recursive: Boolean = True): string;
+    function EvaluateReplacements(s: string; Recursive: Boolean = True; AEvalTextCount: Integer = -1): string;
     procedure AppendErrorMessageToActionVar(NewErrMsg: string);
     procedure PrependErrorMessageToActionVar(NewErrMsg: string);
     function EvaluateHTTP(AValue: string; out AGeneratedException: Boolean): string;
@@ -156,10 +164,15 @@ type
     procedure DoOnSaveFileToExtRenderingInMemFS(AFileName: string; AContent: Pointer; AFileSize: Int64);
     //procedure DoOnRestoreVars(AAllVars: TStringList);
     function DoOnGenerateAndSaveTreeWithWinInterp(AHandle: THandle; ATreeFileName: string; AStep: Integer; AUseMouseSwipe: Boolean): Boolean;
+    function DoOnFileExists(const FileName: string): Boolean;
+    procedure DoOnSaveTemplateToFile(AStringList: TStringList; const AFileName: string);
+    function DoOnExecuteActionByContent(var AAllActions: TClkActionsRecArr; AActionIndex: Integer): Boolean;
+    procedure DoOnLoadTemplateToActions(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; out ANotes, AIconPath: string; AWaitForFileAvailability: Boolean = False);
+    procedure DoOnSaveCompleteTemplateToFile(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; ANotes, AIconPath: string);
 
     function HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     function HandleOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
-    function HandleOnEvaluateReplacements(s: string; Recursive: Boolean = True): string;
+    function HandleOnEvaluateReplacements(s: string; Recursive: Boolean = True; AEvalTextCount: Integer = -1): string;
 
     procedure HandleOnSetVar(AVarName, AVarValue: string);
     procedure HandleOnSetDebugPoint(ADebugPoint: string);
@@ -182,6 +195,7 @@ type
     function ExecuteLoadSetVarFromFileAction(var ALoadSetVarFromFileOptions: TClkLoadSetVarFromFileOptions): Boolean;
     function ExecuteSaveSetVarToFileAction(var ASaveSetVarToFileOptions: TClkSaveSetVarToFileOptions): Boolean;
     function ExecutePluginAction(var APluginOptions: TClkPluginOptions; AAllActions: PClkActionsRecArr; AListOfAllVars: TStringList; AResolvedPluginPath: string; IsDebugging, AShouldStopAtBreakPoint: Boolean): Boolean;
+    function ExecuteEditTemplateAction(var AEditTemplateOptions: TClkEditTemplateOptions): Boolean;
 
     function ExecuteClickActionAsString(AListOfClickOptionsParams: TStrings): Boolean;
     function ExecuteExecAppActionAsString(AListOfExecAppOptionsParams: TStrings): Boolean;
@@ -193,7 +207,8 @@ type
     function ExecuteWindowOperationsActionAsString(AListOfWindowOperationsOptionsParams: TStrings): Boolean;
     function ExecuteLoadSetVarFromFileActionAsString(AListOfLoadSetVarOptionsParams: TStrings): Boolean;
     function ExecuteSaveSetVarToFileActionAsString(AListOfSaveSetVarOptionsParams: TStrings): Boolean;
-    function ExecutePluginActionAsString(APluginOptionsParams: TStrings): Boolean;
+    function ExecutePluginActionAsString(AListOfPluginOptionsParams: TStrings): Boolean;
+    function ExecuteEditTemplateActionAsString(AListOfEditTemplateOptionsParams: TStrings): Boolean;
 
     //using pointers for the following properties, because the values they are pointing to, can be updated later, not when this class is created
     property ClickerVars: TStringList write FClickerVars;  //not created here in this class, used from outside
@@ -244,9 +259,14 @@ type
     property OnResolveTemplatePath: TOnResolveTemplatePath write FOnResolveTemplatePath;
     property OnSetDebugPoint: TOnSetDebugPoint write FOnSetDebugPoint;
     property OnIsAtBreakPoint: TOnIsAtBreakPoint write FOnIsAtBreakPoint;
+    property OnFileExists: TOnFileExists write FOnFileExists;
+    property OnSaveTemplateToFile: TOnSaveTemplateToFile write FOnSaveTemplateToFile;
 
     property OnSaveFileToExtRenderingInMemFS: TOnSaveFileToExtRenderingInMemFS write FOnSaveFileToExtRenderingInMemFS;
     property OnGenerateAndSaveTreeWithWinInterp: TOnGenerateAndSaveTreeWithWinInterp write FOnGenerateAndSaveTreeWithWinInterp;
+    property OnExecuteActionByContent: TOnExecuteActionByContent write FOnExecuteActionByContent;
+    property OnLoadTemplateToActions: TOnLoadTemplateToActions write FOnLoadTemplateToActions;
+    property OnSaveCompleteTemplateToFile: TOnSaveCompleteTemplateToFile write FOnSaveCompleteTemplateToFile;
   end;
 
 
@@ -262,7 +282,7 @@ uses
   {$ENDIF}
   IdHTTP, ClickerPrimitivesCompositor, ClickerActionProperties,
   ClickerActionPluginLoader, ClickerActionPlugins, BitmapProcessing,
-  ClickerActionsClient;
+  ClickerActionsClient, ClickerTemplates;
 
 
 constructor TActionExecution.Create;
@@ -312,9 +332,14 @@ begin
   FOnResolveTemplatePath := nil;
   FOnSetDebugPoint := nil;
   FOnIsAtBreakPoint := nil;
+  FOnFileExists := nil;
+  FOnSaveTemplateToFile := nil;
 
   FOnSaveFileToExtRenderingInMemFS := nil;
   FOnGenerateAndSaveTreeWithWinInterp := nil;
+  FOnExecuteActionByContent := nil;
+  FOnLoadTemplateToActions := nil;
+  FOnSaveCompleteTemplateToFile := nil;
 end;
 
 
@@ -343,9 +368,9 @@ begin
 end;
 
 
-function TActionExecution.EvaluateReplacements(s: string; Recursive: Boolean = True): string;
+function TActionExecution.EvaluateReplacements(s: string; Recursive: Boolean = True; AEvalTextCount: Integer = -1): string;
 begin
-  Result := EvaluateAllReplacements(FClickerVars, s, Recursive);
+  Result := EvaluateAllReplacements(FClickerVars, s, Recursive, AEvalTextCount);
 end;
 
 
@@ -574,6 +599,9 @@ begin
 
     acPlugin:
       Result := GetPluginActionProperties(Action.PluginOptions);
+
+    acEditTemplate:
+      Result := GetEditTemplateActionProperties(Action.EditTemplateOptions);
   end;
 end;
 
@@ -861,6 +889,51 @@ begin
     raise Exception.Create('OnIsAtBreakPoint not assigned.');
 
   Result := FOnIsAtBreakPoint(ADebugPoint);
+end;
+
+
+function TActionExecution.DoOnFileExists(const FileName: string): Boolean;
+begin
+  if not Assigned(FOnFileExists) then
+    raise Exception.Create('OnFileExists not assigned.');
+
+  Result := FOnFileExists(FileName);
+end;
+
+
+procedure TActionExecution.DoOnSaveTemplateToFile(AStringList: TStringList; const AFileName: string);
+begin
+  if not Assigned(FOnSaveTemplateToFile) then
+    raise Exception.Create('OnSaveTemplateToFile is not assigned.')
+  else
+    FOnSaveTemplateToFile(AStringList, AFileName);
+end;
+
+
+function TActionExecution.DoOnExecuteActionByContent(var AAllActions: TClkActionsRecArr; AActionIndex: Integer): Boolean;
+begin
+  if not Assigned(FOnExecuteActionByContent) then
+    raise Exception.Create('OnExecuteActionByContent not assigned.');
+
+  Result := FOnExecuteActionByContent(AAllActions, AActionIndex);
+end;
+
+
+procedure TActionExecution.DoOnLoadTemplateToActions(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; out ANotes, AIconPath: string; AWaitForFileAvailability: Boolean = False);
+begin
+  if not Assigned(FOnLoadTemplateToActions) then
+    raise Exception.Create('OnLoadTemplateToActions is not assigned.')
+  else
+    FOnLoadTemplateToActions(Fnm, AActions, AWhichTemplate, ANotes, AIconPath, AWaitForFileAvailability);
+end;
+
+
+procedure TActionExecution.DoOnSaveCompleteTemplateToFile(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; ANotes, AIconPath: string);
+begin
+  if not Assigned(FOnSaveCompleteTemplateToFile) then
+    raise Exception.Create('OnSaveCompleteTemplateToFile is not assigned.')
+  else
+    FOnSaveCompleteTemplateToFile(Fnm, AActions, AWhichTemplate, ANotes, AIconPath);
 end;
 
 
@@ -1314,6 +1387,7 @@ function TActionExecution.FillInFindControlInputData(var AFindControlOptions: TC
 
 var
   LocalFormatSettings: TFormatSettings;
+  TempEvalTextCount: Integer;
 begin
   Result := True;
 
@@ -1336,8 +1410,10 @@ begin
   FindControlInputData.SearchAsSubControl := IsSubControl;
   FindControlInputData.DebugBitmap := nil;
 
+  TempEvalTextCount := StrToIntDef(EvaluateReplacements(AFindControlOptions.EvaluateTextCount), -1);
+
   FindControlInputData.ClassName := EvaluateReplacements(AFindControlOptions.MatchClassName);
-  FindControlInputData.Text := EvaluateReplacements(AFindControlOptions.MatchText, True);
+  FindControlInputData.Text := EvaluateReplacements(AFindControlOptions.MatchText, True, TempEvalTextCount);
   FindControlInputData.GetAllHandles := AFindControlOptions.GetAllControls;
 
   if AFindControlOptions.MatchCriteria.WillMatchBitmapText then
@@ -3473,6 +3549,628 @@ begin
 end;
 
 
+procedure UpdateActionProperties(var AEditTemplateOptions: TClkEditTemplateOptions; AEditedClkAction: PClkActionRec);
+  function ArrayPropertyChecked(AListOfProperties: TStringList; APropertyName: string): Boolean;  // at least one property from the font profile is checked
+  var
+    i: Integer;
+  begin               //IndexOf with Pos
+    Result := False;
+
+    for i := 0 to AListOfProperties.Count - 1 do
+    begin
+      if Pos(APropertyName, AListOfProperties.Strings[i]) = 1 then
+      begin
+        Result := True;
+        Exit;
+      end;
+    end;
+  end;
+
+  function FontProfileChecked(AListOfProperties: TStringList; AProfileIndexStr: string): Boolean;  // at least one property from the font profile is checked
+  begin
+    Result := ArrayPropertyChecked(AListOfProperties, 'MatchBitmapText[' + AProfileIndexStr + '].');
+  end;
+
+  function FileNamesAsString(AListOfProperties, AListOfEnabledProperties: TStringList; APropertyName: string): string;
+  var
+    i, Idx: Integer;
+    EnabledPropertyName: string;
+    FilteredResult: TStringList;
+    IsFiltered: Boolean;
+  begin
+    Result := '';
+
+    Idx := AListOfProperties.IndexOfName(APropertyName);
+    if Idx = -1 then
+      Exit;
+
+    Result := FastReplace_1920ToReturn(AListOfProperties.ValueFromIndex[Idx]);
+    //the result has to be filtered by AListOfEnabledProperties
+    FilteredResult := TStringList.Create;
+    try
+      FilteredResult.Text := Result;
+      IsFiltered := False;
+
+      for i := FilteredResult.Count - 1 downto 0 do
+      begin
+        EnabledPropertyName := APropertyName + '.File[' + IntToStr(i) + ']';
+        if AListOfEnabledProperties.IndexOf(EnabledPropertyName) = -1 then
+        begin
+          FilteredResult.Delete(i);
+          IsFiltered := True;
+        end;
+      end;
+
+      if IsFiltered then
+        Result := FilteredResult.Text;
+    finally
+      FilteredResult.Free;
+    end;
+  end;
+
+var
+  TempProperties, TempEnabledProperties, TempEditedProperties: TStringList;
+  ListOfMatchBitmapFiles, ListOfMatchPrimitiveFiles: TStringList;
+  PropertyName, OldPropertyValue, NewPropertyValue, ActionProperties, s: string;
+  ListOfOldPluginProperties, ListOfNewPluginProperties: TStringList;
+  i, j, n: Integer;
+  MaxSrcProfileIndex: Integer;
+  Fnm: string;
+begin
+  TempProperties := TStringList.Create;
+  TempEnabledProperties := TStringList.Create;
+  TempEditedProperties := TStringList.Create;
+  try
+    TempEnabledProperties.Text := FastReplace_45ToReturn(AEditTemplateOptions.ListOfEnabledProperties);
+    TempEditedProperties.Text := StringReplace(AEditTemplateOptions.ListOfEditedProperties, CPropSeparatorInt, #13#10, [rfReplaceAll]);
+
+    //Example for FindControl, FindSubControl:
+    //TempEditedProperties[0] becomes ''    //TBD
+    //TempEditedProperties[1] becomes ''    //TBD
+    //
+    //TempEnabledProperties[0] becomes 'MatchBitmapText[0].ForegroundColor'
+    //TempEnabledProperties[1] becomes 'MatchBitmapText[0].BackgroundColor'
+    //TempEnabledProperties[2] becomes 'MatchBitmapText[0].FontName'
+    //TempEnabledProperties[3] becomes 'MatchBitmapFiles.File[0]'
+    //TempEnabledProperties[4] becomes 'MatchBitmapFiles.File[1]'
+    //TempEnabledProperties[5] becomes 'MatchBitmapFiles.File[2]'
+    //TempEnabledProperties[6] becomes 'MatchPrimitiveFiles.File[1]'
+    //TempEnabledProperties[7] becomes 'MatchPrimitiveFiles.File[0]'
+    //TempEnabledProperties[8] becomes 'MatchBitmapText[1].FontName'
+    //TempEnabledProperties[9] becomes 'MatchBitmapText[1].BackgroundColor'
+    //TempEnabledProperties[10] becomes 'MatchBitmapText[1].ForegroundColor'
+    //TempEnabledProperties[11] becomes 'MatchBitmapText[1].FontSize'
+
+    //TempProperties[0] becomes ''          //TBD
+    //TempProperties[1] becomes ''          //TBD
+
+    if AEditTemplateOptions.EditedActionType in [acFindControl, acFindSubControl] then
+    begin
+      MaxSrcProfileIndex := -1;
+      for i := 0 to 30 - 1 do  //verifying 30 profiles, since this is a large number
+        if FontProfileChecked(TempEditedProperties, IntToStr(i)) then
+          MaxSrcProfileIndex := i;
+
+      SetLength(AEditedClkAction^.FindControlOptions.MatchBitmapText, 0);  //Without this line, old profiles are kept if their index is above MaxSrcProfileIndex.
+                                                                           //However, there is no other way of deleting them, rather than deleting all.
+      if Length(AEditedClkAction^.FindControlOptions.MatchBitmapText) < MaxSrcProfileIndex + 1 then
+      begin
+        //Verify if the missing profiles are checked. If yes, add them.
+
+        for i := Length(AEditedClkAction^.FindControlOptions.MatchBitmapText) to MaxSrcProfileIndex do
+          if FontProfileChecked(TempEditedProperties, IntToStr(i)) then
+          begin
+            n := Length(AEditedClkAction^.FindControlOptions.MatchBitmapText);
+            SetLength(AEditedClkAction^.FindControlOptions.MatchBitmapText, n + 1);
+            GetDefaultPropertyValues_FindControl_MatchBitmapText(AEditedClkAction^.FindControlOptions.MatchBitmapText[n]);
+          end;
+      end;
+
+      ListOfMatchBitmapFiles := TStringList.Create;
+      try
+        ListOfMatchBitmapFiles.Text := FastReplace_45ToReturn(AEditedClkAction^.FindControlOptions.MatchBitmapFiles);  //this is empty for a new action
+
+        Fnm := FileNamesAsString(TempEditedProperties, TempEnabledProperties, 'MatchBitmapFiles');
+        ListOfMatchBitmapFiles.Text := Fnm;
+
+        AEditedClkAction^.FindControlOptions.MatchBitmapFiles := FastReplace_ReturnTo45(ListOfMatchBitmapFiles.Text);
+      finally
+        ListOfMatchBitmapFiles.Free;
+      end;
+
+      ListOfMatchPrimitiveFiles := TStringList.Create;
+      try
+        ListOfMatchPrimitiveFiles.Text := FastReplace_45ToReturn(AEditedClkAction^.FindControlOptions.MatchPrimitiveFiles); //this is empty for a new action
+
+        Fnm := FileNamesAsString(TempEditedProperties, TempEnabledProperties, 'MatchPrimitiveFiles');
+        ListOfMatchPrimitiveFiles.Text := Fnm;
+
+        AEditedClkAction^.FindControlOptions.MatchPrimitiveFiles := FastReplace_ReturnTo45(ListOfMatchPrimitiveFiles.Text);
+      finally
+        ListOfMatchPrimitiveFiles.Free;
+      end;
+    end;
+
+    ActionProperties := GetActionPropertiesByType(AEditedClkAction^);
+    ActionProperties := StringReplace(ActionProperties, CPropSeparatorSer, #13#10, [rfReplaceAll]);
+    TempProperties.Text := StringReplace(ActionProperties, {'&'} CPropSeparatorInt, #13#10, [rfReplaceAll]);
+
+    //Example for plugins:
+    //TempEditedProperties[0] becomes 'FileName=$AppDir$\..\UIClickerFindWindowsPlugin\lib\i386-win32\UIClickerFindWindows.dll'
+    //TempEditedProperties[1] becomes 'ListOfPropertiesAndValues=FindSubControlTopLeftCorner=ab'#$13#$14'FindSubControlBotLeftCorner=cd'#$13#$14'FindSubControlTopRightCorner=ef'#$13#$14'FindSubControlBotRightCorner=gh'#$13#$14'FindSubControlLeftEdge=ij'#$13#$14'FindSubControlTopEdge=kl'#$13#$14'FindSubControlRightEdge=mn'#$13#$14'FindSubControlBottomEdge=op'#$13#$14'ParentFindControl=qr'#$13#$14'BorderThickness=6'#$13#$14'MatchWindowEdges=True'#$13#$14
+    //
+    //TempEnabledProperties[0] becomes 'FileName'
+    //TempEnabledProperties[1] becomes 'FindSubControlTopLeftCorner'
+    //TempEnabledProperties[2] becomes 'FindSubControlBotLeftCorner'
+    //TempEnabledProperties[3] becomes 'FindSubControlTopRightCorner'
+
+    //TempProperties[0] becomes 'FileName=$AppDir$\..\UIClickerFindWindowsPlugin\lib\i386-win32\UIClickerFindWindows.dll'
+    //TempProperties[1] becomes 'ListOfPropertiesAndValues='
+
+    // For plugin, the ListOfPropertiesAndValues property has to be unpacked (#4#5-> #13#10), updated, then repacked.
+    // TempEnabledProperties won't even see the ListOfPropertiesAndValues key, only its content (value, which is a list of key=value)
+
+    //MessageBoxFunction(PChar(TempEnabledProperties.Text), 'TempEnabledProperties', 0); //for debugging only
+
+    for i := 0 to TempProperties.Count - 1 do
+    begin
+      if i >= TempProperties.Count then
+        raise Exception.Create('bad code');  //"i" can go past TempProperties.Count - 1 when setting ValueFromIndex to ''
+
+      PropertyName := TempProperties.Names[i];
+      NewPropertyValue := TempEditedProperties.Values[PropertyName];   //ValueFromIndex should work, but it is gets out of sync (for some reason), then a wrong value is returned.
+
+      case AEditTemplateOptions.EditedActionType of
+        acPlugin:
+        begin
+          OldPropertyValue := TempProperties.ValueFromIndex[i];
+
+          //For plugins, if the property is ListOfPropertiesAndValues, its value is of <Property=Value>#19#20<Property=Value>#19#20 format
+          if PropertyName = 'ListOfPropertiesAndValues' then
+          begin
+            ListOfNewPluginProperties := TStringList.Create;
+            ListOfOldPluginProperties := TStringList.Create;
+            try
+              ListOfOldPluginProperties.Text := FastReplace_45ToReturn(OldPropertyValue);
+              ListOfNewPluginProperties.Text := FastReplace_1920ToReturn(FastReplace_45ToReturn(NewPropertyValue)); //it contains only the checked properties
+
+              s := '';
+              for j := 0 to ListOfNewPluginProperties.Count - 1 do
+                if TempEnabledProperties.IndexOf(ListOfNewPluginProperties.Names[j]) > -1 then //PropertyName enabled
+                  s := s + ListOfNewPluginProperties.Names[j] + '=' + ListOfNewPluginProperties.ValueFromIndex[j] + #4#5
+                else
+                  s := s + ListOfNewPluginProperties.Names[j] + '=' + ListOfOldPluginProperties.Values[ListOfNewPluginProperties.Names[j]] + #4#5;  //using ListOfPluginProperties.Names[j] instead of ValueFromIndex[j], because this list might not contain all plugin properties. It contains only the checked ones.
+
+              //[might not be needed] If there are properties in ListOfOldPluginProperties, which are not in ListOfNewPluginProperties, then they should be added here.  Also, not sure if the property order matters.
+              for j := 0 to ListOfOldPluginProperties.Count - 1 do
+                if ListOfNewPluginProperties.IndexOfName(ListOfOldPluginProperties.Names[j]) = -1 then
+                  s := s + ListOfOldPluginProperties.Strings[j] + #4#5;
+
+              TempProperties.Strings[i] := TempProperties.Names[i] + '=' + s; // TempProperties.ValueFromIndex[i] := s;     //Do not set ValueFromIndex !!!
+            finally
+              ListOfNewPluginProperties.Free;
+              ListOfOldPluginProperties.Free;
+            end;
+          end  //ListOfPropertiesAndValues
+          else  //other property (most likely FileName)
+            if TempEnabledProperties.IndexOf(PropertyName) > -1 then //enabled
+              TempProperties.Strings[i] := TempProperties.Names[i] + '=' + NewPropertyValue; //TempProperties.ValueFromIndex[i] := NewPropertyValue;  //Do not set ValueFromIndex !!!
+        end; //is plugin
+
+        acCallTemplate:
+        begin
+          if PropertyName = 'ListOfCustomVarsAndValues' then
+            NewPropertyValue := FastReplace_1920To45(NewPropertyValue);
+
+          if Pos('Loop.', PropertyName) = 1 then
+            PropertyName := 'CallTemplate' + PropertyName;
+
+          if TempEnabledProperties.IndexOf(PropertyName) > -1 then //enabled
+            TempProperties.Strings[i] := TempProperties.Names[i] + '=' + NewPropertyValue; //TempProperties.ValueFromIndex[i] := NewPropertyValue;    //Do not set ValueFromIndex !!!
+        end;
+
+        acSetVar:
+        begin
+          if (PropertyName = 'ListOfVarNames') or
+             (PropertyName = 'ListOfVarValues') or
+             (PropertyName = 'ListOfVarEvalBefore') then
+          begin
+            PropertyName := 'ListOfVarNamesValuesAndEvalBefore';
+            NewPropertyValue := FastReplace_1920To45(NewPropertyValue);
+          end;
+
+          if TempEnabledProperties.IndexOf(PropertyName) > -1 then //enabled
+            TempProperties.Strings[i] := TempProperties.Names[i] + '=' + NewPropertyValue; //TempProperties.ValueFromIndex[i] := NewPropertyValue;   //Do not set ValueFromIndex !!!
+        end;
+
+        else //is some other action type
+          if TempEnabledProperties.IndexOf(PropertyName) > -1 then //enabled
+            TempProperties.Strings[i] := TempProperties.Names[i] + '=' + NewPropertyValue; //TempProperties.ValueFromIndex[i] := NewPropertyValue;  //Do not set ValueFromIndex !!!
+      end; //case
+    end; //for
+
+    SetActionProperties(TempProperties, AEditTemplateOptions.EditedActionType, AEditedClkAction^);
+  finally
+    TempProperties.Free;
+    TempEnabledProperties.Free;
+    TempEditedProperties.Free;
+  end;
+end;
+
+
+procedure UpdateActionByEditTemplate(var AEditTemplateOptions: TClkEditTemplateOptions; AClkAction: PClkActionRec);
+begin
+  AClkAction.ActionOptions.ActionName := AEditTemplateOptions.EditedActionName;
+  AClkAction.ActionOptions.Action := AEditTemplateOptions.EditedActionType;
+  AClkAction.ActionOptions.ActionCondition := AEditTemplateOptions.EditedActionCondition;
+  AClkAction.ActionOptions.ActionTimeout := AEditTemplateOptions.EditedActionTimeout;
+  AClkAction.ActionOptions.ActionEnabled := True;
+  AClkAction.ActionOptions.ExecutionIndex := '';
+  AClkAction.ActionStatus := asNotStarted;
+  AClkAction.ActionSkipped := False;
+  AClkAction.ActionDebuggingStatus := adsNone;
+  AClkAction.ActionBreakPoint.Exists := False;
+  AClkAction.ActionBreakPoint.Enabled := False;
+  AClkAction.ActionBreakPoint.Condition := '';
+
+  if AEditTemplateOptions.Operation = etoNewAction then
+  begin
+    GetDefaultPropertyValues_Click(AClkAction.ClickOptions);
+    GetDefaultPropertyValues_ExecApp(AClkAction.ExecAppOptions);
+    GetDefaultPropertyValues_FindControl(AClkAction.FindControlOptions, AClkAction.ActionOptions.Action = acFindSubControl);
+    GetDefaultPropertyValues_SetControlText(AClkAction.SetTextOptions);
+    GetDefaultPropertyValues_CallTemplate(AClkAction.CallTemplateOptions);
+    GetDefaultPropertyValues_Sleep(AClkAction.SleepOptions);
+    GetDefaultPropertyValues_SetVar(AClkAction.SetVarOptions);
+    GetDefaultPropertyValues_WindowOperations(AClkAction.WindowOperationsOptions);
+    GetDefaultPropertyValues_LoadSetVarFromFile(AClkAction.LoadSetVarFromFileOptions);
+    GetDefaultPropertyValues_SaveSetVarToFile(AClkAction.SaveSetVarToFileOptions);
+    GetDefaultPropertyValues_Plugin(AClkAction.PluginOptions);
+    GetDefaultPropertyValues_EditTemplate(AClkAction.EditTemplateOptions);
+  end;
+
+  UpdateActionProperties(AEditTemplateOptions, AClkAction);
+end;
+
+
+procedure GetPropertiesForEditTemplate(var AEditTemplateOptions: TClkEditTemplateOptions; AEditedClkAction: PClkActionRec; AListOfNames, AListOfValues: TStringList);
+var
+  TempProperties, TempEnabledProperties, TempEditedProperties: TStringList;
+  ActionProperties, PropertyName, PropertyValue, OldPropertyValue: string;
+  i, j: Integer;
+  ListOfOldPluginProperties, ListOfNewPluginProperties: TStringList;
+
+  procedure AddFindSubControlFilesFromProperty(APropertyName: string);
+  var
+    j: Integer;
+    SubPropertyName: string;
+    ListOfFiles: TStringList;
+  begin
+    ListOfFiles := TStringList.Create;
+    try
+      ListOfFiles.Text := FastReplace_45ToReturn(PropertyValue);
+      for j := 0 to ListOfFiles.Count - 1 do
+      begin
+        SubPropertyName := APropertyName + '.File[' + IntToStr(j) + ']';
+        if TempEnabledProperties.IndexOf(SubPropertyName) > -1 then
+        begin
+          AListOfNames.Add(SubPropertyName);
+          AListOfValues.Add(ListOfFiles.Strings[j]);
+        end;
+      end;
+    finally
+      ListOfFiles.Free;
+    end;
+  end;
+
+begin
+  TempProperties := TStringList.Create;
+  TempEnabledProperties := TStringList.Create;
+  TempEditedProperties := TStringList.Create;
+  try
+    TempEnabledProperties.Text := FastReplace_45ToReturn(AEditTemplateOptions.ListOfEnabledProperties);
+    TempEditedProperties.Text := StringReplace(AEditTemplateOptions.ListOfEditedProperties, CPropSeparatorInt, #13#10, [rfReplaceAll]);
+
+    ActionProperties := GetActionPropertiesByType(AEditedClkAction^);
+    ActionProperties := StringReplace(ActionProperties, CPropSeparatorSer, #13#10, [rfReplaceAll]);
+    TempProperties.Text := StringReplace(ActionProperties, {'&'} CPropSeparatorInt, #13#10, [rfReplaceAll]);
+
+    //MessageBoxFunction(PChar(TempEnabledProperties.Text), 'TempEnabledProperties', 0); //for debugging only
+
+    for i := 0 to TempProperties.Count - 1 do
+    begin
+      PropertyName := TempProperties.Names[i];
+      PropertyValue := TempProperties.ValueFromIndex[i]; //TempEditedProperties.Values[PropertyName];   //ValueFromIndex should work, but it is gets out of sync (for some reason), then a wrong value is returned.
+
+      case AEditTemplateOptions.EditedActionType of
+        acFindControl, acFindSubControl:
+        begin
+          if (PropertyName = 'MatchBitmapFiles') or (PropertyName = 'MatchPrimitiveFiles') then
+            AddFindSubControlFilesFromProperty(PropertyName)
+          else
+            if TempEnabledProperties.IndexOf(PropertyName) > -1 then //enabled
+            begin
+              AListOfNames.Add(PropertyName);
+              AListOfValues.Add(PropertyValue);
+            end;
+        end;
+
+        acPlugin:  //In work ////////////////////////////////
+        begin
+          OldPropertyValue := TempProperties.ValueFromIndex[i];
+
+          //For plugins, if the property is ListOfPropertiesAndValues, its value is of <Property=Value>#19#20<Property=Value>#19#20 format
+          if PropertyName = 'ListOfPropertiesAndValues' then
+          begin
+            ListOfNewPluginProperties := TStringList.Create;
+            ListOfOldPluginProperties := TStringList.Create;
+            try
+              ListOfOldPluginProperties.Text := FastReplace_45ToReturn(OldPropertyValue);
+
+              PropertyValue := TempEditedProperties.Values[PropertyName];
+              ListOfNewPluginProperties.Text := FastReplace_1920ToReturn(FastReplace_45ToReturn(PropertyValue)); //it contains only the checked properties
+
+              for j := 0 to ListOfNewPluginProperties.Count - 1 do
+                if TempEnabledProperties.IndexOf(ListOfNewPluginProperties.Names[j]) > -1 then //PropertyName enabled
+                begin
+                  AListOfNames.Add(ListOfNewPluginProperties.Names[j]);
+                  AListOfValues.Add(ListOfOldPluginProperties.Values[ListOfNewPluginProperties.Names[j]]);  /////////////// bad [j]
+                end;
+            finally
+              ListOfNewPluginProperties.Free;
+              ListOfOldPluginProperties.Free;
+            end;
+          end  //ListOfPropertiesAndValues
+          else  //other property (most likely FileName)
+          begin
+            if TempEnabledProperties.IndexOf(PropertyName) > -1 then //enabled
+            begin
+              AListOfNames.Add(PropertyName);
+              AListOfValues.Add(PropertyValue);
+            end;
+          end;
+        end; //is plugin
+
+        acCallTemplate:
+        begin
+          if PropertyName = 'ListOfCustomVarsAndValues' then
+            PropertyValue := FastReplace_1920To45(PropertyValue);
+
+          if Pos('Loop.', PropertyName) = 1 then
+            PropertyName := 'CallTemplate' + PropertyName;
+
+          if TempEnabledProperties.IndexOf(PropertyName) > -1 then //enabled
+          begin
+            AListOfNames.Add(PropertyName);
+            AListOfValues.Add(PropertyValue);
+          end;
+        end;
+
+        acSetVar:
+        begin
+          if (PropertyName = 'ListOfVarNames') or
+             (PropertyName = 'ListOfVarValues') or
+             (PropertyName = 'ListOfVarEvalBefore') then
+          begin
+            PropertyValue := FastReplace_1920ToReturn(PropertyValue);
+
+            if TempEnabledProperties.IndexOf('ListOfVarNamesValuesAndEvalBefore') > -1 then //enabled
+            begin
+              AListOfNames.Add(PropertyName);
+              AListOfValues.Add(PropertyValue);
+            end;
+          end
+          else
+            if TempEnabledProperties.IndexOf(PropertyName) > -1 then //enabled
+            begin
+              AListOfNames.Add(PropertyName);
+              AListOfValues.Add(PropertyValue);
+            end;
+        end;
+
+        else //it's some other action type
+        begin
+          if TempEnabledProperties.IndexOf(PropertyName) > -1 then //enabled
+          begin
+            AListOfNames.Add(PropertyName);
+            AListOfValues.Add(PropertyValue);
+          end;
+        end;
+      end; //case  AEditTemplateOptions.EditedActionType
+    end; //for i
+  finally
+    TempProperties.Free;
+    TempEnabledProperties.Free;
+    TempEditedProperties.Free;
+  end;
+end;
+
+
+function TActionExecution.ExecuteEditTemplateAction(var AEditTemplateOptions: TClkEditTemplateOptions): Boolean;
+  function GetActionIndexByName(var AClkActions: TClkActionsRecArr; AName: string): Integer;
+  var
+    i: Integer;
+  begin
+    Result := -1;
+    for i := 0 to Length(AClkActions) - 1 do
+      if AClkActions[i].ActionOptions.ActionName = AEditTemplateOptions.EditedActionName then
+      begin
+        Result := i;
+        Break;
+      end;
+  end;
+
+var
+  ClkActions: TClkActionsRecArr;
+  Notes, IconPath: string;
+  i, Idx, DestIdx: Integer;
+  LocalListOfPropertyNames, LocalListOfPropertyValues: TStringList;
+begin
+  Result := False;
+  SetActionVarValue('$ExecAction_Err$', '');
+  try
+    DoOnLoadTemplateToActions(AEditTemplateOptions.TemplateFileName, ClkActions, AEditTemplateOptions.WhichTemplate, Notes, IconPath, True);
+    AddToLog('EditAction: loaded template "' + AEditTemplateOptions.TemplateFileName + '".  Operation: ' + CEditTemplateOperationStr[AEditTemplateOptions.Operation]);
+
+    if (Length(ClkActions) = 0) and (AEditTemplateOptions.Operation <> etoNewAction) then
+    begin
+      AddToLog('Template is empty when executing EditAction.');
+      SetActionVarValue('$ExecAction_Err$', '');  //exiting without an error
+      Exit;
+    end;
+
+    Idx := GetActionIndexByName(ClkActions, AEditTemplateOptions.EditedActionName);
+    if Idx = -1 then
+    begin
+      if AEditTemplateOptions.Operation <> etoNewAction then   //etoNewAction is the only operation which allows Idx to be -1.
+      begin //the action should already exist
+        SetActionVarValue('$ExecAction_Err$', CREResp_ActionNotFound);
+        Exit;
+      end;
+    end
+    else
+      if AEditTemplateOptions.Operation = etoNewAction then
+      begin //the action should already exist
+        SetActionVarValue('$ExecAction_Err$', CREResp_ActionAlreadyExists);
+        Exit;
+      end;
+
+    //etoNewAction, etoMoveAction, etoDeleteAction, etoDuplicateAction, etoRenameAction, etoEnableAction, etoDisableAction, etoGetProperty, etoSetProperty, etoSetCondition, etoExecuteAction, etoSaveTemplate
+    case AEditTemplateOptions.Operation of
+      etoNewAction:  //If action already exists, Idx will point to it. That means the action is updated.
+      begin
+        SetLength(ClkActions, Length(ClkActions) + 1);
+        Idx := Length(ClkActions) - 1;
+        UpdateActionByEditTemplate(AEditTemplateOptions, @ClkActions[Idx]);
+        Result := True;
+      end;
+
+      etoUpdateAction:
+      begin
+        UpdateActionByEditTemplate(AEditTemplateOptions, @ClkActions[Idx]);
+        Result := True;
+      end;
+
+      etoMoveAction:
+      begin
+        if AEditTemplateOptions.NewActionName = '' then  //this moves the action at the end of the list
+          DestIdx := Length(ClkActions) - 1
+        else
+          DestIdx := GetActionIndexByName(ClkActions, AEditTemplateOptions.NewActionName);
+
+        if DestIdx = -1 then
+        begin
+          SetActionVarValue('$ExecAction_Err$', CREResp_ActionNotFound);
+          Exit;
+        end;
+
+        Result := True;
+      end;
+
+      etoDeleteAction:
+      begin
+        for i := Idx to Length(ClkActions) - 2 do
+          CopyActionContent(ClkActions[i + 1], ClkActions[i]);
+
+        SetLength(ClkActions, Length(ClkActions) - 1);
+        Result := True;
+      end;
+
+      etoDuplicateAction:
+      begin
+        SetLength(ClkActions, Length(ClkActions) + 1);
+        CopyActionContent(ClkActions[Idx], ClkActions[Length(ClkActions) - 1]);  //for duplicating right after the existing action, there should be a another move operation
+        ClkActions[Length(ClkActions) - 1].ActionOptions.ActionName := AEditTemplateOptions.NewActionName;
+        Result := True;
+      end;
+
+      etoRenameAction:
+      begin
+        DestIdx := GetActionIndexByName(ClkActions, AEditTemplateOptions.NewActionName);
+
+        if DestIdx > -1 then
+        begin
+          SetActionVarValue('$ExecAction_Err$', CREResp_ActionAlreadyExists);
+          Exit;
+        end;
+
+        ClkActions[Idx].ActionOptions.ActionName := AEditTemplateOptions.NewActionName;
+        Result := True;
+      end;
+
+      etoEnableAction:
+      begin
+        ClkActions[Idx].ActionOptions.ActionEnabled := True;
+        Result := True;
+      end;
+
+      etoDisableAction:
+      begin
+        ClkActions[Idx].ActionOptions.ActionEnabled := False;
+        Result := True;
+      end;
+
+      etoGetProperty:
+      begin
+        //All the properties to be found in AEditTemplateOptions.ListOfEnabledProperties will be returned in $Property_<PropertyName>_Value$ variables.
+
+        LocalListOfPropertyNames := TStringList.Create;
+        LocalListOfPropertyValues := TStringList.Create;
+        try
+          GetPropertiesForEditTemplate(AEditTemplateOptions, @ClkActions[Idx], LocalListOfPropertyNames, LocalListOfPropertyValues);
+          for i := 0 to LocalListOfPropertyNames.Count - 1 do
+            SetActionVarValue('$Property_' + LocalListOfPropertyNames.Strings[i] + '_Value$', LocalListOfPropertyValues.Strings[i]);
+        finally
+          LocalListOfPropertyNames.Free;
+          LocalListOfPropertyValues.Free;
+        end;
+
+        Result := True;
+      end;
+
+      etoSetProperty:
+      begin      //read-modify-write
+        UpdateActionProperties(AEditTemplateOptions, @ClkActions[Idx]);
+        Result := True;
+      end;
+
+      etoSetCondition:
+      begin
+        ClkActions[Idx].ActionOptions.ActionCondition := AEditTemplateOptions.EditedActionCondition;
+        Result := True;
+      end;
+
+      etoSetTimeout:
+      begin
+        ClkActions[Idx].ActionOptions.ActionTimeout := AEditTemplateOptions.EditedActionTimeout;
+        Result := True;
+      end;
+
+      etoExecuteAction:
+        Result := DoOnExecuteActionByContent(ClkActions, Idx);
+
+      etoSaveTemplate: //The advantage of having a Save command is that a template can be edited in memory, partially executed then saved (or not).
+      begin            //This command makes sense for the currently loaded file (the etwtSelf option).
+        AddToLog('Nothing to save.');
+        Result := True;
+      end;
+    end;  //case
+
+    if Result and (not (AEditTemplateOptions.Operation in [etoExecuteAction, etoGetProperty])) then   //etoExecuteAction is not an editing operation
+    begin  //The file is saved almost every time for the etwtOther option (successful editing operations only).
+      DoOnSaveCompleteTemplateToFile(AEditTemplateOptions.TemplateFileName, ClkActions, AEditTemplateOptions.WhichTemplate, Notes, IconPath);
+    end;
+  except
+    on E: Exception do
+    begin
+      SetActionVarValue('$ExecAction_Err$', E.Message);
+      AddToLog(E.Message);
+      raise;
+    end;
+  end;
+end;
+
+
 function TActionExecution.ExecuteClickActionAsString(AListOfClickOptionsParams: TStrings): Boolean;
 var
   ClickOptions: TClkClickOptions;
@@ -3704,7 +4402,7 @@ begin
 end;
 
 
-function TActionExecution.ExecutePluginActionAsString(APluginOptionsParams: TStrings): Boolean;
+function TActionExecution.ExecutePluginActionAsString(AListOfPluginOptionsParams: TStrings): Boolean;
 var
   PluginOptions: TClkPluginOptions;
   TempAllActions: PClkActionsRecArr;
@@ -3715,14 +4413,14 @@ begin
   Result := False;
   SetActionVarValue('$ExecAction_Err$', '');
   try
-    Err := SetPluginActionProperties(APluginOptionsParams, PluginOptions);
+    Err := SetPluginActionProperties(AListOfPluginOptionsParams, PluginOptions);
     if Err <> '' then
     begin
       SetActionVarValue('$ExecAction_Err$', Err);
       Exit;
     end;
 
-    IsDebugging := APluginOptionsParams.Values['IsDebugging'] = '1';
+    IsDebugging := AListOfPluginOptionsParams.Values['IsDebugging'] = '1';
     TempAllActions := DoOnGetAllActions;
 
     TempListOfAllVars := TStringList.Create;
@@ -3732,6 +4430,28 @@ begin
     finally
       TempListOfAllVars.Free;
     end;
+  finally
+    SetLastActionStatus(Result, False);
+  end;
+end;
+
+
+function TActionExecution.ExecuteEditTemplateActionAsString(AListOfEditTemplateOptionsParams: TStrings): Boolean;
+var
+  EditTemplateOptions: TClkEditTemplateOptions;
+  Err: string;
+begin
+  Result := False;
+  SetActionVarValue('$ExecAction_Err$', '');
+  try
+    Err := SetEditTemplateActionProperties(AListOfEditTemplateOptionsParams, EditTemplateOptions, True);
+    if Err <> '' then
+    begin
+      SetActionVarValue('$ExecAction_Err$', Err);
+      Exit;
+    end;
+
+    Result := ExecuteEditTemplateAction(EditTemplateOptions);
   finally
     SetLastActionStatus(Result, False);
   end;
@@ -3751,9 +4471,9 @@ begin
 end;
 
 
-function TActionExecution.HandleOnEvaluateReplacements(s: string; Recursive: Boolean = True): string;
+function TActionExecution.HandleOnEvaluateReplacements(s: string; Recursive: Boolean = True; AEvalTextCount: Integer = -1): string;
 begin
-  Result := EvaluateReplacements(s, Recursive);
+  Result := EvaluateReplacements(s, Recursive, AEvalTextCount);
 end;
 
 

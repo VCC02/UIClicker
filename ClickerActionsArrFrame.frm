@@ -846,9 +846,12 @@ object frClickerActionsArr: TfrClickerActionsArr
     Top = 235
     Width = 765
     Anchors = [akTop, akLeft, akRight]
+    Caption = 'SplitterActionsAndOI'
     Color = 13041606
+    Font.Color = 13041606
     ParentBackground = False
     ParentColor = False
+    ParentFont = False
     TabOrder = 2
     OnMouseDown = pnlVertSplitterMouseDown
     OnMouseMove = pnlVertSplitterMouseMove
