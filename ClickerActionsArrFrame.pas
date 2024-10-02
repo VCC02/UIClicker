@@ -444,6 +444,9 @@ type
     function HandleOnTClkIniFileCreate(AFileName: string): TClkIniFile;
     procedure HandleOnSaveStringListToFile(AStringList: TStringList; const AFileName: string);
     function HandleOnExecuteActionByContent(var AAllActions: TClkActionsRecArr; AActionIndex: Integer): Boolean;
+    procedure HandleOnLoadTemplateToActions(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; out ANotes, AIconPath: string; AWaitForFileAvailability: Boolean = False);
+    procedure HandleOnSaveCompleteTemplateToFile(Fnm: string; var AActions: TClkActionsRecArr;  AWhichTemplate: TEditTemplateWhichTemplate; ANotes, AIconPath: string);
+
     procedure HandleOnBackupVars(AAllVars: TStringList);
     procedure HandleOnGetListOfAvailableSetVarActions(AListOfSetVarActions: TStringList);
     procedure HandleOnGetListOfAvailableActions(AListOfSetVarActions: TStringList);
@@ -624,7 +627,7 @@ type
 
     function CreateIniReadonlyFileFromInMemFileSystem(AFnm: string; AInMemFileSystem: TInMemFileSystem): TClkIniReadonlyFile;
     procedure LoadTemplate(Fnm: string; AFileLocation: TFileLocation = flDisk; AInMemFileSystem: TInMemFileSystem = nil);
-    procedure LoadTemplateToActions(Fnm: string; var AActions: TClkActionsRecArr; AFileLocation: TFileLocation = flDisk; AInMemFileSystem: TInMemFileSystem = nil);
+    procedure LoadTemplateToActions(Fnm: string; var AActions: TClkActionsRecArr; out ANotes, AIconPath: string; AFileLocation: TFileLocation = flDisk; AInMemFileSystem: TInMemFileSystem = nil; AWaitForFileAvailability: Boolean = False);
     procedure LoadTemplateWithUIUpdate(AFileName: string; AFileLocation: TFileLocation = flDisk; AInMemFileSystem: TInMemFileSystem = nil);
     procedure SaveTemplateWithDialog;
     procedure SetVariables(ListOfVariables: TStrings);
@@ -1156,6 +1159,8 @@ begin
   FActionExecution.OnFileExists := HandleOnFileExists;
   FActionExecution.OnSaveTemplateToFile := HandleOnSaveStringListToFile; //HandleOnSaveTemplateToFile;
   FActionExecution.OnExecuteActionByContent := HandleOnExecuteActionByContent;
+  FActionExecution.OnLoadTemplateToActions := HandleOnLoadTemplateToActions;
+  FActionExecution.OnSaveCompleteTemplateToFile := HandleOnSaveCompleteTemplateToFile;
 
   FCmdConsoleHistory := TStringList.Create;
   FOnExecuteRemoteActionAtIndex := nil;
@@ -1735,6 +1740,74 @@ end;
 function TfrClickerActionsArr.HandleOnExecuteActionByContent(var AAllActions: TClkActionsRecArr; AActionIndex: Integer): Boolean;
 begin
   Result := ExecuteActionByContent(AAllActions, AActionIndex);
+end;
+
+
+procedure TfrClickerActionsArr.HandleOnLoadTemplateToActions(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; out ANotes, AIconPath: string; AWaitForFileAvailability: Boolean = False);
+const
+  CLoc: array[Boolean] of TFileLocation = (flDisk, flMem);
+var
+  i: Integer;
+begin
+  if AWhichTemplate = etwtSelf then
+  begin
+    SetLength(AActions, Length(FClkActions));
+
+    for i := 0 to Length(FClkActions) - 1 do
+      CopyActionContent(FClkActions[i], AActions[i]);
+  end
+  else
+    LoadTemplateToActions(Fnm, AActions, ANotes, AIconPath, CLoc[FExecutingActionFromRemote], InMemFS, AWaitForFileAvailability);
+end;
+
+
+procedure TfrClickerActionsArr.HandleOnSaveCompleteTemplateToFile(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; ANotes, AIconPath: string);
+var
+  TempStringList: TStringList;   //much faster than T(Mem)IniFile
+  MemStream: TMemoryStream;
+  i: Integer;
+begin
+  if AWhichTemplate = etwtSelf then
+  begin
+    SetLength(FClkActions, Length(AActions));
+
+    for i := 0 to Length(FClkActions) - 1 do
+      CopyActionContent(AActions[i], FClkActions[i]);
+
+    try
+      if Integer(vstActions.RootNodeCount) <> Length(FClkActions) then
+      begin
+        vstActions.RootNodeCount := Length(FClkActions);
+        vstActions.Repaint;
+        SetPropertiesFromPlugins;
+      end;
+    except
+      on E: Exception do
+        AddToLog('Ex on updating self actions from EditTmplate: ' + E.Message);
+    end;
+  end
+  else
+  begin
+    TempStringList := TStringList.Create;
+    try
+      SaveTemplateWithCustomActionsToStringList_V2(TempStringList, AActions, ANotes, AIconPath);
+
+      if FExecutingActionFromRemote then //save to in-mem
+      begin
+        MemStream := TMemoryStream.Create;
+        try
+          TempStringList.SaveToStream(MemStream);
+          InMemFS.SaveFileToMem(Fnm, MemStream.Memory, MemStream.Size);
+        finally
+          MemStream.Free;
+        end;
+      end
+      else //save to disk
+        DoOnSaveTemplateToFile(TempStringList, ResolveTemplatePath(Fnm));
+    finally
+      TempStringList.Free;
+    end;
+  end;
 end;
 
 
@@ -3549,14 +3622,19 @@ begin
 end;
 
 
-procedure TfrClickerActionsArr.LoadTemplateToActions(Fnm: string; var AActions: TClkActionsRecArr; AFileLocation: TFileLocation = flDisk; AInMemFileSystem: TInMemFileSystem = nil);
+procedure TfrClickerActionsArr.LoadTemplateToActions(Fnm: string; var AActions: TClkActionsRecArr; out ANotes, AIconPath: string; AFileLocation: TFileLocation = flDisk; AInMemFileSystem: TInMemFileSystem = nil; AWaitForFileAvailability: Boolean = False);
 var
   Ini: TClkIniReadonlyFile;
   FormatVersion: string;
   ActionCount: Integer;
-  DummyNotes, DummyTemplateIconPath: string;
+  WaitingMsg: string;
 begin
   Fnm := StringReplace(Fnm, '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
+  ANotes := '';
+  AIconPath := '';
+
+  WaitingMsg := 'Waiting for file availability: ' + Fnm + '   Timeout: ' + IntToStr(CWaitForFileAvailabilityTimeout div 1000) + 's.';
+  WaitingMsg := WaitingMsg + #13#10 + 'There is a "stop waiting" button, next to the "Stop action" button.';
 
   try
     case AFileLocation of      ///////////////////// ToDo:   refactoring !!!!!!!!!!!!!!
@@ -3571,7 +3649,15 @@ begin
       flMem:
       begin
         if not AInMemFileSystem.FileExistsInMem(Fnm) then
-          Exit;
+        begin
+          if AWaitForFileAvailability then
+          begin
+            AddToLog(WaitingMsg);
+            DoWaitForFileAvailability(Fnm);
+          end
+          else
+            Exit;
+        end;
 
         Ini := CreateIniReadonlyFileFromInMemFileSystem(Fnm, AInMemFileSystem);
       end;
@@ -3582,13 +3668,28 @@ begin
         else
         begin
           if not AInMemFileSystem.FileExistsInMem(Fnm) then
-            Exit;
+          begin
+            if AWaitForFileAvailability then
+            begin
+              AddToLog(WaitingMsg);
+              DoWaitForFileAvailability(Fnm);
+            end
+            else
+              Exit;
+          end;
 
           Ini := CreateIniReadonlyFileFromInMemFileSystem(Fnm, AInMemFileSystem);
         end;
 
       flMemThenDisk:
       begin
+        if not AInMemFileSystem.FileExistsInMem(Fnm) then
+          if AWaitForFileAvailability then
+          begin
+            AddToLog(WaitingMsg);
+            DoWaitForFileAvailability(Fnm);
+          end;
+
         if AInMemFileSystem.FileExistsInMem(Fnm) then
           Ini := CreateIniReadonlyFileFromInMemFileSystem(Fnm, AInMemFileSystem)
         else
@@ -3610,7 +3711,7 @@ begin
         LoadTemplateToCustomActions_V1(Ini, AActions)
       else
         if FormatVersion = '2' then
-          LoadTemplateToCustomActions_V2(Ini, AActions, DummyNotes, DummyTemplateIconPath)
+          LoadTemplateToCustomActions_V2(Ini, AActions, ANotes, AIconPath)
         else
           //raise Exception.Create('Unhandled format version: ' + FormatVersion)
           ;
@@ -4556,6 +4657,7 @@ var
   CalledTemplateContent: TClkActionsRecArr;
   i: Integer;
   CalledTemplateFileName, SelfFileName: string;
+  DummyNotes, DummyIconPath: string;
 begin
   NodeData := vstActions.GetNodeData(ANode);
   NodeData^.FullTemplatePath := EvaluateReplacements(ATemplateFileName);
@@ -4566,7 +4668,7 @@ begin
 
   SelfFileName := NodeData^.FullTemplatePath;
 
-  LoadTemplateToActions(SelfFileName, CalledTemplateContent);
+  LoadTemplateToActions(SelfFileName, CalledTemplateContent, DummyNotes, DummyIconPath);
 
   for i := 0 to Length(CalledTemplateContent) - 1 do
   begin

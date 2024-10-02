@@ -54,6 +54,8 @@ type
 
   TOnResolveTemplatePath = function(APath: string; ACustomSelfTemplateDir: string = ''; ACustomAppDir: string = ''): string of object;
   TOnExecuteActionByContent = function(var AAllActions: TClkActionsRecArr; AActionIndex: Integer): Boolean of object;
+  TOnLoadTemplateToActions = procedure(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; out ANotes, AIconPath: string; AWaitForFileAvailability: Boolean = False) of object;
+  TOnSaveCompleteTemplateToFile = procedure(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; ANotes, AIconPath: string) of object;
 
   TActionExecution = class
   private
@@ -110,6 +112,8 @@ type
     FOnSaveFileToExtRenderingInMemFS: TOnSaveFileToExtRenderingInMemFS;
     FOnGenerateAndSaveTreeWithWinInterp: TOnGenerateAndSaveTreeWithWinInterp;
     FOnExecuteActionByContent: TOnExecuteActionByContent;
+    FOnLoadTemplateToActions: TOnLoadTemplateToActions;
+    FOnSaveCompleteTemplateToFile: TOnSaveCompleteTemplateToFile;
 
     function GetActionVarValue(VarName: string): string;
     procedure SetActionVarValue(VarName, VarValue: string);
@@ -163,6 +167,8 @@ type
     function DoOnFileExists(const FileName: string): Boolean;
     procedure DoOnSaveTemplateToFile(AStringList: TStringList; const AFileName: string);
     function DoOnExecuteActionByContent(var AAllActions: TClkActionsRecArr; AActionIndex: Integer): Boolean;
+    procedure DoOnLoadTemplateToActions(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; out ANotes, AIconPath: string; AWaitForFileAvailability: Boolean = False);
+    procedure DoOnSaveCompleteTemplateToFile(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; ANotes, AIconPath: string);
 
     function HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     function HandleOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
@@ -259,6 +265,8 @@ type
     property OnSaveFileToExtRenderingInMemFS: TOnSaveFileToExtRenderingInMemFS write FOnSaveFileToExtRenderingInMemFS;
     property OnGenerateAndSaveTreeWithWinInterp: TOnGenerateAndSaveTreeWithWinInterp write FOnGenerateAndSaveTreeWithWinInterp;
     property OnExecuteActionByContent: TOnExecuteActionByContent write FOnExecuteActionByContent;
+    property OnLoadTemplateToActions: TOnLoadTemplateToActions write FOnLoadTemplateToActions;
+    property OnSaveCompleteTemplateToFile: TOnSaveCompleteTemplateToFile write FOnSaveCompleteTemplateToFile;
   end;
 
 
@@ -330,6 +338,8 @@ begin
   FOnSaveFileToExtRenderingInMemFS := nil;
   FOnGenerateAndSaveTreeWithWinInterp := nil;
   FOnExecuteActionByContent := nil;
+  FOnLoadTemplateToActions := nil;
+  FOnSaveCompleteTemplateToFile := nil;
 end;
 
 
@@ -906,6 +916,24 @@ begin
     raise Exception.Create('OnExecuteActionByContent not assigned.');
 
   Result := FOnExecuteActionByContent(AAllActions, AActionIndex);
+end;
+
+
+procedure TActionExecution.DoOnLoadTemplateToActions(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; out ANotes, AIconPath: string; AWaitForFileAvailability: Boolean = False);
+begin
+  if not Assigned(FOnLoadTemplateToActions) then
+    raise Exception.Create('OnLoadTemplateToActions is not assigned.')
+  else
+    FOnLoadTemplateToActions(Fnm, AActions, AWhichTemplate, ANotes, AIconPath, AWaitForFileAvailability);
+end;
+
+
+procedure TActionExecution.DoOnSaveCompleteTemplateToFile(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; ANotes, AIconPath: string);
+begin
+  if not Assigned(FOnSaveCompleteTemplateToFile) then
+    raise Exception.Create('OnSaveCompleteTemplateToFile is not assigned.')
+  else
+    FOnSaveCompleteTemplateToFile(Fnm, AActions, AWhichTemplate, ANotes, AIconPath);
 end;
 
 
@@ -3686,6 +3714,9 @@ begin
 
     for i := 0 to TempProperties.Count - 1 do
     begin
+      if i >= TempProperties.Count then
+        raise Exception.Create('bad code');  //"i" can go past TempProperties.Count - 1 when setting ValueFromIndex to ''
+
       PropertyName := TempProperties.Names[i];
       NewPropertyValue := TempEditedProperties.Values[PropertyName];   //ValueFromIndex should work, but it is gets out of sync (for some reason), then a wrong value is returned.
 
@@ -3701,7 +3732,7 @@ begin
             ListOfOldPluginProperties := TStringList.Create;
             try
               ListOfOldPluginProperties.Text := FastReplace_45ToReturn(OldPropertyValue);
-              ListOfNewPluginProperties.Text := FastReplace_1920ToReturn(NewPropertyValue); //it contains only the checked properties
+              ListOfNewPluginProperties.Text := FastReplace_1920ToReturn(FastReplace_45ToReturn(NewPropertyValue)); //it contains only the checked properties
 
               s := '';
               for j := 0 to ListOfNewPluginProperties.Count - 1 do
@@ -3715,7 +3746,7 @@ begin
                 if ListOfNewPluginProperties.IndexOfName(ListOfOldPluginProperties.Names[j]) = -1 then
                   s := s + ListOfOldPluginProperties.Strings[j] + #4#5;
 
-              TempProperties.ValueFromIndex[i] := s;
+              TempProperties.Strings[i] := TempProperties.Names[i] + '=' + s; // TempProperties.ValueFromIndex[i] := s;     //Do not set ValueFromIndex !!!
             finally
               ListOfNewPluginProperties.Free;
               ListOfOldPluginProperties.Free;
@@ -3723,7 +3754,7 @@ begin
           end  //ListOfPropertiesAndValues
           else  //other property (most likely FileName)
             if TempEnabledProperties.IndexOf(PropertyName) > -1 then //enabled
-              TempProperties.ValueFromIndex[i] := NewPropertyValue;
+              TempProperties.Strings[i] := TempProperties.Names[i] + '=' + NewPropertyValue; //TempProperties.ValueFromIndex[i] := NewPropertyValue;  //Do not set ValueFromIndex !!!
         end; //is plugin
 
         acCallTemplate:
@@ -3735,7 +3766,7 @@ begin
             PropertyName := 'CallTemplate' + PropertyName;
 
           if TempEnabledProperties.IndexOf(PropertyName) > -1 then //enabled
-            TempProperties.ValueFromIndex[i] := NewPropertyValue;
+            TempProperties.Strings[i] := TempProperties.Names[i] + '=' + NewPropertyValue; //TempProperties.ValueFromIndex[i] := NewPropertyValue;    //Do not set ValueFromIndex !!!
         end;
 
         acSetVar:
@@ -3749,12 +3780,12 @@ begin
           end;
 
           if TempEnabledProperties.IndexOf(PropertyName) > -1 then //enabled
-            TempProperties.ValueFromIndex[i] := NewPropertyValue;
+            TempProperties.Strings[i] := TempProperties.Names[i] + '=' + NewPropertyValue; //TempProperties.ValueFromIndex[i] := NewPropertyValue;   //Do not set ValueFromIndex !!!
         end;
 
         else //is some other action type
           if TempEnabledProperties.IndexOf(PropertyName) > -1 then //enabled
-            TempProperties.ValueFromIndex[i] := NewPropertyValue;
+            TempProperties.Strings[i] := TempProperties.Names[i] + '=' + NewPropertyValue; //TempProperties.ValueFromIndex[i] := NewPropertyValue;  //Do not set ValueFromIndex !!!
       end; //case
     end; //for
 
@@ -3877,7 +3908,7 @@ begin
               ListOfOldPluginProperties.Text := FastReplace_45ToReturn(OldPropertyValue);
 
               PropertyValue := TempEditedProperties.Values[PropertyName];
-              ListOfNewPluginProperties.Text := FastReplace_1920ToReturn(PropertyValue); //it contains only the checked properties
+              ListOfNewPluginProperties.Text := FastReplace_1920ToReturn(FastReplace_45ToReturn(PropertyValue)); //it contains only the checked properties
 
               for j := 0 to ListOfNewPluginProperties.Count - 1 do
                 if TempEnabledProperties.IndexOf(ListOfNewPluginProperties.Names[j]) > -1 then //PropertyName enabled
@@ -3970,190 +4001,172 @@ function TActionExecution.ExecuteEditTemplateAction(var AEditTemplateOptions: TC
   end;
 
 var
-  Ini: TClkIniReadonlyFile;
   ClkActions: TClkActionsRecArr;
   Notes, IconPath: string;
   i, Idx, DestIdx: Integer;
-  TemplateContent: TStringList;
   LocalListOfPropertyNames, LocalListOfPropertyValues: TStringList;
 begin
   Result := False;
+  SetActionVarValue('$ExecAction_Err$', '');
+  try
+    DoOnLoadTemplateToActions(AEditTemplateOptions.TemplateFileName, ClkActions, AEditTemplateOptions.WhichTemplate, Notes, IconPath, True);
+    AddToLog('EditAction: loaded template "' + AEditTemplateOptions.TemplateFileName + '".  Operation: ' + CEditTemplateOperationStr[AEditTemplateOptions.Operation]);
 
-  case AEditTemplateOptions.WhichTemplate of
-    etwtSelf:
+    if (Length(ClkActions) = 0) and (AEditTemplateOptions.Operation <> etoNewAction) then
     begin
-      SetActionVarValue('$ExecAction_Err$', 'etwtSelf - Not implemented');
+      AddToLog('Template is empty when executing EditAction.');
+      SetActionVarValue('$ExecAction_Err$', '');  //exiting without an error
+      Exit;
     end;
 
-    etwtOther:
+    Idx := GetActionIndexByName(ClkActions, AEditTemplateOptions.EditedActionName);
+    if Idx = -1 then
     begin
-      if not DoOnFileExists(AEditTemplateOptions.TemplateFileName) then
-      begin
-        SetActionVarValue('$ExecAction_Err$', CREResp_FileNotFound);
+      if AEditTemplateOptions.Operation <> etoNewAction then   //etoNewAction is the only operation which allows Idx to be -1.
+      begin //the action should already exist
+        SetActionVarValue('$ExecAction_Err$', CREResp_ActionNotFound);
+        Exit;
+      end;
+    end
+    else
+      if AEditTemplateOptions.Operation = etoNewAction then
+      begin //the action should already exist
+        SetActionVarValue('$ExecAction_Err$', CREResp_ActionAlreadyExists);
         Exit;
       end;
 
-      Ini := DoOnTClkIniReadonlyFileCreate(AEditTemplateOptions.TemplateFileName);  //LoadTemplate
-      try
-        LoadTemplateToCustomActions_V2(Ini, ClkActions, Notes, IconPath);
+    //etoNewAction, etoMoveAction, etoDeleteAction, etoDuplicateAction, etoRenameAction, etoEnableAction, etoDisableAction, etoGetProperty, etoSetProperty, etoSetCondition, etoExecuteAction, etoSaveTemplate
+    case AEditTemplateOptions.Operation of
+      etoNewAction:  //If action already exists, Idx will point to it. That means the action is updated.
+      begin
+        SetLength(ClkActions, Length(ClkActions) + 1);
+        Idx := Length(ClkActions) - 1;
+        UpdateActionByEditTemplate(AEditTemplateOptions, @ClkActions[Idx]);
+        Result := True;
+      end;
 
-        if Length(ClkActions) = 0 then
+      etoUpdateAction:
+      begin
+        UpdateActionByEditTemplate(AEditTemplateOptions, @ClkActions[Idx]);
+        Result := True;
+      end;
+
+      etoMoveAction:
+      begin
+        if AEditTemplateOptions.NewActionName = '' then  //this moves the action at the end of the list
+          DestIdx := Length(ClkActions) - 1
+        else
+          DestIdx := GetActionIndexByName(ClkActions, AEditTemplateOptions.NewActionName);
+
+        if DestIdx = -1 then
         begin
-          SetActionVarValue('$ExecAction_Err$', '');  //exiting without an error
+          SetActionVarValue('$ExecAction_Err$', CREResp_ActionNotFound);
           Exit;
         end;
 
-        Idx := GetActionIndexByName(ClkActions, AEditTemplateOptions.EditedActionName);
-        if Idx = -1 then
-        begin
-          if AEditTemplateOptions.Operation <> etoNewAction then   //etoNewAction is the only operation which allows Idx to be -1.
-          begin //the action should exist already
-            SetActionVarValue('$ExecAction_Err$', CREResp_ActionNotFound);
-            Exit;
-          end;
-        end
-        else
-          if AEditTemplateOptions.Operation = etoNewAction then
-          begin //the action should exist already
-            SetActionVarValue('$ExecAction_Err$', CREResp_ActionAlreadyExists);
-            Exit;
-          end;
-
-        //etoNewAction, etoMoveAction, etoDeleteAction, etoDuplicateAction, etoRenameAction, etoEnableAction, etoDisableAction, etoGetProperty, etoSetProperty, etoSetCondition, etoExecuteAction, etoSaveTemplate
-        case AEditTemplateOptions.Operation of
-          etoNewAction:  //If action already exists, Idx will point to it. That means the action is updated.
-          begin
-            SetLength(ClkActions, Length(ClkActions) + 1);
-            Idx := Length(ClkActions) - 1;
-            UpdateActionByEditTemplate(AEditTemplateOptions, @ClkActions[Idx]);
-            Result := True;
-          end;
-
-          etoUpdateAction:
-          begin
-            UpdateActionByEditTemplate(AEditTemplateOptions, @ClkActions[Idx]);
-            Result := True;
-          end;
-
-          etoMoveAction:
-          begin
-            if AEditTemplateOptions.NewActionName = '' then  //this moves the action at the end of the list
-              DestIdx := Length(ClkActions) - 1
-            else
-              DestIdx := GetActionIndexByName(ClkActions, AEditTemplateOptions.NewActionName);
-
-            if DestIdx = -1 then
-            begin
-              SetActionVarValue('$ExecAction_Err$', CREResp_ActionNotFound);
-              Exit;
-            end;
-
-            Result := True;
-          end;
-
-          etoDeleteAction:
-          begin
-            for i := Idx to Length(ClkActions) - 2 do
-              CopyActionContent(ClkActions[i + 1], ClkActions[i]);
-
-            SetLength(ClkActions, Length(ClkActions) - 1);
-            Result := True;
-          end;
-
-          etoDuplicateAction:
-          begin
-            SetLength(ClkActions, Length(ClkActions) + 1);
-            CopyActionContent(ClkActions[Idx], ClkActions[Length(ClkActions) - 1]);  //for duplicating right after the existing action, there should be a another move operation
-            ClkActions[Length(ClkActions) - 1].ActionOptions.ActionName := AEditTemplateOptions.NewActionName;
-            Result := True;
-          end;
-
-          etoRenameAction:
-          begin
-            DestIdx := GetActionIndexByName(ClkActions, AEditTemplateOptions.NewActionName);
-
-            if DestIdx > -1 then
-            begin
-              SetActionVarValue('$ExecAction_Err$', CREResp_ActionAlreadyExists);
-              Exit;
-            end;
-
-            ClkActions[Idx].ActionOptions.ActionName := AEditTemplateOptions.NewActionName;
-            Result := True;
-          end;
-
-          etoEnableAction:
-          begin
-            ClkActions[Idx].ActionOptions.ActionEnabled := True;
-            Result := True;
-          end;
-
-          etoDisableAction:
-          begin
-            ClkActions[Idx].ActionOptions.ActionEnabled := False;
-            Result := True;
-          end;
-
-          etoGetProperty:
-          begin
-            //All the properties to be found in AEditTemplateOptions.ListOfEnabledProperties will be returned in $Property_<PropertyName>_Value$ variables.
-
-            LocalListOfPropertyNames := TStringList.Create;
-            LocalListOfPropertyValues := TStringList.Create;
-            try
-              GetPropertiesForEditTemplate(AEditTemplateOptions, @ClkActions[Idx], LocalListOfPropertyNames, LocalListOfPropertyValues);
-              for i := 0 to LocalListOfPropertyNames.Count - 1 do
-                SetActionVarValue('$Property_' + LocalListOfPropertyNames.Strings[i] + '_Value$', LocalListOfPropertyValues.Strings[i]);
-            finally
-              LocalListOfPropertyNames.Free;
-              LocalListOfPropertyValues.Free;
-            end;
-
-            Result := True;
-          end;
-
-          etoSetProperty:
-          begin      //read-modify-write
-            UpdateActionProperties(AEditTemplateOptions, @ClkActions[Idx]);
-            Result := True;
-          end;
-
-          etoSetCondition:
-          begin
-            ClkActions[Idx].ActionOptions.ActionCondition := AEditTemplateOptions.EditedActionCondition;
-            Result := True;
-          end;
-
-          etoSetTimeout:
-          begin
-            ClkActions[Idx].ActionOptions.ActionTimeout := AEditTemplateOptions.EditedActionTimeout;
-            Result := True;
-          end;
-
-          etoExecuteAction:
-            Result := DoOnExecuteActionByContent(ClkActions, Idx);
-
-          etoSaveTemplate: //The advantage of having a Save command is that a template can be edited in memory, partially executed then saved (or not).
-          begin            //This command makes sense for the currently loaded file (the etwtSelf option).
-            AddToLog('Nothing to save.');
-            Result := True;
-          end;
-        end;  //case
-
-        if Result and (not (AEditTemplateOptions.Operation in [etoExecuteAction, etoGetProperty])) then   //etoExecuteAction is not an editing operation
-        begin  //The file is saved almost every time for the etwtOther option (successful editing operations only).
-          TemplateContent := TStringList.Create;
-          try
-            SaveTemplateWithCustomActionsToStringList_V2(TemplateContent, ClkActions, Notes, IconPath);
-            DoOnSaveTemplateToFile(TemplateContent, AEditTemplateOptions.TemplateFileName);
-          finally
-            TemplateContent.Free;
-          end;
-        end;
-      finally
-        Ini.Free;
+        Result := True;
       end;
-    end; //etwtOther
+
+      etoDeleteAction:
+      begin
+        for i := Idx to Length(ClkActions) - 2 do
+          CopyActionContent(ClkActions[i + 1], ClkActions[i]);
+
+        SetLength(ClkActions, Length(ClkActions) - 1);
+        Result := True;
+      end;
+
+      etoDuplicateAction:
+      begin
+        SetLength(ClkActions, Length(ClkActions) + 1);
+        CopyActionContent(ClkActions[Idx], ClkActions[Length(ClkActions) - 1]);  //for duplicating right after the existing action, there should be a another move operation
+        ClkActions[Length(ClkActions) - 1].ActionOptions.ActionName := AEditTemplateOptions.NewActionName;
+        Result := True;
+      end;
+
+      etoRenameAction:
+      begin
+        DestIdx := GetActionIndexByName(ClkActions, AEditTemplateOptions.NewActionName);
+
+        if DestIdx > -1 then
+        begin
+          SetActionVarValue('$ExecAction_Err$', CREResp_ActionAlreadyExists);
+          Exit;
+        end;
+
+        ClkActions[Idx].ActionOptions.ActionName := AEditTemplateOptions.NewActionName;
+        Result := True;
+      end;
+
+      etoEnableAction:
+      begin
+        ClkActions[Idx].ActionOptions.ActionEnabled := True;
+        Result := True;
+      end;
+
+      etoDisableAction:
+      begin
+        ClkActions[Idx].ActionOptions.ActionEnabled := False;
+        Result := True;
+      end;
+
+      etoGetProperty:
+      begin
+        //All the properties to be found in AEditTemplateOptions.ListOfEnabledProperties will be returned in $Property_<PropertyName>_Value$ variables.
+
+        LocalListOfPropertyNames := TStringList.Create;
+        LocalListOfPropertyValues := TStringList.Create;
+        try
+          GetPropertiesForEditTemplate(AEditTemplateOptions, @ClkActions[Idx], LocalListOfPropertyNames, LocalListOfPropertyValues);
+          for i := 0 to LocalListOfPropertyNames.Count - 1 do
+            SetActionVarValue('$Property_' + LocalListOfPropertyNames.Strings[i] + '_Value$', LocalListOfPropertyValues.Strings[i]);
+        finally
+          LocalListOfPropertyNames.Free;
+          LocalListOfPropertyValues.Free;
+        end;
+
+        Result := True;
+      end;
+
+      etoSetProperty:
+      begin      //read-modify-write
+        UpdateActionProperties(AEditTemplateOptions, @ClkActions[Idx]);
+        Result := True;
+      end;
+
+      etoSetCondition:
+      begin
+        ClkActions[Idx].ActionOptions.ActionCondition := AEditTemplateOptions.EditedActionCondition;
+        Result := True;
+      end;
+
+      etoSetTimeout:
+      begin
+        ClkActions[Idx].ActionOptions.ActionTimeout := AEditTemplateOptions.EditedActionTimeout;
+        Result := True;
+      end;
+
+      etoExecuteAction:
+        Result := DoOnExecuteActionByContent(ClkActions, Idx);
+
+      etoSaveTemplate: //The advantage of having a Save command is that a template can be edited in memory, partially executed then saved (or not).
+      begin            //This command makes sense for the currently loaded file (the etwtSelf option).
+        AddToLog('Nothing to save.');
+        Result := True;
+      end;
+    end;  //case
+
+    if Result and (not (AEditTemplateOptions.Operation in [etoExecuteAction, etoGetProperty])) then   //etoExecuteAction is not an editing operation
+    begin  //The file is saved almost every time for the etwtOther option (successful editing operations only).
+      DoOnSaveCompleteTemplateToFile(AEditTemplateOptions.TemplateFileName, ClkActions, AEditTemplateOptions.WhichTemplate, Notes, IconPath);
+    end;
+  except
+    on E: Exception do
+    begin
+      SetActionVarValue('$ExecAction_Err$', E.Message);
+      AddToLog(E.Message);
+      raise;
+    end;
   end;
 end;
 
@@ -4431,7 +4444,7 @@ begin
   Result := False;
   SetActionVarValue('$ExecAction_Err$', '');
   try
-    Err := SetEditTemplateActionProperties(AListOfEditTemplateOptionsParams, EditTemplateOptions);
+    Err := SetEditTemplateActionProperties(AListOfEditTemplateOptionsParams, EditTemplateOptions, True);
     if Err <> '' then
     begin
       SetActionVarValue('$ExecAction_Err$', Err);

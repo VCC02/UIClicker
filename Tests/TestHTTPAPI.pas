@@ -72,6 +72,7 @@ type
     procedure CreateTestTemplateInMem;
     procedure CreateCallableTestTemplateInMem(ATestTemplateFileName, AVarName, AVarValue: string; ASleepValue: string = '0'; AEvalBefore: Boolean = False; AFailOnException: Boolean = False);
     procedure CreateCallableTestTemplateInMem_WithCallTemplate(ATestTemplateFileName, AVarName, AVarValue: string; ACalledTemplateName, AListOfVarsAndValues: string; AEvalBefore: Boolean; ASleepValue: string = '0');
+    procedure CreateTestTemplateWithAllActionsInMem(ATestTemplateFileName: string);
 
     procedure CopyFileFromDiskToInMemFS(ADiskFileName, AInMemFileName: string);
     procedure CopyMultipleFilesFromDiskToInMemFS(AListOfFiles: string);
@@ -115,7 +116,8 @@ implementation
 
 
 uses
-  ClickerActionsClient, ActionsStuff, Controls, Forms;
+  ClickerActionsClient, ActionsStuff, ClickerActionProperties,
+  Controls, Forms;
 
 
 procedure ExpectSuccessfulAction(AListOfVars: TStringList);
@@ -331,6 +333,51 @@ begin
 
   GenerateCallTemplateOptions(CallTemplateOptions, ACalledTemplateName, AListOfVarsAndValues, AEvalBefore);
   AddCallTemplateActionToTemplate(ATestTemplateFileName, 'call ' + ATestTemplateFileName, 0, True, '', CallTemplateOptions, FInMemFS);
+end;
+
+
+procedure TTestHTTPAPI.CreateTestTemplateWithAllActionsInMem(ATestTemplateFileName: string);
+var
+  TempAction: TClkActionRec;
+begin
+  GetDefaultPropertyValues_Click(TempAction.ClickOptions);
+  AddClickActionToTemplate(ATestTemplateFileName, 'TestClick', 0, True, '', TempAction.ClickOptions, FInMemFS);
+
+  GetDefaultPropertyValues_ExecApp(TempAction.ExecAppOptions);
+  AddExecAppActionToTemplate(ATestTemplateFileName, 'TestExecApp', 0, True, '', TempAction.ExecAppOptions, FInMemFS);
+
+  GetDefaultPropertyValues_FindControl(TempAction.FindControlOptions, False);
+  AddFindControlActionToTemplate(ATestTemplateFileName, 'TestFindControl', 0, True, '', TempAction.FindControlOptions, FInMemFS, False);
+
+  GetDefaultPropertyValues_FindControl(TempAction.FindControlOptions, True);
+  AddFindControlActionToTemplate(ATestTemplateFileName, 'TestFindSubControl', 0, True, '', TempAction.FindControlOptions, FInMemFS, True);
+
+  GetDefaultPropertyValues_SetControlText(TempAction.SetTextOptions);
+  AddSetControlTextActionToTemplate(ATestTemplateFileName, 'TestSetControlText', 0, True, '', TempAction.SetTextOptions, FInMemFS);
+
+  GetDefaultPropertyValues_CallTemplate(TempAction.CallTemplateOptions);
+  AddCallTemplateActionToTemplate(ATestTemplateFileName, 'TestCallTemplate', 0, True, '', TempAction.CallTemplateOptions, FInMemFS);
+
+  GetDefaultPropertyValues_Sleep(TempAction.SleepOptions);
+  AddSleepActionToTemplate(ATestTemplateFileName, 'TestSleep', 0, True, '', TempAction.SleepOptions, FInMemFS);
+
+  GetDefaultPropertyValues_SetVar(TempAction.SetVarOptions);
+  AddSetVarActionToTemplate(ATestTemplateFileName, 'TestSetVar', 0, True, '', TempAction.SetVarOptions, FInMemFS);
+
+  GetDefaultPropertyValues_WindowOperations(TempAction.WindowOperationsOptions);
+  AddWindowOperationsActionToTemplate(ATestTemplateFileName, 'TestWindowOperations', 0, True, '', TempAction.WindowOperationsOptions, FInMemFS);
+
+  GetDefaultPropertyValues_LoadSetVarFromFile(TempAction.LoadSetVarFromFileOptions);
+  AddLoadSetVarFromFileActionToTemplate(ATestTemplateFileName, 'TestLoadSetVarFromFile', 0, True, '', TempAction.LoadSetVarFromFileOptions, FInMemFS);
+
+  GetDefaultPropertyValues_SaveSetVarToFile(TempAction.SaveSetVarToFileOptions);
+  AddSaveSetVarToFileActionToTemplate(ATestTemplateFileName, 'TestSaveSetVarToFile', 0, True, '', TempAction.SaveSetVarToFileOptions, FInMemFS);
+
+  GetDefaultPropertyValues_Plugin(TempAction.PluginOptions);
+  AddPluginActionToTemplate(ATestTemplateFileName, 'TestPlugin', 0, True, '', TempAction.PluginOptions, FInMemFS);
+
+  GetDefaultPropertyValues_EditTemplate(TempAction.EditTemplateOptions);
+  AddEditTemplateActionToTemplate(ATestTemplateFileName, 'TestEditTemplate', 0, True, '', TempAction.EditTemplateOptions, FInMemFS);
 end;
 
 

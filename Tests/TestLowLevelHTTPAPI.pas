@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2022 VCC
+    Copyright (C) 2024 VCC
     creation date: Aug 2022
     initial release date: 25 Aug 2022
 
@@ -29,7 +29,8 @@ unit TestLowLevelHTTPAPI;
 interface
 
 uses
-  LCLIntf, Classes, SysUtils, TestHTTPAPI, fpcunit, testregistry, Expectations;
+  LCLIntf, Classes, SysUtils, TestHTTPAPI, fpcunit, testregistry, Expectations,
+  ClickerUtils;
 
 
 type
@@ -39,6 +40,7 @@ type
     procedure Test_FindSubControl_MultiFind(AFnm, AExpectedXOffsets, AExpectedYOffsets: string);
     function GetPluginPath: string;
     procedure Test_ExecutePlugin(APluginVarsAndValues, AExpectedErr: string);
+    procedure Test_ExecuteEditTemplate(AActionType: TClkAction; AOperation: TEditTemplateOperation; var AExpectedValues: TStringArray);
 
     procedure Test_FindSubControl_RenderExternalBackground;
     procedure CloseRenderingServer;
@@ -109,6 +111,10 @@ type
     procedure Test_ExecutePlugin_EmptyListOfVars_WithDummyActions;
     procedure Test_ExecutePlugin_ValidVarsSetToNonExistentActions_EmptyTemplate;
     procedure Test_ExecutePlugin_ValidVarsSetToNonExistentActions_WithDummyActions;
+
+    procedure Test_ExecuteEditTemplate_UpdateAction_Click_HappyFlow;
+    procedure Test_ExecuteEditTemplate_UpdateAction_ExecApp_HappyFlow;
+    procedure Test_ExecuteEditTemplate_UpdateAction_Plugin_HappyFlow;
   end;
 
 
@@ -116,7 +122,7 @@ implementation
 
 
 uses
-  ClickerActionsClient, ClickerUtils, ActionsStuff, Controls, ClickerFileProviderClient;
+  ClickerActionsClient, ActionsStuff, Controls, ClickerFileProviderClient;
 
 
 function ExecTestTemplate(ATestServerAddress, ATemplateName: string): string;
@@ -1114,6 +1120,96 @@ begin
   CreateTestTemplateInMem;
   SendTemplateFromInMemToServerThenLoad(CTestTemplateFileName);
   Test_ExecutePlugin(CPluginVarsAndValues, CExpectedErr_WrongNumberOfProperties);
+end;
+
+
+const
+  CTestEditTemplateFileName = 'TestEditTemplateAction.clktmpl';
+  //CTestEditTemplateFileName = '$AppDir$\ActionTemplates\TestEditTemplateAction.clktmpl';  //not needed to have a path
+
+procedure TTestLowLevelHTTPAPI.Test_ExecuteEditTemplate(AActionType: TClkAction; AOperation: TEditTemplateOperation; var AExpectedValues: TStringArray);
+var
+  EditTemplateOptions: TClkEditTemplateOptions;
+  TempListOfEnabledProperties: TStringList;
+  i: Integer;
+  VarName: string;
+begin
+  GenerateEditTemplateOptions(EditTemplateOptions, AActionType, AOperation, etwtOther, CTestEditTemplateFileName);
+  TempListOfEnabledProperties := TStringList.Create;
+  try
+    TempListOfEnabledProperties.Text := EditTemplateOptions.ListOfEnabledProperties;
+    for i := 0 to TempListOfEnabledProperties.Count - 1 do
+    begin
+      VarName := '$Property_' + TempListOfEnabledProperties.Strings[i] + '_Value$';
+      Expect(SetVariable(TestServerAddress, VarName, '__', 0)).ToBe(CREResp_Done);
+      Expect(GetVarValueFromServer(VarName)).ToBe('__');
+    end;
+
+    ExecuteEditTemplateAction(TestServerAddress, EditTemplateOptions);
+    Expect(SendLoadTemplateInExecListRequest(TestServerAddress, CTestEditTemplateFileName, 0)).ToBe(CREResp_TemplateLoaded);//for debugging only
+
+    //Execute a get property, which should set the variables.
+    GenerateEditTemplateOptions(EditTemplateOptions, AActionType, etoGetProperty, etwtOther, CTestEditTemplateFileName);
+    ExecuteEditTemplateAction(TestServerAddress, EditTemplateOptions);
+
+    Expect(TempListOfEnabledProperties.Count).ToBe(Length(AExpectedValues), 'The number of properties mismatches. Please update.');
+    for i := 0 to TempListOfEnabledProperties.Count - 1 do
+    begin
+      VarName := '$Property_' + TempListOfEnabledProperties.Strings[i] + '_Value$';
+      Expect(GetVarValueFromServer(VarName)).ToBe(AExpectedValues[i]);
+    end;
+  finally
+    TempListOfEnabledProperties.Free;
+  end;
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecuteEditTemplate_UpdateAction_Click_HappyFlow;
+var
+  ExpectedValues: TStringArray;
+begin
+  CreateTestTemplateWithAllActionsInMem(CTestEditTemplateFileName);
+  SendTemplateFromInMemToServer(CTestEditTemplateFileName);
+
+  SetLength(ExpectedValues, 3);
+  ExpectedValues[0] := '2';
+  ExpectedValues[1] := '$JustAnotherVar$';
+  ExpectedValues[2] := '77';
+  Test_ExecuteEditTemplate(acClick, etoUpdateAction, ExpectedValues);  //@['2', '$JustAnotherVar$', '77']
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecuteEditTemplate_UpdateAction_ExecApp_HappyFlow;
+var
+  ExpectedValues: TStringArray;
+begin
+  CreateTestTemplateWithAllActionsInMem(CTestEditTemplateFileName);
+  SendTemplateFromInMemToServer(CTestEditTemplateFileName);
+
+  SetLength(ExpectedValues, 2);
+  ExpectedValues[0] := 'path to destination';
+  ExpectedValues[1] := 'something typed into app console';
+  Test_ExecuteEditTemplate(acExecApp, etoUpdateAction, ExpectedValues);
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecuteEditTemplate_UpdateAction_Plugin_HappyFlow;
+var
+  ExpectedValues: TStringArray;
+begin
+  CreateTestTemplateWithAllActionsInMem(CTestEditTemplateFileName);
+  SendTemplateFromInMemToServer(CTestEditTemplateFileName);
+
+  //SetLength(ExpectedValues, 2);
+  //ExpectedValues[0] := '$AppDir$\..\UIClickerFindWindowsPlugin\lib\i386-win32\UIClickerFindWindows.dll';
+  //ExpectedValues[1] := 'FindSubControlTopLeftCorner=30FindSubControlBotLeftCorner=40';
+
+  SetLength(ExpectedValues, 3);
+  ExpectedValues[0] := '$AppDir$\..\UIClickerFindWindowsPlugin\lib\i386-win32\UIClickerFindWindows.dll';
+  ExpectedValues[1] := 'FindSubControlTopLeftCorner=30';
+  ExpectedValues[2] := 'FindSubControlBotLeftCorner=40';
+
+  Test_ExecuteEditTemplate(acPlugin, etoUpdateAction, ExpectedValues);
 end;
 
 

@@ -319,7 +319,7 @@ begin
             'TemplateFileName' + '=' + AEditTemplateOptions.TemplateFileName + '&';
 
             if AIncludeListOfEditedProperties then  //this should be true when serializing for http
-              Result := Result + 'ListOfEditedProperties' + '=' + FastReplace_1920To45(AEditTemplateOptions.ListOfEditedProperties) + '&'; //ListOfEditedProperties stores a #18 separated list of key=value strings
+              Result := Result + 'ListOfEditedProperties' + '=' + StringReplace(FastReplace_1920To45(AEditTemplateOptions.ListOfEditedProperties), CPropSeparatorSer, CPropSeparatorInt, [rfReplaceAll]) + '&'; //ListOfEditedProperties stores a #18 separated list of key=value strings
 
   Result := Result +
             'ListOfEnabledProperties' + '=' + FastReplace_ReturnTo45(AEditTemplateOptions.ListOfEnabledProperties) + '&' +
@@ -823,7 +823,7 @@ begin
   Result := '';
 
   Temp_Operation := StrToIntDef(AListOfEditTemplateOptionsParams.Values['Operation'], 0);
-  if (Temp_Operation < 0) or (Temp_Operation > Ord(High(TWindowOperation))) then
+  if (Temp_Operation < 0) or (Temp_Operation > Ord(High(TEditTemplateOperation))) then
   begin
     Result := 'Operation is out of range.';
     Exit;
@@ -856,10 +856,6 @@ begin
   AEditTemplateOptions.EditedActionCondition := AListOfEditTemplateOptionsParams.Values['EditedActionCondition'];
   AEditTemplateOptions.EditedActionTimeout := StrToIntDef(AListOfEditTemplateOptionsParams.Values['EditedActionTimeout'], 1000);
   AEditTemplateOptions.NewActionName := AListOfEditTemplateOptionsParams.Values['NewActionName'];
-
-  //Set "private" propeties to some valid values:
-  AEditTemplateOptions.CachedCount := 0;
-  AEditTemplateOptions.PluginOptionsCachedCount := 0;
 end;
 
 
@@ -1109,8 +1105,6 @@ begin
   AEditTemplateOptions.WhichTemplate := etwtOther;
   AEditTemplateOptions.TemplateFileName := '';
   AEditTemplateOptions.ListOfEnabledProperties := '';
-  AEditTemplateOptions.CachedCount := 0;
-  AEditTemplateOptions.PluginOptionsCachedCount := 0;
   AEditTemplateOptions.EditedActionName := '';
   AEditTemplateOptions.EditedActionType := acClick; //TClkAction(CClkUnsetAction); // acClick;
   AEditTemplateOptions.EditedActionCondition := '';

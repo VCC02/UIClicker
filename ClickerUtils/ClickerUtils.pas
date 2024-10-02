@@ -365,11 +365,8 @@ type
     WhichTemplate: TEditTemplateWhichTemplate;
     TemplateFileName: string; //used when WhichTemplate is set to etwtOther
 
-    ListOfEditedProperties: string;       //serialized properties for the selected action (see the EditedActionType field)
-    ListOfEnabledProperties: string;      //CRLF separated list of values  (first level of properties)
-
-    CachedCount: Integer;                 //used to speed up ObjectInspector            - set after loading template, from ListOfEnabledProperties
-    PluginOptionsCachedCount: Integer;    //Same as PluginOptions.CachedCount when EditAction points to a plugin. It should be updated the same way a TClkPluginOptions is updated.
+    ListOfEditedProperties: string;       //serialized properties for the selected action (see the EditedActionType field)   #18 separated list of values
+    ListOfEnabledProperties: string;      //CRLF separated list of values
 
     EditedActionName: string;             //Used to identify the action.  Both the EditedActionType and ActionName have to match if they point to an existing action.
     EditedActionType: TClkAction;         //Action type which is being edited by EditTemplate action. The type has to be set in advance, because the edited template might not be available to tell which type the edited action is going to be.

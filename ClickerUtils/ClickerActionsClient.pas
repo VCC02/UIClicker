@@ -805,7 +805,7 @@ function ExecuteEditTemplateAction(ARemoteAddress: string; AEditTemplateOptions:
 begin
   Result := SendTextRequestToServer(ARemoteAddress + CRECmd_ExecuteEditTemplate + '?' +
                                     CREParam_StackLevel + '=0' + '&' +   //use the main editor
-                                    GetEditTemplateActionProperties(AEditTemplateOptions),
+                                    GetEditTemplateActionProperties(AEditTemplateOptions, True),
                                     ACallAppProcMsg
                                     );
 end;
