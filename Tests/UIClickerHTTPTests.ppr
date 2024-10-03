@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2022 VCC
+    Copyright (C) 2024 VCC
     creation date: Aug 2022
     initial release date: 14 Aug 2022
 
@@ -28,9 +28,9 @@ program UIClickerHTTPTests;
 
 uses
   Interfaces, Forms, GuiTestRunner, TestHTTPAPI, ClickerActionsClient,
-  ClickerUtils, ClickerTemplates, ClickerFileProviderClient, InMemFileSystem,
-  Expectations, ActionsStuff, TestMiscHTTPAPI, TestTemplateLevelHTTPAPI,
-  TestLowLevelHTTPAPI;
+  ClickerUtils, ClickerTemplates, ClickerFileProviderClient,
+  ClickerActionProperties, InMemFileSystem, Expectations, ActionsStuff,
+  TestMiscHTTPAPI, TestTemplateLevelHTTPAPI, TestLowLevelHTTPAPI;
 
 {$R *.res}
 

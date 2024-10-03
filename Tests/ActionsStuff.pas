@@ -1199,6 +1199,20 @@ begin
     acCallTemplate:
     begin
       GetDefaultPropertyValues_CallTemplate(TempAction.CallTemplateOptions);
+
+      if AOperation in [etoNewAction, etoUpdateAction] then
+      begin
+        TempAction.CallTemplateOptions.TemplateFileName := 'Template to be called.';
+        TempAction.CallTemplateOptions.ListOfCustomVarsAndValues := '$a$=a' + #13#10 + '$b$=b' + #13#10;        //
+        TempAction.CallTemplateOptions.CallTemplateLoop.Counter := '$ii$';
+      end
+      else
+      begin                                                             //use some predefined values, which should be returned in case of error
+        TempAction.CallTemplateOptions.TemplateFileName := 'bad typewriter';
+        TempAction.CallTemplateOptions.ListOfCustomVarsAndValues := '$c$=d' + #13#10 + '$d$=c' + #13#10;
+        TempAction.CallTemplateOptions.CallTemplateLoop.Counter := '$a_var$';
+      end;
+
       AEditTemplateOptions.ListOfEditedProperties := GetCallTemplateActionProperties(TempAction.CallTemplateOptions);
       AEditTemplateOptions.ListOfEnabledProperties := 'TemplateFileName' + #13#10 +
                                                       'ListOfCustomVarsAndValues' + #13#10 +
@@ -1208,6 +1222,12 @@ begin
     acSleep:
     begin
       GetDefaultPropertyValues_Sleep(TempAction.SleepOptions);
+
+      if AOperation in [etoNewAction, etoUpdateAction] then
+        TempAction.SleepOptions.Value := '456'
+      else
+        TempAction.SleepOptions.Value := '789';                         //use some predefined values, which should be returned in case of error
+
       AEditTemplateOptions.ListOfEditedProperties := GetSleepActionProperties(TempAction.SleepOptions);
       AEditTemplateOptions.ListOfEnabledProperties := 'Value';
     end;
@@ -1215,6 +1235,22 @@ begin
     acSetVar:
     begin
       GetDefaultPropertyValues_SetVar(TempAction.SetVarOptions);
+
+      if AOperation in [etoNewAction, etoUpdateAction] then
+      begin
+        TempAction.SetVarOptions.ListOfVarNames := '$abc$' + #13#10 + '$def$' + #13#10;        //
+        TempAction.SetVarOptions.ListOfVarValues := 'a' + #13#10 + 'b' + #13#10;        //
+        TempAction.SetVarOptions.ListOfVarEvalBefore := '1' + #13#10 + '1' + #13#10;        //
+        TempAction.SetVarOptions.FailOnException := True;
+      end
+      else
+      begin                                                             //use some predefined values, which should be returned in case of error
+        TempAction.SetVarOptions.ListOfVarNames := '$123$' + #13#10 + '$456$' + #13#10;        //
+        TempAction.SetVarOptions.ListOfVarValues := 'd' + #13#10 + 'c' + #13#10;        //
+        TempAction.SetVarOptions.ListOfVarEvalBefore := '0' + #13#10 + '0' + #13#10;        //
+        TempAction.SetVarOptions.FailOnException := False;
+      end;
+
       AEditTemplateOptions.ListOfEditedProperties := GetSetVarActionProperties(TempAction.SetVarOptions);
       AEditTemplateOptions.ListOfEnabledProperties := 'ListOfVarNamesValuesAndEvalBefore' + #13#10 +
                                                       'FailOnException';
@@ -1223,6 +1259,18 @@ begin
     acWindowOperations:
     begin
       GetDefaultPropertyValues_WindowOperations(TempAction.WindowOperationsOptions);
+
+      if AOperation in [etoNewAction, etoUpdateAction] then
+      begin
+        TempAction.WindowOperationsOptions.NewX := 'X300';
+        TempAction.WindowOperationsOptions.NewY := 'Y400';
+      end
+      else
+      begin                                                             //use some predefined values, which should be returned in case of error
+        TempAction.WindowOperationsOptions.NewX := 'OldX';
+        TempAction.WindowOperationsOptions.NewY := 'OldY';
+      end;
+
       AEditTemplateOptions.ListOfEditedProperties := GetWindowOperationsActionProperties(TempAction.WindowOperationsOptions);
       AEditTemplateOptions.ListOfEnabledProperties := 'NewX' + #13#10 +
                                                       'NewY';
@@ -1231,6 +1279,18 @@ begin
     acLoadSetVarFromFile:
     begin
       GetDefaultPropertyValues_LoadSetVarFromFile(TempAction.LoadSetVarFromFileOptions);
+
+      if AOperation in [etoNewAction, etoUpdateAction] then
+      begin
+        TempAction.LoadSetVarFromFileOptions.FileName := '$PathToFile$';
+        TempAction.LoadSetVarFromFileOptions.SetVarActionName := '$Action$';
+      end
+      else
+      begin                                                             //use some predefined values, which should be returned in case of error
+        TempAction.LoadSetVarFromFileOptions.FileName := '$NoPath$';
+        TempAction.LoadSetVarFromFileOptions.SetVarActionName := 'Empty';
+      end;
+
       AEditTemplateOptions.ListOfEditedProperties := GetLoadSetVarFromFileActionProperties(TempAction.LoadSetVarFromFileOptions);
       AEditTemplateOptions.ListOfEnabledProperties := 'FileName' + #13#10 +
                                                       'SetVarActionName';
@@ -1239,6 +1299,18 @@ begin
     acSaveSetVarToFile:
     begin
       GetDefaultPropertyValues_SaveSetVarToFile(TempAction.SaveSetVarToFileOptions);
+
+      if AOperation in [etoNewAction, etoUpdateAction] then
+      begin
+        TempAction.SaveSetVarToFileOptions.FileName := '$PathToFile$';
+        TempAction.SaveSetVarToFileOptions.SetVarActionName := '$Action$';
+      end
+      else
+      begin                                                             //use some predefined values, which should be returned in case of error
+        TempAction.SaveSetVarToFileOptions.FileName := '$NoPath$';
+        TempAction.SaveSetVarToFileOptions.SetVarActionName := 'Empty';
+      end;
+
       AEditTemplateOptions.ListOfEditedProperties := GetSaveSetVarToFileActionProperties(TempAction.SaveSetVarToFileOptions);
       AEditTemplateOptions.ListOfEnabledProperties := 'FileName' + #13#10 +
                                                       'SetVarActionName';
@@ -1251,12 +1323,12 @@ begin
       if AOperation in [etoNewAction, etoUpdateAction] then
       begin
         TempAction.PluginOptions.FileName := '$AppDir$\..\UIClickerFindWindowsPlugin\lib\i386-win32\UIClickerFindWindows.dll';
-        TempAction.PluginOptions.ListOfPropertiesAndValues := 'FindSubControlTopLeftCorner=30FindSubControlBotLeftCorner=40';
+        TempAction.PluginOptions.ListOfPropertiesAndValues := 'FindSubControlTopLeftCorner=30FindSubControlBotLeftCorner=40BorderThickness=7';
       end
       else
       begin                                                             //use some predefined values, which should be returned in case of error
         TempAction.PluginOptions.FileName := 'bad path';
-        TempAction.PluginOptions.ListOfPropertiesAndValues := 'FindSubControlTopLeftCorner=K_valFindSubControlBotLeftCorner=L_val'//'unknown values';
+        TempAction.PluginOptions.ListOfPropertiesAndValues := 'FindSubControlTopLeftCorner=K_valFindSubControlBotLeftCorner=L_valBorderThickness=17'//'unknown values';
       end;
 
       AEditTemplateOptions.ListOfEditedProperties := GetPluginActionProperties(TempAction.PluginOptions);
@@ -1265,11 +1337,39 @@ begin
 
       AEditTemplateOptions.ListOfEnabledProperties := 'FileName' + #13#10 +
                                                       'FindSubControlTopLeftCorner' + #13#10 +
-                                                      'FindSubControlBotLeftCorner';
+                                                      'FindSubControlBotLeftCorner' + #13#10 +
+                                                      'BorderThickness';
     end;
 
     acEditTemplate:
+    begin
+      GetDefaultPropertyValues_EditTemplate(TempAction.EditTemplateOptions);
 
+      if AOperation in [etoNewAction, etoUpdateAction] then
+      begin
+        TempAction.EditTemplateOptions.Operation := etoDuplicateAction;
+        TempAction.EditTemplateOptions.WhichTemplate := etwtSelf;
+        TempAction.EditTemplateOptions.TemplateFileName := '$PathToTemplate$';
+        TempAction.EditTemplateOptions.ListOfEditedProperties := 'Property=10';
+        TempAction.EditTemplateOptions.ListOfEnabledProperties := 'Property';
+        TempAction.EditTemplateOptions.EditedActionName := 'Act';
+      end
+      else
+      begin    //use some predefined values, which should be returned in case of error
+        TempAction.EditTemplateOptions.Operation := etoExecuteAction;
+        TempAction.EditTemplateOptions.WhichTemplate := etwtOther;
+        TempAction.EditTemplateOptions.TemplateFileName := '$NoPath$';
+        TempAction.EditTemplateOptions.ListOfEditedProperties := 'Empty';
+        TempAction.EditTemplateOptions.ListOfEnabledProperties := 'Empty';
+        TempAction.EditTemplateOptions.EditedActionName := 'Unknown';
+      end;
+
+      AEditTemplateOptions.ListOfEditedProperties := GetEditTemplateActionProperties(TempAction.EditTemplateOptions);
+      AEditTemplateOptions.ListOfEnabledProperties := 'Operation' + #13#10 +
+                                                      'WhichTemplate' + #13#10 +
+                                                      'TemplateFileName' + #13#10 +
+                                                      'EditedActionName';
+    end;
   end; //case
 end;
 

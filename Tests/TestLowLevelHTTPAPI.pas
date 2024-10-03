@@ -41,6 +41,7 @@ type
     function GetPluginPath: string;
     procedure Test_ExecutePlugin(APluginVarsAndValues, AExpectedErr: string);
     procedure Test_ExecuteEditTemplate(AActionType: TClkAction; AOperation: TEditTemplateOperation; var AExpectedValues: TStringArray);
+    procedure CreateTheSecondPluginAction(var AExpectedValues: TStringArray);
 
     procedure Test_FindSubControl_RenderExternalBackground;
     procedure CloseRenderingServer;
@@ -117,6 +118,9 @@ type
     procedure Test_ExecuteEditTemplate_UpdateAction_FindControl_HappyFlow;
     procedure Test_ExecuteEditTemplate_UpdateAction_FindSubControl_HappyFlow;
     procedure Test_ExecuteEditTemplate_UpdateAction_SetControlText_HappyFlow;
+    procedure Test_ExecuteEditTemplate_UpdateAction_CallTemplate_HappyFlow;
+    procedure Test_ExecuteEditTemplate_UpdateAction_Sleep_HappyFlow;
+    procedure Test_ExecuteEditTemplate_UpdateAction_SetVar_HappyFlow;
     procedure Test_ExecuteEditTemplate_UpdateAction_Plugin_HappyFlow;
     procedure Test_ExecuteEditTemplate_UpdateAction_TwoUpdatedPlugins_HappyFlow;
   end;
@@ -126,7 +130,7 @@ implementation
 
 
 uses
-  ClickerActionsClient, ActionsStuff, Controls, ClickerFileProviderClient;
+  ClickerActionsClient, ActionsStuff, Controls, ClickerFileProviderClient, ClickerActionProperties;
 
 
 function ExecTestTemplate(ATestServerAddress, ATemplateName: string): string;
@@ -1251,6 +1255,54 @@ begin
 end;
 
 
+procedure TTestLowLevelHTTPAPI.Test_ExecuteEditTemplate_UpdateAction_CallTemplate_HappyFlow;
+var
+  ExpectedValues: TStringArray;
+begin
+  CreateTestTemplateWithAllActionsInMem(CTestEditTemplateFileName);
+  SendTemplateFromInMemToServer(CTestEditTemplateFileName);
+
+  SetLength(ExpectedValues, 3);
+  ExpectedValues[0] := 'Template to be called.';
+  ExpectedValues[1] := '$a$=a$b$=b';
+  ExpectedValues[2] := '$ii$';
+  Test_ExecuteEditTemplate(acCallTemplate, etoUpdateAction, ExpectedValues);
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecuteEditTemplate_UpdateAction_Sleep_HappyFlow;
+var
+  ExpectedValues: TStringArray;
+begin
+  CreateTestTemplateWithAllActionsInMem(CTestEditTemplateFileName);
+  SendTemplateFromInMemToServer(CTestEditTemplateFileName);
+
+  SetLength(ExpectedValues, 1);
+  ExpectedValues[0] := '456';
+  Test_ExecuteEditTemplate(acSleep, etoUpdateAction, ExpectedValues);
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecuteEditTemplate_UpdateAction_SetVar_HappyFlow;
+var
+  ExpectedValues: TStringArray;
+begin
+  CreateTestTemplateWithAllActionsInMem(CTestEditTemplateFileName);
+  SendTemplateFromInMemToServer(CTestEditTemplateFileName);
+
+  SetLength(ExpectedValues, 2);
+  ExpectedValues[0] := '__'; //'ListOfVarNamesValuesAndEvalBefore'; //This action does not get the value of ListOfVarNamesValuesAndEvalBefore.
+  ExpectedValues[1] := '1'; //'FailOnException';
+
+  Test_ExecuteEditTemplate(acSetVar, etoUpdateAction, ExpectedValues);
+
+  //Because of the special encoding, Test_ExecuteEditTemplate is not compatible with this action type, so the values have to be verified here.
+  Expect(GetVarValueFromServer('$Property_ListOfVarNames_Value$')).ToBe('$abc$$def$');
+  Expect(GetVarValueFromServer('$Property_ListOfVarValues_Value$')).ToBe('ab');
+  Expect(GetVarValueFromServer('$Property_ListOfVarEvalBefore_Value$')).ToBe('11');
+end;
+
+
 procedure TTestLowLevelHTTPAPI.Test_ExecuteEditTemplate_UpdateAction_Plugin_HappyFlow;
 var
   ExpectedValues: TStringArray;
@@ -1258,11 +1310,93 @@ begin
   CreateTestTemplateWithAllActionsInMem(CTestEditTemplateFileName);
   SendTemplateFromInMemToServer(CTestEditTemplateFileName);
 
-  SetLength(ExpectedValues, 3);
+  SetLength(ExpectedValues, 4);
   ExpectedValues[0] := '$AppDir$\..\UIClickerFindWindowsPlugin\lib\i386-win32\UIClickerFindWindows.dll';
   ExpectedValues[1] := '30';
   ExpectedValues[2] := '40';
+  ExpectedValues[3] := '7';
   Test_ExecuteEditTemplate(acPlugin, etoUpdateAction, ExpectedValues);
+end;
+
+
+procedure TTestLowLevelHTTPAPI.CreateTheSecondPluginAction(var AExpectedValues: TStringArray);  //This has to be refactored into multiple sections
+var
+  TempEditTemplate: TClkEditTemplateOptions;
+  DestPluginOptions: TClkPluginOptions;
+  TempListOfEnabledProperties: TStringList;
+  i: Integer;
+  VarName: string;
+begin
+  TempEditTemplate.ListOfEnabledProperties := 'FileName' + #13#10 +
+                                              'WhatToBecomeVarName' + #13#10 +
+                                              'CurrentTextVarName' + #13#10 +
+                                              'LowLevelTypewriterAction';
+
+  //reset all involved vars
+  TempListOfEnabledProperties := TStringList.Create;
+  try
+    TempListOfEnabledProperties.Text := TempEditTemplate.ListOfEnabledProperties;
+    TempListOfEnabledProperties.Text := TempListOfEnabledProperties.Text + #13#10 +
+                                        'FindSubControlTopLeftCorner' + #13#10 +
+                                        'FindSubControlBotLeftCorner' + #13#10 +
+                                        'BorderThickness';
+
+    for i := 0 to TempListOfEnabledProperties.Count - 1 do
+    begin
+      VarName := '$Property_' + TempListOfEnabledProperties.Strings[i] + '_Value$';
+      Expect(SetVariable(TestServerAddress, VarName, '__', 0)).ToBe(CREResp_Done);
+      Expect(GetVarValueFromServer(VarName)).ToBe('__');
+    end;
+  finally
+    TempListOfEnabledProperties.Free;
+  end;
+
+  DestPluginOptions.FileName := '$AppDir$\..\UIClickerTypewriterPlugin\lib\i386-win32\UIClickerTypewriter.dll';
+  DestPluginOptions.ListOfPropertiesAndValues := 'WhatToBecomeVarName=$Become$CurrentTextVarName=$CurrentText$LowLevelTypewriterAction=MyAction';
+  GenerateEditTemplateOptions(TempEditTemplate, acPlugin, etoNewAction, etwtOther, CTestEditTemplateFileName);  //this call resets ListOfEnabledProperties
+
+  TempEditTemplate.Operation := etoNewAction;
+  TempEditTemplate.EditedActionTimeout := 3333;
+  TempEditTemplate.ListOfEditedProperties := GetPluginActionProperties(DestPluginOptions);
+  TempEditTemplate.EditedActionName := 'SecondPlugin';
+
+  ExecuteEditTemplateAction(TestServerAddress, TempEditTemplate); //create the plugin action
+
+  //modify the plugin action
+  TempEditTemplate.Operation := etoUpdateAction;
+  TempEditTemplate.EditedActionTimeout := 4444;
+  DestPluginOptions.ListOfPropertiesAndValues := 'WhatToBecomeVarName=$Done$CurrentTextVarName=$EditedText$LowLevelTypewriterAction=SameAction';
+  TempEditTemplate.ListOfEditedProperties := GetPluginActionProperties(DestPluginOptions);
+  TempEditTemplate.ListOfEnabledProperties := 'FileName' + #13#10 +
+                                              'WhatToBecomeVarName' + #13#10 +
+                                              'CurrentTextVarName' + #13#10 +
+                                              'LowLevelTypewriterAction';
+
+  ExecuteEditTemplateAction(TestServerAddress, TempEditTemplate); //update the plugin action
+
+  Expect(SendLoadTemplateInExecListRequest(TestServerAddress, CTestEditTemplateFileName, 0)).ToBe(CREResp_TemplateLoaded);//for debugging only
+
+  //Execute a GetProperty, which should set the variables.
+  TempEditTemplate.Operation := etoGetProperty;
+  DestPluginOptions.FileName := 'bad path';   //init to some unlikely values
+  DestPluginOptions.ListOfPropertiesAndValues := 'WhatToBecomeVarName=M_valCurrentTextVarName=N_valLowLevelTypewriterAction=27'; //'unknown values';
+  TempEditTemplate.ListOfEditedProperties := GetPluginActionProperties(DestPluginOptions);
+  ExecuteEditTemplateAction(TestServerAddress, TempEditTemplate);
+
+  //verify updated values
+  TempListOfEnabledProperties := TStringList.Create;
+  try
+    TempListOfEnabledProperties.Text := TempEditTemplate.ListOfEnabledProperties;
+    Expect(TempListOfEnabledProperties.Count).ToBe(Length(AExpectedValues), 'The number of properties mismatches. Please update.');
+
+    for i := 0 to TempListOfEnabledProperties.Count - 1 do
+    begin
+      VarName := '$Property_' + TempListOfEnabledProperties.Strings[i] + '_Value$';
+      Expect(GetVarValueFromServer(VarName)).ToBe(AExpectedValues[i]);
+    end;
+  finally
+    TempListOfEnabledProperties.Free;
+  end;
 end;
 
 
@@ -1270,6 +1404,10 @@ procedure TTestLowLevelHTTPAPI.Test_ExecuteEditTemplate_UpdateAction_TwoUpdatedP
 var
   ExpectedValues: TStringArray;
 begin
+  //This test relies on the fact that TypeWriter plugin has fewer properties than FindWindows plugin.
+  //If there are no bugs, the lists of properties should be properly updated.
+  //Also, the two plugins should already exist on disk.
+
   //The double plugin test should use an EditTemplate action, to create a second Plugin action.
   //This Plugin action has to be configured to point to a second plugin.
   //Ths test verifies if modifying the two plugins, one after the other, will both update and read proper values.
@@ -1277,12 +1415,21 @@ begin
   CreateTestTemplateWithAllActionsInMem(CTestEditTemplateFileName);
   SendTemplateFromInMemToServer(CTestEditTemplateFileName);
 
-  SetLength(ExpectedValues, 3);
+  SetLength(ExpectedValues, 4);
   ExpectedValues[0] := '$AppDir$\..\UIClickerFindWindowsPlugin\lib\i386-win32\UIClickerFindWindows.dll';
   ExpectedValues[1] := '30';
   ExpectedValues[2] := '40';
+  ExpectedValues[3] := '7';
   Test_ExecuteEditTemplate(acPlugin, etoUpdateAction, ExpectedValues);
+
+  SetLength(ExpectedValues, 4);
+  ExpectedValues[0] := '$AppDir$\..\UIClickerTypewriterPlugin\lib\i386-win32\UIClickerTypewriter.dll';
+  ExpectedValues[1] := '$Done$';
+  ExpectedValues[2] := '$EditedText$';
+  ExpectedValues[3] := 'SameAction';
+  CreateTheSecondPluginAction(ExpectedValues);
 end;
+
 
 
 initialization

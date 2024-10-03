@@ -3895,7 +3895,7 @@ begin
             end;
         end;
 
-        acPlugin:  //In work ////////////////////////////////
+        acPlugin:
         begin
           OldPropertyValue := TempProperties.ValueFromIndex[i];
 
