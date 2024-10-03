@@ -114,7 +114,11 @@ type
 
     procedure Test_ExecuteEditTemplate_UpdateAction_Click_HappyFlow;
     procedure Test_ExecuteEditTemplate_UpdateAction_ExecApp_HappyFlow;
+    procedure Test_ExecuteEditTemplate_UpdateAction_FindControl_HappyFlow;
+    procedure Test_ExecuteEditTemplate_UpdateAction_FindSubControl_HappyFlow;
+    procedure Test_ExecuteEditTemplate_UpdateAction_SetControlText_HappyFlow;
     procedure Test_ExecuteEditTemplate_UpdateAction_Plugin_HappyFlow;
+    procedure Test_ExecuteEditTemplate_UpdateAction_TwoUpdatedPlugins_HappyFlow;
   end;
 
 
@@ -1193,6 +1197,60 @@ begin
 end;
 
 
+procedure TTestLowLevelHTTPAPI.Test_ExecuteEditTemplate_UpdateAction_FindControl_HappyFlow;
+var
+  ExpectedValues: TStringArray;
+begin
+  CreateTestTemplateWithAllActionsInMem(CTestEditTemplateFileName);
+  SendTemplateFromInMemToServer(CTestEditTemplateFileName);
+
+  SetLength(ExpectedValues, 5);
+  ExpectedValues[0] := '1';
+  ExpectedValues[1] := '1';
+  ExpectedValues[2] := 'text to be matched';
+  ExpectedValues[3] := 'some window';
+  ExpectedValues[4] := '1';
+  Test_ExecuteEditTemplate(acFindControl, etoUpdateAction, ExpectedValues);
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecuteEditTemplate_UpdateAction_FindSubControl_HappyFlow;
+var
+  ExpectedValues: TStringArray;
+begin
+  CreateTestTemplateWithAllActionsInMem(CTestEditTemplateFileName);
+  SendTemplateFromInMemToServer(CTestEditTemplateFileName);
+
+  SetLength(ExpectedValues, 10);
+  ExpectedValues[0] := '0';
+  ExpectedValues[1] := '0';
+  ExpectedValues[2] := '1';
+  ExpectedValues[3] := 'bmp text to be matched';
+  ExpectedValues[4] := 'class doesn''t matter';
+  ExpectedValues[5] := '$FGCol$';
+  ExpectedValues[6] := '$BGCol$';
+  ExpectedValues[7] := 'Mono';
+  ExpectedValues[8] := '19';
+  ExpectedValues[9] := '0';
+  Test_ExecuteEditTemplate(acFindSubControl, etoUpdateAction, ExpectedValues);
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecuteEditTemplate_UpdateAction_SetControlText_HappyFlow;
+var
+  ExpectedValues: TStringArray;
+begin
+  CreateTestTemplateWithAllActionsInMem(CTestEditTemplateFileName);
+  SendTemplateFromInMemToServer(CTestEditTemplateFileName);
+
+  SetLength(ExpectedValues, 3);
+  ExpectedValues[0] := 'Type this text.';
+  ExpectedValues[1] := '2';
+  ExpectedValues[2] := '$cnt$';
+  Test_ExecuteEditTemplate(acSetControlText, etoUpdateAction, ExpectedValues);
+end;
+
+
 procedure TTestLowLevelHTTPAPI.Test_ExecuteEditTemplate_UpdateAction_Plugin_HappyFlow;
 var
   ExpectedValues: TStringArray;
@@ -1200,15 +1258,29 @@ begin
   CreateTestTemplateWithAllActionsInMem(CTestEditTemplateFileName);
   SendTemplateFromInMemToServer(CTestEditTemplateFileName);
 
-  //SetLength(ExpectedValues, 2);
-  //ExpectedValues[0] := '$AppDir$\..\UIClickerFindWindowsPlugin\lib\i386-win32\UIClickerFindWindows.dll';
-  //ExpectedValues[1] := 'FindSubControlTopLeftCorner=30FindSubControlBotLeftCorner=40';
+  SetLength(ExpectedValues, 3);
+  ExpectedValues[0] := '$AppDir$\..\UIClickerFindWindowsPlugin\lib\i386-win32\UIClickerFindWindows.dll';
+  ExpectedValues[1] := '30';
+  ExpectedValues[2] := '40';
+  Test_ExecuteEditTemplate(acPlugin, etoUpdateAction, ExpectedValues);
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecuteEditTemplate_UpdateAction_TwoUpdatedPlugins_HappyFlow;
+var
+  ExpectedValues: TStringArray;
+begin
+  //The double plugin test should use an EditTemplate action, to create a second Plugin action.
+  //This Plugin action has to be configured to point to a second plugin.
+  //Ths test verifies if modifying the two plugins, one after the other, will both update and read proper values.
+
+  CreateTestTemplateWithAllActionsInMem(CTestEditTemplateFileName);
+  SendTemplateFromInMemToServer(CTestEditTemplateFileName);
 
   SetLength(ExpectedValues, 3);
   ExpectedValues[0] := '$AppDir$\..\UIClickerFindWindowsPlugin\lib\i386-win32\UIClickerFindWindows.dll';
-  ExpectedValues[1] := 'FindSubControlTopLeftCorner=30';
-  ExpectedValues[2] := 'FindSubControlBotLeftCorner=40';
-
+  ExpectedValues[1] := '30';
+  ExpectedValues[2] := '40';
   Test_ExecuteEditTemplate(acPlugin, etoUpdateAction, ExpectedValues);
 end;
 

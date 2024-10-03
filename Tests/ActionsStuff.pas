@@ -1102,6 +1102,24 @@ begin
     acFindControl:
     begin
       GetDefaultPropertyValues_FindControl(TempAction.FindControlOptions, False);
+
+      if AOperation in [etoNewAction, etoUpdateAction] then
+      begin
+        TempAction.FindControlOptions.MatchCriteria.WillMatchText := True;
+        TempAction.FindControlOptions.MatchCriteria.WillMatchClassName := True;
+        TempAction.FindControlOptions.MatchText := 'text to be matched';
+        TempAction.FindControlOptions.MatchClassName := 'some window';
+        TempAction.FindControlOptions.UseWholeScreen := True;
+      end
+      else
+      begin                                                             //use some predefined values, which should be returned in case of error
+        TempAction.FindControlOptions.MatchCriteria.WillMatchText := False;
+        TempAction.FindControlOptions.MatchCriteria.WillMatchClassName := False;
+        TempAction.FindControlOptions.MatchText := 'missing text';
+        TempAction.FindControlOptions.MatchClassName := 'unknown class';
+        TempAction.FindControlOptions.UseWholeScreen := False;
+      end;
+
       AEditTemplateOptions.ListOfEditedProperties := GetFindControlActionProperties(TempAction.FindControlOptions);
       AEditTemplateOptions.ListOfEnabledProperties := 'MatchCriteria.WillMatchText' + #13#10 +
                                                       'MatchCriteria.WillMatchClassName' + #13#10 +
@@ -1113,9 +1131,41 @@ begin
     acFindSubControl:
     begin
       GetDefaultPropertyValues_FindControl(TempAction.FindControlOptions, True);
+
+      SetLength(TempAction.FindControlOptions.MatchBitmapText, 2);
+      if AOperation in [etoNewAction, etoUpdateAction] then
+      begin
+        TempAction.FindControlOptions.MatchCriteria.WillMatchText := False;
+        TempAction.FindControlOptions.MatchCriteria.WillMatchClassName := False;
+        TempAction.FindControlOptions.MatchCriteria.WillMatchBitmapText := True;
+        TempAction.FindControlOptions.MatchText := 'bmp text to be matched';
+        TempAction.FindControlOptions.MatchClassName := 'class doesn''t matter';
+        TempAction.FindControlOptions.MatchBitmapText[0].ForegroundColor := '$FGCol$';
+        TempAction.FindControlOptions.MatchBitmapText[0].BackgroundColor := '$BGCol$';
+        TempAction.FindControlOptions.MatchBitmapText[1].FontName := 'Mono';
+        TempAction.FindControlOptions.MatchBitmapText[1].FontSize := 19;
+        TempAction.FindControlOptions.UseWholeScreen := False;
+      end
+      else
+      begin                                                             //use some predefined values, which should be returned in case of error
+        TempAction.FindControlOptions.MatchCriteria.WillMatchText := True;
+        TempAction.FindControlOptions.MatchCriteria.WillMatchClassName := True;
+        TempAction.FindControlOptions.MatchCriteria.WillMatchBitmapText := False;
+        TempAction.FindControlOptions.MatchText := 'missing text';
+        TempAction.FindControlOptions.MatchClassName := 'unknown class';
+        TempAction.FindControlOptions.MatchBitmapText[0].ForegroundColor := 'Bad$FGCol$';
+        TempAction.FindControlOptions.MatchBitmapText[0].BackgroundColor := '$BadBGCol$';
+        TempAction.FindControlOptions.MatchBitmapText[1].FontName := 'Stereo';
+        TempAction.FindControlOptions.MatchBitmapText[1].FontSize := 320;
+        TempAction.FindControlOptions.UseWholeScreen := True;
+      end;
+
       AEditTemplateOptions.ListOfEditedProperties := GetFindControlActionProperties(TempAction.FindControlOptions);
       AEditTemplateOptions.ListOfEnabledProperties := 'MatchCriteria.WillMatchText' + #13#10 +
                                                       'MatchCriteria.WillMatchClassName' + #13#10 +
+                                                      'MatchCriteria.WillMatchBitmapText' + #13#10 +
+                                                      'MatchText' + #13#10 +
+                                                      'MatchClassName' + #13#10 +
                                                       'MatchBitmapText[0].ForegroundColor' + #13#10 +
                                                       'MatchBitmapText[0].BackgroundColor' + #13#10 +
                                                       'MatchBitmapText[1].FontName' + #13#10 +
@@ -1126,6 +1176,20 @@ begin
     acSetControlText:
     begin
       GetDefaultPropertyValues_SetControlText(TempAction.SetTextOptions);
+
+      if AOperation in [etoNewAction, etoUpdateAction] then
+      begin
+        TempAction.SetTextOptions.Text := 'Type this text.';
+        TempAction.SetTextOptions.ControlType := stKeystrokes;
+        TempAction.SetTextOptions.Count := '$cnt$';
+      end
+      else
+      begin                                                             //use some predefined values, which should be returned in case of error
+        TempAction.SetTextOptions.Text := 'bad typewriter';
+        TempAction.SetTextOptions.ControlType := stComboBox;
+        TempAction.SetTextOptions.Count := '$var$';
+      end;
+
       AEditTemplateOptions.ListOfEditedProperties := GetSetControlTextActionProperties(TempAction.SetTextOptions);
       AEditTemplateOptions.ListOfEnabledProperties := 'Text' + #13#10 +
                                                       'ControlType' + #13#10 +
@@ -1192,12 +1256,12 @@ begin
       else
       begin                                                             //use some predefined values, which should be returned in case of error
         TempAction.PluginOptions.FileName := 'bad path';
-        TempAction.PluginOptions.ListOfPropertiesAndValues := 'unknown values';
+        TempAction.PluginOptions.ListOfPropertiesAndValues := 'FindSubControlTopLeftCorner=K_valFindSubControlBotLeftCorner=L_val'//'unknown values';
       end;
 
       AEditTemplateOptions.ListOfEditedProperties := GetPluginActionProperties(TempAction.PluginOptions);
       //AEditTemplateOptions.ListOfEnabledProperties := 'FileName' + #13#10 +
-      //                                                'ListOfPropertiesAndValues';   //this is the wrong wayof setting it
+      //                                                'ListOfPropertiesAndValues';   //this is the wrong way of setting it
 
       AEditTemplateOptions.ListOfEnabledProperties := 'FileName' + #13#10 +
                                                       'FindSubControlTopLeftCorner' + #13#10 +
