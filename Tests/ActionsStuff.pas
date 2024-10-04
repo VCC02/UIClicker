@@ -1302,8 +1302,8 @@ begin
 
       if AOperation in [etoNewAction, etoUpdateAction] then
       begin
-        TempAction.SaveSetVarToFileOptions.FileName := '$PathToFile$';
-        TempAction.SaveSetVarToFileOptions.SetVarActionName := '$Action$';
+        TempAction.SaveSetVarToFileOptions.FileName := '$PathToAnotherFile$';
+        TempAction.SaveSetVarToFileOptions.SetVarActionName := '$AnotherAction$';
       end
       else
       begin                                                             //use some predefined values, which should be returned in case of error

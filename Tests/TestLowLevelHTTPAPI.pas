@@ -121,8 +121,12 @@ type
     procedure Test_ExecuteEditTemplate_UpdateAction_CallTemplate_HappyFlow;
     procedure Test_ExecuteEditTemplate_UpdateAction_Sleep_HappyFlow;
     procedure Test_ExecuteEditTemplate_UpdateAction_SetVar_HappyFlow;
+    procedure Test_ExecuteEditTemplate_UpdateAction_WindowOperations_HappyFlow;
+    procedure Test_ExecuteEditTemplate_UpdateAction_LoadSetVarFromFile_HappyFlow;
+    procedure Test_ExecuteEditTemplate_UpdateAction_SaveSetVarToFile_HappyFlow;
     procedure Test_ExecuteEditTemplate_UpdateAction_Plugin_HappyFlow;
     procedure Test_ExecuteEditTemplate_UpdateAction_TwoUpdatedPlugins_HappyFlow;
+    procedure Test_ExecuteEditTemplate_UpdateAction_EditTemplate_HappyFlow;
   end;
 
 
@@ -1303,6 +1307,48 @@ begin
 end;
 
 
+procedure TTestLowLevelHTTPAPI.Test_ExecuteEditTemplate_UpdateAction_WindowOperations_HappyFlow;
+var
+  ExpectedValues: TStringArray;
+begin
+  CreateTestTemplateWithAllActionsInMem(CTestEditTemplateFileName);
+  SendTemplateFromInMemToServer(CTestEditTemplateFileName);
+
+  SetLength(ExpectedValues, 2);
+  ExpectedValues[0] := 'X300';
+  ExpectedValues[1] := 'Y400';
+  Test_ExecuteEditTemplate(acWindowOperations, etoUpdateAction, ExpectedValues);
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecuteEditTemplate_UpdateAction_LoadSetVarFromFile_HappyFlow;
+var
+  ExpectedValues: TStringArray;
+begin
+  CreateTestTemplateWithAllActionsInMem(CTestEditTemplateFileName);
+  SendTemplateFromInMemToServer(CTestEditTemplateFileName);
+
+  SetLength(ExpectedValues, 2);
+  ExpectedValues[0] := '$PathToFile$';
+  ExpectedValues[1] := '$Action$';
+  Test_ExecuteEditTemplate(acLoadSetVarFromFile, etoUpdateAction, ExpectedValues);
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecuteEditTemplate_UpdateAction_SaveSetVarToFile_HappyFlow;
+var
+  ExpectedValues: TStringArray;
+begin
+  CreateTestTemplateWithAllActionsInMem(CTestEditTemplateFileName);
+  SendTemplateFromInMemToServer(CTestEditTemplateFileName);
+
+  SetLength(ExpectedValues, 2);
+  ExpectedValues[0] := '$PathToAnotherFile$';
+  ExpectedValues[1] := '$AnotherAction$';
+  Test_ExecuteEditTemplate(acSaveSetVarToFile, etoUpdateAction, ExpectedValues);
+end;
+
+
 procedure TTestLowLevelHTTPAPI.Test_ExecuteEditTemplate_UpdateAction_Plugin_HappyFlow;
 var
   ExpectedValues: TStringArray;
@@ -1430,6 +1476,21 @@ begin
   CreateTheSecondPluginAction(ExpectedValues);
 end;
 
+
+procedure TTestLowLevelHTTPAPI.Test_ExecuteEditTemplate_UpdateAction_EditTemplate_HappyFlow;
+var
+  ExpectedValues: TStringArray;
+begin
+  CreateTestTemplateWithAllActionsInMem(CTestEditTemplateFileName);
+  SendTemplateFromInMemToServer(CTestEditTemplateFileName);
+
+  SetLength(ExpectedValues, 4);
+  ExpectedValues[0] := IntToStr(Ord(etoDuplicateAction));
+  ExpectedValues[1] := IntToStr(Ord(etwtSelf));
+  ExpectedValues[2] := '$PathToTemplate$';
+  ExpectedValues[3] := 'Act';
+  Test_ExecuteEditTemplate(acEditTemplate, etoUpdateAction, ExpectedValues);
+end;
 
 
 initialization
