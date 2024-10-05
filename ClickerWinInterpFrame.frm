@@ -286,6 +286,18 @@ object frClickerWinInterp: TfrClickerWinInterp
         State = cbChecked
         TabOrder = 13
       end
+      object chkFullScr: TCheckBox
+        Left = 200
+        Height = 19
+        Hint = 'When checked, the MouseSwipe scan uses full screenshots, then crops the bitmaps to the required size.'#13#10'This is way slower than component screenshots, but it allows capturing content, which is not visible otherwise.'
+        Top = 372
+        Width = 56
+        Anchors = [akLeft, akBottom]
+        Caption = 'Full Scr'
+        ParentShowHint = False
+        ShowHint = True
+        TabOrder = 14
+      end
     end
     object pnlDrag: TPanel
       Left = 4

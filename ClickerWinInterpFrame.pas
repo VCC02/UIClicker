@@ -73,6 +73,7 @@ type
     btnSaveTree: TButton;
     btnStartRec: TButton;
     btnStopRec: TButton;
+    chkFullScr: TCheckBox;
     chkUseHCursor: TCheckBox;
     chkHighlightSelectedComponent: TCheckBox;
     chkMinimizeWhileRecording: TCheckBox;
@@ -596,6 +597,8 @@ procedure TfrClickerWinInterp.pnlDragMouseMove(Sender: TObject;
 var
   tp: TPoint;
   Comp: TCompRec;
+  SrcRect, DestRect: TRect;
+  FullScreenBmp: TBitmap;
 begin
   if FDragging then
   begin
@@ -617,7 +620,38 @@ begin
 
     scrboxScannedComponents.HorzScrollBar.Position := 0;
     scrboxScannedComponents.VertScrollBar.Position := 0;
-    ScreenShot(Comp.Handle, imgLiveScreenshot.Picture.Bitmap, 0, 0, Comp.ComponentRectangle.Width, Comp.ComponentRectangle.Height);
+
+    if not chkFullScr.Checked then
+      ScreenShot(Comp.Handle, imgLiveScreenshot.Picture.Bitmap, 0, 0, Comp.ComponentRectangle.Width, Comp.ComponentRectangle.Height)
+    else
+    begin
+      //WipeBitmap(imgLiveScreenshot.Picture.Bitmap, Comp.ComponentRectangle.Width, Comp.ComponentRectangle.Height);
+
+      SrcRect := Comp.ComponentRectangle;
+
+      DestRect.Left := 0;
+      DestRect.Top := 0;
+      DestRect.Width := Comp.ComponentRectangle.Width;
+      DestRect.Height := Comp.ComponentRectangle.Height;
+
+      FullScreenBmp := TBitmap.Create;
+      try
+        ScreenShot(0, FullScreenBmp, 0, 0, Screen.Width, Screen.Height);
+        imgLiveScreenshot.Picture.Bitmap.Canvas.CopyRect(DestRect, FullScreenBmp.Canvas, SrcRect);
+
+        //BitBlt(imgLiveScreenshot.Picture.Bitmap.Canvas.Handle,  //dest DC
+        //  0, //X   x-coord of destination upper-left corner
+        //  0, //Y   y-coord of destination upper-left corner
+        //  SrcRect.Width,   //src and dest width
+        //  SrcRect.Height,  //src and dest height
+        //  FullScreenBmp.Canvas.Handle,      //src DC
+        //  SrcRect.Left,     //offset for source
+        //  SrcRect.Top,     //offset for source
+        //  SRCCOPY);
+      finally
+        FullScreenBmp.Free;
+      end;
+    end;
   end;
 end;
 
@@ -1363,9 +1397,11 @@ var
   ImgMatrix: TColorArr;
   ImgHWMatrix: array of THandle;
   tk, Duration: QWord;
-  UseHCursor: Boolean;
+  UseHCursor, UseFullScreenshot: Boolean;
   pci: TCursorInfo;
   Res: LongBool;
+  SrcRect, DestRect: TRect;
+  FullScreenBmp: TBitmap;
 begin
   FDoneRec := False;
   if GetWindowRect(AInterprettedHandle, rct) = False then
@@ -1413,12 +1449,34 @@ begin
   AppTitle := Application.Title;
   try
     UseHCursor := chkUseHCursor.Checked;
+    UseFullScreenshot := chkFullScr.Checked;
 
     SetCursorPos(Screen.Width, Screen.Height);
     InitBmp := TBitmap.Create;
     CurrentBmp := TBitmap.Create;
     try
-      ScreenShot(AInterprettedHandle, InitBmp, 0, 0, w, h);
+      if not UseFullScreenshot then
+        ScreenShot(AInterprettedHandle, InitBmp, 0, 0, w, h)
+      else
+      begin
+        WipeBitmap(InitBmp, w, h);
+        WipeBitmap(CurrentBmp, w, h);
+
+        SrcRect := rct;
+
+        DestRect.Left := 0;
+        DestRect.Top := 0;
+        DestRect.Width := w;
+        DestRect.Height := h;
+
+        FullScreenBmp := TBitmap.Create;
+        try
+          ScreenShot(0, FullScreenBmp, 0, 0, Screen.Width, Screen.Height);
+          InitBmp.Canvas.CopyRect(DestRect, FullScreenBmp.Canvas, SrcRect);
+        finally
+          FullScreenBmp.Free;
+        end;
+      end;
 
       Step := AStep;
       x := 0; //must be initialized also here, bcause of UseHCursor
@@ -1434,7 +1492,20 @@ begin
           CurrentY := y + rct.Top;
 
           SetCursorPos(CurrentX, CurrentY);
-          ScreenShot(AInterprettedHandle, CurrentBmp, 0, 0, w, h);
+          Sleep(1);
+
+          if not UseFullScreenshot then
+            ScreenShot(AInterprettedHandle, CurrentBmp, 0, 0, w, h)
+          else
+          begin
+            FullScreenBmp := TBitmap.Create;    //full screenshot then crop
+            try
+              ScreenShot(0, FullScreenBmp, 0, 0, Screen.Width, Screen.Height);
+              CurrentBmp.Canvas.CopyRect(DestRect, FullScreenBmp.Canvas, SrcRect);
+            finally
+              FullScreenBmp.Free;
+            end;
+          end;
 
           if UseHCursor then
           begin
