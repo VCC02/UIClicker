@@ -73,6 +73,7 @@ type
     btnSaveTree: TButton;
     btnStartRec: TButton;
     btnStopRec: TButton;
+    chkUseHCursor: TCheckBox;
     chkHighlightSelectedComponent: TCheckBox;
     chkMinimizeWhileRecording: TCheckBox;
     colboxHighlightingLabels: TColorBox;
@@ -162,6 +163,8 @@ type
     procedure spdbtnExtraRecordingClick(Sender: TObject);
     procedure tmrSpinnerTimer(Sender: TObject);
     procedure vstComponentsClick(Sender: TObject);
+    procedure vstComponentsMouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
     procedure vstComponentsGetText(Sender: TBaseVirtualTree;
       Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
       var CellText: String);
@@ -740,6 +743,7 @@ begin
   vstComponents.TreeOptions.AutoOptions := [toAutoDropExpand, toAutoScrollOnExpand, toAutoTristateTracking, toAutoDeleteMovedNodes, toDisableAutoscrollOnFocus, toDisableAutoscrollOnEdit];
   vstComponents.TreeOptions.SelectionOptions := [toFullRowSelect];
   vstComponents.OnClick := @vstComponentsClick;
+  vstComponents.OnMouseUp := @vstComponentsMouseUp;
   vstComponents.OnGetText := @vstComponentsGetText;
   vstComponents.OnLoadNode := @vstComponentsLoadNode;
   vstComponents.OnLoadTree := @vstComponentsLoadTree;
@@ -1359,6 +1363,9 @@ var
   ImgMatrix: TColorArr;
   ImgHWMatrix: array of THandle;
   tk, Duration: QWord;
+  UseHCursor: Boolean;
+  pci: TCursorInfo;
+  Res: LongBool;
 begin
   FDoneRec := False;
   if GetWindowRect(AInterprettedHandle, rct) = False then
@@ -1405,6 +1412,8 @@ begin
   spdbtnExtraRecording.Enabled := False;
   AppTitle := Application.Title;
   try
+    UseHCursor := chkUseHCursor.Checked;
+
     SetCursorPos(Screen.Width, Screen.Height);
     InitBmp := TBitmap.Create;
     CurrentBmp := TBitmap.Create;
@@ -1412,6 +1421,7 @@ begin
       ScreenShot(AInterprettedHandle, InitBmp, 0, 0, w, h);
 
       Step := AStep;
+      x := 0; //must be initialized also here, bcause of UseHCursor
       y := 0;
       repeat
         Inc(y, Step);
@@ -1426,7 +1436,14 @@ begin
           SetCursorPos(CurrentX, CurrentY);
           ScreenShot(AInterprettedHandle, CurrentBmp, 0, 0, w, h);
 
-          if not BitmapsAreEqual(InitBmp, CurrentBmp, w, h) then
+          if UseHCursor then
+          begin
+            pci.cbSize := SizeOf(TCursorInfo);
+            Res := GetCursorInfo(pci);
+          end;
+
+          if not BitmapsAreEqual(InitBmp, CurrentBmp, w, h) or
+            (UseHCursor and Res and (pci.hCursor <> 65539)) then
           begin
             imgSpinnerDiff.Visible := True;
 
@@ -1463,6 +1480,7 @@ begin
             imgSpinnerDiff.Visible := False;
 
           Application.ProcessMessages;
+          //Sleep(10);
           if GetAsyncKeyState(VK_ESCAPE) < 0 then
             Exit;
 
@@ -1476,7 +1494,6 @@ begin
           if FDoneRec then
             Break;
         until x >= w - 1;
-
       until y >= h - 1;
     finally
       InitBmp.Free;
@@ -2916,6 +2933,13 @@ end;
 
 
 procedure TfrClickerWinInterp.vstComponentsClick(Sender: TObject);
+begin
+  //cannot use this event, because it is not called on clicking the last node :(
+end;
+
+
+procedure TfrClickerWinInterp.vstComponentsMouseUp(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 var
   Node: PVirtualNode;
 begin

@@ -272,6 +272,20 @@ object frClickerWinInterp: TfrClickerWinInterp
         TabOrder = 12
         OnSelect = colboxHighlightingLabelsSelect
       end
+      object chkUseHCursor: TCheckBox
+        Left = 368
+        Height = 19
+        Hint = '[in work]'#13#10'Reads mouse cursor handle on every position during recording with mouse swipe.'#13#10'This may be useful when interactable components do not display a visual feedback while hovered,'#13#10'so the scan relies on changing the mouse cursor to detect component edges.'
+        Top = 438
+        Width = 82
+        Anchors = [akLeft, akBottom]
+        Caption = 'Use hCursor'
+        Checked = True
+        ParentShowHint = False
+        ShowHint = True
+        State = cbChecked
+        TabOrder = 13
+      end
     end
     object pnlDrag: TPanel
       Left = 4

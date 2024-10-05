@@ -71,7 +71,7 @@ const
   CPropCount_LoadSetVarFromFile = 2;
   CPropCount_SaveSetVarToFile = 2;
   CPropCount_Plugin = 1;  //Static properties, defined here. A plugin can report additional properties, which are not counted by this constant.
-  CPropCount_EditTemplate = 8; //Static properties, defined here.  ListOfEnabledProperties and CachedCount do not have to be displayed. They are not directly editable from OI.
+  CPropCount_EditTemplate = 10;
 
   CMainPropCounts: array[0..Ord(High(TClkAction))] of Integer = (
     CPropCount_Click,
@@ -222,7 +222,8 @@ const
   CEditTemplate_EditedActionCondition_PropIndex = 5;
   CEditTemplate_EditedActionTimeout_PropIndex = 6;
   CEditTemplate_NewActionName_PropIndex = 7;
-
+  CEditTemplate_ListOfEditedProperties_PropIndex = 8;
+  CEditTemplate_ListOfEnabledProperties_PropIndex = 9;
 
   //Moved to ClickerUtils
   //CDTString = 'String';
@@ -437,7 +438,9 @@ const
     (Name: 'EditedActionType'; EditorType: etEnumCombo; DataType: CDTString),
     (Name: 'EditedActionCondition'; EditorType: etUserEditor; DataType: CDTString),
     (Name: 'EditedActionTimeout'; EditorType: etTextWithArrow; DataType: CDTInteger),
-    (Name: 'NewActionName'; EditorType: etTextWithArrow; DataType: CDTString)
+    (Name: 'NewActionName'; EditorType: etTextWithArrow; DataType: CDTString),
+    (Name: 'ListOfEditedProperties'; EditorType: etNone; DataType: CDTString),
+    (Name: 'ListOfEnabledProperties'; EditorType: etNone; DataType: CDTString)
   );
 
 type
@@ -750,6 +753,8 @@ const
     Ord(High(TClkAction)) + 1,
     0, //NewActionName
     0,
+    0,
+    0,
     0
   );
 
@@ -947,6 +952,8 @@ const
     nil,  //EditedActionName
     @CClkActionStr,
     nil,  //NewActionName
+    nil,
+    nil,
     nil,
     nil
   );
@@ -1151,7 +1158,9 @@ const
     0,  //TClkAction
     0,  //NewActionName
     0,  //EditedActionCondition
-    0   //EditedActionTimeout
+    0,  //EditedActionTimeout
+    0,  //ListOfEditedProperties
+    0   //ListOfEnabledProperties
   );
 
 
@@ -1283,6 +1292,8 @@ function GetPropertyHint_EditTemplate_EditedActionType: string;
 function GetPropertyHint_EditTemplate_EditedActionCondition: string;
 function GetPropertyHint_EditTemplate_EditedActionTimeout: string;
 function GetPropertyHint_EditTemplate_NewActionName: string;
+function GetPropertyHint_EditTemplate_ListOfEditedProperties: string;
+function GetPropertyHint_EditTemplate_ListOfEnabledProperties: string;
 
 const
   CGetPropertyHint_Click: array[0..CPropCount_Click - 1] of TPropHintFunc = (
@@ -1421,7 +1432,9 @@ const
     @GetPropertyHint_EditTemplate_EditedActionType,
     @GetPropertyHint_EditTemplate_EditedActionCondition,
     @GetPropertyHint_EditTemplate_EditedActionTimeout,
-    @GetPropertyHint_EditTemplate_NewActionName
+    @GetPropertyHint_EditTemplate_NewActionName,
+    @GetPropertyHint_EditTemplate_ListOfEditedProperties,
+    @GetPropertyHint_EditTemplate_ListOfEnabledProperties
   );
 
 
@@ -1851,6 +1864,8 @@ begin
     5: Result := AAction^.EditTemplateOptions.EditedActionCondition;
     6: Result := IntToStr(AAction^.EditTemplateOptions.EditedActionTimeout);
     7: Result := AAction^.EditTemplateOptions.NewActionName;
+    8: Result := AAction^.EditTemplateOptions.ListOfEditedProperties;
+    9: Result := AAction^.EditTemplateOptions.ListOfEnabledProperties;
     else
       Result := 'unknown';
   end;
@@ -2456,6 +2471,8 @@ begin
     5: AAction^.EditTemplateOptions.EditedActionCondition := NewValue;
     6: AAction^.EditTemplateOptions.EditedActionTimeout := StrToIntDef(NewValue, 1000);
     7: AAction^.EditTemplateOptions.NewActionName := NewValue;
+    8: AAction^.EditTemplateOptions.ListOfEditedProperties := NewValue;
+    9: AAction^.EditTemplateOptions.ListOfEnabledProperties := NewValue;
     else
       ;
   end;
@@ -3139,6 +3156,18 @@ end;
 function GetPropertyHint_EditTemplate_NewActionName: string;
 begin
   Result := 'Used when moving, duplicating and renaming an action.';
+end;
+
+
+function GetPropertyHint_EditTemplate_ListOfEditedProperties: string;
+begin
+  Result := '#18-separated list of PropertyName=PropertyValue items.';
+end;
+
+
+function GetPropertyHint_EditTemplate_ListOfEnabledProperties: string;
+begin
+  Result := 'CRLF separated list of values.'
 end;
 
 end.

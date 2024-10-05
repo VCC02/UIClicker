@@ -911,6 +911,7 @@ begin
     TempFuncDescriptions.Add('$DecBrightnessB(<HexColor>[,Amount])$=Returns <HexColor>, decreased by Amount, on B channel only. If Amount is not passed, <HexColor> is decreased by one, on B channel only. <HexColor> must be in BBGGRR format.');
     TempFuncDescriptions.Add('$Current_Mouse_X$=Returns the current global X position of the mouse cursor.');
     TempFuncDescriptions.Add('$Current_Mouse_Y$=Returns the current global Y position of the mouse cursor.');
+    TempFuncDescriptions.Add('$Current_Mouse_hCursor$=Returns the current mouse cursor handle. Some applictions may register their own cursors which will get dynamic handles.');
     TempFuncDescriptions.Add('$CRLF$=Returns a CRLF sequence.');
     TempFuncDescriptions.Add('$#4#5$=Returns a ASCII #4#5 sequence.');
     TempFuncDescriptions.Add('$Now$=Returns current datetime.');

@@ -260,7 +260,7 @@ object frClickerSetVar: TfrClickerSetVar
     object memAvailableFunctions: TMemo
       Left = 0
       Height = 247
-      Hint = 'The "$GetSelfHandles()$" and "$Exit(<ExitCode>)$" functions do not return a value, so they must be placed in the "Variable" column of a SetVar action.'#13#10'Also, they can''t be evaluated using the console or as part of a condition.'#13#10'All the other function should be called from the "Value" column.'
+      Hint = 'The "$GetSelfHandles()$" and "$Exit(<ExitCode>)$" functions do not return a value, so they must be placed in the "Variable" column of a SetVar action.'#13#10'Also, they can''t be evaluated using the console or as part of a condition.'#13#10'All the other function should be called from the "Value" column.'#13#10'Function and var names are case sensitive.'
       Top = 20
       Width = 335
       Anchors = [akTop, akLeft, akRight, akBottom]
@@ -310,6 +310,7 @@ object frClickerSetVar: TfrClickerSetVar
         '$DecBrightnessB(<HexColor>[,Amount])$'
         '$Current_Mouse_X$'
         '$Current_Mouse_Y$'
+        '$Current_Mouse_hCursor$'
         '$CRLF$'
         '$#4#5$'
         '$Now$'

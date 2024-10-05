@@ -2269,6 +2269,8 @@ var
   ibr: TBrightnessOperation;
   tp: TPoint;
   CurrentName, CurrentValue: string;
+  pci: TCursorInfo;
+  Res: LongBool;
 begin
   for i := 0 to AListOfVars.Count - 1 do
   begin
@@ -2315,6 +2317,16 @@ begin
   begin
     GetCursorPos(tp);
     s := StringReplace(s, '$Current_Mouse_Y$', IntToStr(tp.Y), [rfReplaceAll]);
+  end;
+
+  if Pos('$Current_Mouse_hCursor$', s) > 0 then
+  begin
+    pci.cbSize := SizeOf(TCursorInfo);
+    Res := GetCursorInfo(pci);
+    if Res then
+      s := StringReplace(s, '$Current_Mouse_hCursor$', IntToStr(pci.hCursor), [rfReplaceAll])
+    else
+      s := StringReplace(s, '$Current_Mouse_hCursor$', 'Err: ' + SysErrorMessage(GetLastError), [rfReplaceAll])
   end;
 
   if Pos('$CRLF$', s) > 0 then

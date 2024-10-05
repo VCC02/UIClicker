@@ -5076,7 +5076,7 @@ begin
 end;
 
 
-function OIGetPropertyValue_ActionSpecific(AEditingAction: PClkActionRec; ALiveEditingActionType: TClkAction; APropertyIndex: Integer; var APropDef: TOIPropDef): string;
+function OIGetPropertyValue_ActionSpecific(AEditingAction: PClkActionRec; ALiveEditingActionType: TClkAction; ACategoryIndex, APropertyIndex: Integer; var APropDef: TOIPropDef): string;
 var
   EditingActionType: Integer;
   ListOfProperties: TStringList;
@@ -5120,7 +5120,13 @@ begin
       end;
 
       if (APropertyIndex < CMainPropCounts[EditingActionType]) or (ALiveEditingActionType = acPlugin) then    //initially used AEditingAction^.ActionOptions.Action
-        Result := CMainGetActionValueStrFunctions[ALiveEditingActionType](AEditingAction, APropertyIndex)
+      begin
+        Result := CMainGetActionValueStrFunctions[ALiveEditingActionType](AEditingAction, APropertyIndex);
+
+        //if (AEditingAction^.ActionOptions.Action = acEditTemplate) and (ACategoryIndex = CCategory_EditedAction) then
+        //  if APropertyIndex in [CEditTemplate_ListOfEditedProperties_PropIndex, CEditTemplate_ListOfEnabledProperties_PropIndex] then
+        //    APropDef.EditorType := etTextWithArrow; //To be enabled when editing those properties work as expected.
+      end
       else
         Result := '[bug. bad init]';
     end; //CClkUnsetAction
@@ -5147,11 +5153,11 @@ begin
       end;
 
       CCategory_ActionSpecific:
-        Result := OIGetPropertyValue_ActionSpecific(FEditingAction, CurrentlyEditingActionType, APropertyIndex, PropDef);
+        Result := OIGetPropertyValue_ActionSpecific(FEditingAction, CurrentlyEditingActionType, ACategoryIndex, APropertyIndex, PropDef);
 
       CCategory_EditedAction:
         if FEditTemplateOptions_EditingAction <> nil then
-          Result := OIGetPropertyValue_ActionSpecific(FEditTemplateOptions_EditingAction, FEditTemplateOptions_EditingAction.ActionOptions.Action, APropertyIndex, PropDef);
+          Result := OIGetPropertyValue_ActionSpecific(FEditTemplateOptions_EditingAction, FEditTemplateOptions_EditingAction.ActionOptions.Action, ACategoryIndex, APropertyIndex, PropDef);
 
       else
         PropDef.Name := '???';
@@ -5700,7 +5706,9 @@ begin
   end; // Column = 0
 
   if Column = 1 then
+  begin
     if ANodeLevel = CPropertyItemLevel then
+    begin
       if EditingActionType in [Ord(acFindControl), Ord(acFindSubControl)] then
         if APropertyIndex = CFindControl_MatchBitmapText_PropIndex then
         begin
@@ -5716,6 +5724,28 @@ begin
               BuildFontColorIconsList;
           end;
         end;
+    end;
+
+    if ANodeLevel = CPropertyLevel then
+      if ((ALiveEditingActionType = acEditTemplate) and (ACategoryIndex = CCategory_ActionSpecific)) or
+         (ACategoryIndex = CCategory_EditedAction) then   //works for EditTemplate only
+        if APropertyIndex = CEditTemplate_EditedActionType_PropIndex then
+        begin
+          ImageList := imglstActions16;
+
+          case ACategoryIndex of
+            CCategory_ActionSpecific:
+              ImageIndex := Ord(FEditingAction^.EditTemplateOptions.EditedActionType);
+
+            CCategory_EditedAction:
+              if FEditingAction^.EditTemplateOptions.EditedActionType = acEditTemplate then
+                ImageIndex := Ord(FEditTemplateOptions_EditingAction^.EditTemplateOptions.EditedActionType);
+
+            else
+              ;
+          end;
+        end;
+  end;
 end;
 
 
@@ -8417,6 +8447,10 @@ begin
     DatatypeName := OIGetDataTypeName_ActionSpecific(FEditTemplateOptions_EditingAction, FEditTemplateOptions_EditingAction.ActionOptions.Action, CategoryIndex, PropertyIndex, PropertyItemIndex);
     if (DatatypeName = 'Structure') or (DatatypeName = 'Array') then
       AAllowed := False;
+
+    if (FEditTemplateOptions_EditingAction^.ActionOptions.Action = acEditTemplate) and (CategoryIndex = CCategory_EditedAction) then
+      if PropertyIndex in [CEditTemplate_ListOfEditedProperties_PropIndex, CEditTemplate_ListOfEnabledProperties_PropIndex] then
+        AAllowed := False;
   end;
 end;
 
