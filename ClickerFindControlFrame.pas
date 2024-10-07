@@ -2243,6 +2243,9 @@ var
   FindControlOptions: PClkFindControlOptions;
   InMemFiles: TMemFileArr;
   i: Integer;
+  FFullScreenBmp: TBitmap;
+  SrcRect, DestRect: TRect;
+  hwc: TCompRec;
 begin
   try
     if FSearchAreaScrBox = nil then
@@ -2613,12 +2616,38 @@ begin
     //else
 
     if FindControlOptions.ImageSource = isScreenshot then
-      ScreenShot(SearchAreaControlHandle,
-                 FSearchAreaControlDbgImg.Picture.Bitmap,
-                 SearchAreaControlRect.Left,
-                 SearchAreaControlRect.Top,
-                 SearchAreaControlRect.Width,
-                 SearchAreaControlRect.Height)
+    begin
+      if not FindControlOptions.CropFromScreenshot then
+      begin
+        DoOnAddToLog('Taking component screenshot.');
+        ScreenShot(SearchAreaControlHandle,
+                   FSearchAreaControlDbgImg.Picture.Bitmap,
+                   SearchAreaControlRect.Left,
+                   SearchAreaControlRect.Top,
+                   SearchAreaControlRect.Width,
+                   SearchAreaControlRect.Height)
+      end
+      else
+      begin
+        DoOnAddToLog('Taking full screenshot, then crop.');
+
+        hwc := GetWindowClassRec(SearchAreaControlHandle);
+        SrcRect := hwc.ComponentRectangle;
+
+        DestRect.Left := 0;
+        DestRect.Top := 0;
+        DestRect.Width := hwc.ComponentRectangle.Width;
+        DestRect.Height := hwc.ComponentRectangle.Height;
+
+        FFullScreenBmp := TBitmap.Create;
+        try
+          ScreenShot(0, FFullScreenBmp, 0, 0, Screen.Width, Screen.Height);
+          FSearchAreaControlDbgImg.Picture.Bitmap.Canvas.CopyRect(DestRect, FFullScreenBmp.Canvas, SrcRect);
+        finally
+          FFullScreenBmp.Free;
+        end;
+      end
+    end
     else
       if FindControlOptions.ImageSourceFileNameLocation = isflDisk then
       begin

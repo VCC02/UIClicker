@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2023 VCC
+    Copyright (C) 2024 VCC
     creation date: Jul 2022
     initial release date: 26 Jul 2022
 
@@ -140,6 +140,7 @@ type
     FullBackgroundImageInResult: Boolean;
     MatchByHistogramSettings: TMatchByHistogramSettingsAPI;
     EvaluateTextCount: PWideChar;
+    CropFromScreenshot: Boolean;
   end;
 
   PClkFindControlOptionsAPI = ^TClkFindControlOptionsAPI;
@@ -750,6 +751,7 @@ begin
   SetPointedContentToString(@string(PWideChar(AFindControlOptions^.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp))[1], TempAction.FindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp);
 
   SetPointedContentToString(@string(PWideChar(AFindControlOptions^.EvaluateTextCount))[1], TempAction.FindControlOptions.EvaluateTextCount);
+  TempAction.FindControlOptions.CropFromScreenshot := AFindControlOptions^.CropFromScreenshot;
 
   AddActionToTemplate(TemplateFileName, TempAction);
   Result := 0;

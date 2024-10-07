@@ -1567,6 +1567,8 @@ begin
   FindControlInputData.MatchByHistogramNumericSettings.MinPercentColorMatch := StrToFloatDef(EvaluateReplacements(AFindControlOptions.MatchByHistogramSettings.MinPercentColorMatch), 50, LocalFormatSettings);
   FindControlInputData.MatchByHistogramNumericSettings.MostSignificantColorCountInSubBmp := StrToIntDef(EvaluateReplacements(AFindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInSubBmp), 10);
   FindControlInputData.MatchByHistogramNumericSettings.MostSignificantColorCountInBackgroundBmp := StrToIntDef(EvaluateReplacements(AFindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp), 15);
+
+  FindControlInputData.CropFromScreenshot := AFindControlOptions.CropFromScreenshot;
 end;
 
 

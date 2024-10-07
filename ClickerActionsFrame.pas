@@ -6470,7 +6470,8 @@ begin
       if ((APropertyIndex in [CFindControl_MatchBitmapText_PropIndex .. CFindControl_MatchBitmapAlgorithmSettings_PropIndex,
                               CFindControl_ColorError_PropIndex .. CFindControl_AllowedColorErrorCount_PropIndex,
                               CFindControl_MatchPrimitiveFiles_PropIndex,
-                              CFindControl_UseFastSearch_PropIndex .. CFindControl_MatchByHistogramSettings_PropIndex])
+                              CFindControl_UseFastSearch_PropIndex .. CFindControl_MatchByHistogramSettings_PropIndex,
+                              CFindControl_CropFromScreenshot_PropIndex])
                               and (ALiveEditingActionType = acFindControl)) then
       begin
         TargetCanvas.Font.Color := clGray;

@@ -265,7 +265,8 @@ class TFindControlOptions(Structure):
                ("PrecisionTimeout", BOOLEAN),
                ("FullBackgroundImageInResult", BOOLEAN),
                ("MatchByHistogramSettings", TMatchByHistogramSettings),
-               ("EvaluateTextCount", LPCWSTR)
+               ("EvaluateTextCount", LPCWSTR),
+               ("CropFromScreenshot", BOOLEAN)
                ]
 
 PFindControlOptions = ctypes.POINTER(TFindControlOptions)
@@ -334,6 +335,7 @@ def GetDefaultFindControlOptions():
     FindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp = '15'
 
     FindControlOptions.EvaluateTextCount = "-1"
+    FindControlOptionsCropFromScreenshot.
 
     return FindControlOptions
 

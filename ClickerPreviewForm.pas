@@ -478,12 +478,12 @@ begin
   DestRect.Width := hwc.ComponentRectangle.Width;
   DestRect.Height := hwc.ComponentRectangle.Height;
 
-  FFullScreenBmp := TBitmap.Create;
+  //FFullScreenBmp := TBitmap.Create;    //created and destroyed as global var
   try
     ScreenShot(0, FFullScreenBmp, 0, 0, Screen.Width, Screen.Height);
     imgScreenshot.Picture.Bitmap.Canvas.CopyRect(DestRect, FFullScreenBmp.Canvas, SrcRect);
   finally
-    FFullScreenBmp.Free;
+    //FFullScreenBmp.Free;               //created and destroyed as global var
   end;
 
 

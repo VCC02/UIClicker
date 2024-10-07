@@ -287,6 +287,7 @@ type
     FullBackgroundImageInResult: Boolean; //When True, the resulted debugging image contains the background image. Defaults to True for backwards compatibility.
     MatchByHistogramSettings: TMatchByHistogramSettings; //used when MatchBitmapAlgorithm is mbaRawHistogramZones
     EvaluateTextCount: string; //-1 = default (1000 "recursive" evaluations), 0 = no evaluations, >1 = EvaluateTextCount "recursive" evaluations
+    CropFromScreenshot: Boolean; //False = use component handle for screenshot, True = use full screenshot, then crop from it.
   end;
 
   TClkSetTextOptions = record

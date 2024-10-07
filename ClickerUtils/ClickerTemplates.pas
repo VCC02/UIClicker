@@ -208,6 +208,7 @@ begin
     ACustomActions[i].FindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp := '15';
 
     ACustomActions[i].FindControlOptions.EvaluateTextCount := '-1';
+    ACustomActions[i].FindControlOptions.CropFromScreenshot := False;
 
     SectionIndex := Ini.GetSectionIndex('Actions.SetTextOptions');
     ACustomActions[i].SetTextOptions.Text := Ini.ReadString(SectionIndex, 'Text_' + IterationStr, '');
@@ -430,6 +431,7 @@ begin
   AFindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp := Ini.ReadString(SectionIndex, 'MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp', '15');
 
   AFindControlOptions.EvaluateTextCount := Ini.ReadString(SectionIndex, 'EvaluateTextCount', '-1');
+  AFindControlOptions.CropFromScreenshot := Ini.ReadBool(SectionIndex, 'CropFromScreenshot', False);
 end;
 
 
@@ -896,6 +898,7 @@ begin
   AStringList.Add('MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=' + AActionFindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp);
 
   AStringList.Add('EvaluateTextCount=' + AActionFindControlOptions.EvaluateTextCount);
+  AStringList.Add('CropFromScreenshot=' + IntToStr(Ord(AActionFindControlOptions.CropFromScreenshot)));
 end;
 
 
@@ -1090,6 +1093,7 @@ begin
   ADest.MatchByHistogramSettings := ASrc.MatchByHistogramSettings;
 
   ADest.EvaluateTextCount := ASrc.EvaluateTextCount;
+  ADest.CropFromScreenshot := ASrc.CropFromScreenshot;
 end;
 
 

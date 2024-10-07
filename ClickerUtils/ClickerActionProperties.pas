@@ -234,7 +234,8 @@ begin
             'MatchByHistogramSettings.MostSignificantColorCountInSubBmp' + '=' + AFindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInSubBmp + '&' +
             'MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp' + '=' + AFindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp + '&' +
 
-            'EvaluateTextCount' + '=' + AFindControlOptions.EvaluateTextCount
+            'EvaluateTextCount' + '=' + AFindControlOptions.EvaluateTextCount+ '&' +
+            'CropFromScreenshot' + '=' + IntToStr(Ord(AFindControlOptions.CropFromScreenshot))
             ;
 end;
 
@@ -682,6 +683,8 @@ begin
   AActionOptions.ActionName := AListOfFindControlOptionsParams.Values[CPropertyName_ActionName];
   AActionOptions.ActionTimeout := Temp_ActionTimeout;
   AActionOptions.Action := CActionType[AIsSubControl];
+
+  AFindControlOptions.CropFromScreenshot := AListOfFindControlOptionsParams.Values['CropFromScreenshot'] = '1';
 end;
 
 
@@ -1015,6 +1018,7 @@ begin
   AFindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInSubBmp := '10';
   AFindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp := '15';
   AFindControlOptions.EvaluateTextCount := '-1';
+  AFindControlOptions.CropFromScreenshot := False;
 
   SetLength(AFindControlOptions.MatchBitmapText, 1);
   GetDefaultPropertyValues_FindControl_MatchBitmapText(AFindControlOptions.MatchBitmapText[0]);

@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2023 VCC
+    Copyright (C) 2024 VCC
     creation date: Dec 2019
     initial release date: 13 Sep 2022
 
@@ -69,6 +69,7 @@ type
     PrecisionTimeout: QWord;
     FullBackgroundImageInResult: Boolean;
     MatchByHistogramNumericSettings: TMatchByHistogramNumericSettings;
+    CropFromScreenshot: Boolean;
   end;
 
 
@@ -775,17 +776,46 @@ function MatchByBitmap(Algorithm: TMatchBitmapAlgorithm;
                        ASleepySearch: Byte;
                        AOutsideTickCount, APrecisionTimeout: QWord;
                        AStopSearchOnMismatch: Boolean;
+                       ACropFromScreenshot: Boolean;
                        out AResultedErrorCount: Integer;
                        AStopAllActionsOnDemand: PBoolean): Boolean;
 var
   i: Integer;
   SrcRect, DestRect: TRect;
+  FullScreenBmp: TBitmap;
+  hwc: TCompRec;
 begin
   Result := False;
                        //SrcCompSearchAreaBitmap is the cropped area, from where BitmapToSearchFor is searched for.
 
   if ImageSource = isScreenshot then
-    ScreenShot(CompHandle, SrcCompSearchAreaBitmap, ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height)
+  begin
+    if not ACropFromScreenshot then
+      ScreenShot(CompHandle, SrcCompSearchAreaBitmap, ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height)
+    else
+    begin
+      hwc := GetWindowClassRec(CompHandle);
+
+      SrcRect.Left := hwc.ComponentRectangle.Left + ScrShot_Left;
+      SrcRect.Top := hwc.ComponentRectangle.Top + ScrShot_Top;
+      SrcRect.Width := Max(3, ScrShot_Width);
+      SrcRect.Height := Max(3, ScrShot_Height);
+
+      DestRect.Left := 0;
+      DestRect.Top := 0;
+      DestRect.Width := SrcRect.Width;
+      DestRect.Height := SrcRect.Height;
+      SrcCompSearchAreaBitmap.SetSize(DestRect.Width, DestRect.Height);
+
+      FullScreenBmp := TBitmap.Create;
+      try
+        ScreenShot(0, FullScreenBmp, 0, 0, Screen.Width, Screen.Height);  //Screen.DesktopWidth, Screen.DesktopHeight ???
+        SrcCompSearchAreaBitmap.Canvas.CopyRect(DestRect, FullScreenBmp.Canvas, SrcRect);
+      finally
+        FullScreenBmp.Free;
+      end;
+    end;
+  end
   else
   begin
     ScrShot_Width := Min(ScrShot_Width, BitmapToSearchOn.Width);
@@ -795,13 +825,13 @@ begin
 
     SrcRect.Left := ScrShot_Left;
     SrcRect.Top := ScrShot_Top;
-    SrcRect.Width := ScrShot_Width;
-    SrcRect.Height := ScrShot_Height;
+    SrcRect.Width := Max(3, ScrShot_Width);
+    SrcRect.Height := Max(3, ScrShot_Height);
 
     DestRect.Left := 0;
     DestRect.Top := 0;
-    DestRect.Width := ScrShot_Width;
-    DestRect.Height := ScrShot_Height;
+    DestRect.Width := SrcRect.Width;
+    DestRect.Height := SrcRect.Height;
 
     SrcCompSearchAreaBitmap.Canvas.CopyRect(DestRect, BitmapToSearchOn.Canvas, SrcRect);
   end;
@@ -872,13 +902,44 @@ var
   ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height, CompWidth, CompHeight: Integer;
   SrcCompSearchAreaBitmap: TBitmap;
   FoundBmp: Boolean;
+  FullScreenBmp: TBitmap;
+  SrcRect, DestRect: TRect;
 begin
   ComputeScreenshotArea(InputData, CompAtPoint, ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height, CompWidth, CompHeight);
 
   if InputData.ImageSource = isScreenshot then
   begin
     if InputData.DebugBitmap <> nil then
-      ScreenShot(CompAtPoint.Handle, InputData.DebugBitmap, 0, 0, CompWidth, CompHeight);  //call this here, before calling MatchByBitmap, to have a screenshot on debug image, while searching :)
+    begin
+      if not InputData.CropFromScreenshot then
+        ScreenShot(CompAtPoint.Handle, InputData.DebugBitmap, 0, 0, CompWidth, CompHeight)   //call this here, before calling MatchByBitmap, to have a screenshot on debug image, while searching :)
+      else
+      begin
+        SrcRect.Left := CompAtPoint.ComponentRectangle.Left;
+        SrcRect.Top := CompAtPoint.ComponentRectangle.Top;
+        SrcRect.Width := Max(3, CompWidth);
+        SrcRect.Height := Max(3, CompHeight);
+
+        DestRect.Left := 0;
+        DestRect.Top := 0;
+        DestRect.Width := SrcRect.Width;
+        DestRect.Height := SrcRect.Height;
+
+        FullScreenBmp := TBitmap.Create;
+        try
+          ScreenShot(0, FullScreenBmp, 0, 0, Screen.Width, Screen.Height);  //Screen.DesktopWidth, Screen.DesktopHeight ???
+          InputData.DebugBitmap.Canvas.CopyRect(DestRect, FullScreenBmp.Canvas, SrcRect);
+
+          if InputData.DebugBitmap.Width > CompWidth then
+            InputData.DebugBitmap.Width := CompWidth; //do not set with Max, because that will always set the width
+
+          if InputData.DebugBitmap.Height > CompHeight then
+            InputData.DebugBitmap.Height := CompHeight; //do not set with Max, because that will always set the height
+        finally
+          FullScreenBmp.Free;
+        end;
+      end;
+    end;
   end
   else
   begin
@@ -920,6 +981,7 @@ begin
                                 InputData.OutsideTickCount,
                                 InputData.PrecisionTimeout,
                                 InputData.StopSearchOnMismatch,
+                                InputData.CropFromScreenshot,
                                 AResultedErrorCount,
                                 AStopAllActionsOnDemand);
     except
