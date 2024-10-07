@@ -93,6 +93,7 @@ type
     trbCropZoom: TTrackBar;
     procedure chkNoKeysScanningTimerChange(Sender: TObject);
     procedure chkScanningTimerChange(Sender: TObject);
+    procedure FormDestroy(Sender: TObject);
     procedure pnlDragMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure pnlDragMouseMove(Sender: TObject; Shift: TShiftState; X,
@@ -129,6 +130,7 @@ type
     FDragging: Boolean;
 
     pnlImgCoords: TPanel;
+    FFullScreenBmp: TBitmap;
 
     procedure SetCropRectangleByTrb;
     procedure DrawCroppedImage;
@@ -352,6 +354,7 @@ begin
   pnlImgCoords.Caption := 'Coords';
 
   FNoKeysScanningTimer := False;
+  FFullScreenBmp := TBitmap.Create;
 end;
 
 
@@ -405,6 +408,8 @@ var
   tp: TPoint;
   hwc: TCompRec;
   CompWidth, CompHeight: Integer;
+  SrcRect, DestRect: TRect;
+  //FullScreenBmp: TBitmap;  //using FFullScreenBmp as global var, because it is faster to create it once
 begin
   GetCursorPos(tp);
   lbeMouseGX.Text := IntToStr(tp.X);
@@ -465,7 +470,23 @@ begin
   pnlBase.Width := imgScreenshot.Left + imgScreenshot.Width + 5;
   pnlBase.Height := imgScreenshot.Top + imgScreenshot.Height + 5;
 
-  ScreenShot(hwc.Handle, imgScreenshot.Picture.Bitmap, 0, 0, CompWidth, CompHeight);
+  //ScreenShot(hwc.Handle, imgScreenshot.Picture.Bitmap, 0, 0, CompWidth, CompHeight);
+  SrcRect := hwc.ComponentRectangle;
+
+  DestRect.Left := 0;
+  DestRect.Top := 0;
+  DestRect.Width := hwc.ComponentRectangle.Width;
+  DestRect.Height := hwc.ComponentRectangle.Height;
+
+  FFullScreenBmp := TBitmap.Create;
+  try
+    ScreenShot(0, FFullScreenBmp, 0, 0, Screen.Width, Screen.Height);
+    imgScreenshot.Picture.Bitmap.Canvas.CopyRect(DestRect, FFullScreenBmp.Canvas, SrcRect);
+  finally
+    FFullScreenBmp.Free;
+  end;
+
+
   //imgScreenshot.Repaint;
 
   trbCropLeft.Max := CompWidth;
@@ -477,7 +498,7 @@ end;
 
 procedure TfrmClickerControlPreview.tmrScanTimer(Sender: TObject);
 begin
-  if FNoKeysScanningTimer or ((GetAsyncKeyState(VK_CONTROL) < 0) and (GetAsyncKeyState(VK_SHIFT) < 0)) then
+  if FNoKeysScanningTimer or ((GetAsyncKeyState(VK_CONTROL) < 0) and (GetAsyncKeyState(VK_SHIFT) < 0)) or FDragging then
     ScanTargetControl;
 end;
 
@@ -493,10 +514,18 @@ begin
 end;
 
 
+procedure TfrmClickerControlPreview.FormDestroy(Sender: TObject);
+begin
+  FreeAndNil(FFullScreenBmp);
+end;
+
+
 procedure TfrmClickerControlPreview.pnlDragMouseDown(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
   FDragging := True;
+  tmrScan.Interval := 1;
+  tmrScan.Enabled := True;
 end;
 
 
@@ -505,7 +534,7 @@ procedure TfrmClickerControlPreview.pnlDragMouseMove(Sender: TObject;
 begin
   if FDragging then
   begin
-    ScanTargetControl;
+    //ScanTargetControl; //called by timer
 
     if pnlDrag.Color <> clLime then
       pnlDrag.Color := clLime;
@@ -518,6 +547,8 @@ procedure TfrmClickerControlPreview.pnlDragMouseUp(Sender: TObject;
 begin
   FDragging := False;
   pnlDrag.Color := clYellow;
+  tmrScan.Interval := 10;
+  tmrScan.Enabled := False;
 end;
 
 

@@ -241,6 +241,7 @@ type
     TabSheetActionFindSubControlBMPText: TTabSheet;
     TabSheetActionFindSubControlSearchArea: TTabSheet;
     TabSheetActionFindSubControlText: TTabSheet;
+    tmrScan: TTimer;
     tmrHandleSelectionKeys: TTimer;
     tmrBlinkCalcErrLevel: TTimer;
     tmrDrawZoom: TTimer;
@@ -269,6 +270,7 @@ type
     procedure tmrBlinkCalcErrLevelTimer(Sender: TObject);
     procedure tmrDrawZoomTimer(Sender: TObject);
     procedure tmrHandleSelectionKeysTimer(Sender: TObject);
+    procedure tmrScanTimer(Sender: TObject);
     procedure tmrUpdateGridTimer(Sender: TObject);
     procedure tmrUpdateSearchAreaOffsetEditBoxesTimer(Sender: TObject);
 
@@ -566,6 +568,7 @@ type
     procedure UpdateSearchAreaSearchedTextAndLabels;
     procedure PopulateDbgImgExtraMenuWithTxtItems;
     procedure PopulateDbgImgExtraMenu;
+    procedure ScanTargetControl;
   public
     //FBMPTextFrames: TfrClickerBMPTextArr; //should eventually made private and accesed through functions
 
@@ -1803,54 +1806,81 @@ begin
 end;
 
 
+procedure TfrClickerFindControl.ScanTargetControl;
+var
+  tp: TPoint;
+  Comp: TCompRec;
+  SrcRect, DestRect: TRect;
+  FullScreenBmp: TBitmap;
+  CompWidth, CompHeight: Integer;
+begin
+  GetCursorPos(tp);
+  Comp := GetWindowClassRec(tp);
+
+  lbeFoundControlText.Text := Comp.Text;
+  lbeFoundControlClass.Text := Comp.ClassName;
+  edtFoundControlInfo.Text := 'Control info:  handle = ' + IntToStr(Comp.Handle) +
+                              '  x:y = ' + IntToStr(Comp.ComponentRectangle.Left) + ':' + IntToStr(Comp.ComponentRectangle.Top) +
+                              '  w:h = ' + IntToStr(Comp.ComponentRectangle.Width) + ':' + IntToStr(Comp.ComponentRectangle.Height);
+
+  if pnlDrag.Color <> clLime then
+    pnlDrag.Color := clLime;
+
+  CompWidth := Comp.ComponentRectangle.Right - Comp.ComponentRectangle.Left;
+  CompHeight := Comp.ComponentRectangle.Bottom - Comp.ComponentRectangle.Top;
+
+  if CompWidth > 16383 then
+    CompWidth := 16383;
+
+  if CompHeight > 16383 then
+    CompHeight := 16383;
+
+  try
+    imgScreenshot.Width := CompWidth;             //AV here after debugging, then reloading a template while debugging and pressing Continue (AV), then pressing Ctrl key to enter here
+    imgScreenshot.Height := CompHeight;
+    pnlBase.Width := imgScreenshot.Left + imgScreenshot.Width + 3;
+    pnlBase.Height := imgScreenshot.Top + imgScreenshot.Height + 3;
+    pnlBase.Color := clYellow;
+
+    ScreenShot(Comp.Handle, imgScreenshot.Picture.Bitmap, 0, 0, CompWidth, CompHeight);
+    SrcRect := Comp.ComponentRectangle;
+
+    DestRect.Left := 0;
+    DestRect.Top := 0;
+    DestRect.Width := Comp.ComponentRectangle.Width;
+    DestRect.Height := Comp.ComponentRectangle.Height;
+
+    FullScreenBmp := TBitmap.Create;
+    try
+      ScreenShot(0, FullScreenBmp, 0, 0, Screen.Width, Screen.Height);
+      imgScreenshot.Picture.Bitmap.Canvas.CopyRect(DestRect, FullScreenBmp.Canvas, SrcRect);
+    finally
+      FullScreenBmp.Free;
+    end;
+  except
+  end;
+end;
+
+
+procedure TfrClickerFindControl.tmrScanTimer(Sender: TObject);
+begin
+  ScanTargetControl;
+end;
+
+
 procedure TfrClickerFindControl.pnlDragMouseDown(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
   FDragging := True;
+  tmrScan.Enabled := True;
 end;
 
 
 procedure TfrClickerFindControl.pnlDragMouseMove(Sender: TObject;
   Shift: TShiftState; X, Y: Integer);
-var
-  tp: TPoint;
-  Comp: TCompRec;
-  CompWidth, CompHeight: Integer;
 begin
   if FDragging then
-  begin
-    GetCursorPos(tp);
-    Comp := GetWindowClassRec(tp);
-
-    lbeFoundControlText.Text := Comp.Text;
-    lbeFoundControlClass.Text := Comp.ClassName;
-    edtFoundControlInfo.Text := 'Control info:  handle = ' + IntToStr(Comp.Handle) +
-                                '  x:y = ' + IntToStr(Comp.ComponentRectangle.Left) + ':' + IntToStr(Comp.ComponentRectangle.Top) +
-                                '  w:h = ' + IntToStr(Comp.ComponentRectangle.Width) + ':' + IntToStr(Comp.ComponentRectangle.Height);
-
-    if pnlDrag.Color <> clLime then
-      pnlDrag.Color := clLime;
-
-    CompWidth := Comp.ComponentRectangle.Right - Comp.ComponentRectangle.Left;
-    CompHeight := Comp.ComponentRectangle.Bottom - Comp.ComponentRectangle.Top;
-
-    if CompWidth > 16383 then
-      CompWidth := 16383;
-
-    if CompHeight > 16383 then
-      CompHeight := 16383;
-
-    try
-      imgScreenshot.Width := CompWidth;             //AV here after debugging, then reloading a template while debugging and pressing Continue (AV), then pressing Ctrl key to enter here
-      imgScreenshot.Height := CompHeight;
-      pnlBase.Width := imgScreenshot.Left + imgScreenshot.Width + 3;
-      pnlBase.Height := imgScreenshot.Top + imgScreenshot.Height + 3;
-      pnlBase.Color := clYellow;
-
-      ScreenShot(Comp.Handle, imgScreenshot.Picture.Bitmap, 0, 0, CompWidth, CompHeight);
-    except
-    end;
-  end;
+    //ScanTargetControl;
 end;
 
 
@@ -1859,6 +1889,7 @@ procedure TfrClickerFindControl.pnlDragMouseUp(Sender: TObject;
 begin
   FDragging := False;
   pnlDrag.Color := clYellow;
+  tmrScan.Enabled := False;
 
   if chkAutoCopyValuesToObjectInspector.Checked then
     DoOnSetMatchTextAndClassToOI(lbeFoundControlText.Text, lbeFoundControlClass.Text);

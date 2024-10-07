@@ -15,6 +15,7 @@ object frmClickerControlPreview: TfrmClickerControlPreview
   FormStyle = fsStayOnTop
   LCLVersion = '8.4'
   OnCreate = FormCreate
+  OnDestroy = FormDestroy
   object lblInstructions: TLabel
     Left = 24
     Height = 13

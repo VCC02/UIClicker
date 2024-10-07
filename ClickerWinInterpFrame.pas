@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2022 VCC
+    Copyright (C) 2024 VCC
     creation date: Jul 2023 - most content moved from ClickerWinInterpForm.pas
     initial release date: 09 Jul 2023
 
@@ -118,6 +118,7 @@ type
     pmScreenshot: TPopupMenu;
     Separator1: TMenuItem;
     spdbtnExtraRecording: TSpeedButton;
+    tmrScan: TTimer;
     tmrSpinner: TTimer;
     procedure btnExportClick(Sender: TObject);
     procedure btnLoadTreeClick(Sender: TObject);
@@ -162,6 +163,7 @@ type
       Shift: TShiftState; WheelDelta: Integer; MousePos: TPoint;
       var Handled: Boolean);
     procedure spdbtnExtraRecordingClick(Sender: TObject);
+    procedure tmrScanTimer(Sender: TObject);
     procedure tmrSpinnerTimer(Sender: TObject);
     procedure vstComponentsClick(Sender: TObject);
     procedure vstComponentsMouseUp(Sender: TObject; Button: TMouseButton;
@@ -287,6 +289,7 @@ type
 
     procedure RectsToTree(var ADiffRects: TCompRecArr; var ImgMatrix: TColorArr; var ImgHWMatrix: THandleArr);
     procedure LoadImages(ABasePath: string);
+    procedure ScanTargetControl;
 
     property HighlightingLinesColor: TColor read GetHighlightingLinesColor write SetHighlightingLinesColor;
     property SelectedLayer: Integer read GetSelectedLayer write SetSelectedLayer;
@@ -577,6 +580,66 @@ begin
 end;
 
 
+procedure TfrClickerWinInterp.ScanTargetControl;
+var
+  tp: TPoint;
+  Comp: TCompRec;
+  SrcRect, DestRect: TRect;
+  FullScreenBmp: TBitmap;
+begin
+  GetCursorPos(tp);
+  Comp := GetWindowClassRec(tp);
+
+  memCompInfo.Clear;
+  memCompInfo.Lines.Add('Handle=' + IntToStr(Comp.Handle));
+  memCompInfo.Lines.Add('Class=' + Comp.ClassName);
+  memCompInfo.Lines.Add('Text=' + Comp.Text);
+
+  if pnlDrag.Color <> clLime then
+    pnlDrag.Color := clLime;
+
+  imgLiveScreenshot.Width := Comp.ComponentRectangle.Width;
+  imgLiveScreenshot.Height := Comp.ComponentRectangle.Height;
+  imgLiveScreenshot.Picture.Bitmap.Width := imgLiveScreenshot.Width;
+  imgLiveScreenshot.Picture.Bitmap.Height := imgLiveScreenshot.Height;
+
+  scrboxScannedComponents.HorzScrollBar.Position := 0;
+  scrboxScannedComponents.VertScrollBar.Position := 0;
+
+  if not chkFullScr.Checked then
+    ScreenShot(Comp.Handle, imgLiveScreenshot.Picture.Bitmap, 0, 0, Comp.ComponentRectangle.Width, Comp.ComponentRectangle.Height)
+  else
+  begin
+    //WipeBitmap(imgLiveScreenshot.Picture.Bitmap, Comp.ComponentRectangle.Width, Comp.ComponentRectangle.Height);
+
+    SrcRect := Comp.ComponentRectangle;
+
+    DestRect.Left := 0;
+    DestRect.Top := 0;
+    DestRect.Width := Comp.ComponentRectangle.Width;
+    DestRect.Height := Comp.ComponentRectangle.Height;
+
+    FullScreenBmp := TBitmap.Create;
+    try
+      ScreenShot(0, FullScreenBmp, 0, 0, Screen.Width, Screen.Height);
+      imgLiveScreenshot.Picture.Bitmap.Canvas.CopyRect(DestRect, FullScreenBmp.Canvas, SrcRect);
+
+      //BitBlt(imgLiveScreenshot.Picture.Bitmap.Canvas.Handle,  //dest DC
+      //  0, //X   x-coord of destination upper-left corner
+      //  0, //Y   y-coord of destination upper-left corner
+      //  SrcRect.Width,   //src and dest width
+      //  SrcRect.Height,  //src and dest height
+      //  FullScreenBmp.Canvas.Handle,      //src DC
+      //  SrcRect.Left,     //offset for source
+      //  SrcRect.Top,     //offset for source
+      //  SRCCOPY);
+    finally
+      FullScreenBmp.Free;
+    end;
+  end;
+end;
+
+
 procedure TfrClickerWinInterp.pnlDragMouseDown(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
@@ -589,70 +652,16 @@ begin
   imgLiveScreenshot.Canvas.Brush.Color := clWhite;
   imgLiveScreenshot.Canvas.Rectangle(0, 0, imgLiveScreenshot.Width - 1, imgLiveScreenshot.Height - 1);
   imgLiveScreenshot.Show;
+
+  tmrScan.Enabled := True;
 end;
 
 
 procedure TfrClickerWinInterp.pnlDragMouseMove(Sender: TObject;
   Shift: TShiftState; X, Y: Integer);
-var
-  tp: TPoint;
-  Comp: TCompRec;
-  SrcRect, DestRect: TRect;
-  FullScreenBmp: TBitmap;
 begin
   if FDragging then
-  begin
-    GetCursorPos(tp);
-    Comp := GetWindowClassRec(tp);
-
-    memCompInfo.Clear;
-    memCompInfo.Lines.Add('Handle=' + IntToStr(Comp.Handle));
-    memCompInfo.Lines.Add('Class=' + Comp.ClassName);
-    memCompInfo.Lines.Add('Text=' + Comp.Text);
-
-    if pnlDrag.Color <> clLime then
-      pnlDrag.Color := clLime;
-
-    imgLiveScreenshot.Width := Comp.ComponentRectangle.Width;
-    imgLiveScreenshot.Height := Comp.ComponentRectangle.Height;
-    imgLiveScreenshot.Picture.Bitmap.Width := imgLiveScreenshot.Width;
-    imgLiveScreenshot.Picture.Bitmap.Height := imgLiveScreenshot.Height;
-
-    scrboxScannedComponents.HorzScrollBar.Position := 0;
-    scrboxScannedComponents.VertScrollBar.Position := 0;
-
-    if not chkFullScr.Checked then
-      ScreenShot(Comp.Handle, imgLiveScreenshot.Picture.Bitmap, 0, 0, Comp.ComponentRectangle.Width, Comp.ComponentRectangle.Height)
-    else
-    begin
-      //WipeBitmap(imgLiveScreenshot.Picture.Bitmap, Comp.ComponentRectangle.Width, Comp.ComponentRectangle.Height);
-
-      SrcRect := Comp.ComponentRectangle;
-
-      DestRect.Left := 0;
-      DestRect.Top := 0;
-      DestRect.Width := Comp.ComponentRectangle.Width;
-      DestRect.Height := Comp.ComponentRectangle.Height;
-
-      FullScreenBmp := TBitmap.Create;
-      try
-        ScreenShot(0, FullScreenBmp, 0, 0, Screen.Width, Screen.Height);
-        imgLiveScreenshot.Picture.Bitmap.Canvas.CopyRect(DestRect, FullScreenBmp.Canvas, SrcRect);
-
-        //BitBlt(imgLiveScreenshot.Picture.Bitmap.Canvas.Handle,  //dest DC
-        //  0, //X   x-coord of destination upper-left corner
-        //  0, //Y   y-coord of destination upper-left corner
-        //  SrcRect.Width,   //src and dest width
-        //  SrcRect.Height,  //src and dest height
-        //  FullScreenBmp.Canvas.Handle,      //src DC
-        //  SrcRect.Left,     //offset for source
-        //  SrcRect.Top,     //offset for source
-        //  SRCCOPY);
-      finally
-        FullScreenBmp.Free;
-      end;
-    end;
-  end;
+    //ScanTargetControl;  //called by timer
 end;
 
 
@@ -665,6 +674,7 @@ begin
   if FDragging then
   begin
     FDragging := False;
+    tmrScan.Enabled := False;
 
     GetCursorPos(tp);
     Comp := GetWindowClassRec(tp);
@@ -2992,6 +3002,12 @@ var
 begin
   GetCursorPos(tp);
   pmExtraRecording.PopUp(tp.X, tp.Y);
+end;
+
+
+procedure TfrClickerWinInterp.tmrScanTimer(Sender: TObject);
+begin
+  ScanTargetControl;
 end;
 
 

@@ -926,4 +926,11 @@ object frClickerFindControl: TfrClickerFindControl
     Left = 376
     Top = 192
   end
+  object tmrScan: TTimer
+    Enabled = False
+    Interval = 1
+    OnTimer = tmrScanTimer
+    Left = 784
+    Top = 176
+  end
 end

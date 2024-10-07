@@ -561,4 +561,11 @@ object frClickerWinInterp: TfrClickerWinInterp
     Left = 381
     Top = 232
   end
+  object tmrScan: TTimer
+    Enabled = False
+    Interval = 1
+    OnTimer = tmrScanTimer
+    Left = 307
+    Top = 413
+  end
 end
