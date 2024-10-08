@@ -1077,6 +1077,10 @@ const
   CLoadTextFile_FuncName = '$LoadTextFile(';
   CItemCount_FuncName = '$ItemCount(';
   CGetTextItem_FuncName = '$GetTextItem(';
+  CIndexOfTextItem_FuncName = '$IndexOfTextItem(';
+  CStr0_FuncName = '$Str0(';
+  CStr1_FuncName = '$Str1(';
+  CStrLen_FuncName = '$StrLen(';
   CIncBrightness_FuncName = '$IncBrightness(';
   CDecBrightness_FuncName = '$DecBrightness(';
   CIncBrightnessR_FuncName = '$IncBrightnessR(';
@@ -1091,7 +1095,7 @@ const
   CGetWindowLongPtr_FuncName = '$GetWindowLongPtr(';
   CGetWindowProcessId_FuncName = '$GetWindowProcessId(';
 
-  CBuiltInFunctionCount = 42;
+  CBuiltInFunctionCount = 46;
   CBuiltInFunctions: array[0..CBuiltInFunctionCount - 1] of string = (
     CRandom_FuncName,
     CSum_FuncName,
@@ -1122,6 +1126,10 @@ const
     CLoadTextFile_FuncName,
     CItemCount_FuncName,
     CGetTextItem_FuncName,
+    CIndexOfTextItem_FuncName,
+    CStr0_FuncName,
+    CStr1_FuncName,
+    CStrLen_FuncName,
     CIncBrightness_FuncName,
     CDecBrightness_FuncName,
     CIncBrightnessR_FuncName,
@@ -1936,6 +1944,8 @@ begin
   FileArgs := ExtractFuncArgs(CLoadTextFile_FuncName, s);
   InitialFileArgs := FileArgs;
 
+  AListOfVars.Values[CFuncExVarName] := '';
+
   FileArgs := StringReplace(FileArgs, '"', '', [rfReplaceAll]);
 
   Result := '';
@@ -1990,6 +2000,8 @@ var
 begin
   ItemArgs := ExtractFuncArgs(CGetTextItem_FuncName, s);
   InitialItemArgs := ItemArgs;
+
+  AListOfVars.Values[CFuncExVarName] := '';
 
   if ItemArgs = '' then
   begin
@@ -2051,6 +2063,173 @@ begin
 
   Result := Copy(Content, PrevItemPos, ItemPos - PrevItemPos);
   Result := StringReplace(s, CGetTextItem_FuncName + InitialItemArgs + ')$', Result, [rfReplaceAll]);
+end;
+
+
+function ReplaceIndexOfTextItem(AListOfVars: TStringList; s: string): string;
+var
+  ItemArgs, InitialItemArgs, Content, TextItemStr, CurrentItemStr: string;
+  CurrentIndex, i, PosComma, PrevItemPos: Integer;
+  Found: Boolean;
+begin
+  ItemArgs := ExtractFuncArgs(CIndexOfTextItem_FuncName, s);
+  InitialItemArgs := ItemArgs;
+  AListOfVars.Values[CFuncExVarName] := '';
+
+  if ItemArgs = '' then
+  begin
+    Result := '-1';
+    AListOfVars.Values[CFuncExVarName] := 'Missing arguments for IndexOfTextItem.';
+    Exit;
+  end
+  else
+  begin
+    PosComma := Pos(',', ItemArgs);
+
+    if PosComma > 0 then
+    begin
+      Content := Copy(ItemArgs, 1, PosComma - 1);
+      TextItemStr := Copy(ItemArgs, PosComma + 1, MaxInt);
+    end
+    else
+    begin
+      Result := '-1';
+      AListOfVars.Values[CFuncExVarName] := 'Missing searched item argument for IndexOfTextItem.';
+      Exit;
+    end
+  end;
+
+  if Content = '' then
+  begin
+    Result := '-1';
+    Exit;
+  end;
+
+  if Copy(Content, Length(Content) - 1, 2) <> #4#5 then
+    Content := Content + #4#5; //required to properly get the last item
+
+  PrevItemPos := 1;
+                 //this parser should be faster than converting the content to CRLF separated string and assigning it to a TStringList
+  CurrentIndex := -1;
+  Found := False;
+  for i := 1 to Length(Content) - 1 do  //yes, from 1 to len -1
+    if (Content[i] = #4) and (Content[i + 1] = #5) then
+    begin
+      Inc(CurrentIndex);
+
+      CurrentItemStr := Copy(Content, PrevItemPos, i - PrevItemPos);
+      if TextItemStr = CurrentItemStr then
+      begin
+        Found := True;
+        Break;
+      end;
+
+      PrevItemPos := i + 2;
+      Continue;
+    end;
+
+  if not Found then
+  begin
+    Result := '-1';
+    Exit;
+  end;
+
+  Result := IntToStr(CurrentIndex);
+  Result := StringReplace(s, CIndexOfTextItem_FuncName + InitialItemArgs + ')$', Result, [rfReplaceAll]);
+end;
+
+
+function ReplaceStr0(s: string): string;
+var
+  ItemArgs, InitialItemArgs, Content, TextItemStr: string;
+  i, PosComma: Integer;
+begin
+  ItemArgs := ExtractFuncArgs(CStr0_FuncName, s);
+  InitialItemArgs := ItemArgs;
+
+  if ItemArgs = '' then
+  begin
+    Result := '';
+    Exit;
+  end
+  else
+  begin
+    PosComma := Pos(',', ItemArgs);
+
+    if PosComma > 0 then
+    begin
+      Content := Copy(ItemArgs, 1, PosComma - 1);
+      TextItemStr := Copy(ItemArgs, PosComma + 1, MaxInt);
+    end
+    else
+    begin
+      Result := '';
+      Exit;
+    end
+  end;
+
+  if Content = '' then
+  begin
+    Result := '';
+    Exit;
+  end;
+
+  i := StrToIntDef(TextItemStr, 0) + 1;
+
+  Result := StringReplace(s, CStr0_FuncName + InitialItemArgs + ')$', Content[i], [rfReplaceAll]);
+end;
+
+
+function ReplaceStr1(s: string): string;
+var
+  ItemArgs, InitialItemArgs, Content, TextItemStr: string;
+  i, PosComma: Integer;
+begin
+  ItemArgs := ExtractFuncArgs(CStr1_FuncName, s);
+  InitialItemArgs := ItemArgs;
+
+  if ItemArgs = '' then
+  begin
+    Result := '';
+    Exit;
+  end
+  else
+  begin
+    PosComma := Pos(',', ItemArgs);
+
+    if PosComma > 0 then
+    begin
+      Content := Copy(ItemArgs, 1, PosComma - 1);
+      TextItemStr := Copy(ItemArgs, PosComma + 1, MaxInt);
+    end
+    else
+    begin
+      Result := '';
+      Exit;
+    end
+  end;
+
+  if Content = '' then
+  begin
+    Result := '';
+    Exit;
+  end;
+
+  i := StrToIntDef(TextItemStr, 1);
+
+  Result := StringReplace(s, CStr1_FuncName + InitialItemArgs + ')$', Content[i], [rfReplaceAll]);
+end;
+
+
+
+function ReplaceStrLen(s: string): string;
+var
+  ItemArgs, InitialItemArgs: string;
+begin
+  ItemArgs := ExtractFuncArgs(CStrLen_FuncName, s);
+  InitialItemArgs := ItemArgs;
+
+  Result := StringReplace(s, CStrLen_FuncName + InitialItemArgs + ')$', IntToStr(Length(ItemArgs)), [rfReplaceAll]);
 end;
 
 
@@ -2356,6 +2535,18 @@ begin
 
   if Pos(CGetTextItem_FuncName, s) > 0 then
     s := ReplaceGetTextItem(AListOfVars, s);
+
+  if Pos(CIndexOfTextItem_FuncName, s) > 0 then
+    s := ReplaceIndexOfTextItem(AListOfVars, s);
+
+  if Pos(CStr0_FuncName, s) > 0 then
+    s := ReplaceStr0(s);
+
+  if Pos(CStr1_FuncName, s) > 0 then
+    s := ReplaceStr1(s);
+
+  if Pos(CStrLen_FuncName, s) > 0 then
+    s := ReplaceStrLen(s);
 
   if Pos(CFastReplace_45ToReturn_FuncName, s) > 0 then
     s := ReplaceFastReplace_45ToReturn(s);

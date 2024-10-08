@@ -5727,6 +5727,7 @@ begin
     end;
 
     if ANodeLevel = CPropertyLevel then
+    begin
       if ((ALiveEditingActionType = acEditTemplate) and (ACategoryIndex = CCategory_ActionSpecific)) or
          (ACategoryIndex = CCategory_EditedAction) then   //works for EditTemplate only
         if APropertyIndex = CEditTemplate_EditedActionType_PropIndex then
@@ -5745,7 +5746,17 @@ begin
               ;
           end;
         end;
-  end;
+
+      if ALiveEditingActionType = acCallTemplate then
+        if APropertyIndex = CCallTemplate_CallTemplateLoop_PropIndex then
+          if ((ACategoryIndex = CCategory_ActionSpecific) and FEditingAction^.CallTemplateOptions.CallTemplateLoop.Enabled) or
+             ((ACategoryIndex = CCategory_EditedAction) and FEditTemplateOptions_EditingAction^.CallTemplateOptions.CallTemplateLoop.Enabled) then
+          begin
+            ImageList := imglstCallTemplateLoopProperties;
+            ImageIndex := CCallTemplate_CallTemplateLoop_Enabled_PropItemIndex;
+          end;
+    end;
+  end; //Column = 1
 end;
 
 

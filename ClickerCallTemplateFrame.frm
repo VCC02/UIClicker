@@ -13,8 +13,8 @@ object frClickerCallTemplate: TfrClickerCallTemplate
     Height = 15
     Hint = 'Right-click to add/remove. Double-click to edit.'
     Top = 0
-    Width = 191
-    Caption = 'Custom user variables before calling'
+    Width = 339
+    Caption = 'Custom user variables before calling (set on every loop iteration)'
     ParentShowHint = False
     ShowHint = True
   end
