@@ -30,7 +30,7 @@ interface
 
 uses
   Windows, Classes, SysUtils, Forms, Controls, Menus, ExtCtrls, StdCtrls,
-  Buttons, Dialogs, VirtualTrees, ClickerUtils;
+  Buttons, Dialogs, Graphics, VirtualTrees, ClickerUtils;
 
 type
 
@@ -58,6 +58,7 @@ type
     spdbtnNewVariable: TSpeedButton;
     spdbtnMoveUp: TSpeedButton;
     spdbtnRemoveSelectedVariable: TSpeedButton;
+    tmrSetEditorTextColor: TTimer;
     tmrCreateEditor: TTimer;
     tmrEditSetVars: TTimer;
     vstSetVar: TVirtualStringTree;
@@ -80,6 +81,7 @@ type
     procedure spdbtnRemoveSelectedVariableClick(Sender: TObject);
     procedure tmrCreateEditorTimer(Sender: TObject);
     procedure tmrEditSetVarsTimer(Sender: TObject);
+    procedure tmrSetEditorTextColorTimer(Sender: TObject);
     procedure vstSetVarChecked(Sender: TBaseVirtualTree; Node: PVirtualNode);
     procedure vstSetVarChecking(Sender: TBaseVirtualTree; Node: PVirtualNode;
       var NewState: TCheckState; var Allowed: Boolean);
@@ -103,6 +105,9 @@ type
       Shift: TShiftState; X, Y: Integer);
     procedure vstSetVarNewText(Sender: TBaseVirtualTree; Node: PVirtualNode;
       Column: TColumnIndex; const NewText: String);
+    procedure vstSetVarPaintText(Sender: TBaseVirtualTree;
+      const TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex;
+      TextType: TVSTTextType);
   private
     FSetVarContent_Vars: TStringList;
     FSetVarContent_Values: TStringList;
@@ -285,6 +290,18 @@ begin
 end;
 
 
+procedure TfrClickerSetVar.tmrSetEditorTextColorTimer(Sender: TObject);
+begin
+  tmrSetEditorTextColor.Enabled := False;
+
+  if Assigned(FTextEditorEditBox) then
+    if Pos(#4#5, FTextEditorEditBox.Text) > 0 then
+      FTextEditorEditBox.Font.Color := clRed
+    else
+      FTextEditorEditBox.Font.Color := clWindowText;
+end;
+
+
 procedure TfrClickerSetVar.vstSetVarChecked(Sender: TBaseVirtualTree;
   Node: PVirtualNode);
 begin
@@ -312,14 +329,16 @@ begin
   FTextEditorEditBox := TEdit(TCustomEdit(TempStringEditLink.Edit));
 
   FTextEditorEditBox.PopupMenu := pmVarsEditor;
-  //FTextEditorEditBox.OnExit := edtTextEditorExit;
-  //FTextEditorEditBox.OnKeyDown := edtTextEditorKeyDown;
-  //FTextEditorEditBox.OnKeyUp := edtTextEditorKeyUp;
+  FTextEditorEditBox.OnExit := edtTextEditorExit;
+  FTextEditorEditBox.OnKeyDown := edtTextEditorKeyDown;
+  FTextEditorEditBox.OnKeyUp := edtTextEditorKeyUp;
 
   FTextEditorEditBox.Show;
 
   Application.ProcessMessages;
   FTextEditorEditBox.SetFocus;
+
+  tmrSetEditorTextColor.Enabled := True;
 end;
 
 
@@ -456,6 +475,17 @@ procedure TfrClickerSetVar.vstSetVarNewText(Sender: TBaseVirtualTree;
 begin
   FSetVarEditingText := NewText;
   FSetVarUpdatedVstText := True;
+end;
+
+
+procedure TfrClickerSetVar.vstSetVarPaintText(Sender: TBaseVirtualTree;
+  const TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex;
+  TextType: TVSTTextType);
+begin
+  if Pos(#4#5, FSetVarContent_Values.Strings[Node^.Index]) > 0 then
+    TargetCanvas.Font.Color := clRed
+  else
+    TargetCanvas.Font.Color := clWindowText;
 end;
 
 
@@ -730,12 +760,12 @@ procedure TfrClickerSetVar.edtTextEditorExit(Sender: TObject);
 begin
   if Assigned(frmAutoComplete) and not frmAutoComplete.Focused then  //if AutoCompleteVisible then
     CloseAutoComplete
-  //else
-  //begin
-  //  FSetVarEditingText := FTextEditorEditBox.Text;
-  //  FSetVarUpdatedVstText := True;
-  //  FreeAndNil(FTextEditorEditBox);
-  //end;
+  else
+  begin
+    FSetVarEditingText := FTextEditorEditBox.Text;
+    FSetVarUpdatedVstText := True;
+    FreeAndNil(FTextEditorEditBox);
+  end;
 end;
 
 
@@ -757,13 +787,25 @@ end;
 
 procedure TfrClickerSetVar.edtTextEditorKeyUp(Sender: TObject;
   var Key: Word; Shift: TShiftState);
+var
+  Editor: TEdit;
 begin
+  Editor := TEdit(TCustomEdit(Sender));
+
   if Key = VK_SPACE then
     if ssCtrl in Shift then
     begin
       Key := 0;
-      DoOnShowAutoComplete(TEdit(TCustomEdit(Sender)));
+      DoOnShowAutoComplete(Editor);
     end;
+
+  if AutoCompleteVisible then
+    UpdateAutoComplete(Editor);
+
+  if Pos(#4#5, Editor.Text) > 0 then
+    Editor.Font.Color := clRed
+  else
+    Editor.Font.Color := clWindowText;
 end;
 
 

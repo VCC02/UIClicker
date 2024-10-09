@@ -86,6 +86,7 @@ object frClickerSetVar: TfrClickerSetVar
       OnEdited = vstSetVarEdited
       OnEditing = vstSetVarEditing
       OnGetText = vstSetVarGetText
+      OnPaintText = vstSetVarPaintText
       OnGetImageIndex = vstSetVarGetImageIndex
       OnInitNode = vstSetVarInitNode
       OnKeyDown = vstSetVarKeyDown
@@ -502,5 +503,12 @@ object frClickerSetVar: TfrClickerSetVar
     OnTimer = tmrCreateEditorTimer
     Left = 326
     Top = 38
+  end
+  object tmrSetEditorTextColor: TTimer
+    Enabled = False
+    Interval = 200
+    OnTimer = tmrSetEditorTextColorTimer
+    Left = 326
+    Top = 143
   end
 end
