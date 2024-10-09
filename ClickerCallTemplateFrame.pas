@@ -30,7 +30,7 @@ interface
 
 uses
   Windows, Classes, SysUtils, Forms, Controls, StdCtrls, Menus, ExtCtrls,
-  ValEdit, Buttons, VirtualTrees, ClickerUtils;
+  ValEdit, Buttons, VirtualTrees, ClickerUtils, Graphics;
 
 type
 
@@ -39,6 +39,7 @@ type
   TfrClickerCallTemplate = class(TFrame)
     AddCustomVarRow1: TMenuItem;
     lblCustomUserVarsBeforeCall: TLabel;
+    lblSetVarWarning: TLabel;
     pmCustomVars: TPopupMenu;
     RemoveCustomVarRow1: TMenuItem;
     spdbtnMoveDown: TSpeedButton;
@@ -69,6 +70,9 @@ type
       Shift: TShiftState; X, Y: Integer);
     procedure vstCustomVariablesNewText(Sender: TBaseVirtualTree;
       Node: PVirtualNode; Column: TColumnIndex; const NewText: String);
+    procedure vstCustomVariablesPaintText(Sender: TBaseVirtualTree;
+      const TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex;
+      TextType: TVSTTextType);
   private
     FCustomVarsMouseUpHitInfo: THitInfo;
     FCustomVarsEditingText: string;
@@ -349,6 +353,17 @@ procedure TfrClickerCallTemplate.vstCustomVariablesNewText(
 begin
   FCustomVarsEditingText := FastReplace_ReturnTo68(NewText);
   FCustomVarsUpdatedVstText := True;
+end;
+
+
+procedure TfrClickerCallTemplate.vstCustomVariablesPaintText(
+  Sender: TBaseVirtualTree; const TargetCanvas: TCanvas; Node: PVirtualNode;
+  Column: TColumnIndex; TextType: TVSTTextType);
+begin
+  if Pos(#4#5, vallstCustomVariables.Strings[Node^.Index]) > 0 then
+    TargetCanvas.Font.Color := clRed
+  else
+    TargetCanvas.Font.Color := clWindowText;
 end;
 
 end.

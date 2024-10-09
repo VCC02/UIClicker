@@ -4747,7 +4747,7 @@ end;
 
 procedure TfrClickerActionsArr.edtConsoleCommandExit(Sender: TObject);
 begin
-  if Assigned(frmAutoComplete) and not frmAutoComplete.Focused then
+  if Assigned(frmAutoComplete) and not frmAutoComplete.Focused and frmAutoComplete.Visible then
     CloseAutoComplete;
 end;
 

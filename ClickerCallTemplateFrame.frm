@@ -60,6 +60,7 @@ object frClickerCallTemplate: TfrClickerCallTemplate
     OnEdited = vstCustomVariablesEdited
     OnEditing = vstCustomVariablesEditing
     OnGetText = vstCustomVariablesGetText
+    OnPaintText = vstCustomVariablesPaintText
     OnKeyDown = vstCustomVariablesKeyDown
     OnMouseUp = vstCustomVariablesMouseUp
     OnNewText = vstCustomVariablesNewText
@@ -217,6 +218,19 @@ object frClickerCallTemplate: TfrClickerCallTemplate
     ParentFont = False
     ParentShowHint = False
     OnClick = spdbtnRemoveSelectedVariableClick
+  end
+  object lblSetVarWarning: TLabel
+    Left = 104
+    Height = 15
+    Hint = 'Because of a limitation of saving these values, please do not use plain #4#5 separators.'#13#10'Use $#4#5$ replacement instead.'
+    Top = 217
+    Width = 326
+    Anchors = [akLeft, akBottom]
+    Caption = 'Do not use plain ASCII #4#5 characters in var names or values!'
+    Font.Color = clMaroon
+    ParentFont = False
+    ParentShowHint = False
+    ShowHint = True
   end
   object pmCustomVars: TPopupMenu
     Left = 284
