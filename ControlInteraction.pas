@@ -927,6 +927,7 @@ begin
 
         FullScreenBmp := TBitmap.Create;
         try
+          InputData.DebugBitmap.SetSize(SrcRect.Width, SrcRect.Height);
           ScreenShot(0, FullScreenBmp, 0, 0, Screen.Width, Screen.Height);  //Screen.DesktopWidth, Screen.DesktopHeight ???
           InputData.DebugBitmap.Canvas.CopyRect(DestRect, FullScreenBmp.Canvas, SrcRect);
 
