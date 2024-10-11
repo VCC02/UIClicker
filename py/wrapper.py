@@ -101,8 +101,8 @@ class TDllFunctionAddresses:
         CreateNewTemplateParams = (1, "ATemplateFileName", 0),
         CreateNewTemplateFuncRes = CreateNewTemplateProto(("CreateNewTemplate", self.DllHandle), CreateNewTemplateParams)
         return CreateNewTemplateFuncRes
-        
-            
+
+
     def GetAddClickActionToTemplate(self):
         AddClickActionToTemplateProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, LPCWSTR, LONG, BOOLEAN, LPCWSTR, PClickOptions)
         AddClickActionToTemplateParams = (1, "ATemplateFileName", 0), (1, "AActionName", 0), (1, "AActionTimeout", 0), (1, "AActionEnabled", 0), (1, "AActionCondition", 0), (1, "AClickOptions", 0),
@@ -179,11 +179,19 @@ class TDllFunctionAddresses:
         AddSaveSetVarToFileActionToTemplateFuncRes = AddSaveSetVarToFileActionToTemplateProto(("AddSaveSetVarToFileActionToTemplate", self.DllHandle), AddSaveSetVarToFileActionToTemplateParams)
         return AddSaveSetVarToFileActionToTemplateFuncRes
     
+    
     def GetAddPluginActionToTemplate(self):
         AddPluginActionToTemplateProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, LPCWSTR, LONG, BOOLEAN, LPCWSTR, PPluginOptions)
         AddPluginActionToTemplateParams = (1, "ATemplateFileName", 0), (1, "AActionName", 0), (1, "AActionTimeout", 0), (1, "AActionEnabled", 0), (1, "AActionCondition", 0), (1, "APluginOptions", 0),
         AddPluginActionToTemplateFuncRes = AddPluginActionToTemplateProto(("AddPluginActionToTemplate", self.DllHandle), AddPluginActionToTemplateParams)
         return AddPluginActionToTemplateFuncRes
+    
+    
+    def GetAddEditTemplateActionToTemplate(self):
+        AddEditTemplateActionToTemplateProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, LPCWSTR, LONG, BOOLEAN, LPCWSTR, PEditTemplateOptions)
+        AddEditTemplateActionToTemplateParams = (1, "ATemplateFileName", 0), (1, "AActionName", 0), (1, "AActionTimeout", 0), (1, "AActionEnabled", 0), (1, "AActionCondition", 0), (1, "AEditTemplateOptions", 0),
+        AddEditTemplateActionToTemplateFuncRes = AddEditTemplateActionToTemplateProto(("AddEditTemplateActionToTemplate", self.DllHandle), AddEditTemplateActionToTemplateParams)
+        return AddEditTemplateActionToTemplateFuncRes
     
     
     def GetAddFontProfileToFindSubControlAction(self):
@@ -311,6 +319,7 @@ class TDllFunctions:
         self.AddLoadSetVarFromFileActionToTemplateFunc = self.Addresses.GetAddLoadSetVarFromFileActionToTemplate()
         self.AddSaveSetVarToFileActionToTemplateFunc = self.Addresses.GetAddSaveSetVarToFileActionToTemplate()
         self.AddPluginActionToTemplateFunc = self.Addresses.GetAddPluginActionToTemplate()
+        self.AddEditTemplateActionToTemplateFunc = self.Addresses.GetAddEditTemplateActionToTemplate()
         
         self.AddFontProfileToFindSubControlActionFunc = self.Addresses.GetAddFontProfileToFindSubControlAction()
         
@@ -506,6 +515,14 @@ class TDllFunctions:
             return AddPluginActionToTemplateResult
         except:
             return 'AV on AddPluginActionToTemplate'
+
+
+    def AddEditTemplateActionToTemplate(self, ATemplateFileName, AActionName, AActionTimeout, AActionEnabled, AActionCondition, AEditTemplateOptions):
+        try:
+            AddEditTemplateActionToTemplateResult = self.AddEditTemplateActionToTemplateFunc(ATemplateFileName, AActionName, AActionTimeout, AActionEnabled, AActionCondition, AEditTemplateOptions)  #sending PWideChar, and converting to ANSI at dll
+            return AddEditTemplateActionToTemplateResult
+        except:
+            return 'AV on AddEditTemplateActionToTemplate'
 
 
     def AddFontProfileToFindSubControlAction(self, ATemplateFileName, AActionIndex, AFindControlMatchBitmapText):
@@ -755,6 +772,23 @@ try:
     LoadSetVarFromFileOptions.SetVarActionName = 'Eighth'
     print("AddLoadSetVarFromFileActionToTemplate: ", DllFuncs.AddLoadSetVarFromFileActionToTemplate('VerifyClicking.clktmpl', 'Eleventh', 0, True, '', ctypes.byref(LoadSetVarFromFileOptions)))
     
+    PluginOptions = GetDefaultPluginOptions()
+    PluginOptions.FileName = '$AppDir$\\..\\UIClickerFindWindowsPlugin\\lib\\x86_64-win64\\UIClickerFindWindows.dll'
+    PluginOptions.ListOfPropertiesAndValues
+    PluginOptions.SetVarActionName = 'The plugin'
+    print("AddPluginActionToTemplate: ", DllFuncs.AddPluginActionToTemplate('VerifyClicking.clktmpl', 'Twelveth', 0, True, '', ctypes.byref(PluginOptions)))
+    
+    EditTemplateOptions = GetDefaultEditTemplateOptions()
+    EditTemplateOptions.WhichTemplate = TEditTemplateWhichTemplate.etwtSelf
+    EditTemplateOptions.TemplateFileName = ''
+    EditTemplateOptions.ListOfEditedProperties = 'Text=Some text to be typed.ControlType=2DelayBetweenKeyStrokes=0Count=3'
+    EditTemplateOptions.ListOfEnabledProperties = 'TextControlTypeCount'
+    EditTemplateOptions.EditedActionName = 'My new action'
+    EditTemplateOptions.EditedActionType = TClkAction.acSetControlText
+    EditTemplateOptions.EditedActionCondition = '$LastAction_Status$==Successful'
+    print("AddEditTemplateActionToTemplate: ", DllFuncs.AddEditTemplateActionToTemplate('VerifyClicking.clktmpl', 'Thirteenth', 0, True, '', ctypes.byref(EditTemplateOptions)))
+    
+    
     print("PrepareFilesInServer: ", DllFuncs.PrepareFilesInServer('VerifyClicking.clktmpl'))
     
     print("ExecuteActionAtIndex: ", DllFuncs.ExecuteActionAtIndex(AActionIndex = 6, AStackLevel = 0))
@@ -770,12 +804,9 @@ try:
     ######## maybe modify the vars here, to verify later that loading them will update from ini
     print("ExecuteActionAtIndex: ", DllFuncs.ExecuteActionAtIndex(AActionIndex = 10, AStackLevel = 0)) #Load SetVar vars from ini.
 
-    PluginOptions = GetDefaultPluginOptions()
-    PluginOptions.FileName = '$AppDir$\\..\\UIClickerFindWindowsPlugin\\lib\\x86_64-win64\\UIClickerFindWindowsPlugin.dll'
-    PluginOptions.ListOfPropertiesAndValues
-    PluginOptions.SetVarActionName = 'The plugin'
-
     print("ExecuteActionAtIndex: ", DllFuncs.ExecuteActionAtIndex(AActionIndex = 11, AStackLevel = 0)) #plugin.
+
+    print("ExecuteActionAtIndex: ", DllFuncs.ExecuteActionAtIndex(AActionIndex = 12, AStackLevel = 0)) #EditTemplate.
 
 
     print("FileProviderClientThreadDone: ", DllFuncs.FileProviderClientThreadDone())

@@ -34,6 +34,21 @@ CClickType_Drag = 1;
 
 #Various datatypes, translated from ClickerUtils.pas
 
+class TClkAction: #(Enum):
+    acClick = 0;
+    acExecApp = 1;
+    acFindControl = 2;
+    acFindSubControl = 3;
+    acSetControlText = 4;
+    acCallTemplate = 5;
+    acSleep = 6;
+    acSetVar = 7;
+    acWindowOperations = 8;
+    acLoadSetVarFromFile = 9;
+    acSaveSetVarToFile = 10;
+    acPlugin = 11;
+    acEditTemplate = 12;
+
 class TXClickPointReference: #(Enum):
     xrefLeft = 0
     xrefRight = 1
@@ -119,7 +134,29 @@ class TLoopEvalBreakPosition:  #(Enum):
     lebpAfterContent = 0
     lebpBeforeContent = 1
 
-               
+
+class TEditTemplateOperation: #(Enum):
+    etoNewAction = 0
+    etoUpdateAction = 1
+    etoMoveAction = 2
+    etoDeleteAction = 3
+    etoDuplicateAction = 4
+    etoRenameAction = 5
+    etoEnableAction = 6
+    etoDisableAction = 7
+    etoGetProperty = 8
+    etoSetProperty = 9
+    etoSetCondition = 10
+    etoSetTimeout = 11
+    etoExecuteAction = 12
+    etoSaveTemplate = 13
+
+
+class TEditTemplateWhichTemplate: #(Enum):
+    etwtSelf = 0
+    etwtOther = 1
+
+
 class TClickOptions(Structure):
     _fields_ = [("XClickPointReference", LONG), #TXClickPointReference
                ("YClickPointReference", LONG), #TYClickPointReference
@@ -335,7 +372,7 @@ def GetDefaultFindControlOptions():
     FindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp = '15'
 
     FindControlOptions.EvaluateTextCount = "-1"
-    FindControlOptionsCropFromScreenshot.
+    FindControlOptions.CropFromScreenshot = False
 
     return FindControlOptions
 
@@ -491,6 +528,35 @@ def GetDefaultPluginOptions():
     PluginOptions.FileName = ''
     PluginOptions.ListOfPropertiesAndValues = ''
     return PluginOptions
+
+
+class TEditTemplateOptions(Structure):
+    _fields_ = [("Operation", LONG),  #TEditTemplateOperation
+               ("WhichTemplate", LONG),  #TEditTemplateWhichTemplate
+               ("TemplateFileName", LPCWSTR),
+               ("ListOfEditedProperties", LPCWSTR),   # ASCII-18 separated list of values
+               ("ListOfEnabledProperties", LPCWSTR),
+               ("EditedActionName", LPCWSTR),
+               ("EditedActionType", LONG),  #TClkAction
+               ("EditedActionCondition", LPCWSTR),
+               ("EditedActionTimeout", LONG),
+               ("NewActionName", LPCWSTR)]
+
+PEditTemplateOptions = ctypes.POINTER(TEditTemplateOptions)
+
+def GetDefaultEditTemplateOptions():
+    EditTemplateOptions = TEditTemplateOptions()
+    EditTemplateOptions.Operation = TEditTemplateOperation.etoNewAction
+    EditTemplateOptions.WhichTemplate = TEditTemplateWhichTemplate.etwtOther
+    EditTemplateOptions.TemplateFileName = ''
+    EditTemplateOptions.ListOfEditedProperties = ''  # 'XClickPointReference=2YClickPointReference=3XClickPointVar=$Control_Left$YClickPointVar=$Control_Top$'  #All the properties for that action.
+    EditTemplateOptions.ListOfEnabledProperties = 'XClickPointReferenceYClickPointReference'
+    EditTemplateOptions.EditedActionName = ''
+    EditTemplateOptions.EditedActionType = TClkAction.acClick
+    EditTemplateOptions.EditedActionCondition = ''
+    EditTemplateOptions.EditedActionTimeout = 1000
+    EditTemplateOptions.NewActionName = ''
+    return EditTemplateOptions
 
 
 ########################

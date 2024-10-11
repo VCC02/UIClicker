@@ -1118,7 +1118,7 @@ begin
     Exit;
   end;
 
-  SetBasicActionOptions(ATemplateFileName, AActionName, acPlugin, AActionTimeout, AActionEnabled, AActionCondition, TempAction, TemplateFileName);
+  SetBasicActionOptions(ATemplateFileName, AActionName, acEditTemplate, AActionTimeout, AActionEnabled, AActionCondition, TempAction, TemplateFileName);
 
   //Plugin stuff
   TempAction.EditTemplateOptions.Operation := AEditTemplateOptions^.Operation;

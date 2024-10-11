@@ -93,6 +93,7 @@ type
     procedure Test_FindSubControl_ExternalBackground_isflMem;
 
     procedure Test_FindSubControl_PrecisionTimeout;
+    procedure Test_FindSubControl_CropFromScreenshot;
 
     procedure Test_ExecuteSetControlTextAction_HappyFlow;
     procedure Test_ExecuteCallTemplate_HappyFlow;
@@ -797,6 +798,12 @@ begin
   tk2 := GetTickCount64 - tk2;
 
   Expect(DWord(tk1)).ToBeGreaterThan(DWord(tk2 + 100), 'Without PrecisionTimeout, the duration should be greater.');
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_FindSubControl_CropFromScreenshot;
+begin
+  ExecTestTemplate(TestServerAddress, '$AppDir$\Tests\TestFiles\TestFindSubControlInWinOverlayWithCropFromScreenshot.clktmpl');
 end;
 
 
