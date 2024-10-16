@@ -631,6 +631,8 @@ begin
 
   AFindControlOptions.UseFastSearch := True;
 
+  AFindControlOptions.SleepySearch := False;
+  AFindControlOptions.StopSearchOnMismatch := True;
   AFindControlOptions.ImageSource := isScreenshot;
   AFindControlOptions.ImageSourceFileNameLocation := isflMem;
 
@@ -694,6 +696,8 @@ begin
 
   AFindControlOptions.UseFastSearch := True;
 
+  AFindControlOptions.SleepySearch := False;
+  AFindControlOptions.StopSearchOnMismatch := True;
   AFindControlOptions.ImageSource := isScreenshot;
   AFindControlOptions.ImageSourceFileNameLocation := isflMem;
 
@@ -742,6 +746,8 @@ begin
 
   AFindControlOptions.UseFastSearch := True;
 
+  AFindControlOptions.SleepySearch := False;
+  AFindControlOptions.StopSearchOnMismatch := True;
   AFindControlOptions.ImageSource := isScreenshot;
   AFindControlOptions.ImageSourceFileNameLocation := isflMem;
 
@@ -790,6 +796,8 @@ begin
 
   AFindControlOptions.UseFastSearch := True;
 
+  AFindControlOptions.SleepySearch := False;
+  AFindControlOptions.StopSearchOnMismatch := True;
   AFindControlOptions.ImageSource := isScreenshot;
   AFindControlOptions.ImageSourceFileNameLocation := isflMem;
 
@@ -853,6 +861,8 @@ begin
 
   AFindControlOptions.UseFastSearch := True;
 
+  AFindControlOptions.SleepySearch := False;
+  AFindControlOptions.StopSearchOnMismatch := True;
   AFindControlOptions.ImageSource := isFile;
   AFindControlOptions.SourceFileName := ASourceFileName;
   AFindControlOptions.ImageSourceFileNameLocation := isflMem;
@@ -917,6 +927,8 @@ begin
 
   AFindControlOptions.UseFastSearch := True;
 
+  AFindControlOptions.SleepySearch := False;
+  AFindControlOptions.StopSearchOnMismatch := True;
   AFindControlOptions.ImageSource := isFile;
   AFindControlOptions.SourceFileName := ASourceFileName;
   AFindControlOptions.ImageSourceFileNameLocation := isflDisk;
@@ -982,6 +994,8 @@ begin
   AFindControlOptions.UseFastSearch := True;
   AFindControlOptions.FastSearchAllowedColorErrorCount := '10';
 
+  AFindControlOptions.SleepySearch := False;
+  AFindControlOptions.StopSearchOnMismatch := True;
   AFindControlOptions.ImageSource := isScreenshot;
   AFindControlOptions.SourceFileName := '';
   AFindControlOptions.ImageSourceFileNameLocation := isflMem;
