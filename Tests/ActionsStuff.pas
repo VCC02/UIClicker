@@ -573,6 +573,10 @@ begin
   AClickOptions.YClickPointReferenceDest := yrefAbsolute;
   AClickOptions.MouseWheelType := mwtVert;
   AClickOptions.MouseWheelAmount := '0';
+  AClickOptions.DelayAfterMovingToDestination := '50';
+  AClickOptions.DelayAfterMouseDown := '200';
+  AClickOptions.MoveDuration := '-1';
+  AClickOptions.UseClipCursor := False;
 end;
 
 
@@ -632,6 +636,8 @@ begin
 
   AFindControlOptions.PrecisionTimeout := False;
   AFindControlOptions.FullBackgroundImageInResult := True;
+  AFindControlOptions.EvaluateTextCount := '';
+  AFindControlOptions.CropFromScreenshot := False;
 end;
 
 
@@ -693,6 +699,8 @@ begin
 
   AFindControlOptions.PrecisionTimeout := False;
   AFindControlOptions.FullBackgroundImageInResult := True;
+  AFindControlOptions.EvaluateTextCount := '';
+  AFindControlOptions.CropFromScreenshot := False;
 end;
 
 
@@ -739,6 +747,8 @@ begin
 
   AFindControlOptions.PrecisionTimeout := False;
   AFindControlOptions.FullBackgroundImageInResult := True;
+  AFindControlOptions.EvaluateTextCount := '';
+  AFindControlOptions.CropFromScreenshot := False;
 end;
 
 
@@ -785,6 +795,8 @@ begin
 
   AFindControlOptions.PrecisionTimeout := False;
   AFindControlOptions.FullBackgroundImageInResult := True;
+  AFindControlOptions.EvaluateTextCount := '';
+  AFindControlOptions.CropFromScreenshot := False;
 end;
 
 
@@ -847,6 +859,8 @@ begin
 
   AFindControlOptions.PrecisionTimeout := False;
   AFindControlOptions.FullBackgroundImageInResult := True;
+  AFindControlOptions.EvaluateTextCount := '';
+  AFindControlOptions.CropFromScreenshot := False;
 end;
 
 
@@ -909,6 +923,8 @@ begin
 
   AFindControlOptions.PrecisionTimeout := False;
   AFindControlOptions.FullBackgroundImageInResult := True;
+  AFindControlOptions.EvaluateTextCount := '';
+  AFindControlOptions.CropFromScreenshot := False;
 end;
 
 
@@ -964,6 +980,7 @@ begin
   AFindControlOptions.MatchBitmapAlgorithmSettings.YMultipleOf := 0;
 
   AFindControlOptions.UseFastSearch := True;
+  AFindControlOptions.FastSearchAllowedColorErrorCount := '10';
 
   AFindControlOptions.ImageSource := isScreenshot;
   AFindControlOptions.SourceFileName := '';
@@ -971,6 +988,8 @@ begin
 
   AFindControlOptions.PrecisionTimeout := False;
   AFindControlOptions.FullBackgroundImageInResult := True;
+  AFindControlOptions.EvaluateTextCount := '-1';
+  AFindControlOptions.CropFromScreenshot := False;
 end;
 
 

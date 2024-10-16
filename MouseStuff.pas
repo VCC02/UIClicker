@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2023 VCC
+    Copyright (C) 2024 VCC
     creation date: Dec 2019
     initial release date: 13 Sep 2022
 
@@ -26,6 +26,7 @@ unit MouseStuff;
 
 interface
 
+
 uses
   Windows, Classes;
 
@@ -51,6 +52,7 @@ const
   CMouseWheelVertWheel = 'VWheel';
   CMouseWheelHorizWheel = 'HWheel';
   CMouseWheelAmount = 'WheelAmount'; //the values of this key are in 120 unit increments  (can also be negative)
+  CMouseUseClipCursor = 'UseClipCursor';
 
   //Same values are defined in ClickerUtils. They are redefined here, to avoid a dependency.
   CMouseClickType_Click = 0;
@@ -95,7 +97,19 @@ begin
 end;
 
 
-procedure MoveMouseCursor(DestTp: TPoint; ACallAppProcMsg: Boolean = True); //slow move, not teleporting
+procedure ClipCursorToOnePixel(AX, AY: Integer);
+var
+  ClipCursorRect: TRect;
+begin
+  ClipCursorRect.Left := AX;
+  ClipCursorRect.Top := AY;
+  ClipCursorRect.Right := AX + 1;
+  ClipCursorRect.Bottom := AY + 1;
+  ClipCursor(ClipCursorRect);
+end;
+
+
+procedure MoveMouseCursor(DestTp: TPoint; AUseClipCursor: Boolean; ACallAppProcMsg: Boolean = True); //slow move, not teleporting
 var
   SrcTp: TPoint;
   IncX, IncY: Integer;
@@ -116,6 +130,8 @@ begin
     Inc(IncCount);
 
     SetCursorPos(IncX, IncY);
+    if AUseClipCursor then
+      ClipCursorToOnePixel(IncX, IncY);
 
     if (SleepDistance > 0) and (IncCount mod SleepDistance = 0) then
     begin
@@ -130,14 +146,20 @@ begin
   Sleep(1);
   Inc(IncX);
   SetCursorPos(IncX, IncY);
+
+  if AUseClipCursor then
+    ClipCursorToOnePixel(IncX, IncY);
   
   Sleep(1);
   Dec(IncX);
   SetCursorPos(IncX, IncY);
+
+  if AUseClipCursor then
+    ClipCursorToOnePixel(IncX, IncY);
 end;
 
 
-procedure MoveMouseCursorWithDuration(DestTp: TPoint; ADuration: Integer; ACallAppProcMsg: Boolean = True); //slow move, not teleporting
+procedure MoveMouseCursorWithDuration(DestTp: TPoint; ADuration: Integer; AUseClipCursor: Boolean; ACallAppProcMsg: Boolean = True); //slow move, not teleporting
 const              //it seems that using Sleep calls, with args greater than 16, gives more accurate results than with lower values
   CResolutionDiv = 4; //powers of two   .. A greater value means less Sleep calls, which should get closer to the overall requested duration.
   CResolutionMul = 1 shl CResolutionDiv;
@@ -148,6 +170,7 @@ var
   IncCount, SleepDistance: Integer;
   MaxDiff, SleepAmount: Integer;
   DurationDiv: Extended; //Integer;
+
 begin
   if ADuration < 1 then
   begin
@@ -177,6 +200,8 @@ begin
     Inc(IncCount, SleepAmount);
 
     SetCursorPos(Round(IncX), Round(IncY));
+    if AUseClipCursor then
+      ClipCursorToOnePixel(Round(IncX), Round(IncY));
 
     if ACallAppProcMsg then
       if (SleepDistance > 0) and (IncCount mod SleepDistance = 0) then
@@ -190,12 +215,18 @@ begin
   IncX := IncX + 1;
   SetCursorPos(Round(IncX), Round(IncY));
 
+  if AUseClipCursor then
+    ClipCursorToOnePixel(Round(IncX), Round(IncY));
+
   Sleep(1);
   SetCursorPos(DestTp.X, DestTp.Y);
+
+  if AUseClipCursor then
+    ClipCursorToOnePixel(DestTp.X, DestTp.Y);
 end;
 
 
-procedure GetMouseEventsFromParam(AParams: TStrings; DefaultX, DefaultY: Integer; out X, Y: Integer; out XDest, YDest: Integer; out IsDragging: Boolean; out AShift: TShiftState; out AButton: TMouseButton);
+procedure GetMouseEventsFromParam(AParams: TStrings; DefaultX, DefaultY: Integer; out X, Y: Integer; out XDest, YDest: Integer; out IsDragging: Boolean; out AShift: TShiftState; out AButton: TMouseButton; out ALeaveMouse, AUseClipCursor: Boolean);
 begin
   X := StrToIntDef(AParams.Values[CMouseX], DefaultX);
   Y := StrToIntDef(AParams.Values[CMouseY], DefaultY);
@@ -232,6 +263,9 @@ begin
 
   //if Pos(CShiftStateDoubleClick, AParams.Values[CMouseShiftState]) > 0 then
   //  Include(AShift, ssDouble);    //ssDouble seems to do nothing
+
+  ALeaveMouse := AParams.Values[CMouseCursorLeaveMouse] = '1';
+  AUseClipCursor := AParams.Values[CMouseUseClipCursor] = '1';
 end;
 
 
@@ -294,6 +328,7 @@ var
   AButton: TMouseButton;
   ClickPoint, DestPoint: TPoint;
   InitialPoint: TPoint;
+  LeaveMouse, UseClipCursor: Boolean;
 
   procedure ExecMouseClick;
   var
@@ -313,11 +348,11 @@ var
     MoveDuration := Max(-1, StrToIntDef(AParams.Values[CMouseMoveDuration], -1));
 
     if MoveDuration < 1 then
-      MoveMouseCursor(ClickPoint, False)
+      MoveMouseCursor(ClickPoint, UseClipCursor, False)
     else
     begin
       if not IsDragging then
-        MoveMouseCursorWithDuration(ClickPoint, MoveDuration, MoveDuration > 5000);  //there will be race-conditions on client-server execution, if using App.ProcMsg
+        MoveMouseCursorWithDuration(ClickPoint, MoveDuration, UseClipCursor, MoveDuration > 5000);  //there will be race-conditions on client-server execution, if using App.ProcMsg
     end;
 
     if not MoveWithoutClick then
@@ -330,6 +365,10 @@ var
 
       AInputs.mi.dwFlags := MOUSEEVENTF_ABSOLUTE or MOUSEEVENTF_MOVE;
       mouse_event(AInputs.mi.dwFlags, DWord(AInputs.mi.dx), DWord(AInputs.mi.dy), 0, 0);  //at ClickPoint
+
+      if UseClipCursor then
+        ClipCursorToOnePixel(X, Y);
+
       //Application.ProcessMessages;
       Sleep(DelayAfterMovingToDestination);  //delay after moving to destination
 
@@ -343,7 +382,7 @@ var
     begin
       DestPoint.X := XDest;
       DestPoint.Y := YDest;
-      MoveMouseCursorWithDuration(DestPoint, MoveDuration, MoveDuration > 5000);  //there will be race-conditions on client-server execution, if using App.ProcMsg
+      MoveMouseCursorWithDuration(DestPoint, MoveDuration, UseClipCursor, MoveDuration > 5000);  //there will be race-conditions on client-server execution, if using App.ProcMsg
 
       SetBasicMouseInfo(AInputs, XDest, YDest);
 
@@ -356,6 +395,14 @@ var
 
     if not MoveWithoutClick then
     begin
+      if UseClipCursor then
+      begin
+        if not IsDragging then
+          ClipCursorToOnePixel(X, Y)
+        else
+          ClipCursorToOnePixel(XDest, YDest);
+      end;
+
       AInputs.mi.dwFlags := MOUSEEVENTF_ABSOLUTE or AMouseBtnUpState;
       mouse_event(AInputs.mi.dwFlags, DWord(AInputs.mi.dx), DWord(AInputs.mi.dy), 0, 0);  //at ClickPoint if not dragging, at destination if dragging
       //Application.ProcessMessages;
@@ -371,21 +418,27 @@ var
       //Application.ProcessMessages;
     end;
   end;
+
 begin
   Randomize;
-  GetMouseEventsFromParam(AParams, 3, 3, X, Y, XDest, YDest, IsDragging, AShift, AButton);
+  GetMouseEventsFromParam(AParams, 3, 3, X, Y, XDest, YDest, IsDragging, AShift, AButton, LeaveMouse, UseClipCursor);
 
   GetCursorPos(InitialPoint);
   try
     if IsDragging then
       SetCursorPos(XDest, YDest);   //usually harmless, but it might be needed in some special corner cases
 
-    ExecMouseClick;
+    try
+      ExecMouseClick;
+    finally
+      if UseClipCursor then
+        ClipCursor(nil);
+    end;
   finally
     if IsDragging then
       SetCursorPos(XDest, YDest)
     else
-      if (AParams.Values['LeaveMouse'] <> '1') {or IsDragging} then
+      if not LeaveMouse {or IsDragging} then
         SetCursorPos(InitialPoint.X, InitialPoint.Y);
   end;
 end;
@@ -399,6 +452,7 @@ var
   AButton: TMouseButton;
   ClickPoint: TPoint;
   tp: TPoint;
+  LeaveMouse, UseClipCursor: Boolean;
 
   procedure ExecMouseDown;
   var
@@ -407,23 +461,31 @@ var
   begin
     ClickPoint.X := X;
     ClickPoint.Y := Y;
-    MoveMouseCursor(ClickPoint, False);
+    MoveMouseCursor(ClickPoint, UseClipCursor, False);
 
     SetMouseButtonStates(AButton, AMouseBtnDownState, AMouseBtnUpState);
     SimulateSpecialKeys(AShift, 0);
     //Application.ProcessMessages;   //commented, to allow calling from server thread (for lower latency)
 
-    SetBasicMouseInfo(AInputs, X, Y);
+    if UseClipCursor then
+      ClipCursorToOnePixel(X, Y);
 
-    AInputs.mi.dwFlags := MOUSEEVENTF_ABSOLUTE or AMouseBtnDownState;
-    mouse_event(AInputs.mi.dwFlags, DWord(AInputs.mi.dx), DWord(AInputs.mi.dy), 0, 0);
-    //Application.ProcessMessages;
-    //Sleep(100);
-    //SimulateSpecialKeys(AShift, KEYEVENTF_KEYUP); //usually, this key should already be released here, only on MouseUp
+    try
+      SetBasicMouseInfo(AInputs, X, Y);
+
+      AInputs.mi.dwFlags := MOUSEEVENTF_ABSOLUTE or AMouseBtnDownState;
+      mouse_event(AInputs.mi.dwFlags, DWord(AInputs.mi.dx), DWord(AInputs.mi.dy), 0, 0);
+      //Application.ProcessMessages;
+      //Sleep(100);
+      //SimulateSpecialKeys(AShift, KEYEVENTF_KEYUP); //usually, this key should already be released here, only on MouseUp
+    finally
+      if UseClipCursor then
+        ClipCursor(nil);
+    end;
   end;
 begin
   GetCursorPos(tp);
-  GetMouseEventsFromParam(AParams, tp.X, tp.Y, X, Y, XDest, YDest, IsDragging, AShift, AButton);
+  GetMouseEventsFromParam(AParams, tp.X, tp.Y, X, Y, XDest, YDest, IsDragging, AShift, AButton, LeaveMouse, UseClipCursor);
   ExecMouseDown;
 end;
 
@@ -436,6 +498,7 @@ var
   AButton: TMouseButton;
   ClickPoint: TPoint;
   tp: TPoint;
+  LeaveMouse, UseClipCursor: Boolean;
 
   procedure ExecMouseUp;
   var
@@ -444,23 +507,31 @@ var
   begin
     ClickPoint.X := X;
     ClickPoint.Y := Y;
-    MoveMouseCursor(ClickPoint, False);
+    MoveMouseCursor(ClickPoint, UseClipCursor, False);
 
     SetMouseButtonStates(AButton, AMouseBtnDownState, AMouseBtnUpState);
     //SimulateSpecialKeys(AShift, 0);  //usually, this key should already be down from MouseDown
     //Application.ProcessMessages;
 
-    SetBasicMouseInfo(AInputs, X, Y);
+    if UseClipCursor then
+      ClipCursorToOnePixel(X, Y);
 
-    AInputs.mi.dwFlags := MOUSEEVENTF_ABSOLUTE or AMouseBtnUpState;
-    mouse_event(AInputs.mi.dwFlags, DWord(AInputs.mi.dx), DWord(AInputs.mi.dy), 0, 0);
-    //Application.ProcessMessages;
-    //Sleep(100);
-    SimulateSpecialKeys(AShift, KEYEVENTF_KEYUP);
+    try
+      SetBasicMouseInfo(AInputs, X, Y);
+
+      AInputs.mi.dwFlags := MOUSEEVENTF_ABSOLUTE or AMouseBtnUpState;
+      mouse_event(AInputs.mi.dwFlags, DWord(AInputs.mi.dx), DWord(AInputs.mi.dy), 0, 0);
+      //Application.ProcessMessages;
+      //Sleep(100);
+      SimulateSpecialKeys(AShift, KEYEVENTF_KEYUP);
+    finally
+      if UseClipCursor then
+        ClipCursor(nil);
+    end;
   end;
 begin
   GetCursorPos(tp);
-  GetMouseEventsFromParam(AParams, tp.X, tp.Y, X, Y, XDest, YDest, IsDragging, AShift, AButton);
+  GetMouseEventsFromParam(AParams, tp.X, tp.Y, X, Y, XDest, YDest, IsDragging, AShift, AButton, LeaveMouse, UseClipCursor);
   ExecMouseUp;
 end;
 

@@ -125,6 +125,7 @@ begin
     ACustomActions[i].ClickOptions.DelayAfterMovingToDestination := '50';
     ACustomActions[i].ClickOptions.DelayAfterMouseDown := '100';
     ACustomActions[i].ClickOptions.MoveDuration := '-1';
+    ACustomActions[i].ClickOptions.UseClipCursor := False;
 
     SectionIndex := Ini.GetSectionIndex('Actions.ExecAppOptions');
     ACustomActions[i].ExecAppOptions.PathToApp := Ini.ReadString(SectionIndex, 'PathToApp_' + IterationStr, '');
@@ -300,6 +301,7 @@ begin
   AClickOptions.DelayAfterMovingToDestination := Ini.ReadString(SectionIndex, 'DelayAfterMovingToDestination', '50');
   AClickOptions.DelayAfterMouseDown := Ini.ReadString(SectionIndex, 'DelayAfterMouseDown', '100');
   AClickOptions.MoveDuration := Ini.ReadString(SectionIndex, 'MoveDuration', '-1');
+  AClickOptions.UseClipCursor := Ini.ReadBool(SectionIndex, 'UseClipCursor', False);
 end;
 
 
@@ -793,6 +795,7 @@ begin
   AStringList.Add('DelayAfterMovingToDestination=' + AActionClickOptions.DelayAfterMovingToDestination);
   AStringList.Add('DelayAfterMouseDown=' + AActionClickOptions.DelayAfterMouseDown);
   AStringList.Add('MoveDuration=' + AActionClickOptions.MoveDuration);
+  AStringList.Add('UseClipCursor=' + IntToStr(Ord(AActionClickOptions.UseClipCursor)));
 end;
 
 

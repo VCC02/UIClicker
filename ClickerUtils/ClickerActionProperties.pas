@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2023 VCC
+    Copyright (C) 2024 VCC
     creation date: Nov 2023
     initial release date: 19 Nov 2023
 
@@ -135,7 +135,8 @@ begin
             'MouseWheelAmount' + '=' + AClickOptions.MouseWheelAmount + '&' +
             'DelayAfterMovingToDestination' + '=' + AClickOptions.DelayAfterMovingToDestination + '&' +
             'DelayAfterMouseDown' + '=' + AClickOptions.DelayAfterMouseDown + '&' +
-            'MoveDuration' + '=' + AClickOptions.MoveDuration;
+            'MoveDuration' + '=' + AClickOptions.MoveDuration + '&' +
+            'UseClipCursor' + '=' + IntToStr(Ord(AClickOptions.UseClipCursor));
 end;
 
 
@@ -433,6 +434,7 @@ begin
   AClickOptions.ClickWithShift := AListOfClickOptionsParams.Values['ClickWithShift'] = '1';
   AClickOptions.ClickWithDoubleClick := AListOfClickOptionsParams.Values['ClickWithDoubleClick'] = '1';
   AClickOptions.Count := Temp_Count;
+
   AClickOptions.LeaveMouse := AListOfClickOptionsParams.Values['LeaveMouse'] = '1';
   AClickOptions.MoveWithoutClick := AListOfClickOptionsParams.Values['MoveWithoutClick'] = '1';
   AClickOptions.ClickType := Temp_ClickType;    //see CClickType_Click and CClickType_Drag
@@ -447,6 +449,7 @@ begin
   AClickOptions.DelayAfterMovingToDestination := AListOfClickOptionsParams.Values['DelayAfterMovingToDestination'];
   AClickOptions.DelayAfterMouseDown := AListOfClickOptionsParams.Values['DelayAfterMouseDown'];
   AClickOptions.MoveDuration := AListOfClickOptionsParams.Values['MoveDuration'];
+  AClickOptions.UseClipCursor := AListOfClickOptionsParams.Values['UseClipCursor'] = '1';
 end;
 
 
@@ -930,6 +933,7 @@ begin
   AClickOptions.DelayAfterMovingToDestination := '50';
   AClickOptions.DelayAfterMouseDown := '200';
   AClickOptions.MoveDuration := '-1';
+  AClickOptions.UseClipCursor := False;
 end;
 
 

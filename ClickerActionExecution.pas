@@ -961,6 +961,7 @@ var
   XClick, YClick: Integer;
   Control_Left, Control_Top, Control_Width, Control_Height: Integer;
   MXOffset, MYOffset: Integer;
+  ShiftStateParam: string;
 begin
   MouseParams := TStringList.Create;
   try
@@ -991,39 +992,42 @@ begin
       yrefAbsolute: YClick := MYOffset;
     end;
 
-    MouseParams.Values[CMouseX] := IntToStr(XClick);
-    MouseParams.Values[CMouseY] := IntToStr(YClick);
+    MouseParams.Add(CMouseX + '=' + IntToStr(XClick));
+    MouseParams.Add(CMouseY + '=' + IntToStr(YClick));
 
     case AClickOptions.MouseButton of
-      mbLeft: MouseParams.Values[CMouseButton] := CMouseButtonLeft;
-      mbRight: MouseParams.Values[CMouseButton] := CMouseButtonRight;
-      mbMiddle: MouseParams.Values[CMouseButton] := CMouseButtonMiddle;
+      mbLeft: MouseParams.Add(CMouseButton + '=' + CMouseButtonLeft);
+      mbRight: MouseParams.Add(CMouseButton + '=' + CMouseButtonRight);
+      mbMiddle: MouseParams.Add(CMouseButton + '=' + CMouseButtonMiddle);
       else
       begin
       end;
     end;
 
-    MouseParams.Values[CMouseShiftState] := '';
+    ShiftStateParam := '';
     if AClickOptions.ClickWithCtrl then
-      MouseParams.Values[CMouseShiftState] := MouseParams.Values[CMouseShiftState] + CShiftStateCtrl;
+      ShiftStateParam := ShiftStateParam + CShiftStateCtrl;
 
     if AClickOptions.ClickWithAlt then
-      MouseParams.Values[CMouseShiftState] := MouseParams.Values[CMouseShiftState] + ',' + CShiftStateAlt;
+      ShiftStateParam := ShiftStateParam + ',' + CShiftStateAlt;
 
     if AClickOptions.ClickWithShift then
-      MouseParams.Values[CMouseShiftState] := MouseParams.Values[CMouseShiftState] + ',' + CShiftStateShift;
+      ShiftStateParam := ShiftStateParam + ',' + CShiftStateShift;
 
     if AClickOptions.ClickWithDoubleClick then
-      MouseParams.Values[CMouseShiftState] := MouseParams.Values[CMouseShiftState] + ',' + CShiftStateDoubleClick;
+      ShiftStateParam := ShiftStateParam + ',' + CShiftStateDoubleClick;
 
-    MouseParams.Values[CMouseCursorLeaveMouse] := IntToStr(Ord(AClickOptions.LeaveMouse));
-    MouseParams.Values[CMouseMoveWithoutClick] := IntToStr(Ord(AClickOptions.MoveWithoutClick));
+    MouseParams.Add(CMouseShiftState + '=' + ShiftStateParam);
 
-    MouseParams.Values[CMouseClickType] := IntToStr(AClickOptions.ClickType);
+    MouseParams.Add(CMouseCursorLeaveMouse + '=' + IntToStr(Ord(AClickOptions.LeaveMouse)));
+    MouseParams.Add(CMouseMoveWithoutClick + '=' + IntToStr(Ord(AClickOptions.MoveWithoutClick)));
 
-    MouseParams.Values[CMouseDelayAfterMovingToDestination] := EvaluateReplacements(AClickOptions.DelayAfterMovingToDestination);
-    MouseParams.Values[CMouseDelayAfterMouseDown] := EvaluateReplacements(AClickOptions.DelayAfterMouseDown);
-    MouseParams.Values[CMouseMoveDuration] := EvaluateReplacements(AClickOptions.MoveDuration);
+    MouseParams.Add(CMouseClickType + '=' + IntToStr(AClickOptions.ClickType));
+
+    MouseParams.Add(CMouseDelayAfterMovingToDestination + '=' + EvaluateReplacements(AClickOptions.DelayAfterMovingToDestination));
+    MouseParams.Add(CMouseDelayAfterMouseDown + '=' + EvaluateReplacements(AClickOptions.DelayAfterMouseDown));
+    MouseParams.Add(CMouseMoveDuration + '=' + EvaluateReplacements(AClickOptions.MoveDuration));
+    MouseParams.Add(CMouseUseClipCursor + '=' + IntToStr(Ord(AClickOptions.UseClipCursor)));
 
     if AClickOptions.ClickType = CMouseClickType_Drag then  ///Dest
     begin
@@ -1049,21 +1053,21 @@ begin
         yrefAbsolute: YClick := MYOffset;
       end;
 
-      MouseParams.Values[CMouseXDest] := IntToStr(XClick);
-      MouseParams.Values[CMouseYDest] := IntToStr(YClick);
+      MouseParams.Add(CMouseXDest + '=' + IntToStr(XClick));
+      MouseParams.Add(CMouseYDest + '=' + IntToStr(YClick));
     end; ///Dest
 
     if AClickOptions.ClickType = CMouseClickType_Wheel then
     begin
       case AClickOptions.MouseWheelType of
         mwtVert:
-          MouseParams.Values[CMouseWheelType] := CMouseWheelVertWheel;
+          MouseParams.Add(CMouseWheelType + '=' + CMouseWheelVertWheel);
 
         mwtHoriz:
-          MouseParams.Values[CMouseWheelType] := CMouseWheelHorizWheel;
+          MouseParams.Add(CMouseWheelType + '=' + CMouseWheelHorizWheel);
       end;
 
-      MouseParams.Values[CMouseWheelAmount] := EvaluateReplacements(AClickOptions.MouseWheelAmount);
+      MouseParams.Add(CMouseWheelAmount + '=' + EvaluateReplacements(AClickOptions.MouseWheelAmount));
     end;
 
     case AClickOptions.ClickType of

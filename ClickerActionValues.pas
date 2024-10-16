@@ -59,7 +59,7 @@ const
   CPropCount_Common = 4;  //Action name, Action type, Action Timeout, StopOnError
 
   //Properties (counts)
-  CPropCount_Click = 25;
+  CPropCount_Click = 26;
   CPropCount_ExecApp = 7;
   CPropCount_FindControl = 33;
   CPropCount_FindSubControl = CPropCount_FindControl;
@@ -117,6 +117,7 @@ const
   CClick_DelayAfterMovingToDestination_PropIndex = 22;
   CClick_DelayAfterMouseDown_PropIndex = 23;
   CClick_MoveDuration_PropIndex = 24;
+  CClick_UseClipCursor_PropIndex = 25;
 
   CExecApp_PathToApp_PropIndex = 0;     //property index in ExecApp structure
   CExecApp_ListOfParams_PropIndex = 1;  //property index in ExecApp structure
@@ -269,7 +270,8 @@ const
     (Name: 'MouseWheelAmount'; EditorType: etSpinText; DataType: CDTString),
     (Name: 'DelayAfterMovingToDestination'; EditorType: etSpinText; DataType: CDTString),
     (Name: 'DelayAfterMouseDown'; EditorType: etSpinText; DataType: CDTString),
-    (Name: 'MoveDuration'; EditorType: etSpinText; DataType: CDTString)
+    (Name: 'MoveDuration'; EditorType: etSpinText; DataType: CDTString),
+    (Name: 'UseClipCursor'; EditorType: etBooleanCombo; DataType: CDTBool)
   );
 
   CExecAppProperties: array[0..CPropCount_ExecApp - 1] of TOIPropDef = (
@@ -653,7 +655,8 @@ const
     0, //MouseWheelAmount: string;
     0, //DelayAfterMovingToDestination: string;
     0, //DelayAfterMouseDown: string;
-    0 //MoveDuration: string;
+    0, //MoveDuration: string;
+    0  //UseClipCursor
   );
 
   CExecAppEnumCounts: array[0..CPropCount_ExecApp - 1] of Integer = (
@@ -854,7 +857,8 @@ const
     nil, //MouseWheelAmount
     nil, //DelayAfterMovingToDestination
     nil, //DelayAfterMouseDown
-    nil  //MoveDuration
+    nil, //MoveDuration
+    nil  //UseClipCursor
   );
 
   CExecAppEnumStrings: array[0..CPropCount_ExecApp - 1] of PArrayOfString = (
@@ -1060,7 +1064,8 @@ const
     0, //MouseWheelAmount: string;
     0, //DelayAfterMovingToDestination: string;
     0, //DelayAfterMouseDown: string;
-    0 //MoveDuration: string;
+    0, //MoveDuration: string;
+    0  //UseClipCursor
   );
 
   CExecAppIsExp: array[0..CPropCount_ExecApp - 1] of Integer = (
@@ -1198,6 +1203,7 @@ function GetPropertyHint_Click_DelayAfterMovingToDestination: string;
 function GetPropertyHint_Click_DelayAfterMouseDown: string;
 function GetPropertyHint_Click_MouseWheelAmount: string;
 function GetPropertyHint_Click_MoveDuration: string;
+function GetPropertyHint_Click_UseClipCursor: string;
 
 function GetPropertyHint_ExecApp_PathToApp: string;
 function GetPropertyHint_ExecApp_AppStdIn: string;
@@ -1328,7 +1334,8 @@ const
     @GetPropertyHint_Click_MouseWheelAmount, // MouseWheelAmount: string;
     @GetPropertyHint_Click_DelayAfterMovingToDestination,
     @GetPropertyHint_Click_DelayAfterMouseDown,
-    @GetPropertyHint_Click_MoveDuration
+    @GetPropertyHint_Click_MoveDuration,
+    @GetPropertyHint_Click_UseClipCursor
   );
 
 
@@ -1560,6 +1567,7 @@ begin
     22: Result := AAction^.ClickOptions.DelayAfterMovingToDestination;
     23: Result := AAction^.ClickOptions.DelayAfterMouseDown;
     24: Result := AAction^.ClickOptions.MoveDuration;
+    25: Result := BoolToStr(AAction^.ClickOptions.UseClipCursor, True);
     else
       Result := 'unknown';
   end;
@@ -2186,6 +2194,7 @@ begin
     22: AAction^.ClickOptions.DelayAfterMovingToDestination := NewValue;
     23: AAction^.ClickOptions.DelayAfterMouseDown := NewValue;
     24: AAction^.ClickOptions.MoveDuration := NewValue;
+    25: AAction^.ClickOptions.UseClipCursor := StrToBool(NewValue);
     else
       ;
   end;
@@ -2552,6 +2561,13 @@ function GetPropertyHint_Click_MoveDuration: string;
 begin
   Result := 'Duration in ms, of how much it takes to move the mouse cursor from its current location to its destination.' + #13#10 +
             'If set to a negative value, no delay is used.';
+end;
+
+
+function GetPropertyHint_Click_UseClipCursor: string;
+begin
+  Result := 'If set to True, it ensures that the mouse cursor is kept at the specified coordinates, although the physical mouse generates other input.' + #13#10 +
+            'This may be required, when the user can accidentally move the mouse, while UIClicker is running and setting other mouse cursor position.';
 end;
 
 

@@ -178,6 +178,7 @@ type
     DelayAfterMovingToDestination: string;
     DelayAfterMouseDown: string;
     MoveDuration: string;
+    UseClipCursor: Boolean;
   end;
 
   TExecAppUseInheritHandles = (uihNo, uihYes, uihOnlyWithStdInOut);

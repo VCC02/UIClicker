@@ -51,7 +51,8 @@ type
     procedure Test_ExecuteClickAction_LeaveMouse;
     procedure Test_ExecuteClickAction_MouseWheel;
     procedure Test_ExecuteClickAction_TestApp_ClickDuration;
-    procedure Test_ExecuteClickAction_TestApp_DragDuration;
+    procedure Test_ExecuteClickAction_TestApp_DragDuration_WithDraggingAction;
+    procedure Test_ExecuteClickAction_TestApp_DragDuration_WithMouseDownMoveUpActions;
     procedure Test_ExecuteExecAppAction_IPConfig;
     procedure Test_ExecuteExecAppAction_IPConfig_NoInheritHandles;
 
@@ -217,9 +218,18 @@ begin                                         //This test should be modified, to
 end;
 
 
-procedure TTestLowLevelHTTPAPI.Test_ExecuteClickAction_TestApp_DragDuration;
+procedure TTestLowLevelHTTPAPI.Test_ExecuteClickAction_TestApp_DragDuration_WithDraggingAction;
 begin                                         //This test should be modified, to execute in-mem actions, i.e. Click, via API.
                                               //It should generate some options similar to GenerateClickOptionsForLeaveMouse and modify them for this test.
+  SetVariable(TestServerAddress, '$DragMouseCursor$', '1', 0);    //using mouse cursor dragging in one action
+  ExecTestTemplate(TestServerAddress, '$AppDir$\Tests\TestFiles\DragMeasurements.clktmpl');
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecuteClickAction_TestApp_DragDuration_WithMouseDownMoveUpActions;
+begin                                         //This test should be modified, to execute in-mem actions, i.e. Click, via API.
+                                              //It should generate some options similar to GenerateClickOptionsForLeaveMouse and modify them for this test.
+  SetVariable(TestServerAddress, '$DragMouseCursor$', '0', 0);    //using mouse cursor dragging in one action
   ExecTestTemplate(TestServerAddress, '$AppDir$\Tests\TestFiles\DragMeasurements.clktmpl');
 end;
 

@@ -183,7 +183,8 @@ class TClickOptions(Structure):
                ("MouseWheelAmount", LPCWSTR),
                ("DelayAfterMovingToDestination", LPCWSTR),
                ("DelayAfterMouseDown", LPCWSTR),
-               ("MoveDuration", LPCWSTR)]
+               ("MoveDuration", LPCWSTR),
+               ("UseClipCursor", BOOLEAN)]
 
 PClickOptions = ctypes.POINTER(TClickOptions)
 
@@ -215,6 +216,7 @@ def GetDefaultClickOptions():
     ClickOptions.DelayAfterMovingToDestination = '50'
     ClickOptions.DelayAfterMouseDown = '200'
     ClickOptions.MoveDuration = '-1'
+    ClickOptions.UseClipCursor = False
     return ClickOptions
 
 

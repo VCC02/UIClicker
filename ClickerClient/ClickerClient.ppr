@@ -67,6 +67,7 @@ type
     DelayAfterMovingToDestination: PWideChar;
     DelayAfterMouseDown: PWideChar;
     MoveDuration: PWideChar;
+    UseClipCursor: Boolean;
   end;
 
   PClkClickOptionsAPI = ^TClkClickOptionsAPI;
@@ -632,6 +633,7 @@ begin
   SetPointedContentToString(@string(PWideChar(AClickOptions^.DelayAfterMovingToDestination))[1], TempAction.ClickOptions.DelayAfterMovingToDestination);
   SetPointedContentToString(@string(PWideChar(AClickOptions^.DelayAfterMouseDown))[1], TempAction.ClickOptions.DelayAfterMouseDown);
   SetPointedContentToString(@string(PWideChar(AClickOptions^.MoveDuration))[1], TempAction.ClickOptions.MoveDuration);
+  TempAction.ClickOptions.UseClipCursor := AClickOptions^.UseClipCursor;
 
   AddActionToTemplate(TemplateFileName, TempAction);
   Result := 0;
