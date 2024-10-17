@@ -3999,7 +3999,7 @@ function TActionExecution.ExecuteEditTemplateAction(var AEditTemplateOptions: TC
   begin
     Result := -1;
     for i := 0 to Length(AClkActions) - 1 do
-      if AClkActions[i].ActionOptions.ActionName = AEditTemplateOptions.EditedActionName then
+      if AClkActions[i].ActionOptions.ActionName = AName then
       begin
         Result := i;
         Break;

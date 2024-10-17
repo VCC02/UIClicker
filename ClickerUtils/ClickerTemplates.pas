@@ -38,6 +38,7 @@ procedure LoadTemplateToCustomActions_V2(Ini: TClkIniReadonlyFile; var ACustomAc
 procedure SaveTemplateWithCustomActionsToStringList_V2(AStringList: TStringList; var ACustomActions: TClkActionsRecArr; ANotes, ATemplateIconPath: string);
 
 procedure CopyFindControlActionContent(ASrc: TClkFindControlOptions; var ADest: TClkFindControlOptions);
+
 procedure CopyActionContent(ASrc: TClkActionRec; var ADest: TClkActionRec);
 
 procedure GetTemplateContentAsMemoryStream(var ATemplateContent: TClkActionsRecArr; ANotes, ATemplateIconPath: string; AFileContentMem: TMemoryStream);
