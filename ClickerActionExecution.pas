@@ -3993,19 +3993,6 @@ end;
 
 
 function TActionExecution.ExecuteEditTemplateAction(var AEditTemplateOptions: TClkEditTemplateOptions): Boolean;
-  function GetActionIndexByName(var AClkActions: TClkActionsRecArr; AName: string): Integer;
-  var
-    i: Integer;
-  begin
-    Result := -1;
-    for i := 0 to Length(AClkActions) - 1 do
-      if AClkActions[i].ActionOptions.ActionName = AName then
-      begin
-        Result := i;
-        Break;
-      end;
-  end;
-
 var
   ClkActions: TClkActionsRecArr;
   Notes, IconPath: string;
@@ -4070,15 +4057,14 @@ begin
           Exit;
         end;
 
+        //DoOnMoveAction
+
         Result := True;
       end;
 
       etoDeleteAction:
       begin
-        for i := Idx to Length(ClkActions) - 2 do
-          CopyActionContent(ClkActions[i + 1], ClkActions[i]);
-
-        SetLength(ClkActions, Length(ClkActions) - 1);
+        RemoveActionFromArr(ClkActions, Idx);
         Result := True;
       end;
 

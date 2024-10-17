@@ -44,6 +44,9 @@ procedure CopyActionContent(ASrc: TClkActionRec; var ADest: TClkActionRec);
 procedure GetTemplateContentAsMemoryStream(var ATemplateContent: TClkActionsRecArr; ANotes, ATemplateIconPath: string; AFileContentMem: TMemoryStream);
 procedure GetTemplateContentFromMemoryStream(var ACustomActions: TClkActionsRecArr; var ANotes, ATemplateIconPath: string; AFileContentMem: TMemoryStream);
 
+function GetActionIndexByName(var AClkActions: TClkActionsRecArr; AName: string): Integer;
+procedure RemoveActionFromArr(var AActions: TClkActionsRecArr; ActionIndex: Integer);
+
 {
  What V2 does better than V1:
    - Template files (*.clktmpl) can be easily diff'ed as text
@@ -1155,6 +1158,34 @@ begin
   finally
     FileContentStr.Free;
   end;
+end;
+
+
+function GetActionIndexByName(var AClkActions: TClkActionsRecArr; AName: string): Integer;
+var
+  i: Integer;
+begin
+  Result := -1;
+  for i := 0 to Length(AClkActions) - 1 do
+    if AClkActions[i].ActionOptions.ActionName = AName then
+    begin
+      Result := i;
+      Break;
+    end;
+end;
+
+
+procedure RemoveActionFromArr(var AActions: TClkActionsRecArr; ActionIndex: Integer);
+var
+  i: Integer;
+begin
+  if Length(AActions) = 0 then
+    Exit;
+
+  for i := ActionIndex to Length(AActions) - 2 do
+    CopyActionContent(AActions[i + 1], AActions[i]); //AActions[i] := AActions[i + 1];
+
+  SetLength(AActions, Length(AActions) - 1);
 end;
 
 end.

@@ -53,6 +53,8 @@ type
     lblMouseOnPreviewImgBB: TLabel;
     lblMouseOnPreviewImgGG: TLabel;
     lblMouseOnPreviewImgRR: TLabel;
+    MenuItem_RepaintAllCompositionsFromStaticMenu: TMenuItem;
+    N3: TMenuItem;
     MenuItem_EditMode: TMenuItem;
     N2: TMenuItem;
     N1: TMenuItem;
@@ -69,6 +71,8 @@ type
     procedure chkShowPrimitiveEdgesChange(Sender: TObject);
     procedure FrameResize(Sender: TObject);
     procedure MenuItem_CopyToClipboardClick(Sender: TObject);
+    procedure MenuItem_EditModeClick(Sender: TObject);
+    procedure MenuItem_RepaintAllCompositionsFromStaticMenuClick(Sender: TObject);
     procedure MenuItem_SavePrimitivesFileClick(Sender: TObject);
     procedure pnlHorizSplitterMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
@@ -597,6 +601,7 @@ begin
   SetLength(FPrimitives, 0);
   SetLength(FOrders, 0);
   FOIFrame.ReloadContent;
+  lblModified.Hide;
 end;
 
 
@@ -887,6 +892,21 @@ begin
   finally
     PmtvCompositor.Free;
   end;
+end;
+
+
+procedure TfrClickerPrimitives.MenuItem_EditModeClick(Sender: TObject);
+begin
+
+end;
+
+
+procedure TfrClickerPrimitives.MenuItem_RepaintAllCompositionsFromStaticMenuClick(
+  Sender: TObject);
+begin
+  RepaintAllCompositions;
+  BuildImgLstPreviewPrimitives;
+  BuildFontColorIconsList;
 end;
 
 

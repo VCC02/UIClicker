@@ -1771,18 +1771,22 @@ var
   TempStringList: TStringList;   //much faster than T(Mem)IniFile
   MemStream: TMemoryStream;
   i: Integer;
+  LenModified: Boolean;
 begin
   if AWhichTemplate = etwtSelf then
   begin
+    LenModified := Length(AActions) <> Length(FClkActions);
+    if LenModified then
+      vstActions.RootNodeCount := Length(AActions);
+
     SetLength(FClkActions, Length(AActions));
 
     for i := 0 to Length(FClkActions) - 1 do
       CopyActionContent(AActions[i], FClkActions[i]);
 
     try
-      if Integer(vstActions.RootNodeCount) <> Length(FClkActions) then
+      if LenModified then
       begin
-        vstActions.RootNodeCount := Length(FClkActions);
         vstActions.Repaint;
         SetPropertiesFromPlugins;
       end;
@@ -2916,20 +2920,34 @@ end;
 function TfrClickerActionsArr.PlayActionByNode(Node: PVirtualNode): Boolean;
 var
   ActionIndex: Integer;
+  InitialLen: Integer;
+  DeletingActionName: string;
+  DeletingActionIndex: Integer;  //used only when executing EditTemplate, which deletes actions
+  DeletingSelfAction: Boolean;
 begin
   Result := True;
 
   ActionIndex := Node^.Index;
+  DeletingActionIndex := -1;
 
   FClkActions[ActionIndex].ActionStatus := asInProgress;
   SetActionVarValue('$ExitCode$', '');
   vstActions.RepaintNode(Node);
+  InitialLen := Length(FClkActions);
 
   try
     FClkActions[ActionIndex].ActionSkipped := False;
 
     if EvaluateActionCondition(ActionIndex) then
     begin
+      if FClkActions[ActionIndex].ActionOptions.Action = acEditTemplate then
+        if FClkActions[ActionIndex].EditTemplateOptions.Operation = etoDeleteAction then
+          if FClkActions[ActionIndex].EditTemplateOptions.WhichTemplate = etwtSelf then
+          begin
+            DeletingActionName := FClkActions[ActionIndex].EditTemplateOptions.EditedActionName;
+            DeletingActionIndex := GetActionIndexByName(FClkActions, DeletingActionName);
+          end;
+
       if not FExecutesRemotely then
         Result := ExecuteActionAtIndex(ActionIndex)
       else
@@ -2955,48 +2973,67 @@ begin
     end;
   end;
 
-  if Result then
+  if Length(FClkActions) > 0 then
   begin
-    if FClkActions[ActionIndex].ActionOptions.Action <> acCallTemplate then
-      FClkActions[ActionIndex].ActionStatus := asSuccessful
-    else
-      FClkActions[ActionIndex].ActionStatus := ActionStatusStrToActionStatus(GetActionVarValue('$LastAction_Status$'));  ///////////// not sure if this is the way to go
-  end
-  else
-  begin
-    if {((FClkActions[ActionIndex].ActionOptions.Action = acFindControl) or (FClkActions[ActionIndex].ActionOptions.Action = acFindSubControl)) and}
-       not Result and
-       FClkActions[ActionIndex].FindControlOptions.AllowToFail then
+    DeletingSelfAction := DeletingActionIndex = ActionIndex;
+
+    if InitialLen - Length(FClkActions) = 1 then  //deleted one action
+      if (DeletingActionIndex > -1) and (DeletingActionIndex < ActionIndex) then
+        Dec(ActionIndex);
+
+    if (ActionIndex > -1) and (ActionIndex < Length(FClkActions)) and (not ((DeletingActionIndex > -1) and DeletingSelfAction)) then
     begin
-      FClkActions[ActionIndex].ActionStatus := asAllowedFailed;
-      Result := True; //allow further execution
-    end
-    else
-      if GetActionVarValue('$ExitCode$') <> '0' then
-        FClkActions[ActionIndex].ActionStatus := asFailed
+      if Result then
+      begin
+        if FClkActions[ActionIndex].ActionOptions.Action <> acCallTemplate then
+          FClkActions[ActionIndex].ActionStatus := asSuccessful
+        else
+          FClkActions[ActionIndex].ActionStatus := ActionStatusStrToActionStatus(GetActionVarValue('$LastAction_Status$'));  ///////////// not sure if this is the way to go
+      end
       else
-        FClkActions[ActionIndex].ActionStatus := asSuccessful;
+      begin
+        if {((FClkActions[ActionIndex].ActionOptions.Action = acFindControl) or (FClkActions[ActionIndex].ActionOptions.Action = acFindSubControl)) and}
+           not Result and
+           FClkActions[ActionIndex].FindControlOptions.AllowToFail then
+        begin
+          FClkActions[ActionIndex].ActionStatus := asAllowedFailed;
+          Result := True; //allow further execution
+        end
+        else
+          if GetActionVarValue('$ExitCode$') <> '0' then
+            FClkActions[ActionIndex].ActionStatus := asFailed
+          else
+            FClkActions[ActionIndex].ActionStatus := asSuccessful;
+      end;
+
+      if not FExecutesRemotely then
+        SetActionVarValue('$LastAction_Status$', CActionStatusStr[FClkActions[ActionIndex].ActionStatus]);
+
+      if InitialLen <> Length(FClkActions) then
+        Node := GetNodeByIndex(ActionIndex);
+
+      if Node <> nil then
+        vstActions.RepaintNode(Node);    //Node is no longer valid if the action is delted
+    end;
   end;
-
-  if not FExecutesRemotely then
-    SetActionVarValue('$LastAction_Status$', CActionStatusStr[FClkActions[ActionIndex].ActionStatus]);
-
-  vstActions.RepaintNode(Node);
 end;
 
 
 procedure TfrClickerActionsArr.PlaySelected;
 var
   Node: PVirtualNode;
+  TempIdx: Integer;
 begin
   Node := vstActions.GetFirstSelected;
   if Node = nil then
     Exit; //do not show a dialog here
 
+  TempIdx := Node^.Index; //using TempIdx, because the action might be deleted by PlayActionByNode
   PlayActionByNode(Node);
 
-  if FClkActions[Node^.Index].ActionOptions.Action = acPlugin then
-    frClickerActions.frClickerPlugin.DoneDebuging;
+  if (TempIdx < -1) and (TempIdx < Length(FClkActions)) then
+    if FClkActions[TempIdx].ActionOptions.Action = acPlugin then
+      frClickerActions.frClickerPlugin.DoneDebuging;
 end;
 
 
@@ -4373,7 +4410,7 @@ const
     Result := False;
 
     if frClickerActions.ControlsModified then
-      if MessageBox(Handle, PChar(CControlsModifiedMsg), '', MB_ICONWARNING + MB_YESNO) = IDYES then
+      if MessageBox(Handle, PChar(CControlsModifiedMsg), '', MB_ICONWARNING + MB_YESNO) = IDYES then   //YES means go back to previous action.
       begin
         vstActions.ClearSelection;
         if FPreviousSelectedNode <> nil then
@@ -4388,7 +4425,7 @@ const
     Result := False;
 
     if frClickerActions.ModifiedPmtvFiles then
-      if MessageBox(Handle, PChar(CModifiedPmtvFilesMsg), '', MB_ICONWARNING + MB_YESNO) = IDYES then
+      if MessageBox(Handle, PChar(CModifiedPmtvFilesMsg), '', MB_ICONWARNING + MB_YESNO) = IDYES then   //YES means go back to previous action.
       begin
         vstActions.ClearSelection;
         if FPreviousSelectedNode <> nil then
@@ -6597,14 +6634,9 @@ end;
 
 
 procedure TfrClickerActionsArr.RemoveAction(ActionIndex: Integer; AClearSelectionAfterRemoving: Boolean = True; AUpdateRootNodeCount: Boolean = True);
-var
-  i: Integer;
 begin
   if Length(FClkActions) = 0 then
     Exit;
-
-  for i := ActionIndex to Length(FClkActions) - 2 do
-    CopyActionContent(FClkActions[i + 1], FClkActions[i]); //FClkActions[i] := FClkActions[i + 1];
 
   if AClearSelectionAfterRemoving then
     vstActions.Clear; // vstActions.RootNodeCount := 0; //to reinit nodes
@@ -6612,7 +6644,7 @@ begin
   if AUpdateRootNodeCount then
     vstActions.RootNodeCount := Length(FClkActions) - 1;
 
-  SetLength(FClkActions, Length(FClkActions) - 1);
+  RemoveActionFromArr(FClkActions, ActionIndex); //deleting the action after setting VST node count, to avoid AVs
 
   UpdateNodesCheckStateFromActions;
 end;
