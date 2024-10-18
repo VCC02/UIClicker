@@ -46,6 +46,8 @@ procedure GetTemplateContentFromMemoryStream(var ACustomActions: TClkActionsRecA
 
 function GetActionIndexByName(var AClkActions: TClkActionsRecArr; AName: string): Integer;
 procedure RemoveActionFromArr(var AActions: TClkActionsRecArr; ActionIndex: Integer);
+procedure InsertActionIntoArr(var AActions: TClkActionsRecArr; AIndexToInsertAt: Integer; var ANewAction: TClkActionRec);
+procedure MoveActionInArr(var AActions: TClkActionsRecArr; ASrcIndex, ADestIndex: Integer);
 
 {
  What V2 does better than V1:
@@ -1182,10 +1184,49 @@ begin
   if Length(AActions) = 0 then
     Exit;
 
+  if (ActionIndex < 0) or (ActionIndex > Length(AActions) - 1) then
+    raise Exception.Create('Attempting to remove an action by an out of bounds index.');
+
   for i := ActionIndex to Length(AActions) - 2 do
     CopyActionContent(AActions[i + 1], AActions[i]); //AActions[i] := AActions[i + 1];
 
   SetLength(AActions, Length(AActions) - 1);
+end;
+
+
+procedure InsertActionIntoArr(var AActions: TClkActionsRecArr; AIndexToInsertAt: Integer; var ANewAction: TClkActionRec);
+var
+  i, n: Integer;
+begin
+  if (AIndexToInsertAt < 0) or (AIndexToInsertAt > Length(AActions)) then  //The verification is a bit different than above, at RemoveActionFromArr, to allow inserting into an empty array.
+    raise Exception.Create('Attempting to insert an action at an out of bounds index.');
+
+  n := Length(AActions);
+  SetLength(AActions, n + 1);
+
+  for i := n downto AIndexToInsertAt + 1 do
+    CopyActionContent(AActions[i - 1], AActions[i]); //AActions[i] := AActions[i - 1];
+
+  CopyActionContent(ANewAction, AActions[AIndexToInsertAt]);
+end;
+
+
+procedure MoveActionInArr(var AActions: TClkActionsRecArr; ASrcIndex, ADestIndex: Integer);
+var
+  Ph: TClkActionRec;
+begin
+  if ASrcIndex = ADestIndex then
+    Exit;
+
+  if (ASrcIndex < 0) or (ASrcIndex > Length(AActions) - 1) then
+    raise Exception.Create('Attempting to move an action from an out of bounds index.');
+
+  if (ADestIndex < 0) or (ADestIndex > Length(AActions)) then
+    raise Exception.Create('Attempting to move an action to an out of bounds index.');
+
+  CopyActionContent(AActions[ASrcIndex], Ph);
+  RemoveActionFromArr(AActions, ASrcIndex);
+  InsertActionIntoArr(AActions, ADestIndex, Ph);
 end;
 
 end.

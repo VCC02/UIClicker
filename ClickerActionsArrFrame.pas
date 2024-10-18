@@ -2921,14 +2921,17 @@ function TfrClickerActionsArr.PlayActionByNode(Node: PVirtualNode): Boolean;
 var
   ActionIndex: Integer;
   InitialLen: Integer;
-  DeletingActionName: string;
+  ActionName: string;
   DeletingActionIndex: Integer;  //used only when executing EditTemplate, which deletes actions
   DeletingSelfAction: Boolean;
+  MovingActionSrcIndex, MovingActionDestIndex: Integer;    //used only when executing EditTemplate, which moves actions
 begin
   Result := True;
 
   ActionIndex := Node^.Index;
   DeletingActionIndex := -1;
+  MovingActionSrcIndex := -1;
+  MovingActionDestIndex := -1;
 
   FClkActions[ActionIndex].ActionStatus := asInProgress;
   SetActionVarValue('$ExitCode$', '');
@@ -2941,13 +2944,25 @@ begin
     if EvaluateActionCondition(ActionIndex) then
     begin
       if FClkActions[ActionIndex].ActionOptions.Action = acEditTemplate then
-        if FClkActions[ActionIndex].EditTemplateOptions.Operation = etoDeleteAction then
-          if FClkActions[ActionIndex].EditTemplateOptions.WhichTemplate = etwtSelf then
-          begin
-            DeletingActionName := FClkActions[ActionIndex].EditTemplateOptions.EditedActionName;
-            DeletingActionIndex := GetActionIndexByName(FClkActions, DeletingActionName);
-          end;
+        if FClkActions[ActionIndex].EditTemplateOptions.WhichTemplate = etwtSelf then
+        begin
+          case FClkActions[ActionIndex].EditTemplateOptions.Operation of
+            etoDeleteAction:
+            begin
+              ActionName := FClkActions[ActionIndex].EditTemplateOptions.EditedActionName;
+              DeletingActionIndex := GetActionIndexByName(FClkActions, ActionName);
+            end;
 
+            etoMoveAction:
+            begin
+              MovingActionSrcIndex := GetActionIndexByName(FClkActions, FClkActions[ActionIndex].EditTemplateOptions.EditedActionName);
+              MovingActionDestIndex := GetActionIndexByName(FClkActions, FClkActions[ActionIndex].EditTemplateOptions.NewActionName);
+            end;
+
+            else
+              ;
+          end; //case
+        end;
       if not FExecutesRemotely then
         Result := ExecuteActionAtIndex(ActionIndex)
       else
@@ -2980,6 +2995,15 @@ begin
     if InitialLen - Length(FClkActions) = 1 then  //deleted one action
       if (DeletingActionIndex > -1) and (DeletingActionIndex < ActionIndex) then
         Dec(ActionIndex);
+
+    if (MovingActionSrcIndex > -1) and (MovingActionDestIndex > -1) then //Moving an action
+    begin
+      if ActionIndex = MovingActionSrcIndex then
+        ActionIndex := MovingActionDestIndex
+      else
+        if ActionIndex = MovingActionDestIndex then
+          ActionIndex := MovingActionSrcIndex;
+    end;
 
     if (ActionIndex > -1) and (ActionIndex < Length(FClkActions)) and (not ((DeletingActionIndex > -1) and DeletingSelfAction)) then
     begin
@@ -3014,6 +3038,9 @@ begin
 
       if Node <> nil then
         vstActions.RepaintNode(Node);    //Node is no longer valid if the action is delted
+
+      if (MovingActionSrcIndex > -1) and (MovingActionDestIndex > -1) then //Moving an action
+        vstActions.Repaint;
     end;
   end;
 end;
@@ -5259,16 +5286,8 @@ end;
 
 
 procedure TfrClickerActionsArr.InsertAction(AIndexToInsertAt: Integer; var ANewAction: TClkActionRec);
-var
-  i, n: Integer;
 begin
-  n := Length(FClkActions);
-  SetLength(FClkActions, n + 1);
-
-  for i := n downto AIndexToInsertAt + 1 do
-    CopyActionContent(FClkActions[i - 1], FClkActions[i]); //FClkActions[i] := FClkActions[i - 1];
-
-  CopyActionContent(ANewAction, FClkActions[AIndexToInsertAt]);
+  InsertActionIntoArr(FClkActions, AIndexToInsertAt, ANewAction);
   vstActions.RootNodeCount := Length(FClkActions);
 end;
 

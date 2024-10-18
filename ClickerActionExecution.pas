@@ -4057,7 +4057,7 @@ begin
           Exit;
         end;
 
-        //DoOnMoveAction
+        MoveActionInArr(ClkActions, Idx, DestIdx);
 
         Result := True;
       end;
