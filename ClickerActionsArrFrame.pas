@@ -445,7 +445,7 @@ type
     procedure HandleOnSaveStringListToFile(AStringList: TStringList; const AFileName: string);
     function HandleOnExecuteActionByContent(var AAllActions: TClkActionsRecArr; AActionIndex: Integer): Boolean;
     procedure HandleOnLoadTemplateToActions(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; out ANotes, AIconPath: string; AWaitForFileAvailability: Boolean = False);
-    procedure HandleOnSaveCompleteTemplateToFile(Fnm: string; var AActions: TClkActionsRecArr;  AWhichTemplate: TEditTemplateWhichTemplate; ANotes, AIconPath: string);
+    procedure HandleOnSaveCompleteTemplateToFile(Fnm: string; var AActions: TClkActionsRecArr;  AWhichTemplate: TEditTemplateWhichTemplate; ANotes, AIconPath: string; AUpdateUI: Boolean);
 
     procedure HandleOnBackupVars(AAllVars: TStringList);
     procedure HandleOnGetListOfAvailableSetVarActions(AListOfSetVarActions: TStringList);
@@ -1766,7 +1766,7 @@ begin
 end;
 
 
-procedure TfrClickerActionsArr.HandleOnSaveCompleteTemplateToFile(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; ANotes, AIconPath: string);
+procedure TfrClickerActionsArr.HandleOnSaveCompleteTemplateToFile(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; ANotes, AIconPath: string; AUpdateUI: Boolean);
 var
   TempStringList: TStringList;   //much faster than T(Mem)IniFile
   MemStream: TMemoryStream;
@@ -1785,8 +1785,9 @@ begin
       CopyActionContent(AActions[i], FClkActions[i]);
 
     try
-      if LenModified then
+      if LenModified or AUpdateUI then
       begin
+        UpdateNodesCheckStateFromActions; //required for EnableAction and DisableAction operations only
         vstActions.Repaint;
         SetPropertiesFromPlugins;
       end;
@@ -1794,7 +1795,7 @@ begin
       on E: Exception do
         AddToLog('Ex on updating self actions from EditTmplate: ' + E.Message);
     end;
-  end
+  end  //Self
   else
   begin
     TempStringList := TStringList.Create;
@@ -3037,7 +3038,7 @@ begin
         Node := GetNodeByIndex(ActionIndex);
 
       if Node <> nil then
-        vstActions.RepaintNode(Node);    //Node is no longer valid if the action is delted
+        vstActions.RepaintNode(Node);    //Node is no longer valid if the action is deleted
 
       if (MovingActionSrcIndex > -1) and (MovingActionDestIndex > -1) then //Moving an action
         vstActions.Repaint;

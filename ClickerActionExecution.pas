@@ -55,7 +55,7 @@ type
   TOnResolveTemplatePath = function(APath: string; ACustomSelfTemplateDir: string = ''; ACustomAppDir: string = ''): string of object;
   TOnExecuteActionByContent = function(var AAllActions: TClkActionsRecArr; AActionIndex: Integer): Boolean of object;
   TOnLoadTemplateToActions = procedure(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; out ANotes, AIconPath: string; AWaitForFileAvailability: Boolean = False) of object;
-  TOnSaveCompleteTemplateToFile = procedure(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; ANotes, AIconPath: string) of object;
+  TOnSaveCompleteTemplateToFile = procedure(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; ANotes, AIconPath: string; AUpdateUI: Boolean) of object;
 
   TActionExecution = class
   private
@@ -168,7 +168,7 @@ type
     procedure DoOnSaveTemplateToFile(AStringList: TStringList; const AFileName: string);
     function DoOnExecuteActionByContent(var AAllActions: TClkActionsRecArr; AActionIndex: Integer): Boolean;
     procedure DoOnLoadTemplateToActions(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; out ANotes, AIconPath: string; AWaitForFileAvailability: Boolean = False);
-    procedure DoOnSaveCompleteTemplateToFile(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; ANotes, AIconPath: string);
+    procedure DoOnSaveCompleteTemplateToFile(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; ANotes, AIconPath: string; AUpdateUI: Boolean);
 
     function HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     function HandleOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
@@ -928,12 +928,12 @@ begin
 end;
 
 
-procedure TActionExecution.DoOnSaveCompleteTemplateToFile(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; ANotes, AIconPath: string);
+procedure TActionExecution.DoOnSaveCompleteTemplateToFile(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; ANotes, AIconPath: string; AUpdateUI: Boolean);
 begin
   if not Assigned(FOnSaveCompleteTemplateToFile) then
     raise Exception.Create('OnSaveCompleteTemplateToFile is not assigned.')
   else
-    FOnSaveCompleteTemplateToFile(Fnm, AActions, AWhichTemplate, ANotes, AIconPath);
+    FOnSaveCompleteTemplateToFile(Fnm, AActions, AWhichTemplate, ANotes, AIconPath, AUpdateUI);
 end;
 
 
@@ -3998,9 +3998,12 @@ var
   Notes, IconPath: string;
   i, Idx, DestIdx: Integer;
   LocalListOfPropertyNames, LocalListOfPropertyValues: TStringList;
+  ShouldUpdateUI: Boolean;
 begin
   Result := False;
+  ShouldUpdateUI := False;
   SetActionVarValue('$ExecAction_Err$', '');
+
   try
     DoOnLoadTemplateToActions(AEditTemplateOptions.TemplateFileName, ClkActions, AEditTemplateOptions.WhichTemplate, Notes, IconPath, True);
     AddToLog('EditAction: loaded template "' + AEditTemplateOptions.TemplateFileName + '".  Operation: ' + CEditTemplateOperationStr[AEditTemplateOptions.Operation]);
@@ -4035,12 +4038,14 @@ begin
         SetLength(ClkActions, Length(ClkActions) + 1);
         Idx := Length(ClkActions) - 1;
         UpdateActionByEditTemplate(AEditTemplateOptions, @ClkActions[Idx]);
+        ShouldUpdateUI := True;
         Result := True;
       end;
 
       etoUpdateAction:
       begin
         UpdateActionByEditTemplate(AEditTemplateOptions, @ClkActions[Idx]);
+        ShouldUpdateUI := True;
         Result := True;
       end;
 
@@ -4059,12 +4064,14 @@ begin
 
         MoveActionInArr(ClkActions, Idx, DestIdx);
 
+        ShouldUpdateUI := True;
         Result := True;
       end;
 
       etoDeleteAction:
       begin
         RemoveActionFromArr(ClkActions, Idx);
+        ShouldUpdateUI := True;
         Result := True;
       end;
 
@@ -4073,6 +4080,7 @@ begin
         SetLength(ClkActions, Length(ClkActions) + 1);
         CopyActionContent(ClkActions[Idx], ClkActions[Length(ClkActions) - 1]);  //for duplicating right after the existing action, there should be a another move operation
         ClkActions[Length(ClkActions) - 1].ActionOptions.ActionName := AEditTemplateOptions.NewActionName;
+        ShouldUpdateUI := True;
         Result := True;
       end;
 
@@ -4087,18 +4095,21 @@ begin
         end;
 
         ClkActions[Idx].ActionOptions.ActionName := AEditTemplateOptions.NewActionName;
+        ShouldUpdateUI := True;
         Result := True;
       end;
 
       etoEnableAction:
       begin
         ClkActions[Idx].ActionOptions.ActionEnabled := True;
+        ShouldUpdateUI := True;
         Result := True;
       end;
 
       etoDisableAction:
       begin
         ClkActions[Idx].ActionOptions.ActionEnabled := False;
+        ShouldUpdateUI := True;
         Result := True;
       end;
 
@@ -4135,6 +4146,7 @@ begin
       etoSetTimeout:
       begin
         ClkActions[Idx].ActionOptions.ActionTimeout := AEditTemplateOptions.EditedActionTimeout;
+        ShouldUpdateUI := True;
         Result := True;
       end;
 
@@ -4150,7 +4162,7 @@ begin
 
     if Result and (not (AEditTemplateOptions.Operation in [etoExecuteAction, etoGetProperty])) then   //etoExecuteAction is not an editing operation
     begin  //The file is saved almost every time for the etwtOther option (successful editing operations only).
-      DoOnSaveCompleteTemplateToFile(AEditTemplateOptions.TemplateFileName, ClkActions, AEditTemplateOptions.WhichTemplate, Notes, IconPath);
+      DoOnSaveCompleteTemplateToFile(AEditTemplateOptions.TemplateFileName, ClkActions, AEditTemplateOptions.WhichTemplate, Notes, IconPath, ShouldUpdateUI);
     end;
   except
     on E: Exception do
