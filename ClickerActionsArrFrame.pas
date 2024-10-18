@@ -445,7 +445,7 @@ type
     procedure HandleOnSaveStringListToFile(AStringList: TStringList; const AFileName: string);
     function HandleOnExecuteActionByContent(var AAllActions: TClkActionsRecArr; AActionIndex: Integer): Boolean;
     procedure HandleOnLoadTemplateToActions(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; out ANotes, AIconPath: string; AWaitForFileAvailability: Boolean = False);
-    procedure HandleOnSaveCompleteTemplateToFile(Fnm: string; var AActions: TClkActionsRecArr;  AWhichTemplate: TEditTemplateWhichTemplate; ANotes, AIconPath: string; AUpdateUI: Boolean);
+    function HandleOnSaveCompleteTemplateToFile(Fnm: string; var AActions: TClkActionsRecArr;  AWhichTemplate: TEditTemplateWhichTemplate; ANotes, AIconPath: string; AUpdateUI, AShouldSaveSelfTemplate: Boolean): string;
 
     procedure HandleOnBackupVars(AAllVars: TStringList);
     procedure HandleOnGetListOfAvailableSetVarActions(AListOfSetVarActions: TStringList);
@@ -1766,13 +1766,15 @@ begin
 end;
 
 
-procedure TfrClickerActionsArr.HandleOnSaveCompleteTemplateToFile(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; ANotes, AIconPath: string; AUpdateUI: Boolean);
+function TfrClickerActionsArr.HandleOnSaveCompleteTemplateToFile(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; ANotes, AIconPath: string; AUpdateUI, AShouldSaveSelfTemplate: Boolean): string;
 var
   TempStringList: TStringList;   //much faster than T(Mem)IniFile
   MemStream: TMemoryStream;
   i: Integer;
   LenModified: Boolean;
 begin
+  Result := '';
+
   if AWhichTemplate = etwtSelf then
   begin
     LenModified := Length(AActions) <> Length(FClkActions);
@@ -1793,7 +1795,19 @@ begin
       end;
     except
       on E: Exception do
-        AddToLog('Ex on updating self actions from EditTmplate: ' + E.Message);
+      begin
+        AddToLog('Ex on updating self actions from EditTemplate: ' + E.Message);
+        Result := E.Message;
+      end;
+    end;
+
+    Modified := True; //This flag should be set anyway
+    if AShouldSaveSelfTemplate then
+    begin
+      if FFileName <> '' then
+        SaveTemplate(FFileName)  //this call resets the Modified flag
+      else
+        Result := CREResp_TemplateFileNameNotSet;
     end;
   end  //Self
   else

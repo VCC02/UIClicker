@@ -238,6 +238,7 @@ type
     EditedActionCondition: PWideChar;
     EditedActionTimeout: LongInt;
     NewActionName: PWideChar;
+    ShouldSaveTemplate: Boolean;
   end;
 
   PClkEditTemplateOptionsAPI = ^TClkEditTemplateOptionsAPI;
@@ -1133,6 +1134,7 @@ begin
   SetPointedContentToString(@string(PWideChar(AEditTemplateOptions^.EditedActionCondition))[1], TempAction.EditTemplateOptions.EditedActionCondition);
   TempAction.EditTemplateOptions.EditedActionTimeout := AEditTemplateOptions^.EditedActionTimeout;
   SetPointedContentToString(@string(PWideChar(AEditTemplateOptions^.NewActionName))[1], TempAction.EditTemplateOptions.NewActionName);
+  TempAction.EditTemplateOptions.ShouldSaveTemplate := AEditTemplateOptions^.ShouldSaveTemplate;
 
   AddActionToTemplate(TemplateFileName, TempAction);
   Result := 0;

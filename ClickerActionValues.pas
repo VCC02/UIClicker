@@ -71,7 +71,7 @@ const
   CPropCount_LoadSetVarFromFile = 2;
   CPropCount_SaveSetVarToFile = 2;
   CPropCount_Plugin = 1;  //Static properties, defined here. A plugin can report additional properties, which are not counted by this constant.
-  CPropCount_EditTemplate = 10;
+  CPropCount_EditTemplate = 11;
 
   CMainPropCounts: array[0..Ord(High(TClkAction))] of Integer = (
     CPropCount_Click,
@@ -226,6 +226,7 @@ const
   CEditTemplate_NewActionName_PropIndex = 7;
   CEditTemplate_ListOfEditedProperties_PropIndex = 8;
   CEditTemplate_ListOfEnabledProperties_PropIndex = 9;
+  CEditTemplate_ShouldSaveTemplate_PropIndex = 10;
 
   //Moved to ClickerUtils
   //CDTString = 'String';
@@ -444,7 +445,8 @@ const
     (Name: 'EditedActionTimeout'; EditorType: etTextWithArrow; DataType: CDTInteger),
     (Name: 'NewActionName'; EditorType: etTextWithArrow; DataType: CDTString),
     (Name: 'ListOfEditedProperties'; EditorType: etNone; DataType: CDTString),
-    (Name: 'ListOfEnabledProperties'; EditorType: etNone; DataType: CDTString)
+    (Name: 'ListOfEnabledProperties'; EditorType: etNone; DataType: CDTString),
+    (Name: 'ShouldSaveTemplate'; EditorType: etBooleanCombo; DataType: CDTBool)
   );
 
 type
@@ -762,6 +764,7 @@ const
     0,
     0,
     0,
+    0,
     0
   );
 
@@ -961,6 +964,7 @@ const
     nil,  //EditedActionName
     @CClkActionStr,
     nil,  //NewActionName
+    nil,
     nil,
     nil,
     nil,
@@ -1171,7 +1175,8 @@ const
     0,  //EditedActionCondition
     0,  //EditedActionTimeout
     0,  //ListOfEditedProperties
-    0   //ListOfEnabledProperties
+    0,  //ListOfEnabledProperties
+    0   //ShouldSaveTemplate
   );
 
 
@@ -1307,6 +1312,7 @@ function GetPropertyHint_EditTemplate_EditedActionTimeout: string;
 function GetPropertyHint_EditTemplate_NewActionName: string;
 function GetPropertyHint_EditTemplate_ListOfEditedProperties: string;
 function GetPropertyHint_EditTemplate_ListOfEnabledProperties: string;
+function GetPropertyHint_EditTemplate_ShouldSaveTemplate: string;
 
 const
   CGetPropertyHint_Click: array[0..CPropCount_Click - 1] of TPropHintFunc = (
@@ -1449,7 +1455,8 @@ const
     @GetPropertyHint_EditTemplate_EditedActionTimeout,
     @GetPropertyHint_EditTemplate_NewActionName,
     @GetPropertyHint_EditTemplate_ListOfEditedProperties,
-    @GetPropertyHint_EditTemplate_ListOfEnabledProperties
+    @GetPropertyHint_EditTemplate_ListOfEnabledProperties,
+    @GetPropertyHint_EditTemplate_ShouldSaveTemplate
   );
 
 
@@ -1883,6 +1890,7 @@ begin
     7: Result := AAction^.EditTemplateOptions.NewActionName;
     8: Result := AAction^.EditTemplateOptions.ListOfEditedProperties;
     9: Result := AAction^.EditTemplateOptions.ListOfEnabledProperties;
+    10: Result := BoolToStr(AAction^.EditTemplateOptions.ShouldSaveTemplate, True);
     else
       Result := 'unknown';
   end;
@@ -2492,6 +2500,7 @@ begin
     7: AAction^.EditTemplateOptions.NewActionName := NewValue;
     8: AAction^.EditTemplateOptions.ListOfEditedProperties := NewValue;
     9: AAction^.EditTemplateOptions.ListOfEnabledProperties := NewValue;
+    10: AAction^.EditTemplateOptions.ShouldSaveTemplate := StrToBool(NewValue);
     else
       ;
   end;
@@ -3204,6 +3213,14 @@ end;
 function GetPropertyHint_EditTemplate_ListOfEnabledProperties: string;
 begin
   Result := 'CRLF separated list of values.'
+end;
+
+
+function GetPropertyHint_EditTemplate_ShouldSaveTemplate: string;
+begin
+  Result := 'When Operation is set to etoSaveTemplate and WhichTemplate is set to etwtSelf, this property control weather to save the template or not.' + #13#10 +
+            'If ShouldSaveTemplate is True and the template does not have a name, i.e. has never been saved, the action fails, because it won''t prompt the user for a filename.' + #13#10 +
+            'This property does not affect the saving of a template which is already on disk (i.e. used when WhichTemplate is set to etwtOther). That template is attempted to be saved anyway.';
 end;
 
 end.

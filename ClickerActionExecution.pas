@@ -55,7 +55,7 @@ type
   TOnResolveTemplatePath = function(APath: string; ACustomSelfTemplateDir: string = ''; ACustomAppDir: string = ''): string of object;
   TOnExecuteActionByContent = function(var AAllActions: TClkActionsRecArr; AActionIndex: Integer): Boolean of object;
   TOnLoadTemplateToActions = procedure(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; out ANotes, AIconPath: string; AWaitForFileAvailability: Boolean = False) of object;
-  TOnSaveCompleteTemplateToFile = procedure(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; ANotes, AIconPath: string; AUpdateUI: Boolean) of object;
+  TOnSaveCompleteTemplateToFile = function(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; ANotes, AIconPath: string; AUpdateUI, AShouldSaveSelfTemplate: Boolean): string of object;
 
   TActionExecution = class
   private
@@ -168,7 +168,7 @@ type
     procedure DoOnSaveTemplateToFile(AStringList: TStringList; const AFileName: string);
     function DoOnExecuteActionByContent(var AAllActions: TClkActionsRecArr; AActionIndex: Integer): Boolean;
     procedure DoOnLoadTemplateToActions(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; out ANotes, AIconPath: string; AWaitForFileAvailability: Boolean = False);
-    procedure DoOnSaveCompleteTemplateToFile(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; ANotes, AIconPath: string; AUpdateUI: Boolean);
+    function DoOnSaveCompleteTemplateToFile(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; ANotes, AIconPath: string; AUpdateUI, AShouldSaveSelfTemplate: Boolean): string;
 
     function HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     function HandleOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
@@ -928,12 +928,12 @@ begin
 end;
 
 
-procedure TActionExecution.DoOnSaveCompleteTemplateToFile(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; ANotes, AIconPath: string; AUpdateUI: Boolean);
+function TActionExecution.DoOnSaveCompleteTemplateToFile(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; ANotes, AIconPath: string; AUpdateUI, AShouldSaveSelfTemplate: Boolean): string;
 begin
   if not Assigned(FOnSaveCompleteTemplateToFile) then
     raise Exception.Create('OnSaveCompleteTemplateToFile is not assigned.')
   else
-    FOnSaveCompleteTemplateToFile(Fnm, AActions, AWhichTemplate, ANotes, AIconPath, AUpdateUI);
+    Result := FOnSaveCompleteTemplateToFile(Fnm, AActions, AWhichTemplate, ANotes, AIconPath, AUpdateUI, AShouldSaveSelfTemplate);
 end;
 
 
@@ -3998,10 +3998,12 @@ var
   Notes, IconPath: string;
   i, Idx, DestIdx: Integer;
   LocalListOfPropertyNames, LocalListOfPropertyValues: TStringList;
-  ShouldUpdateUI: Boolean;
+  ShouldUpdateUI, ShouldSaveSelfTemplate: Boolean;
+  SaveTemplateResult: string;
 begin
   Result := False;
   ShouldUpdateUI := False;
+  ShouldSaveSelfTemplate := False;
   SetActionVarValue('$ExecAction_Err$', '');
 
   try
@@ -4018,7 +4020,7 @@ begin
     Idx := GetActionIndexByName(ClkActions, AEditTemplateOptions.EditedActionName);
     if Idx = -1 then
     begin
-      if AEditTemplateOptions.Operation <> etoNewAction then   //etoNewAction is the only operation which allows Idx to be -1.
+      if not (AEditTemplateOptions.Operation in [etoNewAction, etoSaveTemplate]) then   //etoNewAction and etoSaveTemplate are the only operation which allow Idx to be -1.
       begin //the action should already exist
         SetActionVarValue('$ExecAction_Err$', CREResp_ActionNotFound);
         Exit;
@@ -4155,14 +4157,25 @@ begin
 
       etoSaveTemplate: //The advantage of having a Save command is that a template can be edited in memory, partially executed then saved (or not).
       begin            //This command makes sense for the currently loaded file (the etwtSelf option).
-        AddToLog('Nothing to save.');
+        if AEditTemplateOptions.ShouldSaveTemplate then
+          ShouldSaveSelfTemplate := True;
+
+        if AEditTemplateOptions.WhichTemplate = etwtOther then
+          AddToLog('Saving anyway...');
+
         Result := True;
       end;
     end;  //case
 
     if Result and (not (AEditTemplateOptions.Operation in [etoExecuteAction, etoGetProperty])) then   //etoExecuteAction is not an editing operation
     begin  //The file is saved almost every time for the etwtOther option (successful editing operations only).
-      DoOnSaveCompleteTemplateToFile(AEditTemplateOptions.TemplateFileName, ClkActions, AEditTemplateOptions.WhichTemplate, Notes, IconPath, ShouldUpdateUI);
+      SaveTemplateResult := DoOnSaveCompleteTemplateToFile(AEditTemplateOptions.TemplateFileName, ClkActions, AEditTemplateOptions.WhichTemplate, Notes, IconPath, ShouldUpdateUI, ShouldSaveSelfTemplate);
+
+      if SaveTemplateResult <> '' then
+      begin
+        Result := False;
+        SetActionVarValue('$ExecAction_Err$', SaveTemplateResult);
+      end;
     end;
   except
     on E: Exception do

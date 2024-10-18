@@ -375,6 +375,7 @@ type
     EditedActionCondition: string;        //Used when setting action condition
     EditedActionTimeout: Integer;         //Used when setting action timeout
     NewActionName: string;                //Used when renaming and duplicating the action
+    ShouldSaveTemplate: Boolean;          //Used when saving the self template
   end;
 
   TActionBreakPoint = record

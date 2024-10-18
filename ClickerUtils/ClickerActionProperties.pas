@@ -329,7 +329,8 @@ begin
             'EditedActionType' + '=' + IntToStr(Ord(AEditTemplateOptions.EditedActionType)) + '&' +
             'EditedActionCondition' + '=' + AEditTemplateOptions.EditedActionCondition + '&' +
             'EditedActionTimeout' + '=' + IntToStr(AEditTemplateOptions.EditedActionTimeout) + '&' +
-            'NewActionName' + '=' + AEditTemplateOptions.NewActionName + '&';
+            'NewActionName' + '=' + AEditTemplateOptions.NewActionName + '&' +
+            'ShouldSaveTemplate' + '=' + IntToStr(Ord(AEditTemplateOptions.ShouldSaveTemplate));
 end;
 
 
@@ -862,6 +863,7 @@ begin
   AEditTemplateOptions.EditedActionCondition := AListOfEditTemplateOptionsParams.Values['EditedActionCondition'];
   AEditTemplateOptions.EditedActionTimeout := StrToIntDef(AListOfEditTemplateOptionsParams.Values['EditedActionTimeout'], 1000);
   AEditTemplateOptions.NewActionName := AListOfEditTemplateOptionsParams.Values['NewActionName'];
+  AEditTemplateOptions.ShouldSaveTemplate := AListOfEditTemplateOptionsParams.Values['ShouldSaveTemplate'] = '1';
 end;
 
 
@@ -1118,6 +1120,7 @@ begin
   AEditTemplateOptions.EditedActionCondition := '';
   AEditTemplateOptions.EditedActionTimeout := 1000;
   AEditTemplateOptions.NewActionName := '';
+  AEditTemplateOptions.ShouldSaveTemplate := True;
 
   GetDefaultPropertyValues_Click(ClickOptions);
   AEditTemplateOptions.ListOfEditedProperties := GetClickActionProperties(ClickOptions);

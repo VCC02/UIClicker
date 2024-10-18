@@ -146,6 +146,7 @@ const
 
   CREResp_ActionNotFound = 'ActionNotFound';
   CREResp_ActionAlreadyExists = 'ActionAlreadyExists';
+  CREResp_TemplateFileNameNotSet = 'TemplateFileNameNotSet';
 
   CREResp_ErrParam = 'Err';
   CREResp_ErrResponseOK = 'OK';

@@ -542,7 +542,8 @@ class TEditTemplateOptions(Structure):
                ("EditedActionType", LONG),  #TClkAction
                ("EditedActionCondition", LPCWSTR),
                ("EditedActionTimeout", LONG),
-               ("NewActionName", LPCWSTR)]
+               ("NewActionName", LPCWSTR),
+               ("ShouldSaveTemplate", BOOLEAN)]
 
 PEditTemplateOptions = ctypes.POINTER(TEditTemplateOptions)
 
@@ -558,6 +559,7 @@ def GetDefaultEditTemplateOptions():
     EditTemplateOptions.EditedActionCondition = ''
     EditTemplateOptions.EditedActionTimeout = 1000
     EditTemplateOptions.NewActionName = ''
+    EditTemplateOptions.ShouldSaveTemplate = False
     return EditTemplateOptions
 
 

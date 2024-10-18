@@ -6681,6 +6681,13 @@ begin
           Exit;
         end;
 
+      CEditTemplate_ShouldSaveTemplate_PropIndex:
+        if not ((AEditingAction^.EditTemplateOptions.Operation in [etoSaveTemplate]) and (AEditingAction^.EditTemplateOptions.WhichTemplate = etwtSelf)) then
+        begin
+          TargetCanvas.Font.Color := clGray;
+          Exit;
+        end;
+
       else
         ;
     end;  //case APropertyIndex
