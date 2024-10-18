@@ -2167,16 +2167,32 @@ var
   ActionType: TClkAction;
   //OldType: TClkAction;
   ActionTypeInt: Integer;
+  PropertyIndex: Integer;
 begin
   ActionName := StringReplace((Sender as TMenuItem).Caption, '&', '', [rfReplaceAll]);
   ActionTypeInt := Max(Min((Sender as TMenuItem).Tag shr 16, Ord(High(TClkAction))), Ord(Low(TClkAction)));
   ActionType := TClkAction(ActionTypeInt);
+  PropertyIndex := (Sender as TMenuItem).Tag and $FFFF;
 
-  //GetEditingActionObjectByActionType^.EditTemplateOptions.EditedActionName := ActionName; //editing action
-  FEditingAction^.EditTemplateOptions.EditedActionName := ActionName;                       //action specific
+  case PropertyIndex of
+    CEditTemplate_EditedActionName_PropIndex:
+    begin
+      //GetEditingActionObjectByActionType^.EditTemplateOptions.EditedActionName := ActionName; //editing action
+      FEditingAction^.EditTemplateOptions.EditedActionName := ActionName;                       //action specific
 
-  //OldType := FEditingAction^.EditTemplateOptions.EditedActionType;
-  FEditingAction^.EditTemplateOptions.EditedActionType := ActionType;                       //type
+      //OldType := FEditingAction^.EditTemplateOptions.EditedActionType;
+      FEditingAction^.EditTemplateOptions.EditedActionType := ActionType;                       //type
+    end;
+
+    CEditTemplate_NewActionName_PropIndex:
+    begin
+      //GetEditingActionObjectByActionType^.EditTemplateOptions.NewActionName := ActionName; //editing action
+      FEditingAction^.EditTemplateOptions.NewActionName := ActionName;                       //action specific
+    end;
+
+    else
+      ;
+  end;
 
   FOIFrame.CancelCurrentEditing;
 
@@ -2197,16 +2213,32 @@ var
   ActionType: TClkAction;
   //OldType: TClkAction;
   ActionTypeInt: Integer;
+  PropertyIndex: Integer;
 begin
   ActionName := StringReplace((Sender as TMenuItem).Caption, '&', '', [rfReplaceAll]);
   ActionTypeInt := Max(Min((Sender as TMenuItem).Tag shr 16, Ord(High(TClkAction))), Ord(Low(TClkAction)));
   ActionType := TClkAction(ActionTypeInt);
+  PropertyIndex := (Sender as TMenuItem).Tag and $FFFF;
 
-  GetEditingActionObjectByActionType^.EditTemplateOptions.EditedActionName := ActionName;  //editing action
-  //FEditingAction^.EditTemplateOptions.EditedActionName := ActionName;                    //action specific
+  case PropertyIndex of
+    CEditTemplate_EditedActionName_PropIndex:
+    begin
+      GetEditingActionObjectByActionType^.EditTemplateOptions.EditedActionName := ActionName;  //editing action
+      //FEditingAction^.EditTemplateOptions.EditedActionName := ActionName;                    //action specific
 
-  //OldType := GetEditingActionObjectByActionType^.EditTemplateOptions.EditedActionType;
-  GetEditingActionObjectByActionType^.EditTemplateOptions.EditedActionType := ActionType;  //type
+      //OldType := GetEditingActionObjectByActionType^.EditTemplateOptions.EditedActionType;
+      GetEditingActionObjectByActionType^.EditTemplateOptions.EditedActionType := ActionType;  //type
+    end;
+
+    CEditTemplate_NewActionName_PropIndex:
+    begin
+      GetEditingActionObjectByActionType^.EditTemplateOptions.NewActionName := ActionName;  //editing action
+      //FEditingAction^.EditTemplateOptions.NewActionName := ActionName;                    //action specific
+    end;
+
+    else
+      ;
+  end;
 
   FOIFrame.CancelCurrentEditing;
 
@@ -7727,7 +7759,7 @@ begin
           FOIEditorMenu.PopUp;
         end;
 
-        CEditTemplate_EditedActionName_PropIndex:
+        CEditTemplate_EditedActionName_PropIndex, CEditTemplate_NewActionName_PropIndex:
         begin
           LoadListOfAvailableActionsForEditTemplate(APropertyIndex, AEditingAction);
           FPmLocalTemplates.PopUp;
@@ -7745,10 +7777,10 @@ begin
           FOIEditorMenu.PopUp;
         end;
 
-        CEditTemplate_NewActionName_PropIndex:
-        begin
-
-        end;
+        //CEditTemplate_NewActionName_PropIndex:
+        //begin
+        //
+        //end;
 
         else
           ;
