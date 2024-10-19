@@ -444,7 +444,7 @@ type
     function HandleOnTClkIniFileCreate(AFileName: string): TClkIniFile;
     procedure HandleOnSaveStringListToFile(AStringList: TStringList; const AFileName: string);
     function HandleOnExecuteActionByContent(var AAllActions: TClkActionsRecArr; AActionIndex: Integer): Boolean;
-    procedure HandleOnLoadTemplateToActions(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; out ANotes, AIconPath: string; AWaitForFileAvailability: Boolean = False);
+    function HandleOnLoadTemplateToActions(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; out ANotes, AIconPath: string; AWaitForFileAvailability: Boolean = False): string;
     function HandleOnSaveCompleteTemplateToFile(Fnm: string; var AActions: TClkActionsRecArr;  AWhichTemplate: TEditTemplateWhichTemplate; ANotes, AIconPath: string; AUpdateUI, AShouldSaveSelfTemplate: Boolean): string;
 
     procedure HandleOnBackupVars(AAllVars: TStringList);
@@ -627,7 +627,7 @@ type
 
     function CreateIniReadonlyFileFromInMemFileSystem(AFnm: string; AInMemFileSystem: TInMemFileSystem): TClkIniReadonlyFile;
     procedure LoadTemplate(Fnm: string; AFileLocation: TFileLocation = flDisk; AInMemFileSystem: TInMemFileSystem = nil);
-    procedure LoadTemplateToActions(Fnm: string; var AActions: TClkActionsRecArr; out ANotes, AIconPath: string; AFileLocation: TFileLocation = flDisk; AInMemFileSystem: TInMemFileSystem = nil; AWaitForFileAvailability: Boolean = False);
+    function LoadTemplateToActions(Fnm: string; var AActions: TClkActionsRecArr; out ANotes, AIconPath: string; AFileLocation: TFileLocation = flDisk; AInMemFileSystem: TInMemFileSystem = nil; AWaitForFileAvailability: Boolean = False): string;
     procedure LoadTemplateWithUIUpdate(AFileName: string; AFileLocation: TFileLocation = flDisk; AInMemFileSystem: TInMemFileSystem = nil);
     procedure SaveTemplateWithDialog;
     procedure SetVariables(ListOfVariables: TStrings);
@@ -1748,7 +1748,7 @@ begin
 end;
 
 
-procedure TfrClickerActionsArr.HandleOnLoadTemplateToActions(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; out ANotes, AIconPath: string; AWaitForFileAvailability: Boolean = False);
+function TfrClickerActionsArr.HandleOnLoadTemplateToActions(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; out ANotes, AIconPath: string; AWaitForFileAvailability: Boolean = False): string;
 const
   CLoc: array[Boolean] of TFileLocation = (flDisk, flMem);
 var
@@ -1760,9 +1760,11 @@ begin
 
     for i := 0 to Length(FClkActions) - 1 do
       CopyActionContent(FClkActions[i], AActions[i]);
+
+    Result := '';
   end
   else
-    LoadTemplateToActions(Fnm, AActions, ANotes, AIconPath, CLoc[FExecutingActionFromRemote], InMemFS, AWaitForFileAvailability);
+    Result := LoadTemplateToActions(Fnm, AActions, ANotes, AIconPath, CLoc[FExecutingActionFromRemote], InMemFS, AWaitForFileAvailability);
 end;
 
 
@@ -1816,6 +1818,9 @@ begin
     try
       SaveTemplateWithCustomActionsToStringList_V2(TempStringList, AActions, ANotes, AIconPath);
 
+      Fnm := ResolveTemplatePath(Fnm);
+      Fnm := EvaluateReplacements(Fnm);
+
       if FExecutingActionFromRemote then //save to in-mem
       begin
         MemStream := TMemoryStream.Create;
@@ -1827,7 +1832,7 @@ begin
         end;
       end
       else //save to disk
-        DoOnSaveTemplateToFile(TempStringList, ResolveTemplatePath(Fnm));
+        DoOnSaveTemplateToFile(TempStringList, Fnm);
     finally
       TempStringList.Free;
     end;
@@ -3588,7 +3593,9 @@ var
 begin
   vstActions.Clear; //to reset the node checkboxes
 
-  Fnm := StringReplace(Fnm, '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
+  Fnm := ResolveTemplatePath(Fnm);
+  Fnm := EvaluateReplacements(Fnm);
+
   WaitingMsg := 'Waiting for file availability: ' + Fnm + '   Timeout: ' + IntToStr(CWaitForFileAvailabilityTimeout div 1000) + 's.';
   WaitingMsg := WaitingMsg + #13#10 + 'There is a "stop waiting" button, next to the "Stop action" button.';
 
@@ -3706,14 +3713,17 @@ begin
 end;
 
 
-procedure TfrClickerActionsArr.LoadTemplateToActions(Fnm: string; var AActions: TClkActionsRecArr; out ANotes, AIconPath: string; AFileLocation: TFileLocation = flDisk; AInMemFileSystem: TInMemFileSystem = nil; AWaitForFileAvailability: Boolean = False);
+function TfrClickerActionsArr.LoadTemplateToActions(Fnm: string; var AActions: TClkActionsRecArr; out ANotes, AIconPath: string; AFileLocation: TFileLocation = flDisk; AInMemFileSystem: TInMemFileSystem = nil; AWaitForFileAvailability: Boolean = False): string;
 var
   Ini: TClkIniReadonlyFile;
   FormatVersion: string;
   ActionCount: Integer;
   WaitingMsg: string;
 begin
-  Fnm := StringReplace(Fnm, '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
+  Result := '';  // '' means no error
+  Fnm := ResolveTemplatePath(Fnm);
+  Fnm := EvaluateReplacements(Fnm);
+
   ANotes := '';
   AIconPath := '';
 
@@ -3725,7 +3735,11 @@ begin
       flDisk:
       begin
         if not DoOnFileExists(Fnm) then
+        begin
+          Result := CREResp_FileNotFound;
+          AddToLog(Result + ' ' + Fnm);
           Exit;
+        end;
 
         Ini := DoOnTClkIniReadonlyFileCreate(Fnm);
       end;
@@ -3740,7 +3754,11 @@ begin
             DoWaitForFileAvailability(Fnm);
           end
           else
+          begin
+            Result := CREResp_FileNotFound;
+          AddToLog(Result + ' ' + Fnm);
             Exit;
+          end
         end;
 
         Ini := CreateIniReadonlyFileFromInMemFileSystem(Fnm, AInMemFileSystem);
@@ -3759,7 +3777,11 @@ begin
               DoWaitForFileAvailability(Fnm);
             end
             else
+            begin
+              Result := CREResp_FileNotFound;
+              AddToLog(Result + ' ' + Fnm);
               Exit;
+            end;
           end;
 
           Ini := CreateIniReadonlyFileFromInMemFileSystem(Fnm, AInMemFileSystem);
@@ -3779,7 +3801,11 @@ begin
         else
         begin
           if not DoOnFileExists(Fnm) then
+          begin
+            Result := CREResp_FileNotFound;
+            AddToLog(Result + ' ' + Fnm);
             Exit;
+          end;
 
           Ini := DoOnTClkIniReadonlyFileCreate(Fnm);
         end;
@@ -3804,6 +3830,10 @@ begin
     end;
   except
     on E: Exception do
+    begin
+      Result := 'Ex on loading template: ' + E.Message;
+      AddToLog(Result);
+    end;
   end;
 end;
 

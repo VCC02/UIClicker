@@ -54,7 +54,7 @@ type
 
   TOnResolveTemplatePath = function(APath: string; ACustomSelfTemplateDir: string = ''; ACustomAppDir: string = ''): string of object;
   TOnExecuteActionByContent = function(var AAllActions: TClkActionsRecArr; AActionIndex: Integer): Boolean of object;
-  TOnLoadTemplateToActions = procedure(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; out ANotes, AIconPath: string; AWaitForFileAvailability: Boolean = False) of object;
+  TOnLoadTemplateToActions = function(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; out ANotes, AIconPath: string; AWaitForFileAvailability: Boolean = False): string of object;
   TOnSaveCompleteTemplateToFile = function(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; ANotes, AIconPath: string; AUpdateUI, AShouldSaveSelfTemplate: Boolean): string of object;
 
   TActionExecution = class
@@ -167,7 +167,7 @@ type
     function DoOnFileExists(const FileName: string): Boolean;
     procedure DoOnSaveTemplateToFile(AStringList: TStringList; const AFileName: string);
     function DoOnExecuteActionByContent(var AAllActions: TClkActionsRecArr; AActionIndex: Integer): Boolean;
-    procedure DoOnLoadTemplateToActions(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; out ANotes, AIconPath: string; AWaitForFileAvailability: Boolean = False);
+    function DoOnLoadTemplateToActions(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; out ANotes, AIconPath: string; AWaitForFileAvailability: Boolean = False): string;
     function DoOnSaveCompleteTemplateToFile(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; ANotes, AIconPath: string; AUpdateUI, AShouldSaveSelfTemplate: Boolean): string;
 
     function HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
@@ -919,12 +919,12 @@ begin
 end;
 
 
-procedure TActionExecution.DoOnLoadTemplateToActions(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; out ANotes, AIconPath: string; AWaitForFileAvailability: Boolean = False);
+function TActionExecution.DoOnLoadTemplateToActions(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; out ANotes, AIconPath: string; AWaitForFileAvailability: Boolean = False): string;
 begin
   if not Assigned(FOnLoadTemplateToActions) then
     raise Exception.Create('OnLoadTemplateToActions is not assigned.')
   else
-    FOnLoadTemplateToActions(Fnm, AActions, AWhichTemplate, ANotes, AIconPath, AWaitForFileAvailability);
+    Result := FOnLoadTemplateToActions(Fnm, AActions, AWhichTemplate, ANotes, AIconPath, AWaitForFileAvailability);
 end;
 
 
@@ -4000,6 +4000,8 @@ var
   LocalListOfPropertyNames, LocalListOfPropertyValues: TStringList;
   ShouldUpdateUI, ShouldSaveSelfTemplate: Boolean;
   SaveTemplateResult: string;
+  EvaluatedEditedActionName, EvaluatedNewActionName: string;
+  LoadingTemplateErr: string;
 begin
   Result := False;
   ShouldUpdateUI := False;
@@ -4007,7 +4009,13 @@ begin
   SetActionVarValue('$ExecAction_Err$', '');
 
   try
-    DoOnLoadTemplateToActions(AEditTemplateOptions.TemplateFileName, ClkActions, AEditTemplateOptions.WhichTemplate, Notes, IconPath, True);
+    LoadingTemplateErr := DoOnLoadTemplateToActions(AEditTemplateOptions.TemplateFileName, ClkActions, AEditTemplateOptions.WhichTemplate, Notes, IconPath, True);
+    if LoadingTemplateErr <> '' then
+    begin
+      SetActionVarValue('$ExecAction_Err$', LoadingTemplateErr);
+      Exit;
+    end;
+
     AddToLog('EditAction: loaded template "' + AEditTemplateOptions.TemplateFileName + '".  Operation: ' + CEditTemplateOperationStr[AEditTemplateOptions.Operation]);
 
     if (Length(ClkActions) = 0) and (AEditTemplateOptions.Operation <> etoNewAction) then
@@ -4017,12 +4025,14 @@ begin
       Exit;
     end;
 
-    Idx := GetActionIndexByName(ClkActions, AEditTemplateOptions.EditedActionName);
+    EvaluatedEditedActionName := EvaluateReplacements(AEditTemplateOptions.EditedActionName);
+    Idx := GetActionIndexByName(ClkActions, EvaluatedEditedActionName);
     if Idx = -1 then
     begin
       if not (AEditTemplateOptions.Operation in [etoNewAction, etoSaveTemplate]) then   //etoNewAction and etoSaveTemplate are the only operation which allow Idx to be -1.
       begin //the action should already exist
         SetActionVarValue('$ExecAction_Err$', CREResp_ActionNotFound);
+        AddToLog('Action "' + EvaluatedEditedActionName + '" cannot be found.');
         Exit;
       end;
     end
@@ -4053,14 +4063,19 @@ begin
 
       etoMoveAction:
       begin
+        EvaluatedNewActionName := '';
         if AEditTemplateOptions.NewActionName = '' then  //this moves the action at the end of the list
           DestIdx := Length(ClkActions) - 1
         else
-          DestIdx := GetActionIndexByName(ClkActions, AEditTemplateOptions.NewActionName);
+        begin
+          EvaluatedNewActionName := EvaluateReplacements(AEditTemplateOptions.NewActionName);
+          DestIdx := GetActionIndexByName(ClkActions, EvaluatedNewActionName);
+        end;
 
         if DestIdx = -1 then
         begin
           SetActionVarValue('$ExecAction_Err$', CREResp_ActionNotFound);
+          AddToLog('Action "' + EvaluatedNewActionName + '" cannot be found.');
           Exit;
         end;
 
@@ -4081,14 +4096,15 @@ begin
       begin
         SetLength(ClkActions, Length(ClkActions) + 1);
         CopyActionContent(ClkActions[Idx], ClkActions[Length(ClkActions) - 1]);  //for duplicating right after the existing action, there should be a another move operation
-        ClkActions[Length(ClkActions) - 1].ActionOptions.ActionName := AEditTemplateOptions.NewActionName;
+        ClkActions[Length(ClkActions) - 1].ActionOptions.ActionName := EvaluateReplacements(AEditTemplateOptions.NewActionName);
         ShouldUpdateUI := True;
         Result := True;
       end;
 
       etoRenameAction:
       begin
-        DestIdx := GetActionIndexByName(ClkActions, AEditTemplateOptions.NewActionName);
+        EvaluatedNewActionName := EvaluateReplacements(AEditTemplateOptions.NewActionName);
+        DestIdx := GetActionIndexByName(ClkActions, EvaluatedNewActionName);
 
         if DestIdx > -1 then
         begin
@@ -4096,7 +4112,7 @@ begin
           Exit;
         end;
 
-        ClkActions[Idx].ActionOptions.ActionName := AEditTemplateOptions.NewActionName;
+        ClkActions[Idx].ActionOptions.ActionName := EvaluatedNewActionName;
         ShouldUpdateUI := True;
         Result := True;
       end;
