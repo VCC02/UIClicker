@@ -54,6 +54,8 @@ type
   TfrClickerActions = class(TFrame)
     chkDecodeVariables: TCheckBox;
     chkShowDebugGrid: TCheckBox;
+    imglstEditTemplateWhichTemplate: TImageList;
+    imglstEditTemplateOperation: TImageList;
     imglstMatchByHistogramSettings: TImageList;
     imglstEditTemplateProperties: TImageList;
     imglstUsedMatchCriteria: TImageList;
@@ -589,7 +591,7 @@ type
     procedure HandleOnOIGetColorConst(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AColorItemIndex: Integer; var AColorName: string; var AColorValue: Int64);
 
     function HandleOnOIGetEnumConstsCount(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer): Integer;
-    procedure HandleOnOIGetEnumConst(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEnumItemIndex: Integer; var AEnumItemName: string);
+    procedure HandleOnOIGetEnumConst(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEnumItemIndex: Integer; var AEnumItemName: string; var AEnumImgItemIndex: Integer; var AImgLst: TImageList);
 
     procedure HandleOnOIPaintText(ANodeData: TNodeDataPropertyRec; ACategoryIndex, APropertyIndex, APropertyItemIndex: Integer;
       const TargetCanvas: TCanvas; Column: TColumnIndex; var TextType: TVSTTextType);
@@ -5762,22 +5764,63 @@ begin
     begin
       if ((ALiveEditingActionType = acEditTemplate) and (ACategoryIndex = CCategory_ActionSpecific)) or
          (ACategoryIndex = CCategory_EditedAction) then   //works for EditTemplate only
-        if APropertyIndex = CEditTemplate_EditedActionType_PropIndex then
-        begin
-          ImageList := imglstActions16;
+      begin
+        case APropertyIndex of
+          CEditTemplate_EditedActionType_PropIndex:
+          begin
+            ImageList := imglstActions16;
 
-          case ACategoryIndex of
-            CCategory_ActionSpecific:
-              ImageIndex := Ord(FEditingAction^.EditTemplateOptions.EditedActionType);
+            case ACategoryIndex of
+              CCategory_ActionSpecific:
+                ImageIndex := Ord(FEditingAction^.EditTemplateOptions.EditedActionType);
 
-            CCategory_EditedAction:
-              if FEditingAction^.EditTemplateOptions.EditedActionType = acEditTemplate then
-                ImageIndex := Ord(FEditTemplateOptions_EditingAction^.EditTemplateOptions.EditedActionType);
+              CCategory_EditedAction:
+                if FEditingAction^.EditTemplateOptions.EditedActionType = acEditTemplate then
+                  ImageIndex := Ord(FEditTemplateOptions_EditingAction^.EditTemplateOptions.EditedActionType);
 
-            else
-              ;
+              else
+                ;
+            end;
           end;
-        end;
+
+          CEditTemplate_Operation_PropIndex:
+          begin
+            ImageList := imglstEditTemplateOperation;
+
+            case ACategoryIndex of
+              CCategory_ActionSpecific:
+                ImageIndex := Ord(FEditingAction^.EditTemplateOptions.Operation);
+
+              CCategory_EditedAction:
+                if FEditingAction^.EditTemplateOptions.EditedActionType = acEditTemplate then
+                  ImageIndex := Ord(FEditTemplateOptions_EditingAction^.EditTemplateOptions.Operation);
+
+              else
+                ;
+            end;
+          end;
+
+          CEditTemplate_WhichTemplate_PropIndex:
+          begin
+            ImageList := imglstEditTemplateWhichTemplate;
+
+            case ACategoryIndex of
+              CCategory_ActionSpecific:
+                ImageIndex := Ord(FEditingAction^.EditTemplateOptions.WhichTemplate);
+
+              CCategory_EditedAction:
+                if FEditingAction^.EditTemplateOptions.EditedActionType = acEditTemplate then
+                  ImageIndex := Ord(FEditTemplateOptions_EditingAction^.EditTemplateOptions.WhichTemplate);
+
+              else
+                ;
+            end;
+          end;
+
+          else
+            ;
+        end; //case
+      end; /// EditTemplate icons
 
       if ALiveEditingActionType = acCallTemplate then
         if APropertyIndex = CCallTemplate_CallTemplateLoop_PropIndex then
@@ -5787,7 +5830,8 @@ begin
             ImageList := imglstCallTemplateLoopProperties;
             ImageIndex := CCallTemplate_CallTemplateLoop_Enabled_PropItemIndex;
           end;
-    end;
+    end; //CPropertyLevel
+
   end; //Column = 1
 end;
 
@@ -6081,24 +6125,24 @@ begin
     end;
 
   if AEditingAction <> @FClkEditedActionByEditTemplate then    //This prevents loading the OI when changing the edited action type.
-  if AEditingAction^.ActionOptions.Action = acEditTemplate then       // Only the editing action should be verified here. The edited action should be avoided.
-    if APropertyIndex = CEditTemplate_EditedActionType_PropIndex then // AEditingAction will get both editing and edited.
-      if FEditTemplateOptions_EditingAction <> nil then
-      begin
-        FClkEditedActionByEditTemplate.ActionOptions.Action := AEditingAction^.EditTemplateOptions.EditedActionType;
-        if Length(FEditTemplateOptions_EditingAction^.FindControlOptions.MatchBitmapText) = 0 then
-          SetLength(FEditTemplateOptions_EditingAction^.FindControlOptions.MatchBitmapText, frClickerFindControl.GetBMPTextFontProfilesCount);
-
-        //These will set the action options to default, discarding user settings.
-        if ANewText <> OldText then
+    if AEditingAction^.ActionOptions.Action = acEditTemplate then       // Only the editing action should be verified here. The edited action should be avoided.
+      if APropertyIndex = CEditTemplate_EditedActionType_PropIndex then // AEditingAction will get both editing and edited.
+        if FEditTemplateOptions_EditingAction <> nil then
         begin
-          SetEmptyEditedActionByEditTemplateToDefault;
-          FClkEditedActionByEditTemplate.ActionOptions.Action := AEditingAction^.EditTemplateOptions.EditedActionType; //call again after resetting by GetDefaultPropertyValues_EditTemplate
-        end;
+          FClkEditedActionByEditTemplate.ActionOptions.Action := AEditingAction^.EditTemplateOptions.EditedActionType;
+          if Length(FEditTemplateOptions_EditingAction^.FindControlOptions.MatchBitmapText) = 0 then
+            SetLength(FEditTemplateOptions_EditingAction^.FindControlOptions.MatchBitmapText, frClickerFindControl.GetBMPTextFontProfilesCount);
 
-        SerializeEditTemplateEditingAction;
-        tmrOnChangeEditTemplateEditingActionType.Enabled := True;
-      end;
+          //These will set the action options to default, discarding user settings.
+          if ANewText <> OldText then
+          begin
+            SetEmptyEditedActionByEditTemplateToDefault;
+            FClkEditedActionByEditTemplate.ActionOptions.Action := AEditingAction^.EditTemplateOptions.EditedActionType; //call again after resetting by GetDefaultPropertyValues_EditTemplate
+          end;
+
+          SerializeEditTemplateEditingAction;
+          tmrOnChangeEditTemplateEditingActionType.Enabled := True;
+        end;
 end;
 
 
@@ -6366,7 +6410,7 @@ begin
 end;
 
 
-procedure OIGetEnumConst_ActionSpecific(AEditingAction: PClkActionRec; ALiveEditingActionType: TClkAction; ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEnumItemIndex: Integer; var AEnumItemName: string);
+procedure OIGetEnumConst_ActionSpecific(AEditingAction: PClkActionRec; ALiveEditingActionType: TClkAction; AfrClickerActions: TfrClickerActions; ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEnumItemIndex: Integer; var AEnumItemName: string; var AEnumImgItemIndex: Integer; var AImgLst: TImageList);
 var
   EditingActionType: Integer;
   ItemIndexMod: Integer;
@@ -6424,10 +6468,25 @@ begin
   end
   else
     AEnumItemName := CPropEnumStrings[ALiveEditingActionType]^[APropertyIndex]^[AEnumItemIndex];
+
+  if ALiveEditingActionType = acEditTemplate then
+  begin
+    AEnumImgItemIndex := AEnumItemIndex;
+    case APropertyIndex of
+      CEditTemplate_Operation_PropIndex:
+        AImgLst := AfrClickerActions.imglstEditTemplateOperation;
+
+      CEditTemplate_WhichTemplate_PropIndex:
+        AImgLst := AfrClickerActions.imglstEditTemplateWhichTemplate;
+
+      CEditTemplate_EditedActionType_PropIndex:
+        AImgLst := AfrClickerActions.imglstActions16;
+    end;
+  end;
 end;
 
 
-procedure TfrClickerActions.HandleOnOIGetEnumConst(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEnumItemIndex: Integer; var AEnumItemName: string);
+procedure TfrClickerActions.HandleOnOIGetEnumConst(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEnumItemIndex: Integer; var AEnumItemName: string; var AEnumImgItemIndex: Integer; var AImgLst: TImageList);
 begin
   AEnumItemName := '';
 
@@ -6437,11 +6496,11 @@ begin
         AEnumItemName := CActionEnumStrings[APropertyIndex]^[AEnumItemIndex];
 
       CCategory_ActionSpecific:
-        OIGetEnumConst_ActionSpecific(FEditingAction, CurrentlyEditingActionType, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEnumItemIndex, AEnumItemName);
+        OIGetEnumConst_ActionSpecific(FEditingAction, CurrentlyEditingActionType, Self, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEnumItemIndex, AEnumItemName, AEnumImgItemIndex, AImgLst);
 
       CCategory_EditedAction:
         if FEditTemplateOptions_EditingAction <> nil then
-          OIGetEnumConst_ActionSpecific(FEditTemplateOptions_EditingAction, FEditTemplateOptions_EditingAction.ActionOptions.Action, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEnumItemIndex, AEnumItemName);
+          OIGetEnumConst_ActionSpecific(FEditTemplateOptions_EditingAction, FEditTemplateOptions_EditingAction.ActionOptions.Action, Self, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEnumItemIndex, AEnumItemName, AEnumImgItemIndex, AImgLst);
 
       else
         AEnumItemName := '';
