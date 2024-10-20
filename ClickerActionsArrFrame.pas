@@ -2419,9 +2419,13 @@ begin
       AddToLog('Should send template and other files to server...');
 
       if FFileName = '' then
-        AddToLog(SetCurrentClientTemplateInServer) //send the current template (whis is not saved to a file (disk or mem)
+        AddToLog(SetCurrentClientTemplateInServer) //send the current template (which is not saved to a file (disk or mem))
       else
-        AddToLog(SendLoadTemplateInExecListRequest(FRemoteAddress, FFileName, FStackLevel));  //AddToLog(SetCurrentClientTemplateInServer);   //this is required, to load the template into editor
+      begin
+        //ToDo:  this is required to send the file, but it has to check the directory permissions first (see file provider)
+        AddToLog(SendLoadTemplateInExecListRequest(FRemoteAddress, FFileName, FStackLevel));
+        //AddToLog(SetCurrentClientTemplateInServer);  //this is required, to load the template into editor   - uncomment when the above call is fixed
+      end;
       //AddToLog(SendMissingFilesToServer);  //keep commented, to let the server request its missing files
     end;
 end;

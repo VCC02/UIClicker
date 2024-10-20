@@ -44,9 +44,12 @@ type
     procedure ArrangeUIClickerActionWindows;
 
     procedure LoadTestTemplateInClickerUnderTest(ATestTemplate: string);
+    procedure LoadTestTemplateInClickerUnderTest_FullPath(ATestTemplate: string);
+
     procedure RunTestTemplateInClickerUnderTest(ATestTemplate: string);
     procedure RunTestTemplateInClickerUnderTestWithDebugging(ATestTemplate: string);
     procedure RunTestTemplateInClickerUnderTestWithDebuggingAndStepInto(ATestTemplate, AExpectedStepOverCount: string; AStopAfterSteppingInto: string = '0');
+    procedure RunTestTemplateInClickerUnderTest_FullPath(ATestTemplate: string);
 
     procedure PrepareClickerUnderTestToReadItsVars;
     procedure PrepareClickerUnderTestToLocalMode;
@@ -57,6 +60,7 @@ type
     procedure AddActionButton(AActionNameToSelect: string);
 
     procedure VerifyOIDefaultValues(AActionToDrag: string; var AProperties: TOIInteractionDataArr);
+    procedure VerifyPermissionsOnSendingFiles;
   public
     constructor Create; override;
   published
@@ -112,6 +116,8 @@ type
     procedure TestVerifyOIDefaultValues_SaveSetVarToFile;
     procedure TestVerifyOIDefaultValues_Plugin;
     procedure TestVerifyOIDefaultValues_EditTemplate;
+
+    procedure TestVerifyPermissionsOnSendingFiles_SendingFileFromDeniedTestFiles;
 
     procedure AfterAll_AlwaysExecute;
   end;
@@ -390,6 +396,13 @@ begin
 end;
 
 
+procedure TTestUI.LoadTestTemplateInClickerUnderTest_FullPath(ATestTemplate: string);
+begin
+  SetVariableOnTestDriverClient('$TemplateToLoad$', ATestTemplate);
+  ExecuteTemplateOnTestDriver(FTemplatesDir + 'LoadCallerTemplateIntoAppUnderTest.clktmpl', CREParam_FileLocation_ValueDisk); //this loads BasicCaller into test client (the one which is in client mode)
+end;
+
+
 procedure TTestUI.RunTestTemplateInClickerUnderTest(ATestTemplate: string);
 begin
   LoadTestTemplateInClickerUnderTest(ATestTemplate);
@@ -410,6 +423,13 @@ begin
   SetVariableOnTestDriverClient('$StopAfterSteppingInto$', AStopAfterSteppingInto);
   LoadTestTemplateInClickerUnderTest(ATestTemplate);
   ExecuteTemplateOnTestDriver(FTemplatesDir + 'PlayAllActionsFromAppUnderTestWithDebuggingAndSteppingInto.clktmpl', CREParam_FileLocation_ValueDisk);
+end;
+
+
+procedure TTestUI.RunTestTemplateInClickerUnderTest_FullPath(ATestTemplate: string);
+begin
+  LoadTestTemplateInClickerUnderTest_FullPath(ATestTemplate);
+  ExecuteTemplateOnTestDriver(FTemplatesDir + 'PlayAllActionsFromAppUnderTest.clktmpl', CREParam_FileLocation_ValueDisk);
 end;
 
 
@@ -1051,6 +1071,82 @@ begin
   ListOfSerializedPropertiesToOIInteractionData(GetEditTemplateActionProperties(EditTemplateOptions), @CEditTemplateProperties, CPropIsExp[acEditTemplate], CPropCount_EditTemplate, Properties);
 
   VerifyOIDefaultValues(CClkActionStr[acEditTemplate], Properties);
+end;
+
+
+
+procedure TTestUI.VerifyPermissionsOnSendingFiles;
+var
+  i: Integer;
+  AllowedExtensions, AllowedDirs: string;
+  ListOfAllowedExtensions, ListOfAllowedDirs: TStringList;
+begin
+  TestServerAddress := CTestDriverServerAddress_Client;
+
+  PrepareClickerUnderTestToReadItsVars;  //This is server mode. It is suitable to these tests only, because the actions do not have to be executed.
+
+  ExecuteTemplateOnTestDriver(ExtractFilePath(ParamStr(0)) + '..\..\TestDriver\ActionTemplates\PrepareClientActionsWindowForEditingSettings.clktmpl', CREParam_FileLocation_ValueDisk);
+  ExecuteTemplateOnTestDriver(ExtractFilePath(ParamStr(0)) + '..\..\TestDriver\ActionTemplates\GetAllowedFileExtensionsFromSettings.clktmpl', CREParam_FileLocation_ValueDisk);
+
+  AllowedExtensions := GetVarValueFromServer('$Control_Text$', 0);
+  ListOfAllowedExtensions := TStringList.Create;
+  try
+    ListOfAllowedExtensions.Text := FastReplace_68ToReturn(AllowedExtensions);
+    for i := 0 to ListOfAllowedExtensions.Count - 1 do
+      ListOfAllowedExtensions.Strings[i] := ListOfAllowedExtensions.Strings[i] + '='; //convert items to keys, so they can be evaluated by WithItem
+
+    Expect(ListOfAllowedExtensions).WithItem('.clktmpl');
+    Expect(ListOfAllowedExtensions).WithItem('.bmp');
+    Expect(ListOfAllowedExtensions).WithItem('.pmtv');
+  finally
+    ListOfAllowedExtensions.Free;
+  end;
+
+  ExecuteTemplateOnTestDriver(ExtractFilePath(ParamStr(0)) + '..\..\TestDriver\ActionTemplates\PrepareClientActionsWindowForEditingSettings.clktmpl', CREParam_FileLocation_ValueDisk);
+  ExecuteTemplateOnTestDriver(ExtractFilePath(ParamStr(0)) + '..\..\TestDriver\ActionTemplates\GetAllowedDirsFromSettings.clktmpl', CREParam_FileLocation_ValueDisk);
+
+  AllowedDirs := GetVarValueFromServer('$Control_Text$', 0);
+  ListOfAllowedDirs := TStringList.Create;
+  try
+    ListOfAllowedDirs.Text := FastReplace_68ToReturn(AllowedDirs);
+    Expect(ListOfAllowedDirs.IndexOf('$AppDir$\Tests\DeniedTestFiles')).ToBe(-1);
+  finally
+    ListOfAllowedDirs.Free;
+  end;
+
+  ExecuteTemplateOnTestDriver(ExtractFilePath(ParamStr(0)) + '..\..\TestDriver\ActionTemplates\PrepareClientActionsWindowForInteraction.clktmpl', CREParam_FileLocation_ValueDisk);
+  ExecuteTemplateOnTestDriver(ExtractFilePath(ParamStr(0)) + '..\..\TestDriver\ActionTemplates\DeleteAllActionsFromList.clktmpl', CREParam_FileLocation_ValueDisk); //this template depends on caching from above
+end;
+
+
+procedure TTestUI.TestVerifyPermissionsOnSendingFiles_SendingFileFromDeniedTestFiles;
+begin
+  VerifyPermissionsOnSendingFiles;
+
+  PrepareClickerUnderTestToClientMode;
+  RunTestTemplateInClickerUnderTest_FullPath(ExtractFilePath(ParamStr(0)) + '..\TestFiles\ResetDeniedFileExecutedVar.clktmpl'); //this resets the var on both client and server
+  PrepareClickerUnderTestToReadItsVars;
+
+  TestServerAddress := CTestClientAddress;
+  try
+    //connect to ClientUnderTest instance, which is now running in server mode and read its variables
+    Expect(GetVarValueFromServer('$DeniedFileExecuted$', 0)).ToBe('False', 'The variable should be reset.');
+  finally
+    TestServerAddress := CTestDriverServerAddress_Client; //restore
+  end;
+
+  PrepareClickerUnderTestToClientMode;
+  RunTestTemplateInClickerUnderTest_FullPath(ExtractFilePath(ParamStr(0)) + '..\DeniedTestFiles\ADeniedFile.clktmpl');
+  PrepareClickerUnderTestToReadItsVars;
+
+  TestServerAddress := CTestClientAddress;
+  try
+    //connect to ClientUnderTest instance, which is now running in server mode and read its variables
+    Expect(GetVarValueFromServer('$DeniedFileExecuted$', 0)).ToBe('False', 'The template should not be executed on server side.');
+    Expect(GetVarValueFromServer('$ExecAction_Err$', 0)).ToBe('empty template', 'A second confirmation of attempting to execute an empty template.');  //this error message comes from server under test
+  finally
+    TestServerAddress := CTestDriverServerAddress_Client; //restore
+  end;
 end;
 
 
