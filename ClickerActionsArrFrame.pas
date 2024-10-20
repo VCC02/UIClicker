@@ -2989,6 +2989,10 @@ begin
       begin
         Result := DoExecuteRemoteActionAtIndex(ActionIndex);   //called by client, to send requests
         Result := Result and (ActionStatusStrToActionStatus(GetActionVarValue('$LastAction_Status$')) = asSuccessful);
+
+        if Result then                                                             //As an issue in this case, is that executing local apps, might by unwanted.
+          if FClkActions[ActionIndex].ActionOptions.Action = acEditTemplate then   //The result is not modified by the local execution.
+            AddToLog('Executing locally as well, because the action is an EditTemplate action. Result = ' + BoolToStr(ExecuteActionAtIndex(ActionIndex), True));
       end;
 
       SetActionVarValue('$LastAction_Skipped$', 'No');

@@ -2149,8 +2149,10 @@ begin
   try
     ListOfProperties.Text := GetEditingActionObjectByActionType^.PluginOptions.ListOfPropertiesAndValues;
 
-    if ActionName <> '' then  //verification required, otherwise the item is deleted from list
-      ListOfProperties.ValueFromIndex[PropertyIndex] := ActionName;
+    //if ActionName <> '' then  //verification required, otherwise the item is deleted from list
+      //ListOfProperties.ValueFromIndex[PropertyIndex] := ActionName;      //see next line
+
+    ListOfProperties.Strings[PropertyIndex] := ListOfProperties.Names[PropertyIndex] + '=' + ActionName; //this assignment supports empty string, without deleting the item as done by ValueFromIndex
 
     GetEditingActionObjectByActionType^.PluginOptions.ListOfPropertiesAndValues := ListOfProperties.Text;
   finally
@@ -2167,7 +2169,7 @@ procedure TfrClickerActions.AvailableEditingActionPropertiesClick_Cat_ActionSpec
 var
   ActionName: string;
   ActionType: TClkAction;
-  //OldType: TClkAction;
+  OldType: TClkAction;
   ActionTypeInt: Integer;
   PropertyIndex: Integer;
 begin
@@ -2176,13 +2178,13 @@ begin
   ActionType := TClkAction(ActionTypeInt);
   PropertyIndex := (Sender as TMenuItem).Tag and $FFFF;
 
+  OldType := FEditingAction^.EditTemplateOptions.EditedActionType;
+
   case PropertyIndex of
     CEditTemplate_EditedActionName_PropIndex:
     begin
       //GetEditingActionObjectByActionType^.EditTemplateOptions.EditedActionName := ActionName; //editing action
       FEditingAction^.EditTemplateOptions.EditedActionName := ActionName;                       //action specific
-
-      //OldType := FEditingAction^.EditTemplateOptions.EditedActionType;
       FEditingAction^.EditTemplateOptions.EditedActionType := ActionType;                       //type
     end;
 
@@ -2198,11 +2200,12 @@ begin
 
   FOIFrame.CancelCurrentEditing;
 
-  //if ActionType <> OldType then
-  //begin
-  //  SerializeEditTemplateEditingAction;
-  //  tmrOnChangeEditTemplateEditingActionType.Enabled := True;
-  //end;
+  if ActionType <> OldType then   //updating the OI is not commented, as it is in AvailableEditingActionPropertiesClick_Cat_EditingAction
+  begin
+    FClkEditedActionByEditTemplate.ActionOptions.Action := ActionType;
+    SerializeEditTemplateEditingAction;
+    tmrOnChangeEditTemplateEditingActionType.Enabled := True;
+  end;
 
   FOIFrame.Repaint;   //ideally, RepaintNodeByLevel
   TriggerOnControlsModified;
@@ -2398,22 +2401,26 @@ var
 begin
   AvailableActions := TStringList.Create;
   try
-    if AEditingAction^.EditTemplateOptions.WhichTemplate = etwtSelf then
+    if AEditingAction.ActionOptions.Action = acPlugin then
       DoOnGetListOfAvailableActions(AvailableActions)
     else
-    begin
-      if DoOnFileExists(AEditingAction^.EditTemplateOptions.TemplateFileName) then
-      begin
-        Ini := DoOnTClkIniReadonlyFileCreate(AEditingAction^.EditTemplateOptions.TemplateFileName);  //LoadTemplate
-        try
-          LoadTemplateToCustomActions_V2(Ini, LocalClkActions, Notes, IconPath);
-          for i := 0 to Length(LocalClkActions) - 1 do
-            AvailableActions.Add(LocalClkActions[i].ActionOptions.ActionName + #4#5 + IntToStr(Ord(LocalClkActions[i].ActionOptions.Action)));
-        finally
-          Ini.Free;
+      if AEditingAction.ActionOptions.Action = acEditTemplate then
+        if AEditingAction^.EditTemplateOptions.WhichTemplate = etwtSelf then
+          DoOnGetListOfAvailableActions(AvailableActions)
+        else
+        begin
+          if DoOnFileExists(AEditingAction^.EditTemplateOptions.TemplateFileName) then
+          begin
+            Ini := DoOnTClkIniReadonlyFileCreate(AEditingAction^.EditTemplateOptions.TemplateFileName);  //LoadTemplate
+            try
+              LoadTemplateToCustomActions_V2(Ini, LocalClkActions, Notes, IconPath);
+              for i := 0 to Length(LocalClkActions) - 1 do
+                AvailableActions.Add(LocalClkActions[i].ActionOptions.ActionName + #4#5 + IntToStr(Ord(LocalClkActions[i].ActionOptions.Action)));
+            finally
+              Ini.Free;
+            end;
+          end;
         end;
-      end;
-    end;
 
     FPmLocalTemplates.Items.Clear;
 
