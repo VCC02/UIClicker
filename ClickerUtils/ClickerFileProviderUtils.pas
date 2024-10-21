@@ -155,12 +155,14 @@ end;
 procedure TFileProvider.AddListOfAccessibleDirs(AList: TStrings); overload;
 var
   i: Integer;
-  CurrentItem: string;
+  CurrentItem, ExeDir: string;
 begin
+  ExeDir := ExtractFileDir(ParamStr(0));
+
   for i := 0 to AList.Count - 1 do
   begin
     CurrentItem := AList.Strings[i];
-    CurrentItem := StringReplace(CurrentItem, '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
+    CurrentItem := StringReplace(CurrentItem, '$AppDir$', ExeDir, [rfReplaceAll]);
     FListOfAccessibleDirs.Add(UpperCase(CurrentItem));
   end;
 end;

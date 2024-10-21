@@ -742,8 +742,8 @@ implementation
 
 
 uses
-  Math, ClickerTemplates, BitmapConv,
-  BitmapProcessing, Clipbrd, ClickerConditionEditorForm, ClickerActionsClient,
+  Math, ClickerTemplates, BitmapConv, BitmapProcessing, Clipbrd,
+  ClickerConditionEditorForm, ClickerActionsClient, ClickerFileProviderUtils,
   ClickerTemplateNotesForm, AutoCompleteForm, ClickerVstUtils,
   ClickerActionPluginLoader, ClickerActionPlugins, ClickerActionProperties;
 
@@ -1594,7 +1594,7 @@ begin
       end;
 
     FDebugging := False;  /////////////////////// to be verified if this will throw the debugger into a bad state
-    PrepareFilesInServer;
+    PrepareFilesInServer;  //not sure if this call requires spdbtnStopPlaying.Enabled := True; and spdbtnStopPlaying.Repaint;
     Result := PlayActionByNode(Node);
 
     if Result then
@@ -2409,6 +2409,11 @@ end;
 
 
 procedure TfrClickerActionsArr.PrepareFilesInServer;
+var
+  LocalFileProvider: TFileProvider;
+  IsAllowed: Boolean;
+  DenyReason: string;
+  EmptyTemplate: TClkActionsRecArr;
 begin
   if not FExecutesRemotely then
     Exit;
@@ -2422,9 +2427,27 @@ begin
         AddToLog(SetCurrentClientTemplateInServer) //send the current template (which is not saved to a file (disk or mem))
       else
       begin
-        //ToDo:  this is required to send the file, but it has to check the directory permissions first (see file provider)
-        //AddToLog(SendLoadTemplateInExecListRequest(FRemoteAddress, FFileName, FStackLevel));   //Better, do not send the file at all. Let the file provider transfer it.
-        AddToLog(SetCurrentClientTemplateInServer);  //this is required, to load the template into editor   - actually, it is ok to load the template into editor, without sending it to server via SendLoadTemplateInExecListRequest. However, SetClientTemplateInServer should verify sending permissions first.
+        LocalFileProvider := TFileProvider.Create;
+        try
+          LocalFileProvider.AddListOfAccessibleFileExtensions(FAllowedFileExtensionsForServer);
+          LocalFileProvider.AddListOfAccessibleDirs(FAllowedFileDirsForServer);
+          LocalFileProvider.FullTemplatesDir := FFullTemplatesDir;
+
+          IsAllowed := LocalFileProvider.FileIsAllowed(FFileName, DenyReason);
+          if IsAllowed then
+          begin
+            //AddToLog(SendLoadTemplateInExecListRequest(FRemoteAddress, FFileName, FStackLevel));   //Do not send the file at all. Let the file provider transfer it.
+            AddToLog(SetCurrentClientTemplateInServer);  //this is required, to load the template into editor   - actually, it is ok to load the template into editor, without sending it to server via SendLoadTemplateInExecListRequest. However, SetClientTemplateInServer should verify sending permissions first.
+          end
+          else
+          begin
+            AddToLog('Current template is not allowed to be sent to server: ' + DenyReason);
+            AddToLog('Clearing current template in server: ' + SetClientTemplateInServer(FRemoteAddress, FFileName, EmptyTemplate, FStackLevel)); //clear, because the current client action will pass if it finds a successful action in server
+            Sleep(700); //This is required to provide live visual feeback about running and stopping the template. The test driver requires it to capture the state of the Stop button on ClickerUnderTest. Without this Sleep call, the Stop button stays "On" for a very short period of time.
+          end;
+        finally
+          LocalFileProvider.Free;
+        end;
       end;
       //AddToLog(SendMissingFilesToServer);  //keep commented, to let the server request its missing files
     end;
@@ -4215,8 +4238,13 @@ end;
 
 procedure TfrClickerActionsArr.spdbtnPlayAllActionsClick(Sender: TObject);
 begin
-  PrepareFilesInServer;
-  PlayAllActionsFromButton(False);
+  spdbtnStopPlaying.Enabled := True;  //It's ugly that the button has to be enabled here, but it is required to stay "on" for a little longer, to be captured by the test driver.
+  spdbtnStopPlaying.Repaint;
+  try
+    PrepareFilesInServer;
+  finally
+    PlayAllActionsFromButton(False);
+  end;
 end;
 
 
@@ -4225,8 +4253,13 @@ begin
   if not FPlaying then
     FDebugging := False;
 
-  PrepareFilesInServer;
-  PlaySelectedActionFromButton;
+  spdbtnStopPlaying.Enabled := True;  //It's ugly that the button has to be enabled here, but it is required to stay "on" for a little longer, to be captured by the test driver.
+  spdbtnStopPlaying.Repaint;
+  try
+    PrepareFilesInServer;
+  finally
+    PlaySelectedActionFromButton;
+  end;
 end;
 
 
@@ -5274,8 +5307,13 @@ begin
   try
     BackupList.Text := frClickerActions.ClkVariables.Text;
     try
-      PrepareFilesInServer;
-      PlaySelected;
+      spdbtnStopPlaying.Enabled := True;  //It's ugly that the button has to be enabled here, but it is required to stay "on" for a little longer, to be captured by the test driver.
+      spdbtnStopPlaying.Repaint;
+      try
+        PrepareFilesInServer;
+      finally
+        PlaySelected;
+      end;
     finally
       frClickerActions.ClkVariables.Text := BackupList.Text;
     end;
@@ -6470,16 +6508,26 @@ end;
 
 procedure TfrClickerActionsArr.PlayAllInDebuggingMode1Click(Sender: TObject);
 begin
-  PrepareFilesInServer;
-  PlayAllActionsFromButton(True);
+  spdbtnStopPlaying.Enabled := True;  //It's ugly that the button has to be enabled here, but it is required to stay "on" for a little longer, to be captured by the test driver.
+  spdbtnStopPlaying.Repaint;
+  try
+    PrepareFilesInServer;
+  finally
+    PlayAllActionsFromButton(True);
+  end;
 end;
 
 
 procedure TfrClickerActionsArr.PlayAllInDebuggingModeStartingAtSelected1Click(
   Sender: TObject);
 begin
-  PrepareFilesInServer;
-  PlayAllActionsFromButton(True, True);
+  spdbtnStopPlaying.Enabled := True;  //It's ugly that the button has to be enabled here, but it is required to stay "on" for a little longer, to be captured by the test driver.
+  spdbtnStopPlaying.Repaint;
+  try
+    PrepareFilesInServer;
+  finally
+    PlayAllActionsFromButton(True, True);
+  end;
 end;
 
 

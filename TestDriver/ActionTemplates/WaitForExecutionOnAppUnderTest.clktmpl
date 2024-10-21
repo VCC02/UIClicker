@@ -55,8 +55,8 @@ InitialRectangle.Top=$Stop_Top$
 InitialRectangle.Right=$Stop_Left$
 InitialRectangle.Bottom=$Stop_Top$
 UseWholeScreen=0
-InitialRectangle.LeftOffset=-17
-InitialRectangle.TopOffset=3
+InitialRectangle.LeftOffset=-18
+InitialRectangle.TopOffset=2
 InitialRectangle.RightOffset=-3
 InitialRectangle.BottomOffset=13
 StartSearchingWithCachedControl=0
@@ -77,6 +77,8 @@ FullBackgroundImageInResult=1
 MatchByHistogramSettings.MinPercentColorMatch=50
 MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
+EvaluateTextCount=-1
+CropFromScreenshot=0
 
 [Action_1]
 ActionName=Find Stop button icon - idle state
@@ -153,6 +155,8 @@ FullBackgroundImageInResult=1
 MatchByHistogramSettings.MinPercentColorMatch=50
 MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
+EvaluateTextCount=-1
+CropFromScreenshot=0
 
 [Notes]
 Content=waiting 15s for execution to stop, because of the looped call example
