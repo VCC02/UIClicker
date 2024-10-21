@@ -55,6 +55,8 @@ type
     procedure PrepareClickerUnderTestToLocalMode;
     procedure PrepareClickerUnderTestToClientMode;
 
+    procedure ExpectVarFromClientUnderTest(AVarName, AExpectedValue: string; AExtraComment: string = '');
+
     procedure DragAction_FromPosToPos(ASrcIdx, ADestIdx: Integer; const AActIdx: array of Byte);
     procedure AutoCompleteTextInConsoleEditBox(ATypedEditBoxContent, AFunctionNameToDoubleClick, AExpectedResult: string);
     procedure AddActionButton(AActionNameToSelect: string);
@@ -118,6 +120,7 @@ type
     procedure TestVerifyOIDefaultValues_EditTemplate;
 
     procedure TestVerifyPermissionsOnSendingFiles_SendingFileFromDeniedTestFiles;
+    procedure TestVerifyPermissionsOnSendingFiles_ReSendingModifiedFileByEditTemplate;
 
     procedure AfterAll_AlwaysExecute;
   end;
@@ -458,6 +461,18 @@ begin
 end;
 
 
+procedure TTestUI.ExpectVarFromClientUnderTest(AVarName, AExpectedValue: string; AExtraComment: string = '');
+begin
+  TestServerAddress := CTestClientAddress;
+  try
+    //connect to ClientUnderTest instance, which is now running in server mode and read its variables
+    Expect(GetVarValueFromServer(AVarName)).ToBe(AExpectedValue, AExtraComment);
+  finally
+    TestServerAddress := CTestDriverServerAddress_Client; //restore
+  end;
+end;
+
+
 procedure TTestUI.Test_ExecuteTemplateRemotely;
 begin
   PrepareClickerUnderTestToClientMode;
@@ -467,14 +482,7 @@ begin
   PrepareClickerUnderTestToReadItsVars;
 
   Sleep(500);
-
-  TestServerAddress := CTestClientAddress;
-  try
-    //connect to ClientUnderTest instance, which is now running in server mode and read its variables
-    Expect(GetVarValueFromServer('$VarToBeIncremented$')).ToBe('1');  //this var is initialized to 0 in BasicCaller.clktmpl
-  finally
-    TestServerAddress := CTestDriverServerAddress_Client; //restore
-  end;
+  ExpectVarFromClientUnderTest('$VarToBeIncremented$', '1');
 end;
 
 
@@ -487,14 +495,7 @@ begin
   PrepareClickerUnderTestToReadItsVars;
 
   Sleep(500);
-
-  TestServerAddress := CTestClientAddress;
-  try
-    //connect to ClientUnderTest instance, which is now running in server mode and read its variables
-    Expect(GetVarValueFromServer('$VarToBeIncremented$')).ToBe('10');  //this var is initialized to 0 in BasicCaller.clktmpl
-  finally
-    TestServerAddress := CTestDriverServerAddress_Client; //restore
-  end;
+  ExpectVarFromClientUnderTest('$VarToBeIncremented$', '10');  //this var is initialized to 0 in BasicCaller.clktmpl
 end;
 
 
@@ -507,14 +508,7 @@ begin
   PrepareClickerUnderTestToReadItsVars;
 
   Sleep(500);
-
-  TestServerAddress := CTestClientAddress;
-  try
-    //connect to ClientUnderTest instance, which is now running in server mode and read its variables
-    Expect(GetVarValueFromServer('$VarToBeIncremented$')).ToBe('1');  //this var is initialized to 0 in BasicCaller.clktmpl
-  finally
-    TestServerAddress := CTestDriverServerAddress_Client; //restore
-  end;
+  ExpectVarFromClientUnderTest('$VarToBeIncremented$', '1');  //this var is initialized to 0 in BasicCaller.clktmpl
 end;
 
 
@@ -527,14 +521,7 @@ begin
   PrepareClickerUnderTestToReadItsVars;
 
   Sleep(500);
-
-  TestServerAddress := CTestClientAddress;
-  try
-    //connect to ClientUnderTest instance, which is now running in server mode and read its variables
-    Expect(GetVarValueFromServer('$VarToBeIncremented$')).ToBe('10');  //this var is initialized to 0 in BasicCaller.clktmpl
-  finally
-    TestServerAddress := CTestDriverServerAddress_Client; //restore
-  end;
+  ExpectVarFromClientUnderTest('$VarToBeIncremented$', '10');  //this var is initialized to 0 in BasicCaller.clktmpl
 end;
 
 
@@ -547,14 +534,7 @@ begin
   PrepareClickerUnderTestToReadItsVars;
 
   Sleep(500);
-
-  TestServerAddress := CTestClientAddress;
-  try
-    //connect to ClientUnderTest instance, which is now running in server mode and read its variables
-    Expect(GetVarValueFromServer('$VarToBeIncremented$')).ToBe('1');  //this var is initialized to 0 in BasicCaller.clktmpl
-  finally
-    TestServerAddress := CTestDriverServerAddress_Client; //restore
-  end;
+  ExpectVarFromClientUnderTest('$VarToBeIncremented$', '1'); //this var is initialized to 0 in BasicCaller.clktmpl
 end;
 
 
@@ -567,14 +547,7 @@ begin
   PrepareClickerUnderTestToReadItsVars;
 
   Sleep(500);
-
-  TestServerAddress := CTestClientAddress;
-  try
-    //connect to ClientUnderTest instance, which is now running in server mode and read its variables
-    Expect(GetVarValueFromServer('$VarToBeIncremented$')).ToBe('10');  //this var is initialized to 0 in BasicCaller.clktmpl
-  finally
-    TestServerAddress := CTestDriverServerAddress_Client; //restore
-  end;
+  ExpectVarFromClientUnderTest('$VarToBeIncremented$', '10');  //this var is initialized to 0 in BasicCaller.clktmpl
 end;
 
 
@@ -587,14 +560,7 @@ begin
   PrepareClickerUnderTestToReadItsVars;
 
   Sleep(500);
-
-  TestServerAddress := CTestClientAddress;
-  try
-    //connect to ClientUnderTest instance, which is now running in server mode and read its variables
-    Expect(GetVarValueFromServer('$VarToBeIncremented$')).ToBe('0');  //this var is initialized to 0 in BasicCaller.clktmpl
-  finally                                                      //expecting 0 if stopped
-    TestServerAddress := CTestDriverServerAddress_Client; //restore
-  end;
+  ExpectVarFromClientUnderTest('$VarToBeIncremented$', '0');  //this var is initialized to 0 in BasicCaller.clktmpl
 end;
 
 
@@ -607,14 +573,7 @@ begin
   PrepareClickerUnderTestToReadItsVars;
 
   Sleep(500);
-
-  TestServerAddress := CTestClientAddress;
-  try
-    //connect to ClientUnderTest instance, which is now running in server mode and read its variables
-    Expect(GetVarValueFromServer('$VarToBeIncremented$')).ToBe('0', '$VarToBeIncremented$ should be reset to 0.  $DbgPlayAllActions$ is ' + GetVarValueFromServer('$DbgPlayAllActions$'));  //this var is initialized to 0 in BasicCaller.clktmpl
-  finally                                                      //expecting 0 if stopped
-    TestServerAddress := CTestDriverServerAddress_Client; //restore
-  end;
+  ExpectVarFromClientUnderTest('$VarToBeIncremented$', '0', '$VarToBeIncremented$ should be reset to 0.  $DbgPlayAllActions$ is ' + GetVarValueFromServer('$DbgPlayAllActions$')); //this var is initialized to 0 in BasicCaller.clktmpl
 end;
 
 
@@ -628,14 +587,7 @@ begin
   PrepareClickerUnderTestToReadItsVars;
 
   Sleep(500);
-
-  TestServerAddress := CTestClientAddress;
-  try
-    //connect to ClientUnderTest instance, which is now running in server mode and read its variables
-    Expect(GetVarValueFromServer('$VarToBeIncremented$')).ToBe('0', '$VarToBeIncremented$ should be reset to 0.  $DbgPlayAllActions$ is ' + GetVarValueFromServer('$DbgPlayAllActions$'));  //this var is initialized to 0 in BasicCaller.clktmpl
-  finally                                                      //expecting 0 if stopped
-    TestServerAddress := CTestDriverServerAddress_Client; //restore
-  end;
+  ExpectVarFromClientUnderTest('$VarToBeIncremented$', '0', '$VarToBeIncremented$ should be reset to 0.  $DbgPlayAllActions$ is ' + GetVarValueFromServer('$DbgPlayAllActions$'));  //this var is initialized to 0 in BasicCaller.clktmpl
 end;
 
 
@@ -1127,26 +1079,39 @@ begin
   RunTestTemplateInClickerUnderTest_FullPath(ExtractFilePath(ParamStr(0)) + '..\TestFiles\ResetDeniedFileExecutedVar.clktmpl'); //this resets the var on both client and server
   PrepareClickerUnderTestToReadItsVars;
 
-  TestServerAddress := CTestClientAddress;
-  try
-    //connect to ClientUnderTest instance, which is now running in server mode and read its variables
-    Expect(GetVarValueFromServer('$DeniedFileExecuted$', 0)).ToBe('False', 'The variable should be reset.');
-  finally
-    TestServerAddress := CTestDriverServerAddress_Client; //restore
-  end;
+  ExpectVarFromClientUnderTest('$DeniedFileExecuted$', 'False', 'The variable should be reset.');
 
   PrepareClickerUnderTestToClientMode;
   RunTestTemplateInClickerUnderTest_FullPath(ExtractFilePath(ParamStr(0)) + '..\DeniedTestFiles\ADeniedFile.clktmpl');
   PrepareClickerUnderTestToReadItsVars;
 
-  TestServerAddress := CTestClientAddress;
-  try
-    //connect to ClientUnderTest instance, which is now running in server mode and read its variables
-    Expect(GetVarValueFromServer('$DeniedFileExecuted$', 0)).ToBe('False', 'The template should not be executed on server side.');
-    Expect(GetVarValueFromServer('$ExecAction_Err$', 0)).ToBe('empty template', 'A second confirmation of attempting to execute an empty template.');  //this error message comes from server under test
-  finally
-    TestServerAddress := CTestDriverServerAddress_Client; //restore
-  end;
+  ExpectVarFromClientUnderTest('$DeniedFileExecuted$', 'False', 'The template should not be executed on server side.');
+  ExpectVarFromClientUnderTest('$ExecAction_Err$', 'empty template', 'A second confirmation of attempting to execute an empty template.'); //this error message comes from server under test
+end;
+
+
+procedure TTestUI.TestVerifyPermissionsOnSendingFiles_ReSendingModifiedFileByEditTemplate;
+begin
+  VerifyPermissionsOnSendingFiles;
+
+  PrepareClickerUnderTestToClientMode;
+  RunTestTemplateInClickerUnderTest_FullPath(ExtractFilePath(ParamStr(0)) + '..\TestFiles\TestEditTemplateWithVars.clktmpl');
+  PrepareClickerUnderTestToReadItsVars;
+
+  ExpectVarFromClientUnderTest('$LastAction_Status$', 'Successful', 'The first run should be successful and leave the file modified by itself.');
+
+  //Run again. This time, the template should stop, because the file is modified by itself, but it should not be reloaded automatically.
+
+  PrepareClickerUnderTestToClientMode;
+  ExecuteTemplateOnTestDriver(ExtractFilePath(ParamStr(0)) + '..\..\TestDriver\ActionTemplates\PrepareClientActionsWindowForInteraction.clktmpl', CREParam_FileLocation_ValueDisk);
+
+  ExecuteTemplateOnTestDriver(FTemplatesDir + 'PlayAllActionsFromAppUnderTest.clktmpl', CREParam_FileLocation_ValueDisk); //run without reloading
+  PrepareClickerUnderTestToReadItsVars;
+
+  ExpectVarFromClientUnderTest('$LastAction_Status$', 'Failed', 'The second run should stop at first EditAction.');
+
+  ExecuteTemplateOnTestDriver(ExtractFilePath(ParamStr(0)) + '..\..\TestDriver\ActionTemplates\PrepareClientActionsWindowForInteraction.clktmpl', CREParam_FileLocation_ValueDisk);
+  ExecuteTemplateOnTestDriver(ExtractFilePath(ParamStr(0)) + '..\..\TestDriver\ActionTemplates\DeleteAllActionsFromList.clktmpl', CREParam_FileLocation_ValueDisk); //this template depends on caching from above
 end;
 
 

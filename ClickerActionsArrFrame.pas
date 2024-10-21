@@ -2423,8 +2423,8 @@ begin
       else
       begin
         //ToDo:  this is required to send the file, but it has to check the directory permissions first (see file provider)
-        AddToLog(SendLoadTemplateInExecListRequest(FRemoteAddress, FFileName, FStackLevel));
-        //AddToLog(SetCurrentClientTemplateInServer);  //this is required, to load the template into editor   - uncomment when the above call is fixed
+        //AddToLog(SendLoadTemplateInExecListRequest(FRemoteAddress, FFileName, FStackLevel));   //Better, do not send the file at all. Let the file provider transfer it.
+        AddToLog(SetCurrentClientTemplateInServer);  //this is required, to load the template into editor   - actually, it is ok to load the template into editor, without sending it to server via SendLoadTemplateInExecListRequest. However, SetClientTemplateInServer should verify sending permissions first.
       end;
       //AddToLog(SendMissingFilesToServer);  //keep commented, to let the server request its missing files
     end;
