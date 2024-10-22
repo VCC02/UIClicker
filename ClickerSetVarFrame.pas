@@ -30,7 +30,7 @@ interface
 
 uses
   Windows, Classes, SysUtils, Forms, Controls, Menus, ExtCtrls, StdCtrls,
-  Buttons, Dialogs, Graphics, VirtualTrees, ClickerUtils;
+  Buttons, Dialogs, Graphics, PopupNotifier, VirtualTrees, ClickerUtils;
 
 type
 
@@ -54,6 +54,7 @@ type
     pmSetVars: TPopupMenu;
     pnlHorizSplitter: TPanel;
     pmVarsEditor: TPopupMenu;
+    pnSetVarFormat: TPopupNotifier;
     spdbtnMoveDown: TSpeedButton;
     spdbtnNewVariable: TSpeedButton;
     spdbtnMoveUp: TSpeedButton;
@@ -369,6 +370,9 @@ end;
 
 procedure TfrClickerSetVar.vstSetVarEdited(Sender: TBaseVirtualTree;
   Node: PVirtualNode; Column: TColumnIndex);
+var
+  hwc: TCompRec;
+  NotifierFormRect: TRect;
 begin
   if FSetVarMouseUpHitInfo.HitNode = nil then
     Exit;
@@ -389,8 +393,27 @@ begin
          (FSetVarEditingText[1] <> '$') or
          (FSetVarEditingText[Length(FSetVarEditingText)] <> '$') then
       begin
-        MessageBox(Handle, 'The variable name must have the following format: "$<varname>$" .', PChar(Application.Title), MB_ICONINFORMATION);
-        Exit;
+        //MessageBox(Handle, 'The variable name must have the following format: "$<varname>$" .', PChar(Application.Title), MB_ICONINFORMATION);
+        //Exit;
+        hwc := GetWindowClassRec(FTextEditorEditBox.Handle);
+
+        pnSetVarFormat.vNotifierForm.BorderWidth := 1;
+        pnSetVarFormat.vNotifierForm.BorderStyle := bsSizeToolWin;
+        pnSetVarFormat.vNotifierForm.Width := 300;
+        pnSetVarFormat.vNotifierForm.Height := 50;
+
+        NotifierFormRect.Left := hwc.ComponentRectangle.Left;
+        NotifierFormRect.Top := hwc.ComponentRectangle.Bottom + 3;
+        NotifierFormRect.Width := pnSetVarFormat.vNotifierForm.Width;
+        NotifierFormRect.Height := pnSetVarFormat.vNotifierForm.Height;
+
+        if NotifierFormRect.Right > Screen.Width - 3 then
+          Dec(NotifierFormRect.Left, Screen.Width - 3 - NotifierFormRect.Right);
+
+        if NotifierFormRect.Bottom > Screen.Height then
+          NotifierFormRect.Top := hwc.ComponentRectangle.Top - NotifierFormRect.Height - 3;
+
+        pnSetVarFormat.ShowAtPos(NotifierFormRect.Left, NotifierFormRect.Top);
       end;
 
       FSetVarContent_Vars.Strings[Node^.Index] := FSetVarEditingText;

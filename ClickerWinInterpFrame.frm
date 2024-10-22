@@ -442,6 +442,13 @@ object frClickerWinInterp: TfrClickerWinInterp
       Caption = 'Save selected component to file...'
       OnClick = MenuItem_SaveSelectedComponentToFileClick
     end
+    object Separator3: TMenuItem
+      Caption = '-'
+    end
+    object MenuItem_UpdateTreeValuesFromSelection: TMenuItem
+      Caption = 'Update tree values from selection'
+      OnClick = MenuItem_UpdateTreeValuesFromSelectionClick
+    end
   end
   object pmComponents: TPopupMenu
     Left = 280
@@ -567,5 +574,12 @@ object frClickerWinInterp: TfrClickerWinInterp
     OnTimer = tmrScanTimer
     Left = 307
     Top = 413
+  end
+  object tmrEdit: TTimer
+    Enabled = False
+    Interval = 10
+    OnTimer = tmrEditTimer
+    Left = 456
+    Top = 16
   end
 end

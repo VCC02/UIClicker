@@ -92,6 +92,8 @@ type
     lblGauge: TLabel;
     lblHighlightingLabels: TLabel;
     memCompInfo: TMemo;
+    MenuItem_UpdateTreeValuesFromSelection: TMenuItem;
+    Separator3: TMenuItem;
     MenuItem_ConfigureMultiSizeRecording: TMenuItem;
     MenuItem_RecordMultipleSizes: TMenuItem;
     pnlDrag: TPanel;
@@ -118,6 +120,7 @@ type
     pmScreenshot: TPopupMenu;
     Separator1: TMenuItem;
     spdbtnExtraRecording: TSpeedButton;
+    tmrEdit: TTimer;
     tmrScan: TTimer;
     tmrSpinner: TTimer;
     procedure btnExportClick(Sender: TObject);
@@ -146,6 +149,7 @@ type
     procedure MenuItem_RecordMultipleSizesClick(Sender: TObject);
     procedure MenuItem_SaveSelectedComponentToFileClick(Sender: TObject);
     procedure MenuItem_SaveSelectionToFileClick(Sender: TObject);
+    procedure MenuItem_UpdateTreeValuesFromSelectionClick(Sender: TObject);
     procedure pnlDragMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure pnlDragMouseMove(Sender: TObject; Shift: TShiftState; X,
@@ -163,9 +167,14 @@ type
       Shift: TShiftState; WheelDelta: Integer; MousePos: TPoint;
       var Handled: Boolean);
     procedure spdbtnExtraRecordingClick(Sender: TObject);
+    procedure tmrEditTimer(Sender: TObject);
     procedure tmrScanTimer(Sender: TObject);
     procedure tmrSpinnerTimer(Sender: TObject);
     procedure vstComponentsClick(Sender: TObject);
+    procedure vstComponentsDblClick(Sender: TObject);
+    procedure vstComponentsEdited(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
+    procedure vstComponentsEditing(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; var Allowed: Boolean);
+    procedure vstComponentsNewText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; const NewText: String);
     procedure vstComponentsMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure vstComponentsGetText(Sender: TBaseVirtualTree;
@@ -203,9 +212,12 @@ type
     FSelectionHold: Boolean;
     FMouseDownGlobalPos: TPoint;
     FMouseDownSelPos: TPoint;
+    FMouseUpHitInfo: THitInfo;
 
     FSelectedComponentText: string;
     FSelectedComponentClassName: string;
+    FEditingText: string;
+    FUpdatedVstText: Boolean;
 
     FHold: Boolean;
     FSplitterMouseDownGlobalPos: TPoint;
@@ -784,9 +796,14 @@ begin
   vstComponents.Header.Style := hsFlatButtons;
   vstComponents.PopupMenu := pmComponents;
   vstComponents.TabOrder := 1;
-  vstComponents.TreeOptions.AutoOptions := [toAutoDropExpand, toAutoScrollOnExpand, toAutoTristateTracking, toAutoDeleteMovedNodes, toDisableAutoscrollOnFocus, toDisableAutoscrollOnEdit];
+  vstComponents.TreeOptions.AutoOptions := [toAutoDropExpand, {toAutoScrollOnExpand,} toAutoTristateTracking, toAutoDeleteMovedNodes, toDisableAutoscrollOnFocus, toDisableAutoscrollOnEdit];
+  vstComponents.TreeOptions.MiscOptions := [toAcceptOLEDrop, toEditable, toFullRepaintOnResize, toInitOnSave, {toToggleOnDblClick,} toWheelPanning, toEditOnClick];
   vstComponents.TreeOptions.SelectionOptions := [toFullRowSelect];
   vstComponents.OnClick := @vstComponentsClick;
+  vstComponents.OnDblClick := @vstComponentsDblClick;
+  vstComponents.OnEdited := @vstComponentsEdited;
+  vstComponents.OnEditing := @vstComponentsEditing;
+  vstComponents.OnNewText := @vstComponentsNewText;
   vstComponents.OnMouseUp := @vstComponentsMouseUp;
   vstComponents.OnGetText := @vstComponentsGetText;
   vstComponents.OnLoadNode := @vstComponentsLoadNode;
@@ -990,6 +1007,7 @@ begin
   imgLiveScreenshot.Left := 0;
   imgLiveScreenshot.Top := 0;
   FSelectionHold := False;
+  FUpdatedVstText := False;
 
   FSelectedComponentText := 'no selected component';
   FSelectedComponentClassName := 'no selected component';
@@ -1916,6 +1934,67 @@ begin
   finally
     SaveDialog.Free;
   end;
+end;
+
+
+procedure TfrClickerWinInterp.MenuItem_UpdateTreeValuesFromSelectionClick(
+  Sender: TObject);
+var
+  Node, NextSibling: PVirtualNode;
+  NodeData: PHighlightedCompRec;
+  DiffX, DiffY, DiffR, DiffB: Integer;
+begin
+  if vstComponents.RootNodeCount = 0 then
+    Exit;
+
+  Node := vstComponents.GetFirstSelected;
+  if Node = nil then
+  begin
+    MessageBox(Handle, 'Please select a component in tree before editing.', PChar(Caption), MB_ICONINFORMATION);
+    Exit;
+  end;
+
+  NodeData := vstComponents.GetNodeData(Node);
+  if NodeData = nil then
+    Exit;
+
+  DiffX := FSelectedComponentLeftLimitLabel.Left - NodeData^.LocalX;
+  DiffY := FSelectedComponentTopLimitLabel.Top - NodeData^.LocalY;
+  DiffR := FSelectedComponentRightLimitLabel.Left - (NodeData^.LocalX + NodeData^.CompRec.ComponentRectangle.Width);
+  DiffB := FSelectedComponentBottomLimitLabel.Top - (NodeData^.LocalY + NodeData^.CompRec.ComponentRectangle.Height);
+
+  NodeData^.LocalX := FSelectedComponentLeftLimitLabel.Left;
+  NodeData^.LocalY := FSelectedComponentTopLimitLabel.Top;
+
+  Inc(NodeData^.LocalX_FromParent, DiffX);
+  Inc(NodeData^.LocalY_FromParent, DiffY);
+
+  Inc(NodeData^.CompRec.ComponentRectangle.Left, DiffX);
+  Inc(NodeData^.CompRec.ComponentRectangle.Top, DiffY);
+  Inc(NodeData^.CompRec.ComponentRectangle.Right, DiffR);
+  Inc(NodeData^.CompRec.ComponentRectangle.Bottom, DiffB);
+
+  GenerateContent_AvgScreenshotAndGreenComp(Node);
+  vstComponents.RepaintNode(Node);
+
+  NextSibling := vstComponents.GetNextSibling(Node); //this allows getting all the subnodes
+  repeat
+    Node := vstComponents.GetNext(Node);
+    if (Node = NextSibling) or (Node = nil) then
+      Break;
+
+    NodeData := vstComponents.GetNodeData(Node);
+    if NodeData <> nil then                        //update all the subnodes
+    begin
+      Inc(NodeData^.LocalX, DiffX);
+      Inc(NodeData^.LocalY, DiffY);
+
+      Inc(NodeData^.CompRec.ComponentRectangle.Left, DiffX);
+      Inc(NodeData^.CompRec.ComponentRectangle.Top, DiffY);
+      Inc(NodeData^.CompRec.ComponentRectangle.Right, DiffX);
+      Inc(NodeData^.CompRec.ComponentRectangle.Bottom, DiffY);
+    end;
+  until False;
 end;
 
 
@@ -3005,6 +3084,17 @@ begin
 end;
 
 
+procedure TfrClickerWinInterp.tmrEditTimer(Sender: TObject);
+begin
+  tmrEdit.Enabled := False;
+
+  if FMouseUpHitInfo.HitNode = nil then
+    Exit;
+
+  vstComponents.EditNode(FMouseUpHitInfo.HitNode, FMouseUpHitInfo.HitColumn);
+end;
+
+
 procedure TfrClickerWinInterp.tmrScanTimer(Sender: TObject);
 begin
   ScanTargetControl;
@@ -3025,11 +3115,59 @@ begin
 end;
 
 
+procedure TfrClickerWinInterp.vstComponentsDblClick(Sender: TObject);
+begin
+  tmrEdit.Enabled := True;
+end;
+
+
+procedure TfrClickerWinInterp.vstComponentsEdited(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
+var
+  NodeData: PHighlightedCompRec;
+begin
+  if FMouseUpHitInfo.HitNode = nil then
+    Exit;
+
+  if not FUpdatedVstText then
+    Exit;
+
+  NodeData := vstComponents.GetNodeData(Node);
+  if NodeData = nil then
+    Exit;
+
+  case Column of
+    0:
+      NodeData^.CompRec.Handle := StrToIntDef(FEditingText, 0);
+
+    1:
+      NodeData^.CompRec.ClassName := FEditingText;
+
+    2:
+      NodeData^.CompRec.Text := FEditingText;
+  end;
+end;
+
+
+procedure TfrClickerWinInterp.vstComponentsEditing(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; var Allowed: Boolean);
+begin
+  Allowed := Column in [0..2];
+  FUpdatedVstText := False;
+end;
+
+
+procedure TfrClickerWinInterp.vstComponentsNewText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; const NewText: String);
+begin
+  FEditingText := NewText;
+  FUpdatedVstText := True;
+end;
+
+
 procedure TfrClickerWinInterp.vstComponentsMouseUp(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 var
   Node: PVirtualNode;
 begin
+  vstComponents.GetHitTestInfoAt(X, Y, True, FMouseUpHitInfo);
   Node := vstComponents.GetFirstSelected;
 
   GenerateContent_AvgScreenshotAndGreenComp(Node);
