@@ -445,7 +445,7 @@ const
     (Name: 'EditedActionTimeout'; EditorType: etTextWithArrow; DataType: CDTInteger),
     (Name: 'NewActionName'; EditorType: etTextWithArrow; DataType: CDTString),
     (Name: 'ListOfEditedProperties'; EditorType: etText {etNone}; DataType: CDTString),
-    (Name: 'ListOfEnabledProperties'; EditorType: etNone; DataType: CDTString),
+    (Name: 'ListOfEnabledProperties'; EditorType: etText {etNone}; DataType: CDTString),
     (Name: 'ShouldSaveTemplate'; EditorType: etBooleanCombo; DataType: CDTBool)
   );
 
@@ -3204,7 +3204,7 @@ begin
 end;
 
 
-  function GetReadOnlyHintPart_EditTemplate_Propeties: string;
+  function GetReadOnlyHintPart_EditTemplate_Properties: string;
   begin
     Result := 'This property is read-only under the "Action specific" category, but it can be edited under the "' + CCategory_Name_EditedAction + '" category.';
   end;
@@ -3228,14 +3228,14 @@ begin
             'EditedActionTimeout=123' + #13#10 +
             'NewActionName=triple' + #13#10 +
             'ShouldSaveTemplate=0' + #13#10#13#10 +
-            GetReadOnlyHintPart_EditTemplate_Propeties;
+            GetReadOnlyHintPart_EditTemplate_Properties;
 end;
 
 
 function GetPropertyHint_EditTemplate_ListOfEnabledProperties: string;
 begin
-  Result := 'CRLF separated list of values.' + #13#10 +
-            GetReadOnlyHintPart_EditTemplate_Propeties;
+  Result := 'CRLF separated list of values. (Currently limited to CRLF, which cannot be properly input.)' + #13#10 +
+            GetReadOnlyHintPart_EditTemplate_Properties;
 end;
 
 
