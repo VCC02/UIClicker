@@ -5183,7 +5183,7 @@ begin
               Result := AEditingAction^.EditTemplateOptions.ListOfEditedProperties_ET;
 
             CEditTemplate_ListOfEnabledProperties_PropIndex:
-              Result := AEditingAction^.EditTemplateOptions.ListOfEnabledProperties_ET;
+              Result := FastReplace_ReturnTo45(AEditingAction^.EditTemplateOptions.ListOfEnabledProperties_ET);
 
             else
               ;
@@ -6150,14 +6150,14 @@ begin
             CEditTemplate_ListOfEditedProperties_PropIndex:
             begin
               AEditingAction^.EditTemplateOptions.ListOfEditedProperties_ET := ANewText;
-              TriggerOnControlsModified(ANewText <> OldText);
+              TriggerOnControlsModified(True {ANewText <> OldText});  //OldText is not initialized here
               Exit;
             end;
 
             CEditTemplate_ListOfEnabledProperties_PropIndex:
             begin
-              AEditingAction^.EditTemplateOptions.ListOfEnabledProperties_ET := ANewText;
-              TriggerOnControlsModified(ANewText <> OldText);
+              AEditingAction^.EditTemplateOptions.ListOfEnabledProperties_ET := FastReplace_45ToReturn(ANewText);
+              TriggerOnControlsModified(True {ANewText <> OldText});  //OldText is not initialized here
               Exit;
             end;
           end;
