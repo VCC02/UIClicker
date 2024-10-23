@@ -444,7 +444,7 @@ const
     (Name: 'EditedActionCondition'; EditorType: etUserEditor; DataType: CDTString),
     (Name: 'EditedActionTimeout'; EditorType: etTextWithArrow; DataType: CDTInteger),
     (Name: 'NewActionName'; EditorType: etTextWithArrow; DataType: CDTString),
-    (Name: 'ListOfEditedProperties'; EditorType: etNone; DataType: CDTString),
+    (Name: 'ListOfEditedProperties'; EditorType: etText {etNone}; DataType: CDTString),
     (Name: 'ListOfEnabledProperties'; EditorType: etNone; DataType: CDTString),
     (Name: 'ShouldSaveTemplate'; EditorType: etBooleanCombo; DataType: CDTBool)
   );
@@ -3204,15 +3204,38 @@ begin
 end;
 
 
+  function GetReadOnlyHintPart_EditTemplate_Propeties: string;
+  begin
+    Result := 'This property is read-only under the "Action specific" category, but it can be edited under the "' + CCategory_Name_EditedAction + '" category.';
+  end;
+
+
 function GetPropertyHint_EditTemplate_ListOfEditedProperties: string;
 begin
-  Result := '#18-separated list of PropertyName=PropertyValue items.';
+  Result := '#18-separated list of PropertyName=PropertyValue items. This is a serialized version of the new/updated action.' + #13#10 +
+            'When needed for editing, the #18 characters can be obtained from the "ListOfEditedProperties" property, under the "' + CCategory_Name_ActionSpecific + '" category.' + #13#10 +
+            'When editing this property, the content can be copied from the "' + CCategory_Name_ActionSpecific + '" category, then edited using a text editor, then pasted under the "' + CCategory_Name_EditedAction + '" category.' + #13#10 +
+            'One of the items is "ListOfEnabledProperties", which contains a #4#5 separated list of property names. All the names, present in this list will control which propertie are going to be checked in the new/updated action.' + #13#10 +
+            'Please make sure you don''t set out of range values, because they are not validated and may lead to bad/unusable settings.' + #13#10#13#10 +
+            'Example of creating/updating an EditTemplate action, with #18 replaced by #13#10 (i.e. "" replaced by Return):' + #13#10#13#10 +
+            'Operation=3' + #13#10 +
+            'WhichTemplate=1' + #13#10 +
+            'TemplateFileName=second_fnm.clktmpl' + #13#10 +
+            'ListOfEnabledProperties=NewActionNameOperationEditedActionNameWhichTemplateTemplateFileNameEditedActionConditionEditedActionTypeListOfEditedPropertiesListOfEnabledPropertiesShouldSaveTemplate' + #13#10 +
+            'EditedActionName=CopiedAction' + #13#10 +
+            'EditedActionType=11' + #13#10 +
+            'EditedActionCondition=$Stat$<>Allowed' + #13#10 +
+            'EditedActionTimeout=123' + #13#10 +
+            'NewActionName=triple' + #13#10 +
+            'ShouldSaveTemplate=0' + #13#10#13#10 +
+            GetReadOnlyHintPart_EditTemplate_Propeties;
 end;
 
 
 function GetPropertyHint_EditTemplate_ListOfEnabledProperties: string;
 begin
-  Result := 'CRLF separated list of values.'
+  Result := 'CRLF separated list of values.' + #13#10 +
+            GetReadOnlyHintPart_EditTemplate_Propeties;
 end;
 
 

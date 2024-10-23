@@ -376,6 +376,9 @@ type
     EditedActionTimeout: Integer;         //Used when setting action timeout
     NewActionName: string;                //Used when renaming and duplicating the action
     ShouldSaveTemplate: Boolean;          //Used when saving the self template
+
+    ListOfEditedProperties_ET: string;    //same as ListOfEditedProperties, but used when creating/editing an EditTemplate action  - this should be displayed/edited by OI in that case
+    ListOfEnabledProperties_ET: string;   //same as ListOfEnabledProperties, but used when creating/editing an EditTemplate action - this should be displayed/edited by OI in that case
   end;
 
   TActionBreakPoint = record

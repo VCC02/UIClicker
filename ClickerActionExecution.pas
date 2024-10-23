@@ -3796,6 +3796,12 @@ begin
     end; //for
 
     SetActionProperties(TempProperties, AEditTemplateOptions.EditedActionType, AEditedClkAction^);
+
+    if AEditTemplateOptions.EditedActionType = acEditTemplate then
+    begin
+      AEditedClkAction^.EditTemplateOptions.ListOfEditedProperties := AEditTemplateOptions.ListOfEditedProperties_ET;
+      AEditedClkAction^.EditTemplateOptions.ListOfEnabledProperties := AEditTemplateOptions.ListOfEnabledProperties_ET;
+    end;
   finally
     TempProperties.Free;
     TempEnabledProperties.Free;

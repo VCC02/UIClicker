@@ -2672,6 +2672,10 @@ procedure TfrClickerActions.SerializeEditTemplateEditingAction;
 begin
   FEditingAction^.EditTemplateOptions.ListOfEnabledProperties := FClkEditedActionByEditTemplate.EditTemplateOptions.ListOfEnabledProperties;
   FEditingAction^.EditTemplateOptions.ListOfEditedProperties := StringReplace(GetActionPropertiesByType(FClkEditedActionByEditTemplate), CPropSeparatorSer, CPropSeparatorInt, [rfReplaceAll]);
+
+  //To be verified
+  FEditingAction^.EditTemplateOptions.ListOfEnabledProperties_ET := FClkEditedActionByEditTemplate.EditTemplateOptions.ListOfEnabledProperties_ET;
+  FEditingAction^.EditTemplateOptions.ListOfEditedProperties_ET := FClkEditedActionByEditTemplate.EditTemplateOptions.ListOfEditedProperties_ET;
 end;
 
 
@@ -2772,6 +2776,10 @@ begin
     else
       ;
   end;
+
+  //To be verified
+  FClkEditedActionByEditTemplate.EditTemplateOptions.ListOfEnabledProperties_ET := FEditingAction^.EditTemplateOptions.ListOfEnabledProperties_ET;
+  FClkEditedActionByEditTemplate.EditTemplateOptions.ListOfEditedProperties_ET := FEditingAction^.EditTemplateOptions.ListOfEditedProperties_ET;
 end;
 
 
@@ -5157,7 +5165,7 @@ begin
       else
       begin
         if APropertyIndex < CMainPropCounts[EditingActionType] then
-          APropDef := CMainProperties[EditingActionType]^[APropertyIndex]
+          APropDef := CMainProperties[EditingActionType]^[APropertyIndex];
       end;
 
       if (APropertyIndex < CMainPropCounts[EditingActionType]) or (ALiveEditingActionType = acPlugin) then    //initially used AEditingAction^.ActionOptions.Action
@@ -5167,6 +5175,20 @@ begin
         //if (AEditingAction^.ActionOptions.Action = acEditTemplate) and (ACategoryIndex = CCategory_EditedAction) then
         //  if APropertyIndex in [CEditTemplate_ListOfEditedProperties_PropIndex, CEditTemplate_ListOfEnabledProperties_PropIndex] then
         //    APropDef.EditorType := etTextWithArrow; //To be enabled when editing those properties work as expected.
+
+        if (AEditingAction^.ActionOptions.Action = acEditTemplate) and (ACategoryIndex = CCategory_EditedAction) then
+        begin
+          case APropertyIndex of             //it would be nice to have subproperties, like In FindSubControl (Font properties), so that these lists would be properly displayed as lists of properies, instead of plain text
+            CEditTemplate_ListOfEditedProperties_PropIndex:
+              Result := AEditingAction^.EditTemplateOptions.ListOfEditedProperties_ET;
+
+            CEditTemplate_ListOfEnabledProperties_PropIndex:
+              Result := AEditingAction^.EditTemplateOptions.ListOfEnabledProperties_ET;
+
+            else
+              ;
+          end;
+        end;
       end
       else
         Result := '[bug. bad init]';
@@ -6117,6 +6139,33 @@ begin
           ;
       end;
     end; //CallTemplate  case
+
+    Ord(acEditTemplate):
+    begin
+      //if AEditingAction^.ActionOptions.Action = acEditTemplate then
+      //if FEditTemplateOptions_EditingAction <> nil then
+        if AEditingAction = @FClkEditedActionByEditTemplate then
+        begin
+          case APropertyIndex of
+            CEditTemplate_ListOfEditedProperties_PropIndex:
+            begin
+              AEditingAction^.EditTemplateOptions.ListOfEditedProperties_ET := ANewText;
+              TriggerOnControlsModified(ANewText <> OldText);
+              Exit;
+            end;
+
+            CEditTemplate_ListOfEnabledProperties_PropIndex:
+            begin
+              AEditingAction^.EditTemplateOptions.ListOfEnabledProperties_ET := ANewText;
+              TriggerOnControlsModified(ANewText <> OldText);
+              Exit;
+            end;
+          end;
+        end
+        else
+          if APropertyIndex in [CEditTemplate_ListOfEditedProperties_PropIndex, CEditTemplate_ListOfEnabledProperties_PropIndex] then
+            Exit; //behave like read-only properties
+    end;
   end;   //case EditingActionType
 
   //default handler for main properties
@@ -8494,6 +8543,7 @@ begin
           ListOfProperties := TStringList.Create;
           try                             // a bit of overhead to decode the same list for all properties
             ListOfProperties.Text := FastReplace_45ToReturn(FEditTemplateOptions_EditingAction.EditTemplateOptions.ListOfEnabledProperties);
+
             if ListOfProperties.IndexOf(PropertyName) <> -1 then
               ACheckState := csCheckedNormal;
           finally
@@ -8526,7 +8576,7 @@ begin
 
   ListOfProperties := TStringList.Create;
   try
-    ListOfProperties.Text := FastReplace_45ToReturn(FEditTemplateOptions_EditingAction.EditTemplateOptions.ListOfEnabledProperties);
+    ListOfProperties.Text := FastReplace_45ToReturn(FEditTemplateOptions_EditingAction^.EditTemplateOptions.ListOfEnabledProperties);
 
     Idx := ListOfProperties.IndexOf(PropertyName);
     if Idx = -1 then //not in the list
@@ -8544,7 +8594,8 @@ begin
         ; //nothing to do
     end;
 
-    FEditTemplateOptions_EditingAction.EditTemplateOptions.ListOfEnabledProperties := FastReplace_ReturnTo45(ListOfProperties.Text);
+    FEditTemplateOptions_EditingAction^.EditTemplateOptions.ListOfEnabledProperties := FastReplace_ReturnTo45(ListOfProperties.Text);
+
     //DoOnAddToLog('List: ' + FEditTemplateOptions_EditingAction.EditTemplateOptions.ListOfEnabledProperties);
     TriggerOnControlsModified;
   finally

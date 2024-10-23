@@ -350,7 +350,7 @@ begin
     acLoadSetVarFromFile: Result := GetLoadSetVarFromFileActionProperties(AAction.LoadSetVarFromFileOptions);
     acSaveSetVarToFile: Result := GetSaveSetVarToFileActionProperties(AAction.SaveSetVarToFileOptions);
     acPlugin: Result := GetPluginActionProperties(AAction.PluginOptions);
-    acEditTemplate: Result := GetEditTemplateActionProperties(AAction.EditTemplateOptions);
+    acEditTemplate: Result := GetEditTemplateActionProperties(AAction.EditTemplateOptions, False);
   end;
 end;
 
@@ -884,7 +884,7 @@ begin
     acLoadSetVarFromFile: Result := SetLoadSetVarFromFileActionProperties(AListOfOptionsParams, AActionOptions.LoadSetVarFromFileOptions);
     acSaveSetVarToFile: Result := SetSaveSetVarToFileActionProperties(AListOfOptionsParams, AActionOptions.SaveSetVarToFileOptions);
     acPlugin: Result := SetPluginActionProperties(AListOfOptionsParams, AActionOptions.PluginOptions);
-    acEditTemplate: Result := SetEditTemplateActionProperties(AListOfOptionsParams, AActionOptions.EditTemplateOptions);
+    acEditTemplate: Result := SetEditTemplateActionProperties(AListOfOptionsParams, AActionOptions.EditTemplateOptions, False);
   end;
 
   AActionOptions.ActionOptions.Action := AActionType;  //uncomment if needed
@@ -1121,6 +1121,9 @@ begin
   AEditTemplateOptions.EditedActionTimeout := 1000;
   AEditTemplateOptions.NewActionName := '';
   AEditTemplateOptions.ShouldSaveTemplate := True;
+
+  AEditTemplateOptions.ListOfEditedProperties_ET := '';
+  AEditTemplateOptions.ListOfEnabledProperties_ET := '';
 
   GetDefaultPropertyValues_Click(ClickOptions);
   AEditTemplateOptions.ListOfEditedProperties := GetClickActionProperties(ClickOptions);

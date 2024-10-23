@@ -257,6 +257,9 @@ begin
     ACustomActions[i].EditTemplateOptions.ListOfEnabledProperties := '';
     ACustomActions[i].EditTemplateOptions.ShouldSaveTemplate := True;
 
+    ACustomActions[i].EditTemplateOptions.ListOfEditedProperties_ET := '';
+    ACustomActions[i].EditTemplateOptions.ListOfEnabledProperties_ET := '';
+
     AdjustListOfVarEvalBeforeCount(ACustomActions[i].SetVarOptions);
   end;
 end;
@@ -534,6 +537,9 @@ begin
   AEditTemplateOptions.EditedActionTimeout := Ini.ReadInteger(SectionIndex, 'EditedActionTimeout', 1000);
   AEditTemplateOptions.NewActionName := Ini.ReadString(SectionIndex, 'NewActionName', '');
   AEditTemplateOptions.ShouldSaveTemplate := Ini.ReadBool(SectionIndex, 'ShouldSaveTemplate', True);
+
+  AEditTemplateOptions.ListOfEditedProperties_ET := Ini.ReadString(SectionIndex, 'ListOfEditedProperties_ET', '');
+  AEditTemplateOptions.ListOfEnabledProperties_ET := FastReplace_45ToReturn(Ini.ReadString(SectionIndex, 'ListOfEnabledProperties_ET', ''));
 end;
 
 
@@ -1002,6 +1008,9 @@ begin
   AStringList.Add('EditedActionTimeout=' + IntToStr(AActionEditTemplateOptions.EditedActionTimeout));
   AStringList.Add('NewActionName=' + AActionEditTemplateOptions.NewActionName);
   AStringList.Add('ShouldSaveTemplate=' + IntToStr(Ord(AActionEditTemplateOptions.ShouldSaveTemplate)));
+
+  AStringList.Add('ListOfEditedProperties_ET=' + AActionEditTemplateOptions.ListOfEditedProperties_ET);
+  AStringList.Add('ListOfEnabledProperties_ET=' + FastReplace_ReturnTo45(AActionEditTemplateOptions.ListOfEnabledProperties_ET));
 end;
 
 
