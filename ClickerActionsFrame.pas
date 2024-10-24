@@ -4555,6 +4555,15 @@ begin
   try
     n := Length(MenuData^.TempEditingAction^.FindControlOptions.MatchBitmapText);
 
+    if (n = 1) and (MenuData^.CategoryIndex = CCategory_EditedAction) then //////////////////////////////// ToDo:  fix bug
+    begin
+      MessageBox(Handle,
+                 PChar('Connot leave structure without font profiles (under EditAction). Please create the desired profile first, then delete this one.'),
+                 PChar(Application.Title),
+                 MB_ICONINFORMATION);
+      Exit;
+    end;
+
     if MessageBox(Handle,
                   PChar('Are you sure you want to remove font profile: ' + MenuData^.TempEditingAction^.FindControlOptions.MatchBitmapText[MenuData^.PropertyItemIndex].ProfileName),
                   PChar(Application.Title),
