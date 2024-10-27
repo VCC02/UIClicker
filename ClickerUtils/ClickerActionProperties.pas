@@ -235,8 +235,9 @@ begin
             'MatchByHistogramSettings.MostSignificantColorCountInSubBmp' + '=' + AFindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInSubBmp + '&' +
             'MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp' + '=' + AFindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp + '&' +
 
-            'EvaluateTextCount' + '=' + AFindControlOptions.EvaluateTextCount+ '&' +
-            'CropFromScreenshot' + '=' + IntToStr(Ord(AFindControlOptions.CropFromScreenshot))
+            'EvaluateTextCount' + '=' + AFindControlOptions.EvaluateTextCount + '&' +
+            'CropFromScreenshot' + '=' + IntToStr(Ord(AFindControlOptions.CropFromScreenshot)) + '&' +
+            'ThreadCount' + '=' + AFindControlOptions.ThreadCount
             ;
 end;
 
@@ -683,12 +684,12 @@ begin
   AFindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp := AListOfFindControlOptionsParams.Values['MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp'];
 
   AFindControlOptions.EvaluateTextCount := AListOfFindControlOptionsParams.Values['EvaluateTextCount'];
+  AFindControlOptions.CropFromScreenshot := AListOfFindControlOptionsParams.Values['CropFromScreenshot'] = '1';
+  AFindControlOptions.ThreadCount := AListOfFindControlOptionsParams.Values['ThreadCount'];
 
   AActionOptions.ActionName := AListOfFindControlOptionsParams.Values[CPropertyName_ActionName];
   AActionOptions.ActionTimeout := Temp_ActionTimeout;
   AActionOptions.Action := CActionType[AIsSubControl];
-
-  AFindControlOptions.CropFromScreenshot := AListOfFindControlOptionsParams.Values['CropFromScreenshot'] = '1';
 end;
 
 
@@ -1025,6 +1026,7 @@ begin
   AFindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp := '15';
   AFindControlOptions.EvaluateTextCount := '-1';
   AFindControlOptions.CropFromScreenshot := False;
+  AFindControlOptions.ThreadCount := '2';
 
   SetLength(AFindControlOptions.MatchBitmapText, 1);
   GetDefaultPropertyValues_FindControl_MatchBitmapText(AFindControlOptions.MatchBitmapText[0]);

@@ -216,6 +216,7 @@ begin
 
     ACustomActions[i].FindControlOptions.EvaluateTextCount := '-1';
     ACustomActions[i].FindControlOptions.CropFromScreenshot := False;
+    ACustomActions[i].FindControlOptions.ThreadCount := '2';
 
     SectionIndex := Ini.GetSectionIndex('Actions.SetTextOptions');
     ACustomActions[i].SetTextOptions.Text := Ini.ReadString(SectionIndex, 'Text_' + IterationStr, '');
@@ -444,6 +445,7 @@ begin
 
   AFindControlOptions.EvaluateTextCount := Ini.ReadString(SectionIndex, 'EvaluateTextCount', '-1');
   AFindControlOptions.CropFromScreenshot := Ini.ReadBool(SectionIndex, 'CropFromScreenshot', False);
+  AFindControlOptions.ThreadCount := Ini.ReadString(SectionIndex, 'ThreadCount', '2');
 end;
 
 
@@ -916,6 +918,7 @@ begin
 
   AStringList.Add('EvaluateTextCount=' + AActionFindControlOptions.EvaluateTextCount);
   AStringList.Add('CropFromScreenshot=' + IntToStr(Ord(AActionFindControlOptions.CropFromScreenshot)));
+  AStringList.Add('ThreadCount=' + AActionFindControlOptions.ThreadCount);
 end;
 
 
@@ -1115,6 +1118,7 @@ begin
 
   ADest.EvaluateTextCount := ASrc.EvaluateTextCount;
   ADest.CropFromScreenshot := ASrc.CropFromScreenshot;
+  ADest.ThreadCount := ASrc.ThreadCount;
 end;
 
 

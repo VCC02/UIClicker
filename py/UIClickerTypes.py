@@ -305,7 +305,8 @@ class TFindControlOptions(Structure):
                ("FullBackgroundImageInResult", BOOLEAN),
                ("MatchByHistogramSettings", TMatchByHistogramSettings),
                ("EvaluateTextCount", LPCWSTR),
-               ("CropFromScreenshot", BOOLEAN)
+               ("CropFromScreenshot", BOOLEAN),
+               ("ThreadCount", LPCWSTR)
                ]
 
 PFindControlOptions = ctypes.POINTER(TFindControlOptions)
@@ -375,6 +376,7 @@ def GetDefaultFindControlOptions():
 
     FindControlOptions.EvaluateTextCount = "-1"
     FindControlOptions.CropFromScreenshot = False
+    FindControlOptions.ThreadCount = "2"
 
     return FindControlOptions
 

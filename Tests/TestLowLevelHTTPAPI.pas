@@ -42,6 +42,8 @@ type
     procedure Test_ExecutePlugin(APluginVarsAndValues, AExpectedErr: string);
     procedure Test_ExecuteEditTemplate(AActionType: TClkAction; AOperation: TEditTemplateOperation; var AExpectedValues: TStringArray);
     procedure CreateTheSecondPluginAction(var AExpectedValues: TStringArray);
+    procedure Create_SaveTemplateButton_WithAndWithoutThreads_TestTemplateInMem(var FindControlOptions: TClkFindControlOptions; var WindowOperationsOptions: TClkWindowOperationsOptions; var FindSubControlOptions: TClkFindControlOptions);
+    procedure Execute_UIClickerActions_SaveTemplateButton(AThreadCount, AThreadMessage: string; var FindControlOptions: TClkFindControlOptions; var WindowOperationsOptions: TClkWindowOperationsOptions; var FindSubControlOptions: TClkFindControlOptions);
 
     procedure Test_FindSubControl_RenderExternalBackground;
     procedure CloseRenderingServer;
@@ -69,6 +71,8 @@ type
     procedure Test_ExecuteFindSubControlAction_UIClickerMain_BitnessLabelWithBadCropping_NegativeHeight;
     procedure Test_ExecuteFindSubControlAction_UIClickerMain_BitnessLabel_WithFastSearch;
     procedure Test_ExecuteFindSubControlAction_UIClickerMain_BitnessLabel_WithFastSearchAndSleepySearch;
+    procedure Test_ExecuteFindSubControlAction_UIClickerActions_SaveTemplateButton_WithAndWithoutThreads;
+    procedure Test_ExecuteFindSubControlAction_UIClickerActions_SaveTemplateButton_WithAndWithoutThreads_AsTemplate;
     procedure Test_ExecuteFindSubControlAction_UIClickerMain_CustomLabel_IgnoreBG;
 
     procedure Test_ExecuteFindSubControlAction_UIClickerMain_WindowInterpreterButton_Disk;
@@ -136,7 +140,8 @@ implementation
 
 
 uses
-  ClickerActionsClient, ActionsStuff, Controls, ClickerFileProviderClient, ClickerActionProperties;
+  ClickerActionsClient, ActionsStuff, Controls, ClickerFileProviderClient, ClickerActionProperties,
+  Graphics;
 
 
 function ExecTestTemplate(ATestServerAddress, ATemplateName: string): string;
@@ -491,6 +496,92 @@ begin                                         //This test should be modified, to
   SecondDuration := GetTickCount64 - tk;
 
   Expect(DWord(FirstDuration)).ToBeGreaterThan(CExpectedMultiplier * SecondDuration, 'Expecting some performance gain.  ' + IntToStr(FirstDuration) + ' vs. ' + IntToStr(CExpectedMultiplier) + ' * ' + IntToStr(SecondDuration));
+end;
+
+
+const
+  //CTestFileName_FindSaveTemplateButtonAsSubControl = 'FindSaveTemplateButtonAsSubControl.clktmpl';
+  CThreadCount_VarName = '$ThreadCount$';
+  CFindSubControlActionDuration_VarName = '$ActionExecDuration$';
+
+procedure TTestLowLevelHTTPAPI.Create_SaveTemplateButton_WithAndWithoutThreads_TestTemplateInMem(var FindControlOptions: TClkFindControlOptions; var WindowOperationsOptions: TClkWindowOperationsOptions; var FindSubControlOptions: TClkFindControlOptions);
+begin
+  GetDefaultPropertyValues_FindControl(FindControlOptions, False);
+  FindControlOptions.MatchText := 'UI Clicker Actions';
+  FindControlOptions.MatchClassName := 'Window';
+
+  GetDefaultPropertyValues_WindowOperations(WindowOperationsOptions);
+
+  GetDefaultPropertyValues_FindControl(FindSubControlOptions, True);
+  FindSubControlOptions.MatchText := 'Save Template'; //looking for the Save Template button
+  FindSubControlOptions.MatchBitmapText[0].ForegroundColor := '$Color_WindowText$';
+  FindSubControlOptions.MatchBitmapText[0].BackgroundColor := 'EAEAEA';
+  FindSubControlOptions.MatchBitmapText[0].FontName := 'Tahoma';
+  FindSubControlOptions.MatchBitmapText[0].FontSize := 8;
+  FindSubControlOptions.MatchBitmapText[0].FontQuality := fqNonAntialiased;
+  FindSubControlOptions.MatchBitmapText[0].IgnoreBackgroundColor := True;
+
+  FindSubControlOptions.GetAllControls := True;   //there will be about 3 texts like this (the actual button, the list of actions and the log)
+  FindSubControlOptions.ThreadCount := CThreadCount_VarName;
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Execute_UIClickerActions_SaveTemplateButton(AThreadCount, AThreadMessage: string; var FindControlOptions: TClkFindControlOptions; var WindowOperationsOptions: TClkWindowOperationsOptions; var FindSubControlOptions: TClkFindControlOptions);
+begin
+  Expect(ExecuteFindControlAction(CTestServerAddress, FindControlOptions, 'Find this window (UIClicker Actions)', 3000, CREParam_FileLocation_ValueMem)).ToContain('$LastAction_Status$=Successful', 'Should find window');
+  Expect(ExecuteWindowOperationsAction(CTestServerAddress, WindowOperationsOptions)).ToContain('$LastAction_Status$=Successful', 'Should bring window to front');
+
+  SetVariable(TestServerAddress, CThreadCount_VarName, AThreadCount, 0);
+  Expect(ExecuteFindSubControlAction(CTestServerAddress, FindSubControlOptions, 'Find "Save Template"', 2000, CREParam_FileLocation_ValueMem)).ToContain('$LastAction_Status$=Successful', AThreadMessage);
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecuteFindSubControlAction_UIClickerActions_SaveTemplateButton_WithAndWithoutThreads;
+var
+  UIThreadDuration, OneThreadDuration, TwoThreadsDuration: QWord;
+
+  FindControlOptions: TClkFindControlOptions;
+  WindowOperationsOptions: TClkWindowOperationsOptions;
+  FindSubControlOptions: TClkFindControlOptions;
+begin
+  Create_SaveTemplateButton_WithAndWithoutThreads_TestTemplateInMem(FindControlOptions, WindowOperationsOptions, FindSubControlOptions);
+
+  Execute_UIClickerActions_SaveTemplateButton('0', 'UI thread', FindControlOptions, WindowOperationsOptions, FindSubControlOptions);
+  UIThreadDuration := StrToIntDef(GetVarValueFromServer(CFindSubControlActionDuration_VarName), MaxInt);
+
+  Execute_UIClickerActions_SaveTemplateButton('1', 'One separate thread', FindControlOptions, WindowOperationsOptions, FindSubControlOptions);
+  OneThreadDuration := StrToIntDef(GetVarValueFromServer(CFindSubControlActionDuration_VarName), MaxInt);
+
+  Execute_UIClickerActions_SaveTemplateButton('2', 'Two separate threads', FindControlOptions, WindowOperationsOptions, FindSubControlOptions);
+  TwoThreadsDuration := StrToIntDef(GetVarValueFromServer(CFindSubControlActionDuration_VarName), MaxInt);
+
+  Expect(DWord(OneThreadDuration)).ToBeLessThan(UIThreadDuration, 'Expecting some performance gain from one separate thread over the UI thread.  ' + IntToStr(OneThreadDuration) + ' should be less than ' + IntToStr(UIThreadDuration));
+  Expect(DWord(TwoThreadsDuration)).ToBeLessThan(OneThreadDuration, 'Expecting some performance gain from two separate threads over one separate thread.  ' + IntToStr(TwoThreadsDuration) + ' should be less than ' + IntToStr(OneThreadDuration));
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecuteFindSubControlAction_UIClickerActions_SaveTemplateButton_WithAndWithoutThreads_AsTemplate;
+var
+  tk: QWord;
+  UIThreadDuration, OneThreadDuration, TwoThreadsDuration: QWord;
+begin                                             //same as above test, but instead of executing actions via API, it executes a template from disk
+  SetVariable(TestServerAddress, '$ThreadCount$', '0', 0);
+  tk := GetTickCount64;
+  ExecTestTemplate(TestServerAddress, '$AppDir$\Tests\TestFiles\FindSaveTemplateButtonAsSubControl.clktmpl');
+  UIThreadDuration := GetTickCount64 - tk;
+
+  SetVariable(TestServerAddress, '$ThreadCount$', '1', 0);
+  tk := GetTickCount64;
+  ExecTestTemplate(TestServerAddress, '$AppDir$\Tests\TestFiles\FindSaveTemplateButtonAsSubControl.clktmpl');
+  OneThreadDuration := GetTickCount64 - tk;
+
+  SetVariable(TestServerAddress, '$ThreadCount$', '2', 0);
+  tk := GetTickCount64;
+  ExecTestTemplate(TestServerAddress, '$AppDir$\Tests\TestFiles\FindSaveTemplateButtonAsSubControl.clktmpl');
+  TwoThreadsDuration := GetTickCount64 - tk;
+
+  Expect(DWord(OneThreadDuration)).ToBeLessThan(UIThreadDuration, 'Expecting some performance gain from one separate thread over the UI thread.  ' + IntToStr(OneThreadDuration) + ' vs. ' + IntToStr(UIThreadDuration));
+  Expect(DWord(TwoThreadsDuration)).ToBeLessThan(OneThreadDuration, 'Expecting some performance gain from two separate threads over one separate thread.  ' + IntToStr(TwoThreadsDuration) + ' vs. ' + IntToStr(OneThreadDuration));
 end;
 
 

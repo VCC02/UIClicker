@@ -70,6 +70,7 @@ type
     FullBackgroundImageInResult: Boolean;
     MatchByHistogramNumericSettings: TMatchByHistogramNumericSettings;
     CropFromScreenshot: Boolean;
+    ThreadCount: Integer;
   end;
 
 
@@ -777,6 +778,7 @@ function MatchByBitmap(Algorithm: TMatchBitmapAlgorithm;
                        AOutsideTickCount, APrecisionTimeout: QWord;
                        AStopSearchOnMismatch: Boolean;
                        ACropFromScreenshot: Boolean;
+                       AThreadCount: Integer;
                        out AResultedErrorCount: Integer;
                        AStopAllActionsOnDemand: PBoolean): Boolean;
 var
@@ -859,6 +861,7 @@ begin
                     ASleepySearch,
                     AOutsideTickCount,
                     APrecisionTimeout,
+                    AThreadCount,
                     AResultedErrorCount,
                     AStopAllActionsOnDemand,
                     AStopSearchOnMismatch) then
@@ -983,6 +986,7 @@ begin
                                 InputData.PrecisionTimeout,
                                 InputData.StopSearchOnMismatch,
                                 InputData.CropFromScreenshot,
+                                InputData.ThreadCount,
                                 AResultedErrorCount,
                                 AStopAllActionsOnDemand);
     except

@@ -61,7 +61,7 @@ const
   //Properties (counts)
   CPropCount_Click = 26;
   CPropCount_ExecApp = 7;
-  CPropCount_FindControl = 33;
+  CPropCount_FindControl = 34;
   CPropCount_FindSubControl = CPropCount_FindControl;
   CPropCount_SetText = 4;
   CPropCount_CallTemplate = 4;
@@ -149,6 +149,7 @@ const
   CFindControl_MatchByHistogramSettings_PropIndex = 30;
   CFindControl_EvaluateTextCount_PropIndex = 31;
   CFindControl_CropFromScreenshot_PropIndex = 32;
+  CFindControl_ThreadCount_PropIndex = 33;
 
   CCallTemplate_TemplateFileName_PropIndex = 0; //property index in CallTemplate structure
   CCallTemplate_ListOfCustomVarsAndValues_PropIndex = 1;
@@ -318,7 +319,8 @@ const
     (Name: 'FullBackgroundImageInResult'; EditorType: etBooleanCombo; DataType: CDTBool),
     (Name: 'MatchByHistogramSettings'; EditorType: etNone; DataType: CDTStructure),
     (Name: 'EvaluateTextCount'; EditorType: etSpinText; DataType: CDTString),
-    (Name: 'CropFromScreenshot'; EditorType: etBooleanCombo; DataType: CDTBool)
+    (Name: 'CropFromScreenshot'; EditorType: etBooleanCombo; DataType: CDTBool),
+    (Name: 'ThreadCount'; EditorType: etText; DataType: CDTString)
   );
 
   {$IFDEF SubProperties}
@@ -613,7 +615,8 @@ const
     nil, //FullBackgroundImageInResult
     GetActionValueStr_FindControl_MatchByHistogramSettings,  //MatchByHistogramSettings
     nil, //EvaluateTextCount
-    nil  //CropFromScreenshot
+    nil, //CropFromScreenshot
+    nil  //ThreadCount
   );
 
   CCallTemplateGetActionValueStrFunctions: TGetCallTemplateValueStrFuncArr = (
@@ -704,7 +707,8 @@ const
     0, //FullBackgroundImageInResult
     0, //MatchByHistogramSettings: TMatchByHistogramSettings;
     0, //EvaluateTextCount
-    0  //CropFromScreenshot
+    0, //CropFromScreenshot
+    0  //ThreadCount
   );
 
   CSetTextEnumCounts: array[0..CPropCount_SetText - 1] of Integer = (
@@ -907,7 +911,8 @@ const
     nil, //FullBackgroundImageInResult
     nil, //MatchByHistogramSettings
     nil, //EvaluateTextCount
-    nil  //CropFromScreenshot
+    nil, //CropFromScreenshot
+    nil  //ThreadCount
   );
 
   CSetTextEnumStrings: array[0..CPropCount_SetText - 1] of PArrayOfString = (
@@ -1115,7 +1120,8 @@ const
     0, //FullBackgroundImageInResult
     1, //MatchByHistogramSettings: TMatchByHistogramSettings;
     0, //EvaluateTextCount
-    0  //CropFromScreenshot
+    0, //CropFromScreenshot
+    0  //ThreadCount
   );
 
   CSetTextIsExp: array[0..CPropCount_SetText - 1] of Integer = (
@@ -1243,6 +1249,7 @@ function GetPropertyHint_FindControl_FullBackgroundImageInResult: string;
 function GetPropertyHint_FindControl_MatchByHistogramSettings: string;
 function GetPropertyHint_FindControl_EvaluateTextCount: string;
 function GetPropertyHint_FindControl_CropFromScreenshot: string;
+function GetPropertyHint_FindControl_ThreadCount: string;
 
 {$IFDEF SubProperties}
   function GetPropertyHint_FindControl_MatchCriteria_MatchBitmapText: string;
@@ -1389,7 +1396,8 @@ const
     @GetPropertyHint_FindControl_FullBackgroundImageInResult,  //FullBackgroundImageInResult: Boolean
     @GetPropertyHint_FindControl_MatchByHistogramSettings, //MatchByHistogramSettings: TMatchByHistogramSettings;
     @GetPropertyHint_FindControl_EvaluateTextCount, //EvaluateTextCount: string;
-    @GetPropertyHint_FindControl_CropFromScreenshot //CropFromScreenshot: Boolean;
+    @GetPropertyHint_FindControl_CropFromScreenshot, //CropFromScreenshot: Boolean;
+    @GetPropertyHint_FindControl_ThreadCount //ThreadCount: string;
   );
 
 
@@ -1650,6 +1658,7 @@ begin
     30: Result := '';
     31: Result := AAction^.FindControlOptions.EvaluateTextCount;
     32: Result := BoolToStr(AAction^.FindControlOptions.CropFromScreenshot, True);
+    33: Result := AAction^.FindControlOptions.ThreadCount;
     else
       Result := 'unknown';
   end;
@@ -2261,6 +2270,7 @@ begin
     30: ;  //MatchByHistogramSettings
     31: AAction^.FindControlOptions.EvaluateTextCount := NewValue;
     32: AAction^.FindControlOptions.CropFromScreenshot := StrToBool(NewValue);
+    33: AAction^.FindControlOptions.ThreadCount := NewValue;
     else
       ;
   end;
@@ -2834,6 +2844,15 @@ begin
             'As a limitation, not all windows/controls support this kind of screenshot.' + #13#10#13#10 +
             'When True, a full screenshot is taken, then it is cropped by the desired coordinates.' + #13#10 +
             'This approach is a bit slower, but it allows capturing windows/controls with different device contexts.';
+end;
+
+
+function GetPropertyHint_FindControl_ThreadCount: string;
+begin
+  Result := 'This property controls how to execute the bitmap matching algorithm when using brute force searching.' + #13#10 +
+            'When 0 (or negative), the algorithm runs in the UI thread.' + #13#10 +
+            'When greater than 0 (limited to 255), that number is used to create separate threads, which are started together and search on different sections of the background bitmap.' + #13#10 +
+            'These sections are horizontal bands, "cropped" from the background bitmap. The performance gain is visible on large backgrounds.';
 end;
 
 

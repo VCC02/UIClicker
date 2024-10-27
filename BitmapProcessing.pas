@@ -88,6 +88,7 @@ function BitmapPosMatch(Algorithm: TMatchBitmapAlgorithm;
                         var AIgnoredColorsArr: TColorArr;
                         ASleepySearch: Byte;
                         AOutsideTickCount, APrecisionTimeout: QWord;
+                        AThreadCount: Integer;
                         out AResultedErrorCount: Integer;
                         AStopSearchOnDemand: PBoolean = nil;
                         StopSearchOnMismatch: Boolean = True): Boolean;
@@ -915,13 +916,14 @@ function BitmapPosMatch_BruteForce(SrcMat, SubMat: TRGBPCanvasMat;
                                    var AIgnoredColorsArr: TColorArr;
                                    ASleepySearch: Byte;
                                    AOutsideTickCount, APrecisionTimeout: QWord;
+                                   AThreadCount: Integer;
                                    out AResultedErrorCount: Integer;
                                    AStopSearchOnDemand: PBoolean = nil;
                                    StopSearchOnMismatch: Boolean = True): Boolean;
 const
   CPreSize = 5; //px
 var
-  //xx, yy: Integer;
+  xx, yy: Integer;
   SrcWidth, SrcHeight: Integer;
   SubWidth, SubHeight: Integer;
   XAmount, YAmount: Integer;
@@ -932,7 +934,7 @@ var
   ThArr: TBmpPosMatchThArr;
   AllThreadsDone: Boolean;
   FirstThIndexWithResult: Integer;
-  ThadsAreStillRunning: Boolean;
+  ThreadsAreStillRunning: Boolean;
   tk: QWord;
 begin                     //default optimization: searching a 5px x 5px area, then if that matches, go for full size search
   Result := False;
@@ -982,162 +984,167 @@ begin                     //default optimization: searching a 5px x 5px area, th
     PreSizeX := Min(SubWidth, CPreSize);
     PreSizeY := Min(SubHeight, CPreSize);
 
-    //just another ugly code, to create threads and split the searching across them
-    SplitIntoSearchIntervals(YAmount, 4, Intervals);
-    SetLength(ThArr, Length(Intervals));
-    for i := 0 to Length(Intervals) - 1 do
+    if AThreadCount > 0 then
     begin
-      ThArr[i] := TBmpPosMatchTh.Create(True);
-      ThArr[i].FreeOnTerminate := False;
-      ThArr[i].FDone := False;
-      ThArr[i].FPosMatchInterval := Intervals[i];
-
-      ThArr[i].FXAmount := XAmount;
-      ThArr[i].FStopSearchOnDemand := AStopSearchOnDemand;
-      ThArr[i].FOutsideTickCount := AOutsideTickCount;
-      ThArr[i].FPrecisionTimeout := APrecisionTimeout;
-      ThArr[i].FSrcMat := SrcMat;
-      ThArr[i].FSubMat := SubMat;
-      ThArr[i].FSrcWidth := SrcWidth;
-      ThArr[i].FSrcHeight := SrcHeight;
-      ThArr[i].FSubWidth := SubWidth;
-      ThArr[i].FSubHeight := SubHeight;
-      ThArr[i].FPreSizeX := PreSizeX;
-      ThArr[i].FPreSizeY := PreSizeY;
-      ThArr[i].FColorErrorLevel := ColorErrorLevel;
-      ThArr[i].FPreErrorCount := PreErrorCount;
-      ThArr[i].FIgnoreBackgroundColor := AIgnoreBackgroundColor;
-      ThArr[i].FGetAllBitmaps := AGetAllBitmaps;
-      ThArr[i].FTotalErrorCount := TotalErrorCount;
-      ThArr[i].FBackgroundColor := ABackgroundColor;
-      ThArr[i].FIgnoredColorsArr := AIgnoredColorsArr; //can be directly copied as a pointer
-      //ThArr[i].FResultedErrorCount: Integer;  //part of result
-      ThArr[i].FStopSearchOnMismatch := StopSearchOnMismatch;
-      //ThArr[i].FSubCnvXOffset, FSubCnvYOffset: Integer; //part of result
-      //ThArr[i].FFoundBitmaps: TCompRecArr; //part of result
-    end;
-
-    for i := 0 to Length(Intervals) - 1 do
-      ThArr[i].Start;
-
-    FirstThIndexWithResult := -1;
-    repeat
-      AllThreadsDone := True;
+      //just another ugly code, to create threads and split the searching across them
+      SplitIntoSearchIntervals(YAmount, Min(AThreadCount, 255), Intervals);   //UIClicker is not that important to run on more than 255 cores.
+      SetLength(ThArr, Length(Intervals));
       for i := 0 to Length(Intervals) - 1 do
-        AllThreadsDone := AllThreadsDone and ThArr[i].FDone;
+      begin
+        ThArr[i] := TBmpPosMatchTh.Create(True);
+        ThArr[i].FreeOnTerminate := False;
+        ThArr[i].FDone := False;
+        ThArr[i].FPosMatchInterval := Intervals[i];
+
+        ThArr[i].FXAmount := XAmount;
+        ThArr[i].FStopSearchOnDemand := AStopSearchOnDemand;
+        ThArr[i].FOutsideTickCount := AOutsideTickCount;
+        ThArr[i].FPrecisionTimeout := APrecisionTimeout;
+        ThArr[i].FSrcMat := SrcMat;
+        ThArr[i].FSubMat := SubMat;
+        ThArr[i].FSrcWidth := SrcWidth;
+        ThArr[i].FSrcHeight := SrcHeight;
+        ThArr[i].FSubWidth := SubWidth;
+        ThArr[i].FSubHeight := SubHeight;
+        ThArr[i].FPreSizeX := PreSizeX;
+        ThArr[i].FPreSizeY := PreSizeY;
+        ThArr[i].FColorErrorLevel := ColorErrorLevel;
+        ThArr[i].FPreErrorCount := PreErrorCount;
+        ThArr[i].FIgnoreBackgroundColor := AIgnoreBackgroundColor;
+        ThArr[i].FGetAllBitmaps := AGetAllBitmaps;
+        ThArr[i].FTotalErrorCount := TotalErrorCount;
+        ThArr[i].FBackgroundColor := ABackgroundColor;
+        ThArr[i].FIgnoredColorsArr := AIgnoredColorsArr; //can be directly copied as a pointer
+        //ThArr[i].FResultedErrorCount: Integer;  //part of result
+        ThArr[i].FStopSearchOnMismatch := StopSearchOnMismatch;
+        //ThArr[i].FSubCnvXOffset, FSubCnvYOffset: Integer; //part of result
+        //ThArr[i].FFoundBitmaps: TCompRecArr; //part of result
+      end;
+
+      for i := 0 to Length(Intervals) - 1 do
+        ThArr[i].Start;
+
+      FirstThIndexWithResult := -1;
+      repeat
+        AllThreadsDone := True;
+        for i := 0 to Length(Intervals) - 1 do
+          AllThreadsDone := AllThreadsDone and ThArr[i].FDone;
+
+        if AGetAllBitmaps then
+        begin //all theads must be done
+          if AllThreadsDone then
+            Break;
+        end
+        else
+        begin //at least one thread must be done
+          for i := 0 to Length(Intervals) - 1 do
+            if ThArr[i].FDone and ThArr[i].FResult then
+            begin
+              FirstThIndexWithResult := i;
+              Break; //this breaks the for loop
+            end;
+
+          if FirstThIndexWithResult > -1 then
+            for i := 0 to Length(Intervals) - 1 do
+              ThArr[i].FShouldStopThread := True;
+
+          if AllThreadsDone then
+            Break;
+        end;
+
+        Application.ProcessMessages;
+        Sleep(1);
+      until False;
 
       if AGetAllBitmaps then
-      begin //all theads must be done
-        if AllThreadsDone then
-          Break;
+      begin
+        for i := 0 to Length(Intervals) - 1 do
+          if ThArr[i].FResult then
+          begin
+            Result := True;
+
+            for j := 0 to Length(ThArr[i].FFoundBitmaps) - 1 do
+            begin
+              SubCnvXOffset := ThArr[i].FSubCnvXOffset;
+              SubCnvYOffset := ThArr[i].FSubCnvYOffset;
+              SetLength(AFoundBitmaps, Length(AFoundBitmaps) + 1);
+              AFoundBitmaps[Length(AFoundBitmaps) - 1].XOffsetFromParent := ThArr[i].FFoundBitmaps[j].XOffsetFromParent;
+              AFoundBitmaps[Length(AFoundBitmaps) - 1].YOffsetFromParent := ThArr[i].FFoundBitmaps[j].YOffsetFromParent;
+              AFoundBitmaps[Length(AFoundBitmaps) - 1].ResultedErrorCount := ThArr[i].FFoundBitmaps[j].ResultedErrorCount;
+              AResultedErrorCount := ThArr[i].FFoundBitmaps[j].ResultedErrorCount;
+            end;
+          end;
       end
       else
-      begin //at least one thread must be done
-        for i := 0 to Length(Intervals) - 1 do
-          if ThArr[i].FDone and ThArr[i].FResult then
-          begin
-            FirstThIndexWithResult := i;
-            Break; //this breaks the for loop
-          end;
-
-        if FirstThIndexWithResult > -1 then
-          for i := 0 to Length(Intervals) - 1 do
-            ThArr[i].FShouldStopThread := True;
-
-        if AllThreadsDone then
-          Break;
-      end;
-
-      Application.ProcessMessages;
-      Sleep(1);
-    until False;
-
-    if AGetAllBitmaps then
-    begin
-      for i := 0 to Length(Intervals) - 1 do
-        if ThArr[i].FResult then
+      begin
+        if FirstThIndexWithResult > -1 then  //at least one thread found the bitmap
         begin
           Result := True;
+          SubCnvXOffset := ThArr[FirstThIndexWithResult].FSubCnvXOffset;
+          SubCnvYOffset := ThArr[FirstThIndexWithResult].FSubCnvYOffset;
 
-          for j := 0 to Length(ThArr[i].FFoundBitmaps) - 1 do
+          if Length(ThArr[FirstThIndexWithResult].FFoundBitmaps) > 0 then //it should be > 0
           begin
-            SubCnvXOffset := ThArr[i].FSubCnvXOffset;
-            SubCnvYOffset := ThArr[i].FSubCnvYOffset;
             SetLength(AFoundBitmaps, Length(AFoundBitmaps) + 1);
-            AFoundBitmaps[Length(AFoundBitmaps) - 1].XOffsetFromParent := ThArr[i].FFoundBitmaps[j].XOffsetFromParent;
-            AFoundBitmaps[Length(AFoundBitmaps) - 1].YOffsetFromParent := ThArr[i].FFoundBitmaps[j].YOffsetFromParent;
-            AFoundBitmaps[Length(AFoundBitmaps) - 1].ResultedErrorCount := ThArr[i].FFoundBitmaps[j].ResultedErrorCount;
-            AResultedErrorCount := ThArr[i].FFoundBitmaps[j].ResultedErrorCount;
+            AFoundBitmaps[Length(AFoundBitmaps) - 1].XOffsetFromParent := ThArr[FirstThIndexWithResult].FFoundBitmaps[0].XOffsetFromParent;
+            AFoundBitmaps[Length(AFoundBitmaps) - 1].YOffsetFromParent := ThArr[FirstThIndexWithResult].FFoundBitmaps[0].YOffsetFromParent;
+            AFoundBitmaps[Length(AFoundBitmaps) - 1].ResultedErrorCount := ThArr[FirstThIndexWithResult].FFoundBitmaps[0].ResultedErrorCount;
+            AResultedErrorCount := ThArr[FirstThIndexWithResult].FFoundBitmaps[0].ResultedErrorCount;
           end;
         end;
-    end
+      end;
+
+      tk := GetTickCount64;
+      repeat
+        ThreadsAreStillRunning := False;
+        for i := 0 to Length(Intervals) - 1 do
+          if Assigned(ThArr[i]) and ThArr[i].FDone then
+          begin
+            ThreadsAreStillRunning := True;
+            FreeAndNil(ThArr[i]);
+          end;
+
+        if not ThreadsAreStillRunning then
+          Break;
+
+        Sleep(1);
+      until GetTickCount64 - tk > 1000;
+    end  //AThreadCount
     else
     begin
-      if FirstThIndexWithResult > -1 then  //at least one thread found the bitmap
-      begin
-        Result := True;
-        SubCnvXOffset := ThArr[FirstThIndexWithResult].FSubCnvXOffset;
-        SubCnvYOffset := ThArr[FirstThIndexWithResult].FSubCnvYOffset;
-
-        if Length(ThArr[FirstThIndexWithResult].FFoundBitmaps) > 0 then //it should be > 0
+      for yy := 0 to YAmount do                //AResultedErrorCount makes sense only when the searched bitmap has the same size as the area in which it is searched for
+        for xx := 0 to XAmount do
         begin
-          SetLength(AFoundBitmaps, Length(AFoundBitmaps) + 1);
-          AFoundBitmaps[Length(AFoundBitmaps) - 1].XOffsetFromParent := ThArr[FirstThIndexWithResult].FFoundBitmaps[0].XOffsetFromParent;
-          AFoundBitmaps[Length(AFoundBitmaps) - 1].YOffsetFromParent := ThArr[FirstThIndexWithResult].FFoundBitmaps[0].YOffsetFromParent;
-          AFoundBitmaps[Length(AFoundBitmaps) - 1].ResultedErrorCount := ThArr[FirstThIndexWithResult].FFoundBitmaps[0].ResultedErrorCount;
-          AResultedErrorCount := ThArr[FirstThIndexWithResult].FFoundBitmaps[0].ResultedErrorCount;
+          if (AStopSearchOnDemand <> nil) and AStopSearchOnDemand^ then
+            Exit;
+
+          if (AOutsideTickCount > 0) and (GetTickCount64 - AOutsideTickCount > APrecisionTimeout) then
+            raise EBmpMatchTimeout.Create('PrecisionTimeout on searching for SubControl.'); //Exit;
+                                                                                                                             //Avoid ignoring on "pre-search", because of false positives. Those would cause a longer search time.
+          if CanvasPosMatch(SrcMat, SubMat, xx, yy, SrcWidth, SrcHeight, PreSizeX, PreSizeY, ColorErrorLevel, PreErrorCount, AIgnoreBackgroundColor {False}, ABackgroundColor, AIgnoredColorsArr, AOutsideTickCount, APrecisionTimeout, AResultedErrorCount, AStopSearchOnDemand, StopSearchOnMismatch) then
+          begin
+            if CanvasPosMatch(SrcMat, SubMat, xx, yy, SrcWidth, SrcHeight, SubWidth, SubHeight, ColorErrorLevel, TotalErrorCount, AIgnoreBackgroundColor, ABackgroundColor, AIgnoredColorsArr, AOutsideTickCount, APrecisionTimeout, AResultedErrorCount, AStopSearchOnDemand, StopSearchOnMismatch) then
+            begin
+              Result := True;
+              SubCnvXOffset := xx;
+              SubCnvYOffset := yy;
+              SetLength(AFoundBitmaps, Length(AFoundBitmaps) + 1);
+              AFoundBitmaps[Length(AFoundBitmaps) - 1].XOffsetFromParent := xx;
+              AFoundBitmaps[Length(AFoundBitmaps) - 1].YOffsetFromParent := yy;
+              AFoundBitmaps[Length(AFoundBitmaps) - 1].ResultedErrorCount := AResultedErrorCount;
+
+              if not AGetAllBitmaps then
+                Exit;                      //stop only if a single bitmap result is expected
+            end;
+
+            ////verify again here, right before the RandomSleep call
+            //if (AOutsideTickCount > 0) and (GetTickCount64 - AOutsideTickCount > APrecisionTimeout) then
+            //  Exit;
+
+            RandomSleep(ASleepySearch);
+          end;
         end;
-      end;
-    end;
-
-    tk := GetTickCount64;
-    repeat
-      ThadsAreStillRunning := False;
-      for i := 0 to Length(Intervals) - 1 do
-        if Assigned(ThArr[i]) and ThArr[i].FDone then
-        begin
-          ThadsAreStillRunning := True;
-          FreeAndNil(ThArr[i]);
-        end;
-
-      if not ThadsAreStillRunning then
-        Break;
-
-      Sleep(1);
-    until GetTickCount64 - tk > 1000;
-
-    //for yy := 0 to YAmount do                //AResultedErrorCount makes sense only when the searched bitmap has the same size as the area in which it is searched for
-    //  for xx := 0 to XAmount do
-    //  begin
-    //    if (AStopSearchOnDemand <> nil) and AStopSearchOnDemand^ then
-    //      Exit;
-    //
-    //    if (AOutsideTickCount > 0) and (GetTickCount64 - AOutsideTickCount > APrecisionTimeout) then
-    //      raise EBmpMatchTimeout.Create('PrecisionTimeout on searching for SubControl.'); //Exit;
-    //                                                                                                                       //Avoid ignoring on "pre-search", because of false positives. Those would cause a longer search time.
-    //    if CanvasPosMatch(SrcMat, SubMat, xx, yy, SrcWidth, SrcHeight, PreSizeX, PreSizeY, ColorErrorLevel, PreErrorCount, AIgnoreBackgroundColor {False}, ABackgroundColor, AIgnoredColorsArr, AOutsideTickCount, APrecisionTimeout, AResultedErrorCount, AStopSearchOnDemand, StopSearchOnMismatch) then
-    //    begin
-    //      if CanvasPosMatch(SrcMat, SubMat, xx, yy, SrcWidth, SrcHeight, SubWidth, SubHeight, ColorErrorLevel, TotalErrorCount, AIgnoreBackgroundColor, ABackgroundColor, AIgnoredColorsArr, AOutsideTickCount, APrecisionTimeout, AResultedErrorCount, AStopSearchOnDemand, StopSearchOnMismatch) then
-    //      begin
-    //        Result := True;
-    //        SubCnvXOffset := xx;
-    //        SubCnvYOffset := yy;
-    //        SetLength(AFoundBitmaps, Length(AFoundBitmaps) + 1);
-    //        AFoundBitmaps[Length(AFoundBitmaps) - 1].XOffsetFromParent := xx;
-    //        AFoundBitmaps[Length(AFoundBitmaps) - 1].YOffsetFromParent := yy;
-    //        AFoundBitmaps[Length(AFoundBitmaps) - 1].ResultedErrorCount := AResultedErrorCount;
-    //
-    //        if not AGetAllBitmaps then
-    //          Exit;                      //stop only if a single bitmap result is expected
-    //      end;
-    //
-    //      ////verify again here, right before the RandomSleep call
-    //      //if (AOutsideTickCount > 0) and (GetTickCount64 - AOutsideTickCount > APrecisionTimeout) then
-    //      //  Exit;
-    //
-    //      RandomSleep(ASleepySearch);
-    //    end;
-    //  end;
+    end; //AThreadCount
   end;
 end;
 
@@ -1363,6 +1370,7 @@ function BitmapPosMatch(Algorithm: TMatchBitmapAlgorithm;
                         var AIgnoredColorsArr: TColorArr;
                         ASleepySearch: Byte;
                         AOutsideTickCount, APrecisionTimeout: QWord;
+                        AThreadCount: Integer;
                         out AResultedErrorCount: Integer;
                         AStopSearchOnDemand: PBoolean = nil;
                         StopSearchOnMismatch: Boolean = True): Boolean;
@@ -1432,6 +1440,7 @@ begin
                                             ASleepySearch,
                                             AOutsideTickCount,
                                             APrecisionTimeout,
+                                            AThreadCount,
                                             AResultedErrorCount,
                                             AStopSearchOnDemand,
                                             StopSearchOnMismatch);

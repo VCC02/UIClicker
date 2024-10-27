@@ -1573,6 +1573,7 @@ begin
   FindControlInputData.MatchByHistogramNumericSettings.MostSignificantColorCountInBackgroundBmp := StrToIntDef(EvaluateReplacements(AFindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp), 15);
 
   FindControlInputData.CropFromScreenshot := AFindControlOptions.CropFromScreenshot;
+  FindControlInputData.ThreadCount := StrToIntDef(EvaluateReplacements(AFindControlOptions.ThreadCount), 0);
 end;
 
 
@@ -2016,6 +2017,7 @@ begin
 
             if FindControlOnScreen_Result or not FindControlInputData.StopSearchOnMismatch then
             begin
+              SetActionVarValue('$ActionExecDuration$', IntToStr(GetTickCount64 - InitialTickCount));
               if not FindControlOnScreen_Result and not FindControlInputData.StopSearchOnMismatch then
                 AddToLog('Can''t find the subcontrol (text), but the searching went further, to get the error count. See $ResultedErrorCount$.');
 
@@ -2145,6 +2147,7 @@ begin
 
             if FindControlOnScreen_Result or not FindControlInputData.StopSearchOnMismatch then
             begin
+              SetActionVarValue('$ActionExecDuration$', IntToStr(GetTickCount64 - InitialTickCount));
               if not FindControlOnScreen_Result and not FindControlInputData.StopSearchOnMismatch then
                 AddToLog('Can''t find the subcontrol (bmp), but the searching went further, to get the error count. See $ResultedErrorCount$.');
 
@@ -2287,6 +2290,7 @@ begin
 
                 if FindControlOnScreen_Result or not FindControlInputData.StopSearchOnMismatch then
                 begin
+                  SetActionVarValue('$ActionExecDuration$', IntToStr(GetTickCount64 - InitialTickCount));
                   if not FindControlOnScreen_Result and not FindControlInputData.StopSearchOnMismatch then
                     AddToLog('Can''t find the subcontrol (pmtv), but the searching went further, to get the error count. See $ResultedErrorCount$.');
 
