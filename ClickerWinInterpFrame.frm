@@ -547,6 +547,14 @@ object frClickerWinInterp: TfrClickerWinInterp
       Caption = 'Configure multi-size recording...'
       Enabled = False
     end
+    object Separator4: TMenuItem
+      Caption = '-'
+    end
+    object MenuItem_ToggleRecordingSelectedAreaOnly: TMenuItem
+      AutoCheck = True
+      Caption = 'Toggle recording selected area only'
+      OnClick = MenuItem_ToggleRecordingSelectedAreaOnlyClick
+    end
   end
   object imglstSpinner: TImageList
     Left = 77

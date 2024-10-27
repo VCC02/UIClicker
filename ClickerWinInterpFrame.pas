@@ -92,6 +92,8 @@ type
     lblGauge: TLabel;
     lblHighlightingLabels: TLabel;
     memCompInfo: TMemo;
+    MenuItem_ToggleRecordingSelectedAreaOnly: TMenuItem;
+    Separator4: TMenuItem;
     MenuItem_UpdateTreeValuesFromSelection: TMenuItem;
     Separator3: TMenuItem;
     MenuItem_ConfigureMultiSizeRecording: TMenuItem;
@@ -149,6 +151,7 @@ type
     procedure MenuItem_RecordMultipleSizesClick(Sender: TObject);
     procedure MenuItem_SaveSelectedComponentToFileClick(Sender: TObject);
     procedure MenuItem_SaveSelectionToFileClick(Sender: TObject);
+    procedure MenuItem_ToggleRecordingSelectedAreaOnlyClick(Sender: TObject);
     procedure MenuItem_UpdateTreeValuesFromSelectionClick(Sender: TObject);
     procedure pnlDragMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
@@ -222,6 +225,7 @@ type
     FHold: Boolean;
     FSplitterMouseDownGlobalPos: TPoint;
     FSplitterMouseDownImagePos: TPoint;
+    FRecordSelectedAreaOnly: Boolean;
 
     FOnGetConnectionAddress: TOnGetConnectionAddress;
     FOnGetSelectedCompFromRemoteWin: TOnGetSelectedCompFromRemoteWin;
@@ -1008,6 +1012,7 @@ begin
   imgLiveScreenshot.Top := 0;
   FSelectionHold := False;
   FUpdatedVstText := False;
+  FRecordSelectedAreaOnly := False;
 
   FSelectedComponentText := 'no selected component';
   FSelectedComponentClassName := 'no selected component';
@@ -1430,10 +1435,18 @@ var
   Res: LongBool;
   SrcRect, DestRect: TRect;
   FullScreenBmp: TBitmap;
+  SelectionLeft, SelectionTop: Integer;
+  SelectionRight, SelectionBottom: Integer;
 begin
   FDoneRec := False;
   if GetWindowRect(AInterprettedHandle, rct) = False then
     Exit;
+
+  SelectionLeft := FSelectedComponentLeftLimitLabel.Left;
+  SelectionTop := FSelectedComponentTopLimitLabel.Top;
+
+  SelectionRight := FSelectedComponentRightLimitLabel.Left;
+  SelectionBottom := FSelectedComponentBottomLimitLabel.Top;
 
   SetLength(ImgMatrix, 0);
   SetLength(ImgHWMatrix, 0);
@@ -1507,12 +1520,21 @@ begin
       end;
 
       Step := AStep;
-      x := 0; //must be initialized also here, bcause of UseHCursor
+      x := 0; //must be initialized also here, because of UseHCursor
       y := 0;
+
+      if FRecordSelectedAreaOnly then
+      begin
+        x := SelectionLeft;
+        y := SelectionTop;
+      end;
+
       repeat
         Inc(y, Step);
 
         x := 0;
+        if FRecordSelectedAreaOnly then
+          x := SelectionLeft;
         repeat
           Inc(x, Step);
 
@@ -1586,13 +1608,21 @@ begin
           if x and $FF = $FF then
           begin
             prbRecording.Position := YLine + x;
-            lblGauge.Caption := IntToStr(prbRecording.Position * 100 div Length(ImgMatrix)) + ' %';
+            lblGauge.Caption := IntToStr(prbRecording.Position * 100 div prbRecording.Max) + ' %';
             Application.Title := lblGauge.Caption;
           end;
 
           if FDoneRec then
             Break;
+
+          if FRecordSelectedAreaOnly then
+            if x >= SelectionRight - 1 then
+              Break;
         until x >= w - 1;
+
+        if FRecordSelectedAreaOnly then
+          if y >= SelectionBottom - 1 then
+            Break;
       until y >= h - 1;
     finally
       InitBmp.Free;
@@ -1934,6 +1964,13 @@ begin
   finally
     SaveDialog.Free;
   end;
+end;
+
+
+procedure TfrClickerWinInterp.MenuItem_ToggleRecordingSelectedAreaOnlyClick(
+  Sender: TObject);
+begin
+  FRecordSelectedAreaOnly := MenuItem_ToggleRecordingSelectedAreaOnly.Checked;
 end;
 
 
@@ -2511,7 +2548,7 @@ begin
         if x and $FF = $FF then
         begin
           prbRecording.Position := YLine + x;
-          lblGauge.Caption := IntToStr(prbRecording.Position * 100 div Length(ImgMatrix)) + ' %';
+          lblGauge.Caption := IntToStr(prbRecording.Position * 100 div prbRecording.Max) + ' %';
           Application.Title := lblGauge.Caption;
         end;
       until x >= RectWidth - 1;
