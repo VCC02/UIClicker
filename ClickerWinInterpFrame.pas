@@ -92,6 +92,9 @@ type
     lblGauge: TLabel;
     lblHighlightingLabels: TLabel;
     memCompInfo: TMemo;
+    MenuItem_DeleteSubComponent: TMenuItem;
+    MenuItem_AddSubcomponent: TMenuItem;
+    Separator5: TMenuItem;
     MenuItem_ToggleRecordingSelectedAreaOnly: TMenuItem;
     Separator4: TMenuItem;
     MenuItem_UpdateTreeValuesFromSelection: TMenuItem;
@@ -145,8 +148,10 @@ type
     procedure MenuItemCopyFindControlAndClickActionsToClipBoardClick(
       Sender: TObject);
     procedure MenuItemRecordWithMouseSwipeClick(Sender: TObject);
+    procedure MenuItem_AddSubcomponentClick(Sender: TObject);
     procedure MenuItem_CopySelectedComponentToClipboardClick(Sender: TObject);
     procedure MenuItem_CopySelectionToClipboardClick(Sender: TObject);
+    procedure MenuItem_DeleteSubComponentClick(Sender: TObject);
     procedure MenuItem_RecordFromRemoteClick(Sender: TObject);
     procedure MenuItem_RecordMultipleSizesClick(Sender: TObject);
     procedure MenuItem_SaveSelectedComponentToFileClick(Sender: TObject);
@@ -1419,7 +1424,7 @@ end;
 
 procedure TfrClickerWinInterp.RecordWithMouseSwipe(AInterprettedHandle: THandle; AStep: Integer = 1);
 var
-  InitBmp, CurrentBmp: TBitmap;
+  InitBmp, CurrentBmp, PrevBmp: TBitmap;
   rct: TRect;
   x, y, w, h: Integer;
   CurrentX, CurrentY, YLine, Step: Integer;
@@ -1495,6 +1500,7 @@ begin
     SetCursorPos(Screen.Width, Screen.Height);
     InitBmp := TBitmap.Create;
     CurrentBmp := TBitmap.Create;
+    PrevBmp := TBitmap.Create;
     try
       if not UseFullScreenshot then
         ScreenShot(AInterprettedHandle, InitBmp, 0, 0, w, h)
@@ -1502,6 +1508,7 @@ begin
       begin
         WipeBitmap(InitBmp, w, h);
         WipeBitmap(CurrentBmp, w, h);
+        WipeBitmap(PrevBmp, w, h);
 
         SrcRect := rct;
 
@@ -1518,6 +1525,8 @@ begin
           FullScreenBmp.Free;
         end;
       end;
+
+      PrevBmp.Assign(InitBmp);
 
       Step := AStep;
       x := 0; //must be initialized also here, because of UseHCursor
@@ -1563,7 +1572,7 @@ begin
             Res := GetCursorInfo(pci);
           end;
 
-          if not BitmapsAreEqual(InitBmp, CurrentBmp, w, h) or
+          if not BitmapsAreEqual(InitBmp, CurrentBmp, w, h) or not BitmapsAreEqual(PrevBmp, CurrentBmp, w, h) or
             (UseHCursor and Res and (pci.hCursor <> 65539)) then
           begin
             imgSpinnerDiff.Visible := True;
@@ -1600,6 +1609,8 @@ begin
           else
             imgSpinnerDiff.Visible := False;
 
+          PrevBmp.Assign(CurrentBmp);
+
           Application.ProcessMessages;
           //Sleep(10);
           if GetAsyncKeyState(VK_ESCAPE) < 0 then
@@ -1627,6 +1638,7 @@ begin
     finally
       InitBmp.Free;
       CurrentBmp.Free;
+      PrevBmp.Free;
     end;
 
     RectsToTree(DiffRects, ImgMatrix, ImgHWMatrix);
@@ -1712,6 +1724,37 @@ begin
 end;
 
 
+procedure TfrClickerWinInterp.MenuItem_AddSubcomponentClick(Sender: TObject);
+var
+  Node: PVirtualNode;
+  CompData: PHighlightedCompRec;
+begin
+  Node := vstComponents.GetFirstSelected;
+  if Node = nil then
+  begin
+    MessageBox(Handle, 'Please record a component, first.',  PChar(Caption), MB_ICONINFORMATION);
+    Exit;
+  end;
+
+  Node := vstComponents.AddChild(Node);
+
+  CompData := vstComponents.GetNodeData(Node);
+  if CompData = nil then
+  begin
+    MessageBox(Handle, 'Can''t get component info.', PChar(Caption), MB_ICONERROR);
+    Exit;
+  end;
+
+  CompData^.AssignedColor := clBlack; //maybe a new color should be assigned
+  CompData^.ManuallyAdded := True; //at least, use to allow editing
+  CompData^.CompRec.ClassName := 'NewClass';
+  CompData^.CompRec.Text := 'NewText';
+
+  vstComponents.Selected[Node] := True;
+  vstComponents.Expanded[Node^.Parent] := True;
+end;
+
+
 procedure TfrClickerWinInterp.MenuItemCopyFindControlAndCachePositionActionsToClipBoardClick
   (Sender: TObject);
 begin
@@ -1776,6 +1819,25 @@ begin
   finally
     CroppedBMP.Free;
   end;
+end;
+
+
+procedure TfrClickerWinInterp.MenuItem_DeleteSubComponentClick(Sender: TObject);
+var
+  Node: PVirtualNode;
+begin
+  Node := vstComponents.GetFirstSelected;
+
+  if Node = nil then
+  begin
+    MessageBox(Handle, 'Please select at least one component.', PChar(Caption), MB_ICONINFORMATION);
+    Exit;
+  end;
+
+  if MessageBox(Handle, 'Are you sure you want to delete the selected component (and its subcomponents)?', PChar(Caption), MB_ICONQUESTION + MB_YESNO) = IDNO then
+    Exit;
+
+  vstComponents.DeleteNode(Node);
 end;
 
 
@@ -3173,21 +3235,36 @@ begin
     Exit;
 
   case Column of
-    0:
-      NodeData^.CompRec.Handle := StrToIntDef(FEditingText, 0);
+    0: NodeData^.CompRec.Handle := StrToIntDef(FEditingText, 0);
+    1: NodeData^.CompRec.ClassName := FEditingText;
+    2: NodeData^.CompRec.Text := FEditingText;
 
-    1:
-      NodeData^.CompRec.ClassName := FEditingText;
-
-    2:
-      NodeData^.CompRec.Text := FEditingText;
+    3: NodeData^.AssignedColor := HexToInt(FEditingText);
+    4: NodeData^.CompRec.ComponentRectangle.Left := StrToIntDef(FEditingText, 0);
+    5: NodeData^.CompRec.ComponentRectangle.Top := StrToIntDef(FEditingText, 0);
+    6: NodeData^.CompRec.ComponentRectangle.Right := StrToIntDef(FEditingText, 0);
+    7: NodeData^.CompRec.ComponentRectangle.Bottom := StrToIntDef(FEditingText, 0);
+    8: NodeData^.LocalX := StrToIntDef(FEditingText, 0);
+    9: NodeData^.LocalY := StrToIntDef(FEditingText, 0);
+    10: NodeData^.LocalX_FromParent := StrToIntDef(FEditingText, 0);
+    11: NodeData^.LocalY_FromParent := StrToIntDef(FEditingText, 0);
   end;
 end;
 
 
 procedure TfrClickerWinInterp.vstComponentsEditing(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; var Allowed: Boolean);
+var
+  NodeData: PHighlightedCompRec;
 begin
   Allowed := Column in [0..2];
+
+  NodeData := vstComponents.GetNodeData(Node);
+  if NodeData = nil then
+    Exit;
+
+  if NodeData^.ManuallyAdded then
+    Allowed := Allowed or (Column in [3..11]);
+
   FUpdatedVstText := False;
 end;
 

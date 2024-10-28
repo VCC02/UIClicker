@@ -465,6 +465,17 @@ object frClickerWinInterp: TfrClickerWinInterp
       Caption = 'Create FindControl (+Cache position) actions and copy them to clipboard'
       OnClick = MenuItemCopyFindControlAndCachePositionActionsToClipBoardClick
     end
+    object Separator5: TMenuItem
+      Caption = '-'
+    end
+    object MenuItem_AddSubcomponent: TMenuItem
+      Caption = 'Add subcomponent'
+      OnClick = MenuItem_AddSubcomponentClick
+    end
+    object MenuItem_DeleteSubComponent: TMenuItem
+      Caption = 'Delete (sub)component'
+      OnClick = MenuItem_DeleteSubComponentClick
+    end
   end
   object pmExtraRecording: TPopupMenu
     Left = 221
