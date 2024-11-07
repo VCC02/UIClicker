@@ -50,6 +50,28 @@ type
     function GetOnGetSelectedCompFromRemoteWin: TOnGetSelectedCompFromRemoteWin;
     procedure SetOnGetSelectedCompFromRemoteWin(Value: TOnGetSelectedCompFromRemoteWin);
 
+    function GetOnInsertTreeComponent: TOnInsertTreeComponent;
+    procedure SetOnInsertTreeComponent(Value: TOnInsertTreeComponent);
+
+    function GetOnClearWinInterp: TOnClearWinInterp;
+    procedure SetOnClearWinInterp(Value: TOnClearWinInterp);
+
+    function GetOnOpenDialogExecute: TOnOpenDialogExecute;
+    procedure SetOnOpenDialogExecute(Value: TOnOpenDialogExecute);
+    function GetOnGetOpenDialogFileName: TOnGetOpenDialogFileName;
+    procedure SetOnGetOpenDialogFileName(Value: TOnGetOpenDialogFileName);
+    function GetOnSaveDialogExecute: TOnOpenDialogExecute;
+    procedure SetOnSaveDialogExecute(Value: TOnOpenDialogExecute);
+    function GetOnGetSaveDialogFileName: TOnGetOpenDialogFileName;
+    procedure SetOnGetSaveDialogFileName(Value: TOnGetOpenDialogFileName);
+
+    function GetOnLoadFileFromStream: TOnLoadFileFromStream;
+    procedure SetOnLoadFileFromStream(Value: TOnLoadFileFromStream);
+    function GetOnSaveFileToStream: TOnLoadFileFromStream;
+    procedure SetOnSaveFileToStream(Value: TOnLoadFileFromStream);
+    function GetOnFileExists: TOnFileExists;
+    procedure SetOnFileExists(Value: TOnFileExists);
+
     function GetSelectedComponentText: string;
     function GetSelectedComponentClassName: string;
   public
@@ -67,6 +89,17 @@ type
 
     property OnGetConnectionAddress: TOnGetConnectionAddress read GetOnGetConnectionAddress write SetOnGetConnectionAddress;
     property OnGetSelectedCompFromRemoteWin: TOnGetSelectedCompFromRemoteWin read GetOnGetSelectedCompFromRemoteWin write SetOnGetSelectedCompFromRemoteWin;
+    property OnInsertTreeComponent: TOnInsertTreeComponent read GetOnInsertTreeComponent write SetOnInsertTreeComponent;
+    property OnClearWinInterp: TOnClearWinInterp read GetOnClearWinInterp write SetOnClearWinInterp;
+
+    property OnOpenDialogExecute: TOnOpenDialogExecute read GetOnOpenDialogExecute write SetOnOpenDialogExecute;
+    property OnGetOpenDialogFileName: TOnGetOpenDialogFileName read GetOnGetOpenDialogFileName write SetOnGetOpenDialogFileName;
+    property OnSaveDialogExecute: TOnOpenDialogExecute read GetOnSaveDialogExecute write SetOnSaveDialogExecute;
+    property OnGetSaveDialogFileName: TOnGetOpenDialogFileName read GetOnGetSaveDialogFileName write SetOnGetSaveDialogFileName;
+
+    property OnLoadFileFromStream: TOnLoadFileFromStream read GetOnLoadFileFromStream write SetOnLoadFileFromStream;
+    property OnSaveFileToStream: TOnLoadFileFromStream read GetOnSaveFileToStream write SetOnSaveFileToStream;
+    property OnFileExists: TOnFileExists read GetOnFileExists write SetOnFileExists;
   end;
 
 var
@@ -115,6 +148,114 @@ end;
 procedure TfrmClickerWinInterp.SetOnGetSelectedCompFromRemoteWin(Value: TOnGetSelectedCompFromRemoteWin);
 begin
   FWinInterpFrame.OnGetSelectedCompFromRemoteWin := Value;
+end;
+
+
+function TfrmClickerWinInterp.GetOnInsertTreeComponent: TOnInsertTreeComponent;
+begin
+  Result := FWinInterpFrame.OnInsertTreeComponent;
+end;
+
+
+procedure TfrmClickerWinInterp.SetOnInsertTreeComponent(Value: TOnInsertTreeComponent);
+begin
+  FWinInterpFrame.OnInsertTreeComponent := Value;
+end;
+
+
+function TfrmClickerWinInterp.GetOnClearWinInterp: TOnClearWinInterp;
+begin
+  Result := FWinInterpFrame.OnClearWinInterp;
+end;
+
+
+procedure TfrmClickerWinInterp.SetOnClearWinInterp(Value: TOnClearWinInterp);
+begin
+  FWinInterpFrame.OnClearWinInterp := Value;
+end;
+
+
+function TfrmClickerWinInterp.GetOnOpenDialogExecute: TOnOpenDialogExecute;
+begin
+  Result := FWinInterpFrame.OnOpenDialogExecute;
+end;
+
+
+procedure TfrmClickerWinInterp.SetOnOpenDialogExecute(Value: TOnOpenDialogExecute);
+begin
+  FWinInterpFrame.OnOpenDialogExecute := Value;
+end;
+
+
+function TfrmClickerWinInterp.GetOnGetOpenDialogFileName: TOnGetOpenDialogFileName;
+begin
+  Result := FWinInterpFrame.OnGetOpenDialogFileName;
+end;
+
+
+procedure TfrmClickerWinInterp.SetOnGetOpenDialogFileName(Value: TOnGetOpenDialogFileName);
+begin
+  FWinInterpFrame.OnGetOpenDialogFileName := Value;
+end;
+
+
+function TfrmClickerWinInterp.GetOnSaveDialogExecute: TOnOpenDialogExecute;
+begin
+  Result := FWinInterpFrame.OnSaveDialogExecute;
+end;
+
+
+procedure TfrmClickerWinInterp.SetOnSaveDialogExecute(Value: TOnOpenDialogExecute);
+begin
+  FWinInterpFrame.OnSaveDialogExecute := Value;
+end;
+
+
+function TfrmClickerWinInterp.GetOnGetSaveDialogFileName: TOnGetOpenDialogFileName;
+begin
+  Result := FWinInterpFrame.OnGetSaveDialogFileName;
+end;
+
+
+procedure TfrmClickerWinInterp.SetOnGetSaveDialogFileName(Value: TOnGetOpenDialogFileName);
+begin
+  FWinInterpFrame.OnGetSaveDialogFileName := Value;
+end;
+
+
+function TfrmClickerWinInterp.GetOnLoadFileFromStream: TOnLoadFileFromStream;
+begin
+  Result := FWinInterpFrame.OnLoadFileFromStream;
+end;
+
+
+procedure TfrmClickerWinInterp.SetOnLoadFileFromStream(Value: TOnLoadFileFromStream);
+begin
+  FWinInterpFrame.OnLoadFileFromStream := Value;
+end;
+
+
+function TfrmClickerWinInterp.GetOnSaveFileToStream: TOnLoadFileFromStream;
+begin
+  Result := FWinInterpFrame.OnSaveFileToStream;
+end;
+
+
+procedure TfrmClickerWinInterp.SetOnSaveFileToStream(Value: TOnLoadFileFromStream);
+begin
+  FWinInterpFrame.OnSaveFileToStream := Value;
+end;
+
+
+function TfrmClickerWinInterp.GetOnFileExists: TOnFileExists;
+begin
+  Result := FWinInterpFrame.OnFileExists;
+end;
+
+
+procedure TfrmClickerWinInterp.SetOnFileExists(Value: TOnFileExists);
+begin
+  FWinInterpFrame.OnFileExists := Value;
 end;
 
 

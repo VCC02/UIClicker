@@ -1,10 +1,10 @@
 object frmGradientTextMain: TfrmGradientTextMain
   Left = 100
-  Height = 608
+  Height = 636
   Top = 142
   Width = 623
   Caption = 'Gradient Text'
-  ClientHeight = 608
+  ClientHeight = 636
   ClientWidth = 623
   LCLVersion = '8.4'
   OnCreate = FormCreate
@@ -13172,19 +13172,161 @@ object frmGradientTextMain: TfrmGradientTextMain
     Height = 15
     Top = 368
     Width = 72
-    Anchors = [akRight, akBottom]
+    Anchors = [akTop, akRight]
     AutoSize = False
     Caption = 'Server log:'
   end
   object memLog: TMemo
     Left = 344
-    Height = 218
+    Height = 246
     Top = 384
     Width = 269
     Anchors = [akTop, akLeft, akRight, akBottom]
     ScrollBars = ssBoth
     TabOrder = 2
     WordWrap = False
+  end
+  object pnlHorizontalLabels1: TPanel
+    Left = 16
+    Height = 29
+    Top = 604
+    Width = 139
+    ClientHeight = 29
+    ClientWidth = 139
+    Color = clYellow
+    ParentBackground = False
+    ParentColor = False
+    TabOrder = 3
+    object lblHorizontalLabels1: TLabel
+      Left = 0
+      Height = 15
+      Top = 0
+      Width = 100
+      Caption = 'Horizontal Labels 1'
+    end
+    object lblHA: TLabel
+      Cursor = crHandPoint
+      Left = 5
+      Height = 10
+      Top = 16
+      Width = 27
+      AutoSize = False
+      Color = clBlue
+      ParentColor = False
+      Transparent = False
+      OnMouseEnter = lblHGenericMouseEnter
+      OnMouseLeave = lblHGenericMouseLeave
+    end
+    object lblHB: TLabel
+      Cursor = crHandPoint
+      Left = 37
+      Height = 10
+      Top = 16
+      Width = 27
+      AutoSize = False
+      Color = clBlue
+      ParentColor = False
+      Transparent = False
+      OnMouseEnter = lblHGenericMouseEnter
+      OnMouseLeave = lblHGenericMouseLeave
+    end
+    object lblHC: TLabel
+      Cursor = crHandPoint
+      Left = 69
+      Height = 10
+      Top = 16
+      Width = 27
+      AutoSize = False
+      Color = clBlue
+      ParentColor = False
+      Transparent = False
+      OnMouseEnter = lblHGenericMouseEnter
+      OnMouseLeave = lblHGenericMouseLeave
+    end
+    object lblHD: TLabel
+      Cursor = crHandPoint
+      Left = 101
+      Height = 10
+      Top = 16
+      Width = 27
+      AutoSize = False
+      Color = clBlue
+      ParentColor = False
+      Transparent = False
+      OnMouseEnter = lblHGenericMouseEnter
+      OnMouseLeave = lblHGenericMouseLeave
+    end
+  end
+  object pnlHorizontalLabels2: TPanel
+    Left = 160
+    Height = 29
+    Top = 604
+    Width = 120
+    ClientHeight = 29
+    ClientWidth = 120
+    Color = clYellow
+    ParentBackground = False
+    ParentColor = False
+    TabOrder = 4
+    object lblHorizontalLabels2: TLabel
+      Left = 0
+      Height = 15
+      Top = 0
+      Width = 100
+      Caption = 'Horizontal Labels 2'
+    end
+    object lblHA1: TLabel
+      Cursor = crHandPoint
+      Left = 5
+      Height = 10
+      Top = 16
+      Width = 27
+      AutoSize = False
+      Color = clBlue
+      ParentColor = False
+      Transparent = False
+      OnMouseEnter = lblHGenericMouseEnter
+      OnMouseLeave = lblHGenericMouseLeave
+    end
+    object lblHB1: TLabel
+      Cursor = crHandPoint
+      Left = 32
+      Height = 10
+      Top = 16
+      Width = 27
+      AutoSize = False
+      Color = clBlue
+      ParentColor = False
+      Transparent = False
+      OnMouseEnter = lblHGenericMouseEnter
+      OnMouseLeave = lblHGenericMouseLeave
+    end
+    object lblHC1: TLabel
+      Cursor = crHandPoint
+      Left = 59
+      Height = 10
+      Top = 16
+      Width = 27
+      AutoSize = False
+      Color = clBlue
+      ParentColor = False
+      Transparent = False
+      OnMouseEnter = lblHGenericMouseEnter
+      OnMouseLeave = lblHGenericMouseLeave
+    end
+    object lblHD1: TLabel
+      Cursor = crHandPoint
+      Left = 86
+      Height = 10
+      Top = 16
+      Width = 27
+      AutoSize = False
+      Color = clBlue
+      ParentColor = False
+      Transparent = False
+      OnMouseEnter = lblHGenericMouseEnter
+      OnMouseLeave = lblHGenericMouseLeave
+    end
   end
   object IdSchedulerOfThreadPool1: TIdSchedulerOfThreadPool
     MaxThreads = 30

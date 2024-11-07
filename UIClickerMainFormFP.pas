@@ -101,6 +101,9 @@ type
     procedure HandleOnSavePrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
     procedure HandleOnGetSelfHandles(AListOfSelfHandles: TStringList);
     function HandleOnGenerateAndSaveTreeWithWinInterp(AHandle: THandle; ATreeFileName: string; AStep: Integer; AUseMouseSwipe: Boolean): Boolean;
+
+    procedure HandleOnLoadFileFromStream(AFileName: string; AStream: TMemoryStream);
+    procedure HandleOnSaveFileToStream(AFileName: string; AStream: TMemoryStream);
   public
     property AllFormsAreCreated: Boolean write FAllFormsAreCreated;
   end;
@@ -143,6 +146,13 @@ procedure TfrmUIClickerMainForm.SetHandles;
 begin
   frmClickerWinInterp.OnGetConnectionAddress := HandleOnGetConnectionAddress;
   frmClickerWinInterp.OnGetSelectedCompFromRemoteWin := HandleOnGetSelectedCompFromRemoteWin;
+  frmClickerWinInterp.OnOpenDialogExecute := HandleOnOpenDialogExecute;
+  frmClickerWinInterp.OnGetOpenDialogFileName := HandleOnGetOpenDialogFileName;
+  frmClickerWinInterp.OnSaveDialogExecute := HandleOnSaveDialogExecute;
+  frmClickerWinInterp.OnGetSaveDialogFileName := HandleOnGetSaveDialogFileName;
+  frmClickerWinInterp.OnLoadFileFromStream := HandleOnLoadFileFromStream;
+  frmClickerWinInterp.OnSaveFileToStream := HandleOnSaveFileToStream;
+  frmClickerWinInterp.OnFileExists := HandleOnFileExists;
 
   frmClickerActions.OnCopyControlTextAndClassFromMainWindow := HandleOnCopyControlTextAndClassFromMainWindow;
   frmClickerActions.OnReLoadSettings := HandleOnReLoadActionsWindowSettings;
@@ -642,6 +652,19 @@ begin
     SetLength(ImgHWMatrix, 0);
     TreeContent.Free;
   end;
+end;
+
+
+procedure TfrmUIClickerMainForm.HandleOnLoadFileFromStream(AFileName: string; AStream: TMemoryStream);
+begin
+  AStream.LoadFromFile(AFileName);
+end;
+
+
+procedure TfrmUIClickerMainForm.HandleOnSaveFileToStream(AFileName: string; AStream: TMemoryStream);
+begin
+  CreateDirWithSubDirs(ExtractFileDir(AFileName));
+  AStream.SaveToFile(AFileName);
 end;
 
 

@@ -92,6 +92,7 @@ type
     lblGauge: TLabel;
     lblHighlightingLabels: TLabel;
     memCompInfo: TMemo;
+    MenuItem_ToggleRecordedEdgeExtending: TMenuItem;
     MenuItem_DeleteSubComponent: TMenuItem;
     MenuItem_AddSubcomponent: TMenuItem;
     Separator5: TMenuItem;
@@ -156,6 +157,7 @@ type
     procedure MenuItem_RecordMultipleSizesClick(Sender: TObject);
     procedure MenuItem_SaveSelectedComponentToFileClick(Sender: TObject);
     procedure MenuItem_SaveSelectionToFileClick(Sender: TObject);
+    procedure MenuItem_ToggleRecordedEdgeExtendingClick(Sender: TObject);
     procedure MenuItem_ToggleRecordingSelectedAreaOnlyClick(Sender: TObject);
     procedure MenuItem_UpdateTreeValuesFromSelectionClick(Sender: TObject);
     procedure pnlDragMouseDown(Sender: TObject; Button: TMouseButton;
@@ -231,11 +233,21 @@ type
     FSplitterMouseDownGlobalPos: TPoint;
     FSplitterMouseDownImagePos: TPoint;
     FRecordSelectedAreaOnly: Boolean;
+    FRecordedEdgeExtending: Boolean;
 
     FOnGetConnectionAddress: TOnGetConnectionAddress;
     FOnGetSelectedCompFromRemoteWin: TOnGetSelectedCompFromRemoteWin;
     FOnInsertTreeComponent: TOnInsertTreeComponent;
     FOnClearWinInterp: TOnClearWinInterp;
+
+    FOnOpenDialogExecute: TOnOpenDialogExecute;
+    FOnGetOpenDialogFileName: TOnGetOpenDialogFileName;
+    FOnSaveDialogExecute: TOnOpenDialogExecute;
+    FOnGetSaveDialogFileName: TOnGetOpenDialogFileName;
+
+    FOnLoadFileFromStream: TOnLoadFileFromStream;
+    FOnSaveFileToStream: TOnLoadFileFromStream;
+    FOnFileExists: TOnFileExists;
 
     procedure FTransparent_LeftMouseDown(Sender: TObject;
       Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
@@ -279,6 +291,15 @@ type
     procedure DoOnInsertTreeComponent(ACompData: PHighlightedCompRec);
     procedure DoOnClearWinInterp;
 
+    function DoOnOpenDialogExecute(AFilter: string): Boolean;
+    function DoOnGetOpenDialogFileName: string;
+    function DoOnSaveDialogExecute(AFilter: string): Boolean;
+    function DoOnGetSaveDialogFileName: string;
+
+    procedure DoOnLoadFileFromStream(AFileName: string; AStream: TMemoryStream);
+    procedure DoOnSaveFileToStream(AFileName: string; AStream: TMemoryStream);
+    function DoOnFileExists(const AFileName: string): Boolean;
+
     procedure CreateRemainingComponents;
     procedure AdjustHighlightingLabelsToScreenshot;
     procedure HighlightComponent(Node: PVirtualNode);
@@ -309,6 +330,8 @@ type
     procedure GenerateContent_AvgScreenshotAndGenComp;
 
     procedure RectsToTree(var ADiffRects: TCompRecArr; var ImgMatrix: TColorArr; var ImgHWMatrix: THandleArr);
+    procedure LoadScreenshotAsPng(AFileName: string; ADestImage: TImage);
+    procedure SaveScreenshotAsPng(AFileName: string; ASrcImage: TImage);
     procedure LoadImages(ABasePath: string);
     procedure ScanTargetControl;
 
@@ -333,8 +356,17 @@ type
 
     property OnGetConnectionAddress: TOnGetConnectionAddress read FOnGetConnectionAddress write FOnGetConnectionAddress;
     property OnGetSelectedCompFromRemoteWin: TOnGetSelectedCompFromRemoteWin read FOnGetSelectedCompFromRemoteWin write FOnGetSelectedCompFromRemoteWin;
-    property OnInsertTreeComponent: TOnInsertTreeComponent write FOnInsertTreeComponent;
-    property OnClearWinInterp: TOnClearWinInterp write FOnClearWinInterp;
+    property OnInsertTreeComponent: TOnInsertTreeComponent read FOnInsertTreeComponent write FOnInsertTreeComponent;
+    property OnClearWinInterp: TOnClearWinInterp read FOnClearWinInterp write FOnClearWinInterp;
+
+    property OnOpenDialogExecute: TOnOpenDialogExecute read FOnOpenDialogExecute write FOnOpenDialogExecute;
+    property OnGetOpenDialogFileName: TOnGetOpenDialogFileName read FOnGetOpenDialogFileName write FOnGetOpenDialogFileName;
+    property OnSaveDialogExecute: TOnOpenDialogExecute read FOnSaveDialogExecute write FOnSaveDialogExecute;
+    property OnGetSaveDialogFileName: TOnGetOpenDialogFileName read FOnGetSaveDialogFileName write FOnGetSaveDialogFileName;
+
+    property OnLoadFileFromStream: TOnLoadFileFromStream read FOnLoadFileFromStream write FOnLoadFileFromStream;
+    property OnSaveFileToStream: TOnLoadFileFromStream read FOnSaveFileToStream write FOnSaveFileToStream;
+    property OnFileExists: TOnFileExists read FOnFileExists write FOnFileExists;
   end;
 
 implementation
@@ -435,6 +467,65 @@ procedure TfrClickerWinInterp.DoOnClearWinInterp;
 begin
   if Assigned(FOnClearWinInterp) then
     FOnClearWinInterp;
+end;
+
+
+function TfrClickerWinInterp.DoOnOpenDialogExecute(AFilter: string): Boolean;
+begin
+  if not Assigned(FOnOpenDialogExecute) then
+    raise Exception.Create('OnOpenDialogExecute is not assigned.')
+  else
+    Result := FOnOpenDialogExecute(AFilter);
+end;
+
+
+function TfrClickerWinInterp.DoOnGetOpenDialogFileName: string;
+begin
+  if not Assigned(FOnGetOpenDialogFileName) then
+    raise Exception.Create('OnGetOpenDialogFileName is not assigned.')
+  else
+    Result := FOnGetOpenDialogFileName();
+end;
+
+
+function TfrClickerWinInterp.DoOnSaveDialogExecute(AFilter: string): Boolean;
+begin
+  if not Assigned(FOnSaveDialogExecute) then
+    raise Exception.Create('OnSaveDialogExecute is not assigned.')
+  else
+    Result := FOnSaveDialogExecute(AFilter);
+end;
+
+
+function TfrClickerWinInterp.DoOnGetSaveDialogFileName: string;
+begin
+  if not Assigned(FOnGetSaveDialogFileName) then
+    raise Exception.Create('OnGetSaveDialogFileName is not assigned.')
+  else
+    Result := FOnGetSaveDialogFileName();
+end;
+
+
+procedure TfrClickerWinInterp.DoOnLoadFileFromStream(AFileName: string; AStream: TMemoryStream);
+begin
+  if Assigned(FOnLoadFileFromStream) then
+    FOnLoadFileFromStream(AFileName, AStream);
+end;
+
+
+procedure TfrClickerWinInterp.DoOnSaveFileToStream(AFileName: string; AStream: TMemoryStream);
+begin
+  if Assigned(FOnSaveFileToStream) then
+    FOnSaveFileToStream(AFileName, AStream);
+end;
+
+
+function TfrClickerWinInterp.DoOnFileExists(const AFileName: string): Boolean;
+begin
+  if not Assigned(FOnFileExists) then
+    raise Exception.Create('OnFileExists is not assigned.')
+  else
+    Result := FOnFileExists(AFileName);
 end;
 
 
@@ -795,6 +886,8 @@ begin
   vstComponents.Top := 0;
   vstComponents.Width := 456;
   vstComponents.Anchors := [akLeft, akTop, akRight, akBottom];
+  //vstComponents.ButtonStyle := bsTriangle; //bsRectangle; //bsRectangle - to use *.res,     bsTriangle - to draw a triangle in code: line 13162
+  //vstComponents.ButtonFillMode := fmShaded; //to use *.res
   vstComponents.Colors.UnfocusedColor := clMedGray;
   vstComponents.Colors.UnfocusedSelectionColor := clGradientInactiveCaption;
   vstComponents.DefaultText := 'Node';
@@ -1018,6 +1111,7 @@ begin
   FSelectionHold := False;
   FUpdatedVstText := False;
   FRecordSelectedAreaOnly := False;
+  FRecordedEdgeExtending := True;
 
   FSelectedComponentText := 'no selected component';
   FSelectedComponentClassName := 'no selected component';
@@ -1025,6 +1119,15 @@ begin
   FOnGetConnectionAddress := nil;
   FOnGetSelectedCompFromRemoteWin := nil;
   FOnInsertTreeComponent := nil;
+  FOnClearWinInterp := nil;
+
+  FOnOpenDialogExecute := nil;
+  FOnGetOpenDialogFileName := nil;
+  FOnSaveDialogExecute := nil;
+  FOnGetSaveDialogFileName := nil;
+
+  FOnLoadFileFromStream := nil;
+  FOnSaveFileToStream := nil;
 
   pnlWinInterpSettings.Caption := '';
 
@@ -1578,7 +1681,7 @@ begin
             imgSpinnerDiff.Visible := True;
 
             IndexOfRect := GetIndexOfRect(DiffRects, CurrentX, CurrentY, ExtDirs);
-            if IndexOfRect = -1 then
+            if (IndexOfRect = -1) and FRecordedEdgeExtending or not BitmapsAreEqual(PrevBmp, CurrentBmp, w, h) and not FRecordedEdgeExtending then
             begin
               n := Length(DiffRects);
               SetLength(DiffRects, n + 1);
@@ -2026,6 +2129,13 @@ begin
   finally
     SaveDialog.Free;
   end;
+end;
+
+
+procedure TfrClickerWinInterp.MenuItem_ToggleRecordedEdgeExtendingClick(
+  Sender: TObject);
+begin
+  FRecordedEdgeExtending := MenuItem_ToggleRecordedEdgeExtending.Checked;
 end;
 
 
@@ -2728,117 +2838,87 @@ begin
 end;
 
 
-procedure TfrClickerWinInterp.LoadImages(ABasePath: string);
+procedure TfrClickerWinInterp.LoadScreenshotAsPng(AFileName: string; ADestImage: TImage);
 var
-  APng: TPNGImage;
+  Png: TPNGImage;
+  MemStream: TMemoryStream;
+begin
+  if DoOnFileExists(AFileName) then
+  begin
+    Png := TPNGImage.Create;
+    try
+      MemStream := TMemoryStream.Create;
+      try
+        DoOnLoadFileFromStream(AFileName, MemStream);
+        MemStream.Position := 0;
+        Png.LoadFromStream(MemStream);
+      finally
+        MemStream.Free;
+      end;
+
+      ADestImage.Picture.Bitmap.LoadFromDevice(Png.Canvas.Handle);
+    finally
+      Png.Free;
+    end;
+  end
+  else
+    memCompInfo.Lines.Add('Image not found: ' + AFileName);
+end;
+
+
+procedure TfrClickerWinInterp.SaveScreenshotAsPng(AFileName: string; ASrcImage: TImage);
+var
+  Png: TPNGImage;
+  MemStream: TMemoryStream;
+begin
+  Png := TPNGImage.Create;
+  try
+    Png.LoadFromDevice(ASrcImage.Canvas.Handle);
+
+    MemStream := TMemoryStream.Create;
+    try
+      Png.SaveToStream(MemStream);
+      MemStream.Position := 0;
+      DoOnSaveFileToStream(AFileName, MemStream);
+    finally
+      MemStream.Free;
+    end;
+  finally
+    Png.Free;
+  end;
+end;
+
+
+procedure FixScreenshotBasePath(var ABasePath: string);
+var
   ExtLen: Integer;
 begin
   ExtLen := Length(ExtractFileExt(ABasePath));
   Delete(ABasePath, Length(ABasePath) - ExtLen + 1, ExtLen);
 
-  CreateDirWithSubDirs(ABasePath);
   if ABasePath > '' then
     if ABasePath[Length(ABasePath)] <> PathDelim then
       ABasePath := ABasePath + PathDelim;
+end;
 
-  if FileExists(ABasePath + 'ScannedWindow.png') then
-  begin
-    APng := TPNGImage.Create;
-    try
-      APng.LoadFromFile(ABasePath + 'ScannedWindow.png');
-      imgScannedWindow.Picture.Bitmap.LoadFromDevice(APng.Canvas.Handle);
-    finally
-      APng.Free;
-    end;
-  end
-  else
-    memCompInfo.Lines.Add('Image not found: ' + ABasePath + 'ScannedWindow.png');
 
-  if FileExists(ABasePath + 'Screenshot.png') then
-  begin
-    APng := TPNGImage.Create;
-    try
-      APng.LoadFromFile(ABasePath + 'Screenshot.png');
-      imgScreenshot.Picture.Bitmap.LoadFromDevice(APng.Canvas.Handle);
-    finally
-      APng.Free;
-    end;
-  end
-  else
-    memCompInfo.Lines.Add('Image not found: ' + ABasePath + 'Screenshot.png');
-
-  if FileExists(ABasePath + 'HandleColors.png') then
-  begin
-    APng := TPNGImage.Create;
-    try
-      APng.LoadFromFile(ABasePath + 'HandleColors.png');
-      imgHandleColors.Picture.Bitmap.LoadFromDevice(APng.Canvas.Handle);
-    finally
-      APng.Free;
-    end;
-  end
-  else
-    memCompInfo.Lines.Add('Image not found: ' + ABasePath + 'HandleColors.png');
-
-  if FileExists(ABasePath + 'ScannedWindowWithText.png') then
-  begin
-    APng := TPNGImage.Create;
-    try
-      APng.LoadFromFile(ABasePath + 'ScannedWindowWithText.png');
-      imgScannedWindowWithText.Picture.Bitmap.LoadFromDevice(APng.Canvas.Handle);
-    finally
-      APng.Free;
-    end;
-  end
-  else
-    memCompInfo.Lines.Add('Image not found: ' + ABasePath + 'ScannedWindowWithText.png');
+procedure TfrClickerWinInterp.LoadImages(ABasePath: string);
+begin
+  FixScreenshotBasePath(ABasePath);
+  LoadScreenshotAsPng(ABasePath + 'ScannedWindow.png', imgScannedWindow);
+  LoadScreenshotAsPng(ABasePath + 'Screenshot.png', imgScreenshot);
+  LoadScreenshotAsPng(ABasePath + 'HandleColors.png', imgHandleColors);
+  LoadScreenshotAsPng(ABasePath + 'ScannedWindowWithText.png', imgScannedWindowWithText);
 end;
 
 
 procedure TfrClickerWinInterp.SaveImages(ABasePath: string);
-var
-  APng: TPNGImage;
-  ExtLen: Integer;
 begin
-  ExtLen := Length(ExtractFileExt(ABasePath));
-  Delete(ABasePath, Length(ABasePath) - ExtLen + 1, ExtLen);
-
-  CreateDirWithSubDirs(ABasePath);
-  if ABasePath > '' then
-    if ABasePath[Length(ABasePath)] <> PathDelim then
-      ABasePath := ABasePath + PathDelim;
-
-  APng := TPNGImage.Create;
-  try
-    APng.LoadFromDevice(imgScannedWindow.Canvas.Handle);
-    APng.SaveToFile(ABasePath + 'ScannedWindow.png');
-  finally
-    APng.Free;
-  end;
-
-  APng := TPNGImage.Create;
-  try
-    APng.LoadFromDevice(imgScreenshot.Canvas.Handle);
-    APng.SaveToFile(ABasePath + 'Screenshot.png');
-  finally
-    APng.Free;
-  end;
-
-  APng := TPNGImage.Create;
-  try
-    APng.LoadFromDevice(imgHandleColors.Canvas.Handle);
-    APng.SaveToFile(ABasePath + 'HandleColors.png');
-  finally
-    APng.Free;
-  end;
-
-  APng := TPNGImage.Create;
-  try
-    APng.LoadFromDevice(imgScannedWindowWithText.Canvas.Handle);
-    APng.SaveToFile(ABasePath + 'ScannedWindowWithText.png');
-  finally
-    APng.Free;
-  end;
+  FixScreenshotBasePath(ABasePath);
+  SaveScreenshotAsPng(ABasePath + 'ScannedWindow.png', imgScannedWindow);
+  SaveScreenshotAsPng(ABasePath + 'Screenshot.png', imgScreenshot);
+  SaveScreenshotAsPng(ABasePath + 'HandleColors.png', imgHandleColors);
+  SaveScreenshotAsPng(ABasePath + 'ScannedWindowWithText.png', imgScannedWindowWithText);
 end;
 
 
@@ -2851,114 +2931,121 @@ procedure TfrClickerWinInterp.btnExportClick(Sender: TObject);
 
 var
   Content: TStringList;
-  TempSaveDialog: TSaveDialog;
   Node: PVirtualNode;
   NodeData: PHighlightedCompRec;
-  Blanks: string;
+  Blanks, Fnm: string;
+  MemStream: TMemoryStream;
 begin
-  TempSaveDialog := TSaveDialog.Create(Self);
+  if not DoOnSaveDialogExecute('Yml files (*.yml)|*.yml|All files (*.*)|*.*') then
+    Exit;
+
+  Fnm := DoOnGetSaveDialogFileName;
+  if ExtractFileExt(Fnm) = '' then
+    Fnm := Fnm + '.yml';
+
+  Content := TStringList.Create;
   try
-    TempSaveDialog.Filter := 'Yml files (*.yml)|*.yml|All files (*.*)|*.*';
-
-    if not TempSaveDialog.Execute then
-      Exit;
-
-    if ExtractFileExt(TempSaveDialog.FileName) = '' then
-      TempSaveDialog.FileName := TempSaveDialog.FileName + '.yml';
-
-    Content := TStringList.Create;
+    Node := vstComponents.GetFirst;
     try
-      Node := vstComponents.GetFirst;
-      try
-        if Node = nil then
-          Exit;
+      if Node = nil then
+        Exit;
 
-        repeat
-          NodeData := vstComponents.GetNodeData(Node);
-          Blanks := MakeBlanks(vstComponents.GetNodeLevel(Node) shl 2);
+      repeat
+        NodeData := vstComponents.GetNodeData(Node);
+        Blanks := MakeBlanks(vstComponents.GetNodeLevel(Node) shl 2);
 
-          if NodeData = nil then
-            Content.Add(Blanks + 'Data_bug')
+        if NodeData = nil then
+          Content.Add(Blanks + 'Data_bug')
+        else
+        begin
+          Content.Add(Blanks + 'Handle: ' + IntToStr(NodeData^.CompRec.Handle));
+
+          if NodeData^.CompRec.IsSubControl then
+            Content.Add(Blanks + '    Type: ' + 'Subcontrol')
           else
-          begin
-            Content.Add(Blanks + 'Handle: ' + IntToStr(NodeData^.CompRec.Handle));
+            Content.Add(Blanks + '    Type: ' + 'Control');
 
-            if NodeData^.CompRec.IsSubControl then
-              Content.Add(Blanks + '    Type: ' + 'Subcontrol')
-            else
-              Content.Add(Blanks + '    Type: ' + 'Control');
+          Content.Add(Blanks + '    Text: "' + NodeData^.CompRec.Text + '"');
+          Content.Add(Blanks + '    Class: "' + NodeData^.CompRec.ClassName + '"');
+          Content.Add(Blanks + '    Left: ' + IntToStr(NodeData^.CompRec.ComponentRectangle.Left));
+          Content.Add(Blanks + '    Top: ' + IntToStr(NodeData^.CompRec.ComponentRectangle.Top));
+          Content.Add(Blanks + '    Right: ' + IntToStr(NodeData^.CompRec.ComponentRectangle.Right));
+          Content.Add(Blanks + '    Bottom: ' + IntToStr(NodeData^.CompRec.ComponentRectangle.Bottom));
+          Content.Add(Blanks + '    LocalX: ' + IntToStr(NodeData^.LocalX));
+          Content.Add(Blanks + '    LocalY: ' + IntToStr(NodeData^.LocalY));
+        end;
 
-            Content.Add(Blanks + '    Text: "' + NodeData^.CompRec.Text + '"');
-            Content.Add(Blanks + '    Class: "' + NodeData^.CompRec.ClassName + '"');
-            Content.Add(Blanks + '    Left: ' + IntToStr(NodeData^.CompRec.ComponentRectangle.Left));
-            Content.Add(Blanks + '    Top: ' + IntToStr(NodeData^.CompRec.ComponentRectangle.Top));
-            Content.Add(Blanks + '    Right: ' + IntToStr(NodeData^.CompRec.ComponentRectangle.Right));
-            Content.Add(Blanks + '    Bottom: ' + IntToStr(NodeData^.CompRec.ComponentRectangle.Bottom));
-            Content.Add(Blanks + '    LocalX: ' + IntToStr(NodeData^.LocalX));
-            Content.Add(Blanks + '    LocalY: ' + IntToStr(NodeData^.LocalY));
-          end;
-
-          Node := vstComponents.GetNext(Node);
-        until Node = nil;
-      finally
-        Content.SaveToFile(TempSaveDialog.FileName);
-      end;
+        Node := vstComponents.GetNext(Node);
+      until Node = nil;
     finally
-      Content.Free;
+      MemStream := TMemoryStream.Create;
+      try
+        Content.SaveToStream(MemStream);
+        MemStream.Position := 0;
+        DoOnSaveFileToStream(Fnm, MemStream);
+      finally
+        MemStream.Free;
+      end;
     end;
-
-    SaveImages(TempSaveDialog.FileName);
   finally
-    TempSaveDialog.Free;
+    Content.Free;
   end;
+
+  SaveImages(Fnm);
 end;
 
 
 procedure TfrClickerWinInterp.btnLoadTreeClick(Sender: TObject);
 var
-  TempOpenDialog: TOpenDialog;
+  Fnm: string;
+  MemStream: TMemoryStream;
 begin
-  TempOpenDialog := TOpenDialog.Create(nil);
+  if not DoOnOpenDialogExecute('Tree files (*.tree)|*.tree|All files (*.*)|*.*') then
+    Exit;
+
+  DoOnClearWinInterp;
+
+  MemStream := TMemoryStream.Create;
   try
-    TempOpenDialog.Filter := 'Tree files (*.tree)|*.tree|All files (*.*)|*.*';
-    if not TempOpenDialog.Execute then
-      Exit;
-
-    DoOnClearWinInterp;
-
+    Fnm := DoOnGetOpenDialogFileName;
     try
-      vstComponents.LoadFromFile(TempOpenDialog.FileName);
+      DoOnLoadFileFromStream(Fnm, MemStream);
+      MemStream.Position := 0;
+      vstComponents.LoadFromStream(MemStream);
     except
       on E: Exception do
         MessageBox(Handle, PChar(E.Message), PChar(Application.Title), MB_ICONERROR);
     end;
-
-    GenerateCompImagesfromTreeContent;
-    LoadImages(TempOpenDialog.FileName);
   finally
-    TempOpenDialog.Free;
+    MemStream.Free;
   end;
+
+  GenerateCompImagesfromTreeContent;
+  LoadImages(Fnm);
 end;
 
 
 procedure TfrClickerWinInterp.btnSaveTreeClick(Sender: TObject);
 var
-  TempSaveDialog: TSaveDialog;
+  Fnm: string;
+  MemStream: TMemoryStream;
 begin
-  TempSaveDialog := TSaveDialog.Create(nil);
+  if not DoOnSaveDialogExecute('Tree files (*.tree)|*.tree|All files (*.*)|*.*') then
+    Exit;
+
+  Fnm := DoOnGetSaveDialogFileName;
+  if ExtractFileExt(Fnm) = '' then
+    Fnm := Fnm + '.tree';
+
+  MemStream := TMemoryStream.Create;
   try
-    TempSaveDialog.Filter := 'Tree files (*.tree)|*.tree|All files (*.*)|*.*';
-    if not TempSaveDialog.Execute then
-      Exit;
-
-    if ExtractFileExt(TempSaveDialog.FileName) = '' then
-      TempSaveDialog.FileName := TempSaveDialog.FileName + '.tree';
-
-    vstComponents.SaveToFile(TempSaveDialog.FileName);
-    SaveImages(TempSaveDialog.FileName);
+    vstComponents.SaveToStream(MemStream);
+    MemStream.Position := 0;
+    DoOnSaveFileToStream(Fnm, MemStream);
   finally
-    TempSaveDialog.Free;
+    MemStream.Free;
   end;
+  SaveImages(Fnm);
 end;
 
 

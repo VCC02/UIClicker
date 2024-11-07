@@ -110,6 +110,8 @@ type
   TOnShowAutoComplete = procedure(AEdit: TEdit) of object;
   TOnUpdateActionScrollIndex = procedure(AActionScrollIndex: string) of object;
 
+  TOnLoadFileFromStream = procedure(AFileName: string; AStream: TMemoryStream) of object;
+
 const
   CClkActionStr: array[TClkAction] of string = ('Click', 'ExecApp', 'FindControl', 'FindSubControl',
                                                 'SetControlText', 'CallTemplate', 'Sleep', 'SetVar', 'WindowOperations',

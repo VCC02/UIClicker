@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2023 VCC
+    Copyright (C) 2024 VCC
     creation date: 19 Oct 2023
     initial release date: 19 Oct 2023
 
@@ -52,11 +52,23 @@ type
     IdSchedulerOfThreadPool1: TIdSchedulerOfThreadPool;
     imgBrowserRendering: TImage;
     imgGradient: TImage;
+    lblHA: TLabel;
+    lblHA1: TLabel;
+    lblHB: TLabel;
+    lblHB1: TLabel;
+    lblHC: TLabel;
+    lblHC1: TLabel;
+    lblHD: TLabel;
+    lblHD1: TLabel;
+    lblHorizontalLabels1: TLabel;
+    lblHorizontalLabels2: TLabel;
     lblServerLog: TLabel;
     lblCustomText: TLabel;
     lbeServerModePort: TLabeledEdit;
     lblServerInfo: TLabel;
     memLog: TMemo;
+    pnlHorizontalLabels1: TPanel;
+    pnlHorizontalLabels2: TPanel;
     trbTestTrackBar: TTrackBar;
     procedure btnResetTrackBarClick(Sender: TObject);
     procedure btnResetTrackBarMouseDown(Sender: TObject; Button: TMouseButton;
@@ -70,6 +82,8 @@ type
     procedure IdHTTPServer1Connect(AContext: TIdContext);
     procedure IdHTTPServer1Exception(AContext: TIdContext; AException: Exception
       );
+    procedure lblHGenericMouseLeave(Sender: TObject);
+    procedure lblHGenericMouseEnter(Sender: TObject);
     procedure trbTestTrackBarMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure trbTestTrackBarMouseUp(Sender: TObject; Button: TMouseButton;
@@ -415,6 +429,19 @@ begin
       //AddToLogFromThread('Server exception: ' + AException.Message);
   except
   end;
+end;
+
+
+
+procedure TfrmGradientTextMain.lblHGenericMouseLeave(Sender: TObject);
+begin
+  (Sender as TLabel).Color := clBlue;
+end;
+
+
+procedure TfrmGradientTextMain.lblHGenericMouseEnter(Sender: TObject);
+begin
+  (Sender as TLabel).Color := clLime;
 end;
 
 

@@ -566,6 +566,12 @@ object frClickerWinInterp: TfrClickerWinInterp
       Caption = 'Toggle recording selected area only'
       OnClick = MenuItem_ToggleRecordingSelectedAreaOnlyClick
     end
+    object MenuItem_ToggleRecordedEdgeExtending: TMenuItem
+      AutoCheck = True
+      Caption = 'Toggle recorded edge extending'
+      Checked = True
+      OnClick = MenuItem_ToggleRecordedEdgeExtendingClick
+    end
   end
   object imglstSpinner: TImageList
     Left = 77
