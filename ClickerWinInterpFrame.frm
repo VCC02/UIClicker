@@ -72,15 +72,6 @@ object frClickerWinInterp: TfrClickerWinInterp
         Smooth = True
         TabOrder = 3
       end
-      object chkMinimizeWhileRecording: TCheckBox
-        Left = 273
-        Height = 19
-        Top = 372
-        Width = 138
-        Anchors = [akLeft, akBottom]
-        Caption = 'Minimize on recording'
-        TabOrder = 4
-      end
       object lbeStep: TLabeledEdit
         Left = 401
         Height = 23
@@ -93,7 +84,7 @@ object frClickerWinInterp: TfrClickerWinInterp
         EditLabel.Caption = 'Step [px]'
         ParentShowHint = False
         ShowHint = True
-        TabOrder = 5
+        TabOrder = 4
         Text = '1'
       end
       object lblGauge: TLabel
@@ -113,7 +104,7 @@ object frClickerWinInterp: TfrClickerWinInterp
         Caption = 'Highlight selected component'
         Checked = True
         State = cbChecked
-        TabOrder = 6
+        TabOrder = 5
         OnChange = chkHighlightSelectedComponentChange
       end
       object rdgrpLayers: TRadioGroup
@@ -140,16 +131,8 @@ object frClickerWinInterp: TfrClickerWinInterp
           'Avg(Screenshot, Green Comp Rect)'
           'Avg(Screenshot, Assigned Comp Rect)'
         )
-        TabOrder = 7
+        TabOrder = 6
         OnClick = rdgrpLayersClick
-      end
-      object lblHighlightingLabels: TLabel
-        Left = 273
-        Height = 15
-        Top = 396
-        Width = 124
-        Anchors = [akLeft, akBottom]
-        Caption = 'Highlighting lines color'
       end
       object btnExport: TButton
         Left = 382
@@ -161,7 +144,7 @@ object frClickerWinInterp: TfrClickerWinInterp
         Caption = 'Export...'
         ParentShowHint = False
         ShowHint = True
-        TabOrder = 8
+        TabOrder = 7
         OnClick = btnExportClick
       end
       object btnSaveTree: TButton
@@ -174,7 +157,7 @@ object frClickerWinInterp: TfrClickerWinInterp
         Caption = 'Save Tree...'
         ParentShowHint = False
         ShowHint = True
-        TabOrder = 9
+        TabOrder = 8
         OnClick = btnSaveTreeClick
       end
       object btnLoadTree: TButton
@@ -187,7 +170,7 @@ object frClickerWinInterp: TfrClickerWinInterp
         Caption = 'Load Tree...'
         ParentShowHint = False
         ShowHint = True
-        TabOrder = 10
+        TabOrder = 9
         OnClick = btnLoadTreeClick
       end
       object spdbtnExtraRecording: TSpeedButton
@@ -250,53 +233,231 @@ object frClickerWinInterp: TfrClickerWinInterp
         ShowHint = True
         Visible = False
       end
-      object pnlvstComponents: TPanel
-        Left = 0
-        Height = 256
-        Top = 4
-        Width = 456
-        Anchors = [akTop, akLeft, akRight, akBottom]
-        Caption = 'pnlvstComponents'
-        Color = clYellow
-        ParentBackground = False
-        ParentColor = False
-        TabOrder = 11
-      end
-      object colboxHighlightingLabels: TColorBox
+      object prbRecordingWithMouseSwipe: TProgressBar
         Left = 273
-        Height = 22
-        Top = 413
-        Width = 184
+        Height = 8
+        Top = 292
+        Width = 140
         Anchors = [akLeft, akBottom]
-        ItemHeight = 16
-        TabOrder = 12
-        OnSelect = colboxHighlightingLabelsSelect
+        Smooth = True
+        TabOrder = 10
+        Visible = False
       end
-      object chkUseHCursor: TCheckBox
-        Left = 368
-        Height = 19
-        Hint = '[in work]'#13#10'Reads mouse cursor handle on every position during recording with mouse swipe.'#13#10'This may be useful when interactable components do not display a visual feedback while hovered,'#13#10'so the scan relies on changing the mouse cursor to detect component edges.'
-        Top = 438
-        Width = 82
-        Anchors = [akLeft, akBottom]
-        Caption = 'Use hCursor'
-        Checked = True
-        ParentShowHint = False
-        ShowHint = True
-        State = cbChecked
-        TabOrder = 13
-      end
-      object chkFullScr: TCheckBox
-        Left = 200
-        Height = 19
-        Hint = 'When checked, the MouseSwipe scan uses full screenshots, then crops the bitmaps to the required size.'#13#10'This is way slower than component screenshots, but it allows capturing content, which is not visible otherwise.'
-        Top = 372
-        Width = 56
-        Anchors = [akLeft, akBottom]
-        Caption = 'Full Scr'
-        ParentShowHint = False
-        ShowHint = True
-        TabOrder = 14
+      object PageControlWinInterp: TPageControl
+        Left = 0
+        Height = 264
+        Top = 0
+        Width = 457
+        ActivePage = TabSheet_Components
+        Anchors = [akTop, akLeft, akRight, akBottom]
+        TabIndex = 0
+        TabOrder = 11
+        OnChange = PageControlWinInterpChange
+        object TabSheet_Components: TTabSheet
+          Caption = 'Components'
+          ClientHeight = 236
+          ClientWidth = 449
+          object pnlvstComponents: TPanel
+            Left = 0
+            Height = 236
+            Top = 0
+            Width = 456
+            Anchors = [akTop, akLeft, akRight, akBottom]
+            Caption = 'pnlvstComponents'
+            Color = clYellow
+            ParentBackground = False
+            ParentColor = False
+            TabOrder = 0
+          end
+        end
+        object TabSheet_Settings: TTabSheet
+          Caption = 'Settings'
+          ClientHeight = 236
+          ClientWidth = 449
+          object pnlvstSettings: TPanel
+            Left = 0
+            Height = 152
+            Top = 16
+            Width = 360
+            Anchors = [akTop, akLeft, akRight, akBottom]
+            Caption = 'pnlvstSettings'
+            Color = 14090197
+            ParentBackground = False
+            ParentColor = False
+            TabOrder = 0
+          end
+          object lblAvoidedZones: TLabel
+            Left = 0
+            Height = 15
+            Top = 0
+            Width = 285
+            Caption = 'Avoided zones (used on recording with mouse swipe):'
+          end
+          object btNewZone: TButton
+            Left = 365
+            Height = 25
+            Top = 16
+            Width = 83
+            Anchors = [akTop, akRight]
+            Caption = 'New zone'
+            TabOrder = 1
+            OnClick = btNewZoneClick
+          end
+          object btnDeleteZone: TButton
+            Left = 365
+            Height = 25
+            Top = 48
+            Width = 83
+            Anchors = [akTop, akRight]
+            Caption = 'Delete zone'
+            TabOrder = 2
+            OnClick = btnDeleteZoneClick
+          end
+          object chkFullScr: TCheckBox
+            Left = 0
+            Height = 19
+            Hint = 'When checked, the MouseSwipe scan uses full screenshots, then crops the bitmaps to the required size.'#13#10'This is way slower than component screenshots, but it allows capturing content, which is not visible otherwise.'
+            Top = 168
+            Width = 125
+            Anchors = [akLeft, akBottom]
+            Caption = 'Full screen scanning'
+            ParentShowHint = False
+            ShowHint = True
+            TabOrder = 3
+          end
+          object chkMinimizeWhileRecording: TCheckBox
+            Left = 152
+            Height = 19
+            Top = 214
+            Width = 138
+            Anchors = [akLeft, akBottom]
+            Caption = 'Minimize on recording'
+            TabOrder = 4
+          end
+          object lblHighlightingLabels: TLabel
+            Left = 0
+            Height = 15
+            Top = 192
+            Width = 124
+            Anchors = [akLeft, akBottom]
+            Caption = 'Highlighting lines color'
+          end
+          object colboxHighlightingLabels: TColorBox
+            Left = 0
+            Height = 22
+            Top = 211
+            Width = 136
+            Anchors = [akLeft, akBottom]
+            ItemHeight = 16
+            TabOrder = 5
+            OnSelect = colboxHighlightingLabelsSelect
+          end
+          object chkUseHCursor: TCheckBox
+            Left = 320
+            Height = 19
+            Hint = '[in work]'#13#10'Reads mouse cursor handle on every position during recording with mouse swipe.'#13#10'This may be useful when interactable components do not display a visual feedback while hovered,'#13#10'so the scan relies on changing the mouse cursor to detect component edges.'
+            Top = 214
+            Width = 82
+            Anchors = [akLeft, akBottom]
+            Caption = 'Use hCursor'
+            Checked = True
+            ParentShowHint = False
+            ShowHint = True
+            State = cbChecked
+            TabOrder = 6
+          end
+          object chkRecordSelectedAreaOnly: TCheckBox
+            Left = 152
+            Height = 19
+            Top = 168
+            Width = 152
+            Anchors = [akLeft, akBottom]
+            Caption = 'Record selected area only'
+            TabOrder = 7
+            OnChange = chkRecordSelectedAreaOnlyChange
+          end
+          object chkRecordWithEdgeExtending: TCheckBox
+            Left = 152
+            Height = 19
+            Hint = 'When checked, scanned component edges are "extended" until the screenshot changes.'#13#10'If there are two adjacent components, they may end up being recorded as a single component.'
+            Top = 192
+            Width = 165
+            Anchors = [akLeft, akBottom]
+            Caption = 'Record with edge extending'
+            Checked = True
+            ParentShowHint = False
+            ShowHint = True
+            State = cbChecked
+            TabOrder = 8
+            OnChange = chkRecordWithEdgeExtendingChange
+          end
+          object btnLoadZones: TButton
+            Left = 365
+            Height = 25
+            Top = 80
+            Width = 83
+            Anchors = [akTop, akRight]
+            Caption = 'Load zones...'
+            TabOrder = 9
+            OnClick = btnLoadZonesClick
+          end
+          object btnSaveZones: TButton
+            Left = 365
+            Height = 25
+            Top = 111
+            Width = 83
+            Anchors = [akTop, akRight]
+            Caption = 'Save zones...'
+            TabOrder = 10
+            OnClick = btnSaveZonesClick
+          end
+          object spdbtnMoveUp: TSpeedButton
+            Left = 365
+            Height = 22
+            Hint = 'Move Up'
+            Top = 146
+            Width = 20
+            Anchors = [akTop, akRight]
+            Font.Color = clWindowText
+            Glyph.Data = {
+              EA000000424DEA0000000000000036000000280000000B000000050000000100
+              180000000000B400000000000000000000000000000000000000FFFFFF39841A
+              39841A39841A39841A39841A39841A39841A39841A39841AFFFFFF000000FFFF
+              FFFFFFFF39841A39841A39841A39841A39841A39841A39841AFFFFFFFFFFFF00
+              0000FFFFFFFFFFFFFFFFFF39841A39841A39841A39841A39841AFFFFFFFFFFFF
+              FFFFFF000000FFFFFFFFFFFFFFFFFFFFFFFF39841A39841A39841AFFFFFFFFFF
+              FFFFFFFFFFFFFF000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFF39841AFFFFFFFF
+              FFFFFFFFFFFFFFFFFFFFFF000000
+            }
+            ShowHint = True
+            ParentFont = False
+            ParentShowHint = False
+            OnClick = spdbtnMoveUpClick
+          end
+          object spdbtnMoveDown: TSpeedButton
+            Left = 384
+            Height = 22
+            Hint = 'Move Down'
+            Top = 146
+            Width = 20
+            Anchors = [akTop, akRight]
+            Font.Color = clWindowText
+            Glyph.Data = {
+              EA000000424DEA0000000000000036000000280000000B000000050000000100
+              180000000000B400000000000000000000000000000000000000FFFFFFFFFFFF
+              FFFFFFFFFFFFFFFFFF39841AFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF000000FFFF
+              FFFFFFFFFFFFFFFFFFFF39841A39841A39841AFFFFFFFFFFFFFFFFFFFFFFFF00
+              0000FFFFFFFFFFFFFFFFFF39841A39841A39841A39841A39841AFFFFFFFFFFFF
+              FFFFFF000000FFFFFFFFFFFF39841A39841A39841A39841A39841A39841A3984
+              1AFFFFFFFFFFFF000000FFFFFF39841A39841A39841A39841A39841A39841A39
+              841A39841A39841AFFFFFF000000
+            }
+            ShowHint = True
+            ParentFont = False
+            ParentShowHint = False
+            OnClick = spdbtnMoveDownClick
+          end
+        end
       end
     end
     object pnlDrag: TPanel
@@ -319,7 +480,7 @@ object frClickerWinInterp: TfrClickerWinInterp
     object pnlMouseCoordsOnScreenshot: TPanel
       Left = 332
       Height = 25
-      Top = 8
+      Top = 9
       Width = 72
       Caption = '0:0'
       TabOrder = 2
@@ -384,6 +545,7 @@ object frClickerWinInterp: TfrClickerWinInterp
         Width = 121
         Visible = False
         OnMouseDown = imgLiveScreenshotMouseDown
+        OnMouseMove = imgScannedWindowMouseMove
       end
       object imgHandleColors: TImage
         Left = 144
@@ -561,17 +723,6 @@ object frClickerWinInterp: TfrClickerWinInterp
     object Separator4: TMenuItem
       Caption = '-'
     end
-    object MenuItem_ToggleRecordingSelectedAreaOnly: TMenuItem
-      AutoCheck = True
-      Caption = 'Toggle recording selected area only'
-      OnClick = MenuItem_ToggleRecordingSelectedAreaOnlyClick
-    end
-    object MenuItem_ToggleRecordedEdgeExtending: TMenuItem
-      AutoCheck = True
-      Caption = 'Toggle recorded edge extending'
-      Checked = True
-      OnClick = MenuItem_ToggleRecordedEdgeExtendingClick
-    end
   end
   object imglstSpinner: TImageList
     Left = 77
@@ -600,11 +751,18 @@ object frClickerWinInterp: TfrClickerWinInterp
     Left = 307
     Top = 413
   end
-  object tmrEdit: TTimer
+  object tmrEditComponents: TTimer
     Enabled = False
     Interval = 10
-    OnTimer = tmrEditTimer
+    OnTimer = tmrEditComponentsTimer
     Left = 456
+    Top = 16
+  end
+  object tmrEditSettings: TTimer
+    Enabled = False
+    Interval = 10
+    OnTimer = tmrEditSettingsTimer
+    Left = 584
     Top = 16
   end
 end

@@ -51,6 +51,13 @@ type
   end;
 
 
+  PAvoidedZoneRec = ^TAvoidedZoneRec;
+  TAvoidedZoneRec = record
+    ZRect: TRect;
+    ZName: string;
+  end;
+
+
   TLastFindControlGeneratedAction = (lfcNone, lfcClick, lfcCachePos);
 
   TColoredHandleArr = array of TColoredHandle;
@@ -73,10 +80,16 @@ type
     btnSaveTree: TButton;
     btnStartRec: TButton;
     btnStopRec: TButton;
+    btNewZone: TButton;
+    btnDeleteZone: TButton;
+    btnLoadZones: TButton;
+    btnSaveZones: TButton;
+    chkRecordSelectedAreaOnly: TCheckBox;
+    chkRecordWithEdgeExtending: TCheckBox;
     chkFullScr: TCheckBox;
-    chkUseHCursor: TCheckBox;
     chkHighlightSelectedComponent: TCheckBox;
     chkMinimizeWhileRecording: TCheckBox;
+    chkUseHCursor: TCheckBox;
     colboxHighlightingLabels: TColorBox;
     imgAvgScreenshotAndAssignedComp: TImage;
     imgAvgScreenshotAndGreenComp: TImage;
@@ -88,15 +101,18 @@ type
     imgScreenshot: TImage;
     imgSpinner: TImage;
     imgSpinnerDiff: TImage;
+    lblAvoidedZones: TLabel;
     lbeStep: TLabeledEdit;
     lblGauge: TLabel;
     lblHighlightingLabels: TLabel;
     memCompInfo: TMemo;
-    MenuItem_ToggleRecordedEdgeExtending: TMenuItem;
     MenuItem_DeleteSubComponent: TMenuItem;
     MenuItem_AddSubcomponent: TMenuItem;
+    PageControlWinInterp: TPageControl;
+    pnlvstComponents: TPanel;
+    pnlvstSettings: TPanel;
+    prbRecordingWithMouseSwipe: TProgressBar;
     Separator5: TMenuItem;
-    MenuItem_ToggleRecordingSelectedAreaOnly: TMenuItem;
     Separator4: TMenuItem;
     MenuItem_UpdateTreeValuesFromSelection: TMenuItem;
     Separator3: TMenuItem;
@@ -108,7 +124,6 @@ type
     pmExtraRecording: TPopupMenu;
     pnlHorizSplitter: TPanel;
     pnlMouseCoordsOnScreenshot: TPanel;
-    pnlvstComponents: TPanel;
     pnlWinInterpSettings: TPanel;
     prbRecording: TProgressBar;
     rdgrpLayers: TRadioGroup;
@@ -126,15 +141,26 @@ type
     pmScreenshot: TPopupMenu;
     Separator1: TMenuItem;
     spdbtnExtraRecording: TSpeedButton;
-    tmrEdit: TTimer;
+    spdbtnMoveDown: TSpeedButton;
+    spdbtnMoveUp: TSpeedButton;
+    TabSheet_Components: TTabSheet;
+    TabSheet_Settings: TTabSheet;
+    tmrEditSettings: TTimer;
+    tmrEditComponents: TTimer;
     tmrScan: TTimer;
     tmrSpinner: TTimer;
+    procedure btnDeleteZoneClick(Sender: TObject);
+    procedure btNewZoneClick(Sender: TObject);
     procedure btnExportClick(Sender: TObject);
     procedure btnLoadTreeClick(Sender: TObject);
+    procedure btnLoadZonesClick(Sender: TObject);
     procedure btnSaveTreeClick(Sender: TObject);
+    procedure btnSaveZonesClick(Sender: TObject);
     procedure btnStartRecClick(Sender: TObject);
     procedure btnStopRecClick(Sender: TObject);
     procedure chkHighlightSelectedComponentChange(Sender: TObject);
+    procedure chkRecordSelectedAreaOnlyChange(Sender: TObject);
+    procedure chkRecordWithEdgeExtendingChange(Sender: TObject);
     procedure colboxHighlightingLabelsSelect(Sender: TObject);
     procedure FrameResize(Sender: TObject);
     procedure imgLiveScreenshotMouseDown(Sender: TObject; Button: TMouseButton;
@@ -157,9 +183,8 @@ type
     procedure MenuItem_RecordMultipleSizesClick(Sender: TObject);
     procedure MenuItem_SaveSelectedComponentToFileClick(Sender: TObject);
     procedure MenuItem_SaveSelectionToFileClick(Sender: TObject);
-    procedure MenuItem_ToggleRecordedEdgeExtendingClick(Sender: TObject);
-    procedure MenuItem_ToggleRecordingSelectedAreaOnlyClick(Sender: TObject);
     procedure MenuItem_UpdateTreeValuesFromSelectionClick(Sender: TObject);
+    procedure PageControlWinInterpChange(Sender: TObject);
     procedure pnlDragMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure pnlDragMouseMove(Sender: TObject; Shift: TShiftState; X,
@@ -177,7 +202,10 @@ type
       Shift: TShiftState; WheelDelta: Integer; MousePos: TPoint;
       var Handled: Boolean);
     procedure spdbtnExtraRecordingClick(Sender: TObject);
-    procedure tmrEditTimer(Sender: TObject);
+    procedure spdbtnMoveDownClick(Sender: TObject);
+    procedure spdbtnMoveUpClick(Sender: TObject);
+    procedure tmrEditComponentsTimer(Sender: TObject);
+    procedure tmrEditSettingsTimer(Sender: TObject);
     procedure tmrScanTimer(Sender: TObject);
     procedure tmrSpinnerTimer(Sender: TObject);
     procedure vstComponentsClick(Sender: TObject);
@@ -197,8 +225,18 @@ type
       Node: PVirtualNode; Stream: TStream);
     procedure vstComponentsSaveTree(Sender: TBaseVirtualTree; Stream: TStream);
 
+    procedure vstSettingsDblClick(Sender: TObject);
+    procedure vstSettingsEdited(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
+    procedure vstSettingsEditing(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; var Allowed: Boolean);
+    procedure vstSettingsNewText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; const NewText: String);
+    procedure vstSettingsMouseUp(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure vstSettingsGetText(Sender: TBaseVirtualTree;
+      Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
+      var CellText: String);
   private
     vstComponents: TVirtualStringTree;
+    vstSettings: TVirtualStringTree;
 
     FDragging: Boolean;
 
@@ -219,10 +257,24 @@ type
     FTransparent_SelectedComponentRightLimitLabel: TLabel;
     FTransparent_SelectedComponentBottomLimitLabel: TLabel;
 
+    FSelectedZoneLeftLimitLabel: TLabel;
+    FSelectedZoneTopLimitLabel: TLabel;
+    FSelectedZoneRightLimitLabel: TLabel;
+    FSelectedZoneBottomLimitLabel: TLabel;
+
+    FTransparent_SelectedZoneLeftLimitLabel: TLabel;
+    FTransparent_SelectedZoneTopLimitLabel: TLabel;
+    FTransparent_SelectedZoneRightLimitLabel: TLabel;
+    FTransparent_SelectedZoneBottomLimitLabel: TLabel;
+
+    FProgressVertLabel: TLabel;
+    FProgressHorizLabel: TLabel;
+
     FSelectionHold: Boolean;
     FMouseDownGlobalPos: TPoint;
     FMouseDownSelPos: TPoint;
-    FMouseUpHitInfo: THitInfo;
+    FMouseUpHitInfo_Components: THitInfo;
+    FMouseUpHitInfo_Settings: THitInfo;
 
     FSelectedComponentText: string;
     FSelectedComponentClassName: string;
@@ -233,7 +285,7 @@ type
     FSplitterMouseDownGlobalPos: TPoint;
     FSplitterMouseDownImagePos: TPoint;
     FRecordSelectedAreaOnly: Boolean;
-    FRecordedEdgeExtending: Boolean;
+    FRecordWithEdgeExtending: Boolean;
 
     FOnGetConnectionAddress: TOnGetConnectionAddress;
     FOnGetSelectedCompFromRemoteWin: TOnGetSelectedCompFromRemoteWin;
@@ -277,6 +329,38 @@ type
     procedure FTransparent_BottomMouseUp(Sender: TObject;
       Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 
+    ///
+
+    procedure FTransparentZone_LeftMouseDown(Sender: TObject;
+      Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+    procedure FTransparentZone_LeftMouseMove(Sender: TObject;
+      Shift: TShiftState; X, Y: Integer);
+    procedure FTransparentZone_LeftMouseUp(Sender: TObject;
+      Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+
+    procedure FTransparentZone_RightMouseDown(Sender: TObject;
+      Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+    procedure FTransparentZone_RightMouseMove(Sender: TObject;
+      Shift: TShiftState; X, Y: Integer);
+    procedure FTransparentZone_RightMouseUp(Sender: TObject;
+      Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+
+    procedure FTransparentZone_TopMouseDown(Sender: TObject;
+      Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+    procedure FTransparentZone_TopMouseMove(Sender: TObject;
+      Shift: TShiftState; X, Y: Integer);
+    procedure FTransparentZone_TopMouseUp(Sender: TObject;
+      Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+
+    procedure FTransparentZone_BottomMouseDown(Sender: TObject;
+      Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+    procedure FTransparentZone_BottomMouseMove(Sender: TObject;
+      Shift: TShiftState; X, Y: Integer);
+    procedure FTransparentZone_BottomMouseUp(Sender: TObject;
+      Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+
+    ///
+
     function GetHighlightingLinesColor: TColor;
     procedure SetHighlightingLinesColor(Value: TColor);
 
@@ -303,6 +387,7 @@ type
     procedure CreateRemainingComponents;
     procedure AdjustHighlightingLabelsToScreenshot;
     procedure HighlightComponent(Node: PVirtualNode);
+    procedure HighlightZone(Node: PVirtualNode);
     procedure CopyFindControlActionsToClipBoard(AIncludeAction: TLastFindControlGeneratedAction);
 
     procedure ResizeFrameSectionsBySplitter(NewLeft: Integer);
@@ -329,6 +414,7 @@ type
     procedure GenerateContent_AvgScreenshotAndGreenComp(Node: PVirtualNode);
     procedure GenerateContent_AvgScreenshotAndGenComp;
 
+    function PointIsInAvoidedZone(X, Y: Integer): Boolean;
     procedure RectsToTree(var ADiffRects: TCompRecArr; var ImgMatrix: TColorArr; var ImgHWMatrix: THandleArr);
     procedure LoadScreenshotAsPng(AFileName: string; ADestImage: TImage);
     procedure SaveScreenshotAsPng(AFileName: string; ASrcImage: TImage);
@@ -376,7 +462,7 @@ implementation
 
 uses
   BitmapProcessing, ClickerTemplates, Clipbrd, ClickerActionsClient,
-  imgList, Dialogs, BitmapConv;
+  imgList, Dialogs, BitmapConv, ClickerIniFiles;
 
 
 procedure TfrClickerWinInterp.LoadSettings(AIni: TMemIniFile);
@@ -608,6 +694,29 @@ begin
     10: CellText := IntToStr(NodeData^.LocalX_FromParent);
     11: CellText := IntToStr(NodeData^.LocalY_FromParent);
     12: CellText := BoolToStr(NodeData^.ManuallyAdded, 'Yes', 'No');
+  end;
+end;
+
+
+procedure TfrClickerWinInterp.vstSettingsGetText(Sender: TBaseVirtualTree;
+  Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
+  var CellText: String);
+var
+  NodeData: PAvoidedZoneRec;
+begin
+  NodeData := vstSettings.GetNodeData(Node);
+  if NodeData = nil then
+  begin
+    CellText := 'Data bug';
+    Exit;
+  end;
+
+  case Column of
+    0: CellText := IntToStr(NodeData^.ZRect.Left);
+    1: CellText := IntToStr(NodeData^.ZRect.Top);
+    2: CellText := IntToStr(NodeData^.ZRect.Right);
+    3: CellText := IntToStr(NodeData^.ZRect.Bottom);
+    4: CellText := NodeData^.ZName;
   end;
 end;
 
@@ -882,10 +991,11 @@ begin
   vstComponents.Parent := pnlvstComponents;
 
   vstComponents.Left := 0;
-  vstComponents.Height := 256;
+  vstComponents.Height := pnlvstComponents.Height - 1;
   vstComponents.Top := 0;
-  vstComponents.Width := 456;
+  vstComponents.Width := pnlvstComponents.Width - 1;
   vstComponents.Anchors := [akLeft, akTop, akRight, akBottom];
+  vstComponents.NodeDataSize := SizeOf(THighlightedCompRec);
   //vstComponents.ButtonStyle := bsTriangle; //bsRectangle; //bsRectangle - to use *.res,     bsTriangle - to draw a triangle in code: line 13162
   //vstComponents.ButtonFillMode := fmShaded; //to use *.res
   vstComponents.Colors.UnfocusedColor := clMedGray;
@@ -991,6 +1101,69 @@ begin
   NewColum.Width := 99;
   NewColum.Text := 'Manually Added';
 
+  vstSettings := TVirtualStringTree.Create(Self);
+  vstSettings.Parent := pnlvstSettings;
+
+  vstSettings.Left := 0;
+  vstSettings.Height := pnlvstSettings.Height;
+  vstSettings.Top := 0;
+  vstSettings.Width := pnlvstSettings.Width;
+  vstSettings.Indent := 0;
+  vstSettings.Anchors := [akLeft, akTop, akRight, akBottom];
+  vstSettings.NodeDataSize := SizeOf(TAvoidedZoneRec);
+  //vstSettings.ButtonStyle := bsTriangle; //bsRectangle; //bsRectangle - to use *.res,     bsTriangle - to draw a triangle in code: line 13162
+  //vstSettings.ButtonFillMode := fmShaded; //to use *.res
+  vstSettings.Colors.UnfocusedColor := clMedGray;
+  vstSettings.Colors.UnfocusedSelectionColor := clGradientInactiveCaption;
+  vstSettings.DefaultText := 'Node';
+  vstSettings.Header.AutoSizeIndex := 0;
+  vstSettings.Header.DefaultHeight := 21;
+  vstSettings.Header.Height := 21;
+  vstSettings.Header.Options := [hoColumnResize, hoDblClickResize, hoDrag, hoShowSortGlyphs, hoVisible];
+  vstSettings.Header.Style := hsFlatButtons;
+  vstSettings.PopupMenu := pmComponents;
+  vstSettings.TabOrder := 1;
+  vstSettings.TreeOptions.AutoOptions := [toAutoDropExpand, {toAutoScrollOnExpand,} toAutoTristateTracking, toAutoDeleteMovedNodes, toDisableAutoscrollOnFocus, toDisableAutoscrollOnEdit];
+  vstSettings.TreeOptions.MiscOptions := [toAcceptOLEDrop, toEditable, toFullRepaintOnResize, toInitOnSave, {toToggleOnDblClick,} toWheelPanning, toEditOnClick];
+  vstSettings.TreeOptions.PaintOptions := [toShowButtons, toShowDropmark, {toShowTreeLines,} toShowRoot, toThemeAware, toUseBlendedImages];
+  vstSettings.TreeOptions.SelectionOptions := [toFullRowSelect];
+  vstSettings.OnDblClick := @vstSettingsDblClick;
+  vstSettings.OnEdited := @vstSettingsEdited;
+  vstSettings.OnEditing := @vstSettingsEditing;
+  vstSettings.OnNewText := @vstSettingsNewText;
+  vstSettings.OnMouseUp := @vstSettingsMouseUp;
+  vstSettings.OnGetText := @vstSettingsGetText;
+
+  NewColum := vstSettings.Header.Columns.Add;
+  NewColum.MinWidth := 50;
+  NewColum.Position := 0;
+  NewColum.Width := 50;
+  NewColum.Text := 'Left';
+
+  NewColum := vstSettings.Header.Columns.Add;
+  NewColum.MinWidth := 50;
+  NewColum.Position := 1;
+  NewColum.Width := 50;
+  NewColum.Text := 'Top';
+
+  NewColum := vstSettings.Header.Columns.Add;
+  NewColum.MinWidth := 50;
+  NewColum.Position := 2;
+  NewColum.Width := 50;
+  NewColum.Text := 'Right';
+
+  NewColum := vstSettings.Header.Columns.Add;
+  NewColum.MinWidth := 70;
+  NewColum.Position := 3;
+  NewColum.Width := 70;
+  NewColum.Text := 'Bottom';
+
+  NewColum := vstSettings.Header.Columns.Add;
+  NewColum.MinWidth := 100;
+  NewColum.Position := 4;
+  NewColum.Width := 150;
+  NewColum.Text := 'Zone name/note';
+
   FSelectedComponentLeftLimitLabel := TLabel.Create(Self);
   FSelectedComponentTopLimitLabel := TLabel.Create(Self);
   FSelectedComponentRightLimitLabel := TLabel.Create(Self);
@@ -1082,6 +1255,136 @@ begin
   FTransparent_SelectedComponentBottomLimitLabel.OnMouseDown := @FTransparent_BottomMouseDown;
   FTransparent_SelectedComponentBottomLimitLabel.OnMouseMove := @FTransparent_BottomMouseMove;
   FTransparent_SelectedComponentBottomLimitLabel.OnMouseUp := @FTransparent_BottomMouseUp;
+
+  ///
+
+  FSelectedZoneLeftLimitLabel := TLabel.Create(Self);
+  FSelectedZoneTopLimitLabel := TLabel.Create(Self);
+  FSelectedZoneRightLimitLabel := TLabel.Create(Self);
+  FSelectedZoneBottomLimitLabel := TLabel.Create(Self);
+
+  FSelectedZoneLeftLimitLabel.Parent := scrboxScannedComponents;
+  FSelectedZoneTopLimitLabel.Parent := scrboxScannedComponents;
+  FSelectedZoneRightLimitLabel.Parent := scrboxScannedComponents;
+  FSelectedZoneBottomLimitLabel.Parent := scrboxScannedComponents;
+
+  FSelectedZoneLeftLimitLabel.AutoSize := False;
+  FSelectedZoneTopLimitLabel.AutoSize := False;
+  FSelectedZoneRightLimitLabel.AutoSize := False;
+  FSelectedZoneBottomLimitLabel.AutoSize := False;
+
+  FSelectedZoneLeftLimitLabel.Caption := '';
+  FSelectedZoneTopLimitLabel.Caption := '';
+  FSelectedZoneRightLimitLabel.Caption := '';
+  FSelectedZoneBottomLimitLabel.Caption := '';
+
+  FSelectedZoneLeftLimitLabel.Color := clRed;
+  FSelectedZoneTopLimitLabel.Color := clRed;
+  FSelectedZoneRightLimitLabel.Color := clRed;
+  FSelectedZoneBottomLimitLabel.Color := clRed;
+
+  FSelectedZoneLeftLimitLabel.Width := 1;
+  FSelectedZoneTopLimitLabel.Height := 1;
+  FSelectedZoneRightLimitLabel.Width := 1;
+  FSelectedZoneBottomLimitLabel.Height := 1;
+
+  FSelectedZoneLeftLimitLabel.Transparent := False;
+  FSelectedZoneTopLimitLabel.Transparent := False;
+  FSelectedZoneRightLimitLabel.Transparent := False;
+  FSelectedZoneBottomLimitLabel.Transparent := False;
+
+  FSelectedZoneLeftLimitLabel.Visible := False; //hidden by default
+  FSelectedZoneTopLimitLabel.Visible := False; //hidden by default
+  FSelectedZoneRightLimitLabel.Visible := False; //hidden by default
+  FSelectedZoneBottomLimitLabel.Visible := False; //hidden by default
+
+
+  FTransparent_SelectedZoneLeftLimitLabel := TLabel.Create(Self);
+  FTransparent_SelectedZoneTopLimitLabel := TLabel.Create(Self);
+  FTransparent_SelectedZoneRightLimitLabel := TLabel.Create(Self);
+  FTransparent_SelectedZoneBottomLimitLabel := TLabel.Create(Self);
+
+  FTransparent_SelectedZoneLeftLimitLabel.Parent := scrboxScannedComponents;
+  FTransparent_SelectedZoneTopLimitLabel.Parent := scrboxScannedComponents;
+  FTransparent_SelectedZoneRightLimitLabel.Parent := scrboxScannedComponents;
+  FTransparent_SelectedZoneBottomLimitLabel.Parent := scrboxScannedComponents;
+
+  FTransparent_SelectedZoneLeftLimitLabel.AutoSize := False;
+  FTransparent_SelectedZoneTopLimitLabel.AutoSize := False;
+  FTransparent_SelectedZoneRightLimitLabel.AutoSize := False;
+  FTransparent_SelectedZoneBottomLimitLabel.AutoSize := False;
+
+  FTransparent_SelectedZoneLeftLimitLabel.Caption := '';
+  FTransparent_SelectedZoneTopLimitLabel.Caption := '';
+  FTransparent_SelectedZoneRightLimitLabel.Caption := '';
+  FTransparent_SelectedZoneBottomLimitLabel.Caption := '';
+
+  FTransparent_SelectedZoneLeftLimitLabel.Color := clDefault;
+  FTransparent_SelectedZoneTopLimitLabel.Color := clDefault;
+  FTransparent_SelectedZoneRightLimitLabel.Color := clDefault;
+  FTransparent_SelectedZoneBottomLimitLabel.Color := clDefault;
+
+  FTransparent_SelectedZoneLeftLimitLabel.Width := 7;
+  FTransparent_SelectedZoneTopLimitLabel.Height := 7;
+  FTransparent_SelectedZoneRightLimitLabel.Width := 7;
+  FTransparent_SelectedZoneBottomLimitLabel.Height := 7;
+
+  FTransparent_SelectedZoneLeftLimitLabel.Transparent := True;
+  FTransparent_SelectedZoneTopLimitLabel.Transparent := True;
+  FTransparent_SelectedZoneRightLimitLabel.Transparent := True;
+  FTransparent_SelectedZoneBottomLimitLabel.Transparent := True;
+
+  FTransparent_SelectedZoneLeftLimitLabel.Visible := False; //hidden by default
+  FTransparent_SelectedZoneTopLimitLabel.Visible := False; //hidden by default
+  FTransparent_SelectedZoneRightLimitLabel.Visible := False; //hidden by default
+  FTransparent_SelectedZoneBottomLimitLabel.Visible := False; //hidden by default
+
+  FTransparent_SelectedZoneLeftLimitLabel.Cursor := crSizeWE;
+  FTransparent_SelectedZoneTopLimitLabel.Cursor := crSizeNS;
+  FTransparent_SelectedZoneRightLimitLabel.Cursor := crSizeWE;
+  FTransparent_SelectedZoneBottomLimitLabel.Cursor := crSizeNS;
+
+  FTransparent_SelectedZoneLeftLimitLabel.OnMouseDown := @FTransparentZone_LeftMouseDown;
+  FTransparent_SelectedZoneLeftLimitLabel.OnMouseMove := @FTransparentZone_LeftMouseMove;
+  FTransparent_SelectedZoneLeftLimitLabel.OnMouseUp := @FTransparentZone_LeftMouseUp;
+
+  FTransparent_SelectedZoneRightLimitLabel.OnMouseDown := @FTransparentZone_RightMouseDown;
+  FTransparent_SelectedZoneRightLimitLabel.OnMouseMove := @FTransparentZone_RightMouseMove;
+  FTransparent_SelectedZoneRightLimitLabel.OnMouseUp := @FTransparentZone_RightMouseUp;
+
+  FTransparent_SelectedZoneTopLimitLabel.OnMouseDown := @FTransparentZone_TopMouseDown;
+  FTransparent_SelectedZoneTopLimitLabel.OnMouseMove := @FTransparentZone_TopMouseMove;
+  FTransparent_SelectedZoneTopLimitLabel.OnMouseUp := @FTransparentZone_TopMouseUp;
+
+  FTransparent_SelectedZoneBottomLimitLabel.OnMouseDown := @FTransparentZone_BottomMouseDown;
+  FTransparent_SelectedZoneBottomLimitLabel.OnMouseMove := @FTransparentZone_BottomMouseMove;
+  FTransparent_SelectedZoneBottomLimitLabel.OnMouseUp := @FTransparentZone_BottomMouseUp;
+
+  ///
+
+  FProgressVertLabel := TLabel.Create(Self);
+  FProgressHorizLabel := TLabel.Create(Self);
+
+  FProgressVertLabel.Parent := scrboxScannedComponents;
+  FProgressHorizLabel.Parent := scrboxScannedComponents;
+
+  FProgressVertLabel.AutoSize := False;
+  FProgressHorizLabel.AutoSize := False;
+
+  FProgressVertLabel.Caption := '';
+  FProgressHorizLabel.Caption := '';
+
+  FProgressVertLabel.Color := clBlue;
+  FProgressHorizLabel.Color := clBlue;
+
+  FProgressVertLabel.Width := 1;
+  FProgressHorizLabel.Height := 1;
+
+  FProgressVertLabel.Transparent := False;
+  FProgressHorizLabel.Transparent := False;
+
+  FProgressVertLabel.Visible := False;
+  FProgressHorizLabel.Visible := False;
 end;
 
 
@@ -1102,7 +1405,6 @@ begin
 
   CreateRemainingComponents;
 
-  vstComponents.NodeDataSize := SizeOf(THighlightedCompRec);
   colboxHighlightingLabels.AddItem('clOrange', TObject({%H-}Pointer(CLabel_Orange)));
   colboxHighlightingLabels.Selected := CLabel_Orange;
 
@@ -1111,7 +1413,7 @@ begin
   FSelectionHold := False;
   FUpdatedVstText := False;
   FRecordSelectedAreaOnly := False;
-  FRecordedEdgeExtending := True;
+  FRecordWithEdgeExtending := True;
 
   FSelectedComponentText := 'no selected component';
   FSelectedComponentClassName := 'no selected component';
@@ -1197,6 +1499,33 @@ begin
 
   FTransparent_SelectedComponentBottomLimitLabel.Left := 0;
   FTransparent_SelectedComponentBottomLimitLabel.Width := imgScannedWindow.Width;
+
+  FSelectedZoneLeftLimitLabel.Top := 0;
+  FSelectedZoneLeftLimitLabel.Height := imgScannedWindow.Height;
+
+  FSelectedZoneTopLimitLabel.Left := 0;
+  FSelectedZoneTopLimitLabel.Width := imgScannedWindow.Width;
+
+  FSelectedZoneRightLimitLabel.Top := 0;
+  FSelectedZoneRightLimitLabel.Height := imgScannedWindow.Height;
+
+  FSelectedZoneBottomLimitLabel.Left := 0;
+  FSelectedZoneBottomLimitLabel.Width := imgScannedWindow.Width;
+
+  FTransparent_SelectedZoneLeftLimitLabel.Top := 0;
+  FTransparent_SelectedZoneLeftLimitLabel.Height := imgScannedWindow.Height;
+
+  FTransparent_SelectedZoneTopLimitLabel.Left := 0;
+  FTransparent_SelectedZoneTopLimitLabel.Width := imgScannedWindow.Width;
+
+  FTransparent_SelectedZoneRightLimitLabel.Top := 0;
+  FTransparent_SelectedZoneRightLimitLabel.Height := imgScannedWindow.Height;
+
+  FTransparent_SelectedZoneBottomLimitLabel.Left := 0;
+  FTransparent_SelectedZoneBottomLimitLabel.Width := imgScannedWindow.Width;
+
+  FProgressVertLabel.Height := imgScannedWindow.Height;
+  FProgressHorizLabel.Width := imgScannedWindow.Width;
 end;
 
 
@@ -1221,6 +1550,27 @@ begin
 
   FSelectedComponentText := NodeData^.CompRec.Text;
   FSelectedComponentClassName := NodeData^.CompRec.ClassName;
+end;
+
+
+procedure TfrClickerWinInterp.HighlightZone(Node: PVirtualNode);
+var
+  NodeData: PAvoidedZoneRec;
+begin
+  if Node = nil then
+    Exit;
+
+  NodeData := vstSettings.GetNodeData(Node);
+
+  FSelectedZoneLeftLimitLabel.Left := NodeData^.ZRect.Left;
+  FSelectedZoneTopLimitLabel.Top := NodeData^.ZRect.Top;
+  FSelectedZoneRightLimitLabel.Left := NodeData^.ZRect.Right;
+  FSelectedZoneBottomLimitLabel.Top := NodeData^.ZRect.Bottom;
+
+  FTransparent_SelectedZoneLeftLimitLabel.Left := FSelectedZoneLeftLimitLabel.Left - 3;
+  FTransparent_SelectedZoneTopLimitLabel.Top := FSelectedZoneTopLimitLabel.Top - 3;
+  FTransparent_SelectedZoneRightLimitLabel.Left := FSelectedZoneRightLimitLabel.Left - 3;
+  FTransparent_SelectedZoneBottomLimitLabel.Top := FSelectedZoneBottomLimitLabel.Top - 3;
 end;
 
 
@@ -1506,6 +1856,31 @@ begin
 end;
 
 
+function TfrClickerWinInterp.PointIsInAvoidedZone(X, Y: Integer): Boolean;
+var
+  Node: PVirtualNode;
+  NodeData: PAvoidedZoneRec;
+begin
+  Result := False;
+
+  Node := vstSettings.GetFirst;
+  if Node = nil then
+    Exit;
+
+  repeat
+    NodeData := vstSettings.GetNodeData(Node);
+    if (X >= NodeData^.ZRect.Left) and (X <= NodeData^.ZRect.Right) and
+       (Y >= NodeData^.ZRect.Top) and (Y <= NodeData^.ZRect.Bottom) then
+    begin
+      Result := True;
+      Exit;
+    end;
+
+    Node := Node^.NextSibling;
+  until Node = nil;
+end;
+
+
 procedure TfrClickerWinInterp.RectsToTree(var ADiffRects: TCompRecArr; var ImgMatrix: TColorArr; var ImgHWMatrix: THandleArr);
 var
   AllocatedColor: TColor;
@@ -1596,6 +1971,9 @@ begin
   btnStartRec.Enabled := False;
   spdbtnExtraRecording.Enabled := False;
   AppTitle := Application.Title;
+  FProgressVertLabel.Visible := True;
+  FProgressHorizLabel.Visible := True;
+  prbRecordingWithMouseSwipe.Visible := True;
   try
     UseHCursor := chkUseHCursor.Checked;
     UseFullScreenshot := chkFullScr.Checked;
@@ -1641,81 +2019,89 @@ begin
         y := SelectionTop;
       end;
 
+      prbRecordingWithMouseSwipe.Max := h - 1;
+
       repeat
         Inc(y, Step);
+        FProgressHorizLabel.Top := y;
+        prbRecordingWithMouseSwipe.Position := y;
 
         x := 0;
         if FRecordSelectedAreaOnly then
           x := SelectionLeft;
         repeat
           Inc(x, Step);
+          FProgressVertLabel.Left := x;
 
-          CurrentX := x + rct.Left;
-          CurrentY := y + rct.Top;
-
-          SetCursorPos(CurrentX, CurrentY);
-          Sleep(1);
-
-          if not UseFullScreenshot then
-            ScreenShot(AInterprettedHandle, CurrentBmp, 0, 0, w, h)
-          else
+          if not PointIsInAvoidedZone(x, y) then
           begin
-            FullScreenBmp := TBitmap.Create;    //full screenshot then crop
-            try
-              ScreenShot(0, FullScreenBmp, 0, 0, Screen.Width, Screen.Height);
-              CurrentBmp.Canvas.CopyRect(DestRect, FullScreenBmp.Canvas, SrcRect);
-            finally
-              FullScreenBmp.Free;
-            end;
-          end;
+            CurrentX := x + rct.Left;
+            CurrentY := y + rct.Top;
 
-          if UseHCursor then
-          begin
-            pci.cbSize := SizeOf(TCursorInfo);
-            Res := GetCursorInfo(pci);
-          end;
+            SetCursorPos(CurrentX, CurrentY);
+            Sleep(1);
 
-          if not BitmapsAreEqual(InitBmp, CurrentBmp, w, h) or not BitmapsAreEqual(PrevBmp, CurrentBmp, w, h) or
-            (UseHCursor and Res and (pci.hCursor <> 65539)) then
-          begin
-            imgSpinnerDiff.Visible := True;
-
-            IndexOfRect := GetIndexOfRect(DiffRects, CurrentX, CurrentY, ExtDirs);
-            if (IndexOfRect = -1) and FRecordedEdgeExtending or not BitmapsAreEqual(PrevBmp, CurrentBmp, w, h) and not FRecordedEdgeExtending then
+            if not UseFullScreenshot then
+              ScreenShot(AInterprettedHandle, CurrentBmp, 0, 0, w, h)
+            else
             begin
-              n := Length(DiffRects);
-              SetLength(DiffRects, n + 1);
+              FullScreenBmp := TBitmap.Create;    //full screenshot then crop
+              try
+                ScreenShot(0, FullScreenBmp, 0, 0, Screen.Width, Screen.Height);
+                CurrentBmp.Canvas.CopyRect(DestRect, FullScreenBmp.Canvas, SrcRect);
+              finally
+                FullScreenBmp.Free;
+              end;
+            end;
 
-              DiffRects[n].ComponentRectangle.Left := CurrentX;
-              DiffRects[n].ComponentRectangle.Top := CurrentY;
-              DiffRects[n].ComponentRectangle.Width := 1;
-              DiffRects[n].ComponentRectangle.Height := 1;
+            if UseHCursor then
+            begin
+              pci.cbSize := SizeOf(TCursorInfo);
+              Res := GetCursorInfo(pci);
+            end;
 
-              DiffRects[n].MouseXOffset := x;
-              DiffRects[n].MouseYOffset := y;
+            if not BitmapsAreEqual(InitBmp, CurrentBmp, w, h) or not BitmapsAreEqual(PrevBmp, CurrentBmp, w, h) or
+              (UseHCursor and Res and (pci.hCursor <> 65539)) then
+            begin
+              imgSpinnerDiff.Visible := True;
+
+              IndexOfRect := GetIndexOfRect(DiffRects, CurrentX, CurrentY, ExtDirs);
+              if (IndexOfRect = -1) and FRecordWithEdgeExtending or not BitmapsAreEqual(PrevBmp, CurrentBmp, w, h) and not FRecordWithEdgeExtending then
+              begin
+                n := Length(DiffRects);
+                SetLength(DiffRects, n + 1);
+
+                DiffRects[n].ComponentRectangle.Left := CurrentX;
+                DiffRects[n].ComponentRectangle.Top := CurrentY;
+                DiffRects[n].ComponentRectangle.Width := 1;
+                DiffRects[n].ComponentRectangle.Height := 1;
+
+                DiffRects[n].MouseXOffset := x;
+                DiffRects[n].MouseYOffset := y;
+              end
+              else
+              begin  //extend the current rectangle
+                if edLeft in ExtDirs then
+                  DiffRects[IndexOfRect].ComponentRectangle.Left := DiffRects[IndexOfRect].ComponentRectangle.Left - 1;
+
+                if edTop in ExtDirs then
+                  DiffRects[IndexOfRect].ComponentRectangle.Top := DiffRects[IndexOfRect].ComponentRectangle.Top - 1;
+
+                if edRight in ExtDirs then
+                  DiffRects[IndexOfRect].ComponentRectangle.Right := DiffRects[IndexOfRect].ComponentRectangle.Right + 1;
+
+                if edBottom in ExtDirs then
+                  DiffRects[IndexOfRect].ComponentRectangle.Bottom := DiffRects[IndexOfRect].ComponentRectangle.Bottom + 1;
+              end;
             end
             else
-            begin  //extend the current rectangle
-              if edLeft in ExtDirs then
-                DiffRects[IndexOfRect].ComponentRectangle.Left := DiffRects[IndexOfRect].ComponentRectangle.Left - 1;
+              imgSpinnerDiff.Visible := False;
 
-              if edTop in ExtDirs then
-                DiffRects[IndexOfRect].ComponentRectangle.Top := DiffRects[IndexOfRect].ComponentRectangle.Top - 1;
-
-              if edRight in ExtDirs then
-                DiffRects[IndexOfRect].ComponentRectangle.Right := DiffRects[IndexOfRect].ComponentRectangle.Right + 1;
-
-              if edBottom in ExtDirs then
-                DiffRects[IndexOfRect].ComponentRectangle.Bottom := DiffRects[IndexOfRect].ComponentRectangle.Bottom + 1;
-            end;
-          end
-          else
-            imgSpinnerDiff.Visible := False;
-
-          PrevBmp.Assign(CurrentBmp);
+            PrevBmp.Assign(CurrentBmp);
+          end; //PointIsInAvoidedZone
 
           Application.ProcessMessages;
-          //Sleep(10);
+          //Sleep(10); //to be moved inside PointIsInAvoidedZone section
           if GetAsyncKeyState(VK_ESCAPE) < 0 then
             Exit;
 
@@ -1781,6 +2167,10 @@ begin
         //WindowState := wsNormal;
         Application.Restore;
       end;
+
+    FProgressVertLabel.Visible := False;
+    FProgressHorizLabel.Visible := False;
+    prbRecordingWithMouseSwipe.Visible := False;
   end;
 
   Duration := GetTickCount64 - tk;
@@ -2132,20 +2522,6 @@ begin
 end;
 
 
-procedure TfrClickerWinInterp.MenuItem_ToggleRecordedEdgeExtendingClick(
-  Sender: TObject);
-begin
-  FRecordedEdgeExtending := MenuItem_ToggleRecordedEdgeExtending.Checked;
-end;
-
-
-procedure TfrClickerWinInterp.MenuItem_ToggleRecordingSelectedAreaOnlyClick(
-  Sender: TObject);
-begin
-  FRecordSelectedAreaOnly := MenuItem_ToggleRecordingSelectedAreaOnly.Checked;
-end;
-
-
 procedure TfrClickerWinInterp.MenuItem_UpdateTreeValuesFromSelectionClick(
   Sender: TObject);
 var
@@ -2204,6 +2580,31 @@ begin
       Inc(NodeData^.CompRec.ComponentRectangle.Bottom, DiffY);
     end;
   until False;
+end;
+
+
+procedure TfrClickerWinInterp.PageControlWinInterpChange(Sender: TObject);
+begin
+  FSelectedComponentLeftLimitLabel.Visible := PageControlWinInterp.ActivePageIndex = 0;
+  FSelectedComponentTopLimitLabel.Visible := PageControlWinInterp.ActivePageIndex = 0;
+  FSelectedComponentRightLimitLabel.Visible := PageControlWinInterp.ActivePageIndex = 0;
+  FSelectedComponentBottomLimitLabel.Visible := PageControlWinInterp.ActivePageIndex = 0;
+
+  FTransparent_SelectedComponentLeftLimitLabel.Visible := PageControlWinInterp.ActivePageIndex = 0;
+  FTransparent_SelectedComponentTopLimitLabel.Visible := PageControlWinInterp.ActivePageIndex = 0;
+  FTransparent_SelectedComponentRightLimitLabel.Visible := PageControlWinInterp.ActivePageIndex = 0;
+  FTransparent_SelectedComponentBottomLimitLabel.Visible := PageControlWinInterp.ActivePageIndex = 0;
+
+  FSelectedZoneLeftLimitLabel.Visible := PageControlWinInterp.ActivePageIndex = 1;
+  FSelectedZoneTopLimitLabel.Visible := PageControlWinInterp.ActivePageIndex = 1;
+  FSelectedZoneRightLimitLabel.Visible := PageControlWinInterp.ActivePageIndex = 1;
+  FSelectedZoneBottomLimitLabel.Visible := PageControlWinInterp.ActivePageIndex = 1;
+
+  FTransparent_SelectedZoneLeftLimitLabel.Visible := PageControlWinInterp.ActivePageIndex = 1;
+  FTransparent_SelectedZoneTopLimitLabel.Visible := PageControlWinInterp.ActivePageIndex = 1;
+  FTransparent_SelectedZoneRightLimitLabel.Visible := PageControlWinInterp.ActivePageIndex = 1;
+  FTransparent_SelectedZoneBottomLimitLabel.Visible := PageControlWinInterp.ActivePageIndex = 1;
+
 end;
 
 
@@ -3025,6 +3426,166 @@ begin
 end;
 
 
+const
+  CZoneFilter = 'WinInterp Avoided Zone (*.zone)|*.zone|All Files (*.*)|*.*';
+
+procedure TfrClickerWinInterp.btnLoadZonesClick(Sender: TObject);
+var
+  Ini: TClkIniReadonlyFile;
+  MemStream: TMemoryStream;
+  ZoneFnm, Prefix: string;
+  Node: PVirtualNode;
+  NodeData: PAvoidedZoneRec;
+  i, n: Integer;
+begin
+  if not DoOnOpenDialogExecute(CZoneFilter) then
+    Exit;
+
+  ZoneFnm := DoOnGetOpenDialogFileName;
+  if not DoOnFileExists(ZoneFnm) then
+  begin
+    MessageBox(Handle, PChar('File not found: ' + #13#10 + ZoneFnm), PChar(Application.Title), MB_ICONERROR);
+    Exit;
+  end;
+
+  vstSettings.Clear;
+  vstSettings.BeginUpdate;
+  try
+    MemStream := TMemoryStream.Create;
+    try
+      DoOnLoadFileFromStream(ZoneFnm, MemStream);
+      MemStream.Position := 0;
+
+      Ini := TClkIniReadonlyFile.Create(MemStream);
+      try
+        n := Ini.ReadInteger('Zones', 'Count', 0);
+
+        for i := 0 to n - 1 do
+        begin
+          Node := vstSettings.InsertNode(vstSettings.RootNode, amInsertAfter);
+          NodeData := vstSettings.GetNodeData(Node);
+
+          Prefix := 'Zone_' + IntToStr(i) + '.';
+          NodeData^.ZRect.Left := Ini.ReadInteger('Zones', Prefix + 'Left', 0);
+          NodeData^.ZRect.Top := Ini.ReadInteger('Zones', Prefix + 'Top', 0);
+          NodeData^.ZRect.Right := Ini.ReadInteger('Zones', Prefix + 'Right', 0);
+          NodeData^.ZRect.Bottom := Ini.ReadInteger('Zones', Prefix + 'Bottom', 0);
+          NodeData^.ZName := Ini.ReadString('Zones', Prefix + 'Name', 'Zone');
+        end;
+      finally
+        Ini.Free;
+      end;
+    finally
+      MemStream.Free;
+    end;
+  finally
+    vstSettings.EndUpdate;
+  end;
+end;
+
+
+procedure TfrClickerWinInterp.btnSaveZonesClick(Sender: TObject);
+var
+  MemStream: TMemoryStream;
+  ZoneFnm, Prefix: string;
+  Node: PVirtualNode;
+  NodeData: PAvoidedZoneRec;
+  TempList: TStringList;
+begin
+  if not DoOnSaveDialogExecute(CZoneFilter) then
+    Exit;
+
+  ZoneFnm := DoOnGetSaveDialogFileName;
+  if ExtractFileName(ZoneFnm) = ExtractFileNameNoExt(ZoneFnm) then
+    ZoneFnm := ZoneFnm + '.zone';
+
+  MemStream := TMemoryStream.Create;
+  TempList := TStringList.Create;
+  try
+    TempList.Add('[Zones]');
+    TempList.Add('Count=' + IntToStr(vstSettings.RootNodeCount));
+
+    Node := vstSettings.GetFirst;
+    if Node <> nil then
+    begin
+      repeat
+        NodeData := vstSettings.GetNodeData(Node);
+        Prefix := 'Zone_' + IntToStr(Node^.Index) + '.';
+
+        TempList.Add(Prefix + 'Left' + '=' + IntToStr(NodeData^.ZRect.Left));
+        TempList.Add(Prefix + 'Top' + '=' + IntToStr(NodeData^.ZRect.Top));
+        TempList.Add(Prefix + 'Right' + '=' + IntToStr(NodeData^.ZRect.Right));
+        TempList.Add(Prefix + 'Bottom' + '=' + IntToStr(NodeData^.ZRect.Bottom));
+        TempList.Add(Prefix + 'Name' + '=' + NodeData^.ZName);
+
+        Node := Node^.NextSibling;
+      until Node = nil;
+    end;
+
+    TempList.SaveToStream(MemStream);
+    MemStream.Position := 0;
+    DoOnSaveFileToStream(ZoneFnm, MemStream);
+  finally
+    MemStream.Free;
+    TempList.Free;
+  end;
+end;
+
+
+procedure TfrClickerWinInterp.btNewZoneClick(Sender: TObject);
+var
+  Node: PVirtualNode;
+  NodeData: PAvoidedZoneRec;
+  NewZoneRect: TRect;
+begin
+  Node := vstSettings.GetFirstSelected;
+  if Node <> nil then
+  begin
+    NodeData := vstSettings.GetNodeData(Node);
+    if NodeData = nil then
+      Exit;
+
+    NewZoneRect := NodeData^.ZRect;
+  end
+  else
+  begin
+    NewZoneRect.Left := 0;
+    NewZoneRect.Top := 0;
+    NewZoneRect.Width := 30;
+    NewZoneRect.Height := 30;
+  end;
+
+  Node := vstSettings.InsertNode(vstSettings.RootNode, amInsertAfter);
+  NodeData := vstSettings.GetNodeData(Node);
+  if NodeData = nil then
+    Exit;
+
+  NodeData^.ZRect := NewZoneRect;
+  NodeData^.ZName := 'Zone';
+end;
+
+
+procedure TfrClickerWinInterp.btnDeleteZoneClick(Sender: TObject);
+var
+  Node: PVirtualNode;
+begin
+  if vstSettings.RootNodeCount = 0 then
+    Exit;
+
+  Node := vstSettings.GetFirstSelected;
+  if Node = nil then
+  begin
+    MessageBox(Handle, 'No zone is selected to be deleted. Please select a zone.', PChar(Application.Title), MB_ICONINFORMATION);
+    Exit;
+  end;
+
+  if MessageBox(Handle, 'Are you sure you want to delete the selected zone?', PChar(Application.Title), MB_ICONQUESTION + MB_YESNO) = IDNO then
+    Exit;
+
+  vstSettings.DeleteNode(Node);
+end;
+
+
 procedure TfrClickerWinInterp.btnSaveTreeClick(Sender: TObject);
 var
   Fnm: string;
@@ -3164,6 +3725,18 @@ begin
 end;
 
 
+procedure TfrClickerWinInterp.chkRecordSelectedAreaOnlyChange(Sender: TObject);
+begin
+  FRecordSelectedAreaOnly := chkRecordSelectedAreaOnly.Checked;
+end;
+
+
+procedure TfrClickerWinInterp.chkRecordWithEdgeExtendingChange(Sender: TObject);
+begin
+  FRecordWithEdgeExtending := chkRecordWithEdgeExtending.Checked;
+end;
+
+
 procedure TfrClickerWinInterp.SetHighlightingLabelsColor;
 begin
   FSelectedComponentLeftLimitLabel.Color := colboxHighlightingLabels.Selected;
@@ -3270,14 +3843,55 @@ begin
 end;
 
 
-procedure TfrClickerWinInterp.tmrEditTimer(Sender: TObject);
+procedure TfrClickerWinInterp.spdbtnMoveUpClick(Sender: TObject);
+var
+  Node: PVirtualNode;
 begin
-  tmrEdit.Enabled := False;
-
-  if FMouseUpHitInfo.HitNode = nil then
+  Node := vstSettings.GetFirstSelected;
+  if Node = nil then
     Exit;
 
-  vstComponents.EditNode(FMouseUpHitInfo.HitNode, FMouseUpHitInfo.HitColumn);
+  if Node = vstSettings.GetFirst then
+    Exit;
+
+  vstSettings.MoveTo(Node, Node^.PrevSibling, amInsertBefore, False);
+end;
+
+
+procedure TfrClickerWinInterp.spdbtnMoveDownClick(Sender: TObject);
+var
+  Node: PVirtualNode;
+begin
+  Node := vstSettings.GetFirstSelected;
+  if Node = nil then
+    Exit;
+
+  if Node = vstSettings.GetLast then
+    Exit;
+
+  vstSettings.MoveTo(Node, Node^.NextSibling, amInsertAfter, False);
+end;
+
+
+procedure TfrClickerWinInterp.tmrEditComponentsTimer(Sender: TObject);
+begin
+  tmrEditComponents.Enabled := False;
+
+  if FMouseUpHitInfo_Components.HitNode = nil then
+    Exit;
+
+  vstComponents.EditNode(FMouseUpHitInfo_Components.HitNode, FMouseUpHitInfo_Components.HitColumn);
+end;
+
+
+procedure TfrClickerWinInterp.tmrEditSettingsTimer(Sender: TObject);
+begin
+  tmrEditSettings.Enabled := False;
+
+  if FMouseUpHitInfo_Settings.HitNode = nil then
+    Exit;
+
+  vstSettings.EditNode(FMouseUpHitInfo_Settings.HitNode, FMouseUpHitInfo_Settings.HitColumn);
 end;
 
 
@@ -3303,7 +3917,13 @@ end;
 
 procedure TfrClickerWinInterp.vstComponentsDblClick(Sender: TObject);
 begin
-  tmrEdit.Enabled := True;
+  tmrEditComponents.Enabled := True;
+end;
+
+
+procedure TfrClickerWinInterp.vstSettingsDblClick(Sender: TObject);
+begin
+  tmrEditSettings.Enabled := True;
 end;
 
 
@@ -3311,7 +3931,7 @@ procedure TfrClickerWinInterp.vstComponentsEdited(Sender: TBaseVirtualTree; Node
 var
   NodeData: PHighlightedCompRec;
 begin
-  if FMouseUpHitInfo.HitNode = nil then
+  if FMouseUpHitInfo_Components.HitNode = nil then
     Exit;
 
   if not FUpdatedVstText then
@@ -3339,6 +3959,30 @@ begin
 end;
 
 
+procedure TfrClickerWinInterp.vstSettingsEdited(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
+var
+  NodeData: PAvoidedZoneRec;
+begin
+  if FMouseUpHitInfo_Settings.HitNode = nil then
+    Exit;
+
+  if not FUpdatedVstText then
+    Exit;
+
+  NodeData := vstSettings.GetNodeData(Node);
+  if NodeData = nil then
+    Exit;
+
+  case Column of
+    0: NodeData^.ZRect.Left := StrToIntDef(FEditingText, 0);
+    1: NodeData^.ZRect.Top := StrToIntDef(FEditingText, 0);
+    2: NodeData^.ZRect.Right := StrToIntDef(FEditingText, 0);
+    3: NodeData^.ZRect.Bottom := StrToIntDef(FEditingText, 0);
+    4: NodeData^.ZName := FEditingText;
+  end;
+end;
+
+
 procedure TfrClickerWinInterp.vstComponentsEditing(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; var Allowed: Boolean);
 var
   NodeData: PHighlightedCompRec;
@@ -3356,7 +4000,28 @@ begin
 end;
 
 
+procedure TfrClickerWinInterp.vstSettingsEditing(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; var Allowed: Boolean);
+var
+  NodeData: PAvoidedZoneRec;
+begin
+  Allowed := True;
+
+  NodeData := vstSettings.GetNodeData(Node);
+  if NodeData = nil then
+    Exit;
+
+  FUpdatedVstText := False;
+end;
+
+
 procedure TfrClickerWinInterp.vstComponentsNewText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; const NewText: String);
+begin
+  FEditingText := NewText;
+  FUpdatedVstText := True;
+end;
+
+
+procedure TfrClickerWinInterp.vstSettingsNewText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; const NewText: String);
 begin
   FEditingText := NewText;
   FUpdatedVstText := True;
@@ -3368,11 +4033,23 @@ procedure TfrClickerWinInterp.vstComponentsMouseUp(Sender: TObject;
 var
   Node: PVirtualNode;
 begin
-  vstComponents.GetHitTestInfoAt(X, Y, True, FMouseUpHitInfo);
+  vstComponents.GetHitTestInfoAt(X, Y, True, FMouseUpHitInfo_Components);
   Node := vstComponents.GetFirstSelected;
 
   GenerateContent_AvgScreenshotAndGreenComp(Node);
   HighlightComponent(Node);
+end;
+
+
+procedure TfrClickerWinInterp.vstSettingsMouseUp(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var
+  Node: PVirtualNode;
+begin
+  vstSettings.GetHitTestInfoAt(X, Y, True, FMouseUpHitInfo_Settings);
+  Node := vstSettings.GetFirstSelected;
+
+  HighlightZone(Node);
 end;
 
 
@@ -3563,8 +4240,240 @@ begin
   FSelectionHold := False;
 end;
 
-end.
 
+///
+
+
+procedure TfrClickerWinInterp.FTransparentZone_LeftMouseDown(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  if not (ssLeft in Shift) then
+    Exit;
+
+  GetCursorPos(FMouseDownGlobalPos);
+
+  if not FSelectionHold then
+  begin
+    FMouseDownSelPos.X := FTransparent_SelectedZoneLeftLimitLabel.Left; //component coordinates on the window
+    FSelectionHold := True;
+  end;
+end;
+
+
+procedure TfrClickerWinInterp.FTransparentZone_LeftMouseMove(Sender: TObject;
+  Shift: TShiftState; X, Y: Integer);
+var
+  NewLeft: Integer;
+  CurrentLabel: TLabel;
+  tp: TPoint;
+begin
+  if not FSelectionHold then
+    Exit;
+
+  GetCursorPos(tp);
+  if Sender is TLabel then
+  begin
+    CurrentLabel := Sender as TLabel;
+    NewLeft := FMouseDownSelPos.X + tp.X - FMouseDownGlobalPos.X;
+    //if NewLeft <> CurrentLabel.Left then
+    //  Modified := True;
+
+    CurrentLabel.Left := Max(0, Min(FTransparent_SelectedZoneRightLimitLabel.Left - 8, NewLeft));
+    FSelectedZoneLeftLimitLabel.Left := CurrentLabel.Left + 3;
+  end;
+end;
+
+
+procedure TfrClickerWinInterp.FTransparentZone_LeftMouseUp(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var
+  Node: PVirtualNode;
+  NodeData: PAvoidedZoneRec;
+begin
+  FSelectionHold := False;
+
+  Node := vstSettings.GetFirstSelected;
+  if Node = nil then
+    Exit;
+
+  NodeData := vstSettings.GetNodeData(Node);
+  NodeData^.ZRect.Left := FSelectedZoneLeftLimitLabel.Left;
+  vstSettings.RepaintNode(Node);
+end;
+
+
+procedure TfrClickerWinInterp.FTransparentZone_RightMouseDown(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  if not (ssLeft in Shift) then
+    Exit;
+
+  GetCursorPos(FMouseDownGlobalPos);
+
+  if not FSelectionHold then
+  begin
+    FMouseDownSelPos.X := FTransparent_SelectedZoneRightLimitLabel.Left; //component coordinates on the window
+    FSelectionHold := True;
+  end;
+end;
+
+
+procedure TfrClickerWinInterp.FTransparentZone_RightMouseMove(Sender: TObject;
+  Shift: TShiftState; X, Y: Integer);
+var
+  NewLeft: Integer;
+  CurrentLabel: TLabel;
+  tp: TPoint;
+begin
+  if not FSelectionHold then
+    Exit;
+
+  GetCursorPos(tp);
+  if Sender is TLabel then
+  begin
+    CurrentLabel := Sender as TLabel;
+    NewLeft := FMouseDownSelPos.X + tp.X - FMouseDownGlobalPos.X;
+    //if NewLeft <> CurrentLabel.Left then
+    //  Modified := True;
+
+    CurrentLabel.Left := Max(FTransparent_SelectedZoneLeftLimitLabel.Left + 8, Min(imgLiveScreenshot.Width - 2, NewLeft));
+    FSelectedZoneRightLimitLabel.Left := CurrentLabel.Left + 3;
+  end;
+end;
+
+
+procedure TfrClickerWinInterp.FTransparentZone_RightMouseUp(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var
+  Node: PVirtualNode;
+  NodeData: PAvoidedZoneRec;
+begin
+  FSelectionHold := False;
+
+  Node := vstSettings.GetFirstSelected;
+  if Node = nil then
+    Exit;
+
+  NodeData := vstSettings.GetNodeData(Node);
+  NodeData^.ZRect.Right := FSelectedZoneRightLimitLabel.Left;
+  vstSettings.RepaintNode(Node);
+end;
+
+
+procedure TfrClickerWinInterp.FTransparentZone_TopMouseDown(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  if not (ssLeft in Shift) then
+    Exit;
+
+  GetCursorPos(FMouseDownGlobalPos);
+
+  if not FSelectionHold then
+  begin
+    FMouseDownSelPos.Y := FTransparent_SelectedZoneTopLimitLabel.Top; //component coordinates on the window
+    FSelectionHold := True;
+  end;
+end;
+
+
+procedure TfrClickerWinInterp.FTransparentZone_TopMouseMove(Sender: TObject;
+  Shift: TShiftState; X, Y: Integer);
+var
+  NewTop: Integer;
+  CurrentLabel: TLabel;
+  tp: TPoint;
+begin
+  if not FSelectionHold then
+    Exit;
+
+  GetCursorPos(tp);
+  if Sender is TLabel then
+  begin
+    CurrentLabel := Sender as TLabel;
+    NewTop := FMouseDownSelPos.Y + tp.Y - FMouseDownGlobalPos.Y;
+    //if NewTop <> CurrentLabel.Top then
+    //  Modified := True;
+
+    CurrentLabel.Top := Max(0, Min(FTransparent_SelectedZoneBottomLimitLabel.Top - 8, NewTop));
+    FSelectedZoneTopLimitLabel.Top := CurrentLabel.Top + 3;
+  end;
+end;
+
+
+procedure TfrClickerWinInterp.FTransparentZone_TopMouseUp(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var
+  Node: PVirtualNode;
+  NodeData: PAvoidedZoneRec;
+begin
+  FSelectionHold := False;
+
+  Node := vstSettings.GetFirstSelected;
+  if Node = nil then
+    Exit;
+
+  NodeData := vstSettings.GetNodeData(Node);
+  NodeData^.ZRect.Top := FSelectedZoneTopLimitLabel.Top;
+  vstSettings.RepaintNode(Node);
+end;
+
+
+procedure TfrClickerWinInterp.FTransparentZone_BottomMouseDown(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  if not (ssLeft in Shift) then
+    Exit;
+
+  GetCursorPos(FMouseDownGlobalPos);
+
+  if not FSelectionHold then
+  begin
+    FMouseDownSelPos.Y := FTransparent_SelectedZoneBottomLimitLabel.Top; //component coordinates on the window
+    FSelectionHold := True;
+  end;
+end;
+
+
+procedure TfrClickerWinInterp.FTransparentZone_BottomMouseMove(Sender: TObject;
+  Shift: TShiftState; X, Y: Integer);
+var
+  NewTop: Integer;
+  CurrentLabel: TLabel;
+  tp: TPoint;
+begin
+  if not FSelectionHold then
+    Exit;
+
+  GetCursorPos(tp);
+  if Sender is TLabel then
+  begin
+    CurrentLabel := Sender as TLabel;
+    NewTop := FMouseDownSelPos.Y + tp.Y - FMouseDownGlobalPos.Y;
+    //if NewTop <> CurrentLabel.Top then
+    //  Modified := True;
+
+    CurrentLabel.Top := Max(FTransparent_SelectedZoneTopLimitLabel.Top + 8, Min(imgLiveScreenshot.Height - 2, NewTop));
+    FSelectedZoneBottomLimitLabel.Top := CurrentLabel.Top + 3;
+  end;
+end;
+
+
+procedure TfrClickerWinInterp.FTransparentZone_BottomMouseUp(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var
+  Node: PVirtualNode;
+  NodeData: PAvoidedZoneRec;
+begin
+  FSelectionHold := False;
+
+  Node := vstSettings.GetFirstSelected;
+  if Node = nil then
+    Exit;
+
+  NodeData := vstSettings.GetNodeData(Node);
+  NodeData^.ZRect.Bottom := FSelectedZoneBottomLimitLabel.Top;
+  vstSettings.RepaintNode(Node);
+end;
 
 end.
 

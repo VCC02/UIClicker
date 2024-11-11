@@ -643,7 +643,7 @@ begin
     frmClickerWinInterp.GetTreeContent(TreeContent);
 
     TreeContent.Position := 0;
-    TreeContent.SaveToFile(ATreeFileName);
+    HandleOnSaveFileToStream(ATreeFileName, TreeContent);
     frmClickerWinInterp.SaveImages(ATreeFileName);
 
     Result := True;
