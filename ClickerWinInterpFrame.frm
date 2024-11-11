@@ -353,7 +353,7 @@ object frClickerWinInterp: TfrClickerWinInterp
             OnSelect = colboxHighlightingLabelsSelect
           end
           object chkUseHCursor: TCheckBox
-            Left = 320
+            Left = 328
             Height = 19
             Hint = '[in work]'#13#10'Reads mouse cursor handle on every position during recording with mouse swipe.'#13#10'This may be useful when interactable components do not display a visual feedback while hovered,'#13#10'so the scan relies on changing the mouse cursor to detect component edges.'
             Top = 214
@@ -456,6 +456,20 @@ object frClickerWinInterp: TfrClickerWinInterp
             ParentFont = False
             ParentShowHint = False
             OnClick = spdbtnMoveDownClick
+          end
+          object lbeMouseCursorPosToScreenshotDelay: TLabeledEdit
+            Left = 328
+            Height = 23
+            Hint = 'Delay in ms, between setting the mouse cursor position and taking the (component) screenshot.'#13#10'Some UIs required a greater delay because of animations. This will lead to longer scanning time.'#13#10'Valid values are from 0 to 1000.'#13#10'For example, on a 32x32 scanning area and a configured value of 1, this delay only will take at least 1024ms.'#13#10'This option is used by recording with mouse swipe.'
+            Top = 188
+            Width = 120
+            EditLabel.Height = 15
+            EditLabel.Width = 120
+            EditLabel.Caption = 'Mouse to scr delay'
+            ParentShowHint = False
+            ShowHint = True
+            TabOrder = 11
+            Text = '1'
           end
         end
       end

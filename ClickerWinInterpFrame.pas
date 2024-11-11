@@ -101,6 +101,7 @@ type
     imgScreenshot: TImage;
     imgSpinner: TImage;
     imgSpinnerDiff: TImage;
+    lbeMouseCursorPosToScreenshotDelay: TLabeledEdit;
     lblAvoidedZones: TLabel;
     lbeStep: TLabeledEdit;
     lblGauge: TLabel;
@@ -1912,7 +1913,7 @@ var
   AppTitle: string;
   ImgMatrix: TColorArr;
   ImgHWMatrix: array of THandle;
-  tk, Duration: QWord;
+  tk, Duration, SleepTk, MouseCursorToScreenshotDelay: QWord;
   UseHCursor, UseFullScreenshot: Boolean;
   pci: TCursorInfo;
   Res: LongBool;
@@ -1963,6 +1964,9 @@ begin
       //WindowState := wsMinimized;
       Application.Minimize;
     end;
+
+  MouseCursorToScreenshotDelay := StrToIntDef(lbeMouseCursorPosToScreenshotDelay.Text, 1);
+  MouseCursorToScreenshotDelay := Max(0, Min(MouseCursorToScreenshotDelay, 1000));
 
   imgScannedWindow.Canvas.Lock;
   imgHandleColors.Canvas.Lock;
@@ -2039,7 +2043,12 @@ begin
             CurrentY := y + rct.Top;
 
             SetCursorPos(CurrentX, CurrentY);
-            Sleep(1);
+
+            SleepTk := GetTickCount64;
+            repeat
+              //Sleep(1); // GetTickCount64 seems to be more accurate than Sleep
+              Application.ProcessMessages;
+            until GetTickCount64 - SleepTk >= MouseCursorToScreenshotDelay;
 
             if not UseFullScreenshot then
               ScreenShot(AInterprettedHandle, CurrentBmp, 0, 0, w, h)
@@ -2182,9 +2191,14 @@ end;
 
 procedure TfrClickerWinInterp.MenuItemRecordWithMouseSwipeClick(Sender: TObject);
 var
-  rct: TRect;
-  EstimatedDuration: Double;
+  rct, DestRect: TRect;
+  EstimatedDuration, AvgScreenshotDuration: Double;
   Step: Integer;
+  MouseCursorToScreenshotDelay, ScreenshotDuration: QWord;
+  EstimatedDurationStr: string;
+  UseFullScreenshot: Boolean;
+  CurrentBmp, FullScreenBmp: TBitmap;
+  i, MeasurementCount: Integer;
 begin
   if FInterprettedHandle = 0 then
   begin
@@ -2198,14 +2212,64 @@ begin
     Exit;
 
   Step := Max(1, StrToIntDef(lbeStep.Text, 1)); //bug: If Step is greater than 1, the algorithm detects subcontrol edges on every Step number of pixels. I.e. it does not merge areas.
+  MouseCursorToScreenshotDelay := StrToIntDef(lbeMouseCursorPosToScreenshotDelay.Text, 1);
+  MouseCursorToScreenshotDelay := Max(0, Min(MouseCursorToScreenshotDelay, 1000));
+  UseFullScreenshot := chkFullScr.Checked;
 
-  memCompInfo.Lines.Add('Estimated duration: ' + FloatToStr(EstimatedDuration) + ' min.');
-  EstimatedDuration := (rct.Width * rct.Height * 4.3) / 60000 / Double(Step);   //2.6 for a small window   - also depends on CPU and GPU speed
+  AvgScreenshotDuration := 0;
+  MeasurementCount := 10;  //number of screenshot duration measurements
+
+  for i := 1 to MeasurementCount do
+  begin
+    ScreenshotDuration := GetTickCount64;   //an approximate measurement of how long does it take for a (component) screenshot
+    try
+      CurrentBmp := TBitmap.Create;
+      try
+        DestRect.Left := 0;
+        DestRect.Top := 0;
+        DestRect.Width := rct.Width;
+        DestRect.Height := rct.Height;
+
+        WipeBitmap(CurrentBmp, Screen.Width, Screen.Height);
+        GetWindowRect(FInterprettedHandle, rct);
+        if not UseFullScreenshot then
+          ScreenShot(FInterprettedHandle, CurrentBmp, 0, 0, rct.Width, rct.Height)   //not accurate if using a selected area only
+        else
+        begin
+          FullScreenBmp := TBitmap.Create;    //full screenshot then crop
+          try
+            ScreenShot(0, FullScreenBmp, 0, 0, Screen.Width, Screen.Height);
+            CurrentBmp.Canvas.CopyRect(DestRect, FullScreenBmp.Canvas, rct); //SrcRect is the same as rct
+          finally
+            FullScreenBmp.Free;
+          end;
+        end;
+      finally
+        CurrentBmp.Free;
+      end;
+
+      //there is also the duration of comparing two bitmaps, twice
+    finally
+      ScreenshotDuration := GetTickCount64 - ScreenshotDuration;
+    end;
+
+    AvgScreenshotDuration := AvgScreenshotDuration + ScreenshotDuration;
+    Application.ProcessMessages;
+  end;
+  AvgScreenshotDuration := AvgScreenshotDuration / MeasurementCount;
+
+  Inc(ScreenshotDuration);  //add 1ms for other processing stuff
+
+  //EstimatedDuration := (rct.Width * rct.Height * 4.3) / 60000 / Double(Step);   //2.6 for a small window   - also depends on CPU and GPU speed
+  EstimatedDuration := (rct.Width * rct.Height * (MouseCursorToScreenshotDelay + AvgScreenshotDuration)) / Double(Sqr(Step));  //step is squared, because it is applied to both x and y
+  EstimatedDurationStr := 'Minimum estimated duration: ' + FloatToStr(EstimatedDuration) + ' ms  (' + FloatToStr(EstimatedDuration / 60000) + ' min).';
+
+  memCompInfo.Lines.Add(EstimatedDurationStr);
 
   if MessageBox(Handle,
                 PChar('Recording with mouse swipe, will take a very long time, while keeping busy at least a CPU core. The scanning can be stopped with the Esc key.' + #13#10 +
                       'Control size: ' + IntToStr(rct.Width) + ' x ' + IntToStr(rct.Height) + #13#10 +
-                      'Estimated recording time: ' + FloatToStr(EstimatedDuration) + ' min' + #13#10 +
+                      EstimatedDurationStr + #13#10 +
                       'Continue?'),
                 PChar(Caption),
                 MB_ICONQUESTION + MB_YESNO) = IDNO then
