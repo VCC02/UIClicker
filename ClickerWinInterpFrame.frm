@@ -555,8 +555,11 @@ object frClickerWinInterp: TfrClickerWinInterp
       object imgLiveScreenshot: TImage
         Left = 113
         Height = 121
+        Hint = 'Live screenshot'
         Top = 113
         Width = 121
+        ParentShowHint = False
+        ShowHint = True
         Visible = False
         OnMouseDown = imgLiveScreenshotMouseDown
         OnMouseMove = imgScannedWindowMouseMove
@@ -624,6 +627,24 @@ object frClickerWinInterp: TfrClickerWinInterp
     object MenuItem_UpdateTreeValuesFromSelection: TMenuItem
       Caption = 'Update tree values from selection'
       OnClick = MenuItem_UpdateTreeValuesFromSelectionClick
+    end
+    object Separator6: TMenuItem
+      Caption = '-'
+    end
+    object MenuItem_ClearScreenshots: TMenuItem
+      Caption = 'Clear screenshots'
+      OnClick = MenuItem_ClearScreenshotsClick
+    end
+    object Separator7: TMenuItem
+      Caption = '-'
+    end
+    object MenuItem_ShowLiveScreenshot: TMenuItem
+      Caption = 'Show live screenshot'
+      OnClick = MenuItem_ShowLiveScreenshotClick
+    end
+    object MenuItem_HideLiveScreenshot: TMenuItem
+      Caption = 'Hide live screenshot'
+      OnClick = MenuItem_HideLiveScreenshotClick
     end
   end
   object pmComponents: TPopupMenu

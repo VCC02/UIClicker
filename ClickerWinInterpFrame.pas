@@ -107,6 +107,11 @@ type
     lblGauge: TLabel;
     lblHighlightingLabels: TLabel;
     memCompInfo: TMemo;
+    MenuItem_HideLiveScreenshot: TMenuItem;
+    MenuItem_ShowLiveScreenshot: TMenuItem;
+    Separator7: TMenuItem;
+    MenuItem_ClearScreenshots: TMenuItem;
+    Separator6: TMenuItem;
     MenuItem_DeleteSubComponent: TMenuItem;
     MenuItem_AddSubcomponent: TMenuItem;
     PageControlWinInterp: TPageControl;
@@ -177,13 +182,16 @@ type
       Sender: TObject);
     procedure MenuItemRecordWithMouseSwipeClick(Sender: TObject);
     procedure MenuItem_AddSubcomponentClick(Sender: TObject);
+    procedure MenuItem_ClearScreenshotsClick(Sender: TObject);
     procedure MenuItem_CopySelectedComponentToClipboardClick(Sender: TObject);
     procedure MenuItem_CopySelectionToClipboardClick(Sender: TObject);
     procedure MenuItem_DeleteSubComponentClick(Sender: TObject);
+    procedure MenuItem_HideLiveScreenshotClick(Sender: TObject);
     procedure MenuItem_RecordFromRemoteClick(Sender: TObject);
     procedure MenuItem_RecordMultipleSizesClick(Sender: TObject);
     procedure MenuItem_SaveSelectedComponentToFileClick(Sender: TObject);
     procedure MenuItem_SaveSelectionToFileClick(Sender: TObject);
+    procedure MenuItem_ShowLiveScreenshotClick(Sender: TObject);
     procedure MenuItem_UpdateTreeValuesFromSelectionClick(Sender: TObject);
     procedure PageControlWinInterpChange(Sender: TObject);
     procedure pnlDragMouseDown(Sender: TObject; Button: TMouseButton;
@@ -2312,6 +2320,18 @@ begin
 end;
 
 
+procedure TfrClickerWinInterp.MenuItem_ClearScreenshotsClick(Sender: TObject);
+begin
+  WipeImage(imgScannedWindow, scrboxScannedComponents.Width, scrboxScannedComponents.Height);
+  WipeImage(imgScreenshot, scrboxScannedComponents.Width, scrboxScannedComponents.Height);
+  WipeImage(imgAvgScreenshotAndGreenComp, scrboxScannedComponents.Width, scrboxScannedComponents.Height);
+  WipeImage(imgAvgScreenshotAndAssignedComp, scrboxScannedComponents.Width, scrboxScannedComponents.Height);
+  WipeImage(imgLiveScreenshot, scrboxScannedComponents.Width, scrboxScannedComponents.Height);
+  WipeImage(imgHandleColors, scrboxScannedComponents.Width, scrboxScannedComponents.Height);
+  WipeImage(imgScannedWindowWithText, scrboxScannedComponents.Width, scrboxScannedComponents.Height);
+end;
+
+
 procedure TfrClickerWinInterp.MenuItemCopyFindControlAndCachePositionActionsToClipBoardClick
   (Sender: TObject);
 begin
@@ -2583,6 +2603,18 @@ begin
   finally
     SaveDialog.Free;
   end;
+end;
+
+
+procedure TfrClickerWinInterp.MenuItem_ShowLiveScreenshotClick(Sender: TObject);
+begin
+  imgLiveScreenshot.Show;
+end;
+
+
+procedure TfrClickerWinInterp.MenuItem_HideLiveScreenshotClick(Sender: TObject);
+begin
+  imgLiveScreenshot.Hide;
 end;
 
 
