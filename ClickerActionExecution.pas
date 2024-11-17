@@ -1104,8 +1104,8 @@ begin
   for i := 0 to AClickOptions.Count - 1 do
   begin
     ExecuteClickAction(AClickOptions);
-    Application.ProcessMessages;
-    Sleep(3);
+    Application.ProcessMessages;  //When opening a pop-up menu or a MessageBox, belonging to UIClicker, any call to Application.ProcessMessages will block the application.
+    Sleep(3);                     //If this Application.ProcessMessages is commented, then the next call is going to block.
 
     //memLogErr.Lines.Add('$Current_Mouse_Y$: ' + EvaluateReplacements('$Current_Mouse_Y$'));
 

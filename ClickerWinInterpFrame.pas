@@ -67,6 +67,7 @@ type
   TExtendDirs = set of TExtendDir;
 
   THandleArr = array of THandle;
+  TTRectArr = array of TRect;
 
 
   TOnInsertTreeComponent = procedure(ACompData: PHighlightedCompRec) of object;
@@ -84,12 +85,15 @@ type
     btnDeleteZone: TButton;
     btnLoadZones: TButton;
     btnSaveZones: TButton;
+    btnClearZones: TButton;
+    chkBringTargetToFrontPeriodically: TCheckBox;
+    chkHighlightSelectedComponent: TCheckBox;
     chkRecordSelectedAreaOnly: TCheckBox;
     chkRecordWithEdgeExtending: TCheckBox;
     chkFullScr: TCheckBox;
-    chkHighlightSelectedComponent: TCheckBox;
     chkMinimizeWhileRecording: TCheckBox;
     chkUseHCursor: TCheckBox;
+    chkBringTargetToFront: TCheckBox;
     colboxHighlightingLabels: TColorBox;
     imgAvgScreenshotAndAssignedComp: TImage;
     imgAvgScreenshotAndGreenComp: TImage;
@@ -98,8 +102,11 @@ type
     imglstSpinner: TImageList;
     imgScannedWindow: TImage;
     imgScannedWindowWithText: TImage;
+    imgScannedWindowWithAvoidedZones: TImage;
     imgScreenshot: TImage;
     imgSpinner: TImage;
+    imgEnabledPause: TImage;
+    imgDisabledPause: TImage;
     imgSpinnerDiff: TImage;
     lbeMouseCursorPosToScreenshotDelay: TLabeledEdit;
     lblAvoidedZones: TLabel;
@@ -107,8 +114,11 @@ type
     lblGauge: TLabel;
     lblHighlightingLabels: TLabel;
     memCompInfo: TMemo;
+    MenuItem_ClearZones: TMenuItem;
+    MenuItem_CopyLiveScreenshotToMainScreenshot: TMenuItem;
     MenuItem_HideLiveScreenshot: TMenuItem;
     MenuItem_ShowLiveScreenshot: TMenuItem;
+    pmAvoidedZones: TPopupMenu;
     Separator7: TMenuItem;
     MenuItem_ClearScreenshots: TMenuItem;
     Separator6: TMenuItem;
@@ -155,6 +165,7 @@ type
     tmrEditComponents: TTimer;
     tmrScan: TTimer;
     tmrSpinner: TTimer;
+    procedure btnClearZonesClick(Sender: TObject);
     procedure btnDeleteZoneClick(Sender: TObject);
     procedure btNewZoneClick(Sender: TObject);
     procedure btnExportClick(Sender: TObject);
@@ -175,6 +186,10 @@ type
       Shift: TShiftState; X, Y: Integer);
     procedure imgScannedWindowMouseMove(Sender: TObject; Shift: TShiftState; X,
       Y: Integer);
+    procedure imgScannedWindowWithAvoidedZonesMouseDown(Sender: TObject;
+      Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+    procedure imgScannedWindowWithAvoidedZonesMouseMove(Sender: TObject;
+      Shift: TShiftState; X, Y: Integer);
     procedure MenuItemCopyFindControlActionsToClipBoardClick(Sender: TObject);
     procedure MenuItemCopyFindControlAndCachePositionActionsToClipBoardClick(
       Sender: TObject);
@@ -183,6 +198,8 @@ type
     procedure MenuItemRecordWithMouseSwipeClick(Sender: TObject);
     procedure MenuItem_AddSubcomponentClick(Sender: TObject);
     procedure MenuItem_ClearScreenshotsClick(Sender: TObject);
+    procedure MenuItem_ClearZonesClick(Sender: TObject);
+    procedure MenuItem_CopyLiveScreenshotToMainScreenshotClick(Sender: TObject);
     procedure MenuItem_CopySelectedComponentToClipboardClick(Sender: TObject);
     procedure MenuItem_CopySelectionToClipboardClick(Sender: TObject);
     procedure MenuItem_DeleteSubComponentClick(Sender: TObject);
@@ -234,18 +251,18 @@ type
       Node: PVirtualNode; Stream: TStream);
     procedure vstComponentsSaveTree(Sender: TBaseVirtualTree; Stream: TStream);
 
-    procedure vstSettingsDblClick(Sender: TObject);
-    procedure vstSettingsEdited(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
-    procedure vstSettingsEditing(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; var Allowed: Boolean);
-    procedure vstSettingsNewText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; const NewText: String);
-    procedure vstSettingsMouseUp(Sender: TObject; Button: TMouseButton;
+    procedure vstAvoidedZonesDblClick(Sender: TObject);
+    procedure vstAvoidedZonesEdited(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
+    procedure vstAvoidedZonesEditing(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; var Allowed: Boolean);
+    procedure vstAvoidedZonesNewText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; const NewText: String);
+    procedure vstAvoidedZonesMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
-    procedure vstSettingsGetText(Sender: TBaseVirtualTree;
+    procedure vstAvoidedZonesGetText(Sender: TBaseVirtualTree;
       Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
       var CellText: String);
   private
     vstComponents: TVirtualStringTree;
-    vstSettings: TVirtualStringTree;
+    vstAvoidedZones: TVirtualStringTree;
 
     FDragging: Boolean;
 
@@ -403,6 +420,7 @@ type
 
     procedure GetWindowInfo;
     procedure BuildColors;
+    procedure DrawAvoidedZones;
     procedure GenerateCompImagesfromTreeContent;
     function GetParentNodeByRectangle(AComp: THighlightedCompRec): PVirtualNode;
     procedure InsertTreeComponent(AParentNode: PVirtualNode; AComp: THighlightedCompRec);
@@ -423,7 +441,11 @@ type
     procedure GenerateContent_AvgScreenshotAndGreenComp(Node: PVirtualNode);
     procedure GenerateContent_AvgScreenshotAndGenComp;
 
-    function PointIsInAvoidedZone(X, Y: Integer): Boolean;
+    function PointIsInAvoidedZone(X, Y: Integer): Boolean; overload;
+    function PointIsInAvoidedZone(X, Y: Integer; var AZones: TTRectArr; var ALastFoundIndex: Integer): Boolean; overload;
+    procedure BuildZonesArray(var AZones: TTRectArr);
+    function GetMouseSwipePixelCount(var AZones: TTRectArr; var AScanningArea: TRect): Integer;
+
     procedure RectsToTree(var ADiffRects: TCompRecArr; var ImgMatrix: TColorArr; var ImgHWMatrix: THandleArr);
     procedure LoadScreenshotAsPng(AFileName: string; ADestImage: TImage);
     procedure SaveScreenshotAsPng(AFileName: string; ASrcImage: TImage);
@@ -707,13 +729,13 @@ begin
 end;
 
 
-procedure TfrClickerWinInterp.vstSettingsGetText(Sender: TBaseVirtualTree;
+procedure TfrClickerWinInterp.vstAvoidedZonesGetText(Sender: TBaseVirtualTree;
   Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
   var CellText: String);
 var
   NodeData: PAvoidedZoneRec;
 begin
-  NodeData := vstSettings.GetNodeData(Node);
+  NodeData := vstAvoidedZones.GetNodeData(Node);
   if NodeData = nil then
   begin
     CellText := 'Data bug';
@@ -1110,64 +1132,64 @@ begin
   NewColum.Width := 99;
   NewColum.Text := 'Manually Added';
 
-  vstSettings := TVirtualStringTree.Create(Self);
-  vstSettings.Parent := pnlvstSettings;
+  vstAvoidedZones := TVirtualStringTree.Create(Self);
+  vstAvoidedZones.Parent := pnlvstSettings;
 
-  vstSettings.Left := 0;
-  vstSettings.Height := pnlvstSettings.Height;
-  vstSettings.Top := 0;
-  vstSettings.Width := pnlvstSettings.Width;
-  vstSettings.Indent := 0;
-  vstSettings.Anchors := [akLeft, akTop, akRight, akBottom];
-  vstSettings.NodeDataSize := SizeOf(TAvoidedZoneRec);
-  //vstSettings.ButtonStyle := bsTriangle; //bsRectangle; //bsRectangle - to use *.res,     bsTriangle - to draw a triangle in code: line 13162
-  //vstSettings.ButtonFillMode := fmShaded; //to use *.res
-  vstSettings.Colors.UnfocusedColor := clMedGray;
-  vstSettings.Colors.UnfocusedSelectionColor := clGradientInactiveCaption;
-  vstSettings.DefaultText := 'Node';
-  vstSettings.Header.AutoSizeIndex := 0;
-  vstSettings.Header.DefaultHeight := 21;
-  vstSettings.Header.Height := 21;
-  vstSettings.Header.Options := [hoColumnResize, hoDblClickResize, hoDrag, hoShowSortGlyphs, hoVisible];
-  vstSettings.Header.Style := hsFlatButtons;
-  vstSettings.PopupMenu := pmComponents;
-  vstSettings.TabOrder := 1;
-  vstSettings.TreeOptions.AutoOptions := [toAutoDropExpand, {toAutoScrollOnExpand,} toAutoTristateTracking, toAutoDeleteMovedNodes, toDisableAutoscrollOnFocus, toDisableAutoscrollOnEdit];
-  vstSettings.TreeOptions.MiscOptions := [toAcceptOLEDrop, toEditable, toFullRepaintOnResize, toInitOnSave, {toToggleOnDblClick,} toWheelPanning, toEditOnClick];
-  vstSettings.TreeOptions.PaintOptions := [toShowButtons, toShowDropmark, {toShowTreeLines,} toShowRoot, toThemeAware, toUseBlendedImages];
-  vstSettings.TreeOptions.SelectionOptions := [toFullRowSelect];
-  vstSettings.OnDblClick := @vstSettingsDblClick;
-  vstSettings.OnEdited := @vstSettingsEdited;
-  vstSettings.OnEditing := @vstSettingsEditing;
-  vstSettings.OnNewText := @vstSettingsNewText;
-  vstSettings.OnMouseUp := @vstSettingsMouseUp;
-  vstSettings.OnGetText := @vstSettingsGetText;
+  vstAvoidedZones.Left := 0;
+  vstAvoidedZones.Height := pnlvstSettings.Height;
+  vstAvoidedZones.Top := 0;
+  vstAvoidedZones.Width := pnlvstSettings.Width;
+  vstAvoidedZones.Indent := 0;
+  vstAvoidedZones.Anchors := [akLeft, akTop, akRight, akBottom];
+  vstAvoidedZones.NodeDataSize := SizeOf(TAvoidedZoneRec);
+  //vstAvoidedZones.ButtonStyle := bsTriangle; //bsRectangle; //bsRectangle - to use *.res,     bsTriangle - to draw a triangle in code: line 13162
+  //vstAvoidedZones.ButtonFillMode := fmShaded; //to use *.res
+  vstAvoidedZones.Colors.UnfocusedColor := clMedGray;
+  vstAvoidedZones.Colors.UnfocusedSelectionColor := clGradientInactiveCaption;
+  vstAvoidedZones.DefaultText := 'Node';
+  vstAvoidedZones.Header.AutoSizeIndex := 0;
+  vstAvoidedZones.Header.DefaultHeight := 21;
+  vstAvoidedZones.Header.Height := 21;
+  vstAvoidedZones.Header.Options := [hoColumnResize, hoDblClickResize, hoDrag, hoShowSortGlyphs, hoVisible];
+  vstAvoidedZones.Header.Style := hsFlatButtons;
+  vstAvoidedZones.PopupMenu := pmAvoidedZones;
+  vstAvoidedZones.TabOrder := 1;
+  vstAvoidedZones.TreeOptions.AutoOptions := [toAutoDropExpand, {toAutoScrollOnExpand,} toAutoTristateTracking, toAutoDeleteMovedNodes, toDisableAutoscrollOnFocus, toDisableAutoscrollOnEdit];
+  vstAvoidedZones.TreeOptions.MiscOptions := [toAcceptOLEDrop, toEditable, toFullRepaintOnResize, toInitOnSave, {toToggleOnDblClick,} toWheelPanning, toEditOnClick];
+  vstAvoidedZones.TreeOptions.PaintOptions := [toShowButtons, toShowDropmark, {toShowTreeLines,} toShowRoot, toThemeAware, toUseBlendedImages];
+  vstAvoidedZones.TreeOptions.SelectionOptions := [toFullRowSelect];
+  vstAvoidedZones.OnDblClick := @vstAvoidedZonesDblClick;
+  vstAvoidedZones.OnEdited := @vstAvoidedZonesEdited;
+  vstAvoidedZones.OnEditing := @vstAvoidedZonesEditing;
+  vstAvoidedZones.OnNewText := @vstAvoidedZonesNewText;
+  vstAvoidedZones.OnMouseUp := @vstAvoidedZonesMouseUp;
+  vstAvoidedZones.OnGetText := @vstAvoidedZonesGetText;
 
-  NewColum := vstSettings.Header.Columns.Add;
+  NewColum := vstAvoidedZones.Header.Columns.Add;
   NewColum.MinWidth := 50;
   NewColum.Position := 0;
   NewColum.Width := 50;
   NewColum.Text := 'Left';
 
-  NewColum := vstSettings.Header.Columns.Add;
+  NewColum := vstAvoidedZones.Header.Columns.Add;
   NewColum.MinWidth := 50;
   NewColum.Position := 1;
   NewColum.Width := 50;
   NewColum.Text := 'Top';
 
-  NewColum := vstSettings.Header.Columns.Add;
+  NewColum := vstAvoidedZones.Header.Columns.Add;
   NewColum.MinWidth := 50;
   NewColum.Position := 2;
   NewColum.Width := 50;
   NewColum.Text := 'Right';
 
-  NewColum := vstSettings.Header.Columns.Add;
+  NewColum := vstAvoidedZones.Header.Columns.Add;
   NewColum.MinWidth := 70;
   NewColum.Position := 3;
   NewColum.Width := 70;
   NewColum.Text := 'Bottom';
 
-  NewColum := vstSettings.Header.Columns.Add;
+  NewColum := vstAvoidedZones.Header.Columns.Add;
   NewColum.MinWidth := 100;
   NewColum.Position := 4;
   NewColum.Width := 150;
@@ -1441,6 +1463,7 @@ begin
   FOnSaveFileToStream := nil;
 
   pnlWinInterpSettings.Caption := '';
+  PageControlWinInterp.ActivePageIndex := 0;
 
   imgScannedWindow.Left := 0;
   imgScannedWindow.Top := 0;
@@ -1456,6 +1479,8 @@ begin
   imgHandleColors.Top := 0;
   imgScannedWindowWithText.Left := 0;
   imgScannedWindowWithText.Top := 0;
+  imgScannedWindowWithAvoidedZones.Left := 0;
+  imgScannedWindowWithAvoidedZones.Top := 0;
 
   //some default values
   imgScannedWindow.Width := 1920;
@@ -1472,6 +1497,8 @@ begin
   imgHandleColors.Height := 1080;
   imgScannedWindowWithText.Width := 1920;
   imgScannedWindowWithText.Height := 1080;
+  imgScannedWindowWithAvoidedZones.Width := 1920;
+  imgScannedWindowWithAvoidedZones.Height := 1080;
 end;
 
 
@@ -1569,7 +1596,7 @@ begin
   if Node = nil then
     Exit;
 
-  NodeData := vstSettings.GetNodeData(Node);
+  NodeData := vstAvoidedZones.GetNodeData(Node);
 
   FSelectedZoneLeftLimitLabel.Left := NodeData^.ZRect.Left;
   FSelectedZoneTopLimitLabel.Top := NodeData^.ZRect.Top;
@@ -1655,6 +1682,40 @@ begin
       HighlightComponent(FOldSelectedNode);
     end;
   end;
+end;
+
+
+procedure TfrClickerWinInterp.imgScannedWindowWithAvoidedZonesMouseDown(
+  Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var
+  Node: PVirtualNode;
+  NodeData: PAvoidedZoneRec;
+begin
+  Node := vstAvoidedZones.GetFirst;
+  if Node = nil then
+    Exit;
+
+  repeat
+    NodeData := vstAvoidedZones.GetNodeData(Node);
+    if NodeData <> nil then
+      if (X >= NodeData^.ZRect.Left) and (X <= NodeData^.ZRect.Right) and
+         (Y >= NodeData^.ZRect.Top) and (Y <= NodeData^.ZRect.Bottom) then
+      begin
+        vstAvoidedZones.Selected[Node] := True;
+        HighlightZone(Node);
+        DrawAvoidedZones;
+        Break;
+      end;
+
+    Node := Node^.NextSibling;
+  until Node = nil;
+end;
+
+
+procedure TfrClickerWinInterp.imgScannedWindowWithAvoidedZonesMouseMove(
+  Sender: TObject; Shift: TShiftState; X, Y: Integer);
+begin
+  pnlMouseCoordsOnScreenshot.Caption := IntToStr(X) + ' : ' + IntToStr(Y);
 end;
 
 
@@ -1872,18 +1933,64 @@ var
 begin
   Result := False;
 
-  Node := vstSettings.GetFirst;
+  Node := vstAvoidedZones.GetFirst;
   if Node = nil then
     Exit;
 
   repeat
-    NodeData := vstSettings.GetNodeData(Node);
+    NodeData := vstAvoidedZones.GetNodeData(Node);
     if (X >= NodeData^.ZRect.Left) and (X <= NodeData^.ZRect.Right) and
        (Y >= NodeData^.ZRect.Top) and (Y <= NodeData^.ZRect.Bottom) then
     begin
       Result := True;
       Exit;
     end;
+
+    Node := Node^.NextSibling;
+  until Node = nil;
+end;
+
+
+function TfrClickerWinInterp.PointIsInAvoidedZone(X, Y: Integer; var AZones: TTRectArr; var ALastFoundIndex: Integer): Boolean;
+var            //ALastFoundIndex is an optimization, which allows verifying the last found zone first, instead of starting all over from 0.
+  i: Integer;
+begin
+  Result := False;
+
+  for i := ALastFoundIndex to Length(AZones) - 1 do
+    if (X >= AZones[i].Left) and (X <= AZones[i].Right) and
+       (Y >= AZones[i].Top) and (Y <= AZones[i].Bottom) then
+    begin
+      Result := True;
+      ALastFoundIndex := i;
+      Exit;
+    end;
+
+  for i := 0 to ALastFoundIndex - 1 do
+    if (X >= AZones[i].Left) and (X <= AZones[i].Right) and
+       (Y >= AZones[i].Top) and (Y <= AZones[i].Bottom) then
+    begin
+      Result := True;
+      ALastFoundIndex := i;
+      Exit;
+    end;
+end;
+
+
+procedure TfrClickerWinInterp.BuildZonesArray(var AZones: TTRectArr);
+var
+  Node: PVirtualNode;
+  NodeData: PAvoidedZoneRec;
+begin
+  SetLength(AZones, 0);
+  Node := vstAvoidedZones.GetFirst;
+  if Node = nil then
+    Exit;
+
+  repeat
+    NodeData := vstAvoidedZones.GetNodeData(Node);
+    SetLength(AZones, Length(AZones) + 1);
+    AZones[Length(AZones) - 1] := NodeData^.ZRect;
 
     Node := Node^.NextSibling;
   until Node = nil;
@@ -1909,7 +2016,26 @@ begin
 end;
 
 
-procedure TfrClickerWinInterp.RecordWithMouseSwipe(AInterprettedHandle: THandle; AStep: Integer = 1);
+function TfrClickerWinInterp.GetMouseSwipePixelCount(var AZones: TTRectArr; var AScanningArea: TRect): Integer;
+var
+  x, y: Integer;
+  LastFoundIndex: Integer;
+  LocalWidth, LocalHeight: Integer;
+begin
+  Result := 0;
+  LastFoundIndex := 0;
+
+  LocalWidth := AScanningArea.Width;
+  LocalHeight := AScanningArea.Height;
+
+  for y := 0 to LocalHeight - 1 do
+    for x := 0 to LocalWidth - 1 do
+      if not PointIsInAvoidedZone(x, y, AZones, LastFoundIndex) then
+        Inc(Result);
+end;
+
+
+procedure TfrClickerWinInterp.RecordWithMouseSwipe(AInterprettedHandle: THandle; AStep: Integer = 1);  ////////////// Add a wrapper without Zones: TTRectArr;
 var
   InitBmp, CurrentBmp, PrevBmp: TBitmap;
   rct: TRect;
@@ -1922,13 +2048,14 @@ var
   ImgMatrix: TColorArr;
   ImgHWMatrix: array of THandle;
   tk, Duration, SleepTk, MouseCursorToScreenshotDelay: QWord;
-  UseHCursor, UseFullScreenshot: Boolean;
+  UseHCursor, UseFullScreenshot, BringTargetToFrontPeriodically: Boolean;
   pci: TCursorInfo;
   Res: LongBool;
   SrcRect, DestRect: TRect;
   FullScreenBmp: TBitmap;
   SelectionLeft, SelectionTop: Integer;
   SelectionRight, SelectionBottom: Integer;
+  Paused: Boolean;
 begin
   FDoneRec := False;
   if GetWindowRect(AInterprettedHandle, rct) = False then
@@ -1979,6 +2106,7 @@ begin
   imgScannedWindow.Canvas.Lock;
   imgHandleColors.Canvas.Lock;
   imgScannedWindowWithText.Canvas.Lock;
+
   vstComponents.BeginUpdate;
   btnStartRec.Enabled := False;
   spdbtnExtraRecording.Enabled := False;
@@ -1989,6 +2117,7 @@ begin
   try
     UseHCursor := chkUseHCursor.Checked;
     UseFullScreenshot := chkFullScr.Checked;
+    BringTargetToFrontPeriodically := chkBringTargetToFrontPeriodically.Checked;
 
     SetCursorPos(Screen.Width, Screen.Height);
     InitBmp := TBitmap.Create;
@@ -2035,18 +2164,24 @@ begin
 
       repeat
         Inc(y, Step);
-        FProgressHorizLabel.Top := y;
+        //FProgressHorizLabel.Top := y;
         prbRecordingWithMouseSwipe.Position := y;
+
+        if BringTargetToFrontPeriodically then
+          BringWindowToTop(AInterprettedHandle);
 
         x := 0;
         if FRecordSelectedAreaOnly then
           x := SelectionLeft;
         repeat
           Inc(x, Step);
-          FProgressVertLabel.Left := x;
+          //FProgressVertLabel.Left := x;
 
           if not PointIsInAvoidedZone(x, y) then
           begin
+            FProgressHorizLabel.Top := y;
+            FProgressVertLabel.Left := x;
+
             CurrentX := x + rct.Left;
             CurrentY := y + rct.Top;
 
@@ -2115,19 +2250,55 @@ begin
               imgSpinnerDiff.Visible := False;
 
             PrevBmp.Assign(CurrentBmp);
+
+            Application.ProcessMessages;
+            if GetAsyncKeyState(VK_ESCAPE) < 0 then
+            begin
+              if GetAsyncKeyState(VK_SHIFT) < 0 then
+              begin //pause
+                Paused := True;
+                imgEnabledPause.Hide;
+                imgDisabledPause.Show;
+
+                Sleep(500); //cheap debounce
+                repeat
+                  Application.ProcessMessages;
+
+                  if GetAsyncKeyState(VK_ESCAPE) < 0 then
+                  begin
+                    if GetAsyncKeyState(VK_SHIFT) < 0 then
+                    begin
+                      imgEnabledPause.Show;
+                      imgDisabledPause.Hide;
+                      Sleep(500); //cheap debounce
+                      Break;
+                    end
+                    else
+                      Exit;
+                  end;
+
+                  BringTargetToFrontPeriodically := chkBringTargetToFrontPeriodically.Checked; //update setting during pause
+
+                  if GeneralClosingApp then
+                    Exit;
+                until False;
+
+                imgEnabledPause.Show;
+                imgDisabledPause.Hide;
+                Paused := False;
+              end
+              else    //simple Esc
+                Exit;
+            end;
+
+
+            //if x and $FF = $FF then
+            //begin
+            //  prbRecording.Position := YLine + x;
+            //  lblGauge.Caption := IntToStr(prbRecording.Position * 100 div prbRecording.Max) + ' %';
+            //  Application.Title := lblGauge.Caption;
+            //end;
           end; //PointIsInAvoidedZone
-
-          Application.ProcessMessages;
-          //Sleep(10); //to be moved inside PointIsInAvoidedZone section
-          if GetAsyncKeyState(VK_ESCAPE) < 0 then
-            Exit;
-
-          if x and $FF = $FF then
-          begin
-            prbRecording.Position := YLine + x;
-            lblGauge.Caption := IntToStr(prbRecording.Position * 100 div prbRecording.Max) + ' %';
-            Application.Title := lblGauge.Caption;
-          end;
 
           if FDoneRec then
             Break;
@@ -2140,6 +2311,9 @@ begin
         if FRecordSelectedAreaOnly then
           if y >= SelectionBottom - 1 then
             Break;
+
+        lblGauge.Caption := IntToStr(prbRecordingWithMouseSwipe.Position * 100 div prbRecordingWithMouseSwipe.Max) + ' %';
+        Application.Title := lblGauge.Caption;
       until y >= h - 1;
     finally
       InitBmp.Free;
@@ -2164,30 +2338,34 @@ begin
     end;
 
     imgScannedWindowWithText.Picture.Bitmap.Canvas.Draw(0, 0, imgScannedWindow.Picture.Bitmap);
+    //imgScannedWindowWithAvoidedZones.Picture.Bitmap.Canvas.Draw(0, 0, imgScannedWindow.Picture.Bitmap);
 
     SetLength(ImgMatrix, 0);
     SetLength(ImgHWMatrix, 0);
 
-    imgScannedWindow.Canvas.Unlock;
-    imgHandleColors.Canvas.Unlock;
-    imgScannedWindowWithText.Canvas.Unlock;
-    vstComponents.EndUpdate;
-    btnStartRec.Enabled := True;
-    spdbtnExtraRecording.Enabled := True;
+    try
+      imgScannedWindow.Canvas.Unlock;
+      imgHandleColors.Canvas.Unlock;
+      imgScannedWindowWithText.Canvas.Unlock;
+    finally
+      vstComponents.EndUpdate;
+      btnStartRec.Enabled := True;
+      spdbtnExtraRecording.Enabled := True;
 
-    SetLength(DiffRects, 0);
-    imgSpinnerDiff.Visible := False;
+      SetLength(DiffRects, 0);
+      imgSpinnerDiff.Visible := False;
 
-    if chkMinimizeWhileRecording.Checked then
-      if AInterprettedHandle <> Handle then
-      begin
-        //WindowState := wsNormal;
-        Application.Restore;
-      end;
+      if chkMinimizeWhileRecording.Checked then
+        if AInterprettedHandle <> Handle then
+        begin
+          //WindowState := wsNormal;
+          Application.Restore;
+        end;
 
-    FProgressVertLabel.Visible := False;
-    FProgressHorizLabel.Visible := False;
-    prbRecordingWithMouseSwipe.Visible := False;
+      FProgressVertLabel.Visible := False;
+      FProgressHorizLabel.Visible := False;
+      prbRecordingWithMouseSwipe.Visible := False;
+    end;
   end;
 
   Duration := GetTickCount64 - tk;
@@ -2206,7 +2384,8 @@ var
   EstimatedDurationStr: string;
   UseFullScreenshot: Boolean;
   CurrentBmp, FullScreenBmp: TBitmap;
-  i, MeasurementCount: Integer;
+  i, MeasurementCount, TotalPixelCount: Integer;
+  Zones: TTRectArr;
 begin
   if FInterprettedHandle = 0 then
   begin
@@ -2224,8 +2403,11 @@ begin
   MouseCursorToScreenshotDelay := Max(0, Min(MouseCursorToScreenshotDelay, 1000));
   UseFullScreenshot := chkFullScr.Checked;
 
+  BuildZonesArray(Zones);
+  TotalPixelCount := GetMouseSwipePixelCount(Zones, rct);  //width * height - avoided_pixels
+
   AvgScreenshotDuration := 0;
-  MeasurementCount := 10;  //number of screenshot duration measurements
+  MeasurementCount := 20;  //number of screenshot duration measurements
 
   for i := 1 to MeasurementCount do
   begin
@@ -2268,8 +2450,7 @@ begin
 
   Inc(ScreenshotDuration);  //add 1ms for other processing stuff
 
-  //EstimatedDuration := (rct.Width * rct.Height * 4.3) / 60000 / Double(Step);   //2.6 for a small window   - also depends on CPU and GPU speed
-  EstimatedDuration := (rct.Width * rct.Height * (MouseCursorToScreenshotDelay + AvgScreenshotDuration)) / Double(Sqr(Step));  //step is squared, because it is applied to both x and y
+  EstimatedDuration := (TotalPixelCount * (MouseCursorToScreenshotDelay + AvgScreenshotDuration)) / Double(Sqr(Step));  //step is squared, because it is applied to both x and y
   EstimatedDurationStr := 'Minimum estimated duration: ' + FloatToStr(EstimatedDuration) + ' ms  (' + FloatToStr(EstimatedDuration / 60000) + ' min).';
 
   memCompInfo.Lines.Add(EstimatedDurationStr);
@@ -2277,9 +2458,10 @@ begin
   if MessageBox(Handle,
                 PChar('Recording with mouse swipe, will take a very long time, while keeping busy at least a CPU core. The scanning can be stopped with the Esc key.' + #13#10 +
                       'Control size: ' + IntToStr(rct.Width) + ' x ' + IntToStr(rct.Height) + #13#10 +
+                      'Valid pixel count: ' + IntToStr(TotalPixelCount) + #13#10 +
                       EstimatedDurationStr + #13#10 +
                       'Continue?'),
-                PChar(Caption),
+                PChar(Application.Title),
                 MB_ICONQUESTION + MB_YESNO) = IDNO then
     Exit;
 
@@ -2329,6 +2511,22 @@ begin
   WipeImage(imgLiveScreenshot, scrboxScannedComponents.Width, scrboxScannedComponents.Height);
   WipeImage(imgHandleColors, scrboxScannedComponents.Width, scrboxScannedComponents.Height);
   WipeImage(imgScannedWindowWithText, scrboxScannedComponents.Width, scrboxScannedComponents.Height);
+  //WipeImage(imgScannedWindowWithAvoidedZones, scrboxScannedComponents.Width, scrboxScannedComponents.Height);
+end;
+
+
+procedure TfrClickerWinInterp.MenuItem_ClearZonesClick(Sender: TObject);
+begin
+  vstAvoidedZones.Clear;
+  DrawAvoidedZones;
+end;
+
+
+procedure TfrClickerWinInterp.MenuItem_CopyLiveScreenshotToMainScreenshotClick(
+  Sender: TObject);
+begin
+  WipeImage(imgScreenshot, imgLiveScreenshot.Width, imgLiveScreenshot.Height);
+  imgScreenshot.Picture.Assign(imgLiveScreenshot.Picture.Bitmap);
 end;
 
 
@@ -2701,6 +2899,7 @@ begin
   FTransparent_SelectedZoneRightLimitLabel.Visible := PageControlWinInterp.ActivePageIndex = 1;
   FTransparent_SelectedZoneBottomLimitLabel.Visible := PageControlWinInterp.ActivePageIndex = 1;
 
+  imgScannedWindowWithAvoidedZones.Visible := PageControlWinInterp.ActivePageIndex = 1;
 end;
 
 
@@ -3046,6 +3245,17 @@ begin
   imgScannedWindowWithText.Canvas.Pen.Color := clBlack;
   imgScannedWindowWithText.Canvas.Brush.Color := clBlack;
   imgScannedWindowWithText.Canvas.Rectangle(0, 0, imgScreenshot.Width - 1, imgScreenshot.Height - 1);
+
+  //imgScannedWindowWithAvoidedZones.Picture.Clear;
+  //imgScannedWindowWithAvoidedZones.Left := 0;
+  //imgScannedWindowWithAvoidedZones.Top := 0;
+  //imgScannedWindowWithAvoidedZones.Width := imgScannedWindowWithText.Width;
+  //imgScannedWindowWithAvoidedZones.Height := imgScannedWindowWithText.Height;
+  //imgScannedWindowWithAvoidedZones.Picture.Bitmap.Width := imgScannedWindowWithText.Width;
+  //imgScannedWindowWithAvoidedZones.Picture.Bitmap.Height := imgScannedWindowWithText.Height;
+  //imgScannedWindowWithAvoidedZones.Canvas.Pen.Color := clBlack;
+  //imgScannedWindowWithAvoidedZones.Canvas.Brush.Color := clBlack;
+  //imgScannedWindowWithAvoidedZones.Canvas.Rectangle(0, 0, imgScreenshot.Width - 1, imgScreenshot.Height - 1);
 end;
 
 
@@ -3122,6 +3332,8 @@ var
   AppTitle: string;
   Node: PVirtualNode;
   NodeData: PHighlightedCompRec;
+  DestRect: TRect;
+  FullScreenBmp: TBitmap;
 begin
   if chkMinimizeWhileRecording.Checked then
     if AInterprettedHandle <> Handle then
@@ -3129,6 +3341,9 @@ begin
       //WindowState := wsMinimized;
       Application.Minimize;
     end;
+
+  if chkBringTargetToFront.Checked then
+    BringWindowToTop(AInterprettedHandle);
 
   tk := GetTickCount64;
 
@@ -3146,7 +3361,7 @@ begin
     vstComponents.EndUpdate;
   end;
 
-  PrepareLayers(Rct);
+  PrepareLayers(rct);
 
   RectWidth := rct.Width;  //rct.Width and rct.Height are functions, so better use some local vars
   RectHeight := rct.Height;
@@ -3177,6 +3392,8 @@ begin
   imgScannedWindow.Canvas.Lock;
   imgHandleColors.Canvas.Lock;
   imgScannedWindowWithText.Canvas.Lock;
+  imgScannedWindowWithAvoidedZones.Canvas.Lock;
+
   vstComponents.BeginUpdate;
   btnStartRec.Enabled := False;
   spdbtnExtraRecording.Enabled := False;
@@ -3187,6 +3404,9 @@ begin
       Inc(y, Step);
       if y and $F = $F then
         Application.ProcessMessages;
+
+      if chkBringTargetToFrontPeriodically.Checked then
+        BringWindowToTop(AInterprettedHandle);
 
       YLine := y * RectWidth;
       tp.Y := y + rct.Top;
@@ -3243,6 +3463,7 @@ begin
     end;
 
     imgScannedWindowWithText.Picture.Bitmap.Canvas.Draw(0, 0, imgScannedWindow.Picture.Bitmap);
+    //imgScannedWindowWithAvoidedZones.Picture.Bitmap.Canvas.Draw(0, 0, imgScannedWindow.Picture.Bitmap);
 
     Node := vstComponents.GetFirst;
     if Node <> nil then
@@ -3264,6 +3485,8 @@ begin
     imgScannedWindow.Canvas.Unlock;
     imgHandleColors.Canvas.Unlock;
     imgScannedWindowWithText.Canvas.Unlock;
+    imgScannedWindowWithAvoidedZones.Canvas.Unlock;
+
     vstComponents.EndUpdate;
     btnStartRec.Enabled := True;
     spdbtnExtraRecording.Enabled := True;
@@ -3278,10 +3501,32 @@ begin
 
   memCompInfo.Lines.Add('Done recording in ' + IntToStr(GetTickCount64 - tk) + 'ms.');
 
-  ScreenShot(InitialHW, imgScreenshot.Picture.Bitmap, 0, 0, RectWidth, RectHeight);
+  //ScreenShot(InitialHW, imgScreenshot.Picture.Bitmap, 0, 0, RectWidth, RectHeight);
+
+  DestRect.Left := 0;
+  DestRect.Top := 0;
+  DestRect.Width := rct.Width;
+  DestRect.Height := rct.Height;
+
+  WipeBitmap(imgScreenshot.Picture.Bitmap, rct.Width, rct.Height);
+  GetWindowRect(AInterprettedHandle, rct);  //this was InitialHW
+  if not chkFullScr.Checked then
+    ScreenShot(AInterprettedHandle, imgScreenshot.Picture.Bitmap, 0, 0, rct.Width, rct.Height)   //this was InitialHW
+  else
+  begin
+    FullScreenBmp := TBitmap.Create;    //full screenshot then crop
+    try
+      ScreenShot(0, FullScreenBmp, 0, 0, Screen.Width, Screen.Height);
+      imgScreenshot.Picture.Bitmap.Canvas.CopyRect(DestRect, FullScreenBmp.Canvas, rct);
+    finally
+      FullScreenBmp.Free;
+    end;
+  end;
+
   GenerateContent_AvgScreenshotAndGenComp;
   AdjustHighlightingLabelsToScreenshot;
   UpdateLayersVisibility;
+  DrawAvoidedZones;
 
   //MessageBox(Handle, 'Done recording', PChar(Caption), MB_ICONINFORMATION);  //sometimes, this messagebox pops up under a Stay-On-Top window
   lblGauge.Caption := '100%';
@@ -3406,6 +3651,8 @@ begin
   LoadScreenshotAsPng(ABasePath + 'Screenshot.png', imgScreenshot);
   LoadScreenshotAsPng(ABasePath + 'HandleColors.png', imgHandleColors);
   LoadScreenshotAsPng(ABasePath + 'ScannedWindowWithText.png', imgScannedWindowWithText);
+
+  //draw hashed avoided zones onto imgScannedWindowWithAvoidedZones, if a .zone file is present near the other screenshots
 end;
 
 
@@ -3416,6 +3663,8 @@ begin
   SaveScreenshotAsPng(ABasePath + 'Screenshot.png', imgScreenshot);
   SaveScreenshotAsPng(ABasePath + 'HandleColors.png', imgHandleColors);
   SaveScreenshotAsPng(ABasePath + 'ScannedWindowWithText.png', imgScannedWindowWithText);
+
+  //save avoided zones (imgScannedWindowWithAvoidedZones) if present and used
 end;
 
 
@@ -3522,6 +3771,71 @@ begin
 end;
 
 
+procedure TfrClickerWinInterp.DrawAvoidedZones;
+  procedure LoadSelectedImage;
+  begin
+    imgScannedWindowWithAvoidedZones.Width := imgScreenshot.Width;
+    imgScannedWindowWithAvoidedZones.Height := imgScreenshot.Height;
+    imgScannedWindowWithAvoidedZones.Picture.Bitmap.SetSize(imgScannedWindowWithAvoidedZones.Width, imgScannedWindowWithAvoidedZones.Height);
+
+    case rdgrpLayers.ItemIndex of
+      0: imgScannedWindowWithAvoidedZones.Picture.Assign(imgScreenshot.Picture.Bitmap);
+      1: imgScannedWindowWithAvoidedZones.Picture.Assign(imgScannedWindowWithText.Picture.Bitmap);
+      2: imgScannedWindowWithAvoidedZones.Picture.Assign(imgAvgScreenshotAndGreenComp.Picture.Bitmap); //GenerateContent_AvgScreenshotAndGreenComp should already be called
+      3: imgScannedWindowWithAvoidedZones.Picture.Assign(imgAvgScreenshotAndAssignedComp.Picture.Bitmap);
+      else
+      begin
+        imgScannedWindowWithAvoidedZones.Canvas.Brush.Color := clWhite;
+        imgScannedWindowWithAvoidedZones.Canvas.Font.Color := clRed;
+        imgScannedWindowWithAvoidedZones.Canvas.TextOut(0, 0, 'Not implemented.');
+      end;
+    end;
+  end;
+
+var
+  Node: PVirtualNode;
+  NodeData: PAvoidedZoneRec;
+  SelectedZone: TRect;
+begin
+  LoadSelectedImage;
+
+  Node := vstAvoidedZones.GetFirst;
+  if Node = nil then
+    Exit;
+
+  SelectedZone.Left := -300; //some unlikely value
+  //imgScannedWindowWithAvoidedZones.Canvas.Lock;
+  try
+    LoadSelectedImage;
+
+    imgScannedWindowWithAvoidedZones.Canvas.Brush.Style := bsBDiagonal;
+    imgScannedWindowWithAvoidedZones.Canvas.Pen.Color := colboxHighlightingLabels.Selected;
+    imgScannedWindowWithAvoidedZones.Canvas.Brush.Color := colboxHighlightingLabels.Selected;
+    repeat
+      NodeData := vstAvoidedZones.GetNodeData(Node);
+      if NodeData <> nil then
+      begin
+        imgScannedWindowWithAvoidedZones.Canvas.Rectangle(NodeData^.ZRect);
+        if vstAvoidedZones.Selected[Node] then
+          SelectedZone := NodeData^.ZRect;
+      end;
+
+      Node := Node^.NextSibling;
+    until Node = nil;
+  finally
+    //imgScannedWindowWithAvoidedZones.Canvas.Unlock;
+  end;
+
+  if SelectedZone.Left <> -300 then
+  begin
+    imgScannedWindowWithAvoidedZones.Canvas.Brush.Style := bsDiagCross;
+    imgScannedWindowWithAvoidedZones.Canvas.Pen.Color := clMaroon;
+    imgScannedWindowWithAvoidedZones.Canvas.Brush.Color := clMaroon;
+    imgScannedWindowWithAvoidedZones.Canvas.Rectangle(SelectedZone);
+  end;
+end;
+
+
 const
   CZoneFilter = 'WinInterp Avoided Zone (*.zone)|*.zone|All Files (*.*)|*.*';
 
@@ -3544,8 +3858,8 @@ begin
     Exit;
   end;
 
-  vstSettings.Clear;
-  vstSettings.BeginUpdate;
+  vstAvoidedZones.Clear;
+  vstAvoidedZones.BeginUpdate;
   try
     MemStream := TMemoryStream.Create;
     try
@@ -3558,8 +3872,8 @@ begin
 
         for i := 0 to n - 1 do
         begin
-          Node := vstSettings.InsertNode(vstSettings.RootNode, amInsertAfter);
-          NodeData := vstSettings.GetNodeData(Node);
+          Node := vstAvoidedZones.InsertNode(vstAvoidedZones.RootNode, amInsertAfter);
+          NodeData := vstAvoidedZones.GetNodeData(Node);
 
           Prefix := 'Zone_' + IntToStr(i) + '.';
           NodeData^.ZRect.Left := Ini.ReadInteger('Zones', Prefix + 'Left', 0);
@@ -3575,8 +3889,10 @@ begin
       MemStream.Free;
     end;
   finally
-    vstSettings.EndUpdate;
+    vstAvoidedZones.EndUpdate;
   end;
+
+  DrawAvoidedZones;
 end;
 
 
@@ -3599,13 +3915,13 @@ begin
   TempList := TStringList.Create;
   try
     TempList.Add('[Zones]');
-    TempList.Add('Count=' + IntToStr(vstSettings.RootNodeCount));
+    TempList.Add('Count=' + IntToStr(vstAvoidedZones.RootNodeCount));
 
-    Node := vstSettings.GetFirst;
+    Node := vstAvoidedZones.GetFirst;
     if Node <> nil then
     begin
       repeat
-        NodeData := vstSettings.GetNodeData(Node);
+        NodeData := vstAvoidedZones.GetNodeData(Node);
         Prefix := 'Zone_' + IntToStr(Node^.Index) + '.';
 
         TempList.Add(Prefix + 'Left' + '=' + IntToStr(NodeData^.ZRect.Left));
@@ -3634,10 +3950,10 @@ var
   NodeData: PAvoidedZoneRec;
   NewZoneRect: TRect;
 begin
-  Node := vstSettings.GetFirstSelected;
+  Node := vstAvoidedZones.GetFirstSelected;
   if Node <> nil then
   begin
-    NodeData := vstSettings.GetNodeData(Node);
+    NodeData := vstAvoidedZones.GetNodeData(Node);
     if NodeData = nil then
       Exit;
 
@@ -3651,13 +3967,16 @@ begin
     NewZoneRect.Height := 30;
   end;
 
-  Node := vstSettings.InsertNode(vstSettings.RootNode, amInsertAfter);
-  NodeData := vstSettings.GetNodeData(Node);
+  Node := vstAvoidedZones.InsertNode(vstAvoidedZones.RootNode, amInsertAfter);
+  NodeData := vstAvoidedZones.GetNodeData(Node);
   if NodeData = nil then
     Exit;
 
   NodeData^.ZRect := NewZoneRect;
   NodeData^.ZName := 'Zone';
+  vstAvoidedZones.Selected[Node] := True;
+
+  DrawAvoidedZones;
 end;
 
 
@@ -3665,10 +3984,10 @@ procedure TfrClickerWinInterp.btnDeleteZoneClick(Sender: TObject);
 var
   Node: PVirtualNode;
 begin
-  if vstSettings.RootNodeCount = 0 then
+  if vstAvoidedZones.RootNodeCount = 0 then
     Exit;
 
-  Node := vstSettings.GetFirstSelected;
+  Node := vstAvoidedZones.GetFirstSelected;
   if Node = nil then
   begin
     MessageBox(Handle, 'No zone is selected to be deleted. Please select a zone.', PChar(Application.Title), MB_ICONINFORMATION);
@@ -3678,7 +3997,18 @@ begin
   if MessageBox(Handle, 'Are you sure you want to delete the selected zone?', PChar(Application.Title), MB_ICONQUESTION + MB_YESNO) = IDNO then
     Exit;
 
-  vstSettings.DeleteNode(Node);
+  vstAvoidedZones.DeleteNode(Node);
+  DrawAvoidedZones;
+end;
+
+
+procedure TfrClickerWinInterp.btnClearZonesClick(Sender: TObject);
+begin
+  if MessageBox(Handle, 'Are you sure you want to clear the list of avoided zones?', PChar(Application.Title), MB_ICONQUESTION + MB_YESNO) = IDNO then
+    Exit;
+
+  vstAvoidedZones.Clear;
+  DrawAvoidedZones;
 end;
 
 
@@ -3736,10 +4066,13 @@ begin
   WipeImage(imgLiveScreenshot, imgScannedWindow.Width, imgScannedWindow.Height);
   WipeImage(imgHandleColors, imgScannedWindow.Width, imgScannedWindow.Height);
   WipeImage(imgScannedWindowWithText, imgScannedWindow.Width, imgScannedWindow.Height);
+  //WipeImage(imgScannedWindowWithAvoidedZones, imgScannedWindow.Width, imgScannedWindow.Height);
+
 
   imgScannedWindow.Canvas.Lock;
   imgHandleColors.Canvas.Lock;
   imgScannedWindowWithText.Canvas.Lock;
+  //imgScannedWindowWithAvoidedZones.Canvas.Lock;
   try
     repeat
       NodeData := vstComponents.GetNodeData(Node);
@@ -3787,10 +4120,13 @@ begin
     GenerateContent_AvgScreenshotAndGenComp;   //requires images to have some screenshots, already loaded
     AdjustHighlightingLabelsToScreenshot;
     UpdateLayersVisibility;
+
+    //draw something on imgScannedWindowWithAvoidedZones ???
   finally
     imgScannedWindow.Canvas.Unlock;
     imgHandleColors.Canvas.Unlock;
     imgScannedWindowWithText.Canvas.Unlock;
+    //imgScannedWindowWithAvoidedZones.Canvas.Unlock;
   end;
 end;
 
@@ -3897,6 +4233,8 @@ begin
     end;
 
     3: imgAvgScreenshotAndAssignedComp.Visible := True;
+
+    //imgScannedWindowWithAvoidedZones ???
     else
   end;
 
@@ -3943,14 +4281,14 @@ procedure TfrClickerWinInterp.spdbtnMoveUpClick(Sender: TObject);
 var
   Node: PVirtualNode;
 begin
-  Node := vstSettings.GetFirstSelected;
+  Node := vstAvoidedZones.GetFirstSelected;
   if Node = nil then
     Exit;
 
-  if Node = vstSettings.GetFirst then
+  if Node = vstAvoidedZones.GetFirst then
     Exit;
 
-  vstSettings.MoveTo(Node, Node^.PrevSibling, amInsertBefore, False);
+  vstAvoidedZones.MoveTo(Node, Node^.PrevSibling, amInsertBefore, False);
 end;
 
 
@@ -3958,14 +4296,14 @@ procedure TfrClickerWinInterp.spdbtnMoveDownClick(Sender: TObject);
 var
   Node: PVirtualNode;
 begin
-  Node := vstSettings.GetFirstSelected;
+  Node := vstAvoidedZones.GetFirstSelected;
   if Node = nil then
     Exit;
 
-  if Node = vstSettings.GetLast then
+  if Node = vstAvoidedZones.GetLast then
     Exit;
 
-  vstSettings.MoveTo(Node, Node^.NextSibling, amInsertAfter, False);
+  vstAvoidedZones.MoveTo(Node, Node^.NextSibling, amInsertAfter, False);
 end;
 
 
@@ -3987,7 +4325,7 @@ begin
   if FMouseUpHitInfo_Settings.HitNode = nil then
     Exit;
 
-  vstSettings.EditNode(FMouseUpHitInfo_Settings.HitNode, FMouseUpHitInfo_Settings.HitColumn);
+  vstAvoidedZones.EditNode(FMouseUpHitInfo_Settings.HitNode, FMouseUpHitInfo_Settings.HitColumn);
 end;
 
 
@@ -4017,7 +4355,7 @@ begin
 end;
 
 
-procedure TfrClickerWinInterp.vstSettingsDblClick(Sender: TObject);
+procedure TfrClickerWinInterp.vstAvoidedZonesDblClick(Sender: TObject);
 begin
   tmrEditSettings.Enabled := True;
 end;
@@ -4055,7 +4393,7 @@ begin
 end;
 
 
-procedure TfrClickerWinInterp.vstSettingsEdited(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
+procedure TfrClickerWinInterp.vstAvoidedZonesEdited(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
 var
   NodeData: PAvoidedZoneRec;
 begin
@@ -4065,7 +4403,7 @@ begin
   if not FUpdatedVstText then
     Exit;
 
-  NodeData := vstSettings.GetNodeData(Node);
+  NodeData := vstAvoidedZones.GetNodeData(Node);
   if NodeData = nil then
     Exit;
 
@@ -4096,13 +4434,13 @@ begin
 end;
 
 
-procedure TfrClickerWinInterp.vstSettingsEditing(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; var Allowed: Boolean);
+procedure TfrClickerWinInterp.vstAvoidedZonesEditing(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; var Allowed: Boolean);
 var
   NodeData: PAvoidedZoneRec;
 begin
   Allowed := True;
 
-  NodeData := vstSettings.GetNodeData(Node);
+  NodeData := vstAvoidedZones.GetNodeData(Node);
   if NodeData = nil then
     Exit;
 
@@ -4117,7 +4455,7 @@ begin
 end;
 
 
-procedure TfrClickerWinInterp.vstSettingsNewText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; const NewText: String);
+procedure TfrClickerWinInterp.vstAvoidedZonesNewText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; const NewText: String);
 begin
   FEditingText := NewText;
   FUpdatedVstText := True;
@@ -4137,15 +4475,16 @@ begin
 end;
 
 
-procedure TfrClickerWinInterp.vstSettingsMouseUp(Sender: TObject;
+procedure TfrClickerWinInterp.vstAvoidedZonesMouseUp(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 var
   Node: PVirtualNode;
 begin
-  vstSettings.GetHitTestInfoAt(X, Y, True, FMouseUpHitInfo_Settings);
-  Node := vstSettings.GetFirstSelected;
+  vstAvoidedZones.GetHitTestInfoAt(X, Y, True, FMouseUpHitInfo_Settings);
+  Node := vstAvoidedZones.GetFirstSelected;
 
   HighlightZone(Node);
+  DrawAvoidedZones;
 end;
 
 
@@ -4374,7 +4713,7 @@ begin
     //if NewLeft <> CurrentLabel.Left then
     //  Modified := True;
 
-    CurrentLabel.Left := Max(0, Min(FTransparent_SelectedZoneRightLimitLabel.Left - 8, NewLeft));
+    CurrentLabel.Left := Max(0, Min(FTransparent_SelectedZoneRightLimitLabel.Left - 4, NewLeft));
     FSelectedZoneLeftLimitLabel.Left := CurrentLabel.Left + 3;
   end;
 end;
@@ -4388,13 +4727,14 @@ var
 begin
   FSelectionHold := False;
 
-  Node := vstSettings.GetFirstSelected;
+  Node := vstAvoidedZones.GetFirstSelected;
   if Node = nil then
     Exit;
 
-  NodeData := vstSettings.GetNodeData(Node);
+  NodeData := vstAvoidedZones.GetNodeData(Node);
   NodeData^.ZRect.Left := FSelectedZoneLeftLimitLabel.Left;
-  vstSettings.RepaintNode(Node);
+  vstAvoidedZones.RepaintNode(Node);
+  DrawAvoidedZones;
 end;
 
 
@@ -4432,7 +4772,7 @@ begin
     //if NewLeft <> CurrentLabel.Left then
     //  Modified := True;
 
-    CurrentLabel.Left := Max(FTransparent_SelectedZoneLeftLimitLabel.Left + 8, Min(imgLiveScreenshot.Width - 2, NewLeft));
+    CurrentLabel.Left := Max(FTransparent_SelectedZoneLeftLimitLabel.Left + 4, Min(imgLiveScreenshot.Width - 2, NewLeft));
     FSelectedZoneRightLimitLabel.Left := CurrentLabel.Left + 3;
   end;
 end;
@@ -4446,13 +4786,14 @@ var
 begin
   FSelectionHold := False;
 
-  Node := vstSettings.GetFirstSelected;
+  Node := vstAvoidedZones.GetFirstSelected;
   if Node = nil then
     Exit;
 
-  NodeData := vstSettings.GetNodeData(Node);
+  NodeData := vstAvoidedZones.GetNodeData(Node);
   NodeData^.ZRect.Right := FSelectedZoneRightLimitLabel.Left;
-  vstSettings.RepaintNode(Node);
+  vstAvoidedZones.RepaintNode(Node);
+  DrawAvoidedZones;
 end;
 
 
@@ -4490,7 +4831,7 @@ begin
     //if NewTop <> CurrentLabel.Top then
     //  Modified := True;
 
-    CurrentLabel.Top := Max(0, Min(FTransparent_SelectedZoneBottomLimitLabel.Top - 8, NewTop));
+    CurrentLabel.Top := Max(0, Min(FTransparent_SelectedZoneBottomLimitLabel.Top - 4, NewTop));
     FSelectedZoneTopLimitLabel.Top := CurrentLabel.Top + 3;
   end;
 end;
@@ -4504,13 +4845,14 @@ var
 begin
   FSelectionHold := False;
 
-  Node := vstSettings.GetFirstSelected;
+  Node := vstAvoidedZones.GetFirstSelected;
   if Node = nil then
     Exit;
 
-  NodeData := vstSettings.GetNodeData(Node);
+  NodeData := vstAvoidedZones.GetNodeData(Node);
   NodeData^.ZRect.Top := FSelectedZoneTopLimitLabel.Top;
-  vstSettings.RepaintNode(Node);
+  vstAvoidedZones.RepaintNode(Node);
+  DrawAvoidedZones;
 end;
 
 
@@ -4548,7 +4890,7 @@ begin
     //if NewTop <> CurrentLabel.Top then
     //  Modified := True;
 
-    CurrentLabel.Top := Max(FTransparent_SelectedZoneTopLimitLabel.Top + 8, Min(imgLiveScreenshot.Height - 2, NewTop));
+    CurrentLabel.Top := Max(FTransparent_SelectedZoneTopLimitLabel.Top + 4, Min(imgLiveScreenshot.Height - 2, NewTop));
     FSelectedZoneBottomLimitLabel.Top := CurrentLabel.Top + 3;
   end;
 end;
@@ -4562,13 +4904,14 @@ var
 begin
   FSelectionHold := False;
 
-  Node := vstSettings.GetFirstSelected;
+  Node := vstAvoidedZones.GetFirstSelected;
   if Node = nil then
     Exit;
 
-  NodeData := vstSettings.GetNodeData(Node);
+  NodeData := vstAvoidedZones.GetNodeData(Node);
   NodeData^.ZRect.Bottom := FSelectedZoneBottomLimitLabel.Top;
-  vstSettings.RepaintNode(Node);
+  vstAvoidedZones.RepaintNode(Node);
+  DrawAvoidedZones;
 end;
 
 end.

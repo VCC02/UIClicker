@@ -21,7 +21,7 @@ object frClickerWinInterp: TfrClickerWinInterp
     ClientWidth = 893
     TabOrder = 0
     object pnlWinInterpSettings: TPanel
-      Left = 432
+      Left = 433
       Height = 493
       Top = 0
       Width = 460
@@ -46,7 +46,7 @@ object frClickerWinInterp: TfrClickerWinInterp
       object btnStartRec: TButton
         Left = 273
         Height = 25
-        Top = 300
+        Top = 320
         Width = 97
         Anchors = [akLeft, akBottom]
         Caption = 'Start Recording'
@@ -56,7 +56,7 @@ object frClickerWinInterp: TfrClickerWinInterp
       object btnStopRec: TButton
         Left = 273
         Height = 25
-        Top = 330
+        Top = 350
         Width = 97
         Anchors = [akLeft, akBottom]
         Caption = 'Stop Recording'
@@ -66,7 +66,7 @@ object frClickerWinInterp: TfrClickerWinInterp
       object prbRecording: TProgressBar
         Left = 273
         Height = 16
-        Top = 276
+        Top = 296
         Width = 140
         Anchors = [akLeft, akBottom]
         Smooth = True
@@ -76,7 +76,7 @@ object frClickerWinInterp: TfrClickerWinInterp
         Left = 401
         Height = 23
         Hint = 'Scanning granularity'
-        Top = 332
+        Top = 352
         Width = 48
         Anchors = [akLeft, akBottom]
         EditLabel.Height = 15
@@ -90,27 +90,15 @@ object frClickerWinInterp: TfrClickerWinInterp
       object lblGauge: TLabel
         Left = 425
         Height = 15
-        Top = 276
+        Top = 296
         Width = 16
         Anchors = [akLeft, akBottom]
         Caption = '0%'
       end
-      object chkHighlightSelectedComponent: TCheckBox
-        Left = 0
-        Height = 19
-        Top = 372
-        Width = 179
-        Anchors = [akLeft, akBottom]
-        Caption = 'Highlight selected component'
-        Checked = True
-        State = cbChecked
-        TabOrder = 5
-        OnChange = chkHighlightSelectedComponentChange
-      end
       object rdgrpLayers: TRadioGroup
         Left = 0
-        Height = 96
-        Top = 268
+        Height = 104
+        Top = 288
         Width = 249
         Anchors = [akLeft, akBottom]
         AutoFill = True
@@ -122,7 +110,7 @@ object frClickerWinInterp: TfrClickerWinInterp
         ChildSizing.ShrinkVertical = crsScaleChilds
         ChildSizing.Layout = cclLeftToRightThenTopToBottom
         ChildSizing.ControlsPerLine = 1
-        ClientHeight = 76
+        ClientHeight = 84
         ClientWidth = 245
         ItemIndex = 1
         Items.Strings = (
@@ -131,7 +119,8 @@ object frClickerWinInterp: TfrClickerWinInterp
           'Avg(Screenshot, Green Comp Rect)'
           'Avg(Screenshot, Assigned Comp Rect)'
         )
-        TabOrder = 6
+        ParentBackground = False
+        TabOrder = 5
         OnClick = rdgrpLayersClick
       end
       object btnExport: TButton
@@ -144,7 +133,7 @@ object frClickerWinInterp: TfrClickerWinInterp
         Caption = 'Export...'
         ParentShowHint = False
         ShowHint = True
-        TabOrder = 7
+        TabOrder = 6
         OnClick = btnExportClick
       end
       object btnSaveTree: TButton
@@ -157,7 +146,7 @@ object frClickerWinInterp: TfrClickerWinInterp
         Caption = 'Save Tree...'
         ParentShowHint = False
         ShowHint = True
-        TabOrder = 8
+        TabOrder = 7
         OnClick = btnSaveTreeClick
       end
       object btnLoadTree: TButton
@@ -170,13 +159,13 @@ object frClickerWinInterp: TfrClickerWinInterp
         Caption = 'Load Tree...'
         ParentShowHint = False
         ShowHint = True
-        TabOrder = 9
+        TabOrder = 8
         OnClick = btnLoadTreeClick
       end
       object spdbtnExtraRecording: TSpeedButton
         Left = 369
         Height = 25
-        Top = 300
+        Top = 320
         Width = 18
         Anchors = [akLeft, akBottom]
         Font.Color = clWindowText
@@ -197,7 +186,7 @@ object frClickerWinInterp: TfrClickerWinInterp
         Left = 371
         Height = 16
         Hint = 'Waiting for server...'
-        Top = 330
+        Top = 350
         Width = 16
         Anchors = [akLeft, akBottom]
         ParentShowHint = False
@@ -217,7 +206,7 @@ object frClickerWinInterp: TfrClickerWinInterp
         Left = 255
         Height = 16
         Hint = 'Found subcontrol...'
-        Top = 276
+        Top = 296
         Width = 16
         Anchors = [akLeft, akBottom]
         ParentShowHint = False
@@ -236,30 +225,30 @@ object frClickerWinInterp: TfrClickerWinInterp
       object prbRecordingWithMouseSwipe: TProgressBar
         Left = 273
         Height = 8
-        Top = 292
+        Top = 312
         Width = 140
         Anchors = [akLeft, akBottom]
         Smooth = True
-        TabOrder = 10
+        TabOrder = 9
         Visible = False
       end
       object PageControlWinInterp: TPageControl
         Left = 0
-        Height = 264
+        Height = 288
         Top = 0
         Width = 457
-        ActivePage = TabSheet_Components
+        ActivePage = TabSheet_Settings
         Anchors = [akTop, akLeft, akRight, akBottom]
-        TabIndex = 0
-        TabOrder = 11
+        TabIndex = 1
+        TabOrder = 10
         OnChange = PageControlWinInterpChange
         object TabSheet_Components: TTabSheet
           Caption = 'Components'
-          ClientHeight = 236
+          ClientHeight = 260
           ClientWidth = 449
           object pnlvstComponents: TPanel
             Left = 0
-            Height = 236
+            Height = 260
             Top = 0
             Width = 456
             Anchors = [akTop, akLeft, akRight, akBottom]
@@ -272,7 +261,7 @@ object frClickerWinInterp: TfrClickerWinInterp
         end
         object TabSheet_Settings: TTabSheet
           Caption = 'Settings'
-          ClientHeight = 236
+          ClientHeight = 260
           ClientWidth = 449
           object pnlvstSettings: TPanel
             Left = 0
@@ -317,7 +306,7 @@ object frClickerWinInterp: TfrClickerWinInterp
             Left = 0
             Height = 19
             Hint = 'When checked, the MouseSwipe scan uses full screenshots, then crops the bitmaps to the required size.'#13#10'This is way slower than component screenshots, but it allows capturing content, which is not visible otherwise.'
-            Top = 168
+            Top = 192
             Width = 125
             Anchors = [akLeft, akBottom]
             Caption = 'Full screen scanning'
@@ -326,9 +315,9 @@ object frClickerWinInterp: TfrClickerWinInterp
             TabOrder = 3
           end
           object chkMinimizeWhileRecording: TCheckBox
-            Left = 152
+            Left = 148
             Height = 19
-            Top = 214
+            Top = 238
             Width = 138
             Anchors = [akLeft, akBottom]
             Caption = 'Minimize on recording'
@@ -337,7 +326,7 @@ object frClickerWinInterp: TfrClickerWinInterp
           object lblHighlightingLabels: TLabel
             Left = 0
             Height = 15
-            Top = 192
+            Top = 216
             Width = 124
             Anchors = [akLeft, akBottom]
             Caption = 'Highlighting lines color'
@@ -345,7 +334,7 @@ object frClickerWinInterp: TfrClickerWinInterp
           object colboxHighlightingLabels: TColorBox
             Left = 0
             Height = 22
-            Top = 211
+            Top = 235
             Width = 136
             Anchors = [akLeft, akBottom]
             ItemHeight = 16
@@ -353,10 +342,10 @@ object frClickerWinInterp: TfrClickerWinInterp
             OnSelect = colboxHighlightingLabelsSelect
           end
           object chkUseHCursor: TCheckBox
-            Left = 328
+            Left = 224
             Height = 19
             Hint = '[in work]'#13#10'Reads mouse cursor handle on every position during recording with mouse swipe.'#13#10'This may be useful when interactable components do not display a visual feedback while hovered,'#13#10'so the scan relies on changing the mouse cursor to detect component edges.'
-            Top = 214
+            Top = 168
             Width = 82
             Anchors = [akLeft, akBottom]
             Caption = 'Use hCursor'
@@ -367,9 +356,9 @@ object frClickerWinInterp: TfrClickerWinInterp
             TabOrder = 6
           end
           object chkRecordSelectedAreaOnly: TCheckBox
-            Left = 152
+            Left = 148
             Height = 19
-            Top = 168
+            Top = 192
             Width = 152
             Anchors = [akLeft, akBottom]
             Caption = 'Record selected area only'
@@ -377,10 +366,10 @@ object frClickerWinInterp: TfrClickerWinInterp
             OnChange = chkRecordSelectedAreaOnlyChange
           end
           object chkRecordWithEdgeExtending: TCheckBox
-            Left = 152
+            Left = 148
             Height = 19
             Hint = 'When checked, scanned component edges are "extended" until the screenshot changes.'#13#10'If there are two adjacent components, they may end up being recorded as a single component.'
-            Top = 192
+            Top = 216
             Width = 165
             Anchors = [akLeft, akBottom]
             Caption = 'Record with edge extending'
@@ -413,9 +402,9 @@ object frClickerWinInterp: TfrClickerWinInterp
           end
           object spdbtnMoveUp: TSpeedButton
             Left = 365
-            Height = 22
+            Height = 25
             Hint = 'Move Up'
-            Top = 146
+            Top = 143
             Width = 20
             Anchors = [akTop, akRight]
             Font.Color = clWindowText
@@ -436,9 +425,9 @@ object frClickerWinInterp: TfrClickerWinInterp
           end
           object spdbtnMoveDown: TSpeedButton
             Left = 384
-            Height = 22
+            Height = 25
             Hint = 'Move Down'
-            Top = 146
+            Top = 143
             Width = 20
             Anchors = [akTop, akRight]
             Font.Color = clWindowText
@@ -458,20 +447,106 @@ object frClickerWinInterp: TfrClickerWinInterp
             OnClick = spdbtnMoveDownClick
           end
           object lbeMouseCursorPosToScreenshotDelay: TLabeledEdit
-            Left = 328
+            Left = 324
             Height = 23
             Hint = 'Delay in ms, between setting the mouse cursor position and taking the (component) screenshot.'#13#10'Some UIs required a greater delay because of animations. This will lead to longer scanning time.'#13#10'Valid values are from 0 to 1000.'#13#10'For example, on a 32x32 scanning area and a configured value of 1, this delay only will take at least 1024ms.'#13#10'This option is used by recording with mouse swipe.'
             Top = 188
-            Width = 120
+            Width = 124
+            Anchors = [akLeft, akBottom]
             EditLabel.Height = 15
-            EditLabel.Width = 120
+            EditLabel.Width = 124
             EditLabel.Caption = 'Mouse to scr delay'
             ParentShowHint = False
             ShowHint = True
             TabOrder = 11
             Text = '1'
           end
+          object chkHighlightSelectedComponent: TCheckBox
+            Left = 0
+            Height = 19
+            Top = 168
+            Width = 179
+            Anchors = [akLeft, akBottom]
+            Caption = 'Highlight selected component'
+            Checked = True
+            State = cbChecked
+            TabOrder = 12
+            OnChange = chkHighlightSelectedComponentChange
+          end
+          object chkBringTargetToFront: TCheckBox
+            Left = 324
+            Height = 19
+            Hint = 'Focuses target window, to avoid being overlapped by any other windows.'#13#10'There are cases where this may not work (different window states, inclusing "Stay on top").'
+            Top = 216
+            Width = 123
+            Anchors = [akLeft, akBottom]
+            Caption = 'Bring target to front'
+            ParentShowHint = False
+            ShowHint = True
+            TabOrder = 13
+          end
+          object chkBringTargetToFrontPeriodically: TCheckBox
+            Left = 324
+            Height = 19
+            Hint = 'When checked, the target window is brought to front on every new Y increment.'#13#10'This may be required when the target window keeps being overlayed by other windows.'
+            Top = 239
+            Width = 153
+            Anchors = [akLeft, akBottom]
+            Caption = 'Bring periodically to front'
+            ParentShowHint = False
+            ShowHint = True
+            TabOrder = 14
+          end
+          object btnClearZones: TButton
+            Left = 404
+            Height = 25
+            Top = 143
+            Width = 44
+            Anchors = [akTop, akRight]
+            Caption = 'Clear...'
+            TabOrder = 15
+            OnClick = btnClearZonesClick
+          end
         end
+      end
+      object imgEnabledPause: TImage
+        Left = 371
+        Height = 16
+        Hint = 'Press Shift-Esc during MouseSwipe recording, to pause.'
+        Top = 367
+        Width = 16
+        Anchors = [akLeft, akBottom]
+        ParentShowHint = False
+        Picture.Data = {
+          1754506F727461626C654E6574776F726B47726170686963A600000089504E47
+          0D0A1A0A0000000D494844520000001000000010080200000090916836000000
+          0467414D410000B18F0BFC6105000000097048597300000EC300000EC301C76F
+          A8640000004849444154384F63FCFFFF3F032900A6E1BA27980B069ADBA10C20
+          C0106782B041E0F331207A796F07940B07A8E2481A8803A31A8801C34BC3CBD7
+          9F8008CA410268E224266F0606004FF1240F972595880000000049454E44AE42
+          6082
+        }
+        ShowHint = True
+      end
+      object imgDisabledPause: TImage
+        Left = 384
+        Height = 16
+        Hint = 'Press Shift-Esc, to continue.'
+        Top = 367
+        Width = 16
+        Anchors = [akLeft, akBottom]
+        ParentShowHint = False
+        Picture.Data = {
+          1754506F727461626C654E6574776F726B47726170686963A800000089504E47
+          0D0A1A0A0000000D494844520000001000000010080200000090916836000000
+          017352474200AECE1CE90000000467414D410000B18F0BFC6105000000097048
+          597300000EC300000EC301C76FA8640000003D49444154384FEDCB310A003008
+          04C13CD83FA4F5D726B882824DD23BE51EB7EC531CA4A02092A3E4613B55A5A0
+          F739D401737079B80914F41E87576607076750B7795D07DE0000000049454E44
+          AE426082
+        }
+        ShowHint = True
+        Visible = False
       end
     end
     object pnlDrag: TPanel
@@ -504,9 +579,9 @@ object frClickerWinInterp: TfrClickerWinInterp
       Height = 456
       Top = 37
       Width = 416
-      HorzScrollBar.Page = 293
+      HorzScrollBar.Page = 321
       HorzScrollBar.Tracking = True
-      VertScrollBar.Page = 293
+      VertScrollBar.Page = 321
       VertScrollBar.Tracking = True
       Anchors = [akTop, akLeft, akRight, akBottom]
       ClientHeight = 452
@@ -585,6 +660,19 @@ object frClickerWinInterp: TfrClickerWinInterp
         OnMouseDown = imgScannedWindowMouseDown
         OnMouseMove = imgScannedWindowMouseMove
       end
+      object imgScannedWindowWithAvoidedZones: TImage
+        Left = 200
+        Height = 121
+        Hint = 'Avoided zones'
+        Top = 200
+        Width = 121
+        ParentShowHint = False
+        ShowHint = True
+        Transparent = True
+        Visible = False
+        OnMouseDown = imgScannedWindowWithAvoidedZonesMouseDown
+        OnMouseMove = imgScannedWindowWithAvoidedZonesMouseMove
+      end
     end
     object pnlHorizSplitter: TPanel
       Cursor = crHSplit
@@ -645,6 +733,10 @@ object frClickerWinInterp: TfrClickerWinInterp
     object MenuItem_HideLiveScreenshot: TMenuItem
       Caption = 'Hide live screenshot'
       OnClick = MenuItem_HideLiveScreenshotClick
+    end
+    object MenuItem_CopyLiveScreenshotToMainScreenshot: TMenuItem
+      Caption = 'Copy live screenshot to main screenshot'
+      OnClick = MenuItem_CopyLiveScreenshotToMainScreenshotClick
     end
   end
   object pmComponents: TPopupMenu
@@ -799,5 +891,13 @@ object frClickerWinInterp: TfrClickerWinInterp
     OnTimer = tmrEditSettingsTimer
     Left = 584
     Top = 16
+  end
+  object pmAvoidedZones: TPopupMenu
+    Left = 728
+    Top = 16
+    object MenuItem_ClearZones: TMenuItem
+      Caption = 'Clear zones'
+      OnClick = MenuItem_ClearZonesClick
+    end
   end
 end
