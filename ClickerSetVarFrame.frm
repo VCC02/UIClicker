@@ -330,6 +330,7 @@ object frClickerSetVar: TfrClickerSetVar
         '$GetWindowLongPtr(<ControlHandle>, <Index>)$'
         '$GetWindowProcessId(<ControlHandle>)$'
         '$GenerateAndSaveTree(<TreePath>[,<Step>[,<UseMouseSwipe>]])$'
+        '$Console([<Value>]])$'
       )
       ParentShowHint = False
       ReadOnly = True

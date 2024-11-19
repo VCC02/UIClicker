@@ -3313,6 +3313,20 @@ begin
         VarName := ''; //Prevent creating a variable, named $GenerateAndSaveTree(...)$
       end;
 
+      if (Pos('$Console(', VarName) = 1) and (VarName[Length(VarName)] = '$') and (VarName[Length(VarName) - 1] = ')') then
+      begin
+        if VarValue = '' then
+        begin
+          FuncArgs := Copy(VarName, Pos('(', VarName) + 1, MaxInt);
+          FuncArgs := Copy(FuncArgs, 1, Length(FuncArgs) - 2);
+          AddToLog('Console: ' + EvaluateReplacements(FuncArgs));
+        end
+        else
+          AddToLog('Console: ' + EvaluateReplacements(VarValue));
+
+        Continue;
+      end;
+
       if VarName > '' then
         SetActionVarValue(VarName, VarValue);  //Do not move or delete this line. It is what SetVar does, it updates variables. VarName may be set to '', if a "Left-column" function is called.
     end;  //for i := 0 to TempListOfSetVarNames.Count - 1 do
