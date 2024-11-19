@@ -1,5 +1,5 @@
 [Actions]
-Count=35
+Count=47
 Version=2
 
 [Action_0]
@@ -159,6 +159,9 @@ FullBackgroundImageInResult=1
 MatchByHistogramSettings.MinPercentColorMatch=50
 MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
+EvaluateTextCount=-1
+CropFromScreenshot=0
+ThreadCount=2
 
 [Action_3]
 ActionName=Open WinInterp
@@ -195,6 +198,7 @@ MouseWheelAmount=1
 DelayAfterMovingToDestination=50
 DelayAfterMouseDown=100
 MoveDuration=-1
+UseClipCursor=0
 
 [Action_4]
 ActionName=Update Control to WinInterp
@@ -285,6 +289,9 @@ FullBackgroundImageInResult=1
 MatchByHistogramSettings.MinPercentColorMatch=50
 MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
+EvaluateTextCount=-1
+CropFromScreenshot=0
+ThreadCount=2
 
 [Action_6]
 ActionName=Drag mouse to set target
@@ -321,6 +328,7 @@ MouseWheelAmount=1
 DelayAfterMovingToDestination=50
 DelayAfterMouseDown=100
 MoveDuration=-1
+UseClipCursor=0
 
 [Action_7]
 ActionName=Update Control to WinInterp
@@ -411,6 +419,9 @@ FullBackgroundImageInResult=1
 MatchByHistogramSettings.MinPercentColorMatch=50
 MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
+EvaluateTextCount=-1
+CropFromScreenshot=0
+ThreadCount=2
 
 [Action_9]
 ActionName=Click StartRecording
@@ -447,6 +458,7 @@ MouseWheelAmount=1
 DelayAfterMovingToDestination=50
 DelayAfterMouseDown=100
 MoveDuration=-1
+UseClipCursor=0
 
 [Action_10]
 ActionName=Update Control to WinInterp
@@ -548,6 +560,9 @@ FullBackgroundImageInResult=1
 MatchByHistogramSettings.MinPercentColorMatch=50
 MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
+EvaluateTextCount=-1
+CropFromScreenshot=0
+ThreadCount=2
 
 [Action_13]
 ActionName=Confirm 100%
@@ -624,6 +639,9 @@ FullBackgroundImageInResult=1
 MatchByHistogramSettings.MinPercentColorMatch=50
 MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
+EvaluateTextCount=-1
+CropFromScreenshot=0
+ThreadCount=2
 
 [Action_14]
 ActionName=Update Control to WinInterp
@@ -640,6 +658,232 @@ ListOfVarEvalBefore=1
 FailOnException=0
 
 [Action_15]
+ActionName=Find PageControl
+Action=FindControl
+ActionTimeout=3000
+ActionEnabled=1
+ActionCondition=
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+MatchCriteria.WillMatchText=1
+MatchCriteria.WillMatchClassName=1
+MatchCriteria.WillMatchBitmapText=0
+MatchCriteria.WillMatchBitmapFiles=0
+MatchCriteria.WillMatchPrimitiveFiles=0
+MatchCriteria.SearchForControlMode=0
+MatchText=
+MatchClassName=SysTabControl32
+MatchTextSeparator=
+MatchClassNameSeparator=
+AllowToFail=0
+WaitForControlToGoAway=0
+MatchBitmapTextArr=1
+MatchBitmapText_Count=1
+MatchBitmapText[0].ForegroundColor=$Color_Window$
+MatchBitmapText[0].BackgroundColor=$Color_Highlight$
+MatchBitmapText[0].FontName=Tahoma
+MatchBitmapText[0].FontSize=8
+MatchBitmapText[0].Bold=0
+MatchBitmapText[0].Italic=0
+MatchBitmapText[0].Underline=0
+MatchBitmapText[0].StrikeOut=0
+MatchBitmapText[0].FontQuality=3
+MatchBitmapText[0].FontQualityUsesReplacement=0
+MatchBitmapText[0].FontQualityReplacement=
+MatchBitmapText[0].ProfileName=Profile [0]
+MatchBitmapText[0].CropLeft=0
+MatchBitmapText[0].CropTop=0
+MatchBitmapText[0].CropRight=0
+MatchBitmapText[0].CropBottom=0
+MatchBitmapText[0].IgnoreBackgroundColor=0
+MatchBitmapFiles=
+ColorError=0
+AllowedColorErrorCount=0
+MatchBitmapAlgorithm=0
+MatchBitmapAlgorithm_Grid_XMultipleOf=1
+MatchBitmapAlgorithm_Grid_YMultipleOf=1
+MatchBitmapAlgorithm_Grid_XOffset=0
+MatchBitmapAlgorithm_Grid_YOffset=0
+InitialRectangle.Left=$Control_Left$
+InitialRectangle.Top=$Control_Top$
+InitialRectangle.Right=$Control_Right$
+InitialRectangle.Bottom=$Control_Bottom$
+UseWholeScreen=0
+InitialRectangle.LeftOffset=0
+InitialRectangle.TopOffset=0
+InitialRectangle.RightOffset=0
+InitialRectangle.BottomOffset=0
+StartSearchingWithCachedControl=0
+CachedControlLeft=
+CachedControlTop=
+MatchPrimitiveFiles=
+GetAllControls=0
+UseFastSearch=1
+FastSearchAllowedColorErrorCount=10
+IgnoredColors=
+SleepySearch=0
+StopSearchOnMismatch=1
+ImageSource=0
+SourceFileName=
+ImageSourceFileNameLocation=1
+PrecisionTimeout=0
+FullBackgroundImageInResult=1
+MatchByHistogramSettings.MinPercentColorMatch=50
+MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
+MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
+EvaluateTextCount=-1
+CropFromScreenshot=0
+ThreadCount=2
+
+[Action_16]
+ActionName=Find Settings tab
+Action=FindSubControl
+ActionTimeout=1000
+ActionEnabled=1
+ActionCondition=
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+MatchCriteria.WillMatchText=0
+MatchCriteria.WillMatchClassName=0
+MatchCriteria.WillMatchBitmapText=1
+MatchCriteria.WillMatchBitmapFiles=0
+MatchCriteria.WillMatchPrimitiveFiles=0
+MatchCriteria.SearchForControlMode=0
+MatchText=Settings
+MatchClassName=
+MatchTextSeparator=
+MatchClassNameSeparator=
+AllowToFail=0
+WaitForControlToGoAway=0
+MatchBitmapTextArr=1
+MatchBitmapText_Count=2
+MatchBitmapText[0].ForegroundColor=$Color_WindowText$
+MatchBitmapText[0].BackgroundColor=$Color_Window$
+MatchBitmapText[0].FontName=Segoe UI
+MatchBitmapText[0].FontSize=9
+MatchBitmapText[0].Bold=0
+MatchBitmapText[0].Italic=0
+MatchBitmapText[0].Underline=0
+MatchBitmapText[0].StrikeOut=0
+MatchBitmapText[0].FontQuality=4
+MatchBitmapText[0].FontQualityUsesReplacement=0
+MatchBitmapText[0].FontQualityReplacement=
+MatchBitmapText[0].ProfileName=Profile [0]
+MatchBitmapText[0].CropLeft=0
+MatchBitmapText[0].CropTop=0
+MatchBitmapText[0].CropRight=0
+MatchBitmapText[0].CropBottom=0
+MatchBitmapText[0].IgnoreBackgroundColor=1
+MatchBitmapText[1].ForegroundColor=$Color_WindowText$
+MatchBitmapText[1].BackgroundColor=$Color_Window$
+MatchBitmapText[1].FontName=Segoe UI
+MatchBitmapText[1].FontSize=9
+MatchBitmapText[1].Bold=0
+MatchBitmapText[1].Italic=0
+MatchBitmapText[1].Underline=0
+MatchBitmapText[1].StrikeOut=0
+MatchBitmapText[1].FontQuality=5
+MatchBitmapText[1].FontQualityUsesReplacement=0
+MatchBitmapText[1].FontQualityReplacement=
+MatchBitmapText[1].ProfileName=Profile [1]
+MatchBitmapText[1].CropLeft=0
+MatchBitmapText[1].CropTop=0
+MatchBitmapText[1].CropRight=0
+MatchBitmapText[1].CropBottom=0
+MatchBitmapText[1].IgnoreBackgroundColor=1
+MatchBitmapFiles=
+ColorError=30
+AllowedColorErrorCount=20
+MatchBitmapAlgorithm=0
+MatchBitmapAlgorithm_Grid_XMultipleOf=1
+MatchBitmapAlgorithm_Grid_YMultipleOf=1
+MatchBitmapAlgorithm_Grid_XOffset=0
+MatchBitmapAlgorithm_Grid_YOffset=0
+InitialRectangle.Left=$Control_Left$
+InitialRectangle.Top=$Control_Top$
+InitialRectangle.Right=$Control_Left$
+InitialRectangle.Bottom=$Control_Right$
+UseWholeScreen=0
+InitialRectangle.LeftOffset=0
+InitialRectangle.TopOffset=0
+InitialRectangle.RightOffset=148
+InitialRectangle.BottomOffset=-475
+StartSearchingWithCachedControl=0
+CachedControlLeft=
+CachedControlTop=
+MatchPrimitiveFiles=
+GetAllControls=0
+UseFastSearch=1
+FastSearchAllowedColorErrorCount=10
+IgnoredColors=
+SleepySearch=0
+StopSearchOnMismatch=1
+ImageSource=0
+SourceFileName=
+ImageSourceFileNameLocation=1
+PrecisionTimeout=0
+FullBackgroundImageInResult=1
+MatchByHistogramSettings.MinPercentColorMatch=50
+MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
+MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
+EvaluateTextCount=-1
+CropFromScreenshot=0
+ThreadCount=2
+
+[Action_17]
+ActionName=Select Settings tab
+Action=Click
+ActionTimeout=0
+ActionEnabled=1
+ActionCondition=
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+XOffsetReference=0
+YOffsetReference=0
+XClickPointVar=$Control_Left$
+YClickPointVar=$Control_Top$
+XOffset=4
+YOffset=4
+MouseButton=0
+ClickWithCtrl=0
+ClickWithAlt=0
+ClickWithShift=0
+ClickWithDoubleClick=0
+LeaveMouse=0
+MoveWithoutClick=0
+Count=1
+ClickType=0
+XOffsetReferenceDest=0
+YOffsetReferenceDest=0
+XClickPointVarDest=$Control_Left$
+YClickPointVarDest=$Control_Top$
+XOffsetDest=7
+YOffsetDest=7
+MouseWheelType=0
+MouseWheelAmount=1
+DelayAfterMovingToDestination=50
+DelayAfterMouseDown=200
+MoveDuration=-1
+UseClipCursor=0
+
+[Action_18]
+ActionName=Update Control to WinInterp
+Action=SetVar
+ActionTimeout=0
+ActionEnabled=1
+ActionCondition=
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+ListOfVarNames=$UpdateRes$
+ListOfVarValues=$UpdateControlInfo($frmClickerWinInterp_Handle$)$
+ListOfVarEvalBefore=1
+FailOnException=0
+
+[Action_19]
 ActionName=Find ComboBox
 Action=FindControl
 ActionTimeout=3000
@@ -692,10 +936,10 @@ InitialRectangle.Top=$Control_Bottom$
 InitialRectangle.Right=$Control_Right$
 InitialRectangle.Bottom=$Control_Bottom$
 UseWholeScreen=0
-InitialRectangle.LeftOffset=700
-InitialRectangle.TopOffset=-116
+InitialRectangle.LeftOffset=318
+InitialRectangle.TopOffset=-277
 InitialRectangle.RightOffset=-4
-InitialRectangle.BottomOffset=-68
+InitialRectangle.BottomOffset=-180
 StartSearchingWithCachedControl=0
 CachedControlLeft=
 CachedControlTop=
@@ -714,8 +958,11 @@ FullBackgroundImageInResult=1
 MatchByHistogramSettings.MinPercentColorMatch=50
 MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
+EvaluateTextCount=-1
+CropFromScreenshot=0
+ThreadCount=2
 
-[Action_16]
+[Action_20]
 ActionName=Cache ComboBox
 Action=SetVar
 ActionTimeout=0
@@ -729,7 +976,7 @@ ListOfVarValues=$Control_Left$$Control_Top$$Control_Bottom$
 ListOfVarEvalBefore=111
 FailOnException=0
 
-[Action_17]
+[Action_21]
 ActionName=Drop ComboBox
 Action=Click
 ActionTimeout=0
@@ -764,8 +1011,9 @@ MouseWheelAmount=1
 DelayAfterMovingToDestination=50
 DelayAfterMouseDown=100
 MoveDuration=-1
+UseClipCursor=0
 
-[Action_18]
+[Action_22]
 ActionName=wait a bit,to open
 Action=Sleep
 ActionTimeout=0
@@ -776,7 +1024,7 @@ BreakpointEnabled=0
 BreakpointCondition=
 Value=300
 
-[Action_19]
+[Action_23]
 ActionName=Wait for ComboBox.ListBox
 Action=FindControl
 ActionTimeout=2000
@@ -851,8 +1099,11 @@ FullBackgroundImageInResult=1
 MatchByHistogramSettings.MinPercentColorMatch=50
 MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
+EvaluateTextCount=-1
+CropFromScreenshot=0
+ThreadCount=2
 
-[Action_20]
+[Action_24]
 ActionName=Restore cached ComboBox
 Action=SetVar
 ActionTimeout=0
@@ -866,14 +1117,14 @@ ListOfVarValues=$Combo_Left$$Combo_Top$$Combo_Bot$
 ListOfVarEvalBefore=111
 FailOnException=0
 
-[Action_21]
+[Action_25]
 ActionName=Close ComboBox
 Action=Click
 ActionTimeout=0
 ActionEnabled=1
 ActionCondition=
-BreakpointExists=0
-BreakpointEnabled=0
+BreakpointExists=1
+BreakpointEnabled=1
 BreakpointCondition=
 XOffsetReference=0
 YOffsetReference=0
@@ -901,8 +1152,9 @@ MouseWheelAmount=1
 DelayAfterMovingToDestination=50
 DelayAfterMouseDown=100
 MoveDuration=-1
+UseClipCursor=0
 
-[Action_22]
+[Action_26]
 ActionName=Scroll to the first item
 Action=Click
 ActionTimeout=0
@@ -937,8 +1189,9 @@ MouseWheelAmount=60
 DelayAfterMovingToDestination=50
 DelayAfterMouseDown=100
 MoveDuration=-1
+UseClipCursor=0
 
-[Action_23]
+[Action_27]
 ActionName=Scroll to clMaroon
 Action=Click
 ActionTimeout=0
@@ -973,8 +1226,9 @@ MouseWheelAmount=-1
 DelayAfterMovingToDestination=50
 DelayAfterMouseDown=100
 MoveDuration=-1
+UseClipCursor=0
 
-[Action_24]
+[Action_28]
 ActionName=Verify if clMaroon is selected
 Action=FindControl
 ActionTimeout=1000
@@ -1049,15 +1303,18 @@ FullBackgroundImageInResult=1
 MatchByHistogramSettings.MinPercentColorMatch=50
 MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
+EvaluateTextCount=-1
+CropFromScreenshot=0
+ThreadCount=2
 
-[Action_25]
+[Action_29]
 ActionName=Scroll to clOlive
 Action=Click
 ActionTimeout=0
 ActionEnabled=1
 ActionCondition=
-BreakpointExists=1
-BreakpointEnabled=1
+BreakpointExists=0
+BreakpointEnabled=0
 BreakpointCondition=
 XOffsetReference=0
 YOffsetReference=0
@@ -1085,8 +1342,9 @@ MouseWheelAmount=-2
 DelayAfterMovingToDestination=50
 DelayAfterMouseDown=100
 MoveDuration=-1
+UseClipCursor=0
 
-[Action_26]
+[Action_30]
 ActionName=Verify if clOlive is selected
 Action=FindControl
 ActionTimeout=1000
@@ -1161,15 +1419,18 @@ FullBackgroundImageInResult=1
 MatchByHistogramSettings.MinPercentColorMatch=50
 MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
+EvaluateTextCount=-1
+CropFromScreenshot=0
+ThreadCount=2
 
-[Action_27]
+[Action_31]
 ActionName=Scroll to clOrange
 Action=Click
 ActionTimeout=0
 ActionEnabled=1
 ActionCondition=
 BreakpointExists=0
-BreakpointEnabled=0
+BreakpointEnabled=1
 BreakpointCondition=
 XOffsetReference=0
 YOffsetReference=0
@@ -1197,15 +1458,16 @@ MouseWheelAmount=-60
 DelayAfterMovingToDestination=50
 DelayAfterMouseDown=100
 MoveDuration=-1
+UseClipCursor=0
 
-[Action_28]
+[Action_32]
 ActionName=Verify if clOrange is selected
 Action=FindControl
 ActionTimeout=1000
 ActionEnabled=1
 ActionCondition=
 BreakpointExists=0
-BreakpointEnabled=0
+BreakpointEnabled=1
 BreakpointCondition=
 MatchCriteria.WillMatchText=1
 MatchCriteria.WillMatchClassName=1
@@ -1273,8 +1535,11 @@ FullBackgroundImageInResult=1
 MatchByHistogramSettings.MinPercentColorMatch=50
 MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
+EvaluateTextCount=-1
+CropFromScreenshot=0
+ThreadCount=2
 
-[Action_29]
+[Action_33]
 ActionName=Update Control to WinInterp
 Action=SetVar
 ActionTimeout=0
@@ -1288,7 +1553,442 @@ ListOfVarValues=$UpdateControlInfo($frmClickerWinInterp_Handle$)$
 ListOfVarEvalBefore=1
 FailOnException=0
 
-[Action_30]
+[Action_34]
+ActionName=Find PageControl
+Action=FindControl
+ActionTimeout=3000
+ActionEnabled=1
+ActionCondition=
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+MatchCriteria.WillMatchText=1
+MatchCriteria.WillMatchClassName=1
+MatchCriteria.WillMatchBitmapText=0
+MatchCriteria.WillMatchBitmapFiles=0
+MatchCriteria.WillMatchPrimitiveFiles=0
+MatchCriteria.SearchForControlMode=0
+MatchText=
+MatchClassName=SysTabControl32
+MatchTextSeparator=
+MatchClassNameSeparator=
+AllowToFail=0
+WaitForControlToGoAway=0
+MatchBitmapTextArr=1
+MatchBitmapText_Count=1
+MatchBitmapText[0].ForegroundColor=$Color_Window$
+MatchBitmapText[0].BackgroundColor=$Color_Highlight$
+MatchBitmapText[0].FontName=Tahoma
+MatchBitmapText[0].FontSize=8
+MatchBitmapText[0].Bold=0
+MatchBitmapText[0].Italic=0
+MatchBitmapText[0].Underline=0
+MatchBitmapText[0].StrikeOut=0
+MatchBitmapText[0].FontQuality=3
+MatchBitmapText[0].FontQualityUsesReplacement=0
+MatchBitmapText[0].FontQualityReplacement=
+MatchBitmapText[0].ProfileName=Profile [0]
+MatchBitmapText[0].CropLeft=0
+MatchBitmapText[0].CropTop=0
+MatchBitmapText[0].CropRight=0
+MatchBitmapText[0].CropBottom=0
+MatchBitmapText[0].IgnoreBackgroundColor=0
+MatchBitmapFiles=
+ColorError=0
+AllowedColorErrorCount=0
+MatchBitmapAlgorithm=0
+MatchBitmapAlgorithm_Grid_XMultipleOf=1
+MatchBitmapAlgorithm_Grid_YMultipleOf=1
+MatchBitmapAlgorithm_Grid_XOffset=0
+MatchBitmapAlgorithm_Grid_YOffset=0
+InitialRectangle.Left=$Control_Left$
+InitialRectangle.Top=$Control_Top$
+InitialRectangle.Right=$Control_Right$
+InitialRectangle.Bottom=$Control_Bottom$
+UseWholeScreen=0
+InitialRectangle.LeftOffset=0
+InitialRectangle.TopOffset=0
+InitialRectangle.RightOffset=0
+InitialRectangle.BottomOffset=0
+StartSearchingWithCachedControl=0
+CachedControlLeft=
+CachedControlTop=
+MatchPrimitiveFiles=
+GetAllControls=0
+UseFastSearch=1
+FastSearchAllowedColorErrorCount=10
+IgnoredColors=
+SleepySearch=0
+StopSearchOnMismatch=1
+ImageSource=0
+SourceFileName=
+ImageSourceFileNameLocation=1
+PrecisionTimeout=0
+FullBackgroundImageInResult=1
+MatchByHistogramSettings.MinPercentColorMatch=50
+MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
+MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
+EvaluateTextCount=-1
+CropFromScreenshot=0
+ThreadCount=2
+
+[Action_35]
+ActionName=Find Components tab
+Action=FindSubControl
+ActionTimeout=1000
+ActionEnabled=1
+ActionCondition=
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+MatchCriteria.WillMatchText=0
+MatchCriteria.WillMatchClassName=0
+MatchCriteria.WillMatchBitmapText=1
+MatchCriteria.WillMatchBitmapFiles=0
+MatchCriteria.WillMatchPrimitiveFiles=0
+MatchCriteria.SearchForControlMode=0
+MatchText=Components
+MatchClassName=
+MatchTextSeparator=
+MatchClassNameSeparator=
+AllowToFail=0
+WaitForControlToGoAway=0
+MatchBitmapTextArr=1
+MatchBitmapText_Count=2
+MatchBitmapText[0].ForegroundColor=$Color_WindowText$
+MatchBitmapText[0].BackgroundColor=$Color_Window$
+MatchBitmapText[0].FontName=Segoe UI
+MatchBitmapText[0].FontSize=9
+MatchBitmapText[0].Bold=0
+MatchBitmapText[0].Italic=0
+MatchBitmapText[0].Underline=0
+MatchBitmapText[0].StrikeOut=0
+MatchBitmapText[0].FontQuality=4
+MatchBitmapText[0].FontQualityUsesReplacement=0
+MatchBitmapText[0].FontQualityReplacement=
+MatchBitmapText[0].ProfileName=Profile [0]
+MatchBitmapText[0].CropLeft=0
+MatchBitmapText[0].CropTop=0
+MatchBitmapText[0].CropRight=0
+MatchBitmapText[0].CropBottom=0
+MatchBitmapText[0].IgnoreBackgroundColor=1
+MatchBitmapText[1].ForegroundColor=$Color_WindowText$
+MatchBitmapText[1].BackgroundColor=$Color_Window$
+MatchBitmapText[1].FontName=Segoe UI
+MatchBitmapText[1].FontSize=9
+MatchBitmapText[1].Bold=0
+MatchBitmapText[1].Italic=0
+MatchBitmapText[1].Underline=0
+MatchBitmapText[1].StrikeOut=0
+MatchBitmapText[1].FontQuality=5
+MatchBitmapText[1].FontQualityUsesReplacement=0
+MatchBitmapText[1].FontQualityReplacement=
+MatchBitmapText[1].ProfileName=Profile [1]
+MatchBitmapText[1].CropLeft=0
+MatchBitmapText[1].CropTop=0
+MatchBitmapText[1].CropRight=0
+MatchBitmapText[1].CropBottom=0
+MatchBitmapText[1].IgnoreBackgroundColor=1
+MatchBitmapFiles=
+ColorError=30
+AllowedColorErrorCount=20
+MatchBitmapAlgorithm=0
+MatchBitmapAlgorithm_Grid_XMultipleOf=1
+MatchBitmapAlgorithm_Grid_YMultipleOf=1
+MatchBitmapAlgorithm_Grid_XOffset=0
+MatchBitmapAlgorithm_Grid_YOffset=0
+InitialRectangle.Left=$Control_Left$
+InitialRectangle.Top=$Control_Top$
+InitialRectangle.Right=$Control_Left$
+InitialRectangle.Bottom=$Control_Right$
+UseWholeScreen=0
+InitialRectangle.LeftOffset=0
+InitialRectangle.TopOffset=0
+InitialRectangle.RightOffset=148
+InitialRectangle.BottomOffset=-475
+StartSearchingWithCachedControl=0
+CachedControlLeft=
+CachedControlTop=
+MatchPrimitiveFiles=
+GetAllControls=0
+UseFastSearch=1
+FastSearchAllowedColorErrorCount=10
+IgnoredColors=
+SleepySearch=0
+StopSearchOnMismatch=1
+ImageSource=0
+SourceFileName=
+ImageSourceFileNameLocation=1
+PrecisionTimeout=0
+FullBackgroundImageInResult=1
+MatchByHistogramSettings.MinPercentColorMatch=50
+MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
+MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
+EvaluateTextCount=-1
+CropFromScreenshot=0
+ThreadCount=2
+
+[Action_36]
+ActionName=Select Components tab
+Action=Click
+ActionTimeout=0
+ActionEnabled=1
+ActionCondition=
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+XOffsetReference=0
+YOffsetReference=0
+XClickPointVar=$Control_Left$
+YClickPointVar=$Control_Top$
+XOffset=4
+YOffset=4
+MouseButton=0
+ClickWithCtrl=0
+ClickWithAlt=0
+ClickWithShift=0
+ClickWithDoubleClick=0
+LeaveMouse=0
+MoveWithoutClick=0
+Count=1
+ClickType=0
+XOffsetReferenceDest=0
+YOffsetReferenceDest=0
+XClickPointVarDest=$Control_Left$
+YClickPointVarDest=$Control_Top$
+XOffsetDest=7
+YOffsetDest=7
+MouseWheelType=0
+MouseWheelAmount=1
+DelayAfterMovingToDestination=50
+DelayAfterMouseDown=200
+MoveDuration=-1
+UseClipCursor=0
+
+[Action_37]
+ActionName=Update Control to WinInterp
+Action=SetVar
+ActionTimeout=0
+ActionEnabled=1
+ActionCondition=
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+ListOfVarNames=$UpdateRes$
+ListOfVarValues=$UpdateControlInfo($frmClickerWinInterp_Handle$)$
+ListOfVarEvalBefore=1
+FailOnException=0
+
+[Action_38]
+ActionName=Find Layers grp
+Action=FindControl
+ActionTimeout=3000
+ActionEnabled=1
+ActionCondition=
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+MatchCriteria.WillMatchText=1
+MatchCriteria.WillMatchClassName=1
+MatchCriteria.WillMatchBitmapText=0
+MatchCriteria.WillMatchBitmapFiles=0
+MatchCriteria.WillMatchPrimitiveFiles=0
+MatchCriteria.SearchForControlMode=0
+MatchText=Layers
+MatchClassName=Button
+MatchTextSeparator=
+MatchClassNameSeparator=
+AllowToFail=0
+WaitForControlToGoAway=0
+MatchBitmapTextArr=1
+MatchBitmapText_Count=1
+MatchBitmapText[0].ForegroundColor=$Color_Window$
+MatchBitmapText[0].BackgroundColor=$Color_Highlight$
+MatchBitmapText[0].FontName=Tahoma
+MatchBitmapText[0].FontSize=8
+MatchBitmapText[0].Bold=0
+MatchBitmapText[0].Italic=0
+MatchBitmapText[0].Underline=0
+MatchBitmapText[0].StrikeOut=0
+MatchBitmapText[0].FontQuality=3
+MatchBitmapText[0].FontQualityUsesReplacement=0
+MatchBitmapText[0].FontQualityReplacement=
+MatchBitmapText[0].ProfileName=Profile [0]
+MatchBitmapText[0].CropLeft=0
+MatchBitmapText[0].CropTop=0
+MatchBitmapText[0].CropRight=0
+MatchBitmapText[0].CropBottom=0
+MatchBitmapText[0].IgnoreBackgroundColor=0
+MatchBitmapFiles=
+ColorError=0
+AllowedColorErrorCount=0
+MatchBitmapAlgorithm=0
+MatchBitmapAlgorithm_Grid_XMultipleOf=1
+MatchBitmapAlgorithm_Grid_YMultipleOf=1
+MatchBitmapAlgorithm_Grid_XOffset=0
+MatchBitmapAlgorithm_Grid_YOffset=0
+InitialRectangle.Left=$Control_Left$
+InitialRectangle.Top=$Control_Bottom$
+InitialRectangle.Right=$Control_Left$
+InitialRectangle.Bottom=$Control_Bottom$
+UseWholeScreen=0
+InitialRectangle.LeftOffset=276
+InitialRectangle.TopOffset=-259
+InitialRectangle.RightOffset=895
+InitialRectangle.BottomOffset=-69
+StartSearchingWithCachedControl=0
+CachedControlLeft=
+CachedControlTop=
+MatchPrimitiveFiles=
+GetAllControls=0
+UseFastSearch=1
+FastSearchAllowedColorErrorCount=10
+IgnoredColors=
+SleepySearch=0
+StopSearchOnMismatch=1
+ImageSource=0
+SourceFileName=
+ImageSourceFileNameLocation=1
+PrecisionTimeout=0
+FullBackgroundImageInResult=1
+MatchByHistogramSettings.MinPercentColorMatch=50
+MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
+MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
+EvaluateTextCount=-1
+CropFromScreenshot=0
+ThreadCount=2
+
+[Action_39]
+ActionName=Find Screenshot radio button
+Action=FindControl
+ActionTimeout=3000
+ActionEnabled=1
+ActionCondition=
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+MatchCriteria.WillMatchText=1
+MatchCriteria.WillMatchClassName=1
+MatchCriteria.WillMatchBitmapText=0
+MatchCriteria.WillMatchBitmapFiles=0
+MatchCriteria.WillMatchPrimitiveFiles=0
+MatchCriteria.SearchForControlMode=0
+MatchText=Screenshot
+MatchClassName=Button
+MatchTextSeparator=
+MatchClassNameSeparator=
+AllowToFail=0
+WaitForControlToGoAway=0
+MatchBitmapTextArr=1
+MatchBitmapText_Count=1
+MatchBitmapText[0].ForegroundColor=$Color_Window$
+MatchBitmapText[0].BackgroundColor=$Color_Highlight$
+MatchBitmapText[0].FontName=Tahoma
+MatchBitmapText[0].FontSize=8
+MatchBitmapText[0].Bold=0
+MatchBitmapText[0].Italic=0
+MatchBitmapText[0].Underline=0
+MatchBitmapText[0].StrikeOut=0
+MatchBitmapText[0].FontQuality=3
+MatchBitmapText[0].FontQualityUsesReplacement=0
+MatchBitmapText[0].FontQualityReplacement=
+MatchBitmapText[0].ProfileName=Profile [0]
+MatchBitmapText[0].CropLeft=0
+MatchBitmapText[0].CropTop=0
+MatchBitmapText[0].CropRight=0
+MatchBitmapText[0].CropBottom=0
+MatchBitmapText[0].IgnoreBackgroundColor=0
+MatchBitmapFiles=
+ColorError=0
+AllowedColorErrorCount=0
+MatchBitmapAlgorithm=0
+MatchBitmapAlgorithm_Grid_XMultipleOf=1
+MatchBitmapAlgorithm_Grid_YMultipleOf=1
+MatchBitmapAlgorithm_Grid_XOffset=0
+MatchBitmapAlgorithm_Grid_YOffset=0
+InitialRectangle.Left=$Control_Left$
+InitialRectangle.Top=$Control_Top$
+InitialRectangle.Right=$Control_Right$
+InitialRectangle.Bottom=$Control_Bottom$
+UseWholeScreen=0
+InitialRectangle.LeftOffset=0
+InitialRectangle.TopOffset=0
+InitialRectangle.RightOffset=0
+InitialRectangle.BottomOffset=0
+StartSearchingWithCachedControl=0
+CachedControlLeft=
+CachedControlTop=
+MatchPrimitiveFiles=
+GetAllControls=0
+UseFastSearch=1
+FastSearchAllowedColorErrorCount=10
+IgnoredColors=
+SleepySearch=0
+StopSearchOnMismatch=1
+ImageSource=0
+SourceFileName=
+ImageSourceFileNameLocation=1
+PrecisionTimeout=0
+FullBackgroundImageInResult=1
+MatchByHistogramSettings.MinPercentColorMatch=50
+MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
+MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
+EvaluateTextCount=-1
+CropFromScreenshot=0
+ThreadCount=2
+
+[Action_40]
+ActionName=Select Screenshot
+Action=Click
+ActionTimeout=0
+ActionEnabled=1
+ActionCondition=
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+XOffsetReference=0
+YOffsetReference=0
+XClickPointVar=$Control_Left$
+YClickPointVar=$Control_Top$
+XOffset=4
+YOffset=4
+MouseButton=0
+ClickWithCtrl=0
+ClickWithAlt=0
+ClickWithShift=0
+ClickWithDoubleClick=0
+LeaveMouse=0
+MoveWithoutClick=0
+Count=1
+ClickType=0
+XOffsetReferenceDest=0
+YOffsetReferenceDest=0
+XClickPointVarDest=$Control_Left$
+YClickPointVarDest=$Control_Top$
+XOffsetDest=7
+YOffsetDest=7
+MouseWheelType=0
+MouseWheelAmount=1
+DelayAfterMovingToDestination=50
+DelayAfterMouseDown=200
+MoveDuration=-1
+UseClipCursor=0
+
+[Action_41]
+ActionName=Update Control to WinInterp
+Action=SetVar
+ActionTimeout=0
+ActionEnabled=1
+ActionCondition=
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+ListOfVarNames=$UpdateRes$
+ListOfVarValues=$UpdateControlInfo($frmClickerWinInterp_Handle$)$
+ListOfVarEvalBefore=1
+FailOnException=0
+
+[Action_42]
 ActionName=Click on Drag panel from screenshot
 Action=Click
 ActionTimeout=0
@@ -1323,29 +2023,30 @@ MouseWheelAmount=1
 DelayAfterMovingToDestination=50
 DelayAfterMouseDown=100
 MoveDuration=-1
+UseClipCursor=0
 
-[Action_31]
+[Action_43]
 ActionName=Update Control to WinInterp
 Action=SetVar
 ActionTimeout=0
 ActionEnabled=1
 ActionCondition=
 BreakpointExists=0
-BreakpointEnabled=1
+BreakpointEnabled=0
 BreakpointCondition=
 ListOfVarNames=$UpdateRes$
 ListOfVarValues=$UpdateControlInfo($frmClickerWinInterp_Handle$)$
 ListOfVarEvalBefore=1
 FailOnException=0
 
-[Action_32]
+[Action_44]
 ActionName=Find a selection line
 Action=FindSubControl
 ActionTimeout=1000
 ActionEnabled=1
 ActionCondition=
 BreakpointExists=0
-BreakpointEnabled=1
+BreakpointEnabled=0
 BreakpointCondition=
 MatchCriteria.WillMatchText=0
 MatchCriteria.WillMatchClassName=0
@@ -1413,8 +2114,11 @@ FullBackgroundImageInResult=1
 MatchByHistogramSettings.MinPercentColorMatch=50
 MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
+EvaluateTextCount=-1
+CropFromScreenshot=0
+ThreadCount=2
 
-[Action_33]
+[Action_45]
 ActionName=Update Control to WinInterp
 Action=SetVar
 ActionTimeout=0
@@ -1428,7 +2132,7 @@ ListOfVarValues=$UpdateControlInfo($frmClickerWinInterp_Handle$)$
 ListOfVarEvalBefore=1
 FailOnException=0
 
-[Action_34]
+[Action_46]
 ActionName=Close WinInterp
 Action=WindowOperations
 ActionTimeout=0

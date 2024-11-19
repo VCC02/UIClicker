@@ -48,6 +48,7 @@ type
 
     Ctrl: TWinControl; //used by drawing board, to sync components  (this is the mount panel)
     ParentCtrl: TWinControl; //used by drawing board, to sync components  (this can be the drawing board or another mount panel)
+    CGClassName: string; //code generator class name (e.g. TForm1 or TSpeedButton)
   end;
 
 
@@ -259,6 +260,7 @@ type
     procedure vstComponentsSaveNode(Sender: TBaseVirtualTree;
       Node: PVirtualNode; Stream: TStream);
     procedure vstComponentsSaveTree(Sender: TBaseVirtualTree; Stream: TStream);
+    procedure vstComponentsKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
 
     procedure vstAvoidedZonesDblClick(Sender: TObject);
     procedure vstAvoidedZonesEdited(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
@@ -269,6 +271,7 @@ type
     procedure vstAvoidedZonesGetText(Sender: TBaseVirtualTree;
       Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
       var CellText: String);
+    procedure vstAvoidedZonesKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
   private
     vstComponents: TVirtualStringTree;
     vstAvoidedZones: TVirtualStringTree;
@@ -281,6 +284,7 @@ type
     clrs2: array [0..300] of TColor;
     FColoredHandles: TColoredHandleArr;
     FOldSelectedNode: PVirtualNode;
+    FCompTreeVersion: LongInt;  //used on loading, because there are two handlers (one which gets the value, and the other, which uses the value)
 
     FSelectedComponentLeftLimitLabel: TLabel;
     FSelectedComponentTopLimitLabel: TLabel;
@@ -728,16 +732,19 @@ begin
     0: CellText := IntToStr(NodeData^.CompRec.Handle);
     1: CellText := NodeData^.CompRec.ClassName;
     2: CellText := NodeData^.CompRec.Text;
-    3: CellText := '0x' + IntToHex(NodeData^.AssignedColor, 6);
-    4: CellText := IntToStr(NodeData^.CompRec.ComponentRectangle.Left);
-    5: CellText := IntToStr(NodeData^.CompRec.ComponentRectangle.Top);
-    6: CellText := IntToStr(NodeData^.CompRec.ComponentRectangle.Right);
-    7: CellText := IntToStr(NodeData^.CompRec.ComponentRectangle.Bottom);
-    8: CellText := IntToStr(NodeData^.LocalX);
-    9: CellText := IntToStr(NodeData^.LocalY);
-    10: CellText := IntToStr(NodeData^.LocalX_FromParent);
-    11: CellText := IntToStr(NodeData^.LocalY_FromParent);
-    12: CellText := BoolToStr(NodeData^.ManuallyAdded, 'Yes', 'No');
+    3: CellText := NodeData^.CGClassName; //code generator class name (e.g. TForm1 or TSpeedButton)
+    4: CellText := '0x' + IntToHex(NodeData^.AssignedColor, 6);
+    5: CellText := IntToStr(NodeData^.CompRec.ComponentRectangle.Left);
+    6: CellText := IntToStr(NodeData^.CompRec.ComponentRectangle.Top);
+    7: CellText := IntToStr(NodeData^.CompRec.ComponentRectangle.Right);
+    8: CellText := IntToStr(NodeData^.CompRec.ComponentRectangle.Bottom);
+    9: CellText := IntToStr(NodeData^.CompRec.ComponentRectangle.Width {Right - NodeData^.CompRec.ComponentRectangle.Left});
+    10: CellText := IntToStr(NodeData^.CompRec.ComponentRectangle.Height);
+    11: CellText := IntToStr(NodeData^.LocalX);
+    12: CellText := IntToStr(NodeData^.LocalY);
+    13: CellText := IntToStr(NodeData^.LocalX_FromParent);
+    14: CellText := IntToStr(NodeData^.LocalY_FromParent);
+    15: CellText := BoolToStr(NodeData^.ManuallyAdded, 'Yes', 'No');
   end;
 end;
 
@@ -765,6 +772,20 @@ begin
 end;
 
 
+procedure TfrClickerWinInterp.vstComponentsKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+begin
+  if Key = VK_DELETE then
+    MenuItem_DeleteSubComponent.Click;
+end;
+
+
+procedure TfrClickerWinInterp.vstAvoidedZonesKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+begin
+  if Key = VK_DELETE then
+    btnDeleteZone.Click;
+end;
+
+
 procedure TfrClickerWinInterp.vstComponentsLoadNode(Sender: TBaseVirtualTree;
   Node: PVirtualNode; Stream: TStream);
 var
@@ -786,6 +807,14 @@ begin
   Stream.Read(DataStr[1], Len);
   NodeData^.CompRec.ClassName := DataStr;
 
+  if FCompTreeVersion > 1 then
+  begin
+    Stream.Read(Len, 4);
+    SetLength(DataStr, Len);
+    Stream.Read(DataStr[1], Len);
+    NodeData^.CGClassName := DataStr;
+  end;
+
   Stream.Read(NodeData^.CompRec.ComponentRectangle.Left, 4);
   Stream.Read(NodeData^.CompRec.ComponentRectangle.Top, 4);
   Stream.Read(NodeData^.CompRec.ComponentRectangle.Right, 4);
@@ -793,16 +822,41 @@ begin
 
   Stream.Read(NodeData^.LocalX, 4);
   Stream.Read(NodeData^.LocalY, 4);
-  Stream.Read(NodeData^.AssignedColor, 4);
 
+  if FCompTreeVersion > 1 then
+  begin
+    Stream.Read(NodeData^.LocalX_FromParent, 4);
+    Stream.Read(NodeData^.LocalY_FromParent, 4);
+  end;
+
+  Stream.Read(NodeData^.AssignedColor, 4);
   Stream.Read(NodeData^.ManuallyAdded, 1);
 end;
 
 
+const
+  CTreeHeader = #254#254#254#254 + 'TreeVersion_';
+
 procedure TfrClickerWinInterp.vstComponentsLoadTree(Sender: TBaseVirtualTree;
   Stream: TStream);
-begin
+//var
+//  InitialStreamPos: Int64;
+//  DataStr: string;
+//  Len: LongInt;
+begin                                            //this handler is called to late for setting FCompTreeVersion
+  //InitialStreamPos := Stream.Position;
+  //try
+  //  Stream.Read(Len, 4);
+  //  SetLength(DataStr, Len);
+  //  Stream.Read(DataStr[1], Len);
   //
+  //  if DataStr = CTreeHeader then   //Tree version present. This should be at least v2.
+  //    Stream.Read(FCompTreeVersion, 4)
+  //  else
+  //    FCompTreeVersion := 1; //default
+  //finally
+  //  Stream.Position := InitialStreamPos;
+  //end;
 end;
 
 
@@ -827,6 +881,11 @@ begin
   Stream.Write(Len, 4);
   Stream.Write(DataStr[1], Len);
 
+  DataStr := NodeData^.CGClassName;
+  Len := Length(DataStr);
+  Stream.Write(Len, 4);            //since v2
+  Stream.Write(DataStr[1], Len);   //since v2
+
   Stream.Write(NodeData^.CompRec.ComponentRectangle.Left, 4);
   Stream.Write(NodeData^.CompRec.ComponentRectangle.Top, 4);
   Stream.Write(NodeData^.CompRec.ComponentRectangle.Right, 4);
@@ -834,14 +893,28 @@ begin
 
   Stream.Write(NodeData^.LocalX, 4);
   Stream.Write(NodeData^.LocalY, 4);
+
+  Stream.Write(NodeData^.LocalX_FromParent, 4);  //since v2
+  Stream.Write(NodeData^.LocalY_FromParent, 4);  //since v2
+
   Stream.Write(NodeData^.AssignedColor, 4);
+  Stream.Write(NodeData^.ManuallyAdded, 1);       //since v2, although this field is loaded in v1 (which, in theory, adds an offset to Stream.Position)
 end;
 
 
 procedure TfrClickerWinInterp.vstComponentsSaveTree(Sender: TBaseVirtualTree;
   Stream: TStream);
+var
+  DataStr: string;
+  Len, {%H-}TreeVersion: LongInt;
 begin
-  //MessageBox(Handle, 'TreeSave', PChar(Application.Title), MB_ICONERROR);
+  DataStr := CTreeHeader;
+  Len := Length(DataStr);
+  Stream.Write(Len, 4);
+  Stream.Write(DataStr[1], Len);
+
+  TreeVersion := 2; //current version
+  Stream.Write(TreeVersion, 4);
 end;
 
 
@@ -1060,7 +1133,7 @@ begin
   vstComponents.TabOrder := 1;
   vstComponents.TreeOptions.AutoOptions := [toAutoDropExpand, {toAutoScrollOnExpand,} toAutoTristateTracking, toAutoDeleteMovedNodes, toDisableAutoscrollOnFocus, toDisableAutoscrollOnEdit];
   vstComponents.TreeOptions.MiscOptions := [toAcceptOLEDrop, toEditable, toFullRepaintOnResize, toInitOnSave, {toToggleOnDblClick,} toWheelPanning, toEditOnClick];
-  vstComponents.TreeOptions.SelectionOptions := [toFullRowSelect];
+  vstComponents.TreeOptions.SelectionOptions := [toFullRowSelect, toMultiSelect];
   vstComponents.OnClick := @vstComponentsClick;
   vstComponents.OnDblClick := @vstComponentsDblClick;
   vstComponents.OnEdited := @vstComponentsEdited;
@@ -1072,6 +1145,7 @@ begin
   vstComponents.OnLoadTree := @vstComponentsLoadTree;
   vstComponents.OnSaveNode := @vstComponentsSaveNode;
   vstComponents.OnSaveTree := @vstComponentsSaveTree;
+  vstComponents.OnKeyDown := @vstComponentsKeyDown;
 
   NewColum := vstComponents.Header.Columns.Add;
   NewColum.MinWidth := 150;
@@ -1092,62 +1166,80 @@ begin
   NewColum.Text := 'Text';
 
   NewColum := vstComponents.Header.Columns.Add;
-  NewColum.MinWidth := 100;
+  NewColum.MinWidth := 150;
   NewColum.Position := 3;
+  NewColum.Width := 150;
+  NewColum.Text := 'CG Class';
+
+  NewColum := vstComponents.Header.Columns.Add;
+  NewColum.MinWidth := 100;
+  NewColum.Position := 4;
   NewColum.Width := 100;
   NewColum.Text := 'Assigned Color';
 
   NewColum := vstComponents.Header.Columns.Add;
   NewColum.MinWidth := 50;
-  NewColum.Position := 4;
+  NewColum.Position := 5;
   NewColum.Width := 50;
   NewColum.Text := 'Left';
 
   NewColum := vstComponents.Header.Columns.Add;
   NewColum.MinWidth := 50;
-  NewColum.Position := 5;
+  NewColum.Position := 6;
   NewColum.Width := 50;
   NewColum.Text := 'Top';
 
   NewColum := vstComponents.Header.Columns.Add;
   NewColum.MinWidth := 50;
-  NewColum.Position := 6;
+  NewColum.Position := 7;
   NewColum.Width := 50;
   NewColum.Text := 'Right';
 
   NewColum := vstComponents.Header.Columns.Add;
   NewColum.MinWidth := 70;
-  NewColum.Position := 7;
+  NewColum.Position := 8;
   NewColum.Width := 70;
   NewColum.Text := 'Bottom';
 
   NewColum := vstComponents.Header.Columns.Add;
+  NewColum.MinWidth := 50;
+  NewColum.Position := 9;
+  NewColum.Width := 50;
+  NewColum.Text := 'Width';
+
+  NewColum := vstComponents.Header.Columns.Add;
   NewColum.MinWidth := 70;
-  NewColum.Position := 8;
+  NewColum.Position := 10;
+  NewColum.Width := 70;
+  NewColum.Text := 'Height';
+
+  NewColum := vstComponents.Header.Columns.Add;
+  NewColum.MinWidth := 70;
+  NewColum.Position := 11;
   NewColum.Width := 70;
   NewColum.Text := 'Local Left';
 
   NewColum := vstComponents.Header.Columns.Add;
   NewColum.MinWidth := 70;
-  NewColum.Position := 9;
+  NewColum.Position := 12;
   NewColum.Width := 70;
   NewColum.Text := 'Local Top';
 
   NewColum := vstComponents.Header.Columns.Add;
   NewColum.MinWidth := 70;
-  NewColum.Position := 10;
+  NewColum.Position := 13;
   NewColum.Width := 170;
   NewColum.Text := 'Local Left from parent';
 
   NewColum := vstComponents.Header.Columns.Add;
   NewColum.MinWidth := 70;
-  NewColum.Position := 11;
+  NewColum.Position := 14;
   NewColum.Width := 170;
   NewColum.Text := 'Local Top from parent';
 
   NewColum := vstComponents.Header.Columns.Add;
   NewColum.MinWidth := 99;
-  NewColum.Position := 12;
+  NewColum.Position := 15;
   NewColum.Width := 99;
   NewColum.Text := 'Manually Added';
 
@@ -1183,6 +1275,7 @@ begin
   vstAvoidedZones.OnNewText := @vstAvoidedZonesNewText;
   vstAvoidedZones.OnMouseUp := @vstAvoidedZonesMouseUp;
   vstAvoidedZones.OnGetText := @vstAvoidedZonesGetText;
+  vstAvoidedZones.OnKeyDown := @vstAvoidedZonesKeyDown;
 
   NewColum := vstAvoidedZones.Header.Columns.Add;
   NewColum.MinWidth := 50;
@@ -1735,7 +1828,10 @@ begin
   HandleIndex := GetIndexOfColoredHandleByHandle(imgHandleColors.Canvas.Pixels[X, Y]);
 
   if HandleIndex > -1 then
+  begin
+    vstComponents.ClearSelection;
     SelectTreeNodeByHandle(FColoredHandles[HandleIndex].Handle);
+  end;
 end;
 
 
@@ -2189,6 +2285,8 @@ begin
       Application.Minimize;
     end;
 
+  FRecordWithEdgeExtending := chkRecordWithEdgeExtending.Checked;
+
   MouseCursorToScreenshotDelay := StrToIntDef(lbeMouseCursorPosToScreenshotDelay.Text, 1);
   MouseCursorToScreenshotDelay := Max(0, Min(MouseCursorToScreenshotDelay, 1000));
 
@@ -2250,6 +2348,8 @@ begin
       end;
 
       prbRecordingWithMouseSwipe.Max := h - 1;
+
+      //imgScannedWindowWithAvoidedZones.Canvas.Pen.Color := clRed;  ////////////////////////dbg
 
       repeat
         Inc(y, Step);
@@ -2319,6 +2419,9 @@ begin
 
                 DiffRects[n].MouseXOffset := x;
                 DiffRects[n].MouseYOffset := y;
+
+                //imgScannedWindowWithAvoidedZones.Canvas.Line(x - 2, y, x + 3, y);  //dbg
+                //imgScannedWindowWithAvoidedZones.Canvas.Line(x, y - 2, x, y + 3);  //dbg
               end
               else
               begin  //extend the current rectangle
@@ -2688,7 +2791,7 @@ end;
 
 procedure TfrClickerWinInterp.MenuItem_DeleteSubComponentClick(Sender: TObject);
 var
-  Node: PVirtualNode;
+  Node, PrevNode: PVirtualNode;
 begin
   Node := vstComponents.GetFirstSelected;
 
@@ -2698,10 +2801,19 @@ begin
     Exit;
   end;
 
-  if MessageBox(Handle, 'Are you sure you want to delete the selected component (and its subcomponents)?', PChar(Caption), MB_ICONQUESTION + MB_YESNO) = IDNO then
+  if MessageBox(Handle, 'Are you sure you want to delete the selected component(s) (and its/their subcomponents)?', PChar(Caption), MB_ICONQUESTION + MB_YESNO) = IDNO then
     Exit;
 
-  vstComponents.DeleteNode(Node);
+  vstComponents.RootNode^.PrevSibling := nil; //make sure the loop stops
+  Node := vstComponents.GetLast;
+  repeat
+    PrevNode := vstComponents.GetPrevious(Node);
+
+    if vstComponents.Selected[Node] then
+      vstComponents.DeleteNode(Node);
+
+    Node := PrevNode;
+  until Node = nil;
 end;
 
 
@@ -3392,33 +3504,43 @@ var
   LocX, LocY: Integer;
   CompWidth, CompHeight: Integer;
 begin
+  if toMultiSelect in vstComponents.TreeOptions.SelectionOptions then
+    Node := vstComponents.GetFirstSelected; //override param, since multiple nodes can be selected
+
   if Node = nil then
     Exit;
-
-  NodeData := vstComponents.GetNodeData(Node);
-  if NodeData = nil then
-    Exit;
-
-  LocX := NodeData^.LocalX;
-  LocY := NodeData^.LocalY;
-  CompWidth := NodeData^.CompRec.ComponentRectangle.Width;
-  CompHeight := NodeData^.CompRec.ComponentRectangle.Height;
 
   //reset with screenshot
   imgAvgScreenshotAndGreenComp.Canvas.Draw(0, 0, imgScreenshot.Picture.Bitmap);
 
-  //highlight with green
+  repeat
+    if vstComponents.Selected[Node] then
+    begin
+      NodeData := vstComponents.GetNodeData(Node);
+      if NodeData = nil then
+        Exit;
 
-  {$IFDEF UNIX}  //using the slower method, because of ScanLine
-    for i := LocY to CompHeight + LocY - 1 do
-      for j := LocX to CompWidth + LocX - 1 do
-      begin
-        Color1 := imgAvgScreenshotAndGreenComp.Canvas.Pixels[j, i];
-        imgAvgScreenshotAndGreenComp.Canvas.Pixels[j, i] := AvgTwoTrueColors(Color1, clLime);
-      end;
-  {$ELSE}
-    AvgBitmapWithColor(imgScreenshot.Picture.Bitmap, imgAvgScreenshotAndGreenComp.Picture.Bitmap, clLime, LocX, LocY, CompWidth, CompHeight);
-  {$ENDIF}
+      LocX := NodeData^.LocalX;
+      LocY := NodeData^.LocalY;
+      CompWidth := NodeData^.CompRec.ComponentRectangle.Width;
+      CompHeight := NodeData^.CompRec.ComponentRectangle.Height;
+
+      //highlight with green
+
+      {$IFDEF UNIX}  //using the slower method, because of ScanLine
+        for i := LocY to CompHeight + LocY - 1 do
+          for j := LocX to CompWidth + LocX - 1 do
+          begin
+            Color1 := imgAvgScreenshotAndGreenComp.Canvas.Pixels[j, i];
+            imgAvgScreenshotAndGreenComp.Canvas.Pixels[j, i] := AvgTwoTrueColors(Color1, clLime);
+          end;
+      {$ELSE}
+        AvgBitmapWithColor(imgScreenshot.Picture.Bitmap, imgAvgScreenshotAndGreenComp.Picture.Bitmap, clLime, LocX, LocY, CompWidth, CompHeight);
+      {$ENDIF}
+    end;
+
+    Node := vstComponents.GetNext(Node);
+  until Node = nil;
 end;
 
 
@@ -3867,6 +3989,8 @@ procedure TfrClickerWinInterp.btnLoadTreeClick(Sender: TObject);
 var
   Fnm: string;
   MemStream: TMemoryStream;
+  s: string;
+  TreeHeaderIdx: Integer;
 begin
   if not DoOnOpenDialogExecute('Tree files (*.tree)|*.tree|All files (*.*)|*.*') then
     Exit;
@@ -3878,6 +4002,18 @@ begin
     Fnm := DoOnGetOpenDialogFileName;
     try
       DoOnLoadFileFromStream(Fnm, MemStream);
+
+      SetLength(s, MemStream.Size);
+      Move(MemStream.Memory^, s[1], MemStream.Size);
+      TreeHeaderIdx := Pos(CTreeHeader, s);
+
+      if TreeHeaderIdx > 0 then
+        Move(s[TreeHeaderIdx + Length(CTreeHeader)], FCompTreeVersion, 4)
+      else
+        FCompTreeVersion := 1;
+
+      memCompInfo.Lines.Add('Tree version: ' + IntToStr(FCompTreeVersion));
+
       MemStream.Position := 0;
       vstComponents.LoadFromStream(MemStream);
     except
@@ -4518,16 +4654,18 @@ begin
     0: NodeData^.CompRec.Handle := StrToIntDef(FEditingText, 0);
     1: NodeData^.CompRec.ClassName := FEditingText;
     2: NodeData^.CompRec.Text := FEditingText;
+    3: NodeData^.CGClassName := FEditingText;
 
-    3: NodeData^.AssignedColor := HexToInt(FEditingText);
-    4: NodeData^.CompRec.ComponentRectangle.Left := StrToIntDef(FEditingText, 0);
-    5: NodeData^.CompRec.ComponentRectangle.Top := StrToIntDef(FEditingText, 0);
-    6: NodeData^.CompRec.ComponentRectangle.Right := StrToIntDef(FEditingText, 0);
-    7: NodeData^.CompRec.ComponentRectangle.Bottom := StrToIntDef(FEditingText, 0);
-    8: NodeData^.LocalX := StrToIntDef(FEditingText, 0);
-    9: NodeData^.LocalY := StrToIntDef(FEditingText, 0);
-    10: NodeData^.LocalX_FromParent := StrToIntDef(FEditingText, 0);
-    11: NodeData^.LocalY_FromParent := StrToIntDef(FEditingText, 0);
+    4: NodeData^.AssignedColor := HexToInt(FEditingText);
+    5: NodeData^.CompRec.ComponentRectangle.Left := StrToIntDef(FEditingText, 0);
+    6: NodeData^.CompRec.ComponentRectangle.Top := StrToIntDef(FEditingText, 0);
+    7: NodeData^.CompRec.ComponentRectangle.Right := StrToIntDef(FEditingText, 0);
+    8: NodeData^.CompRec.ComponentRectangle.Bottom := StrToIntDef(FEditingText, 0);
+
+    11: NodeData^.LocalX := StrToIntDef(FEditingText, 0);
+    12: NodeData^.LocalY := StrToIntDef(FEditingText, 0);
+    13: NodeData^.LocalX_FromParent := StrToIntDef(FEditingText, 0);
+    14: NodeData^.LocalY_FromParent := StrToIntDef(FEditingText, 0);
   end;
 end;
 
@@ -4560,14 +4698,14 @@ procedure TfrClickerWinInterp.vstComponentsEditing(Sender: TBaseVirtualTree; Nod
 var
   NodeData: PHighlightedCompRec;
 begin
-  Allowed := Column in [0..2];
+  Allowed := Column in [0..3];
 
   NodeData := vstComponents.GetNodeData(Node);
   if NodeData = nil then
     Exit;
 
   if NodeData^.ManuallyAdded then
-    Allowed := Allowed or (Column in [3..11]);
+    Allowed := Allowed or (Column in [4..8, 11..14]);
 
   FUpdatedVstText := False;
 end;

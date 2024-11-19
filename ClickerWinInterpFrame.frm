@@ -372,15 +372,13 @@ object frClickerWinInterp: TfrClickerWinInterp
           object chkRecordWithEdgeExtending: TCheckBox
             Left = 148
             Height = 19
-            Hint = 'When checked, scanned component edges are "extended" until the screenshot changes.'#13#10'If there are two adjacent components, they may end up being recorded as a single component.'
+            Hint = 'When checked, scanned component edges are "extended" until the screenshot changes.'#13#10'If there are two adjacent components, they may end up being recorded as a single component.'#13#10'When unchecked, many edges and corners might be reported as new subcomponents (false positives).'
             Top = 216
             Width = 165
             Anchors = [akLeft, akBottom]
             Caption = 'Record with edge extending'
-            Checked = True
             ParentShowHint = False
             ShowHint = True
-            State = cbChecked
             TabOrder = 8
             OnChange = chkRecordWithEdgeExtendingChange
           end
@@ -558,6 +556,7 @@ object frClickerWinInterp: TfrClickerWinInterp
         Hint = 'When checked, the screenshot image is updated by pressing/holding the Ctrl-Alt-Shift key combination.'#13#10'Make sure the live screenshot is displayed over the other layers.'#13#10'The live screenshot may be switched back automatically on a new recording.'
         Top = 396
         Width = 191
+        Anchors = [akLeft, akBottom]
         Caption = 'Continuously screenshot by keys'
         ParentShowHint = False
         ShowHint = True
