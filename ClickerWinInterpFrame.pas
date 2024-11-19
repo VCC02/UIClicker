@@ -86,6 +86,7 @@ type
     btnLoadZones: TButton;
     btnSaveZones: TButton;
     btnClearZones: TButton;
+    chkContinuouslyScreenshotByKeys: TCheckBox;
     chkBringTargetToFrontPeriodically: TCheckBox;
     chkHighlightSelectedComponent: TCheckBox;
     chkRecordSelectedAreaOnly: TCheckBox;
@@ -114,6 +115,7 @@ type
     lblGauge: TLabel;
     lblHighlightingLabels: TLabel;
     memCompInfo: TMemo;
+    MenuItem_UpdateTreeValuesFromSelectionToANewComponent: TMenuItem;
     MenuItem_ClearZones: TMenuItem;
     MenuItem_CopyLiveScreenshotToMainScreenshot: TMenuItem;
     MenuItem_HideLiveScreenshot: TMenuItem;
@@ -161,6 +163,7 @@ type
     spdbtnMoveUp: TSpeedButton;
     TabSheet_Components: TTabSheet;
     TabSheet_Settings: TTabSheet;
+    tmrScanByKeys: TTimer;
     tmrEditSettings: TTimer;
     tmrEditComponents: TTimer;
     tmrScan: TTimer;
@@ -175,12 +178,17 @@ type
     procedure btnSaveZonesClick(Sender: TObject);
     procedure btnStartRecClick(Sender: TObject);
     procedure btnStopRecClick(Sender: TObject);
+    procedure chkContinuouslyScreenshotByKeysChange(Sender: TObject);
     procedure chkHighlightSelectedComponentChange(Sender: TObject);
     procedure chkRecordSelectedAreaOnlyChange(Sender: TObject);
     procedure chkRecordWithEdgeExtendingChange(Sender: TObject);
     procedure colboxHighlightingLabelsSelect(Sender: TObject);
     procedure FrameResize(Sender: TObject);
     procedure imgLiveScreenshotMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
+    procedure imgLiveScreenshotMouseMove(Sender: TObject; Shift: TShiftState;
+      X, Y: Integer);
+    procedure imgLiveScreenshotMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure imgScannedWindowMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
@@ -203,13 +211,13 @@ type
     procedure MenuItem_CopySelectedComponentToClipboardClick(Sender: TObject);
     procedure MenuItem_CopySelectionToClipboardClick(Sender: TObject);
     procedure MenuItem_DeleteSubComponentClick(Sender: TObject);
-    procedure MenuItem_HideLiveScreenshotClick(Sender: TObject);
     procedure MenuItem_RecordFromRemoteClick(Sender: TObject);
     procedure MenuItem_RecordMultipleSizesClick(Sender: TObject);
     procedure MenuItem_SaveSelectedComponentToFileClick(Sender: TObject);
     procedure MenuItem_SaveSelectionToFileClick(Sender: TObject);
-    procedure MenuItem_ShowLiveScreenshotClick(Sender: TObject);
     procedure MenuItem_UpdateTreeValuesFromSelectionClick(Sender: TObject);
+    procedure MenuItem_UpdateTreeValuesFromSelectionToANewComponentClick(
+      Sender: TObject);
     procedure PageControlWinInterpChange(Sender: TObject);
     procedure pnlDragMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
@@ -232,6 +240,7 @@ type
     procedure spdbtnMoveUpClick(Sender: TObject);
     procedure tmrEditComponentsTimer(Sender: TObject);
     procedure tmrEditSettingsTimer(Sender: TObject);
+    procedure tmrScanByKeysTimer(Sender: TObject);
     procedure tmrScanTimer(Sender: TObject);
     procedure tmrSpinnerTimer(Sender: TObject);
     procedure vstComponentsClick(Sender: TObject);
@@ -312,6 +321,7 @@ type
     FSplitterMouseDownImagePos: TPoint;
     FRecordSelectedAreaOnly: Boolean;
     FRecordWithEdgeExtending: Boolean;
+    FDraggingForSelection: Boolean;
 
     FOnGetConnectionAddress: TOnGetConnectionAddress;
     FOnGetSelectedCompFromRemoteWin: TOnGetSelectedCompFromRemoteWin;
@@ -355,6 +365,8 @@ type
     procedure FTransparent_BottomMouseUp(Sender: TObject;
       Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 
+    procedure FSelectionsLinesMouseUp(Sender: TObject;
+      Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     ///
 
     procedure FTransparentZone_LeftMouseDown(Sender: TObject;
@@ -427,6 +439,7 @@ type
     procedure AddTreeComponent(AComp: THighlightedCompRec);
     procedure SelectTreeNodeByHandle(HW: THandle);
     procedure SelectTreeNodeByImgPoint(X, Y: Integer);
+    procedure UpdateTreeValuesFromSelection;
 
     function GetIndexOfColoredHandleByHandle(HW: THandle): Integer;
     function GetIndexOfColoredHandleByColor(AColor: TColor): Integer;
@@ -903,7 +916,10 @@ begin
   imgLiveScreenshot.Canvas.Pen.Color := clWhite;
   imgLiveScreenshot.Canvas.Brush.Color := clWhite;
   imgLiveScreenshot.Canvas.Rectangle(0, 0, imgLiveScreenshot.Width - 1, imgLiveScreenshot.Height - 1);
-  imgLiveScreenshot.Show;
+
+  //imgLiveScreenshot.Show;
+  imgLiveScreenshot.Tag := rdgrpLayers.ItemIndex;
+  rdgrpLayers.ItemIndex := 4;  //LiveScreenshot
 
   tmrScan.Enabled := True;
 end;
@@ -935,7 +951,10 @@ begin
     pnlDrag.Color := clYellow;
 
     if vstComponents.RootNodeCount > 0 then
-      imgLiveScreenshot.Hide;  //hidden when recordong
+    begin
+      //imgLiveScreenshot.Hide;  //hidden when recording
+      rdgrpLayers.ItemIndex := imgLiveScreenshot.Tag; //restore to previous layer (which may even be LiveScreenshot)
+    end;
   end;
 end;
 
@@ -1230,6 +1249,10 @@ begin
   FSelectedComponentRightLimitLabel.Transparent := False;
   FSelectedComponentBottomLimitLabel.Transparent := False;
 
+  FSelectedComponentLeftLimitLabel.OnMouseUp := @FSelectionsLinesMouseUp;
+  FSelectedComponentTopLimitLabel.OnMouseUp := @FSelectionsLinesMouseUp;
+  FSelectedComponentRightLimitLabel.OnMouseUp := @FSelectionsLinesMouseUp;
+  FSelectedComponentBottomLimitLabel.OnMouseUp := @FSelectionsLinesMouseUp;
 
   FTransparent_SelectedComponentLeftLimitLabel := TLabel.Create(Self);
   FTransparent_SelectedComponentTopLimitLabel := TLabel.Create(Self);
@@ -1445,6 +1468,7 @@ begin
   FUpdatedVstText := False;
   FRecordSelectedAreaOnly := False;
   FRecordWithEdgeExtending := True;
+  FDraggingForSelection := False;
 
   FSelectedComponentText := 'no selected component';
   FSelectedComponentClassName := 'no selected component';
@@ -1504,9 +1528,74 @@ end;
 
 procedure TfrClickerWinInterp.imgLiveScreenshotMouseDown(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var
+  tp: TPoint;
+  CurrentLabel: TLabel;
+  NewLeft: Integer;
+  NewTop: Integer;
 begin
-  if vstComponents.RootNodeCount > 0 then
-    imgLiveScreenshot.Hide;
+  if ssLeft in Shift then
+  begin
+    FDraggingForSelection := True;
+
+    GetCursorPos(FMouseDownGlobalPos);
+
+    CurrentLabel := FTransparent_SelectedComponentLeftLimitLabel;
+    NewLeft := X - 3;
+    CurrentLabel.Left := Max(0, Min(imgLiveScreenshot.Width - 1, NewLeft));
+    FSelectedComponentLeftLimitLabel.Left := CurrentLabel.Left + 3;
+
+    CurrentLabel := FTransparent_SelectedComponentTopLimitLabel;
+    NewTop := Y - 3;
+    CurrentLabel.Top := Max(0, Min(imgLiveScreenshot.Height - 1, NewTop));
+    FSelectedComponentTopLimitLabel.Top := CurrentLabel.Top + 3;
+
+    FSelectedComponentRightLimitLabel.Left := FSelectedComponentLeftLimitLabel.Left;
+    FSelectedComponentBottomLimitLabel.Top := FSelectedComponentTopLimitLabel.Top;
+  end;
+end;
+
+
+procedure TfrClickerWinInterp.imgLiveScreenshotMouseMove(Sender: TObject;
+  Shift: TShiftState; X, Y: Integer);
+var
+  NewLeft: Integer;
+  NewTop: Integer;
+begin
+  if FDraggingForSelection then
+  begin
+    NewLeft := X - 3;
+    NewLeft := Max(FSelectedComponentLeftLimitLabel.Left + 5, Min(imgLiveScreenshot.Width - 2, NewLeft));
+    FSelectedComponentRightLimitLabel.Left := NewLeft + 3;
+
+    NewTop := Y - 3;
+    NewTop := Max(FSelectedComponentTopLimitLabel.Top + 5, Min(imgLiveScreenshot.Height - 2, NewTop));
+    FSelectedComponentBottomLimitLabel.Top := NewTop + 3;
+  end;
+end;
+
+
+procedure TfrClickerWinInterp.imgLiveScreenshotMouseUp(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+var
+  CurrentLabel: TLabel;
+  NewLeft: Integer;
+  NewTop: Integer;
+begin
+  if FDraggingForSelection then
+  begin
+    FDraggingForSelection := False;
+
+    CurrentLabel := FTransparent_SelectedComponentRightLimitLabel;
+    NewLeft := X - 3;
+    CurrentLabel.Left := Max(FTransparent_SelectedComponentLeftLimitLabel.Left + 8, Min(imgLiveScreenshot.Width - 2, NewLeft));
+    FSelectedComponentRightLimitLabel.Left := CurrentLabel.Left + 3;
+
+    CurrentLabel := FTransparent_SelectedComponentBottomLimitLabel;
+    NewTop := Y - 3;
+    CurrentLabel.Top := Max(FTransparent_SelectedComponentTopLimitLabel.Top + 8, Min(imgLiveScreenshot.Height - 2, NewTop));
+    FSelectedComponentBottomLimitLabel.Top := CurrentLabel.Top + 3;
+  end;
 end;
 
 
@@ -2804,20 +2893,7 @@ begin
 end;
 
 
-procedure TfrClickerWinInterp.MenuItem_ShowLiveScreenshotClick(Sender: TObject);
-begin
-  imgLiveScreenshot.Show;
-end;
-
-
-procedure TfrClickerWinInterp.MenuItem_HideLiveScreenshotClick(Sender: TObject);
-begin
-  imgLiveScreenshot.Hide;
-end;
-
-
-procedure TfrClickerWinInterp.MenuItem_UpdateTreeValuesFromSelectionClick(
-  Sender: TObject);
+procedure TfrClickerWinInterp.UpdateTreeValuesFromSelection;
 var
   Node, NextSibling: PVirtualNode;
   NodeData: PHighlightedCompRec;
@@ -2874,6 +2950,53 @@ begin
       Inc(NodeData^.CompRec.ComponentRectangle.Bottom, DiffY);
     end;
   until False;
+end;
+
+
+procedure TfrClickerWinInterp.MenuItem_UpdateTreeValuesFromSelectionClick(
+  Sender: TObject);
+begin
+  UpdateTreeValuesFromSelection;
+end;
+
+
+procedure TfrClickerWinInterp.MenuItem_UpdateTreeValuesFromSelectionToANewComponentClick
+  (Sender: TObject);
+var
+  Node: PVirtualNode;
+  CompData: PHighlightedCompRec;
+begin
+  if vstComponents.RootNodeCount = 0 then
+  begin
+    Node := vstComponents.InsertNode(vstComponents.RootNode, amInsertAfter);
+    vstComponents.Selected[Node] := True;
+  end;
+
+  Node := vstComponents.GetFirstSelected;
+  if Node = nil then
+  begin
+    Node := vstComponents.GetFirst;
+    vstComponents.Selected[Node] := True;
+  end;
+
+  Node := vstComponents.InsertNode(Node, amAddChildLast);
+
+  CompData := vstComponents.GetNodeData(Node);
+  if CompData = nil then
+  begin
+    MessageBox(Handle, 'Can''t get component info.', PChar(Caption), MB_ICONERROR);
+    Exit;
+  end;
+
+  CompData^.AssignedColor := clBlack; //maybe a new color should be assigned
+  CompData^.ManuallyAdded := True; //at least, use to allow editing
+  CompData^.CompRec.ClassName := 'NewClass';
+  CompData^.CompRec.Text := 'NewText';
+
+  vstComponents.Selected[Node] := True;
+  vstComponents.Expanded[Node^.Parent] := True;
+
+  UpdateTreeValuesFromSelection;
 end;
 
 
@@ -3533,7 +3656,6 @@ begin
 
   prbRecording.Position := 0;
   vstComponents.Repaint;
-  imgLiveScreenshot.Hide;
 end;
 
 
@@ -3783,6 +3905,7 @@ procedure TfrClickerWinInterp.DrawAvoidedZones;
       1: imgScannedWindowWithAvoidedZones.Picture.Assign(imgScannedWindowWithText.Picture.Bitmap);
       2: imgScannedWindowWithAvoidedZones.Picture.Assign(imgAvgScreenshotAndGreenComp.Picture.Bitmap); //GenerateContent_AvgScreenshotAndGreenComp should already be called
       3: imgScannedWindowWithAvoidedZones.Picture.Assign(imgAvgScreenshotAndAssignedComp.Picture.Bitmap);
+      4: imgScannedWindowWithAvoidedZones.Picture.Assign(imgLiveScreenshot.Picture.Bitmap);
       else
       begin
         imgScannedWindowWithAvoidedZones.Canvas.Brush.Color := clWhite;
@@ -4143,6 +4266,13 @@ begin
 end;
 
 
+procedure TfrClickerWinInterp.chkContinuouslyScreenshotByKeysChange(
+  Sender: TObject);
+begin
+  tmrScanByKeys.Enabled := True;
+end;
+
+
 procedure TfrClickerWinInterp.chkHighlightSelectedComponentChange(Sender: TObject);
 begin
   FSelectedComponentLeftLimitLabel.Visible := chkHighlightSelectedComponent.Checked;
@@ -4212,6 +4342,7 @@ begin
   imgScannedWindowWithText.Visible := False;
   imgAvgScreenshotAndGreenComp.Visible := False;
   imgAvgScreenshotAndAssignedComp.Visible := False;
+  imgLiveScreenshot.Visible := False;
 
   Node := vstComponents.GetFirstSelected;
   if Node = nil then
@@ -4234,7 +4365,8 @@ begin
 
     3: imgAvgScreenshotAndAssignedComp.Visible := True;
 
-    //imgScannedWindowWithAvoidedZones ???
+    4: imgLiveScreenshot.Visible := True;
+
     else
   end;
 
@@ -4326,6 +4458,13 @@ begin
     Exit;
 
   vstAvoidedZones.EditNode(FMouseUpHitInfo_Settings.HitNode, FMouseUpHitInfo_Settings.HitColumn);
+end;
+
+
+procedure TfrClickerWinInterp.tmrScanByKeysTimer(Sender: TObject);
+begin
+  if (GetAsyncKeyState(VK_CONTROL) < 0) and (GetAsyncKeyState(VK_SHIFT) < 0) and (GetAsyncKeyState(VK_MENU) < 0) then
+    ScanTargetControl;
 end;
 
 
@@ -4532,6 +4671,7 @@ procedure TfrClickerWinInterp.FTransparent_LeftMouseUp(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
   FSelectionHold := False;
+  FDraggingForSelection := False;
 end;
 
 
@@ -4579,6 +4719,7 @@ procedure TfrClickerWinInterp.FTransparent_RightMouseUp(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
   FSelectionHold := False;
+  FDraggingForSelection := False;
 end;
 
 
@@ -4626,6 +4767,7 @@ procedure TfrClickerWinInterp.FTransparent_TopMouseUp(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
   FSelectionHold := False;
+  FDraggingForSelection := False;
 end;
 
 
@@ -4673,8 +4815,16 @@ procedure TfrClickerWinInterp.FTransparent_BottomMouseUp(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
   FSelectionHold := False;
+  FDraggingForSelection := False;
 end;
 
+
+procedure TfrClickerWinInterp.FSelectionsLinesMouseUp(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  FSelectionHold := False;
+  FDraggingForSelection := False;
+end;
 
 ///
 

@@ -98,6 +98,7 @@ object frClickerWinInterp: TfrClickerWinInterp
       object rdgrpLayers: TRadioGroup
         Left = 0
         Height = 104
+        Hint = 'The live screenshot allows selecting an area by dragging.'#13#10'All the others select a component by clicking.'#13#10'Also, when the active page is Settings, the selection targets avoided zones.'
         Top = 288
         Width = 249
         Anchors = [akLeft, akBottom]
@@ -118,8 +119,11 @@ object frClickerWinInterp: TfrClickerWinInterp
           'Component rectangles'
           'Avg(Screenshot, Green Comp Rect)'
           'Avg(Screenshot, Assigned Comp Rect)'
+          'Live screenshot'
         )
         ParentBackground = False
+        ParentShowHint = False
+        ShowHint = True
         TabOrder = 5
         OnClick = rdgrpLayersClick
       end
@@ -237,9 +241,9 @@ object frClickerWinInterp: TfrClickerWinInterp
         Height = 288
         Top = 0
         Width = 457
-        ActivePage = TabSheet_Settings
+        ActivePage = TabSheet_Components
         Anchors = [akTop, akLeft, akRight, akBottom]
-        TabIndex = 1
+        TabIndex = 0
         TabOrder = 10
         OnChange = PageControlWinInterpChange
         object TabSheet_Components: TTabSheet
@@ -548,6 +552,18 @@ object frClickerWinInterp: TfrClickerWinInterp
         ShowHint = True
         Visible = False
       end
+      object chkContinuouslyScreenshotByKeys: TCheckBox
+        Left = 273
+        Height = 19
+        Hint = 'When checked, the screenshot image is updated by pressing/holding the Ctrl-Alt-Shift key combination.'#13#10'Make sure the live screenshot is displayed over the other layers.'#13#10'The live screenshot may be switched back automatically on a new recording.'
+        Top = 396
+        Width = 191
+        Caption = 'Continuously screenshot by keys'
+        ParentShowHint = False
+        ShowHint = True
+        TabOrder = 11
+        OnChange = chkContinuouslyScreenshotByKeysChange
+      end
     end
     object pnlDrag: TPanel
       Left = 4
@@ -630,14 +646,16 @@ object frClickerWinInterp: TfrClickerWinInterp
       object imgLiveScreenshot: TImage
         Left = 113
         Height = 121
-        Hint = 'Live screenshot'
+        Hint = 'Live screenshot'#13#10'The live screenshot allows selecting an area by dragging.'#13#10'Right-click and select "Update tree values from selection", to update the tree with the new selection values.'
         Top = 113
         Width = 121
         ParentShowHint = False
+        PopupMenu = pmScreenshot
         ShowHint = True
         Visible = False
         OnMouseDown = imgLiveScreenshotMouseDown
-        OnMouseMove = imgScannedWindowMouseMove
+        OnMouseMove = imgLiveScreenshotMouseMove
+        OnMouseUp = imgLiveScreenshotMouseUp
       end
       object imgHandleColors: TImage
         Left = 144
@@ -716,6 +734,10 @@ object frClickerWinInterp: TfrClickerWinInterp
       Caption = 'Update tree values from selection'
       OnClick = MenuItem_UpdateTreeValuesFromSelectionClick
     end
+    object MenuItem_UpdateTreeValuesFromSelectionToANewComponent: TMenuItem
+      Caption = 'Update tree values from selection to a new component'
+      OnClick = MenuItem_UpdateTreeValuesFromSelectionToANewComponentClick
+    end
     object Separator6: TMenuItem
       Caption = '-'
     end
@@ -728,11 +750,9 @@ object frClickerWinInterp: TfrClickerWinInterp
     end
     object MenuItem_ShowLiveScreenshot: TMenuItem
       Caption = 'Show live screenshot'
-      OnClick = MenuItem_ShowLiveScreenshotClick
     end
     object MenuItem_HideLiveScreenshot: TMenuItem
       Caption = 'Hide live screenshot'
-      OnClick = MenuItem_HideLiveScreenshotClick
     end
     object MenuItem_CopyLiveScreenshotToMainScreenshot: TMenuItem
       Caption = 'Copy live screenshot to main screenshot'
@@ -899,5 +919,12 @@ object frClickerWinInterp: TfrClickerWinInterp
       Caption = 'Clear zones'
       OnClick = MenuItem_ClearZonesClick
     end
+  end
+  object tmrScanByKeys: TTimer
+    Enabled = False
+    Interval = 1
+    OnTimer = tmrScanByKeysTimer
+    Left = 624
+    Top = 413
   end
 end
