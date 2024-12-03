@@ -3346,6 +3346,7 @@ var
   Hw: THandle;
   Flags: DWord;
   X, Y, cx, cy: LongInt;
+  CompRec: TCompRec;
 begin
   Result := False;
   Hw := StrToIntDef(EvaluateReplacements('$Control_Handle$'), 0);
@@ -3393,6 +3394,79 @@ begin
       SendMessage(Hw, WM_CLOSE, 0, 0);
       Result := True;
     end;
+
+    woFitIntoView:
+    begin
+      CompRec := GetWindowClassRec(Hw);                //-8 is the offset used on maximized windows
+      if (CompRec.ComponentRectangle.Left >= -8) and
+         (CompRec.ComponentRectangle.Top >= -8) and
+         (CompRec.ComponentRectangle.Right < Screen.Width + 8) and
+         (CompRec.ComponentRectangle.Bottom < Screen.Height + 8) then
+      begin
+        Result := True;
+        Exit;
+      end;
+
+      Flags := SWP_ASYNCWINDOWPOS or SWP_NOACTIVATE or SWP_NOOWNERZORDER or SWP_NOZORDER;
+      Flags := Flags or SWP_NOSIZE;  //move only
+
+      X := CompRec.ComponentRectangle.Left;   //set default values
+      Y := CompRec.ComponentRectangle.Top;
+      cx := CompRec.ComponentRectangle.Width;
+      cy := CompRec.ComponentRectangle.Height;
+
+      if (CompRec.ComponentRectangle.Left < -8) or (CompRec.ComponentRectangle.Top < -8) then
+      begin
+        if CompRec.ComponentRectangle.Left < -8 then
+          X := 0;
+
+        if CompRec.ComponentRectangle.Top < -8 then
+          Y := 0;
+
+        Result := SetWindowPos(Hw, HWND_TOP, X, Y, cx, cy, Flags);   //after this, left and top edges should be visible
+        if not Result then
+        begin
+          SetActionVarValue('$ExecAction_Err$', SysErrorMessage(GetLastError));
+          Exit;
+        end;
+      end;
+
+      if (CompRec.ComponentRectangle.Right > Screen.Width + 8) or (CompRec.ComponentRectangle.Bottom > Screen.Height + 8) then
+      begin
+        if CompRec.ComponentRectangle.Width < Screen.Width then
+        begin
+          if CompRec.ComponentRectangle.Right > Screen.Width + 8 then
+            X := Screen.Width - CompRec.ComponentRectangle.Width;  //a simple move is enough
+        end
+        else
+          if Flags and SWP_NOSIZE > 0 then
+          begin
+            Flags := Flags xor SWP_NOSIZE; //let it resize
+            X := 0;
+            cx := Screen.Width;
+          end;
+
+        if CompRec.ComponentRectangle.Height < Screen.Height then
+        begin
+          if CompRec.ComponentRectangle.Bottom > Screen.Height + 8 then
+            Y := Screen.Height - CompRec.ComponentRectangle.Height;   //a simple move is enough
+        end
+        else
+          if Flags and SWP_NOSIZE > 0 then
+          begin
+            Flags := Flags xor SWP_NOSIZE; //let it resize
+            Y := 0;
+            cy := Screen.Height;
+          end;
+
+        Result := SetWindowPos(Hw, HWND_TOP, X, Y, cx, cy, Flags);   //after this, right and bottom edges should be visible  (if resizing is allowed)
+        if not Result then
+        begin
+          SetActionVarValue('$ExecAction_Err$', SysErrorMessage(GetLastError));
+          Exit;
+        end;
+      end;   //Right or Bottom are outside of visible area
+    end; //woFitIntoView
 
     else
     begin

@@ -47,8 +47,8 @@ type
 
   TClkSetTextControlType = (stEditBox, stComboBox, stKeystrokes);
   TSearchForControlMode = (sfcmGenGrid, sfcmEnumWindows, sfcmFindWindow);
-  TWindowOperation = (woBringToFront, woMoveResize, woClose);
-                      //SetForegroundWindow, SetWindowPos, WM_CLOSE
+  TWindowOperation = (woBringToFront, woMoveResize, woClose, woFitIntoView);
+                      //SetForegroundWindow, SetWindowPos, WM_CLOSE, SetWindowPos
 
   TActionDebuggingStatus = (adsNone, adsPrev, adsCurrent, adsNext);
   TActionStatus = (asNotStarted, asFailed, asSuccessful, asInProgress, asAllowedFailed);
@@ -549,7 +549,7 @@ const
   CImageSourceStr: array[TImageSource] of string = ('isScreenshot', 'isFile');
   CImageSourceFileNameLocationStr: array[TImageSourceFileNameLocation] of string = ('isflDisk', 'isflMem');
   CClkSetTextControlTypeStr: array[TClkSetTextControlType] of string = ('stEditBox', 'stComboBox', 'stKeystrokes');
-  CWindowOperationStr: array[TWindowOperation] of string = ('woBringToFront', 'woMoveResize', 'woClose');
+  CWindowOperationStr: array[TWindowOperation] of string = ('woBringToFront', 'woMoveResize', 'woClose', 'woFitIntoView');
   CSearchForControlModeStr: array[TSearchForControlMode] of string = ('sfcmGenGrid', 'sfcmEnumWindows', 'sfcmFindWindow');
   CFontQualityStr: array[TFontQuality] of string = ('fqDefault', 'fqDraft', 'fqProof', 'fqNonAntialiased', 'fqAntialiased', 'fqCleartype', 'fqCleartypeNatural');
   CLoopDirectionStr: array[TLoopDirection] of string = ('ldInc', 'ldDec', 'ldAuto');
