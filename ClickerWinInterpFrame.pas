@@ -49,12 +49,13 @@ type
     Ctrl: TWinControl; //used by drawing board, to sync components  (this is the mount panel)
     ParentCtrl: TWinControl; //used by drawing board, to sync components  (this can be the drawing board or another mount panel)
     CGClassName: string; //code generator class name (e.g. TForm1 or TSpeedButton)
+    CompName: string; //used when identifying the component for avoided zones, code generator or something else. These names might contain the component handles as they were recorded, although users should change these names to something meaningful (e.g. frmMyForm, btnOpen, btnClose).
   end;
 
 
   PAvoidedZoneRec = ^TAvoidedZoneRec;
   TAvoidedZoneRec = record
-    ZRect: TRect;
+    ZRectStr: TRectString;
     ZName: string;
   end;
 
@@ -327,6 +328,8 @@ type
     FRecordWithEdgeExtending: Boolean;
     FDraggingForSelection: Boolean;
 
+    FListOfScannedComponents: TStringList;
+
     FOnGetConnectionAddress: TOnGetConnectionAddress;
     FOnGetSelectedCompFromRemoteWin: TOnGetSelectedCompFromRemoteWin;
     FOnInsertTreeComponent: TOnInsertTreeComponent;
@@ -426,6 +429,12 @@ type
     procedure DoOnSaveFileToStream(AFileName: string; AStream: TMemoryStream);
     function DoOnFileExists(const AFileName: string): Boolean;
 
+    procedure EvaluateScanedComponentsOnChange(Sender: TObject);
+    function EvaluateScanedComponents(s: string): string;
+    procedure ZoneRectStrToRect(var ARectStr: TRectString; var ADestRect: TRect);
+    procedure AddCompInfoToListOfScannedComponents(ANodeData: PHighlightedCompRec);
+    procedure UpdateListOfScanedValues;
+
     procedure CreateRemainingComponents;
     procedure AdjustHighlightingLabelsToScreenshot;
     procedure HighlightComponent(Node: PVirtualNode);
@@ -474,6 +483,7 @@ type
     property HighlightSelectedComponent: Boolean read GetHighlightSelectedComponent write SetHighlightSelectedComponent;
   public
     constructor Create(TheOwner: TComponent); override;
+    destructor Destroy; override;
 
     procedure LoadSettings(AIni: TMemIniFile);
     procedure SaveSettings(AIni: TMemIniFile);
@@ -763,11 +773,17 @@ begin
   end;
 
   case Column of
-    0: CellText := IntToStr(NodeData^.ZRect.Left);
-    1: CellText := IntToStr(NodeData^.ZRect.Top);
-    2: CellText := IntToStr(NodeData^.ZRect.Right);
-    3: CellText := IntToStr(NodeData^.ZRect.Bottom);
+    0: CellText := NodeData^.ZRectStr.Left;
+    1: CellText := NodeData^.ZRectStr.Top;
+    2: CellText := NodeData^.ZRectStr.Right;
+    3: CellText := NodeData^.ZRectStr.Bottom;
+
     4: CellText := NodeData^.ZName;
+
+    5: CellText := NodeData^.ZRectStr.LeftOffset;
+    6: CellText := NodeData^.ZRectStr.TopOffset;
+    7: CellText := NodeData^.ZRectStr.RightOffset;
+    8: CellText := NodeData^.ZRectStr.BottomOffset;
   end;
 end;
 
@@ -1278,34 +1294,58 @@ begin
   vstAvoidedZones.OnKeyDown := @vstAvoidedZonesKeyDown;
 
   NewColum := vstAvoidedZones.Header.Columns.Add;
-  NewColum.MinWidth := 50;
+  NewColum.MinWidth := 100;
   NewColum.Position := 0;
-  NewColum.Width := 50;
-  NewColum.Text := 'Left';
+  NewColum.Width := 100;
+  NewColum.Text := 'Left offset';
 
   NewColum := vstAvoidedZones.Header.Columns.Add;
-  NewColum.MinWidth := 50;
+  NewColum.MinWidth := 100;
   NewColum.Position := 1;
-  NewColum.Width := 50;
-  NewColum.Text := 'Top';
+  NewColum.Width := 100;
+  NewColum.Text := 'Top offset';
 
   NewColum := vstAvoidedZones.Header.Columns.Add;
-  NewColum.MinWidth := 50;
+  NewColum.MinWidth := 100;
   NewColum.Position := 2;
-  NewColum.Width := 50;
-  NewColum.Text := 'Right';
+  NewColum.Width := 100;
+  NewColum.Text := 'Right offset';
 
   NewColum := vstAvoidedZones.Header.Columns.Add;
-  NewColum.MinWidth := 70;
+  NewColum.MinWidth := 150;
   NewColum.Position := 3;
-  NewColum.Width := 70;
-  NewColum.Text := 'Bottom';
+  NewColum.Width := 150;
+  NewColum.Text := 'Bottom offset';
 
   NewColum := vstAvoidedZones.Header.Columns.Add;
   NewColum.MinWidth := 100;
   NewColum.Position := 4;
   NewColum.Width := 150;
   NewColum.Text := 'Zone name/note';
+
+  NewColum := vstAvoidedZones.Header.Columns.Add;
+  NewColum.MinWidth := 50;
+  NewColum.Position := 5;
+  NewColum.Width := 50;
+  NewColum.Text := 'Left';
+
+  NewColum := vstAvoidedZones.Header.Columns.Add;
+  NewColum.MinWidth := 50;
+  NewColum.Position := 6;
+  NewColum.Width := 50;
+  NewColum.Text := 'Top';
+
+  NewColum := vstAvoidedZones.Header.Columns.Add;
+  NewColum.MinWidth := 50;
+  NewColum.Position := 7;
+  NewColum.Width := 50;
+  NewColum.Text := 'Right';
+
+  NewColum := vstAvoidedZones.Header.Columns.Add;
+  NewColum.MinWidth := 70;
+  NewColum.Position := 8;
+  NewColum.Width := 70;
+  NewColum.Text := 'Bottom';
 
   FSelectedComponentLeftLimitLabel := TLabel.Create(Self);
   FSelectedComponentTopLimitLabel := TLabel.Create(Self);
@@ -1550,6 +1590,9 @@ begin
   FOnGetConnectionAddress := nil;
   FOnGetSelectedCompFromRemoteWin := nil;
 
+  FListOfScannedComponents := TStringList.Create;
+  FListOfScannedComponents.OnChange := @EvaluateScanedComponentsOnChange;
+
   CreateRemainingComponents;
 
   colboxHighlightingLabels.AddItem('clOrange', TObject({%H-}Pointer(CLabel_Orange)));
@@ -1616,6 +1659,12 @@ begin
   imgScannedWindowWithText.Height := 1080;
   imgScannedWindowWithAvoidedZones.Width := 1920;
   imgScannedWindowWithAvoidedZones.Height := 1080;
+end;
+
+
+destructor TfrClickerWinInterp.Destroy;
+begin
+  FreeAndNil(FListOfScannedComponents);
 end;
 
 
@@ -1771,19 +1820,68 @@ begin
 end;
 
 
+procedure TfrClickerWinInterp.EvaluateScanedComponentsOnChange(Sender: TObject);
+begin
+  //nothing here, just have an OnChange handler
+end;
+
+
+function TfrClickerWinInterp.EvaluateScanedComponents(s: string): string;
+begin
+  Result := EvaluateAllReplacements(FListOfScannedComponents, s);
+end;
+
+
+procedure TfrClickerWinInterp.ZoneRectStrToRect(var ARectStr: TRectString; var ADestRect: TRect);
+begin
+  ADestRect.Left := StrToIntDef(EvaluateScanedComponents(ARectStr.Left), 0) + StrToIntDef(ARectStr.LeftOffset, 0);
+  ADestRect.Top := StrToIntDef(EvaluateScanedComponents(ARectStr.Top), 0) + StrToIntDef(ARectStr.TopOffset, 0);
+  ADestRect.Left := StrToIntDef(EvaluateScanedComponents(ARectStr.Right), 0) + StrToIntDef(ARectStr.RightOffset, 0);
+  ADestRect.Top := StrToIntDef(EvaluateScanedComponents(ARectStr.Bottom), 0) + StrToIntDef(ARectStr.BottomOffset, 0);
+end;
+
+
+procedure TfrClickerWinInterp.AddCompInfoToListOfScannedComponents(ANodeData: PHighlightedCompRec);
+begin
+  FListOfScannedComponents.Add('$' + ANodeData^.CompName + '_Left$=' + IntToStr(ANodeData^.LocalX_FromParent));
+  FListOfScannedComponents.Add('$' + ANodeData^.CompName + '_Top$=' + IntToStr(ANodeData^.LocalY_FromParent));
+  FListOfScannedComponents.Add('$' + ANodeData^.CompName + '_Right$=' + IntToStr(ANodeData^.LocalX_FromParent + ANodeData^.CompRec.ComponentRectangle.Width));
+  FListOfScannedComponents.Add('$' + ANodeData^.CompName + '_Bottom$=' + IntToStr(ANodeData^.LocalY_FromParent + ANodeData^.CompRec.ComponentRectangle.Height));
+end;
+
+
+procedure TfrClickerWinInterp.UpdateListOfScanedValues;
+var
+  Node: PVirtualNode;
+  NodeData: PHighlightedCompRec;
+begin
+  FListOfScannedComponents.Clear;
+
+  Node := vstComponents.GetFirst;
+  repeat
+    NodeData := vstComponents.GetNodeData(Node);
+    AddCompInfoToListOfScannedComponents(NodeData);
+
+    Node := vstComponents.GetNext(Node);
+  until Node = nil;
+end;
+
+
 procedure TfrClickerWinInterp.HighlightZone(Node: PVirtualNode);
 var
   NodeData: PAvoidedZoneRec;
+  ZRect: TRect;
 begin
   if Node = nil then
     Exit;
 
   NodeData := vstAvoidedZones.GetNodeData(Node);
 
-  FSelectedZoneLeftLimitLabel.Left := NodeData^.ZRect.Left;
-  FSelectedZoneTopLimitLabel.Top := NodeData^.ZRect.Top;
-  FSelectedZoneRightLimitLabel.Left := NodeData^.ZRect.Right;
-  FSelectedZoneBottomLimitLabel.Top := NodeData^.ZRect.Bottom;
+  ZoneRectStrToRect(NodeData^.ZRectStr, ZRect);
+  FSelectedZoneLeftLimitLabel.Left := ZRect.Left;
+  FSelectedZoneTopLimitLabel.Top := ZRect.Top;
+  FSelectedZoneRightLimitLabel.Left := ZRect.Right;
+  FSelectedZoneBottomLimitLabel.Top := ZRect.Bottom;
 
   FTransparent_SelectedZoneLeftLimitLabel.Left := FSelectedZoneLeftLimitLabel.Left - 3;
   FTransparent_SelectedZoneTopLimitLabel.Top := FSelectedZoneTopLimitLabel.Top - 3;
@@ -1875,6 +1973,7 @@ procedure TfrClickerWinInterp.imgScannedWindowWithAvoidedZonesMouseDown(
 var
   Node: PVirtualNode;
   NodeData: PAvoidedZoneRec;
+  ZRect: TRect;
 begin
   Node := vstAvoidedZones.GetFirst;
   if Node = nil then
@@ -1883,14 +1982,21 @@ begin
   repeat
     NodeData := vstAvoidedZones.GetNodeData(Node);
     if NodeData <> nil then
-      if (X >= NodeData^.ZRect.Left) and (X <= NodeData^.ZRect.Right) and
-         (Y >= NodeData^.ZRect.Top) and (Y <= NodeData^.ZRect.Bottom) then
+    begin
+      ZRect.Left := StrToIntDef(EvaluateScanedComponents(NodeData^.ZRectStr.Left), 0) + StrToIntDef(NodeData^.ZRectStr.LeftOffset, 0);
+      ZRect.Top := StrToIntDef(EvaluateScanedComponents(NodeData^.ZRectStr.Top), 0) + StrToIntDef(NodeData^.ZRectStr.TopOffset, 0);
+      ZRect.Left := StrToIntDef(EvaluateScanedComponents(NodeData^.ZRectStr.Right), 0) + StrToIntDef(NodeData^.ZRectStr.RightOffset, 0);
+      ZRect.Top := StrToIntDef(EvaluateScanedComponents(NodeData^.ZRectStr.Bottom), 0) + StrToIntDef(NodeData^.ZRectStr.BottomOffset, 0);
+
+      if (X >= ZRect.Left) and (X <= ZRect.Right) and
+         (Y >= ZRect.Top) and (Y <= ZRect.Bottom) then
       begin
         vstAvoidedZones.Selected[Node] := True;
         HighlightZone(Node);
         DrawAvoidedZones;
         Break;
       end;
+    end;
 
     Node := Node^.NextSibling;
   until Node = nil;
@@ -2115,6 +2221,7 @@ function TfrClickerWinInterp.PointIsInAvoidedZone(X, Y: Integer): Boolean;
 var
   Node: PVirtualNode;
   NodeData: PAvoidedZoneRec;
+  ZRect: TRect;
 begin
   Result := False;
 
@@ -2124,8 +2231,10 @@ begin
 
   repeat
     NodeData := vstAvoidedZones.GetNodeData(Node);
-    if (X >= NodeData^.ZRect.Left) and (X <= NodeData^.ZRect.Right) and
-       (Y >= NodeData^.ZRect.Top) and (Y <= NodeData^.ZRect.Bottom) then
+    ZoneRectStrToRect(NodeData^.ZRectStr, ZRect);
+
+    if (X >= ZRect.Left) and (X <= ZRect.Right) and
+       (Y >= ZRect.Top) and (Y <= ZRect.Bottom) then
     begin
       Result := True;
       Exit;
@@ -2166,6 +2275,7 @@ procedure TfrClickerWinInterp.BuildZonesArray(var AZones: TTRectArr);
 var
   Node: PVirtualNode;
   NodeData: PAvoidedZoneRec;
+  ZRect: TRect;
 begin
   SetLength(AZones, 0);
   Node := vstAvoidedZones.GetFirst;
@@ -2174,8 +2284,10 @@ begin
 
   repeat
     NodeData := vstAvoidedZones.GetNodeData(Node);
+    ZoneRectStrToRect(NodeData^.ZRectStr, ZRect);
+
     SetLength(AZones, Length(AZones) + 1);
-    AZones[Length(AZones) - 1] := NodeData^.ZRect;
+    AZones[Length(AZones) - 1] := ZRect;
 
     Node := Node^.NextSibling;
   until Node = nil;
@@ -2564,6 +2676,7 @@ begin
   memCompInfo.Lines.Add('Recording with mouse swipe duration: ' + IntToStr(Duration) + 'ms   ~= ' + FloatToStr(Duration / 60000) + ' min.');
   lblGauge.Caption := '100%';
   prbRecording.Position := 0;
+  UpdateListOfScanedValues;
 end;
 
 
@@ -2691,6 +2804,7 @@ begin
 
   vstComponents.Selected[Node] := True;
   vstComponents.Expanded[Node^.Parent] := True;
+  AddCompInfoToListOfScannedComponents(CompData);
 end;
 
 
@@ -2814,6 +2928,8 @@ begin
 
     Node := PrevNode;
   until Node = nil;
+
+  UpdateListOfScanedValues;
 end;
 
 
@@ -3360,6 +3476,8 @@ begin
     HighlightedCompRec.ParentCtrl := nil; //init here
     HighlightedCompRec.LocalX_FromParent := ALocalX;  //init here, although these will have to be updated later by AddTreeComponent, when the values are available from parent
     HighlightedCompRec.LocalY_FromParent := ALocalY;  //init here, although these will have to be updated later by AddTreeComponent, when the values are available from parent
+    HighlightedCompRec.CGClassName := '';
+    HighlightedCompRec.CompName := 'Comp' + IntToStr(HW);
 
     try
       AddTreeComponent(HighlightedCompRec);
@@ -3778,6 +3896,7 @@ begin
 
   prbRecording.Position := 0;
   vstComponents.Repaint;
+  UpdateListOfScanedValues;
 end;
 
 
@@ -4054,7 +4173,7 @@ procedure TfrClickerWinInterp.DrawAvoidedZones;
 var
   Node: PVirtualNode;
   NodeData: PAvoidedZoneRec;
-  SelectedZone: TRect;
+  SelectedZone, ZRect: TRect;
 begin
   LoadSelectedImage;
 
@@ -4070,13 +4189,15 @@ begin
     imgScannedWindowWithAvoidedZones.Canvas.Brush.Style := bsBDiagonal;
     imgScannedWindowWithAvoidedZones.Canvas.Pen.Color := colboxHighlightingLabels.Selected;
     imgScannedWindowWithAvoidedZones.Canvas.Brush.Color := colboxHighlightingLabels.Selected;
+
     repeat
       NodeData := vstAvoidedZones.GetNodeData(Node);
       if NodeData <> nil then
       begin
-        imgScannedWindowWithAvoidedZones.Canvas.Rectangle(NodeData^.ZRect);
+        ZoneRectStrToRect(NodeData^.ZRectStr, ZRect);
+        imgScannedWindowWithAvoidedZones.Canvas.Rectangle(ZRect);
         if vstAvoidedZones.Selected[Node] then
-          SelectedZone := NodeData^.ZRect;
+          SelectedZone := ZRect;
       end;
 
       Node := Node^.NextSibling;
@@ -4135,10 +4256,16 @@ begin
           NodeData := vstAvoidedZones.GetNodeData(Node);
 
           Prefix := 'Zone_' + IntToStr(i) + '.';
-          NodeData^.ZRect.Left := Ini.ReadInteger('Zones', Prefix + 'Left', 0);
-          NodeData^.ZRect.Top := Ini.ReadInteger('Zones', Prefix + 'Top', 0);
-          NodeData^.ZRect.Right := Ini.ReadInteger('Zones', Prefix + 'Right', 0);
-          NodeData^.ZRect.Bottom := Ini.ReadInteger('Zones', Prefix + 'Bottom', 0);
+          NodeData^.ZRectStr.Left := Ini.ReadString('Zones', Prefix + 'Left', '0');
+          NodeData^.ZRectStr.Top := Ini.ReadString('Zones', Prefix + 'Top', '0');
+          NodeData^.ZRectStr.Right := Ini.ReadString('Zones', Prefix + 'Right', '0');
+          NodeData^.ZRectStr.Bottom := Ini.ReadString('Zones', Prefix + 'Bottom', '0');
+
+          NodeData^.ZRectStr.LeftOffset := Ini.ReadString('Zones', Prefix + 'LeftOffset', '0');
+          NodeData^.ZRectStr.TopOffset := Ini.ReadString('Zones', Prefix + 'TopOffset', '0');
+          NodeData^.ZRectStr.RightOffset := Ini.ReadString('Zones', Prefix + 'RightOffset', '0');
+          NodeData^.ZRectStr.BottomOffset := Ini.ReadString('Zones', Prefix + 'BottomOffset', '0');
+
           NodeData^.ZName := Ini.ReadString('Zones', Prefix + 'Name', 'Zone');
         end;
       finally
@@ -4151,6 +4278,7 @@ begin
     vstAvoidedZones.EndUpdate;
   end;
 
+  UpdateListOfScanedValues;
   DrawAvoidedZones;
 end;
 
@@ -4183,10 +4311,16 @@ begin
         NodeData := vstAvoidedZones.GetNodeData(Node);
         Prefix := 'Zone_' + IntToStr(Node^.Index) + '.';
 
-        TempList.Add(Prefix + 'Left' + '=' + IntToStr(NodeData^.ZRect.Left));
-        TempList.Add(Prefix + 'Top' + '=' + IntToStr(NodeData^.ZRect.Top));
-        TempList.Add(Prefix + 'Right' + '=' + IntToStr(NodeData^.ZRect.Right));
-        TempList.Add(Prefix + 'Bottom' + '=' + IntToStr(NodeData^.ZRect.Bottom));
+        TempList.Add(Prefix + 'Left' + '=' + NodeData^.ZRectStr.Left);
+        TempList.Add(Prefix + 'Top' + '=' + NodeData^.ZRectStr.Top);
+        TempList.Add(Prefix + 'Right' + '=' + NodeData^.ZRectStr.Right);
+        TempList.Add(Prefix + 'Bottom' + '=' + NodeData^.ZRectStr.Bottom);
+
+        TempList.Add(Prefix + 'LeftOffset' + '=' + NodeData^.ZRectStr.LeftOffset);
+        TempList.Add(Prefix + 'TopOffset' + '=' + NodeData^.ZRectStr.TopOffset);
+        TempList.Add(Prefix + 'RightOffset' + '=' + NodeData^.ZRectStr.RightOffset);
+        TempList.Add(Prefix + 'BottomOffset' + '=' + NodeData^.ZRectStr.BottomOffset);
+
         TempList.Add(Prefix + 'Name' + '=' + NodeData^.ZName);
 
         Node := Node^.NextSibling;
@@ -4216,7 +4350,7 @@ begin
     if NodeData = nil then
       Exit;
 
-    NewZoneRect := NodeData^.ZRect;
+    ZoneRectStrToRect(NodeData^.ZRectStr, NewZoneRect);
   end
   else
   begin
@@ -4231,8 +4365,16 @@ begin
   if NodeData = nil then
     Exit;
 
-  NodeData^.ZRect := NewZoneRect;
   NodeData^.ZName := 'Zone';
+  NodeData^.ZRectStr.Left := ''; //'$<New>Comp_Left$';
+  NodeData^.ZRectStr.Top := ''; //'$<New>Comp_Top$';
+  NodeData^.ZRectStr.Right := ''; //'$<New>Comp_Left$';  //leave it to Left for now
+  NodeData^.ZRectStr.Bottom := ''; //'$<New>Comp_Top$';  //leave it to Top for now
+  NodeData^.ZRectStr.LeftOffset := '0';
+  NodeData^.ZRectStr.TopOffset := '0';
+  NodeData^.ZRectStr.RightOffset := '30';
+  NodeData^.ZRectStr.BottomOffset := '30';
+
   vstAvoidedZones.Selected[Node] := True;
 
   DrawAvoidedZones;
@@ -4685,11 +4827,15 @@ begin
     Exit;
 
   case Column of
-    0: NodeData^.ZRect.Left := StrToIntDef(FEditingText, 0);
-    1: NodeData^.ZRect.Top := StrToIntDef(FEditingText, 0);
-    2: NodeData^.ZRect.Right := StrToIntDef(FEditingText, 0);
-    3: NodeData^.ZRect.Bottom := StrToIntDef(FEditingText, 0);
+    0: NodeData^.ZRectStr.Left := FEditingText;
+    1: NodeData^.ZRectStr.Top := FEditingText;
+    2: NodeData^.ZRectStr.Right := FEditingText;
+    3: NodeData^.ZRectStr.Bottom := FEditingText;
     4: NodeData^.ZName := FEditingText;
+    5: NodeData^.ZRectStr.LeftOffset := FEditingText;
+    6: NodeData^.ZRectStr.TopOffset := FEditingText;
+    7: NodeData^.ZRectStr.RightOffset := FEditingText;
+    8: NodeData^.ZRectStr.BottomOffset := FEditingText
   end;
 end;
 
@@ -5020,7 +5166,7 @@ begin
     Exit;
 
   NodeData := vstAvoidedZones.GetNodeData(Node);
-  NodeData^.ZRect.Left := FSelectedZoneLeftLimitLabel.Left;
+  NodeData^.ZRectStr.LeftOffset := IntToStr(FSelectedZoneLeftLimitLabel.Left);
   vstAvoidedZones.RepaintNode(Node);
   DrawAvoidedZones;
 end;
@@ -5079,7 +5225,7 @@ begin
     Exit;
 
   NodeData := vstAvoidedZones.GetNodeData(Node);
-  NodeData^.ZRect.Right := FSelectedZoneRightLimitLabel.Left;
+  NodeData^.ZRectStr.RightOffset := IntToStr(FSelectedZoneRightLimitLabel.Left);
   vstAvoidedZones.RepaintNode(Node);
   DrawAvoidedZones;
 end;
@@ -5138,7 +5284,7 @@ begin
     Exit;
 
   NodeData := vstAvoidedZones.GetNodeData(Node);
-  NodeData^.ZRect.Top := FSelectedZoneTopLimitLabel.Top;
+  NodeData^.ZRectStr.TopOffset := IntToStr(FSelectedZoneTopLimitLabel.Top);
   vstAvoidedZones.RepaintNode(Node);
   DrawAvoidedZones;
 end;
@@ -5197,7 +5343,7 @@ begin
     Exit;
 
   NodeData := vstAvoidedZones.GetNodeData(Node);
-  NodeData^.ZRect.Bottom := FSelectedZoneBottomLimitLabel.Top;
+  NodeData^.ZRectStr.BottomOffset := IntToStr(FSelectedZoneBottomLimitLabel.Top);
   vstAvoidedZones.RepaintNode(Node);
   DrawAvoidedZones;
 end;
