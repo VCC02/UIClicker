@@ -111,6 +111,7 @@ type
 
     FOnSaveFileToExtRenderingInMemFS: TOnSaveFileToExtRenderingInMemFS;
     FOnGenerateAndSaveTreeWithWinInterp: TOnGenerateAndSaveTreeWithWinInterp;
+    FOnSetWinInterpOption: TOnSetWinInterpOption;
     FOnExecuteActionByContent: TOnExecuteActionByContent;
     FOnLoadTemplateToActions: TOnLoadTemplateToActions;
     FOnSaveCompleteTemplateToFile: TOnSaveCompleteTemplateToFile;
@@ -164,6 +165,7 @@ type
     procedure DoOnSaveFileToExtRenderingInMemFS(AFileName: string; AContent: Pointer; AFileSize: Int64);
     //procedure DoOnRestoreVars(AAllVars: TStringList);
     function DoOnGenerateAndSaveTreeWithWinInterp(AHandle: THandle; ATreeFileName: string; AStep: Integer; AUseMouseSwipe: Boolean): Boolean;
+    function DoOnSetWinInterpOption(AWinInterpOptionName, AWinInterpOptionValue: string): Boolean;
     function DoOnFileExists(const FileName: string): Boolean;
     procedure DoOnSaveTemplateToFile(AStringList: TStringList; const AFileName: string);
     function DoOnExecuteActionByContent(var AAllActions: TClkActionsRecArr; AActionIndex: Integer): Boolean;
@@ -264,6 +266,7 @@ type
 
     property OnSaveFileToExtRenderingInMemFS: TOnSaveFileToExtRenderingInMemFS write FOnSaveFileToExtRenderingInMemFS;
     property OnGenerateAndSaveTreeWithWinInterp: TOnGenerateAndSaveTreeWithWinInterp write FOnGenerateAndSaveTreeWithWinInterp;
+    property OnSetWinInterpOption: TOnSetWinInterpOption write FOnSetWinInterpOption;
     property OnExecuteActionByContent: TOnExecuteActionByContent write FOnExecuteActionByContent;
     property OnLoadTemplateToActions: TOnLoadTemplateToActions write FOnLoadTemplateToActions;
     property OnSaveCompleteTemplateToFile: TOnSaveCompleteTemplateToFile write FOnSaveCompleteTemplateToFile;
@@ -337,6 +340,7 @@ begin
 
   FOnSaveFileToExtRenderingInMemFS := nil;
   FOnGenerateAndSaveTreeWithWinInterp := nil;
+  FOnSetWinInterpOption := nil;
   FOnExecuteActionByContent := nil;
   FOnLoadTemplateToActions := nil;
   FOnSaveCompleteTemplateToFile := nil;
@@ -844,6 +848,15 @@ begin
     raise Exception.Create('OnGenerateAndSaveTreeWithWinInterp not assigned.')
   else
     Result := FOnGenerateAndSaveTreeWithWinInterp(AHandle, ATreeFileName, AStep, AUseMouseSwipe);
+end;
+
+
+function TActionExecution.DoOnSetWinInterpOption(AWinInterpOptionName, AWinInterpOptionValue: string): Boolean;
+begin
+  if not Assigned(FOnSetWinInterpOption) then
+    raise Exception.Create('OnSetWinInterpOption not assigned.')
+  else
+    Result := FOnSetWinInterpOption(AWinInterpOptionName, AWinInterpOptionValue);
 end;
 
 
@@ -3032,6 +3045,28 @@ function TActionExecution.ExecuteSetVarAction(var ASetVarOptions: TClkSetVarOpti
     end;
   end;
 
+
+  procedure GetWinInterpOptionArgsFromArgsStr(AFuncArgs: string; out ASetting: string; out AValue: string);
+  var
+    ListOfFuncArgs: TStringList;
+  begin
+    ASetting := 'None';
+    AValue := '';
+
+    ListOfFuncArgs := TStringList.Create;
+    try
+      ListOfFuncArgs.Text := StringReplace(AFuncArgs, ',', #13#10, [rfReplaceAll]);
+
+      if ListOfFuncArgs.Count > 0 then
+        ASetting := EvaluateReplacements(Trim(ListOfFuncArgs.Strings[0]));
+
+      if ListOfFuncArgs.Count > 1 then
+        AValue := EvaluateReplacements(Trim(ListOfFuncArgs.Strings[1]));
+    finally
+      ListOfFuncArgs.Free;
+    end;
+  end;
+
 var
   TempListOfSetVarNames: TStringList;
   TempListOfSetVarValues: TStringList;
@@ -3046,7 +3081,7 @@ var
   HistItemCount: Integer;
   tk: QWord;
   TemplateDir: string;
-  TreePath: string;
+  TreePath, WinInterpOptionName, WinInterpOptionValue: string;
   TreeStep: Integer;
   TreeUseMouseSwipe: Boolean;
 begin
@@ -3311,6 +3346,38 @@ begin
           end;
 
         VarName := ''; //Prevent creating a variable, named $GenerateAndSaveTree(...)$
+      end;
+
+      if (Pos('$SetWinInterpOption(', VarName) = 1) and (VarName[Length(VarName)] = '$') and (VarName[Length(VarName) - 1] = ')') then
+      begin
+        FuncArgs := Copy(VarName, Pos('(', VarName) + 1, MaxInt);
+        FuncArgs := Copy(FuncArgs, 1, Length(FuncArgs) - 2);
+        GetWinInterpOptionArgsFromArgsStr(FuncArgs, WinInterpOptionName, WinInterpOptionValue);
+
+        try
+          if DoOnSetWinInterpOption(WinInterpOptionName, WinInterpOptionValue) then   //use one of the CWinInterpOption_<Name> options from ClickeUtils.pas
+          begin
+            //SetActionVarValue('$Tree$', VarValue);
+            Result := True;
+          end
+          else  //this is not an exception, it's just the result, set to False
+            if ASetVarOptions.FailOnException then
+            begin
+              SetActionVarValue('$ExecAction_Err$', 'Unknown option: "' + WinInterpOptionName + '".');
+              Result := False;
+              Exit;
+            end;
+        except
+          on E: Exception do
+            if ASetVarOptions.FailOnException then
+            begin
+              SetActionVarValue('$ExecAction_Err$', E.Message);
+              Result := False;
+              Exit;
+            end;
+        end;
+
+        VarName := ''; //Prevent creating a variable, named $SetWinInterpOption(...)$
       end;
 
       if (Pos('$Console(', VarName) = 1) and (VarName[Length(VarName)] = '$') and (VarName[Length(VarName) - 1] = ')') then

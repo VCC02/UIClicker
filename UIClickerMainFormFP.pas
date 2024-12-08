@@ -101,6 +101,7 @@ type
     procedure HandleOnSavePrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
     procedure HandleOnGetSelfHandles(AListOfSelfHandles: TStringList);
     function HandleOnGenerateAndSaveTreeWithWinInterp(AHandle: THandle; ATreeFileName: string; AStep: Integer; AUseMouseSwipe: Boolean): Boolean;
+    function HandleOnSetWinInterpOption(AWinInterpOptionName, AWinInterpOptionValue: string): Boolean;
 
     procedure HandleOnLoadFileFromStream(AFileName: string; AStream: TMemoryStream);
     procedure HandleOnSaveFileToStream(AFileName: string; AStream: TMemoryStream);
@@ -181,6 +182,7 @@ begin
   frmClickerActions.OnSavePrimitivesFile := HandleOnSavePrimitivesFile;
   frmClickerActions.OnGetSelfHandles := HandleOnGetSelfHandles;
   frmClickerActions.OnGenerateAndSaveTreeWithWinInterp := HandleOnGenerateAndSaveTreeWithWinInterp;
+  frmClickerActions.OnSetWinInterpOption := HandleOnSetWinInterpOption;
 
   frmClickerRemoteScreen.OnGetConnectionAddress := HandleOnGetConnectionAddress;
 
@@ -652,6 +654,12 @@ begin
     SetLength(ImgHWMatrix, 0);
     TreeContent.Free;
   end;
+end;
+
+
+function TfrmUIClickerMainForm.HandleOnSetWinInterpOption(AWinInterpOptionName, AWinInterpOptionValue: string): Boolean;
+begin
+  Result := frmClickerWinInterp.SetWinInterpOption(AWinInterpOptionName, AWinInterpOptionValue);
 end;
 
 

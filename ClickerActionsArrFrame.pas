@@ -389,6 +389,7 @@ type
     FOnAddFileNameToRecent: TOnAddFileNameToRecent;
     FOnGetListOfRecentFiles: TOnGetListOfRecentFiles;
     FOnGenerateAndSaveTreeWithWinInterp: TOnGenerateAndSaveTreeWithWinInterp;
+    FOnSetWinInterpOption: TOnSetWinInterpOption;
 
     vstActions: TVirtualStringTree;
     FPalette: TfrClickerActionsPalette;
@@ -472,6 +473,7 @@ type
     procedure HandleOnPluginDbgSetBreakpoint(ALineIndex, ASelectedSourceFileIndex: Integer; AEnabled: Boolean);
 
     function HandleOnGenerateAndSaveTreeWithWinInterp(AHandle: THandle; ATreeFileName: string; AStep: Integer; AUseMouseSwipe: Boolean): Boolean;
+    function HandleOnSetWinInterpOption(AWinInterpOptionName, AWinInterpOptionValue: string): Boolean;
 
     function GetInMemFS: TInMemFileSystem;
     procedure SetInMemFS(Value: TInMemFileSystem);
@@ -577,6 +579,7 @@ type
     procedure DoOnAddFileNameToRecent(AFileName: string);
     procedure DoOnGetListOfRecentFiles(AList: TStringList);
     function DoOnGenerateAndSaveTreeWithWinInterp(AHandle: THandle; ATreeFileName: string; AStep: Integer; AUseMouseSwipe: Boolean): Boolean;
+    function DoOnSetWinInterpOption(AWinInterpOptionName, AWinInterpOptionValue: string): Boolean;
 
     function PlayActionByNode(Node: PVirtualNode): Boolean;
     procedure PlaySelected;
@@ -729,6 +732,7 @@ type
     property OnAddFileNameToRecent: TOnAddFileNameToRecent write FOnAddFileNameToRecent;
     property OnGetListOfRecentFiles: TOnGetListOfRecentFiles write FOnGetListOfRecentFiles;
     property OnGenerateAndSaveTreeWithWinInterp: TOnGenerateAndSaveTreeWithWinInterp write FOnGenerateAndSaveTreeWithWinInterp;
+    property OnSetWinInterpOption: TOnSetWinInterpOption write FOnSetWinInterpOption;
   end;
 
 
@@ -887,6 +891,8 @@ begin
     TempFuncDescriptions.Add('$FastReplace_ReturnTo45(<some_string>)$=Replaces all CRLF (ASCII_13 and ASCII_10) occurrences with #4#5. Returns the result.');
     TempFuncDescriptions.Add('$FastReplace_45To87(<some_string>)$=Replaces all #4#5 (ASCII_4 and ASCII_5) occurrences with #8#7 (ASCII_8 and ASCII_7). Returns the result.');
     TempFuncDescriptions.Add('$FastReplace_87To45(<some_string>)$=Replaces all #8#7 (ASCII_8 and ASCII_7) occurrences with #4#5 (ASCII_4 and ASCII_5). Returns the result.');
+    TempFuncDescriptions.Add('$FastReplace_45To68(<some_string>)$=Replaces all #4#5 (ASCII_4 and ASCII_5) occurrences with #6#8 (ASCII_6 and ASCII_8). Returns the result.');
+    TempFuncDescriptions.Add('$FastReplace_68To45(<some_string>)$=Replaces all #6#8 (ASCII_6 and ASCII_8) occurrences with #4#5 (ASCII_4 and ASCII_5). Returns the result.');
     TempFuncDescriptions.Add('$Exit(<ExitCode>)$=Stops current template execution. If the passed ExitCode argument is 0, the template stops with a "Successful" status, otherwise with "Failed". Returns nothing. Sets the $ExitCode$ variable to the passed argument. It can be executed by SetVar action and must be placed in its "Variable" column.');
     TempFuncDescriptions.Add('$CreateDir(<PathToNewDir>)$=Creates a directory (and its parent directories, if required) by the current path.');
     TempFuncDescriptions.Add('$LoadTextFile(<PathToTextFile>)$=Loads a text file (CRLF-separated lines) and returns its content as #4#5 separated strings.');
@@ -918,6 +924,7 @@ begin
     TempFuncDescriptions.Add('$Current_Mouse_hCursor$=Returns the current mouse cursor handle. Some applictions may register their own cursors which will get dynamic handles.');
     TempFuncDescriptions.Add('$CRLF$=Returns a CRLF sequence.');
     TempFuncDescriptions.Add('$#4#5$=Returns a ASCII #4#5 sequence.');
+    TempFuncDescriptions.Add('$#6#8$=Returns a ASCII #6#8 sequence.');
     TempFuncDescriptions.Add('$Now$=Returns current datetime.');
     TempFuncDescriptions.Add('$RenderBmpExternally()$=Sends an http request to a server, for rendering a bitmap, using the supplied list of parameters (from right column of a SetVar action). These parameters are encoded as a "$#4#5$" separated <key>eq<value> strings. Notice the use of "$#4#5$" variable, not its actual value. The required parameters are (without quotes): "' + CExtBmp_SrvAddrPort + '", "' + CExtBmp_Cmd + '", "' + CExtBmp_Filename + '". The optional parameters are (without quotes): "' + CExtBmp_Params + '" and "' + CExtBmp_IncludeFilenameInRequest + '". When provided, "' + CExtBmp_Params + '" are "&"-separated key%3Dvalue pairs. When "' + CExtBmp_IncludeFilenameInRequest + '" is 1, the filename is added to request. The result is placed in $ExternallyRenderedBmpResult$ variable. If successful, the result is set to empty string, otherwise it is set to an error message. The received bitmap is "stored" in an in-mem file system. The function must be called from the left column of SetVar action. Argument example: SrvAddrPort=http://127.0.0.1:53444$#4#5$Cmd=GetGradientImage$#4#5$Filename=I:\TheResult.bmp$#4#5$Params=IncludeTimestamp%3DYes&TextCount%3D1');
     TempFuncDescriptions.Add('$GetActionProperties()$=Sets the $ActionPropertiesResult$ variable to an &-separated list of action properties and their values, from the current template. The action is identified by name, and this name has to be provided in the right column of a SetVar action. If the action is not found by name (which is case sensitive), the result is set to an error message. The function must be called from the left column.');
@@ -930,6 +937,7 @@ begin
     TempFuncDescriptions.Add('$GetWindowLongPtr(<ControlHandle>, <Index>)$=Returns info about a control, specified by its handle and the info index. For details, see MSDN. Examples for index values are -4, for WNDPROC, -6 for HINSTANCE, -8 for HWNDPARENT, -21 for USERDATA, -12 for ID etc.');
     TempFuncDescriptions.Add('$GetWindowProcessId(<ControlHandle>)$=Returns the process ID, which owns the control, specified by the handle. Most of the time, the handle belongs to a window. Any other control from that window should return the same process ID. If the handle is invalid, the function returns 0 and sets the $ExecAction_Err$ variable to "Invalid window handle.".');
     TempFuncDescriptions.Add('$GenerateAndSaveTree(<TreePath>[,<Step>[,<UseMouseSwipe>]])$=Calls the built-in WinInterpreter scan function, identified by $Control_Handle$, to generate the tree of controls. Then, the tree is saved to file (provided by <TreePath>) and also it is accompanied by its screenshots in the same directory. Step, if provided should resolve to an integer, greater than 1, which sets the step in pixels for the scanning accuracy. UseMouseSwipe, if provided and is either 1 or True, will use the "MouseSwipe" scanning algorithm (see WinInterp window), which is slower, but may find subcontrols.');
+    TempFuncDescriptions.Add('$SetWinInterpOption(<WinInterpOptionName>, <WinInterpOptionValue>)$=Sets an option or executes a command on the WinInterp window. Most options are boolean values and they check or uncheck a checkbox on the window. Other options expect a numeric value (e.g. a color index or a radio button index). Available option names (case insensitive): ShowZoom, ContinuouslyScreenshotByKeys, RecordingStep, MouseCursorPosToScreenshotDelay, HighlightSelectedComponent, UseHCursor, FullScreenScanning, RecordSelectedAreaOnly, RecordWithEdgeExtending, MinimizeWhileRecording, BringTargetToFront, BringTargetToFrontPeriodically, HighlightingLabels, SelectedLayer, LoadTree, LoadAvoidedZones, SaveAvoidedZones, NewAvoidedZone, DeleteAvoidedZone.');
     TempFuncDescriptions.Add('$Console([<Value>])$=Prints the evaluated value to log. This function must be called from the left column of a SetVar action and uses, with priority, the value from the right column. If that value is empty, it looks for an argument, like $Console(<argument>])$ and prints that on instead. It returns nothing.');
 
     for i := 0 to FFuncDescriptions.Count - 1 do
@@ -1162,6 +1170,7 @@ begin
   FActionExecution.OnIsAtBreakPoint := HandleOnIsAtBreakPoint;
   FActionExecution.OnSaveFileToExtRenderingInMemFS := HandleOnSaveFileToExtRenderingInMemFS;
   FActionExecution.OnGenerateAndSaveTreeWithWinInterp := HandleOnGenerateAndSaveTreeWithWinInterp;
+  FActionExecution.OnSetWinInterpOption := HandleOnSetWinInterpOption;
   FActionExecution.OnFileExists := HandleOnFileExists;
   FActionExecution.OnSaveTemplateToFile := HandleOnSaveStringListToFile; //HandleOnSaveTemplateToFile;
   FActionExecution.OnExecuteActionByContent := HandleOnExecuteActionByContent;
@@ -1215,6 +1224,7 @@ begin
   FOnAddFileNameToRecent := nil;
   FOnGetListOfRecentFiles := nil;
   FOnGenerateAndSaveTreeWithWinInterp := nil;
+  FOnSetWinInterpOption := nil;
 
   FPalette := nil;
 
@@ -2007,6 +2017,12 @@ end;
 function TfrClickerActionsArr.HandleOnGenerateAndSaveTreeWithWinInterp(AHandle: THandle; ATreeFileName: string; AStep: Integer; AUseMouseSwipe: Boolean): Boolean;
 begin
   Result := DoOnGenerateAndSaveTreeWithWinInterp(AHandle, ATreeFileName, AStep, AUseMouseSwipe);
+end;
+
+
+function TfrClickerActionsArr.HandleOnSetWinInterpOption(AWinInterpOptionName, AWinInterpOptionValue: string): Boolean;
+begin
+  Result := DoOnSetWinInterpOption(AWinInterpOptionName, AWinInterpOptionValue);
 end;
 
 
@@ -2962,6 +2978,15 @@ begin
     raise Exception.Create('OnGenerateAndSaveTreeWithWinInterp not assigned.')
   else
     Result := FOnGenerateAndSaveTreeWithWinInterp(AHandle, ATreeFileName, AStep, AUseMouseSwipe);
+end;
+
+
+function TfrClickerActionsArr.DoOnSetWinInterpOption(AWinInterpOptionName, AWinInterpOptionValue: string): Boolean;
+begin
+  if not Assigned(FOnSetWinInterpOption) then
+    raise Exception.Create('OnSetWinInterpOption not assigned.')
+  else
+    Result := FOnSetWinInterpOption(AWinInterpOptionName, AWinInterpOptionValue);
 end;
 
 
