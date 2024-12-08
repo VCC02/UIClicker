@@ -21,14 +21,14 @@ object frClickerWinInterp: TfrClickerWinInterp
     ClientWidth = 893
     TabOrder = 0
     object pnlWinInterpSettings: TPanel
-      Left = 433
+      Left = 425
       Height = 493
       Top = 0
-      Width = 460
+      Width = 468
       Anchors = [akTop, akLeft, akRight, akBottom]
       Caption = 'pnlWinInterpSettings'
       ClientHeight = 493
-      ClientWidth = 460
+      ClientWidth = 468
       ParentBackground = False
       ParentColor = False
       TabOrder = 0
@@ -240,7 +240,7 @@ object frClickerWinInterp: TfrClickerWinInterp
         Left = 0
         Height = 288
         Top = 0
-        Width = 457
+        Width = 465
         ActivePage = TabSheet_Components
         Anchors = [akTop, akLeft, akRight, akBottom]
         TabIndex = 0
@@ -249,12 +249,12 @@ object frClickerWinInterp: TfrClickerWinInterp
         object TabSheet_Components: TTabSheet
           Caption = 'Components'
           ClientHeight = 260
-          ClientWidth = 449
+          ClientWidth = 457
           object pnlvstComponents: TPanel
             Left = 0
             Height = 260
             Top = 0
-            Width = 456
+            Width = 464
             Anchors = [akTop, akLeft, akRight, akBottom]
             Caption = 'pnlvstComponents'
             Color = clYellow
@@ -266,12 +266,12 @@ object frClickerWinInterp: TfrClickerWinInterp
         object TabSheet_Settings: TTabSheet
           Caption = 'Settings'
           ClientHeight = 260
-          ClientWidth = 449
+          ClientWidth = 457
           object pnlvstSettings: TPanel
             Left = 0
             Height = 152
             Top = 16
-            Width = 360
+            Width = 368
             Anchors = [akTop, akLeft, akRight, akBottom]
             Caption = 'pnlvstSettings'
             Color = 14090197
@@ -287,7 +287,7 @@ object frClickerWinInterp: TfrClickerWinInterp
             Caption = 'Avoided zones (used on recording with mouse swipe):'
           end
           object btNewZone: TButton
-            Left = 365
+            Left = 372
             Height = 25
             Top = 16
             Width = 83
@@ -297,12 +297,12 @@ object frClickerWinInterp: TfrClickerWinInterp
             OnClick = btNewZoneClick
           end
           object btnDeleteZone: TButton
-            Left = 365
+            Left = 372
             Height = 25
             Top = 48
             Width = 83
             Anchors = [akTop, akRight]
-            Caption = 'Delete zone'
+            Caption = 'Delete zone...'
             TabOrder = 2
             OnClick = btnDeleteZoneClick
           end
@@ -383,7 +383,7 @@ object frClickerWinInterp: TfrClickerWinInterp
             OnChange = chkRecordWithEdgeExtendingChange
           end
           object btnLoadZones: TButton
-            Left = 365
+            Left = 372
             Height = 25
             Top = 80
             Width = 83
@@ -393,7 +393,7 @@ object frClickerWinInterp: TfrClickerWinInterp
             OnClick = btnLoadZonesClick
           end
           object btnSaveZones: TButton
-            Left = 365
+            Left = 372
             Height = 25
             Top = 111
             Width = 83
@@ -403,7 +403,7 @@ object frClickerWinInterp: TfrClickerWinInterp
             OnClick = btnSaveZonesClick
           end
           object spdbtnMoveUp: TSpeedButton
-            Left = 365
+            Left = 372
             Height = 25
             Hint = 'Move Up'
             Top = 143
@@ -426,7 +426,7 @@ object frClickerWinInterp: TfrClickerWinInterp
             OnClick = spdbtnMoveUpClick
           end
           object spdbtnMoveDown: TSpeedButton
-            Left = 384
+            Left = 391
             Height = 25
             Hint = 'Move Down'
             Top = 143
@@ -500,10 +500,10 @@ object frClickerWinInterp: TfrClickerWinInterp
             TabOrder = 14
           end
           object btnClearZones: TButton
-            Left = 404
+            Left = 410
             Height = 25
             Top = 143
-            Width = 44
+            Width = 45
             Anchors = [akTop, akRight]
             Caption = 'Clear...'
             TabOrder = 15
@@ -563,6 +563,15 @@ object frClickerWinInterp: TfrClickerWinInterp
         TabOrder = 11
         OnChange = chkContinuouslyScreenshotByKeysChange
       end
+      object chkShowZoom: TCheckBox
+        Left = 273
+        Height = 19
+        Top = 416
+        Width = 80
+        Anchors = [akLeft, akBottom]
+        Caption = 'Show zoom'
+        TabOrder = 12
+      end
     end
     object pnlDrag: TPanel
       Left = 4
@@ -593,14 +602,14 @@ object frClickerWinInterp: TfrClickerWinInterp
       Left = 4
       Height = 456
       Top = 37
-      Width = 416
+      Width = 408
       HorzScrollBar.Page = 321
       HorzScrollBar.Tracking = True
       VertScrollBar.Page = 321
       VertScrollBar.Tracking = True
       Anchors = [akTop, akLeft, akRight, akBottom]
       ClientHeight = 452
-      ClientWidth = 412
+      ClientWidth = 404
       TabOrder = 3
       OnMouseWheel = scrboxScannedComponentsMouseWheel
       object imgScreenshot: TImage
@@ -611,6 +620,8 @@ object frClickerWinInterp: TfrClickerWinInterp
         PopupMenu = pmScreenshot
         Visible = False
         OnMouseDown = imgScannedWindowMouseDown
+        OnMouseEnter = imgScannedWindowMouseEnter
+        OnMouseLeave = imgScannedWindowMouseLeave
         OnMouseMove = imgScannedWindowMouseMove
       end
       object imgAvgScreenshotAndGreenComp: TImage
@@ -621,6 +632,8 @@ object frClickerWinInterp: TfrClickerWinInterp
         PopupMenu = pmScreenshot
         Visible = False
         OnMouseDown = imgScannedWindowMouseDown
+        OnMouseEnter = imgScannedWindowMouseEnter
+        OnMouseLeave = imgScannedWindowMouseLeave
         OnMouseMove = imgScannedWindowMouseMove
       end
       object imgAvgScreenshotAndAssignedComp: TImage
@@ -631,6 +644,8 @@ object frClickerWinInterp: TfrClickerWinInterp
         PopupMenu = pmScreenshot
         Visible = False
         OnMouseDown = imgScannedWindowMouseDown
+        OnMouseEnter = imgScannedWindowMouseEnter
+        OnMouseLeave = imgScannedWindowMouseLeave
         OnMouseMove = imgScannedWindowMouseMove
       end
       object imgScannedWindow: TImage
@@ -640,19 +655,23 @@ object frClickerWinInterp: TfrClickerWinInterp
         Width = 121
         PopupMenu = pmScreenshot
         OnMouseDown = imgScannedWindowMouseDown
+        OnMouseEnter = imgScannedWindowMouseEnter
+        OnMouseLeave = imgScannedWindowMouseLeave
         OnMouseMove = imgScannedWindowMouseMove
       end
       object imgLiveScreenshot: TImage
         Left = 113
         Height = 121
         Hint = 'Live screenshot'#13#10'The live screenshot allows selecting an area by dragging.'#13#10'Right-click and select "Update tree values from selection", to update the tree with the new selection values.'
-        Top = 113
+        Top = 112
         Width = 121
         ParentShowHint = False
         PopupMenu = pmScreenshot
         ShowHint = True
         Visible = False
         OnMouseDown = imgLiveScreenshotMouseDown
+        OnMouseEnter = imgScannedWindowMouseEnter
+        OnMouseLeave = imgScannedWindowMouseLeave
         OnMouseMove = imgLiveScreenshotMouseMove
         OnMouseUp = imgLiveScreenshotMouseUp
       end
@@ -664,6 +683,8 @@ object frClickerWinInterp: TfrClickerWinInterp
         PopupMenu = pmScreenshot
         Visible = False
         OnMouseDown = imgScannedWindowMouseDown
+        OnMouseEnter = imgScannedWindowMouseEnter
+        OnMouseLeave = imgScannedWindowMouseLeave
         OnMouseMove = imgScannedWindowMouseMove
       end
       object imgScannedWindowWithText: TImage
@@ -675,6 +696,8 @@ object frClickerWinInterp: TfrClickerWinInterp
         PopupMenu = pmScreenshot
         Visible = False
         OnMouseDown = imgScannedWindowMouseDown
+        OnMouseEnter = imgScannedWindowMouseEnter
+        OnMouseLeave = imgScannedWindowMouseLeave
         OnMouseMove = imgScannedWindowMouseMove
       end
       object imgScannedWindowWithAvoidedZones: TImage
@@ -688,12 +711,14 @@ object frClickerWinInterp: TfrClickerWinInterp
         Transparent = True
         Visible = False
         OnMouseDown = imgScannedWindowWithAvoidedZonesMouseDown
+        OnMouseEnter = imgScannedWindowWithAvoidedZonesMouseEnter
+        OnMouseLeave = imgScannedWindowWithAvoidedZonesMouseLeave
         OnMouseMove = imgScannedWindowWithAvoidedZonesMouseMove
       end
     end
     object pnlHorizSplitter: TPanel
       Cursor = crHSplit
-      Left = 421
+      Left = 413
       Height = 493
       Top = 0
       Width = 11
@@ -925,5 +950,16 @@ object frClickerWinInterp: TfrClickerWinInterp
     OnTimer = tmrScanByKeysTimer
     Left = 624
     Top = 413
+  end
+  object pmVarsEditor: TPopupMenu
+    Left = 728
+    Top = 79
+  end
+  object tmrDrawZoom: TTimer
+    Enabled = False
+    Interval = 50
+    OnTimer = tmrDrawZoomTimer
+    Left = 456
+    Top = 80
   end
 end

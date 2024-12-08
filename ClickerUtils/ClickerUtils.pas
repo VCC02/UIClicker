@@ -472,6 +472,8 @@ type
     procedure Paint; override;
   end;
 
+  TGetAvoidedZoneException = class(Exception);
+
 
   TOnUpdateSearchAreaLimitsInOIFromDraggingLines = procedure(ALimitLabelsToUpdate: TLimitLabels; var AOffsets: TSimpleRectString) of object;
   TOnUpdateTextCroppingLimitsInOIFromDraggingLines = procedure(ALimitLabelsToUpdate: TLimitLabels; var AOffsets: TSimpleRectString; AFontProfileName: string) of object;
@@ -484,6 +486,7 @@ type
   TOnModifyPluginProperty = procedure(AAction: PClkActionRec) of object;
   TOnGetAllActions = function: PClkActionsRecArr of object;
   TOnGenerateAndSaveTreeWithWinInterp = function(AHandle: THandle; ATreeFileName: string; AStep: Integer; AUseMouseSwipe: Boolean): Boolean of object;
+  TOnSetWinInterpOption = function(AWinInterpOptionName, AWinInterpOptionValue: string): Boolean of object;
 
 const
   CActionStatusStr: array[TActionStatus] of string = ('Not Started', 'Failed', 'Successful', 'In Progress', 'Allowed Failed');
@@ -622,6 +625,35 @@ const
   );
 
 
+  //The following WinInterp constants should be decoded by WinInterp as case insensitive.
+  //That means, users who want to pass, for example, 'SHOWZOOM' can do that.
+  //Most options are boolean. Their values should be set either as 0 / 1, or False / True.
+  CWinInterpOption_ShowZoom = 'ShowZoom';
+  CWinInterpOption_ContinuouslyScreenshotByKeys = 'ContinuouslyScreenshotByKeys';
+  CWinInterpOption_RecordingStep = 'RecordingStep';
+  CWinInterpOption_MouseCursorPosToScreenshotDelay = 'MouseCursorPosToScreenshotDelay';
+  CWinInterpOption_HighlightSelectedComponent = 'HighlightSelectedComponent';
+  CWinInterpOption_UseHCursor = 'UseHCursor';
+  CWinInterpOption_FullScreenScanning = 'FullScreenScanning';
+  CWinInterpOption_RecordSelectedAreaOnly = 'RecordSelectedAreaOnly';
+  CWinInterpOption_RecordWithEdgeExtending = 'RecordWithEdgeExtending';
+  CWinInterpOption_MinimizeWhileRecording = 'MinimizeWhileRecording';
+  CWinInterpOption_BringTargetToFront = 'BringTargetToFront';
+  CWinInterpOption_BringTargetToFrontPeriodically = 'BringTargetToFrontPeriodically';
+  CWinInterpOption_HighlightingLinesColor = 'HighlightingLinesColor';
+  CWinInterpOption_SelectedLayer = 'SelectedLayer';
+  CWinInterpOption_LoadTree = 'LoadTree';
+  CWinInterpOption_LoadAvoidedZones = 'LoadAvoidedZones';
+  CWinInterpOption_SaveAvoidedZones = 'SaveAvoidedZones';
+  CWinInterpOption_NewAvoidedZone = 'NewAvoidedZone';
+  CWinInterpOption_DeleteAvoidedZone = 'DeleteAvoidedZone';
+  CWinInterpOption_GetAvoidedZone = 'GetAvoidedZone';
+  CWinInterpOption_SetAvoidedZone = 'SetAvoidedZone';
+  CWinInterpOption_ClearAvoidedZone = 'ClearAvoidedZone';
+  //CWinInterpOption_GetWinInterpVar = 'GetWinInterpVar';  //not sure if needed
+  //CWinInterpOption_SetWinInterpVar = 'SetWinInterpVar';  //not sure if needed
+
+
 function FastReplace_ReturnTo45(s: string): string;
 function FastReplace_45ToReturn(s: string): string;
 function FastReplace_ReturnTo68(s: string): string; //used for storing CRLF (replaced by #6#8) inside a CRLF separated list of variables
@@ -630,6 +662,8 @@ function FastReplace_ReturnTo87(s: string): string; //should be used for remote 
 function FastReplace_87ToReturn(s: string): string; //should be used for remote execution only
 function FastReplace_87To45(s: string): string;
 function FastReplace_45To87(s: string): string;
+function FastReplace_68To45(s: string): string;
+function FastReplace_45To68(s: string): string;
 function FastReplace_1920To45(s: string): string;
 function FastReplace_45To1920(s: string): string;
 function FastReplace_1920ToReturn(s: string): string;
@@ -877,6 +911,54 @@ begin
 end;
 
 
+function FastReplace_68To45(s: string): string;
+var
+  i, n: Integer;
+begin
+  n := Pos(#6, s);
+  if n = 0 then
+  begin
+    Result := s;
+    Exit;
+  end;
+
+  for i := n to Length(s) - 1 do
+    if s[i] = #6 then
+      if s[i + 1] = #8 then
+      begin
+        s[i] := #4;
+        s[i + 1] := #5;
+        Continue;
+      end;
+
+  Result := s;
+end;
+
+
+function FastReplace_45To68(s: string): string;
+var
+  i, n: Integer;
+begin
+  n := Pos(#4, s);
+  if n = 0 then
+  begin
+    Result := s;
+    Exit;
+  end;
+
+  for i := n to Length(s) - 1 do
+    if s[i] = #4 then
+      if s[i + 1] = #5 then
+      begin
+        s[i] := #6;
+        s[i + 1] := #8;
+        Continue;
+      end;
+
+  Result := s;
+end;
+
+
 function FastReplace_1920To45(s: string): string;
 var
   i, n: Integer;
@@ -1079,6 +1161,8 @@ const
   CFastReplace_ReturnTo45_FuncName = '$FastReplace_ReturnTo45(';
   CFastReplace_45To87_FuncName = '$FastReplace_45To87(';
   CFastReplace_87To45_FuncName = '$FastReplace_87To45(';
+  CFastReplace_45To68_FuncName = '$FastReplace_45To68(';
+  CFastReplace_68To45_FuncName = '$FastReplace_68To45(';
   CExit_FuncName = '$Exit(';
   CStringContains_FuncName = '$StringContains(';
   CCreateDir_FuncName = '$CreateDir(';
@@ -1103,7 +1187,7 @@ const
   CGetWindowLongPtr_FuncName = '$GetWindowLongPtr(';
   CGetWindowProcessId_FuncName = '$GetWindowProcessId(';
 
-  CBuiltInFunctionCount = 46;
+  CBuiltInFunctionCount = 48;
   CBuiltInFunctions: array[0..CBuiltInFunctionCount - 1] of string = (
     CRandom_FuncName,
     CSum_FuncName,
@@ -1128,6 +1212,8 @@ const
     CFastReplace_ReturnTo45_FuncName,
     CFastReplace_45To87_FuncName,
     CFastReplace_87To45_FuncName,
+    CFastReplace_45To68_FuncName,
+    CFastReplace_68To45_FuncName,
     CExit_FuncName,
     CStringContains_FuncName,
     CCreateDir_FuncName,
@@ -1886,6 +1972,28 @@ begin
 end;
 
 
+function ReplaceFastReplace_45To68(s: string): string;
+var
+  Args, InitialArgs: string;
+begin
+  Args := ExtractFuncArgs(CFastReplace_45To68_FuncName, s);
+  InitialArgs := Args;
+
+  Result := StringReplace(s, CFastReplace_45To68_FuncName + InitialArgs + ')$', FastReplace_45To68(Args), [rfReplaceAll]);
+end;
+
+
+function ReplaceFastReplace_68To45(s: string): string;
+var
+  Args, InitialArgs: string;
+begin
+  Args := ExtractFuncArgs(CFastReplace_68To45_FuncName, s);
+  InitialArgs := Args;
+
+  Result := StringReplace(s, CFastReplace_68To45_FuncName + InitialArgs + ')$', FastReplace_68To45(Args), [rfReplaceAll]);
+end;
+
+
 function ReplaceExit(s: string): string;
 var
   Args, InitialArgs: string;
@@ -2523,6 +2631,9 @@ begin
   if Pos('$#4#5$', s) > 0 then
     s := StringReplace(s, '$#4#5$', #4#5, [rfReplaceAll]);
 
+  if Pos('$#6#8$', s) > 0 then
+    s := StringReplace(s, '$#6#8$', #6#8, [rfReplaceAll]);
+
   if Pos('$Now$', s) > 0 then
     s := StringReplace(s, '$Now$', DateTimeToStr(Now), [rfReplaceAll]);
 
@@ -2567,6 +2678,12 @@ begin
 
   if Pos(CFastReplace_87To45_FuncName, s) > 0 then
     s := ReplaceFastReplace_87To45(s);
+
+  if Pos(CFastReplace_45To68_FuncName, s) > 0 then
+    s := ReplaceFastReplace_45To68(s);
+
+  if Pos(CFastReplace_68To45_FuncName, s) > 0 then
+    s := ReplaceFastReplace_68To45(s);
 
   if Pos(CSum_FuncName, s) > 0 then
     s := ReplaceSum(AListOfVars, s);

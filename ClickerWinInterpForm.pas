@@ -79,6 +79,7 @@ type
     procedure SaveSettings(AIni: TMemIniFile);
 
     procedure GetTreeContent(AStream: TMemoryStream);
+    function SetWinInterpOption(AWinInterpOptionName, AWinInterpOptionValue: string): Boolean;
     procedure RecordComponent(AInterprettedHandle: THandle; var ImgMatrix: TColorArr; var ImgHWMatrix: THandleArr; AStep: Integer = 1);
     procedure RecordWithMouseSwipe(AInterprettedHandle: THandle; AStep: Integer = 1);
     procedure GetCurrentlyRecordedScreenShotImage(ABmp: TBitmap);
@@ -296,6 +297,12 @@ end;
 procedure TfrmClickerWinInterp.GetTreeContent(AStream: TMemoryStream);
 begin
   FWinInterpFrame.GetTreeContent(AStream);
+end;
+
+
+function TfrmClickerWinInterp.SetWinInterpOption(AWinInterpOptionName, AWinInterpOptionValue: string): Boolean;
+begin
+  Result := FWinInterpFrame.SetWinInterpOption(AWinInterpOptionName, AWinInterpOptionValue);
 end;
 
 

@@ -287,6 +287,8 @@ object frClickerSetVar: TfrClickerSetVar
         '$FastReplace_ReturnTo45(<some_string>)$'
         '$FastReplace_45To87(<some_string>)$'
         '$FastReplace_87To45(<some_string>)$'
+        '$FastReplace_45To68(<some_string>)$'
+        '$FastReplace_68To45(<some_string>)$'
         '$Exit(<ExitCode>)$'
         '$CreateDir(<PathToNewDir>)$'
         '$LoadTextFile(<PathToTextFile>)$'
@@ -318,6 +320,7 @@ object frClickerSetVar: TfrClickerSetVar
         '$Current_Mouse_hCursor$'
         '$CRLF$'
         '$#4#5$'
+        '$#6#8$'
         '$Now$'
         '$RenderBmpExternally()$'
         '$GetActionProperties()$'
@@ -330,6 +333,7 @@ object frClickerSetVar: TfrClickerSetVar
         '$GetWindowLongPtr(<ControlHandle>, <Index>)$'
         '$GetWindowProcessId(<ControlHandle>)$'
         '$GenerateAndSaveTree(<TreePath>[,<Step>[,<UseMouseSwipe>]])$'
+        '$SetWinInterpOption(<WinInterpOptionName>, <WinInterpOptionValue>)$'
         '$Console([<Value>])$'
       )
       ParentShowHint = False
