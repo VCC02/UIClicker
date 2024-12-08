@@ -472,6 +472,8 @@ type
     procedure Paint; override;
   end;
 
+  TGetAvoidedZoneException = class(Exception);
+
 
   TOnUpdateSearchAreaLimitsInOIFromDraggingLines = procedure(ALimitLabelsToUpdate: TLimitLabels; var AOffsets: TSimpleRectString) of object;
   TOnUpdateTextCroppingLimitsInOIFromDraggingLines = procedure(ALimitLabelsToUpdate: TLimitLabels; var AOffsets: TSimpleRectString; AFontProfileName: string) of object;
@@ -645,6 +647,11 @@ const
   CWinInterpOption_SaveAvoidedZones = 'SaveAvoidedZones';
   CWinInterpOption_NewAvoidedZone = 'NewAvoidedZone';
   CWinInterpOption_DeleteAvoidedZone = 'DeleteAvoidedZone';
+  CWinInterpOption_GetAvoidedZone = 'GetAvoidedZone';
+  CWinInterpOption_SetAvoidedZone = 'SetAvoidedZone';
+  CWinInterpOption_ClearAvoidedZone = 'ClearAvoidedZone';
+  //CWinInterpOption_GetWinInterpVar = 'GetWinInterpVar';  //not sure if needed
+  //CWinInterpOption_SetWinInterpVar = 'SetWinInterpVar';  //not sure if needed
 
 
 function FastReplace_ReturnTo45(s: string): string;

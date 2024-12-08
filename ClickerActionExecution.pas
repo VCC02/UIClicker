@@ -3368,6 +3368,13 @@ begin
               Exit;
             end;
         except
+          on E: TGetAvoidedZoneException do
+          begin
+            SetActionVarValue('$GetAvoidedZoneResult$', E.Message);
+            Result := True;
+            Exit;
+          end;
+
           on E: Exception do
             if ASetVarOptions.FailOnException then
             begin

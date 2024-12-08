@@ -499,10 +499,13 @@ type
     procedure LoadTree(AFnm: string);
     procedure LoadZones(AFnm: string);
     procedure SaveZones(AFnm: string);
-    procedure NewZone(AZoneName, ALeft, ATop, ARight, ABottom, ALeftOffset, ATopOffset, ARightOffset, ABottomOffset: string);
+    procedure UpdateZoneByNode(ANode: PVirtualNode; AZoneName, ALeftOffset, ATopOffset, ARightOffset, ABottomOffset, ALeft, ATop, ARight, ABottom: string);
+    procedure UpdateZone(AZoneName, ALeftOffset, ATopOffset, ARightOffset, ABottomOffset, ALeft, ATop, ARight, ABottom: string);
+    procedure NewZone(AZoneName, ALeftOffset, ATopOffset, ARightOffset, ABottomOffset, ALeft, ATop, ARight, ABottom: string);
     procedure DeleteZone(ANode: PVirtualNode);
     function GetZoneNodeByName(AName: string): PVirtualNode;
     procedure DeleteZoneByName(AName: string);
+    function GetZoneByName(AName: string): string;
 
     property HighlightingLinesColor: TColor read GetHighlightingLinesColor write SetHighlightingLinesColor;
     property SelectedLayer: Integer read GetSelectedLayer write SetSelectedLayer;
@@ -4611,26 +4614,46 @@ begin
 end;
 
 
-procedure TfrClickerWinInterp.NewZone(AZoneName, ALeft, ATop, ARight, ABottom, ALeftOffset, ATopOffset, ARightOffset, ABottomOffset: string);
+procedure TfrClickerWinInterp.UpdateZoneByNode(ANode: PVirtualNode; AZoneName, ALeftOffset, ATopOffset, ARightOffset, ABottomOffset, ALeft, ATop, ARight, ABottom: string);
 var
-  Node: PVirtualNode;
   NodeData: PAvoidedZoneRec;
 begin
-  Node := vstAvoidedZones.InsertNode(vstAvoidedZones.RootNode, amInsertAfter);
-  NodeData := vstAvoidedZones.GetNodeData(Node);
+  NodeData := vstAvoidedZones.GetNodeData(ANode);
   if NodeData = nil then
     Exit;
 
   NodeData^.ZName := AZoneName;
-  NodeData^.ZRectStr.Left := ALeft; //'$<New>Comp_Left$';
-  NodeData^.ZRectStr.Top := ATop; //'$<New>Comp_Top$';
-  NodeData^.ZRectStr.Right := ARight; //'$<New>Comp_Left$';  //leave it to Left for now
-  NodeData^.ZRectStr.Bottom := ABottom; //'$<New>Comp_Top$';  //leave it to Top for now
   NodeData^.ZRectStr.LeftOffset := ALeftOffset;
   NodeData^.ZRectStr.TopOffset := ATopOffset;
   NodeData^.ZRectStr.RightOffset := ARightOffset;
   NodeData^.ZRectStr.BottomOffset := ABottomOffset;
+  NodeData^.ZRectStr.Left := ALeft; //'$<New>Comp_Left$';
+  NodeData^.ZRectStr.Top := ATop; //'$<New>Comp_Top$';
+  NodeData^.ZRectStr.Right := ARight; //'$<New>Comp_Left$';  //leave it to Left for now
+  NodeData^.ZRectStr.Bottom := ABottom; //'$<New>Comp_Top$';  //leave it to Top for now
+end;
 
+
+procedure TfrClickerWinInterp.UpdateZone(AZoneName, ALeftOffset, ATopOffset, ARightOffset, ABottomOffset, ALeft, ATop, ARight, ABottom: string);
+var
+  Node: PVirtualNode;
+begin
+  Node := GetZoneNodeByName(AZoneName);
+
+  if Node = nil then
+    raise Exception.Create('Zone not found: ' + AZoneName);
+
+  UpdateZoneByNode(Node, AZoneName, ALeftOffset, ATopOffset, ARightOffset, ABottomOffset, ALeft, ATop, ARight, ABottom);
+  DrawAvoidedZones;
+end;
+
+
+procedure TfrClickerWinInterp.NewZone(AZoneName, ALeftOffset, ATopOffset, ARightOffset, ABottomOffset, ALeft, ATop, ARight, ABottom: string);
+var
+  Node: PVirtualNode;
+begin
+  Node := vstAvoidedZones.InsertNode(vstAvoidedZones.RootNode, amInsertAfter);
+  UpdateZoneByNode(Node, AZoneName, ALeftOffset, ATopOffset, ARightOffset, ABottomOffset, ALeft, ATop, ARight, ABottom);
   vstAvoidedZones.Selected[Node] := True;
 
   DrawAvoidedZones;
@@ -4650,11 +4673,11 @@ begin
       Exit;
 
     NewZone(NodeData^.ZName,
-            NodeData^.ZRectStr.Left, NodeData^.ZRectStr.Top, NodeData^.ZRectStr.Right, NodeData^.ZRectStr.Bottom,
-            NodeData^.ZRectStr.LeftOffset, NodeData^.ZRectStr.TopOffset, NodeData^.ZRectStr.RightOffset, NodeData^.ZRectStr.BottomOffset);
+            NodeData^.ZRectStr.LeftOffset, NodeData^.ZRectStr.TopOffset, NodeData^.ZRectStr.RightOffset, NodeData^.ZRectStr.BottomOffset,
+            NodeData^.ZRectStr.Left, NodeData^.ZRectStr.Top, NodeData^.ZRectStr.Right, NodeData^.ZRectStr.Bottom);
   end
   else
-    NewZone('Zone', '', '', '', '', '0', '0', '30', '30');
+    NewZone('Zone', '0', '0', '30', '30', '', '', '', '');
 end;
 
 
@@ -4673,7 +4696,7 @@ var
 begin
   Result := nil;
 
-  Node := vstAvoidedZones.GetFirstSelected;
+  Node := vstAvoidedZones.GetFirst;
   if Node = nil then
     Exit;
 
@@ -4723,6 +4746,33 @@ begin
     Exit;
 
   DeleteZone(Node);
+end;
+
+
+function TfrClickerWinInterp.GetZoneByName(AName: string): string;
+var
+  Node: PVirtualNode;
+  NodeData: PAvoidedZoneRec;
+begin
+  Node := GetZoneNodeByName(AName);
+
+  if Node = nil then
+    if vstAvoidedZones.RootNodeCount > 0 then
+      raise Exception.Create('Zone not found: ' + AName);
+
+  NodeData := vstAvoidedZones.GetNodeData(Node);
+  if NodeData = nil then
+    raise Exception.Create('Zone data not found for zone: ' + AName);
+
+  Result := NodeData^.ZName + #6#8 +
+            NodeData^.ZRectStr.LeftOffset + #6#8 +
+            NodeData^.ZRectStr.TopOffset + #6#8 +
+            NodeData^.ZRectStr.RightOffset + #6#8 +
+            NodeData^.ZRectStr.BottomOffset + #6#8 +
+            NodeData^.ZRectStr.Left + #6#8 +
+            NodeData^.ZRectStr.Top + #6#8 +
+            NodeData^.ZRectStr.Right + #6#8 +
+            NodeData^.ZRectStr.Bottom + #6#8;
 end;
 
 
@@ -5002,20 +5052,20 @@ begin
 
       try
         ZoneName := CmdParams.Strings[0];
-        ZoneLeft := CmdParams.Strings[1];
-        ZoneTop := CmdParams.Strings[2];
-        ZoneRight := CmdParams.Strings[3];
-        ZoneBottom := CmdParams.Strings[4];
-        ZoneLeftOffset := CmdParams.Strings[5];
-        ZoneTopOffset := CmdParams.Strings[6];
-        ZoneRightOffset := CmdParams.Strings[7];
-        ZoneBottomOffset := CmdParams.Strings[8];
+        ZoneLeftOffset := CmdParams.Strings[1];
+        ZoneTopOffset := CmdParams.Strings[2];
+        ZoneRightOffset := CmdParams.Strings[3];
+        ZoneBottomOffset := CmdParams.Strings[4];
+        ZoneLeft := CmdParams.Strings[5];
+        ZoneTop := CmdParams.Strings[6];
+        ZoneRight := CmdParams.Strings[7];
+        ZoneBottom := CmdParams.Strings[8];
       except
         Result := False;
-        raise Exception.Create('NewAvoidedZone command expects 9 parameters, separated by "|" or $#6#8$, e.g.: MyFirstZone|$btnOpen_Left$|$btnOpen_Top$|$btnOpen_Right$|$btnOpen_Bottom$|0|0|30|40. The Left, Top, Right and Bottom parameters can be empty.');
+        raise Exception.Create('NewAvoidedZone command expects 9 parameters, separated by "|" or $#6#8$, e.g.: MyFirstZone|0|0|30|40|$btnOpen_Left$|$btnOpen_Top$|$btnOpen_Right$|$btnOpen_Bottom$. The Left, Top, Right and Bottom parameters can be empty or they can contain WinInterp-specific variables.');
       end;
 
-      NewZone(ZoneName, ZoneLeft, ZoneTop, ZoneRight, ZoneBottom, ZoneLeftOffset, ZoneTopOffset, ZoneRightOffset, ZoneBottomOffset);
+      NewZone(ZoneName, ZoneLeftOffset, ZoneTopOffset, ZoneRightOffset, ZoneBottomOffset, ZoneLeft, ZoneTop, ZoneRight, ZoneBottom);
       Result := True;
       Exit;
     finally
@@ -5026,6 +5076,53 @@ begin
   if AWinInterpOptionName = UpperCase(CWinInterpOption_DeleteAvoidedZone) then
   begin
     DeleteZoneByName(AWinInterpOptionValue);
+    Result := True;
+    Exit;
+  end;
+
+  if AWinInterpOptionName = UpperCase(CWinInterpOption_GetAvoidedZone) then
+  begin
+    raise TGetAvoidedZoneException.Create(GetZoneByName(AWinInterpOptionValue));   //using exceptions to pass the result
+    Result := True;
+    Exit;
+  end;
+
+  if AWinInterpOptionName = UpperCase(CWinInterpOption_SetAvoidedZone) then
+  begin
+    CmdParams := TStringList.Create;
+    try
+      CmdParams.Text := StringReplace(AWinInterpOptionValue, '|', #13#10, [rfReplaceAll]);
+      if CmdParams.Count = 1 then
+        CmdParams.Text := FastReplace_68ToReturn(AWinInterpOptionValue); //maybe #6$8 is used as separator
+
+      try
+        ZoneName := CmdParams.Strings[0];
+        ZoneLeftOffset := CmdParams.Strings[1];
+        ZoneTopOffset := CmdParams.Strings[2];
+        ZoneRightOffset := CmdParams.Strings[3];
+        ZoneBottomOffset := CmdParams.Strings[4];
+        ZoneLeft := CmdParams.Strings[5];
+        ZoneTop := CmdParams.Strings[6];
+        ZoneRight := CmdParams.Strings[7];
+        ZoneBottom := CmdParams.Strings[8];
+      except
+        Result := False;
+        raise Exception.Create('SetAvoidedZone command expects 9 parameters, separated by "|" or $#6#8$, e.g.: ExistingZone|0|0|30|40|$btnOpen_Left$|$btnOpen_Top$|$btnOpen_Right$|$btnOpen_Bottom$. The Left, Top, Right and Bottom parameters can be empty or they can contain WinInterp-specific variables.');
+      end;
+
+      UpdateZone(ZoneName, ZoneLeftOffset, ZoneTopOffset, ZoneRightOffset, ZoneBottomOffset, ZoneLeft, ZoneTop, ZoneRight, ZoneBottom);
+      Result := True;
+      Exit;
+    finally
+      CmdParams.Free;
+    end;
+  end;
+
+  if AWinInterpOptionName = UpperCase(CWinInterpOption_ClearAvoidedZone) then
+  begin
+    vstAvoidedZones.Clear;
+    DrawAvoidedZones;
+
     Result := True;
     Exit;
   end;
