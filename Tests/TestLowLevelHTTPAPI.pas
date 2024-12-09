@@ -514,12 +514,33 @@ begin
 
   GetDefaultPropertyValues_FindControl(FindSubControlOptions, True);
   FindSubControlOptions.MatchText := 'Save Template'; //looking for the Save Template button
+  SetLength(FindSubControlOptions.MatchBitmapText, 3);
+
   FindSubControlOptions.MatchBitmapText[0].ForegroundColor := '$Color_WindowText$';
   FindSubControlOptions.MatchBitmapText[0].BackgroundColor := 'EAEAEA';
   FindSubControlOptions.MatchBitmapText[0].FontName := 'Tahoma';
   FindSubControlOptions.MatchBitmapText[0].FontSize := 8;
   FindSubControlOptions.MatchBitmapText[0].FontQuality := fqNonAntialiased;
   FindSubControlOptions.MatchBitmapText[0].IgnoreBackgroundColor := True;
+
+  GetDefaultPropertyValues_FindControl_MatchBitmapText(FindSubControlOptions.MatchBitmapText[1]);
+  GetDefaultPropertyValues_FindControl_MatchBitmapText(FindSubControlOptions.MatchBitmapText[2]);
+  FindSubControlOptions.MatchBitmapText[1].FontQuality := fqAntialiased;
+  FindSubControlOptions.MatchBitmapText[2].FontQuality := fqCleartype;
+  FindSubControlOptions.MatchBitmapText[1].ForegroundColor := '$Color_WindowText$';
+  FindSubControlOptions.MatchBitmapText[2].ForegroundColor := '$Color_WindowText$';
+  FindSubControlOptions.MatchBitmapText[1].BackgroundColor := 'EAEAEA';
+  FindSubControlOptions.MatchBitmapText[2].BackgroundColor := 'EAEAEA';
+  FindSubControlOptions.MatchBitmapText[1].IgnoreBackgroundColor := True;
+  FindSubControlOptions.MatchBitmapText[2].IgnoreBackgroundColor := True;
+
+  //FindSubControlOptions.InitialRectangle.LeftOffset := '464';     //limit the search area, to save time (for debugging only, because multiple results are expected)
+  //FindSubControlOptions.InitialRectangle.TopOffset := '284';
+  //FindSubControlOptions.InitialRectangle.RightOffset := '-635';
+  //FindSubControlOptions.InitialRectangle.BottomOffset := '-469';
+
+  FindSubControlOptions.ColorError := '16';
+  FindSubControlOptions.AllowedColorErrorCount := '30';
 
   FindSubControlOptions.GetAllControls := True;   //there will be about 3 texts like this (the actual button, the list of actions and the log)
   FindSubControlOptions.ThreadCount := CThreadCount_VarName;
@@ -1272,7 +1293,7 @@ begin
     GenerateEditTemplateOptions(EditTemplateOptions, AActionType, etoGetProperty, etwtOther, CTestEditTemplateFileName);
     ExecuteEditTemplateAction(TestServerAddress, EditTemplateOptions);
 
-    Expect(TempListOfEnabledProperties.Count).ToBe(Length(AExpectedValues), 'The number of properties mismatches. Please update.');
+    Expect(TempListOfEnabledProperties.Count).ToBe(DWord(Length(AExpectedValues)), 'The number of properties mismatches. Please update.');
     for i := 0 to TempListOfEnabledProperties.Count - 1 do
     begin
       VarName := '$Property_' + TempListOfEnabledProperties.Strings[i] + '_Value$';
@@ -1541,7 +1562,7 @@ begin
   TempListOfEnabledProperties := TStringList.Create;
   try
     TempListOfEnabledProperties.Text := TempEditTemplate.ListOfEnabledProperties;
-    Expect(TempListOfEnabledProperties.Count).ToBe(Length(AExpectedValues), 'The number of properties mismatches. Please update.');
+    Expect(TempListOfEnabledProperties.Count).ToBe(DWord(Length(AExpectedValues)), 'The number of properties mismatches. Please update.');
 
     for i := 0 to TempListOfEnabledProperties.Count - 1 do
     begin

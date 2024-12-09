@@ -1239,7 +1239,7 @@ begin
     Th.Link := FRemoteAddress + CRECmd_ExecuteCommandAtIndex + '?' +
                                 CREParam_ActionIdx + '=' + IntToStr(AActionIndex) + '&' +
                                 CREParam_StackLevel + '=' + IntToStr(AStackLevel) + '&' +
-                                CREParam_IsDebugging + '=' + IntToStr(Ord(False)) + '&' +
+                                CREParam_IsDebugging + '=' + IntToStr(Ord(False)) + '&' +  //useful for debugging plugins
                                 CREParam_FileLocation + '= ' + CUsesInMemFiles[False]; //this should come from a class field
     Th.Start;
 
