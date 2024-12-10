@@ -271,6 +271,67 @@ class TMatchByHistogramSettings(Structure):
                ("MostSignificantColorCountInSubBmp", LPCWSTR),
                ("MostSignificantColorCountInBackgroundBmp", LPCWSTR)]
 
+###########/////////////////
+
+#Font profile structure. MatchBitmapText field from TFindControlOptions is a dynamic array of TClkFindControlMatchBitmapText.
+class TClkFindControlMatchBitmapText(Structure):
+    _fields_ = [("ForegroundColor", LPCWSTR),
+               ("BackgroundColor", LPCWSTR),
+               ("FontName", LPCWSTR),
+               ("FontSize", LONG),
+               ("Bold", BOOLEAN),
+               ("Italic", BOOLEAN),
+               ("Underline", BOOLEAN),
+               ("StrikeOut", BOOLEAN),
+               ("FontQuality", LONG), #TFontQuality
+               ("FontQualityUsesReplacement", BOOLEAN),
+               ("FontQualityReplacement", LPCWSTR),
+               ("ProfileName", LPCWSTR),
+               ("CropLeft", LPCWSTR),
+               ("CropTop", LPCWSTR),
+               ("CropRight", LPCWSTR),
+               ("CropBottom", LPCWSTR),
+               ("IgnoreBackgroundColor", BOOLEAN)]
+
+PClkFindControlMatchBitmapText = ctypes.POINTER(TClkFindControlMatchBitmapText)
+
+def GetDefaultMatchBitmapText():
+    MatchBitmapTextProfile = TClkFindControlMatchBitmapText()
+    MatchBitmapTextProfile.ForegroundColor = '$Color_WindowText$'
+    MatchBitmapTextProfile.BackgroundColor = '$Color_BtnFace$'
+    MatchBitmapTextProfile.FontName = 'Tahoma'
+    MatchBitmapTextProfile.FontSize = 8
+    MatchBitmapTextProfile.Bold = False
+    MatchBitmapTextProfile.Italic = False
+    MatchBitmapTextProfile.Underline = False
+    MatchBitmapTextProfile.StrikeOut = False
+    MatchBitmapTextProfile.FontQuality = TFontQuality.fqNonAntialiased
+    MatchBitmapTextProfile.FontQualityUsesReplacement = False
+    MatchBitmapTextProfile.FontQualityReplacement = ''
+    MatchBitmapTextProfile.ProfileName = 'SomeFontProfileName'
+    MatchBitmapTextProfile.CropLeft = '0'
+    MatchBitmapTextProfile.CropTop = '0'
+    MatchBitmapTextProfile.CropRight = '0'
+    MatchBitmapTextProfile.CropBottom = '0'
+    MatchBitmapTextProfile.IgnoreBackgroundColor = False
+    return MatchBitmapTextProfile
+
+
+class TMatchBitmapTextRec(Structure):
+    _fields_ = [("ArrLen", LONG),
+               ("Items", PClkFindControlMatchBitmapText)]
+
+    def __init__(self, Count):
+        TheItems = (TClkFindControlMatchBitmapText * Count)()
+        self.Items = ctypes.cast(TheItems, PClkFindControlMatchBitmapText)
+        self.ArrLen = Count
+        
+        for i in range(Count):
+          self.Items[i] = GetDefaultMatchBitmapText()
+
+PMatchBitmapTextRec = ctypes.POINTER(TMatchBitmapTextRec)
+
+
 class TFindControlOptions(Structure):
     _fields_ = [("DummyField", LONG),
                ("MatchCriteria", TClkFindControlMatchCriteria),
@@ -279,7 +340,7 @@ class TFindControlOptions(Structure):
                ("MatchClassName", LPCWSTR),
                ("MatchTextSeparator", LPCWSTR),
                ("MatchClassNameSeparator", LPCWSTR),
-               ("MatchBitmapText", LARGE_INTEGER), #TClkFindControlMatchBitmapTextArr;  #dummy field, can be updated, by a different call
+               ("MatchBitmapText", PMatchBitmapTextRec), #TClkFindControlMatchBitmapTextArr;  #Can be updated, by a different call
                ("MatchBitmapFiles", LPCWSTR),
                ("MatchBitmapAlgorithm", LONG), #TMatchBitmapAlgorithm)
                ("MatchBitmapAlgorithmSettings", TMatchBitmapAlgorithmSettings),
@@ -326,7 +387,7 @@ def GetDefaultFindControlOptions():
     FindControlOptions.MatchClassName = 'TButton'
     FindControlOptions.MatchTextSeparator = ''
     FindControlOptions.MatchClassNameSeparator = ''
-    FindControlOptions.MatchBitmapText = 305419907 # $12345683 #0 #dummy field  (The content is updated separately. See TClkFindControlMatchBitmapText)
+    FindControlOptions.MatchBitmapText = ()  #(The content is updated separately. See TClkFindControlMatchBitmapText)
     FindControlOptions.MatchBitmapFiles = '' #'FileExample1.bmp\r\nFileExample2.bmp\r\nFileExample3.bmp'
     FindControlOptions.MatchBitmapAlgorithm = TMatchBitmapAlgorithm.mbaBruteForce
 
@@ -566,45 +627,3 @@ def GetDefaultEditTemplateOptions():
 
 
 ########################
-#Font profile structure. MatchBitmapText field from TFindControlOptions is a dynamic array of TClkFindControlMatchBitmapText.
-class TClkFindControlMatchBitmapText(Structure):
-    _fields_ = [("ForegroundColor", LPCWSTR),
-               ("BackgroundColor", LPCWSTR),
-               ("FontName", LPCWSTR),
-               ("FontSize", LONG),
-               ("Bold", BOOLEAN),
-               ("Italic", BOOLEAN),
-               ("Underline", BOOLEAN),
-               ("StrikeOut", BOOLEAN),
-               ("FontQuality", LONG), #TFontQuality
-               ("FontQualityUsesReplacement", BOOLEAN),
-               ("FontQualityReplacement", LPCWSTR),
-               ("ProfileName", LPCWSTR),
-               ("CropLeft", LPCWSTR),
-               ("CropTop", LPCWSTR),
-               ("CropRight", LPCWSTR),
-               ("CropBottom", LPCWSTR),
-               ("IgnoreBackgroundColor", BOOLEAN)]
-
-PClkFindControlMatchBitmapText = ctypes.POINTER(TClkFindControlMatchBitmapText)
-
-def GetDefaultMatchBitmapText():
-    MatchBitmapTextProfile = TClkFindControlMatchBitmapText()
-    MatchBitmapTextProfile.ForegroundColor = '$Color_WindowText$'
-    MatchBitmapTextProfile.BackgroundColor = '$Color_BtnFace$'
-    MatchBitmapTextProfile.FontName = 'Tahoma'
-    MatchBitmapTextProfile.FontSize = 8
-    MatchBitmapTextProfile.Bold = False
-    MatchBitmapTextProfile.Italic = False
-    MatchBitmapTextProfile.Underline = False
-    MatchBitmapTextProfile.StrikeOut = False
-    MatchBitmapTextProfile.FontQuality = TFontQuality.fqNonAntialiased
-    MatchBitmapTextProfile.FontQualityUsesReplacement = False
-    MatchBitmapTextProfile.FontQualityReplacement = ''
-    MatchBitmapTextProfile.ProfileName = 'SomeFontProfileName'
-    MatchBitmapTextProfile.CropLeft = '0'
-    MatchBitmapTextProfile.CropTop = '0'
-    MatchBitmapTextProfile.CropRight = '0'
-    MatchBitmapTextProfile.CropBottom = '0'
-    MatchBitmapTextProfile.IgnoreBackgroundColor = False
-    return MatchBitmapTextProfile

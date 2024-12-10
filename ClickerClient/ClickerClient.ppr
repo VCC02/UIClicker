@@ -107,6 +107,40 @@ type
   end;
 
 
+  TClkFindControlMatchBitmapTextAPI = record
+    ForegroundColor: PWideChar;
+    BackgroundColor: PWideChar;
+    FontName: PWideChar;
+    FontSize: LongInt;
+    Bold: Boolean;
+    Italic: Boolean;
+    Underline: Boolean;
+    StrikeOut: Boolean;
+    FontQuality: TFontQuality;
+    FontQualityUsesReplacement: Boolean;
+    FontQualityReplacement: PWideChar;
+    ProfileName: PWideChar;
+    CropLeft: PWideChar;
+    CropTop: PWideChar;
+    CropRight: PWideChar;
+    CropBottom: PWideChar;
+    IgnoreBackgroundColor: Boolean;
+  end;
+
+  PClkFindControlMatchBitmapTextAPI = ^TClkFindControlMatchBitmapTextAPI;
+
+
+  TMatchBitmapTextArray = array[0..0] of TClkFindControlMatchBitmapTextAPI;
+  PMatchBitmapTextArray = ^TMatchBitmapTextArray;
+
+  TMatchBitmapTextRecAPI = record
+    ArrLen: Integer; //32-bit
+    Items: PMatchBitmapTextArray;
+  end;
+
+  PMatchBitmapTextRecAPI = ^TMatchBitmapTextRecAPI;
+
+
   TClkFindControlOptionsAPI = record
     DummyField: Integer;    //required for proper alignment (otherwise, there is an AV in Python)
     MatchCriteria: TClkFindControlMatchCriteriaAPI;
@@ -115,7 +149,7 @@ type
     MatchClassName: PWideChar;
     MatchTextSeparator: PWideChar;
     MatchClassNameSeparator: PWideChar;
-    MatchBitmapText: Pointer; //TClkFindControlMatchBitmapTextArr;
+    MatchBitmapText: PMatchBitmapTextRecAPI; //pointer to a TMatchBitmapTextRecAPI structure, which contains a length (32-bit) and a pointer to an array of TClkFindControlMatchBitmapText;
     MatchBitmapFiles: PWideChar;
     MatchBitmapAlgorithm: TMatchBitmapAlgorithm; //change this to LongInt, in case of AV at python side
     MatchBitmapAlgorithmSettings: TMatchBitmapAlgorithmSettings;
@@ -195,13 +229,13 @@ type
   PClkSetVarOptionsAPI = ^TClkSetVarOptionsAPI;
 
 
-  TClkWindowOperationsAPI = record
+  TClkWindowOperationsOptionsAPI = record
     Operation: TWindowOperation;
     NewX, NewY, NewWidth, NewHeight: PWideChar;
     NewPositionEnabled, NewSizeEnabled: Boolean;
   end;
 
-  PClkWindowOperationsAPI = ^TClkWindowOperationsAPI;
+  PClkWindowOperationsOptionsAPI = ^TClkWindowOperationsOptionsAPI;
 
 
   TClkLoadSetVarFromFileOptionsAPI = record
@@ -243,29 +277,6 @@ type
   end;
 
   PClkEditTemplateOptionsAPI = ^TClkEditTemplateOptionsAPI;
-
-
-  TClkFindControlMatchBitmapTextAPI = record
-    ForegroundColor: PWideChar;
-    BackgroundColor: PWideChar;
-    FontName: PWideChar;
-    FontSize: LongInt;
-    Bold: Boolean;
-    Italic: Boolean;
-    Underline: Boolean;
-    StrikeOut: Boolean;
-    FontQuality: TFontQuality;
-    FontQualityUsesReplacement: Boolean;
-    FontQualityReplacement: PWideChar;
-    ProfileName: PWideChar;
-    CropLeft: PWideChar;
-    CropTop: PWideChar;
-    CropRight: PWideChar;
-    CropBottom: PWideChar;
-    IgnoreBackgroundColor: Boolean;
-  end;
-
-  PClkFindControlMatchBitmapTextAPI = ^TClkFindControlMatchBitmapTextAPI;
 
 
   TExHandler = class
@@ -586,6 +597,294 @@ begin
 end;
 
 
+////////////////
+
+procedure GetMatchBitmapTextFromAPI(AFindControlMatchBitmapText: PClkFindControlMatchBitmapTextAPI; var ADestMatchBitmapText: TClkFindControlMatchBitmapText);
+begin
+  SetPointedContentToString(@string(PWideChar(AFindControlMatchBitmapText^.ForegroundColor))[1], ADestMatchBitmapText.ForegroundColor);
+  SetPointedContentToString(@string(PWideChar(AFindControlMatchBitmapText^.BackgroundColor))[1], ADestMatchBitmapText.BackgroundColor);
+  SetPointedContentToString(@string(PWideChar(AFindControlMatchBitmapText^.FontName))[1], ADestMatchBitmapText.FontName);
+  ADestMatchBitmapText.FontSize := AFindControlMatchBitmapText^.FontSize;
+  ADestMatchBitmapText.Bold := AFindControlMatchBitmapText^.Bold;
+  ADestMatchBitmapText.Italic := AFindControlMatchBitmapText^.Italic;
+  ADestMatchBitmapText.Underline := AFindControlMatchBitmapText^.Underline;
+  ADestMatchBitmapText.StrikeOut := AFindControlMatchBitmapText^.StrikeOut;
+  ADestMatchBitmapText.FontQuality := AFindControlMatchBitmapText^.FontQuality;
+  ADestMatchBitmapText.FontQualityUsesReplacement := AFindControlMatchBitmapText^.FontQualityUsesReplacement;
+  SetPointedContentToString(@string(PWideChar(AFindControlMatchBitmapText^.FontQualityReplacement))[1], ADestMatchBitmapText.FontQualityReplacement);
+  SetPointedContentToString(@string(PWideChar(AFindControlMatchBitmapText^.ProfileName))[1], ADestMatchBitmapText.ProfileName);
+  SetPointedContentToString(@string(PWideChar(AFindControlMatchBitmapText^.CropLeft))[1], ADestMatchBitmapText.CropLeft);
+  SetPointedContentToString(@string(PWideChar(AFindControlMatchBitmapText^.CropTop))[1], ADestMatchBitmapText.CropTop);
+  SetPointedContentToString(@string(PWideChar(AFindControlMatchBitmapText^.CropRight))[1], ADestMatchBitmapText.CropRight);
+  SetPointedContentToString(@string(PWideChar(AFindControlMatchBitmapText^.CropBottom))[1], ADestMatchBitmapText.CropBottom);
+  ADestMatchBitmapText.IgnoreBackgroundColor := AFindControlMatchBitmapText^.IgnoreBackgroundColor;
+end;
+
+////////////////
+
+
+procedure GetClickOptionsFromAPI(AClickOptions: PClkClickOptionsAPI; var ADestClkAction: TClkActionRec);
+begin
+  //click stuff
+  ADestClkAction.ClickOptions.XClickPointReference := AClickOptions^.XClickPointReference; //xrefLeft;
+  ADestClkAction.ClickOptions.YClickPointReference := AClickOptions^.YClickPointReference; //yrefTop;
+  SetPointedContentToString(@string(PWideChar(AClickOptions^.XClickPointVar))[1], ADestClkAction.ClickOptions.XClickPointVar);
+  SetPointedContentToString(@string(PWideChar(AClickOptions^.YClickPointVar))[1], ADestClkAction.ClickOptions.YClickPointVar);
+  SetPointedContentToString(@string(PWideChar(AClickOptions^.XOffset))[1], ADestClkAction.ClickOptions.XOffset);
+  SetPointedContentToString(@string(PWideChar(AClickOptions^.YOffset))[1], ADestClkAction.ClickOptions.YOffset);
+  ADestClkAction.ClickOptions.MouseButton := AClickOptions^.MouseButton;
+  ADestClkAction.ClickOptions.ClickWithCtrl := AClickOptions^.ClickWithCtrl;
+  ADestClkAction.ClickOptions.ClickWithAlt := AClickOptions^.ClickWithAlt;
+  ADestClkAction.ClickOptions.ClickWithShift := AClickOptions^.ClickWithShift;
+  ADestClkAction.ClickOptions.ClickWithDoubleClick := AClickOptions^.ClickWithDoubleClick;
+  ADestClkAction.ClickOptions.Count := AClickOptions^.Count;
+  ADestClkAction.ClickOptions.LeaveMouse := AClickOptions^.LeaveMouse;
+  ADestClkAction.ClickOptions.MoveWithoutClick := AClickOptions^.MoveWithoutClick;
+  ADestClkAction.ClickOptions.ClickType := AClickOptions^.ClickType;
+  ADestClkAction.ClickOptions.XClickPointReferenceDest := AClickOptions^.XClickPointReferenceDest;
+  ADestClkAction.ClickOptions.YClickPointReferenceDest := AClickOptions^.YClickPointReferenceDest;
+  SetPointedContentToString(@string(PWideChar(AClickOptions^.XClickPointVarDest))[1], ADestClkAction.ClickOptions.XClickPointVarDest);
+  SetPointedContentToString(@string(PWideChar(AClickOptions^.YClickPointVarDest))[1], ADestClkAction.ClickOptions.YClickPointVarDest);
+  SetPointedContentToString(@string(PWideChar(AClickOptions^.XOffsetDest))[1], ADestClkAction.ClickOptions.XOffsetDest);
+  SetPointedContentToString(@string(PWideChar(AClickOptions^.YOffsetDest))[1], ADestClkAction.ClickOptions.YOffsetDest);
+  ADestClkAction.ClickOptions.MouseWheelType := AClickOptions^.MouseWheelType;
+  SetPointedContentToString(@string(PWideChar(AClickOptions^.MouseWheelAmount))[1], ADestClkAction.ClickOptions.MouseWheelAmount);
+  SetPointedContentToString(@string(PWideChar(AClickOptions^.DelayAfterMovingToDestination))[1], ADestClkAction.ClickOptions.DelayAfterMovingToDestination);
+  SetPointedContentToString(@string(PWideChar(AClickOptions^.DelayAfterMouseDown))[1], ADestClkAction.ClickOptions.DelayAfterMouseDown);
+  SetPointedContentToString(@string(PWideChar(AClickOptions^.MoveDuration))[1], ADestClkAction.ClickOptions.MoveDuration);
+  ADestClkAction.ClickOptions.UseClipCursor := AClickOptions^.UseClipCursor;
+end;
+
+
+procedure GetExecAppOptionsFromAPI(AExecAppOptions: PClkExecAppOptionsAPI; var ADestClkAction: TClkActionRec);
+begin
+  //exec app stuff
+  SetPointedContentToString(@string(PWideChar(AExecAppOptions^.PathToApp))[1], ADestClkAction.ExecAppOptions.PathToApp);
+  SetPointedContentToString(@string(PWideChar(AExecAppOptions^.ListOfParams))[1], ADestClkAction.ExecAppOptions.ListOfParams);
+  ADestClkAction.ExecAppOptions.WaitForApp := AExecAppOptions^.WaitForApp;
+  SetPointedContentToString(@string(PWideChar(AExecAppOptions^.AppStdIn))[1], ADestClkAction.ExecAppOptions.AppStdIn);
+  SetPointedContentToString(@string(PWideChar(AExecAppOptions^.CurrentDir))[1], ADestClkAction.ExecAppOptions.CurrentDir);
+  ADestClkAction.ExecAppOptions.UseInheritHandles := AExecAppOptions^.UseInheritHandles;
+end;
+
+
+procedure GetFindControlOptionsFromAPI(AFindControlOptions: PClkFindControlOptionsAPI; var ADestClkAction: TClkActionRec);
+var
+  i: Integer;
+begin
+  //find control stuff
+  ADestClkAction.FindControlOptions.MatchCriteria.WillMatchText := AFindControlOptions^.MatchCriteria.WillMatchText;
+  ADestClkAction.FindControlOptions.MatchCriteria.WillMatchClassName := AFindControlOptions^.MatchCriteria.WillMatchClassName;
+  ADestClkAction.FindControlOptions.MatchCriteria.WillMatchBitmapText := AFindControlOptions^.MatchCriteria.WillMatchBitmapText;
+  ADestClkAction.FindControlOptions.MatchCriteria.WillMatchBitmapFiles := AFindControlOptions^.MatchCriteria.WillMatchBitmapFiles;
+  ADestClkAction.FindControlOptions.MatchCriteria.WillMatchPrimitiveFiles := AFindControlOptions^.MatchCriteria.WillMatchPrimitiveFiles;
+  ADestClkAction.FindControlOptions.MatchCriteria.SearchForControlMode := TSearchForControlMode(AFindControlOptions^.MatchCriteria.SearchForControlMode);
+
+  ADestClkAction.FindControlOptions.AllowToFail := AFindControlOptions^.AllowToFail;
+  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.MatchText))[1], ADestClkAction.FindControlOptions.MatchText);
+  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.MatchClassName))[1], ADestClkAction.FindControlOptions.MatchClassName);
+  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.MatchTextSeparator))[1], ADestClkAction.FindControlOptions.MatchTextSeparator);
+  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.MatchClassNameSeparator))[1], ADestClkAction.FindControlOptions.MatchClassNameSeparator);
+  SetLength(ADestClkAction.FindControlOptions.MatchBitmapText, 0);
+  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.MatchBitmapFiles))[1], ADestClkAction.FindControlOptions.MatchBitmapFiles);
+  ADestClkAction.FindControlOptions.MatchBitmapAlgorithm := TMatchBitmapAlgorithm(AFindControlOptions^.MatchBitmapAlgorithm);
+
+  ADestClkAction.FindControlOptions.MatchBitmapAlgorithmSettings := AFindControlOptions^.MatchBitmapAlgorithmSettings;
+  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.InitialRectangle.Left))[1], ADestClkAction.FindControlOptions.InitialRectangle.Left);
+  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.InitialRectangle.Top))[1], ADestClkAction.FindControlOptions.InitialRectangle.Top);
+  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.InitialRectangle.Right))[1], ADestClkAction.FindControlOptions.InitialRectangle.Right);
+  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.InitialRectangle.Bottom))[1], ADestClkAction.FindControlOptions.InitialRectangle.Bottom);
+  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.InitialRectangle.LeftOffset))[1], ADestClkAction.FindControlOptions.InitialRectangle.LeftOffset);
+  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.InitialRectangle.TopOffset))[1], ADestClkAction.FindControlOptions.InitialRectangle.TopOffset);
+  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.InitialRectangle.RightOffset))[1], ADestClkAction.FindControlOptions.InitialRectangle.RightOffset);
+  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.InitialRectangle.BottomOffset))[1], ADestClkAction.FindControlOptions.InitialRectangle.BottomOffset);
+
+  ADestClkAction.FindControlOptions.UseWholeScreen := AFindControlOptions^.UseWholeScreen;
+  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.ColorError))[1], ADestClkAction.FindControlOptions.ColorError);
+  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.AllowedColorErrorCount))[1], ADestClkAction.FindControlOptions.AllowedColorErrorCount);
+  ADestClkAction.FindControlOptions.WaitForControlToGoAway := AFindControlOptions^.WaitForControlToGoAway;
+  ADestClkAction.FindControlOptions.StartSearchingWithCachedControl := AFindControlOptions^.StartSearchingWithCachedControl;
+  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.CachedControlLeft))[1], ADestClkAction.FindControlOptions.CachedControlLeft);
+  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.CachedControlTop))[1], ADestClkAction.FindControlOptions.CachedControlTop);
+
+  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.MatchPrimitiveFiles))[1], ADestClkAction.FindControlOptions.MatchPrimitiveFiles);
+  ADestClkAction.FindControlOptions.GetAllControls := AFindControlOptions^.GetAllControls;
+  ADestClkAction.FindControlOptions.UseFastSearch := AFindControlOptions^.UseFastSearch;
+  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.FastSearchAllowedColorErrorCount))[1], ADestClkAction.FindControlOptions.FastSearchAllowedColorErrorCount);
+  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.IgnoredColors))[1], ADestClkAction.FindControlOptions.IgnoredColors);
+  ADestClkAction.FindControlOptions.SleepySearch := AFindControlOptions^.SleepySearch;
+  ADestClkAction.FindControlOptions.StopSearchOnMismatch := AFindControlOptions^.StopSearchOnMismatch;
+
+  ADestClkAction.FindControlOptions.ImageSource := TImageSource(AFindControlOptions^.ImageSource);
+  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.SourceFileName))[1], ADestClkAction.FindControlOptions.SourceFileName);
+  ADestClkAction.FindControlOptions.ImageSourceFileNameLocation := TImageSourceFileNameLocation(AFindControlOptions^.ImageSourceFileNameLocation);
+
+  ADestClkAction.FindControlOptions.PrecisionTimeout := AFindControlOptions^.PrecisionTimeout;
+  ADestClkAction.FindControlOptions.FullBackgroundImageInResult := AFindControlOptions^.FullBackgroundImageInResult;
+
+  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.MatchByHistogramSettings.MinPercentColorMatch))[1], ADestClkAction.FindControlOptions.MatchByHistogramSettings.MinPercentColorMatch);
+  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.MatchByHistogramSettings.MostSignificantColorCountInSubBmp))[1], ADestClkAction.FindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInSubBmp);
+  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp))[1], ADestClkAction.FindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp);
+
+  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.EvaluateTextCount))[1], ADestClkAction.FindControlOptions.EvaluateTextCount);
+  ADestClkAction.FindControlOptions.CropFromScreenshot := AFindControlOptions^.CropFromScreenshot;
+  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.ThreadCount))[1], ADestClkAction.FindControlOptions.ThreadCount);
+
+  if AFindControlOptions^.MatchBitmapText = nil then  //assume the caller sets this field to nil if not used
+    Exit;
+  //However, if the field is not nil, then it is either valid or an uninitialized pointer.
+  //The number of profiles is limited (to e.g. 60), in case the pointer is invalid and this library reads junk data.
+  SetLength(ADestClkAction.FindControlOptions.MatchBitmapText, Min(AFindControlOptions^.MatchBitmapText^.ArrLen, 60));
+
+  for i := 0 to Length(ADestClkAction.FindControlOptions.MatchBitmapText) - 1 do
+    GetMatchBitmapTextFromAPI(@AFindControlOptions^.MatchBitmapText^.Items^[i], ADestClkAction.FindControlOptions.MatchBitmapText[i]);
+end;
+
+
+procedure GetSetControlTextOptionsFromAPI(ASetControlTextOptions: PClkSetTextOptionsAPI; var ADestClkAction: TClkActionRec);
+begin
+  //set control text stuff
+  SetPointedContentToString(@string(PWideChar(ASetControlTextOptions^.Text))[1], ADestClkAction.SetTextOptions.Text);
+  ADestClkAction.SetTextOptions.ControlType := ASetControlTextOptions^.ControlType;
+  SetPointedContentToString(@string(PWideChar(ASetControlTextOptions^.DelayBetweenKeyStrokes))[1], ADestClkAction.SetTextOptions.DelayBetweenKeyStrokes);
+  SetPointedContentToString(@string(PWideChar(ASetControlTextOptions^.Count))[1], ADestClkAction.SetTextOptions.Count);
+end;
+
+
+procedure GetCallTemplateOptionsFromAPI(ACallTemplateOptions: PClkCallTemplateOptionsAPI; var ADestClkAction: TClkActionRec);
+begin
+  //call template stuff
+  SetPointedContentToString(@string(PWideChar(ACallTemplateOptions^.TemplateFileName))[1], ADestClkAction.CallTemplateOptions.TemplateFileName);
+  SetPointedContentToString(@string(PWideChar(ACallTemplateOptions^.ListOfCustomVarsAndValues))[1], ADestClkAction.CallTemplateOptions.ListOfCustomVarsAndValues);
+  ADestClkAction.CallTemplateOptions.EvaluateBeforeCalling := ACallTemplateOptions^.EvaluateBeforeCalling;
+
+  ADestClkAction.CallTemplateOptions.CallTemplateLoop.Enabled := ACallTemplateOptions^.CallTemplateLoop.Enabled;
+  SetPointedContentToString(@string(PWideChar(ACallTemplateOptions^.CallTemplateLoop.Counter))[1], ADestClkAction.CallTemplateOptions.CallTemplateLoop.Counter);
+  SetPointedContentToString(@string(PWideChar(ACallTemplateOptions^.CallTemplateLoop.InitValue))[1], ADestClkAction.CallTemplateOptions.CallTemplateLoop.InitValue);
+  SetPointedContentToString(@string(PWideChar(ACallTemplateOptions^.CallTemplateLoop.EndValue))[1], ADestClkAction.CallTemplateOptions.CallTemplateLoop.EndValue);
+  ADestClkAction.CallTemplateOptions.CallTemplateLoop.Direction := ACallTemplateOptions^.CallTemplateLoop.Direction;
+  SetPointedContentToString(@string(PWideChar(ACallTemplateOptions^.CallTemplateLoop.BreakCondition))[1], ADestClkAction.CallTemplateOptions.CallTemplateLoop.BreakCondition);
+  ADestClkAction.CallTemplateOptions.CallTemplateLoop.EvalBreakPosition := ACallTemplateOptions^.CallTemplateLoop.EvalBreakPosition;
+end;
+
+
+procedure GetSleepOptionsFromAPI(ASleepOptions: PClkSleepOptionsAPI; var ADestClkAction: TClkActionRec);
+begin
+  //sleep stuff
+  SetPointedContentToString(@string(PWideChar(ASleepOptions^.Value))[1], ADestClkAction.SleepOptions.Value);
+end;
+
+
+function GetSetVarOptionsFromAPI(ASetVarOptions: PClkSetVarOptionsAPI; var ADestClkAction: TClkActionRec): Integer;
+var
+  ListOfVarNames, ListOfVarValues, ListOfVarEvalBefore: TStringList;
+begin
+  //SetVar stuff
+  SetPointedContentToString(@string(PWideChar(ASetVarOptions^.ListOfVarNames))[1], ADestClkAction.SetVarOptions.ListOfVarNames);
+  SetPointedContentToString(@string(PWideChar(ASetVarOptions^.ListOfVarValues))[1], ADestClkAction.SetVarOptions.ListOfVarValues);
+  SetPointedContentToString(@string(PWideChar(ASetVarOptions^.ListOfVarEvalBefore))[1], ADestClkAction.SetVarOptions.ListOfVarEvalBefore);
+  ADestClkAction.SetVarOptions.FailOnException := ASetVarOptions^.FailOnException;
+
+  Result := 0;
+
+  ListOfVarNames := TStringList.Create;
+  ListOfVarValues := TStringList.Create;
+  ListOfVarEvalBefore := TStringList.Create;
+  try
+    ListOfVarNames.Text := ADestClkAction.SetVarOptions.ListOfVarNames;
+    ListOfVarValues.Text := ADestClkAction.SetVarOptions.ListOfVarValues;
+    ListOfVarEvalBefore.Text := ADestClkAction.SetVarOptions.ListOfVarEvalBefore;
+
+    if (ListOfVarNames.Count <> ListOfVarValues.Count) or (ListOfVarNames.Count <> ListOfVarEvalBefore.Count) then
+    begin
+      Result := -1;
+
+      ListOfVarNames.Clear;
+      ListOfVarValues.Clear;
+      ListOfVarEvalBefore.Clear;
+
+      ListOfVarNames.Add('$DLL_Err_Var$');
+      ListOfVarValues.Add('The number of items from ListOfVarValues or ListOfVarEvalBefore, does not match the number of items from ListOfVarNames.');
+      ListOfVarEvalBefore.Add('0');
+
+      ListOfVarNames.Add('$DLL_Err_ListOfVarNames.Count$');
+      ListOfVarNames.Add('$DLL_Err_ListOfVarValues.Count$');
+      ListOfVarNames.Add('$DLL_Err_ListOfVarEvalBefore.Count$');
+      ListOfVarValues.Add(IntToStr(ListOfVarNames.Count));
+      ListOfVarValues.Add(IntToStr(ListOfVarValues.Count));
+      ListOfVarValues.Add(IntToStr(ListOfVarEvalBefore.Count));
+      ListOfVarEvalBefore.Add('0');
+      ListOfVarEvalBefore.Add('0');
+      ListOfVarEvalBefore.Add('0');
+
+      ADestClkAction.SetVarOptions.ListOfVarNames := ListOfVarNames.Text;
+      ADestClkAction.SetVarOptions.ListOfVarValues := ListOfVarValues.Text;
+      ADestClkAction.SetVarOptions.ListOfVarEvalBefore := ListOfVarEvalBefore.Text;
+
+      //Do not exit, simply create the bad action, then let the user debug it.
+    end;
+  finally
+    ListOfVarNames.Free;
+    ListOfVarValues.Free;
+    ListOfVarEvalBefore.Free;
+  end;
+end;
+
+
+procedure GetWindowOperationsOptionsFromAPI(AWindowOperationsOptions: PClkWindowOperationsOptionsAPI; var ADestClkAction: TClkActionRec);
+begin
+  //Window Operations stuff
+  ADestClkAction.WindowOperationsOptions.Operation := AWindowOperationsOptions^.Operation;
+  SetPointedContentToString(@string(PWideChar(AWindowOperationsOptions^.NewX))[1], ADestClkAction.WindowOperationsOptions.NewX);
+  SetPointedContentToString(@string(PWideChar(AWindowOperationsOptions^.NewY))[1], ADestClkAction.WindowOperationsOptions.NewY);
+  SetPointedContentToString(@string(PWideChar(AWindowOperationsOptions^.NewWidth))[1], ADestClkAction.WindowOperationsOptions.NewWidth);
+  SetPointedContentToString(@string(PWideChar(AWindowOperationsOptions^.NewHeight))[1], ADestClkAction.WindowOperationsOptions.NewHeight);
+  ADestClkAction.WindowOperationsOptions.NewPositionEnabled := AWindowOperationsOptions^.NewPositionEnabled;
+  ADestClkAction.WindowOperationsOptions.NewSizeEnabled := AWindowOperationsOptions^.NewSizeEnabled;
+end;
+
+
+procedure GetLoadSetVarFromFileOptionsFromAPI(ALoadSetVarFromFileOptions: PClkLoadSetVarFromFileOptionsAPI; var ADestClkAction: TClkActionRec);
+begin
+  //LoadSetVarFromFile stuff
+  SetPointedContentToString(@string(PWideChar(ALoadSetVarFromFileOptions^.FileName))[1], ADestClkAction.LoadSetVarFromFileOptions.FileName);
+  SetPointedContentToString(@string(PWideChar(ALoadSetVarFromFileOptions^.SetVarActionName))[1], ADestClkAction.LoadSetVarFromFileOptions.SetVarActionName);
+end;
+
+
+procedure GetSaveSetVarToFileOptionsFromAPI(ASaveSetVarToFileOptions: PClkSaveSetVarToFileOptionsAPI; var ADestClkAction: TClkActionRec);
+begin
+  //SaveSetVarToFile stuff
+  SetPointedContentToString(@string(PWideChar(ASaveSetVarToFileOptions^.FileName))[1], ADestClkAction.SaveSetVarToFileOptions.FileName);
+  SetPointedContentToString(@string(PWideChar(ASaveSetVarToFileOptions^.SetVarActionName))[1], ADestClkAction.SaveSetVarToFileOptions.SetVarActionName);
+end;
+
+
+procedure GetPluginOptionsFromAPI(APluginOptions: PClkPluginOptionsAPI; var ADestClkAction: TClkActionRec);
+begin
+  //Plugin stuff
+  SetPointedContentToString(@string(PWideChar(APluginOptions^.FileName))[1], ADestClkAction.PluginOptions.FileName);
+  SetPointedContentToString(@string(PWideChar(APluginOptions^.ListOfPropertiesAndValues))[1], ADestClkAction.PluginOptions.ListOfPropertiesAndValues);
+end;
+
+
+procedure GetEditTemplateOptionsFromAPI(AEditTemplateOptions: PClkEditTemplateOptionsAPI; var ADestClkAction: TClkActionRec);
+begin
+  //EditTemplate stuff
+  ADestClkAction.EditTemplateOptions.Operation := AEditTemplateOptions^.Operation;
+  ADestClkAction.EditTemplateOptions.WhichTemplate := AEditTemplateOptions^.WhichTemplate;
+  SetPointedContentToString(@string(PWideChar(AEditTemplateOptions^.TemplateFileName))[1], ADestClkAction.EditTemplateOptions.TemplateFileName);
+  SetPointedContentToString(@string(PWideChar(AEditTemplateOptions^.ListOfEditedProperties))[1], ADestClkAction.EditTemplateOptions.ListOfEditedProperties);
+  SetPointedContentToString(@string(PWideChar(AEditTemplateOptions^.ListOfEnabledProperties))[1], ADestClkAction.EditTemplateOptions.ListOfEnabledProperties);
+  SetPointedContentToString(@string(PWideChar(AEditTemplateOptions^.EditedActionName))[1], ADestClkAction.EditTemplateOptions.EditedActionName);
+  ADestClkAction.EditTemplateOptions.EditedActionType := AEditTemplateOptions^.EditedActionType;
+  SetPointedContentToString(@string(PWideChar(AEditTemplateOptions^.EditedActionCondition))[1], ADestClkAction.EditTemplateOptions.EditedActionCondition);
+  ADestClkAction.EditTemplateOptions.EditedActionTimeout := AEditTemplateOptions^.EditedActionTimeout;
+  SetPointedContentToString(@string(PWideChar(AEditTemplateOptions^.NewActionName))[1], ADestClkAction.EditTemplateOptions.NewActionName);
+  ADestClkAction.EditTemplateOptions.ShouldSaveTemplate := AEditTemplateOptions^.ShouldSaveTemplate;
+end;
+
+
 function AddClickActionToTemplate(ATemplateFileName: Pointer;
 
                                   AActionName: Pointer;
@@ -607,35 +906,7 @@ begin
   end;
 
   SetBasicActionOptions(ATemplateFileName, AActionName, acClick, AActionTimeout, AActionEnabled, AActionCondition, TempAction, TemplateFileName);
-
-  //click stuff
-  TempAction.ClickOptions.XClickPointReference := AClickOptions^.XClickPointReference; //xrefLeft;
-  TempAction.ClickOptions.YClickPointReference := AClickOptions^.YClickPointReference; //yrefTop;
-  SetPointedContentToString(@string(PWideChar(AClickOptions^.XClickPointVar))[1], TempAction.ClickOptions.XClickPointVar);
-  SetPointedContentToString(@string(PWideChar(AClickOptions^.YClickPointVar))[1], TempAction.ClickOptions.YClickPointVar);
-  SetPointedContentToString(@string(PWideChar(AClickOptions^.XOffset))[1], TempAction.ClickOptions.XOffset);
-  SetPointedContentToString(@string(PWideChar(AClickOptions^.YOffset))[1], TempAction.ClickOptions.YOffset);
-  TempAction.ClickOptions.MouseButton := AClickOptions^.MouseButton;
-  TempAction.ClickOptions.ClickWithCtrl := AClickOptions^.ClickWithCtrl;
-  TempAction.ClickOptions.ClickWithAlt := AClickOptions^.ClickWithAlt;
-  TempAction.ClickOptions.ClickWithShift := AClickOptions^.ClickWithShift;
-  TempAction.ClickOptions.ClickWithDoubleClick := AClickOptions^.ClickWithDoubleClick;
-  TempAction.ClickOptions.Count := AClickOptions^.Count;
-  TempAction.ClickOptions.LeaveMouse := AClickOptions^.LeaveMouse;
-  TempAction.ClickOptions.MoveWithoutClick := AClickOptions^.MoveWithoutClick;
-  TempAction.ClickOptions.ClickType := AClickOptions^.ClickType;
-  TempAction.ClickOptions.XClickPointReferenceDest := AClickOptions^.XClickPointReferenceDest;
-  TempAction.ClickOptions.YClickPointReferenceDest := AClickOptions^.YClickPointReferenceDest;
-  SetPointedContentToString(@string(PWideChar(AClickOptions^.XClickPointVarDest))[1], TempAction.ClickOptions.XClickPointVarDest);
-  SetPointedContentToString(@string(PWideChar(AClickOptions^.YClickPointVarDest))[1], TempAction.ClickOptions.YClickPointVarDest);
-  SetPointedContentToString(@string(PWideChar(AClickOptions^.XOffsetDest))[1], TempAction.ClickOptions.XOffsetDest);
-  SetPointedContentToString(@string(PWideChar(AClickOptions^.YOffsetDest))[1], TempAction.ClickOptions.YOffsetDest);
-  TempAction.ClickOptions.MouseWheelType := AClickOptions^.MouseWheelType;
-  SetPointedContentToString(@string(PWideChar(AClickOptions^.MouseWheelAmount))[1], TempAction.ClickOptions.MouseWheelAmount);
-  SetPointedContentToString(@string(PWideChar(AClickOptions^.DelayAfterMovingToDestination))[1], TempAction.ClickOptions.DelayAfterMovingToDestination);
-  SetPointedContentToString(@string(PWideChar(AClickOptions^.DelayAfterMouseDown))[1], TempAction.ClickOptions.DelayAfterMouseDown);
-  SetPointedContentToString(@string(PWideChar(AClickOptions^.MoveDuration))[1], TempAction.ClickOptions.MoveDuration);
-  TempAction.ClickOptions.UseClipCursor := AClickOptions^.UseClipCursor;
+  GetClickOptionsFromAPI(AClickOptions, TempAction);
 
   AddActionToTemplate(TemplateFileName, TempAction);
   Result := 0;
@@ -663,14 +934,7 @@ begin
   end;
 
   SetBasicActionOptions(ATemplateFileName, AActionName, acExecApp, AActionTimeout, AActionEnabled, AActionCondition, TempAction, TemplateFileName);
-
-  //exec app stuff
-  SetPointedContentToString(@string(PWideChar(AExecAppOptions^.PathToApp))[1], TempAction.ExecAppOptions.PathToApp);
-  SetPointedContentToString(@string(PWideChar(AExecAppOptions^.ListOfParams))[1], TempAction.ExecAppOptions.ListOfParams);
-  TempAction.ExecAppOptions.WaitForApp := AExecAppOptions^.WaitForApp;
-  SetPointedContentToString(@string(PWideChar(AExecAppOptions^.AppStdIn))[1], TempAction.ExecAppOptions.AppStdIn);
-  SetPointedContentToString(@string(PWideChar(AExecAppOptions^.CurrentDir))[1], TempAction.ExecAppOptions.CurrentDir);
-  TempAction.ExecAppOptions.UseInheritHandles := AExecAppOptions^.UseInheritHandles;
+  GetExecAppOptionsFromAPI(AExecAppOptions, TempAction);
 
   AddActionToTemplate(TemplateFileName, TempAction);
   Result := 0;
@@ -679,15 +943,15 @@ end;
 
 function Add_FindControl_ActionToTemplate(ATemplateFileName: Pointer;
 
-                                        AActionName: Pointer;
-                                        AAction: TClkAction;
-                                        AActionTimeout: LongInt; //ms
-                                        AActionEnabled: Boolean;
-                                        AActionCondition: Pointer;
+                                          AActionName: Pointer;
+                                          AAction: TClkAction;
+                                          AActionTimeout: LongInt; //ms
+                                          AActionEnabled: Boolean;
+                                          AActionCondition: Pointer;
 
-                                        AFindControlOptions: PClkFindControlOptionsAPI
+                                          AFindControlOptions: PClkFindControlOptionsAPI
 
-                                       ): LongInt;
+                                         ): LongInt;
 var
   TemplateFileName: string;
   TempAction: TClkActionRec;
@@ -699,64 +963,7 @@ begin
   end;
 
   SetBasicActionOptions(ATemplateFileName, AActionName, AAction, AActionTimeout, AActionEnabled, AActionCondition, TempAction, TemplateFileName);
-
-  //find control stuff
-  TempAction.FindControlOptions.MatchCriteria.WillMatchText := AFindControlOptions^.MatchCriteria.WillMatchText;
-  TempAction.FindControlOptions.MatchCriteria.WillMatchClassName := AFindControlOptions^.MatchCriteria.WillMatchClassName;
-  TempAction.FindControlOptions.MatchCriteria.WillMatchBitmapText := AFindControlOptions^.MatchCriteria.WillMatchBitmapText;
-  TempAction.FindControlOptions.MatchCriteria.WillMatchBitmapFiles := AFindControlOptions^.MatchCriteria.WillMatchBitmapFiles;
-  TempAction.FindControlOptions.MatchCriteria.WillMatchPrimitiveFiles := AFindControlOptions^.MatchCriteria.WillMatchPrimitiveFiles;
-  TempAction.FindControlOptions.MatchCriteria.SearchForControlMode := TSearchForControlMode(AFindControlOptions^.MatchCriteria.SearchForControlMode);
-
-  TempAction.FindControlOptions.AllowToFail := AFindControlOptions^.AllowToFail;
-  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.MatchText))[1], TempAction.FindControlOptions.MatchText);
-  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.MatchClassName))[1], TempAction.FindControlOptions.MatchClassName);
-  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.MatchTextSeparator))[1], TempAction.FindControlOptions.MatchTextSeparator);
-  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.MatchClassNameSeparator))[1], TempAction.FindControlOptions.MatchClassNameSeparator);
-  SetLength(TempAction.FindControlOptions.MatchBitmapText, 0);
-  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.MatchBitmapFiles))[1], TempAction.FindControlOptions.MatchBitmapFiles);
-  TempAction.FindControlOptions.MatchBitmapAlgorithm := TMatchBitmapAlgorithm(AFindControlOptions^.MatchBitmapAlgorithm);
-
-  TempAction.FindControlOptions.MatchBitmapAlgorithmSettings := AFindControlOptions^.MatchBitmapAlgorithmSettings;
-  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.InitialRectangle.Left))[1], TempAction.FindControlOptions.InitialRectangle.Left);
-  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.InitialRectangle.Top))[1], TempAction.FindControlOptions.InitialRectangle.Top);
-  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.InitialRectangle.Right))[1], TempAction.FindControlOptions.InitialRectangle.Right);
-  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.InitialRectangle.Bottom))[1], TempAction.FindControlOptions.InitialRectangle.Bottom);
-  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.InitialRectangle.LeftOffset))[1], TempAction.FindControlOptions.InitialRectangle.LeftOffset);
-  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.InitialRectangle.TopOffset))[1], TempAction.FindControlOptions.InitialRectangle.TopOffset);
-  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.InitialRectangle.RightOffset))[1], TempAction.FindControlOptions.InitialRectangle.RightOffset);
-  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.InitialRectangle.BottomOffset))[1], TempAction.FindControlOptions.InitialRectangle.BottomOffset);
-
-  TempAction.FindControlOptions.UseWholeScreen := AFindControlOptions^.UseWholeScreen;
-  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.ColorError))[1], TempAction.FindControlOptions.ColorError);
-  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.AllowedColorErrorCount))[1], TempAction.FindControlOptions.AllowedColorErrorCount);
-  TempAction.FindControlOptions.WaitForControlToGoAway := AFindControlOptions^.WaitForControlToGoAway;
-  TempAction.FindControlOptions.StartSearchingWithCachedControl := AFindControlOptions^.StartSearchingWithCachedControl;
-  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.CachedControlLeft))[1], TempAction.FindControlOptions.CachedControlLeft);
-  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.CachedControlTop))[1], TempAction.FindControlOptions.CachedControlTop);
-
-  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.MatchPrimitiveFiles))[1], TempAction.FindControlOptions.MatchPrimitiveFiles);
-  TempAction.FindControlOptions.GetAllControls := AFindControlOptions^.GetAllControls;
-  TempAction.FindControlOptions.UseFastSearch := AFindControlOptions^.UseFastSearch;
-  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.FastSearchAllowedColorErrorCount))[1], TempAction.FindControlOptions.FastSearchAllowedColorErrorCount);
-  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.IgnoredColors))[1], TempAction.FindControlOptions.IgnoredColors);
-  TempAction.FindControlOptions.SleepySearch := AFindControlOptions^.SleepySearch;
-  TempAction.FindControlOptions.StopSearchOnMismatch := AFindControlOptions^.StopSearchOnMismatch;
-
-  TempAction.FindControlOptions.ImageSource := TImageSource(AFindControlOptions^.ImageSource);
-  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.SourceFileName))[1], TempAction.FindControlOptions.SourceFileName);
-  TempAction.FindControlOptions.ImageSourceFileNameLocation := TImageSourceFileNameLocation(AFindControlOptions^.ImageSourceFileNameLocation);
-
-  TempAction.FindControlOptions.PrecisionTimeout := AFindControlOptions^.PrecisionTimeout;
-  TempAction.FindControlOptions.FullBackgroundImageInResult := AFindControlOptions^.FullBackgroundImageInResult;
-
-  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.MatchByHistogramSettings.MinPercentColorMatch))[1], TempAction.FindControlOptions.MatchByHistogramSettings.MinPercentColorMatch);
-  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.MatchByHistogramSettings.MostSignificantColorCountInSubBmp))[1], TempAction.FindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInSubBmp);
-  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp))[1], TempAction.FindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp);
-
-  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.EvaluateTextCount))[1], TempAction.FindControlOptions.EvaluateTextCount);
-  TempAction.FindControlOptions.CropFromScreenshot := AFindControlOptions^.CropFromScreenshot;
-  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.ThreadCount))[1], TempAction.FindControlOptions.ThreadCount);
+  GetFindControlOptionsFromAPI(AFindControlOptions, TempAction);
 
   AddActionToTemplate(TemplateFileName, TempAction);
   Result := 0;
@@ -814,12 +1021,7 @@ begin
   end;
 
   SetBasicActionOptions(ATemplateFileName, AActionName, acSetControlText, AActionTimeout, AActionEnabled, AActionCondition, TempAction, TemplateFileName);
-
-  //set control text stuff
-  SetPointedContentToString(@string(PWideChar(ASetControlTextOptions^.Text))[1], TempAction.SetTextOptions.Text);
-  TempAction.SetTextOptions.ControlType := ASetControlTextOptions^.ControlType;
-  SetPointedContentToString(@string(PWideChar(ASetControlTextOptions^.DelayBetweenKeyStrokes))[1], TempAction.SetTextOptions.DelayBetweenKeyStrokes);
-  SetPointedContentToString(@string(PWideChar(ASetControlTextOptions^.Count))[1], TempAction.SetTextOptions.Count);
+  GetSetControlTextOptionsFromAPI(ASetControlTextOptions, TempAction);
 
   AddActionToTemplate(TemplateFileName, TempAction);
   Result := 0;
@@ -847,19 +1049,7 @@ begin
   end;
 
   SetBasicActionOptions(ATemplateFileName, AActionName, acCallTemplate, AActionTimeout, AActionEnabled, AActionCondition, TempAction, TemplateFileName);
-
-  //call template stuff
-  SetPointedContentToString(@string(PWideChar(ACallTemplateOptions^.TemplateFileName))[1], TempAction.CallTemplateOptions.TemplateFileName);
-  SetPointedContentToString(@string(PWideChar(ACallTemplateOptions^.ListOfCustomVarsAndValues))[1], TempAction.CallTemplateOptions.ListOfCustomVarsAndValues);
-  TempAction.CallTemplateOptions.EvaluateBeforeCalling := ACallTemplateOptions^.EvaluateBeforeCalling;
-
-  TempAction.CallTemplateOptions.CallTemplateLoop.Enabled := ACallTemplateOptions^.CallTemplateLoop.Enabled;
-  SetPointedContentToString(@string(PWideChar(ACallTemplateOptions^.CallTemplateLoop.Counter))[1], TempAction.CallTemplateOptions.CallTemplateLoop.Counter);
-  SetPointedContentToString(@string(PWideChar(ACallTemplateOptions^.CallTemplateLoop.InitValue))[1], TempAction.CallTemplateOptions.CallTemplateLoop.InitValue);
-  SetPointedContentToString(@string(PWideChar(ACallTemplateOptions^.CallTemplateLoop.EndValue))[1], TempAction.CallTemplateOptions.CallTemplateLoop.EndValue);
-  TempAction.CallTemplateOptions.CallTemplateLoop.Direction := ACallTemplateOptions^.CallTemplateLoop.Direction;
-  SetPointedContentToString(@string(PWideChar(ACallTemplateOptions^.CallTemplateLoop.BreakCondition))[1], TempAction.CallTemplateOptions.CallTemplateLoop.BreakCondition);
-  TempAction.CallTemplateOptions.CallTemplateLoop.EvalBreakPosition := ACallTemplateOptions^.CallTemplateLoop.EvalBreakPosition;
+  GetCallTemplateOptionsFromAPI(ACallTemplateOptions, TempAction);
 
   AddActionToTemplate(TemplateFileName, TempAction);
   Result := 0;
@@ -887,9 +1077,7 @@ begin
   end;
 
   SetBasicActionOptions(ATemplateFileName, AActionName, acSleep, AActionTimeout, AActionEnabled, AActionCondition, TempAction, TemplateFileName);
-
-  //sleep stuff
-  SetPointedContentToString(@string(PWideChar(ASleepOptions^.Value))[1], TempAction.SleepOptions.Value);
+  GetSleepOptionsFromAPI(ASleepOptions, TempAction);
 
   AddActionToTemplate(TemplateFileName, TempAction);
   Result := 0;
@@ -909,8 +1097,6 @@ function AddSetVarActionToTemplate(ATemplateFileName: Pointer;
 var
   TemplateFileName: string;
   TempAction: TClkActionRec;
-
-  ListOfVarNames, ListOfVarValues, ListOfVarEvalBefore: TStringList;
 begin
   if InMemFS = nil then
   begin
@@ -919,56 +1105,7 @@ begin
   end;
 
   SetBasicActionOptions(ATemplateFileName, AActionName, acSetVar, AActionTimeout, AActionEnabled, AActionCondition, TempAction, TemplateFileName);
-
-  //SetVar stuff
-  SetPointedContentToString(@string(PWideChar(ASetVarOptions^.ListOfVarNames))[1], TempAction.SetVarOptions.ListOfVarNames);
-  SetPointedContentToString(@string(PWideChar(ASetVarOptions^.ListOfVarValues))[1], TempAction.SetVarOptions.ListOfVarValues);
-  SetPointedContentToString(@string(PWideChar(ASetVarOptions^.ListOfVarEvalBefore))[1], TempAction.SetVarOptions.ListOfVarEvalBefore);
-  TempAction.SetVarOptions.FailOnException := ASetVarOptions^.FailOnException;
-
-  Result := 0;
-
-  ListOfVarNames := TStringList.Create;
-  ListOfVarValues := TStringList.Create;
-  ListOfVarEvalBefore := TStringList.Create;
-  try
-    ListOfVarNames.Text := TempAction.SetVarOptions.ListOfVarNames;
-    ListOfVarValues.Text := TempAction.SetVarOptions.ListOfVarValues;
-    ListOfVarEvalBefore.Text := TempAction.SetVarOptions.ListOfVarEvalBefore;
-
-    if (ListOfVarNames.Count <> ListOfVarValues.Count) or (ListOfVarNames.Count <> ListOfVarEvalBefore.Count) then
-    begin
-      Result := -1;
-
-      ListOfVarNames.Clear;
-      ListOfVarValues.Clear;
-      ListOfVarEvalBefore.Clear;
-
-      ListOfVarNames.Add('$DLL_Err_Var$');
-      ListOfVarValues.Add('The number of items from ListOfVarValues or ListOfVarEvalBefore, does not match the number of items from ListOfVarNames.');
-      ListOfVarEvalBefore.Add('0');
-
-      ListOfVarNames.Add('$DLL_Err_ListOfVarNames.Count$');
-      ListOfVarNames.Add('$DLL_Err_ListOfVarValues.Count$');
-      ListOfVarNames.Add('$DLL_Err_ListOfVarEvalBefore.Count$');
-      ListOfVarValues.Add(IntToStr(ListOfVarNames.Count));
-      ListOfVarValues.Add(IntToStr(ListOfVarValues.Count));
-      ListOfVarValues.Add(IntToStr(ListOfVarEvalBefore.Count));
-      ListOfVarEvalBefore.Add('0');
-      ListOfVarEvalBefore.Add('0');
-      ListOfVarEvalBefore.Add('0');
-
-      TempAction.SetVarOptions.ListOfVarNames := ListOfVarNames.Text;
-      TempAction.SetVarOptions.ListOfVarValues := ListOfVarValues.Text;
-      TempAction.SetVarOptions.ListOfVarEvalBefore := ListOfVarEvalBefore.Text;
-
-      //Do not exit, simply create the bad action, then let the user debug it.
-    end;
-  finally
-    ListOfVarNames.Free;
-    ListOfVarValues.Free;
-    ListOfVarEvalBefore.Free;
-  end;
+  Result := GetSetVarOptionsFromAPI(ASetVarOptions, TempAction);
 
   AddActionToTemplate(TemplateFileName, TempAction);
 end;
@@ -981,7 +1118,7 @@ function AddWindowOperationsActionToTemplate(ATemplateFileName: Pointer;
                                              AActionEnabled: Boolean;
                                              AActionCondition: Pointer;
 
-                                             AWindowOperationsOptions: PClkWindowOperationsAPI
+                                             AWindowOperationsOptions: PClkWindowOperationsOptionsAPI
 
                                             ): LongInt; cdecl;
 var
@@ -995,15 +1132,7 @@ begin
   end;
 
   SetBasicActionOptions(ATemplateFileName, AActionName, acWindowOperations, AActionTimeout, AActionEnabled, AActionCondition, TempAction, TemplateFileName);
-
-  //Window Operations stuff
-  TempAction.WindowOperationsOptions.Operation := AWindowOperationsOptions^.Operation;
-  SetPointedContentToString(@string(PWideChar(AWindowOperationsOptions^.NewX))[1], TempAction.WindowOperationsOptions.NewX);
-  SetPointedContentToString(@string(PWideChar(AWindowOperationsOptions^.NewY))[1], TempAction.WindowOperationsOptions.NewY);
-  SetPointedContentToString(@string(PWideChar(AWindowOperationsOptions^.NewWidth))[1], TempAction.WindowOperationsOptions.NewWidth);
-  SetPointedContentToString(@string(PWideChar(AWindowOperationsOptions^.NewHeight))[1], TempAction.WindowOperationsOptions.NewHeight);
-  TempAction.WindowOperationsOptions.NewPositionEnabled := AWindowOperationsOptions^.NewPositionEnabled;
-  TempAction.WindowOperationsOptions.NewSizeEnabled := AWindowOperationsOptions^.NewSizeEnabled;
+  GetWindowOperationsOptionsFromAPI(AWindowOperationsOptions, TempAction);
 
   AddActionToTemplate(TemplateFileName, TempAction);
   Result := 0;
@@ -1031,10 +1160,7 @@ begin
   end;
 
   SetBasicActionOptions(ATemplateFileName, AActionName, acLoadSetVarFromFile, AActionTimeout, AActionEnabled, AActionCondition, TempAction, TemplateFileName);
-
-  //LoadSetVarFromFile stuff
-  SetPointedContentToString(@string(PWideChar(ALoadSetVarFromFileOptions^.FileName))[1], TempAction.LoadSetVarFromFileOptions.FileName);
-  SetPointedContentToString(@string(PWideChar(ALoadSetVarFromFileOptions^.SetVarActionName))[1], TempAction.LoadSetVarFromFileOptions.SetVarActionName);
+  GetLoadSetVarFromFileOptionsFromAPI(ALoadSetVarFromFileOptions, TempAction);
 
   AddActionToTemplate(TemplateFileName, TempAction);
   Result := 0;
@@ -1062,10 +1188,7 @@ begin
   end;
 
   SetBasicActionOptions(ATemplateFileName, AActionName, acSaveSetVarToFile, AActionTimeout, AActionEnabled, AActionCondition, TempAction, TemplateFileName);
-
-  //SaveSetVarToFile stuff
-  SetPointedContentToString(@string(PWideChar(ASaveSetVarToFileOptions^.FileName))[1], TempAction.SaveSetVarToFileOptions.FileName);
-  SetPointedContentToString(@string(PWideChar(ASaveSetVarToFileOptions^.SetVarActionName))[1], TempAction.SaveSetVarToFileOptions.SetVarActionName);
+  GetSaveSetVarToFileOptionsFromAPI(ASaveSetVarToFileOptions, TempAction);
 
   AddActionToTemplate(TemplateFileName, TempAction);
   Result := 0;
@@ -1093,10 +1216,7 @@ begin
   end;
 
   SetBasicActionOptions(ATemplateFileName, AActionName, acPlugin, AActionTimeout, AActionEnabled, AActionCondition, TempAction, TemplateFileName);
-
-  //Plugin stuff
-  SetPointedContentToString(@string(PWideChar(APluginOptions^.FileName))[1], TempAction.PluginOptions.FileName);
-  SetPointedContentToString(@string(PWideChar(APluginOptions^.ListOfPropertiesAndValues))[1], TempAction.PluginOptions.ListOfPropertiesAndValues);
+  GetPluginOptionsFromAPI(APluginOptions, TempAction);
 
   AddActionToTemplate(TemplateFileName, TempAction);
   Result := 0;
@@ -1124,19 +1244,7 @@ begin
   end;
 
   SetBasicActionOptions(ATemplateFileName, AActionName, acEditTemplate, AActionTimeout, AActionEnabled, AActionCondition, TempAction, TemplateFileName);
-
-  //Plugin stuff
-  TempAction.EditTemplateOptions.Operation := AEditTemplateOptions^.Operation;
-  TempAction.EditTemplateOptions.WhichTemplate := AEditTemplateOptions^.WhichTemplate;
-  SetPointedContentToString(@string(PWideChar(AEditTemplateOptions^.TemplateFileName))[1], TempAction.EditTemplateOptions.TemplateFileName);
-  SetPointedContentToString(@string(PWideChar(AEditTemplateOptions^.ListOfEditedProperties))[1], TempAction.EditTemplateOptions.ListOfEditedProperties);
-  SetPointedContentToString(@string(PWideChar(AEditTemplateOptions^.ListOfEnabledProperties))[1], TempAction.EditTemplateOptions.ListOfEnabledProperties);
-  SetPointedContentToString(@string(PWideChar(AEditTemplateOptions^.EditedActionName))[1], TempAction.EditTemplateOptions.EditedActionName);
-  TempAction.EditTemplateOptions.EditedActionType := AEditTemplateOptions^.EditedActionType;
-  SetPointedContentToString(@string(PWideChar(AEditTemplateOptions^.EditedActionCondition))[1], TempAction.EditTemplateOptions.EditedActionCondition);
-  TempAction.EditTemplateOptions.EditedActionTimeout := AEditTemplateOptions^.EditedActionTimeout;
-  SetPointedContentToString(@string(PWideChar(AEditTemplateOptions^.NewActionName))[1], TempAction.EditTemplateOptions.NewActionName);
-  TempAction.EditTemplateOptions.ShouldSaveTemplate := AEditTemplateOptions^.ShouldSaveTemplate;
+  GetEditTemplateOptionsFromAPI(AEditTemplateOptions, TempAction);
 
   AddActionToTemplate(TemplateFileName, TempAction);
   Result := 0;
@@ -1202,23 +1310,7 @@ begin
     Exit;
   end;
 
-  SetPointedContentToString(@string(PWideChar(AFindControlMatchBitmapText^.ForegroundColor))[1], FindControlMatchBitmapText.ForegroundColor);
-  SetPointedContentToString(@string(PWideChar(AFindControlMatchBitmapText^.BackgroundColor))[1], FindControlMatchBitmapText.BackgroundColor);
-  SetPointedContentToString(@string(PWideChar(AFindControlMatchBitmapText^.FontName))[1], FindControlMatchBitmapText.FontName);
-  FindControlMatchBitmapText.FontSize := AFindControlMatchBitmapText^.FontSize;
-  FindControlMatchBitmapText.Bold := AFindControlMatchBitmapText^.Bold;
-  FindControlMatchBitmapText.Italic := AFindControlMatchBitmapText^.Italic;
-  FindControlMatchBitmapText.Underline := AFindControlMatchBitmapText^.Underline;
-  FindControlMatchBitmapText.StrikeOut := AFindControlMatchBitmapText^.StrikeOut;
-  FindControlMatchBitmapText.FontQuality := AFindControlMatchBitmapText^.FontQuality;
-  FindControlMatchBitmapText.FontQualityUsesReplacement := AFindControlMatchBitmapText^.FontQualityUsesReplacement;
-  SetPointedContentToString(@string(PWideChar(AFindControlMatchBitmapText^.FontQualityReplacement))[1], FindControlMatchBitmapText.FontQualityReplacement);
-  SetPointedContentToString(@string(PWideChar(AFindControlMatchBitmapText^.ProfileName))[1], FindControlMatchBitmapText.ProfileName);
-  SetPointedContentToString(@string(PWideChar(AFindControlMatchBitmapText^.CropLeft))[1], FindControlMatchBitmapText.CropLeft);
-  SetPointedContentToString(@string(PWideChar(AFindControlMatchBitmapText^.CropTop))[1], FindControlMatchBitmapText.CropTop);
-  SetPointedContentToString(@string(PWideChar(AFindControlMatchBitmapText^.CropRight))[1], FindControlMatchBitmapText.CropRight);
-  SetPointedContentToString(@string(PWideChar(AFindControlMatchBitmapText^.CropBottom))[1], FindControlMatchBitmapText.CropBottom);
-  FindControlMatchBitmapText.IgnoreBackgroundColor := AFindControlMatchBitmapText^.IgnoreBackgroundColor;
+  GetMatchBitmapTextFromAPI(AFindControlMatchBitmapText, FindControlMatchBitmapText);
 
   Result := AddFontProfileToFindSubControlActionInTemplate(TemplateFileName, AActionIndex, FindControlMatchBitmapText);
 end;

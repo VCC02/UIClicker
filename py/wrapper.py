@@ -167,24 +167,46 @@ try:
     print("AddEditTemplateActionToTemplate: ", DllFuncs.AddEditTemplateActionToTemplate('VerifyClicking.clktmpl', 'Thirteenth', 0, True, '', ctypes.byref(EditTemplateOptions)))
     
     
+#///////////////
+
+    print("Preparing a FindSubControl with pointer to structure. This one does not need AddFontProfileToFindSubControlAction.")
+    FindSubControlOptions = GetDefaultFindControlOptions()
+    FindSubControlOptions.MatchText = '64-bit'
+    FindSubControlOptions.MatchClassName = ''
+
+    TempMatchBitmapTextRec = TMatchBitmapTextRec(3)
+    TempMatchBitmapTextRec.Items[0].ForegroundColor = '888888'
+    TempMatchBitmapTextRec.Items[1].ForegroundColor = '3888888'
+    TempMatchBitmapTextRec.Items[2].ForegroundColor = '7888888'
+    TempMatchBitmapTextRec.Items[0].BackgroundColor = '444444'
+    TempMatchBitmapTextRec.Items[1].BackgroundColor = '3444444'
+    TempMatchBitmapTextRec.Items[2].BackgroundColor = '7444444'
+    FindSubControlOptions.MatchBitmapText = PMatchBitmapTextRec(TempMatchBitmapTextRec)
+    FindSubControlOptions.ThreadCount = '3'
+    
+    print("AddFindSubControlActionToTemplate: ", DllFuncs.AddFindSubControlActionToTemplate('VerifyClicking.clktmpl', 'AFindSubColntrol', 1000, True, '$a$<>$b$', ctypes.byref(FindSubControlOptions)))
+
+#///////////////////
+    
+    
     print("PrepareFilesInServer: ", DllFuncs.PrepareFilesInServer('VerifyClicking.clktmpl'))
     
-    print("ExecuteActionAtIndex: ", DllFuncs.ExecuteActionAtIndex(AActionIndex = 6, AStackLevel = 0))
-    print("ExecuteActionAtIndex: ", DllFuncs.ExecuteActionAtIndex(AActionIndex = 2, AStackLevel = 0))
-    print("ExecuteActionAtIndex: ", DllFuncs.ExecuteActionAtIndex(AActionIndex = 3, AStackLevel = 0))
+    print("ExecuteActionAtIndex (Sleep): ", DllFuncs.ExecuteActionAtIndex(AActionIndex = 6, AStackLevel = 0))
+    print("ExecuteActionAtIndex (FindControl): ", DllFuncs.ExecuteActionAtIndex(AActionIndex = 2, AStackLevel = 0))
+    print("ExecuteActionAtIndex (FindSubControl): ", DllFuncs.ExecuteActionAtIndex(AActionIndex = 3, AStackLevel = 0))
     
     #print("StopTemplateExecution: ", DllFuncs.StopTemplateExecution(0))
     
     print("GetListOfFilesFromClientInMem: ", DllFuncs.GetListOfFilesFromClientInMem())
     
     # #print("GetTemplateContentFromClientInMemAsString: ", DllFuncs.GetTemplateContentFromClientInMemAsString('VerifyClicking.clktmpl'))
-    print("ExecuteActionAtIndex: ", DllFuncs.ExecuteActionAtIndex(AActionIndex = 9, AStackLevel = 0)) #Save SetVar vars to ini.
+    print("ExecuteActionAtIndex (SaveSetVarToFile): ", DllFuncs.ExecuteActionAtIndex(AActionIndex = 9, AStackLevel = 0)) #Save SetVar vars to ini.
     ######## maybe modify the vars here, to verify later that loading them will update from ini
-    print("ExecuteActionAtIndex: ", DllFuncs.ExecuteActionAtIndex(AActionIndex = 10, AStackLevel = 0)) #Load SetVar vars from ini.
+    print("ExecuteActionAtIndex (LoadSetVarFromFile): ", DllFuncs.ExecuteActionAtIndex(AActionIndex = 10, AStackLevel = 0)) #Load SetVar vars from ini.
 
-    print("ExecuteActionAtIndex: ", DllFuncs.ExecuteActionAtIndex(AActionIndex = 11, AStackLevel = 0)) #plugin.
+    print("ExecuteActionAtIndex (Plugin): ", DllFuncs.ExecuteActionAtIndex(AActionIndex = 11, AStackLevel = 0)) #plugin.
 
-    print("ExecuteActionAtIndex: ", DllFuncs.ExecuteActionAtIndex(AActionIndex = 12, AStackLevel = 0)) #EditTemplate.
+    print("ExecuteActionAtIndex (EditTemplate): ", DllFuncs.ExecuteActionAtIndex(AActionIndex = 12, AStackLevel = 0)) #EditTemplate.
 
 
     print("FileProviderClientThreadDone: ", DllFuncs.FileProviderClientThreadDone())
