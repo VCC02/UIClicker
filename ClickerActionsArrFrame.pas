@@ -475,6 +475,8 @@ type
     function HandleOnGenerateAndSaveTreeWithWinInterp(AHandle: THandle; ATreeFileName: string; AStep: Integer; AUseMouseSwipe: Boolean): Boolean;
     function HandleOnSetWinInterpOption(AWinInterpOptionName, AWinInterpOptionValue: string): Boolean;
 
+    procedure HandleOnWaitInDebuggingMode(var ADebuggingAction: TClkActionRec);
+
     function GetInMemFS: TInMemFileSystem;
     procedure SetInMemFS(Value: TInMemFileSystem);
     function GetExtRenderingInMemFS: TInMemFileSystem;
@@ -1176,6 +1178,7 @@ begin
   FActionExecution.OnExecuteActionByContent := HandleOnExecuteActionByContent;
   FActionExecution.OnLoadTemplateToActions := HandleOnLoadTemplateToActions;
   FActionExecution.OnSaveCompleteTemplateToFile := HandleOnSaveCompleteTemplateToFile;
+  FActionExecution.OnWaitInDebuggingMode := HandleOnWaitInDebuggingMode;
 
   FCmdConsoleHistory := TStringList.Create;
   FOnExecuteRemoteActionAtIndex := nil;
@@ -2023,6 +2026,66 @@ end;
 function TfrClickerActionsArr.HandleOnSetWinInterpOption(AWinInterpOptionName, AWinInterpOptionValue: string): Boolean;
 begin
   Result := DoOnSetWinInterpOption(AWinInterpOptionName, AWinInterpOptionValue);
+end;
+
+
+procedure TfrClickerActionsArr.HandleOnWaitInDebuggingMode(var ADebuggingAction: TClkActionRec);
+var
+  IndexBeforeEditing: Integer;
+begin
+  FContinuePlayingAll := False;
+  FPlaying := True;
+  FContinuePlayingBySteppingInto := False;  //without this, stepping into will set this flag to true and any subsequent actions will enter debugging mode
+
+  spdbtnContinuePlayingAll.Enabled := True;
+  spdbtnStepOver.Enabled := True;
+  spdbtnStopPlaying.Enabled := True;
+  spdbtnPlaySelectedAction.Enabled := False;
+  spdbtnPlayAllActions.Enabled := False;
+
+  if ADebuggingAction.ActionOptions.Action in [acCallTemplate, acPlugin] then
+    spdbtnStepInto.Enabled := True;   //Currently, there is a bug, which executes all called templates without debugging.
+                                      //FContinuePlayingBySteppingInto will cause the waiting loop to exit, when set by spdbtnStepInto.
+                                      //This will require an extra waiting loop.
+                                      //Until fixed, please use the other remote debuggin feature of CallTemplate (set both debugging parameters to True).
+  try
+    SetLength(FClkActions, Length(FClkActions) + 1);  //add a debugging action
+    vstActions.ClearSelection;
+
+    IndexBeforeEditing := Length(FClkActions) - 1;
+    CopyActionContent(ADebuggingAction, FClkActions[IndexBeforeEditing]);
+
+    vstActions.RootNodeCount := Length(FClkActions);
+    SelectNodeByIndex(vstActions, IndexBeforeEditing, True);
+
+    UpdateActionsArrFromControls(IndexBeforeEditing);
+    CopyActionContent(ADebuggingAction, FClkActions[IndexBeforeEditing]);  //call again, because UpdateActionsArrFromControls
+
+    frClickerActions.UpdatePageControlActionExecutionIcons;
+    UpdateControlsFromActionsArr(IndexBeforeEditing); //HandleActionSelection;
+    StopGlowingUpdateButton;
+
+    AddToLog('Entering in debugging mode.. Waiting for user to step over or continue debugging..');
+    WaitInDebuggingMode;
+  finally
+    AddToLog('Exiting debugging mode..');
+    spdbtnContinuePlayingAll.Enabled := False;
+    spdbtnStepOver.Enabled := False;
+    spdbtnStopPlaying.Enabled := False;
+    spdbtnPlaySelectedAction.Enabled := True;
+    spdbtnPlayAllActions.Enabled := True;
+    spdbtnStepInto.Enabled := False;
+    FPlaying := False;
+
+    AddToLog('Updating back the action..');
+    CopyActionContent(FClkActions[IndexBeforeEditing], ADebuggingAction);
+
+    try
+      RemoveAction(IndexBeforeEditing);  //delete the debugging action
+    except
+      AddToLog('Debugging action may have been moved (or at least its index is no longer valid).');
+    end;
+  end;
 end;
 
 

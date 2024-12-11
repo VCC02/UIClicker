@@ -1543,6 +1543,236 @@ begin
 end;
 
 
+function ExecuteClickAction(AActionName: Pointer;
+                            AActionTimeout: LongInt; //ms
+                            AClickOptions: PClkClickOptionsAPI;
+                            AUseServerDebugging: Boolean;
+                            AResultStr: Pointer): LongInt; cdecl;
+var
+  TempClkAction: TClkActionRec;
+  Res: string;
+begin
+  GetClickOptionsFromAPI(AClickOptions, TempClkAction);
+  Res := ClickerActionsClient.ExecuteClickAction(FRemoteAddress, TempClkAction.ClickOptions, True, AUseServerDebugging);
+  Result := SetPointedContentFromString(Res, AResultStr);
+end;
+
+
+function ExecuteExecAppAction(AActionName: Pointer;
+                              AActionTimeout: LongInt; //ms
+                              AExecAppOptions: PClkExecAppOptionsAPI;
+                              AUseServerDebugging: Boolean;
+                              AResultStr: Pointer): LongInt; cdecl;
+var
+  TempClkAction: TClkActionRec;
+  Res: string;
+  ActionName: string;
+begin
+  GetExecAppOptionsFromAPI(AExecAppOptions, TempClkAction);
+  SetPointedContentToString(@string(PWideChar(AActionName))[1], ActionName);
+  Res := ClickerActionsClient.ExecuteExecAppAction(FRemoteAddress, TempClkAction.ExecAppOptions, ActionName, AActionTimeout, True, AUseServerDebugging);
+  Result := SetPointedContentFromString(Res, AResultStr);
+end;
+
+
+function ExecuteFindControlAction(AActionName: Pointer;
+                                  AActionTimeout: LongInt; //ms
+                                  AFindControlOptions: PClkFindControlOptionsAPI;
+                                  AUseServerDebugging: Boolean;
+                                  AFileLocation: Pointer;
+                                  AResultStr: Pointer): LongInt; cdecl;
+var
+  TempClkAction: TClkActionRec;
+  Res: string;
+  ActionName: string;
+  FileLocation: string;
+begin
+  GetFindControlOptionsFromAPI(AFindControlOptions, TempClkAction);
+  SetPointedContentToString(@string(PWideChar(AActionName))[1], ActionName);
+  SetPointedContentToString(@string(PWideChar(AFileLocation))[1], FileLocation);
+  Res := ClickerActionsClient.ExecuteFindControlAction(FRemoteAddress, TempClkAction.FindControlOptions, ActionName, AActionTimeout, FileLocation, True, AUseServerDebugging);
+  Result := SetPointedContentFromString(Res, AResultStr);
+end;
+
+
+function ExecuteFindSubControlAction(AActionName: Pointer;
+                                     AActionTimeout: LongInt; //ms
+                                     AFindControlOptions: PClkFindControlOptionsAPI;
+                                     AUseServerDebugging: Boolean;
+                                     AFileLocation: Pointer;
+                                     AResultStr: Pointer): LongInt; cdecl;
+var
+  TempClkAction: TClkActionRec;
+  Res: string;
+  ActionName: string;
+  FileLocation: string;
+begin
+  GetFindControlOptionsFromAPI(AFindControlOptions, TempClkAction);
+  SetPointedContentToString(@string(PWideChar(AActionName))[1], ActionName);
+  SetPointedContentToString(@string(PWideChar(AFileLocation))[1], FileLocation);
+  Res := ClickerActionsClient.ExecuteFindSubControlAction(FRemoteAddress, TempClkAction.FindControlOptions, ActionName, AActionTimeout, FileLocation, True, AUseServerDebugging);
+  Result := SetPointedContentFromString(Res, AResultStr);
+end;
+
+
+function ExecuteSetControlTextAction(AActionName: Pointer;
+                                     AActionTimeout: LongInt; //ms
+                                     ASetControlTextOptions: PClkSetTextOptionsAPI;
+                                     AUseServerDebugging: Boolean;
+                                     AFileLocation: Pointer;
+                                     AResultStr: Pointer): LongInt; cdecl;
+var
+  TempClkAction: TClkActionRec;
+  Res: string;
+  ActionName: string;
+  FileLocation: string;
+begin
+  GetSetControlTextOptionsFromAPI(ASetControlTextOptions, TempClkAction);
+  SetPointedContentToString(@string(PWideChar(AActionName))[1], ActionName);
+  SetPointedContentToString(@string(PWideChar(AFileLocation))[1], FileLocation);
+  Res := ClickerActionsClient.ExecuteSetControlTextAction(FRemoteAddress, TempClkAction.SetTextOptions, True, AUseServerDebugging);
+  Result := SetPointedContentFromString(Res, AResultStr);
+end;
+
+
+function ExecuteCallTemplateAction(AActionName: Pointer;
+                                   AActionTimeout: LongInt; //ms
+                                   ACallTemplateOptions: PClkCallTemplateOptionsAPI;
+                                   AUseServerDebugging: Boolean;
+                                   AFileLocation: Pointer;
+                                   AResultStr: Pointer): LongInt; cdecl;
+var
+  TempClkAction: TClkActionRec;
+  Res: string;
+  ActionName: string;
+  FileLocation: string;
+begin
+  GetCallTemplateOptionsFromAPI(ACallTemplateOptions, TempClkAction);
+  SetPointedContentToString(@string(PWideChar(AActionName))[1], ActionName);
+  SetPointedContentToString(@string(PWideChar(AFileLocation))[1], FileLocation);
+  Res := ClickerActionsClient.ExecuteCallTemplateAction(FRemoteAddress, TempClkAction.CallTemplateOptions, False, False, FileLocation, True, AUseServerDebugging);
+  Result := SetPointedContentFromString(Res, AResultStr);
+end;
+
+
+function ExecuteSleepAction(AActionName: Pointer;
+                            AActionTimeout: LongInt; //ms
+                            ASleepOptions: PClkSleepOptionsAPI;
+                            AUseServerDebugging: Boolean;
+                            AResultStr: Pointer): LongInt; cdecl;
+var
+  TempClkAction: TClkActionRec;
+  Res: string;
+  ActionName: string;
+begin
+  GetSleepOptionsFromAPI(ASleepOptions, TempClkAction);
+  SetPointedContentToString(@string(PWideChar(AActionName))[1], ActionName);
+  Res := ClickerActionsClient.ExecuteSleepAction(FRemoteAddress, TempClkAction.SleepOptions, ActionName, True, AUseServerDebugging);
+  Result := SetPointedContentFromString(Res, AResultStr);
+end;
+
+
+function ExecuteSetVarAction(AActionName: Pointer;
+                             AActionTimeout: LongInt; //ms
+                             ASetVarOptions: PClkSetVarOptionsAPI;
+                             AUseServerDebugging: Boolean;
+                             AResultStr: Pointer): LongInt; cdecl;
+var
+  TempClkAction: TClkActionRec;
+  Res: string;
+  ActionName: string;
+begin
+  GetSetVarOptionsFromAPI(ASetVarOptions, TempClkAction);
+  SetPointedContentToString(@string(PWideChar(AActionName))[1], ActionName);
+  Res := ClickerActionsClient.ExecuteSetVarAction(FRemoteAddress, TempClkAction.SetVarOptions, True, AUseServerDebugging);
+  Result := SetPointedContentFromString(Res, AResultStr);
+end;
+
+
+function ExecuteWindowOperationsAction(AActionName: Pointer;
+                                       AActionTimeout: LongInt; //ms
+                                       AWindowOperationsOptions: PClkWindowOperationsOptionsAPI;
+                                       AUseServerDebugging: Boolean;
+                                       AResultStr: Pointer): LongInt; cdecl;
+var
+  TempClkAction: TClkActionRec;
+  Res: string;
+  ActionName: string;
+begin
+  GetWindowOperationsOptionsFromAPI(AWindowOperationsOptions, TempClkAction);
+  SetPointedContentToString(@string(PWideChar(AActionName))[1], ActionName);
+  Res := ClickerActionsClient.ExecuteWindowOperationsAction(FRemoteAddress, TempClkAction.WindowOperationsOptions, True, AUseServerDebugging);
+  Result := SetPointedContentFromString(Res, AResultStr);
+end;
+
+
+function ExecuteLoadSetVarFromFileAction(AActionName: Pointer;
+                                         AActionTimeout: LongInt; //ms
+                                         ALoadSetVarFromFileOptions: PClkLoadSetVarFromFileOptionsAPI;
+                                         AUseServerDebugging: Boolean;
+                                         AResultStr: Pointer): LongInt; cdecl;
+var
+  TempClkAction: TClkActionRec;
+  Res: string;
+  ActionName: string;
+begin
+  GetLoadSetVarFromFileOptionsFromAPI(ALoadSetVarFromFileOptions, TempClkAction);
+  SetPointedContentToString(@string(PWideChar(AActionName))[1], ActionName);
+  Res := ClickerActionsClient.ExecuteLoadSetVarFromFileAction(FRemoteAddress, TempClkAction.LoadSetVarFromFileOptions, True, AUseServerDebugging);
+  Result := SetPointedContentFromString(Res, AResultStr);
+end;
+
+
+function ExecuteSaveSetVarToFileAction(AActionName: Pointer;
+                                       AActionTimeout: LongInt; //ms
+                                       ASaveSetVarToFileOptions: PClkSaveSetVarToFileOptionsAPI;
+                                       AUseServerDebugging: Boolean;
+                                       AResultStr: Pointer): LongInt; cdecl;
+var
+  TempClkAction: TClkActionRec;
+  Res: string;
+  ActionName: string;
+begin
+  GetSaveSetVarToFileOptionsFromAPI(ASaveSetVarToFileOptions, TempClkAction);
+  SetPointedContentToString(@string(PWideChar(AActionName))[1], ActionName);
+  Res := ClickerActionsClient.ExecuteSaveSetVarToFileAction(FRemoteAddress, TempClkAction.SaveSetVarToFileOptions, True, AUseServerDebugging);
+  Result := SetPointedContentFromString(Res, AResultStr);
+end;
+
+
+function ExecutePluginAction(AActionName: Pointer;
+                             AActionTimeout: LongInt; //ms
+                             APluginOptions: PClkPluginOptionsAPI;
+                             AUseServerDebugging: Boolean;
+                             AResultStr: Pointer): LongInt; cdecl;
+var
+  TempClkAction: TClkActionRec;
+  Res: string;
+  ActionName: string;
+begin
+  GetPluginOptionsFromAPI(APluginOptions, TempClkAction);
+  SetPointedContentToString(@string(PWideChar(AActionName))[1], ActionName);
+  Res := ClickerActionsClient.ExecutePluginAction(FRemoteAddress, TempClkAction.PluginOptions, True, AUseServerDebugging);
+  Result := SetPointedContentFromString(Res, AResultStr);
+end;
+
+
+function ExecuteEditTemplateAction(AActionName: Pointer;
+                                   AActionTimeout: LongInt; //ms
+                                   AEditTemplateOptions: PClkEditTemplateOptionsAPI;
+                                   AUseServerDebugging: Boolean;
+                                   AResultStr: Pointer): LongInt; cdecl;
+var
+  TempClkAction: TClkActionRec;
+  Res: string;
+  ActionName: string;
+begin
+  GetEditTemplateOptionsFromAPI(AEditTemplateOptions, TempClkAction);
+  SetPointedContentToString(@string(PWideChar(AActionName))[1], ActionName);
+  Res := ClickerActionsClient.ExecuteEditTemplateAction(FRemoteAddress, TempClkAction.EditTemplateOptions, True, AUseServerDebugging);
+  Result := SetPointedContentFromString(Res, AResultStr);
+end;
+
 
 exports
   InitClickerClient,
@@ -1586,7 +1816,21 @@ exports
   SetFileProviderClientConnectTimeout,
 
   ClearClientInMemFS,
-  ClearServerInMemFS;
+  ClearServerInMemFS,
+
+  ExecuteClickAction,
+  ExecuteExecAppAction,
+  ExecuteFindControlAction,
+  ExecuteFindSubControlAction,
+  ExecuteSetControlTextAction,
+  ExecuteCallTemplateAction,
+  ExecuteSleepAction,
+  ExecuteSetVarAction,
+  ExecuteWindowOperationsAction,
+  ExecuteLoadSetVarFromFileAction,
+  ExecuteSaveSetVarToFileAction,
+  ExecutePluginAction,
+  ExecuteEditTemplateAction;
 begin
   ClientLastError := '';
   frmClickerClientLogging := nil;

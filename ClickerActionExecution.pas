@@ -57,6 +57,9 @@ type
   TOnLoadTemplateToActions = function(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; out ANotes, AIconPath: string; AWaitForFileAvailability: Boolean = False): string of object;
   TOnSaveCompleteTemplateToFile = function(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; ANotes, AIconPath: string; AUpdateUI, AShouldSaveSelfTemplate: Boolean): string of object;
 
+  TOnWaitInDebuggingMode = procedure(var ADebuggingAction: TClkActionRec) of object;
+
+
   TActionExecution = class
   private
     FClickerVars: TStringList;  //not created here in this class, used from outside
@@ -116,6 +119,8 @@ type
     FOnLoadTemplateToActions: TOnLoadTemplateToActions;
     FOnSaveCompleteTemplateToFile: TOnSaveCompleteTemplateToFile;
 
+    FOnWaitInDebuggingMode: TOnWaitInDebuggingMode;
+
     function GetActionVarValue(VarName: string): string;
     procedure SetActionVarValue(VarName, VarValue: string);
     function EvaluateReplacements(s: string; Recursive: Boolean = True; AEvalTextCount: Integer = -1): string;
@@ -171,6 +176,8 @@ type
     function DoOnExecuteActionByContent(var AAllActions: TClkActionsRecArr; AActionIndex: Integer): Boolean;
     function DoOnLoadTemplateToActions(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; out ANotes, AIconPath: string; AWaitForFileAvailability: Boolean = False): string;
     function DoOnSaveCompleteTemplateToFile(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; ANotes, AIconPath: string; AUpdateUI, AShouldSaveSelfTemplate: Boolean): string;
+
+    procedure DoOnWaitInDebuggingMode(var ADebuggingAction: TClkActionRec);
 
     function HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     function HandleOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
@@ -270,6 +277,8 @@ type
     property OnExecuteActionByContent: TOnExecuteActionByContent write FOnExecuteActionByContent;
     property OnLoadTemplateToActions: TOnLoadTemplateToActions write FOnLoadTemplateToActions;
     property OnSaveCompleteTemplateToFile: TOnSaveCompleteTemplateToFile write FOnSaveCompleteTemplateToFile;
+
+    property OnWaitInDebuggingMode: TOnWaitInDebuggingMode write FOnWaitInDebuggingMode;
   end;
 
 
@@ -344,6 +353,8 @@ begin
   FOnExecuteActionByContent := nil;
   FOnLoadTemplateToActions := nil;
   FOnSaveCompleteTemplateToFile := nil;
+
+  FOnWaitInDebuggingMode := nil;
 end;
 
 
@@ -947,6 +958,15 @@ begin
     raise Exception.Create('OnSaveCompleteTemplateToFile is not assigned.')
   else
     Result := FOnSaveCompleteTemplateToFile(Fnm, AActions, AWhichTemplate, ANotes, AIconPath, AUpdateUI, AShouldSaveSelfTemplate);
+end;
+
+
+procedure TActionExecution.DoOnWaitInDebuggingMode(var ADebuggingAction: TClkActionRec);
+begin
+  if not Assigned(FOnWaitInDebuggingMode) then
+    raise Exception.Create('OnWaitInDebuggingMode is not assigned.')
+  else
+    FOnWaitInDebuggingMode(ADebuggingAction);
 end;
 
 
@@ -4376,22 +4396,52 @@ begin
 end;
 
 
+procedure GetActionOptionsFromParams(AListOfOptionsParams: TStrings; var AAction: TClkActionRec);
+begin
+  AAction.ActionDebuggingStatus := adsNone;
+  AAction.ActionBreakPoint.Exists := False;
+  AAction.ActionBreakPoint.Enabled := False;
+  AAction.ActionStatus := asNotStarted;
+  AAction.ActionSkipped := False;
+
+  AAction.ActionOptions.ActionName := AListOfOptionsParams.Values[CPropertyName_ActionName];
+  AAction.ActionOptions.ActionTimeout := StrToIntDef(AListOfOptionsParams.Values[CPropertyName_ActionTimeout], 1000);
+  AAction.ActionOptions.Action := TClkAction(CClkUnsetAction);
+  AAction.ActionOptions.ActionEnabled := True;
+  AAction.ActionOptions.ActionCondition := '';
+  AAction.ActionOptions.ExecutionIndex := '';
+
+  if AAction.ActionOptions.ActionName = '' then
+    AAction.ActionOptions.ActionName := 'Debugging action';
+
+  if AAction.ActionOptions.ActionTimeout < 0 then
+    AAction.ActionOptions.ActionTimeout := 600000; //10min
+end;
+
+
 function TActionExecution.ExecuteClickActionAsString(AListOfClickOptionsParams: TStrings): Boolean;
 var
-  ClickOptions: TClkClickOptions;
   Err: string;
+  WorkAction: TClkActionRec;
 begin
   Result := False;
   SetActionVarValue('$ExecAction_Err$', '');
   try
-    Err := SetClickActionProperties(AListOfClickOptionsParams, ClickOptions);
+    Err := SetClickActionProperties(AListOfClickOptionsParams, WorkAction.ClickOptions);
     if Err <> '' then
     begin
       SetActionVarValue('$ExecAction_Err$', Err);
       Exit;
     end;
 
-    Result := ExecuteMultiClickAction(ClickOptions);
+    if AListOfClickOptionsParams.Values[CREParam_UseServerDebugging] = '1' then
+    begin
+      GetActionOptionsFromParams(AListOfClickOptionsParams, WorkAction);
+      WorkAction.ActionOptions.Action := acClick;
+      DoOnWaitInDebuggingMode(WorkAction);
+    end;
+
+    Result := ExecuteMultiClickAction(WorkAction.ClickOptions);
   finally
     SetLastActionStatus(Result, False);
   end;
@@ -4400,21 +4450,27 @@ end;
 
 function TActionExecution.ExecuteExecAppActionAsString(AListOfExecAppOptionsParams: TStrings): Boolean;
 var
-  ExecAppOptions: TClkExecAppOptions;
-  ActionOptions: TClkActionOptions;
+  WorkAction: TClkActionRec;
   Err: string;
 begin
   Result := False;
   SetActionVarValue('$ExecAction_Err$', '');
   try
-    Err := SetExecAppActionProperties(AListOfExecAppOptionsParams, ExecAppOptions, ActionOptions);
+    Err := SetExecAppActionProperties(AListOfExecAppOptionsParams, WorkAction.ExecAppOptions, WorkAction.ActionOptions);
     if Err <> '' then
     begin
       SetActionVarValue('$ExecAction_Err$', Err);
       Exit;
     end;
 
-    Result := ExecuteExecAppAction(ExecAppOptions, ActionOptions);
+    if AListOfExecAppOptionsParams.Values[CREParam_UseServerDebugging] = '1' then
+    begin
+      GetActionOptionsFromParams(AListOfExecAppOptionsParams, WorkAction);
+      WorkAction.ActionOptions.Action := acExecApp;
+      DoOnWaitInDebuggingMode(WorkAction);
+    end;
+
+    Result := ExecuteExecAppAction(WorkAction.ExecAppOptions, WorkAction.ActionOptions);
   finally
     SetLastActionStatus(Result, False);
   end;
@@ -4423,43 +4479,59 @@ end;
 
 function TActionExecution.ExecuteFindControlActionAsString(AListOfFindControlOptionsParams: TStrings; AIsSubControl: Boolean): Boolean;
 var
-  FindControlOptions: TClkFindControlOptions;
-  ActionOptions: TClkActionOptions;
+  WorkAction: TClkActionRec;
   Err: string;
 begin
   Result := False;
   SetActionVarValue('$ExecAction_Err$', '');
   try
-    Err := SetFindControlActionProperties(AListOfFindControlOptionsParams, AIsSubControl, AddToLog, FindControlOptions, ActionOptions);
+    Err := SetFindControlActionProperties(AListOfFindControlOptionsParams, AIsSubControl, AddToLog, WorkAction.FindControlOptions, WorkAction.ActionOptions);
     if Err <> '' then
     begin
       SetActionVarValue('$ExecAction_Err$', Err);
       Exit;
     end;
 
-    Result := ExecuteFindControlActionWithTimeout(FindControlOptions, ActionOptions, AIsSubControl);
+    if AListOfFindControlOptionsParams.Values[CREParam_UseServerDebugging] = '1' then
+    begin
+      GetActionOptionsFromParams(AListOfFindControlOptionsParams, WorkAction);
+      WorkAction.ActionOptions.Action := acFindControl;
+      if AIsSubControl then
+        WorkAction.ActionOptions.Action := acFindSubControl;
+
+      DoOnWaitInDebuggingMode(WorkAction);
+    end;
+
+    Result := ExecuteFindControlActionWithTimeout(WorkAction.FindControlOptions, WorkAction.ActionOptions, AIsSubControl);
   finally
-    SetLastActionStatus(Result, FindControlOptions.AllowToFail);
+    SetLastActionStatus(Result, WorkAction.FindControlOptions.AllowToFail);
   end;
 end;
 
 
 function TActionExecution.ExecuteSetControlTextActionAsString(AListOfSetControlTextOptionsParams: TStrings): Boolean;
 var
-  SetTextOptions: TClkSetTextOptions;
+  WorkAction: TClkActionRec;
   Err: string;
 begin
   Result := False;
   SetActionVarValue('$ExecAction_Err$', '');
   try
-    Err := SetSetControlTextActionProperties(AListOfSetControlTextOptionsParams, SetTextOptions);
+    Err := SetSetControlTextActionProperties(AListOfSetControlTextOptionsParams, WorkAction.SetTextOptions);
     if Err <> '' then
     begin
       SetActionVarValue('$ExecAction_Err$', Err);
       Exit;
     end;
 
-    Result := ExecuteSetControlTextAction(SetTextOptions);
+    if AListOfSetControlTextOptionsParams.Values[CREParam_UseServerDebugging] = '1' then
+    begin
+      GetActionOptionsFromParams(AListOfSetControlTextOptionsParams, WorkAction);
+      WorkAction.ActionOptions.Action := acSetControlText;
+      DoOnWaitInDebuggingMode(WorkAction);
+    end;
+
+    Result := ExecuteSetControlTextAction(WorkAction.SetTextOptions);
   finally
     SetLastActionStatus(Result, False);
   end;
@@ -4468,7 +4540,7 @@ end;
 
 function TActionExecution.ExecuteCallTemplateActionAsString(AListOfCallTemplateOptionsParams: TStrings): Boolean;
 var
-  CallTemplateOptions: TClkCallTemplateOptions;
+  WorkAction: TClkActionRec;
   IsDebugging: Boolean;
   Err: string;
 begin
@@ -4477,14 +4549,22 @@ begin
   try
     IsDebugging := AListOfCallTemplateOptionsParams.Values['IsDebugging'] = '1';
 
-    Err := SetCallTemplateActionProperties(AListOfCallTemplateOptionsParams, CallTemplateOptions);
+    Err := SetCallTemplateActionProperties(AListOfCallTemplateOptionsParams, WorkAction.CallTemplateOptions);
     if Err <> '' then
     begin
       SetActionVarValue('$ExecAction_Err$', Err);
       Exit;
     end;
 
-    Result := ExecuteLoopedCallTemplateAction(CallTemplateOptions, IsDebugging, IsDebugging); //not sure if AShouldStopAtBreakPoint should be the same as IsDebugging or if it should be another http param
+    if AListOfCallTemplateOptionsParams.Values[CREParam_UseServerDebugging] = '1' then
+    begin
+      IsDebugging := False;
+      GetActionOptionsFromParams(AListOfCallTemplateOptionsParams, WorkAction);
+      WorkAction.ActionOptions.Action := acCallTemplate;
+      DoOnWaitInDebuggingMode(WorkAction);
+    end;
+
+    Result := ExecuteLoopedCallTemplateAction(WorkAction.CallTemplateOptions, IsDebugging, IsDebugging); //not sure if AShouldStopAtBreakPoint should be the same as IsDebugging or if it should be another http param
 
     if not Result then
       AddToLog(DateTimeToStr(Now) + '  /ExecuteCallTemplateAction is False. $ExecAction_Err$: ' + EvaluateReplacements('$ExecAction_Err$'))
@@ -4498,21 +4578,27 @@ end;
 
 function TActionExecution.ExecuteSleepActionAsString(AListOfSleepOptionsParams: TStrings): Boolean;
 var
-  SleepOptions: TClkSleepOptions;
-  ActionOptions: TClkActionOptions;
+  WorkAction: TClkActionRec;
   Err: string;
 begin
   Result := False;
   SetActionVarValue('$ExecAction_Err$', '');
   try
-    Err := SetSleepActionProperties(AListOfSleepOptionsParams, SleepOptions, ActionOptions);
+    Err := SetSleepActionProperties(AListOfSleepOptionsParams, WorkAction.SleepOptions, WorkAction.ActionOptions);
     if Err <> '' then
     begin
       SetActionVarValue('$ExecAction_Err$', Err);
       Exit;
     end;
 
-    Result := ExecuteSleepAction(SleepOptions, ActionOptions);
+    if AListOfSleepOptionsParams.Values[CREParam_UseServerDebugging] = '1' then
+    begin
+      GetActionOptionsFromParams(AListOfSleepOptionsParams, WorkAction);
+      WorkAction.ActionOptions.Action := acSleep;
+      DoOnWaitInDebuggingMode(WorkAction);
+    end;
+
+    Result := ExecuteSleepAction(WorkAction.SleepOptions, WorkAction.ActionOptions);
   finally
     SetLastActionStatus(Result, False);
   end;
@@ -4521,20 +4607,27 @@ end;
 
 function TActionExecution.ExecuteSetVarActionAsString(AListOfSetVarOptionsParams: TStrings): Boolean;
 var
-  SetVarOptions: TClkSetVarOptions;
+  WorkAction: TClkActionRec;
   Err: string;
 begin
   Result := False;
   SetActionVarValue('$ExecAction_Err$', '');
   try
-    Err := SetSetVarActionProperties(AListOfSetVarOptionsParams, SetVarOptions);
+    Err := SetSetVarActionProperties(AListOfSetVarOptionsParams, WorkAction.SetVarOptions);
     if Err <> '' then
     begin
       SetActionVarValue('$ExecAction_Err$', Err);
       Exit;
     end;
 
-    Result := ExecuteSetVarAction(SetVarOptions);
+    if AListOfSetVarOptionsParams.Values[CREParam_UseServerDebugging] = '1' then
+    begin
+      GetActionOptionsFromParams(AListOfSetVarOptionsParams, WorkAction);
+      WorkAction.ActionOptions.Action := acSetVar;
+      DoOnWaitInDebuggingMode(WorkAction);
+    end;
+
+    Result := ExecuteSetVarAction(WorkAction.SetVarOptions);
   finally
     SetLastActionStatus(Result, False);
   end;
@@ -4543,20 +4636,27 @@ end;
 
 function TActionExecution.ExecuteWindowOperationsActionAsString(AListOfWindowOperationsOptionsParams: TStrings): Boolean;
 var
-  WindowOperationsOptions: TClkWindowOperationsOptions;
+  WorkAction: TClkActionRec;
   Err: string;
 begin
   Result := False;
   SetActionVarValue('$ExecAction_Err$', '');
   try
-    Err := SetWindowOperationsActionProperties(AListOfWindowOperationsOptionsParams, WindowOperationsOptions);
+    Err := SetWindowOperationsActionProperties(AListOfWindowOperationsOptionsParams, WorkAction.WindowOperationsOptions);
     if Err <> '' then
     begin
       SetActionVarValue('$ExecAction_Err$', Err);
       Exit;
     end;
 
-    Result := ExecuteWindowOperationsAction(WindowOperationsOptions);
+    if AListOfWindowOperationsOptionsParams.Values[CREParam_UseServerDebugging] = '1' then
+    begin
+      GetActionOptionsFromParams(AListOfWindowOperationsOptionsParams, WorkAction);
+      WorkAction.ActionOptions.Action := acWindowOperations;
+      DoOnWaitInDebuggingMode(WorkAction);
+    end;
+
+    Result := ExecuteWindowOperationsAction(WorkAction.WindowOperationsOptions);
   finally
     SetLastActionStatus(Result, False);
   end;
@@ -4565,20 +4665,27 @@ end;
 
 function TActionExecution.ExecuteLoadSetVarFromFileActionAsString(AListOfLoadSetVarOptionsParams: TStrings): Boolean;
 var
-  LoadSetVarFromFileOptions: TClkLoadSetVarFromFileOptions;
+  WorkAction: TClkActionRec;
   Err: string;
 begin
   Result := False;
   SetActionVarValue('$ExecAction_Err$', '');
   try
-    Err := SetLoadSetVarFromFileActionProperties(AListOfLoadSetVarOptionsParams, LoadSetVarFromFileOptions);
+    Err := SetLoadSetVarFromFileActionProperties(AListOfLoadSetVarOptionsParams, WorkAction.LoadSetVarFromFileOptions);
     if Err <> '' then
     begin
       SetActionVarValue('$ExecAction_Err$', Err);
       Exit;
     end;
 
-    Result := ExecuteLoadSetVarFromFileAction(LoadSetVarFromFileOptions);
+    if AListOfLoadSetVarOptionsParams.Values[CREParam_UseServerDebugging] = '1' then
+    begin
+      GetActionOptionsFromParams(AListOfLoadSetVarOptionsParams, WorkAction);
+      WorkAction.ActionOptions.Action := acLoadSetVarFromFile;
+      DoOnWaitInDebuggingMode(WorkAction);
+    end;
+
+    Result := ExecuteLoadSetVarFromFileAction(WorkAction.LoadSetVarFromFileOptions);
   finally
     SetLastActionStatus(Result, False);
   end;
@@ -4587,20 +4694,27 @@ end;
 
 function TActionExecution.ExecuteSaveSetVarToFileActionAsString(AListOfSaveSetVarOptionsParams: TStrings): Boolean;
 var
-  SaveSetVarToFileOptions: TClkSaveSetVarToFileOptions;
+  WorkAction: TClkActionRec;
   Err: string;
 begin
   Result := False;
   SetActionVarValue('$ExecAction_Err$', '');
   try
-    Err := SetSaveSetVarToFileActionProperties(AListOfSaveSetVarOptionsParams, SaveSetVarToFileOptions);
+    Err := SetSaveSetVarToFileActionProperties(AListOfSaveSetVarOptionsParams, WorkAction.SaveSetVarToFileOptions);
     if Err <> '' then
     begin
       SetActionVarValue('$ExecAction_Err$', Err);
       Exit;
     end;
 
-    Result := ExecuteSaveSetVarToFileAction(SaveSetVarToFileOptions);
+    if AListOfSaveSetVarOptionsParams.Values[CREParam_UseServerDebugging] = '1' then
+    begin
+      GetActionOptionsFromParams(AListOfSaveSetVarOptionsParams, WorkAction);
+      WorkAction.ActionOptions.Action := acSaveSetVarToFile;
+      DoOnWaitInDebuggingMode(WorkAction);
+    end;
+
+    Result := ExecuteSaveSetVarToFileAction(WorkAction.SaveSetVarToFileOptions);
   finally
     SetLastActionStatus(Result, False);
   end;
@@ -4609,7 +4723,7 @@ end;
 
 function TActionExecution.ExecutePluginActionAsString(AListOfPluginOptionsParams: TStrings): Boolean;
 var
-  PluginOptions: TClkPluginOptions;
+  WorkAction: TClkActionRec;
   TempAllActions: PClkActionsRecArr;
   TempListOfAllVars: TStringList;
   IsDebugging: Boolean;
@@ -4618,20 +4732,27 @@ begin
   Result := False;
   SetActionVarValue('$ExecAction_Err$', '');
   try
-    Err := SetPluginActionProperties(AListOfPluginOptionsParams, PluginOptions);
+    Err := SetPluginActionProperties(AListOfPluginOptionsParams, WorkAction.PluginOptions);
     if Err <> '' then
     begin
       SetActionVarValue('$ExecAction_Err$', Err);
       Exit;
     end;
 
-    IsDebugging := AListOfPluginOptionsParams.Values['IsDebugging'] = '1';
+    IsDebugging := AListOfPluginOptionsParams.Values['IsDebugging'] = '1';  //this is plugin debugging, which is different than UseServerDebugging
     TempAllActions := DoOnGetAllActions;
+
+    if AListOfPluginOptionsParams.Values[CREParam_UseServerDebugging] = '1' then
+    begin
+      GetActionOptionsFromParams(AListOfPluginOptionsParams, WorkAction);
+      WorkAction.ActionOptions.Action := acPlugin;
+      DoOnWaitInDebuggingMode(WorkAction);
+    end;
 
     TempListOfAllVars := TStringList.Create;
     try
       DoOnBackupVars(TempListOfAllVars);
-      Result := ExecutePluginAction(PluginOptions, TempAllActions, TempListOfAllVars, DoOnResolveTemplatePath(PluginOptions.FileName), IsDebugging, IsDebugging); //passing two IsDebugging params. ToDo:  review the logic
+      Result := ExecutePluginAction(WorkAction.PluginOptions, TempAllActions, TempListOfAllVars, DoOnResolveTemplatePath(WorkAction.PluginOptions.FileName), IsDebugging, IsDebugging); //passing two IsDebugging params. ToDo:  review the logic
     finally
       TempListOfAllVars.Free;
     end;
@@ -4643,20 +4764,27 @@ end;
 
 function TActionExecution.ExecuteEditTemplateActionAsString(AListOfEditTemplateOptionsParams: TStrings): Boolean;
 var
-  EditTemplateOptions: TClkEditTemplateOptions;
+  WorkAction: TClkActionRec;
   Err: string;
 begin
   Result := False;
   SetActionVarValue('$ExecAction_Err$', '');
   try
-    Err := SetEditTemplateActionProperties(AListOfEditTemplateOptionsParams, EditTemplateOptions, True);
+    Err := SetEditTemplateActionProperties(AListOfEditTemplateOptionsParams, WorkAction.EditTemplateOptions, True);
     if Err <> '' then
     begin
       SetActionVarValue('$ExecAction_Err$', Err);
       Exit;
     end;
 
-    Result := ExecuteEditTemplateAction(EditTemplateOptions);
+    if AListOfEditTemplateOptionsParams.Values[CREParam_UseServerDebugging] = '1' then
+    begin
+      GetActionOptionsFromParams(AListOfEditTemplateOptionsParams, WorkAction);
+      WorkAction.ActionOptions.Action := acEditTemplate;
+      DoOnWaitInDebuggingMode(WorkAction);
+    end;
+
+    Result := ExecuteEditTemplateAction(WorkAction.EditTemplateOptions);
   finally
     SetLastActionStatus(Result, False);
   end;

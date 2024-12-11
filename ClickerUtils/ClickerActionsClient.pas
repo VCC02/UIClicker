@@ -63,6 +63,7 @@ const
   CREParam_StackLevel = 'StackLevel';
   CREParam_IsDebugging = 'IsDebugging';
   CREParam_UseLocalDebugger = 'UseLocalDebugger';
+  CREParam_UseServerDebugging = 'UseServerDebugging';  //different debugging mechanism (one action only, for Execute<ActionName>Action functions)
   CREParam_Grid = 'Grid';
   CREParam_FileName = 'FileName';
   CREParam_FileLocation = 'FileLocation';
@@ -195,19 +196,19 @@ function SendMouseDown(ARemoteAddress: string; AMouseParams: TStringList): strin
 function SendMouseUp(ARemoteAddress: string; AMouseParams: TStringList): string;
 function SendPluginCmd(ARemoteAddress: string; APluginCmd: string; AStackLevel: Integer; ACallAppProcMsg: Boolean = True): string;
 
-function ExecuteClickAction(ARemoteAddress: string; AClickOptions: TClkClickOptions; ACallAppProcMsg: Boolean = True): string;
-function ExecuteExecAppAction(ARemoteAddress: string; AExecAppOptions: TClkExecAppOptions; AActionName: string; AActionTimeout: Integer; ACallAppProcMsg: Boolean = True): string;
-function ExecuteFindControlAction(ARemoteAddress: string; AFindControlOptions: TClkFindControlOptions; AActionName: string; AActionTimeout: Integer; AFileLocation: string; ACallAppProcMsg: Boolean = True): string;
-function ExecuteFindSubControlAction(ARemoteAddress: string; AFindControlOptions: TClkFindControlOptions; AActionName: string; AActionTimeout: Integer; AFileLocation: string; ACallAppProcMsg: Boolean = True): string;
-function ExecuteSetControlTextAction(ARemoteAddress: string; ASetTextOptions: TClkSetTextOptions; ACallAppProcMsg: Boolean = True): string;
-function ExecuteCallTemplateAction(ARemoteAddress: string; ACallTemplateOptions: TClkCallTemplateOptions; AIsDebugging, AUseLocalDebugger: Boolean; AFileLocation: string; ACallAppProcMsg: Boolean = True): string;
-function ExecuteSleepAction(ARemoteAddress: string; ASleepOptions: TClkSleepOptions; AActionName: string; ACallAppProcMsg: Boolean = True): string;
-function ExecuteSetVarAction(ARemoteAddress: string; ASetVarOptions: TClkSetVarOptions; ACallAppProcMsg: Boolean = True): string;
-function ExecuteWindowOperationsAction(ARemoteAddress: string; AWindowOperationsOptions: TClkWindowOperationsOptions; ACallAppProcMsg: Boolean = True): string;
-function ExecuteLoadSetVarFromFileAction(ARemoteAddress: string; ALoadSetVarFromFileOptions: TClkLoadSetVarFromFileOptions; ACallAppProcMsg: Boolean = True): string;
-function ExecuteSaveSetVarToFileAction(ARemoteAddress: string; ASaveSetVarToFileOptions: TClkSaveSetVarToFileOptions; ACallAppProcMsg: Boolean = True): string;
-function ExecutePluginAction(ARemoteAddress: string; APluginOptions: TClkPluginOptions; ACallAppProcMsg: Boolean = True): string;
-function ExecuteEditTemplateAction(ARemoteAddress: string; AEditTemplateOptions: TClkEditTemplateOptions; ACallAppProcMsg: Boolean = True): string;
+function ExecuteClickAction(ARemoteAddress: string; AClickOptions: TClkClickOptions; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
+function ExecuteExecAppAction(ARemoteAddress: string; AExecAppOptions: TClkExecAppOptions; AActionName: string; AActionTimeout: Integer; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
+function ExecuteFindControlAction(ARemoteAddress: string; AFindControlOptions: TClkFindControlOptions; AActionName: string; AActionTimeout: Integer; AFileLocation: string; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
+function ExecuteFindSubControlAction(ARemoteAddress: string; AFindControlOptions: TClkFindControlOptions; AActionName: string; AActionTimeout: Integer; AFileLocation: string; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
+function ExecuteSetControlTextAction(ARemoteAddress: string; ASetTextOptions: TClkSetTextOptions; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
+function ExecuteCallTemplateAction(ARemoteAddress: string; ACallTemplateOptions: TClkCallTemplateOptions; AIsDebugging, AUseLocalDebugger: Boolean; AFileLocation: string; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
+function ExecuteSleepAction(ARemoteAddress: string; ASleepOptions: TClkSleepOptions; AActionName: string; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
+function ExecuteSetVarAction(ARemoteAddress: string; ASetVarOptions: TClkSetVarOptions; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
+function ExecuteWindowOperationsAction(ARemoteAddress: string; AWindowOperationsOptions: TClkWindowOperationsOptions; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
+function ExecuteLoadSetVarFromFileAction(ARemoteAddress: string; ALoadSetVarFromFileOptions: TClkLoadSetVarFromFileOptions; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
+function ExecuteSaveSetVarToFileAction(ARemoteAddress: string; ASaveSetVarToFileOptions: TClkSaveSetVarToFileOptions; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
+function ExecutePluginAction(ARemoteAddress: string; APluginOptions: TClkPluginOptions; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
+function ExecuteEditTemplateAction(ARemoteAddress: string; AEditTemplateOptions: TClkEditTemplateOptions; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
 
 procedure GetListOfUsedFilesFromLoadedTemplate(var AClkActions: TClkActionsRecArr; AListOfFiles: TStringList);
 function SendMissingFilesToServer(ARemoteAddress: string; var AClkActions: TClkActionsRecArr): string;
@@ -667,20 +668,22 @@ begin
 end;
 
 
-function ExecuteClickAction(ARemoteAddress: string; AClickOptions: TClkClickOptions; ACallAppProcMsg: Boolean = True): string;
+function ExecuteClickAction(ARemoteAddress: string; AClickOptions: TClkClickOptions; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
 begin
   Result := SendTextRequestToServer(ARemoteAddress + CRECmd_ExecuteClickAction + '?' +
                                     CREParam_StackLevel + '=0' + '&' +   //use the main editor
+                                    CREParam_UseServerDebugging + '=' + IntToStr(Ord(AUseServerDebugging)) + '&' +
                                     GetClickActionProperties(AClickOptions),
                                     ACallAppProcMsg
                                     );
 end;
 
 
-function ExecuteExecAppAction(ARemoteAddress: string; AExecAppOptions: TClkExecAppOptions; AActionName: string; AActionTimeout: Integer; ACallAppProcMsg: Boolean = True): string;
+function ExecuteExecAppAction(ARemoteAddress: string; AExecAppOptions: TClkExecAppOptions; AActionName: string; AActionTimeout: Integer; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
 begin
   Result := SendTextRequestToServer(ARemoteAddress + CRECmd_ExecuteExecAppAction + '?' +
                                     CREParam_StackLevel + '=0' + '&' +   //use the main editor
+                                    CREParam_UseServerDebugging + '=' + IntToStr(Ord(AUseServerDebugging)) + '&' +
                                     GetExecAppActionProperties(AExecAppOptions) + '&' +
 
                                     CPropertyName_ActionName + '=' + AActionName + '&' +
@@ -690,10 +693,11 @@ begin
 end;
 
 
-function ExecuteGenericFindControlAction(ARemoteAddress: string; AFindControlOptions: TClkFindControlOptions; AActionName: string; AActionTimeout: Integer; AFileLocation: string; AActionType: string; ACallAppProcMsg: Boolean = True): string;
+function ExecuteGenericFindControlAction(ARemoteAddress: string; AFindControlOptions: TClkFindControlOptions; AActionName: string; AActionTimeout: Integer; AFileLocation: string; AActionType: string; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
 begin
   Result := SendTextRequestToServer(ARemoteAddress + AActionType + '?' +
                                     CREParam_StackLevel + '=0' + '&' +   //use the main editor
+                                    CREParam_UseServerDebugging + '=' + IntToStr(Ord(AUseServerDebugging)) + '&' +
                                     GetFindControlActionProperties(AFindControlOptions) + '&' +
 
                                     CPropertyName_ActionName + '=' + AActionName + '&' +
@@ -704,32 +708,34 @@ begin
 end;
 
 
-function ExecuteFindControlAction(ARemoteAddress: string; AFindControlOptions: TClkFindControlOptions; AActionName: string; AActionTimeout: Integer; AFileLocation: string; ACallAppProcMsg: Boolean = True): string;
+function ExecuteFindControlAction(ARemoteAddress: string; AFindControlOptions: TClkFindControlOptions; AActionName: string; AActionTimeout: Integer; AFileLocation: string; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
 begin
-  Result := ExecuteGenericFindControlAction(ARemoteAddress, AFindControlOptions, AActionName, AActionTimeout, AFileLocation, CRECmd_ExecuteFindControlAction, ACallAppProcMsg);
+  Result := ExecuteGenericFindControlAction(ARemoteAddress, AFindControlOptions, AActionName, AActionTimeout, AFileLocation, CRECmd_ExecuteFindControlAction, ACallAppProcMsg, AUseServerDebugging);
 end;
 
 
-function ExecuteFindSubControlAction(ARemoteAddress: string; AFindControlOptions: TClkFindControlOptions; AActionName: string; AActionTimeout: Integer; AFileLocation: string; ACallAppProcMsg: Boolean = True): string;
+function ExecuteFindSubControlAction(ARemoteAddress: string; AFindControlOptions: TClkFindControlOptions; AActionName: string; AActionTimeout: Integer; AFileLocation: string; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
 begin
-  Result := ExecuteGenericFindControlAction(ARemoteAddress, AFindControlOptions, AActionName, AActionTimeout, AFileLocation, CRECmd_ExecuteFindSubControlAction, ACallAppProcMsg);
+  Result := ExecuteGenericFindControlAction(ARemoteAddress, AFindControlOptions, AActionName, AActionTimeout, AFileLocation, CRECmd_ExecuteFindSubControlAction, ACallAppProcMsg, AUseServerDebugging);
 end;
 
 
-function ExecuteSetControlTextAction(ARemoteAddress: string; ASetTextOptions: TClkSetTextOptions; ACallAppProcMsg: Boolean = True): string;
+function ExecuteSetControlTextAction(ARemoteAddress: string; ASetTextOptions: TClkSetTextOptions; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
 begin
   Result := SendTextRequestToServer(ARemoteAddress + CRECmd_ExecuteSetControlTextAction + '?' +
                                     CREParam_StackLevel + '=0' + '&' +   //use the main editor
+                                    CREParam_UseServerDebugging + '=' + IntToStr(Ord(AUseServerDebugging)) + '&' +
                                     GetSetControlTextActionProperties(ASetTextOptions),
                                     ACallAppProcMsg
                                     );
 end;
 
 
-function ExecuteCallTemplateAction(ARemoteAddress: string; ACallTemplateOptions: TClkCallTemplateOptions; AIsDebugging, AUseLocalDebugger: Boolean; AFileLocation: string; ACallAppProcMsg: Boolean = True): string;
+function ExecuteCallTemplateAction(ARemoteAddress: string; ACallTemplateOptions: TClkCallTemplateOptions; AIsDebugging, AUseLocalDebugger: Boolean; AFileLocation: string; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
 begin
   Result := SendTextRequestToServer(ARemoteAddress + CRECmd_ExecuteCallTemplateAction + '?' +
                                     CREParam_StackLevel + '=0' + '&' +   //use the main editor
+                                    CREParam_UseServerDebugging + '=' + IntToStr(Ord(AUseServerDebugging)) + '&' +  //when True, the AIsDebugging and AUseLocalDebugger are ignored,to avoid double waiting in debug mode
                                     GetCallTemplateActionProperties(ACallTemplateOptions) + '&' +
 
                                     CREParam_IsDebugging + '=' + IntToStr(Ord(AIsDebugging)) + '&' +
@@ -741,10 +747,11 @@ begin
 end;
 
 
-function ExecuteSleepAction(ARemoteAddress: string; ASleepOptions: TClkSleepOptions; AActionName: string; ACallAppProcMsg: Boolean = True): string;
+function ExecuteSleepAction(ARemoteAddress: string; ASleepOptions: TClkSleepOptions; AActionName: string; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
 begin
   Result := SendTextRequestToServer(ARemoteAddress + CRECmd_ExecuteSleepAction + '?' +
                                     CREParam_StackLevel + '=0' + '&' +   //use the main editor
+                                    CREParam_UseServerDebugging + '=' + IntToStr(Ord(AUseServerDebugging)) + '&' +
                                     GetSleepActionProperties(ASleepOptions) + '&' +
                                     CPropertyName_ActionName + '=' + AActionName,
                                     ACallAppProcMsg
@@ -752,60 +759,66 @@ begin
 end;
 
 
-function ExecuteSetVarAction(ARemoteAddress: string; ASetVarOptions: TClkSetVarOptions; ACallAppProcMsg: Boolean = True): string;
+function ExecuteSetVarAction(ARemoteAddress: string; ASetVarOptions: TClkSetVarOptions; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
 begin
   Result := SendTextRequestToServer(ARemoteAddress + CRECmd_ExecuteSetVarAction + '?' +
                                     CREParam_StackLevel + '=0' + '&' +   //use the main editor
+                                    CREParam_UseServerDebugging + '=' + IntToStr(Ord(AUseServerDebugging)) + '&' +
                                     GetSetVarActionProperties(ASetVarOptions),
                                     ACallAppProcMsg
                                     );
 end;
 
 
-function ExecuteWindowOperationsAction(ARemoteAddress: string; AWindowOperationsOptions: TClkWindowOperationsOptions; ACallAppProcMsg: Boolean = True): string;
+function ExecuteWindowOperationsAction(ARemoteAddress: string; AWindowOperationsOptions: TClkWindowOperationsOptions; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
 begin
   Result := SendTextRequestToServer(ARemoteAddress + CRECmd_ExecuteWindowOperationsAction + '?' +
                                     CREParam_StackLevel + '=0' + '&' +   //use the main editor
+                                    CREParam_UseServerDebugging + '=' + IntToStr(Ord(AUseServerDebugging)) + '&' +
                                     GetWindowOperationsActionProperties(AWindowOperationsOptions),
                                     ACallAppProcMsg
                                     );
 end;
 
 
-function ExecuteLoadSetVarFromFileAction(ARemoteAddress: string; ALoadSetVarFromFileOptions: TClkLoadSetVarFromFileOptions; ACallAppProcMsg: Boolean = True): string;
+function ExecuteLoadSetVarFromFileAction(ARemoteAddress: string; ALoadSetVarFromFileOptions: TClkLoadSetVarFromFileOptions; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
 begin
   Result := SendTextRequestToServer(ARemoteAddress + CRECmd_ExecuteLoadSetVarFromFile + '?' +
                                     CREParam_StackLevel + '=0' + '&' +   //use the main editor
+                                    CREParam_UseServerDebugging + '=' + IntToStr(Ord(AUseServerDebugging)) + '&' +
                                     GetLoadSetVarFromFileActionProperties(ALoadSetVarFromFileOptions),
                                     ACallAppProcMsg
                                     );
 end;
 
 
-function ExecuteSaveSetVarToFileAction(ARemoteAddress: string; ASaveSetVarToFileOptions: TClkSaveSetVarToFileOptions; ACallAppProcMsg: Boolean = True): string;
+function ExecuteSaveSetVarToFileAction(ARemoteAddress: string; ASaveSetVarToFileOptions: TClkSaveSetVarToFileOptions; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
 begin
   Result := SendTextRequestToServer(ARemoteAddress + CRECmd_ExecuteSaveSetVarToFile + '?' +
                                     CREParam_StackLevel + '=0' + '&' +   //use the main editor
+                                    CREParam_UseServerDebugging + '=' + IntToStr(Ord(AUseServerDebugging)) + '&' +
                                     GetSaveSetVarToFileActionProperties(ASaveSetVarToFileOptions),
                                     ACallAppProcMsg
                                     );
 end;
 
 
-function ExecutePluginAction(ARemoteAddress: string; APluginOptions: TClkPluginOptions; ACallAppProcMsg: Boolean = True): string;
+function ExecutePluginAction(ARemoteAddress: string; APluginOptions: TClkPluginOptions; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
 begin
   Result := SendTextRequestToServer(ARemoteAddress + CRECmd_ExecutePlugin + '?' +
                                     CREParam_StackLevel + '=0' + '&' +   //use the main editor
+                                    CREParam_UseServerDebugging + '=' + IntToStr(Ord(AUseServerDebugging)) + '&' +
                                     GetPluginActionProperties(APluginOptions),
                                     ACallAppProcMsg
                                     );
 end;
 
 
-function ExecuteEditTemplateAction(ARemoteAddress: string; AEditTemplateOptions: TClkEditTemplateOptions; ACallAppProcMsg: Boolean = True): string;
+function ExecuteEditTemplateAction(ARemoteAddress: string; AEditTemplateOptions: TClkEditTemplateOptions; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
 begin
   Result := SendTextRequestToServer(ARemoteAddress + CRECmd_ExecuteEditTemplate + '?' +
                                     CREParam_StackLevel + '=0' + '&' +   //use the main editor
+                                    CREParam_UseServerDebugging + '=' + IntToStr(Ord(AUseServerDebugging)) + '&' +
                                     GetEditTemplateActionProperties(AEditTemplateOptions, True),
                                     ACallAppProcMsg
                                     );
