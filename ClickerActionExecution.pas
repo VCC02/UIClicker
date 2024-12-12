@@ -4547,7 +4547,7 @@ begin
   Result := False;
   SetActionVarValue('$ExecAction_Err$', '');
   try
-    IsDebugging := AListOfCallTemplateOptionsParams.Values['IsDebugging'] = '1';
+    IsDebugging := AListOfCallTemplateOptionsParams.Values[CREParam_IsDebugging] = '1';
 
     Err := SetCallTemplateActionProperties(AListOfCallTemplateOptionsParams, WorkAction.CallTemplateOptions);
     if Err <> '' then
@@ -4558,7 +4558,9 @@ begin
 
     if AListOfCallTemplateOptionsParams.Values[CREParam_UseServerDebugging] = '1' then
     begin
-      IsDebugging := False;
+      IsDebugging := True; //this allows the debugger to step into a CallTemplate action
+      //FUseLocalDebugger := True; is set to True in main window (HTTP handler) if CREParam_UseServerDebugging is set
+
       GetActionOptionsFromParams(AListOfCallTemplateOptionsParams, WorkAction);
       WorkAction.ActionOptions.Action := acCallTemplate;
       DoOnWaitInDebuggingMode(WorkAction);
@@ -4739,11 +4741,15 @@ begin
       Exit;
     end;
 
-    IsDebugging := AListOfPluginOptionsParams.Values['IsDebugging'] = '1';  //this is plugin debugging, which is different than UseServerDebugging
+    IsDebugging := AListOfPluginOptionsParams.Values[CREParam_IsDebugging] = '1';  //this is plugin debugging, which is different than UseServerDebugging
     TempAllActions := DoOnGetAllActions;
 
     if AListOfPluginOptionsParams.Values[CREParam_UseServerDebugging] = '1' then
     begin
+      //IsDebugging := True; //Do not set for Plugin yet, because there is a waiting loop, which cannot be stopped by StepOver (only by Stop, which is not enabled)
+                             //However, it seems that the flag is still needed to debug the plugin.
+                             //It seems (for now) that plugin debugging starts after the call to remove the debugging action from list (see DoOnWaitInDebuggingMode), which might be needed for debugging the plugin.
+                             //Keeping the action in the list does not fix the issue of "invisible" waiting loop. Plugin debugging buttons do not appear either. At least those would be helpful to stop the loop.
       GetActionOptionsFromParams(AListOfPluginOptionsParams, WorkAction);
       WorkAction.ActionOptions.Action := acPlugin;
       DoOnWaitInDebuggingMode(WorkAction);

@@ -2652,7 +2652,10 @@ begin
   begin
     frClickerActionsArrMain.ExecutingActionFromRemote := True;
 
-    if ASyncObj.FParams.Values['UseLocalDebugger'] = '1' then
+    if ASyncObj.FParams.Values[CREParam_UseLocalDebugger] = '1' then
+      frClickerActionsArrMain.UseLocalDebugger := True;
+
+    if ASyncObj.FParams.Values[CREParam_UseServerDebugging] = '1' then
       frClickerActionsArrMain.UseLocalDebugger := True;
 
     frClickerActionsArrMain.FileLocationOfDepsIsMem := ASyncObj.FParams.Values[CREParam_FileLocation] = CREParam_FileLocation_ValueMem; //to load files from in-mem FS
@@ -2667,8 +2670,11 @@ begin
       frClickerActionsArrMain.ExecutingActionFromRemote := False;
       frClickerActionsArrMain.FileLocationOfDepsIsMem := False;
 
-      if ASyncObj.FParams.Values['UseLocalDebugger'] = '1' then
+      if ASyncObj.FParams.Values[CREParam_UseLocalDebugger] = '1' then
         frClickerActionsArrMain.UseLocalDebugger := False;
+
+      if ASyncObj.FParams.Values[CREParam_UseServerDebugging] = '1' then
+      frClickerActionsArrMain.UseLocalDebugger := False;
     end;
 
     Exit;
@@ -2699,21 +2705,24 @@ begin
     Exit;
   end;
 
-  if ASyncObj.FCmd = '/' + CRECmd_ExecuteLoadSetVarFromFile then
+  if (ASyncObj.FCmd = '/' + CRECmd_ExecuteLoadSetVarFromFile) or
+     (ASyncObj.FCmd = '/' + CRECmd_ExecuteLoadSetVarFromFileAction) then   //fixed the missing "Action" suffix.
   begin
     Result := CREResp_RemoteExecResponseVar + '=' + IntToStr(Ord(frClickerActionsArrMain.ActionExecution.ExecuteLoadSetVarFromFileActionAsString(ASyncObj.FParams)));
     Result := Result + #8#7 + GetClkVariables87;
     Exit;
   end;
 
-  if ASyncObj.FCmd = '/' + CRECmd_ExecuteSaveSetVarToFile then
+  if (ASyncObj.FCmd = '/' + CRECmd_ExecuteSaveSetVarToFile) or
+     (ASyncObj.FCmd = '/' + CRECmd_ExecuteSaveSetVarToFileAction) then     //fixed the missing "Action" suffix.
   begin
     Result := CREResp_RemoteExecResponseVar + '=' + IntToStr(Ord(frClickerActionsArrMain.ActionExecution.ExecuteSaveSetVarToFileActionAsString(ASyncObj.FParams)));
     Result := Result + #8#7 + GetClkVariables87;
     Exit;
   end;
 
-  if ASyncObj.FCmd = '/' + CRECmd_ExecutePlugin then
+  if (ASyncObj.FCmd = '/' + CRECmd_ExecutePlugin) or
+     (ASyncObj.FCmd = '/' + CRECmd_ExecutePluginAction) then //fixed the missing "Action" suffix.
   begin
     RemoteState := ASyncObj.FFrame.ExecutingActionFromRemote;
     try
@@ -2728,7 +2737,8 @@ begin
     Exit;
   end;
 
-  if ASyncObj.FCmd = '/' + CRECmd_ExecuteEditTemplate then
+  if (ASyncObj.FCmd = '/' + CRECmd_ExecuteEditTemplate) or
+     (ASyncObj.FCmd = '/' + CRECmd_ExecuteEditTemplateAction) then //fixed the missing "Action" suffix.
   begin
     RemoteState := ASyncObj.FFrame.ExecutingActionFromRemote;
     try
