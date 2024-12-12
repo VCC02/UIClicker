@@ -1619,17 +1619,14 @@ function ExecuteSetControlTextAction(AActionName: Pointer;
                                      AActionTimeout: LongInt; //ms
                                      ASetControlTextOptions: PClkSetTextOptionsAPI;
                                      AUseServerDebugging: Boolean;
-                                     AFileLocation: Pointer;
                                      AResultStr: Pointer): LongInt; cdecl;
 var
   TempClkAction: TClkActionRec;
   Res: string;
   ActionName: string;
-  FileLocation: string;
 begin
   GetSetControlTextOptionsFromAPI(ASetControlTextOptions, TempClkAction);
   SetPointedContentToString(@string(PWideChar(AActionName))[1], ActionName);
-  SetPointedContentToString(@string(PWideChar(AFileLocation))[1], FileLocation);
   Res := ClickerActionsClient.ExecuteSetControlTextAction(FRemoteAddress, TempClkAction.SetTextOptions, True, AUseServerDebugging);
   Result := SetPointedContentFromString(Res, AResultStr);
 end;
@@ -1744,6 +1741,7 @@ function ExecutePluginAction(AActionName: Pointer;
                              AActionTimeout: LongInt; //ms
                              APluginOptions: PClkPluginOptionsAPI;
                              AUseServerDebugging: Boolean;
+                             AUseStepIntoDebugging: Boolean;
                              AResultStr: Pointer): LongInt; cdecl;
 var
   TempClkAction: TClkActionRec;
@@ -1752,7 +1750,7 @@ var
 begin
   GetPluginOptionsFromAPI(APluginOptions, TempClkAction);
   SetPointedContentToString(@string(PWideChar(AActionName))[1], ActionName);
-  Res := ClickerActionsClient.ExecutePluginAction(FRemoteAddress, TempClkAction.PluginOptions, True, AUseServerDebugging);
+  Res := ClickerActionsClient.ExecutePluginAction(FRemoteAddress, TempClkAction.PluginOptions, True, AUseServerDebugging, AUseStepIntoDebugging);
   Result := SetPointedContentFromString(Res, AResultStr);
 end;
 

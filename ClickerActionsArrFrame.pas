@@ -475,7 +475,7 @@ type
     function HandleOnGenerateAndSaveTreeWithWinInterp(AHandle: THandle; ATreeFileName: string; AStep: Integer; AUseMouseSwipe: Boolean): Boolean;
     function HandleOnSetWinInterpOption(AWinInterpOptionName, AWinInterpOptionValue: string): Boolean;
 
-    procedure HandleOnWaitInDebuggingMode(var ADebuggingAction: TClkActionRec);
+    procedure HandleOnWaitInDebuggingMode(var ADebuggingAction: TClkActionRec; AActionAllowsSteppingInto: TAllowsSteppingInto);
 
     function GetInMemFS: TInMemFileSystem;
     procedure SetInMemFS(Value: TInMemFileSystem);
@@ -2029,7 +2029,7 @@ begin
 end;
 
 
-procedure TfrClickerActionsArr.HandleOnWaitInDebuggingMode(var ADebuggingAction: TClkActionRec);
+procedure TfrClickerActionsArr.HandleOnWaitInDebuggingMode(var ADebuggingAction: TClkActionRec; AActionAllowsSteppingInto: TAllowsSteppingInto);
 var
   IndexBeforeEditing: Integer;
 begin
@@ -2046,11 +2046,18 @@ begin
   spdbtnPlaySelectedAction.Enabled := False;
   spdbtnPlayAllActions.Enabled := False;
 
-  if ADebuggingAction.ActionOptions.Action in [acCallTemplate, acPlugin] then
-    spdbtnStepInto.Enabled := True;   //Currently, there is a bug, which executes all called templates without debugging.
-                                      //FContinuePlayingBySteppingInto will cause the waiting loop to exit, when set by spdbtnStepInto.
-                                      //This will require an extra waiting loop.
-                                      //Until fixed, please use the other remote debuggin feature of CallTemplate (set both debugging parameters to True).
+  spdbtnStepInto.Enabled := False;
+  if ADebuggingAction.ActionOptions.Action = acCallTemplate then
+    if AActionAllowsSteppingInto = asiYes then
+      spdbtnStepInto.Enabled := True;   //Currently, there is a bug, which executes all called templates without debugging.
+                                        //FContinuePlayingBySteppingInto will cause the waiting loop to exit, when set by spdbtnStepInto.
+                                        //This will require an extra waiting loop.
+                                        //Until fixed, please use the other remote debugging feature of CallTemplate (set both debugging parameters to True).
+
+  if ADebuggingAction.ActionOptions.Action = acPlugin then
+    if AActionAllowsSteppingInto = asiYes then
+      spdbtnStepInto.Enabled := True;
+
   try
     SetLength(FClkActions, Length(FClkActions) + 1);  //add a debugging action
     vstActions.ClearSelection;

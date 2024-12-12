@@ -37,6 +37,8 @@ uses
 
 
 type
+  TAllowsSteppingInto = (asiNo, asiYes);
+
   TOnSetEditorEnabledState = procedure(AEnabled: Boolean) of object;
   TOnSetEditorTimeoutProgressBarMax = procedure(AMaxValue: Integer) of object;
   TOnSetEditorTimeoutProgressBarPosition = procedure(APositionValue: Integer) of object;
@@ -57,7 +59,7 @@ type
   TOnLoadTemplateToActions = function(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; out ANotes, AIconPath: string; AWaitForFileAvailability: Boolean = False): string of object;
   TOnSaveCompleteTemplateToFile = function(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; ANotes, AIconPath: string; AUpdateUI, AShouldSaveSelfTemplate: Boolean): string of object;
 
-  TOnWaitInDebuggingMode = procedure(var ADebuggingAction: TClkActionRec) of object;
+  TOnWaitInDebuggingMode = procedure(var ADebuggingAction: TClkActionRec; AActionAllowsSteppingInto: TAllowsSteppingInto) of object;
 
 
   TActionExecution = class
@@ -177,7 +179,7 @@ type
     function DoOnLoadTemplateToActions(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; out ANotes, AIconPath: string; AWaitForFileAvailability: Boolean = False): string;
     function DoOnSaveCompleteTemplateToFile(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; ANotes, AIconPath: string; AUpdateUI, AShouldSaveSelfTemplate: Boolean): string;
 
-    procedure DoOnWaitInDebuggingMode(var ADebuggingAction: TClkActionRec);
+    procedure DoOnWaitInDebuggingMode(var ADebuggingAction: TClkActionRec; AActionAllowsSteppingInto: TAllowsSteppingInto);
 
     function HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     function HandleOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
@@ -961,12 +963,12 @@ begin
 end;
 
 
-procedure TActionExecution.DoOnWaitInDebuggingMode(var ADebuggingAction: TClkActionRec);
+procedure TActionExecution.DoOnWaitInDebuggingMode(var ADebuggingAction: TClkActionRec; AActionAllowsSteppingInto: TAllowsSteppingInto);
 begin
   if not Assigned(FOnWaitInDebuggingMode) then
     raise Exception.Create('OnWaitInDebuggingMode is not assigned.')
   else
-    FOnWaitInDebuggingMode(ADebuggingAction);
+    FOnWaitInDebuggingMode(ADebuggingAction, AActionAllowsSteppingInto);
 end;
 
 
@@ -4398,7 +4400,7 @@ end;
 
 procedure GetActionOptionsFromParams(AListOfOptionsParams: TStrings; var AAction: TClkActionRec);
 begin
-  AAction.ActionDebuggingStatus := adsNone;
+  AAction.ActionDebuggingStatus := adsCurrent;
   AAction.ActionBreakPoint.Exists := False;
   AAction.ActionBreakPoint.Enabled := False;
   AAction.ActionStatus := asNotStarted;
@@ -4438,7 +4440,7 @@ begin
     begin
       GetActionOptionsFromParams(AListOfClickOptionsParams, WorkAction);
       WorkAction.ActionOptions.Action := acClick;
-      DoOnWaitInDebuggingMode(WorkAction);
+      DoOnWaitInDebuggingMode(WorkAction, asiNo);
     end;
 
     Result := ExecuteMultiClickAction(WorkAction.ClickOptions);
@@ -4467,7 +4469,7 @@ begin
     begin
       GetActionOptionsFromParams(AListOfExecAppOptionsParams, WorkAction);
       WorkAction.ActionOptions.Action := acExecApp;
-      DoOnWaitInDebuggingMode(WorkAction);
+      DoOnWaitInDebuggingMode(WorkAction, asiNo);
     end;
 
     Result := ExecuteExecAppAction(WorkAction.ExecAppOptions, WorkAction.ActionOptions);
@@ -4499,7 +4501,7 @@ begin
       if AIsSubControl then
         WorkAction.ActionOptions.Action := acFindSubControl;
 
-      DoOnWaitInDebuggingMode(WorkAction);
+      DoOnWaitInDebuggingMode(WorkAction, asiNo);
     end;
 
     Result := ExecuteFindControlActionWithTimeout(WorkAction.FindControlOptions, WorkAction.ActionOptions, AIsSubControl);
@@ -4528,7 +4530,7 @@ begin
     begin
       GetActionOptionsFromParams(AListOfSetControlTextOptionsParams, WorkAction);
       WorkAction.ActionOptions.Action := acSetControlText;
-      DoOnWaitInDebuggingMode(WorkAction);
+      DoOnWaitInDebuggingMode(WorkAction, asiNo);
     end;
 
     Result := ExecuteSetControlTextAction(WorkAction.SetTextOptions);
@@ -4563,7 +4565,7 @@ begin
 
       GetActionOptionsFromParams(AListOfCallTemplateOptionsParams, WorkAction);
       WorkAction.ActionOptions.Action := acCallTemplate;
-      DoOnWaitInDebuggingMode(WorkAction);
+      DoOnWaitInDebuggingMode(WorkAction, asiYes);
     end;
 
     Result := ExecuteLoopedCallTemplateAction(WorkAction.CallTemplateOptions, IsDebugging, IsDebugging); //not sure if AShouldStopAtBreakPoint should be the same as IsDebugging or if it should be another http param
@@ -4597,7 +4599,7 @@ begin
     begin
       GetActionOptionsFromParams(AListOfSleepOptionsParams, WorkAction);
       WorkAction.ActionOptions.Action := acSleep;
-      DoOnWaitInDebuggingMode(WorkAction);
+      DoOnWaitInDebuggingMode(WorkAction, asiNo);
     end;
 
     Result := ExecuteSleepAction(WorkAction.SleepOptions, WorkAction.ActionOptions);
@@ -4626,7 +4628,7 @@ begin
     begin
       GetActionOptionsFromParams(AListOfSetVarOptionsParams, WorkAction);
       WorkAction.ActionOptions.Action := acSetVar;
-      DoOnWaitInDebuggingMode(WorkAction);
+      DoOnWaitInDebuggingMode(WorkAction, asiNo);
     end;
 
     Result := ExecuteSetVarAction(WorkAction.SetVarOptions);
@@ -4655,7 +4657,7 @@ begin
     begin
       GetActionOptionsFromParams(AListOfWindowOperationsOptionsParams, WorkAction);
       WorkAction.ActionOptions.Action := acWindowOperations;
-      DoOnWaitInDebuggingMode(WorkAction);
+      DoOnWaitInDebuggingMode(WorkAction, asiNo);
     end;
 
     Result := ExecuteWindowOperationsAction(WorkAction.WindowOperationsOptions);
@@ -4684,7 +4686,7 @@ begin
     begin
       GetActionOptionsFromParams(AListOfLoadSetVarOptionsParams, WorkAction);
       WorkAction.ActionOptions.Action := acLoadSetVarFromFile;
-      DoOnWaitInDebuggingMode(WorkAction);
+      DoOnWaitInDebuggingMode(WorkAction, asiNo);
     end;
 
     Result := ExecuteLoadSetVarFromFileAction(WorkAction.LoadSetVarFromFileOptions);
@@ -4713,7 +4715,7 @@ begin
     begin
       GetActionOptionsFromParams(AListOfSaveSetVarOptionsParams, WorkAction);
       WorkAction.ActionOptions.Action := acSaveSetVarToFile;
-      DoOnWaitInDebuggingMode(WorkAction);
+      DoOnWaitInDebuggingMode(WorkAction, asiNo);
     end;
 
     Result := ExecuteSaveSetVarToFileAction(WorkAction.SaveSetVarToFileOptions);
@@ -4744,15 +4746,21 @@ begin
     IsDebugging := AListOfPluginOptionsParams.Values[CREParam_IsDebugging] = '1';  //this is plugin debugging, which is different than UseServerDebugging
     TempAllActions := DoOnGetAllActions;
 
+    if IsDebugging then
+      AddToLog('IsDebugging flag, used for stepping into, is set for plugin "' + WorkAction.PluginOptions.FileName + '".')
+    else
+      AddToLog('IsDebugging flag, used for stepping into, is not set for plugin "' + WorkAction.PluginOptions.FileName + '".');
+
     if AListOfPluginOptionsParams.Values[CREParam_UseServerDebugging] = '1' then
     begin
       //IsDebugging := True; //Do not set for Plugin yet, because there is a waiting loop, which cannot be stopped by StepOver (only by Stop, which is not enabled)
                              //However, it seems that the flag is still needed to debug the plugin.
                              //It seems (for now) that plugin debugging starts after the call to remove the debugging action from list (see DoOnWaitInDebuggingMode), which might be needed for debugging the plugin.
                              //Keeping the action in the list does not fix the issue of "invisible" waiting loop. Plugin debugging buttons do not appear either. At least those would be helpful to stop the loop.
+                             //The "Step into" button is enabled by this flag, so the execution should not get to that "invisible" loop.
       GetActionOptionsFromParams(AListOfPluginOptionsParams, WorkAction);
       WorkAction.ActionOptions.Action := acPlugin;
-      DoOnWaitInDebuggingMode(WorkAction);
+      DoOnWaitInDebuggingMode(WorkAction, TAllowsSteppingInto(Ord(IsDebugging)));
     end;
 
     TempListOfAllVars := TStringList.Create;
@@ -4787,7 +4795,7 @@ begin
     begin
       GetActionOptionsFromParams(AListOfEditTemplateOptionsParams, WorkAction);
       WorkAction.ActionOptions.Action := acEditTemplate;
-      DoOnWaitInDebuggingMode(WorkAction);
+      DoOnWaitInDebuggingMode(WorkAction, asiNo);
     end;
 
     Result := ExecuteEditTemplateAction(WorkAction.EditTemplateOptions);

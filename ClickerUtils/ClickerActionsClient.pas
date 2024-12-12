@@ -130,10 +130,16 @@ const
   CRECmd_ExecuteSleepAction = 'ExecuteSleepAction';
   CRECmd_ExecuteSetVarAction = 'ExecuteSetVarAction';
   CRECmd_ExecuteWindowOperationsAction = 'ExecuteWindowOperationsAction';
-  CRECmd_ExecuteLoadSetVarFromFile = 'ExecuteLoadSetVarFromFile';
-  CRECmd_ExecuteSaveSetVarToFile = 'ExecuteSaveSetVarToFile';
-  CRECmd_ExecutePlugin = 'ExecutePlugin';
-  CRECmd_ExecuteEditTemplate = 'ExecuteEditTemplate';
+  CRECmd_ExecuteLoadSetVarFromFile = 'ExecuteLoadSetVarFromFile';    //constant misses "Action" suffix. Kept here for backwards compatibility.
+  CRECmd_ExecuteSaveSetVarToFile = 'ExecuteSaveSetVarToFile';        //constant misses "Action" suffix. Kept here for backwards compatibility.
+  CRECmd_ExecutePlugin = 'ExecutePlugin';                            //constant misses "Action" suffix. Kept here for backwards compatibility.
+  CRECmd_ExecuteEditTemplate = 'ExecuteEditTemplate';                //constant misses "Action" suffix. Kept here for backwards compatibility.
+
+  CRECmd_ExecuteLoadSetVarFromFileAction = 'ExecuteLoadSetVarFromFileAction'; //fixed the missing "Action" suffix.
+  CRECmd_ExecuteSaveSetVarToFileAction = 'ExecuteSaveSetVarToFileAction';     //fixed the missing "Action" suffix.
+  CRECmd_ExecutePluginAction = 'ExecutePluginAction';                         //fixed the missing "Action" suffix.
+  CRECmd_ExecuteEditTemplateAction = 'ExecuteEditTemplateAction';             //fixed the missing "Action" suffix.
+
 
   CREResp_ConnectionOK = 'Connection ok';
   CREResp_RemoteExecResponseVar = '$RemoteExecResponse$';
@@ -207,7 +213,7 @@ function ExecuteSetVarAction(ARemoteAddress: string; ASetVarOptions: TClkSetVarO
 function ExecuteWindowOperationsAction(ARemoteAddress: string; AWindowOperationsOptions: TClkWindowOperationsOptions; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
 function ExecuteLoadSetVarFromFileAction(ARemoteAddress: string; ALoadSetVarFromFileOptions: TClkLoadSetVarFromFileOptions; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
 function ExecuteSaveSetVarToFileAction(ARemoteAddress: string; ASaveSetVarToFileOptions: TClkSaveSetVarToFileOptions; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
-function ExecutePluginAction(ARemoteAddress: string; APluginOptions: TClkPluginOptions; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
+function ExecutePluginAction(ARemoteAddress: string; APluginOptions: TClkPluginOptions; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False; AUseStepIntoDebugging: Boolean = False): string;
 function ExecuteEditTemplateAction(ARemoteAddress: string; AEditTemplateOptions: TClkEditTemplateOptions; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
 
 procedure GetListOfUsedFilesFromLoadedTemplate(var AClkActions: TClkActionsRecArr; AListOfFiles: TStringList);
@@ -803,11 +809,12 @@ begin
 end;
 
 
-function ExecutePluginAction(ARemoteAddress: string; APluginOptions: TClkPluginOptions; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
+function ExecutePluginAction(ARemoteAddress: string; APluginOptions: TClkPluginOptions; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False; AUseStepIntoDebugging: Boolean = False): string;
 begin
   Result := SendTextRequestToServer(ARemoteAddress + CRECmd_ExecutePlugin + '?' +
                                     CREParam_StackLevel + '=0' + '&' +   //use the main editor
                                     CREParam_UseServerDebugging + '=' + IntToStr(Ord(AUseServerDebugging)) + '&' +
+                                    CREParam_IsDebugging + '=' + IntToStr(Ord(AUseStepIntoDebugging)) + '&' +
                                     GetPluginActionProperties(APluginOptions),
                                     ACallAppProcMsg
                                     );

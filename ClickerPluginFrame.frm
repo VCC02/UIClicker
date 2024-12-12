@@ -11,7 +11,7 @@ object frClickerPlugin: TfrClickerPlugin
   object imgPlugin: TImage
     Left = 8
     Height = 24
-    Hint = 'Plugin settings and debugging.'
+    Hint = 'Plugin settings and debugging.'#13#10#13#10'Debugging points are added through plugin code, when lines contain calls to DbgPoint function (implemented in plugins).'#13#10'These are high-level points, where the debugger can can stop the plugin execution.'#13#10'They are displayed by orange-yellow arrows, next to the lines, containing the DbgPoint call.'#13#10'The debugger will stop to these points only if they are set as breakpoints. To set them as breakpoints, please click on the arrows.'#13#10'A debugging point, set as breakpoint, displays an orange disk next to the arrow. To disable the breakpoints, please click again on the arrows.'#13#10#13#10'The list of debugging points is generated at plugin compilation time by the ClkDbgSym.exe tool and saved in .DbgSym files, next to plugins.'#13#10'These files are automatically updated by UIClicker when users set or reset breakpoints.'
     Top = 0
     Width = 24
     AutoSize = True

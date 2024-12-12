@@ -7845,7 +7845,10 @@ begin
           begin
             AEditingAction^.EditTemplateOptions.WhichTemplate := FEditingAction^.EditTemplateOptions.WhichTemplate;
             AEditingAction^.EditTemplateOptions.TemplateFileName := FEditingAction^.EditTemplateOptions.TemplateFileName;
-          end;
+          end
+          else
+            AEditingAction^.EditTemplateOptions.WhichTemplate := etwtSelf; //update the action, as this is a LoadSetVar or SaveSetVar action, not an EditTemplate. The flag is used by LoadListOfAvailableSetVarActions.
+
           LoadListOfAvailableSetVarActions(AEditingAction);
           FPmLocalTemplates.PopUp;
         end;

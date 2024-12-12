@@ -208,6 +208,8 @@ try:
 
     print("ExecuteActionAtIndex (EditTemplate): ", DllFuncs.ExecuteActionAtIndex(AActionIndex = 12, AStackLevel = 0)) #EditTemplate.
 
+    print("...Execute<ActionName>Action...")
+    print("ExecuteClickAction: ", DllFuncs.ExecuteClickAction("Another click", 100, ClickOptions, True))
 
     print("FileProviderClientThreadDone: ", DllFuncs.FileProviderClientThreadDone())
     print("TerminateFileProviderClientThread: ", DllFuncs.TerminateFileProviderClientThread())
@@ -217,5 +219,4 @@ finally:
     print("DestroyLoggingWindow: ", DllFuncs.DestroyLoggingWindow())
     print("DoneClickerClient", DllFuncs.DoneClickerClient())
     print("end of script")
-
 

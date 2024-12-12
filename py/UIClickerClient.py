@@ -292,6 +292,99 @@ class TDllFunctionAddresses:
         return ClearServerInMemFSFuncRes
 
 
+#Execute<ActionName>Action functions. These allow using the "UseServerDebugging" flag, to see the action in ObjectInspector before executing it.
+
+    def GetExecuteClickAction(self):
+        ExecuteClickActionProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, LONG, PClickOptions, BOOLEAN, ctypes.c_char_p)
+        ExecuteClickActionParams = (1, "AActionName", 0), (1, "AActionTimeout", 0), (1, "AClickOptions", 0), (1, "AUseServerDebugging", 0), (1, "AResultStr", 0),
+        ExecuteClickActionFuncRes = ExecuteClickActionProto(("ExecuteClickAction", self.DllHandle), ExecuteClickActionParams)
+        return ExecuteClickActionFuncRes
+
+
+    def GetExecuteExecAppAction(self):
+        ExecuteExecAppActionProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, LONG, PExecAppOptions, BOOLEAN, ctypes.c_char_p)
+        ExecuteExecAppActionParams = (1, "AActionName", 0), (1, "AActionTimeout", 0), (1, "AExecAppOptions", 0), (1, "AUseServerDebugging", 0), (1, "AResultStr", 0),
+        ExecuteExecAppActionFuncRes = ExecuteExecAppActionProto(("ExecuteExecAppAction", self.DllHandle), ExecuteExecAppActionParams)
+        return ExecuteExecAppActionFuncRes
+
+
+    def GetExecuteFindControlAction(self):
+        ExecuteFindControlActionProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, LONG, PFindControlOptions, BOOLEAN, LPCWSTR, ctypes.c_char_p)
+        ExecuteFindControlActionParams = (1, "AActionName", 0), (1, "AActionTimeout", 0), (1, "AFindControlOptions", 0), (1, "AUseServerDebugging", 0), (1, "AFileLocation", 0), (1, "AResultStr", 0),
+        ExecuteFindControlActionFuncRes = ExecuteFindControlActionProto(("ExecuteFindControlAction", self.DllHandle), ExecuteFindControlActionParams)
+        return ExecuteFindControlActionFuncRes
+
+
+    def GetExecuteFindSubControlAction(self):
+        ExecuteFindSubControlActionProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, LONG, PFindControlOptions, BOOLEAN, LPCWSTR, ctypes.c_char_p)
+        ExecuteFindSubControlActionParams = (1, "AActionName", 0), (1, "AActionTimeout", 0), (1, "AFindSubControlOptions", 0), (1, "AUseServerDebugging", 0), (1, "AFileLocation", 0), (1, "AResultStr", 0),
+        ExecuteFindSubControlActionFuncRes = ExecuteFindSubControlActionProto(("ExecuteFindSubControlAction", self.DllHandle), ExecuteFindSubControlActionParams)
+        return ExecuteFindSubControlActionFuncRes
+
+
+    def GetExecuteSetControlTextAction(self):
+        ExecuteSetControlTextActionProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, LONG, PSetControlTextOptions, BOOLEAN, ctypes.c_char_p)
+        ExecuteSetControlTextActionParams = (1, "AActionName", 0), (1, "AActionTimeout", 0), (1, "ASetControlTextOptions", 0), (1, "AUseServerDebugging", 0), (1, "AResultStr", 0),
+        ExecuteSetControlTextActionFuncRes = ExecuteSetControlTextActionProto(("ExecuteSetControlTextAction", self.DllHandle), ExecuteSetControlTextActionParams)
+        return ExecuteSetControlTextActionFuncRes
+
+
+    def GetExecuteCallTemplateAction(self):
+        ExecuteCallTemplateActionProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, LONG, PCallTemplateOptions, BOOLEAN, LPCWSTR, ctypes.c_char_p)
+        ExecuteCallTemplateActionParams = (1, "AActionName", 0), (1, "AActionTimeout", 0), (1, "ACallTemplateOptions", 0), (1, "AUseServerDebugging", 0), (1, "AFileLocation", 0), (1, "AResultStr", 0),
+        ExecuteCallTemplateActionFuncRes = ExecuteCallTemplateActionProto(("ExecuteCallTemplateAction", self.DllHandle), ExecuteCallTemplateActionParams)
+        return ExecuteCallTemplateActionFuncRes
+
+
+    def GetExecuteSleepAction(self):
+        ExecuteSleepActionProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, LONG, PSleepOptions, BOOLEAN, ctypes.c_char_p)
+        ExecuteSleepActionParams = (1, "AActionName", 0), (1, "AActionTimeout", 0), (1, "ASleepOptions", 0), (1, "AUseServerDebugging", 0), (1, "AResultStr", 0),
+        ExecuteSleepActionFuncRes = ExecuteSleepActionProto(("ExecuteSleepAction", self.DllHandle), ExecuteSleepActionParams)
+        return ExecuteSleepActionFuncRes
+
+
+    def GetExecuteSetVarAction(self):
+        ExecuteSetVarActionProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, LONG, PSetVarOptions, BOOLEAN, ctypes.c_char_p)
+        ExecuteSetVarActionParams = (1, "AActionName", 0), (1, "AActionTimeout", 0), (1, "ASetVarOptions", 0), (1, "AUseServerDebugging", 0), (1, "AResultStr", 0),
+        ExecuteSetVarActionFuncRes = ExecuteSetVarActionProto(("ExecuteSetVarAction", self.DllHandle), ExecuteSetVarActionParams)
+        return ExecuteSetVarActionFuncRes
+
+
+    def GetExecuteWindowOperationsAction(self):
+        ExecuteWindowOperationsActionProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, LONG, PWindowOperationsOptions, BOOLEAN, ctypes.c_char_p)
+        ExecuteWindowOperationsActionParams = (1, "AActionName", 0), (1, "AActionTimeout", 0), (1, "AWindowOperationsOptions", 0), (1, "AUseServerDebugging", 0), (1, "AResultStr", 0),
+        ExecuteWindowOperationsActionFuncRes = ExecuteWindowOperationsActionProto(("ExecuteWindowOperationsAction", self.DllHandle), ExecuteWindowOperationsActionParams)
+        return ExecuteWindowOperationsActionFuncRes
+
+
+    def GetExecuteLoadSetVarFromFileAction(self):
+        ExecuteLoadSetVarFromFileActionProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, LONG, PLoadSetVarFromFileOptions, BOOLEAN, ctypes.c_char_p)
+        ExecuteLoadSetVarFromFileActionParams = (1, "AActionName", 0), (1, "AActionTimeout", 0), (1, "ALoadSetVarFromFileOptions", 0), (1, "AUseServerDebugging", 0), (1, "AResultStr", 0),
+        ExecuteLoadSetVarFromFileActionFuncRes = ExecuteLoadSetVarFromFileActionProto(("ExecuteLoadSetVarFromFileAction", self.DllHandle), ExecuteLoadSetVarFromFileActionParams)
+        return ExecuteLoadSetVarFromFileActionFuncRes
+
+
+    def GetExecuteSaveSetVarToFileAction(self):
+        ExecuteSaveSetVarToFileActionProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, LONG, PSaveSetVarToFileOptions, BOOLEAN, ctypes.c_char_p)
+        ExecuteSaveSetVarToFileActionParams = (1, "AActionName", 0), (1, "AActionTimeout", 0), (1, "ASaveSetVarToFileOptions", 0), (1, "AUseServerDebugging", 0), (1, "AResultStr", 0),
+        ExecuteSaveSetVarToFileActionFuncRes = ExecuteSaveSetVarToFileActionProto(("ExecuteSaveSetVarToFileAction", self.DllHandle), ExecuteSaveSetVarToFileActionParams)
+        return ExecuteSaveSetVarToFileActionFuncRes
+
+
+    def GetExecutePluginAction(self):
+        ExecutePluginActionProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, LONG, PPluginOptions, BOOLEAN, BOOLEAN, ctypes.c_char_p)
+        ExecutePluginActionParams = (1, "AActionName", 0), (1, "AActionTimeout", 0), (1, "APluginOptions", 0), (1, "AUseServerDebugging", 0), (1, "AUseStepIntoDebugging", 0), (1, "AResultStr", 0),
+        ExecutePluginActionFuncRes = ExecutePluginActionProto(("ExecutePluginAction", self.DllHandle), ExecutePluginActionParams)
+        return ExecutePluginActionFuncRes
+
+
+    def GetExecuteEditTemplateAction(self):
+        ExecuteEditTemplateActionProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, LONG, PEditTemplateOptions, BOOLEAN, ctypes.c_char_p)
+        ExecuteEditTemplateActionParams = (1, "AActionName", 0), (1, "AActionTimeout", 0), (1, "AEditTemplateOptions", 0), (1, "AUseServerDebugging", 0), (1, "AResultStr", 0),
+        ExecuteEditTemplateActionFuncRes = ExecuteEditTemplateActionProto(("ExecuteEditTemplateAction", self.DllHandle), ExecuteEditTemplateActionParams)
+        return ExecuteEditTemplateActionFuncRes
+
+
 class TDllFunctions:
     def __init__(self):
         self.Addresses = TDllFunctionAddresses()
@@ -338,7 +431,20 @@ class TDllFunctions:
         
         self.GetClearClientInMemFSFunc = self.Addresses.GetClearClientInMemFS()
         self.GetClearServerInMemFSFunc = self.Addresses.GetClearServerInMemFS()
-
+        
+        self.ExecuteClickActionFunc = self.Addresses.GetExecuteClickAction()
+        self.ExecuteExecAppActionFunc = self.Addresses.GetExecuteExecAppAction()
+        self.ExecuteFindControlActionFunc = self.Addresses.GetExecuteFindControlAction()
+        self.ExecuteFindSubControlActionFunc = self.Addresses.GetExecuteFindSubControlAction()
+        self.ExecuteSetControlTextActionFunc = self.Addresses.GetExecuteSetControlTextAction()
+        self.ExecuteCallTemplateActionFunc = self.Addresses.GetExecuteCallTemplateAction()
+        self.ExecuteSleepActionFunc = self.Addresses.GetExecuteSleepAction()
+        self.ExecuteSetVarActionFunc = self.Addresses.GetExecuteSetVarAction()
+        self.ExecuteWindowOperationsActionFunc = self.Addresses.GetExecuteWindowOperationsAction()
+        self.ExecuteLoadSetVarFromFileActionFunc = self.Addresses.GetExecuteLoadSetVarFromFileAction()
+        self.ExecuteSaveSetVarToFileActionFunc = self.Addresses.GetExecuteSaveSetVarToFileAction()
+        self.ExecutePluginActionFunc = self.Addresses.GetExecutePluginAction()
+        self.ExecuteEditTemplateActionFunc = self.Addresses.GetExecuteEditTemplateAction()
         
     def InitClickerClient(self):
         try:
@@ -655,6 +761,163 @@ class TDllFunctions:
             return 'AV on ClearServerInMemFS'
 
 
+
+    def ExecuteClickAction(self, AActionName, AActionTimeout, AClickOptions, AUseServerDebugging):
+        try:
+            buffer = ctypes.create_string_buffer(10 * 1048576) # #(CMaxSharedStringLength)
+            ResponsePtr = buffer[0] #ctypes.c_char_p(buffer[0])  #address of first byte in the buffer
+            RespLen = self.ExecuteClickActionFunc(AActionName, AActionTimeout, AClickOptions, AUseServerDebugging, ResponsePtr)
+            
+            Response = ctypes.string_at(ResponsePtr, RespLen)
+            return Response.decode('utf-8') #Returns the list of variables, separated by ASCII8 ASCII7  (i.e. #8#7)
+        except:
+            return 'AV on ExecuteClickAction'
+
+
+    def ExecuteExecAppAction(self, AActionName, AActionTimeout, AExecAppOptions, AUseServerDebugging):
+        try:
+            buffer = ctypes.create_string_buffer(10 * 1048576) # #(CMaxSharedStringLength)
+            ResponsePtr = buffer[0] #ctypes.c_char_p(buffer[0])  #address of first byte in the buffer
+            RespLen = self.ExecuteExecAppActionFunc(AActionName, AActionTimeout, AExecAppOptions, AUseServerDebugging, ResponsePtr)
+            
+            Response = ctypes.string_at(ResponsePtr, RespLen)
+            return Response.decode('utf-8') #Returns the list of variables, separated by ASCII8 ASCII7  (i.e. #8#7)
+        except:
+            return 'AV on ExecuteExecAppAction'
+
+
+    def ExecuteFindControlAction(self, AActionName, AActionTimeout, AFindControlOptions, AUseServerDebugging, AFileLocation):
+        try:
+            buffer = ctypes.create_string_buffer(10 * 1048576) # #(CMaxSharedStringLength)
+            ResponsePtr = buffer[0] #ctypes.c_char_p(buffer[0])  #address of first byte in the buffer
+            RespLen = self.ExecuteFindControlActionFunc(AActionName, AActionTimeout, AFindControlOptions, AUseServerDebugging, AFileLocation, ResponsePtr)
+            
+            Response = ctypes.string_at(ResponsePtr, RespLen)
+            return Response.decode('utf-8') #Returns the list of variables, separated by ASCII8 ASCII7  (i.e. #8#7)
+        except:
+            return 'AV on ExecuteFindControlAction'
+
+
+    def ExecuteFindSubControlAction(self, AActionName, AActionTimeout, AFindSubControlOptions, AUseServerDebugging, AFileLocation):
+        try:
+            buffer = ctypes.create_string_buffer(10 * 1048576) # #(CMaxSharedStringLength)
+            ResponsePtr = buffer[0] #ctypes.c_char_p(buffer[0])  #address of first byte in the buffer
+            RespLen = self.ExecuteFindSubControlActionFunc(AActionName, AActionTimeout, AFindSubControlOptions, AUseServerDebugging, AFileLocation, ResponsePtr)
+            
+            Response = ctypes.string_at(ResponsePtr, RespLen)
+            return Response.decode('utf-8') #Returns the list of variables, separated by ASCII8 ASCII7  (i.e. #8#7)
+        except:
+            return 'AV on ExecuteFindSubControlAction'
+
+
+    def ExecuteSetControlTextAction(self, AActionName, AActionTimeout, ASetControlTextOptions, AUseServerDebugging):
+        try:
+            buffer = ctypes.create_string_buffer(10 * 1048576) # #(CMaxSharedStringLength)
+            ResponsePtr = buffer[0] #ctypes.c_char_p(buffer[0])  #address of first byte in the buffer
+            RespLen = self.ExecuteSetControlTextActionFunc(AActionName, AActionTimeout, ASetControlTextOptions, AUseServerDebugging, ResponsePtr)
+            
+            Response = ctypes.string_at(ResponsePtr, RespLen)
+            return Response.decode('utf-8') #Returns the list of variables, separated by ASCII8 ASCII7  (i.e. #8#7)
+        except:
+            return 'AV on ExecuteSetControlTextAction'
+
+
+    def ExecuteCallTemplateAction(self, AActionName, AActionTimeout, ACallTemplateOptions, AUseServerDebugging, AFileLocation):
+        try:
+            buffer = ctypes.create_string_buffer(10 * 1048576) # #(CMaxSharedStringLength)
+            ResponsePtr = buffer[0] #ctypes.c_char_p(buffer[0])  #address of first byte in the buffer
+            RespLen = self.ExecuteCallTemplateActionFunc(AActionName, AActionTimeout, ACallTemplateOptions, AUseServerDebugging, AFileLocation, ResponsePtr)
+            
+            Response = ctypes.string_at(ResponsePtr, RespLen)
+            return Response.decode('utf-8') #Returns the list of variables, separated by ASCII8 ASCII7  (i.e. #8#7)
+        except:
+            return 'AV on ExecuteCallTemplateAction'
+
+
+    def ExecuteSleepAction(self, AActionName, AActionTimeout, ASleepOptions, AUseServerDebugging):
+        try:
+            buffer = ctypes.create_string_buffer(10 * 1048576) # #(CMaxSharedStringLength)
+            ResponsePtr = buffer[0] #ctypes.c_char_p(buffer[0])  #address of first byte in the buffer
+            RespLen = self.ExecuteSleepActionFunc(AActionName, AActionTimeout, ASleepOptions, AUseServerDebugging, ResponsePtr)
+            
+            Response = ctypes.string_at(ResponsePtr, RespLen)
+            return Response.decode('utf-8') #Returns the list of variables, separated by ASCII8 ASCII7  (i.e. #8#7)
+        except:
+            return 'AV on ExecuteSleepAction'
+
+
+    def ExecuteSetVarAction(self, AActionName, AActionTimeout, ASetVarOptions, AUseServerDebugging):
+        try:
+            buffer = ctypes.create_string_buffer(10 * 1048576) # #(CMaxSharedStringLength)
+            ResponsePtr = buffer[0] #ctypes.c_char_p(buffer[0])  #address of first byte in the buffer
+            RespLen = self.ExecuteSetVarActionFunc(AActionName, AActionTimeout, ASetVarOptions, AUseServerDebugging, ResponsePtr)
+            
+            Response = ctypes.string_at(ResponsePtr, RespLen)
+            return Response.decode('utf-8') #Returns the list of variables, separated by ASCII8 ASCII7  (i.e. #8#7)
+        except:
+            return 'AV on ExecuteSetVarAction'
+
+
+    def ExecuteWindowOperationsAction(self, AActionName, AActionTimeout, AWindowOperationsOptions, AUseServerDebugging):
+        try:
+            buffer = ctypes.create_string_buffer(10 * 1048576) # #(CMaxSharedStringLength)
+            ResponsePtr = buffer[0] #ctypes.c_char_p(buffer[0])  #address of first byte in the buffer
+            RespLen = self.ExecuteWindowOperationsActionFunc(AActionName, AActionTimeout, AWindowOperationsOptions, AUseServerDebugging, ResponsePtr)
+            
+            Response = ctypes.string_at(ResponsePtr, RespLen)
+            return Response.decode('utf-8') #Returns the list of variables, separated by ASCII8 ASCII7  (i.e. #8#7)
+        except:
+            return 'AV on ExecuteWindowOperationsAction'
+
+
+    def ExecuteLoadSetVarFromFileAction(self, AActionName, AActionTimeout, ALoadSetVarFromFileOptions, AUseServerDebugging):
+        try:
+            buffer = ctypes.create_string_buffer(10 * 1048576) # #(CMaxSharedStringLength)
+            ResponsePtr = buffer[0] #ctypes.c_char_p(buffer[0])  #address of first byte in the buffer
+            RespLen = self.ExecuteLoadSetVarFromFileActionFunc(AActionName, AActionTimeout, ALoadSetVarFromFileOptions, AUseServerDebugging, ResponsePtr)
+            
+            Response = ctypes.string_at(ResponsePtr, RespLen)
+            return Response.decode('utf-8') #Returns the list of variables, separated by ASCII8 ASCII7  (i.e. #8#7)
+        except:
+            return 'AV on ExecuteLoadSetVarFromFileAction'
+
+
+    def ExecuteSaveSetVarToFileAction(self, AActionName, AActionTimeout, ASaveSetVarToFileOptions, AUseServerDebugging):
+        try:
+            buffer = ctypes.create_string_buffer(10 * 1048576) # #(CMaxSharedStringLength)
+            ResponsePtr = buffer[0] #ctypes.c_char_p(buffer[0])  #address of first byte in the buffer
+            RespLen = self.GetExecuteSaveSetVarToFileActionFunc(AActionName, AActionTimeout, ASaveSetVarToFileOptions, AUseServerDebugging, ResponsePtr)
+            
+            Response = ctypes.string_at(ResponsePtr, RespLen)
+            return Response.decode('utf-8') #Returns the list of variables, separated by ASCII8 ASCII7  (i.e. #8#7)
+        except:
+            return 'AV on ExecuteSaveSetVarToFileAction'
+
+
+    def ExecutePluginAction(self, AActionName, AActionTimeout, APluginOptions, AUseServerDebugging, AUseStepIntoDebugging):
+        try:
+            buffer = ctypes.create_string_buffer(10 * 1048576) # #(CMaxSharedStringLength)
+            ResponsePtr = buffer[0] #ctypes.c_char_p(buffer[0])  #address of first byte in the buffer
+            RespLen = self.ExecutePluginActionFunc(AActionName, AActionTimeout, APluginOptions, AUseServerDebugging, AUseStepIntoDebugging, ResponsePtr)
+            
+            Response = ctypes.string_at(ResponsePtr, RespLen)
+            return Response.decode('utf-8') #Returns the list of variables, separated by ASCII8 ASCII7  (i.e. #8#7)
+        except:
+            return 'AV on ExecutePluginAction'
+
+
+    def ExecuteEditTemplateAction(self, AActionName, AActionTimeout, AEditTemplateOptions, AUseServerDebugging):
+        try:
+            buffer = ctypes.create_string_buffer(10 * 1048576) # #(CMaxSharedStringLength)
+            ResponsePtr = buffer[0] #ctypes.c_char_p(buffer[0])  #address of first byte in the buffer
+            RespLen = self.ExecuteEditTemplateActionFunc(AActionName, AActionTimeout, AEditTemplateOptions, AUseServerDebugging, ResponsePtr)
+            
+            Response = ctypes.string_at(ResponsePtr, RespLen)
+            return Response.decode('utf-8') #Returns the list of variables, separated by ASCII8 ASCII7  (i.e. #8#7)
+        except:
+            return 'AV on ExecuteEditTemplateAction'
+
+
 #A similar set of functions as above, but these ones return Boolean, instead of 0 or 1.
 #More than that, their results are set to True for succes and False otherwise (without any other info).
 
@@ -804,4 +1067,70 @@ class TUIClickerDllFunctions:
 
     def ClearServerInMemFS(self):
         return self.DllFuncs.ClearServerInMemFS() == 'OK'
+
+
+    def ExecuteClickAction(self, AActionName, AActionTimeout, AClickOptions, AUseServerDebugging):
+        Res = self.DllFuncs.ExecuteClickAction(AActionName, AActionTimeout, AClickOptions, AUseServerDebugging)  #sending PWideChar, and converting to ANSI at dll
+        return Res.find("Client exception: ") == -1
+
+
+    def ExecuteExecAppAction(self, AActionName, AActionTimeout, AExecAppOptions, AUseServerDebugging):
+        Res = self.DllFuncs.ExecuteExecAppAction(AActionName, AActionTimeout, AExecAppOptions, AUseServerDebugging)  #sending PWideChar, and converting to ANSI at dll
+        return Res.find("Client exception: ") == -1
+
+
+    def ExecuteFindControlAction(self, AActionName, AActionTimeout, AFindControlOptions, AUseServerDebugging, AFileLocation):
+        Res = self.DllFuncs.ExecuteFindControlAction(AActionName, AActionTimeout, AFindControlOptions, AUseServerDebugging, AFileLocation)  #sending PWideChar, and converting to ANSI at dll
+        return Res.find("Client exception: ") == -1
+
+
+    def ExecuteFindSubControlAction(self, AActionName, AActionTimeout, AFindSubControlOptions, AUseServerDebugging, AFileLocation):
+        Res = self.DllFuncs.ExecuteFindSubControlAction(AActionName, AActionTimeout, AFindSubControlOptions, AUseServerDebugging, AFileLocation)  #sending PWideChar, and converting to ANSI at dll
+        return Res.find("Client exception: ") == -1
+
+
+    def ExecuteSetControlTextAction(self, AActionName, AActionTimeout, ASetControlTextOptions, AUseServerDebugging):
+        Res = self.DllFuncs.ExecuteSetControlTextAction(AActionName, AActionTimeout, ASetControlTextOptions, AUseServerDebugging)  #sending PWideChar, and converting to ANSI at dll
+        return Res.find("Client exception: ") == -1
+
+
+    def ExecuteCallTemplateAction(self, AActionName, AActionTimeout, ACallTemplateOptions, AUseServerDebugging, AFileLocation):
+        Res = self.DllFuncs.ExecuteCallTemplateAction(AActionName, AActionTimeout, ACallTemplateOptions, AUseServerDebugging, AFileLocation)  #sending PWideChar, and converting to ANSI at dll
+        return Res.find("Client exception: ") == -1
+
+
+    def ExecuteSleepAction(self, AActionName, AActionTimeout, ASleepOptions, AUseServerDebugging):
+        Res = self.DllFuncs.ExecuteSleepAction(AActionName, AActionTimeout, ASleepOptions, AUseServerDebugging)  #sending PWideChar, and converting to ANSI at dll
+        return Res.find("Client exception: ") == -1
+
+
+    def ExecuteSetVarAction(self, AActionName, AActionTimeout, ASetVarOptions, AUseServerDebugging):
+        Res = self.DllFuncs.ExecuteSetVarAction(AActionName, AActionTimeout, ASetVarOptions, AUseServerDebugging)  #sending PWideChar, and converting to ANSI at dll
+        return Res.find("Client exception: ") == -1
+
+
+    def ExecuteWindowOperationsAction(self, AActionName, AActionTimeout, AWindowOperationsOptions, AUseServerDebugging):
+        Res = self.DllFuncs.ExecuteWindowOperationsAction(AActionName, AActionTimeout, AWindowOperationsOptions, AUseServerDebugging)  #sending PWideChar, and converting to ANSI at dll
+        return Res.find("Client exception: ") == -1
+
+
+    def ExecuteLoadSetVarFromFileAction(self, AActionName, AActionTimeout, ALoadSetVarFromFileOptions, AUseServerDebugging):
+        Res = self.DllFuncs.ExecuteLoadSetVarFromFileAction(AActionName, AActionTimeout, ALoadSetVarFromFileOptions, AUseServerDebugging)  #sending PWideChar, and converting to ANSI at dll
+        return Res.find("Client exception: ") == -1
+
+
+    def ExecuteSaveSetVarToFileAction(self, AActionName, AActionTimeout, ASaveSetVarToFileOptions, AUseServerDebugging):
+        Res = self.DllFuncs.ExecuteSaveSetVarToFileAction(AActionName, AActionTimeout, ASaveSetVarToFileOptions, AUseServerDebugging)  #sending PWideChar, and converting to ANSI at dll
+        return Res.find("Client exception: ") == -1
+
+
+    def ExecutePluginAction(self, AActionName, AActionTimeout, APluginOptions, AUseServerDebugging, AUseStepIntoDebugging):
+        Res = self.DllFuncs.ExecutePluginAction(AActionName, AActionTimeout, APluginOptions, AUseServerDebugging, AUseStepIntoDebugging)  #sending PWideChar, and converting to ANSI at dll
+        return Res.find("Client exception: ") == -1
+
+
+    def ExecuteEditTemplateAction(self, AActionName, AActionTimeout, AEditTemplateOptions, AUseServerDebugging):
+        Res = self.DllFuncs.ExecuteEditTemplateAction(AActionName, AActionTimeout, AEditTemplateOptions, AUseServerDebugging)  #sending PWideChar, and converting to ANSI at dll
+        return Res.find("Client exception: ") == -1
+
 
