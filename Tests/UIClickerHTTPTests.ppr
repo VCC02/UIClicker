@@ -30,7 +30,8 @@ uses
   Interfaces, Forms, GuiTestRunner, TestHTTPAPI, ClickerActionsClient,
   ClickerUtils, ClickerTemplates, ClickerFileProviderClient,
   ClickerActionProperties, InMemFileSystem, Expectations, ActionsStuff,
-  TestMiscHTTPAPI, TestTemplateLevelHTTPAPI, TestLowLevelHTTPAPI;
+  TestMiscHTTPAPI, TestTemplateLevelHTTPAPI, TestLowLevelHTTPAPI, 
+  TestClickerClientHTTPAPI, DllUtils, ClickerClientAPI;
 
 {$R *.res}
 

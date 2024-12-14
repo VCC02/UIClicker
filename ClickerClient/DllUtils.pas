@@ -45,11 +45,15 @@ procedure SetPointedContentToString(ASrc: Pointer; var ADest: string);
 implementation
 
 
+uses
+  Math;
+
+
 function SetPointedContentFromString(ASrc: string; ADest: Pointer; AMaxLen: Integer = CMaxSharedStringLength): Integer;
 begin
   if Length(ASrc) > AMaxLen then
   begin
-    ASrc := 'Can''t set the string over its allocated size. Please increase CMaxSharedStringLength to at least ' + IntToStr(Length(ASrc)) + ', or simply pass a bigger value.';
+    ASrc := 'Can''t set the string over its allocated size. Please increase CMaxSharedStringLength to at least ' + IntToStr(Length(ASrc)) + ', or simply pass a greater value.';
     ClientLastError := ASrc;
   end;
 
@@ -72,7 +76,7 @@ begin
     Exit;
   end;
 
-  SetLength(ADest, strlen(ASrc));
+  SetLength(ADest, Min(StrLen(ASrc), CMaxSharedStringLength));
   Move(ASrc^, ADest[1], Length(ADest));
 end;
 

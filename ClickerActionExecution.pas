@@ -4408,7 +4408,7 @@ begin
 
   AAction.ActionOptions.ActionName := AListOfOptionsParams.Values[CPropertyName_ActionName];
   AAction.ActionOptions.ActionTimeout := StrToIntDef(AListOfOptionsParams.Values[CPropertyName_ActionTimeout], 1000);
-  AAction.ActionOptions.Action := TClkAction(CClkUnsetAction);
+  AAction.ActionOptions.Action := {%H-}TClkAction(CClkUnsetAction);
   AAction.ActionOptions.ActionEnabled := True;
   AAction.ActionOptions.ActionCondition := '';
   AAction.ActionOptions.ExecutionIndex := '';

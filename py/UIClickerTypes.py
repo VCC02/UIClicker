@@ -158,13 +158,13 @@ class TEditTemplateWhichTemplate: #(Enum):
 
 
 class TClickOptions(Structure):
-    _fields_ = [("XClickPointReference", LONG), #TXClickPointReference
-               ("YClickPointReference", LONG), #TYClickPointReference
+    _fields_ = [("XClickPointReference", BYTE), #LONG), #TXClickPointReference
+               ("YClickPointReference", BYTE), #LONG), #TYClickPointReference
                ("XClickPointVar", LPCWSTR),
                ("YClickPointVar", LPCWSTR),
                ("XOffset", LPCWSTR),
                ("YOffset", LPCWSTR),
-               ("MouseButton", LONG), #TMouseButton
+               ("MouseButton", BYTE), #LONG), #TMouseButton
                ("ClickWithCtrl", BOOLEAN),
                ("ClickWithAlt", BOOLEAN),
                ("ClickWithShift", BOOLEAN),
@@ -173,13 +173,13 @@ class TClickOptions(Structure):
                ("LeaveMouse", BOOLEAN),
                ("MoveWithoutClick", BOOLEAN),
                ("ClickType", LONG),    #see CClickType_Click and CClickType_DoubleClick
-               ("XClickPointReferenceDest", LONG), #TXClickPointReference
-               ("YClickPointReferenceDest", LONG), #TYClickPointReference
+               ("XClickPointReferenceDest", BYTE), #LONG), #TXClickPointReference
+               ("YClickPointReferenceDest", BYTE), #LONG), #TYClickPointReference
                ("XClickPointVarDest", LPCWSTR),
                ("YClickPointVarDest", LPCWSTR),
                ("XOffsetDest", LPCWSTR),
                ("YOffsetDest", LPCWSTR),
-               ("MouseWheelType", LONG), #TMouseWheelType
+               ("MouseWheelType", BYTE), #LONG), #TMouseWheelType
                ("MouseWheelAmount", LPCWSTR),
                ("DelayAfterMovingToDestination", LPCWSTR),
                ("DelayAfterMouseDown", LPCWSTR),
@@ -226,7 +226,7 @@ class TExecAppOptions(Structure):
                ("WaitForApp", BOOLEAN),
                ("AppStdIn", LPCWSTR),
                ("CurrentDir", LPCWSTR),
-               ("UseInheritHandles", LONG)] #TExecAppUseInheritHandless
+               ("UseInheritHandles", BYTE)] #LONG)] #TExecAppUseInheritHandless
 
 PExecAppOptions = ctypes.POINTER(TExecAppOptions)
 
@@ -247,7 +247,7 @@ class TClkFindControlMatchCriteria(Structure):
                ("WillMatchBitmapText", BOOLEAN),
                ("WillMatchBitmapFiles", BOOLEAN),
                ("WillMatchPrimitiveFiles", BOOLEAN),
-               ("SearchForControlMode", LONG)] #TSearchForControlMode
+               ("SearchForControlMode", LONG)] #TSearchForControlMode  #This one stays LONG
 
 class TMatchBitmapAlgorithmSettings(Structure):
     _fields_ = [("XMultipleOf", LONG),
@@ -283,7 +283,7 @@ class TClkFindControlMatchBitmapText(Structure):
                ("Italic", BOOLEAN),
                ("Underline", BOOLEAN),
                ("StrikeOut", BOOLEAN),
-               ("FontQuality", LONG), #TFontQuality
+               ("FontQuality", BYTE), #LONG), #TFontQuality
                ("FontQualityUsesReplacement", BOOLEAN),
                ("FontQualityReplacement", LPCWSTR),
                ("ProfileName", LPCWSTR),
@@ -342,7 +342,7 @@ class TFindControlOptions(Structure):
                ("MatchClassNameSeparator", LPCWSTR),
                ("MatchBitmapText", PMatchBitmapTextRec), #TClkFindControlMatchBitmapTextArr;  #Can be updated, by a different call
                ("MatchBitmapFiles", LPCWSTR),
-               ("MatchBitmapAlgorithm", LONG), #TMatchBitmapAlgorithm)
+               ("MatchBitmapAlgorithm", BYTE), #LONG), #TMatchBitmapAlgorithm)
                ("MatchBitmapAlgorithmSettings", TMatchBitmapAlgorithmSettings),
                ("InitialRectangle", TRectString),
                ("UseWholeScreen", BOOLEAN),
@@ -359,9 +359,9 @@ class TFindControlOptions(Structure):
                ("IgnoredColors", LPCWSTR),
                ("SleepySearch", BOOLEAN),
                ("StopSearchOnMismatch", BOOLEAN),
-               ("ImageSource", LONG), #TImageSource)
+               ("ImageSource", BYTE), #LONG), #TImageSource)
                ("SourceFileName", LPCWSTR),
-               ("ImageSourceFileNameLocation", LONG),  #TImageSourceFileNameLocation)
+               ("ImageSourceFileNameLocation", BYTE), #LONG),  #TImageSourceFileNameLocation)
                ("PrecisionTimeout", BOOLEAN),
                ("FullBackgroundImageInResult", BOOLEAN),
                ("MatchByHistogramSettings", TMatchByHistogramSettings),
@@ -455,7 +455,7 @@ def GetDefaultFindSubControlOptions():
 
 class TSetControlTextOptions(Structure):
     _fields_ = [("Text", LPCWSTR),
-               ("ControlType", LONG), #TClkSetTextControlType
+               ("ControlType", BYTE), #LONG), #TClkSetTextControlType
                ("DelayBetweenKeyStrokes", LPCWSTR),
                ("Count", LPCWSTR)]
 
@@ -475,9 +475,9 @@ class TClkCallTemplateLoop(Structure):
                ("Counter", LPCWSTR),
                ("InitValue", LPCWSTR),
                ("EndValue", LPCWSTR),
-               ("Direction", LONG), #TLoopDirection
+               ("Direction", BYTE), #LONG), #TLoopDirection
                ("BreakCondition", LPCWSTR),
-               ("EvalBreakPosition", LONG)] #TLoopEvalBreakPosition
+               ("EvalBreakPosition", BYTE)] #LONG)] #TLoopEvalBreakPosition
                
 
 class TCallTemplateOptions(Structure):
@@ -534,7 +534,7 @@ def GetDefaultSetVarOptions():
 
 
 class TWindowOperationsOptions(Structure):
-    _fields_ = [("Operation", LONG),  #TWindowOperation
+    _fields_ = [("Operation", BYTE), #LONG),  #TWindowOperation
                ("NewX", LPCWSTR),
                ("NewY", LPCWSTR),
                ("NewWidth", LPCWSTR),
@@ -596,13 +596,13 @@ def GetDefaultPluginOptions():
 
 
 class TEditTemplateOptions(Structure):
-    _fields_ = [("Operation", LONG),  #TEditTemplateOperation
-               ("WhichTemplate", LONG),  #TEditTemplateWhichTemplate
+    _fields_ = [("Operation", BYTE), #LONG),  #TEditTemplateOperation
+               ("WhichTemplate", BYTE), #LONG),  #TEditTemplateWhichTemplate
                ("TemplateFileName", LPCWSTR),
                ("ListOfEditedProperties", LPCWSTR),   # ASCII-18 separated list of values
                ("ListOfEnabledProperties", LPCWSTR),
                ("EditedActionName", LPCWSTR),
-               ("EditedActionType", LONG),  #TClkAction
+               ("EditedActionType", BYTE), #LONG),  #TClkAction
                ("EditedActionCondition", LPCWSTR),
                ("EditedActionTimeout", LONG),
                ("NewActionName", LPCWSTR),

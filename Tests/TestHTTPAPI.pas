@@ -206,6 +206,7 @@ end;
 
 procedure TTestHTTPAPI.SetUp;
 begin
+  inherited SetUp;
   FInMemFS := TInMemFileSystem.Create;
 end;
 
@@ -213,6 +214,7 @@ end;
 procedure TTestHTTPAPI.TearDown;
 begin
   FreeAndNil(FInMemFS);
+  inherited TearDown;
 end;
 
 
