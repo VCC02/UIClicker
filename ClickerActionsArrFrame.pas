@@ -1664,12 +1664,13 @@ var
 begin
   Result := False;
   for i := 0 to Length(FClkActions) - 1 do
-    if FClkActions[i].ActionOptions.ActionName = AActionName then
-    begin
-      AClkSetVarOptions := FClkActions[i].SetVarOptions;
-      Result := True;
-      Break;
-    end;
+    if FClkActions[i].ActionOptions.Action = acSetVar then
+      if FClkActions[i].ActionOptions.ActionName = AActionName then
+      begin
+        AClkSetVarOptions := FClkActions[i].SetVarOptions;
+        Result := True;
+        Break;
+      end;
 end;
 
 
@@ -1679,12 +1680,13 @@ var
 begin
   Result := False;
   for i := 0 to Length(FClkActions) - 1 do
-    if FClkActions[i].ActionOptions.ActionName = AActionName then
-    begin
-      FClkActions[i].SetVarOptions := AClkSetVarOptions;
-      Result := True;
-      Break;
-    end;
+    if FClkActions[i].ActionOptions.Action = acSetVar then
+      if FClkActions[i].ActionOptions.ActionName = AActionName then
+      begin
+        FClkActions[i].SetVarOptions := AClkSetVarOptions;
+        Result := True;
+        Break;
+      end;
 end;
 
 
@@ -2037,6 +2039,7 @@ begin
   FPlaying := True;
   FContinuePlayingBySteppingInto := False;  //without this, stepping into will set this flag to true and any subsequent actions will enter debugging mode
 
+  FStopAllActionsOnDemand := False;
   if FStopAllActionsOnDemandFromParent <> nil then
     FStopAllActionsOnDemandFromParent^ := False; //this flag may remain set after stopping a plugin
 
