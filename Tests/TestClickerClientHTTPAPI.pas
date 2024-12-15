@@ -30,13 +30,14 @@ interface
 
 uses
   LCLIntf, Classes, SysUtils, TestHTTPAPI, fpcunit, testregistry, Expectations,
-  ClickerUtils;
+  ClickerUtils, ClickerActionsClient;
 
 type
   TTestClickerClientHTTPAPI = class(TTestHTTPAPI)
   private
     FClickerClientDllHandle: THandle;
 
+    procedure WaitForDebuggingActionToFinish(AExecResponse: string; ATh: TClientThread);
   protected
     procedure SetUp; override;
     procedure TearDown; override;
@@ -44,6 +45,7 @@ type
     constructor Create; override;
   published
     procedure Test_TestConnectionToServer;
+    procedure StartTestDriver;
     procedure Test_ExecuteClickAction_With_UseServerDebugging;
     procedure Test_ExecuteExecAppAction_With_UseServerDebugging;
     procedure Test_ExecuteFindControlAction_With_UseServerDebugging;
@@ -64,8 +66,8 @@ implementation
 
 
 uses
-  ClickerActionsClient, ActionsStuff, Controls, ClickerFileProviderClient, ClickerActionProperties,
-  Graphics, DllUtils, ClickerClientAPI;
+  ActionsStuff, Controls, ClickerFileProviderClient, ClickerActionProperties,
+  Graphics, DllUtils, ClickerClientAPI, ShellAPI;
 
 type
   TInitClickerClient_Proc = procedure; cdecl;
@@ -170,6 +172,9 @@ var
   ExecutePluginAction: TExecutePluginAction_Proc;
   ExecuteEditTemplateAction: TExecuteEditTemplateAction_Proc;
 
+const
+  CTestDriverAddress = 'http://127.0.0.1:25444/';
+
 
 constructor TTestClickerClientHTTPAPI.Create;
 begin
@@ -214,6 +219,7 @@ begin
   SetLength(RecServerAddress, GetServerAddress(@RecServerAddress[1]));
 
   Expect(RecServerAddress).ToBe(TestServerAddress, 'The configured server address does not match the expected one in ClickerClient.');
+  SetVariable(TestServerAddress, '$ExecAction_Err$', '', 0);  //clear errors  - required if the debugged action should be successful
 end;
 
 
@@ -240,17 +246,46 @@ begin
 end;
 
 
+procedure TTestClickerClientHTTPAPI.StartTestDriver;
+var
+  PathToDriver: string;
+begin
+  //ToDo use UI tests code for this. Also, create one more method, at the end, to close the process
+
+  PathToDriver := ExtractFilePath(ParamStr(0)) + '..\TestDriver\UIClicker.exe' ;
+  ShellExecute(0, 'open', PChar(PathToDriver), '--ExtraCaption MyServer --SetExecMode Server --ServerPort 25444', PChar(ExtractFilePath(PathToDriver)), 5);
+end;
+
+
+procedure TTestClickerClientHTTPAPI.WaitForDebuggingActionToFinish(AExecResponse: string; ATh: TClientThread);
+begin
+  Expect(AExecResponse).ToContain('$RemoteExecResponse$=', 'Response from the action being debugged.');
+  WaitForServerResponse(ATh, True);
+  ExpectSuccessfulAction(FastReplace_87ToReturn(ATh.Result));
+end;
+
+
 procedure TTestClickerClientHTTPAPI.Test_ExecuteClickAction_With_UseServerDebugging;
 var
   ClickOptions: TClkClickOptions;
   ClickOptionsAPI: TClkClickOptionsAPI;
   Response: string;
+  Th: TClientThread;
 begin
   GetDefaultPropertyValues_Click(ClickOptions);
   SetLength(Response, CMaxSharedStringLength);
 
-  SetClickOptionsToAPI(ClickOptions, ClickOptionsAPI);
-  ExecuteClickAction(nil, 100, @ClickOptionsAPI, True, @Response[1]);
+  SetVariable(TestServerAddress, '$Control_Left$', '1920', 0);  //prevent clicking on top-left, because the mouse action has '' for these two vars
+  SetVariable(TestServerAddress, '$Control_Top$', '1080', 0);
+
+  Th := AsyncExecTestTemplate(CTestDriverAddress, '$AppDir$\..\Tests\TestFiles\ClickDebuggingButton.clktmpl');
+  try
+    SetClickOptionsToAPI(ClickOptions, ClickOptionsAPI);
+    ExecuteClickAction(nil, 100, @ClickOptionsAPI, True, @Response[1]);
+    WaitForDebuggingActionToFinish(Response, Th);
+  finally
+    Th.Free;
+  end;
 end;
 
 
@@ -260,18 +295,21 @@ var
   ExecAppOptionsAPI: TClkExecAppOptionsAPI;
   ActionName: WideString;
   Response: string;
+  Th: TClientThread;
 begin
   GetDefaultPropertyValues_ExecApp(ExecAppOptions);
   SetLength(Response, CMaxSharedStringLength);
 
   ActionName := 'My ExecApp action';
 
-  //ToDo: start a second thread, which runs a template, capable of stopping or stepping over the current action
-  //////////////
-
-  SetExecAppOptionsToAPI(ExecAppOptions, ExecAppOptionsAPI);
-  ExecuteExecAppAction(@ActionName[1], 100, @ExecAppOptionsAPI, True, @Response[1]);
-  Expect(Response).ToContain('$RemoteExecResponse$=');
+  Th := AsyncExecTestTemplate(CTestDriverAddress, '$AppDir$\..\Tests\TestFiles\ClickDebuggingButton.clktmpl');
+  try
+    SetExecAppOptionsToAPI(ExecAppOptions, ExecAppOptionsAPI);
+    ExecuteExecAppAction(@ActionName[1], 100, @ExecAppOptionsAPI, True, @Response[1]);
+    WaitForDebuggingActionToFinish(Response, Th);
+  finally
+    Th.Free;
+  end;
 end;
 
 
@@ -283,6 +321,7 @@ var
   FindControlMatchBitmapTextAPIArr: TClkFindControlMatchBitmapTextAPIArr;
   ActionName, FileLoc: WideString;
   Response: string;
+  Th: TClientThread;
 begin
   GetDefaultPropertyValues_FindControl(FindControlOptions);
   FindControlOptions.MatchText := 'UI Clicker Main';
@@ -294,8 +333,14 @@ begin
   ActionName := 'My FindControl action';
   FileLoc := CREParam_FileLocation_ValueDisk;
 
-  SetFindControlOptionsToAPI(FindControlOptions, FindControlOptionsAPI, MatchBitmapTextRecAPI, FindControlMatchBitmapTextAPIArr);
-  ExecuteFindControlAction(@ActionName[1], 2000, @FindControlOptionsAPI, True, @FileLoc[1], @Response[1]);
+  Th := AsyncExecTestTemplate(CTestDriverAddress, '$AppDir$\..\Tests\TestFiles\ClickDebuggingButton.clktmpl');
+  try
+    SetFindControlOptionsToAPI(FindControlOptions, FindControlOptionsAPI, MatchBitmapTextRecAPI, FindControlMatchBitmapTextAPIArr);
+    ExecuteFindControlAction(@ActionName[1], 2000, @FindControlOptionsAPI, True, @FileLoc[1], @Response[1]);
+    WaitForDebuggingActionToFinish(Response, Th);
+  finally
+    Th.Free;
+  end;
 end;
 
 
@@ -307,6 +352,7 @@ var
   FindControlMatchBitmapTextAPIArr: TClkFindControlMatchBitmapTextAPIArr;
   ActionName, FileLoc: WideString;
   Response: string;
+  Th: TClientThread;
 begin
   GetDefaultPropertyValues_FindControl(FindControlOptions, True);
   FindControlOptions.MatchText := '-bit';
@@ -324,8 +370,14 @@ begin
   ActionName := 'My FindSubControl action';
   FileLoc := CREParam_FileLocation_ValueDisk;
 
-  SetFindControlOptionsToAPI(FindControlOptions, FindControlOptionsAPI, MatchBitmapTextRecAPI, FindControlMatchBitmapTextAPIArr);
-  ExecuteFindSubControlAction(@ActionName[1], 1000, @FindControlOptionsAPI, True, @FileLoc[1], @Response[1]);
+  Th := AsyncExecTestTemplate(CTestDriverAddress, '$AppDir$\..\Tests\TestFiles\ClickDebuggingButton.clktmpl');
+  try
+    SetFindControlOptionsToAPI(FindControlOptions, FindControlOptionsAPI, MatchBitmapTextRecAPI, FindControlMatchBitmapTextAPIArr);
+    ExecuteFindSubControlAction(@ActionName[1], 1000, @FindControlOptionsAPI, True, @FileLoc[1], @Response[1]);
+    WaitForDebuggingActionToFinish(Response, Th);
+  finally
+    Th.Free;
+  end;
 end;
 
 
@@ -335,15 +387,21 @@ var
   SetControlTextOptionsAPI: TClkSetTextOptionsAPI;
   ActionName: WideString;
   Response: string;
+  Th: TClientThread;
 begin
   GetDefaultPropertyValues_SetControlText(SetControlTextOptions);
   SetLength(Response, CMaxSharedStringLength);
 
   ActionName := 'My SetControlText action';
 
-  SetSetControlTextOptionsToAPI(SetControlTextOptions, SetControlTextOptionsAPI);
-  ExecuteSetControlTextAction(@ActionName[1], 100, @SetControlTextOptionsAPI, True, @Response[1]);
-  Expect(Response).ToContain('$RemoteExecResponse$=');
+  Th := AsyncExecTestTemplate(CTestDriverAddress, '$AppDir$\..\Tests\TestFiles\ClickDebuggingButton.clktmpl');
+  try
+    SetSetControlTextOptionsToAPI(SetControlTextOptions, SetControlTextOptionsAPI);
+    ExecuteSetControlTextAction(@ActionName[1], 100, @SetControlTextOptionsAPI, True, @Response[1]);
+    WaitForDebuggingActionToFinish(Response, Th);
+  finally
+    Th.Free;
+  end;
 end;
 
 
@@ -353,6 +411,7 @@ var
   CallTemplateOptionsAPI: TClkCallTemplateOptionsAPI;
   ActionName, FileLoc: WideString;
   Response: string;
+  Th: TClientThread;
 begin
   GetDefaultPropertyValues_CallTemplate(CallTemplateOptions);
   SetLength(Response, CMaxSharedStringLength);
@@ -360,9 +419,14 @@ begin
   ActionName := 'My CallTemplate action';
   FileLoc := CREParam_FileLocation_ValueDisk;
 
-  SetCallTemplateOptionsToAPI(CallTemplateOptions, CallTemplateOptionsAPI);
-  ExecuteCallTemplateAction(@ActionName[1], 100, @CallTemplateOptionsAPI, True, @FileLoc[1], @Response[1]);
-  Expect(Response).ToContain('$RemoteExecResponse$=');
+  Th := AsyncExecTestTemplate(CTestDriverAddress, '$AppDir$\..\Tests\TestFiles\ClickDebuggingButton.clktmpl');
+  try
+    SetCallTemplateOptionsToAPI(CallTemplateOptions, CallTemplateOptionsAPI);
+    ExecuteCallTemplateAction(@ActionName[1], 100, @CallTemplateOptionsAPI, True, @FileLoc[1], @Response[1]);
+    WaitForDebuggingActionToFinish(Response, Th);
+  finally
+    Th.Free;
+  end;
 end;
 
 
@@ -372,15 +436,21 @@ var
   SleepOptionsAPI: TClkSleepOptionsAPI;
   ActionName: WideString;
   Response: string;
+  Th: TClientThread;
 begin
   GetDefaultPropertyValues_Sleep(SleepOptions);
   SetLength(Response, CMaxSharedStringLength);
 
   ActionName := 'My Sleep action';
 
-  SetSleepOptionsToAPI(SleepOptions, SleepOptionsAPI);
-  ExecuteSleepAction(@ActionName[1], 100, @SleepOptionsAPI, True, @Response[1]);
-  Expect(Response).ToContain('$RemoteExecResponse$=');
+  Th := AsyncExecTestTemplate(CTestDriverAddress, '$AppDir$\..\Tests\TestFiles\ClickDebuggingButton.clktmpl');
+  try
+    SetSleepOptionsToAPI(SleepOptions, SleepOptionsAPI);
+    ExecuteSleepAction(@ActionName[1], 100, @SleepOptionsAPI, True, @Response[1]);
+    WaitForDebuggingActionToFinish(Response, Th);
+  finally
+    Th.Free;
+  end;
 end;
 
 
@@ -390,15 +460,21 @@ var
   SetVarOptionsAPI: TClkSetVarOptionsAPI;
   ActionName: WideString;
   Response: string;
+  Th: TClientThread;
 begin
   GetDefaultPropertyValues_SetVar(SetVarOptions);
   SetLength(Response, CMaxSharedStringLength);
 
   ActionName := 'My SetVar action';
 
-  SetSetVarOptionsToAPI(SetVarOptions, SetVarOptionsAPI);
-  ExecuteSetVarAction(@ActionName[1], 100, @SetVarOptionsAPI, True, @Response[1]);
-  Expect(Response).ToContain('$RemoteExecResponse$=');
+  Th := AsyncExecTestTemplate(CTestDriverAddress, '$AppDir$\..\Tests\TestFiles\ClickDebuggingButton.clktmpl');
+  try
+    SetSetVarOptionsToAPI(SetVarOptions, SetVarOptionsAPI);
+    ExecuteSetVarAction(@ActionName[1], 100, @SetVarOptionsAPI, True, @Response[1]);
+    WaitForDebuggingActionToFinish(Response, Th);
+  finally
+    Th.Free;
+  end;
 end;
 
 
@@ -408,15 +484,21 @@ var
   WindowOperationsOptionsAPI: TClkWindowOperationsOptionsAPI;
   ActionName: WideString;
   Response: string;
+  Th: TClientThread;
 begin
   GetDefaultPropertyValues_WindowOperations(WindowOperationsOptions);
   SetLength(Response, CMaxSharedStringLength);
 
   ActionName := 'My WindowOperations action';
 
-  SetWindowOperationsOptionsToAPI(WindowOperationsOptions, WindowOperationsOptionsAPI);
-  ExecuteWindowOperationsAction(@ActionName[1], 100, @WindowOperationsOptionsAPI, True, @Response[1]);
-  Expect(Response).ToContain('$RemoteExecResponse$=');
+  Th := AsyncExecTestTemplate(CTestDriverAddress, '$AppDir$\..\Tests\TestFiles\ClickDebuggingButton.clktmpl');
+  try
+    SetWindowOperationsOptionsToAPI(WindowOperationsOptions, WindowOperationsOptionsAPI);
+    ExecuteWindowOperationsAction(@ActionName[1], 100, @WindowOperationsOptionsAPI, True, @Response[1]);
+    WaitForDebuggingActionToFinish(Response, Th);
+  finally
+    Th.Free;
+  end;
 end;
 
 
@@ -426,15 +508,21 @@ var
   LoadSetVarFromFileOptionsAPI: TClkLoadSetVarFromFileOptionsAPI;
   ActionName: WideString;
   Response: string;
+  Th: TClientThread;
 begin
   GetDefaultPropertyValues_LoadSetVarFromFile(LoadSetVarFromFileOptions);
   SetLength(Response, CMaxSharedStringLength);
 
   ActionName := 'My LoadSetVarFromFile action';
 
-  SetLoadSetVarFromFileOptionsToAPI(LoadSetVarFromFileOptions, LoadSetVarFromFileOptionsAPI);
-  ExecuteLoadSetVarFromFileAction(@ActionName[1], 100, @LoadSetVarFromFileOptionsAPI, True, @Response[1]);
-  Expect(Response).ToContain('$RemoteExecResponse$=');
+  Th := AsyncExecTestTemplate(CTestDriverAddress, '$AppDir$\..\Tests\TestFiles\ClickDebuggingButton.clktmpl');
+  try
+    SetLoadSetVarFromFileOptionsToAPI(LoadSetVarFromFileOptions, LoadSetVarFromFileOptionsAPI);
+    ExecuteLoadSetVarFromFileAction(@ActionName[1], 100, @LoadSetVarFromFileOptionsAPI, True, @Response[1]);
+    WaitForDebuggingActionToFinish(Response, Th);
+  finally
+    Th.Free;
+  end;
 end;
 
 
@@ -445,15 +533,21 @@ var
   SaveSetVarToFileOptionsAPI: TClkSaveSetVarToFileOptionsAPI;
   ActionName: WideString;
   Response: string;
+  Th: TClientThread;
 begin
   GetDefaultPropertyValues_SaveSetVarToFile(SaveSetVarToFileOptions);
   SetLength(Response, CMaxSharedStringLength);
 
   ActionName := 'My SaveSetVarToFile action';
 
-  SetSaveSetVarToFileOptionsToAPI(SaveSetVarToFileOptions, SaveSetVarToFileOptionsAPI);
-  ExecuteSaveSetVarToFileAction(@ActionName[1], 100, @SaveSetVarToFileOptionsAPI, True, @Response[1]);
-  Expect(Response).ToContain('$RemoteExecResponse$=');
+  Th := AsyncExecTestTemplate(CTestDriverAddress, '$AppDir$\..\Tests\TestFiles\ClickDebuggingButton.clktmpl');
+  try
+    SetSaveSetVarToFileOptionsToAPI(SaveSetVarToFileOptions, SaveSetVarToFileOptionsAPI);
+    ExecuteSaveSetVarToFileAction(@ActionName[1], 100, @SaveSetVarToFileOptionsAPI, True, @Response[1]);
+    WaitForDebuggingActionToFinish(Response, Th);
+  finally
+    Th.Free;
+  end;
 end;
 
 
@@ -463,15 +557,21 @@ var
   PluginOptionsAPI: TClkPluginOptionsAPI;
   ActionName: WideString;
   Response: string;
+  Th: TClientThread;
 begin
   GetDefaultPropertyValues_Plugin(PluginOptions);
   SetLength(Response, CMaxSharedStringLength);
 
   ActionName := 'My Plugin action';
 
-  SetPluginOptionsToAPI(PluginOptions, PluginOptionsAPI);
-  ExecutePluginAction(@ActionName[1], 100, @PluginOptionsAPI, True, True, @Response[1]);
-  Expect(Response).ToContain('$RemoteExecResponse$=');
+  Th := AsyncExecTestTemplate(CTestDriverAddress, '$AppDir$\..\Tests\TestFiles\ClickDebuggingButton.clktmpl');
+  try
+    SetPluginOptionsToAPI(PluginOptions, PluginOptionsAPI);
+    ExecutePluginAction(@ActionName[1], 100, @PluginOptionsAPI, True, True, @Response[1]);
+    WaitForDebuggingActionToFinish(Response, Th);
+  finally
+    Th.Free;
+  end;
 end;
 
 
@@ -481,15 +581,22 @@ var
   EditTemplateOptionsAPI: TClkEditTemplateOptionsAPI;
   ActionName: WideString;
   Response: string;
+  Th: TClientThread;
 begin
   GetDefaultPropertyValues_EditTemplate(EditTemplateOptions);
   SetLength(Response, CMaxSharedStringLength);
 
   ActionName := 'My EditTemplate action';
 
-  SetEditTemplateOptionsToAPI(EditTemplateOptions, EditTemplateOptionsAPI);
-  ExecuteEditTemplateAction(@ActionName[1], 100, @EditTemplateOptionsAPI, True, @Response[1]);
-  Expect(Response).ToContain('$RemoteExecResponse$=');
+  Th := AsyncExecTestTemplate(CTestDriverAddress, '$AppDir$\..\Tests\TestFiles\ClickDebuggingButton.clktmpl');
+  try
+    SetEditTemplateOptionsToAPI(EditTemplateOptions, EditTemplateOptionsAPI);
+    EditTemplateOptionsAPI.WhichTemplate := Byte(etwtSelf);  //remote execution of EditTemplate, with etwtOther expects a valid file (for 5min) to be sent
+    ExecuteEditTemplateAction(@ActionName[1], 100, @EditTemplateOptionsAPI, True, @Response[1]);
+    WaitForDebuggingActionToFinish(Response, Th);
+  finally
+    Th.Free;
+  end;
 end;
 
 

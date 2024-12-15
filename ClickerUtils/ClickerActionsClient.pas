@@ -172,6 +172,7 @@ const
 function TestConnection(ARemoteAddress: string; ACallAppProcMsg: Boolean = True): string;
 function WaitForServerResponse(ATh: TClientThread; ACallAppProcMsg: Boolean = True): Boolean; //used for requests with custom waiting
 function SendTextRequestToServer(AFullLink: string; ACallAppProcMsg: Boolean = True): string;
+function AsyncSendTextRequestToServer(AFullLink: string; ACallAppProcMsg: Boolean = True): TClientThread; //after returning, call the code which should run in parallel with this thread, then call WaitForServerResponse(Th, ACallAppProcMsg); After that, free the object with Th.Free.
 function SendGetFileRequestToServer(AFullLink: string; AStream: TMemoryStream): string;
 //function SendFileToServer(AFullLink: string; AFileContent, AResponseStream: TMemoryStream; ACallAppProcMsg: Boolean = True): string; overload; //expose this only if needed
 function SendFileToServer(AFullLink: string; AFileContent: TMemoryStream; ACallAppProcMsg: Boolean = True): string; overload;
@@ -208,6 +209,7 @@ function ExecuteFindControlAction(ARemoteAddress: string; AFindControlOptions: T
 function ExecuteFindSubControlAction(ARemoteAddress: string; AFindControlOptions: TClkFindControlOptions; AActionName: string; AActionTimeout: Integer; AFileLocation: string; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
 function ExecuteSetControlTextAction(ARemoteAddress: string; ASetTextOptions: TClkSetTextOptions; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
 function ExecuteCallTemplateAction(ARemoteAddress: string; ACallTemplateOptions: TClkCallTemplateOptions; AIsDebugging, AUseLocalDebugger: Boolean; AFileLocation: string; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
+function AsyncExecuteCallTemplateAction(ARemoteAddress: string; ACallTemplateOptions: TClkCallTemplateOptions; AIsDebugging, AUseLocalDebugger: Boolean; AFileLocation: string; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): TClientThread;
 function ExecuteSleepAction(ARemoteAddress: string; ASleepOptions: TClkSleepOptions; AActionName: string; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
 function ExecuteSetVarAction(ARemoteAddress: string; ASetVarOptions: TClkSetVarOptions; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
 function ExecuteWindowOperationsAction(ARemoteAddress: string; AWindowOperationsOptions: TClkWindowOperationsOptions; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
@@ -321,6 +323,21 @@ begin
   finally
     Th.Free;
   end;
+end;
+
+
+function AsyncSendTextRequestToServer(AFullLink: string; ACallAppProcMsg: Boolean = True): TClientThread; //after returning, call the code which should run in parallel with this thread, then call WaitForServerResponse(Th, ACallAppProcMsg); After that, free the object with Th.Free.
+var
+  Th: TClientThread;
+begin
+  Th := TClientThread.Create(True);   //without using thread, the client blocks both this UI and the server's UI, because it doesn't read  - some sort of deadlock
+
+  Th.FLink := AFullLink;
+  Th.FConnectTimeout := GeneralConnectTimeout;
+
+  Th.Start;
+
+  Result := Th;
 end;
 
 
@@ -737,19 +754,28 @@ begin
 end;
 
 
-function ExecuteCallTemplateAction(ARemoteAddress: string; ACallTemplateOptions: TClkCallTemplateOptions; AIsDebugging, AUseLocalDebugger: Boolean; AFileLocation: string; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
+function GetCallTemplateActionRequest(ARemoteAddress: string; ACallTemplateOptions: TClkCallTemplateOptions; AIsDebugging, AUseLocalDebugger: Boolean; AFileLocation: string; AUseServerDebugging: Boolean = False): string;
 begin
-  Result := SendTextRequestToServer(ARemoteAddress + CRECmd_ExecuteCallTemplateAction + '?' +
+  Result := ARemoteAddress + CRECmd_ExecuteCallTemplateAction + '?' +
                                     CREParam_StackLevel + '=0' + '&' +   //use the main editor
                                     CREParam_UseServerDebugging + '=' + IntToStr(Ord(AUseServerDebugging)) + '&' +  //when True, the AIsDebugging and AUseLocalDebugger are ignored,to avoid double waiting in debug mode
                                     GetCallTemplateActionProperties(ACallTemplateOptions) + '&' +
 
                                     CREParam_IsDebugging + '=' + IntToStr(Ord(AIsDebugging)) + '&' +
                                     CREParam_FileLocation + '=' + AFileLocation + '&' +
-                                    CREParam_UseLocalDebugger + '=' + IntToStr(Ord(AUseLocalDebugger)),
+                                    CREParam_UseLocalDebugger + '=' + IntToStr(Ord(AUseLocalDebugger));
+end;
 
-                                    ACallAppProcMsg
-                                    );
+
+function ExecuteCallTemplateAction(ARemoteAddress: string; ACallTemplateOptions: TClkCallTemplateOptions; AIsDebugging, AUseLocalDebugger: Boolean; AFileLocation: string; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
+begin
+  Result := SendTextRequestToServer(GetCallTemplateActionRequest(ARemoteAddress, ACallTemplateOptions, AIsDebugging, AUseLocalDebugger, AFileLocation, AUseServerDebugging));
+end;
+
+
+function AsyncExecuteCallTemplateAction(ARemoteAddress: string; ACallTemplateOptions: TClkCallTemplateOptions; AIsDebugging, AUseLocalDebugger: Boolean; AFileLocation: string; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): TClientThread;
+begin
+  Result := AsyncSendTextRequestToServer(GetCallTemplateActionRequest(ARemoteAddress, ACallTemplateOptions, AIsDebugging, AUseLocalDebugger, AFileLocation, AUseServerDebugging));
 end;
 
 

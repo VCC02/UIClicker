@@ -102,6 +102,10 @@
         <Filename Value="..\ClickerClient\DllUtils.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
+      <Unit>
+        <Filename Value="..\ClickerClient\ClickerClientAPI.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

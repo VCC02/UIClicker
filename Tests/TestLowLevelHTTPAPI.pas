@@ -144,22 +144,6 @@ uses
   Graphics;
 
 
-function ExecTestTemplate(ATestServerAddress, ATemplateName: string): string;
-var
-  CallTemplateOptions: TClkCallTemplateOptions;
-begin
-  CallTemplateOptions.TemplateFileName := ATemplateName;
-  CallTemplateOptions.ListOfCustomVarsAndValues := '';
-  CallTemplateOptions.EvaluateBeforeCalling := False;
-  CallTemplateOptions.CallTemplateLoop.Enabled := False;
-  CallTemplateOptions.CallTemplateLoop.Direction := ldInc;
-  CallTemplateOptions.CallTemplateLoop.EvalBreakPosition := lebpAfterContent;
-
-  Result := FastReplace_87ToReturn(ExecuteCallTemplateAction(ATestServerAddress, CallTemplateOptions, False, False, CREParam_FileLocation_ValueDisk));
-  ExpectSuccessfulAction(Result);
-end;
-
-
 constructor TTestLowLevelHTTPAPI.Create;
 begin
   inherited Create;

@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2022 VCC
+    Copyright (C) 2024 VCC
     creation date: Aug 2022
     initial release date: 14 Aug 2022
 
@@ -30,7 +30,7 @@ interface
 
 uses
   LCLIntf, Classes, SysUtils, fpcunit, testregistry, InMemFileSystem, Expectations,
-  ClickerFileProviderClient, ClickerUtils;
+  ClickerFileProviderClient, ClickerUtils, ClickerActionsClient;
 
 type
   TTerminateWaitingForFileAvailabilityRequestTh = class(TThread)
@@ -56,6 +56,8 @@ type
     FTestServerAddress: string;
 
     function SendTemplateToServer(ARemoteAddress, AFileName: string; AFileContent: TMemoryStream): string;
+
+    procedure GetCallTemplateOptionsForExecTemplate(ATemplateName: string; out ACallTemplateOptions: TClkCallTemplateOptions);
 
   protected
     function SendTestFileToServer(ARemoteAddress, AFileName: string; AFileContent: string = 'Dummy'): string;
@@ -92,6 +94,9 @@ type
     function CreateFileProvider(AAccessibleDirs, AAccessibleFileExtensions: string; AOnFileExistsHandler: TOnFileExists; AOnLoadMissingFileContentHandler: TOnLoadMissingFileContent): TPollForMissingServerFiles;
     procedure DestroyFileProvider(AFileProvider: TPollForMissingServerFiles);
 
+    function ExecTestTemplate(ATestServerAddress, ATemplateName: string): string;
+    function AsyncExecTestTemplate(ATestServerAddress, ATemplateName: string): TClientThread;
+
     property InMemFS: TInMemFileSystem read FInMemFS;
   public
     property TestServerAddress: string read FTestServerAddress write FTestServerAddress;
@@ -116,7 +121,7 @@ implementation
 
 
 uses
-  ClickerActionsClient, ActionsStuff, ClickerActionProperties,
+  ActionsStuff, ClickerActionProperties,
   Controls, Forms;
 
 
@@ -607,6 +612,37 @@ begin
 
     AFileProvider := nil;
   end;
+end;
+
+
+procedure TTestHTTPAPI.GetCallTemplateOptionsForExecTemplate(ATemplateName: string; out ACallTemplateOptions: TClkCallTemplateOptions);
+begin
+  ACallTemplateOptions.TemplateFileName := ATemplateName;
+  ACallTemplateOptions.ListOfCustomVarsAndValues := '';
+  ACallTemplateOptions.EvaluateBeforeCalling := False;
+  ACallTemplateOptions.CallTemplateLoop.Enabled := False;
+  ACallTemplateOptions.CallTemplateLoop.Direction := ldInc;
+  ACallTemplateOptions.CallTemplateLoop.EvalBreakPosition := lebpAfterContent;
+end;
+
+
+function TTestHTTPAPI.ExecTestTemplate(ATestServerAddress, ATemplateName: string): string;
+var
+  CallTemplateOptions: TClkCallTemplateOptions;
+begin
+  GetCallTemplateOptionsForExecTemplate(ATemplateName, CallTemplateOptions);
+
+  Result := FastReplace_87ToReturn(ExecuteCallTemplateAction(ATestServerAddress, CallTemplateOptions, False, False, CREParam_FileLocation_ValueDisk));
+  ExpectSuccessfulAction(Result);
+end;
+
+
+function TTestHTTPAPI.AsyncExecTestTemplate(ATestServerAddress, ATemplateName: string): TClientThread;
+var
+  CallTemplateOptions: TClkCallTemplateOptions;
+begin
+  GetCallTemplateOptionsForExecTemplate(ATemplateName, CallTemplateOptions);
+  Result := AsyncExecuteCallTemplateAction(ATestServerAddress, CallTemplateOptions, False, False, CREParam_FileLocation_ValueDisk);
 end;
 
 end.
