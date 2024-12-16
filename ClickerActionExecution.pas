@@ -3737,6 +3737,8 @@ begin
 
     frClickerActions.imgDebugBmp.Width := Max(10, Min(frClickerActions.imgDebugBmp.Picture.Bitmap.Width, 7680));   //Limit to 8K resolution for now. Sometimes, imgDebugBmp might not be initialized, causing AVs (div by 0 or heap overflow).
     frClickerActions.imgDebugBmp.Height := Max(10, Min(frClickerActions.imgDebugBmp.Picture.Bitmap.Height, 4320)); //Limit to 8K resolution for now.
+
+    frClickerActions.frClickerPlugin.DoneDebuging; //hide debugging buttons
   finally
     AddToLog('Plugin executed in ' + IntToStr(GetTickCount64 - tk) + 'ms.  Total action count: ' + IntToStr(Length(AAllActions^)) + ' action(s)...');
   end;
