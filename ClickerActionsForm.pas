@@ -336,6 +336,8 @@ type
     function HandleOnGenerateAndSaveTreeWithWinInterp(AHandle: THandle; ATreeFileName: string; AStep: Integer; AUseMouseSwipe: Boolean): Boolean;
     function HandleOnSetWinInterpOption(AWinInterpOptionName, AWinInterpOptionValue: string): Boolean;
 
+    function HandleOnGetListeningPort: Word;
+
     procedure CreateRemainingUIComponents;
     function GetClickerActionsArrFrameByStackLevel(AStackLevel: Integer): TfrClickerActionsArr;
 
@@ -1042,6 +1044,7 @@ begin
   frClickerActionsArrMain.OnGetListOfRecentFiles := HandleOnGetListOfRecentFiles;
   frClickerActionsArrMain.OnGenerateAndSaveTreeWithWinInterp := HandleOnGenerateAndSaveTreeWithWinInterp;
   frClickerActionsArrMain.OnSetWinInterpOption := HandleOnSetWinInterpOption;
+  frClickerActionsArrMain.OnGetListeningPort := HandleOnGetListeningPort;
 
   frClickerActionsArrExperiment1.frClickerActions.PasteDebugValuesListFromMainExecutionList1.OnClick := frClickerActionsArrExperiment1PasteDebugValuesListFromMainExecutionList1Click;
   frClickerActionsArrExperiment2.frClickerActions.PasteDebugValuesListFromMainExecutionList1.OnClick := frClickerActionsArrExperiment2PasteDebugValuesListFromMainExecutionList1Click;
@@ -1130,6 +1133,8 @@ begin
   frClickerActionsArrExperiment2.OnGenerateAndSaveTreeWithWinInterp := HandleOnGenerateAndSaveTreeWithWinInterp;
   frClickerActionsArrExperiment1.OnSetWinInterpOption := HandleOnSetWinInterpOption;
   frClickerActionsArrExperiment2.OnSetWinInterpOption := HandleOnSetWinInterpOption;
+  frClickerActionsArrExperiment1.OnGetListeningPort := HandleOnGetListeningPort;
+  frClickerActionsArrExperiment2.OnGetListeningPort := HandleOnGetListeningPort;
 
   AddToLog('ProcessID: ' + IntToStr(GetProcessID));
 
@@ -1688,6 +1693,7 @@ begin
         NewFrame.OnGetListOfRecentFiles := HandleOnGetListOfRecentFiles;
         NewFrame.OnGenerateAndSaveTreeWithWinInterp := HandleOnGenerateAndSaveTreeWithWinInterp;
         NewFrame.OnSetWinInterpOption := HandleOnSetWinInterpOption;
+        NewFrame.OnGetListeningPort := HandleOnGetListeningPort;
 
         if FAutoSwitchToExecutingTab or (FAutoEnableSwitchingTabsOnDebugging and IsDebugging) then
         begin
@@ -3984,6 +3990,12 @@ end;
 function TfrmClickerActions.HandleOnSetWinInterpOption(AWinInterpOptionName, AWinInterpOptionValue: string): Boolean;
 begin
   Result := DoOnSetWinInterpOption(AWinInterpOptionName, AWinInterpOptionValue);
+end;
+
+
+function TfrmClickerActions.HandleOnGetListeningPort: Word;
+begin
+  Result := StrToIntDef(lbeServerModePort.Text, 5444);
 end;
 
 

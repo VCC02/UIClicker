@@ -73,9 +73,16 @@ type
     imglstCurrentDebuggingActionWithBreakPoint: TImageList;
     imglstCurrentDebuggingActionWithDisabledBreakPoint: TImageList;
     imgWaitingInPreDebuggingMode: TImage;
+    imgWaitingForFilesAvailability: TImage;
     lbeSearchAction: TLabeledEdit;
     lblModifiedStatus: TLabel;
     memLogErr: TMemo;
+    MenuItem_GetHTTPRequestFromActionAllPropertiesWithSrvDbg: TMenuItem;
+    MenuItem_GetHTTPRequestFromActionModifiedOnlyWithSrvDbg: TMenuItem;
+    MenuItem_GetHTTPRequestFromActionAllProperties: TMenuItem;
+    MenuItem_GetHTTPRequestFromActionModifiedOnly: TMenuItem;
+    MenuItem_GetHTTPRequestFromAction: TMenuItem;
+    N5: TMenuItem;
     MenuItemPasteActionsFromClipboardAfterTheFirstSelected: TMenuItem;
     MenuItem_StopWaitingForFilesAvailability: TMenuItem;
     MenuItem_ResolvePathToAbsolute: TMenuItem;
@@ -185,6 +192,9 @@ type
     procedure MenuItem_CopyFilenameToClipboardClick(Sender: TObject);
     procedure MenuItem_CopyFullFilepathToClipboardClick(Sender: TObject);
     procedure MenuItem_EditBreakPointClick(Sender: TObject);
+    procedure MenuItem_GetGenericHTTPRequestFromActionClick(
+      Sender: TObject);
+    procedure MenuItem_GetHTTPRequestFromActionClick(Sender: TObject);
     procedure MenuItem_PlayActionAndRestoreVarsClick(Sender: TObject);
     procedure MenuItem_RefactorSelectedActionsIntoATemplateClick(Sender: TObject
       );
@@ -340,7 +350,7 @@ type
     FPluginStepOver: Boolean;
     FPluginContinueAll: Boolean;
 
-    FRemoteAddress: string; //and port
+    FRemoteAddress: string; //and port  //used as a client
 
     FHold: Boolean; //for splitter
     FSplitterMouseDownImagePos: TPoint;
@@ -390,6 +400,8 @@ type
     FOnGetListOfRecentFiles: TOnGetListOfRecentFiles;
     FOnGenerateAndSaveTreeWithWinInterp: TOnGenerateAndSaveTreeWithWinInterp;
     FOnSetWinInterpOption: TOnSetWinInterpOption;
+
+    FOnGetListeningPort: TOnGetListeningPort;
 
     vstActions: TVirtualStringTree;
     FPalette: TfrClickerActionsPalette;
@@ -583,6 +595,8 @@ type
     function DoOnGenerateAndSaveTreeWithWinInterp(AHandle: THandle; ATreeFileName: string; AStep: Integer; AUseMouseSwipe: Boolean): Boolean;
     function DoOnSetWinInterpOption(AWinInterpOptionName, AWinInterpOptionValue: string): Boolean;
 
+    function DoOnGetListeningPort: Word;
+
     function PlayActionByNode(Node: PVirtualNode): Boolean;
     procedure PlaySelected;
     procedure PlayAllActionsFromButton(IsDebugging: Boolean = False; StartAtSelected: Boolean = False);
@@ -735,6 +749,8 @@ type
     property OnGetListOfRecentFiles: TOnGetListOfRecentFiles write FOnGetListOfRecentFiles;
     property OnGenerateAndSaveTreeWithWinInterp: TOnGenerateAndSaveTreeWithWinInterp write FOnGenerateAndSaveTreeWithWinInterp;
     property OnSetWinInterpOption: TOnSetWinInterpOption write FOnSetWinInterpOption;
+
+    property OnGetListeningPort: TOnGetListeningPort write FOnGetListeningPort;
   end;
 
 
@@ -1228,6 +1244,8 @@ begin
   FOnGetListOfRecentFiles := nil;
   FOnGenerateAndSaveTreeWithWinInterp := nil;
   FOnSetWinInterpOption := nil;
+
+  FOnGetListeningPort := nil;
 
   FPalette := nil;
 
@@ -2731,28 +2749,40 @@ end;
 procedure TfrClickerActionsArr.DoWaitForFileAvailability(AFileName: string);
 begin
   if Assigned(FOnWaitForFileAvailability) then
+  begin
     FOnWaitForFileAvailability(AFileName);
+    imgWaitingForFilesAvailability.Hide;
+  end;
 end;
 
 
 procedure TfrClickerActionsArr.DoWaitForMultipleFilesAvailability(AListOfFiles: TStringList);
 begin
   if Assigned(FOnWaitForMultipleFilesAvailability) then
+  begin
     FOnWaitForMultipleFilesAvailability(AListOfFiles);
+    imgWaitingForFilesAvailability.Hide;
+  end;
 end;
 
 
 procedure TfrClickerActionsArr.DoWaitForBitmapsAvailability(AListOfFiles: TStringList);
 begin
   if Assigned(FOnWaitForBitmapsAvailability) then
+  begin
     FOnWaitForBitmapsAvailability(AListOfFiles);
+    imgWaitingForFilesAvailability.Hide;
+  end;
 end;
 
 
 procedure TfrClickerActionsArr.DoOnTerminateWaitForMultipleFilesAvailability;
 begin
   if Assigned(FOnTerminateWaitForMultipleFilesAvailability) then
+  begin
     FOnTerminateWaitForMultipleFilesAvailability();
+    imgWaitingForFilesAvailability.Hide;
+  end;
 end;
 
 
@@ -3063,6 +3093,15 @@ begin
     raise Exception.Create('OnSetWinInterpOption not assigned.')
   else
     Result := FOnSetWinInterpOption(AWinInterpOptionName, AWinInterpOptionValue);
+end;
+
+
+function TfrClickerActionsArr.DoOnGetListeningPort: Word;
+begin
+  if not Assigned(FOnGetListeningPort) then
+    raise Exception.Create('OnGetListeningPort not assigned.')
+  else
+    Result := FOnGetListeningPort;
 end;
 
 
@@ -3731,6 +3770,7 @@ begin
 
   WaitingMsg := 'Waiting for file availability: ' + Fnm + '   Timeout: ' + IntToStr(CWaitForFileAvailabilityTimeout div 1000) + 's.';
   WaitingMsg := WaitingMsg + #13#10 + 'There is a "stop waiting" button, next to the "Stop action" button.';
+  imgWaitingForFilesAvailability.Show;
 
   try
     case AFileLocation of      ///////////////////// ToDo:   refactoring !!!!!!!!!!!!!!
@@ -3862,6 +3902,7 @@ begin
 
   WaitingMsg := 'Waiting for file availability: ' + Fnm + '   Timeout: ' + IntToStr(CWaitForFileAvailabilityTimeout div 1000) + 's.';
   WaitingMsg := WaitingMsg + #13#10 + 'There is a "stop waiting" button, next to the "Stop action" button.';
+  imgWaitingForFilesAvailability.Show;
 
   try
     case AFileLocation of      ///////////////////// ToDo:   refactoring !!!!!!!!!!!!!!
@@ -5397,6 +5438,79 @@ begin
 
   if EditActionCondition(FClkActions[FActionsHitInfo.HitNode^.Index].ActionBreakPoint.Condition) then
     Modified := True;
+end;
+
+
+procedure TfrClickerActionsArr.MenuItem_GetGenericHTTPRequestFromActionClick
+  (Sender: TObject);
+var
+  Node: PVirtualNode;
+  ActionType: TClkAction;
+  Request, Properties: string;
+begin
+  Node := vstActions.GetFirstSelected;
+  if Node = nil then
+    if vstActions.RootNodeCount > 0 then
+    begin
+      MessageBox(Handle, 'Please select an action first.', PChar(Application.Title), MB_ICONINFORMATION);
+      Exit;
+    end;
+
+  Request := '';
+  repeat
+    if vstActions.Selected[Node] then
+    begin
+      if Request > '' then
+        Request := Request + #13#10;  //Add CRLF only if there are multiple selected actions.
+
+      ActionType := FClkActions[Node^.Index].ActionOptions.Action;
+      Request := Request + 'http://127.0.0.1:' + IntToStr(DoOnGetListeningPort) + '/' +
+                           'Execute' + CClkActionStr[ActionType] + 'Action?' +
+                           CREParam_StackLevel + '=0';
+
+      if (Sender = MenuItem_GetHTTPRequestFromActionModifiedOnly) or
+         (Sender = MenuItem_GetHTTPRequestFromActionModifiedOnlyWithSrvDbg) then    //different than default properties
+      begin
+        Properties := GetDifferentThanDefaultActionPropertiesByType(FClkActions[Node^.Index], True);
+        if Properties > '' then
+          Request := Request + '&' + Properties;
+      end;
+
+      if (Sender = MenuItem_GetHTTPRequestFromActionAllProperties) or
+         (Sender = MenuItem_GetHTTPRequestFromActionAllPropertiesWithSrvDbg) then    //all properties
+        Request := Request + '&' + GetActionPropertiesByType(FClkActions[Node^.Index], True);
+
+      if ActionType in [acFindControl, acFindSubControl, acCallTemplate] then
+        Request := Request + '&' + CREParam_FileLocation + '=' + CREParam_FileLocation_ValueDisk;
+
+      if (Sender = MenuItem_GetHTTPRequestFromActionAllPropertiesWithSrvDbg) or
+         (Sender = MenuItem_GetHTTPRequestFromActionModifiedOnlyWithSrvDbg) then    //debugging
+      begin
+        if ActionType in [acPlugin, acCallTemplate] then
+          Request := Request + '&' + CREParam_IsDebugging + '=1';  //required by plugin to be able to step into
+
+        if ActionType = acCallTemplate then
+          Request := Request + '&' + CREParam_UseLocalDebugger + '=1';  //debugging at server side, instead of being controlled by a client
+
+        Request := Request + '&' + CREParam_UseServerDebugging + '=1';
+      end;
+
+      Request := Request + '&' + CPropertyName_ActionName + '=' + FClkActions[Node^.Index].ActionOptions.ActionName; //implemented for some of the actions only
+      Request := Request + '&' + CPropertyName_ActionTimeout + '=' + IntToStr(FClkActions[Node^.Index].ActionOptions.ActionTimeout);  //required by a few actions only
+    end;
+
+    Node := Node^.NextSibling;
+  until Node = nil;
+
+  Clipboard.AsText := Request;
+end;
+
+
+procedure TfrClickerActionsArr.MenuItem_GetHTTPRequestFromActionClick(
+  Sender: TObject);
+begin
+  MenuItem_GetHTTPRequestFromActionModifiedOnlyWithSrvDbg.Bitmap := MenuItem_SetActionStatusTo.Bitmap;
+  MenuItem_GetHTTPRequestFromActionAllPropertiesWithSrvDbg.Bitmap := MenuItem_SetActionStatusTo.Bitmap;
 end;
 
 

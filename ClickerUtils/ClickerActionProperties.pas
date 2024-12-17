@@ -51,7 +51,8 @@ function GetPluginActionProperties(PluginOptions: TClkPluginOptions): string;
 function GetEditTemplateActionProperties(AEditTemplateOptions: TClkEditTemplateOptions; AIncludeListOfEditedProperties: Boolean = False): string;
 //when adding new Get<ActionType>Properties functions, please update DoOnActionPlugin_GetActionContentByIndex_Callback from ClickerActionPluginLoader.pas
 
-function GetActionPropertiesByType(var AAction: TClkActionRec): string;
+function GetActionPropertiesByType(var AAction: TClkActionRec; AIncludeSpecialProperties: Boolean = False): string;
+function GetDifferentThanDefaultActionPropertiesByType(var AAction: TClkActionRec; AIncludeSpecialProperties: Boolean = False): string;
 
 //The Set<ActionType>Properties functions return an error if any, or emptry string for success.
 function SetClickActionProperties(AListOfClickOptionsParams: TStrings; out AClickOptions: TClkClickOptions): string;
@@ -83,7 +84,9 @@ procedure GetDefaultPropertyValues_LoadSetVarFromFile(var ALoadSetVarFromFileOpt
 procedure GetDefaultPropertyValues_SaveSetVarToFile(var ASaveSetVarToFileOptions: TClkSaveSetVarToFileOptions);
 procedure GetDefaultPropertyValues_Plugin(var APluginOptions: TClkPluginOptions);
 procedure GetDefaultPropertyValues_EditTemplate(var AEditTemplateOptions: TClkEditTemplateOptions);
-//if adding new action types, please update ClickeActionsFrame and ExecuteEditTemplateAction, which call all of the above
+//if adding new action types, please update ClickerActionsFrame and ExecuteEditTemplateAction, which call all of the above
+
+procedure GetDefaultPropertyValuesByType(AActionType: TClkAction; var AAction: TClkActionRec);
 
 //These actions return True if their string properties, which are not '' by default, are now set to ''.
 //This will happen after serializing properties from ''.
@@ -99,7 +102,7 @@ function IsActionEmpty_LoadSetVarFromFile(var ALoadSetVarFromFileOptions: TClkLo
 function IsActionEmpty_SaveSetVarToFile(var ASaveSetVarToFileOptions: TClkSaveSetVarToFileOptions): Boolean;
 function IsActionEmpty_Plugin(var APluginOptions: TClkPluginOptions): Boolean;
 function IsActionEmpty_EditTemplate(var AEditTemplateOptions: TClkEditTemplateOptions): Boolean;
-//if adding new action types, please update ClickeActionsFrame, which calls all of the above
+//if adding new action types, please update ClickerActionsFrame, which calls all of the above
 
 implementation
 
@@ -335,7 +338,7 @@ begin
 end;
 
 
-function GetActionPropertiesByType(var AAction: TClkActionRec): string;
+function GetActionPropertiesByType(var AAction: TClkActionRec; AIncludeSpecialProperties: Boolean = False): string;
 begin
   Result := '';
   case AAction.ActionOptions.Action of
@@ -351,7 +354,41 @@ begin
     acLoadSetVarFromFile: Result := GetLoadSetVarFromFileActionProperties(AAction.LoadSetVarFromFileOptions);
     acSaveSetVarToFile: Result := GetSaveSetVarToFileActionProperties(AAction.SaveSetVarToFileOptions);
     acPlugin: Result := GetPluginActionProperties(AAction.PluginOptions);
-    acEditTemplate: Result := GetEditTemplateActionProperties(AAction.EditTemplateOptions, False);
+    acEditTemplate: Result := GetEditTemplateActionProperties(AAction.EditTemplateOptions, AIncludeSpecialProperties);
+  end;
+end;
+
+
+function GetDifferentThanDefaultActionPropertiesByType(var AAction: TClkActionRec; AIncludeSpecialProperties: Boolean = False): string;
+var
+  ActionWithDefaultProperties: TClkActionRec;
+
+  DefaultProperties, AllProperties: string;
+  ListOfDefaultProperties, ListOfAllProperties: TStringList;
+  i: Integer;
+begin
+  GetDefaultPropertyValuesByType(AAction.ActionOptions.Action, ActionWithDefaultProperties);
+
+  DefaultProperties := GetActionPropertiesByType(ActionWithDefaultProperties, AIncludeSpecialProperties);
+  AllProperties := GetActionPropertiesByType(AAction, AIncludeSpecialProperties);
+
+  ListOfDefaultProperties := TStringList.Create;
+  ListOfAllProperties := TStringList.Create;
+  try
+    ListOfDefaultProperties.Text := StringReplace(DefaultProperties, '&', #13#10, [rfReplaceAll]);
+    ListOfAllProperties.Text := StringReplace(AllProperties, '&', #13#10, [rfReplaceAll]);
+
+    Result := '';
+    for i := 0 to ListOfDefaultProperties.Count - 1 do
+      if ListOfAllProperties.Strings[i] <> ListOfDefaultProperties.Strings[i] then
+        Result := Result + ListOfAllProperties.Strings[i] + '&';
+
+    if Result > '' then
+      if Result[Length(Result)] = '&' then
+        Delete(Result, Length(Result), 1);
+  finally
+    ListOfDefaultProperties.Free;
+    ListOfAllProperties.Free;
   end;
 end;
 
@@ -864,7 +901,7 @@ begin
   AEditTemplateOptions.EditedActionCondition := AListOfEditTemplateOptionsParams.Values['EditedActionCondition'];
   AEditTemplateOptions.EditedActionTimeout := StrToIntDef(AListOfEditTemplateOptionsParams.Values['EditedActionTimeout'], 1000);
   AEditTemplateOptions.NewActionName := AListOfEditTemplateOptionsParams.Values['NewActionName'];
-  AEditTemplateOptions.ShouldSaveTemplate := AListOfEditTemplateOptionsParams.Values['ShouldSaveTemplate'] = '1';
+  AEditTemplateOptions.ShouldSaveTemplate := AListOfEditTemplateOptionsParams.Values['ShouldSaveTemplate'] <> '0';
 end;
 
 
@@ -1129,6 +1166,28 @@ begin
 
   GetDefaultPropertyValues_Click(ClickOptions);
   AEditTemplateOptions.ListOfEditedProperties := GetClickActionProperties(ClickOptions);
+end;
+
+
+procedure GetDefaultPropertyValuesByType(AActionType: TClkAction; var AAction: TClkActionRec);
+begin
+  case AActionType of
+    acClick: GetDefaultPropertyValues_Click(AAction.ClickOptions);
+    acExecApp: GetDefaultPropertyValues_ExecApp(AAction.ExecAppOptions);
+    acFindControl: GetDefaultPropertyValues_FindControl(AAction.FindControlOptions);
+    acFindSubControl: GetDefaultPropertyValues_FindControl(AAction.FindControlOptions);
+    acSetControlText: GetDefaultPropertyValues_SetControlText(AAction.SetTextOptions);
+    acCallTemplate: GetDefaultPropertyValues_CallTemplate(AAction.CallTemplateOptions);
+    acSleep: GetDefaultPropertyValues_Sleep(AAction.SleepOptions);
+    acSetVar: GetDefaultPropertyValues_SetVar(AAction.SetVarOptions);
+    acWindowOperations: GetDefaultPropertyValues_WindowOperations(AAction.WindowOperationsOptions);
+    acLoadSetVarFromFile: GetDefaultPropertyValues_LoadSetVarFromFile(AAction.LoadSetVarFromFileOptions);
+    acSaveSetVarToFile: GetDefaultPropertyValues_SaveSetVarToFile(AAction.SaveSetVarToFileOptions);
+    acPlugin: GetDefaultPropertyValues_Plugin(AAction.PluginOptions);
+    acEditTemplate: GetDefaultPropertyValues_EditTemplate(AAction.EditTemplateOptions);
+  end;
+
+  AAction.ActionOptions.Action := AActionType;
 end;
 
 
