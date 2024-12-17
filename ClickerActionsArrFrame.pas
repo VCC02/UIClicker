@@ -66,6 +66,7 @@ type
     chkResetVarsOnPlayAll: TCheckBox;
     chkShowActionNumber: TCheckBox;
     edtConsoleCommand: TEdit;
+    imglstWaitingForFilesAvailability: TImageList;
     imgTemplateIcon: TImage;
     imgWaitingInDebuggingMode: TImage;
     imglstActionHasCondition: TImageList;
@@ -162,6 +163,7 @@ type
     spdbtnAddAction: TSpeedButton;
     spdbtnRemoveAction: TSpeedButton;
     spdbtnNew: TSpeedButton;
+    tmrWaitingForFilesAvailability: TTimer;
     tmrEditActionsVST: TTimer;
     tmrLogging: TTimer;
     tmrDeleteActions: TTimer;
@@ -228,6 +230,7 @@ type
     procedure tmrEditActionsVSTTimer(Sender: TObject);
     procedure tmrExecActionFromSrvModuleTimer(Sender: TObject);
     procedure tmrLoggingTimer(Sender: TObject);
+    procedure tmrWaitingForFilesAvailabilityTimer(Sender: TObject);
     procedure vstActionsMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure vstActionsKeyDown(Sender: TObject; var Key: Word;
@@ -2750,8 +2753,13 @@ procedure TfrClickerActionsArr.DoWaitForFileAvailability(AFileName: string);
 begin
   if Assigned(FOnWaitForFileAvailability) then
   begin
+    imgWaitingForFilesAvailability.Show;
+    tmrWaitingForFilesAvailability.Enabled := True;
+
     FOnWaitForFileAvailability(AFileName);
+
     imgWaitingForFilesAvailability.Hide;
+    tmrWaitingForFilesAvailability.Enabled := False;
   end;
 end;
 
@@ -2760,8 +2768,13 @@ procedure TfrClickerActionsArr.DoWaitForMultipleFilesAvailability(AListOfFiles: 
 begin
   if Assigned(FOnWaitForMultipleFilesAvailability) then
   begin
+    imgWaitingForFilesAvailability.Show;
+    tmrWaitingForFilesAvailability.Enabled := True;
+
     FOnWaitForMultipleFilesAvailability(AListOfFiles);
+
     imgWaitingForFilesAvailability.Hide;
+    tmrWaitingForFilesAvailability.Enabled := False;
   end;
 end;
 
@@ -2770,8 +2783,13 @@ procedure TfrClickerActionsArr.DoWaitForBitmapsAvailability(AListOfFiles: TStrin
 begin
   if Assigned(FOnWaitForBitmapsAvailability) then
   begin
+    imgWaitingForFilesAvailability.Show;
+    tmrWaitingForFilesAvailability.Enabled := True;
+
     FOnWaitForBitmapsAvailability(AListOfFiles);
+
     imgWaitingForFilesAvailability.Hide;
+    tmrWaitingForFilesAvailability.Enabled := False;
   end;
 end;
 
@@ -2780,8 +2798,13 @@ procedure TfrClickerActionsArr.DoOnTerminateWaitForMultipleFilesAvailability;
 begin
   if Assigned(FOnTerminateWaitForMultipleFilesAvailability) then
   begin
+    imgWaitingForFilesAvailability.Show;
+    tmrWaitingForFilesAvailability.Enabled := True;
+
     FOnTerminateWaitForMultipleFilesAvailability();
+
     imgWaitingForFilesAvailability.Hide;
+    tmrWaitingForFilesAvailability.Enabled := False;
   end;
 end;
 
@@ -3770,7 +3793,6 @@ begin
 
   WaitingMsg := 'Waiting for file availability: ' + Fnm + '   Timeout: ' + IntToStr(CWaitForFileAvailabilityTimeout div 1000) + 's.';
   WaitingMsg := WaitingMsg + #13#10 + 'There is a "stop waiting" button, next to the "Stop action" button.';
-  imgWaitingForFilesAvailability.Show;
 
   try
     case AFileLocation of      ///////////////////// ToDo:   refactoring !!!!!!!!!!!!!!
@@ -3902,7 +3924,6 @@ begin
 
   WaitingMsg := 'Waiting for file availability: ' + Fnm + '   Timeout: ' + IntToStr(CWaitForFileAvailabilityTimeout div 1000) + 's.';
   WaitingMsg := WaitingMsg + #13#10 + 'There is a "stop waiting" button, next to the "Stop action" button.';
-  imgWaitingForFilesAvailability.Show;
 
   try
     case AFileLocation of      ///////////////////// ToDo:   refactoring !!!!!!!!!!!!!!
@@ -7437,6 +7458,17 @@ begin
     on E: Exception do
       memLogErr.Lines.Add('Exception on adding to log: ' + E.Message);
   end;
+end;
+
+
+procedure TfrClickerActionsArr.tmrWaitingForFilesAvailabilityTimer(
+  Sender: TObject);
+begin
+  tmrWaitingForFilesAvailability.Tag := tmrWaitingForFilesAvailability.Tag + 1;
+  if tmrWaitingForFilesAvailability.Tag >= 6 then
+    tmrWaitingForFilesAvailability.Tag := 0;
+
+  imglstWaitingForFilesAvailability.Draw(imgWaitingForFilesAvailability.Canvas, 0, 0, tmrWaitingForFilesAvailability.Tag, dsNormal, itImage);
 end;
 
 
