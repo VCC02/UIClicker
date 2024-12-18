@@ -626,7 +626,7 @@ const
   );
 
 
-  //$SetWinInterpOption(<Operation>, <Arg>)$ operations
+  // $SetWinInterpOption(<Operation>, <Arg>)$ operations
   //The following WinInterp constants should be decoded by WinInterp as case insensitive.
   //That means, users who want to pass, for example, 'SHOWZOOM' can do that.
   //Most options are boolean. Their values should be set either as 0 / 1, or False / True.

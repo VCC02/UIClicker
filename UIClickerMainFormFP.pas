@@ -127,6 +127,7 @@ implementation
   - In ClickerActionsFrame.pas, add new icon to the "imglst*" image list for that field.
   - In ClickerActionsFrame.pas, Add menu, hint, (and custom editors, if required). Some properties may have to be grayed-out depending on other properties (see HandleOnOIPaintText).
   - In ClickerClientAPI.pas and ClickerClientIntf.pas, add the new field (in structure(s) and function(s)), then recompile the dll (ClickerClient)
+  - In ActionsStuff.pas, add the new field to GenerateDifferentThanDefault_<Action> functions.
   - In UIClickerTypes.py (and wrapper.py), add the new field and make sure it works
   - optionally, if the new field (as an ObjectInspector property) is related to other fields, so that it makes sense to be added right after them, and not at the end of the structure, then various other structures will have to be adjusted (including imglst icons)
   - Add/Modify some tests

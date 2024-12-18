@@ -72,6 +72,7 @@ type
     AppStdIn: PWideChar;
     CurrentDir: PWideChar;
     UseInheritHandles: Byte; //TExecAppUseInheritHandles;
+    NoConsole: Boolean;
   end;
 
   PClkExecAppOptionsAPI = ^TClkExecAppOptionsAPI;
@@ -379,6 +380,7 @@ begin
   SetPointedContentToString(@string(PWideChar(AExecAppOptions^.AppStdIn))[1], ADestClkAction.ExecAppOptions.AppStdIn);
   SetPointedContentToString(@string(PWideChar(AExecAppOptions^.CurrentDir))[1], ADestClkAction.ExecAppOptions.CurrentDir);
   ADestClkAction.ExecAppOptions.UseInheritHandles := TExecAppUseInheritHandles(AExecAppOptions^.UseInheritHandles);
+  ADestClkAction.ExecAppOptions.NoConsole := AExecAppOptions^.NoConsole;
 end;
 
 
@@ -667,6 +669,7 @@ begin
   ADestExecAppOptions.AppStdIn := @WideString(AExecAppOptions.AppStdIn)[1];
   ADestExecAppOptions.CurrentDir := @WideString(AExecAppOptions.CurrentDir)[1];
   ADestExecAppOptions.UseInheritHandles := Byte(AExecAppOptions.UseInheritHandles);
+  ADestExecAppOptions.NoConsole := AExecAppOptions.NoConsole;
 end;
 
 
