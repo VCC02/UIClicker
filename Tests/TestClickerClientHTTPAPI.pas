@@ -35,7 +35,7 @@ uses
 type
   TTestClickerClientHTTPAPI = class(TTestHTTPAPI)
   private
-    FClickerClientDllHandle: THandle;
+    FLoadClickerClientRes: Boolean;
 
     procedure WaitForDebuggingActionToFinish(AExecResponse: string; ATh: TClientThread);
   protected
@@ -66,111 +66,9 @@ implementation
 
 
 uses
-  ActionsStuff, Controls, ClickerFileProviderClient, ClickerActionProperties,
-  Graphics, DllUtils, ClickerClientAPI, ShellAPI;
+  Controls, ClickerActionProperties,
+  Graphics, DllUtils, ClickerClientAPI, ClickerClientIntf, ShellAPI;
 
-type
-  TInitClickerClient_Proc = procedure; cdecl;
-  TDoneClickerClient_Proc = procedure; cdecl;
-  TSetServerAddress_Proc = procedure(AAddress: Pointer); cdecl;
-  TGetServerAddress_Proc = function(AResponse: Pointer): LongInt; cdecl;
-  TTestConnectionToServer_Proc = function(AResponse: Pointer): LongInt; cdecl;
-
-  TExecuteClickAction_Proc = function(AActionName: Pointer;
-                                      AActionTimeout: LongInt; //ms
-                                      AClickOptions: PClkClickOptionsAPI;
-                                      AUseServerDebugging: Boolean;
-                                      AResultStr: Pointer): LongInt; cdecl;
-
-  TExecuteExecAppAction_Proc = function(AActionName: Pointer;
-                                        AActionTimeout: LongInt; //ms
-                                        AExecAppOptions: PClkExecAppOptionsAPI;
-                                        AUseServerDebugging: Boolean;
-                                        AResultStr: Pointer): LongInt; cdecl;
-
-  TExecuteFindControlAction_Proc = function(AActionName: Pointer;
-                                            AActionTimeout: LongInt; //ms
-                                            AFindControlOptions: PClkFindControlOptionsAPI;
-                                            AUseServerDebugging: Boolean;
-                                            AFileLocation: Pointer;
-                                            AResultStr: Pointer): LongInt; cdecl;
-
-  TExecuteSetControlTextAction_Proc = function(AActionName: Pointer;
-                                               AActionTimeout: LongInt; //ms
-                                               ASetControlTextOptions: PClkSetTextOptionsAPI;
-                                               AUseServerDebugging: Boolean;
-                                               AResultStr: Pointer): LongInt; cdecl;
-
-  TExecuteCallTemplateAction_Proc = function(AActionName: Pointer;
-                                             AActionTimeout: LongInt; //ms
-                                             ASetControlTextOptions: PClkCallTemplateOptionsAPI;
-                                             AUseServerDebugging: Boolean;
-                                             AFileLocation: Pointer;
-                                             AResultStr: Pointer): LongInt; cdecl;
-
-  TExecuteSleepAction_Proc = function(AActionName: Pointer;
-                                      AActionTimeout: LongInt; //ms
-                                      ASleepOptions: PClkSleepOptionsAPI;
-                                      AUseServerDebugging: Boolean;
-                                      AResultStr: Pointer): LongInt; cdecl;
-
-  TExecuteSetVarAction_Proc = function(AActionName: Pointer;
-                                       AActionTimeout: LongInt; //ms
-                                       ASetVarOptions: PClkSetVarOptionsAPI;
-                                       AUseServerDebugging: Boolean;
-                                       AResultStr: Pointer): LongInt; cdecl;
-
-  TExecuteWindowOperationsAction_Proc = function(AActionName: Pointer;
-                                                 AActionTimeout: LongInt; //ms
-                                                 AWindowOperationsOptions: PClkWindowOperationsOptionsAPI;
-                                                 AUseServerDebugging: Boolean;
-                                                 AResultStr: Pointer): LongInt; cdecl;
-
-  TExecuteLoadSetVarFromFileAction_Proc = function(AActionName: Pointer;
-                                                   AActionTimeout: LongInt; //ms
-                                                   ALoadSetVarFromFileOptions: PClkLoadSetVarFromFileOptionsAPI;
-                                                   AUseServerDebugging: Boolean;
-                                                   AResultStr: Pointer): LongInt; cdecl;
-
-  TExecuteSaveSetVarToFileAction_Proc = function(AActionName: Pointer;
-                                                 AActionTimeout: LongInt; //ms
-                                                 ASaveSetVarToFileOptions: PClkSaveSetVarToFileOptionsAPI;
-                                                 AUseServerDebugging: Boolean;
-                                                 AResultStr: Pointer): LongInt; cdecl;
-
-   TExecutePluginAction_Proc = function(AActionName: Pointer;
-                                        AActionTimeout: LongInt; //ms
-                                        APluginOptions: PClkPluginOptionsAPI;
-                                        AUseServerDebugging: Boolean;
-                                        AUseStepIntoDebugging: Boolean;
-                                        AResultStr: Pointer): LongInt; cdecl;
-
-   TExecuteEditTemplateAction_Proc = function(AActionName: Pointer;
-                                              AActionTimeout: LongInt; //ms
-                                              AEditTemplateOptions: PClkEditTemplateOptionsAPI;
-                                              AUseServerDebugging: Boolean;
-                                              AResultStr: Pointer): LongInt; cdecl;
-
-var
-  InitClickerClient: TInitClickerClient_Proc;
-  DoneClickerClient: TDoneClickerClient_Proc;
-  SetServerAddress: TSetServerAddress_Proc;
-  GetServerAddress: TGetServerAddress_Proc;
-  TestConnectionToServer: TTestConnectionToServer_Proc;
-
-  ExecuteClickAction: TExecuteClickAction_Proc;
-  ExecuteExecAppAction: TExecuteExecAppAction_Proc;
-  ExecuteFindControlAction: TExecuteFindControlAction_Proc;
-  ExecuteFindSubControlAction: TExecuteFindControlAction_Proc;
-  ExecuteSetControlTextAction: TExecuteSetControlTextAction_Proc;
-  ExecuteCallTemplateAction: TExecuteCallTemplateAction_Proc;
-  ExecuteSleepAction: TExecuteSleepAction_Proc;
-  ExecuteSetVarAction: TExecuteSetVarAction_Proc;
-  ExecuteWindowOperationsAction: TExecuteWindowOperationsAction_Proc;
-  ExecuteLoadSetVarFromFileAction: TExecuteLoadSetVarFromFileAction_Proc;
-  ExecuteSaveSetVarToFileAction: TExecuteSaveSetVarToFileAction_Proc;
-  ExecutePluginAction: TExecutePluginAction_Proc;
-  ExecuteEditTemplateAction: TExecuteEditTemplateAction_Proc;
 
 const
   CTestDriverAddress = 'http://127.0.0.1:25444/';
@@ -180,6 +78,7 @@ constructor TTestClickerClientHTTPAPI.Create;
 begin
   inherited Create;
   TestServerAddress := CTestServerAddress;
+  FLoadClickerClientRes := False;
 end;
 
 
@@ -188,29 +87,8 @@ var
   RecServerAddress: string;
 begin
   inherited SetUp;
-  FClickerClientDllHandle := LoadLibrary('..\ClickerClient\ClickerClient.dll');
-
-  Expect(DWord(FClickerClientDllHandle)).NotToBe(0, 'Can''t load ClickerClient.dll');
-
-  @InitClickerClient := GetProcAddress(FClickerClientDllHandle, 'InitClickerClient');
-  @DoneClickerClient := GetProcAddress(FClickerClientDllHandle, 'DoneClickerClient');
-  @SetServerAddress := GetProcAddress(FClickerClientDllHandle, 'SetServerAddress');
-  @GetServerAddress := GetProcAddress(FClickerClientDllHandle, 'GetServerAddress');
-  @TestConnectionToServer := GetProcAddress(FClickerClientDllHandle, 'TestConnectionToServer');
-
-  @ExecuteClickAction := GetProcAddress(FClickerClientDllHandle, 'ExecuteClickAction');
-  @ExecuteExecAppAction := GetProcAddress(FClickerClientDllHandle, 'ExecuteExecAppAction');
-  @ExecuteFindControlAction := GetProcAddress(FClickerClientDllHandle, 'ExecuteFindControlAction');
-  @ExecuteFindSubControlAction := GetProcAddress(FClickerClientDllHandle, 'ExecuteFindSubControlAction');
-  @ExecuteSetControlTextAction := GetProcAddress(FClickerClientDllHandle, 'ExecuteSetControlTextAction');
-  @ExecuteCallTemplateAction := GetProcAddress(FClickerClientDllHandle, 'ExecuteCallTemplateAction');
-  @ExecuteSleepAction := GetProcAddress(FClickerClientDllHandle, 'ExecuteSleepAction');
-  @ExecuteSetVarAction := GetProcAddress(FClickerClientDllHandle, 'ExecuteSetVarAction');
-  @ExecuteWindowOperationsAction := GetProcAddress(FClickerClientDllHandle, 'ExecuteWindowOperationsAction');
-  @ExecuteLoadSetVarFromFileAction := GetProcAddress(FClickerClientDllHandle, 'ExecuteLoadSetVarFromFileAction');
-  @ExecuteSaveSetVarToFileAction := GetProcAddress(FClickerClientDllHandle, 'ExecuteSaveSetVarToFileAction');
-  @ExecutePluginAction := GetProcAddress(FClickerClientDllHandle, 'ExecutePluginAction');
-  @ExecuteEditTemplateAction := GetProcAddress(FClickerClientDllHandle, 'ExecuteEditTemplateAction');
+  FLoadClickerClientRes := LoadClickerClient('..\ClickerClient\ClickerClient.dll');
+  Expect(FLoadClickerClientRes).ToBe(True, 'Can''t load ClickerClient.dll');
 
   InitClickerClient;
   SetServerAddress(@WideString(TestServerAddress)[1]);
@@ -225,11 +103,13 @@ end;
 
 procedure TTestClickerClientHTTPAPI.TearDown;
 begin
-  try
-    if FClickerClientDllHandle > 0 then
+  if FLoadClickerClientRes then
+  begin
+    try
       DoneClickerClient;
-  finally
-    FreeLibrary(FClickerClientDllHandle);
+    finally
+      UnLoadClickerClient;
+    end;
   end;
 
   inherited TearDown;

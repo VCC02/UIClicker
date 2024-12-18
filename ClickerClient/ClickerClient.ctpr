@@ -52,7 +52,7 @@
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="..\..\MiscUtils\InMemFileSystem.pas"/>
+        <Filename Value="..\MiscUtils\InMemFileSystem.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
@@ -82,6 +82,10 @@
         <ComponentName Value="frmClickerClientLogging"/>
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
+      </Unit>
+      <Unit>
+        <Filename Value="ClickerClientAPI.pas"/>
+        <IsPartOfProject Value="True"/>
       </Unit>
     </Units>
   </ProjectOptions>
