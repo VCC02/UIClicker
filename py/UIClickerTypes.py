@@ -29,25 +29,28 @@ from ctypes import Structure, POINTER
 from enum import Enum
 
 
-CClickType_Click = 0;
-CClickType_Drag = 1; 
+CClickType_Click = 0
+CClickType_Drag = 1
+CClickType_ButtonDown = 2
+CClickType_ButtonUp = 3
+CClickType_Wheel = 4
 
 #Various datatypes, translated from ClickerUtils.pas
 
 class TClkAction: #(Enum):
-    acClick = 0;
-    acExecApp = 1;
-    acFindControl = 2;
-    acFindSubControl = 3;
-    acSetControlText = 4;
-    acCallTemplate = 5;
-    acSleep = 6;
-    acSetVar = 7;
-    acWindowOperations = 8;
-    acLoadSetVarFromFile = 9;
-    acSaveSetVarToFile = 10;
-    acPlugin = 11;
-    acEditTemplate = 12;
+    acClick = 0
+    acExecApp = 1
+    acFindControl = 2
+    acFindSubControl = 3
+    acSetControlText = 4
+    acCallTemplate = 5
+    acSleep = 6
+    acSetVar = 7
+    acWindowOperations = 8
+    acLoadSetVarFromFile = 9
+    acSaveSetVarToFile = 10
+    acPlugin = 11
+    acEditTemplate = 12
 
 class TXClickPointReference: #(Enum):
     xrefLeft = 0

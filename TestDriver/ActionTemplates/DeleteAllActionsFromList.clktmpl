@@ -38,7 +38,7 @@ MatchClassNameSeparator=
 AllowToFail=0
 WaitForControlToGoAway=0
 MatchBitmapTextArr=1
-MatchBitmapText_Count=1
+MatchBitmapText_Count=2
 MatchBitmapText[0].ForegroundColor=$Color_WindowText$
 MatchBitmapText[0].BackgroundColor=$Color_BtnFace$
 MatchBitmapText[0].FontName=Tahoma
@@ -56,9 +56,26 @@ MatchBitmapText[0].CropTop=0
 MatchBitmapText[0].CropRight=0
 MatchBitmapText[0].CropBottom=0
 MatchBitmapText[0].IgnoreBackgroundColor=1
+MatchBitmapText[1].ForegroundColor=$Color_WindowText$
+MatchBitmapText[1].BackgroundColor=$Color_BtnFace$
+MatchBitmapText[1].FontName=Tahoma
+MatchBitmapText[1].FontSize=8
+MatchBitmapText[1].Bold=0
+MatchBitmapText[1].Italic=0
+MatchBitmapText[1].Underline=0
+MatchBitmapText[1].StrikeOut=0
+MatchBitmapText[1].FontQuality=5
+MatchBitmapText[1].FontQualityUsesReplacement=0
+MatchBitmapText[1].FontQualityReplacement=
+MatchBitmapText[1].ProfileName=Profile [1]
+MatchBitmapText[1].CropLeft=0
+MatchBitmapText[1].CropTop=0
+MatchBitmapText[1].CropRight=0
+MatchBitmapText[1].CropBottom=0
+MatchBitmapText[1].IgnoreBackgroundColor=1
 MatchBitmapFiles=
-ColorError=0
-AllowedColorErrorCount=0
+ColorError=17
+AllowedColorErrorCount=20
 MatchBitmapAlgorithm=0
 MatchBitmapAlgorithm_Grid_XMultipleOf=1
 MatchBitmapAlgorithm_Grid_YMultipleOf=1
@@ -91,6 +108,9 @@ FullBackgroundImageInResult=1
 MatchByHistogramSettings.MinPercentColorMatch=50
 MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
+EvaluateTextCount=-1
+CropFromScreenshot=0
+ThreadCount=2
 
 [Action_2]
 ActionName=Click New
@@ -127,6 +147,7 @@ MouseWheelAmount=1
 DelayAfterMovingToDestination=50
 DelayAfterMouseDown=200
 MoveDuration=-1
+UseClipCursor=0
 
 [Action_3]
 ActionName=Find save confirmation dialog
@@ -203,6 +224,9 @@ FullBackgroundImageInResult=1
 MatchByHistogramSettings.MinPercentColorMatch=50
 MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
+EvaluateTextCount=-1
+CropFromScreenshot=0
+ThreadCount=2
 
 [Action_4]
 ActionName="Sleep"
@@ -290,6 +314,9 @@ FullBackgroundImageInResult=1
 MatchByHistogramSettings.MinPercentColorMatch=50
 MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
+EvaluateTextCount=-1
+CropFromScreenshot=0
+ThreadCount=2
 
 [Action_6]
 ActionName=Close dialog
@@ -326,6 +353,7 @@ MouseWheelAmount=1
 DelayAfterMovingToDestination=50
 DelayAfterMouseDown=200
 MoveDuration=-1
+UseClipCursor=0
 
 [Notes]
 Content=refactored actions

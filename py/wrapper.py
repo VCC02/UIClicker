@@ -153,7 +153,6 @@ try:
     PluginOptions = GetDefaultPluginOptions()
     PluginOptions.FileName = '$AppDir$\\..\\UIClickerFindWindowsPlugin\\lib\\x86_64-win64\\UIClickerFindWindows.dll'
     PluginOptions.ListOfPropertiesAndValues
-    PluginOptions.SetVarActionName = 'The plugin'
     print("AddPluginActionToTemplate: ", DllFuncs.AddPluginActionToTemplate('VerifyClicking.clktmpl', 'Twelveth', 0, True, '', ctypes.byref(PluginOptions)))
     
     EditTemplateOptions = GetDefaultEditTemplateOptions()

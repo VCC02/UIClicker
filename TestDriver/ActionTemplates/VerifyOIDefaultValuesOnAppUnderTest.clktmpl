@@ -373,9 +373,9 @@ ActionCondition=$LastAction_Status$<>Successful$PropertyFound$<>Successful
 BreakpointExists=0
 BreakpointEnabled=0
 BreakpointCondition=
-ListOfVarNames=$Console()$$Exit(Property not found)$
+ListOfVarNames=$Console()$$Exit(Property not found: $PropertyName$)$
 ListOfVarValues=----- Err: Property not found: $PropertyName$
-ListOfVarEvalBefore=1
+ListOfVarEvalBefore=11
 FailOnException=0
 
 [Action_10]

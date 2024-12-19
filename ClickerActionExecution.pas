@@ -3141,6 +3141,10 @@ begin
         VarValue := Copy(VarName, Pos('(', VarName) + 1, MaxInt);
         VarValue := Copy(VarValue, 1, Length(VarValue) - 2);
         SetActionVarValue('$ExecAction_Err$', 'Terminating template execution on request.');
+
+        if TempListOfSetVarEvalBefore.Strings[i] = '1' then
+          VarValue := EvaluateReplacements(VarValue);
+
         SetActionVarValue('$ExitCode$', VarValue);
 
         Result := VarValue = '0';

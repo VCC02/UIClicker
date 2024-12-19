@@ -1,8 +1,19 @@
 [Actions]
-Count=1
+Count=2
 Version=2
 
 [Action_0]
+ActionName="Sleep"
+Action=Sleep
+ActionTimeout=0
+ActionEnabled=1
+ActionCondition=
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+Value=1000
+
+[Action_1]
 ActionName=Reset DeniedFileExecuted
 Action=SetVar
 ActionTimeout=0

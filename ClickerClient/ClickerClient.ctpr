@@ -52,7 +52,7 @@
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>
-        <Filename Value="..\MiscUtils\InMemFileSystem.pas"/>
+        <Filename Value="..\..\MiscUtils\InMemFileSystem.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
       <Unit>

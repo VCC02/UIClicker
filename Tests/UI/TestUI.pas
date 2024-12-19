@@ -124,6 +124,7 @@ type
     procedure TestVerifyOIDifferentThanDefaultValues_ExecApp;
     procedure TestVerifyOIDifferentThanDefaultValues_FindControl;
     procedure TestVerifyOIDifferentThanDefaultValues_FindSubControl;
+    procedure TestVerifyOIDifferentThanDefaultValues_FindSubControl_SubProperties;
     procedure TestVerifyOIDifferentThanDefaultValues_SetControlText;
     procedure TestVerifyOIDifferentThanDefaultValues_CallTemplate;
     procedure TestVerifyOIDifferentThanDefaultValues_Sleep;
@@ -320,10 +321,10 @@ begin
   try
     ListOfVars.Text := Response;
     try
-      Expect(ListOfVars).WithItem('$ExecAction_Err$').OfValue('', 'No error Allowed in test driver.');
+      Expect(ListOfVars).WithItem('$ExecAction_Err$').OfValue('', 'No error Allowed in test driver. $ExecAction_Err$ is ' + ListOfVars.Values['$ExecAction_Err$'] + '   $ExitCode$ is ' + ListOfVars.Values['$ExitCode$']);
     except
       on E: Exception do
-        Expect(ListOfVars).WithItem('$ExecAction_Err$').OfValue(CSecondExpectedErrMsg, 'No error Allowed in test driver.');
+        Expect(ListOfVars).WithItem('$ExecAction_Err$').OfValue(CSecondExpectedErrMsg, 'No error Allowed in test driver. $ExecAction_Err$ is ' + ListOfVars.Values['$ExecAction_Err$'] + '   $ExitCode$ is ' + ListOfVars.Values['$ExitCode$']);
     end;
 
     if AAdditionalExpectedVar <> '' then
@@ -1077,6 +1078,11 @@ begin
 
   SetVariableOnTestDriverClient('$ActionToDrag$', AActionToDrag);
   SetVariableOnTestDriverClient('$ExtraCaption2$', ' - ClientUnderTest'); //using $ExtraCaption2$, instead of $ExtraCaption$ in VerifyOIDefaultValuesOnAppUnderTest.clktmpl
+  ExecuteTemplateOnTestDriver(ExtractFilePath(ParamStr(0)) + '..\..\TestDriver\ActionTemplates\PrepareOIForReadingValues.clktmpl',
+                              CREParam_FileLocation_ValueDisk,
+                              '', //'$Control_Text$',
+                              '' //AExpectedResult
+                              );
 
   //run python with arg, which executes an action in debugging mode with "different than default" values for all properties
   PyProc := CreatePyProcess('Python'{.exe'}, '..\..\py\Tests\RunExecute' + AActionToDrag + 'Action.py', ExtractFileDir(ParamStr(0)));
@@ -1172,6 +1178,20 @@ begin
   ListOfSerializedPropertiesToOIInteractionData(GetFindControlActionProperties(FindSubControlOptions), @CFindControlProperties, CPropIsExp[acFindSubControl], CPropCount_FindControl, Properties);
 
   VerifyOIDifferentThanDefaultValues(CClkActionStr[acFindSubControl], Properties);
+end;
+
+
+procedure TTestUI.TestVerifyOIDifferentThanDefaultValues_FindSubControl_SubProperties;
+var
+  Properties: TOIInteractionDataArr;
+  FindSubControlOptions: TClkFindControlOptions;
+begin
+  GenerateDifferentThanDefault_FindSubControl(FindSubControlOptions);
+  ListOfSerializedPropertiesToOIInteractionData(GetFindControlActionProperties(FindSubControlOptions), @CFindControlProperties, CPropIsExp[acFindSubControl], CPropCount_FindControl, Properties);
+
+  //Get only the properties from structures and arrays
+
+  //VerifyOIDifferentThanDefaultValues(CClkActionStr[acFindSubControl], Properties);
 end;
 
 

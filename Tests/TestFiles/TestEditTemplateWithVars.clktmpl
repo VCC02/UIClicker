@@ -1,8 +1,19 @@
 [Actions]
-Count=5
+Count=6
 Version=2
 
 [Action_0]
+ActionName="Sleep"
+Action=Sleep
+ActionTimeout=0
+ActionEnabled=1
+ActionCondition=
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+Value=1000
+
+[Action_1]
 ActionName="SetVar"
 Action=SetVar
 ActionTimeout=0
@@ -16,7 +27,7 @@ ListOfVarValues="Plugin"123
 ListOfVarEvalBefore=
 FailOnException=0
 
-[Action_1]
+[Action_2]
 ActionName=edt
 Action=EditTemplate
 ActionTimeout=0
@@ -36,8 +47,10 @@ EditedActionCondition=
 EditedActionTimeout=1000
 NewActionName=$abc$
 ShouldSaveTemplate=1
+ListOfEditedProperties_ET=
+ListOfEnabledProperties_ET=
 
-[Action_2]
+[Action_3]
 ActionName="Plugin"
 Action=Plugin
 ActionTimeout=1000
@@ -49,7 +62,7 @@ BreakpointCondition=
 FileName=$AppDir$\..\UIClickerFindWindowsPlugin\lib\i386-win32\UIClickerFindWindows.dll
 ListOfPropertiesAndValues=FindSubControlTopLeftCorner=FindSubControlBotLeftCorner=FindSubControlTopRightCorner=FindSubControlBotRightCorner=FindSubControlLeftEdge=FindSubControlTopEdge=FindSubControlRightEdge=FindSubControlBottomEdge=ParentFindControl=BorderThickness=6MatchWindowEdges=True
 
-[Action_3]
+[Action_4]
 ActionName=Set plugin timeout
 Action=EditTemplate
 ActionTimeout=0
@@ -69,8 +82,10 @@ EditedActionCondition=
 EditedActionTimeout=1000
 NewActionName=
 ShouldSaveTemplate=1
+ListOfEditedProperties_ET=
+ListOfEnabledProperties_ET=
 
-[Action_4]
+[Action_5]
 ActionName="Sleep"
 Action=Sleep
 ActionTimeout=0
@@ -79,7 +94,7 @@ ActionCondition=
 BreakpointExists=0
 BreakpointEnabled=0
 BreakpointCondition=
-Value=1000
+Value=2000
 
 [Notes]
 Content=

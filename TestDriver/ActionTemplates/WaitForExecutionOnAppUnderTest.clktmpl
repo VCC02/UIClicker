@@ -5,7 +5,7 @@ Version=2
 [Action_0]
 ActionName=Find Stop button icon - running state
 Action=FindSubControl
-ActionTimeout=1000
+ActionTimeout=1500
 ActionEnabled=1
 ActionCondition=
 BreakpointExists=0
@@ -55,8 +55,8 @@ InitialRectangle.Top=$Stop_Top$
 InitialRectangle.Right=$Stop_Left$
 InitialRectangle.Bottom=$Stop_Top$
 UseWholeScreen=0
-InitialRectangle.LeftOffset=-18
-InitialRectangle.TopOffset=2
+InitialRectangle.LeftOffset=-19
+InitialRectangle.TopOffset=-1
 InitialRectangle.RightOffset=-3
 InitialRectangle.BottomOffset=13
 StartSearchingWithCachedControl=0
@@ -79,6 +79,7 @@ MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 EvaluateTextCount=-1
 CropFromScreenshot=0
+ThreadCount=2
 
 [Action_1]
 ActionName=Find Stop button icon - idle state
@@ -133,8 +134,8 @@ InitialRectangle.Top=$Stop_Top$
 InitialRectangle.Right=$Stop_Left$
 InitialRectangle.Bottom=$Stop_Top$
 UseWholeScreen=0
-InitialRectangle.LeftOffset=-17
-InitialRectangle.TopOffset=3
+InitialRectangle.LeftOffset=-19
+InitialRectangle.TopOffset=-1
 InitialRectangle.RightOffset=-3
 InitialRectangle.BottomOffset=13
 StartSearchingWithCachedControl=0
@@ -157,6 +158,7 @@ MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 EvaluateTextCount=-1
 CropFromScreenshot=0
+ThreadCount=2
 
 [Notes]
 Content=waiting 15s for execution to stop, because of the looped call example
