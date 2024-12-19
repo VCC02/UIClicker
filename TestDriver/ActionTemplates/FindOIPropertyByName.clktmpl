@@ -194,6 +194,8 @@ MatchByHistogramSettings.MinPercentColorMatch=50
 MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 EvaluateTextCount=-1
+CropFromScreenshot=0
+ThreadCount=2
 
 [Action_2]
 ActionName=Copy status1
@@ -435,6 +437,8 @@ MatchByHistogramSettings.MinPercentColorMatch=50
 MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 EvaluateTextCount=1
+CropFromScreenshot=0
+ThreadCount=2
 
 [Action_5]
 ActionName=Copy status2
@@ -485,6 +489,7 @@ MouseWheelAmount=-1
 DelayAfterMovingToDestination=50
 DelayAfterMouseDown=200
 MoveDuration=-1
+UseClipCursor=0
 
 [Notes]
 Content=refactored actions

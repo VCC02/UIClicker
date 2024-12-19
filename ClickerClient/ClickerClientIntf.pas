@@ -149,7 +149,7 @@ var
 
 function LoadClickerClient(ADllPath: string): Boolean; //returns True if successful
 begin
-  FClickerClientDllHandle := LoadLibrary('..\ClickerClient\ClickerClient.dll');
+  FClickerClientDllHandle := LoadLibrary(ADllPath);
   Result := FClickerClientDllHandle > 0;
 
   @InitClickerClient := GetProcAddress(FClickerClientDllHandle, 'InitClickerClient');

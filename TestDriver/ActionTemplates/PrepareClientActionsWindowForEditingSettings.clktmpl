@@ -1,5 +1,5 @@
 [Actions]
-Count=8
+Count=9
 Version=2
 
 [Action_0]
@@ -79,8 +79,26 @@ MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 EvaluateTextCount=-1
 CropFromScreenshot=0
+ThreadCount=2
 
 [Action_1]
+ActionName="WindowOperations"
+Action=WindowOperations
+ActionTimeout=0
+ActionEnabled=1
+ActionCondition=
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+WindowOperation=0
+NewX=
+NewY=
+NewWidth=
+NewHeight=
+NewPositionEnabled=0
+NewSizeEnabled=0
+
+[Action_2]
 ActionName=Find main PageControl
 Action=FindControl
 ActionTimeout=1000
@@ -157,8 +175,9 @@ MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 EvaluateTextCount=-1
 CropFromScreenshot=0
+ThreadCount=2
 
-[Action_2]
+[Action_3]
 ActionName=Find "Settings" tab
 Action=FindSubControl
 ActionTimeout=1000
@@ -252,8 +271,9 @@ MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 EvaluateTextCount=-1
 CropFromScreenshot=0
+ThreadCount=2
 
-[Action_3]
+[Action_4]
 ActionName=Make sure the tab is selected
 Action=Click
 ActionTimeout=0
@@ -290,7 +310,7 @@ DelayAfterMouseDown=200
 MoveDuration=-1
 UseClipCursor=0
 
-[Action_4]
+[Action_5]
 ActionName=Wait for animation
 Action=Sleep
 ActionTimeout=0
@@ -301,7 +321,7 @@ BreakpointEnabled=0
 BreakpointCondition=
 Value=500
 
-[Action_5]
+[Action_6]
 ActionName=Find Actions Window
 Action=FindControl
 ActionTimeout=10000
@@ -378,8 +398,9 @@ MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 EvaluateTextCount=-1
 CropFromScreenshot=0
+ThreadCount=2
 
-[Action_6]
+[Action_7]
 ActionName=Find main PageControl
 Action=FindControl
 ActionTimeout=1000
@@ -456,8 +477,9 @@ MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 EvaluateTextCount=-1
 CropFromScreenshot=0
+ThreadCount=2
 
-[Action_7]
+[Action_8]
 ActionName=Cache Settings tab
 Action=SetVar
 ActionTimeout=0

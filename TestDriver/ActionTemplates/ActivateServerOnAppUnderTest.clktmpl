@@ -1,5 +1,5 @@
 [Actions]
-Count=12
+Count=19
 Version=2
 
 [Action_0]
@@ -77,6 +77,9 @@ FullBackgroundImageInResult=1
 MatchByHistogramSettings.MinPercentColorMatch=50
 MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
+EvaluateTextCount=-1
+CropFromScreenshot=0
+ThreadCount=2
 
 [Action_1]
 ActionName=Find main PageControl (works on visible windows only)
@@ -153,6 +156,9 @@ FullBackgroundImageInResult=1
 MatchByHistogramSettings.MinPercentColorMatch=50
 MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
+EvaluateTextCount=-1
+CropFromScreenshot=0
+ThreadCount=2
 
 [Action_2]
 ActionName=Find page
@@ -229,6 +235,9 @@ FullBackgroundImageInResult=1
 MatchByHistogramSettings.MinPercentColorMatch=50
 MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
+EvaluateTextCount=-1
+CropFromScreenshot=0
+ThreadCount=2
 
 [Action_3]
 ActionName=Find ExecMode PageControl (works on visible windows only)
@@ -305,6 +314,9 @@ FullBackgroundImageInResult=1
 MatchByHistogramSettings.MinPercentColorMatch=50
 MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
+EvaluateTextCount=-1
+CropFromScreenshot=0
+ThreadCount=2
 
 [Action_4]
 ActionName=Find ServerMode tab
@@ -381,6 +393,9 @@ FullBackgroundImageInResult=1
 MatchByHistogramSettings.MinPercentColorMatch=50
 MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
+EvaluateTextCount=-1
+CropFromScreenshot=0
+ThreadCount=2
 
 [Action_5]
 ActionName=Select tab (should already be selected)
@@ -417,6 +432,7 @@ MouseWheelAmount=0
 DelayAfterMovingToDestination=50
 DelayAfterMouseDown=100
 MoveDuration=-1
+UseClipCursor=0
 
 [Action_6]
 ActionName=Find Server mode page
@@ -493,6 +509,9 @@ FullBackgroundImageInResult=1
 MatchByHistogramSettings.MinPercentColorMatch=50
 MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
+EvaluateTextCount=-1
+CropFromScreenshot=0
+ThreadCount=2
 
 [Action_7]
 ActionName=Find Port editbox
@@ -569,6 +588,9 @@ FullBackgroundImageInResult=1
 MatchByHistogramSettings.MinPercentColorMatch=50
 MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
+EvaluateTextCount=-1
+CropFromScreenshot=0
+ThreadCount=2
 
 [Action_8]
 ActionName=SetControlText
@@ -659,8 +681,304 @@ FullBackgroundImageInResult=1
 MatchByHistogramSettings.MinPercentColorMatch=50
 MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
+EvaluateTextCount=-1
+CropFromScreenshot=0
+ThreadCount=2
 
 [Action_10]
+ActionName=Cache page
+Action=SetVar
+ActionTimeout=0
+ActionEnabled=1
+ActionCondition=
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+ListOfVarNames=$ServerPage_Left$$ServerPage_Top$$ServerPage_Right$$ServerPage_Bottom$$ServerPage_Width$$ServerPage_Height$$ServerPage_Text$$ServerPage_Class$$ServerPage_Handle$
+ListOfVarValues=$Control_Left$$Control_Top$$Control_Right$$Control_Bottom$$Control_Width$$Control_Height$$Control_Text$$Control_Class$$Control_Handle$
+ListOfVarEvalBefore=111111111
+FailOnException=56
+
+[Action_11]
+ActionName=Dbg "FindControl" (do not enable)
+Action=FindControl
+ActionTimeout=3000
+ActionEnabled=0
+ActionCondition=
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+MatchCriteria.WillMatchText=1
+MatchCriteria.WillMatchClassName=1
+MatchCriteria.WillMatchBitmapText=0
+MatchCriteria.WillMatchBitmapFiles=0
+MatchCriteria.WillMatchPrimitiveFiles=0
+MatchCriteria.SearchForControlMode=0
+MatchText=
+MatchClassName=Window
+MatchTextSeparator=
+MatchClassNameSeparator=
+AllowToFail=0
+WaitForControlToGoAway=0
+MatchBitmapTextArr=1
+MatchBitmapText_Count=1
+MatchBitmapText[0].ForegroundColor=$Color_Window$
+MatchBitmapText[0].BackgroundColor=$Color_Highlight$
+MatchBitmapText[0].FontName=Tahoma
+MatchBitmapText[0].FontSize=8
+MatchBitmapText[0].Bold=0
+MatchBitmapText[0].Italic=0
+MatchBitmapText[0].Underline=0
+MatchBitmapText[0].StrikeOut=0
+MatchBitmapText[0].FontQuality=3
+MatchBitmapText[0].FontQualityUsesReplacement=0
+MatchBitmapText[0].FontQualityReplacement=
+MatchBitmapText[0].ProfileName=Profile [0]
+MatchBitmapText[0].CropLeft=0
+MatchBitmapText[0].CropTop=0
+MatchBitmapText[0].CropRight=0
+MatchBitmapText[0].CropBottom=0
+MatchBitmapText[0].IgnoreBackgroundColor=0
+MatchBitmapFiles=
+ColorError=0
+AllowedColorErrorCount=0
+MatchBitmapAlgorithm=0
+MatchBitmapAlgorithm_Grid_XMultipleOf=1
+MatchBitmapAlgorithm_Grid_YMultipleOf=1
+MatchBitmapAlgorithm_Grid_XOffset=0
+MatchBitmapAlgorithm_Grid_YOffset=0
+InitialRectangle.Left=$Control_Left$
+InitialRectangle.Top=$Control_Top$
+InitialRectangle.Right=$Control_Right$
+InitialRectangle.Bottom=$Control_Bottom$
+UseWholeScreen=1
+InitialRectangle.LeftOffset=0
+InitialRectangle.TopOffset=0
+InitialRectangle.RightOffset=0
+InitialRectangle.BottomOffset=0
+StartSearchingWithCachedControl=0
+CachedControlLeft=
+CachedControlTop=
+MatchPrimitiveFiles=
+GetAllControls=0
+UseFastSearch=1
+FastSearchAllowedColorErrorCount=10
+IgnoredColors=
+SleepySearch=0
+StopSearchOnMismatch=1
+ImageSource=0
+SourceFileName=
+ImageSourceFileNameLocation=1
+PrecisionTimeout=0
+FullBackgroundImageInResult=1
+MatchByHistogramSettings.MinPercentColorMatch=50
+MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
+MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
+EvaluateTextCount=-1
+CropFromScreenshot=0
+ThreadCount=2
+
+[Action_12]
+ActionName=Find server state label - active
+Action=FindSubControl
+ActionTimeout=1000
+ActionEnabled=1
+ActionCondition=
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+MatchCriteria.WillMatchText=0
+MatchCriteria.WillMatchClassName=0
+MatchCriteria.WillMatchBitmapText=1
+MatchCriteria.WillMatchBitmapFiles=0
+MatchCriteria.WillMatchPrimitiveFiles=0
+MatchCriteria.SearchForControlMode=0
+MatchText=Server is listening on port
+MatchClassName=
+MatchTextSeparator=
+MatchClassNameSeparator=
+AllowToFail=1
+WaitForControlToGoAway=0
+MatchBitmapTextArr=1
+MatchBitmapText_Count=1
+MatchBitmapText[0].ForegroundColor=008000
+MatchBitmapText[0].BackgroundColor=$Color_Window$
+MatchBitmapText[0].FontName=Tahoma
+MatchBitmapText[0].FontSize=8
+MatchBitmapText[0].Bold=1
+MatchBitmapText[0].Italic=0
+MatchBitmapText[0].Underline=0
+MatchBitmapText[0].StrikeOut=0
+MatchBitmapText[0].FontQuality=3
+MatchBitmapText[0].FontQualityUsesReplacement=0
+MatchBitmapText[0].FontQualityReplacement=
+MatchBitmapText[0].ProfileName=Profile [0]
+MatchBitmapText[0].CropLeft=0
+MatchBitmapText[0].CropTop=0
+MatchBitmapText[0].CropRight=0
+MatchBitmapText[0].CropBottom=0
+MatchBitmapText[0].IgnoreBackgroundColor=0
+MatchBitmapFiles=
+ColorError=0
+AllowedColorErrorCount=0
+MatchBitmapAlgorithm=0
+MatchBitmapAlgorithm_Grid_XMultipleOf=1
+MatchBitmapAlgorithm_Grid_YMultipleOf=1
+MatchBitmapAlgorithm_Grid_XOffset=0
+MatchBitmapAlgorithm_Grid_YOffset=0
+InitialRectangle.Left=$Control_Left$
+InitialRectangle.Top=$Control_Top$
+InitialRectangle.Right=$Control_Right$
+InitialRectangle.Bottom=$Control_Bottom$
+UseWholeScreen=0
+InitialRectangle.LeftOffset=0
+InitialRectangle.TopOffset=0
+InitialRectangle.RightOffset=0
+InitialRectangle.BottomOffset=0
+StartSearchingWithCachedControl=0
+CachedControlLeft=
+CachedControlTop=
+MatchPrimitiveFiles=
+GetAllControls=0
+UseFastSearch=1
+FastSearchAllowedColorErrorCount=10
+IgnoredColors=
+SleepySearch=0
+StopSearchOnMismatch=1
+ImageSource=0
+SourceFileName=
+ImageSourceFileNameLocation=1
+PrecisionTimeout=0
+FullBackgroundImageInResult=1
+MatchByHistogramSettings.MinPercentColorMatch=50
+MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
+MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
+EvaluateTextCount=-1
+CropFromScreenshot=0
+ThreadCount=2
+
+[Action_13]
+ActionName=Exit if server is active
+Action=SetVar
+ActionTimeout=0
+ActionEnabled=1
+ActionCondition=$LastAction_Status$==Successful
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+ListOfVarNames=$Exit(0)$
+ListOfVarValues=
+ListOfVarEvalBefore=
+FailOnException=0
+
+[Action_14]
+ActionName=Restore page
+Action=SetVar
+ActionTimeout=0
+ActionEnabled=1
+ActionCondition=
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+ListOfVarNames=$Control_Left$$Control_Top$$Control_Right$$Control_Bottom$$Control_Width$$Control_Height$$Control_Text$$Control_Class$$Control_Handle$
+ListOfVarValues=$ServerPage_Left$$ServerPage_Top$$ServerPage_Right$$ServerPage_Bottom$$ServerPage_Width$$ServerPage_Height$$ServerPage_Text$$ServerPage_Class$$ServerPage_Handle$
+ListOfVarEvalBefore=111111111
+FailOnException=56
+
+[Action_15]
+ActionName=Find server state label - inactive
+Action=FindSubControl
+ActionTimeout=1000
+ActionEnabled=1
+ActionCondition=
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+MatchCriteria.WillMatchText=0
+MatchCriteria.WillMatchClassName=0
+MatchCriteria.WillMatchBitmapText=1
+MatchCriteria.WillMatchBitmapFiles=0
+MatchCriteria.WillMatchPrimitiveFiles=0
+MatchCriteria.SearchForControlMode=0
+MatchText=Server module is inactive
+MatchClassName=
+MatchTextSeparator=
+MatchClassNameSeparator=
+AllowToFail=1
+WaitForControlToGoAway=0
+MatchBitmapTextArr=1
+MatchBitmapText_Count=1
+MatchBitmapText[0].ForegroundColor=808080
+MatchBitmapText[0].BackgroundColor=$Color_Window$
+MatchBitmapText[0].FontName=Tahoma
+MatchBitmapText[0].FontSize=8
+MatchBitmapText[0].Bold=1
+MatchBitmapText[0].Italic=0
+MatchBitmapText[0].Underline=0
+MatchBitmapText[0].StrikeOut=0
+MatchBitmapText[0].FontQuality=3
+MatchBitmapText[0].FontQualityUsesReplacement=0
+MatchBitmapText[0].FontQualityReplacement=
+MatchBitmapText[0].ProfileName=Profile [0]
+MatchBitmapText[0].CropLeft=0
+MatchBitmapText[0].CropTop=0
+MatchBitmapText[0].CropRight=0
+MatchBitmapText[0].CropBottom=0
+MatchBitmapText[0].IgnoreBackgroundColor=0
+MatchBitmapFiles=
+ColorError=0
+AllowedColorErrorCount=0
+MatchBitmapAlgorithm=0
+MatchBitmapAlgorithm_Grid_XMultipleOf=1
+MatchBitmapAlgorithm_Grid_YMultipleOf=1
+MatchBitmapAlgorithm_Grid_XOffset=0
+MatchBitmapAlgorithm_Grid_YOffset=0
+InitialRectangle.Left=$Control_Left$
+InitialRectangle.Top=$Control_Top$
+InitialRectangle.Right=$Control_Right$
+InitialRectangle.Bottom=$Control_Bottom$
+UseWholeScreen=0
+InitialRectangle.LeftOffset=0
+InitialRectangle.TopOffset=0
+InitialRectangle.RightOffset=0
+InitialRectangle.BottomOffset=0
+StartSearchingWithCachedControl=0
+CachedControlLeft=
+CachedControlTop=
+MatchPrimitiveFiles=
+GetAllControls=0
+UseFastSearch=1
+FastSearchAllowedColorErrorCount=10
+IgnoredColors=
+SleepySearch=0
+StopSearchOnMismatch=1
+ImageSource=0
+SourceFileName=
+ImageSourceFileNameLocation=1
+PrecisionTimeout=0
+FullBackgroundImageInResult=1
+MatchByHistogramSettings.MinPercentColorMatch=50
+MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
+MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
+EvaluateTextCount=-1
+CropFromScreenshot=0
+ThreadCount=2
+
+[Action_16]
+ActionName=Restore page
+Action=SetVar
+ActionTimeout=0
+ActionEnabled=1
+ActionCondition=
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+ListOfVarNames=$Control_Left$$Control_Top$$Control_Right$$Control_Bottom$$Control_Width$$Control_Height$$Control_Text$$Control_Class$$Control_Handle$
+ListOfVarValues=$ServerPage_Left$$ServerPage_Top$$ServerPage_Right$$ServerPage_Bottom$$ServerPage_Width$$ServerPage_Height$$ServerPage_Text$$ServerPage_Class$$ServerPage_Handle$
+ListOfVarEvalBefore=111111111
+FailOnException=56
+
+[Action_17]
 ActionName=Find Active CheckBox
 Action=FindControl
 ActionTimeout=1000
@@ -735,8 +1053,11 @@ FullBackgroundImageInResult=1
 MatchByHistogramSettings.MinPercentColorMatch=50
 MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
+EvaluateTextCount=-1
+CropFromScreenshot=0
+ThreadCount=2
 
-[Action_11]
+[Action_18]
 ActionName=Check Activate
 Action=Click
 ActionTimeout=0
@@ -771,6 +1092,7 @@ MouseWheelAmount=0
 DelayAfterMovingToDestination=50
 DelayAfterMouseDown=100
 MoveDuration=-1
+UseClipCursor=0
 
 [Notes]
 Content=refactored actions

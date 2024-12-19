@@ -62,6 +62,7 @@ type
     procedure AddActionButton(AActionNameToSelect: string);
 
     procedure VerifyOIDefaultValues(AActionToDrag: string; var AProperties: TOIInteractionDataArr);
+    procedure VerifyOIDifferentThanDefaultValues(AActionToDrag: string; var AProperties: TOIInteractionDataArr);
     procedure VerifyPermissionsOnSendingFiles;
   public
     constructor Create; override;
@@ -119,6 +120,21 @@ type
     procedure TestVerifyOIDefaultValues_Plugin;
     procedure TestVerifyOIDefaultValues_EditTemplate;
 
+    procedure TestVerifyOIDifferentThanDefaultValues_Click;
+    procedure TestVerifyOIDifferentThanDefaultValues_ExecApp;
+    procedure TestVerifyOIDifferentThanDefaultValues_FindControl;
+    procedure TestVerifyOIDifferentThanDefaultValues_FindSubControl;
+    procedure TestVerifyOIDifferentThanDefaultValues_SetControlText;
+    procedure TestVerifyOIDifferentThanDefaultValues_CallTemplate;
+    procedure TestVerifyOIDifferentThanDefaultValues_Sleep;
+    procedure TestVerifyOIDifferentThanDefaultValues_SetVar;
+    procedure TestVerifyOIDifferentThanDefaultValues_WindowOperations;
+    procedure TestVerifyOIDifferentThanDefaultValues_LoadSetVarFromFile;
+    procedure TestVerifyOIDifferentThanDefaultValues_SaveSetVarToFile;
+    procedure TestVerifyOIDifferentThanDefaultValues_Plugin;
+    procedure TestVerifyOIDifferentThanDefaultValues_EditTemplate;
+
+
     procedure TestVerifyPermissionsOnSendingFiles_SendingFileFromDeniedTestFiles;
     procedure TestVerifyPermissionsOnSendingFiles_ReSendingModifiedFileByEditTemplate;
 
@@ -174,8 +190,8 @@ implementation
 
 
 uses
-  ClickerActionsClient, ClickerUtils, AsyncProcess, Expectations, Forms, IniFiles,
-  ObjectInspectorFrame, ClickerActionProperties, ClickerActionValues;
+  ClickerActionsClient, ClickerUtils, AsyncProcess, Process, Expectations, Forms, IniFiles,
+  ObjectInspectorFrame, ClickerActionProperties, ClickerActionValues, ActionsStuff;
 
 
 var  //using global vars instead of class fields, to avoid recreating the objects on every test
@@ -865,8 +881,6 @@ begin
                                 'Successful'
                                 );
   end;
-
-
 end;
 
 
@@ -1026,6 +1040,250 @@ begin
 end;
 
 
+///////////////////////////////
+
+
+function CreatePyProcess(AExe, AParams, ADir: string): TProcess;
+begin
+  Result := TProcess.Create(nil);
+  Result.Executable := AExe;
+  Result.Parameters.Text := StringReplace(AParams, #32, #13#10, [rfReplaceAll]);
+  Result.CurrentDirectory := ADir;
+  Result.InheritHandles := True;
+  Result.StartupOptions := Result.StartupOptions + [suoUseShowWindow];
+  Result.Options := [poUsePipes, poStderrToOutPut{, poPassInput}]; //- [poNoConsole];
+  Result.Options := Result.Options + [poNoConsole];
+
+  Result.Execute;
+end;
+
+
+
+procedure TTestUI.VerifyOIDifferentThanDefaultValues(AActionToDrag: string; var AProperties: TOIInteractionDataArr);
+var
+  i: Integer;
+  PyProc: TProcess;
+  tk: QWord;
+  PyOut: string;
+begin
+  TestServerAddress := CTestDriverServerAddress_Client;
+
+  PrepareClickerUnderTestToReadItsVars;  //This is server mode. It is suitable to these tests only, because the actions do not have to be executed.
+
+  ExecuteTemplateOnTestDriver(ExtractFilePath(ParamStr(0)) + '..\..\TestDriver\ActionTemplates\PrepareClientActionsWindowForInteraction.clktmpl',
+                              CREParam_FileLocation_ValueDisk);
+  ExecuteTemplateOnTestDriver(ExtractFilePath(ParamStr(0)) + '..\..\TestDriver\ActionTemplates\DeleteAllActionsFromList.clktmpl', //this template depends on caching from above
+                              CREParam_FileLocation_ValueDisk);
+
+  SetVariableOnTestDriverClient('$ActionToDrag$', AActionToDrag);
+  SetVariableOnTestDriverClient('$ExtraCaption2$', ' - ClientUnderTest'); //using $ExtraCaption2$, instead of $ExtraCaption$ in VerifyOIDefaultValuesOnAppUnderTest.clktmpl
+
+  //run python with arg, which executes an action in debugging mode with "different than default" values for all properties
+  PyProc := CreatePyProcess('Python'{.exe'}, '..\..\py\Tests\RunExecute' + AActionToDrag + 'Action.py', ExtractFileDir(ParamStr(0)));
+  try
+    try
+      SetVariableOnTestDriverClient('$PropertyCount$', IntToStr(Length(AProperties)));
+      for i := 0 to Length(AProperties) - 1 do
+      begin
+        SetVariableOnTestDriverClient('$PropertyName$', AProperties[i].BasicPropertyInfo.Name);
+        SetVariableOnTestDriverClient('$PropertyNameToExpand$', AProperties[i].PropertyNamesToExpand);
+        SetVariableOnTestDriverClient('$PropertyValue$', AProperties[i].PropertyValue);
+        SetVariableOnTestDriverClient('$EditorType$', COIEditorTypeStr[AProperties[i].BasicPropertyInfo.EditorType]);
+        SetVariableOnTestDriverClient('$PropertyIndex$', IntToStr(i));
+
+        ExecuteTemplateOnTestDriver(ExtractFilePath(ParamStr(0)) + '..\..\TestDriver\ActionTemplates\VerifyOIDefaultValuesOnAppUnderTest.clktmpl',
+                                    CREParam_FileLocation_ValueDisk,
+                                    '$ValueFound$',
+                                    'Successful'
+                                    );
+      end;
+    finally
+      ExecuteTemplateOnTestDriver('$AppDir$\..\Tests\TestFiles\ClickDebuggingButton.clktmpl', CREParam_FileLocation_ValueDisk);
+
+      PyOut := 'No output';
+
+      tk := GetTickCount64;
+      repeat
+        Application.ProcessMessages;
+        Sleep(1);
+      until not PyProc.Active or (GetTickCount64 - tk > 2000);  //the process may freeze, regardless of timeout
+
+      if (PyProc.Output <> nil) and (PyProc.Output.NumBytesAvailable > 0) then
+      begin
+        SetLength(PyOut, PyProc.Output.NumBytesAvailable);
+        PyProc.Output.Read(PyOut[1], Length(PyOut));
+      end;
+
+      PyProc.Terminate(0);
+      //MessageBoxFunction(PChar(PyOut), 'PyOut', 0);  //ideally, this should end up in a log
+    end;
+  finally
+    try
+      Expect(PyProc.Active).ToBe(False, 'py should close gracefully, not by timeout.');
+    finally
+      PyProc.Free;
+    end;
+  end;
+end;
+
+
+procedure TTestUI.TestVerifyOIDifferentThanDefaultValues_Click;
+var
+  Properties: TOIInteractionDataArr;
+  ClickOptions: TClkClickOptions;
+begin
+  GenerateDifferentThanDefault_Click(ClickOptions);
+  ListOfSerializedPropertiesToOIInteractionData(GetClickActionProperties(ClickOptions), @CClickProperties, CPropIsExp[acClick], CPropCount_Click, Properties);
+
+  VerifyOIDifferentThanDefaultValues(CClkActionStr[acClick], Properties);
+end;
+
+
+procedure TTestUI.TestVerifyOIDifferentThanDefaultValues_ExecApp;
+var
+  Properties: TOIInteractionDataArr;
+  ExecAppOptions: TClkExecAppOptions;
+begin
+  GenerateDifferentThanDefault_ExecApp(ExecAppOptions);
+  ListOfSerializedPropertiesToOIInteractionData(GetExecAppActionProperties(ExecAppOptions), @CExecAppProperties, CPropIsExp[acExecApp], CPropCount_ExecApp, Properties);
+
+  VerifyOIDifferentThanDefaultValues(CClkActionStr[acExecApp], Properties);
+end;
+
+
+procedure TTestUI.TestVerifyOIDifferentThanDefaultValues_FindControl;
+var
+  Properties: TOIInteractionDataArr;
+  FindControlOptions: TClkFindControlOptions;
+begin
+  GenerateDifferentThanDefault_FindControl(FindControlOptions);
+  ListOfSerializedPropertiesToOIInteractionData(GetFindControlActionProperties(FindControlOptions), @CFindControlProperties, CPropIsExp[acFindControl], CPropCount_FindControl, Properties);
+
+  VerifyOIDifferentThanDefaultValues(CClkActionStr[acFindControl], Properties);
+end;
+
+
+procedure TTestUI.TestVerifyOIDifferentThanDefaultValues_FindSubControl;
+var
+  Properties: TOIInteractionDataArr;
+  FindSubControlOptions: TClkFindControlOptions;
+begin
+  GenerateDifferentThanDefault_FindSubControl(FindSubControlOptions);
+  ListOfSerializedPropertiesToOIInteractionData(GetFindControlActionProperties(FindSubControlOptions), @CFindControlProperties, CPropIsExp[acFindSubControl], CPropCount_FindControl, Properties);
+
+  VerifyOIDifferentThanDefaultValues(CClkActionStr[acFindSubControl], Properties);
+end;
+
+
+procedure TTestUI.TestVerifyOIDifferentThanDefaultValues_SetControlText;
+var
+  Properties: TOIInteractionDataArr;
+  SetControlTextOptions: TClkSetTextOptions;
+begin
+  GenerateDifferentThanDefault_SetControlText(SetControlTextOptions);
+  ListOfSerializedPropertiesToOIInteractionData(GetSetControlTextActionProperties(SetControlTextOptions), @CSetTextProperties, CPropIsExp[acSetControlText], CPropCount_SetText, Properties);
+
+  VerifyOIDifferentThanDefaultValues(CClkActionStr[acSetControlText], Properties);
+end;
+
+
+procedure TTestUI.TestVerifyOIDifferentThanDefaultValues_CallTemplate;
+var
+  Properties: TOIInteractionDataArr;
+  CallTemplateOptions: TClkCallTemplateOptions;
+begin
+  GenerateDifferentThanDefault_CallTemplate(CallTemplateOptions);
+  ListOfSerializedPropertiesToOIInteractionData(GetCallTemplateActionProperties(CallTemplateOptions), @CCallTemplateProperties, CPropIsExp[acCallTemplate], CPropCount_CallTemplate, Properties);
+
+  VerifyOIDifferentThanDefaultValues(CClkActionStr[acCallTemplate], Properties);
+end;
+
+
+procedure TTestUI.TestVerifyOIDifferentThanDefaultValues_Sleep;
+var
+  Properties: TOIInteractionDataArr;
+  SleepOptions: TClkSleepOptions;
+begin
+  GenerateDifferentThanDefault_Sleep(SleepOptions);
+  ListOfSerializedPropertiesToOIInteractionData(GetSleepActionProperties(SleepOptions), @CSleepProperties, CPropIsExp[acSleep], CPropCount_Sleep, Properties);
+
+  VerifyOIDifferentThanDefaultValues(CClkActionStr[acSleep], Properties);
+end;
+
+
+procedure TTestUI.TestVerifyOIDifferentThanDefaultValues_SetVar;
+var
+  Properties: TOIInteractionDataArr;
+  SetVarOptions: TClkSetVarOptions;
+begin
+  GenerateDifferentThanDefault_SetVar(SetVarOptions);
+  ListOfSerializedPropertiesToOIInteractionData(GetSetVarActionProperties(SetVarOptions), @CSetVarProperties, CPropIsExp[acSetVar], CPropCount_SetVar, Properties);
+
+  VerifyOIDifferentThanDefaultValues(CClkActionStr[acSetVar], Properties);
+end;
+
+
+procedure TTestUI.TestVerifyOIDifferentThanDefaultValues_WindowOperations;
+var
+  Properties: TOIInteractionDataArr;
+  WindowOperationsOptions: TClkWindowOperationsOptions;
+begin
+  GenerateDifferentThanDefault_WindowOperations(WindowOperationsOptions);
+  ListOfSerializedPropertiesToOIInteractionData(GetWindowOperationsActionProperties(WindowOperationsOptions), @CWindowOperationsProperties, CPropIsExp[acWindowOperations], CPropCount_WindowOperations, Properties);
+
+  VerifyOIDifferentThanDefaultValues(CClkActionStr[acWindowOperations], Properties);
+end;
+
+
+procedure TTestUI.TestVerifyOIDifferentThanDefaultValues_LoadSetVarFromFile;
+var
+  Properties: TOIInteractionDataArr;
+  LoadSetVarFromFileOptions: TClkLoadSetVarFromFileOptions;
+begin
+  GenerateDifferentThanDefault_LoadSetVarFromFile(LoadSetVarFromFileOptions);
+  ListOfSerializedPropertiesToOIInteractionData(GetLoadSetVarFromFileActionProperties(LoadSetVarFromFileOptions), @CLoadSetVarFromFileProperties, CPropIsExp[acLoadSetVarFromFile], CPropCount_LoadSetVarFromFile, Properties);
+
+  VerifyOIDifferentThanDefaultValues(CClkActionStr[acLoadSetVarFromFile], Properties);
+end;
+
+
+procedure TTestUI.TestVerifyOIDifferentThanDefaultValues_SaveSetVarToFile;
+var
+  Properties: TOIInteractionDataArr;
+  SaveSetVarToFileOptions: TClkSaveSetVarToFileOptions;
+begin
+  GenerateDifferentThanDefault_SaveSetVarToFile(SaveSetVarToFileOptions);
+  ListOfSerializedPropertiesToOIInteractionData(GetSaveSetVarToFileActionProperties(SaveSetVarToFileOptions), @CSaveSetVarToFileProperties, CPropIsExp[acSaveSetVarToFile], CPropCount_SaveSetVarToFile, Properties);
+
+  VerifyOIDifferentThanDefaultValues(CClkActionStr[acSaveSetVarToFile], Properties);
+end;
+
+
+procedure TTestUI.TestVerifyOIDifferentThanDefaultValues_Plugin;
+var
+  Properties: TOIInteractionDataArr;
+  PluginOptions: TClkPluginOptions;
+begin
+  GenerateDifferentThanDefault_Plugin(PluginOptions);
+  ListOfSerializedPropertiesToOIInteractionData(GetPluginActionProperties(PluginOptions), @CPluginProperties, CPropIsExp[acPlugin], CPropCount_Plugin, Properties);
+
+  VerifyOIDifferentThanDefaultValues(CClkActionStr[acPlugin], Properties);
+end;
+
+
+procedure TTestUI.TestVerifyOIDifferentThanDefaultValues_EditTemplate;
+var
+  Properties: TOIInteractionDataArr;
+  EditTemplateOptions: TClkEditTemplateOptions;
+begin
+  GenerateDifferentThanDefault_EditTemplate(EditTemplateOptions);
+  ListOfSerializedPropertiesToOIInteractionData(GetEditTemplateActionProperties(EditTemplateOptions), @CEditTemplateProperties, CPropIsExp[acEditTemplate], CPropCount_EditTemplate, Properties);
+
+  VerifyOIDifferentThanDefaultValues(CClkActionStr[acEditTemplate], Properties);
+end;
+
+
+///////////////////////////////
 
 procedure TTestUI.VerifyPermissionsOnSendingFiles;
 var
