@@ -25,6 +25,14 @@ import ctypes
 import ctypes.wintypes  #without importing wintypes, python crashes when calling functions like TestConnectionToServerFunc
 import os
 from ctypes.wintypes import LPCSTR, LPCWSTR, BYTE, BOOLEAN, LONG
+
+ClickerClientAPIDir = os.path.abspath(os.path.dirname(__file__))
+#print('--- ClickerClientAPIDir = ', ClickerClientAPIDir)
+ClickerClientDllPath = os.path.abspath(os.path.join(ClickerClientAPIDir, '../ClickerClient/ClickerClient.dll'))
+#print('--- ClickerClientDllPath = ', ClickerClientDllPath) #There is an extra space before the actual path :(
+
+sys.path.append(ClickerClientAPIDir)
+
 from UIClickerTypes import *
 from UIClickerTypes import TClickOptions
 
@@ -36,7 +44,7 @@ CMaxSharedStringLength = 10 * 1048576; #10MB
 
 class TDllFunctionAddresses:
     def __init__(self):
-        self.DllHandle = ctypes.CDLL("..\\ClickerClient\\ClickerClient.dll")  #CDLL is used for cdecl.   WinDLL is used for stdcall (and uses WINFUNCTYPE).
+        self.DllHandle = ctypes.CDLL(ClickerClientDllPath)  #CDLL is used for cdecl.   WinDLL is used for stdcall (and uses WINFUNCTYPE).
 
 
     def GetInitClickerClient(self):

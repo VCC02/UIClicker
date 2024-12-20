@@ -24,6 +24,12 @@ import sys
 import ctypes
 import ctypes.wintypes  #without importing wintypes, python crashes when calling functions like TestConnectionToServerFunc
 import os
+
+ClickerClientAPIDir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
+ClickerClientAPIDir = os.path.join(ClickerClientAPIDir, 'py')
+#print('--- ClickerClientAPIDir = ', ClickerClientAPIDir)
+sys.path.append(ClickerClientAPIDir)
+
 from ctypes.wintypes import LPCSTR, LPCWSTR, BYTE, BOOLEAN, LONG
 from UIClickerTypes import *
 from UIClickerTypes import TClickOptions
@@ -39,7 +45,7 @@ print("InitClickerClient: ", DllFuncs.InitClickerClient())
 try:
     print("CreateLoggingWindow: ", DllFuncs.CreateLoggingWindow())
 
-    print("SetServerAddress: ", DllFuncs.SetServerAddress('http://127.0.0.1:5444/'))
+    print("SetServerAddress: ", DllFuncs.SetServerAddress('http://127.0.0.1:35444/'))
     print("TestConnectionToServer: ", DllFuncs.TestConnectionToServer())
 
 
