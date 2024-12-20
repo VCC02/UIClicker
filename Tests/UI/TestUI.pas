@@ -1084,6 +1084,8 @@ begin
                               '' //AExpectedResult
                               );
 
+  //These tests do not call DragActionToListOnAppUnderTest.clktmpl. Instead a python script sends a request to create the action.
+
   //run python with arg, which executes an action in debugging mode with "different than default" values for all properties
   PyProc := CreatePyProcess('Python'{.exe'}, '..\..\py\Tests\RunExecute' + AActionToDrag + 'Action.py', ExtractFileDir(ParamStr(0)));
   try
@@ -1122,6 +1124,7 @@ begin
 
       PyProc.Terminate(0);
       //MessageBoxFunction(PChar(PyOut), 'PyOut', 0);  //ideally, this should end up in a log
+      Expect(DWord(Pos('Traceback (most recent call last)', PyOut))).ToBe(0, 'No py error allowed.');
     end;
   finally
     try
@@ -1136,10 +1139,8 @@ end;
 procedure TTestUI.TestVerifyOIDifferentThanDefaultValues_Click;
 var
   Properties: TOIInteractionDataArr;
-  ClickOptions: TClkClickOptions;
 begin
-  GenerateDifferentThanDefault_Click(ClickOptions);
-  ListOfSerializedPropertiesToOIInteractionData(GetClickActionProperties(ClickOptions), @CClickProperties, CPropIsExp[acClick], CPropCount_Click, Properties);
+  ListOfSerializedPropertiesToOIInteractionData(GenerateDifferentThanDefault_ClickStr, @CClickProperties, CPropIsExp[acClick], CPropCount_Click, Properties);
 
   VerifyOIDifferentThanDefaultValues(CClkActionStr[acClick], Properties);
 end;
@@ -1148,10 +1149,8 @@ end;
 procedure TTestUI.TestVerifyOIDifferentThanDefaultValues_ExecApp;
 var
   Properties: TOIInteractionDataArr;
-  ExecAppOptions: TClkExecAppOptions;
 begin
-  GenerateDifferentThanDefault_ExecApp(ExecAppOptions);
-  ListOfSerializedPropertiesToOIInteractionData(GetExecAppActionProperties(ExecAppOptions), @CExecAppProperties, CPropIsExp[acExecApp], CPropCount_ExecApp, Properties);
+  ListOfSerializedPropertiesToOIInteractionData(GenerateDifferentThanDefault_ExecAppStr, @CExecAppProperties, CPropIsExp[acExecApp], CPropCount_ExecApp, Properties);
 
   VerifyOIDifferentThanDefaultValues(CClkActionStr[acExecApp], Properties);
 end;
@@ -1160,10 +1159,8 @@ end;
 procedure TTestUI.TestVerifyOIDifferentThanDefaultValues_FindControl;
 var
   Properties: TOIInteractionDataArr;
-  FindControlOptions: TClkFindControlOptions;
 begin
-  GenerateDifferentThanDefault_FindControl(FindControlOptions);
-  ListOfSerializedPropertiesToOIInteractionData(GetFindControlActionProperties(FindControlOptions), @CFindControlProperties, CPropIsExp[acFindControl], CPropCount_FindControl, Properties);
+  ListOfSerializedPropertiesToOIInteractionData(GenerateDifferentThanDefault_FindControlStr, @CFindControlProperties, CPropIsExp[acFindControl], CPropCount_FindControl, Properties);
 
   VerifyOIDifferentThanDefaultValues(CClkActionStr[acFindControl], Properties);
 end;
@@ -1172,10 +1169,8 @@ end;
 procedure TTestUI.TestVerifyOIDifferentThanDefaultValues_FindSubControl;
 var
   Properties: TOIInteractionDataArr;
-  FindSubControlOptions: TClkFindControlOptions;
 begin
-  GenerateDifferentThanDefault_FindSubControl(FindSubControlOptions);
-  ListOfSerializedPropertiesToOIInteractionData(GetFindControlActionProperties(FindSubControlOptions), @CFindControlProperties, CPropIsExp[acFindSubControl], CPropCount_FindControl, Properties);
+  ListOfSerializedPropertiesToOIInteractionData(GenerateDifferentThanDefault_FindControlStr, @CFindControlProperties, CPropIsExp[acFindSubControl], CPropCount_FindControl, Properties);
 
   VerifyOIDifferentThanDefaultValues(CClkActionStr[acFindSubControl], Properties);
 end;
@@ -1198,10 +1193,8 @@ end;
 procedure TTestUI.TestVerifyOIDifferentThanDefaultValues_SetControlText;
 var
   Properties: TOIInteractionDataArr;
-  SetControlTextOptions: TClkSetTextOptions;
 begin
-  GenerateDifferentThanDefault_SetControlText(SetControlTextOptions);
-  ListOfSerializedPropertiesToOIInteractionData(GetSetControlTextActionProperties(SetControlTextOptions), @CSetTextProperties, CPropIsExp[acSetControlText], CPropCount_SetText, Properties);
+  ListOfSerializedPropertiesToOIInteractionData(GenerateDifferentThanDefault_SetControlTextStr, @CSetTextProperties, CPropIsExp[acSetControlText], CPropCount_SetText, Properties);
 
   VerifyOIDifferentThanDefaultValues(CClkActionStr[acSetControlText], Properties);
 end;
@@ -1210,10 +1203,8 @@ end;
 procedure TTestUI.TestVerifyOIDifferentThanDefaultValues_CallTemplate;
 var
   Properties: TOIInteractionDataArr;
-  CallTemplateOptions: TClkCallTemplateOptions;
 begin
-  GenerateDifferentThanDefault_CallTemplate(CallTemplateOptions);
-  ListOfSerializedPropertiesToOIInteractionData(GetCallTemplateActionProperties(CallTemplateOptions), @CCallTemplateProperties, CPropIsExp[acCallTemplate], CPropCount_CallTemplate, Properties);
+  ListOfSerializedPropertiesToOIInteractionData(GenerateDifferentThanDefault_CallTemplateStr, @CCallTemplateProperties, CPropIsExp[acCallTemplate], CPropCount_CallTemplate, Properties);
 
   VerifyOIDifferentThanDefaultValues(CClkActionStr[acCallTemplate], Properties);
 end;
@@ -1222,10 +1213,8 @@ end;
 procedure TTestUI.TestVerifyOIDifferentThanDefaultValues_Sleep;
 var
   Properties: TOIInteractionDataArr;
-  SleepOptions: TClkSleepOptions;
 begin
-  GenerateDifferentThanDefault_Sleep(SleepOptions);
-  ListOfSerializedPropertiesToOIInteractionData(GetSleepActionProperties(SleepOptions), @CSleepProperties, CPropIsExp[acSleep], CPropCount_Sleep, Properties);
+  ListOfSerializedPropertiesToOIInteractionData(GenerateDifferentThanDefault_SleepStr, @CSleepProperties, CPropIsExp[acSleep], CPropCount_Sleep, Properties);
 
   VerifyOIDifferentThanDefaultValues(CClkActionStr[acSleep], Properties);
 end;
@@ -1234,10 +1223,8 @@ end;
 procedure TTestUI.TestVerifyOIDifferentThanDefaultValues_SetVar;
 var
   Properties: TOIInteractionDataArr;
-  SetVarOptions: TClkSetVarOptions;
 begin
-  GenerateDifferentThanDefault_SetVar(SetVarOptions);
-  ListOfSerializedPropertiesToOIInteractionData(GetSetVarActionProperties(SetVarOptions), @CSetVarProperties, CPropIsExp[acSetVar], CPropCount_SetVar, Properties);
+  ListOfSerializedPropertiesToOIInteractionData(GenerateDifferentThanDefault_SetVarStr, @CSetVarProperties, CPropIsExp[acSetVar], CPropCount_SetVar, Properties);
 
   VerifyOIDifferentThanDefaultValues(CClkActionStr[acSetVar], Properties);
 end;
@@ -1246,10 +1233,8 @@ end;
 procedure TTestUI.TestVerifyOIDifferentThanDefaultValues_WindowOperations;
 var
   Properties: TOIInteractionDataArr;
-  WindowOperationsOptions: TClkWindowOperationsOptions;
 begin
-  GenerateDifferentThanDefault_WindowOperations(WindowOperationsOptions);
-  ListOfSerializedPropertiesToOIInteractionData(GetWindowOperationsActionProperties(WindowOperationsOptions), @CWindowOperationsProperties, CPropIsExp[acWindowOperations], CPropCount_WindowOperations, Properties);
+  ListOfSerializedPropertiesToOIInteractionData(GenerateDifferentThanDefault_WindowOperationsStr, @CWindowOperationsProperties, CPropIsExp[acWindowOperations], CPropCount_WindowOperations, Properties);
 
   VerifyOIDifferentThanDefaultValues(CClkActionStr[acWindowOperations], Properties);
 end;
@@ -1258,10 +1243,8 @@ end;
 procedure TTestUI.TestVerifyOIDifferentThanDefaultValues_LoadSetVarFromFile;
 var
   Properties: TOIInteractionDataArr;
-  LoadSetVarFromFileOptions: TClkLoadSetVarFromFileOptions;
 begin
-  GenerateDifferentThanDefault_LoadSetVarFromFile(LoadSetVarFromFileOptions);
-  ListOfSerializedPropertiesToOIInteractionData(GetLoadSetVarFromFileActionProperties(LoadSetVarFromFileOptions), @CLoadSetVarFromFileProperties, CPropIsExp[acLoadSetVarFromFile], CPropCount_LoadSetVarFromFile, Properties);
+  ListOfSerializedPropertiesToOIInteractionData(GenerateDifferentThanDefault_LoadSetVarFromFileStr, @CLoadSetVarFromFileProperties, CPropIsExp[acLoadSetVarFromFile], CPropCount_LoadSetVarFromFile, Properties);
 
   VerifyOIDifferentThanDefaultValues(CClkActionStr[acLoadSetVarFromFile], Properties);
 end;
@@ -1270,10 +1253,8 @@ end;
 procedure TTestUI.TestVerifyOIDifferentThanDefaultValues_SaveSetVarToFile;
 var
   Properties: TOIInteractionDataArr;
-  SaveSetVarToFileOptions: TClkSaveSetVarToFileOptions;
 begin
-  GenerateDifferentThanDefault_SaveSetVarToFile(SaveSetVarToFileOptions);
-  ListOfSerializedPropertiesToOIInteractionData(GetSaveSetVarToFileActionProperties(SaveSetVarToFileOptions), @CSaveSetVarToFileProperties, CPropIsExp[acSaveSetVarToFile], CPropCount_SaveSetVarToFile, Properties);
+  ListOfSerializedPropertiesToOIInteractionData(GenerateDifferentThanDefault_SaveSetVarToFileStr, @CSaveSetVarToFileProperties, CPropIsExp[acSaveSetVarToFile], CPropCount_SaveSetVarToFile, Properties);
 
   VerifyOIDifferentThanDefaultValues(CClkActionStr[acSaveSetVarToFile], Properties);
 end;
@@ -1282,10 +1263,8 @@ end;
 procedure TTestUI.TestVerifyOIDifferentThanDefaultValues_Plugin;
 var
   Properties: TOIInteractionDataArr;
-  PluginOptions: TClkPluginOptions;
 begin
-  GenerateDifferentThanDefault_Plugin(PluginOptions);
-  ListOfSerializedPropertiesToOIInteractionData(GetPluginActionProperties(PluginOptions), @CPluginProperties, CPropIsExp[acPlugin], CPropCount_Plugin, Properties);
+  ListOfSerializedPropertiesToOIInteractionData(GenerateDifferentThanDefault_PluginStr, @CPluginProperties, CPropIsExp[acPlugin], CPropCount_Plugin, Properties);
 
   VerifyOIDifferentThanDefaultValues(CClkActionStr[acPlugin], Properties);
 end;
@@ -1294,10 +1273,8 @@ end;
 procedure TTestUI.TestVerifyOIDifferentThanDefaultValues_EditTemplate;
 var
   Properties: TOIInteractionDataArr;
-  EditTemplateOptions: TClkEditTemplateOptions;
 begin
-  GenerateDifferentThanDefault_EditTemplate(EditTemplateOptions);
-  ListOfSerializedPropertiesToOIInteractionData(GetEditTemplateActionProperties(EditTemplateOptions), @CEditTemplateProperties, CPropIsExp[acEditTemplate], CPropCount_EditTemplate, Properties);
+  ListOfSerializedPropertiesToOIInteractionData(GenerateDifferentThanDefault_EditTemplateStr, @CEditTemplateProperties, CPropIsExp[acEditTemplate], CPropCount_EditTemplate, Properties);
 
   VerifyOIDifferentThanDefaultValues(CClkActionStr[acEditTemplate], Properties);
 end;

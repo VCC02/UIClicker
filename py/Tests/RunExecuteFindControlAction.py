@@ -112,7 +112,7 @@ try:
     FindControlOptions.ThreadCount = "30"
 
 
-    print("ExecuteFindControlAction: ", DllFuncs.ExecuteFindControlAction("Another FindControl", 100, ExecuteFindControlActionOptions, True, 'Mem'))
+    print("ExecuteFindControlAction: ", DllFuncs.ExecuteFindControlAction("Another FindControl", 100, FindControlOptions, True, 'Mem'))
 finally:
     print("DestroyLoggingWindow: ", DllFuncs.DestroyLoggingWindow())
     print("DoneClickerClient", DllFuncs.DoneClickerClient())

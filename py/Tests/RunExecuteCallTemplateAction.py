@@ -49,20 +49,20 @@ try:
     print("TestConnectionToServer: ", DllFuncs.TestConnectionToServer())
 
 
-    SetCallTemplateOptions = GetDefaultCallTemplateOptions()
-    SetCallTemplateOptions.TemplateFileName = 'NonExistentTemplate'
-    SetCallTemplateOptions.ListOfCustomVarsAndValues = '$NewVar$=3'
-    SetCallTemplateOptions.EvaluateBeforeCalling = True
-    SetCallTemplateOptions.CallOnlyIfCondition = False //still required, to prevent a pop-up, until the feature is removed
-    SetCallTemplateOptions.CallTemplateLoop.Enabled = True
-    SetCallTemplateOptions.CallTemplateLoop.Counter = '$cnt$'
-    SetCallTemplateOptions.CallTemplateLoop.InitValue = '78'
-    SetCallTemplateOptions.CallTemplateLoop.EndValue = '79'
-    SetCallTemplateOptions.CallTemplateLoop.Direction = ldAuto
-    SetCallTemplateOptions.CallTemplateLoop.BreakCondition = '$a$==$b$'
-    SetCallTemplateOptions.CallTemplateLoop.EvalBreakPosition = TLoopEvalBreakPosition.lebpAfterContent
+    CallTemplateOptions = GetDefaultCallTemplateOptions()
+    CallTemplateOptions.TemplateFileName = 'NonExistentTemplate'
+    CallTemplateOptions.ListOfCustomVarsAndValues = '$NewVar$=3'
+    CallTemplateOptions.EvaluateBeforeCalling = True
+    CallTemplateOptions.CallOnlyIfCondition = False #still required, to prevent a pop-up, until the feature is removed
+    CallTemplateOptions.CallTemplateLoop.Enabled = True
+    CallTemplateOptions.CallTemplateLoop.Counter = '$cnt$'
+    CallTemplateOptions.CallTemplateLoop.InitValue = '78'
+    CallTemplateOptions.CallTemplateLoop.EndValue = '79'
+    CallTemplateOptions.CallTemplateLoop.Direction = TLoopDirection.ldAuto
+    CallTemplateOptions.CallTemplateLoop.BreakCondition = '$a$==$b$'
+    CallTemplateOptions.CallTemplateLoop.EvalBreakPosition = TLoopEvalBreakPosition.lebpAfterContent
 
-    print("ExecuteCallTemplateAction: ", DllFuncs.ExecuteCallTemplateAction("Another CallTemplate", 100, CallTemplateOptions, True, 'Mem'))
+    print("ExecuteCallTemplateAction: ", DllFuncs.ExecuteCallTemplateAction("Another CallTemplate", 100, CallTemplateOptions, True, 'Disk'))
 finally:
     print("DestroyLoggingWindow: ", DllFuncs.DestroyLoggingWindow())
     print("DoneClickerClient", DllFuncs.DoneClickerClient())

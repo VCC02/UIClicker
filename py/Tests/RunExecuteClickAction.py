@@ -66,7 +66,7 @@ try:
     ClickOptions.MoveWithoutClick = True
     ClickOptions.ClickType = CClickType_Wheel
     ClickOptions.XClickPointReferenceDest = TXClickPointReference.xrefWidth
-    ClickOptions.YClickPointReferenceDest = TXClickPointReference.yrefHeight
+    ClickOptions.YClickPointReferenceDest = TYClickPointReference.yrefHeight
     ClickOptions.XClickPointVarDest = 'ThirdVar'
     ClickOptions.YClickPointVarDest = 'FourthVar'
     ClickOptions.XOffsetDest = 'ThirdOffset'

@@ -54,7 +54,7 @@ try:
     PluginOptions.ListOfPropertiesAndValues = 'NoPropertiesAndValues'
 
 
-    print("ExecutePluginAction: ", DllFuncs.ExecutePluginAction("Another Plugin", 100, PluginOptions, True))
+    print("ExecutePluginAction: ", DllFuncs.ExecutePluginAction("Another Plugin", 100, PluginOptions, True, True))
 finally:
     print("DestroyLoggingWindow: ", DllFuncs.DestroyLoggingWindow())
     print("DoneClickerClient", DllFuncs.DoneClickerClient())

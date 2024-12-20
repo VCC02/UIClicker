@@ -50,7 +50,7 @@ try:
 
 
     WindowOperationsOptions = GetDefaultWindowOperationsOptions()
-    WindowOperationsOptions.Operation = TWindowOperationsOptions.woMoveResize
+    WindowOperationsOptions.Operation = TWindowOperation.woMoveResize
     WindowOperationsOptions.NewX = '$Control_Left$'
     WindowOperationsOptions.NewY = '$Control_Top$'
     WindowOperationsOptions.NewWidth = '$Control_Width$'

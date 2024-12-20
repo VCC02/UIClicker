@@ -213,6 +213,21 @@ procedure GenerateDifferentThanDefault_SaveSetVarToFile(var ASaveSetVarToFileOpt
 procedure GenerateDifferentThanDefault_Plugin(var APluginOptions: TClkPluginOptions);
 procedure GenerateDifferentThanDefault_EditTemplate(var AEditTemplateOptions: TClkEditTemplateOptions);
 
+
+function GenerateDifferentThanDefault_ClickStr: string;
+function GenerateDifferentThanDefault_ExecAppStr: string;
+function GenerateDifferentThanDefault_FindControlStr: string;
+function GenerateDifferentThanDefault_SetControlTextStr: string;
+function GenerateDifferentThanDefault_CallTemplateStr: string;
+function GenerateDifferentThanDefault_SleepStr: string;
+function GenerateDifferentThanDefault_SetVarStr: string;
+function GenerateDifferentThanDefault_WindowOperationsStr: string;
+function GenerateDifferentThanDefault_LoadSetVarFromFileStr: string;
+function GenerateDifferentThanDefault_SaveSetVarToFileStr: string;
+function GenerateDifferentThanDefault_PluginStr: string;
+function GenerateDifferentThanDefault_EditTemplateStr: string;
+
+
 implementation
 
 
@@ -1455,6 +1470,38 @@ begin
 end;
 
 
+function GenerateDifferentThanDefault_ClickStr: string;
+begin
+  Result := 'XClickPointReference' + '=' + 'xrefVar' + '&' +
+            'YClickPointReference' + '=' + 'yrefAbsolute' + '&' +
+            'XClickPointVar' + '=' + 'FirstVar' + '&' +
+            'YClickPointVar' + '=' + 'SecondVar' + '&' +
+            'XOffset' + '=' + 'FirstOffset' + '&' +
+            'YOffset' + '=' + 'SecondOffset' + '&' +
+            'MouseButton' + '=' + 'mbExtra1' + '&' +
+            'ClickWithCtrl' + '=' + 'True' + '&' +
+            'ClickWithAlt' + '=' + 'True' + '&' +
+            'ClickWithShift' + '=' + 'True' + '&' +
+            'ClickWithDoubleClick' + '=' + 'True' + '&' +
+            'Count' + '=' + '10' + '&' +
+            'LeaveMouse' + '=' + 'True' + '&' +
+            'MoveWithoutClick' + '=' + 'True' + '&' +
+            'ClickType' + '=' + 'Wheel' + '&' +
+            'XClickPointReferenceDest' + '=' + 'xrefWidth' + '&' +
+            'YClickPointReferenceDest' + '=' + 'yrefHeight' + '&' +
+            'XClickPointVarDest' + '=' + 'ThirdVar' + '&' +
+            'YClickPointVarDest' + '=' + 'FourthVar' + '&' +
+            'XOffsetDest' + '=' + 'ThirdOffset' + '&' +
+            'YOffsetDest' + '=' + 'FourthOffset' + '&' +
+            'MouseWheelType' + '=' + 'mwtHoriz' + '&' +
+            'MouseWheelAmount' + '=' + '30' + '&' +
+            'DelayAfterMovingToDestination' + '=' + '40' + '&' +
+            'DelayAfterMouseDown' + '=' + '50' + '&' +
+            'MoveDuration' + '=' + '60' + '&' +
+            'UseClipCursor' + '=' + 'True';
+end;
+
+
 procedure GenerateDifferentThanDefault_ExecApp(var AExecAppOptions: TClkExecAppOptions);
 begin
   GetDefaultPropertyValues_ExecApp(AExecAppOptions);
@@ -1466,6 +1513,18 @@ begin
   AExecAppOptions.CurrentDir := 'TheDir';
   AExecAppOptions.UseInheritHandles := uihYes;
   AExecAppOptions.NoConsole := True;
+end;
+
+
+function GenerateDifferentThanDefault_ExecAppStr: string;
+begin
+  Result := 'PathToApp' + '=' + 'TheNonExistentApp' + '&' +
+            'ListOfParams' + '=' + 'NewParams' + '&' +
+            'WaitForApp' + '=' + 'True' + '&' +
+            'AppStdIn' + '=' + 'MyStdIn' + '&' +
+            'CurrentDir' + '=' + 'TheDir' + '&' +
+            'UseInheritHandles' + '=' + 'uihYes' + '&' +
+            'NoConsole' + '=' + 'True';
 end;
 
 
@@ -1527,6 +1586,68 @@ begin
 end;
 
 
+function GenerateDifferentThanDefault_FindControlStr: string;
+begin
+  Result := 'MatchCriteria.WillMatchText' + '=' + 'False' + '&' +
+            'MatchCriteria.WillMatchClassName' + '=' + 'False' + '&' +
+            'MatchCriteria.WillMatchBitmapText' + '=' + 'True' + '&' +
+            'MatchCriteria.WillMatchBitmapFiles' + '=' + 'True' + '&' +
+            'MatchCriteria.WillMatchPrimitiveFiles' + '=' + 'True' + '&' +
+            'MatchCriteria.SearchForControlMode' + '=' + 'sfcmEnumWindows' + '&' +
+            'AllowToFail' + '=' + 'True' + '&' +
+
+            'MatchText' + '=' + 'some text' + '&' +
+            'MatchClassName' + '=' + 'some class' + '&' +
+            'MatchTextSeparator' + '=' + 'txt sep' + '&' +
+            'MatchClassNameSeparator' + '=' + 'class sep' + '&' +
+
+            'MatchBitmapText.Count' + '=' + '2' + '&' +
+            //GetMatchBitmapTextContent(AFindControlOptions.MatchBitmapText) +
+            'MatchBitmapFiles' + '=' + 'bmp' + '&' +
+            'MatchBitmapAlgorithm' + '=' + 'mbaRawHistogramZones' + '&' +
+            'MatchBitmapAlgorithmSettings.XMultipleOf' + '=' + '3' + '&' +
+            'MatchBitmapAlgorithmSettings.YMultipleOf' + '=' + '4' + '&' +
+            'MatchBitmapAlgorithmSettings.XOffset' + '=' + '5' + '&' +
+            'MatchBitmapAlgorithmSettings.YOffset' + '=' + '6' + '&' +
+            'InitialRectangle.Left' + '=' + '$Control_L$' + '&' +
+            'InitialRectangle.Top' + '=' + '$Control_T$' + '&' +
+            'InitialRectangle.Right' + '=' + '$Control_R$' + '&' +
+            'InitialRectangle.Bottom' + '=' + '$Control_B$' + '&' +
+            'InitialRectangle.LeftOffset' + '=' + '30' + '&' +
+            'InitialRectangle.TopOffset' + '=' + '40' + '&' +
+            'InitialRectangle.RightOffset' + '=' + '50' + '&' +
+            'InitialRectangle.BottomOffset' + '=' + '60' + '&' +
+            'UseWholeScreen' + '=' + 'False' + '&' +
+            'ColorError' + '=' + '70' + '&' +
+            'AllowedColorErrorCount' + '=' + '80' + '&' +
+            'WaitForControlToGoAway' + '=' + 'True' + '&' +
+            'StartSearchingWithCachedControl' + '=' + 'True' + '&' +
+            'CachedControlLeft' + '=' + '90' + '&' +
+            'CachedControlTop' + '=' + '100' + '&' +
+            'MatchPrimitiveFiles' + '=' +'pmtv' + '&' +
+            'GetAllControls' + '=' + 'True' + '&' +
+            'UseFastSearch' + '=' + 'False' + '&' +
+            'FastSearchAllowedColorErrorCount' + '=' + '700' + '&' +
+            'IgnoredColors' + '=' + '800' + '&' +
+            'SleepySearch' + '=' + 'True' + '&' +
+            'StopSearchOnMismatch' + '=' + 'True' + '&' +
+            'ImageSource' + '=' + 'isFile' + '&' +
+            'SourceFileName' + '=' + 'Fnm' + '&' +
+            'ImageSourceFileNameLocation' + '=' + 'isflDisk' + '&' +
+            'PrecisionTimeout' + '=' + 'True' + '&' +
+            'FullBackgroundImageInResult' + '=' + 'False' + '&' +
+
+            'MatchByHistogramSettings.MinPercentColorMatch' + '=' + '250' + '&' +
+            'MatchByHistogramSettings.MostSignificantColorCountInSubBmp' + '=' + '310' + '&' +
+            'MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp' + '=' + '415' + '&' +
+
+            'EvaluateTextCount' + '=' + '-17' + '&' +
+            'CropFromScreenshot' + '=' + 'True' + '&' +
+            'ThreadCount' + '=' + '30'
+            ;
+end;
+
+
 procedure GenerateDifferentThanDefault_FindSubControl(var AFindControlOptions: TClkFindControlOptions);
 begin
   GenerateDifferentThanDefault_FindControl(AFindControlOptions);
@@ -1583,6 +1704,15 @@ begin
 end;
 
 
+function GenerateDifferentThanDefault_SetControlTextStr: string;
+begin
+  Result := 'Text' + '=' + 'some text' + '&' +
+            'ControlType' + '=' + 'stComboBox' + '&' +
+            'DelayBetweenKeyStrokes' + '=' + '300' + '&' +
+            'Count' + '=' + '7';
+end;
+
+
 procedure GenerateDifferentThanDefault_CallTemplate(var ACallTemplateOptions: TClkCallTemplateOptions);
 begin
   GetDefaultPropertyValues_CallTemplate(ACallTemplateOptions);
@@ -1601,10 +1731,32 @@ begin
 end;
 
 
+function GenerateDifferentThanDefault_CallTemplateStr: string;
+begin
+  Result := 'TemplateFileName' + '=' + 'NonExistentTemplate' + '&' +
+            'ListOfCustomVarsAndValues' + '=' + '$NewVar$=3' + '&' +
+            'EvaluateBeforeCalling' + '=' + 'True' + '&' +
+
+            'Loop.Enabled' + '=' + 'True' + '&' +
+            'Loop.Counter' + '=' + '$cnt$' + '&' +
+            'Loop.InitValue' + '=' + '78' + '&' +
+            'Loop.EndValue' + '=' + '79' + '&' +
+            'Loop.Direction' + '=' + 'ldAuto' + '&' +
+            'Loop.BreakCondition' + '=' + '$a$==$b$' + '&' +
+            'Loop.EvalBreakPosition' + '=' + 'lebpAfterContent';
+end;
+
+
 procedure GenerateDifferentThanDefault_Sleep(var ASleepOptions: TClkSleepOptions);
 begin
   GetDefaultPropertyValues_Sleep(ASleepOptions);
   ASleepOptions.Value := '3';
+end;
+
+
+function GenerateDifferentThanDefault_SleepStr: string;
+begin
+  Result := 'Value' + '=' + '3';
 end;
 
 
@@ -1616,6 +1768,15 @@ begin
   ASetVarOptions.ListOfVarValues := 'MyValue';
   ASetVarOptions.ListOfVarEvalBefore := '1';
   ASetVarOptions.FailOnException := True;
+end;
+
+
+function GenerateDifferentThanDefault_SetVarStr: string;
+begin
+  Result := 'ListOfVarNames' + '=' + '$MyVar$' + '&' +
+            'ListOfVarValues' + '=' + 'MyValue' + '&' +
+            'ListOfVarEvalBefore' + '=' + '1' + '&' +
+            'FailOnException' + '=' + 'True';
 end;
 
 
@@ -1633,12 +1794,31 @@ begin
 end;
 
 
+function GenerateDifferentThanDefault_WindowOperationsStr: string;
+begin
+  Result := 'Operation' + '=' + 'woMoveResize' + '&' +
+            'NewX' + '=' + '$Control_Left$' + '&' +
+            'NewY' + '=' + '$Control_Top$' + '&' +
+            'NewWidth' + '=' + '$Control_Width$' + '&' +
+            'NewHeight' + '=' + '$Control_Height$' + '&' +
+            'NewPositionEnabled' + '=' + 'True' + '&' +
+            'NewSizeEnabled' + '=' + 'True';
+end;
+
+
 procedure GenerateDifferentThanDefault_LoadSetVarFromFile(var ALoadSetVarFromFileOptions: TClkLoadSetVarFromFileOptions);
 begin
   GetDefaultPropertyValues_LoadSetVarFromFile(ALoadSetVarFromFileOptions);
 
   ALoadSetVarFromFileOptions.FileName := 'UnknownLoadedFile';
   ALoadSetVarFromFileOptions.SetVarActionName := '$SetVarNewName$';
+end;
+
+
+function GenerateDifferentThanDefault_LoadSetVarFromFileStr: string;
+begin
+  Result := 'FileName' + '=' + 'UnknownLoadedFile' + '&' +
+            'SetVarActionName' + '=' + '$SetVarNewName$';
 end;
 
 
@@ -1651,6 +1831,13 @@ begin
 end;
 
 
+function GenerateDifferentThanDefault_SaveSetVarToFileStr: string;
+begin
+  Result := 'FileName' + '=' + 'UnknownSavedFile' + '&' +
+            'SetVarActionName' + '=' + '$SetVarOldName$';
+end;
+
+
 procedure GenerateDifferentThanDefault_Plugin(var APluginOptions: TClkPluginOptions);
 begin
   GetDefaultPropertyValues_Plugin(APluginOptions);
@@ -1660,6 +1847,13 @@ begin
   APluginOptions.ListOfPropertiesAndTypes := '';
   APluginOptions.CachedCount := 0;
   APluginOptions.ListOfInitValues := '3';
+end;
+
+
+function GenerateDifferentThanDefault_PluginStr: string;
+begin
+  Result := 'FileName' + '=' + 'PluginFnm' + '&' +
+            'ListOfPropertiesAndValues' + '=' + 'NoPropertiesAndValues';
 end;
 
 
@@ -1687,6 +1881,24 @@ begin
   AEditTemplateOptions.ListOfEditedProperties := GetExecAppActionProperties(ExecAppOptions);
 end;
 
+
+function GenerateDifferentThanDefault_EditTemplateStr: string;
+begin
+  Result := 'Operation' + '=' + 'etoDeleteAction' + '&' +
+            'WhichTemplate' + '=' + 'etwtSelf' + '&' +
+            'TemplateFileName' + '=' + 'NoFnm' + '&';
+                                                      //full string: 'PathToApp=ListOfParams=WaitForApp=0AppStdIn=CurrentDir=UseInheritHandles=0NoConsole=0'
+  Result := Result + 'ListOfEditedProperties' + '=' + 'PathToApp=' + '&'; //ListOfEditedProperties stores a #18 separated list of key=value strings
+
+  Result := Result +
+            'ListOfEnabledProperties' + '=' + 'Ena' + '&' +
+            'EditedActionName' + '=' + 'Edt' + '&' +
+            'EditedActionType' + '=' + 'ExecApp' + '&' +
+            'EditedActionCondition' + '=' + '$3$==$4$' + '&' +
+            'EditedActionTimeout' + '=' + '2000' + '&' +
+            'NewActionName' + '=' + 'Generic' + '&' +
+            'ShouldSaveTemplate' + '=' + 'False';
+end;
 
 
 end.

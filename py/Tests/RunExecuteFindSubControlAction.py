@@ -122,7 +122,7 @@ try:
     FindControlOptions.MatchBitmapText = PMatchBitmapTextRec(TempMatchBitmapTextRec)
 
 
-    print("ExecuteFindSubControlAction: ", DllFuncs.ExecuteFindSubControlAction("Another FindSubControl", 100, ExecuteFindControlActionOptions, True, 'Mem'))
+    print("ExecuteFindSubControlAction: ", DllFuncs.ExecuteFindSubControlAction("Another FindSubControl", 100, FindControlOptions, True, 'Mem'))
 finally:
     print("DestroyLoggingWindow: ", DllFuncs.DestroyLoggingWindow())
     print("DoneClickerClient", DllFuncs.DoneClickerClient())

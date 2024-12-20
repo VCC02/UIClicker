@@ -96,6 +96,7 @@ class TSearchForControlMode: #(Enum):
 class TMatchBitmapAlgorithm: #(Enum):
     mbaBruteForce = 0
     mbaXYMultipleAndOffsets = 1
+    mbaRawHistogramZones = 2
     
 #TFontQuality from Graphics.pp
 class TFontQuality: #(Enum):
@@ -126,6 +127,7 @@ class TWindowOperation: #(Enum):
     woBringToFront = 0
     woMoveResize = 1
     woClose = 2
+    woFitIntoView = 3
 
 
 class TLoopDirection:  #
