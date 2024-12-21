@@ -118,7 +118,7 @@ type
     CropRight: PWideChar;
     CropBottom: PWideChar;
     IgnoreBackgroundColor: Boolean;
-  end;
+  end;                                  //see a similar structure below if adding new fields
 
   PClkFindControlMatchBitmapTextAPI = ^TClkFindControlMatchBitmapTextAPI;
 
@@ -134,6 +134,29 @@ type
   end;
 
   PMatchBitmapTextRecAPI = ^TMatchBitmapTextRecAPI;
+
+
+  TClkFindControlMatchBitmapTextWideString = record
+    ForegroundColor: WideString;
+    BackgroundColor: WideString;
+    FontName: WideString;
+    FontSize: Integer;
+    Bold: Boolean;
+    Italic: Boolean;
+    Underline: Boolean;
+    StrikeOut: Boolean;
+    FontQuality: TFontQuality;
+    FontQualityUsesReplacement: Boolean;
+    FontQualityReplacement: WideString;
+    ProfileName: WideString;
+    CropLeft: WideString;
+    CropTop: WideString;
+    CropRight: WideString;
+    CropBottom: WideString;
+    IgnoreBackgroundColor: Boolean;
+  end;
+
+  TClkFindControlMatchBitmapTextWideStringArr = array of TClkFindControlMatchBitmapTextWideString;
 
 
   TClkFindControlOptionsAPI = record
@@ -289,7 +312,7 @@ procedure GetSaveSetVarToFileOptionsFromAPI(ASaveSetVarToFileOptions: PClkSaveSe
 procedure GetPluginOptionsFromAPI(APluginOptions: PClkPluginOptionsAPI; var ADestClkAction: TClkActionRec);
 procedure GetEditTemplateOptionsFromAPI(AEditTemplateOptions: PClkEditTemplateOptionsAPI; var ADestClkAction: TClkActionRec);
 
-procedure SetMatchBitmapTextToAPI(var AMatchBitmapText: TClkFindControlMatchBitmapText; var ADestMatchBitmapText: TClkFindControlMatchBitmapTextAPI);
+procedure SetMatchBitmapTextToAPI(var AMatchBitmapText: TClkFindControlMatchBitmapText; var ADestMatchBitmapText: TClkFindControlMatchBitmapTextAPI; var ATempDestWideStr: TClkFindControlMatchBitmapTextWideString);
 
 procedure SetClickOptionsToAPI(var AClickOptions: TClkClickOptions; var ADestClickOptions: TClkClickOptionsAPI);
 procedure SetExecAppOptionsToAPI(var AExecAppOptions: TClkExecAppOptions; var ADestExecAppOptions: TClkExecAppOptionsAPI);
@@ -604,11 +627,19 @@ end;
 //
 
 
-procedure SetMatchBitmapTextToAPI(var AMatchBitmapText: TClkFindControlMatchBitmapText; var ADestMatchBitmapText: TClkFindControlMatchBitmapTextAPI);
+procedure SetMatchBitmapTextToAPI(var AMatchBitmapText: TClkFindControlMatchBitmapText; var ADestMatchBitmapText: TClkFindControlMatchBitmapTextAPI; var ATempDestWideStr: TClkFindControlMatchBitmapTextWideString);
 begin
-  ADestMatchBitmapText.ForegroundColor := @WideString(AMatchBitmapText.ForegroundColor)[1];
-  ADestMatchBitmapText.BackgroundColor := @WideString(AMatchBitmapText.BackgroundColor)[1];
-  ADestMatchBitmapText.FontName := @WideString(AMatchBitmapText.FontName)[1];
+  //ADestMatchBitmapText.ForegroundColor := @WideString(AMatchBitmapText.ForegroundColor)[1];
+  //ADestMatchBitmapText.BackgroundColor := @WideString(AMatchBitmapText.BackgroundColor)[1];
+  //ADestMatchBitmapText.FontName := @WideString(AMatchBitmapText.FontName)[1];
+
+  ATempDestWideStr.ForegroundColor := WideString(AMatchBitmapText.ForegroundColor);    //using ATempDestWideStr, because the strings must remain in memory (at least for a while)
+  ATempDestWideStr.BackgroundColor := WideString(AMatchBitmapText.BackgroundColor);
+  ATempDestWideStr.FontName := WideString(AMatchBitmapText.FontName);
+
+  ADestMatchBitmapText.ForegroundColor := @(ATempDestWideStr.ForegroundColor)[1];
+  ADestMatchBitmapText.BackgroundColor := @(ATempDestWideStr.BackgroundColor)[1];
+  ADestMatchBitmapText.FontName := @(ATempDestWideStr.FontName)[1];
 
   ADestMatchBitmapText.FontSize := AMatchBitmapText.FontSize;
   ADestMatchBitmapText.Bold := AMatchBitmapText.Bold;
@@ -618,12 +649,26 @@ begin
   ADestMatchBitmapText.FontQuality := Byte(AMatchBitmapText.FontQuality);
   ADestMatchBitmapText.FontQualityUsesReplacement := AMatchBitmapText.FontQualityUsesReplacement;
 
-  ADestMatchBitmapText.FontQualityReplacement := @WideString(AMatchBitmapText.FontQualityReplacement)[1];
-  ADestMatchBitmapText.ProfileName := @WideString(AMatchBitmapText.ProfileName)[1];
-  ADestMatchBitmapText.CropLeft := @WideString(AMatchBitmapText.CropLeft)[1];
-  ADestMatchBitmapText.CropTop := @WideString(AMatchBitmapText.CropTop)[1];
-  ADestMatchBitmapText.CropRight := @WideString(AMatchBitmapText.CropRight)[1];
-  ADestMatchBitmapText.CropBottom := @WideString(AMatchBitmapText.CropBottom)[1];
+  //ADestMatchBitmapText.FontQualityReplacement := @WideString(AMatchBitmapText.FontQualityReplacement)[1];
+  //ADestMatchBitmapText.ProfileName := @WideString(AMatchBitmapText.ProfileName)[1];
+  //ADestMatchBitmapText.CropLeft := @WideString(AMatchBitmapText.CropLeft)[1];
+  //ADestMatchBitmapText.CropTop := @WideString(AMatchBitmapText.CropTop)[1];
+  //ADestMatchBitmapText.CropRight := @WideString(AMatchBitmapText.CropRight)[1];
+  //ADestMatchBitmapText.CropBottom := @WideString(AMatchBitmapText.CropBottom)[1];
+
+  ATempDestWideStr.FontQualityReplacement := WideString(AMatchBitmapText.FontQualityReplacement);
+  ATempDestWideStr.ProfileName := WideString(AMatchBitmapText.ProfileName);
+  ATempDestWideStr.CropLeft := WideString(AMatchBitmapText.CropLeft);
+  ATempDestWideStr.CropTop := WideString(AMatchBitmapText.CropTop);
+  ATempDestWideStr.CropRight := WideString(AMatchBitmapText.CropRight);
+  ATempDestWideStr.CropBottom := WideString(AMatchBitmapText.CropBottom);
+
+  ADestMatchBitmapText.FontQualityReplacement := @(ATempDestWideStr.FontQualityReplacement)[1];
+  ADestMatchBitmapText.ProfileName := @(ATempDestWideStr.ProfileName)[1];
+  ADestMatchBitmapText.CropLeft := @(ATempDestWideStr.CropLeft)[1];
+  ADestMatchBitmapText.CropTop := @(ATempDestWideStr.CropTop)[1];
+  ADestMatchBitmapText.CropRight := @(ATempDestWideStr.CropRight)[1];
+  ADestMatchBitmapText.CropBottom := @(ATempDestWideStr.CropBottom)[1];
 
   ADestMatchBitmapText.IgnoreBackgroundColor := AMatchBitmapText.IgnoreBackgroundColor;
 end;
@@ -676,6 +721,7 @@ end;
 procedure SetFindControlOptionsToAPI(var AFindControlOptions: TClkFindControlOptions; var ADestFindControlOptions: TClkFindControlOptionsAPI; var ADestMatchBitmapTextRecAPI: TMatchBitmapTextRecAPI; var ADestMatchBitmapTextArray: TClkFindControlMatchBitmapTextAPIArr);
 var
   i: Integer;
+  TempDestWideStr: TClkFindControlMatchBitmapTextWideStringArr;   /////////////////////// If there are still memory overwriting issues, then this variable must moved as a procedure parameter, similar to the ADestMatchBitmapTextArray array. This will keep it in memory during the API call.
 begin
   ADestFindControlOptions.MatchCriteria.WillMatchText := AFindControlOptions.MatchCriteria.WillMatchText;
   ADestFindControlOptions.MatchCriteria.WillMatchClassName := AFindControlOptions.MatchCriteria.WillMatchClassName;
@@ -743,9 +789,10 @@ begin
   ADestFindControlOptions.MatchBitmapText := @ADestMatchBitmapTextRecAPI; //PMatchBitmapTextRecAPI
 
   SetLength(ADestMatchBitmapTextArray, Length(AFindControlOptions.MatchBitmapText));
+  SetLength(TempDestWideStr, Length(AFindControlOptions.MatchBitmapText));
 
   for i := 0 to Length(AFindControlOptions.MatchBitmapText) - 1 do
-    SetMatchBitmapTextToAPI(AFindControlOptions.MatchBitmapText[i], ADestMatchBitmapTextArray[i]);
+    SetMatchBitmapTextToAPI(AFindControlOptions.MatchBitmapText[i], ADestMatchBitmapTextArray[i], TempDestWideStr[i]);
 
   ADestMatchBitmapTextRecAPI.ArrLen := Length(AFindControlOptions.MatchBitmapText);
   ADestMatchBitmapTextRecAPI.Items := @ADestMatchBitmapTextArray[0];
