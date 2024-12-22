@@ -894,7 +894,7 @@ class TDllFunctions:
         try:
             buffer = ctypes.create_string_buffer(10 * 1048576) # #(CMaxSharedStringLength)
             ResponsePtr = buffer[0] #ctypes.c_char_p(buffer[0])  #address of first byte in the buffer
-            RespLen = self.GetExecuteSaveSetVarToFileActionFunc(AActionName, AActionTimeout, ASaveSetVarToFileOptions, AUseServerDebugging, ResponsePtr)
+            RespLen = self.ExecuteSaveSetVarToFileActionFunc(AActionName, AActionTimeout, ASaveSetVarToFileOptions, AUseServerDebugging, ResponsePtr)
             
             Response = ctypes.string_at(ResponsePtr, RespLen)
             return Response.decode('utf-8') #Returns the list of variables, separated by ASCII8 ASCII7  (i.e. #8#7)

@@ -219,8 +219,8 @@ begin
             'AllowedColorErrorCount' + '=' + AFindControlOptions.AllowedColorErrorCount + '&' +
             'WaitForControlToGoAway' + '=' + IntToStr(Ord(AFindControlOptions.WaitForControlToGoAway)) + '&' +
             'StartSearchingWithCachedControl' + '=' + IntToStr(Ord(AFindControlOptions.StartSearchingWithCachedControl)) + '&' +
-            'CachedControlLeft' + '=' + AFindControlOptions.ColorError + '&' +
-            'CachedControlTop' + '=' + AFindControlOptions.ColorError + '&' +
+            'CachedControlLeft' + '=' + AFindControlOptions.CachedControlLeft + '&' +
+            'CachedControlTop' + '=' + AFindControlOptions.CachedControlTop + '&' +
             'MatchPrimitiveFiles' + '=' + FastReplace_ReturnTo45(AFindControlOptions.MatchPrimitiveFiles) + '&' +
             'GetAllControls' + '=' + IntToStr(Ord(AFindControlOptions.GetAllControls)) + '&' +
             'UseFastSearch' + '=' + IntToStr(Ord(AFindControlOptions.UseFastSearch)) + '&' +
