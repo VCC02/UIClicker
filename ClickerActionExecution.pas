@@ -2630,14 +2630,14 @@ begin
           begin
             Idx := i shl 1;
             KeyStrokes[Idx]._Type := INPUT_KEYBOARD; //not sure if needed
-            KeyStrokes[Idx].ki.wVk := 0;   //this can be set to Ord(TextToSend[i + 1]); and then, dwFlags must be 0, instead of KEYEVENTF_UNICODE
+            KeyStrokes[Idx].ki.wVk := 0;  //If this is set to Ord(TextToSend[i + 1]), instead of 0, then capital letters are types as lower case (probably, because it expects the Shift key to come as a separate state). This causes VBox to block its keyboard input (probably some bad state).
             KeyStrokes[Idx].ki.wScan := Ord(TextToSend[i + 1]);
             KeyStrokes[Idx].ki.dwFlags := KEYEVENTF_UNICODE; //0;
             KeyStrokes[Idx].ki.Time := 0;
             KeyStrokes[Idx].ki.ExtraInfo := 0;
 
             KeyStrokes[Idx + 1]._Type := INPUT_KEYBOARD; //not sure if needed
-            KeyStrokes[Idx + 1].ki.wVk := 0;
+            KeyStrokes[Idx + 1].ki.wVk := 0;   //this can be set to Ord(TextToSend[i + 1]);  //it looks like a valid combination to avoid blocking VBox input
             KeyStrokes[Idx + 1].ki.wScan := Ord(TextToSend[i + 1]);
             KeyStrokes[Idx + 1].ki.dwFlags := KEYEVENTF_UNICODE or KEYEVENTF_KEYUP;
             KeyStrokes[Idx + 1].ki.Time := 0;
