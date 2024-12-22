@@ -2630,7 +2630,7 @@ begin
           begin
             Idx := i shl 1;
             KeyStrokes[Idx]._Type := INPUT_KEYBOARD; //not sure if needed
-            KeyStrokes[Idx].ki.wVk := 0;
+            KeyStrokes[Idx].ki.wVk := 0;   //this can be set to Ord(TextToSend[i + 1]); and then, dwFlags must be 0, instead of KEYEVENTF_UNICODE
             KeyStrokes[Idx].ki.wScan := Ord(TextToSend[i + 1]);
             KeyStrokes[Idx].ki.dwFlags := KEYEVENTF_UNICODE; //0;
             KeyStrokes[Idx].ki.Time := 0;
