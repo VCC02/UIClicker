@@ -172,6 +172,7 @@ type
     FBMPsDir: string;
     FInMemFileSystem: TInMemFileSystem;   //for client-server execution
     FRenderedInMemFileSystem: TInMemFileSystem;  //for externally rendered images
+    FPluginsInMemFileSystem: TInMemFileSystem;  //for storing received plugins in memory
     FFileAvailabilityFIFO: TPollingFIFO;
     FPollForMissingServerFiles: TPollForMissingServerFiles;
     FProcessingMissingFilesRequestByClient: Boolean; //for activity info
@@ -289,7 +290,14 @@ type
 
     function HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     function HandleOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
+    function HandleOnLoadPluginFromInMemFS(APlugin: TMemoryStream; AFileName: string): Boolean;
     procedure HandleOnGetListOfExternallyRenderedImages(AListOfExternallyRenderedImages: TStringList);
+
+    {$IFDEF MemPlugins}
+      procedure HandleOnGetListOfInMemPlugins(AListOfInMemPlugins: TStringList);
+      procedure HandleOnLoadPluginFromDiskToPluginInMemFileSystem(APluginPath: string);
+    {$ENDIF}
+
     function HandleOnRenderBmpExternally(ARequest: string): string;
     procedure HandleOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
     procedure HandleOnSavePrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
@@ -363,6 +371,7 @@ type
     property StopAllActionsOnDemand: Boolean read FStopAllActionsOnDemand write FStopAllActionsOnDemand;
 
     property RenderedInMemFileSystem: TInMemFileSystem read FRenderedInMemFileSystem;  //for externally rendered images
+    property PluginsInMemFileSystem: TInMemFileSystem read FPluginsInMemFileSystem;    //for plugins
 
     property OnReLoadSettings: TOnReLoadSettings read FOnReLoadSettings write FOnReLoadSettings;
     property OnCopyControlTextAndClassFromMainWindow: TOnCopyControlTextAndClassFromMainWindow read FOnCopyControlTextAndClassFromMainWindow write FOnCopyControlTextAndClassFromMainWindow;
@@ -784,6 +793,9 @@ begin
   FRenderedInMemFileSystem := TInMemFileSystem.Create;
   FRenderedInMemFileSystem.OnComputeInMemFileHash := HandleOnComputeInMemFileHash;
 
+  FPluginsInMemFileSystem := TInMemFileSystem.Create;
+  FPluginsInMemFileSystem.OnComputeInMemFileHash := HandleOnComputeInMemFileHash;
+
   FFileAvailabilityFIFO := TPollingFIFO.Create;
   FAutoSwitchToExecutingTab := False;
   FAutoEnableSwitchingTabsOnDebugging := False;
@@ -1008,7 +1020,14 @@ begin
   frClickerActionsArrMain.OnTerminateWaitForMultipleFilesAvailability := HandleOnTerminateWaitForMultipleFilesAvailability;
   frClickerActionsArrMain.OnLoadBitmap := HandleOnLoadBitmap;
   frClickerActionsArrMain.OnLoadRenderedBitmap := HandleOnLoadRenderedBitmap;
+  frClickerActionsArrMain.OnLoadPluginFromInMemFS := HandleOnLoadPluginFromInMemFS;
   frClickerActionsArrMain.OnGetListOfExternallyRenderedImages := HandleOnGetListOfExternallyRenderedImages;
+
+  {$IFDEF MemPlugins}
+    frClickerActionsArrMain.OnGetListOfInMemPlugins := HandleOnGetListOfInMemPlugins;
+    frClickerActionsArrMain.OnLoadPluginFromDiskToPluginInMemFileSystem := HandleOnLoadPluginFromDiskToPluginInMemFileSystem;
+  {$ENDIF}
+
   frClickerActionsArrMain.OnRenderBmpExternally := HandleOnRenderBmpExternally;
   frClickerActionsArrMain.OnLoadPrimitivesFile := HandleOnLoadPrimitivesFile;
   frClickerActionsArrMain.OnSavePrimitivesFile := HandleOnSavePrimitivesFile;
@@ -1065,8 +1084,19 @@ begin
   frClickerActionsArrExperiment2.OnLoadBitmap := HandleOnLoadBitmap;
   frClickerActionsArrExperiment1.OnLoadRenderedBitmap := HandleOnLoadRenderedBitmap;
   frClickerActionsArrExperiment2.OnLoadRenderedBitmap := HandleOnLoadRenderedBitmap;
+  frClickerActionsArrExperiment1.OnLoadPluginFromInMemFS := HandleOnLoadPluginFromInMemFS;
+  frClickerActionsArrExperiment2.OnLoadPluginFromInMemFS := HandleOnLoadPluginFromInMemFS;
   frClickerActionsArrExperiment1.OnGetListOfExternallyRenderedImages := HandleOnGetListOfExternallyRenderedImages;
   frClickerActionsArrExperiment2.OnGetListOfExternallyRenderedImages := HandleOnGetListOfExternallyRenderedImages;
+
+  {$IFDEF MemPlugins}
+    frClickerActionsArrExperiment1.OnGetListOfInMemPlugins := HandleOnGetListOfInMemPlugins;
+    frClickerActionsArrExperiment2.OnGetListOfInMemPlugins := HandleOnGetListOfInMemPlugins;
+
+    frClickerActionsArrExperiment1.OnLoadPluginFromDiskToPluginInMemFileSystem := HandleOnLoadPluginFromDiskToPluginInMemFileSystem;
+    frClickerActionsArrExperiment2.OnLoadPluginFromDiskToPluginInMemFileSystem := HandleOnLoadPluginFromDiskToPluginInMemFileSystem;
+  {$ENDIF}
+
   frClickerActionsArrExperiment1.OnRenderBmpExternally := HandleOnRenderBmpExternally;
   frClickerActionsArrExperiment2.OnRenderBmpExternally := HandleOnRenderBmpExternally;
   frClickerActionsArrExperiment1.OnLoadPrimitivesFile := HandleOnLoadPrimitivesFile;
@@ -1197,6 +1227,7 @@ begin
   FreeAndNil(FFileAvailabilityFIFO); //destroy the FIFO before the in-mem filesystem
   FreeAndNil(FInMemFileSystem);
   FreeAndNil(FRenderedInMemFileSystem);
+  FreeAndNil(FPluginsInMemFileSystem);
 
   try
     frClickerActionsArrMain.frClickerActions.frClickerConditionEditor.ClearActionConditionPreview;
@@ -1656,7 +1687,14 @@ begin
 
         NewFrame.OnLoadBitmap := HandleOnLoadBitmap;
         NewFrame.OnLoadRenderedBitmap := HandleOnLoadRenderedBitmap;
+        NewFrame.OnLoadPluginFromInMemFS := HandleOnLoadPluginFromInMemFS;
         NewFrame.OnGetListOfExternallyRenderedImages := HandleOnGetListOfExternallyRenderedImages;
+
+        {$IFDEF MemPlugins}
+          NewFrame.OnGetListOfInMemPlugins := HandleOnGetListOfInMemPlugins;
+          NewFrame.OnLoadPluginFromDiskToPluginInMemFileSystem := HandleOnLoadPluginFromDiskToPluginInMemFileSystem;
+        {$ENDIF}
+
         NewFrame.OnRenderBmpExternally := HandleOnRenderBmpExternally;
         NewFrame.OnLoadPrimitivesFile := HandleOnLoadPrimitivesFile;
         NewFrame.OnSavePrimitivesFile := HandleOnSavePrimitivesFile;
@@ -2038,6 +2076,18 @@ begin
 end;
 
 
+function TfrmClickerActions.HandleOnLoadPluginFromInMemFS(APlugin: TMemoryStream; AFileName: string): Boolean;
+begin
+  if FPluginsInMemFileSystem.FileExistsInMem(AFileName) then
+  begin
+    FPluginsInMemFileSystem.LoadFileFromMemToStream(AFileName, APlugin);
+    Result := True;
+  end
+  else
+    Result := False;
+end;
+
+
 procedure TfrmClickerActions.HandleOnGetListOfExternallyRenderedImages(AListOfExternallyRenderedImages: TStringList);
 var
   Stream: TMemoryStream;
@@ -2070,6 +2120,33 @@ begin
     end;
   end;
 end;
+
+
+{$IFDEF MemPlugins}
+  procedure TfrmClickerActions.HandleOnGetListOfInMemPlugins(AListOfInMemPlugins: TStringList);
+  var
+    i: Integer;
+  begin
+    FPluginsInMemFileSystem.ListMemFiles(AListOfInMemPlugins);
+
+    for i := 0 to AListOfInMemPlugins.Count - 1 do
+      AListOfInMemPlugins.Strings[i] := AListOfInMemPlugins.Strings[i] + #8#7;
+  end;
+
+
+  procedure TfrmClickerActions.HandleOnLoadPluginFromDiskToPluginInMemFileSystem(APluginPath: string);
+  var
+    MemStream: TMemoryStream;
+  begin
+    MemStream := TMemoryStream.Create;
+    try
+      MemStream.LoadFromFile(APluginPath);
+      FPluginsInMemFileSystem.SaveFileToMem(CMemPluginLocationPrefix + PathDelim + ExtractFileName(APluginPath), MemStream.Memory, MemStream.Size);
+    finally
+      MemStream.Free;
+    end;
+  end;
+{$ENDIF}
 
 
 function TfrmClickerActions.HandleOnRenderBmpExternally(ARequest: string): string;
@@ -3058,6 +3135,24 @@ begin
       Exit;
     end;
 
+    if ARequestInfo.PostStream.Size > 100 * 1048576 then
+    begin
+      RespondWithText(CREResp_FileTooLarge);
+      Exit;
+    end;
+
+    if FInMemFileSystem.TotalFileSize > 100 * 1048576 then
+    begin
+      RespondWithText(CREResp_FileSystemFull);
+      Exit;
+    end;
+
+    if FInMemFileSystem.TotalFileCount > 300 then
+    begin
+      RespondWithText(CREResp_TooManyFilesInFileSystem);
+      Exit;
+    end;
+
     TempMemStream := TMemoryStream.Create;
     try
       TempMemStream.CopyFrom(ARequestInfo.PostStream, ARequestInfo.PostStream.Size);
@@ -3082,6 +3177,24 @@ begin
       Exit;
     end;
 
+    if ARequestInfo.PostStream.Size > 100 * 1048576 then
+    begin
+      RespondWithText(CREResp_FileTooLarge);
+      Exit;
+    end;
+
+    if FRenderedInMemFileSystem.TotalFileSize > 100 * 1048576 then
+    begin
+      RespondWithText(CREResp_FileSystemFull);
+      Exit;
+    end;
+
+    if FRenderedInMemFileSystem.TotalFileCount > 200 then
+    begin
+      RespondWithText(CREResp_TooManyFilesInFileSystem);
+      Exit;
+    end;
+
     TempMemStream := TMemoryStream.Create;
     try
       TempMemStream.CopyFrom(ARequestInfo.PostStream, ARequestInfo.PostStream.Size);
@@ -3096,6 +3209,65 @@ begin
 
     Exit;
   end;
+
+  {$IFDEF MemPlugins}
+    if ARequestInfo.Document = '/' + CRECmd_SetMemPluginFile then
+    begin
+      Fnm := ARequestInfo.Params.Values[CREParam_FileName];
+      if Trim(Fnm) = '' then
+      begin
+        RespondWithText('Expecting a valid filename.');
+        Exit;
+      end;
+
+      if ARequestInfo.PostStream.Size > 100 * 1048576 then
+      begin
+        RespondWithText(CREResp_FileTooLarge);
+        Exit;
+      end;
+
+      if FPluginsInMemFileSystem.TotalFileSize > 100 * 1048576 then
+      begin
+        RespondWithText(CREResp_FileSystemFull);
+        Exit;
+      end;
+
+      if FPluginsInMemFileSystem.TotalFileCount > 200 then
+      begin
+        RespondWithText(CREResp_TooManyFilesInFileSystem);
+        Exit;
+      end;
+
+      if ExtractFileName(Fnm) = Fnm then //no path
+        Fnm := CMemPluginLocationPrefix + PathDelim + Fnm;
+
+      if Pos(':' + PathDelim, Fnm) = 2 then
+        Fnm := CMemPluginLocationPrefix + Copy(Fnm, 3, MaxInt);
+
+      if Pos(UpperCase(CMemPluginLocationPrefix), UpperCase(Fnm)) = 1 then  // e.g. MEM:\PathToDll\MyPlugin.dll
+        Fnm := CMemPluginLocationPrefix + Copy(Fnm, 5, MaxInt);
+
+      TempMemStream := TMemoryStream.Create;
+      try
+        TempMemStream.CopyFrom(ARequestInfo.PostStream, ARequestInfo.PostStream.Size);
+        FPluginsInMemFileSystem.SaveFileToMem(Fnm, TempMemStream.Memory, TempMemStream.Size);   //FPluginsInMemFileSystem is used for plugins and their files (dbgsym or config files)
+
+        Msg := 'Received file: "' + Fnm + '"  of ' + IntToStr(TempMemStream.Size) + ' bytes in size (for PluginInMemFS).';
+        AddToLogFromThread(Msg);
+        RespondWithText(CREResp_ErrResponseOK);
+      finally
+        TempMemStream.Free;
+      end;
+
+      Exit;
+    end;
+  {$ELSE}
+    if ARequestInfo.Document = '/' + CRECmd_SetMemPluginFile then
+    begin
+      RespondWithText(CREResp_NotImplemented);
+      Exit;
+    end;
+  {$ENDIF}
 
   if ARequestInfo.Document = '/' + CRECmd_GetFileExistenceOnServer then
   begin

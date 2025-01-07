@@ -43,8 +43,11 @@ type
   POIMenuItemData = ^TOIMenuItemData;
 
 
-procedure AddMenuItemToPopupMenu(APopupMenu: TPopupMenu; ACaption: TCaption; AHandler: TNotifyEvent;
-  ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; AEditingAction: PClkActionRec);
+function AddMenuItemToAnotherMenuItem(APopupMenu: TPopupMenu; AParentMenuItem: TMenuItem; ACaption: TCaption; AHandler: TNotifyEvent;
+  ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; AEditingAction: PClkActionRec): TMenuItem;
+
+function AddMenuItemToPopupMenu(APopupMenu: TPopupMenu; ACaption: TCaption; AHandler: TNotifyEvent;
+  ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; AEditingAction: PClkActionRec): TMenuItem;
 
 procedure BuildFontColorIcons(AImgLst: TImageList; var AFindControlOptions: TClkFindControlOptions; AEvaluateReplacementsFunc: TEvaluateReplacementsFunc);
 
@@ -52,18 +55,17 @@ procedure BuildFontColorIcons(AImgLst: TImageList; var AFindControlOptions: TClk
 implementation
 
 
-procedure AddMenuItemToPopupMenu(APopupMenu: TPopupMenu; ACaption: TCaption; AHandler: TNotifyEvent;
-  ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; AEditingAction: PClkActionRec);
+function AddMenuItemToAnotherMenuItem(APopupMenu: TPopupMenu; AParentMenuItem: TMenuItem; ACaption: TCaption; AHandler: TNotifyEvent;
+  ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; AEditingAction: PClkActionRec): TMenuItem;
 var
   MenuData: POIMenuItemData;
-  MenuItem: TMenuItem;
 begin
-  MenuItem := TMenuItem.Create(nil);
-  MenuItem.Caption := ACaption;
-  MenuItem.OnClick := AHandler;
+  Result := TMenuItem.Create(nil);
+  Result.Caption := ACaption;
+  Result.OnClick := AHandler;
 
   New(MenuData);
-  MenuItem.Tag := {%H-}PtrInt(MenuData);
+  Result.Tag := {%H-}PtrInt(MenuData);
   MenuData^.OwnerMenu := APopupMenu;
   MenuData^.NodeLevel := ANodeLevel;
   MenuData^.CategoryIndex := ACategoryIndex;
@@ -72,7 +74,16 @@ begin
   MenuData^.MenuItemCaption := ACaption;
   MenuData^.TempEditingAction := AEditingAction;
 
-  APopupMenu.Items.Add(MenuItem);
+  if AParentMenuItem <> nil then
+    AParentMenuItem.Add(Result);
+end;
+
+
+function AddMenuItemToPopupMenu(APopupMenu: TPopupMenu; ACaption: TCaption; AHandler: TNotifyEvent;
+  ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; AEditingAction: PClkActionRec): TMenuItem;
+begin
+  Result := AddMenuItemToAnotherMenuItem(APopupMenu, nil, ACaption, AHandler, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+  APopupMenu.Items.Add(Result);
 end;
 
 

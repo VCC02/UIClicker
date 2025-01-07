@@ -35,7 +35,7 @@
           </Target>
           <SearchPaths>
             <IncludeFiles Value="$(ProjOutDir)"/>
-            <OtherUnitFiles Value="ClickerUtils;..\MiscUtils;ClickerClient"/>
+            <OtherUnitFiles Value="ClickerUtils;..\MiscUtils;ClickerClient;..\DynMemLib\"/>
             <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
           </SearchPaths>
           <Parsing>
@@ -403,6 +403,10 @@
         <HasResources Value="True"/>
         <ResourceBaseClass Value="Form"/>
       </Unit>
+      <Unit>
+        <Filename Value="..\DynMemLib\DynMemLib.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -413,7 +417,7 @@
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
-      <OtherUnitFiles Value="ClickerUtils;..\MiscUtils;ClickerClient"/>
+      <OtherUnitFiles Value="ClickerUtils;..\MiscUtils;ClickerClient;..\DynMemLib\"/>
       <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <Parsing>
@@ -424,14 +428,14 @@
     <Linking>
       <Debugging>
         <GenerateDebugInfo Value="False"/>
-        <RunWithoutDebug Value="True"/>
       </Debugging>
     </Linking>
     <Other>
       <CompilerMessages>
         <IgnoredMessages idx6018="True"/>
       </CompilerMessages>
-      <CustomOptions Value="-d_TestBuild"/>
+      <CustomOptions Value="-dTestBuild
+-dMemPlugins"/>
     </Other>
   </CompilerOptions>
   <Debugging>

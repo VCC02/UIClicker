@@ -287,8 +287,10 @@ type
 
     procedure MenuItem_BrowseImageSourceFromPropertyListClick(Sender: TObject);
     procedure MenuItem_NoImageSourceInInMemPropertyListClick(Sender: TObject);
+    procedure MenuItem_NoPluginInInMemPropertyListClick(Sender: TObject);
     procedure MenuItem_SetFileNameFromInMemPropertyListClick(Sender: TObject);
     procedure MenuItem_BrowseFileNameFromInMemPropertyListClick(Sender: TObject);
+    procedure MenuItem_SetPluginFileNameFromInMemPropertyListClick(Sender: TObject);
 
     procedure MenuItem_AddFontProfileToPropertyListClick(Sender: TObject);
     procedure MenuItem_AddFontProfileWithAntialiasedAndClearTypeToPropertyListClick(Sender: TObject);
@@ -300,6 +302,7 @@ type
 
     procedure MenuItem_BrowseSetVarFileInPropertyListClick(Sender: TObject);
     procedure MenuItem_BrowsePluginFileInPropertyListClick(Sender: TObject);
+    procedure MenuItem_LoadPluginFromDiskToPluginInMemFSInPropertyListClick(Sender: TObject);
     procedure MenuItem_BrowseEditTemplateFileInPropertyListClick(Sender: TObject);
 
     procedure MenuItemControl_EdgeRefGenericClick(Sender: TObject);
@@ -373,6 +376,13 @@ type
     FOnLoadBitmap: TOnLoadBitmap;
     FOnLoadRenderedBitmap: TOnLoadRenderedBitmap;
     FOnGetListOfExternallyRenderedImages: TOnGetListOfExternallyRenderedImages;
+
+    {$IFDEF MemPlugins}
+      FOnGetListOfInMemPlugins: TOnGetListOfInMemPlugins;
+      FOnLoadPluginFromDiskToPluginInMemFileSystem: TOnLoadPluginFromDiskToPluginInMemFileSystem;
+      FOnLoadPluginFromInMemFS: TOnLoadPluginFromInMemFS;
+    {$ENDIF}
+
     FOnLoadPrimitivesFile: TOnLoadPrimitivesFile;
     FOnSavePrimitivesFile: TOnSavePrimitivesFile;
     FOnFileExists: TOnFileExists;
@@ -428,6 +438,13 @@ type
     function DoOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     function DoOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     procedure DoOnGetListOfExternallyRenderedImages(AListOfExternallyRenderedImages: TStringList);
+
+    {$IFDEF MemPlugins}
+      procedure DoOnGetListOfInMemPlugins(AListOfInMemPlugins: TStringList);
+      procedure DoOnLoadPluginFromDiskToPluginInMemFileSystem(APluginPath: string);
+      function DoOnLoadPluginFromInMemFS(APlugin: TMemoryStream; AFileName: string): Boolean;
+    {$ENDIF}
+
     procedure DoOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
     procedure DoOnSavePrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
     function DoOnFileExists(const AFileName: string): Boolean;
@@ -556,6 +573,10 @@ type
     procedure HandleOnPluginDbgSetBreakpoint(ALineIndex, ASelectedSourceFileIndex: Integer; AEnabled: Boolean);
 
     function HandleOnTClkIniFileCreate(AFileName: string): TClkIniFile;
+
+    {$IFDEF MemPlugins}
+      function HandleOnLoadPluginFromInMemFS(APlugin: TMemoryStream; AFileName: string): Boolean;
+    {$ENDIF}
 
     ///////////////////////////// OI
     function EditFontProperties(AEditingAction: PClkActionRec; AItemIndexDiv: Integer; var ANewItems: string): Boolean;
@@ -714,6 +735,13 @@ type
     property OnLoadBitmap: TOnLoadBitmap write FOnLoadBitmap;
     property OnLoadRenderedBitmap: TOnLoadRenderedBitmap write FOnLoadRenderedBitmap;
     property OnGetListOfExternallyRenderedImages: TOnGetListOfExternallyRenderedImages write FOnGetListOfExternallyRenderedImages;
+
+    {$IFDEF MemPlugins}
+      property OnGetListOfInMemPlugins: TOnGetListOfInMemPlugins write FOnGetListOfInMemPlugins;
+      property OnLoadPluginFromDiskToPluginInMemFileSystem: TOnLoadPluginFromDiskToPluginInMemFileSystem write FOnLoadPluginFromDiskToPluginInMemFileSystem;
+      property OnLoadPluginFromInMemFS: TOnLoadPluginFromInMemFS write FOnLoadPluginFromInMemFS;
+    {$ENDIF}
+
     property OnLoadPrimitivesFile: TOnLoadPrimitivesFile write FOnLoadPrimitivesFile;
     property OnSavePrimitivesFile: TOnSavePrimitivesFile write FOnSavePrimitivesFile;
     property OnFileExists: TOnFileExists write FOnFileExists;
@@ -909,6 +937,10 @@ begin
   frClickerPlugin.OnPluginDbgSetBreakpoint := HandleOnPluginDbgSetBreakpoint;
   frClickerPlugin.OnTClkIniFileCreate := HandleOnTClkIniFileCreate;
 
+  {$IFDEF MemPlugins}
+    frClickerPlugin.OnLoadPluginFromInMemFS := HandleOnLoadPluginFromInMemFS;
+  {$ENDIF}
+
   FPmLocalTemplates := TPopupMenu.Create(Self);
 
   ////////////////////////////// OI
@@ -1006,6 +1038,13 @@ begin
   FOnLoadBitmap := nil;
   FOnLoadRenderedBitmap := nil;
   FOnGetListOfExternallyRenderedImages := nil;
+
+  {$IFDEF MemPlugins}
+    FOnGetListOfInMemPlugins := nil;
+    FOnLoadPluginFromDiskToPluginInMemFileSystem := nil;
+    FOnLoadPluginFromInMemFS := nil;
+  {$ENDIF}
+
   FOnLoadPrimitivesFile := nil;
   FOnSavePrimitivesFile := nil;
   FOnFileExists := nil;
@@ -3189,6 +3228,14 @@ begin
 end;
 
 
+{$IFDEF MemPlugins}
+  function TfrClickerActions.HandleOnLoadPluginFromInMemFS(APlugin: TMemoryStream; AFileName: string): Boolean;
+  begin
+    Result := DoOnLoadPluginFromInMemFS(APlugin, AFileName);
+  end;
+{$ENDIF}
+
+
 function TfrClickerActions.DoOnEditCallTemplateBreakCondition(var AActionCondition: string): Boolean;
 begin
   if not Assigned(FOnEditCallTemplateBreakCondition) then
@@ -3223,6 +3270,35 @@ begin
   else
     FOnGetListOfExternallyRenderedImages(AListOfExternallyRenderedImages);
 end;
+
+
+{$IFDEF MemPlugins}
+  procedure TfrClickerActions.DoOnGetListOfInMemPlugins(AListOfInMemPlugins: TStringList);
+  begin
+    if not Assigned(FOnGetListOfInMemPlugins) then
+      raise Exception.Create('OnGetListOfInMemPlugins not assigned.')
+    else
+      FOnGetListOfInMemPlugins(AListOfInMemPlugins);
+  end;
+
+
+  procedure TfrClickerActions.DoOnLoadPluginFromDiskToPluginInMemFileSystem(APluginPath: string);
+  begin
+    if not Assigned(FOnLoadPluginFromDiskToPluginInMemFileSystem) then
+      raise Exception.Create('OnLoadPluginFromDiskToPluginInMemFileSystem not assigned.')
+    else
+      FOnLoadPluginFromDiskToPluginInMemFileSystem(APluginPath);
+  end;
+
+
+  function TfrClickerActions.DoOnLoadPluginFromInMemFS(APlugin: TMemoryStream; AFileName: string): Boolean;
+  begin
+    if not Assigned(FOnLoadPluginFromInMemFS) then
+      raise Exception.Create('OnLoadPluginFromInMemFS not assigned.');
+
+    Result := FOnLoadPluginFromInMemFS(APlugin, AFileName);
+  end;
+{$ENDIF}
 
 
 procedure TfrClickerActions.DoOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
@@ -4382,6 +4458,19 @@ begin
 end;
 
 
+procedure TfrClickerActions.MenuItem_NoPluginInInMemPropertyListClick(Sender: TObject);
+var
+  MenuData: POIMenuItemData;
+begin
+  MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
+  try
+    MessageBox(Handle, 'No plugins in In-Mem file system..', PChar(Application.Title), MB_ICONINFORMATION);
+  finally
+    Dispose(MenuData);
+  end;
+end;
+
+
 procedure TfrClickerActions.MenuItem_SetFileNameFromInMemPropertyListClick(Sender: TObject);
 var
   MenuData: POIMenuItemData;
@@ -4415,6 +4504,31 @@ begin
       FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex, True);  //this closes the editor
       TriggerOnControlsModified;
     end;
+  finally
+    Dispose(MenuData);
+  end;
+end;
+
+
+procedure TfrClickerActions.MenuItem_SetPluginFileNameFromInMemPropertyListClick(Sender: TObject);
+var
+  MenuData: POIMenuItemData;
+  Fnm: string;
+begin
+  MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
+  try
+    Fnm := StringReplace(MenuData^.MenuItemCaption, '&', '', [rfReplaceAll]);
+    //Fnm := Copy(Fnm, 1, Pos(#8#7, Fnm) - 1); //not used for plugin paths
+
+    MenuData^.TempEditingAction^.PluginOptions.FileName := Fnm;
+    FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex, True);  //this closes the editor
+
+    FOIFrame.CancelCurrentEditing;
+    FOIFrame.Repaint;   //ideally, RepaintNodeByLevel
+    TriggerOnControlsModified;
+
+    DoOnModifyPluginProperty(MenuData^.TempEditingAction);
+    tmrReloadOIContent.Enabled := True;
   finally
     Dispose(MenuData);
   end;
@@ -4719,6 +4833,28 @@ begin
 
     DoOnModifyPluginProperty(MenuData^.TempEditingAction);
     tmrReloadOIContent.Enabled := True;
+  finally
+    Dispose(MenuData);
+  end;
+end;
+
+
+procedure TfrClickerActions.MenuItem_LoadPluginFromDiskToPluginInMemFSInPropertyListClick(Sender: TObject);
+var
+  MenuData: POIMenuItemData;
+  PathToFileName: string;
+begin
+  MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
+  try
+    if not DoOnOpenDialogExecute('Dll files (*.dll)|*.dll|All files (*.*)|*.*') then
+      Exit;
+
+    PathToFileName := DoOnGetOpenDialogFileName;
+
+    {$IFDEF MemPlugins}
+      DoOnLoadPluginFromDiskToPluginInMemFileSystem(PathToFileName);
+      DoOnLoadPluginFromDiskToPluginInMemFileSystem(ExtractFullFileNameNoExt(PathToFileName) + '.DbgSym');
+    {$ENDIF}
   finally
     Dispose(MenuData);
   end;
@@ -7555,6 +7691,13 @@ var
   BMPTxt: TClkFindControlMatchBitmapText;
   ItemIndexMod, ItemIndexDiv: Integer;
   TempListOfExternallyRenderedImages: TStringList;
+  {$IFDEF MemPlugins}
+    TempListOfMemPlugins: TStringList;
+    TempMenuItem: TMenuItem;
+    PluginMenuItem: TMenuItem;
+    PluginPath: string;
+    PluginsFoundInInMemFS: Boolean;
+  {$ENDIF}
 begin
   if AEditingAction = nil then
     Exit;
@@ -7861,8 +8004,54 @@ begin
         CPlugin_FileName_PropIndex:
         begin
           FOIEditorMenu.Items.Clear;
-          AddMenuItemToPopupMenu(FOIEditorMenu, 'Browse...', MenuItem_BrowsePluginFileInPropertyListClick,
+
+          {$IFDEF MemPlugins}
+            TempMenuItem := AddMenuItemToPopupMenu(FOIEditorMenu, 'Browse from disk...', MenuItem_BrowsePluginFileInPropertyListClick,
               ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+            TempMenuItem.Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 0);
+
+            AddMenuItemToPopupMenu(FOIEditorMenu, '-', nil, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+
+            TempMenuItem := AddMenuItemToPopupMenu(FOIEditorMenu, 'Browse Plugin In-Mem file system...', nil,
+              ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+            TempMenuItem.Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 0);
+
+            TempListOfMemPlugins := TStringList.Create;
+            try
+              DoOnGetListOfInMemPlugins(TempListOfMemPlugins);
+
+              PluginsFoundInInMemFS := False;
+              for i := 0 to TempListOfMemPlugins.Count - 1 do
+              begin
+                PluginPath := Copy(TempListOfMemPlugins.Strings[i], 1, Pos(#8#7, TempListOfMemPlugins.Strings[i]) - 1);
+
+                if UpperCase(ExtractFileExt(PluginPath)) = '.DLL' then
+                begin
+                  PluginsFoundInInMemFS := True;
+                  PluginMenuItem := AddMenuItemToAnotherMenuItem(FOIEditorMenu, TempMenuItem, PluginPath, MenuItem_SetPluginFileNameFromInMemPropertyListClick,
+                    ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+                  PluginMenuItem.Bitmap := CreateBitmapForMenu(imglstPluginProperties, CPlugin_FileName_PropIndex);
+                end;
+              end;
+
+              if not PluginsFoundInInMemFS then
+              begin
+                PluginMenuItem := AddMenuItemToAnotherMenuItem(FOIEditorMenu, TempMenuItem, 'No plugins in In-Mem file system', MenuItem_NoPluginInInMemPropertyListClick, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+                PluginMenuItem.Bitmap := CreateBitmapForMenu(imglstPluginProperties, CPlugin_FileName_PropIndex);
+              end;
+            finally
+              TempListOfMemPlugins.Free;
+            end;
+
+            AddMenuItemToPopupMenu(FOIEditorMenu, '-', nil, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+
+            TempMenuItem := AddMenuItemToPopupMenu(FOIEditorMenu, 'Load plugin from disk to Plugin In-Mem file system...', MenuItem_LoadPluginFromDiskToPluginInMemFSInPropertyListClick,
+              ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+            TempMenuItem.Bitmap := CreateBitmapForMenu(imglstFindControlProperties, CFindControl_ImageSourceFileNameLocation_PropIndex);
+          {$ELSE}
+            AddMenuItemToPopupMenu(FOIEditorMenu, 'Browse...', MenuItem_BrowsePluginFileInPropertyListClick,
+              ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+          {$ENDIF}
 
           FOIEditorMenu.PopUp;
         end;

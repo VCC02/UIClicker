@@ -369,6 +369,13 @@ type
     FOnLoadRenderedBitmap: TOnLoadRenderedBitmap;
     FOnRenderBmpExternally: TOnRenderBmpExternally;
     FOnGetListOfExternallyRenderedImages: TOnGetListOfExternallyRenderedImages;
+
+    {$IFDEF MemPlugins}
+      FOnGetListOfInMemPlugins: TOnGetListOfInMemPlugins;
+      FOnLoadPluginFromDiskToPluginInMemFileSystem: TOnLoadPluginFromDiskToPluginInMemFileSystem;
+    {$ENDIF}
+
+    FOnLoadPluginFromInMemFS: TOnLoadPluginFromInMemFS;
     FOnLoadPrimitivesFile: TOnLoadPrimitivesFile;
     FOnSavePrimitivesFile: TOnSavePrimitivesFile;
 
@@ -429,8 +436,17 @@ type
     function HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     function HandleOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     function HandleOnRenderBmpExternally(AFilename: string): string;
-    function HandleOnGetActionProperties(AActionName: string): PClkActionRec;
     procedure HandleOnGetListOfExternallyRenderedImages(AListOfExternallyRenderedImages: TStringList);
+
+    {$IFDEF MemPlugins}
+      procedure HandleOnGetListOfInMemPlugins(AListOfInMemPlugins: TStringList);
+      procedure HandleOnLoadPluginFromDiskToPluginInMemFileSystem(APluginPath: string);
+    {$ENDIF}
+
+    function HandleOnGetActionProperties(AActionName: string): PClkActionRec;
+
+    function HandleOnLoadPluginFromInMemFS(APlugin: TMemoryStream; AFileName: string): Boolean;
+
     procedure HandleOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
     procedure HandleOnSavePrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
     function HandleOnFileExists(const AFileName: string): Boolean;
@@ -561,6 +577,14 @@ type
     function DoOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     function DoOnRenderBmpExternally(AFilename: string): string;
     procedure DoOnGetListOfExternallyRenderedImages(AListOfExternallyRenderedImages: TStringList);
+
+    {$IFDEF MemPlugins}
+      procedure DoOnGetListOfInMemPlugins(AListOfInMemPlugins: TStringList);
+      procedure DoOnLoadPluginFromDiskToPluginInMemFileSystem(APluginPath: string);
+    {$ENDIF}
+
+    function DoOnLoadPluginFromInMemFS(APlugin: TMemoryStream; AFileName: string): Boolean;
+
     procedure DoOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
     procedure DoOnSavePrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
 
@@ -718,6 +742,14 @@ type
     property OnLoadRenderedBitmap: TOnLoadRenderedBitmap read FOnLoadRenderedBitmap write FOnLoadRenderedBitmap;
     property OnRenderBmpExternally: TOnRenderBmpExternally read FOnRenderBmpExternally write FOnRenderBmpExternally;
     property OnGetListOfExternallyRenderedImages: TOnGetListOfExternallyRenderedImages write FOnGetListOfExternallyRenderedImages;
+
+    {$IFDEF MemPlugins}
+      property OnGetListOfInMemPlugins: TOnGetListOfInMemPlugins read FOnGetListOfInMemPlugins write FOnGetListOfInMemPlugins;
+      property OnLoadPluginFromDiskToPluginInMemFileSystem: TOnLoadPluginFromDiskToPluginInMemFileSystem read FOnLoadPluginFromDiskToPluginInMemFileSystem write FOnLoadPluginFromDiskToPluginInMemFileSystem;
+    {$ENDIF}
+
+    property OnLoadPluginFromInMemFS: TOnLoadPluginFromInMemFS read FOnLoadPluginFromInMemFS write FOnLoadPluginFromInMemFS;
+
     property OnLoadPrimitivesFile: TOnLoadPrimitivesFile write FOnLoadPrimitivesFile;
     property OnSavePrimitivesFile: TOnSavePrimitivesFile write FOnSavePrimitivesFile;
 
@@ -998,6 +1030,13 @@ begin
   frClickerActions.OnLoadBitmap := HandleOnLoadBitmap; //both ActionExecution and frClickerActions use the same handler
   frClickerActions.OnLoadRenderedBitmap := HandleOnLoadRenderedBitmap;
   frClickerActions.OnGetListOfExternallyRenderedImages := HandleOnGetListOfExternallyRenderedImages;
+
+  {$IFDEF MemPlugins}
+    frClickerActions.OnGetListOfInMemPlugins := HandleOnGetListOfInMemPlugins;
+    frClickerActions.OnLoadPluginFromDiskToPluginInMemFileSystem := HandleOnLoadPluginFromDiskToPluginInMemFileSystem;
+    frClickerActions.OnLoadPluginFromInMemFS := HandleOnLoadPluginFromInMemFS;
+  {$ENDIF}
+
   frClickerActions.OnLoadPrimitivesFile := HandleOnLoadPrimitivesFile;
   frClickerActions.OnSavePrimitivesFile := HandleOnSavePrimitivesFile;
   frClickerActions.OnFileExists := HandleOnFileExists;
@@ -1171,6 +1210,7 @@ begin
   FActionExecution.OnLoadBitmap := HandleOnLoadBitmap; //both ActionExecution and frClickerActions use the same handler
   FActionExecution.OnLoadRenderedBitmap := HandleOnLoadRenderedBitmap;
   FActionExecution.OnRenderBmpExternally := HandleOnRenderBmpExternally;
+  FActionExecution.OnLoadPluginFromInMemFS := HandleOnLoadPluginFromInMemFS;
   FActionExecution.OnGetActionProperties := HandleOnGetActionProperties;
   FActionExecution.OnCallTemplate := HandleOnCallTemplate;
   FActionExecution.OnSetEditorSleepProgressBarMax := HandleOnSetEditorSleepProgressBarMax;
@@ -1213,6 +1253,14 @@ begin
   FOnLoadRenderedBitmap := nil;
   FOnRenderBmpExternally := nil;
   FOnGetListOfExternallyRenderedImages := nil;
+
+  {$IFDEF MemPlugins}
+    FOnGetListOfInMemPlugins := nil;
+    FOnLoadPluginFromDiskToPluginInMemFileSystem := nil;
+  {$ENDIF}
+
+  FOnLoadPluginFromInMemFS := nil;
+
   FOnLoadPrimitivesFile := nil;
   FOnSavePrimitivesFile := nil;
 
@@ -1420,6 +1468,28 @@ end;
 procedure TfrClickerActionsArr.HandleOnGetListOfExternallyRenderedImages(AListOfExternallyRenderedImages: TStringList);
 begin
   DoOnGetListOfExternallyRenderedImages(AListOfExternallyRenderedImages);
+end;
+
+
+{$IFDEF MemPlugins}
+  procedure TfrClickerActionsArr.HandleOnGetListOfInMemPlugins(AListOfInMemPlugins: TStringList);
+  begin
+    DoOnGetListOfInMemPlugins(AListOfInMemPlugins);
+  end;
+
+
+  procedure TfrClickerActionsArr.HandleOnLoadPluginFromDiskToPluginInMemFileSystem(APluginPath: string);
+  begin
+    DoOnLoadPluginFromDiskToPluginInMemFileSystem(APluginPath);
+  end;
+
+{$ENDIF}
+
+
+function TfrClickerActionsArr.HandleOnLoadPluginFromInMemFS(APlugin: TMemoryStream; AFileName: string): Boolean;
+begin
+  AFileName := ResolveTemplatePath(AFileName); //////////////////// Added for plugin. Not sure how it affects unresolved path, which may be validated from allowed dirs.
+  Result := DoOnLoadPluginFromInMemFS(APlugin, AFileName);
 end;
 
 
@@ -1975,8 +2045,10 @@ end;
 
 procedure TfrClickerActionsArr.HandleOnModifyPluginProperty(AAction: PClkActionRec);
 begin
-  if DoOnFileExists(ResolveTemplatePath(AAction^.PluginOptions.FileName)) then
-    SetActionPropertiesFromPlugin(AAction^);
+  {$IFNDEF MemPlugins}
+    if DoOnFileExists(ResolveTemplatePath(AAction^.PluginOptions.FileName)) then
+  {$ENDIF}
+      SetActionPropertiesFromPlugin(AAction^);
 end;
 
 
@@ -2845,6 +2917,35 @@ begin
 end;
 
 
+{$IFDEF MemPlugins}
+  procedure TfrClickerActionsArr.DoOnGetListOfInMemPlugins(AListOfInMemPlugins: TStringList);
+  begin
+    if not Assigned(FOnGetListOfInMemPlugins) then
+      raise Exception.Create('OnGetListOfInMemPlugins not assigned.')
+    else
+      FOnGetListOfInMemPlugins(AListOfInMemPlugins);
+  end;
+
+
+  procedure TfrClickerActionsArr.DoOnLoadPluginFromDiskToPluginInMemFileSystem(APluginPath: string);
+  begin
+    if not Assigned(FOnLoadPluginFromDiskToPluginInMemFileSystem) then
+      raise Exception.Create('OnLoadPluginFromDiskToPluginInMemFileSystem not assigned.')
+    else
+      FOnLoadPluginFromDiskToPluginInMemFileSystem(APluginPath);
+  end;
+{$ENDIF}
+
+
+function TfrClickerActionsArr.DoOnLoadPluginFromInMemFS(APlugin: TMemoryStream; AFileName: string): Boolean;
+begin
+  if Assigned(FOnLoadPluginFromInMemFS) then
+    Result := FOnLoadPluginFromInMemFS(APlugin, AFileName)
+  else
+    Result := False;
+end;
+
+
 procedure TfrClickerActionsArr.DoOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
 begin
   if not Assigned(FOnLoadPrimitivesFile) then
@@ -3703,7 +3804,7 @@ begin
     frClickerActions.imglstPluginProperties.AddMasked(frClickerActions.imgPluginFileName.Picture.Bitmap, clFuchsia);
 
     ActionPlugin.Loaded := False;
-    LoadingResult := ActionPlugin.LoadToGetProperties(ResolvedPluginPath, DoOnUpdatePropertyIcons, AddToLog);
+    LoadingResult := ActionPlugin.LoadToGetProperties(ResolvedPluginPath, DoOnLoadPluginFromInMemFS, DoOnUpdatePropertyIcons, AddToLog);
   except
     on E: Exception do
     begin
@@ -5696,7 +5797,9 @@ begin
             vstActions.RootNodeCount := Length(FClkActions);
 
             if FClkActions[APasteIndex].ActionOptions.Action = acPlugin then
-              if DoOnFileExists(ResolveTemplatePath(FClkActions[APasteIndex].PluginOptions.FileName)) then
+              {$IFnDEF MemPlugins}
+                if DoOnFileExists(ResolveTemplatePath(FClkActions[APasteIndex].PluginOptions.FileName)) then
+              {$ENDIF}
                 SetActionPropertiesFromPlugin(FClkActions[APasteIndex]);
           end
           else
@@ -5708,7 +5811,9 @@ begin
               vstActions.Selected[vstActions.GetLast] := True;
 
               if FClkActions[Length(FClkActions) - 1].ActionOptions.Action = acPlugin then
-                if DoOnFileExists(ResolveTemplatePath(FClkActions[Length(FClkActions) - 1].PluginOptions.FileName)) then
+                {$IFnDEF MemPlugins}
+                  if DoOnFileExists(ResolveTemplatePath(FClkActions[Length(FClkActions) - 1].PluginOptions.FileName)) then
+                {$ENDIF}
                   SetActionPropertiesFromPlugin(FClkActions[Length(FClkActions) - 1]);
             end;
         end

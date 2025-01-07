@@ -152,13 +152,8 @@ end;
 
 
 function TTestLowLevelHTTPAPI.GetPluginPath: string;
-var
-  AppBitness: string;
-  OSBitness: string;
 begin
-  AppBitness := GetVarValueFromServer('$AppBitness$');
-  OSBitness := GetVarValueFromServer('$OSBitness$');
-  Result := '$AppDir$\..\UIClickerFindWindowsPlugin\lib\' + AppBitness + '-' + OSBitness + '\UIClickerFindWindows.dll';
+  Result := '$AppDir$\..\UIClickerFindWindowsPlugin\lib\' + GetPluginBitnessDirName + '\UIClickerFindWindows.dll';
 end;
 
 

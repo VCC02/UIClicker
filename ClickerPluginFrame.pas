@@ -107,6 +107,10 @@ type
 
     FOnTClkIniFileCreate: TOnTClkIniFileCreate;
 
+    {$IFDEF MemPlugins}
+      FOnLoadPluginFromInMemFS: TOnLoadPluginFromInMemFS;
+    {$ENDIF}
+
     function GetSelectedLine: string;
 
     procedure ExtractSelectedSourceFileAndLineFromDbgName(ALineContent: string; var ASelectedLine, ASelectedSourceFileIndex: Integer; var AAllDbgLinesFromSelectedFile: TIntArr);
@@ -128,6 +132,10 @@ type
     procedure DoOnPluginDbgSetBreakpoint(ALineIndex, ASelectedSourceFileIndex: Integer; AEnabled: Boolean);
 
     function DoOnTClkIniFileCreate(AFileName: string): TClkIniFile;
+
+    {$IFDEF MemPlugins}
+      function DoOnLoadPluginFromInMemFS(APlugin: TMemoryStream; AFileName: string): Boolean;
+    {$ENDIF}
   public
     constructor Create(TheOwner: TComponent); override;
     destructor Destroy; override;
@@ -151,6 +159,10 @@ type
     property OnPluginDbgSetBreakpoint: TOnPluginDbgSetBreakpoint write FOnPluginDbgSetBreakpoint;
 
     property OnTClkIniFileCreate: TOnTClkIniFileCreate write FOnTClkIniFileCreate;
+
+    {$IFDEF MemPlugins}
+      property OnLoadPluginFromInMemFS: TOnLoadPluginFromInMemFS read FOnLoadPluginFromInMemFS write FOnLoadPluginFromInMemFS;
+    {$ENDIF}
   end;
 
 implementation
@@ -159,7 +171,11 @@ implementation
 
 
 uses
-  ClickerActionPlugins, BitmapProcessing, ClickerVstUtils;
+  ClickerActionPlugins, BitmapProcessing, ClickerVstUtils
+  {$IFDEF MemPlugins}
+    , ClickerActionPluginLoader
+  {$ENDIF}
+  ;
 
 
 constructor TfrClickerPlugin.Create(TheOwner: TComponent);
@@ -176,6 +192,10 @@ begin
   FOnPluginDbgSetBreakpoint := nil;
 
   FOnTClkIniFileCreate := nil;
+
+  {$IFDEF MemPlugins}
+    FOnLoadPluginFromInMemFS := nil;
+  {$ENDIF}
 
   FSelectedLine := -1;
   FLineIntoView := -1;
@@ -627,6 +647,17 @@ begin
 end;
 
 
+{$IFDEF MemPlugins}
+  function TfrClickerPlugin.DoOnLoadPluginFromInMemFS(APlugin: TMemoryStream; AFileName: string): Boolean;
+  begin
+    if Assigned(FOnLoadPluginFromInMemFS) then
+      Result := FOnLoadPluginFromInMemFS(APlugin, AFileName)
+    else
+      Result := False;
+  end;
+{$ENDIF}
+
+
 procedure TfrClickerPlugin.UpdateDebugSymbolsFileWithBreakPoints;
 var
   Ini: TClkIniFile;
@@ -662,64 +693,94 @@ var
   i, j: Integer;
   BreakPointCount: Integer;
   CurrentSourceFileName: string;
+  {$IFDEF MemPlugins}
+    LoadPluginDbgSymRes: Boolean;
+    MemStream: TMemoryStream;
+  {$ENDIF}
 begin
   spdbtnStopPlaying.Visible := False;
   spdbtnContinuePlayingAll.Visible := False;
   spdbtnStepOver.Visible := False;
 
-  if FileExists(ADbgSymFnm) then
-  begin
-    UpdateMsgLabel('Debug symbols file "' + ADbgSymFnm + '".');
-    FDbgSymFnm := ADbgSymFnm;
-
-    Ini := TClkIniFile.Create(ADbgSymFnm);
+  {$IFDEF MemPlugins}
+    MemStream := TMemoryStream.Create;
     try
-      ClearSourceFilesArr;
-      SetLength(FSourceFiles, Ini.GetSectionCount);
+      if IsMemPluginPath(ADbgSymFnm) then
+        LoadPluginDbgSymRes := DoOnLoadPluginFromInMemFS(MemStream, ADbgSymFnm)
+      else
+        LoadPluginDbgSymRes := FileExists(ADbgSymFnm);
 
-      if Length(FBreakPointsArr) <> Ini.GetSectionCount then //all items must be reallocated and their contents be updated
+      if LoadPluginDbgSymRes then
+  {$ELSE}
+      if FileExists(ADbgSymFnm) then
+  {$ENDIF}
       begin
-        ClearBreakPointsArr;
-        SetLength(FBreakPointsArr, Ini.GetSectionCount);  //number of source files in the current plugin
+        UpdateMsgLabel('Debug symbols file "' + ADbgSymFnm + '".');
+        FDbgSymFnm := ADbgSymFnm;
 
-        for i := 0 to Length(FSourceFiles) - 1 do
-        begin
-          CurrentSourceFileName := Ini.GetSectionAtIndex(i);
-          FBreakPointsArr[i] := TStringList.Create;
+        {$IFDEF MemPlugins}
+          if IsMemPluginPath(ADbgSymFnm) then
+            Ini := TClkIniFile.Create(MemStream)
+          else
+            Ini := TClkIniFile.Create(ADbgSymFnm);
+        {$ELSE}
+          Ini := TClkIniFile.Create(ADbgSymFnm);
+        {$ENDIF}
+        try
+          ClearSourceFilesArr;
+          SetLength(FSourceFiles, Ini.GetSectionCount);
 
-          BreakPointCount := Ini.ReadInteger(CurrentSourceFileName, 'BrkPointCount', 0);
-          for j := 0 to BreakPointCount - 1 do
-            FBreakPointsArr[i].Add(Ini.ReadString(CurrentSourceFileName, 'BrkPointIdx' + IntToStr(j), '0'));
+          if Length(FBreakPointsArr) <> Ini.GetSectionCount then //all items must be reallocated and their contents be updated
+          begin
+            ClearBreakPointsArr;
+            SetLength(FBreakPointsArr, Ini.GetSectionCount);  //number of source files in the current plugin
+
+            for i := 0 to Length(FSourceFiles) - 1 do
+            begin
+              CurrentSourceFileName := Ini.GetSectionAtIndex(i);
+              FBreakPointsArr[i] := TStringList.Create;
+
+              BreakPointCount := Ini.ReadInteger(CurrentSourceFileName, 'BrkPointCount', 0);
+              for j := 0 to BreakPointCount - 1 do
+                FBreakPointsArr[i].Add(Ini.ReadString(CurrentSourceFileName, 'BrkPointIdx' + IntToStr(j), '0'));
+            end;
+          end;
+
+          for i := 0 to Length(FSourceFiles) - 1 do
+          begin
+            FSourceFiles[i].Content := TStringList.Create;
+            FSourceFiles[i].DbgLines := TStringList.Create;
+
+            FSourceFiles[i].Fnm := Ini.GetSectionAtIndex(i);
+
+            if FileExists(FSourceFiles[i].Fnm) then
+            begin
+              FSourceFiles[i].Content.LoadFromFile(FSourceFiles[i].Fnm);
+              Ini.ReadSection(i, FSourceFiles[i].DbgLines);
+            end
+            else
+              FSourceFiles[i].Content.Add('Source file "' + FSourceFiles[i].Fnm + '" not found.');
+          end;
+
+          FSelectedLine := -1;
+          FLineIntoView := -1;
+        finally
+          Ini.Free;
         end;
-      end;
 
-      for i := 0 to Length(FSourceFiles) - 1 do
-      begin
-        FSourceFiles[i].Content := TStringList.Create;
-        FSourceFiles[i].DbgLines := TStringList.Create;
-
-        FSourceFiles[i].Fnm := Ini.GetSectionAtIndex(i);
-
-        if FileExists(FSourceFiles[i].Fnm) then
-        begin
-          FSourceFiles[i].Content.LoadFromFile(FSourceFiles[i].Fnm);
-          Ini.ReadSection(i, FSourceFiles[i].DbgLines);
-        end
-        else
-          FSourceFiles[i].Content.Add('Source file "' + FSourceFiles[i].Fnm + '" not found.');
-      end;
-
-      FSelectedLine := -1;
-      FLineIntoView := -1;
+        if FCachedLineContent <> '' then
+          SelectLineByContent(FCachedLineContent);  //called when manually switching actions in list
+      end
+      else
+        UpdateMsgLabel('Debug symbols file "' + ADbgSymFnm + '" not found.');
+  {$IFDEF MemPlugins}
     finally
-      Ini.Free;
+      MemStream.Free;
     end;
+  {$ENDIF}
 
-    if FCachedLineContent <> '' then
-      SelectLineByContent(FCachedLineContent);  //called when manually switching actions in list
-  end
-  else
-    UpdateMsgLabel('Debug symbols file "' + ADbgSymFnm + '" not found.');
+  lblMsg.Hint := 'Debug symbols file:' + #13#10 + ADbgSymFnm;
+  lblMsg.ShowHint := True;
 end;
 
 

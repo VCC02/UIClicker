@@ -4607,7 +4607,7 @@ begin
     Exit;
 
   ZoneFnm := DoOnGetSaveDialogFileName;
-  if ExtractFileName(ZoneFnm) = ExtractFileNameNoExt(ZoneFnm) then
+  if ExtractFileExt(ZoneFnm) = '' then //if ExtractFileName(ZoneFnm) = ExtractFileNameNoExt(ZoneFnm) then
     ZoneFnm := ZoneFnm + '.zone';
 
   SaveZones(ZoneFnm);

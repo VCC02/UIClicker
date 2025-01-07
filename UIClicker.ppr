@@ -49,7 +49,11 @@ uses
   ClickerPrimitivesCompositor, ClickerPrimitivesCompEditors,
   ClickerWinInterpFrame, ClickerFontFinderSettingsForm, BitmapConv,
   ClickerActionPlugins, ClickerActionPluginLoader, DllUtils, ClickerExtraUtils,
-  ClickerPluginFrame, ClickerFileProviderUtils, ClickerVstUtils;
+  ClickerPluginFrame,
+  {$IFDEF MemPlugins}
+    DynMemLib, //search for DynMemLib.pas on GitHub if not found
+  {$ENDIF}
+  ClickerFileProviderUtils, ClickerVstUtils;
 
 {$R *.res}
 

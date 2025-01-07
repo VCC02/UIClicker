@@ -1006,6 +1006,32 @@ begin
 end;
 
 
+function SendMemPluginFileToServer(AFileName, AFileContent: Pointer; AFileSize: Int64; AResultStr: Pointer): Integer; cdecl;
+var
+  Res: string;
+  FileName: string;
+  MemStream: TMemoryStream;
+begin
+  SetPointedContentToString(@string(PWideChar(AFileName))[1], FileName);
+  Res := '';
+  try
+    MemStream := TMemoryStream.Create;
+    try
+      MemStream.SetSize(AFileSize);
+      Move(AFileContent^, MemStream.Memory^, AFileSize);
+      Res := SendMemPluginFile(FRemoteAddress, FileName, MemStream, True);
+    finally
+      MemStream.Free;
+    end;
+
+    Result := SetPointedContentFromString(Res, AResultStr);
+  except
+    on E: Exception do
+      AddToLog('Can''t send plugin file to server: "' + E.Message + '"  Res: ' + Res);
+  end;
+end;
+
+
 procedure ClearClientInMemFS; cdecl;
 begin
   InMemFS.Clear;
@@ -1287,6 +1313,7 @@ exports
   AddListOfAccessibleFileExtensionsToFileProviderClient,
   FileProviderClientThreadDone,
   SetFileProviderClientConnectTimeout,
+  SendMemPluginFileToServer,
 
   ClearClientInMemFS,
   ClearServerInMemFS,

@@ -97,6 +97,8 @@ type
     function ExecTestTemplate(ATestServerAddress, ATemplateName: string): string;
     function AsyncExecTestTemplate(ATestServerAddress, ATemplateName: string): TClientThread;
 
+    function GetPluginBitnessDirName: string;
+
     property InMemFS: TInMemFileSystem read FInMemFS;
   public
     property TestServerAddress: string read FTestServerAddress write FTestServerAddress;
@@ -643,6 +645,17 @@ var
 begin
   GetCallTemplateOptionsForExecTemplate(ATemplateName, CallTemplateOptions);
   Result := AsyncExecuteCallTemplateAction(ATestServerAddress, CallTemplateOptions, False, False, CREParam_FileLocation_ValueDisk);
+end;
+
+
+function TTestHTTPAPI.GetPluginBitnessDirName: string;
+var
+  AppBitness: string;
+  OSBitness: string;
+begin
+  AppBitness := GetVarValueFromServer('$AppBitness$');
+  OSBitness := GetVarValueFromServer('$OSBitness$');
+  Result := AppBitness + '-' + OSBitness;
 end;
 
 end.

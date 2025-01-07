@@ -69,7 +69,14 @@ type
   TOnGetSelectedCompFromRemoteWin = function: THandle of object;
   TOnLoadBitmap = function(ABitmap: TBitmap; AFileName: string): Boolean of object; //returns True if file loaded, and False if file not found
   TOnLoadRenderedBitmap = function(ABitmap: TBitmap; AFileName: string): Boolean of object; //returns True if file loaded, and False if file not found in in-mem FS for received rendered bitmaps
+  TOnLoadPluginFromInMemFS = function(APlugin: TMemoryStream; AFileName: string): Boolean of object;
+  TOnLoadPluginFromDiskToPluginInMemFileSystem = procedure(APluginPath: string) of object;
   TOnGetListOfExternallyRenderedImages = procedure(AListOfExternallyRenderedImages: TStringList) of object;
+
+  {$IFDEF MemPlugins}
+    TOnGetListOfInMemPlugins = procedure(AListOfInMemPlugins: TStringList) of object;
+  {$ENDIF}
+
   TOnRenderBmpExternally = function(ARequest: string): string of object; //Returns client result (empty string for no error).
   TOnEditActionCondition = function(var AActionCondition: string): Boolean of object;
   TOnSetMatchTextAndClassToOI = procedure(AMatchText, AMatchClassName: string) of object;
@@ -140,6 +147,10 @@ const
   CExtBmp_Params = 'Params';
   CExtBmp_IncludeFilenameInRequest = 'IncludeFilenameInRequest';  //can be '0' or '1'
   CExtBmp_FilenameMaxLen = 1024;
+
+  {$IFDEF MemPlugins}
+    CMemPluginLocationPrefix = 'Mem:';  //If a plugin path starts with this prefix, then UIClicker expects the plugin to exist in memory.
+  {$ENDIF}
 
 
 type

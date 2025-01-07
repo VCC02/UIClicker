@@ -89,6 +89,7 @@ type
     FOnLoadBitmap: TOnLoadBitmap;
     FOnLoadRenderedBitmap: TOnLoadRenderedBitmap;
     FOnRenderBmpExternally: TOnRenderBmpExternally;
+    FOnLoadPluginFromInMemFS: TOnLoadPluginFromInMemFS;
     FOnGetActionProperties: TOnGetActionProperties;
     FOnWaitForBitmapsAvailability: TOnWaitForBitmapsAvailability;
     FOnCallTemplate: TOnCallTemplate;
@@ -154,6 +155,7 @@ type
     function DoOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     function DoOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     function DoOnRenderBmpExternally(ARequest: string): string;
+    function DoOnLoadPluginFromInMemFS(APlugin: TMemoryStream; AFileName: string): Boolean;
     function DoOnGetActionProperties(AActionName: string): PClkActionRec;
     procedure DoOnWaitForBitmapsAvailability(AListOfFiles: TStringList);
     procedure DoOnSetEditorSleepProgressBarMax(AMaxValue: Integer);
@@ -248,6 +250,7 @@ type
     property OnLoadBitmap: TOnLoadBitmap write FOnLoadBitmap;
     property OnLoadRenderedBitmap: TOnLoadRenderedBitmap write FOnLoadRenderedBitmap;
     property OnRenderBmpExternally: TOnRenderBmpExternally write FOnRenderBmpExternally;
+    property OnLoadPluginFromInMemFS: TOnLoadPluginFromInMemFS write FOnLoadPluginFromInMemFS;
     property OnGetActionProperties: TOnGetActionProperties write FOnGetActionProperties;
     property OnWaitForBitmapsAvailability: TOnWaitForBitmapsAvailability write FOnWaitForBitmapsAvailability;
     property OnCallTemplate: TOnCallTemplate write FOnCallTemplate;
@@ -324,6 +327,7 @@ begin
   FOnLoadBitmap := nil;
   FOnLoadRenderedBitmap := nil;
   FOnRenderBmpExternally := nil;
+  FOnLoadPluginFromInMemFS := nil;
   FOnGetActionProperties := nil;
   FOnWaitForBitmapsAvailability := nil;
   FOnCallTemplate := nil;
@@ -699,6 +703,15 @@ begin
     Result := FOnRenderBmpExternally(ARequest)
   else
     raise Exception.Create('OnRenderBmpExternally is not assigned.');
+end;
+
+
+function TActionExecution.DoOnLoadPluginFromInMemFS(APlugin: TMemoryStream; AFileName: string): Boolean;
+begin
+  if Assigned(FOnLoadPluginFromInMemFS) then
+    Result := FOnLoadPluginFromInMemFS(APlugin, AFileName)
+  else
+    Result := False;
 end;
 
 
@@ -3696,6 +3709,7 @@ begin
   try
     ActionPlugin.Loaded := False;
     if not ActionPlugin.LoadToExecute(AResolvedPluginPath,
+                                      FOnLoadPluginFromInMemFS,
                                       AddToLog,
                                       DoOnExecuteActionByName,
                                       HandleOnSetVar,

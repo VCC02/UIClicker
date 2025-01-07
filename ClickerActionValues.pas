@@ -3118,6 +3118,16 @@ begin
   Result := 'Filename of the dll.' + #13#10 +
             'When changing value of this property, the dll is loaded to get its list of custom properties.' + #13#10 +
             'That list is also loaded on template loading.';
+
+  {$IFDEF MemPlugins}
+    Result := Result + #13#10#13#10 +
+              'If this path starts with "Mem:\" (without quotes),' + #13#10 +
+              'the plugin and its dbgsym file must exist in the InMem file system for plugins.' + #13#10 +
+              'Plugins and their related files can be sent to UIClicker''s InMem FS, via the HTTP API, using the SetMemPluginFile command.';
+  {$ELSE}
+    Result := Result + #13#10#13#10 +
+              'Memory plugins can be used if UIClicker is built using the MemPlugins compiler directive, present at project level.';
+  {$ENDIF}
 end;
 
 
