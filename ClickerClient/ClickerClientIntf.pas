@@ -39,6 +39,7 @@ type
   TGetServerAddress_Proc = function(AResponse: Pointer): LongInt; cdecl;
   TTestConnectionToServer_Proc = function(AResponse: Pointer): LongInt; cdecl;
   TSendMemPluginFileToServer_Proc = function(AFileName, AFileContent: Pointer; AFileSize: Int64; AResultStr: Pointer): Integer; cdecl;
+  TSendMemPluginArchiveFileToServer_Proc = function(AFileName, ADecryptionPluginName, ADecompressionPluginName, AHashingPluginName, AFileContent: Pointer; AFileSize: Int64; ACompressionLevel: Integer; AAdditionalInfo: Pointer; AIsDecDecHash: Boolean; AResultStr: Pointer): Integer; cdecl;
 
   TExecuteClickAction_Proc = function(AActionName: Pointer;
                                       AActionTimeout: LongInt; //ms
@@ -122,6 +123,7 @@ var
   GetServerAddress: TGetServerAddress_Proc;
   TestConnectionToServer: TTestConnectionToServer_Proc;
   SendMemPluginFileToServer: TSendMemPluginFileToServer_Proc;
+  SendMemPluginArchiveFileToServer: TSendMemPluginArchiveFileToServer_Proc;
 
   ExecuteClickAction: TExecuteClickAction_Proc;
   ExecuteExecAppAction: TExecuteExecAppAction_Proc;
@@ -160,6 +162,7 @@ begin
   @GetServerAddress := GetProcAddress(FClickerClientDllHandle, 'GetServerAddress');
   @TestConnectionToServer := GetProcAddress(FClickerClientDllHandle, 'TestConnectionToServer');
   @SendMemPluginFileToServer := GetProcAddress(FClickerClientDllHandle, 'SendMemPluginFileToServer');
+  @SendMemPluginArchiveFileToServer := GetProcAddress(FClickerClientDllHandle, 'SendMemPluginArchiveFileToServer');
 
   @ExecuteClickAction := GetProcAddress(FClickerClientDllHandle, 'ExecuteClickAction');
   @ExecuteExecAppAction := GetProcAddress(FClickerClientDllHandle, 'ExecuteExecAppAction');

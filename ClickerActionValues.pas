@@ -3123,7 +3123,33 @@ begin
     Result := Result + #13#10#13#10 +
               'If this path starts with "Mem:\" (without quotes),' + #13#10 +
               'the plugin and its dbgsym file must exist in the InMem file system for plugins.' + #13#10 +
-              'Plugins and their related files can be sent to UIClicker''s InMem FS, via the HTTP API, using the SetMemPluginFile command.';
+              'Plugins and their related files can be sent to UIClicker''s InMem FS, via the HTTP API, using the SetMemPluginFile command.' + #13#10#13#10 +
+
+              'It is also possible to send multiple plugins and their files, in a single request, by archiving them and using the SetMemPluginArchiveFile command.' + #13#10 +
+              'Sending plugin archives has the advantage of using encryption, compression and verifying the archive integrity with a custom hash algorithm.' + #13#10 +
+              'Another advantage is the ability to archive both 32-bit and 64-bit plugins, then let UIClicker extract only the matching ones.' + #13#10 +
+              'If a file from an archive, has its path starting with "i386-win32", it is extracted to the InMem FS, by a 32-bit UIClicker.' + #13#10 +
+              'If a file from an archive, has its path starting with "x86-win64", it is extracted to the InMem FS, by a 64-bit UIClicker.' + #13#10 +
+              'A file, from an archive, with a path starting with "i386-win32", is ignored (not extracted), by a 64-bit UIClicker.' + #13#10 +
+              'A file, from an archive, with a path starting with "x86-win64", is ignored (not extracted), by a 32-bit UIClicker.' + #13#10 +
+              'All the other files (outside the "i386-win32" and "x86-win64" directories), from inside the archive, are extracted.' + #13#10#13#10 +
+
+              'The SetMemPluginArchiveFile command has a parameter, AIsDecDecHash, which decides what type of archive is being sent.' + #13#10 +
+              'If set to 1 (i.e. True), it means that the archive contains plugin(s) for decryption, decompression and custom hashing.' + #13#10 +
+              'These types of plugins, called DecDecHash (and all the other files in the archive) will be extracted in separate InMem file systems (one FS / archive).' + #13#10 +
+              'If set to 0 (i.e. False), all the files are extracted to the InMem FS, used by the SetMemPluginFile command.' + #13#10 +
+              'Upon extraction, files are prefixed with the "Mem:\" string automatically.' + #13#10 +
+              'An archive uses decryption, decompression and custom hashing, if their respective parameters are set to valid and existing plugin names in SetMemPluginArchiveFile command.' + #13#10 +
+              'If these parameters are empty strings, their algorithms are not used. If custom hashing is not used, then the archive is verifyed with MD5.' + #13#10#13#10 +
+
+              'The DecDecHash plugins use the same API as ordinary action plugins, plus an additional function, which does the decryption, decompression or custom hashing.' + #13#10 +
+              'The DecDecHash plugins are expected to exist in their InMem file systems, in order for an archive to be successfully extracted, if it requires them.' + #13#10 +
+              'Unfortunately, the security of the first sent decryption plugin is low, because it will have to be sent in plain (i.e. unencrypted archive).' + #13#10 +
+              'Although plugins can access the disk, only plugins from these special InMem file systems can be used for decryption, decompression and custom hashing.' + #13#10 +
+              'Unless specifically implemented, all the above mentioned plugins remain in memory, during the existence of the UIClicker process.' + #13#10 +
+              'The decryption, decompression and custom hashing are implemented in plugins, while the custom archiving component is provided by UIClicker (MemArchive.pas).' + #13#10 +
+              'The tool(s) for creating the archives will have to use this archiving component (or a compatible implementation) and the matching encryption and compression algorithms.'
+              ;
   {$ELSE}
     Result := Result + #13#10#13#10 +
               'Memory plugins can be used if UIClicker is built using the MemPlugins compiler directive, present at project level.';

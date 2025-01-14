@@ -42,18 +42,18 @@ uses
   ClickerActionsPaletteFrame, UIClickerMainFormFP, ClickerRemoteScreenForm,
   ClickerPreviewForm, ClickerActionExecution, ClickerTemplateNotesForm,
   ClickerZoomPreviewForm, ObjectInspectorFrame, AutoCompleteForm,
-  InMemFileSystemBrowserForm, ClickerActionValues, ClickerExecAppFrame,
-  ClickerSetVarFrame, ClickerSleepFrame, ClickerCallTemplateFrame, ClickerUtils,
-  ClickerPrimitiveUtils, ClickerPrimitivesFrame, ClickerPrimitiveValues,
-  ClickerPrimitives, ClickerOIUtils, ClickerActionProperties,
-  ClickerPrimitivesCompositor, ClickerPrimitivesCompEditors,
-  ClickerWinInterpFrame, ClickerFontFinderSettingsForm, BitmapConv,
-  ClickerActionPlugins, ClickerActionPluginLoader, DllUtils, ClickerExtraUtils,
-  ClickerPluginFrame,
+  InMemFileSystemBrowserForm, MemArchive, ClickerActionValues,
+  ClickerExecAppFrame, ClickerSetVarFrame, ClickerSleepFrame,
+  ClickerCallTemplateFrame, ClickerUtils, ClickerPrimitiveUtils,
+  ClickerPrimitivesFrame, ClickerPrimitiveValues, ClickerPrimitives,
+  ClickerOIUtils, ClickerActionProperties, ClickerPrimitivesCompositor,
+  ClickerPrimitivesCompEditors, ClickerWinInterpFrame,
+  ClickerFontFinderSettingsForm, BitmapConv, ClickerActionPlugins,
+  ClickerActionPluginLoader, DllUtils, ClickerExtraUtils, ClickerPluginFrame,
   {$IFDEF MemPlugins}
     DynMemLib, //search for DynMemLib.pas on GitHub if not found
   {$ENDIF}
-  ClickerFileProviderUtils, ClickerVstUtils;
+  ClickerFileProviderUtils, ClickerVstUtils, ClickerPluginArchive;
 
 {$R *.res}
 

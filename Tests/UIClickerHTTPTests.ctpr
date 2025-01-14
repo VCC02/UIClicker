@@ -22,6 +22,9 @@
     </RunParams>
     <RequiredPackages>
       <Item>
+        <PackageName Value="pl_ExCompress"/>
+      </Item>
+      <Item>
         <PackageName Value="pl_Indy"/>
       </Item>
       <Item>
@@ -108,6 +111,14 @@
       </Unit>
       <Unit>
         <Filename Value="..\ClickerClient\ClickerClientIntf.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\MiscUtils\MemArchive.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="TestClickerClientMemPlugins.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
     </Units>

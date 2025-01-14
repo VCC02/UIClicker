@@ -38,6 +38,7 @@ uses
 type
   //Callbacks of callbacks:
   TOnFileContent = procedure(ACallReference, AStreamContent: Pointer; AStreamSize: Int64); cdecl;
+  TOnFileContentObj = procedure(AStreamContent: Pointer; AStreamSize: Int64) of object; cdecl;
 
   //Plugin property callbacks:
   TOnActionPlugin_UpdatePropertyIcons = procedure(APluginReference: Pointer; AStreamContent: Pointer; AStreamSize: Int64); cdecl; //A plugin calls this procedure to update the TImageList component in UIClicker, used on displaying plugin properties. This callback will be called for every property. UIClicker has to clear and add fixed icons to the image list, prior to calling TGetListOfProperties. On every call of this callback, UIClicker has to add a new bitmap to the image list.

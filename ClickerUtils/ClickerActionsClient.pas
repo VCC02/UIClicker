@@ -69,6 +69,13 @@ const
   CREParam_FileLocation = 'FileLocation';
   CREParam_VerifyHashes = 'VerifyHashes';
 
+  CREParam_DecryptionPluginName = 'DecryptionPluginName';
+  CREParam_DecompressionPluginName = 'DecompressionPluginName';
+  CREParam_HashingPluginName = 'HashingPluginName';
+  CREParam_IsDecDecHash = 'IsDecDecHash'; //the received plugin is one of the above: Decryption, Decompression, Hashing
+  CREParam_CompressionLevel = 'CompressionLevel';
+  CREParam_AdditionalInfo = 'AdditionalInfo';
+
   CREParam_X = 'X';
   CREParam_Y = 'Y';
   CREParam_Handle = 'Handle';
@@ -118,6 +125,7 @@ const
   CRECmd_GetRenderedFile = 'GetRenderedFile';  //Retreives a bitmap file from ExternalRenderingInMem file system. Files can be added here by executing $RenderBmpExternally()$ or they can be saved by plugins.
   CRECmd_SetRenderedFile = 'SetRenderedFile';  //Adds or updates a bitmap file to the ExternalRenderingInMem file system.
   CRECmd_SetMemPluginFile = 'SetMemPluginFile'; //Adds or updates a plugin or a plugin related file to the PluginsInMemFileSystem file system.
+  CRECmd_SetMemPluginArchiveFile = 'SetMemPluginArchiveFile'; //Extracts and archive with plugins and their related files, then adds them to the PluginsInMemFileSystem file system.
   CRECmd_MouseDown = 'MouseDown';
   CRECmd_MouseUp = 'MouseUp';
   CRECmd_PluginCmd = 'PluginCmd'; //requires additional parameters to decide what command to do. It is used to "remote click" plugin debugging buttons.   see CREParam_Plugin_ContinueAll
@@ -151,9 +159,11 @@ const
   CREResp_TemplateLoaded = 'Loaded';
   CREResp_FileNotFound = 'FileNotFound';
   CREResp_PluginDebuggingNotAvailable = 'PluginDebuggingNotAvailable'; //the plugin debugging frame is not created, probably because the request is made outside of a plugin debugging session
+  CREResp_PluginError = 'PluginError'; //generic plugin error, usually followed by details (E.g. exception message)
   CREResp_FileSystemFull = 'FileSystemFull';
   CREResp_FileTooLarge = 'FileTooLarge';
   CREResp_TooManyFilesInFileSystem = 'TooManyFilesInFileSystem';
+  CREResp_TooManyPluginFileSystems = 'TooManyPluginFileSystems';
   CREResp_NotImplemented = 'NotImplemented.';
 
   CREResp_ActionNotFound = 'ActionNotFound';
@@ -204,6 +214,7 @@ function TerminateWaitingForFileAvailability(ARemoteAddress, ALoopType: string; 
 function GetListOfRenderedFilesFromServer(ARemoteAddress: string; ACallAppProcMsg: Boolean = True): string;
 function GetRenderedFileFromServer(ARemoteAddress: string; AFileName: string; AReceivedBmp: TBitmap): string; //Returns error message if any. Returns a bitmap with error as text if file not found.
 function SendMemPluginFile(ARemoteAddress: string; AFileName: string; AFileContent: TMemoryStream; ACallAppProcMsg: Boolean = True): string; //dll, dbsym, or plugin config files
+function SendMemPluginArchiveFile(ARemoteAddress: string; AFileName, ADecryptionPluginName, ADecompressionPluginName, AHashingPluginName: string; AFileContent: TMemoryStream; ACompressionLevel: Integer; AAdditionalInfo: string; AIsDecDecHash: Boolean; ACallAppProcMsg: Boolean = True): string;
 
 function SendMouseDown(ARemoteAddress: string; AMouseParams: TStringList): string;
 function SendMouseUp(ARemoteAddress: string; AMouseParams: TStringList): string;
@@ -679,6 +690,24 @@ var
 begin
   Link := ARemoteAddress + CRECmd_SetMemPluginFile + '?' +
                            CREParam_FileName + '=' + AFileName;
+
+  Result := SendFileToServer(Link, AFileContent, ACallAppProcMsg);
+end;
+
+
+function SendMemPluginArchiveFile(ARemoteAddress: string; AFileName, ADecryptionPluginName, ADecompressionPluginName, AHashingPluginName: string; AFileContent: TMemoryStream; ACompressionLevel: Integer; AAdditionalInfo: string; AIsDecDecHash: Boolean; ACallAppProcMsg: Boolean = True): string;
+var
+  Link: string;
+begin
+  Link := ARemoteAddress + CRECmd_SetMemPluginArchiveFile + '?' +
+                           CREParam_FileName + '=' + AFileName + '&' +
+                           CREParam_DecryptionPluginName + '=' + ADecryptionPluginName + '&' +
+                           CREParam_DecompressionPluginName + '=' + ADecompressionPluginName + '&' +
+                           CREParam_HashingPluginName + '=' + AHashingPluginName + '&' +
+                           CREParam_CompressionLevel + '=' + IntToStr(ACompressionLevel) + '&' +
+                           CREParam_AdditionalInfo + '=' + AAdditionalInfo + '&' +
+                           CREParam_IsDecDecHash + '=' + IntToStr(Ord(AIsDecDecHash))
+                           ;
 
   Result := SendFileToServer(Link, AFileContent, ACallAppProcMsg);
 end;

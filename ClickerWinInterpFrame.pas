@@ -1846,7 +1846,6 @@ end;
 procedure TfrClickerWinInterp.imgLiveScreenshotMouseDown(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 var
-  tp: TPoint;
   CurrentLabel: TLabel;
   NewLeft: Integer;
   NewTop: Integer;
@@ -2594,7 +2593,6 @@ var
   FullScreenBmp: TBitmap;
   SelectionLeft, SelectionTop: Integer;
   SelectionRight, SelectionBottom: Integer;
-  Paused: Boolean;
 begin
   FDoneRec := False;
   if GetWindowRect(AInterprettedHandle, rct) = False then
@@ -2802,7 +2800,6 @@ begin
             begin
               if GetAsyncKeyState(VK_SHIFT) < 0 then
               begin //pause
-                Paused := True;
                 imgEnabledPause.Hide;
                 imgDisabledPause.Show;
 
@@ -2831,7 +2828,6 @@ begin
 
                 imgEnabledPause.Show;
                 imgDisabledPause.Hide;
-                Paused := False;
               end
               else    //simple Esc
                 Exit;
@@ -3942,7 +3938,7 @@ var
   x, y, Step, YLine: Integer;
   tp: TPoint;
   rct: TRect;
-  HW, InitialHW: THandle;
+  HW{, InitialHW}: THandle;
   AllocatedColor: TColor;
   RectWidth, RectHeight: Integer;
   tk: QWord;
@@ -3988,7 +3984,7 @@ begin
 
   tp.X := rct.Left;
   tp.Y := rct.Top;
-  InitialHW := WindowFromPoint(tp);
+  //InitialHW := WindowFromPoint(tp);
 
   prbRecording.Max := RectWidth * RectHeight;
 

@@ -1032,6 +1032,37 @@ begin
 end;
 
 
+function SendMemPluginArchiveFileToServer(AFileName, ADecryptionPluginName, ADecompressionPluginName, AHashingPluginName, AFileContent: Pointer; AFileSize: Int64; ACompressionLevel: Integer; AAdditionalInfo: Pointer; AIsDecDecHash: Boolean; AResultStr: Pointer): Integer; cdecl;
+var
+  Res: string;
+  FileName, DecryptionPluginName, DecompressionPluginName, HashingPluginName, AdditionalInfo: string;
+  MemStream: TMemoryStream;
+begin
+  SetPointedContentToString(@string(PWideChar(AFileName))[1], FileName);
+  SetPointedContentToString(@string(PWideChar(ADecryptionPluginName))[1], DecryptionPluginName);
+  SetPointedContentToString(@string(PWideChar(ADecompressionPluginName))[1], DecompressionPluginName);
+  SetPointedContentToString(@string(PWideChar(AHashingPluginName))[1], HashingPluginName);
+  SetPointedContentToString(@string(PWideChar(AAdditionalInfo))[1], AdditionalInfo);
+
+  Res := '';
+  try
+    MemStream := TMemoryStream.Create;
+    try
+      MemStream.SetSize(AFileSize);
+      Move(AFileContent^, MemStream.Memory^, AFileSize);
+      Res := SendMemPluginArchiveFile(FRemoteAddress, FileName, DecryptionPluginName, DecompressionPluginName, HashingPluginName, MemStream, ACompressionLevel, AdditionalInfo, AIsDecDecHash, True);
+    finally
+      MemStream.Free;
+    end;
+
+    Result := SetPointedContentFromString(Res, AResultStr);
+  except
+    on E: Exception do
+      AddToLog('Can''t send plugin file to server: "' + E.Message + '"  Res: ' + Res);
+  end;
+end;
+
+
 procedure ClearClientInMemFS; cdecl;
 begin
   InMemFS.Clear;
@@ -1314,6 +1345,7 @@ exports
   FileProviderClientThreadDone,
   SetFileProviderClientConnectTimeout,
   SendMemPluginFileToServer,
+  SendMemPluginArchiveFileToServer,
 
   ClearClientInMemFS,
   ClearServerInMemFS,

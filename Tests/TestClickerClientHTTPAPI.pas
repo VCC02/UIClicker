@@ -30,7 +30,7 @@ interface
 
 uses
   LCLIntf, Classes, SysUtils, TestHTTPAPI, fpcunit, testregistry, Expectations,
-  ClickerUtils, ClickerActionsClient;
+  ClickerUtils, ClickerActionsClient, MemArchive;
 
 type
   TTestClickerClientHTTPAPI = class(TTestHTTPAPI)
@@ -38,9 +38,6 @@ type
     FLoadClickerClientRes: Boolean;
 
     procedure WaitForDebuggingActionToFinish(AExecResponse: string; ATh: TClientThread);
-    function Get_FindWindows_PluginPath_RelativeToTestApp: string;
-    function Get_FindWindows_DbgSymPluginPath_RelativeToTestApp: string;
-    procedure SendGenericMemPluginFileToServer_HappyFlow(AFileName: string);
 
   protected
     procedure SetUp; override;
@@ -63,9 +60,6 @@ type
     procedure Test_ExecuteSaveSetVarToFileAction_With_UseServerDebugging;
     procedure Test_ExecutePluginAction_With_UseServerDebugging;
     procedure Test_ExecuteEditTemplateAction_With_UseServerDebugging;
-
-    procedure Test_SendMemPluginFileToServer_HappyFlow;
-    procedure Test_SendMemPluginDbgSymFileToServer_HappyFlow;
   end;
 
 
@@ -73,7 +67,7 @@ implementation
 
 
 uses
-  Controls, ClickerActionProperties,
+  Controls, ClickerActionProperties, DCPsha256, DCPmd5,
   Graphics, DllUtils, ClickerClientAPI, ClickerClientIntf, ShellAPI;
 
 
@@ -486,61 +480,6 @@ begin
     Th.Free;
   end;
 end;
-
-
-function TTestClickerClientHTTPAPI.Get_FindWindows_PluginPath_RelativeToTestApp: string;
-begin
-  Result := ExtractFilePath(ParamStr(0)) + '..\..\UIClickerFindWindowsPlugin\lib\' + GetPluginBitnessDirName + '\UIClickerFindWindows.dll';
-end;
-
-
-function TTestClickerClientHTTPAPI.Get_FindWindows_DbgSymPluginPath_RelativeToTestApp: string;
-begin
-  Result := ExtractFullFileNameNoExt(Get_FindWindows_PluginPath_RelativeToTestApp) + '.dbgsym';
-end;
-
-
-procedure TTestClickerClientHTTPAPI.SendGenericMemPluginFileToServer_HappyFlow(AFileName: string);
-var
-  MemStream: TMemoryStream;
-  FileNameWS: WideString;
-  Response: string;
-  ResLen: Integer;
-begin
-  Expect(FileExists(AFileName)).ToBe(True, 'The test expects this file to exist on disk: "' + AFileName + '".');
-
-  MemStream := TMemoryStream.Create;
-  try
-    FileNameWS := WideString(ExtractFileName(AFileName));
-    SetLength(Response, CMaxSharedStringLength);
-
-    MemStream.LoadFromFile(AFileName);
-    ResLen := SendMemPluginFileToServer(@FileNameWS[1], MemStream.Memory, MemStream.Size, @Response[1]);
-    SetLength(Response, ResLen);
-  finally
-    MemStream.Free;
-  end;
-
-  try
-    Expect(Response).ToBe(CREResp_ErrResponseOK);
-  except
-    on E: EExp do
-      Expect(Response).ToBe(CREResp_NotImplemented);
-  end;
-end;
-
-
-procedure TTestClickerClientHTTPAPI.Test_SendMemPluginFileToServer_HappyFlow;
-begin
-  SendGenericMemPluginFileToServer_HappyFlow(Get_FindWindows_PluginPath_RelativeToTestApp);
-end;
-
-
-procedure TTestClickerClientHTTPAPI.Test_SendMemPluginDbgSymFileToServer_HappyFlow;
-begin
-  SendGenericMemPluginFileToServer_HappyFlow(Get_FindWindows_DbgSymPluginPath_RelativeToTestApp);
-end;
-
 
 initialization
 

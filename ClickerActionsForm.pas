@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2024 VCC
+    Copyright (C) 2025 VCC
     creation date: Dec 2019
     initial release date: 13 Sep 2022
 
@@ -37,7 +37,7 @@ uses
   StdCtrls, ExtCtrls, Menus, ColorBox, ClickerActionsArrFrame, InMemFileSystem,
   IdHTTPServer, IdSchedulerOfThreadPool, IdCustomHTTPServer, IdContext, IdSync, IdGlobal,
   PollingFIFO, ClickerFileProviderClient, IniFiles, ClickerUtils, ClickerActionExecution,
-  ClickerIniFiles, ClickerPrimitiveUtils;
+  ClickerIniFiles, ClickerPrimitiveUtils, ClickerPluginArchive;
 
 type
   TLoggingSyncObj = class(TIdSync)
@@ -173,6 +173,9 @@ type
     FInMemFileSystem: TInMemFileSystem;   //for client-server execution
     FRenderedInMemFileSystem: TInMemFileSystem;  //for externally rendered images
     FPluginsInMemFileSystem: TInMemFileSystem;  //for storing received plugins in memory
+
+    FDecDecHashPluginInMemFSArr: TDecDecHashPluginInMemFSArr;
+
     FFileAvailabilityFIFO: TPollingFIFO;
     FPollForMissingServerFiles: TPollForMissingServerFiles;
     FProcessingMissingFilesRequestByClient: Boolean; //for activity info
@@ -482,6 +485,7 @@ begin
     MemStream.Free;
   end;
 end;
+
 
 procedure LoadPmtvFromInMemFileSystem(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings; AInMemFileSystem: TInMemFileSystem);
 var
@@ -3114,6 +3118,11 @@ var
   ListOfFileNames, ListOfFileFound: TStringList;
   VerifyHashes: Boolean;
   i: Integer;
+  PluginArchive: TClickerPluginArchive;
+  {$IFDEF MemPlugins}
+    IsDecDecHash: Boolean;
+    InMemFSIndex: Integer;
+  {$ENDIF}
 begin
   if ARequestInfo.CommandType <> hcPUT then
     Exit;
@@ -3211,6 +3220,32 @@ begin
   end;
 
   {$IFDEF MemPlugins}
+    IsDecDecHash := ARequestInfo.Params.Values[CREParam_IsDecDecHash] = '1';
+    if IsDecDecHash then
+    begin
+      InMemFSIndex := GetPluginInMemFSIndex(FDecDecHashPluginInMemFSArr, ARequestInfo.Params.Values[CREParam_FileName]);
+      if InMemFSIndex = -1 then
+      begin
+        if Length(FDecDecHashPluginInMemFSArr) >= 21 then
+        begin
+          RespondWithText(CREResp_TooManyPluginFileSystems);
+          AddToLogFromThread(Msg);
+          Exit;
+        end
+        else
+        begin
+          AddToLogFromThread('Allocating a new InMemFS for a DecDecHash plugin.');
+          SetLength(FDecDecHashPluginInMemFSArr, Length(FDecDecHashPluginInMemFSArr) + 1);
+          InMemFSIndex := Length(FDecDecHashPluginInMemFSArr) - 1;
+
+          FDecDecHashPluginInMemFSArr[InMemFSIndex].Name := ARequestInfo.Params.Values[CREParam_FileName];
+          FDecDecHashPluginInMemFSArr[InMemFSIndex].InMemFS := TInMemFileSystem.Create; //allocate a new FS for this plugin
+        end;                                                                  ///////////////ToDo: deallocate InMemFS, and remove item from FDecDecHashPluginInMemFSArr, on exception and when not needed anymore
+      end
+      else
+        AddToLogFromThread('Received a plugin with an existing name. Reusing FS: ' + ARequestInfo.Params.Values[CREParam_FileName] + '  at index ' + IntToStr(InMemFSIndex));
+    end;
+
     if ARequestInfo.Document = '/' + CRECmd_SetMemPluginFile then
     begin
       Fnm := ARequestInfo.Params.Values[CREParam_FileName];
@@ -3250,11 +3285,104 @@ begin
       TempMemStream := TMemoryStream.Create;
       try
         TempMemStream.CopyFrom(ARequestInfo.PostStream, ARequestInfo.PostStream.Size);
-        FPluginsInMemFileSystem.SaveFileToMem(Fnm, TempMemStream.Memory, TempMemStream.Size);   //FPluginsInMemFileSystem is used for plugins and their files (dbgsym or config files)
 
-        Msg := 'Received file: "' + Fnm + '"  of ' + IntToStr(TempMemStream.Size) + ' bytes in size (for PluginInMemFS).';
+        if not IsDecDecHash then
+        begin  //ordinary plugin
+          FPluginsInMemFileSystem.SaveFileToMem(Fnm, TempMemStream.Memory, TempMemStream.Size);   //FPluginsInMemFileSystem is used for plugins and their files (dbgsym or config files)
+          Msg := 'Received plugin file: "' + Fnm + '"  of ' + IntToStr(TempMemStream.Size) + ' bytes in size (for PluginInMemFS).';
+        end
+        else
+        begin  //DecDecHash plugin
+          FDecDecHashPluginInMemFSArr[InMemFSIndex].InMemFS.SaveFileToMem(Fnm, TempMemStream.Memory, TempMemStream.Size);   //FDecDecHashPluginInMemFSArr is used for DecDecHash plugins and their files (dbgsym or config files)
+          Msg := 'Received DecDecHash plugin file: "' + Fnm + '"  of ' + IntToStr(TempMemStream.Size) + ' bytes in size (for DecDecHashPluginInMemFS).';
+        end;
+
         AddToLogFromThread(Msg);
         RespondWithText(CREResp_ErrResponseOK);
+      finally
+        TempMemStream.Free;
+      end;
+
+      Exit;
+    end;
+
+    if ARequestInfo.Document = '/' + CRECmd_SetMemPluginArchiveFile then
+    begin
+      Fnm := ARequestInfo.Params.Values[CREParam_FileName];
+      if Trim(Fnm) = '' then
+      begin
+        RespondWithText('Expecting a valid filename.');
+        Exit;
+      end;
+
+      if ARequestInfo.PostStream.Size > 100 * 1048576 then
+      begin
+        RespondWithText(CREResp_FileTooLarge);
+        Exit;
+      end;
+
+      if FPluginsInMemFileSystem.TotalFileSize > 100 * 1048576 then
+      begin
+        RespondWithText(CREResp_FileSystemFull);
+        Exit;
+      end;
+
+      if FPluginsInMemFileSystem.TotalFileCount > 200 then
+      begin
+        RespondWithText(CREResp_TooManyFilesInFileSystem);
+        Exit;
+      end;
+
+      TempMemStream := TMemoryStream.Create;
+      try
+        TempMemStream.CopyFrom(ARequestInfo.PostStream, ARequestInfo.PostStream.Size);
+        //FPluginsInMemFileSystem.SaveFileToMem(Fnm, TempMemStream.Memory, TempMemStream.Size);   //FPluginsInMemFileSystem is used for plugins and their files (dbgsym or config files)
+
+        if not IsDecDecHash then
+          Msg := 'Received plugin archive file: "' + Fnm + '"  of ' + IntToStr(TempMemStream.Size) + ' bytes in size (for PluginInMemFS).'
+        else
+          Msg := 'Received DecDecHash plugin archive file: "' + Fnm + '"  of ' + IntToStr(TempMemStream.Size) + ' bytes in size (for DecDecHashPluginInMemFS).';
+
+        try
+          PluginArchive := TClickerPluginArchive.Create;
+          try
+            PluginArchive.OnAddToLog := AddToLog;
+
+            if not IsDecDecHash then
+              PluginArchive.PluginsInMemFS := FPluginsInMemFileSystem   //ordinary plugin
+            else
+              PluginArchive.PluginsInMemFS := FDecDecHashPluginInMemFSArr[InMemFSIndex].InMemFS;  //DecDecHash plugin
+
+            AddToLogFromThread('DecryptionPluginName is "' + ARequestInfo.Params.Values[CREParam_DecryptionPluginName] + '".');
+            AddToLogFromThread('DecompressionPluginName is "' + ARequestInfo.Params.Values[CREParam_DecompressionPluginName] + '".');
+            AddToLogFromThread('HashingPluginName is "' + ARequestInfo.Params.Values[CREParam_HashingPluginName] + '".');
+
+            PluginArchive.ExtractArchive(TempMemStream,
+                                         @FDecDecHashPluginInMemFSArr,
+                                         ARequestInfo.Params.Values[CREParam_DecryptionPluginName],
+                                         ARequestInfo.Params.Values[CREParam_DecompressionPluginName],
+                                         ARequestInfo.Params.Values[CREParam_HashingPluginName],
+                                         StrToIntDef(ARequestInfo.Params.Values[CREParam_CompressionLevel], 0));
+          finally
+            PluginArchive.Free;
+          end;
+
+          AddToLogFromThread(Msg);
+          RespondWithText(CREResp_ErrResponseOK);
+        except
+          on E: Exception do
+          begin
+            Msg := Msg + ' But...';
+            AddToLogFromThread(Msg);
+            AddToLogFromThread('DecryptionPluginName is "' + ARequestInfo.Params.Values[CREParam_DecryptionPluginName] + '".');
+            AddToLogFromThread('DecompressionPluginName is "' + ARequestInfo.Params.Values[CREParam_DecompressionPluginName] + '".');
+            AddToLogFromThread('HashingPluginName is "' + ARequestInfo.Params.Values[CREParam_HashingPluginName] + '".');
+
+            Msg := CREResp_PluginError + ': ' + E.Message;
+            AddToLogFromThread(Msg);
+            RespondWithText(Msg);
+          end;
+        end;
       finally
         TempMemStream.Free;
       end;
