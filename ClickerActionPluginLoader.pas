@@ -33,7 +33,7 @@ interface
 
 uses
   Windows, Classes, SysUtils, Graphics, dynlibs,
-  ClickerUtils, ClickerActionPlugins;
+  ClickerUtils, ClickerActionPlugins, InMemFileSystem;
 
 
 type
@@ -61,6 +61,7 @@ type
     FFullTemplatesDir: string;
     FAllowedFileDirsForServer: string;
     FAllowedFileExtensionsForServer: string;
+    FInMemFS: TInMemFileSystem;
 
     ResultBmp: TBitmap;
     AllActions: PClkActionsRecArr;
@@ -96,6 +97,7 @@ type
                            AStepOver,
                            APluginContinueAll: PBoolean;
                            AResultBmp: TBitmap;
+                           AInMemFS: TInMemFileSystem;
                            AFullTemplatesDir,
                            AAllowedFileDirsForServer,
                            AAllowedFileExtensionsForServer: string;
@@ -114,6 +116,17 @@ type
   end;
 
   PActionPlugin = ^TActionPlugin;
+
+
+  TPluginInMemFSAccess = class
+  private
+    FInMemFS: TInMemFileSystem;
+  public
+    constructor Create;
+    function InMemFSFunc(ACallbackIndex: Integer; AInData1, AInData2: Pointer; AInDataLen1, AInDataLen2: Int64; AOnFileContent: TOnFileContentObj): Int64;
+
+    property InMemFS: TInMemFileSystem write FInMemFS;
+  end;
 
 
 function DecodePluginPropertyFromAttribute(AValue, AAttrName: string): string;
@@ -589,6 +602,23 @@ begin
 end;
 
 
+function DoOnActionPlugin_InMemFS(APluginReference: Pointer; ACallbackIndex: Integer; AInData1, AInData2: Pointer; AInDataLen1, AInDataLen2: Int64; AOnFileContent: TOnFileContentObj): Int64; cdecl;
+var
+  ActionPlugin: PActionPlugin;
+  InMemFSAccess: TPluginInMemFSAccess;
+begin
+  ActionPlugin := APluginReference;
+
+  InMemFSAccess := TPluginInMemFSAccess.Create;
+  try
+    InMemFSAccess.InMemFS := ActionPlugin.FInMemFS;
+    Result := InMemFSAccess.InMemFSFunc(ACallbackIndex, AInData1, AInData2, AInDataLen1, AInDataLen2, AOnFileContent);
+  finally
+    InMemFSAccess.Free;
+  end;
+end;
+
+
 function TActionPlugin.DoOnLoadPluginFromInMemFS(APlugin: TMemoryStream; AFileName: string): Boolean;
 begin
   if Assigned(OnLoadPluginFromInMemFS) then
@@ -702,6 +732,7 @@ function TActionPlugin.LoadToExecute(APath: string;
                                      AStepOver,
                                      APluginContinueAll: PBoolean;
                                      AResultBmp: TBitmap;
+                                     AInMemFS: TInMemFileSystem;
                                      AFullTemplatesDir,
                                      AAllowedFileDirsForServer,
                                      AAllowedFileExtensionsForServer: string;
@@ -738,6 +769,7 @@ begin
   FStopAllActionsOnDemandFromParent := AStopAllActionsOnDemandFromParent;
   FStepOver := AStepOver;
   FPluginContinueAll := APluginContinueAll;
+  FInMemFS := AInMemFS;
 
   ResultBmp := AResultBmp;
   FFullTemplatesDir := AFullTemplatesDir;
@@ -1121,7 +1153,9 @@ begin
                                        DoOnActionPlugin_GetAllowedFilesInfo,
                                        DoOnActionPlugin_SetBitmap,
                                        DoOnActionPlugin_Screenshot,
-                                       DoOnActionPlugin_CheckStopAllActionsOnDemand);
+                                       DoOnActionPlugin_CheckStopAllActionsOnDemand{,
+                                       DoOnActionPlugin_InMemFS}
+                                       );
     finally
       if FPluginContinueAll <> nil then
         FPluginContinueAll^ := False; //reset flag after execution
@@ -1134,6 +1168,96 @@ begin
       on E: Exception do
         DoAddToLog(E.Message);
     end;
+  end;
+end;
+
+
+constructor TPluginInMemFSAccess.Create;
+begin
+  inherited Create;
+  FInMemFS := nil;
+end;
+
+
+function TPluginInMemFSAccess.InMemFSFunc(ACallbackIndex: Integer; AInData1, AInData2: Pointer; AInDataLen1, AInDataLen2: Int64; AOnFileContent: TOnFileContentObj): Int64;
+var
+  Fnm, NewFnm, ListOfFiles: string;
+begin
+  if FInMemFS = nil then
+    raise Exception.Create('Plugin InMemFS not assigned.');
+
+  Result := 0;
+
+  case ACallbackIndex of
+    CPluginInMemFSFunc_LoadFileFromMem:   //Calls   procedure LoadFileFromMem(AName: string; AContent: Pointer; AvailableIndex: Integer = -1);
+    begin
+      SetPointedContentToString(AInData1, Fnm);
+      FInMemFS.LoadFileFromMem(Fnm, AInData2);  //AInData1 points to AName, AInData2 points to AContent. The plugin has to call CPluginInMemFSFunc_GetFileSize in advance and preallocate that amount of memory, then set AInData2 pointer to it.
+    end;
+
+    CPluginInMemFSFunc_SaveFileToMem:     //Calls   procedure SaveFileToMem(AName: string; AContent: Pointer; ASize: Int64);
+    begin
+      SetPointedContentToString(AInData1, Fnm);
+      FInMemFS.SaveFileToMem(Fnm, AInData2, AInDataLen2);  //AInData1 points to AName, AInData2 is set to AContent. AInDataLen2 is set to ASize.
+    end;
+
+    CPluginInMemFSFunc_GetFileSize:       //Calls   function GetFileSize(AName: string): Int64;
+    begin
+      SetPointedContentToString(AInData1, Fnm);
+      Result := FInMemFS.GetFileSize(Fnm);
+    end;
+
+    CPluginInMemFSFunc_ListMemFiles:      //Calls   function ListMemFilesAsString: string
+    begin
+      ListOfFiles := FInMemFS.ListMemFilesAsString;
+      Result := Length(ListOfFiles);
+      AOnFileContent(@ListOfFiles[1], Result);
+    end;
+
+    CPluginInMemFSFunc_FileExistsInMem:   //Calls   function FileExistsInMem(AFileName: string): Boolean;
+    begin
+      SetPointedContentToString(AInData1, Fnm);
+      Result := Int64(FInMemFS.FileExistsInMem(Fnm));
+    end;
+
+    CPluginInMemFSFunc_DeleteFileFromMem: //Calls   procedure DeleteFileFromMem(AFileName: string);
+    begin
+      SetPointedContentToString(AInData1, Fnm);
+      FInMemFS.DeleteFileFromMem(Fnm);
+    end;
+
+    CPluginInMemFSFunc_DuplicateFile:     //Calls   function DuplicateFile(AFileName: string): string;
+    begin
+      SetPointedContentToString(AInData1, Fnm);
+      NewFnm := FInMemFS.DuplicateFile(Fnm);
+      Result := Length(NewFnm);
+      AOnFileContent(@NewFnm[1], Result);
+    end;
+
+    CPluginInMemFSFunc_RenameFile:        //Calls   procedure RenameFile(AFileName, NewFileName: string);
+    begin
+      SetPointedContentToString(AInData1, Fnm);
+      SetPointedContentToString(AInData2, NewFnm);
+
+      try
+        FInMemFS.RenameFile(Fnm, NewFnm);
+      except
+        on E: Exception do
+        begin
+          if Pos('New file already exists on renaming.', E.Message) = 1 then
+            Result := -1;
+
+          if Pos('Can''t properly rename file.', E.Message) = 1 then
+            Result := -2;
+
+          if Pos('Can''t find file to rename.', E.Message) = 1 then
+            Result := -3;
+        end;
+      end;
+    end;
+
+    else
+      raise Exception.Create('Plugin InMemFS function not implemented at index ' + IntToStr(ACallbackIndex));
   end;
 end;
 

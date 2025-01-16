@@ -5,7 +5,7 @@ Version=2
 [Action_0]
 ActionName=Find Actions window
 Action=FindControl
-ActionTimeout=3000
+ActionTimeout=7000
 ActionEnabled=1
 ActionCondition=
 BreakpointExists=0

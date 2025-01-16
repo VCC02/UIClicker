@@ -37,9 +37,12 @@ type
   private
     FLoadClickerClientRes: Boolean;
     FUseDefaultUIClickerHash: Boolean;
+    FUseDefaultEncryptionKey: Boolean;
+    FUseBadEncryptionKey: Boolean;
 
     function Get_FindWindows_PluginPath_RelativeToTestApp: string;
     function Get_FindWindows_DbgSymPluginPath_RelativeToTestApp: string;
+    function Get_Typewriter_PluginPath_RelativeToTestApp: string;
     procedure SendGenericMemPluginFileToServer_HappyFlow(AFileName: string);
 
     procedure HandleOnInitEncryption(var AArcKey: TArr32OfByte);
@@ -48,8 +51,9 @@ type
     procedure HandleOnEncryptionCleanup;
     procedure HandleOnCompress(APlainStream, AArchiveStream: TMemoryStream; ACompressionLevel: Integer);
     procedure HandleOnComputeArchiveHash(AArchiveStream: Pointer; AArchiveStreamSize: Int64; var AResultedHash: TArr32OfByte; AAdditionalInfo: string = '');
-    procedure SendGenericMemPluginArchiveFileToServer_SinglePlugin_HappyFlow(AFileName, AFileNameInsideArchive, ADecryptionPluginName, ADecompressionPluginName, AHashingPluginName: string; AUseComperssion: Boolean; AAdditionalInfo: string; AIsDecDecHash: Boolean; AExpectedError: string);
+    procedure SendGenericMemPluginArchiveFileToServer_SinglePlugin_HappyFlow(AFileName, AFileNameInsideArchive, ADecryptionPluginName, ADecompressionPluginName, AHashingPluginName: string; AUseComperssion: Boolean; AAdditionalInfo: string; AIsDecDecHash, ACreateCustomKey: Boolean; AExpectedError: string);
 
+    procedure Test_SendMemPluginArchiveFileToServer_WithDecryptOnly_CfgKey(AUseCustomKey, AUseBadKey: Boolean; AExpectedError: string);
   protected
     procedure SetUp; override;
     procedure TearDown; override;
@@ -60,6 +64,8 @@ type
     procedure Test_SendMemPluginDbgSymFileToServer_HappyFlow;
 
     procedure Test_SendMemPluginArchiveFileToServer_NoDecDecHash_HappyFlow;
+    procedure Test_SendMemPluginArchiveFileToServer_NoDecDecHash_ReusingInMemFS;
+
     procedure Test_SendMemPluginArchiveFileToServer_WithDecompOnlyAndEmptyPluginName_HappyFlow;
     procedure Test_SendMemPluginArchiveFileToServer_WithDecryptOnlyAndNoPlugin_HappyFlow;
     procedure Test_SendMemPluginArchiveFileToServer_WithDecompOnlyAndNoPlugin_HappyFlow;
@@ -69,6 +75,8 @@ type
     procedure Test_SendMemPluginArchiveFileToServer_WithDecompOnly_HappyFlow;
     procedure Test_SendMemPluginArchiveFileToServer_WithHashingOnly_HappyFlow;
     procedure Test_SendMemPluginArchiveFileToServer_WithAllDecDecHashPlugins_HappyFlow;
+    procedure Test_SendMemPluginArchiveFileToServer_WithDecryptOnly_CustomKey;
+    procedure Test_SendMemPluginArchiveFileToServer_WithDecryptOnly_BadKey;
   end;
 
 
@@ -112,6 +120,8 @@ begin
   SetVariable(CTestDriverAddress, '$ExtraCaption2$', '', 0);  //required for finding action window
 
   FUseDefaultUIClickerHash := True;
+  FUseDefaultEncryptionKey := True;
+  FUseBadEncryptionKey := False;
 end;
 
 
@@ -139,6 +149,12 @@ end;
 function TTestClickerClientMemPlugins.Get_FindWindows_DbgSymPluginPath_RelativeToTestApp: string;
 begin
   Result := ExtractFullFileNameNoExt(Get_FindWindows_PluginPath_RelativeToTestApp) + '.dbgsym';
+end;
+
+
+function TTestClickerClientMemPlugins.Get_Typewriter_PluginPath_RelativeToTestApp: string;
+begin
+  Result := ExtractFilePath(ParamStr(0)) + '..\..\UIClickerTypewriterPlugin\lib\' + GetPluginBitnessDirName + '\UIClickerTypewriter.dll';
 end;
 
 
@@ -215,6 +231,10 @@ begin
 end;
 
 
+const
+  CCustomKey = '0123456789ABCDEF0123456789ABCDEF';
+
+
 procedure TTestClickerClientMemPlugins.HandleOnEncryptArchive(AArchiveStream: TMemoryStream);
 var
   AES: TDCP_rijndael;
@@ -224,6 +244,13 @@ begin
   AES := TDCP_rijndael.Create(nil);
   try
     FillChar(Key, Length(Key), 0);
+
+    if not FUseDefaultEncryptionKey then
+      Move(CCustomKey, Key, Length(Key));
+
+    if FUseBadEncryptionKey then
+      FillChar(Key, Length(Key), 3); //a bad key
+
     AES.Init(Key, Length(Key) shl 3, nil);
 
     try
@@ -279,7 +306,7 @@ begin
 end;
 
 
-procedure TTestClickerClientMemPlugins.SendGenericMemPluginArchiveFileToServer_SinglePlugin_HappyFlow(AFileName, AFileNameInsideArchive, ADecryptionPluginName, ADecompressionPluginName, AHashingPluginName: string; AUseComperssion: Boolean; AAdditionalInfo: string; AIsDecDecHash: Boolean; AExpectedError: string);
+procedure TTestClickerClientMemPlugins.SendGenericMemPluginArchiveFileToServer_SinglePlugin_HappyFlow(AFileName, AFileNameInsideArchive, ADecryptionPluginName, ADecompressionPluginName, AHashingPluginName: string; AUseComperssion: Boolean; AAdditionalInfo: string; AIsDecDecHash, ACreateCustomKey: Boolean; AExpectedError: string);
 var
   MemStream, ArchiveStream: TMemoryStream;
   FileNameWS, DecryptionPluginNameWS, DecompressionPluginNameWS, HashingPluginNameWS, AdditionalInfoWS: WideString;
@@ -315,6 +342,14 @@ begin
     Archive.OpenArchive(ArchiveStream, True);
     try
       Archive.AddFromStream(AFileNameInsideArchive, MemStream);  //this should be .dll
+
+      if ACreateCustomKey then
+      begin
+        Archive.AddFromString('Key.txt', CCustomKey);
+        Archive.AddFromString('UseKey.txt', 'True');
+      end
+      else
+        Archive.AddFromString('UseKey.txt', 'False');
     finally
       Archive.CloseArchive;
     end;
@@ -358,7 +393,18 @@ var
   Fnm: string;
 begin
   Fnm := Get_FindWindows_PluginPath_RelativeToTestApp;
-  SendGenericMemPluginArchiveFileToServer_SinglePlugin_HappyFlow(Fnm, Fnm, '', '', '', False, 'none', False, CREResp_ErrResponseOK);
+  SendGenericMemPluginArchiveFileToServer_SinglePlugin_HappyFlow(Fnm, Fnm, '', '', '', False, 'none', False, False, CREResp_ErrResponseOK);
+end;
+
+
+procedure TTestClickerClientMemPlugins.Test_SendMemPluginArchiveFileToServer_NoDecDecHash_ReusingInMemFS;
+var
+  Fnm: string;
+begin
+  Fnm := Get_Typewriter_PluginPath_RelativeToTestApp;   //uses a different plugin than the other tests
+  SendGenericMemPluginArchiveFileToServer_SinglePlugin_HappyFlow(Fnm, Fnm, '', '', '', False, CREParam_PreventReusingInMemFS + '%3D' + 'True', True, False, CREResp_ErrResponseOK);
+  SendGenericMemPluginArchiveFileToServer_SinglePlugin_HappyFlow(Fnm, Fnm, '', '', '', False, 'none', True, False, CREResp_TooManyPluginFileSystems);
+  //Once run, this test fails the next times, because the "PreventReusing" flag is set. Because of that a new UIClicker instance has to be used for every run.
 end;
 
 
@@ -367,7 +413,7 @@ var
   Fnm: string;
 begin
   Fnm := Get_FindWindows_PluginPath_RelativeToTestApp;
-  SendGenericMemPluginArchiveFileToServer_SinglePlugin_HappyFlow(Fnm, Fnm, '', '', '', True, 'none', False, 'PluginError: OnDecompress is not assigned.');
+  SendGenericMemPluginArchiveFileToServer_SinglePlugin_HappyFlow(Fnm, Fnm, '', '', '', True, 'none', False, False, 'PluginError: Decompression plugin not set.');
 end;
 
 
@@ -376,7 +422,7 @@ var
   Fnm: string;
 begin
   Fnm := Get_FindWindows_PluginPath_RelativeToTestApp;
-  SendGenericMemPluginArchiveFileToServer_SinglePlugin_HappyFlow(Fnm, Fnm, 'Decrypt.dll', '', '', False, 'none', False, 'PluginError: Decryption plugin not found: Decrypt.dll');
+  SendGenericMemPluginArchiveFileToServer_SinglePlugin_HappyFlow(Fnm, Fnm, 'Decrypt.dll', '', '', False, 'none', False, False, 'PluginError: Decryption plugin not found: Decrypt.dll');
 end;
 
 
@@ -385,7 +431,7 @@ var
   Fnm: string;
 begin
   Fnm := Get_FindWindows_PluginPath_RelativeToTestApp;
-  SendGenericMemPluginArchiveFileToServer_SinglePlugin_HappyFlow(Fnm, Fnm, '', 'Decomp.dll', '', True, 'none', False, 'PluginError: Decompression plugin not found: Decomp.dll');
+  SendGenericMemPluginArchiveFileToServer_SinglePlugin_HappyFlow(Fnm, Fnm, '', 'Decomp.dll', '', True, 'none', False, False, 'PluginError: Decompression plugin not found: Decomp.dll');
 end;
 
 
@@ -394,7 +440,7 @@ var
   Fnm: string;
 begin
   Fnm := Get_FindWindows_PluginPath_RelativeToTestApp;
-  SendGenericMemPluginArchiveFileToServer_SinglePlugin_HappyFlow(Fnm, Fnm, '', '', 'Hashing.dll', False, 'none', False, 'PluginError: Hashing plugin not found: Hashing.dll');
+  SendGenericMemPluginArchiveFileToServer_SinglePlugin_HappyFlow(Fnm, Fnm, '', '', 'Hashing.dll', False, 'none', False, False, 'PluginError: Hashing plugin not found: Hashing.dll');
 end;
 
 
@@ -406,8 +452,8 @@ begin
   Fnm := Get_FindWindows_PluginPath_RelativeToTestApp;
   DecryptionPluginName := ExtractFilePath(ParamStr(0)) + '..\..\UIClickerDecryptionExamplePlugin\lib\' + GetPluginBitnessDirName + '\UIClickerDecryptionExample.dll';
 
-  SendGenericMemPluginArchiveFileToServer_SinglePlugin_HappyFlow(DecryptionPluginName, ExtractFileName(DecryptionPluginName), '', '', '', False, '', True, CREResp_ErrResponseOK);
-  SendGenericMemPluginArchiveFileToServer_SinglePlugin_HappyFlow(Fnm, ExtractFileName(Fnm), ExtractFileName(DecryptionPluginName) + 'arc|Mem:\' + ExtractFileName(DecryptionPluginName), '', '', False, 'none', False, CREResp_ErrResponseOK);
+  SendGenericMemPluginArchiveFileToServer_SinglePlugin_HappyFlow(DecryptionPluginName, ExtractFileName(DecryptionPluginName), '', '', '', False, '', True, False, CREResp_ErrResponseOK);
+  SendGenericMemPluginArchiveFileToServer_SinglePlugin_HappyFlow(Fnm, ExtractFileName(Fnm), ExtractFileName(DecryptionPluginName) + 'arc|Mem:\' + ExtractFileName(DecryptionPluginName), '', '', False, 'none', False, False, CREResp_ErrResponseOK);
 end;
 
 
@@ -419,8 +465,8 @@ begin
   Fnm := Get_FindWindows_PluginPath_RelativeToTestApp;
   DecompressionPluginName := ExtractFilePath(ParamStr(0)) + '..\..\UIClickerDecompressionExamplePlugin\lib\' + GetPluginBitnessDirName + '\UIClickerDecompressionExample.dll';
 
-  SendGenericMemPluginArchiveFileToServer_SinglePlugin_HappyFlow(DecompressionPluginName, ExtractFileName(DecompressionPluginName), '', '', '', False, '', True, CREResp_ErrResponseOK);
-  SendGenericMemPluginArchiveFileToServer_SinglePlugin_HappyFlow(Fnm, ExtractFileName(Fnm), '', ExtractFileName(DecompressionPluginName) + 'arc|Mem:\' + ExtractFileName(DecompressionPluginName), '', True, 'none', False, CREResp_ErrResponseOK);
+  SendGenericMemPluginArchiveFileToServer_SinglePlugin_HappyFlow(DecompressionPluginName, ExtractFileName(DecompressionPluginName), '', '', '', False, '', True, False, CREResp_ErrResponseOK);
+  SendGenericMemPluginArchiveFileToServer_SinglePlugin_HappyFlow(Fnm, ExtractFileName(Fnm), '', ExtractFileName(DecompressionPluginName) + 'arc|Mem:\' + ExtractFileName(DecompressionPluginName), '', True, 'none', False, False, CREResp_ErrResponseOK);
 end;
 
 
@@ -433,10 +479,10 @@ begin
   HashingPluginName := ExtractFilePath(ParamStr(0)) + '..\..\UIClickerHashingExamplePlugin\lib\' + GetPluginBitnessDirName + '\UIClickerHashingExample.dll';
 
   FUseDefaultUIClickerHash := True;
-  SendGenericMemPluginArchiveFileToServer_SinglePlugin_HappyFlow(HashingPluginName, ExtractFileName(HashingPluginName), '', '', '', False, '', True, CREResp_ErrResponseOK);
+  SendGenericMemPluginArchiveFileToServer_SinglePlugin_HappyFlow(HashingPluginName, ExtractFileName(HashingPluginName), '', '', '', False, '', True, False, CREResp_ErrResponseOK);
 
   FUseDefaultUIClickerHash := False; //when False, the SHA256 algorithm is used (from plugin by UIClicker)
-  SendGenericMemPluginArchiveFileToServer_SinglePlugin_HappyFlow(Fnm, ExtractFileName(Fnm), '', '', ExtractFileName(HashingPluginName) + 'arc|Mem:\' + ExtractFileName(HashingPluginName), False, 'none', False, CREResp_ErrResponseOK);
+  SendGenericMemPluginArchiveFileToServer_SinglePlugin_HappyFlow(Fnm, ExtractFileName(Fnm), '', '', ExtractFileName(HashingPluginName) + 'arc|Mem:\' + ExtractFileName(HashingPluginName), False, 'none', False, False, CREResp_ErrResponseOK);
 end;
 
 
@@ -453,9 +499,9 @@ begin
   HashingPluginName := ExtractFilePath(ParamStr(0)) + '..\..\UIClickerHashingExamplePlugin\lib\' + GetPluginBitnessDirName + '\UIClickerHashingExample.dll';
 
   FUseDefaultUIClickerHash := True;
-  SendGenericMemPluginArchiveFileToServer_SinglePlugin_HappyFlow(DecryptionPluginName, 'New' + ExtractFileName(DecryptionPluginName), '', '', '', False, '', True, CREResp_ErrResponseOK);
-  SendGenericMemPluginArchiveFileToServer_SinglePlugin_HappyFlow(DecompressionPluginName, 'New' + ExtractFileName(DecompressionPluginName), '', '', '', False, '', True, CREResp_ErrResponseOK);
-  SendGenericMemPluginArchiveFileToServer_SinglePlugin_HappyFlow(HashingPluginName, 'New' + ExtractFileName(HashingPluginName), '', '', '', False, '', True, CREResp_ErrResponseOK);
+  SendGenericMemPluginArchiveFileToServer_SinglePlugin_HappyFlow(DecryptionPluginName, 'New' + ExtractFileName(DecryptionPluginName), '', '', '', False, '', True, False, CREResp_ErrResponseOK);
+  SendGenericMemPluginArchiveFileToServer_SinglePlugin_HappyFlow(DecompressionPluginName, 'New' + ExtractFileName(DecompressionPluginName), '', '', '', False, '', True, False, CREResp_ErrResponseOK);
+  SendGenericMemPluginArchiveFileToServer_SinglePlugin_HappyFlow(HashingPluginName, 'New' + ExtractFileName(HashingPluginName), '', '', '', False, '', True, False, CREResp_ErrResponseOK);
 
   FUseDefaultUIClickerHash := False; //when False, the SHA256 algorithm is used (from plugin by UIClicker)
   SendGenericMemPluginArchiveFileToServer_SinglePlugin_HappyFlow(Fnm,
@@ -466,7 +512,40 @@ begin
                                                                  False,
                                                                  'none',
                                                                  False,
+                                                                 False,
                                                                  CREResp_ErrResponseOK);
+end;
+
+
+procedure TTestClickerClientMemPlugins.Test_SendMemPluginArchiveFileToServer_WithDecryptOnly_CfgKey(AUseCustomKey, AUseBadKey: Boolean; AExpectedError: string);
+var
+  DecryptionPluginName: string;
+  Fnm: string;
+begin
+  Fnm := Get_FindWindows_PluginPath_RelativeToTestApp;
+  DecryptionPluginName := ExtractFilePath(ParamStr(0)) + '..\..\UIClickerDecryptionExamplePlugin\lib\' + GetPluginBitnessDirName + '\UIClickerDecryptionExample.dll';
+
+  SendGenericMemPluginArchiveFileToServer_SinglePlugin_HappyFlow(DecryptionPluginName, ExtractFileName(DecryptionPluginName), '', '', '', False, '', True, True, CREResp_ErrResponseOK);
+
+  if AUseCustomKey then
+    FUseDefaultEncryptionKey := False;
+
+  if AUseBadKey then
+    FUseBadEncryptionKey := True;
+
+  SendGenericMemPluginArchiveFileToServer_SinglePlugin_HappyFlow(Fnm, ExtractFileName(Fnm), ExtractFileName(DecryptionPluginName) + 'arc|Mem:\' + ExtractFileName(DecryptionPluginName), '', '', False, 'none', False, False, AExpectedError);
+end;
+
+
+procedure TTestClickerClientMemPlugins.Test_SendMemPluginArchiveFileToServer_WithDecryptOnly_CustomKey;
+begin
+  Test_SendMemPluginArchiveFileToServer_WithDecryptOnly_CfgKey(True, False, CREResp_ErrResponseOK);
+end;
+
+
+procedure TTestClickerClientMemPlugins.Test_SendMemPluginArchiveFileToServer_WithDecryptOnly_BadKey;
+begin
+  Test_SendMemPluginArchiveFileToServer_WithDecryptOnly_CfgKey(False, True, 'PluginError: Archive is invalid. Hash mismatch.');
 end;
 
 

@@ -75,6 +75,7 @@ const
   CREParam_IsDecDecHash = 'IsDecDecHash'; //the received plugin is one of the above: Decryption, Decompression, Hashing
   CREParam_CompressionLevel = 'CompressionLevel';
   CREParam_AdditionalInfo = 'AdditionalInfo';
+  CREParam_PreventReusingInMemFS = 'PreventReusingInMemFS'; //This is a subparam of AdditionalInfo. Can be True or False.
 
   CREParam_X = 'X';
   CREParam_Y = 'Y';

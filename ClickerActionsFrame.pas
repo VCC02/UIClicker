@@ -4842,16 +4842,17 @@ end;
 procedure TfrClickerActions.MenuItem_LoadPluginFromDiskToPluginInMemFSInPropertyListClick(Sender: TObject);
 var
   MenuData: POIMenuItemData;
-  PathToFileName: string;
+  {$IFDEF MemPlugins}
+    PathToFileName: string;
+  {$ENDIF}
 begin
   MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
   try
     if not DoOnOpenDialogExecute('Dll files (*.dll)|*.dll|All files (*.*)|*.*') then
       Exit;
 
-    PathToFileName := DoOnGetOpenDialogFileName;
-
     {$IFDEF MemPlugins}
+      PathToFileName := DoOnGetOpenDialogFileName;
       DoOnLoadPluginFromDiskToPluginInMemFileSystem(PathToFileName);
       DoOnLoadPluginFromDiskToPluginInMemFileSystem(ExtractFullFileNameNoExt(PathToFileName) + '.DbgSym');
     {$ENDIF}

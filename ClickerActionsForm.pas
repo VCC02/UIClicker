@@ -3223,6 +3223,8 @@ begin
     IsDecDecHash := ARequestInfo.Params.Values[CREParam_IsDecDecHash] = '1';
     if IsDecDecHash then
     begin
+      AddToLogFromThread('Archive AdditionalInfo: ' + ARequestInfo.Params.Values[CREParam_AdditionalInfo]);
+
       InMemFSIndex := GetPluginInMemFSIndex(FDecDecHashPluginInMemFSArr, ARequestInfo.Params.Values[CREParam_FileName]);
       if InMemFSIndex = -1 then
       begin
@@ -3240,10 +3242,24 @@ begin
 
           FDecDecHashPluginInMemFSArr[InMemFSIndex].Name := ARequestInfo.Params.Values[CREParam_FileName];
           FDecDecHashPluginInMemFSArr[InMemFSIndex].InMemFS := TInMemFileSystem.Create; //allocate a new FS for this plugin
+          FDecDecHashPluginInMemFSArr[InMemFSIndex].PreventReusingInMemFS := Pos(CREParam_PreventReusingInMemFS + '=' + 'True', ARequestInfo.Params.Values[CREParam_AdditionalInfo]) > 0;
+
+          if FDecDecHashPluginInMemFSArr[InMemFSIndex].PreventReusingInMemFS then
+            AddToLogFromThread('This FS prevents being reused for other archives with the same name: ' + FDecDecHashPluginInMemFSArr[InMemFSIndex].Name);
         end;                                                                  ///////////////ToDo: deallocate InMemFS, and remove item from FDecDecHashPluginInMemFSArr, on exception and when not needed anymore
       end
       else
+      begin
+        if FDecDecHashPluginInMemFSArr[InMemFSIndex].PreventReusingInMemFS then
+        begin        //It would be nice to allocate a new FS with a random name and respond with that name, but in case of error, that name has to be combined with the error message.
+          AddToLogFromThread('There may be available file systems, but this one is not allowed to be allocated, because the name already exists and it can''t be reused. FS Name: ' + FDecDecHashPluginInMemFSArr[InMemFSIndex].Name);
+          RespondWithText(CREResp_TooManyPluginFileSystems);
+          AddToLogFromThread(Msg);
+          Exit;
+        end;
+
         AddToLogFromThread('Received a plugin with an existing name. Reusing FS: ' + ARequestInfo.Params.Values[CREParam_FileName] + '  at index ' + IntToStr(InMemFSIndex));
+      end;
     end;
 
     if ARequestInfo.Document = '/' + CRECmd_SetMemPluginFile then
@@ -3362,7 +3378,8 @@ begin
                                          ARequestInfo.Params.Values[CREParam_DecryptionPluginName],
                                          ARequestInfo.Params.Values[CREParam_DecompressionPluginName],
                                          ARequestInfo.Params.Values[CREParam_HashingPluginName],
-                                         StrToIntDef(ARequestInfo.Params.Values[CREParam_CompressionLevel], 0));
+                                         StrToIntDef(ARequestInfo.Params.Values[CREParam_CompressionLevel], 0),
+                                         ARequestInfo.Params.Values[CREParam_AdditionalInfo]);
           finally
             PluginArchive.Free;
           end;
@@ -3378,6 +3395,16 @@ begin
             AddToLogFromThread('DecompressionPluginName is "' + ARequestInfo.Params.Values[CREParam_DecompressionPluginName] + '".');
             AddToLogFromThread('HashingPluginName is "' + ARequestInfo.Params.Values[CREParam_HashingPluginName] + '".');
 
+            //Remove some "internal" details
+            if E.Message = 'OnDecompress is not assigned.' then
+              E.Message := 'Decompression plugin not set.';
+
+            if Pos('Archive is invalid. Hash mismatch.', E.Message) = 1 then   //remove hash info
+              E.Message := 'Archive is invalid. Hash mismatch.';
+
+            if E.Message = 'Cannot find exported symbol.' then
+              E.Message := 'One of the required functions is not exported by the plugin.';
+
             Msg := CREResp_PluginError + ': ' + E.Message;
             AddToLogFromThread(Msg);
             RespondWithText(Msg);
@@ -3390,7 +3417,8 @@ begin
       Exit;
     end;
   {$ELSE}
-    if ARequestInfo.Document = '/' + CRECmd_SetMemPluginFile then
+    if (ARequestInfo.Document = '/' + CRECmd_SetMemPluginFile) or
+       (ARequestInfo.Document = '/' + CRECmd_SetMemPluginArchiveFile) then
     begin
       RespondWithText(CREResp_NotImplemented);
       Exit;

@@ -29,7 +29,7 @@ unit ClickerPluginArchive;
 interface
 
 uses
-  Classes, SysUtils, MemArchive, InMemFileSystem, ClickerUtils,
+  Classes, SysUtils, MemArchive, InMemFileSystem, ClickerUtils, ClickerActionPlugins,
   DCPmd5;
 
 
@@ -37,6 +37,7 @@ type
   TDecDecHashPluginInMemFS = record
     Name: string;
     InMemFS: TInMemFileSystem;
+    PreventReusingInMemFS: Boolean; //If true, new archives with the same name are not using this FS
   end;
 
   TDecDecHashPluginInMemFSArr = array of TDecDecHashPluginInMemFS;
@@ -53,11 +54,20 @@ type
     FDecompressingStream: TMemoryStream; //set during decompressing
     FHashingResult: Pointer; //set during hashing
 
+    FDecryptionArchiveName: string;
+    FDecompressionArchiveName: string;
+    FHashingArchiveName: string;
+
     FDecryptionPluginName: string;
     FDecompressionPluginName: string;
     FHashingPluginName: string;
 
     procedure DoOnAddToLog(s: string);
+
+    function HandleOnActionPlugin_DecDecHashInMemFS(AArchiveName: string; ACallbackIndex: Integer; AInData1, AInData2: Pointer; AInDataLen1, AInDataLen2: Int64; AOnFileContent: TOnFileContentObj): Int64; cdecl;
+    function HandleOnActionPlugin_DecryptInMemFS(ACallbackIndex: Integer; AInData1, AInData2: Pointer; AInDataLen1, AInDataLen2: Int64; AOnFileContent: TOnFileContentObj): Int64; cdecl;
+    function HandleOnActionPlugin_DecompressInMemFS(ACallbackIndex: Integer; AInData1, AInData2: Pointer; AInDataLen1, AInDataLen2: Int64; AOnFileContent: TOnFileContentObj): Int64; cdecl;
+    function HandleOnActionPlugin_HashInMemFS(ACallbackIndex: Integer; AInData1, AInData2: Pointer; AInDataLen1, AInDataLen2: Int64; AOnFileContent: TOnFileContentObj): Int64; cdecl;
 
     procedure HandleOnFileContent_Decrypt(AStreamContent: Pointer; AStreamSize: Int64); cdecl;   //AStreamContent points to the decrypted stream
     procedure HandleOnFileContent_Decompress(AStreamContent: Pointer; AStreamSize: Int64); cdecl;   //AStreamContent points to the decrypted stream
@@ -74,7 +84,7 @@ type
     destructor Destroy; override;
 
     //Every DecDecHash plugin (and it config files) reside(s) in its own InMemFS, which is different than PluginsInMemFS, set below.
-    procedure ExtractArchive(AArchiveStream: TMemoryStream; ADecDecHashPluginInMemFSArr: PDecDecHashPluginInMemFSArr; ADecryptionPluginName, ADecompressionPluginName, AHashingPluginName: string; ACompressionLevel: Integer);
+    procedure ExtractArchive(AArchiveStream: TMemoryStream; ADecDecHashPluginInMemFSArr: PDecDecHashPluginInMemFSArr; ADecryptionPluginName, ADecompressionPluginName, AHashingPluginName: string; ACompressionLevel: Integer; AAdditionalInfo: string);
 
     property PluginsInMemFS: TInMemFileSystem write FPluginsInMemFS; //must be set by owner before calling ExtractArchive
     property OnAddToLog: TOnAddToLog write FOnAddToLog;
@@ -93,7 +103,7 @@ implementation
 
 
 uses
-  ClickerActionPlugins, Math
+  Math, DllUtils, ClickerActionPluginLoader
   {$IFDEF MemPlugins}
     , DynMemLib
   {$ENDIF}
@@ -114,8 +124,11 @@ begin
 end;
 
 
-type
-  TProcessMemoryContent_Proc = function(AInData: Pointer; AInDataLen: Int64; AOnFileContent: TOnFileContentObj): Integer; cdecl;
+{$IFDEF MemPlugins}
+  type
+    TConfigurePluginForMemoryContent_Proc = function(AOnActionPlugin_InMemFS: TOnActionPlugin_InMemFS_Obj): Boolean; cdecl;
+    TProcessMemoryContent_Proc = function(AInData: Pointer; AInDataLen: Int64; AOnFileContent: TOnFileContentObj): Integer; cdecl;
+{$ENDIF}
 
 
 constructor TClickerPluginArchive.Create;
@@ -141,6 +154,43 @@ begin
 end;
 
 
+function TClickerPluginArchive.HandleOnActionPlugin_DecDecHashInMemFS(AArchiveName: string; ACallbackIndex: Integer; AInData1, AInData2: Pointer; AInDataLen1, AInDataLen2: Int64; AOnFileContent: TOnFileContentObj): Int64; cdecl;
+var
+  InMemFSAccess: TPluginInMemFSAccess;
+  PluginIdx: Integer;
+begin
+  PluginIdx := GetPluginInMemFSIndex(FDecDecHashPluginInMemFSArr^, AArchiveName);
+  if PluginIdx = -1 then
+    raise Exception.Create('Archive not found for plugin configuration: ' + AArchiveName);
+
+  InMemFSAccess := TPluginInMemFSAccess.Create;
+  try
+    InMemFSAccess.InMemFS := FDecDecHashPluginInMemFSArr^[PluginIdx].InMemFS;
+    Result := InMemFSAccess.InMemFSFunc(ACallbackIndex, AInData1, AInData2, AInDataLen1, AInDataLen2, AOnFileContent);
+  finally
+    InMemFSAccess.Free;
+  end;
+end;
+
+
+function TClickerPluginArchive.HandleOnActionPlugin_DecryptInMemFS(ACallbackIndex: Integer; AInData1, AInData2: Pointer; AInDataLen1, AInDataLen2: Int64; AOnFileContent: TOnFileContentObj): Int64; cdecl;
+begin
+  Result := HandleOnActionPlugin_DecDecHashInMemFS(FDecryptionArchiveName, ACallbackIndex, AInData1, AInData2, AInDataLen1, AInDataLen2, AOnFileContent);
+end;
+
+
+function TClickerPluginArchive.HandleOnActionPlugin_DecompressInMemFS(ACallbackIndex: Integer; AInData1, AInData2: Pointer; AInDataLen1, AInDataLen2: Int64; AOnFileContent: TOnFileContentObj): Int64; cdecl;
+begin
+  Result := HandleOnActionPlugin_DecDecHashInMemFS(FDecompressionArchiveName, ACallbackIndex, AInData1, AInData2, AInDataLen1, AInDataLen2, AOnFileContent);
+end;
+
+
+function TClickerPluginArchive.HandleOnActionPlugin_HashInMemFS(ACallbackIndex: Integer; AInData1, AInData2: Pointer; AInDataLen1, AInDataLen2: Int64; AOnFileContent: TOnFileContentObj): Int64; cdecl;
+begin
+  Result := HandleOnActionPlugin_DecDecHashInMemFS(FHashingArchiveName, ACallbackIndex, AInData1, AInData2, AInDataLen1, AInDataLen2, AOnFileContent);
+end;
+
+
 procedure TClickerPluginArchive.HandleOnInitEncryption(var AArcKey: TArr32OfByte);
 begin
   //nothing here
@@ -161,17 +211,15 @@ end;
 
 
 procedure TClickerPluginArchive.HandleOnDecryptArchive(AArchiveStream: TMemoryStream);
-var
-  PluginIdx: Integer;
-  PluginInMemFS: TDecDecHashPluginInMemFS;
-
-  {$IFDEF MemPlugins}
+{$IFDEF MemPlugins}
+  var
+    PluginIdx: Integer;
+    PluginInMemFS: TDecDecHashPluginInMemFS;
     MemLoader: TDynMemLib;
+    ConfigurePluginForMemoryContent: TConfigurePluginForMemoryContent_Proc;
     ProcessMemoryContent: TProcessMemoryContent_Proc;
     LibStream: TMemoryStream;
-  {$ENDIF}
-
-  ArchiveName: string;
+{$ENDIF}
 begin
   if FDecryptionPluginName = '' then
     Exit;
@@ -180,16 +228,16 @@ begin
     raise Exception.Create('Decryption required padding.');  //For some reason, the archive is not the proper size, so it will require a larger size for decryption.
 
   //FDecryptionPluginName should end up here, using the following format: <ArhiveName.dllarc>|<PluginName.dll>
-  ArchiveName := Copy(FDecryptionPluginName, 1, Pos('|', FDecryptionPluginName) - 1);
+  FDecryptionArchiveName := Copy(FDecryptionPluginName, 1, Pos('|', FDecryptionPluginName) - 1);
   FDecryptionPluginName := Copy(FDecryptionPluginName, Pos('|', FDecryptionPluginName) + 1, MaxInt);
 
-  PluginIdx := GetPluginInMemFSIndex(FDecDecHashPluginInMemFSArr^, ArchiveName);
-  if PluginIdx = -1 then
-    raise Exception.Create('Decryption plugin not found: ' + FDecryptionPluginName);
-
-  PluginInMemFS := FDecDecHashPluginInMemFSArr[PluginIdx];
-
   {$IFDEF MemPlugins}
+    PluginIdx := GetPluginInMemFSIndex(FDecDecHashPluginInMemFSArr^, FDecryptionArchiveName);
+    if PluginIdx = -1 then
+      raise Exception.Create('Decryption plugin not found: ' + FDecryptionPluginName);
+
+    PluginInMemFS := FDecDecHashPluginInMemFSArr[PluginIdx];
+
     if not PluginInMemFS.InMemFS.FileExistsInMem(FDecryptionPluginName) then
       raise Exception.Create('Decryption plugin not found in InMemFS: ' + FDecryptionPluginName + '   Count = ' + IntToStr(PluginInMemFS.InMemFS.TotalFileCount));
 
@@ -202,9 +250,24 @@ begin
 
         MemLoader.MemLoadLibrary(LibStream.Memory);
         try
+          @ConfigurePluginForMemoryContent := MemLoader.MemGetProcAddress('ConfigurePluginForMemoryContent');
+          if @ConfigurePluginForMemoryContent = nil then
+            raise Exception.Create('Invalid decryption plugin: ' + FDecryptionPluginName + '.  ConfigurePluginForMemoryContent function not found.');
+
           @ProcessMemoryContent := MemLoader.MemGetProcAddress('ProcessMemoryContent');
           if @ProcessMemoryContent = nil then
             raise Exception.Create('Invalid decryption plugin: ' + FDecryptionPluginName + '.  ProcessMemoryContent function not found.');
+
+          DoOnAddToLog('Configuring decryption plugin..');
+          try
+            ConfigurePluginForMemoryContent(HandleOnActionPlugin_DecryptInMemFS);
+          except
+            on E: Exception do
+            begin
+              DoOnAddToLog('Ex on configuring decryption: ' + E.Message);
+              raise;
+            end;
+          end;
 
           DoOnAddToLog('Decrypting archive..');
           try
@@ -239,17 +302,15 @@ end;
 
 
 function TClickerPluginArchive.HandleOnDecompress(AArchiveStream, APlainStream: TMemoryStream): Boolean;  //AArchiveStream is the source, APlainStream is the destination
-var
-  PluginIdx: Integer;
-  PluginInMemFS: TDecDecHashPluginInMemFS;
-
-  {$IFDEF MemPlugins}
+{$IFDEF MemPlugins}
+  var
+    PluginIdx: Integer;
+    PluginInMemFS: TDecDecHashPluginInMemFS;
     MemLoader: TDynMemLib;
+    ConfigurePluginForMemoryContent: TConfigurePluginForMemoryContent_Proc;
     ProcessMemoryContent: TProcessMemoryContent_Proc;
     LibStream: TMemoryStream;
-  {$ENDIF}
-
-  ArchiveName: string;
+{$ENDIF}
 begin
   Result := True;
   if FDecompressionPluginName = '' then
@@ -259,16 +320,16 @@ begin
   end;
 
   //FDecompressionPluginName should end up here, using the following format: <ArhiveName.dllarc>|<PluginName.dll>
-  ArchiveName := Copy(FDecompressionPluginName, 1, Pos('|', FDecompressionPluginName) - 1);
+  FDecompressionArchiveName := Copy(FDecompressionPluginName, 1, Pos('|', FDecompressionPluginName) - 1);
   FDecompressionPluginName := Copy(FDecompressionPluginName, Pos('|', FDecompressionPluginName) + 1, MaxInt);
 
-  PluginIdx := GetPluginInMemFSIndex(FDecDecHashPluginInMemFSArr^, ArchiveName);
-  if PluginIdx = -1 then
-    raise Exception.Create('Decompression plugin not found: ' + FDecompressionPluginName);
-
-  PluginInMemFS := FDecDecHashPluginInMemFSArr[PluginIdx];
-
   {$IFDEF MemPlugins}
+    PluginIdx := GetPluginInMemFSIndex(FDecDecHashPluginInMemFSArr^, FDecompressionArchiveName);
+    if PluginIdx = -1 then
+      raise Exception.Create('Decompression plugin not found: ' + FDecompressionPluginName);
+
+    PluginInMemFS := FDecDecHashPluginInMemFSArr[PluginIdx];
+
     if not PluginInMemFS.InMemFS.FileExistsInMem(FDecompressionPluginName) then
       raise Exception.Create('Decompression plugin not found in InMemFS: ' + FDecompressionPluginName + '   Count = ' + IntToStr(PluginInMemFS.InMemFS.TotalFileCount));
 
@@ -281,15 +342,30 @@ begin
 
         MemLoader.MemLoadLibrary(LibStream.Memory);
         try
+          @ConfigurePluginForMemoryContent := MemLoader.MemGetProcAddress('ConfigurePluginForMemoryContent');
+          if @ConfigurePluginForMemoryContent = nil then
+            raise Exception.Create('Invalid decompression plugin: ' + FDecryptionPluginName + '.  ConfigurePluginForMemoryContent function not found.');
+
           @ProcessMemoryContent := MemLoader.MemGetProcAddress('ProcessMemoryContent');
           if @ProcessMemoryContent = nil then
             raise Exception.Create('Invalid decompression plugin: ' + FDecompressionPluginName + '.  ProcessMemoryContent function not found.');
+
+          DoOnAddToLog('Configuring decompression plugin ..');
+          try
+            ConfigurePluginForMemoryContent(HandleOnActionPlugin_DecompressInMemFS);
+          except
+            on E: Exception do
+            begin
+              DoOnAddToLog('Ex on configuring decompression: ' + E.Message);
+              raise;
+            end;
+          end;
 
           DoOnAddToLog('Decompressing archive..  Initial size = ' + IntToStr(AArchiveStream.Size));
           try
             FDecompressingStream := APlainStream;
             if ProcessMemoryContent(AArchiveStream.Memory, AArchiveStream.Size, HandleOnFileContent_Decompress) = -1 then
-              raise Exception.Create('Cannot decompress archive: "' + ArchiveName + '". The decompression may not be configured properly.');
+              raise Exception.Create('Cannot decompress archive: "' + FDecompressionArchiveName + '". The decompression may not be configured properly.');
           except
             on E: Exception do
             begin
@@ -319,16 +395,15 @@ end;
 
 procedure TClickerPluginArchive.HandleOnComputeArchiveHash(AArchiveStream: Pointer; AArchiveStreamSize: Int64; var AResultedHash: TArr32OfByte; AAdditionalInfo: string = '');
 var
-  PluginIdx: Integer;
-  PluginInMemFS: TDecDecHashPluginInMemFS;
-
   {$IFDEF MemPlugins}
+    PluginIdx: Integer;
+    PluginInMemFS: TDecDecHashPluginInMemFS;
     MemLoader: TDynMemLib;
+    ConfigurePluginForMemoryContent: TConfigurePluginForMemoryContent_Proc;
     ProcessMemoryContent: TProcessMemoryContent_Proc;
     LibStream: TMemoryStream;
   {$ENDIF}
 
-  ArchiveName: string;
   MD5: TDCP_md5;
 begin
   FillChar(AResultedHash[0], Length(AResultedHash), 0);  //provide a default
@@ -350,17 +425,17 @@ begin
   end;
 
   //FHashingPluginName should end up here, using the following format: <ArhiveName.dllarc>|<PluginName.dll>
-  ArchiveName := Copy(FHashingPluginName, 1, Pos('|', FHashingPluginName) - 1);
+  FHashingArchiveName := Copy(FHashingPluginName, 1, Pos('|', FHashingPluginName) - 1);
   FHashingPluginName := Copy(FHashingPluginName, Pos('|', FHashingPluginName) + 1, MaxInt);
-  DoOnAddToLog('Using hashing plugin: ' + FHashingPluginName + ' from ' + ArchiveName);
-
-  PluginIdx := GetPluginInMemFSIndex(FDecDecHashPluginInMemFSArr^, ArchiveName);
-  if PluginIdx = -1 then
-    raise Exception.Create('Hashing plugin not found: ' + FHashingPluginName);
-
-  PluginInMemFS := FDecDecHashPluginInMemFSArr[PluginIdx];
+  DoOnAddToLog('Using hashing plugin: ' + FHashingPluginName + ' from ' + FHashingArchiveName);
 
   {$IFDEF MemPlugins}
+    PluginIdx := GetPluginInMemFSIndex(FDecDecHashPluginInMemFSArr^, FHashingArchiveName);
+    if PluginIdx = -1 then
+      raise Exception.Create('Hashing plugin not found: ' + FHashingPluginName);
+
+    PluginInMemFS := FDecDecHashPluginInMemFSArr[PluginIdx];
+
     if not PluginInMemFS.InMemFS.FileExistsInMem(FHashingPluginName) then
       raise Exception.Create('Hashing plugin not found in InMemFS: ' + FHashingPluginName + '   Count = ' + IntToStr(PluginInMemFS.InMemFS.TotalFileCount));
 
@@ -373,9 +448,24 @@ begin
 
         MemLoader.MemLoadLibrary(LibStream.Memory);
         try
+          @ConfigurePluginForMemoryContent := MemLoader.MemGetProcAddress('ConfigurePluginForMemoryContent');
+          if @ConfigurePluginForMemoryContent = nil then
+            raise Exception.Create('Invalid hashing plugin: ' + FDecryptionPluginName + '.  ConfigurePluginForMemoryContent function not found.');
+
           @ProcessMemoryContent := MemLoader.MemGetProcAddress('ProcessMemoryContent');
           if @ProcessMemoryContent = nil then
             raise Exception.Create('Invalid hashing plugin: ' + FHashingPluginName + '.  ProcessMemoryContent function not found.');
+
+          DoOnAddToLog('Configuring hashing plugin..');
+          try
+            ConfigurePluginForMemoryContent(HandleOnActionPlugin_HashInMemFS);
+          except
+            on E: Exception do
+            begin
+              DoOnAddToLog('Ex on configuring hashing: ' + E.Message);
+              raise;
+            end;
+          end;
 
           FHashingResult := @AResultedHash;
           ProcessMemoryContent(AArchiveStream, AArchiveStreamSize, HandleOnFileContent_Hashing);
@@ -392,7 +482,7 @@ begin
 end;
 
 
-procedure TClickerPluginArchive.ExtractArchive(AArchiveStream: TMemoryStream; ADecDecHashPluginInMemFSArr: PDecDecHashPluginInMemFSArr; ADecryptionPluginName, ADecompressionPluginName, AHashingPluginName: string; ACompressionLevel: Integer);
+procedure TClickerPluginArchive.ExtractArchive(AArchiveStream: TMemoryStream; ADecDecHashPluginInMemFSArr: PDecDecHashPluginInMemFSArr; ADecryptionPluginName, ADecompressionPluginName, AHashingPluginName: string; ACompressionLevel: Integer; AAdditionalInfo: string);
 var
   ListOfFiles: TStringList;
   i, n: Integer;

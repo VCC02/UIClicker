@@ -3132,7 +3132,8 @@ begin
               'If a file from an archive, has its path starting with "x86-win64", it is extracted to the InMem FS, by a 64-bit UIClicker.' + #13#10 +
               'A file, from an archive, with a path starting with "i386-win32", is ignored (not extracted), by a 64-bit UIClicker.' + #13#10 +
               'A file, from an archive, with a path starting with "x86-win64", is ignored (not extracted), by a 32-bit UIClicker.' + #13#10 +
-              'All the other files (outside the "i386-win32" and "x86-win64" directories), from inside the archive, are extracted.' + #13#10#13#10 +
+              'All the files, from the "i386-win32" or "x86-win64" directories, are extracted outside these directories (their path will not be prefixed by the directories name).' + #13#10 +
+              'All the other files (outside the "i386-win32" and "x86-win64" directories), from inside the archive, are extracted as they are.' + #13#10#13#10 +
 
               'The SetMemPluginArchiveFile command has a parameter, AIsDecDecHash, which decides what type of archive is being sent.' + #13#10 +
               'If set to 1 (i.e. True), it means that the archive contains plugin(s) for decryption, decompression and custom hashing.' + #13#10 +

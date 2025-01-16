@@ -3725,6 +3725,7 @@ begin
                                       FPluginStepOver,
                                       FPluginContinueAll,
                                       frClickerActions.imgDebugBmp.Picture.Bitmap,
+                                      nil, //AInMemFS: TInMemFileSystem;
                                       FFullTemplatesDir^,
                                       FAllowedFileDirsForServer^, //ResolvedAllowedFileDirs,
                                       FAllowedFileExtensionsForServer^,
@@ -4925,6 +4926,7 @@ begin
     Result := True;
   end;
 end;
+
 
 end.
 
