@@ -38,6 +38,7 @@ type
     Name: string;
     InMemFS: TInMemFileSystem;
     PreventReusingInMemFS: Boolean; //If true, new archives with the same name are not using this FS
+    IsDecDecHashPlugin: Boolean;
   end;
 
   TDecDecHashPluginInMemFSArr = array of TDecDecHashPluginInMemFS;
@@ -46,6 +47,8 @@ type
   TClickerPluginArchive = class
   private
     FOnAddToLog: TOnAddToLog;
+    FOnSetVar: TOnSetVar;
+
     FArchive: TMemArchive;
     FPluginsInMemFS: TInMemFileSystem;
     FDecDecHashPluginInMemFSArr: PDecDecHashPluginInMemFSArr;
@@ -63,6 +66,10 @@ type
     FHashingPluginName: string;
 
     procedure DoOnAddToLog(s: string);
+    procedure DoOnSetVar(AVarName, AVarValue: string);
+
+    procedure HandleOnActionPlugin_SetTemplateVar(AVarName, AVarValue: Pointer); cdecl;
+    procedure HandleOnActionPlugin_AddToLog(ALogMsg: Pointer); cdecl;
 
     function HandleOnActionPlugin_DecDecHashInMemFS(AArchiveName: string; ACallbackIndex: Integer; AInData1, AInData2: Pointer; AInDataLen1, AInDataLen2: Int64; AOnFileContent: TOnFileContentObj): Int64; cdecl;
     function HandleOnActionPlugin_DecryptInMemFS(ACallbackIndex: Integer; AInData1, AInData2: Pointer; AInDataLen1, AInDataLen2: Int64; AOnFileContent: TOnFileContentObj): Int64; cdecl;
@@ -88,6 +95,7 @@ type
 
     property PluginsInMemFS: TInMemFileSystem write FPluginsInMemFS; //must be set by owner before calling ExtractArchive
     property OnAddToLog: TOnAddToLog write FOnAddToLog;
+    property OnSetVar: TOnSetVar write FOnSetVar;
   end;
 
 
@@ -126,7 +134,9 @@ end;
 
 {$IFDEF MemPlugins}
   type
-    TConfigurePluginForMemoryContent_Proc = function(AOnActionPlugin_InMemFS: TOnActionPlugin_InMemFS_Obj): Boolean; cdecl;
+    TConfigurePluginForMemoryContent_Proc = function(AOnActionPlugin_InMemFS: TOnActionPlugin_InMemFS_Obj;
+                                                     AOnActionPlugin_SetTemplateVar: TOnActionPlugin_SetTemplateVar_Obj;
+                                                     AOnActionPlugin_AddToLog: TOnActionPlugin_AddToLog_Obj): Boolean; cdecl;
     TProcessMemoryContent_Proc = function(AInData: Pointer; AInDataLen: Int64; AOnFileContent: TOnFileContentObj): Integer; cdecl;
 {$ENDIF}
 
@@ -151,6 +161,32 @@ procedure TClickerPluginArchive.DoOnAddToLog(s: string);
 begin
   if Assigned(FOnAddToLog) then
     FOnAddToLog(s);
+end;
+
+
+procedure TClickerPluginArchive.DoOnSetVar(AVarName, AVarValue: string);
+begin
+  if Assigned(FOnSetVar) then
+    FOnSetVar(AVarName, AVarValue);
+end;
+
+
+procedure TClickerPluginArchive.HandleOnActionPlugin_SetTemplateVar(AVarName, AVarValue: Pointer); cdecl;
+var
+  VarName, VarValue: string;
+begin
+  SetPointedContentToString(AVarName, VarName);
+  SetPointedContentToString(AVarValue, VarValue);
+  DoOnSetVar(VarName, VarValue);
+end;
+
+
+procedure TClickerPluginArchive.HandleOnActionPlugin_AddToLog(ALogMsg: Pointer); cdecl;
+var
+  s: string;
+begin
+  SetPointedContentToString(ALogMsg, s);
+  DoOnAddToLog(s);
 end;
 
 
@@ -260,7 +296,7 @@ begin
 
           DoOnAddToLog('Configuring decryption plugin..');
           try
-            ConfigurePluginForMemoryContent(HandleOnActionPlugin_DecryptInMemFS);
+            ConfigurePluginForMemoryContent(HandleOnActionPlugin_DecryptInMemFS, HandleOnActionPlugin_SetTemplateVar, HandleOnActionPlugin_AddToLog);
           except
             on E: Exception do
             begin
@@ -352,7 +388,7 @@ begin
 
           DoOnAddToLog('Configuring decompression plugin ..');
           try
-            ConfigurePluginForMemoryContent(HandleOnActionPlugin_DecompressInMemFS);
+            ConfigurePluginForMemoryContent(HandleOnActionPlugin_DecompressInMemFS, HandleOnActionPlugin_SetTemplateVar, HandleOnActionPlugin_AddToLog);
           except
             on E: Exception do
             begin
@@ -458,7 +494,7 @@ begin
 
           DoOnAddToLog('Configuring hashing plugin..');
           try
-            ConfigurePluginForMemoryContent(HandleOnActionPlugin_HashInMemFS);
+            ConfigurePluginForMemoryContent(HandleOnActionPlugin_HashInMemFS, HandleOnActionPlugin_SetTemplateVar, HandleOnActionPlugin_AddToLog);
           except
             on E: Exception do
             begin

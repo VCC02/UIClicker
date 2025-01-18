@@ -1,0 +1,280 @@
+{
+    Copyright (C) 2025 VCC
+    creation date: 17 Jan 2025
+    initial release date: 18 Jan 2025
+
+    author: VCC
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"),
+    to deal in the Software without restriction, including without limitation
+    the rights to use, copy, modify, merge, publish, distribute, sublicense,
+    and/or sell copies of the Software, and to permit persons to whom the
+    Software is furnished to do so, subject to the following conditions:
+    The above copyright notice and this permission notice shall be included
+    in all copies or substantial portions of the Software.
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+    IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+    DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+    TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
+    OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+}
+
+
+library TestPlugin;
+
+{$mode objfpc}{$H+}
+
+uses
+  Windows,
+  Interfaces, Classes, SysUtils,// Graphics, TestPluginExampleDM, ImgList,
+  ClickerActionPlugins, ClickerUtils, DllUtils, ClickerPluginInMemFileSystem,
+  TplLzmaUnit
+  ;
+
+var
+  AddToLogCallback: TOnActionPlugin_AddToLog;
+
+
+procedure AddToLog(AMsg: string);  //thread safe
+begin
+  if @AddToLogCallback <> nil then
+    AddToLogCallback(DefaultPluginReference, @AMsg[1]);
+end;
+
+
+function GetAPIVersion: DWord; cdecl;
+begin
+  Result := CActionPlugin_APIVersion;
+end;
+
+
+procedure GetListOfProperties(APluginReference: Pointer;                 //UIClicker passes the plugin reference to the plugin, then the plugin calls some callbacks with that reference
+                              AListOfProperties: Pointer;
+                              AListOfPropertiesLen: PDWord;
+                              AOnActionPlugin_UpdatePropertyIcons: TOnActionPlugin_UpdatePropertyIcons); cdecl;
+//var
+//  Properties: string;
+//  i: Integer;
+//  TempMemStream: TMemoryStream;
+//  Bmp: TBitmap;
+begin
+  //Properties := FillInPropertyDetails;
+  //AListOfPropertiesLen^ := SetPointedContentFromString(Properties, AListOfProperties);
+  //
+  //dmProperties := TdmProperties.Create(nil);
+  //try
+  //  for i := 0 to CPropertiesCount - 1 do
+  //  begin
+  //    TempMemStream := TMemoryStream.Create;
+  //    Bmp := TBitmap.Create;
+  //    try
+  //      Bmp.PixelFormat := pf24bit;
+  //      Bmp.Width := dmProperties.imglstProperties.Width;
+  //      Bmp.Height := dmProperties.imglstProperties.Height;
+  //      Bmp.Canvas.Pen.Color := clWhite;
+  //      Bmp.Canvas.Brush.Color := clWhite;
+  //      Bmp.Canvas.Rectangle(0, 0, Bmp.Width, Bmp.Height);
+  //
+  //      dmProperties.imglstProperties.Draw(Bmp.Canvas, 0, 0, i, dsNormal, itImage);
+  //      Bmp.SaveToStream(TempMemStream);
+  //
+  //      AOnActionPlugin_UpdatePropertyIcons(APluginReference, TempMemStream.Memory, TempMemStream.Size);
+  //    finally
+  //      TempMemStream.Free;
+  //      Bmp.Free;
+  //    end;
+  //  end;
+  //finally
+  //  dmProperties.Free;
+  //end;
+end;
+
+
+//for ExecutePlugin
+function ReturnListOfFilesFromInMemFS(APluginReference: Pointer; AOnActionPlugin_InMemFS: TOnActionPlugin_InMemFS): string;
+var
+  PluginInMemFS: TPluginInMemFileSystem;
+begin
+  PluginInMemFS := TPluginInMemFileSystem.Create;
+  try
+    PluginInMemFS.PluginReference := APluginReference;
+
+    Result := PluginInMemFS.ListMemFilesAsString(AOnActionPlugin_InMemFS);
+  finally
+    PluginInMemFS.Free;
+  end;
+end;
+
+
+//for ConfigurePluginForMemoryContent
+function ReturnListOfFilesFromInMemFS_Obj(AOnActionPlugin_InMemFS: TOnActionPlugin_InMemFS_Obj): string;
+var
+  PluginInMemFS: TPluginInMemFileSystem;
+begin
+  PluginInMemFS := TPluginInMemFileSystem.Create;
+  try
+    Result := PluginInMemFS.ListMemFilesAsString(AOnActionPlugin_InMemFS);
+  finally
+    PluginInMemFS.Free;
+  end;
+end;
+
+
+function ExecutePlugin(APluginReference: Pointer;
+                       AListOfPluginSettings: Pointer;
+                       AListOfPluginSettingsLen: PDWord;
+
+                       AOnActionPlugin_GetActionCount: TOnActionPlugin_GetActionCount;
+                       AOnActionPlugin_GetActionInfoByIndex: TOnActionPlugin_GetActionInfoByIndex;
+                       AOnActionPlugin_GetActionContentByIndex: TOnActionPlugin_GetActionContentByIndex;
+                       AOnActionPlugin_ExecuteAction: TOnActionPlugin_ExecuteAction;
+                       AOnActionPlugin_GetAllTemplateVars: TOnActionPlugin_GetAllTemplateVars;
+                       AOnActionPlugin_SetTemplateVar: TOnActionPlugin_SetTemplateVar;
+                       AOnActionPlugin_DebugPoint: TOnActionPlugin_DebugPoint;
+                       AOnActionPlugin_AddToLog: TOnActionPlugin_AddToLog;
+                       AOnActionPlugin_SetResultImg: TOnActionPlugin_SetResultImg;
+                       AOnActionPlugin_LoadBitmap: TOnActionPlugin_LoadBitmap;
+                       AOnActionPlugin_GetAllowedFilesInfo: TOnActionPlugin_GetAllowedFilesInfo;
+                       AOnActionPlugin_SetBitmap: TOnActionPlugin_SetBitmap;
+                       AOnActionPlugin_Screenshot: TOnActionPlugin_Screenshot;
+                       AOnActionPlugin_CheckStopAllActionsOnDemand: TOnActionPlugin_CheckStopAllActionsOnDemand;
+                       AOnActionPlugin_InMemFS: TOnActionPlugin_InMemFS
+                       ): Boolean; cdecl;
+
+  var
+    CfgInfo: string;
+
+  procedure LoadCfgFileFromInMemFS;
+  const
+    CCfgFnm = 'Mem:\Cfg.txt';
+  var
+    PluginInMemFS: TPluginInMemFileSystem;
+  begin
+    PluginInMemFS := TPluginInMemFileSystem.Create;
+    try
+      PluginInMemFS.PluginReference := APluginReference;
+
+      if PluginInMemFS.FileExistsInMem(AOnActionPlugin_InMemFS, CCfgFnm) then
+      begin
+        SetLength(CfgInfo, PluginInMemFS.GetFileSize(AOnActionPlugin_InMemFS, CCfgFnm));
+        PluginInMemFS.LoadFileFromMem(AOnActionPlugin_InMemFS, CCfgFnm, @CfgInfo[1]);
+      end;
+    finally
+      PluginInMemFS.Free;
+    end;
+  end;
+
+  var
+    ListOfFilesStr: string;
+begin
+  Result := True;
+  try
+    LoadCfgFileFromInMemFS;
+
+    // do something with CfgInfo
+    AOnActionPlugin_SetTemplateVar(APluginReference, @'$PluginCfg$'[1], @CfgInfo[1]);
+
+    ListOfFilesStr := ReturnListOfFilesFromInMemFS(APluginReference, AOnActionPlugin_InMemFS);
+    AOnActionPlugin_SetTemplateVar(APluginReference, @'$ListOfFilesInPluginInMemFS$'[1], @ListOfFilesStr[1]);
+  except
+    on E: Exception do
+      AOnActionPlugin_SetTemplateVar(APluginReference, @'$PluginException$'[1], @E.Message[1]);
+  end;
+end;
+
+
+var
+  FKey: string;
+  FKeySet: Boolean = False;
+
+
+//This test plugin is used as decompression plugin, although is purpose is to get the list of files from its InMem FS.
+//However, it has to implement a valid ProcessMemoryContent function.
+function ProcessMemoryContent(AInData: Pointer; AInDataLen: Int64; AOnFileContent: TOnFileContentObj): Integer; cdecl;
+var
+  ArchiveStream, DecompressedStream: TMemoryStream; //The archive stream has to be allocated again here, because it cannot be (safely) passed as argument.
+begin
+  Result := AInDataLen;
+  try
+    DecompressedStream := TMemoryStream.Create;
+    try
+      //DecompressedStream.SetSize(AInDataLen);  //should not be needed if calling ExtractStreamLzma  - for debugging only
+
+      ArchiveStream := TMemoryStream.Create;
+      try
+        ArchiveStream.SetSize(AInDataLen);
+        Move(AInData^, ArchiveStream.Memory^, AInDataLen);
+
+        //Move(AInData^, DecompressedStream.Memory^, AInDataLen);  //plain copy - for debugging only
+        ExtractStreamLzma(ArchiveStream, DecompressedStream);
+      finally
+        ArchiveStream.Free;
+      end;
+
+      AOnFileContent(DecompressedStream.Memory, DecompressedStream.Size);
+    finally
+      DecompressedStream.Free;
+    end;
+  except
+    Result := -1;
+  end;
+end;
+
+
+function ConfigurePluginForMemoryContent(AOnActionPlugin_InMemFS: TOnActionPlugin_InMemFS_Obj;
+                                         AOnActionPlugin_SetTemplateVar: TOnActionPlugin_SetTemplateVar_Obj;
+                                         AOnActionPlugin_AddToLog: TOnActionPlugin_AddToLog_Obj
+                                         ): Boolean; cdecl;
+const
+  CKeyFileName: string = 'Mem:\Key.txt';
+  CUseKeyFileName: string = 'Mem:\UseKey.txt';
+var
+  PluginInMemFS: TPluginInMemFileSystem;
+  UseKeyInfo: string;
+  ListOfFilesStr: string;
+begin
+  Result := True;
+  FKeySet := False;  //init also here
+
+  PluginInMemFS := TPluginInMemFileSystem.Create;
+  try
+    if PluginInMemFS.FileExistsInMem(AOnActionPlugin_InMemFS, CUseKeyFileName) then
+    begin
+      SetLength(UseKeyInfo, PluginInMemFS.GetFileSize(AOnActionPlugin_InMemFS, CUseKeyFileName));
+      PluginInMemFS.LoadFileFromMem(AOnActionPlugin_InMemFS, CUseKeyFileName, @UseKeyInfo[1]);
+    end;
+
+    if UseKeyInfo = 'True' then
+      if PluginInMemFS.FileExistsInMem(AOnActionPlugin_InMemFS, CKeyFileName) then
+      begin
+        FKeySet := True;
+        //read key from file
+        SetLength(FKey, PluginInMemFS.GetFileSize(AOnActionPlugin_InMemFS, CKeyFileName));
+        PluginInMemFS.LoadFileFromMem(AOnActionPlugin_InMemFS, CKeyFileName, @FKey[1]);
+      end;
+
+    ListOfFilesStr := ReturnListOfFilesFromInMemFS_Obj(AOnActionPlugin_InMemFS);
+    AOnActionPlugin_SetTemplateVar(@'$ListOfFilesInDecDecHashPluginInMemFS$'[1], @ListOfFilesStr[1]);
+
+    ListOfFilesStr := 'ListOfFiles: ' + ListOfFilesStr;
+    AOnActionPlugin_AddToLog(@ListOfFilesStr[1]);
+    AOnActionPlugin_AddToLog(@'Exiting configuration of TestPlugin.dll'[1]);
+  finally
+    PluginInMemFS.Free
+  end;
+end;
+
+
+exports
+  GetAPIVersion,
+  GetListOfProperties,
+  ExecutePlugin,
+  ProcessMemoryContent,
+  ConfigurePluginForMemoryContent;
+
+begin
+  FKeySet := False;  //init again here
+end.
+

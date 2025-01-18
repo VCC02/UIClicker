@@ -59,6 +59,9 @@ type
   TOnActionPlugin_Screenshot = function(APluginReference: Pointer; AActionName: Pointer): Boolean; cdecl;  //A plugin may call this function, to take a screenshot, using the settings from a FindSubControl action (specified by AActionName). Returns False if the cropping settings are wrong (e.g. may result in negative sizes). It may require a FindControl action to be executed before the plugin action, to properly set the search area. If the cropping limits are absolute (i.e. they do not depend on the $Control..$ variables), then the $Control_Handle$ will be set to what is found at global screen coordinates. The screenshot is saved to ExtRendering InMem file system, using the CScreenshotFilename name.
   TOnActionPlugin_CheckStopAllActionsOnDemand = function(APluginReference: Pointer): Boolean; cdecl; //A plugin should call this function in its "main loop", from the ExecutePlugin function, and it should stop the loop if the function returns True.
   TOnActionPlugin_InMemFS = function(APluginReference: Pointer; ACallbackIndex: Integer; AInData1, AInData2: Pointer; AInDataLen1, AInDataLen2: Int64; AOnFileContent: TOnFileContentObj): Int64; cdecl;  //A plugin calls this callback to access the in-mem FS it is part of (where the dll is kept in memory). It is a multi-purpose function, which calls one of the In-Mem FS functions, based on the ACallbackIndex parameter. The API is designed in this way, to avoid adding to many callbacks and to make it forward compatible with future implementations of this function.
+
+  TOnActionPlugin_SetTemplateVar_Obj = procedure(AVarName, AVarValue: Pointer) of object; cdecl;
+  TOnActionPlugin_AddToLog_Obj = procedure(ALogMsg: Pointer) of object; cdecl;
   TOnActionPlugin_InMemFS_Obj = function(ACallbackIndex: Integer; AInData1, AInData2: Pointer; AInDataLen1, AInDataLen2: Int64; AOnFileContent: TOnFileContentObj): Int64 of object; cdecl;
 
   //Plugin procedures / functions:
@@ -87,8 +90,8 @@ type
                             AOnActionPlugin_GetAllowedFilesInfo: TOnActionPlugin_GetAllowedFilesInfo;
                             AOnActionPlugin_SetBitmap: TOnActionPlugin_SetBitmap;
                             AOnActionPlugin_Screenshot: TOnActionPlugin_Screenshot;
-                            AOnActionPlugin_CheckStopAllActionsOnDemand: TOnActionPlugin_CheckStopAllActionsOnDemand{;
-                            AOnActionPlugin_InMemFS: TOnActionPlugin_InMemFS}  //for the next API version
+                            AOnActionPlugin_CheckStopAllActionsOnDemand: TOnActionPlugin_CheckStopAllActionsOnDemand;
+                            AOnActionPlugin_InMemFS: TOnActionPlugin_InMemFS
                             ): Boolean; cdecl;
 
 
@@ -101,7 +104,7 @@ type
 
 
 const
-  CActionPlugin_APIVersion = 7;
+  CActionPlugin_APIVersion = 8;
   CActionPlugin_ExecutionResultErrorVar = '$PluginError$';
   CActionPlugin_DebuggingVar = '$PluginDebugging$';
   CBeforePluginExecution_DbgLineContent = 'Before plugin execution.';

@@ -355,6 +355,10 @@ type
 
     FRemoteAddress: string; //and port  //used as a client
 
+    {$IFDEF MemPlugins}
+      FMemPluginsInMemFS: TInMemFileSystem;
+    {$ENDIF}
+
     FHold: Boolean; //for splitter
     FSplitterMouseDownImagePos: TPoint;
     FSplitterMouseDownGlobalPos: TPoint;
@@ -507,6 +511,7 @@ type
     function HandleOnSetWinInterpOption(AWinInterpOptionName, AWinInterpOptionValue: string): Boolean;
 
     procedure HandleOnWaitInDebuggingMode(var ADebuggingAction: TClkActionRec; AActionAllowsSteppingInto: TAllowsSteppingInto);
+    function HandleOnGetPluginInMemFS: TInMemFileSystem;
 
     function GetInMemFS: TInMemFileSystem;
     procedure SetInMemFS(Value: TInMemFileSystem);
@@ -719,6 +724,10 @@ type
 
     property InMemFS: TInMemFileSystem read GetInMemFS write SetInMemFS;
     property ExtRenderingInMemFS: TInMemFileSystem read GetExtRenderingInMemFS write SetExtRenderingInMemFS;
+    {$IFDEF MemPlugins}
+      property MemPluginsInMemFS: TInMemFileSystem read FMemPluginsInMemFS write FMemPluginsInMemFS;
+    {$ENDIF}
+
     property ActionExecution: TActionExecution read FActionExecution;
     property ShouldStopAtBreakPoint: Boolean {read FShouldStopAtBreakPoint} write FShouldStopAtBreakPoint;
 
@@ -1238,6 +1247,7 @@ begin
   FActionExecution.OnLoadTemplateToActions := HandleOnLoadTemplateToActions;
   FActionExecution.OnSaveCompleteTemplateToFile := HandleOnSaveCompleteTemplateToFile;
   FActionExecution.OnWaitInDebuggingMode := HandleOnWaitInDebuggingMode;
+  FActionExecution.OnGetPluginInMemFS := HandleOnGetPluginInMemFS;
 
   FCmdConsoleHistory := TStringList.Create;
   FOnExecuteRemoteActionAtIndex := nil;
@@ -1310,6 +1320,10 @@ begin
   FRemoteAddress := 'http://127.0.0.1:5444/';
   FShouldStopAtBreakPoint := False;
   FPlayingAllActions := False;
+
+  {$IFDEF MemPlugins}
+    FMemPluginsInMemFS := nil;
+  {$ENDIF}
 
   imgTemplateIcon.Picture.Bitmap.Width := imgTemplateIcon.Width;
   imgTemplateIcon.Picture.Bitmap.Height := imgTemplateIcon.Height;
@@ -2192,6 +2206,12 @@ begin
       AddToLog('Debugging action may have been moved (or at least its index is no longer valid).');
     end;
   end;
+end;
+
+
+function TfrClickerActionsArr.HandleOnGetPluginInMemFS: TInMemFileSystem;
+begin
+  Result := FMemPluginsInMemFS;
 end;
 
 

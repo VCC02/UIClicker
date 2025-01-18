@@ -348,6 +348,8 @@ type
     function HandleOnSetWinInterpOption(AWinInterpOptionName, AWinInterpOptionValue: string): Boolean;
 
     function HandleOnGetListeningPort: Word;
+    procedure HandlePluginAddToLog(s: string);
+    procedure HandleOnSetVar(AVarName, AVarValue: string);
 
     procedure CreateRemainingUIComponents;
     function GetClickerActionsArrFrameByStackLevel(AStackLevel: Integer): TfrClickerActionsArr;
@@ -986,6 +988,12 @@ begin
   frClickerActionsArrExperiment1.ExtRenderingInMemFS := FRenderedInMemFileSystem;
   frClickerActionsArrExperiment2.ExtRenderingInMemFS := FRenderedInMemFileSystem;
   frClickerActionsArrMain.ExtRenderingInMemFS := FRenderedInMemFileSystem;
+
+  {$IFDEF MemPlugins}
+    frClickerActionsArrExperiment1.MemPluginsInMemFS := FPluginsInMemFileSystem;
+    frClickerActionsArrExperiment2.MemPluginsInMemFS := FPluginsInMemFileSystem;
+    frClickerActionsArrMain.MemPluginsInMemFS := FPluginsInMemFileSystem;
+  {$ENDIF}
 
   //do not set FRenderedInMemFileSystem here, as it is used for externally rendered images, not for other files
 
@@ -1672,6 +1680,11 @@ begin
         NewFrame.RemoteAddress := frClickerActionsArrMain.RemoteAddress;
         NewFrame.InMemFS := FInMemFileSystem;
         NewFrame.ExtRenderingInMemFS := FRenderedInMemFileSystem;
+
+        {$IFDEF MemPlugins}
+          NewFrame.MemPluginsInMemFS := FPluginsInMemFileSystem;
+        {$ENDIF}
+
         //do not set FRenderedInMemFileSystem here
         NewFrame.GridDrawingOption := TDisplayGridLineOption(cmbImgPreviewGridType.ItemIndex);
 
@@ -2081,14 +2094,25 @@ end;
 
 
 function TfrmClickerActions.HandleOnLoadPluginFromInMemFS(APlugin: TMemoryStream; AFileName: string): Boolean;
+var
+  i: Integer;
 begin
-  if FPluginsInMemFileSystem.FileExistsInMem(AFileName) then
-  begin
-    FPluginsInMemFileSystem.LoadFileFromMemToStream(AFileName, APlugin);
-    Result := True;
-  end
-  else
-    Result := False;
+  Result := False;
+
+  //if FPluginsInMemFileSystem.FileExistsInMem(AFileName) then  //FPluginsInMemFileSystem is no longer used to store plugins, however, it points to Mem:\
+  //begin
+  //  FPluginsInMemFileSystem.LoadFileFromMemToStream(AFileName, APlugin);
+  //  Result := True;
+  //end;
+
+  for i := 0 to Length(FDecDecHashPluginInMemFSArr) - 1 do
+    if not FDecDecHashPluginInMemFSArr[i].IsDecDecHashPlugin then
+      if FDecDecHashPluginInMemFSArr[i].InMemFS.FileExistsInMem(AFileName) then
+      begin
+        FDecDecHashPluginInMemFSArr[i].InMemFS.LoadFileFromMemToStream(AFileName, APlugin);
+        Result := True;
+        Exit;
+      end;
 end;
 
 
@@ -2130,8 +2154,33 @@ end;
   procedure TfrmClickerActions.HandleOnGetListOfInMemPlugins(AListOfInMemPlugins: TStringList);
   var
     i: Integer;
+    TempListOfInMemPlugins: TStringList;
   begin
-    FPluginsInMemFileSystem.ListMemFiles(AListOfInMemPlugins);
+    //FPluginsInMemFileSystem.ListMemFiles(AListOfInMemPlugins);       //FPluginsInMemFileSystem is no longer used to store plugins, however, it points to Mem:\
+    //
+    AddToLog('..... Quering for list of mem plugins..  ArrLen = ' + IntToStr(Length(FDecDecHashPluginInMemFSArr)));
+
+    for i := 0 to Length(FDecDecHashPluginInMemFSArr) - 1 do
+      if not FDecDecHashPluginInMemFSArr[i].IsDecDecHashPlugin then
+      begin
+        TempListOfInMemPlugins := TStringList.Create;
+        try
+          FDecDecHashPluginInMemFSArr[i].InMemFS.ListMemFiles(TempListOfInMemPlugins);
+          AListOfInMemPlugins.AddStrings(TempListOfInMemPlugins);
+
+          AddToLog('..... Found ' + IntToStr(TempListOfInMemPlugins.Count) + ' files(s) at index ' + IntToStr(i) + ':  ' + FastReplace_ReturnToCSV(TempListOfInMemPlugins.Text));
+        finally
+          TempListOfInMemPlugins.Free;
+        end;
+      end;
+
+    TempListOfInMemPlugins := TStringList.Create;
+    try
+      FPluginsInMemFileSystem.ListMemFiles(TempListOfInMemPlugins);
+      AddToLog('..... Found ' + IntToStr(TempListOfInMemPlugins.Count) + ' files(s) in plugins InMem FS:  ' + FastReplace_ReturnToCSV(TempListOfInMemPlugins.Text));
+    finally
+      TempListOfInMemPlugins.Free;
+    end;
 
     for i := 0 to AListOfInMemPlugins.Count - 1 do
       AListOfInMemPlugins.Strings[i] := AListOfInMemPlugins.Strings[i] + #8#7;
@@ -2141,11 +2190,33 @@ end;
   procedure TfrmClickerActions.HandleOnLoadPluginFromDiskToPluginInMemFileSystem(APluginPath: string);
   var
     MemStream: TMemoryStream;
+    Idx: Integer;
   begin
+    if not FileExists(APluginPath) then
+    begin
+      AddToLog('File not found on disk: ' + APluginPath);
+      Exit;
+    end;
+
     MemStream := TMemoryStream.Create;
     try
       MemStream.LoadFromFile(APluginPath);
-      FPluginsInMemFileSystem.SaveFileToMem(CMemPluginLocationPrefix + PathDelim + ExtractFileName(APluginPath), MemStream.Memory, MemStream.Size);
+
+      //FPluginsInMemFileSystem is no longer used to store plugins, however, it points to Mem:\
+      //FPluginsInMemFileSystem.SaveFileToMem(CMemPluginLocationPrefix + PathDelim + ExtractFileName(APluginPath), MemStream.Memory, MemStream.Size);
+
+      Idx := GetPluginInMemFSIndex(FDecDecHashPluginInMemFSArr, ExtractFileName(APluginPath));
+      if Idx = -1 then
+      begin
+        SetLength(FDecDecHashPluginInMemFSArr, Length(FDecDecHashPluginInMemFSArr) + 1);
+        Idx := Length(FDecDecHashPluginInMemFSArr) - 1;
+      end;
+
+      FDecDecHashPluginInMemFSArr[Idx].InMemFS := TInMemFileSystem.Create;
+      FDecDecHashPluginInMemFSArr[Idx].Name := ExtractFileName(APluginPath);
+      FDecDecHashPluginInMemFSArr[Idx].PreventReusingInMemFS := True;
+      FDecDecHashPluginInMemFSArr[Idx].IsDecDecHashPlugin := False; //no DecDecHashPlugin from disk
+      FDecDecHashPluginInMemFSArr[Idx].InMemFS.SaveFileToMem(CMemPluginLocationPrefix + PathDelim + ExtractFileName(APluginPath), MemStream.Memory, MemStream.Size);
     finally
       MemStream.Free;
     end;
@@ -3113,7 +3184,7 @@ procedure TfrmClickerActions.IdHTTPServer1CommandOther(AContext: TIdContext;
   end;
 
 var
-  Fnm, Msg: string;
+  Fnm, Msg, UpperCaseFnmExt: string;
   TempMemStream: TMemoryStream;
   ListOfFileNames, ListOfFileFound: TStringList;
   VerifyHashes: Boolean;
@@ -3221,14 +3292,14 @@ begin
 
   {$IFDEF MemPlugins}
     IsDecDecHash := ARequestInfo.Params.Values[CREParam_IsDecDecHash] = '1';
-    if IsDecDecHash then
+    //if IsDecDecHash or (not IsDecDecHash and (UpperCase(ExtractFileExt(ARequestInfo.Params.Values[CREParam_FileName])) = '.DLL')) then
     begin
       AddToLogFromThread('Archive AdditionalInfo: ' + ARequestInfo.Params.Values[CREParam_AdditionalInfo]);
 
       InMemFSIndex := GetPluginInMemFSIndex(FDecDecHashPluginInMemFSArr, ARequestInfo.Params.Values[CREParam_FileName]);
       if InMemFSIndex = -1 then
       begin
-        if Length(FDecDecHashPluginInMemFSArr) >= 21 then
+        if Length(FDecDecHashPluginInMemFSArr) >= 45 then //21 then
         begin
           RespondWithText(CREResp_TooManyPluginFileSystems);
           AddToLogFromThread(Msg);
@@ -3236,20 +3307,32 @@ begin
         end
         else
         begin
-          AddToLogFromThread('Allocating a new InMemFS for a DecDecHash plugin.');
-          SetLength(FDecDecHashPluginInMemFSArr, Length(FDecDecHashPluginInMemFSArr) + 1);
-          InMemFSIndex := Length(FDecDecHashPluginInMemFSArr) - 1;
+          if (UpperCase(ExtractFileExt(ARequestInfo.Params.Values[CREParam_FileName])) = '.DBGSYM') and (Length(FDecDecHashPluginInMemFSArr) > 0) then
+          begin            //.dbgsym file end up in the first FS
+            InMemFSIndex := 0; //use the first available item, although it may not be related to its plugin
+            AddToLogFromThread('Using the first InMemFS for a plugin .dbgsym file.');
+          end
+          else
+          begin
+            AddToLogFromThread('Allocating a new InMemFS for a plugin.');
+            SetLength(FDecDecHashPluginInMemFSArr, Length(FDecDecHashPluginInMemFSArr) + 1);
+            InMemFSIndex := Length(FDecDecHashPluginInMemFSArr) - 1;
 
-          FDecDecHashPluginInMemFSArr[InMemFSIndex].Name := ARequestInfo.Params.Values[CREParam_FileName];
-          FDecDecHashPluginInMemFSArr[InMemFSIndex].InMemFS := TInMemFileSystem.Create; //allocate a new FS for this plugin
-          FDecDecHashPluginInMemFSArr[InMemFSIndex].PreventReusingInMemFS := Pos(CREParam_PreventReusingInMemFS + '=' + 'True', ARequestInfo.Params.Values[CREParam_AdditionalInfo]) > 0;
+            FDecDecHashPluginInMemFSArr[InMemFSIndex].Name := ARequestInfo.Params.Values[CREParam_FileName];
+            FDecDecHashPluginInMemFSArr[InMemFSIndex].InMemFS := TInMemFileSystem.Create; //allocate a new FS for this plugin
+            FDecDecHashPluginInMemFSArr[InMemFSIndex].PreventReusingInMemFS := Pos(CREParam_PreventReusingInMemFS + '=' + 'True', ARequestInfo.Params.Values[CREParam_AdditionalInfo]) > 0;
+          end;
+
+          if UpperCase(ExtractFileExt(ARequestInfo.Params.Values[CREParam_FileName])) = '.DBGSYM' then
+            if not IsDecDecHash then
+              FDecDecHashPluginInMemFSArr[InMemFSIndex].PreventReusingInMemFS := False;  // .dbgsym files will not allocate a new FS
 
           if FDecDecHashPluginInMemFSArr[InMemFSIndex].PreventReusingInMemFS then
             AddToLogFromThread('This FS prevents being reused for other archives with the same name: ' + FDecDecHashPluginInMemFSArr[InMemFSIndex].Name);
         end;                                                                  ///////////////ToDo: deallocate InMemFS, and remove item from FDecDecHashPluginInMemFSArr, on exception and when not needed anymore
-      end
+      end   // InMemFSIndex = -1
       else
-      begin
+      begin // File found, InMemFSIndex > -1
         if FDecDecHashPluginInMemFSArr[InMemFSIndex].PreventReusingInMemFS then
         begin        //It would be nice to allocate a new FS with a random name and respond with that name, but in case of error, that name has to be combined with the error message.
           AddToLogFromThread('There may be available file systems, but this one is not allowed to be allocated, because the name already exists and it can''t be reused. FS Name: ' + FDecDecHashPluginInMemFSArr[InMemFSIndex].Name);
@@ -3298,20 +3381,23 @@ begin
       if Pos(UpperCase(CMemPluginLocationPrefix), UpperCase(Fnm)) = 1 then  // e.g. MEM:\PathToDll\MyPlugin.dll
         Fnm := CMemPluginLocationPrefix + Copy(Fnm, 5, MaxInt);
 
+      UpperCaseFnmExt := UpperCase(ExtractFileExt(Fnm));
+
       TempMemStream := TMemoryStream.Create;
       try
         TempMemStream.CopyFrom(ARequestInfo.PostStream, ARequestInfo.PostStream.Size);
 
-        if not IsDecDecHash then
-        begin  //ordinary plugin
-          FPluginsInMemFileSystem.SaveFileToMem(Fnm, TempMemStream.Memory, TempMemStream.Size);   //FPluginsInMemFileSystem is used for plugins and their files (dbgsym or config files)
-          Msg := 'Received plugin file: "' + Fnm + '"  of ' + IntToStr(TempMemStream.Size) + ' bytes in size (for PluginInMemFS).';
-        end
-        else
-        begin  //DecDecHash plugin
+        if not IsDecDecHash and (UpperCaseFnmExt <> '.DLL') and (UpperCaseFnmExt <> '.DLLARC') and (UpperCaseFnmExt <> '.DBGSYM') then  //ordinary plugin             // save ordinary plugins to new FSes
+          FPluginsInMemFileSystem.SaveFileToMem(Fnm, TempMemStream.Memory, TempMemStream.Size)   //FPluginsInMemFileSystem is used for plugins and their files (dbgsym or config files)
+        else   //DecDecHash plugin
           FDecDecHashPluginInMemFSArr[InMemFSIndex].InMemFS.SaveFileToMem(Fnm, TempMemStream.Memory, TempMemStream.Size);   //FDecDecHashPluginInMemFSArr is used for DecDecHash plugins and their files (dbgsym or config files)
+
+        FDecDecHashPluginInMemFSArr[InMemFSIndex].IsDecDecHashPlugin := IsDecDecHash;
+
+        if not IsDecDecHash then
+          Msg := 'Received plugin file: "' + Fnm + '"  of ' + IntToStr(TempMemStream.Size) + ' bytes in size (for PluginInMemFS).'
+        else
           Msg := 'Received DecDecHash plugin file: "' + Fnm + '"  of ' + IntToStr(TempMemStream.Size) + ' bytes in size (for DecDecHashPluginInMemFS).';
-        end;
 
         AddToLogFromThread(Msg);
         RespondWithText(CREResp_ErrResponseOK);
@@ -3349,6 +3435,8 @@ begin
         Exit;
       end;
 
+      UpperCaseFnmExt := UpperCase(ExtractFileExt(Fnm));
+
       TempMemStream := TMemoryStream.Create;
       try
         TempMemStream.CopyFrom(ARequestInfo.PostStream, ARequestInfo.PostStream.Size);
@@ -3362,12 +3450,15 @@ begin
         try
           PluginArchive := TClickerPluginArchive.Create;
           try
-            PluginArchive.OnAddToLog := AddToLog;
+            PluginArchive.OnAddToLog := HandlePluginAddToLog;
+            PluginArchive.OnSetVar := HandleOnSetVar;
 
-            if not IsDecDecHash then
+            if not IsDecDecHash and (UpperCaseFnmExt <> '.DLL') and (UpperCaseFnmExt <> '.DLLARC') and (UpperCaseFnmExt <> '.DBGSYM') then              // save ordinary plugins to new FSes
               PluginArchive.PluginsInMemFS := FPluginsInMemFileSystem   //ordinary plugin
             else
               PluginArchive.PluginsInMemFS := FDecDecHashPluginInMemFSArr[InMemFSIndex].InMemFS;  //DecDecHash plugin
+
+            FDecDecHashPluginInMemFSArr[InMemFSIndex].IsDecDecHashPlugin := IsDecDecHash;
 
             AddToLogFromThread('DecryptionPluginName is "' + ARequestInfo.Params.Values[CREParam_DecryptionPluginName] + '".');
             AddToLogFromThread('DecompressionPluginName is "' + ARequestInfo.Params.Values[CREParam_DecompressionPluginName] + '".');
@@ -4324,6 +4415,18 @@ end;
 function TfrmClickerActions.HandleOnGetListeningPort: Word;
 begin
   Result := StrToIntDef(lbeServerModePort.Text, 5444);
+end;
+
+
+procedure TfrmClickerActions.HandlePluginAddToLog(s: string);
+begin
+  AddToLog('Plugin: ' + s);
+end;
+
+
+procedure TfrmClickerActions.HandleOnSetVar(AVarName, AVarValue: string);
+begin
+  frClickerActionsArrMain.SetActionVarValue(AVarName, AVarValue);
 end;
 
 

@@ -77,6 +77,7 @@ type
     procedure Test_SendMemPluginArchiveFileToServer_WithAllDecDecHashPlugins_HappyFlow;
     procedure Test_SendMemPluginArchiveFileToServer_WithDecryptOnly_CustomKey;
     procedure Test_SendMemPluginArchiveFileToServer_WithDecryptOnly_BadKey;
+    procedure Test_SendMemPluginArchiveFileToServer_GetListOfFilesDecDecHashInMemFS;
   end;
 
 
@@ -546,6 +547,21 @@ end;
 procedure TTestClickerClientMemPlugins.Test_SendMemPluginArchiveFileToServer_WithDecryptOnly_BadKey;
 begin
   Test_SendMemPluginArchiveFileToServer_WithDecryptOnly_CfgKey(False, True, 'PluginError: Archive is invalid. Hash mismatch.');
+end;
+
+
+procedure TTestClickerClientMemPlugins.Test_SendMemPluginArchiveFileToServer_GetListOfFilesDecDecHashInMemFS;
+var
+  TestPluginName: string;
+  Fnm: string;
+begin
+  Fnm := Get_FindWindows_PluginPath_RelativeToTestApp;
+  TestPluginName := ExtractFilePath(ParamStr(0)) + 'TestFiles\TestPlugin\lib\' + GetPluginBitnessDirName + '\TestPlugin.dll';
+
+  SendGenericMemPluginArchiveFileToServer_SinglePlugin_HappyFlow(TestPluginName, ExtractFileName(TestPluginName), '', '', '', False, '', True, False, CREResp_ErrResponseOK);
+  SendGenericMemPluginArchiveFileToServer_SinglePlugin_HappyFlow(Fnm, ExtractFileName(Fnm), '', ExtractFileName(TestPluginName) + 'arc|Mem:\' + ExtractFileName(TestPluginName), '', True, 'none', False, False, CREResp_ErrResponseOK);
+
+  Expect(GetVarValueFromServer('$ListOfFilesInDecDecHashPluginInMemFS$')).ToBe('Mem:\' + ExtractFileName(TestPluginName) + #6#8 + 'Mem:\UseKey.txt' + #6#8);
 end;
 
 

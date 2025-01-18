@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2024 VCC
+    Copyright (C) 2025 VCC
     creation date: Dec 2019
     initial release date: 13 Sep 2022
 
@@ -60,6 +60,7 @@ type
   TOnSaveCompleteTemplateToFile = function(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; ANotes, AIconPath: string; AUpdateUI, AShouldSaveSelfTemplate: Boolean): string of object;
 
   TOnWaitInDebuggingMode = procedure(var ADebuggingAction: TClkActionRec; AActionAllowsSteppingInto: TAllowsSteppingInto) of object;
+  TOnGetPluginInMemFS = function: TInMemFileSystem of object;
 
 
   TActionExecution = class
@@ -123,6 +124,7 @@ type
     FOnSaveCompleteTemplateToFile: TOnSaveCompleteTemplateToFile;
 
     FOnWaitInDebuggingMode: TOnWaitInDebuggingMode;
+    FOnGetPluginInMemFS: TOnGetPluginInMemFS;
 
     function GetActionVarValue(VarName: string): string;
     procedure SetActionVarValue(VarName, VarValue: string);
@@ -182,6 +184,7 @@ type
     function DoOnSaveCompleteTemplateToFile(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; ANotes, AIconPath: string; AUpdateUI, AShouldSaveSelfTemplate: Boolean): string;
 
     procedure DoOnWaitInDebuggingMode(var ADebuggingAction: TClkActionRec; AActionAllowsSteppingInto: TAllowsSteppingInto);
+    function DoOnGetPluginInMemFS: TInMemFileSystem;
 
     function HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     function HandleOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
@@ -284,6 +287,7 @@ type
     property OnSaveCompleteTemplateToFile: TOnSaveCompleteTemplateToFile write FOnSaveCompleteTemplateToFile;
 
     property OnWaitInDebuggingMode: TOnWaitInDebuggingMode write FOnWaitInDebuggingMode;
+    property OnGetPluginInMemFS: TOnGetPluginInMemFS write FOnGetPluginInMemFS;
   end;
 
 
@@ -361,6 +365,7 @@ begin
   FOnSaveCompleteTemplateToFile := nil;
 
   FOnWaitInDebuggingMode := nil;
+  FOnGetPluginInMemFS := nil;
 end;
 
 
@@ -982,6 +987,15 @@ begin
     raise Exception.Create('OnWaitInDebuggingMode is not assigned.')
   else
     FOnWaitInDebuggingMode(ADebuggingAction, AActionAllowsSteppingInto);
+end;
+
+
+function TActionExecution.DoOnGetPluginInMemFS: TInMemFileSystem;
+begin
+  if not Assigned(FOnGetPluginInMemFS) then
+    raise Exception.Create('OnGetPluginInMemFS is not assigned.')
+  else
+    Result := FOnGetPluginInMemFS();
 end;
 
 
@@ -3725,7 +3739,7 @@ begin
                                       FPluginStepOver,
                                       FPluginContinueAll,
                                       frClickerActions.imgDebugBmp.Picture.Bitmap,
-                                      nil, //AInMemFS: TInMemFileSystem;
+                                      DoOnGetPluginInMemFS,
                                       FFullTemplatesDir^,
                                       FAllowedFileDirsForServer^, //ResolvedAllowedFileDirs,
                                       FAllowedFileExtensionsForServer^,

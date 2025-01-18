@@ -609,6 +609,13 @@ var
 begin
   ActionPlugin := APluginReference;
 
+  if ActionPlugin.FInMemFS = nil then
+  begin
+    Result := -1;
+    ActionPlugin.DoAddToLog('Plugin InMemFS not available. Please enable the feature and recompile UIClicker.');
+    Exit;
+  end;
+
   InMemFSAccess := TPluginInMemFSAccess.Create;
   try
     InMemFSAccess.InMemFS := ActionPlugin.FInMemFS;
@@ -1153,8 +1160,8 @@ begin
                                        DoOnActionPlugin_GetAllowedFilesInfo,
                                        DoOnActionPlugin_SetBitmap,
                                        DoOnActionPlugin_Screenshot,
-                                       DoOnActionPlugin_CheckStopAllActionsOnDemand{,
-                                       DoOnActionPlugin_InMemFS}
+                                       DoOnActionPlugin_CheckStopAllActionsOnDemand,
+                                       DoOnActionPlugin_InMemFS
                                        );
     finally
       if FPluginContinueAll <> nil then
