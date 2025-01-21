@@ -2438,11 +2438,15 @@ function TfrmClickerActions.ProcessServerCmd(ASyncObj: TSyncHTTPCmd): string;
 
 var
   TabIdx: Integer;
+  {$IFDEF MemPlugins}
+    i, FSIdx: Integer;
+  {$ENDIF}
   IsDebuggingFromClient: Boolean;
   ErrMsg: string;
   Fnm: string;
   RemoteState: Boolean;
   TempStr: string;
+  ListOfFileNames: TStringList;
 begin
   Result := 'ok';  //default if not setting any result, as in CRECmd_ExecuteCommandAtIndex
 
@@ -2911,6 +2915,102 @@ begin
     Exit;
   end;
 
+  {$IFDEF MemPlugins}
+    {$IFDEF TestBuild}
+      {$IFDEF PluginTesting} //These requests are implemented for testing only. Ideally, they should be part of some unit testing only, not exposed by UIClicker.
+        if ASyncObj.FCmd = '/' + CRECmd_GetMemPluginInMemFSCount then
+        begin
+          Result := IntToStr(Length(FDecDecHashPluginInMemFSArr));
+          Exit;
+        end;
+
+        if ASyncObj.FCmd = '/' + CRECmd_DeleteAllMemPluginInMemFSes then
+        begin
+          for i := 0 to Length(FDecDecHashPluginInMemFSArr) - 1 do
+            FDecDecHashPluginInMemFSArr[i].InMemFS.Free;
+          SetLength(FDecDecHashPluginInMemFSArr, 0);
+
+          Result := CREResp_ErrResponseOK;
+          Exit;
+        end;
+
+        if ASyncObj.FCmd = '/' + CRECmd_GetListOfFilesFromMemPluginInMemFS then
+        begin
+          FSIdx := StrToIntDef(ASyncObj.FParams.Values[CREParam_PluginFSIdx], -2);
+          if (FSIdx <= -2) or (FSIdx > Length(FDecDecHashPluginInMemFSArr) - 1) then
+          begin
+            Result := CREResp_PluginFileSystemIndexOutOfBounds;
+            Exit;
+          end;
+
+          ListOfFileNames := TStringList.Create;
+          try
+            if FSIdx = -1 then
+              FPluginsInMemFileSystem.ListMemFiles(ListOfFileNames)
+            else
+              FDecDecHashPluginInMemFSArr[FSIdx].InMemFS.ListMemFiles(ListOfFileNames);
+
+            Result := FastReplace_ReturnTo87(ListOfFileNames.Text);
+            if Result = '' then
+              Result := CREResp_ErrResponseOK;   //return a predefined text, to avoid returning '..200 OK..'
+
+            AddToLog(CRECmd_GetListOfFilesFromMemPluginInMemFS + ': ' + Result);
+          finally
+            ListOfFileNames.Free;
+          end;
+
+          Exit;
+        end;
+
+        if ASyncObj.FCmd = '/' + CRECmd_DeleteAllFilesFromMemPluginInMemFS then
+        begin
+          FSIdx := StrToIntDef(ASyncObj.FParams.Values[CREParam_PluginFSIdx], -2);
+          if (FSIdx <= -2) or (FSIdx > Length(FDecDecHashPluginInMemFSArr) - 1) then
+          begin
+            Result := CREResp_PluginFileSystemIndexOutOfBounds;
+            Exit;
+          end;
+
+          if FSIdx = -1 then
+            FPluginsInMemFileSystem.Clear
+          else
+            FDecDecHashPluginInMemFSArr[FSIdx].InMemFS.Clear;
+
+          Result := CREResp_ErrResponseOK;
+
+          Exit;
+        end;
+      {$ELSE}
+        if (ARequestInfo.Document = '/' + CRECmd_GetMemPluginInMemFSCount) or
+           (ARequestInfo.Document = '/' + CRECmd_DeleteAllMemPluginInMemFSes) or
+           (ARequestInfo.Document = '/' + CRECmd_GetListOfFilesInMemPluginInMem) or
+           (ARequestInfo.Document = '/' + CRECmd_DeleteAllFilesFromMemPluginInMemFS) then
+        begin
+          Result := CREResp_NotImplemented;
+          Exit;
+        end;
+      {$ENDIF}
+    {$ELSE}
+      if (ARequestInfo.Document = '/' + CRECmd_GetMemPluginInMemFSCount) or
+         (ARequestInfo.Document = '/' + CRECmd_DeleteAllMemPluginInMemFSes) or
+         (ARequestInfo.Document = '/' + CRECmd_GetListOfFilesInMemPluginInMem) or
+         (ARequestInfo.Document = '/' + CRECmd_DeleteAllFilesFromMemPluginInMemFS) then
+      begin
+        Result := CREResp_NotImplemented;
+        Exit;
+      end;
+    {$ENDIF} //TestBuild
+  {$ELSE}
+    if (ARequestInfo.Document = '/' + CRECmd_GetMemPluginInMemFSCount) or
+       (ARequestInfo.Document = '/' + CRECmd_DeleteAllMemPluginInMemFSes) or
+       (ARequestInfo.Document = '/' + CRECmd_GetListOfFilesInMemPluginInMem) or
+       (ARequestInfo.Document = '/' + CRECmd_DeleteAllFilesFromMemPluginInMemFS) then
+    begin
+      Result := CREResp_NotImplemented;
+      Exit;
+    end;
+  {$ENDIF}
+
   Result := 'unknown command';  //default if no command is recognized
   frClickerActionsArrMain.AddToLog(Result + ': ' + ASyncObj.FCmd);
   ASyncObj.FErrCode := 2;
@@ -3193,6 +3293,7 @@ var
   {$IFDEF MemPlugins}
     IsDecDecHash: Boolean;
     InMemFSIndex: Integer;
+    PrevDecDecHashPlugin: Integer;
   {$ENDIF}
 begin
   if ARequestInfo.CommandType <> hcPUT then
@@ -3291,59 +3392,66 @@ begin
   end;
 
   {$IFDEF MemPlugins}
-    IsDecDecHash := ARequestInfo.Params.Values[CREParam_IsDecDecHash] = '1';
-    //if IsDecDecHash or (not IsDecDecHash and (UpperCase(ExtractFileExt(ARequestInfo.Params.Values[CREParam_FileName])) = '.DLL')) then
+    if (ARequestInfo.Document = '/' + CRECmd_SetMemPluginFile) or
+       (ARequestInfo.Document = '/' + CRECmd_SetMemPluginArchiveFile) then
     begin
-      AddToLogFromThread('Archive AdditionalInfo: ' + ARequestInfo.Params.Values[CREParam_AdditionalInfo]);
-
-      InMemFSIndex := GetPluginInMemFSIndex(FDecDecHashPluginInMemFSArr, ARequestInfo.Params.Values[CREParam_FileName]);
-      if InMemFSIndex = -1 then
+      /////////////////ToDo: CritSec
+      IsDecDecHash := ARequestInfo.Params.Values[CREParam_IsDecDecHash] = '1';
+      //if IsDecDecHash or (not IsDecDecHash and (UpperCase(ExtractFileExt(ARequestInfo.Params.Values[CREParam_FileName])) = '.DLL')) then
       begin
-        if Length(FDecDecHashPluginInMemFSArr) >= 45 then //21 then
+        AddToLogFromThread('Archive AdditionalInfo: ' + ARequestInfo.Params.Values[CREParam_AdditionalInfo]);
+
+        InMemFSIndex := GetPluginInMemFSIndex(FDecDecHashPluginInMemFSArr, ARequestInfo.Params.Values[CREParam_FileName]);
+        if InMemFSIndex = -1 then
         begin
-          RespondWithText(CREResp_TooManyPluginFileSystems);
-          AddToLogFromThread(Msg);
-          Exit;
-        end
-        else
-        begin
-          if (UpperCase(ExtractFileExt(ARequestInfo.Params.Values[CREParam_FileName])) = '.DBGSYM') and (Length(FDecDecHashPluginInMemFSArr) > 0) then
-          begin            //.dbgsym file end up in the first FS
-            InMemFSIndex := 0; //use the first available item, although it may not be related to its plugin
-            AddToLogFromThread('Using the first InMemFS for a plugin .dbgsym file.');
+          if Length(FDecDecHashPluginInMemFSArr) >= 45 then //21 then
+          begin
+            RespondWithText(CREResp_TooManyPluginFileSystems);
+            AddToLogFromThread(Msg);
+            Exit;
           end
           else
           begin
-            AddToLogFromThread('Allocating a new InMemFS for a plugin.');
-            SetLength(FDecDecHashPluginInMemFSArr, Length(FDecDecHashPluginInMemFSArr) + 1);
-            InMemFSIndex := Length(FDecDecHashPluginInMemFSArr) - 1;
+            if (UpperCase(ExtractFileExt(ARequestInfo.Params.Values[CREParam_FileName])) = '.DBGSYM') and (Length(FDecDecHashPluginInMemFSArr) > 0) then
+            begin            //.dbgsym file end up in the first FS
+              InMemFSIndex := 0; //use the first available item, although it may not be related to its plugin
+              AddToLogFromThread('Using the first InMemFS for a plugin .dbgsym file.');
+            end
+            else
+            begin
+              PrevDecDecHashPlugin := Length(FDecDecHashPluginInMemFSArr);
+              AddToLogFromThread('Allocating a new InMemFS for a plugin.');
+              SetLength(FDecDecHashPluginInMemFSArr, Length(FDecDecHashPluginInMemFSArr) + 1);
+              InMemFSIndex := Length(FDecDecHashPluginInMemFSArr) - 1;
 
-            FDecDecHashPluginInMemFSArr[InMemFSIndex].Name := ARequestInfo.Params.Values[CREParam_FileName];
-            FDecDecHashPluginInMemFSArr[InMemFSIndex].InMemFS := TInMemFileSystem.Create; //allocate a new FS for this plugin
-            FDecDecHashPluginInMemFSArr[InMemFSIndex].PreventReusingInMemFS := Pos(CREParam_PreventReusingInMemFS + '=' + 'True', ARequestInfo.Params.Values[CREParam_AdditionalInfo]) > 0;
+              FDecDecHashPluginInMemFSArr[InMemFSIndex].Name := ARequestInfo.Params.Values[CREParam_FileName];
+              FDecDecHashPluginInMemFSArr[InMemFSIndex].InMemFS := TInMemFileSystem.Create; //allocate a new FS for this plugin
+              FDecDecHashPluginInMemFSArr[InMemFSIndex].PreventReusingInMemFS := Pos(CREParam_PreventReusingInMemFS + '=' + 'True', ARequestInfo.Params.Values[CREParam_AdditionalInfo]) > 0;
+            end;
+
+            if UpperCase(ExtractFileExt(ARequestInfo.Params.Values[CREParam_FileName])) = '.DBGSYM' then
+              if not IsDecDecHash then
+                FDecDecHashPluginInMemFSArr[InMemFSIndex].PreventReusingInMemFS := False;  // .dbgsym files will not allocate a new FS
+
+            if FDecDecHashPluginInMemFSArr[InMemFSIndex].PreventReusingInMemFS then
+              AddToLogFromThread('This FS prevents being reused for other archives with the same name: ' + FDecDecHashPluginInMemFSArr[InMemFSIndex].Name);
+          end;                                                                  ///////////////ToDo: deallocate InMemFS, and remove item from FDecDecHashPluginInMemFSArr, on exception and when not needed anymore
+        end   // InMemFSIndex = -1
+        else
+        begin // File found, InMemFSIndex > -1
+          if FDecDecHashPluginInMemFSArr[InMemFSIndex].PreventReusingInMemFS or
+            (FDecDecHashPluginInMemFSArr[InMemFSIndex].IsDecDecHashPlugin <> IsDecDecHash) then  //changing the IsDecDecHashPlugin flag is not alowed
+          begin        //It would be nice to allocate a new FS with a random name and respond with that name, but in case of error, that name has to be combined with the error message.
+            AddToLogFromThread('There may be available file systems, but this one is not allowed to be allocated, because the name already exists and it can''t be reused. FS Name: ' + FDecDecHashPluginInMemFSArr[InMemFSIndex].Name);
+            RespondWithText(CREResp_TooManyPluginFileSystems);
+            AddToLogFromThread(Msg);
+            Exit;
           end;
 
-          if UpperCase(ExtractFileExt(ARequestInfo.Params.Values[CREParam_FileName])) = '.DBGSYM' then
-            if not IsDecDecHash then
-              FDecDecHashPluginInMemFSArr[InMemFSIndex].PreventReusingInMemFS := False;  // .dbgsym files will not allocate a new FS
-
-          if FDecDecHashPluginInMemFSArr[InMemFSIndex].PreventReusingInMemFS then
-            AddToLogFromThread('This FS prevents being reused for other archives with the same name: ' + FDecDecHashPluginInMemFSArr[InMemFSIndex].Name);
-        end;                                                                  ///////////////ToDo: deallocate InMemFS, and remove item from FDecDecHashPluginInMemFSArr, on exception and when not needed anymore
-      end   // InMemFSIndex = -1
-      else
-      begin // File found, InMemFSIndex > -1
-        if FDecDecHashPluginInMemFSArr[InMemFSIndex].PreventReusingInMemFS then
-        begin        //It would be nice to allocate a new FS with a random name and respond with that name, but in case of error, that name has to be combined with the error message.
-          AddToLogFromThread('There may be available file systems, but this one is not allowed to be allocated, because the name already exists and it can''t be reused. FS Name: ' + FDecDecHashPluginInMemFSArr[InMemFSIndex].Name);
-          RespondWithText(CREResp_TooManyPluginFileSystems);
-          AddToLogFromThread(Msg);
-          Exit;
+          AddToLogFromThread('Received a plugin with an existing name. Reusing FS: ' + ARequestInfo.Params.Values[CREParam_FileName] + '  at index ' + IntToStr(InMemFSIndex));
         end;
-
-        AddToLogFromThread('Received a plugin with an existing name. Reusing FS: ' + ARequestInfo.Params.Values[CREParam_FileName] + '  at index ' + IntToStr(InMemFSIndex));
       end;
-    end;
+    end;   //CRECmd_SetMemPluginFile or CRECmd_SetMemPluginArchiveFile
 
     if ARequestInfo.Document = '/' + CRECmd_SetMemPluginFile then
     begin
@@ -3392,7 +3500,7 @@ begin
         else   //DecDecHash plugin
           FDecDecHashPluginInMemFSArr[InMemFSIndex].InMemFS.SaveFileToMem(Fnm, TempMemStream.Memory, TempMemStream.Size);   //FDecDecHashPluginInMemFSArr is used for DecDecHash plugins and their files (dbgsym or config files)
 
-        FDecDecHashPluginInMemFSArr[InMemFSIndex].IsDecDecHashPlugin := IsDecDecHash;
+        FDecDecHashPluginInMemFSArr[InMemFSIndex].IsDecDecHashPlugin := IsDecDecHash;       /////////////////ToDo: CritSec
 
         if not IsDecDecHash then
           Msg := 'Received plugin file: "' + Fnm + '"  of ' + IntToStr(TempMemStream.Size) + ' bytes in size (for PluginInMemFS).'
@@ -3456,16 +3564,16 @@ begin
             if not IsDecDecHash and (UpperCaseFnmExt <> '.DLL') and (UpperCaseFnmExt <> '.DLLARC') and (UpperCaseFnmExt <> '.DBGSYM') then              // save ordinary plugins to new FSes
               PluginArchive.PluginsInMemFS := FPluginsInMemFileSystem   //ordinary plugin
             else
-              PluginArchive.PluginsInMemFS := FDecDecHashPluginInMemFSArr[InMemFSIndex].InMemFS;  //DecDecHash plugin
+              PluginArchive.PluginsInMemFS := FDecDecHashPluginInMemFSArr[InMemFSIndex].InMemFS;  //DecDecHash plugin   /////////////////ToDo: CritSec
 
-            FDecDecHashPluginInMemFSArr[InMemFSIndex].IsDecDecHashPlugin := IsDecDecHash;
+            FDecDecHashPluginInMemFSArr[InMemFSIndex].IsDecDecHashPlugin := IsDecDecHash;                               /////////////////ToDo: CritSec
 
             AddToLogFromThread('DecryptionPluginName is "' + ARequestInfo.Params.Values[CREParam_DecryptionPluginName] + '".');
             AddToLogFromThread('DecompressionPluginName is "' + ARequestInfo.Params.Values[CREParam_DecompressionPluginName] + '".');
             AddToLogFromThread('HashingPluginName is "' + ARequestInfo.Params.Values[CREParam_HashingPluginName] + '".');
 
             PluginArchive.ExtractArchive(TempMemStream,
-                                         @FDecDecHashPluginInMemFSArr,
+                                         @FDecDecHashPluginInMemFSArr,                                   /////////////////ToDo: CritSec
                                          ARequestInfo.Params.Values[CREParam_DecryptionPluginName],
                                          ARequestInfo.Params.Values[CREParam_DecompressionPluginName],
                                          ARequestInfo.Params.Values[CREParam_HashingPluginName],
@@ -3491,7 +3599,16 @@ begin
               E.Message := 'Decompression plugin not set.';
 
             if Pos('Archive is invalid. Hash mismatch.', E.Message) = 1 then   //remove hash info
+            begin
               E.Message := 'Archive is invalid. Hash mismatch.';
+
+              //Archive cannot be decrypted, so remove the FS if allocated for it
+              if PrevDecDecHashPlugin = Length(FDecDecHashPluginInMemFSArr) - 1 then    /////////////////ToDo: CritSec
+              begin
+                FDecDecHashPluginInMemFSArr[Length(FDecDecHashPluginInMemFSArr) - 1].InMemFS.Free;
+                SetLength(FDecDecHashPluginInMemFSArr, Length(FDecDecHashPluginInMemFSArr) - 1);     /////////////////ToDo: CritSec
+              end;
+            end;
 
             if E.Message = 'Cannot find exported symbol.' then
               E.Message := 'One of the required functions is not exported by the plugin.';
@@ -3514,7 +3631,7 @@ begin
       RespondWithText(CREResp_NotImplemented);
       Exit;
     end;
-  {$ENDIF}
+  {$ENDIF}  //MemPlugins
 
   if ARequestInfo.Document = '/' + CRECmd_GetFileExistenceOnServer then
   begin

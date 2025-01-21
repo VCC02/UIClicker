@@ -59,6 +59,7 @@ const
   CClientExceptionPrefix = 'Client exception: ';
 
 const
+  //Command parameters
   CREParam_ActionIdx = 'ActionIdx';
   CREParam_StackLevel = 'StackLevel';
   CREParam_IsDebugging = 'IsDebugging';
@@ -76,6 +77,7 @@ const
   CREParam_CompressionLevel = 'CompressionLevel';
   CREParam_AdditionalInfo = 'AdditionalInfo';
   CREParam_PreventReusingInMemFS = 'PreventReusingInMemFS'; //This is a subparam of AdditionalInfo. Can be True or False.
+  CREParam_PluginFSIdx = 'PluginFSIdx'; //used by CRECmd_GetListOfFilesFromMemPluginInMemFS.  If -1, it points to the main FS, otherwise to an array item.
 
   CREParam_X = 'X';
   CREParam_Y = 'Y';
@@ -102,6 +104,7 @@ const
   CREParam_Plugin_SetBreakpoint_SelectedSourceFileIndex = 'SelectedSourceFileIndex';
   CREParam_Plugin_SetBreakpoint_Enabled = 'Enabled';
 
+  //Commands - requests
   CRECmd_TestConnection = 'TestConnection';
   CRECmd_ExecuteCommandAtIndex = 'ExecuteCommandAtIndex';
   CRECmd_GetExecuteCommandAtIndexResult = 'GetExecuteCommandAtIndexResult';
@@ -127,6 +130,10 @@ const
   CRECmd_SetRenderedFile = 'SetRenderedFile';  //Adds or updates a bitmap file to the ExternalRenderingInMem file system.
   CRECmd_SetMemPluginFile = 'SetMemPluginFile'; //Adds or updates a plugin or a plugin related file to the PluginsInMemFileSystem file system.
   CRECmd_SetMemPluginArchiveFile = 'SetMemPluginArchiveFile'; //Extracts and archive with plugins and their related files, then adds them to the PluginsInMemFileSystem file system.
+  CRECmd_GetMemPluginInMemFSCount = 'GetMemPluginInMemFSCount';  //returns array length
+  CRECmd_DeleteAllMemPluginInMemFSes = 'DeleteAllMemPluginInMemFSes'; //doe not delete the main one, only the array items
+  CRECmd_GetListOfFilesFromMemPluginInMemFS = 'GetListOfFilesFromMemPluginInMemFS';  //returns list of files from a particular plugin InMem FS
+  CRECmd_DeleteAllFilesFromMemPluginInMemFS = 'DeleteAllFilesFromMemPluginInMemFS'; //uses the same parameter as GetListOfFilesFromMemPluginInMemFS
   CRECmd_MouseDown = 'MouseDown';
   CRECmd_MouseUp = 'MouseUp';
   CRECmd_PluginCmd = 'PluginCmd'; //requires additional parameters to decide what command to do. It is used to "remote click" plugin debugging buttons.   see CREParam_Plugin_ContinueAll
@@ -151,6 +158,7 @@ const
   CRECmd_ExecuteEditTemplateAction = 'ExecuteEditTemplateAction';             //fixed the missing "Action" suffix.
 
 
+  //Responses
   CREResp_ConnectionOK = 'Connection ok';
   CREResp_RemoteExecResponseVar = '$RemoteExecResponse$';
   CREResp_FileExpectancy_ValueOnDisk = 'OnDisk';           //the server expects that templates and bmps to exist on disk
@@ -165,6 +173,7 @@ const
   CREResp_FileTooLarge = 'FileTooLarge';
   CREResp_TooManyFilesInFileSystem = 'TooManyFilesInFileSystem';
   CREResp_TooManyPluginFileSystems = 'TooManyPluginFileSystems';
+  CREResp_PluginFileSystemIndexOutOfBounds = 'PluginFileSystemIndexOutOfBounds';
   CREResp_NotImplemented = 'NotImplemented.';
 
   CREResp_ActionNotFound = 'ActionNotFound';
@@ -239,6 +248,13 @@ function ExecuteEditTemplateAction(ARemoteAddress: string; AEditTemplateOptions:
 procedure GetListOfUsedFilesFromLoadedTemplate(var AClkActions: TClkActionsRecArr; AListOfFiles: TStringList);
 function SendMissingFilesToServer(ARemoteAddress: string; var AClkActions: TClkActionsRecArr): string;
 function SetClientTemplateInServer(ARemoteAddress, AFileName: string; var AClkActions: TClkActionsRecArr; AStackLevel: Integer; ASendFileOnly: Boolean = False): string;
+
+
+//Some testing functions
+function GetMemPluginInMemFSCount(ARemoteAddress: string; ACallAppProcMsg: Boolean = True): string;
+function DeleteAllMemPluginInMemFSes(ARemoteAddress: string; ACallAppProcMsg: Boolean = True): string;
+function GetListOfFilesFromMemPluginInMemFS(ARemoteAddress: string; AFSIdx: Integer; ACallAppProcMsg: Boolean = True): string;
+function DeleteAllFilesFromMemPluginInMemFS(ARemoteAddress: string; AFSIdx: Integer; ACallAppProcMsg: Boolean = True): string;
 
 
 var
@@ -1021,6 +1037,30 @@ begin
     Exit;
 
   Result := SendLoadTemplateInExecListRequest(ARemoteAddress, AFileName, AStackLevel);  //should return CREResp_TemplateLoaded for success
+end;
+
+
+function GetMemPluginInMemFSCount(ARemoteAddress: string; ACallAppProcMsg: Boolean = True): string;
+begin
+  Result := SendTextRequestToServer(ARemoteAddress + CRECmd_GetMemPluginInMemFSCount + '?' + CREParam_StackLevel + '=0', ACallAppProcMsg); //stack level is needed for protocol only
+end;
+
+
+function DeleteAllMemPluginInMemFSes(ARemoteAddress: string; ACallAppProcMsg: Boolean = True): string;
+begin
+  Result := SendTextRequestToServer(ARemoteAddress + CRECmd_DeleteAllMemPluginInMemFSes + '?' + CREParam_StackLevel + '=0', ACallAppProcMsg); //stack level is needed for protocol only
+end;
+
+
+function GetListOfFilesFromMemPluginInMemFS(ARemoteAddress: string; AFSIdx: Integer; ACallAppProcMsg: Boolean = True): string;
+begin
+  Result := SendTextRequestToServer(ARemoteAddress + CRECmd_GetListOfFilesFromMemPluginInMemFS + '?' + CREParam_StackLevel + '=0' + '&' + CREParam_PluginFSIdx + '=' + IntToStr(AFSIdx), ACallAppProcMsg); //stack level is needed for protocol only
+end;
+
+
+function DeleteAllFilesFromMemPluginInMemFS(ARemoteAddress: string; AFSIdx: Integer; ACallAppProcMsg: Boolean = True): string;
+begin
+  Result := SendTextRequestToServer(ARemoteAddress + CRECmd_DeleteAllFilesFromMemPluginInMemFS + '?' + CREParam_StackLevel + '=0' + '&' + CREParam_PluginFSIdx + '=' + IntToStr(AFSIdx), ACallAppProcMsg); //stack level is needed for protocol only
 end;
 
 
