@@ -43,6 +43,7 @@ type
     function Get_FindWindows_PluginPath_RelativeToTestApp: string;
     function Get_FindWindows_DbgSymPluginPath_RelativeToTestApp: string;
     function Get_Typewriter_PluginPath_RelativeToTestApp: string;
+    function Get_Typewriter_DbgSymPluginPath_RelativeToTestApp: string;
     procedure SendGenericMemPluginFileToServer_HappyFlow(AFileName: string);
 
     procedure HandleOnInitEncryption(var AArcKey: TArr32OfByte);
@@ -61,6 +62,7 @@ type
     procedure ExpectAllDecDecHashAndFindWindowsPluginAndTheirKey(ADecryptionPluginFnm, ADecompressionPluginFnm, AHashingPluginFnm: string);
     procedure ExpectTypewriterPluginAndItsKey;
     procedure ExpectTestPluginAndItsKey;
+    procedure ExpectListOfFilesPluginInMemFS(APluginFnm, AExpectedFilesInFS: string);
   protected
     procedure SetUp; override;
     procedure TearDown; override;
@@ -84,9 +86,11 @@ type
     procedure Test_SendMemPluginArchiveFileToServer_WithAllDecDecHashPlugins_HappyFlow;
     procedure Test_SendMemPluginArchiveFileToServer_WithDecryptOnly_CustomKey;
     procedure Test_SendMemPluginArchiveFileToServer_WithDecryptOnly_BadKey;
+    procedure Test_SendMemPluginArchiveFileToServer_AllDbgSymInFS0;
     procedure Test_SendMemPluginArchiveFileToServer_GetListOfFilesDecDecHashInMemFS;
     procedure Test_SendMemPluginArchiveFileToServer_GetListOfFilesPluginInMemFS;
-    procedure Test_SendMemPluginArchiveFileToServer_GetListOfFilesPluginInMemFS_PreventReusingInMemFS;
+    procedure Test_SendMemPluginArchiveFileToServer_GetListOfFilesPluginInMemFS_PreventReusingInMemFS_StayFalse;
+    procedure Test_SendMemPluginArchiveFileToServer_GetListOfFilesPluginInMemFS_PreventReusingInMemFS_StayTrue;
     procedure Test_SendMemPluginArchiveFileToServer_DummyFiles_GetListOfFilesPluginInMemFS;
     procedure Test_SendMemPluginWithoutArchiveFileToServer_DummyFiles_GetListOfFilesPluginInMemFS;
   end;
@@ -173,6 +177,12 @@ begin
 end;
 
 
+function TTestClickerClientMemPlugins.Get_Typewriter_DbgSymPluginPath_RelativeToTestApp: string;
+begin
+  Result := ExtractFullFileNameNoExt(Get_Typewriter_PluginPath_RelativeToTestApp) + '.dbgsym';
+end;
+
+
 procedure TTestClickerClientMemPlugins.SendGenericMemPluginFileToServer_HappyFlow(AFileName: string);
 var
   MemStream: TMemoryStream;
@@ -204,14 +214,28 @@ end;
 
 
 procedure TTestClickerClientMemPlugins.Test_SendMemPluginFileToServer_HappyFlow;
+var
+  Fnm: string;
 begin
-  SendGenericMemPluginFileToServer_HappyFlow(Get_FindWindows_PluginPath_RelativeToTestApp);
+  Fnm := Get_FindWindows_PluginPath_RelativeToTestApp;
+  SendGenericMemPluginFileToServer_HappyFlow(Fnm);
+
+  Expect(GetMemPluginInMemFSCount(CTestServerAddress)).ToBe('1', 'FS count');
+  Expect(GetListOfFilesFromMemPluginInMemFS(CTestServerAddress, -1)).ToBe(CREResp_ErrResponseOK, 'from main FS');
+  Expect(GetListOfFilesFromMemPluginInMemFS(CTestServerAddress, 0)).ToBe('Mem:\' + ExtractFileName(Fnm) + #8#7, 'From FS 0');
 end;
 
 
 procedure TTestClickerClientMemPlugins.Test_SendMemPluginDbgSymFileToServer_HappyFlow;
+var
+  Fnm: string;
 begin
-  SendGenericMemPluginFileToServer_HappyFlow(Get_FindWindows_DbgSymPluginPath_RelativeToTestApp);
+  Fnm := Get_FindWindows_DbgSymPluginPath_RelativeToTestApp;
+  SendGenericMemPluginFileToServer_HappyFlow(Fnm);
+
+  Expect(GetMemPluginInMemFSCount(CTestServerAddress)).ToBe('1', 'FS count');
+  Expect(GetListOfFilesFromMemPluginInMemFS(CTestServerAddress, -1)).ToBe(CREResp_ErrResponseOK, 'from main FS');
+  Expect(GetListOfFilesFromMemPluginInMemFS(CTestServerAddress, 0)).ToBe('Mem:\' + ExtractFileName(Fnm) + #8#7, 'From FS 0'); //dbgsym files end up in FS0
 end;
 
 
@@ -671,6 +695,28 @@ begin
 end;
 
 
+procedure TTestClickerClientMemPlugins.Test_SendMemPluginArchiveFileToServer_AllDbgSymInFS0;
+var
+  FirstPluginFnm, SecondPluginFnm: string;
+  FirstDbgSymFnm, SecondDbgSymFnm: string;
+begin
+  FirstPluginFnm := Get_FindWindows_PluginPath_RelativeToTestApp;
+  FirstDbgSymFnm := Get_FindWindows_DbgSymPluginPath_RelativeToTestApp;
+  SecondPluginFnm := Get_Typewriter_PluginPath_RelativeToTestApp;
+  SecondDbgSymFnm := Get_Typewriter_DbgSymPluginPath_RelativeToTestApp;
+
+  SendGenericMemPluginArchiveFileToServer_SinglePlugin_HappyFlow(FirstPluginFnm, ExtractFileName(FirstPluginFnm), '', '', '', False, '', False, False, CREResp_ErrResponseOK);
+  SendGenericMemPluginArchiveFileToServer_SinglePlugin_HappyFlow(FirstDbgSymFnm, ExtractFileName(FirstDbgSymFnm), '', '', '', False, '', False, False, CREResp_ErrResponseOK);
+  SendGenericMemPluginArchiveFileToServer_SinglePlugin_HappyFlow(SecondPluginFnm, ExtractFileName(SecondPluginFnm), '', '', '', False, '', False, False, CREResp_ErrResponseOK);
+  SendGenericMemPluginArchiveFileToServer_SinglePlugin_HappyFlow(SecondDbgSymFnm, ExtractFileName(SecondDbgSymFnm), '', '', '', False, '', False, False, CREResp_ErrResponseOK);
+
+  Expect(GetMemPluginInMemFSCount(CTestServerAddress)).ToBe('2', 'FS count');
+  Expect(GetListOfFilesFromMemPluginInMemFS(CTestServerAddress, -1)).ToBe(CREResp_ErrResponseOK, 'from main FS');
+  Expect(GetListOfFilesFromMemPluginInMemFS(CTestServerAddress, 0)).ToBe('Mem:\' + ExtractFileName(FirstPluginFnm) + #8#7 + 'Mem:\UseKey.txt' + #8#7 + 'Mem:\' + ExtractFileName(FirstDbgSymFnm) + #8#7 + 'Mem:\' + ExtractFileName(SecondDbgSymFnm) + #8#7, 'From FS 0');
+  Expect(GetListOfFilesFromMemPluginInMemFS(CTestServerAddress, 1)).ToBe('Mem:\' + ExtractFileName(SecondPluginFnm) + #8#7 + 'Mem:\UseKey.txt' + #8#7, 'From FS 1');
+end;
+
+
 procedure TTestClickerClientMemPlugins.Test_SendMemPluginArchiveFileToServer_GetListOfFilesDecDecHashInMemFS;
 var
   TestPluginName: string;
@@ -687,25 +733,62 @@ begin
 end;
 
 
+procedure TTestClickerClientMemPlugins.ExpectListOfFilesPluginInMemFS(APluginFnm, AExpectedFilesInFS: string);
+var
+  PluginOptions: TClkPluginOptions;
+begin
+  Expect(SetVariable(CTestServerAddress, '$ListOfFilesInPluginInMemFS$', '---', 0)).ToBe(CREResp_Done, 'Init var');
+  Expect(GetVarValueFromServer('$ListOfFilesInPluginInMemFS$')).ToBe('---', 'Init var set');
+  GeneratePluginOptions(PluginOptions, APluginFnm, '');
+  ExpectSuccessfulAction(FastReplace_87ToReturn(ClickerActionsClient.ExecutePluginAction(CTestServerAddress, PluginOptions, True, False, False)));
+  Expect(GetVarValueFromServer('$ListOfFilesInPluginInMemFS$')).ToBe(AExpectedFilesInFS, 'Var set by plugin');
+end;
+
+
 procedure TTestClickerClientMemPlugins.Test_SendMemPluginArchiveFileToServer_GetListOfFilesPluginInMemFS;
 var
   TestPluginName: string;
 begin
   TestPluginName := ExtractFilePath(ParamStr(0)) + 'TestFiles\TestPlugin\lib\' + GetPluginBitnessDirName + '\TestPlugin.dll';
+  SendGenericMemPluginArchiveFileToServer_SinglePlugin_HappyFlow(TestPluginName, 'SimpleTestPlugin.dll', '', '', '', False, '', False, False, CREResp_ErrResponseOK);
 
-  SendGenericMemPluginArchiveFileToServer_SinglePlugin_HappyFlow(TestPluginName, ExtractFileName('SimpleTestPlugin.dll'), '', '', '', False, '', False, False, CREResp_ErrResponseOK);
-  ///////////////////////////////// ToDo: Expect
+  Expect(GetMemPluginInMemFSCount(CTestServerAddress)).ToBe('1', 'FS count');
+  ExpectListOfFilesPluginInMemFS('Mem:\SimpleTestPlugin.dll', '');
 end;
 
 
-procedure TTestClickerClientMemPlugins.Test_SendMemPluginArchiveFileToServer_GetListOfFilesPluginInMemFS_PreventReusingInMemFS;
+procedure TTestClickerClientMemPlugins.Test_SendMemPluginArchiveFileToServer_GetListOfFilesPluginInMemFS_PreventReusingInMemFS_StayFalse;
+var
+  TestPluginName: string;
+begin
+  TestPluginName := ExtractFilePath(ParamStr(0)) + 'TestFiles\TestPlugin\lib\' + GetPluginBitnessDirName + '\TestPlugin.dll';
+
+  SendGenericMemPluginArchiveFileToServer_SinglePlugin_HappyFlow(TestPluginName, 'SimpleTestPlugin.dll', '', '', '', False, '', False, False, CREResp_ErrResponseOK);
+  Expect(GetMemPluginInMemFSCount(CTestServerAddress)).ToBe('1', 'FS count - before');
+  SendGenericMemPluginArchiveFileToServer_SinglePlugin_HappyFlow(TestPluginName, 'SimpleTestPlugin.dll', '', '', '', False, CREParam_PreventReusingInMemFS + '%3D' + 'True', False, False, CREResp_ErrResponseOK);
+  SendGenericMemPluginArchiveFileToServer_SinglePlugin_HappyFlow(TestPluginName, 'SimpleTestPlugin.dll', '', '', '', False, '', False, False, CREResp_ErrResponseOK);
+
+  Expect(GetMemPluginInMemFSCount(CTestServerAddress)).ToBe('1', 'FS count - after');  //even after sending with a different Prevent flag, the existing one should remain unchanged
+  SendGenericMemPluginArchiveFileToServer_SinglePlugin_HappyFlow(TestPluginName, 'SimpleTestPlugin.dll', '', '', '', False, '', False, False, CREResp_ErrResponseOK);
+  Expect(GetMemPluginInMemFSCount(CTestServerAddress)).ToBe('1', 'FS count - second after');  //even after sending with a different Prevent flag, the existing one should remain unchanged
+
+  ExpectListOfFilesPluginInMemFS('Mem:\SimpleTestPlugin.dll', '');
+end;
+
+
+procedure TTestClickerClientMemPlugins.Test_SendMemPluginArchiveFileToServer_GetListOfFilesPluginInMemFS_PreventReusingInMemFS_StayTrue;
 var
   TestPluginName: string;
 begin
   TestPluginName := ExtractFilePath(ParamStr(0)) + 'TestFiles\TestPlugin\lib\' + GetPluginBitnessDirName + '\TestPlugin.dll';
 
   SendGenericMemPluginArchiveFileToServer_SinglePlugin_HappyFlow(TestPluginName, 'SimpleTestPlugin.dll', '', '', '', False, CREParam_PreventReusingInMemFS + '%3D' + 'True', False, False, CREResp_ErrResponseOK);
-  ///////////////////////////////// ToDo: Expect
+  Expect(GetMemPluginInMemFSCount(CTestServerAddress)).ToBe('1', 'FS count - before');
+  SendGenericMemPluginArchiveFileToServer_SinglePlugin_HappyFlow(TestPluginName, 'SimpleTestPlugin.dll', '', '', '', False, '', False, False, CREResp_TooManyPluginFileSystems);
+  SendGenericMemPluginArchiveFileToServer_SinglePlugin_HappyFlow(TestPluginName, 'SimpleTestPlugin.dll', '', '', '', False, '', False, False, CREResp_TooManyPluginFileSystems);
+
+  Expect(GetMemPluginInMemFSCount(CTestServerAddress)).ToBe('1', 'FS count - after');  //even after sending with a different Prevent flag, the existing one should remain unchanged
+  ExpectListOfFilesPluginInMemFS('Mem:\SimpleTestPlugin.dll', '');
 end;
 
 
@@ -713,7 +796,6 @@ procedure TTestClickerClientMemPlugins.Test_SendMemPluginArchiveFileToServer_Dum
 var
   TestPluginName: string;
   Fnm: string;
-  PluginOptions: TClkPluginOptions;
 begin
   Fnm := ExtractFilePath(ParamStr(0)) + 'TestFiles\TestPlugin\TestPlugin.ppr';
   TestPluginName := ExtractFilePath(ParamStr(0)) + 'TestFiles\TestPlugin\lib\' + GetPluginBitnessDirName + '\TestPlugin.dll';
@@ -726,10 +808,7 @@ begin
   Expect(GetListOfFilesFromMemPluginInMemFS(CTestServerAddress, 0)).ToBe({'Mem:\' + ExtractFileName(TestPluginName) + #8#7 + 'Mem:\UseKey.txt' + #8#7} CREResp_ErrResponseOK, 'From FS 0'); //allocated for ppr, although the ppr file is extracted in the main FS
   Expect(GetListOfFilesFromMemPluginInMemFS(CTestServerAddress, 1)).ToBe('Mem:\' + ExtractFileName(TestPluginName) + #8#7 + 'Mem:\UseKey.txt' + #8#7, 'From FS 1');
 
-  Expect(SetVariable(CTestServerAddress, '$ListOfFilesInPluginInMemFS$', '---', 0)).ToBe(CREResp_Done, 'Init var');
-  GeneratePluginOptions(PluginOptions, 'Mem:\' + ExtractFileName(TestPluginName), '');
-  ExpectSuccessfulAction(FastReplace_87ToReturn(ClickerActionsClient.ExecutePluginAction(CTestServerAddress, PluginOptions, True, False, False)));
-  Expect(GetVarValueFromServer('$ListOfFilesInPluginInMemFS$')).ToBe('Mem:\' + ExtractFileName(Fnm) + #6#8 + 'Mem:\UseKey.txt' + #6#8, 'Var set by plugin');
+  ExpectListOfFilesPluginInMemFS('Mem:\' + ExtractFileName(TestPluginName), 'Mem:\' + ExtractFileName(Fnm) + #6#8 + 'Mem:\UseKey.txt' + #6#8);
 end;
 
 
