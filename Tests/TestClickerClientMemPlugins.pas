@@ -53,6 +53,7 @@ type
     procedure HandleOnCompress(APlainStream, AArchiveStream: TMemoryStream; ACompressionLevel: Integer);
     procedure HandleOnComputeArchiveHash(AArchiveStream: Pointer; AArchiveStreamSize: Int64; var AResultedHash: TArr32OfByte; AAdditionalInfo: string = '');
     procedure SendGenericMemPluginArchiveFileToServer_SinglePlugin_HappyFlow(AFileName, AFileNameInsideArchive, ADecryptionPluginName, ADecompressionPluginName, AHashingPluginName: string; AUseComperssion: Boolean; AAdditionalInfo: string; AIsDecDecHash, ACreateCustomKey: Boolean; AExpectedError: string);
+    procedure SendMultiBitnessMemPluginArchiveFileToServer(AFileName, AFileNameInsideArchive, AConfigStringAsFile, AFileName_x32, AFileNameInsideArchive_x32, AConfigStringAsFile_x32, AFileName_x64, AFileNameInsideArchive_x64, AConfigStringAsFile_x64, ADecryptionPluginName, ADecompressionPluginName, AHashingPluginName: string; AUseComperssion: Boolean; AAdditionalInfo: string; AIsDecDecHash, ACreateCustomKey: Boolean; AExpectedError: string);
 
     procedure Test_SendMemPluginArchiveFileToServer_WithDecryptOnly_CfgKey(AUseCustomKey, AUseBadKey: Boolean; AExpectedError: string);
 
@@ -93,6 +94,8 @@ type
     procedure Test_SendMemPluginArchiveFileToServer_GetListOfFilesPluginInMemFS_PreventReusingInMemFS_StayTrue;
     procedure Test_SendMemPluginArchiveFileToServer_DummyFiles_GetListOfFilesPluginInMemFS;
     procedure Test_SendMemPluginWithoutArchiveFileToServer_DummyFiles_GetListOfFilesPluginInMemFS;
+
+    procedure Test_SendSameBitnessMemPlugin_HappyFlow;
   end;
 
 
@@ -369,7 +372,7 @@ begin
       Archive.OnEncryptArchive := HandleOnEncryptArchive;
       Archive.OnEncryptionCleanup := HandleOnEncryptionCleanup;
       Archive.Password := 'dummy';  //setting the password to a value, different than '', is enough to call the encryption handlers
-                                    //however, in this example, this mechanism is not used. The key hardcoded. (same as in the example plugin)
+                                    //however, in this example, this mechanism is not used. The key is hardcoded. (same as in the example plugin)
     end;
 
     if AUseComperssion then
@@ -389,6 +392,122 @@ begin
       end
       else
         Archive.AddFromString('UseKey.txt', 'False');
+    finally
+      Archive.CloseArchive;
+    end;
+
+    AFileName := AFileName + 'arc'; //results .dllarc
+
+    FileNameWS := WideString(ExtractFileName(AFileName));
+    DecryptionPluginNameWS := WideString(ADecryptionPluginName);
+    DecompressionPluginNameWS := WideString(ADecompressionPluginName);
+    HashingPluginNameWS := WideString(AHashingPluginName);
+    AdditionalInfoWS := WideString(AAdditionalInfo); //for example a list of compression parameters
+
+    ResLen := SendMemPluginArchiveFileToServer(@FileNameWS[1],
+                                               @DecryptionPluginNameWS[1],
+                                               @DecompressionPluginNameWS[1],
+                                               @HashingPluginNameWS[1],
+                                               ArchiveStream.Memory,
+                                               ArchiveStream.Size,
+                                               Archive.CompressionLevel,
+                                               @AdditionalInfoWS[1],
+                                               AIsDecDecHash,
+                                               @Response[1]);
+    SetLength(Response, ResLen);
+  finally
+    MemStream.Free;
+    ArchiveStream.Free;
+    Archive.Free;
+  end;
+
+  try
+    Expect(Response).ToBe(AExpectedError);
+  except
+    on E: EExp do
+      Expect(Response).ToBe(CREResp_NotImplemented, 'Previous expected response: ' + AExpectedError);
+  end;
+end;
+
+
+procedure TTestClickerClientMemPlugins.SendMultiBitnessMemPluginArchiveFileToServer(AFileName, AFileNameInsideArchive, AConfigStringAsFile,
+                                                                                    AFileName_x32, AFileNameInsideArchive_x32, AConfigStringAsFile_x32,
+                                                                                    AFileName_x64, AFileNameInsideArchive_x64, AConfigStringAsFile_x64,
+                                                                                    ADecryptionPluginName, ADecompressionPluginName, AHashingPluginName: string;
+                                                                                    AUseComperssion: Boolean;
+                                                                                    AAdditionalInfo: string;
+                                                                                    AIsDecDecHash, ACreateCustomKey: Boolean;
+                                                                                    AExpectedError: string);
+var
+  MemStream, ArchiveStream: TMemoryStream;
+  FileNameWS, DecryptionPluginNameWS, DecompressionPluginNameWS, HashingPluginNameWS, AdditionalInfoWS: WideString;
+  Response: string;
+  ResLen: Integer;
+  Archive: TMemArchive;
+begin
+  //Expect(FileExists(AFileName)).ToBe(True, 'The test expects this file to exist on disk: "' + AFileName + '".');   //not for this type of test
+  Expect(AFileName).NotToBe('', 'AFileName must be different than empty string, because it is used as archive name. It doesn''t have to point to a file on disk.');
+
+  MemStream := TMemoryStream.Create;
+  ArchiveStream := TMemoryStream.Create;
+  Archive := TMemArchive.Create;
+  try
+    SetLength(Response, CMaxSharedStringLength);
+
+    if ADecryptionPluginName > '' then
+    begin
+      Archive.OnInitEncryption := HandleOnInitEncryption;
+      Archive.OnGetKeyFromPassword := HandleOnGetKeyFromPassword;
+      Archive.OnEncryptArchive := HandleOnEncryptArchive;
+      Archive.OnEncryptionCleanup := HandleOnEncryptionCleanup;
+      Archive.Password := 'dummy';  //setting the password to a value, different than '', is enough to call the encryption handlers
+                                    //however, in this example, this mechanism is not used. The key is hardcoded. (same as in the example plugin)
+    end;
+
+    if AUseComperssion then
+      Archive.OnCompress := HandleOnCompress;
+
+    Archive.CompressionLevel := 9 * Ord(AUseComperssion);
+
+    Archive.OnComputeArchiveHash := HandleOnComputeArchiveHash;
+    Archive.OpenArchive(ArchiveStream, True);
+    try
+      //Load the default plugin, if it exists on disk
+      if FileExists(AFileName) then
+      begin
+        MemStream.LoadFromFile(AFileName);
+        Archive.AddFromStream(AFileNameInsideArchive, MemStream);  //this should be .dll
+      end;
+
+      //Load 32-bit and 64-bit versions of the plugin, if they exist on disk
+      if FileExists(AFileName_x32) then
+      begin
+        MemStream.LoadFromFile(AFileName_x32);
+        Archive.AddFromStream(AFileNameInsideArchive_x32, MemStream);
+      end;
+
+      if FileExists(AFileName_x64) then
+      begin
+        MemStream.LoadFromFile(AFileName_x64);
+        Archive.AddFromStream(AFileNameInsideArchive_x64, MemStream);
+      end;
+
+      if ACreateCustomKey then
+      begin
+        Archive.AddFromString('Key.txt', CCustomKey);
+        Archive.AddFromString('UseKey.txt', 'True');
+      end
+      else
+        Archive.AddFromString('UseKey.txt', 'False');
+
+      if AConfigStringAsFile <> '' then
+        Archive.AddFromString(ExtractFullFileNameNoExt(AFileNameInsideArchive) + '.cfg', AConfigStringAsFile);
+
+      if AConfigStringAsFile_x32 <> '' then
+        Archive.AddFromString(ExtractFullFileNameNoExt(AFileNameInsideArchive_x32) + '.cfg', AConfigStringAsFile_x32);
+
+      if AConfigStringAsFile_x64 <> '' then
+        Archive.AddFromString(ExtractFullFileNameNoExt(AFileNameInsideArchive_x64) + '.cfg', AConfigStringAsFile_x64);
     finally
       Archive.CloseArchive;
     end;
@@ -823,6 +942,30 @@ begin
 
   Expect(GetMemPluginInMemFSCount(CTestServerAddress)).ToBe('1', 'FS count');
   Expect(GetListOfFilesFromMemPluginInMemFS(CTestServerAddress, -1)).ToBe('Mem:\' + ExtractFileName(Fnm) + #8#7, 'from main FS');
+end;
+
+
+procedure TTestClickerClientMemPlugins.Test_SendSameBitnessMemPlugin_HappyFlow;
+var
+  TestPluginName: string;
+  Fnm: string;
+  Bitness: string;
+begin
+  Fnm := Get_FindWindows_PluginPath_RelativeToTestApp;
+  Bitness := GetPluginBitnessDirName;
+  TestPluginName := ExtractFilePath(ParamStr(0)) + 'TestFiles\TestPlugin\lib\' + Bitness + '\TestPlugin.dll';
+
+  //Expect(SetVariable(CTestServerAddress, '$BitnessCfg$', '---', 0)).ToBe(CREResp_Done, 'Init var');
+  //Expect(GetVarValueFromServer('$BitnessCfg$')).ToBe('---', 'Init var set');
+
+  SendMultiBitnessMemPluginArchiveFileToServer(TestPluginName, ExtractFileName(TestPluginName), 'Outside bitness',
+                                               TestPluginName, 'i386-win32\' + ExtractFileName(TestPluginName), '(' + Bitness + ')',
+                                               TestPluginName, 'x86-win64\' + ExtractFileName(TestPluginName), '(' + Bitness + ')',
+                                               '', '', '', False, 'none', True, False, CREResp_ErrResponseOK);
+
+  //Use TestPluginName as decompressor, to run it in cfg mode. It should load the config file:
+  SendGenericMemPluginArchiveFileToServer_SinglePlugin_HappyFlow(Fnm, ExtractFileName(Fnm), '', ExtractFileName(TestPluginName) + 'arc|Mem:\' + ExtractFileName(TestPluginName), '', True, 'none', False, False, CREResp_ErrResponseOK);
+  Expect(GetVarValueFromServer('$BitnessCfg$')).ToBe('Bitness: (' + Bitness + ')', 'Var set by plugin');
 end;
 
 

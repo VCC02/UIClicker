@@ -177,6 +177,13 @@ var
 begin
   SetPointedContentToString(AVarName, VarName);
   SetPointedContentToString(AVarValue, VarValue);
+
+  if Pos(#0, VarName) > 0 then
+    VarName := Copy(VarName, 1, Pos(#0, VarName) - 1);
+
+  if Pos(#0, VarValue) > 0 then
+    VarValue := Copy(VarValue, 1, Pos(#0, VarValue) - 1);
+
   DoOnSetVar(VarName, VarValue);
 end;
 

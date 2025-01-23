@@ -2491,10 +2491,28 @@ end;
 
 
 procedure TfrClickerActionsArr.SetActionVarValue(VarName, VarValue: string);
+var
+  Idx: Integer;
+  NewLineStr: string;
 begin
-  frClickerActions.ClkVariables.Values[VarName] := FastReplace_ReturnTo68(VarValue);
+  Idx := frClickerActions.ClkVariables.IndexOf(VarName);
+  NewLineStr := VarName + '=' + FastReplace_ReturnTo68(VarValue);
+
+  if Idx > -1 then
+    frClickerActions.ClkVariables.Strings[Idx] := NewLineStr   //do not use Values[VarName] := ..
+  else
+    frClickerActions.ClkVariables.Add(NewLineStr);
+
   if VarName = '$ExecAction_Err$' then
     AddToLog(DateTimeToStr(Now) + '  ' + VarValue);
+
+  /////////////// raise Ex if ThreadID <> MainThreadID
+
+  AddToLog('SetActionVarValue: ' + NewLineStr + '  ... ThreadID = ' + IntToStr(ThreadID) + '  MainThreadID = ' + IntToStr(MainThreadID));
+
+  frClickerActions.tmrClkVariables.Enabled := True; //Trigger a repaint
+  frClickerActions.vstVariables.RootNodeCount := frClickerActions.ClkVariables.Count;
+  frClickerActions.vstVariables.Repaint;
 end;
 
 
