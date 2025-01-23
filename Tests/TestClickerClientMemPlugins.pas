@@ -96,6 +96,7 @@ type
     procedure Test_SendMemPluginWithoutArchiveFileToServer_DummyFiles_GetListOfFilesPluginInMemFS;
 
     procedure Test_SendSameBitnessMemPlugin_HappyFlow;
+    procedure Test_SendOutsideBitnessOnlyMemPlugin_HappyFlow;
   end;
 
 
@@ -144,6 +145,8 @@ begin
 
   Expect(DeleteAllMemPluginInMemFSes(CTestServerAddress, True)).ToBe(CREResp_ErrResponseOK);
   Expect(DeleteAllFilesFromMemPluginInMemFS(CTestServerAddress, -1, True)).ToBe(CREResp_ErrResponseOK);
+  Expect(GetMemPluginInMemFSCount(CTestServerAddress)).ToBe('0', 'FS count in SetUp');
+  Expect(GetListOfFilesFromMemPluginInMemFS(CTestServerAddress, -1)).ToBe(CREResp_ErrResponseOK);
 end;
 
 
@@ -955,8 +958,8 @@ begin
   Bitness := GetPluginBitnessDirName;
   TestPluginName := ExtractFilePath(ParamStr(0)) + 'TestFiles\TestPlugin\lib\' + Bitness + '\TestPlugin.dll';
 
-  //Expect(SetVariable(CTestServerAddress, '$BitnessCfg$', '---', 0)).ToBe(CREResp_Done, 'Init var');
-  //Expect(GetVarValueFromServer('$BitnessCfg$')).ToBe('---', 'Init var set');
+  Expect(SetVariable(CTestServerAddress, '$BitnessCfg$', '---', 0)).ToBe(CREResp_Done, 'Init var');
+  Expect(GetVarValueFromServer('$BitnessCfg$')).ToBe('---', 'Init var set');
 
   SendMultiBitnessMemPluginArchiveFileToServer(TestPluginName, ExtractFileName(TestPluginName), 'Outside bitness',
                                                TestPluginName, 'i386-win32\' + ExtractFileName(TestPluginName), '(' + Bitness + ')',
@@ -966,6 +969,30 @@ begin
   //Use TestPluginName as decompressor, to run it in cfg mode. It should load the config file:
   SendGenericMemPluginArchiveFileToServer_SinglePlugin_HappyFlow(Fnm, ExtractFileName(Fnm), '', ExtractFileName(TestPluginName) + 'arc|Mem:\' + ExtractFileName(TestPluginName), '', True, 'none', False, False, CREResp_ErrResponseOK);
   Expect(GetVarValueFromServer('$BitnessCfg$')).ToBe('Bitness: (' + Bitness + ')', 'Var set by plugin');
+end;
+
+
+procedure TTestClickerClientMemPlugins.Test_SendOutsideBitnessOnlyMemPlugin_HappyFlow;
+var
+  TestPluginName: string;
+  Fnm: string;
+  Bitness: string;
+begin
+  Fnm := Get_FindWindows_PluginPath_RelativeToTestApp;
+  Bitness := GetPluginBitnessDirName;
+  TestPluginName := ExtractFilePath(ParamStr(0)) + 'TestFiles\TestPlugin\lib\' + Bitness + '\TestPlugin.dll';
+
+  Expect(SetVariable(CTestServerAddress, '$BitnessCfg$', '---', 0)).ToBe(CREResp_Done, 'Init var');
+  Expect(GetVarValueFromServer('$BitnessCfg$')).ToBe('---', 'Init var set');
+
+  SendMultiBitnessMemPluginArchiveFileToServer(TestPluginName, ExtractFileName(TestPluginName), 'Outside bitness',
+                                               '', '', '',
+                                               '', '', '',
+                                               '', '', '', False, 'none', True, False, CREResp_ErrResponseOK);
+
+  //Use TestPluginName as decompressor, to run it in cfg mode. It should load the config file:
+  SendGenericMemPluginArchiveFileToServer_SinglePlugin_HappyFlow(Fnm, ExtractFileName(Fnm), '', ExtractFileName(TestPluginName) + 'arc|Mem:\' + ExtractFileName(TestPluginName), '', True, 'none', False, False, CREResp_ErrResponseOK);
+  Expect(GetVarValueFromServer('$BitnessCfg$')).ToBe('Bitness: Outside bitness', 'Var set by plugin');
 end;
 
 

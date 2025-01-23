@@ -2495,8 +2495,12 @@ var
   Idx: Integer;
   NewLineStr: string;
 begin
-  Idx := frClickerActions.ClkVariables.IndexOf(VarName);
   NewLineStr := VarName + '=' + FastReplace_ReturnTo68(VarValue);
+
+  if ThreadID <> MainThreadID then
+    raise Exception.Create('ThreadID doesn''t match MainThreadID when setting var: ' + NewLineStr);
+
+  Idx := frClickerActions.ClkVariables.IndexOfName(VarName);
 
   if Idx > -1 then
     frClickerActions.ClkVariables.Strings[Idx] := NewLineStr   //do not use Values[VarName] := ..
@@ -2505,14 +2509,6 @@ begin
 
   if VarName = '$ExecAction_Err$' then
     AddToLog(DateTimeToStr(Now) + '  ' + VarValue);
-
-  /////////////// raise Ex if ThreadID <> MainThreadID
-
-  AddToLog('SetActionVarValue: ' + NewLineStr + '  ... ThreadID = ' + IntToStr(ThreadID) + '  MainThreadID = ' + IntToStr(MainThreadID));
-
-  frClickerActions.tmrClkVariables.Enabled := True; //Trigger a repaint
-  frClickerActions.vstVariables.RootNodeCount := frClickerActions.ClkVariables.Count;
-  frClickerActions.vstVariables.Repaint;
 end;
 
 

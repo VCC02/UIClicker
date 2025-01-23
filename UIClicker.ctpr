@@ -443,7 +443,8 @@
         <IgnoredMessages idx6018="True"/>
       </CompilerMessages>
       <CustomOptions Value="-dTestBuild
--dMemPlugins"/>
+-dMemPlugins
+-dPluginTesting"/>
     </Other>
   </CompilerOptions>
   <Debugging>

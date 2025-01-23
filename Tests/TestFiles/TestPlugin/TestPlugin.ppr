@@ -122,6 +122,40 @@ begin
 end;
 
 
+function GetTestPluginBitnessCfgContent(AOnActionPlugin_InMemFS: TOnActionPlugin_InMemFS_Obj): string;
+const
+  CCfgFnm: string = 'Mem:\TestPlugin.cfg';
+var
+  PluginInMemFS: TPluginInMemFileSystem;
+  MemStream: TMemoryStream;
+begin
+  PluginInMemFS := TPluginInMemFileSystem.Create;
+  try
+    if PluginInMemFS.FileExistsInMem(AOnActionPlugin_InMemFS, CCfgFnm) then
+    begin
+      MemStream := TMemoryStream.Create;
+      try
+        MemStream.SetSize(PluginInMemFS.GetFileSize(AOnActionPlugin_InMemFS, CCfgFnm));
+        if MemStream.Size > 0 then
+        begin
+          PluginInMemFS.LoadFileFromMem(AOnActionPlugin_InMemFS, CCfgFnm, MemStream.Memory);
+
+          SetLength(Result, MemStream.Size);
+          MemStream.Position := 0;
+          MemStream.Read(Result[1], MemStream.Size);
+        end;
+      finally
+        MemStream.Free;
+      end;
+    end
+    else
+      Result := 'File not found: ' + CCfgFnm;
+  finally
+    PluginInMemFS.Free;
+  end;
+end;
+
+
 function ExecutePlugin(APluginReference: Pointer;
                        AListOfPluginSettings: Pointer;
                        AListOfPluginSettingsLen: PDWord;
@@ -233,7 +267,7 @@ const
 var
   PluginInMemFS: TPluginInMemFileSystem;
   UseKeyInfo: string;
-  ListOfFilesStr: string;
+  ListOfFilesStr, BitnessCfgStr, BitnessCfgLog: string;
 begin
   Result := True;
   FKeySet := False;  //init also here
@@ -261,6 +295,12 @@ begin
     ListOfFilesStr := 'ListOfFiles: ' + ListOfFilesStr;
     AOnActionPlugin_AddToLog(@ListOfFilesStr[1]);
     AOnActionPlugin_AddToLog(@'Exiting configuration of TestPlugin.dll'[1]);
+
+    BitnessCfgStr := GetTestPluginBitnessCfgContent(AOnActionPlugin_InMemFS);
+    BitnessCfgLog := 'Plugin decoded bitness in archive: ' + BitnessCfgStr;
+    AOnActionPlugin_AddToLog(@BitnessCfgLog[1]);
+    BitnessCfgStr := 'Bitness: ' + BitnessCfgStr;
+    AOnActionPlugin_SetTemplateVar(@'$BitnessCfg$'[1], @BitnessCfgStr[1]);
   finally
     PluginInMemFS.Free
   end;

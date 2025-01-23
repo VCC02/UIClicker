@@ -62,6 +62,13 @@ type
     constructor Create; override;
   end;
 
+  TSetVarSyncObj = class(TIdSync)
+  private
+    FVarName, FVarValue: string;
+  protected
+    procedure DoSynchronize; override;
+  end;
+
 
   TOnReLoadSettings = procedure of object;
   TOnRecordComponent = procedure(ACompHandle: THandle; ATreeContentStream: TMemoryStream) of object;
@@ -442,6 +449,27 @@ begin
   SyncObj := TLoggingSyncObj.Create;
   try
     SyncObj.FMsg := s;
+    SyncObj.Synchronize;
+  finally
+    SyncObj.Free;
+  end;
+end;
+
+
+procedure TSetVarSyncObj.DoSynchronize;
+begin
+  frmClickerActions.frClickerActionsArrMain.SetActionVarValue(FVarName, FVarValue);
+end;
+
+
+procedure SetVarFromThread(AVarName, AVarValue: string);
+var
+  SyncObj: TSetVarSyncObj;
+begin
+  SyncObj := TSetVarSyncObj.Create;
+  try
+    SyncObj.FVarName := AVarName;
+    SyncObj.FVarValue := AVarValue;
     SyncObj.Synchronize;
   finally
     SyncObj.Free;
@@ -2187,16 +2215,16 @@ end;
             TempListOfInMemPlugins.Free;
           end;
         end;
+
+      TempListOfInMemPlugins := TStringList.Create;
+      try
+        FPluginsInMemFileSystem.ListMemFiles(TempListOfInMemPlugins);
+        AddToLog('..... Found ' + IntToStr(TempListOfInMemPlugins.Count) + ' files(s) in plugins InMem FS:  ' + FastReplace_ReturnToCSV(TempListOfInMemPlugins.Text));
+      finally
+        TempListOfInMemPlugins.Free;
+      end;
     finally
       LeaveCriticalSection(FDecDecHashArrCritSec);
-    end;
-
-    TempListOfInMemPlugins := TStringList.Create;
-    try
-      FPluginsInMemFileSystem.ListMemFiles(TempListOfInMemPlugins);
-      AddToLog('..... Found ' + IntToStr(TempListOfInMemPlugins.Count) + ' files(s) in plugins InMem FS:  ' + FastReplace_ReturnToCSV(TempListOfInMemPlugins.Text));
-    finally
-      TempListOfInMemPlugins.Free;
     end;
 
     for i := 0 to AListOfInMemPlugins.Count - 1 do
@@ -3521,18 +3549,6 @@ begin
         Exit;
       end;
 
-      if FPluginsInMemFileSystem.TotalFileSize > 100 * 1048576 then
-      begin
-        RespondWithText(CREResp_FileSystemFull);
-        Exit;
-      end;
-
-      if FPluginsInMemFileSystem.TotalFileCount > 200 then
-      begin
-        RespondWithText(CREResp_TooManyFilesInFileSystem);
-        Exit;
-      end;
-
       if ExtractFileName(Fnm) = Fnm then //no path
         Fnm := CMemPluginLocationPrefix + PathDelim + Fnm;
 
@@ -3550,6 +3566,18 @@ begin
 
         EnterCriticalSection(FDecDecHashArrCritSec);
         try
+          if FPluginsInMemFileSystem.TotalFileSize > 100 * 1048576 then  //FPluginsInMemFileSystem validations moved inside CritSec
+          begin
+            RespondWithText(CREResp_FileSystemFull);
+            Exit;
+          end;
+
+          if FPluginsInMemFileSystem.TotalFileCount > 200 then
+          begin
+            RespondWithText(CREResp_TooManyFilesInFileSystem);
+            Exit;
+          end;
+
           if not IsDecDecHash and (UpperCaseFnmExt <> '.DLL') and (UpperCaseFnmExt <> '.DLLARC') and (UpperCaseFnmExt <> '.DBGSYM') and (UpperCaseFnmExt <> '.DBGSYMARC') then  //ordinary plugin             // save ordinary plugins to new FSes
             FPluginsInMemFileSystem.SaveFileToMem(Fnm, TempMemStream.Memory, TempMemStream.Size)   //FPluginsInMemFileSystem is used for plugins and their files (dbgsym or config files)
           else   //DecDecHash plugin
@@ -3589,18 +3617,6 @@ begin
         Exit;
       end;
 
-      if FPluginsInMemFileSystem.TotalFileSize > 100 * 1048576 then
-      begin
-        RespondWithText(CREResp_FileSystemFull);
-        Exit;
-      end;
-
-      if FPluginsInMemFileSystem.TotalFileCount > 200 then
-      begin
-        RespondWithText(CREResp_TooManyFilesInFileSystem);
-        Exit;
-      end;
-
       UpperCaseFnmExt := UpperCase(ExtractFileExt(Fnm));
 
       TempMemStream := TMemoryStream.Create;
@@ -3615,6 +3631,18 @@ begin
 
         EnterCriticalSection(FDecDecHashArrCritSec);
         try
+          if FPluginsInMemFileSystem.TotalFileSize > 100 * 1048576 then  //FPluginsInMemFileSystem validations moved inside CritSec
+          begin
+            RespondWithText(CREResp_FileSystemFull);
+            Exit;
+          end;
+
+          if FPluginsInMemFileSystem.TotalFileCount > 200 then
+          begin
+            RespondWithText(CREResp_TooManyFilesInFileSystem);
+            Exit;
+          end;
+
           try
             PluginArchive := TClickerPluginArchive.Create;
             try
@@ -4606,7 +4634,7 @@ end;
 
 procedure TfrmClickerActions.HandleOnSetVar(AVarName, AVarValue: string);
 begin
-  frClickerActionsArrMain.SetActionVarValue(AVarName, AVarValue);
+  SetVarFromThread(AVarName, AVarValue);
 end;
 
 
