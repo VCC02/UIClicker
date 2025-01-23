@@ -1,4 +1,4 @@
-#   Copyright (C) 2022-2024 VCC
+#   Copyright (C) 2022-2025 VCC
 #   creation date: Aug 2022
 #   initial release date: 10 Aug 2022
 #

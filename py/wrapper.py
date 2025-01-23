@@ -1,4 +1,4 @@
-#   Copyright (C) 2022-2024 VCC
+#   Copyright (C) 2022-2025 VCC
 #   creation date: Jul 2022
 #   initial release date: 26 Jul 2022
 #
@@ -24,13 +24,15 @@ import sys
 import ctypes
 import ctypes.wintypes  #without importing wintypes, python crashes when calling functions like TestConnectionToServerFunc
 import os
-from ctypes.wintypes import LPCSTR, LPCWSTR, BYTE, BOOLEAN, LONG
+from ctypes.wintypes import LPCSTR, LPCWSTR, BYTE, BOOLEAN, LONG, LPCVOID, LARGE_INTEGER
 from UIClickerTypes import *
 from UIClickerTypes import TClickOptions
 from UIClickerClient import *
 
 
 import time
+
+from pathlib import Path
 
 DllFuncs = TUIClickerDllFunctions() #use TUIClickerDllFunctions for Boolean results (True for success)
 #DllFuncs = TDllFunctions() #use TDllFunctions for debugging (see functions implementation for details (some functions return 1 for success, others return 0 for success)
@@ -209,6 +211,21 @@ try:
 
     print("...Execute<ActionName>Action...")
     print("ExecuteClickAction: ", DllFuncs.ExecuteClickAction("Another click", 100, ClickOptions, True))
+
+    print("Loading a plugin from disk...")
+
+    PluginPath = "..\\..\\UIClickerFindWindowsPlugin\\lib\\x86_64-win64\\UIClickerFindWindows.dll"
+    #PluginPath = "..\\..\\UIClickerTypewriterPlugin\\lib\\x86_64-win64\\UIClickerTypewriter.dll"
+
+    f = open(PluginPath, 'rb')
+    try:
+        PluginContent = bytearray(f.read())
+    finally:
+        f.close
+
+    ContentPtr = LPCVOID(PluginContent[0])
+    PluginFileSize = LARGE_INTEGER(len(PluginContent))
+    print("SendMemPluginFileToServer (in work): ", DllFuncs.SendMemPluginFileToServer('MyPlugin.dll', ContentPtr, PluginFileSize))
 
     print("FileProviderClientThreadDone: ", DllFuncs.FileProviderClientThreadDone())
     print("TerminateFileProviderClientThread: ", DllFuncs.TerminateFileProviderClientThread())

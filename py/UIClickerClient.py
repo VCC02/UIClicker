@@ -1,4 +1,4 @@
-#   Copyright (C) 2022-2024 VCC
+#   Copyright (C) 2022-2025 VCC
 #   creation date: Dec 2024  (most content moved here from wrapper.py)
 #   initial release date: 09 Dec 2024
 #
@@ -24,7 +24,7 @@ import sys
 import ctypes
 import ctypes.wintypes  #without importing wintypes, python crashes when calling functions like TestConnectionToServerFunc
 import os
-from ctypes.wintypes import LPCSTR, LPCWSTR, BYTE, BOOLEAN, LONG
+from ctypes.wintypes import LPCSTR, LPCWSTR, BYTE, BOOLEAN, LONG, LARGE_INTEGER, LPCVOID
 
 ClickerClientAPIDir = os.path.abspath(os.path.dirname(__file__))
 #print('--- ClickerClientAPIDir = ', ClickerClientAPIDir)
@@ -74,13 +74,27 @@ class TDllFunctionAddresses:
         GetServerAddressParams = (1, "AResponse", 0),
         GetServerAddressFuncRes = GetServerAddressProto(("GetServerAddress", self.DllHandle), GetServerAddressParams)
         return GetServerAddressFuncRes
-    
-    
+
+
     def GetTestConnectionToServerAddress(self):
         TestConnectionToServerProto = ctypes.CFUNCTYPE(LONG, ctypes.c_char_p)
         TestConnectionToServerParams = (1, "AResponse", 0),
         TestConnectionToServerFuncRes = TestConnectionToServerProto(("TestConnectionToServer", self.DllHandle), TestConnectionToServerParams)
         return TestConnectionToServerFuncRes
+
+
+    def GetSendMemPluginFileToServer(self):
+        SendMemPluginFileToServerProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, LPCVOID, LARGE_INTEGER, ctypes.c_char_p)
+        SendMemPluginFileToServerParams = (1, "AFileName", 0), (1, "AFileContent", 0), (1, "AFileSize", 0), (1, "AResultStr", 0),
+        SendMemPluginFileToServerFuncRes = SendMemPluginFileToServerProto(("SendMemPluginFileToServer", self.DllHandle), SendMemPluginFileToServerParams)
+        return SendMemPluginFileToServerFuncRes
+
+
+    def GetSendMemPluginArchiveFileToServer(self):
+        SendMemPluginArchiveFileToServerProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, LPCWSTR, LPCWSTR, LPCWSTR, LPCVOID, LARGE_INTEGER, LONG, LPCWSTR, BOOLEAN, ctypes.c_char_p)
+        SendMemPluginArchiveFileToServerParams = (1, "AFileName", 0), (1, "ADecryptionPluginName", 0), (1, "ADecompressionPluginName", 0), (1, "AHashingPluginName", 0), (1, "AFileContent", 0), (1, "AFileSize", 0), (1, "ACompressionLevel", 0), (1, "AAdditionalInfo", 0), (1, "AIsDecDecHash", 0), (1, "AResultStr", 0),
+        SendMemPluginArchiveFileToServerFuncRes = SendMemPluginArchiveFileToServerProto(("SendMemPluginArchiveFileToServer", self.DllHandle), SendMemPluginArchiveFileToServerParams)
+        return SendMemPluginArchiveFileToServerFuncRes
 
 
     def GetSetTemplatesDir(self):
@@ -403,6 +417,8 @@ class TDllFunctions:
         self.SetServerAddressFunc = self.Addresses.GetSetServerAddress()
         self.GetServerAddressFunc = self.Addresses.GetGetServerAddress()
         self.TestConnectionToServerFunc = self.Addresses.GetTestConnectionToServerAddress()
+        self.SendMemPluginFileToServerFunc = self.Addresses.GetSendMemPluginFileToServer()
+        self.SendMemPluginArchiveFileToServerFunc = self.Addresses.GetSendMemPluginArchiveFileToServer()
         self.SetTemplatesDirFunc = self.Addresses.GetSetTemplatesDir()
         self.CreateLoggingWindowFunc = self.Addresses.GetCreateLoggingWindow()
         self.DestroyLoggingWindowFunc = self.Addresses.GetDestroyLoggingWindow()
@@ -500,6 +516,30 @@ class TDllFunctions:
             return Response
         except:
             return 'AV on TestConnectionToServer'
+
+
+    def SendMemPluginFileToServer(self, AFileName, AFileContent, AFileSize):
+        try:
+            buffer = ctypes.create_string_buffer(10 * 1048576) # #(CMaxSharedStringLength)
+            ResponsePtr = buffer[0] #ctypes.c_char_p(buffer[0])  #address of first byte in the buffer
+            RespLen = self.SendMemPluginFileToServerFunc(AFileName, AFileContent, AFileSize, ResponsePtr)
+            
+            Response = ctypes.string_at(ResponsePtr, RespLen)
+            return Response
+        except:
+            return 'AV on SendMemPluginFileToServer'
+
+
+    def SendMemPluginArchiveFileToServer(self, AFileName, ADecryptionPluginName, ADecompressionPluginName, AHashingPluginName, AFileContent, AFileSize, ACompressionLevel, AAdditionalInfo, AIsDecDecHash):
+        try:
+            buffer = ctypes.create_string_buffer(10 * 1048576) # #(CMaxSharedStringLength)
+            ResponsePtr = buffer[0] #ctypes.c_char_p(buffer[0])  #address of first byte in the buffer
+            RespLen = self.SendMemPluginArchiveFileToServerFunc(AFileName, ADecryptionPluginName, ADecompressionPluginName, AHashingPluginName, AFileContent, AFileSize, ACompressionLevel, AAdditionalInfo, AIsDecDecHash, ResponsePtr)
+            
+            Response = ctypes.string_at(ResponsePtr, RespLen)
+            return Response
+        except:
+            return 'AV on SendMemPluginArchiveFileToServer'
 
 
     def SetTemplatesDir(self, ADir):
@@ -955,6 +995,14 @@ class TUIClickerDllFunctions:
 
     def SetTemplatesDir(self, ADir):
         return self.DllFuncs.SetTemplatesDir(ADir) == 'OK'  #sending PWideChar, and converting to ANSI at dll
+
+
+    def SendMemPluginFileToServer(self, AFileName, AFileContent, AFileSize):
+        return self.DllFuncs.SendMemPluginFileToServer(AFileName, AFileContent, AFileSize) == 'OK'  #sending PWideChar, and converting to ANSI at dll
+
+
+    def SendMemPluginArchiveFileToServer(self, AFileName, ADecryptionPluginName, ADecompressionPluginName, AHashingPluginName, AFileContent, AFileSize, ACompressionLevel, AAdditionalInfo, AIsDecDecHash):
+        return self.DllFuncs.SendMemPluginArchiveFileToServer(AFileName, ADecryptionPluginName, ADecompressionPluginName, AHashingPluginName, AFileContent, AFileSize, ACompressionLevel, AAdditionalInfo, AIsDecDecHash) == 'OK'  #sending PWideChar, and converting to ANSI at dll
 
 
     def CreateLoggingWindow(self):
