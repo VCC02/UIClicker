@@ -122,6 +122,8 @@ end;
 
 
 procedure TTestClickerClientMemPlugins.SetUp;
+const
+  CTestingRequirementInfo = 'These tests require UIClicker to be built with the following compiler directives: MemPlugins and PluginTesting.';
 var
   RecServerAddress: string;
 begin
@@ -143,10 +145,10 @@ begin
   FUseDefaultEncryptionKey := True;
   FUseBadEncryptionKey := False;
 
-  Expect(DeleteAllMemPluginInMemFSes(CTestServerAddress, True)).ToBe(CREResp_ErrResponseOK);
-  Expect(DeleteAllFilesFromMemPluginInMemFS(CTestServerAddress, -1, True)).ToBe(CREResp_ErrResponseOK);
+  Expect(DeleteAllMemPluginInMemFSes(CTestServerAddress, True)).ToBe(CREResp_ErrResponseOK, CTestingRequirementInfo);
+  Expect(DeleteAllFilesFromMemPluginInMemFS(CTestServerAddress, -1, True)).ToBe(CREResp_ErrResponseOK, CTestingRequirementInfo);
   Expect(GetMemPluginInMemFSCount(CTestServerAddress)).ToBe('0', 'FS count in SetUp');
-  Expect(GetListOfFilesFromMemPluginInMemFS(CTestServerAddress, -1)).ToBe(CREResp_ErrResponseOK);
+  Expect(GetListOfFilesFromMemPluginInMemFS(CTestServerAddress, -1)).ToBe(CREResp_ErrResponseOK, CTestingRequirementInfo);
 end;
 
 

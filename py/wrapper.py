@@ -61,7 +61,7 @@ try:
     print("AddListOfAccessibleDirsToFileProviderClient: ", DllFuncs.AddListOfAccessibleDirsToFileProviderClient("bmps\\"))
     print("AddListOfAccessibleFileExtensionsToFileProviderClient: ", DllFuncs.AddListOfAccessibleFileExtensionsToFileProviderClient(".bmp\r\n.clktmpl\r\n.pmtv"))
     print("SetFileProviderClientConnectTimeout: ", DllFuncs.SetFileProviderClientConnectTimeout(3000))
-
+    
     print("StartFileProviderClientThread: ", DllFuncs.StartFileProviderClientThread())
     ###########
     
@@ -90,7 +90,7 @@ try:
     FindControlOptions.MatchText = 'UI Clicker Main'
     FindControlOptions.MatchClassName = 'Window'
     print("AddFindControlActionToTemplate: ", DllFuncs.AddFindControlActionToTemplate('VerifyClicking.clktmpl', 'Third', 1000, True, '$a$<>$b$', ctypes.byref(FindControlOptions)))
-
+    
     MatchBitmapText = GetDefaultMatchBitmapText()
     print("AddFontProfileToFindSubControlAction: ", DllFuncs.AddFontProfileToFindSubControlAction('VerifyClicking.clktmpl', 2, ctypes.byref(MatchBitmapText)))
     #-2 means the action index is out of range (negative or greater than the number of actions)
@@ -168,13 +168,13 @@ try:
     print("AddEditTemplateActionToTemplate: ", DllFuncs.AddEditTemplateActionToTemplate('VerifyClicking.clktmpl', 'Thirteenth', 0, True, '', ctypes.byref(EditTemplateOptions)))
     
     
-#///////////////
-
+    #///////////////
+    
     print("Preparing a FindSubControl with pointer to structure. This one does not need AddFontProfileToFindSubControlAction.")
     FindSubControlOptions = GetDefaultFindControlOptions()
     FindSubControlOptions.MatchText = '64-bit'
     FindSubControlOptions.MatchClassName = ''
-
+    
     TempMatchBitmapTextRec = TMatchBitmapTextRec(3)
     TempMatchBitmapTextRec.Items[0].ForegroundColor = '888888'
     TempMatchBitmapTextRec.Items[1].ForegroundColor = '3888888'
@@ -186,8 +186,8 @@ try:
     FindSubControlOptions.ThreadCount = '3'
     
     print("AddFindSubControlActionToTemplate: ", DllFuncs.AddFindSubControlActionToTemplate('VerifyClicking.clktmpl', 'AFindSubColntrol', 1000, True, '$a$<>$b$', ctypes.byref(FindSubControlOptions)))
-
-#///////////////////
+    
+    #///////////////////
     
     
     print("PrepareFilesInServer: ", DllFuncs.PrepareFilesInServer('VerifyClicking.clktmpl'))
@@ -204,29 +204,31 @@ try:
     print("ExecuteActionAtIndex (SaveSetVarToFile): ", DllFuncs.ExecuteActionAtIndex(AActionIndex = 9, AStackLevel = 0)) #Save SetVar vars to ini.
     ######## maybe modify the vars here, to verify later that loading them will update from ini
     print("ExecuteActionAtIndex (LoadSetVarFromFile): ", DllFuncs.ExecuteActionAtIndex(AActionIndex = 10, AStackLevel = 0)) #Load SetVar vars from ini.
-
+    
     print("ExecuteActionAtIndex (Plugin): ", DllFuncs.ExecuteActionAtIndex(AActionIndex = 11, AStackLevel = 0)) #plugin.
-
+    
     print("ExecuteActionAtIndex (EditTemplate): ", DllFuncs.ExecuteActionAtIndex(AActionIndex = 12, AStackLevel = 0)) #EditTemplate.
-
+    
     print("...Execute<ActionName>Action...")
     print("ExecuteClickAction: ", DllFuncs.ExecuteClickAction("Another click", 100, ClickOptions, True))
-
+    
     print("Loading a plugin from disk...")
-
+    
+    #These path are valid if the script is run from its directory.
+    #Also, they point to 64-bit plugins, which work only on 64-bit UIClicker.
     PluginPath = "..\\..\\UIClickerFindWindowsPlugin\\lib\\x86_64-win64\\UIClickerFindWindows.dll"
     #PluginPath = "..\\..\\UIClickerTypewriterPlugin\\lib\\x86_64-win64\\UIClickerTypewriter.dll"
-
+    
     f = open(PluginPath, 'rb')
     try:
-        PluginContent = bytearray(f.read())
+        PluginContent = f.read()
     finally:
         f.close
-
-    ContentPtr = LPCVOID(PluginContent[0])
+    
     PluginFileSize = LARGE_INTEGER(len(PluginContent))
-    print("SendMemPluginFileToServer (in work): ", DllFuncs.SendMemPluginFileToServer('MyPlugin.dll', ContentPtr, PluginFileSize))
-
+    print("SendMemPluginFileToServer: ", DllFuncs.SendMemPluginFileToServer('MyPlugin.dll', PluginContent, PluginFileSize))
+    #################################### use TDllFunctions().SendMemPluginFileToServer for debugging
+    
     print("FileProviderClientThreadDone: ", DllFuncs.FileProviderClientThreadDone())
     print("TerminateFileProviderClientThread: ", DllFuncs.TerminateFileProviderClientThread())
     time.sleep(1)

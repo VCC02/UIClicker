@@ -2211,7 +2211,12 @@ end;
 
 function TfrClickerActionsArr.HandleOnGetPluginInMemFS: TInMemFileSystem;
 begin
-  Result := FMemPluginsInMemFS;
+  {$IFDEF MemPlugins}
+    Result := FMemPluginsInMemFS;
+  {$ELSE}
+    AddToLog('MemPluginsInMemFS not available. UIClicker requires MemPlugins compiler directive.');
+    Result := nil;
+  {$ENDIF}
 end;
 
 

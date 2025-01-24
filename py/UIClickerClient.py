@@ -525,7 +525,7 @@ class TDllFunctions:
             RespLen = self.SendMemPluginFileToServerFunc(AFileName, AFileContent, AFileSize, ResponsePtr)
             
             Response = ctypes.string_at(ResponsePtr, RespLen)
-            return Response
+            return Response.decode('utf-8')
         except:
             return 'AV on SendMemPluginFileToServer'
 
@@ -537,7 +537,7 @@ class TDllFunctions:
             RespLen = self.SendMemPluginArchiveFileToServerFunc(AFileName, ADecryptionPluginName, ADecompressionPluginName, AHashingPluginName, AFileContent, AFileSize, ACompressionLevel, AAdditionalInfo, AIsDecDecHash, ResponsePtr)
             
             Response = ctypes.string_at(ResponsePtr, RespLen)
-            return Response
+            return Response.decode('utf-8')
         except:
             return 'AV on SendMemPluginArchiveFileToServer'
 

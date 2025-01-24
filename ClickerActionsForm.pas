@@ -2489,14 +2489,16 @@ function TfrmClickerActions.ProcessServerCmd(ASyncObj: TSyncHTTPCmd): string;
 var
   TabIdx: Integer;
   {$IFDEF MemPlugins}
-    i, FSIdx: Integer;
+    {$IFDEF PluginTesting}
+      i, FSIdx: Integer;
+      ListOfFileNames: TStringList;
+    {$ENDIF}
   {$ENDIF}
   IsDebuggingFromClient: Boolean;
   ErrMsg: string;
   Fnm: string;
   RemoteState: Boolean;
   TempStr: string;
-  ListOfFileNames: TStringList;
 begin
   Result := 'ok';  //default if not setting any result, as in CRECmd_ExecuteCommandAtIndex
 
@@ -2966,115 +2968,104 @@ begin
   end;
 
   {$IFDEF MemPlugins}
-    {$IFDEF TestBuild}
-      {$IFDEF PluginTesting} //These requests are implemented for testing only. Ideally, they should be part of some unit testing only, not exposed by UIClicker.
-        if ASyncObj.FCmd = '/' + CRECmd_GetMemPluginInMemFSCount then
-        begin
-          EnterCriticalSection(FDecDecHashArrCritSec);
-          try
-            Result := IntToStr(Length(FDecDecHashPluginInMemFSArr));
-          finally
-            LeaveCriticalSection(FDecDecHashArrCritSec);
-          end;
-          Exit;
+    {$IFDEF PluginTesting} //These requests are implemented for testing only. Ideally, they should be part of some unit testing only, not exposed by UIClicker.
+      if ASyncObj.FCmd = '/' + CRECmd_GetMemPluginInMemFSCount then
+      begin
+        EnterCriticalSection(FDecDecHashArrCritSec);
+        try
+          Result := IntToStr(Length(FDecDecHashPluginInMemFSArr));
+        finally
+          LeaveCriticalSection(FDecDecHashArrCritSec);
+        end;
+        Exit;
+      end;
+
+      if ASyncObj.FCmd = '/' + CRECmd_DeleteAllMemPluginInMemFSes then
+      begin
+        EnterCriticalSection(FDecDecHashArrCritSec);
+        try
+          for i := 0 to Length(FDecDecHashPluginInMemFSArr) - 1 do
+            FDecDecHashPluginInMemFSArr[i].InMemFS.Free;
+          SetLength(FDecDecHashPluginInMemFSArr, 0);
+        finally
+          LeaveCriticalSection(FDecDecHashArrCritSec);
         end;
 
-        if ASyncObj.FCmd = '/' + CRECmd_DeleteAllMemPluginInMemFSes then
-        begin
-          EnterCriticalSection(FDecDecHashArrCritSec);
-          try
-            for i := 0 to Length(FDecDecHashPluginInMemFSArr) - 1 do
-              FDecDecHashPluginInMemFSArr[i].InMemFS.Free;
-            SetLength(FDecDecHashPluginInMemFSArr, 0);
-          finally
-            LeaveCriticalSection(FDecDecHashArrCritSec);
+        Result := CREResp_ErrResponseOK;
+        Exit;
+      end;
+
+      if ASyncObj.FCmd = '/' + CRECmd_GetListOfFilesFromMemPluginInMemFS then
+      begin
+        EnterCriticalSection(FDecDecHashArrCritSec);
+        try
+          FSIdx := StrToIntDef(ASyncObj.FParams.Values[CREParam_PluginFSIdx], -2);
+          if (FSIdx <= -2) or (FSIdx > Length(FDecDecHashPluginInMemFSArr) - 1) then
+          begin
+            Result := CREResp_PluginFileSystemIndexOutOfBounds;
+            Exit;
           end;
+
+          ListOfFileNames := TStringList.Create;
+          try
+            if FSIdx = -1 then
+              FPluginsInMemFileSystem.ListMemFiles(ListOfFileNames)
+            else
+              FDecDecHashPluginInMemFSArr[FSIdx].InMemFS.ListMemFiles(ListOfFileNames);
+
+            Result := FastReplace_ReturnTo87(ListOfFileNames.Text);
+            if Result = '' then
+              Result := CREResp_ErrResponseOK;   //return a predefined text, to avoid returning '..200 OK..'
+
+            AddToLog(CRECmd_GetListOfFilesFromMemPluginInMemFS + ': ' + Result);
+          finally
+            ListOfFileNames.Free;
+          end;
+        finally
+          LeaveCriticalSection(FDecDecHashArrCritSec);
+        end;
+
+        Exit;
+      end;
+
+      if ASyncObj.FCmd = '/' + CRECmd_DeleteAllFilesFromMemPluginInMemFS then
+      begin
+        EnterCriticalSection(FDecDecHashArrCritSec);
+        try
+          FSIdx := StrToIntDef(ASyncObj.FParams.Values[CREParam_PluginFSIdx], -2);
+          if (FSIdx <= -2) or (FSIdx > Length(FDecDecHashPluginInMemFSArr) - 1) then
+          begin
+            Result := CREResp_PluginFileSystemIndexOutOfBounds;
+            Exit;
+          end;
+
+          if FSIdx = -1 then
+            FPluginsInMemFileSystem.Clear
+          else
+            FDecDecHashPluginInMemFSArr[FSIdx].InMemFS.Clear;
 
           Result := CREResp_ErrResponseOK;
-          Exit;
+        finally
+          LeaveCriticalSection(FDecDecHashArrCritSec);
         end;
 
-        if ASyncObj.FCmd = '/' + CRECmd_GetListOfFilesFromMemPluginInMemFS then
-        begin
-          EnterCriticalSection(FDecDecHashArrCritSec);
-          try
-            FSIdx := StrToIntDef(ASyncObj.FParams.Values[CREParam_PluginFSIdx], -2);
-            if (FSIdx <= -2) or (FSIdx > Length(FDecDecHashPluginInMemFSArr) - 1) then
-            begin
-              Result := CREResp_PluginFileSystemIndexOutOfBounds;
-              Exit;
-            end;
-
-            ListOfFileNames := TStringList.Create;
-            try
-              if FSIdx = -1 then
-                FPluginsInMemFileSystem.ListMemFiles(ListOfFileNames)
-              else
-                FDecDecHashPluginInMemFSArr[FSIdx].InMemFS.ListMemFiles(ListOfFileNames);
-
-              Result := FastReplace_ReturnTo87(ListOfFileNames.Text);
-              if Result = '' then
-                Result := CREResp_ErrResponseOK;   //return a predefined text, to avoid returning '..200 OK..'
-
-              AddToLog(CRECmd_GetListOfFilesFromMemPluginInMemFS + ': ' + Result);
-            finally
-              ListOfFileNames.Free;
-            end;
-          finally
-            LeaveCriticalSection(FDecDecHashArrCritSec);
-          end;
-
-          Exit;
-        end;
-
-        if ASyncObj.FCmd = '/' + CRECmd_DeleteAllFilesFromMemPluginInMemFS then
-        begin
-          EnterCriticalSection(FDecDecHashArrCritSec);
-          try
-            FSIdx := StrToIntDef(ASyncObj.FParams.Values[CREParam_PluginFSIdx], -2);
-            if (FSIdx <= -2) or (FSIdx > Length(FDecDecHashPluginInMemFSArr) - 1) then
-            begin
-              Result := CREResp_PluginFileSystemIndexOutOfBounds;
-              Exit;
-            end;
-
-            if FSIdx = -1 then
-              FPluginsInMemFileSystem.Clear
-            else
-              FDecDecHashPluginInMemFSArr[FSIdx].InMemFS.Clear;
-
-            Result := CREResp_ErrResponseOK;
-          finally
-            LeaveCriticalSection(FDecDecHashArrCritSec);
-          end;
-
-          Exit;
-        end;
-      {$ELSE}
-        if (ARequestInfo.Document = '/' + CRECmd_GetMemPluginInMemFSCount) or
-           (ARequestInfo.Document = '/' + CRECmd_DeleteAllMemPluginInMemFSes) or
-           (ARequestInfo.Document = '/' + CRECmd_GetListOfFilesInMemPluginInMem) or
-           (ARequestInfo.Document = '/' + CRECmd_DeleteAllFilesFromMemPluginInMemFS) then
-        begin
-          Result := CREResp_NotImplemented;
-          Exit;
-        end;
-      {$ENDIF}
+        Exit;
+      end;
     {$ELSE}
-      if (ARequestInfo.Document = '/' + CRECmd_GetMemPluginInMemFSCount) or
-         (ARequestInfo.Document = '/' + CRECmd_DeleteAllMemPluginInMemFSes) or
-         (ARequestInfo.Document = '/' + CRECmd_GetListOfFilesInMemPluginInMem) or
-         (ARequestInfo.Document = '/' + CRECmd_DeleteAllFilesFromMemPluginInMemFS) then
+      if (ASyncObj.FCmd = '/' + CRECmd_GetMemPluginInMemFSCount) or
+         (ASyncObj.FCmd = '/' + CRECmd_DeleteAllMemPluginInMemFSes) or
+         (ASyncObj.FCmd = '/' + CRECmd_GetListOfFilesFromMemPluginInMemFS) or
+         (ASyncObj.FCmd = '/' + CRECmd_DeleteAllFilesFromMemPluginInMemFS) then
       begin
         Result := CREResp_NotImplemented;
         Exit;
       end;
-    {$ENDIF} //TestBuild
+    {$ENDIF}
   {$ELSE}
-    if (ARequestInfo.Document = '/' + CRECmd_GetMemPluginInMemFSCount) or
-       (ARequestInfo.Document = '/' + CRECmd_DeleteAllMemPluginInMemFSes) or
-       (ARequestInfo.Document = '/' + CRECmd_GetListOfFilesInMemPluginInMem) or
-       (ARequestInfo.Document = '/' + CRECmd_DeleteAllFilesFromMemPluginInMemFS) then
+    if (ASyncObj.FCmd = '/' + CRECmd_GetMemPluginInMemFSCount) or
+       (ASyncObj.FCmd = '/' + CRECmd_DeleteAllMemPluginInMemFSes) or
+       (ASyncObj.FCmd = '/' + CRECmd_GetListOfFilesFromMemPluginInMemFS) or
+       (ASyncObj.FCmd = '/' + CRECmd_DeleteAllFilesFromMemPluginInMemFS) then
     begin
       Result := CREResp_NotImplemented;
       Exit;
@@ -3354,13 +3345,14 @@ procedure TfrmClickerActions.IdHTTPServer1CommandOther(AContext: TIdContext;
   end;
 
 var
-  Fnm, Msg, UpperCaseFnmExt: string;
+  Fnm, Msg: string;
   TempMemStream: TMemoryStream;
   ListOfFileNames, ListOfFileFound: TStringList;
   VerifyHashes: Boolean;
   i: Integer;
-  PluginArchive: TClickerPluginArchive;
   {$IFDEF MemPlugins}
+    UpperCaseFnmExt: string;
+    PluginArchive: TClickerPluginArchive;
     IsDecDecHash: Boolean;
     PreventReusingInMemFSFlag: Boolean;
     InMemFSIndex: Integer;

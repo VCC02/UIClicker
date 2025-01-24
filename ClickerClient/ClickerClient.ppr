@@ -1027,7 +1027,15 @@ begin
     Result := SetPointedContentFromString(Res, AResultStr);
   except
     on E: Exception do
+    begin
       AddToLog('Can''t send plugin file to server: "' + E.Message + '"  Res: ' + Res);
+      try
+        Result := SetPointedContentFromString('AV in ClickerClient: ' + E.Message + '  AFileContent: $' + IntToHex(UInt64(AFileContent)), AResultStr);
+      except
+      end;
+
+      Sleep(3000);
+    end;
   end;
 end;
 
@@ -1058,7 +1066,15 @@ begin
     Result := SetPointedContentFromString(Res, AResultStr);
   except
     on E: Exception do
-      AddToLog('Can''t send plugin file to server: "' + E.Message + '"  Res: ' + Res);
+    begin
+      AddToLog('Can''t send plugin archive file to server: "' + E.Message + '"  Res: ' + Res);
+      try
+        Result := SetPointedContentFromString('AV in ClickerClient: ' + E.Message + '  AFileContent: $' + IntToHex(UInt64(AFileContent)), AResultStr);
+      except
+      end;
+
+      Sleep(3000);
+    end;
   end;
 end;
 

@@ -3135,15 +3135,21 @@ begin
               'All the files, from the "i386-win32" or "x86-win64" directories, are extracted outside these directories (their path will not be prefixed by the directories name).' + #13#10 +
               'All the other files (outside the "i386-win32" and "x86-win64" directories), from inside the archive, are extracted as they are.' + #13#10#13#10 +
 
-              'The SetMemPluginArchiveFile command has a parameter, AIsDecDecHash, which decides what type of archive is being sent.' + #13#10 +
+              'The SetMemPluginArchiveFile command has a parameter, IsDecDecHash, which decides what type of archive is being sent.' + #13#10 +
               'If set to 1 (i.e. True), it means that the archive contains plugin(s) for decryption, decompression and custom hashing.' + #13#10 +
               'These types of plugins, called DecDecHash (and all the other files in the archive) will be extracted in separate InMem file systems (one FS / archive).' + #13#10 +
-              'If set to 0 (i.e. False), all the files are extracted to the InMem FS, used by the SetMemPluginFile command.' + #13#10 +
-              'Upon extraction, files are prefixed with the "Mem:\" string automatically.' + #13#10 +
+              'They do not appear in the selection menu, from the arrow button of the FileName property of a Plugin action (the property with this tooltip).' + #13#10 +
+              'If set to 0 (i.e. False), all the files (except .dll and .dbgsym) are extracted to the main InMem FS for plugins.' + #13#10 +
+              'The .dll files are extracted to their own InMem FSes, while the .dbgsym files, to the first InMem FS.' + #13#10 +
+              'Ordinary plugins (i.e. non DecDecHash) can access the main FS for plugins, during action execution (via ExecutePlugin function).' + #13#10 +
+              'DecDecHash plugins can access their own FSes, and read configuration files, when loaded for decryption, decompression and custom hashing.' + #13#10 +
+              'The reason to extract all .dbgsym files to the same FS, is because a new FS is allocated on every request, so less FSes are used in this way.' + #13#10 +
+              'Upon extraction, files are prefixed with the "Mem:\" string automatically. They should not contain this prefix inside the archive.' + #13#10 +
               'An archive uses decryption, decompression and custom hashing, if their respective parameters are set to valid and existing plugin names in SetMemPluginArchiveFile command.' + #13#10 +
               'If these parameters are empty strings, their algorithms are not used. If custom hashing is not used, then the archive is verifyed with MD5.' + #13#10#13#10 +
 
-              'The DecDecHash plugins use the same API as ordinary action plugins, plus an additional function, which does the decryption, decompression or custom hashing.' + #13#10 +
+              'The DecDecHash plugins have the same API (for backwards compatibility) as ordinary action plugins, plus two additional functions.' + #13#10 +
+              'One of the functions does the decryption, decompression or custom hashing, and the other, reads configuration files (if any) from the InMem FS of that plugin.' + #13#10 +
               'The DecDecHash plugins are expected to exist in their InMem file systems, in order for an archive to be successfully extracted, if it requires them.' + #13#10 +
               'Unfortunately, the security of the first sent decryption plugin is low, because it will have to be sent in plain (i.e. unencrypted archive).' + #13#10 +
               'Although plugins can access the disk, only plugins from these special InMem file systems can be used for decryption, decompression and custom hashing.' + #13#10 +
