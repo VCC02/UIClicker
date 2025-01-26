@@ -966,6 +966,23 @@ class TDllFunctions:
             return 'AV on ExecuteEditTemplateAction'
 
 
+    def GetPluginBitnessDirName(self):
+        SleepOptions = GetDefaultSleepOptions()
+        SleepOptions.Value = '1'
+        AllVars = self.ExecuteSleepAction("Dummy sleep", 100, SleepOptions, False)
+        
+        if '$AppBitness$=x86_64' in AllVars: # a bit ugly, instead of cropping the value
+            AppBitness = 'x86_64'
+        else:
+            AppBitness = 'i386'
+        
+        if '$OSBitness$=win64' in AllVars:
+            OSBitness = 'win64'
+        else:
+            OSBitness = 'win32'
+            
+        return AppBitness + '-' + OSBitness
+
 #A similar set of functions as above, but these ones return Boolean, instead of 0 or 1.
 #More than that, their results are set to True for succes and False otherwise (without any other info).
 
@@ -1190,3 +1207,5 @@ class TUIClickerDllFunctions:
         return Res.find("Client exception: ") == -1
 
 
+    def GetPluginBitnessDirName(self):
+        return self.DllFuncs.GetPluginBitnessDirName()

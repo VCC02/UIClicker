@@ -31,8 +31,7 @@ from UIClickerClient import *
 
 
 import time
-
-from pathlib import Path
+import os
 
 DllFuncs = TUIClickerDllFunctions() #use TUIClickerDllFunctions for Boolean results (True for success)
 #DllFuncs = TDllFunctions() #use TDllFunctions for debugging (see functions implementation for details (some functions return 1 for success, others return 0 for success)
@@ -210,14 +209,16 @@ try:
     print("ExecuteActionAtIndex (EditTemplate): ", DllFuncs.ExecuteActionAtIndex(AActionIndex = 12, AStackLevel = 0)) #EditTemplate.
     
     print("...Execute<ActionName>Action...")
+    print("...waiting for user (to maybe live edit the action and) to manually click a debugging button on UIClicker...")
     print("ExecuteClickAction: ", DllFuncs.ExecuteClickAction("Another click", 100, ClickOptions, True))
     
-    print("Loading a plugin from disk...")
     
-    #These path are valid if the script is run from its directory.
-    #Also, they point to 64-bit plugins, which work only on 64-bit UIClicker.
-    PluginPath = "..\\..\\UIClickerFindWindowsPlugin\\lib\\x86_64-win64\\UIClickerFindWindows.dll"
-    #PluginPath = "..\\..\\UIClickerTypewriterPlugin\\lib\\x86_64-win64\\UIClickerTypewriter.dll"
+    #It is expected that the plugins exist on disk.
+    UIClickerBitness = DllFuncs.GetPluginBitnessDirName()
+    PluginPath = os.path.join(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.join("..\\..\\UIClickerFindWindowsPlugin\\lib", UIClickerBitness))), "UIClickerFindWindows.dll")
+    #PluginPath = os.path.join(os.path.abspath(os.path.join(os.path.dirname(__file__), os.path.join("..\\..\\UIClickerTypewriterPlugin\\lib", UIClickerBitness))), "UIClickerTypewriter.dll")
+    print("Loading a plugin from disk... at ", PluginPath)
+    
     
     f = open(PluginPath, 'rb')
     try:
@@ -228,6 +229,7 @@ try:
     PluginFileSize = LARGE_INTEGER(len(PluginContent))
     print("SendMemPluginFileToServer: ", DllFuncs.SendMemPluginFileToServer('MyPlugin.dll', PluginContent, PluginFileSize))
     #################################### use TDllFunctions().SendMemPluginFileToServer for debugging
+    
     
     print("FileProviderClientThreadDone: ", DllFuncs.FileProviderClientThreadDone())
     print("TerminateFileProviderClientThread: ", DllFuncs.TerminateFileProviderClientThread())
