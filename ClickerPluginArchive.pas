@@ -104,7 +104,7 @@ function GetPluginInMemFSIndex(var ADecDecHashPluginInMemFSArr: TDecDecHashPlugi
 
 const
   CPluginPath32BitPrefix = 'i386-win32\';
-  CPluginPath64BitPrefix = 'x86-win64\';
+  CPluginPath64BitPrefix = 'x86_64-win64\';
 
 
 implementation
@@ -579,8 +579,8 @@ begin
             try
               Fnm := ListOfFiles.Strings[i];
 
-              if Pos(GoodPluginPathBitPrefix, UpperCase(Fnm)) = 1 then  //the file name starts with 'i386-win32\' or 'x86-win64\'
-                Fnm := Copy(Fnm, Length(GoodPluginPathBitPrefix) + 1, MaxInt); //discard 'i386-win32\' or 'x86-win64\' prefix, because this is used only to decide about plugin bitness
+              if Pos(GoodPluginPathBitPrefix, UpperCase(Fnm)) = 1 then  //the file name starts with 'i386-win32\' or 'x86_64-win64\'
+                Fnm := Copy(Fnm, Length(GoodPluginPathBitPrefix) + 1, MaxInt); //discard 'i386-win32\' or 'x86_64-win64\' prefix, because this is used only to decide about plugin bitness
               //Plugins without the "good" prefix are still extracted. Plugins with bad prefix are not.
 
               {$IFDEF MemPlugins}

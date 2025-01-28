@@ -212,6 +212,12 @@ begin
 
     ListOfFilesStr := ReturnListOfFilesFromInMemFS(APluginReference, AOnActionPlugin_InMemFS);
     AOnActionPlugin_SetTemplateVar(APluginReference, @'$ListOfFilesInPluginInMemFS$'[1], @ListOfFilesStr[1]);
+
+    {$IFDEF CPU64}
+      AOnActionPlugin_SetTemplateVar(APluginReference, @'$PluginBitnessDir$'[1], @'x86_64-win64'[1]);
+    {$ELSE}
+      AOnActionPlugin_SetTemplateVar(APluginReference, @'$PluginBitnessDir$'[1], @'i386-win32'[1]);
+    {$ENDIF}
   except
     on E: Exception do
       AOnActionPlugin_SetTemplateVar(APluginReference, @'$PluginException$'[1], @E.Message[1]);

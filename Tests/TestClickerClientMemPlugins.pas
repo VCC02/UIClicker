@@ -97,6 +97,7 @@ type
 
     procedure Test_SendSameBitnessMemPlugin_HappyFlow;
     procedure Test_SendOutsideBitnessOnlyMemPlugin_HappyFlow;
+    procedure Test_SendBothBitnessesMemPlugin_HappyFlow;
   end;
 
 
@@ -965,7 +966,7 @@ begin
 
   SendMultiBitnessMemPluginArchiveFileToServer(TestPluginName, ExtractFileName(TestPluginName), 'Outside bitness',
                                                TestPluginName, 'i386-win32\' + ExtractFileName(TestPluginName), '(' + Bitness + ')',
-                                               TestPluginName, 'x86-win64\' + ExtractFileName(TestPluginName), '(' + Bitness + ')',
+                                               TestPluginName, 'x86_64-win64\' + ExtractFileName(TestPluginName), '(' + Bitness + ')',
                                                '', '', '', False, 'none', True, False, CREResp_ErrResponseOK);
 
   //Use TestPluginName as decompressor, to run it in cfg mode. It should load the config file:
@@ -995,6 +996,34 @@ begin
   //Use TestPluginName as decompressor, to run it in cfg mode. It should load the config file:
   SendGenericMemPluginArchiveFileToServer_SinglePlugin_HappyFlow(Fnm, ExtractFileName(Fnm), '', ExtractFileName(TestPluginName) + 'arc|Mem:\' + ExtractFileName(TestPluginName), '', True, 'none', False, False, CREResp_ErrResponseOK);
   Expect(GetVarValueFromServer('$BitnessCfg$')).ToBe('Bitness: Outside bitness', 'Var set by plugin');
+end;
+
+
+procedure TTestClickerClientMemPlugins.Test_SendBothBitnessesMemPlugin_HappyFlow;
+var
+  TestPluginName, TestPluginName32, TestPluginName64: string;
+  Bitness: string;
+  PluginOptions: TClkPluginOptions;
+begin
+  Bitness := GetPluginBitnessDirName;
+  TestPluginName := 'NoTestPluginExpectedHere.dll';  //should not exist on disk for this test
+  TestPluginName32 := ExtractFilePath(ParamStr(0)) + 'TestFiles\TestPlugin\lib\' + 'i386-win32' + '\TestPlugin.dll';
+  TestPluginName64 := ExtractFilePath(ParamStr(0)) + 'TestFiles\TestPlugin\lib\' + 'x86_64-win64' + '\TestPlugin.dll';
+
+  Expect(FileExists(TestPluginName32)).ToBe(True, 'The test expects this file to exist on disk: "' + TestPluginName32 + '".');
+  Expect(FileExists(TestPluginName64)).ToBe(True, 'The test expects this file to exist on disk: "' + TestPluginName64 + '".');
+
+  Expect(SetVariable(CTestServerAddress, '$PluginBitnessDir$', '---', 0)).ToBe(CREResp_Done, 'Init var');
+  Expect(GetVarValueFromServer('$PluginBitnessDir$')).ToBe('---', 'Init var set');
+
+  SendMultiBitnessMemPluginArchiveFileToServer(TestPluginName, ExtractFileName(TestPluginName), 'Outside bitness',
+                                               TestPluginName32, 'i386-win32\' + ExtractFileName(TestPluginName32), '(' + Bitness + ')',
+                                               TestPluginName64, 'x86_64-win64\' + ExtractFileName(TestPluginName64), '(' + Bitness + ')',
+                                               '', '', '', False, 'none', False, False, CREResp_ErrResponseOK); //set as action plugin this time
+
+  GeneratePluginOptions(PluginOptions, 'Mem:\TestPlugin.dll', '');
+  ExpectSuccessfulAction(FastReplace_87ToReturn(ClickerActionsClient.ExecutePluginAction(CTestServerAddress, PluginOptions, True, False, False)));
+  Expect(GetVarValueFromServer('$PluginBitnessDir$')).ToBe(Bitness, 'Var set by plugin'); //on ExecutePlugin only
 end;
 
 
