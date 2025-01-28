@@ -60,7 +60,7 @@ ExtendToEndpointCorner=1
 [Primitive_6]
 PrimitiveName=Inactive Slider
 Primitive=SetPen
-Color=ACACAC
+Color=$SliderEdgeColor_Inactive$
 Style=psSolid
 Width=1
 Mode=pmCopy
@@ -131,7 +131,7 @@ ExtendToEndpointCorner=1
 [Primitive_14]
 PrimitiveName=Active Slider
 Primitive=SetPen
-Color=EAB47E
+Color=$SliderEdgeColor_Active$
 Style=psSolid
 Width=1
 Mode=pmCopy

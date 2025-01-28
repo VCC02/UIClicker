@@ -1,5 +1,5 @@
 [Actions]
-Count=27
+Count=29
 Version=2
 
 [Action_0]
@@ -110,6 +110,7 @@ MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 EvaluateTextCount=-1
 CropFromScreenshot=0
+ThreadCount=2
 
 [Action_3]
 ActionName=Bring to front
@@ -205,6 +206,7 @@ MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 EvaluateTextCount=-1
 CropFromScreenshot=0
+ThreadCount=2
 
 [Action_5]
 ActionName=Find Reset button
@@ -283,6 +285,7 @@ MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 EvaluateTextCount=-1
 CropFromScreenshot=0
+ThreadCount=2
 
 [Action_6]
 ActionName=Click Reset
@@ -398,6 +401,7 @@ MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 EvaluateTextCount=-1
 CropFromScreenshot=0
+ThreadCount=2
 
 [Action_8]
 ActionName=Find Click Testing GroupBox
@@ -476,6 +480,7 @@ MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 EvaluateTextCount=-1
 CropFromScreenshot=0
+ThreadCount=2
 
 [Action_9]
 ActionName=Find TrackBar button
@@ -554,6 +559,7 @@ MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 EvaluateTextCount=-1
 CropFromScreenshot=0
+ThreadCount=2
 
 [Action_10]
 ActionName=Drag TrackBarButton
@@ -780,6 +786,7 @@ MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 EvaluateTextCount=-1
 CropFromScreenshot=0
+ThreadCount=2
 
 [Action_15]
 ActionName=Find Click Testing GroupBox
@@ -858,6 +865,7 @@ MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 EvaluateTextCount=-1
 CropFromScreenshot=0
+ThreadCount=2
 
 [Action_16]
 ActionName=Find Duration grp
@@ -936,6 +944,7 @@ MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 EvaluateTextCount=-1
 CropFromScreenshot=0
+ThreadCount=2
 
 [Action_17]
 ActionName=Find editbox
@@ -1014,6 +1023,7 @@ MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 EvaluateTextCount=-1
 CropFromScreenshot=0
+ThreadCount=2
 
 [Action_18]
 ActionName=calc DurationError
@@ -1134,6 +1144,7 @@ MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 EvaluateTextCount=-1
 CropFromScreenshot=0
+ThreadCount=2
 
 [Action_22]
 ActionName=Find Click Testing GroupBox
@@ -1212,6 +1223,7 @@ MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 EvaluateTextCount=-1
 CropFromScreenshot=0
+ThreadCount=2
 
 [Action_23]
 ActionName=Set slider pos
@@ -1222,12 +1234,40 @@ ActionCondition=
 BreakpointExists=0
 BreakpointEnabled=0
 BreakpointCondition=
-ListOfVarNames=$SliderX$
-ListOfVarValues=58
-ListOfVarEvalBefore=
+ListOfVarNames=$SliderX$$SliderEdgeColor_Active_W8.1$$SliderEdgeColor_Inactive_W8.1$$SliderEdgeColor_Active_W10$$SliderEdgeColor_Inactive_W10$
+ListOfVarValues=58EAB47EACACAC171717D77800
+ListOfVarEvalBefore=0
 FailOnException=0
 
 [Action_24]
+ActionName=Set Edge colors to Win8.1
+Action=SetVar
+ActionTimeout=0
+ActionEnabled=1
+ActionCondition=$OSVer$==Win8.1
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+ListOfVarNames=$SliderEdgeColor_Active$$SliderEdgeColor_Inactive$
+ListOfVarValues=$SliderEdgeColor_Active_W8.1$$SliderEdgeColor_Inactive_W8.1$
+ListOfVarEvalBefore=1
+FailOnException=0
+
+[Action_25]
+ActionName=Set Edge colors to Win10
+Action=SetVar
+ActionTimeout=0
+ActionEnabled=1
+ActionCondition=$OSVer$==Win10
+BreakpointExists=0
+BreakpointEnabled=1
+BreakpointCondition=
+ListOfVarNames=$SliderEdgeColor_Active$$SliderEdgeColor_Inactive$
+ListOfVarValues=$SliderEdgeColor_Active_W10$$SliderEdgeColor_Inactive_W10$
+ListOfVarEvalBefore=1
+FailOnException=0
+
+[Action_26]
 ActionName=Find TrackBar slider
 Action=FindSubControl
 ActionTimeout=1000
@@ -1304,8 +1344,9 @@ MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 EvaluateTextCount=-1
 CropFromScreenshot=0
+ThreadCount=2
 
-[Action_25]
+[Action_27]
 ActionName=Find window
 Action=FindControl
 ActionTimeout=3000
@@ -1382,8 +1423,9 @@ MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 EvaluateTextCount=-1
 CropFromScreenshot=0
+ThreadCount=2
 
-[Action_26]
+[Action_28]
 ActionName=Close window
 Action=WindowOperations
 ActionTimeout=0
