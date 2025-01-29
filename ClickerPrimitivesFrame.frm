@@ -71,6 +71,21 @@ object frClickerPrimitives: TfrClickerPrimitives
       }
       Visible = False
     end
+    object imgPreviewColorUnderMouse: TImage
+      Left = 44
+      Height = 16
+      Top = 16
+      Width = 16
+      AutoSize = True
+      Picture.Data = {
+        1754506F727461626C654E6574776F726B477261706869636900000089504E47
+        0D0A1A0A0000000D494844520000001000000010080200000090916836000000
+        097048597300000EC400000EC401952B0E1B0000001B4944415428CF63FCFFFF
+        3F03298089814430AA6154C390D1F01F00566C041CB97ACC9D0000000049454E
+        44AE426082
+      }
+      Visible = False
+    end
   end
   object pnlPreview: TPanel
     Left = 280
@@ -294,6 +309,31 @@ object frClickerPrimitives: TfrClickerPrimitives
     object MenuItem_EditMode: TMenuItem
       AutoCheck = True
       Caption = 'Edit mode'
+      OnClick = MenuItem_EditModeClick
+    end
+    object N3: TMenuItem
+      Caption = '-'
+    end
+    object MenuItem_RepaintAllCompositionsFromStaticMenu: TMenuItem
+      Caption = 'Repaint all compositions'
+      OnClick = MenuItem_RepaintAllCompositionsFromStaticMenuClick
+    end
+    object MenuItem_CopyColorUnderMouseCursor: TMenuItem
+      Caption = 'Copy color under mouse cursor'
+      OnClick = MenuItem_CopyColorUnderMouseCursorClick
+    end
+    object Separator1: TMenuItem
+      Caption = '-'
+    end
+    object MenuItem_HighContrastOption1: TMenuItem
+      AutoCheck = True
+      Caption = 'High contrast color - Option1'
+      OnClick = MenuItem_HighContrastOption1Click
+    end
+    object MenuItem_HighContrastOption2: TMenuItem
+      AutoCheck = True
+      Caption = 'High contrast color - Option2'
+      OnClick = MenuItem_HighContrastOption2Click
     end
   end
   object tmrDrawZoom: TTimer

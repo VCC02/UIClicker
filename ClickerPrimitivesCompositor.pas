@@ -40,6 +40,9 @@ type
   TPrimitivesCompositor = class
   private
     FFileIndex: Integer; //primitives file index in the list of MatchPrimitiveFiles property
+    FHighContrastOption1: Boolean;
+    FHighContrastOption2: Boolean;
+
     FOnEvaluateReplacementsFunc: TEvaluateReplacementsFunc;
     FOnLoadBitmap: TOnLoadBitmap;
     FOnLoadRenderedBitmap: TOnLoadRenderedBitmap;
@@ -58,6 +61,8 @@ type
     function GetMaxY(ADestCanvas: TCanvas; var APrimitives: TPrimitiveRecArr): Integer;
 
     property FileIndex: Integer read FFileIndex write FFileIndex; //primitives file index in the list of MatchPrimitiveFiles property
+    property HighContrastOption1: Boolean write FHighContrastOption1;
+    property HighContrastOption2: Boolean write FHighContrastOption2;
 
     property OnEvaluateReplacementsFunc: TEvaluateReplacementsFunc write FOnEvaluateReplacementsFunc;
     property OnLoadBitmap: TOnLoadBitmap write FOnLoadBitmap;
@@ -335,6 +340,8 @@ begin
   inherited Create;
 
   FFileIndex := 0; //assume first file, unless explicitly updated
+  FHighContrastOption1 := False;
+  FHighContrastOption2 := False;
 
   FOnEvaluateReplacementsFunc := nil;
   FOnLoadBitmap := nil;
@@ -404,7 +411,7 @@ begin
 end;
 
 
-procedure BuildHighContrastColors(var AHighContrastColors: TColorArr; APrimitivesLen: Integer);
+procedure BuildHighContrastColors(var AHighContrastColors: TColorArr; APrimitivesLen: Integer; AColorOption1, AColorOption2: Boolean);
 var
   i: Integer;
 var
@@ -415,12 +422,25 @@ begin
   G := 128 + 32;
   B := (224 + 32) and $FF;
 
+  if AColorOption1 then
+  begin
+    Inc(R, 32);
+    Inc(B, 32);
+  end;
+
   for i := 0 to Length(AHighContrastColors) - 1 do
   begin
     AHighContrastColors[i] := RGBToColor(R, G, B);
     Inc(R, 32 + 7);
     Inc(G, 32 + 7);
     Inc(B, 32 + 7);
+
+    if AColorOption2 then
+    begin
+      //Inc(R, 0);
+      Inc(G, 50 + 17);
+      Inc(B, 50 + 37);
+    end;
   end;
 end;
 
@@ -451,7 +471,7 @@ begin
   end;
 
   ErasePreviewBmp(ABmp);
-  BuildHighContrastColors(HighContrastColors, Length(APrimitives));
+  BuildHighContrastColors(HighContrastColors, Length(APrimitives), FHighContrastOption1, FHighContrastOption2);
 
   case APrimitiveSettings.CompositorDirection of
     cdTopBot:
@@ -487,7 +507,7 @@ procedure TPrimitivesCompositor.PreviewPrimitive(ABmp: TBitmap; AUseHighContrast
 var
   HighContrastColors: TColorArr;
 begin
-  BuildHighContrastColors(HighContrastColors, Length(APrimitives));
+  BuildHighContrastColors(HighContrastColors, Length(APrimitives), FHighContrastOption1, FHighContrastOption2);
 
   if AUseHighContrastColors then
     CComposePrimitives[APrimitives[APrimitiveIndex].PrimitiveType](Self, ABmp, APrimitives[APrimitiveIndex], HighContrastColors[APrimitiveIndex])

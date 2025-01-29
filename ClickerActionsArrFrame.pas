@@ -816,6 +816,8 @@ uses
 
 const
   CInsertActionOffset = 30; //this value has to be greater than the current available action types High(TClkAction)
+  CErr_CannotSelectActionToLoadValuesAtIndex = 'Cannot select action, to load values at index';
+  CErr_EmptyTemplate = 'empty template';
 
 
 procedure TfrClickerActionsArr.FillInWithAllVars(AListOfVars: TStringList);
@@ -3276,6 +3278,7 @@ var
   DeletingActionIndex: Integer;  //used only when executing EditTemplate, which deletes actions
   DeletingSelfAction: Boolean;
   MovingActionSrcIndex, MovingActionDestIndex: Integer;    //used only when executing EditTemplate, which moves actions
+  DbgCurrentAction: string;
 begin
   Result := True;
 
@@ -3314,6 +3317,7 @@ begin
               ;
           end; //case
         end;
+
       if not FExecutesRemotely then
         Result := ExecuteActionAtIndex(ActionIndex)
       else
@@ -3322,8 +3326,27 @@ begin
         Result := Result and (ActionStatusStrToActionStatus(GetActionVarValue('$LastAction_Status$')) = asSuccessful);
 
         if Result then                                                             //As an issue in this case, is that executing local apps, might by unwanted.
+        begin
           if FClkActions[ActionIndex].ActionOptions.Action = acEditTemplate then   //The result is not modified by the local execution.
             AddToLog('Executing locally as well, because the action is an EditTemplate action. Result = ' + BoolToStr(ExecuteActionAtIndex(ActionIndex), True));
+        end
+        else
+        begin
+          DbgCurrentAction := GetActionVarValue('$DbgCurrentAction$');
+          if DbgCurrentAction > '' then
+          begin
+            AddToLog('$DbgCurrentAction$: ' + DbgCurrentAction);
+            if Pos(CErr_CannotSelectActionToLoadValuesAtIndex, DbgCurrentAction) > 0 then
+            begin
+              if GetActionVarValue('$ExecAction_Err$') = CErr_EmptyTemplate then
+                AddToLog('The template might not be sent to server. Please verify the list of allowed directories, on the Settings page.')
+              else
+                AddToLog('The template might be out of date on server side and a non-existent action is attempted to be executed.');
+            end
+            //else
+            //  AddToLog('No extra info about what went wrong.');
+          end;
+        end;
       end;
 
       SetActionVarValue('$LastAction_Skipped$', 'No');
@@ -7480,6 +7503,9 @@ begin
       CurrentNode := GetNodeByIndex(FRemoteExActionIndex);
       if CurrentNode <> nil then
       begin
+        SetActionVarValue('$DbgCurrentAction$', '');
+        SetActionVarValue('$ExecAction_Err$', '');
+
         try
           HighlightCurrentlyExecutedAction(CurrentNode);
         except
@@ -7489,11 +7515,11 @@ begin
       end
       else
       begin
-        Err := 'Cannot select action, to load values at index ' + IntToStr(FRemoteExActionIndex) + '.';
+        Err := CErr_CannotSelectActionToLoadValuesAtIndex + ' ' + IntToStr(FRemoteExActionIndex) + '.';
         if GetNodeByIndex(0) = nil then
         begin
           Err := Err + '  It seems that no template is loaded.';
-          SetActionVarValue('$ExecAction_Err$', 'empty template');
+          SetActionVarValue('$ExecAction_Err$', CErr_EmptyTemplate);
         end;
 
         SetActionVarValue('$DbgCurrentAction$', Err);

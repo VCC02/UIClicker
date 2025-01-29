@@ -1,5 +1,5 @@
 [Actions]
-Count=5
+Count=6
 Version=2
 
 [Action_0]
@@ -77,8 +77,28 @@ FullBackgroundImageInResult=1
 MatchByHistogramSettings.MinPercentColorMatch=50
 MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
+EvaluateTextCount=-1
+CropFromScreenshot=0
+ThreadCount=2
 
 [Action_1]
+ActionName=Bring to front
+Action=WindowOperations
+ActionTimeout=0
+ActionEnabled=1
+ActionCondition=
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+WindowOperation=0
+NewX=
+NewY=
+NewWidth=
+NewHeight=
+NewPositionEnabled=0
+NewSizeEnabled=0
+
+[Action_2]
 ActionName=Find main PageControl (works on visible windows only)
 Action=FindControl
 ActionTimeout=1000
@@ -153,8 +173,11 @@ FullBackgroundImageInResult=1
 MatchByHistogramSettings.MinPercentColorMatch=50
 MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
+EvaluateTextCount=-1
+CropFromScreenshot=0
+ThreadCount=2
 
-[Action_2]
+[Action_3]
 ActionName=Select Settings tab
 Action=Click
 ActionTimeout=0
@@ -189,8 +212,9 @@ MouseWheelAmount=0
 DelayAfterMovingToDestination=50
 DelayAfterMouseDown=100
 MoveDuration=-1
+UseClipCursor=0
 
-[Action_3]
+[Action_4]
 ActionName=Find page
 Action=FindControl
 ActionTimeout=1000
@@ -265,8 +289,11 @@ FullBackgroundImageInResult=1
 MatchByHistogramSettings.MinPercentColorMatch=50
 MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
+EvaluateTextCount=-1
+CropFromScreenshot=0
+ThreadCount=2
 
-[Action_4]
+[Action_5]
 ActionName=Find ExecMode ComboBox (it takes 2300ms by default, to change from server to client)
 Action=FindControl
 ActionTimeout=4000
@@ -341,6 +368,9 @@ FullBackgroundImageInResult=1
 MatchByHistogramSettings.MinPercentColorMatch=50
 MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
 MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
+EvaluateTextCount=-1
+CropFromScreenshot=0
+ThreadCount=2
 
 [Notes]
 Content=refactored actions

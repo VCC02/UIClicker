@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2024 VCC
+    Copyright (C) 2025 VCC
     creation date: Mar 2023
     initial release date: 11 Mar 2023
 
@@ -43,6 +43,7 @@ type
   TfrClickerPrimitives = class(TFrame)
     chkShowPrimitiveEdges: TCheckBox;
     chkHighContrast: TCheckBox;
+    imgPreviewColorUnderMouse: TImage;
     imglstFontColorProperties: TImageList;
     imglstPreviewPrimitives: TImageList;
     imglstPrimitivesEditorMenu: TImageList;
@@ -53,6 +54,10 @@ type
     lblMouseOnPreviewImgBB: TLabel;
     lblMouseOnPreviewImgGG: TLabel;
     lblMouseOnPreviewImgRR: TLabel;
+    MenuItem_HighContrastOption2: TMenuItem;
+    MenuItem_HighContrastOption1: TMenuItem;
+    Separator1: TMenuItem;
+    MenuItem_CopyColorUnderMouseCursor: TMenuItem;
     MenuItem_RepaintAllCompositionsFromStaticMenu: TMenuItem;
     N3: TMenuItem;
     MenuItem_EditMode: TMenuItem;
@@ -70,8 +75,11 @@ type
     procedure chkHighContrastChange(Sender: TObject);
     procedure chkShowPrimitiveEdgesChange(Sender: TObject);
     procedure FrameResize(Sender: TObject);
+    procedure MenuItem_CopyColorUnderMouseCursorClick(Sender: TObject);
     procedure MenuItem_CopyToClipboardClick(Sender: TObject);
     procedure MenuItem_EditModeClick(Sender: TObject);
+    procedure MenuItem_HighContrastOption1Click(Sender: TObject);
+    procedure MenuItem_HighContrastOption2Click(Sender: TObject);
     procedure MenuItem_RepaintAllCompositionsFromStaticMenuClick(Sender: TObject);
     procedure MenuItem_SavePrimitivesFileClick(Sender: TObject);
     procedure pnlHorizSplitterMouseDown(Sender: TObject; Button: TMouseButton;
@@ -89,6 +97,7 @@ type
     FPrimitiveSettings: TPrimitiveSettings;
     FCurrentMousePosOnPreviewImg: TPoint;
     FFileIndex: Integer; //primitives file index in the list of MatchPrimitiveFiles property
+    FimgPreviewTpColor: TColor;
 
     FHold: Boolean;
     FSplitterMouseDownGlobalPos: TPoint;
@@ -556,6 +565,8 @@ begin
     PmtvCompositor.OnLoadRenderedBitmap := HandleOnLoadRenderedBitmap;
 
     UsingHighContrast := chkHighContrast.Checked;
+    BuildImgLstPreviewPrimitives;
+
     for i := 0 to Length(FOrders) - 1 do
     begin
       TempScrollBox := TScrollBox(PageControlPreview.Pages[i].Tag);
@@ -564,6 +575,8 @@ begin
       PreviewImage.Picture.Bitmap.Width := PmtvCompositor.GetMaxX(PreviewImage.Picture.Bitmap.Canvas, FPrimitives) + 1;
       PreviewImage.Picture.Bitmap.Height := PmtvCompositor.GetMaxY(PreviewImage.Picture.Bitmap.Canvas, FPrimitives) + 1;
 
+      PmtvCompositor.HighContrastOption1 := MenuItem_HighContrastOption1.Checked;
+      PmtvCompositor.HighContrastOption2 := MenuItem_HighContrastOption2.Checked;
       PmtvCompositor.ComposePrimitives(PreviewImage.Picture.Bitmap, i, UsingHighContrast, FPrimitives, FOrders, FPrimitiveSettings);
       UpdatePreviewImageSizeFromPrimitives(PreviewImage, TempScrollBox);
     end;
@@ -809,6 +822,8 @@ begin
     PmtvCompositor.OnLoadBitmap := HandleOnLoadBitmap;
     PmtvCompositor.OnLoadRenderedBitmap := HandleOnLoadRenderedBitmap;
 
+    PmtvCompositor.HighContrastOption1 := False;
+    PmtvCompositor.HighContrastOption2 := False;
     PmtvCompositor.ComposePrimitives(ABmp, AOrderIndex, chkHighContrast.Checked, FPrimitives, FOrders, FPrimitiveSettings);
   finally
     PmtvCompositor.Free;
@@ -883,6 +898,9 @@ begin
 
       Bmp.Width := PmtvCompositor.GetMaxX(Bmp.Canvas, FPrimitives) + 1;
       Bmp.Height := PmtvCompositor.GetMaxY(Bmp.Canvas, FPrimitives) + 1;
+
+      PmtvCompositor.HighContrastOption1 := MenuItem_HighContrastOption1.Checked;
+      PmtvCompositor.HighContrastOption2 := MenuItem_HighContrastOption2.Checked;
       PmtvCompositor.ComposePrimitives(Bmp, Idx, chkHighContrast.Checked, FPrimitives, FOrders, FPrimitiveSettings);
 
       Clipboard.Assign(Bmp);
@@ -898,6 +916,18 @@ end;
 procedure TfrClickerPrimitives.MenuItem_EditModeClick(Sender: TObject);
 begin
 
+end;
+
+
+procedure TfrClickerPrimitives.MenuItem_HighContrastOption1Click(Sender: TObject);
+begin
+  chkHighContrastChange(nil); //ToDo: move to another procedure, instead of handler
+end;
+
+
+procedure TfrClickerPrimitives.MenuItem_HighContrastOption2Click(Sender: TObject);
+begin
+  chkHighContrastChange(nil); //ToDo: move to another procedure, instead of handler
 end;
 
 
@@ -1001,6 +1031,13 @@ begin
     NewLeft := Width - 270;
 
   ResizeFrameSectionsBySplitter(NewLeft);
+end;
+
+
+procedure TfrClickerPrimitives.MenuItem_CopyColorUnderMouseCursorClick(
+  Sender: TObject);
+begin
+  Clipboard.AsText := IntToHex(FimgPreviewTpColor, 6);
 end;
 
 
@@ -1478,13 +1515,20 @@ var
   Img: TImage;
   Found: Boolean;
 begin
+  Img := Sender as TImage;
+
+  FimgPreviewTpColor := Img.Canvas.Pixels[X, Y];
+  imgPreviewColorUnderMouse.Canvas.Pen.Color := 2;
+  imgPreviewColorUnderMouse.Canvas.Brush.Color := FimgPreviewTpColor;
+  imgPreviewColorUnderMouse.Canvas.Rectangle(0, 0, imgPreviewColorUnderMouse.Width, imgPreviewColorUnderMouse.Height);
+  MenuItem_CopyColorUnderMouseCursor.Bitmap := imgPreviewColorUnderMouse.Picture.Bitmap;
+
   if not MenuItem_EditMode.Checked then
   begin
     ClearPrimitiveSelection;
     Exit;
   end;
 
-  Img := Sender as TImage;
   OrderIdx := Img.Tag;
   Found := False;
 
@@ -1556,7 +1600,8 @@ begin
   TempPanel := (PreviewImage.Parent as TPanel);
   TempPanel.Hint := 'Image size: ' + IntToStr(PreviewImage.Width) + ' : ' + IntToStr(PreviewImage.Height) + #13#10 +
                     'Bitmap size: ' + IntToStr(PreviewImage.Picture.Bitmap.Width) + ' : ' + IntToStr(PreviewImage.Picture.Bitmap.Height) + #13#10 +
-                    'Green panel size: ' + IntToStr(TempPanel.Width) + ' : ' + IntToStr(TempPanel.Height);
+                    'Green panel size: ' + IntToStr(TempPanel.Width) + ' : ' + IntToStr(TempPanel.Height) + #13#10#13#10 +
+                    'When "Edit mode" is enabled (from pop-up menu), clicking a primitive here on preview, selects it in the Object Inspector.';
 end;
 
 
@@ -1647,6 +1692,8 @@ begin
         PreviewBmp.Canvas.Font.Size := CfgFont_Size;
         PreviewBmp.Canvas.Font.Style := CfgFont_Style;
 
+        PmtvCompositor.HighContrastOption1 := MenuItem_HighContrastOption1.Checked;
+        PmtvCompositor.HighContrastOption2 := MenuItem_HighContrastOption2.Checked;
         PmtvCompositor.PreviewPrimitive(PreviewBmp, UsingHighContrast, FPrimitives, i);
 
         CfgPenColor := PreviewBmp.Canvas.Pen.Color;
