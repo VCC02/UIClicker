@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2023 VCC
+    Copyright (C) 2025 VCC
     creation date: Mar 2023
     initial release date: 11 Mar 2023
 
@@ -58,9 +58,12 @@ const
   CPropCountClkImagePrimitive = 10;
   CPropCountClkLinePrimitive = 5;
   CPropCountClkRectPrimitive = 5;
+  CPropCountClkRoundedRectPrimitive = 7;
   CPropCountClkGradientFillPrimitive = 7;
   CPropCountClkTextPrimitive = 3;
   CPropCountClkDonutSectorPrimitive = 12;
+  CPropCountClkPolygonPrimitive = 9;    //4 * 2 + 1     //modify HandleOnOIGetListPropertyItemCount, if adding new properties
+  CPropCountClkPolyBezierPrimitive = 9; //4 * 2 + 1     //modify HandleOnOIGetListPropertyItemCount, if adding new properties
 
   CClkPrimitivesTypeCounts: array[0..CPrimitiveTypeCount - 1] of Integer = (
     CPropCountClkSetPenPrimitive,
@@ -70,9 +73,12 @@ const
     CPropCountClkImagePrimitive,
     CPropCountClkLinePrimitive,
     CPropCountClkRectPrimitive,
+    CPropCountClkRoundedRectPrimitive,
     CPropCountClkGradientFillPrimitive,
     CPropCountClkTextPrimitive,
-    CPropCountClkDonutSectorPrimitive
+    CPropCountClkDonutSectorPrimitive,
+    CPropCountClkPolygonPrimitive,
+    CPropCountClkPolyBezierPrimitive
   );
 
 
@@ -143,6 +149,16 @@ const
     (Name: 'ExtendToEndpointCorner'; EditorType: etText)
   );
 
+  CRoundedRectPrimitiveProperties: array[0..CPropCountClkRoundedRectPrimitive - 1] of TOIPropDef = (
+    (Name: 'X1'; EditorType: etSpinText),
+    (Name: 'Y1'; EditorType: etSpinText),
+    (Name: 'X2'; EditorType: etSpinText),
+    (Name: 'Y2'; EditorType: etSpinText),
+    (Name: 'RX'; EditorType: etSpinText),
+    (Name: 'RY'; EditorType: etSpinText),
+    (Name: 'ExtendToEndpointCorner'; EditorType: etText)
+  );
+
   CGradientFillPrimitiveProperties: array[0..CPropCountClkGradientFillPrimitive - 1] of TOIPropDef = (
     (Name: 'X1'; EditorType: etSpinText),
     (Name: 'Y1'; EditorType: etSpinText),
@@ -172,6 +188,30 @@ const
     (Name: 'EndColorFG'; EditorType: etColorCombo),
     (Name: 'StartColorBG'; EditorType: etColorCombo),
     (Name: 'EndColorBG'; EditorType: etColorCombo)
+  );
+
+  CPolygonPrimitiveProperties: array[0..CPropCountClkPolygonPrimitive - 1] of TOIPropDef = (
+    (Name: 'Reserved'; EditorType: etText),
+    (Name: 'X[0]'; EditorType: etSpinText),
+    (Name: 'Y[0]'; EditorType: etSpinText),
+    (Name: 'X[1]'; EditorType: etSpinText),
+    (Name: 'Y[1]'; EditorType: etSpinText),
+    (Name: 'X[2]'; EditorType: etSpinText),
+    (Name: 'Y[2]'; EditorType: etSpinText),
+    (Name: 'X[3]'; EditorType: etSpinText),
+    (Name: 'Y[3]'; EditorType: etSpinText)
+  );
+
+  CPolyBezierPrimitiveProperties: array[0..CPropCountClkPolyBezierPrimitive - 1] of TOIPropDef = (
+    (Name: 'Filled'; EditorType: etText),
+    (Name: 'X[0]'; EditorType: etSpinText),
+    (Name: 'Y[0]'; EditorType: etSpinText),
+    (Name: 'X[1]'; EditorType: etSpinText),
+    (Name: 'Y[1]'; EditorType: etSpinText),
+    (Name: 'X[2]'; EditorType: etSpinText),
+    (Name: 'Y[2]'; EditorType: etSpinText),
+    (Name: 'X[3]'; EditorType: etSpinText),
+    (Name: 'Y[3]'; EditorType: etSpinText)
   );
 
   CSetPenPrimitive_Color_PropIndex = 0;
@@ -222,9 +262,12 @@ const
     @CImagePrimitiveProperties,
     @CLinePrimitiveProperties,
     @CRectPrimitiveProperties,
+    @CRoundedRectPrimitiveProperties,
     @CGradientFillPrimitiveProperties,
     @CTextPrimitiveProperties,
-    @CDonutSectorPrimitiveProperties
+    @CDonutSectorPrimitiveProperties,
+    @CPolygonPrimitiveProperties,
+    @CPolyBezierPrimitiveProperties
   );
 
   CSettingsClkPropCount = 2;
@@ -239,9 +282,12 @@ const
   function GetPrimitiveValueStr_Image(var APrimitive: TPrimitiveRec; APropertyIndex: Integer): string;
   function GetPrimitiveValueStr_Line(var APrimitive: TPrimitiveRec; APropertyIndex: Integer): string;
   function GetPrimitiveValueStr_Rect(var APrimitive: TPrimitiveRec; APropertyIndex: Integer): string;
+  function GetPrimitiveValueStr_RoundedRect(var APrimitive: TPrimitiveRec; APropertyIndex: Integer): string;
   function GetPrimitiveValueStr_GradientFill(var APrimitive: TPrimitiveRec; APropertyIndex: Integer): string;
   function GetPrimitiveValueStr_Text(var APrimitive: TPrimitiveRec; APropertyIndex: Integer): string;
   function GetPrimitiveValueStr_DonutSector(var APrimitive: TPrimitiveRec; APropertyIndex: Integer): string;
+  function GetPrimitiveValueStr_Polygon(var APrimitive: TPrimitiveRec; APropertyIndex: Integer): string;
+  //function GetPrimitiveValueStr_PolyBezier(var APrimitive: TPrimitiveRec; APropertyIndex: Integer): string;  //same as GetPrimitiveValueStr_Polygon
 {$ENDIF}
 
 
@@ -253,9 +299,12 @@ const
   procedure SetPrimitiveValueStr_Image(var APrimitive: TPrimitiveRec; NewValue: string; APropertyIndex: Integer);
   procedure SetPrimitiveValueStr_Line(var APrimitive: TPrimitiveRec; NewValue: string; APropertyIndex: Integer);
   procedure SetPrimitiveValueStr_Rect(var APrimitive: TPrimitiveRec; NewValue: string; APropertyIndex: Integer);
+  procedure SetPrimitiveValueStr_RoundedRect(var APrimitive: TPrimitiveRec; NewValue: string; APropertyIndex: Integer);
   procedure SetPrimitiveValueStr_GradientFill(var APrimitive: TPrimitiveRec; NewValue: string; APropertyIndex: Integer);
   procedure SetPrimitiveValueStr_Text(var APrimitive: TPrimitiveRec; NewValue: string; APropertyIndex: Integer);
   procedure SetPrimitiveValueStr_DonutSector(var APrimitive: TPrimitiveRec; NewValue: string; APropertyIndex: Integer);
+  procedure SetPrimitiveValueStr_Polygon(var APrimitive: TPrimitiveRec; NewValue: string; APropertyIndex: Integer);
+  //procedure SetPrimitiveValueStr_PolyBezier(var APrimitive: TPrimitiveRec; NewValue: string; APropertyIndex: Integer);  //same as SetPrimitiveValueStr_Polygon
 {$ENDIF}
 
 
@@ -266,9 +315,12 @@ procedure FillInDefaultValuesToPrimitive_SetFont(var APrimitive: TPrimitiveRec);
 procedure FillInDefaultValuesToPrimitive_Image(var APrimitive: TPrimitiveRec);
 procedure FillInDefaultValuesToPrimitive_Line(var APrimitive: TPrimitiveRec);
 procedure FillInDefaultValuesToPrimitive_Rect(var APrimitive: TPrimitiveRec);
+procedure FillInDefaultValuesToPrimitive_RoundedRect(var APrimitive: TPrimitiveRec);
 procedure FillInDefaultValuesToPrimitive_GradientFill(var APrimitive: TPrimitiveRec);
 procedure FillInDefaultValuesToPrimitive_Text(var APrimitive: TPrimitiveRec);
 procedure FillInDefaultValuesToPrimitive_DonutSector(var APrimitive: TPrimitiveRec);
+procedure FillInDefaultValuesToPrimitive_Polygon(var APrimitive: TPrimitiveRec);
+procedure FillInDefaultValuesToPrimitive_PolyBezier(var APrimitive: TPrimitiveRec);
 
 
 type
@@ -285,9 +337,12 @@ const
     @FillInDefaultValuesToPrimitive_Image,
     @FillInDefaultValuesToPrimitive_Line,
     @FillInDefaultValuesToPrimitive_Rect,
+    @FillInDefaultValuesToPrimitive_RoundedRect,
     @FillInDefaultValuesToPrimitive_GradientFill,
     @FillInDefaultValuesToPrimitive_Text,
-    @FillInDefaultValuesToPrimitive_DonutSector
+    @FillInDefaultValuesToPrimitive_DonutSector,
+    @FillInDefaultValuesToPrimitive_Polygon,
+    @FillInDefaultValuesToPrimitive_PolyBezier
   );
 
 
@@ -299,9 +354,12 @@ const
     @GetPrimitiveValueStr_Image,
     @GetPrimitiveValueStr_Line,
     @GetPrimitiveValueStr_Rect,
+    @GetPrimitiveValueStr_RoundedRect,
     @GetPrimitiveValueStr_GradientFill,
     @GetPrimitiveValueStr_Text,
-    @GetPrimitiveValueStr_DonutSector
+    @GetPrimitiveValueStr_DonutSector,
+    @GetPrimitiveValueStr_Polygon,
+    @GetPrimitiveValueStr_Polygon
   );
 
 
@@ -313,9 +371,12 @@ const
     @SetPrimitiveValueStr_Image,
     @SetPrimitiveValueStr_Line,
     @SetPrimitiveValueStr_Rect,
+    @SetPrimitiveValueStr_RoundedRect,
     @SetPrimitiveValueStr_GradientFill,
     @SetPrimitiveValueStr_Text,
-    @SetPrimitiveValueStr_DonutSector
+    @SetPrimitiveValueStr_DonutSector,
+    @SetPrimitiveValueStr_Polygon,
+    @SetPrimitiveValueStr_Polygon
   );
 
 const
@@ -386,6 +447,16 @@ const
     0   //ExtendToEndpointCorner: string;
   );
 
+  CRoundedRectEnumCounts: array[0..CPropCountClkRoundedRectPrimitive - 1] of Integer = (
+    0,  //X1: string;
+    0,  //Y1: string;
+    0,  //X2: string;
+    0,  //Y2: string;
+    0,  //RX: string;
+    0,  //RY: string;
+    0   //ExtendToEndpointCorner: string;
+  );
+
   CGradientFillEnumCounts: array[0..CPropCountClkGradientFillPrimitive - 1] of Integer = (
     0,  //X1: string;
     0,  //X2: string;
@@ -417,6 +488,18 @@ const
     0   //EndColorBG: string;  // TColor
   );
 
+  CPolygonEnumCounts: array[0..CPropCountClkPolygonPrimitive - 1] of Integer = (
+    0,  //Filled: string;
+    0,  //X: string;
+    0,  //Y: string;
+    0,  //X: string;
+    0,  //Y: string;
+    0,  //X: string;
+    0,  //Y: string;
+    0,  //X: string;
+    0   //Y: string;
+  );
+
 
   CPrimitivesPropEnumCounts: array[0..CPrimitiveTypeCount - 1] of PArrayOfEnumCounts = (
     @CSetPenEnumCounts,
@@ -426,9 +509,12 @@ const
     @CImageEnumCounts,
     @CLineEnumCounts,
     @CRectEnumCounts,
+    @CRoundedRectEnumCounts,
     @CGradientFillEnumCounts,
     @CTextEnumCounts,
-    @CDonutSectorEnumCounts
+    @CDonutSectorEnumCounts,
+    @CPolygonEnumCounts,
+    @CPolygonEnumCounts
   );
 
 
@@ -499,6 +585,16 @@ const
     nil  //ExtendToEndpointCorner: string;
   );
 
+  CRoundedRectEnumStrings: array[0..CPropCountClkRoundedRectPrimitive - 1] of PArrayOfString = (
+    nil, //X1: string;
+    nil, //Y1: string;
+    nil, //X2: string;
+    nil, //Y2: string;
+    nil, //RX: string;
+    nil, //RY: string;
+    nil  //ExtendToEndpointCorner: string;
+  );
+
   CGradientFillEnumStrings: array[0..CPropCountClkGradientFillPrimitive - 1] of PArrayOfString = (
     nil, //X1: string;
     nil, //X2: string;
@@ -530,6 +626,18 @@ const
     nil  //EndColorBG: string;  // TColor
   );
 
+  CPolygonEnumStrings: array[0..CPropCountClkPolygonPrimitive - 1] of PArrayOfString = (
+    nil, //Filled: string;
+    nil, //X: string;
+    nil, //Y: string;
+    nil, //X: string;
+    nil, //Y: string;
+    nil, //X: string;
+    nil, //Y: string;
+    nil, //X: string;
+    nil  //Y: string;
+  );
+
   CPrimitivesPropEnumStrings: array[0..CPrimitiveTypeCount - 1] of PArrayOfEnumStrings = (
     @CSetPenEnumStrings,
     @CSetBrushEnumStrings,
@@ -538,9 +646,12 @@ const
     @CImageEnumStrings,
     @CLineEnumStrings,
     @CRectEnumStrings,
+    @CRoundedRectEnumStrings,
     @CGradientFillEnumStrings,
     @CTextEnumStrings,
-    @CDonutSectorEnumStrings
+    @CDonutSectorEnumStrings,
+    @CPolygonEnumStrings,
+    @CPolygonEnumStrings
   );
 
 
@@ -671,6 +782,22 @@ implementation
   end;
 
 
+  function GetPrimitiveValueStr_RoundedRect(var APrimitive: TPrimitiveRec; APropertyIndex: Integer): string;
+  begin
+    case APropertyIndex of
+      0: Result := APrimitive.ClkRoundedRect.X1;
+      1: Result := APrimitive.ClkRoundedRect.Y1;
+      2: Result := APrimitive.ClkRoundedRect.X2;
+      3: Result := APrimitive.ClkRoundedRect.Y2;
+      4: Result := APrimitive.ClkRoundedRect.RX;
+      5: Result := APrimitive.ClkRoundedRect.RY;
+      6: Result := APrimitive.ClkRoundedRect.ExtendToEndpointCorner;
+      else
+        Result := 'unknown';
+    end;
+  end;
+
+
   function GetPrimitiveValueStr_GradientFill(var APrimitive: TPrimitiveRec; APropertyIndex: Integer): string;
   begin
     case APropertyIndex of
@@ -718,6 +845,54 @@ implementation
         Result := 'unknown';
     end;
   end;
+
+
+  function GetPrimitiveValueStr_Polygon(var APrimitive: TPrimitiveRec; APropertyIndex: Integer): string;
+  var
+    ListOfX: TStringList;
+    ListOfY: TStringList;
+  begin
+    if APropertyIndex < 0 then
+    begin
+      Result := '0';
+      Exit;
+    end;
+
+    if APropertyIndex = 0 then
+    begin
+      Result := APrimitive.ClkPolygon.Filled;
+      Exit;
+    end;
+
+    Dec(APropertyIndex);  //Dec by number of fixed properties (e.g. "Filled"), before the array.
+
+    ListOfX := TStringList.Create;
+    ListOfY := TStringList.Create;
+    try
+      ListOfX.LineBreak := CPolygonPointLineBreak;
+      ListOfY.LineBreak := CPolygonPointLineBreak;
+      ListOfX.Text := APrimitive.ClkPolygon.XPoints;  //even   0, 2, 4, 6..
+      ListOfY.Text := APrimitive.ClkPolygon.YPoints;  //odd    1, 3, 5, 7..
+
+      try
+        if APropertyIndex and 1 = 0 then //even
+          Result := ListOfX.Strings[APropertyIndex shr 1]
+        else                             //odd
+          Result := ListOfY.Strings[APropertyIndex shr 1];
+      except
+        Result := 'Ex on Idx ' + IntToStr(APropertyIndex);
+      end;
+    finally
+      ListOfX.Free;
+      ListOfY.Free;
+    end;
+  end;
+
+
+  //function GetPrimitiveValueStr_PolyBezier(var APrimitive: TPrimitiveRec; APropertyIndex: Integer): string;
+  //begin
+  //  Result := GetPrimitiveValueStr_Polygon(APrimitive, APropertyIndex);
+  //end;
 {$ENDIF}
 
 
@@ -831,6 +1006,22 @@ implementation
   end;
 
 
+  procedure SetPrimitiveValueStr_RoundedRect(var APrimitive: TPrimitiveRec; NewValue: string; APropertyIndex: Integer);
+  begin
+    case APropertyIndex of
+      0: APrimitive.ClkRoundedRect.X1 := NewValue;
+      1: APrimitive.ClkRoundedRect.Y1 := NewValue;
+      2: APrimitive.ClkRoundedRect.X2 := NewValue;
+      3: APrimitive.ClkRoundedRect.Y2 := NewValue;
+      4: APrimitive.ClkRoundedRect.RX := NewValue;
+      5: APrimitive.ClkRoundedRect.RY := NewValue;
+      6: APrimitive.ClkRoundedRect.ExtendToEndpointCorner := NewValue;
+      else
+        ;
+    end;
+  end;
+
+
   procedure SetPrimitiveValueStr_GradientFill(var APrimitive: TPrimitiveRec; NewValue: string; APropertyIndex: Integer);
   begin
     case APropertyIndex of
@@ -876,6 +1067,48 @@ implementation
       11: APrimitive.ClkDonutSector.EndColorBG := NewValue;
       else
         ;
+    end;
+  end;
+
+
+  procedure SetPrimitiveValueStr_Polygon(var APrimitive: TPrimitiveRec; NewValue: string; APropertyIndex: Integer);
+  var
+    ListOfX: TStringList;
+    ListOfY: TStringList;
+  begin
+    if APropertyIndex < 0 then
+      Exit;
+
+    if APropertyIndex = 0 then
+    begin
+      APrimitive.ClkPolygon.Filled := NewValue;
+      Exit;
+    end;
+
+    Dec(APropertyIndex);  //Dec by number of fixed properties (e.g. "Filled"), before the array.
+
+    ListOfX := TStringList.Create;
+    ListOfY := TStringList.Create;
+    try
+      ListOfX.LineBreak := CPolygonPointLineBreak;
+      ListOfY.LineBreak := CPolygonPointLineBreak;
+      ListOfX.Text := APrimitive.ClkPolygon.XPoints;  //even   0, 2, 4, 6..
+      ListOfY.Text := APrimitive.ClkPolygon.YPoints;  //odd    1, 3, 5, 7..
+
+      try
+        if APropertyIndex and 1 = 0 then //even
+          ListOfX.Strings[APropertyIndex shr 1] := NewValue
+        else                             //odd
+          ListOfY.Strings[APropertyIndex shr 1] := NewValue;
+      except
+        //
+      end;
+
+      APrimitive.ClkPolygon.XPoints := ListOfX.Text;
+      APrimitive.ClkPolygon.YPoints := ListOfY.Text;
+    finally
+      ListOfX.Free;
+      ListOfY.Free;
     end;
   end;
 {$ENDIF}
@@ -958,6 +1191,18 @@ begin
 end;
 
 
+procedure FillInDefaultValuesToPrimitive_RoundedRect(var APrimitive: TPrimitiveRec);
+begin
+  APrimitive.ClkRoundedRect.X1 := '24';
+  APrimitive.ClkRoundedRect.Y1 := '26';
+  APrimitive.ClkRoundedRect.X2 := '44';
+  APrimitive.ClkRoundedRect.Y2 := '36';
+  APrimitive.ClkRoundedRect.RX := '3';
+  APrimitive.ClkRoundedRect.RY := '3';
+  APrimitive.ClkRoundedRect.ExtendToEndpointCorner := '0'; //False
+end;
+
+
 procedure FillInDefaultValuesToPrimitive_GradientFill(var APrimitive: TPrimitiveRec);
 begin
   APrimitive.ClkGradientFill.X1 := '4';
@@ -992,6 +1237,22 @@ begin
   APrimitive.ClkDonutSector.EndColorFG := '1FFFFFFF';
   APrimitive.ClkDonutSector.StartColorBG := '008080'; //clOlive;
   APrimitive.ClkDonutSector.EndColorBG := '808000'; //clTeal;
+end;
+
+
+procedure FillInDefaultValuesToPrimitive_Polygon(var APrimitive: TPrimitiveRec);
+begin
+  APrimitive.ClkPolygon.Filled := '1';
+  APrimitive.ClkPolygon.XPoints := CPolygonDefaultXPoints;
+  APrimitive.ClkPolygon.YPoints := CPolygonDefaultYPoints;
+end;
+
+
+procedure FillInDefaultValuesToPrimitive_PolyBezier(var APrimitive: TPrimitiveRec);
+begin
+  APrimitive.ClkPolygon.Filled := '1';
+  APrimitive.ClkPolygon.XPoints := CPolyBezierDefaultXPoints;
+  APrimitive.ClkPolygon.YPoints := CPolyBezierDefaultYPoints;
 end;
 
 end.

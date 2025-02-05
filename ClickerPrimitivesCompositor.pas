@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2023 VCC
+    Copyright (C) 2025 VCC
     creation date: Apr 2023
     initial release date: 09 Apr 2023
 
@@ -75,6 +75,10 @@ implementation
 
 uses
   FPCanvas, Math;
+
+
+type
+  TPointArr = array of TPoint;
 
 
 procedure ComposePrimitive_SetPen(Sender: TPrimitivesCompositor; ABmp: TBitmap; var APrimitive: TPrimitiveRec; AHighContrast: TColor = -1);
@@ -268,11 +272,45 @@ begin
 end;
 
 
+procedure ComposePrimitive_RoundedRect(Sender: TPrimitivesCompositor; ABmp: TBitmap; var APrimitive: TPrimitiveRec; AHighContrast: TColor = -1);
+var
+  x1, y1, x2, y2, rx, ry: Integer;
+  EvalExtendToEndpointCorner: string;
+begin
+  EvalExtendToEndpointCorner := Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkRect.ExtendToEndpointCorner);
+
+  x1 := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkRoundedRect.X1), 10);
+  y1 := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkRoundedRect.Y1), 20);
+  x2 := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkRoundedRect.X2), 30);
+  y2 := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkRoundedRect.Y2), 40);
+  rx := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkRoundedRect.RX), 3);
+  ry := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkRoundedRect.RY), 3);
+
+  if (StrToIntDef(EvalExtendToEndpointCorner, 0) = 1) or (UpperCase(EvalExtendToEndpointCorner) = 'TRUE') then
+  begin                 //do nothing if x1=x2 or y1=y2
+    if x1 < x2 then
+      Inc(x2);
+
+    if x1 > x2 then
+      Dec(x2);
+
+    if y1 < y2 then
+      Inc(y2);
+
+    if y1 > y2 then
+      Dec(y2);
+  end;
+
+  ABmp.Canvas.RoundRect(x1, y1, x2, y2, rx, ry);
+end;
+
+
 procedure ComposePrimitive_GradientFill(Sender: TPrimitivesCompositor; ABmp: TBitmap; var APrimitive: TPrimitiveRec; AHighContrast: TColor = -1);
 var
   TempRect: TRect;
   StartColor, StopColor: TColor;
   GradientDirection: TGradientDirection;
+  GradientDirectionStr: string;
 begin
   TempRect.Left := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkGradientFill.X1), 10);
   TempRect.Top := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkGradientFill.Y1), 20);
@@ -286,11 +324,12 @@ begin
   end
   else
   begin
-    StartColor := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkGradientFill.StartColor), clLime);
-    StopColor := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkGradientFill.StopColor), clYellow);
+    StartColor := HexToInt(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkGradientFill.StartColor));
+    StopColor := HexToInt(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkGradientFill.StopColor));
   end;
 
-  GradientDirection := TGradientDirection(Ord(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkGradientFill.Direction) = '1'));
+  GradientDirectionStr := Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkGradientFill.Direction);
+  GradientDirection := TGradientDirection(Ord((GradientDirectionStr = '1') or (GradientDirectionStr = 'gdHorizontal')));
 
   ABmp.Canvas.GradientFill(TempRect, StartColor, StopColor, GradientDirection);
 end;
@@ -332,6 +371,55 @@ begin
   DrawDonutSector(ABmp.Canvas, TempCx, TempCy, TempRadius1, TempRadius2, TempPointCount,
                   TempStartAngle, TempEndAngle, TempAngleSpacing,
                   TempStartColorFG, TempEndColorFG, TempStartColorBG, TempEndColorBG);
+end;
+
+
+procedure PolygonPointsToArray(Sender: TPrimitivesCompositor; var APrimitive: TPrimitiveRec; var ADest: TPointArr);
+var
+  ListOfX, ListOfY: TStringList;
+  i: Integer;
+begin
+  try
+    ListOfX := TStringList.Create;
+    ListOfY := TStringList.Create;
+    try
+      ListOfX.LineBreak := CPolygonPointLineBreak;
+      ListOfY.LineBreak := CPolygonPointLineBreak;
+      ListOfX.Text := APrimitive.ClkPolygon.XPoints;
+      ListOfY.Text := APrimitive.ClkPolygon.YPoints;
+
+      SetLength(ADest, ListOfX.Count);
+      for i := 0 to ListOfX.Count - 1 do
+      begin
+        ADest[i].X := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(ListOfX.Strings[i]), 30);
+        ADest[i].Y := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(ListOfY.Strings[i]), 30);
+      end;
+    finally
+      ListOfX.Free;
+      ListOfY.Free;
+    end;
+  except
+  end;
+end;
+
+
+procedure ComposePrimitive_Polygon(Sender: TPrimitivesCompositor; ABmp: TBitmap; var APrimitive: TPrimitiveRec; AHighContrast: TColor = -1);
+var
+  Points: TPointArr;
+begin
+  PolygonPointsToArray(Sender, APrimitive, Points);
+  ABmp.Canvas.Polygon(Points);
+end;
+
+
+procedure ComposePrimitive_PolyBezier(Sender: TPrimitivesCompositor; ABmp: TBitmap; var APrimitive: TPrimitiveRec; AHighContrast: TColor = -1);
+var
+  IsFilled: Boolean;
+  Points: TPointArr;
+begin
+  IsFilled := Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkPolygon.Filled) = '1';
+  PolygonPointsToArray(Sender, APrimitive, Points);
+  ABmp.Canvas.PolyBezier(Points, IsFilled);
 end;
 
 
@@ -392,9 +480,12 @@ const
     @ComposePrimitive_Image,
     @ComposePrimitive_Line,
     @ComposePrimitive_Rect,
+    @ComposePrimitive_RoundedRect,
     @ComposePrimitive_GradientFill,
     @ComposePrimitive_Text,
-    @ComposePrimitive_DonutSector
+    @ComposePrimitive_DonutSector,
+    @ComposePrimitive_Polygon,
+    @ComposePrimitive_PolyBezier
   );
 
 
@@ -549,8 +640,9 @@ end;
 
 function TPrimitivesCompositor.GetMaxX(ADestCanvas: TCanvas; var APrimitives: TPrimitiveRecArr): Integer;
 var
-  i: Integer;
+  i, j: Integer;
   X, W, W2: Integer;
+  ListOfXPoints: TStringList;
 begin
   Result := 0;
 
@@ -629,15 +721,53 @@ begin
         if Result < X then
           Result := X;
       end;
-    end;
-  end;
+
+      CClkPolygon:
+      begin
+        ListOfXPoints := TStringList.Create;
+        try
+          ListOfXPoints.LineBreak := CPolygonPointLineBreak;
+          ListOfXPoints.Text := APrimitives[i].ClkPolygon.XPoints;
+
+          for j := 0 to ListOfXPoints.Count - 1 do
+          begin
+            X := StrToIntDef(DoOnEvaluateReplacementsFunc(ListOfXPoints.Strings[j]), 10);
+            if Result < X then
+              Result := X;
+          end;
+        finally
+          ListOfXPoints.Free;
+        end;
+      end;
+
+      CClkPolyBezier:
+      begin
+        //on Bezier, some of the points (i.e. editpoints) can go beyond the polygon itself
+        ListOfXPoints := TStringList.Create;
+        try
+          ListOfXPoints.LineBreak := CPolygonPointLineBreak;
+          ListOfXPoints.Text := APrimitives[i].ClkPolygon.XPoints;
+
+          for j := 0 to ListOfXPoints.Count - 1 do
+          begin
+            X := StrToIntDef(DoOnEvaluateReplacementsFunc(ListOfXPoints.Strings[j]), 10);
+            if Result < X then
+              Result := X;
+          end;
+        finally
+          ListOfXPoints.Free;
+        end;
+      end;
+    end; //case
+  end; //for
 end;
 
 
 function TPrimitivesCompositor.GetMaxY(ADestCanvas: TCanvas; var APrimitives: TPrimitiveRecArr): Integer;
 var
-  i: Integer;
+  i, j: Integer;
   Y, H, H2: Integer;
+  ListOfYPoints: TStringList;
 begin
   Result := 0;
 
@@ -716,8 +846,45 @@ begin
         if Result < Y then
           Result := Y;
       end;
-    end;
-  end;
+
+      CClkPolygon:
+      begin
+        ListOfYPoints := TStringList.Create;
+        try
+          ListOfYPoints.LineBreak := CPolygonPointLineBreak;
+          ListOfYPoints.Text := APrimitives[i].ClkPolygon.YPoints;
+
+          for j := 0 to ListOfYPoints.Count - 1 do
+          begin
+            Y := StrToIntDef(DoOnEvaluateReplacementsFunc(ListOfYPoints.Strings[j]), 10);
+            if Result < Y then
+              Result := Y;
+          end;
+        finally
+          ListOfYPoints.Free;
+        end;
+      end;
+
+      CClkPolyBezier:
+      begin
+        //on Bezier, some of the points (i.e. editpoints) can go beyond the polygon itself
+        ListOfYPoints := TStringList.Create;
+        try
+          ListOfYPoints.LineBreak := CPolygonPointLineBreak;
+          ListOfYPoints.Text := APrimitives[i].ClkPolygon.YPoints;
+
+          for j := 0 to ListOfYPoints.Count - 1 do
+          begin
+            Y := StrToIntDef(DoOnEvaluateReplacementsFunc(ListOfYPoints.Strings[j]), 10);
+            if Result < Y then
+              Result := Y;
+          end;
+        finally
+          ListOfYPoints.Free;
+        end;
+      end;
+    end; //case
+  end; //for
 end;
 
 end.

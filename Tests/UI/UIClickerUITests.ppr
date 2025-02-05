@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2024 VCC
+    Copyright (C) 2025 VCC
     creation date: Oct 2022
     initial release date: 30 Oct 2022
 
@@ -28,14 +28,16 @@ program UIClickerUITests;
 
 uses
   Interfaces, Forms, Expectations, InMemFileSystem, ObjectInspectorFrame,
-  ClickerActionsClient, ClickerUtils, ClickerActionProperties, TestHTTPAPI,
-  ClickerActionValues, TestUI, GuiTestRunner, UIActionsStuff;
+  PitstopTestRunner, ClickerActionsClient, ClickerUtils,
+  ClickerActionProperties, TestHTTPAPI, ClickerActionValues, TestUI,
+  GuiTestRunner, UIActionsStuff;
 
 {$R *.res}
 
 begin
   Application.Initialize;
   Application.CreateForm(TGuiTestRunner, TestRunner);
+  Application.CreateForm(TfrmPitstopTestRunner, frmPitstopTestRunner);
   Application.Run;
 end.
 

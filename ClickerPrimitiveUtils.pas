@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2023 VCC
+    Copyright (C) 2025 VCC
     creation date: Mar 2023
     initial release date: 11 Mar 2023
 
@@ -84,6 +84,16 @@ type
     ExtendToEndpointCorner: string;
   end;
 
+  TClkRoundedRect = record
+    X1: string;
+    X2: string;
+    RX: string;
+    Y1: string;
+    Y2: string;
+    RY: string;
+    ExtendToEndpointCorner: string;
+  end;
+
   TClkGradientFill = record
     X1: string;
     X2: string;
@@ -116,6 +126,14 @@ type
     EndColorBG: string;  // TColor
   end;
 
+  TClkPolygonPoints = record
+    Filled: string; //'0' or '1'  used on Bezier only. Simpe polygons do not have this option
+    XPoints: string; // #4#5 - separated list of values
+    YPoints: string; // #4#5 - separated list of values
+  end;
+
+  TClkPolyBezierPoints = TClkPolygonPoints;
+
 
 const
   CClkSetPenPrimitiveCmdIdx = 0;
@@ -125,9 +143,12 @@ const
   CClkImagePrimitiveCmdIdx = 4;
   CClkLinePrimitiveCmdIdx = 5;
   CClkRectPrimitiveCmdIdx = 6;
-  CClkGradientFill = 7;
-  CClkText = 8;
-  CClkDonutSector = 9;
+  CClkRoundedRectPrimitiveCmdIdx = 7;
+  CClkGradientFill = 8;
+  CClkText = 9;
+  CClkDonutSector = 10;
+  CClkPolygon = 11;
+  CClkPolyBezier = 12;
 
 
 type
@@ -149,9 +170,12 @@ type
     ClkImage: TClkImage;
     ClkLine: TClkLine;
     ClkRect: TClkRect;
+    ClkRoundedRect: TClkRoundedRect;
     ClkGradientFill: TClkGradientFill;
     ClkText: TClkText;
     ClkDonutSector: TClkDonutSector;
+    ClkPolygon: TClkPolygonPoints;
+    //ClkPolyBezier: TClkPolyBezierPoints;   //not needed, since it is the same structure as TClkPolygonPoints
   end;
 
   PPrimitiveRec = ^TPrimitiveRec;
@@ -170,9 +194,9 @@ type
 
 
 const
-  CPrimitiveTypeCount = 10;
+  CPrimitiveTypeCount = 13;
   CPrimitiveNames: array[0..CPrimitiveTypeCount - 1] of string = (
-    'SetPen', 'SetBrush', 'SetMisc', 'SetFont', 'Image', 'Line', 'Rect', 'GradientFill', 'Text', 'DonutSector');
+    'SetPen', 'SetBrush', 'SetMisc', 'SetFont', 'Image', 'Line', 'Rect', 'RoundedRect', 'GradientFill', 'Text', 'DonutSector', 'Polygon', 'PolyBezier');
 
   CPenStyleStr: array[TPenStyle] of string = ('psSolid', 'psDash', 'psDot', 'psDashDot', 'psDashDotDot', 'psinsideFrame', 'psPattern', 'psClear');
   CPenModeStr: array[TPenMode] of string = (
@@ -193,6 +217,13 @@ const
   CGradientDirectionStr: array[TGradientDirection] of string = ('gdVertical', 'gdHorizontal');
 
   CCompositorDirectionStr: array[TCompositorDirection] of string = ('cdTopBot', 'cdBotTop');
+
+  CPolygonPointLineBreak = #4#5; //expected to be two characters long
+  CPPLB = CPolygonPointLineBreak; // a short vesion, for easy concatenation
+  CPolygonDefaultXPoints: string = '10' + CPPLB + '20' + CPPLB + '30' + CPPLB + '40' + CPPLB;
+  CPolygonDefaultYPoints: string = '30' + CPPLB + '20' + CPPLB + '40' + CPPLB + '30' + CPPLB;
+  CPolyBezierDefaultXPoints: string = '10' + CPPLB + '20' + CPPLB + '30' + CPPLB + '40' + CPPLB + '70' + CPPLB + '20' + CPPLB + '40' + CPPLB + '30' + CPPLB + '20' + CPPLB + '10' + CPPLB + '-20' + CPPLB + '30' + CPPLB + '10' + CPPLB;
+  CPolyBezierDefaultYPoints: string = '130' + CPPLB + '100' + CPPLB + '150' + CPPLB + '130' + CPPLB + '140' + CPPLB + '150' + CPPLB + '160' + CPPLB + '190' + CPPLB + '140' + CPPLB + '160' + CPPLB + '150' + CPPLB + '140' + CPPLB + '130' + CPPLB;
 
 
 function PrimitiveTypeNameToIndex(AName: string): Integer;

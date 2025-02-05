@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2023 VCC
+    Copyright (C) 2025 VCC
     creation date: Dec 2019
     initial release date: 26 Jul 2022
 
@@ -123,12 +123,27 @@ begin
 end;
 
 
+procedure Get_RoundedRect_PrimitiveFromIni(AIni: TClkIniReadonlyFile; ASectionIndex: Integer; var APrimitive: TPrimitiveRec);
+begin
+  APrimitive.ClkRoundedRect.X1 := AIni.ReadString(ASectionIndex, 'X1', '5');
+  APrimitive.ClkRoundedRect.Y1 := AIni.ReadString(ASectionIndex, 'Y1', '6');
+  APrimitive.ClkRoundedRect.X2 := AIni.ReadString(ASectionIndex, 'X2', '7');
+  APrimitive.ClkRoundedRect.Y2 := AIni.ReadString(ASectionIndex, 'Y2', '8');
+  APrimitive.ClkRoundedRect.RX := AIni.ReadString(ASectionIndex, 'RX', '7');
+  APrimitive.ClkRoundedRect.RY := AIni.ReadString(ASectionIndex, 'RY', '8');
+  APrimitive.ClkRoundedRect.ExtendToEndpointCorner := AIni.ReadString(ASectionIndex, 'ExtendToEndpointCorner', '1');  //defaults to 1, because this is the behavior which makes sense
+end;
+
+
 procedure Get_GradientFill_PrimitiveFromIni(AIni: TClkIniReadonlyFile; ASectionIndex: Integer; var APrimitive: TPrimitiveRec);
 begin
   APrimitive.ClkGradientFill.X1 := AIni.ReadString(ASectionIndex, 'X1', '3');
   APrimitive.ClkGradientFill.Y1 := AIni.ReadString(ASectionIndex, 'Y1', '4');
   APrimitive.ClkGradientFill.X2 := AIni.ReadString(ASectionIndex, 'X2', '7');
   APrimitive.ClkGradientFill.Y2 := AIni.ReadString(ASectionIndex, 'Y2', '8');
+  APrimitive.ClkGradientFill.StartColor := AIni.ReadString(ASectionIndex, 'StartColor', '44CCAA');
+  APrimitive.ClkGradientFill.StopColor := AIni.ReadString(ASectionIndex, 'StopColor', 'AA4477');
+  APrimitive.ClkGradientFill.Direction := AIni.ReadString(ASectionIndex, 'Direction', 'gdVertical');
 end;
 
 
@@ -157,6 +172,22 @@ begin
 end;
 
 
+procedure Get_Polygon_PrimitiveFromIni(AIni: TClkIniReadonlyFile; ASectionIndex: Integer; var APrimitive: TPrimitiveRec);
+begin
+  APrimitive.ClkPolygon.Filled := AIni.ReadString(ASectionIndex, 'Filled', '1');  //reserved for polygon
+  APrimitive.ClkPolygon.XPoints := AIni.ReadString(ASectionIndex, 'XPoints', CPolygonDefaultXPoints);
+  APrimitive.ClkPolygon.YPoints := AIni.ReadString(ASectionIndex, 'YPoints', CPolygonDefaultYPoints);
+end;
+
+
+procedure Get_PolyBezier_PrimitiveFromIni(AIni: TClkIniReadonlyFile; ASectionIndex: Integer; var APrimitive: TPrimitiveRec);
+begin
+  APrimitive.ClkPolygon.Filled := AIni.ReadString(ASectionIndex, 'Filled', '1');
+  APrimitive.ClkPolygon.XPoints := AIni.ReadString(ASectionIndex, 'XPoints', CPolyBezierDefaultXPoints);
+  APrimitive.ClkPolygon.YPoints := AIni.ReadString(ASectionIndex, 'YPoints', CPolyBezierDefaultYPoints);
+end;
+
+
 type
   TGetPrimitiveFromIni = procedure(AIni: TClkIniReadonlyFile; ASectionIndex: Integer; var APrimitive: TPrimitiveRec);
 
@@ -169,9 +200,12 @@ const
     @Get_Image_PrimitiveFromIni,
     @Get_Line_PrimitiveFromIni,
     @Get_Rect_PrimitiveFromIni,
+    @Get_RoundedRect_PrimitiveFromIni,
     @Get_GradientFill_PrimitiveFromIni,
     @Get_Text_PrimitiveFromIni,
-    @Get_DonutSector_PrimitiveFromIni
+    @Get_DonutSector_PrimitiveFromIni,
+    @Get_Polygon_PrimitiveFromIni,
+    @Get_PolyBezier_PrimitiveFromIni
   );
 
 
@@ -306,12 +340,27 @@ begin
 end;
 
 
+procedure AddPrimitive_RoundedRectToStringList(var APrimitive: TPrimitiveRec; AStringList: TStringList);
+begin
+  AStringList.Add('X1=' + APrimitive.ClkRoundedRect.X1);
+  AStringList.Add('Y1=' + APrimitive.ClkRoundedRect.Y1);
+  AStringList.Add('X2=' + APrimitive.ClkRoundedRect.X2);
+  AStringList.Add('Y2=' + APrimitive.ClkRoundedRect.Y2);
+  AStringList.Add('RX=' + APrimitive.ClkRoundedRect.RX);
+  AStringList.Add('RY=' + APrimitive.ClkRoundedRect.RY);
+  AStringList.Add('ExtendToEndpointCorner=' + APrimitive.ClkRect.ExtendToEndpointCorner);
+end;
+
+
 procedure AddPrimitive_GradientFillToStringList(var APrimitive: TPrimitiveRec; AStringList: TStringList);
 begin
   AStringList.Add('X1=' + APrimitive.ClkGradientFill.X1);
   AStringList.Add('Y1=' + APrimitive.ClkGradientFill.Y1);
   AStringList.Add('X2=' + APrimitive.ClkGradientFill.X2);
   AStringList.Add('Y2=' + APrimitive.ClkGradientFill.Y2);
+  AStringList.Add('StartColor=' + APrimitive.ClkGradientFill.StartColor);
+  AStringList.Add('StopColor=' + APrimitive.ClkGradientFill.StopColor);
+  AStringList.Add('Direction=' + APrimitive.ClkGradientFill.Direction);
 end;
 
 
@@ -340,6 +389,14 @@ begin
 end;
 
 
+procedure AddPrimitive_PolygonToStringList(var APrimitive: TPrimitiveRec; AStringList: TStringList);
+begin
+  AStringList.Add('Filled=' + APrimitive.ClkPolygon.Filled);
+  AStringList.Add('XPoints=' + APrimitive.ClkPolygon.XPoints);
+  AStringList.Add('YPoints=' + APrimitive.ClkPolygon.YPoints);
+end;
+
+
 type
   TAddPrimitive_ToStringList = procedure(var APrimitive: TPrimitiveRec; AStringList: TStringList);
 
@@ -352,9 +409,12 @@ const
     @AddPrimitive_ImageToStringList,
     @AddPrimitive_LineToStringList,
     @AddPrimitive_RectToStringList,
+    @AddPrimitive_RoundedRectToStringList,
     @AddPrimitive_GradientFillToStringList,
     @AddPrimitive_TextToStringList,
-    @AddPrimitive_DonutSectorToStringList
+    @AddPrimitive_DonutSectorToStringList,
+    @AddPrimitive_PolygonToStringList,
+    @AddPrimitive_PolygonToStringList
   );
 
 
