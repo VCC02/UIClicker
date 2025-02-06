@@ -423,6 +423,18 @@ begin
 end;
 
 
+procedure ComposePrimitive_Ellipse(Sender: TPrimitivesCompositor; ABmp: TBitmap; var APrimitive: TPrimitiveRec; AHighContrast: TColor = -1);
+var
+  TempX, TempY, TempRX, TempRY: Integer;
+begin
+  TempX := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkEllipse.X), 30);
+  TempY := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkEllipse.Y), 30);
+  TempRX := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkEllipse.RX), 9);
+  TempRY := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkEllipse.RY), 3);
+  ABmp.Canvas.EllipseC(TempX, TempY, TempRX, TempRY);
+end;
+
+
 constructor TPrimitivesCompositor.Create;
 begin
   inherited Create;
@@ -485,7 +497,8 @@ const
     @ComposePrimitive_Text,
     @ComposePrimitive_DonutSector,
     @ComposePrimitive_Polygon,
-    @ComposePrimitive_PolyBezier
+    @ComposePrimitive_PolyBezier,
+    @ComposePrimitive_Ellipse
   );
 
 

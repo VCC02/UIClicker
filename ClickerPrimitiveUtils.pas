@@ -127,9 +127,16 @@ type
   end;
 
   TClkPolygonPoints = record
-    Filled: string; //'0' or '1'  used on Bezier only. Simpe polygons do not have this option
+    Filled: string; //'0' or '1'  used on Bezier only. Simple polygons do not have this option.
     XPoints: string; // #4#5 - separated list of values
     YPoints: string; // #4#5 - separated list of values
+  end;
+
+  TClkEllipse = record
+    X: string;
+    Y: string;
+    RX: string;
+    RY: string;
   end;
 
   TClkPolyBezierPoints = TClkPolygonPoints;
@@ -149,6 +156,7 @@ const
   CClkDonutSector = 10;
   CClkPolygon = 11;
   CClkPolyBezier = 12;
+  CClkEllipse = 13;
 
 
 type
@@ -176,6 +184,7 @@ type
     ClkDonutSector: TClkDonutSector;
     ClkPolygon: TClkPolygonPoints;
     //ClkPolyBezier: TClkPolyBezierPoints;   //not needed, since it is the same structure as TClkPolygonPoints
+    ClkEllipse: TClkEllipse;
   end;
 
   PPrimitiveRec = ^TPrimitiveRec;
@@ -194,9 +203,9 @@ type
 
 
 const
-  CPrimitiveTypeCount = 13;
+  CPrimitiveTypeCount = 14;
   CPrimitiveNames: array[0..CPrimitiveTypeCount - 1] of string = (
-    'SetPen', 'SetBrush', 'SetMisc', 'SetFont', 'Image', 'Line', 'Rect', 'RoundedRect', 'GradientFill', 'Text', 'DonutSector', 'Polygon', 'PolyBezier');
+    'SetPen', 'SetBrush', 'SetMisc', 'SetFont', 'Image', 'Line', 'Rect', 'RoundedRect', 'GradientFill', 'Text', 'DonutSector', 'Polygon', 'PolyBezier', 'Ellipse');
 
   CPenStyleStr: array[TPenStyle] of string = ('psSolid', 'psDash', 'psDot', 'psDashDot', 'psDashDotDot', 'psinsideFrame', 'psPattern', 'psClear');
   CPenModeStr: array[TPenMode] of string = (

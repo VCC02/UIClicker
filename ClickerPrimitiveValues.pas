@@ -64,6 +64,7 @@ const
   CPropCountClkDonutSectorPrimitive = 12;
   CPropCountClkPolygonPrimitive = 9;    //4 * 2 + 1     //modify HandleOnOIGetListPropertyItemCount, if adding new properties
   CPropCountClkPolyBezierPrimitive = 9; //4 * 2 + 1     //modify HandleOnOIGetListPropertyItemCount, if adding new properties
+  CPropCountClkEllipsePrimitive = 4;
 
   CClkPrimitivesTypeCounts: array[0..CPrimitiveTypeCount - 1] of Integer = (
     CPropCountClkSetPenPrimitive,
@@ -78,7 +79,8 @@ const
     CPropCountClkTextPrimitive,
     CPropCountClkDonutSectorPrimitive,
     CPropCountClkPolygonPrimitive,
-    CPropCountClkPolyBezierPrimitive
+    CPropCountClkPolyBezierPrimitive,
+    CPropCountClkEllipsePrimitive
   );
 
 
@@ -214,6 +216,13 @@ const
     (Name: 'Y[3]'; EditorType: etSpinText)
   );
 
+  CEllipsePrimitiveProperties: array[0..CPropCountClkEllipsePrimitive - 1] of TOIPropDef = (
+    (Name: 'X'; EditorType: etSpinText),
+    (Name: 'Y'; EditorType: etSpinText),
+    (Name: 'RX'; EditorType: etSpinText),
+    (Name: 'RY'; EditorType: etSpinText)
+  );
+
   CSetPenPrimitive_Color_PropIndex = 0;
   CSetPenPrimitive_Style_PropIndex = 1;
   CSetPenPrimitive_Width_PropIndex = 2;
@@ -267,7 +276,8 @@ const
     @CTextPrimitiveProperties,
     @CDonutSectorPrimitiveProperties,
     @CPolygonPrimitiveProperties,
-    @CPolyBezierPrimitiveProperties
+    @CPolyBezierPrimitiveProperties,
+    @CEllipsePrimitiveProperties
   );
 
   CSettingsClkPropCount = 2;
@@ -288,6 +298,7 @@ const
   function GetPrimitiveValueStr_DonutSector(var APrimitive: TPrimitiveRec; APropertyIndex: Integer): string;
   function GetPrimitiveValueStr_Polygon(var APrimitive: TPrimitiveRec; APropertyIndex: Integer): string;
   //function GetPrimitiveValueStr_PolyBezier(var APrimitive: TPrimitiveRec; APropertyIndex: Integer): string;  //same as GetPrimitiveValueStr_Polygon
+  function GetPrimitiveValueStr_Ellipse(var APrimitive: TPrimitiveRec; APropertyIndex: Integer): string;
 {$ENDIF}
 
 
@@ -305,6 +316,7 @@ const
   procedure SetPrimitiveValueStr_DonutSector(var APrimitive: TPrimitiveRec; NewValue: string; APropertyIndex: Integer);
   procedure SetPrimitiveValueStr_Polygon(var APrimitive: TPrimitiveRec; NewValue: string; APropertyIndex: Integer);
   //procedure SetPrimitiveValueStr_PolyBezier(var APrimitive: TPrimitiveRec; NewValue: string; APropertyIndex: Integer);  //same as SetPrimitiveValueStr_Polygon
+  procedure SetPrimitiveValueStr_Ellipse(var APrimitive: TPrimitiveRec; NewValue: string; APropertyIndex: Integer);
 {$ENDIF}
 
 
@@ -321,6 +333,7 @@ procedure FillInDefaultValuesToPrimitive_Text(var APrimitive: TPrimitiveRec);
 procedure FillInDefaultValuesToPrimitive_DonutSector(var APrimitive: TPrimitiveRec);
 procedure FillInDefaultValuesToPrimitive_Polygon(var APrimitive: TPrimitiveRec);
 procedure FillInDefaultValuesToPrimitive_PolyBezier(var APrimitive: TPrimitiveRec);
+procedure FillInDefaultValuesToPrimitive_Ellipse(var APrimitive: TPrimitiveRec);
 
 
 type
@@ -342,7 +355,8 @@ const
     @FillInDefaultValuesToPrimitive_Text,
     @FillInDefaultValuesToPrimitive_DonutSector,
     @FillInDefaultValuesToPrimitive_Polygon,
-    @FillInDefaultValuesToPrimitive_PolyBezier
+    @FillInDefaultValuesToPrimitive_PolyBezier,
+    @FillInDefaultValuesToPrimitive_Ellipse
   );
 
 
@@ -359,7 +373,8 @@ const
     @GetPrimitiveValueStr_Text,
     @GetPrimitiveValueStr_DonutSector,
     @GetPrimitiveValueStr_Polygon,
-    @GetPrimitiveValueStr_Polygon
+    @GetPrimitiveValueStr_Polygon, //Bezier
+    @GetPrimitiveValueStr_Ellipse
   );
 
 
@@ -376,7 +391,8 @@ const
     @SetPrimitiveValueStr_Text,
     @SetPrimitiveValueStr_DonutSector,
     @SetPrimitiveValueStr_Polygon,
-    @SetPrimitiveValueStr_Polygon
+    @SetPrimitiveValueStr_Polygon,  //Bezier
+    @SetPrimitiveValueStr_Ellipse
   );
 
 const
@@ -500,6 +516,13 @@ const
     0   //Y: string;
   );
 
+  CEllipseEnumCounts: array[0..CPropCountClkEllipsePrimitive - 1] of Integer = (
+    0,  //X: string;
+    0,  //Y: string;
+    0,  //RX: string;
+    0   //RY: string;
+  );
+
 
   CPrimitivesPropEnumCounts: array[0..CPrimitiveTypeCount - 1] of PArrayOfEnumCounts = (
     @CSetPenEnumCounts,
@@ -514,7 +537,8 @@ const
     @CTextEnumCounts,
     @CDonutSectorEnumCounts,
     @CPolygonEnumCounts,
-    @CPolygonEnumCounts
+    @CPolygonEnumCounts,
+    @CEllipseEnumCounts
   );
 
 
@@ -638,6 +662,13 @@ const
     nil  //Y: string;
   );
 
+  CEllipseEnumStrings: array[0..CPropCountClkEllipsePrimitive - 1] of PArrayOfString = (
+    nil, //X: string;
+    nil, //Y: string;
+    nil, //RX: string;
+    nil  //RY: string;
+  );
+
   CPrimitivesPropEnumStrings: array[0..CPrimitiveTypeCount - 1] of PArrayOfEnumStrings = (
     @CSetPenEnumStrings,
     @CSetBrushEnumStrings,
@@ -651,7 +682,8 @@ const
     @CTextEnumStrings,
     @CDonutSectorEnumStrings,
     @CPolygonEnumStrings,
-    @CPolygonEnumStrings
+    @CPolygonEnumStrings,
+    @CEllipseEnumStrings
   );
 
 
@@ -893,6 +925,19 @@ implementation
   //begin
   //  Result := GetPrimitiveValueStr_Polygon(APrimitive, APropertyIndex);
   //end;
+
+
+  function GetPrimitiveValueStr_Ellipse(var APrimitive: TPrimitiveRec; APropertyIndex: Integer): string;
+  begin
+    case APropertyIndex of
+      0: Result := APrimitive.ClkEllipse.X;
+      1: Result := APrimitive.ClkEllipse.Y;
+      2: Result := APrimitive.ClkEllipse.RX;
+      3: Result := APrimitive.ClkEllipse.RY;
+      else
+        Result := 'unknown';
+    end;
+  end;
 {$ENDIF}
 
 
@@ -1111,6 +1156,19 @@ implementation
       ListOfY.Free;
     end;
   end;
+
+
+  procedure SetPrimitiveValueStr_Ellipse(var APrimitive: TPrimitiveRec; NewValue: string; APropertyIndex: Integer);
+  begin
+    case APropertyIndex of
+      0: APrimitive.ClkEllipse.X := NewValue;
+      1: APrimitive.ClkEllipse.Y := NewValue;
+      2: APrimitive.ClkEllipse.RX := NewValue;
+      3: APrimitive.ClkEllipse.RY := NewValue;
+      else
+        ;
+    end;
+  end;
 {$ENDIF}
 
 
@@ -1253,6 +1311,15 @@ begin
   APrimitive.ClkPolygon.Filled := '1';
   APrimitive.ClkPolygon.XPoints := CPolyBezierDefaultXPoints;
   APrimitive.ClkPolygon.YPoints := CPolyBezierDefaultYPoints;
+end;
+
+
+procedure FillInDefaultValuesToPrimitive_Ellipse(var APrimitive: TPrimitiveRec);
+begin
+  APrimitive.ClkEllipse.X := '30';
+  APrimitive.ClkEllipse.Y := '30';
+  APrimitive.ClkEllipse.RX := '9';
+  APrimitive.ClkEllipse.RY := '3';
 end;
 
 end.

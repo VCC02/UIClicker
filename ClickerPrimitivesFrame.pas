@@ -86,6 +86,7 @@ type
     pnlPreview: TPanel;
     pnlvstOI: TPanel;
     pmPreview: TPopupMenu;
+    tmrMoveEditingPoints: TTimer;
     tmrDrawZoom: TTimer;
     tmrReloadOIContent: TTimer;
     procedure chkHighContrastChange(Sender: TObject);
@@ -106,6 +107,7 @@ type
     procedure pnlHorizSplitterMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure tmrDrawZoomTimer(Sender: TObject);
+    procedure tmrMoveEditingPointsTimer(Sender: TObject);
     procedure tmrReloadOIContentTimer(Sender: TObject);
   private
     FOIFrame: TfrObjectInspector;
@@ -147,6 +149,7 @@ type
     procedure ClearPreviewTabs;
     procedure ClearAllEditingPoints;
     procedure RebuildAllEditingPoints(APointCount: Integer);
+    procedure MoveEditingPointsToActiveTab;
     procedure ReassignImagePointers;
     function AddPreviewTabWithImage(ATabName: string): TImage;
     procedure CreateAllPreviewPages;
@@ -448,10 +451,7 @@ var
   i: Integer;
 begin
   for i := PageControlPreview.PageCount - 1 downto 0 do
-  begin
     PageControlPreview.Pages[i].Free;
-    FEditingPanels[i].Free;
-  end;
 
   SetLength(FEditingPanels, 0);
 end;
@@ -757,9 +757,6 @@ procedure TfrClickerPrimitives.DeleteOrderByIndex(AIndex: Integer; ADeleteTab: B
 var
   i, j: Integer;
 begin
-  if ADeleteTab then
-    FEditingPanels[AIndex].Free;
-
   for i := AIndex to Length(FOrders) - 2 do
   begin
     FOrders[i].Name := FOrders[i + 1].Name;
@@ -781,6 +778,7 @@ begin
   end;
 
   ReassignImagePointers;
+  MoveEditingPointsToActiveTab;
 end;
 
 
@@ -819,6 +817,7 @@ begin
 
   InsertOrderAtIndex(ADestIndex, Ph);
   MoveOrderTabContent(ASrcIndex, ADestIndex);
+  ReassignImagePointers;
 end;
 
 
@@ -1003,6 +1002,13 @@ begin
   finally
     TempBmp.Free;
   end;
+end;
+
+
+procedure TfrClickerPrimitives.tmrMoveEditingPointsTimer(Sender: TObject);
+begin
+  tmrMoveEditingPoints.Enabled := False;
+  MoveEditingPointsToActiveTab;
 end;
 
 
@@ -1250,12 +1256,18 @@ begin
 end;
 
 
-procedure TfrClickerPrimitives.PageControlPreviewChange(Sender: TObject);
+procedure TfrClickerPrimitives.MoveEditingPointsToActiveTab;
 var
   i: Integer;
 begin
-  //for i := 0 to Length(FEditingPrimitivePoints.EditingLabels) - 1 do
-  //  FEditingPrimitivePoints.EditingLabels[i].Parent := PageControlPreview.ActivePage;
+  for i := 0 to Length(FEditingPrimitivePoints.EditingPoints) - 1 do
+    FEditingPrimitivePoints.EditingPoints[i].Parent := FEditingPanels[PageControlPreview.ActivePageIndex];
+end;
+
+
+procedure TfrClickerPrimitives.PageControlPreviewChange(Sender: TObject);
+begin
+  tmrMoveEditingPoints.Enabled := True;
 end;
 
 
@@ -1846,6 +1858,21 @@ begin
 
       Result := PointBetweenEndpoints(X, X1, X2) and PointBetweenEndpoints(Y, Y1, Y2);
     end; //poly
+
+    CClkEllipse:
+    begin
+      cx := StrToIntDef(DoOnEvaluateReplacementsFunc(APrimitive.ClkEllipse.X), 0);
+      cy := StrToIntDef(DoOnEvaluateReplacementsFunc(APrimitive.ClkEllipse.Y), 0);
+      r1 := StrToIntDef(DoOnEvaluateReplacementsFunc(APrimitive.ClkEllipse.RX), 0);
+      r2 := StrToIntDef(DoOnEvaluateReplacementsFunc(APrimitive.ClkEllipse.RY), 0);
+
+      X1 := cx - r1;
+      X2 := cx + r1;
+      Y1 := cy - r2;
+      Y2 := cy + r2;
+
+      Result := PointBetweenEndpoints(X, X1, X2) and PointBetweenEndpoints(Y, Y1, Y2);
+    end;
   end;
 end;
 
@@ -1856,18 +1883,29 @@ var
   TopLimitLabel_ForPrimitive: TPaintedLabel;
   RightLimitLabel_ForPrimitive: TPaintedLabel;
   BottomLimitLabel_ForPrimitive: TPaintedLabel;
+  i: Integer;
 begin
   ClearPrimitiveSelection;
   FPrimitives[APrimitiveIndex].Selected := True;
   FOIFrame.SelectNode(CPropertyLevel, CCategory_Primitives, APrimitiveIndex, -1, True, True);
+
+
+  for i := 0 to Length(FOrders) - 1 do
+  begin
+    GetSelectionLabelsByOrderIndex(i,
+                                   TLabel(LeftLimitLabel_ForPrimitive),
+                                   TLabel(TopLimitLabel_ForPrimitive),
+                                   TLabel(RightLimitLabel_ForPrimitive),
+                                   TLabel(BottomLimitLabel_ForPrimitive));
+
+    SelectPrimitiveOnPreviewImage(FPrimitives[APrimitiveIndex].PrimitiveType, APrimitiveIndex, i, LeftLimitLabel_ForPrimitive, TopLimitLabel_ForPrimitive, RightLimitLabel_ForPrimitive, BottomLimitLabel_ForPrimitive);
+  end;
 
   GetSelectionLabelsByOrderIndex(AOrderIndex,
                                  TLabel(LeftLimitLabel_ForPrimitive),
                                  TLabel(TopLimitLabel_ForPrimitive),
                                  TLabel(RightLimitLabel_ForPrimitive),
                                  TLabel(BottomLimitLabel_ForPrimitive));
-
-  SelectPrimitiveOnPreviewImage(FPrimitives[APrimitiveIndex].PrimitiveType, APrimitiveIndex, AOrderIndex, LeftLimitLabel_ForPrimitive, TopLimitLabel_ForPrimitive, RightLimitLabel_ForPrimitive, BottomLimitLabel_ForPrimitive);
 
   FEditingPrimitivePoints.OrderIndex := AOrderIndex;
   FEditingPrimitivePoints.SelectedPrimitiveIndex := APrimitiveIndex;
@@ -2279,8 +2317,16 @@ begin
 
     CCategory_Orders:
     begin
-      Result := FOrders[APropertyIndex].Name;
-      AEditorType := etTextWithArrow;
+      if APropertyIndex > Length(FOrders) - 1 then
+      begin
+        Result := 'bug';
+        AEditorType := etNone;
+      end
+      else
+      begin
+        Result := FOrders[APropertyIndex].Name;
+        AEditorType := etTextWithArrow;
+      end;
     end;
 
     CCategory_Settings:
@@ -3160,6 +3206,13 @@ begin
 
     CClkPolygon, CClkPolyBezier:
       ; //nothing to update for polygons
+
+    CClkEllipse:
+    begin
+      RebuildAllEditingPoints(1);
+      FEditingPrimitivePoints.EditingPoints[0].Left := (ALeftLimitLabel.Left + ARightLimitLabel.Left) shr 1 - CEditingPointOffset;
+      FEditingPrimitivePoints.EditingPoints[0].Top := (ATopLimitLabel.Top + ABottomLimitLabel.Top) shr 1 - CEditingPointOffset;
+    end;
   end; //case
 end;
 
@@ -3319,6 +3372,24 @@ begin
       SetLimitLabelFromPolygon(APrimitiveIndex, ALeftLimitLabel, ATopLimitLabel, ARightLimitLabel, ABottomLimitLabel);
       //
     end; //Polygon
+
+    CClkEllipse:
+    begin
+      cx := StrToIntDef(DoOnEvaluateReplacementsFunc(FPrimitives[APrimitiveIndex].ClkEllipse.X), 0);
+      cy := StrToIntDef(DoOnEvaluateReplacementsFunc(FPrimitives[APrimitiveIndex].ClkEllipse.Y), 0);
+      r1 := StrToIntDef(DoOnEvaluateReplacementsFunc(FPrimitives[APrimitiveIndex].ClkEllipse.RX), 9);
+      r2 := StrToIntDef(DoOnEvaluateReplacementsFunc(FPrimitives[APrimitiveIndex].ClkEllipse.RY), 3);
+
+      x1 := cx - r1;
+      x2 := cx + r1;
+      y1 := cy - r2;
+      y2 := cy + r2;
+
+      ALeftLimitLabel.Left := x1;
+      ATopLimitLabel.Top := y1;
+      ARightLimitLabel.Left := x2;
+      ABottomLimitLabel.Top := y2;
+    end;
   end; //case
 end;
 
@@ -3462,6 +3533,7 @@ var
   TempBmp: TBitmap;
   TextSize: TSize;
   cx, cy, r1, r2, rmax, x1, x2, y1, y2: Integer;
+  i: Integer;
   TempImage: TImage;
 
   FLeftLimitLabel_ForPrimitive: TPaintedLabel;
@@ -3473,12 +3545,6 @@ begin
 
   if Length(FOrders) = 0 then
     Exit;
-
-  GetSelectionLabelsByOrderIndex(0,
-                                   TLabel(FLeftLimitLabel_ForPrimitive),
-                                   TLabel(FTopLimitLabel_ForPrimitive),
-                                   TLabel(FRightLimitLabel_ForPrimitive),
-                                   TLabel(FBottomLimitLabel_ForPrimitive));
 
   case TempPrimitiveType of
     CClkImagePrimitiveCmdIdx:
@@ -3643,110 +3709,143 @@ begin
         ListOfPoints.Free;
       end;
     end;
+
+    CClkEllipse:
+    begin
+      FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkEllipse.X := IntToStr(NewX);
+      FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkEllipse.Y := IntToStr(NewY);
+    end;
   end; //case
 
-  //update the other selection labels:
-  case TempPrimitiveType of
-    CClkImagePrimitiveCmdIdx, CClkRectPrimitiveCmdIdx, CClkRoundedRectPrimitiveCmdIdx, CClkGradientFill:
-    begin
-      case AEditingPointIndex of
-        0:
-        begin
-          FLeftLimitLabel_ForPrimitive.Left := NewX; //FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkImage.X1;
-          FTopLimitLabel_ForPrimitive.Top := NewY; //FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkImage.Y1;
-          //FRightLimitLabel_ForPrimitive.Left := FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkImage.X2;
-          //FBottomLimitLabel_ForPrimitive.Top := FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkImage.Y2;
-        end;
+  for i := 0 to Length(FOrders) - 1 do
+  begin
+    GetSelectionLabelsByOrderIndex(i,
+                                     TLabel(FLeftLimitLabel_ForPrimitive),
+                                     TLabel(FTopLimitLabel_ForPrimitive),
+                                     TLabel(FRightLimitLabel_ForPrimitive),
+                                     TLabel(FBottomLimitLabel_ForPrimitive));
 
-        1:
-        begin
-          //FLeftLimitLabel_ForPrimitive.Left := FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkImage.X1;
-          FTopLimitLabel_ForPrimitive.Top := NewY; //FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkImage.Y1;
-          FRightLimitLabel_ForPrimitive.Left := NewX; //FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkImage.X2;
-          //FBottomLimitLabel_ForPrimitive.Top := FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkImage.Y2;
-        end;
+    //update the other selection labels:
+    case TempPrimitiveType of
+      CClkImagePrimitiveCmdIdx, CClkRectPrimitiveCmdIdx, CClkRoundedRectPrimitiveCmdIdx, CClkGradientFill:
+      begin
+        case AEditingPointIndex of
+          0:
+          begin
+            FLeftLimitLabel_ForPrimitive.Left := NewX; //FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkImage.X1;
+            FTopLimitLabel_ForPrimitive.Top := NewY; //FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkImage.Y1;
+            //FRightLimitLabel_ForPrimitive.Left := FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkImage.X2;
+            //FBottomLimitLabel_ForPrimitive.Top := FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkImage.Y2;
+          end;
 
-        2:
-        begin
-          FLeftLimitLabel_ForPrimitive.Left := NewX; //FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkImage.X1;
-          //FTopLimitLabel_ForPrimitive.Top := FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkImage.Y1;
-          //FRightLimitLabel_ForPrimitive.Left := FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkImage.X2;
-          FBottomLimitLabel_ForPrimitive.Top := NewY; //FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkImage.Y2;
-        end;
+          1:
+          begin
+            //FLeftLimitLabel_ForPrimitive.Left := FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkImage.X1;
+            FTopLimitLabel_ForPrimitive.Top := NewY; //FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkImage.Y1;
+            FRightLimitLabel_ForPrimitive.Left := NewX; //FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkImage.X2;
+            //FBottomLimitLabel_ForPrimitive.Top := FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkImage.Y2;
+          end;
 
-        3:
-        begin
-          //FLeftLimitLabel_ForPrimitive.Left := FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkImage.X1;
-          //FTopLimitLabel_ForPrimitive.Top := FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkImage.Y1;
-          FRightLimitLabel_ForPrimitive.Left := NewX; //FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkImage.X2;
-          FBottomLimitLabel_ForPrimitive.Top := NewY; //FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkImage.Y2;
-        end;
-      end; //case
-    end;
+          2:
+          begin
+            FLeftLimitLabel_ForPrimitive.Left := NewX; //FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkImage.X1;
+            //FTopLimitLabel_ForPrimitive.Top := FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkImage.Y1;
+            //FRightLimitLabel_ForPrimitive.Left := FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkImage.X2;
+            FBottomLimitLabel_ForPrimitive.Top := NewY; //FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkImage.Y2;
+          end;
 
-    CClkLinePrimitiveCmdIdx:
-    begin
-      case AEditingPointIndex of
-        0:
-        begin
-          FLeftLimitLabel_ForPrimitive.Left := NewX; //FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkImage.X1;
-          FTopLimitLabel_ForPrimitive.Top := NewY; //FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkImage.Y1;
-        end;
-
-        1:
-        begin
-          FRightLimitLabel_ForPrimitive.Left := NewX; //FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkImage.X2;
-          FBottomLimitLabel_ForPrimitive.Top := NewY; //FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkImage.Y2;
-        end;
-      end; //case
-    end;
-
-    CClkText:
-    begin
-      TempText := DoOnEvaluateReplacementsFunc(FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkText.Text);
-      TempBmp := TBitmap.Create;
-      try
-        TempImage := TImage(TScrollBox(PageControlPreview.Pages[0].Tag).Tag);
-        //init to some defaults
-        TempBmp.Canvas.Font.Name := TempImage.Canvas.Font.Name;
-        TempBmp.Canvas.Font.Size := TempImage.Canvas.Font.Size;
-        TempBmp.Canvas.Font.Style := TempImage.Canvas.Font.Style;
-
-        TextSize := TempBmp.Canvas.TextExtent(TempText);
-
-        FLeftLimitLabel_ForPrimitive.Left := NewX;
-        FTopLimitLabel_ForPrimitive.Top := NewY;
-        FRightLimitLabel_ForPrimitive.Left := NewX + TextSize.cx;
-        FBottomLimitLabel_ForPrimitive.Top := NewY + TextSize.cy;
-      finally
-        TempBmp.Free;
+          3:
+          begin
+            //FLeftLimitLabel_ForPrimitive.Left := FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkImage.X1;
+            //FTopLimitLabel_ForPrimitive.Top := FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkImage.Y1;
+            FRightLimitLabel_ForPrimitive.Left := NewX; //FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkImage.X2;
+            FBottomLimitLabel_ForPrimitive.Top := NewY; //FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkImage.Y2;
+          end;
+        end; //case
       end;
-    end; //CClkText
 
-    CClkDonutSector:
-    begin
-      r1 := StrToIntDef(DoOnEvaluateReplacementsFunc(FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkDonutSector.Radius1), 30);
-      r2 := StrToIntDef(DoOnEvaluateReplacementsFunc(FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkDonutSector.Radius2), 90);
-      cx := NewX;
-      cy := NewY;
-      rmax := Max(r1, r2);
+      CClkLinePrimitiveCmdIdx:
+      begin
+        case AEditingPointIndex of
+          0:
+          begin
+            FLeftLimitLabel_ForPrimitive.Left := NewX; //FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkImage.X1;
+            FTopLimitLabel_ForPrimitive.Top := NewY; //FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkImage.Y1;
+          end;
 
-      x1 := cx - rmax;
-      x2 := cx + rmax;
-      y1 := cy - rmax;
-      y2 := cy + rmax;
+          1:
+          begin
+            FRightLimitLabel_ForPrimitive.Left := NewX; //FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkImage.X2;
+            FBottomLimitLabel_ForPrimitive.Top := NewY; //FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkImage.Y2;
+          end;
+        end; //case
+      end;
 
-      FLeftLimitLabel_ForPrimitive.Left := x1;
-      FTopLimitLabel_ForPrimitive.Top := y1;
-      FRightLimitLabel_ForPrimitive.Left := x2;
-      FBottomLimitLabel_ForPrimitive.Top := y2;
-    end;
+      CClkText:
+      begin
+        TempText := DoOnEvaluateReplacementsFunc(FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkText.Text);
+        TempBmp := TBitmap.Create;
+        try
+          TempImage := TImage(TScrollBox(PageControlPreview.Pages[0].Tag).Tag);
+          //init to some defaults
+          TempBmp.Canvas.Font.Name := TempImage.Canvas.Font.Name;
+          TempBmp.Canvas.Font.Size := TempImage.Canvas.Font.Size;
+          TempBmp.Canvas.Font.Style := TempImage.Canvas.Font.Style;
 
-    CClkPolygon, CClkPolyBezier:
-      SetLimitLabelFromPolygon(FEditingPrimitivePoints.SelectedPrimitiveIndex, FLeftLimitLabel_ForPrimitive, FTopLimitLabel_ForPrimitive, FRightLimitLabel_ForPrimitive, FBottomLimitLabel_ForPrimitive);
-  end; //case
+          TextSize := TempBmp.Canvas.TextExtent(TempText);
 
-  SetEditPointsFromLimitLabels(TempPrimitiveType, FLeftLimitLabel_ForPrimitive, FTopLimitLabel_ForPrimitive, FRightLimitLabel_ForPrimitive, FBottomLimitLabel_ForPrimitive);
+          FLeftLimitLabel_ForPrimitive.Left := NewX;
+          FTopLimitLabel_ForPrimitive.Top := NewY;
+          FRightLimitLabel_ForPrimitive.Left := NewX + TextSize.cx;
+          FBottomLimitLabel_ForPrimitive.Top := NewY + TextSize.cy;
+        finally
+          TempBmp.Free;
+        end;
+      end; //CClkText
+
+      CClkDonutSector:
+      begin
+        r1 := StrToIntDef(DoOnEvaluateReplacementsFunc(FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkDonutSector.Radius1), 30);
+        r2 := StrToIntDef(DoOnEvaluateReplacementsFunc(FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkDonutSector.Radius2), 90);
+        cx := NewX;
+        cy := NewY;
+        rmax := Max(r1, r2);
+
+        x1 := cx - rmax;
+        x2 := cx + rmax;
+        y1 := cy - rmax;
+        y2 := cy + rmax;
+
+        FLeftLimitLabel_ForPrimitive.Left := x1;
+        FTopLimitLabel_ForPrimitive.Top := y1;
+        FRightLimitLabel_ForPrimitive.Left := x2;
+        FBottomLimitLabel_ForPrimitive.Top := y2;
+      end;
+
+      CClkPolygon, CClkPolyBezier:
+        SetLimitLabelFromPolygon(FEditingPrimitivePoints.SelectedPrimitiveIndex, FLeftLimitLabel_ForPrimitive, FTopLimitLabel_ForPrimitive, FRightLimitLabel_ForPrimitive, FBottomLimitLabel_ForPrimitive);
+
+      CClkEllipse:
+      begin
+        cx := NewX;
+        cy := NewY;
+        r1 := StrToIntDef(DoOnEvaluateReplacementsFunc(FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkEllipse.RX), 9);
+        r2 := StrToIntDef(DoOnEvaluateReplacementsFunc(FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkEllipse.RY), 3);
+
+        x1 := cx - r1;
+        x2 := cx + r1;
+        y1 := cy - r2;
+        y2 := cy + r2;
+
+        FLeftLimitLabel_ForPrimitive.Left := x1;
+        FTopLimitLabel_ForPrimitive.Top := y1;
+        FRightLimitLabel_ForPrimitive.Left := x2;
+        FBottomLimitLabel_ForPrimitive.Top := y2;
+      end;
+    end; //case
+
+    SetEditPointsFromLimitLabels(TempPrimitiveType, FLeftLimitLabel_ForPrimitive, FTopLimitLabel_ForPrimitive, FRightLimitLabel_ForPrimitive, FBottomLimitLabel_ForPrimitive);
+  end;  //for
 end;
 
 

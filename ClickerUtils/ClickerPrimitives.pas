@@ -188,6 +188,15 @@ begin
 end;
 
 
+procedure Get_Ellipse_PrimitiveFromIni(AIni: TClkIniReadonlyFile; ASectionIndex: Integer; var APrimitive: TPrimitiveRec);
+begin
+  APrimitive.ClkEllipse.X := AIni.ReadString(ASectionIndex, 'X', '30');
+  APrimitive.ClkEllipse.Y := AIni.ReadString(ASectionIndex, 'Y', '30');
+  APrimitive.ClkEllipse.RX := AIni.ReadString(ASectionIndex, 'RX', '9');
+  APrimitive.ClkEllipse.RY := AIni.ReadString(ASectionIndex, 'RY', '3');
+end;
+
+
 type
   TGetPrimitiveFromIni = procedure(AIni: TClkIniReadonlyFile; ASectionIndex: Integer; var APrimitive: TPrimitiveRec);
 
@@ -205,7 +214,8 @@ const
     @Get_Text_PrimitiveFromIni,
     @Get_DonutSector_PrimitiveFromIni,
     @Get_Polygon_PrimitiveFromIni,
-    @Get_PolyBezier_PrimitiveFromIni
+    @Get_PolyBezier_PrimitiveFromIni,
+    @Get_Ellipse_PrimitiveFromIni
   );
 
 
@@ -397,6 +407,15 @@ begin
 end;
 
 
+procedure AddPrimitive_EllipseToStringList(var APrimitive: TPrimitiveRec; AStringList: TStringList);
+begin
+  AStringList.Add('X=' + APrimitive.ClkEllipse.X);
+  AStringList.Add('Y=' + APrimitive.ClkEllipse.Y);
+  AStringList.Add('RX=' + APrimitive.ClkEllipse.RX);
+  AStringList.Add('RY=' + APrimitive.ClkEllipse.RY);
+end;
+
+
 type
   TAddPrimitive_ToStringList = procedure(var APrimitive: TPrimitiveRec; AStringList: TStringList);
 
@@ -414,7 +433,8 @@ const
     @AddPrimitive_TextToStringList,
     @AddPrimitive_DonutSectorToStringList,
     @AddPrimitive_PolygonToStringList,
-    @AddPrimitive_PolygonToStringList
+    @AddPrimitive_PolygonToStringList,
+    @AddPrimitive_EllipseToStringList
   );
 
 
