@@ -1691,9 +1691,9 @@ begin
 
   if PageControlPreview.ActivePageIndex > -1 then
   begin
-    lblMouseOnPreviewImg.Caption := IntToStr(X) + ' : ' + IntToStr(Y);
+    lblMouseOnPreviewImg.Caption := IntToStr(Min(X, 8192)) + ' : ' + IntToStr(Min(Y, 8192));
     PreviewImage := TImage(TScrollBox(PageControlPreview.Pages[PageControlPreview.ActivePageIndex].Tag).Tag);
-    SetLabelsFromMouseOverPreviewImgPixelColor(PreviewImage.Canvas.Pixels[X, Y]);
+    SetLabelsFromMouseOverPreviewImgPixelColor(PreviewImage.Canvas.Pixels[Max(0, X), Max(0, Y)]);
   end;
 end;
 
@@ -2012,7 +2012,7 @@ end;
 
 procedure TfrClickerPrimitives.pnlPreviewMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
 begin
-  lblMouseOnPreviewImg.Caption := IntToStr(X) + ' : ' + IntToStr(Y);
+  lblMouseOnPreviewImg.Caption := IntToStr(Min(X, 8192)) + ' : ' + IntToStr(Min(Y, 8192));
 end;
 
 
@@ -3885,8 +3885,8 @@ begin
 
     FCurrentMousePosOnPreviewImg.X := X;
     FCurrentMousePosOnPreviewImg.Y := Y;
-    lblMouseOnPreviewImg.Caption := IntToStr(X) + ' : ' + IntToStr(Y);
-    SetLabelsFromMouseOverPreviewImgPixelColor(PreviewImage.Canvas.Pixels[X, Y]);
+    lblMouseOnPreviewImg.Caption := IntToStr(Min(X, 8192)) + ' : ' + IntToStr(Min(Y, 8192));
+    SetLabelsFromMouseOverPreviewImgPixelColor(PreviewImage.Canvas.Pixels[Max(0, X), Max(0, Y)]);
   end
   else
     Exit;

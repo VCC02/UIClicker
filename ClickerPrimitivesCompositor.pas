@@ -771,6 +771,16 @@ begin
           ListOfXPoints.Free;
         end;
       end;
+
+      CClkEllipse:
+      begin
+        X := StrToIntDef(DoOnEvaluateReplacementsFunc(APrimitives[i].ClkEllipse.X), 10);
+        W := StrToIntDef(DoOnEvaluateReplacementsFunc(APrimitives[i].ClkEllipse.RX), 30);
+        Inc(X, W - 1);
+
+        if Result < X then
+          Result := X;
+      end;
     end; //case
   end; //for
 end;
@@ -895,6 +905,16 @@ begin
         finally
           ListOfYPoints.Free;
         end;
+      end;
+
+      CClkEllipse:
+      begin
+        Y := StrToIntDef(DoOnEvaluateReplacementsFunc(APrimitives[i].ClkEllipse.Y), 10);
+        H := StrToIntDef(DoOnEvaluateReplacementsFunc(APrimitives[i].ClkEllipse.RY), 30);
+        Inc(Y, H - 1);
+
+        if Result < Y then
+          Result := Y;
       end;
     end; //case
   end; //for
