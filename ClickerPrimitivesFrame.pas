@@ -1827,7 +1827,7 @@ begin
         ListOfPoints.LineBreak := CPolygonPointLineBreak;
 
         ListOfPoints.Text := APrimitive.ClkPolygon.XPoints;
-        RebuildAllEditingPoints(ListOfPoints.Count);
+        //RebuildAllEditingPoints(ListOfPoints.Count);   //should not be required here
         MaxP := -MaxInt;
         MinP := MaxInt;
         for j := 0 to ListOfPoints.Count - 1 do
@@ -3170,15 +3170,22 @@ begin
   case APmtvType of
     CClkImagePrimitiveCmdIdx, CClkRectPrimitiveCmdIdx, CClkRoundedRectPrimitiveCmdIdx, CClkGradientFill:
     begin
-      RebuildAllEditingPoints(4);
+      RebuildAllEditingPoints(5);
       FEditingPrimitivePoints.EditingPoints[0].Left := ALeftLimitLabel.Left - CEditingPointOffset;
       FEditingPrimitivePoints.EditingPoints[0].Top := ATopLimitLabel.Top - CEditingPointOffset;
+      FEditingPrimitivePoints.EditingPoints[0].Cursor := crSizeNWSE;
       FEditingPrimitivePoints.EditingPoints[1].Left := ARightLimitLabel.Left - CEditingPointOffset;
       FEditingPrimitivePoints.EditingPoints[1].Top := ATopLimitLabel.Top - CEditingPointOffset;
+      FEditingPrimitivePoints.EditingPoints[1].Cursor := crSizeNESW;
       FEditingPrimitivePoints.EditingPoints[2].Left := ALeftLimitLabel.Left - CEditingPointOffset;
       FEditingPrimitivePoints.EditingPoints[2].Top := ABottomLimitLabel.Top - CEditingPointOffset;
+      FEditingPrimitivePoints.EditingPoints[2].Cursor := crSizeNESW;
       FEditingPrimitivePoints.EditingPoints[3].Left := ARightLimitLabel.Left - CEditingPointOffset;
       FEditingPrimitivePoints.EditingPoints[3].Top := ABottomLimitLabel.Top - CEditingPointOffset;
+      FEditingPrimitivePoints.EditingPoints[3].Cursor := crSizeNWSE;
+      FEditingPrimitivePoints.EditingPoints[4].Left := (ARightLimitLabel.Left + ALeftLimitLabel.Left) shr 1 - CEditingPointOffset;
+      FEditingPrimitivePoints.EditingPoints[4].Top := (ABottomLimitLabel.Top + ATopLimitLabel.Top) shr 1 - CEditingPointOffset;
+      FEditingPrimitivePoints.EditingPoints[4].Cursor := crSizeAll;
     end;
 
     CClkLinePrimitiveCmdIdx:
@@ -3532,7 +3539,7 @@ var
   TempText: string;
   TempBmp: TBitmap;
   TextSize: TSize;
-  cx, cy, r1, r2, rmax, x1, x2, y1, y2: Integer;
+  cx, cy, r1, r2, rmax, x1, x2, y1, y2, w, h: Integer;
   i: Integer;
   TempImage: TImage;
 
@@ -3545,6 +3552,10 @@ begin
 
   if Length(FOrders) = 0 then
     Exit;
+
+  //some init values, to prevent warnings
+  w := 20;
+  h := 10;
 
   case TempPrimitiveType of
     CClkImagePrimitiveCmdIdx:
@@ -3572,6 +3583,16 @@ begin
         begin
           FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkImage.X2 := IntToStr(NewX);
           FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkImage.Y2 := IntToStr(NewY);
+        end;
+
+        4:
+        begin
+          w := StrToIntDef(FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkImage.X2, 30) - StrToIntDef(FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkImage.X1, 10);
+          h := StrToIntDef(FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkImage.Y2, 30) - StrToIntDef(FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkImage.Y1, 10);
+          FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkImage.X1 := IntToStr(NewX - w shr 1);
+          FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkImage.Y1 := IntToStr(NewY - h shr 1);
+          FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkImage.X2 := IntToStr(NewX + w shr 1);
+          FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkImage.Y2 := IntToStr(NewY + h shr 1);
         end;
       end; //case
     end;
@@ -3619,6 +3640,16 @@ begin
           FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkRect.X2 := IntToStr(NewX);
           FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkRect.Y2 := IntToStr(NewY);
         end;
+
+        4:
+        begin
+          w := StrToIntDef(FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkRect.X2, 30) - StrToIntDef(FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkRect.X1, 10);
+          h := StrToIntDef(FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkRect.Y2, 30) - StrToIntDef(FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkRect.Y1, 10);
+          FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkRect.X1 := IntToStr(NewX - w shr 1);
+          FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkRect.Y1 := IntToStr(NewY - h shr 1);
+          FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkRect.X2 := IntToStr(NewX + w shr 1);
+          FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkRect.Y2 := IntToStr(NewY + h shr 1);
+        end;
       end;
     end;
 
@@ -3648,6 +3679,16 @@ begin
           FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkRoundedRect.X2 := IntToStr(NewX);
           FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkRoundedRect.Y2 := IntToStr(NewY);
         end;
+
+        4:
+        begin
+          w := StrToIntDef(FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkRoundedRect.X2, 30) - StrToIntDef(FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkRoundedRect.X1, 10);
+          h := StrToIntDef(FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkRoundedRect.Y2, 30) - StrToIntDef(FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkRoundedRect.Y1, 10);
+          FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkRoundedRect.X1 := IntToStr(NewX - w shr 1);
+          FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkRoundedRect.Y1 := IntToStr(NewY - h shr 1);
+          FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkRoundedRect.X2 := IntToStr(NewX + w shr 1);
+          FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkRoundedRect.Y2 := IntToStr(NewY + h shr 1);
+        end;
       end;
     end;
 
@@ -3676,6 +3717,16 @@ begin
         begin
           FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkGradientFill.X2 := IntToStr(NewX);
           FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkGradientFill.Y2 := IntToStr(NewY);
+        end;
+
+        4:
+        begin
+          w := StrToIntDef(FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkGradientFill.X2, 30) - StrToIntDef(FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkGradientFill.X1, 10);
+          h := StrToIntDef(FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkGradientFill.Y2, 30) - StrToIntDef(FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkGradientFill.Y1, 10);
+          FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkGradientFill.X1 := IntToStr(NewX - w shr 1);
+          FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkGradientFill.Y1 := IntToStr(NewY - h shr 1);
+          FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkGradientFill.X2 := IntToStr(NewX + w shr 1);
+          FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkGradientFill.Y2 := IntToStr(NewY + h shr 1);
         end;
       end;
     end;
@@ -3760,6 +3811,14 @@ begin
             //FTopLimitLabel_ForPrimitive.Top := FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkImage.Y1;
             FRightLimitLabel_ForPrimitive.Left := NewX; //FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkImage.X2;
             FBottomLimitLabel_ForPrimitive.Top := NewY; //FPrimitives[FEditingPrimitivePoints.SelectedPrimitiveIndex].ClkImage.Y2;
+          end;
+
+          4:
+          begin
+            FLeftLimitLabel_ForPrimitive.Left := NewX - w shr 1;
+            FTopLimitLabel_ForPrimitive.Top := NewY - h shr 1;
+            FRightLimitLabel_ForPrimitive.Left := NewX + w shr 1;
+            FBottomLimitLabel_ForPrimitive.Top := NewY + h shr 1;
           end;
         end; //case
       end;
