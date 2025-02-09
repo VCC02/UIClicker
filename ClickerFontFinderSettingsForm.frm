@@ -119,12 +119,12 @@ object frmClickerFontFinderSettings: TfrmClickerFontFinderSettings
   end
   object grpPreview: TGroupBox
     Left = 8
-    Height = 105
-    Top = 176
+    Height = 97
+    Top = 184
     Width = 510
-    Anchors = [akLeft, akBottom]
+    Anchors = [akLeft, akRight, akBottom]
     Caption = 'Preview'
-    ClientHeight = 85
+    ClientHeight = 77
     ClientWidth = 506
     TabOrder = 4
     object lblPreviewText: TLabel
@@ -244,6 +244,24 @@ object frmClickerFontFinderSettings: TfrmClickerFontFinderSettings
     object MenuItem_InvertCheckedState: TMenuItem
       Caption = 'Invert checked state'
       OnClick = MenuItem_InvertCheckedStateClick
+    end
+    object N4: TMenuItem
+      Caption = '-'
+    end
+    object MenuItem_ImportListOfFonts: TMenuItem
+      Caption = 'Import list of fonts from text file'
+      object MenuItem_ImportListOfFonts_ReplaceExisting: TMenuItem
+        Caption = 'Replace existing list...'
+        OnClick = MenuItem_ImportListOfFonts_ReplaceExistingClick
+      end
+      object MenuItem_ImportListOfFonts_MergeWithExisting: TMenuItem
+        Caption = 'Merge with existing list...'
+        OnClick = MenuItem_ImportListOfFonts_MergeWithExistingClick
+      end
+    end
+    object MenuItem_ExportListOfSelectedFonts: TMenuItem
+      Caption = 'Export list of selected fonts...'
+      OnClick = MenuItem_ExportListOfSelectedFontsClick
     end
   end
 end

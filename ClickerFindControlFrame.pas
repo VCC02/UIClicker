@@ -3975,6 +3975,7 @@ var
   FontFinderSettings: TFontFinderSettings;
   ListOfFontNames: TStringList;
   tk: QWord;
+  prbFontSize, prbFontName: TProgressBar;
 begin
   (Sender as TMenuItem).Enabled := False;
   try
@@ -4006,6 +4007,8 @@ begin
 
     tmrBlinkCalcErrLevel.Enabled := True;
     ListOfFontNames := TStringList.Create;
+    prbFontSize := TProgressBar.Create(Self);
+    prbFontName := TProgressBar.Create(Self);
     try
       DoOnGetFontFinderSettings(FontFinderSettings);
 
@@ -4019,11 +4022,39 @@ begin
       else
         DoOnAddToLog('Searching with font sizes: [' + IntToStr(FontFinderSettings.MinFontSize) + '..' + IntToStr(FontFinderSettings.MaxFontSize) + '] and names: ' + FastReplace_ReturnToCSV(FontFinderSettings.ListOfUsedFonts));
 
+
+      prbFontSize.Parent := TabSheetActionFindSubControlSearchArea;
+      prbFontName.Parent := TabSheetActionFindSubControlSearchArea;
+      prbFontSize.Left := lblPreviewControl_Width.Left + lblPreviewControl_Width.Width + 20;
+      prbFontName.Left := prbFontSize.Left;
+      prbFontSize.Top := lblPreviewControl_Width.Top;
+      prbFontName.Top := prbFontSize.Top;
+      prbFontSize.Width := 100;
+      prbFontName.Height := 10;
+      prbFontSize.Width := 100;
+      prbFontName.Height := 10;
+      prbFontSize.Smooth := True;
+      prbFontName.Smooth := True;
+      prbFontSize.Min := FontFinderSettings.MinFontSize;
+      prbFontName.Min := 0;
+      prbFontSize.Max := FontFinderSettings.MaxFontSize;
+      prbFontName.Max := ListOfFontNames.Count - 1;
+      prbFontSize.Visible := True;
+      prbFontName.Visible := True;
+      prbFontSize.ShowHint := True;
+      prbFontName.ShowHint := True;
+      prbFontSize.Hint := 'FontSize: ' + IntToStr(FontFinderSettings.MinFontSize) + ' to ' + IntToStr(FontFinderSettings.MaxFontSize);
+      prbFontName.Hint := 'FontName count: ' + IntToStr(ListOfFontNames.Count);
+
       tk := GetTickCount64;
       for i := FontFinderSettings.MinFontSize to FontFinderSettings.MaxFontSize do
       begin
+        prbFontSize.Position := i;
+
         for j := 0 to ListOfFontNames.Count - 1 do
         begin
+          prbFontName.Position := j;
+
           FontSize := i;
           FontName := ListOfFontNames.Strings[j];
           DoOnAddToLog('--- Testing font: ' + FontName + '    Size: ' + IntToStr(FontSize));
@@ -4081,6 +4112,8 @@ begin
       tmrBlinkCalcErrLevel.Enabled := False;
       imgCalcMinErrLevel.Visible := False;
       ListOfFontNames.Free;
+      prbFontSize.Free;
+      prbFontName.Free;
     end;
 
     FManuallyStopSearching := False;
@@ -4183,6 +4216,17 @@ begin
   FSearchAreaTopLimitLabel_ForMinErr.Show;
   FSearchAreaRightLimitLabel_ForMinErr.Show;
   FSearchAreaBottomLimitLabel_ForMinErr.Show;
+
+  if (FSearchAreaLeftLimitLabel_ForMinErr.Left = 0) and
+     (FSearchAreaTopLimitLabel_ForMinErr.Top = 0) and
+     (FSearchAreaRightLimitLabel_ForMinErr.Left = 0) and
+     (FSearchAreaBottomLimitLabel_ForMinErr.Top = 0) then
+  begin
+    FSearchAreaLeftLimitLabel_ForMinErr.Left := FSearchAreaLeftLimitLabel.Left + 10;
+    FSearchAreaTopLimitLabel_ForMinErr.Top := FSearchAreaTopLimitLabel.Top + 10;
+    FSearchAreaRightLimitLabel_ForMinErr.Left := FSearchAreaRightLimitLabel.Left - 10;
+    FSearchAreaBottomLimitLabel_ForMinErr.Top := FSearchAreaBottomLimitLabel.Top - 10;
+  end;
 end;
 
 

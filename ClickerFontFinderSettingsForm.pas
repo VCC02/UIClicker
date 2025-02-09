@@ -47,6 +47,11 @@ type
     lblFontNames: TLabel;
     lblPreviewSize: TLabel;
     lblPreviewText: TLabel;
+    MenuItem_ExportListOfSelectedFonts: TMenuItem;
+    MenuItem_ImportListOfFonts_MergeWithExisting: TMenuItem;
+    MenuItem_ImportListOfFonts_ReplaceExisting: TMenuItem;
+    MenuItem_ImportListOfFonts: TMenuItem;
+    N4: TMenuItem;
     MenuItem_InvertCheckedState: TMenuItem;
     MenuItem_InvertSelection: TMenuItem;
     N3: TMenuItem;
@@ -74,6 +79,9 @@ type
     procedure lbeSearchChange(Sender: TObject);
     procedure MenuItem_CheckAllClick(Sender: TObject);
     procedure MenuItem_CheckAllSelectedClick(Sender: TObject);
+    procedure MenuItem_ExportListOfSelectedFontsClick(Sender: TObject);
+    procedure MenuItem_ImportListOfFonts_MergeWithExistingClick(Sender: TObject);
+    procedure MenuItem_ImportListOfFonts_ReplaceExistingClick(Sender: TObject);
     procedure MenuItem_InvertCheckedStateClick(Sender: TObject);
     procedure MenuItem_InvertSelectionClick(Sender: TObject);
     procedure MenuItem_SelectAllCheckedByClearingSelectionClick(Sender: TObject
@@ -110,6 +118,8 @@ type
     procedure InvertCheckedState;
     procedure RefreshDisplayFontSettings;
     procedure HandleNodeChecked;
+    procedure RebuildListOfUsedFonts;
+    procedure ImportListOfFonts(ClearExisting: Boolean);
   public
 
   end;
@@ -208,6 +218,7 @@ begin
   RefreshDisplayFontSettings;
 end;
 
+
 procedure TfrmClickerFontFinderSettings.MenuItem_CheckAllClick(Sender: TObject);
 begin
   SetCheckedStateToAll(True, False);
@@ -218,6 +229,104 @@ procedure TfrmClickerFontFinderSettings.MenuItem_CheckAllSelectedClick(
   Sender: TObject);
 begin
   SetCheckedStateToAll(True, True);
+end;
+
+
+const
+  CTextFilesFilter = 'Text files (*.txt)|*.txt|All files (*.*)|*.*';
+
+
+procedure TfrmClickerFontFinderSettings.ImportListOfFonts(ClearExisting: Boolean);
+var
+  Node: PVirtualNode;
+  ListOfSelected: TStringList;
+  OpenDialog: TOpenDialog;
+begin
+  Node := vstFonts.GetFirst;
+  if Node = nil then
+    Exit;
+
+  ListOfSelected := TStringList.Create;
+  try
+    OpenDialog := TOpenDialog.Create(Self);
+    try
+      OpenDialog.Filter := CTextFilesFilter;
+      if not OpenDialog.Execute then
+        Exit;
+
+      ListOfSelected.LoadFromFile(OpenDialog.FileName);
+    finally
+      OpenDialog.Free;
+    end;
+
+    if ClearExisting then
+      vstFonts.ClearChecked;
+
+    repeat
+      if ListOfSelected.IndexOf(Screen.Fonts.Strings[Node^.Index]) > -1 then
+        Node^.CheckState := csCheckedNormal;
+
+      Node := Node^.NextSibling;
+    until Node = nil;
+  finally
+    ListOfSelected.Free;
+  end;
+
+  RebuildListOfUsedFonts;
+end;
+
+
+procedure TfrmClickerFontFinderSettings.MenuItem_ImportListOfFonts_ReplaceExistingClick
+  (Sender: TObject);
+begin
+  ImportListOfFonts(True);
+end;
+
+
+procedure TfrmClickerFontFinderSettings.MenuItem_ImportListOfFonts_MergeWithExistingClick
+  (Sender: TObject);
+begin
+  ImportListOfFonts(False);
+end;
+
+
+procedure TfrmClickerFontFinderSettings.MenuItem_ExportListOfSelectedFontsClick(
+  Sender: TObject);
+var
+  Node: PVirtualNode;
+  ListOfSelected: TStringList;
+  SaveDialog: TSaveDialog;
+begin
+  Node := vstFonts.GetFirst;
+  if Node = nil then
+    Exit;
+
+  ListOfSelected := TStringList.Create;
+  try
+    repeat
+      if Node^.CheckState = csCheckedNormal then
+        ListOfSelected.Add(Screen.Fonts.Strings[Node^.Index]);
+
+      Node := Node^.NextSibling;
+    until Node = nil;
+
+    SaveDialog := TSaveDialog.Create(Self);
+    try
+      SaveDialog.Filter := CTextFilesFilter;
+
+      if SaveDialog.Execute then
+      begin
+        if ExtractFileExt(SaveDialog.FileName) = '' then
+          SaveDialog.FileName := SaveDialog.FileName + '.txt';
+
+        ListOfSelected.SaveToFile(SaveDialog.FileName);
+      end;
+    finally
+      SaveDialog.Free;
+    end;
+  finally
+    ListOfSelected.Free;
+  end;
 end;
 
 
@@ -368,6 +477,24 @@ begin
 end;
 
 
+procedure TfrmClickerFontFinderSettings.RebuildListOfUsedFonts;
+var
+  Node: PVirtualNode;
+begin
+  Node := vstFonts.GetFirst;
+  if Node = nil then
+    Exit;
+
+  FListOfUsedFonts.Clear;
+  repeat
+    if Node^.CheckState = csCheckedNormal then  //add to list
+      FListOfUsedFonts.Add(Screen.Fonts.Strings[Node^.Index]);
+
+    Node := Node^.NextSibling;
+  until Node = nil;
+end;
+
+
 procedure TfrmClickerFontFinderSettings.vstFontsChecked(
   Sender: TBaseVirtualTree; Node: PVirtualNode);
 begin
@@ -440,6 +567,8 @@ begin
 
     Node := Node^.NextSibling;
   until Node = nil;
+
+  RebuildListOfUsedFonts;;
 end;
 
 
@@ -496,6 +625,8 @@ begin
 
     Node := Node^.NextSibling;
   until Node = nil;
+
+  RebuildListOfUsedFonts;;
 end;
 
 
