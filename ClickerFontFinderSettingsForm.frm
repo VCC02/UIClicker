@@ -40,6 +40,12 @@ object frmClickerFontFinderSettings: TfrmClickerFontFinderSettings
         Position = 2
         Text = 'Preview [All letters]'
         Width = 500
+      end    
+      item
+        MinWidth = 100
+        Position = 3
+        Text = 'Histogram diff'
+        Width = 100
       end>
     Header.DefaultHeight = 21
     Header.Height = 21
@@ -130,9 +136,22 @@ object frmClickerFontFinderSettings: TfrmClickerFontFinderSettings
     object lblPreviewText: TLabel
       Left = 8
       Height = 15
+      Hint = 'Preview by font settings.'
       Top = 0
       Width = 71
       Caption = 'TextToSearch'
+      ParentShowHint = False
+      ShowHint = True
+      Transparent = False
+    end
+    object imgPreviewByBmp: TImage
+      Left = 400
+      Height = 71
+      Hint = 'Preview by cropped bitmap from baackground.'
+      Top = 0
+      Width = 90
+      ParentShowHint = False
+      ShowHint = True
     end
   end
   object btnOK: TButton

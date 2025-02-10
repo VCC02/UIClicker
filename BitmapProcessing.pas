@@ -148,7 +148,10 @@ begin
 end;
 
 
-function CompFunc({const} a, b: Int64): Integer;
+type
+  THistCompFunc = function({const} a, b: Int64): Integer;  //TCompareFunc
+
+function CompFuncByColorCount({const} a, b: Int64): Integer;
 begin
   a := a shr 32;  //discard colors
   b := b shr 32;
@@ -163,7 +166,22 @@ begin
 end;
 
 
-procedure SortHistogram(var AHist, AHistColorCounts: TIntArr);
+function CompFuncByColor({const} a, b: Int64): Integer;
+begin
+  a := a and $FFFFFFFF;  //discard color counts
+  b := b and $FFFFFFFF;  //discard color counts
+
+  if a > b then
+    Result := -1
+  else
+    if a = b then
+      Result := 0
+    else
+      Result := 1;
+end;
+
+
+procedure CustomSortHistogram(var AHist, AHistColorCounts: TIntArr; ACmpFunc: THistCompFunc);
 var
   SortingArray: TInt64List;
   Item64: Int64;
@@ -175,7 +193,7 @@ begin
     for i := 0 to Length(AHist) - 1 do
       SortingArray.Add(AHist[i] or (Int64(AHistColorCounts[i]) shl 32));
 
-    SortingArray.Sort(@CompFunc);
+    SortingArray.Sort(@ACmpFunc);
 
     for i := 0 to Length(AHist) - 1 do
     begin
@@ -186,6 +204,18 @@ begin
   finally
     SortingArray.Free;
   end;
+end;
+
+
+procedure SortHistogram(var AHist, AHistColorCounts: TIntArr);  //ByColorCounts
+begin
+  CustomSortHistogram(AHist, AHistColorCounts, CompFuncByColorCount);
+end;
+
+
+procedure SortHistogramByColor(var AHist, AHistColorCounts: TIntArr);  //used for comparing two histograms
+begin
+  CustomSortHistogram(AHist, AHistColorCounts, CompFuncByColor);
 end;
 
 
@@ -351,7 +381,7 @@ var
   i, InsertIdx: Integer;
 begin
   for i := Length(AHistB) - 1 downto 0 do
-    if ColorIndexInIntArr(AHistB[i], AHistA) = - 1 then  //item from histogram B does not exist in histogram A
+    if ColorIndexInIntArr(AHistB[i], AHistA) = -1 then  //item from histogram B does not exist in histogram A
     begin
       InsertIdx := Length(AHistA); //insert as the last item (for now)
       InsertPointIntoTIntArr(AHistA, AHistB[i], InsertIdx);
@@ -359,7 +389,7 @@ begin
     end;
 
   for i := Length(AHistA) - 1 downto 0 do
-    if ColorIndexInIntArr(AHistA[i], AHistB) = - 1 then  //item from histogram A does not exist in histogram B
+    if ColorIndexInIntArr(AHistA[i], AHistB) = -1 then  //item from histogram A does not exist in histogram B
     begin
       InsertIdx := Length(AHistB); //insert as the last item (for now)
       InsertPointIntoTIntArr(AHistB, AHistA[i], InsertIdx);
@@ -371,8 +401,8 @@ begin
      (Length(AHistB) <> Length(AHistColorCountsB)) then
      raise Exception.Create('Bug: array length mismatch when preparing to compare.');
 
-  SortHistogram(AHistA, AHistColorCountsA);
-  SortHistogram(AHistB, AHistColorCountsB);
+  SortHistogramByColor(AHistA, AHistColorCountsA);
+  SortHistogramByColor(AHistB, AHistColorCountsB);
 end;
 
 

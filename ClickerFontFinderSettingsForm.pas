@@ -41,6 +41,7 @@ type
     btnCancel: TButton;
     chkShowAllFonts: TCheckBox;
     grpPreview: TGroupBox;
+    imgPreviewByBmp: TImage;
     lbeSearch: TLabeledEdit;
     lblMinSize: TLabel;
     lblMaxSize: TLabel;
@@ -110,6 +111,8 @@ type
   private
     FListOfUsedFonts: TStringList;  //only the used fonts
     FLatestCheckedNode: PVirtualNode;
+    FListOfHistogramDiffs: TStringList;
+    FPreviewBitmap: TBitmap;
 
     procedure SetVSTCheckStates;
     procedure SetCheckedStateToAll(AState, ASelectedOnly: Boolean);
@@ -120,12 +123,16 @@ type
     procedure HandleNodeChecked;
     procedure RebuildListOfUsedFonts;
     procedure ImportListOfFonts(ClearExisting: Boolean);
+    procedure ComputeHistogramDiffs;
+
+    procedure GetHistogramFromPreviewBitmap(APreviewBitmap: TBitmap; var APreviewHist, APreviewHistColorCounts: TIntArr);
+    function GetHistogramDiffByFontName(APreviewBitmap: TBitmap; AFontName: string; var APreviewHist, APreviewHistColorCounts: TIntArr): string;
   public
 
   end;
 
 
-function EditFontFinderSettings(var AFontFinderSettings: TFontFinderSettings; APreviewFont: TFont; AFGColor, ABGColor: TColor; APreviewText: string): Boolean;
+function EditFontFinderSettings(var AFontFinderSettings: TFontFinderSettings; APreviewFont: TFont; APreviewBitmap: TBitmap; AFGColor, ABGColor: TColor; APreviewText: string): Boolean;
 
 
 implementation
@@ -134,10 +141,10 @@ implementation
 
 
 uses
-  Math;
+  Math, BitmapProcessing, BitmapConv, Types;
 
 
-function EditFontFinderSettings(var AFontFinderSettings: TFontFinderSettings; APreviewFont: TFont; AFGColor, ABGColor: TColor; APreviewText: string): Boolean;
+function EditFontFinderSettings(var AFontFinderSettings: TFontFinderSettings; APreviewFont: TFont; APreviewBitmap: TBitmap; AFGColor, ABGColor: TColor; APreviewText: string): Boolean;
 var
   frmClickerFontFinderSettings: TfrmClickerFontFinderSettings;
   i: Integer;
@@ -160,9 +167,10 @@ begin
 
   frmClickerFontFinderSettings.lblPreviewText.Caption := APreviewText;
 
-  if frmClickerFontFinderSettings.FListOfUsedFonts.Count > 0 then
-    frmClickerFontFinderSettings.lblPreviewText.Font.Name := frmClickerFontFinderSettings.FListOfUsedFonts.Strings[0];
+  //if frmClickerFontFinderSettings.FListOfUsedFonts.Count > 0 then
+  //  frmClickerFontFinderSettings.lblPreviewText.Font.Name := frmClickerFontFinderSettings.FListOfUsedFonts.Strings[0]; //not sure what was the purpose of this
 
+  frmClickerFontFinderSettings.lblPreviewText.Font.Name := APreviewFont.Name;
   frmClickerFontFinderSettings.lblPreviewText.Font.Size := Max(8, APreviewFont.Size);
   frmClickerFontFinderSettings.lblPreviewText.Font.Color := AFGColor; //APreviewFont.Color;
   frmClickerFontFinderSettings.lblPreviewText.Font.Quality := APreviewFont.Quality;
@@ -173,6 +181,8 @@ begin
 
   //frmClickerFontFinderSettings.vstFonts.Hint := 'Initial fonts: ' + #13#10#13#10 + AFontFinderSettings.ListOfUsedFonts;
   frmClickerFontFinderSettings.SetVSTCheckStates;
+  frmClickerFontFinderSettings.FPreviewBitmap := APreviewBitmap;
+  frmClickerFontFinderSettings.imgPreviewByBmp.Picture.Assign(APreviewBitmap);
 
   frmClickerFontFinderSettings.ShowModal;
 
@@ -199,10 +209,17 @@ end;
 { TfrmClickerFontFinderSettings }
 
 procedure TfrmClickerFontFinderSettings.FormCreate(Sender: TObject);
+var
+  i: Integer;
 begin
   vstFonts.RootNodeCount := Screen.Fonts.Count;
   FListOfUsedFonts := TStringList.Create;
+  FListOfHistogramDiffs := TStringList.Create;
   FLatestCheckedNode := nil;
+
+  for i := 0 to Screen.Fonts.Count - 1 do
+    FListOfHistogramDiffs.Add('...');
+
   tmrStartup.Enabled := True;
 end;
 
@@ -210,6 +227,7 @@ end;
 procedure TfrmClickerFontFinderSettings.FormDestroy(Sender: TObject);
 begin
   FreeAndNil(FListOfUsedFonts);
+  FreeAndNil(FListOfHistogramDiffs);
 end;
 
 
@@ -377,6 +395,79 @@ begin
 end;
 
 
+procedure TfrmClickerFontFinderSettings.GetHistogramFromPreviewBitmap(APreviewBitmap: TBitmap; var APreviewHist, APreviewHistColorCounts: TIntArr);
+begin
+  //WipeBitmap(APreviewBitmap, lblPreviewText.Width, lblPreviewText.Height);
+
+  //APreviewBitmap.Canvas.Font.Name := lblPreviewText.Font.Name;
+  //APreviewBitmap.Canvas.Font.Size := lblPreviewText.Font.Size;
+  //APreviewBitmap.Canvas.Font.Color := lblPreviewText.Font.Color;
+  //APreviewBitmap.Canvas.Font.Quality := lblPreviewText.Font.Quality;
+  //APreviewBitmap.Canvas.Font.Style := lblPreviewText.Font.Style;
+  //APreviewBitmap.Canvas.Brush.Color := lblPreviewText.Color;
+  //
+  //APreviewBitmap.Canvas.TextOut(0, 0, lblPreviewText.Caption);
+
+  GetHistogram(APreviewBitmap, APreviewHist, APreviewHistColorCounts);
+end;
+
+
+function TfrmClickerFontFinderSettings.GetHistogramDiffByFontName(APreviewBitmap: TBitmap; AFontName: string; var APreviewHist, APreviewHistColorCounts: TIntArr): string;
+var
+  TempBitmap: TBitmap;
+  TextSize: TSize;
+  TempHist, TempHistColorCounts: TIntArr;
+  HistDiff: Double;
+begin
+  TempBitmap := TBitmap.Create;
+  try
+    TempBitmap.Canvas.Font.Name := AFontName;
+    TempBitmap.Canvas.Font.Size := lblPreviewText.Font.Size;
+    TempBitmap.Canvas.Font.Color := lblPreviewText.Font.Color;
+    TempBitmap.Canvas.Font.Quality := lblPreviewText.Font.Quality;
+    TempBitmap.Canvas.Font.Style := lblPreviewText.Font.Style;
+    TempBitmap.Canvas.Brush.Color := lblPreviewText.Color;
+    TextSize := TempBitmap.Canvas.TextExtent(lblPreviewText.Caption);
+
+    WipeBitmap(TempBitmap, TextSize.Width, TextSize.Height);
+    TempBitmap.Canvas.TextOut(0, 0, lblPreviewText.Caption);
+    SetLength(TempHist, 0);
+    SetLength(TempHistColorCounts, 0);
+    GetHistogram(TempBitmap, TempHist, TempHistColorCounts);
+
+    FillInMissingHistogramPointsToBeCompared(APreviewHist, APreviewHistColorCounts, TempHist, TempHistColorCounts);
+    HistDiff := CompareHistograms(APreviewHist, APreviewHistColorCounts, TempHist, TempHistColorCounts);
+    Result := FloatToStrF(HistDiff, ffNumber, 15, 3);
+  finally
+    TempBitmap.Free;
+  end;
+end;
+
+
+procedure TfrmClickerFontFinderSettings.ComputeHistogramDiffs;
+var
+  i: Integer;
+  //PreviewBitmap: TBitmap;
+  PreviewHist, PreviewHistColorCounts: TIntArr;
+begin
+  //PreviewBitmap := TBitmap.Create;
+  try
+    GetHistogramFromPreviewBitmap({PreviewBitmap} FPreviewBitmap, PreviewHist, PreviewHistColorCounts);
+
+    for i := 0 to Screen.Fonts.Count - 1 do
+      if FListOfUsedFonts.IndexOf(Screen.Fonts[i]) <> -1 then
+      begin
+        FListOfHistogramDiffs.Strings[i] := GetHistogramDiffByFontName({PreviewBitmap} FPreviewBitmap, Screen.Fonts[i], PreviewHist, PreviewHistColorCounts);
+        Application.ProcessMessages;
+      end
+      else
+        FListOfHistogramDiffs.Strings[i] := '-';
+  finally
+    //PreviewBitmap.Free;
+  end;
+end;
+
+
 procedure TfrmClickerFontFinderSettings.tmrCheckedTimer(Sender: TObject);
 begin
   tmrChecked.Enabled := False;
@@ -387,6 +478,8 @@ end;
 procedure TfrmClickerFontFinderSettings.tmrStartupTimer(Sender: TObject);
 begin
   tmrStartup.Enabled := False;
+
+  ComputeHistogramDiffs;
   RefreshDisplayFontSettings;
 end;
 
@@ -459,6 +552,7 @@ procedure TfrmClickerFontFinderSettings.HandleNodeChecked;
 var
   FontIsUsed: Boolean;
   FontIndexInUsedList: Integer;
+  PreviewHist, PreviewHistColorCounts: TIntArr;
 begin
   if FLatestCheckedNode = nil then
     Exit;
@@ -473,25 +567,49 @@ begin
   end
   else
     if FLatestCheckedNode^.CheckState = csCheckedNormal then  //add to list
+    begin
       FListOfUsedFonts.Add(Screen.Fonts.Strings[FLatestCheckedNode^.Index]);
+
+      GetHistogramFromPreviewBitmap({PreviewBitmap} FPreviewBitmap, PreviewHist, PreviewHistColorCounts);
+      FListOfHistogramDiffs.Strings[FLatestCheckedNode^.Index] := GetHistogramDiffByFontName({PreviewBitmap} FPreviewBitmap, Screen.Fonts[FLatestCheckedNode^.Index], PreviewHist, PreviewHistColorCounts);
+      vstFonts.InvalidateNode(FLatestCheckedNode);
+    end;
 end;
 
 
 procedure TfrmClickerFontFinderSettings.RebuildListOfUsedFonts;
 var
   Node: PVirtualNode;
+  //PreviewBitmap: TBitmap;
+  PreviewHist, PreviewHistColorCounts: TIntArr;
 begin
   Node := vstFonts.GetFirst;
   if Node = nil then
     Exit;
 
-  FListOfUsedFonts.Clear;
-  repeat
-    if Node^.CheckState = csCheckedNormal then  //add to list
-      FListOfUsedFonts.Add(Screen.Fonts.Strings[Node^.Index]);
+  GetHistogramFromPreviewBitmap({PreviewBitmap} FPreviewBitmap, PreviewHist, PreviewHistColorCounts);
 
-    Node := Node^.NextSibling;
-  until Node = nil;
+  //PreviewBitmap := TBitmap.Create;
+  try
+    FListOfUsedFonts.Clear;
+    repeat
+      if Node^.CheckState = csCheckedNormal then  //add to list
+      begin
+        FListOfUsedFonts.Add(Screen.Fonts.Strings[Node^.Index]);
+
+        if FListOfUsedFonts.IndexOf(Screen.Fonts[Node^.Index]) <> -1 then
+          FListOfHistogramDiffs.Strings[Node^.Index] := GetHistogramDiffByFontName({PreviewBitmap} FPreviewBitmap, Screen.Fonts[Node^.Index], PreviewHist, PreviewHistColorCounts)
+        else
+          FListOfHistogramDiffs.Strings[Node^.Index] := '-';
+      end;
+
+      Node := Node^.NextSibling;
+    until Node = nil;
+  finally
+    //PreviewBitmap.Free;
+  end;
+
+  vstFonts.Repaint;
 end;
 
 
@@ -520,6 +638,7 @@ begin
       0: CellText := Screen.Fonts.Strings[Node^.Index];
       1: CellText := lblPreviewText.Caption;
       2: CellText := 'The quick brown fox jumps over the lazy dog. (0123456789)';
+      3: CellText := FListOfHistogramDiffs.Strings[Node^.Index];
     end;
   except
     CellText := 'bug'; //in case the list changes on the fly

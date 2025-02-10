@@ -493,6 +493,7 @@ type
     procedure SelectDbgImgByRectangleForMinErr(X, Y: Integer);
     procedure DisplaySelectionLinesForExpectedFindLocation;
     procedure HideSelectionLinesForExpectedFindLocation;
+    procedure SetMinErrSelectionLinesToDefault;
 
     function HandleBMPTextOnGetDisplayedText: string;
     procedure HandleBMPTextOnTriggerOnControlsModified;
@@ -4028,7 +4029,7 @@ begin
       prbFontSize.Left := lblPreviewControl_Width.Left + lblPreviewControl_Width.Width + 20;
       prbFontName.Left := prbFontSize.Left;
       prbFontSize.Top := lblPreviewControl_Width.Top;
-      prbFontName.Top := prbFontSize.Top;
+      prbFontName.Top := prbFontSize.Top + prbFontSize.Height + 2;
       prbFontSize.Width := 100;
       prbFontName.Height := 10;
       prbFontSize.Width := 100;
@@ -4161,6 +4162,8 @@ var
   Options: PClkFindControlOptions;
   FGColor, BGColor: TColor;
   Idx: Integer;
+  PreviewBitmap: TBitmap;
+  SrcRect, DestRect: TRect;
 begin
   Idx := FSearchAreaSearchedTextDbgImg.Tag;
 
@@ -4192,9 +4195,34 @@ begin
     end;
   end;
 
-  DoOnGetFontFinderSettings(FontFinderSettings);
-  {if} EditFontFinderSettings(FontFinderSettings, PreviewFont, FGColor, BGColor, Options^.MatchText) {then} ;
-    DoOnSetFontFinderSettings(FontFinderSettings);
+  PreviewBitmap := TBitmap.Create;
+  try
+    SetMinErrSelectionLinesToDefault;
+
+    PreviewBitmap.Width := FSearchAreaRightLimitLabel_ForMinErr.Left - FSearchAreaLeftLimitLabel_ForMinErr.Left;
+    PreviewBitmap.Height := FSearchAreaBottomLimitLabel_ForMinErr.Top - FSearchAreaTopLimitLabel_ForMinErr.Top;
+    PreviewBitmap.Canvas.Pen.Color := clWhite;
+    PreviewBitmap.Canvas.Brush.Color := PreviewBitmap.Canvas.Pen.Color;
+    PreviewBitmap.Canvas.Rectangle(0, 0, PreviewBitmap.Width, PreviewBitmap.Height);   // -1
+
+    SrcRect.Left := FSearchAreaLeftLimitLabel_ForMinErr.Left;
+    SrcRect.Right := FSearchAreaRightLimitLabel_ForMinErr.Left;
+    SrcRect.Top := FSearchAreaTopLimitLabel_ForMinErr.Top;
+    SrcRect.Bottom := FSearchAreaBottomLimitLabel_ForMinErr.Top;
+
+    DestRect.Left := 0;
+    DestRect.Top := 0;
+    DestRect.Width := PreviewBitmap.Width;
+    DestRect.Height := PreviewBitmap.Height;
+
+    PreviewBitmap.Canvas.CopyRect(DestRect, FSearchAreaControlDbgImg.Canvas, SrcRect);
+
+    DoOnGetFontFinderSettings(FontFinderSettings);
+    {if} EditFontFinderSettings(FontFinderSettings, PreviewFont, PreviewBitmap, FGColor, BGColor, Options^.MatchText) {then} ;
+      DoOnSetFontFinderSettings(FontFinderSettings);
+  finally
+    PreviewBitmap.Free;
+  end;
 end;
 
 
@@ -4210,13 +4238,8 @@ begin
 end;
 
 
-procedure TfrClickerFindControl.DisplaySelectionLinesForExpectedFindLocation;
+procedure TfrClickerFindControl.SetMinErrSelectionLinesToDefault;
 begin
-  FSearchAreaLeftLimitLabel_ForMinErr.Show;
-  FSearchAreaTopLimitLabel_ForMinErr.Show;
-  FSearchAreaRightLimitLabel_ForMinErr.Show;
-  FSearchAreaBottomLimitLabel_ForMinErr.Show;
-
   if (FSearchAreaLeftLimitLabel_ForMinErr.Left = 0) and
      (FSearchAreaTopLimitLabel_ForMinErr.Top = 0) and
      (FSearchAreaRightLimitLabel_ForMinErr.Left = 0) and
@@ -4227,6 +4250,17 @@ begin
     FSearchAreaRightLimitLabel_ForMinErr.Left := FSearchAreaRightLimitLabel.Left - 10;
     FSearchAreaBottomLimitLabel_ForMinErr.Top := FSearchAreaBottomLimitLabel.Top - 10;
   end;
+end;
+
+
+procedure TfrClickerFindControl.DisplaySelectionLinesForExpectedFindLocation;
+begin
+  FSearchAreaLeftLimitLabel_ForMinErr.Show;
+  FSearchAreaTopLimitLabel_ForMinErr.Show;
+  FSearchAreaRightLimitLabel_ForMinErr.Show;
+  FSearchAreaBottomLimitLabel_ForMinErr.Show;
+
+  SetMinErrSelectionLinesToDefault;
 end;
 
 
