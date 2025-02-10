@@ -415,6 +415,10 @@
         <Filename Value="ClickerPluginArchive.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
+      <Unit>
+        <Filename Value="ClickerUtils\DoubleList.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

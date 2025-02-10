@@ -432,6 +432,8 @@ type
   TIntArr = array of Integer;
   TColorArr = array of TColor;
 
+  TDblArr = array of Double;
+
 
   TVarRepl = record
     VarName: string;

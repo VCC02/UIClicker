@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2023 VCC
+    Copyright (C) 2025 VCC
     creation date: Dec 2019
     initial release date: 13 Sep 2022
 
@@ -100,14 +100,18 @@ function BitmapsAreEqual(ASrcABitmap, ASrcBBitmap: TBitmap; AWidth, AHeight: Int
 procedure GenerateGradientColors(AStartColor, AEndColor: TColor; APointCount: Integer; var AResult: TColorArr);
 procedure MakeImageContentTransparent(AImg: TImage);
 procedure DrawSearchGrid(AImg: TImage; AlgorithmSettings: TMatchBitmapAlgorithmSettings; AGridWidth, AGridHeight: Integer; AGridColor: TColor; ADisplayGridLineOption: TDisplayGridLineOption);
+
 procedure GetHistogram(ABitmap: TBitmap; var AHist, AHistColorCounts: TIntArr);
+procedure FillInMissingHistogramPointsToBeCompared(var AHistA, AHistColorCountsA, AHistB, AHistColorCountsB: TIntArr);
+function CompareHistograms(var AHistA, AHistColorCountsA, AHistB, AHistColorCountsB: TIntArr): Double;
+procedure SortHistogramCmpArr(var ACmpArr: TDblArr);  //array of results, returned by CompareHistograms
 
 
 implementation
 
 
 uses
-  Forms, Classes, IntegerList;
+  Forms, Classes, IntegerList, DoubleList;
 
 
 procedure RandomSleep(ASleepySearch: Byte);
@@ -323,6 +327,99 @@ begin
 
     else
       raise Exception.Create('Unsupported PixelFormat when computing histogram. Format index: ' + IntToStr(Ord(ABitmap.PixelFormat)));
+  end;
+end;
+
+
+procedure InsertPointIntoTIntArr(var AArr: TIntArr; APoint, AIndex: Integer);
+var
+  i: Integer;
+begin
+  if (AIndex < 0) or (AIndex > Length(AArr)) then
+    raise Exception.Create('Index out of bounds when inserting item into array.');
+
+  SetLength(AArr, Length(AArr) + 1);
+  for i := Length(AArr) - 1 downto AIndex + 1 do
+    AArr[i] := AArr[i - 1];
+
+  AArr[AIndex] := APoint;
+end;
+
+
+procedure FillInMissingHistogramPointsToBeCompared(var AHistA, AHistColorCountsA, AHistB, AHistColorCountsB: TIntArr);
+var
+  i, InsertIdx: Integer;
+begin
+  for i := Length(AHistB) - 1 downto 0 do
+    if ColorIndexInIntArr(AHistB[i], AHistA) = - 1 then  //item from histogram B does not exist in histogram A
+    begin
+      InsertIdx := Length(AHistA); //insert as the last item (for now)
+      InsertPointIntoTIntArr(AHistA, AHistB[i], InsertIdx);
+      InsertPointIntoTIntArr(AHistColorCountsA, AHistColorCountsB[i], InsertIdx);
+    end;
+
+  for i := Length(AHistA) - 1 downto 0 do
+    if ColorIndexInIntArr(AHistA[i], AHistB) = - 1 then  //item from histogram A does not exist in histogram B
+    begin
+      InsertIdx := Length(AHistB); //insert as the last item (for now)
+      InsertPointIntoTIntArr(AHistB, AHistA[i], InsertIdx);
+      InsertPointIntoTIntArr(AHistColorCountsB, AHistColorCountsA[i], InsertIdx);
+    end;
+
+  if (Length(AHistA) <> Length(AHistB)) or
+     (Length(AHistA) <> Length(AHistColorCountsA)) or
+     (Length(AHistB) <> Length(AHistColorCountsB)) then
+     raise Exception.Create('Bug: array length mismatch when preparing to compare.');
+
+  SortHistogram(AHistA, AHistColorCountsA);
+  SortHistogram(AHistB, AHistColorCountsB);
+end;
+
+
+function CompareHistograms(var AHistA, AHistColorCountsA, AHistB, AHistColorCountsB: TIntArr): Double;
+var
+  i, DiffInt: Integer;
+begin
+  if (Length(AHistA) <> Length(AHistB)) or
+     (Length(AHistA) <> Length(AHistColorCountsA)) or
+     (Length(AHistB) <> Length(AHistColorCountsB)) then
+    FillInMissingHistogramPointsToBeCompared(AHistA, AHistColorCountsA, AHistB, AHistColorCountsB);
+
+  if Length(AHistA) = 0 then
+  begin
+    Result := 0;
+    Exit;
+  end;
+
+  for i := 0 to Length(AHistA) - 1 do
+    if AHistA[i] <> AHistB[i] then
+      raise Exception.Create('Bug: The lists of colors, from the two histograms, are different.'); //both arrays should have the same content
+
+  DiffInt := 0;
+  for i := 0 to Length(AHistA) - 1 do
+    Inc(DiffInt, Abs(AHistColorCountsA[i] - AHistColorCountsB[i]));
+
+  Result := DiffInt / Length(AHistA);  //if dividing by Length(AHistA), it means that comparing results from bitmaps of different sizes, will (most of the times) lead to erroneous results
+end;
+
+
+procedure SortHistogramCmpArr(var ACmpArr: TDblArr);
+var
+  SortingArray: TDoubleList;
+  i: Integer;
+begin
+  SortingArray := TDoubleList.Create;
+  try
+    SortingArray.Capacity := Length(ACmpArr);
+    for i := 0 to Length(ACmpArr) - 1 do
+      SortingArray.Add(ACmpArr[i]);
+
+    SortingArray.Sort;
+
+    for i := 0 to Length(ACmpArr) - 1 do
+      ACmpArr[i] := SortingArray.Items[i];
+  finally
+    SortingArray.Free;
   end;
 end;
 
