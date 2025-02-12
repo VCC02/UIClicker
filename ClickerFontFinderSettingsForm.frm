@@ -111,10 +111,10 @@ object frmClickerFontFinderSettings: TfrmClickerFontFinderSettings
     Caption = 'Max size'
   end
   object chkShowAllFonts: TCheckBox
-    Left = 427
+    Left = 424
     Height = 19
     Hint = 'When unchecked, only the used fonts are displayed'
-    Top = 68
+    Top = 48
     Width = 92
     Anchors = [akTop, akRight]
     Caption = 'Show all fonts'
@@ -127,11 +127,14 @@ object frmClickerFontFinderSettings: TfrmClickerFontFinderSettings
     Left = 8
     Height = 97
     Top = 184
-    Width = 510
+    Width = 508
     Anchors = [akLeft, akRight, akBottom]
     Caption = 'Preview'
     ClientHeight = 77
-    ClientWidth = 506
+    ClientWidth = 504
+    Color = clMoneyGreen
+    ParentBackground = False
+    ParentColor = False
     TabOrder = 4
     object lblPreviewText: TLabel
       Left = 8
@@ -165,7 +168,7 @@ object frmClickerFontFinderSettings: TfrmClickerFontFinderSettings
     OnClick = btnOKClick
   end
   object btnCancel: TButton
-    Left = 444
+    Left = 441
     Height = 25
     Top = 151
     Width = 75
@@ -195,7 +198,7 @@ object frmClickerFontFinderSettings: TfrmClickerFontFinderSettings
     Caption = 'Preview size'
   end
   object lbeSearch: TLabeledEdit
-    Left = 352
+    Left = 350
     Height = 23
     Top = 116
     Width = 166
@@ -205,6 +208,37 @@ object frmClickerFontFinderSettings: TfrmClickerFontFinderSettings
     EditLabel.Caption = 'Search'
     TabOrder = 8
     OnChange = lbeSearchChange
+  end
+  object chkSortResults: TCheckBox
+    Left = 424
+    Height = 19
+    Hint = 'If checked, the list of fonts, returned to the finder algorithm, is sorted by histogram differences.'
+    Top = 72
+    Width = 76
+    Anchors = [akTop, akRight]
+    Caption = 'Sort results'
+    ParentShowHint = False
+    ShowHint = True
+    TabOrder = 9
+  end
+  object prbDiffs: TProgressBar
+    Left = 350
+    Height = 5
+    Hint = 'Computing histograms...'
+    Top = 175
+    Width = 166
+    Anchors = [akTop, akRight]
+    ParentShowHint = False
+    ShowHint = True
+    TabOrder = 10
+    Visible = False
+  end
+  object lblFontStatistics: TLabel
+    Left = 124
+    Height = 15
+    Top = 4
+    Width = 20
+    Caption = 'Stat'
   end
   object tmrChecked: TTimer
     Enabled = False

@@ -4031,8 +4031,8 @@ begin
       prbFontSize.Top := lblPreviewControl_Width.Top;
       prbFontName.Top := prbFontSize.Top + prbFontSize.Height + 2;
       prbFontSize.Width := 100;
-      prbFontName.Height := 10;
-      prbFontSize.Width := 100;
+      prbFontName.Width := 100;
+      prbFontSize.Height := 10;
       prbFontName.Height := 10;
       prbFontSize.Smooth := True;
       prbFontName.Smooth := True;
@@ -4051,6 +4051,8 @@ begin
       for i := FontFinderSettings.MinFontSize to FontFinderSettings.MaxFontSize do
       begin
         prbFontSize.Position := i;
+        prbFontSize.Hint := 'FontSize: ' + IntToStr(FontFinderSettings.MinFontSize) + ' to ' + IntToStr(FontFinderSettings.MaxFontSize) + #13#10 +
+                            'Current FontSize: ' + IntToStr(i);
 
         for j := 0 to ListOfFontNames.Count - 1 do
         begin
@@ -4059,6 +4061,9 @@ begin
           FontSize := i;
           FontName := ListOfFontNames.Strings[j];
           DoOnAddToLog('--- Testing font: ' + FontName + '    Size: ' + IntToStr(FontSize));
+
+          prbFontName.Hint := 'FontName count: ' + IntToStr(ListOfFontNames.Count) + #13#10 +
+                              'Current FontName: ' + FontName;
 
           Found := DoOnExecuteFindSubControlAction(ErrorLevel, AllowedColErr, FastSearchAllowedColErr, FontName, FontSize, FoundArea);
           DoOnAddToLog('"Found" flag: ' + BoolToStr(Found, 'True', 'False'));
