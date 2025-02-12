@@ -116,6 +116,7 @@ type
     FLatestCheckedNode: PVirtualNode;
     FListOfHistogramDiffs: TStringList;
     FPreviewBitmap: TBitmap;
+    FClosing: Boolean;
 
     procedure SetVSTCheckStates;
     procedure SetCheckedStateToAll(AState, ASelectedOnly: Boolean);
@@ -169,6 +170,7 @@ begin
   frmClickerFontFinderSettings.spnedtMinSize.Value := AFontFinderSettings.MinFontSize;
   frmClickerFontFinderSettings.spnedtMaxSize.Value := AFontFinderSettings.MaxFontSize;
   frmClickerFontFinderSettings.chkShowAllFonts.Checked := AFontFinderSettings.ShowAllFonts;
+  frmClickerFontFinderSettings.chkSortResults.Checked := AFontFinderSettings.SortResultsByHistogram;
 
   frmClickerFontFinderSettings.lblPreviewText.Caption := APreviewText;
 
@@ -210,6 +212,7 @@ begin
     AFontFinderSettings.MinFontSize := frmClickerFontFinderSettings.spnedtMinSize.Value;
     AFontFinderSettings.MaxFontSize := frmClickerFontFinderSettings.spnedtMaxSize.Value;
     AFontFinderSettings.ShowAllFonts := frmClickerFontFinderSettings.chkShowAllFonts.Checked;
+    AFontFinderSettings.SortResultsByHistogram := frmClickerFontFinderSettings.chkSortResults.Checked;
   end;
 end;
 
@@ -224,6 +227,7 @@ begin
   FListOfUsedFonts := TStringList.Create;
   FListOfHistogramDiffs := TStringList.Create;
   FLatestCheckedNode := nil;
+  FClosing := False;
 
   for i := 0 to Screen.Fonts.Count - 1 do
     FListOfHistogramDiffs.Add('...');
@@ -236,6 +240,7 @@ procedure TfrmClickerFontFinderSettings.FormDestroy(Sender: TObject);
 begin
   FreeAndNil(FListOfUsedFonts);
   FreeAndNil(FListOfHistogramDiffs);
+  FClosing := True;
 end;
 
 
@@ -508,6 +513,8 @@ begin
   if Node = nil then
     Exit;
 
+  //RebuildListOfUsedFonts;  //if called here, then an AV occurs, because of calling AppProcMsg, which frees FListOfHistogramDiffs on closing.
+
   SetLength(InitialDiffs, 0);
   repeat
     if Node^.CheckState = csCheckedNormal then
@@ -615,6 +622,8 @@ end;
 procedure TfrmClickerFontFinderSettings.btnOKClick(Sender: TObject);
 begin
   Tag := 1;
+  btnOK.Enabled := False;
+  btnCancel.Enabled := False;
   Close;
 end;
 
@@ -622,6 +631,8 @@ end;
 procedure TfrmClickerFontFinderSettings.btnCancelClick(Sender: TObject);
 begin
   Tag := 0;
+  btnOK.Enabled := False;
+  btnCancel.Enabled := False;
   Close;
 end;
 
@@ -630,6 +641,11 @@ procedure TfrmClickerFontFinderSettings.FormClose(Sender: TObject;
   var CloseAction: TCloseAction);
 begin
   CloseAction := caFree;
+  if chkSortResults.Checked then
+  begin
+    FClosing := True;
+    RebuildListOfUsedFonts;
+  end;
 end;
 
 
@@ -679,7 +695,12 @@ begin
   GetHistogramFromPreviewBitmap({PreviewBitmap} FPreviewBitmap, PreviewHist, PreviewHistColorCounts);
 
   tmrChecked.Enabled := False;
-  Application.ProcessMessages; //This will call HandleNodeChecked if the timer can still call its handler. This will add an item to FListOfUsedFonts.
+
+  if not FClosing then
+    Application.ProcessMessages; //This will call HandleNodeChecked if the timer can still call its handler. This will add an item to FListOfUsedFonts.
+
+  if FListOfHistogramDiffs = nil then
+    Exit;
 
   prbDiffs.Max := FListOfHistogramDiffs.Count;
   prbDiffs.Show;
@@ -704,7 +725,9 @@ begin
         if FListOfUsedFonts.IndexOf(Screen.Fonts[Node^.Index]) <> -1 then
         begin
           FListOfHistogramDiffs.Strings[Node^.Index] := GetHistogramDiffByFontName({PreviewBitmap} FPreviewBitmap, Screen.Fonts[Node^.Index], PreviewHist, PreviewHistColorCounts);
-          Application.ProcessMessages;
+
+          if not FClosing then
+            Application.ProcessMessages;
         end
         else
           FListOfHistogramDiffs.Strings[Node^.Index] := '-';
@@ -799,7 +822,7 @@ begin
     Node := Node^.NextSibling;
   until Node = nil;
 
-  RebuildListOfUsedFonts;;
+  RebuildListOfUsedFonts;
 end;
 
 
@@ -857,7 +880,7 @@ begin
     Node := Node^.NextSibling;
   until Node = nil;
 
-  RebuildListOfUsedFonts;;
+  RebuildListOfUsedFonts;
 end;
 
 

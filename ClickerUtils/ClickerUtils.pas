@@ -476,6 +476,7 @@ type
     MinFontSize: Integer;
     MaxFontSize: Integer;
     ShowAllFonts: Boolean;
+    SortResultsByHistogram: Boolean;
     WinRect: TRect;
     ColWidths: TIntArr;
   end;

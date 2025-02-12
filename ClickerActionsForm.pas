@@ -624,6 +624,7 @@ begin
   FFontFinderSettings.MinFontSize := AIni.ReadInteger('ActionsWindow', 'MinFontSize', 7);
   FFontFinderSettings.MaxFontSize := AIni.ReadInteger('ActionsWindow', 'MaxFontSize', 9);
   FFontFinderSettings.ShowAllFonts := AIni.ReadBool('ActionsWindow', 'ShowAllFonts', False);
+  FFontFinderSettings.SortResultsByHistogram := AIni.ReadBool('ActionsWindow', 'SortResultsByHistogram', False);
   FFontFinderSettings.WinRect.Left := AIni.ReadInteger('FontFinderSettingsWindow', 'Left', Left);
   FFontFinderSettings.WinRect.Top := AIni.ReadInteger('FontFinderSettingsWindow', 'Top', Top);
   FFontFinderSettings.WinRect.Width := AIni.ReadInteger('FontFinderSettingsWindow', 'Width', Width);
@@ -727,6 +728,7 @@ begin
   AIni.WriteInteger('ActionsWindow', 'MinFontSize', FFontFinderSettings.MinFontSize);
   AIni.WriteInteger('ActionsWindow', 'MaxFontSize', FFontFinderSettings.MaxFontSize);
   AIni.WriteBool('ActionsWindow', 'ShowAllFonts', FFontFinderSettings.ShowAllFonts);
+  AIni.WriteBool('ActionsWindow', 'SortResultsByHistogram', FFontFinderSettings.SortResultsByHistogram);
   AIni.WriteInteger('ActionsWindow', 'MaxFontSize', FFontFinderSettings.MaxFontSize);
 
   AIni.WriteInteger('FontFinderSettingsWindow', 'Left', FFontFinderSettings.WinRect.Left);
