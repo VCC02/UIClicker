@@ -135,6 +135,8 @@ object frmClickerFontFinderSettings: TfrmClickerFontFinderSettings
     Color = clMoneyGreen
     ParentBackground = False
     ParentColor = False
+    ParentShowHint = False
+    ShowHint = True
     TabOrder = 4
     object lblPreviewText: TLabel
       Left = 8

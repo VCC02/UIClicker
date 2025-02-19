@@ -228,6 +228,13 @@ var
   TempColor: TColor;
   ColorCounts: TIntArr;
 begin
+  if (AWidth = 0) or (AHeight = 0) then
+  begin
+    SetLength(AHist, 0);
+    SetLength(AHistColorCounts, 0);
+    Exit;
+  end;
+
   Width := Max(AWidth, 1);
   Height := Max(AHeight, 1);
   ALeft := Max(ALeft, 0);
@@ -284,6 +291,13 @@ var
   TempColor: TColor;
   ColorCounts: TIntArr;
 begin
+  if (AWidth = 0) or (AHeight = 0) then
+  begin
+    SetLength(AHist, 0);
+    SetLength(AHistColorCounts, 0);
+    Exit;
+  end;
+
   Width := Max(AWidth, 1);
   Height := Max(AHeight, 1);
   ALeft := Max(ALeft, 0);

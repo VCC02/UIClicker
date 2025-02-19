@@ -472,11 +472,12 @@ begin
     for i := 0 to Screen.Fonts.Count - 1 do
     begin
       prbDiffs.Position := i;
+      prbDiffs.Repaint;
 
       if FListOfUsedFonts.IndexOf(Screen.Fonts[i]) <> -1 then
       begin
         FListOfHistogramDiffs.Strings[i] := GetHistogramDiffByFontName({PreviewBitmap} FPreviewBitmap, Screen.Fonts[i], PreviewHist, PreviewHistColorCounts);
-        Application.ProcessMessages;
+        //Application.ProcessMessages;
       end
       else
         FListOfHistogramDiffs.Strings[i] := '-';
@@ -696,9 +697,9 @@ begin
 
   tmrChecked.Enabled := False;
 
-  if not FClosing then
-    Application.ProcessMessages; //This will call HandleNodeChecked if the timer can still call its handler. This will add an item to FListOfUsedFonts.
-
+  //if not FClosing then
+  //  Application.ProcessMessages; //This will call HandleNodeChecked if the timer can still call its handler. This will add an item to FListOfUsedFonts.
+                                   //The AppProcMsg call is not needed if the one from the loop is commented.
   if FListOfHistogramDiffs = nil then
     Exit;
 
@@ -714,6 +715,7 @@ begin
       if Node^.CheckState = csCheckedNormal then  //add to list
       begin
         prbDiffs.Position := Node^.Index;
+        prbDiffs.Repaint;
 
         CurrentFontName := Screen.Fonts.Strings[Node^.Index];
         FListOfUsedFonts.Add(CurrentFontName);
@@ -726,8 +728,8 @@ begin
         begin
           FListOfHistogramDiffs.Strings[Node^.Index] := GetHistogramDiffByFontName({PreviewBitmap} FPreviewBitmap, Screen.Fonts[Node^.Index], PreviewHist, PreviewHistColorCounts);
 
-          if not FClosing then
-            Application.ProcessMessages;
+          //if not FClosing then
+          //  Application.ProcessMessages;
         end
         else
           FListOfHistogramDiffs.Strings[Node^.Index] := '-';
@@ -789,6 +791,7 @@ begin
   if Node = nil then
     Exit;
 
+  grpPreview.Hint := '';
   repeat
     Node^.CheckType := ctCheckBox;   //this is also executed on vstFontsInitNode, but only for nodes which come into view
 
@@ -796,7 +799,14 @@ begin
       if FListOfUsedFonts.IndexOf(Screen.Fonts.Strings[Node^.Index]) > -1 then
         vstFonts.CheckState[Node] := csCheckedNormal
       else
+      begin
         vstFonts.CheckState[Node] := csUncheckedNormal;
+
+        if (Pos(#0, Screen.Fonts.Strings[Node^.Index]) > 0) or
+           (Pos(#13, Screen.Fonts.Strings[Node^.Index]) > 0) or
+           (Pos(#10, Screen.Fonts.Strings[Node^.Index]) > 0) then
+        grpPreview.Hint := 'Bad font name: ' + Screen.Fonts.Strings[Node^.Index] + #13#10;
+      end;
     except
     end;
 

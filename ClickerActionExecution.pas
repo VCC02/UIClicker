@@ -2069,7 +2069,7 @@ begin
           try
             SetLength(PartialResultedControlArr, 0);
             WorkFindControlInputData := FindControlInputData;
-            FindControlOnScreen_Result := FindControlOnScreen(AFindControlOptions.MatchBitmapAlgorithm,
+            FindControlOnScreen_Result := FindSubControlOnScreen(AFindControlOptions.MatchBitmapAlgorithm,
                                                               AFindControlOptions.MatchBitmapAlgorithmSettings,
                                                               WorkFindControlInputData,
                                                               InitialTickCount,
@@ -2199,7 +2199,7 @@ begin
 
             SetLength(PartialResultedControlArr, 0);
             WorkFindControlInputData := FindControlInputData;
-            FindControlOnScreen_Result := FindControlOnScreen(AFindControlOptions.MatchBitmapAlgorithm,
+            FindControlOnScreen_Result := FindSubControlOnScreen(AFindControlOptions.MatchBitmapAlgorithm,
                                                               AFindControlOptions.MatchBitmapAlgorithmSettings,
                                                               WorkFindControlInputData,
                                                               InitialTickCount,
@@ -2342,7 +2342,7 @@ begin
 
                 SetLength(PartialResultedControlArr, 0);
                 WorkFindControlInputData := FindControlInputData;
-                FindControlOnScreen_Result := FindControlOnScreen(AFindControlOptions.MatchBitmapAlgorithm,
+                FindControlOnScreen_Result := FindSubControlOnScreen(AFindControlOptions.MatchBitmapAlgorithm,
                                                                   AFindControlOptions.MatchBitmapAlgorithmSettings,
                                                                   WorkFindControlInputData,
                                                                   InitialTickCount,
