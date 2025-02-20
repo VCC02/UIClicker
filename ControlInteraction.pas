@@ -1249,17 +1249,7 @@ begin
       //           MB_ICONINFORMATION);
     end;
 
-    if InputData.SearchAsSubControl then //a sub control has its own grid
-    begin
-      SetLength(XValues, 1);
-      SetLength(YValues, 1);
-      SetLength(XValues[0], 1);
-      SetLength(YValues[0], 1);
-      XValues[0][0] := 0;
-      YValues[0][0] := 0;
-    end
-    else
-      GenerateBinarySearchValuesForImage(GlobalSearchAreaWidth, GlobalSearchAreaHeight, XValues, YValues);
+    GenerateBinarySearchValuesForImage(GlobalSearchAreaWidth, GlobalSearchAreaHeight, XValues, YValues);
 
     try
       Result := False;
