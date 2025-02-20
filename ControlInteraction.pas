@@ -1211,8 +1211,8 @@ begin
 
       InputDataForCaching.GlobalSearchArea.Left := tp.X;
       InputDataForCaching.GlobalSearchArea.Top := tp.Y;
-      InputDataForCaching.GlobalSearchArea.Width := InputDataForCaching.BitmapToSearchFor.Width;
-      InputDataForCaching.GlobalSearchArea.Height := InputDataForCaching.BitmapToSearchFor.Height;
+      //InputDataForCaching.GlobalSearchArea.Width := InputDataForCaching.BitmapToSearchFor.Width;     //BitmapToSearchFor is not set on Findontrol
+      //InputDataForCaching.GlobalSearchArea.Height := InputDataForCaching.BitmapToSearchFor.Height;   //BitmapToSearchFor is not set on Findontrol
       InputDataForCaching.InitialRectangleOffsets.Left := 0;
       InputDataForCaching.InitialRectangleOffsets.Top := 0;
       InputDataForCaching.InitialRectangleOffsets.Right := 0;
