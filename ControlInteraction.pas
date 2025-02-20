@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2024 VCC
+    Copyright (C) 2025 VCC
     creation date: Dec 2019
     initial release date: 13 Sep 2022
 
@@ -1027,17 +1027,10 @@ begin
 end;
 
 
-type
-  TMatchingMethodsRec = record
-    Matching_Class, Matching_Text, Matching_BitmapText, Matching_BitmapFiles, Matching_PrimitiveFiles: Boolean;
-  end;
-
-
 function MatchControl(var CompAtPoint: TCompRec;
-                      AMatchingMethodsRec: TMatchingMethodsRec;  //this info is already contained by InputData, but it's faster this way
                       Algorithm: TMatchBitmapAlgorithm;
                       AlgorithmSettings: TMatchBitmapAlgorithmSettings;
-                      InputData: TFindControlInputData;
+                      AInputData: TFindControlInputData;
                       AStopAllActionsOnDemand: PBoolean;
                       {var} AvailableControls: TCompRecArr; //Do not pass by reference. Let it create a copy, so that any modification will not affect "source" components (search area).
                       var AFoundSubControls: TCompRecArr; //used when searching with FindSubControl and InputData.GetAllHandles is True
@@ -1049,7 +1042,7 @@ begin
   FoundClass := True;
   FoundText := True;
 
-  if AMatchingMethodsRec.Matching_Class then
+  if mmClass in AInputData.MatchingMethods then
   begin
     if ListOfControlClasses.Count > 0 then
       FoundClass := ClassNameOrCaptionInListOfPatternedStrings(CompAtPoint.ClassName, ListOfControlClasses)
@@ -1057,7 +1050,7 @@ begin
       FoundClass := CompAtPoint.ClassName = '';
   end;
 
-  if AMatchingMethodsRec.Matching_Text then
+  if mmText in AInputData.MatchingMethods then
   begin
     if ListOfControlTexts.Count > 0 then
       FoundText := ClassNameOrCaptionInListOfPatternedStrings(CompAtPoint.Text, ListOfControlTexts)
@@ -1070,7 +1063,6 @@ end;
 
 
 function MatchSubControl(var CompAtPoint: TCompRec;
-                         AMatchingMethodsRec: TMatchingMethodsRec;  //this info is already contained by InputData, but it's faster this way
                          Algorithm: TMatchBitmapAlgorithm;
                          AlgorithmSettings: TMatchBitmapAlgorithmSettings;
                          InputData: TFindControlInputData;
@@ -1082,47 +1074,40 @@ var
   SubCnvXOffset, SubCnvYOffset: Integer;
   i: Integer;
 begin
-  Result := True;
+  Result := MatchControlByBitmap(Algorithm,
+                                   AlgorithmSettings,
+                                   CompAtPoint,
+                                   InputData,
+                                   SubCnvXOffset,
+                                   SubCnvYOffset,
+                                   CompAtPoint.ResultedErrorCount,
+                                   AFoundSubControls,
+                                   AStopAllActionsOnDemand,
+                                   ADisplayGridLineOption);
 
-  if AMatchingMethodsRec.Matching_BitmapText or
-     AMatchingMethodsRec.Matching_BitmapFiles or
-     AMatchingMethodsRec.Matching_PrimitiveFiles then
+  if Result then    //yes, this "if" should be inside mmBitmap condition
   begin
-    Result := MatchControlByBitmap(Algorithm,
-                                     AlgorithmSettings,
-                                     CompAtPoint,
-                                     InputData,
-                                     SubCnvXOffset,
-                                     SubCnvYOffset,
-                                     CompAtPoint.ResultedErrorCount,
-                                     AFoundSubControls,
-                                     AStopAllActionsOnDemand,
-                                     ADisplayGridLineOption);
-
-    if Result then    //yes, this "if" should be inside mmBitmap condition
+    for i := 0 to Length(AFoundSubControls) - 1 do
     begin
-      for i := 0 to Length(AFoundSubControls) - 1 do
-      begin
-        AFoundSubControls[i].Handle := CompAtPoint.Handle;
-        AFoundSubControls[i].IsSubControl := CompAtPoint.IsSubControl;
-        AFoundSubControls[i].ClassName := CompAtPoint.ClassName;
-        AFoundSubControls[i].Text := CompAtPoint.Text;
-        AFoundSubControls[i].ComponentRectangle := CompAtPoint.ComponentRectangle;
+      AFoundSubControls[i].Handle := CompAtPoint.Handle;
+      AFoundSubControls[i].IsSubControl := CompAtPoint.IsSubControl;
+      AFoundSubControls[i].ClassName := CompAtPoint.ClassName;
+      AFoundSubControls[i].Text := CompAtPoint.Text;
+      AFoundSubControls[i].ComponentRectangle := CompAtPoint.ComponentRectangle;
 
-        Inc(AFoundSubControls[i].ComponentRectangle.Left, AFoundSubControls[i].XOffsetFromParent);
-        Inc(AFoundSubControls[i].ComponentRectangle.Top, AFoundSubControls[i].YOffsetFromParent);
-        AFoundSubControls[i].ComponentRectangle.Right := AFoundSubControls[i].ComponentRectangle.Left + InputData.BitmapToSearchFor.Width;
-        AFoundSubControls[i].ComponentRectangle.Bottom := AFoundSubControls[i].ComponentRectangle.Top + InputData.BitmapToSearchFor.Height;
-      end;
-
-      CompAtPoint.XOffsetFromParent := SubCnvXOffset;
-      CompAtPoint.YOffsetFromParent := SubCnvYOffset;
-
-      Inc(CompAtPoint.ComponentRectangle.Left, SubCnvXOffset);
-      Inc(CompAtPoint.ComponentRectangle.Top, SubCnvYOffset);
-      CompAtPoint.ComponentRectangle.Right := CompAtPoint.ComponentRectangle.Left + InputData.BitmapToSearchFor.Width;
-      CompAtPoint.ComponentRectangle.Bottom := CompAtPoint.ComponentRectangle.Top + InputData.BitmapToSearchFor.Height;
+      Inc(AFoundSubControls[i].ComponentRectangle.Left, AFoundSubControls[i].XOffsetFromParent);
+      Inc(AFoundSubControls[i].ComponentRectangle.Top, AFoundSubControls[i].YOffsetFromParent);
+      AFoundSubControls[i].ComponentRectangle.Right := AFoundSubControls[i].ComponentRectangle.Left + InputData.BitmapToSearchFor.Width;
+      AFoundSubControls[i].ComponentRectangle.Bottom := AFoundSubControls[i].ComponentRectangle.Top + InputData.BitmapToSearchFor.Height;
     end;
+
+    CompAtPoint.XOffsetFromParent := SubCnvXOffset;
+    CompAtPoint.YOffsetFromParent := SubCnvYOffset;
+
+    Inc(CompAtPoint.ComponentRectangle.Left, SubCnvXOffset);
+    Inc(CompAtPoint.ComponentRectangle.Top, SubCnvYOffset);
+    CompAtPoint.ComponentRectangle.Right := CompAtPoint.ComponentRectangle.Left + InputData.BitmapToSearchFor.Width;
+    CompAtPoint.ComponentRectangle.Bottom := CompAtPoint.ComponentRectangle.Top + InputData.BitmapToSearchFor.Height;
   end;
 end;
 
@@ -1150,7 +1135,7 @@ function FindControlOnScreen(Algorithm: TMatchBitmapAlgorithm;
                              var AResultedControl: TCompRecArr;
                              ADisplayGridLineOption: TDisplayGridLineOption): Boolean;
 var
-  i, j, k, cc: Integer;
+  i, j, k: Integer;
   tp: TPoint;
   CompAtPoint: TCompRec;
   XValues, YValues: TIntArrArr;
@@ -1158,7 +1143,6 @@ var
   AvailableControls: TCompRecArr;
   FoundSubControls: TCompRecArr;
   GlobalSearchAreaWidth, GlobalSearchAreaHeight: Integer;
-  MatchingMethodsRec: TMatchingMethodsRec;
   InputDataForCaching: TFindControlInputData;
 begin
   Result := False;
@@ -1175,12 +1159,6 @@ begin
 
     GlobalSearchAreaWidth := InputData.GlobalSearchArea.Right - InputData.GlobalSearchArea.Left;
     GlobalSearchAreaHeight := InputData.GlobalSearchArea.Bottom - InputData.GlobalSearchArea.Top;
-
-    MatchingMethodsRec.Matching_Class := mmClass in InputData.MatchingMethods;
-    MatchingMethodsRec.Matching_Text := mmText in InputData.MatchingMethods;
-    MatchingMethodsRec.Matching_BitmapText := mmBitmapText in InputData.MatchingMethods;
-    MatchingMethodsRec.Matching_BitmapFiles := mmBitmapFiles in InputData.MatchingMethods;
-    MatchingMethodsRec.Matching_PrimitiveFiles := mmPrimitiveFiles in InputData.MatchingMethods;
 
     if InputData.StartSearchingWithCachedControl then
     begin
@@ -1222,7 +1200,6 @@ begin
       CompAtPoint.YOffsetFromParent := 0;
                                                            //ToDo: enclose this code with a loop for verifying excluded handles
       if MatchControl(CompAtPoint,
-                      MatchingMethodsRec,
                       Algorithm,
                       AlgorithmSettings,
                       InputDataForCaching,
@@ -1278,7 +1255,6 @@ begin
             //SetCursorPos(tp.X, tp.Y); /////////////////// debug only
 
             if MatchControl(CompAtPoint,
-                            MatchingMethodsRec,
                             Algorithm,
                             AlgorithmSettings,
                             InputData,
@@ -1289,20 +1265,11 @@ begin
                             ListOfControlClasses,
                             ADisplayGridLineOption) then
             begin
-              if (MatchingMethodsRec.Matching_BitmapText or
-                  MatchingMethodsRec.Matching_BitmapFiles or
-                  MatchingMethodsRec.Matching_PrimitiveFiles) and InputData.GetAllHandles then //SubControl
+              if GetControlHandleIndexInResultedControls(AResultedControl, CompAtPoint.Handle) = -1 then
               begin
-                SetLength(AResultedControl, Length(FoundSubControls));
-                for cc := 0 to Length(FoundSubControls) - 1 do
-                  AResultedControl[cc] := FoundSubControls[cc];
-              end
-              else
-                if GetControlHandleIndexInResultedControls(AResultedControl, CompAtPoint.Handle) = -1 then
-                begin
-                  SetLength(AResultedControl, Length(AResultedControl) + 1);
-                  AResultedControl[Length(AResultedControl) - 1] := CompAtPoint;
-                end;
+                SetLength(AResultedControl, Length(AResultedControl) + 1);
+                AResultedControl[Length(AResultedControl) - 1] := CompAtPoint;
+              end;
 
               Result := True;
 
@@ -1364,7 +1331,6 @@ var
   CompAtPoint: TCompRec;
   AvailableControls: TCompRecArr;
   FoundSubControls: TCompRecArr;
-  MatchingMethodsRec: TMatchingMethodsRec;
   InputDataForCaching: TFindControlInputData;
 begin
   Result := False;
@@ -1374,12 +1340,6 @@ begin
   SetLength(AvailableControls, 0);
   SetLength(FoundSubControls, 0);
   try
-    MatchingMethodsRec.Matching_Class := mmClass in InputData.MatchingMethods;
-    MatchingMethodsRec.Matching_Text := mmText in InputData.MatchingMethods;
-    MatchingMethodsRec.Matching_BitmapText := mmBitmapText in InputData.MatchingMethods;
-    MatchingMethodsRec.Matching_BitmapFiles := mmBitmapFiles in InputData.MatchingMethods;
-    MatchingMethodsRec.Matching_PrimitiveFiles := mmPrimitiveFiles in InputData.MatchingMethods;
-
     if InputData.StartSearchingWithCachedControl then
     begin
       tp.X := InputData.CachedControlLeft;
@@ -1420,7 +1380,6 @@ begin
       CompAtPoint.YOffsetFromParent := 0;
                                                            //ToDo: enclose this code with a loop for verifying excluded handles
       if MatchSubControl(CompAtPoint,
-                         MatchingMethodsRec,
                          Algorithm,
                          AlgorithmSettings,
                          InputDataForCaching,
@@ -1468,29 +1427,17 @@ begin
       //SetCursorPos(tp.X, tp.Y); /////////////////// debug only
 
       if MatchSubControl(CompAtPoint,
-                      MatchingMethodsRec,
-                      Algorithm,
-                      AlgorithmSettings,
-                      InputData,
-                      AStopAllActionsOnDemand,
-                      AvailableControls,
-                      FoundSubControls,
-                      ADisplayGridLineOption) then
+                         Algorithm,
+                         AlgorithmSettings,
+                         InputData,
+                         AStopAllActionsOnDemand,
+                         AvailableControls,
+                         FoundSubControls,
+                         ADisplayGridLineOption) then
       begin
-        if (MatchingMethodsRec.Matching_BitmapText or
-            MatchingMethodsRec.Matching_BitmapFiles or
-            MatchingMethodsRec.Matching_PrimitiveFiles) and InputData.GetAllHandles then //SubControl
-        begin
-          SetLength(AResultedControl, Length(FoundSubControls));
-          for cc := 0 to Length(FoundSubControls) - 1 do
-            AResultedControl[cc] := FoundSubControls[cc];
-        end
-        else
-          if GetControlHandleIndexInResultedControls(AResultedControl, CompAtPoint.Handle) = -1 then
-          begin
-            SetLength(AResultedControl, Length(AResultedControl) + 1);
-            AResultedControl[Length(AResultedControl) - 1] := CompAtPoint;
-          end;
+        SetLength(AResultedControl, Length(FoundSubControls));
+        for cc := 0 to Length(FoundSubControls) - 1 do
+          AResultedControl[cc] := FoundSubControls[cc];
 
         Result := True;
 
