@@ -455,8 +455,8 @@ type
 
     procedure ExecuteFindSubControl_ForColorErrorLevel(ATestedError, AErrA, AErrB: Integer; out AFoundArea: TRect; out ARes: Boolean);
     procedure ExecuteFindSubControl_ForColorErrorCount(ATestedError, AErrA, AErrB: Integer; out AFoundArea: TRect; out ARes: Boolean);
-    function CalculateMinimumErrorLevelToMatchBitmap(AFindControlOptions: PClkFindControlOptions): Integer;
-    function CalculateMinimumErrorCountToMatchBitmap(AFindControlOptions: PClkFindControlOptions): Integer;
+    function CalculateMinimumErrorLevelToMatchBitmap(AFindControlOptions: PClkFindSubControlOptions): Integer;
+    function CalculateMinimumErrorCountToMatchBitmap(AFindControlOptions: PClkFindSubControlOptions): Integer;
     function CalculateMinimumErrorToMatchBitmap(AMinInterval, AMaxInterval, AErrA, AErrB: Integer; ASearchedParamName: string; ACallback: TCalculateMinimumErrorCallback): Integer;
 
     function GetFontProfile(Value: Integer): TFontProfile;
@@ -477,7 +477,7 @@ type
     procedure DoOnUpdateTextCroppingLimitsInOIFromDraggingLines(ALimitLabelsToUpdate: TLimitLabels; var AOffsets: TSimpleRectString; AFontProfileIndex: Integer); //called by a handler for BMPTextFrame
     function DoOnGetDisplayedText: string;
     procedure DoOnSetMatchTextAndClassToOI(AMatchText, AMatchClassName: string);
-    function DoOnGetFindControlOptions: PClkFindControlOptions;
+    function DoOnGetFindControlOptions(AIsSubControl: Boolean = True): PClkFindSubControlOptions;
 
     function DoOnExecuteFindSubControlAction(AErrorLevel, AErrorCount, AFastSearchErrorCount: Integer; AFontName: string; AFontSize: Integer; out AFoundArea: TRect): Boolean;
     procedure DoOnAddToLog(s: string);
@@ -1227,12 +1227,12 @@ begin
 end;
 
 
-function TfrClickerFindControl.DoOnGetFindControlOptions: PClkFindControlOptions;
+function TfrClickerFindControl.DoOnGetFindControlOptions(AIsSubControl: Boolean = True): PClkFindSubControlOptions;
 begin
   if not Assigned(FOnGetFindControlOptions) then
     raise Exception.Create('OnGetFindControlOptions not assigned.')
   else
-    Result := FOnGetFindControlOptions;
+    Result := FOnGetFindControlOptions(AIsSubControl);
 end;
 
 
@@ -1362,11 +1362,11 @@ end;
 
 function TfrClickerFindControl.HandleOnGetFindControlMatchBitmapText(Sender: TObject): PClkFindControlMatchBitmapText;
 var
-  FindControlOptions: PClkFindControlOptions;
+  FindSubControlOptions: PClkFindSubControlOptions;
   i: Integer;
   Found: Boolean;
 begin
-  FindControlOptions := DoOnGetFindControlOptions;
+  FindSubControlOptions := DoOnGetFindControlOptions;
 
   if Length(FBMPTextProfiles) = 0 then
     raise Exception.Create('No font profile available.');
@@ -1382,7 +1382,7 @@ begin
   end;
 
   if Found then
-    Result := @FindControlOptions^.MatchBitmapText[i]
+    Result := @FindSubControlOptions^.MatchBitmapText[i]
   else
     raise Exception.Create('Can''t find font profile by index.');
 end;
@@ -1672,7 +1672,7 @@ end;
 procedure TfrClickerFindControl.GeneratePreviewGridContent(ADisplayGridLineOption: TDisplayGridLineOption);
 var
   AlgorithmSettings: TMatchBitmapAlgorithmSettings;
-  FindControlOptions: PClkFindControlOptions;
+  FindControlOptions: PClkFindSubControlOptions;
   NoGridAreaImg: TImage;
 
   //SrcRect, DestRect: TRect;
@@ -2021,7 +2021,7 @@ procedure TfrClickerFindControl.PopulateDbgImgExtraMenuWithTxtItems;
 var
   MenuItem, MenuItem_Load: TMenuItem;
   i, QualityIdx: Integer;
-  FindControlOptions: PClkFindControlOptions;
+  FindControlOptions: PClkFindSubControlOptions;
   Bmp: TBitmap;
 begin
   for i := 0 to FSearchAreaDbgImgSearchedBmpMenu.Items.Count - 1 do
@@ -2241,7 +2241,7 @@ var
   MenuItem: TMenuItem;
   ControlLeft: Integer;
   ControlTop: Integer;
-  FindControlOptions: PClkFindControlOptions;
+  FindControlOptions: PClkFindSubControlOptions;
   InMemFiles: TMemFileArr;
   i: Integer;
   FFullScreenBmp: TBitmap;
@@ -2693,7 +2693,7 @@ end;
 procedure TfrClickerFindControl.btnDisplaySearchAreaDebuggingImageClick(Sender: TObject);
 var
   TempBmp: TBitmap;
-  FindControlOptions: PClkFindControlOptions;
+  FindControlOptions: PClkFindSubControlOptions;
 begin
   DisplayDebuggingImage;  //call this, before working with FSearchAreaControlDbgImg, because it might be nil, so it has to be created
 
@@ -3723,7 +3723,7 @@ begin
 end;
 
 
-function TfrClickerFindControl.CalculateMinimumErrorLevelToMatchBitmap(AFindControlOptions: PClkFindControlOptions): Integer;
+function TfrClickerFindControl.CalculateMinimumErrorLevelToMatchBitmap(AFindControlOptions: PClkFindSubControlOptions): Integer;
 var
   ErrA, ErrB: Integer;
 begin
@@ -3734,7 +3734,7 @@ begin
 end;
 
 
-function TfrClickerFindControl.CalculateMinimumErrorCountToMatchBitmap(AFindControlOptions: PClkFindControlOptions): Integer;
+function TfrClickerFindControl.CalculateMinimumErrorCountToMatchBitmap(AFindControlOptions: PClkFindSubControlOptions): Integer;
 var
   ErrA, ErrB: Integer;
 begin
@@ -3747,7 +3747,7 @@ end;
 
 procedure TfrClickerFindControl.MenuItemCalculateMinimumErrorLevelToMatchBitmap(Sender: TObject);
 var
-  FindControlOptions: PClkFindControlOptions;
+  FindControlOptions: PClkFindSubControlOptions;
   Res: Integer;
 begin
   (Sender as TMenuItem).Enabled := False;
@@ -3769,7 +3769,7 @@ end;
 
 procedure TfrClickerFindControl.MenuItemCalculateMinimumColorErrorCountToMatchBitmap(Sender: TObject);
 var
-  FindControlOptions: PClkFindControlOptions;
+  FindControlOptions: PClkFindSubControlOptions;
   Res: Integer;
 begin
   (Sender as TMenuItem).Enabled := False;
@@ -3965,7 +3965,7 @@ end;
 procedure TfrClickerFindControl.MenuItemFindFontNameAndSizeToMatchText(Sender: TObject);
 var
   Found: Boolean;
-  FindControlOptions: PClkFindControlOptions;
+  FindControlOptions: PClkFindSubControlOptions;
   ErrorLevel, AllowedColErr, LastValidSize, FastSearchAllowedColErr: Integer;
   FoundArea: TRect;
   ExpectedArea: TRect; //Expected area where the text should be found. If found somewhere else, then it's a false positive.
@@ -4164,7 +4164,7 @@ procedure TfrClickerFindControl.MenuItemEditSettingsForFontNameAndSizeSearching(
 var
   FontFinderSettings: TFontFinderSettings;
   PreviewFont: TFont;
-  Options: PClkFindControlOptions;
+  Options: PClkFindSubControlOptions;
   FGColor, BGColor: TColor;
   Idx: Integer;
   PreviewBitmap: TBitmap;
@@ -4387,16 +4387,16 @@ end;
 
 
 procedure TfrClickerFindControl.UpdateUseWholeScreenLabel(AUseWholeScreen: Boolean);
-var
-  FindControlOptions: PClkFindControlOptions;
+//var
+//  FindControlOptions: PClkFindSUbControlOptions;
 begin
   pnlUseWholeScreen.Visible := AUseWholeScreen;
-  FindControlOptions := DoOnGetFindControlOptions;
+  //FindControlOptions := DoOnGetFindControlOptions;
 
-  if AUseWholeScreen and
+  if AUseWholeScreen {and
      (FindControlOptions^.MatchCriteria.WillMatchBitmapText or
      FindControlOptions^.MatchCriteria.WillMatchBitmapFiles or
-     FindControlOptions^.MatchCriteria.WillMatchPrimitiveFiles) then
+     FindControlOptions^.MatchCriteria.WillMatchPrimitiveFiles)} then
     pnlUseWholeScreen.Color := $00B6B6FF  //some light red
   else
     pnlUseWholeScreen.Color := $0053F783; //some green
@@ -4405,7 +4405,8 @@ end;
 
 procedure TfrClickerFindControl.ClearControls;
 var
-  FindControlOptions: PClkFindControlOptions;
+  //FindControlOptions: PClkFindControlOptions;
+  FindSubControlOptions: PClkFindSubControlOptions;
   Offsets: TSimpleRectString;
 begin
   CreateBMPTextFrames(0);
@@ -4413,25 +4414,36 @@ begin
 
   lstMatchBitmapFiles.Clear;
   lstMatchPrimitiveFiles.Clear;
-  FindControlOptions := DoOnGetFindControlOptions;
+  //FindControlOptions := DoOnGetFindControlOptions;
+  FindSubControlOptions := DoOnGetFindControlOptions;  ////////////////////// should be DoOnGetFindSubControlOptions
 
-  FindControlOptions^.MatchBitmapAlgorithm := mbaBruteForce;
-  FindControlOptions^.MatchBitmapAlgorithmSettings.XMultipleOf := 1;
-  FindControlOptions^.MatchBitmapAlgorithmSettings.YMultipleOf := 1;
-  FindControlOptions^.MatchBitmapAlgorithmSettings.XOffset := 0;
-  FindControlOptions^.MatchBitmapAlgorithmSettings.YOffset := 0;
-  FindControlOptions^.StartSearchingWithCachedControl := False;
+  FindSubControlOptions^.MatchBitmapAlgorithm := mbaBruteForce;
+  FindSubControlOptions^.MatchBitmapAlgorithmSettings.XMultipleOf := 1;
+  FindSubControlOptions^.MatchBitmapAlgorithmSettings.YMultipleOf := 1;
+  FindSubControlOptions^.MatchBitmapAlgorithmSettings.XOffset := 0;
+  FindSubControlOptions^.MatchBitmapAlgorithmSettings.YOffset := 0;
+  FindSubControlOptions^.StartSearchingWithCachedControl := False;
+  //FindControlOptions^.StartSearchingWithCachedControl := False;
 
   UpdateBitmapAlgorithmSettings;
 
-  FindControlOptions^.InitialRectangle.Left := '$Control_Left$';
-  FindControlOptions^.InitialRectangle.Top := '$Control_Top$';
-  FindControlOptions^.InitialRectangle.Right := '$Control_Right$';
-  FindControlOptions^.InitialRectangle.Bottom := '$Control_Bottom$';
-  FindControlOptions^.InitialRectangle.LeftOffset := '0';
-  FindControlOptions^.InitialRectangle.TopOffset := '0';
-  FindControlOptions^.InitialRectangle.RightOffset := '0';
-  FindControlOptions^.InitialRectangle.BottomOffset := '0';
+  //FindControlOptions^.InitialRectangle.Left := '$Control_Left$';
+  //FindControlOptions^.InitialRectangle.Top := '$Control_Top$';
+  //FindControlOptions^.InitialRectangle.Right := '$Control_Right$';
+  //FindControlOptions^.InitialRectangle.Bottom := '$Control_Bottom$';
+  //FindControlOptions^.InitialRectangle.LeftOffset := '0';
+  //FindControlOptions^.InitialRectangle.TopOffset := '0';
+  //FindControlOptions^.InitialRectangle.RightOffset := '0';
+  //FindControlOptions^.InitialRectangle.BottomOffset := '0';
+
+  FindSubControlOptions^.InitialRectangle.Left := '$Control_Left$';
+  FindSubControlOptions^.InitialRectangle.Top := '$Control_Top$';
+  FindSubControlOptions^.InitialRectangle.Right := '$Control_Right$';
+  FindSubControlOptions^.InitialRectangle.Bottom := '$Control_Bottom$';
+  FindSubControlOptions^.InitialRectangle.LeftOffset := '0';
+  FindSubControlOptions^.InitialRectangle.TopOffset := '0';
+  FindSubControlOptions^.InitialRectangle.RightOffset := '0';
+  FindSubControlOptions^.InitialRectangle.BottomOffset := '0';
 
   Offsets.Left := '0';
   Offsets.Top := '0';

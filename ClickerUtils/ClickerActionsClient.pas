@@ -929,11 +929,11 @@ var
   TempStringList: TStringList;
 begin
   for i := 0 to Length(AClkActions) - 1 do
-    if AClkActions[i].ActionOptions.Action in [acFindControl, acFindSubControl] then
+    if AClkActions[i].ActionOptions.Action = acFindSubControl then
     begin
       TempStringList := TStringList.Create;
       try
-        TempStringList.Text := AClkActions[i].FindControlOptions.MatchBitmapFiles;
+        TempStringList.Text := AClkActions[i].FindSubControlOptions.MatchBitmapFiles;
 
         for j := 0 to TempStringList.Count - 1 do
           AListOfFiles.Add(TempStringList.Strings[j]);

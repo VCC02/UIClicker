@@ -87,9 +87,7 @@ function MatchControlByBitmap(Algorithm: TMatchBitmapAlgorithm;
                               AStopAllActionsOnDemand: PBoolean;
                               ADisplayGridLineOption: TDisplayGridLineOption): Boolean;
 
-function FindControlOnScreen(Algorithm: TMatchBitmapAlgorithm;
-                             AlgorithmSettings: TMatchBitmapAlgorithmSettings;
-                             InputData: TFindControlInputData;
+function FindControlOnScreen(InputData: TFindControlInputData;
                              AInitialTickCount: QWord;
                              AStopAllActionsOnDemand: PBoolean;
                              var AResultedControl: TCompRecArr;
@@ -103,8 +101,8 @@ function FindSubControlOnScreen(Algorithm: TMatchBitmapAlgorithm;
                              var AResultedControl: TCompRecArr;
                              ADisplayGridLineOption: TDisplayGridLineOption): Boolean;
 
-function FindWindowOnScreenByCaptionOrClass(InputData: TFindControlInputData; AInitialTickCount, ATimeout: Cardinal; AStopAllActionsOnDemand: PBoolean; out AResultedControl: TCompRec): Boolean;
-function FindWindowOnScreenByCaptionAndClass(InputData: TFindControlInputData; AInitialTickCount, ATimeout: Cardinal; AStopAllActionsOnDemand: PBoolean; var AResultedControls: TCompRecArr): Boolean;
+function FindWindowOnScreenByCaptionOrClass(InputData: TFindControlInputData; AStopAllActionsOnDemand: PBoolean; out AResultedControl: TCompRec): Boolean;
+function FindWindowOnScreenByCaptionAndClass(InputData: TFindControlInputData; AStopAllActionsOnDemand: PBoolean; var AResultedControls: TCompRecArr): Boolean;
 
 
 const
@@ -371,7 +369,7 @@ begin
 end;
 
 
-function FindWindowOnScreenByCaptionOrClass(InputData: TFindControlInputData; AInitialTickCount, ATimeout: Cardinal; AStopAllActionsOnDemand: PBoolean; out AResultedControl: TCompRec): Boolean;
+function FindWindowOnScreenByCaptionOrClass(InputData: TFindControlInputData; AStopAllActionsOnDemand: PBoolean; out AResultedControl: TCompRec): Boolean;
 var
   ListOfControlTexts, ListOfControlClasses: TStringList;
   hwc: TCompRec;
@@ -432,7 +430,7 @@ begin
 end;
 
 
-function FindWindowOnScreenByCaptionAndClass(InputData: TFindControlInputData; AInitialTickCount, ATimeout: Cardinal; AStopAllActionsOnDemand: PBoolean; var AResultedControls: TCompRecArr): Boolean;
+function FindWindowOnScreenByCaptionAndClass(InputData: TFindControlInputData; AStopAllActionsOnDemand: PBoolean; var AResultedControls: TCompRecArr): Boolean;
 var
   ListOfControlTexts, ListOfControlClasses: TStringList;
 begin
@@ -1028,8 +1026,6 @@ end;
 
 
 function MatchControl(var CompAtPoint: TCompRec;
-                      Algorithm: TMatchBitmapAlgorithm;
-                      AlgorithmSettings: TMatchBitmapAlgorithmSettings;
                       AInputData: TFindControlInputData;
                       AStopAllActionsOnDemand: PBoolean;
                       {var} AvailableControls: TCompRecArr; //Do not pass by reference. Let it create a copy, so that any modification will not affect "source" components (search area).
@@ -1127,9 +1123,7 @@ begin
 end;
 
 
-function FindControlOnScreen(Algorithm: TMatchBitmapAlgorithm;
-                             AlgorithmSettings: TMatchBitmapAlgorithmSettings;
-                             InputData: TFindControlInputData;
+function FindControlOnScreen(InputData: TFindControlInputData;
                              AInitialTickCount: QWord;
                              AStopAllActionsOnDemand: PBoolean;
                              var AResultedControl: TCompRecArr;
@@ -1200,8 +1194,6 @@ begin
       CompAtPoint.YOffsetFromParent := 0;
                                                            //ToDo: enclose this code with a loop for verifying excluded handles
       if MatchControl(CompAtPoint,
-                      Algorithm,
-                      AlgorithmSettings,
                       InputDataForCaching,
                       AStopAllActionsOnDemand,
                       AvailableControls,
@@ -1255,8 +1247,6 @@ begin
             //SetCursorPos(tp.X, tp.Y); /////////////////// debug only
 
             if MatchControl(CompAtPoint,
-                            Algorithm,
-                            AlgorithmSettings,
                             InputData,
                             AStopAllActionsOnDemand,
                             AvailableControls,
@@ -1301,13 +1291,6 @@ begin
     finally
       ClearUsedValues(XValues);
       ClearUsedValues(YValues);
-
-      if not InputData.StopSearchOnMismatch then
-        if Length(AResultedControl) = 0 then
-        begin
-          SetLength(AResultedControl, Length(AResultedControl) + 1);
-          AResultedControl[Length(AResultedControl) - 1] := CompAtPoint;
-        end;
     end;
   finally
     ListOfControlTexts.Free;

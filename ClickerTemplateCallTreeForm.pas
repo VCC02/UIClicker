@@ -249,7 +249,7 @@ begin
     if FTemplateFiles[i] <> nil then
     begin
       for j := 0 to Length(FTemplateFiles[i]^.ClkActions) - 1 do
-        SetLength(FTemplateFiles[i]^.ClkActions[j].FindControlOptions.MatchBitmapText, 0);
+        SetLength(FTemplateFiles[i]^.ClkActions[j].FindSubControlOptions.MatchBitmapText, 0);
 
       SetLength(FTemplateFiles[i]^.ClkActions, 0);
       Dispose(FTemplateFiles[i]);
@@ -369,7 +369,7 @@ begin
             for i := 0 to Length(NodeData^.Template^.ClkActions) - 1 do
             begin
               if NodeData^.Template^.ClkActions[i].ActionOptions.Action = acFindSubControl then
-                Content.Add(Blanks + '    Bmps: "' + FastReplace_ReturnToCSV(NodeData^.Template^.ClkActions[i].FindControlOptions.MatchBitmapFiles) + '"');
+                Content.Add(Blanks + '    Bmps: "' + FastReplace_ReturnToCSV(NodeData^.Template^.ClkActions[i].FindSubControlOptions.MatchBitmapFiles) + '"');
             end;
           end;
 

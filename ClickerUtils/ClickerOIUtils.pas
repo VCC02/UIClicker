@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2024 VCC
+    Copyright (C) 2025 VCC
     creation date: Mar 2023
     initial release date: 10 Mar 2023
 
@@ -49,7 +49,7 @@ function AddMenuItemToAnotherMenuItem(APopupMenu: TPopupMenu; AParentMenuItem: T
 function AddMenuItemToPopupMenu(APopupMenu: TPopupMenu; ACaption: TCaption; AHandler: TNotifyEvent;
   ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; AEditingAction: PClkActionRec): TMenuItem;
 
-procedure BuildFontColorIcons(AImgLst: TImageList; var AFindControlOptions: TClkFindControlOptions; AEvaluateReplacementsFunc: TEvaluateReplacementsFunc);
+procedure BuildFontColorIcons(AImgLst: TImageList; var AFindSubControlOptions: TClkFindSubControlOptions; AEvaluateReplacementsFunc: TEvaluateReplacementsFunc);
 
 
 implementation
@@ -87,20 +87,20 @@ begin
 end;
 
 
-procedure BuildFontColorIcons(AImgLst: TImageList; var AFindControlOptions: TClkFindControlOptions; AEvaluateReplacementsFunc: TEvaluateReplacementsFunc);
+procedure BuildFontColorIcons(AImgLst: TImageList; var AFindSubControlOptions: TClkFindSubControlOptions; AEvaluateReplacementsFunc: TEvaluateReplacementsFunc);
 var
   i: Integer;
   FontProfilesCount: Integer;
   FG, BG: TColor;
   Bmp: TBitmap;
 begin
-  FontProfilesCount := Length(AFindControlOptions.MatchBitmapText);
+  FontProfilesCount := Length(AFindSubControlOptions.MatchBitmapText);
 
   AImgLst.Clear;
   for i := 0 to FontProfilesCount - 1 do
   begin
-    FG := HexToInt(AEvaluateReplacementsFunc(AFindControlOptions.MatchBitmapText[i].ForegroundColor));
-    BG := HexToInt(AEvaluateReplacementsFunc(AFindControlOptions.MatchBitmapText[i].BackgroundColor));
+    FG := HexToInt(AEvaluateReplacementsFunc(AFindSubControlOptions.MatchBitmapText[i].ForegroundColor));
+    BG := HexToInt(AEvaluateReplacementsFunc(AFindSubControlOptions.MatchBitmapText[i].BackgroundColor));
 
     Bmp := TBitmap.Create;
     try
