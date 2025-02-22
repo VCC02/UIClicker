@@ -355,11 +355,11 @@ begin
   GetDefaultPropertyValues_ExecApp(TempAction.ExecAppOptions);
   AddExecAppActionToTemplate(ATestTemplateFileName, 'TestExecApp', 0, True, '', TempAction.ExecAppOptions, FInMemFS);
 
-  GetDefaultPropertyValues_FindControl(TempAction.FindControlOptions, False);
-  AddFindControlActionToTemplate(ATestTemplateFileName, 'TestFindControl', 0, True, '', TempAction.FindControlOptions, FInMemFS, False);
+  GetDefaultPropertyValues_FindControl(TempAction.FindControlOptions);
+  AddFindControlActionToTemplate(ATestTemplateFileName, 'TestFindControl', 0, True, '', TempAction.FindControlOptions, FInMemFS);
 
-  GetDefaultPropertyValues_FindControl(TempAction.FindControlOptions, True);
-  AddFindControlActionToTemplate(ATestTemplateFileName, 'TestFindSubControl', 0, True, '', TempAction.FindControlOptions, FInMemFS, True);
+  GetDefaultPropertyValues_FindSubControl(TempAction.FindSubControlOptions);
+  AddFindSubControlActionToTemplate(ATestTemplateFileName, 'TestFindSubControl', 0, True, '', TempAction.FindSubControlOptions, FInMemFS);
 
   GetDefaultPropertyValues_SetControlText(TempAction.SetTextOptions);
   AddSetControlTextActionToTemplate(ATestTemplateFileName, 'TestSetControlText', 0, True, '', TempAction.SetTextOptions, FInMemFS);

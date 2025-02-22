@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2024 VCC
+    Copyright (C) 2025 VCC
     creation date: Dec 2024
     initial release date: 14 Dec 2024
 
@@ -208,7 +208,6 @@ begin
   GetDefaultPropertyValues_FindControl(FindControlOptions);
   FindControlOptions.MatchText := 'UI Clicker Main';
   FindControlOptions.MatchClassName := 'Window';
-  FindControlOptions.MatchBitmapFiles := 'DummyFile.bmp';
 
   SetLength(Response, CMaxSharedStringLength);
 
@@ -228,24 +227,24 @@ end;
 
 procedure TTestClickerClientHTTPAPI.Test_ExecuteFindSubControlAction_With_UseServerDebugging;
 var
-  FindControlOptions: TClkFindControlOptions;
-  FindControlOptionsAPI: TClkFindControlOptionsAPI;
+  FindSubControlOptions: TClkFindSubControlOptions;
+  FindSubControlOptionsAPI: TClkFindSubControlOptionsAPI;
   MatchBitmapTextRecAPI: TMatchBitmapTextRecAPI;
   FindControlMatchBitmapTextAPIArr: TClkFindControlMatchBitmapTextAPIArr;
   ActionName, FileLoc: WideString;
   Response: string;
   Th: TClientThread;
 begin
-  GetDefaultPropertyValues_FindControl(FindControlOptions, True);
-  FindControlOptions.MatchText := '-bit';
-  FindControlOptions.MatchBitmapFiles := 'FirstDummyFile.bmp' + #4#5 + 'SecondDummyFile.bmp' + #4#5;
-  SetLength(FindControlOptions.MatchBitmapText, 2);
-  FindControlOptions.MatchBitmapText[1] := FindControlOptions.MatchBitmapText[0];
-  FindControlOptions.MatchBitmapText[1].ForegroundColor := '00FFFF';
-  FindControlOptions.MatchBitmapText[1].BackgroundColor := '008000';
-  FindControlOptions.MatchBitmapText[1].IgnoreBackgroundColor := True;
-  FindControlOptions.MatchBitmapText[0].ProfileName := 'First';
-  FindControlOptions.MatchBitmapText[1].ProfileName := 'Second';
+  GetDefaultPropertyValues_FindSubControl(FindSubControlOptions);
+  FindSubControlOptions.MatchText := '-bit';
+  FindSubControlOptions.MatchBitmapFiles := 'FirstDummyFile.bmp' + #4#5 + 'SecondDummyFile.bmp' + #4#5;
+  SetLength(FindSubControlOptions.MatchBitmapText, 2);
+  FindSubControlOptions.MatchBitmapText[1] := FindSubControlOptions.MatchBitmapText[0];
+  FindSubControlOptions.MatchBitmapText[1].ForegroundColor := '00FFFF';
+  FindSubControlOptions.MatchBitmapText[1].BackgroundColor := '008000';
+  FindSubControlOptions.MatchBitmapText[1].IgnoreBackgroundColor := True;
+  FindSubControlOptions.MatchBitmapText[0].ProfileName := 'First';
+  FindSubControlOptions.MatchBitmapText[1].ProfileName := 'Second';
 
   SetLength(Response, CMaxSharedStringLength);
 
@@ -254,8 +253,8 @@ begin
 
   Th := AsyncExecTestTemplate(CTestDriverAddress, '$AppDir$\..\Tests\TestFiles\ClickDebuggingButton.clktmpl');
   try
-    SetFindControlOptionsToAPI(FindControlOptions, FindControlOptionsAPI, MatchBitmapTextRecAPI, FindControlMatchBitmapTextAPIArr);
-    ExecuteFindSubControlAction(@ActionName[1], 1000, @FindControlOptionsAPI, True, @FileLoc[1], @Response[1]);
+    SetFindSubControlOptionsToAPI(FindSubControlOptions, FindSubControlOptionsAPI, MatchBitmapTextRecAPI, FindControlMatchBitmapTextAPIArr);
+    ExecuteFindSubControlAction(@ActionName[1], 1000, @FindSubControlOptionsAPI, True, @FileLoc[1], @Response[1]);
     WaitForDebuggingActionToFinish(Response, Th);
   finally
     Th.Free;

@@ -1231,15 +1231,7 @@ begin
             tp.X := XValues[k][j] + InputData.GlobalSearchArea.Left;
             tp.Y := YValues[k][i] + InputData.GlobalSearchArea.Top;
 
-            if InputData.ImageSource = isScreenshot then
-              CompAtPoint := GetWindowClassRec(tp)
-            else
-            begin
-              CompAtPoint.ComponentRectangle.Left := 0;
-              CompAtPoint.ComponentRectangle.Top := 0;
-              CompAtPoint.ComponentRectangle.Width := 100;  //Not used. Set to a "valid" value, in case it will be used later.
-              CompAtPoint.ComponentRectangle.Height := 100; //Not used. Set to a "valid" value, in case it will be used later.
-            end;
+            CompAtPoint := GetWindowClassRec(tp);
 
             CompAtPoint.XOffsetFromParent := 0;
             CompAtPoint.YOffsetFromParent := 0;

@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2024 VCC
+    Copyright (C) 2025 VCC
     creation date: Aug 2022
     initial release date: 25 Aug 2022
 
@@ -42,8 +42,8 @@ type
     procedure Test_ExecutePlugin(APluginVarsAndValues, AExpectedErr: string);
     procedure Test_ExecuteEditTemplate(AActionType: TClkAction; AOperation: TEditTemplateOperation; var AExpectedValues: TStringArray);
     procedure CreateTheSecondPluginAction(var AExpectedValues: TStringArray);
-    procedure Create_SaveTemplateButton_WithAndWithoutThreads_TestTemplateInMem(var FindControlOptions: TClkFindControlOptions; var WindowOperationsOptions: TClkWindowOperationsOptions; var FindSubControlOptions: TClkFindControlOptions);
-    procedure Execute_UIClickerActions_SaveTemplateButton(AThreadCount, AThreadMessage: string; var FindControlOptions: TClkFindControlOptions; var WindowOperationsOptions: TClkWindowOperationsOptions; var FindSubControlOptions: TClkFindControlOptions);
+    procedure Create_SaveTemplateButton_WithAndWithoutThreads_TestTemplateInMem(var FindControlOptions: TClkFindControlOptions; var WindowOperationsOptions: TClkWindowOperationsOptions; var FindSubControlOptions: TClkFindSubControlOptions);
+    procedure Execute_UIClickerActions_SaveTemplateButton(AThreadCount, AThreadMessage: string; var FindControlOptions: TClkFindControlOptions; var WindowOperationsOptions: TClkWindowOperationsOptions; var FindSubControlOptions: TClkFindSubControlOptions);
 
     procedure Test_FindSubControl_RenderExternalBackground;
     procedure CloseRenderingServer;
@@ -316,7 +316,7 @@ end;
 procedure TTestLowLevelHTTPAPI.Test_ExecuteFindSubControlAction_UIClickerMain_BitnessLabel;
 var
   Response: string;
-  FindSubControlOptions: TClkFindControlOptions;
+  FindSubControlOptions: TClkFindSubControlOptions;
 begin
   SetupTargetWindowFor_FindSubControl;
   GenerateFindSubControlOptionsForMainUIClickerWindow_Bitness(FindSubControlOptions, False);
@@ -329,7 +329,7 @@ end;
 procedure TTestLowLevelHTTPAPI.Test_ExecuteFindSubControlAction_UIClickerMain_BitnessLabelWithCropping;
 var
   Response: string;
-  FindSubControlOptions: TClkFindControlOptions;
+  FindSubControlOptions: TClkFindSubControlOptions;
 begin
   SetupTargetWindowFor_FindSubControl;
   GenerateFindSubControlOptionsForMainUIClickerWindow_Bitness(FindSubControlOptions, False);
@@ -347,7 +347,7 @@ procedure TTestLowLevelHTTPAPI.Test_ExecuteFindSubControlAction_UIClickerMain_Bi
 var
   Response: string;
   ListOfVars: TStringList;
-  FindSubControlOptions: TClkFindControlOptions;
+  FindSubControlOptions: TClkFindSubControlOptions;
 begin
   SetupTargetWindowFor_FindSubControl; //this should set the execution status to "Successful", then the next call, should set it to "Failed".
   GenerateFindSubControlOptionsForMainUIClickerWindow_Bitness(FindSubControlOptions, False);
@@ -371,7 +371,7 @@ end;
 procedure TTestLowLevelHTTPAPI.Test_ExecuteFindSubControlAction_UIClickerMain_BitnessLabelWithBadCropping_Width0;
 var
   Response: string;
-  FindSubControlOptions: TClkFindControlOptions;
+  FindSubControlOptions: TClkFindSubControlOptions;
 begin
   SetupTargetWindowFor_FindSubControl; //this should set the execution status to "Successful", then the next call, should set it to "Failed".
   GenerateFindSubControlOptionsForMainUIClickerWindow_Bitness(FindSubControlOptions, False);
@@ -389,7 +389,7 @@ end;
 procedure TTestLowLevelHTTPAPI.Test_ExecuteFindSubControlAction_UIClickerMain_BitnessLabelWithBadCropping_NegativeWidth;
 var
   Response: string;
-  FindSubControlOptions: TClkFindControlOptions;
+  FindSubControlOptions: TClkFindSubControlOptions;
 begin
   SetupTargetWindowFor_FindSubControl; //this should set the execution status to "Successful", then the next call, should set it to "Failed".
   GenerateFindSubControlOptionsForMainUIClickerWindow_Bitness(FindSubControlOptions, False);
@@ -407,7 +407,7 @@ end;
 procedure TTestLowLevelHTTPAPI.Test_ExecuteFindSubControlAction_UIClickerMain_BitnessLabelWithBadCropping_Height0;
 var
   Response: string;
-  FindSubControlOptions: TClkFindControlOptions;
+  FindSubControlOptions: TClkFindSubControlOptions;
 begin
   SetupTargetWindowFor_FindSubControl; //this should set the execution status to "Successful", then the next call, should set it to "Failed".
   GenerateFindSubControlOptionsForMainUIClickerWindow_Bitness(FindSubControlOptions, False);
@@ -425,7 +425,7 @@ end;
 procedure TTestLowLevelHTTPAPI.Test_ExecuteFindSubControlAction_UIClickerMain_BitnessLabelWithBadCropping_NegativeHeight;
 var
   Response: string;
-  FindSubControlOptions: TClkFindControlOptions;
+  FindSubControlOptions: TClkFindSubControlOptions;
 begin
   SetupTargetWindowFor_FindSubControl; //this should set the execution status to "Successful", then the next call, should set it to "Failed".
   GenerateFindSubControlOptionsForMainUIClickerWindow_Bitness(FindSubControlOptions, False);
@@ -483,15 +483,15 @@ const
   CThreadCount_VarName = '$ThreadCount$';
   CFindSubControlActionDuration_VarName = '$ActionExecDuration$';
 
-procedure TTestLowLevelHTTPAPI.Create_SaveTemplateButton_WithAndWithoutThreads_TestTemplateInMem(var FindControlOptions: TClkFindControlOptions; var WindowOperationsOptions: TClkWindowOperationsOptions; var FindSubControlOptions: TClkFindControlOptions);
+procedure TTestLowLevelHTTPAPI.Create_SaveTemplateButton_WithAndWithoutThreads_TestTemplateInMem(var FindControlOptions: TClkFindControlOptions; var WindowOperationsOptions: TClkWindowOperationsOptions; var FindSubControlOptions: TClkFindSubControlOptions);
 begin
-  GetDefaultPropertyValues_FindControl(FindControlOptions, False);
+  GetDefaultPropertyValues_FindControl(FindControlOptions);
   FindControlOptions.MatchText := 'UI Clicker Actions';
   FindControlOptions.MatchClassName := 'Window';
 
   GetDefaultPropertyValues_WindowOperations(WindowOperationsOptions);
 
-  GetDefaultPropertyValues_FindControl(FindSubControlOptions, True);
+  GetDefaultPropertyValues_FindSubControl(FindSubControlOptions);
   FindSubControlOptions.MatchText := 'Save Template'; //looking for the Save Template button
   SetLength(FindSubControlOptions.MatchBitmapText, 3);
 
@@ -526,7 +526,7 @@ begin
 end;
 
 
-procedure TTestLowLevelHTTPAPI.Execute_UIClickerActions_SaveTemplateButton(AThreadCount, AThreadMessage: string; var FindControlOptions: TClkFindControlOptions; var WindowOperationsOptions: TClkWindowOperationsOptions; var FindSubControlOptions: TClkFindControlOptions);
+procedure TTestLowLevelHTTPAPI.Execute_UIClickerActions_SaveTemplateButton(AThreadCount, AThreadMessage: string; var FindControlOptions: TClkFindControlOptions; var WindowOperationsOptions: TClkWindowOperationsOptions; var FindSubControlOptions: TClkFindSubControlOptions);
 begin
   Expect(ExecuteFindControlAction(CTestServerAddress, FindControlOptions, 'Find this window (UIClicker Actions)', 3000, CREParam_FileLocation_ValueMem)).ToContain('$LastAction_Status$=Successful', 'Should find window');
   Expect(ExecuteWindowOperationsAction(CTestServerAddress, WindowOperationsOptions)).ToContain('$LastAction_Status$=Successful', 'Should bring window to front');
@@ -542,7 +542,7 @@ var
 
   FindControlOptions: TClkFindControlOptions;
   WindowOperationsOptions: TClkWindowOperationsOptions;
-  FindSubControlOptions: TClkFindControlOptions;
+  FindSubControlOptions: TClkFindSubControlOptions;
 begin
   Create_SaveTemplateButton_WithAndWithoutThreads_TestTemplateInMem(FindControlOptions, WindowOperationsOptions, FindSubControlOptions);
 
@@ -595,7 +595,7 @@ end;
 procedure TTestLowLevelHTTPAPI.Test_ExecuteFindSubControlAction_UIClickerMain_WindowInterpreterButton_Disk;
 var
   Response: string;
-  FindSubControlOptions: TClkFindControlOptions;
+  FindSubControlOptions: TClkFindSubControlOptions;
 begin
   SetupTargetWindowFor_FindSubControl;
   GenerateFindSubControlOptionsForMainUIClickerWindow_WinInterpBtn(FindSubControlOptions, False);
@@ -612,7 +612,7 @@ const
 var
   Response: string;
   ListOfVars: TStringList;
-  FindSubControlOptions: TClkFindControlOptions;
+  FindSubControlOptions: TClkFindSubControlOptions;
 begin
   SetupTargetWindowFor_FindSubControl;
   GenerateFindSubControlOptionsForMainUIClickerWindow_WinInterpBtn(FindSubControlOptions, False);
@@ -634,7 +634,7 @@ end;
 procedure TTestLowLevelHTTPAPI.Test_ExecuteFindSubControlAction_UIClickerMain_PmtvPreviewButton_Disk;
 var
   Response: string;
-  FindSubControlOptions: TClkFindControlOptions;
+  FindSubControlOptions: TClkFindSubControlOptions;
 begin
   SetupTargetWindowFor_FindSubControl;
   GenerateFindSubControlOptionsForMainUIClickerWindow_PmtvPreviewBtn(FindSubControlOptions, False);
@@ -652,7 +652,7 @@ const
                '$AppDir$\TestFiles\PreviewButtonIcon.pmtv'#13#10'$AppDir$\TestFiles\PreviewButtonIcon64.pmtv';
 var
   Response: string;
-  FindSubControlOptions: TClkFindControlOptions;
+  FindSubControlOptions: TClkFindSubControlOptions;
   FileProvider: TPollForMissingServerFiles;
 begin
   SetupTargetWindowFor_FindSubControl;
@@ -846,22 +846,22 @@ procedure TTestLowLevelHTTPAPI.Test_FindSubControl_ExternalBackground_isflDisk;
 const
   CExtBk = '$AppDir$\Tests\TestFiles\MyLongText_GreenBlue.bmp';  //used with isflDisk
 var
-  FindControlOptions: TClkFindControlOptions;
+  FindSubControlOptions: TClkFindSubControlOptions;
 begin
-  GenerateFindSubControlOptionsForLoadedBackgroundBmp(FindControlOptions, False, CExtBk);
-  ExpectSuccessfulAction(FastReplace_87ToReturn(ExecuteFindSubControlAction(TestServerAddress, FindControlOptions, 'FindExtBmpFileFromDisk', 1000, CREParam_FileLocation_ValueDisk, True)));
+  GenerateFindSubControlOptionsForLoadedBackgroundBmp(FindSubControlOptions, False, CExtBk);
+  ExpectSuccessfulAction(FastReplace_87ToReturn(ExecuteFindSubControlAction(TestServerAddress, FindSubControlOptions, 'FindExtBmpFileFromDisk', 1000, CREParam_FileLocation_ValueDisk, True)));
 end;
 
 
 procedure TTestLowLevelHTTPAPI.Test_FindSubControl_ExternalBackground_isflMem;
 var
-  FindControlOptions: TClkFindControlOptions;
+  FindSubControlOptions: TClkFindSubControlOptions;
 begin
   Test_FindSubControl_RenderExternalBackground;
-  GenerateFindSubControlOptionsForExtRenderingText(FindControlOptions, False, 'I:\TheResult.bmp');
+  GenerateFindSubControlOptionsForExtRenderingText(FindSubControlOptions, False, 'I:\TheResult.bmp');
 
   try
-    ExpectSuccessfulAction(FastReplace_87ToReturn(ExecuteFindSubControlAction(TestServerAddress, FindControlOptions, 'FindExtBmp', 1000, CREParam_FileLocation_ValueDisk, True)));
+    ExpectSuccessfulAction(FastReplace_87ToReturn(ExecuteFindSubControlAction(TestServerAddress, FindSubControlOptions, 'FindExtBmp', 1000, CREParam_FileLocation_ValueDisk, True)));
   finally
     CloseRenderingServer;  //close it anyway, so that other tests can run
   end;
@@ -870,31 +870,31 @@ end;
 
 procedure TTestLowLevelHTTPAPI.Test_FindSubControl_PrecisionTimeout;
 var
-  FindControlOptions: TClkFindControlOptions;
+  FindSubControlOptions: TClkFindSubControlOptions;
   tk1, tk2: QWord;
   Response: string;
 begin
-  GenerateFindSubControlOptionsForFullScreenshot(FindControlOptions, False);
-  FindControlOptions.UseFastSearch := False;
-  SetLength(FindControlOptions.MatchBitmapText, 4);
-  FindControlOptions.MatchBitmapText[1] := FindControlOptions.MatchBitmapText[0];
-  FindControlOptions.MatchBitmapText[2] := FindControlOptions.MatchBitmapText[0];
-  FindControlOptions.MatchBitmapText[3] := FindControlOptions.MatchBitmapText[0];
-  FindControlOptions.MatchBitmapText[1].ProfileName := 'two';
-  FindControlOptions.MatchBitmapText[2].ProfileName := 'three';
-  FindControlOptions.MatchBitmapText[3].ProfileName := 'four';
-  FindControlOptions.MatchBitmapText[1].BackgroundColor := '00FFFF'; //yellow
-  FindControlOptions.MatchBitmapText[2].BackgroundColor := '00FF88'; //green
-  FindControlOptions.MatchBitmapText[3].BackgroundColor := '44AADD'; //orange
+  GenerateFindSubControlOptionsForFullScreenshot(FindSubControlOptions, False);
+  FindSubControlOptions.UseFastSearch := False;
+  SetLength(FindSubControlOptions.MatchBitmapText, 4);
+  FindSubControlOptions.MatchBitmapText[1] := FindSubControlOptions.MatchBitmapText[0];
+  FindSubControlOptions.MatchBitmapText[2] := FindSubControlOptions.MatchBitmapText[0];
+  FindSubControlOptions.MatchBitmapText[3] := FindSubControlOptions.MatchBitmapText[0];
+  FindSubControlOptions.MatchBitmapText[1].ProfileName := 'two';
+  FindSubControlOptions.MatchBitmapText[2].ProfileName := 'three';
+  FindSubControlOptions.MatchBitmapText[3].ProfileName := 'four';
+  FindSubControlOptions.MatchBitmapText[1].BackgroundColor := '00FFFF'; //yellow
+  FindSubControlOptions.MatchBitmapText[2].BackgroundColor := '00FF88'; //green
+  FindSubControlOptions.MatchBitmapText[3].BackgroundColor := '44AADD'; //orange
 
   tk1 := GetTickCount64;
-  Response := ExecuteFindSubControlAction(TestServerAddress, FindControlOptions, 'FindTxtOnDesktop_FullDuration', 2000, CREParam_FileLocation_ValueDisk, True);
+  Response := ExecuteFindSubControlAction(TestServerAddress, FindSubControlOptions, 'FindTxtOnDesktop_FullDuration', 2000, CREParam_FileLocation_ValueDisk, True);
   ExpectFailedAction(FastReplace_87ToReturn(Response), 'Timeout at "FindTxtOnDesktop_FullDuration" in');
   tk1 := GetTickCount64 - tk1;
 
-  FindControlOptions.PrecisionTimeout := True;
+  FindSubControlOptions.PrecisionTimeout := True;
   tk2 := GetTickCount64;
-  Response := ExecuteFindSubControlAction(TestServerAddress, FindControlOptions, 'FindTxtOnDesktop_FastTimeout', 2000, CREParam_FileLocation_ValueDisk, True);
+  Response := ExecuteFindSubControlAction(TestServerAddress, FindSubControlOptions, 'FindTxtOnDesktop_FastTimeout', 2000, CREParam_FileLocation_ValueDisk, True);
   ExpectFailedAction(FastReplace_87ToReturn(Response), 'Timeout');
   tk2 := GetTickCount64 - tk2;
 

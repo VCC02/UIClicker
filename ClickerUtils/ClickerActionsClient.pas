@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2024 VCC
+    Copyright (C) 2025 VCC
     creation date: Dec 2019
     initial release date: 26 Jul 2022
 
@@ -233,7 +233,7 @@ function SendPluginCmd(ARemoteAddress: string; APluginCmd: string; AStackLevel: 
 function ExecuteClickAction(ARemoteAddress: string; AClickOptions: TClkClickOptions; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
 function ExecuteExecAppAction(ARemoteAddress: string; AExecAppOptions: TClkExecAppOptions; AActionName: string; AActionTimeout: Integer; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
 function ExecuteFindControlAction(ARemoteAddress: string; AFindControlOptions: TClkFindControlOptions; AActionName: string; AActionTimeout: Integer; AFileLocation: string; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
-function ExecuteFindSubControlAction(ARemoteAddress: string; AFindControlOptions: TClkFindControlOptions; AActionName: string; AActionTimeout: Integer; AFileLocation: string; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
+function ExecuteFindSubControlAction(ARemoteAddress: string; AFindSubControlOptions: TClkFindSubControlOptions; AActionName: string; AActionTimeout: Integer; AFileLocation: string; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
 function ExecuteSetControlTextAction(ARemoteAddress: string; ASetTextOptions: TClkSetTextOptions; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
 function ExecuteCallTemplateAction(ARemoteAddress: string; ACallTemplateOptions: TClkCallTemplateOptions; AIsDebugging, AUseLocalDebugger: Boolean; AFileLocation: string; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
 function AsyncExecuteCallTemplateAction(ARemoteAddress: string; ACallTemplateOptions: TClkCallTemplateOptions; AIsDebugging, AUseLocalDebugger: Boolean; AFileLocation: string; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): TClientThread;
@@ -779,9 +779,9 @@ begin
 end;
 
 
-function ExecuteGenericFindControlAction(ARemoteAddress: string; AFindControlOptions: TClkFindControlOptions; AActionName: string; AActionTimeout: Integer; AFileLocation: string; AActionType: string; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
+function ExecuteFindControlAction(ARemoteAddress: string; AFindControlOptions: TClkFindControlOptions; AActionName: string; AActionTimeout: Integer; AFileLocation: string; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
 begin
-  Result := SendTextRequestToServer(ARemoteAddress + AActionType + '?' +
+  Result := SendTextRequestToServer(ARemoteAddress + CRECmd_ExecuteFindControlAction + '?' +
                                     CREParam_StackLevel + '=0' + '&' +   //use the main editor
                                     CREParam_UseServerDebugging + '=' + IntToStr(Ord(AUseServerDebugging)) + '&' +
                                     GetFindControlActionProperties(AFindControlOptions) + '&' +
@@ -794,15 +794,18 @@ begin
 end;
 
 
-function ExecuteFindControlAction(ARemoteAddress: string; AFindControlOptions: TClkFindControlOptions; AActionName: string; AActionTimeout: Integer; AFileLocation: string; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
+function ExecuteFindSubControlAction(ARemoteAddress: string; AFindSubControlOptions: TClkFindSubControlOptions; AActionName: string; AActionTimeout: Integer; AFileLocation: string; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
 begin
-  Result := ExecuteGenericFindControlAction(ARemoteAddress, AFindControlOptions, AActionName, AActionTimeout, AFileLocation, CRECmd_ExecuteFindControlAction, ACallAppProcMsg, AUseServerDebugging);
-end;
+  Result := SendTextRequestToServer(ARemoteAddress + CRECmd_ExecuteFindSubControlAction + '?' +
+                                    CREParam_StackLevel + '=0' + '&' +   //use the main editor
+                                    CREParam_UseServerDebugging + '=' + IntToStr(Ord(AUseServerDebugging)) + '&' +
+                                    GetFindSubControlActionProperties(AFindSubControlOptions) + '&' +
 
-
-function ExecuteFindSubControlAction(ARemoteAddress: string; AFindControlOptions: TClkFindControlOptions; AActionName: string; AActionTimeout: Integer; AFileLocation: string; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
-begin
-  Result := ExecuteGenericFindControlAction(ARemoteAddress, AFindControlOptions, AActionName, AActionTimeout, AFileLocation, CRECmd_ExecuteFindSubControlAction, ACallAppProcMsg, AUseServerDebugging);
+                                    CPropertyName_ActionName + '=' + AActionName + '&' +
+                                    CPropertyName_ActionTimeout + '=' + IntToStr(AActionTimeout) + '&' +
+                                    CREParam_FileLocation + '=' + AFileLocation,
+                                    ACallAppProcMsg
+                                    );
 end;
 
 

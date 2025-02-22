@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2024 VCC
+    Copyright (C) 2025 VCC
     creation date: Aug 2022
     initial release date: 14 Aug 2022
 
@@ -64,9 +64,20 @@ function AddFindControlActionToTemplate(ATemplateFileName: string;
                                         AActionCondition: string;
 
                                         AFindControlOptions: TClkFindControlOptions;
-                                        AInMemFS: TInMemFileSystem;
-                                        AIsSubControl: Boolean = False
+                                        AInMemFS: TInMemFileSystem
                                         ): LongInt;
+
+
+function AddFindSubControlActionToTemplate(ATemplateFileName: string;
+
+                                          AActionName: string;
+                                          AActionTimeout: LongInt; //ms
+                                          AActionEnabled: Boolean;
+                                          AActionCondition: string;
+
+                                          AFindSubControlOptions: TClkFindSubControlOptions;
+                                          AInMemFS: TInMemFileSystem
+                                          ): LongInt;
 
 
 function AddSetControlTextActionToTemplate(ATemplateFileName: string;
@@ -182,12 +193,12 @@ procedure GenerateClickOptionsForMouseWheel(AWheelType: TMouseWheelType; AAmount
 procedure GenerateExecAppOptionsForIPConfig(var AExecAppOptions: TClkExecAppOptions);
 
 procedure GenerateFindControlOptionsForMainUIClickerWindow(var AFindControlOptions: TClkFindControlOptions; AAllowToFail: Boolean; ACustomFormCaption: string = 'UI Clicker Main');
-procedure GenerateFindSubControlOptionsForMainUIClickerWindow_Bitness(var AFindControlOptions: TClkFindControlOptions; AAllowToFail: Boolean);
-procedure GenerateFindSubControlOptionsForMainUIClickerWindow_WinInterpBtn(var AFindControlOptions: TClkFindControlOptions; AAllowToFail: Boolean);
-procedure GenerateFindSubControlOptionsForMainUIClickerWindow_PmtvPreviewBtn(var AFindControlOptions: TClkFindControlOptions; AAllowToFail: Boolean);
-procedure GenerateFindSubControlOptionsForExtRenderingText(var AFindControlOptions: TClkFindControlOptions; AAllowToFail: Boolean; ASourceFileName: string);
-procedure GenerateFindSubControlOptionsForLoadedBackgroundBmp(var AFindControlOptions: TClkFindControlOptions; AAllowToFail: Boolean; ASourceFileName: string);
-procedure GenerateFindSubControlOptionsForFullScreenshot(var AFindControlOptions: TClkFindControlOptions; AAllowToFail: Boolean);
+procedure GenerateFindSubControlOptionsForMainUIClickerWindow_Bitness(var AFindSubControlOptions: TClkFindSubControlOptions; AAllowToFail: Boolean);
+procedure GenerateFindSubControlOptionsForMainUIClickerWindow_WinInterpBtn(var AFindSubControlOptions: TClkFindSubControlOptions; AAllowToFail: Boolean);
+procedure GenerateFindSubControlOptionsForMainUIClickerWindow_PmtvPreviewBtn(var AFindSubControlOptions: TClkFindSubControlOptions; AAllowToFail: Boolean);
+procedure GenerateFindSubControlOptionsForExtRenderingText(var AFindSubControlOptions: TClkFindSubControlOptions; AAllowToFail: Boolean; ASourceFileName: string);
+procedure GenerateFindSubControlOptionsForLoadedBackgroundBmp(var AFindSubControlOptions: TClkFindSubControlOptions; AAllowToFail: Boolean; ASourceFileName: string);
+procedure GenerateFindSubControlOptionsForFullScreenshot(var AFindSubControlOptions: TClkFindSubControlOptions; AAllowToFail: Boolean);
 
 procedure GenerateSetControlTextOptions(var ASetTextOptions: TClkSetTextOptions; AText: string; AControlType: TClkSetTextControlType);
 procedure GenerateCallTemplateOptions(var ACallTemplateOptions: TClkCallTemplateOptions; ATemplateFileName, AListOfVarsAndValues: string; AEvalBefore: Boolean);
@@ -202,7 +213,7 @@ procedure GenerateEditTemplateOptions(var AEditTemplateOptions: TClkEditTemplate
 procedure GenerateDifferentThanDefault_Click(var AClickOptions: TClkClickOptions);
 procedure GenerateDifferentThanDefault_ExecApp(var AExecAppOptions: TClkExecAppOptions);
 procedure GenerateDifferentThanDefault_FindControl(var AFindControlOptions: TClkFindControlOptions);
-procedure GenerateDifferentThanDefault_FindSubControl(var AFindControlOptions: TClkFindControlOptions);
+procedure GenerateDifferentThanDefault_FindSubControl(var AFindSubControlOptions: TClkFindSubControlOptions);
 procedure GenerateDifferentThanDefault_SetControlText(var ASetControlTextOptions: TClkSetTextOptions);
 procedure GenerateDifferentThanDefault_CallTemplate(var ACallTemplateOptions: TClkCallTemplateOptions);
 procedure GenerateDifferentThanDefault_Sleep(var ASleepOptions: TClkSleepOptions);
@@ -335,19 +346,38 @@ function AddFindControlActionToTemplate(ATemplateFileName: string;
                                         AActionCondition: string;
 
                                         AFindControlOptions: TClkFindControlOptions;
-                                        AInMemFS: TInMemFileSystem;
-                                        AIsSubControl: Boolean = False
+                                        AInMemFS: TInMemFileSystem
                                         ): LongInt;
 var
   TempAction: TClkActionRec;
 begin
-  if not AIsSubControl then
-    SetBasicActionOptions(ATemplateFileName, AActionName, acFindControl, AActionTimeout, AActionEnabled, AActionCondition, TempAction)
-  else
-    SetBasicActionOptions(ATemplateFileName, AActionName, acFindSubControl, AActionTimeout, AActionEnabled, AActionCondition, TempAction);
+  SetBasicActionOptions(ATemplateFileName, AActionName, acFindControl, AActionTimeout, AActionEnabled, AActionCondition, TempAction);
 
   //FindControl stuff
-  TempAction.FindControlOptions := AFindControlOptions;
+  TempAction.FindControlOptions := AFindControlOptions; //this structure contains a dynamic array
+
+  AddActionToTemplate(ATemplateFileName, TempAction, AInMemFS);
+  Result := 0;
+end;
+
+
+function AddFindSubControlActionToTemplate(ATemplateFileName: string;
+
+                                        AActionName: string;
+                                        AActionTimeout: LongInt; //ms
+                                        AActionEnabled: Boolean;
+                                        AActionCondition: string;
+
+                                        AFindSubControlOptions: TClkFindSubControlOptions;
+                                        AInMemFS: TInMemFileSystem
+                                        ): LongInt;
+var
+  TempAction: TClkActionRec;
+begin
+  SetBasicActionOptions(ATemplateFileName, AActionName, acFindSubControl, AActionTimeout, AActionEnabled, AActionCondition, TempAction);
+
+  //FindSubControl stuff
+  TempAction.FindSubControlOptions := AFindSubControlOptions;  //this structure contains a dynamic array
 
   AddActionToTemplate(ATemplateFileName, TempAction, AInMemFS);
   Result := 0;
@@ -643,396 +673,363 @@ begin
   AFindControlOptions.MatchCriteria.SearchForControlMode := sfcmGenGrid;
   AFindControlOptions.MatchCriteria.WillMatchText := True;
   AFindControlOptions.MatchCriteria.WillMatchClassName := True;
-  AFindControlOptions.MatchCriteria.WillMatchBitmapText := False;
-  AFindControlOptions.MatchCriteria.WillMatchBitmapFiles := False;
-  AFindControlOptions.MatchCriteria.WillMatchPrimitiveFiles := False;
   AFindControlOptions.MatchText := ACustomFormCaption;
   AFindControlOptions.MatchClassName := 'Window';
   AFindControlOptions.UseWholeScreen := True;
   AFindControlOptions.AllowToFail := AAllowToFail;
-  AFindControlOptions.MatchBitmapAlgorithm := mbaBruteForce;
-  SetLength(AFindControlOptions.MatchBitmapText, 0);
 
   AFindControlOptions.WaitForControlToGoAway := False;
   AFindControlOptions.CachedControlLeft := '';
   AFindControlOptions.CachedControlTop := '';
   AFindControlOptions.StartSearchingWithCachedControl := False;
 
-  AFindControlOptions.UseFastSearch := True;
-
-  AFindControlOptions.SleepySearch := False;
-  AFindControlOptions.StopSearchOnMismatch := True;
-  AFindControlOptions.ImageSource := isScreenshot;
-  AFindControlOptions.ImageSourceFileNameLocation := isflMem;
-
   AFindControlOptions.PrecisionTimeout := False;
-  AFindControlOptions.FullBackgroundImageInResult := True;
-  AFindControlOptions.EvaluateTextCount := '';
-  AFindControlOptions.CropFromScreenshot := False;
 end;
 
 
-procedure GenerateFindSubControlOptionsForMainUIClickerWindow_Bitness(var AFindControlOptions: TClkFindControlOptions; AAllowToFail: Boolean);
+procedure GenerateFindSubControlOptionsForMainUIClickerWindow_Bitness(var AFindSubControlOptions: TClkFindSubControlOptions; AAllowToFail: Boolean);
 begin
-  AFindControlOptions.MatchCriteria.SearchForControlMode := sfcmGenGrid;
-  AFindControlOptions.MatchCriteria.WillMatchText := False;
-  AFindControlOptions.MatchCriteria.WillMatchClassName := False;
-  AFindControlOptions.MatchCriteria.WillMatchBitmapText := True;
-  AFindControlOptions.MatchCriteria.WillMatchBitmapFiles := False;
-  AFindControlOptions.MatchCriteria.WillMatchPrimitiveFiles := False;
-  AFindControlOptions.MatchText := '-bit';  //can be 32-bit or 64-bit, so match both
-  AFindControlOptions.UseWholeScreen := False;
-  AFindControlOptions.AllowToFail := AAllowToFail;
-  AFindControlOptions.MatchBitmapAlgorithm := mbaBruteForce;
+  AFindSubControlOptions.MatchCriteria.WillMatchBitmapText := True;
+  AFindSubControlOptions.MatchCriteria.WillMatchBitmapFiles := False;
+  AFindSubControlOptions.MatchCriteria.WillMatchPrimitiveFiles := False;
+  AFindSubControlOptions.MatchText := '-bit';  //can be 32-bit or 64-bit, so match both
+  AFindSubControlOptions.UseWholeScreen := False;
+  AFindSubControlOptions.AllowToFail := AAllowToFail;
+  AFindSubControlOptions.MatchBitmapAlgorithm := mbaBruteForce;
 
-  SetLength(AFindControlOptions.MatchBitmapText, 1);
-  AFindControlOptions.MatchBitmapText[0].ForegroundColor := '000000';
-  AFindControlOptions.MatchBitmapText[0].BackgroundColor := '$Color_BtnFace$';
-  AFindControlOptions.MatchBitmapText[0].FontName := 'Segoe UI';
-  AFindControlOptions.MatchBitmapText[0].FontSize := 9;
-  AFindControlOptions.MatchBitmapText[0].FontQuality := fqDefault;
-  AFindControlOptions.MatchBitmapText[0].ProfileName := 'First';
-  AFindControlOptions.MatchBitmapText[0].Bold := False;
-  AFindControlOptions.MatchBitmapText[0].Italic := False;
-  AFindControlOptions.MatchBitmapText[0].Underline := False;
-  AFindControlOptions.MatchBitmapText[0].StrikeOut := False;
-  AFindControlOptions.MatchBitmapText[0].CropLeft := '';
-  AFindControlOptions.MatchBitmapText[0].CropTop := '';
-  AFindControlOptions.MatchBitmapText[0].CropRight := '';
-  AFindControlOptions.MatchBitmapText[0].CropBottom := '';
-  AFindControlOptions.MatchBitmapText[0].IgnoreBackgroundColor := False;
+  SetLength(AFindSubControlOptions.MatchBitmapText, 1);
+  AFindSubControlOptions.MatchBitmapText[0].ForegroundColor := '000000';
+  AFindSubControlOptions.MatchBitmapText[0].BackgroundColor := '$Color_BtnFace$';
+  AFindSubControlOptions.MatchBitmapText[0].FontName := 'Segoe UI';
+  AFindSubControlOptions.MatchBitmapText[0].FontSize := 9;
+  AFindSubControlOptions.MatchBitmapText[0].FontQuality := fqDefault;
+  AFindSubControlOptions.MatchBitmapText[0].ProfileName := 'First';
+  AFindSubControlOptions.MatchBitmapText[0].Bold := False;
+  AFindSubControlOptions.MatchBitmapText[0].Italic := False;
+  AFindSubControlOptions.MatchBitmapText[0].Underline := False;
+  AFindSubControlOptions.MatchBitmapText[0].StrikeOut := False;
+  AFindSubControlOptions.MatchBitmapText[0].CropLeft := '';
+  AFindSubControlOptions.MatchBitmapText[0].CropTop := '';
+  AFindSubControlOptions.MatchBitmapText[0].CropRight := '';
+  AFindSubControlOptions.MatchBitmapText[0].CropBottom := '';
+  AFindSubControlOptions.MatchBitmapText[0].IgnoreBackgroundColor := False;
 
-  AFindControlOptions.InitialRectangle.Left := '$Control_Left$';
-  AFindControlOptions.InitialRectangle.Top := '$Control_Top$';
-  AFindControlOptions.InitialRectangle.Right := '$Control_Right$';
-  AFindControlOptions.InitialRectangle.Bottom := '$Control_Bottom$';
-  AFindControlOptions.InitialRectangle.LeftOffset := '0';
-  AFindControlOptions.InitialRectangle.TopOffset := '220';
-  AFindControlOptions.InitialRectangle.RightOffset := '-250';
-  AFindControlOptions.InitialRectangle.BottomOffset := '0';
-  AFindControlOptions.ColorError := '10';
-  AFindControlOptions.AllowedColorErrorCount := '40';
+  AFindSubControlOptions.InitialRectangle.Left := '$Control_Left$';
+  AFindSubControlOptions.InitialRectangle.Top := '$Control_Top$';
+  AFindSubControlOptions.InitialRectangle.Right := '$Control_Right$';
+  AFindSubControlOptions.InitialRectangle.Bottom := '$Control_Bottom$';
+  AFindSubControlOptions.InitialRectangle.LeftOffset := '0';
+  AFindSubControlOptions.InitialRectangle.TopOffset := '220';
+  AFindSubControlOptions.InitialRectangle.RightOffset := '-250';
+  AFindSubControlOptions.InitialRectangle.BottomOffset := '0';
+  AFindSubControlOptions.ColorError := '10';
+  AFindSubControlOptions.AllowedColorErrorCount := '40';
 
-  AFindControlOptions.WaitForControlToGoAway := False;
-  AFindControlOptions.CachedControlLeft := '';
-  AFindControlOptions.CachedControlTop := '';
-  AFindControlOptions.StartSearchingWithCachedControl := False;
+  AFindSubControlOptions.WaitForControlToGoAway := False;
+  AFindSubControlOptions.CachedControlLeft := '';
+  AFindSubControlOptions.CachedControlTop := '';
+  AFindSubControlOptions.StartSearchingWithCachedControl := False;
 
-  AFindControlOptions.MatchBitmapAlgorithmSettings.XOffset := 0;
-  AFindControlOptions.MatchBitmapAlgorithmSettings.YOffset := 0;
-  AFindControlOptions.MatchBitmapAlgorithmSettings.XMultipleOf := 0;
-  AFindControlOptions.MatchBitmapAlgorithmSettings.YMultipleOf := 0;
+  AFindSubControlOptions.MatchBitmapAlgorithmSettings.XOffset := 0;
+  AFindSubControlOptions.MatchBitmapAlgorithmSettings.YOffset := 0;
+  AFindSubControlOptions.MatchBitmapAlgorithmSettings.XMultipleOf := 0;
+  AFindSubControlOptions.MatchBitmapAlgorithmSettings.YMultipleOf := 0;
 
-  AFindControlOptions.UseFastSearch := True;
+  AFindSubControlOptions.UseFastSearch := True;
 
-  AFindControlOptions.SleepySearch := False;
-  AFindControlOptions.StopSearchOnMismatch := True;
-  AFindControlOptions.ImageSource := isScreenshot;
-  AFindControlOptions.ImageSourceFileNameLocation := isflMem;
+  AFindSubControlOptions.SleepySearch := False;
+  AFindSubControlOptions.StopSearchOnMismatch := True;
+  AFindSubControlOptions.ImageSource := isScreenshot;
+  AFindSubControlOptions.ImageSourceFileNameLocation := isflMem;
 
-  AFindControlOptions.PrecisionTimeout := False;
-  AFindControlOptions.FullBackgroundImageInResult := True;
-  AFindControlOptions.EvaluateTextCount := '';
-  AFindControlOptions.CropFromScreenshot := False;
+  AFindSubControlOptions.PrecisionTimeout := False;
+  AFindSubControlOptions.FullBackgroundImageInResult := True;
+  AFindSubControlOptions.EvaluateTextCount := '';
+  AFindSubControlOptions.CropFromScreenshot := False;
 end;
 
 
-procedure GenerateFindSubControlOptionsForMainUIClickerWindow_WinInterpBtn(var AFindControlOptions: TClkFindControlOptions; AAllowToFail: Boolean);
+procedure GenerateFindSubControlOptionsForMainUIClickerWindow_WinInterpBtn(var AFindSubControlOptions: TClkFindSubControlOptions; AAllowToFail: Boolean);
 const
   CBmpDirAsSrvDisk = 'py\bmps\';
 begin
-  AFindControlOptions.MatchCriteria.SearchForControlMode := sfcmGenGrid;
-  AFindControlOptions.MatchCriteria.WillMatchText := False;
-  AFindControlOptions.MatchCriteria.WillMatchClassName := False;
-  AFindControlOptions.MatchCriteria.WillMatchBitmapText := False;
-  AFindControlOptions.MatchCriteria.WillMatchBitmapFiles := True;
-  AFindControlOptions.MatchCriteria.WillMatchPrimitiveFiles := False;
-  AFindControlOptions.UseWholeScreen := False;
-  AFindControlOptions.AllowToFail := AAllowToFail;
-  AFindControlOptions.MatchBitmapAlgorithm := mbaBruteForce;
+  AFindSubControlOptions.MatchCriteria.WillMatchBitmapText := False;
+  AFindSubControlOptions.MatchCriteria.WillMatchBitmapFiles := True;
+  AFindSubControlOptions.MatchCriteria.WillMatchPrimitiveFiles := False;
+  AFindSubControlOptions.UseWholeScreen := False;
+  AFindSubControlOptions.AllowToFail := AAllowToFail;
+  AFindSubControlOptions.MatchBitmapAlgorithm := mbaBruteForce;
 
-  SetLength(AFindControlOptions.MatchBitmapText, 0);
+  SetLength(AFindSubControlOptions.MatchBitmapText, 0);
 
-  AFindControlOptions.MatchBitmapFiles := CBmpDirAsSrvDisk + 'ShowActionsWindow_Focused.bmp' + #13#10 +
+  AFindSubControlOptions.MatchBitmapFiles := CBmpDirAsSrvDisk + 'ShowActionsWindow_Focused.bmp' + #13#10 +
                                           CBmpDirAsSrvDisk + 'ShowActionsWindow_FocusedHighlighted.bmp' + #13#10 +
                                           CBmpDirAsSrvDisk + 'ShowActionsWindow_Unfocused.bmp';
 
-  AFindControlOptions.InitialRectangle.Left := '$Control_Left$';
-  AFindControlOptions.InitialRectangle.Top := '$Control_Top$';
-  AFindControlOptions.InitialRectangle.Right := '$Control_Right$';
-  AFindControlOptions.InitialRectangle.Bottom := '$Control_Bottom$';
-  AFindControlOptions.InitialRectangle.LeftOffset := '61';
-  AFindControlOptions.InitialRectangle.TopOffset := '90';
-  AFindControlOptions.InitialRectangle.RightOffset := '-73';
-  AFindControlOptions.InitialRectangle.BottomOffset := '-120';
-  AFindControlOptions.ColorError := '25';                    //rendering depends on video card, so allow a high error value
-  AFindControlOptions.AllowedColorErrorCount := '400';
+  AFindSubControlOptions.InitialRectangle.Left := '$Control_Left$';
+  AFindSubControlOptions.InitialRectangle.Top := '$Control_Top$';
+  AFindSubControlOptions.InitialRectangle.Right := '$Control_Right$';
+  AFindSubControlOptions.InitialRectangle.Bottom := '$Control_Bottom$';
+  AFindSubControlOptions.InitialRectangle.LeftOffset := '61';
+  AFindSubControlOptions.InitialRectangle.TopOffset := '90';
+  AFindSubControlOptions.InitialRectangle.RightOffset := '-73';
+  AFindSubControlOptions.InitialRectangle.BottomOffset := '-120';
+  AFindSubControlOptions.ColorError := '25';                    //rendering depends on video card, so allow a high error value
+  AFindSubControlOptions.AllowedColorErrorCount := '400';
 
-  AFindControlOptions.WaitForControlToGoAway := False;
-  AFindControlOptions.CachedControlLeft := '';
-  AFindControlOptions.CachedControlTop := '';
-  AFindControlOptions.StartSearchingWithCachedControl := False;
+  AFindSubControlOptions.WaitForControlToGoAway := False;
+  AFindSubControlOptions.CachedControlLeft := '';
+  AFindSubControlOptions.CachedControlTop := '';
+  AFindSubControlOptions.StartSearchingWithCachedControl := False;
 
-  AFindControlOptions.UseFastSearch := True;
+  AFindSubControlOptions.UseFastSearch := True;
 
-  AFindControlOptions.SleepySearch := False;
-  AFindControlOptions.StopSearchOnMismatch := True;
-  AFindControlOptions.ImageSource := isScreenshot;
-  AFindControlOptions.ImageSourceFileNameLocation := isflMem;
+  AFindSubControlOptions.SleepySearch := False;
+  AFindSubControlOptions.StopSearchOnMismatch := True;
+  AFindSubControlOptions.ImageSource := isScreenshot;
+  AFindSubControlOptions.ImageSourceFileNameLocation := isflMem;
 
-  AFindControlOptions.PrecisionTimeout := False;
-  AFindControlOptions.FullBackgroundImageInResult := True;
-  AFindControlOptions.EvaluateTextCount := '';
-  AFindControlOptions.CropFromScreenshot := False;
+  AFindSubControlOptions.PrecisionTimeout := False;
+  AFindSubControlOptions.FullBackgroundImageInResult := True;
+  AFindSubControlOptions.EvaluateTextCount := '';
+  AFindSubControlOptions.CropFromScreenshot := False;
 end;
 
 
-procedure GenerateFindSubControlOptionsForMainUIClickerWindow_PmtvPreviewBtn(var AFindControlOptions: TClkFindControlOptions; AAllowToFail: Boolean);
+procedure GenerateFindSubControlOptionsForMainUIClickerWindow_PmtvPreviewBtn(var AFindSubControlOptions: TClkFindSubControlOptions; AAllowToFail: Boolean);
 const
   CBmpDirAsSrvDisk = 'py\bmps\';
 begin
-  AFindControlOptions.MatchCriteria.SearchForControlMode := sfcmGenGrid;
-  AFindControlOptions.MatchCriteria.WillMatchText := False;
-  AFindControlOptions.MatchCriteria.WillMatchClassName := False;
-  AFindControlOptions.MatchCriteria.WillMatchBitmapText := False;
-  AFindControlOptions.MatchCriteria.WillMatchBitmapFiles := False;
-  AFindControlOptions.MatchCriteria.WillMatchPrimitiveFiles := True;
-  AFindControlOptions.UseWholeScreen := False;
-  AFindControlOptions.AllowToFail := AAllowToFail;
-  AFindControlOptions.MatchBitmapAlgorithm := mbaBruteForce;
+  AFindSubControlOptions.MatchCriteria.WillMatchBitmapText := False;
+  AFindSubControlOptions.MatchCriteria.WillMatchBitmapFiles := False;
+  AFindSubControlOptions.MatchCriteria.WillMatchPrimitiveFiles := True;
+  AFindSubControlOptions.UseWholeScreen := False;
+  AFindSubControlOptions.AllowToFail := AAllowToFail;
+  AFindSubControlOptions.MatchBitmapAlgorithm := mbaBruteForce;
 
-  SetLength(AFindControlOptions.MatchBitmapText, 0);
+  SetLength(AFindSubControlOptions.MatchBitmapText, 0);
 
-  AFindControlOptions.MatchBitmapFiles := '';
-  AFindControlOptions.MatchPrimitiveFiles := CBmpDirAsSrvDisk + 'PreviewButtonIcon.pmtv' + #13#10 +
+  AFindSubControlOptions.MatchBitmapFiles := '';
+  AFindSubControlOptions.MatchPrimitiveFiles := CBmpDirAsSrvDisk + 'PreviewButtonIcon.pmtv' + #13#10 +
                                              CBmpDirAsSrvDisk + 'PreviewButtonIcon64.pmtv';
 
-  AFindControlOptions.InitialRectangle.Left := '$Control_Left$';
-  AFindControlOptions.InitialRectangle.Top := '$Control_Top$';
-  AFindControlOptions.InitialRectangle.Right := '$Control_Right$';
-  AFindControlOptions.InitialRectangle.Bottom := '$Control_Bottom$';
-  AFindControlOptions.InitialRectangle.LeftOffset := '76';
-  AFindControlOptions.InitialRectangle.TopOffset := '60';
-  AFindControlOptions.InitialRectangle.RightOffset := '-217';
-  AFindControlOptions.InitialRectangle.BottomOffset := '-185';
-  AFindControlOptions.ColorError := '0';
-  AFindControlOptions.AllowedColorErrorCount := '0';
+  AFindSubControlOptions.InitialRectangle.Left := '$Control_Left$';
+  AFindSubControlOptions.InitialRectangle.Top := '$Control_Top$';
+  AFindSubControlOptions.InitialRectangle.Right := '$Control_Right$';
+  AFindSubControlOptions.InitialRectangle.Bottom := '$Control_Bottom$';
+  AFindSubControlOptions.InitialRectangle.LeftOffset := '76';
+  AFindSubControlOptions.InitialRectangle.TopOffset := '60';
+  AFindSubControlOptions.InitialRectangle.RightOffset := '-217';
+  AFindSubControlOptions.InitialRectangle.BottomOffset := '-185';
+  AFindSubControlOptions.ColorError := '0';
+  AFindSubControlOptions.AllowedColorErrorCount := '0';
 
-  AFindControlOptions.WaitForControlToGoAway := False;
-  AFindControlOptions.CachedControlLeft := '';
-  AFindControlOptions.CachedControlTop := '';
-  AFindControlOptions.StartSearchingWithCachedControl := False;
+  AFindSubControlOptions.WaitForControlToGoAway := False;
+  AFindSubControlOptions.CachedControlLeft := '';
+  AFindSubControlOptions.CachedControlTop := '';
+  AFindSubControlOptions.StartSearchingWithCachedControl := False;
 
-  AFindControlOptions.UseFastSearch := True;
+  AFindSubControlOptions.UseFastSearch := True;
 
-  AFindControlOptions.SleepySearch := False;
-  AFindControlOptions.StopSearchOnMismatch := True;
-  AFindControlOptions.ImageSource := isScreenshot;
-  AFindControlOptions.ImageSourceFileNameLocation := isflMem;
+  AFindSubControlOptions.SleepySearch := False;
+  AFindSubControlOptions.StopSearchOnMismatch := True;
+  AFindSubControlOptions.ImageSource := isScreenshot;
+  AFindSubControlOptions.ImageSourceFileNameLocation := isflMem;
 
-  AFindControlOptions.PrecisionTimeout := False;
-  AFindControlOptions.FullBackgroundImageInResult := True;
-  AFindControlOptions.EvaluateTextCount := '';
-  AFindControlOptions.CropFromScreenshot := False;
+  AFindSubControlOptions.PrecisionTimeout := False;
+  AFindSubControlOptions.FullBackgroundImageInResult := True;
+  AFindSubControlOptions.EvaluateTextCount := '';
+  AFindSubControlOptions.CropFromScreenshot := False;
 end;
 
 
-procedure GenerateFindSubControlOptionsForExtRenderingText(var AFindControlOptions: TClkFindControlOptions; AAllowToFail: Boolean; ASourceFileName: string);
+procedure GenerateFindSubControlOptionsForExtRenderingText(var AFindSubControlOptions: TClkFindSubControlOptions; AAllowToFail: Boolean; ASourceFileName: string);
 begin
-  AFindControlOptions.MatchCriteria.SearchForControlMode := sfcmGenGrid;
-  AFindControlOptions.MatchCriteria.WillMatchText := False;
-  AFindControlOptions.MatchCriteria.WillMatchClassName := False;
-  AFindControlOptions.MatchCriteria.WillMatchBitmapText := True;
-  AFindControlOptions.MatchCriteria.WillMatchBitmapFiles := False;
-  AFindControlOptions.MatchCriteria.WillMatchPrimitiveFiles := False;
-  AFindControlOptions.MatchText := 'This is the searched text.';
-  AFindControlOptions.UseWholeScreen := False;
-  AFindControlOptions.AllowToFail := AAllowToFail;
-  AFindControlOptions.MatchBitmapAlgorithm := mbaBruteForce;
+  AFindSubControlOptions.MatchCriteria.WillMatchBitmapText := True;
+  AFindSubControlOptions.MatchCriteria.WillMatchBitmapFiles := False;
+  AFindSubControlOptions.MatchCriteria.WillMatchPrimitiveFiles := False;
+  AFindSubControlOptions.MatchText := 'This is the searched text.';
+  AFindSubControlOptions.UseWholeScreen := False;
+  AFindSubControlOptions.AllowToFail := AAllowToFail;
+  AFindSubControlOptions.MatchBitmapAlgorithm := mbaBruteForce;
 
-  SetLength(AFindControlOptions.MatchBitmapText, 1);
-  AFindControlOptions.MatchBitmapText[0].ForegroundColor := '000000';
-  AFindControlOptions.MatchBitmapText[0].BackgroundColor := 'FFFFFF';
-  AFindControlOptions.MatchBitmapText[0].FontName := 'Tahoma';
-  AFindControlOptions.MatchBitmapText[0].FontSize := 36;
-  AFindControlOptions.MatchBitmapText[0].FontQuality := fqNonAntialiased;
-  AFindControlOptions.MatchBitmapText[0].ProfileName := 'First';
-  AFindControlOptions.MatchBitmapText[0].Bold := False;
-  AFindControlOptions.MatchBitmapText[0].Italic := False;
-  AFindControlOptions.MatchBitmapText[0].Underline := False;
-  AFindControlOptions.MatchBitmapText[0].StrikeOut := False;
-  AFindControlOptions.MatchBitmapText[0].CropLeft := '';
-  AFindControlOptions.MatchBitmapText[0].CropTop := '';
-  AFindControlOptions.MatchBitmapText[0].CropRight := '';
-  AFindControlOptions.MatchBitmapText[0].CropBottom := '';
-  AFindControlOptions.MatchBitmapText[0].IgnoreBackgroundColor := True;
+  SetLength(AFindSubControlOptions.MatchBitmapText, 1);
+  AFindSubControlOptions.MatchBitmapText[0].ForegroundColor := '000000';
+  AFindSubControlOptions.MatchBitmapText[0].BackgroundColor := 'FFFFFF';
+  AFindSubControlOptions.MatchBitmapText[0].FontName := 'Tahoma';
+  AFindSubControlOptions.MatchBitmapText[0].FontSize := 36;
+  AFindSubControlOptions.MatchBitmapText[0].FontQuality := fqNonAntialiased;
+  AFindSubControlOptions.MatchBitmapText[0].ProfileName := 'First';
+  AFindSubControlOptions.MatchBitmapText[0].Bold := False;
+  AFindSubControlOptions.MatchBitmapText[0].Italic := False;
+  AFindSubControlOptions.MatchBitmapText[0].Underline := False;
+  AFindSubControlOptions.MatchBitmapText[0].StrikeOut := False;
+  AFindSubControlOptions.MatchBitmapText[0].CropLeft := '';
+  AFindSubControlOptions.MatchBitmapText[0].CropTop := '';
+  AFindSubControlOptions.MatchBitmapText[0].CropRight := '';
+  AFindSubControlOptions.MatchBitmapText[0].CropBottom := '';
+  AFindSubControlOptions.MatchBitmapText[0].IgnoreBackgroundColor := True;
 
-  AFindControlOptions.InitialRectangle.Left := '0';
-  AFindControlOptions.InitialRectangle.Top := '0';
-  AFindControlOptions.InitialRectangle.Right := '597';   //it has to be greater than Left
-  AFindControlOptions.InitialRectangle.Bottom := '232';  //it has to be greater than Top
-  AFindControlOptions.InitialRectangle.LeftOffset := '0';
-  AFindControlOptions.InitialRectangle.TopOffset := '0';
-  AFindControlOptions.InitialRectangle.RightOffset := '0';
-  AFindControlOptions.InitialRectangle.BottomOffset := '0';
-  AFindControlOptions.ColorError := '0';
-  AFindControlOptions.AllowedColorErrorCount := '0';
+  AFindSubControlOptions.InitialRectangle.Left := '0';
+  AFindSubControlOptions.InitialRectangle.Top := '0';
+  AFindSubControlOptions.InitialRectangle.Right := '597';   //it has to be greater than Left
+  AFindSubControlOptions.InitialRectangle.Bottom := '232';  //it has to be greater than Top
+  AFindSubControlOptions.InitialRectangle.LeftOffset := '0';
+  AFindSubControlOptions.InitialRectangle.TopOffset := '0';
+  AFindSubControlOptions.InitialRectangle.RightOffset := '0';
+  AFindSubControlOptions.InitialRectangle.BottomOffset := '0';
+  AFindSubControlOptions.ColorError := '0';
+  AFindSubControlOptions.AllowedColorErrorCount := '0';
 
-  AFindControlOptions.WaitForControlToGoAway := False;
-  AFindControlOptions.CachedControlLeft := '';
-  AFindControlOptions.CachedControlTop := '';
-  AFindControlOptions.StartSearchingWithCachedControl := False;
+  AFindSubControlOptions.WaitForControlToGoAway := False;
+  AFindSubControlOptions.CachedControlLeft := '';
+  AFindSubControlOptions.CachedControlTop := '';
+  AFindSubControlOptions.StartSearchingWithCachedControl := False;
 
-  AFindControlOptions.MatchBitmapAlgorithmSettings.XOffset := 0;
-  AFindControlOptions.MatchBitmapAlgorithmSettings.YOffset := 0;
-  AFindControlOptions.MatchBitmapAlgorithmSettings.XMultipleOf := 0;
-  AFindControlOptions.MatchBitmapAlgorithmSettings.YMultipleOf := 0;
+  AFindSubControlOptions.MatchBitmapAlgorithmSettings.XOffset := 0;
+  AFindSubControlOptions.MatchBitmapAlgorithmSettings.YOffset := 0;
+  AFindSubControlOptions.MatchBitmapAlgorithmSettings.XMultipleOf := 0;
+  AFindSubControlOptions.MatchBitmapAlgorithmSettings.YMultipleOf := 0;
 
-  AFindControlOptions.UseFastSearch := True;
+  AFindSubControlOptions.UseFastSearch := True;
 
-  AFindControlOptions.SleepySearch := False;
-  AFindControlOptions.StopSearchOnMismatch := True;
-  AFindControlOptions.ImageSource := isFile;
-  AFindControlOptions.SourceFileName := ASourceFileName;
-  AFindControlOptions.ImageSourceFileNameLocation := isflMem;
+  AFindSubControlOptions.SleepySearch := False;
+  AFindSubControlOptions.StopSearchOnMismatch := True;
+  AFindSubControlOptions.ImageSource := isFile;
+  AFindSubControlOptions.SourceFileName := ASourceFileName;
+  AFindSubControlOptions.ImageSourceFileNameLocation := isflMem;
 
-  AFindControlOptions.PrecisionTimeout := False;
-  AFindControlOptions.FullBackgroundImageInResult := True;
-  AFindControlOptions.EvaluateTextCount := '';
-  AFindControlOptions.CropFromScreenshot := False;
+  AFindSubControlOptions.PrecisionTimeout := False;
+  AFindSubControlOptions.FullBackgroundImageInResult := True;
+  AFindSubControlOptions.EvaluateTextCount := '';
+  AFindSubControlOptions.CropFromScreenshot := False;
 end;
 
 
-procedure GenerateFindSubControlOptionsForLoadedBackgroundBmp(var AFindControlOptions: TClkFindControlOptions; AAllowToFail: Boolean; ASourceFileName: string);
+procedure GenerateFindSubControlOptionsForLoadedBackgroundBmp(var AFindSubControlOptions: TClkFindSubControlOptions; AAllowToFail: Boolean; ASourceFileName: string);
 begin
-  AFindControlOptions.MatchCriteria.SearchForControlMode := sfcmGenGrid;
-  AFindControlOptions.MatchCriteria.WillMatchText := False;
-  AFindControlOptions.MatchCriteria.WillMatchClassName := False;
-  AFindControlOptions.MatchCriteria.WillMatchBitmapText := True;
-  AFindControlOptions.MatchCriteria.WillMatchBitmapFiles := False;
-  AFindControlOptions.MatchCriteria.WillMatchPrimitiveFiles := False;
-  AFindControlOptions.MatchText := 'Long';
-  AFindControlOptions.UseWholeScreen := False;
-  AFindControlOptions.AllowToFail := AAllowToFail;
-  AFindControlOptions.MatchBitmapAlgorithm := mbaBruteForce;
+  AFindSubControlOptions.MatchCriteria.WillMatchBitmapText := True;
+  AFindSubControlOptions.MatchCriteria.WillMatchBitmapFiles := False;
+  AFindSubControlOptions.MatchCriteria.WillMatchPrimitiveFiles := False;
+  AFindSubControlOptions.MatchText := 'Long';
+  AFindSubControlOptions.UseWholeScreen := False;
+  AFindSubControlOptions.AllowToFail := AAllowToFail;
+  AFindSubControlOptions.MatchBitmapAlgorithm := mbaBruteForce;
 
-  SetLength(AFindControlOptions.MatchBitmapText, 1);
-  AFindControlOptions.MatchBitmapText[0].ForegroundColor := '00D000';
-  AFindControlOptions.MatchBitmapText[0].BackgroundColor := 'F3E7A0';
-  AFindControlOptions.MatchBitmapText[0].FontName := 'Tahoma';
-  AFindControlOptions.MatchBitmapText[0].FontSize := 15;
-  AFindControlOptions.MatchBitmapText[0].FontQuality := fqNonAntialiased;
-  AFindControlOptions.MatchBitmapText[0].ProfileName := 'First';
-  AFindControlOptions.MatchBitmapText[0].Bold := False;
-  AFindControlOptions.MatchBitmapText[0].Italic := False;
-  AFindControlOptions.MatchBitmapText[0].Underline := False;
-  AFindControlOptions.MatchBitmapText[0].StrikeOut := False;
-  AFindControlOptions.MatchBitmapText[0].CropLeft := '';
-  AFindControlOptions.MatchBitmapText[0].CropTop := '';
-  AFindControlOptions.MatchBitmapText[0].CropRight := '';
-  AFindControlOptions.MatchBitmapText[0].CropBottom := '';
-  AFindControlOptions.MatchBitmapText[0].IgnoreBackgroundColor := False;
+  SetLength(AFindSubControlOptions.MatchBitmapText, 1);
+  AFindSubControlOptions.MatchBitmapText[0].ForegroundColor := '00D000';
+  AFindSubControlOptions.MatchBitmapText[0].BackgroundColor := 'F3E7A0';
+  AFindSubControlOptions.MatchBitmapText[0].FontName := 'Tahoma';
+  AFindSubControlOptions.MatchBitmapText[0].FontSize := 15;
+  AFindSubControlOptions.MatchBitmapText[0].FontQuality := fqNonAntialiased;
+  AFindSubControlOptions.MatchBitmapText[0].ProfileName := 'First';
+  AFindSubControlOptions.MatchBitmapText[0].Bold := False;
+  AFindSubControlOptions.MatchBitmapText[0].Italic := False;
+  AFindSubControlOptions.MatchBitmapText[0].Underline := False;
+  AFindSubControlOptions.MatchBitmapText[0].StrikeOut := False;
+  AFindSubControlOptions.MatchBitmapText[0].CropLeft := '';
+  AFindSubControlOptions.MatchBitmapText[0].CropTop := '';
+  AFindSubControlOptions.MatchBitmapText[0].CropRight := '';
+  AFindSubControlOptions.MatchBitmapText[0].CropBottom := '';
+  AFindSubControlOptions.MatchBitmapText[0].IgnoreBackgroundColor := False;
 
-  AFindControlOptions.InitialRectangle.Left := '0';
-  AFindControlOptions.InitialRectangle.Top := '0';
-  AFindControlOptions.InitialRectangle.Right := '130';
-  AFindControlOptions.InitialRectangle.Bottom := '30';
-  AFindControlOptions.InitialRectangle.LeftOffset := '0';
-  AFindControlOptions.InitialRectangle.TopOffset := '0';
-  AFindControlOptions.InitialRectangle.RightOffset := '0';
-  AFindControlOptions.InitialRectangle.BottomOffset := '0';
-  AFindControlOptions.ColorError := '0';
-  AFindControlOptions.AllowedColorErrorCount := '0';
+  AFindSubControlOptions.InitialRectangle.Left := '0';
+  AFindSubControlOptions.InitialRectangle.Top := '0';
+  AFindSubControlOptions.InitialRectangle.Right := '130';
+  AFindSubControlOptions.InitialRectangle.Bottom := '30';
+  AFindSubControlOptions.InitialRectangle.LeftOffset := '0';
+  AFindSubControlOptions.InitialRectangle.TopOffset := '0';
+  AFindSubControlOptions.InitialRectangle.RightOffset := '0';
+  AFindSubControlOptions.InitialRectangle.BottomOffset := '0';
+  AFindSubControlOptions.ColorError := '0';
+  AFindSubControlOptions.AllowedColorErrorCount := '0';
 
-  AFindControlOptions.WaitForControlToGoAway := False;
-  AFindControlOptions.CachedControlLeft := '';
-  AFindControlOptions.CachedControlTop := '';
-  AFindControlOptions.StartSearchingWithCachedControl := False;
+  AFindSubControlOptions.WaitForControlToGoAway := False;
+  AFindSubControlOptions.CachedControlLeft := '';
+  AFindSubControlOptions.CachedControlTop := '';
+  AFindSubControlOptions.StartSearchingWithCachedControl := False;
 
-  AFindControlOptions.MatchBitmapAlgorithmSettings.XOffset := 0;
-  AFindControlOptions.MatchBitmapAlgorithmSettings.YOffset := 0;
-  AFindControlOptions.MatchBitmapAlgorithmSettings.XMultipleOf := 0;
-  AFindControlOptions.MatchBitmapAlgorithmSettings.YMultipleOf := 0;
+  AFindSubControlOptions.MatchBitmapAlgorithmSettings.XOffset := 0;
+  AFindSubControlOptions.MatchBitmapAlgorithmSettings.YOffset := 0;
+  AFindSubControlOptions.MatchBitmapAlgorithmSettings.XMultipleOf := 0;
+  AFindSubControlOptions.MatchBitmapAlgorithmSettings.YMultipleOf := 0;
 
-  AFindControlOptions.UseFastSearch := True;
+  AFindSubControlOptions.UseFastSearch := True;
 
-  AFindControlOptions.SleepySearch := False;
-  AFindControlOptions.StopSearchOnMismatch := True;
-  AFindControlOptions.ImageSource := isFile;
-  AFindControlOptions.SourceFileName := ASourceFileName;
-  AFindControlOptions.ImageSourceFileNameLocation := isflDisk;
+  AFindSubControlOptions.SleepySearch := False;
+  AFindSubControlOptions.StopSearchOnMismatch := True;
+  AFindSubControlOptions.ImageSource := isFile;
+  AFindSubControlOptions.SourceFileName := ASourceFileName;
+  AFindSubControlOptions.ImageSourceFileNameLocation := isflDisk;
 
-  AFindControlOptions.PrecisionTimeout := False;
-  AFindControlOptions.FullBackgroundImageInResult := True;
-  AFindControlOptions.EvaluateTextCount := '';
-  AFindControlOptions.CropFromScreenshot := False;
+  AFindSubControlOptions.PrecisionTimeout := False;
+  AFindSubControlOptions.FullBackgroundImageInResult := True;
+  AFindSubControlOptions.EvaluateTextCount := '';
+  AFindSubControlOptions.CropFromScreenshot := False;
 end;
 
 
-procedure GenerateFindSubControlOptionsForFullScreenshot(var AFindControlOptions: TClkFindControlOptions; AAllowToFail: Boolean);
+procedure GenerateFindSubControlOptionsForFullScreenshot(var AFindSubControlOptions: TClkFindSubControlOptions; AAllowToFail: Boolean);
 begin
-  AFindControlOptions.MatchCriteria.SearchForControlMode := sfcmGenGrid;
-  AFindControlOptions.MatchCriteria.WillMatchText := False;
-  AFindControlOptions.MatchCriteria.WillMatchClassName := False;
-  AFindControlOptions.MatchCriteria.WillMatchBitmapText := True;
-  AFindControlOptions.MatchCriteria.WillMatchBitmapFiles := False;
-  AFindControlOptions.MatchCriteria.WillMatchPrimitiveFiles := False;
-  AFindControlOptions.MatchText := 'This is the searched text.';
-  AFindControlOptions.UseWholeScreen := False;
-  AFindControlOptions.AllowToFail := AAllowToFail;
-  AFindControlOptions.MatchBitmapAlgorithm := mbaBruteForce;
+  AFindSubControlOptions.MatchCriteria.WillMatchBitmapText := True;
+  AFindSubControlOptions.MatchCriteria.WillMatchBitmapFiles := False;
+  AFindSubControlOptions.MatchCriteria.WillMatchPrimitiveFiles := False;
+  AFindSubControlOptions.MatchText := 'This is the searched text.';
+  AFindSubControlOptions.UseWholeScreen := False;
+  AFindSubControlOptions.AllowToFail := AAllowToFail;
+  AFindSubControlOptions.MatchBitmapAlgorithm := mbaBruteForce;
 
-  SetLength(AFindControlOptions.MatchBitmapText, 1);
-  AFindControlOptions.MatchBitmapText[0].ForegroundColor := '000000';
-  AFindControlOptions.MatchBitmapText[0].BackgroundColor := 'FFFFFF';
-  AFindControlOptions.MatchBitmapText[0].FontName := 'Tahoma';
-  AFindControlOptions.MatchBitmapText[0].FontSize := 36;
-  AFindControlOptions.MatchBitmapText[0].FontQuality := fqNonAntialiased;
-  AFindControlOptions.MatchBitmapText[0].ProfileName := 'First';
-  AFindControlOptions.MatchBitmapText[0].Bold := False;
-  AFindControlOptions.MatchBitmapText[0].Italic := False;
-  AFindControlOptions.MatchBitmapText[0].Underline := False;
-  AFindControlOptions.MatchBitmapText[0].StrikeOut := False;
-  AFindControlOptions.MatchBitmapText[0].CropLeft := '';
-  AFindControlOptions.MatchBitmapText[0].CropTop := '';
-  AFindControlOptions.MatchBitmapText[0].CropRight := '';
-  AFindControlOptions.MatchBitmapText[0].CropBottom := '';
-  AFindControlOptions.MatchBitmapText[0].IgnoreBackgroundColor := False;  //Yes, False
+  SetLength(AFindSubControlOptions.MatchBitmapText, 1);
+  AFindSubControlOptions.MatchBitmapText[0].ForegroundColor := '000000';
+  AFindSubControlOptions.MatchBitmapText[0].BackgroundColor := 'FFFFFF';
+  AFindSubControlOptions.MatchBitmapText[0].FontName := 'Tahoma';
+  AFindSubControlOptions.MatchBitmapText[0].FontSize := 36;
+  AFindSubControlOptions.MatchBitmapText[0].FontQuality := fqNonAntialiased;
+  AFindSubControlOptions.MatchBitmapText[0].ProfileName := 'First';
+  AFindSubControlOptions.MatchBitmapText[0].Bold := False;
+  AFindSubControlOptions.MatchBitmapText[0].Italic := False;
+  AFindSubControlOptions.MatchBitmapText[0].Underline := False;
+  AFindSubControlOptions.MatchBitmapText[0].StrikeOut := False;
+  AFindSubControlOptions.MatchBitmapText[0].CropLeft := '';
+  AFindSubControlOptions.MatchBitmapText[0].CropTop := '';
+  AFindSubControlOptions.MatchBitmapText[0].CropRight := '';
+  AFindSubControlOptions.MatchBitmapText[0].CropBottom := '';
+  AFindSubControlOptions.MatchBitmapText[0].IgnoreBackgroundColor := False;  //Yes, False
 
-  AFindControlOptions.InitialRectangle.Left := '0';
-  AFindControlOptions.InitialRectangle.Top := '0';
-  AFindControlOptions.InitialRectangle.Right := IntToStr(Screen.Width);
-  AFindControlOptions.InitialRectangle.Bottom := IntToStr(Screen.Height);
-  AFindControlOptions.InitialRectangle.LeftOffset := '0';
-  AFindControlOptions.InitialRectangle.TopOffset := '0';
-  AFindControlOptions.InitialRectangle.RightOffset := '0';
-  AFindControlOptions.InitialRectangle.BottomOffset := '0';
-  AFindControlOptions.ColorError := '0';
-  AFindControlOptions.AllowedColorErrorCount := '0';
+  AFindSubControlOptions.InitialRectangle.Left := '0';
+  AFindSubControlOptions.InitialRectangle.Top := '0';
+  AFindSubControlOptions.InitialRectangle.Right := IntToStr(Screen.Width);
+  AFindSubControlOptions.InitialRectangle.Bottom := IntToStr(Screen.Height);
+  AFindSubControlOptions.InitialRectangle.LeftOffset := '0';
+  AFindSubControlOptions.InitialRectangle.TopOffset := '0';
+  AFindSubControlOptions.InitialRectangle.RightOffset := '0';
+  AFindSubControlOptions.InitialRectangle.BottomOffset := '0';
+  AFindSubControlOptions.ColorError := '0';
+  AFindSubControlOptions.AllowedColorErrorCount := '0';
 
-  AFindControlOptions.WaitForControlToGoAway := False;
-  AFindControlOptions.CachedControlLeft := '';
-  AFindControlOptions.CachedControlTop := '';
-  AFindControlOptions.StartSearchingWithCachedControl := False;
+  AFindSubControlOptions.WaitForControlToGoAway := False;
+  AFindSubControlOptions.CachedControlLeft := '';
+  AFindSubControlOptions.CachedControlTop := '';
+  AFindSubControlOptions.StartSearchingWithCachedControl := False;
 
-  AFindControlOptions.MatchBitmapAlgorithmSettings.XOffset := 0;
-  AFindControlOptions.MatchBitmapAlgorithmSettings.YOffset := 0;
-  AFindControlOptions.MatchBitmapAlgorithmSettings.XMultipleOf := 0;
-  AFindControlOptions.MatchBitmapAlgorithmSettings.YMultipleOf := 0;
+  AFindSubControlOptions.MatchBitmapAlgorithmSettings.XOffset := 0;
+  AFindSubControlOptions.MatchBitmapAlgorithmSettings.YOffset := 0;
+  AFindSubControlOptions.MatchBitmapAlgorithmSettings.XMultipleOf := 0;
+  AFindSubControlOptions.MatchBitmapAlgorithmSettings.YMultipleOf := 0;
 
-  AFindControlOptions.UseFastSearch := True;
-  AFindControlOptions.FastSearchAllowedColorErrorCount := '10';
+  AFindSubControlOptions.UseFastSearch := True;
+  AFindSubControlOptions.FastSearchAllowedColorErrorCount := '10';
 
-  AFindControlOptions.SleepySearch := False;
-  AFindControlOptions.StopSearchOnMismatch := True;
-  AFindControlOptions.ImageSource := isScreenshot;
-  AFindControlOptions.SourceFileName := '';
-  AFindControlOptions.ImageSourceFileNameLocation := isflMem;
+  AFindSubControlOptions.SleepySearch := False;
+  AFindSubControlOptions.StopSearchOnMismatch := True;
+  AFindSubControlOptions.ImageSource := isScreenshot;
+  AFindSubControlOptions.SourceFileName := '';
+  AFindSubControlOptions.ImageSourceFileNameLocation := isflMem;
 
-  AFindControlOptions.PrecisionTimeout := False;
-  AFindControlOptions.FullBackgroundImageInResult := True;
-  AFindControlOptions.EvaluateTextCount := '-1';
-  AFindControlOptions.CropFromScreenshot := False;
+  AFindSubControlOptions.PrecisionTimeout := False;
+  AFindSubControlOptions.FullBackgroundImageInResult := True;
+  AFindSubControlOptions.EvaluateTextCount := '-1';
+  AFindSubControlOptions.CropFromScreenshot := False;
 end;
 
 
@@ -1163,7 +1160,7 @@ begin
 
     acFindControl:
     begin
-      GetDefaultPropertyValues_FindControl(TempAction.FindControlOptions, False);
+      GetDefaultPropertyValues_FindControl(TempAction.FindControlOptions);
 
       if AOperation in [etoNewAction, etoUpdateAction] then
       begin
@@ -1192,37 +1189,33 @@ begin
 
     acFindSubControl:
     begin
-      GetDefaultPropertyValues_FindControl(TempAction.FindControlOptions, True);
+      GetDefaultPropertyValues_FindSubControl(TempAction.FindSubControlOptions);
 
-      SetLength(TempAction.FindControlOptions.MatchBitmapText, 2);
+      SetLength(TempAction.FindSubControlOptions.MatchBitmapText, 2);
       if AOperation in [etoNewAction, etoUpdateAction] then
       begin
-        TempAction.FindControlOptions.MatchCriteria.WillMatchText := False;
-        TempAction.FindControlOptions.MatchCriteria.WillMatchClassName := False;
-        TempAction.FindControlOptions.MatchCriteria.WillMatchBitmapText := True;
-        TempAction.FindControlOptions.MatchText := 'bmp text to be matched';
-        TempAction.FindControlOptions.MatchClassName := 'class doesn''t matter';
-        TempAction.FindControlOptions.MatchBitmapText[0].ForegroundColor := '$FGCol$';
-        TempAction.FindControlOptions.MatchBitmapText[0].BackgroundColor := '$BGCol$';
-        TempAction.FindControlOptions.MatchBitmapText[1].FontName := 'Mono';
-        TempAction.FindControlOptions.MatchBitmapText[1].FontSize := 19;
-        TempAction.FindControlOptions.UseWholeScreen := False;
+        TempAction.FindSubControlOptions.MatchCriteria.WillMatchBitmapText := True;
+        TempAction.FindSubControlOptions.MatchText := 'bmp text to be matched';
+        TempAction.FindSubControlOptions.MatchClassName := 'class doesn''t matter';
+        TempAction.FindSubControlOptions.MatchBitmapText[0].ForegroundColor := '$FGCol$';
+        TempAction.FindSubControlOptions.MatchBitmapText[0].BackgroundColor := '$BGCol$';
+        TempAction.FindSubControlOptions.MatchBitmapText[1].FontName := 'Mono';
+        TempAction.FindSubControlOptions.MatchBitmapText[1].FontSize := 19;
+        TempAction.FindSubControlOptions.UseWholeScreen := False;
       end
       else
       begin                                                             //use some predefined values, which should be returned in case of error
-        TempAction.FindControlOptions.MatchCriteria.WillMatchText := True;
-        TempAction.FindControlOptions.MatchCriteria.WillMatchClassName := True;
-        TempAction.FindControlOptions.MatchCriteria.WillMatchBitmapText := False;
-        TempAction.FindControlOptions.MatchText := 'missing text';
-        TempAction.FindControlOptions.MatchClassName := 'unknown class';
-        TempAction.FindControlOptions.MatchBitmapText[0].ForegroundColor := 'Bad$FGCol$';
-        TempAction.FindControlOptions.MatchBitmapText[0].BackgroundColor := '$BadBGCol$';
-        TempAction.FindControlOptions.MatchBitmapText[1].FontName := 'Stereo';
-        TempAction.FindControlOptions.MatchBitmapText[1].FontSize := 320;
-        TempAction.FindControlOptions.UseWholeScreen := True;
+        TempAction.FindSubControlOptions.MatchCriteria.WillMatchBitmapText := False;
+        TempAction.FindSubControlOptions.MatchText := 'missing text';
+        TempAction.FindSubControlOptions.MatchClassName := 'unknown class';
+        TempAction.FindSubControlOptions.MatchBitmapText[0].ForegroundColor := 'Bad$FGCol$';
+        TempAction.FindSubControlOptions.MatchBitmapText[0].BackgroundColor := '$BadBGCol$';
+        TempAction.FindSubControlOptions.MatchBitmapText[1].FontName := 'Stereo';
+        TempAction.FindSubControlOptions.MatchBitmapText[1].FontSize := 320;
+        TempAction.FindSubControlOptions.UseWholeScreen := True;
       end;
 
-      AEditTemplateOptions.ListOfEditedProperties := GetFindControlActionProperties(TempAction.FindControlOptions);
+      AEditTemplateOptions.ListOfEditedProperties := GetFindSubControlActionProperties(TempAction.FindSubControlOptions);
       AEditTemplateOptions.ListOfEnabledProperties := 'MatchCriteria.WillMatchText' + #13#10 +
                                                       'MatchCriteria.WillMatchClassName' + #13#10 +
                                                       'MatchCriteria.WillMatchBitmapText' + #13#10 +
@@ -1534,21 +1527,12 @@ begin
 
   AFindControlOptions.MatchCriteria.WillMatchText := False;
   AFindControlOptions.MatchCriteria.WillMatchClassName := False;
-  AFindControlOptions.MatchCriteria.WillMatchBitmapText := True;
-  AFindControlOptions.MatchCriteria.WillMatchBitmapFiles := True;
-  AFindControlOptions.MatchCriteria.WillMatchPrimitiveFiles := True;
   AFindControlOptions.MatchCriteria.SearchForControlMode := sfcmEnumWindows;
   AFindControlOptions.AllowToFail := True;
   AFindControlOptions.MatchText := 'some text';
   AFindControlOptions.MatchClassName := 'some class';
   AFindControlOptions.MatchTextSeparator := 'txt sep';
   AFindControlOptions.MatchClassNameSeparator := 'class sep';
-  AFindControlOptions.MatchBitmapFiles := 'bmp';
-  AFindControlOptions.MatchBitmapAlgorithm := mbaRawHistogramZones;
-  AFindControlOptions.MatchBitmapAlgorithmSettings.XMultipleOf := 3;
-  AFindControlOptions.MatchBitmapAlgorithmSettings.YMultipleOf := 4;
-  AFindControlOptions.MatchBitmapAlgorithmSettings.XOffset := 5;
-  AFindControlOptions.MatchBitmapAlgorithmSettings.YOffset := 6;
   AFindControlOptions.InitialRectangle.Left := '$Control_L$';
   AFindControlOptions.InitialRectangle.Top := '$Control_T$';
   AFindControlOptions.InitialRectangle.Right := '$Control_R$';
@@ -1558,31 +1542,13 @@ begin
   AFindControlOptions.InitialRectangle.RightOffset := '50';
   AFindControlOptions.InitialRectangle.BottomOffset := '60';
   AFindControlOptions.UseWholeScreen := False;
-  AFindControlOptions.ColorError := '70';
-  AFindControlOptions.AllowedColorErrorCount := '80';
   AFindControlOptions.WaitForControlToGoAway := True;
   AFindControlOptions.StartSearchingWithCachedControl := True;
   AFindControlOptions.CachedControlLeft := '90';
   AFindControlOptions.CachedControlTop := '100';
-  AFindControlOptions.MatchPrimitiveFiles := 'pmtv';
-  AFindControlOptions.MatchPrimitiveFiles_Modified := '';
   AFindControlOptions.GetAllControls := True;
-  AFindControlOptions.UseFastSearch := False;
-  AFindControlOptions.FastSearchAllowedColorErrorCount := '700';
-  AFindControlOptions.IgnoredColors := '800';
-  AFindControlOptions.SleepySearch := True;
-  AFindControlOptions.StopSearchOnMismatch := True;
-  AFindControlOptions.ImageSource := isFile;
-  AFindControlOptions.SourceFileName := 'Fnm';
-  AFindControlOptions.ImageSourceFileNameLocation := isflDisk;
   AFindControlOptions.PrecisionTimeout := True;
-  AFindControlOptions.FullBackgroundImageInResult := False;
-  AFindControlOptions.MatchByHistogramSettings.MinPercentColorMatch := '250';
-  AFindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInSubBmp := '310';
-  AFindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp := '415';
   AFindControlOptions.EvaluateTextCount := '-17';
-  AFindControlOptions.CropFromScreenshot := True;
-  AFindControlOptions.ThreadCount := '30';
 end;
 
 
@@ -1648,48 +1614,97 @@ begin
 end;
 
 
-procedure GenerateDifferentThanDefault_FindSubControl(var AFindControlOptions: TClkFindControlOptions);
+procedure GenerateDifferentThanDefault_FindSubControl(var AFindSubControlOptions: TClkFindSubControlOptions);
 begin
-  GenerateDifferentThanDefault_FindControl(AFindControlOptions);
+  GetDefaultPropertyValues_FindSubControl(AFindSubControlOptions);
 
-  SetLength(AFindControlOptions.MatchBitmapText, 2);
+  AFindSubControlOptions.MatchCriteria.WillMatchBitmapText := True;
+  AFindSubControlOptions.MatchCriteria.WillMatchBitmapFiles := True;
+  AFindSubControlOptions.MatchCriteria.WillMatchPrimitiveFiles := True;
+  AFindSubControlOptions.AllowToFail := True;
+  AFindSubControlOptions.MatchText := 'some text';
+  AFindSubControlOptions.MatchClassName := 'some class';
+  AFindSubControlOptions.MatchTextSeparator := 'txt sep';
+  AFindSubControlOptions.MatchClassNameSeparator := 'class sep';
+  AFindSubControlOptions.MatchBitmapFiles := 'bmp';
+  AFindSubControlOptions.MatchBitmapAlgorithm := mbaRawHistogramZones;
+  AFindSubControlOptions.MatchBitmapAlgorithmSettings.XMultipleOf := 3;
+  AFindSubControlOptions.MatchBitmapAlgorithmSettings.YMultipleOf := 4;
+  AFindSubControlOptions.MatchBitmapAlgorithmSettings.XOffset := 5;
+  AFindSubControlOptions.MatchBitmapAlgorithmSettings.YOffset := 6;
+  AFindSubControlOptions.InitialRectangle.Left := '$Control_L$';
+  AFindSubControlOptions.InitialRectangle.Top := '$Control_T$';
+  AFindSubControlOptions.InitialRectangle.Right := '$Control_R$';
+  AFindSubControlOptions.InitialRectangle.Bottom := '$Control_B$';
+  AFindSubControlOptions.InitialRectangle.LeftOffset := '30';
+  AFindSubControlOptions.InitialRectangle.TopOffset := '40';
+  AFindSubControlOptions.InitialRectangle.RightOffset := '50';
+  AFindSubControlOptions.InitialRectangle.BottomOffset := '60';
+  AFindSubControlOptions.UseWholeScreen := False;
+  AFindSubControlOptions.ColorError := '70';
+  AFindSubControlOptions.AllowedColorErrorCount := '80';
+  AFindSubControlOptions.WaitForControlToGoAway := True;
+  AFindSubControlOptions.StartSearchingWithCachedControl := True;
+  AFindSubControlOptions.CachedControlLeft := '90';
+  AFindSubControlOptions.CachedControlTop := '100';
+  AFindSubControlOptions.MatchPrimitiveFiles := 'pmtv';
+  AFindSubControlOptions.MatchPrimitiveFiles_Modified := '';
+  AFindSubControlOptions.GetAllControls := True;
+  AFindSubControlOptions.UseFastSearch := False;
+  AFindSubControlOptions.FastSearchAllowedColorErrorCount := '700';
+  AFindSubControlOptions.IgnoredColors := '800';
+  AFindSubControlOptions.SleepySearch := True;
+  AFindSubControlOptions.StopSearchOnMismatch := True;
+  AFindSubControlOptions.ImageSource := isFile;
+  AFindSubControlOptions.SourceFileName := 'Fnm';
+  AFindSubControlOptions.ImageSourceFileNameLocation := isflDisk;
+  AFindSubControlOptions.PrecisionTimeout := True;
+  AFindSubControlOptions.FullBackgroundImageInResult := False;
+  AFindSubControlOptions.MatchByHistogramSettings.MinPercentColorMatch := '250';
+  AFindSubControlOptions.MatchByHistogramSettings.MostSignificantColorCountInSubBmp := '310';
+  AFindSubControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp := '415';
+  AFindSubControlOptions.EvaluateTextCount := '-17';
+  AFindSubControlOptions.CropFromScreenshot := True;
+  AFindSubControlOptions.ThreadCount := '30';
+
+  SetLength(AFindSubControlOptions.MatchBitmapText, 2);
   //no need to call GetDefaultPropertyValues_FindControl_MatchBitmapText();
 
-  AFindControlOptions.MatchBitmapText[0].ForegroundColor := '$Color_3Window$';
-  AFindControlOptions.MatchBitmapText[0].BackgroundColor := '$Color_4Highlight$';
-  AFindControlOptions.MatchBitmapText[0].FontName := 'Courier New';
-  AFindControlOptions.MatchBitmapText[0].FontSize := 9;
-  AFindControlOptions.MatchBitmapText[0].FontQualityReplacement := '80';
-  AFindControlOptions.MatchBitmapText[0].FontQuality := fqAntialiased;
-  AFindControlOptions.MatchBitmapText[0].FontQualityUsesReplacement := True;
-  AFindControlOptions.MatchBitmapText[0].Bold := True;
-  AFindControlOptions.MatchBitmapText[0].Italic := True;
-  AFindControlOptions.MatchBitmapText[0].Underline := True;
-  AFindControlOptions.MatchBitmapText[0].StrikeOut := True;
-  AFindControlOptions.MatchBitmapText[0].CropLeft := '70';
-  AFindControlOptions.MatchBitmapText[0].CropTop := '80';
-  AFindControlOptions.MatchBitmapText[0].CropRight := '90';
-  AFindControlOptions.MatchBitmapText[0].CropBottom := '100';
-  AFindControlOptions.MatchBitmapText[0].IgnoreBackgroundColor := True;
-  AFindControlOptions.MatchBitmapText[0].ProfileName := 'P0';
+  AFindSubControlOptions.MatchBitmapText[0].ForegroundColor := '$Color_3Window$';
+  AFindSubControlOptions.MatchBitmapText[0].BackgroundColor := '$Color_4Highlight$';
+  AFindSubControlOptions.MatchBitmapText[0].FontName := 'Courier New';
+  AFindSubControlOptions.MatchBitmapText[0].FontSize := 9;
+  AFindSubControlOptions.MatchBitmapText[0].FontQualityReplacement := '80';
+  AFindSubControlOptions.MatchBitmapText[0].FontQuality := fqAntialiased;
+  AFindSubControlOptions.MatchBitmapText[0].FontQualityUsesReplacement := True;
+  AFindSubControlOptions.MatchBitmapText[0].Bold := True;
+  AFindSubControlOptions.MatchBitmapText[0].Italic := True;
+  AFindSubControlOptions.MatchBitmapText[0].Underline := True;
+  AFindSubControlOptions.MatchBitmapText[0].StrikeOut := True;
+  AFindSubControlOptions.MatchBitmapText[0].CropLeft := '70';
+  AFindSubControlOptions.MatchBitmapText[0].CropTop := '80';
+  AFindSubControlOptions.MatchBitmapText[0].CropRight := '90';
+  AFindSubControlOptions.MatchBitmapText[0].CropBottom := '100';
+  AFindSubControlOptions.MatchBitmapText[0].IgnoreBackgroundColor := True;
+  AFindSubControlOptions.MatchBitmapText[0].ProfileName := 'P0';
 
-  AFindControlOptions.MatchBitmapText[1].ForegroundColor := '$Color_7Window$';
-  AFindControlOptions.MatchBitmapText[1].BackgroundColor := '$Color_8Highlight$';
-  AFindControlOptions.MatchBitmapText[1].FontName := 'Courier Old';
-  AFindControlOptions.MatchBitmapText[1].FontSize := 10;
-  AFindControlOptions.MatchBitmapText[1].FontQualityReplacement := '90';
-  AFindControlOptions.MatchBitmapText[1].FontQuality := fqCleartypeNatural;
-  AFindControlOptions.MatchBitmapText[1].FontQualityUsesReplacement := True;
-  AFindControlOptions.MatchBitmapText[1].Bold := True;
-  AFindControlOptions.MatchBitmapText[1].Italic := True;
-  AFindControlOptions.MatchBitmapText[1].Underline := True;
-  AFindControlOptions.MatchBitmapText[1].StrikeOut := True;
-  AFindControlOptions.MatchBitmapText[1].CropLeft := '270';
-  AFindControlOptions.MatchBitmapText[1].CropTop := '380';
-  AFindControlOptions.MatchBitmapText[1].CropRight := '490';
-  AFindControlOptions.MatchBitmapText[1].CropBottom := '500';
-  AFindControlOptions.MatchBitmapText[1].IgnoreBackgroundColor := True;
-  AFindControlOptions.MatchBitmapText[1].ProfileName := 'P1';
+  AFindSubControlOptions.MatchBitmapText[1].ForegroundColor := '$Color_7Window$';
+  AFindSubControlOptions.MatchBitmapText[1].BackgroundColor := '$Color_8Highlight$';
+  AFindSubControlOptions.MatchBitmapText[1].FontName := 'Courier Old';
+  AFindSubControlOptions.MatchBitmapText[1].FontSize := 10;
+  AFindSubControlOptions.MatchBitmapText[1].FontQualityReplacement := '90';
+  AFindSubControlOptions.MatchBitmapText[1].FontQuality := fqCleartypeNatural;
+  AFindSubControlOptions.MatchBitmapText[1].FontQualityUsesReplacement := True;
+  AFindSubControlOptions.MatchBitmapText[1].Bold := True;
+  AFindSubControlOptions.MatchBitmapText[1].Italic := True;
+  AFindSubControlOptions.MatchBitmapText[1].Underline := True;
+  AFindSubControlOptions.MatchBitmapText[1].StrikeOut := True;
+  AFindSubControlOptions.MatchBitmapText[1].CropLeft := '270';
+  AFindSubControlOptions.MatchBitmapText[1].CropTop := '380';
+  AFindSubControlOptions.MatchBitmapText[1].CropRight := '490';
+  AFindSubControlOptions.MatchBitmapText[1].CropBottom := '500';
+  AFindSubControlOptions.MatchBitmapText[1].IgnoreBackgroundColor := True;
+  AFindSubControlOptions.MatchBitmapText[1].ProfileName := 'P1';
 end;
 
 
