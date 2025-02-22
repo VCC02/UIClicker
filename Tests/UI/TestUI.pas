@@ -914,7 +914,7 @@ var
   Properties: TOIInteractionDataArr;
   FindControlOptions: TClkFindControlOptions;
 begin
-  GetDefaultPropertyValues_FindControl(FindControlOptions, False);
+  GetDefaultPropertyValues_FindControl(FindControlOptions);
   ListOfSerializedPropertiesToOIInteractionData(GetFindControlActionProperties(FindControlOptions), @CFindControlProperties, CPropIsExp[acFindControl], CPropCount_FindControl, Properties);
 
   VerifyOIDefaultValues(CClkActionStr[acFindControl], Properties);
@@ -924,10 +924,10 @@ end;
 procedure TTestUI.TestVerifyOIDefaultValues_FindSubControl;
 var
   Properties: TOIInteractionDataArr;
-  FindSubControlOptions: TClkFindControlOptions;
+  FindSubControlOptions: TClkFindSubControlOptions;
 begin
-  GetDefaultPropertyValues_FindControl(FindSubControlOptions, True);
-  ListOfSerializedPropertiesToOIInteractionData(GetFindControlActionProperties(FindSubControlOptions), @CFindControlProperties, CPropIsExp[acFindSubControl], CPropCount_FindControl, Properties);
+  GetDefaultPropertyValues_FindSubControl(FindSubControlOptions);
+  ListOfSerializedPropertiesToOIInteractionData(GetFindSubControlActionProperties(FindSubControlOptions), @CFindSubControlProperties, CPropIsExp[acFindSubControl], CPropCount_FindControl, Properties);
 
   VerifyOIDefaultValues(CClkActionStr[acFindSubControl], Properties);
 end;
@@ -1179,10 +1179,10 @@ end;
 procedure TTestUI.TestVerifyOIDifferentThanDefaultValues_FindSubControl_SubProperties;
 var
   Properties: TOIInteractionDataArr;
-  FindSubControlOptions: TClkFindControlOptions;
+  FindSubControlOptions: TClkFindSubControlOptions;
 begin
   GenerateDifferentThanDefault_FindSubControl(FindSubControlOptions);
-  ListOfSerializedPropertiesToOIInteractionData(GetFindControlActionProperties(FindSubControlOptions), @CFindControlProperties, CPropIsExp[acFindSubControl], CPropCount_FindControl, Properties);
+  ListOfSerializedPropertiesToOIInteractionData(GetFindSubControlActionProperties(FindSubControlOptions), @CFindSubControlProperties, CPropIsExp[acFindSubControl], CPropCount_FindControl, Properties);
 
   //Get only the properties from structures and arrays
 

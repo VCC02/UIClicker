@@ -1337,17 +1337,15 @@ begin
   CreateTestTemplateWithAllActionsInMem(CTestEditTemplateFileName);
   SendTemplateFromInMemToServer(CTestEditTemplateFileName);
 
-  SetLength(ExpectedValues, 10);
-  ExpectedValues[0] := '0';
-  ExpectedValues[1] := '0';
-  ExpectedValues[2] := '1';
-  ExpectedValues[3] := 'bmp text to be matched';
-  ExpectedValues[4] := 'class doesn''t matter';
-  ExpectedValues[5] := '$FGCol$';
-  ExpectedValues[6] := '$BGCol$';
-  ExpectedValues[7] := 'Mono';
-  ExpectedValues[8] := '19';
-  ExpectedValues[9] := '0';
+  SetLength(ExpectedValues, 8);
+  ExpectedValues[0] := '1';
+  ExpectedValues[1] := 'bmp text to be matched';
+  ExpectedValues[2] := 'class doesn''t matter';
+  ExpectedValues[3] := '$FGCol$';
+  ExpectedValues[4] := '$BGCol$';
+  ExpectedValues[5] := 'Mono';
+  ExpectedValues[6] := '19';
+  ExpectedValues[7] := '0';
   Test_ExecuteEditTemplate(acFindSubControl, etoUpdateAction, ExpectedValues);
 end;
 

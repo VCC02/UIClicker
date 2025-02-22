@@ -1216,9 +1216,9 @@ begin
       end;
 
       AEditTemplateOptions.ListOfEditedProperties := GetFindSubControlActionProperties(TempAction.FindSubControlOptions);
-      AEditTemplateOptions.ListOfEnabledProperties := 'MatchCriteria.WillMatchText' + #13#10 +
-                                                      'MatchCriteria.WillMatchClassName' + #13#10 +
-                                                      'MatchCriteria.WillMatchBitmapText' + #13#10 +
+      AEditTemplateOptions.ListOfEnabledProperties := 'MatchCriteria.WillMatchBitmapText' + #13#10 +
+                                                      //'MatchCriteria.WillMatchBitmapFiles' + #13#10 +
+                                                      //'MatchCriteria.WillMatchPrimitiveFiles' + #13#10 +
                                                       'MatchText' + #13#10 +
                                                       'MatchClassName' + #13#10 +
                                                       'MatchBitmapText[0].ForegroundColor' + #13#10 +
