@@ -195,17 +195,11 @@ const
 
   CFindControl_MatchCriteria_WillMatchText_PropItemIndex = 0;
   CFindControl_MatchCriteria_WillMatchClassName_PropItemIndex = 1;
-  CFindControl_MatchCriteria_WillMatchBitmapText_PropItemIndex = 2;  //to be removed
-  CFindControl_MatchCriteria_WillMatchBitmapFiles_PropItemIndex = 3;  //to be removed
-  CFindControl_MatchCriteria_WillMatchPrimitiveFiles_PropItemIndex = 4; //to be removed
-  CFindControl_MatchCriteria_SearchForControlMode_PropItemIndex = 5;
+  CFindControl_MatchCriteria_SearchForControlMode_PropItemIndex = 2;
 
-  CFindSubControl_MatchCriteria_WillMatchText_PropItemIndex = 0;      //to be removed
-  CFindSubControl_MatchCriteria_WillMatchClassName_PropItemIndex = 1;   //to be removed
-  CFindSubControl_MatchCriteria_WillMatchBitmapText_PropItemIndex = 2;
-  CFindSubControl_MatchCriteria_WillMatchBitmapFiles_PropItemIndex = 3;
-  CFindSubControl_MatchCriteria_WillMatchPrimitiveFiles_PropItemIndex = 4;
-  CFindSubControl_MatchCriteria_SearchForControlMode_PropItemIndex = 5;   //to be removed
+  CFindSubControl_MatchCriteria_WillMatchBitmapText_PropItemIndex = 0;
+  CFindSubControl_MatchCriteria_WillMatchBitmapFiles_PropItemIndex = 1;
+  CFindSubControl_MatchCriteria_WillMatchPrimitiveFiles_PropItemIndex = 2;
 
   CFindControl_MatchBitmapText_ForegroundColor_PropItemIndex = 0;   //property index in FindControl.MatchBitmapText structure
   CFindControl_MatchBitmapText_BackgroundColor_PropItemIndex = 1;   //property index in FindControl.MatchBitmapText structure
