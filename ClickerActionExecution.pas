@@ -4867,7 +4867,7 @@ begin
 
     Result := ExecuteFindSubControlActionWithTimeout(WorkAction.FindSubControlOptions, WorkAction.ActionOptions);
   finally
-    SetLastActionStatus(Result, WorkAction.FindControlOptions.AllowToFail);
+    SetLastActionStatus(Result, WorkAction.FindSubControlOptions.AllowToFail);
   end;
 end;
 

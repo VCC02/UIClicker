@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2024 VCC
+    Copyright (C) 2025 VCC
     creation date: Oct 2022
     initial release date: 30 Oct 2022
 
@@ -499,7 +499,7 @@ begin
   PrepareClickerUnderTestToReadItsVars;
 
   Sleep(500);
-  ExpectVarFromClientUnderTest('$VarToBeIncremented$', '1');
+  ExpectVarFromClientUnderTest('$VarToBeIncremented$', '1', 'This is VarToBeIncremented.');
 end;
 
 

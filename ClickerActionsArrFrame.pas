@@ -3396,8 +3396,10 @@ begin
       else
       begin
         if {((FClkActions[ActionIndex].ActionOptions.Action = acFindControl) or (FClkActions[ActionIndex].ActionOptions.Action = acFindSubControl)) and}
-           not Result and
-           FClkActions[ActionIndex].FindControlOptions.AllowToFail then
+           not Result and (
+           (FClkActions[ActionIndex].ActionOptions.Action = acFindControl) and (FClkActions[ActionIndex].FindControlOptions.AllowToFail) or
+           (FClkActions[ActionIndex].ActionOptions.Action = acFindSubControl) and (FClkActions[ActionIndex].FindSubControlOptions.AllowToFail)
+                          ) then
         begin
           FClkActions[ActionIndex].ActionStatus := asAllowedFailed;
           Result := True; //allow further execution
@@ -7574,8 +7576,10 @@ begin
     else
     begin
       if {((FClkActions[ActionIndex].ActionOptions.Action = acFindControl) or (FClkActions[ActionIndex].ActionOptions.Action = acFindSubControl)) and}
-         not FRemoteExCmdResult and
-         FClkActions[FRemoteExActionIndex].FindControlOptions.AllowToFail then
+         not FRemoteExCmdResult and (
+             (FClkActions[FRemoteExActionIndex].ActionOptions.Action = acFindControl) and (FClkActions[FRemoteExActionIndex].FindControlOptions.AllowToFail) or
+             (FClkActions[FRemoteExActionIndex].ActionOptions.Action = acFindSubControl) and (FClkActions[FRemoteExActionIndex].FindSubControlOptions.AllowToFail)
+                                    ) then
       begin
         FClkActions[FRemoteExActionIndex].ActionStatus := asAllowedFailed;
         FRemoteExCmdResult := True; //allow further execution
