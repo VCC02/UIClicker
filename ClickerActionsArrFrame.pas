@@ -4460,7 +4460,8 @@ begin
         case CurrentAction.ActionOptions.Action of
           acClick: CellText := IntToStr(CurrentAction.ClickOptions.ClickType);
           acExecApp: CellText := ExtractFileName(CurrentAction.ExecAppOptions.PathToApp);
-          acFindControl, acFindSubControl: CellText := CurrentAction.FindControlOptions.MatchText + ' / ' + CurrentAction.FindControlOptions.MatchClassName + ' / ' + BoolToStr(CurrentAction.FindControlOptions.UseWholeScreen, '[WholeScreen]', '');
+          acFindControl: CellText := CurrentAction.FindControlOptions.MatchText + ' / ' + CurrentAction.FindControlOptions.MatchClassName + ' / ' + BoolToStr(CurrentAction.FindControlOptions.UseWholeScreen, '[WholeScreen]', '');
+          acFindSubControl: CellText := CurrentAction.FindSubControlOptions.MatchText + ' / ' + BoolToStr(CurrentAction.FindSubControlOptions.UseWholeScreen, '[WholeScreen]', '');
           acSetControlText: CellText := CurrentAction.SetTextOptions.Text;
           acCallTemplate: CellText := ExtractFileName(CurrentAction.CallTemplateOptions.TemplateFileName);
           acSleep: CellText := CurrentAction.SleepOptions.Value;

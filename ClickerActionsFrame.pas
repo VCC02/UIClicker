@@ -2951,29 +2951,64 @@ end;
 
 procedure TfrClickerActions.HandleOnUpdateSearchAreaLimitsInOIFromDraggingLines(ALimitLabelsToUpdate: TLimitLabels; var AOffsets: TSimpleRectString);
 begin
-  if llLeft in ALimitLabelsToUpdate then
-  begin
-    GetEditingActionObjectByActionType^.FindControlOptions.InitialRectangle.LeftOffset := AOffsets.Left;
-    FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, CCategory_ActionSpecific, CFindControl_InitialRectangle_PropIndex, CFindControl_InitialRectangle_LeftOffset_PropItemIndex);
-  end;
+  case GetEditingActionObjectByActionType^.ActionOptions.Action of
+    acFindControl:
+    begin
+      if llLeft in ALimitLabelsToUpdate then
+      begin
+        GetEditingActionObjectByActionType^.FindControlOptions.InitialRectangle.LeftOffset := AOffsets.Left;
+        FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, CCategory_ActionSpecific, CFindControl_InitialRectangle_PropIndex, CFindControl_InitialRectangle_LeftOffset_PropItemIndex);
+      end;
 
-  if llTop in ALimitLabelsToUpdate then
-  begin
-    GetEditingActionObjectByActionType^.FindControlOptions.InitialRectangle.TopOffset := AOffsets.Top;
-    FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, CCategory_ActionSpecific, CFindControl_InitialRectangle_PropIndex, CFindControl_InitialRectangle_TopOffset_PropItemIndex);
-  end;
+      if llTop in ALimitLabelsToUpdate then
+      begin
+        GetEditingActionObjectByActionType^.FindControlOptions.InitialRectangle.TopOffset := AOffsets.Top;
+        FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, CCategory_ActionSpecific, CFindControl_InitialRectangle_PropIndex, CFindControl_InitialRectangle_TopOffset_PropItemIndex);
+      end;
 
-  if llRight in ALimitLabelsToUpdate then
-  begin
-    GetEditingActionObjectByActionType^.FindControlOptions.InitialRectangle.RightOffset := AOffsets.Right;
-    FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, CCategory_ActionSpecific, CFindControl_InitialRectangle_PropIndex, CFindControl_InitialRectangle_RightOffset_PropItemIndex);
-  end;
+      if llRight in ALimitLabelsToUpdate then
+      begin
+        GetEditingActionObjectByActionType^.FindControlOptions.InitialRectangle.RightOffset := AOffsets.Right;
+        FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, CCategory_ActionSpecific, CFindControl_InitialRectangle_PropIndex, CFindControl_InitialRectangle_RightOffset_PropItemIndex);
+      end;
 
-  if llBottom in ALimitLabelsToUpdate then
-  begin
-    GetEditingActionObjectByActionType^.FindControlOptions.InitialRectangle.BottomOffset := AOffsets.Bottom;
-    FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, CCategory_ActionSpecific, CFindControl_InitialRectangle_PropIndex, CFindControl_InitialRectangle_BottomOffset_PropItemIndex);
-  end;
+      if llBottom in ALimitLabelsToUpdate then
+      begin
+        GetEditingActionObjectByActionType^.FindControlOptions.InitialRectangle.BottomOffset := AOffsets.Bottom;
+        FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, CCategory_ActionSpecific, CFindControl_InitialRectangle_PropIndex, CFindControl_InitialRectangle_BottomOffset_PropItemIndex);
+      end;
+    end;
+
+    acFindSubControl:
+    begin
+      if llLeft in ALimitLabelsToUpdate then
+      begin
+        GetEditingActionObjectByActionType^.FindSubControlOptions.InitialRectangle.LeftOffset := AOffsets.Left;
+        FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, CCategory_ActionSpecific, CFindControl_InitialRectangle_PropIndex, CFindControl_InitialRectangle_LeftOffset_PropItemIndex);
+      end;
+
+      if llTop in ALimitLabelsToUpdate then
+      begin
+        GetEditingActionObjectByActionType^.FindSubControlOptions.InitialRectangle.TopOffset := AOffsets.Top;
+        FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, CCategory_ActionSpecific, CFindControl_InitialRectangle_PropIndex, CFindControl_InitialRectangle_TopOffset_PropItemIndex);
+      end;
+
+      if llRight in ALimitLabelsToUpdate then
+      begin
+        GetEditingActionObjectByActionType^.FindSubControlOptions.InitialRectangle.RightOffset := AOffsets.Right;
+        FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, CCategory_ActionSpecific, CFindControl_InitialRectangle_PropIndex, CFindControl_InitialRectangle_RightOffset_PropItemIndex);
+      end;
+
+      if llBottom in ALimitLabelsToUpdate then
+      begin
+        GetEditingActionObjectByActionType^.FindSubControlOptions.InitialRectangle.BottomOffset := AOffsets.Bottom;
+        FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, CCategory_ActionSpecific, CFindControl_InitialRectangle_PropIndex, CFindControl_InitialRectangle_BottomOffset_PropItemIndex);
+      end;
+    end;
+
+    else
+      ;
+  end; //case
 end;
 
 
@@ -3013,7 +3048,16 @@ end;
 
 function TfrClickerActions.HandleOnGetDisplayedText: string;
 begin
-  Result := GetEditingActionObjectByActionType^.FindControlOptions.MatchText;
+  case GetEditingActionObjectByActionType^.ActionOptions.Action of
+    acFindControl:
+      Result := GetEditingActionObjectByActionType^.FindControlOptions.MatchText;
+
+    acFindSubControl:
+      Result := GetEditingActionObjectByActionType^.FindSubControlOptions.MatchText;
+
+    else
+      Result := 'undefined action';
+  end;
 end;
 
 
@@ -7280,46 +7324,70 @@ begin
   if AEditingAction = nil then
     Exit;
 
-  case APropertyIndex of
-    CFindControl_InitialRectangle_PropIndex:
-    begin
-      case AItemIndex of
-        CFindControl_InitialRectangle_LeftOffset_PropItemIndex:
-          frClickerFindControl.UpdateOnSearchRectLeftOffsetMouseDown(AEditingAction^.FindControlOptions.InitialRectangle, Sender as TVTEdit, Button, Shift, X, Y);
+  if AEditingAction^.ActionOptions.Action = acFindControl then
+  begin
+    case APropertyIndex of
+      CFindControl_InitialRectangle_PropIndex:
+      begin
+        case AItemIndex of
+          CFindControl_InitialRectangle_LeftOffset_PropItemIndex:
+            frClickerFindControl.UpdateOnSearchRectLeftOffsetMouseDown(AEditingAction^.FindControlOptions.InitialRectangle, Sender as TVTEdit, Button, Shift, X, Y);
 
-        CFindControl_InitialRectangle_TopOffset_PropItemIndex:
-          frClickerFindControl.UpdateOnSearchRectTopOffsetMouseDown(AEditingAction^.FindControlOptions.InitialRectangle, Sender as TVTEdit, Button, Shift, X, Y);
+          CFindControl_InitialRectangle_TopOffset_PropItemIndex:
+            frClickerFindControl.UpdateOnSearchRectTopOffsetMouseDown(AEditingAction^.FindControlOptions.InitialRectangle, Sender as TVTEdit, Button, Shift, X, Y);
 
-        CFindControl_InitialRectangle_RightOffset_PropItemIndex:
-          frClickerFindControl.UpdateOnSearchRectRightOffsetMouseDown(AEditingAction^.FindControlOptions.InitialRectangle, Sender as TVTEdit, Button, Shift, X, Y);
+          CFindControl_InitialRectangle_RightOffset_PropItemIndex:
+            frClickerFindControl.UpdateOnSearchRectRightOffsetMouseDown(AEditingAction^.FindControlOptions.InitialRectangle, Sender as TVTEdit, Button, Shift, X, Y);
 
-        CFindControl_InitialRectangle_BottomOffset_PropItemIndex:
-          frClickerFindControl.UpdateOnSearchRectBottomOffsetMouseDown(AEditingAction^.FindControlOptions.InitialRectangle, Sender as TVTEdit, Button, Shift, X, Y);
+          CFindControl_InitialRectangle_BottomOffset_PropItemIndex:
+            frClickerFindControl.UpdateOnSearchRectBottomOffsetMouseDown(AEditingAction^.FindControlOptions.InitialRectangle, Sender as TVTEdit, Button, Shift, X, Y);
+        end;
       end;
-    end;
+    end
+  end
+  else  //FindSubControl
+  begin
+    case APropertyIndex of
+      CFindControl_InitialRectangle_PropIndex:
+      begin
+        case AItemIndex of
+          CFindControl_InitialRectangle_LeftOffset_PropItemIndex:
+            frClickerFindControl.UpdateOnSearchRectLeftOffsetMouseDown(AEditingAction^.FindSubControlOptions.InitialRectangle, Sender as TVTEdit, Button, Shift, X, Y);
 
-    CFindControl_MatchBitmapText_PropIndex:
-    begin
-      ItemIndexMod := AItemIndex mod CPropCount_FindControlMatchBitmapText;
-      ItemIndexDiv := AItemIndex div CPropCount_FindControlMatchBitmapText;
+          CFindControl_InitialRectangle_TopOffset_PropItemIndex:
+            frClickerFindControl.UpdateOnSearchRectTopOffsetMouseDown(AEditingAction^.FindSubControlOptions.InitialRectangle, Sender as TVTEdit, Button, Shift, X, Y);
 
-      case ItemIndexMod of
-        CFindControl_MatchBitmapText_CropLeft:
-          frClickerFindControl.UpdateOnTextCroppingLeftMouseDown(AEditingAction^.FindSubControlOptions.MatchBitmapText[ItemIndexDiv], Sender as TVTEdit, Button, Shift, X, Y);
+          CFindControl_InitialRectangle_RightOffset_PropItemIndex:
+            frClickerFindControl.UpdateOnSearchRectRightOffsetMouseDown(AEditingAction^.FindSubControlOptions.InitialRectangle, Sender as TVTEdit, Button, Shift, X, Y);
 
-        CFindControl_MatchBitmapText_CropTop:
-          frClickerFindControl.UpdateOnTextCroppingTopMouseDown(AEditingAction^.FindSubControlOptions.MatchBitmapText[ItemIndexDiv], Sender as TVTEdit, Button, Shift, X, Y);
-
-        CFindControl_MatchBitmapText_CropRight:
-          frClickerFindControl.UpdateOnTextCroppingRightMouseDown(AEditingAction^.FindSubControlOptions.MatchBitmapText[ItemIndexDiv], Sender as TVTEdit, Button, Shift, X, Y);
-
-        CFindControl_MatchBitmapText_CropBottom:
-          frClickerFindControl.UpdateOnTextCroppingBottomMouseDown(AEditingAction^.FindSubControlOptions.MatchBitmapText[ItemIndexDiv], Sender as TVTEdit, Button, Shift, X, Y);
+          CFindControl_InitialRectangle_BottomOffset_PropItemIndex:
+            frClickerFindControl.UpdateOnSearchRectBottomOffsetMouseDown(AEditingAction^.FindSubControlOptions.InitialRectangle, Sender as TVTEdit, Button, Shift, X, Y);
+        end;
       end;
-    end;
 
-    else
-      ;
+      CFindControl_MatchBitmapText_PropIndex:
+      begin
+        ItemIndexMod := AItemIndex mod CPropCount_FindControlMatchBitmapText;
+        ItemIndexDiv := AItemIndex div CPropCount_FindControlMatchBitmapText;
+
+        case ItemIndexMod of
+          CFindControl_MatchBitmapText_CropLeft:
+            frClickerFindControl.UpdateOnTextCroppingLeftMouseDown(AEditingAction^.FindSubControlOptions.MatchBitmapText[ItemIndexDiv], Sender as TVTEdit, Button, Shift, X, Y);
+
+          CFindControl_MatchBitmapText_CropTop:
+            frClickerFindControl.UpdateOnTextCroppingTopMouseDown(AEditingAction^.FindSubControlOptions.MatchBitmapText[ItemIndexDiv], Sender as TVTEdit, Button, Shift, X, Y);
+
+          CFindControl_MatchBitmapText_CropRight:
+            frClickerFindControl.UpdateOnTextCroppingRightMouseDown(AEditingAction^.FindSubControlOptions.MatchBitmapText[ItemIndexDiv], Sender as TVTEdit, Button, Shift, X, Y);
+
+          CFindControl_MatchBitmapText_CropBottom:
+            frClickerFindControl.UpdateOnTextCroppingBottomMouseDown(AEditingAction^.FindSubControlOptions.MatchBitmapText[ItemIndexDiv], Sender as TVTEdit, Button, Shift, X, Y);
+        end;
+      end;
+
+      else
+        ;
+    end; //case
   end;
 end;
 
@@ -7354,87 +7422,137 @@ begin
   if AEditingAction = nil then
     Exit;
 
-  case APropertyIndex of
-    CFindControl_InitialRectangle_PropIndex:
+  case AEditingAction^.ActionOptions.Action of
+    acFindControl:
     begin
-      case AItemIndex of
-        CFindControl_InitialRectangle_LeftOffset_PropItemIndex:
+      case APropertyIndex of
+        CFindControl_InitialRectangle_PropIndex:
         begin
-          OldValue := AEditingAction^.FindControlOptions.InitialRectangle.LeftOffset;
-          frClickerFindControl.UpdateOnSearchRectLeftOffsetMouseMove(AEditingAction^.FindControlOptions.InitialRectangle, Sender as TVTEdit, Shift, X, Y);
-          TriggerOnControlsModified(AEditingAction^.FindControlOptions.InitialRectangle.LeftOffset <> OldValue);
-          Result := True;
-        end;
+          case AItemIndex of
+            CFindControl_InitialRectangle_LeftOffset_PropItemIndex:
+            begin
+              OldValue := AEditingAction^.FindControlOptions.InitialRectangle.LeftOffset;
+              frClickerFindControl.UpdateOnSearchRectLeftOffsetMouseMove(AEditingAction^.FindControlOptions.InitialRectangle, Sender as TVTEdit, Shift, X, Y);
+              TriggerOnControlsModified(AEditingAction^.FindControlOptions.InitialRectangle.LeftOffset <> OldValue);
+              Result := True;
+            end;
 
-        CFindControl_InitialRectangle_TopOffset_PropItemIndex:
-        begin
-          OldValue := AEditingAction^.FindControlOptions.InitialRectangle.TopOffset;
-          frClickerFindControl.UpdateOnSearchRectTopOffsetMouseMove(AEditingAction^.FindControlOptions.InitialRectangle, Sender as TVTEdit, Shift, X, Y);
-          TriggerOnControlsModified(AEditingAction^.FindControlOptions.InitialRectangle.TopOffset <> OldValue);
-          Result := True;
-        end;
+            CFindControl_InitialRectangle_TopOffset_PropItemIndex:
+            begin
+              OldValue := AEditingAction^.FindControlOptions.InitialRectangle.TopOffset;
+              frClickerFindControl.UpdateOnSearchRectTopOffsetMouseMove(AEditingAction^.FindControlOptions.InitialRectangle, Sender as TVTEdit, Shift, X, Y);
+              TriggerOnControlsModified(AEditingAction^.FindControlOptions.InitialRectangle.TopOffset <> OldValue);
+              Result := True;
+            end;
 
-        CFindControl_InitialRectangle_RightOffset_PropItemIndex:
-        begin
-          OldValue := AEditingAction^.FindControlOptions.InitialRectangle.RightOffset;
-          frClickerFindControl.UpdateOnSearchRectRightOffsetMouseMove(AEditingAction^.FindControlOptions.InitialRectangle, Sender as TVTEdit, Shift, X, Y);
-          TriggerOnControlsModified(AEditingAction^.FindControlOptions.InitialRectangle.RightOffset <> OldValue);
-          Result := True;
-        end;
+            CFindControl_InitialRectangle_RightOffset_PropItemIndex:
+            begin
+              OldValue := AEditingAction^.FindControlOptions.InitialRectangle.RightOffset;
+              frClickerFindControl.UpdateOnSearchRectRightOffsetMouseMove(AEditingAction^.FindControlOptions.InitialRectangle, Sender as TVTEdit, Shift, X, Y);
+              TriggerOnControlsModified(AEditingAction^.FindControlOptions.InitialRectangle.RightOffset <> OldValue);
+              Result := True;
+            end;
 
-        CFindControl_InitialRectangle_BottomOffset_PropItemIndex:
-        begin
-          OldValue := AEditingAction^.FindControlOptions.InitialRectangle.BottomOffset;
-          frClickerFindControl.UpdateOnSearchRectBottomOffsetMouseMove(AEditingAction^.FindControlOptions.InitialRectangle, Sender as TVTEdit, Shift, X, Y);
-          TriggerOnControlsModified(AEditingAction^.FindControlOptions.InitialRectangle.BottomOffset <> OldValue);
-          Result := True;
+            CFindControl_InitialRectangle_BottomOffset_PropItemIndex:
+            begin
+              OldValue := AEditingAction^.FindControlOptions.InitialRectangle.BottomOffset;
+              frClickerFindControl.UpdateOnSearchRectBottomOffsetMouseMove(AEditingAction^.FindControlOptions.InitialRectangle, Sender as TVTEdit, Shift, X, Y);
+              TriggerOnControlsModified(AEditingAction^.FindControlOptions.InitialRectangle.BottomOffset <> OldValue);
+              Result := True;
+            end;
+          end;
         end;
-      end;
+      end; //case
     end;
 
-    CFindControl_MatchBitmapText_PropIndex:
+    acFindSubControl:
     begin
-      ItemIndexMod := AItemIndex mod CPropCount_FindControlMatchBitmapText;
-      ItemIndexDiv := AItemIndex div CPropCount_FindControlMatchBitmapText;
-
-      case ItemIndexMod of
-        CFindControl_MatchBitmapText_CropLeft:
+      case APropertyIndex of
+        CFindControl_InitialRectangle_PropIndex:
         begin
-          OldValue := AEditingAction^.FindSubControlOptions.MatchBitmapText[ItemIndexDiv].CropLeft;
-          frClickerFindControl.UpdateOnTextCroppingLeftMouseMove(AEditingAction^.FindSubControlOptions.MatchBitmapText[ItemIndexDiv], Sender as TVTEdit, Shift, X, Y, ItemIndexDiv);
-          frClickerFindControl.SelectedBMPTextTab := ItemIndexDiv;
-          TriggerOnControlsModified(AEditingAction^.FindSubControlOptions.MatchBitmapText[ItemIndexDiv].CropLeft <> OldValue);
-          Result := True;
+          case AItemIndex of
+            CFindControl_InitialRectangle_LeftOffset_PropItemIndex:
+            begin
+              OldValue := AEditingAction^.FindSubControlOptions.InitialRectangle.LeftOffset;
+              frClickerFindControl.UpdateOnSearchRectLeftOffsetMouseMove(AEditingAction^.FindSubControlOptions.InitialRectangle, Sender as TVTEdit, Shift, X, Y);
+              TriggerOnControlsModified(AEditingAction^.FindSubControlOptions.InitialRectangle.LeftOffset <> OldValue);
+              Result := True;
+            end;
+
+            CFindControl_InitialRectangle_TopOffset_PropItemIndex:
+            begin
+              OldValue := AEditingAction^.FindSubControlOptions.InitialRectangle.TopOffset;
+              frClickerFindControl.UpdateOnSearchRectTopOffsetMouseMove(AEditingAction^.FindSubControlOptions.InitialRectangle, Sender as TVTEdit, Shift, X, Y);
+              TriggerOnControlsModified(AEditingAction^.FindSubControlOptions.InitialRectangle.TopOffset <> OldValue);
+              Result := True;
+            end;
+
+            CFindControl_InitialRectangle_RightOffset_PropItemIndex:
+            begin
+              OldValue := AEditingAction^.FindSubControlOptions.InitialRectangle.RightOffset;
+              frClickerFindControl.UpdateOnSearchRectRightOffsetMouseMove(AEditingAction^.FindSubControlOptions.InitialRectangle, Sender as TVTEdit, Shift, X, Y);
+              TriggerOnControlsModified(AEditingAction^.FindSubControlOptions.InitialRectangle.RightOffset <> OldValue);
+              Result := True;
+            end;
+
+            CFindControl_InitialRectangle_BottomOffset_PropItemIndex:
+            begin
+              OldValue := AEditingAction^.FindSubControlOptions.InitialRectangle.BottomOffset;
+              frClickerFindControl.UpdateOnSearchRectBottomOffsetMouseMove(AEditingAction^.FindSubControlOptions.InitialRectangle, Sender as TVTEdit, Shift, X, Y);
+              TriggerOnControlsModified(AEditingAction^.FindSubControlOptions.InitialRectangle.BottomOffset <> OldValue);
+              Result := True;
+            end;
+          end;
         end;
 
-        CFindControl_MatchBitmapText_CropTop:
+        CFindControl_MatchBitmapText_PropIndex:
         begin
-          OldValue := AEditingAction^.FindSubControlOptions.MatchBitmapText[ItemIndexDiv].CropTop;
-          frClickerFindControl.UpdateOnTextCroppingTopMouseMove(AEditingAction^.FindSubControlOptions.MatchBitmapText[ItemIndexDiv], Sender as TVTEdit, Shift, X, Y, ItemIndexDiv);
-          frClickerFindControl.SelectedBMPTextTab := ItemIndexDiv;
-          TriggerOnControlsModified(AEditingAction^.FindSubControlOptions.MatchBitmapText[ItemIndexDiv].CropTop <> OldValue);
-          Result := True;
+          ItemIndexMod := AItemIndex mod CPropCount_FindControlMatchBitmapText;
+          ItemIndexDiv := AItemIndex div CPropCount_FindControlMatchBitmapText;
+
+          case ItemIndexMod of
+            CFindControl_MatchBitmapText_CropLeft:
+            begin
+              OldValue := AEditingAction^.FindSubControlOptions.MatchBitmapText[ItemIndexDiv].CropLeft;
+              frClickerFindControl.UpdateOnTextCroppingLeftMouseMove(AEditingAction^.FindSubControlOptions.MatchBitmapText[ItemIndexDiv], Sender as TVTEdit, Shift, X, Y, ItemIndexDiv);
+              frClickerFindControl.SelectedBMPTextTab := ItemIndexDiv;
+              TriggerOnControlsModified(AEditingAction^.FindSubControlOptions.MatchBitmapText[ItemIndexDiv].CropLeft <> OldValue);
+              Result := True;
+            end;
+
+            CFindControl_MatchBitmapText_CropTop:
+            begin
+              OldValue := AEditingAction^.FindSubControlOptions.MatchBitmapText[ItemIndexDiv].CropTop;
+              frClickerFindControl.UpdateOnTextCroppingTopMouseMove(AEditingAction^.FindSubControlOptions.MatchBitmapText[ItemIndexDiv], Sender as TVTEdit, Shift, X, Y, ItemIndexDiv);
+              frClickerFindControl.SelectedBMPTextTab := ItemIndexDiv;
+              TriggerOnControlsModified(AEditingAction^.FindSubControlOptions.MatchBitmapText[ItemIndexDiv].CropTop <> OldValue);
+              Result := True;
+            end;
+
+            CFindControl_MatchBitmapText_CropRight:
+            begin
+              OldValue := AEditingAction^.FindSubControlOptions.MatchBitmapText[ItemIndexDiv].CropRight;
+              frClickerFindControl.UpdateOnTextCroppingRightMouseMove(AEditingAction^.FindSubControlOptions.MatchBitmapText[ItemIndexDiv], Sender as TVTEdit, Shift, X, Y, ItemIndexDiv);
+              frClickerFindControl.SelectedBMPTextTab := ItemIndexDiv;
+              TriggerOnControlsModified(AEditingAction^.FindSubControlOptions.MatchBitmapText[ItemIndexDiv].CropRight <> OldValue);
+              Result := True;
+            end;
+
+            CFindControl_MatchBitmapText_CropBottom:
+            begin
+              OldValue := AEditingAction^.FindSubControlOptions.MatchBitmapText[ItemIndexDiv].CropBottom;
+              frClickerFindControl.UpdateOnTextCroppingBottomMouseMove(AEditingAction^.FindSubControlOptions.MatchBitmapText[ItemIndexDiv], Sender as TVTEdit, Shift, X, Y, ItemIndexDiv);
+              frClickerFindControl.SelectedBMPTextTab := ItemIndexDiv;
+              TriggerOnControlsModified(AEditingAction^.FindSubControlOptions.MatchBitmapText[ItemIndexDiv].CropBottom <> OldValue);
+              Result := True;
+            end;
+          end;
         end;
 
-        CFindControl_MatchBitmapText_CropRight:
-        begin
-          OldValue := AEditingAction^.FindSubControlOptions.MatchBitmapText[ItemIndexDiv].CropRight;
-          frClickerFindControl.UpdateOnTextCroppingRightMouseMove(AEditingAction^.FindSubControlOptions.MatchBitmapText[ItemIndexDiv], Sender as TVTEdit, Shift, X, Y, ItemIndexDiv);
-          frClickerFindControl.SelectedBMPTextTab := ItemIndexDiv;
-          TriggerOnControlsModified(AEditingAction^.FindSubControlOptions.MatchBitmapText[ItemIndexDiv].CropRight <> OldValue);
-          Result := True;
-        end;
-
-        CFindControl_MatchBitmapText_CropBottom:
-        begin
-          OldValue := AEditingAction^.FindSubControlOptions.MatchBitmapText[ItemIndexDiv].CropBottom;
-          frClickerFindControl.UpdateOnTextCroppingBottomMouseMove(AEditingAction^.FindSubControlOptions.MatchBitmapText[ItemIndexDiv], Sender as TVTEdit, Shift, X, Y, ItemIndexDiv);
-          frClickerFindControl.SelectedBMPTextTab := ItemIndexDiv;
-          TriggerOnControlsModified(AEditingAction^.FindSubControlOptions.MatchBitmapText[ItemIndexDiv].CropBottom <> OldValue);
-          Result := True;
-        end;
-      end;
-    end;
+        else
+          ;
+      end; //case
+    end; //FindSubControl
 
     else
       ;
@@ -7522,7 +7640,7 @@ begin
         SetActionValueStr_FindSubControl_MatchBitmapAlgorithmSettings(AEditingAction, NewValue, AItemIndex);
         TriggerOnControlsModified(NewValue <> OldValue);
 
-        frClickerFindControl.UpdateSearchAreaLabelsFromKeysOnInitRect(AEditingAction^.FindControlOptions.InitialRectangle); //call this, to update the grid
+        frClickerFindControl.UpdateSearchAreaLabelsFromKeysOnInitRect(AEditingAction^.FindSubControlOptions.InitialRectangle); //call this, to update the grid
       end;
 
       CFindControl_InitialRectangle_PropIndex:

@@ -321,7 +321,7 @@ begin
   try
     ListOfVars.Text := Response;
     try
-      Expect(ListOfVars).WithItem('$ExecAction_Err$').OfValue('', 'No error Allowed in test driver. $ExecAction_Err$ is ' + ListOfVars.Values['$ExecAction_Err$'] + '   $ExitCode$ is ' + ListOfVars.Values['$ExitCode$']);
+      Expect(ListOfVars).WithItem('$ExecAction_Err$').OfValue('', 'No error Allowed in test driver... $ExecAction_Err$ is ' + ListOfVars.Values['$ExecAction_Err$'] + '   $ExitCode$ is ' + ListOfVars.Values['$ExitCode$']);
     except
       on E: Exception do
         Expect(ListOfVars).WithItem('$ExecAction_Err$').OfValue(CSecondExpectedErrMsg, 'No error Allowed in test driver. $ExecAction_Err$ is ' + ListOfVars.Values['$ExecAction_Err$'] + '   $ExitCode$ is ' + ListOfVars.Values['$ExitCode$']);
@@ -1069,7 +1069,7 @@ var
 begin
   TestServerAddress := CTestDriverServerAddress_Client;
 
-  PrepareClickerUnderTestToReadItsVars;  //This is server mode. It is suitable to these tests only, because the actions do not have to be executed.
+  PrepareClickerUnderTestToReadItsVars;  //This is server mode. It is suitable for these tests only, because the actions do not have to be executed.
 
   ExecuteTemplateOnTestDriver(ExtractFilePath(ParamStr(0)) + '..\..\TestDriver\ActionTemplates\PrepareClientActionsWindowForInteraction.clktmpl',
                               CREParam_FileLocation_ValueDisk);
@@ -1084,7 +1084,7 @@ begin
                               '' //AExpectedResult
                               );
 
-  //These tests do not call DragActionToListOnAppUnderTest.clktmpl. Instead a python script sends a request to create the action.
+  //These tests do not call DragActionToListOnAppUnderTest.clktmpl. Instead, a python script sends a request to create the action.
 
   //run python with arg, which executes an action in debugging mode with "different than default" values for all properties
   PyProc := CreatePyProcess('Python'{.exe'}, '..\..\py\Tests\RunExecute' + AActionToDrag + 'Action.py', ExtractFileDir(ParamStr(0)));
@@ -1170,7 +1170,7 @@ procedure TTestUI.TestVerifyOIDifferentThanDefaultValues_FindSubControl;
 var
   Properties: TOIInteractionDataArr;
 begin
-  ListOfSerializedPropertiesToOIInteractionData(GenerateDifferentThanDefault_FindControlStr, @CFindControlProperties, CPropIsExp[acFindSubControl], CPropCount_FindControl, Properties);
+  ListOfSerializedPropertiesToOIInteractionData(GenerateDifferentThanDefault_FindSubControlStr, @CFindSubControlProperties, CPropIsExp[acFindSubControl], CPropCount_FindSubControl, Properties);
 
   VerifyOIDifferentThanDefaultValues(CClkActionStr[acFindSubControl], Properties);
 end;

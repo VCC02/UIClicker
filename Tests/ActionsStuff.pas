@@ -228,6 +228,7 @@ procedure GenerateDifferentThanDefault_EditTemplate(var AEditTemplateOptions: TC
 function GenerateDifferentThanDefault_ClickStr: string;
 function GenerateDifferentThanDefault_ExecAppStr: string;
 function GenerateDifferentThanDefault_FindControlStr: string;
+function GenerateDifferentThanDefault_FindSubControlStr: string;
 function GenerateDifferentThanDefault_SetControlTextStr: string;
 function GenerateDifferentThanDefault_CallTemplateStr: string;
 function GenerateDifferentThanDefault_SleepStr: string;
@@ -1556,9 +1557,6 @@ function GenerateDifferentThanDefault_FindControlStr: string;
 begin
   Result := 'MatchCriteria.WillMatchText' + '=' + 'False' + '&' +
             'MatchCriteria.WillMatchClassName' + '=' + 'False' + '&' +
-            'MatchCriteria.WillMatchBitmapText' + '=' + 'True' + '&' +
-            'MatchCriteria.WillMatchBitmapFiles' + '=' + 'True' + '&' +
-            'MatchCriteria.WillMatchPrimitiveFiles' + '=' + 'True' + '&' +
             'MatchCriteria.SearchForControlMode' + '=' + 'sfcmEnumWindows' + '&' +
             'AllowToFail' + '=' + 'True' + '&' +
 
@@ -1567,14 +1565,6 @@ begin
             'MatchTextSeparator' + '=' + 'txt sep' + '&' +
             'MatchClassNameSeparator' + '=' + 'class sep' + '&' +
 
-            'MatchBitmapText.Count' + '=' + '2' + '&' +
-            //GetMatchBitmapTextContent(AFindControlOptions.MatchBitmapText) +
-            'MatchBitmapFiles' + '=' + 'bmp' + '&' +
-            'MatchBitmapAlgorithm' + '=' + 'mbaRawHistogramZones' + '&' +
-            'MatchBitmapAlgorithmSettings.XMultipleOf' + '=' + '3' + '&' +
-            'MatchBitmapAlgorithmSettings.YMultipleOf' + '=' + '4' + '&' +
-            'MatchBitmapAlgorithmSettings.XOffset' + '=' + '5' + '&' +
-            'MatchBitmapAlgorithmSettings.YOffset' + '=' + '6' + '&' +
             'InitialRectangle.Left' + '=' + '$Control_L$' + '&' +
             'InitialRectangle.Top' + '=' + '$Control_T$' + '&' +
             'InitialRectangle.Right' + '=' + '$Control_R$' + '&' +
@@ -1584,32 +1574,16 @@ begin
             'InitialRectangle.RightOffset' + '=' + '50' + '&' +
             'InitialRectangle.BottomOffset' + '=' + '60' + '&' +
             'UseWholeScreen' + '=' + 'False' + '&' +
-            'ColorError' + '=' + '70' + '&' +
-            'AllowedColorErrorCount' + '=' + '80' + '&' +
+
             'WaitForControlToGoAway' + '=' + 'True' + '&' +
             'StartSearchingWithCachedControl' + '=' + 'True' + '&' +
             'CachedControlLeft' + '=' + '90' + '&' +
             'CachedControlTop' + '=' + '100' + '&' +
-            'MatchPrimitiveFiles' + '=' +'pmtv' + '&' +
+
             'GetAllControls' + '=' + 'True' + '&' +
-            'UseFastSearch' + '=' + 'False' + '&' +
-            'FastSearchAllowedColorErrorCount' + '=' + '700' + '&' +
-            'IgnoredColors' + '=' + '800' + '&' +
-            'SleepySearch' + '=' + 'True' + '&' +
-            'StopSearchOnMismatch' + '=' + 'True' + '&' +
-            'ImageSource' + '=' + 'isFile' + '&' +
-            'SourceFileName' + '=' + 'Fnm' + '&' +
-            'ImageSourceFileNameLocation' + '=' + 'isflDisk' + '&' +
             'PrecisionTimeout' + '=' + 'True' + '&' +
-            'FullBackgroundImageInResult' + '=' + 'False' + '&' +
 
-            'MatchByHistogramSettings.MinPercentColorMatch' + '=' + '250' + '&' +
-            'MatchByHistogramSettings.MostSignificantColorCountInSubBmp' + '=' + '310' + '&' +
-            'MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp' + '=' + '415' + '&' +
-
-            'EvaluateTextCount' + '=' + '-17' + '&' +
-            'CropFromScreenshot' + '=' + 'True' + '&' +
-            'ThreadCount' + '=' + '30'
+            'EvaluateTextCount' + '=' + '-17'
             ;
 end;
 
@@ -1705,6 +1679,65 @@ begin
   AFindSubControlOptions.MatchBitmapText[1].CropBottom := '500';
   AFindSubControlOptions.MatchBitmapText[1].IgnoreBackgroundColor := True;
   AFindSubControlOptions.MatchBitmapText[1].ProfileName := 'P1';
+end;
+
+
+function GenerateDifferentThanDefault_FindSubControlStr: string;
+begin
+  Result := 'MatchCriteria.WillMatchBitmapText' + '=' + 'True' + '&' +
+            'MatchCriteria.WillMatchBitmapFiles' + '=' + 'True' + '&' +
+            'MatchCriteria.WillMatchPrimitiveFiles' + '=' + 'True' + '&' +
+            'AllowToFail' + '=' + 'True' + '&' +
+
+            'MatchText' + '=' + 'some text' + '&' +
+            'MatchClassName' + '=' + 'some class' + '&' +
+            'MatchTextSeparator' + '=' + 'txt sep' + '&' +
+            'MatchClassNameSeparator' + '=' + 'class sep' + '&' +
+
+            'MatchBitmapText.Count' + '=' + '2' + '&' +
+            //GetMatchBitmapTextContent(AFindControlOptions.MatchBitmapText) +
+            'MatchBitmapFiles' + '=' + 'bmp' + '&' +
+            'MatchBitmapAlgorithm' + '=' + 'mbaRawHistogramZones' + '&' +
+            'MatchBitmapAlgorithmSettings.XMultipleOf' + '=' + '3' + '&' +
+            'MatchBitmapAlgorithmSettings.YMultipleOf' + '=' + '4' + '&' +
+            'MatchBitmapAlgorithmSettings.XOffset' + '=' + '5' + '&' +
+            'MatchBitmapAlgorithmSettings.YOffset' + '=' + '6' + '&' +
+            'InitialRectangle.Left' + '=' + '$Control_L$' + '&' +
+            'InitialRectangle.Top' + '=' + '$Control_T$' + '&' +
+            'InitialRectangle.Right' + '=' + '$Control_R$' + '&' +
+            'InitialRectangle.Bottom' + '=' + '$Control_B$' + '&' +
+            'InitialRectangle.LeftOffset' + '=' + '30' + '&' +
+            'InitialRectangle.TopOffset' + '=' + '40' + '&' +
+            'InitialRectangle.RightOffset' + '=' + '50' + '&' +
+            'InitialRectangle.BottomOffset' + '=' + '60' + '&' +
+            'UseWholeScreen' + '=' + 'False' + '&' +
+            'ColorError' + '=' + '70' + '&' +
+            'AllowedColorErrorCount' + '=' + '80' + '&' +
+            'WaitForControlToGoAway' + '=' + 'True' + '&' +
+            'StartSearchingWithCachedControl' + '=' + 'True' + '&' +
+            'CachedControlLeft' + '=' + '90' + '&' +
+            'CachedControlTop' + '=' + '100' + '&' +
+            'MatchPrimitiveFiles' + '=' +'pmtv' + '&' +
+            'GetAllControls' + '=' + 'True' + '&' +
+            'UseFastSearch' + '=' + 'False' + '&' +
+            'FastSearchAllowedColorErrorCount' + '=' + '700' + '&' +
+            'IgnoredColors' + '=' + '800' + '&' +
+            'SleepySearch' + '=' + 'True' + '&' +
+            'StopSearchOnMismatch' + '=' + 'True' + '&' +
+            'ImageSource' + '=' + 'isFile' + '&' +
+            'SourceFileName' + '=' + 'Fnm' + '&' +
+            'ImageSourceFileNameLocation' + '=' + 'isflDisk' + '&' +
+            'PrecisionTimeout' + '=' + 'True' + '&' +
+            'FullBackgroundImageInResult' + '=' + 'False' + '&' +
+
+            'MatchByHistogramSettings.MinPercentColorMatch' + '=' + '250' + '&' +
+            'MatchByHistogramSettings.MostSignificantColorCountInSubBmp' + '=' + '310' + '&' +
+            'MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp' + '=' + '415' + '&' +
+
+            'EvaluateTextCount' + '=' + '-17' + '&' +
+            'CropFromScreenshot' + '=' + 'True' + '&' +
+            'ThreadCount' + '=' + '30'
+            ;
 end;
 
 
