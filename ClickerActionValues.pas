@@ -91,10 +91,7 @@ const
 
   //Sub properties (counts)
   CPropCount_FindControlMatchCriteria = 3;
-  CPropCount_FindControlMatchBitmapText = 17;    ///////////////// to be removed
-  CPropCount_FindControlMatchBitmapAlgorithmSettings = 4; ///////////////// to be removed
   CPropCount_FindControlInitialRectangle = 8;
-  CPropCount_FindControlMatchByHistogramSettings = 3;     ///////////////// to be removed
 
   CPropCount_FindSubControlMatchCriteria = 3;
   CPropCount_FindSubControlMatchBitmapText = 17;
@@ -401,22 +398,16 @@ const
     CFindControl_MatchCriteriaProperties: array[0..CPropCount_FindControlMatchCriteria - 1] of TOIPropDef = (
       (Name: 'WillMatchText'; EditorType: etBooleanCombo; DataType: CDTBool),
       (Name: 'WillMatchClassName'; EditorType: etBooleanCombo; DataType: CDTBool),
-      //(Name: 'WillMatchBitmapText'; EditorType: etBooleanCombo; DataType: CDTBool),    //Description:   When selecting FindSubControl action, only bitmaps can be matched (BMP Text or BMP Files).  A SubControl does not have a handle of its own, it is a part of a control.  The $Control_Left$, $Control_Top$, $Control_Width$, $Control_Height$, $Control_Right$, $Control_Bottom$ variables ar set with the subcontrol offset.
-      //(Name: 'WillMatchBitmapFiles'; EditorType: etBooleanCombo; DataType: CDTBool),
-      //(Name: 'WillMatchPrimitiveFiles'; EditorType: etBooleanCombo; DataType: CDTBool),
       (Name: 'SearchForControlMode'; EditorType: etEnumCombo; DataType: CDTEnum)
     );
 
     CFindSubControl_MatchCriteriaProperties: array[0..CPropCount_FindSubControlMatchCriteria - 1] of TOIPropDef = (
-      //(Name: 'WillMatchText'; EditorType: etBooleanCombo; DataType: CDTBool),
-      //(Name: 'WillMatchClassName'; EditorType: etBooleanCombo; DataType: CDTBool),
       (Name: 'WillMatchBitmapText'; EditorType: etBooleanCombo; DataType: CDTBool),    //Description:   When selecting FindSubControl action, only bitmaps can be matched (BMP Text or BMP Files).  A SubControl does not have a handle of its own, it is a part of a control.  The $Control_Left$, $Control_Top$, $Control_Width$, $Control_Height$, $Control_Right$, $Control_Bottom$ variables ar set with the subcontrol offset.
       (Name: 'WillMatchBitmapFiles'; EditorType: etBooleanCombo; DataType: CDTBool),
       (Name: 'WillMatchPrimitiveFiles'; EditorType: etBooleanCombo; DataType: CDTBool)//,
-      //(Name: 'SearchForControlMode'; EditorType: etEnumCombo; DataType: CDTEnum)
     );
 
-    CFindControl_MatchBitmapTextProperties: array[0..CPropCount_FindControlMatchBitmapText - 1] of TOIPropDef = (
+    CFindSubControl_MatchBitmapTextProperties: array[0..CPropCount_FindSubControlMatchBitmapText - 1] of TOIPropDef = (
       (Name: 'ForegroundColor'; EditorType: etColorCombo; DataType: CDTString),
       (Name: 'BackgroundColor'; EditorType: etColorCombo; DataType: CDTString),
       (Name: 'FontName'; EditorType: etEnumComboWithBtn; DataType: CDTString),
@@ -436,7 +427,7 @@ const
       (Name: 'IgnoreBackgroundColor'; EditorType: etBooleanCombo; DataType: CDTBool)
     );
 
-    CFindControl_MatchBitmapAlgorithmSettingsProperties: array[0..CPropCount_FindControlMatchBitmapAlgorithmSettings - 1] of TOIPropDef = (
+    CFindSubControl_MatchBitmapAlgorithmSettingsProperties: array[0..CPropCount_FindSubControlMatchBitmapAlgorithmSettings - 1] of TOIPropDef = (
       (Name: 'XMultipleOf'; EditorType: etSpinText; DataType: CDTInteger),
       (Name: 'YMultipleOf'; EditorType: etSpinText; DataType: CDTInteger),
       (Name: 'XOffset'; EditorType: etSpinText; DataType: CDTInteger),
@@ -454,7 +445,7 @@ const
       (Name: 'BottomOffset'; EditorType: etSpinText; DataType: CDTString)
     );
 
-    CFindControl_MatchByHistogramSettingsProperties: array[0..CPropCount_FindControlMatchByHistogramSettings - 1] of TOIPropDef = (
+    CFindSubControl_MatchByHistogramSettingsProperties: array[0..CPropCount_FindSubControlMatchByHistogramSettings - 1] of TOIPropDef = (
       (Name: 'MinPercentColorMatch'; EditorType: etSpinText; DataType: CDTString),
       (Name: 'MostSignificantColorCountInSubBmp'; EditorType: etSpinText; DataType: CDTString),
       (Name: 'MostSignificantColorCountInBackgroundBmp'; EditorType: etSpinText; DataType: CDTString)
@@ -960,22 +951,16 @@ const
     CFindControl_MatchCriteriaEnumCounts: array[0..CPropCount_FindControlMatchCriteria - 1] of Integer = (
       0, //WillMatchText: Boolean;
       0, //WillMatchClassName: Boolean;
-      //0, //WillMatchBitmapText: Boolean;
-      //0, //WillMatchBitmapFiles: Boolean;
-      //0, //WillMatchPrimitiveFiles: Boolean;
       Ord(High(TSearchForControlMode)) + 1
     );
 
     CFindSubControl_MatchCriteriaEnumCounts: array[0..CPropCount_FindSubControlMatchCriteria - 1] of Integer = (
-      //0, //WillMatchText: Boolean;
-      //0, //WillMatchClassName: Boolean;
       0, //WillMatchBitmapText: Boolean;
       0, //WillMatchBitmapFiles: Boolean;
       0//, //WillMatchPrimitiveFiles: Boolean;
-      //Ord(High(TSearchForControlMode)) + 1
     );
 
-    CFindControl_MatchBitmapTextEnumCounts: array[0..CPropCount_FindControlMatchBitmapText - 1] of Integer = (
+    CFindSubControl_MatchBitmapTextEnumCounts: array[0..CPropCount_FindSubControlMatchBitmapText - 1] of Integer = (
       0, //ForegroundColor: string;
       0, //BackgroundColor: string;
       0, //FontName: string;
@@ -1209,22 +1194,16 @@ const
     CFindControl_MatchCriteriaEnumStrings: array[0..CPropCount_FindControlMatchCriteria - 1] of PArrayOfString = (
       nil, //WillMatchText: Boolean;
       nil, //WillMatchClassName: Boolean;
-      //nil, //WillMatchBitmapText: Boolean;
-      //nil, //WillMatchBitmapFiles: Boolean;
-      //nil, //WillMatchPrimitiveFiles: Boolean;
       @CSearchForControlModeStr
     );
 
     CFindSubControl_MatchCriteriaEnumStrings: array[0..CPropCount_FindSubControlMatchCriteria - 1] of PArrayOfString = (
-      //nil, //WillMatchText: Boolean;
-      //nil, //WillMatchClassName: Boolean;
       nil, //WillMatchBitmapText: Boolean;
       nil, //WillMatchBitmapFiles: Boolean;
       nil//, //WillMatchPrimitiveFiles: Boolean;
-      //@CSearchForControlModeStr
     );
 
-    CFindControl_MatchBitmapTextEnumStrings: array[0..CPropCount_FindControlMatchBitmapText - 1] of PArrayOfString = (
+    CFindSubControl_MatchBitmapTextEnumStrings: array[0..CPropCount_FindSubControlMatchBitmapText - 1] of PArrayOfString = (
       nil, //ForegroundColor: string;
       nil, //BackgroundColor: string;
       nil, //FontName: string;
@@ -1524,9 +1503,9 @@ function GetPropertyHint_FindControl_ThreadCount: string;
 {$ENDIF}
 
 {$IFDEF SubProperties}
-  function GetPropertyHint_FindControl_MatchByHistogramSettings_MinPercentColorMatch: string;
-  function GetPropertyHint_FindControl_MatchByHistogramSettings_MostSignificantColorCountInSubBmp: string;
-  function GetPropertyHint_FindControl_MatchByHistogramSettings_MostSignificantColorCountInBackgroundBmp: string;
+  function GetPropertyHint_FindSubControl_MatchByHistogramSettings_MinPercentColorMatch: string;
+  function GetPropertyHint_FindSubControl_MatchByHistogramSettings_MostSignificantColorCountInSubBmp: string;
+  function GetPropertyHint_FindSubControl_MatchByHistogramSettings_MostSignificantColorCountInBackgroundBmp: string;
 {$ENDIF}
 
 
@@ -1747,19 +1726,13 @@ const
   CGetPropertyHint_FindControlMatchCriteria_Items: array[0..CPropCount_FindControlMatchCriteria - 1] of TPropHintFunc = (
     @GetPropertyHint_FindControl_MatchCriteria_WillMatchText, //WillMatchText: Boolean;
     @GetPropertyHintNoHint, //WillMatchClassName: Boolean;
-    //@GetPropertyHint_FindControl_MatchCriteria_WillMatchBitmapText, //WillMatchBitmapText: Boolean;  //to be removed
-    //@GetPropertyHintNoHint, //WillMatchBitmapFiles: Boolean;                                         //to be removed
-    //@GetPropertyHintNoHint, //WillMatchPrimitiveFiles: Boolean;                                      //to be removed
     @GetPropertyHint_FindControl_MatchCriteria_SearchForControlMode //SearchForControlMode: TSearchForControlMode;
   );
 
   CGetPropertyHint_FindSubControlMatchCriteria_Items: array[0..CPropCount_FindSubControlMatchCriteria - 1] of TPropHintFunc = (
-    //@GetPropertyHint_FindControl_MatchCriteria_WillMatchText, //WillMatchText: Boolean;   //to be removed
-    //@GetPropertyHintNoHint, //WillMatchClassName: Boolean;                                //to be removed
     @GetPropertyHint_FindControl_MatchCriteria_WillMatchBitmapText, //WillMatchBitmapText: Boolean;
     @GetPropertyHintNoHint, //WillMatchBitmapFiles: Boolean;
     @GetPropertyHintNoHint//, //WillMatchPrimitiveFiles: Boolean;
-    //@GetPropertyHint_FindControl_MatchCriteria_SearchForControlMode //SearchForControlMode: TSearchForControlMode; //to be removed
   );
 
   CGetPropertyHint_FindControlInitialRectangle_Items: array[0..CPropCount_FindControlInitialRectangle - 1] of TPropHintFunc = (
@@ -1773,10 +1746,10 @@ const
     @GetPropertyHint_FindControl_InitialRectangle_Offsets  //BottomOffset
   );
 
-  CGetPropertyHint_FindControlMatchByHistogramSettings_Items: array[0..CPropCount_FindControlMatchByHistogramSettings - 1] of TPropHintFunc = (
-    @GetPropertyHint_FindControl_MatchByHistogramSettings_MinPercentColorMatch, //MinPercentColorMatch
-    @GetPropertyHint_FindControl_MatchByHistogramSettings_MostSignificantColorCountInSubBmp,  //MostSignificantColorCountInSubBmp
-    @GetPropertyHint_FindControl_MatchByHistogramSettings_MostSignificantColorCountInBackgroundBmp  //MostSignificantColorCountInBackgroundBmp
+  CGetPropertyHint_FindSubControlMatchByHistogramSettings_Items: array[0..CPropCount_FindSubControlMatchByHistogramSettings - 1] of TPropHintFunc = (
+    @GetPropertyHint_FindSubControl_MatchByHistogramSettings_MinPercentColorMatch, //MinPercentColorMatch
+    @GetPropertyHint_FindSubControl_MatchByHistogramSettings_MostSignificantColorCountInSubBmp,  //MostSignificantColorCountInSubBmp
+    @GetPropertyHint_FindSubControl_MatchByHistogramSettings_MostSignificantColorCountInBackgroundBmp  //MostSignificantColorCountInBackgroundBmp
   );
 
 
@@ -1883,15 +1856,6 @@ begin
       //
       //if AAction^.FindControlOptions.MatchCriteria.WillMatchClassName then
       //  Result := Result + '[Class] ';
-      //
-      //if AAction^.FindControlOptions.MatchCriteria.WillMatchBitmapText then
-      //  Result := Result + '[bmptxt] ';
-      //
-      //if AAction^.FindControlOptions.MatchCriteria.WillMatchBitmapFiles then
-      //  Result := Result + '[.bmp] ';
-      //
-      //if AAction^.FindControlOptions.MatchCriteria.WillMatchPrimitiveFiles then
-      //  Result := Result + '[.pmtv] ';
     end;
     1: Result := BoolToStr(AAction^.FindControlOptions.AllowToFail, True);
     2: Result := AAction^.FindControlOptions.MatchText;
@@ -1938,12 +1902,6 @@ begin
     0:
     begin
       Result := '';  //MatchCriteria     Replaced by icons.
-      //if AAction^.FindSubControlOptions.MatchCriteria.WillMatchText then
-      //  Result := Result + '[Text] ';
-      //
-      //if AAction^.FindSubControlOptions.MatchCriteria.WillMatchClassName then
-      //  Result := Result + '[Class] ';
-      //
       //if AAction^.FindSubControlOptions.MatchCriteria.WillMatchBitmapText then
       //  Result := Result + '[bmptxt] ';
       //
@@ -1998,9 +1956,6 @@ end;
     case APropertyIndex of
       0: Result := BoolToStr(AAction^.FindControlOptions.MatchCriteria.WillMatchText, True);
       1: Result := BoolToStr(AAction^.FindControlOptions.MatchCriteria.WillMatchClassName, True);
-      //2: Result := BoolToStr(AAction^.FindControlOptions.MatchCriteria.WillMatchBitmapText, True);
-      //3: Result := BoolToStr(AAction^.FindControlOptions.MatchCriteria.WillMatchBitmapFiles, True);
-      //4: Result := BoolToStr(AAction^.FindControlOptions.MatchCriteria.WillMatchPrimitiveFiles, True);
       2: Result := CSearchForControlModeStr[AAction^.FindControlOptions.MatchCriteria.SearchForControlMode];
       else
         Result := 'unknown';
@@ -2010,12 +1965,9 @@ end;
   function GetActionValueStr_FindSubControl_MatchCriteria(AAction: PClkActionRec; APropertyIndex: Integer): string;
   begin
     case APropertyIndex of
-      //0: Result := BoolToStr(AAction^.FindControlOptions.MatchCriteria.WillMatchText, True);
-      //1: Result := BoolToStr(AAction^.FindControlOptions.MatchCriteria.WillMatchClassName, True);
       0: Result := BoolToStr(AAction^.FindSubControlOptions.MatchCriteria.WillMatchBitmapText, True);
       1: Result := BoolToStr(AAction^.FindSubControlOptions.MatchCriteria.WillMatchBitmapFiles, True);
       2: Result := BoolToStr(AAction^.FindSubControlOptions.MatchCriteria.WillMatchPrimitiveFiles, True);
-      //5: Result := CSearchForControlModeStr[AAction^.FindControlOptions.MatchCriteria.SearchForControlMode];
       else
         Result := 'unknown';
     end;
@@ -2031,8 +1983,8 @@ end;
       Exit;
     end;
 
-    PropertyIndexMod := APropertyIndex mod CPropCount_FindControlMatchBitmapText;
-    PropertyIndexDiv := APropertyIndex div CPropCount_FindControlMatchBitmapText;
+    PropertyIndexMod := APropertyIndex mod CPropCount_FindSubControlMatchBitmapText;
+    PropertyIndexDiv := APropertyIndex div CPropCount_FindSubControlMatchBitmapText;
 
     case PropertyIndexMod of
       0: Result := AAction^.FindSubControlOptions.MatchBitmapText[PropertyIndexDiv].ForegroundColor;
@@ -2684,9 +2636,6 @@ end;
     case APropertyIndex of
       0: AAction^.FindControlOptions.MatchCriteria.WillMatchText := StrToBool(NewValue);
       1: AAction^.FindControlOptions.MatchCriteria.WillMatchClassName := StrToBool(NewValue);
-      //2: AAction^.FindControlOptions.MatchCriteria.WillMatchBitmapText := StrToBool(NewValue);
-      //3: AAction^.FindControlOptions.MatchCriteria.WillMatchBitmapFiles := StrToBool(NewValue);
-      //4: AAction^.FindControlOptions.MatchCriteria.WillMatchPrimitiveFiles := StrToBool(NewValue);
       2: AAction^.FindControlOptions.MatchCriteria.SearchForControlMode := SearchForControlMode_AsStringToValue(NewValue);
       else
         ;
@@ -2696,12 +2645,9 @@ end;
   procedure SetActionValueStr_FindSubControl_MatchCriteria(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
   begin
     case APropertyIndex of
-      //0: AAction^.FindControlOptions.MatchCriteria.WillMatchText := StrToBool(NewValue);
-      //1: AAction^.FindControlOptions.MatchCriteria.WillMatchClassName := StrToBool(NewValue);
       0: AAction^.FindSubControlOptions.MatchCriteria.WillMatchBitmapText := StrToBool(NewValue);
       1: AAction^.FindSubControlOptions.MatchCriteria.WillMatchBitmapFiles := StrToBool(NewValue);
       2: AAction^.FindSubControlOptions.MatchCriteria.WillMatchPrimitiveFiles := StrToBool(NewValue);
-      //5: AAction^.FindControlOptions.MatchCriteria.SearchForControlMode := SearchForControlMode_AsStringToValue(NewValue);
       else
         ;
     end;
@@ -2711,8 +2657,8 @@ end;
   var
     PropertyIndexMod, PropertyIndexDiv: Integer;
   begin
-    PropertyIndexMod := APropertyIndex mod CPropCount_FindControlMatchBitmapText;
-    PropertyIndexDiv := APropertyIndex div CPropCount_FindControlMatchBitmapText;
+    PropertyIndexMod := APropertyIndex mod CPropCount_FindSubControlMatchBitmapText;
+    PropertyIndexDiv := APropertyIndex div CPropCount_FindSubControlMatchBitmapText;
 
     case PropertyIndexMod of
       0: AAction^.FindSubControlOptions.MatchBitmapText[PropertyIndexDiv].ForegroundColor := NewValue;
@@ -3361,7 +3307,7 @@ end;
 {$ENDIF}
 
 {$IFDEF SubProperties}
-  function GetPropertyHint_FindControl_MatchByHistogramSettings_MinPercentColorMatch: string;
+  function GetPropertyHint_FindSubControl_MatchByHistogramSettings_MinPercentColorMatch: string;
   begin
     Result := 'MinPercentColorMatch sets how much of the searched bitmap histogram data should be found in background bitmap histogram data.' + #13#10 +
               'Only identical colors are compared (the most significant ones). Each of them should match at least this amount.' + #13#10 +
@@ -3371,7 +3317,7 @@ end;
   end;
 
 
-  function GetPropertyHint_FindControl_MatchByHistogramSettings_MostSignificantColorCountInSubBmp: string;
+  function GetPropertyHint_FindSubControl_MatchByHistogramSettings_MostSignificantColorCountInSubBmp: string;
   begin
     Result := 'MostSignificantColorCountInSubBmp sets how many of the most significant colors of the searched bitmap histogram, are compared.' + #13#10 +
               'Both histograms are sorted automatically, so that the most significant colors are compared only (those colors with the most number of pixels).' + #13#10 +
@@ -3381,7 +3327,7 @@ end;
   end;
 
 
-  function GetPropertyHint_FindControl_MatchByHistogramSettings_MostSignificantColorCountInBackgroundBmp: string;
+  function GetPropertyHint_FindSubControl_MatchByHistogramSettings_MostSignificantColorCountInBackgroundBmp: string;
   begin
     Result := 'MostSignificantColorCountInBackgroundBmp sets how many of the most significant colors of the background bitmap histograms, are available to be compared.' + #13#10 +
               'Both histograms are sorted automatically, so that the most significant colors are compared only (those colors with the most number of pixels).' + #13#10 +

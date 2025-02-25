@@ -54,7 +54,7 @@ const
   CPropCountClkSetPenPrimitive = 6;
   CPropCountClkSetBrushPrimitive = 2;
   CPropCountClkSetMiscPrimitive = 1;
-  CPropCountClkSetFontPrimitive = CPropCount_FindControlMatchBitmapText; //16;
+  CPropCountClkSetFontPrimitive = CPropCount_FindSubControlMatchBitmapText;
   CPropCountClkImagePrimitive = 10;
   CPropCountClkLinePrimitive = 5;
   CPropCountClkRectPrimitive = 5;

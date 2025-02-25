@@ -141,6 +141,14 @@ type
     procedure TestEditOIProperty_FindControl_InitialRectangle_Right_SetToValueFromMenu;
     procedure TestEditOIProperty_FindControl_InitialRectangle_Bottom_SetToValueFromMenu;
 
+    procedure TestEditOIProperty_FindSubControl_InitialRectangle_Left_SetToValueFromMenu;
+    procedure TestEditOIProperty_FindSubControl_InitialRectangle_Top_SetToValueFromMenu;
+    procedure TestEditOIProperty_FindSubControl_InitialRectangle_Right_SetToValueFromMenu;
+    procedure TestEditOIProperty_FindSubControl_InitialRectangle_Bottom_SetToValueFromMenu;
+
+    procedure TestEditOIProperty_FindSubControl_MatchBitmapText_ForegroundColor_SetToValueFromMenu;
+    procedure TestEditOIProperty_FindSubControl_MatchBitmapText_BackgroundColor_SetToValueFromMenu;
+
     procedure TestVerifyPermissionsOnSendingFiles_SendingFileFromDeniedTestFiles;
     procedure TestVerifyPermissionsOnSendingFiles_ReSendingModifiedFileByEditTemplate;
 
@@ -1345,6 +1353,42 @@ end;
 procedure TTestUI.TestEditOIProperty_FindControl_InitialRectangle_Bottom_SetToValueFromMenu;
 begin
   EditOIPropertiesFromMenu('FindControl', 'InitialRectangle', 'Bottom', '-5', '$Control_Top$', '$Control_Top$');
+end;
+
+
+procedure TTestUI.TestEditOIProperty_FindSubControl_InitialRectangle_Left_SetToValueFromMenu;
+begin
+  EditOIPropertiesFromMenu('FindSubControl', 'InitialRectangle', 'Left', '-5', '$Control_Right$', '$Control_Right$');
+end;
+
+
+procedure TTestUI.TestEditOIProperty_FindSubControl_InitialRectangle_Top_SetToValueFromMenu;
+begin
+  EditOIPropertiesFromMenu('FindSubControl', 'InitialRectangle', 'Top', '-5', '$Control_Bottom$', '$Control_Bottom$');
+end;
+
+
+procedure TTestUI.TestEditOIProperty_FindSubControl_InitialRectangle_Right_SetToValueFromMenu;
+begin
+  EditOIPropertiesFromMenu('FindSubControl', 'InitialRectangle', 'Right', '-5', '$Control_Left$', '$Control_Left$');
+end;
+
+
+procedure TTestUI.TestEditOIProperty_FindSubControl_InitialRectangle_Bottom_SetToValueFromMenu;
+begin
+  EditOIPropertiesFromMenu('FindSubControl', 'InitialRectangle', 'Bottom', '-5', '$Control_Top$', '$Control_Top$');
+end;
+
+
+procedure TTestUI.TestEditOIProperty_FindSubControl_MatchBitmapText_ForegroundColor_SetToValueFromMenu;
+begin
+  EditOIPropertiesFromMenu('FindSubControl', 'MatchBitmapText [0..0]', 'ForegroundColor', '-3', '$Color_ActiveCaption$', '$Color_ActiveCaption$');
+end;
+
+
+procedure TTestUI.TestEditOIProperty_FindSubControl_MatchBitmapText_BackgroundColor_SetToValueFromMenu;
+begin
+  EditOIPropertiesFromMenu('FindSubControl', 'MatchBitmapText [0..0]', 'BackgroundColor', '-3', '$Color_WindowFrame$', '$Color_WindowFrame$');
 end;
 
 ///////////////////////////////

@@ -3019,28 +3019,28 @@ var
 begin
   if llLeft in ALimitLabelsToUpdate then
   begin
-    UpdatingNodeIndex := AFontProfileIndex * CPropCount_FindControlMatchBitmapText + CFindControl_MatchBitmapText_CropLeft;
+    UpdatingNodeIndex := AFontProfileIndex * CPropCount_FindSubControlMatchBitmapText + CFindControl_MatchBitmapText_CropLeft;
     GetEditingActionObjectByActionType^.FindSubControlOptions.MatchBitmapText[AFontProfileIndex].CropLeft := AOffsets.Left;
     FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, CCategory_ActionSpecific, CFindControl_MatchBitmapText_PropIndex, UpdatingNodeIndex);
   end;
 
   if llTop in ALimitLabelsToUpdate then
   begin
-    UpdatingNodeIndex := AFontProfileIndex * CPropCount_FindControlMatchBitmapText + CFindControl_MatchBitmapText_CropTop;
+    UpdatingNodeIndex := AFontProfileIndex * CPropCount_FindSubControlMatchBitmapText + CFindControl_MatchBitmapText_CropTop;
     GetEditingActionObjectByActionType^.FindSubControlOptions.MatchBitmapText[AFontProfileIndex].CropTop := AOffsets.Top;
     FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, CCategory_ActionSpecific, CFindControl_MatchBitmapText_PropIndex, UpdatingNodeIndex);
   end;
 
   if llRight in ALimitLabelsToUpdate then
   begin
-    UpdatingNodeIndex := AFontProfileIndex * CPropCount_FindControlMatchBitmapText + CFindControl_MatchBitmapText_CropRight;
+    UpdatingNodeIndex := AFontProfileIndex * CPropCount_FindSubControlMatchBitmapText + CFindControl_MatchBitmapText_CropRight;
     GetEditingActionObjectByActionType^.FindSubControlOptions.MatchBitmapText[AFontProfileIndex].CropRight := AOffsets.Right;
     FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, CCategory_ActionSpecific, CFindControl_MatchBitmapText_PropIndex, UpdatingNodeIndex);
   end;
 
   if llBottom in ALimitLabelsToUpdate then
   begin
-    UpdatingNodeIndex := AFontProfileIndex * CPropCount_FindControlMatchBitmapText + CFindControl_MatchBitmapText_CropBottom;
+    UpdatingNodeIndex := AFontProfileIndex * CPropCount_FindSubControlMatchBitmapText + CFindControl_MatchBitmapText_CropBottom;
     GetEditingActionObjectByActionType^.FindSubControlOptions.MatchBitmapText[AFontProfileIndex].CropBottom := AOffsets.Bottom;
     FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, CCategory_ActionSpecific, CFindControl_MatchBitmapText_PropIndex, UpdatingNodeIndex);
   end;
@@ -4669,8 +4669,8 @@ begin
     FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex);
     TriggerOnControlsModified;
 
-    FOIFrame.SelectNode(CPropertyItemLevel, MenuData^.CategoryIndex, MenuData^.PropertyIndex, n * CPropCount_FindControlMatchBitmapText);
-    FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, MenuData^.CategoryIndex, MenuData^.PropertyIndex, n * CPropCount_FindControlMatchBitmapText, True, True);
+    FOIFrame.SelectNode(CPropertyItemLevel, MenuData^.CategoryIndex, MenuData^.PropertyIndex, n * CPropCount_FindSubControlMatchBitmapText);
+    FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, MenuData^.CategoryIndex, MenuData^.PropertyIndex, n * CPropCount_FindSubControlMatchBitmapText, True, True);
     FOIFrame.FocusOI;
   finally
     Dispose(MenuData);
@@ -4691,8 +4691,8 @@ begin
     FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex);
     TriggerOnControlsModified;
 
-    FOIFrame.SelectNode(CPropertyItemLevel, MenuData^.CategoryIndex, MenuData^.PropertyIndex, n * CPropCount_FindControlMatchBitmapText);
-    FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, MenuData^.CategoryIndex, MenuData^.PropertyIndex, n * CPropCount_FindControlMatchBitmapText, True, True);
+    FOIFrame.SelectNode(CPropertyItemLevel, MenuData^.CategoryIndex, MenuData^.PropertyIndex, n * CPropCount_FindSubControlMatchBitmapText);
+    FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, MenuData^.CategoryIndex, MenuData^.PropertyIndex, n * CPropCount_FindSubControlMatchBitmapText, True, True);
     FOIFrame.FocusOI;
   finally
     Dispose(MenuData);
@@ -4714,8 +4714,8 @@ begin
     FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex);
     TriggerOnControlsModified;
 
-    FOIFrame.SelectNode(CPropertyItemLevel, MenuData^.CategoryIndex, MenuData^.PropertyIndex, n * CPropCount_FindControlMatchBitmapText);
-    FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, MenuData^.CategoryIndex, MenuData^.PropertyIndex, n * CPropCount_FindControlMatchBitmapText, True, True);
+    FOIFrame.SelectNode(CPropertyItemLevel, MenuData^.CategoryIndex, MenuData^.PropertyIndex, n * CPropCount_FindSubControlMatchBitmapText);
+    FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, MenuData^.CategoryIndex, MenuData^.PropertyIndex, n * CPropCount_FindSubControlMatchBitmapText, True, True);
     FOIFrame.FocusOI;
   finally
     Dispose(MenuData);
@@ -4782,8 +4782,8 @@ begin
     FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex);
     TriggerOnControlsModified;
 
-    FOIFrame.SelectNode(CPropertyItemLevel, MenuData^.CategoryIndex, MenuData^.PropertyIndex, n * CPropCount_FindControlMatchBitmapText);
-    FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, MenuData^.CategoryIndex, MenuData^.PropertyIndex, n * CPropCount_FindControlMatchBitmapText, True, True);
+    FOIFrame.SelectNode(CPropertyItemLevel, MenuData^.CategoryIndex, MenuData^.PropertyIndex, n * CPropCount_FindSubControlMatchBitmapText);
+    FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, MenuData^.CategoryIndex, MenuData^.PropertyIndex, n * CPropCount_FindSubControlMatchBitmapText, True, True);
     FOIFrame.FocusOI;
   finally
     Dispose(MenuData);
@@ -4957,6 +4957,7 @@ end;
 procedure TfrClickerActions.MenuItemControl_EdgeRefGenericClick(Sender: TObject);
 var
   s: string;
+  Key: Word;
 begin
   try
     s := StringReplace((Sender as TMenuItem).Caption, '&', '', [rfReplaceAll]);
@@ -4967,6 +4968,15 @@ begin
     begin
       FLastClickedTVTEdit.Text := s;
       FOIFrame.EditingText := FLastClickedTVTEdit.Text;
+      if Assigned(FLastClickedTVTEdit.OnChange) then
+        FLastClickedTVTEdit.OnChange(FLastClickedTVTEdit);
+
+      Key := Ord('A');
+      if Assigned(FLastClickedTVTEdit.OnKeyDown) then
+        FLastClickedTVTEdit.OnKeyDown(FLastClickedTVTEdit, Key, []);
+
+      if Assigned(FLastClickedTVTEdit.OnKeyUp) then
+        FLastClickedTVTEdit.OnKeyUp(FLastClickedTVTEdit, Key, []);   //this one seems to do it
     end;
 
     if Assigned(FLastClickedEdit) then
@@ -5484,16 +5494,30 @@ begin
     Exit;
 
   case EditingActionType of
-    Ord(acFindControl), Ord(acFindSubControl):
+    Ord(acFindControl):
     begin
       case APropertyIndex of
         CFindControl_MatchCriteria_PropIndex:
           Result := CPropCount_FindControlMatchCriteria;
 
-        CFindControl_MatchBitmapText_PropIndex:
-          Result := CPropCount_FindControlMatchBitmapText * Length(AEditingAction^.FindSubControlOptions.MatchBitmapText);  //frClickerFindControl.GetBMPTextFontProfilesCount;
+        CFindControl_InitialRectangle_PropIndex:
+          Result := CPropCount_FindControlInitialRectangle;
 
-        CFindControl_MatchBitmapFiles_PropIndex:
+        else
+          Result := 0;
+      end;
+    end;
+
+    Ord(acFindSubControl):
+    begin
+      case APropertyIndex of
+        CFindSubControl_MatchCriteria_PropIndex:
+          Result := CPropCount_FindControlMatchCriteria;
+
+        CFindSubControl_MatchBitmapText_PropIndex:
+          Result := CPropCount_FindSubControlMatchBitmapText * Length(AEditingAction^.FindSubControlOptions.MatchBitmapText);  //frClickerFindControl.GetBMPTextFontProfilesCount;
+
+        CFindSubControl_MatchBitmapFiles_PropIndex:
         begin
           TempStringList := TStringList.Create;
           try
@@ -5504,13 +5528,13 @@ begin
           end;
         end;
 
-        CFindControl_MatchBitmapAlgorithmSettings_PropIndex:
-          Result := CPropCount_FindControlMatchBitmapAlgorithmSettings;
+        CFindSubControl_MatchBitmapAlgorithmSettings_PropIndex:
+          Result := CPropCount_FindSubControlMatchBitmapAlgorithmSettings;
 
-        CFindControl_InitialRectangle_PropIndex:
+        CFindSubControl_InitialRectangle_PropIndex:
           Result := CPropCount_FindControlInitialRectangle;
 
-        CFindControl_MatchPrimitiveFiles_PropIndex:
+        CFindSubControl_MatchPrimitiveFiles_PropIndex:
         begin
           TempStringList := TStringList.Create;
           try
@@ -5521,8 +5545,8 @@ begin
           end;
         end;
 
-        CFindControl_MatchByHistogramSettings_PropIndex:
-          Result := CPropCount_FindControlMatchByHistogramSettings;
+        CFindSubControl_MatchByHistogramSettings_PropIndex:
+          Result := CPropCount_FindSubControlMatchByHistogramSettings;
 
         else
           Result := 0;
@@ -5605,18 +5629,18 @@ begin
 
         CFindControl_MatchBitmapText_PropIndex:
         begin
-          ItemIndexMod := AItemIndex mod CPropCount_FindControlMatchBitmapText;
-          ItemIndexDiv := AItemIndex div CPropCount_FindControlMatchBitmapText;
-          Result := '[' + IntToStr(ItemIndexDiv) + ']  ' + CFindControl_MatchBitmapTextProperties[ItemIndexMod].Name;
+          ItemIndexMod := AItemIndex mod CPropCount_FindSubControlMatchBitmapText;
+          ItemIndexDiv := AItemIndex div CPropCount_FindSubControlMatchBitmapText;
+          Result := '[' + IntToStr(ItemIndexDiv) + ']  ' + CFindSubControl_MatchBitmapTextProperties[ItemIndexMod].Name;
         end;
 
-        CFindControl_MatchBitmapFiles_PropIndex:
+        CFindSubControl_MatchBitmapFiles_PropIndex:
           Result := 'File[' + IntToStr(AItemIndex) + ']';
 
-        CFindControl_MatchBitmapAlgorithmSettings_PropIndex:
-          Result := CFindControl_MatchBitmapAlgorithmSettingsProperties[AItemIndex].Name;
+        CFindSubControl_MatchBitmapAlgorithmSettings_PropIndex:
+          Result := CFindSubControl_MatchBitmapAlgorithmSettingsProperties[AItemIndex].Name;
 
-        CFindControl_InitialRectangle_PropIndex:
+        CFindSubControl_InitialRectangle_PropIndex:
           Result := CFindControl_InitialRectangleProperties[AItemIndex].Name;
 
         CFindControl_MatchPrimitiveFiles_PropIndex:
@@ -5644,7 +5668,7 @@ begin
         end;  //CFindControl_MatchPrimitiveFiles_PropIndex
 
         CFindControl_MatchByHistogramSettings_PropIndex:
-          Result := CFindControl_MatchByHistogramSettingsProperties[AItemIndex].Name;
+          Result := CFindSubControl_MatchByHistogramSettingsProperties[AItemIndex].Name;
 
         else
           Result := '';
@@ -5727,7 +5751,7 @@ begin
           APropDef := CFindSubControl_MatchCriteriaProperties[AItemIndex];
 
         CFindControl_MatchBitmapText_PropIndex:
-          APropDef := CFindControl_MatchBitmapTextProperties[AItemIndex mod CPropCount_FindControlMatchBitmapText];
+          APropDef := CFindSubControl_MatchBitmapTextProperties[AItemIndex mod CPropCount_FindSubControlMatchBitmapText];
 
         CFindControl_MatchBitmapFiles_PropIndex:
         begin
@@ -5749,7 +5773,7 @@ begin
         end;
 
         CFindControl_MatchBitmapAlgorithmSettings_PropIndex:
-          APropDef := CFindControl_MatchBitmapAlgorithmSettingsProperties[AItemIndex];
+          APropDef := CFindSubControl_MatchBitmapAlgorithmSettingsProperties[AItemIndex];
 
         CFindControl_InitialRectangle_PropIndex:
           APropDef := CFindControl_InitialRectangleProperties[AItemIndex];
@@ -5777,7 +5801,7 @@ begin
         end;
 
         CFindControl_MatchByHistogramSettings_PropIndex:
-          APropDef := CFindControl_MatchByHistogramSettingsProperties[AItemIndex];
+          APropDef := CFindSubControl_MatchByHistogramSettingsProperties[AItemIndex];
 
         else
           ;
@@ -5881,13 +5905,13 @@ begin
               Result := CFindSubControl_MatchCriteriaProperties[AItemIndex].DataType;
 
             CFindControl_MatchBitmapText_PropIndex:
-              Result := CFindControl_MatchBitmapTextProperties[AItemIndex mod CPropCount_FindControlMatchBitmapText].DataType;
+              Result := CFindSubControl_MatchBitmapTextProperties[AItemIndex mod CPropCount_FindSubControlMatchBitmapText].DataType;
 
             CFindControl_MatchBitmapFiles_PropIndex:
               Result := CDTString;
 
             CFindControl_MatchBitmapAlgorithmSettings_PropIndex:
-              Result := CFindControl_MatchBitmapAlgorithmSettingsProperties[AItemIndex].DataType;
+              Result := CFindSubControl_MatchBitmapAlgorithmSettingsProperties[AItemIndex].DataType;
 
             CFindControl_InitialRectangle_PropIndex:
               Result := CFindControl_InitialRectangleProperties[AItemIndex].DataType;
@@ -5896,7 +5920,7 @@ begin
               Result := CDTString;
 
             CFindControl_MatchByHistogramSettings_PropIndex:
-              Result := CFindControl_MatchByHistogramSettingsProperties[AItemIndex].DataType;
+              Result := CFindSubControl_MatchByHistogramSettingsProperties[AItemIndex].DataType;
           end;
         end;
 
@@ -6030,7 +6054,7 @@ begin
 
               CFindControl_MatchBitmapText_PropIndex:
               begin
-                ItemIndexMod := AItemIndex mod CPropCount_FindControlMatchBitmapText;
+                ItemIndexMod := AItemIndex mod CPropCount_FindSubControlMatchBitmapText;
                 ImageIndex := ItemIndexMod;
                 ImageList := imglstMatchBitmapTextProperties;
               end;
@@ -6060,8 +6084,8 @@ begin
       if EditingActionType = Ord(acFindSubControl) then
         if APropertyIndex = CFindControl_MatchBitmapText_PropIndex then
         begin
-          ItemIndexMod := AItemIndex mod CPropCount_FindControlMatchBitmapText;
-          ItemIndexDiv := AItemIndex div CPropCount_FindControlMatchBitmapText;
+          ItemIndexMod := AItemIndex mod CPropCount_FindSubControlMatchBitmapText;
+          ItemIndexDiv := AItemIndex div CPropCount_FindSubControlMatchBitmapText;
 
           if ItemIndexMod in [CFindControl_MatchBitmapText_ForegroundColor_PropItemIndex, CFindControl_MatchBitmapText_BackgroundColor_PropItemIndex] then
           begin
@@ -6245,8 +6269,8 @@ begin
 
           if ANodeLevel = CPropertyItemLevel then
           begin
-            ItemIndexMod := AItemIndex mod CPropCount_FindControlMatchBitmapText;
-            ItemIndexDiv := AItemIndex div CPropCount_FindControlMatchBitmapText;
+            ItemIndexMod := AItemIndex mod CPropCount_FindSubControlMatchBitmapText;
+            ItemIndexDiv := AItemIndex div CPropCount_FindSubControlMatchBitmapText;
 
             case ItemIndexMod of
               CFindControl_MatchBitmapText_ForegroundColor_PropItemIndex, CFindControl_MatchBitmapText_BackgroundColor_PropItemIndex:
@@ -6651,8 +6675,8 @@ begin
   if EditingActionType = Ord(acFindSubControl) then
     if APropertyIndex = CFindControl_MatchBitmapText_PropIndex then
     begin
-      ItemIndexDiv := AItemIndex div CPropCount_FindControlMatchBitmapText;
-      ItemIndexMod := AItemIndex mod CPropCount_FindControlMatchBitmapText;
+      ItemIndexDiv := AItemIndex div CPropCount_FindSubControlMatchBitmapText;
+      ItemIndexMod := AItemIndex mod CPropCount_FindSubControlMatchBitmapText;
 
       if ItemIndexMod = CFindControl_MatchBitmapText_FontName_PropItemIndex then
       begin
@@ -6733,8 +6757,8 @@ begin
 
     if APropertyIndex = CFindControl_MatchBitmapText_PropIndex then
     begin
-      ItemIndexMod := AItemIndex mod CPropCount_FindControlMatchBitmapText;
-      Result := CFindControl_MatchBitmapTextEnumCounts[ItemIndexMod];
+      ItemIndexMod := AItemIndex mod CPropCount_FindSubControlMatchBitmapText;
+      Result := CFindSubControl_MatchBitmapTextEnumCounts[ItemIndexMod];
 
       if ItemIndexMod = CFindControl_MatchBitmapText_FontName_PropItemIndex then
         Result := Screen.Fonts.Count;
@@ -6816,12 +6840,12 @@ begin
 
     if APropertyIndex = CFindControl_MatchBitmapText_PropIndex then
     begin
-      ItemIndexMod := AItemIndex mod CPropCount_FindControlMatchBitmapText;
+      ItemIndexMod := AItemIndex mod CPropCount_FindSubControlMatchBitmapText;
 
       if ItemIndexMod = CFindControl_MatchBitmapText_FontName_PropItemIndex then
         AEnumItemName := Screen.Fonts.Strings[AEnumItemIndex]
       else
-        AEnumItemName := CFindControl_MatchBitmapTextEnumStrings[ItemIndexMod]^[AEnumItemIndex];
+        AEnumItemName := CFindSubControl_MatchBitmapTextEnumStrings[ItemIndexMod]^[AEnumItemIndex];
 
       Exit;
     end;
@@ -6984,14 +7008,6 @@ begin
 
     if (ANodeData.Level = CPropertyItemLevel) and (ALiveEditingActionType in [acFindControl, acFindSubControl]) then
     begin
-      //if APropertyIndex = CFindControl_MatchCriteria_PropIndex then
-      //  if (ALiveEditingActionType = acFindControl) and (APropertyItemIndex in [CFindControl_MatchCriteria_WillMatchBitmapText_PropItemIndex, CFindControl_MatchCriteria_WillMatchBitmapFiles_PropItemIndex, CFindControl_MatchCriteria_WillMatchPrimitiveFiles_PropItemIndex]) or
-      //     (ALiveEditingActionType = acFindSubControl) and (APropertyItemIndex in [CFindControl_MatchCriteria_WillMatchText_PropItemIndex, CFindControl_MatchCriteria_WillMatchClassName_PropItemIndex]) then
-      //  begin
-      //    TargetCanvas.Font.Color := clGray;
-      //    Exit;;
-      //  end;
-
       if APropertyIndex = CFindControl_MatchPrimitiveFiles_PropIndex then
       begin
         if AEditingAction^.FindSubControlOptions.MatchPrimitiveFiles_Modified = '' then //this happens because this field should have been updated in FEditTemplateOptions_EditingAction, instead of FEditingAction
@@ -7175,7 +7191,7 @@ begin
   if ALiveEditingActionType = acFindSubControl then
     if APropertyIndex = CFindControl_MatchBitmapText_PropIndex then
     begin
-      ItemIndexDiv := APropertyItemIndex div CPropCount_FindControlMatchBitmapText;
+      ItemIndexDiv := APropertyItemIndex div CPropCount_FindSubControlMatchBitmapText;
 
       if ItemIndexDiv and 1 = 0 then
         NewColor := $E0FFE0   //light green
@@ -7238,24 +7254,6 @@ begin
           ASrcImgLst.Draw(TargetCanvas, CurrentIconPos, CIconYOffset, CFindControl_MatchCriteria_WillMatchClassName_PropItemIndex, dsNormal, itImage);
           Inc(CurrentIconPos, 18);
         end;
-
-        //if AEditingAction^.FindControlOptions.MatchCriteria.WillMatchBitmapText then
-        //begin
-        //  ASrcImgLst.Draw(TargetCanvas, CurrentIconPos, CIconYOffset, CFindControl_MatchCriteria_WillMatchBitmapText_PropItemIndex, dsNormal, itImage);
-        //  Inc(CurrentIconPos, 18);
-        //end;
-        //
-        //if AEditingAction^.FindControlOptions.MatchCriteria.WillMatchBitmapFiles then
-        //begin
-        //  ASrcImgLst.Draw(TargetCanvas, CurrentIconPos, CIconYOffset, CFindControl_MatchCriteria_WillMatchBitmapFiles_PropItemIndex, dsNormal, itImage);
-        //  Inc(CurrentIconPos, 18);
-        //end;
-        //
-        //if AEditingAction^.FindControlOptions.MatchCriteria.WillMatchPrimitiveFiles then
-        //begin
-        //  ASrcImgLst.Draw(TargetCanvas, CurrentIconPos, CIconYOffset, CFindControl_MatchCriteria_WillMatchPrimitiveFiles_PropItemIndex, dsNormal, itImage);
-        //  Inc(CurrentIconPos, 18);
-        //end;
       end;
 
   if ALiveEditingActionType = acFindSubControl then
@@ -7263,18 +7261,6 @@ begin
       if Column = 1 then
       begin
         CurrentIconPos := CellRect.Left + 2;
-
-        //if AEditingAction^.FindSubControlOptions.MatchCriteria.WillMatchText then
-        //begin
-        //  ASrcImgLst.Draw(TargetCanvas, CurrentIconPos, CIconYOffset, CFindControl_MatchCriteria_WillMatchText_PropItemIndex, dsNormal, itImage);
-        //  Inc(CurrentIconPos, 18);
-        //end;
-        //
-        //if AEditingAction^.FindSubControlOptions.MatchCriteria.WillMatchClassName then
-        //begin
-        //  ASrcImgLst.Draw(TargetCanvas, CurrentIconPos, CIconYOffset, CFindControl_MatchCriteria_WillMatchClassName_PropItemIndex, dsNormal, itImage);
-        //  Inc(CurrentIconPos, 18);
-        //end;
 
         if AEditingAction^.FindSubControlOptions.MatchCriteria.WillMatchBitmapText then
         begin
@@ -7384,8 +7370,8 @@ begin
 
       CFindControl_MatchBitmapText_PropIndex:
       begin
-        ItemIndexMod := AItemIndex mod CPropCount_FindControlMatchBitmapText;
-        ItemIndexDiv := AItemIndex div CPropCount_FindControlMatchBitmapText;
+        ItemIndexMod := AItemIndex mod CPropCount_FindSubControlMatchBitmapText;
+        ItemIndexDiv := AItemIndex div CPropCount_FindSubControlMatchBitmapText;
 
         case ItemIndexMod of
           CFindControl_MatchBitmapText_CropLeft:
@@ -7524,8 +7510,8 @@ begin
 
         CFindControl_MatchBitmapText_PropIndex:
         begin
-          ItemIndexMod := AItemIndex mod CPropCount_FindControlMatchBitmapText;
-          ItemIndexDiv := AItemIndex div CPropCount_FindControlMatchBitmapText;
+          ItemIndexMod := AItemIndex mod CPropCount_FindSubControlMatchBitmapText;
+          ItemIndexDiv := AItemIndex div CPropCount_FindSubControlMatchBitmapText;
 
           case ItemIndexMod of
             CFindControl_MatchBitmapText_CropLeft:
@@ -7638,8 +7624,8 @@ begin
 
       CFindControl_MatchBitmapText_PropIndex:
       begin
-        ItemIndexMod := AItemIndex mod CPropCount_FindControlMatchBitmapText;
-        ItemIndexDiv := AItemIndex div CPropCount_FindControlMatchBitmapText;
+        ItemIndexMod := AItemIndex mod CPropCount_FindSubControlMatchBitmapText;
+        ItemIndexDiv := AItemIndex div CPropCount_FindSubControlMatchBitmapText;
 
         if ItemIndexMod = CFindControl_MatchBitmapText_ProfileName_PropItemIndex then
         begin
@@ -7819,7 +7805,7 @@ begin
             AHint := CGetPropertyHint_FindSubControlMatchCriteria_Items[AItemIndex];
 
           CFindControl_MatchBitmapText_PropIndex:
-            case AItemIndex mod CPropCount_FindControlMatchBitmapText of
+            case AItemIndex mod CPropCount_FindSubControlMatchBitmapText of
               CFindControl_MatchBitmapText_ForegroundColor_PropItemIndex, CFindControl_MatchBitmapText_BackgroundColor_PropItemIndex:
               begin
                 FLastClickedTVTEdit := nil;
@@ -7910,7 +7896,7 @@ begin
 
           CFindControl_MatchByHistogramSettings_PropIndex:
           begin
-            AHint := CGetPropertyHint_FindControlMatchByHistogramSettings_Items[AItemIndex];
+            AHint := CGetPropertyHint_FindSubControlMatchByHistogramSettings_Items[AItemIndex];
           end;
         end; //case
       end; //FindControl
@@ -8154,8 +8140,8 @@ begin
 
             CPropertyItemLevel:
             begin
-              ItemIndexMod := AItemIndex mod CPropCount_FindControlMatchBitmapText;
-              ItemIndexDiv := AItemIndex div CPropCount_FindControlMatchBitmapText;
+              ItemIndexMod := AItemIndex mod CPropCount_FindSubControlMatchBitmapText;
+              ItemIndexDiv := AItemIndex div CPropCount_FindSubControlMatchBitmapText;
 
               if ItemIndexMod = CFindControl_MatchBitmapText_ProfileName_PropItemIndex then
                 if Length(AEditingAction^.FindSubControlOptions.MatchBitmapText) > 1 then  //add only if there are at least two profiles
@@ -8777,8 +8763,8 @@ begin
 
       CFindSubControl_MatchBitmapText_PropIndex:
       begin
-        ItemIndexMod := AItemIndex mod CPropCount_FindControlMatchBitmapText;
-        ItemIndexDiv := AItemIndex div CPropCount_FindControlMatchBitmapText;
+        ItemIndexMod := AItemIndex mod CPropCount_FindSubControlMatchBitmapText;
+        ItemIndexDiv := AItemIndex div CPropCount_FindSubControlMatchBitmapText;
 
         case ItemIndexMod of
           CFindControl_MatchBitmapText_CropLeft:
@@ -9078,16 +9064,16 @@ begin
 
         CFindControl_MatchBitmapText_PropIndex:
         begin
-          ItemIndexMod := AItemIndex mod CPropCount_FindControlMatchBitmapText;
-          ItemIndexDiv := AItemIndex div CPropCount_FindControlMatchBitmapText;
-          Result := '[' + IntToStr(ItemIndexDiv) + '].' + CFindControl_MatchBitmapTextProperties[ItemIndexMod].Name;
+          ItemIndexMod := AItemIndex mod CPropCount_FindSubControlMatchBitmapText;
+          ItemIndexDiv := AItemIndex div CPropCount_FindSubControlMatchBitmapText;
+          Result := '[' + IntToStr(ItemIndexDiv) + '].' + CFindSubControl_MatchBitmapTextProperties[ItemIndexMod].Name;
         end;
 
         CFindControl_MatchBitmapFiles_PropIndex:
           Result := 'File[' + IntToStr(AItemIndex) + ']';
 
         CFindControl_MatchBitmapAlgorithmSettings_PropIndex:
-          Result := CFindControl_MatchBitmapAlgorithmSettingsProperties[AItemIndex].Name;
+          Result := CFindSubControl_MatchBitmapAlgorithmSettingsProperties[AItemIndex].Name;
 
         CFindControl_InitialRectangle_PropIndex:
           Result := CFindControl_InitialRectangleProperties[AItemIndex].Name;
@@ -9098,7 +9084,7 @@ begin
         end;  //CFindControl_MatchPrimitiveFiles_PropIndex
 
         CFindControl_MatchByHistogramSettings_PropIndex:
-          Result := CFindControl_MatchByHistogramSettingsProperties[AItemIndex].Name;
+          Result := CFindSubControl_MatchByHistogramSettingsProperties[AItemIndex].Name;
 
         else
           Result := '';
