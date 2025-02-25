@@ -64,6 +64,7 @@ type
     procedure VerifyOIDefaultValues(AActionToDrag: string; var AProperties: TOIInteractionDataArr);
     procedure VerifyOIDifferentThanDefaultValues(AActionToDrag: string; var AProperties: TOIInteractionDataArr);
     procedure VerifyPermissionsOnSendingFiles;
+    procedure EditOIPropertiesFromMenu(AActionToDrag, APropertyToEdit, ASubPropertyToEdit, AScrollCount, AMenuItemCaption, ANewPropertyValue: string);
   public
     constructor Create; override;
   published
@@ -135,6 +136,10 @@ type
     procedure TestVerifyOIDifferentThanDefaultValues_Plugin;
     procedure TestVerifyOIDifferentThanDefaultValues_EditTemplate;
 
+    procedure TestEditOIProperty_FindControl_InitialRectangle_Left_SetToValueFromMenu;
+    procedure TestEditOIProperty_FindControl_InitialRectangle_Top_SetToValueFromMenu;
+    procedure TestEditOIProperty_FindControl_InitialRectangle_Right_SetToValueFromMenu;
+    procedure TestEditOIProperty_FindControl_InitialRectangle_Bottom_SetToValueFromMenu;
 
     procedure TestVerifyPermissionsOnSendingFiles_SendingFileFromDeniedTestFiles;
     procedure TestVerifyPermissionsOnSendingFiles_ReSendingModifiedFileByEditTemplate;
@@ -1279,6 +1284,68 @@ begin
   VerifyOIDifferentThanDefaultValues(CClkActionStr[acEditTemplate], Properties);
 end;
 
+
+procedure TTestUI.EditOIPropertiesFromMenu(AActionToDrag, APropertyToEdit, ASubPropertyToEdit, AScrollCount, AMenuItemCaption, ANewPropertyValue: string);
+var
+  i: Integer;
+begin
+  TestServerAddress := CTestDriverServerAddress_Client;
+
+  PrepareClickerUnderTestToReadItsVars;  //This is server mode. It is suitable to these tests only, because the actions do not have to be executed.
+
+  ExecuteTemplateOnTestDriver(ExtractFilePath(ParamStr(0)) + '..\..\TestDriver\ActionTemplates\PrepareClientActionsWindowForInteraction.clktmpl',
+                              CREParam_FileLocation_ValueDisk);
+  ExecuteTemplateOnTestDriver(ExtractFilePath(ParamStr(0)) + '..\..\TestDriver\ActionTemplates\DeleteAllActionsFromList.clktmpl', //this template depends on caching from above
+                              CREParam_FileLocation_ValueDisk);
+
+  SetVariableOnTestDriverClient('$ActionToDrag$', AActionToDrag);
+  ExecuteTemplateOnTestDriver(ExtractFilePath(ParamStr(0)) + '..\..\TestDriver\ActionTemplates\DragActionToListOnAppUnderTest.clktmpl',
+                              CREParam_FileLocation_ValueDisk,
+                              '', //'$Control_Text$',
+                              '' //AExpectedResult
+                              );
+
+  SetVariableOnTestDriverClient('$PropertyToEdit$', APropertyToEdit);
+  SetVariableOnTestDriverClient('$SubPropertyToEdit$', ASubPropertyToEdit);
+  SetVariableOnTestDriverClient('$ScrollCount$', AScrollCount);          //to get to $ActionToDrag$
+  ExecuteTemplateOnTestDriver(ExtractFilePath(ParamStr(0)) + '..\..\TestDriver\ActionTemplates\EditProperty.clktmpl',
+                              CREParam_FileLocation_ValueDisk,
+                              '', //'$Control_Text$',
+                              '' //AExpectedResult
+                              );
+
+  SetVariableOnTestDriverClient('$MenuItem$', AMenuItemCaption);
+  SetVariableOnTestDriverClient('$NewPropertyValue$', ANewPropertyValue);
+  ExecuteTemplateOnTestDriver(ExtractFilePath(ParamStr(0)) + '..\..\TestDriver\ActionTemplates\OpenOIEditorPopUpMenuFromRightClick.clktmpl',
+                              CREParam_FileLocation_ValueDisk,
+                              '', //'$Control_Text$',
+                              '' //AExpectedResult
+                              );
+end;
+
+
+procedure TTestUI.TestEditOIProperty_FindControl_InitialRectangle_Left_SetToValueFromMenu;
+begin
+  EditOIPropertiesFromMenu('FindControl', 'InitialRectangle', 'Left', '-5', '$Control_Right$', '$Control_Right$');
+end;
+
+
+procedure TTestUI.TestEditOIProperty_FindControl_InitialRectangle_Top_SetToValueFromMenu;
+begin
+  EditOIPropertiesFromMenu('FindControl', 'InitialRectangle', 'Top', '-5', '$Control_Bottom$', '$Control_Bottom$');
+end;
+
+
+procedure TTestUI.TestEditOIProperty_FindControl_InitialRectangle_Right_SetToValueFromMenu;
+begin
+  EditOIPropertiesFromMenu('FindControl', 'InitialRectangle', 'Right', '-5', '$Control_Left$', '$Control_Left$');
+end;
+
+
+procedure TTestUI.TestEditOIProperty_FindControl_InitialRectangle_Bottom_SetToValueFromMenu;
+begin
+  EditOIPropertiesFromMenu('FindControl', 'InitialRectangle', 'Bottom', '-5', '$Control_Top$', '$Control_Top$');
+end;
 
 ///////////////////////////////
 
