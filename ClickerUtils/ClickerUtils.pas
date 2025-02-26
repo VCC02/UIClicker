@@ -500,6 +500,7 @@ type
 
   TCompRecArr = array of TCompRec;
 
+  PClkFindControlOptions = ^TClkFindControlOptions;
   PClkFindSubControlOptions = ^TClkFindSubControlOptions;
 
 
@@ -535,7 +536,8 @@ type
   TOnUpdateSearchAreaLimitsInOIFromDraggingLines = procedure(ALimitLabelsToUpdate: TLimitLabels; var AOffsets: TSimpleRectString) of object;
   TOnUpdateTextCroppingLimitsInOIFromDraggingLines = procedure(ALimitLabelsToUpdate: TLimitLabels; var AOffsets: TSimpleRectString; AFontProfileName: string) of object;
   TOnUpdateTextCroppingLimitsInOIFromDraggingLinesIdx = procedure(ALimitLabelsToUpdate: TLimitLabels; var AOffsets: TSimpleRectString; AFontProfileIndex: Integer) of object;
-  TOnGetFindControlOptions = function(AIsSubControl: Boolean = True): PClkFindSubControlOptions of object;
+  TOnGetFindControlOptions = function: PClkFindControlOptions of object;
+  TOnGetFindSubControlOptions = function: PClkFindSubControlOptions of object;
   TOnGetFindControlMatchBitmapText = function(Sender: TObject): PClkFindControlMatchBitmapText of object;
   TOnGetGridDrawingOption = function: TDisplayGridLineOption of object;
   TOnGetActionProperties = function(AActionName: string): PClkActionRec of object;
@@ -544,6 +546,7 @@ type
   TOnGetAllActions = function: PClkActionsRecArr of object;
   TOnGenerateAndSaveTreeWithWinInterp = function(AHandle: THandle; ATreeFileName: string; AStep: Integer; AUseMouseSwipe: Boolean): Boolean of object;
   TOnSetWinInterpOption = function(AWinInterpOptionName, AWinInterpOptionValue: string): Boolean of object;
+  TOnGetIsFindSubControl = function: Boolean of object;
 
 const
   CActionStatusStr: array[TActionStatus] of string = ('Not Started', 'Failed', 'Successful', 'In Progress', 'Allowed Failed');

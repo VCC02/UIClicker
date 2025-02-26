@@ -360,6 +360,8 @@ type
     FOnSetMatchTextAndClassToOI: TOnSetMatchTextAndClassToOI;
     FOnGetUseWholeScreenAsSearchArea: TOnGetUseWholeScreenAsSearchArea;
     FOnGetFindControlOptions: TOnGetFindControlOptions;
+    FOnGetFindSubControlOptions: TOnGetFindSubControlOptions;
+    FOnGetIsFindSubControl: TOnGetIsFindSubControl;
 
     FOnExecuteFindSubControlAction: TOnExecuteFindSubControlAction;
     FOnAddToLog: TOnAddToLog;
@@ -477,7 +479,9 @@ type
     procedure DoOnUpdateTextCroppingLimitsInOIFromDraggingLines(ALimitLabelsToUpdate: TLimitLabels; var AOffsets: TSimpleRectString; AFontProfileIndex: Integer); //called by a handler for BMPTextFrame
     function DoOnGetDisplayedText: string;
     procedure DoOnSetMatchTextAndClassToOI(AMatchText, AMatchClassName: string);
-    function DoOnGetFindControlOptions(AIsSubControl: Boolean = True): PClkFindSubControlOptions;
+    function DoOnGetFindControlOptions: PClkFindControlOptions;
+    function DoOnGetFindSubControlOptions: PClkFindSubControlOptions;
+    function DoOnGetIsFindSubControl: Boolean;
 
     function DoOnExecuteFindSubControlAction(AErrorLevel, AErrorCount, AFastSearchErrorCount: Integer; AFontName: string; AFontSize: Integer; out AFoundArea: TRect): Boolean;
     procedure DoOnAddToLog(s: string);
@@ -648,6 +652,8 @@ type
     property OnGetDisplayedText: TOnGetDisplayedText write FOnGetDisplayedText;
     property OnSetMatchTextAndClassToOI: TOnSetMatchTextAndClassToOI write FOnSetMatchTextAndClassToOI;
     property OnGetFindControlOptions: TOnGetFindControlOptions write FOnGetFindControlOptions;
+    property OnGetFindSubControlOptions: TOnGetFindSubControlOptions write FOnGetFindSubControlOptions;
+    property OnGetIsFindSubControl: TOnGetIsFindSubControl write FOnGetIsFindSubControl;
 
     property OnExecuteFindSubControlAction: TOnExecuteFindSubControlAction write FOnExecuteFindSubControlAction;   //used on finding error level only (not on all FindSubControl actions)
     property OnAddToLog: TOnAddToLog write FOnAddToLog;
@@ -1060,6 +1066,8 @@ begin
   FOnSetMatchTextAndClassToOI := nil;
   FOnGetUseWholeScreenAsSearchArea := nil;
   FOnGetFindControlOptions := nil;
+  FOnGetFindSubControlOptions := nil;
+  FOnGetIsFindSubControl := nil;
 
   FOnExecuteFindSubControlAction := nil;
   FOnAddToLog := nil;
@@ -1227,12 +1235,30 @@ begin
 end;
 
 
-function TfrClickerFindControl.DoOnGetFindControlOptions(AIsSubControl: Boolean = True): PClkFindSubControlOptions;
+function TfrClickerFindControl.DoOnGetFindControlOptions: PClkFindControlOptions;
 begin
   if not Assigned(FOnGetFindControlOptions) then
     raise Exception.Create('OnGetFindControlOptions not assigned.')
   else
-    Result := FOnGetFindControlOptions(AIsSubControl);
+    Result := FOnGetFindControlOptions();
+end;
+
+
+function TfrClickerFindControl.DoOnGetFindSubControlOptions: PClkFindSubControlOptions;
+begin
+  if not Assigned(FOnGetFindSubControlOptions) then
+    raise Exception.Create('OnGetFindSubControlOptions not assigned.')
+  else
+    Result := FOnGetFindSubControlOptions();
+end;
+
+
+function TfrClickerFindControl.DoOnGetIsFindSubControl: Boolean;
+begin
+  if not Assigned(FOnGetIsFindSubControl) then
+    raise Exception.Create('OnGetIsFindSubControl not assigned.')
+  else
+    Result := FOnGetIsFindSubControl();
 end;
 
 
@@ -1366,7 +1392,7 @@ var
   i: Integer;
   Found: Boolean;
 begin
-  FindSubControlOptions := DoOnGetFindControlOptions;
+  FindSubControlOptions := DoOnGetFindSubControlOptions;
 
   if Length(FBMPTextProfiles) = 0 then
     raise Exception.Create('No font profile available.');
@@ -1472,7 +1498,7 @@ begin
   SetLength(FBMPTextProfiles, n + 1);
   FBMPTextProfiles[n] := TFontProfile.Create(Self, 'FBMPTextFrames_' + IntToStr(n));
   FBMPTextProfiles[n].ProfileName := AProfileName;
-  FBMPTextProfiles[n].FindControlMatchBitmapText := @DoOnGetFindControlOptions.MatchBitmapText[n];
+  FBMPTextProfiles[n].FindControlMatchBitmapText := @DoOnGetFindSubControlOptions.MatchBitmapText[n];
 
   SetBMPTextFrameVisibility;
 end;
@@ -1495,7 +1521,7 @@ begin
     FBMPTextProfiles[i].EditorVisible := i = tabctrlBMPText.TabIndex;
 
     FBMPTextProfiles[i].ProfileName := 'not set ' + IntToStr(i);
-    FBMPTextProfiles[i].FindControlMatchBitmapText := @DoOnGetFindControlOptions.MatchBitmapText[i];
+    FBMPTextProfiles[i].FindControlMatchBitmapText := @DoOnGetFindSubControlOptions.MatchBitmapText[i];
 
     tabctrlBMPText.Tabs.Add('no name ' + IntToStr(i));
     tabctrlBMPText.TabIndex := tabctrlBMPText.Tabs.Count - 1;
@@ -1672,7 +1698,7 @@ end;
 procedure TfrClickerFindControl.GeneratePreviewGridContent(ADisplayGridLineOption: TDisplayGridLineOption);
 var
   AlgorithmSettings: TMatchBitmapAlgorithmSettings;
-  FindControlOptions: PClkFindSubControlOptions;
+  FindSubControlOptions: PClkFindSubControlOptions;
   NoGridAreaImg: TImage;
 
   //SrcRect, DestRect: TRect;
@@ -1680,12 +1706,12 @@ begin
   if FSearchAreaControlDbgImg = nil then
     Exit;
 
-  FindControlOptions := DoOnGetFindControlOptions;
+  FindSubControlOptions := DoOnGetFindSubControlOptions;
 
-  AlgorithmSettings.XMultipleOf := FindControlOptions^.MatchBitmapAlgorithmSettings.XMultipleOf;
-  AlgorithmSettings.YMultipleOf := FindControlOptions^.MatchBitmapAlgorithmSettings.YMultipleOf;
-  AlgorithmSettings.XOffset := FindControlOptions^.MatchBitmapAlgorithmSettings.XOffset;
-  AlgorithmSettings.YOffset := FindControlOptions^.MatchBitmapAlgorithmSettings.YOffset;
+  AlgorithmSettings.XMultipleOf := FindSubControlOptions^.MatchBitmapAlgorithmSettings.XMultipleOf;
+  AlgorithmSettings.YMultipleOf := FindSubControlOptions^.MatchBitmapAlgorithmSettings.YMultipleOf;
+  AlgorithmSettings.XOffset := FindSubControlOptions^.MatchBitmapAlgorithmSettings.XOffset;
+  AlgorithmSettings.YOffset := FindSubControlOptions^.MatchBitmapAlgorithmSettings.YOffset;
 
   FSearchAreaGridImg.Left := AlgorithmSettings.XOffset + FSearchAreaLeftLimitLabel.Left;
   FSearchAreaGridImg.Top := AlgorithmSettings.YOffset + FSearchAreaTopLimitLabel.Top;
@@ -2021,7 +2047,7 @@ procedure TfrClickerFindControl.PopulateDbgImgExtraMenuWithTxtItems;
 var
   MenuItem, MenuItem_Load: TMenuItem;
   i, QualityIdx: Integer;
-  FindControlOptions: PClkFindSubControlOptions;
+  FindSubControlOptions: PClkFindSubControlOptions;
   Bmp: TBitmap;
 begin
   for i := 0 to FSearchAreaDbgImgSearchedBmpMenu.Items.Count - 1 do
@@ -2044,40 +2070,40 @@ begin
   MenuItem_Load.OnClick := nil;
   FSearchAreaDbgImgSearchedBmpMenu.Items.Add(MenuItem_Load);
 
-  FindControlOptions := DoOnGetFindControlOptions;
-  for i := 0 to Length(FindControlOptions^.MatchBitmapText) - 1 do
+  FindSubControlOptions := DoOnGetFindSubControlOptions;
+  for i := 0 to Length(FindSubControlOptions^.MatchBitmapText) - 1 do
   begin
     MenuItem := TMenuItem.Create(FSearchAreaDbgImgSearchedBmpMenu);
     MenuItem.Caption := 'Profile [' + IntToStr(i) + ']: ' +
-                        FindControlOptions^.MatchBitmapText[i].FontName + '  ' +
-                        IntToStr(FindControlOptions^.MatchBitmapText[i].FontSize) + '  ';
+                        FindSubControlOptions^.MatchBitmapText[i].FontName + '  ' +
+                        IntToStr(FindSubControlOptions^.MatchBitmapText[i].FontSize) + '  ';
 
-    if FindControlOptions^.MatchBitmapText[i].FontQualityUsesReplacement then
-      MenuItem.Caption := MenuItem.Caption + FindControlOptions^.MatchBitmapText[i].FontQualityReplacement
+    if FindSubControlOptions^.MatchBitmapText[i].FontQualityUsesReplacement then
+      MenuItem.Caption := MenuItem.Caption + FindSubControlOptions^.MatchBitmapText[i].FontQualityReplacement
     else
-      MenuItem.Caption := MenuItem.Caption + CFontQualityStr[FindControlOptions^.MatchBitmapText[i].FontQuality];
+      MenuItem.Caption := MenuItem.Caption + CFontQualityStr[FindSubControlOptions^.MatchBitmapText[i].FontQuality];
 
-    MenuItem.Caption := MenuItem.Caption + '   ' + FindControlOptions^.MatchBitmapText[i].ForegroundColor;
-    MenuItem.Caption := MenuItem.Caption + '   ' + FindControlOptions^.MatchBitmapText[i].BackgroundColor;
+    MenuItem.Caption := MenuItem.Caption + '   ' + FindSubControlOptions^.MatchBitmapText[i].ForegroundColor;
+    MenuItem.Caption := MenuItem.Caption + '   ' + FindSubControlOptions^.MatchBitmapText[i].BackgroundColor;
 
-    if FindControlOptions^.MatchBitmapText[i].Bold then
+    if FindSubControlOptions^.MatchBitmapText[i].Bold then
       MenuItem.Caption := MenuItem.Caption + '  Bold';
 
-    if FindControlOptions^.MatchBitmapText[i].Italic then
+    if FindSubControlOptions^.MatchBitmapText[i].Italic then
       MenuItem.Caption := MenuItem.Caption + '  Italic';
 
-    if FindControlOptions^.MatchBitmapText[i].Underline then
+    if FindSubControlOptions^.MatchBitmapText[i].Underline then
       MenuItem.Caption := MenuItem.Caption + '  Underline';
 
-    if FindControlOptions^.MatchBitmapText[i].StrikeOut then
+    if FindSubControlOptions^.MatchBitmapText[i].StrikeOut then
       MenuItem.Caption := MenuItem.Caption + '  StrikeOut';
 
     MenuItem.OnClick := MenuItemLoadBmpTextToSearchedAreaClick;
     Bmp := TBitmap.Create;
     Bmp.Width := 16;
     Bmp.Height := 16;
-    Bmp.Canvas.Font.Color := HexToInt(EvaluateReplacements(FindControlOptions^.MatchBitmapText[i].ForegroundColor));
-    if FindControlOptions^.MatchBitmapText[i].FontQuality = fqNonAntialiased then
+    Bmp.Canvas.Font.Color := HexToInt(EvaluateReplacements(FindSubControlOptions^.MatchBitmapText[i].ForegroundColor));
+    if FindSubControlOptions^.MatchBitmapText[i].FontQuality = fqNonAntialiased then
     begin
       Bmp.Canvas.Font.Name := 'Tahoma';
       Bmp.Canvas.Font.Size := 8;
@@ -2088,18 +2114,18 @@ begin
       Bmp.Canvas.Font.Size := 9;
     end;
 
-    if FindControlOptions^.MatchBitmapText[i].FontQualityUsesReplacement then
+    if FindSubControlOptions^.MatchBitmapText[i].FontQualityUsesReplacement then
     begin
-      QualityIdx := GetFontQualityIndexByName(EvaluateReplacements(FindControlOptions^.MatchBitmapText[i].FontQualityReplacement));
+      QualityIdx := GetFontQualityIndexByName(EvaluateReplacements(FindSubControlOptions^.MatchBitmapText[i].FontQualityReplacement));
       if (QualityIdx > -1) and (QualityIdx <= Ord(High(TFontQuality))) then
         Bmp.Canvas.Font.Quality := TFontQuality(QualityIdx)
       else
         Bmp.Canvas.Font.Quality := fqDefault
     end
     else
-      Bmp.Canvas.Font.Quality := FindControlOptions^.MatchBitmapText[i].FontQuality;
+      Bmp.Canvas.Font.Quality := FindSubControlOptions^.MatchBitmapText[i].FontQuality;
 
-    Bmp.Canvas.Brush.Color := HexToInt(EvaluateReplacements(FindControlOptions^.MatchBitmapText[i].BackgroundColor));
+    Bmp.Canvas.Brush.Color := HexToInt(EvaluateReplacements(FindSubControlOptions^.MatchBitmapText[i].BackgroundColor));
     Bmp.Canvas.Pen.Color := Bmp.Canvas.Brush.Color;
     Bmp.Canvas.Rectangle(0, 0, 16, 16);
     Bmp.Canvas.TextOut(0, 0, 'Txt');
@@ -2241,7 +2267,8 @@ var
   MenuItem: TMenuItem;
   ControlLeft: Integer;
   ControlTop: Integer;
-  FindControlOptions: PClkFindSubControlOptions;
+  FindControlOptions: PClkFindControlOptions;
+  FindSubControlOptions: PClkFindSubControlOptions;
   InMemFiles: TMemFileArr;
   i: Integer;
   FFullScreenBmp: TBitmap;
@@ -2556,15 +2583,26 @@ begin
     //
 
     FindControlOptions := DoOnGetFindControlOptions;
+    FindSubControlOptions := DoOnGetFindSubControlOptions;
 
     ControlLeft := StrToIntDef(EvaluateReplacements('$Control_Left$'), 0);
     ControlTop := StrToIntDef(EvaluateReplacements('$Control_Top$'), 0);
 
-    FSearchAreaSearchedBmpDbgImg.Left := StrToIntDef(EvaluateReplacements(FindControlOptions^.InitialRectangle.LeftOffset), 0);
-    FSearchAreaSearchedBmpDbgImg.Top := StrToIntDef(EvaluateReplacements(FindControlOptions^.InitialRectangle.TopOffset), 0);
+    if not DoOnGetIsFindSubControl then
+    begin
+      FSearchAreaSearchedBmpDbgImg.Left := StrToIntDef(EvaluateReplacements(FindControlOptions^.InitialRectangle.LeftOffset), 0);
+      FSearchAreaSearchedBmpDbgImg.Top := StrToIntDef(EvaluateReplacements(FindControlOptions^.InitialRectangle.TopOffset), 0);
+      FSearchAreaSearchedBmpDbgImg.Left := FSearchAreaSearchedBmpDbgImg.Left - (ControlLeft - StrToIntDef(EvaluateReplacements(FindControlOptions^.InitialRectangle.Left), 0)) * Ord(not FindControlOptions^.UseWholeScreen);
+      FSearchAreaSearchedBmpDbgImg.Top := FSearchAreaSearchedBmpDbgImg.Top - (ControlTop - StrToIntDef(EvaluateReplacements(FindControlOptions^.InitialRectangle.Top), 0)) * Ord(not FindControlOptions^.UseWholeScreen);
+    end
+    else
+    begin
+      FSearchAreaSearchedBmpDbgImg.Left := StrToIntDef(EvaluateReplacements(FindSubControlOptions^.InitialRectangle.LeftOffset), 0);
+      FSearchAreaSearchedBmpDbgImg.Top := StrToIntDef(EvaluateReplacements(FindSubControlOptions^.InitialRectangle.TopOffset), 0);
+      FSearchAreaSearchedBmpDbgImg.Left := FSearchAreaSearchedBmpDbgImg.Left - (ControlLeft - StrToIntDef(EvaluateReplacements(FindSubControlOptions^.InitialRectangle.Left), 0)) * Ord(not FindSubControlOptions^.UseWholeScreen);
+      FSearchAreaSearchedBmpDbgImg.Top := FSearchAreaSearchedBmpDbgImg.Top - (ControlTop - StrToIntDef(EvaluateReplacements(FindSubControlOptions^.InitialRectangle.Top), 0)) * Ord(not FindSubControlOptions^.UseWholeScreen);
+    end;
 
-    FSearchAreaSearchedBmpDbgImg.Left := FSearchAreaSearchedBmpDbgImg.Left - (ControlLeft - StrToIntDef(EvaluateReplacements(FindControlOptions^.InitialRectangle.Left), 0)) * Ord(not FindControlOptions^.UseWholeScreen);
-    FSearchAreaSearchedBmpDbgImg.Top := FSearchAreaSearchedBmpDbgImg.Top - (ControlTop - StrToIntDef(EvaluateReplacements(FindControlOptions^.InitialRectangle.Top), 0)) * Ord(not FindControlOptions^.UseWholeScreen);
 
     FSearchAreaSearchedTextDbgImg.Left := FSearchAreaSearchedBmpDbgImg.Left;
     FSearchAreaSearchedTextDbgImg.Top := FSearchAreaSearchedBmpDbgImg.Top;
@@ -2576,19 +2614,39 @@ begin
     FTransparent_SearchAreaTopLimitLabel.Top := FSearchAreaTopLimitLabel.Top;
     //tmrUpdateGrid.Enabled := True;
 
-    FSearchAreaRightLimitLabel.Left := StrToIntDef(EvaluateReplacements(FindControlOptions^.InitialRectangle.RightOffset), 0);
-    FSearchAreaBottomLimitLabel.Top := StrToIntDef(EvaluateReplacements(FindControlOptions^.InitialRectangle.BottomOffset), 0);
-
-    if FindControlOptions^.UseWholeScreen then
+    if not DoOnGetIsFindSubControl then
     begin
-      FSearchAreaRightLimitLabel.Left := FSearchAreaRightLimitLabel.Left + Screen.Width;
-      FSearchAreaBottomLimitLabel.Top := FSearchAreaBottomLimitLabel.Top + Screen.Height;
+      FSearchAreaRightLimitLabel.Left := StrToIntDef(EvaluateReplacements(FindControlOptions^.InitialRectangle.RightOffset), 0);
+      FSearchAreaBottomLimitLabel.Top := StrToIntDef(EvaluateReplacements(FindControlOptions^.InitialRectangle.BottomOffset), 0);
+
+      if FindControlOptions^.UseWholeScreen then
+      begin
+        FSearchAreaRightLimitLabel.Left := FSearchAreaRightLimitLabel.Left + Screen.Width;
+        FSearchAreaBottomLimitLabel.Top := FSearchAreaBottomLimitLabel.Top + Screen.Height;
+      end
+      else
+      begin
+        FSearchAreaRightLimitLabel.Left := FSearchAreaRightLimitLabel.Left - (ControlLeft - StrToIntDef(EvaluateReplacements(FindControlOptions^.InitialRectangle.Right), 0));
+        FSearchAreaBottomLimitLabel.Top := FSearchAreaBottomLimitLabel.Top - (ControlTop - StrToIntDef(EvaluateReplacements(FindControlOptions^.InitialRectangle.Bottom), 0));
+      end;
     end
     else
     begin
-      FSearchAreaRightLimitLabel.Left := FSearchAreaRightLimitLabel.Left - (ControlLeft - StrToIntDef(EvaluateReplacements(FindControlOptions^.InitialRectangle.Right), 0));
-      FSearchAreaBottomLimitLabel.Top := FSearchAreaBottomLimitLabel.Top - (ControlTop - StrToIntDef(EvaluateReplacements(FindControlOptions^.InitialRectangle.Bottom), 0));
+      FSearchAreaRightLimitLabel.Left := StrToIntDef(EvaluateReplacements(FindSubControlOptions^.InitialRectangle.RightOffset), 0);
+      FSearchAreaBottomLimitLabel.Top := StrToIntDef(EvaluateReplacements(FindSubControlOptions^.InitialRectangle.BottomOffset), 0);
+
+      if FindSubControlOptions^.UseWholeScreen then
+      begin
+        FSearchAreaRightLimitLabel.Left := FSearchAreaRightLimitLabel.Left + Screen.Width;
+        FSearchAreaBottomLimitLabel.Top := FSearchAreaBottomLimitLabel.Top + Screen.Height;
+      end
+      else
+      begin
+        FSearchAreaRightLimitLabel.Left := FSearchAreaRightLimitLabel.Left - (ControlLeft - StrToIntDef(EvaluateReplacements(FindSubControlOptions^.InitialRectangle.Right), 0));
+        FSearchAreaBottomLimitLabel.Top := FSearchAreaBottomLimitLabel.Top - (ControlTop - StrToIntDef(EvaluateReplacements(FindSubControlOptions^.InitialRectangle.Bottom), 0));
+      end;
     end;
+
 
     UpdateTransparent_SearchAreaLimitsFromSearchAreaLimits;
     UpdateSearchAreaLabelColorsFromTheirPosition;
@@ -2616,73 +2674,85 @@ begin
     //end
     //else
 
-    if FindControlOptions.ImageSource = isScreenshot then
+    if not DoOnGetIsFindSubControl then
     begin
-      if not FindControlOptions.CropFromScreenshot then
-      begin
-        DoOnAddToLog('Taking component screenshot.');
-        ScreenShot(SearchAreaControlHandle,
-                   FSearchAreaControlDbgImg.Picture.Bitmap,
-                   SearchAreaControlRect.Left,
-                   SearchAreaControlRect.Top,
-                   SearchAreaControlRect.Width,
-                   SearchAreaControlRect.Height)
-      end
-      else
-      begin
-        DoOnAddToLog('Taking full screenshot, then crop.');
-
-        hwc := GetWindowClassRec(SearchAreaControlHandle);
-        SrcRect := hwc.ComponentRectangle;
-
-        DestRect.Left := 0;
-        DestRect.Top := 0;
-        DestRect.Width := hwc.ComponentRectangle.Width;
-        DestRect.Height := hwc.ComponentRectangle.Height;
-
-        FFullScreenBmp := TBitmap.Create;
-        try
-          ScreenShot(0, FFullScreenBmp, 0, 0, Screen.Width, Screen.Height);
-          FSearchAreaControlDbgImg.Picture.Bitmap.Canvas.CopyRect(DestRect, FFullScreenBmp.Canvas, SrcRect);
-        finally
-          FFullScreenBmp.Free;
-        end;
-      end
+      ScreenShot(SearchAreaControlHandle,
+                 FSearchAreaControlDbgImg.Picture.Bitmap,
+                 SearchAreaControlRect.Left,
+                 SearchAreaControlRect.Top,
+                 SearchAreaControlRect.Width,
+                 SearchAreaControlRect.Height);
     end
     else
-      if FindControlOptions.ImageSourceFileNameLocation = isflDisk then
+    begin
+      if FindSubControlOptions.ImageSource = isScreenshot then
       begin
-        if not DoOnLoadBitmap(FSearchAreaControlDbgImg.Picture.Bitmap, FindControlOptions.SourceFileName) then
-          MessageBox(Handle, PChar('File not found: ' + #13#10 + FindControlOptions.SourceFileName), PChar(Application.Title), MB_ICONERROR)
-        else
+        if not FindSubControlOptions.CropFromScreenshot then
         begin
-          FSearchAreaControlDbgImg.Width := FSearchAreaControlDbgImg.Picture.Bitmap.Width;
-          FSearchAreaControlDbgImg.Height := FSearchAreaControlDbgImg.Picture.Bitmap.Height;
-        end;
-      end
-      else
-      begin
-        FDisplayDbgImgMenu.Items.Clear;
-
-        FExtRenderingInMemFS.ListMemFiles(InMemFiles);
-
-        if Length(InMemFiles) > 0 then
-        begin
-          for i := 0 to Length(InMemFiles) - 1 do
-          begin
-            MenuItem := TMenuItem.Create(FDisplayDbgImgMenu);
-            MenuItem.Caption := InMemFiles[i].Name;
-            MenuItem.OnClick := MenuItemLoadImageSourceBmpToImgDbgClick;
-            MenuItem.Bitmap := imgCopyBkImg.Picture.Bitmap;
-            FDisplayDbgImgMenu.Items.Add(MenuItem);
-          end;
-          SetLength(InMemFiles, 0);
-
-          FDisplayDbgImgMenu.PopUp;
+          DoOnAddToLog('Taking component screenshot.');
+          ScreenShot(SearchAreaControlHandle,
+                     FSearchAreaControlDbgImg.Picture.Bitmap,
+                     SearchAreaControlRect.Left,
+                     SearchAreaControlRect.Top,
+                     SearchAreaControlRect.Width,
+                     SearchAreaControlRect.Height)
         end
         else
-          MessageBox(Handle, 'The InMem file system is empty.', PChar(Caption), MB_ICONINFORMATION);
-      end;
+        begin
+          DoOnAddToLog('Taking full screenshot, then crop.');
+
+          hwc := GetWindowClassRec(SearchAreaControlHandle);
+          SrcRect := hwc.ComponentRectangle;
+
+          DestRect.Left := 0;
+          DestRect.Top := 0;
+          DestRect.Width := hwc.ComponentRectangle.Width;
+          DestRect.Height := hwc.ComponentRectangle.Height;
+
+          FFullScreenBmp := TBitmap.Create;
+          try
+            ScreenShot(0, FFullScreenBmp, 0, 0, Screen.Width, Screen.Height);
+            FSearchAreaControlDbgImg.Picture.Bitmap.Canvas.CopyRect(DestRect, FFullScreenBmp.Canvas, SrcRect);
+          finally
+            FFullScreenBmp.Free;
+          end;
+        end
+      end
+      else
+        if FindSubControlOptions.ImageSourceFileNameLocation = isflDisk then
+        begin
+          if not DoOnLoadBitmap(FSearchAreaControlDbgImg.Picture.Bitmap, FindSubControlOptions.SourceFileName) then
+            MessageBox(Handle, PChar('File not found: ' + #13#10 + FindSubControlOptions.SourceFileName), PChar(Application.Title), MB_ICONERROR)
+          else
+          begin
+            FSearchAreaControlDbgImg.Width := FSearchAreaControlDbgImg.Picture.Bitmap.Width;
+            FSearchAreaControlDbgImg.Height := FSearchAreaControlDbgImg.Picture.Bitmap.Height;
+          end;
+        end
+        else
+        begin
+          FDisplayDbgImgMenu.Items.Clear;
+
+          FExtRenderingInMemFS.ListMemFiles(InMemFiles);
+
+          if Length(InMemFiles) > 0 then
+          begin
+            for i := 0 to Length(InMemFiles) - 1 do
+            begin
+              MenuItem := TMenuItem.Create(FDisplayDbgImgMenu);
+              MenuItem.Caption := InMemFiles[i].Name;
+              MenuItem.OnClick := MenuItemLoadImageSourceBmpToImgDbgClick;
+              MenuItem.Bitmap := imgCopyBkImg.Picture.Bitmap;
+              FDisplayDbgImgMenu.Items.Add(MenuItem);
+            end;
+            SetLength(InMemFiles, 0);
+
+            FDisplayDbgImgMenu.PopUp;
+          end
+          else
+            MessageBox(Handle, 'The InMem file system is empty.', PChar(Caption), MB_ICONINFORMATION);
+        end;
+    end; //DoOnGetIsFindSubControl
   except
     on E: Exception do
       MessageBox(Handle, PChar('Debug img: ' + E.Message), PChar(Caption), MB_ICONERROR);
@@ -2693,7 +2763,8 @@ end;
 procedure TfrClickerFindControl.btnDisplaySearchAreaDebuggingImageClick(Sender: TObject);
 var
   TempBmp: TBitmap;
-  FindControlOptions: PClkFindSubControlOptions;
+  FindControlOptions: PClkFindControlOptions;
+  FindSubControlOptions: PClkFindSubControlOptions;
 begin
   DisplayDebuggingImage;  //call this, before working with FSearchAreaControlDbgImg, because it might be nil, so it has to be created
 
@@ -2713,8 +2784,16 @@ begin
     TempBmp.Free;
   end;
 
-  FindControlOptions := DoOnGetFindControlOptions;
-  UpdateSearchAreaLabelsFromKeysOnInitRect(FindControlOptions.InitialRectangle);
+  if not DoOnGetIsFindSubControl then
+  begin
+    FindControlOptions := DoOnGetFindControlOptions;
+    UpdateSearchAreaLabelsFromKeysOnInitRect(FindControlOptions.InitialRectangle);
+  end
+  else
+  begin
+    FindSubControlOptions := DoOnGetFindSubControlOptions;
+    UpdateSearchAreaLabelsFromKeysOnInitRect(FindSubControlOptions.InitialRectangle);
+  end;
 end;
 
 
@@ -2770,49 +2849,73 @@ end;
 
 function TfrClickerFindControl.GetSearch_BottomBottom_Ref: Integer;
 begin
-  Result := GetSearch_EditBoxVar_Ref(DoOnGetFindControlOptions^.InitialRectangle.Bottom, '$Control_Bottom$');
+  if not DoOnGetIsFindSubControl then
+    Result := GetSearch_EditBoxVar_Ref(DoOnGetFindControlOptions^.InitialRectangle.Bottom, '$Control_Bottom$')
+  else
+    Result := GetSearch_EditBoxVar_Ref(DoOnGetFindSubControlOptions^.InitialRectangle.Bottom, '$Control_Bottom$');
 end;
 
 
 function TfrClickerFindControl.GetSearch_TopBottom_Ref: Integer;
 begin
-  Result := GetSearch_EditBoxVar_Ref(DoOnGetFindControlOptions^.InitialRectangle.Top, '$Control_Bottom$');
+  if not DoOnGetIsFindSubControl then
+    Result := GetSearch_EditBoxVar_Ref(DoOnGetFindControlOptions^.InitialRectangle.Top, '$Control_Bottom$')
+  else
+    Result := GetSearch_EditBoxVar_Ref(DoOnGetFindSubControlOptions^.InitialRectangle.Top, '$Control_Bottom$');
 end;
 
 
 function TfrClickerFindControl.GetSearch_LeftLeft_Ref: Integer;
 begin
-  Result := GetSearch_EditBoxVar_Ref(DoOnGetFindControlOptions^.InitialRectangle.Left, '$Control_Left$');
+  if not DoOnGetIsFindSubControl then
+    Result := GetSearch_EditBoxVar_Ref(DoOnGetFindControlOptions^.InitialRectangle.Left, '$Control_Left$')
+  else
+    Result := GetSearch_EditBoxVar_Ref(DoOnGetFindSubControlOptions^.InitialRectangle.Left, '$Control_Left$');
 end;
 
 
 function TfrClickerFindControl.GetSearch_RightLeft_Ref: Integer;
 begin
-  Result := GetSearch_EditBoxVar_Ref(DoOnGetFindControlOptions^.InitialRectangle.Right, '$Control_Left$');
+  if not DoOnGetIsFindSubControl then
+    Result := GetSearch_EditBoxVar_Ref(DoOnGetFindControlOptions^.InitialRectangle.Right, '$Control_Left$')
+  else
+    Result := GetSearch_EditBoxVar_Ref(DoOnGetFindSubControlOptions^.InitialRectangle.Right, '$Control_Left$');
 end;
 
 
 function TfrClickerFindControl.GetSearch_RightRight_Ref: Integer;
 begin
-  Result := GetSearch_EditBoxVar_Ref(DoOnGetFindControlOptions^.InitialRectangle.Right, '$Control_Right$');
+  if not DoOnGetIsFindSubControl then
+    Result := GetSearch_EditBoxVar_Ref(DoOnGetFindControlOptions^.InitialRectangle.Right, '$Control_Right$')
+  else
+    Result := GetSearch_EditBoxVar_Ref(DoOnGetFindSubControlOptions^.InitialRectangle.Right, '$Control_Right$');
 end;
 
 
 function TfrClickerFindControl.GetSearch_LeftRight_Ref: Integer;
 begin
-  Result := GetSearch_EditBoxVar_Ref(DoOnGetFindControlOptions^.InitialRectangle.Left, '$Control_Right$');
+  if not DoOnGetIsFindSubControl then
+    Result := GetSearch_EditBoxVar_Ref(DoOnGetFindControlOptions^.InitialRectangle.Left, '$Control_Right$')
+  else
+    Result := GetSearch_EditBoxVar_Ref(DoOnGetFindSubControlOptions^.InitialRectangle.Left, '$Control_Right$');
 end;
 
 
 function TfrClickerFindControl.GetSearch_TopTop_Ref: Integer;
 begin
-  Result := GetSearch_EditBoxVar_Ref(DoOnGetFindControlOptions^.InitialRectangle.Top, '$Control_Top$');
+  if not DoOnGetIsFindSubControl then
+    Result := GetSearch_EditBoxVar_Ref(DoOnGetFindControlOptions^.InitialRectangle.Top, '$Control_Top$')
+  else
+    Result := GetSearch_EditBoxVar_Ref(DoOnGetFindSubControlOptions^.InitialRectangle.Top, '$Control_Top$');
 end;
 
 
 function TfrClickerFindControl.GetSearch_BottomTop_Ref: Integer;
 begin
-  Result := GetSearch_EditBoxVar_Ref(DoOnGetFindControlOptions^.InitialRectangle.Bottom, '$Control_Top$');
+  if not DoOnGetIsFindSubControl then
+    Result := GetSearch_EditBoxVar_Ref(DoOnGetFindControlOptions^.InitialRectangle.Bottom, '$Control_Top$')
+  else
+    Result := GetSearch_EditBoxVar_Ref(DoOnGetFindSubControlOptions^.InitialRectangle.Bottom, '$Control_Top$');
 end;
 
 
@@ -3747,17 +3850,17 @@ end;
 
 procedure TfrClickerFindControl.MenuItemCalculateMinimumErrorLevelToMatchBitmap(Sender: TObject);
 var
-  FindControlOptions: PClkFindSubControlOptions;
+  FindSubControlOptions: PClkFindSubControlOptions;
   Res: Integer;
 begin
   (Sender as TMenuItem).Enabled := False;
   try
-    FindControlOptions := DoOnGetFindControlOptions;
-    Res := CalculateMinimumErrorLevelToMatchBitmap(FindControlOptions);
+    FindSubControlOptions := DoOnGetFindSubControlOptions;
+    Res := CalculateMinimumErrorLevelToMatchBitmap(FindSubControlOptions);
 
     if Res <> -1 then
     begin
-      FindControlOptions^.ColorError := IntToStr(Res);
+      FindSubControlOptions^.ColorError := IntToStr(Res);
       tmrUpdateSearchAreaOffsetEditBoxes.Enabled := True; //an ugly way to trigger the modified flag in parent frames, up to OI
       DoOnTriggerOnControlsModified;
     end;
@@ -3769,17 +3872,17 @@ end;
 
 procedure TfrClickerFindControl.MenuItemCalculateMinimumColorErrorCountToMatchBitmap(Sender: TObject);
 var
-  FindControlOptions: PClkFindSubControlOptions;
+  FindSubControlOptions: PClkFindSubControlOptions;
   Res: Integer;
 begin
   (Sender as TMenuItem).Enabled := False;
   try
-    FindControlOptions := DoOnGetFindControlOptions;
-    Res := CalculateMinimumErrorCountToMatchBitmap(FindControlOptions);
+    FindSubControlOptions := DoOnGetFindSubControlOptions;
+    Res := CalculateMinimumErrorCountToMatchBitmap(FindSubControlOptions);
 
     if Res <> -1 then
     begin
-      FindControlOptions^.AllowedColorErrorCount := IntToStr(Res);
+      FindSubControlOptions^.AllowedColorErrorCount := IntToStr(Res);
       tmrUpdateSearchAreaOffsetEditBoxes.Enabled := True; //an ugly way to trigger the modified flag in parent frames, up to OI
       DoOnTriggerOnControlsModified;
     end;
@@ -3965,7 +4068,7 @@ end;
 procedure TfrClickerFindControl.MenuItemFindFontNameAndSizeToMatchText(Sender: TObject);
 var
   Found: Boolean;
-  FindControlOptions: PClkFindSubControlOptions;
+  FindSubControlOptions: PClkFindSubControlOptions;
   ErrorLevel, AllowedColErr, LastValidSize, FastSearchAllowedColErr: Integer;
   FoundArea: TRect;
   ExpectedArea: TRect; //Expected area where the text should be found. If found somewhere else, then it's a false positive.
@@ -3983,13 +4086,13 @@ begin
     if MessageBox(Handle, 'The algorithm will use the current FindSubControl action settings, to search for a matching font name and size. It can be stopped with Ctrl-Shift-F2. Continue?', PChar(Application.Title), MB_ICONQUESTION + MB_YESNO) = IDNO then
       Exit;
 
-    FindControlOptions := DoOnGetFindControlOptions;
+    FindSubControlOptions := DoOnGetFindSubControlOptions;
 
     LastValidSize := -1;
 
-    ErrorLevel := StrToIntDef(EvaluateReplacements(FindControlOptions.ColorError), 10);
-    FastSearchAllowedColErr := StrToIntDef(EvaluateReplacements(FindControlOptions.FastSearchAllowedColorErrorCount), 10);
-    AllowedColErr := StrToIntDef(EvaluateReplacements(FindControlOptions.AllowedColorErrorCount), 10);
+    ErrorLevel := StrToIntDef(EvaluateReplacements(FindSubControlOptions.ColorError), 10);
+    FastSearchAllowedColErr := StrToIntDef(EvaluateReplacements(FindSubControlOptions.FastSearchAllowedColorErrorCount), 10);
+    AllowedColErr := StrToIntDef(EvaluateReplacements(FindSubControlOptions.AllowedColorErrorCount), 10);
 
     DoOnAddToLog('');
     DoOnAddToLog('Searching for font name and size...');
@@ -4143,11 +4246,11 @@ begin
 
         DoOnAddToLog('Found a font name and size: ' + FontName + '  ' + IntToStr(FontSize));
 
-        if Length(FindControlOptions^.MatchBitmapText) = 1 then  //ask to update, only if there is a single font profile
+        if Length(FindSubControlOptions^.MatchBitmapText) = 1 then  //ask to update, only if there is a single font profile
           if MessageBox(Handle, 'A font name and size found. Do you want to update the action properties?', PChar(Application.Title), MB_ICONQUESTION + MB_YESNO) = IDYES then
           begin
-            FindControlOptions^.MatchBitmapText[0].FontName := FontName;
-            FindControlOptions^.MatchBitmapText[0].FontSize := FontSize;
+            FindSubControlOptions^.MatchBitmapText[0].FontName := FontName;
+            FindSubControlOptions^.MatchBitmapText[0].FontSize := FontSize;
             tmrUpdateSearchAreaOffsetEditBoxes.Enabled := True; //an ugly way to trigger the modified flag in parent frames, up to OI
             DoOnTriggerOnControlsModified;
             //update other properties if the algorithm is advanced enough to calculate more than ColorError
@@ -4185,7 +4288,7 @@ begin
     BGColor := -1;
   end;
 
-  Options := DoOnGetFindControlOptions;
+  Options := DoOnGetFindSubControlOptions;
   if BGColor = -1 then
   begin
     if Length(Options^.MatchBitmapText) > 0 then
@@ -4387,25 +4490,25 @@ end;
 
 
 procedure TfrClickerFindControl.UpdateUseWholeScreenLabel(AUseWholeScreen: Boolean);
-//var
-//  FindControlOptions: PClkFindSubControlOptions;
 begin
   pnlUseWholeScreen.Visible := AUseWholeScreen;
-  //FindControlOptions := DoOnGetFindControlOptions;
 
-  //if AUseWholeScreen {and
-  //   (FindControlOptions^.MatchCriteria.WillMatchBitmapText or
-  //   FindControlOptions^.MatchCriteria.WillMatchBitmapFiles or
-  //   FindControlOptions^.MatchCriteria.WillMatchPrimitiveFiles)} then
-  //  pnlUseWholeScreen.Color := $00B6B6FF  //some light red      //this would be used for FindSubControl
-  //else
-    pnlUseWholeScreen.Color := $0053F783; //some green
+  if not DoOnGetIsFindSubControl then
+  begin
+    if AUseWholeScreen then
+      pnlUseWholeScreen.Color := $0053F783; //some green
+  end
+  else
+  begin
+    if AUseWholeScreen then
+      pnlUseWholeScreen.Color := $00B6B6FF;  //some light red
+  end;
 end;
 
 
 procedure TfrClickerFindControl.ClearControls;
 var
-  //FindControlOptions: PClkFindControlOptions;
+  FindControlOptions: PClkFindControlOptions;
   FindSubControlOptions: PClkFindSubControlOptions;
   Offsets: TSimpleRectString;
 begin
@@ -4414,8 +4517,9 @@ begin
 
   lstMatchBitmapFiles.Clear;
   lstMatchPrimitiveFiles.Clear;
-  //FindControlOptions := DoOnGetFindControlOptions;
-  FindSubControlOptions := DoOnGetFindControlOptions;  ////////////////////// should be DoOnGetFindSubControlOptions
+
+  FindControlOptions := DoOnGetFindControlOptions;
+  FindSubControlOptions := DoOnGetFindSubControlOptions;
 
   FindSubControlOptions^.MatchBitmapAlgorithm := mbaBruteForce;
   FindSubControlOptions^.MatchBitmapAlgorithmSettings.XMultipleOf := 1;
@@ -4423,18 +4527,18 @@ begin
   FindSubControlOptions^.MatchBitmapAlgorithmSettings.XOffset := 0;
   FindSubControlOptions^.MatchBitmapAlgorithmSettings.YOffset := 0;
   FindSubControlOptions^.StartSearchingWithCachedControl := False;
-  //FindControlOptions^.StartSearchingWithCachedControl := False;
+  FindControlOptions^.StartSearchingWithCachedControl := False;
 
   UpdateBitmapAlgorithmSettings;
 
-  //FindControlOptions^.InitialRectangle.Left := '$Control_Left$';
-  //FindControlOptions^.InitialRectangle.Top := '$Control_Top$';
-  //FindControlOptions^.InitialRectangle.Right := '$Control_Right$';
-  //FindControlOptions^.InitialRectangle.Bottom := '$Control_Bottom$';
-  //FindControlOptions^.InitialRectangle.LeftOffset := '0';
-  //FindControlOptions^.InitialRectangle.TopOffset := '0';
-  //FindControlOptions^.InitialRectangle.RightOffset := '0';
-  //FindControlOptions^.InitialRectangle.BottomOffset := '0';
+  FindControlOptions^.InitialRectangle.Left := '$Control_Left$';
+  FindControlOptions^.InitialRectangle.Top := '$Control_Top$';
+  FindControlOptions^.InitialRectangle.Right := '$Control_Right$';
+  FindControlOptions^.InitialRectangle.Bottom := '$Control_Bottom$';
+  FindControlOptions^.InitialRectangle.LeftOffset := '0';
+  FindControlOptions^.InitialRectangle.TopOffset := '0';
+  FindControlOptions^.InitialRectangle.RightOffset := '0';
+  FindControlOptions^.InitialRectangle.BottomOffset := '0';
 
   FindSubControlOptions^.InitialRectangle.Left := '$Control_Left$';
   FindSubControlOptions^.InitialRectangle.Top := '$Control_Top$';

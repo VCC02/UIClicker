@@ -549,7 +549,9 @@ type
     procedure HandleOnUpdateTextCroppingLimitsInOIFromDraggingLines(ALimitLabelsToUpdate: TLimitLabels; var AOffsets: TSimpleRectString; AFontProfileIndex: Integer);
     function HandleOnGetDisplayedText: string;
     procedure HandleOnSetMatchTextAndClassToOI(AMatchText, AMatchClassName: string);
-    function HandleOnGetFindControlOptions(AIsSubControl: Boolean = True): PClkFindSubControlOptions;
+    function HandleOnGetFindControlOptions: PClkFindControlOptions;
+    function HandleOnGetFindSubControlOptions: PClkFindSubControlOptions;
+    function HandleOnGetIsFindSubControl: Boolean;
 
     function HandleOnExecuteFindSubControlAction(AErrorLevel, AErrorCount, AFastSearchErrorCount: Integer; AFontName: string; AFontSize: Integer; out AFoundArea: TRect): Boolean;
     procedure HandleOnAddToLog(s: string);
@@ -866,6 +868,8 @@ begin
   frClickerFindControl.OnGetDisplayedText := HandleOnGetDisplayedText;
   frClickerFindControl.OnSetMatchTextAndClassToOI := HandleOnSetMatchTextAndClassToOI;
   frClickerFindControl.OnGetFindControlOptions := HandleOnGetFindControlOptions;
+  frClickerFindControl.OnGetFindSubControlOptions := HandleOnGetFindSubControlOptions;
+  frClickerFindControl.OnGetIsFindSubControl := HandleOnGetIsFindSubControl;
   frClickerFindControl.OnExecuteFindSubControlAction := HandleOnExecuteFindSubControlAction;
   frClickerFindControl.OnAddToLog := HandleOnAddToLog;
   frClickerFindControl.OnGetFontFinderSettings := HandleOnGetFontFinderSettings;
@@ -3082,12 +3086,21 @@ begin
 end;
 
 
-function TfrClickerActions.HandleOnGetFindControlOptions(AIsSubControl: Boolean = True): PClkFindSubControlOptions;
+function TfrClickerActions.HandleOnGetFindControlOptions: PClkFindControlOptions;
 begin
-  if AIsSubControl then
-    Result := @GetEditingActionObjectByActionType^.FindSubControlOptions
-  else
-    Result := @GetEditingActionObjectByActionType^.FindControlOptions;
+  Result := @GetEditingActionObjectByActionType^.FindControlOptions;
+end;
+
+
+function TfrClickerActions.HandleOnGetFindSubControlOptions: PClkFindSubControlOptions;
+begin
+  Result := @GetEditingActionObjectByActionType^.FindSubControlOptions;
+end;
+
+
+function TfrClickerActions.HandleOnGetIsFindSubControl: Boolean;
+begin
+  Result := GetEditingActionObjectByActionType^.ActionOptions.Action = acFindSubControl;
 end;
 
 
