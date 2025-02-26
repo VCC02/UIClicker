@@ -6234,7 +6234,7 @@ begin
         CFindControl_InitialRectangle_PropIndex:
         begin
           OldText := GetActionValueStr_FindControl_InitialRectangle(AEditingAction, AItemIndex);
-          SetActionValueStr_FindSubControl_InitialRectangle(AEditingAction, ANewText, AItemIndex);
+          SetActionValueStr_FindControl_InitialRectangle(AEditingAction, ANewText, AItemIndex);
           TriggerOnControlsModified(ANewText <> OldText);
           Exit;
         end;
@@ -6378,7 +6378,7 @@ begin
         CFindSubControl_InitialRectangle_PropIndex:
         begin
           OldText := GetActionValueStr_FindSubControl_InitialRectangle(AEditingAction, AItemIndex);
-          SetActionValueStr_FindControl_InitialRectangle(AEditingAction, ANewText, AItemIndex);
+          SetActionValueStr_FindSubControl_InitialRectangle(AEditingAction, ANewText, AItemIndex);
           TriggerOnControlsModified(ANewText <> OldText);
           Exit;
         end;
