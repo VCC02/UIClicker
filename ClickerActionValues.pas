@@ -130,30 +130,36 @@ const
   CFindControl_AllowToFail_PropIndex = 1;
   CFindControl_MatchText_PropIndex = 2;      //property index in FindControl structure
   CFindControl_MatchClassName_PropIndex = 3;  //property index in FindControl structure
-  CFindControl_MatchBitmapText_PropIndex = 6; //property index in FindControl structure         //to be removed
-  CFindControl_MatchBitmapFiles_PropIndex = 7; //property index in FindControl structure   - list of files   //to be removed
-  CFindControl_MatchBitmapAlgorithm_PropIndex = 8;             //to be removed
-  CFindControl_MatchBitmapAlgorithmSettings_PropIndex = 9;     //to be removed
+  CFindControl_MatchTextSeparator_PropIndex = 4;
+  CFindControl_MatchClassNameSeparator_PropIndex = 5;
+  //CFindControl_MatchBitmapText_PropIndex = 6; //property index in FindControl structure         //to be removed
+  //CFindControl_MatchBitmapFiles_PropIndex = 7; //property index in FindControl structure   - list of files   //to be removed
+  //CFindControl_MatchBitmapAlgorithm_PropIndex = 8;             //to be removed
+  //CFindControl_MatchBitmapAlgorithmSettings_PropIndex = 9;     //to be removed
   CFindControl_InitialRectangle_PropIndex = 10;
   CFindControl_UseWholeScreen_PropIndex = 11;
-  CFindControl_ColorError_PropIndex = 12;     //to be removed
-  CFindControl_AllowedColorErrorCount_PropIndex = 13;  //to be removed
-  CFindControl_MatchPrimitiveFiles_PropIndex = 18; //property index in FindControl structure   - list of files   //to be removed
+  //CFindControl_ColorError_PropIndex = 12;     //to be removed
+  //CFindControl_AllowedColorErrorCount_PropIndex = 13;  //to be removed
+  CFindControl_WaitForControlToGoAway_PropIndex = 14;
+  CFindControl_StartSearchingWithCachedControl_PropIndex = 15;
+  CFindControl_CachedControlLeft_PropIndex = 16;
+  CFindControl_CachedControlTop_PropIndex = 17;
+  //CFindControl_MatchPrimitiveFiles_PropIndex = 18; //property index in FindControl structure   - list of files   //to be removed
   CFindControl_GetAllControls_PropIndex = 19;
-  CFindControl_UseFastSearch_PropIndex = 20;   //to be removed
-  CFindControl_FastSearchAllowedColorErrorCount_PropIndex = 21;  //to be removed
-  CFindControl_IgnoredColors_PropIndex = 22; //to be removed
-  CFindControl_SleepySearch_PropIndex = 23;  //to be removed
-  CFindControl_StopSearchOnMismatch_PropIndex = 24;  //to be removed
-  CFindControl_ImageSource_PropIndex = 25;  //to be removed
-  CFindControl_SourceFileName_PropIndex = 26;  //to be removed
-  CFindControl_ImageSourceFileNameLocation_PropIndex = 27;  //to be removed
+  //CFindControl_UseFastSearch_PropIndex = 20;   //to be removed
+  //CFindControl_FastSearchAllowedColorErrorCount_PropIndex = 21;  //to be removed
+  //CFindControl_IgnoredColors_PropIndex = 22; //to be removed
+  //CFindControl_SleepySearch_PropIndex = 23;  //to be removed
+  //CFindControl_StopSearchOnMismatch_PropIndex = 24;  //to be removed
+  //CFindControl_ImageSource_PropIndex = 25;  //to be removed
+  //CFindControl_SourceFileName_PropIndex = 26;  //to be removed
+  //CFindControl_ImageSourceFileNameLocation_PropIndex = 27;  //to be removed
   CFindControl_PrecisionTimeout_PropIndex = 28;  //to be removed
-  CFindControl_FullBackgroundImageInResult_PropIndex = 29;  //to be removed
-  CFindControl_MatchByHistogramSettings_PropIndex = 30;  //to be removed
+  //CFindControl_FullBackgroundImageInResult_PropIndex = 29;  //to be removed
+  //CFindControl_MatchByHistogramSettings_PropIndex = 30;  //to be removed
   CFindControl_EvaluateTextCount_PropIndex = 31;
-  CFindControl_CropFromScreenshot_PropIndex = 32; //to be removed
-  CFindControl_ThreadCount_PropIndex = 33;   //to be removed
+  //CFindControl_CropFromScreenshot_PropIndex = 32; //to be removed
+  //CFindControl_ThreadCount_PropIndex = 33;   //to be removed
 
   CFindSubControl_MatchCriteria_PropIndex = 0; //property index in FindControl structure
   CFindSubControl_AllowToFail_PropIndex = 1;
@@ -198,21 +204,21 @@ const
   CFindSubControl_MatchCriteria_WillMatchBitmapFiles_PropItemIndex = 1;
   CFindSubControl_MatchCriteria_WillMatchPrimitiveFiles_PropItemIndex = 2;
 
-  CFindControl_MatchBitmapText_ForegroundColor_PropItemIndex = 0;   //property index in FindControl.MatchBitmapText structure
-  CFindControl_MatchBitmapText_BackgroundColor_PropItemIndex = 1;   //property index in FindControl.MatchBitmapText structure
-  CFindControl_MatchBitmapText_FontName_PropItemIndex = 2;   //property index in FindControl.MatchBitmapText structure
-  CFindControl_MatchBitmapText_ProfileName_PropItemIndex = 11;   //property index in FindControl.MatchBitmapText structure
-  CFindControl_MatchBitmapText_IgnoreBackgroundColor_PropItemIndex = 16;   //property index in FindControl.MatchBitmapText structure
+  CFindSubControl_MatchBitmapText_ForegroundColor_PropItemIndex = 0;   //property index in FindControl.MatchBitmapText structure
+  CFindSubControl_MatchBitmapText_BackgroundColor_PropItemIndex = 1;   //property index in FindControl.MatchBitmapText structure
+  CFindSubControl_MatchBitmapText_FontName_PropItemIndex = 2;   //property index in FindControl.MatchBitmapText structure
+  CFindSubControl_MatchBitmapText_ProfileName_PropItemIndex = 11;   //property index in FindControl.MatchBitmapText structure
+  CFindSubControl_MatchBitmapText_IgnoreBackgroundColor_PropItemIndex = 16;   //property index in FindControl.MatchBitmapText structure
 
-  CFindControl_MatchBitmapText_CropLeft = 12;
-  CFindControl_MatchBitmapText_CropTop = 13;
-  CFindControl_MatchBitmapText_CropRight = 14;
-  CFindControl_MatchBitmapText_CropBottom = 15;
+  CFindSubControl_MatchBitmapText_CropLeft = 12;
+  CFindSubControl_MatchBitmapText_CropTop = 13;
+  CFindSubControl_MatchBitmapText_CropRight = 14;
+  CFindSubControl_MatchBitmapText_CropBottom = 15;
 
-  CFindControl_MatchBitmapAlgorithmSettings_XMultipleOf_PropItemIndex = 0;
-  CFindControl_MatchBitmapAlgorithmSettings_YMultipleOf_PropItemIndex = 1;
-  CFindControl_MatchBitmapAlgorithmSettings_XOffset_PropItemIndex = 2;
-  CFindControl_MatchBitmapAlgorithmSettings_YOffset_PropItemIndex = 3;
+  CFindSubControl_MatchBitmapAlgorithmSettings_XMultipleOf_PropItemIndex = 0;
+  CFindSubControl_MatchBitmapAlgorithmSettings_YMultipleOf_PropItemIndex = 1;
+  CFindSubControl_MatchBitmapAlgorithmSettings_XOffset_PropItemIndex = 2;
+  CFindSubControl_MatchBitmapAlgorithmSettings_YOffset_PropItemIndex = 3;
 
   CFindControl_InitialRectangle_Left_PropItemIndex = 0;
   CFindControl_InitialRectangle_Top_PropItemIndex = 1;
@@ -223,9 +229,18 @@ const
   CFindControl_InitialRectangle_RightOffset_PropItemIndex = 6;
   CFindControl_InitialRectangle_BottomOffset_PropItemIndex = 7;
 
-  CFindControl_MatchByHistogramSettings_MinPercentColorMatch_PropItemIndex = 0;
-  CFindControl_MatchByHistogramSettings_MostSignificantColorCountInSubBmp_PropItemIndex = 1;
-  CFindControl_MatchByHistogramSettings_MostSignificantColorCountInBackgroundBmp_PropItemIndex = 2;
+  CFindSubControl_InitialRectangle_Left_PropItemIndex = 0;
+  CFindSubControl_InitialRectangle_Top_PropItemIndex = 1;
+  CFindSubControl_InitialRectangle_Right_PropItemIndex = 2;
+  CFindSubControl_InitialRectangle_Bottom_PropItemIndex = 3;
+  CFindSubControl_InitialRectangle_LeftOffset_PropItemIndex = 4;
+  CFindSubControl_InitialRectangle_TopOffset_PropItemIndex = 5;
+  CFindSubControl_InitialRectangle_RightOffset_PropItemIndex = 6;
+  CFindSubControl_InitialRectangle_BottomOffset_PropItemIndex = 7;
+
+  CFindSubControl_MatchByHistogramSettings_MinPercentColorMatch_PropItemIndex = 0;
+  CFindSubControl_MatchByHistogramSettings_MostSignificantColorCountInSubBmp_PropItemIndex = 1;
+  CFindSubControl_MatchByHistogramSettings_MostSignificantColorCountInBackgroundBmp_PropItemIndex = 2;
 
   CSetVar_ListOfVarNamesValuesAndEvalBefore_PropItemIndex = 0;
   CSetVar_FailOnException_PropItemIndex = 1;
@@ -327,34 +342,34 @@ const
     (Name: 'MatchClassName'; EditorType: etTextWithArrow; DataType: CDTString),        //Description:  Wildcards are available ("*"). Variable replacements are available.  There are applications which can have one or more of their windows, registered with class name, containing a randomly generated string.
     (Name: 'MatchTextSeparator'; EditorType: etText; DataType: CDTString),
     (Name: 'MatchClassNameSeparator'; EditorType: etText; DataType: CDTString),
-    (Name: 'MatchBitmapText'; EditorType: etFilePathWithArrow; DataType: CDTArray),  //array of other structure.  Count should be 0 for FindControl and >0 for FindSubControl
-    (Name: 'MatchBitmapFiles'; EditorType: etFilePathWithArrow; DataType: CDTArray),  //Description:  Relative paths can be entered using the following format:' + #13#10 + '$TemplateDir$\<SomeBmp.bmp>
-    (Name: 'MatchBitmapAlgorithm'; EditorType: etEnumCombo; DataType: CDTEnum),
-    (Name: 'MatchBitmapAlgorithmSettings'; EditorType: etNone; DataType: CDTStructure),    //structure
+    (Name: '//MatchBitmapText'; EditorType: etFilePathWithArrow; DataType: CDTArray),  //array of other structure.  Count should be 0 for FindControl and >0 for FindSubControl
+    (Name: '//MatchBitmapFiles'; EditorType: etFilePathWithArrow; DataType: CDTArray),  //Description:  Relative paths can be entered using the following format:' + #13#10 + '$TemplateDir$\<SomeBmp.bmp>
+    (Name: '//MatchBitmapAlgorithm'; EditorType: etEnumCombo; DataType: CDTEnum),
+    (Name: '//MatchBitmapAlgorithmSettings'; EditorType: etNone; DataType: CDTStructure),    //structure
     (Name: 'InitialRectangle'; EditorType: etNone; DataType: CDTStructure),                 //structure
     (Name: 'UseWholeScreen'; EditorType: etBooleanCombo; DataType: CDTBool),          //Description:  Use the whole screen as search area, if True. Use the current control as search area, if False. The search area is modified by offsets.
-    (Name: 'ColorError'; EditorType: etSpinText; DataType: CDTString),                  //Description:  When matching bitmaps, which contain antialiasing pixels (see smooth text), some of those pixels will not match. The "Color Error" represents the difference between the color values for the two compared pixels, for each RGB channel. The "Color Error Count" is the allowed number of mismatching pixels. Variable replacements are available.  If at least one of the three color channels (R, G, B) mismatches by at least ColorError, it counts as an error point.
-    (Name: 'AllowedColorErrorCount'; EditorType: etSpinText; DataType: CDTString),      //Description:  When matching bitmaps, which contain antialiasing pixels (see smooth text), some of those pixels will not match. The "Color Error" represents the difference between the color values for the two compared pixels, for each RGB channel. The "Color Error Count" is the allowed number of mismatching pixels. Variable replacements are available.
+    (Name: '//ColorError'; EditorType: etSpinText; DataType: CDTString),                  //Description:  When matching bitmaps, which contain antialiasing pixels (see smooth text), some of those pixels will not match. The "Color Error" represents the difference between the color values for the two compared pixels, for each RGB channel. The "Color Error Count" is the allowed number of mismatching pixels. Variable replacements are available.  If at least one of the three color channels (R, G, B) mismatches by at least ColorError, it counts as an error point.
+    (Name: '//AllowedColorErrorCount'; EditorType: etSpinText; DataType: CDTString),      //Description:  When matching bitmaps, which contain antialiasing pixels (see smooth text), some of those pixels will not match. The "Color Error" represents the difference between the color values for the two compared pixels, for each RGB channel. The "Color Error Count" is the allowed number of mismatching pixels. Variable replacements are available.
     (Name: 'WaitForControlToGoAway'; EditorType: etBooleanCombo; DataType: CDTBool),  //Description:     When checked, the action expects to find no control, using the current settings.
     (Name: 'StartSearchingWithCachedControl'; EditorType: etBooleanCombo; DataType: CDTBool),   //Description: When checked, the control is checked at the specified cached $My_Control_Left$ and $My_Control_Top$ var replacements, before using the search grid.  In order to cache the control coordinates, please add a SetVar action after this one, by assigning:  $My_Control_Left$ to $Control_Left$  and  $My_Control_Top$ to $Control_Top$  where $My_Control_Left$ and $My_Control_Top$ are the cached values. The "Eval before" checkboxes have to be set.  Each Find(Sub)Control action, which uses caching, will have to use its own set of $My_Control_Left$ and $My_Control_Top$ vars.  The cached values are global coordinates, so they will become invalid even for a subcontrol if the parent window is moved.
     (Name: 'CachedControlLeft'; EditorType: etText; DataType: CDTString),
     (Name: 'CachedControlTop'; EditorType: etText; DataType: CDTString),
-    (Name: 'MatchPrimitiveFiles'; EditorType: etFilePathWithArrow; DataType: CDTArray),
+    (Name: '//MatchPrimitiveFiles'; EditorType: etFilePathWithArrow; DataType: CDTArray),
     (Name: 'GetAllControls'; EditorType: etBooleanCombo; DataType: CDTBool),
-    (Name: 'UseFastSearch'; EditorType: etBooleanCombo; DataType: CDTBool),
-    (Name: 'FastSearchAllowedColorErrorCount'; EditorType: etText; DataType: CDTString),
-    (Name: 'IgnoredColors'; EditorType: etText; DataType: CDTString),
-    (Name: 'SleepySearch'; EditorType: etBooleanCombo; DataType: CDTBool),
-    (Name: 'StopSearchOnMismatch'; EditorType: etBooleanCombo; DataType: CDTBool),
-    (Name: 'ImageSource'; EditorType: etEnumCombo; DataType: CDTEnum),
-    (Name: 'SourceFileName'; EditorType: etTextWithArrow; DataType: CDTString),
-    (Name: 'ImageSourceFileNameLocation'; EditorType: etEnumCombo; DataType: CDTEnum),
+    (Name: '//UseFastSearch'; EditorType: etBooleanCombo; DataType: CDTBool),
+    (Name: '//FastSearchAllowedColorErrorCount'; EditorType: etText; DataType: CDTString),
+    (Name: '//IgnoredColors'; EditorType: etText; DataType: CDTString),
+    (Name: '//SleepySearch'; EditorType: etBooleanCombo; DataType: CDTBool),
+    (Name: '//StopSearchOnMismatch'; EditorType: etBooleanCombo; DataType: CDTBool),
+    (Name: '//ImageSource'; EditorType: etEnumCombo; DataType: CDTEnum),
+    (Name: '//SourceFileName'; EditorType: etTextWithArrow; DataType: CDTString),
+    (Name: '//ImageSourceFileNameLocation'; EditorType: etEnumCombo; DataType: CDTEnum),
     (Name: 'PrecisionTimeout'; EditorType: etBooleanCombo; DataType: CDTBool),
-    (Name: 'FullBackgroundImageInResult'; EditorType: etBooleanCombo; DataType: CDTBool),
-    (Name: 'MatchByHistogramSettings'; EditorType: etNone; DataType: CDTStructure),
+    (Name: '//FullBackgroundImageInResult'; EditorType: etBooleanCombo; DataType: CDTBool),
+    (Name: '//MatchByHistogramSettings'; EditorType: etNone; DataType: CDTStructure),
     (Name: 'EvaluateTextCount'; EditorType: etSpinText; DataType: CDTString),
-    (Name: 'CropFromScreenshot'; EditorType: etBooleanCombo; DataType: CDTBool),
-    (Name: 'ThreadCount'; EditorType: etText; DataType: CDTString)
+    (Name: '//CropFromScreenshot'; EditorType: etBooleanCombo; DataType: CDTBool),
+    (Name: '//ThreadCount'; EditorType: etText; DataType: CDTString)
   );
 
   CFindSubControlProperties: array[0..CPropCount_FindSubControl - 1] of TOIPropDef = (
@@ -435,6 +450,17 @@ const
     );
 
     CFindControl_InitialRectangleProperties: array[0..CPropCount_FindControlInitialRectangle - 1] of TOIPropDef = (
+      (Name: 'Left'; EditorType: etText; DataType: CDTString),
+      (Name: 'Top'; EditorType: etText; DataType: CDTString),
+      (Name: 'Right'; EditorType: etText; DataType: CDTString),
+      (Name: 'Bottom'; EditorType: etText; DataType: CDTString),
+      (Name: 'LeftOffset'; EditorType: etSpinText; DataType: CDTString),
+      (Name: 'TopOffset'; EditorType: etSpinText; DataType: CDTString),
+      (Name: 'RightOffset'; EditorType: etSpinText; DataType: CDTString),
+      (Name: 'BottomOffset'; EditorType: etSpinText; DataType: CDTString)
+    );
+
+    CFindSubControl_InitialRectangleProperties: array[0..CPropCount_FindSubControlInitialRectangle - 1] of TOIPropDef = (
       (Name: 'Left'; EditorType: etText; DataType: CDTString),
       (Name: 'Top'; EditorType: etText; DataType: CDTString),
       (Name: 'Right'; EditorType: etText; DataType: CDTString),
