@@ -4388,17 +4388,17 @@ end;
 
 procedure TfrClickerFindControl.UpdateUseWholeScreenLabel(AUseWholeScreen: Boolean);
 //var
-//  FindControlOptions: PClkFindSUbControlOptions;
+//  FindControlOptions: PClkFindSubControlOptions;
 begin
   pnlUseWholeScreen.Visible := AUseWholeScreen;
   //FindControlOptions := DoOnGetFindControlOptions;
 
-  if AUseWholeScreen {and
-     (FindControlOptions^.MatchCriteria.WillMatchBitmapText or
-     FindControlOptions^.MatchCriteria.WillMatchBitmapFiles or
-     FindControlOptions^.MatchCriteria.WillMatchPrimitiveFiles)} then
-    pnlUseWholeScreen.Color := $00B6B6FF  //some light red
-  else
+  //if AUseWholeScreen {and
+  //   (FindControlOptions^.MatchCriteria.WillMatchBitmapText or
+  //   FindControlOptions^.MatchCriteria.WillMatchBitmapFiles or
+  //   FindControlOptions^.MatchCriteria.WillMatchPrimitiveFiles)} then
+  //  pnlUseWholeScreen.Color := $00B6B6FF  //some light red      //this would be used for FindSubControl
+  //else
     pnlUseWholeScreen.Color := $0053F783; //some green
 end;
 

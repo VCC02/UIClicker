@@ -2814,7 +2814,7 @@ begin
     acExecApp:
       frClickerExecApp.memExecAppParams.Lines.Text := FEditTemplateOptions_EditingAction.ExecAppOptions.ListOfParams;
 
-    acFindControl, acFindSubControl:
+    acFindControl, acFindSubControl:   //both
     begin
       UpdateFindSubControlInternalStructuresFromAction(FEditTemplateOptions_EditingAction);
       FEditTemplateOptions_EditingAction^.FindSubControlOptions.MatchPrimitiveFiles_Modified := InitListOfZerosByItemCount(FEditTemplateOptions_EditingAction^.FindSubControlOptions.MatchPrimitiveFiles);

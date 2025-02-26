@@ -2365,7 +2365,7 @@ begin
       frClickerActions.frClickerFindControl.BMPTextFontProfiles[i].UpdateSelectionLabelsFromCropInfo(FClkActions[ActionIndex].FindSubControlOptions.MatchBitmapText[i]);
   end;}
 
-  if frClickerActions.CurrentlyEditingActionType in [acFindControl, acFindSubControl] then
+  if frClickerActions.CurrentlyEditingActionType in [acFindControl, acFindSubControl] then    //both actions
     frClickerActions.UpdateFindSubControlInternalStructuresFromAction(@FClkActions[ActionIndex]);
 
   if frClickerActions.CurrentlyEditingActionType = acPlugin then
@@ -4735,13 +4735,18 @@ begin
     4:
     begin
       try
-        if (FClkActions[Node^.Index].ActionOptions.Action = acFindControl) or (FClkActions[Node^.Index].ActionOptions.Action = acFindSubControl) then
+        if FClkActions[Node^.Index].ActionOptions.Action = acFindControl then
           if FClkActions[Node^.Index].FindControlOptions.UseWholeScreen then
-            TargetCanvas.Brush.Color := clLime
-          else
-            if FClkActions[Node^.Index].ActionOptions.Action = acFindSubControl then
-              if FClkActions[Node^.Index].FindSubControlOptions.MatchCriteria.WillMatchBitmapText then
-                TargetCanvas.Brush.Color := HexToInt(EvaluateReplacements(FClkActions[Node^.Index].FindSubControlOptions.MatchBitmapText[0].BackgroundColor));
+            TargetCanvas.Brush.Color := clLime;
+
+        if FClkActions[Node^.Index].ActionOptions.Action = acFindSubControl then
+        begin
+          if FClkActions[Node^.Index].FindSubControlOptions.MatchCriteria.WillMatchBitmapText then
+            TargetCanvas.Brush.Color := HexToInt(EvaluateReplacements(FClkActions[Node^.Index].FindSubControlOptions.MatchBitmapText[0].BackgroundColor));
+
+          if FClkActions[Node^.Index].FindSubControlOptions.UseWholeScreen then
+            TargetCanvas.Brush.Color := clLime;
+        end;
       except
         TargetCanvas.Brush.Color := clRed;
       end;
