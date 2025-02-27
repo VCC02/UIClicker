@@ -147,8 +147,8 @@ class TDllFunctionAddresses:
     
     
     def GetAddFindSubControlActionToTemplate(self):
-        AddFindSubControlActionToTemplateProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, LPCWSTR, LONG, BOOLEAN, LPCWSTR, PFindControlOptions)
-        AddFindSubControlActionToTemplateParams = (1, "ATemplateFileName", 0), (1, "AActionName", 0), (1, "AActionTimeout", 0), (1, "AActionEnabled", 0), (1, "AActionCondition", 0), (1, "AFindControlOptions", 0),
+        AddFindSubControlActionToTemplateProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, LPCWSTR, LONG, BOOLEAN, LPCWSTR, PFindSubControlOptions)
+        AddFindSubControlActionToTemplateParams = (1, "ATemplateFileName", 0), (1, "AActionName", 0), (1, "AActionTimeout", 0), (1, "AActionEnabled", 0), (1, "AActionCondition", 0), (1, "AFindSubControlOptions", 0),
         AddFindSubControlActionToTemplateFuncRes = AddFindSubControlActionToTemplateProto(("AddFindSubControlActionToTemplate", self.DllHandle), AddFindSubControlActionToTemplateParams)
         return AddFindSubControlActionToTemplateFuncRes
         
@@ -599,9 +599,9 @@ class TDllFunctions:
             return 'AV on AddFindControlActionToTemplate. {}'.format(e)
             
             
-    def AddFindSubControlActionToTemplate(self, ATemplateFileName, AActionName, AActionTimeout, AActionEnabled, AActionCondition, AFindControlOptions):
+    def AddFindSubControlActionToTemplate(self, ATemplateFileName, AActionName, AActionTimeout, AActionEnabled, AActionCondition, AFindSubControlOptions):
         try:
-            AddFindSubControlActionToTemplateResult = self.AddFindSubControlActionToTemplateFunc(ATemplateFileName, AActionName, AActionTimeout, AActionEnabled, AActionCondition, AFindControlOptions)  #sending PWideChar, and converting to ANSI at dll
+            AddFindSubControlActionToTemplateResult = self.AddFindSubControlActionToTemplateFunc(ATemplateFileName, AActionName, AActionTimeout, AActionEnabled, AActionCondition, AFindSubControlOptions)  #sending PWideChar, and converting to ANSI at dll
             return AddFindSubControlActionToTemplateResult
         except Exception as e:
             return 'AV on AddFindSubControlActionToTemplate. {}'.format(e)
@@ -1046,8 +1046,8 @@ class TUIClickerDllFunctions:
         return self.DllFuncs.AddFindControlActionToTemplate(ATemplateFileName, AActionName, AActionTimeout, AActionEnabled, AActionCondition, AFindControlOptions) == 0  #sending PWideChar, and converting to ANSI at dll
 
 
-    def AddFindSubControlActionToTemplate(self, ATemplateFileName, AActionName, AActionTimeout, AActionEnabled, AActionCondition, AFindControlOptions):
-        return self.DllFuncs.AddFindSubControlActionToTemplate(ATemplateFileName, AActionName, AActionTimeout, AActionEnabled, AActionCondition, AFindControlOptions) == 0  #sending PWideChar, and converting to ANSI at dll
+    def AddFindSubControlActionToTemplate(self, ATemplateFileName, AActionName, AActionTimeout, AActionEnabled, AActionCondition, AFindSubControlOptions):
+        return self.DllFuncs.AddFindSubControlActionToTemplate(ATemplateFileName, AActionName, AActionTimeout, AActionEnabled, AActionCondition, AFindSubControlOptions) == 0  #sending PWideChar, and converting to ANSI at dll
 
 
     def AddSetControlTextActionToTemplate(self, ATemplateFileName, AActionName, AActionTimeout, AActionEnabled, AActionCondition, ASetControlTextOptions):

@@ -416,35 +416,6 @@ begin
 end;
 
 
-function Add_FindControl_ActionToTemplate(ATemplateFileName: Pointer;
-
-                                          AActionName: Pointer;
-                                          AAction: TClkAction;
-                                          AActionTimeout: LongInt; //ms
-                                          AActionEnabled: Boolean;
-                                          AActionCondition: Pointer;
-
-                                          AFindControlOptions: PClkFindControlOptionsAPI
-
-                                         ): LongInt;
-var
-  TemplateFileName: string;
-  TempAction: TClkActionRec;
-begin
-  if InMemFS = nil then
-  begin
-    Result := -1;
-    Exit;
-  end;
-
-  SetBasicActionOptions(ATemplateFileName, AActionName, AAction, AActionTimeout, AActionEnabled, AActionCondition, TempAction, TemplateFileName);
-  GetFindControlOptionsFromAPI(AFindControlOptions, TempAction);
-
-  AddActionToTemplate(TemplateFileName, TempAction);
-  Result := 0;
-end;
-
-
 function AddFindControlActionToTemplate(ATemplateFileName: Pointer;
 
                                         AActionName: Pointer;
@@ -455,8 +426,21 @@ function AddFindControlActionToTemplate(ATemplateFileName: Pointer;
                                         AFindControlOptions: PClkFindControlOptionsAPI
 
                                        ): LongInt; cdecl;
+var
+  TemplateFileName: string;
+  TempAction: TClkActionRec;
 begin
-  Result := Add_FindControl_ActionToTemplate(ATemplateFileName, AActionName, acFindControl, AActionTimeout, AActionEnabled, AActionCondition, AFindControlOptions);
+  if InMemFS = nil then
+  begin
+    Result := -1;
+    Exit;
+  end;
+
+  SetBasicActionOptions(ATemplateFileName, AActionName, acFindControl, AActionTimeout, AActionEnabled, AActionCondition, TempAction, TemplateFileName);
+  GetFindControlOptionsFromAPI(AFindControlOptions, TempAction);
+
+  AddActionToTemplate(TemplateFileName, TempAction);
+  Result := 0;
 end;
 
 
@@ -467,11 +451,24 @@ function AddFindSubControlActionToTemplate(ATemplateFileName: Pointer;
                                            AActionEnabled: Boolean;
                                            AActionCondition: Pointer;
 
-                                           AFindControlOptions: PClkFindControlOptionsAPI
+                                           AFindSubControlOptions: PClkFindSubControlOptionsAPI
 
                                           ): LongInt; cdecl;
+var
+  TemplateFileName: string;
+  TempAction: TClkActionRec;
 begin
-  Result := Add_FindControl_ActionToTemplate(ATemplateFileName, AActionName, acFindSubControl, AActionTimeout, AActionEnabled, AActionCondition, AFindControlOptions);
+  if InMemFS = nil then
+  begin
+    Result := -1;
+    Exit;
+  end;
+
+  SetBasicActionOptions(ATemplateFileName, AActionName, acFindSubControl, AActionTimeout, AActionEnabled, AActionCondition, TempAction, TemplateFileName);
+  GetFindSubControlOptionsFromAPI(AFindSubControlOptions, TempAction);
+
+  AddActionToTemplate(TemplateFileName, TempAction);
+  Result := 0;
 end;
 
 
