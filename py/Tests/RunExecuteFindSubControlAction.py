@@ -49,12 +49,12 @@ try:
 
 
     FindControlOptions = GetDefaultFindControlOptions()
-    FindControlOptions.MatchCriteria.WillMatchText = False
-    FindControlOptions.MatchCriteria.WillMatchClassName = False
+    #FindControlOptions.MatchCriteria.WillMatchText = False
+    #FindControlOptions.MatchCriteria.WillMatchClassName = False
     FindControlOptions.MatchCriteria.WillMatchBitmapText = True
     FindControlOptions.MatchCriteria.WillMatchBitmapFiles = True
     FindControlOptions.MatchCriteria.WillMatchPrimitiveFiles = True
-    FindControlOptions.MatchCriteria.SearchForControlMode = TSearchForControlMode.sfcmEnumWindows
+    #FindControlOptions.MatchCriteria.SearchForControlMode = TSearchForControlMode.sfcmEnumWindows
 
     FindControlOptions.AllowToFail = True
     FindControlOptions.MatchText = 'some text'

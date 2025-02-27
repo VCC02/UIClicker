@@ -170,9 +170,8 @@ try:
     #///////////////
     
     print("Preparing a FindSubControl with pointer to structure. This one does not need AddFontProfileToFindSubControlAction.")
-    FindSubControlOptions = GetDefaultFindControlOptions()
+    FindSubControlOptions = GetDefaultFindSubControlOptions()
     FindSubControlOptions.MatchText = '64-bit'
-    FindSubControlOptions.MatchClassName = ''
     
     TempMatchBitmapTextRec = TMatchBitmapTextRec(3)
     TempMatchBitmapTextRec.Items[0].ForegroundColor = '888888'
