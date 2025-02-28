@@ -182,9 +182,6 @@ begin
     ACustomActions[i].FindSubControlOptions.WaitForControlToGoAway := Ini.ReadBool(SectionIndex, 'WaitForControlToGoAway_' + IterationStr, False);
 
     ACustomActions[i].FindSubControlOptions.MatchText := Ini.ReadString(SectionIndex, 'MatchText_' + IterationStr, 'ComponentText_' + IterationStr);
-    ACustomActions[i].FindSubControlOptions.MatchClassName := Ini.ReadString(SectionIndex, 'MatchClassName_' + IterationStr, 'ComponentClassName_' + IterationStr);
-    ACustomActions[i].FindSubControlOptions.MatchTextSeparator := Ini.ReadString(SectionIndex, 'MatchTextSeparator_' + IterationStr, '');
-    ACustomActions[i].FindSubControlOptions.MatchClassNameSeparator := Ini.ReadString(SectionIndex, 'MatchClassNameSeparator_' + IterationStr, '');
 
     if Length(ACustomActions[i].FindSubControlOptions.MatchBitmapText) = 0 then  //version 1 did not support multiple font settings
       SetLength(ACustomActions[i].FindSubControlOptions.MatchBitmapText, 1);
@@ -255,9 +252,6 @@ begin
     ACustomActions[i].FindSubControlOptions.WaitForControlToGoAway := Ini.ReadBool(SectionIndex, 'WaitForControlToGoAway_' + IterationStr, False);
 
     ACustomActions[i].FindSubControlOptions.MatchText := Ini.ReadString(SectionIndex, 'MatchText_' + IterationStr, 'ComponentText_' + IterationStr);
-    ACustomActions[i].FindSubControlOptions.MatchClassName := Ini.ReadString(SectionIndex, 'MatchClassName_' + IterationStr, 'ComponentClassName_' + IterationStr);
-    ACustomActions[i].FindSubControlOptions.MatchTextSeparator := Ini.ReadString(SectionIndex, 'MatchTextSeparator_' + IterationStr, '');
-    ACustomActions[i].FindSubControlOptions.MatchClassNameSeparator := Ini.ReadString(SectionIndex, 'MatchClassNameSeparator_' + IterationStr, '');
 
     if Length(ACustomActions[i].FindSubControlOptions.MatchBitmapText) = 0 then  //version 1 did not support multiple font settings
       SetLength(ACustomActions[i].FindSubControlOptions.MatchBitmapText, 1);
@@ -431,9 +425,6 @@ end;
 
 
 procedure LoadAction_FindControl(Ini: TClkIniReadonlyFile; SectionIndex: Integer; var AFindControlOptions: TClkFindControlOptions);
-var
-  i, n: Integer;
-  Indent: string;
 begin
   AFindControlOptions.MatchCriteria.WillMatchText := Ini.ReadBool(SectionIndex, 'MatchCriteria.WillMatchText', True);
   AFindControlOptions.MatchCriteria.WillMatchClassName := Ini.ReadBool(SectionIndex, 'MatchCriteria.WillMatchClassName', True);
@@ -481,9 +472,6 @@ begin
   AFindSubControlOptions.WaitForControlToGoAway := Ini.ReadBool(SectionIndex, 'WaitForControlToGoAway', False);
 
   AFindSubControlOptions.MatchText := Ini.ReadString(SectionIndex, 'MatchText', 'ComponentText');
-  AFindSubControlOptions.MatchClassName := Ini.ReadString(SectionIndex, 'MatchClassName', 'ComponentClassName');
-  AFindSubControlOptions.MatchTextSeparator := Ini.ReadString(SectionIndex, 'MatchTextSeparator', '');
-  AFindSubControlOptions.MatchClassNameSeparator := Ini.ReadString(SectionIndex, 'MatchClassNameSeparator', '');
 
   if Ini.ReadString(SectionIndex, 'MatchBitmapTextArr', '') = '1' then
   begin
@@ -965,9 +953,6 @@ end;
 
 
 procedure AddAction_FindControlToStringList(var AActionFindControlOptions: TClkFindControlOptions; AStringList: TStringList);
-var
-  i: Integer;
-  Indent: string;
 begin
   AStringList.Add('MatchCriteria.WillMatchText=' + IntToStr(Ord(AActionFindControlOptions.MatchCriteria.WillMatchText)));
   AStringList.Add('MatchCriteria.WillMatchClassName=' + IntToStr(Ord(AActionFindControlOptions.MatchCriteria.WillMatchClassName)));
@@ -1009,9 +994,6 @@ begin
   AStringList.Add('MatchCriteria.WillMatchBitmapFiles=' + IntToStr(Ord(AActionFindSubControlOptions.MatchCriteria.WillMatchBitmapFiles)));
   AStringList.Add('MatchCriteria.WillMatchPrimitiveFiles=' + IntToStr(Ord(AActionFindSubControlOptions.MatchCriteria.WillMatchPrimitiveFiles)));
   AStringList.Add('MatchText=' + AActionFindSubControlOptions.MatchText);
-  AStringList.Add('MatchClassName=' + AActionFindSubControlOptions.MatchClassName);
-  AStringList.Add('MatchTextSeparator=' + AActionFindSubControlOptions.MatchTextSeparator);
-  AStringList.Add('MatchClassNameSeparator=' + AActionFindSubControlOptions.MatchClassNameSeparator);
   AStringList.Add('AllowToFail=' + IntToStr(Ord(AActionFindSubControlOptions.AllowToFail)));
   AStringList.Add('WaitForControlToGoAway=' + IntToStr(Ord(AActionFindSubControlOptions.WaitForControlToGoAway)));
 
@@ -1239,8 +1221,6 @@ end;
 
 
 procedure CopyFindControlActionContent(ASrc: TClkFindControlOptions; var ADest: TClkFindControlOptions);
-var
-  i: Integer;
 begin
   ADest.MatchCriteria := ASrc.MatchCriteria;
   ADest.AllowToFail := ASrc.AllowToFail;
@@ -1269,9 +1249,6 @@ begin
   ADest.MatchCriteria := ASrc.MatchCriteria;
   ADest.AllowToFail := ASrc.AllowToFail;
   ADest.MatchText := ASrc.MatchText;
-  ADest.MatchClassName := ASrc.MatchClassName;
-  ADest.MatchTextSeparator := ASrc.MatchTextSeparator;
-  ADest.MatchClassNameSeparator := ASrc.MatchClassNameSeparator;
   //ADest.MatchBitmapText: TClkFindControlMatchBitmapTextArr;      //this cannot be directly assigned, it's an array
   ADest.MatchBitmapFiles := ASrc.MatchBitmapFiles;
   ADest.MatchBitmapAlgorithm := ASrc.MatchBitmapAlgorithm;

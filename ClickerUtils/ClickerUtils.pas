@@ -313,9 +313,9 @@ type
     MatchCriteria: TClkFindSubControlMatchCriteria;
     AllowToFail: Boolean;
     MatchText: string;
-    MatchClassName: string;
-    MatchTextSeparator: string;
-    MatchClassNameSeparator: string;
+    //MatchClassName: string;
+    //MatchTextSeparator: string;
+    //MatchClassNameSeparator: string;
     MatchBitmapText: TClkFindControlMatchBitmapTextArr;
     MatchBitmapFiles: string; //ListOfStrings
     MatchBitmapAlgorithm: TMatchBitmapAlgorithm;

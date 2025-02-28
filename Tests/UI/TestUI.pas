@@ -1294,8 +1294,6 @@ end;
 
 
 procedure TTestUI.EditOIPropertiesFromMenu(AActionToDrag, APropertyToEdit, ASubPropertyToEdit, AScrollCount, AMenuItemCaption, ANewPropertyValue: string);
-var
-  i: Integer;
 begin
   TestServerAddress := CTestDriverServerAddress_Client;
 

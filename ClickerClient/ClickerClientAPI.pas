@@ -209,9 +209,9 @@ type
     MatchCriteria: TClkFindSubControlMatchCriteriaAPI;
     AllowToFail: Boolean;
     MatchText: PWideChar;
-    MatchClassName: PWideChar;
-    MatchTextSeparator: PWideChar;
-    MatchClassNameSeparator: PWideChar;
+    // MatchClassName: PWideChar;
+    // MatchTextSeparator: PWideChar;
+    // MatchClassNameSeparator: PWideChar;
     MatchBitmapText: PMatchBitmapTextRecAPI; //pointer to a TMatchBitmapTextRecAPI structure, which contains a length (32-bit) and a pointer to an array of TClkFindControlMatchBitmapText;
     MatchBitmapFiles: PWideChar;
     MatchBitmapAlgorithm: Byte; //TMatchBitmapAlgorithm; //change this to LongInt, in case of AV at python side
@@ -455,8 +455,6 @@ end;
 
 
 procedure GetFindControlOptionsFromAPI(AFindControlOptions: PClkFindControlOptionsAPI; var ADestClkAction: TClkActionRec);
-var
-  i: Integer;
 begin
   //find control stuff
   ADestClkAction.FindControlOptions.MatchCriteria.WillMatchText := AFindControlOptions^.MatchCriteria.WillMatchText;
@@ -541,9 +539,6 @@ begin
 
   ADestClkAction.FindSubControlOptions.AllowToFail := AFindSubControlOptions^.AllowToFail;
   SetPointedContentToString(@string(PWideChar(AFindSubControlOptions^.MatchText))[1], ADestClkAction.FindSubControlOptions.MatchText);
-  SetPointedContentToString(@string(PWideChar(AFindSubControlOptions^.MatchClassName))[1], ADestClkAction.FindSubControlOptions.MatchClassName);
-  SetPointedContentToString(@string(PWideChar(AFindSubControlOptions^.MatchTextSeparator))[1], ADestClkAction.FindSubControlOptions.MatchTextSeparator);
-  SetPointedContentToString(@string(PWideChar(AFindSubControlOptions^.MatchClassNameSeparator))[1], ADestClkAction.FindSubControlOptions.MatchClassNameSeparator);
   SetLength(ADestClkAction.FindSubControlOptions.MatchBitmapText, 0);
   SetPointedContentToString(@string(PWideChar(AFindSubControlOptions^.MatchBitmapFiles))[1], ADestClkAction.FindSubControlOptions.MatchBitmapFiles);
   ADestClkAction.FindSubControlOptions.MatchBitmapAlgorithm := TMatchBitmapAlgorithm(AFindSubControlOptions^.MatchBitmapAlgorithm);
@@ -839,9 +834,6 @@ end;
 
 
 procedure SetFindControlOptionsToAPI(var AFindControlOptions: TClkFindControlOptions; var ADestFindControlOptions: TClkFindControlOptionsAPI; var ADestMatchBitmapTextRecAPI: TMatchBitmapTextRecAPI; var ADestMatchBitmapTextArray: TClkFindControlMatchBitmapTextAPIArr);
-var
-  i: Integer;
-  TempDestWideStr: TClkFindControlMatchBitmapTextWideStringArr;   /////////////////////// If there are still memory overwriting issues, then this variable must moved as a procedure parameter, similar to the ADestMatchBitmapTextArray array. This will keep it in memory during the API call.
 begin
   ADestFindControlOptions.MatchCriteria.WillMatchText := AFindControlOptions.MatchCriteria.WillMatchText;
   ADestFindControlOptions.MatchCriteria.WillMatchClassName := AFindControlOptions.MatchCriteria.WillMatchClassName;
@@ -933,9 +925,6 @@ begin
 
   ADestFindSubControlOptions.AllowToFail := AFindSubControlOptions.AllowToFail;
   ADestFindSubControlOptions.MatchText := @WideString(AFindSubControlOptions.MatchText)[1];
-  ADestFindSubControlOptions.MatchClassName := @WideString(AFindSubControlOptions.MatchClassName)[1];
-  ADestFindSubControlOptions.MatchTextSeparator := @WideString(AFindSubControlOptions.MatchTextSeparator)[1];
-  ADestFindSubControlOptions.MatchClassNameSeparator := @WideString(AFindSubControlOptions.MatchClassNameSeparator)[1];
   ADestFindSubControlOptions.MatchBitmapText := nil;
   ADestFindSubControlOptions.MatchBitmapFiles := @WideString(AFindSubControlOptions.MatchBitmapFiles)[1];
   ADestFindSubControlOptions.MatchBitmapAlgorithm := Byte(AFindSubControlOptions.MatchBitmapAlgorithm);

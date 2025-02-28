@@ -228,9 +228,6 @@ begin
             'AllowToFail' + '=' + IntToStr(Ord(AFindSubControlOptions.AllowToFail)) + '&' +
 
             'MatchText' + '=' + AFindSubControlOptions.MatchText + '&' +
-            'MatchClassName' + '=' + AFindSubControlOptions.MatchClassName + '&' +
-            'MatchTextSeparator' + '=' + AFindSubControlOptions.MatchTextSeparator + '&' +
-            'MatchClassNameSeparator' + '=' + AFindSubControlOptions.MatchClassNameSeparator + '&' +
 
             'MatchBitmapText.Count' + '=' + IntToStr(Length(AFindSubControlOptions.MatchBitmapText)) + '&' +
             GetMatchBitmapTextContent(AFindSubControlOptions.MatchBitmapText) +
@@ -565,8 +562,6 @@ function SetFindControlActionProperties(AListOfFindControlOptionsParams: TString
 var
   Temp_SearchForControlMode: Integer;
   Temp_ActionTimeout: Int64;
-  i: Integer;
-  Prefix: string;
 begin
   Result := '';
 
@@ -692,9 +687,6 @@ begin
 
   AFindSubControlOptions.AllowToFail := AListOfFindSubControlOptionsParams.Values['AllowToFail'] = '1';
   AFindSubControlOptions.MatchText := AListOfFindSubControlOptionsParams.Values['MatchText'];
-  AFindSubControlOptions.MatchClassName := AListOfFindSubControlOptionsParams.Values['MatchClassName'];
-  AFindSubControlOptions.MatchTextSeparator := AListOfFindSubControlOptionsParams.Values['MatchTextSeparator'];
-  AFindSubControlOptions.MatchClassNameSeparator := AListOfFindSubControlOptionsParams.Values['MatchClassNameSeparator'];
   SetLength(AFindSubControlOptions.MatchBitmapText, Temp_MatchBitmapTextCount);
 
   for i := 0 to Temp_MatchBitmapTextCount - 1 do
@@ -1137,9 +1129,6 @@ begin
   AFindSubControlOptions.MatchCriteria.WillMatchPrimitiveFiles := False;
   AFindSubControlOptions.AllowToFail := False;
   AFindSubControlOptions.MatchText := '';
-  AFindSubControlOptions.MatchClassName := '';
-  AFindSubControlOptions.MatchTextSeparator := '';
-  AFindSubControlOptions.MatchClassNameSeparator := '';
   AFindSubControlOptions.MatchBitmapFiles := '';
   AFindSubControlOptions.MatchBitmapAlgorithm := mbaBruteForce;
   AFindSubControlOptions.MatchBitmapAlgorithmSettings.XMultipleOf := 1;

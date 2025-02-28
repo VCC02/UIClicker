@@ -1197,7 +1197,6 @@ begin
       begin
         TempAction.FindSubControlOptions.MatchCriteria.WillMatchBitmapText := True;
         TempAction.FindSubControlOptions.MatchText := 'bmp text to be matched';
-        TempAction.FindSubControlOptions.MatchClassName := 'class doesn''t matter';
         TempAction.FindSubControlOptions.MatchBitmapText[0].ForegroundColor := '$FGCol$';
         TempAction.FindSubControlOptions.MatchBitmapText[0].BackgroundColor := '$BGCol$';
         TempAction.FindSubControlOptions.MatchBitmapText[1].FontName := 'Mono';
@@ -1208,7 +1207,6 @@ begin
       begin                                                             //use some predefined values, which should be returned in case of error
         TempAction.FindSubControlOptions.MatchCriteria.WillMatchBitmapText := False;
         TempAction.FindSubControlOptions.MatchText := 'missing text';
-        TempAction.FindSubControlOptions.MatchClassName := 'unknown class';
         TempAction.FindSubControlOptions.MatchBitmapText[0].ForegroundColor := 'Bad$FGCol$';
         TempAction.FindSubControlOptions.MatchBitmapText[0].BackgroundColor := '$BadBGCol$';
         TempAction.FindSubControlOptions.MatchBitmapText[1].FontName := 'Stereo';
@@ -1221,7 +1219,6 @@ begin
                                                       //'MatchCriteria.WillMatchBitmapFiles' + #13#10 +
                                                       //'MatchCriteria.WillMatchPrimitiveFiles' + #13#10 +
                                                       'MatchText' + #13#10 +
-                                                      'MatchClassName' + #13#10 +
                                                       'MatchBitmapText[0].ForegroundColor' + #13#10 +
                                                       'MatchBitmapText[0].BackgroundColor' + #13#10 +
                                                       'MatchBitmapText[1].FontName' + #13#10 +
@@ -1597,9 +1594,6 @@ begin
   AFindSubControlOptions.MatchCriteria.WillMatchPrimitiveFiles := True;
   AFindSubControlOptions.AllowToFail := True;
   AFindSubControlOptions.MatchText := 'some text';
-  AFindSubControlOptions.MatchClassName := 'some class';
-  AFindSubControlOptions.MatchTextSeparator := 'txt sep';
-  AFindSubControlOptions.MatchClassNameSeparator := 'class sep';
   AFindSubControlOptions.MatchBitmapFiles := 'bmp';
   AFindSubControlOptions.MatchBitmapAlgorithm := mbaRawHistogramZones;
   AFindSubControlOptions.MatchBitmapAlgorithmSettings.XMultipleOf := 3;
@@ -1690,9 +1684,6 @@ begin
             'AllowToFail' + '=' + 'True' + '&' +
 
             'MatchText' + '=' + 'some text' + '&' +
-            'MatchClassName' + '=' + 'some class' + '&' +
-            'MatchTextSeparator' + '=' + 'txt sep' + '&' +
-            'MatchClassNameSeparator' + '=' + 'class sep' + '&' +
 
             'MatchBitmapText.Count' + '=' + '2' + '&' +
             //GetMatchBitmapTextContent(AFindControlOptions.MatchBitmapText) +

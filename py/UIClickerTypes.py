@@ -468,9 +468,9 @@ class TFindSubControlOptions(Structure):
                ("MatchCriteria", TClkFindSubControlMatchCriteria),
                ("AllowToFail", BOOLEAN),
                ("MatchText", LPCWSTR),
-               ("MatchClassName", LPCWSTR), #to be removed
-               ("MatchTextSeparator", LPCWSTR), #to be removed
-               ("MatchClassNameSeparator", LPCWSTR), #to be removed
+               #("MatchClassName", LPCWSTR), #to be removed
+               #("MatchTextSeparator", LPCWSTR), #to be removed
+               #("MatchClassNameSeparator", LPCWSTR), #to be removed
                ("MatchBitmapText", PMatchBitmapTextRec), #TClkFindControlMatchBitmapTextArr;  #Can be updated, by a different call
                ("MatchBitmapFiles", LPCWSTR),
                ("MatchBitmapAlgorithm", BYTE), #LONG), #TMatchBitmapAlgorithm)
@@ -512,9 +512,9 @@ def GetDefaultFindSubControlOptions():
 
     FindSubControlOptions.AllowToFail = False
     FindSubControlOptions.MatchText = 'SomeText'
-    FindSubControlOptions.MatchClassName = 'TButton'
-    FindSubControlOptions.MatchTextSeparator = ''
-    FindSubControlOptions.MatchClassNameSeparator = ''
+    #FindSubControlOptions.MatchClassName = 'TButton'
+    #FindSubControlOptions.MatchTextSeparator = ''
+    #FindSubControlOptions.MatchClassNameSeparator = ''
     FindSubControlOptions.MatchBitmapText = ()  #(The content is updated separately. See TClkFindControlMatchBitmapText)
     FindSubControlOptions.MatchBitmapFiles = '' #'FileExample1.bmp\r\nFileExample2.bmp\r\nFileExample3.bmp'
     FindSubControlOptions.MatchBitmapAlgorithm = TMatchBitmapAlgorithm.mbaBruteForce

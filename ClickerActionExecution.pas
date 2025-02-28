@@ -1667,7 +1667,6 @@ begin
 
   TempEvalTextCount := StrToIntDef(EvaluateReplacements(AFindSubControlOptions.EvaluateTextCount), -1);
 
-  FindControlInputData.ClassName := EvaluateReplacements(AFindSubControlOptions.MatchClassName);
   FindControlInputData.Text := EvaluateReplacements(AFindSubControlOptions.MatchText, True, TempEvalTextCount);
   FindControlInputData.GetAllHandles := AFindSubControlOptions.GetAllControls;
 
@@ -1680,8 +1679,6 @@ begin
       Exit;
     end;
 
-  FindControlInputData.ClassNameSeparator := AFindSubControlOptions.MatchClassNameSeparator;
-  FindControlInputData.TextSeparator := AFindSubControlOptions.MatchTextSeparator;
   FindControlInputData.ColorError := StrToIntDef(EvaluateReplacements(AFindSubControlOptions.ColorError), 0);
   FindControlInputData.AllowedColorErrorCount := StrToIntDef(EvaluateReplacements(AFindSubControlOptions.AllowedColorErrorCount), 0);
   FindControlInputData.DebugTemplateName := FSelfTemplateFileName^;

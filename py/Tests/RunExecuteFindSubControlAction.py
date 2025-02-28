@@ -58,9 +58,9 @@ try:
 
     FindControlOptions.AllowToFail = True
     FindControlOptions.MatchText = 'some text'
-    FindControlOptions.MatchClassName = 'some class'
-    FindControlOptions.MatchTextSeparator = 'txt sep'
-    FindControlOptions.MatchClassNameSeparator = 'class sep'
+    #FindControlOptions.MatchClassName = 'some class'
+    #FindControlOptions.MatchTextSeparator = 'txt sep'
+    #FindControlOptions.MatchClassNameSeparator = 'class sep'
     FindControlOptions.MatchBitmapText = ()  #(The content is updated separately. See TClkFindControlMatchBitmapText)
     FindControlOptions.MatchBitmapFiles = 'bmp'
     FindControlOptions.MatchBitmapAlgorithm = TMatchBitmapAlgorithm.mbaRawHistogramZones
