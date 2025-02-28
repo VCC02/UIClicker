@@ -111,7 +111,7 @@ General limitations (very low priority and high effort to improve):
  - GPU rendered text (like that on webpages) will require a lot more manual tweaking on FindSubControl settings, for error level and color error threshold, because the content is not reproducible/portable. This may also be the case for ordinary windows, when matching anti-aliased fonts on different machines / video cards.
  - All variables share the same name space, and they are shared across template calls (and after returning from calls).
  - The execution engine can't keep track of modified templates while debugging. It will attempt to execute actions by the old template structure, leading to access violations.
- - No access to DirectX or OpenGL windows, because they use a different rendering buffer.
+ - Limited access to DirectX or OpenGL windows, via full screenshot, because they use a different rendering buffer.
 
 Other:
 
