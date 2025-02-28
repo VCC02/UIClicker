@@ -2130,15 +2130,15 @@ end;
 
 procedure TfrClickerPrimitives.BuildFontColorIconsList;
 var
-  DummyFindControlOptions: TClkFindControlOptions;
+  DummyFindSubControlOptions: TClkFindSubControlOptions;
   i: Integer;
 begin
-  SetLength(DummyFindControlOptions.MatchBitmapText, Length(FPrimitives));
+  SetLength(DummyFindSubControlOptions.MatchBitmapText, Length(FPrimitives));
 
   for i := 0 to Length(FPrimitives) - 1 do
-    DummyFindControlOptions.MatchBitmapText[i] := FPrimitives[i].ClkSetFont;
+    DummyFindSubControlOptions.MatchBitmapText[i] := FPrimitives[i].ClkSetFont;
 
-  BuildFontColorIcons(imglstFontColorProperties, DummyFindControlOptions, FOnEvaluateReplacementsFunc);
+  BuildFontColorIcons(imglstFontColorProperties, DummyFindSubControlOptions, FOnEvaluateReplacementsFunc);
 end;
 
 

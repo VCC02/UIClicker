@@ -257,8 +257,11 @@ begin
       acExecApp:
         ActionContentStr := GetExecAppActionProperties(ActionPlugin^.AllActions^[AIndex].ExecAppOptions);
 
-      acFindControl, acFindSubControl:
+      acFindControl:
         ActionContentStr := GetFindControlActionProperties(ActionPlugin^.AllActions^[AIndex].FindControlOptions);
+
+      acFindSubControl:
+        ActionContentStr := GetFindSubControlActionProperties(ActionPlugin^.AllActions^[AIndex].FindSubControlOptions);
 
       acSetControlText:
         ActionContentStr := GetSetControlTextActionProperties(ActionPlugin^.AllActions^[AIndex].SetTextOptions);

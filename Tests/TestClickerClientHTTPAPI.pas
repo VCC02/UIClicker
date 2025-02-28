@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2024 VCC
+    Copyright (C) 2025 VCC
     creation date: Dec 2024
     initial release date: 14 Dec 2024
 
@@ -60,6 +60,20 @@ type
     procedure Test_ExecuteSaveSetVarToFileAction_With_UseServerDebugging;
     procedure Test_ExecutePluginAction_With_UseServerDebugging;
     procedure Test_ExecuteEditTemplateAction_With_UseServerDebugging;
+
+    procedure Test_AddClickActionToTemplate_HappyFlow;
+    procedure Test_AddExecAppActionToTemplate_HappyFlow;
+    procedure Test_AddFindControlActionToTemplate_HappyFlow;
+    procedure Test_AddFindSubControlActionToTemplate_HappyFlow;
+    procedure Test_AddSetControlTextActionToTemplate_HappyFlow;
+    procedure Test_AddCallTemplateActionToTemplate_HappyFlow;
+    procedure Test_AddSleepActionToTemplate_HappyFlow;
+    procedure Test_AddSetVarActionToTemplate_HappyFlow;
+    procedure Test_AddWindowOperationsActionToTemplate_HappyFlow;
+    procedure Test_AddLoadSetVarFromFileActionToTemplate_HappyFlow;
+    procedure Test_AddSaveSetVarToFileActionToTemplate_HappyFlow;
+    procedure Test_AddPluginActionToTemplate_HappyFlow;
+    procedure Test_AddEditTemplateActionToTemplate_HappyFlow;
   end;
 
 
@@ -208,7 +222,6 @@ begin
   GetDefaultPropertyValues_FindControl(FindControlOptions);
   FindControlOptions.MatchText := 'UI Clicker Main';
   FindControlOptions.MatchClassName := 'Window';
-  FindControlOptions.MatchBitmapFiles := 'DummyFile.bmp';
 
   SetLength(Response, CMaxSharedStringLength);
 
@@ -228,24 +241,24 @@ end;
 
 procedure TTestClickerClientHTTPAPI.Test_ExecuteFindSubControlAction_With_UseServerDebugging;
 var
-  FindControlOptions: TClkFindControlOptions;
-  FindControlOptionsAPI: TClkFindControlOptionsAPI;
+  FindSubControlOptions: TClkFindSubControlOptions;
+  FindSubControlOptionsAPI: TClkFindSubControlOptionsAPI;
   MatchBitmapTextRecAPI: TMatchBitmapTextRecAPI;
   FindControlMatchBitmapTextAPIArr: TClkFindControlMatchBitmapTextAPIArr;
   ActionName, FileLoc: WideString;
   Response: string;
   Th: TClientThread;
 begin
-  GetDefaultPropertyValues_FindControl(FindControlOptions, True);
-  FindControlOptions.MatchText := '-bit';
-  FindControlOptions.MatchBitmapFiles := 'FirstDummyFile.bmp' + #4#5 + 'SecondDummyFile.bmp' + #4#5;
-  SetLength(FindControlOptions.MatchBitmapText, 2);
-  FindControlOptions.MatchBitmapText[1] := FindControlOptions.MatchBitmapText[0];
-  FindControlOptions.MatchBitmapText[1].ForegroundColor := '00FFFF';
-  FindControlOptions.MatchBitmapText[1].BackgroundColor := '008000';
-  FindControlOptions.MatchBitmapText[1].IgnoreBackgroundColor := True;
-  FindControlOptions.MatchBitmapText[0].ProfileName := 'First';
-  FindControlOptions.MatchBitmapText[1].ProfileName := 'Second';
+  GetDefaultPropertyValues_FindSubControl(FindSubControlOptions);
+  FindSubControlOptions.MatchText := '-bit';
+  FindSubControlOptions.MatchBitmapFiles := 'FirstDummyFile.bmp' + #4#5 + 'SecondDummyFile.bmp' + #4#5;
+  SetLength(FindSubControlOptions.MatchBitmapText, 2);
+  FindSubControlOptions.MatchBitmapText[1] := FindSubControlOptions.MatchBitmapText[0];
+  FindSubControlOptions.MatchBitmapText[1].ForegroundColor := '00FFFF';
+  FindSubControlOptions.MatchBitmapText[1].BackgroundColor := '008000';
+  FindSubControlOptions.MatchBitmapText[1].IgnoreBackgroundColor := True;
+  FindSubControlOptions.MatchBitmapText[0].ProfileName := 'First';
+  FindSubControlOptions.MatchBitmapText[1].ProfileName := 'Second';
 
   SetLength(Response, CMaxSharedStringLength);
 
@@ -254,8 +267,8 @@ begin
 
   Th := AsyncExecTestTemplate(CTestDriverAddress, '$AppDir$\..\Tests\TestFiles\ClickDebuggingButton.clktmpl');
   try
-    SetFindControlOptionsToAPI(FindControlOptions, FindControlOptionsAPI, MatchBitmapTextRecAPI, FindControlMatchBitmapTextAPIArr);
-    ExecuteFindSubControlAction(@ActionName[1], 1000, @FindControlOptionsAPI, True, @FileLoc[1], @Response[1]);
+    SetFindSubControlOptionsToAPI(FindSubControlOptions, FindSubControlOptionsAPI, MatchBitmapTextRecAPI, FindControlMatchBitmapTextAPIArr);
+    ExecuteFindSubControlAction(@ActionName[1], 1000, @FindSubControlOptionsAPI, True, @FileLoc[1], @Response[1]);
     WaitForDebuggingActionToFinish(Response, Th);
   finally
     Th.Free;
@@ -480,6 +493,425 @@ begin
     Th.Free;
   end;
 end;
+
+
+const
+  CAddActionsTemplateFnm = 'TestAddActionsViaClickerClient.clktmpl';
+
+function GetStandardResponseFrom_PrepareFilesInServer: string;
+begin
+  Result := CRECmd_LoadTemplateInExecList + ': ' + CREResp_TemplateLoaded + ',  SendMissingFilesToServer: ';
+end;
+
+
+procedure TTestClickerClientHTTPAPI.Test_AddClickActionToTemplate_HappyFlow;
+var
+  AddActionsTemplateFnm: WideString;
+  ActionName: WideString;
+  Response: string;
+  ClickOptions: TClkClickOptions;
+  ClickOptionsAPI: TClkClickOptionsAPI;
+  Th: TClientThread;
+begin
+  GetDefaultPropertyValues_Click(ClickOptions);
+  SetLength(Response, CMaxSharedStringLength);
+
+  SetVariable(TestServerAddress, '$Control_Left$', '1920', 0);  //prevent clicking on top-left, because the mouse action has '' for these two vars
+  SetVariable(TestServerAddress, '$Control_Top$', '1080', 0);
+
+  AddActionsTemplateFnm := CAddActionsTemplateFnm;
+  ActionName := 'ClientClick';
+
+  //Th := AsyncExecTestTemplate(CTestDriverAddress, '$AppDir$\..\Tests\TestFiles\ClickDebuggingButton.clktmpl');
+  try
+    SetClickOptionsToAPI(ClickOptions, ClickOptionsAPI);
+    Expect(AddClickActionToTemplate(@AddActionsTemplateFnm[1], @ActionName[1], 1000, True, nil, @ClickOptionsAPI)).ToBe(0);
+
+    SetLength(Response, PrepareFilesInServer(@AddActionsTemplateFnm[1], @Response[1]));
+    Expect(Response).ToBe(GetStandardResponseFrom_PrepareFilesInServer, 'Response from PrepareFilesInServer');
+    //ToDo: execute a template in TestDriver, which clicks the action (to be selected), then starts action execution in debugging mode.
+    //WaitForDebuggingActionToFinish('$RemoteExecResponse$=', Th);
+  finally
+    //Th.Free;
+  end;
+end;
+
+
+procedure TTestClickerClientHTTPAPI.Test_AddExecAppActionToTemplate_HappyFlow;
+var
+  AddActionsTemplateFnm: WideString;
+  ActionName: WideString;
+  Response: string;
+  ExecAppOptions: TClkExecAppOptions;
+  ExecAppOptionsAPI: TClkExecAppOptionsAPI;
+  Th: TClientThread;
+begin
+  GetDefaultPropertyValues_ExecApp(ExecAppOptions);
+  SetLength(Response, CMaxSharedStringLength);
+
+  AddActionsTemplateFnm := CAddActionsTemplateFnm;
+  ActionName := 'ClientExecApp';
+
+  //Th := AsyncExecTestTemplate(CTestDriverAddress, '$AppDir$\..\Tests\TestFiles\ClickDebuggingButton.clktmpl');
+  try
+    SetExecAppOptionsToAPI(ExecAppOptions, ExecAppOptionsAPI);
+    Expect(AddExecAppActionToTemplate(@AddActionsTemplateFnm[1], @ActionName[1], 1000, True, nil, @ExecAppOptionsAPI)).ToBe(0);
+
+    SetLength(Response, PrepareFilesInServer(@AddActionsTemplateFnm[1], @Response[1]));
+    Expect(Response).ToBe(GetStandardResponseFrom_PrepareFilesInServer, 'Response from PrepareFilesInServer');
+    //ToDo: execute a template in TestDriver, which clicks the action (to be selected), then starts action execution in debugging mode.
+    //WaitForDebuggingActionToFinish('$RemoteExecResponse$=', Th);
+  finally
+    //Th.Free;
+  end;
+end;
+
+
+procedure TTestClickerClientHTTPAPI.Test_AddFindControlActionToTemplate_HappyFlow;
+var
+  AddActionsTemplateFnm: WideString;
+  ActionName: WideString;
+  Response: string;
+  FindControlOptions: TClkFindControlOptions;
+  FindControlOptionsAPI: TClkFindControlOptionsAPI;
+  MatchBitmapTextRecAPI: TMatchBitmapTextRecAPI;
+  FindControlMatchBitmapTextAPIArr: TClkFindControlMatchBitmapTextAPIArr;
+  Th: TClientThread;
+begin
+  GetDefaultPropertyValues_FindControl(FindControlOptions);
+  SetLength(Response, CMaxSharedStringLength);
+  FindControlOptions.MatchText := 'UI Clicker Main';
+  FindControlOptions.MatchClassName := 'Window';
+
+  AddActionsTemplateFnm := CAddActionsTemplateFnm;
+  ActionName := 'ClientFindControl';
+
+  //Th := AsyncExecTestTemplate(CTestDriverAddress, '$AppDir$\..\Tests\TestFiles\ClickDebuggingButton.clktmpl');
+  try
+    SetFindControlOptionsToAPI(FindControlOptions, FindControlOptionsAPI, MatchBitmapTextRecAPI, FindControlMatchBitmapTextAPIArr);
+    Expect(AddFindControlActionToTemplate(@AddActionsTemplateFnm[1], @ActionName[1], 1000, True, nil, @FindControlOptionsAPI)).ToBe(0);
+
+    SetLength(Response, PrepareFilesInServer(@AddActionsTemplateFnm[1], @Response[1]));
+    Expect(Response).ToBe(GetStandardResponseFrom_PrepareFilesInServer, 'Response from PrepareFilesInServer');
+    //ToDo: execute a template in TestDriver, which clicks the action (to be selected), then starts action execution in debugging mode.
+    //WaitForDebuggingActionToFinish('$RemoteExecResponse$=', Th);
+  finally
+    //Th.Free;
+  end;
+end;
+
+
+procedure TTestClickerClientHTTPAPI.Test_AddFindSubControlActionToTemplate_HappyFlow;
+var
+  AddActionsTemplateFnm: WideString;
+  ActionName: WideString;
+  Response: string;
+  FindSubControlOptions: TClkFindSubControlOptions;
+  FindSubControlOptionsAPI: TClkFindSubControlOptionsAPI;
+  MatchBitmapTextRecAPI: TMatchBitmapTextRecAPI;
+  FindSubControlMatchBitmapTextAPIArr: TClkFindControlMatchBitmapTextAPIArr;
+  Th: TClientThread;
+begin
+  GetDefaultPropertyValues_FindSubControl(FindSubControlOptions);
+  SetLength(Response, CMaxSharedStringLength);
+  FindSubControlOptions.MatchText := '-bit';
+  FindSubControlOptions.MatchBitmapFiles := 'FirstDummyFile.bmp' + #4#5 + 'SecondDummyFile.bmp' + #4#5;
+  SetLength(FindSubControlOptions.MatchBitmapText, 2);
+  FindSubControlOptions.MatchBitmapText[1] := FindSubControlOptions.MatchBitmapText[0];
+  FindSubControlOptions.MatchBitmapText[1].ForegroundColor := '00FFFF';
+  FindSubControlOptions.MatchBitmapText[1].BackgroundColor := '008000';
+  FindSubControlOptions.MatchBitmapText[1].IgnoreBackgroundColor := True;
+  FindSubControlOptions.MatchBitmapText[0].ProfileName := 'First';
+  FindSubControlOptions.MatchBitmapText[1].ProfileName := 'Second';
+
+  AddActionsTemplateFnm := CAddActionsTemplateFnm;
+  ActionName := 'ClientFindSubControl';
+
+  //Th := AsyncExecTestTemplate(CTestDriverAddress, '$AppDir$\..\Tests\TestFiles\ClickDebuggingButton.clktmpl');
+  try
+    SetFindSubControlOptionsToAPI(FindSubControlOptions, FindSubControlOptionsAPI, MatchBitmapTextRecAPI, FindSubControlMatchBitmapTextAPIArr);
+    Expect(AddFindSubControlActionToTemplate(@AddActionsTemplateFnm[1], @ActionName[1], 1000, True, nil, @FindSubControlOptionsAPI)).ToBe(0);
+
+    SetLength(Response, PrepareFilesInServer(@AddActionsTemplateFnm[1], @Response[1]));
+    Expect(Response).ToContain(GetStandardResponseFrom_PrepareFilesInServer, 'Response from PrepareFilesInServer');
+    //ToDo: execute a template in TestDriver, which clicks the action (to be selected), then starts action execution in debugging mode.
+    //WaitForDebuggingActionToFinish('$RemoteExecResponse$=', Th);
+  finally
+    //Th.Free;
+  end;
+end;
+
+
+procedure TTestClickerClientHTTPAPI.Test_AddSetControlTextActionToTemplate_HappyFlow;
+var
+  AddActionsTemplateFnm: WideString;
+  ActionName: WideString;
+  Response: string;
+  SetControlTextOptions: TClkSetTextOptions;
+  SetControlTextOptionsAPI: TClkSetTextOptionsAPI;
+  Th: TClientThread;
+begin
+  GetDefaultPropertyValues_SetControlText(SetControlTextOptions);
+  SetLength(Response, CMaxSharedStringLength);
+
+  AddActionsTemplateFnm := CAddActionsTemplateFnm;
+  ActionName := 'ClientSetControlText';
+
+  //Th := AsyncExecTestTemplate(CTestDriverAddress, '$AppDir$\..\Tests\TestFiles\ClickDebuggingButton.clktmpl');
+  try
+    SetSetControlTextOptionsToAPI(SetControlTextOptions, SetControlTextOptionsAPI);
+    Expect(AddSetControlTextActionToTemplate(@AddActionsTemplateFnm[1], @ActionName[1], 1000, True, nil, @SetControlTextOptionsAPI)).ToBe(0);
+
+    SetLength(Response, PrepareFilesInServer(@AddActionsTemplateFnm[1], @Response[1]));
+    Expect(Response).ToBe(GetStandardResponseFrom_PrepareFilesInServer, 'Response from PrepareFilesInServer');
+    //ToDo: execute a template in TestDriver, which clicks the action (to be selected), then starts action execution in debugging mode.
+    //WaitForDebuggingActionToFinish('$RemoteExecResponse$=', Th);
+  finally
+    //Th.Free;
+  end;
+end;
+
+
+procedure TTestClickerClientHTTPAPI.Test_AddCallTemplateActionToTemplate_HappyFlow;
+var
+  AddActionsTemplateFnm: WideString;
+  ActionName: WideString;
+  Response: string;
+  CallTemplateOptions: TClkCallTemplateOptions;
+  CallTemplateOptionsAPI: TClkCallTemplateOptionsAPI;
+  Th: TClientThread;
+begin
+  GetDefaultPropertyValues_CallTemplate(CallTemplateOptions);
+  SetLength(Response, CMaxSharedStringLength);
+
+  AddActionsTemplateFnm := CAddActionsTemplateFnm;
+  ActionName := 'ClientCallTemplate';
+
+  //Th := AsyncExecTestTemplate(CTestDriverAddress, '$AppDir$\..\Tests\TestFiles\ClickDebuggingButton.clktmpl');
+  try
+    SetCallTemplateOptionsToAPI(CallTemplateOptions, CallTemplateOptionsAPI);
+    Expect(AddCallTemplateActionToTemplate(@AddActionsTemplateFnm[1], @ActionName[1], 1000, True, nil, @CallTemplateOptionsAPI)).ToBe(0);
+
+    SetLength(Response, PrepareFilesInServer(@AddActionsTemplateFnm[1], @Response[1]));
+    Expect(Response).ToBe(GetStandardResponseFrom_PrepareFilesInServer, 'Response from PrepareFilesInServer');
+    //ToDo: execute a template in TestDriver, which clicks the action (to be selected), then starts action execution in debugging mode.
+    //WaitForDebuggingActionToFinish('$RemoteExecResponse$=', Th);
+  finally
+    //Th.Free;
+  end;
+end;
+
+
+procedure TTestClickerClientHTTPAPI.Test_AddSleepActionToTemplate_HappyFlow;
+var
+  AddActionsTemplateFnm: WideString;
+  ActionName: WideString;
+  Response: string;
+  SleepOptions: TClkSleepOptions;
+  SleepOptionsAPI: TClkSleepOptionsAPI;
+  Th: TClientThread;
+begin
+  GetDefaultPropertyValues_Sleep(SleepOptions);
+  SetLength(Response, CMaxSharedStringLength);
+
+  AddActionsTemplateFnm := CAddActionsTemplateFnm;
+  ActionName := 'ClientSleep';
+
+  //Th := AsyncExecTestTemplate(CTestDriverAddress, '$AppDir$\..\Tests\TestFiles\ClickDebuggingButton.clktmpl');
+  try
+    SetSleepOptionsToAPI(SleepOptions, SleepOptionsAPI);
+    Expect(AddSleepActionToTemplate(@AddActionsTemplateFnm[1], @ActionName[1], 1000, True, nil, @SleepOptionsAPI)).ToBe(0);
+
+    SetLength(Response, PrepareFilesInServer(@AddActionsTemplateFnm[1], @Response[1]));
+    Expect(Response).ToBe(GetStandardResponseFrom_PrepareFilesInServer, 'Response from PrepareFilesInServer');
+    //ToDo: execute a template in TestDriver, which clicks the action (to be selected), then starts action execution in debugging mode.
+    //WaitForDebuggingActionToFinish('$RemoteExecResponse$=', Th);
+  finally
+    //Th.Free;
+  end;
+end;
+
+
+procedure TTestClickerClientHTTPAPI.Test_AddSetVarActionToTemplate_HappyFlow;
+var
+  AddActionsTemplateFnm: WideString;
+  ActionName: WideString;
+  Response: string;
+  SetVarOptions: TClkSetVarOptions;
+  SetVarOptionsAPI: TClkSetVarOptionsAPI;
+  Th: TClientThread;
+begin
+  GetDefaultPropertyValues_SetVar(SetVarOptions);
+  SetLength(Response, CMaxSharedStringLength);
+
+  AddActionsTemplateFnm := CAddActionsTemplateFnm;
+  ActionName := 'ClientSetVar';
+
+  //Th := AsyncExecTestTemplate(CTestDriverAddress, '$AppDir$\..\Tests\TestFiles\ClickDebuggingButton.clktmpl');
+  try
+    SetSetVarOptionsToAPI(SetVarOptions, SetVarOptionsAPI);
+    Expect(AddSetVarActionToTemplate(@AddActionsTemplateFnm[1], @ActionName[1], 1000, True, nil, @SetVarOptionsAPI)).ToBe(0);
+
+    SetLength(Response, PrepareFilesInServer(@AddActionsTemplateFnm[1], @Response[1]));
+    Expect(Response).ToBe(GetStandardResponseFrom_PrepareFilesInServer, 'Response from PrepareFilesInServer');
+    //ToDo: execute a template in TestDriver, which clicks the action (to be selected), then starts action execution in debugging mode.
+    //WaitForDebuggingActionToFinish('$RemoteExecResponse$=', Th);
+  finally
+    //Th.Free;
+  end;
+end;
+
+
+procedure TTestClickerClientHTTPAPI.Test_AddWindowOperationsActionToTemplate_HappyFlow;
+var
+  AddActionsTemplateFnm: WideString;
+  ActionName: WideString;
+  Response: string;
+  WindowOperationsOptions: TClkWindowOperationsOptions;
+  WindowOperationsOptionsAPI: TClkWindowOperationsOptionsAPI;
+  Th: TClientThread;
+begin
+  GetDefaultPropertyValues_WindowOperations(WindowOperationsOptions);
+  SetLength(Response, CMaxSharedStringLength);
+
+  AddActionsTemplateFnm := CAddActionsTemplateFnm;
+  ActionName := 'ClientWindowOperations';
+
+  //Th := AsyncExecTestTemplate(CTestDriverAddress, '$AppDir$\..\Tests\TestFiles\ClickDebuggingButton.clktmpl');
+  try
+    SetWindowOperationsOptionsToAPI(WindowOperationsOptions, WindowOperationsOptionsAPI);
+    Expect(AddWindowOperationsActionToTemplate(@AddActionsTemplateFnm[1], @ActionName[1], 1000, True, nil, @WindowOperationsOptionsAPI)).ToBe(0);
+
+    SetLength(Response, PrepareFilesInServer(@AddActionsTemplateFnm[1], @Response[1]));
+    Expect(Response).ToBe(GetStandardResponseFrom_PrepareFilesInServer, 'Response from PrepareFilesInServer');
+    //ToDo: execute a template in TestDriver, which clicks the action (to be selected), then starts action execution in debugging mode.
+    //WaitForDebuggingActionToFinish('$RemoteExecResponse$=', Th);
+  finally
+    //Th.Free;
+  end;
+end;
+
+
+procedure TTestClickerClientHTTPAPI.Test_AddLoadSetVarFromFileActionToTemplate_HappyFlow;
+var
+  AddActionsTemplateFnm: WideString;
+  ActionName: WideString;
+  Response: string;
+  LoadSetVarFromFileOptions: TClkLoadSetVarFromFileOptions;
+  LoadSetVarFromFileOptionsAPI: TClkLoadSetVarFromFileOptionsAPI;
+  Th: TClientThread;
+begin
+  GetDefaultPropertyValues_LoadSetVarFromFile(LoadSetVarFromFileOptions);
+  SetLength(Response, CMaxSharedStringLength);
+
+  AddActionsTemplateFnm := CAddActionsTemplateFnm;
+  ActionName := 'ClientLoadSetVarFromFile';
+
+  //Th := AsyncExecTestTemplate(CTestDriverAddress, '$AppDir$\..\Tests\TestFiles\ClickDebuggingButton.clktmpl');
+  try
+    SetLoadSetVarFromFileOptionsToAPI(LoadSetVarFromFileOptions, LoadSetVarFromFileOptionsAPI);
+    Expect(AddLoadSetVarFromFileActionToTemplate(@AddActionsTemplateFnm[1], @ActionName[1], 1000, True, nil, @LoadSetVarFromFileOptionsAPI)).ToBe(0);
+
+    SetLength(Response, PrepareFilesInServer(@AddActionsTemplateFnm[1], @Response[1]));
+    Expect(Response).ToBe(GetStandardResponseFrom_PrepareFilesInServer, 'Response from PrepareFilesInServer');
+    //ToDo: execute a template in TestDriver, which clicks the action (to be selected), then starts action execution in debugging mode.
+    //WaitForDebuggingActionToFinish('$RemoteExecResponse$=', Th);
+  finally
+    //Th.Free;
+  end;
+end;
+
+
+procedure TTestClickerClientHTTPAPI.Test_AddSaveSetVarToFileActionToTemplate_HappyFlow;
+var
+  AddActionsTemplateFnm: WideString;
+  ActionName: WideString;
+  Response: string;
+  SaveSetVarToFileOptions: TClkSaveSetVarToFileOptions;
+  SaveSetVarToFileOptionsAPI: TClkSaveSetVarToFileOptionsAPI;
+  Th: TClientThread;
+begin
+  GetDefaultPropertyValues_SaveSetVarToFile(SaveSetVarToFileOptions);
+  SetLength(Response, CMaxSharedStringLength);
+
+  AddActionsTemplateFnm := CAddActionsTemplateFnm;
+  ActionName := 'ClientSaveSetVarToFile';
+
+  //Th := AsyncExecTestTemplate(CTestDriverAddress, '$AppDir$\..\Tests\TestFiles\ClickDebuggingButton.clktmpl');
+  try
+    SetSaveSetVarToFileOptionsToAPI(SaveSetVarToFileOptions, SaveSetVarToFileOptionsAPI);
+    Expect(AddSaveSetVarToFileActionToTemplate(@AddActionsTemplateFnm[1], @ActionName[1], 1000, True, nil, @SaveSetVarToFileOptionsAPI)).ToBe(0);
+
+    SetLength(Response, PrepareFilesInServer(@AddActionsTemplateFnm[1], @Response[1]));
+    Expect(Response).ToBe(GetStandardResponseFrom_PrepareFilesInServer, 'Response from PrepareFilesInServer');
+    //ToDo: execute a template in TestDriver, which clicks the action (to be selected), then starts action execution in debugging mode.
+    //WaitForDebuggingActionToFinish('$RemoteExecResponse$=', Th);
+  finally
+    //Th.Free;
+  end;
+end;
+
+
+procedure TTestClickerClientHTTPAPI.Test_AddPluginActionToTemplate_HappyFlow;
+var
+  AddActionsTemplateFnm: WideString;
+  ActionName: WideString;
+  Response: string;
+  PluginOptions: TClkPluginOptions;
+  PluginOptionsAPI: TClkPluginOptionsAPI;
+  Th: TClientThread;
+begin
+  GetDefaultPropertyValues_Plugin(PluginOptions);
+  SetLength(Response, CMaxSharedStringLength);
+
+  AddActionsTemplateFnm := CAddActionsTemplateFnm;
+  ActionName := 'ClientPlugin';
+
+  //Th := AsyncExecTestTemplate(CTestDriverAddress, '$AppDir$\..\Tests\TestFiles\ClickDebuggingButton.clktmpl');
+  try
+    SetPluginOptionsToAPI(PluginOptions, PluginOptionsAPI);
+    Expect(AddPluginActionToTemplate(@AddActionsTemplateFnm[1], @ActionName[1], 1000, True, nil, @PluginOptionsAPI)).ToBe(0);
+
+    SetLength(Response, PrepareFilesInServer(@AddActionsTemplateFnm[1], @Response[1]));
+    Expect(Response).ToBe(GetStandardResponseFrom_PrepareFilesInServer, 'Response from PrepareFilesInServer');
+    //ToDo: execute a template in TestDriver, which clicks the action (to be selected), then starts action execution in debugging mode.
+    //WaitForDebuggingActionToFinish('$RemoteExecResponse$=', Th);
+  finally
+    //Th.Free;
+  end;
+end;
+
+
+procedure TTestClickerClientHTTPAPI.Test_AddEditTemplateActionToTemplate_HappyFlow;
+var
+  AddActionsTemplateFnm: WideString;
+  ActionName: WideString;
+  Response: string;
+  EditTemplateOptions: TClkEditTemplateOptions;
+  EditTemplateOptionsAPI: TClkEditTemplateOptionsAPI;
+  Th: TClientThread;
+begin
+  GetDefaultPropertyValues_EditTemplate(EditTemplateOptions);
+  SetLength(Response, CMaxSharedStringLength);
+
+  AddActionsTemplateFnm := CAddActionsTemplateFnm;
+  ActionName := 'ClientEditTemplate';
+
+  //Th := AsyncExecTestTemplate(CTestDriverAddress, '$AppDir$\..\Tests\TestFiles\ClickDebuggingButton.clktmpl');
+  try
+    SetEditTemplateOptionsToAPI(EditTemplateOptions, EditTemplateOptionsAPI);
+    EditTemplateOptionsAPI.WhichTemplate := Byte(etwtSelf);  //remote execution of EditTemplate, with etwtOther expects a valid file (for 5min) to be sent
+    Expect(AddEditTemplateActionToTemplate(@AddActionsTemplateFnm[1], @ActionName[1], 1000, True, nil, @EditTemplateOptionsAPI)).ToBe(0);
+
+    SetLength(Response, PrepareFilesInServer(@AddActionsTemplateFnm[1], @Response[1]));
+    Expect(Response).ToBe(GetStandardResponseFrom_PrepareFilesInServer, 'Response from PrepareFilesInServer');
+    //ToDo: execute a template in TestDriver, which clicks the action (to be selected), then starts action execution in debugging mode.
+    //WaitForDebuggingActionToFinish('$RemoteExecResponse$=', Th);
+  finally
+    //Th.Free;
+  end;
+end;
+
 
 initialization
 

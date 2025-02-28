@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2024 VCC
+    Copyright (C) 2025 VCC
     creation date: Jul 2022
     initial release date: 26 Jul 2022
 
@@ -416,35 +416,6 @@ begin
 end;
 
 
-function Add_FindControl_ActionToTemplate(ATemplateFileName: Pointer;
-
-                                          AActionName: Pointer;
-                                          AAction: TClkAction;
-                                          AActionTimeout: LongInt; //ms
-                                          AActionEnabled: Boolean;
-                                          AActionCondition: Pointer;
-
-                                          AFindControlOptions: PClkFindControlOptionsAPI
-
-                                         ): LongInt;
-var
-  TemplateFileName: string;
-  TempAction: TClkActionRec;
-begin
-  if InMemFS = nil then
-  begin
-    Result := -1;
-    Exit;
-  end;
-
-  SetBasicActionOptions(ATemplateFileName, AActionName, AAction, AActionTimeout, AActionEnabled, AActionCondition, TempAction, TemplateFileName);
-  GetFindControlOptionsFromAPI(AFindControlOptions, TempAction);
-
-  AddActionToTemplate(TemplateFileName, TempAction);
-  Result := 0;
-end;
-
-
 function AddFindControlActionToTemplate(ATemplateFileName: Pointer;
 
                                         AActionName: Pointer;
@@ -455,8 +426,21 @@ function AddFindControlActionToTemplate(ATemplateFileName: Pointer;
                                         AFindControlOptions: PClkFindControlOptionsAPI
 
                                        ): LongInt; cdecl;
+var
+  TemplateFileName: string;
+  TempAction: TClkActionRec;
 begin
-  Result := Add_FindControl_ActionToTemplate(ATemplateFileName, AActionName, acFindControl, AActionTimeout, AActionEnabled, AActionCondition, AFindControlOptions);
+  if InMemFS = nil then
+  begin
+    Result := -1;
+    Exit;
+  end;
+
+  SetBasicActionOptions(ATemplateFileName, AActionName, acFindControl, AActionTimeout, AActionEnabled, AActionCondition, TempAction, TemplateFileName);
+  GetFindControlOptionsFromAPI(AFindControlOptions, TempAction);
+
+  AddActionToTemplate(TemplateFileName, TempAction);
+  Result := 0;
 end;
 
 
@@ -467,11 +451,24 @@ function AddFindSubControlActionToTemplate(ATemplateFileName: Pointer;
                                            AActionEnabled: Boolean;
                                            AActionCondition: Pointer;
 
-                                           AFindControlOptions: PClkFindControlOptionsAPI
+                                           AFindSubControlOptions: PClkFindSubControlOptionsAPI
 
                                           ): LongInt; cdecl;
+var
+  TemplateFileName: string;
+  TempAction: TClkActionRec;
 begin
-  Result := Add_FindControl_ActionToTemplate(ATemplateFileName, AActionName, acFindSubControl, AActionTimeout, AActionEnabled, AActionCondition, AFindControlOptions);
+  if InMemFS = nil then
+  begin
+    Result := -1;
+    Exit;
+  end;
+
+  SetBasicActionOptions(ATemplateFileName, AActionName, acFindSubControl, AActionTimeout, AActionEnabled, AActionCondition, TempAction, TemplateFileName);
+  GetFindSubControlOptionsFromAPI(AFindSubControlOptions, TempAction);
+
+  AddActionToTemplate(TemplateFileName, TempAction);
+  Result := 0;
 end;
 
 
@@ -726,7 +723,7 @@ begin
 end;
 
 
-function AddFontProfileToFindSubControlActionInTemplate(ATemplateFileName: string; ActionIndex: Integer; AFindControlMatchBitmapText: TClkFindControlMatchBitmapText): Integer;
+function AddFontProfileToFindSubControlActionInTemplate(ATemplateFileName: string; ActionIndex: Integer; AFindSubControlMatchBitmapText: TClkFindControlMatchBitmapText): Integer;
 var
   ClkActions: TClkActionsRecArr;
   MemStream: TMemoryStream;
@@ -750,9 +747,9 @@ begin
       Exit;
     end;
 
-    n := Length(ClkActions[ActionIndex].FindControlOptions.MatchBitmapText);
-    SetLength(ClkActions[ActionIndex].FindControlOptions.MatchBitmapText, n + 1);
-    ClkActions[ActionIndex].FindControlOptions.MatchBitmapText[n] := AFindControlMatchBitmapText;
+    n := Length(ClkActions[ActionIndex].FindSubControlOptions.MatchBitmapText);
+    SetLength(ClkActions[ActionIndex].FindSubControlOptions.MatchBitmapText, n + 1);
+    ClkActions[ActionIndex].FindSubControlOptions.MatchBitmapText[n] := AFindSubControlMatchBitmapText;
 
     MemStream.Clear;
     GetTemplateContentAsMemoryStream(ClkActions, DummyNotes, DummyIconPath, MemStream);
@@ -1145,7 +1142,7 @@ end;
 
 function ExecuteFindSubControlAction(AActionName: Pointer;
                                      AActionTimeout: LongInt; //ms
-                                     AFindControlOptions: PClkFindControlOptionsAPI;
+                                     AFindSubControlOptions: PClkFindSubControlOptionsAPI;
                                      AUseServerDebugging: Boolean;
                                      AFileLocation: Pointer;
                                      AResultStr: Pointer): LongInt; cdecl;
@@ -1155,10 +1152,10 @@ var
   ActionName: string;
   FileLocation: string;
 begin
-  GetFindControlOptionsFromAPI(AFindControlOptions, TempClkAction);
+  GetFindSubControlOptionsFromAPI(AFindSubControlOptions, TempClkAction);
   SetPointedContentToString(@string(PWideChar(AActionName))[1], ActionName);
   SetPointedContentToString(@string(PWideChar(AFileLocation))[1], FileLocation);
-  Res := ClickerActionsClient.ExecuteFindSubControlAction(FRemoteAddress, TempClkAction.FindControlOptions, ActionName, AActionTimeout, FileLocation, True, AUseServerDebugging);
+  Res := ClickerActionsClient.ExecuteFindSubControlAction(FRemoteAddress, TempClkAction.FindSubControlOptions, ActionName, AActionTimeout, FileLocation, True, AUseServerDebugging);
   Result := SetPointedContentFromString(Res, AResultStr);
 end;
 

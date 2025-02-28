@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2024 VCC
+    Copyright (C) 2025 VCC
     creation date: 14 Dec 2024
     initial release date: 14 Dec 2024
 
@@ -81,12 +81,16 @@ type
   TClkFindControlMatchCriteriaAPI = record
     WillMatchText: Boolean;
     WillMatchClassName: Boolean;
-    WillMatchBitmapText: Boolean;
-    WillMatchBitmapFiles: Boolean;
-    WillMatchPrimitiveFiles: Boolean;
 
     SearchForControlMode: LongInt; // TSearchForControlMode; //must be LongInt, for proper alignment
   end;
+
+  TClkFindSubControlMatchCriteriaAPI = record
+    WillMatchBitmapText: Boolean;
+    WillMatchBitmapFiles: Boolean;
+    WillMatchPrimitiveFiles: Boolean;
+  end;
+
 
   TRectStringAPI = record
     Left, Top, Right, Bottom: PWideChar;
@@ -167,6 +171,47 @@ type
     MatchClassName: PWideChar;
     MatchTextSeparator: PWideChar;
     MatchClassNameSeparator: PWideChar;
+    //MatchBitmapText: PMatchBitmapTextRecAPI; //pointer to a TMatchBitmapTextRecAPI structure, which contains a length (32-bit) and a pointer to an array of TClkFindControlMatchBitmapText;
+    //MatchBitmapFiles: PWideChar;
+    //MatchBitmapAlgorithm: Byte; //TMatchBitmapAlgorithm; //change this to LongInt, in case of AV at python side
+    //MatchBitmapAlgorithmSettings: TMatchBitmapAlgorithmSettings;
+    InitialRectangle: TRectStringAPI;
+    UseWholeScreen: Boolean;
+    //ColorError: PWideChar;
+    //AllowedColorErrorCount: PWideChar;
+    WaitForControlToGoAway: Boolean;
+    StartSearchingWithCachedControl: Boolean;
+    CachedControlLeft: PWideChar;
+    CachedControlTop: PWideChar;
+    //MatchPrimitiveFiles: PWideChar;
+    GetAllControls: Boolean;
+    //UseFastSearch: Boolean;
+    //FastSearchAllowedColorErrorCount: PWideChar;
+    //IgnoredColors: PWideChar;
+    //SleepySearch: Boolean;
+    //StopSearchOnMismatch: Boolean;
+    //ImageSource: Byte; //TImageSource;
+    //SourceFileName: PWideChar;
+    //ImageSourceFileNameLocation: Byte; //TImageSourceFileNameLocation;
+    PrecisionTimeout: Boolean;
+    //FullBackgroundImageInResult: Boolean;
+    //MatchByHistogramSettings: TMatchByHistogramSettingsAPI;
+    EvaluateTextCount: PWideChar;
+    //CropFromScreenshot: Boolean;
+    //ThreadCount: PWideChar;
+  end;
+
+  PClkFindControlOptionsAPI = ^TClkFindControlOptionsAPI;
+
+
+  TClkFindSubControlOptionsAPI = record
+    DummyField: Integer;    //required for proper alignment (otherwise, there is an AV in Python)
+    MatchCriteria: TClkFindSubControlMatchCriteriaAPI;
+    AllowToFail: Boolean;
+    MatchText: PWideChar;
+    // MatchClassName: PWideChar;
+    // MatchTextSeparator: PWideChar;
+    // MatchClassNameSeparator: PWideChar;
     MatchBitmapText: PMatchBitmapTextRecAPI; //pointer to a TMatchBitmapTextRecAPI structure, which contains a length (32-bit) and a pointer to an array of TClkFindControlMatchBitmapText;
     MatchBitmapFiles: PWideChar;
     MatchBitmapAlgorithm: Byte; //TMatchBitmapAlgorithm; //change this to LongInt, in case of AV at python side
@@ -197,7 +242,7 @@ type
     ThreadCount: PWideChar;
   end;
 
-  PClkFindControlOptionsAPI = ^TClkFindControlOptionsAPI;
+  PClkFindSubControlOptionsAPI = ^TClkFindSubControlOptionsAPI;
 
 
   TClkSetTextOptionsAPI = record
@@ -302,6 +347,7 @@ procedure GetMatchBitmapTextFromAPI(AFindControlMatchBitmapText: PClkFindControl
 procedure GetClickOptionsFromAPI(AClickOptions: PClkClickOptionsAPI; var ADestClkAction: TClkActionRec);
 procedure GetExecAppOptionsFromAPI(AExecAppOptions: PClkExecAppOptionsAPI; var ADestClkAction: TClkActionRec);
 procedure GetFindControlOptionsFromAPI(AFindControlOptions: PClkFindControlOptionsAPI; var ADestClkAction: TClkActionRec);
+procedure GetFindSubControlOptionsFromAPI(AFindSubControlOptions: PClkFindSubControlOptionsAPI; var ADestClkAction: TClkActionRec);
 procedure GetSetControlTextOptionsFromAPI(ASetControlTextOptions: PClkSetTextOptionsAPI; var ADestClkAction: TClkActionRec);
 procedure GetCallTemplateOptionsFromAPI(ACallTemplateOptions: PClkCallTemplateOptionsAPI; var ADestClkAction: TClkActionRec);
 procedure GetSleepOptionsFromAPI(ASleepOptions: PClkSleepOptionsAPI; var ADestClkAction: TClkActionRec);
@@ -317,6 +363,7 @@ procedure SetMatchBitmapTextToAPI(var AMatchBitmapText: TClkFindControlMatchBitm
 procedure SetClickOptionsToAPI(var AClickOptions: TClkClickOptions; var ADestClickOptions: TClkClickOptionsAPI);
 procedure SetExecAppOptionsToAPI(var AExecAppOptions: TClkExecAppOptions; var ADestExecAppOptions: TClkExecAppOptionsAPI);
 procedure SetFindControlOptionsToAPI(var AFindControlOptions: TClkFindControlOptions; var ADestFindControlOptions: TClkFindControlOptionsAPI; var ADestMatchBitmapTextRecAPI: TMatchBitmapTextRecAPI; var ADestMatchBitmapTextArray: TClkFindControlMatchBitmapTextAPIArr);
+procedure SetFindSubControlOptionsToAPI(var AFindSubControlOptions: TClkFindSubControlOptions; var ADestFindSubControlOptions: TClkFindSubControlOptionsAPI; var ADestMatchBitmapTextRecAPI: TMatchBitmapTextRecAPI; var ADestMatchBitmapTextArray: TClkFindControlMatchBitmapTextAPIArr);
 procedure SetSetControlTextOptionsToAPI(var ASetControlTextOptions: TClkSetTextOptions; var ADestSetControlTextOptions: TClkSetTextOptionsAPI);
 procedure SetCallTemplateOptionsToAPI(var ACallTemplateOptions: TClkCallTemplateOptions; var ADestCallTemplateOptions: TClkCallTemplateOptionsAPI);
 procedure SetSleepOptionsToAPI(var ASleepOptions: TClkSleepOptions; var ADestSleepOptions: TClkSleepOptionsAPI);
@@ -408,15 +455,13 @@ end;
 
 
 procedure GetFindControlOptionsFromAPI(AFindControlOptions: PClkFindControlOptionsAPI; var ADestClkAction: TClkActionRec);
-var
-  i: Integer;
 begin
   //find control stuff
   ADestClkAction.FindControlOptions.MatchCriteria.WillMatchText := AFindControlOptions^.MatchCriteria.WillMatchText;
   ADestClkAction.FindControlOptions.MatchCriteria.WillMatchClassName := AFindControlOptions^.MatchCriteria.WillMatchClassName;
-  ADestClkAction.FindControlOptions.MatchCriteria.WillMatchBitmapText := AFindControlOptions^.MatchCriteria.WillMatchBitmapText;
-  ADestClkAction.FindControlOptions.MatchCriteria.WillMatchBitmapFiles := AFindControlOptions^.MatchCriteria.WillMatchBitmapFiles;
-  ADestClkAction.FindControlOptions.MatchCriteria.WillMatchPrimitiveFiles := AFindControlOptions^.MatchCriteria.WillMatchPrimitiveFiles;
+  //ADestClkAction.FindControlOptions.MatchCriteria.WillMatchBitmapText := AFindControlOptions^.MatchCriteria.WillMatchBitmapText;
+  //ADestClkAction.FindControlOptions.MatchCriteria.WillMatchBitmapFiles := AFindControlOptions^.MatchCriteria.WillMatchBitmapFiles;
+  //ADestClkAction.FindControlOptions.MatchCriteria.WillMatchPrimitiveFiles := AFindControlOptions^.MatchCriteria.WillMatchPrimitiveFiles;
   ADestClkAction.FindControlOptions.MatchCriteria.SearchForControlMode := TSearchForControlMode(AFindControlOptions^.MatchCriteria.SearchForControlMode);
 
   ADestClkAction.FindControlOptions.AllowToFail := AFindControlOptions^.AllowToFail;
@@ -424,11 +469,11 @@ begin
   SetPointedContentToString(@string(PWideChar(AFindControlOptions^.MatchClassName))[1], ADestClkAction.FindControlOptions.MatchClassName);
   SetPointedContentToString(@string(PWideChar(AFindControlOptions^.MatchTextSeparator))[1], ADestClkAction.FindControlOptions.MatchTextSeparator);
   SetPointedContentToString(@string(PWideChar(AFindControlOptions^.MatchClassNameSeparator))[1], ADestClkAction.FindControlOptions.MatchClassNameSeparator);
-  SetLength(ADestClkAction.FindControlOptions.MatchBitmapText, 0);
-  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.MatchBitmapFiles))[1], ADestClkAction.FindControlOptions.MatchBitmapFiles);
-  ADestClkAction.FindControlOptions.MatchBitmapAlgorithm := TMatchBitmapAlgorithm(AFindControlOptions^.MatchBitmapAlgorithm);
-
-  ADestClkAction.FindControlOptions.MatchBitmapAlgorithmSettings := AFindControlOptions^.MatchBitmapAlgorithmSettings;
+  //SetLength(ADestClkAction.FindControlOptions.MatchBitmapText, 0);
+  //SetPointedContentToString(@string(PWideChar(AFindControlOptions^.MatchBitmapFiles))[1], ADestClkAction.FindControlOptions.MatchBitmapFiles);
+  //ADestClkAction.FindControlOptions.MatchBitmapAlgorithm := TMatchBitmapAlgorithm(AFindControlOptions^.MatchBitmapAlgorithm);
+  //
+  //ADestClkAction.FindControlOptions.MatchBitmapAlgorithmSettings := AFindControlOptions^.MatchBitmapAlgorithmSettings;
   SetPointedContentToString(@string(PWideChar(AFindControlOptions^.InitialRectangle.Left))[1], ADestClkAction.FindControlOptions.InitialRectangle.Left);
   SetPointedContentToString(@string(PWideChar(AFindControlOptions^.InitialRectangle.Top))[1], ADestClkAction.FindControlOptions.InitialRectangle.Top);
   SetPointedContentToString(@string(PWideChar(AFindControlOptions^.InitialRectangle.Right))[1], ADestClkAction.FindControlOptions.InitialRectangle.Right);
@@ -439,44 +484,114 @@ begin
   SetPointedContentToString(@string(PWideChar(AFindControlOptions^.InitialRectangle.BottomOffset))[1], ADestClkAction.FindControlOptions.InitialRectangle.BottomOffset);
 
   ADestClkAction.FindControlOptions.UseWholeScreen := AFindControlOptions^.UseWholeScreen;
-  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.ColorError))[1], ADestClkAction.FindControlOptions.ColorError);
-  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.AllowedColorErrorCount))[1], ADestClkAction.FindControlOptions.AllowedColorErrorCount);
+  //SetPointedContentToString(@string(PWideChar(AFindControlOptions^.ColorError))[1], ADestClkAction.FindControlOptions.ColorError);
+  //SetPointedContentToString(@string(PWideChar(AFindControlOptions^.AllowedColorErrorCount))[1], ADestClkAction.FindControlOptions.AllowedColorErrorCount);
   ADestClkAction.FindControlOptions.WaitForControlToGoAway := AFindControlOptions^.WaitForControlToGoAway;
   ADestClkAction.FindControlOptions.StartSearchingWithCachedControl := AFindControlOptions^.StartSearchingWithCachedControl;
   SetPointedContentToString(@string(PWideChar(AFindControlOptions^.CachedControlLeft))[1], ADestClkAction.FindControlOptions.CachedControlLeft);
   SetPointedContentToString(@string(PWideChar(AFindControlOptions^.CachedControlTop))[1], ADestClkAction.FindControlOptions.CachedControlTop);
 
-  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.MatchPrimitiveFiles))[1], ADestClkAction.FindControlOptions.MatchPrimitiveFiles);
+  //SetPointedContentToString(@string(PWideChar(AFindControlOptions^.MatchPrimitiveFiles))[1], ADestClkAction.FindControlOptions.MatchPrimitiveFiles);
   ADestClkAction.FindControlOptions.GetAllControls := AFindControlOptions^.GetAllControls;
-  ADestClkAction.FindControlOptions.UseFastSearch := AFindControlOptions^.UseFastSearch;
-  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.FastSearchAllowedColorErrorCount))[1], ADestClkAction.FindControlOptions.FastSearchAllowedColorErrorCount);
-  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.IgnoredColors))[1], ADestClkAction.FindControlOptions.IgnoredColors);
-  ADestClkAction.FindControlOptions.SleepySearch := AFindControlOptions^.SleepySearch;
-  ADestClkAction.FindControlOptions.StopSearchOnMismatch := AFindControlOptions^.StopSearchOnMismatch;
+  //ADestClkAction.FindControlOptions.UseFastSearch := AFindControlOptions^.UseFastSearch;
+  //SetPointedContentToString(@string(PWideChar(AFindControlOptions^.FastSearchAllowedColorErrorCount))[1], ADestClkAction.FindControlOptions.FastSearchAllowedColorErrorCount);
+  //SetPointedContentToString(@string(PWideChar(AFindControlOptions^.IgnoredColors))[1], ADestClkAction.FindControlOptions.IgnoredColors);
+  //ADestClkAction.FindControlOptions.SleepySearch := AFindControlOptions^.SleepySearch;
+  //ADestClkAction.FindControlOptions.StopSearchOnMismatch := AFindControlOptions^.StopSearchOnMismatch;
 
-  ADestClkAction.FindControlOptions.ImageSource := TImageSource(AFindControlOptions^.ImageSource);
-  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.SourceFileName))[1], ADestClkAction.FindControlOptions.SourceFileName);
-  ADestClkAction.FindControlOptions.ImageSourceFileNameLocation := TImageSourceFileNameLocation(AFindControlOptions^.ImageSourceFileNameLocation);
+  //ADestClkAction.FindControlOptions.ImageSource := TImageSource(AFindControlOptions^.ImageSource);
+  //SetPointedContentToString(@string(PWideChar(AFindControlOptions^.SourceFileName))[1], ADestClkAction.FindControlOptions.SourceFileName);
+  //ADestClkAction.FindControlOptions.ImageSourceFileNameLocation := TImageSourceFileNameLocation(AFindControlOptions^.ImageSourceFileNameLocation);
 
   ADestClkAction.FindControlOptions.PrecisionTimeout := AFindControlOptions^.PrecisionTimeout;
-  ADestClkAction.FindControlOptions.FullBackgroundImageInResult := AFindControlOptions^.FullBackgroundImageInResult;
+  //ADestClkAction.FindControlOptions.FullBackgroundImageInResult := AFindControlOptions^.FullBackgroundImageInResult;
 
-  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.MatchByHistogramSettings.MinPercentColorMatch))[1], ADestClkAction.FindControlOptions.MatchByHistogramSettings.MinPercentColorMatch);
-  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.MatchByHistogramSettings.MostSignificantColorCountInSubBmp))[1], ADestClkAction.FindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInSubBmp);
-  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp))[1], ADestClkAction.FindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp);
+  //SetPointedContentToString(@string(PWideChar(AFindControlOptions^.MatchByHistogramSettings.MinPercentColorMatch))[1], ADestClkAction.FindControlOptions.MatchByHistogramSettings.MinPercentColorMatch);
+  //SetPointedContentToString(@string(PWideChar(AFindControlOptions^.MatchByHistogramSettings.MostSignificantColorCountInSubBmp))[1], ADestClkAction.FindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInSubBmp);
+  //SetPointedContentToString(@string(PWideChar(AFindControlOptions^.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp))[1], ADestClkAction.FindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp);
 
   SetPointedContentToString(@string(PWideChar(AFindControlOptions^.EvaluateTextCount))[1], ADestClkAction.FindControlOptions.EvaluateTextCount);
-  ADestClkAction.FindControlOptions.CropFromScreenshot := AFindControlOptions^.CropFromScreenshot;
-  SetPointedContentToString(@string(PWideChar(AFindControlOptions^.ThreadCount))[1], ADestClkAction.FindControlOptions.ThreadCount);
+  //ADestClkAction.FindControlOptions.CropFromScreenshot := AFindControlOptions^.CropFromScreenshot;
+  //SetPointedContentToString(@string(PWideChar(AFindControlOptions^.ThreadCount))[1], ADestClkAction.FindControlOptions.ThreadCount);
 
-  if AFindControlOptions^.MatchBitmapText = nil then  //assume the caller sets this field to nil if not used
+  //if AFindControlOptions^.MatchBitmapText = nil then  //assume the caller sets this field to nil if not used
+  //  Exit;
+  ////However, if the field is not nil, then it is either valid or an uninitialized pointer.
+  ////The number of profiles is limited (to e.g. 60), in case the pointer is invalid and this library reads junk data.
+  //SetLength(ADestClkAction.FindControlOptions.MatchBitmapText, Min(AFindControlOptions^.MatchBitmapText^.ArrLen, 60));
+  //
+  //for i := 0 to Length(ADestClkAction.FindControlOptions.MatchBitmapText) - 1 do
+  //  GetMatchBitmapTextFromAPI(@AFindControlOptions^.MatchBitmapText^.Items^[i], ADestClkAction.FindControlOptions.MatchBitmapText[i]);
+end;
+
+
+procedure GetFindSubControlOptionsFromAPI(AFindSubControlOptions: PClkFindSubControlOptionsAPI; var ADestClkAction: TClkActionRec);
+var
+  i: Integer;
+begin
+  //find control stuff
+  //ADestClkAction.FindSubControlOptions.MatchCriteria.WillMatchText := AFindSubControlOptions^.MatchCriteria.WillMatchText;
+  //ADestClkAction.FindSubControlOptions.MatchCriteria.WillMatchClassName := AFindSubControlOptions^.MatchCriteria.WillMatchClassName;
+  ADestClkAction.FindSubControlOptions.MatchCriteria.WillMatchBitmapText := AFindSubControlOptions^.MatchCriteria.WillMatchBitmapText;
+  ADestClkAction.FindSubControlOptions.MatchCriteria.WillMatchBitmapFiles := AFindSubControlOptions^.MatchCriteria.WillMatchBitmapFiles;
+  ADestClkAction.FindSubControlOptions.MatchCriteria.WillMatchPrimitiveFiles := AFindSubControlOptions^.MatchCriteria.WillMatchPrimitiveFiles;
+  //ADestClkAction.FindSubControlOptions.MatchCriteria.SearchForControlMode := TSearchForControlMode(AFindSubControlOptions^.MatchCriteria.SearchForControlMode);
+
+  ADestClkAction.FindSubControlOptions.AllowToFail := AFindSubControlOptions^.AllowToFail;
+  SetPointedContentToString(@string(PWideChar(AFindSubControlOptions^.MatchText))[1], ADestClkAction.FindSubControlOptions.MatchText);
+  SetLength(ADestClkAction.FindSubControlOptions.MatchBitmapText, 0);
+  SetPointedContentToString(@string(PWideChar(AFindSubControlOptions^.MatchBitmapFiles))[1], ADestClkAction.FindSubControlOptions.MatchBitmapFiles);
+  ADestClkAction.FindSubControlOptions.MatchBitmapAlgorithm := TMatchBitmapAlgorithm(AFindSubControlOptions^.MatchBitmapAlgorithm);
+
+  ADestClkAction.FindSubControlOptions.MatchBitmapAlgorithmSettings := AFindSubControlOptions^.MatchBitmapAlgorithmSettings;
+  SetPointedContentToString(@string(PWideChar(AFindSubControlOptions^.InitialRectangle.Left))[1], ADestClkAction.FindSubControlOptions.InitialRectangle.Left);
+  SetPointedContentToString(@string(PWideChar(AFindSubControlOptions^.InitialRectangle.Top))[1], ADestClkAction.FindSubControlOptions.InitialRectangle.Top);
+  SetPointedContentToString(@string(PWideChar(AFindSubControlOptions^.InitialRectangle.Right))[1], ADestClkAction.FindSubControlOptions.InitialRectangle.Right);
+  SetPointedContentToString(@string(PWideChar(AFindSubControlOptions^.InitialRectangle.Bottom))[1], ADestClkAction.FindSubControlOptions.InitialRectangle.Bottom);
+  SetPointedContentToString(@string(PWideChar(AFindSubControlOptions^.InitialRectangle.LeftOffset))[1], ADestClkAction.FindSubControlOptions.InitialRectangle.LeftOffset);
+  SetPointedContentToString(@string(PWideChar(AFindSubControlOptions^.InitialRectangle.TopOffset))[1], ADestClkAction.FindSubControlOptions.InitialRectangle.TopOffset);
+  SetPointedContentToString(@string(PWideChar(AFindSubControlOptions^.InitialRectangle.RightOffset))[1], ADestClkAction.FindSubControlOptions.InitialRectangle.RightOffset);
+  SetPointedContentToString(@string(PWideChar(AFindSubControlOptions^.InitialRectangle.BottomOffset))[1], ADestClkAction.FindSubControlOptions.InitialRectangle.BottomOffset);
+
+  ADestClkAction.FindSubControlOptions.UseWholeScreen := AFindSubControlOptions^.UseWholeScreen;
+  SetPointedContentToString(@string(PWideChar(AFindSubControlOptions^.ColorError))[1], ADestClkAction.FindSubControlOptions.ColorError);
+  SetPointedContentToString(@string(PWideChar(AFindSubControlOptions^.AllowedColorErrorCount))[1], ADestClkAction.FindSubControlOptions.AllowedColorErrorCount);
+  ADestClkAction.FindSubControlOptions.WaitForControlToGoAway := AFindSubControlOptions^.WaitForControlToGoAway;
+  ADestClkAction.FindSubControlOptions.StartSearchingWithCachedControl := AFindSubControlOptions^.StartSearchingWithCachedControl;
+  SetPointedContentToString(@string(PWideChar(AFindSubControlOptions^.CachedControlLeft))[1], ADestClkAction.FindSubControlOptions.CachedControlLeft);
+  SetPointedContentToString(@string(PWideChar(AFindSubControlOptions^.CachedControlTop))[1], ADestClkAction.FindSubControlOptions.CachedControlTop);
+
+  SetPointedContentToString(@string(PWideChar(AFindSubControlOptions^.MatchPrimitiveFiles))[1], ADestClkAction.FindSubControlOptions.MatchPrimitiveFiles);
+  ADestClkAction.FindSubControlOptions.GetAllControls := AFindSubControlOptions^.GetAllControls;
+  ADestClkAction.FindSubControlOptions.UseFastSearch := AFindSubControlOptions^.UseFastSearch;
+  SetPointedContentToString(@string(PWideChar(AFindSubControlOptions^.FastSearchAllowedColorErrorCount))[1], ADestClkAction.FindSubControlOptions.FastSearchAllowedColorErrorCount);
+  SetPointedContentToString(@string(PWideChar(AFindSubControlOptions^.IgnoredColors))[1], ADestClkAction.FindSubControlOptions.IgnoredColors);
+  ADestClkAction.FindSubControlOptions.SleepySearch := AFindSubControlOptions^.SleepySearch;
+  ADestClkAction.FindSubControlOptions.StopSearchOnMismatch := AFindSubControlOptions^.StopSearchOnMismatch;
+
+  ADestClkAction.FindSubControlOptions.ImageSource := TImageSource(AFindSubControlOptions^.ImageSource);
+  SetPointedContentToString(@string(PWideChar(AFindSubControlOptions^.SourceFileName))[1], ADestClkAction.FindSubControlOptions.SourceFileName);
+  ADestClkAction.FindSubControlOptions.ImageSourceFileNameLocation := TImageSourceFileNameLocation(AFindSubControlOptions^.ImageSourceFileNameLocation);
+
+  ADestClkAction.FindSubControlOptions.PrecisionTimeout := AFindSubControlOptions^.PrecisionTimeout;
+  ADestClkAction.FindSubControlOptions.FullBackgroundImageInResult := AFindSubControlOptions^.FullBackgroundImageInResult;
+
+  SetPointedContentToString(@string(PWideChar(AFindSubControlOptions^.MatchByHistogramSettings.MinPercentColorMatch))[1], ADestClkAction.FindSubControlOptions.MatchByHistogramSettings.MinPercentColorMatch);
+  SetPointedContentToString(@string(PWideChar(AFindSubControlOptions^.MatchByHistogramSettings.MostSignificantColorCountInSubBmp))[1], ADestClkAction.FindSubControlOptions.MatchByHistogramSettings.MostSignificantColorCountInSubBmp);
+  SetPointedContentToString(@string(PWideChar(AFindSubControlOptions^.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp))[1], ADestClkAction.FindSubControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp);
+
+  SetPointedContentToString(@string(PWideChar(AFindSubControlOptions^.EvaluateTextCount))[1], ADestClkAction.FindSubControlOptions.EvaluateTextCount);
+  ADestClkAction.FindSubControlOptions.CropFromScreenshot := AFindSubControlOptions^.CropFromScreenshot;
+  SetPointedContentToString(@string(PWideChar(AFindSubControlOptions^.ThreadCount))[1], ADestClkAction.FindSubControlOptions.ThreadCount);
+
+  if AFindSubControlOptions^.MatchBitmapText = nil then  //assume the caller sets this field to nil if not used
     Exit;
   //However, if the field is not nil, then it is either valid or an uninitialized pointer.
   //The number of profiles is limited (to e.g. 60), in case the pointer is invalid and this library reads junk data.
-  SetLength(ADestClkAction.FindControlOptions.MatchBitmapText, Min(AFindControlOptions^.MatchBitmapText^.ArrLen, 60));
+  SetLength(ADestClkAction.FindSubControlOptions.MatchBitmapText, Min(AFindSubControlOptions^.MatchBitmapText^.ArrLen, 60));
 
-  for i := 0 to Length(ADestClkAction.FindControlOptions.MatchBitmapText) - 1 do
-    GetMatchBitmapTextFromAPI(@AFindControlOptions^.MatchBitmapText^.Items^[i], ADestClkAction.FindControlOptions.MatchBitmapText[i]);
+  for i := 0 to Length(ADestClkAction.FindSubControlOptions.MatchBitmapText) - 1 do
+    GetMatchBitmapTextFromAPI(@AFindSubControlOptions^.MatchBitmapText^.Items^[i], ADestClkAction.FindSubControlOptions.MatchBitmapText[i]);
 end;
 
 
@@ -719,15 +834,12 @@ end;
 
 
 procedure SetFindControlOptionsToAPI(var AFindControlOptions: TClkFindControlOptions; var ADestFindControlOptions: TClkFindControlOptionsAPI; var ADestMatchBitmapTextRecAPI: TMatchBitmapTextRecAPI; var ADestMatchBitmapTextArray: TClkFindControlMatchBitmapTextAPIArr);
-var
-  i: Integer;
-  TempDestWideStr: TClkFindControlMatchBitmapTextWideStringArr;   /////////////////////// If there are still memory overwriting issues, then this variable must moved as a procedure parameter, similar to the ADestMatchBitmapTextArray array. This will keep it in memory during the API call.
 begin
   ADestFindControlOptions.MatchCriteria.WillMatchText := AFindControlOptions.MatchCriteria.WillMatchText;
   ADestFindControlOptions.MatchCriteria.WillMatchClassName := AFindControlOptions.MatchCriteria.WillMatchClassName;
-  ADestFindControlOptions.MatchCriteria.WillMatchBitmapText := AFindControlOptions.MatchCriteria.WillMatchBitmapText;
-  ADestFindControlOptions.MatchCriteria.WillMatchBitmapFiles := AFindControlOptions.MatchCriteria.WillMatchBitmapFiles;
-  ADestFindControlOptions.MatchCriteria.WillMatchPrimitiveFiles := AFindControlOptions.MatchCriteria.WillMatchPrimitiveFiles;
+  //ADestFindControlOptions.MatchCriteria.WillMatchBitmapText := AFindControlOptions.MatchCriteria.WillMatchBitmapText;
+  //ADestFindControlOptions.MatchCriteria.WillMatchBitmapFiles := AFindControlOptions.MatchCriteria.WillMatchBitmapFiles;
+  //ADestFindControlOptions.MatchCriteria.WillMatchPrimitiveFiles := AFindControlOptions.MatchCriteria.WillMatchPrimitiveFiles;
   ADestFindControlOptions.MatchCriteria.SearchForControlMode := LongInt(AFindControlOptions.MatchCriteria.SearchForControlMode);
 
   ADestFindControlOptions.AllowToFail := AFindControlOptions.AllowToFail;
@@ -735,11 +847,11 @@ begin
   ADestFindControlOptions.MatchClassName := @WideString(AFindControlOptions.MatchClassName)[1];
   ADestFindControlOptions.MatchTextSeparator := @WideString(AFindControlOptions.MatchTextSeparator)[1];
   ADestFindControlOptions.MatchClassNameSeparator := @WideString(AFindControlOptions.MatchClassNameSeparator)[1];
-  ADestFindControlOptions.MatchBitmapText := nil;
-  ADestFindControlOptions.MatchBitmapFiles := @WideString(AFindControlOptions.MatchBitmapFiles)[1];
-  ADestFindControlOptions.MatchBitmapAlgorithm := Byte(AFindControlOptions.MatchBitmapAlgorithm);
-
-  ADestFindControlOptions.MatchBitmapAlgorithmSettings := AFindControlOptions.MatchBitmapAlgorithmSettings;
+  //ADestFindControlOptions.MatchBitmapText := nil;
+  //ADestFindControlOptions.MatchBitmapFiles := @WideString(AFindControlOptions.MatchBitmapFiles)[1];
+  //ADestFindControlOptions.MatchBitmapAlgorithm := Byte(AFindControlOptions.MatchBitmapAlgorithm);
+  //
+  //ADestFindControlOptions.MatchBitmapAlgorithmSettings := AFindControlOptions.MatchBitmapAlgorithmSettings;
   ADestFindControlOptions.InitialRectangle.Left := @WideString(AFindControlOptions.InitialRectangle.Left)[1];
   ADestFindControlOptions.InitialRectangle.Top := @WideString(AFindControlOptions.InitialRectangle.Top)[1];
   ADestFindControlOptions.InitialRectangle.Right := @WideString(AFindControlOptions.InitialRectangle.Right)[1];
@@ -750,51 +862,129 @@ begin
   ADestFindControlOptions.InitialRectangle.BottomOffset := @WideString(AFindControlOptions.InitialRectangle.BottomOffset)[1];
 
   ADestFindControlOptions.UseWholeScreen := AFindControlOptions.UseWholeScreen;
-  ADestFindControlOptions.ColorError := @WideString(AFindControlOptions.ColorError)[1];
-  ADestFindControlOptions.AllowedColorErrorCount := @WideString(AFindControlOptions.AllowedColorErrorCount)[1];
+  //ADestFindControlOptions.ColorError := @WideString(AFindControlOptions.ColorError)[1];
+  //ADestFindControlOptions.AllowedColorErrorCount := @WideString(AFindControlOptions.AllowedColorErrorCount)[1];
   ADestFindControlOptions.WaitForControlToGoAway := AFindControlOptions.WaitForControlToGoAway;
   ADestFindControlOptions.StartSearchingWithCachedControl := AFindControlOptions.StartSearchingWithCachedControl;
   ADestFindControlOptions.CachedControlLeft := @WideString(AFindControlOptions.CachedControlLeft)[1];
   ADestFindControlOptions.CachedControlTop := @WideString(AFindControlOptions.CachedControlTop)[1];
 
-  ADestFindControlOptions.MatchPrimitiveFiles := @WideString(AFindControlOptions.MatchPrimitiveFiles)[1];
+  //ADestFindControlOptions.MatchPrimitiveFiles := @WideString(AFindControlOptions.MatchPrimitiveFiles)[1];
   ADestFindControlOptions.GetAllControls := AFindControlOptions.GetAllControls;
-  ADestFindControlOptions.UseFastSearch := AFindControlOptions.UseFastSearch;
-  ADestFindControlOptions.FastSearchAllowedColorErrorCount := @WideString(AFindControlOptions.FastSearchAllowedColorErrorCount)[1];
-  ADestFindControlOptions.IgnoredColors := @WideString(AFindControlOptions.IgnoredColors)[1];
-  ADestFindControlOptions.SleepySearch := AFindControlOptions.SleepySearch;
-  ADestFindControlOptions.StopSearchOnMismatch := AFindControlOptions.StopSearchOnMismatch;
+  //ADestFindControlOptions.UseFastSearch := AFindControlOptions.UseFastSearch;
+  //ADestFindControlOptions.FastSearchAllowedColorErrorCount := @WideString(AFindControlOptions.FastSearchAllowedColorErrorCount)[1];
+  //ADestFindControlOptions.IgnoredColors := @WideString(AFindControlOptions.IgnoredColors)[1];
+  //ADestFindControlOptions.SleepySearch := AFindControlOptions.SleepySearch;
+  //ADestFindControlOptions.StopSearchOnMismatch := AFindControlOptions.StopSearchOnMismatch;
 
-  ADestFindControlOptions.ImageSource := Byte(AFindControlOptions.ImageSource);
-  ADestFindControlOptions.SourceFileName := @WideString(AFindControlOptions.SourceFileName)[1];
-  ADestFindControlOptions.ImageSourceFileNameLocation := Byte(AFindControlOptions.ImageSourceFileNameLocation);
+  //ADestFindControlOptions.ImageSource := Byte(AFindControlOptions.ImageSource);
+  //ADestFindControlOptions.SourceFileName := @WideString(AFindControlOptions.SourceFileName)[1];
+  //ADestFindControlOptions.ImageSourceFileNameLocation := Byte(AFindControlOptions.ImageSourceFileNameLocation);
 
   ADestFindControlOptions.PrecisionTimeout := AFindControlOptions.PrecisionTimeout;
-  ADestFindControlOptions.FullBackgroundImageInResult := AFindControlOptions.FullBackgroundImageInResult;
+  //ADestFindControlOptions.FullBackgroundImageInResult := AFindControlOptions.FullBackgroundImageInResult;
 
-  ADestFindControlOptions.MatchByHistogramSettings.MinPercentColorMatch := @WideString(AFindControlOptions.MatchByHistogramSettings.MinPercentColorMatch)[1];
-  ADestFindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInSubBmp := @WideString(AFindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInSubBmp)[1];
-  ADestFindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp := @WideString(AFindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp)[1];
+  //ADestFindControlOptions.MatchByHistogramSettings.MinPercentColorMatch := @WideString(AFindControlOptions.MatchByHistogramSettings.MinPercentColorMatch)[1];
+  //ADestFindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInSubBmp := @WideString(AFindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInSubBmp)[1];
+  //ADestFindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp := @WideString(AFindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp)[1];
 
   ADestFindControlOptions.EvaluateTextCount := @WideString(AFindControlOptions.EvaluateTextCount)[1];
-  ADestFindControlOptions.CropFromScreenshot := AFindControlOptions.CropFromScreenshot;
-  ADestFindControlOptions.ThreadCount := @WideString(AFindControlOptions.ThreadCount)[1];
+  //ADestFindControlOptions.CropFromScreenshot := AFindControlOptions.CropFromScreenshot;
+  //ADestFindControlOptions.ThreadCount := @WideString(AFindControlOptions.ThreadCount)[1];
 
-  if Length(AFindControlOptions.MatchBitmapText) = 0 then
+  //if Length(AFindControlOptions.MatchBitmapText) = 0 then
+  //begin
+  //  ADestFindControlOptions.MatchBitmapText := nil;
+  //  Exit;
+  //end;
+  //
+  //ADestFindControlOptions.MatchBitmapText := @ADestMatchBitmapTextRecAPI; //PMatchBitmapTextRecAPI
+  //
+  //SetLength(ADestMatchBitmapTextArray, Length(AFindControlOptions.MatchBitmapText));
+  //SetLength(TempDestWideStr, Length(AFindControlOptions.MatchBitmapText));
+  //
+  //for i := 0 to Length(AFindControlOptions.MatchBitmapText) - 1 do
+  //  SetMatchBitmapTextToAPI(AFindControlOptions.MatchBitmapText[i], ADestMatchBitmapTextArray[i], TempDestWideStr[i]);
+  //
+  //ADestMatchBitmapTextRecAPI.ArrLen := Length(AFindControlOptions.MatchBitmapText);
+  //ADestMatchBitmapTextRecAPI.Items := @ADestMatchBitmapTextArray[0];
+end;
+
+
+procedure SetFindSubControlOptionsToAPI(var AFindSubControlOptions: TClkFindSubControlOptions; var ADestFindSubControlOptions: TClkFindSubControlOptionsAPI; var ADestMatchBitmapTextRecAPI: TMatchBitmapTextRecAPI; var ADestMatchBitmapTextArray: TClkFindControlMatchBitmapTextAPIArr);
+var
+  i: Integer;
+  TempDestWideStr: TClkFindControlMatchBitmapTextWideStringArr;   /////////////////////// If there are still memory overwriting issues, then this variable must moved as a procedure parameter, similar to the ADestMatchBitmapTextArray array. This will keep it in memory during the API call.
+begin
+  //ADestFindSubControlOptions.MatchCriteria.WillMatchText := AFindSubControlOptions.MatchCriteria.WillMatchText;
+  //ADestFindSubControlOptions.MatchCriteria.WillMatchClassName := AFindSubControlOptions.MatchCriteria.WillMatchClassName;
+  ADestFindSubControlOptions.MatchCriteria.WillMatchBitmapText := AFindSubControlOptions.MatchCriteria.WillMatchBitmapText;
+  ADestFindSubControlOptions.MatchCriteria.WillMatchBitmapFiles := AFindSubControlOptions.MatchCriteria.WillMatchBitmapFiles;
+  ADestFindSubControlOptions.MatchCriteria.WillMatchPrimitiveFiles := AFindSubControlOptions.MatchCriteria.WillMatchPrimitiveFiles;
+  //ADestFindSubControlOptions.MatchCriteria.SearchForControlMode := LongInt(AFindSubControlOptions.MatchCriteria.SearchForControlMode);
+
+  ADestFindSubControlOptions.AllowToFail := AFindSubControlOptions.AllowToFail;
+  ADestFindSubControlOptions.MatchText := @WideString(AFindSubControlOptions.MatchText)[1];
+  ADestFindSubControlOptions.MatchBitmapText := nil;
+  ADestFindSubControlOptions.MatchBitmapFiles := @WideString(AFindSubControlOptions.MatchBitmapFiles)[1];
+  ADestFindSubControlOptions.MatchBitmapAlgorithm := Byte(AFindSubControlOptions.MatchBitmapAlgorithm);
+
+  ADestFindSubControlOptions.MatchBitmapAlgorithmSettings := AFindSubControlOptions.MatchBitmapAlgorithmSettings;
+  ADestFindSubControlOptions.InitialRectangle.Left := @WideString(AFindSubControlOptions.InitialRectangle.Left)[1];
+  ADestFindSubControlOptions.InitialRectangle.Top := @WideString(AFindSubControlOptions.InitialRectangle.Top)[1];
+  ADestFindSubControlOptions.InitialRectangle.Right := @WideString(AFindSubControlOptions.InitialRectangle.Right)[1];
+  ADestFindSubControlOptions.InitialRectangle.Bottom := @WideString(AFindSubControlOptions.InitialRectangle.Bottom)[1];
+  ADestFindSubControlOptions.InitialRectangle.LeftOffset := @WideString(AFindSubControlOptions.InitialRectangle.LeftOffset)[1];
+  ADestFindSubControlOptions.InitialRectangle.TopOffset := @WideString(AFindSubControlOptions.InitialRectangle.TopOffset)[1];
+  ADestFindSubControlOptions.InitialRectangle.RightOffset := @WideString(AFindSubControlOptions.InitialRectangle.RightOffset)[1];
+  ADestFindSubControlOptions.InitialRectangle.BottomOffset := @WideString(AFindSubControlOptions.InitialRectangle.BottomOffset)[1];
+
+  ADestFindSubControlOptions.UseWholeScreen := AFindSubControlOptions.UseWholeScreen;
+  ADestFindSubControlOptions.ColorError := @WideString(AFindSubControlOptions.ColorError)[1];
+  ADestFindSubControlOptions.AllowedColorErrorCount := @WideString(AFindSubControlOptions.AllowedColorErrorCount)[1];
+  ADestFindSubControlOptions.WaitForControlToGoAway := AFindSubControlOptions.WaitForControlToGoAway;
+  ADestFindSubControlOptions.StartSearchingWithCachedControl := AFindSubControlOptions.StartSearchingWithCachedControl;
+  ADestFindSubControlOptions.CachedControlLeft := @WideString(AFindSubControlOptions.CachedControlLeft)[1];
+  ADestFindSubControlOptions.CachedControlTop := @WideString(AFindSubControlOptions.CachedControlTop)[1];
+
+  ADestFindSubControlOptions.MatchPrimitiveFiles := @WideString(AFindSubControlOptions.MatchPrimitiveFiles)[1];
+  ADestFindSubControlOptions.GetAllControls := AFindSubControlOptions.GetAllControls;
+  ADestFindSubControlOptions.UseFastSearch := AFindSubControlOptions.UseFastSearch;
+  ADestFindSubControlOptions.FastSearchAllowedColorErrorCount := @WideString(AFindSubControlOptions.FastSearchAllowedColorErrorCount)[1];
+  ADestFindSubControlOptions.IgnoredColors := @WideString(AFindSubControlOptions.IgnoredColors)[1];
+  ADestFindSubControlOptions.SleepySearch := AFindSubControlOptions.SleepySearch;
+  ADestFindSubControlOptions.StopSearchOnMismatch := AFindSubControlOptions.StopSearchOnMismatch;
+
+  ADestFindSubControlOptions.ImageSource := Byte(AFindSubControlOptions.ImageSource);
+  ADestFindSubControlOptions.SourceFileName := @WideString(AFindSubControlOptions.SourceFileName)[1];
+  ADestFindSubControlOptions.ImageSourceFileNameLocation := Byte(AFindSubControlOptions.ImageSourceFileNameLocation);
+
+  ADestFindSubControlOptions.PrecisionTimeout := AFindSubControlOptions.PrecisionTimeout;
+  ADestFindSubControlOptions.FullBackgroundImageInResult := AFindSubControlOptions.FullBackgroundImageInResult;
+
+  ADestFindSubControlOptions.MatchByHistogramSettings.MinPercentColorMatch := @WideString(AFindSubControlOptions.MatchByHistogramSettings.MinPercentColorMatch)[1];
+  ADestFindSubControlOptions.MatchByHistogramSettings.MostSignificantColorCountInSubBmp := @WideString(AFindSubControlOptions.MatchByHistogramSettings.MostSignificantColorCountInSubBmp)[1];
+  ADestFindSubControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp := @WideString(AFindSubControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp)[1];
+
+  ADestFindSubControlOptions.EvaluateTextCount := @WideString(AFindSubControlOptions.EvaluateTextCount)[1];
+  ADestFindSubControlOptions.CropFromScreenshot := AFindSubControlOptions.CropFromScreenshot;
+  ADestFindSubControlOptions.ThreadCount := @WideString(AFindSubControlOptions.ThreadCount)[1];
+
+  if Length(AFindSubControlOptions.MatchBitmapText) = 0 then
   begin
-    ADestFindControlOptions.MatchBitmapText := nil;
+    ADestFindSubControlOptions.MatchBitmapText := nil;
     Exit;
   end;
 
-  ADestFindControlOptions.MatchBitmapText := @ADestMatchBitmapTextRecAPI; //PMatchBitmapTextRecAPI
+  ADestFindSubControlOptions.MatchBitmapText := @ADestMatchBitmapTextRecAPI; //PMatchBitmapTextRecAPI
 
-  SetLength(ADestMatchBitmapTextArray, Length(AFindControlOptions.MatchBitmapText));
-  SetLength(TempDestWideStr, Length(AFindControlOptions.MatchBitmapText));
+  SetLength(ADestMatchBitmapTextArray, Length(AFindSubControlOptions.MatchBitmapText));
+  SetLength(TempDestWideStr, Length(AFindSubControlOptions.MatchBitmapText));
 
-  for i := 0 to Length(AFindControlOptions.MatchBitmapText) - 1 do
-    SetMatchBitmapTextToAPI(AFindControlOptions.MatchBitmapText[i], ADestMatchBitmapTextArray[i], TempDestWideStr[i]);
+  for i := 0 to Length(AFindSubControlOptions.MatchBitmapText) - 1 do
+    SetMatchBitmapTextToAPI(AFindSubControlOptions.MatchBitmapText[i], ADestMatchBitmapTextArray[i], TempDestWideStr[i]);
 
-  ADestMatchBitmapTextRecAPI.ArrLen := Length(AFindControlOptions.MatchBitmapText);
+  ADestMatchBitmapTextRecAPI.ArrLen := Length(AFindSubControlOptions.MatchBitmapText);
   ADestMatchBitmapTextRecAPI.Items := @ADestMatchBitmapTextArray[0];
 end;
 

@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2024 VCC
+    Copyright (C) 2025 VCC
     creation date: Oct 2022
     initial release date: 30 Oct 2022
 
@@ -64,6 +64,7 @@ type
     procedure VerifyOIDefaultValues(AActionToDrag: string; var AProperties: TOIInteractionDataArr);
     procedure VerifyOIDifferentThanDefaultValues(AActionToDrag: string; var AProperties: TOIInteractionDataArr);
     procedure VerifyPermissionsOnSendingFiles;
+    procedure EditOIPropertiesFromMenu(AActionToDrag, APropertyToEdit, ASubPropertyToEdit, AScrollCount, AMenuItemCaption, ANewPropertyValue: string);
   public
     constructor Create; override;
   published
@@ -135,6 +136,18 @@ type
     procedure TestVerifyOIDifferentThanDefaultValues_Plugin;
     procedure TestVerifyOIDifferentThanDefaultValues_EditTemplate;
 
+    procedure TestEditOIProperty_FindControl_InitialRectangle_Left_SetToValueFromMenu;
+    procedure TestEditOIProperty_FindControl_InitialRectangle_Top_SetToValueFromMenu;
+    procedure TestEditOIProperty_FindControl_InitialRectangle_Right_SetToValueFromMenu;
+    procedure TestEditOIProperty_FindControl_InitialRectangle_Bottom_SetToValueFromMenu;
+
+    procedure TestEditOIProperty_FindSubControl_InitialRectangle_Left_SetToValueFromMenu;
+    procedure TestEditOIProperty_FindSubControl_InitialRectangle_Top_SetToValueFromMenu;
+    procedure TestEditOIProperty_FindSubControl_InitialRectangle_Right_SetToValueFromMenu;
+    procedure TestEditOIProperty_FindSubControl_InitialRectangle_Bottom_SetToValueFromMenu;
+
+    procedure TestEditOIProperty_FindSubControl_MatchBitmapText_ForegroundColor_SetToValueFromMenu;
+    procedure TestEditOIProperty_FindSubControl_MatchBitmapText_BackgroundColor_SetToValueFromMenu;
 
     procedure TestVerifyPermissionsOnSendingFiles_SendingFileFromDeniedTestFiles;
     procedure TestVerifyPermissionsOnSendingFiles_ReSendingModifiedFileByEditTemplate;
@@ -321,7 +334,7 @@ begin
   try
     ListOfVars.Text := Response;
     try
-      Expect(ListOfVars).WithItem('$ExecAction_Err$').OfValue('', 'No error Allowed in test driver. $ExecAction_Err$ is ' + ListOfVars.Values['$ExecAction_Err$'] + '   $ExitCode$ is ' + ListOfVars.Values['$ExitCode$']);
+      Expect(ListOfVars).WithItem('$ExecAction_Err$').OfValue('', 'No error Allowed in test driver... $ExecAction_Err$ is ' + ListOfVars.Values['$ExecAction_Err$'] + '   $ExitCode$ is ' + ListOfVars.Values['$ExitCode$']);
     except
       on E: Exception do
         Expect(ListOfVars).WithItem('$ExecAction_Err$').OfValue(CSecondExpectedErrMsg, 'No error Allowed in test driver. $ExecAction_Err$ is ' + ListOfVars.Values['$ExecAction_Err$'] + '   $ExitCode$ is ' + ListOfVars.Values['$ExitCode$']);
@@ -499,7 +512,7 @@ begin
   PrepareClickerUnderTestToReadItsVars;
 
   Sleep(500);
-  ExpectVarFromClientUnderTest('$VarToBeIncremented$', '1');
+  ExpectVarFromClientUnderTest('$VarToBeIncremented$', '1', 'This is VarToBeIncremented.');
 end;
 
 
@@ -914,7 +927,7 @@ var
   Properties: TOIInteractionDataArr;
   FindControlOptions: TClkFindControlOptions;
 begin
-  GetDefaultPropertyValues_FindControl(FindControlOptions, False);
+  GetDefaultPropertyValues_FindControl(FindControlOptions);
   ListOfSerializedPropertiesToOIInteractionData(GetFindControlActionProperties(FindControlOptions), @CFindControlProperties, CPropIsExp[acFindControl], CPropCount_FindControl, Properties);
 
   VerifyOIDefaultValues(CClkActionStr[acFindControl], Properties);
@@ -924,10 +937,10 @@ end;
 procedure TTestUI.TestVerifyOIDefaultValues_FindSubControl;
 var
   Properties: TOIInteractionDataArr;
-  FindSubControlOptions: TClkFindControlOptions;
+  FindSubControlOptions: TClkFindSubControlOptions;
 begin
-  GetDefaultPropertyValues_FindControl(FindSubControlOptions, True);
-  ListOfSerializedPropertiesToOIInteractionData(GetFindControlActionProperties(FindSubControlOptions), @CFindControlProperties, CPropIsExp[acFindSubControl], CPropCount_FindControl, Properties);
+  GetDefaultPropertyValues_FindSubControl(FindSubControlOptions);
+  ListOfSerializedPropertiesToOIInteractionData(GetFindSubControlActionProperties(FindSubControlOptions), @CFindSubControlProperties, CPropIsExp[acFindSubControl], CPropCount_FindControl, Properties);
 
   VerifyOIDefaultValues(CClkActionStr[acFindSubControl], Properties);
 end;
@@ -1069,7 +1082,7 @@ var
 begin
   TestServerAddress := CTestDriverServerAddress_Client;
 
-  PrepareClickerUnderTestToReadItsVars;  //This is server mode. It is suitable to these tests only, because the actions do not have to be executed.
+  PrepareClickerUnderTestToReadItsVars;  //This is server mode. It is suitable for these tests only, because the actions do not have to be executed.
 
   ExecuteTemplateOnTestDriver(ExtractFilePath(ParamStr(0)) + '..\..\TestDriver\ActionTemplates\PrepareClientActionsWindowForInteraction.clktmpl',
                               CREParam_FileLocation_ValueDisk);
@@ -1084,7 +1097,7 @@ begin
                               '' //AExpectedResult
                               );
 
-  //These tests do not call DragActionToListOnAppUnderTest.clktmpl. Instead a python script sends a request to create the action.
+  //These tests do not call DragActionToListOnAppUnderTest.clktmpl. Instead, a python script sends a request to create the action.
 
   //run python with arg, which executes an action in debugging mode with "different than default" values for all properties
   PyProc := CreatePyProcess('Python'{.exe'}, '..\..\py\Tests\RunExecute' + AActionToDrag + 'Action.py', ExtractFileDir(ParamStr(0)));
@@ -1170,7 +1183,7 @@ procedure TTestUI.TestVerifyOIDifferentThanDefaultValues_FindSubControl;
 var
   Properties: TOIInteractionDataArr;
 begin
-  ListOfSerializedPropertiesToOIInteractionData(GenerateDifferentThanDefault_FindControlStr, @CFindControlProperties, CPropIsExp[acFindSubControl], CPropCount_FindControl, Properties);
+  ListOfSerializedPropertiesToOIInteractionData(GenerateDifferentThanDefault_FindSubControlStr, @CFindSubControlProperties, CPropIsExp[acFindSubControl], CPropCount_FindSubControl, Properties);
 
   VerifyOIDifferentThanDefaultValues(CClkActionStr[acFindSubControl], Properties);
 end;
@@ -1179,10 +1192,10 @@ end;
 procedure TTestUI.TestVerifyOIDifferentThanDefaultValues_FindSubControl_SubProperties;
 var
   Properties: TOIInteractionDataArr;
-  FindSubControlOptions: TClkFindControlOptions;
+  FindSubControlOptions: TClkFindSubControlOptions;
 begin
   GenerateDifferentThanDefault_FindSubControl(FindSubControlOptions);
-  ListOfSerializedPropertiesToOIInteractionData(GetFindControlActionProperties(FindSubControlOptions), @CFindControlProperties, CPropIsExp[acFindSubControl], CPropCount_FindControl, Properties);
+  ListOfSerializedPropertiesToOIInteractionData(GetFindSubControlActionProperties(FindSubControlOptions), @CFindSubControlProperties, CPropIsExp[acFindSubControl], CPropCount_FindControl, Properties);
 
   //Get only the properties from structures and arrays
 
@@ -1279,6 +1292,102 @@ begin
   VerifyOIDifferentThanDefaultValues(CClkActionStr[acEditTemplate], Properties);
 end;
 
+
+procedure TTestUI.EditOIPropertiesFromMenu(AActionToDrag, APropertyToEdit, ASubPropertyToEdit, AScrollCount, AMenuItemCaption, ANewPropertyValue: string);
+begin
+  TestServerAddress := CTestDriverServerAddress_Client;
+
+  PrepareClickerUnderTestToReadItsVars;  //This is server mode. It is suitable to these tests only, because the actions do not have to be executed.
+
+  ExecuteTemplateOnTestDriver(ExtractFilePath(ParamStr(0)) + '..\..\TestDriver\ActionTemplates\PrepareClientActionsWindowForInteraction.clktmpl',
+                              CREParam_FileLocation_ValueDisk);
+  ExecuteTemplateOnTestDriver(ExtractFilePath(ParamStr(0)) + '..\..\TestDriver\ActionTemplates\DeleteAllActionsFromList.clktmpl', //this template depends on caching from above
+                              CREParam_FileLocation_ValueDisk);
+
+  SetVariableOnTestDriverClient('$ActionToDrag$', AActionToDrag);
+  ExecuteTemplateOnTestDriver(ExtractFilePath(ParamStr(0)) + '..\..\TestDriver\ActionTemplates\DragActionToListOnAppUnderTest.clktmpl',
+                              CREParam_FileLocation_ValueDisk,
+                              '', //'$Control_Text$',
+                              '' //AExpectedResult
+                              );
+
+  SetVariableOnTestDriverClient('$PropertyToEdit$', APropertyToEdit);
+  SetVariableOnTestDriverClient('$SubPropertyToEdit$', ASubPropertyToEdit);
+  SetVariableOnTestDriverClient('$ScrollCount$', AScrollCount);          //to get to $ActionToDrag$
+  ExecuteTemplateOnTestDriver(ExtractFilePath(ParamStr(0)) + '..\..\TestDriver\ActionTemplates\EditProperty.clktmpl',
+                              CREParam_FileLocation_ValueDisk,
+                              '', //'$Control_Text$',
+                              '' //AExpectedResult
+                              );
+
+  SetVariableOnTestDriverClient('$MenuItem$', AMenuItemCaption);
+  SetVariableOnTestDriverClient('$NewPropertyValue$', ANewPropertyValue);
+  ExecuteTemplateOnTestDriver(ExtractFilePath(ParamStr(0)) + '..\..\TestDriver\ActionTemplates\OpenOIEditorPopUpMenuFromRightClick.clktmpl',
+                              CREParam_FileLocation_ValueDisk,
+                              '', //'$Control_Text$',
+                              '' //AExpectedResult
+                              );
+end;
+
+
+procedure TTestUI.TestEditOIProperty_FindControl_InitialRectangle_Left_SetToValueFromMenu;
+begin
+  EditOIPropertiesFromMenu('FindControl', 'InitialRectangle', 'Left', '-5', '$Control_Right$', '$Control_Right$');
+end;
+
+
+procedure TTestUI.TestEditOIProperty_FindControl_InitialRectangle_Top_SetToValueFromMenu;
+begin
+  EditOIPropertiesFromMenu('FindControl', 'InitialRectangle', 'Top', '-5', '$Control_Bottom$', '$Control_Bottom$');
+end;
+
+
+procedure TTestUI.TestEditOIProperty_FindControl_InitialRectangle_Right_SetToValueFromMenu;
+begin
+  EditOIPropertiesFromMenu('FindControl', 'InitialRectangle', 'Right', '-5', '$Control_Left$', '$Control_Left$');
+end;
+
+
+procedure TTestUI.TestEditOIProperty_FindControl_InitialRectangle_Bottom_SetToValueFromMenu;
+begin
+  EditOIPropertiesFromMenu('FindControl', 'InitialRectangle', 'Bottom', '-5', '$Control_Top$', '$Control_Top$');
+end;
+
+
+procedure TTestUI.TestEditOIProperty_FindSubControl_InitialRectangle_Left_SetToValueFromMenu;
+begin
+  EditOIPropertiesFromMenu('FindSubControl', 'InitialRectangle', 'Left', '-4', '$Control_Right$', '$Control_Right$');
+end;
+
+
+procedure TTestUI.TestEditOIProperty_FindSubControl_InitialRectangle_Top_SetToValueFromMenu;
+begin
+  EditOIPropertiesFromMenu('FindSubControl', 'InitialRectangle', 'Top', '-4', '$Control_Bottom$', '$Control_Bottom$');
+end;
+
+
+procedure TTestUI.TestEditOIProperty_FindSubControl_InitialRectangle_Right_SetToValueFromMenu;
+begin
+  EditOIPropertiesFromMenu('FindSubControl', 'InitialRectangle', 'Right', '-4', '$Control_Left$', '$Control_Left$');
+end;
+
+
+procedure TTestUI.TestEditOIProperty_FindSubControl_InitialRectangle_Bottom_SetToValueFromMenu;
+begin
+  EditOIPropertiesFromMenu('FindSubControl', 'InitialRectangle', 'Bottom', '-4', '$Control_Top$', '$Control_Top$');
+end;
+
+
+procedure TTestUI.TestEditOIProperty_FindSubControl_MatchBitmapText_ForegroundColor_SetToValueFromMenu;
+begin
+  EditOIPropertiesFromMenu('FindSubControl', 'MatchBitmapText [0..0]', 'ForegroundColor', '-3', '$Color_ActiveCaption$', '$Color_ActiveCaption$');
+end;
+
+
+procedure TTestUI.TestEditOIProperty_FindSubControl_MatchBitmapText_BackgroundColor_SetToValueFromMenu;
+begin
+  EditOIPropertiesFromMenu('FindSubControl', 'MatchBitmapText [0..0]', 'BackgroundColor', '-3', '$Color_WindowFrame$', '$Color_WindowFrame$');
+end;
 
 ///////////////////////////////
 

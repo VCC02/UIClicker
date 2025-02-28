@@ -2827,7 +2827,7 @@ begin
       if frClickerActionsArrMain.StopAllActionsOnDemandFromParent <> nil then
         frClickerActionsArrMain.StopAllActionsOnDemandFromParent^ := False; //set this to avoid stopping child instances
 
-      Result := CREResp_RemoteExecResponseVar + '=' + IntToStr(Ord(frClickerActionsArrMain.ActionExecution.ExecuteFindControlActionAsString(ASyncObj.FParams, False)));
+      Result := CREResp_RemoteExecResponseVar + '=' + IntToStr(Ord(frClickerActionsArrMain.ActionExecution.ExecuteFindControlActionAsString(ASyncObj.FParams)));
       Result := Result + #8#7 + GetClkVariables87;
     finally
       frClickerActionsArrMain.ExecutingActionFromRemote := False;
@@ -2847,7 +2847,7 @@ begin
       if frClickerActionsArrMain.StopAllActionsOnDemandFromParent <> nil then
         frClickerActionsArrMain.StopAllActionsOnDemandFromParent^ := False; //set this to avoid stopping child instances
 
-      Result := CREResp_RemoteExecResponseVar + '=' + IntToStr(Ord(frClickerActionsArrMain.ActionExecution.ExecuteFindControlActionAsString(ASyncObj.FParams, True)));
+      Result := CREResp_RemoteExecResponseVar + '=' + IntToStr(Ord(frClickerActionsArrMain.ActionExecution.ExecuteFindSubControlActionAsString(ASyncObj.FParams)));
       Result := Result + #8#7 + GetClkVariables87;
     finally
       frClickerActionsArrMain.ExecutingActionFromRemote := False;

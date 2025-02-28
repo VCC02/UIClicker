@@ -2263,9 +2263,6 @@ begin
   AAction.FindControlOptions.MatchCriteria.SearchForControlMode := sfcmGenGrid;
   AAction.FindControlOptions.MatchCriteria.WillMatchClassName := True;
   AAction.FindControlOptions.MatchCriteria.WillMatchText := True;
-  AAction.FindControlOptions.MatchCriteria.WillMatchBitmapText := False;
-  AAction.FindControlOptions.MatchCriteria.WillMatchBitmapFiles := False;
-  AAction.FindControlOptions.MatchCriteria.WillMatchPrimitiveFiles := False;
 
   AAction.FindControlOptions.MatchText := ACompData^.CompRec.Text;
   AAction.FindControlOptions.MatchClassName := ACompData^.CompRec.ClassName;
@@ -2293,8 +2290,6 @@ begin
     AAction.FindControlOptions.InitialRectangle.BottomOffset := '10';
   end;
 
-  AAction.FindControlOptions.ColorError := '0';
-  AAction.FindControlOptions.AllowedColorErrorCount := '0';
   AAction.FindControlOptions.WaitForControlToGoAway := False;
 end;
 

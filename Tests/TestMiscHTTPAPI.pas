@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2024 VCC
+    Copyright (C) 2025 VCC
     creation date: Aug 2022
     initial release date: 25 Aug 2022
 
@@ -103,7 +103,7 @@ end;
 procedure TTestMiscHTTPAPI.Test_GetDebugImageFromServerWithSizeOption(AFullSize, ABmpFound: Boolean);
 var
   Response: string;
-  FindSubControlOptions: TClkFindControlOptions;
+  FindSubControlOptions: TClkFindSubControlOptions;
   Bmp: TBitmap;
 begin
   SetupTargetWindowFor_FindSubControl;

@@ -49,18 +49,18 @@ try:
 
 
     FindControlOptions = GetDefaultFindControlOptions()
-    FindControlOptions.MatchCriteria.WillMatchText = False
-    FindControlOptions.MatchCriteria.WillMatchClassName = False
+    #FindControlOptions.MatchCriteria.WillMatchText = False
+    #FindControlOptions.MatchCriteria.WillMatchClassName = False
     FindControlOptions.MatchCriteria.WillMatchBitmapText = True
     FindControlOptions.MatchCriteria.WillMatchBitmapFiles = True
     FindControlOptions.MatchCriteria.WillMatchPrimitiveFiles = True
-    FindControlOptions.MatchCriteria.SearchForControlMode = TSearchForControlMode.sfcmEnumWindows
+    #FindControlOptions.MatchCriteria.SearchForControlMode = TSearchForControlMode.sfcmEnumWindows
 
     FindControlOptions.AllowToFail = True
     FindControlOptions.MatchText = 'some text'
-    FindControlOptions.MatchClassName = 'some class'
-    FindControlOptions.MatchTextSeparator = 'txt sep'
-    FindControlOptions.MatchClassNameSeparator = 'class sep'
+    #FindControlOptions.MatchClassName = 'some class'
+    #FindControlOptions.MatchTextSeparator = 'txt sep'
+    #FindControlOptions.MatchClassNameSeparator = 'class sep'
     FindControlOptions.MatchBitmapText = ()  #(The content is updated separately. See TClkFindControlMatchBitmapText)
     FindControlOptions.MatchBitmapFiles = 'bmp'
     FindControlOptions.MatchBitmapAlgorithm = TMatchBitmapAlgorithm.mbaRawHistogramZones

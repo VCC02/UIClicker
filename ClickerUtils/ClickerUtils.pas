@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2024 VCC
+    Copyright (C) 2025 VCC
     creation date: Dec 2019
     initial release date: 26 Jul 2022
 
@@ -219,10 +219,13 @@ type
   TClkFindControlMatchCriteria = record
     WillMatchText: Boolean;
     WillMatchClassName: Boolean;
+    SearchForControlMode: TSearchForControlMode;
+  end;
+
+  TClkFindSubControlMatchCriteria = record
     WillMatchBitmapText: Boolean;
     WillMatchBitmapFiles: Boolean;
     WillMatchPrimitiveFiles: Boolean;
-    SearchForControlMode: TSearchForControlMode;
   end;
 
   TClkFindControlMatchBitmapText = record
@@ -275,6 +278,44 @@ type
     MatchClassName: string;
     MatchTextSeparator: string;
     MatchClassNameSeparator: string;
+    //Del_MatchBitmapText: TClkFindControlMatchBitmapTextArr;
+    //Del_MatchBitmapFiles: string; //ListOfStrings
+    //Del_MatchBitmapAlgorithm: TMatchBitmapAlgorithm;
+    //Del_MatchBitmapAlgorithmSettings: TMatchBitmapAlgorithmSettings;
+    InitialRectangle: TRectString;
+    UseWholeScreen: Boolean;
+    //Del_ColorError: string;  //string, to allow var replacements
+    //Del_AllowedColorErrorCount: string;  //Number of pixels allowed to mismatch
+    WaitForControlToGoAway: Boolean;
+    StartSearchingWithCachedControl: Boolean;
+    CachedControlLeft: string;
+    CachedControlTop: string;
+    //Del_MatchPrimitiveFiles: string;  //ListOfStrings
+    //  Del_MatchPrimitiveFiles_Modified: string;  //ListOfStrings  '0's and '1's.  This field is not a separate property in ObjectInspector
+    GetAllControls: Boolean; //When True, the FindControl algorithm does not stop on the first found control. It keeps adding found handles to a list.
+    //Del_UseFastSearch: Boolean; //When True, the FindSubControl algorithm searches a 5px x 5px area first. If that matches, then it goes for full search. Make sure that FastSearchAllowedColorErrorCount has the right value.
+    //Del_FastSearchAllowedColorErrorCount: string;  //-1 = Use calculated value (scaled down value of AllowedColorErrorCount). Other values are directly converted / used (including 0). Because the 5x5 area is small, a scaled down value, will often end up being 0, which won't allow a proper match.
+    //Del_IgnoredColors: string; //CSV list of colors, which can be in hex format (6 digits) or var/replacements
+    //Del_SleepySearch: Boolean; //when True, there are Sleep(1) calls, to prevent keeping a CPU core at 100%. However, because the thread switching takes usually longer than 1ms, a Sleep(1) call may take even 16ms. This results in slower searches.
+    //Del_StopSearchOnMismatch: Boolean; //Defaults to True. When False, the loops continue, in order to get the total pixel error count.
+    //Del_ImageSource: TImageSource;  //Defaults to isScreenshot. When set to isScreenshot, FindSubControl calls ScreenShot. When set to isFile, FindSubControl uses a bmp from disk or InMem FS (see ImageSourceFileNameLocation).
+    //Del_SourceFileName: string; //can be a bmp file from disk or from externally rendered InMem FS
+    //Del_ImageSourceFileNameLocation: TImageSourceFileNameLocation; //can be disk or externally rendered bmp from InMem FS
+    PrecisionTimeout: Boolean;  //When True, the bitmap searching algorithm verifies the timeout. This is a bit of extra overhead, which may slow down the search.
+    //Del_FullBackgroundImageInResult: Boolean; //When True, the resulted debugging image contains the background image. Defaults to True for backwards compatibility.
+    //Del_MatchByHistogramSettings: TMatchByHistogramSettings; //used when MatchBitmapAlgorithm is mbaRawHistogramZones
+    EvaluateTextCount: string; //-1 = default (1000 "recursive" evaluations), 0 = no evaluations, >1 = EvaluateTextCount "recursive" evaluations
+    //Del_CropFromScreenshot: Boolean; //False = use component handle for screenshot, True = use full screenshot, then crop from it.
+    //Del_ThreadCount: string; //0 (and negative values) = use UI thread (old implementation). 1..255 = how many threads to use.
+  end;
+
+  TClkFindSubControlOptions = record
+    MatchCriteria: TClkFindSubControlMatchCriteria;
+    AllowToFail: Boolean;
+    MatchText: string;
+    //MatchClassName: string;
+    //MatchTextSeparator: string;
+    //MatchClassNameSeparator: string;
     MatchBitmapText: TClkFindControlMatchBitmapTextArr;
     MatchBitmapFiles: string; //ListOfStrings
     MatchBitmapAlgorithm: TMatchBitmapAlgorithm;
@@ -413,6 +454,7 @@ type
     ClickOptions: TClkClickOptions;
     ExecAppOptions: TClkExecAppOptions;
     FindControlOptions: TClkFindControlOptions;
+    FindSubControlOptions: TClkFindSubControlOptions;
     SetTextOptions: TClkSetTextOptions;
     CallTemplateOptions: TClkCallTemplateOptions;
     SleepOptions: TClkSleepOptions;
@@ -459,6 +501,7 @@ type
   TCompRecArr = array of TCompRec;
 
   PClkFindControlOptions = ^TClkFindControlOptions;
+  PClkFindSubControlOptions = ^TClkFindSubControlOptions;
 
 
   TBrightnessOperation = (boInc, boDec, boIncR, boIncG, boIncB, boDecR, boDecG, boDecB);
@@ -494,6 +537,7 @@ type
   TOnUpdateTextCroppingLimitsInOIFromDraggingLines = procedure(ALimitLabelsToUpdate: TLimitLabels; var AOffsets: TSimpleRectString; AFontProfileName: string) of object;
   TOnUpdateTextCroppingLimitsInOIFromDraggingLinesIdx = procedure(ALimitLabelsToUpdate: TLimitLabels; var AOffsets: TSimpleRectString; AFontProfileIndex: Integer) of object;
   TOnGetFindControlOptions = function: PClkFindControlOptions of object;
+  TOnGetFindSubControlOptions = function: PClkFindSubControlOptions of object;
   TOnGetFindControlMatchBitmapText = function(Sender: TObject): PClkFindControlMatchBitmapText of object;
   TOnGetGridDrawingOption = function: TDisplayGridLineOption of object;
   TOnGetActionProperties = function(AActionName: string): PClkActionRec of object;
@@ -502,6 +546,7 @@ type
   TOnGetAllActions = function: PClkActionsRecArr of object;
   TOnGenerateAndSaveTreeWithWinInterp = function(AHandle: THandle; ATreeFileName: string; AStep: Integer; AUseMouseSwipe: Boolean): Boolean of object;
   TOnSetWinInterpOption = function(AWinInterpOptionName, AWinInterpOptionValue: string): Boolean of object;
+  TOnGetIsFindSubControl = function: Boolean of object;
 
 const
   CActionStatusStr: array[TActionStatus] of string = ('Not Started', 'Failed', 'Successful', 'In Progress', 'Allowed Failed');
@@ -696,7 +741,8 @@ function StringToHex(AStr: string): string;   //converts 'abc' to '616263'
 function HexToString(AHex: string): string;   //converts '616263' to 'abc'
 
 procedure RawExpressionToParts(RawExpression: string; out Op1, Op2, OpEq: string);
-function MatchCriteriaToString(Criteria: TClkFindControlMatchCriteria): string;
+function MatchFindControlCriteriaToString(Criteria: TClkFindControlMatchCriteria): string;
+function MatchFindSubControlCriteriaToString(Criteria: TClkFindSubControlMatchCriteria): string;
 function EvaluateActionCondition(AActionCondition: string; AEvalReplacementsFunc: TEvaluateReplacementsFunc): Boolean;
 
 
@@ -2941,7 +2987,7 @@ begin
 end;
 
 
-function MatchCriteriaToString(Criteria: TClkFindControlMatchCriteria): string;
+function MatchFindControlCriteriaToString(Criteria: TClkFindControlMatchCriteria): string;
 begin
   Result := '';
   if Criteria.WillMatchText then
@@ -2953,6 +2999,12 @@ begin
       Result := Result + ', ';
     Result := Result + 'Class';
   end;
+end;
+
+
+function MatchFindSubControlCriteriaToString(Criteria: TClkFindSubControlMatchCriteria): string;
+begin
+  Result := '';
 
   if Criteria.WillMatchBitmapText then
   begin
@@ -2966,6 +3018,13 @@ begin
     if Result > '' then
       Result := Result + ', ';
     Result := Result + 'Bmp files';
+  end;
+
+  if Criteria.WillMatchPrimitiveFiles then
+  begin
+    if Result > '' then
+      Result := Result + ', ';
+    Result := Result + 'Pmtv files';
   end;
 end;
 
