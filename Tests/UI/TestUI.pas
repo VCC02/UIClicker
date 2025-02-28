@@ -1356,25 +1356,25 @@ end;
 
 procedure TTestUI.TestEditOIProperty_FindSubControl_InitialRectangle_Left_SetToValueFromMenu;
 begin
-  EditOIPropertiesFromMenu('FindSubControl', 'InitialRectangle', 'Left', '-5', '$Control_Right$', '$Control_Right$');
+  EditOIPropertiesFromMenu('FindSubControl', 'InitialRectangle', 'Left', '-4', '$Control_Right$', '$Control_Right$');
 end;
 
 
 procedure TTestUI.TestEditOIProperty_FindSubControl_InitialRectangle_Top_SetToValueFromMenu;
 begin
-  EditOIPropertiesFromMenu('FindSubControl', 'InitialRectangle', 'Top', '-5', '$Control_Bottom$', '$Control_Bottom$');
+  EditOIPropertiesFromMenu('FindSubControl', 'InitialRectangle', 'Top', '-4', '$Control_Bottom$', '$Control_Bottom$');
 end;
 
 
 procedure TTestUI.TestEditOIProperty_FindSubControl_InitialRectangle_Right_SetToValueFromMenu;
 begin
-  EditOIPropertiesFromMenu('FindSubControl', 'InitialRectangle', 'Right', '-5', '$Control_Left$', '$Control_Left$');
+  EditOIPropertiesFromMenu('FindSubControl', 'InitialRectangle', 'Right', '-4', '$Control_Left$', '$Control_Left$');
 end;
 
 
 procedure TTestUI.TestEditOIProperty_FindSubControl_InitialRectangle_Bottom_SetToValueFromMenu;
 begin
-  EditOIPropertiesFromMenu('FindSubControl', 'InitialRectangle', 'Bottom', '-5', '$Control_Top$', '$Control_Top$');
+  EditOIPropertiesFromMenu('FindSubControl', 'InitialRectangle', 'Bottom', '-4', '$Control_Top$', '$Control_Top$');
 end;
 
 

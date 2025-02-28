@@ -2989,25 +2989,25 @@ begin
       if llLeft in ALimitLabelsToUpdate then
       begin
         GetEditingActionObjectByActionType^.FindSubControlOptions.InitialRectangle.LeftOffset := AOffsets.Left;
-        FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, CCategory_ActionSpecific, CFindSubControl_InitialRectangle_PropIndex, CFindControl_InitialRectangle_LeftOffset_PropItemIndex);
+        FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, CCategory_ActionSpecific, CFindSubControl_InitialRectangle_PropIndex, CFindSubControl_InitialRectangle_LeftOffset_PropItemIndex);
       end;
 
       if llTop in ALimitLabelsToUpdate then
       begin
         GetEditingActionObjectByActionType^.FindSubControlOptions.InitialRectangle.TopOffset := AOffsets.Top;
-        FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, CCategory_ActionSpecific, CFindSubControl_InitialRectangle_PropIndex, CFindControl_InitialRectangle_TopOffset_PropItemIndex);
+        FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, CCategory_ActionSpecific, CFindSubControl_InitialRectangle_PropIndex, CFindSubControl_InitialRectangle_TopOffset_PropItemIndex);
       end;
 
       if llRight in ALimitLabelsToUpdate then
       begin
         GetEditingActionObjectByActionType^.FindSubControlOptions.InitialRectangle.RightOffset := AOffsets.Right;
-        FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, CCategory_ActionSpecific, CFindSubControl_InitialRectangle_PropIndex, CFindControl_InitialRectangle_RightOffset_PropItemIndex);
+        FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, CCategory_ActionSpecific, CFindSubControl_InitialRectangle_PropIndex, CFindSubControl_InitialRectangle_RightOffset_PropItemIndex);
       end;
 
       if llBottom in ALimitLabelsToUpdate then
       begin
         GetEditingActionObjectByActionType^.FindSubControlOptions.InitialRectangle.BottomOffset := AOffsets.Bottom;
-        FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, CCategory_ActionSpecific, CFindSubControl_InitialRectangle_PropIndex, CFindControl_InitialRectangle_BottomOffset_PropItemIndex);
+        FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, CCategory_ActionSpecific, CFindSubControl_InitialRectangle_PropIndex, CFindSubControl_InitialRectangle_BottomOffset_PropItemIndex);
       end;
     end;
 
