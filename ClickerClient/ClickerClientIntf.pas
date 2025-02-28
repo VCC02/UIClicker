@@ -41,6 +41,8 @@ type
   TSendMemPluginFileToServer_Proc = function(AFileName, AFileContent: Pointer; AFileSize: Int64; AResultStr: Pointer): Integer; cdecl;
   TSendMemPluginArchiveFileToServer_Proc = function(AFileName, ADecryptionPluginName, ADecompressionPluginName, AHashingPluginName, AFileContent: Pointer; AFileSize: Int64; ACompressionLevel: Integer; AAdditionalInfo: Pointer; AIsDecDecHash: Boolean; AResultStr: Pointer): Integer; cdecl;
 
+  TPrepareFilesInServer_Proc = function(ATemplateFileName, AResponse: Pointer): LongInt; cdecl;
+
   TExecuteClickAction_Proc = function(AActionName: Pointer;
                                       AActionTimeout: LongInt; //ms
                                       AClickOptions: PClkClickOptionsAPI;
@@ -103,18 +105,125 @@ type
                                                  AUseServerDebugging: Boolean;
                                                  AResultStr: Pointer): LongInt; cdecl;
 
-   TExecutePluginAction_Proc = function(AActionName: Pointer;
-                                        AActionTimeout: LongInt; //ms
-                                        APluginOptions: PClkPluginOptionsAPI;
-                                        AUseServerDebugging: Boolean;
-                                        AUseStepIntoDebugging: Boolean;
-                                        AResultStr: Pointer): LongInt; cdecl;
+  TExecutePluginAction_Proc = function(AActionName: Pointer;
+                                       AActionTimeout: LongInt; //ms
+                                       APluginOptions: PClkPluginOptionsAPI;
+                                       AUseServerDebugging: Boolean;
+                                       AUseStepIntoDebugging: Boolean;
+                                       AResultStr: Pointer): LongInt; cdecl;
 
-   TExecuteEditTemplateAction_Proc = function(AActionName: Pointer;
+  TExecuteEditTemplateAction_Proc = function(AActionName: Pointer;
+                                             AActionTimeout: LongInt; //ms
+                                             AEditTemplateOptions: PClkEditTemplateOptionsAPI;
+                                             AUseServerDebugging: Boolean;
+                                             AResultStr: Pointer): LongInt; cdecl;
+
+
+
+  TAddClickActionToTemplate_Proc = function(ATemplateFileName: Pointer;
+                                            AActionName: Pointer;
+                                            AActionTimeout: LongInt; //ms
+                                            AActionEnabled: Boolean;
+                                            AActionCondition: Pointer;
+                                            AClickOptions: PClkClickOptionsAPI
+                                            ): LongInt; cdecl;
+
+  TAddExecAppActionToTemplate_Proc = function(ATemplateFileName: Pointer;
+                                              AActionName: Pointer;
                                               AActionTimeout: LongInt; //ms
-                                              AEditTemplateOptions: PClkEditTemplateOptionsAPI;
-                                              AUseServerDebugging: Boolean;
-                                              AResultStr: Pointer): LongInt; cdecl;
+                                              AActionEnabled: Boolean;
+                                              AActionCondition: Pointer;
+                                              AExecAppOptions: PClkExecAppOptionsAPI
+                                             ): LongInt; cdecl;
+
+  TAddFindControlActionToTemplate_Proc = function(ATemplateFileName: Pointer;
+                                                  AActionName: Pointer;
+                                                  AActionTimeout: LongInt; //ms
+                                                  AActionEnabled: Boolean;
+                                                  AActionCondition: Pointer;
+                                                  AFindControlOptions: PClkFindControlOptionsAPI
+                                                 ): LongInt; cdecl;
+
+  TAddFindSubControlActionToTemplate_Proc = function(ATemplateFileName: Pointer;
+                                                     AActionName: Pointer;
+                                                     AActionTimeout: LongInt; //ms
+                                                     AActionEnabled: Boolean;
+                                                     AActionCondition: Pointer;
+                                                     AFindSubControlOptions: PClkFindSubControlOptionsAPI
+                                                    ): LongInt; cdecl;
+
+
+  TAddSetControlTextActionToTemplate_Proc = function(ATemplateFileName: Pointer;
+                                                     AActionName: Pointer;
+                                                     AActionTimeout: LongInt; //ms
+                                                     AActionEnabled: Boolean;
+                                                     AActionCondition: Pointer;
+                                                     ASetControlTextOptions: PClkSetTextOptionsAPI
+                                                    ): LongInt; cdecl;
+
+  TAddCallTemplateActionToTemplate_Proc = function(ATemplateFileName: Pointer;
+                                                   AActionName: Pointer;
+                                                   AActionTimeout: LongInt; //ms
+                                                   AActionEnabled: Boolean;
+                                                   AActionCondition: Pointer;
+                                                   ACallTemplateOptions: PClkCallTemplateOptionsAPI
+                                                  ): LongInt; cdecl;
+
+  TAddSleepActionToTemplate_Proc = function(ATemplateFileName: Pointer;
+                                            AActionName: Pointer;
+                                            AActionTimeout: LongInt; //ms
+                                            AActionEnabled: Boolean;
+                                            AActionCondition: Pointer;
+                                            ASleepOptions: PClkSleepOptionsAPI
+                                           ): LongInt; cdecl;
+
+  TAddSetVarActionToTemplate_Proc = function(ATemplateFileName: Pointer;
+                                             AActionName: Pointer;
+                                             AActionTimeout: LongInt; //ms
+                                             AActionEnabled: Boolean;
+                                             AActionCondition: Pointer;
+                                             ASetVarOptions: PClkSetVarOptionsAPI
+                                            ): LongInt; cdecl;
+
+  TAddWindowOperationsActionToTemplate_Proc = function(ATemplateFileName: Pointer;
+                                                       AActionName: Pointer;
+                                                       AActionTimeout: LongInt; //ms
+                                                       AActionEnabled: Boolean;
+                                                       AActionCondition: Pointer;
+                                                       AWindowOperationsOptions: PClkWindowOperationsOptionsAPI
+                                                      ): LongInt; cdecl;
+
+  TAddLoadSetVarFromFileActionToTemplate_Proc = function(ATemplateFileName: Pointer;
+                                                         AActionName: Pointer;
+                                                         AActionTimeout: LongInt; //ms
+                                                         AActionEnabled: Boolean;
+                                                         AActionCondition: Pointer;
+                                                         ALoadSetVarFromFileOptions: PClkLoadSetVarFromFileOptionsAPI
+                                                        ): LongInt; cdecl;
+
+  TAddSaveSetVarToFileActionToTemplate_Proc = function(ATemplateFileName: Pointer;
+                                                       AActionName: Pointer;
+                                                       AActionTimeout: LongInt; //ms
+                                                       AActionEnabled: Boolean;
+                                                       AActionCondition: Pointer;
+                                                       ASaveSetVarToFileOptions: PClkSaveSetVarToFileOptionsAPI
+                                                      ): LongInt; cdecl;
+
+  TAddPluginActionToTemplate_Proc = function(ATemplateFileName: Pointer;
+                                             AActionName: Pointer;
+                                             AActionTimeout: LongInt; //ms
+                                             AActionEnabled: Boolean;
+                                             AActionCondition: Pointer;
+                                             APluginOptions: PClkPluginOptionsAPI
+                                            ): LongInt; cdecl;
+
+  TAddEditTemplateActionToTemplate_Proc = function(ATemplateFileName: Pointer;
+                                                   AActionName: Pointer;
+                                                   AActionTimeout: LongInt; //ms
+                                                   AActionEnabled: Boolean;
+                                                   AActionCondition: Pointer;
+                                                   AEditTemplateOptions: PClkEditTemplateOptionsAPI
+                                                  ): LongInt; cdecl;
 
 var
   InitClickerClient: TInitClickerClient_Proc;
@@ -124,6 +233,8 @@ var
   TestConnectionToServer: TTestConnectionToServer_Proc;
   SendMemPluginFileToServer: TSendMemPluginFileToServer_Proc;
   SendMemPluginArchiveFileToServer: TSendMemPluginArchiveFileToServer_Proc;
+
+  PrepareFilesInServer: TPrepareFilesInServer_Proc;
 
   ExecuteClickAction: TExecuteClickAction_Proc;
   ExecuteExecAppAction: TExecuteExecAppAction_Proc;
@@ -138,6 +249,21 @@ var
   ExecuteSaveSetVarToFileAction: TExecuteSaveSetVarToFileAction_Proc;
   ExecutePluginAction: TExecutePluginAction_Proc;
   ExecuteEditTemplateAction: TExecuteEditTemplateAction_Proc;
+
+
+  AddClickActionToTemplate: TAddClickActionToTemplate_Proc;
+  AddExecAppActionToTemplate: TAddExecAppActionToTemplate_Proc;
+  AddFindControlActionToTemplate: TAddFindControlActionToTemplate_Proc;
+  AddFindSubControlActionToTemplate: TAddFindSubControlActionToTemplate_Proc;
+  AddSetControlTextActionToTemplate: TAddSetControlTextActionToTemplate_Proc;
+  AddCallTemplateActionToTemplate: TAddCallTemplateActionToTemplate_Proc;
+  AddSleepActionToTemplate: TAddSleepActionToTemplate_Proc;
+  AddSetVarActionToTemplate: TAddSetVarActionToTemplate_Proc;
+  AddWindowOperationsActionToTemplate: TAddWindowOperationsActionToTemplate_Proc;
+  AddLoadSetVarFromFileActionToTemplate: TAddLoadSetVarFromFileActionToTemplate_Proc;
+  AddSaveSetVarToFileActionToTemplate: TAddSaveSetVarToFileActionToTemplate_Proc;
+  AddPluginActionToTemplate: TAddPluginActionToTemplate_Proc;
+  AddEditTemplateActionToTemplate: TAddEditTemplateActionToTemplate_Proc;
 
 
 function LoadClickerClient(ADllPath: string): Boolean; //returns True if successful
@@ -163,6 +289,7 @@ begin
   @TestConnectionToServer := GetProcAddress(FClickerClientDllHandle, 'TestConnectionToServer');
   @SendMemPluginFileToServer := GetProcAddress(FClickerClientDllHandle, 'SendMemPluginFileToServer');
   @SendMemPluginArchiveFileToServer := GetProcAddress(FClickerClientDllHandle, 'SendMemPluginArchiveFileToServer');
+  @PrepareFilesInServer := GetProcAddress(FClickerClientDllHandle, 'PrepareFilesInServer');
 
   @ExecuteClickAction := GetProcAddress(FClickerClientDllHandle, 'ExecuteClickAction');
   @ExecuteExecAppAction := GetProcAddress(FClickerClientDllHandle, 'ExecuteExecAppAction');
@@ -177,6 +304,20 @@ begin
   @ExecuteSaveSetVarToFileAction := GetProcAddress(FClickerClientDllHandle, 'ExecuteSaveSetVarToFileAction');
   @ExecutePluginAction := GetProcAddress(FClickerClientDllHandle, 'ExecutePluginAction');
   @ExecuteEditTemplateAction := GetProcAddress(FClickerClientDllHandle, 'ExecuteEditTemplateAction');
+
+  @AddClickActionToTemplate := GetProcAddress(FClickerClientDllHandle, 'AddClickActionToTemplate');
+  @AddExecAppActionToTemplate := GetProcAddress(FClickerClientDllHandle, 'AddExecAppActionToTemplate');
+  @AddFindControlActionToTemplate := GetProcAddress(FClickerClientDllHandle, 'AddFindControlActionToTemplate');
+  @AddFindSubControlActionToTemplate := GetProcAddress(FClickerClientDllHandle, 'AddFindSubControlActionToTemplate');
+  @AddSetControlTextActionToTemplate := GetProcAddress(FClickerClientDllHandle, 'AddSetControlTextActionToTemplate');
+  @AddCallTemplateActionToTemplate := GetProcAddress(FClickerClientDllHandle, 'AddCallTemplateActionToTemplate');
+  @AddSleepActionToTemplate := GetProcAddress(FClickerClientDllHandle, 'AddSleepActionToTemplate');
+  @AddSetVarActionToTemplate := GetProcAddress(FClickerClientDllHandle, 'AddSetVarActionToTemplate');
+  @AddWindowOperationsActionToTemplate := GetProcAddress(FClickerClientDllHandle, 'AddWindowOperationsActionToTemplate');
+  @AddLoadSetVarFromFileActionToTemplate := GetProcAddress(FClickerClientDllHandle, 'AddLoadSetVarFromFileActionToTemplate');
+  @AddSaveSetVarToFileActionToTemplate := GetProcAddress(FClickerClientDllHandle, 'AddSaveSetVarToFileActionToTemplate');
+  @AddPluginActionToTemplate := GetProcAddress(FClickerClientDllHandle, 'AddPluginActionToTemplate');
+  @AddEditTemplateActionToTemplate := GetProcAddress(FClickerClientDllHandle, 'AddEditTemplateActionToTemplate');
 end;
 
 
