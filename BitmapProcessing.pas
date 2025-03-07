@@ -111,7 +111,8 @@ implementation
 
 
 uses
-  Forms, Classes, IntegerList, DoubleList;
+  Forms, Classes, IntegerList, DoubleList,
+  ctypes, cl;
 
 
 procedure RandomSleep(ASleepySearch: Byte);
@@ -1498,6 +1499,303 @@ begin
 end;
 
 
+function GetKernelSrcRGB(ARGBSizeOnBG, ARGBSizeOnSub: Byte): string;
+var
+  RGBSizeStrOnBG, RGBSizeStrOnSub: string;
+begin      //int is 32-bit, long is 64-bit
+  if not (ARGBSizeOnBG in [3, 4]) or not (ARGBSizeOnSub in [3, 4]) then
+  begin
+    Result := 'Bad code';
+    Exit;
+  end;
+
+  RGBSizeStrOnBG := IntToStr(ARGBSizeOnBG);
+  RGBSizeStrOnSub := IntToStr(ARGBSizeOnSub);
+
+  Result :=
+    '__kernel void MatCmp(                      ' + #13#10 +
+    '  __global uchar* ABackgroundBmp,          ' + #13#10 +
+    '  __global uchar* ASubBmp,                 ' + #13#10 +
+    '  __global int* AResultedErrCount,         ' + #13#10 +
+    '  const unsigned int ABackgroundWidth,     ' + #13#10 +
+    '  const unsigned int ASubBmpWidth,         ' + #13#10 +
+    '  const unsigned int AXOffset,             ' + #13#10 +
+    '  const unsigned int AYOffset,             ' + #13#10 +
+    '  const uchar AColorError)                 ' + #13#10 +
+    '{                                          ' + #13#10 +
+    '  int YIdx = get_global_id(0);             ' + #13#10 + //goes from 0 to SubBmpHeight - 1
+    '  __global uchar const * BGRow = &ABackgroundBmp[((YIdx + AYOffset) * ABackgroundWidth + AXOffset) * ' + RGBSizeStrOnBG + '];' + #13#10 + //pointer to the current row, indexed by YIdx
+    '  __global uchar const * SubRow = &ASubBmp[(YIdx * ASubBmpWidth) * ' + RGBSizeStrOnSub + '];' + #13#10 + //pointer to the current row, indexed by YIdx
+    '  int ErrCount = 0;                             ' + #13#10 +
+    '  for (int x = 0; x < ASubBmpWidth; x++)        ' + #13#10 +
+    '  {                                             ' + #13#10 +
+    '     int x0_BG = x * ' + RGBSizeStrOnBG + ' + 0;                        ' + #13#10 +
+    '     int x1_BG = x * ' + RGBSizeStrOnBG + ' + 1;                        ' + #13#10 +
+    '     int x2_BG = x * ' + RGBSizeStrOnBG + ' + 2;                        ' + #13#10 +
+    '     int x0_Sub = x * ' + RGBSizeStrOnSub + ' + 0;                        ' + #13#10 +
+    '     int x1_Sub = x * ' + RGBSizeStrOnSub + ' + 1;                        ' + #13#10 +
+    '     int x2_Sub = x * ' + RGBSizeStrOnSub + ' + 2;                        ' + #13#10 +
+    '     short SubPxB = SubRow[x0_Sub];             ' + #13#10 +
+    '     short BGPxB = BGRow[x0_BG];                ' + #13#10 +
+    '     short SubPxG = SubRow[x1_Sub];             ' + #13#10 +
+    '     short BGPxG = BGRow[x1_BG];                ' + #13#10 +
+    '     short SubPxR = SubRow[x2_Sub];             ' + #13#10 +
+    '     short BGPxR = BGRow[x2_BG];                ' + #13#10 +
+    '     if ((abs(SubPxR - BGPxR) > AColorError) || ' + #13#10 +
+    '         (abs(SubPxG - BGPxG) > AColorError) || ' + #13#10 +
+    '         (abs(SubPxB - BGPxB) > AColorError))   ' + #13#10 +
+    '     {                                          ' + #13#10 +
+    '       ErrCount++;                              ' + #13#10 +
+    '     }  //if                                    ' + #13#10 +
+    '  }  //for                                      ' + #13#10 +
+    '  AResultedErrCount[YIdx] = ErrCount;           ' + #13#10 +
+    '}';
+end;
+
+
+function BitmapPosMatch_BruteForceOnGPU(ASrcBmpData, ASubBmpData: Pointer;
+                                        ABytesPerPixelOnSrc, ABytesPerPixelOnSub: Integer;
+                                        ASourceBitmapWidth, ASourceBitmapHeight, ASubBitmapWidth, ASubBitmapHeight: Integer;
+                                        ColorErrorLevel: Integer;
+                                        out SubCnvXOffset, SubCnvYOffset: Integer;
+                                        var AFoundBitmaps: TCompRecArr;
+                                        TotalErrorCount, FastSearchColorErrorCount: Integer;
+                                        AUseFastSearch, AIgnoreBackgroundColor, AGetAllBitmaps: Boolean;
+                                        ABackgroundColor: TColor;
+                                        var AIgnoredColorsArr: TColorArr;
+                                        ASleepySearch: Byte;
+                                        AOutsideTickCount, APrecisionTimeout: QWord;
+                                        AThreadCount: Integer;
+                                        out AResultedErrorCount: Integer;
+                                        AStopSearchOnDemand: PBoolean = nil;
+                                        StopSearchOnMismatch: Boolean = True): Boolean;
+
+  procedure LogCallResult(AError: Integer; AFuncName, AInfo: string);
+  begin
+    //call some event
+    if AError <> 0 then
+      raise Exception.Create('Error ' + clErrorText(AError) + ' instead of "' + AInfo + '" at "' + AFuncName + '" OpenCL API call.');
+  end;
+
+var
+  Error: Integer;
+  DiffCntPerRow: array of LongInt;
+  DifferentCount: LongInt;
+  ShouldStop: Boolean;
+
+  KernelSrc: string;
+
+  GlobalSize: csize_t;
+  LocalSize: csize_t;
+  DeviceID: cl_device_id;
+  Context: cl_context;
+  CmdQueue: cl_command_queue;
+  CLProgram: cl_program;
+  CLKernel: cl_kernel;
+
+  i, j, k: Integer;
+  BackgroundBmpWidth, BackgroundBmpHeight: Integer;
+  SubBmpWidth, SubBmpHeight: Integer;
+  XOffset, YOffset: Integer;
+  ColorError: Byte;
+
+  BackgroundBufferRef: cl_mem;
+  SubBufferRef: cl_mem;
+  ResBufferRef: cl_mem;
+
+  DevType: cl_device_type; //GPU
+  PlatformIDs: Pcl_platform_id;
+  PlatformCount: cl_uint;
+begin
+  //ToDo: - Implement another kernel code, which calls MatCmp with the two for loops (XOffset, YOffset). - Requires OpenCL version > 2.0.
+  //ToDo: - Implement FastSearch property, which verifies a small rectangle (Top-Left), before going full bmp.
+  //ToDo: - Implement ignored colors, using AIgnoredColorsArr.
+  //ToDo: - Move the whole code to another (CPU) thread, to avoid blocking the UI.
+
+  Result := False;
+
+  BackgroundBmpWidth := ASourceBitmapWidth;
+  BackgroundBmpHeight := ASourceBitmapHeight;
+  SubBmpWidth := ASubBitmapWidth;
+  SubBmpHeight := ASubBitmapHeight;
+
+  KernelSrc := GetKernelSrcRGB(ABytesPerPixelOnSrc, ABytesPerPixelOnSub);
+
+  Error := clGetPlatformIDs(0, nil, @PlatformCount);
+  LogCallResult(Error, 'clGetPlatformIDs', 'PlatformCount: ' + IntToStr(PlatformCount));
+
+  GetMem(PlatformIDs, PlatformCount * SizeOf(cl_platform_id));
+  try
+    Error := clGetPlatformIDs(PlatformCount, PlatformIDs, nil);
+    LogCallResult(Error, 'clGetPlatformIDs', '');
+
+    DevType := CL_DEVICE_TYPE_GPU;
+    DeviceID := nil;
+    Error := clGetDeviceIDs(PlatformIDs[0], DevType, 1, @DeviceID, nil);
+
+    LogCallResult(Error, 'clGetDeviceIDs', '');
+
+    Context := clCreateContext(nil, 1, @DeviceID, nil, nil, Error);
+    if Context = nil then
+      LogCallResult(Error, 'clCreateContext', '');
+
+    CmdQueue := clCreateCommandQueue(Context, DeviceID, 0, Error);
+    if CmdQueue = nil then
+      LogCallResult(Error, 'clCreateCommandQueue', '');
+
+    CLProgram := clCreateProgramWithSource(Context, 1, PPAnsiChar(@KernelSrc), nil, Error);
+    if CLProgram = nil then
+      LogCallResult(Error, 'clCreateProgramWithSource', '');
+
+    Error := clBuildProgram(CLProgram, 0, nil, nil, nil, nil);
+    LogCallResult(Error, 'clBuildProgram', 'Kernel code compiled.');
+
+    CLKernel := clCreateKernel(CLProgram, 'MatCmp', Error);
+    try
+      LogCallResult(Error, 'clCreateKernel', 'Kernel allocated.');
+
+      Error := clGetKernelWorkGroupInfo(CLKernel, DeviceID, CL_KERNEL_WORK_GROUP_SIZE, SizeOf(LocalSize), @LocalSize, nil);
+      LogCallResult(Error, 'clGetKernelWorkGroupInfo', 'Work group info obtained.');
+
+      BackgroundBufferRef := clCreateBuffer(Context, CL_MEM_READ_ONLY, csize_t(ABytesPerPixelOnSrc * BackgroundBmpWidth * BackgroundBmpHeight), nil, Error);
+      try
+        LogCallResult(Error, 'clCreateBuffer', 'Background buffer created.');
+
+        SubBufferRef := clCreateBuffer(Context, CL_MEM_READ_ONLY, csize_t(ABytesPerPixelOnSub * SubBmpWidth * SubBmpHeight), nil, Error);
+        try
+          LogCallResult(Error, 'clCreateBuffer', 'Sub buffer created.');
+
+          ResBufferRef := clCreateBuffer(Context, CL_MEM_WRITE_ONLY, csize_t(SizeOf(LongInt) * SubBmpHeight), nil, Error);
+          try
+            LogCallResult(Error, 'clCreateBuffer', 'Res buffer created.');
+
+            Error := clEnqueueWriteBuffer(CmdQueue, BackgroundBufferRef, CL_TRUE, 0, csize_t(ABytesPerPixelOnSrc * BackgroundBmpWidth * BackgroundBmpHeight), ASrcBmpData, 0, nil, nil);
+            LogCallResult(Error, 'clEnqueueWriteBuffer', 'Background buffer written.');
+
+            Error := clEnqueueWriteBuffer(CmdQueue, SubBufferRef, CL_TRUE, 0, csize_t(ABytesPerPixelOnSub * SubBmpWidth * SubBmpHeight), ASubBmpData, 0, nil, nil);
+            LogCallResult(Error, 'clEnqueueWriteBuffer', 'Sub buffer written.');
+
+            XOffset := 0;
+            YOffset := 0;
+            ColorError := ColorErrorLevel;
+
+            Error := clSetKernelArg(CLKernel, 0, SizeOf(cl_mem), @BackgroundBufferRef); //sizeof(cl_mem)  is SizeOf(Pointer), which can be 4 or 8
+            LogCallResult(Error, 'clSetKernelArg', 'BackgroundBufferRef argument set.');
+
+            Error := clSetKernelArg(CLKernel, 1, SizeOf(cl_mem), @SubBufferRef); //sizeof(cl_mem)  is SizeOf(Pointer), which can be 4 or 8
+            LogCallResult(Error, 'clSetKernelArg', 'SubBufferRef argument set.');
+
+            Error := clSetKernelArg(CLKernel, 2, SizeOf(cl_mem), @ResBufferRef); //sizeof(cl_mem)  is SizeOf(Pointer), which can be 4 or 8
+            LogCallResult(Error, 'clSetKernelArg', 'ResBufferRef argument set.');
+
+            Error := clSetKernelArg(CLKernel, 3, SizeOf(LongInt), @BackgroundBmpWidth);
+            LogCallResult(Error, 'clSetKernelArg', 'ABackgroundWidth argument set.');
+
+            Error := clSetKernelArg(CLKernel, 4, SizeOf(LongInt), @SubBmpWidth);
+            LogCallResult(Error, 'clSetKernelArg', 'ASubBmpWidth argument set.');
+
+            //Error := clSetKernelArg(CLKernel, 5, SizeOf(LongInt), @XOffset);
+            //LogCallResult(Error, 'clSetKernelArg', 'XOffset argument set.');
+            //
+            //Error := clSetKernelArg(CLKernel, 6, SizeOf(LongInt), @YOffset);
+            //LogCallResult(Error, 'clSetKernelArg', 'YOffset argument set.');
+
+            Error := clSetKernelArg(CLKernel, 7, SizeOf(Byte), @ColorError);
+            LogCallResult(Error, 'clSetKernelArg', 'ColorError argument set.');
+
+            GlobalSize := SubBmpHeight;
+            LogCallResult(Error, 'Matrix comparison', 'Starting...');
+
+            ShouldStop := False;
+            SetLength(DiffCntPerRow, GlobalSize);
+            for i := 0 to BackgroundBmpHeight - SubBmpHeight - 1 do
+            begin
+              for j := 0 to BackgroundBmpWidth - SubBmpWidth - 1 do
+              begin
+                XOffset := j;
+                YOffset := i;
+
+                Error := clSetKernelArg(CLKernel, 5, SizeOf(LongInt), @XOffset);
+                LogCallResult(Error, 'clSetKernelArg', '');
+
+                Error := clSetKernelArg(CLKernel, 6, SizeOf(LongInt), @YOffset);
+                LogCallResult(Error, 'clSetKernelArg', '');
+
+                Error := clEnqueueNDRangeKernel(CmdQueue, CLKernel, 1, nil, @GlobalSize, nil, 0, nil, nil);
+                LogCallResult(Error, 'clEnqueueNDRangeKernel', '');
+
+                Error := clFinish(CmdQueue);
+                LogCallResult(Error, 'clEnqueueNDRangeKernel', '');
+
+                Error := clEnqueueReadBuffer(CmdQueue, ResBufferRef, CL_TRUE, 0, csize_t(SizeOf(LongInt) * GlobalSize), @DiffCntPerRow[0], 0, nil, nil);
+                LogCallResult(Error, 'clEnqueueReadBuffer', '');
+
+                DifferentCount := 0;
+                for k := 0 to GlobalSize - 1 do //results len
+                  Inc(DifferentCount, DiffCntPerRow[k]);
+
+                if DifferentCount < TotalErrorCount then
+                begin
+                  Result := True;
+                  AResultedErrorCount := DifferentCount;
+                  SubCnvXOffset := XOffset;
+                  SubCnvYOffset := YOffset;
+                  SetLength(AFoundBitmaps, Length(AFoundBitmaps) + 1);
+                  AFoundBitmaps[Length(AFoundBitmaps) - 1].XOffsetFromParent := XOffset;
+                  AFoundBitmaps[Length(AFoundBitmaps) - 1].YOffsetFromParent := YOffset;
+                  AFoundBitmaps[Length(AFoundBitmaps) - 1].ResultedErrorCount := AResultedErrorCount;
+
+                  if not AGetAllBitmaps then
+                    ShouldStop := True;  //stop only if a single bitmap result is expected
+
+                  if ShouldStop then
+                    Break;
+                end;
+
+                if ShouldStop then
+                  Break;
+
+                if (AStopSearchOnDemand <> nil) and AStopSearchOnDemand^ then
+                begin
+                  ShouldStop := True;
+                  Break;
+                end;
+
+                if (AOutsideTickCount > 0) and (GetTickCount64 - AOutsideTickCount > APrecisionTimeout) then
+                  raise EBmpMatchTimeout.Create('PrecisionTimeout on searching for SubControl.'); //Exit;
+              end; //for j
+
+              if DifferentCount < TotalErrorCount then
+                Break;
+
+              if (AOutsideTickCount > 0) and (GetTickCount64 - AOutsideTickCount > APrecisionTimeout) then
+                Break;
+
+              RandomSleep(ASleepySearch);
+              Application.ProcessMessages;
+            end; //for i
+          finally
+            clReleaseMemObject(ResBufferRef);
+          end;
+        finally
+          clReleaseMemObject(SubBufferRef);
+        end;
+      finally
+        clReleaseMemObject(BackgroundBufferRef);
+      end;
+    finally  //clCreateKernel
+      clReleaseKernel(CLKernel);
+    end;
+
+    clReleaseProgram(CLProgram);
+    clReleaseCommandQueue(CmdQueue);
+    clReleaseContext(Context);
+  finally
+    Freemem(PlatformIDs, PlatformCount * SizeOf(cl_platform_id));
+  end;
+end;
+
+
 function BitmapPosMatch(Algorithm: TMatchBitmapAlgorithm;
                         AlgorithmSettings: TMatchBitmapAlgorithmSettings;
                         AMatchByHistogramNumericSettings: TMatchByHistogramNumericSettings;
@@ -1523,11 +1821,76 @@ var
   SourceCanvasMat_B, SubCanvasMat_B: PCanvasMat;
   SizeOfTCanvasMat: Integer;
   SrcMat, SubMat: TRGBPCanvasMat;
+  SourceStream, SubStream: TMemoryStream;
+  i: Integer;
+  BytesPerPixelSrc, BytesPerPixelSub: Integer;
+  ScLn: Pointer;
 begin
   {   //debug code
   if not FileExists(CDebugSubBmpPath) then
     SubBitmap.SaveToFile(CDebugSubBmpPath);
   }
+
+  if Algorithm = mbaBruteForceOnGPU then
+  begin
+    SourceStream := TMemoryStream.Create;
+    SubStream := TMemoryStream.Create;
+    try
+      if SourceBitmap.PixelFormat = pf24bit then
+        BytesPerPixelSrc := 3
+      else
+        BytesPerPixelSrc := 4;
+
+      if SubBitmap.PixelFormat = pf24bit then
+        BytesPerPixelSub := 3
+      else
+        BytesPerPixelSub := 4;
+
+      for i := 0 to SourceBitmap.Height - 1 do
+      begin
+        ScLn := SourceBitmap.{%H-}ScanLine[i];
+        SourceStream.Write(ScLn^, SourceBitmap.Width * BytesPerPixelSrc);
+      end;
+
+      for i := 0 to SubBitmap.Height - 1 do
+      begin
+        ScLn := SubBitmap.{%H-}ScanLine[i];
+        SubStream.Write(ScLn^, SubBitmap.Width * BytesPerPixelSub);
+      end;
+
+      Result := BitmapPosMatch_BruteForceOnGPU(SourceStream.Memory,
+                                               SubStream.Memory,
+                                               BytesPerPixelSrc,
+                                               BytesPerPixelSub,
+                                               SourceBitmap.Width,
+                                               SourceBitmap.Height,
+                                               SubBitmap.Width,
+                                               SubBitmap.Height,
+                                               ColorErrorLevel,
+                                               SubCnvXOffset,
+                                               SubCnvYOffset,
+                                               AFoundBitmaps,
+                                               TotalErrorCount,
+                                               FastSearchColorErrorCount,
+                                               AUseFastSearch,
+                                               AIgnoreBackgroundColor,
+                                               AGetAllBitmaps,
+                                               ABackgroundColor,
+                                               AIgnoredColorsArr,
+                                               ASleepySearch,
+                                               AOutsideTickCount,
+                                               APrecisionTimeout,
+                                               AThreadCount,
+                                               AResultedErrorCount,
+                                               AStopSearchOnDemand,
+                                               StopSearchOnMismatch);
+    finally
+      SourceStream.Free;
+      SubStream.Free;
+      Exit;
+    end;
+    Exit;
+  end;
 
   SizeOfTCanvasMat := SizeOf(TCanvasMat);
 
