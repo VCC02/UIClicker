@@ -957,6 +957,7 @@ begin
     TempFuncDescriptions.Add('$FastReplace_87To45(<some_string>)$=Replaces all #8#7 (ASCII_8 and ASCII_7) occurrences with #4#5 (ASCII_4 and ASCII_5). Returns the result.');
     TempFuncDescriptions.Add('$FastReplace_45To68(<some_string>)$=Replaces all #4#5 (ASCII_4 and ASCII_5) occurrences with #6#8 (ASCII_6 and ASCII_8). Returns the result.');
     TempFuncDescriptions.Add('$FastReplace_68To45(<some_string>)$=Replaces all #6#8 (ASCII_6 and ASCII_8) occurrences with #4#5 (ASCII_4 and ASCII_5). Returns the result.');
+    TempFuncDescriptions.Add('$StringReplace(<StringToBeSearchedFrom>~^~<OldSubString>~^~<NewSubString>)$=Replaces all occurrences of <OldSubString>, from <StringToBeSearchedFrom>, with <NewSubString>. Returns the result. The argument separator is a "~^~" string, to allow parsing strings, which contain commas.');
     TempFuncDescriptions.Add('$Exit(<ExitCode>)$=Stops current template execution. If the passed ExitCode argument is 0, the template stops with a "Successful" status, otherwise with "Failed". Returns nothing. Sets the $ExitCode$ variable to the passed argument. It can be executed by SetVar action and must be placed in its "Variable" column.');
     TempFuncDescriptions.Add('$CreateDir(<PathToNewDir>)$=Creates a directory (and its parent directories, if required) by the current path.');
     TempFuncDescriptions.Add('$LoadTextFile(<PathToTextFile>)$=Loads a text file (CRLF-separated lines) and returns its content as #4#5 separated strings.');

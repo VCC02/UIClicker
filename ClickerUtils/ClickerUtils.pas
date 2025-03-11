@@ -1225,6 +1225,7 @@ const
   CFastReplace_87To45_FuncName = '$FastReplace_87To45(';
   CFastReplace_45To68_FuncName = '$FastReplace_45To68(';
   CFastReplace_68To45_FuncName = '$FastReplace_68To45(';
+  CStringReplace_FuncName = '$StringReplace(';
   CExit_FuncName = '$Exit(';
   CStringContains_FuncName = '$StringContains(';
   CCreateDir_FuncName = '$CreateDir(';
@@ -1249,7 +1250,7 @@ const
   CGetWindowLongPtr_FuncName = '$GetWindowLongPtr(';
   CGetWindowProcessId_FuncName = '$GetWindowProcessId(';
 
-  CBuiltInFunctionCount = 48;
+  CBuiltInFunctionCount = 49;
   CBuiltInFunctions: array[0..CBuiltInFunctionCount - 1] of string = (
     CRandom_FuncName,
     CSum_FuncName,
@@ -1276,6 +1277,7 @@ const
     CFastReplace_87To45_FuncName,
     CFastReplace_45To68_FuncName,
     CFastReplace_68To45_FuncName,
+    CStringReplace_FuncName,
     CExit_FuncName,
     CStringContains_FuncName,
     CCreateDir_FuncName,
@@ -2056,6 +2058,47 @@ begin
 end;
 
 
+function ReplaceStringReplace(s: string): string;
+var
+  Args, InitialArgs: string;
+  Operand1Str, Operand2Str, Operand3Str: string;  //Operand1Str is the string in which it searches for Operand2Str.  Operand3Str is the new string, which replaces Operand2Str.
+  ListOfArgs: TStringList;
+  ResultValueStr: string;
+begin
+  Args := ExtractFuncArgs(CStringReplace_FuncName, s);
+  InitialArgs := Args;
+
+  ListOfArgs := TStringList.Create;
+  try
+    ListOfArgs.LineBreak := #1#3#7#1#9#2#7#4#2#5#8#5#6#8#5#8#9; //a string, which is less likely to occur
+    ListOfArgs.Text := StringReplace(InitialArgs, '~^~', ListOfArgs.LineBreak, [rfReplaceAll]);   //~^~ is also less likely to occur
+    if ListOfArgs.Count > 0 then
+      Operand1Str := ListOfArgs.Strings[0]
+    else
+    begin
+      Result := '';
+      Exit;
+    end;
+
+    if ListOfArgs.Count > 1 then
+      Operand2Str := ListOfArgs.Strings[1]
+    else
+      Operand2Str := '';
+
+    if ListOfArgs.Count > 2 then
+      Operand3Str := ListOfArgs.Strings[2]
+    else
+      Operand3Str := '';
+
+    ResultValueStr := StringReplace(Operand1Str, Operand2Str, Operand3Str, [rfReplaceAll])
+  finally
+    ListOfArgs.Free;
+  end;
+
+  Result := StringReplace(s, CStringReplace_FuncName + InitialArgs + ')$', ResultValueStr, [rfReplaceAll]);
+end;
+
+
 function ReplaceExit(s: string): string;
 var
   Args, InitialArgs: string;
@@ -2746,6 +2789,9 @@ begin
 
   if Pos(CFastReplace_68To45_FuncName, s) > 0 then
     s := ReplaceFastReplace_68To45(s);
+
+  if Pos(CStringReplace_FuncName, s) > 0 then
+    s := ReplaceStringReplace(s);
 
   if Pos(CSum_FuncName, s) > 0 then
     s := ReplaceSum(AListOfVars, s);

@@ -3417,7 +3417,7 @@ var
   i, j: Integer;
   VarName, VarValue, FuncArgs: string;
   RenderBmpExternallyResult: string;
-  ListOfSelfHandles: TStringList;
+  ListOfSelfHandles, ListOfConsoleItems: TStringList;
   GeneratedException: Boolean;
   TempBmp: TBitmap;
   HistogramResult, HistogramColorCountsResult: TIntArr;
@@ -3427,6 +3427,7 @@ var
   TreePath, WinInterpOptionName, WinInterpOptionValue: string;
   TreeStep: Integer;
   TreeUseMouseSwipe: Boolean;
+  ConsoleArgs: string;
 begin
   Result := False;
   TempListOfSetVarNames := TStringList.Create;
@@ -3740,10 +3741,19 @@ begin
         begin
           FuncArgs := Copy(VarName, Pos('(', VarName) + 1, MaxInt);
           FuncArgs := Copy(FuncArgs, 1, Length(FuncArgs) - 2);
-          AddToLog('Console: ' + EvaluateReplacements(FuncArgs));
+          ConsoleArgs := EvaluateReplacements(FuncArgs);
         end
         else
-          AddToLog('Console: ' + EvaluateReplacements(VarValue));
+          ConsoleArgs := EvaluateReplacements(VarValue);
+
+        ListOfConsoleItems := TStringList.Create;
+        try
+          ListOfConsoleItems.Text := ConsoleArgs;
+          for j := 0 to ListOfConsoleItems.Count - 1 do
+            AddToLog('Console: ' + ListOfConsoleItems.Strings[j]);
+        finally
+          ListOfConsoleItems.Free;
+        end;
 
         Continue;
       end;

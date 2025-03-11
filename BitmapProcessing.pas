@@ -1659,6 +1659,9 @@ begin
         SecondError := clGetProgramBuildInfo(CLProgram, DeviceID, CL_PROGRAM_BUILD_LOG, Length(Info), @Info[1], InfoLen);
         SetLength(Info, InfoLen);
         LogCallResult(SecondError, 'clGetProgramBuildInfo', 'Additional build info.');
+
+        Info := StringReplace(Info, #13#10, '|', [rfReplaceAll]);
+        Info := StringReplace(Info, #10, '|', [rfReplaceAll]);
         LogCallResult(Error, 'clBuildProgram', 'Kernel code compiled. ' + Info);
       end;
 

@@ -289,6 +289,7 @@ object frClickerSetVar: TfrClickerSetVar
         '$FastReplace_87To45(<some_string>)$'
         '$FastReplace_45To68(<some_string>)$'
         '$FastReplace_68To45(<some_string>)$'
+        '$StringReplace(<StringToBeSearchedFrom>~^~<OldSubString>~^~<NewSubString>)$'
         '$Exit(<ExitCode>)$'
         '$CreateDir(<PathToNewDir>)$'
         '$LoadTextFile(<PathToTextFile>)$'
