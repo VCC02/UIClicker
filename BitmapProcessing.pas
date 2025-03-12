@@ -1499,6 +1499,29 @@ begin
 end;
 
 
+//{$IFDEF Windows}
+//  {$DEFINE DYNLINK}
+//  const OpenCLLib = 'OpenCL.dll';
+//{$ENDIF}
+//
+//{$IFDEF UNIX}
+//  {$DEFINE DYNLINK}
+//  const OpenCLLib = 'libOpenCL.so';
+//{$ENDIF}
+//
+//const
+//  CL_QUEUE_ON_DEVICE = 1 shl 2;
+//  CL_QUEUE_ON_DEVICE_DEFAULT = 1 shl 3;
+//
+//
+//function clCreateCommandQueueWithProperties(context: cl_context;
+//                                            device: cl_device_id;
+//                                            const properties:
+//                                            Pointer; //so far, this doesn't like any type related to cl_command_queue_properties;    //set to pointer, because an array has to be passed here
+//                                            errcode_ret: cl_int): cl_command_queue; {$IFDEF Windows} stdcall; {$ELSE} cdecl {$ENDIF} external {$IFDEF DYNLINK} OpenCLLib {$ENDIF} name 'clCreateCommandQueueWithProperties';
+//
+
+
 function GetKernelSrcRGB(ARGBSizeOnBG, ARGBSizeOnSub: Byte): string;
 var
   RGBSizeStrOnBG, RGBSizeStrOnSub: string;
@@ -1549,7 +1572,32 @@ begin      //int is 32-bit, long is 64-bit
     '     }  //if                                    ' + #13#10 +
     '  }  //for                                      ' + #13#10 +
     '  AResultedErrCount[YIdx] = ErrCount;           ' + #13#10 +
-    '}';
+    //'}                                               ' + #13#10 +
+    //'                                           ' + #13#10 +
+    //'__kernel void SlideSearch(                 ' + #13#10 +
+    //'  __global uchar* ABackgroundBmp,          ' + #13#10 +
+    //'  __global uchar* ASubBmp,                 ' + #13#10 +
+    //'  __global int* AResultedErrCount,         ' + #13#10 +
+    //'  const unsigned int ABackgroundWidth,     ' + #13#10 +
+    //'  const unsigned int ASubBmpWidth,         ' + #13#10 +
+    //'  const unsigned int AXOffset,             ' + #13#10 +
+    //'  const unsigned int AYOffset,             ' + #13#10 +
+    //'  const uchar AColorError)                 ' + #13#10 +
+    //'{                                          ' + #13#10 +
+    //'  queue_t SlaveQueue = get_default_queue();' + #13#10 +
+    //'                                           ' + #13#10 +
+    //'  ndrange_t ndrange = ndrange_1D(1);       ' + #13#10 +
+    //'  kernel_enqueue_flags_t MyFlags;          ' + #13#10 +
+    //'  MyFlags = CLK_ENQUEUE_FLAGS_NO_WAIT;     ' + #13#10 +
+    //'  for (int i = 0; i < AYOffset; i++)       ' + #13#10 +
+    //'    for (int j = 0; j < AXOffset; j++)     ' + #13#10 +
+    //'      enqueue_kernel(SlaveQueue,           ' + #13#10 +      //using SlaveQueue, instead of get_default_queue()
+    //'        MyFlags,                           ' + #13#10 +      //enqueue_kernel is commented, because using the default queue, messes up the object, so that the clFinish(SlaveCmdQueue) call returns an error.
+    //'        ndrange,                           ' + #13#10 +
+    //'        ^{MatCmp(ABackgroundBmp, ASubBmp, AResultedErrCount, ABackgroundWidth, ASubBmpWidth, i, j, AColorError);});                  ' + #13#10 +
+    //'  //ToDo: collect the results from all slave kernels. ' + #13#10
+    '}                                          ' + #13#10
+    ;
 end;
 
 
@@ -1608,6 +1656,7 @@ var
   PlatformCount: cl_uint;
   Info: string;
   InfoLen: csize_t;
+  //QueueProperties: array[0..20] of PtrUInt; //cl_command_queue_properties;   //requires PtrUInt, not to throw AV on 32-bit
 begin
   //ToDo: - Implement another kernel code, which calls MatCmp with the two for loops (XOffset, YOffset). - Requires OpenCL version > 2.0.
   //ToDo: - Implement FastSearch property, which verifies a small rectangle (Top-Left), before going full bmp.
@@ -1645,6 +1694,13 @@ begin
       CmdQueue := clCreateCommandQueue(Context, DeviceID, 0, Error);
       if CmdQueue = nil then
         LogCallResult(Error, 'clCreateCommandQueue', '');
+
+      //QueueProperties[0] := CL_QUEUE_PROPERTIES;
+      //QueueProperties[1] := CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE or CL_QUEUE_ON_DEVICE or CL_QUEUE_ON_DEVICE_DEFAULT;
+      //QueueProperties[2] := 0;
+      //SlaveCmdQueue := clCreateCommandQueueWithProperties(Context, DeviceID, @QueueProperties, Error);
+      //if (SlaveCmdQueue = nil) or (Error <> 0) then
+      //  LogCallResult(Error, 'clCreateCommandQueue SlaveCmdQueue', '');
 
       CLProgram := clCreateProgramWithSource(Context, 1, PPAnsiChar(@KernelSrc), nil, Error);
       if CLProgram = nil then
@@ -1715,6 +1771,14 @@ begin
               //Error := clSetKernelArg(CLKernel, 6, SizeOf(LongInt), @YOffset);
               //LogCallResult(Error, 'clSetKernelArg', 'YOffset argument set.');
 
+              //XOffset := BackgroundBmpWidth - SubBmpWidth - 1;                 //this is the max value of XOffset
+              //Error := clSetKernelArg(CLKernel, 5, SizeOf(LongInt), @XOffset);
+              //LogCallResult(Error, 'clSetKernelArg', 'XOffset argument set.');
+              //
+              //YOffset := BackgroundBmpHeight - SubBmpHeight - 1;               //this is the max value of YOffset
+              //Error := clSetKernelArg(CLKernel, 6, SizeOf(LongInt), @YOffset);
+              //LogCallResult(Error, 'clSetKernelArg', 'YOffset argument set.');
+
               Error := clSetKernelArg(CLKernel, 7, SizeOf(Byte), @ColorError);
               LogCallResult(Error, 'clSetKernelArg', 'ColorError argument set.');
 
@@ -1740,7 +1804,7 @@ begin
                   LogCallResult(Error, 'clEnqueueNDRangeKernel', '');
 
                   Error := clFinish(CmdQueue);
-                  LogCallResult(Error, 'clEnqueueNDRangeKernel', '');
+                  LogCallResult(Error, 'clFinish', '');
 
                   Error := clEnqueueReadBuffer(CmdQueue, ResBufferRef, CL_TRUE, 0, csize_t(SizeOf(LongInt) * GlobalSize), @DiffCntPerRow[0], 0, nil, nil);
                   LogCallResult(Error, 'clEnqueueReadBuffer', '');
