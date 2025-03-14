@@ -1905,7 +1905,7 @@ begin
   if AFindControlInputData.FullBackgroundImageInResult then
   begin
     case AFindSubControlOptions.MatchBitmapAlgorithm of
-      mbaBruteForce, mbaRawHistogramZones:
+      mbaBruteForce, mbaRawHistogramZones, mbaBruteForceOnGPU:
       begin
         frClickerActions.imgDebugGrid.Left := AResultedControl.XOffsetFromParent;
         frClickerActions.imgDebugGrid.Top := AResultedControl.YOffsetFromParent;
@@ -1921,7 +1921,7 @@ begin
   else
   begin
     case AFindSubControlOptions.MatchBitmapAlgorithm of
-      mbaBruteForce, mbaRawHistogramZones:
+      mbaBruteForce, mbaRawHistogramZones, mbaBruteForceOnGPU:
       begin
         if AFindSubControlOptions.FullBackgroundImageInResult then
         begin

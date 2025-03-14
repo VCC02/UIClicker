@@ -112,7 +112,7 @@ implementation
 
 uses
   Forms, Classes, IntegerList, DoubleList,
-  ctypes, cl;
+  ctypes, CLHeaders;
 
 
 procedure RandomSleep(ASleepySearch: Byte);
@@ -1499,29 +1499,6 @@ begin
 end;
 
 
-//{$IFDEF Windows}
-//  {$DEFINE DYNLINK}
-//  const OpenCLLib = 'OpenCL.dll';
-//{$ENDIF}
-//
-//{$IFDEF UNIX}
-//  {$DEFINE DYNLINK}
-//  const OpenCLLib = 'libOpenCL.so';
-//{$ENDIF}
-//
-//const
-//  CL_QUEUE_ON_DEVICE = 1 shl 2;
-//  CL_QUEUE_ON_DEVICE_DEFAULT = 1 shl 3;
-//
-//
-//function clCreateCommandQueueWithProperties(context: cl_context;
-//                                            device: cl_device_id;
-//                                            const properties:
-//                                            Pointer; //so far, this doesn't like any type related to cl_command_queue_properties;    //set to pointer, because an array has to be passed here
-//                                            errcode_ret: cl_int): cl_command_queue; {$IFDEF Windows} stdcall; {$ELSE} cdecl {$ENDIF} external {$IFDEF DYNLINK} OpenCLLib {$ENDIF} name 'clCreateCommandQueueWithProperties';
-//
-
-
 function GetKernelSrcRGB(ARGBSizeOnBG, ARGBSizeOnSub: Byte): string;
 var
   RGBSizeStrOnBG, RGBSizeStrOnSub: string;
@@ -1622,7 +1599,7 @@ function BitmapPosMatch_BruteForceOnGPU(ASrcBmpData, ASubBmpData: Pointer;
   begin
     //call some event
     if AError <> 0 then
-      raise Exception.Create('Error ' + clErrorText(AError) + ' instead of "' + AInfo + '" at "' + AFuncName + '" OpenCL API call.');
+      raise Exception.Create('Error ' + CLErrorToStr(AError) + ' instead of "' + AInfo + '" at "' + AFuncName + '" OpenCL API call.');
   end;
 
 var
@@ -1657,6 +1634,7 @@ var
   Info: string;
   InfoLen: csize_t;
   //QueueProperties: array[0..20] of PtrUInt; //cl_command_queue_properties;   //requires PtrUInt, not to throw AV on 32-bit
+  OpenCLDll: TOpenCL;
 begin
   //ToDo: - Implement another kernel code, which calls MatCmp with the two for loops (XOffset, YOffset). - Requires OpenCL version > 2.0.
   //ToDo: - Implement FastSearch property, which verifies a small rectangle (Top-Left), before going full bmp.
@@ -1671,208 +1649,215 @@ begin
   SubBmpHeight := ASubBitmapHeight;
 
   KernelSrc := GetKernelSrcRGB(ABytesPerPixelOnSrc, ABytesPerPixelOnSub);
-
-  Error := clGetPlatformIDs(0, nil, @PlatformCount);
-  LogCallResult(Error, 'clGetPlatformIDs', 'PlatformCount: ' + IntToStr(PlatformCount));
-
-  GetMem(PlatformIDs, PlatformCount * SizeOf(cl_platform_id));
+  OpenCLDll := TOpenCL.Create;
   try
-    Error := clGetPlatformIDs(PlatformCount, PlatformIDs, nil);
-    LogCallResult(Error, 'clGetPlatformIDs', '');
+    if not OpenCLDll.Loaded then
+      raise Exception.Create('OpenCL not available. The dll is expected to exist at ' + OpenCLDll.ExpectedDllLocation);
 
-    DevType := CL_DEVICE_TYPE_GPU;
-    DeviceID := nil;
-    Error := clGetDeviceIDs(PlatformIDs[0], DevType, 1, @DeviceID, nil);
+    Error := OpenCLDll.clGetPlatformIDs(0, nil, @PlatformCount);
+    LogCallResult(Error, 'clGetPlatformIDs', 'PlatformCount: ' + IntToStr(PlatformCount));
 
-    LogCallResult(Error, 'clGetDeviceIDs', '');
-
-    Context := clCreateContext(nil, 1, @DeviceID, nil, nil, Error);
+    GetMem(PlatformIDs, PlatformCount * SizeOf(cl_platform_id));
     try
-      if Context = nil then
-        LogCallResult(Error, 'clCreateContext', '');
+      Error := OpenCLDll.clGetPlatformIDs(PlatformCount, PlatformIDs, nil);
+      LogCallResult(Error, 'clGetPlatformIDs', '');
 
-      CmdQueue := clCreateCommandQueue(Context, DeviceID, 0, Error);
-      if CmdQueue = nil then
-        LogCallResult(Error, 'clCreateCommandQueue', '');
+      DevType := CL_DEVICE_TYPE_GPU;
+      DeviceID := nil;
+      Error := OpenCLDll.clGetDeviceIDs(PlatformIDs^, DevType, 1, @DeviceID, nil);   //PlatformIDs[0]
 
-      //QueueProperties[0] := CL_QUEUE_PROPERTIES;
-      //QueueProperties[1] := CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE or CL_QUEUE_ON_DEVICE or CL_QUEUE_ON_DEVICE_DEFAULT;
-      //QueueProperties[2] := 0;
-      //SlaveCmdQueue := clCreateCommandQueueWithProperties(Context, DeviceID, @QueueProperties, Error);
-      //if (SlaveCmdQueue = nil) or (Error <> 0) then
-      //  LogCallResult(Error, 'clCreateCommandQueue SlaveCmdQueue', '');
+      LogCallResult(Error, 'clGetDeviceIDs', '');
 
-      CLProgram := clCreateProgramWithSource(Context, 1, PPAnsiChar(@KernelSrc), nil, Error);
-      if CLProgram = nil then
-        LogCallResult(Error, 'clCreateProgramWithSource', '');
-
-      Error := clBuildProgram(CLProgram, 0, nil, nil, nil, nil);
-      //LogCallResult(Error, 'clBuildProgram', 'Kernel code compiled.'); //commented, to allow the next call to clGetProgramBuildInfo
-
-      if Error < CL_SUCCESS then
-      begin
-        SetLength(Info, 32768);
-        SecondError := clGetProgramBuildInfo(CLProgram, DeviceID, CL_PROGRAM_BUILD_LOG, Length(Info), @Info[1], InfoLen);
-        SetLength(Info, InfoLen);
-        LogCallResult(SecondError, 'clGetProgramBuildInfo', 'Additional build info.');
-
-        Info := StringReplace(Info, #13#10, '|', [rfReplaceAll]);
-        Info := StringReplace(Info, #10, '|', [rfReplaceAll]);
-        LogCallResult(Error, 'clBuildProgram', 'Kernel code compiled. ' + Info);
-      end;
-
-      CLKernel := clCreateKernel(CLProgram, 'MatCmp', Error);
+      Context := OpenCLDll.clCreateContext(nil, 1, @DeviceID, nil, nil, Error);
       try
-        LogCallResult(Error, 'clCreateKernel', 'Kernel allocated.');
+        if Context = nil then
+          LogCallResult(Error, 'clCreateContext', '');
 
-        Error := clGetKernelWorkGroupInfo(CLKernel, DeviceID, CL_KERNEL_WORK_GROUP_SIZE, SizeOf(LocalSize), @LocalSize, nil);
-        LogCallResult(Error, 'clGetKernelWorkGroupInfo', 'Work group info obtained.');
+        CmdQueue := OpenCLDll.clCreateCommandQueue(Context, DeviceID, 0, Error);
+        if CmdQueue = nil then
+          LogCallResult(Error, 'clCreateCommandQueue', '');
 
-        BackgroundBufferRef := clCreateBuffer(Context, CL_MEM_READ_ONLY, csize_t(ABytesPerPixelOnSrc * BackgroundBmpWidth * BackgroundBmpHeight), nil, Error);
+        //QueueProperties[0] := CL_QUEUE_PROPERTIES;
+        //QueueProperties[1] := CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE or CL_QUEUE_ON_DEVICE or CL_QUEUE_ON_DEVICE_DEFAULT;
+        //QueueProperties[2] := 0;
+        //SlaveCmdQueue := clCreateCommandQueueWithProperties(Context, DeviceID, @QueueProperties, Error);
+        //if (SlaveCmdQueue = nil) or (Error <> 0) then
+        //  LogCallResult(Error, 'clCreateCommandQueue SlaveCmdQueue', '');
+
+        CLProgram := OpenCLDll.clCreateProgramWithSource(Context, 1, PPAnsiChar(@KernelSrc), nil, Error);
+        if CLProgram = nil then
+          LogCallResult(Error, 'clCreateProgramWithSource', '');
+
+        Error := OpenCLDll.clBuildProgram(CLProgram, 0, nil, nil, nil, nil);
+        //LogCallResult(Error, 'clBuildProgram', 'Kernel code compiled.'); //commented, to allow the next call to clGetProgramBuildInfo
+
+        if Error < CL_SUCCESS then
+        begin
+          SetLength(Info, 32768);
+          SecondError := OpenCLDll.clGetProgramBuildInfo(CLProgram, DeviceID, CL_PROGRAM_BUILD_LOG, Length(Info), @Info[1], InfoLen);
+          SetLength(Info, InfoLen);
+          LogCallResult(SecondError, 'clGetProgramBuildInfo', 'Additional build info.');
+
+          Info := StringReplace(Info, #13#10, '|', [rfReplaceAll]);
+          Info := StringReplace(Info, #10, '|', [rfReplaceAll]);
+          LogCallResult(Error, 'clBuildProgram', 'Kernel code compiled. ' + Info);
+        end;
+
+        CLKernel := OpenCLDll.clCreateKernel(CLProgram, 'MatCmp', Error);
         try
-          LogCallResult(Error, 'clCreateBuffer', 'Background buffer created.');
+          LogCallResult(Error, 'clCreateKernel', 'Kernel allocated.');
 
-          SubBufferRef := clCreateBuffer(Context, CL_MEM_READ_ONLY, csize_t(ABytesPerPixelOnSub * SubBmpWidth * SubBmpHeight), nil, Error);
+          Error := OpenCLDll.clGetKernelWorkGroupInfo(CLKernel, DeviceID, CL_KERNEL_WORK_GROUP_SIZE, SizeOf(LocalSize), @LocalSize, InfoLen);
+          LogCallResult(Error, 'clGetKernelWorkGroupInfo', 'Work group info obtained.');
+
+          BackgroundBufferRef := OpenCLDll.clCreateBuffer(Context, CL_MEM_READ_ONLY, csize_t(ABytesPerPixelOnSrc * BackgroundBmpWidth * BackgroundBmpHeight), nil, Error);
           try
-            LogCallResult(Error, 'clCreateBuffer', 'Sub buffer created.');
+            LogCallResult(Error, 'clCreateBuffer', 'Background buffer created.');
 
-            ResBufferRef := clCreateBuffer(Context, CL_MEM_WRITE_ONLY, csize_t(SizeOf(LongInt) * SubBmpHeight), nil, Error);
+            SubBufferRef := OpenCLDll.clCreateBuffer(Context, CL_MEM_READ_ONLY, csize_t(ABytesPerPixelOnSub * SubBmpWidth * SubBmpHeight), nil, Error);
             try
-              LogCallResult(Error, 'clCreateBuffer', 'Res buffer created.');
+              LogCallResult(Error, 'clCreateBuffer', 'Sub buffer created.');
 
-              Error := clEnqueueWriteBuffer(CmdQueue, BackgroundBufferRef, CL_TRUE, 0, csize_t(ABytesPerPixelOnSrc * BackgroundBmpWidth * BackgroundBmpHeight), ASrcBmpData, 0, nil, nil);
-              LogCallResult(Error, 'clEnqueueWriteBuffer', 'Background buffer written.');
+              ResBufferRef := OpenCLDll.clCreateBuffer(Context, CL_MEM_WRITE_ONLY, csize_t(SizeOf(LongInt) * SubBmpHeight), nil, Error);
+              try
+                LogCallResult(Error, 'clCreateBuffer', 'Res buffer created.');
 
-              Error := clEnqueueWriteBuffer(CmdQueue, SubBufferRef, CL_TRUE, 0, csize_t(ABytesPerPixelOnSub * SubBmpWidth * SubBmpHeight), ASubBmpData, 0, nil, nil);
-              LogCallResult(Error, 'clEnqueueWriteBuffer', 'Sub buffer written.');
+                Error := OpenCLDll.clEnqueueWriteBuffer(CmdQueue, BackgroundBufferRef, CL_TRUE, 0, csize_t(ABytesPerPixelOnSrc * BackgroundBmpWidth * BackgroundBmpHeight), ASrcBmpData, 0, nil, nil);
+                LogCallResult(Error, 'clEnqueueWriteBuffer', 'Background buffer written.');
 
-              XOffset := 0;
-              YOffset := 0;
-              ColorError := ColorErrorLevel;
+                Error := OpenCLDll.clEnqueueWriteBuffer(CmdQueue, SubBufferRef, CL_TRUE, 0, csize_t(ABytesPerPixelOnSub * SubBmpWidth * SubBmpHeight), ASubBmpData, 0, nil, nil);
+                LogCallResult(Error, 'clEnqueueWriteBuffer', 'Sub buffer written.');
 
-              Error := clSetKernelArg(CLKernel, 0, SizeOf(cl_mem), @BackgroundBufferRef); //sizeof(cl_mem)  is SizeOf(Pointer), which can be 4 or 8
-              LogCallResult(Error, 'clSetKernelArg', 'BackgroundBufferRef argument set.');
+                XOffset := 0;
+                YOffset := 0;
+                ColorError := ColorErrorLevel;
 
-              Error := clSetKernelArg(CLKernel, 1, SizeOf(cl_mem), @SubBufferRef); //sizeof(cl_mem)  is SizeOf(Pointer), which can be 4 or 8
-              LogCallResult(Error, 'clSetKernelArg', 'SubBufferRef argument set.');
+                Error := OpenCLDll.clSetKernelArg(CLKernel, 0, SizeOf(cl_mem), @BackgroundBufferRef); //sizeof(cl_mem)  is SizeOf(Pointer), which can be 4 or 8
+                LogCallResult(Error, 'clSetKernelArg', 'BackgroundBufferRef argument set.');
 
-              Error := clSetKernelArg(CLKernel, 2, SizeOf(cl_mem), @ResBufferRef); //sizeof(cl_mem)  is SizeOf(Pointer), which can be 4 or 8
-              LogCallResult(Error, 'clSetKernelArg', 'ResBufferRef argument set.');
+                Error := OpenCLDll.clSetKernelArg(CLKernel, 1, SizeOf(cl_mem), @SubBufferRef); //sizeof(cl_mem)  is SizeOf(Pointer), which can be 4 or 8
+                LogCallResult(Error, 'clSetKernelArg', 'SubBufferRef argument set.');
 
-              Error := clSetKernelArg(CLKernel, 3, SizeOf(LongInt), @BackgroundBmpWidth);
-              LogCallResult(Error, 'clSetKernelArg', 'ABackgroundWidth argument set.');
+                Error := OpenCLDll.clSetKernelArg(CLKernel, 2, SizeOf(cl_mem), @ResBufferRef); //sizeof(cl_mem)  is SizeOf(Pointer), which can be 4 or 8
+                LogCallResult(Error, 'clSetKernelArg', 'ResBufferRef argument set.');
 
-              Error := clSetKernelArg(CLKernel, 4, SizeOf(LongInt), @SubBmpWidth);
-              LogCallResult(Error, 'clSetKernelArg', 'ASubBmpWidth argument set.');
+                Error := OpenCLDll.clSetKernelArg(CLKernel, 3, SizeOf(LongInt), @BackgroundBmpWidth);
+                LogCallResult(Error, 'clSetKernelArg', 'ABackgroundWidth argument set.');
 
-              //Error := clSetKernelArg(CLKernel, 5, SizeOf(LongInt), @XOffset);
-              //LogCallResult(Error, 'clSetKernelArg', 'XOffset argument set.');
-              //
-              //Error := clSetKernelArg(CLKernel, 6, SizeOf(LongInt), @YOffset);
-              //LogCallResult(Error, 'clSetKernelArg', 'YOffset argument set.');
+                Error := OpenCLDll.clSetKernelArg(CLKernel, 4, SizeOf(LongInt), @SubBmpWidth);
+                LogCallResult(Error, 'clSetKernelArg', 'ASubBmpWidth argument set.');
 
-              //XOffset := BackgroundBmpWidth - SubBmpWidth - 1;                 //this is the max value of XOffset
-              //Error := clSetKernelArg(CLKernel, 5, SizeOf(LongInt), @XOffset);
-              //LogCallResult(Error, 'clSetKernelArg', 'XOffset argument set.');
-              //
-              //YOffset := BackgroundBmpHeight - SubBmpHeight - 1;               //this is the max value of YOffset
-              //Error := clSetKernelArg(CLKernel, 6, SizeOf(LongInt), @YOffset);
-              //LogCallResult(Error, 'clSetKernelArg', 'YOffset argument set.');
+                //Error := OpenCLDll.clSetKernelArg(CLKernel, 5, SizeOf(LongInt), @XOffset);
+                //LogCallResult(Error, 'clSetKernelArg', 'XOffset argument set.');
+                //
+                //Error := OpenCLDll.clSetKernelArg(CLKernel, 6, SizeOf(LongInt), @YOffset);
+                //LogCallResult(Error, 'clSetKernelArg', 'YOffset argument set.');
 
-              Error := clSetKernelArg(CLKernel, 7, SizeOf(Byte), @ColorError);
-              LogCallResult(Error, 'clSetKernelArg', 'ColorError argument set.');
+                //XOffset := BackgroundBmpWidth - SubBmpWidth - 1;                 //this is the max value of XOffset
+                //Error := OpenCLDll.clSetKernelArg(CLKernel, 5, SizeOf(LongInt), @XOffset);
+                //LogCallResult(Error, 'clSetKernelArg', 'XOffset argument set.');
+                //
+                //YOffset := BackgroundBmpHeight - SubBmpHeight - 1;               //this is the max value of YOffset
+                //Error := OpenCLDll.clSetKernelArg(CLKernel, 6, SizeOf(LongInt), @YOffset);
+                //LogCallResult(Error, 'clSetKernelArg', 'YOffset argument set.');
 
-              GlobalSize := SubBmpHeight;
-              LogCallResult(Error, 'Matrix comparison', 'Starting...');
+                Error := OpenCLDll.clSetKernelArg(CLKernel, 7, SizeOf(Byte), @ColorError);
+                LogCallResult(Error, 'clSetKernelArg', 'ColorError argument set.');
 
-              ShouldStop := False;
-              SetLength(DiffCntPerRow, GlobalSize);
-              for i := 0 to BackgroundBmpHeight - SubBmpHeight - 1 do
-              begin
-                for j := 0 to BackgroundBmpWidth - SubBmpWidth - 1 do
+                GlobalSize := SubBmpHeight;
+                LogCallResult(Error, 'Matrix comparison', 'Starting...');
+
+                ShouldStop := False;
+                SetLength(DiffCntPerRow, GlobalSize);
+                for i := 0 to BackgroundBmpHeight - SubBmpHeight - 1 do
                 begin
-                  XOffset := j;
-                  YOffset := i;
-
-                  Error := clSetKernelArg(CLKernel, 5, SizeOf(LongInt), @XOffset);
-                  LogCallResult(Error, 'clSetKernelArg', '');
-
-                  Error := clSetKernelArg(CLKernel, 6, SizeOf(LongInt), @YOffset);
-                  LogCallResult(Error, 'clSetKernelArg', '');
-
-                  Error := clEnqueueNDRangeKernel(CmdQueue, CLKernel, 1, nil, @GlobalSize, nil, 0, nil, nil);
-                  LogCallResult(Error, 'clEnqueueNDRangeKernel', '');
-
-                  Error := clFinish(CmdQueue);
-                  LogCallResult(Error, 'clFinish', '');
-
-                  Error := clEnqueueReadBuffer(CmdQueue, ResBufferRef, CL_TRUE, 0, csize_t(SizeOf(LongInt) * GlobalSize), @DiffCntPerRow[0], 0, nil, nil);
-                  LogCallResult(Error, 'clEnqueueReadBuffer', '');
-
-                  DifferentCount := 0;
-                  for k := 0 to GlobalSize - 1 do //results len
-                    Inc(DifferentCount, DiffCntPerRow[k]);
-
-                  if DifferentCount < TotalErrorCount then
+                  for j := 0 to BackgroundBmpWidth - SubBmpWidth - 1 do
                   begin
-                    Result := True;
-                    AResultedErrorCount := DifferentCount;
-                    SubCnvXOffset := XOffset;
-                    SubCnvYOffset := YOffset;
-                    SetLength(AFoundBitmaps, Length(AFoundBitmaps) + 1);
-                    AFoundBitmaps[Length(AFoundBitmaps) - 1].XOffsetFromParent := XOffset;
-                    AFoundBitmaps[Length(AFoundBitmaps) - 1].YOffsetFromParent := YOffset;
-                    AFoundBitmaps[Length(AFoundBitmaps) - 1].ResultedErrorCount := AResultedErrorCount;
+                    XOffset := j;
+                    YOffset := i;
 
-                    if not AGetAllBitmaps then
-                      ShouldStop := True;  //stop only if a single bitmap result is expected
+                    Error := OpenCLDll.clSetKernelArg(CLKernel, 5, SizeOf(LongInt), @XOffset);
+                    LogCallResult(Error, 'clSetKernelArg', '');
+
+                    Error := OpenCLDll.clSetKernelArg(CLKernel, 6, SizeOf(LongInt), @YOffset);
+                    LogCallResult(Error, 'clSetKernelArg', '');
+
+                    Error := OpenCLDll.clEnqueueNDRangeKernel(CmdQueue, CLKernel, 1, nil, @GlobalSize, nil, 0, nil, nil);
+                    LogCallResult(Error, 'clEnqueueNDRangeKernel', '');
+
+                    Error := OpenCLDll.clFinish(CmdQueue);
+                    LogCallResult(Error, 'clFinish', '');
+
+                    Error := OpenCLDll.clEnqueueReadBuffer(CmdQueue, ResBufferRef, CL_TRUE, 0, csize_t(SizeOf(LongInt) * GlobalSize), @DiffCntPerRow[0], 0, nil, nil);
+                    LogCallResult(Error, 'clEnqueueReadBuffer', '');
+
+                    DifferentCount := 0;
+                    for k := 0 to GlobalSize - 1 do //results len
+                      Inc(DifferentCount, DiffCntPerRow[k]);
+
+                    if DifferentCount < TotalErrorCount then
+                    begin
+                      Result := True;
+                      AResultedErrorCount := DifferentCount;
+                      SubCnvXOffset := XOffset;
+                      SubCnvYOffset := YOffset;
+                      SetLength(AFoundBitmaps, Length(AFoundBitmaps) + 1);
+                      AFoundBitmaps[Length(AFoundBitmaps) - 1].XOffsetFromParent := XOffset;
+                      AFoundBitmaps[Length(AFoundBitmaps) - 1].YOffsetFromParent := YOffset;
+                      AFoundBitmaps[Length(AFoundBitmaps) - 1].ResultedErrorCount := AResultedErrorCount;
+
+                      if not AGetAllBitmaps then
+                        ShouldStop := True;  //stop only if a single bitmap result is expected
+
+                      if ShouldStop then
+                        Break;
+                    end;
 
                     if ShouldStop then
                       Break;
-                  end;
 
-                  if ShouldStop then
-                    Break;
+                    if (AStopSearchOnDemand <> nil) and AStopSearchOnDemand^ then
+                    begin
+                      ShouldStop := True;
+                      Break;
+                    end;
 
-                  if (AStopSearchOnDemand <> nil) and AStopSearchOnDemand^ then
-                  begin
-                    ShouldStop := True;
+                    if (AOutsideTickCount > 0) and (GetTickCount64 - AOutsideTickCount > APrecisionTimeout) then
+                      raise EBmpMatchTimeout.Create('PrecisionTimeout on searching for SubControl.'); //Exit;
+                  end; //for j
+
+                  if DifferentCount < TotalErrorCount then
                     Break;
-                  end;
 
                   if (AOutsideTickCount > 0) and (GetTickCount64 - AOutsideTickCount > APrecisionTimeout) then
-                    raise EBmpMatchTimeout.Create('PrecisionTimeout on searching for SubControl.'); //Exit;
-                end; //for j
+                    Break;
 
-                if DifferentCount < TotalErrorCount then
-                  Break;
-
-                if (AOutsideTickCount > 0) and (GetTickCount64 - AOutsideTickCount > APrecisionTimeout) then
-                  Break;
-
-                RandomSleep(ASleepySearch);
-                Application.ProcessMessages;
-              end; //for i
+                  RandomSleep(ASleepySearch);
+                  Application.ProcessMessages;
+                end; //for i
+              finally
+                OpenCLDll.clReleaseMemObject(ResBufferRef);
+              end;
             finally
-              clReleaseMemObject(ResBufferRef);
+              OpenCLDll.clReleaseMemObject(SubBufferRef);
             end;
           finally
-            clReleaseMemObject(SubBufferRef);
+            OpenCLDll.clReleaseMemObject(BackgroundBufferRef);
           end;
-        finally
-          clReleaseMemObject(BackgroundBufferRef);
+        finally  //clCreateKernel
+          OpenCLDll.clReleaseKernel(CLKernel);
         end;
-      finally  //clCreateKernel
-        clReleaseKernel(CLKernel);
-      end;
 
-      clReleaseProgram(CLProgram);
-      clReleaseCommandQueue(CmdQueue);
+        OpenCLDll.clReleaseProgram(CLProgram);
+        OpenCLDll.clReleaseCommandQueue(CmdQueue);
+      finally
+        OpenCLDll.clReleaseContext(Context);
+      end;
     finally
-      clReleaseContext(Context);
+      Freemem(PlatformIDs, PlatformCount * SizeOf(cl_platform_id));
     end;
   finally
-    Freemem(PlatformIDs, PlatformCount * SizeOf(cl_platform_id));
+    OpenCLDll.Free;
   end;
 end;
 
