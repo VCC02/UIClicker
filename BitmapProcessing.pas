@@ -1519,9 +1519,11 @@ begin      //int is 32-bit, long is 64-bit
     '  __global int* AResultedErrCount,         ' + #13#10 +
     '  const unsigned int ABackgroundWidth,     ' + #13#10 +
     '  const unsigned int ASubBmpWidth,         ' + #13#10 +
+    '  const unsigned int ASubBmpHeight,        ' + #13#10 +    //After setting MatCmp as a slave kernel: not needed in this kernel, it is here for compatibility only (to have a similar list of parameters, to be able to directly call this kernel from host, if needed)
     '  const unsigned int AXOffset,             ' + #13#10 +
     '  const unsigned int AYOffset,             ' + #13#10 +
-    '  const uchar AColorError)                 ' + #13#10 +
+    '  const uchar AColorError,                 ' + #13#10 +
+    '  const long ASlaveQueue)                  ' + #13#10 +    //After setting MatCmp as a slave kernel: not needed in this kernel, it is here for compatibility only ...
     '{                                          ' + #13#10 +
     '  int YIdx = get_global_id(0);             ' + #13#10 + //goes from 0 to SubBmpHeight - 1
     '  __global uchar const * BGRow = &ABackgroundBmp[((YIdx + AYOffset) * ABackgroundWidth + AXOffset) * ' + RGBSizeStrOnBG + '];' + #13#10 + //pointer to the current row, indexed by YIdx
@@ -1557,21 +1559,25 @@ begin      //int is 32-bit, long is 64-bit
     //'  __global int* AResultedErrCount,         ' + #13#10 +
     //'  const unsigned int ABackgroundWidth,     ' + #13#10 +
     //'  const unsigned int ASubBmpWidth,         ' + #13#10 +
+    //'  const unsigned int ASubBmpHeight,        ' + #13#10 +
     //'  const unsigned int AXOffset,             ' + #13#10 +
     //'  const unsigned int AYOffset,             ' + #13#10 +
-    //'  const uchar AColorError)                 ' + #13#10 +
+    //'  const uchar AColorError,                 ' + #13#10 +
+    //'  const long ASlaveQueue)                  ' + #13#10 +
     //'{                                          ' + #13#10 +
-    //'  queue_t SlaveQueue = get_default_queue();' + #13#10 +
+    ////'  queue_t SlaveQueue = get_default_queue();' + #13#10 +     //requies OpenCL >= 2.0 and __opencl_c_device_enqueue    (so... it doesn't work)
+    //'  queue_t SlaveQueue = (queue_t)ASlaveQueue;' + #13#10 +
     //'                                           ' + #13#10 +
-    //'  ndrange_t ndrange = ndrange_1D(1);       ' + #13#10 +
+    //'  ndrange_t ndrange = ndrange_1D(ASubBmpHeight);' + #13#10 +
     //'  kernel_enqueue_flags_t MyFlags;          ' + #13#10 +
     //'  MyFlags = CLK_ENQUEUE_FLAGS_NO_WAIT;     ' + #13#10 +
-    //'  for (int i = 0; i < AYOffset; i++)       ' + #13#10 +
-    //'    for (int j = 0; j < AXOffset; j++)     ' + #13#10 +
+    //'  int i, j = 0;                            ' + #13#10 +
+    //'  //for (i = 0; i < AYOffset; i++)       ' + #13#10 +
+    //'    //for (j = 0; j < AXOffset; j++)     ' + #13#10 +
     //'      enqueue_kernel(SlaveQueue,           ' + #13#10 +      //using SlaveQueue, instead of get_default_queue()
     //'        MyFlags,                           ' + #13#10 +      //enqueue_kernel is commented, because using the default queue, messes up the object, so that the clFinish(SlaveCmdQueue) call returns an error.
     //'        ndrange,                           ' + #13#10 +
-    //'        ^{MatCmp(ABackgroundBmp, ASubBmp, AResultedErrCount, ABackgroundWidth, ASubBmpWidth, i, j, AColorError);});                  ' + #13#10 +
+    //'        ^{MatCmp(ABackgroundBmp, ASubBmp, AResultedErrCount, ABackgroundWidth, ASubBmpWidth, ASubBmpHeight, i, j, AColorError, ASlaveQueue);});                  ' + #13#10 +
     //'  //ToDo: collect the results from all slave kernels. ' + #13#10
     '}                                          ' + #13#10
     ;
@@ -1610,11 +1616,11 @@ var
 
   KernelSrc: string;
 
-  GlobalSize: csize_t;
+  GlobalSize, GlobalSizeWithDeviceEnqueue: csize_t;
   LocalSize: csize_t;
   DeviceID: cl_device_id;
   Context: cl_context;
-  CmdQueue: cl_command_queue;
+  CmdQueue, SlaveCmdQueue: cl_command_queue;
   CLProgram: cl_program;
   CLKernel: cl_kernel;
 
@@ -1633,7 +1639,7 @@ var
   PlatformCount: cl_uint;
   Info: string;
   InfoLen: csize_t;
-  //QueueProperties: array[0..20] of PtrUInt; //cl_command_queue_properties;   //requires PtrUInt, not to throw AV on 32-bit
+  QueueProperties: array[0..8] of cl_command_queue_properties;
   OpenCLDll: TOpenCL;
 begin
   //ToDo: - Implement another kernel code, which calls MatCmp with the two for loops (XOffset, YOffset). - Requires OpenCL version > 2.0.
@@ -1678,11 +1684,30 @@ begin
           LogCallResult(Error, 'clCreateCommandQueue', '');
 
         //QueueProperties[0] := CL_QUEUE_PROPERTIES;
+        //QueueProperties[1] := CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE;
+        //QueueProperties[2] := 0;
+        //
+        //try
+        //  CmdQueue := OpenCLDll.clCreateCommandQueueWithProperties(Context, DeviceID, @QueueProperties, Error);
+        //  if (CmdQueue = nil) or (Error <> 0) then
+        //    LogCallResult(Error, 'clCreateCommandQueueWithProperties CmdQueue', '');
+        //except
+        //  on E: Exception do
+        //    LogCallResult(Error, 'clCreateCommandQueueWithProperties CmdQueue', '', 'Ex: ' + E.Message);
+        //end;
+        //
+        //QueueProperties[0] := CL_QUEUE_PROPERTIES;
         //QueueProperties[1] := CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE or CL_QUEUE_ON_DEVICE or CL_QUEUE_ON_DEVICE_DEFAULT;
         //QueueProperties[2] := 0;
-        //SlaveCmdQueue := clCreateCommandQueueWithProperties(Context, DeviceID, @QueueProperties, Error);
-        //if (SlaveCmdQueue = nil) or (Error <> 0) then
-        //  LogCallResult(Error, 'clCreateCommandQueue SlaveCmdQueue', '');
+        //
+        //try
+        //  SlaveCmdQueue := OpenCLDll.clCreateCommandQueueWithProperties(Context, DeviceID, @QueueProperties, Error);  //also tested by creating this queue before the other one.  get_default_queue  still returns 0.
+        //  if (SlaveCmdQueue = nil) or (Error <> 0) then
+        //    LogCallResult(Error, 'clCreateCommandQueueWithProperties SlaveCmdQueue', '');
+        //except
+        //  on E: Exception do
+        //    LogCallResult(Error, 'clCreateCommandQueueWithProperties SlaveCmdQueue', '', 'Ex: ' + E.Message);
+        //end;
 
         CLProgram := OpenCLDll.clCreateProgramWithSource(Context, 1, PPAnsiChar(@KernelSrc), nil, Error);
         if CLProgram = nil then
@@ -1747,39 +1772,49 @@ begin
                 Error := OpenCLDll.clSetKernelArg(CLKernel, 4, SizeOf(LongInt), @SubBmpWidth);
                 LogCallResult(Error, 'clSetKernelArg', 'ASubBmpWidth argument set.');
 
-                //Error := OpenCLDll.clSetKernelArg(CLKernel, 5, SizeOf(LongInt), @XOffset);
+                Error := OpenCLDll.clSetKernelArg(CLKernel, 5, SizeOf(LongInt), @SubBmpHeight);
+                LogCallResult(Error, 'clSetKernelArg', 'SubBmpHeight argument set.');
+
+                //Error := OpenCLDll.clSetKernelArg(CLKernel, 6, SizeOf(LongInt), @XOffset);
                 //LogCallResult(Error, 'clSetKernelArg', 'XOffset argument set.');
                 //
-                //Error := OpenCLDll.clSetKernelArg(CLKernel, 6, SizeOf(LongInt), @YOffset);
+                //Error := OpenCLDll.clSetKernelArg(CLKernel, 7, SizeOf(LongInt), @YOffset);
                 //LogCallResult(Error, 'clSetKernelArg', 'YOffset argument set.');
 
-                //XOffset := BackgroundBmpWidth - SubBmpWidth - 1;                 //this is the max value of XOffset
-                //Error := OpenCLDll.clSetKernelArg(CLKernel, 5, SizeOf(LongInt), @XOffset);
+                //XOffset := BackgroundBmpWidth - SubBmpWidth - 1;                 //this is the max value of XOffset - will be used for slave kernel
+                //Error := OpenCLDll.clSetKernelArg(CLKernel, 6, SizeOf(LongInt), @XOffset);
                 //LogCallResult(Error, 'clSetKernelArg', 'XOffset argument set.');
                 //
-                //YOffset := BackgroundBmpHeight - SubBmpHeight - 1;               //this is the max value of YOffset
-                //Error := OpenCLDll.clSetKernelArg(CLKernel, 6, SizeOf(LongInt), @YOffset);
+                //YOffset := BackgroundBmpHeight - SubBmpHeight - 1;               //this is the max value of YOffset - will be used for slave kernel
+                //Error := OpenCLDll.clSetKernelArg(CLKernel, 7, SizeOf(LongInt), @YOffset);
                 //LogCallResult(Error, 'clSetKernelArg', 'YOffset argument set.');
 
-                Error := OpenCLDll.clSetKernelArg(CLKernel, 7, SizeOf(Byte), @ColorError);
+                Error := OpenCLDll.clSetKernelArg(CLKernel, 8, SizeOf(Byte), @ColorError);
                 LogCallResult(Error, 'clSetKernelArg', 'ColorError argument set.');
+
+                Error := OpenCLDll.clSetKernelArg(CLKernel, 9, SizeOf(cl_ulong), SlaveCmdQueue);  //using SizeOf(cl_ulong), because the parameter is a QWord on kernel
+                LogCallResult(Error, 'clSetKernelArg', 'SlaveCmdQueue argument set.');
 
                 GlobalSize := SubBmpHeight;
                 LogCallResult(Error, 'Matrix comparison', 'Starting...');
 
+                //GlobalSizeWithDeviceEnqueue := 1; //one master kernel, although not sure if Local should be 1  //the master kernel has only one intance
+                //Error := OpenCLDll.clEnqueueNDRangeKernel(CmdQueue, CLKernel, 1, nil, @GlobalSizeWithDeviceEnqueue, nil, 0, nil, nil);
+                //LogCallResult(Error, 'clEnqueueNDRangeKernel CmdQueue', '');
+
                 ShouldStop := False;
                 SetLength(DiffCntPerRow, GlobalSize);
-                for i := 0 to BackgroundBmpHeight - SubBmpHeight - 1 do
+                for i := 0 to BackgroundBmpHeight - SubBmpHeight - 1 do       //these two for loops are implemented in SlideSearch kernel
                 begin
                   for j := 0 to BackgroundBmpWidth - SubBmpWidth - 1 do
                   begin
                     XOffset := j;
                     YOffset := i;
 
-                    Error := OpenCLDll.clSetKernelArg(CLKernel, 5, SizeOf(LongInt), @XOffset);
+                    Error := OpenCLDll.clSetKernelArg(CLKernel, 6, SizeOf(LongInt), @XOffset);
                     LogCallResult(Error, 'clSetKernelArg', '');
 
-                    Error := OpenCLDll.clSetKernelArg(CLKernel, 6, SizeOf(LongInt), @YOffset);
+                    Error := OpenCLDll.clSetKernelArg(CLKernel, 7, SizeOf(LongInt), @YOffset);
                     LogCallResult(Error, 'clSetKernelArg', '');
 
                     Error := OpenCLDll.clEnqueueNDRangeKernel(CmdQueue, CLKernel, 1, nil, @GlobalSize, nil, 0, nil, nil);
@@ -1850,6 +1885,7 @@ begin
 
         OpenCLDll.clReleaseProgram(CLProgram);
         OpenCLDll.clReleaseCommandQueue(CmdQueue);
+        //OpenCLDll.clReleaseCommandQueue(SlaveCmdQueue);   //used for slave kernels
       finally
         OpenCLDll.clReleaseContext(Context);
       end;
