@@ -1574,8 +1574,10 @@ begin      //int is 32-bit, long is 64-bit
     //'  ndrange_t ndrange = ndrange_1D(ASubBmpHeight);' + #13#10 +
     //'  kernel_enqueue_flags_t MyFlags;          ' + #13#10 +
     //'  MyFlags = CLK_ENQUEUE_FLAGS_NO_WAIT;     ' + #13#10 +
-    //'  int i, j, k = 0;                            ' + #13#10 +
-    //'  for (i = 0; i < AYOffset; i++)       ' + #13#10 +
+    //'  int i, j, k = 0;                         ' + #13#10 +
+    //'  bool Found = false;                      ' + #13#10 +
+    //'  for (i = 0; i < AYOffset; i++)           ' + #13#10 +
+    //'  {                                        ' + #13#10 +
     //'    for (j = 0; j < AXOffset; j++)     ' + #13#10 +
     //'    {                                      ' + #13#10 +
     //'      for (k = 0; k < ASubBmpHeight; k++)  ' + #13#10 +
@@ -1596,14 +1598,16 @@ begin      //int is 32-bit, long is 64-bit
     //'      for (k = 0; k < ASubBmpHeight; k++)  ' + #13#10 +
     //'        DifferentCount += AResultedErrCount[k];' + #13#10 +
     //''                                            + #13#10 +
-    //'      AResultedErrCount[ASubBmpHeight + 1] = 0;' + #13#10 +    //init here
     //'      int TotalErrorCount = 20;            ' + #13#10 + /////////////////////////////// define as kernel param
     //'      if (DifferentCount < TotalErrorCount)' + #13#10 +
-    //'      {                                      ' + #13#10 +
-    //'        AResultedErrCount[ASubBmpHeight + 1] = 123;' + #13#10 +  //output result somehow, that it found  (maybe define another output)
+    //'      {                                    ' + #13#10 +
+    //'        Found = true;                      ' + #13#10 +
     //'        break;'                              + #13#10 +  //should (be modified to) break both "for j" and "for i"  ///////////////////////////////////
     //'      }'                                     + #13#10 +
     //'    }' + #13#10 + //for j
+    //'    if (Found) '                             + #13#10 +
+    //'      break;'                                + #13#10 +
+    //'  }' + #13#10 + //for i
     '}                                          ' + #13#10
     ;
 end;
