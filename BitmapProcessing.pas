@@ -1567,18 +1567,43 @@ begin      //int is 32-bit, long is 64-bit
     //'{                                          ' + #13#10 +
     ////'  queue_t SlaveQueue = get_default_queue();' + #13#10 +     //requies OpenCL >= 2.0 and __opencl_c_device_enqueue    (so... it doesn't work)
     //'  queue_t SlaveQueue = (queue_t)ASlaveQueue;' + #13#10 +
+    //'  clk_event_t AllEvents[' + SubBmpHeightStr + '];' + #13#10 +  //Constrained array of the same length as the 1D range, i.e. the sub BMP height.
+    //'  clk_event_t FinalEvent;                  ' + #13#10 + //used as a return event, from enqueue_marker
+    //'                                           ' + #13#10 +
     //'                                           ' + #13#10 +
     //'  ndrange_t ndrange = ndrange_1D(ASubBmpHeight);' + #13#10 +
     //'  kernel_enqueue_flags_t MyFlags;          ' + #13#10 +
     //'  MyFlags = CLK_ENQUEUE_FLAGS_NO_WAIT;     ' + #13#10 +
-    //'  int i, j = 0;                            ' + #13#10 +
-    //'  //for (i = 0; i < AYOffset; i++)       ' + #13#10 +
-    //'    //for (j = 0; j < AXOffset; j++)     ' + #13#10 +
+    //'  int i, j, k = 0;                            ' + #13#10 +
+    //'  for (i = 0; i < AYOffset; i++)       ' + #13#10 +
+    //'    for (j = 0; j < AXOffset; j++)     ' + #13#10 +
+    //'    {                                      ' + #13#10 +
+    //'      for (k = 0; k < ASubBmpHeight; k++)  ' + #13#10 +
     //'      enqueue_kernel(SlaveQueue,           ' + #13#10 +      //using SlaveQueue, instead of get_default_queue()
     //'        MyFlags,                           ' + #13#10 +      //enqueue_kernel is commented, because using the default queue, messes up the object, so that the clFinish(SlaveCmdQueue) call returns an error.
     //'        ndrange,                           ' + #13#10 +
+    //'        0,                                 ' + #13#10 +
+    //'        NULL,                              ' + #13#10 +
+    //'        &AllEvents[k],                     ' + #13#10 +
     //'        ^{MatCmp(ABackgroundBmp, ASubBmp, AResultedErrCount, ABackgroundWidth, ASubBmpWidth, ASubBmpHeight, i, j, AColorError, ASlaveQueue);});                  ' + #13#10 +
-    //'  //ToDo: collect the results from all slave kernels. ' + #13#10
+    //
+    //'      enqueue_marker(SlaveQueue, ASubBmpHeight, AllEvents, &FinalEvent);' + #13#10 +
+    //'      for (k = 0; k < ASubBmpHeight; k++)  ' + #13#10 +
+    //'        release_event(AllEvents[k]);       ' + #13#10 +
+    //'      release_event(FinalEvent);           ' + #13#10 +
+    //''                                            + #13#10 +
+    //'      int DifferentCount = 0;              ' + #13#10 +     //collect the results from all slave kernels
+    //'      for (k = 0; k < ASubBmpHeight; k++)  ' + #13#10 +
+    //'        DifferentCount += AResultedErrCount[k];' + #13#10 +
+    //''                                            + #13#10 +
+    //'      AResultedErrCount[ASubBmpHeight + 1] = 0;' + #13#10 +    //init here
+    //'      int TotalErrorCount = 20;            ' + #13#10 + /////////////////////////////// define as kernel param
+    //'      if (DifferentCount < TotalErrorCount)' + #13#10 +
+    //'      {                                      ' + #13#10 +
+    //'        AResultedErrCount[ASubBmpHeight + 1] = 123;' + #13#10 +  //output result somehow, that it found  (maybe define another output)
+    //'        break;'                              + #13#10 +  //should (be modified to) break both "for j" and "for i"  ///////////////////////////////////
+    //'      }'                                     + #13#10 +
+    //'    }' + #13#10 + //for j
     '}                                          ' + #13#10
     ;
 end;
