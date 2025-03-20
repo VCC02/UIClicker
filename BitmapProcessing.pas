@@ -1630,11 +1630,28 @@ function BitmapPosMatch_BruteForceOnGPU(ASrcBmpData, ASubBmpData: Pointer;
                                         AStopSearchOnDemand: PBoolean = nil;
                                         StopSearchOnMismatch: Boolean = True): Boolean;
 
-  procedure LogCallResult(AError: Integer; AFuncName, AInfo: string);
+  procedure LogCallResult(AError: Integer; AFuncName, AInfo: string; AExtraErrorInfo: string = '');
+  var
+    Msg: string;
   begin
-    //call some event
-    if AError <> 0 then
-      raise Exception.Create('Error ' + CLErrorToStr(AError) + ' instead of "' + AInfo + '" at "' + AFuncName + '" OpenCL API call.');
+    if AError = 0 then
+      Exit;
+
+    while Pos(#0, AExtraErrorInfo) > 0 do
+    begin
+      Delete(AExtraErrorInfo, Pos(#0, AExtraErrorInfo), 1);
+      if Length(AExtraErrorInfo) = 0 then
+        Break;
+    end;
+
+    if Pos(#0, AInfo) > 0 then
+      Delete(AInfo, Pos(#0, AInfo), 1);
+
+    Msg := 'Error ' + CLErrorToStr(AError) + ' " at "' + AFuncName + '" OpenCL API call.  ' + AExtraErrorInfo;
+    if AInfo <> '' then
+      Msg := Msg + '  Expected: ' + AInfo;
+
+    raise Exception.Create(Msg);
   end;
 
 var
@@ -1706,7 +1723,7 @@ begin
       Context := OpenCLDll.clCreateContext(nil, 1, @DeviceID, nil, nil, Error);
       try
         if Context = nil then
-          LogCallResult(Error, 'clCreateContext', '');
+          LogCallResult(Error, 'clCreateContext', '', 'Error is ' + IntToStr(Error));
 
         CmdQueue := OpenCLDll.clCreateCommandQueue(Context, DeviceID, 0, Error);
         if CmdQueue = nil then
@@ -1754,7 +1771,7 @@ begin
 
           Info := StringReplace(Info, #13#10, '|', [rfReplaceAll]);
           Info := StringReplace(Info, #10, '|', [rfReplaceAll]);
-          LogCallResult(Error, 'clBuildProgram', 'Kernel code compiled. ' + Info);
+          LogCallResult(Error, 'clBuildProgram', 'Kernel code compiled.', Info);
         end;
 
         CLKernel := OpenCLDll.clCreateKernel(CLProgram, 'MatCmp', Error);
