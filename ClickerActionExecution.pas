@@ -5245,10 +5245,13 @@ begin
   AActionOptions := ActionContent^.ActionOptions;
 
   if ActionContent^.ActionOptions.Action = acFindControl then
+  begin
+    AddToLog('Taking screenshot using FindControl... '); //wrong - bug
     if not FillInFindControlInputData(ActionContent^.FindControlOptions, AActionOptions, FindControlInputData, TxtProfileCount) then
       Exit;
+  end;
 
-  if ActionContent^.ActionOptions.Action = acFindControl then
+  if ActionContent^.ActionOptions.Action = acFindSubControl then
     if not FillInFindSubControlInputData(ActionContent^.FindSubControlOptions, AActionOptions, FindControlInputData, TxtProfileCount) then
       Exit;
 
@@ -5279,7 +5282,9 @@ begin
     AddToLog('CompHandle: ' + IntToStr(CompAtPoint.Handle) + '  ControlClass: ' + CompAtPoint.ClassName);
 
     Result := True;
-  end;
+  end
+  else
+    AddToLog('DebugBitmap is not assigned. No screenshot taken.');
 end;
 
 
