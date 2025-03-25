@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2024 VCC
+    Copyright (C) 2025 VCC
     creation date: Dec 2019
     initial release date: 26 Jul 2022
 
@@ -190,6 +190,9 @@ procedure TClkIniReadonlyFile.LoadSections(FileName: string);
 var
   FileContent: TStringList;
 begin
+  if not FileExists(FileName) then   //this may happen when saving a new ini file
+    Exit;
+
   FileContent := TStringList.Create;
   try
     FileContent.LoadFromFile(FileName);
