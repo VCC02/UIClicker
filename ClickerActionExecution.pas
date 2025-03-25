@@ -5267,7 +5267,10 @@ begin
 
   if FindControlInputData.DebugBitmap <> nil then
   begin
-    ScreenShot(CompAtPoint.Handle, FindControlInputData.DebugBitmap, ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height);
+    if FindControlInputData.CropFromScreenshot then
+      ScreenShot(CompAtPoint.Handle, FindControlInputData.DebugBitmap, ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height)
+    else
+      ScreenShot(CompAtPoint.Handle, FindControlInputData.DebugBitmap, 0, 0, CompAtPoint.ComponentRectangle.Width, CompAtPoint.ComponentRectangle.Height);
 
     MemStream := TMemoryStream.Create;
     try
@@ -5277,9 +5280,9 @@ begin
       MemStream.Free;
     end;
 
-    AddToLog('ScrShot_Left: ' + IntToStr(ScrShot_Left) + '  ScrShot_Top:' + IntToStr(ScrShot_Top));
-    AddToLog('CompWidth: ' + IntToStr(CompHeight) + '  CompHeight:' + IntToStr(CompHeight));
-    AddToLog('CompHandle: ' + IntToStr(CompAtPoint.Handle) + '  ControlClass: ' + CompAtPoint.ClassName);
+    AddToLog('ScrShot_Left: ' + IntToStr(ScrShot_Left) + '  ScrShot_Top: ' + IntToStr(ScrShot_Top));
+    AddToLog('CompWidth: ' + IntToStr(CompWidth) + '  CompHeight: ' + IntToStr(CompHeight) + '  CompAtPoint.Width: ' + IntToStr(CompAtPoint.ComponentRectangle.Width) + '  CompAtPoint.Height: ' + IntToStr(CompAtPoint.ComponentRectangle.Height));
+    AddToLog('CompHandle: ' + IntToStr(CompAtPoint.Handle) + '  ControlClass: ' + CompAtPoint.ClassName + '  CropFromScreenshot: ' + BoolToStr(FindControlInputData.CropFromScreenshot, 'True', 'False'));
 
     Result := True;
   end
