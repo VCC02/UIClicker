@@ -78,6 +78,8 @@ procedure SetControlText(hw: THandle; NewText: string);
 procedure SelectComboBoxItem(hw: THandle; StartIndex: Integer; TextToSelect: string);
 
 procedure ComputeScreenshotArea(var InputData: TFindControlInputData; var CompAtPoint: TCompRec; out ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height, CompWidth, CompHeight: Integer);
+procedure CroppedFullScreenShot(ACompAtPoint: TCompRec; AFindControlInputData: TFindControlInputData; ACompWidth, ACompHeight: Integer);
+
 function MatchControlByBitmap(Algorithm: TMatchBitmapAlgorithm;
                               AlgorithmSettings: TMatchBitmapAlgorithmSettings;
                               CompAtPoint: TCompRec;
@@ -802,6 +804,7 @@ begin
       ScreenShot(CompHandle, SrcCompSearchAreaBitmap, ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height)
     else
     begin
+      //The following code is similar to the one from CroppedFullScreenShot, maybe it can be replaced (with minor modifications):
       hwc := GetWindowClassRec(CompHandle);
 
       SrcRect.Left := hwc.ComponentRectangle.Left + ScrShot_Left;
@@ -897,6 +900,38 @@ begin
 end;
 
 
+procedure CroppedFullScreenShot(ACompAtPoint: TCompRec; AFindControlInputData: TFindControlInputData; ACompWidth, ACompHeight: Integer);
+var
+  FullScreenBmp: TBitmap;
+  SrcRect, DestRect: TRect;
+begin
+  SrcRect.Left := ACompAtPoint.ComponentRectangle.Left;
+  SrcRect.Top := ACompAtPoint.ComponentRectangle.Top;
+  SrcRect.Width := Max(3, ACompWidth);
+  SrcRect.Height := Max(3, ACompHeight);
+
+  DestRect.Left := 0;
+  DestRect.Top := 0;
+  DestRect.Width := SrcRect.Width;
+  DestRect.Height := SrcRect.Height;
+
+  FullScreenBmp := TBitmap.Create;
+  try
+    AFindControlInputData.DebugBitmap.SetSize(SrcRect.Width, SrcRect.Height);
+    ScreenShot(0, FullScreenBmp, 0, 0, Screen.Width, Screen.Height);  //Screen.DesktopWidth, Screen.DesktopHeight ???
+    AFindControlInputData.DebugBitmap.Canvas.CopyRect(DestRect, FullScreenBmp.Canvas, SrcRect);
+
+    if AFindControlInputData.DebugBitmap.Width > ACompWidth then
+      AFindControlInputData.DebugBitmap.Width := ACompWidth; //do not set with Max, because that will always set the width
+
+    if AFindControlInputData.DebugBitmap.Height > ACompHeight then
+      AFindControlInputData.DebugBitmap.Height := ACompHeight; //do not set with Max, because that will always set the height
+  finally
+    FullScreenBmp.Free;
+  end;
+end;
+
+
 //Searches for BitmapToSearchFor in the bitmap of a component defined by ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height
 //SrcCompSearchAreaBitmap - bitmap with source component, defined by InitRect
 function MatchControlByBitmap(Algorithm: TMatchBitmapAlgorithm;
@@ -911,8 +946,6 @@ var
   ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height, CompWidth, CompHeight: Integer;
   SrcCompSearchAreaBitmap: TBitmap;
   FoundBmp: Boolean;
-  FullScreenBmp: TBitmap;
-  SrcRect, DestRect: TRect;
 begin
   ComputeScreenshotArea(InputData, CompAtPoint, ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height, CompWidth, CompHeight);
 
@@ -923,32 +956,7 @@ begin
       if not InputData.CropFromScreenshot then
         ScreenShot(CompAtPoint.Handle, InputData.DebugBitmap, 0, 0, CompWidth, CompHeight)   //call this here, before calling MatchByBitmap, to have a screenshot on debug image, while searching :)
       else
-      begin
-        SrcRect.Left := CompAtPoint.ComponentRectangle.Left;
-        SrcRect.Top := CompAtPoint.ComponentRectangle.Top;
-        SrcRect.Width := Max(3, CompWidth);
-        SrcRect.Height := Max(3, CompHeight);
-
-        DestRect.Left := 0;
-        DestRect.Top := 0;
-        DestRect.Width := SrcRect.Width;
-        DestRect.Height := SrcRect.Height;
-
-        FullScreenBmp := TBitmap.Create;
-        try
-          InputData.DebugBitmap.SetSize(SrcRect.Width, SrcRect.Height);
-          ScreenShot(0, FullScreenBmp, 0, 0, Screen.Width, Screen.Height);  //Screen.DesktopWidth, Screen.DesktopHeight ???
-          InputData.DebugBitmap.Canvas.CopyRect(DestRect, FullScreenBmp.Canvas, SrcRect);
-
-          if InputData.DebugBitmap.Width > CompWidth then
-            InputData.DebugBitmap.Width := CompWidth; //do not set with Max, because that will always set the width
-
-          if InputData.DebugBitmap.Height > CompHeight then
-            InputData.DebugBitmap.Height := CompHeight; //do not set with Max, because that will always set the height
-        finally
-          FullScreenBmp.Free;
-        end;
-      end;
+        CroppedFullScreenShot(CompAtPoint, InputData, CompWidth, CompHeight);
     end;
   end
   else

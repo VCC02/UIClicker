@@ -5268,7 +5268,10 @@ begin
   if FindControlInputData.DebugBitmap <> nil then
   begin
     if FindControlInputData.CropFromScreenshot then
-      ScreenShot(CompAtPoint.Handle, FindControlInputData.DebugBitmap, ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height)
+    begin
+      //ScreenShot(CompAtPoint.Handle, FindControlInputData.DebugBitmap, ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height)
+      CroppedFullScreenShot(CompAtPoint, FindControlInputData, CompWidth, CompHeight);
+    end
     else
       ScreenShot(CompAtPoint.Handle, FindControlInputData.DebugBitmap, 0, 0, CompAtPoint.ComponentRectangle.Width, CompAtPoint.ComponentRectangle.Height);
 
