@@ -2638,7 +2638,11 @@ begin
       GetWindowLongPtrOperand2 := StrToIntDef(GetWindowLongPtrArgs, 0);
     end;
 
-    ResultValueStr := IntToStr(GetWindowLongPtr(GetWindowLongPtrOperand1, GetWindowLongPtrOperand2));
+    {$IFDEF Windows}
+      ResultValueStr := IntToStr(GetWindowLongPtr(GetWindowLongPtrOperand1, GetWindowLongPtrOperand2));
+    {$ELSE}
+      ResultValueStr := '0'; //not implemented
+    {$ENDIF}
   end;
 
   Result := StringReplace(s, CGetWindowLongPtr_FuncName + InitialGetWindowLongPtrArgs + ')$', ResultValueStr, [rfReplaceAll]);
@@ -2653,7 +2657,12 @@ begin
   ItemArgs := ExtractFuncArgs(CGetWindowProcessId_FuncName, s);
   InitialItemArgs := ItemArgs;
 
-  Res := GetWindowThreadProcessId(StrToIntDef(ItemArgs, 0), @ProcID);
+  {$IFDEF Windows}
+    Res := GetWindowThreadProcessId(StrToIntDef(ItemArgs, 0), @ProcID);
+  {$ELSE}
+    Res := 0;
+  {$ENDIF}
+
   if Res > 0 then
     Result := StringReplace(s, CGetWindowProcessId_FuncName + InitialItemArgs + ')$', IntToStr(ProcID), [rfReplaceAll])
   else
@@ -2670,7 +2679,9 @@ var
   ibr: TBrightnessOperation;
   tp: TPoint;
   CurrentName, CurrentValue: string;
-  pci: TCursorInfo;
+  {$IFDEF Windows}
+    pci: TCursorInfo;
+  {$ENDIF}
   Res: LongBool;
 begin
   for i := 0 to AListOfVars.Count - 1 do
@@ -2722,12 +2733,16 @@ begin
 
   if Pos('$Current_Mouse_hCursor$', s) > 0 then
   begin
-    pci.cbSize := SizeOf(TCursorInfo);
-    Res := GetCursorInfo(pci);
-    if Res then
-      s := StringReplace(s, '$Current_Mouse_hCursor$', IntToStr(pci.hCursor), [rfReplaceAll])
-    else
-      s := StringReplace(s, '$Current_Mouse_hCursor$', 'Err: ' + SysErrorMessage(GetLastError), [rfReplaceAll])
+    {$IFDEF Windows}
+      pci.cbSize := SizeOf(TCursorInfo);
+      Res := GetCursorInfo(pci);
+      if Res then
+        s := StringReplace(s, '$Current_Mouse_hCursor$', IntToStr(pci.hCursor), [rfReplaceAll])
+      else
+        s := StringReplace(s, '$Current_Mouse_hCursor$', 'Err: ' + SysErrorMessage(GetLastError), [rfReplaceAll])
+    {$ELSE}
+      s := '0';
+    {$ENDIF}
   end;
 
   if Pos('$CRLF$', s) > 0 then
