@@ -29,7 +29,12 @@ unit ClickerRemoteScreenForm;
 interface
 
 uses
-  Windows, Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ExtCtrls,
+  {$IFDEF Windows}
+    Windows,
+  {$ELSE}
+    LCLIntf, LCLType,
+  {$ENDIF}
+  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ExtCtrls,
   StdCtrls, Buttons, Menus, ClickerUtils, IniFiles, Types;
 
 type
@@ -96,7 +101,7 @@ implementation
 {$R *.frm}
 
 uses
-  ClickerActionsClient, MouseStuff;
+  ClickerActionsClient, MouseStuff, Math;
 
 { TfrmClickerRemoteScreen }
 

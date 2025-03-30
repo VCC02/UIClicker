@@ -32,6 +32,10 @@ uses
   Classes, SysUtils, Forms, Controls, ExtCtrls, Buttons, StdCtrls,
   VirtualTrees, Graphics, ClickerUtils, ClickerIniFiles;
 
+{$IFnDEF Windows}
+  {$UNDEF MemPlugins}
+{$ENDIF}
+
 type
   TOnPluginDbgStop = procedure of object;
   TOnPluginDbgContinueAll = procedure of object;

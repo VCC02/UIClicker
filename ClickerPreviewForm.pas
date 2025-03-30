@@ -31,7 +31,12 @@ unit ClickerPreviewForm;
 interface
 
 uses
-  Windows, {Messages,} SysUtils, Variants, Classes, Graphics, Controls, Forms,
+  {$IFDEF Windows}
+    Windows,
+  {$ELSE}
+    LCLIntf, LCLType,
+  {$ENDIF}
+  SysUtils, Variants, Classes, Graphics, Controls, Forms,
   Dialogs, ExtCtrls, StdCtrls, ComCtrls, ExtDlgs, IniFiles;
 
 type
@@ -498,7 +503,11 @@ end;
 
 procedure TfrmClickerControlPreview.tmrScanTimer(Sender: TObject);
 begin
-  if FNoKeysScanningTimer or ((GetAsyncKeyState(VK_CONTROL) < 0) and (GetAsyncKeyState(VK_SHIFT) < 0)) or FDragging then
+  {$IFDEF Windows}
+    if FNoKeysScanningTimer or ((GetAsyncKeyState(VK_CONTROL) < 0) and (GetAsyncKeyState(VK_SHIFT) < 0)) or FDragging then
+  {$ELSE}
+    if FNoKeysScanningTimer or ((GetKeyState(VK_CONTROL) < 0) and (GetKeyState(VK_SHIFT) < 0)) or FDragging then
+  {$ENDIF}
     ScanTargetControl;
 end;
 

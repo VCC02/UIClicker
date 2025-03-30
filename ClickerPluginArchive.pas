@@ -110,6 +110,10 @@ const
 implementation
 
 
+{$IFnDEF Windows}
+  {$UNDEF MemPlugins}
+{$ENDIF}
+
 uses
   Math, DllUtils, ClickerActionPluginLoader
   {$IFDEF MemPlugins}

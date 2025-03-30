@@ -28,7 +28,12 @@ interface
 
 
 uses
-  Windows, Classes;
+  {$IFDEF Windows}
+    Windows,
+  {$ELSE}
+    LCLIntf, LCLType,
+  {$ENDIF}
+  Classes;
 
 const
 
@@ -105,7 +110,12 @@ begin
   ClipCursorRect.Top := AY;
   ClipCursorRect.Right := AX + 1;
   ClipCursorRect.Bottom := AY + 1;
-  ClipCursor(ClipCursorRect);
+
+  {$IFDEF Windows}
+    ClipCursor(ClipCursorRect);
+  {$ELSE}
+    //nothing so far
+  {$ENDIF}
 end;
 
 
@@ -271,44 +281,54 @@ end;
 
 procedure SimulateSpecialKeys(AShift: TShiftState; AKeyState: Byte);
 begin
-  if ssAlt in AShift then
-    keybd_event(VK_MENU, 0, AKeyState, 0);
+  {$IFDEF Windows}
+    if ssAlt in AShift then
+      keybd_event(VK_MENU, 0, AKeyState, 0);
 
-  if ssCtrl in AShift then
-    keybd_event(VK_CONTROL, 0, AKeyState, 0);
+    if ssCtrl in AShift then
+      keybd_event(VK_CONTROL, 0, AKeyState, 0);
 
-  if ssShift in AShift then
-    keybd_event(VK_SHIFT, 0, AKeyState, 0);
+    if ssShift in AShift then
+      keybd_event(VK_SHIFT, 0, AKeyState, 0);
+  {$ELSE}
+    //
+  {$ENDIF}
 end;
 
 
 procedure SetMouseButtonStates(AButton: TMouseButton; out AMouseBtnDownState, AMouseBtnUpState: Word);
 begin
-  case AButton of
-    mbLeft:
-    begin
+  {$IFDEF Windows}
+    case AButton of
+      mbLeft:
+      begin
+        AMouseBtnDownState := MOUSEEVENTF_LEFTDOWN;
+        AMouseBtnUpState := MOUSEEVENTF_LEFTUP;
+      end;
+
+      mbRight:
+      begin
+        AMouseBtnDownState := MOUSEEVENTF_RIGHTDOWN;
+        AMouseBtnUpState := MOUSEEVENTF_RIGHTUP;
+      end;
+
+      mbMiddle:
+      begin
+        AMouseBtnDownState := MOUSEEVENTF_MIDDLEDOWN;
+        AMouseBtnUpState := MOUSEEVENTF_MIDDLEUP;
+      end;
+    else
       AMouseBtnDownState := MOUSEEVENTF_LEFTDOWN;
       AMouseBtnUpState := MOUSEEVENTF_LEFTUP;
     end;
-
-    mbRight:
-    begin
-      AMouseBtnDownState := MOUSEEVENTF_RIGHTDOWN;
-      AMouseBtnUpState := MOUSEEVENTF_RIGHTUP;
-    end;
-
-    mbMiddle:
-    begin
-      AMouseBtnDownState := MOUSEEVENTF_MIDDLEDOWN;
-      AMouseBtnUpState := MOUSEEVENTF_MIDDLEUP;
-    end;
-  else
-    AMouseBtnDownState := MOUSEEVENTF_LEFTDOWN;
-    AMouseBtnUpState := MOUSEEVENTF_LEFTUP;
-  end;
+  {$ELSE}
+    AMouseBtnDownState := 0;
+    AMouseBtnUpState := 0;
+  {$ENDIF}
 end;
 
 
+{$IFDEF Windows}
 procedure SetBasicMouseInfo(var AInputs: TInput; X, Y: Integer);
 begin
   {$IFDEF FPC} AInputs._Type {$ELSE} AInputs.Itype {$ENDIF} := INPUT_MOUSE;
@@ -534,6 +554,24 @@ begin
   GetMouseEventsFromParam(AParams, tp.X, tp.Y, X, Y, XDest, YDest, IsDragging, AShift, AButton, LeaveMouse, UseClipCursor);
   ExecMouseUp;
 end;
+{$ELSE}
+  procedure ClickTControl(AParams: TStringList);
+  begin
+    //
+  end;
+
+
+  procedure MouseDownTControl(AParams: TStrings);
+  begin
+    //
+  end;
+
+
+  procedure MouseUpTControl(AParams: TStrings);
+  begin
+    //
+  end;
+{$ENDIF}
 
 
 procedure MouseWheelTControl(AParams: TStrings);
@@ -542,11 +580,15 @@ var
 begin
   Amount := StrToIntDef(AParams.Values[CMouseWheelAmount], 0);
 
-  if AParams.Values[CMouseWheelType] = CMouseWheelVertWheel then
-    mouse_event(MOUSEEVENTF_WHEEL, 0, 0, DWord(Amount * WHEEL_DELTA), 0);
+  {$IFDEF Windows}
+    if AParams.Values[CMouseWheelType] = CMouseWheelVertWheel then
+      mouse_event(MOUSEEVENTF_WHEEL, 0, 0, DWord(Amount * WHEEL_DELTA), 0);
 
-  if AParams.Values[CMouseWheelType] = CMouseWheelHorizWheel then
-    mouse_event(MOUSEEVENTF_HWHEEL, 0, 0, DWord(Amount), 0);  //the official MSDN doc does not mention doing a multiplication by WHEEL_DELTA
+    if AParams.Values[CMouseWheelType] = CMouseWheelHorizWheel then
+      mouse_event(MOUSEEVENTF_HWHEEL, 0, 0, DWord(Amount), 0);  //the official MSDN doc does not mention doing a multiplication by WHEEL_DELTA
+  {$ELSE}
+    //
+  {$ENDIF}
 end;
 
 end.

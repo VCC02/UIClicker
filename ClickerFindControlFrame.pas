@@ -32,7 +32,12 @@ unit ClickerFindControlFrame;
 interface
 
 uses
-  Windows, Classes, SysUtils, Forms, Controls, ComCtrls,
+  {$IFDEF Windows}
+    Windows,
+  {$ELSE}
+    LCLIntf, LCLType,
+  {$ENDIF}
+  Classes, SysUtils, Forms, Controls, ComCtrls,
   Menus, Buttons, StdCtrls, ExtCtrls, Graphics,
   ClickerUtils, ClickerBMPTextFrame, ClickerPrimitivesFrame,
   InMemFileSystem, VirtualTrees;
@@ -674,7 +679,7 @@ implementation
 
 uses
   BitmapProcessing, Clipbrd, ClickerZoomPreviewForm, ClickerFontFinderSettingsForm,
-  BitmapConv;
+  BitmapConv, Math;
 
 
 //const
@@ -1626,7 +1631,11 @@ end;
 
 procedure TfrClickerFindControl.tmrHandleSelectionKeysTimer(Sender: TObject);
 begin
-  if GetAsyncKeyState(VK_ESCAPE) < 0 then
+  {$IFDEF Windows}
+    if GetAsyncKeyState(VK_ESCAPE) < 0 then
+  {$ELSE}
+    if GetKeyState(VK_ESCAPE) < 0 then //not tested
+  {$ENDIF}
   begin
     case FLatestMovedSelectionLine of
       0:
@@ -3980,7 +3989,11 @@ begin
       else
         MaxInterval := TestedError;
 
-      if (GetAsyncKeyState(VK_CONTROL) < 0) and (GetAsyncKeyState(VK_SHIFT) < 0) and(GetAsyncKeyState(VK_F2) < 0) then
+      {$IFDEF Windows}
+        if (GetAsyncKeyState(VK_CONTROL) < 0) and (GetAsyncKeyState(VK_SHIFT) < 0) and(GetAsyncKeyState(VK_F2) < 0) then
+      {$ELSE}
+        if (GetKeyState(VK_CONTROL) < 0) and (GetKeyState(VK_SHIFT) < 0) and(GetKeyState(VK_F2) < 0) then
+      {$ENDIF}
         Break;
 
       Application.ProcessMessages;
@@ -4190,7 +4203,11 @@ begin
               LastValidSize := FontSize;
           end;
 
-          if (GetAsyncKeyState(VK_CONTROL) < 0) and (GetAsyncKeyState(VK_SHIFT) < 0) and(GetAsyncKeyState(VK_F2) < 0) then
+          {$IFDEF Windows}
+            if (GetAsyncKeyState(VK_CONTROL) < 0) and (GetAsyncKeyState(VK_SHIFT) < 0) and(GetAsyncKeyState(VK_F2) < 0) then
+          {$ELSE}
+            if (GetKeyState(VK_CONTROL) < 0) and (GetKeyState(VK_SHIFT) < 0) and(GetKeyState(VK_F2) < 0) then
+          {$ENDIF}
             Break;
 
           Application.ProcessMessages;
@@ -4590,7 +4607,11 @@ begin
   begin
     CurrentLabel := Sender as TLabel;
 
-    if GetAsyncKeyState(VK_ESCAPE) < 0 then
+    {$IFDEF Windows}
+      if GetAsyncKeyState(VK_ESCAPE) < 0 then
+    {$ELSE}
+      if GetKeyState(VK_ESCAPE) < 0 then
+    {$ENDIF}
     begin
       NewLeft := FMouseDownSelPos.X;
       FSelectionHold := False;
@@ -4655,7 +4676,11 @@ begin
   begin
     CurrentLabel := Sender as TLabel;
 
-    if GetAsyncKeyState(VK_ESCAPE) < 0 then
+    {$IFDEF Windows}
+      if GetAsyncKeyState(VK_ESCAPE) < 0 then
+    {$ELSE}
+      if GetKeyState(VK_ESCAPE) < 0 then
+    {$ENDIF}
     begin
       NewLeft := FMouseDownSelPos.X;
       FSelectionHold := False;
@@ -4720,7 +4745,11 @@ begin
   begin
     CurrentLabel := Sender as TLabel;
 
-    if GetAsyncKeyState(VK_ESCAPE) < 0 then
+    {$IFDEF Windows}
+      if GetAsyncKeyState(VK_ESCAPE) < 0 then
+    {$ELSE}
+      if GetKeyState(VK_ESCAPE) < 0 then
+    {$ENDIF}
     begin
       NewTop := FMouseDownSelPos.Y;
       FSelectionHold := False;
@@ -4785,7 +4814,11 @@ begin
   begin
     CurrentLabel := Sender as TLabel;
 
-    if GetAsyncKeyState(VK_ESCAPE) < 0 then
+    {$IFDEF Windows}
+      if GetAsyncKeyState(VK_ESCAPE) < 0 then
+    {$ELSE}
+      if GetKeyState(VK_ESCAPE) < 0 then
+    {$ENDIF}
     begin
       NewTop := FMouseDownSelPos.Y;
       FSelectionHold := False;

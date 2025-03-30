@@ -33,11 +33,21 @@ unit ClickerActionsForm;
 interface
 
 uses
-  Windows, Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ComCtrls,
+  {$IFDEF Windows}
+    Windows,
+  {$ELSE}
+    LCLIntf, LCLType, Types,
+  {$ENDIF}
+  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ComCtrls,
   StdCtrls, ExtCtrls, Menus, ColorBox, ClickerActionsArrFrame, InMemFileSystem,
   IdHTTPServer, IdSchedulerOfThreadPool, IdCustomHTTPServer, IdContext, IdSync, IdGlobal,
   PollingFIFO, ClickerFileProviderClient, IniFiles, ClickerUtils, ClickerActionExecution,
   ClickerIniFiles, ClickerPrimitiveUtils, ClickerPluginArchive;
+
+{$IFnDEF Windows}
+  {$UNDEF MemPlugins}
+{$ENDIF}
+
 
 type
   TLoggingSyncObj = class(TIdSync)
@@ -429,7 +439,7 @@ implementation
 
 uses
   BitmapProcessing, ClickerActionsClient, MouseStuff, ClickerPrimitives,
-  ClickerExtraUtils;
+  ClickerExtraUtils, Math;
 
 
 const
@@ -834,7 +844,12 @@ begin
   FPluginsInMemFileSystem.OnComputeInMemFileHash := HandleOnComputeInMemFileHash;
 
   SetLength(FDecDecHashPluginInMemFSArr, 0);
-  InitializeCriticalSection(FDecDecHashArrCritSec);
+
+  {$IFDEF Windows}
+    InitializeCriticalSection(FDecDecHashArrCritSec);
+  {$ELSE}
+    InitCriticalSection(FDecDecHashArrCritSec);
+  {$ENDIF}
 
   FFileAvailabilityFIFO := TPollingFIFO.Create;
   FAutoSwitchToExecutingTab := False;
@@ -936,44 +951,49 @@ begin
   memVariables.Lines.Add('$Color_3DLight$=' + IntToHex(GetSysColor(COLOR_3DLIGHT), 6));
   memVariables.Lines.Add('$Color_WindowFrame$=' + IntToHex(GetSysColor(COLOR_WINDOWFRAME), 6));
 
-  //See MS docs for how to read Win32MajorVersion. It's not very reliable.
-  OSVerNumber := IntToStr(Win32MajorVersion) + '.' + IntToStr(Win32MinorVersion) + '.' + IntToStr(Win32BuildNumber);
-  OSVerStr := 'Unknown';
+  {$IFDEF Windows}
+    //See MS docs for how to read Win32MajorVersion. It's not very reliable.
+    OSVerNumber := IntToStr(Win32MajorVersion) + '.' + IntToStr(Win32MinorVersion) + '.' + IntToStr(Win32BuildNumber);
+    OSVerStr := 'Unknown';
 
-  hmod := LoadLibraryEx(PChar(ParamStr(0)), 0, LOAD_LIBRARY_AS_DATAFILE);
-  try
-    if (hmod <> 0) and (FindResource(hmod, MakeIntResource(1), RT_MANIFEST) > 0) then
-    begin
-      //has manifest
-      if (Win32MajorVersion = 6) and (Win32MinorVersion = 3) then
-        OSVerStr := 'Win8.1';
+    hmod := LoadLibraryEx(PChar(ParamStr(0)), 0, LOAD_LIBRARY_AS_DATAFILE);
+    try
+      if (hmod <> 0) and (FindResource(hmod, MakeIntResource(1), RT_MANIFEST) > 0) then
+      begin
+        //has manifest
+        if (Win32MajorVersion = 6) and (Win32MinorVersion = 3) then
+          OSVerStr := 'Win8.1';
 
-      if (Win32MajorVersion = 6) and (Win32MinorVersion = 2) then
-        OSVerStr := 'Win8';
+        if (Win32MajorVersion = 6) and (Win32MinorVersion = 2) then
+          OSVerStr := 'Win8';
 
-      if (Win32MajorVersion = 10) {and (Win32MinorVersion = 2)} then
-        OSVerStr := 'Win11';
+        if (Win32MajorVersion = 10) {and (Win32MinorVersion = 2)} then
+          OSVerStr := 'Win11';
 
-      if (Win32MajorVersion = 10) {and (Win32MinorVersion = 2)} then
-        OSVerStr := 'Win10';
-    end
-    else
-    begin
-      if (Win32MajorVersion = 6) and (Win32MinorVersion = 2) then
-        OSVerStr := 'Win8.1';  //or Win8 or 10  //returning Win8.1 as it may be found more often
+        if (Win32MajorVersion = 10) {and (Win32MinorVersion = 2)} then
+          OSVerStr := 'Win10';
+      end
+      else
+      begin
+        if (Win32MajorVersion = 6) and (Win32MinorVersion = 2) then
+          OSVerStr := 'Win8.1';  //or Win8 or 10  //returning Win8.1 as it may be found more often
+      end;
+
+      if (Win32MajorVersion = 6) and (Win32MinorVersion = 1) then
+        OSVerStr := 'Win7';
+
+      if (Win32MajorVersion = 6) and (Win32MinorVersion = 0) then
+        OSVerStr := 'WinVista';
+
+      if (Win32MajorVersion = 5) and ((Win32MinorVersion = 1) or (Win32MinorVersion = 2)) then
+        OSVerStr := 'WinXP';
+    finally
+      FreeLibrary(hmod);
     end;
-
-    if (Win32MajorVersion = 6) and (Win32MinorVersion = 1) then
-      OSVerStr := 'Win7';
-
-    if (Win32MajorVersion = 6) and (Win32MinorVersion = 0) then
-      OSVerStr := 'WinVista';
-
-    if (Win32MajorVersion = 5) and ((Win32MinorVersion = 1) or (Win32MinorVersion = 2)) then
-      OSVerStr := 'WinXP';
-  finally
-    FreeLibrary(hmod);
-  end;
+  {$ELSE}
+    OSVerNumber := '?';
+    OSVerStr := 'unknown';  //probably Linux
+  {$ENDIF}
 
   memVariables.Lines.Add('$OSVerNumber$=' + OSVerNumber);
   memVariables.Lines.Add('$OSVer$=' + OSVerStr);

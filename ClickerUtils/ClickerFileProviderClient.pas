@@ -29,7 +29,12 @@ unit ClickerFileProviderClient;
 interface
 
 uses
-  Windows, Classes, SysUtils, ClickerUtils, ClickerFileProviderUtils;
+  {$IFDEF Windows}
+    Windows,
+  {$ELSE}
+    LCLIntf, LCLType,
+  {$ENDIF}
+  Classes, SysUtils, ClickerUtils, ClickerFileProviderUtils;
 
 
 type
@@ -120,14 +125,24 @@ begin
   FOnLoadMissingFileContent := nil;
   FOnDenyFile := nil;
 
-  InitializeCriticalSection(FCritSec);
+  {$IFDEF Windows}
+    InitializeCriticalSection(FCritSec);
+  {$ELSE}
+    InitCriticalSection(FCritSec);
+  {$ENDIF}
+
   FLogOutput := TStringList.Create;
 end;
 
 
 destructor TPollForMissingServerFiles.Destroy;
 begin
-  DeleteCriticalSection(FCritSec);
+  {$IFDEF Windows}
+    DeleteCriticalSection(FCritSec);
+  {$ELSE}
+    DoneCriticalSection(FCritSec);
+  {$ENDIF}
+
   FreeAndNil(FLogOutput);
   FFileProvider.Free;
 

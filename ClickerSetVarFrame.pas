@@ -29,7 +29,12 @@ unit ClickerSetVarFrame;
 interface
 
 uses
-  Windows, Classes, SysUtils, Forms, Controls, Menus, ExtCtrls, StdCtrls,
+  {$IFDEF Windows}
+    Windows,
+  {$ELSE}
+    LCLIntf, LCLType,
+  {$ENDIF}
+  Classes, SysUtils, Forms, Controls, Menus, ExtCtrls, StdCtrls,
   Buttons, Dialogs, Graphics, PopupNotifier, VirtualTrees, ClickerUtils;
 
 type
@@ -556,38 +561,44 @@ end;
 
 
 procedure TfrClickerSetVar.SetVSTEditBoxByTyping(ATextToSend: string);
-var
-  KeyStrokes: array of TINPUT;
-  i, Idx: Integer;
+{$IFDEF Windows}
+  var
+    KeyStrokes: array of TINPUT;
+    i, Idx: Integer;
+{$ENDIF}
 begin
   if Assigned(FTextEditorEditBox) then
   begin
-    //FTextEditorEditBox.Text := ATextToSend;   //It seems that VTV doesn't get the message, so "type" the whole content.
+    {$IFDEF Windows}
+      //FTextEditorEditBox.Text := ATextToSend;   //It seems that VTV doesn't get the message, so "type" the whole content.
 
-    FTextEditorEditBox.Text := '';
-    FTextEditorEditBox.SetFocus; //just in case
+      FTextEditorEditBox.Text := '';
+      FTextEditorEditBox.SetFocus; //just in case
 
-    SetLength(KeyStrokes, Length(ATextToSend) shl 1);
+      SetLength(KeyStrokes, Length(ATextToSend) shl 1);
 
-    for i := 0 to Length(ATextToSend) - 1 do   //string len, not array len
-    begin
-      Idx := i shl 1;
-      KeyStrokes[Idx]._Type := INPUT_KEYBOARD; //not sure if needed
-      KeyStrokes[Idx].ki.wVk := 0;
-      KeyStrokes[Idx].ki.wScan := Ord(ATextToSend[i + 1]);
-      KeyStrokes[Idx].ki.dwFlags := KEYEVENTF_UNICODE; //0;
-      KeyStrokes[Idx].ki.Time := 0;
-      KeyStrokes[Idx].ki.ExtraInfo := 0;
+      for i := 0 to Length(ATextToSend) - 1 do   //string len, not array len
+      begin
+        Idx := i shl 1;
+        KeyStrokes[Idx]._Type := INPUT_KEYBOARD; //not sure if needed
+        KeyStrokes[Idx].ki.wVk := 0;
+        KeyStrokes[Idx].ki.wScan := Ord(ATextToSend[i + 1]);
+        KeyStrokes[Idx].ki.dwFlags := KEYEVENTF_UNICODE; //0;
+        KeyStrokes[Idx].ki.Time := 0;
+        KeyStrokes[Idx].ki.ExtraInfo := 0;
 
-      KeyStrokes[Idx + 1]._Type := INPUT_KEYBOARD; //not sure if needed
-      KeyStrokes[Idx + 1].ki.wVk := 0;
-      KeyStrokes[Idx + 1].ki.wScan := Ord(ATextToSend[i + 1]);
-      KeyStrokes[Idx + 1].ki.dwFlags := KEYEVENTF_UNICODE or KEYEVENTF_KEYUP;
-      KeyStrokes[Idx + 1].ki.Time := 0;
-      KeyStrokes[Idx + 1].ki.ExtraInfo := 0;
-    end;
+        KeyStrokes[Idx + 1]._Type := INPUT_KEYBOARD; //not sure if needed
+        KeyStrokes[Idx + 1].ki.wVk := 0;
+        KeyStrokes[Idx + 1].ki.wScan := Ord(ATextToSend[i + 1]);
+        KeyStrokes[Idx + 1].ki.dwFlags := KEYEVENTF_UNICODE or KEYEVENTF_KEYUP;
+        KeyStrokes[Idx + 1].ki.Time := 0;
+        KeyStrokes[Idx + 1].ki.ExtraInfo := 0;
+      end;
 
-    SendInput(Length(KeyStrokes), @KeyStrokes[0], SizeOf(TINPUT));
+      SendInput(Length(KeyStrokes), @KeyStrokes[0], SizeOf(TINPUT));
+    {$ELSE}
+      FTextEditorEditBox.Text := '';
+    {$ENDIF}
   end;
 end;
 

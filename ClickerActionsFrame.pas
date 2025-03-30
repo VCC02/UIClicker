@@ -31,13 +31,22 @@ unit ClickerActionsFrame;
 interface
 
 uses
-  Windows, SysUtils, Variants, Classes, Graphics, Controls, Forms, Dialogs,
+  {$IFDEF Windows}
+    Windows,
+  {$ELSE}
+    LCLIntf, LCLType,
+  {$ENDIF}
+  SysUtils, Variants, Classes, Graphics, Controls, Forms, Dialogs,
   VirtualTrees, ExtCtrls, StdCtrls, ComCtrls, ImgList, Buttons,
   Menus, ClickerUtils, ClickerConditionEditorFrame,
   ClickerFindControlFrame, ClickerExecAppFrame, ClickerSetVarFrame,
   ClickerCallTemplateFrame, ClickerSleepFrame, ClickerPluginFrame,
   Types, InMemFileSystem, ObjectInspectorFrame,
   ClickerPrimitiveUtils, ClickerIniFiles;
+
+{$IFnDEF Windows}
+  {$UNDEF MemPlugins}
+{$ENDIF}
 
 type
   TVarNodeRec = record
@@ -813,11 +822,10 @@ implementation
   {$R *.frm}
 {$ENDIF}
 
-
 uses
   Clipbrd, ClickerActionValues, ClickerOIUtils, ClickerZoomPreviewForm,
   ClickerActionPluginLoader, ClickerActionPlugins, InMemFileSystemBrowserForm,
-  ClickerExtraUtils, ClickerActionProperties, ClickerTemplates;
+  ClickerExtraUtils, ClickerActionProperties, ClickerTemplates, Math;
 
 
 function ActionStatusStrToActionStatus(AString: string): TActionStatus;

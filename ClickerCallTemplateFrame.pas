@@ -29,7 +29,12 @@ unit ClickerCallTemplateFrame;
 interface
 
 uses
-  Windows, Classes, SysUtils, Forms, Controls, StdCtrls, Menus, ExtCtrls,
+  {$IFDEF Windows}
+    Windows,
+  {$ELSE}
+    LCLIntf, LCLType,
+  {$ENDIF}
+  Classes, SysUtils, Forms, Controls, StdCtrls, Menus, ExtCtrls,
   ValEdit, Buttons, VirtualTrees, ClickerUtils, Graphics;
 
 type

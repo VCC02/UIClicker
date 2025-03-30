@@ -29,7 +29,12 @@ unit ClickerBMPTextFrame;
 interface
 
 uses
-  Windows, Classes, SysUtils, Forms, Controls, StdCtrls, ExtCtrls, Menus,
+  {$IFDEF Windows}
+    Windows,
+  {$ELSE}
+    LCLIntf, LCLType,
+  {$ENDIF}
+  Classes, SysUtils, Forms, Controls, StdCtrls, ExtCtrls, Menus,
   ClickerUtils;
 
 type
@@ -188,7 +193,7 @@ implementation
 
 
 uses
-  Types, Graphics, Clipbrd, Dialogs;
+  Types, Graphics, Clipbrd, Dialogs, Math;
 
 
 function GetReplacementVarFromString(AString: string): string;   //if multiple var replacements are concatenated, only the first is returned

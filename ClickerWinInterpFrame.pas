@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2024 VCC
+    Copyright (C) 2025 VCC
     creation date: Jul 2023 - most content moved from ClickerWinInterpForm.pas
     initial release date: 09 Jul 2023
 
@@ -29,7 +29,12 @@ unit ClickerWinInterpFrame;
 interface
 
 uses
-  Windows, Classes, SysUtils, Forms, Controls, ExtCtrls, StdCtrls, ComCtrls, ColorBox,
+  {$IFDEF Windows}
+    Windows,
+  {$ELSE}
+    LCLIntf, LCLType,
+  {$ENDIF}
+  Classes, SysUtils, Forms, Controls, ExtCtrls, StdCtrls, ComCtrls, ColorBox,
   Buttons, Menus, VirtualTrees, Types, Graphics, ClickerUtils, IniFiles;
 
 type
@@ -550,7 +555,7 @@ implementation
 
 uses
   BitmapProcessing, ClickerTemplates, Clipbrd, ClickerActionsClient, ClickerZoomPreviewForm,
-  imgList, Dialogs, BitmapConv, ClickerIniFiles;
+  imgList, Dialogs, BitmapConv, ClickerIniFiles, Math;
 
 
 procedure TfrClickerWinInterp.LoadSettings(AIni: TMemIniFile);
@@ -2582,7 +2587,13 @@ var
   ImgHWMatrix: array of THandle;
   tk, Duration, SleepTk, MouseCursorToScreenshotDelay: QWord;
   UseHCursor, UseFullScreenshot, BringTargetToFrontPeriodically: Boolean;
-  pci: TCursorInfo;
+
+  {$IFDEF Windows}
+    pci: TCursorInfo;
+  {$ELSE}
+    //pci: TCursorInfo;
+  {$ENDIF}
+
   Res: LongBool;
   SrcRect, DestRect: TRect;
   FullScreenBmp: TBitmap;
@@ -2590,7 +2601,10 @@ var
   SelectionRight, SelectionBottom: Integer;
 begin
   FDoneRec := False;
-  if GetWindowRect(AInterprettedHandle, rct) = False then
+  {$IFDEF Windows}
+    if GetWindowRect(AInterprettedHandle, rct) = False then
+  {$ELSE}
+  {$ENDIF}
     Exit;
 
   SelectionLeft := FSelectedComponentLeftLimitLabel.Left;
@@ -2703,8 +2717,12 @@ begin
         //FProgressHorizLabel.Top := y;
         prbRecordingWithMouseSwipe.Position := y;
 
-        if BringTargetToFrontPeriodically then
-          BringWindowToTop(AInterprettedHandle);
+        {$IFDEF Windows}
+          if BringTargetToFrontPeriodically then
+            BringWindowToTop(AInterprettedHandle);
+        {$ELSE}
+          //
+        {$ENDIF}
 
         x := 0;
         if FRecordSelectedAreaOnly then
@@ -2744,12 +2762,20 @@ begin
 
             if UseHCursor then
             begin
-              pci.cbSize := SizeOf(TCursorInfo);
-              Res := GetCursorInfo(pci);
+              {$IFDEF Windows}
+                pci.cbSize := SizeOf(TCursorInfo);
+                Res := GetCursorInfo(pci);
+              {$ELSE}
+                Res := False;
+              {$ENDIF}
             end;
 
             if not BitmapsAreEqual(InitBmp, CurrentBmp, w, h) or not BitmapsAreEqual(PrevBmp, CurrentBmp, w, h) or
-              (UseHCursor and Res and (pci.hCursor <> 65539)) then
+              {$IFDEF Windows}
+                (UseHCursor and Res and (pci.hCursor <> 65539)) then
+              {$ELSE}
+                (UseHCursor and Res) then
+              {$ENDIF}
             begin
               imgSpinnerDiff.Visible := True;
 
@@ -2791,9 +2817,17 @@ begin
             PrevBmp.Assign(CurrentBmp);
 
             Application.ProcessMessages;
-            if GetAsyncKeyState(VK_ESCAPE) < 0 then
+            {$IFDEF Windows}
+              if GetAsyncKeyState(VK_ESCAPE) < 0 then
+            {$ELSE}
+              if GetKeyState(VK_ESCAPE) < 0 then
+            {$ENDIF}
             begin
-              if GetAsyncKeyState(VK_SHIFT) < 0 then
+              {$IFDEF Windows}
+                if GetAsyncKeyState(VK_SHIFT) < 0 then
+              {$ELSE}
+                if GetKeyState(VK_SHIFT) < 0 then
+              {$ENDIF}
               begin //pause
                 imgEnabledPause.Hide;
                 imgDisabledPause.Show;
@@ -2802,9 +2836,17 @@ begin
                 repeat
                   Application.ProcessMessages;
 
-                  if GetAsyncKeyState(VK_ESCAPE) < 0 then
+                  {$IFDEF Windows}
+                    if GetAsyncKeyState(VK_ESCAPE) < 0 then
+                  {$ELSE}
+                    if GetKeyState(VK_ESCAPE) < 0 then
+                  {$ENDIF}
                   begin
-                    if GetAsyncKeyState(VK_SHIFT) < 0 then
+                    {$IFDEF Windows}
+                      if GetAsyncKeyState(VK_SHIFT) < 0 then
+                    {$ELSE}
+                      if GetKeyState(VK_SHIFT) < 0 then
+                    {$ENDIF}
                     begin
                       imgEnabledPause.Show;
                       imgDisabledPause.Hide;
@@ -2933,7 +2975,10 @@ begin
     Exit;
   end;
 
-  if GetWindowRect(FInterprettedHandle, rct) = False then
+  {$IFDEF Windows}
+    if GetWindowRect(FInterprettedHandle, rct) = False then
+  {$ELSE}
+  {$ENDIF}
     Exit;
 
   Step := Max(1, StrToIntDef(lbeStep.Text, 1)); //bug: If Step is greater than 1, the algorithm detects subcontrol edges on every Step number of pixels. I.e. it does not merge areas.
@@ -3292,7 +3337,11 @@ begin
                                  Flags);
 
       if not RecResult then
-        s := s + 'Resizing error: ' + SysErrorMessage(GetLastError) + #13#10;
+        {$IFDEF Windows}
+          s := s + 'Resizing error: ' + SysErrorMessage(GetLastError) + #13#10;
+        {$ELSE}
+          s := s + 'Resizing error: ' + 'Not implemented.' + #13#10;
+        {$ENDIF}
 
       try
         vstComponents.SaveToFile(MainFileName + '_' + IntToStr(i) + '.tree');
@@ -3313,7 +3362,11 @@ begin
                                Flags);
 
     if not RecResult then
-      s := s + 'Resizing error: ' + SysErrorMessage(GetLastError) + #13#10;
+      {$IFDEF Windows}
+        s := s + 'Resizing error: ' + SysErrorMessage(GetLastError) + #13#10;
+      {$ELSE}
+        s := s + 'Resizing error: ' + 'Not implemented.' + #13#10;
+      {$ENDIF}
 
     if s <> '' then
       s := #13#10 + s;
@@ -3951,12 +4004,19 @@ begin
     end;
 
   if chkBringTargetToFront.Checked then
-    BringWindowToTop(AInterprettedHandle);
+    {$IFDEF Windows}
+      BringWindowToTop(AInterprettedHandle);
+    {$ELSE}
+      //
+    {$ENDIF}
 
   tk := GetTickCount64;
 
   FDoneRec := False;
-  if GetWindowRect(AInterprettedHandle, rct) = False then
+  {$IFDEF Windows}
+    if GetWindowRect(AInterprettedHandle, rct) = False then
+  {$ELSE}
+  {$ENDIF}
     Exit;
 
   DoOnClearWinInterp;
@@ -4014,7 +4074,11 @@ begin
         Application.ProcessMessages;
 
       if chkBringTargetToFrontPeriodically.Checked then
-        BringWindowToTop(AInterprettedHandle);
+        {$IFDEF Windows}
+          BringWindowToTop(AInterprettedHandle);
+        {$ELSE}
+          //
+        {$ENDIF}
 
       YLine := y * RectWidth;
       tp.Y := y + rct.Top;
@@ -4117,7 +4181,10 @@ begin
   DestRect.Height := rct.Height;
 
   WipeBitmap(imgScreenshot.Picture.Bitmap, rct.Width, rct.Height);
-  GetWindowRect(AInterprettedHandle, rct);  //this was InitialHW
+  {$IFDEF Windows}
+    GetWindowRect(AInterprettedHandle, rct);  //this was InitialHW
+  {$ELSE}
+  {$ENDIF}
   if not chkFullScr.Checked then
     ScreenShot(AInterprettedHandle, imgScreenshot.Picture.Bitmap, 0, 0, rct.Width, rct.Height)   //this was InitialHW
   else
@@ -5183,7 +5250,10 @@ begin
   InterprettedRectangle.Left := 0;
   InterprettedRectangle.Right := 0;
 
-  if GetWindowRect(FInterprettedHandle, InterprettedRectangle) = False then
+  {$IFDEF Windows}
+    if GetWindowRect(FInterprettedHandle, InterprettedRectangle) = False then
+  {$ELSE}
+  {$ENDIF}
     Exit;
 
   memCompInfo.Lines.Add('Left: ' + IntToStr(InterprettedRectangle.Left) + '   ' +
@@ -5396,7 +5466,11 @@ end;
 
 procedure TfrClickerWinInterp.tmrScanByKeysTimer(Sender: TObject);
 begin
-  if (GetAsyncKeyState(VK_CONTROL) < 0) and (GetAsyncKeyState(VK_SHIFT) < 0) and (GetAsyncKeyState(VK_MENU) < 0) then
+  {$IFDEF Windows}
+    if (GetAsyncKeyState(VK_CONTROL) < 0) and (GetAsyncKeyState(VK_SHIFT) < 0) and (GetAsyncKeyState(VK_MENU) < 0) then
+  {$ELSE}
+    if (GetKeyState(VK_CONTROL) < 0) and (GetKeyState(VK_SHIFT) < 0) and (GetKeyState(VK_MENU) < 0) then
+  {$ENDIF}
     ScanTargetControl;
 end;
 

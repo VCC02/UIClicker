@@ -32,7 +32,12 @@ unit ClickerConditionEditorFrame;
 interface
 
 uses
-  Windows, Classes, SysUtils, Forms, Controls, ExtCtrls, StdCtrls, Buttons, Menus,
+  {$IFDEF Windows}
+    Windows,
+  {$ELSE}
+    LCLIntf, LCLType,
+  {$ENDIF}
+  Classes, SysUtils, Forms, Controls, ExtCtrls, StdCtrls, Buttons, Menus,
   Graphics, VirtualTrees, ClickerUtils;
 
 type
@@ -159,7 +164,7 @@ implementation
 
 
 uses
-  ImgList;
+  ImgList, Math;
 
 
 { TfrClickerConditionEditor }

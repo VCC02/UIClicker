@@ -32,7 +32,12 @@ unit ClickerTemplateCallTreeForm;
 interface
 
 uses
-  Windows, Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, ExtCtrls,
+  {$IFDEF Windows}
+    Windows,
+  {$ELSE}
+    LCLIntf, LCLType,
+  {$ENDIF}
+  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, ExtCtrls,
   Menus, VirtualTrees, ClickerUtils, IniFiles, ClickerIniFiles;
 
 type
@@ -154,7 +159,7 @@ implementation
 {$R *.frm}
 
 uses
-  ClickerTemplates, Clipbrd;
+  ClickerTemplates, Clipbrd, Math;
 
 
 { TfrmClickerTemplateCallTree }

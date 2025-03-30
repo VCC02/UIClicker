@@ -26,6 +26,10 @@ program UIClicker;
 
 {$mode objfpc}{$H+}
 
+{$IFnDEF Windows}
+  {$UNDEF MemPlugins}
+{$ENDIF}
+
 uses
   {$IFDEF UNIX}
   cthreads,
@@ -34,7 +38,12 @@ uses
   athreads,
   {$ENDIF}
   Interfaces, // this includes the CT adLCL widgetset
-  Windows, SysUtils, Forms, Classes, ShellAPI, ClickerActionsArrFrame,
+  {$IFDEF Windows}
+    Windows, ShellAPI,
+  {$ELSE}
+    LCLIntf, LCLType,
+  {$ENDIF}
+  SysUtils, Forms, Classes, ClickerActionsArrFrame,
   ClickerActionsFrame, ClickerIniFiles, BinSearchValues, BitmapProcessing,
   ControlInteraction, MouseStuff, ClickerWinInterpForm, ClickerBMPTextFrame,
   ClickerTemplateCallTreeForm, ClickerConditionEditorFrame,
@@ -109,8 +118,9 @@ begin
       ExceptionLog.SaveToFile(LogPath);
 
       LogPath := '"' + LogPath + '"';
-      ShellExecute(0, 'open', 'C:\Windows\Notepad.exe', PChar(LogPath), '', SW_SHOW);  //nothing opens if Windows is installed somewhere else
-
+      {$IFDEF Windows}
+        ShellExecute(0, 'open', 'C:\Windows\Notepad.exe', PChar(LogPath), '', SW_SHOW);  //nothing opens if Windows is installed somewhere else
+      {$ENDIF}
       //MessageBox(0, PChar(ExceptionLog.Text), 'Clicker', MB_ICONERROR);  //the application crashes after displaying the MessageBox, so the MessageBox is closed
     finally
       ExceptionLog.Free;
@@ -165,7 +175,9 @@ begin
       ExceptionLog.SaveToFile(LogPath);
 
       LogPath := '"' + LogPath + '"';
-      ShellExecute(0, 'open', 'C:\Windows\Notepad.exe', PChar(LogPath), '', SW_SHOW);   //nothing opens if Windows is installed somewhere else
+      {$IFDEF Windows}
+        ShellExecute(0, 'open', 'C:\Windows\Notepad.exe', PChar(LogPath), '', SW_SHOW);   //nothing opens if Windows is installed somewhere else
+      {$ENDIF}
 
       //MessageBox(0, PChar(Msg), 'Clicker', MB_ICONERROR);
     finally
@@ -210,7 +222,10 @@ begin
   {$ELSE}
     WriteLn('Closing console in UI mode...');
   {$ENDIF}
-  FreeConsole;
+
+  {$IFDEF Windows}
+    FreeConsole;
+  {$ENDIF}
 
   RequireDerivedFormResource:=True;
   Application.Scaled:=True;

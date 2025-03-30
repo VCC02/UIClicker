@@ -33,7 +33,12 @@ interface
 
 
 uses
-  Windows, Graphics, Messages, BitmapProcessing, ExtCtrls, ClickerUtils;
+  {$IFDEF Windows}
+    Windows,
+  {$ELSE}
+    LCLIntf, LCLType, Types,
+  {$ENDIF}
+  Graphics, Messages, BitmapProcessing, ExtCtrls, ClickerUtils;
 
 type
   TMatchingMethod = (mmClass, mmText, mmBitmapText, mmBitmapFiles, mmPrimitiveFiles);
@@ -74,8 +79,13 @@ type
   end;
 
 
-procedure SetControlText(hw: THandle; NewText: string);
-procedure SelectComboBoxItem(hw: THandle; StartIndex: Integer; TextToSelect: string);
+{$IFDEF Windows}
+  procedure SetControlText(hw: THandle; NewText: string);
+  procedure SelectComboBoxItem(hw: THandle; StartIndex: Integer; TextToSelect: string);
+{$ELSE}
+  procedure SetControlText(hw: TLCLHandle; NewText: string);
+  procedure SelectComboBoxItem(hw: TLCLHandle; StartIndex: Integer; TextToSelect: string);
+{$ENDIF}
 
 procedure ComputeScreenshotArea(var InputData: TFindControlInputData; var CompAtPoint: TCompRec; out ScrShot_Left, ScrShot_Top, ScrShot_Width, ScrShot_Height, CompWidth, CompHeight: Integer);
 procedure CroppedFullScreenShot(ACompAtPoint: TCompRec; AFindControlInputData: TFindControlInputData; ACompWidth, ACompHeight: Integer);
@@ -116,24 +126,45 @@ implementation
 
 
 uses
-  SysUtils, Classes, Forms, BinSearchValues, Types, Math, BitmapConv
+  SysUtils, Classes, Forms, BinSearchValues, Math, BitmapConv
   , Clipbrd //for debugging only
   ;
 
 
-procedure SetControlText(hw: THandle; NewText: string);
-begin
-  {if UseWideStringsOnGetControlText then
-    SendMessage(hw, WM_SETTEXT, 0, PtrInt(PWideChar(NewText)))   //does not help on Wine
-  else}
-    SendMessage(hw, WM_SETTEXT, 0, {%H-}PtrInt(@NewText[1]));
-end;
+{$IFDEF Windows}
+  procedure SetControlText(hw: THandle; NewText: string);
+  begin
+    {if UseWideStringsOnGetControlText then
+      SendMessage(hw, WM_SETTEXT, 0, PtrInt(PWideChar(NewText)))   //does not help on Wine
+    else}
+      SendMessage(hw, WM_SETTEXT, 0, {%H-}PtrInt(@NewText[1]));
+  end;
 
 
-procedure SelectComboBoxItem(hw: THandle; StartIndex: Integer; TextToSelect: string);
-begin
-  SendMessage(hw, CB_SELECTSTRING, StartIndex, {%H-}PtrInt(@TextToSelect[1]));
-end;
+  procedure SelectComboBoxItem(hw: THandle; StartIndex: Integer; TextToSelect: string);
+  begin
+    SendMessage(hw, CB_SELECTSTRING, StartIndex, {%H-}PtrInt(@TextToSelect[1]));
+  end;
+{$ELSE}
+  const
+    WM_SETTEXT = $0000000C;
+    CB_SELECTSTRING = 333; //TBD
+    WM_USER = $00000400;
+
+  procedure SetControlText(hw: TLCLHandle; NewText: string);
+  begin
+    {if UseWideStringsOnGetControlText then
+      SendMessage(hw, WM_SETTEXT, 0, PtrInt(PWideChar(NewText)))   //does not help on Wine
+    else}
+      SendMessage(hw, WM_SETTEXT, 0, {%H-}PtrInt(@NewText[1]));
+  end;
+
+
+  procedure SelectComboBoxItem(hw: TLCLHandle; StartIndex: Integer; TextToSelect: string);
+  begin
+    SendMessage(hw, CB_SELECTSTRING, StartIndex, {%H-}PtrInt(@TextToSelect[1]));
+  end;
+{$ENDIF}
 
 
 function NumberOfSubStrings(sub, s: string): Integer;
@@ -358,8 +389,12 @@ begin
     FindWindowByPatternObj.ListOfControlClasses := AListOfControlClasses;
     FindWindowByPatternObj.MatchingMethods := AMatchingMethods;
 
-    //MessageBox(0, PChar('LParam: ' + IntToStr(LPARAM(FindWindowByPatterObj))), 'FindWindowByCaptionOrClassPattern', MB_ICONINFORMATION);
-    EnumWindows(@EnumWindowsProc, LPARAM(FindWindowByPatternObj));
+    {$IFDEF Windows}
+      //MessageBox(0, PChar('LParam: ' + IntToStr(LPARAM(FindWindowByPatterObj))), 'FindWindowByCaptionOrClassPattern', MB_ICONINFORMATION);
+      EnumWindows(@EnumWindowsProc, LPARAM(FindWindowByPatternObj));
+    {$ELSE}
+      //nothing for Linux :(
+    {$ENDIF}
 
     Result := FindWindowByPatternObj.FoundByEnum;
 
@@ -405,7 +440,12 @@ begin
   for i := 0 to AListOfControlTexts.Count - 1 do
     for j := 0 to AListOfControlClasses.Count - 1 do
     begin
-      AHandle := FindWindow(PChar(AListOfControlClasses.Strings[j]), PChar(string(AListOfControlTexts.Strings[i])));
+      {$IFDEF Windows}
+        AHandle := FindWindow(PChar(AListOfControlClasses.Strings[j]), PChar(string(AListOfControlTexts.Strings[i])));
+      {$ELSE}
+        AHandle := 0; //maybe there is something for Linux
+      {$ENDIF}
+
       if AHandle > 0 then
       begin
         SetLength(AResultedControls, Length(AResultedControls) + 1);
@@ -1273,7 +1313,11 @@ begin
               Sleep(1);
             end;
 
-            if (GetAsyncKeyState(VK_CONTROL) < 0) and (GetAsyncKeyState(VK_SHIFT) < 0) and (GetAsyncKeyState(VK_F2) < 0) then
+            {$IFDEF Windows}
+              if (GetAsyncKeyState(VK_CONTROL) < 0) and (GetAsyncKeyState(VK_SHIFT) < 0) and (GetAsyncKeyState(VK_F2) < 0) then
+            {$ELSE}
+              if (GetKeyState(VK_CONTROL) < 0) and (GetKeyState(VK_SHIFT) < 0) and (GetKeyState(VK_F2) < 0) then
+            {$ENDIF}
               AStopAllActionsOnDemand^ := True;
 
             if AStopAllActionsOnDemand^ then

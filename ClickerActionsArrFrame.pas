@@ -31,11 +31,20 @@ unit ClickerActionsArrFrame;
 interface
 
 uses
-  Windows, {Messages,} SysUtils, Variants, Classes, Graphics, Controls, Forms, Types,
+  {$IFDEF Windows}
+    Windows, ActiveX,
+  {$ELSE}
+    LCLIntf, LCLType, FakeActiveX,
+  {$ENDIF}
+  SysUtils, Variants, Classes, Graphics, Controls, Forms, Types,
   Dialogs, ClickerActionsFrame, StdCtrls, VirtualTrees, ExtCtrls, Buttons, IniFiles,
   ImgList, Menus, ComCtrls, IdHTTP, ClickerIniFiles, ClickerUtils, InMemFileSystem,
-  ClickerActionsPaletteFrame, ClickerActionExecution, PollingFIFO, ClickerPrimitiveUtils,
-  ActiveX;
+  ClickerActionsPaletteFrame, ClickerActionExecution, PollingFIFO, ClickerPrimitiveUtils;
+
+
+{$IFnDEF Windows}
+  {$UNDEF MemPlugins}
+{$ENDIF}
 
 type
   TOnExecuteRemoteActionAtIndex = function(AActionIndex, AStackLevel: Integer; AVarReplacements: TStringList; AIsDebugging: Boolean): Boolean of object;
@@ -3468,7 +3477,11 @@ begin
           Exit;
         end;
 
-      if (GetAsyncKeyState(VK_CONTROL) < 0) and (GetAsyncKeyState(VK_SHIFT) < 0) and (GetAsyncKeyState(VK_F2) < 0) then
+      {$IFDEF Windows}
+        if (GetAsyncKeyState(VK_CONTROL) < 0) and (GetAsyncKeyState(VK_SHIFT) < 0) and (GetAsyncKeyState(VK_F2) < 0) then
+      {$ELSE}
+        if (GetKeyState(VK_CONTROL) < 0) and (GetKeyState(VK_SHIFT) < 0) and (GetKeyState(VK_F2) < 0) then
+      {$ENDIF}
       begin
         if FStopAllActionsOnDemandFromParent <> nil then
           FStopAllActionsOnDemandFromParent^ := True;
@@ -3666,7 +3679,11 @@ begin
               Exit;
             end;
 
-          if (GetAsyncKeyState(VK_CONTROL) < 0) and (GetAsyncKeyState(VK_SHIFT) < 0) and (GetAsyncKeyState(VK_F2) < 0) then
+          {$IFDEF Windows}
+            if (GetAsyncKeyState(VK_CONTROL) < 0) and (GetAsyncKeyState(VK_SHIFT) < 0) and (GetAsyncKeyState(VK_F2) < 0) then
+          {$ELSE}
+            if (GetKeyState(VK_CONTROL) < 0) and (GetKeyState(VK_SHIFT) < 0) and (GetKeyState(VK_F2) < 0) then
+          {$ENDIF}
           begin
             if FStopAllActionsOnDemandFromParent <> nil then
               FStopAllActionsOnDemandFromParent^ := True;
@@ -6545,7 +6562,11 @@ begin
     Exit;
 
   if ssLeft in Shift then
-    Windows.SetCursor(Screen.Cursors[crDrag]);
+    {$IFDEF Windows}
+      Windows.SetCursor(Screen.Cursors[crDrag]);
+    {$ELSE}
+      SetCursor(Screen.Cursors[crDrag]);
+    {$ENDIF}
   //
   //GetCursorPos(tp);
   //DeltaX := Left + pnlDrawingBoard.Left + scrboxScreen.Left + 8;
@@ -6610,7 +6631,11 @@ begin
 
   FPalette.vstActionsPalette.Tag := 0;
 
-  Windows.SetCursor(Screen.Cursors[crDefault]);
+  {$IFDEF Windows}
+    Windows.SetCursor(Screen.Cursors[crDefault]);
+  {$ELSE}
+    SetCursor(Screen.Cursors[crDefault]);
+  {$ENDIF}
 
   Node := FPalette.vstActionsPalette.GetFirstSelected;
   if Node = nil then
@@ -7318,35 +7343,66 @@ begin
   //SendMessage(Handle, WM_MOUSEMOVE, 0, 0);  //GetKeyboardState requires WM_MOUSEMOVE events when the mouse is not hovering this window
   //GetKeyboardState(AState);
 
-  if GetAsyncKeyState(VK_F2) < 0 then
-    AState[VK_F2] := $80
-  else
-    AState[VK_F2] := 0;
+  {$IFDEF Windows}
+    if GetAsyncKeyState(VK_F2) < 0 then
+      AState[VK_F2] := $80
+    else
+      AState[VK_F2] := 0;
 
-  if GetAsyncKeyState(VK_F6) < 0 then
-    AState[VK_F6] := $80
-  else
-    AState[VK_F6] := 0;
+    if GetAsyncKeyState(VK_F6) < 0 then
+      AState[VK_F6] := $80
+    else
+      AState[VK_F6] := 0;
 
-  if GetAsyncKeyState(VK_F7) < 0 then
-    AState[VK_F7] := $80
-  else
-    AState[VK_F7] := 0;
+    if GetAsyncKeyState(VK_F7) < 0 then
+      AState[VK_F7] := $80
+    else
+      AState[VK_F7] := 0;
 
-  if GetAsyncKeyState(VK_F8) < 0 then
-    AState[VK_F8] := $80
-  else
-    AState[VK_F8] := 0;
+    if GetAsyncKeyState(VK_F8) < 0 then
+      AState[VK_F8] := $80
+    else
+      AState[VK_F8] := 0;
 
-  if GetAsyncKeyState(VK_F9) < 0 then
-    AState[VK_F9] := $80
-  else
-    AState[VK_F9] := 0;
+    if GetAsyncKeyState(VK_F9) < 0 then
+      AState[VK_F9] := $80
+    else
+      AState[VK_F9] := 0;
+  {$ELSE}
+    if GetKeyState(VK_F2) < 0 then
+      AState[VK_F2] := $80
+    else
+      AState[VK_F2] := 0;
+
+    if GetKeyState(VK_F6) < 0 then
+      AState[VK_F6] := $80
+    else
+      AState[VK_F6] := 0;
+
+    if GetKeyState(VK_F7) < 0 then
+      AState[VK_F7] := $80
+    else
+      AState[VK_F7] := 0;
+
+    if GetKeyState(VK_F8) < 0 then
+      AState[VK_F8] := $80
+    else
+      AState[VK_F8] := 0;
+
+    if GetKeyState(VK_F9) < 0 then
+      AState[VK_F9] := $80
+    else
+      AState[VK_F9] := 0;
+  {$ENDIF}
 
   if FDebugging then
   begin
     if (F2_State and $80 = 0) and (AState[VK_F2] and $80 = $80) and
-       (GetAsyncKeyState(VK_CONTROL) < 0) and (GetAsyncKeyState(VK_SHIFT) < 0) then  //detected Ctrl-Shift-F2
+      {$IFDEF Windows}
+        (GetAsyncKeyState(VK_CONTROL) < 0) and (GetAsyncKeyState(VK_SHIFT) < 0) then
+      {$ELSE}
+        (GetKeyState(VK_CONTROL) < 0) and (GetKeyState(VK_SHIFT) < 0) then
+      {$ENDIF}  //detected Ctrl-Shift-F2
     begin
       //Application.MainForm.Caption := 'Ctrl-Shift-F2';
 

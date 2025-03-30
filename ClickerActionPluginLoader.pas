@@ -32,7 +32,12 @@ unit ClickerActionPluginLoader;
 interface
 
 uses
-  Windows, Classes, SysUtils, Graphics, dynlibs,
+  {$IFDEF Windows}
+    Windows,
+  {$ELSE}
+    LCLIntf, LCLType,
+  {$ENDIF}
+  Classes, SysUtils, Graphics, dynlibs,
   ClickerUtils, ClickerActionPlugins, InMemFileSystem;
 
 
@@ -133,6 +138,10 @@ function DecodePluginPropertyFromAttribute(AValue, AAttrName: string): string;
 function GetPluginAdditionalPropertyAttribute(AListOfPropertiesAndTypes, AAttrName: string; APropertyIndexNoOffset: Integer): string;
 
 
+{$IFnDEF Windows}
+  {$UNDEF MemPlugins}
+{$ENDIF}
+
 {$IFDEF MemPlugins}
   function IsMemPluginPath(APath: string): Boolean;
 {$ENDIF}
@@ -144,7 +153,9 @@ implementation
 uses
   DllUtils, Forms, ClickerActionsClient, ClickerActionProperties
   {$IFDEF MemPlugins}
-    , DynMemLib    //search for DynMemLib.pas on GitHub if not found
+    {$IFDEF Windows}
+      , DynMemLib    //search for DynMemLib.pas on GitHub if not found
+    {$ENDIF}
   {$ENDIF}
   ;
 
@@ -365,7 +376,11 @@ begin
     Application.ProcessMessages;
 
     if ((AActionPlugin^.FStepOver <> nil) and AActionPlugin^.FStepOver^) or
-       (GetAsyncKeyState(VK_F8) < 0) then
+      {$IFDEF Windows}
+        (GetAsyncKeyState(VK_F8) < 0) then
+      {$ELSE}
+        (GetKeyState(VK_F8) < 0) then
+      {$ENDIF}
     begin
       if AActionPlugin^.FStepOver <> nil then
         AActionPlugin^.FStepOver^ := False;    //Reset flag
@@ -375,14 +390,22 @@ begin
     end;
 
     if ((AActionPlugin^.FPluginContinueAll <> nil) and AActionPlugin^.FPluginContinueAll^) or
-       (GetAsyncKeyState(VK_F9) < 0) then
+      {$IFDEF Windows}
+        (GetAsyncKeyState(VK_F9) < 0) then
+      {$ELSE}
+        (GetKeyState(VK_F9) < 0) then
+      {$ENDIF}
     begin
       //Do not reset the FPluginContinueAll flag here.
       Break;
     end;
 
     if ((AActionPlugin^.FStopAllActionsOnDemandFromParent <> nil) and AActionPlugin^.FStopAllActionsOnDemandFromParent^) or
-       ((GetAsyncKeyState(VK_CONTROL) < 0) and (GetAsyncKeyState(VK_SHIFT) < 0) and (GetAsyncKeyState(VK_F2) < 0)) then
+      {$IFDEF Windows}
+        ((GetAsyncKeyState(VK_CONTROL) < 0) and (GetAsyncKeyState(VK_SHIFT) < 0) and (GetAsyncKeyState(VK_F2) < 0)) then
+      {$ELSE}
+        ((GetKeyState(VK_CONTROL) < 0) and (GetKeyState(VK_SHIFT) < 0) and (GetKeyState(VK_F2) < 0)) then
+      {$ENDIF}
       Exit;
 
     if GeneralClosingApp then  //there are other loops which will have to be stopped this way
@@ -833,7 +856,11 @@ begin
       Loaded := PluginHandle > 0;
     end;
   {$ELSE}
-    PluginHandle := Windows.LoadLibrary(PChar(Path)); //LoadLibraryA(Path);
+    {$IFDEF Windows}
+      PluginHandle := Windows.LoadLibrary(PChar(Path)); //LoadLibraryA(Path);
+    {$ELSE}
+      PluginHandle := LoadLibrary(PChar(Path)); //LoadLibraryA(Path);
+    {$ENDIF}
     Loaded := PluginHandle > 0;
   {$ENDIF}
 
@@ -969,7 +996,12 @@ begin
       PluginLocationInfo := ' from disk';
     end;
   {$ELSE}
-    PluginHandle := Windows.LoadLibrary(PChar(Path));  //LoadLibraryA
+    {$IFDEF Windows}
+      PluginHandle := Windows.LoadLibrary(PChar(Path));  //LoadLibraryA
+    {$ELSE}
+      PluginHandle := LoadLibrary(PChar(Path));  //LoadLibraryA
+    {$ENDIF}
+
     Loaded := PluginHandle > 0;
   {$ENDIF}
 
@@ -1072,7 +1104,11 @@ begin
       end;
     {$ELSE}
       //if not UnloadLibrary(PluginHandle) then
-      if not Windows.FreeLibrary(PluginHandle) then
+      {$IFDEF Windows}
+        if not Windows.FreeLibrary(PluginHandle) then
+      {$ELSE}
+        if not FreeLibrary(PluginHandle) then
+      {$ENDIF}
       begin
         Err := SysErrorMessage(GetLastOSError);
         Exit;

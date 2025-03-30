@@ -33,6 +33,8 @@ interface
 uses
   {$IFDEF Windows}
     Windows,
+  {$ELSE}
+    LCLIntf, LCLType,
   {$ENDIF}
   SysUtils, Graphics, ExtCtrls, ClickerUtils;
 
@@ -112,7 +114,7 @@ implementation
 
 uses
   Forms, Classes, IntegerList, DoubleList,
-  ctypes, CLHeaders;
+  ctypes, CLHeaders, Math;
 
 
 procedure RandomSleep(ASleepySearch: Byte);
@@ -1433,7 +1435,7 @@ begin
 
           if Result then
           begin
-            MessageBox(0, PChar('Matched by histogram at x = ' + IntToStr(x) + '  y = ' + IntToStr(y)), 'Bmp proc', MB_ICONINFORMATION);
+            //MessageBox(0, PChar('Matched by histogram at x = ' + IntToStr(x) + '  y = ' + IntToStr(y)), 'Bmp proc', MB_ICONINFORMATION);
             //if BitmapPosMatch_BruteForce(SrcMat,
             //                             SubMat,
             //                             ZoneWidth,
@@ -2035,8 +2037,8 @@ begin
     finally
       SourceStream.Free;
       SubStream.Free;
-      Exit;
     end;
+
     Exit;
   end;
 
@@ -2163,7 +2165,12 @@ procedure ScreenShot(SrcHandle: THandle; DestBitmap: TBitmap; XOffsetSrc, YOffse
 var
   DC: HDC;
 begin
-  DC := GetWindowDC(SrcHandle);
+  {$IFDEF Windows}
+    DC := GetWindowDC(SrcHandle);
+  {$ELSE}
+    DC := GetDC(SrcHandle);  //to be tested
+  {$ENDIF}
+
   try
     DestBitmap.Width := Width;
     DestBitmap.Height := Height;

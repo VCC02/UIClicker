@@ -32,7 +32,12 @@ unit ClickerPrimitivesFrame;
 interface
 
 uses
-  Windows, Classes, SysUtils, Forms, Controls, ExtCtrls, ObjectInspectorFrame,
+  {$IFDEF Windows}
+    Windows,
+  {$ELSE}
+    LCLIntf, LCLType,
+  {$ENDIF}
+  Classes, SysUtils, Forms, Controls, ExtCtrls, ObjectInspectorFrame,
   VirtualTrees, ImgList, Graphics, Menus, ComCtrls, StdCtrls, Types,
   ClickerUtils, ClickerPrimitiveUtils;
 
@@ -310,7 +315,7 @@ implementation
 
 uses
   ClickerPrimitiveValues, ClickerOIUtils, ClickerPrimitivesCompositor, ClickerZoomPreviewForm,
-  ClickerExtraUtils, FPCanvas, Clipbrd, Dialogs;
+  ClickerExtraUtils, FPCanvas, Clipbrd, Dialogs, Math;
 
 
 const
@@ -3958,7 +3963,11 @@ begin
   begin
     CurrentEditingPoint := Sender as TEditingPoint;
 
-    if GetAsyncKeyState(VK_ESCAPE) < 0 then
+    {$IFDEF Windows}
+      if GetAsyncKeyState(VK_ESCAPE) < 0 then
+    {$ELSE}
+      if GetKeyState(VK_ESCAPE) < 0 then //not tested
+    {$ENDIF}
     begin
       NewLeft := FMouseDownSelPos.X;
       NewTop := FMouseDownSelPos.Y;

@@ -31,7 +31,12 @@ unit ClickerActionExecution;
 interface
 
 uses
-  Windows, Classes, SysUtils, Forms, Graphics, ExtCtrls,
+  {$IFDEF Windows}
+    Windows,
+  {$ELSE}
+    LCLIntf, LCLType, Types,
+  {$ENDIF}
+  Classes, SysUtils, Forms, Graphics, ExtCtrls,
   ClickerUtils, ClickerPrimitiveUtils, ClickerActionsFrame, ClickerIniFiles,
   InMemFileSystem, ControlInteraction;
 
@@ -312,7 +317,7 @@ uses
   {$ENDIF}
   IdHTTP, ClickerPrimitivesCompositor, ClickerActionProperties,
   ClickerActionPluginLoader, ClickerActionPlugins, BitmapProcessing,
-  ClickerActionsClient, ClickerTemplates;
+  ClickerActionsClient, ClickerTemplates, Math;
 
 
 constructor TActionExecution.Create;
@@ -1183,7 +1188,11 @@ begin
 
     //memLogErr.Lines.Add('$Current_Mouse_Y$: ' + EvaluateReplacements('$Current_Mouse_Y$'));
 
-    if (GetAsyncKeyState(VK_CONTROL) < 0) and (GetAsyncKeyState(VK_SHIFT) < 0) and (GetAsyncKeyState(VK_F2) < 0) then
+    {$IFDEF Windows}
+      if (GetAsyncKeyState(VK_CONTROL) < 0) and (GetAsyncKeyState(VK_SHIFT) < 0) and (GetAsyncKeyState(VK_F2) < 0) then
+    {$ELSE}
+      if (GetKeyState(VK_CONTROL) < 0) and (GetKeyState(VK_SHIFT) < 0) and (GetKeyState(VK_F2) < 0) then
+    {$ENDIF}
     begin
       if FStopAllActionsOnDemandFromParent <> nil then
         FStopAllActionsOnDemandFromParent^ := True;
@@ -2664,7 +2673,11 @@ begin
     OutsideTickCount := 0; //0 means "do not use PrecisionTimeout".
 
   repeat
-    if (GetAsyncKeyState(VK_CONTROL) < 0) and (GetAsyncKeyState(VK_SHIFT) < 0) and (GetAsyncKeyState(VK_F2) < 0) then
+    {$IFDEF Windows}
+      if (GetAsyncKeyState(VK_CONTROL) < 0) and (GetAsyncKeyState(VK_SHIFT) < 0) and (GetAsyncKeyState(VK_F2) < 0) then
+    {$ELSE}
+      if (GetKeyState(VK_CONTROL) < 0) and (GetKeyState(VK_SHIFT) < 0) and (GetKeyState(VK_F2) < 0) then
+    {$ENDIF}
     begin
       if FStopAllActionsOnDemandFromParent <> nil then
         FStopAllActionsOnDemandFromParent^ := True;
@@ -2754,7 +2767,11 @@ begin
     OutsideTickCount := 0; //0 means "do not use PrecisionTimeout".
 
   repeat
-    if (GetAsyncKeyState(VK_CONTROL) < 0) and (GetAsyncKeyState(VK_SHIFT) < 0) and (GetAsyncKeyState(VK_F2) < 0) then
+    {$IFDEF Windows}
+      if (GetAsyncKeyState(VK_CONTROL) < 0) and (GetAsyncKeyState(VK_SHIFT) < 0) and (GetAsyncKeyState(VK_F2) < 0) then
+    {$ELSE}
+      if (GetKeyState(VK_CONTROL) < 0) and (GetKeyState(VK_SHIFT) < 0) and (GetKeyState(VK_F2) < 0) then
+    {$ENDIF}
     begin
       if FStopAllActionsOnDemandFromParent <> nil then
         FStopAllActionsOnDemandFromParent^ := True;
@@ -2892,7 +2909,11 @@ var
   i, k, Idx: Integer;
   TextToSend: string;
   //s: string; //for debugging
-  KeyStrokes: array of TINPUT;
+  {$IFDEF Windows}
+    KeyStrokes: array of TINPUT;
+  {$ELSE}
+    KeyStrokes: array of Pointer;
+  {$ENDIF}
   KeyTypes: TKeyTypeArr;
   Err: Integer;
   ErrStr: string;
@@ -2945,96 +2966,98 @@ begin
 
       stKeystrokes:
       begin
-        SetLength(KeyStrokes, Length(TextToSend) shl 1);
-        try
-          for i := 0 to Length(TextToSend) - 1 do   //string len, not array len
-          begin
-            Idx := i shl 1;
-            KeyStrokes[Idx]._Type := INPUT_KEYBOARD; //not sure if needed
-            KeyStrokes[Idx].ki.wVk := 0;  //If this is set to Ord(TextToSend[i + 1]), instead of 0, then capital letters are types as lower case (probably, because it expects the Shift key to come as a separate state). This causes VBox to block its keyboard input (probably some bad state).
-            KeyStrokes[Idx].ki.wScan := Ord(TextToSend[i + 1]);
-            KeyStrokes[Idx].ki.dwFlags := KEYEVENTF_UNICODE; //0;
-            KeyStrokes[Idx].ki.Time := 0;
-            KeyStrokes[Idx].ki.ExtraInfo := 0;
-
-            KeyStrokes[Idx + 1]._Type := INPUT_KEYBOARD; //not sure if needed
-            KeyStrokes[Idx + 1].ki.wVk := 0;   //this can be set to Ord(TextToSend[i + 1]);  //it looks like a valid combination to avoid blocking VBox input
-            KeyStrokes[Idx + 1].ki.wScan := Ord(TextToSend[i + 1]);
-            KeyStrokes[Idx + 1].ki.dwFlags := KEYEVENTF_UNICODE or KEYEVENTF_KEYUP;
-            KeyStrokes[Idx + 1].ki.Time := 0;
-            KeyStrokes[Idx + 1].ki.ExtraInfo := 0;
-
-            if KeyTypes[i].IsSpecial then
+        {$IFDEF Windows}
+          SetLength(KeyStrokes, Length(TextToSend) shl 1);
+          try
+            for i := 0 to Length(TextToSend) - 1 do   //string len, not array len
             begin
-              KeyStrokes[Idx].ki.wScan := 0;
-              KeyStrokes[Idx + 1].ki.wScan := 0;
+              Idx := i shl 1;
+              KeyStrokes[Idx]._Type := INPUT_KEYBOARD; //not sure if needed
+              KeyStrokes[Idx].ki.wVk := 0;  //If this is set to Ord(TextToSend[i + 1]), instead of 0, then capital letters are types as lower case (probably, because it expects the Shift key to come as a separate state). This causes VBox to block its keyboard input (probably some bad state).
+              KeyStrokes[Idx].ki.wScan := Ord(TextToSend[i + 1]);
+              KeyStrokes[Idx].ki.dwFlags := KEYEVENTF_UNICODE; //0;
+              KeyStrokes[Idx].ki.Time := 0;
+              KeyStrokes[Idx].ki.ExtraInfo := 0;
 
-              if KeyTypes[i].Action in [kaDownUp, kaDown] then
+              KeyStrokes[Idx + 1]._Type := INPUT_KEYBOARD; //not sure if needed
+              KeyStrokes[Idx + 1].ki.wVk := 0;   //this can be set to Ord(TextToSend[i + 1]);  //it looks like a valid combination to avoid blocking VBox input
+              KeyStrokes[Idx + 1].ki.wScan := Ord(TextToSend[i + 1]);
+              KeyStrokes[Idx + 1].ki.dwFlags := KEYEVENTF_UNICODE or KEYEVENTF_KEYUP;
+              KeyStrokes[Idx + 1].ki.Time := 0;
+              KeyStrokes[Idx + 1].ki.ExtraInfo := 0;
+
+              if KeyTypes[i].IsSpecial then
               begin
-                KeyStrokes[Idx].ki.wVk := KeyTypes[i].KeyCode;
-                KeyStrokes[Idx].ki.dwFlags := 0;
-              end;
+                KeyStrokes[Idx].ki.wScan := 0;
+                KeyStrokes[Idx + 1].ki.wScan := 0;
 
-              if KeyTypes[i].Action in [kaDownUp, kaUp] then
-              begin
-                KeyStrokes[Idx + 1].ki.wVk := KeyTypes[i].KeyCode;
-                KeyStrokes[Idx + 1].ki.dwFlags := 0 or KEYEVENTF_KEYUP;
-              end;
-            end;
-          end;
-
-          SetLastError(0);
-          if DelayBetweenKeyStrokesInt = 0 then
-          begin
-            if Integer(SendInput(Length(KeyStrokes), @KeyStrokes[0], SizeOf(TINPUT))) <> Length(KeyStrokes) then
-            begin
-              Err := GetLastOSError;
-              ErrStr := 'KeyStrokes error: ' + IntToStr(Err) + '  ' + SysErrorMessage(GetLastOSError) + '  Keystrokes count: ' + IntToStr(Length(KeyStrokes));
-              SetActionVarValue('$ExecAction_Err$', ErrStr);
-              Result := False;
-            end;
-          end
-          else
-          begin
-            for i := 0 to Length(TextToSend) - 1 do
-            begin
-              //if KeyTypes[i].Action = kaDown then
-              //  keybd_event(KeyTypes[i].KeyCode, 0, 0, 0);    //to be enabled if SendInput doesn't properly simulate key combinations
-              try
-                if Integer(SendInput(2, @KeyStrokes[i shl 1], SizeOf(TINPUT))) <> 2 then
+                if KeyTypes[i].Action in [kaDownUp, kaDown] then
                 begin
-                  Err := GetLastOSError;
-                  ErrStr := 'KeyStrokes error: ' + IntToStr(Err) + '  ' + SysErrorMessage(GetLastOSError) + '  Keystrokes count: ' + IntToStr(Length(KeyStrokes));
-                  SetActionVarValue('$ExecAction_Err$', ErrStr);
-                  Result := False;
+                  KeyStrokes[Idx].ki.wVk := KeyTypes[i].KeyCode;
+                  KeyStrokes[Idx].ki.dwFlags := 0;
                 end;
-              finally
-                //if KeyTypes[i].Action = kaUp then
-                //  keybd_event(KeyTypes[i].KeyCode, 0, KEYEVENTF_KEYUP, 0);  //to be enabled if SendInput doesn't properly simulate key combinations
-              end;
 
-              tk2 := GetTickCount64;
-              repeat
-                //Sleep(1);
-                Application.ProcessMessages;
+                if KeyTypes[i].Action in [kaDownUp, kaUp] then
+                begin
+                  KeyStrokes[Idx + 1].ki.wVk := KeyTypes[i].KeyCode;
+                  KeyStrokes[Idx + 1].ki.dwFlags := 0 or KEYEVENTF_KEYUP;
+                end;
+              end;
+            end;
+
+            SetLastError(0);
+            if DelayBetweenKeyStrokesInt = 0 then
+            begin
+              if Integer(SendInput(Length(KeyStrokes), @KeyStrokes[0], SizeOf(TINPUT))) <> Length(KeyStrokes) then
+              begin
+                Err := GetLastOSError;
+                ErrStr := 'KeyStrokes error: ' + IntToStr(Err) + '  ' + SysErrorMessage(GetLastOSError) + '  Keystrokes count: ' + IntToStr(Length(KeyStrokes));
+                SetActionVarValue('$ExecAction_Err$', ErrStr);
+                Result := False;
+              end;
+            end
+            else
+            begin
+              for i := 0 to Length(TextToSend) - 1 do
+              begin
+                //if KeyTypes[i].Action = kaDown then
+                //  keybd_event(KeyTypes[i].KeyCode, 0, 0, 0);    //to be enabled if SendInput doesn't properly simulate key combinations
+                try
+                  if Integer(SendInput(2, @KeyStrokes[i shl 1], SizeOf(TINPUT))) <> 2 then
+                  begin
+                    Err := GetLastOSError;
+                    ErrStr := 'KeyStrokes error: ' + IntToStr(Err) + '  ' + SysErrorMessage(GetLastOSError) + '  Keystrokes count: ' + IntToStr(Length(KeyStrokes));
+                    SetActionVarValue('$ExecAction_Err$', ErrStr);
+                    Result := False;
+                  end;
+                finally
+                  //if KeyTypes[i].Action = kaUp then
+                  //  keybd_event(KeyTypes[i].KeyCode, 0, KEYEVENTF_KEYUP, 0);  //to be enabled if SendInput doesn't properly simulate key combinations
+                end;
+
+                tk2 := GetTickCount64;
+                repeat
+                  //Sleep(1);
+                  Application.ProcessMessages;
+
+                  if CheckManualStopCondition then
+                  begin
+                    Result := False;
+                    Break;     //break for k
+                  end;
+                until GetTickCount64 - tk2 >= DelayBetweenKeyStrokesInt;
 
                 if CheckManualStopCondition then
                 begin
                   Result := False;
-                  Break;     //break for k
+                  Break;       //break outer for
                 end;
-              until GetTickCount64 - tk2 >= DelayBetweenKeyStrokesInt;
-
-              if CheckManualStopCondition then
-              begin
-                Result := False;
-                Break;       //break outer for
               end;
-            end;
-          end; //using delays
-        finally
-          SetLength(KeyStrokes, 0);
-        end;
+            end; //using delays
+          finally
+            SetLength(KeyStrokes, 0);
+          end;
+        {$ENDIF}
       end;
     end; //case
 
@@ -3064,7 +3087,11 @@ function TActionExecution.CheckManualStopCondition: Boolean;
 begin
   Result := False;
 
-  if (GetAsyncKeyState(VK_CONTROL) < 0) and (GetAsyncKeyState(VK_SHIFT) < 0) and (GetAsyncKeyState(VK_F2) < 0) then
+  {$IFDEF Windows}
+    if (GetAsyncKeyState(VK_CONTROL) < 0) and (GetAsyncKeyState(VK_SHIFT) < 0) and (GetAsyncKeyState(VK_F2) < 0) then
+  {$ELSE}
+    if (GetKeyState(VK_CONTROL) < 0) and (GetKeyState(VK_SHIFT) < 0) and (GetKeyState(VK_F2) < 0) then
+  {$ENDIF}
   begin
     Result := True;
 
@@ -3294,7 +3321,11 @@ begin
       Break;
     end;
 
-    if (GetAsyncKeyState(VK_CONTROL) < 0) and (GetAsyncKeyState(VK_SHIFT) < 0) and (GetAsyncKeyState(VK_F2) < 0) then
+    {$IFDEF Windows}
+      if (GetAsyncKeyState(VK_CONTROL) < 0) and (GetAsyncKeyState(VK_SHIFT) < 0) and (GetAsyncKeyState(VK_F2) < 0) then
+    {$ELSE}
+      if (GetKeyState(VK_CONTROL) < 0) and (GetKeyState(VK_SHIFT) < 0) and (GetKeyState(VK_F2) < 0) then
+    {$ENDIF}
     begin
       if FStopAllActionsOnDemandFromParent <> nil then
         FStopAllActionsOnDemandFromParent^ := True;
@@ -3817,12 +3848,20 @@ begin
       Result := SetWindowPos(Hw, HWND_TOP, X, Y, cx, cy, Flags);
 
       if not Result then
+      {$IFDEF Windows}
         SetActionVarValue('$ExecAction_Err$', SysErrorMessage(GetLastError));
+      {$ELSE}
+        SetActionVarValue('$ExecAction_Err$', 'Not implemented.');
+      {$ENDIF}
     end;
 
     woClose:
     begin
-      SendMessage(Hw, WM_CLOSE, 0, 0);
+      {$IFDEF Windows}
+        SendMessage(Hw, WM_CLOSE, 0, 0);
+      {$ELSE}
+        SendMessage(Hw, {WM_CLOSE} $10, 0, 0);
+      {$ENDIF}
       Result := True;
     end;
 
@@ -3857,7 +3896,11 @@ begin
         Result := SetWindowPos(Hw, HWND_TOP, X, Y, cx, cy, Flags);   //after this, left and top edges should be visible
         if not Result then
         begin
-          SetActionVarValue('$ExecAction_Err$', SysErrorMessage(GetLastError));
+          {$IFDEF Windows}
+            SetActionVarValue('$ExecAction_Err$', SysErrorMessage(GetLastError));
+          {$ELSE}
+            SetActionVarValue('$ExecAction_Err$', 'Not implemented.');
+          {$ENDIF}
           Exit;
         end;
       end;
@@ -3893,7 +3936,11 @@ begin
         Result := SetWindowPos(Hw, HWND_TOP, X, Y, cx, cy, Flags);   //after this, right and bottom edges should be visible  (if resizing is allowed)
         if not Result then
         begin
-          SetActionVarValue('$ExecAction_Err$', SysErrorMessage(GetLastError));
+          {$IFDEF Windows}
+            SetActionVarValue('$ExecAction_Err$', SysErrorMessage(GetLastError));
+          {$ELSE}
+            SetActionVarValue('$ExecAction_Err$', 'Not implemented.');
+          {$ENDIF}
           Exit;
         end;
       end;   //Right or Bottom are outside of visible area
