@@ -3931,6 +3931,23 @@ begin
     //AV in case the frames are not created
     AddToLog('Action frames are not created when setting $TemplateDir$');
   end;
+
+  {$IFnDEF Windows}
+    Font.Size := 8;
+    grpMissingFilesMonitoring.Font.Size := 7;
+    lbePathToTemplates.Font.Size := 7;
+    cmbExecMode.Font.Size := 7;
+    lblAdminStatus.Font.Size := 7;
+    lbeClientModeServerAddress.Font.Size := 7;
+    lbeConnectTimeout.Font.Size := 7;
+    lbeServerModePort.Font.Size := 7;
+    cmbFilesExistence.Font.Size := 7;
+
+    lbePathToTemplates.LabelSpacing := 1;
+    lbeClientModeServerAddress.LabelSpacing := 1;
+    lbeConnectTimeout.LabelSpacing := 1;
+    lbeServerModePort.LabelSpacing := 1;
+  {$ENDIF}
 end;
 
 

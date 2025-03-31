@@ -572,6 +572,33 @@ begin
   tmrStartup.Enabled := False;
   scrboxScreenshot.OnMouseWheel := scrboxMouseWheel;
   scrboxCrop.OnMouseWheel := scrboxMouseWheel;
+
+  {$IFnDEF Windows}
+    Font.Size := 8;
+    grpWinInfo.Font.Size := 7;
+    lbeText.Font.Size := 7;
+    lbeClass.Font.Size := 7;
+    lbeHandle.Font.Size := 7;
+    lbeRect.Font.Size := 7;
+
+    lbeMouseXOffset.Font.Size := 7;
+    lbeMouseYOffset.Font.Size := 7;
+    lbeMouseGX.Font.Size := 7;
+    lbeMouseGY.Font.Size := 7;
+
+    lbeText.LabelSpacing := 1;
+    lbeClass.LabelSpacing := 1;
+    lbeHandle.LabelSpacing := 1;
+    lbeRect.LabelSpacing := 1;
+
+    lbeMouseXOffset.LabelSpacing := 1;
+    lbeMouseYOffset.LabelSpacing := 1;
+    lbeMouseGX.LabelSpacing := 1;
+    lbeMouseGY.LabelSpacing := 1;
+
+    pnlDrag.Font.Size := 8;
+    chkShowCropRectangle.Font.Size := 8;
+  {$ENDIF}
 end;
 
 

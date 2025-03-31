@@ -326,6 +326,10 @@ begin
       frmClickerRemoteScreen.Caption := frmClickerRemoteScreen.Caption + ' - ' + ExtraCaption;
     end;
   {$ENDIF}
+
+  {$IFnDEF Windows}
+    Font.Size := 8;
+  {$ENDIF}
 end;
 
 
