@@ -597,7 +597,8 @@ begin
 
       SendInput(Length(KeyStrokes), @KeyStrokes[0], SizeOf(TINPUT));
     {$ELSE}
-      FTextEditorEditBox.Text := '';
+      FTextEditorEditBox.Text := ''; //clear first
+      FTextEditorEditBox.Text := ATextToSend;
     {$ENDIF}
   end;
 end;

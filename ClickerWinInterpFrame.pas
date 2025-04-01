@@ -4007,7 +4007,8 @@ begin
     {$IFDEF Windows}
       BringWindowToTop(AInterprettedHandle);
     {$ELSE}
-      //
+      begin
+      end;
     {$ENDIF}
 
   tk := GetTickCount64;
@@ -4077,7 +4078,8 @@ begin
         {$IFDEF Windows}
           BringWindowToTop(AInterprettedHandle);
         {$ELSE}
-          //
+          begin
+          end;
         {$ENDIF}
 
       YLine := y * RectWidth;
