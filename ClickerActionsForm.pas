@@ -103,6 +103,7 @@ type
     colcmbBotRightValid: TColorBox;
     colcmbTopLeftInvalid: TColorBox;
     colcmbBotRightInvalid: TColorBox;
+    cmbClientModeServerAddress: TComboBox;
     grpSelectionColors: TGroupBox;
     grpMissingFilesMonitoring: TGroupBox;
     grpAllowedFileExtensionsForServer: TGroupBox;
@@ -112,6 +113,7 @@ type
     IdSchedulerOfThreadPool1: TIdSchedulerOfThreadPool;
     imglstCalledTemplates: TImageList;
     imglstMainPage: TImageList;
+    lblServerAddress: TLabel;
     lblBotRightInvalidColor: TLabel;
     lblTopLeftValidColor: TLabel;
     lblGridType: TLabel;
@@ -126,7 +128,6 @@ type
     lblLocalModeInfo: TLabel;
     lblServerInfo: TLabel;
     lbeServerModePort: TLabeledEdit;
-    lbeClientModeServerAddress: TLabeledEdit;
     lbePathToTemplates: TLabeledEdit;
     lblExecMode: TLabel;
     lblBotRightValidColor: TLabel;
@@ -134,10 +135,12 @@ type
     memAllowedFileExtensionsForServer: TMemo;
     memAllowedFileDirsForServer: TMemo;
     memVariables: TMemo;
+    MenuItem_RemoveServerAddress: TMenuItem;
     PageControlExecMode: TPageControl;
     PageControlMain: TPageControl;
     PageControlPlayer: TPageControl;
     pnlMissingFilesRequest: TPanel;
+    pmClientModeServerAddress: TPopupMenu;
     scrboxMain: TScrollBox;
     TabSheetLocalMode: TTabSheet;
     TabSheetClientMode: TTabSheet;
@@ -178,6 +181,7 @@ type
     procedure lbePathToTemplatesChange(Sender: TObject);
     procedure lbePathToTemplatesKeyUp(Sender: TObject; var Key: Word;
       Shift: TShiftState);
+    procedure pmClientModeServerAddressPopup(Sender: TObject);
     procedure tmrDelayedShowTimer(Sender: TObject);
     procedure tmrDisplayMissingFilesRequestsTimer(Sender: TObject);
     procedure tmrStartupTimer(Sender: TObject);
@@ -368,6 +372,8 @@ type
     function HandleOnGetListeningPort: Word;
     procedure HandlePluginAddToLog(s: string);
     procedure HandleOnSetVar(AVarName, AVarValue: string);
+
+    procedure HandleOnRemoveServerAddressClick(Sender: TObject);
 
     procedure CreateRemainingUIComponents;
     function GetClickerActionsArrFrameByStackLevel(AStackLevel: Integer): TfrClickerActionsArr;
@@ -592,7 +598,12 @@ begin
   frClickerActionsArrExperiment2.frClickerActions.frClickerFindControl.chkDisplayCroppingLines.Checked := AIni.ReadBool('ActionsWindow', 'DisplayCroppingLines.Exp2', True);
 
   chkDisplayActivity.Checked := AIni.ReadBool('ActionsWindow', 'DisplayActivity', chkDisplayActivity.Checked);
-  lbeClientModeServerAddress.Text := AIni.ReadString('ActionsWindow', 'ClientModeServerAddress', lbeClientModeServerAddress.Text);
+
+  cmbClientModeServerAddress.Clear;
+  for i := 0 to AIni.ReadInteger('ActionsWindow', 'ClientModeServerAddressCount', 0) - 1 do
+    cmbClientModeServerAddress.Items.Add(AIni.ReadString('ActionsWindow', 'ClientModeServerAddressCount_' + IntToStr(i), ''));
+
+  cmbClientModeServerAddress.Text := AIni.ReadString('ActionsWindow', 'ClientModeServerAddress', cmbClientModeServerAddress.Text);
   lbeConnectTimeout.Text := AIni.ReadString('ActionsWindow', 'ConnectTimeout', lbeConnectTimeout.Text);
   chkSetExperimentsToClientMode.Checked := AIni.ReadBool('ActionsWindow', 'SetExperimentsToClientMode', chkSetExperimentsToClientMode.Checked);
 
@@ -702,7 +713,12 @@ begin
   AIni.WriteBool('ActionsWindow', 'DisplayCroppingLines.Exp2', frClickerActionsArrExperiment2.frClickerActions.frClickerFindControl.chkDisplayCroppingLines.Checked);
 
   AIni.WriteBool('ActionsWindow', 'DisplayActivity', chkDisplayActivity.Checked);
-  AIni.WriteString('ActionsWindow', 'ClientModeServerAddress', lbeClientModeServerAddress.Text);
+
+  AIni.WriteInteger('ActionsWindow', 'ClientModeServerAddressCount', cmbClientModeServerAddress.Items.Count);
+  for i := 0 to cmbClientModeServerAddress.Items.Count - 1 do
+    AIni.WriteString('ActionsWindow', 'ClientModeServerAddressCount_' + IntToStr(i), cmbClientModeServerAddress.Items.Strings[i]);
+
+  AIni.WriteString('ActionsWindow', 'ClientModeServerAddress', cmbClientModeServerAddress.Text);
   AIni.WriteString('ActionsWindow', 'ConnectTimeout', lbeConnectTimeout.Text);
   AIni.WriteBool('ActionsWindow', 'SetExperimentsToClientMode', chkSetExperimentsToClientMode.Checked);
 
@@ -1987,7 +2003,7 @@ var
 begin
   if frClickerActionsArrMain.ExecutesRemotely then
   begin
-    Response := GetSearchAreaDebugImageFromServer(lbeClientModeServerAddress.Text, AStackLevel, AExtraBitmap);
+    Response := GetSearchAreaDebugImageFromServer(GetConfiguredRemoteAddress, AStackLevel, AExtraBitmap);
 
     if Response = '' then
     begin
@@ -2484,7 +2500,7 @@ end;
 
 function TfrmClickerActions.GetConfiguredRemoteAddress: string;
 begin
-  Result := lbeClientModeServerAddress.Text;
+  Result := cmbClientModeServerAddress.Text;
 end;
 
 
@@ -3815,6 +3831,34 @@ begin
 end;
 
 
+procedure TfrmClickerActions.pmClientModeServerAddressPopup(Sender: TObject);
+var
+  i: Integer;
+  TempMenuItem: TMenuItem;
+begin
+  MenuItem_RemoveServerAddress.Clear;
+
+  for i := 0 to cmbClientModeServerAddress.Items.Count - 1 do
+  begin
+    TempMenuItem := TMenuItem.Create(Self);
+    TempMenuItem.Caption := cmbClientModeServerAddress.Items.Strings[i];
+    TempMenuItem.OnClick := HandleOnRemoveServerAddressClick;
+
+    MenuItem_RemoveServerAddress.Insert(0, TempMenuItem);
+  end;
+end;
+
+
+procedure TfrmClickerActions.HandleOnRemoveServerAddressClick(Sender: TObject);
+var
+  s: string;
+begin
+  s := (Sender as TMenuItem).Caption;
+  s := StringReplace(s, '&', '', [rfReplaceAll]);
+  cmbClientModeServerAddress.Items.Delete(cmbClientModeServerAddress.Items.IndexOf(s));
+end;
+
+
 procedure TfrmClickerActions.tmrDelayedShowTimer(Sender: TObject);
 begin
   tmrDelayedShow.Enabled := False;
@@ -3938,13 +3982,13 @@ begin
     lbePathToTemplates.Font.Size := 7;
     cmbExecMode.Font.Size := 7;
     lblAdminStatus.Font.Size := 7;
-    lbeClientModeServerAddress.Font.Size := 7;
+    cmbClientModeServerAddress.Font.Size := 7;
     lbeConnectTimeout.Font.Size := 7;
     lbeServerModePort.Font.Size := 7;
     cmbFilesExistence.Font.Size := 7;
 
     lbePathToTemplates.LabelSpacing := 1;
-    lbeClientModeServerAddress.LabelSpacing := 1;
+    lblServerAddress.Font.Size := 7;
     lbeConnectTimeout.LabelSpacing := 1;
     lbeServerModePort.LabelSpacing := 1;
   {$ENDIF}
@@ -4019,7 +4063,7 @@ begin
     1: //client
     begin
       ConnectsTo := GetCmdLineOptionValue('--ConnectsTo');
-      lbeClientModeServerAddress.Text := ConnectsTo;
+      cmbClientModeServerAddress.Text := ConnectsTo;
       ConnectionTimeout := StrToIntDef(GetCmdLineOptionValue('--ConnectionTimeout'), 1000);
 
       if ConnectionTimeout < -1 then
@@ -4126,9 +4170,9 @@ begin
     begin
       GeneralConnectTimeout := StrToIntDef(lbeConnectTimeout.Text, 1000); //update GeneralConnectTimeout only after deactivating the server module
 
-      frClickerActionsArrMain.RemoteAddress := lbeClientModeServerAddress.Text;
-      frClickerActionsArrExperiment1.RemoteAddress := lbeClientModeServerAddress.Text;
-      frClickerActionsArrExperiment2.RemoteAddress := lbeClientModeServerAddress.Text;
+      frClickerActionsArrMain.RemoteAddress := GetConfiguredRemoteAddress;
+      frClickerActionsArrExperiment1.RemoteAddress := GetConfiguredRemoteAddress;
+      frClickerActionsArrExperiment2.RemoteAddress := GetConfiguredRemoteAddress;
 
       if FPollForMissingServerFiles <> nil then
       begin
@@ -4176,7 +4220,7 @@ begin
       end;
 
       FPollForMissingServerFiles := TPollForMissingServerFiles.Create(True);
-      FPollForMissingServerFiles.RemoteAddress := lbeClientModeServerAddress.Text;
+      FPollForMissingServerFiles.RemoteAddress := GetConfiguredRemoteAddress;
       FPollForMissingServerFiles.ConnectTimeout := StrToIntDef(lbeConnectTimeout.Text, 1000);
       FPollForMissingServerFiles.FullTemplatesDir := FFullTemplatesDir;
 
@@ -4191,6 +4235,8 @@ begin
       FPollForMissingServerFiles.Start;
 
       frClickerActionsArrMain.AddToLog('Started "missing files" monitoring thread for client mode.');
+      if cmbClientModeServerAddress.Items.IndexOf(cmbClientModeServerAddress.Text) = -1 then
+        cmbClientModeServerAddress.Items.Add(cmbClientModeServerAddress.Text);
     end;
   finally
     lblClientMode.Caption := 'Client mode ' + CClientExecModeInfoTxt[cmbExecMode.ItemIndex];
@@ -4312,7 +4358,7 @@ procedure TfrmClickerActions.btnTestConnectionClick(Sender: TObject);
 var
   RemoteAddress, Response: string;
 begin
-  RemoteAddress := lbeClientModeServerAddress.Text;
+  RemoteAddress := GetConfiguredRemoteAddress;
   Response := TestConnection(RemoteAddress);
   MessageBox(Handle, PChar('Server response: ' + Response), PChar(Application.Title), MB_ICONINFORMATION);
 end;

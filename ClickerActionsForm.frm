@@ -178,20 +178,6 @@ object frmClickerActions: TfrmClickerActions
           Caption = 'Client mode'
           ClientHeight = 118
           ClientWidth = 269
-          object lbeClientModeServerAddress: TLabeledEdit
-            Left = 8
-            Height = 21
-            Hint = 'Machine address, where UIClicker runs in server mode.'#13#10'The expected format is "http://<address:port>/" (without quotes).'
-            Top = 16
-            Width = 184
-            EditLabel.Height = 13
-            EditLabel.Width = 184
-            EditLabel.Caption = 'Server address'
-            ParentShowHint = False
-            ShowHint = True
-            TabOrder = 0
-            Text = 'http://127.0.0.1:5444/'
-          end
           object btnTestConnection: TButton
             Left = 200
             Height = 21
@@ -199,19 +185,19 @@ object frmClickerActions: TfrmClickerActions
             Top = 16
             Width = 64
             Caption = 'Test'
-            TabOrder = 1
+            TabOrder = 0
             OnClick = btnTestConnectionClick
           end
           object chkSetExperimentsToClientMode: TCheckBox
             Left = 8
-            Height = 19
+            Height = 17
             Hint = 'When checked, the template experiments are also set to connect to the same remote server.'
             Top = 40
-            Width = 168
+            Width = 166
             Caption = 'Set experiments to client mode'
             ParentShowHint = False
             ShowHint = True
-            TabOrder = 2
+            TabOrder = 1
           end
           object lblFileMonitoringThreadInfo: TLabel
             Left = 8
@@ -235,7 +221,7 @@ object frmClickerActions: TfrmClickerActions
             EditLabel.Height = 13
             EditLabel.Width = 117
             EditLabel.Caption = 'Connect timeout [ms]'
-            TabOrder = 3
+            TabOrder = 2
             Text = '1000'
           end
           object lblClientMode: TLabel
@@ -249,6 +235,26 @@ object frmClickerActions: TfrmClickerActions
             Font.Name = 'Tahoma'
             Font.Style = [fsBold]
             ParentFont = False
+          end
+          object cmbClientModeServerAddress: TComboBox
+            Left = 8
+            Height = 21
+            Hint = 'Machine address, where UIClicker runs in server mode.'
+            Top = 16
+            Width = 184
+            ItemHeight = 13
+            ParentShowHint = False
+            PopupMenu = pmClientModeServerAddress
+            TabOrder = 3
+            Text = 'http://127.0.0.1:5444/'
+            TextHint = 'http://127.0.0.1:5444/'
+          end
+          object lblServerAddress: TLabel
+            Left = 8
+            Height = 13
+            Top = 0
+            Width = 73
+            Caption = 'Server address'
           end
         end
         object TabSheetServerMode: TTabSheet
@@ -773,5 +779,13 @@ object frmClickerActions: TfrmClickerActions
     OnTimer = tmrDelayedShowTimer
     Left = 672
     Top = 256
+  end
+  object pmClientModeServerAddress: TPopupMenu
+    OnPopup = pmClientModeServerAddressPopup
+    Left = 304
+    Top = 208
+    object MenuItem_RemoveServerAddress: TMenuItem
+      Caption = 'Remove server address'
+    end
   end
 end

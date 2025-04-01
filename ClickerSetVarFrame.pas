@@ -521,7 +521,7 @@ procedure TfrClickerSetVar.AddNewVariable;
 begin
   FSetVarContent_Vars.Add('');
   FSetVarContent_Values.Add('');
-  FSetVarContent_EvalBefore.Add('');
+  FSetVarContent_EvalBefore.Add('0');    //0 reguired on Linux. Not sure why the other two lists do not required this.
 
   vstSetVar.RootNodeCount := FSetVarContent_Vars.Count;
   vstSetVar.Repaint;

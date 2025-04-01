@@ -1249,8 +1249,9 @@ const
   CGetKeyValueFromPair_FuncName = '$GetKeyValueFromPair(';
   CGetWindowLongPtr_FuncName = '$GetWindowLongPtr(';
   CGetWindowProcessId_FuncName = '$GetWindowProcessId(';
+  CGetListOfFonts_FuncName = '$GetListOfFonts(';
 
-  CBuiltInFunctionCount = 49;
+  CBuiltInFunctionCount = 50;
   CBuiltInFunctions: array[0..CBuiltInFunctionCount - 1] of string = (
     CRandom_FuncName,
     CSum_FuncName,
@@ -1300,7 +1301,8 @@ const
     CGetKeyNameFromPair_FuncName,
     CGetKeyValueFromPair_FuncName,
     CGetWindowLongPtr_FuncName,
-    CGetWindowProcessId_FuncName
+    CGetWindowProcessId_FuncName,
+    CGetListOfFonts_FuncName
   );
 
 
@@ -2673,6 +2675,17 @@ begin
 end;
 
 
+function ReplaceGetListOfFonts(AListOfVars: TStringList; s: string): string;
+var
+  ItemArgs, InitialItemArgs: string;
+begin
+  ItemArgs := ExtractFuncArgs(CGetListOfFonts_FuncName, s);
+  InitialItemArgs := ItemArgs;
+
+  Result := StringReplace(s, CGetListOfFonts_FuncName + InitialItemArgs + ')$', FastReplace_ReturnTo45(Screen.Fonts.Text), [rfReplaceAll]);
+end;
+
+
 function ReplaceOnce(AListOfVars: TStringList; s: string; AReplaceRandom: Boolean = True): string;
 var
   i: Integer;
@@ -2865,6 +2878,9 @@ begin
 
   if Pos(CGetWindowProcessId_FuncName, s) > 0 then
     s := ReplaceGetWindowProcessId(AListOfVars, s);
+
+  if Pos(CGetListOfFonts_FuncName, s) > 0 then
+    s := ReplaceGetListOfFonts(AListOfVars, s);
 
   Result := s;
 end;
