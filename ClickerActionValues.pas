@@ -3097,7 +3097,7 @@ end;
 
 function GetPropertyHint_FindControl_MatchBitmapText: string;
 begin
-  Result := 'Count should be 0 for FindControl and >0 for FindSubControl';
+  Result := 'Use the "..." button from FontName subproperty, to browse system fonts, or fonts mentioned in a variable with #4#5-separated list of fonts.';
 end;
 
 

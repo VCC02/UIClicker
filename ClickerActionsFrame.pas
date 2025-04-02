@@ -311,6 +311,8 @@ type
     procedure MenuItem_DuplicateFontProfileClick(Sender: TObject);
     procedure MenuItem_MoveFontProfileUpInPropertyListClick(Sender: TObject);
     procedure MenuItem_MoveFontProfileDownInPropertyListClick(Sender: TObject);
+    procedure MenuItem_BrowseSystemFontsClick(Sender: TObject);
+    procedure MenuItem_SelectFontFromVarClick(Sender: TObject);
 
     procedure MenuItem_BrowseSetVarFileInPropertyListClick(Sender: TObject);
     procedure MenuItem_BrowsePluginFileInPropertyListClick(Sender: TObject);
@@ -619,6 +621,7 @@ type
     procedure SetEmptyEditedActionByEditTemplateToDefault;
     procedure HandleOnOIEditedText(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; ANewText: string);
 
+    procedure OpenFontsMenu(AEditingAction: PClkActionRec; ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer);
     function OIEditItems_ActionSpecific(AEditingAction: PClkActionRec; ALiveEditingActionType: TClkAction; ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; var ANewItems: string): Boolean;
     function HandleOnOIEditItems(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; var ANewItems: string): Boolean;
 
@@ -4860,6 +4863,45 @@ begin
 end;
 
 
+procedure TfrClickerActions.MenuItem_BrowseSystemFontsClick(Sender: TObject);
+var
+  MenuData: POIMenuItemData;
+  TempNewItems: string;
+begin
+  MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
+  try
+    TempNewItems := MenuData^.TempEditingAction.FindSubControlOptions.MatchBitmapText[MenuData^.PropertyItemIndex].FontName;
+    if EditFontProperties(MenuData^.TempEditingAction, MenuData^.PropertyItemIndex{Div}, TempNewItems) then
+    begin
+      FOIFrame.CancelCurrentEditing;
+      FOIFrame.Repaint;   //ideally, RepaintNodeByLevel
+      TriggerOnControlsModified;
+    end;
+  finally
+    Dispose(MenuData);
+  end;
+end;
+
+
+procedure TfrClickerActions.MenuItem_SelectFontFromVarClick(Sender: TObject);
+var
+  MenuData: POIMenuItemData;
+  TempFontName: string;
+begin
+  MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
+  try
+    TempFontName := StringReplace(MenuData^.MenuItemCaption, '&', '', [rfReplaceAll]);
+    MenuData^.TempEditingAction.FindSubControlOptions.MatchBitmapText[MenuData^.PropertyItemIndex].FontName := TempFontName;
+
+    FOIFrame.CancelCurrentEditing;
+    FOIFrame.Repaint;   //ideally, RepaintNodeByLevel
+    TriggerOnControlsModified;
+  finally
+    Dispose(MenuData);
+  end;
+end;
+
+
 procedure TfrClickerActions.MenuItem_BrowseSetVarFileInPropertyListClick(Sender: TObject);
 var
   MenuData: POIMenuItemData;
@@ -6658,6 +6700,48 @@ begin
 end;
 
 
+procedure TfrClickerActions.OpenFontsMenu(AEditingAction: PClkActionRec; ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer);
+var
+  i, j: Integer;
+  VarsWithFonts: TStringList;
+  tp: TPoint;
+  VarsMenuItem, VarWithFontsMenuItem: TMenuItem;
+begin
+  FOIEditorMenu.Items.Clear;
+
+  AddMenuItemToPopupMenu(FOIEditorMenu, 'Browse system fonts...', MenuItem_BrowseSystemFontsClick,
+    ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+
+  VarsMenuItem := AddMenuItemToPopupMenu(FOIEditorMenu, 'Select font from "list of fonts" variables', nil,
+    ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+
+  VarsWithFonts := TStringList.Create;
+  try
+    for i := 0 to FClkVariables.Count - 1 do
+    begin
+      if Pos(#4#5, FClkVariables.Strings[i]) > 0 then
+      begin
+        VarWithFontsMenuItem := AddMenuItemToAnotherMenuItem(FOIEditorMenu, VarsMenuItem, FClkVariables.Names[i], nil,
+          ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+
+        VarsWithFonts.Text := FastReplace_45ToReturn(FClkVariables.ValueFromIndex[i]);
+        for j := 0 to VarsWithFonts.Count - 1 do
+          AddMenuItemToAnotherMenuItem(FOIEditorMenu, VarWithFontsMenuItem, VarsWithFonts.Strings[j], MenuItem_SelectFontFromVarClick,
+            ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+      end;
+    end;
+
+    if VarsMenuItem.Count = 0 then
+      VarsMenuItem.Enabled := False;
+  finally
+    VarsWithFonts.Free;
+  end;
+
+  GetCursorPos(tp);
+  FOIEditorMenu.PopUp(tp.X, tp.Y);
+end;
+
+
 function TfrClickerActions.OIEditItems_ActionSpecific(AEditingAction: PClkActionRec; ALiveEditingActionType: TClkAction; ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; var ANewItems: string): Boolean;
 var
   EditingActionType: Integer;
@@ -6679,12 +6763,7 @@ begin
       ItemIndexMod := AItemIndex mod CPropCount_FindSubControlMatchBitmapText;
 
       if ItemIndexMod = CFindSubControl_MatchBitmapText_FontName_PropItemIndex then
-      begin
-        Result := EditFontProperties(AEditingAction, ItemIndexDiv, ANewItems);
-
-        if Result then
-          TriggerOnControlsModified;
-      end;
+        OpenFontsMenu(AEditingAction, ANodeLevel, ACategoryIndex, APropertyIndex, ItemIndexDiv);
     end;
 end;
 
@@ -7797,6 +7876,11 @@ begin
                 FLastClickedEdit := Sender as TEdit;
                 APopupMenu := pmStandardColorVariables;
               end;
+
+              CFindSubControl_MatchBitmapText_FontName_PropItemIndex:
+                AHint := 'Use the "..." button, to browse system fonts, or fonts mentioned in a variable with #4#5-separated list of fonts.' + #13#10 +
+                         'The variable with list of fonts, can be set by the $GetListOfFonts()$ function.' + #13#10 +
+                         'This is useful when getting a different list of fonts from another machine, where UIClicker is running in server mode.';
 
               CFindSubControl_MatchBitmapText_IgnoreBackgroundColor_PropItemIndex:
                 AHint := 'When set to True, the pixels, which match the current BackgroundColor, under the configured error level, are ignored.' + #13#10 +

@@ -336,6 +336,7 @@ object frClickerSetVar: TfrClickerSetVar
         '$GenerateAndSaveTree(<TreePath>[,<Step>[,<UseMouseSwipe>]])$'
         '$SetWinInterpOption(<WinInterpOptionName>, <WinInterpOptionValue>)$'
         '$Console([<Value>])$'
+        '$GetListOfFonts()$'
       )
       ParentShowHint = False
       ReadOnly = True
