@@ -2682,6 +2682,7 @@ begin
   ItemArgs := ExtractFuncArgs(CGetListOfFonts_FuncName, s);
   InitialItemArgs := ItemArgs;
 
+  Screen.Fonts.LineBreak := #13#10;
   Result := StringReplace(s, CGetListOfFonts_FuncName + InitialItemArgs + ')$', FastReplace_ReturnTo45(Screen.Fonts.Text), [rfReplaceAll]);
 end;
 
