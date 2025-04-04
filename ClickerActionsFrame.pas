@@ -345,6 +345,9 @@ type
     FSplitterMouseDownGlobalPos: TPoint;
     FSplitterMouseDownImagePos: TPoint;
 
+    FOIEditorMenuClosed: Boolean;
+    FTempNewItems: string;
+
     FEditingActionRec: TClkActionRec;
     FEditingAction: PClkActionRec;
     FEditTemplateOptions_EditingAction: PClkActionRec;
@@ -622,6 +625,7 @@ type
     procedure HandleOnOIEditedText(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; ANewText: string);
 
     procedure OpenFontsMenu(AEditingAction: PClkActionRec; ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer);
+    procedure HandleOIEditorMenuOnClose(Sender: TObject);
     function OIEditItems_ActionSpecific(AEditingAction: PClkActionRec; ALiveEditingActionType: TClkAction; ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; var ANewItems: string): Boolean;
     function HandleOnOIEditItems(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; var ANewItems: string): Boolean;
 
@@ -4873,6 +4877,7 @@ begin
     TempNewItems := MenuData^.TempEditingAction.FindSubControlOptions.MatchBitmapText[MenuData^.PropertyItemIndex].FontName;
     if EditFontProperties(MenuData^.TempEditingAction, MenuData^.PropertyItemIndex{Div}, TempNewItems) then
     begin
+      FTempNewItems := TempNewItems;
       FOIFrame.CancelCurrentEditing;
       FOIFrame.Repaint;   //ideally, RepaintNodeByLevel
       TriggerOnControlsModified;
@@ -4892,6 +4897,7 @@ begin
   try
     TempFontName := StringReplace(MenuData^.MenuItemCaption, '&', '', [rfReplaceAll]);
     MenuData^.TempEditingAction.FindSubControlOptions.MatchBitmapText[MenuData^.PropertyItemIndex].FontName := TempFontName;
+    FTempNewItems := TempFontName;
 
     FOIFrame.CancelCurrentEditing;
     FOIFrame.Repaint;   //ideally, RepaintNodeByLevel
@@ -6742,10 +6748,17 @@ begin
 end;
 
 
+procedure TfrClickerActions.HandleOIEditorMenuOnClose(Sender: TObject);
+begin
+  FOIEditorMenuClosed := True;
+end;
+
+
 function TfrClickerActions.OIEditItems_ActionSpecific(AEditingAction: PClkActionRec; ALiveEditingActionType: TClkAction; ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; var ANewItems: string): Boolean;
 var
   EditingActionType: Integer;
   ItemIndexDiv, ItemIndexMod: Integer;
+  tk: QWord;
 begin
   Result := False;
 
@@ -6763,7 +6776,23 @@ begin
       ItemIndexMod := AItemIndex mod CPropCount_FindSubControlMatchBitmapText;
 
       if ItemIndexMod = CFindSubControl_MatchBitmapText_FontName_PropItemIndex then
+      begin
+        FOIEditorMenuClosed := False;
+        FTempNewItems := ANewItems;
+        FOIEditorMenu.OnClose := HandleOIEditorMenuOnClose;
         OpenFontsMenu(AEditingAction, ANodeLevel, ACategoryIndex, APropertyIndex, ItemIndexDiv);
+
+        tk := GetTickCount64;
+        repeat
+          Application.ProcessMessages;
+        until FOIEditorMenuClosed or (GetTickCount64 - tk > 30000);
+
+        if FOIEditorMenuClosed then
+        begin
+          ANewItems := FTempNewItems;
+          Result := True;
+        end;
+      end;
     end;
 end;
 
