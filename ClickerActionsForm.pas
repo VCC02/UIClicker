@@ -3245,6 +3245,7 @@ var
   Cmd: string;
 begin
   Cmd := ARequestInfo.Document;
+  ARequestInfo.Params.LineBreak := #13#10;
 
   AResponseInfo.ContentType := 'text/plain'; // 'text/html';  default type
 
