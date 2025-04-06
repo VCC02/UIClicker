@@ -330,6 +330,7 @@ begin
 
   AStringList := TStringList.Create;
   try
+    AStringList.LineBreak := #13#10;
     AStringList.Text := ACondition;
     SetLength(FActionConditionForPreview, AStringList.Count);
 
@@ -337,6 +338,7 @@ begin
     for i := 0 to Length(FActionConditionForPreview) - 1 do
     begin
       FActionConditionForPreview[i] := TStringList.Create;
+      FActionConditionForPreview[i].LineBreak := #13#10;
       FActionConditionForPreview[i].Text := StringReplace(AStringList[i], #5#6, #13#10, [rfReplaceAll]);
 
       MaxANDsCount := Max(MaxANDsCount, FActionConditionForPreview[i].Count);
@@ -617,6 +619,7 @@ var
 begin
   SetLength(FActionConditionForPreview, Length(FActionConditionForPreview) + 1);
   FActionConditionForPreview[Length(FActionConditionForPreview) - 1] := TStringList.Create;
+  FActionConditionForPreview[Length(FActionConditionForPreview) - 1].LineBreak := #13#10;
 
   if Length(FActionConditionForPreview) > 1 then //there is already an item to copy from
   begin
@@ -647,6 +650,7 @@ begin
   begin
     SetLength(FActionConditionForPreview, Length(FActionConditionForPreview) + 1);
     FActionConditionForPreview[Length(FActionConditionForPreview) - 1] := TStringList.Create;   //create a row if there is none
+    FActionConditionForPreview[Length(FActionConditionForPreview) - 1].LineBreak := #13#10;
   end;
 
   for i := 0 to Length(FActionConditionForPreview) - 1 do
@@ -858,6 +862,7 @@ var
 begin
   SetLength(FActionConditionForPreview, Length(FActionConditionForPreview) + 1);
   FActionConditionForPreview[Length(FActionConditionForPreview) - 1] := TStringList.Create;
+  FActionConditionForPreview[Length(FActionConditionForPreview) - 1].LineBreak := #13#10;
 
   if Length(FActionConditionForPreview) > 1 then //there is already an item to copy from
   begin
@@ -888,6 +893,7 @@ var
 begin
   SetLength(FActionConditionForPreview, Length(FActionConditionForPreview) + 1);
   FActionConditionForPreview[Length(FActionConditionForPreview) - 1] := TStringList.Create;
+  FActionConditionForPreview[Length(FActionConditionForPreview) - 1].LineBreak := #13#10;
 
   if Length(FActionConditionForPreview) > 1 then //there is already an item to copy from
   begin
@@ -918,6 +924,7 @@ var
 begin
   SetLength(FActionConditionForPreview, Length(FActionConditionForPreview) + 1);
   FActionConditionForPreview[Length(FActionConditionForPreview) - 1] := TStringList.Create;
+  FActionConditionForPreview[Length(FActionConditionForPreview) - 1].LineBreak := #13#10;
 
   if Length(FActionConditionForPreview) > 1 then //there is already an item to copy from
   begin

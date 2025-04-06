@@ -2254,6 +2254,7 @@ begin
       Result := '';
       TempStringList := TStringList.Create;
       try
+        TempStringList.LineBreak := #13#10;
         TempStringList.Text := AAction^.PluginOptions.ListOfPropertiesAndValues;
 
         if APropertyIndex - 1 < TempStringList.Count then
@@ -2929,6 +2930,7 @@ begin
 
       TempStringList := TStringList.Create;
       try
+        TempStringList.LineBreak := #13#10;
         TempStringList.Text := AAction^.PluginOptions.ListOfPropertiesAndValues;  //this list does not contain properties defined in this file
 
         if APropertyIndex < TempStringList.Count then

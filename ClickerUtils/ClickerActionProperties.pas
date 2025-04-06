@@ -406,6 +406,9 @@ begin
   ListOfDefaultProperties := TStringList.Create;
   ListOfAllProperties := TStringList.Create;
   try
+    ListOfDefaultProperties.LineBreak := #13#10;
+    ListOfAllProperties.LineBreak := #13#10;
+
     ListOfDefaultProperties.Text := StringReplace(DefaultProperties, '&', #13#10, [rfReplaceAll]);
     ListOfAllProperties.Text := StringReplace(AllProperties, '&', #13#10, [rfReplaceAll]);
 
@@ -1015,6 +1018,7 @@ var
 begin
   SerProperties := TStringList.Create;
   try
+    SerProperties.LineBreak := #13#10;
     AListOfOptionsParams := FastReplace_ReturnTo45(AListOfOptionsParams); //just in case if there are lists with #13#10
     AListOfOptionsParams := FastReplace_1920To45(AListOfOptionsParams);
     SerProperties.Text := StringReplace(AListOfOptionsParams, '&', #13#10, [rfReplaceAll]);

@@ -61,6 +61,8 @@ begin
   inherited Create;
   FListOfAccessibleDirs := TStringList.Create;
   FListOfAccessibleFileExtensions := TStringList.Create;
+  FListOfAccessibleDirs.LineBreak := #13#10;
+  FListOfAccessibleFileExtensions.LineBreak := #13#10;
   FFullTemplatesDir := '';
 end;
 
@@ -183,6 +185,7 @@ var
 begin
   List := TStringList.Create;
   try
+    List.LineBreak := #13#10;
     List.Text := AListOfDirsStr;
     AddListOfAccessibleDirs(List);
   finally
@@ -197,6 +200,7 @@ var
 begin
   List := TStringList.Create;
   try
+    List.LineBreak := #13#10;
     List.Text := AListOfExtensionsStr;
     AddListOfAccessibleFileExtensions(List);
   finally

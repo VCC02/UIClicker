@@ -565,6 +565,7 @@ begin
   try
     ContentAsStringList := TStringList.Create;
     try
+      ContentAsStringList.LineBreak := #13#10;
       SavePrimitivesFile(ContentAsStringList, APrimitives, AOrders, ASettings);
 
       MemStream.Position := 0;
@@ -912,6 +913,7 @@ begin
   PageControlPlayer.Caption := 'Player';
 
   FRecentTemplates := TStringList.Create;
+  FRecentTemplates.LineBreak := #13#10;
 
   colcmbTopLeftValid.AddItem('clOrange', TObject(QWord(CLabel_Orange)));
   colcmbTopLeftValid.AddItem('clLightGreen', TObject(QWord(CLabel_LightGreen)));
@@ -2066,6 +2068,7 @@ begin
 
   TempListOfFiles := TStringList.Create;
   try
+    TempListOfFiles.LineBreak := #13#10;
     TempListOfFiles.AddStrings(AListOfFiles);
 
     FTerminateWaitForMultipleFilesAvailability := False;
@@ -2105,6 +2108,7 @@ var
 begin
   ListOfNonExistentBmps := TStringList.Create;
   try
+    ListOfNonExistentBmps.LineBreak := #13#10;
     ExtractNonExistentFiles(AListOfBitmapFiles, ListOfNonExistentBmps, flMem {flDiskThenMem}, FInMemFileSystem);
     if ListOfNonExistentBmps.Count > 0 then
     begin
@@ -2245,6 +2249,7 @@ end;
         begin
           TempListOfInMemPlugins := TStringList.Create;
           try
+            TempListOfInMemPlugins.LineBreak := #13#10;
             FDecDecHashPluginInMemFSArr[i].InMemFS.ListMemFiles(TempListOfInMemPlugins);
             AListOfInMemPlugins.AddStrings(TempListOfInMemPlugins);
 
@@ -2256,6 +2261,7 @@ end;
 
       TempListOfInMemPlugins := TStringList.Create;
       try
+        TempListOfInMemPlugins.LineBreak := #13#10;
         FPluginsInMemFileSystem.ListMemFiles(TempListOfInMemPlugins);
         AddToLog('..... Found ' + IntToStr(TempListOfInMemPlugins.Count) + ' files(s) in plugins InMem FS:  ' + FastReplace_ReturnToCSV(TempListOfInMemPlugins.Text));
       finally
@@ -2323,6 +2329,7 @@ begin
 
   ListOfParams := TStringList.Create;
   try
+    ListOfParams.LineBreak := #13#10;
     ListOfParams.Text := FastReplace_45ToReturn(ARequest);
 
     Filename := ListOfParams.Values[CExtBmp_Filename];
@@ -2439,6 +2446,7 @@ begin
 
   ResultLst := TStringList.Create;
   try
+    ResultLst.LineBreak := #13#10;
     ResultLst.Add(CREResp_ErrParam + '=' + CREResp_ErrResponseOK);
     ResultLst.Add(CREResp_HandleParam + '=' + IntToStr(Comp.Handle));
     ResultLst.Add(CREResp_TextParam + '=' + Comp.Text);
@@ -3046,6 +3054,7 @@ begin
 
           ListOfFileNames := TStringList.Create;
           try
+            ListOfFileNames.LineBreak := #13#10;
             if FSIdx = -1 then
               FPluginsInMemFileSystem.ListMemFiles(ListOfFileNames)
             else
@@ -3762,6 +3771,8 @@ begin
     ListOfFileNames := TStringList.Create;
     ListOfFileFound := TStringList.Create;
     try
+      ListOfFileNames.LineBreak := #13#10;
+      ListOfFileFound.LineBreak := #13#10;
       ARequestInfo.PostStream.Position := 0;
       ListOfFileNames.LoadFromStream(ARequestInfo.PostStream);
 
@@ -4611,6 +4622,7 @@ var
 begin
   ReceivedList := TStringList.Create;
   try
+    ReceivedList.LineBreak := #13#10;
     ReceivedList.Text := GetListOfRenderedFilesFromServer(ARemoteAddress, False); // and verify if local file has the same hash
 
     ReceivedItem := '';

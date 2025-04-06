@@ -610,6 +610,9 @@ begin
   ListOfFiles := TStringList.Create;
   ListOfResults := TStringList.Create;
   try
+    ListOfFiles.LineBreak := #13#10;
+    ListOfResults.LineBreak := #13#10;
+
     ListOfFiles.Add(AFileName);
 
     Result := GetFileExistenceOnServer(ARemoteAddress, ListOfFiles, ListOfResults, AFileIncludesHash, 'OneFile_' + ADebugParam) = '';
@@ -936,6 +939,7 @@ begin
     begin
       TempStringList := TStringList.Create;
       try
+        TempStringList.LineBreak := #13#10;
         TempStringList.Text := AClkActions[i].FindSubControlOptions.MatchBitmapFiles;
 
         for j := 0 to TempStringList.Count - 1 do
@@ -978,6 +982,10 @@ begin
   ListOfUsedFilesWithHashes := TStringList.Create;
   FileExistenceOnServer := TStringList.Create;
   try
+    ListOfUsedFiles.LineBreak := #13#10;
+    ListOfUsedFilesWithHashes.LineBreak := #13#10;
+    FileExistenceOnServer.LineBreak := #13#10;
+
     GetListOfUsedFilesFromLoadedTemplate(AClkActions, ListOfUsedFiles);
     AddHashesToFileNames(ListOfUsedFiles, ListOfUsedFilesWithHashes);
 

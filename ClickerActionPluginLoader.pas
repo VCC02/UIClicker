@@ -192,6 +192,7 @@ begin
 
   ListOfProperties := TStringList.Create;
   try
+    ListOfProperties.LineBreak := #13#10;
     ListOfProperties.Text := AListOfPropertiesAndTypes;
 
     if (APropertyIndexNoOffset > -1) and (APropertyIndexNoOffset < ListOfProperties.Count) and (ListOfProperties.Count > 0) then
@@ -1311,6 +1312,7 @@ end;
 initialization
   InitCriticalSection(LoadedPluginsCritSec);
   LoadedPluginHandles := TStringList.Create;
+  LoadedPluginHandles.LineBreak := #13#10;
 
 
 finalization

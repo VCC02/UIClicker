@@ -1048,6 +1048,11 @@ begin
   FClkVariables := TStringList.Create;
   FClkVariables.OnChange := ClkVariablesOnChange;
 
+  FSetVarContent_Vars.LineBreak := #13#10;
+  FSetVarContent_Values.LineBreak := #13#10;
+  FSetVarContent_EvalBefore.LineBreak := #13#10;
+  FClkVariables.LineBreak := #13#10;
+
   FlblResultSelLeft := nil;
   FlblResultSelTop := nil;
   FlblResultSelRight := nil;
@@ -1354,6 +1359,7 @@ var
 begin
   AStringList := TStringList.Create;
   try
+    AStringList.LineBreak := #13#10;
     AStringList.Text := AListOfStrings;
     for i := 0 to AStringList.Count - 1 do
     begin
@@ -1497,6 +1503,7 @@ begin
 
   SubVars := TStringList.Create;
   try
+    SubVars.LineBreak := #13#10;
     SubVars.Text := FastReplace_45ToReturn(NodeData^.VarValue);
     for i := 0 to SubVars.Count - 1 do
     begin
@@ -1646,6 +1653,7 @@ var
 begin
   SubVars := TStringList.Create;
   try
+    SubVars.LineBreak := #13#10;
     SubVars.Text := FastReplace_45ToReturn(AMainVarValue);
 
     if ASubVarIndex > SubVars.Count - 1 then
@@ -2042,6 +2050,7 @@ var
 begin
   PrimitiveFile_Modified := TStringList.Create;
   try
+    PrimitiveFile_Modified.LineBreak := #13#10;
     PrimitiveFile_Modified.Text := AEditingAction^.FindSubControlOptions.MatchPrimitiveFiles_Modified;
     Result := PrimitiveFile_Modified.IndexOf('1');
   finally
@@ -2208,6 +2217,7 @@ begin
 
   ListOfProperties := TStringList.Create;
   try
+    ListOfProperties.LineBreak := #13#10;
     ListOfProperties.Text := GetEditingActionObjectByActionType^.PluginOptions.ListOfPropertiesAndValues;
 
     //if ActionName <> '' then  //verification required, otherwise the item is deleted from list
@@ -2343,6 +2353,7 @@ var
 begin
   AvailableTemplates := TStringList.Create;
   try
+    AvailableTemplates.LineBreak := #13#10;
     Dir := FFullTemplatesDir + '\*.clktmpl';
 
     SearchResult := FindFirst(Dir, faArchive, ASearchRec);
@@ -2396,6 +2407,7 @@ var
 begin
   AvailableSetVarActions := TStringList.Create;
   try
+    AvailableSetVarActions.LineBreak := #13#10;
     if AEditingAction^.EditTemplateOptions.WhichTemplate = etwtSelf then
       DoOnGetListOfAvailableSetVarActions(AvailableSetVarActions)
     else
@@ -2462,6 +2474,7 @@ var
 begin
   AvailableActions := TStringList.Create;
   try
+    AvailableActions.LineBreak := #13#10;
     if AEditingAction.ActionOptions.Action = acPlugin then
       DoOnGetListOfAvailableActions(AvailableActions)
     else
@@ -2535,6 +2548,7 @@ var
 begin
   AvailableActions := TStringList.Create;
   try
+    AvailableActions.LineBreak := #13#10;
     if AEditingAction^.EditTemplateOptions.WhichTemplate = etwtSelf then
       DoOnGetListOfAvailableActions(AvailableActions)
     else
@@ -3202,6 +3216,7 @@ begin
 
   ListOfPrimitiveFiles := TStringList.Create;
   try
+    ListOfPrimitiveFiles.LineBreak := #13#10;
     ListOfPrimitiveFiles.Text := GetEditingActionObjectByActionType^.FindSubControlOptions.MatchPrimitiveFiles;
 
     UpperCaseName := UpperCase(FCurrentlyEditingPrimitiveFileName);
@@ -3238,6 +3253,7 @@ begin
   begin
     ListOfPrimitiveFiles_Modified := TStringList.Create;
     try
+      ListOfPrimitiveFiles_Modified.LineBreak := #13#10;
       if GetEditingActionObjectByActionType.ActionOptions.Action = acEditTemplate then
         TempEditingAction := FEditTemplateOptions_EditingAction
       else
@@ -3825,6 +3841,7 @@ var
 begin
   ListOfFiles_Modified := TStringList.Create;
   try
+    ListOfFiles_Modified.LineBreak := #13#10;
     TempEditingAction := GetEditingActionObjectByActionType;
 
     ListOfFiles_Modified.Text := TempEditingAction^.FindSubControlOptions.MatchPrimitiveFiles_Modified;
@@ -3984,6 +4001,7 @@ begin
   try
     ListOfFiles := TStringList.Create;
     try
+      ListOfFiles.LineBreak := #13#10;
       ListOfFiles.Text := MenuData.TempEditingAction^.FindSubControlOptions.MatchBitmapFiles;
       ListOfFiles.Text := ListOfFiles.Text + DoOnGetPictureOpenDialogFileName;
       MenuData.TempEditingAction^.FindSubControlOptions.MatchBitmapFiles := ListOfFiles.Text;
@@ -4032,6 +4050,7 @@ begin
 
     ListOfFiles := TStringList.Create;
     try
+      ListOfFiles.LineBreak := #13#10;
       ListOfFiles.Text := MenuData.TempEditingAction^.FindSubControlOptions.MatchBitmapFiles;
       ListOfFiles.Strings[MenuData^.PropertyItemIndex] := DoOnGetPictureOpenDialogFileName;
       MenuData.TempEditingAction^.FindSubControlOptions.MatchBitmapFiles := ListOfFiles.Text;
@@ -4061,6 +4080,7 @@ begin
   try
     ListOfFiles := TStringList.Create;
     try
+      ListOfFiles.LineBreak := #13#10;
       ListOfFiles.Text := MenuData^.TempEditingAction^.FindSubControlOptions.MatchBitmapFiles;
       ListOfFiles.Delete(MenuData^.PropertyItemIndex);
       MenuData^.TempEditingAction^.FindSubControlOptions.MatchBitmapFiles := ListOfFiles.Text;
@@ -4087,6 +4107,7 @@ begin
   try
     ListOfFiles := TStringList.Create;
     try
+      ListOfFiles.LineBreak := #13#10;
       if MenuData^.PropertyItemIndex <= 0 then
         Exit;
 
@@ -4116,6 +4137,7 @@ begin
   try
     ListOfFiles := TStringList.Create;
     try
+      ListOfFiles.LineBreak := #13#10;
       ListOfFiles.Text := MenuData^.TempEditingAction^.FindSubControlOptions.MatchBitmapFiles;
       if MenuData^.PropertyItemIndex >= ListOfFiles.Count - 1 then
         Exit;
@@ -4152,6 +4174,8 @@ begin
     ListOfFiles := TStringList.Create;
     ListOfFiles_Modified := TStringList.Create;
     try
+      ListOfFiles.LineBreak := #13#10;
+      ListOfFiles_Modified.LineBreak := #13#10;
       ListOfFiles.Text := MenuData.TempEditingAction^.FindSubControlOptions.MatchPrimitiveFiles;
       OldCount := ListOfFiles.Count;
       ListOfFiles.Text := ListOfFiles.Text + DoOnGetOpenDialogFileName;
@@ -4193,6 +4217,8 @@ begin
     ListOfFiles := TStringList.Create;
     ListOfFiles_Modified := TStringList.Create;
     try
+      ListOfFiles.LineBreak := #13#10;
+      ListOfFiles_Modified.LineBreak := #13#10;
       ListOfFiles.Text := MenuData^.TempEditingAction^.FindSubControlOptions.MatchPrimitiveFiles;
       ListOfFiles.Text := ListOfFiles.Text + DoOnGetSaveDialogFileName;
       MenuData^.TempEditingAction^.FindSubControlOptions.MatchPrimitiveFiles := ListOfFiles.Text;
@@ -4252,6 +4278,8 @@ begin
     ListOfFiles := TStringList.Create;
     ListOfFiles_Modified := TStringList.Create;
     try
+      ListOfFiles.LineBreak := #13#10;
+      ListOfFiles_Modified.LineBreak := #13#10;
       ListOfFiles_Modified.Text := MenuData.TempEditingAction^.FindSubControlOptions.MatchPrimitiveFiles_Modified;
 
       if ListOfFiles_Modified.Strings[MenuData^.PropertyItemIndex] = '1' then
@@ -4293,6 +4321,8 @@ begin
     ListOfFiles := TStringList.Create;
     ListOfFiles_Modified := TStringList.Create;
     try
+      ListOfFiles.LineBreak := #13#10;
+      ListOfFiles_Modified.LineBreak := #13#10;
       ListOfFiles.Text := MenuData^.TempEditingAction^.FindSubControlOptions.MatchPrimitiveFiles;
       ListOfFiles.Delete(MenuData^.PropertyItemIndex);
       MenuData^.TempEditingAction^.FindSubControlOptions.MatchPrimitiveFiles := ListOfFiles.Text;
@@ -4327,6 +4357,8 @@ begin
     ListOfFiles := TStringList.Create;
     ListOfFiles_Modified := TStringList.Create;
     try
+      ListOfFiles.LineBreak := #13#10;
+      ListOfFiles_Modified.LineBreak := #13#10;
       if MenuData^.PropertyItemIndex <= 0 then
         Exit;
 
@@ -4364,6 +4396,8 @@ begin
     ListOfFiles := TStringList.Create;
     ListOfFiles_Modified := TStringList.Create;
     try
+      ListOfFiles.LineBreak := #13#10;
+      ListOfFiles_Modified.LineBreak := #13#10;
       ListOfFiles.Text := MenuData^.TempEditingAction^.FindSubControlOptions.MatchPrimitiveFiles;
       if MenuData^.PropertyItemIndex >= ListOfFiles.Count - 1 then
         Exit;
@@ -4399,6 +4433,8 @@ begin
   ListOfFiles := TStringList.Create;
   ListOfFiles_Modified := TStringList.Create;
   try
+    ListOfFiles.LineBreak := #13#10;
+    ListOfFiles_Modified.LineBreak := #13#10;
     ListOfFiles.Text := AEditingAction^.FindSubControlOptions.MatchPrimitiveFiles;
 
     PmtvFnm := ListOfFiles.Strings[AFileIndex];
@@ -4449,6 +4485,8 @@ begin
     ListOfFiles := TStringList.Create;
     ListOfFiles_Modified := TStringList.Create;
     try
+      ListOfFiles.LineBreak := #13#10;
+      ListOfFiles_Modified.LineBreak := #13#10;
       ListOfFiles.Text := MenuData^.TempEditingAction^.FindSubControlOptions.MatchPrimitiveFiles;
 
       PmtvFnm := ListOfFiles.Strings[MenuData^.PropertyItemIndex];
@@ -4496,6 +4534,8 @@ begin
     ListOfFiles := TStringList.Create;
     ListOfFiles_Modified := TStringList.Create;
     try
+      ListOfFiles.LineBreak := #13#10;
+      ListOfFiles_Modified.LineBreak := #13#10;
       if MessageBox(Handle, 'Discard changes and reload?', PChar(Application.Title), MB_ICONQUESTION + MB_YESNO) = IDNO then
         Exit;
 
@@ -5327,6 +5367,7 @@ begin
     begin
       ListOfProperties := TStringList.Create;
       try
+        ListOfProperties.LineBreak := #13#10;
         ListOfProperties.Text := AEditingAction^.PluginOptions.ListOfPropertiesAndTypes;
         try
           if (APropertyIndex - CPropCount_Plugin < ListOfProperties.Count) and (ListOfProperties.Count > 0) then
@@ -5443,6 +5484,7 @@ begin
       begin
         ListOfProperties := TStringList.Create;
         try
+          ListOfProperties.LineBreak := #13#10;
           ListOfProperties.Text := AEditingAction.PluginOptions.ListOfPropertiesAndTypes;
 
           if (APropertyIndex - CPropCount_Plugin < ListOfProperties.Count) and (ListOfProperties.Count > 0) then
@@ -5569,6 +5611,7 @@ begin
         begin
           TempStringList := TStringList.Create;
           try
+            TempStringList.LineBreak := #13#10;
             TempStringList.Text := AEditingAction^.FindSubControlOptions.MatchBitmapFiles;
             Result := TempStringList.Count;
           finally
@@ -5586,6 +5629,7 @@ begin
         begin
           TempStringList := TStringList.Create;
           try
+            TempStringList.LineBreak := #13#10;
             TempStringList.Text := AEditingAction^.FindSubControlOptions.MatchPrimitiveFiles;
             Result := TempStringList.Count;
           finally
@@ -5701,6 +5745,7 @@ begin
           begin
             ListOfPrimitiveFiles_Modified := TStringList.Create;
             try
+              ListOfPrimitiveFiles_Modified.LineBreak := #13#10;
               ListOfPrimitiveFiles_Modified.Text := AEditingAction^.FindSubControlOptions.MatchPrimitiveFiles_Modified;
               try
                 if ListOfPrimitiveFiles_Modified.Strings[AItemIndex] = '1' then
@@ -5805,6 +5850,7 @@ begin
         begin
           TempStringList := TStringList.Create;
           try
+            TempStringList.LineBreak := #13#10;
             TempStringList.Text := AEditingAction^.FindSubControlOptions.MatchBitmapFiles;
             try
               Result := TempStringList.Strings[AItemIndex];
@@ -5830,6 +5876,7 @@ begin
         begin
           TempStringList := TStringList.Create;
           try
+            TempStringList.LineBreak := #13#10;
             TempStringList.Text := AEditingAction^.FindSubControlOptions.MatchPrimitiveFiles;
             try
               if AItemIndex < TempStringList.Count then
@@ -6394,6 +6441,7 @@ begin
         begin
           TempStringList := TStringList.Create;
           try
+            TempStringList.LineBreak := #13#10;
             case ANodeLevel of
               CPropertyLevel:
               begin
@@ -6449,6 +6497,7 @@ begin
         begin
           TempStringList := TStringList.Create;
           try
+            TempStringList.LineBreak := #13#10;
             case ANodeLevel of
               CPropertyLevel:
               begin
@@ -6458,6 +6507,7 @@ begin
                 AEditingAction^.FindSubControlOptions.MatchPrimitiveFiles_Modified := '';
                 ListOfFiles_Modified := TStringList.Create;
                 try
+                  ListOfFiles_Modified.LineBreak := #13#10;
                   ListOfFiles_Modified.Text := AEditingAction^.FindSubControlOptions.MatchPrimitiveFiles;
                   for i := 0 to ListOfFiles_Modified.Count - 1 do
                     AEditingAction^.FindSubControlOptions.MatchPrimitiveFiles_Modified := AEditingAction^.FindSubControlOptions.MatchPrimitiveFiles_Modified + '0'#13#10;
@@ -6723,6 +6773,7 @@ begin
 
   VarsWithFonts := TStringList.Create;
   try
+    VarsWithFonts.LineBreak := #13#10;
     for i := 0 to FClkVariables.Count - 1 do
     begin
       if Pos(#4#5, FClkVariables.Strings[i]) > 0 then
@@ -6971,6 +7022,7 @@ begin
     AEnumItemName := GetPluginPropertyAttribute(AEditingAction.PluginOptions.ListOfPropertiesAndTypes, CPluginPropertyAttr_EnumStrings, APropertyIndex);
     ListOfEnumValues := TStringList.Create;
     try
+      ListOfEnumValues.LineBreak := #13#10;
       ListOfEnumValues.Text := FastReplace_45ToReturn(AEnumItemName);
       try
         AEnumItemName := ListOfEnumValues.Strings[AEnumItemIndex];
@@ -7034,6 +7086,7 @@ begin
 
   TempListOfPropertiesAndValues := TStringList.Create;
   try
+    TempListOfPropertiesAndValues.LineBreak := #13#10;
     TempListOfPropertiesAndValues.Text := AListOfPropertiesAndValues;
 
     for i := 0 to TempListOfPropertiesAndValues.Count - 1 do
@@ -7117,6 +7170,7 @@ begin
         begin
           ListOfPrimitiveFiles_Modified := TStringList.Create;   //instead of parsing this list on every tree paint action, the "modified" flags could be stored in some array of (paths + modified)
           try
+            ListOfPrimitiveFiles_Modified.LineBreak := #13#10;
             ListOfPrimitiveFiles_Modified.Text := AEditingAction^.FindSubControlOptions.MatchPrimitiveFiles_Modified;
 
             try
@@ -8392,6 +8446,7 @@ begin
               begin
                 TempListOfExternallyRenderedImages := TStringList.Create;
                 try
+                  TempListOfExternallyRenderedImages.LineBreak := #13#10;
                   DoOnGetListOfExternallyRenderedImages(TempListOfExternallyRenderedImages);
 
                   if TempListOfExternallyRenderedImages.Count = 0 then
@@ -8487,6 +8542,7 @@ begin
 
             TempListOfMemPlugins := TStringList.Create;
             try
+              TempListOfMemPlugins.LineBreak := #13#10;
               DoOnGetListOfInMemPlugins(TempListOfMemPlugins);
 
               PluginsFoundInInMemFS := False;
@@ -8965,6 +9021,8 @@ begin
       PrimitiveFileNames := TStringList.Create;
       PrimitiveFile_Modified := TStringList.Create;
       try
+        PrimitiveFileNames.LineBreak := #13#10;
+        PrimitiveFile_Modified.LineBreak := #13#10;
         PrimitiveFileNames.Text := AEditingAction^.FindSubControlOptions.MatchPrimitiveFiles;
         PrimitiveFile_Modified.Text := AEditingAction^.FindSubControlOptions.MatchPrimitiveFiles_Modified;
 
@@ -9093,6 +9151,7 @@ begin
     begin
       ListOfProperties := TStringList.Create;
       try
+        ListOfProperties.LineBreak := #13#10;
         ListOfProperties.Text := AEditingAction^.PluginOptions.ListOfPropertiesAndTypes;
         try
           if (APropertyIndex - CPropCount_Plugin < ListOfProperties.Count) and (ListOfProperties.Count > 0) then
@@ -9238,6 +9297,7 @@ begin
 
           ListOfProperties := TStringList.Create;
           try                             // a bit of overhead to decode the same list for all properties
+            ListOfProperties.LineBreak := #13#10;
             ListOfProperties.Text := FastReplace_45ToReturn(FEditTemplateOptions_EditingAction.EditTemplateOptions.ListOfEnabledProperties);
 
             if ListOfProperties.IndexOf(PropertyName) <> -1 then
@@ -9272,6 +9332,7 @@ begin
 
   ListOfProperties := TStringList.Create;
   try
+    ListOfProperties.LineBreak := #13#10;
     ListOfProperties.Text := FastReplace_45ToReturn(FEditTemplateOptions_EditingAction^.EditTemplateOptions.ListOfEnabledProperties);
 
     Idx := ListOfProperties.IndexOf(PropertyName);

@@ -602,6 +602,7 @@ var
 begin
   FileContent := TStringList.Create;
   try
+    FileContent.LineBreak := #13#10;
     SavePrimitivesFile(FileContent, APrimitives, AOrders, ASettings);
     FileContent.SaveToFile(AFileName);
   finally

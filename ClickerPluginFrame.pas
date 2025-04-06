@@ -743,6 +743,7 @@ begin
             begin
               CurrentSourceFileName := Ini.GetSectionAtIndex(i);
               FBreakPointsArr[i] := TStringList.Create;
+              FBreakPointsArr[i].LineBreak := #13#10;
 
               BreakPointCount := Ini.ReadInteger(CurrentSourceFileName, 'BrkPointCount', 0);
               for j := 0 to BreakPointCount - 1 do
@@ -754,6 +755,8 @@ begin
           begin
             FSourceFiles[i].Content := TStringList.Create;
             FSourceFiles[i].DbgLines := TStringList.Create;
+            FSourceFiles[i].Content.LineBreak := #13#10;
+            FSourceFiles[i].DbgLines.LineBreak := #13#10;
 
             FSourceFiles[i].Fnm := Ini.GetSectionAtIndex(i);
 

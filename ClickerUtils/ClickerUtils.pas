@@ -2175,6 +2175,7 @@ begin
   try
     AStringList := TStringList.Create;
     try
+      AStringList.LineBreak := #13#10;
       AStringList.LoadFromFile(FileArgs);
       Result := FastReplace_ReturnTo45(AStringList.Text);
 
@@ -3088,7 +3089,7 @@ begin
   begin
     if Result > '' then
       Result := Result + ', ';
-    Result := Result + 'Bmp';
+    Result := Result + 'Txt';
   end;
 
   if Criteria.WillMatchBitmapFiles then
@@ -3280,6 +3281,7 @@ begin
 
   AStringList := TStringList.Create;
   try
+    AStringList.LineBreak := #13#10;
     AStringList.Text := AActionCondition;
 
     for i := 0 to AStringList.Count - 1 do
@@ -3287,6 +3289,7 @@ begin
       PartialResult := True;
       AConditionPart := TStringList.Create;
       try
+        AConditionPart.LineBreak := #13#10;
         AConditionPart.Text := StringReplace(AStringList.Strings[i], #5#6, #13#10, [rfReplaceAll]);
 
         for j := 0 to AConditionPart.Count - 1 do
@@ -3594,6 +3597,7 @@ var
 begin
   ListOfPrimitiveFiles := TStringList.Create;
   try
+    ListOfPrimitiveFiles.LineBreak := #13#10;
     ListOfPrimitiveFiles.Text := AList;
     s := '';
     for i := 0 to ListOfPrimitiveFiles.Count - 1 do

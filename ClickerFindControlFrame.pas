@@ -4127,6 +4127,7 @@ begin
     prbFontSize := TProgressBar.Create(Self);
     prbFontName := TProgressBar.Create(Self);
     try
+      ListOfFontNames.LineBreak := #13#10;
       DoOnGetFontFinderSettings(FontFinderSettings);
 
       if FontFinderSettings.MinFontSize > FontFinderSettings.MaxFontSize then

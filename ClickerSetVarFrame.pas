@@ -182,6 +182,9 @@ begin
   FSetVarContent_Vars := TStringList.Create;
   FSetVarContent_Values := TStringList.Create;
   FSetVarContent_EvalBefore := TStringList.Create;
+  FSetVarContent_Vars.LineBreak := #13#10;
+  FSetVarContent_Values.LineBreak := #13#10;
+  FSetVarContent_EvalBefore.LineBreak := #13#10;
   FFailOnException := False;
 
   FHold := False;

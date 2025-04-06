@@ -882,6 +882,7 @@ begin
 
   TempVarDescriptions := TStringList.Create;
   try
+    TempVarDescriptions.LineBreak := #13#10;
     FillInWithAllVars(FVarDescriptions);
 
     TempVarDescriptions.Add('$Control_Text$=[String] Current control text. Not all controls have text. Subcontrols do not have a text. This is updated by FindControl action, if the control is found.');
@@ -942,6 +943,7 @@ begin
 
   TempFuncDescriptions := TStringList.Create;
   try
+    TempFuncDescriptions.LineBreak := #13#10;
     FillInWithAllFuncs(FFuncDescriptions);
 
     TempFuncDescriptions.Add('$ExtractFileDir(<DirName>)$=Returns the directory up to and not including the last item in the path.');
@@ -1198,6 +1200,8 @@ begin
 
   FVarDescriptions := TStringList.Create;
   FFuncDescriptions := TStringList.Create;
+  FVarDescriptions.LineBreak := #13#10;
+  FFuncDescriptions.LineBreak := #13#10;
   //FillInVarDescriptions; called when displaying autocomplete
 end;
 
@@ -1263,6 +1267,7 @@ begin
   FActionExecution.OnGetPluginInMemFS := HandleOnGetPluginInMemFS;
 
   FCmdConsoleHistory := TStringList.Create;
+  FCmdConsoleHistory.LineBreak := #13#10;
   FOnExecuteRemoteActionAtIndex := nil;
   FOnCopyControlTextAndClassFromMainWindow := nil;
   FOnGetExtraSearchAreaDebuggingImageWithStackLevel := nil;
@@ -1951,6 +1956,7 @@ begin
   begin
     TempStringList := TStringList.Create;
     try
+      TempStringList.LineBreak := #13#10;
       SaveTemplateWithCustomActionsToStringList_V2(TempStringList, AActions, ANotes, AIconPath);
 
       Fnm := ResolveTemplatePath(Fnm);
@@ -2396,6 +2402,7 @@ begin
   begin
     Action_ScrollInfo := TStringList.Create;
     try
+      Action_ScrollInfo.LineBreak := #13#10;
       Action_ScrollInfo.Text := FClkActions[ActionIndex].ScrollIndex;
 
       NodeLevel := StrToIntDef(Action_ScrollInfo.Values[COIScrollInfo_NodeLevel], -1);
@@ -2748,6 +2755,7 @@ var
 begin
   VarReplacements := TStringList.Create;
   try
+    VarReplacements.LineBreak := #13#10;
     try
       VarReplacements.AddStrings(frClickerActions.ClkVariables); //init with something, in case the server can't be reached
 
@@ -2841,6 +2849,8 @@ begin
     VarNames := TStringList.Create;
     VarValues := TStringList.Create;
     try
+      VarNames.LineBreak := #13#10;
+      VarValues.LineBreak := #13#10;
       VarNames.Text := FClkActions[AActionIndex].SetVarOptions.ListOfVarNames;
       VarValues.Text := FClkActions[AActionIndex].SetVarOptions.ListOfVarValues;
 
@@ -3913,6 +3923,8 @@ begin
   ListOfProperties := TStringList.Create;
   ListOfPropertiesAndValue_Work := TStringList.Create;
   try
+    ListOfProperties.LineBreak := #13#10;
+    ListOfPropertiesAndValue_Work.LineBreak := #13#10;
     ListOfProperties.Text := AAction.PluginOptions.ListOfPropertiesAndTypes;
     ListOfPropertiesAndValue_Work.Text := AAction.PluginOptions.ListOfPropertiesAndValues; //values are saved in .clktmpl files
     AAction.PluginOptions.CachedCount := ListOfProperties.Count;
@@ -4224,6 +4236,7 @@ var
 begin
   AStringList := TStringList.Create;
   try
+    AStringList.LineBreak := #13#10;
     SaveTemplateWithCustomActionsToStringList_V2(AStringList, ACustomClkActions, ANotes, ATemplateIconPath);
     DoOnSaveTemplateToFile(AStringList, Fnm);
   finally
@@ -5420,6 +5433,8 @@ begin
   TempVars := TStringList.Create;
   TempFuncs := TStringList.Create;
   try
+    TempVars.LineBreak := #13#10;
+    TempFuncs.LineBreak := #13#10;
     FillInWithAllVars(TempVars);
     FillInWithAllFuncs(TempFuncs);
     ShowAutoComplete(AEdit, TempVars, TempFuncs, FVarDescriptions, FFuncDescriptions);
@@ -5738,6 +5753,7 @@ var
 begin
   BackupList := TStringList.Create;
   try
+    BackupList.LineBreak := #13#10;
     BackupList.Text := frClickerActions.ClkVariables.Text;
     try
       spdbtnStopPlaying.Enabled := True;  //It's ugly that the button has to be enabled here, but it is required to stay "on" for a little longer, to be captured by the test driver.
@@ -5838,6 +5854,7 @@ var
 begin
   AStringList := TStringList.Create;
   try
+    AStringList.LineBreak := #13#10;
     GetSelectedActions(ActionsToCopy);
     try
       SaveTemplateWithCustomActionsToStringList_V2(AStringList, ActionsToCopy, '', '');
@@ -5863,6 +5880,7 @@ var
 begin
   AStringList := TStringList.Create;
   try
+    AStringList.LineBreak := #13#10;  //probably this should be set after assigning from Clipboard.AsText
     AStringList.Text := Clipboard.AsText;
 
     Ini := TClkIniReadonlyFile.Create(AStringList);
@@ -6486,6 +6504,7 @@ begin
 
   ListOfRecentFiles := TStringList.Create;
   try
+    ListOfRecentFiles.LineBreak := #13#10;
     DoOnGetListOfRecentFiles(ListOfRecentFiles);
     SelfExePath := ExtractFileDir(ParamStr(0));
 
@@ -6505,6 +6524,7 @@ begin
 
   ListOfMemFiles := TStringList.Create;
   try
+    ListOfMemFiles.LineBreak := #13#10;
     frClickerActions.InMemFS.ListMemFiles(ListOfMemFiles);
 
     for i := 0 to ListOfMemFiles.Count - 1 do
@@ -6702,6 +6722,7 @@ begin
 
     ActionNames := TStringList.Create;
     try
+      ActionNames.LineBreak := #13#10;
       for i := Low(TClkAction) to High(TClkAction) do
         ActionNames.Add(CClkActionStr[i]);
 
@@ -7515,6 +7536,7 @@ begin
     begin
       TempStringList := TStringList.Create;
       try
+        TempStringList.LineBreak := #13#10;
         TempStringList.Text := FClkActions[i].FindSubControlOptions.MatchBitmapFiles;
 
         for j := 0 to TempStringList.Count - 1 do
@@ -7699,6 +7721,7 @@ begin
   try
     TempStrings := TStringList.Create;
     try
+      TempStrings.LineBreak := #13#10;
       FLoggingFIFO.PopAll(TempStrings);
 
       for i:= 0 to TempStrings.Count - 1 do

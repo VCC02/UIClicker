@@ -1323,6 +1323,7 @@ var
 begin
   FileContentStr := TStringList.Create;
   try
+    FileContentStr.LineBreak := #13#10;
     SaveTemplateWithCustomActionsToStringList_V2(FileContentStr, ATemplateContent, ANotes, ATemplateIconPath);
     FileContentStr.SaveToStream(AFileContentMem);
   finally
@@ -1333,20 +1334,14 @@ end;
 
 procedure GetTemplateContentFromMemoryStream(var ACustomActions: TClkActionsRecArr; var ANotes, ATemplateIconPath: string; AFileContentMem: TMemoryStream);
 var
-  FileContentStr: TStringList;
   Ini: TClkIniReadonlyFile;
 begin
-  FileContentStr := TStringList.Create;
+  AFileContentMem.Position := 0;
+  Ini := TClkIniReadonlyFile.Create(AFileContentMem);
   try
-    AFileContentMem.Position := 0;
-    Ini := TClkIniReadonlyFile.Create(AFileContentMem);
-    try
-      LoadTemplateToCustomActions_V2(Ini, ACustomActions, ANotes, ATemplateIconPath);
-    finally
-      Ini.Free;
-    end;
+    LoadTemplateToCustomActions_V2(Ini, ACustomActions, ANotes, ATemplateIconPath);
   finally
-    FileContentStr.Free;
+    Ini.Free;
   end;
 end;
 

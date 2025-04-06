@@ -257,6 +257,7 @@ begin
 
   Response := TStringList.Create;
   try
+    Response.LineBreak := #13#10;
     Response.Text := FastReplace_87ToReturn(GetCompInfoAtPoint(ServerAddress, X, Y));
 
     ResponseStatus := Response.Values[CREResp_ErrParam];
@@ -323,6 +324,7 @@ begin
     begin
       MouseParams := TStringList.Create;
       try
+        MouseParams.LineBreak := #13#10;
         MouseParams.Values[CMouseX] := IntToStr(X);
         MouseParams.Values[CMouseY] := IntToStr(Y);
         MouseParams.Values[CMouseButton] := IntToStr(Ord(Button));
@@ -350,6 +352,7 @@ begin
     begin
       MouseParams := TStringList.Create;
       try
+        MouseParams.LineBreak := #13#10;
         MouseParams.Values[CMouseX] := IntToStr(X);
         MouseParams.Values[CMouseY] := IntToStr(Y);
         MouseParams.Values[CMouseButton] := IntToStr(Ord(Button));

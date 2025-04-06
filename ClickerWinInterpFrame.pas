@@ -1770,6 +1770,7 @@ begin
   FOnGetSelectedCompFromRemoteWin := nil;
 
   FListOfScannedComponents := TStringList.Create;
+  FListOfScannedComponents.LineBreak := #13#10;
   FListOfScannedComponents.OnChange := @EvaluateScanedComponentsOnChange;
   FTextEditorEditBox := nil;
 
@@ -2405,6 +2406,7 @@ begin
 
   GeneratedActions := TStringList.Create;
   try
+    GeneratedActions.LineBreak := #13#10;
     SaveTemplateWithCustomActionsToStringList_V2(GeneratedActions, ActionChain, '', '');
     Clipboard.AsText := GeneratedActions.Text;
   finally
@@ -4368,6 +4370,7 @@ begin
 
   Content := TStringList.Create;
   try
+    Content.LineBreak := #13#10;
     Node := vstComponents.GetFirst;
     try
       if Node = nil then
@@ -4623,6 +4626,7 @@ begin
   MemStream := TMemoryStream.Create;
   TempList := TStringList.Create;
   try
+    TempList.LineBreak := #13#10;
     TempList.Add('[Zones]');
     TempList.Add('Count=' + IntToStr(vstAvoidedZones.RootNodeCount));
 
@@ -5106,6 +5110,7 @@ begin
   begin
     CmdParams := TStringList.Create;
     try
+      CmdParams.LineBreak := #13#10;
       CmdParams.Text := StringReplace(AWinInterpOptionValue, '|', #13#10, [rfReplaceAll]);
       if CmdParams.Count = 1 then
         CmdParams.Text := FastReplace_68ToReturn(AWinInterpOptionValue); //maybe #6$8 is used as separator
@@ -5151,6 +5156,7 @@ begin
   begin
     CmdParams := TStringList.Create;
     try
+      CmdParams.LineBreak := #13#10;
       CmdParams.Text := StringReplace(AWinInterpOptionValue, '|', #13#10, [rfReplaceAll]);
       if CmdParams.Count = 1 then
         CmdParams.Text := FastReplace_68ToReturn(AWinInterpOptionValue); //maybe #6$8 is used as separator

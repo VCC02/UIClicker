@@ -645,6 +645,9 @@ begin
   ListOfVarValues := TStringList.Create;
   ListOfVarEvalBefore := TStringList.Create;
   try
+    ListOfVarNames.LineBreak := #13#10;
+    ListOfVarValues.LineBreak := #13#10;
+    ListOfVarEvalBefore.LineBreak := #13#10;
     ListOfVarNames.Text := ADestClkAction.SetVarOptions.ListOfVarNames;
     ListOfVarValues.Text := ADestClkAction.SetVarOptions.ListOfVarValues;
     ListOfVarEvalBefore.Text := ADestClkAction.SetVarOptions.ListOfVarEvalBefore;

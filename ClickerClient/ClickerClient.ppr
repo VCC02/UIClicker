@@ -180,6 +180,7 @@ begin
   InMemFS := TInMemFileSystem.Create;
   FRemoteAddress := 'http://127.0.0.1:5444/';
   FAllVarReplacements := TStringList.Create;
+  FAllVarReplacements.LineBreak := #13#10;
 
   ExceptProc := @CatchUnhandledException;
   FExHandler := TExHandler.Create;  /////////////////////////// probably, it will have to be freed
@@ -894,6 +895,7 @@ var
 begin
   ListOfFiles := TStringList.Create;
   try
+    ListOfFiles.LineBreak := #13#10;
     try
       InMemFS.ListMemFiles(ListOfFiles);
       Result := SetPointedContentFromString(ListOfFiles.Text, AResponse);
@@ -927,6 +929,7 @@ begin
 
   FileContent := TStringList.Create;
   try
+    FileContent.LineBreak := #13#10;
     try
       Result := InMemFS.GetFileSize(TemplateFileName);
       SetLength(Buffer, Result);
@@ -972,6 +975,7 @@ var
 begin
   AList := TStringList.Create;
   try
+    AList.LineBreak := #13#10;
     SetPointedContentToString(@string(PWideChar(AListOfDirs))[1], ListAsString);
     AList.Text := ListAsString;
 
@@ -989,6 +993,7 @@ var
 begin
   AList := TStringList.Create;
   try
+    AList.LineBreak := #13#10;
     SetPointedContentToString(@string(PWideChar(AListOfExtensions))[1], ListAsString);
     AList.Text := ListAsString;
 

@@ -414,6 +414,8 @@ begin
   ListOfControlTexts := TStringList.Create;
   ListOfControlClasses := TStringList.Create;
   try
+    ListOfControlTexts.LineBreak := #13#10;
+    ListOfControlClasses.LineBreak := #13#10;
     ListOfControlTexts.Text := StringReplace(InputData.Text, InputData.TextSeparator, #13#10, [rfReplaceAll]);             //no fast replace here :( , because the separator can be anything
     ListOfControlClasses.Text := StringReplace(InputData.ClassName, InputData.ClassNameSeparator, #13#10, [rfReplaceAll]); //no fast replace here :( , because the separator can be anything
 
@@ -479,6 +481,8 @@ begin
   ListOfControlTexts := TStringList.Create;
   ListOfControlClasses := TStringList.Create;
   try
+    ListOfControlTexts.LineBreak := #13#10;
+    ListOfControlClasses.LineBreak := #13#10;
     ListOfControlTexts.Text := StringReplace(InputData.Text, InputData.TextSeparator, #13#10, [rfReplaceAll]);             //no fast replace here :( , because the separator can be anything
     ListOfControlClasses.Text := StringReplace(InputData.ClassName, InputData.ClassNameSeparator, #13#10, [rfReplaceAll]); //no fast replace here :( , because the separator can be anything
 
@@ -1196,6 +1200,8 @@ begin
   SetLength(AvailableControls, 0);
   SetLength(FoundSubControls, 0);
   try
+    ListOfControlTexts.LineBreak := #13#10;
+    ListOfControlClasses.LineBreak := #13#10;
     ListOfControlTexts.Text := StringReplace(InputData.Text, InputData.TextSeparator, #13#10, [rfReplaceAll]);             //no fast replace here :( , because the separator can be anything
     ListOfControlClasses.Text := StringReplace(InputData.ClassName, InputData.ClassNameSeparator, #13#10, [rfReplaceAll]); //no fast replace here :( , because the separator can be anything
 

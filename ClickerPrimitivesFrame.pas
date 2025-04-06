@@ -3032,6 +3032,7 @@ begin
                 begin
                   ListOfExternallyRenderedImages := TStringList.Create;
                   try
+                    ListOfExternallyRenderedImages.LineBreak := #13#10;
                     DoOnGetListOfExternallyRenderedImages(ListOfExternallyRenderedImages);
                     for i := 0 to ListOfExternallyRenderedImages.Count - 1 do
                       AddMenuItemToPopupMenu(FOIEditorMenu, ListOfExternallyRenderedImages.Strings[i], MenuItem_SetExternallyRenderedFile, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, nil);

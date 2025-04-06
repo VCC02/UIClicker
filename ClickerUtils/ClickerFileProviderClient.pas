@@ -132,6 +132,7 @@ begin
   {$ENDIF}
 
   FLogOutput := TStringList.Create;
+  FLogOutput.LineBreak := #13#10;
 end;
 
 
@@ -297,6 +298,7 @@ begin
           DoOnBeforeRequestingListOfMissingFiles;
           ListOfFiles := TStringList.Create;
           try
+            ListOfFiles.LineBreak := #13#10;
             ListStr := IdHTTPClient.Get(FRemoteAddress + CRECmd_GetListOfWaitingFiles);  //file names, read from FIFO
 
             if ListStr <> '<HTML><BODY><B>200 OK</B></BODY></HTML>' then   //this is the standard TIdHTTPServer response, if no user response is provided

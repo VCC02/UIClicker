@@ -74,6 +74,7 @@ constructor TfrClickerActionsPalette.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   FActions := TStringList.Create;
+  FActions.LineBreak := #13#10;
   FImages := nil;
   FOwnerPanel := nil;
   vstActionsPalette.Caption := 'ActionsPalette';

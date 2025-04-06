@@ -226,6 +226,8 @@ begin
   vstFonts.RootNodeCount := Screen.Fonts.Count;
   FListOfUsedFonts := TStringList.Create;
   FListOfHistogramDiffs := TStringList.Create;
+  FListOfUsedFonts.LineBreak := #13#10;
+  FListOfHistogramDiffs.LineBreak := #13#10;
   FLatestCheckedNode := nil;
   FClosing := False;
 
@@ -279,6 +281,7 @@ begin
 
   ListOfSelected := TStringList.Create;
   try
+    ListOfSelected.LineBreak := #13#10;
     OpenDialog := TOpenDialog.Create(Self);
     try
       OpenDialog.Filter := CTextFilesFilter;
@@ -334,6 +337,7 @@ begin
 
   ListOfSelected := TStringList.Create;
   try
+    ListOfSelected.LineBreak := #13#10;
     repeat
       if Node^.CheckState = csCheckedNormal then
         ListOfSelected.Add(Screen.Fonts.Strings[Node^.Index]);
@@ -538,6 +542,7 @@ begin
 
   SortedNames := TStringList.Create;
   try
+    SortedNames.LineBreak := #13#10;
     for i := 0 to Length(SortedDiffs) - 1 do
     begin
       Idx := IndexOfDoubleInArr(SortedDiffs[i], InitialDiffs);

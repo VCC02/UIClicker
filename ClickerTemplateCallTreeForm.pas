@@ -356,6 +356,7 @@ begin
 
     Content := TStringList.Create;
     try
+      Content.LineBreak := #13#10;
       Node := vstCallTree.GetFirst;
       try
         if Node = nil then
@@ -715,6 +716,7 @@ begin
 
   ListOfCallActions := TStringList.Create;
   try
+    ListOfCallActions.LineBreak := #13#10;
     for i := 0 to Length(NodeData^.Template^.ClkActions) - 1 do
       if NodeData^.Template^.ClkActions[i].ActionOptions.Action = acCallTemplate then
       begin
@@ -760,6 +762,7 @@ begin
 
   ListOfTopLevelNodesToDelete := TStringList.Create;
   try
+    ListOfTopLevelNodesToDelete.LineBreak := #13#10;
     FullPathCmp := chkFullPathComparison.Checked;
     repeat
       InsertCalledTemplates(Node, FullPathCmp, ListOfTopLevelNodesToDelete);

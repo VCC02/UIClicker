@@ -1023,6 +1023,7 @@ var
 begin
   ListOfDirs := TStringList.Create;
   try
+    ListOfDirs.LineBreak := #13#10;
     ListOfDirs.Text := AAllowedFileDirsForServer;
 
     Result := '';
@@ -1044,6 +1045,7 @@ var
 begin
   MouseParams := TStringList.Create;
   try
+    MouseParams.LineBreak := #13#10;
     Control_Left := StrToIntDef(GetActionVarValue('$Control_Left$'), 0);
     Control_Top := StrToIntDef(GetActionVarValue('$Control_Top$'), 0);
     Control_Width := StrToIntDef(GetActionVarValue('$Control_Width$'), 0);
@@ -1258,6 +1260,7 @@ begin
 
   AllParams := TStringList.Create;
   try
+    AllParams.LineBreak := #13#10;
     AllParams.Text := AExecAppOptions.ListOfParams;
 
 
@@ -1343,6 +1346,7 @@ begin
 
           TempStringList := TStringList.Create;
           try
+            TempStringList.LineBreak := #13#10;
             TempStringList.Text := ExeInput;
             TempStringList.SaveToStream(AProcess.Input);
           finally
@@ -1402,6 +1406,7 @@ begin
 
           TempStringList := TStringList.Create;
           try
+            TempStringList.LineBreak := #13#10;
             if (AProcess.Output <> nil) and (AProcess.Output.NumBytesAvailable > 0) then     //read once more (in case the timeout stopped the reading)
             begin
               SetLength(TempBuffer, AProcess.Output.NumBytesAvailable);
@@ -1457,6 +1462,7 @@ function TActionExecution.FillInFindControlInputData(var AFindControlOptions: TC
     begin
       ListOfIgnoredColors := TStringList.Create;
       try
+        ListOfIgnoredColors.LineBreak := #13#10;
         ListOfIgnoredColors.Text := StringReplace(AIgnoredColorsStr, ',', #13#10, [rfReplaceAll]);
 
         SetLength(AIgnoredColorsArr, ListOfIgnoredColors.Count);
@@ -1634,6 +1640,7 @@ function TActionExecution.FillInFindSubControlInputData(var AFindSubControlOptio
     begin
       ListOfIgnoredColors := TStringList.Create;
       try
+        ListOfIgnoredColors.LineBreak := #13#10;
         ListOfIgnoredColors.Text := StringReplace(AIgnoredColorsStr, ',', #13#10, [rfReplaceAll]);
 
         SetLength(AIgnoredColorsArr, ListOfIgnoredColors.Count);
@@ -2359,6 +2366,7 @@ begin
 
         ListOfBitmapFiles := TStringList.Create;
         try
+          ListOfBitmapFiles.LineBreak := #13#10;
           ListOfBitmapFiles.Text := AFindSubControlOptions.MatchBitmapFiles;
           AddToLog('Bmp file count to search with: ' + IntToStr(ListOfBitmapFiles.Count));
 
@@ -2475,6 +2483,7 @@ begin
 
         ListOfPrimitiveFiles := TStringList.Create;
         try
+          ListOfPrimitiveFiles.LineBreak := #13#10;
           ListOfPrimitiveFiles.Text := AFindSubControlOptions.MatchPrimitiveFiles;
           AddToLog('Pmtv file count to search with: ' + IntToStr(ListOfPrimitiveFiles.Count));
 
@@ -3126,6 +3135,7 @@ begin
 
   CustomVars := TStringList.Create;
   try
+    CustomVars.LineBreak := #13#10;
     CustomVars.Text := FastReplace_45ToReturn(ACallTemplateOptions.ListOfCustomVarsAndValues);
 
     for i := 0 to CustomVars.Count - 1 do
@@ -3398,6 +3408,7 @@ function TActionExecution.ExecuteSetVarAction(var ASetVarOptions: TClkSetVarOpti
 
     ListOfFuncArgs := TStringList.Create;
     try
+      ListOfFuncArgs.LineBreak := #13#10;
       ListOfFuncArgs.Text := StringReplace(AFuncArgs, ',', #13#10, [rfReplaceAll]);
 
       if ListOfFuncArgs.Count > 0 then
@@ -3429,6 +3440,7 @@ function TActionExecution.ExecuteSetVarAction(var ASetVarOptions: TClkSetVarOpti
 
     ListOfFuncArgs := TStringList.Create;
     try
+      ListOfFuncArgs.LineBreak := #13#10;
       ListOfFuncArgs.Text := StringReplace(AFuncArgs, ',', #13#10, [rfReplaceAll]);
 
       if ListOfFuncArgs.Count > 0 then
@@ -3465,6 +3477,9 @@ begin
   TempListOfSetVarValues := TStringList.Create;
   TempListOfSetVarEvalBefore := TStringList.Create;
   try
+    TempListOfSetVarNames.LineBreak := #13#10;
+    TempListOfSetVarValues.LineBreak := #13#10;
+    TempListOfSetVarEvalBefore.LineBreak := #13#10;
     TempListOfSetVarNames.Text := ASetVarOptions.ListOfVarNames;
     TempListOfSetVarValues.Text := ASetVarOptions.ListOfVarValues;
     TempListOfSetVarEvalBefore.Text := ASetVarOptions.ListOfVarEvalBefore;
@@ -3508,6 +3523,7 @@ begin
       begin
         ListOfSelfHandles := TStringList.Create;
         try
+          ListOfSelfHandles.LineBreak := #13#10;
           DoOnGetSelfHandles(ListOfSelfHandles);
 
           for j := 0 to ListOfSelfHandles.Count - 1 do
@@ -3779,6 +3795,7 @@ begin
 
         ListOfConsoleItems := TStringList.Create;
         try
+          ListOfConsoleItems.LineBreak := #13#10;
           ListOfConsoleItems.Text := ConsoleArgs;
           for j := 0 to ListOfConsoleItems.Count - 1 do
             AddToLog('Console: ' + ListOfConsoleItems.Strings[j]);
@@ -3975,6 +3992,9 @@ begin
   LoadedListOfVarValues := TStringList.Create;
   VarNamesToBeUpdated := TStringList.Create;
   try
+    LoadedListOfVarNames.LineBreak := #13#10;
+    LoadedListOfVarValues.LineBreak := #13#10;
+    VarNamesToBeUpdated.LineBreak := #13#10;
     LoadedListOfVarNames.Text := FastReplace_45ToReturn(Ini.ReadString('Vars', 'ListOfVarNames', ''));
     LoadedListOfVarValues.Text := FastReplace_45ToReturn(Ini.ReadString('Vars', 'ListOfVarValues', ''));
 
@@ -4020,6 +4040,8 @@ begin
   Bkp := TStringList.Create;
   VarNamesToBeSaved := TStringList.Create;
   try
+    Bkp.LineBreak := #13#10;
+    VarNamesToBeSaved.LineBreak := #13#10;
     DoOnBackupVars(Bkp);
     VarNamesToBeSaved.Text := SetVarActionToBeSaved.ListOfVarNames;
 
@@ -4034,6 +4056,7 @@ begin
 
     FileContent := TStringList.Create;
     try
+      FileContent.LineBreak := #13#10;
       FileContent.Add('[Vars]');
       FileContent.Add('ListOfVarNames=' + ListOfVarNames);
       FileContent.Add('ListOfVarValues=' + ListOfVarValues);
@@ -4168,6 +4191,7 @@ procedure UpdateActionProperties(var AEditTemplateOptions: TClkEditTemplateOptio
     //the result has to be filtered by AListOfEnabledProperties
     FilteredResult := TStringList.Create;
     try
+      FilteredResult.LineBreak := #13#10;
       FilteredResult.Text := Result;
       IsFiltered := False;
 
@@ -4201,6 +4225,9 @@ begin
   TempEnabledProperties := TStringList.Create;
   TempEditedProperties := TStringList.Create;
   try
+    TempProperties.LineBreak := #13#10;
+    TempEnabledProperties.LineBreak := #13#10;
+    TempEditedProperties.LineBreak := #13#10;
     TempEnabledProperties.Text := FastReplace_45ToReturn(AEditTemplateOptions.ListOfEnabledProperties);
     TempEditedProperties.Text := StringReplace(AEditTemplateOptions.ListOfEditedProperties, CPropSeparatorInt, #13#10, [rfReplaceAll]);
 
@@ -4248,6 +4275,7 @@ begin
 
       ListOfMatchBitmapFiles := TStringList.Create;
       try
+        ListOfMatchBitmapFiles.LineBreak := #13#10;
         ListOfMatchBitmapFiles.Text := FastReplace_45ToReturn(AEditedClkAction^.FindSubControlOptions.MatchBitmapFiles);  //this is empty for a new action
 
         Fnm := FileNamesAsString(TempEditedProperties, TempEnabledProperties, 'MatchBitmapFiles');
@@ -4260,6 +4288,7 @@ begin
 
       ListOfMatchPrimitiveFiles := TStringList.Create;
       try
+        ListOfMatchPrimitiveFiles.LineBreak := #13#10;
         ListOfMatchPrimitiveFiles.Text := FastReplace_45ToReturn(AEditedClkAction^.FindSubControlOptions.MatchPrimitiveFiles); //this is empty for a new action
 
         Fnm := FileNamesAsString(TempEditedProperties, TempEnabledProperties, 'MatchPrimitiveFiles');
@@ -4311,6 +4340,8 @@ begin
             ListOfNewPluginProperties := TStringList.Create;
             ListOfOldPluginProperties := TStringList.Create;
             try
+              ListOfNewPluginProperties.LineBreak := #13#10;
+              ListOfOldPluginProperties.LineBreak := #13#10;
               ListOfOldPluginProperties.Text := FastReplace_45ToReturn(OldPropertyValue);
               ListOfNewPluginProperties.Text := FastReplace_1920ToReturn(FastReplace_45ToReturn(NewPropertyValue)); //it contains only the checked properties
 
@@ -4435,6 +4466,7 @@ var
   begin
     ListOfFiles := TStringList.Create;
     try
+      ListOfFiles.LineBreak := #13#10;
       ListOfFiles.Text := FastReplace_45ToReturn(PropertyValue);
       for j := 0 to ListOfFiles.Count - 1 do
       begin
@@ -4455,6 +4487,9 @@ begin
   TempEnabledProperties := TStringList.Create;
   TempEditedProperties := TStringList.Create;
   try
+    TempProperties.LineBreak := #13#10;
+    TempEnabledProperties.LineBreak := #13#10;
+    TempEditedProperties.LineBreak := #13#10;
     TempEnabledProperties.Text := FastReplace_45ToReturn(AEditTemplateOptions.ListOfEnabledProperties);
     TempEditedProperties.Text := StringReplace(AEditTemplateOptions.ListOfEditedProperties, CPropSeparatorInt, #13#10, [rfReplaceAll]);
 
@@ -4492,6 +4527,8 @@ begin
             ListOfNewPluginProperties := TStringList.Create;
             ListOfOldPluginProperties := TStringList.Create;
             try
+              ListOfNewPluginProperties.LineBreak := #13#10;
+              ListOfOldPluginProperties.LineBreak := #13#10;
               ListOfOldPluginProperties.Text := FastReplace_45ToReturn(OldPropertyValue);
 
               PropertyValue := TempEditedProperties.Values[PropertyName];
@@ -4719,6 +4756,8 @@ begin
         LocalListOfPropertyNames := TStringList.Create;
         LocalListOfPropertyValues := TStringList.Create;
         try
+          LocalListOfPropertyNames.LineBreak := #13#10;
+          LocalListOfPropertyValues.LineBreak := #13#10;
           GetPropertiesForEditTemplate(AEditTemplateOptions, @ClkActions[Idx], LocalListOfPropertyNames, LocalListOfPropertyValues);
           for i := 0 to LocalListOfPropertyNames.Count - 1 do
             SetActionVarValue('$Property_' + LocalListOfPropertyNames.Strings[i] + '_Value$', LocalListOfPropertyValues.Strings[i]);
@@ -5180,6 +5219,7 @@ begin
 
     TempListOfAllVars := TStringList.Create;
     try
+      TempListOfAllVars.LineBreak := #13#10;
       DoOnBackupVars(TempListOfAllVars);
       Result := ExecutePluginAction(WorkAction.PluginOptions, TempAllActions, TempListOfAllVars, DoOnResolveTemplatePath(WorkAction.PluginOptions.FileName), IsDebugging, IsDebugging); //passing two IsDebugging params. ToDo:  review the logic
     finally

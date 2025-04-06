@@ -551,6 +551,7 @@ begin
 
   ListOfFiles := TStringList.Create;
   try
+    ListOfFiles.LineBreak := #13#10;
     FArchive.OnComputeArchiveHash := HandleOnComputeArchiveHash;
 
     if ADecompressionPluginName > '' then
