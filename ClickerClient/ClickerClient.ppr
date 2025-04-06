@@ -29,7 +29,13 @@ library ClickerClient;
 {$ENDIF}
 
 uses
-  Interfaces, Windows, SysUtils, Classes, Controls, Forms, ShellAPI, Graphics,
+  Interfaces,
+  {$IFDEF Windows}
+    Windows, ShellAPI,
+  {$ELSE}
+    LCLIntf, LCLType, Types, Math,
+  {$ENDIF}
+  SysUtils, Classes, Controls, Forms, Graphics,
   DllUtils, InMemFileSystem, ClickerActionsClient, ClickerUtils, ClickerTemplates,
   ClickerFileProviderClient, ClickerClientLoggingForm, ClickerClientAPI;
 
@@ -87,7 +93,9 @@ begin
       ExceptionLog.SaveToFile(LogPath);
 
       LogPath := '"' + LogPath + '"';
-      ShellExecute(0, 'open', 'C:\Windows\Notepad.exe', PChar(LogPath), '', SW_SHOW);
+      {$IFDEF Windows}
+        ShellExecute(0, 'open', 'C:\Windows\Notepad.exe', PChar(LogPath), '', SW_SHOW);
+      {$ENDIF}
 
       //MessageBox(0, PChar(ExceptionLog.Text), 'Clicker', MB_ICONERROR);  //the application crashes after displaying the MessageBox, so the MessageBox is closed
     finally
@@ -132,7 +140,10 @@ begin
       ExceptionLog.SaveToFile(LogPath);
 
       LogPath := '"' + LogPath + '"';
-      ShellExecute(0, 'open', 'C:\Windows\Notepad.exe', PChar(LogPath), '', SW_SHOW);
+
+      {$IFDEF Windows}
+        ShellExecute(0, 'open', 'C:\Windows\Notepad.exe', PChar(LogPath), '', SW_SHOW);
+      {$ENDIF}
 
       //MessageBox(0, PChar(Msg), 'Clicker', MB_ICONERROR);
     finally
