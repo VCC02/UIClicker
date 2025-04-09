@@ -37,6 +37,7 @@ type
     FListOfAccessibleDirs: TStringList;
     FListOfAccessibleFileExtensions: TStringList;
     FFullTemplatesDir: string;
+    FFullAppDir: string;
   public
     constructor Create;
     destructor Destroy; override;
@@ -48,6 +49,7 @@ type
     procedure AddListOfAccessibleFileExtensions(AListOfExtensionsStr: string); overload;
 
     property FullTemplatesDir: string read FFullTemplatesDir write FFullTemplatesDir;
+    property FullAppDir: string read FFullAppDir write FFullAppDir;
   end;
 
 
@@ -64,6 +66,7 @@ begin
   FListOfAccessibleDirs.LineBreak := #13#10;
   FListOfAccessibleFileExtensions.LineBreak := #13#10;
   FFullTemplatesDir := '';
+  FFullAppDir := ExtractFileDir(ParamStr(0)); //default
 end;
 
 
@@ -111,12 +114,12 @@ begin
     Exit;
   end;
 
-  TempFullTemplatesDir := UpperCase(StringReplace(UpperCase(FFullTemplatesDir), '$APPDIR$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]));
+  TempFullTemplatesDir := UpperCase(StringReplace(UpperCase(FFullTemplatesDir), '$APPDIR$', FFullAppDir, [rfReplaceAll]));
 
   if (AFileName <> '') and (AFileName[1] = PathDelim) then   //resolve relative paths to TemplatesDir
     AFileName := UpperCase(TempFullTemplatesDir + AFileName);
 
-  AFileName := UpperCase(StringReplace(AFileName, '$APPDIR$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]));
+  AFileName := UpperCase(StringReplace(AFileName, '$APPDIR$', FFullAppDir, [rfReplaceAll]));
   AFileName := UpperCase(StringReplace(AFileName, '$TEMPLATEDIR$', TempFullTemplatesDir, [rfReplaceAll]));
 
   if ExtractFileName(AFileName) = AFileName then //files without paths are expected to be found in $AppDir$\ActionTemplates
@@ -159,7 +162,7 @@ var
   i: Integer;
   CurrentItem, ExeDir: string;
 begin
-  ExeDir := ExtractFileDir(ParamStr(0));
+  ExeDir := FFullAppDir;
 
   for i := 0 to AList.Count - 1 do
   begin

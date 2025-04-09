@@ -71,7 +71,11 @@ type
     procedure AddUniqueMessageToLog(AMsg: string);
     procedure RemoveDeniedFilesFromList(AList: TStringList);
 
+    function GetFullTemplatesDir: string;
     procedure SetFullTemplatesDir(Value: string);
+
+    function GetFullAppDir: string;
+    procedure SetFullAppDir(Value: string);
   protected
     procedure Execute; override;
   public
@@ -87,7 +91,8 @@ type
     property RemoteAddress: string read FRemoteAddress write FRemoteAddress;
     property Done: Boolean read FDone;
     property ConnectTimeout: Integer read FConnectTimeout write FConnectTimeout;
-    property FullTemplatesDir: string write SetFullTemplatesDir;
+    property FullTemplatesDir: string read GetFullTemplatesDir write SetFullTemplatesDir;
+    property FullAppDir: string read GetFullAppDir write SetFullAppDir;
 
     property OnBeforeRequestingListOfMissingFiles: TPollForMissingServerFilesProcessingEvent read FOnBeforeRequestingListOfMissingFiles write FOnBeforeRequestingListOfMissingFiles;
     property OnAfterRequestingListOfMissingFiles: TPollForMissingServerFilesProcessingEvent read FOnAfterRequestingListOfMissingFiles write FOnAfterRequestingListOfMissingFiles;
@@ -151,9 +156,27 @@ begin
 end;
 
 
+function TPollForMissingServerFiles.GetFullTemplatesDir: string;
+begin
+  Result := FFileProvider.FullTemplatesDir;
+end;
+
+
 procedure TPollForMissingServerFiles.SetFullTemplatesDir(Value: string);
 begin
   FFileProvider.FullTemplatesDir := Value;
+end;
+
+
+function TPollForMissingServerFiles.GetFullAppDir: string;
+begin
+  Result := FFileProvider.FullAppDir;
+end;
+
+
+procedure TPollForMissingServerFiles.SetFullAppDir(Value: string);
+begin
+  FFileProvider.FullAppDir := Value;
 end;
 
 
@@ -330,7 +353,10 @@ begin
                   end;
                 end
                 else
+                begin
                   DoOnLogMissingServerFile('File provider: File not found: "' + ListOfFiles.Strings[i] + '"');
+                  DoOnLogMissingServerFile('File provider: AppDir: "' + FFileProvider.FullAppDir + '"');
+                end;
             end;
           finally
             DoOnAfterRequestingListOfMissingFiles;
