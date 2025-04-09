@@ -95,6 +95,7 @@ type
     FOnLoadBitmap: TOnLoadBitmap;
     FOnLoadRenderedBitmap: TOnLoadRenderedBitmap;
     FOnRenderBmpExternally: TOnRenderBmpExternally;
+    FOnLoadRawPmtv: TOnLoadRawPmtv;
     FOnLoadPluginFromInMemFS: TOnLoadPluginFromInMemFS;
     FOnGetActionProperties: TOnGetActionProperties;
     FOnWaitForBitmapsAvailability: TOnWaitForBitmapsAvailability;
@@ -267,6 +268,7 @@ type
     property OnLoadBitmap: TOnLoadBitmap write FOnLoadBitmap;
     property OnLoadRenderedBitmap: TOnLoadRenderedBitmap write FOnLoadRenderedBitmap;
     property OnRenderBmpExternally: TOnRenderBmpExternally write FOnRenderBmpExternally;
+    property OnLoadRawPmtv: TOnLoadRawPmtv read FOnLoadRawPmtv write FOnLoadRawPmtv;
     property OnLoadPluginFromInMemFS: TOnLoadPluginFromInMemFS write FOnLoadPluginFromInMemFS;
     property OnGetActionProperties: TOnGetActionProperties write FOnGetActionProperties;
     property OnWaitForBitmapsAvailability: TOnWaitForBitmapsAvailability write FOnWaitForBitmapsAvailability;
@@ -345,6 +347,7 @@ begin
   FOnLoadBitmap := nil;
   FOnLoadRenderedBitmap := nil;
   FOnRenderBmpExternally := nil;
+  FOnLoadRawPmtv := nil;
   FOnLoadPluginFromInMemFS := nil;
   FOnGetActionProperties := nil;
   FOnWaitForBitmapsAvailability := nil;
@@ -4105,6 +4108,7 @@ begin
                                       HandleOnIsAtBreakPoint,
                                       FOnLoadBitmap,
                                       FOnLoadRenderedBitmap,
+                                      FOnLoadRawPmtv,
                                       HandleOnSaveFileToExtRenderingInMemFS,
                                       HandleOnScreenshotByActionName,
                                       IsDebugging,

@@ -96,6 +96,7 @@ type
     function HandleOnGetPictureOpenDialogFileName: string;
     function HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     function HandleOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
+    function HandleOnLoadRawPmtv(APmtvFile: TMemoryStream; AFileName: string): Boolean;
 
     procedure HandleOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
     procedure HandleOnSavePrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
@@ -180,6 +181,7 @@ begin
   frmClickerActions.OnPictureOpenDialogExecute := HandleOnPictureOpenDialogExecute;
   frmClickerActions.OnGetPictureOpenDialogFileName := HandleOnGetPictureOpenDialogFileName;
   frmClickerActions.OnLoadBitmap := HandleOnLoadBitmap;
+  frmClickerActions.OnLoadRawPmtv := HandleOnLoadRawPmtv;
   frmClickerActions.OnLoadPrimitivesFile := HandleOnLoadPrimitivesFile;
   frmClickerActions.OnSavePrimitivesFile := HandleOnSavePrimitivesFile;
   frmClickerActions.OnGetSelfHandles := HandleOnGetSelfHandles;
@@ -568,6 +570,14 @@ begin
   end
   else
     Result := False;
+end;
+
+
+function TfrmUIClickerMainForm.HandleOnLoadRawPmtv(APmtvFile: TMemoryStream; AFileName: string): Boolean;
+begin
+  Result := FileExists(AFileName);
+  if Result then
+    APmtvFile.LoadFromFile(AFileName);
 end;
 
 

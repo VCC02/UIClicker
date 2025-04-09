@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2024 VCC
+    Copyright (C) 2025 VCC
     creation date: 13 Jan 2024
     initial release date: 15 Jan 2024
 
@@ -52,6 +52,7 @@ type
     OnIsAtBreakPoint: TOnIsAtBreakPoint;
     OnLoadBitmap: TOnLoadBitmap;
     OnLoadRenderedBitmap: TOnLoadRenderedBitmap;
+    OnLoadRawPmtv: TOnLoadRawPmtv;
     OnSaveFileToExtRenderingInMemFS: TOnSaveFileToExtRenderingInMemFS;
     OnScreenshotByActionName: TOnScreenshotByActionName;
     OnUpdatePropertyIcons: TOnUpdatePropertyIcons;
@@ -94,6 +95,7 @@ type
                            AOnIsAtBreakPoint: TOnIsAtBreakPoint;
                            AOnLoadBitmap: TOnLoadBitmap;
                            AOnLoadRenderedBitmap: TOnLoadRenderedBitmap;
+                           AOnLoadRawPmtv: TOnLoadRawPmtv;
                            AOnSaveFileToExtRenderingInMemFS: TOnSaveFileToExtRenderingInMemFS;
                            AOnScreenshotByActionName: TOnScreenshotByActionName;
                            IsDebugging,
@@ -541,32 +543,44 @@ begin
   TempMemSteam := TMemoryStream.Create;
   TempBmp := TBitmap.Create;
   try
-    case AFileLocation of
-      0: //flDisk
-        if not ActionPlugin^.OnLoadBitmap(TempBmp, Fnm) then   //returns True if file loaded, and False if file not found
+    if AFileLocation in [0, 1] then
+    begin
+      case AFileLocation of
+        0: //flDisk
+          if not ActionPlugin^.OnLoadBitmap(TempBmp, Fnm) then   //returns True if file loaded, and False if file not found
+          begin
+            Result := False;
+            ActionPlugin.DoAddToLog('Error: file not found in ActionPlugin_GetFileContent (Disk): "' + Fnm + '".');
+            Exit;
+          end;
+
+        1: //flMem
+          if not ActionPlugin^.OnLoadRenderedBitmap(TempBmp, Fnm) then   //returns True if file loaded, and False if file not found
+          begin
+            Result := False;
+            ActionPlugin.DoAddToLog('Error: file not found in ActionPlugin_GetFileContent (Mem): "' + Fnm + '".');
+            Exit;
+          end;
+
+        else
+        begin
+          ActionPlugin.DoAddToLog('Error: unhandled bitmap location type: ' + IntToStr(AFileLocation) + '.');
+          Result := False;
+          Exit;
+        end;
+      end;  //case
+
+      TempBmp.SaveToStream(TempMemSteam);
+    end  //[0, 1]
+    else
+      if AFileLocation in [0 or 8, 1 or 8] then //probably (0 or 8) only, because raw pmtv files should not end up in the In-mem FS for rendered files
+        if not ActionPlugin^.OnLoadRawPmtv(TempMemSteam, Fnm) then
         begin
           Result := False;
-          ActionPlugin.DoAddToLog('Error: file not found in ActionPlugin_GetFileContent (Disk): "' + Fnm + '".');
+          ActionPlugin.DoAddToLog('Error: file not found in ActionPlugin_GetFileContent (Pmtv): "' + Fnm + '".');
           Exit;
         end;
 
-      1: //flMem
-        if not ActionPlugin^.OnLoadRenderedBitmap(TempBmp, Fnm) then   //returns True if file loaded, and False if file not found
-        begin
-          Result := False;
-          ActionPlugin.DoAddToLog('Error: file not found in ActionPlugin_GetFileContent (Mem): "' + Fnm + '".');
-          Exit;
-        end;
-
-      else
-      begin
-        ActionPlugin.DoAddToLog('Error: unhandled bitmap location type: ' + IntToStr(AFileLocation) + '.');
-        Result := False;
-        Exit;
-      end;
-    end;  //case
-
-    TempBmp.SaveToStream(TempMemSteam);
     AOnFileContent(ACallReference, TempMemSteam.Memory, TempMemSteam.Size);
   finally
     TempMemSteam.Free;
@@ -758,6 +772,7 @@ function TActionPlugin.LoadToExecute(APath: string;
                                      AOnIsAtBreakPoint: TOnIsAtBreakPoint;
                                      AOnLoadBitmap: TOnLoadBitmap;
                                      AOnLoadRenderedBitmap: TOnLoadRenderedBitmap;
+                                     AOnLoadRawPmtv: TOnLoadRawPmtv;
                                      AOnSaveFileToExtRenderingInMemFS: TOnSaveFileToExtRenderingInMemFS;
                                      AOnScreenshotByActionName: TOnScreenshotByActionName;
                                      IsDebugging,
@@ -795,6 +810,7 @@ begin
   OnIsAtBreakPoint := AOnIsAtBreakPoint;
   OnLoadBitmap := AOnLoadBitmap;
   OnLoadRenderedBitmap := AOnLoadRenderedBitmap;
+  OnLoadRawPmtv := AOnLoadRawPmtv;
   OnSaveFileToExtRenderingInMemFS := AOnSaveFileToExtRenderingInMemFS;
   OnScreenshotByActionName := AOnScreenshotByActionName;
 

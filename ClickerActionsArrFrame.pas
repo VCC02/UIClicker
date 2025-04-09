@@ -381,6 +381,7 @@ type
     FOnLoadBitmap: TOnLoadBitmap;
     FOnLoadRenderedBitmap: TOnLoadRenderedBitmap;
     FOnRenderBmpExternally: TOnRenderBmpExternally;
+    FOnLoadRawPmtv: TOnLoadRawPmtv;
     FOnGetListOfExternallyRenderedImages: TOnGetListOfExternallyRenderedImages;
 
     {$IFDEF MemPlugins}
@@ -449,6 +450,7 @@ type
     function HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     function HandleOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     function HandleOnRenderBmpExternally(AFilename: string): string;
+    function HandleOnLoadRawPmtv(APmtvFile: TMemoryStream; AFileName: string): Boolean;
     procedure HandleOnGetListOfExternallyRenderedImages(AListOfExternallyRenderedImages: TStringList);
 
     {$IFDEF MemPlugins}
@@ -590,6 +592,7 @@ type
     function DoOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     function DoOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     function DoOnRenderBmpExternally(AFilename: string): string;
+    function DoOnLoadRawPmtv(APmtvFile: TMemoryStream; AFileName: string): Boolean;
     procedure DoOnGetListOfExternallyRenderedImages(AListOfExternallyRenderedImages: TStringList);
 
     {$IFDEF MemPlugins}
@@ -759,6 +762,7 @@ type
     property OnLoadBitmap: TOnLoadBitmap read FOnLoadBitmap write FOnLoadBitmap;
     property OnLoadRenderedBitmap: TOnLoadRenderedBitmap read FOnLoadRenderedBitmap write FOnLoadRenderedBitmap;
     property OnRenderBmpExternally: TOnRenderBmpExternally read FOnRenderBmpExternally write FOnRenderBmpExternally;
+    property OnLoadRawPmtv: TOnLoadRawPmtv read FOnLoadRawPmtv write FOnLoadRawPmtv;
     property OnGetListOfExternallyRenderedImages: TOnGetListOfExternallyRenderedImages write FOnGetListOfExternallyRenderedImages;
 
     {$IFDEF MemPlugins}
@@ -1236,6 +1240,7 @@ begin
   FActionExecution.OnLoadBitmap := HandleOnLoadBitmap; //both ActionExecution and frClickerActions use the same handler
   FActionExecution.OnLoadRenderedBitmap := HandleOnLoadRenderedBitmap;
   FActionExecution.OnRenderBmpExternally := HandleOnRenderBmpExternally;
+  FActionExecution.OnLoadRawPmtv := HandleOnLoadRawPmtv;
   FActionExecution.OnLoadPluginFromInMemFS := HandleOnLoadPluginFromInMemFS;
   FActionExecution.OnGetActionProperties := HandleOnGetActionProperties;
   FActionExecution.OnCallTemplate := HandleOnCallTemplate;
@@ -1280,6 +1285,7 @@ begin
   FOnLoadBitmap := nil;
   FOnLoadRenderedBitmap := nil;
   FOnRenderBmpExternally := nil;
+  FOnLoadRawPmtv := nil;
   FOnGetListOfExternallyRenderedImages := nil;
 
   {$IFDEF MemPlugins}
@@ -1480,6 +1486,13 @@ end;
 function TfrClickerActionsArr.HandleOnRenderBmpExternally(AFilename: string): string;
 begin
   Result := DoOnRenderBmpExternally(AFilename);
+end;
+
+
+function TfrClickerActionsArr.HandleOnLoadRawPmtv(APmtvFile: TMemoryStream; AFileName: string): Boolean;
+begin
+  AFileName := ResolveTemplatePath(AFileName); //////////////////// Added for plugin. Not sure how it affects unresolved path, which may be validated from allowed dirs.
+  Result := DoOnLoadRawPmtv(APmtvFile, AFileName);
 end;
 
 
@@ -2968,6 +2981,15 @@ begin
     Result := FOnRenderBmpExternally(AFileName)
   else
     Result := 'OnRenderBmpExternally not assigned';
+end;
+
+
+function TfrClickerActionsArr.DoOnLoadRawPmtv(APmtvFile: TMemoryStream; AFileName: string): Boolean;
+begin
+  if Assigned(FOnLoadRawPmtv) then
+    Result := FOnLoadRawPmtv(APmtvFile, AFileName)
+  else
+    raise Exception.Create('OnLoadRawPmtv is not assigned.');
 end;
 
 

@@ -69,6 +69,7 @@ type
   TOnGetSelectedCompFromRemoteWin = function: THandle of object;
   TOnLoadBitmap = function(ABitmap: TBitmap; AFileName: string): Boolean of object; //returns True if file loaded, and False if file not found
   TOnLoadRenderedBitmap = function(ABitmap: TBitmap; AFileName: string): Boolean of object; //returns True if file loaded, and False if file not found in in-mem FS for received rendered bitmaps
+  TOnLoadRawPmtv = function(APmtvFile: TMemoryStream; AFileName: string): Boolean of object;  //returns True if file loaded, and False if file not found
   TOnLoadPluginFromInMemFS = function(APlugin: TMemoryStream; AFileName: string): Boolean of object;
   TOnLoadPluginFromDiskToPluginInMemFileSystem = procedure(APluginPath: string) of object;
   TOnGetListOfExternallyRenderedImages = procedure(AListOfExternallyRenderedImages: TStringList) of object;
@@ -250,6 +251,9 @@ type
 
   TImageSource = (isScreenshot, isFile);
   TImageSourceFileNameLocation = (isflDisk, isflMem); //A reduced version of TFileLocation from InMemFileSystem. Used when TImageSource is set to isFile.
+                                                      //For future use, this datatype may also include flDiskThenMem, flMemThenDisk.
+                                                      //Bit 2 is reserved for now- can be defined here.
+                                                      //Bit 3 is used by plugins, in AOnActionPlugin_LoadBitmap and OnLoadBitmap handlers.
 
   PClkFindControlMatchBitmapText = ^TClkFindControlMatchBitmapText;
 

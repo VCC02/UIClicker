@@ -219,6 +219,7 @@ type
     FOnRecordComponent: TOnRecordComponent;
     FOnGetCurrentlyRecordedScreenShotImage: TOnGetCurrentlyRecordedScreenShotImage;
     FOnLoadBitmap: TOnLoadBitmap;
+    FOnLoadRawPmtv: TOnLoadRawPmtv;
     FOnLoadPrimitivesFile: TOnLoadPrimitivesFile;
     FOnSavePrimitivesFile: TOnSavePrimitivesFile;
     FOnGetSelfHandles: TOnGetSelfHandles;
@@ -265,6 +266,7 @@ type
     procedure DoOnGetCurrentlyRecordedScreenShotImage(ABmp: TBitmap);
 
     function DoOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
+    function DoOnLoadRawPmtv(APmtvFile: TMemoryStream; AFileName: string): Boolean;
     procedure DoOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
     procedure DoOnSavePrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
     function DoOnFileExists(const AFileName: string): Boolean;
@@ -315,6 +317,7 @@ type
 
     function HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     function HandleOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
+    function HandleOnLoadRawPmtv(APmtvFile: TMemoryStream; AFileName: string): Boolean;
     function HandleOnLoadPluginFromInMemFS(APlugin: TMemoryStream; AFileName: string): Boolean;
     procedure HandleOnGetListOfExternallyRenderedImages(AListOfExternallyRenderedImages: TStringList);
 
@@ -407,6 +410,7 @@ type
     property OnRecordComponent: TOnRecordComponent read FOnRecordComponent write FOnRecordComponent;
     property OnGetCurrentlyRecordedScreenShotImage: TOnGetCurrentlyRecordedScreenShotImage read FOnGetCurrentlyRecordedScreenShotImage write FOnGetCurrentlyRecordedScreenShotImage;
     property OnLoadBitmap: TOnLoadBitmap read FOnLoadBitmap write FOnLoadBitmap;
+    property OnLoadRawPmtv: TOnLoadRawPmtv read FOnLoadRawPmtv write FOnLoadRawPmtv;
     property OnLoadPrimitivesFile: TOnLoadPrimitivesFile write FOnLoadPrimitivesFile;
     property OnSavePrimitivesFile: TOnSavePrimitivesFile write FOnSavePrimitivesFile;
     property OnGetSelfHandles: TOnGetSelfHandles write FOnGetSelfHandles;
@@ -879,6 +883,7 @@ begin
   FOnRecordComponent := nil;
   FOnGetCurrentlyRecordedScreenShotImage := nil;
   FOnLoadBitmap := nil;
+  FOnLoadRawPmtv := nil;
   FOnLoadPrimitivesFile := nil;
   FOnSavePrimitivesFile := nil;
 
@@ -1104,6 +1109,7 @@ begin
   frClickerActionsArrMain.OnTerminateWaitForMultipleFilesAvailability := HandleOnTerminateWaitForMultipleFilesAvailability;
   frClickerActionsArrMain.OnLoadBitmap := HandleOnLoadBitmap;
   frClickerActionsArrMain.OnLoadRenderedBitmap := HandleOnLoadRenderedBitmap;
+  frClickerActionsArrMain.OnLoadRawPmtv := HandleOnLoadRawPmtv;
   frClickerActionsArrMain.OnLoadPluginFromInMemFS := HandleOnLoadPluginFromInMemFS;
   frClickerActionsArrMain.OnGetListOfExternallyRenderedImages := HandleOnGetListOfExternallyRenderedImages;
 
@@ -1168,6 +1174,8 @@ begin
   frClickerActionsArrExperiment2.OnLoadBitmap := HandleOnLoadBitmap;
   frClickerActionsArrExperiment1.OnLoadRenderedBitmap := HandleOnLoadRenderedBitmap;
   frClickerActionsArrExperiment2.OnLoadRenderedBitmap := HandleOnLoadRenderedBitmap;
+  frClickerActionsArrExperiment1.OnLoadRawPmtv := HandleOnLoadRawPmtv;
+  frClickerActionsArrExperiment2.OnLoadRawPmtv := HandleOnLoadRawPmtv;
   frClickerActionsArrExperiment1.OnLoadPluginFromInMemFS := HandleOnLoadPluginFromInMemFS;
   frClickerActionsArrExperiment2.OnLoadPluginFromInMemFS := HandleOnLoadPluginFromInMemFS;
   frClickerActionsArrExperiment1.OnGetListOfExternallyRenderedImages := HandleOnGetListOfExternallyRenderedImages;
@@ -1368,6 +1376,15 @@ function TfrmClickerActions.DoOnLoadBitmap(ABitmap: TBitmap; AFileName: string):
 begin
   if Assigned(FOnLoadBitmap) then
     Result := FOnLoadBitmap(ABitmap, AFileName)
+  else
+    Result := False;
+end;
+
+
+function TfrmClickerActions.DoOnLoadRawPmtv(APmtvFile: TMemoryStream; AFileName: string): Boolean;
+begin
+  if Assigned(FOnLoadRawPmtv) then
+    Result := FOnLoadRawPmtv(APmtvFile, AFileName)
   else
     Result := False;
 end;
@@ -1779,6 +1796,7 @@ begin
 
         NewFrame.OnLoadBitmap := HandleOnLoadBitmap;
         NewFrame.OnLoadRenderedBitmap := HandleOnLoadRenderedBitmap;
+        NewFrame.OnLoadRawPmtv := HandleOnLoadRawPmtv;
         NewFrame.OnLoadPluginFromInMemFS := HandleOnLoadPluginFromInMemFS;
         NewFrame.OnGetListOfExternallyRenderedImages := HandleOnGetListOfExternallyRenderedImages;
 
@@ -2167,6 +2185,36 @@ begin
   end
   else
     Result := False;
+end;
+
+
+function TfrmClickerActions.HandleOnLoadRawPmtv(APmtvFile: TMemoryStream; AFileName: string): Boolean;
+begin
+  Result := False;
+
+  if CExpectedFileLocation[frClickerActionsArrMain.FileLocationOfDepsIsMem] = flMem then
+  begin
+    if not FInMemFileSystem.FileExistsInMem(AFileName) then
+      Exit;
+  end
+  else
+    if CExpectedFileLocation[frClickerActionsArrMain.FileLocationOfDepsIsMem] = flDisk then
+    begin
+      if not DoOnFileExists(AFileName) then
+        Exit;
+    end;
+
+  //replaced FileExistsInDiskOrMemWithPriority with the above logic, because of disk handlers
+  //if not FileExistsInDiskOrMemWithPriority(AFileName, FInMemFileSystem, CExpectedFileLocation[frClickerActionsArrMain.FileLocationOfDepsIsMem]) then
+  //  Exit;
+
+  if frClickerActionsArrMain.FileLocationOfDepsIsMem then
+  begin
+    FInMemFileSystem.LoadFileFromMemToStream(AFileName, APmtvFile);
+    Result := True;
+  end
+  else
+    Result := DoOnLoadRawPmtv(APmtvFile, AFileName);
 end;
 
 
