@@ -317,6 +317,7 @@ type
 
     function HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     function HandleOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
+    procedure HandleOnSaveRenderedBitmap(ABitmap: TBitmap; AFileName: string);
     function HandleOnLoadRawPmtv(APmtvFile: TMemoryStream; AFileName: string): Boolean;
     function HandleOnLoadPluginFromInMemFS(APlugin: TMemoryStream; AFileName: string): Boolean;
     procedure HandleOnGetListOfExternallyRenderedImages(AListOfExternallyRenderedImages: TStringList);
@@ -1109,6 +1110,7 @@ begin
   frClickerActionsArrMain.OnTerminateWaitForMultipleFilesAvailability := HandleOnTerminateWaitForMultipleFilesAvailability;
   frClickerActionsArrMain.OnLoadBitmap := HandleOnLoadBitmap;
   frClickerActionsArrMain.OnLoadRenderedBitmap := HandleOnLoadRenderedBitmap;
+  frClickerActionsArrMain.OnSaveRenderedBitmap := HandleOnSaveRenderedBitmap;
   frClickerActionsArrMain.OnLoadRawPmtv := HandleOnLoadRawPmtv;
   frClickerActionsArrMain.OnLoadPluginFromInMemFS := HandleOnLoadPluginFromInMemFS;
   frClickerActionsArrMain.OnGetListOfExternallyRenderedImages := HandleOnGetListOfExternallyRenderedImages;
@@ -1174,6 +1176,8 @@ begin
   frClickerActionsArrExperiment2.OnLoadBitmap := HandleOnLoadBitmap;
   frClickerActionsArrExperiment1.OnLoadRenderedBitmap := HandleOnLoadRenderedBitmap;
   frClickerActionsArrExperiment2.OnLoadRenderedBitmap := HandleOnLoadRenderedBitmap;
+  frClickerActionsArrExperiment1.OnSaveRenderedBitmap := HandleOnSaveRenderedBitmap;
+  frClickerActionsArrExperiment2.OnSaveRenderedBitmap := HandleOnSaveRenderedBitmap;
   frClickerActionsArrExperiment1.OnLoadRawPmtv := HandleOnLoadRawPmtv;
   frClickerActionsArrExperiment2.OnLoadRawPmtv := HandleOnLoadRawPmtv;
   frClickerActionsArrExperiment1.OnLoadPluginFromInMemFS := HandleOnLoadPluginFromInMemFS;
@@ -1796,6 +1800,7 @@ begin
 
         NewFrame.OnLoadBitmap := HandleOnLoadBitmap;
         NewFrame.OnLoadRenderedBitmap := HandleOnLoadRenderedBitmap;
+        NewFrame.OnSaveRenderedBitmap := HandleOnSaveRenderedBitmap;
         NewFrame.OnLoadRawPmtv := HandleOnLoadRawPmtv;
         NewFrame.OnLoadPluginFromInMemFS := HandleOnLoadPluginFromInMemFS;
         NewFrame.OnGetListOfExternallyRenderedImages := HandleOnGetListOfExternallyRenderedImages;
@@ -2185,6 +2190,20 @@ begin
   end
   else
     Result := False;
+end;
+
+
+procedure TfrmClickerActions.HandleOnSaveRenderedBitmap(ABitmap: TBitmap; AFileName: string);
+var
+  MemStream: TMemoryStream;
+begin
+  MemStream := TMemoryStream.Create;
+  try
+    ABitmap.SaveToStream(MemStream);
+    FRenderedInMemFileSystem.SaveFileToMem(AFileName, MemStream.Memory, MemStream.Size);
+  finally
+    MemStream.Free;
+  end;
 end;
 
 

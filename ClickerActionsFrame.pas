@@ -8029,7 +8029,7 @@ begin
 
             FLastClickedEdit := nil;
             APopupMenu := pmPathReplacements;
-            AHint := '$AppDir$ replacement is available';
+            AHint := AHint + #13#10 + '$AppDir$ replacement is available';
 
             if APropertyIndex = CFindSubControl_MatchPrimitiveFiles_PropIndex then
             begin

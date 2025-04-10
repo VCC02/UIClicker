@@ -380,6 +380,7 @@ type
     FOnTerminateWaitForMultipleFilesAvailability: TOnTerminateWaitForMultipleFilesAvailability;
     FOnLoadBitmap: TOnLoadBitmap;
     FOnLoadRenderedBitmap: TOnLoadRenderedBitmap;
+    FOnSaveRenderedBitmap: TOnSaveRenderedBitmap;
     FOnRenderBmpExternally: TOnRenderBmpExternally;
     FOnLoadRawPmtv: TOnLoadRawPmtv;
     FOnGetListOfExternallyRenderedImages: TOnGetListOfExternallyRenderedImages;
@@ -449,6 +450,7 @@ type
     function HandleOnEditCallTemplateBreakCondition(var AActionCondition: string): Boolean;
     function HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     function HandleOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
+    procedure HandleOnSaveRenderedBitmap(ABitmap: TBitmap; AFileName: string);
     function HandleOnRenderBmpExternally(AFilename: string): string;
     function HandleOnLoadRawPmtv(APmtvFile: TMemoryStream; AFileName: string): Boolean;
     procedure HandleOnGetListOfExternallyRenderedImages(AListOfExternallyRenderedImages: TStringList);
@@ -591,6 +593,7 @@ type
     procedure DoOnTerminateWaitForMultipleFilesAvailability;
     function DoOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     function DoOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
+    procedure DoOnSaveRenderedBitmap(ABitmap: TBitmap; AFileName: string);
     function DoOnRenderBmpExternally(AFilename: string): string;
     function DoOnLoadRawPmtv(APmtvFile: TMemoryStream; AFileName: string): Boolean;
     procedure DoOnGetListOfExternallyRenderedImages(AListOfExternallyRenderedImages: TStringList);
@@ -761,6 +764,7 @@ type
     property OnTerminateWaitForMultipleFilesAvailability: TOnTerminateWaitForMultipleFilesAvailability write FOnTerminateWaitForMultipleFilesAvailability;
     property OnLoadBitmap: TOnLoadBitmap read FOnLoadBitmap write FOnLoadBitmap;
     property OnLoadRenderedBitmap: TOnLoadRenderedBitmap read FOnLoadRenderedBitmap write FOnLoadRenderedBitmap;
+    property OnSaveRenderedBitmap: TOnSaveRenderedBitmap write FOnSaveRenderedBitmap;
     property OnRenderBmpExternally: TOnRenderBmpExternally read FOnRenderBmpExternally write FOnRenderBmpExternally;
     property OnLoadRawPmtv: TOnLoadRawPmtv read FOnLoadRawPmtv write FOnLoadRawPmtv;
     property OnGetListOfExternallyRenderedImages: TOnGetListOfExternallyRenderedImages write FOnGetListOfExternallyRenderedImages;
@@ -1239,6 +1243,7 @@ begin
   FActionExecution.OnWaitForBitmapsAvailability := HandleOnWaitForBitmapsAvailability;
   FActionExecution.OnLoadBitmap := HandleOnLoadBitmap; //both ActionExecution and frClickerActions use the same handler
   FActionExecution.OnLoadRenderedBitmap := HandleOnLoadRenderedBitmap;
+  FActionExecution.OnSaveRenderedBitmap := HandleOnSaveRenderedBitmap;
   FActionExecution.OnRenderBmpExternally := HandleOnRenderBmpExternally;
   FActionExecution.OnLoadRawPmtv := HandleOnLoadRawPmtv;
   FActionExecution.OnLoadPluginFromInMemFS := HandleOnLoadPluginFromInMemFS;
@@ -1284,6 +1289,7 @@ begin
 
   FOnLoadBitmap := nil;
   FOnLoadRenderedBitmap := nil;
+  FOnSaveRenderedBitmap := nil;
   FOnRenderBmpExternally := nil;
   FOnLoadRawPmtv := nil;
   FOnGetListOfExternallyRenderedImages := nil;
@@ -1480,6 +1486,13 @@ function TfrClickerActionsArr.HandleOnLoadRenderedBitmap(ABitmap: TBitmap; AFile
 begin
   AFileName := ResolveTemplatePath(AFileName); //////////////////// Added for plugin. Not sure how it affects unresolved path, which may be validated from allowed dirs.
   Result := DoOnLoadRenderedBitmap(ABitmap, AFileName);
+end;
+
+
+procedure TfrClickerActionsArr.HandleOnSaveRenderedBitmap(ABitmap: TBitmap; AFileName: string);
+begin
+  AFileName := ResolveTemplatePath(AFileName); //////////////////// Added for plugin. Not sure how it affects unresolved path, which may be validated from allowed dirs.
+  DoOnSaveRenderedBitmap(ABitmap, AFileName);
 end;
 
 
@@ -2972,6 +2985,15 @@ begin
     Result := FOnLoadRenderedBitmap(ABitmap, AFileName)
   else
     Result := False;
+end;
+
+
+procedure TfrClickerActionsArr.DoOnSaveRenderedBitmap(ABitmap: TBitmap; AFileName: string);
+begin
+  if Assigned(FOnSaveRenderedBitmap) then
+    FOnSaveRenderedBitmap(ABitmap, AFileName)
+  else
+    raise Exception.Create('OnSaveRenderedBitmap is not assigned.');
 end;
 
 
