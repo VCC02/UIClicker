@@ -3550,7 +3550,7 @@ begin
       TempMemStream.CopyFrom(ARequestInfo.PostStream, ARequestInfo.PostStream.Size);
       FInMemFileSystem.SaveFileToMem(Fnm, TempMemStream.Memory, TempMemStream.Size);   //FInMemFileSystem is used for general purpose files (including bitmaps) in server mode.
 
-      Msg := 'Received file: "' + Fnm + '"  of ' + IntToStr(TempMemStream.Size) + ' bytes in size, via ' + CRECmd_SendFileToServer + '.';
+      Msg := 'Received file: "' + Fnm + '"  of ' + IntToStr(TempMemStream.Size) + ' bytes in size.';
       AddToLogFromThread(Msg);
       RespondWithText(Msg);
     finally
@@ -3592,7 +3592,7 @@ begin
       TempMemStream.CopyFrom(ARequestInfo.PostStream, ARequestInfo.PostStream.Size);
       FRenderedInMemFileSystem.SaveFileToMem(Fnm, TempMemStream.Memory, TempMemStream.Size);   //FRenderedInMemFileSystem is used for bitmaps
 
-      Msg := 'Received file: "' + Fnm + '"  of ' + IntToStr(TempMemStream.Size) + ' bytes in size (for ExtRndInMemFS), via ' + CRECmd_SetRenderedFile + '.';
+      Msg := 'Received file: "' + Fnm + '"  of ' + IntToStr(TempMemStream.Size) + ' bytes in size (for ExtRndInMemFS).';
       AddToLogFromThread(Msg);
       RespondWithText(CREResp_ErrResponseOK);
     finally
