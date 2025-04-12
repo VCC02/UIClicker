@@ -74,7 +74,7 @@ implementation
 
 
 uses
-  FPCanvas, Math;
+  FPCanvas, Math, Types;
 
 
 type
@@ -158,6 +158,8 @@ var
   TempTransparentMode: TTransparentMode;
   TempTransparentColorStr: string;
   TempTransparentColor: TColor;
+  BmpExists: Boolean;
+  ErrSize: TSize;
 begin
   ABmp.Canvas.Brush.Color := HexToInt(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetBrush.Color)); //TColor;
   ABmp.Canvas.Brush.Style := TBrushStyle(StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetBrush.Style), Ord(bsSolid))); //TFPBrushStyle;
@@ -196,9 +198,28 @@ begin
     SrcBmp.TransparentColor := TempTransparentColor;
 
     if RenderedExternally then
-      Sender.DoOnLoadRenderedBitmap(SrcBmp, SrcBitmapFnm)
+      BmpExists := Sender.DoOnLoadRenderedBitmap(SrcBmp, SrcBitmapFnm)
     else
-      Sender.DoOnLoadBitmap(SrcBmp, SrcBitmapFnm);
+      BmpExists := Sender.DoOnLoadBitmap(SrcBmp, SrcBitmapFnm);
+
+    if not BmpExists then
+    begin
+      SrcBmp.Canvas.Pen.Color := clBlack;
+      SrcBmp.Canvas.Brush.Color := clBlack;
+      SrcBmp.Canvas.Font.Color := clRed;
+      SrcBmp.Canvas.Font.Name := 'DejaVu Sans';  //something which might also be available in Linux
+      SrcBmp.Canvas.Font.Size := 8;
+      SrcBmp.Canvas.Font.Quality := fqNonAntialiased;
+      ErrSize := SrcBmp.Canvas.TextExtent('File not found.');
+
+      SrcBmp.Width := ErrSize.cx;
+      SrcBmp.Height := ErrSize.cy;
+      SrcBmp.Canvas.Rectangle(0, 0, ErrSize.cx, ErrSize.cy);
+      SrcBmp.Canvas.TextOut(0, 0, 'File not found.');
+
+      SrcBmp.Canvas.Pen.Color := clTeal;
+      SrcBmp.Canvas.Line(0, ErrSize.cy - 1, ErrSize.cx - 1 , ErrSize.cy - 1);
+    end;
 
     if WillStretch then
       ABmp.Canvas.StretchDraw(TempRect, SrcBmp)
