@@ -34,6 +34,8 @@ uses
 procedure LoadPrimitivesFile(Ini: TClkIniReadonlyFile; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
 procedure SavePrimitivesFile(AStringList: TStringList; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
 
+procedure GetPathsToImagesFromPrimitivesFile(AIni: TClkIniReadonlyFile; AListOfPaths: TStringList); overload;
+procedure GetPathsToImagesFromPrimitivesFile(var APrimitives: TPrimitiveRecArr; AListOfPaths: TStringList); overload;
 
 implementation
 
@@ -266,6 +268,40 @@ begin
         AOrders[OrderIndex].Items[j] := Ini.ReadInteger(SectionIndex, 'i' + IntToStr(j), j);
     end;
   end;
+end;
+
+
+procedure GetPathsToImagesFromPrimitivesFile(AIni: TClkIniReadonlyFile; AListOfPaths: TStringList);
+var
+  n, i, SectionIndex: Integer;
+  SectionName, PrimitiveTypeStr: string;
+begin
+  AListOfPaths.Clear;
+  n := AIni.ReadInteger('Primitives', 'Count', 0);
+
+  for i := 0 to AIni.GetSectionCount - 1 do
+  begin
+    SectionIndex := i;
+    SectionName := AIni.GetSectionAtIndex(i);
+
+    if (n > 0) and (Pos('Primitive_', SectionName) > 0) then
+    begin
+      PrimitiveTypeStr := AIni.ReadString(SectionIndex, 'Primitive', 'Line');
+      if PrimitiveTypeStr = 'Image' then
+        AListOfPaths.Add(AIni.ReadString(SectionIndex, 'Path', ''));
+    end;
+  end;
+end;
+
+
+procedure GetPathsToImagesFromPrimitivesFile(var APrimitives: TPrimitiveRecArr; AListOfPaths: TStringList);
+var
+  i: Integer;
+begin
+  AListOfPaths.Clear;
+  for i := 0 to Length(APrimitives) - 1 do
+    if APrimitives[i].PrimitiveType = CClkImagePrimitiveCmdIdx then
+      AListOfPaths.Add(APrimitives[i].ClkImage.Path);
 end;
 
 

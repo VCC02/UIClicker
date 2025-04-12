@@ -320,7 +320,7 @@ uses
   {$ELSE}
     Process,
   {$ENDIF}
-  IdHTTP, ClickerPrimitivesCompositor, ClickerActionProperties,
+  IdHTTP, ClickerPrimitivesCompositor, ClickerPrimitives, ClickerActionProperties,
   ClickerActionPluginLoader, ClickerActionPlugins, BitmapProcessing,
   ClickerActionsClient, ClickerTemplates, Math;
 
@@ -2191,7 +2191,7 @@ function TActionExecution.ExecuteFindSubControlAction(var AFindSubControlOptions
 
 var
   i, j, k, BmpTextProfileCount: Integer;
-  ListOfBitmapFiles, ListOfPrimitiveFiles: TStringList;
+  ListOfBitmapFiles, ListOfPrimitiveFiles, ListOfBmpsInPrimitiveFiles: TStringList;
   ResultedControl: TCompRec;
   ResultedControlArr, PartialResultedControlArr: TCompRecArr;
   ResultedControlArr_Text, ResultedControlArr_Bmp, ResultedControlArr_Pmtv: TCompRecArr;
@@ -2521,6 +2521,7 @@ begin
         LoadBitmapToSearchOn(FindControlInputData);
 
         ListOfPrimitiveFiles := TStringList.Create;
+        ListOfBmpsInPrimitiveFiles := TStringList.Create;
         try
           ListOfPrimitiveFiles.LineBreak := #13#10;
           ListOfPrimitiveFiles.Text := AFindSubControlOptions.MatchPrimitiveFiles;
@@ -2574,6 +2575,14 @@ begin
                 AddToLog('Primitives file: "' + ExtractFileName(ListOfPrimitiveFiles.Strings[i]) + '" has no primitives.');
 
               Continue;
+            end;
+
+            if FExecutingActionFromRemote^ and FFileLocationOfDepsIsMem^ then
+            begin
+              GetPathsToImagesFromPrimitivesFile(TempPrimitives, ListOfBmpsInPrimitiveFiles);
+
+              AddToLog('Might wait for some bmps from primitives files to be present in memory..');
+              DoOnWaitForBitmapsAvailability(ListOfBmpsInPrimitiveFiles);
             end;
 
             PrimitivesCompositor := TPrimitivesCompositor.Create;
@@ -2662,6 +2671,7 @@ begin
           end; //for i   -  primitives
         finally
           ListOfPrimitiveFiles.Free;
+          ListOfBmpsInPrimitiveFiles.Free;
           if Length(PartialResultedControlArr) > 0 then
             ResultedControl := PartialResultedControlArr[0];
 
