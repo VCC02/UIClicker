@@ -2209,6 +2209,7 @@ var
   PrimitiveFound: Boolean;
   FindControlOnScreen_Result: Boolean;
   ExtBmpName: string;
+  IsExtBmp: Boolean;
 begin
   Result := False;
 
@@ -2442,7 +2443,9 @@ begin
 
           for i := 0 to ListOfBitmapFiles.Count - 1 do
           begin
-            if not DoOnLoadBitmap(FindControlInputData.BitmapToSearchFor, ListOfBitmapFiles.Strings[i]) then
+            IsExtBmp := Pos(CExtBmp_PrefixUpperCase, UpperCase(ListOfBitmapFiles.Strings[i])) = 1;
+            if (IsExtBmp and not DoOnLoadRenderedBitmap(FindControlInputData.BitmapToSearchFor, ListOfBitmapFiles.Strings[i])) or
+               (not IsExtBmp and not DoOnLoadBitmap(FindControlInputData.BitmapToSearchFor, ListOfBitmapFiles.Strings[i])) then
             begin
               AppendErrorMessageToActionVar('File not found: "' + ListOfBitmapFiles.Strings[i] + '" ');
               Continue;

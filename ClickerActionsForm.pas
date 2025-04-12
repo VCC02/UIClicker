@@ -2136,14 +2136,34 @@ end;
 procedure TfrmClickerActions.HandleOnWaitForBitmapsAvailability(AListOfBitmapFiles: TStringList);
 var
   ListOfNonExistentBmps, ListOfNonExistentExtBmps: TStringList;
+  Bmps, ExtBmps: TStringList;
+  i: Integer;
 begin
   ListOfNonExistentBmps := TStringList.Create;
   ListOfNonExistentExtBmps := TStringList.Create;
   try
     ListOfNonExistentBmps.LineBreak := #13#10;
-    ExtractNonExistentFiles(AListOfBitmapFiles, ListOfNonExistentBmps, flMem {flDiskThenMem}, FInMemFileSystem);
-    ExtractNonExistentFiles(AListOfBitmapFiles, ListOfNonExistentExtBmps, flMem {flDiskThenMem}, FRenderedInMemFileSystem);
-    ListOfNonExistentBmps.AddStrings(ListOfNonExistentExtBmps);  //put all in one list
+    ListOfNonExistentExtBmps.LineBreak := #13#10;
+
+    Bmps := TStringList.Create;
+    ExtBmps := TStringList.Create;
+    try
+      Bmps.LineBreak := #13#10;
+      ExtBmps.LineBreak := #13#10;
+
+      for i := 0 to AListOfBitmapFiles.Count - 1 do
+        if Pos(CExtBmp_PrefixUpperCase, UpperCase(AListOfBitmapFiles.Strings[i])) = 1 then
+          ExtBmps.Add(AListOfBitmapFiles.Strings[i])
+        else
+          Bmps.Add(AListOfBitmapFiles.Strings[i]);
+
+      ExtractNonExistentFiles(Bmps, ListOfNonExistentBmps, flMem {flDiskThenMem}, FInMemFileSystem);
+      ExtractNonExistentFiles(ExtBmps, ListOfNonExistentExtBmps, flMem {flDiskThenMem}, FRenderedInMemFileSystem);
+      ListOfNonExistentBmps.AddStrings(ListOfNonExistentExtBmps);  //put all in one list
+    finally
+      Bmps.Free;
+      ExtBmps.Free;
+    end;
 
     if ListOfNonExistentBmps.Count > 0 then
     begin
