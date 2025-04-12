@@ -2086,6 +2086,8 @@ var
   TempListOfFiles: TStringList;
   i: Integer;
   AllExist: Boolean;
+  Prefix: string;
+  IsExtMem: Boolean;
 begin
   FFileAvailabilityFIFO.PutMultiple(AListOfFiles);
 
@@ -2099,10 +2101,16 @@ begin
     repeat
       AllExist := True;
       for i := TempListOfFiles.Count - 1 downto 0 do
-        if not FInMemFileSystem.FileExistsInMem(TempListOfFiles.Strings[i]) then
+      begin
+        Prefix := UpperCase(Copy(TempListOfFiles.Strings[i], 1, 7));
+        IsExtMem := Prefix = CExtBmp_PrefixUpperCase;
+
+        if (IsExtMem and not FRenderedInMemFileSystem.FileExistsInMem(TempListOfFiles.Strings[i])) or
+           (not IsExtMem and not FInMemFileSystem.FileExistsInMem(TempListOfFiles.Strings[i])) then
           AllExist := False
         else
           TempListOfFiles.Delete(i); //remove existent files from being verified again
+      end;
 
       if AllExist then
         Exit;
@@ -2127,19 +2135,24 @@ end;
 
 procedure TfrmClickerActions.HandleOnWaitForBitmapsAvailability(AListOfBitmapFiles: TStringList);
 var
-  ListOfNonExistentBmps: TStringList;
+  ListOfNonExistentBmps, ListOfNonExistentExtBmps: TStringList;
 begin
   ListOfNonExistentBmps := TStringList.Create;
+  ListOfNonExistentExtBmps := TStringList.Create;
   try
     ListOfNonExistentBmps.LineBreak := #13#10;
     ExtractNonExistentFiles(AListOfBitmapFiles, ListOfNonExistentBmps, flMem {flDiskThenMem}, FInMemFileSystem);
+    ExtractNonExistentFiles(AListOfBitmapFiles, ListOfNonExistentExtBmps, flMem {flDiskThenMem}, FRenderedInMemFileSystem);
+    ListOfNonExistentBmps.AddStrings(ListOfNonExistentExtBmps);  //put all in one list
+
     if ListOfNonExistentBmps.Count > 0 then
     begin
-      AddToLogFromThread('Waiting for the following bitmaps to exist: ' + #13#10 + AListOfBitmapFiles.Text);
+      AddToLogFromThread('Waiting for the following bitmaps to exist: ' + #13#10 + ListOfNonExistentBmps.Text);
       HandleOnWaitForMultipleFilesAvailability(ListOfNonExistentBmps);
     end;
   finally
     ListOfNonExistentBmps.Free;
+    ListOfNonExistentExtBmps.Free;
   end;
 end;
 
@@ -3517,7 +3530,7 @@ begin
       TempMemStream.CopyFrom(ARequestInfo.PostStream, ARequestInfo.PostStream.Size);
       FInMemFileSystem.SaveFileToMem(Fnm, TempMemStream.Memory, TempMemStream.Size);   //FInMemFileSystem is used for general purpose files (including bitmaps) in server mode.
 
-      Msg := 'Received file: "' + Fnm + '"  of ' + IntToStr(TempMemStream.Size) + ' bytes in size.';
+      Msg := 'Received file: "' + Fnm + '"  of ' + IntToStr(TempMemStream.Size) + ' bytes in size, via ' + CRECmd_SendFileToServer + '.';
       AddToLogFromThread(Msg);
       RespondWithText(Msg);
     finally
@@ -3559,7 +3572,7 @@ begin
       TempMemStream.CopyFrom(ARequestInfo.PostStream, ARequestInfo.PostStream.Size);
       FRenderedInMemFileSystem.SaveFileToMem(Fnm, TempMemStream.Memory, TempMemStream.Size);   //FRenderedInMemFileSystem is used for bitmaps
 
-      Msg := 'Received file: "' + Fnm + '"  of ' + IntToStr(TempMemStream.Size) + ' bytes in size (for ExtRndInMemFS).';
+      Msg := 'Received file: "' + Fnm + '"  of ' + IntToStr(TempMemStream.Size) + ' bytes in size (for ExtRndInMemFS), via ' + CRECmd_SetRenderedFile + '.';
       AddToLogFromThread(Msg);
       RespondWithText(CREResp_ErrResponseOK);
     finally

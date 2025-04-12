@@ -2208,6 +2208,7 @@ var
   PrimitivesCompositor: TPrimitivesCompositor;
   PrimitiveFound: Boolean;
   FindControlOnScreen_Result: Boolean;
+  ExtBmpName: string;
 begin
   Result := False;
 
@@ -2362,7 +2363,8 @@ begin
           end
           else  //mbaRenderTextOnly
           begin
-            DoOnSaveRenderedBitmap(FindControlInputData.BitmapToSearchFor, AActionOptions.ActionName + '_' + AFindSubControlOptions.MatchBitmapText[j].ProfileName);
+            ExtBmpName := CExtBmp_Prefix + PathDelim + AActionOptions.ActionName + '_' + AFindSubControlOptions.MatchBitmapText[j].ProfileName + '.bmp';
+            DoOnSaveRenderedBitmap(FindControlInputData.BitmapToSearchFor, ExtBmpName);
             //
           end;
         finally

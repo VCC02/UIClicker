@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2024 VCC
+    Copyright (C) 2025 VCC
     creation date: Dec 2019
     initial release date: 26 Jul 2022
 
@@ -339,8 +339,12 @@ begin
                     try
                       DoOnLoadMissingFileContent(ListOfFiles.Strings[i], FileContent);
 
-                      LinkForSendingFiles := FRemoteAddress + CRECmd_SendFileToServer + '?' +
-                                             CREParam_FileName + '=' + ListOfFiles.Strings[i];
+                      if Pos(CExtBmp_PrefixUpperCase, UpperCase(ListOfFiles.Strings[i])) = 1 then
+                        LinkForSendingFiles := FRemoteAddress + CRECmd_SetRenderedFile + '?' +   //SetRenderedFile
+                                               CREParam_FileName + '=' + ListOfFiles.Strings[i]
+                      else
+                        LinkForSendingFiles := FRemoteAddress + CRECmd_SendFileToServer + '?' +  //SendFileToServer
+                                               CREParam_FileName + '=' + ListOfFiles.Strings[i];
 
                       DoOnLogMissingServerFile('Sending "' + ListOfFiles.Strings[i] + '"');
                       SendFileToServer(LinkForSendingFiles, FileContent, False);

@@ -150,6 +150,9 @@ const
   CExtBmp_IncludeFilenameInRequest = 'IncludeFilenameInRequest';  //can be '0' or '1'
   CExtBmp_FilenameMaxLen = 1024;
 
+  CExtBmp_Prefix = 'ExtMem:';
+  CExtBmp_PrefixUpperCase = 'EXTMEM:';
+
   {$IFDEF MemPlugins}
     CMemPluginLocationPrefix = 'Mem:';  //If a plugin path starts with this prefix, then UIClicker expects the plugin to exist in memory.
   {$ENDIF}
