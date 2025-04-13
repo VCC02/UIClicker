@@ -30,7 +30,7 @@ uses
   Interfaces, Forms, Expectations, InMemFileSystem, ObjectInspectorFrame,
   PitstopTestRunner, ClickerActionsClient, ClickerUtils,
   ClickerActionProperties, TestHTTPAPI, ClickerActionValues, TestUI,
-  GuiTestRunner, UIActionsStuff;
+  GuiTestRunner, UIActionsStuff, TestDistPlugin, UITestUtils;
 
 {$R *.res}
 

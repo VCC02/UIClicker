@@ -184,6 +184,19 @@ type
 
 
 const
+  CSkipSavingSettings: string = ' --SkipSavingSettings Yes';
+
+
+implementation
+
+
+uses
+  ClickerActionsClient, ClickerUtils, AsyncProcess, Process, Expectations, Forms, IniFiles,
+  ObjectInspectorFrame, ClickerActionProperties, ClickerActionValues, ActionsStuff,
+  UITestUtils;
+
+
+const
   CTestDriver_ServerPort_ForServerUnderTest = '15444';
   CTestDriver_ServerPort_ForClientUnderTest = '25444';
   CServerUnderTestServerPort = '5444';
@@ -198,14 +211,6 @@ const
   CMinErrorCountKeyword = 'count';
   CMinErrorMsgBoxBtn_NoUpdate = 'False';
   CMinErrorMsgBoxBtn_YesUpdate = 'True';
-
-
-implementation
-
-
-uses
-  ClickerActionsClient, ClickerUtils, AsyncProcess, Process, Expectations, Forms, IniFiles,
-  ObjectInspectorFrame, ClickerActionProperties, ClickerActionValues, ActionsStuff;
 
 
 var  //using global vars instead of class fields, to avoid recreating the objects on every test
@@ -232,37 +237,9 @@ end;
 //end;
 
 
-function CreateUIClickerProcess(AExe, AParams: string): TAsyncProcess;
-begin
-  Result := TAsyncProcess.Create(nil);
-  Result.Executable := AExe;
-  Result.Parameters.Text := StringReplace(AParams, #32, #13#10, [rfReplaceAll]);
-  Result.CurrentDirectory := ExtractFileDir(AExe);
-  Result.InheritHandles := False;
-  Result.Execute;
-end;
-
-
-procedure SetUIClickerWindowPosition(APathToIni: string; AMainLeft, AMainTop, AActionsLeft, AActionsTop: Integer);  //useful, to preview the interaction
-var
-  Ini: TMemIniFile;
-begin
-  Ini := TMemIniFile.Create(APathToIni);
-  try
-    Ini.WriteInteger('MainWindow', 'Left', AMainLeft);
-    Ini.WriteInteger('MainWindow', 'Top', AMainTop);
-    Ini.WriteInteger('ActionsWindow', 'Left', AActionsLeft);
-    Ini.WriteInteger('ActionsWindow', 'Top', AActionsTop);
-  finally
-    Ini.Free;
-  end;
-end;
-
-
 procedure TTestUI.StartAllUIClickerInstances;
 const
   CDisplayTabsOptions: string = ' --AutoSwitchToExecTab Yes --AutoEnableSwitchTabsOnDebugging Yes';
-  CSkipSavingSettings: string = ' --SkipSavingSettings Yes';
 var
   PathToTestDriver, PathToAppUnderTest: string;
   ServerParams, ClientParams, AppUnderTestServerParams, AppUnderTestClientParams: string;
@@ -314,37 +291,8 @@ end;
 
 
 procedure TTestUI.ExecuteTemplateOnTestDriver(ATemplatePath, AFileLocation: string; AAdditionalExpectedVar: string = ''; AAdditionalExpectedValue: string = '');
-const
-  CSecondExpectedErrMsg = 'Action condition is false.';
-var
-  Response: string;
-  ListOfVars: TStringList;
-  CallTemplateOptions: TClkCallTemplateOptions;
 begin
-  CallTemplateOptions.TemplateFileName := ATemplatePath;
-  CallTemplateOptions.ListOfCustomVarsAndValues := '';
-  CallTemplateOptions.EvaluateBeforeCalling := False;
-  CallTemplateOptions.CallTemplateLoop.Enabled := False;
-  CallTemplateOptions.CallTemplateLoop.Direction := ldInc;
-  CallTemplateOptions.CallTemplateLoop.EvalBreakPosition := lebpAfterContent;
-
-  Response := FastReplace_87ToReturn(ExecuteCallTemplateAction(CTestDriverServerAddress_Client, CallTemplateOptions, False, False, AFileLocation));
-
-  ListOfVars := TStringList.Create;
-  try
-    ListOfVars.Text := Response;
-    try
-      Expect(ListOfVars).WithItem('$ExecAction_Err$').OfValue('', 'No error Allowed in test driver... $ExecAction_Err$ is ' + ListOfVars.Values['$ExecAction_Err$'] + '   $ExitCode$ is ' + ListOfVars.Values['$ExitCode$']);
-    except
-      on E: Exception do
-        Expect(ListOfVars).WithItem('$ExecAction_Err$').OfValue(CSecondExpectedErrMsg, 'No error Allowed in test driver. $ExecAction_Err$ is ' + ListOfVars.Values['$ExecAction_Err$'] + '   $ExitCode$ is ' + ListOfVars.Values['$ExitCode$']);
-    end;
-
-    if AAdditionalExpectedVar <> '' then
-      Expect(ListOfVars).WithItem(AAdditionalExpectedVar).OfValue(AAdditionalExpectedValue, 'Additional variable mismatch.');
-  finally
-    ListOfVars.Free;
-  end;
+  ExecuteTemplateOnCustomTestDriver(CTestDriverServerAddress_Client, ATemplatePath, AFileLocation, AAdditionalExpectedVar, AAdditionalExpectedValue);
 end;
 
 
@@ -361,35 +309,14 @@ end;
 
 
 procedure SetVariableOnTestDriverClient(AVarName, AVarValue: string; AEvalVarBefore: Boolean = False);
-var
-  SetVarOptions: TClkSetVarOptions;
-  SetVarResult: TStringList;
-  RawResult: string;
 begin
-  SetVarOptions.ListOfVarNames := AVarName;
-  SetVarOptions.ListOfVarValues := AVarValue;
-  SetVarOptions.ListOfVarEvalBefore := Chr(48 + Ord(AEvalVarBefore));
-
-  SetVarResult := TStringList.Create;
-  try
-    RawResult := ExecuteSetVarAction(CTestDriverServerAddress_Client, SetVarOptions);
-    SetVarResult.Text := FastReplace_87ToReturn(RawResult); //this is the test "driver" for client 25444
-    Expect(SetVarResult).WithItem(AVarName).OfValue(AVarValue, 'Expected a particular var value.');
-  finally
-    SetVarResult.Free;
-  end;
+  SetVariableOnCustomTestDriverClient(CTestDriverServerAddress_Client, AVarName, AVarValue, AEvalVarBefore);
 end;
 
 
 procedure WaitForDriverStartup;
-var
-  TestResult: string;
-  tk: QWord;
 begin
-  tk := GetTickCount64;
-  repeat
-    TestResult := TestConnection(CTestDriverServerAddress_Client, False);
-  until (TestResult = CREResp_ConnectionOK) or (GetTickCount64 - tk > 3000);
+  WaitForCustomDriverStartup(CTestDriverServerAddress_Client);
 end;
 
 
@@ -468,26 +395,19 @@ end;
 
 procedure TTestUI.PrepareClickerUnderTestToReadItsVars;
 begin
-  //Set $ExtraCaption$ variable in Client Driver, to 'ClientUnderTest', which is required by SetExecutionModeOnAppUnderTest.clktmpl
-  SetVariableOnTestDriverClient('$ExtraCaption$', 'ClientUnderTest');    //even after executing SetExecModeToServer.clktmpl, the caption should stay 'ClientUnderTest'
-  SetVariableOnTestDriverClient('$ListeningPort$', CClientUnderTestServerPort);
-  ExecuteTemplateOnTestDriver(FTemplatesDir + 'SetExecModeToServer.clktmpl', CREParam_FileLocation_ValueDisk);
+  PrepareCustomClickerUnderTestToReadItsVars(CTestDriverServerAddress_Client, CClientUnderTestServerPort, FTemplatesDir);
 end;
 
 
 procedure TTestUI.PrepareClickerUnderTestToLocalMode;
 begin
-  //Set $ExtraCaption$ variable in Client Driver, to 'ClientUnderTest', which is required by SetExecutionModeOnAppUnderTest.clktmpl
-  SetVariableOnTestDriverClient('$ExtraCaption$', 'ClientUnderTest');    //even after executing SetExecModeToServer.clktmpl, the caption should stay 'ClientUnderTest'
-  ExecuteTemplateOnTestDriver(FTemplatesDir + 'SetExecModeToLocal.clktmpl', CREParam_FileLocation_ValueDisk);
+  PrepareCustomClickerUnderTestToLocalMode(CTestDriverServerAddress_Client, FTemplatesDir);
 end;
 
 
 procedure TTestUI.PrepareClickerUnderTestToClientMode;
 begin
-  //Set $ExtraCaption$ variable in Client Driver, to 'ClientUnderTest', which is required by SetExecutionModeOnAppUnderTest.clktmpl
-  SetVariableOnTestDriverClient('$ExtraCaption$', 'ClientUnderTest');    //even after executing SetExecModeToServer.clktmpl, the caption should stay 'ClientUnderTest'
-  ExecuteTemplateOnTestDriver(FTemplatesDir + 'SetExecModeToClient.clktmpl', CREParam_FileLocation_ValueDisk);
+  PrepareCustomClickerUnderTestToClientMode(CTestDriverServerAddress_Client, FTemplatesDir);
 end;
 
 
