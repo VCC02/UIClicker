@@ -180,6 +180,7 @@ begin
 
   RenderedExternallyStr := Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkImage.RenderedExternally);
   RenderedExternally := (RenderedExternallyStr = '1') or (UpperCase(RenderedExternallyStr) = 'TRUE');
+  RenderedExternally := RenderedExternally or (Pos(CExtBmp_PrefixUpperCase, UpperCase(APrimitive.ClkImage.Path)) = 1);
 
   TempTransparentStr := Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkImage.Transparent);
   TempTransparent := (TempTransparentStr = '1') or (UpperCase(TempTransparentStr) = 'TRUE');

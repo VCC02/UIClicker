@@ -2896,7 +2896,8 @@ begin
                 CImagePrimitive_RenderedExternally_PropIndex:
                 begin
                   AHint := 'Set this to 1 or True, to load an externally rendered bmp (i.e. received from a server).' + #13#10 +
-                           'The image is identified by path and "stored" in a separate in-mem file system (not the same one used on client-server execution).' + #13#10;
+                           'The image is identified by path and "stored" in a separate in-mem file system (not the same one used on client-server execution).' + #13#10 +
+                           'If the image path starts with an "' + CExtBmp_Prefix + '" prefix (no quotes), the image is loaded from the in-mem file system.' + #13#10;
                   AHint := AHint + 'Current value: ' + DoOnEvaluateReplacementsFunc(FPrimitives[APropertyIndex].ClkImage.RenderedExternally);
                 end;
 
