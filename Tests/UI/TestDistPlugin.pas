@@ -37,6 +37,7 @@ type
   protected
     procedure StartAllUIClickerInstances;
     procedure StartAllWorkerInstances(AReportedOS: string = 'Win+Lin'; AReportedFonts: string = '');  //at least those from this machine
+    procedure StartTestUtilities;
     procedure ExecuteTemplateOnTestDriver(ATemplatePath, AFileLocation: string; AAdditionalExpectedVar: string = ''; AAdditionalExpectedValue: string = '');
     procedure ArrangeMainUIClickerWindows;
     procedure ArrangeUIClickerActionWindows;
@@ -60,7 +61,7 @@ implementation
 
 
 uses
-  UITestUtils, AsyncProcess, Forms, ClickerActionsClient;
+  UITestUtils, AsyncProcess, Forms, ClickerActionsClient, Expectations;
 
 
 const
@@ -72,7 +73,7 @@ const
   CWorkerClickerServerPort3 = '54444';
   CWorkerClickerServerPort4 = '24444';
 
-  //CTestClientAddress = 'http://127.0.0.1:' + CClientUnderTestServerPort + '/';                                //UIClicker-under-test client in server mode
+  CTestClientAddress = 'http://127.0.0.1:' + CClientUnderTestServerPort + '/';                                //UIClicker-under-test client in server mode
   CTestDriverServerAddress_Client = 'http://127.0.0.1:' + CTestDriver_ServerPort_ForClientUnderTest + '/';    //UIClicker driver
 
   //CWorkerClickerServerAddress1 = 'http://127.0.0.1:' + CWorkerClickerServerPort1 + '/';
@@ -88,6 +89,7 @@ var
   FTestDriverForClient_Proc, FClientAppUnderTest_Proc: TAsyncProcess;
   FWorker1_Proc, FWorker2_Proc, FWorker3_Proc, FWorker4_Proc: TAsyncProcess;
   FServerForWorker1_Proc, FServerForWorker2_Proc, FServerForWorker3_Proc, FServerForWorker4_Proc: TAsyncProcess;
+  CommonFonts_Proc: TAsyncProcess;
   FTemplatesDir: string;
 
 
@@ -161,6 +163,16 @@ begin
 end;
 
 
+procedure TTestDistPlugin.StartTestUtilities;
+var
+  PathToCommonFonts: string;
+begin
+  PathToCommonFonts := ExtractFilePath(ParamStr(0)) + '..\..\..\UIClickerDistFindSubControlPlugin\Tests\CommonFonts\CommonFonts.exe';
+  CommonFonts_Proc := CreateUIClickerProcess(PathToCommonFonts, '');
+  Sleep(500);
+end;
+
+
 procedure TTestDistPlugin.ExecuteTemplateOnTestDriver(ATemplatePath, AFileLocation: string; AAdditionalExpectedVar: string = ''; AAdditionalExpectedValue: string = '');
 begin
   ExecuteTemplateOnCustomTestDriver(CTestDriverServerAddress_Client, ATemplatePath, AFileLocation, AAdditionalExpectedVar, AAdditionalExpectedValue);
@@ -210,10 +222,23 @@ begin
 end;
 
 
+procedure TTestDistPlugin.ExpectVarFromClientUnderTest(AVarName, AExpectedValue: string; AExtraComment: string = '');
+begin
+  TestServerAddress := CTestClientAddress;
+  try
+    //connect to ClientUnderTest instance, which is now running in server mode and read its variables
+    Expect(GetVarValueFromServer(AVarName)).ToBe(AExpectedValue, AExtraComment);
+  finally
+    TestServerAddress := CTestDriverServerAddress_Client; //restore
+  end;
+end;
+
+
 procedure TTestDistPlugin.BeforeAll_AlwaysExecute;
 begin
   StartAllUIClickerInstances;
   StartAllWorkerInstances;
+  StartTestUtilities;
 
   WaitForDriverStartup;
 
@@ -241,25 +266,42 @@ end;
 
 
 procedure TTestDistPlugin.Test_AllocationOfTwoFontProfiles_WinFontsOnly;
+var
+  WorkersDbgInfo: TStringArray;
+  i: Integer;
+  Found0, Found1: Boolean;
 begin
   PrepareClickerUnderTestToLocalMode;
 
   TestServerAddress := CTestDriverServerAddress_Client;
   LoadTestTemplateInClickerUnderTest_FullPath('..\..\..\UIClickerDistFindSubControlPlugin\Tests\AllocateTwoFontProfiles.clktmpl');
+  ExecuteTemplateOnTestDriver(FTemplatesDir + 'PlayAllActionsFromAppUnderTest.clktmpl', CREParam_FileLocation_ValueDisk);
   PrepareClickerUnderTestToReadItsVars;
-end;
 
-
-procedure TTestDistPlugin.ExpectVarFromClientUnderTest(AVarName, AExpectedValue: string; AExtraComment: string = '');
-begin
   TestServerAddress := CTestClientAddress;
   try
-    //connect to ClientUnderTest instance, which is now running in server mode and read its variables
-    Expect(GetVarValueFromServer(AVarName)).ToBe(AExpectedValue, AExtraComment);
+    SetLength(WorkersDbgInfo, 4); //4 workers
+    for i := 0 to Length(WorkersDbgInfo) - 1 do
+      WorkersDbgInfo[i] := GetVarValueFromServer('$Worker[' + IntToStr(i) + '].WorkerSpecificTask$');
   finally
     TestServerAddress := CTestDriverServerAddress_Client; //restore
   end;
+
+  Found0 := False;
+  Found1 := False;
+  for i := 0 to Length(WorkersDbgInfo) - 1 do
+  begin
+    if (Pos('TxtCnt=1', WorkersDbgInfo[i]) > 0) and (Pos('Txt_0=1', WorkersDbgInfo[i]) > 0) then
+      Found0 := True;
+
+    if (Pos('TxtCnt=1', WorkersDbgInfo[i]) > 0) and (Pos('Txt_1=1', WorkersDbgInfo[i]) > 0) then
+      Found1 := True;
+  end;
+
+  Expect(Found0).ToBe(True, 'A worker should be allocated to the first font profile.');
+  Expect(Found1).ToBe(True, 'A worker should be allocated to the first second profile.');
 end;
+
 
 
 procedure TTestDistPlugin.AfterAll_AlwaysExecute;
@@ -278,6 +320,8 @@ begin
   FServerForWorker3_Proc.Terminate(0);
   FServerForWorker4_Proc.Terminate(0);
 
+  CommonFonts_Proc.Terminate(0);
+
   FreeAndNil(FClientAppUnderTest_Proc);
   FreeAndNil(FTestDriverForClient_Proc);
 
@@ -290,6 +334,8 @@ begin
   FreeAndNil(FServerForWorker2_Proc);
   FreeAndNil(FServerForWorker3_Proc);
   FreeAndNil(FServerForWorker4_Proc);
+
+  FreeAndNil(CommonFonts_Proc);
 end;
 
 
