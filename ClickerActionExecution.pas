@@ -4142,6 +4142,8 @@ begin
   frClickerActions.imgDebugBmp.Canvas.Brush.Color := clWhite;
   frClickerActions.imgDebugBmp.Canvas.Rectangle(0, 0, frClickerActions.imgDebugBmp.Width, frClickerActions.imgDebugBmp.Height);
 
+  AResolvedPluginPath := EvaluateReplacements(AResolvedPluginPath);
+
   tk := GetTickCount64;
   try
     ActionPlugin.Loaded := False;

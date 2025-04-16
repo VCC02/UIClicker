@@ -1478,6 +1478,7 @@ end;
 function TfrClickerActionsArr.HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
 begin
   AFileName := ResolveTemplatePath(AFileName); //////////////////// Added for plugin. Not sure how it affects unresolved path, which may be validated from allowed dirs.
+  AFileName := EvaluateReplacements(AFileName);
   Result := DoOnLoadBitmap(ABitmap, AFileName);
 end;
 
@@ -1485,6 +1486,7 @@ end;
 function TfrClickerActionsArr.HandleOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
 begin
   AFileName := ResolveTemplatePath(AFileName); //////////////////// Added for plugin. Not sure how it affects unresolved path, which may be validated from allowed dirs.
+  AFileName := EvaluateReplacements(AFileName);
   Result := DoOnLoadRenderedBitmap(ABitmap, AFileName);
 end;
 
@@ -1492,6 +1494,7 @@ end;
 procedure TfrClickerActionsArr.HandleOnSaveRenderedBitmap(ABitmap: TBitmap; AFileName: string);
 begin
   AFileName := ResolveTemplatePath(AFileName); //////////////////// Added for plugin. Not sure how it affects unresolved path, which may be validated from allowed dirs.
+  //AFileName := EvaluateReplacements(AFileName);  //uncomment if really needed
   DoOnSaveRenderedBitmap(ABitmap, AFileName);
 end;
 
@@ -3935,6 +3938,7 @@ var
   LoadingResult: Boolean;
 begin
   ResolvedPluginPath := ResolveTemplatePath(AAction.PluginOptions.FileName);
+  ResolvedPluginPath := EvaluateReplacements(ResolvedPluginPath);
 
   LoadingResult := False;
   try

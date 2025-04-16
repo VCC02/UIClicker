@@ -38,10 +38,13 @@ type
     procedure StartAllUIClickerInstances;
     procedure StartAllWorkerInstances(AReportedOS: string = 'Win+Lin'; AReportedFonts: string = '');  //at least those from this machine
     procedure ExecuteTemplateOnTestDriver(ATemplatePath, AFileLocation: string; AAdditionalExpectedVar: string = ''; AAdditionalExpectedValue: string = '');
+    procedure ArrangeMainUIClickerWindows;
+    procedure ArrangeUIClickerActionWindows;
 
     procedure PrepareClickerUnderTestToReadItsVars;
     procedure PrepareClickerUnderTestToLocalMode;
     procedure LoadTestTemplateInClickerUnderTest_FullPath(ATestTemplate: string);
+    procedure ExpectVarFromClientUnderTest(AVarName, AExpectedValue: string; AExtraComment: string = '');
   public
     constructor Create; override;
 
@@ -84,6 +87,7 @@ var
   FIsWine: Boolean;
   FTestDriverForClient_Proc, FClientAppUnderTest_Proc: TAsyncProcess;
   FWorker1_Proc, FWorker2_Proc, FWorker3_Proc, FWorker4_Proc: TAsyncProcess;
+  FServerForWorker1_Proc, FServerForWorker2_Proc, FServerForWorker3_Proc, FServerForWorker4_Proc: TAsyncProcess;
   FTemplatesDir: string;
 
 
@@ -99,7 +103,7 @@ const
   CDisplayTabsOptions: string = ' --AutoSwitchToExecTab Yes --AutoEnableSwitchTabsOnDebugging Yes';
 var
   PathToTestDriver, PathToAppUnderTest: string;
-  DriverParams, AppUnderTestClientParams: string;
+  DriverParams, AppUnderTestClientParams, ServerForWorkerParams: string;
 begin
   PathToTestDriver := ExtractFilePath(ParamStr(0)) + '..\..\TestDriver\UIClicker.exe'; //this should be a stable version of UIClicker
   PathToAppUnderTest := ExtractFilePath(ParamStr(0)) + '..\..\UIClicker.exe';
@@ -112,6 +116,7 @@ begin
 
   DriverParams := '--SetExecMode Server --ExtraCaption Driver.Client --ServerPort ' + CTestDriver_ServerPort_ForClientUnderTest + CDisplayTabsOptions;
   AppUnderTestClientParams := '--SetExecMode Local --ExtraCaption ClientUnderTest' + CSkipSavingSettings + CDisplayTabsOptions;
+  ServerForWorkerParams := '--SetExecMode Server Worker --ServerPort ';
 
   if FIsWine then
   begin
@@ -129,6 +134,11 @@ begin
   begin
     FTestDriverForClient_Proc := CreateUIClickerProcess(PathToTestDriver, DriverParams);
     FClientAppUnderTest_Proc := CreateUIClickerProcess(PathToAppUnderTest, AppUnderTestClientParams);
+
+    FServerForWorker1_Proc := CreateUIClickerProcess(PathToAppUnderTest, ServerForWorkerParams + CWorkerClickerServerPort1 + ' --ExtraCaption Worker1');
+    FServerForWorker2_Proc := CreateUIClickerProcess(PathToAppUnderTest, ServerForWorkerParams + CWorkerClickerServerPort2 + ' --ExtraCaption Worker2');
+    FServerForWorker3_Proc := CreateUIClickerProcess(PathToAppUnderTest, ServerForWorkerParams + CWorkerClickerServerPort3 + ' --ExtraCaption Worker3');
+    FServerForWorker4_Proc := CreateUIClickerProcess(PathToAppUnderTest, ServerForWorkerParams + CWorkerClickerServerPort4 + ' --ExtraCaption Worker4');
   end;
 end;
 
@@ -157,8 +167,16 @@ begin
 end;
 
 
-//ArrangeMainUIClickerWindows
-//ArrangeUIClickerActionWindows
+procedure TTestDistPlugin.ArrangeMainUIClickerWindows;
+begin
+  ExecuteTemplateOnTestDriver(ExtractFilePath(ParamStr(0)) + '..\..\..\UIClickerDistFindSubControlPlugin\Tests\ArrangeMainUIClickerWindows.clktmpl', CREParam_FileLocation_ValueDisk);
+end;
+
+
+procedure TTestDistPlugin.ArrangeUIClickerActionWindows;
+begin
+  ExecuteTemplateOnTestDriver(ExtractFilePath(ParamStr(0)) + '..\..\..\UIClickerDistFindSubControlPlugin\Tests\ArrangeActionWindows.clktmpl', CREParam_FileLocation_ValueDisk);
+end;
 
 
 procedure SetVariableOnTestDriverClient(AVarName, AVarValue: string; AEvalVarBefore: Boolean = False);
@@ -213,10 +231,10 @@ begin
       raise Exception.Create('Please verify if UIClicker is built for testing (including the test driver). ' + E.Message);
   end;
 
-  //ArrangeMainUIClickerWindows;      //Setting window position from ini file, works on Wine. Setting from UIClicker does not (yet).
-  //Sleep(500);                       //these sleep calls should be replaced by some waiting loops
-  //ArrangeUIClickerActionWindows;
-  //Sleep(500);
+  ArrangeMainUIClickerWindows;      //Setting window position from ini file, works on Wine. Setting from UIClicker does not (yet).
+  Sleep(500);                       //these sleep calls should be replaced by some waiting loops
+  ArrangeUIClickerActionWindows;
+  Sleep(500);
 
   FTemplatesDir := ExtractFilePath(ParamStr(0)) + '..\..\TestDriver\ActionTemplates\';
 end;
@@ -232,6 +250,18 @@ begin
 end;
 
 
+procedure TTestDistPlugin.ExpectVarFromClientUnderTest(AVarName, AExpectedValue: string; AExtraComment: string = '');
+begin
+  TestServerAddress := CTestClientAddress;
+  try
+    //connect to ClientUnderTest instance, which is now running in server mode and read its variables
+    Expect(GetVarValueFromServer(AVarName)).ToBe(AExpectedValue, AExtraComment);
+  finally
+    TestServerAddress := CTestDriverServerAddress_Client; //restore
+  end;
+end;
+
+
 procedure TTestDistPlugin.AfterAll_AlwaysExecute;
 begin
   //the following instances should be terminated in this specific order:
@@ -243,6 +273,11 @@ begin
   FWorker3_Proc.Terminate(0);
   FWorker4_Proc.Terminate(0);
 
+  FServerForWorker1_Proc.Terminate(0);
+  FServerForWorker2_Proc.Terminate(0);
+  FServerForWorker3_Proc.Terminate(0);
+  FServerForWorker4_Proc.Terminate(0);
+
   FreeAndNil(FClientAppUnderTest_Proc);
   FreeAndNil(FTestDriverForClient_Proc);
 
@@ -250,6 +285,11 @@ begin
   FreeAndNil(FWorker2_Proc);
   FreeAndNil(FWorker3_Proc);
   FreeAndNil(FWorker4_Proc);
+
+  FreeAndNil(FServerForWorker1_Proc);
+  FreeAndNil(FServerForWorker2_Proc);
+  FreeAndNil(FServerForWorker3_Proc);
+  FreeAndNil(FServerForWorker4_Proc);
 end;
 
 
