@@ -41,11 +41,13 @@ type
     procedure ExecuteTemplateOnTestDriver(ATemplatePath, AFileLocation: string; AAdditionalExpectedVar: string = ''; AAdditionalExpectedValue: string = '');
     procedure ArrangeMainUIClickerWindows;
     procedure ArrangeUIClickerActionWindows;
+    procedure ArrangeWorkerWindows;
 
     procedure PrepareClickerUnderTestToReadItsVars;
     procedure PrepareClickerUnderTestToLocalMode;
     procedure LoadTestTemplateInClickerUnderTest_FullPath(ATestTemplate: string);
     procedure ExpectVarFromClientUnderTest(AVarName, AExpectedValue: string; AExtraComment: string = '');
+    procedure VerifyAllocatedWorkOnWorkerSide;
   public
     constructor Create; override;
 
@@ -152,13 +154,13 @@ begin
   //Other params: '--SetWorkerExtraName', '--SetWorkerExtraCaption', '--SetBrokerCredFile', '--SetBrokerAddress', '--SetBrokerPort'
   PathToDistWorker := ExtractFilePath(ParamStr(0)) + '..\..\..\UIClickerDistFindSubControlPlugin\Worker\FindSubControlWorker.exe';
 
-  FWorker1_Proc := CreateUIClickerProcess(PathToDistWorker, '--SetReportedOS ' + AReportedOS + CSkipSavingWorkerSettings + ' --SetUIClickerPort ' + CWorkerClickerServerPort1);
+  FWorker1_Proc := CreateUIClickerProcess(PathToDistWorker, '--SetReportedOS ' + AReportedOS + CSkipSavingWorkerSettings + ' --SetUIClickerPort ' + CWorkerClickerServerPort1 + ' --SetWorkerExtraName First --SetWorkerExtraCaption First');
   Sleep(500);
-  FWorker2_Proc := CreateUIClickerProcess(PathToDistWorker, '--SetReportedOS ' + AReportedOS + CSkipSavingWorkerSettings + ' --SetUIClickerPort ' + CWorkerClickerServerPort2);
+  FWorker2_Proc := CreateUIClickerProcess(PathToDistWorker, '--SetReportedOS ' + AReportedOS + CSkipSavingWorkerSettings + ' --SetUIClickerPort ' + CWorkerClickerServerPort2 + ' --SetWorkerExtraName Second --SetWorkerExtraCaption Second');
   Sleep(500);
-  FWorker3_Proc := CreateUIClickerProcess(PathToDistWorker, '--SetReportedOS ' + AReportedOS + CSkipSavingWorkerSettings + ' --SetUIClickerPort ' + CWorkerClickerServerPort3);
+  FWorker3_Proc := CreateUIClickerProcess(PathToDistWorker, '--SetReportedOS ' + AReportedOS + CSkipSavingWorkerSettings + ' --SetUIClickerPort ' + CWorkerClickerServerPort3 + ' --SetWorkerExtraName Third --SetWorkerExtraCaption Third');
   Sleep(500);
-  FWorker4_Proc := CreateUIClickerProcess(PathToDistWorker, '--SetReportedOS ' + AReportedOS + CSkipSavingWorkerSettings + ' --SetUIClickerPort ' + CWorkerClickerServerPort4);
+  FWorker4_Proc := CreateUIClickerProcess(PathToDistWorker, '--SetReportedOS ' + AReportedOS + CSkipSavingWorkerSettings + ' --SetUIClickerPort ' + CWorkerClickerServerPort4 + ' --SetWorkerExtraName Fourth --SetWorkerExtraCaption Fourth');
   Sleep(500);
 end;
 
@@ -188,6 +190,12 @@ end;
 procedure TTestDistPlugin.ArrangeUIClickerActionWindows;
 begin
   ExecuteTemplateOnTestDriver(ExtractFilePath(ParamStr(0)) + '..\..\..\UIClickerDistFindSubControlPlugin\Tests\ArrangeActionWindows.clktmpl', CREParam_FileLocation_ValueDisk);
+end;
+
+
+procedure TTestDistPlugin.ArrangeWorkerWindows;
+begin
+  ExecuteTemplateOnTestDriver(ExtractFilePath(ParamStr(0)) + '..\..\..\UIClickerDistFindSubControlPlugin\Tests\ArrangeWorkerWindows.clktmpl', CREParam_FileLocation_ValueDisk);
 end;
 
 
@@ -260,8 +268,45 @@ begin
   Sleep(500);                       //these sleep calls should be replaced by some waiting loops
   ArrangeUIClickerActionWindows;
   Sleep(500);
+  ArrangeWorkerWindows;
+  Sleep(500);
 
   FTemplatesDir := ExtractFilePath(ParamStr(0)) + '..\..\TestDriver\ActionTemplates\';
+end;
+
+
+procedure TTestDistPlugin.VerifyAllocatedWorkOnWorkerSide;
+var
+  WorkersDbgInfo: TStringArray;
+  Found0, Found1: Boolean;
+  FoundUnAllocatedCount, i: Integer;
+begin
+  ExecuteTemplateOnTestDriver(FTemplatesDir + '..\..\..\UIClickerDistFindSubControlPlugin\Tests\GetAllocatedWorkFromAllWorkers.clktmpl', CREParam_FileLocation_ValueDisk);
+
+  SetLength(WorkersDbgInfo, 4);
+  WorkersDbgInfo[0] := GetVarValueFromServer('$Worker_First$');       //TestServerAddress is already set to CTestDriverServerAddress_Client;
+  WorkersDbgInfo[1] := GetVarValueFromServer('$Worker_Second$');
+  WorkersDbgInfo[2] := GetVarValueFromServer('$Worker_Third$');
+  WorkersDbgInfo[3] := GetVarValueFromServer('$Worker_Fourth$');
+
+  Found0 := False;
+  Found1 := False;
+  FoundUnAllocatedCount := 0;
+  for i := 0 to Length(WorkersDbgInfo) - 1 do
+  begin
+    if WorkersDbgInfo[i] = 'TxtCnt=1&BmpCnt=0&PmtvCnt=0&Txt_0=1&' then
+      Found0 := True;
+
+    if WorkersDbgInfo[i] = 'TxtCnt=1&BmpCnt=0&PmtvCnt=0&Txt_1=1&' then
+      Found1 := True;
+
+    if WorkersDbgInfo[i] = 'TxtCnt=0&BmpCnt=0&PmtvCnt=0&' then
+      Inc(FoundUnAllocatedCount);
+  end;
+
+  Expect(Found0).ToBe(True, 'A worker should get work for the first font profile.');
+  Expect(Found1).ToBe(True, 'A worker should get work for the first second profile.');
+  Expect(FoundUnAllocatedCount).ToBe(2);
 end;
 
 
@@ -300,6 +345,8 @@ begin
 
   Expect(Found0).ToBe(True, 'A worker should be allocated to the first font profile.');
   Expect(Found1).ToBe(True, 'A worker should be allocated to the first second profile.');
+
+  VerifyAllocatedWorkOnWorkerSide;
 end;
 
 
