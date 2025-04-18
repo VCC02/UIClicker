@@ -47,14 +47,20 @@ type
     procedure PrepareClickerUnderTestToLocalMode;
     procedure LoadTestTemplateInClickerUnderTest_FullPath(ATestTemplate: string);
     procedure ExpectVarFromClientUnderTest(AVarName, AExpectedValue: string; AExtraComment: string = '');
-    procedure VerifyAllocatedWorkOnWorkerSide;
+    procedure ExpectWorkAtWorkerSide(const AWork: array of string; AExpectedUnreceivedWorkCount: Integer);
+    procedure ExpectWorkAtPluginSide(const AWork: array of string; AExpectedUnreceivedWorkCount: Integer);
+    procedure ExecutePluginTestTemplate_FullPath(ATemplatePath: string);
   public
     constructor Create; override;
 
   published
     procedure BeforeAll_AlwaysExecute;
 
+    procedure Test_AllocationOfZeroFontProfiles_WinFontsOnly;
+    procedure Test_AllocationOfOneFontProfile_WinFontsOnly;
     procedure Test_AllocationOfTwoFontProfiles_WinFontsOnly;
+    procedure Test_AllocationOfThreeFontProfiles_WinFontsOnly;
+    procedure Test_AllocationOfFourFontProfiles_WinFontsOnly;
 
     procedure AfterAll_AlwaysExecute;
   end;
@@ -242,6 +248,73 @@ begin
 end;
 
 
+type
+  TBooleanArr = array of Boolean;
+
+const
+  CEmptyWorkTask = 'TxtCnt=0&BmpCnt=0&PmtvCnt=0&';
+
+procedure ExpectWork(var AWorkersDbgInfo: TStringArray; const AWork: array of string; AExpectedUnreceivedWorkCount: Integer);
+var
+  FoundArr: TBooleanArr;
+  FoundUnAllocatedCount, i, j: Integer;
+begin
+  SetLength(FoundArr, Length(AWork));
+  for i := 0 to Length(FoundArr) - 1 do
+    FoundArr[i] := False;
+
+  FoundUnAllocatedCount := 0;
+  for i := 0 to Length(AWorkersDbgInfo) - 1 do
+  begin
+    for j := 0 to Length(AWork) - 1 do
+      if AWorkersDbgInfo[i] = AWork[j] then
+        FoundArr[j] := True;
+
+    if AWorkersDbgInfo[i] = CEmptyWorkTask then
+      Inc(FoundUnAllocatedCount);
+  end;
+
+  Expect(FoundUnAllocatedCount).ToBe(AExpectedUnreceivedWorkCount, 'The number of workers, which received work, does not match the expected count: ' + IntToStr(AExpectedUnreceivedWorkCount) + '.');
+
+  for j := 0 to Length(FoundArr) - 1 do
+    Expect(FoundArr[j]).ToBe(True, 'A worker should get work for the task [' + IntToStr(j) + '].');
+end;
+
+
+procedure TTestDistPlugin.ExpectWorkAtWorkerSide(const AWork: array of string; AExpectedUnreceivedWorkCount: Integer);
+var
+  WorkersDbgInfo: TStringArray;
+begin
+  ExecuteTemplateOnTestDriver(FTemplatesDir + '..\..\..\UIClickerDistFindSubControlPlugin\Tests\GetAllocatedWorkFromAllWorkers.clktmpl', CREParam_FileLocation_ValueDisk);
+
+  SetLength(WorkersDbgInfo, 4);
+  WorkersDbgInfo[0] := GetVarValueFromServer('$Worker_First$');       //TestServerAddress is already set to CTestDriverServerAddress_Client;
+  WorkersDbgInfo[1] := GetVarValueFromServer('$Worker_Second$');
+  WorkersDbgInfo[2] := GetVarValueFromServer('$Worker_Third$');
+  WorkersDbgInfo[3] := GetVarValueFromServer('$Worker_Fourth$');
+
+  ExpectWork(WorkersDbgInfo, AWork, AExpectedUnreceivedWorkCount);
+end;
+
+
+procedure TTestDistPlugin.ExpectWorkAtPluginSide(const AWork: array of string; AExpectedUnreceivedWorkCount: Integer);
+var
+  WorkersDbgInfo: TStringArray;
+  i: Integer;
+begin
+  TestServerAddress := CTestClientAddress;
+  try
+    SetLength(WorkersDbgInfo, 4); //4 workers
+    for i := 0 to Length(WorkersDbgInfo) - 1 do
+      WorkersDbgInfo[i] := GetVarValueFromServer('$Worker[' + IntToStr(i) + '].WorkerSpecificTask$');
+  finally
+    TestServerAddress := CTestDriverServerAddress_Client; //restore
+  end;
+
+  ExpectWork(WorkersDbgInfo, AWork, AExpectedUnreceivedWorkCount);
+end;
+
+
 procedure TTestDistPlugin.BeforeAll_AlwaysExecute;
 begin
   StartAllUIClickerInstances;
@@ -275,80 +348,55 @@ begin
 end;
 
 
-procedure TTestDistPlugin.VerifyAllocatedWorkOnWorkerSide;
-var
-  WorkersDbgInfo: TStringArray;
-  Found0, Found1: Boolean;
-  FoundUnAllocatedCount, i: Integer;
-begin
-  ExecuteTemplateOnTestDriver(FTemplatesDir + '..\..\..\UIClickerDistFindSubControlPlugin\Tests\GetAllocatedWorkFromAllWorkers.clktmpl', CREParam_FileLocation_ValueDisk);
-
-  SetLength(WorkersDbgInfo, 4);
-  WorkersDbgInfo[0] := GetVarValueFromServer('$Worker_First$');       //TestServerAddress is already set to CTestDriverServerAddress_Client;
-  WorkersDbgInfo[1] := GetVarValueFromServer('$Worker_Second$');
-  WorkersDbgInfo[2] := GetVarValueFromServer('$Worker_Third$');
-  WorkersDbgInfo[3] := GetVarValueFromServer('$Worker_Fourth$');
-
-  Found0 := False;
-  Found1 := False;
-  FoundUnAllocatedCount := 0;
-  for i := 0 to Length(WorkersDbgInfo) - 1 do
-  begin
-    if WorkersDbgInfo[i] = 'TxtCnt=1&BmpCnt=0&PmtvCnt=0&Txt_0=1&' then
-      Found0 := True;
-
-    if WorkersDbgInfo[i] = 'TxtCnt=1&BmpCnt=0&PmtvCnt=0&Txt_1=1&' then
-      Found1 := True;
-
-    if WorkersDbgInfo[i] = 'TxtCnt=0&BmpCnt=0&PmtvCnt=0&' then
-      Inc(FoundUnAllocatedCount);
-  end;
-
-  Expect(Found0).ToBe(True, 'A worker should get work for the first font profile.');
-  Expect(Found1).ToBe(True, 'A worker should get work for the first second profile.');
-  Expect(FoundUnAllocatedCount).ToBe(2);
-end;
-
-
-procedure TTestDistPlugin.Test_AllocationOfTwoFontProfiles_WinFontsOnly;
-var
-  WorkersDbgInfo: TStringArray;
-  i: Integer;
-  Found0, Found1: Boolean;
+procedure TTestDistPlugin.ExecutePluginTestTemplate_FullPath(ATemplatePath: string);
 begin
   PrepareClickerUnderTestToLocalMode;
 
   TestServerAddress := CTestDriverServerAddress_Client;
-  LoadTestTemplateInClickerUnderTest_FullPath('..\..\..\UIClickerDistFindSubControlPlugin\Tests\AllocateTwoFontProfiles.clktmpl');
+  LoadTestTemplateInClickerUnderTest_FullPath(ATemplatePath);
   ExecuteTemplateOnTestDriver(FTemplatesDir + 'PlayAllActionsFromAppUnderTest.clktmpl', CREParam_FileLocation_ValueDisk);
   PrepareClickerUnderTestToReadItsVars;
-
-  TestServerAddress := CTestClientAddress;
-  try
-    SetLength(WorkersDbgInfo, 4); //4 workers
-    for i := 0 to Length(WorkersDbgInfo) - 1 do
-      WorkersDbgInfo[i] := GetVarValueFromServer('$Worker[' + IntToStr(i) + '].WorkerSpecificTask$');
-  finally
-    TestServerAddress := CTestDriverServerAddress_Client; //restore
-  end;
-
-  Found0 := False;
-  Found1 := False;
-  for i := 0 to Length(WorkersDbgInfo) - 1 do
-  begin
-    if (Pos('TxtCnt=1', WorkersDbgInfo[i]) > 0) and (Pos('Txt_0=1', WorkersDbgInfo[i]) > 0) then
-      Found0 := True;
-
-    if (Pos('TxtCnt=1', WorkersDbgInfo[i]) > 0) and (Pos('Txt_1=1', WorkersDbgInfo[i]) > 0) then
-      Found1 := True;
-  end;
-
-  Expect(Found0).ToBe(True, 'A worker should be allocated to the first font profile.');
-  Expect(Found1).ToBe(True, 'A worker should be allocated to the first second profile.');
-
-  VerifyAllocatedWorkOnWorkerSide;
 end;
 
+
+procedure TTestDistPlugin.Test_AllocationOfZeroFontProfiles_WinFontsOnly;
+begin
+  ExecutePluginTestTemplate_FullPath('..\..\..\UIClickerDistFindSubControlPlugin\Tests\AllocateZeroFontProfiles.clktmpl');
+  ExpectWorkAtPluginSide([], 4);
+  ExpectWorkAtWorkerSide([], 4);
+end;
+
+
+procedure TTestDistPlugin.Test_AllocationOfOneFontProfile_WinFontsOnly;
+begin
+  ExecutePluginTestTemplate_FullPath('..\..\..\UIClickerDistFindSubControlPlugin\Tests\AllocateOneFontProfile.clktmpl');
+  ExpectWorkAtPluginSide(['TxtCnt=1&BmpCnt=0&PmtvCnt=0&Txt_0=1&'], 3);
+  ExpectWorkAtWorkerSide(['TxtCnt=1&BmpCnt=0&PmtvCnt=0&Txt_0=1&'], 3);
+end;
+
+
+procedure TTestDistPlugin.Test_AllocationOfTwoFontProfiles_WinFontsOnly;
+begin
+  ExecutePluginTestTemplate_FullPath('..\..\..\UIClickerDistFindSubControlPlugin\Tests\AllocateTwoFontProfiles.clktmpl');
+  ExpectWorkAtPluginSide(['TxtCnt=1&BmpCnt=0&PmtvCnt=0&Txt_0=1&', 'TxtCnt=1&BmpCnt=0&PmtvCnt=0&Txt_1=1&'], 2);
+  ExpectWorkAtWorkerSide(['TxtCnt=1&BmpCnt=0&PmtvCnt=0&Txt_0=1&', 'TxtCnt=1&BmpCnt=0&PmtvCnt=0&Txt_1=1&'], 2);
+end;
+
+
+procedure TTestDistPlugin.Test_AllocationOfThreeFontProfiles_WinFontsOnly;
+begin
+  ExecutePluginTestTemplate_FullPath('..\..\..\UIClickerDistFindSubControlPlugin\Tests\AllocateThreeFontProfiles.clktmpl');
+  ExpectWorkAtPluginSide(['TxtCnt=1&BmpCnt=0&PmtvCnt=0&Txt_0=1&', 'TxtCnt=1&BmpCnt=0&PmtvCnt=0&Txt_1=1&', 'TxtCnt=1&BmpCnt=0&PmtvCnt=0&Txt_2=1&'], 1);
+  ExpectWorkAtWorkerSide(['TxtCnt=1&BmpCnt=0&PmtvCnt=0&Txt_0=1&', 'TxtCnt=1&BmpCnt=0&PmtvCnt=0&Txt_1=1&', 'TxtCnt=1&BmpCnt=0&PmtvCnt=0&Txt_2=1&'], 1);
+end;
+
+
+procedure TTestDistPlugin.Test_AllocationOfFourFontProfiles_WinFontsOnly;
+begin
+  ExecutePluginTestTemplate_FullPath('..\..\..\UIClickerDistFindSubControlPlugin\Tests\AllocateFourFontProfiles.clktmpl');
+  ExpectWorkAtPluginSide(['TxtCnt=1&BmpCnt=0&PmtvCnt=0&Txt_0=1&', 'TxtCnt=1&BmpCnt=0&PmtvCnt=0&Txt_1=1&', 'TxtCnt=1&BmpCnt=0&PmtvCnt=0&Txt_2=1&', 'TxtCnt=1&BmpCnt=0&PmtvCnt=0&Txt_3=1&'], 0);
+  ExpectWorkAtWorkerSide(['TxtCnt=1&BmpCnt=0&PmtvCnt=0&Txt_0=1&', 'TxtCnt=1&BmpCnt=0&PmtvCnt=0&Txt_1=1&', 'TxtCnt=1&BmpCnt=0&PmtvCnt=0&Txt_2=1&', 'TxtCnt=1&BmpCnt=0&PmtvCnt=0&Txt_3=1&'], 0);
+end;
 
 
 procedure TTestDistPlugin.AfterAll_AlwaysExecute;
