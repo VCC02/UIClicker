@@ -1,6 +1,6 @@
 {
     Copyright (C) 2025 VCC
-    creation date: Apr 2025
+    creation date: 13 Apr 2025
     initial release date: 13 Apr 2025
 
     author: VCC
@@ -57,6 +57,7 @@ uses
 
 function CreateUIClickerProcess(AExe, AParams: string): TAsyncProcess;
 begin
+  Expect(FileExists(AExe)).ToBe(True, 'The executable file must exist at this path: "' + AExe + '"');
   Result := TAsyncProcess.Create(nil);
   Result.Executable := AExe;
   Result.Parameters.Text := StringReplace(AParams, #32, #13#10, [rfReplaceAll]);
