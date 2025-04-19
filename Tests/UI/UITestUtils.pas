@@ -44,6 +44,10 @@ procedure PrepareCustomClickerUnderTestToLocalMode(ATestDriverAddr, ATemplatesDi
 procedure PrepareCustomClickerUnderTestToClientMode(ATestDriverAddr, ATemplatesDir: string);
 
 
+const
+  CSkipSavingSettings: string = ' --SkipSavingSettings Yes';
+
+
 implementation
 
 

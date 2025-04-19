@@ -29,8 +29,8 @@ unit TestDistPlugin;
 interface
 
 uses
-  Classes, SysUtils, TestHTTPAPI, fpcunit, testregistry, UIActionsStuff,
-  TestUI, ClickerUtils;
+  Classes, SysUtils, TestHTTPAPI, fpcunit, testregistry, //UIActionsStuff,
+  ClickerUtils;
 
 type
   TStringArr = array of string;
@@ -71,6 +71,7 @@ type
 
     procedure AfterAll_AlwaysExecute;
   end;
+
 
 implementation
 
@@ -164,7 +165,7 @@ procedure TTestDistPlugin.StartAllWorkerInstances(AReportedOS: string = 'Win+Lin
 var
   PathToDistWorker: string;
 begin
-  //Other params: '--SetWorkerExtraName', '--SetWorkerExtraCaption', '--SetBrokerCredFile', '--SetBrokerAddress', '--SetBrokerPort'
+  //Other params: '--SetBrokerCredFile', '--SetBrokerAddress', '--SetBrokerPort'
   PathToDistWorker := ExtractFilePath(ParamStr(0)) + '..\..\..\UIClickerDistFindSubControlPlugin\Worker\FindSubControlWorker.exe';
 
   FWorker1_Proc := CreateUIClickerProcess(PathToDistWorker, '--SetReportedOS ' + AReportedOS + CSkipSavingWorkerSettings + ' --SetUIClickerPort ' + CWorkerClickerServerPort1 + ' --SetWorkerExtraName First --SetWorkerExtraCaption First');

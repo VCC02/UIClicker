@@ -183,10 +183,6 @@ type
 }
 
 
-const
-  CSkipSavingSettings: string = ' --SkipSavingSettings Yes';
-
-
 implementation
 
 
