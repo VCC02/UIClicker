@@ -694,6 +694,7 @@ constructor TFontProfile.Create(AOwnerEditor: TfrClickerFindControl; ANewProfile
 begin
   inherited Create;
   FOwnerEditor := AOwnerEditor;
+  FFindControlMatchBitmapText := nil;
   FfrClickerBMPText := CreateBMPTextFrame_NoContent(ANewProfileName);
 end;
 

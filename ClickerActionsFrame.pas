@@ -2281,6 +2281,11 @@ begin
   if ActionType <> OldType then   //updating the OI is not commented, as it is in AvailableEditingActionPropertiesClick_Cat_EditingAction
   begin
     FClkEditedActionByEditTemplate.ActionOptions.Action := ActionType;
+
+    if ActionType = acFindSubControl then
+      if Length(FClkEditedActionByEditTemplate.FindSubControlOptions.MatchBitmapText) = 0 then
+        GetDefaultPropertyValues_FindSubControl(FClkEditedActionByEditTemplate.FindSubControlOptions);
+
     SerializeEditTemplateEditingAction;
     tmrOnChangeEditTemplateEditingActionType.Enabled := True;
   end;
@@ -6713,7 +6718,11 @@ begin
         begin
           FClkEditedActionByEditTemplate.ActionOptions.Action := AEditingAction^.EditTemplateOptions.EditedActionType;
           if Length(FEditTemplateOptions_EditingAction^.FindSubControlOptions.MatchBitmapText) = 0 then
+          begin
             SetLength(FEditTemplateOptions_EditingAction^.FindSubControlOptions.MatchBitmapText, frClickerFindControl.GetBMPTextFontProfilesCount);
+            frClickerFindControl.CreateBMPTextFrames(Length(FEditTemplateOptions_EditingAction^.FindSubControlOptions.MatchBitmapText)); //AddNewFontProfile(FEditTemplateOptions_EditingAction^.FindSubControlOptions.MatchBitmapText[n]);
+            BuildFontColorIconsList;
+          end;
 
           //These will set the action options to default, discarding user settings.
           if ANewText <> OldText then
@@ -6752,7 +6761,7 @@ begin
     GetDefaultPropertyValues_Sleep(FClkEditedActionByEditTemplate.SleepOptions);
 
   if IsActionEmpty_SetVar(FClkEditedActionByEditTemplate.SetVarOptions) then
-   GetDefaultPropertyValues_SetVar(FClkEditedActionByEditTemplate.SetVarOptions);
+    GetDefaultPropertyValues_SetVar(FClkEditedActionByEditTemplate.SetVarOptions);
 
   if IsActionEmpty_WindowOperations(FClkEditedActionByEditTemplate.WindowOperationsOptions) then
     GetDefaultPropertyValues_WindowOperations(FClkEditedActionByEditTemplate.WindowOperationsOptions);
