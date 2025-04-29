@@ -257,6 +257,9 @@ type
     procedure HandleOnOITextEditorKeyDown(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer;
       Sender: TObject; var Key: Word; Shift: TShiftState);
 
+    procedure HandleOnOIEditorKeyDown(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer;
+      Sender: TObject; var Key: Word; Shift: TShiftState);
+
     procedure HandleOnOIEditorAssignMenuAndTooltip(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer;
       Sender: TObject; var APopupMenu: TPopupMenu; var AHint: string; var AShowHint: Boolean);
 
@@ -380,6 +383,7 @@ begin
   FOIFrame.OnOITextEditorMouseMove := HandleOnTextEditorMouseMove;
   FOIFrame.OnOITextEditorKeyUp := HandleOnOITextEditorKeyUp;
   FOIFrame.OnOITextEditorKeyDown := HandleOnOITextEditorKeyDown;
+  FOIFrame.OnOIEditorKeyDown := HandleOnOIEditorKeyDown;
   FOIFrame.OnOIEditorAssignMenuAndTooltip := HandleOnOIEditorAssignMenuAndTooltip;
   FOIFrame.OnOIGetFileDialogSettings := HandleOnOIGetFileDialogSettings;
   FOIFrame.OnOIArrowEditorClick := HandleOnOIArrowEditorClick;
@@ -2852,6 +2856,38 @@ begin
 
 end;
 
+
+procedure TfrClickerPrimitives.HandleOnOIEditorKeyDown(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer;
+  Sender: TObject; var Key: Word; Shift: TShiftState);
+var
+  PmtvType: Integer;
+begin
+  case ANodeLevel of
+    CPropertyLevel:
+      ;
+
+    CPropertyItemLevel:
+      if ACategoryIndex = CCategory_Primitives then
+      begin
+        PmtvType := FPrimitives[APropertyIndex].PrimitiveType;
+        if PmtvType = CClkSetFontPrimitiveCmdIdx then
+          if AItemIndex = CSetFontPrimitive_FontName_PropIndex then
+          begin
+            if (Key = Ord('C')) and (ssCtrl in Shift) then
+              Clipboard.AsText := FPrimitives[APropertyIndex].ClkSetFont.FontName;
+
+            if (Key = Ord('V')) and (ssCtrl in Shift) then
+            begin
+              if FPrimitives[APropertyIndex].ClkSetFont.FontName <> Clipboard.AsText then
+                DoOnTriggerOnControlsModified;
+
+              FPrimitives[APropertyIndex].ClkSetFont.FontName := Clipboard.AsText;
+              FOIFrame.SetEditorValue(FPrimitives[APropertyIndex].ClkSetFont.FontName); //select item in ComboBox
+            end;
+          end;
+      end;
+  end;
+end;
 
 
 procedure TfrClickerPrimitives.HandleOnOIEditorAssignMenuAndTooltip(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer;

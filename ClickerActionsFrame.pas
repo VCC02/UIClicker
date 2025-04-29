@@ -664,6 +664,9 @@ type
     procedure HandleOnOITextEditorKeyDown(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer;
       Sender: TObject; var Key: Word; Shift: TShiftState);
 
+    procedure HandleOnOIEditorKeyDown(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer;
+      Sender: TObject; var Key: Word; Shift: TShiftState);
+
     procedure OIEditorAssignMenuAndTooltip_ActionSpecific(AEditingAction: PClkActionRec; ALiveEditingActionType: TClkAction; ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer;
       Sender: TObject; var APopupMenu: TPopupMenu; var AHint: string; var AShowHint: Boolean);
     procedure HandleOnOIEditorAssignMenuAndTooltip(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer;
@@ -1003,6 +1006,7 @@ begin
   FOIFrame.OnOITextEditorMouseMove := HandleOnTextEditorMouseMove;
   FOIFrame.OnOITextEditorKeyUp := HandleOnOITextEditorKeyUp;
   FOIFrame.OnOITextEditorKeyDown := HandleOnOITextEditorKeyDown;
+  FOIFrame.OnOIEditorKeyDown := HandleOnOIEditorKeyDown;
   FOIFrame.OnOIEditorAssignMenuAndTooltip := HandleOnOIEditorAssignMenuAndTooltip;
   FOIFrame.OnOIGetFileDialogSettings := HandleOnOIGetFileDialogSettings;
   FOIFrame.OnOIArrowEditorClick := HandleOnOIArrowEditorClick;
@@ -7936,7 +7940,42 @@ procedure TfrClickerActions.HandleOnOITextEditorKeyDown(ANodeLevel, ACategoryInd
 begin
   if Key = VK_SPACE then
     if ssCtrl in Shift then
-      //open a pop-up window with a list of available variables and functions;
+      ;//open a pop-up window with a list of available variables and functions;
+end;
+
+
+procedure TfrClickerActions.HandleOnOIEditorKeyDown(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer;
+  Sender: TObject; var Key: Word; Shift: TShiftState);
+var
+  EditingActionType: TClkAction;
+begin
+  case ACategoryIndex of
+    CCategory_Common:
+      EditingActionType := acFindSubControl;
+
+    CCategory_ActionSpecific:
+      EditingActionType := FEditingAction^.ActionOptions.Action;
+
+    CCategory_EditedAction:
+      if FEditTemplateOptions_EditingAction <> nil then
+        EditingActionType := FEditTemplateOptions_EditingAction^.ActionOptions.Action;
+  end;
+
+  if EditingActionType = acFindSubControl then
+    if ANodeLevel = CPropertyItemLevel then
+      if APropertyIndex = CFindSubControl_MatchBitmapText_PropIndex then
+        if AItemIndex mod CPropCount_FindSubControlMatchBitmapText = CFindSubControl_MatchBitmapText_FontName_PropItemIndex then
+        begin
+          if (Key = Ord('C')) and (ssCtrl in Shift) then
+            Clipboard.AsText := FEditingAction^.FindSubControlOptions.MatchBitmapText[AItemIndex div CPropCount_FindSubControlMatchBitmapText].FontName;
+
+          if (Key = Ord('V')) and (ssCtrl in Shift) then
+          begin
+            TriggerOnControlsModified(FEditingAction^.FindSubControlOptions.MatchBitmapText[AItemIndex div CPropCount_FindSubControlMatchBitmapText].FontName <> Clipboard.AsText);
+            FEditingAction^.FindSubControlOptions.MatchBitmapText[AItemIndex div CPropCount_FindSubControlMatchBitmapText].FontName := Clipboard.AsText;
+            FOIFrame.SetEditorValue(Clipboard.AsText); //select item in ComboBox
+          end;
+        end;
 end;
 
 
