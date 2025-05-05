@@ -36,6 +36,7 @@ procedure SavePrimitivesFile(AStringList: TStringList; var APrimitives: TPrimiti
 
 procedure GetPathsToImagesFromPrimitivesFile(AIni: TClkIniReadonlyFile; AListOfPaths: TStringList); overload;
 procedure GetPathsToImagesFromPrimitivesFile(var APrimitives: TPrimitiveRecArr; AListOfPaths: TStringList); overload;
+function GetListOfFontsUsedByPrimitivesFile(AIni: TClkIniReadonlyFile): string;
 
 implementation
 
@@ -302,6 +303,29 @@ begin
   for i := 0 to Length(APrimitives) - 1 do
     if APrimitives[i].PrimitiveType = CClkImagePrimitiveCmdIdx then
       AListOfPaths.Add(APrimitives[i].ClkImage.Path);
+end;
+
+
+function GetListOfFontsUsedByPrimitivesFile(AIni: TClkIniReadonlyFile): string;
+var
+  n, i, SectionIndex: Integer;
+  SectionName, PrimitiveTypeStr: string;
+begin
+  Result := '';
+  n := AIni.ReadInteger('Primitives', 'Count', 0);
+
+  for i := 0 to AIni.GetSectionCount - 1 do
+  begin
+    SectionIndex := i;
+    SectionName := AIni.GetSectionAtIndex(i);
+
+    if (n > 0) and (Pos('Primitive_', SectionName) > 0) then
+    begin
+      PrimitiveTypeStr := AIni.ReadString(SectionIndex, 'Primitive', 'Line');
+      if PrimitiveTypeStr = 'SetFont' then
+        Result := Result + AIni.ReadString(SectionIndex, 'FontName', '') + #13#10;
+    end;
+  end;
 end;
 
 
