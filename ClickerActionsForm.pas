@@ -1042,6 +1042,7 @@ begin
 
   memVariables.Lines.Add('$SelfActionName$=');
   memVariables.Lines.Add('$SelfActionIndex$=-1');
+  memVariables.Lines.Add('$PluginPath$=');
 
   frClickerActionsArrExperiment1.SetVariables(memVariables.Lines);
   frClickerActionsArrExperiment2.SetVariables(memVariables.Lines);

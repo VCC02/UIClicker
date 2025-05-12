@@ -1223,6 +1223,7 @@ const
   CPrefixWithZeros_FuncName = '$PrefixWithZeros(';
   CUpdateControlInfo_FuncName = '$UpdateControlInfo(';
   CExtractFileDir_FuncName = '$ExtractFileDir(';
+  CExtractFilePath_FuncName = '$ExtractFilePath(';
   CExtractFileName_FuncName = '$ExtractFileName(';
   CExtractFileExt_FuncName = '$ExtractFileExt(';
   CExtractFileNameNoExt_FuncName = '$ExtractFileNameNoExt(';
@@ -1259,7 +1260,7 @@ const
   CGetWindowProcessId_FuncName = '$GetWindowProcessId(';
   CGetListOfFonts_FuncName = '$GetListOfFonts(';
 
-  CBuiltInFunctionCount = 50;
+  CBuiltInFunctionCount = 51;
   CBuiltInFunctions: array[0..CBuiltInFunctionCount - 1] of string = (
     CRandom_FuncName,
     CSum_FuncName,
@@ -1276,6 +1277,7 @@ const
     CPrefixWithZeros_FuncName,
     CUpdateControlInfo_FuncName,
     CExtractFileDir_FuncName,
+    CExtractFilePath_FuncName,
     CExtractFileName_FuncName,
     CExtractFileExt_FuncName,
     CExtractFileNameNoExt_FuncName,
@@ -1950,6 +1952,17 @@ begin
   InitialDirArgs := DirArgs;
 
   Result := StringReplace(s, CExtractFileDir_FuncName + InitialDirArgs + ')$', ExtractFileDir(DirArgs), [rfReplaceAll]);
+end;
+
+
+function ReplaceExtractFilePath(s: string): string;
+var
+  DirArgs, InitialDirArgs: string;
+begin
+  DirArgs := ExtractFuncArgs(CExtractFilePath_FuncName, s);
+  InitialDirArgs := DirArgs;
+
+  Result := StringReplace(s, CExtractFilePath_FuncName + InitialDirArgs + ')$', ExtractFilePath(DirArgs), [rfReplaceAll]);
 end;
 
 
@@ -2729,6 +2742,9 @@ begin
 
   if Pos(CExtractFileDir_FuncName, s) > 0 then
     s := ReplaceExtractFileDir(s);
+
+  if Pos(CExtractFilePath_FuncName, s) > 0 then
+    s := ReplaceExtractFilePath(s);
 
   if Pos(CExtractFileName_FuncName, s) > 0 then
     s := ReplaceExtractFileName(s);

@@ -942,6 +942,7 @@ begin
     TempVarDescriptions.Add('$ExtImageHeight$=[Numeric] This is the height of a bitmap, loaded with GetExternallyRenderedImageDimensions()$ function.');
     TempVarDescriptions.Add('$SelfActionName$=[String] Name of the action, which is currently being executed. A template can have multiple actions with the same name, so make sure they are uniquely named for a proper identification.');
     TempVarDescriptions.Add('$SelfActionIndex$=[Numeric] Index of the action, which is currently being executed.');
+    TempVarDescriptions.Add('$PluginPath$=[String] Full path to the plugin, which is currently being executed.');
 
     for i := 0 to FVarDescriptions.Count - 1 do
       FVarDescriptions.Strings[i] := TempVarDescriptions.Values[FVarDescriptions.Strings[i]];
@@ -954,7 +955,6 @@ begin
     TempFuncDescriptions.LineBreak := #13#10;
     FillInWithAllFuncs(FFuncDescriptions);
 
-    TempFuncDescriptions.Add('$ExtractFileDir(<DirName>)$=Returns the directory up to and not including the last item in the path.');
     TempFuncDescriptions.Add('$Random(<min>, <max>)$=Returns a random number between min and max.');
     TempFuncDescriptions.Add('$Random(<max>)$=Returns a random number, lower than max.');
     TempFuncDescriptions.Add('$Sum(<op1>, <op2>)$=Adds two numbers.');
@@ -986,7 +986,9 @@ begin
     TempFuncDescriptions.Add('$Str0(<some_string>,<CharacterIndex>)$=Returns the character at the given index, in a string. The index is 0-based (e.g. $Str0(ABC,1)$ returns B.');
     TempFuncDescriptions.Add('$Str1(<some_string>,<CharacterIndex>)$=Returns the character at the given index, in a string. The index is 1-based (e.g. $Str1(ABC,1)$ returns A.');
     TempFuncDescriptions.Add('$StrLen(<some_string>)$=Returns the number of characters in a string.');
-    TempFuncDescriptions.Add('$StringContains(<SubString>, <String>)$=Return 1, if <SubString> is part of <String>. Otherwise, it returns 0.');
+    TempFuncDescriptions.Add('$StringContains(<SubString>, <String>)$=Returns 1, if <SubString> is part of <String>. Otherwise, it returns 0.');
+    TempFuncDescriptions.Add('$ExtractFileDir(<DirName>)$=Returns the directory up to and not including the last item in the path.');
+    TempFuncDescriptions.Add('$ExtractFilePath(<DirName>)$=Returns the directory up to and not including the last item in the path. It is terminated by a "' + PathDelim + '".');
     TempFuncDescriptions.Add('$ExtractFileName(<PathToFile>)$=Returns the last item of a file path.');
     TempFuncDescriptions.Add('$ExtractFileExt(<PathToFile>)$=Returns the extension (including the dot) of a file name.');
     TempFuncDescriptions.Add('$ExtractFileNameNoExt(<PathToFile>)$=Returns the filename, without extension, from a file path');

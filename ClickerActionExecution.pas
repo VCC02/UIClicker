@@ -4180,6 +4180,12 @@ begin
     try
       SetActionVarValue('$ExecAction_Err$', '');
       SetActionVarValue(CActionPlugin_ExecutionResultErrorVar, '');
+
+      if Pos(CExtBmp_PrefixUpperCase, UpperCase(AResolvedPluginPath)) = 1 then
+        SetActionVarValue('$PluginPath$', AResolvedPluginPath)
+      else
+        SetActionVarValue('$PluginPath$', ExpandFileName(AResolvedPluginPath));
+
       Result := ActionPlugin.ExecutePlugin(APluginOptions.ListOfPropertiesAndValues);
       if not Result then
         AddToLog('Plugin execution failed with: ' + GetActionVarValue(CActionPlugin_ExecutionResultErrorVar))

@@ -267,7 +267,6 @@ object frClickerSetVar: TfrClickerSetVar
       Anchors = [akTop, akLeft, akRight, akBottom]
       Color = clBtnFace
       Lines.Strings = (
-        '$ExtractFileDir(<DirName>)$'
         '$Random(<min>, <max>)$'
         '$Random(<max>)$'
         '$Sum(<arg1>, <arg2>)$'
@@ -300,6 +299,8 @@ object frClickerSetVar: TfrClickerSetVar
         '$Str1(<some_string>,<CharacterIndex>)$'
         '$StrLen(<some_string>)$'
         '$StringContains(<SubString>, <String>)$'
+        '$ExtractFileDir(<PathToFile>)$'
+        '$ExtractFilePath(<PathToFile>)$'
         '$ExtractFileName(<PathToFile>)$'
         '$ExtractFileExt(<PathToFile>)$'
         '$ExtractFileNameNoExt(<PathToFile>)$'
