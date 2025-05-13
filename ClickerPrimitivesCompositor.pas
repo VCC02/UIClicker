@@ -213,10 +213,11 @@ begin
       SrcBmp.Canvas.Font.Quality := fqNonAntialiased;
       ErrSize := SrcBmp.Canvas.TextExtent('File not found.');
 
-      SrcBmp.Width := ErrSize.cx;
-      SrcBmp.Height := ErrSize.cy;
+      SrcBmp.Width := Max(ErrSize.cx, SrcBmp.Canvas.TextWidth(SrcBitmapFnm));
+      SrcBmp.Height := ErrSize.cy shl 1;
       SrcBmp.Canvas.Rectangle(0, 0, ErrSize.cx, ErrSize.cy);
       SrcBmp.Canvas.TextOut(0, 0, 'File not found.');
+      SrcBmp.Canvas.TextOut(0, ErrSize.cy, SrcBitmapFnm);
 
       SrcBmp.Canvas.Pen.Color := clTeal;
       SrcBmp.Canvas.Line(0, ErrSize.cy - 1, ErrSize.cx - 1 , ErrSize.cy - 1);

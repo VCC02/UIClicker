@@ -67,6 +67,7 @@ type
   private
     FClkIniFileOpenMode: TClkIniFileOpenMode;
     FFileName: string;
+    FStream: TMemoryStream; //used by UpdateStream
 
     procedure CreateSection(ANewSectionName: string);
   public
@@ -79,6 +80,7 @@ type
     procedure GetFileContent(AContent: TStringList); overload;
     procedure GetFileContent(AContent: TMemoryStream); overload;
     procedure UpdateFile;
+    procedure UpdateStream;  //This will set the stream position to 0 before updating.
 
     procedure WriteString(const Section, Ident, Value: string); overload;
     procedure WriteInteger(const Section, Ident: string; Value: Longint); overload;
@@ -323,6 +325,7 @@ begin
   inherited Create(ASourceContent);
   FClkIniFileOpenMode := omStringList;
   FFileName := '';
+  FStream := nil;
 end;
 
 
@@ -331,6 +334,7 @@ begin
   inherited Create(ASourceContent);
   FClkIniFileOpenMode := omMemoryStream;
   FFileName := '';
+  FStream := ASourceContent;
 end;
 
 
@@ -339,6 +343,7 @@ begin
   inherited Create(FileName);
   FClkIniFileOpenMode := omFileName;
   FFileName := FileName;
+  FStream := nil;
 end;
 
 
@@ -394,6 +399,24 @@ begin
     try
       GetFileContent(FileContent);
       FileContent.SaveToFile(FFileName);
+    finally
+      FileContent.Free;
+    end;
+  end;
+end;
+
+
+procedure TClkIniFile.UpdateStream;
+var
+  FileContent: TStringList;
+begin
+  if FClkIniFileOpenMode = omMemoryStream then
+  begin
+    FileContent := TStringList.Create;
+    try
+      GetFileContent(FileContent);
+      FStream.Position := 0;
+      FileContent.SaveToStream(FStream);
     finally
       FileContent.Free;
     end;

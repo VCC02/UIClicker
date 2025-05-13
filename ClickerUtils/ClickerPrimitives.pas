@@ -36,6 +36,7 @@ procedure SavePrimitivesFile(AStringList: TStringList; var APrimitives: TPrimiti
 
 procedure GetPathsToImagesFromPrimitivesFile(AIni: TClkIniReadonlyFile; AListOfPaths: TStringList); overload;
 procedure GetPathsToImagesFromPrimitivesFile(var APrimitives: TPrimitiveRecArr; AListOfPaths: TStringList); overload;
+procedure SetPathsToImagesFromPrimitivesFile(AIni: TClkIniFile; AListOfPaths: TStringList);  //Expects the same number of items. If AListOfPaths contains more items than the pmtv file, then they are ignored.
 function GetListOfFontsUsedByPrimitivesFile(AIni: TClkIniReadonlyFile): string;
 
 implementation
@@ -303,6 +304,32 @@ begin
   for i := 0 to Length(APrimitives) - 1 do
     if APrimitives[i].PrimitiveType = CClkImagePrimitiveCmdIdx then
       AListOfPaths.Add(APrimitives[i].ClkImage.Path);
+end;
+
+
+procedure SetPathsToImagesFromPrimitivesFile(AIni: TClkIniFile; AListOfPaths: TStringList);
+var
+  n, i, j, SectionIndex: Integer;
+  SectionName, PrimitiveTypeStr: string;
+begin
+  n := AIni.ReadInteger('Primitives', 'Count', 0);
+
+  j := 0;
+  for i := 0 to AIni.GetSectionCount - 1 do
+  begin
+    SectionIndex := i;
+    SectionName := AIni.GetSectionAtIndex(i);
+
+    if (n > 0) and (Pos('Primitive_', SectionName) > 0) then
+    begin
+      PrimitiveTypeStr := AIni.ReadString(SectionIndex, 'Primitive', 'Line');
+      if PrimitiveTypeStr = 'Image' then
+      begin
+        AIni.WriteString(SectionIndex, 'Path', AListOfPaths.Strings[j]);
+        Inc(j);
+      end;
+    end;
+  end;
 end;
 
 
