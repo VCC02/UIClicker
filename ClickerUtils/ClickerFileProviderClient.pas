@@ -358,7 +358,7 @@ begin
                 end
                 else
                 begin
-                  DoOnLogMissingServerFile('File provider: File not found: "' + ListOfFiles.Strings[i] + '". This can be about disk or in-mem FS, depending on the configured OnFileExists handler.'));
+                  DoOnLogMissingServerFile('File provider: File not found: "' + ListOfFiles.Strings[i] + '". This can be about disk or in-mem FS, depending on the configured OnFileExists handler.');
                   DoOnLogMissingServerFile('File provider: AppDir: "' + FFileProvider.FullAppDir + '"');
                 end;
             end;

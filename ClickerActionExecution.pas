@@ -1358,7 +1358,7 @@ begin
             SetActionVarValue('$ExecAction_Err$', 'Input stream is nil after exec.');
           end;
 
-          ExeInput := EvaluateReplacements(FastReplace_45ToReturn(AExecAppOptions.AppStdIn));
+          ExeInput := FastReplace_45ToReturn(EvaluateReplacements(FastReplace_45ToReturn(AExecAppOptions.AppStdIn)));
 
           TempStringList := TStringList.Create;
           try

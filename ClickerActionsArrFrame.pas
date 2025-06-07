@@ -453,7 +453,7 @@ type
     procedure HandleOnSaveRenderedBitmap(ABitmap: TBitmap; AFileName: string);
     function HandleOnRenderBmpExternally(AFilename: string): string;
     function HandleOnLoadRawPmtv(APmtvFile: TMemoryStream; AFileName: string): Boolean;
-    procedure HandleOnGetListOfExternallyRenderedImages(AListOfExternallyRenderedImages: TStringList);
+    procedure HandleOnGetListOfExternallyRenderedImages(AListOfExternallyRenderedImages: TStringList; Sender: TObject = nil);
 
     {$IFDEF MemPlugins}
       procedure HandleOnGetListOfInMemPlugins(AListOfInMemPlugins: TStringList);
@@ -1528,7 +1528,7 @@ begin
 end;
 
 
-procedure TfrClickerActionsArr.HandleOnGetListOfExternallyRenderedImages(AListOfExternallyRenderedImages: TStringList);
+procedure TfrClickerActionsArr.HandleOnGetListOfExternallyRenderedImages(AListOfExternallyRenderedImages: TStringList; Sender: TObject = nil);
 begin
   DoOnGetListOfExternallyRenderedImages(AListOfExternallyRenderedImages);
 end;
@@ -3025,7 +3025,7 @@ begin
   if not Assigned(FOnGetListOfExternallyRenderedImages) then
     raise Exception.Create('OnGetListOfExternallyRenderedImages not assigned.')
   else
-    FOnGetListOfExternallyRenderedImages(AListOfExternallyRenderedImages);
+    FOnGetListOfExternallyRenderedImages(AListOfExternallyRenderedImages, Self);
 end;
 
 

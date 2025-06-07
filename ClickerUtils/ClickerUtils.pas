@@ -73,7 +73,7 @@ type
   TOnLoadRawPmtv = function(APmtvFile: TMemoryStream; AFileName: string): Boolean of object;  //returns True if file loaded, and False if file not found
   TOnLoadPluginFromInMemFS = function(APlugin: TMemoryStream; AFileName: string): Boolean of object;
   TOnLoadPluginFromDiskToPluginInMemFileSystem = procedure(APluginPath: string) of object;
-  TOnGetListOfExternallyRenderedImages = procedure(AListOfExternallyRenderedImages: TStringList) of object;
+  TOnGetListOfExternallyRenderedImages = procedure(AListOfExternallyRenderedImages: TStringList; Sender: TObject = nil) of object;
 
   {$IFDEF MemPlugins}
     TOnGetListOfInMemPlugins = procedure(AListOfInMemPlugins: TStringList) of object;

@@ -3062,7 +3062,7 @@ end;
 
 function GetPropertyHint_ExecApp_UseInheritHandles: string;
 begin
-  Result := 'Required mostly when passing data through StdIn.';
+  Result := 'Required mostly when passing data through StdIn.' + #13#10 + 'It may also be required to read from StdOut.';
 end;
 
 

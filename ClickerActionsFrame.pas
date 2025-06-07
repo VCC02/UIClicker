@@ -556,7 +556,7 @@ type
 
     function HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     function HandleOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
-    procedure HandleOnGetListOfExternallyRenderedImages(AListOfExternallyRenderedImages: TStringList);
+    procedure HandleOnGetListOfExternallyRenderedImages(AListOfExternallyRenderedImages: TStringList; Sender: TObject = nil);
     function HandleOnFileExists(const AFileName: string): Boolean;
     procedure HandleOnSetPictureOpenDialogInitialDir(AInitialDir: string);
     function HandleOnPictureOpenDialogExecute: Boolean;
@@ -2965,7 +2965,7 @@ begin
 end;
 
 
-procedure TfrClickerActions.HandleOnGetListOfExternallyRenderedImages(AListOfExternallyRenderedImages: TStringList);
+procedure TfrClickerActions.HandleOnGetListOfExternallyRenderedImages(AListOfExternallyRenderedImages: TStringList; Sender: TObject = nil);
 begin
   DoOnGetListOfExternallyRenderedImages(AListOfExternallyRenderedImages);
 end;

@@ -320,7 +320,7 @@ type
     procedure HandleOnSaveRenderedBitmap(ABitmap: TBitmap; AFileName: string);
     function HandleOnLoadRawPmtv(APmtvFile: TMemoryStream; AFileName: string): Boolean;
     function HandleOnLoadPluginFromInMemFS(APlugin: TMemoryStream; AFileName: string): Boolean;
-    procedure HandleOnGetListOfExternallyRenderedImages(AListOfExternallyRenderedImages: TStringList);
+    procedure HandleOnGetListOfExternallyRenderedImages(AListOfExternallyRenderedImages: TStringList; Sender: TObject = nil);
 
     {$IFDEF MemPlugins}
       procedure HandleOnGetListOfInMemPlugins(AListOfInMemPlugins: TStringList);
@@ -382,7 +382,7 @@ type
     procedure CreateRemainingUIComponents;
     function GetClickerActionsArrFrameByStackLevel(AStackLevel: Integer): TfrClickerActionsArr;
 
-    procedure AddToLog(s: string);
+    procedure AddToLog(s: string; Sender: TfrClickerActionsArr = nil);
     function ProcessServerCmd(ASyncObj: TSyncHTTPCmd): string; //used in server mode
 
     property BMPsDir: string read GetBMPsDir write SetBMPsDir;
@@ -783,9 +783,12 @@ begin
 end;
 
 
-procedure TfrmClickerActions.AddToLog(s: string);
+procedure TfrmClickerActions.AddToLog(s: string; Sender: TfrClickerActionsArr = nil);
 begin
-  frClickerActionsArrMain.AddToLog(DateTimeToStr(Now) + '  ' + s);
+  if Sender = nil then
+    frClickerActionsArrMain.AddToLog(DateTimeToStr(Now) + '  ' + s)
+  else
+    (Sender as TfrClickerActionsArr).AddToLog(DateTimeToStr(Now) + '  ' + s);
 end;
 
 
@@ -2299,7 +2302,7 @@ begin
 end;
 
 
-procedure TfrmClickerActions.HandleOnGetListOfExternallyRenderedImages(AListOfExternallyRenderedImages: TStringList);
+procedure TfrmClickerActions.HandleOnGetListOfExternallyRenderedImages(AListOfExternallyRenderedImages: TStringList; Sender: TObject = nil);
 var
   Stream: TMemoryStream;
   Bmp: TBitmap;
@@ -2321,7 +2324,7 @@ begin
         Bmp.LoadFromStream(Stream, Stream.Size);
       except
         on E: Exception do
-          AddToLog('Error loading received bitmap: "' + E.Message + '"   of size: ' + IntToStr(Stream.Size) + 'B.');
+          AddToLog('Error loading received bitmap: "' + E.Message + '"   of size: ' + IntToStr(Stream.Size) + 'B.', TfrClickerActionsArr(Sender));
       end;
 
       AListOfExternallyRenderedImages.Strings[i] := TempName + #8#7 + IntToStr(Bmp.Width) + ':' + IntToStr(Bmp.Height) + '  ' + IntToStr(Stream.Size) + 'B';
