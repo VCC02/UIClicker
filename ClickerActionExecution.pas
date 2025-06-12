@@ -2106,12 +2106,18 @@ begin
 
     sfcmEnumWindows:        //Caption OR Class
     begin
-      if FindWindowOnScreenByCaptionOrClass(FindControlInputData, StopAllActionsOnDemandAddr, ResultedControl) then
+      if FindWindowOnScreenByCaptionOrClass(FindControlInputData, StopAllActionsOnDemandAddr, ResultedControlArr) then
       begin
-        UpdateActionVarValuesFromControl(ResultedControl);
+        if Length(ResultedControlArr) > 0 then
+          UpdateActionVarValuesFromControl(ResultedControlArr[0]);
+
         Result := True;
         frClickerActions.DebuggingInfoAvailable := True;
-        Exit;  //to prevent further searching for bitmap files
+
+        if AFindControlOptions.GetAllControls then
+          SetAllControl_Handles_FromResultedControlArr(ResultedControlArr, '', '');
+
+        Exit;
       end;
     end;
 
@@ -2126,7 +2132,7 @@ begin
         if AFindControlOptions.GetAllControls then
           SetAllControl_Handles_FromResultedControlArr(ResultedControlArr, '', '');
 
-        Exit;  //to prevent further searching for bitmap files
+        Exit;
       end;
     end;
   end; //case

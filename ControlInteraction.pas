@@ -113,7 +113,7 @@ function FindSubControlOnScreen(Algorithm: TMatchBitmapAlgorithm;
                              var AResultedControl: TCompRecArr;
                              ADisplayGridLineOption: TDisplayGridLineOption): Boolean;
 
-function FindWindowOnScreenByCaptionOrClass(InputData: TFindControlInputData; AStopAllActionsOnDemand: PBoolean; out AResultedControl: TCompRec): Boolean;
+function FindWindowOnScreenByCaptionOrClass(InputData: TFindControlInputData; AStopAllActionsOnDemand: PBoolean; var AResultedControl: TCompRecArr): Boolean;
 function FindWindowOnScreenByCaptionAndClass(InputData: TFindControlInputData; AStopAllActionsOnDemand: PBoolean; var AResultedControls: TCompRecArr): Boolean;
 
 
@@ -335,9 +335,10 @@ end;
 type
   TFindWindowByPatternObj = class(TObject)
     ListOfControlTexts, ListOfControlClasses: TStringList;
-    ResultedControl: TCompRec;
+    ResultedControl: TCompRecArr;
     MatchingMethods: TMatchingMethods;
     FoundByEnum: Boolean;
+    FindAllControls: Boolean;
   end;
 
 threadvar
@@ -345,7 +346,7 @@ threadvar
 
 
 //Callback as required by EnumWindows
-function EnumWindowsProc(hwn: THandle; ALParam: LPARAM): BOOL;
+function EnumWindowsProc(hwn: THandle; ALParam: LPARAM): BOOL; stdcall;
 var
   hwc: TCompRec;
   //FindWindowByPatterObj: TFindWindowByPatternObj;
@@ -373,14 +374,25 @@ begin
       Found := Found and (hwc.Text = '');
   end;
 
-  FindWindowByPatternObj.FoundByEnum := Found;
+  if Found then
+  begin
+    SetLength(FindWindowByPatternObj.ResultedControl, Length(FindWindowByPatternObj.ResultedControl) + 1);
+    FindWindowByPatternObj.ResultedControl[Length(FindWindowByPatternObj.ResultedControl) - 1] := hwc;
+  end;
+
+  FindWindowByPatternObj.FoundByEnum := Found or (Length(FindWindowByPatternObj.ResultedControl) > 0);
   Result := not Found; //if not Found, then continue searching  (a.k.a. continue calling this callback)         //To continue enumeration, the callback function must return TRUE; to stop enumeration, it must return FALSE.
   //MSDN Doc: To continue enumeration, the callback function must return TRUE; to stop enumeration, it must return FALSE.
+
+  if FindWindowByPatternObj.FindAllControls then
+    Result := True;
 end;
 
 
 //uses '*' as wildcard
-function FindWindowByCaptionOrClassPattern(AListOfControlTexts, AListOfControlClasses: TStringList; AMatchingMethods: TMatchingMethods; var hwc: TCompRec): Boolean;
+function FindWindowByCaptionOrClassPattern(AListOfControlTexts, AListOfControlClasses: TStringList; AMatchingMethods: TMatchingMethods; AFindAllControls: Boolean; var hwc: TCompRecArr): Boolean;
+var
+  i: Integer;
 begin
   FindWindowByPatternObj := TFindWindowByPatternObj.Create;
   try
@@ -388,6 +400,8 @@ begin
     FindWindowByPatternObj.ListOfControlTexts := AListOfControlTexts;
     FindWindowByPatternObj.ListOfControlClasses := AListOfControlClasses;
     FindWindowByPatternObj.MatchingMethods := AMatchingMethods;
+    FindWindowByPatternObj.FindAllControls := AFindAllControls;
+    SetLength(FindWindowByPatternObj.ResultedControl, 0);
 
     {$IFDEF Windows}
       //MessageBox(0, PChar('LParam: ' + IntToStr(LPARAM(FindWindowByPatterObj))), 'FindWindowByCaptionOrClassPattern', MB_ICONINFORMATION);
@@ -399,17 +413,20 @@ begin
     Result := FindWindowByPatternObj.FoundByEnum;
 
     if Result then
-      hwc := FindWindowByPatternObj.ResultedControl;
+    begin
+      SetLength(hwc, Length(FindWindowByPatternObj.ResultedControl));
+      for i := 0 to Length(hwc) - 1 do
+        hwc[i] := FindWindowByPatternObj.ResultedControl[i];
+    end;
   finally
     FindWindowByPatternObj.Free;
   end;
 end;
 
 
-function FindWindowOnScreenByCaptionOrClass(InputData: TFindControlInputData; AStopAllActionsOnDemand: PBoolean; out AResultedControl: TCompRec): Boolean;
+function FindWindowOnScreenByCaptionOrClass(InputData: TFindControlInputData; AStopAllActionsOnDemand: PBoolean; var AResultedControl: TCompRecArr): Boolean;
 var
   ListOfControlTexts, ListOfControlClasses: TStringList;
-  hwc: TCompRec;
 begin
   ListOfControlTexts := TStringList.Create;
   ListOfControlClasses := TStringList.Create;
@@ -419,9 +436,7 @@ begin
     ListOfControlTexts.Text := StringReplace(InputData.Text, InputData.TextSeparator, #13#10, [rfReplaceAll]);             //no fast replace here :( , because the separator can be anything
     ListOfControlClasses.Text := StringReplace(InputData.ClassName, InputData.ClassNameSeparator, #13#10, [rfReplaceAll]); //no fast replace here :( , because the separator can be anything
 
-    Result := FindWindowByCaptionOrClassPattern(ListOfControlTexts, ListOfControlClasses, InputData.MatchingMethods, hwc);
-    if Result then
-      AResultedControl := hwc;
+    Result := FindWindowByCaptionOrClassPattern(ListOfControlTexts, ListOfControlClasses, InputData.MatchingMethods, InputData.GetAllHandles, AResultedControl);
   finally
     ListOfControlTexts.Free;
     ListOfControlClasses.Free;
