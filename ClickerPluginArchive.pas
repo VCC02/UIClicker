@@ -274,12 +274,12 @@ begin
   if AArchiveStream.Size mod 32 <> 0 then
     raise Exception.Create('Decryption required padding.');  //For some reason, the archive is not the proper size, so it will require a larger size for decryption.
 
-  //FDecryptionPluginName should end up here, using the following format: <ArhiveName.dllarc>|<PluginName.dll>
+  //FDecryptionPluginName should end up here, using the following format: <ArchiveName.dllarc>|<PluginName.dll>
   FDecryptionArchiveName := Copy(FDecryptionPluginName, 1, Pos('|', FDecryptionPluginName) - 1);
   FDecryptionPluginName := Copy(FDecryptionPluginName, Pos('|', FDecryptionPluginName) + 1, MaxInt);
 
   {$IFDEF MemPlugins}
-    PluginIdx := GetPluginInMemFSIndex(FDecDecHashPluginInMemFSArr^, FDecryptionArchiveName);
+    PluginIdx := GetPluginInMemFSIndex(FDecDecHashPluginInMemFSArr^, FDecryptionArchiveName);  //FDecryptionArchiveName is ok here
     if PluginIdx = -1 then
       raise Exception.Create('Decryption plugin not found: ' + FDecryptionPluginName);
 

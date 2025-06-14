@@ -52,8 +52,8 @@ type
     procedure HandleOnEncryptionCleanup;
     procedure HandleOnCompress(APlainStream, AArchiveStream: TMemoryStream; ACompressionLevel: Integer);
     procedure HandleOnComputeArchiveHash(AArchiveStream: Pointer; AArchiveStreamSize: Int64; var AResultedHash: TArr32OfByte; AAdditionalInfo: string = '');
-    procedure SendGenericMemPluginArchiveFileToServer_SinglePlugin_HappyFlow(AFileName, AFileNameInsideArchive, ADecryptionPluginName, ADecompressionPluginName, AHashingPluginName: string; AUseComperssion: Boolean; AAdditionalInfo: string; AIsDecDecHash, ACreateCustomKey: Boolean; AExpectedError: string);
-    procedure SendMultiBitnessMemPluginArchiveFileToServer(AFileName, AFileNameInsideArchive, AConfigStringAsFile, AFileName_x32, AFileNameInsideArchive_x32, AConfigStringAsFile_x32, AFileName_x64, AFileNameInsideArchive_x64, AConfigStringAsFile_x64, ADecryptionPluginName, ADecompressionPluginName, AHashingPluginName: string; AUseComperssion: Boolean; AAdditionalInfo: string; AIsDecDecHash, ACreateCustomKey: Boolean; AExpectedError: string);
+    procedure SendGenericMemPluginArchiveFileToServer_SinglePlugin_HappyFlow(AFileName, AFileNameInsideArchive, ADecryptionPluginName, ADecompressionPluginName, AHashingPluginName: string; AUseCompression: Boolean; AAdditionalInfo: string; AIsDecDecHash, ACreateCustomKey: Boolean; AExpectedError: string);
+    procedure SendMultiBitnessMemPluginArchiveFileToServer(AFileName, AFileNameInsideArchive, AConfigStringAsFile, AFileName_x32, AFileNameInsideArchive_x32, AConfigStringAsFile_x32, AFileName_x64, AFileNameInsideArchive_x64, AConfigStringAsFile_x64, ADecryptionPluginName, ADecompressionPluginName, AHashingPluginName: string; AUseCompression: Boolean; AAdditionalInfo: string; AIsDecDecHash, ACreateCustomKey: Boolean; AExpectedError: string);
 
     procedure Test_SendMemPluginArchiveFileToServer_WithDecryptOnly_CfgKey(AUseCustomKey, AUseBadKey: Boolean; AExpectedError: string);
 
@@ -354,7 +354,7 @@ begin
 end;
 
 
-procedure TTestClickerClientMemPlugins.SendGenericMemPluginArchiveFileToServer_SinglePlugin_HappyFlow(AFileName, AFileNameInsideArchive, ADecryptionPluginName, ADecompressionPluginName, AHashingPluginName: string; AUseComperssion: Boolean; AAdditionalInfo: string; AIsDecDecHash, ACreateCustomKey: Boolean; AExpectedError: string);
+procedure TTestClickerClientMemPlugins.SendGenericMemPluginArchiveFileToServer_SinglePlugin_HappyFlow(AFileName, AFileNameInsideArchive, ADecryptionPluginName, ADecompressionPluginName, AHashingPluginName: string; AUseCompression: Boolean; AAdditionalInfo: string; AIsDecDecHash, ACreateCustomKey: Boolean; AExpectedError: string);
 var
   MemStream, ArchiveStream: TMemoryStream;
   FileNameWS, DecryptionPluginNameWS, DecompressionPluginNameWS, HashingPluginNameWS, AdditionalInfoWS: WideString;
@@ -381,10 +381,10 @@ begin
                                     //however, in this example, this mechanism is not used. The key is hardcoded. (same as in the example plugin)
     end;
 
-    if AUseComperssion then
+    if AUseCompression then
       Archive.OnCompress := HandleOnCompress;
 
-    Archive.CompressionLevel := 9 * Ord(AUseComperssion);
+    Archive.CompressionLevel := 9 * Ord(AUseCompression);
 
     Archive.OnComputeArchiveHash := HandleOnComputeArchiveHash;
     Archive.OpenArchive(ArchiveStream, True);
@@ -440,7 +440,7 @@ procedure TTestClickerClientMemPlugins.SendMultiBitnessMemPluginArchiveFileToSer
                                                                                     AFileName_x32, AFileNameInsideArchive_x32, AConfigStringAsFile_x32,
                                                                                     AFileName_x64, AFileNameInsideArchive_x64, AConfigStringAsFile_x64,
                                                                                     ADecryptionPluginName, ADecompressionPluginName, AHashingPluginName: string;
-                                                                                    AUseComperssion: Boolean;
+                                                                                    AUseCompression: Boolean;
                                                                                     AAdditionalInfo: string;
                                                                                     AIsDecDecHash, ACreateCustomKey: Boolean;
                                                                                     AExpectedError: string);
@@ -470,10 +470,10 @@ begin
                                     //however, in this example, this mechanism is not used. The key is hardcoded. (same as in the example plugin)
     end;
 
-    if AUseComperssion then
+    if AUseCompression then
       Archive.OnCompress := HandleOnCompress;
 
-    Archive.CompressionLevel := 9 * Ord(AUseComperssion);
+    Archive.CompressionLevel := 9 * Ord(AUseCompression);
 
     Archive.OnComputeArchiveHash := HandleOnComputeArchiveHash;
     Archive.OpenArchive(ArchiveStream, True);
