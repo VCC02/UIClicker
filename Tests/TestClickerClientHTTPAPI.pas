@@ -283,11 +283,18 @@ var
   ActionName: WideString;
   Response: string;
   Th: TClientThread;
+  SetVarToResetHandle: TClkSetVarOptions;
 begin
   GetDefaultPropertyValues_SetControlText(SetControlTextOptions);
   SetLength(Response, CMaxSharedStringLength);
 
   ActionName := 'My SetControlText action';
+  SetVarToResetHandle.ListOfVarNames := '$Control_Handle$';
+  SetVarToResetHandle.ListOfVarValues := '0';
+  SetVarToResetHandle.ListOfVarEvalBefore := '0';
+  SetVarToResetHandle.FailOnException := True;
+
+  ExpectSuccessfulAction(FastReplace_87ToReturn(ClickerActionsClient.ExecuteSetVarAction(CTestServerAddress, SetVarToResetHandle)));
 
   Th := AsyncExecTestTemplate(CTestDriverAddress, '$AppDir$\..\Tests\TestFiles\ClickDebuggingButton.clktmpl');
   try
