@@ -1284,7 +1284,7 @@ begin
     acClick: GetDefaultPropertyValues_Click(AAction.ClickOptions);
     acExecApp: GetDefaultPropertyValues_ExecApp(AAction.ExecAppOptions);
     acFindControl: GetDefaultPropertyValues_FindControl(AAction.FindControlOptions);
-    acFindSubControl: GetDefaultPropertyValues_FindControl(AAction.FindControlOptions);
+    acFindSubControl: GetDefaultPropertyValues_FindSubControl(AAction.FindSubControlOptions);
     acSetControlText: GetDefaultPropertyValues_SetControlText(AAction.SetTextOptions);
     acCallTemplate: GetDefaultPropertyValues_CallTemplate(AAction.CallTemplateOptions);
     acSleep: GetDefaultPropertyValues_Sleep(AAction.SleepOptions);
