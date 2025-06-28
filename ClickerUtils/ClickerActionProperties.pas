@@ -583,8 +583,8 @@ begin
   end;
 
   AFindControlOptions.MatchCriteria.SearchForControlMode := TSearchForControlMode(Temp_SearchForControlMode);
-  AFindControlOptions.MatchCriteria.WillMatchText := AListOfFindControlOptionsParams.Values['MatchCriteria.WillMatchText'] = '1';
-  AFindControlOptions.MatchCriteria.WillMatchClassName := AListOfFindControlOptionsParams.Values['MatchCriteria.WillMatchClassName'] = '1';
+  AFindControlOptions.MatchCriteria.WillMatchText := AListOfFindControlOptionsParams.Values['MatchCriteria.WillMatchText'] <> '0';
+  AFindControlOptions.MatchCriteria.WillMatchClassName := AListOfFindControlOptionsParams.Values['MatchCriteria.WillMatchClassName'] <> '0';
 
   AFindControlOptions.AllowToFail := AListOfFindControlOptionsParams.Values['AllowToFail'] = '1';
   AFindControlOptions.MatchText := AListOfFindControlOptionsParams.Values['MatchText'];
@@ -601,7 +601,19 @@ begin
   AFindControlOptions.InitialRectangle.RightOffset := AListOfFindControlOptionsParams.Values['InitialRectangle.RightOffset'];
   AFindControlOptions.InitialRectangle.BottomOffset := AListOfFindControlOptionsParams.Values['InitialRectangle.BottomOffset'];
 
-  AFindControlOptions.UseWholeScreen := AListOfFindControlOptionsParams.Values['UseWholeScreen'] = '1';
+  if AFindControlOptions.InitialRectangle.Left = '' then
+    AFindControlOptions.InitialRectangle.Left := '$Control_Left$'; //can still be set to '0' if that's the purpose
+
+  if AFindControlOptions.InitialRectangle.Top = '' then
+    AFindControlOptions.InitialRectangle.Top := '$Control_Top$'; //can still be set to '0' if that's the purpose
+
+  if AFindControlOptions.InitialRectangle.Right = '' then
+    AFindControlOptions.InitialRectangle.Right := '$Control_Right$'; //can still be set to '0' if that's the purpose
+
+  if AFindControlOptions.InitialRectangle.Bottom = '' then
+    AFindControlOptions.InitialRectangle.Bottom := '$Control_Bottom$'; //can still be set to '0' if that's the purpose
+
+  AFindControlOptions.UseWholeScreen := AListOfFindControlOptionsParams.Values['UseWholeScreen'] <> '0';
   AFindControlOptions.WaitForControlToGoAway := AListOfFindControlOptionsParams.Values['WaitForControlToGoAway'] = '1';
   AFindControlOptions.StartSearchingWithCachedControl := AListOfFindControlOptionsParams.Values['StartSearchingWithCachedControl'] = '1';
   AFindControlOptions.CachedControlLeft := AListOfFindControlOptionsParams.Values['CachedControlLeft'];
@@ -620,7 +632,6 @@ end;
 
 function SetFindSubControlActionProperties(AListOfFindSubControlOptionsParams: TStrings; AOnAddToLog: TOnAddToLog; out AFindSubControlOptions: TClkFindSubControlOptions; out AActionOptions: TClkActionOptions): string; //AOnAddToLog can be set to nil if not used.
 var
-  Temp_SearchForControlMode: Integer;
   Temp_MatchBitmapTextCount: Integer;
   Temp_MatchBitmapAlgorithm: Integer;
   Temp_ImageSource: Integer;
@@ -633,13 +644,6 @@ var
   Prefix: string;
 begin
   Result := '';
-
-  Temp_SearchForControlMode := StrToIntDef(AListOfFindSubControlOptionsParams.Values['MatchCriteria.SearchForControlMode'], 0);
-  if (Temp_SearchForControlMode < 0) or (Temp_SearchForControlMode > Ord(High(TSearchForControlMode))) then
-  begin
-    Result := 'MatchCriteria.SearchForControlMode is out of range.';
-    Exit;
-  end;
 
   Temp_MatchBitmapTextCount := StrToIntDef(AListOfFindSubControlOptionsParams.Values['MatchBitmapText.Count'], 0);
   if (Temp_MatchBitmapTextCount < 0) or (Temp_MatchBitmapTextCount > 100) then
@@ -684,7 +688,7 @@ begin
     Exit;
   end;
 
-  AFindSubControlOptions.MatchCriteria.WillMatchBitmapText := AListOfFindSubControlOptionsParams.Values['MatchCriteria.WillMatchBitmapText'] = '1';
+  AFindSubControlOptions.MatchCriteria.WillMatchBitmapText := AListOfFindSubControlOptionsParams.Values['MatchCriteria.WillMatchBitmapText'] <> '0';
   AFindSubControlOptions.MatchCriteria.WillMatchBitmapFiles := AListOfFindSubControlOptionsParams.Values['MatchCriteria.WillMatchBitmapFiles'] = '1';
   AFindSubControlOptions.MatchCriteria.WillMatchPrimitiveFiles := AListOfFindSubControlOptionsParams.Values['MatchCriteria.WillMatchPrimitiveFiles'] = '1';
 
@@ -775,6 +779,18 @@ begin
   AFindSubControlOptions.InitialRectangle.RightOffset := AListOfFindSubControlOptionsParams.Values['InitialRectangle.RightOffset'];
   AFindSubControlOptions.InitialRectangle.BottomOffset := AListOfFindSubControlOptionsParams.Values['InitialRectangle.BottomOffset'];
 
+  if AFindSubControlOptions.InitialRectangle.Left = '' then
+    AFindSubControlOptions.InitialRectangle.Left := '$Control_Left$'; //can still be set to '0' if that's the purpose
+
+  if AFindSubControlOptions.InitialRectangle.Top = '' then
+    AFindSubControlOptions.InitialRectangle.Top := '$Control_Top$'; //can still be set to '0' if that's the purpose
+
+  if AFindSubControlOptions.InitialRectangle.Right = '' then
+    AFindSubControlOptions.InitialRectangle.Right := '$Control_Right$'; //can still be set to '0' if that's the purpose
+
+  if AFindSubControlOptions.InitialRectangle.Bottom = '' then
+    AFindSubControlOptions.InitialRectangle.Bottom := '$Control_Bottom$'; //can still be set to '0' if that's the purpose
+
   AFindSubControlOptions.UseWholeScreen := AListOfFindSubControlOptionsParams.Values['UseWholeScreen'] = '1';
   AFindSubControlOptions.ColorError := AListOfFindSubControlOptionsParams.Values['ColorError'];  //string, to allow var replacements
   AFindSubControlOptions.AllowedColorErrorCount := AListOfFindSubControlOptionsParams.Values['AllowedColorErrorCount'];  //Number of pixels allowed to mismatch
@@ -797,11 +813,20 @@ begin
   AFindSubControlOptions.ImageSourceFileNameLocation := TImageSourceFileNameLocation(Temp_ImageSourceFileNameLocation);
 
   AFindSubControlOptions.PrecisionTimeout := AListOfFindSubControlOptionsParams.Values['PrecisionTimeout'] = '1';
-  AFindSubControlOptions.FullBackgroundImageInResult := AListOfFindSubControlOptionsParams.Values['FullBackgroundImageInResult'] = '1';
+  AFindSubControlOptions.FullBackgroundImageInResult := AListOfFindSubControlOptionsParams.Values['FullBackgroundImageInResult'] <> '0';
 
   AFindSubControlOptions.MatchByHistogramSettings.MinPercentColorMatch := AListOfFindSubControlOptionsParams.Values['MatchByHistogramSettings.MinPercentColorMatch'];
   AFindSubControlOptions.MatchByHistogramSettings.MostSignificantColorCountInSubBmp := AListOfFindSubControlOptionsParams.Values['MatchByHistogramSettings.MostSignificantColorCountInSubBmp'];
   AFindSubControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp := AListOfFindSubControlOptionsParams.Values['MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp'];
+
+  if AFindSubControlOptions.MatchByHistogramSettings.MinPercentColorMatch = '' then
+    AFindSubControlOptions.MatchByHistogramSettings.MinPercentColorMatch := '50';
+
+  if AFindSubControlOptions.MatchByHistogramSettings.MostSignificantColorCountInSubBmp = '' then
+    AFindSubControlOptions.MatchByHistogramSettings.MostSignificantColorCountInSubBmp := '10';
+
+  if AFindSubControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp = '' then
+    AFindSubControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp := '15';
 
   AFindSubControlOptions.EvaluateTextCount := AListOfFindSubControlOptionsParams.Values['EvaluateTextCount'];
   AFindSubControlOptions.CropFromScreenshot := AListOfFindSubControlOptionsParams.Values['CropFromScreenshot'] = '1';
