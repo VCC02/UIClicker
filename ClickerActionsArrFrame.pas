@@ -583,6 +583,7 @@ type
     function EncodeTemplatePath(APath: string): string;
 
     procedure PrepareFilesInServer;
+    procedure ExecActionFromSrvModule;
     function ExecuteActionByContent(var AAllActions: TClkActionsRecArr; AActionIndex: Integer): Boolean;
     function ExecuteActionAtIndex(AActionIndex: Integer): Boolean; //can be called by a server module (used when Clicker is in server mode)
     function LocalOnExecuteRemoteActionAtIndex(AActionIndex, AStackLevel: Integer; AVarReplacements: TStringList; AIsDebugging: Boolean): Boolean;
@@ -2619,7 +2620,8 @@ begin
   FFileLocationOfDepsIsMem := True;
   FDebugging := AIsDebuggingFromClient;  // set a flag that tells the player to wait for next "step over" - the last action of a called template should not wait for debugger
   FContinuePlayingBySteppingInto := AIsDebuggingFromClient;
-  tmrExecActionFromSrvModule.Enabled := True;
+
+  ExecActionFromSrvModule; //tmrExecActionFromSrvModule.Enabled := True;
 end;
 
 
@@ -7634,14 +7636,11 @@ begin
 end;
 
 
-//called in server mode
-procedure TfrClickerActionsArr.tmrExecActionFromSrvModuleTimer(Sender: TObject);
+procedure TfrClickerActionsArr.ExecActionFromSrvModule;  //called in server mode
 var
   CurrentNode: PVirtualNode;
   Err: string;
 begin
-  tmrExecActionFromSrvModule.Enabled := False;
-
   if FStackLevel = 0 then
   begin
     FStopAllActionsOnDemand := False;
@@ -7734,6 +7733,14 @@ begin
     FExecutingActionFromRemote := False;
     FFileLocationOfDepsIsMem := False;  //reset here, because the server might switch back to local or client, which uses local files
   end;
+end;
+
+
+//called in server mode
+procedure TfrClickerActionsArr.tmrExecActionFromSrvModuleTimer(Sender: TObject);
+begin
+  tmrExecActionFromSrvModule.Enabled := False;
+  ExecActionFromSrvModule;
 end;
 
 
