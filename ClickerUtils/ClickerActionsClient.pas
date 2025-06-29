@@ -233,11 +233,13 @@ function SendPluginCmd(ARemoteAddress: string; APluginCmd: string; AStackLevel: 
 function ExecuteClickAction(ARemoteAddress: string; AClickOptions: TClkClickOptions; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
 function ExecuteExecAppAction(ARemoteAddress: string; AExecAppOptions: TClkExecAppOptions; AActionName: string; AActionTimeout: Integer; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
 function ExecuteFindControlAction(ARemoteAddress: string; AFindControlOptions: TClkFindControlOptions; AActionName: string; AActionTimeout: Integer; AFileLocation: string; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
+function AsyncExecuteFindControlAction(ARemoteAddress: string; AFindControlOptions: TClkFindControlOptions; AActionName: string; AActionTimeout: Integer; AFileLocation: string; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): TClientThread;
 function ExecuteFindSubControlAction(ARemoteAddress: string; AFindSubControlOptions: TClkFindSubControlOptions; AActionName: string; AActionTimeout: Integer; AFileLocation: string; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
 function ExecuteSetControlTextAction(ARemoteAddress: string; ASetTextOptions: TClkSetTextOptions; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
 function ExecuteCallTemplateAction(ARemoteAddress: string; ACallTemplateOptions: TClkCallTemplateOptions; AIsDebugging, AUseLocalDebugger: Boolean; AFileLocation: string; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
 function AsyncExecuteCallTemplateAction(ARemoteAddress: string; ACallTemplateOptions: TClkCallTemplateOptions; AIsDebugging, AUseLocalDebugger: Boolean; AFileLocation: string; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): TClientThread;
 function ExecuteSleepAction(ARemoteAddress: string; ASleepOptions: TClkSleepOptions; AActionName: string; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
+function AsyncExecuteSleepAction(ARemoteAddress: string; ASleepOptions: TClkSleepOptions; AActionName: string; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): TClientThread;
 function ExecuteSetVarAction(ARemoteAddress: string; ASetVarOptions: TClkSetVarOptions; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
 function ExecuteWindowOperationsAction(ARemoteAddress: string; AWindowOperationsOptions: TClkWindowOperationsOptions; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
 function ExecuteLoadSetVarFromFileAction(ARemoteAddress: string; ALoadSetVarFromFileOptions: TClkLoadSetVarFromFileOptions; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
@@ -797,6 +799,21 @@ begin
 end;
 
 
+function AsyncExecuteFindControlAction(ARemoteAddress: string; AFindControlOptions: TClkFindControlOptions; AActionName: string; AActionTimeout: Integer; AFileLocation: string; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): TClientThread;
+begin
+  Result := AsyncSendTextRequestToServer(ARemoteAddress + CRECmd_ExecuteFindControlAction + '?' +
+                                         CREParam_StackLevel + '=0' + '&' +   //use the main editor
+                                         CREParam_UseServerDebugging + '=' + IntToStr(Ord(AUseServerDebugging)) + '&' +
+                                         GetFindControlActionProperties(AFindControlOptions) + '&' +
+
+                                         CPropertyName_ActionName + '=' + AActionName + '&' +
+                                         CPropertyName_ActionTimeout + '=' + IntToStr(AActionTimeout) + '&' +
+                                         CREParam_FileLocation + '=' + AFileLocation,
+                                         ACallAppProcMsg
+                                         );
+end;
+
+
 function ExecuteFindSubControlAction(ARemoteAddress: string; AFindSubControlOptions: TClkFindSubControlOptions; AActionName: string; AActionTimeout: Integer; AFileLocation: string; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
 begin
   Result := SendTextRequestToServer(ARemoteAddress + CRECmd_ExecuteFindSubControlAction + '?' +
@@ -857,6 +874,18 @@ begin
                                     CPropertyName_ActionName + '=' + AActionName,
                                     ACallAppProcMsg
                                     );
+end;
+
+
+function AsyncExecuteSleepAction(ARemoteAddress: string; ASleepOptions: TClkSleepOptions; AActionName: string; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): TClientThread;
+begin
+  Result := AsyncSendTextRequestToServer(ARemoteAddress + CRECmd_ExecuteSleepAction + '?' +
+                                         CREParam_StackLevel + '=0' + '&' +   //use the main editor
+                                         CREParam_UseServerDebugging + '=' + IntToStr(Ord(AUseServerDebugging)) + '&' +
+                                         GetSleepActionProperties(ASleepOptions) + '&' +
+                                         CPropertyName_ActionName + '=' + AActionName,
+                                         ACallAppProcMsg
+                                         );
 end;
 
 

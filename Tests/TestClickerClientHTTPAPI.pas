@@ -30,7 +30,7 @@ interface
 
 uses
   LCLIntf, Classes, SysUtils, TestHTTPAPI, fpcunit, testregistry, Expectations,
-  ClickerUtils, ClickerActionsClient, MemArchive;
+  ClickerUtils, ClickerActionsClient;
 
 type
   TTestClickerClientHTTPAPI = class(TTestHTTPAPI)
@@ -81,7 +81,7 @@ implementation
 
 
 uses
-  Controls, ClickerActionProperties, DCPsha256, DCPmd5,
+  Controls, ClickerActionProperties, //DCPsha256, DCPmd5,
   Graphics, DllUtils, ClickerClientAPI, ClickerClientIntf, ShellAPI;
 
 
@@ -518,7 +518,7 @@ var
   Response: string;
   ClickOptions: TClkClickOptions;
   ClickOptionsAPI: TClkClickOptionsAPI;
-  Th: TClientThread;
+  //Th: TClientThread;
 begin
   GetDefaultPropertyValues_Click(ClickOptions);
   SetLength(Response, CMaxSharedStringLength);
@@ -551,7 +551,7 @@ var
   Response: string;
   ExecAppOptions: TClkExecAppOptions;
   ExecAppOptionsAPI: TClkExecAppOptionsAPI;
-  Th: TClientThread;
+  //Th: TClientThread;
 begin
   GetDefaultPropertyValues_ExecApp(ExecAppOptions);
   SetLength(Response, CMaxSharedStringLength);
@@ -583,7 +583,7 @@ var
   FindControlOptionsAPI: TClkFindControlOptionsAPI;
   MatchBitmapTextRecAPI: TMatchBitmapTextRecAPI;
   FindControlMatchBitmapTextAPIArr: TClkFindControlMatchBitmapTextAPIArr;
-  Th: TClientThread;
+  //Th: TClientThread;
 begin
   GetDefaultPropertyValues_FindControl(FindControlOptions);
   SetLength(Response, CMaxSharedStringLength);
@@ -617,7 +617,7 @@ var
   FindSubControlOptionsAPI: TClkFindSubControlOptionsAPI;
   MatchBitmapTextRecAPI: TMatchBitmapTextRecAPI;
   FindSubControlMatchBitmapTextAPIArr: TClkFindControlMatchBitmapTextAPIArr;
-  Th: TClientThread;
+  //Th: TClientThread;
 begin
   GetDefaultPropertyValues_FindSubControl(FindSubControlOptions);
   SetLength(Response, CMaxSharedStringLength);
@@ -656,7 +656,7 @@ var
   Response: string;
   SetControlTextOptions: TClkSetTextOptions;
   SetControlTextOptionsAPI: TClkSetTextOptionsAPI;
-  Th: TClientThread;
+  //Th: TClientThread;
 begin
   GetDefaultPropertyValues_SetControlText(SetControlTextOptions);
   SetLength(Response, CMaxSharedStringLength);
@@ -686,7 +686,7 @@ var
   Response: string;
   CallTemplateOptions: TClkCallTemplateOptions;
   CallTemplateOptionsAPI: TClkCallTemplateOptionsAPI;
-  Th: TClientThread;
+  //Th: TClientThread;
 begin
   GetDefaultPropertyValues_CallTemplate(CallTemplateOptions);
   SetLength(Response, CMaxSharedStringLength);
@@ -716,7 +716,7 @@ var
   Response: string;
   SleepOptions: TClkSleepOptions;
   SleepOptionsAPI: TClkSleepOptionsAPI;
-  Th: TClientThread;
+  //Th: TClientThread;
 begin
   GetDefaultPropertyValues_Sleep(SleepOptions);
   SetLength(Response, CMaxSharedStringLength);
@@ -746,7 +746,7 @@ var
   Response: string;
   SetVarOptions: TClkSetVarOptions;
   SetVarOptionsAPI: TClkSetVarOptionsAPI;
-  Th: TClientThread;
+  //Th: TClientThread;
 begin
   GetDefaultPropertyValues_SetVar(SetVarOptions);
   SetLength(Response, CMaxSharedStringLength);
@@ -776,7 +776,7 @@ var
   Response: string;
   WindowOperationsOptions: TClkWindowOperationsOptions;
   WindowOperationsOptionsAPI: TClkWindowOperationsOptionsAPI;
-  Th: TClientThread;
+  //Th: TClientThread;
 begin
   GetDefaultPropertyValues_WindowOperations(WindowOperationsOptions);
   SetLength(Response, CMaxSharedStringLength);
@@ -806,7 +806,7 @@ var
   Response: string;
   LoadSetVarFromFileOptions: TClkLoadSetVarFromFileOptions;
   LoadSetVarFromFileOptionsAPI: TClkLoadSetVarFromFileOptionsAPI;
-  Th: TClientThread;
+  //Th: TClientThread;
 begin
   GetDefaultPropertyValues_LoadSetVarFromFile(LoadSetVarFromFileOptions);
   SetLength(Response, CMaxSharedStringLength);
@@ -836,7 +836,7 @@ var
   Response: string;
   SaveSetVarToFileOptions: TClkSaveSetVarToFileOptions;
   SaveSetVarToFileOptionsAPI: TClkSaveSetVarToFileOptionsAPI;
-  Th: TClientThread;
+  //Th: TClientThread;
 begin
   GetDefaultPropertyValues_SaveSetVarToFile(SaveSetVarToFileOptions);
   SetLength(Response, CMaxSharedStringLength);
@@ -866,7 +866,7 @@ var
   Response: string;
   PluginOptions: TClkPluginOptions;
   PluginOptionsAPI: TClkPluginOptionsAPI;
-  Th: TClientThread;
+  //Th: TClientThread;
 begin
   GetDefaultPropertyValues_Plugin(PluginOptions);
   SetLength(Response, CMaxSharedStringLength);
@@ -896,7 +896,7 @@ var
   Response: string;
   EditTemplateOptions: TClkEditTemplateOptions;
   EditTemplateOptionsAPI: TClkEditTemplateOptionsAPI;
-  Th: TClientThread;
+  //Th: TClientThread;
 begin
   GetDefaultPropertyValues_EditTemplate(EditTemplateOptions);
   SetLength(Response, CMaxSharedStringLength);

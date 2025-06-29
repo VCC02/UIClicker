@@ -62,6 +62,10 @@ type
     procedure Test_ExecuteFindControlAction_UIClickerMain_WrongClass;
     procedure Test_ExecuteFindControlAction_UIClickerMain_WrongClassAllowToFail;
 
+    procedure Test_ExecuteFindControlAction_UIClickerMain_WhileExecutingSleep;
+    procedure Test_ExecuteFindControlAction_UIClickerMain_WhileExecutingFindControl_Actions;
+    procedure Test_ExecuteFindControlAction_UIClickerMain_WhileExecutingFindControl_Actions_WhileExecutingSleep;
+
     procedure Test_ExecuteFindSubControlAction_UIClickerMain_BitnessLabel;
     procedure Test_ExecuteFindSubControlAction_UIClickerMain_BitnessLabelWithCropping;
     procedure Test_ExecuteFindSubControlAction_UIClickerMain_BitnessLabelWithBadCropping;
@@ -309,6 +313,91 @@ begin
     ExpectAllowedFailedAction(ListOfVars);
   finally
     ListOfVars.Free;
+  end;
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecuteFindControlAction_UIClickerMain_WhileExecutingSleep;
+var
+  Response: string;
+  MainFindControlOptions: TClkFindControlOptions;
+  SleepOptions: TClkSleepOptions;
+  Th: TClientThread;
+begin
+  GenerateFindControlOptionsForMainUIClickerWindow(MainFindControlOptions, False);
+  SleepOptions.Value := '2000';
+
+  Th := AsyncExecuteSleepAction(TestServerAddress, SleepOptions, 'Long sleep', True, False);
+  try
+    Response := FastReplace_87ToReturn(ExecuteFindControlAction(TestServerAddress, MainFindControlOptions, 'TestFind UIClicker Main', 2000, CREParam_FileLocation_ValueMem));
+    ExpectSuccessfulAction(Response);
+
+    WaitForServerResponse(Th, True);
+    ExpectSuccessfulAction(FastReplace_87ToReturn(Th.Result));
+  finally
+    Th.Free;
+  end;
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecuteFindControlAction_UIClickerMain_WhileExecutingFindControl_Actions;
+var                                                     //This test was used to verify a failed action. Hhowever, there are race conditions on setting exec results in UIClicker.
+  Response: string;
+  MainFindControlOptions: TClkFindControlOptions;
+  ActionsFindControlOptions: TClkFindControlOptions;
+  Th: TClientThread;
+begin
+  GenerateFindControlOptionsForMainUIClickerWindow(MainFindControlOptions, False);
+  GetDefaultPropertyValues_FindControl(ActionsFindControlOptions);
+  ActionsFindControlOptions.MatchText := 'UI Clicker Actions';
+  ActionsFindControlOptions.MatchClassName := 'Window';
+
+  Th := AsyncExecuteFindControlAction(TestServerAddress, ActionsFindControlOptions, 'Actions FindControl', 3000, CREParam_FileLocation_ValueMem, True, False);
+  try
+    Sleep(500); //this should not be needed after implementing exec serialization
+    Response := FastReplace_87ToReturn(ExecuteFindControlAction(TestServerAddress, MainFindControlOptions, 'TestFind UIClicker Main', 2000, CREParam_FileLocation_ValueMem));
+    ExpectSuccessfulAction(Response);
+
+    WaitForServerResponse(Th, True);
+    ExpectSuccessfulAction(FastReplace_87ToReturn(Th.Result), 'Actions');
+  finally
+    Th.Free;
+  end;
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecuteFindControlAction_UIClickerMain_WhileExecutingFindControl_Actions_WhileExecutingSleep;
+var                                                //Still flaky. It depends on how fast the first ExecuteFindControlAction finds the window.
+  Response: string;                                //The test should be fine after implementing execution serialization.
+  MainFindControlOptions: TClkFindControlOptions;
+  ActionsFindControlOptions: TClkFindControlOptions;
+  SleepOptions: TClkSleepOptions;
+  Th, SleepTh: TClientThread;
+begin
+  GenerateFindControlOptionsForMainUIClickerWindow(MainFindControlOptions, False);
+  GetDefaultPropertyValues_FindControl(ActionsFindControlOptions);
+  ActionsFindControlOptions.MatchText := 'UI Clicker Actions';
+  ActionsFindControlOptions.MatchClassName := 'Window';
+  SleepOptions.Value := '5000';
+
+  SleepTh := AsyncExecuteSleepAction(TestServerAddress, SleepOptions, 'Long sleep', True, False);
+  try
+    Th := AsyncExecuteFindControlAction(TestServerAddress, ActionsFindControlOptions, 'Actions FindControl', 4000, CREParam_FileLocation_ValueMem, True, False);
+    try
+      Sleep(500);  //this should not be needed after implementing exec serialization
+      Response := FastReplace_87ToReturn(ExecuteFindControlAction(TestServerAddress, MainFindControlOptions, 'TestFind UIClicker Main', 3000, CREParam_FileLocation_ValueMem));
+      ExpectSuccessfulAction(Response, '.Find.Main');
+
+      WaitForServerResponse(Th, True);
+      ExpectSuccessfulAction(FastReplace_87ToReturn(Th.Result), '.Find.Actions');    //the error status might be cleared, so a failed action may not be expected
+    finally
+      Th.Free;
+    end;
+
+    WaitForServerResponse(SleepTh, True);
+    ExpectSuccessfulAction(FastReplace_87ToReturn(SleepTh.Result), '.Sleep.');
+  finally
+    SleepTh.Free;
   end;
 end;
 
@@ -1170,13 +1259,13 @@ end;
 
 
 procedure TTestLowLevelHTTPAPI.Test_ExecutePlugin_BadPlugin_InvalidExe;
-const
-  CVarName = '$ExecAction_Err$';
-  CVarNewValue = 'Invalid plugin at: ';
-  CVarInitValue = 'dummy';
-var
-  PluginOptions: TClkPluginOptions;
-  IniPath: string;
+//const
+//  CVarName = '$ExecAction_Err$';
+//  CVarNewValue = 'Invalid plugin at: ';
+//  CVarInitValue = 'dummy';
+//var
+//  PluginOptions: TClkPluginOptions;
+//  IniPath: string;
 begin
   //if GetVarValueFromServer('$OSBitness$') = 'win32' then
   //begin

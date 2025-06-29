@@ -668,7 +668,10 @@ end;
 procedure TActionExecution.SetLastActionStatus(AActionResult, AAlowedToFail: Boolean);
 begin
   if AActionResult then
-    SetActionVarValue('$LastAction_Status$', CActionStatusStr[asSuccessful])
+  begin
+    SetActionVarValue('$LastAction_Status$', CActionStatusStr[asSuccessful]);
+    SetActionVarValue('$ExecAction_Err$', ''); //This might be a bit of a breaking change, but without clearing this var, it makes no sense to still have an error.
+  end
   else
   begin
     if AAlowedToFail then
