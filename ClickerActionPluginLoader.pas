@@ -115,11 +115,17 @@ type
                                  AOnLoadPluginFromInMemFS: TOnLoadPluginFromInMemFS;
                                  AOnUpdatePropertyIcons: TOnUpdatePropertyIcons;
                                  AOnAddToLog: TOnAddToLog): Boolean;
+
+    function LoadToEditProperty(APath: string;
+                                AOnLoadPluginFromInMemFS: TOnLoadPluginFromInMemFS;
+                                AOnAddToLog: TOnAddToLog): Boolean;
+
     function Unload(AOnAddToLog: TOnAddToLog): Boolean;
 
     function GetAPIVersion: DWord;
     function GetListOfProperties: string;
     function ExecutePlugin(AListOfPropertiesAndValues: string): Boolean;
+    function EditProperty(APropertyIndex: Integer; ACurrentValue: string; out ANewValue: string): Boolean;
   end;
 
   PActionPlugin = ^TActionPlugin;
@@ -1081,6 +1087,136 @@ begin
 end;
 
 
+function TActionPlugin.LoadToEditProperty(APath: string;
+                                          AOnLoadPluginFromInMemFS: TOnLoadPluginFromInMemFS;
+                                          AOnAddToLog: TOnAddToLog): Boolean;
+var
+  PluginLocationInfo: string;
+
+  {$IFDEF MemPlugins}
+    MemLoader: TDynMemLib;
+    LibStream: TMemoryStream;
+  {$ENDIF}
+begin
+  Result := False;
+  OnLoadPluginFromInMemFS := AOnLoadPluginFromInMemFS;
+  OnAddToLog := AOnAddToLog;
+
+  if Loaded then
+    Unload(AOnAddToLog);
+
+  Path := APath;
+  PluginLocationInfo := '';
+
+  DoAddToLog('Loading plugin for editing a property...');
+
+  {$IFDEF MemPlugins}
+    if IsMemPluginPath(Path) then
+    begin
+      MemLoader := TDynMemLib.Create;
+      PluginHandle := UInt64(MemLoader);
+
+      LibStream := TMemoryStream.Create;
+      try
+        if not DoOnLoadPluginFromInMemFS(LibStream, Path) then
+        begin
+          OnAddToLog('Plugin not found in InMem file system: ' + Path);
+          Loaded := False;
+        end
+        else
+        begin
+          try
+            LibStream.Position := 0;
+            Loaded := MemLoader.MemLoadLibrary(LibStream.Memory);
+          except
+            on E: Exception do
+            begin
+              Loaded := False;
+              OnAddToLog('Cannot load plugin from memory. ' + E.Message);
+            end;
+          end;
+        end;
+      finally
+        LibStream.Free;
+      end;
+
+      PluginLocationInfo := ' from InMem file system';
+    end
+    else
+    begin
+      PluginHandle := Windows.LoadLibrary(PChar(Path));  //LoadLibraryA
+      Loaded := PluginHandle > 0;
+      PluginLocationInfo := ' from disk';
+    end;
+  {$ELSE}
+    {$IFDEF Windows}
+      PluginHandle := Windows.LoadLibrary(PChar(Path));  //LoadLibraryA
+    {$ELSE}
+      PluginHandle := LoadLibrary(PChar(Path));  //LoadLibraryA
+    {$ENDIF}
+
+    Loaded := PluginHandle > 0;
+  {$ENDIF}
+
+  if Loaded then
+  begin
+    Err := '';
+    DoAddToLog('Plugin loaded' + PluginLocationInfo + ', with handle ' + IntToStr(PluginHandle) + ' and path: ' + Path);
+
+    {$IFDEF MemPlugins}
+      if IsMemPluginPath(APath) then
+        Func.EditPropertyFunc := MemLoader.MemGetProcAddress('EditProperty')
+      else
+        Func.EditPropertyFunc := GetProcedureAddress(PluginHandle, 'EditProperty');
+    {$ELSE}
+      Func.EditPropertyFunc := GetProcedureAddress(PluginHandle, 'EditProperty');
+    {$ENDIF}
+
+    if @Func.EditPropertyFunc = nil then
+    begin
+      Err := 'Cannot get address of EditProperty';
+      Unload(AOnAddToLog);
+      Exit;
+    end;
+
+    {$IFDEF MemPlugins}
+      if IsMemPluginPath(APath) then
+        Func.GetAPIVersionFunc := MemLoader.MemGetProcAddress('GetAPIVersion')
+      else
+        Func.GetAPIVersionFunc := GetProcedureAddress(PluginHandle, 'GetAPIVersion');
+    {$ELSE}
+      Func.GetAPIVersionFunc := GetProcedureAddress(PluginHandle, 'GetAPIVersion');
+    {$ENDIF}
+
+    if @Func.GetAPIVersionFunc = nil then
+    begin
+      Err := 'Cannot get address of GetAPIVersion.';
+      Unload(AOnAddToLog);
+      Exit;
+    end;
+
+    if GetAPIVersion <> CActionPlugin_APIVersion then
+    begin
+      Err := 'The plugin''s API vesion (' + IntToStr(GetAPIVersion) + ') does not match UIClicker''s API version (' + IntToStr(CActionPlugin_APIVersion) + ').';
+      Unload(AOnAddToLog);
+      Exit;
+    end;
+
+    //Set other events here if required.
+  end
+  else
+  begin
+    Err := 'Invalid plugin at: "' + Path + '".';
+    if Path = '' then
+      Err := Err + CMustSetPluginFileNameMsg;
+
+    Exit;
+  end;
+
+  Result := True;
+end;
+
+
 function TActionPlugin.Unload(AOnAddToLog: TOnAddToLog): Boolean;
 {$IFDEF MemPlugins}
   var
@@ -1232,6 +1368,21 @@ begin
         DoAddToLog(E.Message);
     end;
   end;
+end;
+
+
+function TActionPlugin.EditProperty(APropertyIndex: Integer; ACurrentValue: string; out ANewValue: string): Boolean;
+var
+  NewLen: DWord;
+begin
+  if @Func.EditPropertyFunc = nil then
+    raise Exception.Create('Plugin function not set: EditPropertyFunc');
+
+  ANewValue := '';
+  SetLength(ANewValue, CMaxSharedStringLength);
+  Result := Func.EditPropertyFunc(APropertyIndex, @ACurrentValue[1], @ANewValue[1], @NewLen);
+
+  SetLength(ANewValue, NewLen);
 end;
 
 

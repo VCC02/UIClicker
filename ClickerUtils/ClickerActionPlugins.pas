@@ -94,17 +94,22 @@ type
                             AOnActionPlugin_InMemFS: TOnActionPlugin_InMemFS
                             ): Boolean; cdecl;
 
+  TEditProperty = function(APropertyIndex: Integer;
+                           ACurrentValue: Pointer;
+                           ANewValue: Pointer;
+                           ALenOfNewValue: PDWord): Boolean; cdecl;
 
   TActionPluginFunc = record
     GetAPIVersionFunc: TGetAPIVersion;
     GetListOfPropertiesProc: TGetListOfProperties;
     //GetListOfDebugPoints: TGetListOfDebugPoints;
     ExecutePluginFunc: TExecutePlugin;
+    EditPropertyFunc: TEditProperty;
   end;
 
 
 const
-  CActionPlugin_APIVersion = 8;
+  CActionPlugin_APIVersion = 9;
   CActionPlugin_ExecutionResultErrorVar = '$PluginError$';
   CActionPlugin_DebuggingVar = '$PluginDebugging$';
   CBeforePluginExecution_DbgLineContent = 'Before plugin execution.';

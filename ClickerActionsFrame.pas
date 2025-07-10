@@ -677,6 +677,7 @@ type
     procedure OIArrowEditorClick_ActionSpecific(AEditingAction: PClkActionRec; ALiveEditingActionType: TClkAction; ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer);
     procedure HandleOnOIArrowEditorClick(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer);
 
+    function ResolveTemplatePath(APath: string; ACustomSelfTemplateDir: string = ''; ACustomAppDir: string = ''): string;
     procedure OIUserEditorClick_ActionSpecific(AEditingAction: PClkActionRec; ALiveEditingActionType: TClkAction; ACategoryIndex, APropertyIndex, AItemIndex: Integer; var ARepaintValue: Boolean);
     procedure HandleOnOIUserEditorClick(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; var ARepaintValue: Boolean);
 
@@ -8860,10 +8861,29 @@ begin
 end;
 
 
+function TfrClickerActions.ResolveTemplatePath(APath: string; ACustomSelfTemplateDir: string = ''; ACustomAppDir: string = ''): string;
+begin
+  Result := StringReplace(APath, '$TemplateDir$', FFullTemplatesDir, [rfReplaceAll]);
+
+  //if ACustomSelfTemplateDir = '' then
+  //  Result := StringReplace(Result, '$SelfTemplateDir$', ExtractFileDir(FFileName), [rfReplaceAll])
+  //else
+  //  Result := StringReplace(Result, '$SelfTemplateDir$', ACustomSelfTemplateDir, [rfReplaceAll]);
+
+  if ACustomAppDir = '' then
+    Result := StringReplace(Result, '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll])
+  else
+    Result := StringReplace(Result, '$AppDir$', ACustomAppDir, [rfReplaceAll]);
+end;
+
+
 procedure TfrClickerActions.OIUserEditorClick_ActionSpecific(AEditingAction: PClkActionRec; ALiveEditingActionType: TClkAction; ACategoryIndex, APropertyIndex, AItemIndex: Integer; var ARepaintValue: Boolean);
 var
   EditingActionType: Integer;
   Condition: string;
+  ActionPlugin: TActionPlugin;
+  ResolvedPluginPath, CurrentPluginPropertyValue, NewPluginPropertyValue: string;
+  ListOfProperties: TStringList;
 begin
   if AEditingAction = nil then
     Exit;
@@ -8914,6 +8934,55 @@ begin
         frClickerSetVar.SetListOfSetVars(AEditingAction^.SetVarOptions);
         frClickerSetVar.BringToFront;
         //MessageBox(Handle, 'SetVar editor', 'Files', MB_ICONINFORMATION);
+      end;
+
+    acPlugin:
+      if APropertyIndex > CPlugin_FileName_PropIndex then
+      begin
+        ResolvedPluginPath := ResolveTemplatePath(AEditingAction.PluginOptions.FileName);
+        ResolvedPluginPath := EvaluateReplacements(ResolvedPluginPath);
+
+        ActionPlugin.Loaded := False;
+        try
+          if not ActionPlugin.LoadToEditProperty(ResolvedPluginPath, {$IFDEF MemPlugins} DoOnLoadPluginFromInMemFS {$ELSE} nil {$ENDIF}, FOnAddToLog) then
+            DoOnAddToLog('Error loading plugin for editing property.')
+          else
+          begin
+            try
+              ListOfProperties := TStringList.Create;
+              try
+                ListOfProperties.LineBreak := #13#10;
+                ListOfProperties.Text := AEditingAction^.PluginOptions.ListOfPropertiesAndValues;
+                try
+                  if (APropertyIndex - CPropCount_Plugin < ListOfProperties.Count) and (ListOfProperties.Count > 0) then
+                  begin
+                    CurrentPluginPropertyValue := ListOfProperties.ValueFromIndex[APropertyIndex - CPropCount_Plugin];
+                    //DoOnAddToLog('Editing property: ' + ListOfProperties.Names[APropertyIndex - CPropCount_Plugin] + ', with value: ' + CurrentPluginPropertyValue);
+                    if ActionPlugin.EditProperty(APropertyIndex - CPropCount_Plugin, CurrentPluginPropertyValue, NewPluginPropertyValue) then
+                    begin
+                      ListOfProperties.Strings[APropertyIndex - CPropCount_Plugin] := ListOfProperties.Names[APropertyIndex - CPropCount_Plugin] + '=' + NewPluginPropertyValue;
+                      //DoOnAddToLog('Editing property: ' + ListOfProperties.Strings[APropertyIndex - CPropCount_Plugin]);
+                      AEditingAction^.PluginOptions.ListOfPropertiesAndValues := ListOfProperties.Text;
+                      TriggerOnControlsModified(NewPluginPropertyValue <> CurrentPluginPropertyValue);
+                    end;
+                  end
+                  else
+                    DoOnAddToLog('[Err: Index out of bounds on editing property: ' + IntToStr(APropertyIndex - 1) + ']');
+                except
+                  DoOnAddToLog('bug on editing property: ' + IntToStr(APropertyIndex - 1) + ']');
+                end;
+              finally
+                ListOfProperties.Free;
+              end;
+
+            finally
+              ActionPlugin.Unload(FOnAddToLog);
+            end;
+          end;
+        except
+          on E: Exception do
+            DoOnAddToLog('Ex on editing custom plugin property: ' + E.Message);
+        end;
       end;
 
     acEditTemplate:
