@@ -58,6 +58,8 @@ type
   TOnGetLoadedTemplateFileName = function: string of object;
   TOnChangeEditTemplateEditingActionType = procedure of object;
 
+  TOnGetPluginInMemFS = function: TInMemFileSystem of object;
+
   { TfrClickerActions }
 
   TfrClickerActions = class(TFrame)
@@ -402,6 +404,7 @@ type
       FOnLoadPluginFromDiskToPluginInMemFileSystem: TOnLoadPluginFromDiskToPluginInMemFileSystem;
       FOnLoadPluginFromInMemFS: TOnLoadPluginFromInMemFS;
     {$ENDIF}
+    FOnGetPluginInMemFS: TOnGetPluginInMemFS;
 
     FOnLoadPrimitivesFile: TOnLoadPrimitivesFile;
     FOnSavePrimitivesFile: TOnSavePrimitivesFile;
@@ -464,6 +467,7 @@ type
       procedure DoOnLoadPluginFromDiskToPluginInMemFileSystem(APluginPath: string);
       function DoOnLoadPluginFromInMemFS(APlugin: TMemoryStream; AFileName: string): Boolean;
     {$ENDIF}
+    function DoOnGetPluginInMemFS: TInMemFileSystem;
 
     procedure DoOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
     procedure DoOnSavePrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
@@ -769,6 +773,7 @@ type
       property OnLoadPluginFromDiskToPluginInMemFileSystem: TOnLoadPluginFromDiskToPluginInMemFileSystem write FOnLoadPluginFromDiskToPluginInMemFileSystem;
       property OnLoadPluginFromInMemFS: TOnLoadPluginFromInMemFS write FOnLoadPluginFromInMemFS;
     {$ENDIF}
+    property OnGetPluginInMemFS: TOnGetPluginInMemFS write FOnGetPluginInMemFS;
 
     property OnLoadPrimitivesFile: TOnLoadPrimitivesFile write FOnLoadPrimitivesFile;
     property OnSavePrimitivesFile: TOnSavePrimitivesFile write FOnSavePrimitivesFile;
@@ -1079,6 +1084,7 @@ begin
     FOnLoadPluginFromDiskToPluginInMemFileSystem := nil;
     FOnLoadPluginFromInMemFS := nil;
   {$ENDIF}
+  FOnGetPluginInMemFS := nil;
 
   FOnLoadPrimitivesFile := nil;
   FOnSavePrimitivesFile := nil;
@@ -3420,6 +3426,15 @@ end;
     Result := FOnLoadPluginFromInMemFS(APlugin, AFileName);
   end;
 {$ENDIF}
+
+
+function TfrClickerActions.DoOnGetPluginInMemFS: TInMemFileSystem;
+begin
+  if not Assigned(FOnGetPluginInMemFS) then
+    raise Exception.Create('OnGetPluginInMemFS is not assigned.')
+  else
+    Result := FOnGetPluginInMemFS();
+end;
 
 
 procedure TfrClickerActions.DoOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
@@ -8944,7 +8959,7 @@ begin
 
         ActionPlugin.Loaded := False;
         try
-          if not ActionPlugin.LoadToEditProperty(ResolvedPluginPath, {$IFDEF MemPlugins} DoOnLoadPluginFromInMemFS {$ELSE} nil {$ENDIF}, FOnAddToLog) then
+          if not ActionPlugin.LoadToEditProperty(ResolvedPluginPath, DoOnGetPluginInMemFS, {$IFDEF MemPlugins} DoOnLoadPluginFromInMemFS {$ELSE} nil {$ENDIF}, FOnAddToLog) then
             DoOnAddToLog('Error loading plugin for editing property.')
           else
           begin

@@ -94,7 +94,9 @@ type
                             AOnActionPlugin_InMemFS: TOnActionPlugin_InMemFS
                             ): Boolean; cdecl;
 
-  TEditProperty = function(APropertyIndex: Integer;
+  TEditProperty = function(APluginReference: Pointer;
+                           AOnActionPlugin_InMemFS: TOnActionPlugin_InMemFS;
+                           APropertyIndex: Integer;
                            ACurrentValue: Pointer;
                            ANewValue: Pointer;
                            ALenOfNewValue: PDWord): Boolean; cdecl;

@@ -1071,6 +1071,7 @@ begin
     frClickerActions.OnLoadPluginFromDiskToPluginInMemFileSystem := HandleOnLoadPluginFromDiskToPluginInMemFileSystem;
     frClickerActions.OnLoadPluginFromInMemFS := HandleOnLoadPluginFromInMemFS;
   {$ENDIF}
+  frClickerActions.OnGetPluginInMemFS := HandleOnGetPluginInMemFS;
 
   frClickerActions.OnLoadPrimitivesFile := HandleOnLoadPrimitivesFile;
   frClickerActions.OnSavePrimitivesFile := HandleOnSavePrimitivesFile;

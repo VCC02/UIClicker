@@ -117,6 +117,7 @@ type
                                  AOnAddToLog: TOnAddToLog): Boolean;
 
     function LoadToEditProperty(APath: string;
+                                AInMemFS: TInMemFileSystem;
                                 AOnLoadPluginFromInMemFS: TOnLoadPluginFromInMemFS;
                                 AOnAddToLog: TOnAddToLog): Boolean;
 
@@ -1088,6 +1089,7 @@ end;
 
 
 function TActionPlugin.LoadToEditProperty(APath: string;
+                                          AInMemFS: TInMemFileSystem;
                                           AOnLoadPluginFromInMemFS: TOnLoadPluginFromInMemFS;
                                           AOnAddToLog: TOnAddToLog): Boolean;
 var
@@ -1106,6 +1108,7 @@ begin
     Unload(AOnAddToLog);
 
   Path := APath;
+  FInMemFS := AInMemFS;
   PluginLocationInfo := '';
 
   DoAddToLog('Loading plugin for editing a property...');
@@ -1374,15 +1377,23 @@ end;
 function TActionPlugin.EditProperty(APropertyIndex: Integer; ACurrentValue: string; out ANewValue: string): Boolean;
 var
   NewLen: DWord;
+  ActionPlugin: PActionPlugin;
 begin
   if @Func.EditPropertyFunc = nil then
     raise Exception.Create('Plugin function not set: EditPropertyFunc');
 
-  ANewValue := '';
-  SetLength(ANewValue, CMaxSharedStringLength);
-  Result := Func.EditPropertyFunc(APropertyIndex, @ACurrentValue[1], @ANewValue[1], @NewLen);
+  ActionPlugin := @Self;
 
-  SetLength(ANewValue, NewLen);
+  try
+    ANewValue := '';
+    SetLength(ANewValue, CMaxSharedStringLength);
+    Result := Func.EditPropertyFunc(ActionPlugin, DoOnActionPlugin_InMemFS, APropertyIndex, @ACurrentValue[1], @ANewValue[1], @NewLen);
+
+    SetLength(ANewValue, NewLen);
+  except
+    on E: Exception do
+      DoAddToLog(E.Message);
+  end;
 end;
 
 
