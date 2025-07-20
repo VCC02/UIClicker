@@ -87,6 +87,11 @@ type
     lbeSearchAction: TLabeledEdit;
     lblModifiedStatus: TLabel;
     memLogErr: TMemo;
+    MenuItem_GetClickerClientPascalRequestFromActionAllPropertiesWithSrvDbg: TMenuItem;
+    MenuItem_GetClickerClientPascalRequestFromActionModifiedOnlyWithSrvDbg: TMenuItem;
+    MenuItem_GetClickerClientPascalRequestFromActionAllProperties: TMenuItem;
+    MenuItem_GetClickerClientPascalRequestFromActionModifiedOnly: TMenuItem;
+    MenuItem_GetClickerClientPascalRequestFromAction: TMenuItem;
     MenuItem_GetHTTPRequestFromActionAllPropertiesWithSrvDbg: TMenuItem;
     MenuItem_GetHTTPRequestFromActionModifiedOnlyWithSrvDbg: TMenuItem;
     MenuItem_GetHTTPRequestFromActionAllProperties: TMenuItem;
@@ -203,6 +208,10 @@ type
     procedure MenuItem_CopyFilenameToClipboardClick(Sender: TObject);
     procedure MenuItem_CopyFullFilepathToClipboardClick(Sender: TObject);
     procedure MenuItem_EditBreakPointClick(Sender: TObject);
+    procedure MenuItem_GetClickerClientPascalRequestFromActionClick(
+      Sender: TObject);
+    procedure MenuItem_GetGenericClickerClientPascalRequestFromActionClick(
+      Sender: TObject);
     procedure MenuItem_GetGenericHTTPRequestFromActionClick(
       Sender: TObject);
     procedure MenuItem_GetHTTPRequestFromActionClick(Sender: TObject);
@@ -5726,6 +5735,16 @@ begin
 end;
 
 
+procedure TfrClickerActionsArr.MenuItem_GetClickerClientPascalRequestFromActionClick
+  (Sender: TObject);
+begin
+  MenuItem_GetClickerClientPascalRequestFromActionModifiedOnly.Bitmap := MenuItem_GetHTTPRequestFromActionModifiedOnly.Bitmap;
+  MenuItem_GetClickerClientPascalRequestFromActionAllProperties.Bitmap := MenuItem_GetHTTPRequestFromActionAllProperties.Bitmap;
+  MenuItem_GetClickerClientPascalRequestFromActionModifiedOnlyWithSrvDbg.Bitmap := MenuItem_SetActionStatusTo.Bitmap;
+  MenuItem_GetClickerClientPascalRequestFromActionAllPropertiesWithSrvDbg.Bitmap := MenuItem_SetActionStatusTo.Bitmap;
+end;
+
+
 procedure TfrClickerActionsArr.MenuItem_GetGenericHTTPRequestFromActionClick
   (Sender: TObject);
 var
@@ -5786,6 +5805,112 @@ begin
 
     Node := Node^.NextSibling;
   until Node = nil;
+
+  Clipboard.AsText := Request;
+end;
+
+
+procedure TfrClickerActionsArr.MenuItem_GetGenericClickerClientPascalRequestFromActionClick(Sender: TObject);
+var
+  Node: PVirtualNode;
+  ActionType: TClkAction;
+  Request, Properties: string;
+  ListOfProperties: TStringList;
+  i: Integer;
+  IsDbg, IsFileLoc, IsStepIntoDbg: string;
+begin
+  Node := vstActions.GetFirstSelected;
+  if Node = nil then
+    if vstActions.RootNodeCount > 0 then
+    begin
+      MessageBox(Handle, 'Please select an action first.', PChar(Application.Title), MB_ICONINFORMATION);
+      Exit;
+    end;
+
+  Request := '';
+  repeat
+    if vstActions.Selected[Node] then
+    begin
+      if Request > '' then
+        Request := Request + #13#10;  //Add CRLF only if there are multiple selected actions.
+
+      ActionType := FClkActions[Node^.Index].ActionOptions.Action;
+
+      //The following StringReplace call should be replaced with a better option, which is able to convert a complex condition to a valid string.
+      if FClkActions[Node^.Index].ActionOptions.ActionCondition <> '' then
+        Request := Request + 'if ''' + StringReplace(StringReplace(FClkActions[Node^.Index].ActionOptions.ActionCondition, '==', ' = ', [rfReplaceAll]), #13#10, '', [rfReplaceAll]) + ''' then' + #13#10;
+
+      Request := StringReplace(Request, #5#6, ' ', [rfReplaceAll]);
+      Request := Request + 'begin' + #13#10;
+      Request := Request + '  GetDefaultPropertyValues_' + CClkActionStr[ActionType] + '(' + CClkActionStr[ActionType] + ');' + #13#10;
+
+      ListOfProperties := TStringList.Create;
+      try
+        if (Sender = MenuItem_GetClickerClientPascalRequestFromActionModifiedOnly) or
+           (Sender = MenuItem_GetClickerClientPascalRequestFromActionModifiedOnlyWithSrvDbg) then    //different than default properties
+        begin
+          Properties := GetDifferentThanDefaultActionPropertiesByType(FClkActions[Node^.Index], True);
+          //if Properties > '' then
+          //  Request := Request + '&' + Properties;
+        end;
+
+        if (Sender = MenuItem_GetClickerClientPascalRequestFromActionAllProperties) or
+           (Sender = MenuItem_GetClickerClientPascalRequestFromActionAllPropertiesWithSrvDbg) then    //all properties
+        begin
+          //Request := Request + '&' + GetActionPropertiesByType(FClkActions[Node^.Index], True);
+          Properties := GetActionPropertiesByType(FClkActions[Node^.Index], True);
+        end;
+
+        //if ActionType in [acFindControl, acFindSubControl, acCallTemplate] then
+        //  Request := Request + '&' + CREParam_FileLocation + '=' + CREParam_FileLocation_ValueDisk;
+
+        if ActionType in [acFindControl, acFindSubControl, acCallTemplate] then
+          IsFileLoc := ', ''Disk'''
+        else
+          IsFileLoc := '';
+
+        IsDbg := BoolToStr((Sender = MenuItem_GetClickerClientPascalRequestFromActionAllPropertiesWithSrvDbg) or
+                           (Sender = MenuItem_GetClickerClientPascalRequestFromActionModifiedOnlyWithSrvDbg), ', True', ', False');  //debugging action
+
+        if ActionType = acPlugin then
+          IsStepIntoDbg := ', False';
+
+        ListOfProperties.Text := StringReplace(Properties, '&', #13#10, [rfReplaceAll]);
+        for i := 0 to ListOfProperties.Count - 1 do
+          Request := Request + '  ' + CClkActionStr[ActionType] + '.' + ListOfProperties.Names[i] + ' := ''' + ListOfProperties.ValueFromIndex[i] + ''';' + #13#10;
+
+        Request := Request + #13#10;
+        case ActionType of
+          acFindControl:
+            Request := Request + '  Set' + CClkActionStr[ActionType] + 'OptionsToAPI(' + CClkActionStr[ActionType] + ', ' + CClkActionStr[ActionType] + 'API, DummyDestMatchBitmapTextRecAPI, DummyDestMatchBitmapTextArray);' + #13#10;
+
+          acFindSubControl:
+            Request := Request + '  Set' + CClkActionStr[ActionType] + 'OptionsToAPI(' + CClkActionStr[ActionType] + ', ' + CClkActionStr[ActionType] + 'API, DestMatchBitmapTextRecAPI, DestMatchBitmapTextArray);' + #13#10;
+
+          else
+            Request := Request + '  Set' + CClkActionStr[ActionType] + 'OptionsToAPI(' + CClkActionStr[ActionType] + ', ' + CClkActionStr[ActionType] + 'API);' + #13#10;
+        end;
+
+        Request := Request + #13#10;
+
+        Request := Request + '  SetLength(Response, CMaxSharedStringLength);' + #13#10;
+        Request := Request + '  SetLength(Response, Execute' + CClkActionStr[ActionType] + 'Action(@''' + FClkActions[Node^.Index].ActionOptions.ActionName + '''[1], ' + IntToStr(FClkActions[Node^.Index].ActionOptions.ActionTimeout) + ', @' + CClkActionStr[ActionType] + 'API' + IsDbg + IsFileLoc + IsStepIntoDbg + ', @Response[1])); ' + #13#10;
+
+        Request := Request + 'end;';
+        Request := Request + #13#10;
+      finally
+        ListOfProperties.Free;
+      end;
+
+      //Request := Request + '&' + CPropertyName_ActionName + '=' + FClkActions[Node^.Index].ActionOptions.ActionName; //implemented for some of the actions only
+      //Request := Request + '&' + CPropertyName_ActionTimeout + '=' + IntToStr(FClkActions[Node^.Index].ActionOptions.ActionTimeout);  //required by a few actions only
+    end;
+
+    Node := Node^.NextSibling;
+  until Node = nil;
+
+  if Pos(#0, Request) > 0 then
+    Request := FastReplace_0To1(Request);
 
   Clipboard.AsText := Request;
 end;
