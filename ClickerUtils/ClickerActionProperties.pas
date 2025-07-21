@@ -76,7 +76,7 @@ function SetActionProperties(AListOfOptionsParams: string; AActionType: TClkActi
 procedure GetDefaultPropertyValues_Click(var AClickOptions: TClkClickOptions);
 procedure GetDefaultPropertyValues_ExecApp(var AExecAppOptions: TClkExecAppOptions);
 procedure GetDefaultPropertyValues_FindControl(var AFindControlOptions: TClkFindControlOptions);
-procedure GetDefaultPropertyValues_FindSubControl(var AFindSubControlOptions: TClkFindSubControlOptions);
+procedure GetDefaultPropertyValues_FindSubControl(var AFindSubControlOptions: TClkFindSubControlOptions; AFindSubControlProfilesCount: Integer = 1);
 procedure GetDefaultPropertyValues_FindControl_MatchBitmapText(var AMatchBitmapText: TClkFindControlMatchBitmapText);
 procedure GetDefaultPropertyValues_SetControlText(var ASetControlTextOptions: TClkSetTextOptions);
 procedure GetDefaultPropertyValues_CallTemplate(var ACallTemplateOptions: TClkCallTemplateOptions);
@@ -89,7 +89,7 @@ procedure GetDefaultPropertyValues_Plugin(var APluginOptions: TClkPluginOptions)
 procedure GetDefaultPropertyValues_EditTemplate(var AEditTemplateOptions: TClkEditTemplateOptions);
 //if adding new action types, please update ClickerActionsFrame and ExecuteEditTemplateAction, which call all of the above
 
-procedure GetDefaultPropertyValuesByType(AActionType: TClkAction; var AAction: TClkActionRec);
+procedure GetDefaultPropertyValuesByType(AActionType: TClkAction; var AAction: TClkActionRec; AFindSubControlProfilesCount: Integer = 1);
 
 //These actions return True if their string properties, which are not '' by default, are now set to ''.
 //This will happen after serializing properties from ''.
@@ -398,7 +398,7 @@ var
   ListOfDefaultProperties, ListOfAllProperties: TStringList;
   i: Integer;
 begin
-  GetDefaultPropertyValuesByType(AAction.ActionOptions.Action, ActionWithDefaultProperties);
+  GetDefaultPropertyValuesByType(AAction.ActionOptions.Action, ActionWithDefaultProperties, Length(AAction.FindSubControlOptions.MatchBitmapText));
 
   DefaultProperties := GetActionPropertiesByType(ActionWithDefaultProperties, AIncludeSpecialProperties);
   AllProperties := GetActionPropertiesByType(AAction, AIncludeSpecialProperties);
@@ -1151,7 +1151,9 @@ begin
 end;
 
 
-procedure GetDefaultPropertyValues_FindSubControl(var AFindSubControlOptions: TClkFindSubControlOptions);
+procedure GetDefaultPropertyValues_FindSubControl(var AFindSubControlOptions: TClkFindSubControlOptions; AFindSubControlProfilesCount: Integer = 1);
+var
+  i: Integer;
 begin
   AFindSubControlOptions.MatchCriteria.WillMatchBitmapText := True; //AIsSubControl;
   AFindSubControlOptions.MatchCriteria.WillMatchBitmapFiles := False;
@@ -1199,8 +1201,10 @@ begin
   AFindSubControlOptions.CropFromScreenshot := False;
   AFindSubControlOptions.ThreadCount := '2';
 
-  SetLength(AFindSubControlOptions.MatchBitmapText, 1);
-  GetDefaultPropertyValues_FindControl_MatchBitmapText(AFindSubControlOptions.MatchBitmapText[0]);
+  SetLength(AFindSubControlOptions.MatchBitmapText, AFindSubControlProfilesCount);
+
+  for i := 0 to AFindSubControlProfilesCount - 1 do
+    GetDefaultPropertyValues_FindControl_MatchBitmapText(AFindSubControlOptions.MatchBitmapText[i]);
 end;
 
 
@@ -1303,13 +1307,13 @@ begin
 end;
 
 
-procedure GetDefaultPropertyValuesByType(AActionType: TClkAction; var AAction: TClkActionRec);
+procedure GetDefaultPropertyValuesByType(AActionType: TClkAction; var AAction: TClkActionRec; AFindSubControlProfilesCount: Integer = 1);
 begin
   case AActionType of
     acClick: GetDefaultPropertyValues_Click(AAction.ClickOptions);
     acExecApp: GetDefaultPropertyValues_ExecApp(AAction.ExecAppOptions);
     acFindControl: GetDefaultPropertyValues_FindControl(AAction.FindControlOptions);
-    acFindSubControl: GetDefaultPropertyValues_FindSubControl(AAction.FindSubControlOptions);
+    acFindSubControl: GetDefaultPropertyValues_FindSubControl(AAction.FindSubControlOptions, AFindSubControlProfilesCount);
     acSetControlText: GetDefaultPropertyValues_SetControlText(AAction.SetTextOptions);
     acCallTemplate: GetDefaultPropertyValues_CallTemplate(AAction.CallTemplateOptions);
     acSleep: GetDefaultPropertyValues_Sleep(AAction.SleepOptions);

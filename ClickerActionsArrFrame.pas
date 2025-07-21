@@ -5848,24 +5848,14 @@ begin
       try
         if (Sender = MenuItem_GetClickerClientPascalRequestFromActionModifiedOnly) or
            (Sender = MenuItem_GetClickerClientPascalRequestFromActionModifiedOnlyWithSrvDbg) then    //different than default properties
-        begin
           Properties := GetDifferentThanDefaultActionPropertiesByType(FClkActions[Node^.Index], True);
-          //if Properties > '' then
-          //  Request := Request + '&' + Properties;
-        end;
 
         if (Sender = MenuItem_GetClickerClientPascalRequestFromActionAllProperties) or
            (Sender = MenuItem_GetClickerClientPascalRequestFromActionAllPropertiesWithSrvDbg) then    //all properties
-        begin
-          //Request := Request + '&' + GetActionPropertiesByType(FClkActions[Node^.Index], True);
           Properties := GetActionPropertiesByType(FClkActions[Node^.Index], True);
-        end;
-
-        //if ActionType in [acFindControl, acFindSubControl, acCallTemplate] then
-        //  Request := Request + '&' + CREParam_FileLocation + '=' + CREParam_FileLocation_ValueDisk;
 
         if ActionType in [acFindControl, acFindSubControl, acCallTemplate] then
-          IsFileLoc := ', ''Disk'''
+          IsFileLoc := ', @WideString(''' + CREParam_FileLocation_ValueDisk + ''')[1]'
         else
           IsFileLoc := '';
 
@@ -5877,7 +5867,15 @@ begin
 
         ListOfProperties.Text := StringReplace(Properties, '&', #13#10, [rfReplaceAll]);
         for i := 0 to ListOfProperties.Count - 1 do
+        begin
+          if (ActionType = acFindSubControl) and (ListOfProperties.Names[i] = 'MatchBitmapText.Count') then
+          begin
+            Request := Request + '  SetLength(' + CClkActionStr[ActionType] + '.MatchBitmapText, ' + ListOfProperties.ValueFromIndex[i] + ');' + #13#10;
+            Continue;
+          end;
+
           Request := Request + '  ' + CClkActionStr[ActionType] + '.' + ListOfProperties.Names[i] + ' := ''' + ListOfProperties.ValueFromIndex[i] + ''';' + #13#10;
+        end;
 
         Request := Request + #13#10;
         case ActionType of
@@ -5894,7 +5892,7 @@ begin
         Request := Request + #13#10;
 
         Request := Request + '  SetLength(Response, CMaxSharedStringLength);' + #13#10;
-        Request := Request + '  SetLength(Response, Execute' + CClkActionStr[ActionType] + 'Action(@''' + FClkActions[Node^.Index].ActionOptions.ActionName + '''[1], ' + IntToStr(FClkActions[Node^.Index].ActionOptions.ActionTimeout) + ', @' + CClkActionStr[ActionType] + 'API' + IsDbg + IsFileLoc + IsStepIntoDbg + ', @Response[1])); ' + #13#10;
+        Request := Request + '  SetLength(Response, Execute' + CClkActionStr[ActionType] + 'Action(@WideString(''' + FClkActions[Node^.Index].ActionOptions.ActionName + ''')[1], ' + IntToStr(FClkActions[Node^.Index].ActionOptions.ActionTimeout) + ', @' + CClkActionStr[ActionType] + 'API' + IsDbg + IsFileLoc + IsStepIntoDbg + ', @Response[1])); ' + #13#10;
 
         Request := Request + 'end;';
         Request := Request + #13#10;
