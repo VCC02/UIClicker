@@ -5835,7 +5835,7 @@ var
   i: Integer;
   IsDbg, IsFileLoc, IsStepIntoDbg: string;
   PropertyDataType: string;
-  FuncName: string;
+  FuncName, TempActionCondition: string;
   ActionTypeStr: string;
 begin
   Node := vstActions.GetFirstSelected;
@@ -5966,8 +5966,19 @@ begin
         Request := Request + #13#10#13#10;
 
         //The following StringReplace call should be replaced with a better option, which is able to convert a complex condition to a valid string.
-        if FClkActions[Node^.Index].ActionOptions.ActionCondition <> '' then
-          Request := Request + 'if ''' + StringReplace(StringReplace(FClkActions[Node^.Index].ActionOptions.ActionCondition, '==', ' = ', [rfReplaceAll]), #13#10, '', [rfReplaceAll]) + ''' then' + #13#10;
+        TempActionCondition := FClkActions[Node^.Index].ActionOptions.ActionCondition;
+        if Length(TempActionCondition) > 1 then
+          if (TempActionCondition[Length(TempActionCondition) - 1] = #13) and (TempActionCondition[Length(TempActionCondition)] = #10) then
+            Delete(TempActionCondition, Length(TempActionCondition) - 1, 2);
+
+        if TempActionCondition <> '' then
+        begin
+          //ToDo: use #13#10 to separate into "or" rows, and #5#6, to separate into "and" columns, using TStringList.
+          TempActionCondition := '(' + StringReplace(TempActionCondition, #5#6, ') and (', [rfReplaceAll]) + ')';
+          TempActionCondition := 'if (' + StringReplace(StringReplace(TempActionCondition, '==', ' = ', [rfReplaceAll]), #13#10, ') or (', [rfReplaceAll]) + ') then';
+          TempActionCondition := StringReplace(TempActionCondition, ' and ()', '', [rfReplaceAll]);
+          Request := Request + TempActionCondition + #13#10;
+        end;
 
         Request := Request + '  Response := ' + FuncName + ';' + #13#10;
         Request := Request + '  //Result := GetErrorMessageFromResponse(Response);' + #13#10;
