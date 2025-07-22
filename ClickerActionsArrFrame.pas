@@ -5810,14 +5810,33 @@ begin
 end;
 
 
-procedure TfrClickerActionsArr.MenuItem_GetGenericClickerClientPascalRequestFromActionClick(Sender: TObject);
+function FixFuncNameToValid(AFuncName: string): string;
+var
+  i: Integer;
+begin
+  for i := 1 to Length(AFuncName) do
+    if not (AFuncName[i] in ['0'..'9', 'a'..'z', 'A'..'Z', '_']) then
+      AFuncName[i] := '_';
+
+  if AFuncName > '' then
+    if not (AFuncName[1] in ['a'..'z', 'A'..'Z', '_']) then  //must start with a letter or '_'
+      AFuncName := 'Func_' + AFuncName;
+
+  Result := AFuncName;
+end;
+
+
+procedure TfrClickerActionsArr.MenuItem_GetGenericClickerClientPascalRequestFromActionClick(Sender: TObject); //Refactoring required
 var
   Node: PVirtualNode;
   ActionType: TClkAction;
-  Request, Properties: string;
-  ListOfProperties: TStringList;
+  Request, Properties, PropertyDataTypes: string;
+  ListOfProperties, ListOfPropertyDataTypes: TStringList;
   i: Integer;
   IsDbg, IsFileLoc, IsStepIntoDbg: string;
+  PropertyDataType: string;
+  FuncName: string;
+  ActionTypeStr: string;
 begin
   Node := vstActions.GetFirstSelected;
   if Node = nil then
@@ -5835,24 +5854,54 @@ begin
         Request := Request + #13#10;  //Add CRLF only if there are multiple selected actions.
 
       ActionType := FClkActions[Node^.Index].ActionOptions.Action;
+      ActionTypeStr := CClkActionStr[ActionType];
 
-      //The following StringReplace call should be replaced with a better option, which is able to convert a complex condition to a valid string.
-      if FClkActions[Node^.Index].ActionOptions.ActionCondition <> '' then
-        Request := Request + 'if ''' + StringReplace(StringReplace(FClkActions[Node^.Index].ActionOptions.ActionCondition, '==', ' = ', [rfReplaceAll]), #13#10, '', [rfReplaceAll]) + ''' then' + #13#10;
+      FuncName := FixFuncNameToValid(FClkActions[Node^.Index].ActionOptions.ActionName);
+      Request := Request + 'function ' + FuncName + ': string; // ' + FClkActions[Node^.Index].ActionOptions.ActionName + #13#10;
+      Request := Request + 'var' + #13#10;
+      Request := Request + '  ' + ActionTypeStr + 'API: TClk' + ActionTypeStr + 'OptionsAPI;' + #13#10;
+      Request := Request + '  ' + ActionTypeStr + ': TClk' + ActionTypeStr + 'Options;' + #13#10;
+
+      case ActionType of
+        acFindControl:
+        begin
+          Request := Request + '  DummyDestMatchBitmapTextRecAPI: TMatchBitmapTextRecAPI;' + #13#10;
+          Request := Request + '  DummyDestMatchBitmapTextArray: TClkFindControlMatchBitmapTextAPIArr;' + #13#10;
+        end;
+
+        acFindSubControl:
+        begin
+          Request := Request + '  DestMatchBitmapTextRecAPI: TMatchBitmapTextRecAPI;' + #13#10;
+          Request := Request + '  DestMatchBitmapTextArray: TClkFindControlMatchBitmapTextAPIArr;' + #13#10;
+        end;
+
+        else
+          ; //no other special vars
+      end;
 
       Request := StringReplace(Request, #5#6, ' ', [rfReplaceAll]);
       Request := Request + 'begin' + #13#10;
-      Request := Request + '  GetDefaultPropertyValues_' + CClkActionStr[ActionType] + '(' + CClkActionStr[ActionType] + ');' + #13#10;
+      Request := Request + '  GetDefaultPropertyValues_' + ActionTypeStr + '(' + ActionTypeStr + ');' + #13#10;
 
       ListOfProperties := TStringList.Create;
+      ListOfPropertyDataTypes := TStringList.Create;
       try
+        ListOfProperties.LineBreak := #13#10;
+        ListOfPropertyDataTypes.LineBreak := #13#10;
+
         if (Sender = MenuItem_GetClickerClientPascalRequestFromActionModifiedOnly) or
            (Sender = MenuItem_GetClickerClientPascalRequestFromActionModifiedOnlyWithSrvDbg) then    //different than default properties
+        begin
           Properties := GetDifferentThanDefaultActionPropertiesByType(FClkActions[Node^.Index], True);
+          PropertyDataTypes := GetDifferentThanDefaultActionPropertyDataTypesByType(FClkActions[Node^.Index], True);
+        end;
 
         if (Sender = MenuItem_GetClickerClientPascalRequestFromActionAllProperties) or
            (Sender = MenuItem_GetClickerClientPascalRequestFromActionAllPropertiesWithSrvDbg) then    //all properties
+        begin
           Properties := GetActionPropertiesByType(FClkActions[Node^.Index], True);
+          PropertyDataTypes := GetActionPropertyDataTypesByType(FClkActions[Node^.Index], True);
+        end;
 
         if ActionType in [acFindControl, acFindSubControl, acCallTemplate] then
           IsFileLoc := ', @WideString(''' + CREParam_FileLocation_ValueDisk + ''')[1]'
@@ -5866,42 +5915,67 @@ begin
           IsStepIntoDbg := ', False';
 
         ListOfProperties.Text := StringReplace(Properties, '&', #13#10, [rfReplaceAll]);
+        ListOfPropertyDataTypes.Text := StringReplace(PropertyDataTypes, '&', #13#10, [rfReplaceAll]);
         for i := 0 to ListOfProperties.Count - 1 do
         begin
           if (ActionType = acFindSubControl) and (ListOfProperties.Names[i] = 'MatchBitmapText.Count') then
           begin
-            Request := Request + '  SetLength(' + CClkActionStr[ActionType] + '.MatchBitmapText, ' + ListOfProperties.ValueFromIndex[i] + ');' + #13#10;
+            Request := Request + '  SetLength(' + ActionTypeStr + '.MatchBitmapText, ' + ListOfProperties.ValueFromIndex[i] + ');' + #13#10;
             Continue;
           end;
 
-          Request := Request + '  ' + CClkActionStr[ActionType] + '.' + ListOfProperties.Names[i] + ' := ''' + ListOfProperties.ValueFromIndex[i] + ''';' + #13#10;
+          try
+            PropertyDataType := ListOfPropertyDataTypes.ValueFromIndex[i];
+          except
+            PropertyDataType := '';
+          end;
+
+          if PropertyDataType = CDTString then
+            Request := Request + '  ' + ActionTypeStr + '.' + ListOfProperties.Names[i] + ' := ''' + ListOfProperties.ValueFromIndex[i] + ''';' + #13#10
+          else
+            if PropertyDataType = CDTInteger then
+              Request := Request + '  ' + ActionTypeStr + '.' + ListOfProperties.Names[i] + ' := ' + ListOfProperties.ValueFromIndex[i] + ';' + #13#10
+            else
+              if Pos(CDTEnum, PropertyDataType + '.') = 1 then     // CDTEnum + '.<EnumDataType>'
+                Request := Request + '  ' + ActionTypeStr + '.' + ListOfProperties.Names[i] + ' := ' + Copy(PropertyDataType, Length(CDTEnum) + 2, MaxInt) + '(' + ListOfProperties.ValueFromIndex[i] + ');' + #13#10
+              else
+                if PropertyDataType = CDTBool then
+                  Request := Request + '  ' + ActionTypeStr + '.' + ListOfProperties.Names[i] + ' := ' + BoolToStr(ListOfProperties.ValueFromIndex[i] = '1', 'True', 'False') + ';' + #13#10
+                else  //structure or array
+                  Request := Request + '  ' + ActionTypeStr + '.' + ListOfProperties.Names[i] + ' := ' + ListOfProperties.ValueFromIndex[i] + ';' + #13#10; //same as int
         end;
 
         Request := Request + #13#10;
         case ActionType of
           acFindControl:
-            Request := Request + '  Set' + CClkActionStr[ActionType] + 'OptionsToAPI(' + CClkActionStr[ActionType] + ', ' + CClkActionStr[ActionType] + 'API, DummyDestMatchBitmapTextRecAPI, DummyDestMatchBitmapTextArray);' + #13#10;
+            Request := Request + '  Set' + ActionTypeStr + 'OptionsToAPI(' + ActionTypeStr + ', ' + ActionTypeStr + 'API, DummyDestMatchBitmapTextRecAPI, DummyDestMatchBitmapTextArray);' + #13#10;
 
           acFindSubControl:
-            Request := Request + '  Set' + CClkActionStr[ActionType] + 'OptionsToAPI(' + CClkActionStr[ActionType] + ', ' + CClkActionStr[ActionType] + 'API, DestMatchBitmapTextRecAPI, DestMatchBitmapTextArray);' + #13#10;
+            Request := Request + '  Set' + ActionTypeStr + 'OptionsToAPI(' + ActionTypeStr + ', ' + ActionTypeStr + 'API, DestMatchBitmapTextRecAPI, DestMatchBitmapTextArray);' + #13#10;
 
           else
-            Request := Request + '  Set' + CClkActionStr[ActionType] + 'OptionsToAPI(' + CClkActionStr[ActionType] + ', ' + CClkActionStr[ActionType] + 'API);' + #13#10;
+            Request := Request + '  Set' + ActionTypeStr + 'OptionsToAPI(' + ActionTypeStr + ', ' + ActionTypeStr + 'API);' + #13#10;
         end;
 
         Request := Request + #13#10;
 
-        Request := Request + '  SetLength(Response, CMaxSharedStringLength);' + #13#10;
-        Request := Request + '  SetLength(Response, Execute' + CClkActionStr[ActionType] + 'Action(@WideString(''' + FClkActions[Node^.Index].ActionOptions.ActionName + ''')[1], ' + IntToStr(FClkActions[Node^.Index].ActionOptions.ActionTimeout) + ', @' + CClkActionStr[ActionType] + 'API' + IsDbg + IsFileLoc + IsStepIntoDbg + ', @Response[1])); ' + #13#10;
+        Request := Request + '  SetLength(Result, CMaxSharedStringLength);' + #13#10;
+        Request := Request + '  SetLength(Result, Execute' + CClkActionStr[ActionType] + 'Action(@WideString(''' + FClkActions[Node^.Index].ActionOptions.ActionName + ''')[1], ' + IntToStr(FClkActions[Node^.Index].ActionOptions.ActionTimeout) + ', @' + CClkActionStr[ActionType] + 'API' + IsDbg + IsFileLoc + IsStepIntoDbg + ', @Result[1])); ' + #13#10;
 
         Request := Request + 'end;';
+        Request := Request + #13#10#13#10;
+
+        //The following StringReplace call should be replaced with a better option, which is able to convert a complex condition to a valid string.
+        if FClkActions[Node^.Index].ActionOptions.ActionCondition <> '' then
+          Request := Request + 'if ''' + StringReplace(StringReplace(FClkActions[Node^.Index].ActionOptions.ActionCondition, '==', ' = ', [rfReplaceAll]), #13#10, '', [rfReplaceAll]) + ''' then' + #13#10;
+
+        Request := Request + '  Response := ' + FuncName + ';' + #13#10;
+        Request := Request + '  //Result := GetErrorMessageFromResponse(Response);' + #13#10;
         Request := Request + #13#10;
       finally
         ListOfProperties.Free;
+        ListOfPropertyDataTypes.Free;
       end;
-
-      //Request := Request + '&' + CPropertyName_ActionName + '=' + FClkActions[Node^.Index].ActionOptions.ActionName; //implemented for some of the actions only
-      //Request := Request + '&' + CPropertyName_ActionTimeout + '=' + IntToStr(FClkActions[Node^.Index].ActionOptions.ActionTimeout);  //required by a few actions only
     end;
 
     Node := Node^.NextSibling;

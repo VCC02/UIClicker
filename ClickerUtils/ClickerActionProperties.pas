@@ -55,6 +55,9 @@ function GetEditTemplateActionProperties(AEditTemplateOptions: TClkEditTemplateO
 function GetActionPropertiesByType(var AAction: TClkActionRec; AIncludeSpecialProperties: Boolean = False): string;
 function GetDifferentThanDefaultActionPropertiesByType(var AAction: TClkActionRec; AIncludeSpecialProperties: Boolean = False): string;
 
+function GetActionPropertyDataTypesByType(var AAction: TClkActionRec; AIncludeSpecialProperties: Boolean = False): string;
+function GetDifferentThanDefaultActionPropertyDataTypesByType(var AAction: TClkActionRec; AIncludeSpecialProperties: Boolean = False): string;
+
 //The Set<ActionType>Properties functions return an error if any, or emptry string for success.
 function SetClickActionProperties(AListOfClickOptionsParams: TStrings; out AClickOptions: TClkClickOptions): string;
 function SetExecAppActionProperties(AListOfExecAppOptionsParams: TStrings; out AExecAppOptions: TClkExecAppOptions; out AActionOptions: TClkActionOptions): string;
@@ -414,7 +417,7 @@ begin
 
     Result := '';
     for i := 0 to ListOfDefaultProperties.Count - 1 do
-      if ListOfAllProperties.Strings[i] <> ListOfDefaultProperties.Strings[i] then
+      if (ListOfAllProperties.Strings[i] <> ListOfDefaultProperties.Strings[i]) or (ListOfAllProperties.Names[i] = 'MatchBitmapText.Count') then
         Result := Result + ListOfAllProperties.Strings[i] + '&';
 
     if Result > '' then
@@ -425,6 +428,327 @@ begin
     ListOfAllProperties.Free;
   end;
 end;
+
+//////
+
+function GetClickActionPropertyDataTypes: string;
+begin
+  Result := 'XClickPointReference' + '=' + CDTEnum + '.TXClickPointReference' + '&' +
+            'YClickPointReference' + '=' + CDTEnum + '.TYClickPointReference' + '&' +
+            'XClickPointVar' + '=' + CDTString + '&' +
+            'YClickPointVar' + '=' + CDTString + '&' +
+            'XOffset' + '=' + CDTString + '&' +
+            'YOffset' + '=' + CDTString + '&' +
+            'MouseButton' + '=' + CDTEnum + '.TMouseButton' + '&' +
+            'ClickWithCtrl' + '=' + CDTBool + '&' +
+            'ClickWithAlt' + '=' + CDTBool + '&' +
+            'ClickWithShift' + '=' + CDTBool + '&' +
+            'ClickWithDoubleClick' + '=' + CDTBool + '&' +  //Deprecated. The code is still generated with it.
+            'Count' + '=' + CDTInteger + '&' +
+            'LeaveMouse' + '=' + CDTBool + '&' +
+            'MoveWithoutClick' + '=' + CDTBool + '&' +
+            'ClickType' + '=' + CDTInteger + '&' +   //This is enum in OI only. The field is integer.
+            'XClickPointReferenceDest' + '=' + CDTEnum + '.TXClickPointReference' + '&' +
+            'YClickPointReferenceDest' + '=' + CDTEnum + '.TYClickPointReference' + '&' +
+            'XClickPointVarDest' + '=' + CDTString + '&' +
+            'YClickPointVarDest' + '=' + CDTString + '&' +
+            'XOffsetDest' + '=' + CDTString + '&' +
+            'YOffsetDest' + '=' + CDTString + '&' +
+            'MouseWheelType' + '=' + CDTEnum + '.TMouseWheelType' + '&' +
+            'MouseWheelAmount' + '=' + CDTString + '&' +
+            'DelayAfterMovingToDestination' + '=' + CDTString + '&' +
+            'DelayAfterMouseDown' + '=' + CDTString + '&' +
+            'MoveDuration' + '=' + CDTString + '&' +
+            'UseClipCursor' + '=' + CDTBool;
+end;
+
+
+function GetExecAppActionPropertyDataTypes: string;
+begin
+  Result := 'PathToApp' + '=' + CDTString + '&' +
+            'ListOfParams' + '=' + CDTString + '&' +
+            'WaitForApp' + '=' + CDTBool + '&' +
+            'AppStdIn' + '=' + CDTString + '&' +
+            'CurrentDir' + '=' + CDTString + '&' +
+            'UseInheritHandles' + '=' + CDTBool + '&' +
+            'NoConsole' + '=' + CDTBool;
+end;
+
+
+function GetFindControlActionPropertyDataTypes: string;
+begin
+  Result := 'MatchCriteria.SearchForControlMode' + '=' + CDTEnum + '.TSearchForControlMode' + '&' +
+            'MatchCriteria.WillMatchText' + '=' + CDTBool + '&' +
+            'MatchCriteria.WillMatchClassName' + '=' + CDTBool + '&' +
+            'AllowToFail' + '=' + CDTBool + '&' +
+
+            'MatchText' + '=' + CDTString + '&' +
+            'MatchClassName' + '=' + CDTString + '&' +
+            'MatchTextSeparator' + '=' + CDTString + '&' +
+            'MatchClassNameSeparator' + '=' + CDTString + '&' +
+
+            'InitialRectangle.Left' + '=' + CDTString + '&' +
+            'InitialRectangle.Top' + '=' + CDTString + '&' +
+            'InitialRectangle.Right' + '=' + CDTString + '&' +
+            'InitialRectangle.Bottom' + '=' + CDTString + '&' +
+            'InitialRectangle.LeftOffset' + '=' + CDTString + '&' +
+            'InitialRectangle.TopOffset' + '=' + CDTString + '&' +
+            'InitialRectangle.RightOffset' + '=' + CDTString + '&' +
+            'InitialRectangle.BottomOffset' + '=' + CDTString + '&' +
+            'UseWholeScreen' + '=' + CDTBool + '&' +
+            'WaitForControlToGoAway' + '=' + CDTBool + '&' +
+            'StartSearchingWithCachedControl' + '=' + CDTBool + '&' +
+            'CachedControlLeft' + '=' + CDTString + '&' +
+            'CachedControlTop' + '=' + CDTString + '&' +
+            'GetAllControls' + '=' + CDTBool + '&' +
+
+            'PrecisionTimeout' + '=' + CDTBool + '&' +
+            'EvaluateTextCount' + '=' + CDTString //+ '&' +
+            ;
+end;
+
+
+function GetFindSubControlActionPropertyDataTypes(AMatchBitmapTextLen: Integer): string;
+  function GetMatchBitmapTextContent(AMatchBitmapTextLen: Integer): string;
+  var
+    i: Integer;
+    Prefix: string;
+  begin
+    Result := '';
+    for i := 0 to AMatchBitmapTextLen - 1 do
+    begin
+      Prefix := 'MatchBitmapText[' + IntToStr(i) + '].';
+      Result := Result + Prefix + 'ForegroundColor' + '=' + CDTString + '&';
+      Result := Result + Prefix + 'BackgroundColor' + '=' + CDTString + '&';
+      Result := Result + Prefix + 'FontName' + '=' + CDTString + '&';
+      Result := Result + Prefix + 'FontSize' + '=' + CDTInteger + '&';
+      Result := Result + Prefix + 'Bold' + '=' + CDTBool + '&';
+      Result := Result + Prefix + 'Italic' + '=' + CDTBool + '&';
+      Result := Result + Prefix + 'Underline' + '=' + CDTBool + '&';
+      Result := Result + Prefix + 'StrikeOut' + '=' + CDTBool + '&';
+      Result := Result + Prefix + 'FontQuality' + '=' + CDTEnum + '.TFontQuality' + '&';
+      Result := Result + Prefix + 'FontQualityUsesReplacement' + '=' + CDTBool + '&';
+      Result := Result + Prefix + 'FontQualityReplacement' + '=' + CDTString + '&';
+      Result := Result + Prefix + 'ProfileName' + '=' + CDTString + '&';
+      Result := Result + Prefix + 'CropLeft' + '=' + CDTString + '&';
+      Result := Result + Prefix + 'CropTop' + '=' + CDTString + '&';
+      Result := Result + Prefix + 'CropRight' + '=' + CDTString + '&';
+      Result := Result + Prefix + 'CropBottom' + '=' + CDTString + '&';
+      Result := Result + Prefix + 'IgnoreBackgroundColor' + '=' + CDTBool + '&';
+    end;
+  end;
+begin
+  Result := 'MatchCriteria.WillMatchBitmapText' + '=' + CDTBool + '&' +
+            'MatchCriteria.WillMatchBitmapFiles' + '=' + CDTBool + '&' +
+            'MatchCriteria.WillMatchPrimitiveFiles' + '=' + CDTBool + '&' +
+            'AllowToFail' + '=' + CDTBool + '&' +
+
+            'MatchText' + '=' + CDTString + '&' +
+
+            'MatchBitmapText.Count' + '=' + {IntToStr(Length(AFindSubControlOptions.MatchBitmapText))} CDTInteger + '&' +
+            GetMatchBitmapTextContent(AMatchBitmapTextLen) +
+            'MatchBitmapFiles' + '=' + CDTString + '&' +
+            'MatchBitmapAlgorithm' + '=' + CDTEnum + '.TMatchBitmapAlgorithm' + '&' +
+            'MatchBitmapAlgorithmSettings.XMultipleOf' + '=' + CDTInteger + '&' +
+            'MatchBitmapAlgorithmSettings.YMultipleOf' + '=' + CDTInteger + '&' +
+            'MatchBitmapAlgorithmSettings.XOffset' + '=' + CDTInteger + '&' +
+            'MatchBitmapAlgorithmSettings.YOffset' + '=' + CDTInteger + '&' +
+            'InitialRectangle.Left' + '=' + CDTString + '&' +
+            'InitialRectangle.Top' + '=' + CDTString + '&' +
+            'InitialRectangle.Right' + '=' + CDTString + '&' +
+            'InitialRectangle.Bottom' + '=' + CDTString + '&' +
+            'InitialRectangle.LeftOffset' + '=' + CDTString + '&' +
+            'InitialRectangle.TopOffset' + '=' + CDTString + '&' +
+            'InitialRectangle.RightOffset' + '=' + CDTString + '&' +
+            'InitialRectangle.BottomOffset' + '=' + CDTString + '&' +
+            'UseWholeScreen' + '=' + CDTBool + '&' +
+            'ColorError' + '=' + CDTString + '&' +
+            'AllowedColorErrorCount' + '=' + CDTString + '&' +
+            'WaitForControlToGoAway' + '=' + CDTBool + '&' +
+            'StartSearchingWithCachedControl' + '=' + CDTBool + '&' +
+            'CachedControlLeft' + '=' + CDTString + '&' +
+            'CachedControlTop' + '=' + CDTString + '&' +
+            'MatchPrimitiveFiles' + '=' + CDTString + '&' +
+            'GetAllControls' + '=' + CDTBool + '&' +
+            'UseFastSearch' + '=' + CDTBool + '&' +
+            'FastSearchAllowedColorErrorCount' + '=' + CDTString + '&' +
+            'IgnoredColors' + '=' + CDTString + '&' +
+            'SleepySearch' + '=' + CDTBool + '&' +
+            'StopSearchOnMismatch' + '=' + CDTBool + '&' +
+            'ImageSource' + '=' + CDTEnum + '.TImageSource' + '&' +
+            'SourceFileName' + '=' + CDTString + '&' +
+            'ImageSourceFileNameLocation' + '=' + CDTEnum + '.TImageSourceFileNameLocation' + '&' +
+            'PrecisionTimeout' + '=' + CDTBool + '&' +
+            'FullBackgroundImageInResult' + '=' + CDTBool + '&' +
+
+            'MatchByHistogramSettings.MinPercentColorMatch' + '=' + CDTString + '&' +
+            'MatchByHistogramSettings.MostSignificantColorCountInSubBmp' + '=' + CDTString + '&' +
+            'MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp' + '=' + CDTString + '&' +
+
+            'EvaluateTextCount' + '=' + CDTString + '&' +
+            'CropFromScreenshot' + '=' + CDTBool + '&' +
+            'ThreadCount' + '=' + CDTString
+            ;
+end;
+
+
+function GetSetControlTextActionPropertyDataTypes: string;
+begin
+  Result := 'Text' + '=' + CDTString + '&' +
+            'ControlType' + '=' + CDTEnum + '.TClkSetTextControlType' + '&' +
+            'DelayBetweenKeyStrokes' + '=' + CDTString + '&' +
+            'Count' + '=' + CDTString;
+end;
+
+
+function GetCallTemplateActionPropertyDataTypes: string;
+begin
+  Result := 'TemplateFileName' + '=' + CDTString + '&' +
+            'ListOfCustomVarsAndValues' + '=' + CDTString + '&' +
+            'EvaluateBeforeCalling' + '=' + CDTBool + '&' +
+
+            'Loop.Enabled' + '=' + CDTBool + '&' +
+            'Loop.Counter' + '=' + CDTString + '&' +
+            'Loop.InitValue' + '=' + CDTString + '&' +
+            'Loop.EndValue' + '=' + CDTString + '&' +
+            'Loop.Direction' + '=' + CDTEnum + '.TLoopDirection' + '&' +
+            'Loop.BreakCondition' + '=' + CDTString + '&' +
+            'Loop.EvalBreakPosition' + '=' + CDTEnum + '.TLoopEvalBreakPosition';
+end;
+
+
+function GetSleepActionPropertyDataTypes: string;
+begin
+  Result := 'Value' + '=' + CDTString;
+end;
+
+
+function GetSetVarActionPropertyDataTypes: string;
+begin
+  Result := 'ListOfVarNames' + '=' + CDTString + '&' +
+            'ListOfVarValues' + '=' + CDTString + '&' +
+            'ListOfVarEvalBefore' + '=' + CDTString + '&' +
+            'FailOnException' + '=' + CDTBool;
+end;
+
+
+function GetWindowOperationsActionPropertyDataTypes: string;
+begin
+  Result := 'Operation' + '=' + CDTEnum + '.TWindowOperation' + '&' +
+            'NewX' + '=' + CDTString + '&' +
+            'NewY' + '=' + CDTString + '&' +
+            'NewWidth' + '=' + CDTString + '&' +
+            'NewHeight' + '=' + CDTString + '&' +
+            'NewPositionEnabled' + '=' + CDTBool + '&' +
+            'NewSizeEnabled' + '=' + CDTBool;
+end;
+
+
+function GetLoadSetVarFromFileActionPropertyDataTypes: string;
+begin
+  Result := 'FileName' + '=' + CDTString + '&' +
+            'SetVarActionName' + '=' + CDTString;
+end;
+
+
+function GetSaveSetVarToFileActionPropertyDataTypes: string;
+begin
+  Result := 'FileName' + '=' + CDTString + '&' +
+            'SetVarActionName' + '=' + CDTString;
+end;
+
+
+function GetPluginActionPropertyDataTypes: string;
+begin
+  Result := 'FileName' + '=' + CDTString + '&' +
+            'ListOfPropertiesAndValues' + '=' + CDTString;
+end;
+
+
+function GetEditTemplateActionPropertyDataTypes(AIncludeListOfEditedProperties: Boolean = False): string;
+begin
+  Result := 'Operation' + '=' + CDTEnum + '.TEditTemplateOperation' + '&' +
+            'WhichTemplate' + '=' + CDTEnum + '.TEditTemplateWhichTemplate' + '&' +
+            'TemplateFileName' + '=' + CDTString + '&';
+
+            if AIncludeListOfEditedProperties then  //this should be true when serializing for http
+              Result := Result + 'ListOfEditedProperties' + '=' + CDTString + '&'; //ListOfEditedProperties stores a #18 separated list of key=value strings
+
+  Result := Result +
+            'ListOfEnabledProperties' + '=' + CDTString + '&' +
+            'EditedActionName' + '=' + CDTString + '&' +
+            'EditedActionType' + '=' + CDTEnum + '.TClkAction' + '&' +
+            'EditedActionCondition' + '=' + CDTString + '&' +
+            'EditedActionTimeout' + '=' + CDTInteger + '&' +
+            'NewActionName' + '=' + CDTString + '&' +
+            'ShouldSaveTemplate' + '=' + CDTBool;
+end;
+
+
+function GetActionPropertyDataTypesByType(var AAction: TClkActionRec; AIncludeSpecialProperties: Boolean = False): string;
+begin
+  Result := '';
+  case AAction.ActionOptions.Action of
+    acClick: Result := GetClickActionPropertyDataTypes;
+    acExecApp: Result := GetExecAppActionPropertyDataTypes;
+    acFindControl:    Result := GetFindControlActionPropertyDataTypes;
+    acFindSubControl: Result := GetFindSubControlActionPropertyDataTypes(Length(AAction.FindSubControlOptions.MatchBitmapText));
+    acSetControlText: Result := GetSetControlTextActionPropertyDataTypes;
+    acCallTemplate: Result := GetCallTemplateActionPropertyDataTypes;
+    acSleep: Result := GetSleepActionPropertyDataTypes;
+    acSetVar: Result := GetSetVarActionPropertyDataTypes;
+    acWindowOperations: Result := GetWindowOperationsActionPropertyDataTypes;
+    acLoadSetVarFromFile: Result := GetLoadSetVarFromFileActionPropertyDataTypes;
+    acSaveSetVarToFile: Result := GetSaveSetVarToFileActionPropertyDataTypes;
+    acPlugin: Result := GetPluginActionPropertyDataTypes;
+    acEditTemplate: Result := GetEditTemplateActionPropertyDataTypes(AIncludeSpecialProperties);
+  end;
+end;
+
+
+function GetDifferentThanDefaultActionPropertyDataTypesByType(var AAction: TClkActionRec; AIncludeSpecialProperties: Boolean = False): string;
+var
+  ActionWithDefaultProperties: TClkActionRec;
+
+  DefaultProperties, AllProperties, AllPropertyDataTypes: string;
+  ListOfDefaultProperties, ListOfAllProperties, ListOfAllPropertyDataTypes: TStringList;
+  i: Integer;
+begin
+  GetDefaultPropertyValuesByType(AAction.ActionOptions.Action, ActionWithDefaultProperties, Length(AAction.FindSubControlOptions.MatchBitmapText));
+
+  DefaultProperties := GetActionPropertiesByType(ActionWithDefaultProperties, AIncludeSpecialProperties);
+  AllProperties := GetActionPropertiesByType(AAction, AIncludeSpecialProperties);
+  AllPropertyDataTypes := GetActionPropertyDataTypesByType(AAction, AIncludeSpecialProperties);
+
+  ListOfDefaultProperties := TStringList.Create;
+  ListOfAllProperties := TStringList.Create;
+  ListOfAllPropertyDataTypes := TStringList.Create;
+  try
+    ListOfDefaultProperties.LineBreak := #13#10;
+    ListOfAllProperties.LineBreak := #13#10;
+    ListOfAllPropertyDataTypes.LineBreak := #13#10;
+
+    ListOfDefaultProperties.Text := StringReplace(DefaultProperties, '&', #13#10, [rfReplaceAll]);
+    ListOfAllProperties.Text := StringReplace(AllProperties, '&', #13#10, [rfReplaceAll]);
+    ListOfAllPropertyDataTypes.Text := StringReplace(AllPropertyDataTypes, '&', #13#10, [rfReplaceAll]);
+
+    Result := '';
+    for i := 0 to ListOfDefaultProperties.Count - 1 do
+      if (ListOfAllProperties.Strings[i] <> ListOfDefaultProperties.Strings[i]) or (ListOfAllProperties.Names[i] = 'MatchBitmapText.Count') then
+        Result := Result + ListOfAllPropertyDataTypes.Strings[i] + '&';
+
+    if Result > '' then
+      if Result[Length(Result)] = '&' then
+        Delete(Result, Length(Result), 1);
+  finally
+    ListOfDefaultProperties.Free;
+    ListOfAllProperties.Free;
+    ListOfAllPropertyDataTypes.Free;
+  end;
+end;
+
+
+//////
 
 
 function SetClickActionProperties(AListOfClickOptionsParams: TStrings; out AClickOptions: TClkClickOptions): string; //returns error if any, or emptry string for success

@@ -349,7 +349,7 @@ const
     (Name: 'MatchTextSeparator'; EditorType: etText; DataType: CDTString),
     (Name: 'MatchClassNameSeparator'; EditorType: etText; DataType: CDTString),
     //(Name: '//MatchBitmapText'; EditorType: etFilePathWithArrow; DataType: CDTArray),  //array of other structure.  Count should be 0 for FindControl and >0 for FindSubControl
-    //(Name: '//MatchBitmapFiles'; EditorType: etFilePathWithArrow; DataType: CDTArray),  //Description:  Relative paths can be entered using the following format:' + #13#10 + '$TemplateDir$\<SomeBmp.bmp>
+    //(Name: '//MatchBitmapFiles'; EditorType: etFilePathWithArrow; DataType: CDTString),  //Description:  Relative paths can be entered using the following format:' + #13#10 + '$TemplateDir$\<SomeBmp.bmp>
     //(Name: '//MatchBitmapAlgorithm'; EditorType: etEnumCombo; DataType: CDTEnum),
     //(Name: '//MatchBitmapAlgorithmSettings'; EditorType: etNone; DataType: CDTStructure),    //structure
     (Name: 'InitialRectangle'; EditorType: etNone; DataType: CDTStructure),                 //structure
@@ -360,7 +360,7 @@ const
     (Name: 'StartSearchingWithCachedControl'; EditorType: etBooleanCombo; DataType: CDTBool),   //Description: When checked, the control is checked at the specified cached $My_Control_Left$ and $My_Control_Top$ var replacements, before using the search grid.  In order to cache the control coordinates, please add a SetVar action after this one, by assigning:  $My_Control_Left$ to $Control_Left$  and  $My_Control_Top$ to $Control_Top$  where $My_Control_Left$ and $My_Control_Top$ are the cached values. The "Eval before" checkboxes have to be set.  Each Find(Sub)Control action, which uses caching, will have to use its own set of $My_Control_Left$ and $My_Control_Top$ vars.  The cached values are global coordinates, so they will become invalid even for a subcontrol if the parent window is moved.
     (Name: 'CachedControlLeft'; EditorType: etText; DataType: CDTString),
     (Name: 'CachedControlTop'; EditorType: etText; DataType: CDTString),
-    //(Name: '//MatchPrimitiveFiles'; EditorType: etFilePathWithArrow; DataType: CDTArray),
+    //(Name: '//MatchPrimitiveFiles'; EditorType: etFilePathWithArrow; DataType: CDTString),
     (Name: 'GetAllControls'; EditorType: etBooleanCombo; DataType: CDTBool),
     //(Name: '//UseFastSearch'; EditorType: etBooleanCombo; DataType: CDTBool),
     //(Name: '//FastSearchAllowedColorErrorCount'; EditorType: etText; DataType: CDTString),
@@ -386,7 +386,7 @@ const
     //(Name: '//MatchTextSeparator'; EditorType: etText; DataType: CDTString),
     //(Name: '//MatchClassNameSeparator'; EditorType: etText; DataType: CDTString),
     (Name: 'MatchBitmapText'; EditorType: etFilePathWithArrow; DataType: CDTArray),  //array of other structure.  Count should be 0 for FindControl and >0 for FindSubControl
-    (Name: 'MatchBitmapFiles'; EditorType: etFilePathWithArrow; DataType: CDTArray),  //Description:  Relative paths can be entered using the following format:' + #13#10 + '$TemplateDir$\<SomeBmp.bmp>
+    (Name: 'MatchBitmapFiles'; EditorType: etFilePathWithArrow; DataType: CDTString),  //Description:  Relative paths can be entered using the following format:' + #13#10 + '$TemplateDir$\<SomeBmp.bmp>
     (Name: 'MatchBitmapAlgorithm'; EditorType: etEnumCombo; DataType: CDTEnum),
     (Name: 'MatchBitmapAlgorithmSettings'; EditorType: etNone; DataType: CDTStructure),    //structure
     (Name: 'InitialRectangle'; EditorType: etNone; DataType: CDTStructure),                 //structure
@@ -397,7 +397,7 @@ const
     (Name: 'StartSearchingWithCachedControl'; EditorType: etBooleanCombo; DataType: CDTBool),   //Description: When checked, the control is checked at the specified cached $My_Control_Left$ and $My_Control_Top$ var replacements, before using the search grid.  In order to cache the control coordinates, please add a SetVar action after this one, by assigning:  $My_Control_Left$ to $Control_Left$  and  $My_Control_Top$ to $Control_Top$  where $My_Control_Left$ and $My_Control_Top$ are the cached values. The "Eval before" checkboxes have to be set.  Each Find(Sub)Control action, which uses caching, will have to use its own set of $My_Control_Left$ and $My_Control_Top$ vars.  The cached values are global coordinates, so they will become invalid even for a subcontrol if the parent window is moved.
     (Name: 'CachedControlLeft'; EditorType: etText; DataType: CDTString),
     (Name: 'CachedControlTop'; EditorType: etText; DataType: CDTString),
-    (Name: 'MatchPrimitiveFiles'; EditorType: etFilePathWithArrow; DataType: CDTArray),
+    (Name: 'MatchPrimitiveFiles'; EditorType: etFilePathWithArrow; DataType: CDTString),
     (Name: 'GetAllControls'; EditorType: etBooleanCombo; DataType: CDTBool),
     (Name: 'UseFastSearch'; EditorType: etBooleanCombo; DataType: CDTBool),
     (Name: 'FastSearchAllowedColorErrorCount'; EditorType: etText; DataType: CDTString),
