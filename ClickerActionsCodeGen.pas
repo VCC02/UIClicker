@@ -38,6 +38,7 @@ function GenerateClickerClientPascalRequestFromAction(var AAction: TClkActionRec
 
 implementation
 
+
 uses
   ClickerActionProperties, ClickerActionsClient;
 
@@ -100,6 +101,189 @@ begin
       AFuncName := 'Func_' + AFuncName;
 
   Result := AFuncName;
+end;
+
+
+function IsStringCmpOperator(AOp: string): Boolean;
+var
+  i: Integer;
+begin
+  Result := False;
+  for i := 0 to 5 do  //the first 6 operators are string comparison operators
+    if CComparisonOperators[i] = AOp then
+    begin
+      Result := True;
+      Break;
+    end;
+end;
+
+
+function IsIntCmpOperator(AOp: string): Boolean;
+var
+  i: Integer;
+begin
+  Result := False;
+  for i := 6 to 11 do  //the second chunk of 6 operators are integer comparison operators
+    if CComparisonOperators[i] = AOp then
+    begin
+      Result := True;
+      Break;
+    end;
+end;
+
+
+function IsExtCmpOperator(AOp: string): Boolean;
+var
+  i: Integer;
+begin
+  Result := False;
+  for i := 12 to 17 do  //the thirds chunk of 6 operators are integer comparison operators
+    if CComparisonOperators[i] = AOp then
+    begin
+      Result := True;
+      Break;
+    end;
+end;
+
+
+function UIClickerOperatorToPascal(AOp: string): string;
+begin
+  Result := '??';
+
+  if (AOp = CCompNotEqual) or (AOp = CIntCompNotEqual) or (AOp = CExtCompNotEqual) then
+  begin
+    Result := '<>';
+    Exit;
+  end;
+
+  if (AOp = CCompEqual) or (AOp = CIntCompEqual) or (AOp = CExtCompEqual) then
+  begin
+    Result := '=';
+    Exit;
+  end;
+
+  if (AOp = CCompLessThan) or (AOp = CIntCompLessThan) or (AOp = CExtCompLessThan) then
+  begin
+    Result := '<';
+    Exit;
+  end;
+
+  if (AOp = CCompGreaterThan) or (AOp = CIntCompGreaterThan) or (AOp = CExtCompGreaterThan) then
+  begin
+    Result := '>';
+    Exit;
+  end;
+
+  if (AOp = CCompLessThanOrEqual) or (AOp = CIntCompLessThanOrEqual) or (AOp = CExtCompLessThanOrEqual) then
+  begin
+    Result := '<=';
+    Exit;
+  end;
+
+  if (AOp = CCompGreaterThanOrEqual) or (AOp = CIntCompGreaterThanOrEqual) or (AOp = CExtCompGreaterThanOrEqual) then
+  begin
+    Result := '>=';
+    Exit;
+  end;
+end;
+
+
+function IsVar(AOp: string): Boolean;
+begin
+  Result := (AOp > '') and (AOp[1] = '$') and (AOp[Length(AOp)] = '$');
+end;
+
+
+function ExpressionToPascal(AActionConditionExpression: string): string;
+var
+  Op1, Op2, OpEq: string;
+begin
+  RawExpressionToParts(AActionConditionExpression, Op1, Op2, OpEq);
+
+  if IsStringCmpOperator(OpEq) then
+  begin
+    if IsVar(Op1) then
+      Op1 := 'GetVarValueFromResponse(Response, ''' + Op1 + ''')'
+    else
+      Op1 := '''' + Op1 + '''';
+
+    if IsVar(Op2) then
+      Op2 := 'GetVarValueFromResponse(Response, ''' + Op2 + ''')'
+    else
+      Op2 := '''' + Op2 + '''';
+
+    Result := Op1 + ' ' + UIClickerOperatorToPascal(OpEq) + ' ' + Op2;
+  end
+  else
+  begin
+    if IsVar(Op1) then
+    begin
+      if IsIntCmpOperator(OpEq) then
+        Op1 := 'StrToIntDef(GetVarValueFromResponse(Response, ''' + Op1 + '''), -1)'
+      else
+        if IsExtCmpOperator(OpEq) then
+          Op1 := 'StrToFloatDef(GetVarValueFromResponse(Response, ''' + Op1 + '''), -1)'
+        else
+          Op1 := 'StrToUnknownDef(GetVarValueFromResponse(Response, ''' + Op1 + '''), -1)'
+    end;
+
+    if IsVar(Op2) then
+    begin
+      if IsIntCmpOperator(OpEq) then
+        Op2 := 'StrToIntDef(GetVarValueFromResponse(Response, ''' + Op2 + '''), -1)'
+      else
+        if IsExtCmpOperator(OpEq) then
+          Op2 := 'StrToFloatDef(GetVarValueFromResponse(Response, ''' + Op2 + '''), -1)'
+        else
+          Op2 := 'StrToUnknownDef(GetVarValueFromResponse(Response, ''' + Op2 + '''), -1)'
+    end;
+
+    Result := Op1 + ' ' + UIClickerOperatorToPascal(OpEq) + ' ' + Op2;
+  end;
+end;
+
+
+function ActionConditionToPascal(AActionCondition: string): string;
+var
+  Rows, Columns: TStringList;
+  i, j: Integer;
+  TempRow, TempRowPas, TempCol: string;
+begin
+  Result := 'if ';
+  Rows := TStringList.Create;
+  try
+    Rows.LineBreak := #13#10;
+    Rows.Text := AActionCondition;
+
+    for i := 0 to Rows.Count - 1 do
+    begin
+      TempRow := Rows.Strings[i];
+      TempRowPas := '';
+      Columns := TStringList.Create;
+      try
+        Columns.LineBreak := #5#6;
+        Columns.Text := TempRow;
+
+        for j := 0 to Columns.Count - 1 do
+        begin
+          TempCol := ExpressionToPascal(Columns.Strings[j]);
+          TempRowPas := TempRowPas + '(' + TempCol + ')';
+          if j < Columns.Count - 1 then
+            TempRowPas := TempRowPas + ' and ';
+        end;
+      finally
+        Columns.Free;
+      end;
+
+      Result := Result + '(' + TempRowPas + ')';
+      if i < Rows.Count - 1 then
+        Result := Result + ' or ';
+    end;
+
+    Result := Result + ' then'#13#10;
+  finally
+    Rows.Free;
+  end;
 end;
 
 
@@ -223,20 +407,13 @@ begin
     Request := Request + 'end;';
     Request := Request + #13#10#13#10;
 
-    //The following StringReplace call should be replaced with a better option, which is able to convert a complex condition to a valid string.
     TempActionCondition := AAction.ActionOptions.ActionCondition;
     if Length(TempActionCondition) > 1 then
       if (TempActionCondition[Length(TempActionCondition) - 1] = #13) and (TempActionCondition[Length(TempActionCondition)] = #10) then
         Delete(TempActionCondition, Length(TempActionCondition) - 1, 2);
 
     if TempActionCondition <> '' then
-    begin
-      //ToDo: use #13#10 to separate into "or" rows, and #5#6, to separate into "and" columns, using TStringList.
-      TempActionCondition := '(' + StringReplace(TempActionCondition, #5#6, ') and (', [rfReplaceAll]) + ')';
-      TempActionCondition := 'if (' + StringReplace(StringReplace(TempActionCondition, '==', ' = ', [rfReplaceAll]), #13#10, ') or (', [rfReplaceAll]) + ') then';
-      TempActionCondition := StringReplace(TempActionCondition, ' and ()', '', [rfReplaceAll]);
-      Request := Request + TempActionCondition + #13#10;
-    end;
+      Request := Request + ActionConditionToPascal(TempActionCondition);
 
     Request := Request + '  Response := ' + FuncName + ';' + #13#10;
     Request := Request + '  //Result := GetErrorMessageFromResponse(Response);' + #13#10;
