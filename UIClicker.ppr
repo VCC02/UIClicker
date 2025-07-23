@@ -63,7 +63,7 @@ uses
     DynMemLib, //search for DynMemLib.pas on GitHub if not found
   {$ENDIF}
   ClickerFileProviderUtils, ClickerVstUtils, ClickerPluginArchive, DoubleList,
-  CLHeaders;
+  CLHeaders, ClickerActionsCodeGen;
 
 {$R *.res}
 
