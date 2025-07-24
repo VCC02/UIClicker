@@ -87,6 +87,11 @@ type
     lbeSearchAction: TLabeledEdit;
     lblModifiedStatus: TLabel;
     memLogErr: TMemo;
+    MenuItem_GetClickerClientPythonRequestFromActionAllPropertiesWithSrvDbg: TMenuItem;
+    MenuItem_GetClickerClientPythonRequestFromActionModifiedOnlyWithSrvDbg: TMenuItem;
+    MenuItem_GetClickerClientPythonRequestFromActionAllProperties: TMenuItem;
+    MenuItem_GetClickerClientPythonRequestFromActionModifiedOnly: TMenuItem;
+    MenuItem_GetClickerClientPythonRequestFromAction: TMenuItem;
     MenuItem_GenerateGetVarValueFromResponsePascalFunc: TMenuItem;
     MenuItem_SeparatorPas: TMenuItem;
     MenuItem_GetClickerClientPascalRequestFromActionAllPropertiesWithSrvDbg: TMenuItem;
@@ -214,7 +219,11 @@ type
       Sender: TObject);
     procedure MenuItem_GetClickerClientPascalRequestFromActionClick(
       Sender: TObject);
+    procedure MenuItem_GetClickerClientPythonRequestFromActionClick(
+      Sender: TObject);
     procedure MenuItem_GetGenericClickerClientPascalRequestFromActionClick(
+      Sender: TObject);
+    procedure MenuItem_GetGenericClickerClientPythonRequestFromActionClick(
       Sender: TObject);
     procedure MenuItem_GetGenericHTTPRequestFromActionClick(
       Sender: TObject);
@@ -5739,6 +5748,14 @@ begin
 end;
 
 
+procedure TfrClickerActionsArr.MenuItem_GetHTTPRequestFromActionClick(
+  Sender: TObject);
+begin
+  MenuItem_GetHTTPRequestFromActionModifiedOnlyWithSrvDbg.Bitmap := MenuItem_SetActionStatusTo.Bitmap;
+  MenuItem_GetHTTPRequestFromActionAllPropertiesWithSrvDbg.Bitmap := MenuItem_SetActionStatusTo.Bitmap;
+end;
+
+
 procedure TfrClickerActionsArr.MenuItem_GetClickerClientPascalRequestFromActionClick
   (Sender: TObject);
 begin
@@ -5746,6 +5763,16 @@ begin
   MenuItem_GetClickerClientPascalRequestFromActionAllProperties.Bitmap := MenuItem_GetHTTPRequestFromActionAllProperties.Bitmap;
   MenuItem_GetClickerClientPascalRequestFromActionModifiedOnlyWithSrvDbg.Bitmap := MenuItem_SetActionStatusTo.Bitmap;
   MenuItem_GetClickerClientPascalRequestFromActionAllPropertiesWithSrvDbg.Bitmap := MenuItem_SetActionStatusTo.Bitmap;
+end;
+
+
+procedure TfrClickerActionsArr.MenuItem_GetClickerClientPythonRequestFromActionClick
+  (Sender: TObject);
+begin
+  MenuItem_GetClickerClientPythonRequestFromActionModifiedOnly.Bitmap := MenuItem_GetHTTPRequestFromActionModifiedOnly.Bitmap;
+  MenuItem_GetClickerClientPythonRequestFromActionAllProperties.Bitmap := MenuItem_GetHTTPRequestFromActionAllProperties.Bitmap;
+  MenuItem_GetClickerClientPythonRequestFromActionModifiedOnlyWithSrvDbg.Bitmap := MenuItem_SetActionStatusTo.Bitmap;
+  MenuItem_GetClickerClientPythonRequestFromActionAllPropertiesWithSrvDbg.Bitmap := MenuItem_SetActionStatusTo.Bitmap;
 end;
 
 
@@ -5833,18 +5860,54 @@ begin
 end;
 
 
+procedure TfrClickerActionsArr.MenuItem_GetGenericClickerClientPythonRequestFromActionClick
+  (Sender: TObject);
+var
+  Node: PVirtualNode;
+  Request: string;
+  AllProperties, AllDebugging: Boolean;
+begin
+  Node := vstActions.GetFirstSelected;
+  if Node = nil then
+  begin
+    if vstActions.RootNodeCount > 0 then
+      MessageBox(Handle, 'Please select an action first.', PChar(Application.Title), MB_ICONINFORMATION);
+
+    Exit;
+  end;
+
+  AllProperties := ((Sender = MenuItem_GetClickerClientPythonRequestFromActionAllProperties) or
+                   (Sender = MenuItem_GetClickerClientPythonRequestFromActionAllPropertiesWithSrvDbg)) and
+                   not ((Sender = MenuItem_GetClickerClientPythonRequestFromActionModifiedOnly) or
+                        (Sender = MenuItem_GetClickerClientPythonRequestFromActionModifiedOnlyWithSrvDbg));
+
+  AllDebugging := (Sender = MenuItem_GetClickerClientPythonRequestFromActionAllPropertiesWithSrvDbg) or
+                  (Sender = MenuItem_GetClickerClientPythonRequestFromActionModifiedOnlyWithSrvDbg);
+
+  Request := '';
+  repeat
+    if vstActions.Selected[Node] then
+    begin
+      if Request > '' then
+        Request := Request + #13#10;  //Add CRLF only if there are multiple selected actions.
+
+      Request := Request + GenerateClickerClientPythonRequestFromAction(FClkActions[Node^.Index], AllProperties, AllDebugging);
+    end; //selected
+
+    Node := Node^.NextSibling;
+  until Node = nil;
+
+  if Pos(#0, Request) > 0 then
+    Request := FastReplace_0To1(Request);
+
+  Clipboard.AsText := Request;
+end;
+
+
 procedure TfrClickerActionsArr.MenuItem_GenerateGetVarValueFromResponsePascalFuncClick
   (Sender: TObject);
 begin
   Clipboard.AsText := GenerateGetVarValueFromResponsePascalFunc;
-end;
-
-
-procedure TfrClickerActionsArr.MenuItem_GetHTTPRequestFromActionClick(
-  Sender: TObject);
-begin
-  MenuItem_GetHTTPRequestFromActionModifiedOnlyWithSrvDbg.Bitmap := MenuItem_SetActionStatusTo.Bitmap;
-  MenuItem_GetHTTPRequestFromActionAllPropertiesWithSrvDbg.Bitmap := MenuItem_SetActionStatusTo.Bitmap;
 end;
 
 

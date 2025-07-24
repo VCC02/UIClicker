@@ -35,6 +35,7 @@ uses
 function GenerateHTTPRequestFromAction(var AAction: TClkActionRec; AWithAllProperties, AWithDebugging: Boolean; AListeningPort: Word): string;
 function GenerateClickerClientPascalRequestFromAction(var AAction: TClkActionRec; AWithAllProperties, AWithDebugging: Boolean): string;
 function GenerateGetVarValueFromResponsePascalFunc: string;
+function GenerateClickerClientPythonRequestFromAction(var AAction: TClkActionRec; AWithAllProperties, AWithDebugging: Boolean): string;
 
 
 implementation
@@ -443,6 +444,137 @@ begin
     '      ListOfStrings.Free;' + #13#10 +
     '    end;' + #13#10 +
     '  end;' + #13#10;
+end;
+
+
+function GenerateClickerClientPythonRequestFromAction(var AAction: TClkActionRec; AWithAllProperties, AWithDebugging: Boolean): string;
+var
+  ActionType: TClkAction;
+  Request, Properties, PropertyDataTypes: string;
+  ListOfProperties, ListOfPropertyDataTypes: TStringList;
+  i: Integer;
+  IsDbg, IsFileLoc, IsStepIntoDbg: string;
+  PropertyDataType: string;
+  FuncName, TempActionCondition: string;
+  ActionTypeStr: string;
+begin
+  ActionType := AAction.ActionOptions.Action;
+  ActionTypeStr := CClkActionStr[ActionType];
+
+  FuncName := FixFuncNameToValid(AAction.ActionOptions.ActionName);
+  Request := '';
+  Request := Request + 'def ' + FuncName + ': // ' + AAction.ActionOptions.ActionName + #13#10;
+  Request := Request + '  DllFuncs = TUIClickerDllFunctions()' + #13#10;
+  Request := Request + '  //Python code in work...' + #13#10;
+
+  Request := StringReplace(Request, #5#6, ' ', [rfReplaceAll]);
+  Request := Request + '  ' + ActionTypeStr + ' =  GetDefault' + ActionTypeStr + 'Options()' + #13#10;
+
+  ListOfProperties := TStringList.Create;
+  ListOfPropertyDataTypes := TStringList.Create;
+  try
+    ListOfProperties.LineBreak := #13#10;
+    ListOfPropertyDataTypes.LineBreak := #13#10;
+
+    case ActionType of
+      acFindControl:
+      begin
+        //Request := Request + '  DummyDestMatchBitmapTextRecAPI: TMatchBitmapTextRecAPI;' + #13#10;
+        Request := Request + '  DummyDestMatchBitmapTextArray = TMatchBitmapTextRec(' + ListOfProperties.Values['MatchBitmapText.Count'] + ') //should be known in advance' //Request := Request + '  DummyDestMatchBitmapTextArray: TClkFindControlMatchBitmapTextAPIArr;' + #13#10;
+      end;
+
+      acFindSubControl:
+      begin
+        //Request := Request + '  DestMatchBitmapTextRecAPI: TMatchBitmapTextRecAPI;' + #13#10;
+        Request := Request + '  FindControlOptions.MatchBitmapText = ()  #(The content is updated separately. See TClkFindControlMatchBitmapText)';
+        Request := Request + '  DestMatchBitmapTextArray = TMatchBitmapTextRec(' + ListOfProperties.Values['MatchBitmapText.Count'] + ') //should be known in advance' //Request := Request + '  DestMatchBitmapTextArray: TClkFindControlMatchBitmapTextAPIArr;' + #13#10;
+      end;
+
+      else
+        ; //no other special vars
+    end;
+
+    if AWithAllProperties then
+    begin   //all properties
+      Properties := GetActionPropertiesByType(AAction, True);
+      PropertyDataTypes := GetActionPropertyDataTypesByType(AAction, True);
+    end
+    else
+    begin   //different than default properties
+      Properties := GetDifferentThanDefaultActionPropertiesByType(AAction, True);
+      PropertyDataTypes := GetDifferentThanDefaultActionPropertyDataTypesByType(AAction, True);
+    end;
+
+    if ActionType in [acFindControl, acFindSubControl, acCallTemplate] then
+      IsFileLoc := ', @WideString(''' + CREParam_FileLocation_ValueDisk + ''')[1]'
+    else
+      IsFileLoc := '';
+
+    IsDbg := BoolToStr(AWithDebugging, ', True', ', False');  //debugging action
+
+    if ActionType = acPlugin then
+      IsStepIntoDbg := ', False';
+
+    if ActionType = acFindSubControl then
+      Request := Request + '  FindSubControl.MatchBitmapText = PMatchBitmapTextRec(DestMatchBitmapTextArray)' + #13#10;
+
+    ListOfProperties.Text := StringReplace(Properties, '&', #13#10, [rfReplaceAll]);
+    ListOfPropertyDataTypes.Text := StringReplace(PropertyDataTypes, '&', #13#10, [rfReplaceAll]);
+    for i := 0 to ListOfProperties.Count - 1 do
+    begin
+      if (ActionType = acFindSubControl) and (ListOfProperties.Names[i] = 'MatchBitmapText.Count') then
+      begin
+        Request := Request + '  //SetLength(' + ActionTypeStr + '.MatchBitmapText, ' + ListOfProperties.ValueFromIndex[i] + ');' + #13#10;
+        Continue;
+      end;
+
+      try
+        PropertyDataType := ListOfPropertyDataTypes.ValueFromIndex[i];
+      except
+        PropertyDataType := '';
+      end;
+
+      if PropertyDataType = CDTString then
+        Request := Request + '  ' + ActionTypeStr + '.' + ListOfProperties.Names[i] + ' = ''' + ListOfProperties.ValueFromIndex[i] + '''' + #13#10
+      else
+        if PropertyDataType = CDTInteger then
+          Request := Request + '  ' + ActionTypeStr + '.' + ListOfProperties.Names[i] + ' = ' + ListOfProperties.ValueFromIndex[i]  + #13#10
+        else
+          if Pos(CDTEnum, PropertyDataType + '.') = 1 then     // CDTEnum + '.<EnumDataType>'
+            Request := Request + '  ' + ActionTypeStr + '.' + ListOfProperties.Names[i] + ' = ' + Copy(PropertyDataType, Length(CDTEnum) + 2, MaxInt) + '(' + ListOfProperties.ValueFromIndex[i] + ')' + #13#10
+          else
+            if PropertyDataType = CDTBool then
+              Request := Request + '  ' + ActionTypeStr + '.' + ListOfProperties.Names[i] + ' = ' + BoolToStr(ListOfProperties.ValueFromIndex[i] = '1', 'True', 'False') + #13#10
+            else  //structure or array
+              Request := Request + '  ' + ActionTypeStr + '.' + ListOfProperties.Names[i] + ' = ' + ListOfProperties.ValueFromIndex[i] + #13#10; //same as int
+    end;
+
+    Request := Request + #13#10;
+
+    Request := Request + #13#10;
+
+    Request := Request + '  //SetLength(Result, CMaxSharedStringLength);' + #13#10;
+    Request := Request + '  //SetLength(Result, Execute' + CClkActionStr[ActionType] + 'Action(@WideString(''' + AAction.ActionOptions.ActionName + ''')[1], ' + IntToStr(AAction.ActionOptions.ActionTimeout) + ', @' + CClkActionStr[ActionType] + 'API' + IsDbg + IsFileLoc + IsStepIntoDbg + ', @Result[1])); ' + #13#10;
+
+    Request := Request + #13#10#13#10;
+
+    TempActionCondition := AAction.ActionOptions.ActionCondition;
+    if Length(TempActionCondition) > 1 then
+      if (TempActionCondition[Length(TempActionCondition) - 1] = #13) and (TempActionCondition[Length(TempActionCondition)] = #10) then
+        Delete(TempActionCondition, Length(TempActionCondition) - 1, 2);
+
+    if TempActionCondition <> '' then
+      Request := Request + ActionConditionToPascal(TempActionCondition);
+
+    Request := Request + '  Response := ' + FuncName + ';' + #13#10;
+    Request := Request + '  //Result := GetErrorMessageFromResponse(Response);' + #13#10;
+    Request := Request + #13#10;
+  finally
+    ListOfProperties.Free;
+    ListOfPropertyDataTypes.Free;
+  end;
+
+  Result := Request;
 end;
 
 end.
