@@ -1642,6 +1642,13 @@ object frClickerActionsArr: TfrClickerActionsArr
         Caption = 'All Properties with debugging'
         OnClick = MenuItem_GetGenericClickerClientPascalRequestFromActionClick
       end
+      object MenuItem_SeparatorPas: TMenuItem
+        Caption = '-'
+      end
+      object MenuItem_GenerateGetVarValueFromResponsePascalFunc: TMenuItem
+        Caption = 'GetVarValueFromResponse function'
+        OnClick = MenuItem_GenerateGetVarValueFromResponsePascalFuncClick
+      end
     end
   end
   object imglstActionExtraStatus: TImageList

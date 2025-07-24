@@ -34,6 +34,7 @@ uses
 
 function GenerateHTTPRequestFromAction(var AAction: TClkActionRec; AWithAllProperties, AWithDebugging: Boolean; AListeningPort: Word): string;
 function GenerateClickerClientPascalRequestFromAction(var AAction: TClkActionRec; AWithAllProperties, AWithDebugging: Boolean): string;
+function GenerateGetVarValueFromResponsePascalFunc: string;
 
 
 implementation
@@ -426,6 +427,23 @@ begin
   Result := Request;
 end;
 
+
+function GenerateGetVarValueFromResponsePascalFunc: string;
+begin
+  Result :=
+    '  function GetVarValueFromResponse(AResponse, AVarName: string): string;' + #13#10 +
+    '  var' + #13#10 +
+    '    ListOfStrings: TStringList;' + #13#10 +
+    '  begin' + #13#10 +
+    '    ListOfStrings := TStringList.Create;' + #13#10 +
+    '    try' + #13#10 +
+    '      ListOfStrings.Text := FastReplace_87ToReturn(AResponse);' + #13#10 +
+    '      Result := ListOfStrings.Values[AVarName];' + #13#10 +
+    '    finally' + #13#10 +
+    '      ListOfStrings.Free;' + #13#10 +
+    '    end;' + #13#10 +
+    '  end;' + #13#10;
+end;
 
 end.
 

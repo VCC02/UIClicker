@@ -87,6 +87,8 @@ type
     lbeSearchAction: TLabeledEdit;
     lblModifiedStatus: TLabel;
     memLogErr: TMemo;
+    MenuItem_GenerateGetVarValueFromResponsePascalFunc: TMenuItem;
+    MenuItem_SeparatorPas: TMenuItem;
     MenuItem_GetClickerClientPascalRequestFromActionAllPropertiesWithSrvDbg: TMenuItem;
     MenuItem_GetClickerClientPascalRequestFromActionModifiedOnlyWithSrvDbg: TMenuItem;
     MenuItem_GetClickerClientPascalRequestFromActionAllProperties: TMenuItem;
@@ -208,6 +210,8 @@ type
     procedure MenuItem_CopyFilenameToClipboardClick(Sender: TObject);
     procedure MenuItem_CopyFullFilepathToClipboardClick(Sender: TObject);
     procedure MenuItem_EditBreakPointClick(Sender: TObject);
+    procedure MenuItem_GenerateGetVarValueFromResponsePascalFuncClick(
+      Sender: TObject);
     procedure MenuItem_GetClickerClientPascalRequestFromActionClick(
       Sender: TObject);
     procedure MenuItem_GetGenericClickerClientPascalRequestFromActionClick(
@@ -5754,11 +5758,12 @@ var
 begin
   Node := vstActions.GetFirstSelected;
   if Node = nil then
+  begin
     if vstActions.RootNodeCount > 0 then
-    begin
       MessageBox(Handle, 'Please select an action first.', PChar(Application.Title), MB_ICONINFORMATION);
-      Exit;
-    end;
+
+    Exit;
+  end;
 
   AllProperties := ((Sender = MenuItem_GetHTTPRequestFromActionAllProperties) or
                    (Sender = MenuItem_GetHTTPRequestFromActionAllPropertiesWithSrvDbg)) and
@@ -5793,11 +5798,12 @@ var
 begin
   Node := vstActions.GetFirstSelected;
   if Node = nil then
+  begin
     if vstActions.RootNodeCount > 0 then
-    begin
       MessageBox(Handle, 'Please select an action first.', PChar(Application.Title), MB_ICONINFORMATION);
-      Exit;
-    end;
+
+    Exit;
+  end;
 
   AllProperties := ((Sender = MenuItem_GetClickerClientPascalRequestFromActionAllProperties) or
                    (Sender = MenuItem_GetClickerClientPascalRequestFromActionAllPropertiesWithSrvDbg)) and
@@ -5824,6 +5830,13 @@ begin
     Request := FastReplace_0To1(Request);
 
   Clipboard.AsText := Request;
+end;
+
+
+procedure TfrClickerActionsArr.MenuItem_GenerateGetVarValueFromResponsePascalFuncClick
+  (Sender: TObject);
+begin
+  Clipboard.AsText := GenerateGetVarValueFromResponsePascalFunc;
 end;
 
 
