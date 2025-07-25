@@ -338,7 +338,7 @@ class TDllFunctionAddresses:
 
 
     def GetExecuteFindSubControlAction(self):
-        ExecuteFindSubControlActionProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, LONG, PFindControlOptions, BOOLEAN, LPCWSTR, ctypes.c_char_p)
+        ExecuteFindSubControlActionProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, LONG, PFindSubControlOptions, BOOLEAN, LPCWSTR, ctypes.c_char_p)
         ExecuteFindSubControlActionParams = (1, "AActionName", 0), (1, "AActionTimeout", 0), (1, "AFindSubControlOptions", 0), (1, "AUseServerDebugging", 0), (1, "AFileLocation", 0), (1, "AResultStr", 0),
         ExecuteFindSubControlActionFuncRes = ExecuteFindSubControlActionProto(("ExecuteFindSubControlAction", self.DllHandle), ExecuteFindSubControlActionParams)
         return ExecuteFindSubControlActionFuncRes

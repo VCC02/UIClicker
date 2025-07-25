@@ -506,7 +506,7 @@ PFindSubControlOptions = ctypes.POINTER(TFindSubControlOptions)
 def GetDefaultFindSubControlOptions():
     FindSubControlOptions = TFindSubControlOptions()
     FindSubControlOptions.MatchCriteria = TClkFindSubControlMatchCriteria()
-    FindSubControlOptions.MatchCriteria.WillMatchBitmapText = False
+    FindSubControlOptions.MatchCriteria.WillMatchBitmapText = True
     FindSubControlOptions.MatchCriteria.WillMatchBitmapFiles = False
     FindSubControlOptions.MatchCriteria.WillMatchPrimitiveFiles = False
 
@@ -535,7 +535,7 @@ def GetDefaultFindSubControlOptions():
     FindSubControlOptions.InitialRectangle.RightOffset = '0'
     FindSubControlOptions.InitialRectangle.BottomOffset = '0'
 
-    FindSubControlOptions.UseWholeScreen = True  #usually True for finding a window, and False, for finding a (sub)control on a window or another control.  
+    FindSubControlOptions.UseWholeScreen = False  #usually True for finding a window, and False, for finding a (sub)control on a window or another control.  
     FindSubControlOptions.ColorError = '0'
     FindSubControlOptions.AllowedColorErrorCount = '0'
     FindSubControlOptions.WaitForControlToGoAway = False
