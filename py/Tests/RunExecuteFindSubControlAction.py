@@ -48,7 +48,7 @@ try:
     print("TestConnectionToServer: ", DllFuncs.TestConnectionToServer())
 
 
-    FindControlOptions = GetDefaultFindControlOptions()
+    FindControlOptions = GetDefaultFindSubControlOptions()
     #FindControlOptions.MatchCriteria.WillMatchText = False
     #FindControlOptions.MatchCriteria.WillMatchClassName = False
     FindControlOptions.MatchCriteria.WillMatchBitmapText = True

@@ -148,6 +148,12 @@ begin
 end;
 
 
+function IsVar(AOp: string): Boolean;
+begin
+  Result := (AOp > '') and (AOp[1] = '$') and (AOp[Length(AOp)] = '$');
+end;
+
+
 function UIClickerOperatorToPascal(AOp: string): string;
 begin
   Result := '??';
@@ -187,12 +193,6 @@ begin
     Result := '>=';
     Exit;
   end;
-end;
-
-
-function IsVar(AOp: string): Boolean;
-begin
-  Result := (AOp > '') and (AOp[1] = '$') and (AOp[Length(AOp)] = '$');
 end;
 
 
@@ -447,6 +447,141 @@ begin
 end;
 
 
+function UIClickerOperatorToPython(AOp: string): string;
+begin
+  Result := '??';
+
+  if (AOp = CCompNotEqual) or (AOp = CIntCompNotEqual) or (AOp = CExtCompNotEqual) then
+  begin
+    Result := '!=';
+    Exit;
+  end;
+
+  if (AOp = CCompEqual) or (AOp = CIntCompEqual) or (AOp = CExtCompEqual) then
+  begin
+    Result := '==';
+    Exit;
+  end;
+
+  if (AOp = CCompLessThan) or (AOp = CIntCompLessThan) or (AOp = CExtCompLessThan) then
+  begin
+    Result := '<';
+    Exit;
+  end;
+
+  if (AOp = CCompGreaterThan) or (AOp = CIntCompGreaterThan) or (AOp = CExtCompGreaterThan) then
+  begin
+    Result := '>';
+    Exit;
+  end;
+
+  if (AOp = CCompLessThanOrEqual) or (AOp = CIntCompLessThanOrEqual) or (AOp = CExtCompLessThanOrEqual) then
+  begin
+    Result := '<=';
+    Exit;
+  end;
+
+  if (AOp = CCompGreaterThanOrEqual) or (AOp = CIntCompGreaterThanOrEqual) or (AOp = CExtCompGreaterThanOrEqual) then
+  begin
+    Result := '>=';
+    Exit;
+  end;
+end;
+
+
+function ExpressionToPython(AActionConditionExpression: string): string;
+var
+  Op1, Op2, OpEq: string;
+begin
+  RawExpressionToParts(AActionConditionExpression, Op1, Op2, OpEq);
+
+  if IsStringCmpOperator(OpEq) then
+  begin
+    if IsVar(Op1) then
+      Op1 := 'GetVarValueFromResponse(Response, ''' + Op1 + ''')'
+    else
+      Op1 := '''' + Op1 + '''';
+
+    if IsVar(Op2) then
+      Op2 := 'GetVarValueFromResponse(Response, ''' + Op2 + ''')'
+    else
+      Op2 := '''' + Op2 + '''';
+
+    Result := Op1 + ' ' + UIClickerOperatorToPython(OpEq) + ' ' + Op2;
+  end
+  else
+  begin
+    if IsVar(Op1) then
+    begin
+      if IsIntCmpOperator(OpEq) then
+        Op1 := 'StrToIntDef(GetVarValueFromResponse(Response, ''' + Op1 + '''), -1)'
+      else
+        if IsExtCmpOperator(OpEq) then
+          Op1 := 'StrToFloatDef(GetVarValueFromResponse(Response, ''' + Op1 + '''), -1)'
+        else
+          Op1 := 'StrToUnknownDef(GetVarValueFromResponse(Response, ''' + Op1 + '''), -1)'
+    end;
+
+    if IsVar(Op2) then
+    begin
+      if IsIntCmpOperator(OpEq) then
+        Op2 := 'StrToIntDef(GetVarValueFromResponse(Response, ''' + Op2 + '''), -1)'
+      else
+        if IsExtCmpOperator(OpEq) then
+          Op2 := 'StrToFloatDef(GetVarValueFromResponse(Response, ''' + Op2 + '''), -1)'
+        else
+          Op2 := 'StrToUnknownDef(GetVarValueFromResponse(Response, ''' + Op2 + '''), -1)'
+    end;
+
+    Result := Op1 + ' ' + UIClickerOperatorToPython(OpEq) + ' ' + Op2;
+  end;
+end;
+
+
+function ActionConditionToPython(AActionCondition: string): string;
+var
+  Rows, Columns: TStringList;
+  i, j: Integer;
+  TempRow, TempRowPas, TempCol: string;
+begin
+  Result := 'if ';
+  Rows := TStringList.Create;
+  try
+    Rows.LineBreak := #13#10;
+    Rows.Text := AActionCondition;
+
+    for i := 0 to Rows.Count - 1 do
+    begin
+      TempRow := Rows.Strings[i];
+      TempRowPas := '';
+      Columns := TStringList.Create;
+      try
+        Columns.LineBreak := #5#6;
+        Columns.Text := TempRow;
+
+        for j := 0 to Columns.Count - 1 do
+        begin
+          TempCol := ExpressionToPython(Columns.Strings[j]);
+          TempRowPas := TempRowPas + '(' + TempCol + ')';
+          if j < Columns.Count - 1 then
+            TempRowPas := TempRowPas + ' and ';
+        end;
+      finally
+        Columns.Free;
+      end;
+
+      Result := Result + '(' + TempRowPas + ')';
+      if i < Rows.Count - 1 then
+        Result := Result + ' or ';
+    end;
+
+    Result := Result + ':'#13#10;
+  finally
+    Rows.Free;
+  end;
+end;
+
+
 function GenerateClickerClientPythonRequestFromAction(var AAction: TClkActionRec; AWithAllProperties, AWithDebugging: Boolean): string;
 var
   ActionType: TClkAction;
@@ -456,19 +591,18 @@ var
   IsDbg, IsFileLoc, IsStepIntoDbg: string;
   PropertyDataType: string;
   FuncName, TempActionCondition: string;
-  ActionTypeStr: string;
+  ActionTypeStr, ActionNameStr, TextOffset: string;
 begin
   ActionType := AAction.ActionOptions.Action;
   ActionTypeStr := CClkActionStr[ActionType];
 
   FuncName := FixFuncNameToValid(AAction.ActionOptions.ActionName);
   Request := '';
-  Request := Request + 'def ' + FuncName + ': // ' + AAction.ActionOptions.ActionName + #13#10;
-  Request := Request + '  DllFuncs = TUIClickerDllFunctions()' + #13#10;
-  Request := Request + '  //Python code in work...' + #13#10;
+  Request := Request + 'def ' + FuncName + '(ADllFuncs): # ' + AAction.ActionOptions.ActionName + #13#10;
+  Request := Request + '    #Python code in work...' + #13#10;
 
   Request := StringReplace(Request, #5#6, ' ', [rfReplaceAll]);
-  Request := Request + '  ' + ActionTypeStr + ' =  GetDefault' + ActionTypeStr + 'Options()' + #13#10;
+  Request := Request + '    ' + ActionTypeStr + ' = GetDefault' + ActionTypeStr + 'Options()' + #13#10;
 
   ListOfProperties := TStringList.Create;
   ListOfPropertyDataTypes := TStringList.Create;
@@ -477,18 +611,11 @@ begin
     ListOfPropertyDataTypes.LineBreak := #13#10;
 
     case ActionType of
-      acFindControl:
-      begin
-        //Request := Request + '  DummyDestMatchBitmapTextRecAPI: TMatchBitmapTextRecAPI;' + #13#10;
-        Request := Request + '  DummyDestMatchBitmapTextArray = TMatchBitmapTextRec(' + ListOfProperties.Values['MatchBitmapText.Count'] + ') //should be known in advance' //Request := Request + '  DummyDestMatchBitmapTextArray: TClkFindControlMatchBitmapTextAPIArr;' + #13#10;
-      end;
+      //acFindControl:
+      //  Request := Request + '    DummyDestMatchBitmapTextArray = TMatchBitmapTextRec()' + #13#10;
 
       acFindSubControl:
-      begin
-        //Request := Request + '  DestMatchBitmapTextRecAPI: TMatchBitmapTextRecAPI;' + #13#10;
-        Request := Request + '  FindControlOptions.MatchBitmapText = ()  #(The content is updated separately. See TClkFindControlMatchBitmapText)';
-        Request := Request + '  DestMatchBitmapTextArray = TMatchBitmapTextRec(' + ListOfProperties.Values['MatchBitmapText.Count'] + ') //should be known in advance' //Request := Request + '  DestMatchBitmapTextArray: TClkFindControlMatchBitmapTextAPIArr;' + #13#10;
-      end;
+        Request := Request + '    ' + ActionTypeStr + '.MatchBitmapText = ()  # The content is updated separately. See TClkFindControlMatchBitmapText' + #13#10;
 
       else
         ; //no other special vars
@@ -506,7 +633,7 @@ begin
     end;
 
     if ActionType in [acFindControl, acFindSubControl, acCallTemplate] then
-      IsFileLoc := ', @WideString(''' + CREParam_FileLocation_ValueDisk + ''')[1]'
+      IsFileLoc := ', "' + CREParam_FileLocation_ValueDisk + '"'
     else
       IsFileLoc := '';
 
@@ -515,17 +642,21 @@ begin
     if ActionType = acPlugin then
       IsStepIntoDbg := ', False';
 
-    if ActionType = acFindSubControl then
-      Request := Request + '  FindSubControl.MatchBitmapText = PMatchBitmapTextRec(DestMatchBitmapTextArray)' + #13#10;
-
     ListOfProperties.Text := StringReplace(Properties, '&', #13#10, [rfReplaceAll]);
     ListOfPropertyDataTypes.Text := StringReplace(PropertyDataTypes, '&', #13#10, [rfReplaceAll]);
     for i := 0 to ListOfProperties.Count - 1 do
     begin
       if (ActionType = acFindSubControl) and (ListOfProperties.Names[i] = 'MatchBitmapText.Count') then
       begin
-        Request := Request + '  //SetLength(' + ActionTypeStr + '.MatchBitmapText, ' + ListOfProperties.ValueFromIndex[i] + ');' + #13#10;
+        Request := Request + '    DestMatchBitmapTextArray = TMatchBitmapTextRec(' + ListOfProperties.ValueFromIndex[i] + ')' + #13#10;
         Continue;
+      end;
+
+      ActionNameStr := ActionTypeStr;
+      if (ActionType = acFindSubControl) and (Pos('MatchBitmapText[', ListOfProperties.Names[i]) = 1) then
+      begin
+        ListOfProperties.Strings[i] := StringReplace(ListOfProperties.Names[i], 'MatchBitmapText[', 'Items[', [rfReplaceAll]) + '=' + ListOfProperties.ValueFromIndex[i];
+        ActionNameStr := 'DestMatchBitmapTextArray';
       end;
 
       try
@@ -535,27 +666,26 @@ begin
       end;
 
       if PropertyDataType = CDTString then
-        Request := Request + '  ' + ActionTypeStr + '.' + ListOfProperties.Names[i] + ' = ''' + ListOfProperties.ValueFromIndex[i] + '''' + #13#10
+        Request := Request + '    ' + ActionNameStr + '.' + ListOfProperties.Names[i] + ' = ''' + ListOfProperties.ValueFromIndex[i] + '''' + #13#10
       else
         if PropertyDataType = CDTInteger then
-          Request := Request + '  ' + ActionTypeStr + '.' + ListOfProperties.Names[i] + ' = ' + ListOfProperties.ValueFromIndex[i]  + #13#10
+          Request := Request + '    ' + ActionNameStr + '.' + ListOfProperties.Names[i] + ' = ' + ListOfProperties.ValueFromIndex[i]  + #13#10
         else
           if Pos(CDTEnum, PropertyDataType + '.') = 1 then     // CDTEnum + '.<EnumDataType>'
-            Request := Request + '  ' + ActionTypeStr + '.' + ListOfProperties.Names[i] + ' = ' + Copy(PropertyDataType, Length(CDTEnum) + 2, MaxInt) + '(' + ListOfProperties.ValueFromIndex[i] + ')' + #13#10
+            Request := Request + '    ' + ActionNameStr + '.' + ListOfProperties.Names[i] + ' = ' + ListOfProperties.ValueFromIndex[i] + ' # ' + PropertyDataType + #13#10
           else
             if PropertyDataType = CDTBool then
-              Request := Request + '  ' + ActionTypeStr + '.' + ListOfProperties.Names[i] + ' = ' + BoolToStr(ListOfProperties.ValueFromIndex[i] = '1', 'True', 'False') + #13#10
+              Request := Request + '    ' + ActionNameStr + '.' + ListOfProperties.Names[i] + ' = ' + BoolToStr(ListOfProperties.ValueFromIndex[i] = '1', 'True', 'False') + #13#10
             else  //structure or array
-              Request := Request + '  ' + ActionTypeStr + '.' + ListOfProperties.Names[i] + ' = ' + ListOfProperties.ValueFromIndex[i] + #13#10; //same as int
+              Request := Request + '    ' + ActionNameStr + '.' + ListOfProperties.Names[i] + ' = ' + ListOfProperties.ValueFromIndex[i] + #13#10; //same as int
     end;
 
     Request := Request + #13#10;
 
-    Request := Request + #13#10;
+    if ActionType = acFindSubControl then
+      Request := Request + '    ' + ActionTypeStr + '.MatchBitmapText = PMatchBitmapTextRec(DestMatchBitmapTextArray)' + #13#10;
 
-    Request := Request + '  //SetLength(Result, CMaxSharedStringLength);' + #13#10;
-    Request := Request + '  //SetLength(Result, Execute' + CClkActionStr[ActionType] + 'Action(@WideString(''' + AAction.ActionOptions.ActionName + ''')[1], ' + IntToStr(AAction.ActionOptions.ActionTimeout) + ', @' + CClkActionStr[ActionType] + 'API' + IsDbg + IsFileLoc + IsStepIntoDbg + ', @Result[1])); ' + #13#10;
-
+    Request := Request + '    return ADllFuncs.Execute' + CClkActionStr[ActionType] + 'Action(''' + AAction.ActionOptions.ActionName + ''', ' + IntToStr(AAction.ActionOptions.ActionTimeout) + ', ' + CClkActionStr[ActionType] + IsDbg + IsFileLoc + IsStepIntoDbg + ')' + #13#10;
     Request := Request + #13#10#13#10;
 
     TempActionCondition := AAction.ActionOptions.ActionCondition;
@@ -563,11 +693,16 @@ begin
       if (TempActionCondition[Length(TempActionCondition) - 1] = #13) and (TempActionCondition[Length(TempActionCondition)] = #10) then
         Delete(TempActionCondition, Length(TempActionCondition) - 1, 2);
 
+    TextOffset := '';
     if TempActionCondition <> '' then
-      Request := Request + ActionConditionToPascal(TempActionCondition);
+    begin
+      Request := Request + ActionConditionToPython(TempActionCondition);
+      TextOffset := '    ';
+    end;
 
-    Request := Request + '  Response := ' + FuncName + ';' + #13#10;
-    Request := Request + '  //Result := GetErrorMessageFromResponse(Response);' + #13#10;
+    Request := Request + TextOffset + '#DllFuncs = TUIClickerDllFunctions()' + #13#10;
+    Request := Request + TextOffset + 'Response = ' + FuncName + '(DllFuncs)' + #13#10;
+    Request := Request + TextOffset + '#Result = GetErrorMessageFromResponse(Response)' + #13#10;
     Request := Request + #13#10;
   finally
     ListOfProperties.Free;
