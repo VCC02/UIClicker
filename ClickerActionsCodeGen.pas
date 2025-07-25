@@ -36,7 +36,7 @@ function GenerateHTTPRequestFromAction(var AAction: TClkActionRec; AWithAllPrope
 function GenerateClickerClientPascalRequestFromAction(var AAction: TClkActionRec; AWithAllProperties, AWithDebugging: Boolean): string;
 function GenerateGetVarValueFromResponsePascalFunc: string;
 function GenerateClickerClientPythonRequestFromAction(var AAction: TClkActionRec; AWithAllProperties, AWithDebugging: Boolean): string;
-
+function GenerateGetVarValueFromResponsePythonFunc: string;
 
 implementation
 
@@ -418,7 +418,7 @@ begin
       Request := Request + ActionConditionToPascal(TempActionCondition);
 
     Request := Request + '  Response := ' + FuncName + ';' + #13#10;
-    Request := Request + '  //Result := GetErrorMessageFromResponse(Response);' + #13#10;
+    Request := Request + '  //Result := GetVarValueFromResponse(Response, ''$LastAction_Status$'');' + #13#10;
     Request := Request + #13#10;
   finally
     ListOfProperties.Free;
@@ -514,23 +514,23 @@ begin
     if IsVar(Op1) then
     begin
       if IsIntCmpOperator(OpEq) then
-        Op1 := 'StrToIntDef(GetVarValueFromResponse(Response, ''' + Op1 + '''), -1)'
+        Op1 := 'int(GetVarValueFromResponse(Response, ''' + Op1 + '''))'
       else
         if IsExtCmpOperator(OpEq) then
-          Op1 := 'StrToFloatDef(GetVarValueFromResponse(Response, ''' + Op1 + '''), -1)'
+          Op1 := 'float(GetVarValueFromResponse(Response, ''' + Op1 + '''))'
         else
-          Op1 := 'StrToUnknownDef(GetVarValueFromResponse(Response, ''' + Op1 + '''), -1)'
+          Op1 := 'unknown(GetVarValueFromResponse(Response, ''' + Op1 + '''))'
     end;
 
     if IsVar(Op2) then
     begin
       if IsIntCmpOperator(OpEq) then
-        Op2 := 'StrToIntDef(GetVarValueFromResponse(Response, ''' + Op2 + '''), -1)'
+        Op2 := 'int(GetVarValueFromResponse(Response, ''' + Op2 + '''))'
       else
         if IsExtCmpOperator(OpEq) then
-          Op2 := 'StrToFloatDef(GetVarValueFromResponse(Response, ''' + Op2 + '''), -1)'
+          Op2 := 'float(GetVarValueFromResponse(Response, ''' + Op2 + '''))'
         else
-          Op2 := 'StrToUnknownDef(GetVarValueFromResponse(Response, ''' + Op2 + '''), -1)'
+          Op2 := 'unknown(GetVarValueFromResponse(Response, ''' + Op2 + '''))'
     end;
 
     Result := Op1 + ' ' + UIClickerOperatorToPython(OpEq) + ' ' + Op2;
@@ -700,9 +700,10 @@ begin
       TextOffset := '    ';
     end;
 
-    Request := Request + TextOffset + '#DllFuncs = TUIClickerDllFunctions()' + #13#10;
+    Request := Request + TextOffset + '###DllFuncs = TUIClickerDllFunctions()' + #13#10;
+    Request := Request + TextOffset + '#DllFuncs = TDllFunctions() #this type can be used by GetVarValueFromResponse function' + #13#10;
     Request := Request + TextOffset + 'Response = ' + FuncName + '(DllFuncs)' + #13#10;
-    Request := Request + TextOffset + '#Result = GetErrorMessageFromResponse(Response)' + #13#10;
+    Request := Request + TextOffset + '#Result = GetVarValueFromResponse(Response, ''$LastAction_Status$'')' + #13#10;
     Request := Request + #13#10;
   finally
     ListOfProperties.Free;
@@ -710,6 +711,24 @@ begin
   end;
 
   Result := Request;
+end;
+
+
+function GenerateGetVarValueFromResponsePythonFunc: string;
+begin
+  Result :=
+    '    def GetVarValueFromResponse(AResponse, AVarName):' + #13#10 +
+    '        AResponseStr = AResponse.replace("", "\r\n")' + #13#10 +
+    '        ListOfVars = AResponseStr.splitlines()' + #13#10 +
+    '        for Item in ListOfVars:' + #13#10 +
+    '            PosEq = Item.index("=")' + #13#10 +
+    '            VarValue = ''''' + #13#10 +
+    '            if PosEq > -1:' + #13#10 +
+    '                CurrentVarName = Item[0 : PosEq]' + #13#10 +
+    '                if CurrentVarName == AVarName:' + #13#10 +
+    '                    VarValue = Item[PosEq + 1: len(Item)]' + #13#10 +
+    '                    return VarValue' + #13#10 +
+    '        return ''0'' # a valid int as string' + #13#10;
 end;
 
 end.

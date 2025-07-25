@@ -1705,6 +1705,13 @@ object frClickerActionsArr: TfrClickerActionsArr
         Caption = 'All Properties with debugging'
         OnClick = MenuItem_GetGenericClickerClientPythonRequestFromActionClick
       end
+      object Separator1: TMenuItem
+        Caption = '-'
+      end
+      object MenuItem_GenerateGetVarValueFromResponsePythonFunc: TMenuItem
+        Caption = 'GetVarValueFromResponse function'
+        OnClick = MenuItem_GenerateGetVarValueFromResponsePythonFuncClick
+      end
     end
   end
   object imglstActionExtraStatus: TImageList

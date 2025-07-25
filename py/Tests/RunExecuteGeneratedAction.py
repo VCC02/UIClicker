@@ -40,8 +40,31 @@ from UIClickerClient import *
 
 import time
 
-DllFuncs = TUIClickerDllFunctions() #use TUIClickerDllFunctions for Boolean results (True for success)
-#DllFuncs = TDllFunctions() #use TDllFunctions for debugging (see functions implementation for details (some functions return 1 for success, others return 0 for success)
+#DllFuncs = TUIClickerDllFunctions() #use TUIClickerDllFunctions for Boolean results (True for success)
+DllFuncs = TDllFunctions() #use TDllFunctions for debugging (see functions implementation for details (some functions return 1 for success, others return 0 for success)
+
+
+def GetVarValueFromResponse(AResponse, AVarName):
+    AResponseStr = AResponse.replace("", "\r\n")
+    ListOfVars = AResponseStr.splitlines()
+    for Item in ListOfVars:
+        PosEq = Item.index("=")
+        VarValue = ''
+        if PosEq > -1:
+            CurrentVarName = Item[0 : PosEq]
+            if CurrentVarName == AVarName:
+                VarValue = Item[PosEq + 1: len(Item)]
+                return VarValue
+
+    return '0' # a valid int as string
+
+
+def _FindControl_(ADllFuncs): # "FindControl"
+    FindControl = GetDefaultFindControlOptions()
+    FindControl.MatchText = 'UI Clicker Main'
+    FindControl.MatchClassName = 'Window'
+
+    return ADllFuncs.ExecuteFindControlAction('"FindControl"', 3000, FindControl, False, "Disk")
 
 
 def _FindSubControl_(ADllFuncs): # "FindSubControl"
@@ -84,8 +107,20 @@ try:
 
     #print("ExecuteFindSubControlAction: ", _FindSubControl_(DllFuncs))
     
-    Response = _FindSubControl_(DllFuncs)
-    print("Response from ExecuteFindSubControlAction: ", Response)
+    #Hardcoded example response, received by another DllFuncs.Execute<ActionType>Action call, when DllFuncs is created from TDllFunctions()
+    #Response = '$RemoteExecResponse$=1$Control_Text$=UI Clicker Main$LastAction_Status$=Successful$Half_Control_Width$=6'
+    
+    #Real response
+    Response = _FindControl_(DllFuncs) #make sure to init DllFuncs in "debugging" mode
+    #print("Response from ExecuteFindControlAction: ", Response)
+    
+    if ((int(GetVarValueFromResponse(Response, '$Half_Control_Width$')) >= 6)) or ((GetVarValueFromResponse(Response, '$LastAction_Status$') == 'Successful')):
+        Response = _FindSubControl_(DllFuncs)
+        
+    if GetVarValueFromResponse(Response, '$LastAction_Status$') == 'Successful':
+        print("Response from ExecuteFindSubControlAction: True")
+    else:
+        print("Response from ExecuteFindSubControlAction: False")
 
 finally:
     print("DestroyLoggingWindow: ", DllFuncs.DestroyLoggingWindow())

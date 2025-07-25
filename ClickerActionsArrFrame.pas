@@ -87,6 +87,8 @@ type
     lbeSearchAction: TLabeledEdit;
     lblModifiedStatus: TLabel;
     memLogErr: TMemo;
+    MenuItem_GenerateGetVarValueFromResponsePythonFunc: TMenuItem;
+    Separator1: TMenuItem;
     MenuItem_GetClickerClientPythonRequestFromActionAllPropertiesWithSrvDbg: TMenuItem;
     MenuItem_GetClickerClientPythonRequestFromActionModifiedOnlyWithSrvDbg: TMenuItem;
     MenuItem_GetClickerClientPythonRequestFromActionAllProperties: TMenuItem;
@@ -216,6 +218,8 @@ type
     procedure MenuItem_CopyFullFilepathToClipboardClick(Sender: TObject);
     procedure MenuItem_EditBreakPointClick(Sender: TObject);
     procedure MenuItem_GenerateGetVarValueFromResponsePascalFuncClick(
+      Sender: TObject);
+    procedure MenuItem_GenerateGetVarValueFromResponsePythonFuncClick(
       Sender: TObject);
     procedure MenuItem_GetClickerClientPascalRequestFromActionClick(
       Sender: TObject);
@@ -5908,6 +5912,13 @@ procedure TfrClickerActionsArr.MenuItem_GenerateGetVarValueFromResponsePascalFun
   (Sender: TObject);
 begin
   Clipboard.AsText := GenerateGetVarValueFromResponsePascalFunc;
+end;
+
+
+procedure TfrClickerActionsArr.MenuItem_GenerateGetVarValueFromResponsePythonFuncClick
+  (Sender: TObject);
+begin
+  Clipboard.AsText := GenerateGetVarValueFromResponsePythonFunc;
 end;
 
 
