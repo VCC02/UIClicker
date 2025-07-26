@@ -5589,6 +5589,7 @@ begin
   if Node <> nil then
     InsertIndex := Node^.Index;
 
+  GetDefaultPropertyValues_SetVar(NewAction);
   NewAction.ListOfVarNames := FastReplace_45ToReturn('$My_Left$$My_Top$$My_Right$$My_Bottom$$My_Width$$My_Height$$My_Text$$My_Class$$My_Handle$');
   NewAction.ListOfVarValues := FastReplace_45ToReturn('$Control_Left$$Control_Top$$Control_Right$$Control_Bottom$$Control_Width$$Control_Height$$Control_Text$$Control_Class$$Control_Handle$');
   NewAction.ListOfVarEvalBefore := FastReplace_45ToReturn('111111111');
@@ -5610,6 +5611,7 @@ begin
   if Node <> nil then
     InsertIndex := Node^.Index;
 
+  GetDefaultPropertyValues_SetVar(NewAction);
   NewAction.ListOfVarNames := FastReplace_45ToReturn('$Control_Left$$Control_Top$$Control_Right$$Control_Bottom$$Control_Width$$Control_Height$$Control_Text$$Control_Class$$Control_Handle$');
   NewAction.ListOfVarValues := FastReplace_45ToReturn('$My_Left$$My_Top$$My_Right$$My_Bottom$$My_Width$$My_Height$$My_Text$$My_Class$$My_Handle$');
   NewAction.ListOfVarEvalBefore := FastReplace_45ToReturn('111111111');
