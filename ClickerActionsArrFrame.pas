@@ -5859,6 +5859,19 @@ begin
     Node := Node^.NextSibling;
   until Node = nil;
 
+  Node := vstActions.GetFirstSelected;
+  repeat
+    if vstActions.Selected[Node] then
+    begin
+      if Request > '' then
+        Request := Request + #13#10;  //Add CRLF only if there are multiple selected actions.
+
+      Request := Request + GenerateClickerClientPascalRequestCallFromAction(FClkActions[Node^.Index], AllProperties, AllDebugging);
+    end; //selected
+
+    Node := Node^.NextSibling;
+  until Node = nil;
+
   if Pos(#0, Request) > 0 then
     Request := FastReplace_0To1(Request);
 
@@ -5869,11 +5882,12 @@ end;
 procedure TfrClickerActionsArr.MenuItem_GetGenericClickerClientPythonRequestFromActionClick
   (Sender: TObject);
 var
-  Node: PVirtualNode;
+  Node, FirstSelected: PVirtualNode;
   Request: string;
   AllProperties, AllDebugging: Boolean;
 begin
-  Node := vstActions.GetFirstSelected;
+  FirstSelected := vstActions.GetFirstSelected;
+  Node := FirstSelected;
   if Node = nil then
   begin
     if vstActions.RootNodeCount > 0 then
@@ -5898,6 +5912,19 @@ begin
         Request := Request + #13#10;  //Add CRLF only if there are multiple selected actions.
 
       Request := Request + GenerateClickerClientPythonRequestFromAction(FClkActions[Node^.Index], AllProperties, AllDebugging);
+    end; //selected
+
+    Node := Node^.NextSibling;
+  until Node = nil;
+
+  Node := FirstSelected;
+  repeat
+    if vstActions.Selected[Node] then
+    begin
+      if Request > '' then
+        Request := Request + #13#10;  //Add CRLF only if there are multiple selected actions.
+
+      Request := Request + GenerateClickerClientPythonRequestCallFromAction(FClkActions[Node^.Index], AllProperties, AllDebugging, Node = FirstSelected);
     end; //selected
 
     Node := Node^.NextSibling;

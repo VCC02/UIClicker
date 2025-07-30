@@ -33,9 +33,13 @@ uses
 
 
 function GenerateHTTPRequestFromAction(var AAction: TClkActionRec; AWithAllProperties, AWithDebugging: Boolean; AListeningPort: Word): string;
+
 function GenerateClickerClientPascalRequestFromAction(var AAction: TClkActionRec; AWithAllProperties, AWithDebugging: Boolean): string;
+function GenerateClickerClientPascalRequestCallFromAction(var AAction: TClkActionRec; AWithAllProperties, AWithDebugging: Boolean): string;
 function GenerateGetVarValueFromResponsePascalFunc: string;
+
 function GenerateClickerClientPythonRequestFromAction(var AAction: TClkActionRec; AWithAllProperties, AWithDebugging: Boolean): string;
+function GenerateClickerClientPythonRequestCallFromAction(var AAction: TClkActionRec; AWithAllProperties, AWithDebugging: Boolean; AIncludeDllFuncsLoading: Boolean = False): string;
 function GenerateGetVarValueFromResponsePythonFunc: string;
 
 implementation
@@ -297,7 +301,7 @@ var
   i: Integer;
   IsDbg, IsFileLoc, IsStepIntoDbg: string;
   PropertyDataType: string;
-  FuncName, TempActionCondition: string;
+  FuncName: string;
   ActionTypeStr: string;
 begin
   ActionType := AAction.ActionOptions.Action;
@@ -409,23 +413,34 @@ begin
     Request := Request + 'end;';
     Request := Request + #13#10#13#10;
 
-    TempActionCondition := AAction.ActionOptions.ActionCondition;
-    if Length(TempActionCondition) > 1 then
-      if (TempActionCondition[Length(TempActionCondition) - 1] = #13) and (TempActionCondition[Length(TempActionCondition)] = #10) then
-        Delete(TempActionCondition, Length(TempActionCondition) - 1, 2);
 
-    if TempActionCondition <> '' then
-      Request := Request + ActionConditionToPascal(TempActionCondition);
-
-    Request := Request + '  Response := ' + FuncName + ';' + #13#10;
-    Request := Request + '  //Result := GetVarValueFromResponse(Response, ''$LastAction_Status$'');' + #13#10;
-    Request := Request + #13#10;
   finally
     ListOfProperties.Free;
     ListOfPropertyDataTypes.Free;
   end;
 
   Result := Request;
+end;
+
+
+function GenerateClickerClientPascalRequestCallFromAction(var AAction: TClkActionRec; AWithAllProperties, AWithDebugging: Boolean): string;
+var
+  FuncName, TempActionCondition: string;
+begin
+  Result := '';
+  FuncName := FixFuncNameToValid(AAction.ActionOptions.ActionName);
+
+  TempActionCondition := AAction.ActionOptions.ActionCondition;
+  if Length(TempActionCondition) > 1 then
+    if (TempActionCondition[Length(TempActionCondition) - 1] = #13) and (TempActionCondition[Length(TempActionCondition)] = #10) then
+      Delete(TempActionCondition, Length(TempActionCondition) - 1, 2);
+
+  if TempActionCondition <> '' then
+    Result := Result + ActionConditionToPascal(TempActionCondition);
+
+  Result := Result + '  Response := ' + FuncName + ';' + #13#10;
+  Result := Result + '  //Result := GetVarValueFromResponse(Response, ''$LastAction_Status$'');' + #13#10;
+  //Result := Result + #13#10;
 end;
 
 
@@ -590,8 +605,8 @@ var
   i: Integer;
   IsDbg, IsFileLoc, IsStepIntoDbg: string;
   PropertyDataType: string;
-  FuncName, TempActionCondition: string;
-  ActionTypeStr, ActionNameStr, TextOffset: string;
+  FuncName: string;
+  ActionTypeStr, ActionNameStr: string;
 begin
   ActionType := AAction.ActionOptions.Action;
   ActionTypeStr := CClkActionStr[ActionType];
@@ -686,24 +701,6 @@ begin
       Request := Request + '    ' + ActionTypeStr + '.MatchBitmapText = PMatchBitmapTextRec(DestMatchBitmapTextArray)' + #13#10;
 
     Request := Request + '    return ADllFuncs.Execute' + CClkActionStr[ActionType] + 'Action(''' + AAction.ActionOptions.ActionName + ''', ' + IntToStr(AAction.ActionOptions.ActionTimeout) + ', ' + CClkActionStr[ActionType] + IsDbg + IsFileLoc + IsStepIntoDbg + ')' + #13#10;
-    Request := Request + #13#10#13#10;
-
-    TempActionCondition := AAction.ActionOptions.ActionCondition;
-    if Length(TempActionCondition) > 1 then
-      if (TempActionCondition[Length(TempActionCondition) - 1] = #13) and (TempActionCondition[Length(TempActionCondition)] = #10) then
-        Delete(TempActionCondition, Length(TempActionCondition) - 1, 2);
-
-    TextOffset := '';
-    if TempActionCondition <> '' then
-    begin
-      Request := Request + ActionConditionToPython(TempActionCondition);
-      TextOffset := '    ';
-    end;
-
-    Request := Request + TextOffset + '###DllFuncs = TUIClickerDllFunctions()' + #13#10;
-    Request := Request + TextOffset + '#DllFuncs = TDllFunctions() #this type can be used by GetVarValueFromResponse function' + #13#10;
-    Request := Request + TextOffset + 'Response = ' + FuncName + '(DllFuncs)' + #13#10;
-    Request := Request + TextOffset + '#Result = GetVarValueFromResponse(Response, ''$LastAction_Status$'')' + #13#10;
     Request := Request + #13#10;
   finally
     ListOfProperties.Free;
@@ -711,6 +708,37 @@ begin
   end;
 
   Result := Request;
+end;
+
+
+function GenerateClickerClientPythonRequestCallFromAction(var AAction: TClkActionRec; AWithAllProperties, AWithDebugging: Boolean; AIncludeDllFuncsLoading: Boolean = False): string;
+var
+  FuncName, TempActionCondition, TextOffset: string;
+begin
+  Result := '';
+  FuncName := FixFuncNameToValid(AAction.ActionOptions.ActionName);
+
+  TempActionCondition := AAction.ActionOptions.ActionCondition;
+  if Length(TempActionCondition) > 1 then
+    if (TempActionCondition[Length(TempActionCondition) - 1] = #13) and (TempActionCondition[Length(TempActionCondition)] = #10) then
+      Delete(TempActionCondition, Length(TempActionCondition) - 1, 2);
+
+  TextOffset := '';
+  if TempActionCondition <> '' then
+  begin
+    Result := Result + ActionConditionToPython(TempActionCondition);
+    TextOffset := '    ';
+  end;
+
+  if AIncludeDllFuncsLoading then
+  begin
+    Result := Result + TextOffset + '###DllFuncs = TUIClickerDllFunctions()' + #13#10;
+    Result := Result + TextOffset + '#DllFuncs = TDllFunctions() #this type can be used by GetVarValueFromResponse function' + #13#10;
+  end;
+
+  Result := Result + TextOffset + 'Response = ' + FuncName + '(DllFuncs)' + #13#10;
+  Result := Result + TextOffset + '#Result = GetVarValueFromResponse(Response, ''$LastAction_Status$'')' + #13#10;
+  //Result := Result + #13#10;
 end;
 
 
