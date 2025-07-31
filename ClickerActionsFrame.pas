@@ -4943,6 +4943,7 @@ begin
     FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex);
 
     frClickerFindControl.RemoveFontProfileByIndex(MenuData^.PropertyItemIndex);
+    BuildFontColorIconsList;
     TriggerOnControlsModified;
   finally
     Dispose(MenuData);
