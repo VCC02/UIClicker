@@ -87,6 +87,8 @@ type
     lbeSearchAction: TLabeledEdit;
     lblModifiedStatus: TLabel;
     memLogErr: TMemo;
+    MenuItem_IncludeActionCalls_Python: TMenuItem;
+    MenuItem_IncludeActionCalls_Pascal: TMenuItem;
     MenuItem_GenerateGetVarValueFromResponsePythonFunc: TMenuItem;
     Separator1: TMenuItem;
     MenuItem_GetClickerClientPythonRequestFromActionAllPropertiesWithSrvDbg: TMenuItem;
@@ -1438,6 +1440,9 @@ begin
     Indent := 'ActionCond.ColWidth_' + IntToStr(i) + '.' + AIndentSuffix;
     frClickerActions.frClickerConditionEditor.ColumnWidths[i] := AIni.ReadInteger(ASection, Indent, 100);
   end;
+
+  MenuItem_IncludeActionCalls_Pascal.Checked := AIni.ReadBool(ASection, 'IncludeActionCalls_Pascal.' + AIndentSuffix, MenuItem_IncludeActionCalls_Pascal.Checked);
+  MenuItem_IncludeActionCalls_Python.Checked := AIni.ReadBool(ASection, 'IncludeActionCalls_Python.' + AIndentSuffix, MenuItem_IncludeActionCalls_Python.Checked);
 end;
 
 
@@ -1464,6 +1469,9 @@ begin
     Indent := 'ActionCond.ColWidth_' + IntToStr(i) + '.' + AIndentSuffix;
     AIni.WriteInteger(ASection, Indent, frClickerActions.frClickerConditionEditor.ColumnWidths[i]);
   end;
+
+  AIni.WriteBool(ASection, 'IncludeActionCalls_Pascal.' + AIndentSuffix, MenuItem_IncludeActionCalls_Pascal.Checked);
+  AIni.WriteBool(ASection, 'IncludeActionCalls_Python.' + AIndentSuffix, MenuItem_IncludeActionCalls_Python.Checked);
 end;
 
 
@@ -5859,18 +5867,21 @@ begin
     Node := Node^.NextSibling;
   until Node = nil;
 
-  Node := vstActions.GetFirstSelected;
-  repeat
-    if vstActions.Selected[Node] then
-    begin
-      if Request > '' then
-        Request := Request + #13#10;  //Add CRLF only if there are multiple selected actions.
+  if MenuItem_IncludeActionCalls_Pascal.Checked then
+  begin
+    Node := vstActions.GetFirstSelected;
+    repeat
+      if vstActions.Selected[Node] then
+      begin
+        if Request > '' then
+          Request := Request + #13#10;  //Add CRLF only if there are multiple selected actions.
 
-      Request := Request + GenerateClickerClientPascalRequestCallFromAction(FClkActions[Node^.Index], AllProperties, AllDebugging);
-    end; //selected
+        Request := Request + GenerateClickerClientPascalRequestCallFromAction(FClkActions[Node^.Index], AllProperties, AllDebugging);
+      end; //selected
 
-    Node := Node^.NextSibling;
-  until Node = nil;
+      Node := Node^.NextSibling;
+    until Node = nil;
+  end;
 
   if Pos(#0, Request) > 0 then
     Request := FastReplace_0To1(Request);
@@ -5917,18 +5928,21 @@ begin
     Node := Node^.NextSibling;
   until Node = nil;
 
-  Node := FirstSelected;
-  repeat
-    if vstActions.Selected[Node] then
-    begin
-      if Request > '' then
-        Request := Request + #13#10;  //Add CRLF only if there are multiple selected actions.
+  if MenuItem_IncludeActionCalls_Python.Checked then
+  begin
+    Node := FirstSelected;
+    repeat
+      if vstActions.Selected[Node] then
+      begin
+        if Request > '' then
+          Request := Request + #13#10;  //Add CRLF only if there are multiple selected actions.
 
-      Request := Request + GenerateClickerClientPythonRequestCallFromAction(FClkActions[Node^.Index], AllProperties, AllDebugging, Node = FirstSelected);
-    end; //selected
+        Request := Request + GenerateClickerClientPythonRequestCallFromAction(FClkActions[Node^.Index], AllProperties, AllDebugging, Node = FirstSelected);
+      end; //selected
 
-    Node := Node^.NextSibling;
-  until Node = nil;
+      Node := Node^.NextSibling;
+    until Node = nil;
+  end;
 
   if Pos(#0, Request) > 0 then
     Request := FastReplace_0To1(Request);

@@ -1642,6 +1642,11 @@ object frClickerActionsArr: TfrClickerActionsArr
         Caption = 'All Properties with debugging'
         OnClick = MenuItem_GetGenericClickerClientPascalRequestFromActionClick
       end
+      object MenuItem_IncludeActionCalls_Pascal: TMenuItem
+        AutoCheck = True
+        Caption = 'Include action call(s)'
+        Checked = True
+      end
       object MenuItem_SeparatorPas: TMenuItem
         Caption = '-'
       end
@@ -1704,6 +1709,12 @@ object frClickerActionsArr: TfrClickerActionsArr
       object MenuItem_GetClickerClientPythonRequestFromActionAllPropertiesWithSrvDbg: TMenuItem
         Caption = 'All Properties with debugging'
         OnClick = MenuItem_GetGenericClickerClientPythonRequestFromActionClick
+      end
+      object MenuItem_IncludeActionCalls_Python: TMenuItem
+        AutoCheck = True
+        Caption = 'Include action call(s)'
+        Checked = True
+        GroupIndex = 1
       end
       object Separator1: TMenuItem
         Caption = '-'
