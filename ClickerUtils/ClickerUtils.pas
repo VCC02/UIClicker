@@ -1259,8 +1259,10 @@ const
   CGetWindowLongPtr_FuncName = '$GetWindowLongPtr(';
   CGetWindowProcessId_FuncName = '$GetWindowProcessId(';
   CGetListOfFonts_FuncName = '$GetListOfFonts(';
+  CUpperCase_FuncName = '$UpperCase(';
+  CLowerCase_FuncName = '$LowerCase(';
 
-  CBuiltInFunctionCount = 51;
+  CBuiltInFunctionCount = 53;
   CBuiltInFunctions: array[0..CBuiltInFunctionCount - 1] of string = (
     CRandom_FuncName,
     CSum_FuncName,
@@ -1312,7 +1314,9 @@ const
     CGetKeyValueFromPair_FuncName,
     CGetWindowLongPtr_FuncName,
     CGetWindowProcessId_FuncName,
-    CGetListOfFonts_FuncName
+    CGetListOfFonts_FuncName,
+    CUpperCase_FuncName,
+    CLowerCase_FuncName
   );
 
 
@@ -2709,6 +2713,28 @@ begin
 end;
 
 
+function ReplaceUpperCase(s: string): string;
+var
+  ItemArgs, InitialItemArgs: string;
+begin
+  ItemArgs := ExtractFuncArgs(CUpperCase_FuncName, s);
+  InitialItemArgs := ItemArgs;
+
+  Result := StringReplace(s, CUpperCase_FuncName + InitialItemArgs + ')$', UpperCase(ItemArgs), [rfReplaceAll]);
+end;
+
+
+function ReplaceLowerCase(s: string): string;
+var
+  ItemArgs, InitialItemArgs: string;
+begin
+  ItemArgs := ExtractFuncArgs(CLowerCase_FuncName, s);
+  InitialItemArgs := ItemArgs;
+
+  Result := StringReplace(s, CLowerCase_FuncName + InitialItemArgs + ')$', LowerCase(ItemArgs), [rfReplaceAll]);
+end;
+
+
 function ReplaceOnce(AListOfVars: TStringList; s: string; AReplaceRandom: Boolean = True): string;
 var
   i: Integer;
@@ -2907,6 +2933,12 @@ begin
 
   if Pos(CGetListOfFonts_FuncName, s) > 0 then
     s := ReplaceGetListOfFonts(AListOfVars, s);
+
+  if Pos(CUpperCase_FuncName, s) > 0 then
+    s := ReplaceUpperCase(s);
+
+  if Pos(CLowerCase_FuncName, s) > 0 then
+    s := ReplaceLowerCase(s);
 
   Result := s;
 end;

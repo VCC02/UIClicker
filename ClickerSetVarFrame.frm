@@ -338,6 +338,8 @@ object frClickerSetVar: TfrClickerSetVar
         '$SetWinInterpOption(<WinInterpOptionName>, <WinInterpOptionValue>)$'
         '$Console([<Value>])$'
         '$GetListOfFonts()$'
+        '$UpperCase(<some_string>)$'
+        '$LowerCase(<some_string>)$'
       )
       ParentShowHint = False
       ReadOnly = True

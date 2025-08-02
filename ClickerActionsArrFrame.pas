@@ -1055,6 +1055,8 @@ begin
     TempFuncDescriptions.Add('$SetWinInterpOption(<WinInterpOptionName>, <WinInterpOptionValue>)$=Sets an option or executes a command on the WinInterp window. Most options are boolean values and they check or uncheck a checkbox on the window. Other options expect a numeric value (e.g. a color index or a radio button index). Available option names (case insensitive): ShowZoom, ContinuouslyScreenshotByKeys, RecordingStep, MouseCursorPosToScreenshotDelay, HighlightSelectedComponent, UseHCursor, FullScreenScanning, RecordSelectedAreaOnly, RecordWithEdgeExtending, MinimizeWhileRecording, BringTargetToFront, BringTargetToFrontPeriodically, HighlightingLabels, SelectedLayer, LoadTree, LoadAvoidedZones, SaveAvoidedZones, NewAvoidedZone, DeleteAvoidedZone, GetAvoidedZone, SetAvoidedZone, ClearAvoidedZone.');
     TempFuncDescriptions.Add('$Console([<Value>])$=Prints the evaluated value to log. This function must be called from the left column of a SetVar action and uses, with priority, the value from the right column. If that value is empty, it looks for an argument, like $Console(<argument>])$ and prints that on instead. It returns nothing.');
     TempFuncDescriptions.Add('$GetListOfFonts()$=Returns a #4#5-separated list of available (intalled) fonts names. This list may be different on another machine, where UIClicker is running in server mode.');
+    TempFuncDescriptions.Add('$UpperCase(<some_string>)$=Returns the upper case version of the passed string.');
+    TempFuncDescriptions.Add('$LowerCase(<some_string>)$=Returns the lower case version of the passed string.');
 
     for i := 0 to FFuncDescriptions.Count - 1 do
     begin
