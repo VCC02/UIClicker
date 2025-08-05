@@ -1235,7 +1235,9 @@ procedure TfrClickerActions.imgDebugBmpMouseMove(Sender: TObject;
 begin
   lblDebugBitmapXMouseOffset.Caption := 'mx: ' + IntToStr(X);
   lblDebugBitmapYMouseOffset.Caption := 'my: ' + IntToStr(Y);
-  SetLabelsFromMouseOverExecDbgImgPixelColor(imgDebugBmp.Canvas.Pixels[X, Y]);
+
+  if (X > -1) and (Y > -1) and (X < imgDebugBmp.Picture.Bitmap.Width) and (X < imgDebugBmp.Picture.Bitmap.Height) then
+    SetLabelsFromMouseOverExecDbgImgPixelColor(imgDebugBmp.Canvas.Pixels[X, Y]);
 
   FCurrentMousePosOnPreviewImg.X := X;
   FCurrentMousePosOnPreviewImg.Y := Y;
@@ -1264,7 +1266,9 @@ procedure TfrClickerActions.FlblResultSelVertMouseMove(Sender: TObject; Shift: T
 begin
   lblDebugBitmapXMouseOffset.Caption := 'mx: ' + IntToStr((Sender as TLabel).Left);
   lblDebugBitmapYMouseOffset.Caption := 'my: ' + IntToStr(Y);
-  SetLabelsFromMouseOverExecDbgImgPixelColor(imgDebugBmp.Canvas.Pixels[X, Y]);
+
+  if (X > -1) and (Y > -1) and (X < imgDebugBmp.Picture.Bitmap.Width) and (X < imgDebugBmp.Picture.Bitmap.Height) then
+    SetLabelsFromMouseOverExecDbgImgPixelColor(imgDebugBmp.Canvas.Pixels[X, Y]);
 
   FCurrentMousePosOnPreviewImg.X := (Sender as TLabel).Left;
   FCurrentMousePosOnPreviewImg.Y := Y;
@@ -1293,7 +1297,9 @@ procedure TfrClickerActions.FlblResultSelHorizMouseMove(Sender: TObject; Shift: 
 begin
   lblDebugBitmapXMouseOffset.Caption := 'mx: ' + IntToStr(X);
   lblDebugBitmapYMouseOffset.Caption := 'my: ' + IntToStr((Sender as TLabel).Top);
-  SetLabelsFromMouseOverExecDbgImgPixelColor(imgDebugBmp.Canvas.Pixels[X, Y]);
+
+  if (X > -1) and (Y > -1) and (X < imgDebugBmp.Picture.Bitmap.Width) and (X < imgDebugBmp.Picture.Bitmap.Height) then
+    SetLabelsFromMouseOverExecDbgImgPixelColor(imgDebugBmp.Canvas.Pixels[X, Y]);
 
   FCurrentMousePosOnPreviewImg.X := X;
   FCurrentMousePosOnPreviewImg.Y := (Sender as TLabel).Top;
@@ -1358,6 +1364,13 @@ begin
   imgDebugBmp.Canvas.Pen.Color := clWhite;
   imgDebugBmp.Canvas.Brush.Color := clWhite;
   imgDebugBmp.Canvas.Brush.Style := bsSolid;
+
+  if imgDebugBmp.Width < 1 then
+    imgDebugBmp.Width := 1;
+
+  if imgDebugBmp.Height < 1 then
+    imgDebugBmp.Height := 1;
+
   imgDebugBmp.Canvas.Rectangle(0, 0, imgDebugBmp.Width, imgDebugBmp.Height);
   imgDebugBmp.Repaint;
 

@@ -1241,7 +1241,9 @@ const
   CLoadTextFile_FuncName = '$LoadTextFile(';
   CItemCount_FuncName = '$ItemCount(';
   CGetTextItem_FuncName = '$GetTextItem(';
+  CGetTextItemEx_FuncName = '$GetTextItemEx(';
   CIndexOfTextItem_FuncName = '$IndexOfTextItem(';
+  CIndexOfTextItemEx_FuncName = '$IndexOfTextItemEx(';
   CStr0_FuncName = '$Str0(';
   CStr1_FuncName = '$Str1(';
   CStrLen_FuncName = '$StrLen(';
@@ -1262,7 +1264,7 @@ const
   CUpperCase_FuncName = '$UpperCase(';
   CLowerCase_FuncName = '$LowerCase(';
 
-  CBuiltInFunctionCount = 53;
+  CBuiltInFunctionCount = 55;
   CBuiltInFunctions: array[0..CBuiltInFunctionCount - 1] of string = (
     CRandom_FuncName,
     CSum_FuncName,
@@ -1297,7 +1299,9 @@ const
     CLoadTextFile_FuncName,
     CItemCount_FuncName,
     CGetTextItem_FuncName,
+    CGetTextItemEx_FuncName,
     CIndexOfTextItem_FuncName,
+    CIndexOfTextItemEx_FuncName,
     CStr0_FuncName,
     CStr1_FuncName,
     CStrLen_FuncName,
@@ -2241,13 +2245,13 @@ begin
 end;
 
 
-function ReplaceGetTextItem(AListOfVars: TStringList; s: string): string;
+function ReplaceGetTextItemSep(AListOfVars: TStringList; s, ASep, AFuncName: string): string;
 var
   ItemArgs, InitialItemArgs, Content, IndexStr: string;
   CurrentIndex, i, ItemIndex, PosComma, ItemPos, PrevItemPos: Integer;
   Found: Boolean;
 begin
-  ItemArgs := ExtractFuncArgs(CGetTextItem_FuncName, s);
+  ItemArgs := ExtractFuncArgs(AFuncName, s);
   InitialItemArgs := ItemArgs;
 
   AListOfVars.Values[CFuncExVarName] := '';
@@ -2260,12 +2264,12 @@ begin
   end
   else
   begin
-    PosComma := Pos(',', ItemArgs);
+    PosComma := Pos(ASep, ItemArgs);
 
     if PosComma > 0 then
     begin
       Content := Copy(ItemArgs, 1, PosComma - 1);
-      IndexStr := Copy(ItemArgs, PosComma + 1, MaxInt);
+      IndexStr := Copy(ItemArgs, PosComma + Length(ASep), MaxInt);
     end
     else
     begin
@@ -2311,17 +2315,29 @@ begin
   end;
 
   Result := Copy(Content, PrevItemPos, ItemPos - PrevItemPos);
-  Result := StringReplace(s, CGetTextItem_FuncName + InitialItemArgs + ')$', Result, [rfReplaceAll]);
+  Result := StringReplace(s, AFuncName + InitialItemArgs + ')$', Result, [rfReplaceAll]);
 end;
 
 
-function ReplaceIndexOfTextItem(AListOfVars: TStringList; s: string): string;
+function ReplaceGetTextItem(AListOfVars: TStringList; s: string): string;
+begin
+  Result := ReplaceGetTextItemSep(AListOfVars, s, ',', CGetTextItem_FuncName);
+end;
+
+
+function ReplaceGetTextItemEx(AListOfVars: TStringList; s: string): string;
+begin
+  Result := ReplaceGetTextItemSep(AListOfVars, s, '~^~', CGetTextItemEx_FuncName);
+end;
+
+
+function ReplaceIndexOfTextItemSep(AListOfVars: TStringList; s, ASep, AFuncName: string): string;
 var
   ItemArgs, InitialItemArgs, Content, TextItemStr, CurrentItemStr: string;
   CurrentIndex, i, PosComma, PrevItemPos: Integer;
   Found: Boolean;
 begin
-  ItemArgs := ExtractFuncArgs(CIndexOfTextItem_FuncName, s);
+  ItemArgs := ExtractFuncArgs(AFuncName, s);
   InitialItemArgs := ItemArgs;
   AListOfVars.Values[CFuncExVarName] := '';
 
@@ -2333,12 +2349,12 @@ begin
   end
   else
   begin
-    PosComma := Pos(',', ItemArgs);
+    PosComma := Pos(ASep, ItemArgs);
 
     if PosComma > 0 then
     begin
       Content := Copy(ItemArgs, 1, PosComma - 1);
-      TextItemStr := Copy(ItemArgs, PosComma + 1, MaxInt);
+      TextItemStr := Copy(ItemArgs, PosComma + Length(ASep), MaxInt);
     end
     else
     begin
@@ -2384,7 +2400,19 @@ begin
   end;
 
   Result := IntToStr(CurrentIndex);
-  Result := StringReplace(s, CIndexOfTextItem_FuncName + InitialItemArgs + ')$', Result, [rfReplaceAll]);
+  Result := StringReplace(s, AFuncName + InitialItemArgs + ')$', Result, [rfReplaceAll]);
+end;
+
+
+function ReplaceIndexOfTextItem(AListOfVars: TStringList; s: string): string;
+begin
+  Result := ReplaceIndexOfTextItemSep(AListOfVars, s, ',', CIndexOfTextItem_FuncName);
+end;
+
+
+function ReplaceIndexOfTextItemEx(AListOfVars: TStringList; s: string): string;
+begin
+  Result := ReplaceIndexOfTextItemSep(AListOfVars, s, '~^~', CIndexOfTextItemEx_FuncName);
 end;
 
 
@@ -2840,8 +2868,14 @@ begin
   if Pos(CGetTextItem_FuncName, s) > 0 then
     s := ReplaceGetTextItem(AListOfVars, s);
 
+  if Pos(CGetTextItemEx_FuncName, s) > 0 then
+    s := ReplaceGetTextItemEx(AListOfVars, s);
+
   if Pos(CIndexOfTextItem_FuncName, s) > 0 then
     s := ReplaceIndexOfTextItem(AListOfVars, s);
+
+  if Pos(CIndexOfTextItemEx_FuncName, s) > 0 then
+    s := ReplaceIndexOfTextItemEx(AListOfVars, s);
 
   if Pos(CStr0_FuncName, s) > 0 then
     s := ReplaceStr0(s);

@@ -1366,6 +1366,49 @@ begin
 end;
 
 
+procedure FixTRect(var ATRect: TRect);
+begin
+  if ATRect.Left > Screen.Width - 1 then
+    ATRect.Left := Screen.Width - 1;
+
+  if ATRect.Top > Screen.Height - 1 then
+    ATRect.Top := Screen.Height - 1;
+
+  if ATRect.Right > Screen.Width - 1 then
+    ATRect.Right := Screen.Width - 1;
+
+  if ATRect.Bottom > Screen.Height - 1 then
+    ATRect.Bottom := Screen.Height - 1;
+
+  if ATRect.Left < 0 then
+    ATRect.Left := 0;
+
+  if ATRect.Top < 0 then
+    ATRect.Top := 0;
+
+  if ATRect.Right < 1 then
+    ATRect.Right := 1;
+
+  if ATRect.Bottom < 1 then
+    ATRect.Bottom := 1;
+
+  if ATRect.Width < 1 then
+    ATRect.Width := 1;
+
+  if ATRect.Height < 1 then
+    ATRect.Height := 1;
+end;
+
+
+//The search area may have invalid values, as a result of user input. This leads to AVs, like division by 0 or out of memory.
+procedure FixInputData(var InputData: TFindControlInputData);
+begin
+  FixTRect(InputData.GlobalSearchArea);
+  FixTRect(InputData.InitialRectangleOffsets);
+  //Maybe a combination of GlobalSearchArea and InitialRectangleOffsets will be needed later.
+end;
+
+
 function FindSubControlOnScreen(Algorithm: TMatchBitmapAlgorithm;
                                 AlgorithmSettings: TMatchBitmapAlgorithmSettings;
                                 InputData: TFindControlInputData;
@@ -1384,6 +1427,8 @@ begin
   Result := False;
 
   //InputData.BitmapToSearchFor.PixelFormat := pf24bit;  //Leave commented! If the pixel format is different than 24-bit, and changed here, the content is cleared.
+
+  FixInputData(InputData);
 
   SetLength(AvailableControls, 0);
   SetLength(FoundSubControls, 0);

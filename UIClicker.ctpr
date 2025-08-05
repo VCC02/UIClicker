@@ -491,6 +491,9 @@
       <Item>
         <Name Value="EIdSocketError"/>
       </Item>
+      <Item>
+        <Name Value="EIdReadTimeout"/>
+      </Item>
     </Exceptions>
   </Debugging>
 </CONFIG>

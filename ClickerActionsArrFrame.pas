@@ -1011,7 +1011,9 @@ begin
     TempFuncDescriptions.Add('$LoadTextFile(<PathToTextFile>)$=Loads a text file (CRLF-separated lines) and returns its content as #4#5 separated strings.');
     TempFuncDescriptions.Add('$ItemCount($TextFileContent$)$=Returns the number of items in a #4#5-separated list of strings (as returned by $LoadTextFile()$. Even the last item has to be terminated by #4#5.');
     TempFuncDescriptions.Add('$GetTextItem($TextFileContent$,<ItemIndex>)$=Returns the item by index, in a #4#5-separated list of strings (as returned by $LoadTextFile()$. Even the last item has to be terminated by #4#5.');
+    TempFuncDescriptions.Add('$GetTextItemEx($TextFileContent$~^~<ItemIndex>)$=Same as $GetTextItem($TextFileContent$,<ItemIndex>)$, but it uses "~^~" instead of "," to separate arguments. It is useful, when arguments might contain a ",", which leads to bad parsing.');
     TempFuncDescriptions.Add('$IndexOfTextItem($TextFileContent$,<Item>)$=Returns the item index of the given item, in a #4#5-separated list of strings (as returned by $LoadTextFile()$.');
+    TempFuncDescriptions.Add('$IndexOfTextItemEx($TextFileContent$~^~<Item>)$=Same as $IndexOfTextItem($TextFileContent$,<Item>)$, but it uses "~^~" instead of "," to separate arguments. It is useful, when arguments might contain a ",", which leads to bad parsing.');
     TempFuncDescriptions.Add('$Str0(<some_string>,<CharacterIndex>)$=Returns the character at the given index, in a string. The index is 0-based (e.g. $Str0(ABC,1)$ returns B.');
     TempFuncDescriptions.Add('$Str1(<some_string>,<CharacterIndex>)$=Returns the character at the given index, in a string. The index is 1-based (e.g. $Str1(ABC,1)$ returns A.');
     TempFuncDescriptions.Add('$StrLen(<some_string>)$=Returns the number of characters in a string.');
@@ -5418,7 +5420,7 @@ begin
     Exit;
   end;
 
-  RightSide := Trim(Copy(s, PosCrop + 1, MaxInt));
+  RightSide := TrimLeft(Copy(s, PosCrop + 1, MaxInt));
 
   if (Length(RightSide) > 2) and (RightSide[1] = '"') and (RightSide[Length(RightSide)] = '"') then
     Value := Copy(RightSide, 2, Length(RightSide) - 2)
