@@ -160,6 +160,16 @@ object frmClickerTemplateCallTree: TfrmClickerTemplateCallTree
     Anchors = [akRight, akBottom]
     Caption = 'Search mode'
   end
+  object chkDisplayCaller: TCheckBox
+    Left = 264
+    Height = 19
+    Top = 120
+    Width = 123
+    Anchors = [akTop, akRight]
+    Caption = 'Display caller action'
+    TabOrder = 8
+    OnChange = chkDisplayCallerChange
+  end
   object tmrSearch: TTimer
     Enabled = False
     Interval = 200

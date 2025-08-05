@@ -50,6 +50,7 @@ type
     Highlighted: Boolean;
     ItemVisible: Boolean;  //used on searching for files
     IconIndex: Integer;
+    CallerActionName: string;
   end;
 
   PTemplateFile = ^TTemplateFile;
@@ -69,6 +70,7 @@ type
   TfrmClickerTemplateCallTree = class(TForm)
     btnBrowse: TButton;
     btnGenerate: TButton;
+    chkDisplayCaller: TCheckBox;
     chkFullPathComparison: TCheckBox;
     chkDisplayFullPaths: TCheckBox;
     cmbSearchMode: TComboBox;
@@ -88,6 +90,7 @@ type
     vstCallTree: TVirtualStringTree;
     procedure btnBrowseClick(Sender: TObject);
     procedure btnGenerateClick(Sender: TObject);
+    procedure chkDisplayCallerChange(Sender: TObject);
     procedure chkDisplayFullPathsChange(Sender: TObject);
     procedure cmbSearchModeChange(Sender: TObject);
     procedure edtSearchChange(Sender: TObject);
@@ -171,6 +174,8 @@ begin
   Top := AIni.ReadInteger('CallTreeWindow', 'Top', Min(Top, Screen.DesktopHeight - 60));
   Width := AIni.ReadInteger('CallTreeWindow', 'Width', Min(Width, Screen.DesktopWidth - 40));
   Height := AIni.ReadInteger('CallTreeWindow', 'Height', Min(Height, Screen.DesktopHeight - 40));
+
+  chkDisplayCaller.Checked := AIni.ReadBool('CallTreeWindow', 'DisplayCaller', chkDisplayCaller.Checked);
 end;
 
 
@@ -180,6 +185,8 @@ begin
   AIni.WriteInteger('CallTreeWindow', 'Top', Min(Top, Screen.DesktopHeight - 60));
   AIni.WriteInteger('CallTreeWindow', 'Width', Min(Width, Screen.DesktopWidth - 40));
   AIni.WriteInteger('CallTreeWindow', 'Height', Min(Height, Screen.DesktopHeight - 40));
+
+  AIni.WriteBool('CallTreeWindow', 'DisplayCaller', chkDisplayCaller.Checked);
 end;
 
 
@@ -534,10 +541,15 @@ begin
     case Column of
       0:
       begin
-        if chkDisplayFullPaths.Checked then  //the Checked value can be cached if BeforePaint
-          CellText := NodeData^.Template^.FilePath
+        if chkDisplayCaller.Checked then
+          CellText := NodeData^.Template^.CallerActionName + ' => '
         else
-          CellText := NodeData^.Template^.FileName;
+          CellText := '';
+
+        if chkDisplayFullPaths.Checked then  //the Checked value can be cached if BeforePaint
+          CellText := CellText + NodeData^.Template^.FilePath
+        else
+          CellText := CellText + NodeData^.Template^.FileName;
       end;
 
       1:
@@ -732,6 +744,8 @@ begin
           if NewNodeData <> nil then
           begin
             NewNodeData^.Template := FTemplateFiles[IndexOfCalledTemplate];  //copy the pointer
+            NewNodeData^.Template.CallerActionName := NodeData^.Template^.ClkActions[i].ActionOptions.ActionName;
+
             if vstCallTree.GetNodeLevel(NewNode) < 30 then  //safety measure, to prevent infinite recursion, in case TemplatePathFoundInParentNodes has bugs
               if not TemplatePathFoundInParentNodes(NewNode^.Parent, FTemplateFiles[IndexOfCalledTemplate]^.FilePath) then
                 InsertCalledTemplates(NewNode, AFullPathCmp, AListOfTopLevelNodesToDelete);  //recursion here
@@ -769,9 +783,9 @@ begin
       Node := vstCallTree.GetNextSibling(Node);
     until Node = nil;
 
-    //bug:  deleting notes causes the tree scrollbars to be hidden (some bad computations)
+    //bug:  deleting nodes causes the tree scrollbars to be hidden (some bad computations)
     for i := 0 to ListOfTopLevelNodesToDelete.Count - 1 do
-      DeleteTopLevelNodeByPath(ListOfTopLevelNodesToDelete.Strings[i]);       //bug: if only two templates are in the list, and each calls the other (infinite indirect recursion), than both of them end up deleted, resulting in an empty tree
+      DeleteTopLevelNodeByPath(ListOfTopLevelNodesToDelete.Strings[i]);       //bug: if only two templates are in the list, and each calls the other (infinite indirect recursion), then both of them end up deleted, resulting in an empty tree
   finally
     ListOfTopLevelNodesToDelete.Free;
   end;
@@ -898,6 +912,17 @@ begin
   LoadTemplateIcons;
 
   tmrSearch.Enabled := True;
+end;
+
+
+procedure TfrmClickerTemplateCallTree.chkDisplayCallerChange(Sender: TObject);
+const
+  CFirstColumnTitle = 'Template name / path';
+begin
+  vstCallTree.Header.Columns[0].Text := CFirstColumnTitle;
+
+  if chkDisplayCaller.Checked then
+    vstCallTree.Header.Columns[0].Text := 'Caller action => ' + vstCallTree.Header.Columns[0].Text;
 end;
 
 
