@@ -166,6 +166,10 @@ object frClickerConditionEditor: TfrClickerConditionEditor
       Caption = 'Add $PrefixWithZeros($SomeNumber$,6)$ == 001234'
       OnClick = MenuItem_AddPrefixWithZerosEqualsNumberClick
     end
+    object MenuItemAddStrLenMyVar: TMenuItem
+      Caption = 'Add $StrLen($MyVar$)$ == 0'
+      OnClick = MenuItemAddStrLenMyVarClick
+    end
   end
   object tmrEditingCondition: TTimer
     Enabled = False

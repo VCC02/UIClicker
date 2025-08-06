@@ -48,6 +48,7 @@ type
   TfrClickerConditionEditor = class(TFrame)
     imglstComparisonOperators: TImageList;
     lblLastActionStatusValidValues: TLabel;
+    MenuItemAddStrLenMyVar: TMenuItem;
     MenuItemExtNotEqual: TMenuItem;
     MenuItemExtEqual: TMenuItem;
     MenuItemExtLessThan: TMenuItem;
@@ -78,6 +79,7 @@ type
     spdbtnAddAND: TSpeedButton;
     spdbtnAddOR: TSpeedButton;
     tmrEditingCondition: TTimer;
+    procedure MenuItemAddStrLenMyVarClick(Sender: TObject);
     procedure MenuItemEqualClick(Sender: TObject);
     procedure MenuItemExtEqualClick(Sender: TObject);
     procedure MenuItemExtGreaterThanClick(Sender: TObject);
@@ -754,6 +756,36 @@ end;
 procedure TfrClickerConditionEditor.MenuItemEqualClick(Sender: TObject);
 begin
   SetConditionOperator(CCompEqual);
+end;
+
+
+procedure TfrClickerConditionEditor.MenuItemAddStrLenMyVarClick(Sender: TObject);
+var
+  i: Integer;
+  s: string;
+begin
+  SetLength(FActionConditionForPreview, Length(FActionConditionForPreview) + 1);
+  FActionConditionForPreview[Length(FActionConditionForPreview) - 1] := TStringList.Create;
+  FActionConditionForPreview[Length(FActionConditionForPreview) - 1].LineBreak := #13#10;
+
+  if Length(FActionConditionForPreview) > 1 then //there is already an item to copy from
+  begin
+    s := '';
+    for i := 0 to FActionConditionForPreview[0].Count - 1 do
+      s := s + '$StrLen($MyVar$)$' + CIntCompEqual + '0' + #13#10;
+
+    FActionConditionForPreview[Length(FActionConditionForPreview) - 1].Text := s;
+  end
+  else
+  begin
+    AddExpressionColumns(True); //OR
+    FActionConditionForPreview[Length(FActionConditionForPreview) - 1].Text := '$StrLen($MyVar$)$' + CIntCompEqual + '0';
+  end;
+
+  vstActionConditions.RootNodeCount := Length(FActionConditionForPreview);
+  vstActionConditions.Repaint;
+
+  TriggerOnControlsModified;
 end;
 
 

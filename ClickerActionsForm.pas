@@ -1930,6 +1930,7 @@ begin
         NewFrame.InitFrame; //after "LoadTemplate", before "FileName :="
 
         NewFrame.FileName := AFileNameToCall;   //set to AFileNameToCall, after calling InitFrame
+        NewFrame.lblModifiedStatus.Hint := NewFrame.FileName;
         NewFrame.Modified := True; //trigger updating label
         NewFrame.Modified := False;
         NewFrame.StopAllActionsOnDemandFromParent := @FStopAllActionsOnDemand;
