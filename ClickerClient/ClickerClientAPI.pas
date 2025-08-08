@@ -64,6 +64,19 @@ type
 
   PClkClickOptionsAPI = ^TClkClickOptionsAPI;
 
+  TClkClickOptionsAPIWS = record
+    XClickPointVar: WideString;
+    YClickPointVar: WideString;
+    XOffset, YOffset: WideString;
+    XClickPointVarDest: WideString;
+    YClickPointVarDest: WideString;
+    XOffsetDest, YOffsetDest: WideString;
+    MouseWheelAmount: WideString;
+    DelayAfterMovingToDestination: WideString;
+    DelayAfterMouseDown: WideString;
+    MoveDuration: WideString;
+  end;
+
 
   TClkExecAppOptionsAPI = record
     PathToApp: PWideChar;
@@ -76,6 +89,13 @@ type
   end;
 
   PClkExecAppOptionsAPI = ^TClkExecAppOptionsAPI;
+
+  TClkExecAppOptionsAPIWS = record
+    PathToApp: WideString;
+    ListOfParams: WideString;
+    AppStdIn: WideString;
+    CurrentDir: WideString;
+  end;
 
 
   TClkFindControlMatchCriteriaAPI = record
@@ -97,10 +117,21 @@ type
     LeftOffset, TopOffset, RightOffset, BottomOffset: PWideChar;
   end;
 
+  TRectStringAPIWS = record
+    Left, Top, Right, Bottom: WideString;
+    LeftOffset, TopOffset, RightOffset, BottomOffset: WideString;
+  end;
+
   TMatchByHistogramSettingsAPI = record
     MinPercentColorMatch: PWideChar;
     MostSignificantColorCountInSubBmp: PWideChar;
     MostSignificantColorCountInBackgroundBmp: PWideChar;
+  end;
+
+  TMatchByHistogramSettingsAPIWS = record
+    MinPercentColorMatch: WideString;
+    MostSignificantColorCountInSubBmp: WideString;
+    MostSignificantColorCountInBackgroundBmp: WideString;
   end;
 
 
@@ -171,37 +202,30 @@ type
     MatchClassName: PWideChar;
     MatchTextSeparator: PWideChar;
     MatchClassNameSeparator: PWideChar;
-    //MatchBitmapText: PMatchBitmapTextRecAPI; //pointer to a TMatchBitmapTextRecAPI structure, which contains a length (32-bit) and a pointer to an array of TClkFindControlMatchBitmapText;
-    //MatchBitmapFiles: PWideChar;
-    //MatchBitmapAlgorithm: Byte; //TMatchBitmapAlgorithm; //change this to LongInt, in case of AV at python side
-    //MatchBitmapAlgorithmSettings: TMatchBitmapAlgorithmSettings;
     InitialRectangle: TRectStringAPI;
     UseWholeScreen: Boolean;
-    //ColorError: PWideChar;
-    //AllowedColorErrorCount: PWideChar;
     WaitForControlToGoAway: Boolean;
     StartSearchingWithCachedControl: Boolean;
     CachedControlLeft: PWideChar;
     CachedControlTop: PWideChar;
-    //MatchPrimitiveFiles: PWideChar;
     GetAllControls: Boolean;
     //UseFastSearch: Boolean;
-    //FastSearchAllowedColorErrorCount: PWideChar;
-    //IgnoredColors: PWideChar;
-    //SleepySearch: Boolean;
-    //StopSearchOnMismatch: Boolean;
-    //ImageSource: Byte; //TImageSource;
-    //SourceFileName: PWideChar;
-    //ImageSourceFileNameLocation: Byte; //TImageSourceFileNameLocation;
     PrecisionTimeout: Boolean;
-    //FullBackgroundImageInResult: Boolean;
-    //MatchByHistogramSettings: TMatchByHistogramSettingsAPI;
     EvaluateTextCount: PWideChar;
-    //CropFromScreenshot: Boolean;
-    //ThreadCount: PWideChar;
   end;
 
   PClkFindControlOptionsAPI = ^TClkFindControlOptionsAPI;
+
+  TClkFindControlOptionsAPIWS = record
+    MatchText: WideString;
+    MatchClassName: WideString;
+    MatchTextSeparator: WideString;
+    MatchClassNameSeparator: WideString;
+    InitialRectangle: TRectStringAPIWS;
+    CachedControlLeft: WideString;
+    CachedControlTop: WideString;
+    EvaluateTextCount: WideString;
+  end;
 
 
   TClkFindSubControlOptionsAPI = record
@@ -209,9 +233,6 @@ type
     MatchCriteria: TClkFindSubControlMatchCriteriaAPI;
     AllowToFail: Boolean;
     MatchText: PWideChar;
-    // MatchClassName: PWideChar;
-    // MatchTextSeparator: PWideChar;
-    // MatchClassNameSeparator: PWideChar;
     MatchBitmapText: PMatchBitmapTextRecAPI; //pointer to a TMatchBitmapTextRecAPI structure, which contains a length (32-bit) and a pointer to an array of TClkFindControlMatchBitmapText;
     MatchBitmapFiles: PWideChar;
     MatchBitmapAlgorithm: Byte; //TMatchBitmapAlgorithm; //change this to LongInt, in case of AV at python side
@@ -244,6 +265,24 @@ type
 
   PClkFindSubControlOptionsAPI = ^TClkFindSubControlOptionsAPI;
 
+  TClkFindSubControlOptionsAPIWS = record
+    MatchText: WideString;
+    //MatchBitmapText: PMatchBitmapTextRecAPI; //pointer to a TMatchBitmapTextRecAPI structure, which contains a length (32-bit) and a pointer to an array of TClkFindControlMatchBitmapText;
+    MatchBitmapFiles: WideString;
+    InitialRectangle: TRectStringAPIWS;
+    ColorError: WideString;
+    AllowedColorErrorCount: WideString;
+    CachedControlLeft: WideString;
+    CachedControlTop: WideString;
+    MatchPrimitiveFiles: WideString;
+    FastSearchAllowedColorErrorCount: WideString;
+    IgnoredColors: WideString;
+    SourceFileName: WideString;
+    MatchByHistogramSettings: TMatchByHistogramSettingsAPIWS;
+    EvaluateTextCount: WideString;
+    ThreadCount: WideString;
+  end;
+
 
   TClkSetTextOptionsAPI = record
     Text: PWideChar;
@@ -253,6 +292,12 @@ type
   end;
 
   PClkSetTextOptionsAPI = ^TClkSetTextOptionsAPI;
+
+  TClkSetTextOptionsAPIWS = record
+    Text: WideString;
+    DelayBetweenKeyStrokes: WideString;
+    Count: WideString;
+  end;
 
 
   TClkCallTemplateLoopOptionsAPI = record
@@ -265,6 +310,13 @@ type
     EvalBreakPosition: Byte; //TLoopEvalBreakPosition;
   end;
 
+  TClkCallTemplateLoopOptionsAPIWS = record
+    Counter: WideString;
+    InitValue: WideString;
+    EndValue: WideString;
+    BreakCondition: WideString; //uses the same format as TClkActionOptions.ActionCondition
+  end;
+
   TClkCallTemplateOptionsAPI = record
     TemplateFileName: PWideChar;
     ListOfCustomVarsAndValues: PWideChar;
@@ -274,12 +326,21 @@ type
 
   PClkCallTemplateOptionsAPI = ^TClkCallTemplateOptionsAPI;
 
+  TClkCallTemplateOptionsAPIWS = record
+    TemplateFileName: WideString;
+    ListOfCustomVarsAndValues: WideString;
+    CallTemplateLoop: TClkCallTemplateLoopOptionsAPIWS;
+  end;
 
   TClkSleepOptionsAPI = record
     Value: PWideChar;  // [ms]
   end;
 
   PClkSleepOptionsAPI = ^TClkSleepOptionsAPI;
+
+  TClkSleepOptionsAPIWS = record
+    Value: WideString;  // [ms]
+  end;
 
 
   TClkSetVarOptionsAPI = record
@@ -291,6 +352,12 @@ type
 
   PClkSetVarOptionsAPI = ^TClkSetVarOptionsAPI;
 
+  TClkSetVarOptionsAPIWS = record
+    ListOfVarNames: WideString;
+    ListOfVarValues: WideString;
+    ListOfVarEvalBefore: WideString;
+  end;
+
 
   TClkWindowOperationsOptionsAPI = record
     Operation: Byte; //TWindowOperation;
@@ -300,6 +367,10 @@ type
 
   PClkWindowOperationsOptionsAPI = ^TClkWindowOperationsOptionsAPI;
 
+  TClkWindowOperationsOptionsAPIWS = record
+    NewX, NewY, NewWidth, NewHeight: WideString;
+  end;
+
 
   TClkLoadSetVarFromFileOptionsAPI = record
     FileName: PWideChar;
@@ -307,6 +378,11 @@ type
   end;
 
   PClkLoadSetVarFromFileOptionsAPI = ^TClkLoadSetVarFromFileOptionsAPI;
+
+  TClkLoadSetVarFromFileOptionsAPIWS = record
+    FileName: WideString;
+    SetVarActionName: WideString;
+  end;
 
 
   TClkSaveSetVarToFileOptionsAPI = record
@@ -316,6 +392,11 @@ type
 
   PClkSaveSetVarToFileOptionsAPI = ^TClkSaveSetVarToFileOptionsAPI;
 
+  TClkSaveSetVarToFileOptionsAPIWS = record
+    FileName: WideString;
+    SetVarActionName: WideString;
+  end;
+
 
   TClkPluginOptionsAPI = record
     FileName: PWideChar;
@@ -323,6 +404,11 @@ type
   end;
 
   PClkPluginOptionsAPI = ^TClkPluginOptionsAPI;
+
+  TClkPluginOptionsAPIWS = record
+    FileName: WideString;
+    ListOfPropertiesAndValues: WideString;
+  end;
 
 
   TClkEditTemplateOptionsAPI = record
@@ -340,6 +426,15 @@ type
   end;
 
   PClkEditTemplateOptionsAPI = ^TClkEditTemplateOptionsAPI;
+
+  TClkEditTemplateOptionsAPIWS = record
+    TemplateFileName: WideString;
+    ListOfEditedProperties: WideString;
+    ListOfEnabledProperties: WideString;
+    EditedActionName: WideString;
+    EditedActionCondition: WideString;
+    NewActionName: WideString;
+  end;
 
 
 procedure GetMatchBitmapTextFromAPI(AFindControlMatchBitmapText: PClkFindControlMatchBitmapTextAPI; var ADestMatchBitmapText: TClkFindControlMatchBitmapText);
@@ -360,19 +455,19 @@ procedure GetEditTemplateOptionsFromAPI(AEditTemplateOptions: PClkEditTemplateOp
 
 procedure SetMatchBitmapTextToAPI(var AMatchBitmapText: TClkFindControlMatchBitmapText; var ADestMatchBitmapText: TClkFindControlMatchBitmapTextAPI; var ATempDestWideStr: TClkFindControlMatchBitmapTextWideString);
 
-procedure SetClickOptionsToAPI(var AClickOptions: TClkClickOptions; var ADestClickOptions: TClkClickOptionsAPI);
-procedure SetExecAppOptionsToAPI(var AExecAppOptions: TClkExecAppOptions; var ADestExecAppOptions: TClkExecAppOptionsAPI);
-procedure SetFindControlOptionsToAPI(var AFindControlOptions: TClkFindControlOptions; var ADestFindControlOptions: TClkFindControlOptionsAPI; var ADestMatchBitmapTextRecAPI: TMatchBitmapTextRecAPI; var ADestMatchBitmapTextArray: TClkFindControlMatchBitmapTextAPIArr);
-procedure SetFindSubControlOptionsToAPI(var AFindSubControlOptions: TClkFindSubControlOptions; var ADestFindSubControlOptions: TClkFindSubControlOptionsAPI; var ADestMatchBitmapTextRecAPI: TMatchBitmapTextRecAPI; var ADestMatchBitmapTextArray: TClkFindControlMatchBitmapTextAPIArr);
-procedure SetSetControlTextOptionsToAPI(var ASetControlTextOptions: TClkSetTextOptions; var ADestSetControlTextOptions: TClkSetTextOptionsAPI);
-procedure SetCallTemplateOptionsToAPI(var ACallTemplateOptions: TClkCallTemplateOptions; var ADestCallTemplateOptions: TClkCallTemplateOptionsAPI);
-procedure SetSleepOptionsToAPI(var ASleepOptions: TClkSleepOptions; var ADestSleepOptions: TClkSleepOptionsAPI);
-procedure SetSetVarOptionsToAPI(var ASetVarOptions: TClkSetVarOptions; var ADestSetVarOptions: TClkSetVarOptionsAPI);
-procedure SetWindowOperationsOptionsToAPI(var AWindowOperationsOptions: TClkWindowOperationsOptions; var ADestWindowOperationsOptions: TClkWindowOperationsOptionsAPI);
-procedure SetLoadSetVarFromFileOptionsToAPI(var ALoadSetVarFromFileOptions: TClkLoadSetVarFromFileOptions; var ADestLoadSetVarFromFileOptions: TClkLoadSetVarFromFileOptionsAPI);
-procedure SetSaveSetVarToFileOptionsToAPI(var ASaveSetVarToFileOptions: TClkSaveSetVarToFileOptions; var ADestSaveSetVarToFileOptions: TClkSaveSetVarToFileOptionsAPI);
-procedure SetPluginOptionsToAPI(var APluginOptions: TClkPluginOptions; var ADestPluginOptions: TClkPluginOptionsAPI);
-procedure SetEditTemplateOptionsToAPI(var AEditTemplateOptions: TClkEditTemplateOptions; var ADestEditTemplateOptions: TClkEditTemplateOptionsAPI);
+procedure SetClickOptionsToAPI(var AClickOptions: TClkClickOptions; var ADestClickOptions: TClkClickOptionsAPI; var ATempClickOptionsAPIWS: TClkClickOptionsAPIWS);
+procedure SetExecAppOptionsToAPI(var AExecAppOptions: TClkExecAppOptions; var ADestExecAppOptions: TClkExecAppOptionsAPI; var ATempExecAppOptionsAPIWS: TClkExecAppOptionsAPIWS);
+procedure SetFindControlOptionsToAPI(var AFindControlOptions: TClkFindControlOptions; var ADestFindControlOptions: TClkFindControlOptionsAPI; var ADestMatchBitmapTextRecAPI: TMatchBitmapTextRecAPI; var ADestMatchBitmapTextArray: TClkFindControlMatchBitmapTextAPIArr; var ATempFindControlOptionsAPIWS: TClkFindControlOptionsAPIWS);
+procedure SetFindSubControlOptionsToAPI(var AFindSubControlOptions: TClkFindSubControlOptions; var ADestFindSubControlOptions: TClkFindSubControlOptionsAPI; var ADestMatchBitmapTextRecAPI: TMatchBitmapTextRecAPI; var ADestMatchBitmapTextArray: TClkFindControlMatchBitmapTextAPIArr; var ATempFindSubControlOptionsAPIWS: TClkFindSubControlOptionsAPIWS);
+procedure SetSetControlTextOptionsToAPI(var ASetControlTextOptions: TClkSetTextOptions; var ADestSetControlTextOptions: TClkSetTextOptionsAPI; var ATempSetControlTextOptionsAPIWS: TClkSetTextOptionsAPIWS);
+procedure SetCallTemplateOptionsToAPI(var ACallTemplateOptions: TClkCallTemplateOptions; var ADestCallTemplateOptions: TClkCallTemplateOptionsAPI; var ATempCallTemplateOptionsAPIWS: TClkCallTemplateOptionsAPIWS);
+procedure SetSleepOptionsToAPI(var ASleepOptions: TClkSleepOptions; var ADestSleepOptions: TClkSleepOptionsAPI; var ATempSleepOptionsAPIWS: TClkSleepOptionsAPIWS);
+procedure SetSetVarOptionsToAPI(var ASetVarOptions: TClkSetVarOptions; var ADestSetVarOptions: TClkSetVarOptionsAPI; var ATempSetVarOptionsAPIWS: TClkSetVarOptionsAPIWS);
+procedure SetWindowOperationsOptionsToAPI(var AWindowOperationsOptions: TClkWindowOperationsOptions; var ADestWindowOperationsOptions: TClkWindowOperationsOptionsAPI; var ATempWindowOperationsOptionsAPIWS: TClkWindowOperationsOptionsAPIWS);
+procedure SetLoadSetVarFromFileOptionsToAPI(var ALoadSetVarFromFileOptions: TClkLoadSetVarFromFileOptions; var ADestLoadSetVarFromFileOptions: TClkLoadSetVarFromFileOptionsAPI; var ATempLoadSetVarFromFileOptionsAPIWS: TClkLoadSetVarFromFileOptionsAPIWS);
+procedure SetSaveSetVarToFileOptionsToAPI(var ASaveSetVarToFileOptions: TClkSaveSetVarToFileOptions; var ADestSaveSetVarToFileOptions: TClkSaveSetVarToFileOptionsAPI; var ATempSaveSetVarToFileOptionsAPIWS: TClkSaveSetVarToFileOptionsAPIWS);
+procedure SetPluginOptionsToAPI(var APluginOptions: TClkPluginOptions; var ADestPluginOptions: TClkPluginOptionsAPI; var ATempPluginOptionsAPIWS: TClkPluginOptionsAPIWS);
+procedure SetEditTemplateOptionsToAPI(var AEditTemplateOptions: TClkEditTemplateOptions; var ADestEditTemplateOptions: TClkEditTemplateOptionsAPI; var ATempTClkEditTemplateOptionsAPIWS: TClkEditTemplateOptionsAPIWS);
 
 
 implementation
@@ -792,14 +887,14 @@ begin
 end;
 
 
-procedure SetClickOptionsToAPI(var AClickOptions: TClkClickOptions; var ADestClickOptions: TClkClickOptionsAPI);
+procedure SetClickOptionsToAPI(var AClickOptions: TClkClickOptions; var ADestClickOptions: TClkClickOptionsAPI; var ATempClickOptionsAPIWS: TClkClickOptionsAPIWS);
 begin
   ADestClickOptions.XClickPointReference := Byte(AClickOptions.XClickPointReference);
   ADestClickOptions.YClickPointReference := Byte(AClickOptions.YClickPointReference);
-  ADestClickOptions.XClickPointVar := @WideString(AClickOptions.XClickPointVar)[1];
-  ADestClickOptions.YClickPointVar := @WideString(AClickOptions.YClickPointVar)[1];
-  ADestClickOptions.XOffset := @WideString(AClickOptions.XOffset)[1];
-  ADestClickOptions.YOffset := @WideString(AClickOptions.YOffset)[1];
+  ATempClickOptionsAPIWS.XClickPointVar := WideString(AClickOptions.XClickPointVar);  ADestClickOptions.XClickPointVar := @ATempClickOptionsAPIWS.XClickPointVar[1];// ADestClickOptions.XClickPointVar := @WideString(AClickOptions.XClickPointVar)[1];
+  ATempClickOptionsAPIWS.YClickPointVar := WideString(AClickOptions.YClickPointVar);  ADestClickOptions.YClickPointVar := @ATempClickOptionsAPIWS.YClickPointVar[1];// ADestClickOptions.YClickPointVar := @WideString(AClickOptions.YClickPointVar)[1];
+  ATempClickOptionsAPIWS.XOffset := WideString(AClickOptions.XOffset);  ADestClickOptions.XOffset := @ATempClickOptionsAPIWS.XOffset[1];// ADestClickOptions.XOffset := @WideString(AClickOptions.XOffset)[1];
+  ATempClickOptionsAPIWS.YOffset := WideString(AClickOptions.YOffset);  ADestClickOptions.YOffset := @ATempClickOptionsAPIWS.YOffset[1];// ADestClickOptions.YOffset := @WideString(AClickOptions.YOffset)[1];
   ADestClickOptions.MouseButton := Byte(AClickOptions.MouseButton);
   ADestClickOptions.ClickWithCtrl := AClickOptions.ClickWithCtrl;
   ADestClickOptions.ClickWithAlt := AClickOptions.ClickWithAlt;
@@ -811,167 +906,119 @@ begin
   ADestClickOptions.ClickType := AClickOptions.ClickType;
   ADestClickOptions.XClickPointReferenceDest := Byte(AClickOptions.XClickPointReferenceDest);
   ADestClickOptions.YClickPointReferenceDest := Byte(AClickOptions.YClickPointReferenceDest);
-  ADestClickOptions.XClickPointVarDest := @WideString(AClickOptions.XClickPointVarDest)[1];
-  ADestClickOptions.YClickPointVarDest := @WideString(AClickOptions.YClickPointVarDest)[1];
-  ADestClickOptions.XOffsetDest := @WideString(AClickOptions.XOffsetDest)[1];
-  ADestClickOptions.YOffsetDest := @WideString(AClickOptions.YOffsetDest)[1];
+  ATempClickOptionsAPIWS.XClickPointVarDest := WideString(AClickOptions.XClickPointVarDest);  ADestClickOptions.XClickPointVarDest := @ATempClickOptionsAPIWS.XClickPointVarDest[1];// ADestClickOptions.XClickPointVarDest := @WideString(AClickOptions.XClickPointVarDest)[1];
+  ATempClickOptionsAPIWS.YClickPointVarDest := WideString(AClickOptions.YClickPointVarDest);  ADestClickOptions.YClickPointVarDest := @ATempClickOptionsAPIWS.YClickPointVarDest[1];// ADestClickOptions.YClickPointVarDest := @WideString(AClickOptions.YClickPointVarDest)[1];
+  ATempClickOptionsAPIWS.XOffsetDest := WideString(AClickOptions.XOffsetDest);  ADestClickOptions.XOffsetDest := @ATempClickOptionsAPIWS.XOffsetDest[1];// ADestClickOptions.XOffsetDest := @WideString(AClickOptions.XOffsetDest)[1];
+  ATempClickOptionsAPIWS.YOffsetDest := WideString(AClickOptions.YOffsetDest);  ADestClickOptions.YOffsetDest := @ATempClickOptionsAPIWS.YOffsetDest[1];// ADestClickOptions.YOffsetDest := @WideString(AClickOptions.YOffsetDest)[1];
   ADestClickOptions.MouseWheelType := Byte(AClickOptions.MouseWheelType);
-  ADestClickOptions.MouseWheelAmount := @WideString(AClickOptions.MouseWheelAmount)[1];
-  ADestClickOptions.DelayAfterMovingToDestination := @WideString(AClickOptions.DelayAfterMovingToDestination)[1];
-  ADestClickOptions.DelayAfterMouseDown := @WideString(AClickOptions.DelayAfterMouseDown)[1];
-  ADestClickOptions.MoveDuration := @WideString(AClickOptions.MoveDuration)[1];
+  ATempClickOptionsAPIWS.MouseWheelAmount := WideString(AClickOptions.MouseWheelAmount);  ADestClickOptions.MouseWheelAmount := @ATempClickOptionsAPIWS.MouseWheelAmount[1];// ADestClickOptions.MouseWheelAmount := @WideString(AClickOptions.MouseWheelAmount)[1];
+  ATempClickOptionsAPIWS.DelayAfterMovingToDestination := WideString(AClickOptions.DelayAfterMovingToDestination);  ADestClickOptions.DelayAfterMovingToDestination := @ATempClickOptionsAPIWS.DelayAfterMovingToDestination[1];// ADestClickOptions.DelayAfterMovingToDestination := @WideString(AClickOptions.DelayAfterMovingToDestination)[1];
+  ATempClickOptionsAPIWS.DelayAfterMouseDown := WideString(AClickOptions.DelayAfterMouseDown);  ADestClickOptions.DelayAfterMouseDown := @ATempClickOptionsAPIWS.DelayAfterMouseDown[1];// ADestClickOptions.DelayAfterMouseDown := @WideString(AClickOptions.DelayAfterMouseDown)[1];
+  ATempClickOptionsAPIWS.MoveDuration := WideString(AClickOptions.MoveDuration);  ADestClickOptions.MoveDuration := @ATempClickOptionsAPIWS.MoveDuration[1];// ADestClickOptions.MoveDuration := @WideString(AClickOptions.MoveDuration)[1];
   ADestClickOptions.UseClipCursor := AClickOptions.UseClipCursor;
 end;
 
 
-procedure SetExecAppOptionsToAPI(var AExecAppOptions: TClkExecAppOptions; var ADestExecAppOptions: TClkExecAppOptionsAPI);
+procedure SetExecAppOptionsToAPI(var AExecAppOptions: TClkExecAppOptions; var ADestExecAppOptions: TClkExecAppOptionsAPI; var ATempExecAppOptionsAPIWS: TClkExecAppOptionsAPIWS);
 begin
-  ADestExecAppOptions.PathToApp := @WideString(AExecAppOptions.PathToApp)[1];
-  ADestExecAppOptions.ListOfParams := @WideString(AExecAppOptions.ListOfParams)[1];
+  ATempExecAppOptionsAPIWS.PathToApp := WideString(AExecAppOptions.PathToApp);  ADestExecAppOptions.PathToApp := @ATempExecAppOptionsAPIWS.PathToApp[1];// ADestExecAppOptions.PathToApp := @WideString(AExecAppOptions.PathToApp)[1];
+  ATempExecAppOptionsAPIWS.ListOfParams := WideString(AExecAppOptions.ListOfParams);  ADestExecAppOptions.ListOfParams := @ATempExecAppOptionsAPIWS.ListOfParams[1];// ADestExecAppOptions.ListOfParams := @WideString(AExecAppOptions.ListOfParams)[1];
   ADestExecAppOptions.WaitForApp := AExecAppOptions.WaitForApp;
-  ADestExecAppOptions.AppStdIn := @WideString(AExecAppOptions.AppStdIn)[1];
-  ADestExecAppOptions.CurrentDir := @WideString(AExecAppOptions.CurrentDir)[1];
+  ATempExecAppOptionsAPIWS.AppStdIn := WideString(AExecAppOptions.AppStdIn);  ADestExecAppOptions.AppStdIn := @ATempExecAppOptionsAPIWS.AppStdIn[1];// ADestExecAppOptions.AppStdIn := @WideString(AExecAppOptions.AppStdIn)[1];
+  ATempExecAppOptionsAPIWS.CurrentDir := WideString(AExecAppOptions.CurrentDir);  ADestExecAppOptions.CurrentDir := @ATempExecAppOptionsAPIWS.CurrentDir[1];// ADestExecAppOptions.CurrentDir := @WideString(AExecAppOptions.CurrentDir)[1];
   ADestExecAppOptions.UseInheritHandles := Byte(AExecAppOptions.UseInheritHandles);
   ADestExecAppOptions.NoConsole := AExecAppOptions.NoConsole;
 end;
 
 
-procedure SetFindControlOptionsToAPI(var AFindControlOptions: TClkFindControlOptions; var ADestFindControlOptions: TClkFindControlOptionsAPI; var ADestMatchBitmapTextRecAPI: TMatchBitmapTextRecAPI; var ADestMatchBitmapTextArray: TClkFindControlMatchBitmapTextAPIArr);
+procedure SetFindControlOptionsToAPI(var AFindControlOptions: TClkFindControlOptions; var ADestFindControlOptions: TClkFindControlOptionsAPI; var ADestMatchBitmapTextRecAPI: TMatchBitmapTextRecAPI; var ADestMatchBitmapTextArray: TClkFindControlMatchBitmapTextAPIArr; var ATempFindControlOptionsAPIWS: TClkFindControlOptionsAPIWS);
 begin
   ADestFindControlOptions.MatchCriteria.WillMatchText := AFindControlOptions.MatchCriteria.WillMatchText;
   ADestFindControlOptions.MatchCriteria.WillMatchClassName := AFindControlOptions.MatchCriteria.WillMatchClassName;
-  //ADestFindControlOptions.MatchCriteria.WillMatchBitmapText := AFindControlOptions.MatchCriteria.WillMatchBitmapText;
-  //ADestFindControlOptions.MatchCriteria.WillMatchBitmapFiles := AFindControlOptions.MatchCriteria.WillMatchBitmapFiles;
-  //ADestFindControlOptions.MatchCriteria.WillMatchPrimitiveFiles := AFindControlOptions.MatchCriteria.WillMatchPrimitiveFiles;
   ADestFindControlOptions.MatchCriteria.SearchForControlMode := LongInt(AFindControlOptions.MatchCriteria.SearchForControlMode);
 
   ADestFindControlOptions.AllowToFail := AFindControlOptions.AllowToFail;
-  ADestFindControlOptions.MatchText := @WideString(AFindControlOptions.MatchText)[1];
-  ADestFindControlOptions.MatchClassName := @WideString(AFindControlOptions.MatchClassName)[1];
-  ADestFindControlOptions.MatchTextSeparator := @WideString(AFindControlOptions.MatchTextSeparator)[1];
-  ADestFindControlOptions.MatchClassNameSeparator := @WideString(AFindControlOptions.MatchClassNameSeparator)[1];
-  //ADestFindControlOptions.MatchBitmapText := nil;
-  //ADestFindControlOptions.MatchBitmapFiles := @WideString(AFindControlOptions.MatchBitmapFiles)[1];
-  //ADestFindControlOptions.MatchBitmapAlgorithm := Byte(AFindControlOptions.MatchBitmapAlgorithm);
+  ATempFindControlOptionsAPIWS.MatchText := WideString(AFindControlOptions.MatchText);  ADestFindControlOptions.MatchText := @ATempFindControlOptionsAPIWS.MatchText[1];// ADestFindControlOptions.MatchText := @WideString(AFindControlOptions.MatchText)[1];
+  ATempFindControlOptionsAPIWS.MatchClassName := WideString(AFindControlOptions.MatchClassName);  ADestFindControlOptions.MatchClassName := @ATempFindControlOptionsAPIWS.MatchClassName[1];// ADestFindControlOptions.MatchClassName := @WideString(AFindControlOptions.MatchClassName)[1];
+  ATempFindControlOptionsAPIWS.MatchTextSeparator := WideString(AFindControlOptions.MatchTextSeparator);  ADestFindControlOptions.MatchTextSeparator := @ATempFindControlOptionsAPIWS.MatchTextSeparator[1];// ADestFindControlOptions.MatchTextSeparator := @WideString(AFindControlOptions.MatchTextSeparator)[1];
+  ATempFindControlOptionsAPIWS.MatchClassNameSeparator := WideString(AFindControlOptions.MatchClassNameSeparator);  ADestFindControlOptions.MatchClassNameSeparator := @ATempFindControlOptionsAPIWS.MatchClassNameSeparator[1];// ADestFindControlOptions.MatchClassNameSeparator := @WideString(AFindControlOptions.MatchClassNameSeparator)[1];
   //
-  //ADestFindControlOptions.MatchBitmapAlgorithmSettings := AFindControlOptions.MatchBitmapAlgorithmSettings;
-  ADestFindControlOptions.InitialRectangle.Left := @WideString(AFindControlOptions.InitialRectangle.Left)[1];
-  ADestFindControlOptions.InitialRectangle.Top := @WideString(AFindControlOptions.InitialRectangle.Top)[1];
-  ADestFindControlOptions.InitialRectangle.Right := @WideString(AFindControlOptions.InitialRectangle.Right)[1];
-  ADestFindControlOptions.InitialRectangle.Bottom := @WideString(AFindControlOptions.InitialRectangle.Bottom)[1];
-  ADestFindControlOptions.InitialRectangle.LeftOffset := @WideString(AFindControlOptions.InitialRectangle.LeftOffset)[1];
-  ADestFindControlOptions.InitialRectangle.TopOffset := @WideString(AFindControlOptions.InitialRectangle.TopOffset)[1];
-  ADestFindControlOptions.InitialRectangle.RightOffset := @WideString(AFindControlOptions.InitialRectangle.RightOffset)[1];
-  ADestFindControlOptions.InitialRectangle.BottomOffset := @WideString(AFindControlOptions.InitialRectangle.BottomOffset)[1];
+  ATempFindControlOptionsAPIWS.InitialRectangle.Left := WideString(AFindControlOptions.InitialRectangle.Left);  ADestFindControlOptions.InitialRectangle.Left := @ATempFindControlOptionsAPIWS.InitialRectangle.Left[1];// ADestFindControlOptions.InitialRectangle.Left := @WideString(AFindControlOptions.InitialRectangle.Left)[1];
+  ATempFindControlOptionsAPIWS.InitialRectangle.Top := WideString(AFindControlOptions.InitialRectangle.Top);  ADestFindControlOptions.InitialRectangle.Top := @ATempFindControlOptionsAPIWS.InitialRectangle.Top[1];// ADestFindControlOptions.InitialRectangle.Top := @WideString(AFindControlOptions.InitialRectangle.Top)[1];
+  ATempFindControlOptionsAPIWS.InitialRectangle.Right := WideString(AFindControlOptions.InitialRectangle.Right);  ADestFindControlOptions.InitialRectangle.Right := @ATempFindControlOptionsAPIWS.InitialRectangle.Right[1];// ADestFindControlOptions.InitialRectangle.Right := @WideString(AFindControlOptions.InitialRectangle.Right)[1];
+  ATempFindControlOptionsAPIWS.InitialRectangle.Bottom := WideString(AFindControlOptions.InitialRectangle.Bottom);  ADestFindControlOptions.InitialRectangle.Bottom := @ATempFindControlOptionsAPIWS.InitialRectangle.Bottom[1];// ADestFindControlOptions.InitialRectangle.Bottom := @WideString(AFindControlOptions.InitialRectangle.Bottom)[1];
+  ATempFindControlOptionsAPIWS.InitialRectangle.LeftOffset := WideString(AFindControlOptions.InitialRectangle.LeftOffset);  ADestFindControlOptions.InitialRectangle.LeftOffset := @ATempFindControlOptionsAPIWS.InitialRectangle.LeftOffset[1];// ADestFindControlOptions.InitialRectangle.LeftOffset := @WideString(AFindControlOptions.InitialRectangle.LeftOffset)[1];
+  ATempFindControlOptionsAPIWS.InitialRectangle.TopOffset := WideString(AFindControlOptions.InitialRectangle.TopOffset);  ADestFindControlOptions.InitialRectangle.TopOffset := @ATempFindControlOptionsAPIWS.InitialRectangle.TopOffset[1];// ADestFindControlOptions.InitialRectangle.TopOffset := @WideString(AFindControlOptions.InitialRectangle.TopOffset)[1];
+  ATempFindControlOptionsAPIWS.InitialRectangle.RightOffset := WideString(AFindControlOptions.InitialRectangle.RightOffset);  ADestFindControlOptions.InitialRectangle.RightOffset := @ATempFindControlOptionsAPIWS.InitialRectangle.RightOffset[1];// ADestFindControlOptions.InitialRectangle.RightOffset := @WideString(AFindControlOptions.InitialRectangle.RightOffset)[1];
+  ATempFindControlOptionsAPIWS.InitialRectangle.BottomOffset := WideString(AFindControlOptions.InitialRectangle.BottomOffset);  ADestFindControlOptions.InitialRectangle.BottomOffset := @ATempFindControlOptionsAPIWS.InitialRectangle.BottomOffset[1];// ADestFindControlOptions.InitialRectangle.BottomOffset := @WideString(AFindControlOptions.InitialRectangle.BottomOffset)[1];
 
   ADestFindControlOptions.UseWholeScreen := AFindControlOptions.UseWholeScreen;
-  //ADestFindControlOptions.ColorError := @WideString(AFindControlOptions.ColorError)[1];
-  //ADestFindControlOptions.AllowedColorErrorCount := @WideString(AFindControlOptions.AllowedColorErrorCount)[1];
   ADestFindControlOptions.WaitForControlToGoAway := AFindControlOptions.WaitForControlToGoAway;
   ADestFindControlOptions.StartSearchingWithCachedControl := AFindControlOptions.StartSearchingWithCachedControl;
-  ADestFindControlOptions.CachedControlLeft := @WideString(AFindControlOptions.CachedControlLeft)[1];
-  ADestFindControlOptions.CachedControlTop := @WideString(AFindControlOptions.CachedControlTop)[1];
+  ATempFindControlOptionsAPIWS.CachedControlLeft := WideString(AFindControlOptions.CachedControlLeft);  ADestFindControlOptions.CachedControlLeft := @ATempFindControlOptionsAPIWS.CachedControlLeft[1];// ADestFindControlOptions.CachedControlLeft := @WideString(AFindControlOptions.CachedControlLeft)[1];
+  ATempFindControlOptionsAPIWS.CachedControlTop := WideString(AFindControlOptions.CachedControlTop);  ADestFindControlOptions.CachedControlTop := @ATempFindControlOptionsAPIWS.CachedControlTop[1];// ADestFindControlOptions.CachedControlTop := @WideString(AFindControlOptions.CachedControlTop)[1];
 
-  //ADestFindControlOptions.MatchPrimitiveFiles := @WideString(AFindControlOptions.MatchPrimitiveFiles)[1];
   ADestFindControlOptions.GetAllControls := AFindControlOptions.GetAllControls;
-  //ADestFindControlOptions.UseFastSearch := AFindControlOptions.UseFastSearch;
-  //ADestFindControlOptions.FastSearchAllowedColorErrorCount := @WideString(AFindControlOptions.FastSearchAllowedColorErrorCount)[1];
-  //ADestFindControlOptions.IgnoredColors := @WideString(AFindControlOptions.IgnoredColors)[1];
-  //ADestFindControlOptions.SleepySearch := AFindControlOptions.SleepySearch;
-  //ADestFindControlOptions.StopSearchOnMismatch := AFindControlOptions.StopSearchOnMismatch;
-
-  //ADestFindControlOptions.ImageSource := Byte(AFindControlOptions.ImageSource);
-  //ADestFindControlOptions.SourceFileName := @WideString(AFindControlOptions.SourceFileName)[1];
-  //ADestFindControlOptions.ImageSourceFileNameLocation := Byte(AFindControlOptions.ImageSourceFileNameLocation);
-
-  ADestFindControlOptions.PrecisionTimeout := AFindControlOptions.PrecisionTimeout;
-  //ADestFindControlOptions.FullBackgroundImageInResult := AFindControlOptions.FullBackgroundImageInResult;
-
-  //ADestFindControlOptions.MatchByHistogramSettings.MinPercentColorMatch := @WideString(AFindControlOptions.MatchByHistogramSettings.MinPercentColorMatch)[1];
-  //ADestFindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInSubBmp := @WideString(AFindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInSubBmp)[1];
-  //ADestFindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp := @WideString(AFindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp)[1];
-
-  ADestFindControlOptions.EvaluateTextCount := @WideString(AFindControlOptions.EvaluateTextCount)[1];
-  //ADestFindControlOptions.CropFromScreenshot := AFindControlOptions.CropFromScreenshot;
-  //ADestFindControlOptions.ThreadCount := @WideString(AFindControlOptions.ThreadCount)[1];
-
-  //if Length(AFindControlOptions.MatchBitmapText) = 0 then
-  //begin
-  //  ADestFindControlOptions.MatchBitmapText := nil;
-  //  Exit;
-  //end;
-  //
-  //ADestFindControlOptions.MatchBitmapText := @ADestMatchBitmapTextRecAPI; //PMatchBitmapTextRecAPI
-  //
-  //SetLength(ADestMatchBitmapTextArray, Length(AFindControlOptions.MatchBitmapText));
-  //SetLength(TempDestWideStr, Length(AFindControlOptions.MatchBitmapText));
-  //
-  //for i := 0 to Length(AFindControlOptions.MatchBitmapText) - 1 do
-  //  SetMatchBitmapTextToAPI(AFindControlOptions.MatchBitmapText[i], ADestMatchBitmapTextArray[i], TempDestWideStr[i]);
-  //
-  //ADestMatchBitmapTextRecAPI.ArrLen := Length(AFindControlOptions.MatchBitmapText);
-  //ADestMatchBitmapTextRecAPI.Items := @ADestMatchBitmapTextArray[0];
+   ADestFindControlOptions.PrecisionTimeout := AFindControlOptions.PrecisionTimeout;
+  ATempFindControlOptionsAPIWS.EvaluateTextCount := WideString(AFindControlOptions.EvaluateTextCount);  ADestFindControlOptions.EvaluateTextCount := @ATempFindControlOptionsAPIWS.EvaluateTextCount[1];// ADestFindControlOptions.EvaluateTextCount := @WideString(AFindControlOptions.EvaluateTextCount)[1];
 end;
 
 
-procedure SetFindSubControlOptionsToAPI(var AFindSubControlOptions: TClkFindSubControlOptions; var ADestFindSubControlOptions: TClkFindSubControlOptionsAPI; var ADestMatchBitmapTextRecAPI: TMatchBitmapTextRecAPI; var ADestMatchBitmapTextArray: TClkFindControlMatchBitmapTextAPIArr);
+procedure SetFindSubControlOptionsToAPI(var AFindSubControlOptions: TClkFindSubControlOptions; var ADestFindSubControlOptions: TClkFindSubControlOptionsAPI; var ADestMatchBitmapTextRecAPI: TMatchBitmapTextRecAPI; var ADestMatchBitmapTextArray: TClkFindControlMatchBitmapTextAPIArr; var ATempFindSubControlOptionsAPIWS: TClkFindSubControlOptionsAPIWS);
 var
   i: Integer;
   TempDestWideStr: TClkFindControlMatchBitmapTextWideStringArr;   /////////////////////// If there are still memory overwriting issues, then this variable must moved as a procedure parameter, similar to the ADestMatchBitmapTextArray array. This will keep it in memory during the API call.
 begin
-  //ADestFindSubControlOptions.MatchCriteria.WillMatchText := AFindSubControlOptions.MatchCriteria.WillMatchText;
-  //ADestFindSubControlOptions.MatchCriteria.WillMatchClassName := AFindSubControlOptions.MatchCriteria.WillMatchClassName;
   ADestFindSubControlOptions.MatchCriteria.WillMatchBitmapText := AFindSubControlOptions.MatchCriteria.WillMatchBitmapText;
   ADestFindSubControlOptions.MatchCriteria.WillMatchBitmapFiles := AFindSubControlOptions.MatchCriteria.WillMatchBitmapFiles;
   ADestFindSubControlOptions.MatchCriteria.WillMatchPrimitiveFiles := AFindSubControlOptions.MatchCriteria.WillMatchPrimitiveFiles;
-  //ADestFindSubControlOptions.MatchCriteria.SearchForControlMode := LongInt(AFindSubControlOptions.MatchCriteria.SearchForControlMode);
 
   ADestFindSubControlOptions.AllowToFail := AFindSubControlOptions.AllowToFail;
-  ADestFindSubControlOptions.MatchText := @WideString(AFindSubControlOptions.MatchText)[1];
+  ATempFindSubControlOptionsAPIWS.MatchText := WideString(AFindSubControlOptions.MatchText);  ADestFindSubControlOptions.MatchText := @ATempFindSubControlOptionsAPIWS.MatchText[1];// ADestFindSubControlOptions.MatchText := @WideString(AFindSubControlOptions.MatchText)[1];
   ADestFindSubControlOptions.MatchBitmapText := nil;
-  ADestFindSubControlOptions.MatchBitmapFiles := @WideString(AFindSubControlOptions.MatchBitmapFiles)[1];
+  ATempFindSubControlOptionsAPIWS.MatchBitmapFiles := WideString(AFindSubControlOptions.MatchBitmapFiles);  ADestFindSubControlOptions.MatchBitmapFiles := @ATempFindSubControlOptionsAPIWS.MatchBitmapFiles[1];// ADestFindSubControlOptions.MatchBitmapFiles := @WideString(AFindSubControlOptions.MatchBitmapFiles)[1];
   ADestFindSubControlOptions.MatchBitmapAlgorithm := Byte(AFindSubControlOptions.MatchBitmapAlgorithm);
 
   ADestFindSubControlOptions.MatchBitmapAlgorithmSettings := AFindSubControlOptions.MatchBitmapAlgorithmSettings;
-  ADestFindSubControlOptions.InitialRectangle.Left := @WideString(AFindSubControlOptions.InitialRectangle.Left)[1];
-  ADestFindSubControlOptions.InitialRectangle.Top := @WideString(AFindSubControlOptions.InitialRectangle.Top)[1];
-  ADestFindSubControlOptions.InitialRectangle.Right := @WideString(AFindSubControlOptions.InitialRectangle.Right)[1];
-  ADestFindSubControlOptions.InitialRectangle.Bottom := @WideString(AFindSubControlOptions.InitialRectangle.Bottom)[1];
-  ADestFindSubControlOptions.InitialRectangle.LeftOffset := @WideString(AFindSubControlOptions.InitialRectangle.LeftOffset)[1];
-  ADestFindSubControlOptions.InitialRectangle.TopOffset := @WideString(AFindSubControlOptions.InitialRectangle.TopOffset)[1];
-  ADestFindSubControlOptions.InitialRectangle.RightOffset := @WideString(AFindSubControlOptions.InitialRectangle.RightOffset)[1];
-  ADestFindSubControlOptions.InitialRectangle.BottomOffset := @WideString(AFindSubControlOptions.InitialRectangle.BottomOffset)[1];
+  ATempFindSubControlOptionsAPIWS.InitialRectangle.Left := WideString(AFindSubControlOptions.InitialRectangle.Left);  ADestFindSubControlOptions.InitialRectangle.Left := @ATempFindSubControlOptionsAPIWS.InitialRectangle.Left[1];// ADestFindSubControlOptions.InitialRectangle.Left := @WideString(AFindSubControlOptions.InitialRectangle.Left)[1];
+  ATempFindSubControlOptionsAPIWS.InitialRectangle.Top := WideString(AFindSubControlOptions.InitialRectangle.Top);  ADestFindSubControlOptions.InitialRectangle.Top := @ATempFindSubControlOptionsAPIWS.InitialRectangle.Top[1];// ADestFindSubControlOptions.InitialRectangle.Top := @WideString(AFindSubControlOptions.InitialRectangle.Top)[1];
+  ATempFindSubControlOptionsAPIWS.InitialRectangle.Right := WideString(AFindSubControlOptions.InitialRectangle.Right);  ADestFindSubControlOptions.InitialRectangle.Right := @ATempFindSubControlOptionsAPIWS.InitialRectangle.Right[1];// ADestFindSubControlOptions.InitialRectangle.Right := @WideString(AFindSubControlOptions.InitialRectangle.Right)[1];
+  ATempFindSubControlOptionsAPIWS.InitialRectangle.Bottom := WideString(AFindSubControlOptions.InitialRectangle.Bottom);  ADestFindSubControlOptions.InitialRectangle.Bottom := @ATempFindSubControlOptionsAPIWS.InitialRectangle.Bottom[1];// ADestFindSubControlOptions.InitialRectangle.Bottom := @WideString(AFindSubControlOptions.InitialRectangle.Bottom)[1];
+  ATempFindSubControlOptionsAPIWS.InitialRectangle.LeftOffset := WideString(AFindSubControlOptions.InitialRectangle.LeftOffset);  ADestFindSubControlOptions.InitialRectangle.LeftOffset := @ATempFindSubControlOptionsAPIWS.InitialRectangle.LeftOffset[1];// ADestFindSubControlOptions.InitialRectangle.LeftOffset := @WideString(AFindSubControlOptions.InitialRectangle.LeftOffset)[1];
+  ATempFindSubControlOptionsAPIWS.InitialRectangle.TopOffset := WideString(AFindSubControlOptions.InitialRectangle.TopOffset);  ADestFindSubControlOptions.InitialRectangle.TopOffset := @ATempFindSubControlOptionsAPIWS.InitialRectangle.TopOffset[1];// ADestFindSubControlOptions.InitialRectangle.TopOffset := @WideString(AFindSubControlOptions.InitialRectangle.TopOffset)[1];
+  ATempFindSubControlOptionsAPIWS.InitialRectangle.RightOffset := WideString(AFindSubControlOptions.InitialRectangle.RightOffset);  ADestFindSubControlOptions.InitialRectangle.RightOffset := @ATempFindSubControlOptionsAPIWS.InitialRectangle.RightOffset[1];// ADestFindSubControlOptions.InitialRectangle.RightOffset := @WideString(AFindSubControlOptions.InitialRectangle.RightOffset)[1];
+  ATempFindSubControlOptionsAPIWS.InitialRectangle.BottomOffset := WideString(AFindSubControlOptions.InitialRectangle.BottomOffset);  ADestFindSubControlOptions.InitialRectangle.BottomOffset := @ATempFindSubControlOptionsAPIWS.InitialRectangle.BottomOffset[1];// ADestFindSubControlOptions.InitialRectangle.BottomOffset := @WideString(AFindSubControlOptions.InitialRectangle.BottomOffset)[1];
 
   ADestFindSubControlOptions.UseWholeScreen := AFindSubControlOptions.UseWholeScreen;
-  ADestFindSubControlOptions.ColorError := @WideString(AFindSubControlOptions.ColorError)[1];
-  ADestFindSubControlOptions.AllowedColorErrorCount := @WideString(AFindSubControlOptions.AllowedColorErrorCount)[1];
+  ATempFindSubControlOptionsAPIWS.ColorError := WideString(AFindSubControlOptions.ColorError);  ADestFindSubControlOptions.ColorError := @ATempFindSubControlOptionsAPIWS.ColorError[1];// ADestFindSubControlOptions.ColorError := @WideString(AFindSubControlOptions.ColorError)[1];
+  ATempFindSubControlOptionsAPIWS.AllowedColorErrorCount := WideString(AFindSubControlOptions.AllowedColorErrorCount);  ADestFindSubControlOptions.AllowedColorErrorCount := @ATempFindSubControlOptionsAPIWS.AllowedColorErrorCount[1];// ADestFindSubControlOptions.AllowedColorErrorCount := @WideString(AFindSubControlOptions.AllowedColorErrorCount)[1];
   ADestFindSubControlOptions.WaitForControlToGoAway := AFindSubControlOptions.WaitForControlToGoAway;
   ADestFindSubControlOptions.StartSearchingWithCachedControl := AFindSubControlOptions.StartSearchingWithCachedControl;
-  ADestFindSubControlOptions.CachedControlLeft := @WideString(AFindSubControlOptions.CachedControlLeft)[1];
-  ADestFindSubControlOptions.CachedControlTop := @WideString(AFindSubControlOptions.CachedControlTop)[1];
+  ATempFindSubControlOptionsAPIWS.CachedControlLeft := WideString(AFindSubControlOptions.CachedControlLeft);  ADestFindSubControlOptions.CachedControlLeft := @ATempFindSubControlOptionsAPIWS.CachedControlLeft[1];// ADestFindSubControlOptions.CachedControlLeft := @WideString(AFindSubControlOptions.CachedControlLeft)[1];
+  ATempFindSubControlOptionsAPIWS.CachedControlTop := WideString(AFindSubControlOptions.CachedControlTop);  ADestFindSubControlOptions.CachedControlTop := @ATempFindSubControlOptionsAPIWS.CachedControlTop[1];// ADestFindSubControlOptions.CachedControlTop := @WideString(AFindSubControlOptions.CachedControlTop)[1];
 
-  ADestFindSubControlOptions.MatchPrimitiveFiles := @WideString(AFindSubControlOptions.MatchPrimitiveFiles)[1];
+  ATempFindSubControlOptionsAPIWS.MatchPrimitiveFiles := WideString(AFindSubControlOptions.MatchPrimitiveFiles);  ADestFindSubControlOptions.MatchPrimitiveFiles := @ATempFindSubControlOptionsAPIWS.MatchPrimitiveFiles[1];// ADestFindSubControlOptions.MatchPrimitiveFiles := @WideString(AFindSubControlOptions.MatchPrimitiveFiles)[1];
   ADestFindSubControlOptions.GetAllControls := AFindSubControlOptions.GetAllControls;
   ADestFindSubControlOptions.UseFastSearch := AFindSubControlOptions.UseFastSearch;
-  ADestFindSubControlOptions.FastSearchAllowedColorErrorCount := @WideString(AFindSubControlOptions.FastSearchAllowedColorErrorCount)[1];
-  ADestFindSubControlOptions.IgnoredColors := @WideString(AFindSubControlOptions.IgnoredColors)[1];
+  ATempFindSubControlOptionsAPIWS.FastSearchAllowedColorErrorCount := WideString(AFindSubControlOptions.FastSearchAllowedColorErrorCount);  ADestFindSubControlOptions.FastSearchAllowedColorErrorCount := @ATempFindSubControlOptionsAPIWS.FastSearchAllowedColorErrorCount[1];// ADestFindSubControlOptions.FastSearchAllowedColorErrorCount := @WideString(AFindSubControlOptions.FastSearchAllowedColorErrorCount)[1];
+  ATempFindSubControlOptionsAPIWS.IgnoredColors := WideString(AFindSubControlOptions.IgnoredColors);  ADestFindSubControlOptions.IgnoredColors := @ATempFindSubControlOptionsAPIWS.IgnoredColors[1];// ADestFindSubControlOptions.IgnoredColors := @WideString(AFindSubControlOptions.IgnoredColors)[1];
   ADestFindSubControlOptions.SleepySearch := AFindSubControlOptions.SleepySearch;
   ADestFindSubControlOptions.StopSearchOnMismatch := AFindSubControlOptions.StopSearchOnMismatch;
 
   ADestFindSubControlOptions.ImageSource := Byte(AFindSubControlOptions.ImageSource);
-  ADestFindSubControlOptions.SourceFileName := @WideString(AFindSubControlOptions.SourceFileName)[1];
+  ATempFindSubControlOptionsAPIWS.SourceFileName := WideString(AFindSubControlOptions.SourceFileName);  ADestFindSubControlOptions.SourceFileName := @ATempFindSubControlOptionsAPIWS.SourceFileName[1];// ADestFindSubControlOptions.SourceFileName := @WideString(AFindSubControlOptions.SourceFileName)[1];
   ADestFindSubControlOptions.ImageSourceFileNameLocation := Byte(AFindSubControlOptions.ImageSourceFileNameLocation);
 
   ADestFindSubControlOptions.PrecisionTimeout := AFindSubControlOptions.PrecisionTimeout;
   ADestFindSubControlOptions.FullBackgroundImageInResult := AFindSubControlOptions.FullBackgroundImageInResult;
 
-  ADestFindSubControlOptions.MatchByHistogramSettings.MinPercentColorMatch := @WideString(AFindSubControlOptions.MatchByHistogramSettings.MinPercentColorMatch)[1];
-  ADestFindSubControlOptions.MatchByHistogramSettings.MostSignificantColorCountInSubBmp := @WideString(AFindSubControlOptions.MatchByHistogramSettings.MostSignificantColorCountInSubBmp)[1];
-  ADestFindSubControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp := @WideString(AFindSubControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp)[1];
+  ATempFindSubControlOptionsAPIWS.MatchByHistogramSettings.MinPercentColorMatch := WideString(AFindSubControlOptions.MatchByHistogramSettings.MinPercentColorMatch);  ADestFindSubControlOptions.MatchByHistogramSettings.MinPercentColorMatch := @ATempFindSubControlOptionsAPIWS.MatchByHistogramSettings.MinPercentColorMatch[1];// ADestFindSubControlOptions.MatchByHistogramSettings.MinPercentColorMatch := @WideString(AFindSubControlOptions.MatchByHistogramSettings.MinPercentColorMatch)[1];
+  ATempFindSubControlOptionsAPIWS.MatchByHistogramSettings.MostSignificantColorCountInSubBmp := WideString(AFindSubControlOptions.MatchByHistogramSettings.MostSignificantColorCountInSubBmp);  ADestFindSubControlOptions.MatchByHistogramSettings.MostSignificantColorCountInSubBmp := @ATempFindSubControlOptionsAPIWS.MatchByHistogramSettings.MostSignificantColorCountInSubBmp[1];// ADestFindSubControlOptions.MatchByHistogramSettings.MostSignificantColorCountInSubBmp := @WideString(AFindSubControlOptions.MatchByHistogramSettings.MostSignificantColorCountInSubBmp)[1];
+  ATempFindSubControlOptionsAPIWS.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp := WideString(AFindSubControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp);  ADestFindSubControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp := @ATempFindSubControlOptionsAPIWS.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp[1];// ADestFindSubControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp := @WideString(AFindSubControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp)[1];
 
-  ADestFindSubControlOptions.EvaluateTextCount := @WideString(AFindSubControlOptions.EvaluateTextCount)[1];
+  ATempFindSubControlOptionsAPIWS.EvaluateTextCount := WideString(AFindSubControlOptions.EvaluateTextCount);  ADestFindSubControlOptions.EvaluateTextCount := @ATempFindSubControlOptionsAPIWS.EvaluateTextCount[1];// ATempFindSubControlOptionsAPIWS.EvaluateTextCount := WideString(AFindSubControlOptions.EvaluateTextCount);  ADestFindSubControlOptions.EvaluateTextCount := @ATempFindSubControlOptionsAPIWS.EvaluateTextCount[1];// ADestFindSubControlOptions.EvaluateTextCount := @WideString(AFindSubControlOptions.EvaluateTextCount)[1];
   ADestFindSubControlOptions.CropFromScreenshot := AFindSubControlOptions.CropFromScreenshot;
-  ADestFindSubControlOptions.ThreadCount := @WideString(AFindSubControlOptions.ThreadCount)[1];
+  ATempFindSubControlOptionsAPIWS.ThreadCount := WideString(AFindSubControlOptions.ThreadCount);  ADestFindSubControlOptions.ThreadCount := @ATempFindSubControlOptionsAPIWS.ThreadCount[1];// ADestFindSubControlOptions.ThreadCount := @WideString(AFindSubControlOptions.ThreadCount)[1];
 
   if Length(AFindSubControlOptions.MatchBitmapText) = 0 then
   begin
@@ -992,92 +1039,92 @@ begin
 end;
 
 
-procedure SetSetControlTextOptionsToAPI(var ASetControlTextOptions: TClkSetTextOptions; var ADestSetControlTextOptions: TClkSetTextOptionsAPI);
+procedure SetSetControlTextOptionsToAPI(var ASetControlTextOptions: TClkSetTextOptions; var ADestSetControlTextOptions: TClkSetTextOptionsAPI; var ATempSetControlTextOptionsAPIWS: TClkSetTextOptionsAPIWS);
 begin
-  ADestSetControlTextOptions.Text := @WideString(ASetControlTextOptions.Text)[1];
+  ATempSetControlTextOptionsAPIWS.Text := WideString(ASetControlTextOptions.Text);  ADestSetControlTextOptions.Text := @ATempSetControlTextOptionsAPIWS.Text[1];// ADestSetControlTextOptions.Text := @WideString(ASetControlTextOptions.Text)[1];
   ADestSetControlTextOptions.ControlType := Byte(ASetControlTextOptions.ControlType);
-  ADestSetControlTextOptions.DelayBetweenKeyStrokes := @WideString(ASetControlTextOptions.DelayBetweenKeyStrokes)[1];
-  ADestSetControlTextOptions.Count := @WideString(ASetControlTextOptions.Count)[1];
+  ATempSetControlTextOptionsAPIWS.DelayBetweenKeyStrokes := WideString(ASetControlTextOptions.DelayBetweenKeyStrokes);  ADestSetControlTextOptions.DelayBetweenKeyStrokes := @ATempSetControlTextOptionsAPIWS.DelayBetweenKeyStrokes[1];// ADestSetControlTextOptions.DelayBetweenKeyStrokes := @WideString(ASetControlTextOptions.DelayBetweenKeyStrokes)[1];
+  ATempSetControlTextOptionsAPIWS.Count := WideString(ASetControlTextOptions.Count);  ADestSetControlTextOptions.Count := @ATempSetControlTextOptionsAPIWS.Count[1];// ADestSetControlTextOptions.Count := @WideString(ASetControlTextOptions.Count)[1];
 end;
 
 
-procedure SetCallTemplateOptionsToAPI(var ACallTemplateOptions: TClkCallTemplateOptions; var ADestCallTemplateOptions: TClkCallTemplateOptionsAPI);
+procedure SetCallTemplateOptionsToAPI(var ACallTemplateOptions: TClkCallTemplateOptions; var ADestCallTemplateOptions: TClkCallTemplateOptionsAPI; var ATempCallTemplateOptionsAPIWS: TClkCallTemplateOptionsAPIWS);
 begin
-  ADestCallTemplateOptions.TemplateFileName := @WideString(ACallTemplateOptions.TemplateFileName)[1];
-  ADestCallTemplateOptions.ListOfCustomVarsAndValues := @WideString(ACallTemplateOptions.ListOfCustomVarsAndValues)[1];
+  ATempCallTemplateOptionsAPIWS.TemplateFileName := WideString(ACallTemplateOptions.TemplateFileName);  ADestCallTemplateOptions.TemplateFileName := @ATempCallTemplateOptionsAPIWS.TemplateFileName[1];// ADestCallTemplateOptions.TemplateFileName := @WideString(ACallTemplateOptions.TemplateFileName)[1];
+  ATempCallTemplateOptionsAPIWS.ListOfCustomVarsAndValues := WideString(ACallTemplateOptions.ListOfCustomVarsAndValues);  ADestCallTemplateOptions.ListOfCustomVarsAndValues := @ATempCallTemplateOptionsAPIWS.ListOfCustomVarsAndValues[1];// ADestCallTemplateOptions.ListOfCustomVarsAndValues := @WideString(ACallTemplateOptions.ListOfCustomVarsAndValues)[1];
   ADestCallTemplateOptions.EvaluateBeforeCalling := ACallTemplateOptions.EvaluateBeforeCalling;
 
   ADestCallTemplateOptions.CallTemplateLoop.Enabled := ACallTemplateOptions.CallTemplateLoop.Enabled;
-  ADestCallTemplateOptions.CallTemplateLoop.Counter := @WideString(ACallTemplateOptions.CallTemplateLoop.Counter)[1];
-  ADestCallTemplateOptions.CallTemplateLoop.InitValue := @WideString(ACallTemplateOptions.CallTemplateLoop.InitValue)[1];
-  ADestCallTemplateOptions.CallTemplateLoop.EndValue := @WideString(ACallTemplateOptions.CallTemplateLoop.EndValue)[1];
+  ATempCallTemplateOptionsAPIWS.CallTemplateLoop.Counter := WideString(ACallTemplateOptions.CallTemplateLoop.Counter);  ADestCallTemplateOptions.CallTemplateLoop.Counter := @ATempCallTemplateOptionsAPIWS.CallTemplateLoop.Counter[1];// ADestCallTemplateOptions.CallTemplateLoop.Counter := @WideString(ACallTemplateOptions.CallTemplateLoop.Counter)[1];
+  ATempCallTemplateOptionsAPIWS.CallTemplateLoop.InitValue := WideString(ACallTemplateOptions.CallTemplateLoop.InitValue);  ADestCallTemplateOptions.CallTemplateLoop.InitValue := @ATempCallTemplateOptionsAPIWS.CallTemplateLoop.InitValue[1];// ADestCallTemplateOptions.CallTemplateLoop.InitValue := @WideString(ACallTemplateOptions.CallTemplateLoop.InitValue)[1];
+  ATempCallTemplateOptionsAPIWS.CallTemplateLoop.EndValue := WideString(ACallTemplateOptions.CallTemplateLoop.EndValue);  ADestCallTemplateOptions.CallTemplateLoop.EndValue := @ATempCallTemplateOptionsAPIWS.CallTemplateLoop.EndValue[1];// ADestCallTemplateOptions.CallTemplateLoop.EndValue := @WideString(ACallTemplateOptions.CallTemplateLoop.EndValue)[1];
   ADestCallTemplateOptions.CallTemplateLoop.Direction := Byte(ACallTemplateOptions.CallTemplateLoop.Direction);
-  ADestCallTemplateOptions.CallTemplateLoop.BreakCondition := @WideString(ACallTemplateOptions.CallTemplateLoop.BreakCondition)[1];
+  ATempCallTemplateOptionsAPIWS.CallTemplateLoop.BreakCondition := WideString(ACallTemplateOptions.CallTemplateLoop.BreakCondition);  ADestCallTemplateOptions.CallTemplateLoop.BreakCondition := @ATempCallTemplateOptionsAPIWS.CallTemplateLoop.BreakCondition[1];// ADestCallTemplateOptions.CallTemplateLoop.BreakCondition := @WideString(ACallTemplateOptions.CallTemplateLoop.BreakCondition)[1];
   ADestCallTemplateOptions.CallTemplateLoop.EvalBreakPosition := Byte(ACallTemplateOptions.CallTemplateLoop.EvalBreakPosition);
 end;
 
 
-procedure SetSleepOptionsToAPI(var ASleepOptions: TClkSleepOptions; var ADestSleepOptions: TClkSleepOptionsAPI);
+procedure SetSleepOptionsToAPI(var ASleepOptions: TClkSleepOptions; var ADestSleepOptions: TClkSleepOptionsAPI; var ATempSleepOptionsAPIWS: TClkSleepOptionsAPIWS);
 begin
-  ADestSleepOptions.Value := @WideString(ASleepOptions.Value)[1];
+  ATempSleepOptionsAPIWS.Value := WideString(ASleepOptions.Value);  ADestSleepOptions.Value := @ATempSleepOptionsAPIWS.Value[1];// ADestSleepOptions.Value := @WideString(ASleepOptions.Value)[1];
 end;
 
 
-procedure SetSetVarOptionsToAPI(var ASetVarOptions: TClkSetVarOptions; var ADestSetVarOptions: TClkSetVarOptionsAPI);
+procedure SetSetVarOptionsToAPI(var ASetVarOptions: TClkSetVarOptions; var ADestSetVarOptions: TClkSetVarOptionsAPI; var ATempSetVarOptionsAPIWS: TClkSetVarOptionsAPIWS);
 begin
-  ADestSetVarOptions.ListOfVarNames := @WideString(ASetVarOptions.ListOfVarNames)[1];
-  ADestSetVarOptions.ListOfVarValues := @WideString(ASetVarOptions.ListOfVarValues)[1];
-  ADestSetVarOptions.ListOfVarEvalBefore := @WideString(ASetVarOptions.ListOfVarEvalBefore)[1];
+  ATempSetVarOptionsAPIWS.ListOfVarNames := WideString(ASetVarOptions.ListOfVarNames);  ADestSetVarOptions.ListOfVarNames := @ATempSetVarOptionsAPIWS.ListOfVarNames[1];// ADestSetVarOptions.ListOfVarNames := @WideString(ASetVarOptions.ListOfVarNames)[1];
+  ATempSetVarOptionsAPIWS.ListOfVarValues := WideString(ASetVarOptions.ListOfVarValues);  ADestSetVarOptions.ListOfVarValues := @ATempSetVarOptionsAPIWS.ListOfVarValues[1];// ADestSetVarOptions.ListOfVarValues := @WideString(ASetVarOptions.ListOfVarValues)[1];
+  ATempSetVarOptionsAPIWS.ListOfVarEvalBefore := WideString(ASetVarOptions.ListOfVarEvalBefore);  ADestSetVarOptions.ListOfVarEvalBefore := @ATempSetVarOptionsAPIWS.ListOfVarEvalBefore[1];// ADestSetVarOptions.ListOfVarEvalBefore := @WideString(ASetVarOptions.ListOfVarEvalBefore)[1];
   ADestSetVarOptions.FailOnException := ASetVarOptions.FailOnException;
 end;
 
 
-procedure SetWindowOperationsOptionsToAPI(var AWindowOperationsOptions: TClkWindowOperationsOptions; var ADestWindowOperationsOptions: TClkWindowOperationsOptionsAPI);
+procedure SetWindowOperationsOptionsToAPI(var AWindowOperationsOptions: TClkWindowOperationsOptions; var ADestWindowOperationsOptions: TClkWindowOperationsOptionsAPI; var ATempWindowOperationsOptionsAPIWS: TClkWindowOperationsOptionsAPIWS);
 begin
   ADestWindowOperationsOptions.Operation := Byte(AWindowOperationsOptions.Operation);
-  ADestWindowOperationsOptions.NewX := @WideString(AWindowOperationsOptions.NewX)[1];
-  ADestWindowOperationsOptions.NewY := @WideString(AWindowOperationsOptions.NewY)[1];
-  ADestWindowOperationsOptions.NewWidth := @WideString(AWindowOperationsOptions.NewWidth)[1];
-  ADestWindowOperationsOptions.NewHeight := @WideString(AWindowOperationsOptions.NewHeight)[1];
+  ATempWindowOperationsOptionsAPIWS.NewX := WideString(AWindowOperationsOptions.NewX);  ADestWindowOperationsOptions.NewX := @ATempWindowOperationsOptionsAPIWS.NewX[1];// ADestWindowOperationsOptions.NewX := @WideString(AWindowOperationsOptions.NewX)[1];
+  ATempWindowOperationsOptionsAPIWS.NewY := WideString(AWindowOperationsOptions.NewY);  ADestWindowOperationsOptions.NewY := @ATempWindowOperationsOptionsAPIWS.NewY[1];// ADestWindowOperationsOptions.NewY := @WideString(AWindowOperationsOptions.NewY)[1];
+  ATempWindowOperationsOptionsAPIWS.NewWidth := WideString(AWindowOperationsOptions.NewWidth);  ADestWindowOperationsOptions.NewWidth := @ATempWindowOperationsOptionsAPIWS.NewWidth[1];// ADestWindowOperationsOptions.NewWidth := @WideString(AWindowOperationsOptions.NewWidth)[1];
+  ATempWindowOperationsOptionsAPIWS.NewHeight := WideString(AWindowOperationsOptions.NewHeight);  ADestWindowOperationsOptions.NewHeight := @ATempWindowOperationsOptionsAPIWS.NewHeight[1];// ADestWindowOperationsOptions.NewHeight := @WideString(AWindowOperationsOptions.NewHeight)[1];
   ADestWindowOperationsOptions.NewPositionEnabled := AWindowOperationsOptions.NewPositionEnabled;
   ADestWindowOperationsOptions.NewSizeEnabled := AWindowOperationsOptions.NewSizeEnabled;
 end;
 
 
-procedure SetLoadSetVarFromFileOptionsToAPI(var ALoadSetVarFromFileOptions: TClkLoadSetVarFromFileOptions; var ADestLoadSetVarFromFileOptions: TClkLoadSetVarFromFileOptionsAPI);
+procedure SetLoadSetVarFromFileOptionsToAPI(var ALoadSetVarFromFileOptions: TClkLoadSetVarFromFileOptions; var ADestLoadSetVarFromFileOptions: TClkLoadSetVarFromFileOptionsAPI; var ATempLoadSetVarFromFileOptionsAPIWS: TClkLoadSetVarFromFileOptionsAPIWS);
 begin
-  ADestLoadSetVarFromFileOptions.FileName := @WideString(ALoadSetVarFromFileOptions.FileName)[1];
-  ADestLoadSetVarFromFileOptions.SetVarActionName := @WideString(ALoadSetVarFromFileOptions.SetVarActionName)[1];
+  ATempLoadSetVarFromFileOptionsAPIWS.FileName := WideString(ALoadSetVarFromFileOptions.FileName);  ADestLoadSetVarFromFileOptions.FileName := @ATempLoadSetVarFromFileOptionsAPIWS.FileName[1];// ADestLoadSetVarFromFileOptions.FileName := @WideString(ALoadSetVarFromFileOptions.FileName)[1];
+  ATempLoadSetVarFromFileOptionsAPIWS.SetVarActionName := WideString(ALoadSetVarFromFileOptions.SetVarActionName);  ADestLoadSetVarFromFileOptions.SetVarActionName := @ATempLoadSetVarFromFileOptionsAPIWS.SetVarActionName[1];// ADestLoadSetVarFromFileOptions.SetVarActionName := @WideString(ALoadSetVarFromFileOptions.SetVarActionName)[1];
 end;
 
 
-procedure SetSaveSetVarToFileOptionsToAPI(var ASaveSetVarToFileOptions: TClkSaveSetVarToFileOptions; var ADestSaveSetVarToFileOptions: TClkSaveSetVarToFileOptionsAPI);
+procedure SetSaveSetVarToFileOptionsToAPI(var ASaveSetVarToFileOptions: TClkSaveSetVarToFileOptions; var ADestSaveSetVarToFileOptions: TClkSaveSetVarToFileOptionsAPI; var ATempSaveSetVarToFileOptionsAPIWS: TClkSaveSetVarToFileOptionsAPIWS);
 begin
-  ADestSaveSetVarToFileOptions.FileName := @WideString(ASaveSetVarToFileOptions.FileName)[1];
-  ADestSaveSetVarToFileOptions.SetVarActionName := @WideString(ASaveSetVarToFileOptions.SetVarActionName)[1];
+  ATempSaveSetVarToFileOptionsAPIWS.FileName := WideString(ASaveSetVarToFileOptions.FileName);  ADestSaveSetVarToFileOptions.FileName := @ATempSaveSetVarToFileOptionsAPIWS.FileName[1];// ADestSaveSetVarToFileOptions.FileName := @WideString(ASaveSetVarToFileOptions.FileName)[1];
+  ATempSaveSetVarToFileOptionsAPIWS.SetVarActionName := WideString(ASaveSetVarToFileOptions.SetVarActionName);  ADestSaveSetVarToFileOptions.SetVarActionName := @ATempSaveSetVarToFileOptionsAPIWS.SetVarActionName[1];// ADestSaveSetVarToFileOptions.SetVarActionName := @WideString(ASaveSetVarToFileOptions.SetVarActionName)[1];
 end;
 
 
-procedure SetPluginOptionsToAPI(var APluginOptions: TClkPluginOptions; var ADestPluginOptions: TClkPluginOptionsAPI);
+procedure SetPluginOptionsToAPI(var APluginOptions: TClkPluginOptions; var ADestPluginOptions: TClkPluginOptionsAPI; var ATempPluginOptionsAPIWS: TClkPluginOptionsAPIWS);
 begin
-  ADestPluginOptions.FileName := @WideString(APluginOptions.FileName)[1];
-  ADestPluginOptions.ListOfPropertiesAndValues := @WideString(APluginOptions.ListOfPropertiesAndValues)[1];
+  ATempPluginOptionsAPIWS.FileName := WideString(APluginOptions.FileName);  ADestPluginOptions.FileName := @ATempPluginOptionsAPIWS.FileName[1];// ADestPluginOptions.FileName := @WideString(APluginOptions.FileName)[1];
+  ATempPluginOptionsAPIWS.ListOfPropertiesAndValues := WideString(APluginOptions.ListOfPropertiesAndValues);  ADestPluginOptions.ListOfPropertiesAndValues := @ATempPluginOptionsAPIWS.ListOfPropertiesAndValues[1];// ADestPluginOptions.ListOfPropertiesAndValues := @WideString(APluginOptions.ListOfPropertiesAndValues)[1];
 end;
 
 
-procedure SetEditTemplateOptionsToAPI(var AEditTemplateOptions: TClkEditTemplateOptions; var ADestEditTemplateOptions: TClkEditTemplateOptionsAPI);
+procedure SetEditTemplateOptionsToAPI(var AEditTemplateOptions: TClkEditTemplateOptions; var ADestEditTemplateOptions: TClkEditTemplateOptionsAPI; var ATempTClkEditTemplateOptionsAPIWS: TClkEditTemplateOptionsAPIWS);
 begin
   ADestEditTemplateOptions.Operation := Byte(AEditTemplateOptions.Operation);
   ADestEditTemplateOptions.WhichTemplate := Byte(AEditTemplateOptions.WhichTemplate);
 
-  ADestEditTemplateOptions.TemplateFileName := @WideString(AEditTemplateOptions.TemplateFileName)[1];
-  ADestEditTemplateOptions.ListOfEditedProperties := @WideString(AEditTemplateOptions.ListOfEditedProperties)[1];
-  ADestEditTemplateOptions.ListOfEnabledProperties := @WideString(AEditTemplateOptions.ListOfEnabledProperties)[1];
-  ADestEditTemplateOptions.EditedActionName := @WideString(AEditTemplateOptions.EditedActionName)[1];
+  ATempTClkEditTemplateOptionsAPIWS.TemplateFileName := WideString(AEditTemplateOptions.TemplateFileName);  ADestEditTemplateOptions.TemplateFileName := @ATempTClkEditTemplateOptionsAPIWS.TemplateFileName[1];// ADestEditTemplateOptions.TemplateFileName := @WideString(AEditTemplateOptions.TemplateFileName)[1];
+  ATempTClkEditTemplateOptionsAPIWS.ListOfEditedProperties := WideString(AEditTemplateOptions.ListOfEditedProperties);  ADestEditTemplateOptions.ListOfEditedProperties := @ATempTClkEditTemplateOptionsAPIWS.ListOfEditedProperties[1];// ADestEditTemplateOptions.ListOfEditedProperties := @WideString(AEditTemplateOptions.ListOfEditedProperties)[1];
+  ATempTClkEditTemplateOptionsAPIWS.ListOfEnabledProperties := WideString(AEditTemplateOptions.ListOfEnabledProperties);  ADestEditTemplateOptions.ListOfEnabledProperties := @ATempTClkEditTemplateOptionsAPIWS.ListOfEnabledProperties[1];// ADestEditTemplateOptions.ListOfEnabledProperties := @WideString(AEditTemplateOptions.ListOfEnabledProperties)[1];
+  ATempTClkEditTemplateOptionsAPIWS.EditedActionName := WideString(AEditTemplateOptions.EditedActionName);  ADestEditTemplateOptions.EditedActionName := @ATempTClkEditTemplateOptionsAPIWS.EditedActionName[1];// ADestEditTemplateOptions.EditedActionName := @WideString(AEditTemplateOptions.EditedActionName)[1];
   ADestEditTemplateOptions.EditedActionType := Byte(AEditTemplateOptions.EditedActionType);
-  ADestEditTemplateOptions.EditedActionCondition := @WideString(AEditTemplateOptions.EditedActionCondition)[1];
+  ATempTClkEditTemplateOptionsAPIWS.EditedActionCondition := WideString(AEditTemplateOptions.EditedActionCondition);  ADestEditTemplateOptions.EditedActionCondition := @ATempTClkEditTemplateOptionsAPIWS.EditedActionCondition[1];// ADestEditTemplateOptions.EditedActionCondition := @WideString(AEditTemplateOptions.EditedActionCondition)[1];
   ADestEditTemplateOptions.EditedActionTimeout := AEditTemplateOptions.EditedActionTimeout;
-  ADestEditTemplateOptions.NewActionName := @WideString(AEditTemplateOptions.NewActionName)[1];
+  ATempTClkEditTemplateOptionsAPIWS.NewActionName := WideString(AEditTemplateOptions.NewActionName);  ADestEditTemplateOptions.NewActionName := @ATempTClkEditTemplateOptionsAPIWS.NewActionName[1];// ADestEditTemplateOptions.NewActionName := @WideString(AEditTemplateOptions.NewActionName)[1];
   ADestEditTemplateOptions.ShouldSaveTemplate := AEditTemplateOptions.ShouldSaveTemplate;
 end;
 

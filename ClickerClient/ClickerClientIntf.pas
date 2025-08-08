@@ -38,6 +38,9 @@ type
   TSetServerAddress_Proc = procedure(AAddress: Pointer); cdecl;
   TGetServerAddress_Proc = function(AResponse: Pointer): LongInt; cdecl;
   TTestConnectionToServer_Proc = function(AResponse: Pointer): LongInt; cdecl;
+  TCreateLoggingWindow_Proc = procedure; cdecl;
+  TDestroyLoggingWindow_Proc = procedure; cdecl;
+
   TSendMemPluginFileToServer_Proc = function(AFileName, AFileContent: Pointer; AFileSize: Int64; AResultStr: Pointer): Integer; cdecl;
   TSendMemPluginArchiveFileToServer_Proc = function(AFileName, ADecryptionPluginName, ADecompressionPluginName, AHashingPluginName, AFileContent: Pointer; AFileSize: Int64; ACompressionLevel: Integer; AAdditionalInfo: Pointer; AIsDecDecHash: Boolean; AResultStr: Pointer): Integer; cdecl;
 
@@ -231,6 +234,9 @@ var
   SetServerAddress: TSetServerAddress_Proc;
   GetServerAddress: TGetServerAddress_Proc;
   TestConnectionToServer: TTestConnectionToServer_Proc;
+  CreateLoggingWindow: TCreateLoggingWindow_Proc;
+  DestroyLoggingWindow: TDestroyLoggingWindow_Proc;
+
   SendMemPluginFileToServer: TSendMemPluginFileToServer_Proc;
   SendMemPluginArchiveFileToServer: TSendMemPluginArchiveFileToServer_Proc;
 
@@ -287,6 +293,9 @@ begin
   @SetServerAddress := GetProcAddress(FClickerClientDllHandle, 'SetServerAddress');
   @GetServerAddress := GetProcAddress(FClickerClientDllHandle, 'GetServerAddress');
   @TestConnectionToServer := GetProcAddress(FClickerClientDllHandle, 'TestConnectionToServer');
+  @CreateLoggingWindow := GetProcAddress(FClickerClientDllHandle, 'CreateLoggingWindow');
+  @DestroyLoggingWindow := GetProcAddress(FClickerClientDllHandle, 'DestroyLoggingWindow');
+
   @SendMemPluginFileToServer := GetProcAddress(FClickerClientDllHandle, 'SendMemPluginFileToServer');
   @SendMemPluginArchiveFileToServer := GetProcAddress(FClickerClientDllHandle, 'SendMemPluginArchiveFileToServer');
   @PrepareFilesInServer := GetProcAddress(FClickerClientDllHandle, 'PrepareFilesInServer');

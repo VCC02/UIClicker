@@ -165,6 +165,7 @@ procedure TTestClickerClientHTTPAPI.Test_ExecuteClickAction_With_UseServerDebugg
 var
   ClickOptions: TClkClickOptions;
   ClickOptionsAPI: TClkClickOptionsAPI;
+  TempClickOptionsAPIWS: TClkClickOptionsAPIWS;
   Response: string;
   Th: TClientThread;
 begin
@@ -176,7 +177,7 @@ begin
 
   Th := AsyncExecTestTemplate(CTestDriverAddress, '$AppDir$\..\Tests\TestFiles\ClickDebuggingButton.clktmpl');
   try
-    SetClickOptionsToAPI(ClickOptions, ClickOptionsAPI);
+    SetClickOptionsToAPI(ClickOptions, ClickOptionsAPI, TempClickOptionsAPIWS);
     ExecuteClickAction(nil, 100, @ClickOptionsAPI, True, @Response[1]);
     WaitForDebuggingActionToFinish(Response, Th);
   finally
@@ -189,6 +190,7 @@ procedure TTestClickerClientHTTPAPI.Test_ExecuteExecAppAction_With_UseServerDebu
 var
   ExecAppOptions: TClkExecAppOptions;
   ExecAppOptionsAPI: TClkExecAppOptionsAPI;
+  TempExecAppOptionsAPIWS: TClkExecAppOptionsAPIWS;
   ActionName: WideString;
   Response: string;
   Th: TClientThread;
@@ -200,7 +202,7 @@ begin
 
   Th := AsyncExecTestTemplate(CTestDriverAddress, '$AppDir$\..\Tests\TestFiles\ClickDebuggingButton.clktmpl');
   try
-    SetExecAppOptionsToAPI(ExecAppOptions, ExecAppOptionsAPI);
+    SetExecAppOptionsToAPI(ExecAppOptions, ExecAppOptionsAPI, TempExecAppOptionsAPIWS);
     ExecuteExecAppAction(@ActionName[1], 100, @ExecAppOptionsAPI, True, @Response[1]);
     WaitForDebuggingActionToFinish(Response, Th);
   finally
@@ -215,6 +217,7 @@ var
   FindControlOptionsAPI: TClkFindControlOptionsAPI;
   MatchBitmapTextRecAPI: TMatchBitmapTextRecAPI;
   FindControlMatchBitmapTextAPIArr: TClkFindControlMatchBitmapTextAPIArr;
+  TempFindControlOptionsAPIWS: TClkFindControlOptionsAPIWS;
   ActionName, FileLoc: WideString;
   Response: string;
   Th: TClientThread;
@@ -230,7 +233,7 @@ begin
 
   Th := AsyncExecTestTemplate(CTestDriverAddress, '$AppDir$\..\Tests\TestFiles\ClickDebuggingButton.clktmpl');
   try
-    SetFindControlOptionsToAPI(FindControlOptions, FindControlOptionsAPI, MatchBitmapTextRecAPI, FindControlMatchBitmapTextAPIArr);
+    SetFindControlOptionsToAPI(FindControlOptions, FindControlOptionsAPI, MatchBitmapTextRecAPI, FindControlMatchBitmapTextAPIArr, TempFindControlOptionsAPIWS);
     ExecuteFindControlAction(@ActionName[1], 2000, @FindControlOptionsAPI, True, @FileLoc[1], @Response[1]);
     WaitForDebuggingActionToFinish(Response, Th);
   finally
@@ -245,6 +248,7 @@ var
   FindSubControlOptionsAPI: TClkFindSubControlOptionsAPI;
   MatchBitmapTextRecAPI: TMatchBitmapTextRecAPI;
   FindControlMatchBitmapTextAPIArr: TClkFindControlMatchBitmapTextAPIArr;
+  TempFindSubControlOptionsAPIWS: TClkFindSubControlOptionsAPIWS;
   ActionName, FileLoc: WideString;
   Response: string;
   Th: TClientThread;
@@ -267,7 +271,7 @@ begin
 
   Th := AsyncExecTestTemplate(CTestDriverAddress, '$AppDir$\..\Tests\TestFiles\ClickDebuggingButton.clktmpl');
   try
-    SetFindSubControlOptionsToAPI(FindSubControlOptions, FindSubControlOptionsAPI, MatchBitmapTextRecAPI, FindControlMatchBitmapTextAPIArr);
+    SetFindSubControlOptionsToAPI(FindSubControlOptions, FindSubControlOptionsAPI, MatchBitmapTextRecAPI, FindControlMatchBitmapTextAPIArr, TempFindSubControlOptionsAPIWS);
     ExecuteFindSubControlAction(@ActionName[1], 1000, @FindSubControlOptionsAPI, True, @FileLoc[1], @Response[1]);
     WaitForDebuggingActionToFinish(Response, Th);
   finally
@@ -280,6 +284,7 @@ procedure TTestClickerClientHTTPAPI.Test_ExecuteSetControlTextAction_With_UseSer
 var
   SetControlTextOptions: TClkSetTextOptions;
   SetControlTextOptionsAPI: TClkSetTextOptionsAPI;
+  TempSetControlTextOptionsAPIWS: TClkSetTextOptionsAPIWS;
   ActionName: WideString;
   Response: string;
   Th: TClientThread;
@@ -298,7 +303,7 @@ begin
 
   Th := AsyncExecTestTemplate(CTestDriverAddress, '$AppDir$\..\Tests\TestFiles\ClickDebuggingButton.clktmpl');
   try
-    SetSetControlTextOptionsToAPI(SetControlTextOptions, SetControlTextOptionsAPI);
+    SetSetControlTextOptionsToAPI(SetControlTextOptions, SetControlTextOptionsAPI, TempSetControlTextOptionsAPIWS);
     ExecuteSetControlTextAction(@ActionName[1], 100, @SetControlTextOptionsAPI, True, @Response[1]);
     WaitForDebuggingActionToFinish(Response, Th);
   finally
@@ -311,6 +316,7 @@ procedure TTestClickerClientHTTPAPI.Test_ExecuteCallTemplateAction_With_UseServe
 var
   CallTemplateOptions: TClkCallTemplateOptions;
   CallTemplateOptionsAPI: TClkCallTemplateOptionsAPI;
+  TempCallTemplateOptionsAPIWS: TClkCallTemplateOptionsAPIWS;
   ActionName, FileLoc: WideString;
   Response: string;
   Th: TClientThread;
@@ -323,7 +329,7 @@ begin
 
   Th := AsyncExecTestTemplate(CTestDriverAddress, '$AppDir$\..\Tests\TestFiles\ClickDebuggingButton.clktmpl');
   try
-    SetCallTemplateOptionsToAPI(CallTemplateOptions, CallTemplateOptionsAPI);
+    SetCallTemplateOptionsToAPI(CallTemplateOptions, CallTemplateOptionsAPI, TempCallTemplateOptionsAPIWS);
     ExecuteCallTemplateAction(@ActionName[1], 100, @CallTemplateOptionsAPI, True, @FileLoc[1], @Response[1]);
     WaitForDebuggingActionToFinish(Response, Th);
   finally
@@ -336,6 +342,7 @@ procedure TTestClickerClientHTTPAPI.Test_ExecuteSleepAction_With_UseServerDebugg
 var
   SleepOptions: TClkSleepOptions;
   SleepOptionsAPI: TClkSleepOptionsAPI;
+  TempSleepOptionsAPIWS: TClkSleepOptionsAPIWS;
   ActionName: WideString;
   Response: string;
   Th: TClientThread;
@@ -347,7 +354,7 @@ begin
 
   Th := AsyncExecTestTemplate(CTestDriverAddress, '$AppDir$\..\Tests\TestFiles\ClickDebuggingButton.clktmpl');
   try
-    SetSleepOptionsToAPI(SleepOptions, SleepOptionsAPI);
+    SetSleepOptionsToAPI(SleepOptions, SleepOptionsAPI, TempSleepOptionsAPIWS);
     ExecuteSleepAction(@ActionName[1], 100, @SleepOptionsAPI, True, @Response[1]);
     WaitForDebuggingActionToFinish(Response, Th);
   finally
@@ -360,6 +367,7 @@ procedure TTestClickerClientHTTPAPI.Test_ExecuteSetVarAction_With_UseServerDebug
 var
   SetVarOptions: TClkSetVarOptions;
   SetVarOptionsAPI: TClkSetVarOptionsAPI;
+  TempSetVarOptionsAPIWS: TClkSetVarOptionsAPIWS;
   ActionName: WideString;
   Response: string;
   Th: TClientThread;
@@ -371,7 +379,7 @@ begin
 
   Th := AsyncExecTestTemplate(CTestDriverAddress, '$AppDir$\..\Tests\TestFiles\ClickDebuggingButton.clktmpl');
   try
-    SetSetVarOptionsToAPI(SetVarOptions, SetVarOptionsAPI);
+    SetSetVarOptionsToAPI(SetVarOptions, SetVarOptionsAPI, TempSetVarOptionsAPIWS);
     ExecuteSetVarAction(@ActionName[1], 100, @SetVarOptionsAPI, True, @Response[1]);
     WaitForDebuggingActionToFinish(Response, Th);
   finally
@@ -384,6 +392,7 @@ procedure TTestClickerClientHTTPAPI.Test_ExecuteWindowOperationsAction_With_UseS
 var
   WindowOperationsOptions: TClkWindowOperationsOptions;
   WindowOperationsOptionsAPI: TClkWindowOperationsOptionsAPI;
+  TempWindowOperationsOptionsAPIWS: TClkWindowOperationsOptionsAPIWS;
   ActionName: WideString;
   Response: string;
   Th: TClientThread;
@@ -395,7 +404,7 @@ begin
 
   Th := AsyncExecTestTemplate(CTestDriverAddress, '$AppDir$\..\Tests\TestFiles\ClickDebuggingButton.clktmpl');
   try
-    SetWindowOperationsOptionsToAPI(WindowOperationsOptions, WindowOperationsOptionsAPI);
+    SetWindowOperationsOptionsToAPI(WindowOperationsOptions, WindowOperationsOptionsAPI, TempWindowOperationsOptionsAPIWS);
     ExecuteWindowOperationsAction(@ActionName[1], 100, @WindowOperationsOptionsAPI, True, @Response[1]);
     WaitForDebuggingActionToFinish(Response, Th);
   finally
@@ -408,6 +417,7 @@ procedure TTestClickerClientHTTPAPI.Test_ExecuteLoadSetVarFromFileAction_With_Us
 var
   LoadSetVarFromFileOptions: TClkLoadSetVarFromFileOptions;
   LoadSetVarFromFileOptionsAPI: TClkLoadSetVarFromFileOptionsAPI;
+  TempLoadSetVarFromFileOptionsAPIWS: TClkLoadSetVarFromFileOptionsAPIWS;
   ActionName: WideString;
   Response: string;
   Th: TClientThread;
@@ -419,7 +429,7 @@ begin
 
   Th := AsyncExecTestTemplate(CTestDriverAddress, '$AppDir$\..\Tests\TestFiles\ClickDebuggingButton.clktmpl');
   try
-    SetLoadSetVarFromFileOptionsToAPI(LoadSetVarFromFileOptions, LoadSetVarFromFileOptionsAPI);
+    SetLoadSetVarFromFileOptionsToAPI(LoadSetVarFromFileOptions, LoadSetVarFromFileOptionsAPI, TempLoadSetVarFromFileOptionsAPIWS);
     ExecuteLoadSetVarFromFileAction(@ActionName[1], 100, @LoadSetVarFromFileOptionsAPI, True, @Response[1]);
     WaitForDebuggingActionToFinish(Response, Th);
   finally
@@ -433,6 +443,7 @@ procedure TTestClickerClientHTTPAPI.Test_ExecuteSaveSetVarToFileAction_With_UseS
 var
   SaveSetVarToFileOptions: TClkSaveSetVarToFileOptions;
   SaveSetVarToFileOptionsAPI: TClkSaveSetVarToFileOptionsAPI;
+  TempSaveSetVarToFileOptionsAPIWS: TClkSaveSetVarToFileOptionsAPIWS;
   ActionName: WideString;
   Response: string;
   Th: TClientThread;
@@ -444,7 +455,7 @@ begin
 
   Th := AsyncExecTestTemplate(CTestDriverAddress, '$AppDir$\..\Tests\TestFiles\ClickDebuggingButton.clktmpl');
   try
-    SetSaveSetVarToFileOptionsToAPI(SaveSetVarToFileOptions, SaveSetVarToFileOptionsAPI);
+    SetSaveSetVarToFileOptionsToAPI(SaveSetVarToFileOptions, SaveSetVarToFileOptionsAPI, TempSaveSetVarToFileOptionsAPIWS);
     ExecuteSaveSetVarToFileAction(@ActionName[1], 100, @SaveSetVarToFileOptionsAPI, True, @Response[1]);
     WaitForDebuggingActionToFinish(Response, Th);
   finally
@@ -457,6 +468,7 @@ procedure TTestClickerClientHTTPAPI.Test_ExecutePluginAction_With_UseServerDebug
 var
   PluginOptions: TClkPluginOptions;
   PluginOptionsAPI: TClkPluginOptionsAPI;
+  TempPluginOptionsAPIWS: TClkPluginOptionsAPIWS;
   ActionName: WideString;
   Response: string;
   Th: TClientThread;
@@ -468,7 +480,7 @@ begin
 
   Th := AsyncExecTestTemplate(CTestDriverAddress, '$AppDir$\..\Tests\TestFiles\ClickDebuggingButton.clktmpl');
   try
-    SetPluginOptionsToAPI(PluginOptions, PluginOptionsAPI);
+    SetPluginOptionsToAPI(PluginOptions, PluginOptionsAPI, TempPluginOptionsAPIWS);
     ExecutePluginAction(@ActionName[1], 100, @PluginOptionsAPI, True, True, @Response[1]);
     WaitForDebuggingActionToFinish(Response, Th);
   finally
@@ -481,6 +493,7 @@ procedure TTestClickerClientHTTPAPI.Test_ExecuteEditTemplateAction_With_UseServe
 var
   EditTemplateOptions: TClkEditTemplateOptions;
   EditTemplateOptionsAPI: TClkEditTemplateOptionsAPI;
+  TempTClkEditTemplateOptionsAPIWS: TClkEditTemplateOptionsAPIWS;
   ActionName: WideString;
   Response: string;
   Th: TClientThread;
@@ -492,7 +505,7 @@ begin
 
   Th := AsyncExecTestTemplate(CTestDriverAddress, '$AppDir$\..\Tests\TestFiles\ClickDebuggingButton.clktmpl');
   try
-    SetEditTemplateOptionsToAPI(EditTemplateOptions, EditTemplateOptionsAPI);
+    SetEditTemplateOptionsToAPI(EditTemplateOptions, EditTemplateOptionsAPI, TempTClkEditTemplateOptionsAPIWS);
     EditTemplateOptionsAPI.WhichTemplate := Byte(etwtSelf);  //remote execution of EditTemplate, with etwtOther expects a valid file (for 5min) to be sent
     ExecuteEditTemplateAction(@ActionName[1], 100, @EditTemplateOptionsAPI, True, @Response[1]);
     WaitForDebuggingActionToFinish(Response, Th);
@@ -518,6 +531,7 @@ var
   Response: string;
   ClickOptions: TClkClickOptions;
   ClickOptionsAPI: TClkClickOptionsAPI;
+  TempClickOptionsAPIWS: TClkClickOptionsAPIWS;
   //Th: TClientThread;
 begin
   GetDefaultPropertyValues_Click(ClickOptions);
@@ -531,7 +545,7 @@ begin
 
   //Th := AsyncExecTestTemplate(CTestDriverAddress, '$AppDir$\..\Tests\TestFiles\ClickDebuggingButton.clktmpl');
   try
-    SetClickOptionsToAPI(ClickOptions, ClickOptionsAPI);
+    SetClickOptionsToAPI(ClickOptions, ClickOptionsAPI, TempClickOptionsAPIWS);
     Expect(AddClickActionToTemplate(@AddActionsTemplateFnm[1], @ActionName[1], 1000, True, nil, @ClickOptionsAPI)).ToBe(0);
 
     SetLength(Response, PrepareFilesInServer(@AddActionsTemplateFnm[1], @Response[1]));
@@ -551,6 +565,7 @@ var
   Response: string;
   ExecAppOptions: TClkExecAppOptions;
   ExecAppOptionsAPI: TClkExecAppOptionsAPI;
+  TempExecAppOptionsAPIWS: TClkExecAppOptionsAPIWS;
   //Th: TClientThread;
 begin
   GetDefaultPropertyValues_ExecApp(ExecAppOptions);
@@ -561,7 +576,7 @@ begin
 
   //Th := AsyncExecTestTemplate(CTestDriverAddress, '$AppDir$\..\Tests\TestFiles\ClickDebuggingButton.clktmpl');
   try
-    SetExecAppOptionsToAPI(ExecAppOptions, ExecAppOptionsAPI);
+    SetExecAppOptionsToAPI(ExecAppOptions, ExecAppOptionsAPI, TempExecAppOptionsAPIWS);
     Expect(AddExecAppActionToTemplate(@AddActionsTemplateFnm[1], @ActionName[1], 1000, True, nil, @ExecAppOptionsAPI)).ToBe(0);
 
     SetLength(Response, PrepareFilesInServer(@AddActionsTemplateFnm[1], @Response[1]));
@@ -583,6 +598,7 @@ var
   FindControlOptionsAPI: TClkFindControlOptionsAPI;
   MatchBitmapTextRecAPI: TMatchBitmapTextRecAPI;
   FindControlMatchBitmapTextAPIArr: TClkFindControlMatchBitmapTextAPIArr;
+  TempFindControlOptionsAPIWS: TClkFindControlOptionsAPIWS;
   //Th: TClientThread;
 begin
   GetDefaultPropertyValues_FindControl(FindControlOptions);
@@ -595,7 +611,7 @@ begin
 
   //Th := AsyncExecTestTemplate(CTestDriverAddress, '$AppDir$\..\Tests\TestFiles\ClickDebuggingButton.clktmpl');
   try
-    SetFindControlOptionsToAPI(FindControlOptions, FindControlOptionsAPI, MatchBitmapTextRecAPI, FindControlMatchBitmapTextAPIArr);
+    SetFindControlOptionsToAPI(FindControlOptions, FindControlOptionsAPI, MatchBitmapTextRecAPI, FindControlMatchBitmapTextAPIArr, TempFindControlOptionsAPIWS);
     Expect(AddFindControlActionToTemplate(@AddActionsTemplateFnm[1], @ActionName[1], 1000, True, nil, @FindControlOptionsAPI)).ToBe(0);
 
     SetLength(Response, PrepareFilesInServer(@AddActionsTemplateFnm[1], @Response[1]));
@@ -617,6 +633,7 @@ var
   FindSubControlOptionsAPI: TClkFindSubControlOptionsAPI;
   MatchBitmapTextRecAPI: TMatchBitmapTextRecAPI;
   FindSubControlMatchBitmapTextAPIArr: TClkFindControlMatchBitmapTextAPIArr;
+  TempFindSubControlOptionsAPIWS: TClkFindSubControlOptionsAPIWS;
   //Th: TClientThread;
 begin
   GetDefaultPropertyValues_FindSubControl(FindSubControlOptions);
@@ -636,7 +653,7 @@ begin
 
   //Th := AsyncExecTestTemplate(CTestDriverAddress, '$AppDir$\..\Tests\TestFiles\ClickDebuggingButton.clktmpl');
   try
-    SetFindSubControlOptionsToAPI(FindSubControlOptions, FindSubControlOptionsAPI, MatchBitmapTextRecAPI, FindSubControlMatchBitmapTextAPIArr);
+    SetFindSubControlOptionsToAPI(FindSubControlOptions, FindSubControlOptionsAPI, MatchBitmapTextRecAPI, FindSubControlMatchBitmapTextAPIArr, TempFindSubControlOptionsAPIWS);
     Expect(AddFindSubControlActionToTemplate(@AddActionsTemplateFnm[1], @ActionName[1], 1000, True, nil, @FindSubControlOptionsAPI)).ToBe(0);
 
     SetLength(Response, PrepareFilesInServer(@AddActionsTemplateFnm[1], @Response[1]));
@@ -656,6 +673,7 @@ var
   Response: string;
   SetControlTextOptions: TClkSetTextOptions;
   SetControlTextOptionsAPI: TClkSetTextOptionsAPI;
+  TempSetControlTextOptionsAPIWS: TClkSetTextOptionsAPIWS;
   //Th: TClientThread;
 begin
   GetDefaultPropertyValues_SetControlText(SetControlTextOptions);
@@ -666,7 +684,7 @@ begin
 
   //Th := AsyncExecTestTemplate(CTestDriverAddress, '$AppDir$\..\Tests\TestFiles\ClickDebuggingButton.clktmpl');
   try
-    SetSetControlTextOptionsToAPI(SetControlTextOptions, SetControlTextOptionsAPI);
+    SetSetControlTextOptionsToAPI(SetControlTextOptions, SetControlTextOptionsAPI, TempSetControlTextOptionsAPIWS);
     Expect(AddSetControlTextActionToTemplate(@AddActionsTemplateFnm[1], @ActionName[1], 1000, True, nil, @SetControlTextOptionsAPI)).ToBe(0);
 
     SetLength(Response, PrepareFilesInServer(@AddActionsTemplateFnm[1], @Response[1]));
@@ -686,6 +704,7 @@ var
   Response: string;
   CallTemplateOptions: TClkCallTemplateOptions;
   CallTemplateOptionsAPI: TClkCallTemplateOptionsAPI;
+  TempCallTemplateOptionsAPIWS: TClkCallTemplateOptionsAPIWS;
   //Th: TClientThread;
 begin
   GetDefaultPropertyValues_CallTemplate(CallTemplateOptions);
@@ -696,7 +715,7 @@ begin
 
   //Th := AsyncExecTestTemplate(CTestDriverAddress, '$AppDir$\..\Tests\TestFiles\ClickDebuggingButton.clktmpl');
   try
-    SetCallTemplateOptionsToAPI(CallTemplateOptions, CallTemplateOptionsAPI);
+    SetCallTemplateOptionsToAPI(CallTemplateOptions, CallTemplateOptionsAPI, TempCallTemplateOptionsAPIWS);
     Expect(AddCallTemplateActionToTemplate(@AddActionsTemplateFnm[1], @ActionName[1], 1000, True, nil, @CallTemplateOptionsAPI)).ToBe(0);
 
     SetLength(Response, PrepareFilesInServer(@AddActionsTemplateFnm[1], @Response[1]));
@@ -716,6 +735,7 @@ var
   Response: string;
   SleepOptions: TClkSleepOptions;
   SleepOptionsAPI: TClkSleepOptionsAPI;
+  TempSleepOptionsAPIWS: TClkSleepOptionsAPIWS;
   //Th: TClientThread;
 begin
   GetDefaultPropertyValues_Sleep(SleepOptions);
@@ -726,7 +746,7 @@ begin
 
   //Th := AsyncExecTestTemplate(CTestDriverAddress, '$AppDir$\..\Tests\TestFiles\ClickDebuggingButton.clktmpl');
   try
-    SetSleepOptionsToAPI(SleepOptions, SleepOptionsAPI);
+    SetSleepOptionsToAPI(SleepOptions, SleepOptionsAPI, TempSleepOptionsAPIWS);
     Expect(AddSleepActionToTemplate(@AddActionsTemplateFnm[1], @ActionName[1], 1000, True, nil, @SleepOptionsAPI)).ToBe(0);
 
     SetLength(Response, PrepareFilesInServer(@AddActionsTemplateFnm[1], @Response[1]));
@@ -746,6 +766,7 @@ var
   Response: string;
   SetVarOptions: TClkSetVarOptions;
   SetVarOptionsAPI: TClkSetVarOptionsAPI;
+  TempSetVarOptionsAPIWS: TClkSetVarOptionsAPIWS;
   //Th: TClientThread;
 begin
   GetDefaultPropertyValues_SetVar(SetVarOptions);
@@ -756,7 +777,7 @@ begin
 
   //Th := AsyncExecTestTemplate(CTestDriverAddress, '$AppDir$\..\Tests\TestFiles\ClickDebuggingButton.clktmpl');
   try
-    SetSetVarOptionsToAPI(SetVarOptions, SetVarOptionsAPI);
+    SetSetVarOptionsToAPI(SetVarOptions, SetVarOptionsAPI, TempSetVarOptionsAPIWS);
     Expect(AddSetVarActionToTemplate(@AddActionsTemplateFnm[1], @ActionName[1], 1000, True, nil, @SetVarOptionsAPI)).ToBe(0);
 
     SetLength(Response, PrepareFilesInServer(@AddActionsTemplateFnm[1], @Response[1]));
@@ -776,6 +797,7 @@ var
   Response: string;
   WindowOperationsOptions: TClkWindowOperationsOptions;
   WindowOperationsOptionsAPI: TClkWindowOperationsOptionsAPI;
+  TempWindowOperationsOptionsAPIWS: TClkWindowOperationsOptionsAPIWS;
   //Th: TClientThread;
 begin
   GetDefaultPropertyValues_WindowOperations(WindowOperationsOptions);
@@ -786,7 +808,7 @@ begin
 
   //Th := AsyncExecTestTemplate(CTestDriverAddress, '$AppDir$\..\Tests\TestFiles\ClickDebuggingButton.clktmpl');
   try
-    SetWindowOperationsOptionsToAPI(WindowOperationsOptions, WindowOperationsOptionsAPI);
+    SetWindowOperationsOptionsToAPI(WindowOperationsOptions, WindowOperationsOptionsAPI, TempWindowOperationsOptionsAPIWS);
     Expect(AddWindowOperationsActionToTemplate(@AddActionsTemplateFnm[1], @ActionName[1], 1000, True, nil, @WindowOperationsOptionsAPI)).ToBe(0);
 
     SetLength(Response, PrepareFilesInServer(@AddActionsTemplateFnm[1], @Response[1]));
@@ -806,6 +828,7 @@ var
   Response: string;
   LoadSetVarFromFileOptions: TClkLoadSetVarFromFileOptions;
   LoadSetVarFromFileOptionsAPI: TClkLoadSetVarFromFileOptionsAPI;
+  TempLoadSetVarFromFileOptionsAPIWS: TClkLoadSetVarFromFileOptionsAPIWS;
   //Th: TClientThread;
 begin
   GetDefaultPropertyValues_LoadSetVarFromFile(LoadSetVarFromFileOptions);
@@ -816,7 +839,7 @@ begin
 
   //Th := AsyncExecTestTemplate(CTestDriverAddress, '$AppDir$\..\Tests\TestFiles\ClickDebuggingButton.clktmpl');
   try
-    SetLoadSetVarFromFileOptionsToAPI(LoadSetVarFromFileOptions, LoadSetVarFromFileOptionsAPI);
+    SetLoadSetVarFromFileOptionsToAPI(LoadSetVarFromFileOptions, LoadSetVarFromFileOptionsAPI, TempLoadSetVarFromFileOptionsAPIWS);
     Expect(AddLoadSetVarFromFileActionToTemplate(@AddActionsTemplateFnm[1], @ActionName[1], 1000, True, nil, @LoadSetVarFromFileOptionsAPI)).ToBe(0);
 
     SetLength(Response, PrepareFilesInServer(@AddActionsTemplateFnm[1], @Response[1]));
@@ -836,6 +859,7 @@ var
   Response: string;
   SaveSetVarToFileOptions: TClkSaveSetVarToFileOptions;
   SaveSetVarToFileOptionsAPI: TClkSaveSetVarToFileOptionsAPI;
+  TempSaveSetVarToFileOptionsAPIWS: TClkSaveSetVarToFileOptionsAPIWS;
   //Th: TClientThread;
 begin
   GetDefaultPropertyValues_SaveSetVarToFile(SaveSetVarToFileOptions);
@@ -846,7 +870,7 @@ begin
 
   //Th := AsyncExecTestTemplate(CTestDriverAddress, '$AppDir$\..\Tests\TestFiles\ClickDebuggingButton.clktmpl');
   try
-    SetSaveSetVarToFileOptionsToAPI(SaveSetVarToFileOptions, SaveSetVarToFileOptionsAPI);
+    SetSaveSetVarToFileOptionsToAPI(SaveSetVarToFileOptions, SaveSetVarToFileOptionsAPI, TempSaveSetVarToFileOptionsAPIWS);
     Expect(AddSaveSetVarToFileActionToTemplate(@AddActionsTemplateFnm[1], @ActionName[1], 1000, True, nil, @SaveSetVarToFileOptionsAPI)).ToBe(0);
 
     SetLength(Response, PrepareFilesInServer(@AddActionsTemplateFnm[1], @Response[1]));
@@ -866,6 +890,7 @@ var
   Response: string;
   PluginOptions: TClkPluginOptions;
   PluginOptionsAPI: TClkPluginOptionsAPI;
+  TempPluginOptionsAPIWS: TClkPluginOptionsAPIWS;
   //Th: TClientThread;
 begin
   GetDefaultPropertyValues_Plugin(PluginOptions);
@@ -876,7 +901,7 @@ begin
 
   //Th := AsyncExecTestTemplate(CTestDriverAddress, '$AppDir$\..\Tests\TestFiles\ClickDebuggingButton.clktmpl');
   try
-    SetPluginOptionsToAPI(PluginOptions, PluginOptionsAPI);
+    SetPluginOptionsToAPI(PluginOptions, PluginOptionsAPI, TempPluginOptionsAPIWS);
     Expect(AddPluginActionToTemplate(@AddActionsTemplateFnm[1], @ActionName[1], 1000, True, nil, @PluginOptionsAPI)).ToBe(0);
 
     SetLength(Response, PrepareFilesInServer(@AddActionsTemplateFnm[1], @Response[1]));
@@ -896,6 +921,7 @@ var
   Response: string;
   EditTemplateOptions: TClkEditTemplateOptions;
   EditTemplateOptionsAPI: TClkEditTemplateOptionsAPI;
+  TempTClkEditTemplateOptionsAPIWS: TClkEditTemplateOptionsAPIWS;
   //Th: TClientThread;
 begin
   GetDefaultPropertyValues_EditTemplate(EditTemplateOptions);
@@ -906,7 +932,7 @@ begin
 
   //Th := AsyncExecTestTemplate(CTestDriverAddress, '$AppDir$\..\Tests\TestFiles\ClickDebuggingButton.clktmpl');
   try
-    SetEditTemplateOptionsToAPI(EditTemplateOptions, EditTemplateOptionsAPI);
+    SetEditTemplateOptionsToAPI(EditTemplateOptions, EditTemplateOptionsAPI, TempTClkEditTemplateOptionsAPIWS);
     EditTemplateOptionsAPI.WhichTemplate := Byte(etwtSelf);  //remote execution of EditTemplate, with etwtOther expects a valid file (for 5min) to be sent
     Expect(AddEditTemplateActionToTemplate(@AddActionsTemplateFnm[1], @ActionName[1], 1000, True, nil, @EditTemplateOptionsAPI)).ToBe(0);
 
