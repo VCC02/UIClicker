@@ -1,8 +1,59 @@
 [Actions]
-Count=11
+Count=20
 Version=2
 
 [Action_0]
+ActionName=Restore player cached control
+Action=SetVar
+ActionTimeout=0
+ActionEnabled=1
+ActionCondition=
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+ListOfVarNames=$Control_Left$$Control_Top$$Control_Right$$Control_Bottom$$Control_Width$$Control_Height$$Control_Text$$Control_Class$$Control_Handle$
+ListOfVarValues=$Player_Left$$Player_Top$$Player_Right$$Player_Bottom$$Player_Width$$Player_Height$$Player_Text$$Player_Class$$Player_Handle$
+ListOfVarEvalBefore=111111111
+FailOnException=0
+
+[Action_1]
+ActionName=Open action pop-up menu
+Action=Click
+ActionTimeout=0
+ActionEnabled=1
+ActionCondition=
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+XOffsetReference=0
+YOffsetReference=0
+XClickPointVar=$Control_Left$
+YClickPointVar=$Control_Top$
+XOffset=120
+YOffset=60
+MouseButton=1
+ClickWithCtrl=0
+ClickWithAlt=0
+ClickWithShift=0
+ClickWithDoubleClick=0
+LeaveMouse=1
+MoveWithoutClick=0
+Count=1
+ClickType=0
+XOffsetReferenceDest=0
+YOffsetReferenceDest=0
+XClickPointVarDest=$Control_Left$
+YClickPointVarDest=$Control_Top$
+XOffsetDest=7
+YOffsetDest=7
+MouseWheelType=0
+MouseWheelAmount=1
+DelayAfterMovingToDestination=50
+DelayAfterMouseDown=200
+MoveDuration=-1
+UseClipCursor=0
+
+[Action_2]
 ActionName=Find pop-up menu
 Action=FindControl
 ActionTimeout=3000
@@ -36,7 +87,7 @@ GetAllControls=0
 PrecisionTimeout=0
 EvaluateTextCount=-1
 
-[Action_1]
+[Action_3]
 ActionName=Cache first level menu
 Action=SetVar
 ActionTimeout=0
@@ -50,7 +101,7 @@ ListOfVarValues=$Control_Left$$Control_Top$$Control_Right$$Control_Bottom$
 ListOfVarEvalBefore=111111111
 FailOnException=0
 
-[Action_2]
+[Action_4]
 ActionName=Find menu item
 Action=FindSubControl
 ActionTimeout=1000
@@ -140,7 +191,7 @@ EvaluateTextCount=-1
 CropFromScreenshot=0
 ThreadCount=2
 
-[Action_3]
+[Action_5]
 ActionName=Expand menu
 Action=Click
 ActionTimeout=0
@@ -177,7 +228,7 @@ DelayAfterMouseDown=200
 MoveDuration=-1
 UseClipCursor=0
 
-[Action_4]
+[Action_6]
 ActionName=Reset flag
 Action=SetVar
 ActionTimeout=0
@@ -191,7 +242,7 @@ ListOfVarValues=False
 ListOfVarEvalBefore=0
 FailOnException=0
 
-[Action_5]
+[Action_7]
 ActionName=Find second level menu - to the right
 Action=FindControl
 ActionTimeout=3000
@@ -225,7 +276,7 @@ GetAllControls=0
 PrecisionTimeout=0
 EvaluateTextCount=-1
 
-[Action_6]
+[Action_8]
 ActionName=Set flag if found
 Action=SetVar
 ActionTimeout=0
@@ -239,7 +290,7 @@ ListOfVarValues=True
 ListOfVarEvalBefore=0
 FailOnException=0
 
-[Action_7]
+[Action_9]
 ActionName=Find second level menu - to the left
 Action=FindControl
 ActionTimeout=3000
@@ -273,7 +324,7 @@ GetAllControls=0
 PrecisionTimeout=0
 EvaluateTextCount=-1
 
-[Action_8]
+[Action_10]
 ActionName=Verify if it is a second control (it should have a different handle)
 Action=SetVar
 ActionTimeout=0
@@ -287,7 +338,7 @@ ListOfVarValues=
 ListOfVarEvalBefore=0
 FailOnException=0
 
-[Action_9]
+[Action_11]
 ActionName=Find second menu item
 Action=FindSubControl
 ActionTimeout=1000
@@ -377,12 +428,40 @@ EvaluateTextCount=-1
 CropFromScreenshot=0
 ThreadCount=2
 
-[Action_10]
+[Action_12]
+ActionName=Cache second menu item
+Action=SetVar
+ActionTimeout=0
+ActionEnabled=1
+ActionCondition=
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+ListOfVarNames=$SecondMenuItem_Left$$SecondMenuItem_Top$$SecondMenuItem_Right$$SecondMenuItem_Bottom$$SecondMenuItem_Width$$SecondMenuItem_Height$$SecondMenuItem_Text$$SecondMenuItem_Class$$SecondMenuItem_Handle$
+ListOfVarValues=$Control_Left$$Control_Top$$Control_Right$$Control_Bottom$$Control_Width$$Control_Height$$Control_Text$$Control_Class$$Control_Handle$
+ListOfVarEvalBefore=111111111
+FailOnException=0
+
+[Action_13]
+ActionName=Set a var to "Include action call(s)" string
+Action=SetVar
+ActionTimeout=0
+ActionEnabled=1
+ActionCondition=
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+ListOfVarNames=$IncludeActionCallsStr$
+ListOfVarValues=Include action call(s)
+ListOfVarEvalBefore=0
+FailOnException=0
+
+[Action_14]
 ActionName=Click second menu item
 Action=Click
 ActionTimeout=0
 ActionEnabled=1
-ActionCondition=
+ActionCondition=$SecondMenuItem$<>$IncludeActionCallsStr$
 BreakpointExists=0
 BreakpointEnabled=0
 BreakpointCondition=
@@ -414,7 +493,159 @@ DelayAfterMouseDown=200
 MoveDuration=-1
 UseClipCursor=0
 
+[Action_15]
+ActionName=Reset flag
+Action=SetVar
+ActionTimeout=0
+ActionEnabled=1
+ActionCondition=
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+ListOfVarNames=$CheckMarkFound$
+ListOfVarValues=False
+ListOfVarEvalBefore=0
+FailOnException=0
+
+[Action_16]
+ActionName=Find checkmark on second menu item
+Action=FindSubControl
+ActionTimeout=1000
+ActionEnabled=1
+ActionCondition=$SecondMenuItem$==$IncludeActionCallsStr$
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+MatchCriteria.WillMatchBitmapText=0
+MatchCriteria.WillMatchBitmapFiles=1
+MatchCriteria.WillMatchPrimitiveFiles=0
+MatchText=
+AllowToFail=1
+WaitForControlToGoAway=0
+MatchBitmapTextArr=1
+MatchBitmapText_Count=1
+MatchBitmapText[0].ForegroundColor=$Color_Window$
+MatchBitmapText[0].BackgroundColor=$Color_Highlight$
+MatchBitmapText[0].FontName=Tahoma
+MatchBitmapText[0].FontSize=8
+MatchBitmapText[0].Bold=0
+MatchBitmapText[0].Italic=0
+MatchBitmapText[0].Underline=0
+MatchBitmapText[0].StrikeOut=0
+MatchBitmapText[0].FontQuality=3
+MatchBitmapText[0].FontQualityUsesReplacement=0
+MatchBitmapText[0].FontQualityReplacement=
+MatchBitmapText[0].ProfileName=Profile [0]
+MatchBitmapText[0].CropLeft=0
+MatchBitmapText[0].CropTop=0
+MatchBitmapText[0].CropRight=0
+MatchBitmapText[0].CropBottom=0
+MatchBitmapText[0].IgnoreBackgroundColor=0
+MatchBitmapFiles=$TemplateDir$\CheckMark_20x20.bmp
+ColorError=0
+AllowedColorErrorCount=0
+MatchBitmapAlgorithm=0
+MatchBitmapAlgorithm_Grid_XMultipleOf=1
+MatchBitmapAlgorithm_Grid_YMultipleOf=1
+MatchBitmapAlgorithm_Grid_XOffset=0
+MatchBitmapAlgorithm_Grid_YOffset=0
+InitialRectangle.Left=$Control_Left$
+InitialRectangle.Top=$Control_Top$
+InitialRectangle.Right=$Control_Left$
+InitialRectangle.Bottom=$Control_Bottom$
+UseWholeScreen=0
+InitialRectangle.LeftOffset=-33
+InitialRectangle.TopOffset=-10
+InitialRectangle.RightOffset=0
+InitialRectangle.BottomOffset=10
+StartSearchingWithCachedControl=0
+CachedControlLeft=
+CachedControlTop=
+MatchPrimitiveFiles=
+GetAllControls=0
+UseFastSearch=1
+FastSearchAllowedColorErrorCount=10
+IgnoredColors=
+SleepySearch=0
+StopSearchOnMismatch=1
+ImageSource=0
+SourceFileName=
+ImageSourceFileNameLocation=1
+PrecisionTimeout=0
+FullBackgroundImageInResult=1
+MatchByHistogramSettings.MinPercentColorMatch=50
+MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
+MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
+EvaluateTextCount=-1
+CropFromScreenshot=0
+ThreadCount=2
+
+[Action_17]
+ActionName=Set flag
+Action=SetVar
+ActionTimeout=0
+ActionEnabled=1
+ActionCondition=$SecondMenuItem$==$IncludeActionCallsStr$$LastAction_Status$==Successful
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+ListOfVarNames=$CheckMarkFound$
+ListOfVarValues=True
+ListOfVarEvalBefore=0
+FailOnException=0
+
+[Action_18]
+ActionName=Click second menu item
+Action=Click
+ActionTimeout=0
+ActionEnabled=1
+ActionCondition=$SecondMenuItem$==$IncludeActionCallsStr$$CheckMarkFound$==True$IncludeCalls$==False$SecondMenuItem$==$IncludeActionCallsStr$$CheckMarkFound$==False$IncludeCalls$==True
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+XOffsetReference=0
+YOffsetReference=0
+XClickPointVar=$Control_Left$
+YClickPointVar=$Control_Top$
+XOffset=4
+YOffset=4
+MouseButton=0
+ClickWithCtrl=0
+ClickWithAlt=0
+ClickWithShift=0
+ClickWithDoubleClick=0
+LeaveMouse=0
+MoveWithoutClick=0
+Count=1
+ClickType=0
+XOffsetReferenceDest=0
+YOffsetReferenceDest=0
+XClickPointVarDest=$Control_Left$
+YClickPointVarDest=$Control_Top$
+XOffsetDest=7
+YOffsetDest=7
+MouseWheelType=0
+MouseWheelAmount=1
+DelayAfterMovingToDestination=50
+DelayAfterMouseDown=200
+MoveDuration=-1
+UseClipCursor=0
+
+[Action_19]
+ActionName=Dismiss menu if already in the proper checked state
+Action=SetControlText
+ActionTimeout=0
+ActionEnabled=1
+ActionCondition=$SecondMenuItem$==$IncludeActionCallsStr$$CheckMarkFound$==True$IncludeCalls$==True$SecondMenuItem$==$IncludeActionCallsStr$$CheckMarkFound$==False$IncludeCalls$==False
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+Text=$Esc$
+ControlType=2
+DelayBetweenKeyStrokes=
+Count=2
+
 [Notes]
-Content=$MenuItem$ must point to the main menu item caption.$IncludeActionCalls$ should be True or False.$SecondMenuItem$ must point to the submenu item caption.
+Content=$Player_<Left, Top, Right, Bottom, Handle etc>$ vars must be set from a "cache control" action, pointing to the "Main Player" tab.$MenuItem$ must point to the main menu item caption.$IncludeActionCalls$ should be True or False.$SecondMenuItem$ must point to the submenu item caption.$IncludeCalls$ must be True or False, only if $SecondMenuItem$ point to "Include action call(s)".
 TemplateIconPath=
 
