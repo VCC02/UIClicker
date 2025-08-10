@@ -2276,7 +2276,7 @@ begin
     UpdateControlsFromActionsArr(IndexBeforeEditing); //HandleActionSelection;
     StopGlowingUpdateButton;
 
-    AddToLog('Entering in debugging mode.. Waiting for user to step over or continue debugging..');
+    AddToLog('Entering debugging mode.. Waiting for user to step over or continue debugging..');
     WaitInDebuggingMode;
   finally
     AddToLog('Exiting debugging mode..');
@@ -3603,7 +3603,7 @@ begin
       if FContinuePlayingBySteppingInto then
         Break;
 
-      Sleep(20);
+      Sleep(2);
     until not FPlaying;  //Stop button
   finally
     imgWaitingInDebuggingMode.Show;
