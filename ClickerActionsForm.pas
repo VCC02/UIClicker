@@ -1866,10 +1866,10 @@ begin
           begin
             frmClickerActions.AddToLog('[client] Detected client mode when calling template, level=' + IntToStr(AStackLevel));
 
-            if ExtractFileName(AFileNameToCall) = AFileNameToCall then  //AFileNameToCall does not contain a path
-              NewFrame.LoadTemplate(FFullTemplatesDir + '\' + AFileNameToCall{, FileLoc, FInMemFileSystem})
-            else
-              NewFrame.LoadTemplate(AFileNameToCall{, FileLoc, FInMemFileSystem});
+            //if ExtractFileName(AFileNameToCall) = AFileNameToCall then  //AFileNameToCall does not contain a path
+            //  NewFrame.LoadTemplate(FFullTemplatesDir + '\' + AFileNameToCall{, FileLoc, FInMemFileSystem})
+            //else
+            //  NewFrame.LoadTemplate(AFileNameToCall{, FileLoc, FInMemFileSystem});
 
             if GetServerFileExpectancy(NewFrame.RemoteAddress) = CREResp_FileExpectancy_ValueFromClient then
             begin
@@ -1889,12 +1889,18 @@ begin
 
               //frmClickerActions.AddToLog('[client] ' + NewFrame.SendMissingFilesToServer);
             end;
+
+            if ExtractFileName(AFileNameToCall) = AFileNameToCall then  //AFileNameToCall does not contain a path   //moved this section from before GetServerFileExpectancy call
+              NewFrame.LoadTemplate(FFullTemplatesDir + '\' + AFileNameToCall{, FileLoc, FInMemFileSystem})
+            else
+              NewFrame.LoadTemplate(AFileNameToCall{, FileLoc, FInMemFileSystem});
           end
           else
           begin  //local mode
             if ExtractFileName(AFileNameToCall) = AFileNameToCall then  //AFileNameToCall does not contain a path
             begin
               frmClickerActions.AddToLog('[local] Loading template: "' + FFullTemplatesDir + '\' + AFileNameToCall + '"  FileLoc = ' + CFileLocationStr[FileLoc] + '   [using default template dir]');
+              NewFrame.FileName := FFullTemplatesDir + '\' + AFileNameToCall;
               NewFrame.LoadTemplate(FFullTemplatesDir + '\' + AFileNameToCall{, FileLoc, FInMemFileSystem});
             end
             else
@@ -1903,6 +1909,7 @@ begin
               if not DoOnFileExists(AFileNameToCall) then
                 AddToLog('Template (to be loaded) not found: ' + AFileNameToCall);
 
+              NewFrame.FileName := AFileNameToCall;
               NewFrame.LoadTemplate(AFileNameToCall{, FileLoc, FInMemFileSystem});
             end;
           end;
@@ -1915,11 +1922,13 @@ begin
           if (ExtractFileName(AFileNameToCall) = AFileNameToCall) and (FileLoc <> flMem) then  //AFileNameToCall does not contain a path
           begin
             frmClickerActions.AddToLog('[server] Loading template: "' + FFullTemplatesDir + '\' + AFileNameToCall + '"  FileLoc = ' + CFileLocationStr[FileLoc] + '   [using default template dir]');
+            NewFrame.FileName := FFullTemplatesDir + '\' + AFileNameToCall;
             NewFrame.LoadTemplate(FFullTemplatesDir + '\' + AFileNameToCall, FileLoc, FInMemFileSystem);
           end
           else
           begin
             frmClickerActions.AddToLog('[server] Loading template: "' + AFileNameToCall + '"  FileLoc = ' + CFileLocationStr[FileLoc]);
+            NewFrame.FileName := AFileNameToCall;
             NewFrame.LoadTemplate(AFileNameToCall, FileLoc, FInMemFileSystem);
           end;
 

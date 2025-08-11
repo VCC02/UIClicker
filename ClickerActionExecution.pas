@@ -1320,8 +1320,11 @@ begin
 
           for i := 0 to AllParams.Count - 1 do
           begin
-            s := EvaluateReplacements(AllParams.Strings[i]);
+            s := AllParams.Strings[i];
             s := StringReplace(s, '$AppDir$', SelfAppDir, [rfReplaceAll]);
+            s := StringReplace(s, '$SelfTemplateDir$', TemplateDir, [rfReplaceAll]);
+            s := StringReplace(s, '$TemplateDir$', FFullTemplatesDir^, [rfReplaceAll]);
+            s := EvaluateReplacements(s);
             AProcess.Parameters.Add(s);
           end;
 

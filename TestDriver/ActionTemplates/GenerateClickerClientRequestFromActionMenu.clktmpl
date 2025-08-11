@@ -647,5 +647,5 @@ Count=2
 
 [Notes]
 Content=$Player_<Left, Top, Right, Bottom, Handle etc>$ vars must be set from a "cache control" action, pointing to the "Main Player" tab.$MenuItem$ must point to the main menu item caption.$IncludeActionCalls$ should be True or False.$SecondMenuItem$ must point to the submenu item caption.$IncludeCalls$ must be True or False, only if $SecondMenuItem$ point to "Include action call(s)".
-TemplateIconPath=
+TemplateIconPath=$SelfTemplateDir$\..\DrvIcon.png
 
