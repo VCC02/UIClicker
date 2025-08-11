@@ -451,6 +451,20 @@ object frClickerActions: TfrClickerActions
           }
           Visible = False
         end
+        object lblMouseOnExecDbgImg: TLabel
+          Left = 398
+          Height = 13
+          Top = 0
+          Width = 66
+          AutoSize = False
+          Color = 12247438
+          Font.Color = 187
+          Font.Height = -11
+          Font.Name = 'Tahoma'
+          ParentColor = False
+          ParentFont = False
+          Transparent = False
+        end
       end
       object pnlHorizSplitterResults: TPanel
         Cursor = crHSplit

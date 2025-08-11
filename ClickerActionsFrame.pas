@@ -104,6 +104,7 @@ type
     lblMouseOnExecDbgImgBB: TLabel;
     lblMouseOnExecDbgImgGG: TLabel;
     lblMouseOnExecDbgImgRR: TLabel;
+    lblMouseOnExecDbgImg: TLabel;
     lblVarReplacements: TLabel;
     MenuItem_ReplaceWithSelfTemplateDir: TMenuItem;
     MenuItem_ReplaceWithTemplateDir: TMenuItem;
@@ -1236,7 +1237,7 @@ begin
   lblDebugBitmapXMouseOffset.Caption := 'mx: ' + IntToStr(X);
   lblDebugBitmapYMouseOffset.Caption := 'my: ' + IntToStr(Y);
 
-  if (X > -1) and (Y > -1) and (X < imgDebugBmp.Picture.Bitmap.Width) and (X < imgDebugBmp.Picture.Bitmap.Height) then
+  if (X > -1) and (Y > -1) and (X < imgDebugBmp.Picture.Bitmap.Width) and (Y < imgDebugBmp.Picture.Bitmap.Height) then
     SetLabelsFromMouseOverExecDbgImgPixelColor(imgDebugBmp.Canvas.Pixels[X, Y]);
 
   FCurrentMousePosOnPreviewImg.X := X;
@@ -1506,6 +1507,7 @@ begin
   lblMouseOnExecDbgImgRR.Caption := IntToHex(APixelColor and $FF, 2);
   lblMouseOnExecDbgImgGG.Caption := IntToHex(APixelColor shr 8 and $FF, 2);
   lblMouseOnExecDbgImgBB.Caption := IntToHex(APixelColor shr 16 and $FF, 2);
+  lblMouseOnExecDbgImg.Color := APixelColor;
 end;
 
 
