@@ -496,7 +496,7 @@ MouseWheelAmount=1
 DelayAfterMovingToDestination=50
 DelayAfterMouseDown=200
 MoveDuration=-1
-UseClipCursor=0
+UseClipCursor=1
 
 [Action_21]
 ActionName=Find pop-up menu
@@ -585,7 +585,7 @@ MatchBitmapText[1].CropBottom=0
 MatchBitmapText[1].IgnoreBackgroundColor=0
 MatchBitmapFiles=
 ColorError=10
-AllowedColorErrorCount=30
+AllowedColorErrorCount=40
 MatchBitmapAlgorithm=0
 MatchBitmapAlgorithm_Grid_XMultipleOf=1
 MatchBitmapAlgorithm_Grid_YMultipleOf=1

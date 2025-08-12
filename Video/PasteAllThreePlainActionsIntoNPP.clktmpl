@@ -310,7 +310,7 @@ MouseWheelAmount=1
 DelayAfterMovingToDestination=50
 DelayAfterMouseDown=200
 MoveDuration=-1
-UseClipCursor=0
+UseClipCursor=1
 
 [Action_13]
 ActionName=Indent selection
@@ -361,7 +361,7 @@ MouseWheelAmount=1
 DelayAfterMovingToDestination=50
 DelayAfterMouseDown=200
 MoveDuration=-1
-UseClipCursor=0
+UseClipCursor=1
 
 [Action_15]
 ActionName=Save script
@@ -412,7 +412,7 @@ MouseWheelAmount=-5
 DelayAfterMovingToDestination=50
 DelayAfterMouseDown=200
 MoveDuration=-1
-UseClipCursor=0
+UseClipCursor=1
 
 [Notes]
 Content=refactored actions
