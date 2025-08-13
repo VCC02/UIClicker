@@ -56,7 +56,7 @@ NewSizeEnabled=0
 [Action_2]
 ActionName=Find splitter above OI
 Action=FindControl
-ActionTimeout=10000
+ActionTimeout=15000
 ActionEnabled=1
 ActionCondition=
 BreakpointExists=0

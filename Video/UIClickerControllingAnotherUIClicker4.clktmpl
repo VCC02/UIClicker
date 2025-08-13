@@ -1,5 +1,5 @@
 [Actions]
-Count=56
+Count=57
 Version=2
 
 [Action_0]
@@ -128,11 +128,101 @@ ListOfVarEvalBefore=111111111
 FailOnException=0
 
 [Action_6]
-ActionName=Find "Show Actions Window" button
+ActionName=Find "Show Actions Window" button 16-100
 Action=FindSubControl
 ActionTimeout=1000
 ActionEnabled=1
 ActionCondition=
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+MatchCriteria.WillMatchBitmapText=1
+MatchCriteria.WillMatchBitmapFiles=0
+MatchCriteria.WillMatchPrimitiveFiles=0
+MatchText=Show Actions Window
+AllowToFail=1
+WaitForControlToGoAway=0
+MatchBitmapTextArr=1
+MatchBitmapText_Count=2
+MatchBitmapText[0].ForegroundColor=$Color_WindowText$
+MatchBitmapText[0].BackgroundColor=EAEAEA
+MatchBitmapText[0].FontName=Segoe UI
+MatchBitmapText[0].FontSize=9
+MatchBitmapText[0].Bold=0
+MatchBitmapText[0].Italic=0
+MatchBitmapText[0].Underline=0
+MatchBitmapText[0].StrikeOut=0
+MatchBitmapText[0].FontQuality=4
+MatchBitmapText[0].FontQualityUsesReplacement=0
+MatchBitmapText[0].FontQualityReplacement=
+MatchBitmapText[0].ProfileName=Profile [1]
+MatchBitmapText[0].CropLeft=0
+MatchBitmapText[0].CropTop=0
+MatchBitmapText[0].CropRight=0
+MatchBitmapText[0].CropBottom=0
+MatchBitmapText[0].IgnoreBackgroundColor=1
+MatchBitmapText[1].ForegroundColor=$Color_WindowText$
+MatchBitmapText[1].BackgroundColor=EAEAEA
+MatchBitmapText[1].FontName=Segoe UI
+MatchBitmapText[1].FontSize=9
+MatchBitmapText[1].Bold=0
+MatchBitmapText[1].Italic=0
+MatchBitmapText[1].Underline=0
+MatchBitmapText[1].StrikeOut=0
+MatchBitmapText[1].FontQuality=5
+MatchBitmapText[1].FontQualityUsesReplacement=0
+MatchBitmapText[1].FontQualityReplacement=
+MatchBitmapText[1].ProfileName=Profile [2]
+MatchBitmapText[1].CropLeft=0
+MatchBitmapText[1].CropTop=0
+MatchBitmapText[1].CropRight=0
+MatchBitmapText[1].CropBottom=0
+MatchBitmapText[1].IgnoreBackgroundColor=1
+MatchBitmapFiles=
+ColorError=16
+AllowedColorErrorCount=100
+MatchBitmapAlgorithm=0
+MatchBitmapAlgorithm_Grid_XMultipleOf=1
+MatchBitmapAlgorithm_Grid_YMultipleOf=1
+MatchBitmapAlgorithm_Grid_XOffset=0
+MatchBitmapAlgorithm_Grid_YOffset=0
+InitialRectangle.Left=$Control_Left$
+InitialRectangle.Top=$Control_Top$
+InitialRectangle.Right=$Control_Right$
+InitialRectangle.Bottom=$Control_Bottom$
+UseWholeScreen=0
+InitialRectangle.LeftOffset=61
+InitialRectangle.TopOffset=56
+InitialRectangle.RightOffset=-59
+InitialRectangle.BottomOffset=-53
+StartSearchingWithCachedControl=0
+CachedControlLeft=
+CachedControlTop=
+MatchPrimitiveFiles=
+GetAllControls=0
+UseFastSearch=1
+FastSearchAllowedColorErrorCount=10
+IgnoredColors=
+SleepySearch=0
+StopSearchOnMismatch=1
+ImageSource=0
+SourceFileName=
+ImageSourceFileNameLocation=1
+PrecisionTimeout=0
+FullBackgroundImageInResult=1
+MatchByHistogramSettings.MinPercentColorMatch=50
+MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
+MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
+EvaluateTextCount=-1
+CropFromScreenshot=0
+ThreadCount=2
+
+[Action_7]
+ActionName=Find "Show Actions Window" button 20-300
+Action=FindSubControl
+ActionTimeout=1000
+ActionEnabled=1
+ActionCondition=$LastAction_Status$==Allowed Failed
 BreakpointExists=0
 BreakpointEnabled=0
 BreakpointCondition=
@@ -217,7 +307,7 @@ EvaluateTextCount=-1
 CropFromScreenshot=0
 ThreadCount=2
 
-[Action_7]
+[Action_8]
 ActionName=Click "Show Actions Window" button
 Action=Click
 ActionTimeout=0
@@ -254,7 +344,7 @@ DelayAfterMouseDown=200
 MoveDuration=-1
 UseClipCursor=0
 
-[Action_8]
+[Action_9]
 ActionName=Type Adding actions for WinInterp...
 Action=CallTemplate
 ActionTimeout=1000
@@ -277,7 +367,7 @@ Loop.Direction=0
 Loop.BreakCondition=
 Loop.EvalBreakPosition=1
 
-[Action_9]
+[Action_10]
 ActionName=Drag a FindControl for main UIClicker window
 Action=CallTemplate
 ActionTimeout=0
@@ -300,7 +390,7 @@ Loop.Direction=0
 Loop.BreakCondition=
 Loop.EvalBreakPosition=1
 
-[Action_10]
+[Action_11]
 ActionName=Drag a FindSubControl for WinInterp button
 Action=CallTemplate
 ActionTimeout=0
@@ -323,7 +413,7 @@ Loop.Direction=0
 Loop.BreakCondition=
 Loop.EvalBreakPosition=1
 
-[Action_11]
+[Action_12]
 ActionName=Drag a Click for WinInterp button
 Action=CallTemplate
 ActionTimeout=0
@@ -346,7 +436,7 @@ Loop.Direction=0
 Loop.BreakCondition=
 Loop.EvalBreakPosition=1
 
-[Action_12]
+[Action_13]
 ActionName=Type Testing the actions...
 Action=CallTemplate
 ActionTimeout=1000
@@ -369,14 +459,14 @@ Loop.Direction=0
 Loop.BreakCondition=
 Loop.EvalBreakPosition=1
 
-[Action_13]
+[Action_14]
 ActionName=Play actions
 Action=CallTemplate
 ActionTimeout=0
 ActionEnabled=1
 ActionCondition=
 BreakpointExists=0
-BreakpointEnabled=0
+BreakpointEnabled=1
 BreakpointCondition=
 TemplateFileName=PlayAllActionsFromAppUnderTest.clktmpl
 ListOfCustomVarsAndValues=
@@ -392,7 +482,7 @@ Loop.Direction=0
 Loop.BreakCondition=
 Loop.EvalBreakPosition=1
 
-[Action_14]
+[Action_15]
 ActionName=Type The actions are unusable right now. They have to be configured... In debugging mode, from a Python script.
 Action=CallTemplate
 ActionTimeout=1000
@@ -415,28 +505,28 @@ Loop.Direction=0
 Loop.BreakCondition=
 Loop.EvalBreakPosition=1
 
-[Action_15]
+[Action_16]
 ActionName=Restore player cached control
 Action=SetVar
 ActionTimeout=0
 ActionEnabled=1
 ActionCondition=
 BreakpointExists=0
-BreakpointEnabled=1
+BreakpointEnabled=0
 BreakpointCondition=
 ListOfVarNames=$Control_Left$$Control_Top$$Control_Right$$Control_Bottom$$Control_Width$$Control_Height$$Control_Text$$Control_Class$$Control_Handle$
 ListOfVarValues=$Player_Left$$Player_Top$$Player_Right$$Player_Bottom$$Player_Width$$Player_Height$$Player_Text$$Player_Class$$Player_Handle$
 ListOfVarEvalBefore=111111111
 FailOnException=0
 
-[Action_16]
+[Action_17]
 ActionName=Focus an action
 Action=Click
 ActionTimeout=0
 ActionEnabled=1
 ActionCondition=
 BreakpointExists=0
-BreakpointEnabled=0
+BreakpointEnabled=1
 BreakpointCondition=
 XOffsetReference=0
 YOffsetReference=0
@@ -466,21 +556,21 @@ DelayAfterMouseDown=200
 MoveDuration=-1
 UseClipCursor=0
 
-[Action_17]
+[Action_18]
 ActionName=Select all actions
 Action=SetControlText
 ActionTimeout=0
 ActionEnabled=1
 ActionCondition=
 BreakpointExists=0
-BreakpointEnabled=1
+BreakpointEnabled=0
 BreakpointCondition=
 Text=$ControlDown$$KeyA$$ControlUp$
 ControlType=2
 DelayBetweenKeyStrokes=0
 Count=1
 
-[Action_18]
+[Action_19]
 ActionName=Set ClickerClient Python option to include calls
 Action=CallTemplate
 ActionTimeout=1000
@@ -503,7 +593,7 @@ Loop.Direction=0
 Loop.BreakCondition=
 Loop.EvalBreakPosition=0
 
-[Action_19]
+[Action_20]
 ActionName=Generate ClickerClient Python request
 Action=CallTemplate
 ActionTimeout=1000
@@ -526,7 +616,7 @@ Loop.Direction=0
 Loop.BreakCondition=
 Loop.EvalBreakPosition=0
 
-[Action_20]
+[Action_21]
 ActionName=Run NPP
 Action=ExecApp
 ActionTimeout=0
@@ -543,14 +633,14 @@ CurrentDir=
 UseInheritHandles=0
 NoConsole=0
 
-[Action_21]
+[Action_22]
 ActionName=PasteAllThreePlainActionsIntoNPP
 Action=CallTemplate
 ActionTimeout=1000
 ActionEnabled=1
 ActionCondition=
 BreakpointExists=0
-BreakpointEnabled=0
+BreakpointEnabled=1
 BreakpointCondition=
 TemplateFileName=$SelfTemplateDir$\PasteAllThreePlainActionsIntoNPP.clktmpl
 ListOfCustomVarsAndValues=
@@ -566,14 +656,14 @@ Loop.Direction=0
 Loop.BreakCondition=
 Loop.EvalBreakPosition=1
 
-[Action_22]
+[Action_23]
 ActionName=Type The current template will be discarded.
 Action=CallTemplate
 ActionTimeout=1000
 ActionEnabled=1
 ActionCondition=
 BreakpointExists=0
-BreakpointEnabled=1
+BreakpointEnabled=0
 BreakpointCondition=
 TemplateFileName=$SelfTemplateDir$\RunNotepadAndTypeIntoIt.clktmpl
 ListOfCustomVarsAndValues=$WhatToType$=The current template will be discarded.
@@ -589,7 +679,7 @@ Loop.Direction=0
 Loop.BreakCondition=
 Loop.EvalBreakPosition=1
 
-[Action_23]
+[Action_24]
 ActionName=DeleteAllThreePlainActionsFromUIClicker
 Action=CallTemplate
 ActionTimeout=1000
@@ -612,7 +702,7 @@ Loop.Direction=0
 Loop.BreakCondition=
 Loop.EvalBreakPosition=1
 
-[Action_24]
+[Action_25]
 ActionName=Type Starting server mode...
 Action=CallTemplate
 ActionTimeout=1000
@@ -635,14 +725,14 @@ Loop.Direction=0
 Loop.BreakCondition=
 Loop.EvalBreakPosition=1
 
-[Action_25]
+[Action_26]
 ActionName=SwitchUIClickerToServerMode
 Action=CallTemplate
 ActionTimeout=1000
 ActionEnabled=1
 ActionCondition=
 BreakpointExists=0
-BreakpointEnabled=0
+BreakpointEnabled=1
 BreakpointCondition=
 TemplateFileName=$SelfTemplateDir$\SwitchUIClickerToServerMode.clktmpl
 ListOfCustomVarsAndValues=
@@ -658,14 +748,14 @@ Loop.Direction=0
 Loop.BreakCondition=
 Loop.EvalBreakPosition=1
 
-[Action_26]
+[Action_27]
 ActionName=Type The script should be ready for debugging...
 Action=CallTemplate
 ActionTimeout=1000
 ActionEnabled=1
 ActionCondition=
 BreakpointExists=0
-BreakpointEnabled=1
+BreakpointEnabled=0
 BreakpointCondition=
 TemplateFileName=$SelfTemplateDir$\RunNotepadAndTypeIntoIt.clktmpl
 ListOfCustomVarsAndValues=$WhatToType$=The py script should be ready for debugging via ClickerClient.$Return$Starting the script...
@@ -681,7 +771,7 @@ Loop.Direction=0
 Loop.BreakCondition=
 Loop.EvalBreakPosition=1
 
-[Action_27]
+[Action_28]
 ActionName=Run py script (the next 3 CallTemplate actions, will run in parallel with Python)
 Action=ExecApp
 ActionTimeout=3000
@@ -698,7 +788,7 @@ CurrentDir=$AppDir$\..\py\Tests
 UseInheritHandles=0
 NoConsole=0
 
-[Action_28]
+[Action_29]
 ActionName=Configure live FindControl action
 Action=CallTemplate
 ActionTimeout=1000
@@ -721,14 +811,14 @@ Loop.Direction=0
 Loop.BreakCondition=
 Loop.EvalBreakPosition=0
 
-[Action_29]
+[Action_30]
 ActionName=Set ClickerClient Python option to exclude calls
 Action=CallTemplate
 ActionTimeout=1000
 ActionEnabled=1
 ActionCondition=
 BreakpointExists=0
-BreakpointEnabled=0
+BreakpointEnabled=1
 BreakpointCondition=
 TemplateFileName=GenerateClickerClientRequestFromActionMenu.clktmpl
 ListOfCustomVarsAndValues=$MenuItem$=Generate ClickerClient Python request$IncludeActionCalls$=True$SecondMenuItem$=Include action call(s)$IncludeCalls$=False
@@ -744,14 +834,14 @@ Loop.Direction=0
 Loop.BreakCondition=
 Loop.EvalBreakPosition=0
 
-[Action_30]
+[Action_31]
 ActionName=Generate ClickerClient Python request
 Action=CallTemplate
 ActionTimeout=1000
 ActionEnabled=1
 ActionCondition=
 BreakpointExists=0
-BreakpointEnabled=1
+BreakpointEnabled=0
 BreakpointCondition=
 TemplateFileName=GenerateClickerClientRequestFromActionMenu.clktmpl
 ListOfCustomVarsAndValues=$MenuItem$=Generate ClickerClient Python request$IncludeActionCalls$=True$SecondMenuItem$=Different than default properties only      
@@ -767,7 +857,7 @@ Loop.Direction=0
 Loop.BreakCondition=
 Loop.EvalBreakPosition=0
 
-[Action_31]
+[Action_32]
 ActionName=PasteEditedFindControlActionIntoNPP
 Action=CallTemplate
 ActionTimeout=1000
@@ -790,14 +880,14 @@ Loop.Direction=0
 Loop.BreakCondition=
 Loop.EvalBreakPosition=1
 
-[Action_32]
+[Action_33]
 ActionName=Get StepOver button
 Action=CallTemplate
 ActionTimeout=0
 ActionEnabled=1
 ActionCondition=
 BreakpointExists=0
-BreakpointEnabled=0
+BreakpointEnabled=1
 BreakpointCondition=
 TemplateFileName=CacheStepOverButtonPosOnAppUnderTest.clktmpl
 ListOfCustomVarsAndValues=
@@ -813,7 +903,7 @@ Loop.Direction=0
 Loop.BreakCondition=
 Loop.EvalBreakPosition=1
 
-[Action_33]
+[Action_34]
 ActionName=Type Done editing the FindControl action.
 Action=CallTemplate
 ActionTimeout=1000
@@ -836,7 +926,7 @@ Loop.Direction=0
 Loop.BreakCondition=
 Loop.EvalBreakPosition=1
 
-[Action_34]
+[Action_35]
 ActionName=Click StepOver
 Action=Click
 ActionTimeout=0
@@ -873,14 +963,14 @@ DelayAfterMouseDown=200
 MoveDuration=-1
 UseClipCursor=0
 
-[Action_35]
+[Action_36]
 ActionName=Configure live FindSubControl action
 Action=CallTemplate
 ActionTimeout=1000
 ActionEnabled=1
 ActionCondition=
 BreakpointExists=0
-BreakpointEnabled=1
+BreakpointEnabled=0
 BreakpointCondition=
 TemplateFileName=$SelfTemplateDir$\ConfigureLiveFindSubControl.clktmpl
 ListOfCustomVarsAndValues=
@@ -896,7 +986,7 @@ Loop.Direction=0
 Loop.BreakCondition=
 Loop.EvalBreakPosition=0
 
-[Action_36]
+[Action_37]
 ActionName=Generate ClickerClient Python request
 Action=CallTemplate
 ActionTimeout=1000
@@ -919,7 +1009,7 @@ Loop.Direction=0
 Loop.BreakCondition=
 Loop.EvalBreakPosition=0
 
-[Action_37]
+[Action_38]
 ActionName=PasteEditedFindSubControlActionIntoNPP
 Action=CallTemplate
 ActionTimeout=1000
@@ -942,7 +1032,7 @@ Loop.Direction=0
 Loop.BreakCondition=
 Loop.EvalBreakPosition=1
 
-[Action_38]
+[Action_39]
 ActionName=Get StepOver button
 Action=CallTemplate
 ActionTimeout=0
@@ -965,7 +1055,7 @@ Loop.Direction=0
 Loop.BreakCondition=
 Loop.EvalBreakPosition=1
 
-[Action_39]
+[Action_40]
 ActionName=Type Done editing the FindSubControl action.
 Action=CallTemplate
 ActionTimeout=1000
@@ -988,7 +1078,7 @@ Loop.Direction=0
 Loop.BreakCondition=
 Loop.EvalBreakPosition=1
 
-[Action_40]
+[Action_41]
 ActionName=Click StepOver
 Action=Click
 ActionTimeout=0
@@ -1025,14 +1115,14 @@ DelayAfterMouseDown=200
 MoveDuration=-1
 UseClipCursor=0
 
-[Action_41]
+[Action_42]
 ActionName=Type Nothing to edit on the Click action.
 Action=CallTemplate
 ActionTimeout=1000
 ActionEnabled=1
 ActionCondition=
 BreakpointExists=0
-BreakpointEnabled=1
+BreakpointEnabled=0
 BreakpointCondition=
 TemplateFileName=$SelfTemplateDir$\RunNotepadAndTypeIntoIt.clktmpl
 ListOfCustomVarsAndValues=$WhatToType$=Nothing to edit on the Click action.
@@ -1048,7 +1138,7 @@ Loop.Direction=0
 Loop.BreakCondition=
 Loop.EvalBreakPosition=1
 
-[Action_42]
+[Action_43]
 ActionName=Wait for Notepad to close.
 Action=Sleep
 ActionTimeout=0
@@ -1059,7 +1149,7 @@ BreakpointEnabled=0
 BreakpointCondition=
 Value=500
 
-[Action_43]
+[Action_44]
 ActionName=Click StepOver
 Action=Click
 ActionTimeout=0
@@ -1096,7 +1186,7 @@ DelayAfterMouseDown=200
 MoveDuration=-1
 UseClipCursor=0
 
-[Action_44]
+[Action_45]
 ActionName=Wait for Notepad to close.
 Action=Sleep
 ActionTimeout=0
@@ -1107,7 +1197,7 @@ BreakpointEnabled=0
 BreakpointCondition=
 Value=500
 
-[Action_45]
+[Action_46]
 ActionName=Type The last debugging Click action opened the WinInterp window, because it is a valid action now.
 Action=CallTemplate
 ActionTimeout=1000
@@ -1130,7 +1220,7 @@ Loop.Direction=0
 Loop.BreakCondition=
 Loop.EvalBreakPosition=1
 
-[Action_46]
+[Action_47]
 ActionName=Find WinInterp
 Action=FindControl
 ActionTimeout=3000
@@ -1164,7 +1254,7 @@ GetAllControls=0
 PrecisionTimeout=0
 EvaluateTextCount=-1
 
-[Action_47]
+[Action_48]
 ActionName=Close WinInterp
 Action=WindowOperations
 ActionTimeout=0
@@ -1181,7 +1271,7 @@ NewHeight=
 NewPositionEnabled=0
 NewSizeEnabled=0
 
-[Action_48]
+[Action_49]
 ActionName=Wait for WinInterp to close
 Action=FindControl
 ActionTimeout=1000
@@ -1215,7 +1305,7 @@ GetAllControls=0
 PrecisionTimeout=0
 EvaluateTextCount=-1
 
-[Action_49]
+[Action_50]
 ActionName=Type Running the py script again, without debugging...
 Action=CallTemplate
 ActionTimeout=1000
@@ -1238,7 +1328,7 @@ Loop.Direction=0
 Loop.BreakCondition=
 Loop.EvalBreakPosition=1
 
-[Action_50]
+[Action_51]
 ActionName=Run py script without debugging
 Action=ExecApp
 ActionTimeout=30000
@@ -1255,7 +1345,7 @@ CurrentDir=$AppDir$\..\py\Tests
 UseInheritHandles=1
 NoConsole=0
 
-[Action_51]
+[Action_52]
 ActionName=Find WinInterp
 Action=FindControl
 ActionTimeout=3000
@@ -1289,7 +1379,7 @@ GetAllControls=0
 PrecisionTimeout=0
 EvaluateTextCount=-1
 
-[Action_52]
+[Action_53]
 ActionName=Type The WinInterp window can be displayed now from a py script, via ClickerClient.
 Action=CallTemplate
 ActionTimeout=1000
@@ -1312,7 +1402,7 @@ Loop.Direction=0
 Loop.BreakCondition=
 Loop.EvalBreakPosition=1
 
-[Action_53]
+[Action_54]
 ActionName="Sleep"
 Action=Sleep
 ActionTimeout=0
@@ -1323,7 +1413,7 @@ BreakpointEnabled=0
 BreakpointCondition=
 Value=1000
 
-[Action_54]
+[Action_55]
 ActionName=Type All done... Bye!
 Action=CallTemplate
 ActionTimeout=1000
@@ -1346,7 +1436,7 @@ Loop.Direction=0
 Loop.BreakCondition=
 Loop.EvalBreakPosition=1
 
-[Action_55]
+[Action_56]
 ActionName="Sleep"
 Action=Sleep
 ActionTimeout=0
