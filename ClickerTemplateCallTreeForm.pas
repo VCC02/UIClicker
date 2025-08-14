@@ -44,6 +44,7 @@ type
   TTemplateFile = record
     FilePath: string;
     FileName: string; //cached extracted name
+    RawFilePath: string;
     IconPath: string;
     ClkActions: TClkActionsRecArr;
     Loaded: Boolean;
@@ -70,6 +71,7 @@ type
   TfrmClickerTemplateCallTree = class(TForm)
     btnBrowse: TButton;
     btnGenerate: TButton;
+    chkRawPaths: TCheckBox;
     chkDisplayCaller: TCheckBox;
     chkFullPathComparison: TCheckBox;
     chkDisplayFullPaths: TCheckBox;
@@ -92,6 +94,7 @@ type
     procedure btnGenerateClick(Sender: TObject);
     procedure chkDisplayCallerChange(Sender: TObject);
     procedure chkDisplayFullPathsChange(Sender: TObject);
+    procedure chkRawPathsChange(Sender: TObject);
     procedure cmbSearchModeChange(Sender: TObject);
     procedure edtSearchChange(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -468,10 +471,13 @@ begin
     repeat
       NodeData := vstCallTree.GetNodeData(Node);
 
-      if chkDisplayFullPaths.Checked then
-        Fnm := NodeData^.Template^.FilePath
+      if chkRawPaths.Checked then
+        Fnm := NodeData^.Template^.RawFilePath
       else
-        Fnm := NodeData^.Template^.FileName;
+        if chkDisplayFullPaths.Checked then
+          Fnm := NodeData^.Template^.FilePath
+        else
+          Fnm := NodeData^.Template^.FileName;
 
       Fnm := UpperCase(Fnm);
 
@@ -546,10 +552,13 @@ begin
         else
           CellText := '';
 
-        if chkDisplayFullPaths.Checked then  //the Checked value can be cached if BeforePaint
-          CellText := CellText + NodeData^.Template^.FilePath
+        if chkRawPaths.Checked then
+          CellText := CellText + NodeData^.Template^.RawFilePath
         else
-          CellText := CellText + NodeData^.Template^.FileName;
+          if chkDisplayFullPaths.Checked then  //the Checked value can be cached if BeforePaint
+            CellText := CellText + NodeData^.Template^.FilePath
+          else
+            CellText := CellText + NodeData^.Template^.FileName;
       end;
 
       1:
@@ -600,6 +609,7 @@ begin
     Fnm := StringReplace(memTemplates.Lines.Strings[i], '"', '', [rfReplaceAll]);
     New(FTemplateFiles[i]);
 
+    FTemplateFiles[i]^.RawFilePath := Fnm;
     FTemplateFiles[i]^.FilePath := Fnm;
     FTemplateFiles[i]^.FileName := ExtractFileName(Fnm);
     FTemplateFiles[i]^.Highlighted := False;
@@ -745,6 +755,7 @@ begin
           begin
             NewNodeData^.Template := FTemplateFiles[IndexOfCalledTemplate];  //copy the pointer
             NewNodeData^.Template.CallerActionName := NodeData^.Template^.ClkActions[i].ActionOptions.ActionName;
+            NewNodeData^.Template.RawFilePath := NodeData^.Template^.ClkActions[i].CallTemplateOptions.TemplateFileName;
 
             if vstCallTree.GetNodeLevel(NewNode) < 30 then  //safety measure, to prevent infinite recursion, in case TemplatePathFoundInParentNodes has bugs
               if not TemplatePathFoundInParentNodes(NewNode^.Parent, FTemplateFiles[IndexOfCalledTemplate]^.FilePath) then
@@ -930,6 +941,12 @@ procedure TfrmClickerTemplateCallTree.chkDisplayFullPathsChange(Sender: TObject)
 begin
   vstCallTree.Repaint;
   tmrSearch.Enabled := True;
+end;
+
+
+procedure TfrmClickerTemplateCallTree.chkRawPathsChange(Sender: TObject);
+begin
+  vstCallTree.Repaint;
 end;
 
 

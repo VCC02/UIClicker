@@ -163,12 +163,25 @@ object frmClickerTemplateCallTree: TfrmClickerTemplateCallTree
   object chkDisplayCaller: TCheckBox
     Left = 264
     Height = 19
-    Top = 120
+    Top = 121
     Width = 123
     Anchors = [akTop, akRight]
     Caption = 'Display caller action'
     TabOrder = 8
     OnChange = chkDisplayCallerChange
+  end
+  object chkRawPaths: TCheckBox
+    Left = 152
+    Height = 19
+    Hint = 'When checked, the displayed paths are not resoved using var/replacements,'#13#10' like $SelfTemplateDir$, $TemplateDir$ and $AppDir$.'
+    Top = 121
+    Width = 72
+    Anchors = [akTop, akRight]
+    Caption = 'Raw paths'
+    ParentShowHint = False
+    ShowHint = True
+    TabOrder = 9
+    OnChange = chkRawPathsChange
   end
   object tmrSearch: TTimer
     Enabled = False
