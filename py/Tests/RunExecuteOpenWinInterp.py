@@ -45,6 +45,21 @@ DllFuncs = TDllFunctions() #use TDllFunctions for debugging (see functions imple
 
 
 
+def GetVarValueFromResponse(AResponse, AVarName):
+    AResponseStr = AResponse.replace("", "\r\n")
+    ListOfVars = AResponseStr.splitlines()
+    for Item in ListOfVars:
+        PosEq = Item.index("=")
+        VarValue = ''
+        if PosEq > -1:
+            CurrentVarName = Item[0 : PosEq]
+            if CurrentVarName == AVarName:
+                VarValue = Item[PosEq + 1: len(Item)]
+                return VarValue
+    return '0' # a valid int as string
+
+
+
 print("InitClickerClient: ", DllFuncs.InitClickerClient())
 try:
     print("CreateLoggingWindow: ", DllFuncs.CreateLoggingWindow())

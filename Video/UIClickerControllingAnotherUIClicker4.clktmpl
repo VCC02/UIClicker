@@ -594,7 +594,7 @@ Loop.BreakCondition=
 Loop.EvalBreakPosition=0
 
 [Action_20]
-ActionName=Generate ClickerClient Python request
+ActionName=Generate ClickerClient Python request (with dbg)
 Action=CallTemplate
 ActionTimeout=1000
 ActionEnabled=1
@@ -603,7 +603,7 @@ BreakpointExists=0
 BreakpointEnabled=0
 BreakpointCondition=
 TemplateFileName=GenerateClickerClientRequestFromActionMenu.clktmpl
-ListOfCustomVarsAndValues=$MenuItem$=Generate ClickerClient Python request$IncludeActionCalls$=True$SecondMenuItem$=Different than default properties only      
+ListOfCustomVarsAndValues=$MenuItem$=Generate ClickerClient Python request$IncludeActionCalls$=True$SecondMenuItem$=Different than default properties only with debugging
 CallOnlyIfCondition=0
 CallOnlyIfConditionVarName=
 CallOnlyIfConditionVarValue=
@@ -639,7 +639,7 @@ Action=CallTemplate
 ActionTimeout=1000
 ActionEnabled=1
 ActionCondition=
-BreakpointExists=0
+BreakpointExists=1
 BreakpointEnabled=1
 BreakpointCondition=
 TemplateFileName=$SelfTemplateDir$\PasteAllThreePlainActionsIntoNPP.clktmpl
