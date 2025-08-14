@@ -666,6 +666,7 @@ begin
   AExecAppOptions.UseInheritHandles := uihNo;
   AExecAppOptions.WaitForApp := True;
   AExecAppOptions.NoConsole := True;
+  AExecAppOptions.VerifyFileExistence := True;
 end;
 
 
@@ -1504,6 +1505,7 @@ begin
   AExecAppOptions.CurrentDir := 'TheDir';
   AExecAppOptions.UseInheritHandles := uihYes;
   AExecAppOptions.NoConsole := True;
+  AExecAppOptions.VerifyFileExistence := True;
 end;
 
 
@@ -1515,7 +1517,8 @@ begin
             'AppStdIn' + '=' + 'MyStdIn' + '&' +
             'CurrentDir' + '=' + 'TheDir' + '&' +
             'UseInheritHandles' + '=' + 'uihYes' + '&' +
-            'NoConsole' + '=' + 'True';
+            'NoConsole' + '=' + 'True' + '&' +
+            'VerifyFileExistence' + '=' + 'True';
 end;
 
 

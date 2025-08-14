@@ -231,8 +231,10 @@ class TExecAppOptions(Structure):
                ("WaitForApp", BOOLEAN),
                ("AppStdIn", LPCWSTR),
                ("CurrentDir", LPCWSTR),
-               ("UseInheritHandles", BYTE),
-               ("NoConsole", BOOLEAN)] #LONG)] #TExecAppUseInheritHandless
+               ("UseInheritHandles", BYTE), #LONG) #TExecAppUseInheritHandless
+               ("NoConsole", BOOLEAN),
+               ("VerifyFileExistence", BOOLEAN)] 
+               
 
 PExecAppOptions = ctypes.POINTER(TExecAppOptions)
 
@@ -245,6 +247,7 @@ def GetDefaultExecAppOptions():
     ExecAppOptions.CurrentDir = ''
     ExecAppOptions.UseInheritHandles = TExecAppUseInheritHandles.uihOnlyWithStdInOut
     ExecAppOptions.NoConsole = False
+    ExecAppOptions.VerifyFileExistence = False
     return ExecAppOptions
 
 

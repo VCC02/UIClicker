@@ -1269,12 +1269,13 @@ begin
 
   Result := True;
 
-  if not FileExists(ACmd) then
-  begin
-    Result := False;
-    SetActionVarValue('$ExecAction_Err$', 'File not found: ' + ACmd);
-    Exit;
-  end;
+  if AExecAppOptions.VerifyFileExistence then
+    if not FileExists(ACmd) then      //A new property should control this commented section.
+    begin
+      Result := False;
+      SetActionVarValue('$ExecAction_Err$', 'File not found: ' + ACmd);
+      Exit;
+    end;
 
   AllParams := TStringList.Create;
   try

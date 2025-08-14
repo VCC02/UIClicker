@@ -59,6 +59,7 @@ begin
   AExecAppOptions.UseInheritHandles := uihNo;
   AExecAppOptions.WaitForApp := False;
   AExecAppOptions.NoConsole := True;
+  AExecAppOptions.VerifyFileExistence := True;
 end;
 
 

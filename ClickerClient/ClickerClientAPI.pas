@@ -86,6 +86,7 @@ type
     CurrentDir: PWideChar;
     UseInheritHandles: Byte; //TExecAppUseInheritHandles;
     NoConsole: Boolean;
+    VerifyFileExistence: Boolean;
   end;
 
   PClkExecAppOptionsAPI = ^TClkExecAppOptionsAPI;
@@ -546,6 +547,7 @@ begin
   SetPointedContentToString(@string(PWideChar(AExecAppOptions^.CurrentDir))[1], ADestClkAction.ExecAppOptions.CurrentDir);
   ADestClkAction.ExecAppOptions.UseInheritHandles := TExecAppUseInheritHandles(AExecAppOptions^.UseInheritHandles);
   ADestClkAction.ExecAppOptions.NoConsole := AExecAppOptions^.NoConsole;
+  ADestClkAction.ExecAppOptions.VerifyFileExistence := AExecAppOptions^.VerifyFileExistence;
 end;
 
 
@@ -928,6 +930,7 @@ begin
   ATempExecAppOptionsAPIWS.CurrentDir := WideString(AExecAppOptions.CurrentDir);  ADestExecAppOptions.CurrentDir := @ATempExecAppOptionsAPIWS.CurrentDir[1];// ADestExecAppOptions.CurrentDir := @WideString(AExecAppOptions.CurrentDir)[1];
   ADestExecAppOptions.UseInheritHandles := Byte(AExecAppOptions.UseInheritHandles);
   ADestExecAppOptions.NoConsole := AExecAppOptions.NoConsole;
+  ADestExecAppOptions.VerifyFileExistence := AExecAppOptions.VerifyFileExistence;
 end;
 
 

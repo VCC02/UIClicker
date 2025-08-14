@@ -78,6 +78,7 @@ AppStdIn=
 CurrentDir=
 UseInheritHandles=0
 NoConsole=0
+VerifyFileExistence=0
 
 [Action_4]
 ActionName=Find Main Window
@@ -632,6 +633,7 @@ AppStdIn=
 CurrentDir=
 UseInheritHandles=0
 NoConsole=0
+VerifyFileExistence=0
 
 [Action_22]
 ActionName=PasteAllThreePlainActionsIntoNPP
@@ -780,13 +782,14 @@ ActionCondition=
 BreakpointExists=0
 BreakpointEnabled=0
 BreakpointCondition=
-PathToApp=$AppDir$\..\..\Python\Python.exe
-ListOfParams=$AppDir$\..\py\Tests\RunExecuteOpenWinInterp.py5444-1Debugging=True
+PathToApp=Python
+ListOfParams=$AppDir$\..\py\Tests\RunExecuteOpenWinInterp.py
 WaitForApp=0
 AppStdIn=
 CurrentDir=$AppDir$\..\py\Tests
 UseInheritHandles=0
 NoConsole=0
+VerifyFileExistence=0
 
 [Action_29]
 ActionName=Configure live FindControl action
@@ -1337,13 +1340,14 @@ ActionCondition=
 BreakpointExists=0
 BreakpointEnabled=0
 BreakpointCondition=
-PathToApp=$AppDir$\..\..\Python\Python.exe
-ListOfParams=$AppDir$\..\py\Tests\RunExecuteOpenWinInterp.py5444-1Debugging=False
+PathToApp=Python
+ListOfParams=$AppDir$\..\py\Tests\RunExecuteOpenWinInterp.py
 WaitForApp=1
 AppStdIn=
 CurrentDir=$AppDir$\..\py\Tests
 UseInheritHandles=1
 NoConsole=0
+VerifyFileExistence=0
 
 [Action_52]
 ActionName=Find WinInterp
