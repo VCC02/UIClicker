@@ -1,5 +1,5 @@
 [Actions]
-Count=45
+Count=47
 Version=2
 
 [Action_0]
@@ -462,10 +462,83 @@ Loop.BreakCondition=
 Loop.EvalBreakPosition=1
 
 [Action_20]
+ActionName=Find arrow button editor
+Action=FindSubControl
+ActionTimeout=1000
+ActionEnabled=1
+ActionCondition=
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+MatchCriteria.WillMatchBitmapText=1
+MatchCriteria.WillMatchBitmapFiles=0
+MatchCriteria.WillMatchPrimitiveFiles=0
+MatchText==
+AllowToFail=0
+WaitForControlToGoAway=0
+MatchBitmapTextArr=1
+MatchBitmapText_Count=1
+MatchBitmapText[0].ForegroundColor=378418
+MatchBitmapText[0].BackgroundColor=378418
+MatchBitmapText[0].FontName=Tahoma
+MatchBitmapText[0].FontSize=3
+MatchBitmapText[0].Bold=0
+MatchBitmapText[0].Italic=0
+MatchBitmapText[0].Underline=0
+MatchBitmapText[0].StrikeOut=0
+MatchBitmapText[0].FontQuality=3
+MatchBitmapText[0].FontQualityUsesReplacement=0
+MatchBitmapText[0].FontQualityReplacement=
+MatchBitmapText[0].ProfileName=Profile [0]
+MatchBitmapText[0].CropLeft=0
+MatchBitmapText[0].CropTop=0
+MatchBitmapText[0].CropRight=0
+MatchBitmapText[0].CropBottom=0
+MatchBitmapText[0].IgnoreBackgroundColor=0
+MatchBitmapFiles=
+ColorError=0
+AllowedColorErrorCount=2
+MatchBitmapAlgorithm=0
+MatchBitmapAlgorithm_Grid_XMultipleOf=1
+MatchBitmapAlgorithm_Grid_YMultipleOf=1
+MatchBitmapAlgorithm_Grid_XOffset=0
+MatchBitmapAlgorithm_Grid_YOffset=0
+InitialRectangle.Left=$Control_Left$
+InitialRectangle.Top=$Control_Top$
+InitialRectangle.Right=$Control_Right$
+InitialRectangle.Bottom=$Control_Bottom$
+UseWholeScreen=0
+InitialRectangle.LeftOffset=-20
+InitialRectangle.TopOffset=0
+InitialRectangle.RightOffset=0
+InitialRectangle.BottomOffset=0
+StartSearchingWithCachedControl=0
+CachedControlLeft=
+CachedControlTop=
+MatchPrimitiveFiles=
+GetAllControls=0
+UseFastSearch=1
+FastSearchAllowedColorErrorCount=10
+IgnoredColors=
+SleepySearch=0
+StopSearchOnMismatch=1
+ImageSource=0
+SourceFileName=
+ImageSourceFileNameLocation=1
+PrecisionTimeout=0
+FullBackgroundImageInResult=1
+MatchByHistogramSettings.MinPercentColorMatch=50
+MatchByHistogramSettings.MostSignificantColorCountInSubBmp=10
+MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
+EvaluateTextCount=-1
+CropFromScreenshot=0
+ThreadCount=2
+
+[Action_21]
 ActionName=Click arrow button, next to the "..." button
 Action=Click
 ActionTimeout=0
-ActionEnabled=1
+ActionEnabled=0
 ActionCondition=
 BreakpointExists=0
 BreakpointEnabled=0
@@ -474,7 +547,7 @@ XOffsetReference=3
 YOffsetReference=3
 XClickPointVar=$OIEditor_Left$
 YClickPointVar=$OIEditor_Top$
-XOffset=7
+XOffset=-7
 YOffset=7
 MouseButton=0
 ClickWithCtrl=0
@@ -498,7 +571,44 @@ DelayAfterMouseDown=200
 MoveDuration=-1
 UseClipCursor=1
 
-[Action_21]
+[Action_22]
+ActionName=Click arrow button, next to the "..." button
+Action=Click
+ActionTimeout=0
+ActionEnabled=1
+ActionCondition=
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+XOffsetReference=0
+YOffsetReference=0
+XClickPointVar=$OIEditor_Left$
+YClickPointVar=$OIEditor_Top$
+XOffset=4
+YOffset=4
+MouseButton=0
+ClickWithCtrl=0
+ClickWithAlt=0
+ClickWithShift=0
+ClickWithDoubleClick=0
+LeaveMouse=1
+MoveWithoutClick=0
+Count=1
+ClickType=0
+XOffsetReferenceDest=0
+YOffsetReferenceDest=0
+XClickPointVarDest=$Control_Left$
+YClickPointVarDest=$Control_Top$
+XOffsetDest=7
+YOffsetDest=7
+MouseWheelType=0
+MouseWheelAmount=1
+DelayAfterMovingToDestination=50
+DelayAfterMouseDown=200
+MoveDuration=-1
+UseClipCursor=1
+
+[Action_23]
 ActionName=Find pop-up menu
 Action=FindControl
 ActionTimeout=3000
@@ -532,7 +642,7 @@ GetAllControls=0
 PrecisionTimeout=0
 EvaluateTextCount=-1
 
-[Action_22]
+[Action_24]
 ActionName=Find Remove Profile menu item
 Action=FindSubControl
 ActionTimeout=1000
@@ -622,7 +732,7 @@ EvaluateTextCount=-1
 CropFromScreenshot=0
 ThreadCount=2
 
-[Action_23]
+[Action_25]
 ActionName=Click Remove
 Action=Click
 ActionTimeout=0
@@ -659,7 +769,7 @@ DelayAfterMouseDown=200
 MoveDuration=-1
 UseClipCursor=0
 
-[Action_24]
+[Action_26]
 ActionName=Find confirmation dialog
 Action=FindControl
 ActionTimeout=3000
@@ -693,7 +803,7 @@ GetAllControls=0
 PrecisionTimeout=0
 EvaluateTextCount=-1
 
-[Action_25]
+[Action_27]
 ActionName=Find Yes button
 Action=FindControl
 ActionTimeout=3000
@@ -727,7 +837,7 @@ GetAllControls=0
 PrecisionTimeout=0
 EvaluateTextCount=-1
 
-[Action_26]
+[Action_28]
 ActionName=Click Yes
 Action=Click
 ActionTimeout=0
@@ -764,7 +874,7 @@ DelayAfterMouseDown=200
 MoveDuration=-1
 UseClipCursor=0
 
-[Action_27]
+[Action_29]
 ActionName=Click arrow button, next to the "..." button
 Action=Click
 ActionTimeout=0
@@ -777,7 +887,7 @@ XOffsetReference=3
 YOffsetReference=3
 XClickPointVar=$OIEditor_Left$
 YClickPointVar=$OIEditor_Top$
-XOffset=7
+XOffset=-7
 YOffset=7
 MouseButton=0
 ClickWithCtrl=0
@@ -801,7 +911,7 @@ DelayAfterMouseDown=200
 MoveDuration=-1
 UseClipCursor=0
 
-[Action_28]
+[Action_30]
 ActionName=Find pop-up menu
 Action=FindControl
 ActionTimeout=3000
@@ -835,14 +945,14 @@ GetAllControls=0
 PrecisionTimeout=0
 EvaluateTextCount=-1
 
-[Action_29]
+[Action_31]
 ActionName=Find "Add two commonly" menu item
 Action=FindSubControl
 ActionTimeout=1000
 ActionEnabled=1
 ActionCondition=
 BreakpointExists=0
-BreakpointEnabled=0
+BreakpointEnabled=1
 BreakpointCondition=
 MatchCriteria.WillMatchBitmapText=1
 MatchCriteria.WillMatchBitmapFiles=0
@@ -925,7 +1035,7 @@ EvaluateTextCount=-1
 CropFromScreenshot=0
 ThreadCount=2
 
-[Action_30]
+[Action_32]
 ActionName=Click Add
 Action=Click
 ActionTimeout=0
@@ -962,18 +1072,18 @@ DelayAfterMouseDown=200
 MoveDuration=-1
 UseClipCursor=0
 
-[Action_31]
+[Action_33]
 ActionName=Wait a bit before editing the search area
 Action=Sleep
 ActionTimeout=0
 ActionEnabled=1
 ActionCondition=
 BreakpointExists=0
-BreakpointEnabled=1
+BreakpointEnabled=0
 BreakpointCondition=
 Value=100
 
-[Action_32]
+[Action_34]
 ActionName=Restore player position
 Action=SetVar
 ActionTimeout=0
@@ -987,7 +1097,7 @@ ListOfVarValues=$Player_Left$$Player_Top$$Player_Right$$Player_Bottom$$P
 ListOfVarEvalBefore=111111111
 FailOnException=0
 
-[Action_33]
+[Action_35]
 ActionName=Find action editor splitter
 Action=FindControl
 ActionTimeout=15000
@@ -1021,7 +1131,7 @@ GetAllControls=0
 PrecisionTimeout=0
 EvaluateTextCount=-1
 
-[Action_34]
+[Action_36]
 ActionName=Drag to the left (reset to a "known" pos)
 Action=Click
 ActionTimeout=0
@@ -1058,7 +1168,7 @@ DelayAfterMouseDown=200
 MoveDuration=100
 UseClipCursor=0
 
-[Action_35]
+[Action_37]
 ActionName=Restore player position
 Action=SetVar
 ActionTimeout=0
@@ -1072,7 +1182,7 @@ ListOfVarValues=$Player_Left$$Player_Top$$Player_Right$$Player_Bottom$$P
 ListOfVarEvalBefore=111111111
 FailOnException=0
 
-[Action_36]
+[Action_38]
 ActionName=Find "Display dbg img" button
 Action=FindControl
 ActionTimeout=10000
@@ -1106,7 +1216,7 @@ GetAllControls=0
 PrecisionTimeout=0
 EvaluateTextCount=-1
 
-[Action_37]
+[Action_39]
 ActionName=Click Display button
 Action=Click
 ActionTimeout=0
@@ -1143,7 +1253,7 @@ DelayAfterMouseDown=200
 MoveDuration=-1
 UseClipCursor=0
 
-[Action_38]
+[Action_40]
 ActionName=Sleep before scrolling preview image
 Action=Sleep
 ActionTimeout=0
@@ -1154,7 +1264,7 @@ BreakpointEnabled=0
 BreakpointCondition=
 Value=100
 
-[Action_39]
+[Action_41]
 ActionName=Move mouse above preview image
 Action=Click
 ActionTimeout=0
@@ -1191,7 +1301,7 @@ DelayAfterMouseDown=200
 MoveDuration=-1
 UseClipCursor=0
 
-[Action_40]
+[Action_42]
 ActionName=Scroll to desired button
 Action=Click
 ActionTimeout=0
@@ -1228,7 +1338,7 @@ DelayAfterMouseDown=200
 MoveDuration=-1
 UseClipCursor=0
 
-[Action_41]
+[Action_43]
 ActionName=Select search area
 Action=Click
 ActionTimeout=0
@@ -1265,7 +1375,7 @@ DelayAfterMouseDown=200
 MoveDuration=1000
 UseClipCursor=0
 
-[Action_42]
+[Action_44]
 ActionName=Restore player cached control
 Action=SetVar
 ActionTimeout=0
@@ -1279,7 +1389,7 @@ ListOfVarValues=$Player_Left$$Player_Top$$Player_Right$$Player_Bottom$$P
 ListOfVarEvalBefore=111111111
 FailOnException=0
 
-[Action_43]
+[Action_45]
 ActionName=Find the red text Update button.
 Action=FindSubControl
 ActionTimeout=1000
@@ -1369,7 +1479,7 @@ EvaluateTextCount=-1
 CropFromScreenshot=0
 ThreadCount=2
 
-[Action_44]
+[Action_46]
 ActionName=Update
 Action=Click
 ActionTimeout=0

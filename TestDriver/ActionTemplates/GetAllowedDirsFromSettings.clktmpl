@@ -174,5 +174,5 @@ CropFromScreenshot=0
 
 [Notes]
 Content=
-TemplateIconPath=
+TemplateIconPath=$SelfTemplateDir$\..\DrvIcon.png
 

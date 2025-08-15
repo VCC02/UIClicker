@@ -417,5 +417,5 @@ UseClipCursor=0
 
 [Notes]
 Content=
-TemplateIconPath=$AppDir$\DrvIcon.png
+TemplateIconPath=$SelfTemplateDir$\..\DrvIcon.png
 

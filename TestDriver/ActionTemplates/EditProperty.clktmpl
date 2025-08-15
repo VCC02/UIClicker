@@ -1,5 +1,5 @@
 [Actions]
-Count=24
+Count=25
 Version=2
 
 [Action_0]
@@ -80,14 +80,28 @@ InitialRectangle.LeftOffset=0
 InitialRectangle.TopOffset=257
 InitialRectangle.RightOffset=0
 InitialRectangle.BottomOffset=0
-StartSearchingWithCachedControl=0
-CachedControlLeft=
-CachedControlTop=
+StartSearchingWithCachedControl=1
+CachedControlLeft=$SP_Left$
+CachedControlTop=$SP_Top$
 GetAllControls=0
 PrecisionTimeout=0
 EvaluateTextCount=-1
 
 [Action_3]
+ActionName=Cache splitter control
+Action=SetVar
+ActionTimeout=0
+ActionEnabled=1
+ActionCondition=
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+ListOfVarNames=$SP_Left$$SP_Top$$SP_Right$$SP_Bottom$$SP_Width$$SP_Height$$SP_Text$$SP_Class$$SP_Handle$
+ListOfVarValues=$Control_Left$$Control_Top$$Control_Right$$Control_Bottom$$Control_Width$$Control_Height$$Control_Text$$Control_Class$$Control_Handle$
+ListOfVarEvalBefore=111111111
+FailOnException=0
+
+[Action_4]
 ActionName=Move over OI
 Action=Click
 ActionTimeout=0
@@ -124,7 +138,7 @@ DelayAfterMouseDown=200
 MoveDuration=-1
 UseClipCursor=0
 
-[Action_4]
+[Action_5]
 ActionName=Reset VST scroll
 Action=Click
 ActionTimeout=0
@@ -161,7 +175,7 @@ DelayAfterMouseDown=200
 MoveDuration=-1
 UseClipCursor=0
 
-[Action_5]
+[Action_6]
 ActionName=Scroll to property
 Action=Click
 ActionTimeout=0
@@ -198,7 +212,7 @@ DelayAfterMouseDown=200
 MoveDuration=-1
 UseClipCursor=0
 
-[Action_6]
+[Action_7]
 ActionName=Find VST OI
 Action=FindControl
 ActionTimeout=10000
@@ -232,7 +246,7 @@ GetAllControls=0
 PrecisionTimeout=0
 EvaluateTextCount=-1
 
-[Action_7]
+[Action_8]
 ActionName=Cache VST OI
 Action=SetVar
 ActionTimeout=0
@@ -246,7 +260,7 @@ ListOfVarValues=$Control_Left$$Control_Top$$Control_Right$$Control_Bottom$
 ListOfVarEvalBefore=111111111
 FailOnException=0
 
-[Action_8]
+[Action_9]
 ActionName=Find property
 Action=FindSubControl
 ActionTimeout=3000
@@ -438,7 +452,7 @@ EvaluateTextCount=-1
 CropFromScreenshot=0
 ThreadCount=2
 
-[Action_9]
+[Action_10]
 ActionName=Expand property if it contains subproperties
 Action=Click
 ActionTimeout=0
@@ -475,7 +489,7 @@ DelayAfterMouseDown=200
 MoveDuration=-1
 UseClipCursor=0
 
-[Action_10]
+[Action_11]
 ActionName=Restore cached VST OI
 Action=SetVar
 ActionTimeout=0
@@ -489,7 +503,7 @@ ListOfVarValues=$OI_Left$$OI_Top$$OI_Right$$OI_Bottom$$OI_Width$$OI_He
 ListOfVarEvalBefore=111111111
 FailOnException=0
 
-[Action_11]
+[Action_12]
 ActionName=Find property (again, if moved on expanding)
 Action=FindSubControl
 ActionTimeout=1000
@@ -681,7 +695,7 @@ EvaluateTextCount=-1
 CropFromScreenshot=0
 ThreadCount=2
 
-[Action_12]
+[Action_13]
 ActionName=Cache Property ControlTop
 Action=SetVar
 ActionTimeout=0
@@ -695,7 +709,7 @@ ListOfVarValues=$Control_Top$
 ListOfVarEvalBefore=1
 FailOnException=0
 
-[Action_13]
+[Action_14]
 ActionName=Restore cached VST OI
 Action=SetVar
 ActionTimeout=0
@@ -709,7 +723,7 @@ ListOfVarValues=$OI_Left$$OI_Top$$OI_Right$$OI_Bottom$$OI_Width$$OI_He
 ListOfVarEvalBefore=111111111
 FailOnException=0
 
-[Action_14]
+[Action_15]
 ActionName=Find SubProperty (ToDo: If not found, then it should scroll)
 Action=FindSubControl
 ActionTimeout=1000
@@ -833,7 +847,7 @@ EvaluateTextCount=1
 CropFromScreenshot=0
 ThreadCount=2
 
-[Action_15]
+[Action_16]
 ActionName=Cache SubProperty ControlTop
 Action=SetVar
 ActionTimeout=0
@@ -847,7 +861,7 @@ ListOfVarValues=$Control_Top$
 ListOfVarEvalBefore=1
 FailOnException=0
 
-[Action_16]
+[Action_17]
 ActionName=Restore cached VST OI
 Action=SetVar
 ActionTimeout=0
@@ -861,7 +875,7 @@ ListOfVarValues=$OI_Left$$OI_Top$$OI_Right$$OI_Bottom$$OI_Width$$OI_He
 ListOfVarEvalBefore=111111111
 FailOnException=0
 
-[Action_17]
+[Action_18]
 ActionName=Find Value Column
 Action=FindSubControl
 ActionTimeout=1000
@@ -951,7 +965,7 @@ EvaluateTextCount=-1
 CropFromScreenshot=0
 ThreadCount=2
 
-[Action_18]
+[Action_19]
 ActionName=Cache Property ControlLeft
 Action=SetVar
 ActionTimeout=0
@@ -965,7 +979,7 @@ ListOfVarValues=$Control_Left$
 ListOfVarEvalBefore=1
 FailOnException=0
 
-[Action_19]
+[Action_20]
 ActionName=Edit property (if not a subproperty)
 Action=Click
 ActionTimeout=0
@@ -1002,7 +1016,7 @@ DelayAfterMouseDown=200
 MoveDuration=-1
 UseClipCursor=0
 
-[Action_20]
+[Action_21]
 ActionName=Edit property (if a subproperty)
 Action=Click
 ActionTimeout=0
@@ -1039,7 +1053,7 @@ DelayAfterMouseDown=200
 MoveDuration=-1
 UseClipCursor=0
 
-[Action_21]
+[Action_22]
 ActionName=Restore cached VST OI
 Action=SetVar
 ActionTimeout=0
@@ -1053,7 +1067,7 @@ ListOfVarValues=$OI_Left$$OI_Top$$OI_Right$$OI_Bottom$$OI_Width$$OI_He
 ListOfVarEvalBefore=111111111
 FailOnException=0
 
-[Action_22]
+[Action_23]
 ActionName=Find OI editor
 Action=FindControl
 ActionTimeout=10000
@@ -1087,7 +1101,7 @@ GetAllControls=0
 PrecisionTimeout=0
 EvaluateTextCount=-1
 
-[Action_23]
+[Action_24]
 ActionName=Cache OI editor
 Action=SetVar
 ActionTimeout=0
@@ -1103,5 +1117,5 @@ FailOnException=0
 
 [Notes]
 Content=The following properties must be provided by caller:$ScrollCount$ - number of scroll events in OI, to display the editing property$PropertyToEdit$ - name of the editing property$SubPropertyToEdit$ - name of the editing sub property, if editing a sub property. If not, it should be set to empty string.
-TemplateIconPath=$AppDir$\DrvIcon.png
+TemplateIconPath=$SelfTemplateDir$\..\DrvIcon.png
 

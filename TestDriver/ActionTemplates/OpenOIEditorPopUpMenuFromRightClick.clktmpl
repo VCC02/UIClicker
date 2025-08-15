@@ -490,5 +490,5 @@ ThreadCount=2
 
 [Notes]
 Content=This template requires EditProperty.clktmpl to be run prior to this.
-TemplateIconPath=
+TemplateIconPath=$SelfTemplateDir$\..\DrvIcon.png
 
