@@ -1490,6 +1490,7 @@ function GetPropertyHint_Click_MoveDuration: string;
 function GetPropertyHint_Click_UseClipCursor: string;
 
 function GetPropertyHint_ExecApp_PathToApp: string;
+function GetPropertyHint_ExecApp_WaitForApp: string;
 function GetPropertyHint_ExecApp_AppStdIn: string;
 function GetPropertyHint_ExecApp_CurrentDir: string;
 function GetPropertyHint_ExecApp_UseInheritHandles: string;
@@ -1629,7 +1630,7 @@ const
   CGetPropertyHint_ExecApp: array[0..CPropCount_ExecApp - 1] of TPropHintFunc = (
     @GetPropertyHint_ExecApp_PathToApp, // PathToApp: string;
     @GetPropertyHintNoHint, // ListOfParams: string;
-    @GetPropertyHintNoHint, // WaitForApp: Boolean;
+    @GetPropertyHint_ExecApp_WaitForApp, // WaitForApp: Boolean;
     @GetPropertyHint_ExecApp_AppStdIn, // AppStdIn: string;
     @GetPropertyHint_ExecApp_CurrentDir, // CurrentDir: string;
     @GetPropertyHint_ExecApp_UseInheritHandles, // UseInheritHandles: TExecAppUseInheritHandles;
@@ -3054,6 +3055,13 @@ begin
 end;
 
 
+function GetPropertyHint_ExecApp_WaitForApp: string;
+begin
+  Result := 'When set to True, UIClicker waits for the app to finish execution or stops at timeout.' + #13#10 +
+            'The application output is kept in $ExecAction_StdOut$, if WaitForApp is set to True.';
+end;
+
+
 function GetPropertyHint_ExecApp_AppStdIn: string;
 begin
   Result := 'All #4#5 (a.k.a. 0x4:0x5) occurrences are replaced with CRLF (#13#10) before executing the application.' + #13#10 +
@@ -3070,7 +3078,9 @@ end;
 
 function GetPropertyHint_ExecApp_UseInheritHandles: string;
 begin
-  Result := 'Required mostly when passing data through StdIn.' + #13#10 + 'It may also be required to read from StdOut.';
+  Result := 'Required mostly when passing data through StdIn.' + #13#10 +
+            'It may also be required to read from StdOut.' + #13#10 +
+            'The application output is kept in $ExecAction_StdOut$, if WaitForApp is set to True.';
 end;
 
 
