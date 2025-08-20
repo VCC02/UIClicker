@@ -85,6 +85,7 @@ type
     procedure Test_ExecuteFindSubControlAction_UIClickerMain_PmtvPreviewButton_Mem;
     procedure Test_ExecuteFindSubControlAction_RenderingServer_PmtvGradientWithText;
     procedure Test_ExecuteFindSubControlAction_RenderingServer_PmtvGradientOnBrowser;
+    procedure Test_ExecuteFindSubControlAction_RenderingServer_PmtvTextOnBrowser;
 
     procedure Test_ExecuteFindSubControlAction_RenderingServer_MultiText;
     procedure Test_ExecuteFindSubControlAction_RenderingServer_MultiTextWithTwoProfiles;
@@ -775,6 +776,13 @@ procedure TTestLowLevelHTTPAPI.Test_ExecuteFindSubControlAction_RenderingServer_
 begin                                         //This test should be modified, to execute in-mem actions, i.e. FindSubControl, via API. Only the FindSubControl execution time should be measured.
                                               //It should generate some options with GenerateFindSubControlOptionsForMainUIClickerWindow_Bitness and modify them for this test.
   ExecTestTemplate(TestServerAddress, '$AppDir$\Tests\TestFiles\RenderGradientOnBrowser.clktmpl');
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecuteFindSubControlAction_RenderingServer_PmtvTextOnBrowser;
+begin                                         //This test should be modified, to execute in-mem actions, i.e. FindSubControl, via API. Only the FindSubControl execution time should be measured.
+                                              //It should generate some options with GenerateFindSubControlOptionsForMainUIClickerWindow_Bitness and modify them for this test.
+  ExecTestTemplate(TestServerAddress, '$AppDir$\Tests\TestFiles\RenderTextOnBrowser.clktmpl');
 end;
 
 

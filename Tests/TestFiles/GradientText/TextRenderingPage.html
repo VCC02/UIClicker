@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <meta charset="utf-8">
+  <canvas id="txt0" width="500" height="500" />
+
+  <script>
+    const canvas = document.getElementById("txt0");
+    const context = canvas.getContext("2d");
+
+    context.fillStyle = '#000000';
+    //context.fillStyle = grd;
+    context.fillRect(0, 0, 300, 500); //background
+
+    context.fillStyle = '#00f000';
+    //context.fillStyle = "red";
+    
+    //context.fill();
+    context.font = "8px Tahoma";
+    //context.font = "bold 8px Tahoma";
+    context.fillText("MatchText1 property1. A long text.", 4, 4);
+	context.fillText("MatchText2 property2. A long text.", 4, 14);
+	context.fillText("MatchText3 property3. A long text.", 4, 24);
+	context.fillText("MatchText4 property4. A long text.", 4, 34);
+	context.fillText("MatchText5 property5. A long text.", 4, 44);
+	context.fillText("A quick1 brown fox jumps over the lazy dog1. A long text.", 4, 54);
+	context.fillText("A quick2 brown fox jumps over the lazy dog2. A long text.", 4, 64);
+	context.fillText("A quick3 brown fox jumps over the lazy dog3. A long text.", 4, 74);
+	//context.fillText("A quick4 brown fox jumps over the lazy dog4. A long text.", 4, 84); //one more line and the picture size is too much for a request
+	//context.fillText("A quick5 brown fox jumps over the lazy dog5. A long text.", 4, 94);
+
+    let imgContent = canvas.toDataURL();
+    console.log('Image length (bytes): ' + imgContent.length);
+    const xhr = new XMLHttpRequest();
+    xhr.open("GET", "/SetRenderingResult/" + imgContent, true);
+    //xhr.open("POST", "/SetRenderingResult/" + imgContent, true);
+    xhr.onload = () => {
+      console.log('set image response: ' + xhr.response);
+      window.close();
+    }
+
+
+    xhr.onerror = () => {
+      console.log('set image error. Maybe the request string is too long.');
+    } 
+
+    xhr.send(null);
+  </script>
+</html>

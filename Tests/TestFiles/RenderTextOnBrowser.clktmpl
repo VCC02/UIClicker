@@ -35,7 +35,7 @@ BreakpointExists=0
 BreakpointEnabled=0
 BreakpointCondition=
 ListOfVarNames=$StartBrowserResult$
-ListOfVarValues=$http://127.0.0.1:53444/StartBrowserWithGradientRenderingPage$
+ListOfVarValues=$http://127.0.0.1:53444/StartBrowserWithTextRenderingPage$
 ListOfVarEvalBefore=1
 FailOnException=0
 

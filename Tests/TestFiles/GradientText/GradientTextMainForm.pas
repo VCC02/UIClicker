@@ -50,6 +50,7 @@ type
     IdDecoderMIME1: TIdDecoderMIME;
     IdHTTPServer1: TIdHTTPServer;
     IdSchedulerOfThreadPool1: TIdSchedulerOfThreadPool;
+    imgIcon: TImage;
     imgBrowserRendering: TImage;
     imgGradient: TImage;
     lblHA: TLabel;
@@ -79,6 +80,8 @@ type
     procedure FormCreate(Sender: TObject);
     procedure IdHTTPServer1CommandGet(AContext: TIdContext;
       ARequestInfo: TIdHTTPRequestInfo; AResponseInfo: TIdHTTPResponseInfo);
+    procedure IdHTTPServer1CommandOther(AContext: TIdContext;
+      ARequestInfo: TIdHTTPRequestInfo; AResponseInfo: TIdHTTPResponseInfo);
     procedure IdHTTPServer1Connect(AContext: TIdContext);
     procedure IdHTTPServer1Exception(AContext: TIdContext; AException: Exception
       );
@@ -93,6 +96,7 @@ type
     function ProcessPutRenderingResult(AIn: string): string;
   public
     procedure AddToLog(s: string);
+    procedure AddToLogFromThread(s: string);
   end;
 
 
@@ -113,13 +117,22 @@ type
   end;
 
 
+  TLogSyncObj = class(TIdSync)
+    FMsg: string;
+  protected
+    procedure DoSynchronize; override;
+  end;
+
+
 const
   CRECmd_GetGradientImage = 'GetGradientImage';     //returns the yellow-fuchsia image  (used for testing)
-  CRECmd_GetRenderingPage = 'GetRenderingPage';     //returns the html+js page. This request is made by a web browser, to render an image on page
+  CRECmd_GetGradientRenderingPage = 'GetGradientRenderingPage';     //returns the html+js page. This request is made by a web browser, to render an image on page
+  CRECmd_GetTextRenderingPage = 'GetTextRenderingPage';
   CRECmd_SetRenderingResult = 'SetRenderingResult'; //The web browser sends this request, to give back the rendering result to this server.
   CRECmd_GetRenderingImage = 'GetRenderingImage';   //Returns the rendered image (the one set by browser).
                                                     //The above commands (and protocol) should be replaced by some websocket-based protoocol.
-  CRECmd_StartBrowserWithRenderingPage = 'StartBrowserWithRenderingPage';
+  CRECmd_StartBrowserWithGradientRenderingPage = 'StartBrowserWithGradientRenderingPage';
+  CRECmd_StartBrowserWithTextRenderingPage = 'StartBrowserWithTextRenderingPage';
 
 var
   frmGradientTextMain: TfrmGradientTextMain;
@@ -249,6 +262,13 @@ begin
 end;
 
 
+{TLogSyncObj}
+procedure TLogSyncObj.DoSynchronize;
+begin
+  frmGradientTextMain.AddToLog(FMsg);
+end;
+
+
 { TfrmGradientTextMain }
 
 procedure TfrmGradientTextMain.FormCreate(Sender: TObject);
@@ -265,6 +285,20 @@ end;
 procedure TfrmGradientTextMain.AddToLog(s: string);
 begin
   memLog.Lines.Add(s);
+end;
+
+
+procedure TfrmGradientTextMain.AddToLogFromThread(s: string);
+var
+  SyncObj: TLogSyncObj;
+begin
+  SyncObj := TLogSyncObj.Create;
+  try
+    SyncObj.FMsg := s;
+    SyncObj.Synchronize;
+  finally
+    SyncObj.Free;
+  end;
 end;
 
 
@@ -299,12 +333,12 @@ begin
 end;
 
 
-procedure GetRenderingPage(AStream: TStream);
+procedure GetRenderingPage(AStream: TStream; AFnm: string);
 var
   Fnm: string;
   TempStream: TMemoryStream;
 begin
-  Fnm := ExtractFilePath(ParamStr(0)) + 'TestRenderingPage.html';
+  Fnm := ExtractFilePath(ParamStr(0)) + AFnm;
   if not FileExists(Fnm) then
     Exit;
 
@@ -320,6 +354,18 @@ begin
 end;
 
 
+procedure GetGradientRenderingPage(AStream: TStream);
+begin
+  GetRenderingPage(AStream, 'TestRenderingPage.html');
+end;
+
+
+procedure GetTextRenderingPage(AStream: TStream);
+begin
+  GetRenderingPage(AStream, 'TextRenderingPage.html');
+end;
+
+
 procedure TfrmGradientTextMain.IdHTTPServer1CommandGet(AContext: TIdContext;
   ARequestInfo: TIdHTTPRequestInfo; AResponseInfo: TIdHTTPResponseInfo);
 var
@@ -328,10 +374,11 @@ var
   Cmd: string;
 begin
   Cmd := ARequestInfo.Document;
+  AddToLogFromThread('GET Request: ' + Copy(Cmd, 1, 100) + '...');
 
   AResponseInfo.ContentType := 'text/plain'; // 'text/html';  default type
 
-  if Cmd = '/' + CRECmd_GetRenderingPage then
+  if Cmd = '/' + CRECmd_GetGradientRenderingPage then
   begin
     AResponseInfo.ContentText := '';  //maybe not needed
     AResponseInfo.ContentType := 'text/html';
@@ -339,7 +386,21 @@ begin
     if AResponseInfo.ContentStream = nil then
       AResponseInfo.ContentStream := TMemoryStream.Create;
 
-    GetRenderingPage(AResponseInfo.ContentStream);
+    GetGradientRenderingPage(AResponseInfo.ContentStream);
+    AddToLogFromThread('Responded with html page (Gradient).');
+    Exit;
+  end;
+
+  if Cmd = '/' + CRECmd_GetTextRenderingPage then
+  begin
+    AResponseInfo.ContentText := '';  //maybe not needed
+    AResponseInfo.ContentType := 'text/html';
+
+    if AResponseInfo.ContentStream = nil then
+      AResponseInfo.ContentStream := TMemoryStream.Create;
+
+    GetTextRenderingPage(AResponseInfo.ContentStream);
+    AddToLogFromThread('Responded with html page (Text).');
     Exit;
   end;
 
@@ -350,10 +411,16 @@ begin
     Exit;
   end;
 
-  if Cmd = '/' + CRECmd_StartBrowserWithRenderingPage then
+  if Cmd = '/' + CRECmd_StartBrowserWithGradientRenderingPage then
   begin
     AResponseInfo.ContentText := 'OK';  //maybe not needed
-    ShellExecute(Handle, 'open', PChar('http://127.0.0.1:' + lbeServerModePort.Text + '/' + CRECmd_GetRenderingPage), '', '', 5);  //SW_SHOW
+    ShellExecute(Handle, 'open', PChar('http://127.0.0.1:' + lbeServerModePort.Text + '/' + CRECmd_GetGradientRenderingPage), '', '', 5);  //SW_SHOW
+  end;
+
+  if Cmd = '/' + CRECmd_StartBrowserWithTextRenderingPage then
+  begin
+    AResponseInfo.ContentText := 'OK';  //maybe not needed
+    ShellExecute(Handle, 'open', PChar('http://127.0.0.1:' + lbeServerModePort.Text + '/' + CRECmd_GetTextRenderingPage), '', '', 5);  //SW_SHOW
   end;
 
 
@@ -372,6 +439,14 @@ begin
     Bmp := TBitmap.Create;
     GettingImage := True;
     ProcessGetImageRequest(ARequestInfo.Params, Bmp, imgBrowserRendering);
+  end;
+
+  if Cmd = '/favicon.ico' then
+  begin
+    Bmp := TBitmap.Create;
+    GettingImage := True;
+    Bmp.Assign(imgIcon.Picture.Bitmap);
+    AddToLogFromThread('');
   end;
 
   try
@@ -412,6 +487,30 @@ begin
     if GettingImage then
       Bmp.Free;
   end;
+end;
+
+
+procedure TfrmGradientTextMain.IdHTTPServer1CommandOther(AContext: TIdContext;
+  ARequestInfo: TIdHTTPRequestInfo; AResponseInfo: TIdHTTPResponseInfo);
+var
+  Cmd: string;
+begin
+  Cmd := ARequestInfo.Document;
+  AddToLogFromThread('POST/PUT Request: ' + Copy(Cmd, 1, 100) + '...');
+
+  AResponseInfo.ContentType := 'text/plain'; // 'text/html';  default type
+
+  if ARequestInfo.CommandType in [hcPOST, hcPUT] then
+  begin
+    if Pos('/' + CRECmd_SetRenderingResult, Cmd) = 1 then
+    begin
+      AResponseInfo.ContentType := 'text/html';
+      AResponseInfo.ContentText := ProcessPutRenderingResult(Copy(Cmd, Length('/' + CRECmd_SetRenderingResult + '/') + 1, MaxInt));
+      Exit;
+    end;
+  end
+  else
+    AddToLogFromThread('Unknown command type: ' + IntToStr(Integer(ARequestInfo.CommandType)));
 end;
 
 

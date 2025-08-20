@@ -1,13 +1,13 @@
 <!DOCTYPE html>
 <html lang="en-US">
   <meta charset="utf-8">
-  <canvas id="rnd" width="500" height="500" />
+  <canvas id="rnd" width="300" height="300" />
 
   <script>
     const canvas = document.getElementById("rnd");
     const context = canvas.getContext("2d");
 
-    const grd = context.createLinearGradient(0, 0, 500, 500);
+    const grd = context.createLinearGradient(0, 0, 200, 200);
     grd.addColorStop(0, "red");
     grd.addColorStop(1, "green");
 
@@ -18,18 +18,26 @@
     context.beginPath();
     context.moveTo(0, 0);
     context.lineTo(200, 50);
-    context.lineTo(200, 300);
+    context.lineTo(200, 200);
     context.lineTo(100, 200);
     context.lineTo(0, 50);
     context.closePath();
     context.fill();
 
     let imgContent = canvas.toDataURL();
+    console.log('Image length (bytes): ' + imgContent.length);
     const xhr = new XMLHttpRequest();
     xhr.open("GET", "/SetRenderingResult/" + imgContent, true);
+    //xhr.open("POST", "/SetRenderingResult/" + imgContent, true);
     xhr.onload = () => {
       console.log('set image response: ' + xhr.response);
+      window.close();
     }
+
+
+    xhr.onerror = () => {
+      console.log('set image error. Maybe the request string is too long.');
+    } 
 
     xhr.send(null);
   </script>
