@@ -5416,7 +5416,7 @@ begin
     ProfilesLen := Length(FBrowserRenderingText.FontProfiles);
     for i := 0 to ProfilesLen - 1 do
       Result := Result +
-              '  <canvas id="txt' + IntToStr(i) + '" width="500" height="500"></canvas>'#13#10;
+              '  <canvas id="txt' + IntToStr(i) + '" width="500" height="30"></canvas>'#13#10;
 
     Result := Result +
               ''#13#10 +
@@ -5477,7 +5477,7 @@ begin
               '      const context = canvas.getContext("2d");'#13#10 +
               ''#13#10 +
               '      context.fillStyle = BackgroundColors[i];'#13#10 +
-              '      context.fillRect(0, 0, 500, 500); //background'#13#10 +
+              '      context.fillRect(0, 0, 500, 30); //background'#13#10 +
               ''#13#10 +
               '      context.fillStyle = ForegroundColors[i];'#13#10 +
               '      context.font = ' +
@@ -5501,6 +5501,10 @@ begin
               '        console.log("set image error. Maybe the request string is too long.");'#13#10 +
               '      }'#13#10 +
               ''#13#10 +
+              '      imgContent = imgContent.replaceAll("=", "");'#13#10 +   //the HTTP parameter parser messes things up, because of '='
+              '      imgContent = imgContent.replaceAll("+", "");'#13#10 +   //the HTTP parameter parser messes things up, because of '+'
+              '      imgContent = imgContent.replaceAll("/", "");'#13#10 +   //the HTTP parameter parser messes things up, because of '/'
+              '      //console.log("imgContent len: " + imgContent.length + ":  " + imgContent);'#13#10 +
               '      xhr.open("GET", "/' + CRECmd_SetRenderedFileB64 + '?StackLevel=' + IntToStr(FStackLevel^) + '&' + CREParam_FileName + '=" + FileNames[i] + "&' + CREParam_Content + '=" + imgContent, true);'#13#10 +
               '      xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");'#13#10 +
               '      xhr.send(null);'#13#10;

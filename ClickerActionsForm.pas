@@ -3143,6 +3143,10 @@ begin
     AddToLog(CRECmd_SetRenderedFile + '...');
     TempStr := ASyncObj.FParams.Values[CREParam_Content];
     TempStr := Copy(TempStr, Length('data:image/png;base64,') + 1, MaxInt);
+    TempStr := StringReplace(TempStr, '', '=', [rfReplaceAll]);
+    TempStr := StringReplace(TempStr, '', '+', [rfReplaceAll]);
+    TempStr := StringReplace(TempStr, '', '/', [rfReplaceAll]);
+    //AddToLog('TempStr=' + TempStr);
     Fnm := ASyncObj.FParams.Values[CREParam_FileName];
 
     if Trim(Fnm) = '' then
@@ -3181,13 +3185,18 @@ begin
         IdDecoderMIME1.DecodeStream(TempStr, TempMemStream);
         TempMemStream.Position := 0;
 
+        //SetLength(TempStr, 10);
+        //Move(TempMemStream.Memory^, TempStr[1], Length(TempStr));
+        //AddToLog('DecodedTempStr=' + FastReplace_0To1(TempStr));
+
         try
           Png := TPNGImage.Create;
           Bmp := TBitmap.Create;
           try
             try
+              //AddToLog('Png.IsStreamFormatSupported: ' + BoolToStr(Png.IsStreamFormatSupported(TempMemStream), True));
               Png.LoadFromStream(TempMemStream);
-              AddToLog('Png w/h: ' + IntToStr(Png.Width) + '/' + IntToStr(Png.Height));
+              //AddToLog('Png w/h: ' + IntToStr(Png.Width) + '/' + IntToStr(Png.Height));
               WipeBitmap(Bmp, Png.Width, Png.Height);
               Bmp.Canvas.Draw(0, 0, Png);
             except
@@ -3211,10 +3220,10 @@ begin
         end;
 
         try
-          AddToLog('Saving received file: "' + Fnm + '" to rendered in-mem FS');
+          //AddToLog('Saving received file: "' + Fnm + '" to rendered in-mem FS');
           FRenderedInMemFileSystem.SaveFileToMem(Fnm, TempMemStream.Memory, TempMemStream.Size);   //FRenderedInMemFileSystem is used for bitmaps
         finally
-          AddToLog('Received file: "' + Fnm + '"  of ' + IntToStr(TempMemStream.Size) + ' bytes in size (for ExtRndInMemFS), as base64.');
+          AddToLog('Received file: "' + Fnm + '"  of ' + IntToStr(TempMemStream.Size) + ' bytes in size (for ExtRndInMemFS), (' + IntToStr(Length(TempStr) + Length('data:image/png;base64,')) + ') as base64.');
         end;
       finally
         IdDecoderMIME1.Free;
