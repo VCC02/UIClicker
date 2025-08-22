@@ -275,7 +275,8 @@ begin
 
             'EvaluateTextCount' + '=' + AFindSubControlOptions.EvaluateTextCount + '&' +
             'CropFromScreenshot' + '=' + IntToStr(Ord(AFindSubControlOptions.CropFromScreenshot)) + '&' +
-            'ThreadCount' + '=' + AFindSubControlOptions.ThreadCount
+            'ThreadCount' + '=' + AFindSubControlOptions.ThreadCount + '&' +
+            'UseTextRenderingInBrowser' + '=' + IntToStr(Ord(AFindSubControlOptions.UseTextRenderingInBrowser))
             ;
 end;
 
@@ -589,7 +590,8 @@ begin
 
             'EvaluateTextCount' + '=' + CDTString + '&' +
             'CropFromScreenshot' + '=' + CDTBool + '&' +
-            'ThreadCount' + '=' + CDTString
+            'ThreadCount' + '=' + CDTString + '&' +
+            'UseTextRenderingInBrowser' + '=' + CDTBool
             ;
 end;
 
@@ -1158,6 +1160,7 @@ begin
   AFindSubControlOptions.EvaluateTextCount := AListOfFindSubControlOptionsParams.Values['EvaluateTextCount'];
   AFindSubControlOptions.CropFromScreenshot := AListOfFindSubControlOptionsParams.Values['CropFromScreenshot'] = '1';
   AFindSubControlOptions.ThreadCount := AListOfFindSubControlOptionsParams.Values['ThreadCount'];
+  AFindSubControlOptions.UseTextRenderingInBrowser := AListOfFindSubControlOptionsParams.Values['UseTextRenderingInBrowser'] = '1';
 
   AActionOptions.ActionName := AListOfFindSubControlOptionsParams.Values[CPropertyName_ActionName];
   AActionOptions.ActionTimeout := Temp_ActionTimeout;
@@ -1528,6 +1531,7 @@ begin
   AFindSubControlOptions.EvaluateTextCount := '-1';
   AFindSubControlOptions.CropFromScreenshot := False;
   AFindSubControlOptions.ThreadCount := '2';
+  AFindSubControlOptions.UseTextRenderingInBrowser := False;
 
   SetLength(AFindSubControlOptions.MatchBitmapText, AFindSubControlProfilesCount);
 

@@ -66,6 +66,14 @@ type
 
   TOnWaitInDebuggingMode = procedure(var ADebuggingAction: TClkActionRec; AActionAllowsSteppingInto: TAllowsSteppingInto) of object;
 
+  TBrowserRenderingText = record
+    Txt: string;
+    RequestID: string;
+    FontProfiles: TClkFindControlMatchBitmapTextArr;  //not all properties will be used in browser rendering
+    RenderedFileNames: TStringArray; //this should have the same length as FontProfiles
+    CritSec: TRTLCriticalSection;
+  end;
+
 
   TActionExecution = class
   private
@@ -86,6 +94,8 @@ type
     FAllowedFileExtensionsForServer: PString;
 
     FfrClickerActions: TfrClickerActions;  ///////////////////////// temp
+
+    FBrowserRenderingText: TBrowserRenderingText;
 
     FOnAddToLog: TOnAddToLog;
     FOnSetEditorEnabledState: TOnSetEditorEnabledState;
@@ -242,6 +252,8 @@ type
     function ExecutePluginActionAsString(AListOfPluginOptionsParams: TStrings): Boolean;
     function ExecuteEditTemplateActionAsString(AListOfEditTemplateOptionsParams: TStrings): Boolean;
 
+    function GetTextRenderingPage(AHTTPParams: TStrings): string;
+
     //using pointers for the following properties, because the values they are pointing to, can be updated later, not when this class is created
     property ClickerVars: TStringList write FClickerVars;  //not created here in this class, used from outside
     property StopAllActionsOnDemandFromParent: PBoolean write FStopAllActionsOnDemandFromParent;
@@ -342,6 +354,12 @@ begin
   FPluginStepOver := nil;
   FPluginContinueAll := nil;
 
+  {$IFDEF Windows}
+    InitializeCriticalSection(FBrowserRenderingText.CritSec);
+  {$ELSE}
+    InitCriticalSection(FBrowserRenderingText.CritSec);
+  {$ENDIF}
+
   FOnAddToLog := nil;
   FOnSetEditorEnabledState := nil;
   FOnSetEditorTimeoutProgressBarMax := nil;
@@ -392,6 +410,7 @@ end;
 destructor TActionExecution.Destroy;
 begin
   FClickerVars := nil;
+  DoneCriticalSection(FBrowserRenderingText.CritSec);
   inherited Destroy;
 end;
 
@@ -1424,7 +1443,7 @@ begin
             finally
               DoOnSetEditorEnabledState(True);
             end;
-          end;
+          end;  //WaitForApp
 
           TempStringList := TStringList.Create;
           try
@@ -2208,7 +2227,7 @@ var
   ResultedControlArr, PartialResultedControlArr: TCompRecArr;
   ResultedControlArr_Text, ResultedControlArr_Bmp, ResultedControlArr_Pmtv: TCompRecArr;
   MatchSource, DetailedMatchSource: string;
-  InitialTickCount, Timeout: QWord;
+  InitialTickCount, Timeout, tk: QWord;
   FindControlInputData, WorkFindControlInputData: TFindControlInputData;
   StopAllActionsOnDemandAddr: Pointer;
   EvalFG, EvalBG: string;
@@ -2242,161 +2261,205 @@ begin
   try
     if AFindSubControlOptions.MatchCriteria.WillMatchBitmapText then
     begin
-      SetLength(ResultedControlArr, 0);
-      for j := 0 to BmpTextProfileCount - 1 do //number of font profiles
-      begin
-        if j > BmpTextProfileCount - 1 then  //it seems that a FP bug allows "j" to go past n - 1. It may happen on EnumerateWindows only. At best, the memory is overwritten, which causes this behavior.
-          Break;
+      if AFindSubControlOptions.UseTextRenderingInBrowser then
+        EnterCriticalSection(FBrowserRenderingText.CritSec);
+      try
+        if AFindSubControlOptions.UseTextRenderingInBrowser then
+        begin
+          FBrowserRenderingText.Txt := AFindSubControlOptions.MatchText;
+          SetLength(FBrowserRenderingText.FontProfiles, Length(AFindSubControlOptions.MatchBitmapText));
+          SetLength(FBrowserRenderingText.RenderedFileNames, Length(AFindSubControlOptions.MatchBitmapText));
 
-        FindControlInputData.BitmapToSearchFor := TBitmap.Create;
-        FindControlInputData.BitmapToSearchOn := TBitmap.Create;
-        try
-          FindControlInputData.BitmapToSearchFor.PixelFormat := pf24bit;
-          LoadBitmapToSearchOn(FindControlInputData);
-
-          //if AFindSubControlOptions.MatchCriteria.WillMatchBitmapText then
+          for j := 0 to Length(FBrowserRenderingText.RenderedFileNames) - 1 do
           begin
-            EvalFG := EvaluateReplacements(AFindSubControlOptions.MatchBitmapText[j].ForegroundColor, True);
-            EvalBG := EvaluateReplacements(AFindSubControlOptions.MatchBitmapText[j].BackgroundColor, True);
-
-            if AFindSubControlOptions.MatchBitmapAlgorithm <> mbaRenderTextOnly then
-              AddToLog('Searching with text profile[' + IntToStr(j) + ']: ' + AFindSubControlOptions.MatchBitmapText[j].ProfileName)
-            else
-              AddToLog('Rendering text profile[' + IntToStr(j) + ']: ' + AFindSubControlOptions.MatchBitmapText[j].ProfileName);
-
-            SetActionVarValue('$DebugVar_TextColors$',
-                              'FileName=' + FSelfTemplateFileName^ +
-                              //' FG=' + IntToHex(frClickerActions.frClickerFindControl.BMPTextFontProfiles[j].FGColor, 8) +
-                              //' BG=' + IntToHex(frClickerActions.frClickerFindControl.BMPTextFontProfiles[j].BGColor, 8) +
-                              ' Eval(FG)=' + EvaluateReplacements(AFindSubControlOptions.MatchBitmapText[j].ForegroundColor, False) + '=' + EvalFG +
-                              ' Eval(BG)=' + EvaluateReplacements(AFindSubControlOptions.MatchBitmapText[j].BackgroundColor, False) + '=' + EvalBG );
-
-            //if frClickerActions.frClickerFindControl.BMPTextFontProfiles[j].FGColor and clSystemColor <> 0 then  //clSystemColor is declared above
-            //begin
-            //  frClickerActions.frClickerFindControl.BMPTextFontProfiles[j].FGColor := clFuchsia;
-            //  AddToLog('System color found on text FG: $' + IntToHex(frClickerActions.frClickerFindControl.BMPTextFontProfiles[j].FGColor, 8));
-            //end;
-            //
-            //if frClickerActions.frClickerFindControl.BMPTextFontProfiles[j].BGColor and clSystemColor <> 0 then  //clSystemColor is declared above
-            //begin
-            //  frClickerActions.frClickerFindControl.BMPTextFontProfiles[j].BGColor := clLime;
-            //  AddToLog('System color found on text BG: $' + IntToHex(frClickerActions.frClickerFindControl.BMPTextFontProfiles[j].BGColor, 8));
-            //end;
-
-            SetActionVarValue('$DebugVar_BitmapText$', FindControlInputData.Text);
-
-            // frClickerActions.frClickerFindControl.PreviewText;
-
-            try
-              PreviewTextOnBmp(AFindSubControlOptions, FindControlInputData.Text, j, FindControlInputData.BitmapToSearchFor);
-            except
-              on E: Exception do
-              begin
-                AddToLog('Can''t preview bmp text. Ex: "' + E.Message + '".  Action: "' + AActionOptions.ActionName + '" of ' + CClkActionStr[AActionOptions.Action] + ' type.');
-                // frClickerActions.frClickerFindControl.BMPTextFontProfiles[j].ProfileName  is no longer available, since no UI is updated on remote execution. It is replaced by AFindSubControlOptions.MatchBitmapText[j].ProfileName.
-                raise Exception.Create(E.Message + '  Profile[' + IntToStr(j) + ']: "' + AFindSubControlOptions.MatchBitmapText[j].ProfileName + '".   Searched text: "' + FindControlInputData.Text + '"');
-              end;
-            end;
-            //This is the original code for getting the text from the editor, instead of rendering with PreviewTextOnBmp. It should do the same thing.
-            //FindControlInputData.BitmapToSearchFor.Width := frClickerActions.frClickerFindControl.BMPTextFontProfiles[j].PreviewImageBitmap.Width;
-            //FindControlInputData.BitmapToSearchFor.Height := frClickerActions.frClickerFindControl.BMPTextFontProfiles[j].PreviewImageBitmap.Height;
-            //FindControlInputData.BitmapToSearchFor.Canvas.Draw(0, 0, frClickerActions.frClickerFindControl.BMPTextFontProfiles[j].PreviewImageBitmap);   //updated above by PreviewText
-          end;  //WillMatchBitmapText
-
-          //if AFindSubControlOptions.MatchCriteria.WillMatchPrimitiveFiles then   //dbg only
-          //begin
-          //  FindControlInputData.BitmapToSearchFor.Canvas.Pen.Color := clRed;
-          //  FindControlInputData.BitmapToSearchFor.Canvas.Line(20, 30, 60, 70);
-          //end;
-
-          //negative area verification - moved above "for j" loop
-          if AFindSubControlOptions.MatchBitmapAlgorithm <> mbaRenderTextOnly then
-          begin
-            FindControlInputData.IgnoreBackgroundColor := AFindSubControlOptions.MatchBitmapText[j].IgnoreBackgroundColor;
-            FindControlInputData.BackgroundColor := HexToInt(EvalBG);
-
-
-            //clear debug image
-            frClickerActions.imgDebugBmp.Canvas.Pen.Color := clWhite;
-            frClickerActions.imgDebugBmp.Canvas.Brush.Color := clWhite;
-            frClickerActions.imgDebugBmp.Canvas.Rectangle(0, 0, frClickerActions.imgDebugBmp.Width, frClickerActions.imgDebugBmp.Height);
-
-            //FindControlInputData.DebugBitmap := frClickerActions.imgDebugBmp.Picture.Bitmap;    //section moved above :for j" loop
-            //FindControlInputData.DebugGrid := frClickerActions.imgDebugGrid;
-
-            try
-              SetLength(PartialResultedControlArr, 0);
-              WorkFindControlInputData := FindControlInputData;
-              FindControlOnScreen_Result := FindSubControlOnScreen(AFindSubControlOptions.MatchBitmapAlgorithm,
-                                                                   AFindSubControlOptions.MatchBitmapAlgorithmSettings,
-                                                                   WorkFindControlInputData,
-                                                                   InitialTickCount,
-                                                                   StopAllActionsOnDemandAddr,
-                                                                   PartialResultedControlArr,
-                                                                   DoOnGetGridDrawingOption);
-
-              if FindControlOnScreen_Result or not FindControlInputData.StopSearchOnMismatch then
-              begin
-                SetActionVarValue('$ActionExecDuration$', IntToStr(GetTickCount64 - InitialTickCount));
-                if not FindControlOnScreen_Result and not FindControlInputData.StopSearchOnMismatch then
-                  AddToLog('Can''t find the subcontrol (text), but the searching went further, to get the error count. See $ResultedErrorCount$.');
-
-                if Length(PartialResultedControlArr) = 0 then  //it looks like FindControlOnScreen may return with an empty array and a result set to True
-                  SetLength(PartialResultedControlArr, 1);
-
-                UpdateActionVarValuesFromControl(PartialResultedControlArr[0], not FindControlInputData.StopSearchOnMismatch);
-                //frClickerActions.DebuggingInfoAvailable := True;
-                //
-                //if AFindSubControlOptions.GetAllControls then
-                //begin
-                //  SetAllControl_Handles_FromResultedControlArr(ResultedControlArr);
-                //  UpdateActionVarValuesFromResultedControlArr(ResultedControlArr);
-                //end;
-
-                CopyPartialResultsToFinalResult(ResultedControlArr_Text, PartialResultedControlArr);
-
-                Result := True;
-                AddToLog('Found text: "' + AFindSubControlOptions.MatchText + '" in ' + IntToStr(GetTickCount64 - InitialTickCount) + 'ms.');
-
-                if AFindSubControlOptions.GetAllControls then
-                begin
-                  AddToLog('Result count: ' + IntToStr(Length(PartialResultedControlArr)));
-                  AddInfoToMatchSource('txt[' + IntToStr(j) + ']', 'txt[' + IntToStr(j) + '][0]', Length(PartialResultedControlArr), MatchSource, DetailedMatchSource); //hardcoded to [0] as no other subfeature is implemented
-                end;
-
-                if not AFindSubControlOptions.GetAllControls then
-                  Exit;  //to prevent further searching for bitmap files, primitives or other text profiles
-              end;
-            finally
-              if Length(PartialResultedControlArr) > 0 then
-                ResultedControl := PartialResultedControlArr[0];  //ResultedControl has some fields, initialized before the search. If no result is found, then call SetDbgImgPos with those values.
-
-              SetDbgImgPos(AFindSubControlOptions, WorkFindControlInputData, ResultedControl, FindControlOnScreen_Result);
-            end;
-          end
-          else  //mbaRenderTextOnly
-          begin
-            ExtBmpName := CExtBmp_Prefix + PathDelim + AActionOptions.ActionName + '_' + AFindSubControlOptions.MatchBitmapText[j].ProfileName + '.bmp';
-            DoOnSaveRenderedBitmap(FindControlInputData.BitmapToSearchFor, ExtBmpName);
-            //
+            FBrowserRenderingText.FontProfiles[j] := AFindSubControlOptions.MatchBitmapText[j]; //copy entire profile
+            FBrowserRenderingText.FontProfiles[j].ForegroundColor := EvaluateReplacements(AFindSubControlOptions.MatchBitmapText[j].ForegroundColor, True);
+            FBrowserRenderingText.FontProfiles[j].BackgroundColor := EvaluateReplacements(AFindSubControlOptions.MatchBitmapText[j].BackgroundColor, True);
+            FBrowserRenderingText.RenderedFileNames[j] := 'BrowserTxt_' + IntToStr(j) + '.png';  //maybe add a timestamp after index. Make sure the string does not contain quotes or other special characters in JS.
           end;
-        finally
-          FindControlInputData.BitmapToSearchFor.Free;
-          FindControlInputData.BitmapToSearchOn.Free;
+
+          FBrowserRenderingText.RequestID := AActionOptions.ActionName + '_' + DateTimeToStr(Now) + '_' + IntToStr(GetTickCount64);
+          FBrowserRenderingText.RequestID := StringReplace(FBrowserRenderingText.RequestID, '"', '_', [rfReplaceAll]);
+          FBrowserRenderingText.RequestID := StringReplace(FBrowserRenderingText.RequestID, '''', '_', [rfReplaceAll]);
+          FBrowserRenderingText.RequestID := StringReplace(FBrowserRenderingText.RequestID, '?', '_', [rfReplaceAll]);
+          FBrowserRenderingText.RequestID := StringReplace(FBrowserRenderingText.RequestID, ' ', '_', [rfReplaceAll]);
+          FBrowserRenderingText.RequestID := StringReplace(FBrowserRenderingText.RequestID, '=', '_', [rfReplaceAll]);  //maybe another validator (a function) is required
+
+          //////////////////////////////////// the connection string and/or method of running the browser (ShellExecute, ExecApp, running an action etc), should be implemented in new properties
+          ShellExecute(0, 'open', PChar('http://127.0.0.1:5444/' + CRECmd_GetTextRenderingPage + '?StackLevel=' + IntToStr(FStackLevel^) + '&ID=' + FBrowserRenderingText.RequestID), '', '', 5);  //SW_SHOW
+
+          tk := GetTickCount64;
+          repeat                              // wait for BrowserRendering timeout or all files to be present
+            Application.ProcessMessages;
+            Sleep(1);
+            ////////////////////////// for now, DoOnLoadRenderedBitmap() can be used to find out if the bitmap is available, but it returns the bitmap, instead of just looking for it
+          until GetTickCount64 - tk > 3000; ///////////////////////////////////////WaitingForBrowserTimeout should be a new property.
+
+        end; //AFindSubControlOptions.UseTextRenderingInBrowser
+
+        SetLength(ResultedControlArr, 0);
+        for j := 0 to BmpTextProfileCount - 1 do //number of font profiles
+        begin
+          if j > BmpTextProfileCount - 1 then  //it seems that a FP bug allows "j" to go past n - 1. It may happen on EnumerateWindows only. At best, the memory is overwritten, which causes this behavior.
+            Break;
+
+          FindControlInputData.BitmapToSearchFor := TBitmap.Create;
+          FindControlInputData.BitmapToSearchOn := TBitmap.Create;
+          try
+            FindControlInputData.BitmapToSearchFor.PixelFormat := pf24bit;
+            LoadBitmapToSearchOn(FindControlInputData);
+
+            //if AFindSubControlOptions.MatchCriteria.WillMatchBitmapText then
+            begin
+              EvalFG := EvaluateReplacements(AFindSubControlOptions.MatchBitmapText[j].ForegroundColor, True);
+              EvalBG := EvaluateReplacements(AFindSubControlOptions.MatchBitmapText[j].BackgroundColor, True);
+
+              if AFindSubControlOptions.MatchBitmapAlgorithm <> mbaRenderTextOnly then
+                AddToLog('Searching with text profile[' + IntToStr(j) + ']: ' + AFindSubControlOptions.MatchBitmapText[j].ProfileName)
+              else
+                AddToLog('Rendering text profile[' + IntToStr(j) + ']: ' + AFindSubControlOptions.MatchBitmapText[j].ProfileName);
+
+              SetActionVarValue('$DebugVar_TextColors$',
+                                'FileName=' + FSelfTemplateFileName^ +
+                                //' FG=' + IntToHex(frClickerActions.frClickerFindControl.BMPTextFontProfiles[j].FGColor, 8) +
+                                //' BG=' + IntToHex(frClickerActions.frClickerFindControl.BMPTextFontProfiles[j].BGColor, 8) +
+                                ' Eval(FG)=' + EvaluateReplacements(AFindSubControlOptions.MatchBitmapText[j].ForegroundColor, False) + '=' + EvalFG +
+                                ' Eval(BG)=' + EvaluateReplacements(AFindSubControlOptions.MatchBitmapText[j].BackgroundColor, False) + '=' + EvalBG );
+
+              //if frClickerActions.frClickerFindControl.BMPTextFontProfiles[j].FGColor and clSystemColor <> 0 then  //clSystemColor is declared above
+              //begin
+              //  frClickerActions.frClickerFindControl.BMPTextFontProfiles[j].FGColor := clFuchsia;
+              //  AddToLog('System color found on text FG: $' + IntToHex(frClickerActions.frClickerFindControl.BMPTextFontProfiles[j].FGColor, 8));
+              //end;
+              //
+              //if frClickerActions.frClickerFindControl.BMPTextFontProfiles[j].BGColor and clSystemColor <> 0 then  //clSystemColor is declared above
+              //begin
+              //  frClickerActions.frClickerFindControl.BMPTextFontProfiles[j].BGColor := clLime;
+              //  AddToLog('System color found on text BG: $' + IntToHex(frClickerActions.frClickerFindControl.BMPTextFontProfiles[j].BGColor, 8));
+              //end;
+
+              SetActionVarValue('$DebugVar_BitmapText$', FindControlInputData.Text);
+
+              // frClickerActions.frClickerFindControl.PreviewText;
+
+              try
+                if not AFindSubControlOptions.UseTextRenderingInBrowser then
+                  PreviewTextOnBmp(AFindSubControlOptions, FindControlInputData.Text, j, FindControlInputData.BitmapToSearchFor)
+                else
+                  if not DoOnLoadRenderedBitmap(FindControlInputData.BitmapToSearchFor, FBrowserRenderingText.RenderedFileNames[i]) then
+                    raise Exception.Create('Can''t load rendered file from browser: ' + FBrowserRenderingText.RenderedFileNames[i]);
+              except
+                on E: Exception do
+                begin
+                  AddToLog('Can''t preview bmp text. Ex: "' + E.Message + '".  Action: "' + AActionOptions.ActionName + '" of ' + CClkActionStr[AActionOptions.Action] + ' type.');
+                  // frClickerActions.frClickerFindControl.BMPTextFontProfiles[j].ProfileName  is no longer available, since no UI is updated on remote execution. It is replaced by AFindSubControlOptions.MatchBitmapText[j].ProfileName.
+                  raise Exception.Create(E.Message + '  Profile[' + IntToStr(j) + ']: "' + AFindSubControlOptions.MatchBitmapText[j].ProfileName + '".   Searched text: "' + FindControlInputData.Text + '"');
+                end;
+              end;
+              //This is the original code for getting the text from the editor, instead of rendering with PreviewTextOnBmp. It should do the same thing.
+              //FindControlInputData.BitmapToSearchFor.Width := frClickerActions.frClickerFindControl.BMPTextFontProfiles[j].PreviewImageBitmap.Width;
+              //FindControlInputData.BitmapToSearchFor.Height := frClickerActions.frClickerFindControl.BMPTextFontProfiles[j].PreviewImageBitmap.Height;
+              //FindControlInputData.BitmapToSearchFor.Canvas.Draw(0, 0, frClickerActions.frClickerFindControl.BMPTextFontProfiles[j].PreviewImageBitmap);   //updated above by PreviewText
+            end;  //WillMatchBitmapText
+
+            //if AFindSubControlOptions.MatchCriteria.WillMatchPrimitiveFiles then   //dbg only
+            //begin
+            //  FindControlInputData.BitmapToSearchFor.Canvas.Pen.Color := clRed;
+            //  FindControlInputData.BitmapToSearchFor.Canvas.Line(20, 30, 60, 70);
+            //end;
+
+            //negative area verification - moved above "for j" loop
+            if AFindSubControlOptions.MatchBitmapAlgorithm <> mbaRenderTextOnly then
+            begin
+              FindControlInputData.IgnoreBackgroundColor := AFindSubControlOptions.MatchBitmapText[j].IgnoreBackgroundColor;
+              FindControlInputData.BackgroundColor := HexToInt(EvalBG);
+
+
+              //clear debug image
+              frClickerActions.imgDebugBmp.Canvas.Pen.Color := clWhite;
+              frClickerActions.imgDebugBmp.Canvas.Brush.Color := clWhite;
+              frClickerActions.imgDebugBmp.Canvas.Rectangle(0, 0, frClickerActions.imgDebugBmp.Width, frClickerActions.imgDebugBmp.Height);
+
+              //FindControlInputData.DebugBitmap := frClickerActions.imgDebugBmp.Picture.Bitmap;    //section moved above :for j" loop
+              //FindControlInputData.DebugGrid := frClickerActions.imgDebugGrid;
+
+              try
+                SetLength(PartialResultedControlArr, 0);
+                WorkFindControlInputData := FindControlInputData;
+                FindControlOnScreen_Result := FindSubControlOnScreen(AFindSubControlOptions.MatchBitmapAlgorithm,
+                                                                     AFindSubControlOptions.MatchBitmapAlgorithmSettings,
+                                                                     WorkFindControlInputData,
+                                                                     InitialTickCount,
+                                                                     StopAllActionsOnDemandAddr,
+                                                                     PartialResultedControlArr,
+                                                                     DoOnGetGridDrawingOption);
+
+                if FindControlOnScreen_Result or not FindControlInputData.StopSearchOnMismatch then
+                begin
+                  SetActionVarValue('$ActionExecDuration$', IntToStr(GetTickCount64 - InitialTickCount));
+                  if not FindControlOnScreen_Result and not FindControlInputData.StopSearchOnMismatch then
+                    AddToLog('Can''t find the subcontrol (text), but the searching went further, to get the error count. See $ResultedErrorCount$.');
+
+                  if Length(PartialResultedControlArr) = 0 then  //it looks like FindControlOnScreen may return with an empty array and a result set to True
+                    SetLength(PartialResultedControlArr, 1);
+
+                  UpdateActionVarValuesFromControl(PartialResultedControlArr[0], not FindControlInputData.StopSearchOnMismatch);
+                  //frClickerActions.DebuggingInfoAvailable := True;
+                  //
+                  //if AFindSubControlOptions.GetAllControls then
+                  //begin
+                  //  SetAllControl_Handles_FromResultedControlArr(ResultedControlArr);
+                  //  UpdateActionVarValuesFromResultedControlArr(ResultedControlArr);
+                  //end;
+
+                  CopyPartialResultsToFinalResult(ResultedControlArr_Text, PartialResultedControlArr);
+
+                  Result := True;
+                  AddToLog('Found text: "' + AFindSubControlOptions.MatchText + '" in ' + IntToStr(GetTickCount64 - InitialTickCount) + 'ms.');
+
+                  if AFindSubControlOptions.GetAllControls then
+                  begin
+                    AddToLog('Result count: ' + IntToStr(Length(PartialResultedControlArr)));
+                    AddInfoToMatchSource('txt[' + IntToStr(j) + ']', 'txt[' + IntToStr(j) + '][0]', Length(PartialResultedControlArr), MatchSource, DetailedMatchSource); //hardcoded to [0] as no other subfeature is implemented
+                  end;
+
+                  if not AFindSubControlOptions.GetAllControls then
+                    Exit;  //to prevent further searching for bitmap files, primitives or other text profiles
+                end;
+              finally
+                if Length(PartialResultedControlArr) > 0 then
+                  ResultedControl := PartialResultedControlArr[0];  //ResultedControl has some fields, initialized before the search. If no result is found, then call SetDbgImgPos with those values.
+
+                SetDbgImgPos(AFindSubControlOptions, WorkFindControlInputData, ResultedControl, FindControlOnScreen_Result);
+              end;
+            end
+            else  //mbaRenderTextOnly
+            begin
+              ExtBmpName := CExtBmp_Prefix + PathDelim + AActionOptions.ActionName + '_' + AFindSubControlOptions.MatchBitmapText[j].ProfileName + '.bmp';
+              DoOnSaveRenderedBitmap(FindControlInputData.BitmapToSearchFor, ExtBmpName);
+              //
+            end;
+          finally
+            FindControlInputData.BitmapToSearchFor.Free;
+            FindControlInputData.BitmapToSearchOn.Free;
+          end;
+
+          if Result and not AFindSubControlOptions.GetAllControls then
+            Break;
+        end;  //for j  - font profiles
+
+        if AFindSubControlOptions.MatchBitmapAlgorithm = mbaRenderTextOnly then
+        begin
+          Result := True;
+          Exit;  //Done here
         end;
 
-        if Result and not AFindSubControlOptions.GetAllControls then
-          Break;
-      end;  //for j  - font profiles
-
-      if AFindSubControlOptions.MatchBitmapAlgorithm = mbaRenderTextOnly then
-      begin
-        Result := True;
-        Exit;  //Done here
+        AddToLog('MatchSource: ' + MatchSource);
+        AddToLog('DetailedMatchSource: ' + DetailedMatchSource);
+      finally
+        if AFindSubControlOptions.UseTextRenderingInBrowser then
+          LeaveCriticalSection(FBrowserRenderingText.CritSec);
       end;
-
-      AddToLog('MatchSource: ' + MatchSource);
-      AddToLog('DetailedMatchSource: ' + DetailedMatchSource);
     end; //WillMatchBitmapText
 
 
@@ -5326,6 +5389,128 @@ begin
     Result := ExecuteEditTemplateAction(WorkAction.EditTemplateOptions);
   finally
     SetLastActionStatus(Result, False);
+  end;
+end;
+
+
+function SwapRGB(AColor: TColor): TColor;
+var
+  R, G, B: Byte;
+begin
+  RedGreenBlue(AColor, R, G, B);
+  Result := RGBToColor(B, G, R); //swap here
+end;
+
+
+function TActionExecution.GetTextRenderingPage(AHTTPParams: TStrings): string;
+var
+  i: Integer;
+  ProfilesLen: Integer;
+begin
+  EnterCriticalSection(FBrowserRenderingText.CritSec);
+  try
+    Result := '<!DOCTYPE html>'#13#10 +
+              '<html lang="en-US">'#13#10 +
+              '  <meta charset="utf-8">'#13#10;
+
+    ProfilesLen := Length(FBrowserRenderingText.FontProfiles);
+    for i := 0 to ProfilesLen - 1 do
+      Result := Result +
+              '  <canvas id="txt' + IntToStr(i) + '" width="500" height="500"></canvas>'#13#10;
+
+    Result := Result +
+              ''#13#10 +
+              '  <script>'#13#10 +
+              //Insert a timer here, to close the tab after a while. It would be nice to wait for all requests to get their responses.
+
+              '    //FontProfile count is ' + IntToStr(ProfilesLen) + #13#10 +
+              '    ForegroundColors = [';
+    for i := 0 to ProfilesLen - 1 do
+    begin
+      Result := Result + '"#' + IntToHex(SwapRGB(HexToInt(FBrowserRenderingText.FontProfiles[i].ForegroundColor)), 6) + '"';
+      if i < ProfilesLen - 1 then
+        Result := Result + ',';
+    end;
+    Result := Result + '];'#13#10 +
+
+               '    BackgroundColors = [';
+    for i := 0 to ProfilesLen - 1 do
+    begin
+      Result := Result + '"#' + IntToHex(SwapRGB(HexToInt(FBrowserRenderingText.FontProfiles[i].BackgroundColor)), 6) + '"';
+      if i < ProfilesLen - 1 then
+        Result := Result + ',';
+    end;
+    Result := Result + '];'#13#10 +
+
+               '    FontSizes = [';
+    for i := 0 to ProfilesLen - 1 do
+    begin
+      Result := Result + '"' + IntToStr(FBrowserRenderingText.FontProfiles[i].FontSize) + '"';
+      if i < ProfilesLen - 1 then
+        Result := Result + ',';
+    end;
+    Result := Result + '];'#13#10 +
+
+    '    FontNames = [';
+    for i := 0 to ProfilesLen - 1 do
+    begin
+      Result := Result + '"' + FBrowserRenderingText.FontProfiles[i].FontName + '"';
+      if i < ProfilesLen - 1 then
+        Result := Result + ',';
+    end;
+    Result := Result + '];'#13#10 +
+
+               '    FileNames = [';
+    for i := 0 to ProfilesLen - 1 do
+    begin
+      Result := Result + '"' + FBrowserRenderingText.RenderedFileNames[i] + '"';
+      if i < ProfilesLen - 1 then
+        Result := Result + ',';
+    end;
+    Result := Result + '];'#13#10;
+
+    Result := Result +
+              '    for (i = 0; i < ' + IntToStr(ProfilesLen) + '; i++) {'#13#10;
+
+    Result := Result +
+              '      const canvas = document.getElementById("txt" + i);'#13#10 +
+              '      const context = canvas.getContext("2d");'#13#10 +
+              ''#13#10 +
+              '      context.fillStyle = BackgroundColors[i];'#13#10 +
+              '      context.fillRect(0, 0, 500, 500); //background'#13#10 +
+              ''#13#10 +
+              '      context.fillStyle = ForegroundColors[i];'#13#10 +
+              '      context.font = ' +
+              //                           BoolToStr(FBrowserRenderingText.FontProfiles[i].Bold, 'bold ', '') + //no #13#10 here
+              //                           BoolToStr(FBrowserRenderingText.FontProfiles[i].Italic, 'italic ', '') + //no #13#10 here
+              //                           //BoolToStr(FBrowserRenderingText.FontProfiles[i].Underline, 'underline ', '') + //no #13#10 here
+              //                           //BoolToStr(FBrowserRenderingText.FontProfiles[i].StrikeOut, 'strikeout ', '') + //no #13#10 here
+                                           'FontSizes[i] + "px " + FontNames[i];'#13#10 +
+              '      context.textBaseline = "top";'#13#10 +
+              '      context.textAlign = "left";'#13#10 +
+              '      context.fillText("' + FBrowserRenderingText.Txt + '", 0, 0);'#13#10 +
+              ''#13#10 +
+              '      let imgContent = canvas.toDataURL();'#13#10 +
+              '      const xhr = new XMLHttpRequest();'#13#10 +
+              '      xhr.onload = () => {'#13#10 +
+              '        console.log("set image response: " + xhr.response);'#13#10 +
+              '        //window.close();'#13#10 +  //should be called after all requests get their responses, or a timeout
+              '      }'#13#10 +
+              ''#13#10 +
+              '      xhr.onerror = () => {'#13#10 +
+              '        console.log("set image error. Maybe the request string is too long.");'#13#10 +
+              '      }'#13#10 +
+              ''#13#10 +
+              '      xhr.open("GET", "/' + CRECmd_SetRenderedFileB64 + '?StackLevel=' + IntToStr(FStackLevel^) + '&' + CREParam_FileName + '=" + FileNames[i] + "&' + CREParam_Content + '=" + imgContent, true);'#13#10 +
+              '      xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");'#13#10 +
+              '      xhr.send(null);'#13#10;
+    Result := Result +
+              '    } //for'#13#10 +
+              ''#13#10 +
+              '  </script>'#13#10 +
+              '</html>';
+  finally
+    LeaveCriticalSection(FBrowserRenderingText.CritSec);
   end;
 end;
 

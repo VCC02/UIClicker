@@ -69,6 +69,7 @@ const
   CREParam_FileName = 'FileName';
   CREParam_FileLocation = 'FileLocation';
   CREParam_VerifyHashes = 'VerifyHashes';
+  CREParam_Content = 'Content';
 
   CREParam_DecryptionPluginName = 'DecryptionPluginName';
   CREParam_DecompressionPluginName = 'DecompressionPluginName';
@@ -128,6 +129,7 @@ const
   CRECmd_GetListOfRenderedFiles = 'GetListOfRenderedFiles'; //all filenames + hashes in the second in-mem file system (rendered files, received from a rendering server)
   CRECmd_GetRenderedFile = 'GetRenderedFile';  //Retreives a bitmap file from ExternalRenderingInMem file system. Files can be added here by executing $RenderBmpExternally()$ or they can be saved by plugins.
   CRECmd_SetRenderedFile = 'SetRenderedFile';  //Adds or updates a bitmap file to the ExternalRenderingInMem file system.
+  CRECmd_SetRenderedFileB64 = 'SetRenderedFileB64';  //Adds or updates a bitmap file to the ExternalRenderingInMem file system.  It expects a base64 format
   CRECmd_SetMemPluginFile = 'SetMemPluginFile'; //Adds or updates a plugin or a plugin related file to the PluginsInMemFileSystem file system.
   CRECmd_SetMemPluginArchiveFile = 'SetMemPluginArchiveFile'; //Extracts and archive with plugins and their related files, then adds them to the PluginsInMemFileSystem file system.
   CRECmd_GetMemPluginInMemFSCount = 'GetMemPluginInMemFSCount';  //returns array length
@@ -137,6 +139,7 @@ const
   CRECmd_MouseDown = 'MouseDown';
   CRECmd_MouseUp = 'MouseUp';
   CRECmd_PluginCmd = 'PluginCmd'; //requires additional parameters to decide what command to do. It is used to "remote click" plugin debugging buttons.   see CREParam_Plugin_ContinueAll
+  CRECmd_GetTextRenderingPage = 'GetTextRenderingPage';
 
   CRECmd_ExecuteClickAction = 'ExecuteClickAction';
   CRECmd_ExecuteExecAppAction = 'ExecuteExecAppAction';

@@ -61,8 +61,8 @@ const
   //Properties (counts)
   CPropCount_Click = 26;
   CPropCount_ExecApp = 8;
-  CPropCount_FindControl = 15; //34;
-  CPropCount_FindSubControl = 31; //34;
+  CPropCount_FindControl = 15;
+  CPropCount_FindSubControl = 32;
   CPropCount_SetText = 4;
   CPropCount_CallTemplate = 4;
   CPropCount_Sleep = 1;
@@ -132,41 +132,19 @@ const
   CFindControl_MatchClassName_PropIndex = 3;  //property index in FindControl structure
   CFindControl_MatchTextSeparator_PropIndex = 4;
   CFindControl_MatchClassNameSeparator_PropIndex = 5;
-  //CFindControl_MatchBitmapText_PropIndex = 6; //property index in FindControl structure         //to be removed
-  //CFindControl_MatchBitmapFiles_PropIndex = 7; //property index in FindControl structure   - list of files   //to be removed
-  //CFindControl_MatchBitmapAlgorithm_PropIndex = 8;             //to be removed
-  //CFindControl_MatchBitmapAlgorithmSettings_PropIndex = 9;     //to be removed
   CFindControl_InitialRectangle_PropIndex = 6;//10;
   CFindControl_UseWholeScreen_PropIndex = 7;//11;
-  //CFindControl_ColorError_PropIndex = 12;     //to be removed
-  //CFindControl_AllowedColorErrorCount_PropIndex = 13;  //to be removed
   CFindControl_WaitForControlToGoAway_PropIndex = 8;//14;
   CFindControl_StartSearchingWithCachedControl_PropIndex = 9;//15;
   CFindControl_CachedControlLeft_PropIndex = 10;//16;
   CFindControl_CachedControlTop_PropIndex = 11;//17;
-  //CFindControl_MatchPrimitiveFiles_PropIndex = 18; //property index in FindControl structure   - list of files   //to be removed
   CFindControl_GetAllControls_PropIndex = 12;//19;
-  //CFindControl_UseFastSearch_PropIndex = 20;   //to be removed
-  //CFindControl_FastSearchAllowedColorErrorCount_PropIndex = 21;  //to be removed
-  //CFindControl_IgnoredColors_PropIndex = 22; //to be removed
-  //CFindControl_SleepySearch_PropIndex = 23;  //to be removed
-  //CFindControl_StopSearchOnMismatch_PropIndex = 24;  //to be removed
-  //CFindControl_ImageSource_PropIndex = 25;  //to be removed
-  //CFindControl_SourceFileName_PropIndex = 26;  //to be removed
-  //CFindControl_ImageSourceFileNameLocation_PropIndex = 27;  //to be removed
   CFindControl_PrecisionTimeout_PropIndex = 13;//28;  //to be removed
-  //CFindControl_FullBackgroundImageInResult_PropIndex = 29;  //to be removed
-  //CFindControl_MatchByHistogramSettings_PropIndex = 30;  //to be removed
   CFindControl_EvaluateTextCount_PropIndex = 14;//31;
-  //CFindControl_CropFromScreenshot_PropIndex = 32; //to be removed
-  //CFindControl_ThreadCount_PropIndex = 33;   //to be removed
 
   CFindSubControl_MatchCriteria_PropIndex = 0; //property index in FindControl structure
   CFindSubControl_AllowToFail_PropIndex = 1;
   CFindSubControl_MatchText_PropIndex = 2;      //property index in FindControl structure
-  //CFindSubControl_MatchClassName_PropIndex = 3;  //property index in FindControl structure   //to be removed
-  //CFindSubControl_MatchTextSeparator_PropIndex = 4;  //property index in FindControl structure   //to be removed
-  //CFindSubControl_MatchClassNameSeparator_PropIndex = 5;  //property index in FindControl structure   //to be removed
   CFindSubControl_MatchBitmapText_PropIndex = 3;//6; //property index in FindControl structure
   CFindSubControl_MatchBitmapFiles_PropIndex = 4;//7; //property index in FindControl structure   - list of files
   CFindSubControl_MatchBitmapAlgorithm_PropIndex = 5;//8;
@@ -195,6 +173,7 @@ const
   CFindSubControl_EvaluateTextCount_PropIndex = 28;//31;
   CFindSubControl_CropFromScreenshot_PropIndex = 29;//32;
   CFindSubControl_ThreadCount_PropIndex = 30;//33;
+  CFindSubControl_UseTextRenderingInBrowser_PropIndex = 31;
 
   CCallTemplate_TemplateFileName_PropIndex = 0; //property index in CallTemplate structure
   CCallTemplate_ListOfCustomVarsAndValues_PropIndex = 1;
@@ -349,43 +328,21 @@ const
     (Name: 'MatchClassName'; EditorType: etTextWithArrow; DataType: CDTString),        //Description:  Wildcards are available ("*"). Variable replacements are available.  There are applications which can have one or more of their windows, registered with class name, containing a randomly generated string.
     (Name: 'MatchTextSeparator'; EditorType: etText; DataType: CDTString),
     (Name: 'MatchClassNameSeparator'; EditorType: etText; DataType: CDTString),
-    //(Name: '//MatchBitmapText'; EditorType: etFilePathWithArrow; DataType: CDTArray),  //array of other structure.  Count should be 0 for FindControl and >0 for FindSubControl
-    //(Name: '//MatchBitmapFiles'; EditorType: etFilePathWithArrow; DataType: CDTString),  //Description:  Relative paths can be entered using the following format:' + #13#10 + '$TemplateDir$\<SomeBmp.bmp>
-    //(Name: '//MatchBitmapAlgorithm'; EditorType: etEnumCombo; DataType: CDTEnum),
-    //(Name: '//MatchBitmapAlgorithmSettings'; EditorType: etNone; DataType: CDTStructure),    //structure
     (Name: 'InitialRectangle'; EditorType: etNone; DataType: CDTStructure),                 //structure
     (Name: 'UseWholeScreen'; EditorType: etBooleanCombo; DataType: CDTBool),          //Description:  Use the whole screen as search area, if True. Use the current control as search area, if False. The search area is modified by offsets.
-    //(Name: '//ColorError'; EditorType: etSpinText; DataType: CDTString),                  //Description:  When matching bitmaps, which contain antialiasing pixels (see smooth text), some of those pixels will not match. The "Color Error" represents the difference between the color values for the two compared pixels, for each RGB channel. The "Color Error Count" is the allowed number of mismatching pixels. Variable replacements are available.  If at least one of the three color channels (R, G, B) mismatches by at least ColorError, it counts as an error point.
-    //(Name: '//AllowedColorErrorCount'; EditorType: etSpinText; DataType: CDTString),      //Description:  When matching bitmaps, which contain antialiasing pixels (see smooth text), some of those pixels will not match. The "Color Error" represents the difference between the color values for the two compared pixels, for each RGB channel. The "Color Error Count" is the allowed number of mismatching pixels. Variable replacements are available.
     (Name: 'WaitForControlToGoAway'; EditorType: etBooleanCombo; DataType: CDTBool),  //Description:     When checked, the action expects to find no control, using the current settings.
     (Name: 'StartSearchingWithCachedControl'; EditorType: etBooleanCombo; DataType: CDTBool),   //Description: When checked, the control is checked at the specified cached $My_Control_Left$ and $My_Control_Top$ var replacements, before using the search grid.  In order to cache the control coordinates, please add a SetVar action after this one, by assigning:  $My_Control_Left$ to $Control_Left$  and  $My_Control_Top$ to $Control_Top$  where $My_Control_Left$ and $My_Control_Top$ are the cached values. The "Eval before" checkboxes have to be set.  Each Find(Sub)Control action, which uses caching, will have to use its own set of $My_Control_Left$ and $My_Control_Top$ vars.  The cached values are global coordinates, so they will become invalid even for a subcontrol if the parent window is moved.
     (Name: 'CachedControlLeft'; EditorType: etText; DataType: CDTString),
     (Name: 'CachedControlTop'; EditorType: etText; DataType: CDTString),
-    //(Name: '//MatchPrimitiveFiles'; EditorType: etFilePathWithArrow; DataType: CDTString),
     (Name: 'GetAllControls'; EditorType: etBooleanCombo; DataType: CDTBool),
-    //(Name: '//UseFastSearch'; EditorType: etBooleanCombo; DataType: CDTBool),
-    //(Name: '//FastSearchAllowedColorErrorCount'; EditorType: etText; DataType: CDTString),
-    //(Name: '//IgnoredColors'; EditorType: etText; DataType: CDTString),
-    //(Name: '//SleepySearch'; EditorType: etBooleanCombo; DataType: CDTBool),
-    //(Name: '//StopSearchOnMismatch'; EditorType: etBooleanCombo; DataType: CDTBool),
-    //(Name: '//ImageSource'; EditorType: etEnumCombo; DataType: CDTEnum),
-    //(Name: '//SourceFileName'; EditorType: etTextWithArrow; DataType: CDTString),
-    //(Name: '//ImageSourceFileNameLocation'; EditorType: etEnumCombo; DataType: CDTEnum),
     (Name: 'PrecisionTimeout'; EditorType: etBooleanCombo; DataType: CDTBool),
-    //(Name: '//FullBackgroundImageInResult'; EditorType: etBooleanCombo; DataType: CDTBool),
-    //(Name: '//MatchByHistogramSettings'; EditorType: etNone; DataType: CDTStructure),
     (Name: 'EvaluateTextCount'; EditorType: etSpinText; DataType: CDTString)//,
-    //(Name: '//CropFromScreenshot'; EditorType: etBooleanCombo; DataType: CDTBool),
-    //(Name: '//ThreadCount'; EditorType: etText; DataType: CDTString)
   );
 
   CFindSubControlProperties: array[0..CPropCount_FindSubControl - 1] of TOIPropDef = (
     (Name: 'MatchCriteria'; EditorType: etNone; DataType: CDTStructure),               //structure
     (Name: 'AllowToFail'; EditorType: etBooleanCombo; DataType: CDTBool),            //Description:  When checked, the execution flow does not stop if the searched (sub)control is not found.  The "Allowed Failed" response can be used for conditional execution (call action).   When the action is allowed to fail and it fails, $LastAction_Status$ is set to "Allowed Failed".
     (Name: 'MatchText'; EditorType: etTextWithArrow; DataType: CDTString),             //Description:  Wildcards are available ("*"). Variable replacements are available. Used on matching text and BMP text.   For controls, which can have different text values (e.g. a window displaying a different title), these values can be e.g. comma separated. In that case, the text separator is a comma.  For example: a window can display "MyTitle" or "MyTitle (modified)". In that case, the "Match Text" editbox can contain "MyTitle,MyTitle (modified)", without quotes, by using the comma separator.
-    //(Name: '//MatchClassName'; EditorType: etTextWithArrow; DataType: CDTString),        //Description:  Wildcards are available ("*"). Variable replacements are available.  There are applications which can have one or more of their windows, registered with class name, containing a randomly generated string.
-    //(Name: '//MatchTextSeparator'; EditorType: etText; DataType: CDTString),
-    //(Name: '//MatchClassNameSeparator'; EditorType: etText; DataType: CDTString),
     (Name: 'MatchBitmapText'; EditorType: etFilePathWithArrow; DataType: CDTArray),  //array of other structure.  Count should be 0 for FindControl and >0 for FindSubControl
     (Name: 'MatchBitmapFiles'; EditorType: etFilePathWithArrow; DataType: CDTString),  //Description:  Relative paths can be entered using the following format:' + #13#10 + '$TemplateDir$\<SomeBmp.bmp>
     (Name: 'MatchBitmapAlgorithm'; EditorType: etEnumCombo; DataType: CDTEnum),
@@ -413,7 +370,8 @@ const
     (Name: 'MatchByHistogramSettings'; EditorType: etNone; DataType: CDTStructure),
     (Name: 'EvaluateTextCount'; EditorType: etSpinText; DataType: CDTString),
     (Name: 'CropFromScreenshot'; EditorType: etBooleanCombo; DataType: CDTBool),
-    (Name: 'ThreadCount'; EditorType: etText; DataType: CDTString)
+    (Name: 'ThreadCount'; EditorType: etText; DataType: CDTString),
+    (Name: 'UseTextRenderingInBrowser'; EditorType: etBooleanCombo; DataType: CDTBool)
   );
 
   {$IFDEF SubProperties}
@@ -704,43 +662,21 @@ const
     nil, //MatchClassName
     nil, //MatchTextSeparator
     nil, //MatchClassNameSeparator
-    //nil, //MatchBitmapText,
-    //nil, //MatchBitmapFiles
-    //nil, //MatchBitmapAlgorithm
-    //nil, //MatchBitmapAlgorithmSettings,
     GetActionValueStr_FindControl_InitialRectangle,
     nil, //UseWholeScreen
-    //nil, //ColorError
-    //nil, //AllowedColorErrorCount
     nil, //WaitForControlToGoAway
     nil, //StartSearchingWithCachedControl
     nil, //CachedControlLeft
     nil, //CachedControlTop
-    //nil, //MatchPrimitiveFiles
     nil, //GetAllControls
-    //nil, //UseFastSearch
-    //nil, //FastSearchAllowedColorErrorCount
-    //nil, //IgnoredColors
-    //nil, //SleepySearch
-    //nil, //StopSearchOnMismatch
-    //nil, //ImageSource
-    //nil, //SourceFileName
-    //nil, //ImageSourceFileNameLocation
     nil, //PrecisionTimeout
-    //nil, //FullBackgroundImageInResult
-    //nil, //MatchByHistogramSettings
     nil//, //EvaluateTextCount
-    //nil, //CropFromScreenshot
-    //nil  //ThreadCount
   );
 
   CFindSubControlGetActionValueStrFunctions: TGetFindSubControlValueStrFuncArr = (
     GetActionValueStr_FindSubControl_MatchCriteria,
     nil, //AllowToFail
     nil, //MatchText
-    //nil, //MatchClassName
-    //nil, //MatchTextSeparator
-    //nil, //MatchClassNameSeparator
     GetActionValueStr_FindSubControl_MatchBitmapText,
     nil, //MatchBitmapFiles
     nil, //MatchBitmapAlgorithm
@@ -768,7 +704,8 @@ const
     GetActionValueStr_FindSubControl_MatchByHistogramSettings,  //MatchByHistogramSettings
     nil, //EvaluateTextCount
     nil, //CropFromScreenshot
-    nil  //ThreadCount
+    nil, //ThreadCount
+    nil  //UseTextRenderingInBrowser
   );
 
   CCallTemplateGetActionValueStrFunctions: TGetCallTemplateValueStrFuncArr = (
@@ -834,43 +771,21 @@ const
     0, //MatchClassName: string;
     0, //MatchTextSeparator: string;
     0, //MatchClassNameSeparator: string;
-    //0, //MatchBitmapText: TClkFindControlMatchBitmapTextArr;
-    //0, //MatchBitmapFiles: string; //ListOfStrings
-    //Ord(High(TMatchBitmapAlgorithm)) + 1,
-    //0, //MatchBitmapAlgorithmSettings: TMatchBitmapAlgorithmSettings;
     0, //InitialRectangle: TRectString;
     0, //UseWholeScreen: Boolean;
-    //0, //ColorError: string;  //string, to allow var replacements
-    //0, //AllowedColorErrorCount: string;  //Number of pixels allowed to mismatch
     0, //WaitForControlToGoAway: Boolean;
     0, //StartSearchingWithCachedControl: Boolean;
     0, //CachedControlLeft: string;
     0, //CachedControlTop: string;
-    //0, //MatchPrimitiveFiles
     0, //GetAllControls: Boolean;
-    //0, //UseFastSearch: Boolean;
-    //0, //FastSearchAllowedColorErrorCount: Boolean;
-    //0, //IgnoredColors: string;
-    //0, //StopSearchOnMismatch: Boolean;
-    //0, //SleepySearch: Boolean;
-    //Ord(High(TImageSource)) + 1, //ImageSource: TImageSource;
-    //0, //SourceFileName: string;
-    //Ord(High(TImageSourceFileNameLocation)) + 1,  //ImageSourceFileNameLocation: TImageSourceFileNameLocation;
     0, //PrecisionTimeout: Boolean;
-    //0, //FullBackgroundImageInResult
-    //0, //MatchByHistogramSettings: TMatchByHistogramSettings;
     0//, //EvaluateTextCount
-    //0, //CropFromScreenshot
-    //0  //ThreadCount
   );
 
   CFindSubControlEnumCounts: array[0..CPropCount_FindSubControl - 1] of Integer = (
     0, //MatchCriteria: TClkFindSubControlMatchCriteria;
     0, //AllowToFail: Boolean;
     0, //MatchText: string;
-    //0, //MatchClassName: string;
-    //0, //MatchTextSeparator: string;
-    //0, //MatchClassNameSeparator: string;
     0, //MatchBitmapText: TClkFindControlMatchBitmapTextArr;
     0, //MatchBitmapFiles: string; //ListOfStrings
     Ord(High(TMatchBitmapAlgorithm)) + 1,
@@ -898,7 +813,8 @@ const
     0, //MatchByHistogramSettings: TMatchByHistogramSettings;
     0, //EvaluateTextCount
     0, //CropFromScreenshot
-    0  //ThreadCount
+    0, //ThreadCount
+    0  //UseTextRenderingInBrowser
   );
 
 
@@ -1080,43 +996,21 @@ const
     nil, //MatchClassName: string;
     nil, //MatchTextSeparator: string;
     nil, //MatchClassNameSeparator: string;
-    //nil, //MatchBitmapText: TClkFindControlMatchBitmapTextArr;
-    //nil, //MatchBitmapFiles: string; //ListOfStrings
-    //@CMatchBitmapAlgorithmStr,
-    //nil, //MatchBitmapAlgorithmSettings: TMatchBitmapAlgorithmSettings;
     nil, //InitialRectangle: TRectString;
     nil, //UseWholeScreen: Boolean;
-    //nil, //ColorError: string;  //string, to allow var replacements
-    //nil, //AllowedColorErrorCount: string;  //Number of pixels allowed to mismatch
     nil, //WaitForControlToGoAway: Boolean;
     nil, //StartSearchingWithCachedControl: Boolean;
     nil, //CachedControlLeft: string;
     nil, //CachedControlTop: string;
-    //nil, //Primitives
     nil, //GetAllControls
-    //nil, //UseFastSearch
-    //nil, //FastSearchAllowedColorErrorCount
-    //nil, //IgnoredColors
-    //nil, //SleepySearch
-    //nil, //StopSearchOnMismatch
-    //@CImageSourceStr,
-    //nil, //SourceFileName
-    //@CImageSourceFileNameLocationStr,
     nil, //PrecisionTimeout
-    //nil, //FullBackgroundImageInResult
-    //nil, //MatchByHistogramSettings
     nil//, //EvaluateTextCount
-    //nil, //CropFromScreenshot
-    //nil  //ThreadCount
   );
 
   CFindSubControlEnumStrings: array[0..CPropCount_FindSubControl - 1] of PArrayOfString = (
     nil, //MatchCriteria: TClkFindSubControlMatchCriteria;
     nil, //AllowToFail: Boolean;
     nil, //MatchText: string;
-    //nil, //MatchClassName: string;
-    //nil, //MatchTextSeparator: string;
-    //nil, //MatchClassNameSeparator: string;
     nil, //MatchBitmapText: TClkFindControlMatchBitmapTextArr;
     nil, //MatchBitmapFiles: string; //ListOfStrings
     @CMatchBitmapAlgorithmStr,
@@ -1144,7 +1038,8 @@ const
     nil, //MatchByHistogramSettings
     nil, //EvaluateTextCount
     nil, //CropFromScreenshot
-    nil  //ThreadCount
+    nil, //ThreadCount
+    nil  //UseTextRenderingInBrowser
   );
 
   CSetTextEnumStrings: array[0..CPropCount_SetText - 1] of PArrayOfString = (
@@ -1330,43 +1225,21 @@ const
     0, //MatchClassName: string;
     0, //MatchTextSeparator: string;
     0, //MatchClassNameSeparator: string;
-    //2, //MatchBitmapText: TClkFindControlMatchBitmapTextArr;   //althoug unusable without items, the OI allows removing all items
-    //2, //MatchBitmapFiles: string; //ListOfStrings
-    //0, //TMatchBitmapAlgorithm
-    //1, //MatchBitmapAlgorithmSettings: TMatchBitmapAlgorithmSettings;
     1, //InitialRectangle: TRectString;
     0, //UseWholeScreen: Boolean;
-    //0, //ColorError: string;  //string, to allow var replacements
-    //0, //AllowedColorErrorCount: string;  //Number of pixels allowed to mismatch
     0, //WaitForControlToGoAway: Boolean;
     0, //StartSearchingWithCachedControl: Boolean;
     0, //CachedControlLeft: string;
     0, //CachedControlTop: string;
-    //2, //MatchPrimitiveFiles
     0, //GetAllControls: Boolean;
-    //0, //UseFastSearch: Boolean;
-    //0, //FastSearchAllowedColorErrorCount: Boolean;
-    //0, //IgnoredColors: string;
-    //0, //StopSearchOnMismatch: Boolean;
-    //0, //SleepySearch: Boolean;
-    //0, //ImageSource: TImageSource;
-    //0, //SourceFileName: string;
-    //0,  //ImageSourceFileNameLocation: TImageSourceFileNameLocation;
     0, //PrecisionTimeout: Boolean;
-    //0, //FullBackgroundImageInResult
-    //1, //MatchByHistogramSettings: TMatchByHistogramSettings;
     0//, //EvaluateTextCount
-    //0, //CropFromScreenshot
-    //0  //ThreadCount
   );
 
   CFindSubControlIsExp: array[0..CPropCount_FindSubControl - 1] of Integer = (
     1, //MatchCriteria: TClkFindSubControlMatchCriteria;
     0, //AllowToFail: Boolean;
     0, //MatchText: string;
-    //0, //MatchClassName: string;
-    //0, //MatchTextSeparator: string;
-    //0, //MatchClassNameSeparator: string;
     2, //MatchBitmapText: TClkFindControlMatchBitmapTextArr;   //althoug unusable without items, the OI allows removing all items
     2, //MatchBitmapFiles: string; //ListOfStrings
     0, //TMatchBitmapAlgorithm
@@ -1394,7 +1267,8 @@ const
     1, //MatchByHistogramSettings: TMatchByHistogramSettings;
     0, //EvaluateTextCount
     0, //CropFromScreenshot
-    0  //ThreadCount
+    0, //ThreadCount
+    0  //UseTextRenderingInBrowser
   );
 
   CSetTextIsExp: array[0..CPropCount_SetText - 1] of Integer = (
@@ -1525,6 +1399,7 @@ function GetPropertyHint_FindControl_MatchByHistogramSettings: string;
 function GetPropertyHint_FindControl_EvaluateTextCount: string;
 function GetPropertyHint_FindControl_CropFromScreenshot: string;
 function GetPropertyHint_FindControl_ThreadCount: string;
+function GetPropertyHint_FindControl_UseTextRenderingInBrowser: string;
 
 {$IFDEF SubProperties}
   function GetPropertyHint_FindControl_MatchCriteria_WillMatchText: string;
@@ -1646,34 +1521,15 @@ const
     @GetPropertyHint_FindControl_MatchClassName, // MatchClassName: string;
     @GetPropertyHintNoHint, // MatchTextSeparator: string;
     @GetPropertyHintNoHint, // MatchClassNameSeparator: string;
-    //@GetPropertyHint_FindControl_MatchBitmapText, // MatchBitmapText: TClkFindControlMatchBitmapTextArr;
-    //@GetPropertyHint_FindControl_MatchBitmapFiles, // MatchBitmapFiles: string; //ListOfStrings
-    //@GetPropertyHint_FindControl_MatchBitmapAlgorithm, // MatchBitmapAlgorithm: TMatchBitmapAlgorithm;
-    //@GetPropertyHintNoHint, // MatchBitmapAlgorithmSettings: TMatchBitmapAlgorithmSettings;
     @GetPropertyHintNoHint, // InitialRectangle: TRectString;
     @GetPropertyHint_FindControl_UseWholeScreen, // UseWholeScreen: Boolean;
-    //@GetPropertyHint_FindControl_ColorError, // ColorError: string;  //string, to allow var replacements
-    //@GetPropertyHint_FindControl_AllowedColorErrorCount, // AllowedColorErrorCount: string;  //Number of pixels allowed to mismatch
     @GetPropertyHint_FindControl_WaitForControlToGoAway, // WaitForControlToGoAway: Boolean;
     @GetPropertyHint_FindControl_StartSearchingWithCachedControl, // StartSearchingWithCachedControl: Boolean;
     @GetPropertyHint_FindControl_CachedControlLeftTop, // CachedControlLeft: string;
     @GetPropertyHint_FindControl_CachedControlLeftTop, // CachedControlTop: string;
-    //@GetPropertyHint_FindControl_MatchPrimitiveFiles, // MatchPrimitiveFiles: string; //ListOfStrings
     @GetPropertyHint_FindControl_GetAllControls, // GetAllControls: Boolean;
-    //@GetPropertyHint_FindControl_UseFastSearch, // UseFastSearch: Boolean;
-    //@GetPropertyHint_FindControl_FastSearchAllowedColorErrorCount, // FastSearchAllowedColorErrorCount: string;
-    //@GetPropertyHint_FindControl_IgnoredColors, // IgnoredColors: string;
-    //@GetPropertyHint_FindControl_SleepySearch, // SleepySearch: Boolean;
-    //@GetPropertyHint_FindControl_StopSearchOnMismatch, // StopSearchOnMismatch: Boolean;
-    //@GetPropertyHint_FindControl_ImageSource, // ImageSource: TImageSource;
-    //@GetPropertyHint_FindControl_SourceFileName, //SourceFileName: string;
-    //@GetPropertyHint_FindControl_ImageSourceFileNameLocation, //ImageSourceFileNameLocation: TImageSourceFileLocation;
     @GetPropertyHint_FindControl_PrecisionTimeout, //PrecisionTimeout: Boolean
-    //@GetPropertyHint_FindControl_FullBackgroundImageInResult,  //FullBackgroundImageInResult: Boolean
-    //@GetPropertyHint_FindControl_MatchByHistogramSettings, //MatchByHistogramSettings: TMatchByHistogramSettings;
     @GetPropertyHint_FindControl_EvaluateTextCount//, //EvaluateTextCount: string;
-    //@GetPropertyHint_FindControl_CropFromScreenshot, //CropFromScreenshot: Boolean;
-    //@GetPropertyHint_FindControl_ThreadCount //ThreadCount: string;
   );
 
 
@@ -1681,9 +1537,6 @@ const
     @GetPropertyHintNoHint, // MatchCriteria: TClkFindControlMatchCriteria;
     @GetPropertyHint_FindControl_AllowToFail, // AllowToFail: Boolean;
     @GetPropertyHint_FindControl_MatchText, // MatchText: string;
-    //@GetPropertyHint_FindControl_MatchClassName, // MatchClassName: string;
-    //@GetPropertyHintNoHint, // MatchTextSeparator: string;
-    //@GetPropertyHintNoHint, // MatchClassNameSeparator: string;
     @GetPropertyHint_FindControl_MatchBitmapText, // MatchBitmapText: TClkFindControlMatchBitmapTextArr;
     @GetPropertyHint_FindControl_MatchBitmapFiles, // MatchBitmapFiles: string; //ListOfStrings
     @GetPropertyHint_FindControl_MatchBitmapAlgorithm, // MatchBitmapAlgorithm: TMatchBitmapAlgorithm;
@@ -1711,7 +1564,8 @@ const
     @GetPropertyHint_FindControl_MatchByHistogramSettings, //MatchByHistogramSettings: TMatchByHistogramSettings;
     @GetPropertyHint_FindControl_EvaluateTextCount, //EvaluateTextCount: string;
     @GetPropertyHint_FindControl_CropFromScreenshot, //CropFromScreenshot: Boolean;
-    @GetPropertyHint_FindControl_ThreadCount //ThreadCount: string;
+    @GetPropertyHint_FindControl_ThreadCount, //ThreadCount: string;
+    @GetPropertyHint_FindControl_UseTextRenderingInBrowser //UseTextRenderingInBrowser: string;
   );
 
 
@@ -1940,34 +1794,15 @@ begin
     3: Result := AAction^.FindControlOptions.MatchClassName;
     4: Result := AAction^.FindControlOptions.MatchTextSeparator;
     5: Result := AAction^.FindControlOptions.MatchClassNameSeparator;
-    //6: Result := '';  //MatchBitmapText
-    //7: Result := '';  //AAction^.FindControlOptions.MatchBitmapFiles; //ListOfStrings
-    //8: Result := '';  //CMatchBitmapAlgorithmStr[AAction^.FindControlOptions.MatchBitmapAlgorithm];
-    //9: Result := '';  //MatchBitmapAlgorithmSettings
-    6{10}: Result := '';  //InitialRectangle
-    7{11}: Result := BoolToStr(AAction^.FindControlOptions.UseWholeScreen, True);
-    //12: Result := '';  //AAction^.FindControlOptions.ColorError;  //string, to allow var replacements
-    //13: Result := '';  //AAction^.FindControlOptions.AllowedColorErrorCount;  //Number of pixels allowed to mismatch
-    8{14}: Result := BoolToStr(AAction^.FindControlOptions.WaitForControlToGoAway, True);
-    9{15}: Result := BoolToStr(AAction^.FindControlOptions.StartSearchingWithCachedControl, True);
-    10{16}: Result := AAction^.FindControlOptions.CachedControlLeft;
-    11{17}: Result := AAction^.FindControlOptions.CachedControlTop;
-    //18: Result := '';  //AAction^.FindControlOptions.MatchPrimitiveFiles; //ListOfStrings
-    12{19}: Result := BoolToStr(AAction^.FindControlOptions.GetAllControls, True);
-    //20: Result := '';  //BoolToStr(AAction^.FindControlOptions.UseFastSearch, True);
-    //21: Result := '';  //AAction^.FindControlOptions.FastSearchAllowedColorErrorCount;
-    //22: Result := '';  //AAction^.FindControlOptions.IgnoredColors;
-    //23: Result := '';  //BoolToStr(AAction^.FindControlOptions.SleepySearch, True);
-    //24: Result := '';  //BoolToStr(AAction^.FindControlOptions.StopSearchOnMismatch, True);
-    //25: Result := '';  //CImageSourceStr[AAction^.FindControlOptions.ImageSource];
-    //26: Result := '';  //AAction^.FindControlOptions.SourceFileName;
-    //27: Result := '';  //CImageSourceFileNameLocationStr[AAction^.FindControlOptions.ImageSourceFileNameLocation];
-    13{28}: Result := BoolToStr(AAction^.FindControlOptions.PrecisionTimeout, True);
-    //29: Result := '';  //BoolToStr(AAction^.FindControlOptions.FullBackgroundImageInResult, True);
-    //30: Result := '';   //MatchByHistogramSettings
-    14{31}: Result := AAction^.FindControlOptions.EvaluateTextCount;
-    //32: Result := '';  //BoolToStr(AAction^.FindControlOptions.CropFromScreenshot, True);
-    //33: Result := '';  //AAction^.FindControlOptions.ThreadCount;
+    6: Result := '';  //InitialRectangle
+    7: Result := BoolToStr(AAction^.FindControlOptions.UseWholeScreen, True);
+    8: Result := BoolToStr(AAction^.FindControlOptions.WaitForControlToGoAway, True);
+    9: Result := BoolToStr(AAction^.FindControlOptions.StartSearchingWithCachedControl, True);
+    10: Result := AAction^.FindControlOptions.CachedControlLeft;
+    11: Result := AAction^.FindControlOptions.CachedControlTop;
+    12: Result := BoolToStr(AAction^.FindControlOptions.GetAllControls, True);
+    13: Result := BoolToStr(AAction^.FindControlOptions.PrecisionTimeout, True);
+    14: Result := AAction^.FindControlOptions.EvaluateTextCount;
     else
       Result := 'unknown';
   end;
@@ -1991,37 +1826,35 @@ begin
     end;
     1: Result := BoolToStr(AAction^.FindSubControlOptions.AllowToFail, True);
     2: Result := AAction^.FindSubControlOptions.MatchText;
-    //3: Result := AAction^.FindSubControlOptions.MatchClassName;
-    //4: Result := AAction^.FindSubControlOptions.MatchTextSeparator;
-    //5: Result := AAction^.FindSubControlOptions.MatchClassNameSeparator;
-    3{6}: Result := '';  //MatchBitmapText
-    4{7}: Result := AAction^.FindSubControlOptions.MatchBitmapFiles; //ListOfStrings
-    5{8}: Result := CMatchBitmapAlgorithmStr[AAction^.FindSubControlOptions.MatchBitmapAlgorithm];
-    6{9}: Result := '';  //MatchBitmapAlgorithmSettings
-    7{10}: Result := '';  //InitialRectangle
-    8{11}: Result := BoolToStr(AAction^.FindSubControlOptions.UseWholeScreen, True);
-    9{12}: Result := AAction^.FindSubControlOptions.ColorError;  //string, to allow var replacements
-    10{13}: Result := AAction^.FindSubControlOptions.AllowedColorErrorCount;  //Number of pixels allowed to mismatch
-    11{14}: Result := BoolToStr(AAction^.FindSubControlOptions.WaitForControlToGoAway, True);
-    12{15}: Result := BoolToStr(AAction^.FindSubControlOptions.StartSearchingWithCachedControl, True);
-    13{16}: Result := AAction^.FindSubControlOptions.CachedControlLeft;
-    14{17}: Result := AAction^.FindSubControlOptions.CachedControlTop;
-    15{18}: Result := AAction^.FindSubControlOptions.MatchPrimitiveFiles; //ListOfStrings
-    16{19}: Result := BoolToStr(AAction^.FindSubControlOptions.GetAllControls, True);
-    17{20}: Result := BoolToStr(AAction^.FindSubControlOptions.UseFastSearch, True);
-    18{21}: Result := AAction^.FindSubControlOptions.FastSearchAllowedColorErrorCount;
-    19{22}: Result := AAction^.FindSubControlOptions.IgnoredColors;
-    20{23}: Result := BoolToStr(AAction^.FindSubControlOptions.SleepySearch, True);
-    21{24}: Result := BoolToStr(AAction^.FindSubControlOptions.StopSearchOnMismatch, True);
-    22{25}: Result := CImageSourceStr[AAction^.FindSubControlOptions.ImageSource];
-    23{26}: Result := AAction^.FindSubControlOptions.SourceFileName;
-    24{27}: Result := CImageSourceFileNameLocationStr[AAction^.FindSubControlOptions.ImageSourceFileNameLocation];
-    25{28}: Result := BoolToStr(AAction^.FindSubControlOptions.PrecisionTimeout, True);
-    26{29}: Result := BoolToStr(AAction^.FindSubControlOptions.FullBackgroundImageInResult, True);
-    27{30}: Result := '';
-    28{31}: Result := AAction^.FindSubControlOptions.EvaluateTextCount;
-    29{32}: Result := BoolToStr(AAction^.FindSubControlOptions.CropFromScreenshot, True);
-    30{33}: Result := AAction^.FindSubControlOptions.ThreadCount;
+    3: Result := '';  //MatchBitmapText
+    4: Result := AAction^.FindSubControlOptions.MatchBitmapFiles; //ListOfStrings
+    5: Result := CMatchBitmapAlgorithmStr[AAction^.FindSubControlOptions.MatchBitmapAlgorithm];
+    6: Result := '';  //MatchBitmapAlgorithmSettings
+    7: Result := '';  //InitialRectangle
+    8: Result := BoolToStr(AAction^.FindSubControlOptions.UseWholeScreen, True);
+    9: Result := AAction^.FindSubControlOptions.ColorError;  //string, to allow var replacements
+    10: Result := AAction^.FindSubControlOptions.AllowedColorErrorCount;  //Number of pixels allowed to mismatch
+    11: Result := BoolToStr(AAction^.FindSubControlOptions.WaitForControlToGoAway, True);
+    12: Result := BoolToStr(AAction^.FindSubControlOptions.StartSearchingWithCachedControl, True);
+    13: Result := AAction^.FindSubControlOptions.CachedControlLeft;
+    14: Result := AAction^.FindSubControlOptions.CachedControlTop;
+    15: Result := AAction^.FindSubControlOptions.MatchPrimitiveFiles; //ListOfStrings
+    16: Result := BoolToStr(AAction^.FindSubControlOptions.GetAllControls, True);
+    17: Result := BoolToStr(AAction^.FindSubControlOptions.UseFastSearch, True);
+    18: Result := AAction^.FindSubControlOptions.FastSearchAllowedColorErrorCount;
+    19: Result := AAction^.FindSubControlOptions.IgnoredColors;
+    20: Result := BoolToStr(AAction^.FindSubControlOptions.SleepySearch, True);
+    21: Result := BoolToStr(AAction^.FindSubControlOptions.StopSearchOnMismatch, True);
+    22: Result := CImageSourceStr[AAction^.FindSubControlOptions.ImageSource];
+    23: Result := AAction^.FindSubControlOptions.SourceFileName;
+    24: Result := CImageSourceFileNameLocationStr[AAction^.FindSubControlOptions.ImageSourceFileNameLocation];
+    25: Result := BoolToStr(AAction^.FindSubControlOptions.PrecisionTimeout, True);
+    26: Result := BoolToStr(AAction^.FindSubControlOptions.FullBackgroundImageInResult, True);
+    27: Result := '';
+    28: Result := AAction^.FindSubControlOptions.EvaluateTextCount;
+    29: Result := BoolToStr(AAction^.FindSubControlOptions.CropFromScreenshot, True);
+    30: Result := AAction^.FindSubControlOptions.ThreadCount;
+    31: Result := BoolToStr(AAction^.FindSubControlOptions.UseTextRenderingInBrowser, True);
     else
       Result := 'unknown';
   end;
@@ -2633,34 +2466,15 @@ begin
     3: AAction^.FindControlOptions.MatchClassName := NewValue;
     4: AAction^.FindControlOptions.MatchTextSeparator := NewValue;
     5: AAction^.FindControlOptions.MatchClassNameSeparator := NewValue;
-    //6: ;  //MatchBitmapText
-    //7: ;  //AAction^.FindControlOptions.MatchBitmapFiles := NewValue; //ListOfStrings
-    //8: ;  //AAction^.FindControlOptions.MatchBitmapAlgorithm := MatchBitmapAlgorithm_AsStringToValue(NewValue);
-    //9: ;  //MatchBitmapAlgorithmSettings
-    6{10}: ;  //InitialRectangle
-    7{11}: AAction^.FindControlOptions.UseWholeScreen := StrToBool(NewValue);
-    //12: ;  //AAction^.FindControlOptions.ColorError := NewValue;  //string, to allow var replacements
-    //13: ;  //AAction^.FindControlOptions.AllowedColorErrorCount := NewValue;  //Number of pixels allowed to mismatch
-    8{14}: AAction^.FindControlOptions.WaitForControlToGoAway := StrToBool(NewValue);
-    9{15}: AAction^.FindControlOptions.StartSearchingWithCachedControl := StrToBool(NewValue);
-    10{16}: AAction^.FindControlOptions.CachedControlLeft := NewValue;
-    11{17}: AAction^.FindControlOptions.CachedControlTop := NewValue;
-    //18: ;  //AAction^.FindControlOptions.MatchPrimitiveFiles := NewValue; //ListOfStrings
-    12{19}: AAction^.FindControlOptions.GetAllControls := StrToBool(NewValue);
-    //20: ;  //AAction^.FindControlOptions.UseFastSearch := StrToBool(NewValue);
-    //21: ;  //AAction^.FindControlOptions.FastSearchAllowedColorErrorCount := NewValue;
-    //22: ;  //AAction^.FindControlOptions.IgnoredColors := NewValue;
-    //23: ;  //AAction^.FindControlOptions.SleepySearch := StrToBool(NewValue);
-    //24: ;  //AAction^.FindControlOptions.StopSearchOnMismatch := StrToBool(NewValue);
-    //25: ;  //AAction^.FindControlOptions.ImageSource := ImageSource_AsStringToValue(NewValue);
-    //26: ;  //AAction^.FindControlOptions.SourceFileName := NewValue;
-    //27: ;  //AAction^.FindControlOptions.ImageSourceFileNameLocation := ImageSourceFileNameLocation_AsStringToValue(NewValue);
-    13{28}: AAction^.FindControlOptions.PrecisionTimeout := StrToBool(NewValue);
-    //29: ;  //AAction^.FindControlOptions.FullBackgroundImageInResult := StrToBool(NewValue);
-    //30: ;  //MatchByHistogramSettings
-    14{31}: AAction^.FindControlOptions.EvaluateTextCount := NewValue;
-    //32: ;  //AAction^.FindControlOptions.CropFromScreenshot := StrToBool(NewValue);
-    //33: ;  //AAction^.FindControlOptions.ThreadCount := NewValue;
+    6: ;  //InitialRectangle
+    7: AAction^.FindControlOptions.UseWholeScreen := StrToBool(NewValue);
+    8: AAction^.FindControlOptions.WaitForControlToGoAway := StrToBool(NewValue);
+    9: AAction^.FindControlOptions.StartSearchingWithCachedControl := StrToBool(NewValue);
+    10: AAction^.FindControlOptions.CachedControlLeft := NewValue;
+    11: AAction^.FindControlOptions.CachedControlTop := NewValue;
+    12: AAction^.FindControlOptions.GetAllControls := StrToBool(NewValue);
+    13: AAction^.FindControlOptions.PrecisionTimeout := StrToBool(NewValue);
+    14: AAction^.FindControlOptions.EvaluateTextCount := NewValue;
     else
       ;
   end;
@@ -2673,37 +2487,35 @@ begin
     0: ;  //MatchCriteria
     1: AAction^.FindSubControlOptions.AllowToFail := StrToBool(NewValue);
     2: AAction^.FindSubControlOptions.MatchText := NewValue;
-    //3: AAction^.FindSubControlOptions.MatchClassName := NewValue;
-    //4: AAction^.FindSubControlOptions.MatchTextSeparator := NewValue;
-    //5: AAction^.FindSubControlOptions.MatchClassNameSeparator := NewValue;
-    3{6}: ;  //MatchBitmapText
-    4{7}: AAction^.FindSubControlOptions.MatchBitmapFiles := NewValue; //ListOfStrings
-    5{8}: AAction^.FindSubControlOptions.MatchBitmapAlgorithm := MatchBitmapAlgorithm_AsStringToValue(NewValue);
-    6{9}: ;  //MatchBitmapAlgorithmSettings
-    7{10}: ;  //InitialRectangle
-    8{11}: AAction^.FindSubControlOptions.UseWholeScreen := StrToBool(NewValue);
-    9{12}: AAction^.FindSubControlOptions.ColorError := NewValue;  //string, to allow var replacements
-    10{13}: AAction^.FindSubControlOptions.AllowedColorErrorCount := NewValue;  //Number of pixels allowed to mismatch
-    11{14}: AAction^.FindSubControlOptions.WaitForControlToGoAway := StrToBool(NewValue);
-    12{15}: AAction^.FindSubControlOptions.StartSearchingWithCachedControl := StrToBool(NewValue);
-    13{16}: AAction^.FindSubControlOptions.CachedControlLeft := NewValue;
-    14{17}: AAction^.FindSubControlOptions.CachedControlTop := NewValue;
-    15{18}: AAction^.FindSubControlOptions.MatchPrimitiveFiles := NewValue; //ListOfStrings
-    16{19}: AAction^.FindSubControlOptions.GetAllControls := StrToBool(NewValue);
-    17{20}: AAction^.FindSubControlOptions.UseFastSearch := StrToBool(NewValue);
-    18{21}: AAction^.FindSubControlOptions.FastSearchAllowedColorErrorCount := NewValue;
-    19{22}: AAction^.FindSubControlOptions.IgnoredColors := NewValue;
-    20{23}: AAction^.FindSubControlOptions.SleepySearch := StrToBool(NewValue);
-    21{24}: AAction^.FindSubControlOptions.StopSearchOnMismatch := StrToBool(NewValue);
-    22{25}: AAction^.FindSubControlOptions.ImageSource := ImageSource_AsStringToValue(NewValue);
-    23{26}: AAction^.FindSubControlOptions.SourceFileName := NewValue;
-    24{27}: AAction^.FindSubControlOptions.ImageSourceFileNameLocation := ImageSourceFileNameLocation_AsStringToValue(NewValue);
-    25{28}: AAction^.FindSubControlOptions.PrecisionTimeout := StrToBool(NewValue);
-    26{29}: AAction^.FindSubControlOptions.FullBackgroundImageInResult := StrToBool(NewValue);
-    27{30}: ;  //MatchByHistogramSettings
-    28{31}: AAction^.FindSubControlOptions.EvaluateTextCount := NewValue;
-    29{32}: AAction^.FindSubControlOptions.CropFromScreenshot := StrToBool(NewValue);
-    30{33}: AAction^.FindSubControlOptions.ThreadCount := NewValue;
+    3: ;  //MatchBitmapText
+    4: AAction^.FindSubControlOptions.MatchBitmapFiles := NewValue; //ListOfStrings
+    5: AAction^.FindSubControlOptions.MatchBitmapAlgorithm := MatchBitmapAlgorithm_AsStringToValue(NewValue);
+    6: ;  //MatchBitmapAlgorithmSettings
+    7: ;  //InitialRectangle
+    8: AAction^.FindSubControlOptions.UseWholeScreen := StrToBool(NewValue);
+    9: AAction^.FindSubControlOptions.ColorError := NewValue;  //string, to allow var replacements
+    10: AAction^.FindSubControlOptions.AllowedColorErrorCount := NewValue;  //Number of pixels allowed to mismatch
+    11: AAction^.FindSubControlOptions.WaitForControlToGoAway := StrToBool(NewValue);
+    12: AAction^.FindSubControlOptions.StartSearchingWithCachedControl := StrToBool(NewValue);
+    13: AAction^.FindSubControlOptions.CachedControlLeft := NewValue;
+    14: AAction^.FindSubControlOptions.CachedControlTop := NewValue;
+    15: AAction^.FindSubControlOptions.MatchPrimitiveFiles := NewValue; //ListOfStrings
+    16: AAction^.FindSubControlOptions.GetAllControls := StrToBool(NewValue);
+    17: AAction^.FindSubControlOptions.UseFastSearch := StrToBool(NewValue);
+    18: AAction^.FindSubControlOptions.FastSearchAllowedColorErrorCount := NewValue;
+    19: AAction^.FindSubControlOptions.IgnoredColors := NewValue;
+    20: AAction^.FindSubControlOptions.SleepySearch := StrToBool(NewValue);
+    21: AAction^.FindSubControlOptions.StopSearchOnMismatch := StrToBool(NewValue);
+    22: AAction^.FindSubControlOptions.ImageSource := ImageSource_AsStringToValue(NewValue);
+    23: AAction^.FindSubControlOptions.SourceFileName := NewValue;
+    24: AAction^.FindSubControlOptions.ImageSourceFileNameLocation := ImageSourceFileNameLocation_AsStringToValue(NewValue);
+    25: AAction^.FindSubControlOptions.PrecisionTimeout := StrToBool(NewValue);
+    26: AAction^.FindSubControlOptions.FullBackgroundImageInResult := StrToBool(NewValue);
+    27: ;  //MatchByHistogramSettings
+    28: AAction^.FindSubControlOptions.EvaluateTextCount := NewValue;
+    29: AAction^.FindSubControlOptions.CropFromScreenshot := StrToBool(NewValue);
+    30: AAction^.FindSubControlOptions.ThreadCount := NewValue;
+    31: AAction^.FindSubControlOptions.UseTextRenderingInBrowser := StrToBool(NewValue);
     else
       ;
   end;
@@ -3328,6 +3140,14 @@ begin
             'When 0 (or negative), the algorithm runs in the UI thread.' + #13#10 +
             'When greater than 0 (limited to 255), that number is used to create separate threads, which are started together and search on different sections of the background bitmap.' + #13#10 +
             'These sections are horizontal bands, "cropped" from the background bitmap. The performance gain is visible on large backgrounds.';
+end;
+
+
+function GetPropertyHint_FindControl_UseTextRenderingInBrowser: string;
+begin
+  Result := 'When True, the text rendering is done in a web browser, instead of using the internal (GDI) rendering.' + #13#10 +
+            'This is useful to match antialiasing pixels even closer, when a browser-rendered text is to be searched for.' + #13#10 +
+            'Font size, quality and other properties work differently on browser, or are not avaialable.';
 end;
 
 

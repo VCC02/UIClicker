@@ -450,7 +450,7 @@ implementation
 
 uses
   BitmapProcessing, ClickerActionsClient, MouseStuff, ClickerPrimitives,
-  ClickerExtraUtils, Math;
+  ClickerExtraUtils, Math, IdCoderMIME, BitmapConv;
 
 
 const
@@ -2659,6 +2659,10 @@ var
   Fnm: string;
   RemoteState: Boolean;
   TempStr: string;
+  IdDecoderMIME1: TIdDecoderMIME;
+  TempMemStream: TMemoryStream;
+  Png: TPNGImage;
+  Bmp: TBitmap;
 begin
   Result := 'ok';  //default if not setting any result, as in CRECmd_ExecuteCommandAtIndex
 
@@ -3127,6 +3131,103 @@ begin
     Exit;
   end;
 
+  if ASyncObj.FCmd = '/' + CRECmd_GetTextRenderingPage then   //requires StackLevel=0 param
+  begin
+    AddToLog('GetTextRenderingPage...');
+    Result := frClickerActionsArrMain.ActionExecution.GetTextRenderingPage(ASyncObj.FParams);  //after rendering, the browser should upload the bitmaps (or PNGs) via a SetRenderedFile request
+    Exit;
+  end;
+
+  if ASyncObj.FCmd = '/' + CRECmd_SetRenderedFileB64 then
+  begin
+    AddToLog(CRECmd_SetRenderedFile + '...');
+    TempStr := ASyncObj.FParams.Values[CREParam_Content];
+    TempStr := Copy(TempStr, Length('data:image/png;base64,') + 1, MaxInt);
+    Fnm := ASyncObj.FParams.Values[CREParam_FileName];
+
+    if Trim(Fnm) = '' then
+    begin
+      Result := 'Expecting a valid filename.';
+      AddToLog(Result);
+      Exit;
+    end;
+
+    //if ARequestInfo.PostStream.Size > 100 * 1048576 then
+    //begin
+    //  Result := CREResp_FileTooLarge;
+    //  Exit;
+    //end;
+
+    if FRenderedInMemFileSystem.TotalFileSize > 100 * 1048576 then
+    begin
+      Result := CREResp_FileSystemFull;
+      AddToLog(Result);
+      Exit;
+    end;
+
+    if FRenderedInMemFileSystem.TotalFileCount > 200 then
+    begin
+      Result := CREResp_TooManyFilesInFileSystem;
+      AddToLog(Result);
+      Exit;
+    end;
+
+    TempMemStream := TMemoryStream.Create;
+    try
+      AddToLog('Converting received png to bmp.');
+
+      IdDecoderMIME1 := TIdDecoderMIME.Create(nil);
+      try
+        IdDecoderMIME1.DecodeStream(TempStr, TempMemStream);
+        TempMemStream.Position := 0;
+
+        try
+          Png := TPNGImage.Create;
+          Bmp := TBitmap.Create;
+          try
+            try
+              Png.LoadFromStream(TempMemStream);
+              AddToLog('Png w/h: ' + IntToStr(Png.Width) + '/' + IntToStr(Png.Height));
+              WipeBitmap(Bmp, Png.Width, Png.Height);
+              Bmp.Canvas.Draw(0, 0, Png);
+            except
+              on E: Exception do
+              begin
+                AddToLog('Ex on loading received Png: ' + E.Message);
+                WipeBitmap(Bmp, 100, 20);
+                Bmp.Canvas.TextOut(0, 0, 'Png error');
+              end;
+            end;
+
+            TempMemStream.Clear;
+            Bmp.SaveToStream(TempMemStream);
+            TempMemStream.Position := 0;
+          finally
+            Png.Free;
+            Bmp.Free;
+          end;
+        finally
+          AddToLog('Done converting received png to bmp.');
+        end;
+
+        try
+          AddToLog('Saving received file: "' + Fnm + '" to rendered in-mem FS');
+          FRenderedInMemFileSystem.SaveFileToMem(Fnm, TempMemStream.Memory, TempMemStream.Size);   //FRenderedInMemFileSystem is used for bitmaps
+        finally
+          AddToLog('Received file: "' + Fnm + '"  of ' + IntToStr(TempMemStream.Size) + ' bytes in size (for ExtRndInMemFS), as base64.');
+        end;
+      finally
+        IdDecoderMIME1.Free;
+      end;
+    finally
+      TempMemStream.Free;
+      AddToLog('Received png...');
+    end;
+
+    Result := CREResp_ReceivedFile;
+    Exit;
+  end;
+
   {$IFDEF MemPlugins}
     {$IFDEF PluginTesting} //These requests are implemented for testing only. Ideally, they should be part of some unit testing only, not exposed by UIClicker.
       if ASyncObj.FCmd = '/' + CRECmd_GetMemPluginInMemFSCount then
@@ -3394,6 +3495,9 @@ begin
     AResponseInfo.ContentText := GetCompAtPoint(ARequestInfo.Params);
     Exit;
   end;
+
+  if Cmd = '/' + CRECmd_GetTextRenderingPage then
+    AResponseInfo.ContentType := 'text/html';
 
   GettingImage := False;
   if (Cmd = '/' + CRECmd_GetResultedDebugImage) or

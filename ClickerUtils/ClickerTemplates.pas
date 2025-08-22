@@ -243,6 +243,7 @@ begin
     ACustomActions[i].FindSubControlOptions.EvaluateTextCount := '-1';
     ACustomActions[i].FindSubControlOptions.CropFromScreenshot := False;
     ACustomActions[i].FindSubControlOptions.ThreadCount := '2';
+    ACustomActions[i].FindSubControlOptions.UseTextRenderingInBrowser := False;
 
 
     ACustomActions[i].FindSubControlOptions.MatchCriteria.WillMatchBitmapText := Ini.ReadBool(SectionIndex, 'MatchCriteria.WillMatchBitmapText_' + IterationStr, False);
@@ -313,6 +314,7 @@ begin
     ACustomActions[i].FindSubControlOptions.EvaluateTextCount := '-1';
     ACustomActions[i].FindSubControlOptions.CropFromScreenshot := False;
     ACustomActions[i].FindSubControlOptions.ThreadCount := '2';
+    ACustomActions[i].FindSubControlOptions.UseTextRenderingInBrowser := False;
 
 
     SectionIndex := Ini.GetSectionIndex('Actions.SetTextOptions');
@@ -573,6 +575,7 @@ begin
   AFindSubControlOptions.EvaluateTextCount := Ini.ReadString(SectionIndex, 'EvaluateTextCount', '-1');
   AFindSubControlOptions.CropFromScreenshot := Ini.ReadBool(SectionIndex, 'CropFromScreenshot', False);
   AFindSubControlOptions.ThreadCount := Ini.ReadString(SectionIndex, 'ThreadCount', '2');
+  AFindSubControlOptions.UseTextRenderingInBrowser := Ini.ReadBool(SectionIndex, 'UseTextRenderingInBrowser', False);
 end;
 
 
@@ -1074,6 +1077,7 @@ begin
   AStringList.Add('EvaluateTextCount=' + AActionFindSubControlOptions.EvaluateTextCount);
   AStringList.Add('CropFromScreenshot=' + IntToStr(Ord(AActionFindSubControlOptions.CropFromScreenshot)));
   AStringList.Add('ThreadCount=' + AActionFindSubControlOptions.ThreadCount);
+  AStringList.Add('UseTextRenderingInBrowser=' + IntToStr(Ord(AActionFindSubControlOptions.UseTextRenderingInBrowser)));
 end;
 
 
@@ -1293,6 +1297,7 @@ begin
   ADest.EvaluateTextCount := ASrc.EvaluateTextCount;
   ADest.CropFromScreenshot := ASrc.CropFromScreenshot;
   ADest.ThreadCount := ASrc.ThreadCount;
+  ADest.UseTextRenderingInBrowser := ASrc.UseTextRenderingInBrowser;
 end;
 
 

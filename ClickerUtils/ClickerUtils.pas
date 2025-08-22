@@ -331,6 +331,7 @@ type
     EvaluateTextCount: string; //-1 = default (1000 "recursive" evaluations), 0 = no evaluations, >1 = EvaluateTextCount "recursive" evaluations
     CropFromScreenshot: Boolean; //False = use component handle for screenshot, True = use full screenshot, then crop from it.
     ThreadCount: string; //0 (and negative values) = use UI thread (old implementation). 1..255 = how many threads to use.
+    UseTextRenderingInBrowser: Boolean; //If True, MatchBitmapText uses the Internet browser to render text, instead of internal (GDI) rendering.
   end;
 
   TClkSetTextOptions = record

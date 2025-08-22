@@ -1637,6 +1637,7 @@ begin
   AFindSubControlOptions.EvaluateTextCount := '-17';
   AFindSubControlOptions.CropFromScreenshot := True;
   AFindSubControlOptions.ThreadCount := '30';
+  AFindSubControlOptions.UseTextRenderingInBrowser := True;
 
   SetLength(AFindSubControlOptions.MatchBitmapText, 2);
   //no need to call GetDefaultPropertyValues_FindControl_MatchBitmapText();
@@ -1730,7 +1731,8 @@ begin
 
             'EvaluateTextCount' + '=' + '-17' + '&' +
             'CropFromScreenshot' + '=' + 'True' + '&' +
-            'ThreadCount' + '=' + '30'
+            'ThreadCount' + '=' + '30' + '&' +
+            'UseTextRenderingInBrowser' + '=' + 'True'
             ;
 end;
 
