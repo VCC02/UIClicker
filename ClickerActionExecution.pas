@@ -5422,7 +5422,7 @@ begin
               //Insert a timer here, to close the tab after a while. It would be nice to wait for all requests to get their responses.
 
               '    //FontProfile count is ' + IntToStr(ProfilesLen) + #13#10 +
-              '    ForegroundColors = [';
+              '    let ForegroundColors = [';
     for i := 0 to ProfilesLen - 1 do
     begin
       Result := Result + '"#' + IntToHex(SwapRGB(HexToInt(FBrowserRenderingText.FontProfiles[i].ForegroundColor)), 6) + '"';
@@ -5431,7 +5431,7 @@ begin
     end;
     Result := Result + '];'#13#10 +
 
-               '    BackgroundColors = [';
+               '    let BackgroundColors = [';
     for i := 0 to ProfilesLen - 1 do
     begin
       Result := Result + '"#' + IntToHex(SwapRGB(HexToInt(FBrowserRenderingText.FontProfiles[i].BackgroundColor)), 6) + '"';
@@ -5440,7 +5440,7 @@ begin
     end;
     Result := Result + '];'#13#10 +
 
-               '    FontSizes = [';
+               '    let FontSizes = [';
     for i := 0 to ProfilesLen - 1 do
     begin
       Result := Result + {'"' +} IntToStr(FBrowserRenderingText.FontProfiles[i].FontSize) {+ '"'};
@@ -5449,7 +5449,7 @@ begin
     end;
     Result := Result + '];'#13#10 +
 
-    '    FontNames = [';
+               '    let FontNames = [';
     for i := 0 to ProfilesLen - 1 do
     begin
       Result := Result + '"' + FBrowserRenderingText.FontProfiles[i].FontName + '"';
@@ -5458,7 +5458,25 @@ begin
     end;
     Result := Result + '];'#13#10 +
 
-               '    FileNames = [';
+               '    let FontBolds = [';
+    for i := 0 to ProfilesLen - 1 do
+    begin
+      Result := Result + '"' + BoolToStr(FBrowserRenderingText.FontProfiles[i].Bold, 'bold ', '') + '"';
+      if i < ProfilesLen - 1 then
+        Result := Result + ',';
+    end;
+    Result := Result + '];'#13#10 +
+
+               '    let FontItalics = [';
+    for i := 0 to ProfilesLen - 1 do
+    begin
+      Result := Result + '"' + BoolToStr(FBrowserRenderingText.FontProfiles[i].Italic, 'italic ', '') + '"';
+      if i < ProfilesLen - 1 then
+        Result := Result + ',';
+    end;
+    Result := Result + '];'#13#10 +
+
+               '    let FileNames = [';
     for i := 0 to ProfilesLen - 1 do
     begin
       Result := Result + '"' + FBrowserRenderingText.RenderedFileNames[i] + '"';
@@ -5478,13 +5496,7 @@ begin
 
               '      let context = canvas.getContext("2d");'#13#10 +
               ''#13#10 +
-              '      let fontAsStr = '#13#10 +
-              '      context.font = ' +
-              //                           BoolToStr(FBrowserRenderingText.FontProfiles[i].Bold, 'bold ', '') + //no #13#10 here
-              //                           BoolToStr(FBrowserRenderingText.FontProfiles[i].Italic, 'italic ', '') + //no #13#10 here
-              //                           //BoolToStr(FBrowserRenderingText.FontProfiles[i].Underline, 'underline ', '') + //no #13#10 here
-              //                           //BoolToStr(FBrowserRenderingText.FontProfiles[i].StrikeOut, 'strikeout ', '') + //no #13#10 here
-                                           'FontSizes[i] + "pt " + FontNames[i];'#13#10 +
+              '      let fontAsStr = FontBolds[i] + FontItalics[i] + FontSizes[i] + "pt " + FontNames[i];'#13#10 +
               '      context.font = fontAsStr;'#13#10 +
               '      context.textBaseline = "top";'#13#10 +
               '      context.textAlign = "left";'#13#10 +
@@ -5497,8 +5509,6 @@ begin
               '      context.textBaseline = "top";'#13#10 +
               '      context.textAlign = "left";'#13#10 +
 
-              '      //console.log("canvas.width: " + canvas.width);'#13#10 +
-              '      //console.log("canvas.height: " + canvas.height);'#13#10 +
               ''#13#10 +
               '      context.fillStyle = BackgroundColors[i];'#13#10 +
               '      context.fillRect(0, 0, canvas.width - 1, canvas.height - 1); //background'#13#10 +
@@ -5514,14 +5524,14 @@ begin
               '      }'#13#10 +
               ''#13#10 +
               '      xhr.onerror = () => {'#13#10 +
-              '        console.log("set image error. Maybe the request string is too long.");'#13#10 +
+              '        console.error("set image error. Maybe the request string is too long (e.g. > 16384). (Because the rendered text is too complex.)");'#13#10 +
               '      }'#13#10 +
               ''#13#10 +
-              '      //console.log("imgContent len: " + imgContent.length + ":  " + imgContent);'#13#10 +
+
               '      imgContent = imgContent.replaceAll("=", "");'#13#10 +   //the HTTP parameter parser messes things up, because of '='
               '      imgContent = imgContent.replaceAll("+", "");'#13#10 +   //the HTTP parameter parser messes things up, because of '+'
               '      imgContent = imgContent.replaceAll("/", "");'#13#10 +   //the HTTP parameter parser messes things up, because of '/'
-              //'      console.log("imgContent len: " + imgContent.length + ":  " + imgContent);'#13#10 +
+
               '      xhr.open("GET", "/' + CRECmd_SetRenderedFileB64 + '?StackLevel=' + IntToStr(FStackLevel^) + '&' + CREParam_FileName + '=" + FileNames[i] + "&' + CREParam_Content + '=" + imgContent + "&Dummy=dummy", true);'#13#10 +
               '      xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");'#13#10 +
               '      xhr.send(null);'#13#10;
