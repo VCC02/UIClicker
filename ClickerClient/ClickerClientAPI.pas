@@ -262,6 +262,7 @@ type
     EvaluateTextCount: PWideChar;
     CropFromScreenshot: Boolean;
     ThreadCount: PWideChar;
+    UseTextRenderingInBrowser: Boolean;
   end;
 
   PClkFindSubControlOptionsAPI = ^TClkFindSubControlOptionsAPI;
@@ -681,6 +682,8 @@ begin
   ADestClkAction.FindSubControlOptions.CropFromScreenshot := AFindSubControlOptions^.CropFromScreenshot;
   SetPointedContentToString(@string(PWideChar(AFindSubControlOptions^.ThreadCount))[1], ADestClkAction.FindSubControlOptions.ThreadCount);
 
+  ADestClkAction.FindSubControlOptions.UseTextRenderingInBrowser := AFindSubControlOptions^.UseTextRenderingInBrowser;
+
   if AFindSubControlOptions^.MatchBitmapText = nil then  //assume the caller sets this field to nil if not used
     Exit;
   //However, if the field is not nil, then it is either valid or an uninitialized pointer.
@@ -1022,6 +1025,8 @@ begin
   ATempFindSubControlOptionsAPIWS.EvaluateTextCount := WideString(AFindSubControlOptions.EvaluateTextCount);  ADestFindSubControlOptions.EvaluateTextCount := @ATempFindSubControlOptionsAPIWS.EvaluateTextCount[1];// ATempFindSubControlOptionsAPIWS.EvaluateTextCount := WideString(AFindSubControlOptions.EvaluateTextCount);  ADestFindSubControlOptions.EvaluateTextCount := @ATempFindSubControlOptionsAPIWS.EvaluateTextCount[1];// ADestFindSubControlOptions.EvaluateTextCount := @WideString(AFindSubControlOptions.EvaluateTextCount)[1];
   ADestFindSubControlOptions.CropFromScreenshot := AFindSubControlOptions.CropFromScreenshot;
   ATempFindSubControlOptionsAPIWS.ThreadCount := WideString(AFindSubControlOptions.ThreadCount);  ADestFindSubControlOptions.ThreadCount := @ATempFindSubControlOptionsAPIWS.ThreadCount[1];// ADestFindSubControlOptions.ThreadCount := @WideString(AFindSubControlOptions.ThreadCount)[1];
+
+  ADestFindSubControlOptions.UseTextRenderingInBrowser := AFindSubControlOptions.UseTextRenderingInBrowser;
 
   if Length(AFindSubControlOptions.MatchBitmapText) = 0 then
   begin

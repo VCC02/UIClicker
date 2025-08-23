@@ -5445,7 +5445,7 @@ begin
                '    FontSizes = [';
     for i := 0 to ProfilesLen - 1 do
     begin
-      Result := Result + '"' + IntToStr(FBrowserRenderingText.FontProfiles[i].FontSize) + '"';
+      Result := Result + {'"' +} IntToStr(FBrowserRenderingText.FontProfiles[i].FontSize) {+ '"'};
       if i < ProfilesLen - 1 then
         Result := Result + ',';
     end;
@@ -5473,21 +5473,27 @@ begin
               '    for (i = 0; i < ' + IntToStr(ProfilesLen) + '; i++) {'#13#10;
 
     Result := Result +
-              '      const canvas = document.getElementById("txt" + i);'#13#10 +
-              '      const context = canvas.getContext("2d");'#13#10 +
+              '      let canvas = document.getElementById("txt" + i);'#13#10 +
+              '      let context = canvas.getContext("2d");'#13#10 +
               ''#13#10 +
-              '      context.fillStyle = BackgroundColors[i];'#13#10 +
-              '      context.fillRect(0, 0, 500, 30); //background'#13#10 +
-              ''#13#10 +
-              '      context.fillStyle = ForegroundColors[i];'#13#10 +
               '      context.font = ' +
               //                           BoolToStr(FBrowserRenderingText.FontProfiles[i].Bold, 'bold ', '') + //no #13#10 here
               //                           BoolToStr(FBrowserRenderingText.FontProfiles[i].Italic, 'italic ', '') + //no #13#10 here
               //                           //BoolToStr(FBrowserRenderingText.FontProfiles[i].Underline, 'underline ', '') + //no #13#10 here
               //                           //BoolToStr(FBrowserRenderingText.FontProfiles[i].StrikeOut, 'strikeout ', '') + //no #13#10 here
-                                           'FontSizes[i] + "px " + FontNames[i];'#13#10 +
+                                           'FontSizes[i] + "pt " + FontNames[i];'#13#10 +
               '      context.textBaseline = "top";'#13#10 +
               '      context.textAlign = "left";'#13#10 +
+              '      let textMeasurement = context.measureText("' + FBrowserRenderingText.Txt + '");'#13#10 +
+              '      //canvas.width = textMeasurement.width * 2;'#13#10 +
+              '      //canvas.height = FontSizes[i] + 3;'#13#10 +
+              '      //console.log("canvas.width: " + canvas.width);'#13#10 +
+              '      //console.log("canvas.height: " + canvas.height);'#13#10 +
+              ''#13#10 +
+              '      context.fillStyle = BackgroundColors[i];'#13#10 +
+              '      context.fillRect(0, 0, canvas.width - 1, canvas.height - 1); //background'#13#10 +
+              ''#13#10 +
+              '      context.fillStyle = ForegroundColors[i];'#13#10 +
               '      context.fillText("' + FBrowserRenderingText.Txt + '", 0, 0);'#13#10 +
               ''#13#10 +
               '      let imgContent = canvas.toDataURL();'#13#10 +
@@ -5501,11 +5507,12 @@ begin
               '        console.log("set image error. Maybe the request string is too long.");'#13#10 +
               '      }'#13#10 +
               ''#13#10 +
+              '      //console.log("imgContent len: " + imgContent.length + ":  " + imgContent);'#13#10 +
               '      imgContent = imgContent.replaceAll("=", "");'#13#10 +   //the HTTP parameter parser messes things up, because of '='
               '      imgContent = imgContent.replaceAll("+", "");'#13#10 +   //the HTTP parameter parser messes things up, because of '+'
               '      imgContent = imgContent.replaceAll("/", "");'#13#10 +   //the HTTP parameter parser messes things up, because of '/'
-              '      //console.log("imgContent len: " + imgContent.length + ":  " + imgContent);'#13#10 +
-              '      xhr.open("GET", "/' + CRECmd_SetRenderedFileB64 + '?StackLevel=' + IntToStr(FStackLevel^) + '&' + CREParam_FileName + '=" + FileNames[i] + "&' + CREParam_Content + '=" + imgContent, true);'#13#10 +
+              //'      console.log("imgContent len: " + imgContent.length + ":  " + imgContent);'#13#10 +
+              '      xhr.open("GET", "/' + CRECmd_SetRenderedFileB64 + '?StackLevel=' + IntToStr(FStackLevel^) + '&' + CREParam_FileName + '=" + FileNames[i] + "&' + CREParam_Content + '=" + imgContent + "&Dummy=dummy", true);'#13#10 +
               '      xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");'#13#10 +
               '      xhr.send(null);'#13#10;
     Result := Result +

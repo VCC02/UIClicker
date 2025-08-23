@@ -3141,11 +3141,13 @@ begin
   if ASyncObj.FCmd = '/' + CRECmd_SetRenderedFileB64 then
   begin
     AddToLog(CRECmd_SetRenderedFile + '...');
+
     TempStr := ASyncObj.FParams.Values[CREParam_Content];
-    TempStr := Copy(TempStr, Length('data:image/png;base64,') + 1, MaxInt);
     TempStr := StringReplace(TempStr, '', '=', [rfReplaceAll]);
     TempStr := StringReplace(TempStr, '', '+', [rfReplaceAll]);
     TempStr := StringReplace(TempStr, '', '/', [rfReplaceAll]);
+    TempStr := Copy(TempStr, Length('data:image/png;base64,') + 1, MaxInt);
+
     //AddToLog('TempStr=' + TempStr);
     Fnm := ASyncObj.FParams.Values[CREParam_FileName];
 
@@ -3178,25 +3180,19 @@ begin
 
     TempMemStream := TMemoryStream.Create;
     try
-      AddToLog('Converting received png to bmp.');
+      //AddToLog('Converting received png to bmp.');
 
       IdDecoderMIME1 := TIdDecoderMIME.Create(nil);
       try
         IdDecoderMIME1.DecodeStream(TempStr, TempMemStream);
         TempMemStream.Position := 0;
 
-        //SetLength(TempStr, 10);
-        //Move(TempMemStream.Memory^, TempStr[1], Length(TempStr));
-        //AddToLog('DecodedTempStr=' + FastReplace_0To1(TempStr));
-
         try
           Png := TPNGImage.Create;
           Bmp := TBitmap.Create;
           try
             try
-              //AddToLog('Png.IsStreamFormatSupported: ' + BoolToStr(Png.IsStreamFormatSupported(TempMemStream), True));
               Png.LoadFromStream(TempMemStream);
-              //AddToLog('Png w/h: ' + IntToStr(Png.Width) + '/' + IntToStr(Png.Height));
               WipeBitmap(Bmp, Png.Width, Png.Height);
               Bmp.Canvas.Draw(0, 0, Png);
             except
@@ -3216,7 +3212,7 @@ begin
             Bmp.Free;
           end;
         finally
-          AddToLog('Done converting received png to bmp.');
+          //AddToLog('Done converting received png to bmp.');
         end;
 
         try
@@ -3230,7 +3226,7 @@ begin
       end;
     finally
       TempMemStream.Free;
-      AddToLog('Received png...');
+      //AddToLog('Received png...');
     end;
 
     Result := CREResp_ReceivedFile;

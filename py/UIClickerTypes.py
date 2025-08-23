@@ -501,7 +501,8 @@ class TFindSubControlOptions(Structure):
                ("MatchByHistogramSettings", TMatchByHistogramSettings),
                ("EvaluateTextCount", LPCWSTR),
                ("CropFromScreenshot", BOOLEAN),
-               ("ThreadCount", LPCWSTR)
+               ("ThreadCount", LPCWSTR),
+               ("UseTextRenderingInBrowser", BOOLEAN)
                ]
 
 PFindSubControlOptions = ctypes.POINTER(TFindSubControlOptions)
@@ -569,6 +570,7 @@ def GetDefaultFindSubControlOptions():
     FindSubControlOptions.EvaluateTextCount = "-1"
     FindSubControlOptions.CropFromScreenshot = False
     FindSubControlOptions.ThreadCount = "2"
+    FindSubControlOptions.UseTextRenderingInBrowser = False
 
     return FindSubControlOptions
 
