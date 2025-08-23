@@ -5414,12 +5414,10 @@ begin
               '  <meta charset="utf-8">'#13#10;
 
     ProfilesLen := Length(FBrowserRenderingText.FontProfiles);
-    for i := 0 to ProfilesLen - 1 do
-      Result := Result +
-              '  <canvas id="txt' + IntToStr(i) + '" width="500" height="30"></canvas>'#13#10;
 
     Result := Result +
               ''#13#10 +
+              '  <body>'#13#10 +
               '  <script>'#13#10 +
               //Insert a timer here, to close the tab after a while. It would be nice to wait for all requests to get their responses.
 
@@ -5473,20 +5471,32 @@ begin
               '    for (i = 0; i < ' + IntToStr(ProfilesLen) + '; i++) {'#13#10;
 
     Result := Result +
-              '      let canvas = document.getElementById("txt" + i);'#13#10 +
+
+              '      let canvas = document.createElement("canvas");'#13#10 +
+              '      canvas.id = "txt" + i;'#13#10 +
+              '      document.body.appendChild(canvas);'#13#10 +
+
               '      let context = canvas.getContext("2d");'#13#10 +
               ''#13#10 +
+              '      let fontAsStr = '#13#10 +
               '      context.font = ' +
               //                           BoolToStr(FBrowserRenderingText.FontProfiles[i].Bold, 'bold ', '') + //no #13#10 here
               //                           BoolToStr(FBrowserRenderingText.FontProfiles[i].Italic, 'italic ', '') + //no #13#10 here
               //                           //BoolToStr(FBrowserRenderingText.FontProfiles[i].Underline, 'underline ', '') + //no #13#10 here
               //                           //BoolToStr(FBrowserRenderingText.FontProfiles[i].StrikeOut, 'strikeout ', '') + //no #13#10 here
                                            'FontSizes[i] + "pt " + FontNames[i];'#13#10 +
+              '      context.font = fontAsStr;'#13#10 +
               '      context.textBaseline = "top";'#13#10 +
               '      context.textAlign = "left";'#13#10 +
+
               '      let textMeasurement = context.measureText("' + FBrowserRenderingText.Txt + '");'#13#10 +
-              '      //canvas.width = textMeasurement.width * 2;'#13#10 +
-              '      //canvas.height = FontSizes[i] + 3;'#13#10 +
+              '      canvas.width = textMeasurement.width + 3;'#13#10 +
+              '      canvas.height = FontSizes[i] * 1.62;'#13#10 +   //approx 1.62 when using pt, instead of px
+
+              '      context.font = fontAsStr;'#13#10 +     //set font and its properties again, after setting canvas size
+              '      context.textBaseline = "top";'#13#10 +
+              '      context.textAlign = "left";'#13#10 +
+
               '      //console.log("canvas.width: " + canvas.width);'#13#10 +
               '      //console.log("canvas.height: " + canvas.height);'#13#10 +
               ''#13#10 +
@@ -5519,6 +5529,7 @@ begin
               '    } //for'#13#10 +
               ''#13#10 +
               '  </script>'#13#10 +
+              '  </body>'#13#10 +
               '</html>';
   finally
     LeaveCriticalSection(FBrowserRenderingText.CritSec);
