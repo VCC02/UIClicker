@@ -4027,6 +4027,7 @@ end;
 procedure TfrmClickerActions.IdHTTPServer1Connect(AContext: TIdContext);
 begin
   AContext.Connection.Socket.ReadTimeout := 3600000;   //if no bytes are received in 1h, then close the connection
+  AContext.Connection.Socket.MaxLineLength := 1048576;
 end;
 
 

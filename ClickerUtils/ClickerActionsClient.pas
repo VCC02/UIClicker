@@ -91,6 +91,7 @@ const
   CREParam_Var = 'Var';
   CREParam_Value = 'Value';
   CREParam_Cmd = 'Cmd';
+  CREParam_ID = 'ID';
 
   CREParam_TerminateWaitingLoop = 'Loop'; //loop type can be one of the following values: All, Single, Multi
   CREParam_TerminateWaitingLoop_ValueAll = 'All';  //both loops, for single file and multiple files

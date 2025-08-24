@@ -2241,6 +2241,7 @@ var
   FindControlOnScreen_Result: Boolean;
   ExtBmpName: string;
   IsExtBmp: Boolean;
+  TempBmp: TBitmap;
 begin
   Result := False;
 
@@ -2286,15 +2287,23 @@ begin
           FBrowserRenderingText.RequestID := StringReplace(FBrowserRenderingText.RequestID, '=', '_', [rfReplaceAll]);  //maybe another validator (a function) is required
 
           //////////////////////////////////// the connection string and/or method of running the browser (ShellExecute, ExecApp, running an action etc), should be implemented in new properties
-          ShellExecute(0, 'open', PChar('http://127.0.0.1:5444/' + CRECmd_GetTextRenderingPage + '?StackLevel=' + IntToStr(FStackLevel^) + '&ID=' + FBrowserRenderingText.RequestID), '', '', 5);  //SW_SHOW
+          ShellExecute(0, 'open', PChar('http://127.0.0.1:5444/' + CRECmd_GetTextRenderingPage + '?' + CREParam_StackLevel + '=' + IntToStr(FStackLevel^) + '&' + CREParam_ID + '=' + FBrowserRenderingText.RequestID), '', '', 5);  //SW_SHOW
 
-          tk := GetTickCount64;
-          repeat                              // wait for BrowserRendering timeout or all files to be present
-            Application.ProcessMessages;
-            Sleep(1);
-            ////////////////////////// for now, DoOnLoadRenderedBitmap() can be used to find out if the bitmap is available, but it returns the bitmap, instead of just looking for it
-          until GetTickCount64 - tk > 3000; ///////////////////////////////////////WaitingForBrowserTimeout should be a new property.
+          TempBmp := TBitmap.Create;
+          try
+            tk := GetTickCount64;
+            repeat                              // wait for BrowserRendering timeout or all files to be present
+              Application.ProcessMessages;
+              Sleep(1);
 
+              for j := 0 to Length(FBrowserRenderingText.RenderedFileNames) - 1 do
+                if not DoOnLoadRenderedBitmap(TempBmp, FBrowserRenderingText.RenderedFileNames[i]) then  //instad of DoOnLoadRenderedBitmap, there should be a verification for file existence
+                  Continue;
+
+            until GetTickCount64 - tk > 3000; ///////////////////////////////////////WaitingForBrowserTimeout should be a new property.
+          finally
+            TempBmp.Free;
+          end;
         end; //AFindSubControlOptions.UseTextRenderingInBrowser
 
         SetLength(ResultedControlArr, 0);
@@ -5409,6 +5418,9 @@ var
 begin
   EnterCriticalSection(FBrowserRenderingText.CritSec);
   try
+    if AHTTPParams.Values[CREParam_ID] <> FBrowserRenderingText.RequestID then
+      raise Exception.Create('Wrong page ID: ' + AHTTPParams.Values[CREParam_ID] + '.  Expected: ' + FBrowserRenderingText.RequestID);
+
     Result := '<!DOCTYPE html>'#13#10 +
               '<html lang="en-US">'#13#10 +
               '  <meta charset="utf-8">'#13#10;
@@ -5524,7 +5536,7 @@ begin
               '      }'#13#10 +
               ''#13#10 +
               '      xhr.onerror = () => {'#13#10 +
-              '        console.error("set image error. Maybe the request string is too long (e.g. > 16384). (Because the rendered text is too complex.)");'#13#10 +
+              '        console.error("set image error. Maybe the request string is too long (> MaxLineLength). (Because the rendered text is too complex.)");'#13#10 +
               '      }'#13#10 +
               ''#13#10 +
 
