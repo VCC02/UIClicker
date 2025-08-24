@@ -245,6 +245,12 @@ begin
     ACustomActions[i].FindSubControlOptions.ThreadCount := '2';
     ACustomActions[i].FindSubControlOptions.UseTextRenderingInBrowser := False;
 
+    ACustomActions[i].FindSubControlOptions.RenderingInBrowserSettings.RenderingRequestType := rrtShellExecute;
+    ACustomActions[i].FindSubControlOptions.RenderingInBrowserSettings.ReceivingBitmapsTimeout := 3000;
+    ACustomActions[i].FindSubControlOptions.RenderingInBrowserSettings.ActionForSendingRequest := '';
+    ACustomActions[i].FindSubControlOptions.RenderingInBrowserSettings.UsePluginForReceivingBitmaps := False;
+    ACustomActions[i].FindSubControlOptions.RenderingInBrowserSettings.PluginActionForReceivingBitmaps := '';
+    ACustomActions[i].FindSubControlOptions.RenderingInBrowserSettings.FontSizeUnit := fsuPt;
 
     ACustomActions[i].FindSubControlOptions.MatchCriteria.WillMatchBitmapText := Ini.ReadBool(SectionIndex, 'MatchCriteria.WillMatchBitmapText_' + IterationStr, False);
     ACustomActions[i].FindSubControlOptions.MatchCriteria.WillMatchBitmapFiles := Ini.ReadBool(SectionIndex, 'MatchCriteria.WillMatchBitmapFiles_' + IterationStr, False);
@@ -306,16 +312,6 @@ begin
     ACustomActions[i].FindSubControlOptions.ImageSourceFileNameLocation := isflMem;
     ACustomActions[i].FindSubControlOptions.PrecisionTimeout := False;
     ACustomActions[i].FindSubControlOptions.FullBackgroundImageInResult := True;
-
-    ACustomActions[i].FindSubControlOptions.MatchByHistogramSettings.MinPercentColorMatch := '50';
-    ACustomActions[i].FindSubControlOptions.MatchByHistogramSettings.MostSignificantColorCountInSubBmp := '10';
-    ACustomActions[i].FindSubControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp := '15';
-
-    ACustomActions[i].FindSubControlOptions.EvaluateTextCount := '-1';
-    ACustomActions[i].FindSubControlOptions.CropFromScreenshot := False;
-    ACustomActions[i].FindSubControlOptions.ThreadCount := '2';
-    ACustomActions[i].FindSubControlOptions.UseTextRenderingInBrowser := False;
-
 
     SectionIndex := Ini.GetSectionIndex('Actions.SetTextOptions');
     ACustomActions[i].SetTextOptions.Text := Ini.ReadString(SectionIndex, 'Text_' + IterationStr, '');
@@ -576,6 +572,13 @@ begin
   AFindSubControlOptions.CropFromScreenshot := Ini.ReadBool(SectionIndex, 'CropFromScreenshot', False);
   AFindSubControlOptions.ThreadCount := Ini.ReadString(SectionIndex, 'ThreadCount', '2');
   AFindSubControlOptions.UseTextRenderingInBrowser := Ini.ReadBool(SectionIndex, 'UseTextRenderingInBrowser', False);
+
+  AFindSubControlOptions.RenderingInBrowserSettings.RenderingRequestType := TRenderingRequestType(Ord(Ini.ReadInteger(SectionIndex, 'RenderingInBrowserSettings.RenderingRequestType', 0)));
+  AFindSubControlOptions.RenderingInBrowserSettings.ReceivingBitmapsTimeout := Ini.ReadInteger(SectionIndex, 'RenderingInBrowserSettings.ReceivingBitmapsTimeout', 3000);
+  AFindSubControlOptions.RenderingInBrowserSettings.ActionForSendingRequest := Ini.ReadString(SectionIndex, 'RenderingInBrowserSettings.ActionForSendingRequest', '');
+  AFindSubControlOptions.RenderingInBrowserSettings.UsePluginForReceivingBitmaps := Ini.ReadBool(SectionIndex, 'RenderingInBrowserSettings.UsePluginForReceivingBitmaps', False);
+  AFindSubControlOptions.RenderingInBrowserSettings.PluginActionForReceivingBitmaps := Ini.ReadString(SectionIndex, 'RenderingInBrowserSettings.PluginActionForReceivingBitmaps', '');
+  AFindSubControlOptions.RenderingInBrowserSettings.FontSizeUnit := TFontSizeUnit(Ord(Ini.ReadInteger(SectionIndex, 'RenderingInBrowserSettings.FontSizeUnit', 0)));
 end;
 
 
@@ -1078,6 +1081,13 @@ begin
   AStringList.Add('CropFromScreenshot=' + IntToStr(Ord(AActionFindSubControlOptions.CropFromScreenshot)));
   AStringList.Add('ThreadCount=' + AActionFindSubControlOptions.ThreadCount);
   AStringList.Add('UseTextRenderingInBrowser=' + IntToStr(Ord(AActionFindSubControlOptions.UseTextRenderingInBrowser)));
+
+  AStringList.Add('RenderingInBrowserSettings.RenderingRequestType=' + IntToStr(Ord(AActionFindSubControlOptions.RenderingInBrowserSettings.RenderingRequestType)));
+  AStringList.Add('RenderingInBrowserSettings.ReceivingBitmapsTimeout=' + IntToStr(AActionFindSubControlOptions.RenderingInBrowserSettings.ReceivingBitmapsTimeout));
+  AStringList.Add('RenderingInBrowserSettings.ActionForSendingRequest=' + AActionFindSubControlOptions.RenderingInBrowserSettings.ActionForSendingRequest);
+  AStringList.Add('RenderingInBrowserSettings.UsePluginForReceivingBitmaps=' + IntToStr(Ord(AActionFindSubControlOptions.RenderingInBrowserSettings.UsePluginForReceivingBitmaps)));
+  AStringList.Add('RenderingInBrowserSettings.PluginActionForReceivingBitmaps=' + AActionFindSubControlOptions.RenderingInBrowserSettings.PluginActionForReceivingBitmaps);
+  AStringList.Add('RenderingInBrowserSettings.FontSizeUnit=' + IntToStr(Ord(AActionFindSubControlOptions.RenderingInBrowserSettings.FontSizeUnit)));
 end;
 
 
@@ -1298,6 +1308,7 @@ begin
   ADest.CropFromScreenshot := ASrc.CropFromScreenshot;
   ADest.ThreadCount := ASrc.ThreadCount;
   ADest.UseTextRenderingInBrowser := ASrc.UseTextRenderingInBrowser;
+  ADest.RenderingInBrowserSettings := ASrc.RenderingInBrowserSettings;
 end;
 
 

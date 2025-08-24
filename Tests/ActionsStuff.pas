@@ -1638,6 +1638,12 @@ begin
   AFindSubControlOptions.CropFromScreenshot := True;
   AFindSubControlOptions.ThreadCount := '30';
   AFindSubControlOptions.UseTextRenderingInBrowser := True;
+  AFindSubControlOptions.RenderingInBrowserSettings.RenderingRequestType := rrtAction;
+  AFindSubControlOptions.RenderingInBrowserSettings.ReceivingBitmapsTimeout := 8000;
+  AFindSubControlOptions.RenderingInBrowserSettings.ActionForSendingRequest := 'NoAction';
+  AFindSubControlOptions.RenderingInBrowserSettings.UsePluginForReceivingBitmaps := True;
+  AFindSubControlOptions.RenderingInBrowserSettings.PluginActionForReceivingBitmaps := 'DummyAction';
+  AFindSubControlOptions.RenderingInBrowserSettings.FontSizeUnit := fsuPx;
 
   SetLength(AFindSubControlOptions.MatchBitmapText, 2);
   //no need to call GetDefaultPropertyValues_FindControl_MatchBitmapText();
@@ -1732,7 +1738,13 @@ begin
             'EvaluateTextCount' + '=' + '-17' + '&' +
             'CropFromScreenshot' + '=' + 'True' + '&' +
             'ThreadCount' + '=' + '30' + '&' +
-            'UseTextRenderingInBrowser' + '=' + 'True'
+            'UseTextRenderingInBrowser' + '=' + 'True' + '&' +
+            'RenderingInBrowserSettings.RenderingRequestType' + '=' + 'rrtAction' + '&' +
+            'RenderingInBrowserSettings.ReceivingBitmapsTimeout' + '=' + '8000' + '&' +
+            'RenderingInBrowserSettings.PluginActionForReceivingBitmaps' + '=' + 'NoAction' + '&' +
+            'RenderingInBrowserSettings.UsePluginForReceivingBitmaps' + '=' + 'True' + '&' +
+            'RenderingInBrowserSettings.PluginActionForReceivingBitmaps' + '=' + 'DummyAction' + '&' +
+            'RenderingInBrowserSettings.FontSizeUnit' + '=' + 'fsuPx'
             ;
 end;
 

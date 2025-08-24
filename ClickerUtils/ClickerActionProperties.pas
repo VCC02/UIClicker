@@ -280,6 +280,7 @@ begin
 
             'RenderingInBrowserSettings.RenderingRequestType' + '=' + IntToStr(Ord(AFindSubControlOptions.RenderingInBrowserSettings.RenderingRequestType)) + '&' +
             'RenderingInBrowserSettings.ReceivingBitmapsTimeout' + '=' + IntToStr(AFindSubControlOptions.RenderingInBrowserSettings.ReceivingBitmapsTimeout) + '&' +
+            'RenderingInBrowserSettings.ActionForSendingRequest' + '=' + AFindSubControlOptions.RenderingInBrowserSettings.ActionForSendingRequest + '&' +
             'RenderingInBrowserSettings.UsePluginForReceivingBitmaps' + '=' + IntToStr(Ord(AFindSubControlOptions.RenderingInBrowserSettings.UsePluginForReceivingBitmaps)) + '&' +
             'RenderingInBrowserSettings.PluginActionForReceivingBitmaps' + '=' + AFindSubControlOptions.RenderingInBrowserSettings.PluginActionForReceivingBitmaps + '&' +
             'RenderingInBrowserSettings.FontSizeUnit' + '=' + IntToStr(Ord(AFindSubControlOptions.RenderingInBrowserSettings.FontSizeUnit))
@@ -601,9 +602,10 @@ begin
 
             'RenderingInBrowserSettings.RenderingRequestType' + '=' + CDTEnum + '&' +
             'RenderingInBrowserSettings.ReceivingBitmapsTimeout' + '=' + CDTInteger + '&' +
+            'RenderingInBrowserSettings.ActionForSendingRequest' + '=' + CDTString + '&' +
             'RenderingInBrowserSettings.UsePluginForReceivingBitmaps' + '=' + CDTBool + '&' +
             'RenderingInBrowserSettings.PluginActionForReceivingBitmaps' + '=' + CDTString + '&' +
-            'RenderingInBrowserSettings.FontSizeUnit' + '=' + CDTEnum + '&'
+            'RenderingInBrowserSettings.FontSizeUnit' + '=' + CDTEnum
             ;
 end;
 
@@ -981,6 +983,9 @@ var
   Temp_FontSize: Integer;
   Temp_FontQuality: Integer;
   Temp_CropLeft, Temp_CropTop, Temp_CropRight, Temp_CropBottom: string;
+  Temp_RenderingRequestType: Integer;
+  Temp_ReceivingBitmapsTimeout: Integer;
+  Temp_FontSizeUnit: Integer;
   i: Integer;
   Prefix: string;
 begin
@@ -1103,6 +1108,32 @@ begin
     AFindSubControlOptions.MatchBitmapText[i].IgnoreBackgroundColor := AListOfFindSubControlOptionsParams.Values[Prefix + 'IgnoreBackgroundColor'] = '1';
   end;
 
+  AFindSubControlOptions.UseTextRenderingInBrowser := AListOfFindSubControlOptionsParams.Values['UseTextRenderingInBrowser'] = '1'; //assigned here, so it can be used for the next validations
+  if AFindSubControlOptions.UseTextRenderingInBrowser then
+  begin
+    Temp_RenderingRequestType := StrToIntDef(AListOfFindSubControlOptionsParams.Values['RenderingInBrowserSettings.RenderingRequestType'], 0);
+    if (Temp_RenderingRequestType < 0) or (Temp_RenderingRequestType > Ord(High(TRenderingRequestType))) then
+    begin
+      Result := 'RenderingRequestType is out of range.';
+      Exit;
+    end;
+
+    Temp_ReceivingBitmapsTimeout := StrToIntDef(AListOfFindSubControlOptionsParams.Values['RenderingInBrowserSettings.ReceivingBitmapsTimeout'], 0);
+    if (Temp_ReceivingBitmapsTimeout < 0) or (Temp_ReceivingBitmapsTimeout > 3600000) then
+    begin
+      Result := 'ReceivingBitmapsTimeout is out of range.';
+      Exit;
+    end;
+
+    Temp_FontSizeUnit := StrToIntDef(AListOfFindSubControlOptionsParams.Values['RenderingInBrowserSettings.FontSizeUnit'], 0);
+    if (Temp_FontSizeUnit < 0) or (Temp_FontSizeUnit > Ord(High(TFontSizeUnit))) then
+    begin
+      Result := 'FontSizeUnit is out of range.';
+      Exit;
+    end;
+  end;
+
+
   AFindSubControlOptions.MatchBitmapFiles := FastReplace_45ToReturn(AListOfFindSubControlOptionsParams.Values['MatchBitmapFiles']); //ListOfStrings
   AFindSubControlOptions.MatchBitmapAlgorithm := TMatchBitmapAlgorithm(Temp_MatchBitmapAlgorithm);
 
@@ -1172,13 +1203,14 @@ begin
   AFindSubControlOptions.EvaluateTextCount := AListOfFindSubControlOptionsParams.Values['EvaluateTextCount'];
   AFindSubControlOptions.CropFromScreenshot := AListOfFindSubControlOptionsParams.Values['CropFromScreenshot'] = '1';
   AFindSubControlOptions.ThreadCount := AListOfFindSubControlOptionsParams.Values['ThreadCount'];
-  AFindSubControlOptions.UseTextRenderingInBrowser := AListOfFindSubControlOptionsParams.Values['UseTextRenderingInBrowser'] = '1';
+  //AFindSubControlOptions.UseTextRenderingInBrowser := AListOfFindSubControlOptionsParams.Values['UseTextRenderingInBrowser'] = '1';  //assigned above
 
-  AFindSubControlOptions.RenderingInBrowserSettings.RenderingRequestType := TRenderingRequestType(StrToIntDef(AListOfFindSubControlOptionsParams.Values['RenderingInBrowserSettings.RenderingRequestType'], 0));   /////////requires validation
+  AFindSubControlOptions.RenderingInBrowserSettings.RenderingRequestType := TRenderingRequestType(Temp_RenderingRequestType);
   AFindSubControlOptions.RenderingInBrowserSettings.ReceivingBitmapsTimeout := StrToIntDef(AListOfFindSubControlOptionsParams.Values['RenderingInBrowserSettings.ReceivingBitmapsTimeout'], 3000);
+  AFindSubControlOptions.RenderingInBrowserSettings.ActionForSendingRequest := AListOfFindSubControlOptionsParams.Values['PluginActionForReceivingBitmaps.ActionForSendingRequest'];
   AFindSubControlOptions.RenderingInBrowserSettings.UsePluginForReceivingBitmaps := AListOfFindSubControlOptionsParams.Values['RenderingInBrowserSettings.UsePluginForReceivingBitmaps'] = '1';
   AFindSubControlOptions.RenderingInBrowserSettings.PluginActionForReceivingBitmaps := AListOfFindSubControlOptionsParams.Values['PluginActionForReceivingBitmaps.RenderingRequestType'];
-  AFindSubControlOptions.RenderingInBrowserSettings.FontSizeUnit := TFontSizeUnit(StrToIntDef(AListOfFindSubControlOptionsParams.Values['RenderingInBrowserSettings.FontSizeUnit'], 0));
+  AFindSubControlOptions.RenderingInBrowserSettings.FontSizeUnit := TFontSizeUnit(Temp_FontSizeUnit);
 
   AActionOptions.ActionName := AListOfFindSubControlOptionsParams.Values[CPropertyName_ActionName];
   AActionOptions.ActionTimeout := Temp_ActionTimeout;
@@ -1552,6 +1584,7 @@ begin
   AFindSubControlOptions.UseTextRenderingInBrowser := False;
   AFindSubControlOptions.RenderingInBrowserSettings.RenderingRequestType := rrtShellExecute;
   AFindSubControlOptions.RenderingInBrowserSettings.ReceivingBitmapsTimeout := 3000;
+  AFindSubControlOptions.RenderingInBrowserSettings.ActionForSendingRequest := '';
   AFindSubControlOptions.RenderingInBrowserSettings.UsePluginForReceivingBitmaps := False;
   AFindSubControlOptions.RenderingInBrowserSettings.PluginActionForReceivingBitmaps := '';
   AFindSubControlOptions.RenderingInBrowserSettings.FontSizeUnit := fsuPt;

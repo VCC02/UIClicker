@@ -98,7 +98,7 @@ const
   CPropCount_FindSubControlMatchBitmapAlgorithmSettings = 4;
   CPropCount_FindSubControlInitialRectangle = 8;
   CPropCount_FindSubControlMatchByHistogramSettings = 3;
-  CPropCount_FindSubControlRenderingInBrowserSettings = 5;
+  CPropCount_FindSubControlRenderingInBrowserSettings = 6;
 
   CPropCount_CallTemplateLoop = 7;
 
@@ -231,9 +231,10 @@ const
 
   CFindSubControl_RenderingInBrowserSettings_RenderingRequestType_PropItemIndex = 0;
   CFindSubControl_RenderingInBrowserSettings_ReceivingBitmapsTimeout_PropItemIndex = 1;
-  CFindSubControl_RenderingInBrowserSettings_UsePluginForReceivingBitmaps_PropItemIndex = 2;
-  CFindSubControl_RenderingInBrowserSettings_PluginActionForReceivingBitmaps_PropItemIndex = 3;
-  CFindSubControl_RenderingInBrowserSettings_FontSizeUnit_PropItemIndex = 4;
+  CFindSubControl_RenderingInBrowserSettings_ActionForSendingRequest_PropItemIndex = 2;
+  CFindSubControl_RenderingInBrowserSettings_UsePluginForReceivingBitmaps_PropItemIndex = 3;
+  CFindSubControl_RenderingInBrowserSettings_PluginActionForReceivingBitmaps_PropItemIndex = 4;
+  CFindSubControl_RenderingInBrowserSettings_FontSizeUnit_PropItemIndex = 5;
 
   CSetVar_ListOfVarNamesValuesAndEvalBefore_PropItemIndex = 0;
   CSetVar_FailOnException_PropItemIndex = 1;
@@ -454,6 +455,7 @@ const
     CFindSubControl_RenderingInBrowserSettingsProperties: array[0..CPropCount_FindSubControlRenderingInBrowserSettings - 1] of TOIPropDef = (
       (Name: 'RenderingRequestType'; EditorType: etEnumCombo; DataType: CDTEnum),
       (Name: 'ReceivingBitmapsTimeout'; EditorType: etSpinText; DataType: CDTInteger),
+      (Name: 'ActionForSendingRequest'; EditorType: etTextWithArrow; DataType: CDTString),
       (Name: 'UsePluginForReceivingBitmaps'; EditorType: etBooleanCombo; DataType: CDTBool),
       (Name: 'PluginActionForReceivingBitmaps'; EditorType: etTextWithArrow; DataType: CDTString),
       (Name: 'FontSizeUnit'; EditorType: etEnumCombo; DataType: CDTEnum)
@@ -954,6 +956,7 @@ const
     CFindSubControl_RenderingInBrowserSettingsEnumCounts: array[0..CPropCount_FindSubControlRenderingInBrowserSettings - 1] of Integer = (
       Ord(High(TRenderingRequestType)) + 1, //RenderingRequestType: TRenderingRequestType;
       0, //ReceivingBitmapsTimeout: Integer;
+      0, //ActionForSendingRequest: string;
       0, //UsePluginForReceivingBitmaps: Boolean;
       0, //PluginActionForReceivingBitmaps: string;
       Ord(High(TFontSizeUnit)) + 1  //FontSizeUnit: TFontSizeUnit;
@@ -1181,6 +1184,15 @@ const
       nil, //CropRight: string;
       nil, //CropBottom: string;
       nil  //IgnoreBackgroundColor: Boolean;
+    );
+
+    CFindControl_RenderingInBrowserSettingsEnumStrings: array[0..CPropCount_FindSubControlRenderingInBrowserSettings - 1] of PArrayOfString = (
+      @CRenderingRequestTypeStr, //RenderingRequestType: TRenderingRequestType;
+      nil, //ReceivingBitmapsTimeout: Integer;
+      nil, //ActionForSendingRequest: string;
+      nil, //UsePluginForReceivingBitmaps: Boolean;
+      nil, //PluginActionForReceivingBitmaps: string;
+      @CFontSizeUnitStr //FontSizeUnit: TFontSizeUnit;
     );
 
     CCallTemplate_CallTemplateLoopEnumStrings: array[0..CPropCount_CallTemplateLoop - 1] of PArrayOfString = (
@@ -1456,6 +1468,7 @@ function GetPropertyHint_FindControl_RenderingInBrowserSettings: string;
 {$IFDEF SubProperties}
   function GetPropertyHint_FindSubControl_RenderingInBrowserSettings_RenderingRequestType: string;
   function GetPropertyHint_FindSubControl_RenderingInBrowserSettings_ReceivingBitmapsTimeout: string;
+  function GetPropertyHint_FindSubControl_RenderingInBrowserSettings_ActionForSendingRequest: string;
   function GetPropertyHint_FindSubControl_RenderingInBrowserSettings_UsePluginForReceivingBitmaps: string;
   function GetPropertyHint_FindSubControl_RenderingInBrowserSettings_PluginActionForReceivingBitmaps: string;
   function GetPropertyHint_FindSubControl_RenderingInBrowserSettings_FontSizeUnit: string;
@@ -1727,6 +1740,7 @@ const
   CGetPropertyHint_FindSubControlRenderingInBrowserSettings_Items: array[0..CPropCount_FindSubControlRenderingInBrowserSettings - 1] of TPropHintFunc = (
     @GetPropertyHint_FindSubControl_RenderingInBrowserSettings_RenderingRequestType,
     @GetPropertyHint_FindSubControl_RenderingInBrowserSettings_ReceivingBitmapsTimeout,
+    @GetPropertyHint_FindSubControl_RenderingInBrowserSettings_ActionForSendingRequest,
     @GetPropertyHint_FindSubControl_RenderingInBrowserSettings_UsePluginForReceivingBitmaps,
     @GetPropertyHint_FindSubControl_RenderingInBrowserSettings_PluginActionForReceivingBitmaps,
     @GetPropertyHint_FindSubControl_RenderingInBrowserSettings_FontSizeUnit
@@ -2035,9 +2049,10 @@ end;
     case APropertyIndex of
       0: Result := CRenderingRequestTypeStr[AAction^.FindSubControlOptions.RenderingInBrowserSettings.RenderingRequestType];
       1: Result := IntToStr(AAction^.FindSubControlOptions.RenderingInBrowserSettings.ReceivingBitmapsTimeout);
-      2: Result := BoolToStr(AAction^.FindSubControlOptions.RenderingInBrowserSettings.UsePluginForReceivingBitmaps, True);
-      3: Result := AAction^.FindSubControlOptions.RenderingInBrowserSettings.PluginActionForReceivingBitmaps;
-      4: Result := CFontSizeUnitStr[AAction^.FindSubControlOptions.RenderingInBrowserSettings.FontSizeUnit];
+      2: Result := AAction^.FindSubControlOptions.RenderingInBrowserSettings.ActionForSendingRequest;
+      3: Result := BoolToStr(AAction^.FindSubControlOptions.RenderingInBrowserSettings.UsePluginForReceivingBitmaps, True);
+      4: Result := AAction^.FindSubControlOptions.RenderingInBrowserSettings.PluginActionForReceivingBitmaps;
+      5: Result := CFontSizeUnitStr[AAction^.FindSubControlOptions.RenderingInBrowserSettings.FontSizeUnit];
       else
         Result := 'unknown';
     end;
@@ -2733,9 +2748,10 @@ end;
     case APropertyIndex of
       0: AAction^.FindSubControlOptions.RenderingInBrowserSettings.RenderingRequestType := RenderingRequestType_AsStringToValue(NewValue);
       1: AAction^.FindSubControlOptions.RenderingInBrowserSettings.ReceivingBitmapsTimeout := StrToIntDef(NewValue, 3000);
-      2: AAction^.FindSubControlOptions.RenderingInBrowserSettings.UsePluginForReceivingBitmaps := StrToBool(NewValue);
-      3: AAction^.FindSubControlOptions.RenderingInBrowserSettings.PluginActionForReceivingBitmaps := NewValue;
-      4: AAction^.FindSubControlOptions.RenderingInBrowserSettings.FontSizeUnit := FontSizeUnit_AsStringToValue(NewValue);
+      2: AAction^.FindSubControlOptions.RenderingInBrowserSettings.ActionForSendingRequest := NewValue;
+      3: AAction^.FindSubControlOptions.RenderingInBrowserSettings.UsePluginForReceivingBitmaps := StrToBool(NewValue);
+      4: AAction^.FindSubControlOptions.RenderingInBrowserSettings.PluginActionForReceivingBitmaps := NewValue;
+      5: AAction^.FindSubControlOptions.RenderingInBrowserSettings.FontSizeUnit := FontSizeUnit_AsStringToValue(NewValue);
       else
         ;
     end;
@@ -3386,11 +3402,18 @@ end;
               'or using a plugin, which is capable of receiving and "saving" them to the in-mem FS for rendered bitmaps.';
   end;
 
+
   function GetPropertyHint_FindSubControl_RenderingInBrowserSettings_ReceivingBitmapsTimeout: string;
   begin
     Result := 'The time it takes for all bitmaps to be received, from the moment of sending the rendering request (http, action etc).' + #13#10 +
                BitmapRecevingHint + #13#10 +
               'For every font profile, a separate bitmap should be generated and all of them have to be present.';
+  end;
+
+
+  function GetPropertyHint_FindSubControl_RenderingInBrowserSettings_ActionForSendingRequest: string;
+  begin
+    Result := 'Name of an action (ExecApp, CallTemplate or Plugin), from the same template, which is run to send the rendering request.';
   end;
 
 

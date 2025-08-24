@@ -71,6 +71,7 @@ type
     RequestID: string;
     FontProfiles: TClkFindControlMatchBitmapTextArr;  //not all properties will be used in browser rendering
     RenderedFileNames: TStringArray; //this should have the same length as FontProfiles
+    FontSizeUnit: string;
     CritSec: TRTLCriticalSection;
   end;
 
@@ -2286,8 +2287,19 @@ begin
           FBrowserRenderingText.RequestID := StringReplace(FBrowserRenderingText.RequestID, ' ', '_', [rfReplaceAll]);
           FBrowserRenderingText.RequestID := StringReplace(FBrowserRenderingText.RequestID, '=', '_', [rfReplaceAll]);  //maybe another validator (a function) is required
 
-          //////////////////////////////////// the connection string and/or method of running the browser (ShellExecute, ExecApp, running an action etc), should be implemented in new properties
-          ShellExecute(0, 'open', PChar('http://127.0.0.1:5444/' + CRECmd_GetTextRenderingPage + '?' + CREParam_StackLevel + '=' + IntToStr(FStackLevel^) + '&' + CREParam_ID + '=' + FBrowserRenderingText.RequestID), '', '', 5);  //SW_SHOW
+          FBrowserRenderingText.FontSizeUnit := CFontSizeUnitNoPrefixStr[AFindSubControlOptions.RenderingInBrowserSettings.FontSizeUnit];
+
+          if AFindSubControlOptions.RenderingInBrowserSettings.RenderingRequestType = rrtShellExecute then
+            ShellExecute(0, 'open', PChar('http://127.0.0.1:5444/' + CRECmd_GetTextRenderingPage + '?' + CREParam_StackLevel + '=' + IntToStr(FStackLevel^) + '&' + CREParam_ID + '=' + FBrowserRenderingText.RequestID), '', '', 5)  //SW_SHOW
+          else
+          begin  //AFindSubControlOptions
+            if not DoOnExecuteActionByName(AFindSubControlOptions.RenderingInBrowserSettings.ActionForSendingRequest) then
+            begin
+              AddToLog('Sending rendering request from action, failed at "' + AFindSubControlOptions.RenderingInBrowserSettings.ActionForSendingRequest + '" action.');
+              Result := False;
+              Exit;
+            end;
+          end;
 
           TempBmp := TBitmap.Create;
           try
@@ -2300,7 +2312,7 @@ begin
                 if not DoOnLoadRenderedBitmap(TempBmp, FBrowserRenderingText.RenderedFileNames[i]) then  //instad of DoOnLoadRenderedBitmap, there should be a verification for file existence
                   Continue;
 
-            until GetTickCount64 - tk > 3000; ///////////////////////////////////////WaitingForBrowserTimeout should be a new property.
+            until GetTickCount64 - tk > AFindSubControlOptions.RenderingInBrowserSettings.ReceivingBitmapsTimeout;
           finally
             TempBmp.Free;
           end;
@@ -5508,15 +5520,22 @@ begin
 
               '      let context = canvas.getContext("2d");'#13#10 +
               ''#13#10 +
-              '      let fontAsStr = FontBolds[i] + FontItalics[i] + FontSizes[i] + "pt " + FontNames[i];'#13#10 +
+              '      let fontAsStr = FontBolds[i] + FontItalics[i] + FontSizes[i] + "' + FBrowserRenderingText.FontSizeUnit + ' " + FontNames[i];'#13#10 +
               '      context.font = fontAsStr;'#13#10 +
               '      context.textBaseline = "top";'#13#10 +
               '      context.textAlign = "left";'#13#10 +
 
               '      let textMeasurement = context.measureText("' + FBrowserRenderingText.Txt + '");'#13#10 +
-              '      canvas.width = textMeasurement.width + 3;'#13#10 +
-              '      canvas.height = FontSizes[i] * 1.62;'#13#10 +   //approx 1.62 when using pt, instead of px
+              '      canvas.width = textMeasurement.width + 3;'#13#10;
 
+    if FBrowserRenderingText.FontSizeUnit = 'pt' then
+      Result := Result +
+              '      canvas.height = FontSizes[i] * 1.62;'#13#10   //approx 1.62 when using pt, instead of px
+    else
+      Result := Result +
+              '      canvas.height = FontSizes[i];'#13#10;
+
+    Result := Result +
               '      context.font = fontAsStr;'#13#10 +     //set font and its properties again, after setting canvas size
               '      context.textBaseline = "top";'#13#10 +
               '      context.textAlign = "left";'#13#10 +

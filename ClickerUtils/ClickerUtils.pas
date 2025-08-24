@@ -286,6 +286,7 @@ type
   TRenderingInBrowserSettings = record
     RenderingRequestType: TRenderingRequestType;  //If set to rrtAction, UIClicker executes that action and waits for bitmaps. If that action is a Plugin action, it can also handle a custom webpage.
     ReceivingBitmapsTimeout: Integer; //The time it takes for all bitmaps to be received, from the moment of sending the rendering request (http, action etc)
+    ActionForSendingRequest: string; //Name of an action (ExecApp, CallTemplate or Plugin), from the same template, which is run to send the rendering request.
     UsePluginForReceivingBitmaps: Boolean; //Enables using a plugin for receiving bitmaps, instead of using UIClicker's server module. The protocol is plugin specific.
     PluginActionForReceivingBitmaps: string; //Name of a Plugin action, from the same template, which is run to get the rendered bitmaps
     FontSizeUnit: TFontSizeUnit;
@@ -612,6 +613,7 @@ const
   CImageSourceFileNameLocationStr: array[TImageSourceFileNameLocation] of string = ('isflDisk', 'isflMem');
   CRenderingRequestTypeStr: array[TRenderingRequestType] of string = ('rrtShellExecute', 'rrtAction');
   CFontSizeUnitStr: array[TFontSizeUnit] of string = ('fsuPt', 'fsuPx');
+  CFontSizeUnitNoPrefixStr: array[TFontSizeUnit] of string = ('pt', 'px'); //used in JS
   CClkSetTextControlTypeStr: array[TClkSetTextControlType] of string = ('stEditBox', 'stComboBox', 'stKeystrokes');
   CWindowOperationStr: array[TWindowOperation] of string = ('woBringToFront', 'woMoveResize', 'woClose', 'woFitIntoView');
   CSearchForControlModeStr: array[TSearchForControlMode] of string = ('sfcmGenGrid', 'sfcmEnumWindows', 'sfcmFindWindow');

@@ -6694,6 +6694,14 @@ begin
           Exit;
         end;
 
+        CFindSubControl_RenderingInBrowserSettings_PropIndex:
+        begin
+          OldText := GetActionValueStr_FindSubControl_RenderingInBrowserSettings(AEditingAction, AItemIndex);
+          SetActionValueStr_FindSubControl_RenderingInBrowserSettings(AEditingAction, ANewText, AItemIndex);
+          TriggerOnControlsModified(ANewText <> OldText);
+          Exit;
+        end;
+
         else
           ;
       end;
@@ -7165,6 +7173,12 @@ begin
 
       Exit;
     end;
+
+    if APropertyIndex = CFindSubControl_RenderingInBrowserSettings_PropIndex then
+    begin
+      AEnumItemName := CFindControl_RenderingInBrowserSettingsEnumStrings[AItemIndex]^[AEnumItemIndex];
+      Exit;
+    end;
   end;
 
   if ALiveEditingActionType = acCallTemplate then
@@ -7362,6 +7376,13 @@ begin
 
       if (APropertyIndex in [CFindSubControl_MatchByHistogramSettings_PropIndex]) and
          (AEditingAction^.FindSubControlOptions.MatchBitmapAlgorithm <> mbaRawHistogramZones) then
+      begin
+        TargetCanvas.Font.Color := clGray;
+        Exit;
+      end;
+
+      if (APropertyIndex in [CFindSubControl_RenderingInBrowserSettings_PropIndex]) and
+         not AEditingAction^.FindSubControlOptions.UseTextRenderingInBrowser then
       begin
         TargetCanvas.Font.Color := clGray;
         Exit;
@@ -8245,6 +8266,11 @@ begin
           CFindSubControl_MatchByHistogramSettings_PropIndex:
           begin
             AHint := CGetPropertyHint_FindSubControlMatchByHistogramSettings_Items[AItemIndex];
+          end;
+
+          CFindSubControl_RenderingInBrowserSettings_PropIndex:
+          begin
+            AHint := CGetPropertyHint_FindSubControlRenderingInBrowserSettings_Items[AItemIndex];
           end;
         end; //case
       end; //FindControl
@@ -9285,6 +9311,14 @@ begin
         begin
           OldValue := GetActionValueStr_FindSubControl_MatchByHistogramSettings(AEditingAction, AItemIndex);
           SetActionValueStr_FindSubControl_MatchByHistogramSettings(AEditingAction, ANewValue, AItemIndex);
+          TriggerOnControlsModified(ANewValue <> OldValue);
+        end;
+
+      CFindSubControl_RenderingInBrowserSettings_PropIndex:
+        if AItemIndex in [CFindSubControl_RenderingInBrowserSettings_ReceivingBitmapsTimeout_PropItemIndex] then
+        begin
+          OldValue := GetActionValueStr_FindSubControl_RenderingInBrowserSettings(AEditingAction, AItemIndex);
+          SetActionValueStr_FindSubControl_RenderingInBrowserSettings(AEditingAction, ANewValue, AItemIndex);
           TriggerOnControlsModified(ANewValue <> OldValue);
         end;
     end; //case
