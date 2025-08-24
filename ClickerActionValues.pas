@@ -62,7 +62,7 @@ const
   CPropCount_Click = 26;
   CPropCount_ExecApp = 8;
   CPropCount_FindControl = 15;
-  CPropCount_FindSubControl = 32;
+  CPropCount_FindSubControl = 33;
   CPropCount_SetText = 4;
   CPropCount_CallTemplate = 4;
   CPropCount_Sleep = 1;
@@ -98,6 +98,7 @@ const
   CPropCount_FindSubControlMatchBitmapAlgorithmSettings = 4;
   CPropCount_FindSubControlInitialRectangle = 8;
   CPropCount_FindSubControlMatchByHistogramSettings = 3;
+  CPropCount_FindSubControlRenderingInBrowserSettings = 5;
 
   CPropCount_CallTemplateLoop = 7;
 
@@ -174,6 +175,7 @@ const
   CFindSubControl_CropFromScreenshot_PropIndex = 29;//32;
   CFindSubControl_ThreadCount_PropIndex = 30;//33;
   CFindSubControl_UseTextRenderingInBrowser_PropIndex = 31;
+  CFindSubControl_RenderingInBrowserSettings_PropIndex = 32;
 
   CCallTemplate_TemplateFileName_PropIndex = 0; //property index in CallTemplate structure
   CCallTemplate_ListOfCustomVarsAndValues_PropIndex = 1;
@@ -226,6 +228,12 @@ const
   CFindSubControl_MatchByHistogramSettings_MinPercentColorMatch_PropItemIndex = 0;
   CFindSubControl_MatchByHistogramSettings_MostSignificantColorCountInSubBmp_PropItemIndex = 1;
   CFindSubControl_MatchByHistogramSettings_MostSignificantColorCountInBackgroundBmp_PropItemIndex = 2;
+
+  CFindSubControl_RenderingInBrowserSettings_RenderingRequestType_PropItemIndex = 0;
+  CFindSubControl_RenderingInBrowserSettings_ReceivingBitmapsTimeout_PropItemIndex = 1;
+  CFindSubControl_RenderingInBrowserSettings_UsePluginForReceivingBitmaps_PropItemIndex = 2;
+  CFindSubControl_RenderingInBrowserSettings_PluginActionForReceivingBitmaps_PropItemIndex = 3;
+  CFindSubControl_RenderingInBrowserSettings_FontSizeUnit_PropItemIndex = 4;
 
   CSetVar_ListOfVarNamesValuesAndEvalBefore_PropItemIndex = 0;
   CSetVar_FailOnException_PropItemIndex = 1;
@@ -371,7 +379,8 @@ const
     (Name: 'EvaluateTextCount'; EditorType: etSpinText; DataType: CDTString),
     (Name: 'CropFromScreenshot'; EditorType: etBooleanCombo; DataType: CDTBool),
     (Name: 'ThreadCount'; EditorType: etText; DataType: CDTString),
-    (Name: 'UseTextRenderingInBrowser'; EditorType: etBooleanCombo; DataType: CDTBool)
+    (Name: 'UseTextRenderingInBrowser'; EditorType: etBooleanCombo; DataType: CDTBool),
+    (Name: 'RenderingInBrowserSettings'; EditorType: etNone; DataType: CDTStructure)
   );
 
   {$IFDEF SubProperties}
@@ -440,6 +449,14 @@ const
       (Name: 'MinPercentColorMatch'; EditorType: etSpinText; DataType: CDTString),
       (Name: 'MostSignificantColorCountInSubBmp'; EditorType: etSpinText; DataType: CDTString),
       (Name: 'MostSignificantColorCountInBackgroundBmp'; EditorType: etSpinText; DataType: CDTString)
+    );
+
+    CFindSubControl_RenderingInBrowserSettingsProperties: array[0..CPropCount_FindSubControlRenderingInBrowserSettings - 1] of TOIPropDef = (
+      (Name: 'RenderingRequestType'; EditorType: etEnumCombo; DataType: CDTEnum),
+      (Name: 'ReceivingBitmapsTimeout'; EditorType: etSpinText; DataType: CDTInteger),
+      (Name: 'UsePluginForReceivingBitmaps'; EditorType: etBooleanCombo; DataType: CDTBool),
+      (Name: 'PluginActionForReceivingBitmaps'; EditorType: etTextWithArrow; DataType: CDTString),
+      (Name: 'FontSizeUnit'; EditorType: etEnumCombo; DataType: CDTEnum)
     );
   {$ENDIF}
 
@@ -588,6 +605,7 @@ function GetActionValueStr_EditTemplate(AAction: PClkActionRec; APropertyIndex: 
   function GetActionValueStr_FindControl_InitialRectangle(AAction: PClkActionRec; APropertyIndex: Integer): string;
   function GetActionValueStr_FindSubControl_InitialRectangle(AAction: PClkActionRec; APropertyIndex: Integer): string;
   function GetActionValueStr_FindSubControl_MatchByHistogramSettings(AAction: PClkActionRec; APropertyIndex: Integer): string;
+  function GetActionValueStr_FindSubControl_RenderingInBrowserSettings(AAction: PClkActionRec; APropertyIndex: Integer): string;
 
   function GetActionValueStr_CallTemplate_CallTemplateLoop(AAction: PClkActionRec; APropertyIndex: Integer): string;
 {$ENDIF}
@@ -617,6 +635,7 @@ procedure SetActionValueStr_EditTemplate(AAction: PClkActionRec; NewValue: strin
   procedure SetActionValueStr_FindControl_InitialRectangle(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
   procedure SetActionValueStr_FindSubControl_InitialRectangle(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
   procedure SetActionValueStr_FindSubControl_MatchByHistogramSettings(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
+  procedure SetActionValueStr_FindSubControl_RenderingInBrowserSettings(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
 
   procedure SetActionValueStr_CallTemplate_CallTemplateLoop(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
 {$ENDIF}
@@ -705,7 +724,8 @@ const
     nil, //EvaluateTextCount
     nil, //CropFromScreenshot
     nil, //ThreadCount
-    nil  //UseTextRenderingInBrowser
+    nil, //UseTextRenderingInBrowser
+    GetActionValueStr_FindSubControl_RenderingInBrowserSettings  //RenderingInBrowserSettings
   );
 
   CCallTemplateGetActionValueStrFunctions: TGetCallTemplateValueStrFuncArr = (
@@ -814,7 +834,8 @@ const
     0, //EvaluateTextCount
     0, //CropFromScreenshot
     0, //ThreadCount
-    0  //UseTextRenderingInBrowser
+    0, //UseTextRenderingInBrowser
+    0  //RenderingInBrowserSettings: TRenderingInBrowserSettings;
   );
 
 
@@ -930,6 +951,14 @@ const
       0  //IgnoreBackgroundColor: Boolean;
     );
 
+    CFindSubControl_RenderingInBrowserSettingsEnumCounts: array[0..CPropCount_FindSubControlRenderingInBrowserSettings - 1] of Integer = (
+      Ord(High(TRenderingRequestType)) + 1, //RenderingRequestType: TRenderingRequestType;
+      0, //ReceivingBitmapsTimeout: Integer;
+      0, //UsePluginForReceivingBitmaps: Boolean;
+      0, //PluginActionForReceivingBitmaps: string;
+      Ord(High(TFontSizeUnit)) + 1  //FontSizeUnit: TFontSizeUnit;
+    );
+
     CCallTemplate_CallTemplateLoopEnumCounts: array[0..CPropCount_CallTemplateLoop - 1] of Integer = (
       0, //Enabled: Boolean; //When False, the CallTemplate action is executed once, as before. Else, it may be executed or not, based on loop settings.
       0, //Counter: string;
@@ -1039,7 +1068,8 @@ const
     nil, //EvaluateTextCount
     nil, //CropFromScreenshot
     nil, //ThreadCount
-    nil  //UseTextRenderingInBrowser
+    nil, //UseTextRenderingInBrowser
+    nil  //RenderingInBrowserSettings
   );
 
   CSetTextEnumStrings: array[0..CPropCount_SetText - 1] of PArrayOfString = (
@@ -1268,7 +1298,8 @@ const
     0, //EvaluateTextCount
     0, //CropFromScreenshot
     0, //ThreadCount
-    0  //UseTextRenderingInBrowser
+    0, //UseTextRenderingInBrowser
+    1  //RenderingInBrowserSettings: TRenderingInBrowserSettings;
   );
 
   CSetTextIsExp: array[0..CPropCount_SetText - 1] of Integer = (
@@ -1400,6 +1431,7 @@ function GetPropertyHint_FindControl_EvaluateTextCount: string;
 function GetPropertyHint_FindControl_CropFromScreenshot: string;
 function GetPropertyHint_FindControl_ThreadCount: string;
 function GetPropertyHint_FindControl_UseTextRenderingInBrowser: string;
+function GetPropertyHint_FindControl_RenderingInBrowserSettings: string;
 
 {$IFDEF SubProperties}
   function GetPropertyHint_FindControl_MatchCriteria_WillMatchText: string;
@@ -1419,6 +1451,14 @@ function GetPropertyHint_FindControl_UseTextRenderingInBrowser: string;
   function GetPropertyHint_FindSubControl_MatchByHistogramSettings_MinPercentColorMatch: string;
   function GetPropertyHint_FindSubControl_MatchByHistogramSettings_MostSignificantColorCountInSubBmp: string;
   function GetPropertyHint_FindSubControl_MatchByHistogramSettings_MostSignificantColorCountInBackgroundBmp: string;
+{$ENDIF}
+
+{$IFDEF SubProperties}
+  function GetPropertyHint_FindSubControl_RenderingInBrowserSettings_RenderingRequestType: string;
+  function GetPropertyHint_FindSubControl_RenderingInBrowserSettings_ReceivingBitmapsTimeout: string;
+  function GetPropertyHint_FindSubControl_RenderingInBrowserSettings_UsePluginForReceivingBitmaps: string;
+  function GetPropertyHint_FindSubControl_RenderingInBrowserSettings_PluginActionForReceivingBitmaps: string;
+  function GetPropertyHint_FindSubControl_RenderingInBrowserSettings_FontSizeUnit: string;
 {$ENDIF}
 
 
@@ -1565,7 +1605,8 @@ const
     @GetPropertyHint_FindControl_EvaluateTextCount, //EvaluateTextCount: string;
     @GetPropertyHint_FindControl_CropFromScreenshot, //CropFromScreenshot: Boolean;
     @GetPropertyHint_FindControl_ThreadCount, //ThreadCount: string;
-    @GetPropertyHint_FindControl_UseTextRenderingInBrowser //UseTextRenderingInBrowser: string;
+    @GetPropertyHint_FindControl_UseTextRenderingInBrowser, //UseTextRenderingInBrowser: string;
+    @GetPropertyHint_FindControl_RenderingInBrowserSettings //RenderingInBrowserSettings: TRenderingInBrowserSettings;
   );
 
 
@@ -1681,6 +1722,14 @@ const
     @GetPropertyHint_FindSubControl_MatchByHistogramSettings_MinPercentColorMatch, //MinPercentColorMatch
     @GetPropertyHint_FindSubControl_MatchByHistogramSettings_MostSignificantColorCountInSubBmp,  //MostSignificantColorCountInSubBmp
     @GetPropertyHint_FindSubControl_MatchByHistogramSettings_MostSignificantColorCountInBackgroundBmp  //MostSignificantColorCountInBackgroundBmp
+  );
+
+  CGetPropertyHint_FindSubControlRenderingInBrowserSettings_Items: array[0..CPropCount_FindSubControlRenderingInBrowserSettings - 1] of TPropHintFunc = (
+    @GetPropertyHint_FindSubControl_RenderingInBrowserSettings_RenderingRequestType,
+    @GetPropertyHint_FindSubControl_RenderingInBrowserSettings_ReceivingBitmapsTimeout,
+    @GetPropertyHint_FindSubControl_RenderingInBrowserSettings_UsePluginForReceivingBitmaps,
+    @GetPropertyHint_FindSubControl_RenderingInBrowserSettings_PluginActionForReceivingBitmaps,
+    @GetPropertyHint_FindSubControl_RenderingInBrowserSettings_FontSizeUnit
   );
 
 
@@ -1855,6 +1904,7 @@ begin
     29: Result := BoolToStr(AAction^.FindSubControlOptions.CropFromScreenshot, True);
     30: Result := AAction^.FindSubControlOptions.ThreadCount;
     31: Result := BoolToStr(AAction^.FindSubControlOptions.UseTextRenderingInBrowser, True);
+    32: Result := '';
     else
       Result := 'unknown';
   end;
@@ -1974,6 +2024,20 @@ end;
       0: Result := AAction^.FindSubControlOptions.MatchByHistogramSettings.MinPercentColorMatch;
       1: Result := AAction^.FindSubControlOptions.MatchByHistogramSettings.MostSignificantColorCountInSubBmp;
       2: Result := AAction^.FindSubControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp;
+      else
+        Result := 'unknown';
+    end;
+  end;
+
+
+  function GetActionValueStr_FindSubControl_RenderingInBrowserSettings(AAction: PClkActionRec; APropertyIndex: Integer): string;
+  begin
+    case APropertyIndex of
+      0: Result := CRenderingRequestTypeStr[AAction^.FindSubControlOptions.RenderingInBrowserSettings.RenderingRequestType];
+      1: Result := IntToStr(AAction^.FindSubControlOptions.RenderingInBrowserSettings.ReceivingBitmapsTimeout);
+      2: Result := BoolToStr(AAction^.FindSubControlOptions.RenderingInBrowserSettings.UsePluginForReceivingBitmaps, True);
+      3: Result := AAction^.FindSubControlOptions.RenderingInBrowserSettings.PluginActionForReceivingBitmaps;
+      4: Result := CFontSizeUnitStr[AAction^.FindSubControlOptions.RenderingInBrowserSettings.FontSizeUnit];
       else
         Result := 'unknown';
     end;
@@ -2293,6 +2357,34 @@ begin
 end;
 
 
+function RenderingRequestType_AsStringToValue(ARenderingRequestTypeAsString: string): TRenderingRequestType;
+var
+  i: TRenderingRequestType;
+begin
+  Result := rrtShellExecute;
+  for i := Low(TRenderingRequestType) to High(TRenderingRequestType) do
+    if CRenderingRequestTypeStr[i] = ARenderingRequestTypeAsString then
+    begin
+      Result := i;
+      Exit;
+    end;
+end;
+
+
+function FontSizeUnit_AsStringToValue(AFontSizeUnitAsString: string): TFontSizeUnit;
+var
+  i: TFontSizeUnit;
+begin
+  Result := fsuPt;
+  for i := Low(TFontSizeUnit) to High(TFontSizeUnit) do
+    if CFontSizeUnitStr[i] = AFontSizeUnitAsString then
+    begin
+      Result := i;
+      Exit;
+    end;
+end;
+
+
 function ClkSetTextControlType_AsStringToValue(AClkSetTextControlTypeAsString: string): TClkSetTextControlType;
 var
   i: TClkSetTextControlType;
@@ -2516,6 +2608,7 @@ begin
     29: AAction^.FindSubControlOptions.CropFromScreenshot := StrToBool(NewValue);
     30: AAction^.FindSubControlOptions.ThreadCount := NewValue;
     31: AAction^.FindSubControlOptions.UseTextRenderingInBrowser := StrToBool(NewValue);
+    32: ;  //RenderingInBrowserSettings
     else
       ;
   end;
@@ -2629,6 +2722,20 @@ end;
       0: AAction^.FindSubControlOptions.MatchByHistogramSettings.MinPercentColorMatch := NewValue;
       1: AAction^.FindSubControlOptions.MatchByHistogramSettings.MostSignificantColorCountInSubBmp := NewValue;
       2: AAction^.FindSubControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp := NewValue;
+      else
+        ;
+    end;
+  end;
+
+
+  procedure SetActionValueStr_FindSubControl_RenderingInBrowserSettings(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
+  begin
+    case APropertyIndex of
+      0: AAction^.FindSubControlOptions.RenderingInBrowserSettings.RenderingRequestType := RenderingRequestType_AsStringToValue(NewValue);
+      1: AAction^.FindSubControlOptions.RenderingInBrowserSettings.ReceivingBitmapsTimeout := StrToIntDef(NewValue, 3000);
+      2: AAction^.FindSubControlOptions.RenderingInBrowserSettings.UsePluginForReceivingBitmaps := StrToBool(NewValue);
+      3: AAction^.FindSubControlOptions.RenderingInBrowserSettings.PluginActionForReceivingBitmaps := NewValue;
+      4: AAction^.FindSubControlOptions.RenderingInBrowserSettings.FontSizeUnit := FontSizeUnit_AsStringToValue(NewValue);
       else
         ;
     end;
@@ -3116,6 +3223,12 @@ begin
 end;
 
 
+function GetPropertyHint_FindControl_RenderingInBrowserSettings: string;
+begin
+  Result := 'Settings available when rendering text in web browser.';
+end;
+
+
 function GetPropertyHint_FindControl_EvaluateTextCount: string;
 begin
   Result := 'When -1, the searched text is not evaluated either until no more variables are extracted from it, or a hardcoded number of iterations (e.g. 1000) is reached.' + #13#10 +
@@ -3252,6 +3365,52 @@ end;
               'If all of the comparisons are above the configured MinPercentColorMatch value, the algorithm proceeds with "bruteforce" matching in that particular zone.' + #13#10 +
               'The default value is 15 and should be greater than or equal to MostSignificantColorCountInSubBmp.' + #13#10 +
               'This value has to be greater than or equal to MostSignificantColorCountInSubBmp, because the zone to be compared may have a histogram with different significant colors.';
+  end;
+{$ENDIF}
+
+
+{$IFDEF SubProperties}
+  function GetPropertyHint_FindSubControl_RenderingInBrowserSettings_RenderingRequestType: string;
+  begin
+    Result := 'If set to rrtShellExecute, UIClicker sends the request using Win32''s built-in ShellExecute function.' + #13#10 +
+              'This option is limited to the local machine.' + #13#10 +
+              'If set to rrtAction, UIClicker executes that action and waits for bitmaps.' + #13#10 +
+              'If the configured action is a Plugin action, the plugin can also be used to handle a custom webpage.' + #13#10 +
+              'In that case, the plugin should have a property, which points to this FindSubControl action, to get its settings.';
+  end;
+
+
+  function BitmapRecevingHint: string;
+  begin
+    Result := 'UIClicker expects the bitmaps to be received either via SetRenderedFileB64 requests (in server mode),'  + #13#10 +
+              'or using a plugin, which is capable of receiving and "saving" them to the in-mem FS for rendered bitmaps.';
+  end;
+
+  function GetPropertyHint_FindSubControl_RenderingInBrowserSettings_ReceivingBitmapsTimeout: string;
+  begin
+    Result := 'The time it takes for all bitmaps to be received, from the moment of sending the rendering request (http, action etc).' + #13#10 +
+               BitmapRecevingHint + #13#10 +
+              'For every font profile, a separate bitmap should be generated and all of them have to be present.';
+  end;
+
+
+  function GetPropertyHint_FindSubControl_RenderingInBrowserSettings_UsePluginForReceivingBitmaps: string;
+  begin
+    Result := 'Enables using a plugin for receiving bitmaps, instead of using UIClicker''s server module. The protocol is plugin specific.' + #13#10 +
+               BitmapRecevingHint + #13#10 +
+              'When set to True, the PluginActionForReceivingBitmaps property must be set to an existing configured Plugin action.';
+  end;
+
+
+  function GetPropertyHint_FindSubControl_RenderingInBrowserSettings_PluginActionForReceivingBitmaps: string;
+  begin
+    Result := 'Name of a Plugin action, from the same template, which is run to get the rendered bitmaps.';
+  end;
+
+
+  function GetPropertyHint_FindSubControl_RenderingInBrowserSettings_FontSizeUnit: string;
+  begin
+    Result := 'Can be points or pixels. When set to points, the font size is approximately the same size as rendered on desktop.';
   end;
 {$ENDIF}
 

@@ -280,6 +280,17 @@ type
     MostSignificantColorCountInBackgroundBmp: string;
   end;
 
+  TRenderingRequestType = (rrtShellExecute, rrtAction);  //rrtShellExecute works on Windows only and on the same machine.  rrtAction can be ExecApp, Plugin or CallTemplate.
+  TFontSizeUnit = (fsuPt, fsuPx);
+
+  TRenderingInBrowserSettings = record
+    RenderingRequestType: TRenderingRequestType;  //If set to rrtAction, UIClicker executes that action and waits for bitmaps. If that action is a Plugin action, it can also handle a custom webpage.
+    ReceivingBitmapsTimeout: Integer; //The time it takes for all bitmaps to be received, from the moment of sending the rendering request (http, action etc)
+    UsePluginForReceivingBitmaps: Boolean; //Enables using a plugin for receiving bitmaps, instead of using UIClicker's server module. The protocol is plugin specific.
+    PluginActionForReceivingBitmaps: string; //Name of a Plugin action, from the same template, which is run to get the rendered bitmaps
+    FontSizeUnit: TFontSizeUnit;
+  end;
+
   TClkFindControlOptions = record
     MatchCriteria: TClkFindControlMatchCriteria;
     AllowToFail: Boolean;
@@ -332,6 +343,7 @@ type
     CropFromScreenshot: Boolean; //False = use component handle for screenshot, True = use full screenshot, then crop from it.
     ThreadCount: string; //0 (and negative values) = use UI thread (old implementation). 1..255 = how many threads to use.
     UseTextRenderingInBrowser: Boolean; //If True, MatchBitmapText uses the Internet browser to render text, instead of internal (GDI) rendering.
+    RenderingInBrowserSettings: TRenderingInBrowserSettings;
   end;
 
   TClkSetTextOptions = record
@@ -598,6 +610,8 @@ const
   CMatchBitmapAlgorithmStr: array[TMatchBitmapAlgorithm] of string = ('mbaBruteForce', 'mbaXYMultipleAndOffsets', 'mbaRawHistogramZones', 'mbaBruteForceOnGPU', 'mbaRenderTextOnly');
   CImageSourceStr: array[TImageSource] of string = ('isScreenshot', 'isFile');
   CImageSourceFileNameLocationStr: array[TImageSourceFileNameLocation] of string = ('isflDisk', 'isflMem');
+  CRenderingRequestTypeStr: array[TRenderingRequestType] of string = ('rrtShellExecute', 'rrtAction');
+  CFontSizeUnitStr: array[TFontSizeUnit] of string = ('fsuPt', 'fsuPx');
   CClkSetTextControlTypeStr: array[TClkSetTextControlType] of string = ('stEditBox', 'stComboBox', 'stKeystrokes');
   CWindowOperationStr: array[TWindowOperation] of string = ('woBringToFront', 'woMoveResize', 'woClose', 'woFitIntoView');
   CSearchForControlModeStr: array[TSearchForControlMode] of string = ('sfcmGenGrid', 'sfcmEnumWindows', 'sfcmFindWindow');

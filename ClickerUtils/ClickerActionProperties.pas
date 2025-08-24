@@ -276,7 +276,13 @@ begin
             'EvaluateTextCount' + '=' + AFindSubControlOptions.EvaluateTextCount + '&' +
             'CropFromScreenshot' + '=' + IntToStr(Ord(AFindSubControlOptions.CropFromScreenshot)) + '&' +
             'ThreadCount' + '=' + AFindSubControlOptions.ThreadCount + '&' +
-            'UseTextRenderingInBrowser' + '=' + IntToStr(Ord(AFindSubControlOptions.UseTextRenderingInBrowser))
+            'UseTextRenderingInBrowser' + '=' + IntToStr(Ord(AFindSubControlOptions.UseTextRenderingInBrowser)) + '&' +
+
+            'RenderingInBrowserSettings.RenderingRequestType' + '=' + IntToStr(Ord(AFindSubControlOptions.RenderingInBrowserSettings.RenderingRequestType)) + '&' +
+            'RenderingInBrowserSettings.ReceivingBitmapsTimeout' + '=' + IntToStr(AFindSubControlOptions.RenderingInBrowserSettings.ReceivingBitmapsTimeout) + '&' +
+            'RenderingInBrowserSettings.UsePluginForReceivingBitmaps' + '=' + IntToStr(Ord(AFindSubControlOptions.RenderingInBrowserSettings.UsePluginForReceivingBitmaps)) + '&' +
+            'RenderingInBrowserSettings.PluginActionForReceivingBitmaps' + '=' + AFindSubControlOptions.RenderingInBrowserSettings.PluginActionForReceivingBitmaps + '&' +
+            'RenderingInBrowserSettings.FontSizeUnit' + '=' + IntToStr(Ord(AFindSubControlOptions.RenderingInBrowserSettings.FontSizeUnit))
             ;
 end;
 
@@ -591,7 +597,13 @@ begin
             'EvaluateTextCount' + '=' + CDTString + '&' +
             'CropFromScreenshot' + '=' + CDTBool + '&' +
             'ThreadCount' + '=' + CDTString + '&' +
-            'UseTextRenderingInBrowser' + '=' + CDTBool
+            'UseTextRenderingInBrowser' + '=' + CDTBool + '&' +
+
+            'RenderingInBrowserSettings.RenderingRequestType' + '=' + CDTEnum + '&' +
+            'RenderingInBrowserSettings.ReceivingBitmapsTimeout' + '=' + CDTInteger + '&' +
+            'RenderingInBrowserSettings.UsePluginForReceivingBitmaps' + '=' + CDTBool + '&' +
+            'RenderingInBrowserSettings.PluginActionForReceivingBitmaps' + '=' + CDTString + '&' +
+            'RenderingInBrowserSettings.FontSizeUnit' + '=' + CDTEnum + '&'
             ;
 end;
 
@@ -1162,6 +1174,12 @@ begin
   AFindSubControlOptions.ThreadCount := AListOfFindSubControlOptionsParams.Values['ThreadCount'];
   AFindSubControlOptions.UseTextRenderingInBrowser := AListOfFindSubControlOptionsParams.Values['UseTextRenderingInBrowser'] = '1';
 
+  AFindSubControlOptions.RenderingInBrowserSettings.RenderingRequestType := TRenderingRequestType(StrToIntDef(AListOfFindSubControlOptionsParams.Values['RenderingInBrowserSettings.RenderingRequestType'], 0));   /////////requires validation
+  AFindSubControlOptions.RenderingInBrowserSettings.ReceivingBitmapsTimeout := StrToIntDef(AListOfFindSubControlOptionsParams.Values['RenderingInBrowserSettings.ReceivingBitmapsTimeout'], 3000);
+  AFindSubControlOptions.RenderingInBrowserSettings.UsePluginForReceivingBitmaps := AListOfFindSubControlOptionsParams.Values['RenderingInBrowserSettings.UsePluginForReceivingBitmaps'] = '1';
+  AFindSubControlOptions.RenderingInBrowserSettings.PluginActionForReceivingBitmaps := AListOfFindSubControlOptionsParams.Values['PluginActionForReceivingBitmaps.RenderingRequestType'];
+  AFindSubControlOptions.RenderingInBrowserSettings.FontSizeUnit := TFontSizeUnit(StrToIntDef(AListOfFindSubControlOptionsParams.Values['RenderingInBrowserSettings.FontSizeUnit'], 0));
+
   AActionOptions.ActionName := AListOfFindSubControlOptionsParams.Values[CPropertyName_ActionName];
   AActionOptions.ActionTimeout := Temp_ActionTimeout;
   AActionOptions.Action := acFindSubControl;
@@ -1532,6 +1550,11 @@ begin
   AFindSubControlOptions.CropFromScreenshot := False;
   AFindSubControlOptions.ThreadCount := '2';
   AFindSubControlOptions.UseTextRenderingInBrowser := False;
+  AFindSubControlOptions.RenderingInBrowserSettings.RenderingRequestType := rrtShellExecute;
+  AFindSubControlOptions.RenderingInBrowserSettings.ReceivingBitmapsTimeout := 3000;
+  AFindSubControlOptions.RenderingInBrowserSettings.UsePluginForReceivingBitmaps := False;
+  AFindSubControlOptions.RenderingInBrowserSettings.PluginActionForReceivingBitmaps := '';
+  AFindSubControlOptions.RenderingInBrowserSettings.FontSizeUnit := fsuPt;
 
   SetLength(AFindSubControlOptions.MatchBitmapText, AFindSubControlProfilesCount);
 

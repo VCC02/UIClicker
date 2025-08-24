@@ -5775,6 +5775,9 @@ begin
         CFindSubControl_MatchByHistogramSettings_PropIndex:
           Result := CPropCount_FindSubControlMatchByHistogramSettings;
 
+        CFindSubControl_RenderingInBrowserSettings_PropIndex:
+          Result := CPropCount_FindSubControlRenderingInBrowserSettings;
+
         else
           Result := 0;
       end;
@@ -5897,6 +5900,9 @@ begin
 
         CFindSubControl_MatchByHistogramSettings_PropIndex:
           Result := CFindSubControl_MatchByHistogramSettingsProperties[AItemIndex].Name;
+
+        CFindSubControl_RenderingInBrowserSettings_PropIndex:
+          Result := CFindSubControl_RenderingInBrowserSettingsProperties[AItemIndex].Name;
 
         else
           Result := '';
@@ -6033,6 +6039,9 @@ begin
         CFindSubControl_MatchByHistogramSettings_PropIndex:
           APropDef := CFindSubControl_MatchByHistogramSettingsProperties[AItemIndex];
 
+        CFindSubControl_RenderingInBrowserSettings_PropIndex:
+          APropDef := CFindSubControl_RenderingInBrowserSettingsProperties[AItemIndex];
+
         else
           ;
       end;
@@ -6151,6 +6160,9 @@ begin
 
             CFindSubControl_MatchByHistogramSettings_PropIndex:
               Result := CFindSubControl_MatchByHistogramSettingsProperties[AItemIndex].DataType;
+
+            CFindSubControl_RenderingInBrowserSettings_PropIndex:
+              Result := CFindSubControl_RenderingInBrowserSettingsProperties[AItemIndex].DataType;
           end;
         end;
 
@@ -7061,6 +7073,12 @@ begin
       if ItemIndexMod = CFindSubControl_MatchBitmapText_FontName_PropItemIndex then
         Result := Screen.Fonts.Count;
 
+      Exit;
+    end;
+
+    if APropertyIndex = CFindSubControl_RenderingInBrowserSettings_PropIndex then
+    begin
+      Result := CFindSubControl_RenderingInBrowserSettingsEnumCounts[AItemIndex];
       Exit;
     end;
   end;
@@ -9528,6 +9546,9 @@ begin
 
         CFindSubControl_MatchByHistogramSettings_PropIndex:
           Result := CFindSubControl_MatchByHistogramSettingsProperties[AItemIndex].Name;
+
+        CFindSubControl_RenderingInBrowserSettings_PropIndex:
+          Result := CFindSubControl_RenderingInBrowserSettingsProperties[AItemIndex].Name;
 
         else
           Result := '';
