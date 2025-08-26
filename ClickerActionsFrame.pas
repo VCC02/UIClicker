@@ -65,6 +65,7 @@ type
   TfrClickerActions = class(TFrame)
     chkDecodeVariables: TCheckBox;
     chkShowDebugGrid: TCheckBox;
+    imglstRenderingInBrowserSettings: TImageList;
     imglstEditTemplateWhichTemplate: TImageList;
     imglstEditTemplateOperation: TImageList;
     imglstFindSubControlProperties: TImageList;
@@ -6429,6 +6430,9 @@ begin
 
               CFindSubControl_MatchByHistogramSettings_PropIndex:
                 ImageList := imglstMatchByHistogramSettings;
+
+              CFindSubControl_RenderingInBrowserSettings_PropIndex:
+                ImageList := imglstRenderingInBrowserSettings;
             end;
           end;
 
