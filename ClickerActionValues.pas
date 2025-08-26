@@ -3413,7 +3413,11 @@ end;
 
   function GetPropertyHint_FindSubControl_RenderingInBrowserSettings_ActionForSendingRequest: string;
   begin
-    Result := 'Name of an action (ExecApp, CallTemplate or Plugin), from the same template, which is run to send the rendering request.';
+    Result := 'Name of an action (ExecApp, CallTemplate or Plugin), from the same template, which is run to send the rendering request.' + #13#10 +
+              'The request link must contain an "ID" parameter, set to the internal request ID value of the FindSubControl action.' + #13#10 +
+              'The ID can be found in the $RenderingRequestID$, which is valid during the execution of the called action (ExecApp, CallTemplate or Plugin).' + #13#10 +
+              'For example, if the executed action is an ExecApp, it can run explorer with the following request link (including the double quotes):' + #13#10 +
+              '"http://127.0.0.1:5444/GetTextRenderingPage?StackLevel=$StackLevel$&ID=$RenderingRequestID$"';
   end;
 
 

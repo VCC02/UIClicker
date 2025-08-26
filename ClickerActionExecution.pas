@@ -2293,11 +2293,18 @@ begin
             ShellExecute(0, 'open', PChar('http://127.0.0.1:5444/' + CRECmd_GetTextRenderingPage + '?' + CREParam_StackLevel + '=' + IntToStr(FStackLevel^) + '&' + CREParam_ID + '=' + FBrowserRenderingText.RequestID), '', '', 5)  //SW_SHOW
           else
           begin  //AFindSubControlOptions
-            if not DoOnExecuteActionByName(AFindSubControlOptions.RenderingInBrowserSettings.ActionForSendingRequest) then
-            begin
-              AddToLog('Sending rendering request from action, failed at "' + AFindSubControlOptions.RenderingInBrowserSettings.ActionForSendingRequest + '" action.');
-              Result := False;
-              Exit;
+            AddToLog('Sending rendering request via an action, instead of using ShellExecute.');
+            SetActionVarValue('$StackLevel$', IntToStr(FStackLevel^));
+            SetActionVarValue('$RenderingRequestID$', FBrowserRenderingText.RequestID); //used by the called action (ExecApp, CallTemplate, Plugin)
+            try
+              if not DoOnExecuteActionByName(AFindSubControlOptions.RenderingInBrowserSettings.ActionForSendingRequest) then
+              begin
+                AddToLog('Sending rendering request from action, failed at "' + AFindSubControlOptions.RenderingInBrowserSettings.ActionForSendingRequest + '" action.');
+                Result := False;
+                Exit;
+              end;
+            finally
+              SetActionVarValue('$RenderingRequestID$', 'outdated');
             end;
           end;
 

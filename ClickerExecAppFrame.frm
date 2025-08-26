@@ -18,15 +18,15 @@ object frClickerExecApp: TfrClickerExecApp
   object memExecAppParams: TMemo
     Left = 2
     Height = 89
-    Hint = 'Enter each parameter on a new line. Do not add quotes. Replacements are available.'
+    Hint = 'Enter each parameter on a new line.'#13#10'Do not add quotes when running executables.'#13#10'(Double) quotes may be needed when opening a weblink.'#13#10'Replacements are available.'
     Top = 16
-    Width = 326
+    Width = 270
     Anchors = [akTop, akLeft, akRight, akBottom]
-    OnChange = memExecAppParamsChange
     ParentShowHint = False
     ScrollBars = ssBoth
     ShowHint = True
     TabOrder = 0
     WordWrap = False
+    OnChange = memExecAppParamsChange
   end
 end
