@@ -2309,12 +2309,19 @@ begin
               Sleep(1);
 
               for j := 0 to Length(FBrowserRenderingText.RenderedFileNames) - 1 do
-                if not DoOnLoadRenderedBitmap(TempBmp, FBrowserRenderingText.RenderedFileNames[i]) then  //instad of DoOnLoadRenderedBitmap, there should be a verification for file existence
+                if not DoOnLoadRenderedBitmap(TempBmp, FBrowserRenderingText.RenderedFileNames[j]) then  //instead of DoOnLoadRenderedBitmap, there should be a verification for file existence
                   Continue;
 
             until GetTickCount64 - tk > AFindSubControlOptions.RenderingInBrowserSettings.ReceivingBitmapsTimeout;
           finally
             TempBmp.Free;
+          end;
+
+          if GetTickCount64 - tk > AFindSubControlOptions.RenderingInBrowserSettings.ReceivingBitmapsTimeout then
+          begin
+            AddToLog('Timeout receiving all expected rendered bitmaps.');
+            if not AFindSubControlOptions.RenderingInBrowserSettings.UsePluginForReceivingBitmaps then
+              AddToLog('Please also verify if UIClicker is running in server mode.');
           end;
         end; //AFindSubControlOptions.UseTextRenderingInBrowser
 
@@ -2367,8 +2374,8 @@ begin
                 if not AFindSubControlOptions.UseTextRenderingInBrowser then
                   PreviewTextOnBmp(AFindSubControlOptions, FindControlInputData.Text, j, FindControlInputData.BitmapToSearchFor)
                 else
-                  if not DoOnLoadRenderedBitmap(FindControlInputData.BitmapToSearchFor, FBrowserRenderingText.RenderedFileNames[i]) then
-                    raise Exception.Create('Can''t load rendered file from browser: ' + FBrowserRenderingText.RenderedFileNames[i]);
+                  if not DoOnLoadRenderedBitmap(FindControlInputData.BitmapToSearchFor, FBrowserRenderingText.RenderedFileNames[j]) then
+                    raise Exception.Create('Can''t load rendered file from browser: ' + FBrowserRenderingText.RenderedFileNames[j]);
               except
                 on E: Exception do
                 begin

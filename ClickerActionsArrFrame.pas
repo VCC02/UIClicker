@@ -2064,7 +2064,7 @@ var
   LoadedNewFile: Boolean;
   OldDbgSymFnm: string;
 begin
-  AddToLog('Executing action "' + AActionName + '" by name, from plugin...');
+  AddToLog('Executing action "' + AActionName + '" by name...');
 
   ActionIndex := -1;
   for i := 0 to Length(FClkActions) - 1 do
@@ -2076,7 +2076,7 @@ begin
 
   if ActionIndex = -1 then
   begin
-    AddToLog('Action "' + AActionName + '" not found, when executing by name, from plugin.');
+    AddToLog('Action "' + AActionName + '" not found, when executing by name.');
     Result := False;
     Exit;
   end;
