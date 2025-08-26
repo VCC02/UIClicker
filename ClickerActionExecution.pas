@@ -2308,6 +2308,13 @@ begin
             end;
           end;
 
+          if AFindSubControlOptions.RenderingInBrowserSettings.UsePluginForReceivingBitmaps then
+          begin
+            AddToLog('Waiting for rendered bitmaps via a plugin action, instead of using UIClicker''s SetRenderedFileB64 request.');
+            if not DoOnExecuteActionByName(AFindSubControlOptions.RenderingInBrowserSettings.PluginActionForReceivingBitmaps) then
+              raise Exception.Create('Waiting for rendered bitmaps, failed at "' + AFindSubControlOptions.RenderingInBrowserSettings.PluginActionForReceivingBitmaps + '" action.');
+          end;
+
           TempBmp := TBitmap.Create;
           try
             tk := GetTickCount64;
