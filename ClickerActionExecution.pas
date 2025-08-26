@@ -72,6 +72,7 @@ type
     FontProfiles: TClkFindControlMatchBitmapTextArr;  //not all properties will be used in browser rendering
     RenderedFileNames: TStringArray; //this should have the same length as FontProfiles
     FontSizeUnit: string;
+    Timeout: string;
     CritSec: TRTLCriticalSection;
   end;
 
@@ -2288,6 +2289,7 @@ begin
           FBrowserRenderingText.RequestID := StringReplace(FBrowserRenderingText.RequestID, '=', '_', [rfReplaceAll]);  //maybe another validator (a function) is required
 
           FBrowserRenderingText.FontSizeUnit := CFontSizeUnitNoPrefixStr[AFindSubControlOptions.RenderingInBrowserSettings.FontSizeUnit];
+          FBrowserRenderingText.Timeout := IntToStr(AFindSubControlOptions.RenderingInBrowserSettings.ReceivingBitmapsTimeout);
 
           if AFindSubControlOptions.RenderingInBrowserSettings.RenderingRequestType = rrtShellExecute then
             ShellExecute(0, 'open', PChar('http://127.0.0.1:5444/' + CRECmd_GetTextRenderingPage + '?' + CREParam_StackLevel + '=' + IntToStr(FStackLevel^) + '&' + CREParam_ID + '=' + FBrowserRenderingText.RequestID), '', '', 5)  //SW_SHOW
@@ -5528,10 +5530,37 @@ begin
       if i < ProfilesLen - 1 then
         Result := Result + ',';
     end;
+    Result := Result + '];'#13#10 +
+
+    '    let Results = [';
+    for i := 0 to ProfilesLen - 1 do
+    begin
+      Result := Result + 'false';
+      if i < ProfilesLen - 1 then
+        Result := Result + ',';
+    end;
     Result := Result + '];'#13#10;
 
     Result := Result +
-              '    for (i = 0; i < ' + IntToStr(ProfilesLen) + '; i++) {'#13#10;
+              ''#13#10 +
+              '    function CloseIfAllRequestsAreDone(AResults) {'#13#10 +
+              '      let AllResults = true;'#13#10 +
+              '      for (let i = 0; i < ' + IntToStr(ProfilesLen) + '; i++) {'#13#10 +
+              '        if (!AResults[i]) {'#13#10 +
+              '          AllResults = false;'#13#10 +
+              '          console.log("Still waiting for response at [" + i + "]..");'#13#10 +
+              '          break;'#13#10 +
+              '        }'#13#10 +
+              '      }'#13#10 +
+              '      if (AllResults) {'#13#10 +
+              '        console.log("Closing..");'#13#10 +
+              '        window.close();'#13#10 +
+              '      }'#13#10 +
+              '    }'#13#10 +
+              ''#13#10;
+
+    Result := Result +
+              '    for (let i = 0; i < ' + IntToStr(ProfilesLen) + '; i++) {'#13#10;
 
     Result := Result +
 
@@ -5571,12 +5600,15 @@ begin
               '      let imgContent = canvas.toDataURL();'#13#10 +
               '      const xhr = new XMLHttpRequest();'#13#10 +
               '      xhr.onload = () => {'#13#10 +
-              '        console.log("set image response: " + xhr.response);'#13#10 +
-              '        //window.close();'#13#10 +  //should be called after all requests get their responses, or a timeout
+              '        console.log("set image response[" + i + "]: " + xhr.response);'#13#10 +
+              '        Results[i] = true;'#13#10 +
+              '        CloseIfAllRequestsAreDone(Results);'#13#10 +   //ToDo: This call should be controlled by an option (a new property), because the browser/tab may have to stay open.
               '      }'#13#10 +
               ''#13#10 +
               '      xhr.onerror = () => {'#13#10 +
               '        console.error("set image error. Maybe the request string is too long (> MaxLineLength). (Because the rendered text is too complex.)");'#13#10 +
+              '        Results[i] = true;'#13#10 +
+              '        CloseIfAllRequestsAreDone(Results);'#13#10 +  //comment this line if the browser should stay open in case of a failed request
               '      }'#13#10 +
               ''#13#10 +
 
