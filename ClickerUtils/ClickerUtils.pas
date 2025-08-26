@@ -44,6 +44,7 @@ type
   TClkAction = (acClick, acExecApp, acFindControl, acFindSubControl,
                 acSetControlText, acCallTemplate, acSleep, acSetVar, acWindowOperations,
                 acLoadSetVarFromFile, acSaveSetVarToFile, acPlugin, acEditTemplate);     //please update CInsertActionOffset constant in ClickerActionsArrFrame, if there will be more than 30 action types
+  TClkActions = set of TClkAction;
 
   TClkSetTextControlType = (stEditBox, stComboBox, stKeystrokes);
   TSearchForControlMode = (sfcmGenGrid, sfcmEnumWindows, sfcmFindWindow);

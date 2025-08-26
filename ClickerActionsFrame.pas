@@ -538,6 +538,8 @@ type
     procedure AvailablePluginPropertiesClick(Sender: TObject);
     procedure AvailableEditingActionPropertiesClick_Cat_ActionSpecific(Sender: TObject);
     procedure AvailableEditingActionPropertiesClick_Cat_EditingAction(Sender: TObject);
+    procedure AvailableFindSubControlSendRequestActionClick(Sender: TObject);
+    procedure AvailableFindSubControlRcvBmpPluginActionClick(Sender: TObject);
 
     procedure BrowseTemplatesClick(Sender: TObject);
     procedure ClickerConditionEditorControlsModified;
@@ -724,6 +726,7 @@ type
     procedure LoadListOfAvailableSetVarActions(AEditingAction: PClkActionRec);
     procedure LoadListOfAvailableActionsForPlugin(APropertyIndexToUpdate: Integer; AEditingAction: PClkActionRec);
     procedure LoadListOfAvailableActionsForEditTemplate(APropertyIndexToUpdate: Integer; AEditingAction: PClkActionRec);
+    procedure LoadListOfAvailableActionsForFindSubControlRenderingRequest(APropertyIndexToUpdate: Integer; AEditingAction: PClkActionRec; AAllowedActionTypes: TClkActions; AHandler: TNotifyEvent);
 
     procedure SetDebugVariablesFromListOfStrings(AListOfStrings: string);
     procedure UpdatePageControlActionExecutionIcons;
@@ -2363,6 +2366,46 @@ begin
 end;
 
 
+procedure TfrClickerActions.AvailableFindSubControlSendRequestActionClick(Sender: TObject);
+var
+  NewActionName: string;
+begin
+  NewActionName := StringReplace((Sender as TMenuItem).Caption, '&', '', [rfReplaceAll]);
+
+  if NewActionName = CNoActionsMsg then
+  begin
+    MessageBox(Handle, 'There are no available actions.', PChar(Application.Title), MB_ICONINFORMATION);
+    Exit;
+  end;
+
+  GetEditingActionObjectByActionType^.FindSubControlOptions.RenderingInBrowserSettings.ActionForSendingRequest := NewActionName;
+
+  FOIFrame.CancelCurrentEditing;
+  FOIFrame.Repaint;   //ideally, RepaintNodeByLevel
+  TriggerOnControlsModified;
+end;
+
+
+procedure TfrClickerActions.AvailableFindSubControlRcvBmpPluginActionClick(Sender: TObject);
+var
+  NewActionName: string;
+begin
+  NewActionName := StringReplace((Sender as TMenuItem).Caption, '&', '', [rfReplaceAll]);
+
+  if NewActionName = CNoActionsMsg then
+  begin
+    MessageBox(Handle, 'There are no available actions.', PChar(Application.Title), MB_ICONINFORMATION);
+    Exit;
+  end;
+
+  GetEditingActionObjectByActionType^.FindSubControlOptions.RenderingInBrowserSettings.PluginActionForReceivingBitmaps := NewActionName;
+
+  FOIFrame.CancelCurrentEditing;
+  FOIFrame.Repaint;   //ideally, RepaintNodeByLevel
+  TriggerOnControlsModified;
+end;
+
+
 procedure TfrClickerActions.BrowseTemplatesClick(Sender: TObject);
 begin
   DoOnSetOpenDialogInitialDir(FFullTemplatesDir);    //this is not the right dir
@@ -2636,6 +2679,83 @@ begin
       TempMenuItem.Bitmap := Bmp;
 
       FPmLocalTemplates.Items[0].Add(TempMenuItem);
+    end;
+  finally
+    AvailableActions.Free;
+  end;
+end;
+
+
+procedure TfrClickerActions.LoadListOfAvailableActionsForFindSubControlRenderingRequest(APropertyIndexToUpdate: Integer; AEditingAction: PClkActionRec; AAllowedActionTypes: TClkActions; AHandler: TNotifyEvent);
+var
+  AvailableActions: TStringList;
+  TempMenuItem, BaseMenuItem: TMenuItem;
+  i: Integer;
+  Bmp: TBitmap;
+  ActionStr: string;
+  ActionType: Integer;
+  Ini: TClkIniReadonlyFile;
+  LocalClkActions: TClkActionsRecArr;
+  Notes, IconPath: string;
+begin
+  AvailableActions := TStringList.Create;
+  try
+    AvailableActions.LineBreak := #13#10;
+    if AEditingAction.ActionOptions.Action = acFindSubControl then
+      DoOnGetListOfAvailableActions(AvailableActions)
+    else
+      if AEditingAction.ActionOptions.Action = acEditTemplate then
+        if AEditingAction^.EditTemplateOptions.WhichTemplate = etwtSelf then
+          DoOnGetListOfAvailableActions(AvailableActions)
+        else
+        begin
+          if DoOnFileExists(AEditingAction^.EditTemplateOptions.TemplateFileName) then
+          begin
+            Ini := DoOnTClkIniReadonlyFileCreate(AEditingAction^.EditTemplateOptions.TemplateFileName);  //LoadTemplate
+            try
+              LoadTemplateToCustomActions_V2(Ini, LocalClkActions, Notes, IconPath);
+              for i := 0 to Length(LocalClkActions) - 1 do
+                AvailableActions.Add(LocalClkActions[i].ActionOptions.ActionName + #4#5 + IntToStr(Ord(LocalClkActions[i].ActionOptions.Action)));
+            finally
+              Ini.Free;
+            end;
+          end;
+        end;
+
+    FPmLocalTemplates.Items.Clear;
+
+    if AvailableActions.Count = 0 then
+      AvailableActions.Add(CNoSetVarActionsMsg);
+
+    BaseMenuItem := TMenuItem.Create(Self);
+    BaseMenuItem.Caption := 'Available actions';
+    BaseMenuItem.OnClick := nil;
+    FPmLocalTemplates.Items.Add(BaseMenuItem);
+
+    for i := 0 to AvailableActions.Count - 1 do
+    begin
+      ActionStr := AvailableActions.Strings[i];
+      ActionType := StrToIntDef(Copy(ActionStr, Pos(#4#5, ActionStr) + 2, MaxInt), 0);
+
+      if TClkAction(ActionType) in AAllowedActionTypes then
+      begin
+        TempMenuItem := TMenuItem.Create(Self);
+        TempMenuItem.Caption := Copy(ActionStr, 1, Pos(#4#5, ActionStr) - 1);
+        TempMenuItem.OnClick := AHandler;
+        TempMenuItem.Tag := APropertyIndexToUpdate;
+
+        Bmp := TBitmap.Create;
+        Bmp.PixelFormat := pf24bit;
+        Bmp.Width := 16;
+        Bmp.Height := 16;
+        Bmp.Canvas.Pen.Color := clWhite;
+        Bmp.Canvas.Brush.Color := clWhite;
+        Bmp.Canvas.Rectangle(0, 0, 16, 16);
+        imglstActions16.Draw(bmp.Canvas, 0, 0, ActionType, dsNormal, itImage);
+        TempMenuItem.Bitmap := Bmp;
+
+        FPmLocalTemplates.Items[0].Add(TempMenuItem);
+      end;
     end;
   finally
     AvailableActions.Free;
@@ -7387,6 +7507,23 @@ begin
         TargetCanvas.Font.Color := clGray;
         Exit;
       end;
+
+      if (ANodeData.Level = CPropertyItemLevel) and (APropertyIndex in [CFindSubControl_RenderingInBrowserSettings_PropIndex]) then
+      begin
+        if APropertyItemIndex = CFindSubControl_RenderingInBrowserSettings_ActionForSendingRequest_PropItemIndex then
+          if AEditingAction^.FindSubControlOptions.RenderingInBrowserSettings.RenderingRequestType = rrtShellExecute then
+          begin
+            TargetCanvas.Font.Color := clGray;
+            Exit;
+          end;
+
+        if APropertyItemIndex = CFindSubControl_RenderingInBrowserSettings_PluginActionForReceivingBitmaps_PropItemIndex then
+          if not AEditingAction^.FindSubControlOptions.RenderingInBrowserSettings.UsePluginForReceivingBitmaps then
+          begin
+            TargetCanvas.Font.Color := clGray;
+            Exit;
+          end;
+      end;
     end; //acFindSubControl
 
     if (ANodeData.Level = CPropertyItemLevel) and (ALiveEditingActionType = acCallTemplate) then
@@ -8741,6 +8878,20 @@ begin
             FOIEditorMenu.PopUp(tp.X, tp.Y);
           end;
         end; //SourceFileName
+
+        CFindSubControl_RenderingInBrowserSettings_PropIndex:
+          if ANodeLevel = CPropertyItemLevel then
+          begin
+            case AItemIndex of
+              CFindSubControl_RenderingInBrowserSettings_ActionForSendingRequest_PropItemIndex:
+                LoadListOfAvailableActionsForFindSubControlRenderingRequest(APropertyIndex, AEditingAction, [acExecApp, acCallTemplate, acPlugin], AvailableFindSubControlSendRequestActionClick);
+
+              CFindSubControl_RenderingInBrowserSettings_PluginActionForReceivingBitmaps_PropItemIndex:
+                LoadListOfAvailableActionsForFindSubControlRenderingRequest(APropertyIndex, AEditingAction, [acPlugin], AvailableFindSubControlRcvBmpPluginActionClick);
+            end;
+
+            FPmLocalTemplates.PopUp;
+          end;
       end; //case APropertyIndex
     end; //FindControl, FindSubControl
 
