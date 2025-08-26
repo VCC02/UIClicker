@@ -136,6 +136,21 @@ type
   end;
 
 
+  TRenderingInBrowserSettingsAPI = record
+    RenderingRequestType: Byte; //TRenderingRequestType;
+    ReceivingBitmapsTimeout: LongInt;
+    ActionForSendingRequest: PWideChar;
+    UsePluginForReceivingBitmaps: Boolean;
+    PluginActionForReceivingBitmaps: PWideChar;
+    FontSizeUnit: Byte; //TFontSizeUnit;
+  end;
+
+  TRenderingInBrowserSettingsAPIWS = record
+    ActionForSendingRequest: WideString;
+    PluginActionForReceivingBitmaps: WideString;
+  end;
+
+
   TClkFindControlMatchBitmapTextAPI = record
     ForegroundColor: PWideChar;
     BackgroundColor: PWideChar;
@@ -263,6 +278,7 @@ type
     CropFromScreenshot: Boolean;
     ThreadCount: PWideChar;
     UseTextRenderingInBrowser: Boolean;
+    RenderingInBrowserSettings: TRenderingInBrowserSettingsAPI;
   end;
 
   PClkFindSubControlOptionsAPI = ^TClkFindSubControlOptionsAPI;
@@ -283,6 +299,7 @@ type
     MatchByHistogramSettings: TMatchByHistogramSettingsAPIWS;
     EvaluateTextCount: WideString;
     ThreadCount: WideString;
+    RenderingInBrowserSettings: TRenderingInBrowserSettingsAPIWS;
   end;
 
 
@@ -684,6 +701,13 @@ begin
 
   ADestClkAction.FindSubControlOptions.UseTextRenderingInBrowser := AFindSubControlOptions^.UseTextRenderingInBrowser;
 
+  ADestClkAction.FindSubControlOptions.RenderingInBrowserSettings.RenderingRequestType := TRenderingRequestType(AFindSubControlOptions^.RenderingInBrowserSettings.RenderingRequestType);
+  ADestClkAction.FindSubControlOptions.RenderingInBrowserSettings.ReceivingBitmapsTimeout := AFindSubControlOptions^.RenderingInBrowserSettings.ReceivingBitmapsTimeout;
+  SetPointedContentToString(@string(PWideChar(AFindSubControlOptions^.RenderingInBrowserSettings.ActionForSendingRequest))[1], ADestClkAction.FindSubControlOptions.RenderingInBrowserSettings.ActionForSendingRequest);
+  ADestClkAction.FindSubControlOptions.RenderingInBrowserSettings.UsePluginForReceivingBitmaps := AFindSubControlOptions^.RenderingInBrowserSettings.UsePluginForReceivingBitmaps;
+  SetPointedContentToString(@string(PWideChar(AFindSubControlOptions^.RenderingInBrowserSettings.PluginActionForReceivingBitmaps))[1], ADestClkAction.FindSubControlOptions.RenderingInBrowserSettings.PluginActionForReceivingBitmaps);
+  ADestClkAction.FindSubControlOptions.RenderingInBrowserSettings.FontSizeUnit := TFontSizeUnit(AFindSubControlOptions^.RenderingInBrowserSettings.FontSizeUnit);
+
   if AFindSubControlOptions^.MatchBitmapText = nil then  //assume the caller sets this field to nil if not used
     Exit;
   //However, if the field is not nil, then it is either valid or an uninitialized pointer.
@@ -1027,6 +1051,13 @@ begin
   ATempFindSubControlOptionsAPIWS.ThreadCount := WideString(AFindSubControlOptions.ThreadCount);  ADestFindSubControlOptions.ThreadCount := @ATempFindSubControlOptionsAPIWS.ThreadCount[1];// ADestFindSubControlOptions.ThreadCount := @WideString(AFindSubControlOptions.ThreadCount)[1];
 
   ADestFindSubControlOptions.UseTextRenderingInBrowser := AFindSubControlOptions.UseTextRenderingInBrowser;
+
+  ADestFindSubControlOptions.RenderingInBrowserSettings.RenderingRequestType := Ord(AFindSubControlOptions.RenderingInBrowserSettings.RenderingRequestType);
+  ADestFindSubControlOptions.RenderingInBrowserSettings.ReceivingBitmapsTimeout := AFindSubControlOptions.RenderingInBrowserSettings.ReceivingBitmapsTimeout;
+  ATempFindSubControlOptionsAPIWS.RenderingInBrowserSettings.ActionForSendingRequest := WideString(AFindSubControlOptions.RenderingInBrowserSettings.ActionForSendingRequest);  ADestFindSubControlOptions.RenderingInBrowserSettings.ActionForSendingRequest := @ATempFindSubControlOptionsAPIWS.RenderingInBrowserSettings.ActionForSendingRequest[1];
+  ADestFindSubControlOptions.RenderingInBrowserSettings.UsePluginForReceivingBitmaps := AFindSubControlOptions.RenderingInBrowserSettings.UsePluginForReceivingBitmaps;
+  ATempFindSubControlOptionsAPIWS.RenderingInBrowserSettings.PluginActionForReceivingBitmaps := WideString(AFindSubControlOptions.RenderingInBrowserSettings.PluginActionForReceivingBitmaps);  ADestFindSubControlOptions.RenderingInBrowserSettings.PluginActionForReceivingBitmaps := @ATempFindSubControlOptionsAPIWS.RenderingInBrowserSettings.PluginActionForReceivingBitmaps[1];
+  ADestFindSubControlOptions.RenderingInBrowserSettings.FontSizeUnit := Ord(AFindSubControlOptions.RenderingInBrowserSettings.FontSizeUnit);
 
   if Length(AFindSubControlOptions.MatchBitmapText) = 0 then
   begin

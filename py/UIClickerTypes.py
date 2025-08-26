@@ -116,6 +116,14 @@ class TImageSourceFileNameLocation: #(Enum):
     isflDisk = 0
     isflMem = 1
 
+class TRenderingRequestType: #(Enum):
+    rrtShellExecute = 0
+    rrtAction = 1
+
+class TFontSizeUnit: #(Enum):
+    fsuPt = 0
+    fsuPx = 1
+
 
 class TClkSetTextControlType: #(Enum):
     stEditBox = 0
@@ -283,6 +291,16 @@ class TMatchByHistogramSettings(Structure):
                ("MostSignificantColorCountInSubBmp", LPCWSTR),
                ("MostSignificantColorCountInBackgroundBmp", LPCWSTR)]
 
+               
+class TRenderingInBrowserSettings(Structure):
+    _fields_ = [("RenderingRequestType", BYTE), #TRenderingRequestType
+               ("ReceivingBitmapsTimeout", LONG),
+               ("ActionForSendingRequest", LPCWSTR),
+               ("UsePluginForReceivingBitmaps", BOOLEAN),
+               ("PluginActionForReceivingBitmaps", LPCWSTR),
+               ("FontSizeUnit", BYTE)] #TFontSizeUnit
+
+
 ###########/////////////////
 
 #Font profile structure. MatchBitmapText field from TFindControlOptions is a dynamic array of TClkFindControlMatchBitmapText.
@@ -352,34 +370,15 @@ class TFindControlOptions(Structure):
                ("MatchClassName", LPCWSTR),
                ("MatchTextSeparator", LPCWSTR),
                ("MatchClassNameSeparator", LPCWSTR),
-               #("MatchBitmapText", PMatchBitmapTextRec), #TClkFindControlMatchBitmapTextArr;  #Can be updated, by a different call
-               #("MatchBitmapFiles", LPCWSTR),
-               #("MatchBitmapAlgorithm", BYTE), #LONG), #TMatchBitmapAlgorithm)
-               #("MatchBitmapAlgorithmSettings", TMatchBitmapAlgorithmSettings),
                ("InitialRectangle", TRectString),
                ("UseWholeScreen", BOOLEAN),
-               #("ColorError", LPCWSTR),
-               #("AllowedColorErrorCount", LPCWSTR),
                ("WaitForControlToGoAway", BOOLEAN),
                ("StartSearchingWithCachedControl", BOOLEAN),
                ("CachedControlLeft", LPCWSTR),
                ("CachedControlTop", LPCWSTR),
-               #("MatchPrimitiveFiles", LPCWSTR),
                ("GetAllControls", BOOLEAN),
-               #("UseFastSearch", BOOLEAN),
-               #("FastSearchAllowedColorErrorCount", LPCWSTR),
-               #("IgnoredColors", LPCWSTR),
-               #("SleepySearch", BOOLEAN),
-               #("StopSearchOnMismatch", BOOLEAN),
-               #("ImageSource", BYTE), #LONG), #TImageSource)
-               #("SourceFileName", LPCWSTR),
-               #("ImageSourceFileNameLocation", BYTE), #LONG),  #TImageSourceFileNameLocation)
                ("PrecisionTimeout", BOOLEAN),
-               #("FullBackgroundImageInResult", BOOLEAN),
-               #("MatchByHistogramSettings", TMatchByHistogramSettings),
-               ("EvaluateTextCount", LPCWSTR)#,
-               #("CropFromScreenshot", BOOLEAN),
-               #("ThreadCount", LPCWSTR)
+               ("EvaluateTextCount", LPCWSTR)
                ]
 
 PFindControlOptions = ctypes.POINTER(TFindControlOptions)
@@ -389,9 +388,6 @@ def GetDefaultFindControlOptions():
     FindControlOptions.MatchCriteria = TClkFindControlMatchCriteria()
     FindControlOptions.MatchCriteria.WillMatchText = True
     FindControlOptions.MatchCriteria.WillMatchClassName = True
-    #FindControlOptions.MatchCriteria.WillMatchBitmapText = False
-    #FindControlOptions.MatchCriteria.WillMatchBitmapFiles = False
-    #FindControlOptions.MatchCriteria.WillMatchPrimitiveFiles = False
     FindControlOptions.MatchCriteria.SearchForControlMode = TSearchForControlMode.sfcmGenGrid
 
     FindControlOptions.AllowToFail = False
@@ -399,15 +395,6 @@ def GetDefaultFindControlOptions():
     FindControlOptions.MatchClassName = 'TButton'
     FindControlOptions.MatchTextSeparator = ''
     FindControlOptions.MatchClassNameSeparator = ''
-    #FindControlOptions.MatchBitmapText = ()  #(The content is updated separately. See TClkFindControlMatchBitmapText)
-    #FindControlOptions.MatchBitmapFiles = '' #'FileExample1.bmp\r\nFileExample2.bmp\r\nFileExample3.bmp'
-    #FindControlOptions.MatchBitmapAlgorithm = TMatchBitmapAlgorithm.mbaBruteForce
-
-    #FindControlOptions.MatchBitmapAlgorithmSettings = TMatchBitmapAlgorithmSettings()
-    #FindControlOptions.MatchBitmapAlgorithmSettings.XMultipleOf = 1
-    #FindControlOptions.MatchBitmapAlgorithmSettings.YMultipleOf = 1
-    #FindControlOptions.MatchBitmapAlgorithmSettings.XOffset = 0
-    #FindControlOptions.MatchBitmapAlgorithmSettings.YOffset = 0
 
     FindControlOptions.InitialRectangle = TRectString()
     FindControlOptions.InitialRectangle.Left = '$Control_Left$'
@@ -420,36 +407,15 @@ def GetDefaultFindControlOptions():
     FindControlOptions.InitialRectangle.BottomOffset = '0'
 
     FindControlOptions.UseWholeScreen = True  #usually True for finding a window, and False, for finding a (sub)control on a window or another control.  
-    #FindControlOptions.ColorError = '0'
-    #FindControlOptions.AllowedColorErrorCount = '0'
     FindControlOptions.WaitForControlToGoAway = False
     FindControlOptions.StartSearchingWithCachedControl = False
     FindControlOptions.CachedControlLeft = ''
     FindControlOptions.CachedControlTop = ''
 
-    #FindControlOptions.MatchPrimitiveFiles = '' #'FileExample1.pmtv\r\nFileExample2.pmtv\r\nFileExample3.pmtv'
     FindControlOptions.GetAllControls = False
 
-    #FindControlOptions.UseFastSearch = True
-    #FindControlOptions.FastSearchAllowedColorErrorCount = '10'
-    #FindControlOptions.IgnoredColors = ''
-    #FindControlOptions.SleepySearch = False
-    #FindControlOptions.StopSearchOnMismatch = True
-
-    #FindControlOptions.ImageSource = TImageSource.isScreenshot
-    #FindControlOptions.SourceFileName = ''
-    #FindControlOptions.ImageSourceFileNameLocation = TImageSourceFileNameLocation.isflMem
-
     FindControlOptions.PrecisionTimeout = False
-    #FindControlOptions.FullBackgroundImageInResult = True
-
-    #FindControlOptions.MatchByHistogramSettings.MinPercentColorMatch = '50'
-    #FindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInSubBmp = '10'
-    #FindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp = '15'
-
     FindControlOptions.EvaluateTextCount = "-1"
-    #FindControlOptions.CropFromScreenshot = False
-    #FindControlOptions.ThreadCount = "2"
 
     return FindControlOptions
 
@@ -471,9 +437,6 @@ class TFindSubControlOptions(Structure):
                ("MatchCriteria", TClkFindSubControlMatchCriteria),
                ("AllowToFail", BOOLEAN),
                ("MatchText", LPCWSTR),
-               #("MatchClassName", LPCWSTR), #to be removed
-               #("MatchTextSeparator", LPCWSTR), #to be removed
-               #("MatchClassNameSeparator", LPCWSTR), #to be removed
                ("MatchBitmapText", PMatchBitmapTextRec), #TClkFindControlMatchBitmapTextArr;  #Can be updated, by a different call
                ("MatchBitmapFiles", LPCWSTR),
                ("MatchBitmapAlgorithm", BYTE), #LONG), #TMatchBitmapAlgorithm)
@@ -502,7 +465,8 @@ class TFindSubControlOptions(Structure):
                ("EvaluateTextCount", LPCWSTR),
                ("CropFromScreenshot", BOOLEAN),
                ("ThreadCount", LPCWSTR),
-               ("UseTextRenderingInBrowser", BOOLEAN)
+               ("UseTextRenderingInBrowser", BOOLEAN),
+               ("RenderingInBrowserSettings", TRenderingInBrowserSettings)
                ]
 
 PFindSubControlOptions = ctypes.POINTER(TFindSubControlOptions)
@@ -516,9 +480,6 @@ def GetDefaultFindSubControlOptions():
 
     FindSubControlOptions.AllowToFail = False
     FindSubControlOptions.MatchText = 'SomeText'
-    #FindSubControlOptions.MatchClassName = 'TButton'
-    #FindSubControlOptions.MatchTextSeparator = ''
-    #FindSubControlOptions.MatchClassNameSeparator = ''
     FindSubControlOptions.MatchBitmapText = ()  #(The content is updated separately. See TClkFindControlMatchBitmapText)
     FindSubControlOptions.MatchBitmapFiles = '' #'FileExample1.bmp\r\nFileExample2.bmp\r\nFileExample3.bmp'
     FindSubControlOptions.MatchBitmapAlgorithm = TMatchBitmapAlgorithm.mbaBruteForce
@@ -571,6 +532,14 @@ def GetDefaultFindSubControlOptions():
     FindSubControlOptions.CropFromScreenshot = False
     FindSubControlOptions.ThreadCount = "2"
     FindSubControlOptions.UseTextRenderingInBrowser = False
+    
+    FindSubControlOptions.RenderingInBrowserSettings = TRenderingInBrowserSettings()
+    FindSubControlOptions.RenderingInBrowserSettings.RenderingRequestType = TRenderingRequestType.rrtShellExecute
+    FindSubControlOptions.RenderingInBrowserSettings.ReceivingBitmapsTimeout = 3000
+    FindSubControlOptions.RenderingInBrowserSettings.ActionForSendingRequest = ''
+    FindSubControlOptions.RenderingInBrowserSettings.UsePluginForReceivingBitmaps = False
+    FindSubControlOptions.RenderingInBrowserSettings.PluginActionForReceivingBitmaps = ''
+    FindSubControlOptions.RenderingInBrowserSettings.FontSizeUnit = TFontSizeUnit.fsuPt
 
     return FindSubControlOptions
 
