@@ -89,6 +89,7 @@ type
   TfrmClickerActions = class(TForm)
     btnBrowseActionTemplatesDir: TButton;
     btnTestConnection: TButton;
+    chkAutoClose: TCheckBox;
     chkAutoEnableSwitchingTabsOnDebugging: TCheckBox;
     chkAutoSwitchToExecutingTab: TCheckBox;
     chkDisplayActivity: TCheckBox;
@@ -104,6 +105,7 @@ type
     colcmbTopLeftInvalid: TColorBox;
     colcmbBotRightInvalid: TColorBox;
     cmbClientModeServerAddress: TComboBox;
+    grpTextRenderingInBrowser: TGroupBox;
     grpSelectionColors: TGroupBox;
     grpMissingFilesMonitoring: TGroupBox;
     grpAllowedFileExtensionsForServer: TGroupBox;
@@ -157,6 +159,7 @@ type
     tmrStartup: TTimer;
     procedure btnBrowseActionTemplatesDirClick(Sender: TObject);
     procedure btnTestConnectionClick(Sender: TObject);
+    procedure chkAutoCloseChange(Sender: TObject);
     procedure chkAutoEnableSwitchingTabsOnDebuggingChange(Sender: TObject);
     procedure chkAutoSwitchToExecutingTabChange(Sender: TObject);
     procedure chkDisplayActivityChange(Sender: TObject);
@@ -661,6 +664,8 @@ begin
   for i := 0 to Length(FFontFinderSettings.ColWidths) - 1 do
     FFontFinderSettings.ColWidths[i] := AIni.ReadInteger('FontFinderSettingsWindow', 'ColWidth_' + IntToStr(i), 200);
 
+  chkAutoClose.Checked := AIni.ReadBool('ActionsWindow', 'RenderingRequestPageCloseBrowserOnDone', chkAutoClose.Checked);
+
   frClickerActionsArrMain.LoadSettings(AIni, 'ActionsWindow', 'Main');
   frClickerActionsArrExperiment1.LoadSettings(AIni, 'ActionsWindow', 'Exp1');
   frClickerActionsArrExperiment2.LoadSettings(AIni, 'ActionsWindow', 'Exp2');
@@ -771,6 +776,8 @@ begin
   AIni.WriteInteger('FontFinderSettingsWindow', 'ColWidthCount', Length(FFontFinderSettings.ColWidths));
   for i := 0 to Length(FFontFinderSettings.ColWidths) - 1 do
     AIni.WriteInteger('FontFinderSettingsWindow', 'ColWidth_' + IntToStr(i), FFontFinderSettings.ColWidths[i]);
+
+  AIni.WriteBool('ActionsWindow', 'RenderingRequestPageCloseBrowserOnDone', frClickerActionsArrMain.ActionExecution.RenderingRequestPageCloseBrowserOnDone);
 
   frClickerActionsArrMain.SaveSettings(AIni, 'ActionsWindow', 'Main');
   frClickerActionsArrExperiment1.SaveSettings(AIni, 'ActionsWindow', 'Exp1');
@@ -2666,7 +2673,10 @@ var
 begin
   Result := 'ok';  //default if not setting any result, as in CRECmd_ExecuteCommandAtIndex
 
-  AddToLog('Request: ' + ASyncObj.FCmd + '  ' + FastReplace_ReturnToCSV(ASyncObj.FParams.Text));
+  if ASyncObj.FCmd = '/' + CRECmd_SetRenderedFileB64 then
+    AddToLog('Request: ' + ASyncObj.FCmd + '  ' + Copy(FastReplace_ReturnToCSV(ASyncObj.FParams.Text), 1, 100) + '...')
+  else
+    AddToLog('Request: ' + ASyncObj.FCmd + '  ' + FastReplace_ReturnToCSV(ASyncObj.FParams.Text));
 
   if ASyncObj.FFrame = nil then
   begin
@@ -4597,6 +4607,14 @@ begin
   RemoteAddress := GetConfiguredRemoteAddress;
   Response := TestConnection(RemoteAddress);
   MessageBox(Handle, PChar('Server response: ' + Response), PChar(Application.Title), MB_ICONINFORMATION);
+end;
+
+
+procedure TfrmClickerActions.chkAutoCloseChange(Sender: TObject);
+begin
+  frClickerActionsArrMain.ActionExecution.RenderingRequestPageCloseBrowserOnDone := chkAutoClose.Checked;
+  frClickerActionsArrExperiment1.ActionExecution.RenderingRequestPageCloseBrowserOnDone := frClickerActionsArrMain.ActionExecution.RenderingRequestPageCloseBrowserOnDone;
+  frClickerActionsArrExperiment2.ActionExecution.RenderingRequestPageCloseBrowserOnDone := frClickerActionsArrMain.ActionExecution.RenderingRequestPageCloseBrowserOnDone;
 end;
 
 

@@ -591,6 +591,30 @@ object frmClickerActions: TfrmClickerActions
           Caption = 'Bot/Right (Invalid)'
         end
       end
+      object grpTextRenderingInBrowser: TGroupBox
+        Left = 336
+        Height = 52
+        Top = 212
+        Width = 240
+        Caption = 'Text rendering in browser'
+        ClientHeight = 34
+        ClientWidth = 236
+        TabOrder = 13
+        object chkAutoClose: TCheckBox
+          Left = 8
+          Height = 17
+          Hint = 'Automatically close browser and/or tab, after receiving all responses from all requests with rendered bitmaps.'
+          Top = 3
+          Width = 68
+          Caption = 'Auto close'
+          Checked = True
+          ParentShowHint = False
+          ShowHint = True
+          State = cbChecked
+          TabOrder = 0
+          OnChange = chkAutoCloseChange
+        end
+      end
     end
     object TabSheetTemplateExec: TTabSheet
       Caption = 'Template Execution'
@@ -696,8 +720,8 @@ object frmClickerActions: TfrmClickerActions
   end
   object imglstCalledTemplates: TImageList
     BkColor = 15245824
-    Left = 480
-    Top = 328
+    Left = 472
+    Top = 520
     Bitmap = {
       4C7A020000001000000010000000DE0200000000000078DAC593FB4B935118C7
       FD67FA35C89439DD726ADACD124333ACC8AC30C48A4A490CBC54868AD20D95E9
@@ -737,14 +761,14 @@ object frmClickerActions: TfrmClickerActions
     KeepAlive = True
     OnCommandOther = IdHTTPServer1CommandOther
     OnCommandGet = IdHTTPServer1CommandGet
-    Left = 480
-    Top = 256
+    Left = 472
+    Top = 448
   end
   object IdSchedulerOfThreadPool1: TIdSchedulerOfThreadPool
     MaxThreads = 30
     PoolSize = 10
-    Left = 480
-    Top = 208
+    Left = 472
+    Top = 400
   end
   object tmrStartup: TTimer
     Enabled = False
@@ -782,8 +806,8 @@ object frmClickerActions: TfrmClickerActions
   end
   object pmClientModeServerAddress: TPopupMenu
     OnPopup = pmClientModeServerAddressPopup
-    Left = 304
-    Top = 208
+    Left = 296
+    Top = 272
     object MenuItem_RemoveServerAddress: TMenuItem
       Caption = 'Remove server address'
     end

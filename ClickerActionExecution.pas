@@ -95,6 +95,8 @@ type
     FAllowedFileDirsForServer: PString;
     FAllowedFileExtensionsForServer: PString;
 
+    FRenderingRequestPageCloseBrowserOnDone: Boolean;
+
     FfrClickerActions: TfrClickerActions;  ///////////////////////// temp
 
     FBrowserRenderingText: TBrowserRenderingText;
@@ -274,6 +276,8 @@ type
     property AllowedFileDirsForServer: PString write FAllowedFileDirsForServer;
     property AllowedFileExtensionsForServer: PString write FAllowedFileExtensionsForServer;
 
+    property RenderingRequestPageCloseBrowserOnDone: Boolean read FRenderingRequestPageCloseBrowserOnDone write FRenderingRequestPageCloseBrowserOnDone;
+
     property frClickerActions: TfrClickerActions read FfrClickerActions write FfrClickerActions;  //not created here in this class, used from outside    ///////////////////////// temp
 
     property OnAddToLog: TOnAddToLog write FOnAddToLog;
@@ -352,6 +356,8 @@ begin
 
   FAllowedFileDirsForServer := nil;
   FAllowedFileExtensionsForServer := nil;
+
+  FRenderingRequestPageCloseBrowserOnDone := True;
 
   FPluginStepOver := nil;
   FPluginContinueAll := nil;
@@ -2230,6 +2236,7 @@ var
   ResultedControlArr_Text, ResultedControlArr_Bmp, ResultedControlArr_Pmtv: TCompRecArr;
   MatchSource, DetailedMatchSource: string;
   InitialTickCount, Timeout, tk: QWord;
+  TimeoutReceivingBitmaps, AllBitmapsReceived: Boolean;
   FindControlInputData, WorkFindControlInputData: TFindControlInputData;
   StopAllActionsOnDemandAddr: Pointer;
   EvalFG, EvalBG: string;
@@ -2244,6 +2251,7 @@ var
   ExtBmpName: string;
   IsExtBmp: Boolean;
   TempBmp: TBitmap;
+  WebLink: string;
 begin
   Result := False;
 
@@ -2292,7 +2300,16 @@ begin
           FBrowserRenderingText.Timeout := IntToStr(AFindSubControlOptions.RenderingInBrowserSettings.ReceivingBitmapsTimeout);
 
           if AFindSubControlOptions.RenderingInBrowserSettings.RenderingRequestType = rrtShellExecute then
-            ShellExecute(0, 'open', PChar('http://127.0.0.1:5444/' + CRECmd_GetTextRenderingPage + '?' + CREParam_StackLevel + '=' + IntToStr(FStackLevel^) + '&' + CREParam_ID + '=' + FBrowserRenderingText.RequestID), '', '', 5)  //SW_SHOW
+          begin
+            WebLink := 'http://127.0.0.1:5444/' + CRECmd_GetTextRenderingPage + '?' +
+                                                  CREParam_StackLevel + '=' + IntToStr(FStackLevel^) + '&' +
+                                                  CREParam_ID + '=' + FBrowserRenderingText.RequestID;
+            {$IFDEF Windows}
+              ShellExecute(0, 'open', PChar(WebLink), '', '', 5)  //SW_SHOW
+            {$ELSE}
+              raise Exception.Create('ShellExecute equivalent not implemented. Please use an ExecApp action, which runs xdg-open "' + WebLink + '"    (with double quotes).');
+            {$ENDIF}
+          end
           else
           begin  //AFindSubControlOptions
             AddToLog('Sending rendering request via an action, instead of using ShellExecute.');
@@ -2317,6 +2334,7 @@ begin
               raise Exception.Create('Waiting for rendered bitmaps, failed at "' + AFindSubControlOptions.RenderingInBrowserSettings.PluginActionForReceivingBitmaps + '" action.');
           end;
 
+          TimeoutReceivingBitmaps := False;
           TempBmp := TBitmap.Create;
           try
             tk := GetTickCount64;
@@ -2324,16 +2342,25 @@ begin
               Application.ProcessMessages;
               Sleep(1);
 
+              if GetTickCount64 - tk > AFindSubControlOptions.RenderingInBrowserSettings.ReceivingBitmapsTimeout then
+              begin
+                TimeoutReceivingBitmaps := True;
+                Break;
+              end;
+
+              AllBitmapsReceived := True;
               for j := 0 to Length(FBrowserRenderingText.RenderedFileNames) - 1 do
                 if not DoOnLoadRenderedBitmap(TempBmp, FBrowserRenderingText.RenderedFileNames[j]) then  //instead of DoOnLoadRenderedBitmap, there should be a verification for file existence
-                  Continue;
+                  AllBitmapsReceived := False;
 
-            until GetTickCount64 - tk > AFindSubControlOptions.RenderingInBrowserSettings.ReceivingBitmapsTimeout;
+              if AllBitmapsReceived then
+                Break;
+            until False;
           finally
             TempBmp.Free;
           end;
 
-          if GetTickCount64 - tk > AFindSubControlOptions.RenderingInBrowserSettings.ReceivingBitmapsTimeout then
+          if TimeoutReceivingBitmaps then
           begin
             AddToLog('Timeout receiving all expected rendered bitmaps.');
             if not AFindSubControlOptions.RenderingInBrowserSettings.UsePluginForReceivingBitmaps then
@@ -5541,7 +5568,8 @@ begin
     end;
     Result := Result + '];'#13#10;
 
-    Result := Result +
+    if FRenderingRequestPageCloseBrowserOnDone then
+      Result := Result +
               ''#13#10 +
               '    function CloseIfAllRequestsAreDone(AResults) {'#13#10 +
               '      let AllResults = true;'#13#10 +
@@ -5557,7 +5585,10 @@ begin
               '        window.close();'#13#10 +
               '      }'#13#10 +
               '    }'#13#10 +
-              ''#13#10;
+              ''#13#10
+    else
+      Result := Result +
+              '// The CloseIfAllRequestsAreDone function is not used.'#13#10;
 
     Result := Result +
               '    for (let i = 0; i < ' + IntToStr(ProfilesLen) + '; i++) {'#13#10;
@@ -5601,14 +5632,24 @@ begin
               '      const xhr = new XMLHttpRequest();'#13#10 +
               '      xhr.onload = () => {'#13#10 +
               '        console.log("set image response[" + i + "]: " + xhr.response);'#13#10 +
-              '        Results[i] = true;'#13#10 +
-              '        CloseIfAllRequestsAreDone(Results);'#13#10 +   //ToDo: This call should be controlled by an option (a new property), because the browser/tab may have to stay open.
+              '        Results[i] = true;'#13#10;
+
+    if FRenderingRequestPageCloseBrowserOnDone then
+      Result := Result +
+              '        CloseIfAllRequestsAreDone(Results);'#13#10;
+
+    Result := Result +
               '      }'#13#10 +
               ''#13#10 +
               '      xhr.onerror = () => {'#13#10 +
               '        console.error("set image error. Maybe the request string is too long (> MaxLineLength). (Because the rendered text is too complex.)");'#13#10 +
-              '        Results[i] = true;'#13#10 +
-              '        CloseIfAllRequestsAreDone(Results);'#13#10 +  //comment this line if the browser should stay open in case of a failed request
+              '        Results[i] = true;'#13#10;
+
+    if FRenderingRequestPageCloseBrowserOnDone then
+      Result := Result +
+              '        CloseIfAllRequestsAreDone(Results);'#13#10;  //comment this line if the browser should stay open in case of a failed request
+
+    Result := Result +
               '      }'#13#10 +
               ''#13#10 +
 
