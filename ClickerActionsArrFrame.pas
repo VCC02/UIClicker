@@ -553,6 +553,7 @@ type
 
     procedure HandleOnWaitInDebuggingMode(var ADebuggingAction: TClkActionRec; AActionAllowsSteppingInto: TAllowsSteppingInto);
     function HandleOnGetPluginInMemFS: TInMemFileSystem;
+    function HandleOnGetListeningPort: Word;
 
     function GetInMemFS: TInMemFileSystem;
     procedure SetInMemFS(Value: TInMemFileSystem);
@@ -1311,6 +1312,7 @@ begin
   FActionExecution.OnSaveCompleteTemplateToFile := HandleOnSaveCompleteTemplateToFile;
   FActionExecution.OnWaitInDebuggingMode := HandleOnWaitInDebuggingMode;
   FActionExecution.OnGetPluginInMemFS := HandleOnGetPluginInMemFS;
+  FActionExecution.OnGetListeningPort := HandleOnGetListeningPort;
 
   FCmdConsoleHistory := TStringList.Create;
   FCmdConsoleHistory.LineBreak := #13#10;
@@ -2314,6 +2316,12 @@ begin
     AddToLog('MemPluginsInMemFS not available. UIClicker requires MemPlugins compiler directive.');
     Result := nil;
   {$ENDIF}
+end;
+
+
+function TfrClickerActionsArr.HandleOnGetListeningPort: Word;
+begin
+  Result := DoOnGetListeningPort;
 end;
 
 

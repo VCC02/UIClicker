@@ -145,6 +145,7 @@ type
 
     FOnWaitInDebuggingMode: TOnWaitInDebuggingMode;
     FOnGetPluginInMemFS: TOnGetPluginInMemFS;
+    FOnGetListeningPort: TOnGetListeningPort;
 
     function GetActionVarValue(VarName: string): string;
     procedure SetActionVarValue(VarName, VarValue: string);
@@ -213,6 +214,7 @@ type
 
     procedure DoOnWaitInDebuggingMode(var ADebuggingAction: TClkActionRec; AActionAllowsSteppingInto: TAllowsSteppingInto);
     function DoOnGetPluginInMemFS: TInMemFileSystem;
+    function DoOnGetListeningPort: Word;
 
     function HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     function HandleOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
@@ -324,6 +326,7 @@ type
 
     property OnWaitInDebuggingMode: TOnWaitInDebuggingMode write FOnWaitInDebuggingMode;
     property OnGetPluginInMemFS: TOnGetPluginInMemFS write FOnGetPluginInMemFS;
+    property OnGetListeningPort: TOnGetListeningPort write FOnGetListeningPort;
   end;
 
 
@@ -412,6 +415,7 @@ begin
 
   FOnWaitInDebuggingMode := nil;
   FOnGetPluginInMemFS := nil;
+  FOnGetListeningPort := nil;
 end;
 
 
@@ -1058,6 +1062,15 @@ begin
     raise Exception.Create('OnGetPluginInMemFS is not assigned.')
   else
     Result := FOnGetPluginInMemFS();
+end;
+
+
+function TActionExecution.DoOnGetListeningPort: Word;
+begin
+  if not Assigned(FOnGetListeningPort) then
+    raise Exception.Create('OnGetListeningPort is not assigned.')
+  else
+    Result := FOnGetListeningPort();
 end;
 
 
@@ -2228,6 +2241,22 @@ function TActionExecution.ExecuteFindSubControlAction(var AFindSubControlOptions
       AddToLog('BitmapToSearchOn not used... Using screenshot.');
   end;
 
+  function RunApp(AApp, AParams: string): Boolean;
+  var
+    ExecAppAction: TClkExecAppOptions;
+    ActionOptions: TClkActionOptions;
+  begin
+    GetDefaultPropertyValues_ExecApp(ExecAppAction);
+    ExecAppAction.PathToApp := AApp;
+    ExecAppAction.ListOfParams := AParams;
+    ExecAppAction.VerifyFileExistence := False;
+
+    ActionOptions.Action := acExecApp;
+    ActionOptions.ActionName := 'RunApp';
+    ActionOptions.ActionTimeout := 3000;
+    Result := ExecuteExecAppAction(ExecAppAction, ActionOptions);
+  end;
+
 var
   i, j, k, BmpTextProfileCount: Integer;
   ListOfBitmapFiles, ListOfPrimitiveFiles, ListOfBmpsInPrimitiveFiles: TStringList;
@@ -2301,13 +2330,17 @@ begin
 
           if AFindSubControlOptions.RenderingInBrowserSettings.RenderingRequestType = rrtShellExecute then
           begin
-            WebLink := 'http://127.0.0.1:5444/' + CRECmd_GetTextRenderingPage + '?' +
+            WebLink := 'http://127.0.0.1:' + IntToStr(DoOnGetListeningPort) + '/' +
+                                                  CRECmd_GetTextRenderingPage + '?' +
                                                   CREParam_StackLevel + '=' + IntToStr(FStackLevel^) + '&' +
                                                   CREParam_ID + '=' + FBrowserRenderingText.RequestID;
             {$IFDEF Windows}
-              ShellExecute(0, 'open', PChar(WebLink), '', '', 5)  //SW_SHOW
+              ShellExecute(0, 'open', PChar(WebLink), '', '', 5);  //SW_SHOW
+              //if not RunApp('explorer', '"' + WebLink + '"') then
+              //  AddToLog('Can''t run application to open web browser.');
             {$ELSE}
-              raise Exception.Create('ShellExecute equivalent not implemented. Please use an ExecApp action, which runs xdg-open "' + WebLink + '"    (with double quotes).');
+              if not RunApp('xdg-open', '"' + WebLink + '"') then
+                AddToLog('Can''t run application to open web browser.');
             {$ENDIF}
           end
           else
