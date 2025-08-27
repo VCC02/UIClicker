@@ -409,6 +409,7 @@ type
     FOnLoadBitmap: TOnLoadBitmap;
     FOnLoadRenderedBitmap: TOnLoadRenderedBitmap;
     FOnSaveRenderedBitmap: TOnSaveRenderedBitmap;
+    FOnDeleteRenderedBitmap: TOnDeleteRenderedBitmap;
     FOnRenderBmpExternally: TOnRenderBmpExternally;
     FOnLoadRawPmtv: TOnLoadRawPmtv;
     FOnGetListOfExternallyRenderedImages: TOnGetListOfExternallyRenderedImages;
@@ -461,6 +462,7 @@ type
     FLoggingFIFO: TPollingFIFO;
 
     procedure GetListOfUsedFilesFromLoadedTemplate(AListOfFiles: TStringList);
+    procedure SetStackLevel(Value: Integer);
 
     procedure HandleActionSelection; //does not handle an event
 
@@ -479,6 +481,7 @@ type
     function HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     function HandleOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     procedure HandleOnSaveRenderedBitmap(ABitmap: TBitmap; AFileName: string);
+    procedure HandleOnDeleteRenderedBitmap(AFileName: string);
     function HandleOnRenderBmpExternally(AFilename: string): string;
     function HandleOnLoadRawPmtv(APmtvFile: TMemoryStream; AFileName: string): Boolean;
     procedure HandleOnGetListOfExternallyRenderedImages(AListOfExternallyRenderedImages: TStringList; Sender: TObject = nil);
@@ -624,6 +627,7 @@ type
     function DoOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     function DoOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     procedure DoOnSaveRenderedBitmap(ABitmap: TBitmap; AFileName: string);
+    procedure DoOnDeleteRenderedBitmap(AFileName: string);
     function DoOnRenderBmpExternally(AFilename: string): string;
     function DoOnLoadRawPmtv(APmtvFile: TMemoryStream; AFileName: string): Boolean;
     procedure DoOnGetListOfExternallyRenderedImages(AListOfExternallyRenderedImages: TStringList);
@@ -759,7 +763,7 @@ type
     property AllowedFileExtensionsForServer: string write FAllowedFileExtensionsForServer;
 
     property ExecutesRemotely: Boolean read FExecutesRemotely write FExecutesRemotely;  //used in client mode
-    property StackLevel: Integer read FStackLevel write FStackLevel;
+    property StackLevel: Integer read FStackLevel write SetStackLevel;
     property RemoteExActionIndex: Integer read FRemoteExActionIndex write FRemoteExActionIndex;
     property RemoteExCmdResult: Boolean read FRemoteExCmdResult write FRemoteExCmdResult;
     property ExecutingActionFromRemote: Boolean read FExecutingActionFromRemote write FExecutingActionFromRemote; //used in server mode
@@ -795,6 +799,7 @@ type
     property OnLoadBitmap: TOnLoadBitmap read FOnLoadBitmap write FOnLoadBitmap;
     property OnLoadRenderedBitmap: TOnLoadRenderedBitmap read FOnLoadRenderedBitmap write FOnLoadRenderedBitmap;
     property OnSaveRenderedBitmap: TOnSaveRenderedBitmap write FOnSaveRenderedBitmap;
+    property OnDeleteRenderedBitmap: TOnDeleteRenderedBitmap write FOnDeleteRenderedBitmap;
     property OnRenderBmpExternally: TOnRenderBmpExternally read FOnRenderBmpExternally write FOnRenderBmpExternally;
     property OnLoadRawPmtv: TOnLoadRawPmtv read FOnLoadRawPmtv write FOnLoadRawPmtv;
     property OnGetListOfExternallyRenderedImages: TOnGetListOfExternallyRenderedImages write FOnGetListOfExternallyRenderedImages;
@@ -1281,6 +1286,7 @@ begin
   FActionExecution.OnLoadBitmap := HandleOnLoadBitmap; //both ActionExecution and frClickerActions use the same handler
   FActionExecution.OnLoadRenderedBitmap := HandleOnLoadRenderedBitmap;
   FActionExecution.OnSaveRenderedBitmap := HandleOnSaveRenderedBitmap;
+  FActionExecution.OnDeleteRenderedBitmap := HandleOnDeleteRenderedBitmap;
   FActionExecution.OnRenderBmpExternally := HandleOnRenderBmpExternally;
   FActionExecution.OnLoadRawPmtv := HandleOnLoadRawPmtv;
   FActionExecution.OnLoadPluginFromInMemFS := HandleOnLoadPluginFromInMemFS;
@@ -1546,6 +1552,12 @@ begin
   AFileName := ResolveTemplatePath(AFileName); //////////////////// Added for plugin. Not sure how it affects unresolved path, which may be validated from allowed dirs.
   //AFileName := EvaluateReplacements(AFileName);  //uncomment if really needed
   DoOnSaveRenderedBitmap(ABitmap, AFileName);
+end;
+
+
+procedure TfrClickerActionsArr.HandleOnDeleteRenderedBitmap(AFileName: string);
+begin
+  DoOnDeleteRenderedBitmap(AFileName);
 end;
 
 
@@ -3054,6 +3066,15 @@ begin
     FOnSaveRenderedBitmap(ABitmap, AFileName)
   else
     raise Exception.Create('OnSaveRenderedBitmap is not assigned.');
+end;
+
+
+procedure TfrClickerActionsArr.DoOnDeleteRenderedBitmap(AFileName: string);
+begin
+  if Assigned(FOnDeleteRenderedBitmap) then
+    FOnDeleteRenderedBitmap(AFileName)
+  else
+    raise Exception.Create('OnDeleteRenderedBitmap is not assigned.');
 end;
 
 
@@ -7782,6 +7803,13 @@ begin
         TempStringList.Free;
       end;
     end;
+end;
+
+
+procedure TfrClickerActionsArr.SetStackLevel(Value: Integer);
+begin
+  FStackLevel := Value;
+  AddToLog('StackLevel: ' + IntToStr(StackLevel));
 end;
 
 

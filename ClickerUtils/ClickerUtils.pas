@@ -71,6 +71,7 @@ type
   TOnLoadBitmap = function(ABitmap: TBitmap; AFileName: string): Boolean of object; //returns True if file loaded, and False if file not found
   TOnLoadRenderedBitmap = function(ABitmap: TBitmap; AFileName: string): Boolean of object; //returns True if file loaded, and False if file not found in in-mem FS for received rendered bitmaps
   TOnSaveRenderedBitmap = procedure(ABitmap: TBitmap; AFileName: string) of object;
+  TOnDeleteRenderedBitmap = procedure(AFileName: string) of object;  //Deletes file from in-mem FS
   TOnLoadRawPmtv = function(APmtvFile: TMemoryStream; AFileName: string): Boolean of object;  //returns True if file loaded, and False if file not found
   TOnLoadPluginFromInMemFS = function(APlugin: TMemoryStream; AFileName: string): Boolean of object;
   TOnLoadPluginFromDiskToPluginInMemFileSystem = procedure(APluginPath: string) of object;

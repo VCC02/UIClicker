@@ -321,6 +321,7 @@ type
     function HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     function HandleOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     procedure HandleOnSaveRenderedBitmap(ABitmap: TBitmap; AFileName: string);
+    procedure HandleOnDeleteRenderedBitmap(AFileName: string);
     function HandleOnLoadRawPmtv(APmtvFile: TMemoryStream; AFileName: string): Boolean;
     function HandleOnLoadPluginFromInMemFS(APlugin: TMemoryStream; AFileName: string): Boolean;
     procedure HandleOnGetListOfExternallyRenderedImages(AListOfExternallyRenderedImages: TStringList; Sender: TObject = nil);
@@ -1122,6 +1123,7 @@ begin
   frClickerActionsArrMain.OnLoadBitmap := HandleOnLoadBitmap;
   frClickerActionsArrMain.OnLoadRenderedBitmap := HandleOnLoadRenderedBitmap;
   frClickerActionsArrMain.OnSaveRenderedBitmap := HandleOnSaveRenderedBitmap;
+  frClickerActionsArrMain.OnDeleteRenderedBitmap := HandleOnDeleteRenderedBitmap;
   frClickerActionsArrMain.OnLoadRawPmtv := HandleOnLoadRawPmtv;
   frClickerActionsArrMain.OnLoadPluginFromInMemFS := HandleOnLoadPluginFromInMemFS;
   frClickerActionsArrMain.OnGetListOfExternallyRenderedImages := HandleOnGetListOfExternallyRenderedImages;
@@ -1189,6 +1191,8 @@ begin
   frClickerActionsArrExperiment2.OnLoadRenderedBitmap := HandleOnLoadRenderedBitmap;
   frClickerActionsArrExperiment1.OnSaveRenderedBitmap := HandleOnSaveRenderedBitmap;
   frClickerActionsArrExperiment2.OnSaveRenderedBitmap := HandleOnSaveRenderedBitmap;
+  frClickerActionsArrExperiment1.OnDeleteRenderedBitmap := HandleOnDeleteRenderedBitmap;
+  frClickerActionsArrExperiment2.OnDeleteRenderedBitmap := HandleOnDeleteRenderedBitmap;
   frClickerActionsArrExperiment1.OnLoadRawPmtv := HandleOnLoadRawPmtv;
   frClickerActionsArrExperiment2.OnLoadRawPmtv := HandleOnLoadRawPmtv;
   frClickerActionsArrExperiment1.OnLoadPluginFromInMemFS := HandleOnLoadPluginFromInMemFS;
@@ -1812,6 +1816,7 @@ begin
         NewFrame.OnLoadBitmap := HandleOnLoadBitmap;
         NewFrame.OnLoadRenderedBitmap := HandleOnLoadRenderedBitmap;
         NewFrame.OnSaveRenderedBitmap := HandleOnSaveRenderedBitmap;
+        NewFrame.OnDeleteRenderedBitmap := HandleOnDeleteRenderedBitmap;
         NewFrame.OnLoadRawPmtv := HandleOnLoadRawPmtv;
         NewFrame.OnLoadPluginFromInMemFS := HandleOnLoadPluginFromInMemFS;
         NewFrame.OnGetListOfExternallyRenderedImages := HandleOnGetListOfExternallyRenderedImages;
@@ -2258,6 +2263,12 @@ begin
   finally
     MemStream.Free;
   end;
+end;
+
+
+procedure TfrmClickerActions.HandleOnDeleteRenderedBitmap(AFileName: string);
+begin
+  FRenderedInMemFileSystem.DeleteFileFromMem(AFileName);   //no need to call FileExistsInMem
 end;
 
 

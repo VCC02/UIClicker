@@ -108,6 +108,7 @@ type
     FOnLoadBitmap: TOnLoadBitmap;
     FOnLoadRenderedBitmap: TOnLoadRenderedBitmap;
     FOnSaveRenderedBitmap: TOnSaveRenderedBitmap;
+    FOnDeleteRenderedBitmap: TOnDeleteRenderedBitmap;
     FOnRenderBmpExternally: TOnRenderBmpExternally;
     FOnLoadRawPmtv: TOnLoadRawPmtv;
     FOnLoadPluginFromInMemFS: TOnLoadPluginFromInMemFS;
@@ -185,6 +186,7 @@ type
     function DoOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     function DoOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     procedure DoOnSaveRenderedBitmap(ABitmap: TBitmap; AFileName: string);
+    procedure DoOnDeleteRenderedBitmap(AFileName: string);
     function DoOnRenderBmpExternally(ARequest: string): string;
     function DoOnLoadPluginFromInMemFS(APlugin: TMemoryStream; AFileName: string): Boolean;
     function DoOnGetActionProperties(AActionName: string): PClkActionRec;
@@ -289,6 +291,7 @@ type
     property OnLoadBitmap: TOnLoadBitmap write FOnLoadBitmap;
     property OnLoadRenderedBitmap: TOnLoadRenderedBitmap write FOnLoadRenderedBitmap;
     property OnSaveRenderedBitmap: TOnSaveRenderedBitmap write FOnSaveRenderedBitmap;
+    property OnDeleteRenderedBitmap: TOnDeleteRenderedBitmap write FOnDeleteRenderedBitmap;
     property OnRenderBmpExternally: TOnRenderBmpExternally write FOnRenderBmpExternally;
     property OnLoadRawPmtv: TOnLoadRawPmtv read FOnLoadRawPmtv write FOnLoadRawPmtv;
     property OnLoadPluginFromInMemFS: TOnLoadPluginFromInMemFS write FOnLoadPluginFromInMemFS;
@@ -378,6 +381,7 @@ begin
   FOnLoadBitmap := nil;
   FOnLoadRenderedBitmap := nil;
   FOnSaveRenderedBitmap := nil;
+  FOnDeleteRenderedBitmap := nil;
   FOnRenderBmpExternally := nil;
   FOnLoadRawPmtv := nil;
   FOnLoadPluginFromInMemFS := nil;
@@ -765,6 +769,15 @@ begin
     FOnSaveRenderedBitmap(ABitmap, AFileName)
   else
     raise Exception.Create('OnSaveRenderedBitmap is not assigned.');
+end;
+
+
+procedure TActionExecution.DoOnDeleteRenderedBitmap(AFileName: string);
+begin
+  if Assigned(FOnDeleteRenderedBitmap) then
+    FOnDeleteRenderedBitmap(AFileName)
+  else
+    raise Exception.Create('OnDeleteRenderedBitmap is not assigned.');
 end;
 
 
@@ -2315,7 +2328,7 @@ begin
             FBrowserRenderingText.FontProfiles[j] := AFindSubControlOptions.MatchBitmapText[j]; //copy entire profile
             FBrowserRenderingText.FontProfiles[j].ForegroundColor := EvaluateReplacements(AFindSubControlOptions.MatchBitmapText[j].ForegroundColor, True);
             FBrowserRenderingText.FontProfiles[j].BackgroundColor := EvaluateReplacements(AFindSubControlOptions.MatchBitmapText[j].BackgroundColor, True);
-            FBrowserRenderingText.RenderedFileNames[j] := 'BrowserTxt_' + IntToStr(j) + '.png';  //maybe add a timestamp after index. Make sure the string does not contain quotes or other special characters in JS.
+            FBrowserRenderingText.RenderedFileNames[j] := 'BrowserTxt_' + IntToStr(j) + '_L' + IntToStr(FStackLevel^) + '.png';  //maybe add a timestamp after index. Make sure the string does not contain quotes or other special characters in JS.
           end;
 
           FBrowserRenderingText.RequestID := AActionOptions.ActionName + '_' + DateTimeToStr(Now) + '_' + IntToStr(GetTickCount64);
@@ -2349,6 +2362,7 @@ begin
             SetActionVarValue('$StackLevel$', IntToStr(FStackLevel^));
             SetActionVarValue('$RenderingRequestID$', FBrowserRenderingText.RequestID); //used by the called action (ExecApp, CallTemplate, Plugin)
             try
+              AddToLog('Rendering with action: "' + AFindSubControlOptions.RenderingInBrowserSettings.ActionForSendingRequest + '", at stack level ' + IntToStr(FStackLevel^) + '.');
               if not DoOnExecuteActionByName(AFindSubControlOptions.RenderingInBrowserSettings.ActionForSendingRequest) then
               begin
                 AddToLog('Sending rendering request from action, failed at "' + AFindSubControlOptions.RenderingInBrowserSettings.ActionForSendingRequest + '" action.');
@@ -2562,7 +2576,13 @@ begin
         AddToLog('DetailedMatchSource: ' + DetailedMatchSource);
       finally
         if AFindSubControlOptions.UseTextRenderingInBrowser then
+        begin
+          AddToLog('Deleting received rendered bitmaps from In-Mem FS.  StackLevel: ' + IntToStr(FStackLevel^));
+          for j := 0 to Length(FBrowserRenderingText.RenderedFileNames) - 1 do
+            DoOnDeleteRenderedBitmap(FBrowserRenderingText.RenderedFileNames[j]);
+
           LeaveCriticalSection(FBrowserRenderingText.CritSec);
+        end;
       end;
     end; //WillMatchBitmapText
 
@@ -5514,7 +5534,7 @@ begin
   EnterCriticalSection(FBrowserRenderingText.CritSec);
   try
     if AHTTPParams.Values[CREParam_ID] <> FBrowserRenderingText.RequestID then
-      raise Exception.Create('Wrong page ID: ' + AHTTPParams.Values[CREParam_ID] + '.  Expected: ' + FBrowserRenderingText.RequestID);
+      raise Exception.Create('Wrong page ID: ' + AHTTPParams.Values[CREParam_ID] + '.  Expected: ' + FBrowserRenderingText.RequestID + '  StackLevel: ' + IntToStr(FStackLevel^));
 
     Result := '<!DOCTYPE html>'#13#10 +
               '<html lang="en-US">'#13#10 +
