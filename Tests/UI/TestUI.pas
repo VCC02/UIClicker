@@ -152,6 +152,8 @@ type
     procedure TestVerifyPermissionsOnSendingFiles_SendingFileFromDeniedTestFiles;
     procedure TestVerifyPermissionsOnSendingFiles_ReSendingModifiedFileByEditTemplate;
 
+    procedure TestRenderTextOnWebBrowser_With_ShellExecute_RenderingRequest;
+
     procedure AfterAll_AlwaysExecute;
   end;
 
@@ -187,7 +189,7 @@ implementation
 
 
 uses
-  ClickerActionsClient, ClickerUtils, AsyncProcess, Process, Expectations, Forms, IniFiles,
+  ClickerActionsClient, ClickerUtils, AsyncProcess, Process, Expectations, Forms, //IniFiles,
   ObjectInspectorFrame, ClickerActionProperties, ClickerActionValues, ActionsStuff,
   UITestUtils;
 
@@ -1392,6 +1394,19 @@ begin
 
   ExecuteTemplateOnTestDriver(ExtractFilePath(ParamStr(0)) + '..\..\TestDriver\ActionTemplates\PrepareClientActionsWindowForInteraction.clktmpl', CREParam_FileLocation_ValueDisk);
   ExecuteTemplateOnTestDriver(ExtractFilePath(ParamStr(0)) + '..\..\TestDriver\ActionTemplates\DeleteAllActionsFromList.clktmpl', CREParam_FileLocation_ValueDisk); //this template depends on caching from above
+end;
+
+
+procedure TTestUI.TestRenderTextOnWebBrowser_With_ShellExecute_RenderingRequest;
+begin
+  PrepareClickerUnderTestToReadItsVars;   //server mode
+  CheckAutoCloseBrowser(CTestDriverServerAddress_Client, FTemplatesDir, False);
+  StartWebBrowserForTextRendering(CTestClientAddress);
+  try
+    FindSubControl_With_ShellExecute_RenderingRequest(CTestClientAddress);
+  finally
+    CloseWebBrowserForTextRendering(CTestClientAddress);
+  end;
 end;
 
 

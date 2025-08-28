@@ -48,8 +48,16 @@ procedure LoadTemplateFromDiskIntoInMemFS(ATemplateName: string; AInMemFS: TInMe
 
 procedure ListOfSerializedPropertiesToOIInteractionData(AListOfSerProps: string; ABasicPropInfo: PArrayOfProperties; APropIsXP: PArrayOfEnumCounts; APropCnt: Integer; var AProperties: TOIInteractionDataArr);
 
+procedure StartWebBrowserForTextRendering(AUIClickerAddress: string);
+procedure FindSubControl_With_ShellExecute_RenderingRequest(AUIClickerAddress: string);
+procedure CloseWebBrowserForTextRendering(AUIClickerAddress: string);
+
+
 implementation
 
+
+uses
+  ClickerActionProperties, TestHTTPAPI, ClickerActionsClient;
 
 procedure GenerateExecAppOptionsForTestDriver(var AExecAppOptions: TClkExecAppOptions; AExeArgs: string);
 begin
@@ -97,6 +105,87 @@ begin
     ListOfSerProps.Free;
   end;
 end;
+
+
+procedure FindWebBrowserForTextRendering(AUIClickerAddress: string);
+var
+  FindControlOptions: TClkFindControlOptions;
+begin
+  GetDefaultPropertyValues_FindControl(FindControlOptions);
+  FindControlOptions.MatchText := 'Mozilla Firefox';
+  FindControlOptions.MatchClassName := 'MozillaWindowClass';
+  FindControlOptions.InitialRectangle.Bottom := '$Control_Top$';
+  FindControlOptions.InitialRectangle.TopOffset := '102';
+  FindControlOptions.InitialRectangle.BottomOffset := '402';
+  ExpectSuccessfulAction(FastReplace_87ToReturn(ExecuteFindControlAction(AUIClickerAddress, FindControlOptions, 'Find FF', 3000, CREParam_FileLocation_ValueMem)));
+end;
+
+
+procedure StartWebBrowserForTextRendering(AUIClickerAddress: string);
+var
+  ExecAppOptions: TClkExecAppOptions;
+  SleepOptions: TClkSleepOptions;
+begin
+  GetDefaultPropertyValues_ExecApp(ExecAppOptions);
+  ExecAppOptions.PathToApp := 'explorer';
+  ExecAppOptions.ListOfParams := 'http://';
+  ExpectSuccessfulAction(FastReplace_87ToReturn(ExecuteExecAppAction(AUIClickerAddress, ExecAppOptions, 'Start browser', 1000)));
+
+  GetDefaultPropertyValues_Sleep(SleepOptions);
+  ExpectSuccessfulAction(FastReplace_87ToReturn(ExecuteSleepAction(AUIClickerAddress, SleepOptions, 'Sleep')));
+
+  FindWebBrowserForTextRendering(AUIClickerAddress);
+end;
+
+
+procedure CloseWebBrowserForTextRendering(AUIClickerAddress: string);
+var
+  WindowOperationsOptions: TClkWindowOperationsOptions;
+begin
+  FindWebBrowserForTextRendering(AUIClickerAddress);
+
+  GetDefaultPropertyValues_WindowOperations(WindowOperationsOptions);
+  WindowOperationsOptions.Operation := TWindowOperation(2);
+  ExpectSuccessfulAction(FastReplace_87ToReturn(ExecuteWindowOperationsAction(AUIClickerAddress, WindowOperationsOptions)));
+end;
+
+
+procedure FindSubControl_With_ShellExecute_RenderingRequest(AUIClickerAddress: string);
+var
+  FindSubControlOptions: TClkFindSubControlOptions;
+begin
+  GetDefaultPropertyValues_FindSubControl(FindSubControlOptions);
+  FindSubControlOptions.MatchText := 'The quick brown fox bdqW.';
+  SetLength(FindSubControlOptions.MatchBitmapText, 4);
+  FindSubControlOptions.MatchBitmapText[0].FontSize := 15;
+  FindSubControlOptions.MatchBitmapText[0].CropLeft := '7';
+  FindSubControlOptions.MatchBitmapText[0].CropTop := '8';
+  FindSubControlOptions.MatchBitmapText[0].CropRight := '9';
+  FindSubControlOptions.MatchBitmapText[0].CropBottom := '10';
+  FindSubControlOptions.MatchBitmapText[1].ForegroundColor := '000080';
+  FindSubControlOptions.MatchBitmapText[1].BackgroundColor := '008000';
+  FindSubControlOptions.MatchBitmapText[1].FontName := 'Segoe UI';
+  FindSubControlOptions.MatchBitmapText[1].FontSize := 20;
+  FindSubControlOptions.MatchBitmapText[1].Italic := True;
+  FindSubControlOptions.MatchBitmapText[1].ProfileName := 'Profile [1]';
+  FindSubControlOptions.MatchBitmapText[2].ForegroundColor := '808000';
+  FindSubControlOptions.MatchBitmapText[2].BackgroundColor := 'FFFF00';
+  FindSubControlOptions.MatchBitmapText[2].FontName := 'Segoe UI';
+  FindSubControlOptions.MatchBitmapText[2].FontSize := 9;
+  FindSubControlOptions.MatchBitmapText[2].Bold := True;
+  FindSubControlOptions.MatchBitmapText[2].ProfileName := 'Profile [2]';
+  FindSubControlOptions.MatchBitmapText[3].ForegroundColor := '008000';
+  FindSubControlOptions.MatchBitmapText[3].BackgroundColor := '00FFFF';
+  FindSubControlOptions.MatchBitmapText[3].FontName := 'Courier New';
+  FindSubControlOptions.MatchBitmapText[3].FontSize := 60;
+  FindSubControlOptions.MatchBitmapText[3].ProfileName := 'Profile [3]';
+  FindSubControlOptions.UseTextRenderingInBrowser := True;
+  FindSubControlOptions.RenderingInBrowserSettings.ReceivingBitmapsTimeout := 3010;
+
+  ExpectSuccessfulAction(FastReplace_87ToReturn(ExecuteFindSubControlAction(AUIClickerAddress, FindSubControlOptions, 'FindSubControl', 1000, CREParam_FileLocation_ValueMem)));
+end;
+
+
 
 end.
 

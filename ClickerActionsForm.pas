@@ -3159,7 +3159,7 @@ begin
     Exit;
   end;
 
-  if ASyncObj.FCmd = '/' + CRECmd_GetTextRenderingPage then   //requires StackLevel=0 param    ToDo: ActionExecution must provide a function to go to the required StackLevel.
+  if ASyncObj.FCmd = '/' + CRECmd_GetTextRenderingPage then   //requires StackLevel=0 param
   begin
     AddToLog('GetTextRenderingPage...');
     ActionExec := frClickerActionsArrMain.GetActionExecutionByStackLevel(StrToIntDef(ASyncObj.FParams.Values[CREParam_StackLevel], -1)); //instead of frClickerActionsArrMain.ActionExecution, which is always at level 0

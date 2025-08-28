@@ -2412,9 +2412,9 @@ begin
 
           if TimeoutReceivingBitmaps then
           begin
-            AddToLog('Timeout receiving all expected rendered bitmaps.');
+            AddToLog(DateTimeToStr(Now) + '  Timeout receiving all expected rendered bitmaps.');
             if not AFindSubControlOptions.RenderingInBrowserSettings.UsePluginForReceivingBitmaps then
-              AddToLog('Please also verify if UIClicker is running in server mode.');
+              AddToLog(DateTimeToStr(Now) + '  Please also verify if UIClicker is running in server mode.');
           end;
         end; //AFindSubControlOptions.UseTextRenderingInBrowser
 
