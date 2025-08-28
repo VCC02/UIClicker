@@ -751,6 +751,8 @@ type
     procedure AddToLog(s: string);
     function ResolveTemplatePath(APath: string; ACustomSelfTemplateDir: string = ''; ACustomAppDir: string = ''): string;
 
+    function GetActionExecutionByStackLevel(AStackLevel: Integer): TActionExecution;
+
     procedure InitFrame;
 
     property Modified: Boolean read FModified write SetModified;
@@ -8016,5 +8018,36 @@ begin
   imglstWaitingForFilesAvailability.Draw(imgWaitingForFilesAvailability.Canvas, 0, 0, tmrWaitingForFilesAvailability.Tag, dsNormal, itImage);
 end;
 
+
+function TfrClickerActionsArr.GetActionExecutionByStackLevel(AStackLevel: Integer): TActionExecution;
+var
+  Level: Integer;
+begin
+  Result := nil;
+  if AStackLevel < FStackLevel then
+    Exit;
+
+  if AStackLevel = FStackLevel then
+  begin
+    Result := FActionExecution;
+    Exit;
+  end;
+
+  Level := FStackLevel;
+  Result := FActionExecution.NextStackCall;
+  while (Result <> nil) and
+        (Result.StackLevel^ < AStackLevel) do
+  begin
+    Result := Result.NextStackCall;
+    if Level > 500 then  //in case there is an infinite recursion
+      raise Exception.Create('Stack limitation when geting action execution by level.');
+
+    if Result = nil then  //The requested level does not exist
+      Exit;
+
+    if Result.StackLevel^ = AStackLevel then
+      Break;
+  end;
+end;
 
 end.

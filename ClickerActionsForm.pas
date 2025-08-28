@@ -1731,6 +1731,7 @@ var
   ScrBox: TScrollBox;
   ABtn: TButton;
   FileLoc: TFileLocation;
+  ActionExec: TActionExecution;
 begin
   NewTabSheet := TTabSheet.Create(PageControlPlayer);
   try
@@ -1781,6 +1782,11 @@ begin
 
         NewFrame.ShouldStopAtBreakPoint := AShouldStopAtBreakPoint;
         NewFrame.StackLevel := AStackLevel + 1;
+        ActionExec := frClickerActionsArrMain.GetActionExecutionByStackLevel(AStackLevel);
+        if ActionExec <> nil then
+          ActionExec.NextStackCall := NewFrame.ActionExecution;
+
+        NewFrame.ActionExecution.RenderingRequestPageCloseBrowserOnDone := frClickerActionsArrMain.ActionExecution.RenderingRequestPageCloseBrowserOnDone;
         NewFrame.ExecutesRemotely := AExecutesRemotely; //a client executes remotely
         NewFrame.ExecutingActionFromRemote := frClickerActionsArrMain.ExecutingActionFromRemote; //should be true in server mode
         NewFrame.UseLocalDebugger := frClickerActionsArrMain.UseLocalDebugger;
@@ -2681,6 +2687,7 @@ var
   TempMemStream: TMemoryStream;
   Png: TPNGImage;
   Bmp: TBitmap;
+  ActionExec: TActionExecution;
 begin
   Result := 'ok';  //default if not setting any result, as in CRECmd_ExecuteCommandAtIndex
 
@@ -3152,10 +3159,14 @@ begin
     Exit;
   end;
 
-  if ASyncObj.FCmd = '/' + CRECmd_GetTextRenderingPage then   //requires StackLevel=0 param
+  if ASyncObj.FCmd = '/' + CRECmd_GetTextRenderingPage then   //requires StackLevel=0 param    ToDo: ActionExecution must provide a function to go to the required StackLevel.
   begin
     AddToLog('GetTextRenderingPage...');
-    Result := frClickerActionsArrMain.ActionExecution.GetTextRenderingPage(ASyncObj.FParams);  //after rendering, the browser should upload the bitmaps (or PNGs) via a SetRenderedFile request
+    ActionExec := frClickerActionsArrMain.GetActionExecutionByStackLevel(StrToIntDef(ASyncObj.FParams.Values[CREParam_StackLevel], -1)); //instead of frClickerActionsArrMain.ActionExecution, which is always at level 0
+    if ActionExec = nil then
+      raise Exception.Create('Action execution frame not available at stack level ' + ASyncObj.FParams.Values[CREParam_StackLevel]);
+
+    Result := ActionExec.GetTextRenderingPage(ASyncObj.FParams);  //after rendering, the browser should upload the bitmaps (or PNGs) via a SetRenderedFile request
     Exit;
   end;
 

@@ -89,6 +89,7 @@ type
     FFileLocationOfDepsIsMem: PBoolean;
     FFullTemplatesDir: PString;
     FStackLevel: PInteger;
+    FNextStackCall: TActionExecution;
     FExecutesRemotely: PBoolean;
     FOwnerFrame: TObject;
 
@@ -273,7 +274,8 @@ type
     property ExecutingActionFromRemote: PBoolean write FExecutingActionFromRemote;
     property FileLocationOfDepsIsMem: PBoolean write FFileLocationOfDepsIsMem;
     property FullTemplatesDir: PString write FFullTemplatesDir;
-    property StackLevel: PInteger write FStackLevel;
+    property StackLevel: PInteger read FStackLevel write FStackLevel;
+    property NextStackCall: TActionExecution read FNextStackCall write FNextStackCall;
     property ExecutesRemotely: PBoolean write FExecutesRemotely;
     property OwnerFrame: TObject write FOwnerFrame;
 
@@ -357,6 +359,7 @@ begin
   FFileLocationOfDepsIsMem := nil;
   FFullTemplatesDir := nil;
   FStackLevel := nil;
+  FNextStackCall := nil;
   FExecutesRemotely := nil;
   FOwnerFrame := nil;
 
