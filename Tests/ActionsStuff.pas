@@ -672,6 +672,7 @@ end;
 
 procedure GenerateFindControlOptionsForMainUIClickerWindow(var AFindControlOptions: TClkFindControlOptions; AAllowToFail: Boolean; ACustomFormCaption: string = 'UI Clicker Main');
 begin
+  GetDefaultPropertyValues_FindControl(AFindControlOptions);
   AFindControlOptions.MatchCriteria.SearchForControlMode := sfcmGenGrid;
   AFindControlOptions.MatchCriteria.WillMatchText := True;
   AFindControlOptions.MatchCriteria.WillMatchClassName := True;
@@ -691,6 +692,7 @@ end;
 
 procedure GenerateFindSubControlOptionsForMainUIClickerWindow_Bitness(var AFindSubControlOptions: TClkFindSubControlOptions; AAllowToFail: Boolean);
 begin
+  GetDefaultPropertyValues_FindSubControl(AFindSubControlOptions);
   AFindSubControlOptions.MatchCriteria.WillMatchBitmapText := True;
   AFindSubControlOptions.MatchCriteria.WillMatchBitmapFiles := False;
   AFindSubControlOptions.MatchCriteria.WillMatchPrimitiveFiles := False;
@@ -755,6 +757,7 @@ procedure GenerateFindSubControlOptionsForMainUIClickerWindow_WinInterpBtn(var A
 const
   CBmpDirAsSrvDisk = 'py\bmps\';
 begin
+  GetDefaultPropertyValues_FindSubControl(AFindSubControlOptions);
   AFindSubControlOptions.MatchCriteria.WillMatchBitmapText := False;
   AFindSubControlOptions.MatchCriteria.WillMatchBitmapFiles := True;
   AFindSubControlOptions.MatchCriteria.WillMatchPrimitiveFiles := False;
@@ -802,6 +805,7 @@ procedure GenerateFindSubControlOptionsForMainUIClickerWindow_PmtvPreviewBtn(var
 const
   CBmpDirAsSrvDisk = 'py\bmps\';
 begin
+  GetDefaultPropertyValues_FindSubControl(AFindSubControlOptions);
   AFindSubControlOptions.MatchCriteria.WillMatchBitmapText := False;
   AFindSubControlOptions.MatchCriteria.WillMatchBitmapFiles := False;
   AFindSubControlOptions.MatchCriteria.WillMatchPrimitiveFiles := True;
@@ -847,6 +851,7 @@ end;
 
 procedure GenerateFindSubControlOptionsForExtRenderingText(var AFindSubControlOptions: TClkFindSubControlOptions; AAllowToFail: Boolean; ASourceFileName: string);
 begin
+  GetDefaultPropertyValues_FindSubControl(AFindSubControlOptions);
   AFindSubControlOptions.MatchCriteria.WillMatchBitmapText := True;
   AFindSubControlOptions.MatchCriteria.WillMatchBitmapFiles := False;
   AFindSubControlOptions.MatchCriteria.WillMatchPrimitiveFiles := False;
@@ -910,6 +915,7 @@ end;
 
 procedure GenerateFindSubControlOptionsForLoadedBackgroundBmp(var AFindSubControlOptions: TClkFindSubControlOptions; AAllowToFail: Boolean; ASourceFileName: string);
 begin
+  GetDefaultPropertyValues_FindSubControl(AFindSubControlOptions);
   AFindSubControlOptions.MatchCriteria.WillMatchBitmapText := True;
   AFindSubControlOptions.MatchCriteria.WillMatchBitmapFiles := False;
   AFindSubControlOptions.MatchCriteria.WillMatchPrimitiveFiles := False;
@@ -973,6 +979,7 @@ end;
 
 procedure GenerateFindSubControlOptionsForFullScreenshot(var AFindSubControlOptions: TClkFindSubControlOptions; AAllowToFail: Boolean);
 begin
+  GetDefaultPropertyValues_FindSubControl(AFindSubControlOptions);
   AFindSubControlOptions.MatchCriteria.WillMatchBitmapText := True;
   AFindSubControlOptions.MatchCriteria.WillMatchBitmapFiles := False;
   AFindSubControlOptions.MatchCriteria.WillMatchPrimitiveFiles := False;
@@ -1037,6 +1044,7 @@ end;
 
 procedure GenerateSetControlTextOptions(var ASetTextOptions: TClkSetTextOptions; AText: string; AControlType: TClkSetTextControlType);
 begin
+  GetDefaultPropertyValues_SetControlText(ASetTextOptions);
   ASetTextOptions.Text := AText;
   ASetTextOptions.ControlType := AControlType;
 end;
@@ -1044,6 +1052,7 @@ end;
 
 procedure GenerateCallTemplateOptions(var ACallTemplateOptions: TClkCallTemplateOptions; ATemplateFileName, AListOfVarsAndValues: string; AEvalBefore: Boolean);
 begin
+  GetDefaultPropertyValues_CallTemplate(ACallTemplateOptions);
   ACallTemplateOptions.TemplateFileName := ATemplateFileName;
   ACallTemplateOptions.ListOfCustomVarsAndValues := AListOfVarsAndValues;
   ACallTemplateOptions.EvaluateBeforeCalling := AEvalBefore;
@@ -1072,6 +1081,7 @@ end;
 
 procedure GenerateWindowOperationsOptionsForFindControlSetup(var AWindowOperationsOptions: TClkWindowOperationsOptions; AOperation: TWindowOperation);
 begin
+  GetDefaultPropertyValues_WindowOperations(AWindowOperationsOptions);
   AWindowOperationsOptions.Operation := AOperation;
   AWindowOperationsOptions.NewX := '90';
   AWindowOperationsOptions.NewY := '90';
@@ -1084,6 +1094,7 @@ end;
 
 procedure GenerateWindowOperationsOptionsForMouseWheelSetup(var AWindowOperationsOptions: TClkWindowOperationsOptions; AOperation: TWindowOperation);
 begin
+  GetDefaultPropertyValues_WindowOperations(AWindowOperationsOptions);
   AWindowOperationsOptions.Operation := AOperation;
   AWindowOperationsOptions.NewX := '';
   AWindowOperationsOptions.NewY := '';
@@ -1105,6 +1116,7 @@ procedure GenerateEditTemplateOptions(var AEditTemplateOptions: TClkEditTemplate
 var
   TempAction: TClkActionRec;
 begin
+  GetDefaultPropertyValues_EditTemplate(AEditTemplateOptions);
   AEditTemplateOptions.Operation := AOperation;
   AEditTemplateOptions.WhichTemplate := AWhichTemplate;
   AEditTemplateOptions.TemplateFileName := ATemplateFileName;

@@ -43,6 +43,7 @@ procedure PrepareCustomClickerUnderTestToReadItsVars(ATestDriverAddr, AClientUnd
 procedure PrepareCustomClickerUnderTestToLocalMode(ATestDriverAddr, ATemplatesDir: string);
 procedure PrepareCustomClickerUnderTestToClientMode(ATestDriverAddr, ATemplatesDir: string);
 
+procedure CheckAutoCloseBrowser(ATestDriverAddr, ATemplatesDir: string; ACheckState: Boolean);
 
 const
   CSkipSavingSettings: string = ' --SkipSavingSettings Yes';
@@ -173,6 +174,15 @@ begin
   //Set $ExtraCaption$ variable in Client Driver, to 'ClientUnderTest', which is required by SetExecutionModeOnAppUnderTest.clktmpl
   SetVariableOnCustomTestDriverClient(ATestDriverAddr, '$ExtraCaption$', 'ClientUnderTest');    //even after executing SetExecModeToServer.clktmpl, the caption should stay 'ClientUnderTest'
   ExecuteTemplateOnCustomTestDriver(ATestDriverAddr, ATemplatesDir + 'SetExecModeToClient.clktmpl', CREParam_FileLocation_ValueDisk);
+end;
+
+
+//requires PrepareClickerUnderTestToReadItsVars to be called in advance, to let the ActionsWindow on Settings tab.
+procedure CheckAutoCloseBrowser(ATestDriverAddr, ATemplatesDir: string; ACheckState: Boolean);
+begin
+  SetVariableOnCustomTestDriverClient(ATestDriverAddr, '$ExtraCaption$', 'ClientUnderTest');    //even after executing SetExecModeToServer.clktmpl, the caption should stay 'ClientUnderTest'
+  SetVariableOnCustomTestDriverClient(ATestDriverAddr, '$RequiredCheckState$', BoolToStr(ACheckState, 'True', 'False'));
+  ExecuteTemplateOnCustomTestDriver(ATestDriverAddr, ATemplatesDir + 'CheckAutoCloseBrowser.clktmpl', CREParam_FileLocation_ValueDisk);
 end;
 
 

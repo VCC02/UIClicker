@@ -1412,9 +1412,9 @@ begin
   FPluginContinueAll := False;
 
   AddToLog('Compiler options:' +
-           '   TestBuild=' + {$IFDEF TestBuild} 'True' {$ELSE} + 'False' {$ENDIF} +
-           ',  MemPlugins=' + {$IFDEF MemPlugins} 'True' {$ELSE} + 'False' {$ENDIF} +
-           ',  PluginTesting=' + {$IFDEF PluginTesting} 'True' {$ELSE} + 'False' {$ENDIF}
+           '   TestBuild=' + {$IFDEF TestBuild} 'True' {$ELSE} 'False' {$ENDIF} +
+           ',  MemPlugins=' + {$IFDEF MemPlugins} 'True' {$ELSE} 'False' {$ENDIF} +
+           ',  PluginTesting=' + {$IFDEF PluginTesting} 'True' {$ELSE} 'False' {$ENDIF}
            );
 end;
 
