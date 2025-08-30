@@ -1,5 +1,5 @@
 [Actions]
-Count=10
+Count=11
 Version=2
 
 [Action_0]
@@ -60,6 +60,23 @@ PrecisionTimeout=0
 EvaluateTextCount=-1
 
 [Action_2]
+ActionName=BringToFront
+Action=WindowOperations
+ActionTimeout=0
+ActionEnabled=1
+ActionCondition=
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+WindowOperation=0
+NewX=
+NewY=
+NewWidth=
+NewHeight=
+NewPositionEnabled=0
+NewSizeEnabled=0
+
+[Action_3]
 ActionName=Cache Actions Window
 Action=SetVar
 ActionTimeout=0
@@ -73,7 +90,7 @@ ListOfVarValues=$Control_Left$$Control_Top$$Control_Right$$Control_Bottom$
 ListOfVarEvalBefore=111111111
 FailOnException=0
 
-[Action_3]
+[Action_4]
 ActionName=Find main PageControl
 Action=FindControl
 ActionTimeout=1000
@@ -107,7 +124,7 @@ GetAllControls=0
 PrecisionTimeout=0
 EvaluateTextCount=-1
 
-[Action_4]
+[Action_5]
 ActionName=Cache main PageControl
 Action=SetVar
 ActionTimeout=0
@@ -119,9 +136,9 @@ BreakpointCondition=
 ListOfVarNames=$MainPage_Left$$MainPage_Top$$MainPage_Right$$MainPage_Bottom$$MainPage_Width$$MainPage_Height$$MainPage_Text$$MainPage_Class$$MainPage_Handle$
 ListOfVarValues=$Control_Left$$Control_Top$$Control_Right$$Control_Bottom$$Control_Width$$Control_Height$$Control_Text$$Control_Class$$Control_Handle$
 ListOfVarEvalBefore=111111111
-FailOnException=56
+FailOnException=0
 
-[Action_5]
+[Action_6]
 ActionName=Find Play All button
 Action=FindSubControl
 ActionTimeout=5000
@@ -193,8 +210,15 @@ MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 EvaluateTextCount=-1
 CropFromScreenshot=0
 ThreadCount=2
+UseTextRenderingInBrowser=0
+RenderingInBrowserSettings.RenderingRequestType=0
+RenderingInBrowserSettings.ReceivingBitmapsTimeout=3000
+RenderingInBrowserSettings.ActionForSendingRequest=
+RenderingInBrowserSettings.UsePluginForReceivingBitmaps=0
+RenderingInBrowserSettings.PluginActionForReceivingBitmaps=
+RenderingInBrowserSettings.FontSizeUnit=0
 
-[Action_6]
+[Action_7]
 ActionName=Move mouse cursor over button (wine)
 Action=Click
 ActionTimeout=0
@@ -231,7 +255,7 @@ DelayAfterMouseDown=100
 MoveDuration=-1
 UseClipCursor=0
 
-[Action_7]
+[Action_8]
 ActionName=Sleep
 Action=Sleep
 ActionTimeout=300
@@ -242,7 +266,7 @@ BreakpointEnabled=0
 BreakpointCondition=
 Value=300
 
-[Action_8]
+[Action_9]
 ActionName=Click Play All button
 Action=Click
 ActionTimeout=0
@@ -279,7 +303,7 @@ DelayAfterMouseDown=100
 MoveDuration=-1
 UseClipCursor=0
 
-[Action_9]
+[Action_10]
 ActionName=Call WaitForExecutionOnAppUnderTest.clktmpl
 Action=CallTemplate
 ActionTimeout=1000

@@ -114,9 +114,6 @@ begin
   GetDefaultPropertyValues_FindControl(FindControlOptions);
   FindControlOptions.MatchText := 'Mozilla Firefox';
   FindControlOptions.MatchClassName := 'MozillaWindowClass';
-  FindControlOptions.InitialRectangle.Bottom := '$Control_Top$';
-  FindControlOptions.InitialRectangle.TopOffset := '102';
-  FindControlOptions.InitialRectangle.BottomOffset := '402';
   ExpectSuccessfulAction(FastReplace_87ToReturn(ExecuteFindControlAction(AUIClickerAddress, FindControlOptions, 'Find FF', 3000, CREParam_FileLocation_ValueMem)));
 end;
 

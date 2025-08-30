@@ -197,7 +197,7 @@ InitialRectangle.BottomOffset=-9
 StartSearchingWithCachedControl=0
 CachedControlLeft=
 CachedControlTop=
-MatchPrimitiveFiles=$AppDir$\Tests\TestFiles\RenderGradientOnBrowser.pmtv
+MatchPrimitiveFiles=$AppDir$\Tests\TestFiles\RenderTextOnBrowser.pmtv
 GetAllControls=0
 UseFastSearch=1
 FastSearchAllowedColorErrorCount=10
@@ -215,6 +215,13 @@ MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp=15
 EvaluateTextCount=-1
 CropFromScreenshot=0
 ThreadCount=2
+UseTextRenderingInBrowser=0
+RenderingInBrowserSettings.RenderingRequestType=0
+RenderingInBrowserSettings.ReceivingBitmapsTimeout=3000
+RenderingInBrowserSettings.ActionForSendingRequest=
+RenderingInBrowserSettings.UsePluginForReceivingBitmaps=0
+RenderingInBrowserSettings.PluginActionForReceivingBitmaps=
+RenderingInBrowserSettings.FontSizeUnit=0
 
 [Action_9]
 ActionName=Close rendering server

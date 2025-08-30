@@ -177,7 +177,7 @@ begin
 end;
 
 
-//requires PrepareClickerUnderTestToReadItsVars to be called in advance, to let the ActionsWindow on Settings tab.
+//requires PrepareClickerUnderTestToReadItsVars to be called in advance, to leave the ActionsWindow on Settings tab.
 procedure CheckAutoCloseBrowser(ATestDriverAddr, ATemplatesDir: string; ACheckState: Boolean);
 begin
   SetVariableOnCustomTestDriverClient(ATestDriverAddr, '$ExtraCaption$', 'ClientUnderTest');    //even after executing SetExecModeToServer.clktmpl, the caption should stay 'ClientUnderTest'

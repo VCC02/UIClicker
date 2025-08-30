@@ -153,6 +153,9 @@ type
     procedure TestVerifyPermissionsOnSendingFiles_ReSendingModifiedFileByEditTemplate;
 
     procedure TestRenderTextOnWebBrowser_With_ShellExecute_RenderingRequest;
+    procedure TestRenderTextOnWebBrowser_With_ExecApp_RenderingRequest;
+    procedure TestRenderTextOnWebBrowser_With_LocalCallTemplate_RenderingRequest;
+    procedure TestRenderTextOnWebBrowser_With_ServerCallTemplate_RenderingRequest;
 
     procedure AfterAll_AlwaysExecute;
   end;
@@ -1404,6 +1407,44 @@ begin
   StartWebBrowserForTextRendering(CTestClientAddress);
   try
     FindSubControl_With_ShellExecute_RenderingRequest(CTestClientAddress);
+  finally
+    CloseWebBrowserForTextRendering(CTestClientAddress);
+  end;
+end;
+
+
+procedure TTestUI.TestRenderTextOnWebBrowser_With_ExecApp_RenderingRequest;
+begin
+  PrepareClickerUnderTestToReadItsVars;   //server mode
+  CheckAutoCloseBrowser(CTestDriverServerAddress_Client, FTemplatesDir, False);
+  StartWebBrowserForTextRendering(CTestClientAddress);
+  try
+    ExecuteTemplateOnCustomTestDriver(CTestClientAddress, ExtractFilePath(ParamStr(0)) + '..\TestFiles\TextRenderingInBrowserWithExecApp.clktmpl', CREParam_FileLocation_ValueDisk);
+  finally
+    CloseWebBrowserForTextRendering(CTestClientAddress);
+  end;
+end;
+
+
+procedure TTestUI.TestRenderTextOnWebBrowser_With_LocalCallTemplate_RenderingRequest;
+begin
+  PrepareClickerUnderTestToReadItsVars;   //server mode
+  CheckAutoCloseBrowser(CTestDriverServerAddress_Client, FTemplatesDir, False);
+  try
+    RunTestTemplateInClickerUnderTest_FullPath(ExtractFilePath(ParamStr(0)) + '..\TestFiles\TextRenderingInBrowserWithLocalCallTemplate.clktmpl');
+  finally
+    //CloseWebBrowserForTextRendering(CTestClientAddress); //Not needed, because the template will close the browser. Can't close from here anyway, because the test is waiting for TextRenderingInBrowserWithLocalCallTemplate.clktmpl to finish, which waits for browser to go away.
+  end;
+end;
+
+
+procedure TTestUI.TestRenderTextOnWebBrowser_With_ServerCallTemplate_RenderingRequest;
+begin
+  PrepareClickerUnderTestToReadItsVars;   //server mode
+  CheckAutoCloseBrowser(CTestDriverServerAddress_Client, FTemplatesDir, False);
+  StartWebBrowserForTextRendering(CTestClientAddress);
+  try
+    ExecuteTemplateOnCustomTestDriver(CTestClientAddress, ExtractFilePath(ParamStr(0)) + '..\TestFiles\TextRenderingInBrowserWithServerCallTemplate.clktmpl', CREParam_FileLocation_ValueDisk);
   finally
     CloseWebBrowserForTextRendering(CTestClientAddress);
   end;

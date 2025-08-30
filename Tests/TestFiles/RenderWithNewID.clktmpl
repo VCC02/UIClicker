@@ -1,0 +1,37 @@
+[Actions]
+Count=2
+Version=2
+
+[Action_0]
+ActionName=Request rendering (StackLevel0)
+Action=ExecApp
+ActionTimeout=10
+ActionEnabled=1
+ActionCondition=
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+PathToApp=explorer
+ListOfParams="http://127.0.0.1:$ListeningPort$/GetTextRenderingPage?StackLevel=0&ID=$RenderingRequestID$"
+WaitForApp=0
+AppStdIn=
+CurrentDir=
+UseInheritHandles=0
+NoConsole=0
+VerifyFileExistence=0
+
+[Action_1]
+ActionName="Sleep"
+Action=Sleep
+ActionTimeout=0
+ActionEnabled=0
+ActionCondition=
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+Value=3000
+
+[Notes]
+Content=Template run by TextRenderingInBrowserWithCallTemplate.clktmpl
+TemplateIconPath=$AppDir$\TestDriver\ClientUnderTestIcon.png
+

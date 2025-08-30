@@ -4573,7 +4573,7 @@ end;
 
 procedure TfrmClickerActions.chkServerActiveChange(Sender: TObject);
 var
-  s: string;
+  s, PortStr: string;
 begin
   if chkServerActive.Checked then
   begin
@@ -4582,12 +4582,17 @@ begin
       IdHTTPServer1.KeepAlive := chkKeepAlive.Checked;
       IdHTTPServer1.Active := True;
 
-      s := 'Server is listening on port ' + IntToStr(IdHTTPServer1.DefaultPort);
+      PortStr := IntToStr(IdHTTPServer1.DefaultPort);
+      s := 'Server is listening on port ' + PortStr;
       AddToLog(s);
 
       lblServerInfo.Caption := s;
       lblServerInfo.Font.Color := clGreen;
       lblServerInfo.Hint := '';
+
+      frClickerActionsArrMain.SetActionVarValue('$ListeningPort$', PortStr);
+      frClickerActionsArrExperiment1.SetActionVarValue('$ListeningPort$', PortStr);
+      frClickerActionsArrExperiment2.SetActionVarValue('$ListeningPort$', PortStr);
     except
       on E: Exception do
       begin

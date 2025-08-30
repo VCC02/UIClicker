@@ -2334,7 +2334,7 @@ begin
             FBrowserRenderingText.RenderedFileNames[j] := 'BrowserTxt_' + IntToStr(j) + '_L' + IntToStr(FStackLevel^) + '.png';  //maybe add a timestamp after index. Make sure the string does not contain quotes or other special characters in JS.
           end;
 
-          FBrowserRenderingText.RequestID := AActionOptions.ActionName + '_' + DateTimeToStr(Now) + '_' + IntToStr(GetTickCount64);
+          FBrowserRenderingText.RequestID := AActionOptions.ActionName + '_' + DateTimeToStr(Now) + '_' + IntToStr(GetTickCount64) + '_L' + IntToStr(FStackLevel^);
           FBrowserRenderingText.RequestID := StringReplace(FBrowserRenderingText.RequestID, '"', '_', [rfReplaceAll]);
           FBrowserRenderingText.RequestID := StringReplace(FBrowserRenderingText.RequestID, '''', '_', [rfReplaceAll]);
           FBrowserRenderingText.RequestID := StringReplace(FBrowserRenderingText.RequestID, '?', '_', [rfReplaceAll]);
@@ -2361,7 +2361,7 @@ begin
           end
           else
           begin  //AFindSubControlOptions
-            AddToLog('Sending rendering request via an action, instead of using ShellExecute.');
+            AddToLog('Sending rendering request via an action, instead of using ShellExecute.  RequestID=' + FBrowserRenderingText.RequestID);
             SetActionVarValue('$StackLevel$', IntToStr(FStackLevel^));
             SetActionVarValue('$RenderingRequestID$', FBrowserRenderingText.RequestID); //used by the called action (ExecApp, CallTemplate, Plugin)
             try
@@ -5537,7 +5537,7 @@ begin
   EnterCriticalSection(FBrowserRenderingText.CritSec);
   try
     if AHTTPParams.Values[CREParam_ID] <> FBrowserRenderingText.RequestID then
-      raise Exception.Create('Wrong page ID: ' + AHTTPParams.Values[CREParam_ID] + '.  Expected: ' + FBrowserRenderingText.RequestID + '  StackLevel: ' + IntToStr(FStackLevel^));
+      raise Exception.Create('Requested wrong page ID: ' + AHTTPParams.Values[CREParam_ID] + '.  Expected: ' + FBrowserRenderingText.RequestID + '  StackLevel: ' + IntToStr(FStackLevel^));
 
     Result := '<!DOCTYPE html>'#13#10 +
               '<html lang="en-US">'#13#10 +
