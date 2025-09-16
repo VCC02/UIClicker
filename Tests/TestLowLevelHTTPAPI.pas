@@ -698,7 +698,7 @@ end;
 procedure TTestLowLevelHTTPAPI.Test_ExecuteFindSubControlAction_UIClickerMain_WindowInterpreterButton_Mem_NoSender;
 const
   CExpectedErr_Part1: string = 'Timeout at "Test Find WindowInterpreterButton_Mem_NoSender on UIClicker Main" in ';
-  CExpectedErr_Part2: string = '  File not found: "py\bmps\ShowActionsWindow_Focused.bmp" File not found: "py\bmps\ShowActionsWindow_FocusedHighlighted.bmp" File not found: "py\bmps\ShowActionsWindow_Unfocused.bmp"';
+  CExpectedErr_Part2: string = 'File not found: "py\bmps\ShowActionsWindow_Focused.bmp" File not found: "py\bmps\ShowActionsWindow_FocusedHighlighted.bmp" File not found: "py\bmps\ShowActionsWindow_Unfocused.bmp"';
 var
   Response: string;
   ListOfVars: TStringList;
