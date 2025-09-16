@@ -89,6 +89,7 @@ type
   TfrmClickerActions = class(TForm)
     btnBrowseActionTemplatesDir: TButton;
     btnTestConnection: TButton;
+    chkExtraLoggingFindControl: TCheckBox;
     chkAutoClose: TCheckBox;
     chkAutoEnableSwitchingTabsOnDebugging: TCheckBox;
     chkAutoSwitchToExecutingTab: TCheckBox;
@@ -105,6 +106,7 @@ type
     colcmbTopLeftInvalid: TColorBox;
     colcmbBotRightInvalid: TColorBox;
     cmbClientModeServerAddress: TComboBox;
+    grpExtraLogging: TGroupBox;
     grpTextRenderingInBrowser: TGroupBox;
     grpSelectionColors: TGroupBox;
     grpMissingFilesMonitoring: TGroupBox;
@@ -163,6 +165,7 @@ type
     procedure chkAutoEnableSwitchingTabsOnDebuggingChange(Sender: TObject);
     procedure chkAutoSwitchToExecutingTabChange(Sender: TObject);
     procedure chkDisplayActivityChange(Sender: TObject);
+    procedure chkExtraLoggingFindControlChange(Sender: TObject);
     procedure chkServerActiveChange(Sender: TObject);
     procedure chkStayOnTopClick(Sender: TObject);
     procedure cmbExecModeChange(Sender: TObject);
@@ -666,6 +669,7 @@ begin
     FFontFinderSettings.ColWidths[i] := AIni.ReadInteger('FontFinderSettingsWindow', 'ColWidth_' + IntToStr(i), 200);
 
   chkAutoClose.Checked := AIni.ReadBool('ActionsWindow', 'RenderingRequestPageCloseBrowserOnDone', chkAutoClose.Checked);
+  chkExtraLoggingFindControl.Checked := AIni.ReadBool('ActionsWindow', 'ExtraLogging_FindControl', chkExtraLoggingFindControl.Checked);
 
   frClickerActionsArrMain.LoadSettings(AIni, 'ActionsWindow', 'Main');
   frClickerActionsArrExperiment1.LoadSettings(AIni, 'ActionsWindow', 'Exp1');
@@ -779,6 +783,8 @@ begin
     AIni.WriteInteger('FontFinderSettingsWindow', 'ColWidth_' + IntToStr(i), FFontFinderSettings.ColWidths[i]);
 
   AIni.WriteBool('ActionsWindow', 'RenderingRequestPageCloseBrowserOnDone', frClickerActionsArrMain.ActionExecution.RenderingRequestPageCloseBrowserOnDone);
+  AIni.WriteBool('ActionsWindow', 'ExtraLogging_FindControl', frClickerActionsArrMain.ActionExecution.ExtraLogging_FindControl);
+
 
   frClickerActionsArrMain.SaveSettings(AIni, 'ActionsWindow', 'Main');
   frClickerActionsArrExperiment1.SaveSettings(AIni, 'ActionsWindow', 'Exp1');
@@ -1787,6 +1793,7 @@ begin
           ActionExec.NextStackCall := NewFrame.ActionExecution;
 
         NewFrame.ActionExecution.RenderingRequestPageCloseBrowserOnDone := frClickerActionsArrMain.ActionExecution.RenderingRequestPageCloseBrowserOnDone;
+        NewFrame.ActionExecution.ExtraLogging_FindControl := frClickerActionsArrMain.ActionExecution.ExtraLogging_FindControl;
         NewFrame.ExecutesRemotely := AExecutesRemotely; //a client executes remotely
         NewFrame.ExecutingActionFromRemote := frClickerActionsArrMain.ExecutingActionFromRemote; //should be true in server mode
         NewFrame.UseLocalDebugger := frClickerActionsArrMain.UseLocalDebugger;
@@ -4689,6 +4696,14 @@ end;
 procedure TfrmClickerActions.chkDisplayActivityChange(Sender: TObject);
 begin
   tmrDisplayMissingFilesRequests.Enabled := chkDisplayActivity.Checked;
+end;
+
+
+procedure TfrmClickerActions.chkExtraLoggingFindControlChange(Sender: TObject);
+begin
+  frClickerActionsArrMain.ActionExecution.ExtraLogging_FindControl := chkExtraLoggingFindControl.Checked;
+  frClickerActionsArrExperiment1.ActionExecution.ExtraLogging_FindControl := frClickerActionsArrMain.ActionExecution.ExtraLogging_FindControl;
+  frClickerActionsArrExperiment2.ActionExecution.ExtraLogging_FindControl := frClickerActionsArrMain.ActionExecution.ExtraLogging_FindControl;
 end;
 
 

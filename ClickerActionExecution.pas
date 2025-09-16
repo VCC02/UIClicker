@@ -97,6 +97,7 @@ type
     FAllowedFileExtensionsForServer: PString;
 
     FRenderingRequestPageCloseBrowserOnDone: Boolean;
+    FExtraLogging_FindControl: Boolean;
 
     FfrClickerActions: TfrClickerActions;  ///////////////////////// temp
 
@@ -283,6 +284,7 @@ type
     property AllowedFileExtensionsForServer: PString write FAllowedFileExtensionsForServer;
 
     property RenderingRequestPageCloseBrowserOnDone: Boolean read FRenderingRequestPageCloseBrowserOnDone write FRenderingRequestPageCloseBrowserOnDone;
+    property ExtraLogging_FindControl: Boolean read FExtraLogging_FindControl write FExtraLogging_FindControl;
 
     property frClickerActions: TfrClickerActions read FfrClickerActions write FfrClickerActions;  //not created here in this class, used from outside    ///////////////////////// temp
 
@@ -367,6 +369,7 @@ begin
   FAllowedFileExtensionsForServer := nil;
 
   FRenderingRequestPageCloseBrowserOnDone := True;
+  FExtraLogging_FindControl := False;
 
   FPluginStepOver := nil;
   FPluginContinueAll := nil;
@@ -1633,14 +1636,17 @@ begin
 
   if not AFindControlOptions.WaitForControlToGoAway then  //Do not move this if statement, because GlobalSearchArea is modified below:
   begin
-    AddToLog('Find (Sub)Control with text = "' + FindControlInputData.Text + '"' +
+    AddToLog('Find Control with text = "' + FindControlInputData.Text + '"' +
              '    GetAllControls is set to ' + BoolToStr(AFindControlOptions.GetAllControls, True) +
              '    SearchMode: ' + CSearchForControlModeStr[AFindControlOptions.MatchCriteria.SearchForControlMode]);
 
-    AddToLog('Raw GlobalSearchArea.Left = ' + IntToStr(FindControlInputData.GlobalSearchArea.Left));
-    AddToLog('Raw GlobalSearchArea.Top = ' + IntToStr(FindControlInputData.GlobalSearchArea.Top));
-    AddToLog('Raw GlobalSearchArea.Right = ' + IntToStr(FindControlInputData.GlobalSearchArea.Right));
-    AddToLog('Raw GlobalSearchArea.Bottom = ' + IntToStr(FindControlInputData.GlobalSearchArea.Bottom));
+    if FExtraLogging_FindControl then
+    begin
+      AddToLog('Raw GlobalSearchArea.Left = ' + IntToStr(FindControlInputData.GlobalSearchArea.Left));
+      AddToLog('Raw GlobalSearchArea.Top = ' + IntToStr(FindControlInputData.GlobalSearchArea.Top));
+      AddToLog('Raw GlobalSearchArea.Right = ' + IntToStr(FindControlInputData.GlobalSearchArea.Right));
+      AddToLog('Raw GlobalSearchArea.Bottom = ' + IntToStr(FindControlInputData.GlobalSearchArea.Bottom));
+    end;
   end;
 
   FindControlInputData.InitialRectangleOffsets.Left := StrToIntDef(EvaluateReplacements(AFindControlOptions.InitialRectangle.LeftOffset), 0);
@@ -1653,7 +1659,7 @@ begin
   Inc(FindControlInputData.GlobalSearchArea.Right, FindControlInputData.InitialRectangleOffsets.Right);
   Inc(FindControlInputData.GlobalSearchArea.Bottom, FindControlInputData.InitialRectangleOffsets.Bottom);
 
-  if not AFindControlOptions.WaitForControlToGoAway then
+  if FExtraLogging_FindControl and not AFindControlOptions.WaitForControlToGoAway then
   begin
     AddToLog('(With Offset) GlobalSearchArea.Left = ' + IntToStr(FindControlInputData.GlobalSearchArea.Left));
     AddToLog('(With Offset) GlobalSearchArea.Top = ' + IntToStr(FindControlInputData.GlobalSearchArea.Top));
@@ -1833,14 +1839,17 @@ begin
 
   if not AFindSubControlOptions.WaitForControlToGoAway then  //Do not move this if statement, because GlobalSearchArea is modified below:
   begin
-    AddToLog('Find (Sub)Control with text = "' + FindControlInputData.Text + '"' +
+    AddToLog('Find SubControl with text = "' + FindControlInputData.Text + '"' +
              '    GetAllControls is set to ' + BoolToStr(AFindSubControlOptions.GetAllControls, True) {+
              '    SearchMode: ' + CSearchForControlModeStr[AFindSubControlOptions.MatchCriteria.SearchForControlMode]});
 
-    AddToLog('Raw GlobalSearchArea.Left = ' + IntToStr(FindControlInputData.GlobalSearchArea.Left));
-    AddToLog('Raw GlobalSearchArea.Top = ' + IntToStr(FindControlInputData.GlobalSearchArea.Top));
-    AddToLog('Raw GlobalSearchArea.Right = ' + IntToStr(FindControlInputData.GlobalSearchArea.Right));
-    AddToLog('Raw GlobalSearchArea.Bottom = ' + IntToStr(FindControlInputData.GlobalSearchArea.Bottom));
+    if FExtraLogging_FindControl then
+    begin
+      AddToLog('Raw GlobalSearchArea.Left = ' + IntToStr(FindControlInputData.GlobalSearchArea.Left));
+      AddToLog('Raw GlobalSearchArea.Top = ' + IntToStr(FindControlInputData.GlobalSearchArea.Top));
+      AddToLog('Raw GlobalSearchArea.Right = ' + IntToStr(FindControlInputData.GlobalSearchArea.Right));
+      AddToLog('Raw GlobalSearchArea.Bottom = ' + IntToStr(FindControlInputData.GlobalSearchArea.Bottom));
+    end;
   end;
 
   FindControlInputData.InitialRectangleOffsets.Left := StrToIntDef(EvaluateReplacements(AFindSubControlOptions.InitialRectangle.LeftOffset), 0);
@@ -1853,7 +1862,7 @@ begin
   Inc(FindControlInputData.GlobalSearchArea.Right, FindControlInputData.InitialRectangleOffsets.Right);
   Inc(FindControlInputData.GlobalSearchArea.Bottom, FindControlInputData.InitialRectangleOffsets.Bottom);
 
-  if not AFindSubControlOptions.WaitForControlToGoAway then
+  if FExtraLogging_FindControl and not AFindSubControlOptions.WaitForControlToGoAway then
   begin
     AddToLog('(With Offset) GlobalSearchArea.Left = ' + IntToStr(FindControlInputData.GlobalSearchArea.Left));
     AddToLog('(With Offset) GlobalSearchArea.Top = ' + IntToStr(FindControlInputData.GlobalSearchArea.Top));
@@ -2575,8 +2584,11 @@ begin
           Exit;  //Done here
         end;
 
-        AddToLog('MatchSource: ' + MatchSource);
-        AddToLog('DetailedMatchSource: ' + DetailedMatchSource);
+        if FExtraLogging_FindControl then
+        begin
+          AddToLog('MatchSource: ' + MatchSource);
+          AddToLog('DetailedMatchSource: ' + DetailedMatchSource);
+        end;
       finally
         if AFindSubControlOptions.UseTextRenderingInBrowser then
         begin
@@ -2598,7 +2610,7 @@ begin
         FindControlInputData.BitmapToSearchFor.PixelFormat := pf24bit;
         LoadBitmapToSearchOn(FindControlInputData);
 
-        if AFindSubControlOptions.ImageSource = isFile then
+        if FExtraLogging_FindControl and (AFindSubControlOptions.ImageSource = isFile) then
           AddToLog('Background file: "' + AFindSubControlOptions.SourceFileName +
                    '"  Width = ' + IntToStr(FindControlInputData.BitmapToSearchOn.Width) +
                    '   Height = ' + IntToStr(FindControlInputData.BitmapToSearchOn.Height));
@@ -2607,7 +2619,9 @@ begin
         try
           ListOfBitmapFiles.LineBreak := #13#10;
           ListOfBitmapFiles.Text := AFindSubControlOptions.MatchBitmapFiles;
-          AddToLog('Bmp file count to search with: ' + IntToStr(ListOfBitmapFiles.Count));
+
+          if FExtraLogging_FindControl then
+            AddToLog('Bmp file count to search with: ' + IntToStr(ListOfBitmapFiles.Count));
 
           if FExecutingActionFromRemote = nil then
             raise Exception.Create('FExecutingActionFromRemote is not assigned.');
@@ -2691,7 +2705,9 @@ begin
                 //SetAllControl_Handles_FromResultedControlArr(ResultedControlArr);
                 //UpdateActionVarValuesFromResultedControlArr(ResultedControlArr);
 
-                AddToLog('Result count: ' + IntToStr(Length(PartialResultedControlArr)));
+                if FExtraLogging_FindControl then
+                  AddToLog('Result count: ' + IntToStr(Length(PartialResultedControlArr)));
+
                 AddInfoToMatchSource('bmp[' + IntToStr(i) + ']', 'bmp[' + IntToStr(i) + '][0]', Length(PartialResultedControlArr), MatchSource, DetailedMatchSource); //hardcoded to [0] as no other subfeature is implemented
               end
               else
@@ -2710,8 +2726,11 @@ begin
         FindControlInputData.BitmapToSearchOn.Free;
       end;
 
-      AddToLog('MatchSource: ' + MatchSource);
-      AddToLog('DetailedMatchSource: ' + DetailedMatchSource);
+      if FExtraLogging_FindControl then
+      begin
+        AddToLog('MatchSource: ' + MatchSource);
+        AddToLog('DetailedMatchSource: ' + DetailedMatchSource);
+      end;
     end; //WillMatchBitmapFiles
 
     if AFindSubControlOptions.MatchCriteria.WillMatchPrimitiveFiles then
@@ -2727,7 +2746,9 @@ begin
         try
           ListOfPrimitiveFiles.LineBreak := #13#10;
           ListOfPrimitiveFiles.Text := AFindSubControlOptions.MatchPrimitiveFiles;
-          AddToLog('Pmtv file count to search with: ' + IntToStr(ListOfPrimitiveFiles.Count));
+
+          if FExtraLogging_FindControl then
+            AddToLog('Pmtv file count to search with: ' + IntToStr(ListOfPrimitiveFiles.Count));
 
           if FSelfTemplateFileName = nil then
             TemplateDir := 'FSelfTemplateFileName not set.'
@@ -2839,11 +2860,15 @@ begin
 
                   CopyPartialResultsToFinalResult(ResultedControlArr_Pmtv, PartialResultedControlArr);
                   Result := True;
-                  AddToLog('Matched by primitives file: "' + ExtractFileName(ListOfPrimitiveFiles.Strings[i]) + '"  at order ' + IntToStr(k) + '.  Bmp w/h: ' + IntToStr(FindControlInputData.BitmapToSearchFor.Width) + ' / ' + IntToStr(FindControlInputData.BitmapToSearchFor.Height) + '  Result count: ' + IntToStr(Length(ResultedControlArr)));
+
+                  if FExtraLogging_FindControl then
+                    AddToLog('Matched by primitives file: "' + ExtractFileName(ListOfPrimitiveFiles.Strings[i]) + '"  at order ' + IntToStr(k) + '.  Bmp w/h: ' + IntToStr(FindControlInputData.BitmapToSearchFor.Width) + ' / ' + IntToStr(FindControlInputData.BitmapToSearchFor.Height) + '  Result count: ' + IntToStr(Length(ResultedControlArr)));
 
                   if AFindSubControlOptions.GetAllControls then
                   begin
-                    AddToLog('Result count: ' + IntToStr(Length(PartialResultedControlArr)));
+                    if FExtraLogging_FindControl then
+                      AddToLog('Result count: ' + IntToStr(Length(PartialResultedControlArr)));
+
                     AddInfoToMatchSource('pmtv[' + IntToStr(i * Length(TempOrders) + k) + ']', 'pmtv[' + IntToStr(i) + '][' + IntToStr(k) + ']', Length(PartialResultedControlArr), MatchSource, DetailedMatchSource);
                   end;
 
@@ -2884,8 +2909,11 @@ begin
         FindControlInputData.BitmapToSearchOn.Free;
       end;
 
-      AddToLog('MatchSource: ' + MatchSource);
-      AddToLog('DetailedMatchSource: ' + DetailedMatchSource);
+      if FExtraLogging_FindControl then
+      begin
+        AddToLog('MatchSource: ' + MatchSource);
+        AddToLog('DetailedMatchSource: ' + DetailedMatchSource);
+      end;
     end; //WillMatchPrimitiveFiles
   finally
     if Result then
@@ -2920,6 +2948,7 @@ function TActionExecution.ExecuteFindControlActionWithTimeout(var AFindControlOp
 var
   tk, CurrentActionElapsedTime, OutsideTickCount: QWord;
   AttemptCount: Integer;
+  LogMsg: string;
 begin
   tk := GetTickCount64;
   frClickerActions.prbTimeout.Max := AActionOptions.ActionTimeout;
@@ -2985,21 +3014,24 @@ begin
 
     if (frClickerActions.prbTimeout.Max > 0) and (frClickerActions.prbTimeout.Position >= frClickerActions.prbTimeout.Max) then
     begin
-      PrependErrorMessageToActionVar('Timeout at "' + AActionOptions.ActionName +
-                                     '" in ' + FSelfTemplateFileName^ +
-                                     '  ActionTimeout=' + IntToStr(AActionOptions.ActionTimeout) +
-                                     '  Duration=' + IntToStr(CurrentActionElapsedTime) +
-                                     '  AttemptCount=' + IntToStr(AttemptCount) +
-                                     '  Search: ' +
-                                     '  $Control_Left$=' + EvaluateReplacements('$Control_Left$') + //same as "global...", but are required here, to be displayed in caller template log
-                                     '  $Control_Top$=' + EvaluateReplacements('$Control_Top$') +
-                                     '  $Control_Right$=' + EvaluateReplacements('$Control_Right$') +
-                                     '  $Control_Bottom$=' + EvaluateReplacements('$Control_Bottom$') +
-                                     '  $Control_Text$="' + EvaluateReplacements('$Control_Text$') + '"' +
-                                     '  $Control_Class$="' + EvaluateReplacements('$Control_Class$') + '"' +
-                                     '  SearchedText="' + EvaluateReplacements(AFindControlOptions.MatchText) + '"' +
-                                     '  SearchedClass="' + EvaluateReplacements(AFindControlOptions.MatchClassName) + '"' +
-                                     '  ');
+      LogMsg := 'Timeout at "' + AActionOptions.ActionName +
+                '" in ' + FSelfTemplateFileName^ +
+                '  ActionTimeout=' + IntToStr(AActionOptions.ActionTimeout) +
+                '  Duration=' + IntToStr(CurrentActionElapsedTime) +
+                '  AttemptCount=' + IntToStr(AttemptCount);
+
+      if FExtraLogging_FindControl then
+        LogMsg := LogMsg + '  Search: ' +
+                           '  $Control_Left$=' + EvaluateReplacements('$Control_Left$') + //same as "global...", but are required here, to be displayed in caller template log
+                           '  $Control_Top$=' + EvaluateReplacements('$Control_Top$') +
+                           '  $Control_Right$=' + EvaluateReplacements('$Control_Right$') +
+                           '  $Control_Bottom$=' + EvaluateReplacements('$Control_Bottom$') +
+                           '  $Control_Text$="' + EvaluateReplacements('$Control_Text$') + '"' +
+                           '  $Control_Class$="' + EvaluateReplacements('$Control_Class$') + '"' +
+                           '  SearchedText="' + EvaluateReplacements(AFindControlOptions.MatchText) + '"' +
+                           '  SearchedClass="' + EvaluateReplacements(AFindControlOptions.MatchClassName) + '"' +
+                           '  ';
+      PrependErrorMessageToActionVar(LogMsg);
       Break;
     end;
 
@@ -3014,6 +3046,7 @@ function TActionExecution.ExecuteFindSubControlActionWithTimeout(var AFindSubCon
 var
   tk, CurrentActionElapsedTime, OutsideTickCount: QWord;
   AttemptCount: Integer;
+  LogMsg: string;
 begin
   tk := GetTickCount64;
   frClickerActions.prbTimeout.Max := AActionOptions.ActionTimeout;
@@ -3079,20 +3112,23 @@ begin
 
     if (frClickerActions.prbTimeout.Max > 0) and (frClickerActions.prbTimeout.Position >= frClickerActions.prbTimeout.Max) then
     begin
-      PrependErrorMessageToActionVar('Timeout at "' + AActionOptions.ActionName +
-                                     '" in ' + FSelfTemplateFileName^ +
-                                     '  ActionTimeout=' + IntToStr(AActionOptions.ActionTimeout) +
-                                     '  Duration=' + IntToStr(CurrentActionElapsedTime) +
-                                     '  AttemptCount=' + IntToStr(AttemptCount) +
-                                     '  Search: ' +
-                                     '  $Control_Left$=' + EvaluateReplacements('$Control_Left$') + //same as "global...", but are required here, to be displayed in caller template log
-                                     '  $Control_Top$=' + EvaluateReplacements('$Control_Top$') +
-                                     '  $Control_Right$=' + EvaluateReplacements('$Control_Right$') +
-                                     '  $Control_Bottom$=' + EvaluateReplacements('$Control_Bottom$') +
-                                     '  $Control_Text$="' + EvaluateReplacements('$Control_Text$') + '"' +
-                                     '  SearchedText="' + EvaluateReplacements(AFindSubControlOptions.MatchText) + '"' +
-                                     '  MatchBitmapAlgorithm="' + CMatchBitmapAlgorithmStr[AFindSubControlOptions.MatchBitmapAlgorithm] + '"' +
-                                     '  ');
+      LogMsg := 'Timeout at "' + AActionOptions.ActionName +
+                '" in ' + FSelfTemplateFileName^ +
+                '  ActionTimeout=' + IntToStr(AActionOptions.ActionTimeout) +
+                '  Duration=' + IntToStr(CurrentActionElapsedTime) +
+                '  AttemptCount=' + IntToStr(AttemptCount);
+
+      if FExtraLogging_FindControl then
+        LogMsg := LogMsg + '  Search: ' +
+                           '  $Control_Left$=' + EvaluateReplacements('$Control_Left$') + //same as "global...", but are required here, to be displayed in caller template log
+                           '  $Control_Top$=' + EvaluateReplacements('$Control_Top$') +
+                           '  $Control_Right$=' + EvaluateReplacements('$Control_Right$') +
+                           '  $Control_Bottom$=' + EvaluateReplacements('$Control_Bottom$') +
+                           '  $Control_Text$="' + EvaluateReplacements('$Control_Text$') + '"' +
+                           '  SearchedText="' + EvaluateReplacements(AFindSubControlOptions.MatchText) + '"' +
+                           '  MatchBitmapAlgorithm="' + CMatchBitmapAlgorithmStr[AFindSubControlOptions.MatchBitmapAlgorithm] + '"' +
+                           '  ';
+      PrependErrorMessageToActionVar(LogMsg);
       Break;
     end;
 

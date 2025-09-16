@@ -615,6 +615,28 @@ object frmClickerActions: TfrmClickerActions
           OnChange = chkAutoCloseChange
         end
       end
+      object grpExtraLogging: TGroupBox
+        Left = 336
+        Height = 105
+        Top = 280
+        Width = 240
+        Caption = 'Extra logging'
+        ClientHeight = 87
+        ClientWidth = 236
+        TabOrder = 14
+        object chkExtraLoggingFindControl: TCheckBox
+          Left = 8
+          Height = 17
+          Hint = 'When checked, it displays extra information about FindControl and FindSubControl execution.'
+          Top = 8
+          Width = 99
+          Caption = 'Find(Sub)Control'
+          ParentShowHint = False
+          ShowHint = True
+          TabOrder = 0
+          OnChange = chkExtraLoggingFindControlChange
+        end
+      end
     end
     object TabSheetTemplateExec: TTabSheet
       Caption = 'Template Execution'
@@ -807,7 +829,7 @@ object frmClickerActions: TfrmClickerActions
   object pmClientModeServerAddress: TPopupMenu
     OnPopup = pmClientModeServerAddressPopup
     Left = 296
-    Top = 272
+    Top = 256
     object MenuItem_RemoveServerAddress: TMenuItem
       Caption = 'Remove server address'
     end
