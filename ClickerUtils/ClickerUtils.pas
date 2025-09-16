@@ -493,8 +493,8 @@ type
     ComponentRectangle: TRect;  //global on screen
     IsSubControl: Boolean;
 
-    MouseXOffset: Integer;       //relative to the mouee cursor at the time of updating handle
-    MouseYOffset: Integer;       //relative to the mouee cursor at the time of updating handle
+    MouseXOffset: Integer;       //relative to the mouse cursor at the time of updating handle
+    MouseYOffset: Integer;       //relative to the mouse cursor at the time of updating handle
     XOffsetFromParent: Integer;  //field updated when searching for bitmap
     YOffsetFromParent: Integer;  //field updated when searching for bitmap
     ResultedErrorCount: Integer; //field updated when searching for bitmap

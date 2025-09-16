@@ -12,7 +12,7 @@ BreakpointExists=0
 BreakpointEnabled=0
 BreakpointCondition=
 PathToApp=explorer
-ListOfParams="http://127.0.0.1:$ListeningPort$/GetTextRenderingPage?StackLevel=0&ID=$RenderingRequestID$"
+ListOfParams="http://127.0.0.1:$ListeningPort$/GetTextRenderingPage?StackLevel=$StackLevel$&ID=$RenderingRequestID$"
 WaitForApp=0
 AppStdIn=
 CurrentDir=

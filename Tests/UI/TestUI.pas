@@ -1442,6 +1442,8 @@ procedure TTestUI.TestRenderTextOnWebBrowser_With_ServerCallTemplate_RenderingRe
 begin
   PrepareClickerUnderTestToReadItsVars;   //server mode
   CheckAutoCloseBrowser(CTestDriverServerAddress_Client, FTemplatesDir, False);
+  ExecuteTemplateOnTestDriver(ExtractFilePath(ParamStr(0)) + '..\..\TestDriver\ActionTemplates\PrepareClientActionsWindowForInteraction.clktmpl', CREParam_FileLocation_ValueDisk);
+
   StartWebBrowserForTextRendering(CTestClientAddress);
   try
     ExecuteTemplateOnCustomTestDriver(CTestClientAddress, ExtractFilePath(ParamStr(0)) + '..\TestFiles\TextRenderingInBrowserWithServerCallTemplate.clktmpl', CREParam_FileLocation_ValueDisk);
