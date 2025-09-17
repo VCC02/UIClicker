@@ -4396,7 +4396,9 @@ begin
             if GetTickCount64 - tk > GeneralConnectTimeout shl 1 + CFileProviderIterationInterval + 100 then
               Break; //a delay long enough, so the client module does not connect to the server module of the same app instance
           until False;
-        end;
+        end
+        else
+          IdHTTPServer1.Bindings.Clear;
 
         chkServerActive.Checked := False;
       finally
@@ -4618,6 +4620,7 @@ begin
   else
   begin
     IdHTTPServer1.Active := False;
+    IdHTTPServer1.Bindings.Clear;
     lblServerInfo.Caption := 'Server module is inactive';
     lblServerInfo.Font.Color := clGray;
     lblServerInfo.Hint := '';
