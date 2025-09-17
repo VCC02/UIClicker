@@ -2309,8 +2309,13 @@ begin
     FClkEditedActionByEditTemplate.ActionOptions.Action := ActionType;
 
     if ActionType = acFindSubControl then
+    begin
       if Length(FClkEditedActionByEditTemplate.FindSubControlOptions.MatchBitmapText) = 0 then
         GetDefaultPropertyValues_FindSubControl(FClkEditedActionByEditTemplate.FindSubControlOptions);
+
+      if frClickerFindControl.GetBMPTextFontProfilesCount <> Length(FEditTemplateOptions_EditingAction^.FindSubControlOptions.MatchBitmapText) then
+        DeserializeEditTemplateEditingAction; //this should be replaced by something which copies the action content from FindSubControl
+    end;
 
     SerializeEditTemplateEditingAction;
     tmrOnChangeEditTemplateEditingActionType.Enabled := True;
@@ -6889,12 +6894,14 @@ begin
 
   if AEditingAction <> @FClkEditedActionByEditTemplate then    //This prevents loading the OI when changing the edited action type.
     if AEditingAction^.ActionOptions.Action = acEditTemplate then       // Only the editing action should be verified here. The edited action should be avoided.
+    begin
       if APropertyIndex = CEditTemplate_EditedActionType_PropIndex then // AEditingAction will get both editing and edited.
         if FEditTemplateOptions_EditingAction <> nil then
         begin
           FClkEditedActionByEditTemplate.ActionOptions.Action := AEditingAction^.EditTemplateOptions.EditedActionType;
           if Length(FEditTemplateOptions_EditingAction^.FindSubControlOptions.MatchBitmapText) = 0 then
           begin
+            DeserializeEditTemplateEditingAction;  //better start off with an empty list of profiles
             SetLength(FEditTemplateOptions_EditingAction^.FindSubControlOptions.MatchBitmapText, frClickerFindControl.GetBMPTextFontProfilesCount);
             frClickerFindControl.CreateBMPTextFrames(Length(FEditTemplateOptions_EditingAction^.FindSubControlOptions.MatchBitmapText)); //AddNewFontProfile(FEditTemplateOptions_EditingAction^.FindSubControlOptions.MatchBitmapText[n]);
             BuildFontColorIconsList;
@@ -6910,6 +6917,12 @@ begin
           SerializeEditTemplateEditingAction;
           tmrOnChangeEditTemplateEditingActionType.Enabled := True;
         end;
+
+      if APropertyIndex = CEditTemplate_EditedActionName_PropIndex then // AEditingAction will get both editing and edited.
+        if FEditTemplateOptions_EditingAction <> nil then
+          if frClickerFindControl.GetBMPTextFontProfilesCount <> Length(FEditTemplateOptions_EditingAction^.FindSubControlOptions.MatchBitmapText) then
+            DeserializeEditTemplateEditingAction;
+    end;
 end;
 
 

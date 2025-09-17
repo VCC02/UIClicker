@@ -2482,7 +2482,7 @@ begin
   end;}
 
   if frClickerActions.CurrentlyEditingActionType in [acFindControl, acFindSubControl] then    //both actions
-    frClickerActions.UpdateFindSubControlInternalStructuresFromAction(@FClkActions[ActionIndex]);
+    frClickerActions.UpdateFindSubControlInternalStructuresFromAction(@FClkActions[ActionIndex]);  //this is also called by DeserializeEditTemplateEditingAction if the action is EditTemplate
 
   if frClickerActions.CurrentlyEditingActionType = acPlugin then
   begin
