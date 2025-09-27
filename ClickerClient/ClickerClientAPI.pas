@@ -87,6 +87,7 @@ type
     UseInheritHandles: Byte; //TExecAppUseInheritHandles;
     NoConsole: Boolean;
     VerifyFileExistence: Boolean;
+    LeaveRunningAfterTimeout: Boolean;
   end;
 
   PClkExecAppOptionsAPI = ^TClkExecAppOptionsAPI;
@@ -566,6 +567,7 @@ begin
   ADestClkAction.ExecAppOptions.UseInheritHandles := TExecAppUseInheritHandles(AExecAppOptions^.UseInheritHandles);
   ADestClkAction.ExecAppOptions.NoConsole := AExecAppOptions^.NoConsole;
   ADestClkAction.ExecAppOptions.VerifyFileExistence := AExecAppOptions^.VerifyFileExistence;
+  ADestClkAction.ExecAppOptions.LeaveRunningAfterTimeout := AExecAppOptions^.LeaveRunningAfterTimeout;
 end;
 
 
@@ -958,6 +960,7 @@ begin
   ADestExecAppOptions.UseInheritHandles := Byte(AExecAppOptions.UseInheritHandles);
   ADestExecAppOptions.NoConsole := AExecAppOptions.NoConsole;
   ADestExecAppOptions.VerifyFileExistence := AExecAppOptions.VerifyFileExistence;
+  ADestExecAppOptions.LeaveRunningAfterTimeout := AExecAppOptions.LeaveRunningAfterTimeout;
 end;
 
 

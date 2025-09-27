@@ -57,6 +57,8 @@ try:
     ExecAppOptions.CurrentDir = 'TheDir'
     ExecAppOptions.UseInheritHandles = TExecAppUseInheritHandles.uihYes
     ExecAppOptions.NoConsole = True
+    ExecAppOptions.VerifyFileExistence = True
+    ExecAppOptions.LeaveRunningAfterTimeout = True
 
     print("ExecuteExecAppAction: ", DllFuncs.ExecuteExecAppAction("Another ExecApp", 100, ExecAppOptions, True))
 finally:

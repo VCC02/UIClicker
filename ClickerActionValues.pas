@@ -60,7 +60,7 @@ const
 
   //Properties (counts)
   CPropCount_Click = 26;
-  CPropCount_ExecApp = 8;
+  CPropCount_ExecApp = 9;
   CPropCount_FindControl = 15;
   CPropCount_FindSubControl = 33;
   CPropCount_SetText = 4;
@@ -327,7 +327,8 @@ const
     (Name: 'CurrentDir'; EditorType: etDirPath; DataType: CDTString),                  //Description:  Application current directory.  Replacements are avaialable.  Example: $ExtractFileDir($PathToMyFile$)$
     (Name: 'UseInheritHandles'; EditorType: etEnumCombo; DataType: CDTEnum),         //Description:  Required mostly when passing data through StdIn.
     (Name: 'NoConsole'; EditorType: etBooleanCombo; DataType: CDTBool),              //Description:  When checked, console applications are not displayed in a new window.  UI applications can create and display system consoles. For those applications, this option may cause problems if checked.
-    (Name: 'VerifyFileExistence'; EditorType: etBooleanCombo; DataType: CDTBool)     //Description:  When checked, the executable is verified to exist on disk.
+    (Name: 'VerifyFileExistence'; EditorType: etBooleanCombo; DataType: CDTBool),     //Description:  When checked, the executable is verified to exist on disk.
+    (Name: 'LeaveRunningAfterTimeout'; EditorType: etBooleanCombo; DataType: CDTBool)  //Description:  If WaitForApp is True and the app is still running after timeout, this allows exiting the action as Successful.
   );
 
   CFindControlProperties: array[0..CPropCount_FindControl - 1] of TOIPropDef = (
@@ -783,7 +784,8 @@ const
     0, //CurrentDir: string;
     Ord(High(TExecAppUseInheritHandles)) + 1,
     0, //NoConsole: Boolean;
-    0  //VerifyFileExistence: Boolean;
+    0, //VerifyFileExistence: Boolean;
+    0  //LeaveRunningAfterTimeout: Boolean;
   );
 
   CFindControlEnumCounts: array[0..CPropCount_FindControl - 1] of Integer = (
@@ -1018,7 +1020,8 @@ const
     nil, //CurrentDir: string;
     @CExecAppUseInheritHandlesStr,
     nil, //NoConsole: Boolean;
-    nil  //VerifyFileExistence: Boolean;
+    nil, //VerifyFileExistence: Boolean;
+    nil  //LeaveRunningAfterTimeout: Boolean;
   );
 
   CFindControlEnumStrings: array[0..CPropCount_FindControl - 1] of PArrayOfString = (
@@ -1257,7 +1260,8 @@ const
     0, //CurrentDir: string;
     0, //TExecAppUseInheritHandles
     0, //NoConsole: Boolean;
-    0  //VerifyFileExistence: Boolean;
+    0, //VerifyFileExistence: Boolean;
+    0  //LeaveRunningAfterTimeout: Boolean;
   );
 
   CFindControlIsExp: array[0..CPropCount_FindControl - 1] of Integer = (
@@ -1413,6 +1417,7 @@ function GetPropertyHint_ExecApp_CurrentDir: string;
 function GetPropertyHint_ExecApp_UseInheritHandles: string;
 function GetPropertyHint_ExecApp_NoConsole: string;
 function GetPropertyHint_ExecApp_VerifyFileExistence: string;
+function GetPropertyHint_ExecApp_LeaveRunningAfterTimeout: string;
 
 function GetPropertyHint_FindControl_AllowToFail: string;
 function GetPropertyHint_FindControl_MatchText: string;
@@ -1563,7 +1568,8 @@ const
     @GetPropertyHint_ExecApp_CurrentDir, // CurrentDir: string;
     @GetPropertyHint_ExecApp_UseInheritHandles, // UseInheritHandles: TExecAppUseInheritHandles;
     @GetPropertyHint_ExecApp_NoConsole, // NoConsole: Boolean;
-    @GetPropertyHint_ExecApp_VerifyFileExistence // VerifyFileExistence: Boolean;
+    @GetPropertyHint_ExecApp_VerifyFileExistence, // VerifyFileExistence: Boolean;
+    @GetPropertyHint_ExecApp_LeaveRunningAfterTimeout // LeaveRunningAfterTimeout: Boolean;
   );
 
 
@@ -1834,6 +1840,7 @@ begin
     5: Result := CExecAppUseInheritHandlesStr[AAction^.ExecAppOptions.UseInheritHandles];
     6: Result := BoolToStr(AAction^.ExecAppOptions.NoConsole, True);
     7: Result := BoolToStr(AAction^.ExecAppOptions.VerifyFileExistence, True);
+    8: Result := BoolToStr(AAction^.ExecAppOptions.LeaveRunningAfterTimeout, True);
     else
       Result := 'unknown';
   end;
@@ -2558,6 +2565,7 @@ begin
     5: AAction^.ExecAppOptions.UseInheritHandles := ExecAppUseInheritHandles_AsStringToValue(NewValue);
     6: AAction^.ExecAppOptions.NoConsole := StrToBool(NewValue);
     7: AAction^.ExecAppOptions.VerifyFileExistence := StrToBool(NewValue);
+    8: AAction^.ExecAppOptions.LeaveRunningAfterTimeout := StrToBool(NewValue);
     else
       ;
   end;
@@ -3030,6 +3038,12 @@ function GetPropertyHint_ExecApp_VerifyFileExistence: string;
 begin
   Result := 'When True, the executable file is verified to exist on disk.' + #13#10 +
             'To run applications without a path, e.g. those added to environment variables, please set this property to False.';
+end;
+
+
+function GetPropertyHint_ExecApp_LeaveRunningAfterTimeout: string;
+begin
+  Result := 'When True, if WaitForApp is also True and the app is still running after timeout, this allows exiting the action as Successful.';
 end;
 
 

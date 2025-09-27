@@ -667,6 +667,7 @@ begin
   AExecAppOptions.WaitForApp := True;
   AExecAppOptions.NoConsole := True;
   AExecAppOptions.VerifyFileExistence := True;
+  AExecAppOptions.LeaveRunningAfterTimeout := True;
 end;
 
 
@@ -1518,6 +1519,7 @@ begin
   AExecAppOptions.UseInheritHandles := uihYes;
   AExecAppOptions.NoConsole := True;
   AExecAppOptions.VerifyFileExistence := True;
+  AExecAppOptions.LeaveRunningAfterTimeout := True;
 end;
 
 
@@ -1530,7 +1532,8 @@ begin
             'CurrentDir' + '=' + 'TheDir' + '&' +
             'UseInheritHandles' + '=' + 'uihYes' + '&' +
             'NoConsole' + '=' + 'True' + '&' +
-            'VerifyFileExistence' + '=' + 'True';
+            'VerifyFileExistence' + '=' + 'True' + '&' +
+            'LeaveRunningAfterTimeout' + '=' + 'True';
 end;
 
 

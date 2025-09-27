@@ -241,7 +241,8 @@ class TExecAppOptions(Structure):
                ("CurrentDir", LPCWSTR),
                ("UseInheritHandles", BYTE), #LONG) #TExecAppUseInheritHandless
                ("NoConsole", BOOLEAN),
-               ("VerifyFileExistence", BOOLEAN)] 
+               ("VerifyFileExistence", BOOLEAN),
+               ("LeaveRunningAfterTimeout", BOOLEAN)] 
                
 
 PExecAppOptions = ctypes.POINTER(TExecAppOptions)
@@ -256,6 +257,7 @@ def GetDefaultExecAppOptions():
     ExecAppOptions.UseInheritHandles = TExecAppUseInheritHandles.uihOnlyWithStdInOut
     ExecAppOptions.NoConsole = False
     ExecAppOptions.VerifyFileExistence = False
+    ExecAppOptions.LeaveRunningAfterTimeout = False
     return ExecAppOptions
 
 

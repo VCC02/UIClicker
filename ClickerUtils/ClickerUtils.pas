@@ -213,6 +213,7 @@ type
     UseInheritHandles: TExecAppUseInheritHandles;
     NoConsole: Boolean;
     VerifyFileExistence: Boolean;
+    LeaveRunningAfterTimeout: Boolean;
   end;
 
   TRectString = record

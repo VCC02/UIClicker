@@ -159,7 +159,8 @@ begin
             'CurrentDir' + '=' + AExecAppOptions.CurrentDir + '&' +
             'UseInheritHandles' + '=' + IntToStr(Ord(AExecAppOptions.UseInheritHandles)) + '&' +
             'NoConsole' + '=' + IntToStr(Ord(AExecAppOptions.NoConsole)) + '&' +
-            'VerifyFileExistence' + '=' + IntToStr(Ord(AExecAppOptions.VerifyFileExistence));
+            'VerifyFileExistence' + '=' + IntToStr(Ord(AExecAppOptions.VerifyFileExistence)) + '&' +
+            'LeaveRunningAfterTimeout' + '=' + IntToStr(Ord(AExecAppOptions.LeaveRunningAfterTimeout));
 end;
 
 
@@ -481,7 +482,8 @@ begin
             'CurrentDir' + '=' + CDTString + '&' +
             'UseInheritHandles' + '=' + CDTBool + '&' +
             'NoConsole' + '=' + CDTBool + '&' +
-            'VerifyFileExistence' + '=' + CDTBool;
+            'VerifyFileExistence' + '=' + CDTBool + '&' +
+            'LeaveRunningAfterTimeout' + '=' + CDTBool;
 end;
 
 
@@ -897,6 +899,7 @@ begin
   AExecAppOptions.UseInheritHandles := TExecAppUseInheritHandles(Temp_UseInheritHandles);
   AExecAppOptions.NoConsole := AListOfExecAppOptionsParams.Values['NoConsole'] = '1';
   AExecAppOptions.VerifyFileExistence := AListOfExecAppOptionsParams.Values['VerifyFileExistence'] = '1';
+  AExecAppOptions.LeaveRunningAfterTimeout := AListOfExecAppOptionsParams.Values['LeaveRunningAfterTimeout'] = '1';
 
   AActionOptions.ActionName := AListOfExecAppOptionsParams.Values[CPropertyName_ActionName];
   AActionOptions.ActionTimeout := Temp_ActionTimeout;
@@ -1476,6 +1479,7 @@ begin
   AExecAppOptions.UseInheritHandles := uihNo;
   AExecAppOptions.NoConsole := False;
   AExecAppOptions.VerifyFileExistence := False;
+  AExecAppOptions.LeaveRunningAfterTimeout := False;
 end;
 
 

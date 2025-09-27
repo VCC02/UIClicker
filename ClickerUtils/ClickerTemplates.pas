@@ -142,6 +142,7 @@ begin
     ACustomActions[i].ExecAppOptions.UseInheritHandles := uihOnlyWithStdInOut;
     ACustomActions[i].ExecAppOptions.NoConsole := False;
     ACustomActions[i].ExecAppOptions.VerifyFileExistence := False;
+    ACustomActions[i].ExecAppOptions.LeaveRunningAfterTimeout := False;
 
     SectionIndex := Ini.GetSectionIndex('Actions.FindControlOptions');
     ACustomActions[i].FindControlOptions.MatchCriteria.WillMatchText := Ini.ReadBool(SectionIndex, 'MatchCriteria.WillMatchText_' + IterationStr, True);
@@ -421,6 +422,7 @@ begin
   AExecAppOptions.UseInheritHandles := TExecAppUseInheritHandles(Min(Ini.ReadInteger(SectionIndex, 'UseInheritHandles', Ord(uihOnlyWithStdInOut)), Integer(High(TExecAppUseInheritHandles))));
   AExecAppOptions.NoConsole := Ini.ReadBool(SectionIndex, 'NoConsole', False);
   AExecAppOptions.VerifyFileExistence := Ini.ReadBool(SectionIndex, 'VerifyFileExistence', False);
+  AExecAppOptions.LeaveRunningAfterTimeout := Ini.ReadBool(SectionIndex, 'LeaveRunningAfterTimeout', False);
 end;
 
 
@@ -958,6 +960,7 @@ begin
   AStringList.Add('UseInheritHandles=' + IntToStr(Ord(AActionExecAppOptions.UseInheritHandles)));
   AStringList.Add('NoConsole=' + IntToStr(Ord(AActionExecAppOptions.NoConsole)));
   AStringList.Add('VerifyFileExistence=' + IntToStr(Ord(AActionExecAppOptions.VerifyFileExistence)));
+  AStringList.Add('LeaveRunningAfterTimeout=' + IntToStr(Ord(AActionExecAppOptions.LeaveRunningAfterTimeout)));
 end;
 
 

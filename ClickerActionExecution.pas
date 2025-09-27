@@ -1464,6 +1464,9 @@ begin
                   if FSelfTemplateFileName = nil then
                     raise Exception.Create('FSelfTemplateFileName not set.');
 
+                  if AExecAppOptions.LeaveRunningAfterTimeout then
+                    Break;
+
                   PrependErrorMessageToActionVar('Timeout at "' + AActionOptions.ActionName + '" in ' + FSelfTemplateFileName^);
                   Result := False;
                   Break;
