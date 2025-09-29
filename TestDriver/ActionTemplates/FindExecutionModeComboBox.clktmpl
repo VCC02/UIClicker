@@ -56,7 +56,7 @@ NewSizeEnabled=0
 [Action_2]
 ActionName=Find main PageControl (works on visible windows only)
 Action=FindControl
-ActionTimeout=1000
+ActionTimeout=3000
 ActionEnabled=1
 ActionCondition=
 BreakpointExists=0
