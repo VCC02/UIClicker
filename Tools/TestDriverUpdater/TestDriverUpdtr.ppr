@@ -1,0 +1,118 @@
+{
+    Copyright (C) 2025 VCC
+    creation date: 07 Oct 2025
+    initial release date: 07 Oct 2025
+
+    author: VCC
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"),
+    to deal in the Software without restriction, including without limitation
+    the rights to use, copy, modify, merge, publish, distribute, sublicense,
+    and/or sell copies of the Software, and to permit persons to whom the
+    Software is furnished to do so, subject to the following conditions:
+    The above copyright notice and this permission notice shall be included
+    in all copies or substantial portions of the Software.
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+    IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+    DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+    TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
+    OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+}
+
+
+program TestDriverUpdtr;
+
+uses
+  Interfaces, Classes, SysUtils, Process, AsyncProcess;
+
+
+function CreateUIClickerProcess(AExe, AParams: string): TAsyncProcess;  //Adapted from UITestUtils, to avoid including all those deps
+begin
+  Result := TAsyncProcess.Create(nil);
+  Result.Executable := AExe;
+  Result.Parameters.Text := StringReplace(AParams, #32, #13#10, [rfReplaceAll]);
+  Result.CurrentDirectory := ExtractFileDir(AExe);
+  Result.InheritHandles := True;
+  Result.Options := [poUsePipes, poStderrToOutPut, poNoConsole];
+
+  Result.Execute;
+end;
+
+
+function RunUIClickerWithArg(ASrcPath, AParams: string): string; //returns UIClicker STD output
+var
+  UIClickerProc: TAsyncProcess;
+  tk: QWord;
+begin
+  UIClickerProc := CreateUIClickerProcess(ASrcPath, AParams);
+  try
+    tk := GetTickCount64;
+    repeat
+      Sleep(1);
+    until not UIClickerProc.Active or (GetTickCount64 - tk > 2000);
+
+    if (UIClickerProc.Output <> nil) and (UIClickerProc.Output.NumBytesAvailable > 0) then     //read once more (in case the timeout stopped the reading)
+    begin
+      SetLength(Result, UIClickerProc.Output.NumBytesAvailable);
+      UIClickerProc.Output.Read(Result[1], Length(Result));
+    end;
+  finally
+    UIClickerProc.Free;
+  end;
+end;
+
+
+function IsUIClickerBuiltForTesting(ASrcPath: string): Boolean;
+begin
+  Result := (Pos('Yes', RunUIClickerWithArg(ASrcPath, '--IsTestBuild')) = 1) and
+            (Pos('Yes', RunUIClickerWithArg(ASrcPath, '--IsMemPlugins')) = 1) and
+            (Pos('Yes', RunUIClickerWithArg(ASrcPath, '--IsPluginTesting')) = 1);
+end;
+
+
+var
+  Content: TMemoryStream;
+  SourceFileName, DestinationFileName: string;
+begin
+  Content := TMemoryStream.Create;
+  try
+    SourceFileName := ExtractFilePath(ParamStr(0)) + '..' + PathDelim + '..' + PathDelim + 'UIClicker' {$IFDEF Windows} + '.exe' {$ENDIF};
+    //WriteLn('Source UIClicker set to: ' + ExpandFileName(SourceFileName));
+
+    if not FileExists(SourceFileName) then
+    begin
+      WriteLn('Source UIClicker does not exist: ' + ExpandFileName(SourceFileName));
+      Exit;
+    end;
+
+    if not IsUIClickerBuiltForTesting(SourceFileName) then
+    begin
+      WriteLn('Source UIClicker is not built for testing. It requires the following compiler directives to be present: TestBuild, MemPlugins, PluginTesting');
+      Exit;
+    end;
+
+    Content.LoadFromFile(SourceFilename);
+
+    DestinationFileName := ExtractFilePath(ParamStr(0)) + '..' + PathDelim + '..' + PathDelim + 'TestDriver' + PathDelim + 'UIClicker' {$IFDEF Windows} + '.exe' {$ENDIF};
+    //WriteLn('Destination UIClicker set to: ' + ExpandFileName(DestinationFileName));
+
+    Content.Position := 0;
+
+    try
+      Content.SaveToFile(DestinationFileName);
+    except
+      on E: Exception do
+      begin
+        WriteLn('Error saving destination file: ' + ExpandFileName(DestinationFileName));
+        WriteLn(E.Message);
+      end;
+    end;
+
+    WriteLn('TestDriver UIClicker updated successfully.');
+  finally
+    Content.Free;
+  end;
+end.
+

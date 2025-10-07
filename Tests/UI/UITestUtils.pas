@@ -78,6 +78,7 @@ begin
     Ini.WriteInteger('MainWindow', 'Top', AMainTop);
     Ini.WriteInteger('ActionsWindow', 'Left', AActionsLeft);
     Ini.WriteInteger('ActionsWindow', 'Top', AActionsTop);
+    Ini.UpdateFile;
   finally
     Ini.Free;
   end;

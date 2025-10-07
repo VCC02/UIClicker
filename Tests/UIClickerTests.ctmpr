@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <MultiProject FileVersion="1">
+    <Elements Count="7">
+      <Element0 FileName="..\Tools\TestDriverUpdater\TestDriverUpdtr.ctpr">
+        <BuildModes Count="1"/>
+        <Mode1 Name="Default"/>
+      </Element0>
+      <Element1 FileName="..\Tools\ClkDbgSym\ClkDbgSym.ctpr">
+        <BuildModes Count="1"/>
+        <Mode1 Name="Default"/>
+      </Element1>
+      <Element2 FileName="TestFiles\GradientText\GradientText.ctpr">
+        <BuildModes Count="1"/>
+        <Mode1 Name="Default"/>
+      </Element2>
+      <Element3 FileName="TestFiles\TestPlugin\TestPlugin.ctpr">
+        <BuildModes Count="1"/>
+        <Mode1 Name="Default"/>
+      </Element3>
+      <Element4 FileName="..\..\UIClickerFindWindowsPlugin\UIClickerFindWindows.ctpr">
+        <BuildModes Count="1"/>
+        <Mode1 Name="Default"/>
+      </Element4>
+      <Element5 FileName="UIClickerHTTPTests.ctpr">
+        <BuildModes Count="1"/>
+        <Mode1 Name="Default"/>
+      </Element5>
+      <Element6 FileName="UI\UIClickerUITests.ctpr">
+        <BuildModes Count="1"/>
+        <Mode1 Name="Default"/>
+      </Element6>
+    </Elements>
+  </MultiProject>
+</CONFIG>

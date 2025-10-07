@@ -188,12 +188,49 @@ begin
 end;
 
 
-{$IFDEF TestBuild}
-  var
-    i: Integer;
+var
+  i: Integer;
+{$IFnDEF TestBuild}
+  s: string;
 {$ENDIF}
 
 begin
+  try
+    for i := 1 to ParamCount do
+    begin
+      if UpperCase(ParamStr(i)) = UpperCase('--IsTestBuild') then
+      begin
+        {$IFDEF TestBuild}
+          WriteLn('Yes');
+        {$ELSE}
+          WriteLn('No');
+        {$ENDIF}
+        Exit;
+      end;
+
+      if UpperCase(ParamStr(i)) = UpperCase('--IsMemPlugins') then
+      begin
+        {$IFDEF MemPlugins}
+          WriteLn('Yes');
+        {$ELSE}
+          WriteLn('No');
+        {$ENDIF}
+        Exit;
+      end;
+
+      if UpperCase(ParamStr(i)) = UpperCase('--IsPluginTesting') then
+      begin
+        {$IFDEF PluginTesting}
+          WriteLn('Yes');
+        {$ELSE}
+          WriteLn('No');
+        {$ENDIF}
+        Exit;
+      end;
+    end; //for
+  except
+  end;
+
   {$IFDEF TestBuild}
     for i := 1 to ParamCount do
       if UpperCase(ParamStr(i)) = '--HELP' then
@@ -220,7 +257,23 @@ begin
         Exit;
       end;
   {$ELSE}
-    WriteLn('Closing console in UI mode...');
+    try
+      for i := 1 to ParamCount do
+      begin
+        s := UpperCase(ParamStr(i));
+        if (s = UpperCase('--ExtraCaption')) or
+           (s = UpperCase('--SetExecMode')) or
+           (s = UpperCase('--ServerPort')) or
+           (s = UpperCase('--ConnectsTo')) or
+           (s = UpperCase('--SkipSavingSettings')) then //the main switches
+        begin
+          MessageBoxFunction('Command line switches are implemented in Test build only. See the "TestBuild" project-level compiler directive in project settings.', 'UIClicker', 0);
+          Break;
+        end;
+      end;
+    finally
+      WriteLn('Closing console in UI mode...');
+    end;
   {$ENDIF}
 
   {$IFDEF Windows}

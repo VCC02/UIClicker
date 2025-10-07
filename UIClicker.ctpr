@@ -35,7 +35,7 @@
           </Target>
           <SearchPaths>
             <IncludeFiles Value="$(ProjOutDir)"/>
-            <OtherUnitFiles Value="ClickerUtils;..\MiscUtils;ClickerClient;..\DynMemLib\"/>
+            <OtherUnitFiles Value="ClickerUtils;..\MiscUtils;ClickerClient;..\DynMemLib"/>
             <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
           </SearchPaths>
           <Parsing>
@@ -437,7 +437,7 @@
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
-      <OtherUnitFiles Value="ClickerUtils;..\MiscUtils;ClickerClient;..\DynMemLib\"/>
+      <OtherUnitFiles Value="ClickerUtils;..\MiscUtils;ClickerClient;..\DynMemLib"/>
       <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <Parsing>
@@ -457,6 +457,10 @@
       <CustomOptions Value="-dTestBuild
 -dMemPlugins
 -dPluginTesting"/>
+      <ExecuteAfter>
+        <Command Value="&quot;$(ProjPath)\Tools\TestDriverUpdater\TestDriverUpdtr.exe&quot;"/>
+        <CompileReasons Run="False"/>
+      </ExecuteAfter>
     </Other>
   </CompilerOptions>
   <Debugging>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <MultiProject FileVersion="1">
+    <Elements Count="4">
+      <Element0 FileName="Tools\TestDriverUpdater\TestDriverUpdtr.ctpr">
+        <BuildModes Count="1"/>
+        <Mode1 Name="Default"/>
+      </Element0>
+      <Element1 FileName="UIClicker.ctpr">
+        <BuildModes Count="2"/>
+        <Mode1 Name="Default" Compile="True"/>
+        <Mode2 Name="Unicode"/>
+      </Element1>
+      <Element2 FileName="ClickerClient\ClickerClient.ctpr">
+        <BuildModes Count="1"/>
+        <Mode1 Name="Default"/>
+      </Element2>
+      <Element3 FileName="Tests\UIClickerTests.ctmpr"/>
+    </Elements>
+  </MultiProject>
+</CONFIG>

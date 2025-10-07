@@ -38,7 +38,7 @@ uses
 
 begin
   Application.Initialize;
-  Application.CreateForm(TGuiTestRunner, TestRunner);
+  //Application.CreateForm(TGuiTestRunner, TestRunner);
   Application.CreateForm(TfrmPitstopTestRunner, frmPitstopTestRunner);
   Application.Run;
 end.
