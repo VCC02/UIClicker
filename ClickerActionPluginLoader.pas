@@ -674,6 +674,12 @@ begin
 end;
 
 
+procedure DoOnActionPlugin_AppProcMsg(APluginReference: Pointer); cdecl;
+begin
+  Application.ProcessMessages;
+end;
+
+
 function TActionPlugin.DoOnLoadPluginFromInMemFS(APlugin: TMemoryStream; AFileName: string): Boolean;
 begin
   if Assigned(OnLoadPluginFromInMemFS) then
@@ -1356,7 +1362,8 @@ begin
                                        DoOnActionPlugin_SetBitmap,
                                        DoOnActionPlugin_Screenshot,
                                        DoOnActionPlugin_CheckStopAllActionsOnDemand,
-                                       DoOnActionPlugin_InMemFS
+                                       DoOnActionPlugin_InMemFS,
+                                       DoOnActionPlugin_AppProcMsg
                                        );
     finally
       if FPluginContinueAll <> nil then
@@ -1387,7 +1394,13 @@ begin
   try
     ANewValue := '';
     SetLength(ANewValue, CMaxSharedStringLength);
-    Result := Func.EditPropertyFunc(ActionPlugin, DoOnActionPlugin_InMemFS, APropertyIndex, @ACurrentValue[1], @ANewValue[1], @NewLen);
+    Result := Func.EditPropertyFunc(ActionPlugin,
+                                    DoOnActionPlugin_InMemFS,
+                                    DoOnActionPlugin_AppProcMsg,
+                                    APropertyIndex,
+                                    @ACurrentValue[1],
+                                    @ANewValue[1],
+                                    @NewLen);
 
     SetLength(ANewValue, NewLen);
   except
