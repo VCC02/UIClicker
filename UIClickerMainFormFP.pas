@@ -326,6 +326,7 @@ begin
       frmClickerWinInterp.Caption := frmClickerWinInterp.Caption + ' - ' + ExtraCaption;
       frmClickerTemplateCallTree.Caption := frmClickerTemplateCallTree.Caption + ' - ' + ExtraCaption;
       frmClickerRemoteScreen.Caption := frmClickerRemoteScreen.Caption + ' - ' + ExtraCaption;
+      //Do not set Application.Title := 'UIClicker - ' + ExtraCaption;, because this will modify MessageBox titles, which will not be found in tests.
     end;
   {$ENDIF}
 
