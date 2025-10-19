@@ -3089,7 +3089,11 @@ begin
             '- For mbaBruteForce, the searched bitmap is compared on every x:y point, which allows the searched bitmap to fit into the background.' + #13#10 +
             '- When mbaXYMultipleAndOffsets is selected, a grid is generated, which expects the searched bitmap to start (top-left corner) on one of the grid points.' + #13#10 +
             '- The mbaRawHistogramZones algorithm (currently in work) generates a grid, with the resolution, matching the searched bitmap size, then computes the histogram of each resulted zone.' + #13#10 +
-            '    If the significant colors from every zone histogram, match the searced bitmap''s significant colors, then the brute-force search is used on those specific zones.';
+            '    If the significant colors from every zone histogram, match the searced bitmap''s significant colors, then the brute-force search is used on those specific zones.' + #13#10 +
+            '- The mbaBruteForceOnGPU option is similar to mbaBruteForce, except that the bitmap matching is done on GPU. The current implementation is limited to OpenCL 1.2, and it is slower than on CPU.' + #13#10 +
+            '- When using mbaRenderTextOnly, no bitmap matching is done. This option generates the bitmaps from the available font profiles, using the following format:' + #13#10 +
+               '"ExtMem:\<ActionName>_<ProfileName>.bmp". As an example, the following bmp can be generated in ExtIn-Mem FS: "ExtMem:\RenderTextOnly_Profile [0].bmp".' + #13#10 +
+               'These bitmaps can be used by other FindSubControl actions, either directly or through plugins (with or without pmtv files).';
 end;
 
 
