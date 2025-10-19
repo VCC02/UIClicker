@@ -578,6 +578,10 @@ begin
     else
       APreviewBmp.Canvas.Font.Quality := TFontQuality(AFindSubControlOptions.MatchBitmapText[AProfileIndex].FontQuality);
 
+    APreviewBmp.Canvas.Font.CharSet := AFindSubControlOptions.MatchBitmapText[AProfileIndex].CharSet;
+    APreviewBmp.Canvas.Font.Orientation := AFindSubControlOptions.MatchBitmapText[AProfileIndex].Orientation;
+    APreviewBmp.Canvas.Font.Pitch := AFindSubControlOptions.MatchBitmapText[AProfileIndex].Pitch;
+
     APreviewBmp.Canvas.Brush.Color := EvalBGCol;
     APreviewBmp.Canvas.Pen.Color := EvalBGCol;  //yes, BG
 

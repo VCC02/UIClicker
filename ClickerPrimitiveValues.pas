@@ -114,6 +114,9 @@ const
     (Name: 'FontQuality'; EditorType: etEnumCombo),
     (Name: 'FontQualityUsesReplacement'; EditorType: etBooleanCombo),
     (Name: 'FontQualityReplacement'; EditorType: etText),
+    (Name: 'CharSet'; EditorType: etEnumCombo),
+    (Name: 'Orientation'; EditorType: etSpinText),
+    (Name: 'Pitch'; EditorType: etEnumCombo),
     (Name: 'ProfileName'; EditorType: etText),
     (Name: 'CropLeft'; EditorType: etSpinText),
     (Name: 'CropTop'; EditorType: etSpinText),
@@ -423,9 +426,12 @@ const
     0, //Italic: Boolean;
     0, //Underline: Boolean;
     0, //StrikeOut: Boolean;
-    Ord(High(TFontQuality)) + 1,
+    Ord(High(TFontQuality)) + 1, //FontQuality: TFontQuality;
     0, //FontQualityUsesReplacement: Boolean;
     0, //FontQualityReplacement: string;
+    Length(FontCharsets), //CharSet: Byte;
+    0, //Orientation: Integer;
+    Ord(High(TFontPitch)) + 1, //Pitch: TFontPitch;
     0, //ProfileName: string;
     0, //CropLeft: string;
     0, //CropTop: string;
@@ -572,6 +578,9 @@ const
     @CFontQualityStr,
     nil, //FontQualityUsesReplacement: Boolean;
     nil, //FontQualityReplacement: string;
+    @CFontCharSetStr, //CharSet: Byte;
+    nil, //Orientation: Integer;
+    @CFontPitchStr,
     nil, //ProfileName: string;
     nil, //CropLeft: string;
     nil, //CropTop: string;
@@ -755,12 +764,15 @@ implementation
       8: Result := CFontQualityStr[APrimitive.ClkSetFont.FontQuality];
       9: Result := BoolToStr(APrimitive.ClkSetFont.FontQualityUsesReplacement, True);
       10: Result := APrimitive.ClkSetFont.FontQualityReplacement;
-      11: Result := APrimitive.ClkSetFont.ProfileName;
-      12: Result := APrimitive.ClkSetFont.CropLeft;
-      13: Result := APrimitive.ClkSetFont.CropTop;
-      14: Result := APrimitive.ClkSetFont.CropRight;
-      15: Result := APrimitive.ClkSetFont.CropBottom;
-      16: Result := BoolToStr(APrimitive.ClkSetFont.IgnoreBackgroundColor, True);
+      11: Result := CharSetAsByteToString(APrimitive.ClkSetFont.CharSet);
+      12: Result := IntToStr(APrimitive.ClkSetFont.Orientation);
+      13: Result := CFontPitchStr[APrimitive.ClkSetFont.Pitch];
+      14: Result := APrimitive.ClkSetFont.ProfileName;
+      15: Result := APrimitive.ClkSetFont.CropLeft;
+      16: Result := APrimitive.ClkSetFont.CropTop;
+      17: Result := APrimitive.ClkSetFont.CropRight;
+      18: Result := APrimitive.ClkSetFont.CropBottom;
+      19: Result := BoolToStr(APrimitive.ClkSetFont.IgnoreBackgroundColor, True);
       else
         Result := 'unknown';
     end;
@@ -992,12 +1004,15 @@ implementation
       8: APrimitive.ClkSetFont.FontQuality := FontQuality_AsStringToValue(NewValue);
       9: APrimitive.ClkSetFont.FontQualityUsesReplacement := StrToBool(NewValue);
       10: APrimitive.ClkSetFont.FontQualityReplacement := NewValue;
-      11: APrimitive.ClkSetFont.ProfileName := NewValue;
-      12: APrimitive.ClkSetFont.CropLeft := NewValue;
-      13: APrimitive.ClkSetFont.CropTop := NewValue;
-      14: APrimitive.ClkSetFont.CropRight := NewValue;
-      15: APrimitive.ClkSetFont.CropBottom := NewValue;
-      16: APrimitive.ClkSetFont.IgnoreBackgroundColor := StrToBool(NewValue);
+      11: APrimitive.ClkSetFont.CharSet := StringToCharSetAsByte(NewValue);
+      12: APrimitive.ClkSetFont.Orientation := StrToIntDef(NewValue, 0);
+      13: APrimitive.ClkSetFont.Pitch := FontPitch_AsStringToValue(NewValue);
+      14: APrimitive.ClkSetFont.ProfileName := NewValue;
+      15: APrimitive.ClkSetFont.CropLeft := NewValue;
+      16: APrimitive.ClkSetFont.CropTop := NewValue;
+      17: APrimitive.ClkSetFont.CropRight := NewValue;
+      18: APrimitive.ClkSetFont.CropBottom := NewValue;
+      19: APrimitive.ClkSetFont.IgnoreBackgroundColor := StrToBool(NewValue);
       else
         ;
     end;

@@ -106,6 +106,15 @@ type
     function GetStrikeOut: Boolean;
     procedure SetStrikeOut(Value: Boolean);
 
+    function GetCharSet: Byte;
+    procedure SetCharSet(Value: Byte);
+
+    function GetOrientation: Integer;
+    procedure SetOrientation(Value: Integer);
+
+    function GetPitch: TFontPitch;
+    procedure SetPitch(Value: TFontPitch);
+
     function GetCropLeft: string;
     procedure SetCropLeft(Value: string);
 
@@ -150,6 +159,10 @@ type
     property Italic: Boolean read GetItalic write SetItalic;
     property Underline: Boolean read GetUnderline write SetUnderline;
     property StrikeOut: Boolean read GetStrikeOut write SetStrikeOut;
+
+    property CharSet: Byte read GetCharSet write SetCharSet;
+    property Orientation: Integer read GetOrientation write SetOrientation;
+    property Pitch: TFontPitch read GetPitch write SetPitch;
 
     property CropLeft: string read GetCropLeft write SetCropLeft;
     property CropTop: string read GetCropTop write SetCropTop;
@@ -917,6 +930,42 @@ end;
 procedure TFontProfile.SetStrikeOut(Value: Boolean);
 begin
   FFindControlMatchBitmapText^.StrikeOut := Value;
+end;
+
+
+function TFontProfile.GetCharSet: Byte;
+begin
+  Result := FFindControlMatchBitmapText^.CharSet;
+end;
+
+
+procedure TFontProfile.SetCharSet(Value: Byte);
+begin
+  FFindControlMatchBitmapText^.CharSet := Value;
+end;
+
+
+function TFontProfile.GetOrientation: Integer;
+begin
+  Result := FFindControlMatchBitmapText^.Orientation;
+end;
+
+
+procedure TFontProfile.SetOrientation(Value: Integer);
+begin
+  FFindControlMatchBitmapText^.Orientation := Value;
+end;
+
+
+function TFontProfile.GetPitch: TFontPitch;
+begin
+  Result := FFindControlMatchBitmapText^.Pitch;
+end;
+
+
+procedure TFontProfile.SetPitch(Value: TFontPitch);
+begin
+  FFindControlMatchBitmapText^.Pitch := Value;
 end;
 
 

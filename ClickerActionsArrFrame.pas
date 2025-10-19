@@ -1691,6 +1691,9 @@ begin
   AFindSubControlOptions.MatchBitmapText[0].Italic := False;
   AFindSubControlOptions.MatchBitmapText[0].Underline := False;
   AFindSubControlOptions.MatchBitmapText[0].StrikeOut := False;
+  AFindSubControlOptions.MatchBitmapText[0].CharSet := DEFAULT_CHARSET;
+  AFindSubControlOptions.MatchBitmapText[0].Orientation := 0;
+  AFindSubControlOptions.MatchBitmapText[0].Pitch := fpDefault;
   AFindSubControlOptions.MatchBitmapText[0].CropLeft := '0';
   AFindSubControlOptions.MatchBitmapText[0].CropTop := '0';
   AFindSubControlOptions.MatchBitmapText[0].CropRight := '0';
@@ -4839,6 +4842,10 @@ begin
 
   if FClkActions[ActionIndex].FindSubControlOptions.MatchBitmapText[0].StrikeOut then
     AFont.Style := AFont.Style + [fsStrikeOut];
+
+  AFont.CharSet := FClkActions[ActionIndex].FindSubControlOptions.MatchBitmapText[0].CharSet;
+  AFont.Orientation := FClkActions[ActionIndex].FindSubControlOptions.MatchBitmapText[0].Orientation;
+  AFont.Pitch := FClkActions[ActionIndex].FindSubControlOptions.MatchBitmapText[0].Pitch;
 
   AFont.Color := HexToInt(EvaluateReplacements(FClkActions[ActionIndex].FindSubControlOptions.MatchBitmapText[0].ForegroundColor));
 end;

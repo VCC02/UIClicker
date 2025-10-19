@@ -244,7 +244,7 @@ implementation
 
 
 uses
-  Controls, ClickerTemplates, ClickerActionProperties, Graphics, Forms;
+  Controls, ClickerTemplates, ClickerActionProperties, Graphics, Forms, LCLType;
 
 
 procedure AddActionToTemplate(ATemplateFileName: string; AClkAction: TClkActionRec; AInMemFS: TInMemFileSystem);
@@ -1674,6 +1674,9 @@ begin
   AFindSubControlOptions.MatchBitmapText[0].Italic := True;
   AFindSubControlOptions.MatchBitmapText[0].Underline := True;
   AFindSubControlOptions.MatchBitmapText[0].StrikeOut := True;
+  AFindSubControlOptions.MatchBitmapText[0].CharSet := SYMBOL_CHARSET;
+  AFindSubControlOptions.MatchBitmapText[0].Orientation := 200;
+  AFindSubControlOptions.MatchBitmapText[0].Pitch := fpVariable;
   AFindSubControlOptions.MatchBitmapText[0].CropLeft := '70';
   AFindSubControlOptions.MatchBitmapText[0].CropTop := '80';
   AFindSubControlOptions.MatchBitmapText[0].CropRight := '90';
@@ -1692,6 +1695,9 @@ begin
   AFindSubControlOptions.MatchBitmapText[1].Italic := True;
   AFindSubControlOptions.MatchBitmapText[1].Underline := True;
   AFindSubControlOptions.MatchBitmapText[1].StrikeOut := True;
+  AFindSubControlOptions.MatchBitmapText[1].CharSet := SHIFTJIS_CHARSET;
+  AFindSubControlOptions.MatchBitmapText[1].Orientation := 300;
+  AFindSubControlOptions.MatchBitmapText[1].Pitch := fpFixed;
   AFindSubControlOptions.MatchBitmapText[1].CropLeft := '270';
   AFindSubControlOptions.MatchBitmapText[1].CropTop := '380';
   AFindSubControlOptions.MatchBitmapText[1].CropRight := '490';

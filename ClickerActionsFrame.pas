@@ -2943,6 +2943,10 @@ begin
     else
       frClickerFindControl.BMPTextFontProfiles[i].MatchBitmapTextFontQualityIndex := Integer(AAction^.FindSubControlOptions.MatchBitmapText[i].FontQuality);
 
+    frClickerFindControl.BMPTextFontProfiles[i].CharSet := AAction^.FindSubControlOptions.MatchBitmapText[i].CharSet;
+    frClickerFindControl.BMPTextFontProfiles[i].Orientation := AAction^.FindSubControlOptions.MatchBitmapText[i].Orientation;
+    frClickerFindControl.BMPTextFontProfiles[i].Pitch := AAction^.FindSubControlOptions.MatchBitmapText[i].Pitch;
+
     TempProfileName := AAction^.FindSubControlOptions.MatchBitmapText[i].ProfileName;
     //frClickerFindControl.BMPTextFontProfiles[i].ProfileName := TempProfileName;
     //frClickerFindControl.tabctrlBMPText.Tabs.Strings[i] := TempProfileName;     //remove these calls if UpdateFontProfileName works as expected
@@ -4972,6 +4976,9 @@ begin
   TempEditingAction^.FindSubControlOptions.MatchBitmapText[n].Italic := False;
   TempEditingAction^.FindSubControlOptions.MatchBitmapText[n].Underline := False;
   TempEditingAction^.FindSubControlOptions.MatchBitmapText[n].StrikeOut := False;
+  TempEditingAction^.FindSubControlOptions.MatchBitmapText[n].CharSet := DEFAULT_CHARSET;
+  TempEditingAction^.FindSubControlOptions.MatchBitmapText[n].Orientation := 0;
+  TempEditingAction^.FindSubControlOptions.MatchBitmapText[n].Pitch := fpDefault;
   TempEditingAction^.FindSubControlOptions.MatchBitmapText[n].CropLeft := '0';
   TempEditingAction^.FindSubControlOptions.MatchBitmapText[n].CropTop := '0';
   TempEditingAction^.FindSubControlOptions.MatchBitmapText[n].CropRight := '0';
@@ -7046,6 +7053,10 @@ begin
     AEditingAction^.FindSubControlOptions.MatchBitmapText[AItemIndexDiv].Italic := fsItalic in TempFontDialog.Font.Style;
     AEditingAction^.FindSubControlOptions.MatchBitmapText[AItemIndexDiv].Underline := fsUnderline in TempFontDialog.Font.Style;
     AEditingAction^.FindSubControlOptions.MatchBitmapText[AItemIndexDiv].StrikeOut := fsStrikeOut in TempFontDialog.Font.Style;
+
+    AEditingAction^.FindSubControlOptions.MatchBitmapText[AItemIndexDiv].CharSet := TempFontDialog.Font.CharSet;
+    AEditingAction^.FindSubControlOptions.MatchBitmapText[AItemIndexDiv].Orientation := TempFontDialog.Font.Orientation;
+    AEditingAction^.FindSubControlOptions.MatchBitmapText[AItemIndexDiv].Pitch := TempFontDialog.Font.Pitch;
   finally
     TempFontDialog.Free;
   end;
