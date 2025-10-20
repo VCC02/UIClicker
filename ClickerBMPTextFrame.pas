@@ -504,7 +504,9 @@ begin
     NewHint := NewHint + 'Used FontQuality: ' + CQualityNames[Ord(AImg.Canvas.Font.Quality) mod Ord(High(TFontQuality))];
   end;
 
-
+  AImg.Canvas.Font.CharSet := TempFindControlMatchBitmapText^.CharSet;
+  AImg.Canvas.Font.Orientation := TempFindControlMatchBitmapText^.Orientation;
+  AImg.Canvas.Font.Pitch := TFontPitch(TempFindControlMatchBitmapText^.Pitch);
 
   imgPreview.Hint := NewHint;
   scrboxPreview.Hint := NewHint;

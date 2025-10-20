@@ -164,6 +164,9 @@ type
     FontQuality: Byte; //TFontQuality;
     FontQualityUsesReplacement: Boolean;
     FontQualityReplacement: PWideChar;
+    CharSet: Byte;
+    Orientation: LongInt;
+    Pitch: Byte;
     ProfileName: PWideChar;
     CropLeft: PWideChar;
     CropTop: PWideChar;
@@ -200,6 +203,9 @@ type
     FontQuality: TFontQuality;
     FontQualityUsesReplacement: Boolean;
     FontQualityReplacement: WideString;
+    CharSet: Byte;
+    Orientation: Integer;
+    Pitch: TFontPitch;
     ProfileName: WideString;
     CropLeft: WideString;
     CropTop: WideString;
@@ -512,6 +518,9 @@ begin
   ADestMatchBitmapText.FontQuality := TFontQuality(AFindControlMatchBitmapText^.FontQuality);
   ADestMatchBitmapText.FontQualityUsesReplacement := AFindControlMatchBitmapText^.FontQualityUsesReplacement;
   SetPointedContentToString(@string(PWideChar(AFindControlMatchBitmapText^.FontQualityReplacement))[1], ADestMatchBitmapText.FontQualityReplacement);
+  ADestMatchBitmapText.CharSet := AFindControlMatchBitmapText^.CharSet;
+  ADestMatchBitmapText.Orientation := AFindControlMatchBitmapText^.Orientation;
+  ADestMatchBitmapText.Pitch := TFontPitch(AFindControlMatchBitmapText^.Pitch);
   SetPointedContentToString(@string(PWideChar(AFindControlMatchBitmapText^.ProfileName))[1], ADestMatchBitmapText.ProfileName);
   SetPointedContentToString(@string(PWideChar(AFindControlMatchBitmapText^.CropLeft))[1], ADestMatchBitmapText.CropLeft);
   SetPointedContentToString(@string(PWideChar(AFindControlMatchBitmapText^.CropTop))[1], ADestMatchBitmapText.CropTop);
@@ -901,6 +910,9 @@ begin
   //ADestMatchBitmapText.CropBottom := @WideString(AMatchBitmapText.CropBottom)[1];
 
   ATempDestWideStr.FontQualityReplacement := WideString(AMatchBitmapText.FontQualityReplacement);
+  ATempDestWideStr.CharSet := AMatchBitmapText.CharSet;
+  ATempDestWideStr.Orientation := AMatchBitmapText.Orientation;
+  ATempDestWideStr.Pitch := AMatchBitmapText.Pitch;
   ATempDestWideStr.ProfileName := WideString(AMatchBitmapText.ProfileName);
   ATempDestWideStr.CropLeft := WideString(AMatchBitmapText.CropLeft);
   ATempDestWideStr.CropTop := WideString(AMatchBitmapText.CropTop);

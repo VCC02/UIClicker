@@ -194,13 +194,23 @@ const
   CFindSubControl_MatchBitmapText_ForegroundColor_PropItemIndex = 0;   //property index in FindControl.MatchBitmapText structure
   CFindSubControl_MatchBitmapText_BackgroundColor_PropItemIndex = 1;   //property index in FindControl.MatchBitmapText structure
   CFindSubControl_MatchBitmapText_FontName_PropItemIndex = 2;   //property index in FindControl.MatchBitmapText structure
-  CFindSubControl_MatchBitmapText_ProfileName_PropItemIndex = 11;   //property index in FindControl.MatchBitmapText structure
-  CFindSubControl_MatchBitmapText_IgnoreBackgroundColor_PropItemIndex = 16;   //property index in FindControl.MatchBitmapText structure
-
-  CFindSubControl_MatchBitmapText_CropLeft = 15;
-  CFindSubControl_MatchBitmapText_CropTop = 16;
-  CFindSubControl_MatchBitmapText_CropRight = 17;
-  CFindSubControl_MatchBitmapText_CropBottom = 18;
+  CFindSubControl_MatchBitmapText_FontSize_PropItemIndex = 3;
+  //4
+  //5
+  //6
+  //7
+  //8
+  //9
+  //10
+  CFindSubControl_MatchBitmapText_CharSet_PropItemIndex = 11;
+  CFindSubControl_MatchBitmapText_Orientation_PropItemIndex = 12;
+  CFindSubControl_MatchBitmapText_Pitch_PropItemIndex = 13;
+  CFindSubControl_MatchBitmapText_ProfileName_PropItemIndex = 14;   //property index in FindControl.MatchBitmapText structure
+  CFindSubControl_MatchBitmapText_CropLeft_PropItemIndex = 15;
+  CFindSubControl_MatchBitmapText_CropTop_PropItemIndex = 16;
+  CFindSubControl_MatchBitmapText_CropRight_PropItemIndex = 17;
+  CFindSubControl_MatchBitmapText_CropBottom_PropItemIndex = 18;
+  CFindSubControl_MatchBitmapText_IgnoreBackgroundColor_PropItemIndex = 19;   //property index in FindControl.MatchBitmapText structure
 
   CFindSubControl_MatchBitmapAlgorithmSettings_XMultipleOf_PropItemIndex = 0;
   CFindSubControl_MatchBitmapAlgorithmSettings_YMultipleOf_PropItemIndex = 1;
@@ -1775,6 +1785,7 @@ const
 
 function FontQuality_AsStringToValue(AFontQualityAsString: string): TFontQuality;
 
+function CharSetToString(ACharSet: Byte): string; //Input 0..18
 function CharSetAsByteToString(AByte: Byte): string;  //Input 0..255
 function StringToCharSetAsByte(ACharSetStr: string): Byte; //Output 0..255
 function FontPitch_AsStringToValue(AFontPitchAsString: string): TFontPitch;
@@ -1972,44 +1983,49 @@ begin                                           //There are TIdentToInt and TInt
   end;
 end;
 
-function ByteToCharSet(AByte: Byte): Byte;  //This matches the FontCharsets structure.  //Input = 0..255. Output = 0..18
+//function ByteToCharSet(AByte: Byte): Byte;  //This matches the FontCharsets structure.  //Input = 0..255. Output = 0..18
+//begin
+//  case AByte of
+//    ANSI_CHARSET:  Result := 0;
+//    DEFAULT_CHARSET:  Result := 1;
+//    SYMBOL_CHARSET:  Result := 2;
+//    MAC_CHARSET:  Result := 3;
+//    SHIFTJIS_CHARSET:  Result := 4;
+//    HANGEUL_CHARSET:  Result := 5;
+//    JOHAB_CHARSET:  Result := 6;
+//    GB2312_CHARSET:  Result := 7;
+//    CHINESEBIG5_CHARSET:  Result := 8;
+//    GREEK_CHARSET:  Result := 9;
+//    TURKISH_CHARSET: Result := 10;
+//    VIETNAMESE_CHARSET: Result := 11;
+//    HEBREW_CHARSET: Result := 12;
+//    ARABIC_CHARSET: Result := 13;
+//    BALTIC_CHARSET: Result := 14;
+//    RUSSIAN_CHARSET: Result := 15;
+//    THAI_CHARSET: Result := 16;
+//    EASTEUROPE_CHARSET: Result := 17;
+//    OEM_CHARSET: Result := 18;
+//    else
+//      Result := 0;
+//  end;
+//end;
+
+function CharSetToString(ACharSet: Byte): string; //Input 0..18
 begin
-  case AByte of
-    ANSI_CHARSET:  Result := 0;
-    DEFAULT_CHARSET:  Result := 1;
-    SYMBOL_CHARSET:  Result := 2;
-    MAC_CHARSET:  Result := 3;
-    SHIFTJIS_CHARSET:  Result := 4;
-    HANGEUL_CHARSET:  Result := 5;
-    JOHAB_CHARSET:  Result := 6;
-    GB2312_CHARSET:  Result := 7;
-    CHINESEBIG5_CHARSET:  Result := 8;
-    GREEK_CHARSET:  Result := 9;
-    TURKISH_CHARSET: Result := 10;
-    VIETNAMESE_CHARSET: Result := 11;
-    HEBREW_CHARSET: Result := 12;
-    ARABIC_CHARSET: Result := 13;
-    BALTIC_CHARSET: Result := 14;
-    RUSSIAN_CHARSET: Result := 15;
-    THAI_CHARSET: Result := 16;
-    EASTEUROPE_CHARSET: Result := 17;
-    OEM_CHARSET: Result := 18;
-    else
-      Result := 0;
-  end;
+  CharsetToIdent(CharSetToByte(ACharSet), Result);
 end;
 
 function CharSetAsByteToString(AByte: Byte): string;  //Input 0..255
 begin
-  CharsetToIdent(ByteToCharSet(AByte), Result);
+  CharsetToIdent(AByte, Result);
 end;
 
 function StringToCharSetAsByte(ACharSetStr: string): Byte; //Output 0..255
 var
   TempCharSet: Integer;
 begin
-  if IdentToCharset(ACharSetStr, TempCharSet) then    //TempCharSet in [0..18]
-    Result := CharSetToByte(TempCharSet)
+  if IdentToCharset(ACharSetStr, TempCharSet) then    //TempCharSet in [0..255]
+    Result := TempCharSet
   else
     Result := 0;
 end;

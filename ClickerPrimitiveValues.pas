@@ -237,6 +237,8 @@ const
   CSetFontPrimitive_BackgroundColor_PropIndex = 1;
   CSetFontPrimitive_FontName_PropIndex = 2;
 
+  CSetFontPrimitive_CharSet_PropIndex = 11;
+
   CImagePrimitive_X1_PropIndex = 0;
   CImagePrimitive_Y1_PropIndex = 1;
   CImagePrimitive_X2_PropIndex = 2;

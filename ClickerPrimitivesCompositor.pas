@@ -140,6 +140,10 @@ begin
     ABmp.Canvas.Font.Quality := TFontQuality(StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkSetFont.FontQualityReplacement), Ord(fqDefault)))
   else
     ABmp.Canvas.Font.Quality := APrimitive.ClkSetFont.FontQuality;
+
+  ABmp.Canvas.Font.CharSet := APrimitive.ClkSetFont.CharSet;
+  ABmp.Canvas.Font.Orientation := APrimitive.ClkSetFont.Orientation;
+  ABmp.Canvas.Font.Pitch := APrimitive.ClkSetFont.Pitch;
 end;
 
 
@@ -671,6 +675,10 @@ begin
     ADestCanvas.Font.Quality := TFontQuality(StrToIntDef(DoOnEvaluateReplacementsFunc(APrimitive.ClkSetFont.FontQualityReplacement), Ord(fqDefault)))  //    CFontQualityStr is not used this time
   else
     ADestCanvas.Font.Quality := APrimitive.ClkSetFont.FontQuality;
+
+  ADestCanvas.Font.CharSet := APrimitive.ClkSetFont.CharSet;
+  ADestCanvas.Font.Orientation := APrimitive.ClkSetFont.Orientation;
+  ADestCanvas.Font.Pitch := APrimitive.ClkSetFont.Pitch;
 end;
 
 

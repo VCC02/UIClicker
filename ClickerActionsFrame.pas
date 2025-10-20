@@ -3216,28 +3216,28 @@ var
 begin
   if llLeft in ALimitLabelsToUpdate then
   begin
-    UpdatingNodeIndex := AFontProfileIndex * CPropCount_FindSubControlMatchBitmapText + CFindSubControl_MatchBitmapText_CropLeft;
+    UpdatingNodeIndex := AFontProfileIndex * CPropCount_FindSubControlMatchBitmapText + CFindSubControl_MatchBitmapText_CropLeft_PropItemIndex;
     GetEditingActionObjectByActionType^.FindSubControlOptions.MatchBitmapText[AFontProfileIndex].CropLeft := AOffsets.Left;
     FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, CCategory_ActionSpecific, CFindSubControl_MatchBitmapText_PropIndex, UpdatingNodeIndex);
   end;
 
   if llTop in ALimitLabelsToUpdate then
   begin
-    UpdatingNodeIndex := AFontProfileIndex * CPropCount_FindSubControlMatchBitmapText + CFindSubControl_MatchBitmapText_CropTop;
+    UpdatingNodeIndex := AFontProfileIndex * CPropCount_FindSubControlMatchBitmapText + CFindSubControl_MatchBitmapText_CropTop_PropItemIndex;
     GetEditingActionObjectByActionType^.FindSubControlOptions.MatchBitmapText[AFontProfileIndex].CropTop := AOffsets.Top;
     FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, CCategory_ActionSpecific, CFindSubControl_MatchBitmapText_PropIndex, UpdatingNodeIndex);
   end;
 
   if llRight in ALimitLabelsToUpdate then
   begin
-    UpdatingNodeIndex := AFontProfileIndex * CPropCount_FindSubControlMatchBitmapText + CFindSubControl_MatchBitmapText_CropRight;
+    UpdatingNodeIndex := AFontProfileIndex * CPropCount_FindSubControlMatchBitmapText + CFindSubControl_MatchBitmapText_CropRight_PropItemIndex;
     GetEditingActionObjectByActionType^.FindSubControlOptions.MatchBitmapText[AFontProfileIndex].CropRight := AOffsets.Right;
     FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, CCategory_ActionSpecific, CFindSubControl_MatchBitmapText_PropIndex, UpdatingNodeIndex);
   end;
 
   if llBottom in ALimitLabelsToUpdate then
   begin
-    UpdatingNodeIndex := AFontProfileIndex * CPropCount_FindSubControlMatchBitmapText + CFindSubControl_MatchBitmapText_CropBottom;
+    UpdatingNodeIndex := AFontProfileIndex * CPropCount_FindSubControlMatchBitmapText + CFindSubControl_MatchBitmapText_CropBottom_PropItemIndex;
     GetEditingActionObjectByActionType^.FindSubControlOptions.MatchBitmapText[AFontProfileIndex].CropBottom := AOffsets.Bottom;
     FOIFrame.RepaintNodeByLevel(CPropertyItemLevel, CCategory_ActionSpecific, CFindSubControl_MatchBitmapText_PropIndex, UpdatingNodeIndex);
   end;
@@ -6664,7 +6664,7 @@ begin
                 imglstFontColorProperties.ReplaceMasked(ImageIndex, imgFontColorBuffer.Picture.Bitmap, 2);
               end;
 
-              CFindSubControl_MatchBitmapText_CropLeft:
+              CFindSubControl_MatchBitmapText_CropLeft_PropItemIndex:
               begin
                 if StrToIntDef(ANewText, 0) < 0 then
                   ANewText := '0';
@@ -6673,7 +6673,7 @@ begin
                 frClickerFindControl.BMPTextFontProfiles[ItemIndexDiv].UpdateSelectionLabelsFromCropInfo(AEditingAction^.FindSubControlOptions.MatchBitmapText[ItemIndexDiv]);
               end;
 
-              CFindSubControl_MatchBitmapText_CropTop:
+              CFindSubControl_MatchBitmapText_CropTop_PropItemIndex:
               begin
                 if StrToIntDef(ANewText, 0) < 0 then
                   ANewText := '0';
@@ -6682,7 +6682,7 @@ begin
                 frClickerFindControl.BMPTextFontProfiles[ItemIndexDiv].UpdateSelectionLabelsFromCropInfo(AEditingAction^.FindSubControlOptions.MatchBitmapText[ItemIndexDiv]);
               end;
 
-              CFindSubControl_MatchBitmapText_CropRight:
+              CFindSubControl_MatchBitmapText_CropRight_PropItemIndex:
               begin
                 if StrToIntDef(ANewText, 0) < 0 then
                   ANewText := '0';
@@ -6691,7 +6691,7 @@ begin
                 frClickerFindControl.BMPTextFontProfiles[ItemIndexDiv].UpdateSelectionLabelsFromCropInfo(AEditingAction^.FindSubControlOptions.MatchBitmapText[ItemIndexDiv]);
               end;
 
-              CFindSubControl_MatchBitmapText_CropBottom:
+              CFindSubControl_MatchBitmapText_CropBottom_PropItemIndex:
               begin
                 if StrToIntDef(ANewText, 0) < 0 then
                   ANewText := '0';
@@ -7314,10 +7314,16 @@ begin
     begin
       ItemIndexMod := AItemIndex mod CPropCount_FindSubControlMatchBitmapText;
 
-      if ItemIndexMod = CFindSubControl_MatchBitmapText_FontName_PropItemIndex then
-        AEnumItemName := Screen.Fonts.Strings[AEnumItemIndex]
-      else
-        AEnumItemName := CFindSubControl_MatchBitmapTextEnumStrings[ItemIndexMod]^[AEnumItemIndex];
+      case ItemIndexMod of
+        CFindSubControl_MatchBitmapText_FontName_PropItemIndex:
+          AEnumItemName := Screen.Fonts.Strings[AEnumItemIndex];
+
+        CFindSubControl_MatchBitmapText_CharSet_PropItemIndex:
+          AEnumItemName := CharSetToString(AEnumItemIndex);
+
+        else
+          AEnumItemName := CFindSubControl_MatchBitmapTextEnumStrings[ItemIndexMod]^[AEnumItemIndex];
+      end;
 
       Exit;
     end;
@@ -7860,16 +7866,16 @@ begin
           ItemIndexDiv := AItemIndex div CPropCount_FindSubControlMatchBitmapText;
 
           case ItemIndexMod of
-            CFindSubControl_MatchBitmapText_CropLeft:
+            CFindSubControl_MatchBitmapText_CropLeft_PropItemIndex:
               frClickerFindControl.UpdateOnTextCroppingLeftMouseDown(AEditingAction^.FindSubControlOptions.MatchBitmapText[ItemIndexDiv], Sender as TVTEdit, Button, Shift, X, Y);
 
-            CFindSubControl_MatchBitmapText_CropTop:
+            CFindSubControl_MatchBitmapText_CropTop_PropItemIndex:
               frClickerFindControl.UpdateOnTextCroppingTopMouseDown(AEditingAction^.FindSubControlOptions.MatchBitmapText[ItemIndexDiv], Sender as TVTEdit, Button, Shift, X, Y);
 
-            CFindSubControl_MatchBitmapText_CropRight:
+            CFindSubControl_MatchBitmapText_CropRight_PropItemIndex:
               frClickerFindControl.UpdateOnTextCroppingRightMouseDown(AEditingAction^.FindSubControlOptions.MatchBitmapText[ItemIndexDiv], Sender as TVTEdit, Button, Shift, X, Y);
 
-            CFindSubControl_MatchBitmapText_CropBottom:
+            CFindSubControl_MatchBitmapText_CropBottom_PropItemIndex:
               frClickerFindControl.UpdateOnTextCroppingBottomMouseDown(AEditingAction^.FindSubControlOptions.MatchBitmapText[ItemIndexDiv], Sender as TVTEdit, Button, Shift, X, Y);
           end;
         end;
@@ -8004,7 +8010,7 @@ begin
           ItemIndexDiv := AItemIndex div CPropCount_FindSubControlMatchBitmapText;
 
           case ItemIndexMod of
-            CFindSubControl_MatchBitmapText_CropLeft:
+            CFindSubControl_MatchBitmapText_CropLeft_PropItemIndex:
             begin
               OldValue := AEditingAction^.FindSubControlOptions.MatchBitmapText[ItemIndexDiv].CropLeft;
               frClickerFindControl.UpdateOnTextCroppingLeftMouseMove(AEditingAction^.FindSubControlOptions.MatchBitmapText[ItemIndexDiv], Sender as TVTEdit, Shift, X, Y, ItemIndexDiv);
@@ -8013,7 +8019,7 @@ begin
               Result := True;
             end;
 
-            CFindSubControl_MatchBitmapText_CropTop:
+            CFindSubControl_MatchBitmapText_CropTop_PropItemIndex:
             begin
               OldValue := AEditingAction^.FindSubControlOptions.MatchBitmapText[ItemIndexDiv].CropTop;
               frClickerFindControl.UpdateOnTextCroppingTopMouseMove(AEditingAction^.FindSubControlOptions.MatchBitmapText[ItemIndexDiv], Sender as TVTEdit, Shift, X, Y, ItemIndexDiv);
@@ -8022,7 +8028,7 @@ begin
               Result := True;
             end;
 
-            CFindSubControl_MatchBitmapText_CropRight:
+            CFindSubControl_MatchBitmapText_CropRight_PropItemIndex:
             begin
               OldValue := AEditingAction^.FindSubControlOptions.MatchBitmapText[ItemIndexDiv].CropRight;
               frClickerFindControl.UpdateOnTextCroppingRightMouseMove(AEditingAction^.FindSubControlOptions.MatchBitmapText[ItemIndexDiv], Sender as TVTEdit, Shift, X, Y, ItemIndexDiv);
@@ -8031,7 +8037,7 @@ begin
               Result := True;
             end;
 
-            CFindSubControl_MatchBitmapText_CropBottom:
+            CFindSubControl_MatchBitmapText_CropBottom_PropItemIndex:
             begin
               OldValue := AEditingAction^.FindSubControlOptions.MatchBitmapText[ItemIndexDiv].CropBottom;
               frClickerFindControl.UpdateOnTextCroppingBottomMouseMove(AEditingAction^.FindSubControlOptions.MatchBitmapText[ItemIndexDiv], Sender as TVTEdit, Shift, X, Y, ItemIndexDiv);
@@ -9430,7 +9436,7 @@ begin
         ItemIndexDiv := AItemIndex div CPropCount_FindSubControlMatchBitmapText;
 
         case ItemIndexMod of
-          CFindSubControl_MatchBitmapText_CropLeft:
+          CFindSubControl_MatchBitmapText_CropLeft_PropItemIndex:
           begin
             OldValue := AEditingAction^.FindSubControlOptions.MatchBitmapText[ItemIndexDiv].CropLeft;
             AEditingAction^.FindSubControlOptions.MatchBitmapText[ItemIndexDiv].CropLeft := ANewValue;
@@ -9441,7 +9447,7 @@ begin
             TriggerOnControlsModified(ANewValue <> OldValue);
           end;
 
-          CFindSubControl_MatchBitmapText_CropTop:
+          CFindSubControl_MatchBitmapText_CropTop_PropItemIndex:
           begin
             OldValue := AEditingAction^.FindSubControlOptions.MatchBitmapText[ItemIndexDiv].CropTop;
             AEditingAction^.FindSubControlOptions.MatchBitmapText[ItemIndexDiv].CropTop := ANewValue;
@@ -9452,7 +9458,7 @@ begin
             TriggerOnControlsModified(ANewValue <> OldValue);
           end;
 
-          CFindSubControl_MatchBitmapText_CropRight:
+          CFindSubControl_MatchBitmapText_CropRight_PropItemIndex:
           begin
             OldValue := AEditingAction^.FindSubControlOptions.MatchBitmapText[ItemIndexDiv].CropRight;
             AEditingAction^.FindSubControlOptions.MatchBitmapText[ItemIndexDiv].CropRight := ANewValue;
@@ -9463,7 +9469,7 @@ begin
             TriggerOnControlsModified(ANewValue <> OldValue);
           end;
 
-          CFindSubControl_MatchBitmapText_CropBottom:
+          CFindSubControl_MatchBitmapText_CropBottom_PropItemIndex:
           begin
             OldValue := AEditingAction^.FindSubControlOptions.MatchBitmapText[ItemIndexDiv].CropBottom;
             AEditingAction^.FindSubControlOptions.MatchBitmapText[ItemIndexDiv].CropBottom := ANewValue;

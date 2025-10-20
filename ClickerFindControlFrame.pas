@@ -2009,6 +2009,10 @@ begin
   FBMPTextProfiles[n].CropRight := ANewProfile.CropRight;
   FBMPTextProfiles[n].CropBottom := ANewProfile.CropBottom;
 
+  FBMPTextProfiles[n].CharSet := ANewProfile.CharSet;
+  FBMPTextProfiles[n].Orientation := ANewProfile.Orientation;
+  FBMPTextProfiles[n].Pitch := ANewProfile.Pitch;
+
   PreviewText;
 
   DoOnTriggerOnControlsModified;
