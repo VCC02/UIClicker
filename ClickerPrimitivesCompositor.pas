@@ -74,7 +74,7 @@ implementation
 
 
 uses
-  FPCanvas, Math, Types;
+  FPCanvas, Math, Types, BitmapProcessing;
 
 
 type
@@ -366,13 +366,26 @@ procedure ComposePrimitive_Text(Sender: TPrimitivesCompositor; ABmp: TBitmap; va
 var
   X, Y: Integer;
   TempText: string;
+  WorkingRect: TRect;
 begin
   X := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkText.X), 30);
   Y := StrToIntDef(Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkText.Y), 40);
   TempText := Sender.DoOnEvaluateReplacementsFunc(APrimitive.ClkText.Text);
 
   //////////////////////// ToDo:  if all cropping values are 0, then draw on ABmp.Canvas directly, otherwise use a temp bmp and crop from it.
-  ABmp.Canvas.TextOut(X, Y, TempText);
+
+  if ABmp.Canvas.Font.Orientation = 0 then
+    ABmp.Canvas.TextOut(X, Y, TempText)
+  else
+  begin
+    WorkingRect := GetRotatedDrawingRectangle(ABmp.Canvas, TempText);
+
+    ABmp.Width := Max(ABmp.Width, WorkingRect.Width + 2);    //so far, enlarging the bitmap, seemed to work without erasing its content
+    ABmp.Height := Max(ABmp.Height, WorkingRect.Height + 2);
+
+    ABmp.Canvas.Rectangle(0, 0, ABmp.Width, ABmp.Height);
+    ABmp.Canvas.TextOut(WorkingRect.Left, WorkingRect.Top, TempText);
+  end;
 end;
 
 
@@ -687,6 +700,7 @@ var
   i, j: Integer;
   X, W, W2: Integer;
   ListOfXPoints: TStringList;
+  WorkingRect: TRect;
 begin
   Result := 0;
 
@@ -748,8 +762,17 @@ begin
       CClkText: // = 8;
       begin
         X := StrToIntDef(DoOnEvaluateReplacementsFunc(APrimitives[i].ClkText.X), 10);
-        W := ADestCanvas.TextWidth(DoOnEvaluateReplacementsFunc(APrimitives[i].ClkText.Text));
-        Inc(X, W - 1);
+
+        if ADestCanvas.Font.Orientation = 0 then
+        begin
+          W := ADestCanvas.TextWidth(DoOnEvaluateReplacementsFunc(APrimitives[i].ClkText.Text));
+          Inc(X, W - 1);
+        end
+        else
+        begin
+          WorkingRect := GetRotatedDrawingRectangle(ADestCanvas, APrimitives[i].ClkText.Text);
+          Inc(X, WorkingRect.Width - 1 {+ 3});
+        end;
 
         if Result < X then
           Result := X;
@@ -822,6 +845,7 @@ var
   i, j: Integer;
   Y, H, H2: Integer;
   ListOfYPoints: TStringList;
+  WorkingRect: TRect;
 begin
   Result := 0;
 
@@ -883,8 +907,17 @@ begin
       CClkText: // = 8;
       begin
         Y := StrToIntDef(DoOnEvaluateReplacementsFunc(APrimitives[i].ClkText.Y), 10);
-        H := ADestCanvas.TextHeight(DoOnEvaluateReplacementsFunc(APrimitives[i].ClkText.Text));
-        Inc(Y, H - 1);
+
+        if ADestCanvas.Font.Orientation = 0 then
+        begin
+          H := ADestCanvas.TextHeight(DoOnEvaluateReplacementsFunc(APrimitives[i].ClkText.Text));
+          Inc(Y, H - 1);
+        end
+        else
+        begin
+          WorkingRect := GetRotatedDrawingRectangle(ADestCanvas, APrimitives[i].ClkText.Text);
+          Inc(Y, WorkingRect.Height - 1 {+ 3});
+        end;
 
         if Result < Y then
           Result := Y;

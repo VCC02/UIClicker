@@ -108,13 +108,15 @@ procedure FillInMissingHistogramPointsToBeCompared(var AHistA, AHistColorCountsA
 function CompareHistograms(var AHistA, AHistColorCountsA, AHistB, AHistColorCountsB: TIntArr): Double;
 procedure SortHistogramCmpArr(var ACmpArr: TDblArr);  //array of results, returned by CompareHistograms
 
+function GetRotatedDrawingRectangle(ACanvas: TCanvas; AText: string): TRect;
+
 
 implementation
 
 
 uses
   Forms, Classes, IntegerList, DoubleList,
-  ctypes, CLHeaders, Math;
+  ctypes, CLHeaders, Math, GraphMath;
 
 
 procedure RandomSleep(ASleepySearch: Byte);
@@ -2467,6 +2469,21 @@ begin
   for x := 0 to AGridWidth - 1 do   //starts at one, to avoid overwriting transparency pixels
     if x mod AlgorithmSettings.XMultipleOf = 0 then
       Line(AImg.Canvas, x, 1, x, AGridHeight - 1);
+end;
+
+
+function GetRotatedDrawingRectangle(ACanvas: TCanvas; AText: string): TRect;
+var
+  TextSize: TSize;
+begin
+  // See calculations from TCustomLabel.CalculatePreferredSize.
+  // ACanvas.Font.Orientation must be set before calling WorkingRect := GetRotatedDrawingRectangle.
+  // The text show be drawn as TextOut(WorkingRect.Left, WorkingRect.Top, s);
+  // The text Right and Bottom limits are at WorkingRect.Width and WorkingRect.Height.
+  TextSize := ACanvas.TextExtent(AText);
+
+  Result := RotateRect(TextSize.cx, TextSize.cy, ACanvas.Font.Orientation * pi / 1800);
+  OffsetRect(Result, - Result.Left shl 1, - Result.Top shl 1);
 end;
 
 
