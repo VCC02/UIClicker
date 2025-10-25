@@ -384,7 +384,7 @@ begin
     ABmp.Height := Max(ABmp.Height, WorkingRect.Height + 2);
 
     ABmp.Canvas.Rectangle(0, 0, ABmp.Width, ABmp.Height);
-    ABmp.Canvas.TextOut(WorkingRect.Left, WorkingRect.Top, TempText);
+    ABmp.Canvas.TextOut(X + WorkingRect.Left, Y + WorkingRect.Top, TempText);
   end;
 end;
 
