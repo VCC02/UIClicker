@@ -94,7 +94,7 @@ const
   CPropCount_FindControlInitialRectangle = 8;
 
   CPropCount_FindSubControlMatchCriteria = 3;
-  CPropCount_FindSubControlMatchBitmapText = 17;
+  CPropCount_FindSubControlMatchBitmapText = 20;
   CPropCount_FindSubControlMatchBitmapAlgorithmSettings = 4;
   CPropCount_FindSubControlInitialRectangle = 8;
   CPropCount_FindSubControlMatchByHistogramSettings = 3;
@@ -194,13 +194,23 @@ const
   CFindSubControl_MatchBitmapText_ForegroundColor_PropItemIndex = 0;   //property index in FindControl.MatchBitmapText structure
   CFindSubControl_MatchBitmapText_BackgroundColor_PropItemIndex = 1;   //property index in FindControl.MatchBitmapText structure
   CFindSubControl_MatchBitmapText_FontName_PropItemIndex = 2;   //property index in FindControl.MatchBitmapText structure
-  CFindSubControl_MatchBitmapText_ProfileName_PropItemIndex = 11;   //property index in FindControl.MatchBitmapText structure
-  CFindSubControl_MatchBitmapText_IgnoreBackgroundColor_PropItemIndex = 16;   //property index in FindControl.MatchBitmapText structure
-
-  CFindSubControl_MatchBitmapText_CropLeft = 12;
-  CFindSubControl_MatchBitmapText_CropTop = 13;
-  CFindSubControl_MatchBitmapText_CropRight = 14;
-  CFindSubControl_MatchBitmapText_CropBottom = 15;
+  CFindSubControl_MatchBitmapText_FontSize_PropItemIndex = 3;
+  //4
+  //5
+  //6
+  //7
+  //8
+  //9
+  //10
+  CFindSubControl_MatchBitmapText_CharSet_PropItemIndex = 11;
+  CFindSubControl_MatchBitmapText_Orientation_PropItemIndex = 12;
+  CFindSubControl_MatchBitmapText_Pitch_PropItemIndex = 13;
+  CFindSubControl_MatchBitmapText_ProfileName_PropItemIndex = 14;   //property index in FindControl.MatchBitmapText structure
+  CFindSubControl_MatchBitmapText_CropLeft_PropItemIndex = 15;
+  CFindSubControl_MatchBitmapText_CropTop_PropItemIndex = 16;
+  CFindSubControl_MatchBitmapText_CropRight_PropItemIndex = 17;
+  CFindSubControl_MatchBitmapText_CropBottom_PropItemIndex = 18;
+  CFindSubControl_MatchBitmapText_IgnoreBackgroundColor_PropItemIndex = 19;   //property index in FindControl.MatchBitmapText structure
 
   CFindSubControl_MatchBitmapAlgorithmSettings_XMultipleOf_PropItemIndex = 0;
   CFindSubControl_MatchBitmapAlgorithmSettings_YMultipleOf_PropItemIndex = 1;
@@ -410,6 +420,9 @@ const
       (Name: 'FontQuality'; EditorType: etEnumCombo; DataType: CDTEnum),
       (Name: 'FontQualityUsesReplacement'; EditorType: etBooleanCombo; DataType: CDTBool),
       (Name: 'FontQualityReplacement'; EditorType: etText; DataType: CDTString),
+      (Name: 'CharSet'; EditorType: etEnumCombo; DataType: CDTEnum),
+      (Name: 'Orientation'; EditorType: etSpinText; DataType: CDTInteger),
+      (Name: 'Pitch'; EditorType: etEnumCombo; DataType: CDTEnum),
       (Name: 'ProfileName'; EditorType: etText; DataType: CDTString),
       (Name: 'CropLeft'; EditorType: etSpinText; DataType: CDTString),
       (Name: 'CropTop'; EditorType: etSpinText; DataType: CDTString),
@@ -944,9 +957,12 @@ const
       0, //Italic: Boolean;
       0, //Underline: Boolean;
       0, //StrikeOut: Boolean;
-      Ord(High(TFontQuality)) + 1,
+      Ord(High(TFontQuality)) + 1, //FontQuality: TFontQuality;
       0, //FontQualityUsesReplacement: Boolean;
       0, //FontQualityReplacement: string;
+      Length(FontCharsets), //CharSet: Byte;
+      0, //Orientation: Integer;
+      Ord(High(TFontPitch)) + 1, //Pitch: TFontPitch;
       0, //ProfileName: string;
       0, //CropLeft: string;
       0, //CropTop: string;
@@ -1181,6 +1197,9 @@ const
       @CFontQualityStr,
       nil, //FontQualityUsesReplacement: Boolean;
       nil, //FontQualityReplacement: string;
+      @CFontCharSetStr, //CharSet: Byte;
+      nil, //Orientation: Integer;
+      @CFontPitchStr,
       nil, //ProfileName: string;
       nil, //CropLeft: string;
       nil, //CropTop: string;
@@ -1766,12 +1785,17 @@ const
 
 function FontQuality_AsStringToValue(AFontQualityAsString: string): TFontQuality;
 
+function CharSetToString(ACharSet: Byte): string; //Input 0..18
+function CharSetAsByteToString(AByte: Byte): string;  //Input 0..255
+function StringToCharSetAsByte(ACharSetStr: string): Byte; //Output 0..255
+function FontPitch_AsStringToValue(AFontPitchAsString: string): TFontPitch;
+
 
 implementation
 
 
 uses
-  Math;
+  Math, LCLType;
 
 
 function GetActionValueStr_Action(AAction: PClkActionRec; APropertyIndex: Integer): string;
@@ -1932,6 +1956,80 @@ begin
 end;
 
 
+function CharSetToByte(ACharSet: Byte): Byte;   //This matches the FontCharsets structure.  //Input = 0..18. Output = 0..255
+begin                                           //There are TIdentToInt and TIntToIdent functions, which may do a better job.
+  case ACharSet of
+    0:  Result := ANSI_CHARSET;
+    1:  Result := DEFAULT_CHARSET;
+    2:  Result := SYMBOL_CHARSET;
+    3:  Result := MAC_CHARSET;
+    4:  Result := SHIFTJIS_CHARSET;
+    5:  Result := HANGEUL_CHARSET;
+    6:  Result := JOHAB_CHARSET;
+    7:  Result := GB2312_CHARSET;
+    8:  Result := CHINESEBIG5_CHARSET;
+    9:  Result := GREEK_CHARSET;
+    10: Result := TURKISH_CHARSET;
+    11: Result := VIETNAMESE_CHARSET;
+    12: Result := HEBREW_CHARSET;
+    13: Result := ARABIC_CHARSET;
+    14: Result := BALTIC_CHARSET;
+    15: Result := RUSSIAN_CHARSET;
+    16: Result := THAI_CHARSET;
+    17: Result := EASTEUROPE_CHARSET;
+    18: Result := OEM_CHARSET;
+    else
+      Result := 0;
+  end;
+end;
+
+//function ByteToCharSet(AByte: Byte): Byte;  //This matches the FontCharsets structure.  //Input = 0..255. Output = 0..18
+//begin
+//  case AByte of
+//    ANSI_CHARSET:  Result := 0;
+//    DEFAULT_CHARSET:  Result := 1;
+//    SYMBOL_CHARSET:  Result := 2;
+//    MAC_CHARSET:  Result := 3;
+//    SHIFTJIS_CHARSET:  Result := 4;
+//    HANGEUL_CHARSET:  Result := 5;
+//    JOHAB_CHARSET:  Result := 6;
+//    GB2312_CHARSET:  Result := 7;
+//    CHINESEBIG5_CHARSET:  Result := 8;
+//    GREEK_CHARSET:  Result := 9;
+//    TURKISH_CHARSET: Result := 10;
+//    VIETNAMESE_CHARSET: Result := 11;
+//    HEBREW_CHARSET: Result := 12;
+//    ARABIC_CHARSET: Result := 13;
+//    BALTIC_CHARSET: Result := 14;
+//    RUSSIAN_CHARSET: Result := 15;
+//    THAI_CHARSET: Result := 16;
+//    EASTEUROPE_CHARSET: Result := 17;
+//    OEM_CHARSET: Result := 18;
+//    else
+//      Result := 0;
+//  end;
+//end;
+
+function CharSetToString(ACharSet: Byte): string; //Input 0..18
+begin
+  CharsetToIdent(CharSetToByte(ACharSet), Result);
+end;
+
+function CharSetAsByteToString(AByte: Byte): string;  //Input 0..255
+begin
+  CharsetToIdent(AByte, Result);
+end;
+
+function StringToCharSetAsByte(ACharSetStr: string): Byte; //Output 0..255
+var
+  TempCharSet: Integer;
+begin
+  if IdentToCharset(ACharSetStr, TempCharSet) then    //TempCharSet in [0..255]
+    Result := TempCharSet
+  else
+    Result := 0;
+end;
+
 {$IFDEF SubProperties}
   function GetActionValueStr_FindControl_MatchCriteria(AAction: PClkActionRec; APropertyIndex: Integer): string;
   begin
@@ -1980,12 +2078,15 @@ end;
       8: Result := CFontQualityStr[AAction^.FindSubControlOptions.MatchBitmapText[PropertyIndexDiv].FontQuality];
       9: Result := BoolToStr(AAction^.FindSubControlOptions.MatchBitmapText[PropertyIndexDiv].FontQualityUsesReplacement, True);
       10: Result := AAction^.FindSubControlOptions.MatchBitmapText[PropertyIndexDiv].FontQualityReplacement;
-      11: Result := AAction^.FindSubControlOptions.MatchBitmapText[PropertyIndexDiv].ProfileName;
-      12: Result := AAction^.FindSubControlOptions.MatchBitmapText[PropertyIndexDiv].CropLeft;
-      13: Result := AAction^.FindSubControlOptions.MatchBitmapText[PropertyIndexDiv].CropTop;
-      14: Result := AAction^.FindSubControlOptions.MatchBitmapText[PropertyIndexDiv].CropRight;
-      15: Result := AAction^.FindSubControlOptions.MatchBitmapText[PropertyIndexDiv].CropBottom;
-      16: Result := BoolToStr(AAction^.FindSubControlOptions.MatchBitmapText[PropertyIndexDiv].IgnoreBackgroundColor, True);
+      11: Result := CharSetAsByteToString(AAction^.FindSubControlOptions.MatchBitmapText[PropertyIndexDiv].CharSet);
+      12: Result := IntToStr(AAction^.FindSubControlOptions.MatchBitmapText[PropertyIndexDiv].Orientation);
+      13: Result := CFontPitchStr[AAction^.FindSubControlOptions.MatchBitmapText[PropertyIndexDiv].Pitch];
+      14: Result := AAction^.FindSubControlOptions.MatchBitmapText[PropertyIndexDiv].ProfileName;
+      15: Result := AAction^.FindSubControlOptions.MatchBitmapText[PropertyIndexDiv].CropLeft;
+      16: Result := AAction^.FindSubControlOptions.MatchBitmapText[PropertyIndexDiv].CropTop;
+      17: Result := AAction^.FindSubControlOptions.MatchBitmapText[PropertyIndexDiv].CropRight;
+      18: Result := AAction^.FindSubControlOptions.MatchBitmapText[PropertyIndexDiv].CropBottom;
+      19: Result := BoolToStr(AAction^.FindSubControlOptions.MatchBitmapText[PropertyIndexDiv].IgnoreBackgroundColor, True);
       else
         Result := 'unknown';
     end;
@@ -2379,6 +2480,20 @@ begin
 end;
 
 
+function FontPitch_AsStringToValue(AFontPitchAsString: string): TFontPitch;
+var
+  i: TFontPitch;
+begin
+  Result := fpDefault;
+  for i := Low(TFontPitch) to High(TFontPitch) do
+    if CFontPitchStr[i] = AFontPitchAsString then
+    begin
+      Result := i;
+      Exit;
+    end;
+end;
+
+
 function RenderingRequestType_AsStringToValue(ARenderingRequestTypeAsString: string): TRenderingRequestType;
 var
   i: TRenderingRequestType;
@@ -2680,12 +2795,15 @@ end;
       8: AAction^.FindSubControlOptions.MatchBitmapText[PropertyIndexDiv].FontQuality := FontQuality_AsStringToValue(NewValue);
       9: AAction^.FindSubControlOptions.MatchBitmapText[PropertyIndexDiv].FontQualityUsesReplacement := StrToBool(NewValue);
       10: AAction^.FindSubControlOptions.MatchBitmapText[PropertyIndexDiv].FontQualityReplacement := NewValue;
-      11: AAction^.FindSubControlOptions.MatchBitmapText[PropertyIndexDiv].ProfileName := NewValue;
-      12: AAction^.FindSubControlOptions.MatchBitmapText[PropertyIndexDiv].CropLeft := NewValue;
-      13: AAction^.FindSubControlOptions.MatchBitmapText[PropertyIndexDiv].CropTop := NewValue;
-      14: AAction^.FindSubControlOptions.MatchBitmapText[PropertyIndexDiv].CropRight := NewValue;
-      15: AAction^.FindSubControlOptions.MatchBitmapText[PropertyIndexDiv].CropBottom := NewValue;
-      16: AAction^.FindSubControlOptions.MatchBitmapText[PropertyIndexDiv].IgnoreBackgroundColor := StrToBool(NewValue);
+      11: AAction^.FindSubControlOptions.MatchBitmapText[PropertyIndexDiv].CharSet := StringToCharSetAsByte(NewValue);
+      12: AAction^.FindSubControlOptions.MatchBitmapText[PropertyIndexDiv].Orientation := StrToIntDef(NewValue, 0);
+      13: AAction^.FindSubControlOptions.MatchBitmapText[PropertyIndexDiv].Pitch := FontPitch_AsStringToValue(NewValue);
+      14: AAction^.FindSubControlOptions.MatchBitmapText[PropertyIndexDiv].ProfileName := NewValue;
+      15: AAction^.FindSubControlOptions.MatchBitmapText[PropertyIndexDiv].CropLeft := NewValue;
+      16: AAction^.FindSubControlOptions.MatchBitmapText[PropertyIndexDiv].CropTop := NewValue;
+      17: AAction^.FindSubControlOptions.MatchBitmapText[PropertyIndexDiv].CropRight := NewValue;
+      18: AAction^.FindSubControlOptions.MatchBitmapText[PropertyIndexDiv].CropBottom := NewValue;
+      19: AAction^.FindSubControlOptions.MatchBitmapText[PropertyIndexDiv].IgnoreBackgroundColor := StrToBool(NewValue);
       else
         ;
     end;

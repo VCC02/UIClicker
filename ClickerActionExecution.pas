@@ -521,6 +521,7 @@ var
   CropLeft, CropTop, CropRight, CropBottom: Integer;
   APreviewBmp: TBitmap;
   TextWidthAfterCropping, TextHeightAfterCropping: Integer;
+  WorkingRect: TRect;
 begin
   TextToDisplay := AEvaluatedText; //ask once    - it expects an already evaluated text, which is also used somewhere else, so evaluated as less as possible
 
@@ -578,15 +579,35 @@ begin
     else
       APreviewBmp.Canvas.Font.Quality := TFontQuality(AFindSubControlOptions.MatchBitmapText[AProfileIndex].FontQuality);
 
+    APreviewBmp.Canvas.Font.CharSet := AFindSubControlOptions.MatchBitmapText[AProfileIndex].CharSet;
+    APreviewBmp.Canvas.Font.Orientation := AFindSubControlOptions.MatchBitmapText[AProfileIndex].Orientation;
+    APreviewBmp.Canvas.Font.Pitch := AFindSubControlOptions.MatchBitmapText[AProfileIndex].Pitch;
+
     APreviewBmp.Canvas.Brush.Color := EvalBGCol;
     APreviewBmp.Canvas.Pen.Color := EvalBGCol;  //yes, BG
 
-    TextDimensions := APreviewBmp.Canvas.TextExtent(TextToDisplay);
-    APreviewBmp.Width := TextDimensions.cx;
-    APreviewBmp.Height := TextDimensions.cy;
+    if AFindSubControlOptions.MatchBitmapText[AProfileIndex].Orientation = 0 then
+    begin
+      TextDimensions := APreviewBmp.Canvas.TextExtent(TextToDisplay);
+      APreviewBmp.Width := TextDimensions.cx;
+      APreviewBmp.Height := TextDimensions.cy;
 
-    APreviewBmp.Canvas.Rectangle(0, 0, APreviewBmp.Width - 1, APreviewBmp.Height - 1);
-    APreviewBmp.Canvas.TextOut(0, 0, TextToDisplay);     //Do not use replacements here. The editbox should already be updated with replaced strings.
+      APreviewBmp.Canvas.Rectangle(0, 0, APreviewBmp.Width - 1, APreviewBmp.Height - 1);
+      APreviewBmp.Canvas.TextOut(0, 0, TextToDisplay);     //Do not use replacements here. The editbox should already be updated with replaced strings.
+    end
+    else
+    begin
+      WorkingRect := GetRotatedDrawingRectangle(APreviewBmp.Canvas, TextToDisplay);
+      TextDimensions.cx := WorkingRect.Width;
+      TextDimensions.cy := WorkingRect.Height;
+
+      APreviewBmp.Width := TextDimensions.cx;
+      APreviewBmp.Height := TextDimensions.cy;
+
+      APreviewBmp.Canvas.Rectangle(0, 0, WorkingRect.Width, WorkingRect.Height);  // -1 ???
+      APreviewBmp.Canvas.TextOut(WorkingRect.Left, WorkingRect.Top, TextToDisplay);
+    end;
+
 
     CropLeft := Max(StrToIntDef(EvaluateReplacements(AFindSubControlOptions.MatchBitmapText[AProfileIndex].CropLeft), 0), 0);
     CropTop := Max(StrToIntDef(EvaluateReplacements(AFindSubControlOptions.MatchBitmapText[AProfileIndex].CropTop), 0), 0);

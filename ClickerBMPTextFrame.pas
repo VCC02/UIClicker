@@ -193,7 +193,7 @@ implementation
 
 
 uses
-  Types, Graphics, Clipbrd, Dialogs, Math;
+  Types, Graphics, Clipbrd, Dialogs, Math, BitmapProcessing;
 
 
 function GetReplacementVarFromString(AString: string): string;   //if multiple var replacements are concatenated, only the first is returned
@@ -440,7 +440,7 @@ var
   TempFindControlMatchBitmapText: PClkFindControlMatchBitmapText;
   TempBGColor: TColor;
   NewHint: string;
-
+  WorkingRect: TRect;
 begin
   if AImg = nil then
     Exit;
@@ -504,7 +504,9 @@ begin
     NewHint := NewHint + 'Used FontQuality: ' + CQualityNames[Ord(AImg.Canvas.Font.Quality) mod Ord(High(TFontQuality))];
   end;
 
-
+  AImg.Canvas.Font.CharSet := TempFindControlMatchBitmapText^.CharSet;
+  AImg.Canvas.Font.Orientation := TempFindControlMatchBitmapText^.Orientation;
+  AImg.Canvas.Font.Pitch := TFontPitch(TempFindControlMatchBitmapText^.Pitch);
 
   imgPreview.Hint := NewHint;
   scrboxPreview.Hint := NewHint;
@@ -513,14 +515,29 @@ begin
   AImg.Canvas.Brush.Color := TempBGColor;
   AImg.Canvas.Pen.Color := TempBGColor;  //yes, BG
 
-  TextDimensions := AImg.Canvas.TextExtent(TextToDisplay);
-  AImg.Width := TextDimensions.cx;
-  AImg.Height := TextDimensions.cy;
-  AImg.Picture.Bitmap.Width := AImg.Width;
-  AImg.Picture.Bitmap.Height := AImg.Height;
+  if TempFindControlMatchBitmapText^.Orientation = 0 then
+  begin
+    TextDimensions := AImg.Canvas.TextExtent(TextToDisplay);
+    AImg.Width := TextDimensions.cx;
+    AImg.Height := TextDimensions.cy;
+    AImg.Picture.Bitmap.Width := AImg.Width;
+    AImg.Picture.Bitmap.Height := AImg.Height;
 
-  AImg.Canvas.Rectangle(0, 0, AImg.Width - 1, AImg.Height - 1);
-  AImg.Canvas.TextOut(0, 0, TextToDisplay);     //Do not use replacements here. The editbox should already be updated with replaced strings.
+    AImg.Canvas.Rectangle(0, 0, AImg.Width - 1, AImg.Height - 1);
+    AImg.Canvas.TextOut(0, 0, TextToDisplay);     //Do not use replacements here. The editbox should already be updated with replaced strings.
+  end
+  else
+  begin
+    WorkingRect := GetRotatedDrawingRectangle(AImg.Canvas, TextToDisplay);
+
+    AImg.Width := WorkingRect.Width;
+    AImg.Height := WorkingRect.Height;
+    AImg.Picture.Bitmap.Width := WorkingRect.Width;
+    AImg.Picture.Bitmap.Height := WorkingRect.Height;
+
+    AImg.Canvas.Rectangle(0, 0, AImg.Width, AImg.Height);
+    AImg.Canvas.TextOut(WorkingRect.Left, WorkingRect.Top, TextToDisplay);
+  end;
 
   if Assigned(ACroppedImg) then
   begin

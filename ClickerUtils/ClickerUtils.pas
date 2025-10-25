@@ -249,6 +249,9 @@ type
     FontQuality: TFontQuality;
     FontQualityUsesReplacement: Boolean;
     FontQualityReplacement: string;
+    CharSet: Byte;
+    Orientation: Integer;
+    Pitch: TFontPitch;
     ProfileName: string;
     CropLeft: string;
     CropTop: string;
@@ -621,6 +624,8 @@ const
   CWindowOperationStr: array[TWindowOperation] of string = ('woBringToFront', 'woMoveResize', 'woClose', 'woFitIntoView');
   CSearchForControlModeStr: array[TSearchForControlMode] of string = ('sfcmGenGrid', 'sfcmEnumWindows', 'sfcmFindWindow');
   CFontQualityStr: array[TFontQuality] of string = ('fqDefault', 'fqDraft', 'fqProof', 'fqNonAntialiased', 'fqAntialiased', 'fqCleartype', 'fqCleartypeNatural');
+  CFontCharSetStr: array[0..Length(FontCharsets) - 1] of string = ('', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '');
+  CFontPitchStr: array[TFontPitch] of string = ('fpDefault', 'fpVariable', 'fpFixed');
   CLoopDirectionStr: array[TLoopDirection] of string = ('ldInc', 'ldDec', 'ldAuto');
   CLoopEvalBreakPositionStr: array[TLoopEvalBreakPosition] of string = ('lebpAfterContent', 'lebpBeforeContent');
   CEditTemplateOperationStr: array[TEditTemplateOperation] of string = ('etoNewAction', 'etoUpdateAction', 'etoMoveAction', 'etoDeleteAction', 'etoDuplicateAction', 'etoRenameAction', 'etoEnableAction', 'etoDisableAction', 'etoGetProperty', 'etoSetProperty', 'etoSetCondition', 'etoSetTimeout', 'etoExecuteAction', 'etoSaveTemplate');

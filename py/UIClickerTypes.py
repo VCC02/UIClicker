@@ -318,6 +318,9 @@ class TClkFindControlMatchBitmapText(Structure):
                ("FontQuality", BYTE), #LONG), #TFontQuality
                ("FontQualityUsesReplacement", BOOLEAN),
                ("FontQualityReplacement", LPCWSTR),
+               ("CharSet", BYTE),
+               ("Orientation", LONG),
+               ("Pitch", BYTE),
                ("ProfileName", LPCWSTR),
                ("CropLeft", LPCWSTR),
                ("CropTop", LPCWSTR),
@@ -340,6 +343,9 @@ def GetDefaultMatchBitmapText():
     MatchBitmapTextProfile.FontQuality = TFontQuality.fqNonAntialiased
     MatchBitmapTextProfile.FontQualityUsesReplacement = False
     MatchBitmapTextProfile.FontQualityReplacement = ''
+    MatchBitmapTextProfile.CharSet = 1
+    MatchBitmapTextProfile.Orientation = 0
+    MatchBitmapTextProfile.Pitch = 0
     MatchBitmapTextProfile.ProfileName = 'SomeFontProfileName'
     MatchBitmapTextProfile.CropLeft = '0'
     MatchBitmapTextProfile.CropTop = '0'

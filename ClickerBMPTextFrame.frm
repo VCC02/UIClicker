@@ -23,6 +23,7 @@ object frClickerBMPText: TfrClickerBMPText
     ClientHeight = 85
     ClientWidth = 261
     Color = clYellow
+    ParentBackground = False
     ParentColor = False
     ParentShowHint = False
     PopupMenu = pmPreviewImage
@@ -34,10 +35,10 @@ object frClickerBMPText: TfrClickerBMPText
       Hint = 'Right-click for options'
       Top = 1
       Width = 256
-      OnResize = imgPreviewResize
       ParentShowHint = False
       PopupMenu = pmPreviewImage
       ShowHint = True
+      OnResize = imgPreviewResize
     end
   end
   object lblPreview: TLabel

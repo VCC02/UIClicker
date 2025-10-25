@@ -84,6 +84,9 @@ begin
   APrimitive.ClkSetFont.FontQualityUsesReplacement := AIni.ReadBool(ASectionIndex, 'FontQualityUsesReplacement', False);
   APrimitive.ClkSetFont.FontQualityReplacement := AIni.ReadString(ASectionIndex, 'FontQualityReplacement', '$MyFontQuality$');
   APrimitive.ClkSetFont.ProfileName := AIni.ReadString(ASectionIndex, 'ProfileName', 'Default');
+  APrimitive.ClkSetFont.CharSet := AIni.ReadInteger(ASectionIndex, 'CharSet', 1);
+  APrimitive.ClkSetFont.Orientation := AIni.ReadInteger(ASectionIndex, 'Orientation', 0);
+  APrimitive.ClkSetFont.Pitch := TFontPitch(AIni.ReadInteger(ASectionIndex, 'Pitch', 0));
   APrimitive.ClkSetFont.CropLeft := AIni.ReadString(ASectionIndex, 'CropLeft', '0');
   APrimitive.ClkSetFont.CropTop := AIni.ReadString(ASectionIndex, 'CropTop', '0');
   APrimitive.ClkSetFont.CropRight := AIni.ReadString(ASectionIndex, 'CropRight', '0');
@@ -393,6 +396,9 @@ begin
   AStringList.Add('FontQuality=' + IntToStr(Ord(APrimitive.ClkSetFont.FontQuality)));
   AStringList.Add('FontQualityUsesReplacement=' + IntToStr(Ord(APrimitive.ClkSetFont.FontQualityUsesReplacement)));
   AStringList.Add('FontQualityReplacement=' + APrimitive.ClkSetFont.FontQualityReplacement);
+  AStringList.Add('CharSet=' + IntToStr(APrimitive.ClkSetFont.CharSet));
+  AStringList.Add('Orientation=' + IntToStr(APrimitive.ClkSetFont.Orientation));
+  AStringList.Add('Pitch=' + IntToStr(Ord(APrimitive.ClkSetFont.Pitch)));
   AStringList.Add('ProfileName=' + APrimitive.ClkSetFont.ProfileName);
   AStringList.Add('CropLeft=' + APrimitive.ClkSetFont.CropLeft);
   AStringList.Add('CropTop=' + APrimitive.ClkSetFont.CropTop);

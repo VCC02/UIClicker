@@ -318,7 +318,7 @@ implementation
 
 uses
   ClickerPrimitiveValues, ClickerOIUtils, ClickerPrimitivesCompositor, ClickerZoomPreviewForm,
-  ClickerExtraUtils, FPCanvas, Clipbrd, Dialogs, Math;
+  ClickerExtraUtils, ClickerActionValues, FPCanvas, Clipbrd, Dialogs, Math;
 
 
 const
@@ -2702,6 +2702,10 @@ begin
     FPrimitives[APropertyIndex].ClkSetFont.Italic := fsItalic in TempFontDialog.Font.Style;
     FPrimitives[APropertyIndex].ClkSetFont.Underline := fsUnderline in TempFontDialog.Font.Style;
     FPrimitives[APropertyIndex].ClkSetFont.StrikeOut := fsStrikeOut in TempFontDialog.Font.Style;
+
+    FPrimitives[APropertyIndex].ClkSetFont.CharSet := TempFontDialog.Font.CharSet;
+    FPrimitives[APropertyIndex].ClkSetFont.Orientation := TempFontDialog.Font.Orientation;
+    FPrimitives[APropertyIndex].ClkSetFont.Pitch := TempFontDialog.Font.Pitch;
   finally
     TempFontDialog.Free;
   end;
@@ -2793,11 +2797,19 @@ begin
       begin
         PmtvType := FPrimitives[APropertyIndex].PrimitiveType;
         if PmtvType = CClkSetFontPrimitiveCmdIdx then
+        begin
           if AItemIndex = CSetFontPrimitive_FontName_PropIndex then
           begin
             AEnumItemName := Screen.Fonts.Strings[AEnumItemIndex];
             Exit;
           end;
+
+          if AItemIndex = CSetFontPrimitive_CharSet_PropIndex then
+          begin
+            AEnumItemName := CharSetToString(AEnumItemIndex);
+            Exit;
+          end;
+        end;
 
         AEnumItemName := CPrimitivesPropEnumStrings[FPrimitives[APropertyIndex].PrimitiveType]^[AItemIndex]^[AEnumItemIndex];
       end;

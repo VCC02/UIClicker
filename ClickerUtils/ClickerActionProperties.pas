@@ -115,7 +115,7 @@ implementation
 
 
 uses
-  Controls, Graphics;
+  Controls, Graphics, LCLType;
 
 
 function GetClickActionProperties(AClickOptions: TClkClickOptions): string;
@@ -218,6 +218,9 @@ function GetFindSubControlActionProperties(AFindSubControlOptions: TClkFindSubCo
       Result := Result + Prefix + 'FontQuality' + '=' + IntToStr(Ord(AMatchBitmapText[i].FontQuality)) + '&';
       Result := Result + Prefix + 'FontQualityUsesReplacement' + '=' + IntToStr(Ord(AMatchBitmapText[i].FontQualityUsesReplacement)) + '&';
       Result := Result + Prefix + 'FontQualityReplacement' + '=' + AMatchBitmapText[i].FontQualityReplacement + '&';
+      Result := Result + Prefix + 'CharSet' + '=' + IntToStr(AMatchBitmapText[i].CharSet) + '&';
+      Result := Result + Prefix + 'Orientation' + '=' + IntToStr(AMatchBitmapText[i].Orientation) + '&';
+      Result := Result + Prefix + 'Pitch' + '=' + IntToStr(Ord(AMatchBitmapText[i].Pitch)) + '&';
       Result := Result + Prefix + 'ProfileName' + '=' + AMatchBitmapText[i].ProfileName + '&';
       Result := Result + Prefix + 'CropLeft' + '=' + AMatchBitmapText[i].CropLeft + '&';
       Result := Result + Prefix + 'CropTop' + '=' + AMatchBitmapText[i].CropTop + '&';
@@ -541,6 +544,9 @@ function GetFindSubControlActionPropertyDataTypes(AMatchBitmapTextLen: Integer):
       Result := Result + Prefix + 'FontQuality' + '=' + CDTEnum + '.TFontQuality' + '&';
       Result := Result + Prefix + 'FontQualityUsesReplacement' + '=' + CDTBool + '&';
       Result := Result + Prefix + 'FontQualityReplacement' + '=' + CDTString + '&';
+      Result := Result + Prefix + 'CharSet' + '=' + CDTInteger + '&';
+      Result := Result + Prefix + 'Orientation' + '=' + CDTInteger + '&';
+      Result := Result + Prefix + 'Pitch' + '=' + CDTEnum + '.TPitch' + '&';
       Result := Result + Prefix + 'ProfileName' + '=' + CDTString + '&';
       Result := Result + Prefix + 'CropLeft' + '=' + CDTString + '&';
       Result := Result + Prefix + 'CropTop' + '=' + CDTString + '&';
@@ -985,6 +991,8 @@ var
   Temp_ActionTimeout: Int64;
   Temp_FontSize: Integer;
   Temp_FontQuality: Integer;
+  Temp_CharSet: Integer;
+  Temp_Pitch: Integer;
   Temp_CropLeft, Temp_CropTop, Temp_CropRight, Temp_CropBottom: string;
   Temp_RenderingRequestType: Integer;
   Temp_ReceivingBitmapsTimeout: Integer;
@@ -1063,6 +1071,20 @@ begin
       Exit;
     end;
 
+    Temp_CharSet := StrToIntDef(AListOfFindSubControlOptionsParams.Values[Prefix + 'CharSet'], DEFAULT_CHARSET);
+    if (Temp_CharSet < 0) or (Temp_CharSet > Ord(High(TFontCharSet))) then
+    begin
+      Result := Prefix + 'CharSet is out of range.';
+      Exit;
+    end;
+
+    Temp_Pitch := StrToIntDef(AListOfFindSubControlOptionsParams.Values[Prefix + 'Pitch'], 0);
+    if (Temp_Pitch < 0) or (Temp_Pitch > Ord(High(TFontPitch))) then
+    begin
+      Result := Prefix + 'Pitch is out of range.';
+      Exit;
+    end;
+
     Temp_CropLeft := AListOfFindSubControlOptionsParams.Values[Prefix + 'CropLeft'];
     Temp_CropTop := AListOfFindSubControlOptionsParams.Values[Prefix + 'CropTop'];
     Temp_CropRight := AListOfFindSubControlOptionsParams.Values[Prefix + 'CropRight'];
@@ -1103,6 +1125,9 @@ begin
     AFindSubControlOptions.MatchBitmapText[i].FontQuality := TFontQuality(Temp_FontQuality);
     AFindSubControlOptions.MatchBitmapText[i].FontQualityUsesReplacement := AListOfFindSubControlOptionsParams.Values[Prefix + 'FontQualityUsesReplacement'] = '1';
     AFindSubControlOptions.MatchBitmapText[i].FontQualityReplacement := AListOfFindSubControlOptionsParams.Values[Prefix + 'FontQualityReplacement'];
+    AFindSubControlOptions.MatchBitmapText[i].CharSet := Temp_CharSet;
+    AFindSubControlOptions.MatchBitmapText[i].Orientation := StrToIntDef(AListOfFindSubControlOptionsParams.Values[Prefix + 'Orientation'], 0);
+    AFindSubControlOptions.MatchBitmapText[i].Pitch := TFontPitch(Temp_Pitch);
     AFindSubControlOptions.MatchBitmapText[i].ProfileName := AListOfFindSubControlOptionsParams.Values[Prefix + 'ProfileName'];
     AFindSubControlOptions.MatchBitmapText[i].CropLeft := Temp_CropLeft;
     AFindSubControlOptions.MatchBitmapText[i].CropTop := Temp_CropTop;
@@ -1496,6 +1521,9 @@ begin
   AMatchBitmapText.Italic := False;
   AMatchBitmapText.Underline := False;
   AMatchBitmapText.StrikeOut := False;
+  AMatchBitmapText.CharSet := DEFAULT_CHARSET;
+  AMatchBitmapText.Orientation := 0;
+  AMatchBitmapText.Pitch := fpDefault;
   AMatchBitmapText.CropLeft := '0';
   AMatchBitmapText.CropTop := '0';
   AMatchBitmapText.CropRight := '0';
