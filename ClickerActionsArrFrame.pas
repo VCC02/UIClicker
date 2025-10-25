@@ -1631,8 +1631,11 @@ end;
 
 
 function TfrClickerActionsArr.HandleOnFileExists(const AFileName: string): Boolean;
+var
+  ReplacedWithSelf: string;
 begin
-  Result := DoOnFileExists(AFileName);
+  ReplacedWithSelf := StringReplace(AFileName, '$SelfTemplateDir$', ExtractFileDir(FFileName), [rfReplaceAll]);  //required by DbgImg menu
+  Result := DoOnFileExists(ReplacedWithSelf);
 end;
 
 
