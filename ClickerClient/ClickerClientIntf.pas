@@ -40,6 +40,8 @@ type
   TTestConnectionToServer_Proc = function(AResponse: Pointer): LongInt; cdecl;
   TCreateLoggingWindow_Proc = procedure; cdecl;
   TDestroyLoggingWindow_Proc = procedure; cdecl;
+  TSetGeneralConnectTimeout_Proc = procedure(ATimeout: LongInt); cdecl;
+  TSetGeneralReadTimeout_Proc = procedure(ATimeout: LongInt); cdecl;
 
   TSendMemPluginFileToServer_Proc = function(AFileName, AFileContent: Pointer; AFileSize: Int64; AResultStr: Pointer): Integer; cdecl;
   TSendMemPluginArchiveFileToServer_Proc = function(AFileName, ADecryptionPluginName, ADecompressionPluginName, AHashingPluginName, AFileContent: Pointer; AFileSize: Int64; ACompressionLevel: Integer; AAdditionalInfo: Pointer; AIsDecDecHash: Boolean; AResultStr: Pointer): Integer; cdecl;
@@ -236,6 +238,8 @@ var
   TestConnectionToServer: TTestConnectionToServer_Proc;
   CreateLoggingWindow: TCreateLoggingWindow_Proc;
   DestroyLoggingWindow: TDestroyLoggingWindow_Proc;
+  SetGeneralConnectTimeout: TSetGeneralConnectTimeout_Proc;
+  SetGeneralReadTimeout: TSetGeneralReadTimeout_Proc;
 
   SendMemPluginFileToServer: TSendMemPluginFileToServer_Proc;
   SendMemPluginArchiveFileToServer: TSendMemPluginArchiveFileToServer_Proc;
@@ -295,6 +299,8 @@ begin
   @TestConnectionToServer := GetProcAddress(FClickerClientDllHandle, 'TestConnectionToServer');
   @CreateLoggingWindow := GetProcAddress(FClickerClientDllHandle, 'CreateLoggingWindow');
   @DestroyLoggingWindow := GetProcAddress(FClickerClientDllHandle, 'DestroyLoggingWindow');
+  @SetGeneralConnectTimeout := GetProcAddress(FClickerClientDllHandle, 'SetGeneralConnectTimeout');
+  @SetGeneralReadTimeout := GetProcAddress(FClickerClientDllHandle, 'SetGeneralReadTimeout');
 
   @SendMemPluginFileToServer := GetProcAddress(FClickerClientDllHandle, 'SendMemPluginFileToServer');
   @SendMemPluginArchiveFileToServer := GetProcAddress(FClickerClientDllHandle, 'SendMemPluginArchiveFileToServer');

@@ -288,6 +288,24 @@ begin
 end;
 
 
+procedure SetGeneralConnectTimeout(ATimeout: LongInt); cdecl;
+begin
+  if ATimeout < -1 then
+    ATimeout := -1;
+
+  GeneralConnectTimeout := ATimeout;
+end;
+
+
+procedure SetGeneralReadTimeout(ATimeout: LongInt); cdecl;
+begin
+  if ATimeout < -1 then
+    ATimeout := -1;
+
+  GeneralReadTimeout := ATimeout;
+end;
+
+
 function CreateNewTemplateStr(ATemplateFileName: string): Integer;
 begin
   if InMemFS = nil then
@@ -1342,6 +1360,8 @@ exports
   SetTemplatesDir,
   CreateLoggingWindow,
   DestroyLoggingWindow,
+  SetGeneralConnectTimeout,
+  SetGeneralReadTimeout,
 
   CreateNewTemplate,
 

@@ -39,6 +39,7 @@ type
     FResult: string;
     FDone: Boolean;
     FConnectTimeout: Integer;
+    FReadTimeout: Integer;
     FStreamForServer: TMemoryStream;
     FResponseStream: TMemoryStream;
   protected
@@ -49,6 +50,7 @@ type
     property Result: string read FResult;
     property Done: Boolean read FDone;
     property ConnectTimeout: Integer read FConnectTimeout write FConnectTimeout;
+    property ReadTimeout: Integer read FReadTimeout write FReadTimeout;
   end;
 
 
@@ -265,6 +267,7 @@ function DeleteAllFilesFromMemPluginInMemFS(ARemoteAddress: string; AFSIdx: Inte
 
 var
   GeneralConnectTimeout: Integer;  //using a global var for this timeout, instead of passing it through all functions
+  GeneralReadTimeout: Integer;
   GeneralClosingApp: Boolean;      //same as GeneralConnectTimeout. This var is set by a form, on destroy.
 
 implementation
@@ -286,7 +289,7 @@ begin
     IdHTTPClient := TIdHTTP.Create;   //an already created object should be used for "KeepAlive" connections
     try
       IdHTTPClient.ConnectTimeout := FConnectTimeout;
-      IdHTTPClient.ReadTimeout := 3600000; //40000;  //1h instead of 40s, to allow debugging or other long Find(Sub)Control waits
+      IdHTTPClient.ReadTimeout := FReadTimeout; //40000;  //1h instead of 40s, to allow debugging or other long Find(Sub)Control waits
       IdHTTPClient.UseNagle := False;
 
       if FStreamForServer <> nil then
@@ -355,6 +358,7 @@ begin
   try
     Th.FLink := AFullLink;
     Th.FConnectTimeout := GeneralConnectTimeout;
+    Th.FReadTimeout := GeneralReadTimeout;
 
     Th.Start;
 
@@ -374,6 +378,7 @@ begin
 
   Th.FLink := AFullLink;
   Th.FConnectTimeout := GeneralConnectTimeout;
+  Th.FReadTimeout := GeneralReadTimeout;
 
   Th.Start;
 
@@ -389,6 +394,7 @@ begin
   try
     Th.FLink := AFullLink;
     Th.FConnectTimeout := GeneralConnectTimeout;
+    Th.FReadTimeout := GeneralReadTimeout;
 
     Th.FResponseStream := AStream;
     Th.Start;
@@ -427,6 +433,7 @@ begin
   try
     Th.FLink := AFullLink;
     Th.FConnectTimeout := GeneralConnectTimeout;
+    Th.FReadTimeout := GeneralReadTimeout;
 
     Th.FStreamForServer := AFileContent;
     Th.FResponseStream := AResponseStream;
@@ -1110,6 +1117,7 @@ end;
 
 initialization
   GeneralConnectTimeout := 1000;
+  GeneralReadTimeout := 3600000;
   GeneralClosingApp := False;
 
 end.
