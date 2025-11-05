@@ -48,7 +48,7 @@ uses
   ControlInteraction, MouseStuff, ClickerWinInterpForm, ClickerBMPTextFrame,
   ClickerTemplateCallTreeForm, ClickerConditionEditorFrame,
   ClickerConditionEditorForm, ClickerFindControlFrame, ClickerActionsForm,
-  ClickerActionsPaletteFrame, UIClickerMainFormFP, ClickerRemoteScreenForm,
+  ClickerActionsPaletteFrame, UIClickerMainFormFP,
   ClickerPreviewForm, ClickerActionExecution, ClickerTemplateNotesForm,
   ClickerZoomPreviewForm, ObjectInspectorFrame, AutoCompleteForm,
   InMemFileSystemBrowserForm, MemArchive, ClickerActionValues,
@@ -292,7 +292,6 @@ begin
   Application.CreateForm(TfrmClickerActions, frmClickerActions);
   Application.CreateForm(TfrmClickerWinInterp, frmClickerWinInterp);
   Application.CreateForm(TfrmClickerTemplateCallTree, frmClickerTemplateCallTree);
-  Application.CreateForm(TfrmClickerRemoteScreen, frmClickerRemoteScreen);
   Application.CreateForm(TfrmClickerZoomPreview, frmClickerZoomPreview);
 
   frmUIClickerMainForm.AllFormsAreCreated := True; //allow loading settings

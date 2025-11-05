@@ -162,11 +162,9 @@ type
     MenuItemRecordWithMouseSwipe: TMenuItem;
     MenuItem_CopySelectedComponentToClipboard: TMenuItem;
     MenuItem_CopySelectionToClipboard: TMenuItem;
-    MenuItem_RecordFromRemote: TMenuItem;
     MenuItem_SaveSelectedComponentToFile: TMenuItem;
     MenuItem_SaveSelectionToFile: TMenuItem;
     pmScreenshot: TPopupMenu;
-    Separator1: TMenuItem;
     spdbtnExtraRecording: TSpeedButton;
     spdbtnMoveDown: TSpeedButton;
     spdbtnMoveUp: TSpeedButton;
@@ -225,7 +223,6 @@ type
     procedure MenuItem_CopySelectedComponentToClipboardClick(Sender: TObject);
     procedure MenuItem_CopySelectionToClipboardClick(Sender: TObject);
     procedure MenuItem_DeleteSubComponentClick(Sender: TObject);
-    procedure MenuItem_RecordFromRemoteClick(Sender: TObject);
     procedure MenuItem_RecordMultipleSizesClick(Sender: TObject);
     procedure MenuItem_SaveSelectedComponentToFileClick(Sender: TObject);
     procedure MenuItem_SaveSelectionToFileClick(Sender: TObject);
@@ -352,7 +349,6 @@ type
     FCurrentMousePosOnPreviewImg: TPoint;
 
     FOnGetConnectionAddress: TOnGetConnectionAddress;
-    FOnGetSelectedCompFromRemoteWin: TOnGetSelectedCompFromRemoteWin;
     FOnInsertTreeComponent: TOnInsertTreeComponent;
     FOnClearWinInterp: TOnClearWinInterp;
 
@@ -437,7 +433,6 @@ type
     procedure SetHighlightSelectedComponent(Value: Boolean);
 
     function DoOnGetConnectionAddress: string;
-    function DoOnGetSelectedCompFromRemoteWin: THandle;
     procedure DoOnInsertTreeComponent(ACompData: PHighlightedCompRec);
     procedure DoOnClearWinInterp;
 
@@ -534,7 +529,6 @@ type
     property SelectedComponentClassName: string read FSelectedComponentClassName;
 
     property OnGetConnectionAddress: TOnGetConnectionAddress read FOnGetConnectionAddress write FOnGetConnectionAddress;
-    property OnGetSelectedCompFromRemoteWin: TOnGetSelectedCompFromRemoteWin read FOnGetSelectedCompFromRemoteWin write FOnGetSelectedCompFromRemoteWin;
     property OnInsertTreeComponent: TOnInsertTreeComponent read FOnInsertTreeComponent write FOnInsertTreeComponent;
     property OnClearWinInterp: TOnClearWinInterp read FOnClearWinInterp write FOnClearWinInterp;
 
@@ -620,18 +614,6 @@ begin
   end;
 
   Result := FOnGetConnectionAddress();
-end;
-
-
-function TfrClickerWinInterp.DoOnGetSelectedCompFromRemoteWin: THandle;
-begin
-  if not Assigned(FOnGetSelectedCompFromRemoteWin) then
-  begin
-    Result := 0;
-    Exit;
-  end;
-
-  Result := FOnGetSelectedCompFromRemoteWin();
 end;
 
 
@@ -1767,7 +1749,6 @@ begin
 
   FInterprettedHandle := 0;
   FOnGetConnectionAddress := nil;
-  FOnGetSelectedCompFromRemoteWin := nil;
 
   FListOfScannedComponents := TStringList.Create;
   FListOfScannedComponents.LineBreak := #13#10;
@@ -1791,7 +1772,6 @@ begin
   FSelectedComponentClassName := 'no selected component';
 
   FOnGetConnectionAddress := nil;
-  FOnGetSelectedCompFromRemoteWin := nil;
   FOnInsertTreeComponent := nil;
   FOnClearWinInterp := nil;
 
@@ -3218,57 +3198,6 @@ begin
   until Node = nil;
 
   UpdateListOfScanedValues;
-end;
-
-
-procedure TfrClickerWinInterp.MenuItem_RecordFromRemoteClick(Sender: TObject);
-var
-  TreeStream: TMemoryStream;
-  ServerAddress: string;
-  CompHandleToBeRecorded: THandle;
-begin
-  TreeStream := TMemoryStream.Create;
-  try
-    ServerAddress := DoOnGetConnectionAddress;
-    CompHandleToBeRecorded := DoOnGetSelectedCompFromRemoteWin;
-
-    if CompHandleToBeRecorded = 0 then
-    begin
-      MessageBox(Handle, PChar('No selected component. Please open the remote screen tool, refresh the screenshot there, then click on a component from screenshot.'), PChar(Application.Title), MB_ICONINFORMATION);
-      Exit;
-    end;
-
-    DoOnClearWinInterp;
-
-    btnStartRec.Enabled := False;
-    spdbtnExtraRecording.Enabled := False;
-    btnStopRec.Enabled := False;
-    tmrSpinner.Enabled := True;
-    imgSpinner.Show;
-    try
-      RecordComponentOnServer(ServerAddress, CompHandleToBeRecorded, TreeStream);
-
-      WipeImage(imgScreenshot, imgScannedWindow.Width, imgScannedWindow.Height);
-      GetCurrentlyRecordedScreenShotImageFromServer(ServerAddress, imgScreenshot.Picture.Bitmap);
-
-      try
-        TreeStream.Position := 0;
-        vstComponents.LoadFromStream(TreeStream);
-        GenerateCompImagesfromTreeContent;
-      except
-        on E: Exception do
-          MessageBox(Handle, PChar(E.Message + #13#10 + 'Make sure the server is available.'), PChar(Application.Title), MB_ICONERROR);
-      end;
-    finally
-      btnStartRec.Enabled := True;
-      spdbtnExtraRecording.Enabled := True;
-      btnStopRec.Enabled := True;
-      tmrSpinner.Enabled := False;
-      imgSpinner.Hide;
-    end;
-  finally
-    TreeStream.Free;
-  end;
 end;
 
 

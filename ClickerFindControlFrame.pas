@@ -235,7 +235,6 @@ type
     lstMatchBitmapFiles: TListBox;
     lstMatchPrimitiveFiles: TListBox;
     MenuItemSetToSystemMenu: TMenuItem;
-    MenuItem_CopyTextAndClassFromRemoteScreenWindow: TMenuItem;
     MenuItem_CopyTextAndClassFromWinInterpWindow: TMenuItem;
     MenuItem_CopyTextAndClassFromPreviewWindow: TMenuItem;
     MenuItemControl_Bottom: TMenuItem;
@@ -268,7 +267,6 @@ type
     procedure btnCopyFoundValuesClick(Sender: TObject);
     procedure chkDisplayCroppingLinesChange(Sender: TObject);
     procedure CopyTextAndClassFromPreviewWindowClick(Sender: TObject);
-    procedure CopyTextAndClassFromRemoteScreenWindowClick(Sender: TObject);
     procedure CopyTextAndClassFromWinInterpWindowClick(Sender: TObject);
     procedure btnDisplaySearchAreaDebuggingImageClick(Sender: TObject);
     procedure chkShowBMPFileDbgImgClick(Sender: TObject);
@@ -682,7 +680,6 @@ type
 const
   CExtProvPreviewWindow = 'Preview';
   CExtProvWinInterpWindow = 'WinInterp';
-  CExtProvRemoteScreenWindow = 'RemoteScreen';
   CExtProvSystemMenu = 'SystemMenu';
 
 
@@ -2063,13 +2060,6 @@ procedure TfrClickerFindControl.CopyTextAndClassFromPreviewWindowClick(
   Sender: TObject);
 begin
   CopyTextAndClassFromExternalProvider(CExtProvPreviewWindow);
-end;
-
-
-procedure TfrClickerFindControl.CopyTextAndClassFromRemoteScreenWindowClick(
-  Sender: TObject);
-begin
-  CopyTextAndClassFromExternalProvider(CExtProvRemoteScreenWindow);
 end;
 
 

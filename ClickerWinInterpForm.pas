@@ -47,9 +47,6 @@ type
     function GetOnGetConnectionAddress: TOnGetConnectionAddress;
     procedure SetOnGetConnectionAddress(Value: TOnGetConnectionAddress);
 
-    function GetOnGetSelectedCompFromRemoteWin: TOnGetSelectedCompFromRemoteWin;
-    procedure SetOnGetSelectedCompFromRemoteWin(Value: TOnGetSelectedCompFromRemoteWin);
-
     function GetOnInsertTreeComponent: TOnInsertTreeComponent;
     procedure SetOnInsertTreeComponent(Value: TOnInsertTreeComponent);
 
@@ -89,7 +86,6 @@ type
     property SelectedComponentClassName: string read GetSelectedComponentClassName;
 
     property OnGetConnectionAddress: TOnGetConnectionAddress read GetOnGetConnectionAddress write SetOnGetConnectionAddress;
-    property OnGetSelectedCompFromRemoteWin: TOnGetSelectedCompFromRemoteWin read GetOnGetSelectedCompFromRemoteWin write SetOnGetSelectedCompFromRemoteWin;
     property OnInsertTreeComponent: TOnInsertTreeComponent read GetOnInsertTreeComponent write SetOnInsertTreeComponent;
     property OnClearWinInterp: TOnClearWinInterp read GetOnClearWinInterp write SetOnClearWinInterp;
 
@@ -137,18 +133,6 @@ end;
 procedure TfrmClickerWinInterp.SetOnGetConnectionAddress(Value: TOnGetConnectionAddress);
 begin
   FWinInterpFrame.OnGetConnectionAddress := Value;
-end;
-
-
-function TfrmClickerWinInterp.GetOnGetSelectedCompFromRemoteWin: TOnGetSelectedCompFromRemoteWin;
-begin
-  Result := FWinInterpFrame.OnGetSelectedCompFromRemoteWin;
-end;
-
-
-procedure TfrmClickerWinInterp.SetOnGetSelectedCompFromRemoteWin(Value: TOnGetSelectedCompFromRemoteWin);
-begin
-  FWinInterpFrame.OnGetSelectedCompFromRemoteWin := Value;
 end;
 
 

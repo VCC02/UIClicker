@@ -67,7 +67,6 @@ type
   TOnGetExtraSearchAreaDebuggingImage = function(AExtraBitmap: TBitmap): Boolean of object;
   TOnGetExtraSearchAreaDebuggingImageWithStackLevel = function(AExtraBitmap: TBitmap; AStackLevel: Integer): Boolean of object;
   TOnGetConnectionAddress = function: string of object;
-  TOnGetSelectedCompFromRemoteWin = function: THandle of object;
   TOnLoadBitmap = function(ABitmap: TBitmap; AFileName: string): Boolean of object; //returns True if file loaded, and False if file not found
   TOnLoadRenderedBitmap = function(ABitmap: TBitmap; AFileName: string): Boolean of object; //returns True if file loaded, and False if file not found in in-mem FS for received rendered bitmaps
   TOnSaveRenderedBitmap = procedure(ABitmap: TBitmap; AFileName: string) of object;

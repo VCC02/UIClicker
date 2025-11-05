@@ -192,14 +192,6 @@
         <ResourceBaseClass Value="Form"/>
       </Unit>
       <Unit>
-        <Filename Value="ClickerRemoteScreenForm.pas"/>
-        <FRMtype Value="200"/>
-        <IsPartOfProject Value="True"/>
-        <ComponentName Value="frmClickerRemoteScreen"/>
-        <HasResources Value="True"/>
-        <ResourceBaseClass Value="Form"/>
-      </Unit>
-      <Unit>
         <Filename Value="ClickerPreviewForm.pas"/>
         <FRMtype Value="200"/>
         <IsPartOfProject Value="True"/>

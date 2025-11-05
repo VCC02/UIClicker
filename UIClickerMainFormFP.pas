@@ -42,7 +42,6 @@ type
   TfrmUIClickerMainForm = class(TForm)
     bitbtnShowActionsForm: TBitBtn;
     bitbtnShowPreviewForm: TBitBtn;
-    bitbtnShowRemoteScreenShotForm: TBitBtn;
     bitbtnShowTemplateCallTree: TBitBtn;
     bitbtnShowWinInterp: TBitBtn;
     lblBitness: TLabel;
@@ -52,7 +51,6 @@ type
     tmrStartup: TTimer;
     procedure btnShowActionsFormClick(Sender: TObject);
     procedure btnShowPreviewFormClick(Sender: TObject);
-    procedure btnShowRemoteScreenShotFormClick(Sender: TObject);
     procedure btnShowTemplateCallTreeClick(Sender: TObject);
     procedure btnShowWinInterpClick(Sender: TObject);
     procedure FormClose(Sender: TObject; var CloseAction: TCloseAction);
@@ -72,7 +70,6 @@ type
     function HandleOnGetConnectionAddress: string;
     procedure HandleOnReLoadActionsWindowSettings;
     procedure HandleOnRecordComponent(ACompHandle: THandle; ATreeContentStream: TMemoryStream);
-    function HandleOnGetSelectedCompFromRemoteWin: THandle;
     procedure HandleOnGetCurrentlyRecordedScreenShotImage(ABmp: TBitmap);
 
     function HandleOnFileExists(const FileName: string): Boolean;
@@ -140,7 +137,7 @@ implementation
 
 uses
   ClickerPreviewForm, ClickerWinInterpForm, ClickerWinInterpFrame, ClickerTemplateCallTreeForm,
-  ClickerActionsClient, IniFiles, ClickerFindControlFrame, ClickerRemoteScreenForm, BitmapConv,
+  ClickerActionsClient, IniFiles, ClickerFindControlFrame, BitmapConv,
   ClickerUtils, ClickerPrimitives, ClickerActionsForm, ClickerPrimitivesCompositor, Math;
 
 { TfrmUIClickerMainForm }
@@ -149,7 +146,6 @@ uses
 procedure TfrmUIClickerMainForm.SetHandles;
 begin
   frmClickerWinInterp.OnGetConnectionAddress := HandleOnGetConnectionAddress;
-  frmClickerWinInterp.OnGetSelectedCompFromRemoteWin := HandleOnGetSelectedCompFromRemoteWin;
   frmClickerWinInterp.OnOpenDialogExecute := HandleOnOpenDialogExecute;
   frmClickerWinInterp.OnGetOpenDialogFileName := HandleOnGetOpenDialogFileName;
   frmClickerWinInterp.OnSaveDialogExecute := HandleOnSaveDialogExecute;
@@ -188,8 +184,6 @@ begin
   frmClickerActions.OnGenerateAndSaveTreeWithWinInterp := HandleOnGenerateAndSaveTreeWithWinInterp;
   frmClickerActions.OnSetWinInterpOption := HandleOnSetWinInterpOption;
 
-  frmClickerRemoteScreen.OnGetConnectionAddress := HandleOnGetConnectionAddress;
-
   frmClickerTemplateCallTree.OnSetOpenDialogMultiSelect := HandleOnSetOpenDialogMultiSelect;
   frmClickerTemplateCallTree.OnFileExists := HandleOnFileExists;
   frmClickerTemplateCallTree.OnTClkIniReadonlyFileCreate := HandleOnTClkIniReadonlyFileCreate;
@@ -215,7 +209,6 @@ begin
     frmClickerActions.LoadSettings(Ini);
     frmClickerWinInterp.LoadSettings(Ini);
     frmClickerTemplateCallTree.LoadSettings(Ini);
-    frmClickerRemoteScreen.LoadSettings(Ini);
   finally
     Ini.Free;
   end;
@@ -244,7 +237,6 @@ begin
     frmClickerActions.SaveSettings(Ini);
     frmClickerWinInterp.SaveSettings(Ini);
     frmClickerTemplateCallTree.SaveSettings(Ini);
-    frmClickerRemoteScreen.SaveSettings(Ini);
 
     Ini.UpdateFile;
   finally
@@ -256,12 +248,6 @@ end;
 procedure TfrmUIClickerMainForm.btnShowPreviewFormClick(Sender: TObject);
 begin
   frmClickerControlPreview.Show;
-end;
-
-
-procedure TfrmUIClickerMainForm.btnShowRemoteScreenShotFormClick(Sender: TObject);
-begin
-  frmClickerRemoteScreen.Show;
 end;
 
 
@@ -325,7 +311,6 @@ begin
       frmClickerActions.Caption := frmClickerActions.Caption + ' - ' + ExtraCaption;
       frmClickerWinInterp.Caption := frmClickerWinInterp.Caption + ' - ' + ExtraCaption;
       frmClickerTemplateCallTree.Caption := frmClickerTemplateCallTree.Caption + ' - ' + ExtraCaption;
-      frmClickerRemoteScreen.Caption := frmClickerRemoteScreen.Caption + ' - ' + ExtraCaption;
       //Do not set Application.Title := 'UIClicker - ' + ExtraCaption;, because this will modify MessageBox titles, which will not be found in tests.
     end;
   {$ENDIF}
@@ -349,13 +334,6 @@ begin
   begin
     AControlText := frmClickerWinInterp.SelectedComponentText;
     AControlClass := frmClickerWinInterp.SelectedComponentClassName;
-    Exit;
-  end;
-
-  if ACompProvider = CExtProvRemoteScreenWindow then
-  begin
-    AControlText := frmClickerRemoteScreen.SelectedComponentText;
-    AControlClass := frmClickerRemoteScreen.SelectedComponentClassName;
     Exit;
   end;
 
@@ -403,12 +381,6 @@ begin
   end;
 
   frmClickerWinInterp.GetTreeContent(ATreeContentStream);
-end;
-
-
-function TfrmUIClickerMainForm.HandleOnGetSelectedCompFromRemoteWin: THandle;
-begin
-  Result := frmClickerRemoteScreen.SelectedComponentHandle;
 end;
 
 

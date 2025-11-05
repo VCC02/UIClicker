@@ -882,10 +882,6 @@ object frClickerFindControl: TfrClickerFindControl
       Caption = 'Copy values from window interpreter'
       OnClick = CopyTextAndClassFromWinInterpWindowClick
     end
-    object MenuItem_CopyTextAndClassFromRemoteScreenWindow: TMenuItem
-      Caption = 'Copy values from remote screen'
-      OnClick = CopyTextAndClassFromRemoteScreenWindowClick
-    end
     object MenuItemSetToSystemMenu: TMenuItem
       Caption = 'Set to system menu'
       OnClick = MenuItemSetToSystemMenuClick

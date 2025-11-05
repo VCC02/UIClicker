@@ -279,7 +279,6 @@ type
 
     procedure MenuItem_CopyTextAndClassFromPreviewWindowClick(Sender: TObject);
     procedure MenuItem_CopyTextAndClassFromWinInterpWindowClick(Sender: TObject);
-    procedure MenuItem_CopyTextAndClassFromRemoteScreenWindowClick(Sender: TObject);
     procedure MenuItem_SetTextAndClassAsSystemMenuClick(Sender: TObject);
 
     procedure MenuItem_AddBMPFilesToPropertyListClick(Sender: TObject);
@@ -4143,13 +4142,6 @@ end;
 procedure TfrClickerActions.MenuItem_CopyTextAndClassFromWinInterpWindowClick(Sender: TObject);
 begin
   CopyTextAndClassFromExternalProvider(CExtProvWinInterpWindow);
-  FreeOIPopupMenu(Sender);
-end;
-
-
-procedure TfrClickerActions.MenuItem_CopyTextAndClassFromRemoteScreenWindowClick(Sender: TObject);
-begin
-  CopyTextAndClassFromExternalProvider(CExtProvRemoteScreenWindow);
   FreeOIPopupMenu(Sender);
 end;
 
@@ -8625,9 +8617,6 @@ begin
             ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
 
           AddMenuItemToPopupMenu(FOIEditorMenu, 'Copy values from window interpreter', MenuItem_CopyTextAndClassFromWinInterpWindowClick,
-            ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
-
-          AddMenuItemToPopupMenu(FOIEditorMenu, 'Copy values from remote screen', MenuItem_CopyTextAndClassFromRemoteScreenWindowClick,
             ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
 
           AddMenuItemToPopupMenu(FOIEditorMenu, 'Set to system menu', MenuItem_SetTextAndClassAsSystemMenuClick,
