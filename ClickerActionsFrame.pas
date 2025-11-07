@@ -9218,7 +9218,8 @@ begin
                   else
                     DoOnAddToLog('[Err: Index out of bounds on editing property: ' + IntToStr(APropertyIndex - 1) + ']');
                 except
-                  DoOnAddToLog('bug on editing property: ' + IntToStr(APropertyIndex - 1) + ']');
+                  on E: Exception do
+                    DoOnAddToLog('bug on editing property [' + IntToStr(APropertyIndex - 1) + ']: ' + E.Message);
                 end;
               finally
                 ListOfProperties.Free;
