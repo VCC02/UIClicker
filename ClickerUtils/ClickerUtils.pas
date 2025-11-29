@@ -760,7 +760,7 @@ function GetControlText(hw: THandle): string;
 function GetWindowClassRec(HW: THandle): TCompRec; overload;
 function GetWindowClassRec(CrPos: TPoint): TCompRec; overload;
 
-function GetCmdLineOptionValue(AOption: string): string;
+function GetCmdLineOptionValue(AOption: string; ADefault: string = ''): string;
 function RevPos(const ASubStr, AString: string; AOffset: Integer = 1): Integer;
 
 function ActionAsStringToTClkAction(ActionAsString: string): TClkAction;
@@ -3505,11 +3505,11 @@ begin
 end;
 
 
-function GetCmdLineOptionValue(AOption: string): string;
+function GetCmdLineOptionValue(AOption: string; ADefault: string = ''): string;
 var
   i: Integer;
 begin
-  Result := '';
+  Result := ADefault;
   for i := 1 to ParamCount do
     if ParamStr(i) = AOption then
     begin
