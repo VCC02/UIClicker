@@ -3454,6 +3454,7 @@ var
   CompName: array[0..1023] of Char;
 begin
   Result.Handle := HW;
+  Result.ResultedErrorCount := 0;
 
   try
     {$IFDEF Windows}

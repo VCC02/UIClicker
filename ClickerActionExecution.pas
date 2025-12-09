@@ -2099,6 +2099,8 @@ begin
     ErrCnts := ErrCnts + IntToStr(AResultedControlArr[i].ResultedErrorCount) + #4#5;
   end;
 
+  SetActionVarValue('$AllControl_Count$', IntToStr(Length(AResultedControlArr)));
+
   SetActionVarValue('$AllControl_Handles$', s);
   SetActionVarValue('$AllControl_XOffsets$', xs);
   SetActionVarValue('$AllControl_YOffsets$', ys);

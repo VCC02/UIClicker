@@ -1261,6 +1261,7 @@ begin
 
       CompAtPoint.XOffsetFromParent := 0;
       CompAtPoint.YOffsetFromParent := 0;
+      CompAtPoint.ResultedErrorCount := 0;
                                                            //ToDo: enclose this code with a loop for verifying excluded handles
       if MatchControl(CompAtPoint,
                       InputDataForCaching,
