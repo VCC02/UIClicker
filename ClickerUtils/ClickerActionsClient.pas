@@ -766,7 +766,8 @@ function SendPluginCmd(ARemoteAddress: string; APluginCmd: string; AStackLevel: 
 begin
   Result := SendTextRequestToServer(ARemoteAddress + CRECmd_PluginCmd + '?' +
                                     CREParam_StackLevel + '=' + IntToStr(AStackLevel) + '&' +
-                                    CREParam_Cmd + '=' + APluginCmd);
+                                    CREParam_Cmd + '=' + APluginCmd,
+                                    ACallAppProcMsg);
 end;
 
 
@@ -866,13 +867,13 @@ end;
 
 function ExecuteCallTemplateAction(ARemoteAddress: string; ACallTemplateOptions: TClkCallTemplateOptions; AIsDebugging, AUseLocalDebugger: Boolean; AFileLocation: string; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
 begin
-  Result := SendTextRequestToServer(GetCallTemplateActionRequest(ARemoteAddress, ACallTemplateOptions, AIsDebugging, AUseLocalDebugger, AFileLocation, AUseServerDebugging));
+  Result := SendTextRequestToServer(GetCallTemplateActionRequest(ARemoteAddress, ACallTemplateOptions, AIsDebugging, AUseLocalDebugger, AFileLocation, AUseServerDebugging), ACallAppProcMsg);
 end;
 
 
 function AsyncExecuteCallTemplateAction(ARemoteAddress: string; ACallTemplateOptions: TClkCallTemplateOptions; AIsDebugging, AUseLocalDebugger: Boolean; AFileLocation: string; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): TClientThread;
 begin
-  Result := AsyncSendTextRequestToServer(GetCallTemplateActionRequest(ARemoteAddress, ACallTemplateOptions, AIsDebugging, AUseLocalDebugger, AFileLocation, AUseServerDebugging));
+  Result := AsyncSendTextRequestToServer(GetCallTemplateActionRequest(ARemoteAddress, ACallTemplateOptions, AIsDebugging, AUseLocalDebugger, AFileLocation, AUseServerDebugging), ACallAppProcMsg);
 end;
 
 
