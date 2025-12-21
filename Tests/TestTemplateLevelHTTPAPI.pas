@@ -37,6 +37,8 @@ type
   public
     constructor Create; override;
   published
+    procedure BeforeAll_AlwaysExecute;
+
     procedure Test_ExecuteCommandAtIndex_HappyFlow;
     procedure Test_ExecuteCommandAtIndex_EmptyTemplate;
     procedure Test_ExecuteCommandAtIndex_BadActionIndex;
@@ -54,6 +56,8 @@ type
 
     procedure Test_ClearInMemFileSystem;
     procedure Test_GetListOfWaitingFiles_MissingTemplate;
+
+    procedure AfterAll_AlwaysExecute;
   end;
 
 
@@ -61,13 +65,39 @@ implementation
 
 
 uses
-  ClickerActionsClient, ClickerUtils, Controls, InMemFileSystem, ClickerFileProviderClient;
+  ClickerActionsClient, ClickerUtils, Controls, InMemFileSystem, ClickerFileProviderClient,
+  AsyncProcess, UITestUtils;
+
+
+var
+  TestUIClicker_Proc: TAsyncProcess;
 
 
 constructor TTestTemplateLevelHTTPAPI.Create;
 begin
   inherited Create;
   TestServerAddress := CTestServerAddress;
+end;
+
+
+procedure TTestTemplateLevelHTTPAPI.BeforeAll_AlwaysExecute;
+var
+  PathToTestUIClicker: string;
+  Response: string;
+  CallTemplateOptions: TClkCallTemplateOptions;
+begin
+  PathToTestUIClicker := ExpandFileName(ExtractFilePath(ParamStr(0)) + '..\UIClicker.exe');
+  TestUIClicker_Proc := CreateUIClickerProcess(PathToTestUIClicker, '--SetExecMode Server --ServerPort 5444');
+end;
+
+
+procedure TTestTemplateLevelHTTPAPI.AfterAll_AlwaysExecute;
+begin
+  if TestUIClicker_Proc <> nil then
+  begin
+    TestUIClicker_Proc.Terminate(0);
+    TestUIClicker_Proc.Free;
+  end;
 end;
 
 
@@ -318,5 +348,6 @@ end;
 initialization
 
   RegisterTest(TTestTemplateLevelHTTPAPI);
+  TestUIClicker_Proc := nil;
 end.
 

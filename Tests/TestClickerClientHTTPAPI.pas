@@ -45,8 +45,9 @@ type
   public
     constructor Create; override;
   published
+    procedure BeforeAll_AlwaysExecute;
+
     procedure Test_TestConnectionToServer;
-    procedure StartTestDriver;
     procedure Test_ExecuteClickAction_With_UseServerDebugging;
     procedure Test_ExecuteExecAppAction_With_UseServerDebugging;
     procedure Test_ExecuteFindControlAction_With_UseServerDebugging;
@@ -74,6 +75,8 @@ type
     procedure Test_AddSaveSetVarToFileActionToTemplate_HappyFlow;
     procedure Test_AddPluginActionToTemplate_HappyFlow;
     procedure Test_AddEditTemplateActionToTemplate_HappyFlow;
+
+    procedure AfterAll_AlwaysExecute;
   end;
 
 
@@ -81,12 +84,17 @@ implementation
 
 
 uses
-  Controls, ClickerActionProperties, //DCPsha256, DCPmd5,
-  Graphics, DllUtils, ClickerClientAPI, ClickerClientIntf, ShellAPI;
+  Controls, ClickerActionProperties, ActionsStuff, //DCPsha256, DCPmd5,
+  Graphics, DllUtils, ClickerClientAPI, ClickerClientIntf,
+  UITestUtils, AsyncProcess;
 
 
 const
   CTestDriverAddress = 'http://127.0.0.1:25444/';
+
+var
+  TestUIClicker_Proc: TAsyncProcess;
+  TestUIClickerDriver_Proc: TAsyncProcess;
 
 
 constructor TTestClickerClientHTTPAPI.Create;
@@ -132,6 +140,41 @@ begin
 end;
 
 
+procedure TTestClickerClientHTTPAPI.BeforeAll_AlwaysExecute;
+var
+  PathToTestUIClicker, PathToDriver: string;
+  Response: string;
+  CallTemplateOptions: TClkCallTemplateOptions;
+begin
+  PathToTestUIClicker := ExpandFileName(ExtractFilePath(ParamStr(0)) + '..\UIClicker.exe');
+  PathToDriver := ExpandFileName(ExtractFilePath(ParamStr(0)) + '..\TestDriver\UIClicker.exe');
+
+  TestUIClicker_Proc := CreateUIClickerProcess(PathToTestUIClicker, '--SetExecMode Server --ServerPort 5444');
+  TestUIClickerDriver_Proc := CreateUIClickerProcess(PathToDriver, '--ExtraCaption MyServer --SetExecMode Server --ServerPort 25444');
+
+  GenerateCallTemplateOptions(CallTemplateOptions, '$AppDir$\Tests\TestFiles\OpenActionsWindowToTemplateExecution.clktmpl', '', False);
+  Response := FastReplace_87ToReturn(ClickerActionsClient.ExecuteCallTemplateAction(TestServerAddress, CallTemplateOptions, False, False, CREParam_FileLocation_ValueDisk, True, False));
+
+  ExpectSuccessfulAction(Response);
+end;
+
+
+procedure TTestClickerClientHTTPAPI.AfterAll_AlwaysExecute;
+begin
+  if TestUIClicker_Proc <> nil then
+  begin
+    TestUIClicker_Proc.Terminate(0);
+    TestUIClicker_Proc.Free;
+  end;
+
+  if TestUIClickerDriver_Proc <> nil then
+  begin
+    TestUIClickerDriver_Proc.Terminate(0);
+    TestUIClickerDriver_Proc.Free;
+  end;
+end;
+
+
 procedure TTestClickerClientHTTPAPI.Test_TestConnectionToServer;
 var
   Response: string;
@@ -139,17 +182,6 @@ begin
   SetLength(Response, CMaxSharedStringLength);
   SetLength(Response, TestConnectionToServer(@Response[1]));
   Expect(Response).ToBe(CREResp_ConnectionOK, 'Make sure UIClicker is running and is listening on the configured port.');
-end;
-
-
-procedure TTestClickerClientHTTPAPI.StartTestDriver;
-var
-  PathToDriver: string;
-begin
-  //ToDo use UI tests code for this. Also, create one more method, at the end, to close the process
-
-  PathToDriver := ExtractFilePath(ParamStr(0)) + '..\TestDriver\UIClicker.exe' ;
-  ShellExecute(0, 'open', PChar(PathToDriver), '--ExtraCaption MyServer --SetExecMode Server --ServerPort 25444', PChar(ExtractFilePath(PathToDriver)), 5);
 end;
 
 
@@ -949,6 +981,8 @@ end;
 initialization
 
   RegisterTest(TTestClickerClientHTTPAPI);
+  TestUIClicker_Proc := nil;
+  TestUIClickerDriver_Proc := nil;
 
 end.
 

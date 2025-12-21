@@ -31,7 +31,7 @@ uses
   ClickerUtils, ClickerTemplates, ClickerFileProviderClient,
   ClickerActionProperties, InMemFileSystem, Expectations, MemArchive,
   ActionsStuff, TestMiscHTTPAPI, TestTemplateLevelHTTPAPI, TestLowLevelHTTPAPI,
-  TestClickerClientHTTPAPI, TestClickerClientMemPlugins, DllUtils,
+  TestClickerClientHTTPAPI, TestClickerClientMemPlugins, UITestUtils, DllUtils,
   ClickerClientAPI, ClickerClientIntf, PitstopTestRunner;
 
 {$R *.res}

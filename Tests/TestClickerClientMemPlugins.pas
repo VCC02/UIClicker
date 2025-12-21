@@ -70,6 +70,8 @@ type
   public
     constructor Create; override;
   published
+    procedure BeforeAll_AlwaysExecute;
+
     procedure Test_SendMemPluginFileToServer_HappyFlow;
     procedure Test_SendMemPluginDbgSymFileToServer_HappyFlow;
 
@@ -98,6 +100,8 @@ type
     procedure Test_SendSameBitnessMemPlugin_HappyFlow;
     procedure Test_SendOutsideBitnessOnlyMemPlugin_HappyFlow;
     procedure Test_SendBothBitnessesMemPlugin_HappyFlow;
+
+    procedure AfterAll_AlwaysExecute;
   end;
 
 
@@ -107,11 +111,16 @@ implementation
 uses
   Controls,
   DCPsha256, DCPmd5, DCPrijndael, TplLzmaUnit,
-  Graphics, DllUtils, ClickerClientIntf, ActionsStuff;
+  Graphics, DllUtils, ClickerClientIntf, ActionsStuff,
+  AsyncProcess, UITestUtils;
 
 
 const
   CTestDriverAddress = 'http://127.0.0.1:25444/';
+
+
+var
+  TestUIClicker_Proc: TAsyncProcess;
 
 
 constructor TTestClickerClientMemPlugins.Create;
@@ -122,6 +131,27 @@ begin
 end;
 
 
+procedure TTestClickerClientMemPlugins.BeforeAll_AlwaysExecute;
+var
+  PathToTestUIClicker: string;
+  Response: string;
+  CallTemplateOptions: TClkCallTemplateOptions;
+begin
+  PathToTestUIClicker := ExpandFileName(ExtractFilePath(ParamStr(0)) + '..\UIClicker.exe');
+  TestUIClicker_Proc := CreateUIClickerProcess(PathToTestUIClicker, '--SetExecMode Server --ServerPort 5444');
+end;
+
+
+procedure TTestClickerClientMemPlugins.AfterAll_AlwaysExecute;
+begin
+  if TestUIClicker_Proc <> nil then
+  begin
+    TestUIClicker_Proc.Terminate(0);
+    TestUIClicker_Proc.Free;
+  end;
+end;
+
+
 procedure TTestClickerClientMemPlugins.SetUp;
 const
   CTestingRequirementInfo = 'These tests require UIClicker to be built with the following compiler directives: MemPlugins and PluginTesting.';
@@ -129,6 +159,10 @@ var
   RecServerAddress: string;
 begin
   inherited SetUp;
+
+  if (TestName = 'BeforeAll_AlwaysExecute') or (TestName = 'AfterAll_AlwaysExecute') then
+    Exit;
+
   FLoadClickerClientRes := LoadClickerClient('..\ClickerClient\ClickerClient.dll');
   Expect(FLoadClickerClientRes).ToBe(True, 'Can''t load ClickerClient.dll');
 
@@ -1030,6 +1064,6 @@ end;
 initialization
 
   RegisterTest(TTestClickerClientMemPlugins);
-
+  TestUIClicker_Proc := nil;
 end.
 

@@ -40,6 +40,8 @@ type
   public
     constructor Create; override;
   published
+    procedure BeforeAll_AlwaysExecute;
+
     procedure Test_TestConnection;
     procedure Test_SetVariable_HappyFlow;
     procedure Test_SetVariable_BadStackLevel;
@@ -50,6 +52,8 @@ type
     procedure Test_GetDebugImageFromServer_MinimumSize_NotFound;
 
     procedure Test_GetDebugImageFromServer_BadStackIndex;
+
+    procedure AfterAll_AlwaysExecute;
   end;
 
 
@@ -57,13 +61,39 @@ implementation
 
 
 uses
-  ClickerActionsClient, ClickerUtils, Controls, Graphics, ActionsStuff;
+  ClickerActionsClient, ClickerUtils, Controls, Graphics, ActionsStuff,
+  AsyncProcess, UITestUtils;
+
+
+var
+  TestUIClicker_Proc: TAsyncProcess;
 
 
 constructor TTestMiscHTTPAPI.Create;
 begin
   inherited Create;
   TestServerAddress := CTestServerAddress;
+end;
+
+
+procedure TTestMiscHTTPAPI.BeforeAll_AlwaysExecute;
+var
+  PathToTestUIClicker: string;
+  Response: string;
+  CallTemplateOptions: TClkCallTemplateOptions;
+begin
+  PathToTestUIClicker := ExpandFileName(ExtractFilePath(ParamStr(0)) + '..\UIClicker.exe');
+  TestUIClicker_Proc := CreateUIClickerProcess(PathToTestUIClicker, '--SetExecMode Server --ServerPort 5444');
+end;
+
+
+procedure TTestMiscHTTPAPI.AfterAll_AlwaysExecute;
+begin
+  if TestUIClicker_Proc <> nil then
+  begin
+    TestUIClicker_Proc.Terminate(0);
+    TestUIClicker_Proc.Free;
+  end;
 end;
 
 
@@ -193,8 +223,10 @@ begin
   end;
 end;
 
+
 initialization
 
   RegisterTest(TTestMiscHTTPAPI);
+  TestUIClicker_Proc := nil;
 end.
 

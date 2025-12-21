@@ -50,6 +50,8 @@ type
   public
     constructor Create; override;
   published
+    procedure BeforeAll_AlwaysExecute;
+
     procedure Test_ExecuteClickAction_LeaveMouse;
     procedure Test_ExecuteClickAction_MouseWheel;
     procedure Test_ExecuteClickAction_TestApp_ClickDuration;
@@ -138,6 +140,8 @@ type
     procedure Test_ExecuteEditTemplate_UpdateAction_Plugin_HappyFlow;
     procedure Test_ExecuteEditTemplate_UpdateAction_TwoUpdatedPlugins_HappyFlow;
     procedure Test_ExecuteEditTemplate_UpdateAction_EditTemplate_HappyFlow;
+
+    procedure AfterAll_AlwaysExecute;
   end;
 
 
@@ -146,7 +150,11 @@ implementation
 
 uses
   ClickerActionsClient, ActionsStuff, Controls, ClickerFileProviderClient, ClickerActionProperties,
-  Graphics;
+  Graphics, AsyncProcess, UITestUtils;
+
+
+var
+  TestUIClicker_Proc: TAsyncProcess;
 
 
 constructor TTestLowLevelHTTPAPI.Create;
@@ -159,6 +167,32 @@ end;
 function TTestLowLevelHTTPAPI.GetPluginPath: string;
 begin
   Result := '$AppDir$\..\UIClickerFindWindowsPlugin\lib\' + GetPluginBitnessDirName + '\UIClickerFindWindows.dll';
+end;
+
+
+procedure TTestLowLevelHTTPAPI.BeforeAll_AlwaysExecute;
+var
+  PathToTestUIClicker: string;
+  Response: string;
+  CallTemplateOptions: TClkCallTemplateOptions;
+begin
+  PathToTestUIClicker := ExpandFileName(ExtractFilePath(ParamStr(0)) + '..\UIClicker.exe');
+  TestUIClicker_Proc := CreateUIClickerProcess(PathToTestUIClicker, '--SetExecMode Server --ServerPort 5444');
+
+  GenerateCallTemplateOptions(CallTemplateOptions, '$AppDir$\Tests\TestFiles\OpenActionsWindowToTemplateExecution.clktmpl', '', False);
+  Response := FastReplace_87ToReturn(ExecuteCallTemplateAction(TestServerAddress, CallTemplateOptions, False, False, CREParam_FileLocation_ValueDisk));
+
+  ExpectSuccessfulAction(Response);
+end;
+
+
+procedure TTestLowLevelHTTPAPI.AfterAll_AlwaysExecute;
+begin
+  if TestUIClicker_Proc <> nil then
+  begin
+    TestUIClicker_Proc.Terminate(0);
+    TestUIClicker_Proc.Free;
+  end;
 end;
 
 
@@ -1698,5 +1732,6 @@ end;
 initialization
 
   RegisterTest(TTestLowLevelHTTPAPI);
+  TestUIClicker_Proc := nil;
 end.
 
