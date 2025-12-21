@@ -112,7 +112,6 @@ type
     grpMissingFilesMonitoring: TGroupBox;
     grpAllowedFileExtensionsForServer: TGroupBox;
     grpAllowedFileDirsForServer: TGroupBox;
-    grpVariables: TGroupBox;
     IdHTTPServer1: TIdHTTPServer;
     IdSchedulerOfThreadPool1: TIdSchedulerOfThreadPool;
     imglstCalledTemplates: TImageList;
@@ -138,7 +137,6 @@ type
     lblTopLeftInvalidColor: TLabel;
     memAllowedFileExtensionsForServer: TMemo;
     memAllowedFileDirsForServer: TMemo;
-    memVariables: TMemo;
     MenuItem_RemoveServerAddress: TMenuItem;
     PageControlExecMode: TPageControl;
     PageControlMain: TPageControl;
@@ -219,6 +217,8 @@ type
 
     FFirstDisplaying: Boolean;
     FRecentTemplates: TStringList;
+
+    FBuiltInVariables: TStringList;
 
     FOnReLoadSettings: TOnReLoadSettings;
     FOnCopyControlTextAndClassFromMainWindow: TOnCopyControlTextAndClassFromMainWindow;
@@ -386,6 +386,7 @@ type
 
     procedure HandleOnRemoveServerAddressClick(Sender: TObject);
 
+    procedure PopulateBuiltInVariables;
     procedure CreateRemainingUIComponents;
     function GetClickerActionsArrFrameByStackLevel(AStackLevel: Integer): TfrClickerActionsArr;
 
@@ -806,6 +807,116 @@ begin
 end;
 
 
+procedure TfrmClickerActions.PopulateBuiltInVariables;
+var
+  OSVerNumber, OSVerStr: string;
+  hmod: THandle;
+begin
+  FBuiltInVariables.Add('$Control_Text$=');
+  FBuiltInVariables.Add('$Control_Class$=');
+  FBuiltInVariables.Add('$Control_Handle$=');
+  FBuiltInVariables.Add('$Control_Left$=');
+  FBuiltInVariables.Add('$Control_Top$=');
+  FBuiltInVariables.Add('$Control_Right$=');
+  FBuiltInVariables.Add('$Control_Bottom$=');
+  FBuiltInVariables.Add('$Control_Width$=');
+  FBuiltInVariables.Add('$Control_Height$=');
+  FBuiltInVariables.Add('$Half_Control_Width$=');
+  FBuiltInVariables.Add('$Half_Control_Height$=');
+  FBuiltInVariables.Add('$ExecAction_Err$=');
+  FBuiltInVariables.Add('$LastAction_Status$=');
+  FBuiltInVariables.Add('$LastAction_Skipped$=');
+
+  FBuiltInVariables.Add('$Screen_Width$=' + IntToStr(Screen.Width));
+  FBuiltInVariables.Add('$Screen_Height$=' + IntToStr(Screen.Height));
+  FBuiltInVariables.Add('$Desktop_Width$=' + IntToStr(Screen.DesktopWidth));
+  FBuiltInVariables.Add('$Desktop_Height$=' + IntToStr(Screen.DesktopHeight));
+
+  FBuiltInVariables.Add('$Color_Highlight$=' + IntToHex(GetSysColor(COLOR_HIGHLIGHT), 6));
+  FBuiltInVariables.Add('$Color_BtnFace$=' + IntToHex(GetSysColor(COLOR_BTNFACE), 6));
+  FBuiltInVariables.Add('$Color_ActiveCaption$=' + IntToHex(GetSysColor(COLOR_ACTIVECAPTION), 6));
+  FBuiltInVariables.Add('$Color_InactiveCaption$=' + IntToHex(GetSysColor(COLOR_INACTIVECAPTION), 6));
+  FBuiltInVariables.Add('$Color_Window$=' + IntToHex(GetSysColor(COLOR_WINDOW), 6));
+  FBuiltInVariables.Add('$Color_WindowText$=' + IntToHex(GetSysColor(COLOR_WINDOWTEXT), 6));
+  FBuiltInVariables.Add('$Color_GrayText$=' + IntToHex(GetSysColor(COLOR_GRAYTEXT), 6));
+  FBuiltInVariables.Add('$Color_GradientActiveCaption$=' + IntToHex(GetSysColor(COLOR_GRADIENTACTIVECAPTION), 6));
+  FBuiltInVariables.Add('$Color_GradientInactiveCaption$=' + IntToHex(GetSysColor(COLOR_GRADIENTINACTIVECAPTION), 6));
+  FBuiltInVariables.Add('$Color_ScrollBar$=' + IntToHex(GetSysColor(COLOR_SCROLLBAR), 6));
+  FBuiltInVariables.Add('$Color_3DDkShadow$=' + IntToHex(GetSysColor(COLOR_3DDKSHADOW), 6));
+  FBuiltInVariables.Add('$Color_3DLight$=' + IntToHex(GetSysColor(COLOR_3DLIGHT), 6));
+  FBuiltInVariables.Add('$Color_WindowFrame$=' + IntToHex(GetSysColor(COLOR_WINDOWFRAME), 6));
+
+  {$IFDEF Windows}
+    //See MS docs for how to read Win32MajorVersion. It's not very reliable.
+    OSVerNumber := IntToStr(Win32MajorVersion) + '.' + IntToStr(Win32MinorVersion) + '.' + IntToStr(Win32BuildNumber);
+    OSVerStr := 'Unknown';
+
+    hmod := LoadLibraryEx(PChar(ParamStr(0)), 0, LOAD_LIBRARY_AS_DATAFILE);
+    try
+      if (hmod <> 0) and (FindResource(hmod, MakeIntResource(1), RT_MANIFEST) > 0) then
+      begin
+        //has manifest
+        if (Win32MajorVersion = 6) and (Win32MinorVersion = 3) then
+          OSVerStr := 'Win8.1';
+
+        if (Win32MajorVersion = 6) and (Win32MinorVersion = 2) then
+          OSVerStr := 'Win8';
+
+        if (Win32MajorVersion = 10) {and (Win32MinorVersion = 2)} then
+          OSVerStr := 'Win11';
+
+        if (Win32MajorVersion = 10) {and (Win32MinorVersion = 2)} then
+          OSVerStr := 'Win10';
+      end
+      else
+      begin
+        if (Win32MajorVersion = 6) and (Win32MinorVersion = 2) then
+          OSVerStr := 'Win8.1';  //or Win8 or 10  //returning Win8.1 as it may be found more often
+      end;
+
+      if (Win32MajorVersion = 6) and (Win32MinorVersion = 1) then
+        OSVerStr := 'Win7';
+
+      if (Win32MajorVersion = 6) and (Win32MinorVersion = 0) then
+        OSVerStr := 'WinVista';
+
+      if (Win32MajorVersion = 5) and ((Win32MinorVersion = 1) or (Win32MinorVersion = 2)) then
+        OSVerStr := 'WinXP';
+    finally
+      FreeLibrary(hmod);
+    end;
+  {$ELSE}
+    OSVerNumber := '?';
+    OSVerStr := 'unknown';  //probably Linux
+  {$ENDIF}
+
+  FBuiltInVariables.Add('$OSVerNumber$=' + OSVerNumber);
+  FBuiltInVariables.Add('$OSVer$=' + OSVerStr);
+  FBuiltInVariables.Add('$ExitCode$=');
+  FBuiltInVariables.Add('$AppDir$=' + ExtractFileDir(ParamStr(0)));
+  FBuiltInVariables.Add('$TemplateDir$=' + FFullTemplatesDir);
+  FBuiltInVariables.Add('$SelfTemplateDir$=' + frClickerActionsArrMain.FileName);   //frClickerActionsArrMain.FileName is empty here, because no template is being executed at this point
+
+  {$IFDEF CPU64}
+    FBuiltInVariables.Add('$AppBitness$=x86_64');
+  {$ELSE}
+    FBuiltInVariables.Add('$AppBitness$=i386');
+  {$ENDIF}
+
+  {$IFDEF Windows}
+    {$IFDEF CPU64}
+      FBuiltInVariables.Add('$OSBitness$=win64');
+    {$ELSE}
+      FBuiltInVariables.Add('$OSBitness$=win32');
+    {$ENDIF}
+  {$ENDIF}
+
+  FBuiltInVariables.Add('$SelfActionName$=');
+  FBuiltInVariables.Add('$SelfActionIndex$=-1');
+  FBuiltInVariables.Add('$PluginPath$=');
+end;
+
+
 procedure TfrmClickerActions.CreateRemainingUIComponents;
 var
   MenuItem: TMenuItem;
@@ -858,8 +969,6 @@ end;
 
 procedure TfrmClickerActions.FormCreate(Sender: TObject);
 var
-  OSVerNumber, OSVerStr: string;
-  hmod: THandle;
   AdminStatus: string;
   i: TDisplayGridLineOption;
 begin
@@ -872,6 +981,7 @@ begin
 
   FBMPsDir := '';
   FFullTemplatesDir := 'not set'; //'$AppDir$\ActionTemplates';
+  FBuiltInVariables := TStringList.Create;
 
   FInMemFileSystem := TInMemFileSystem.Create;
   FInMemFileSystem.OnComputeInMemFileHash := HandleOnComputeInMemFileHash;
@@ -973,97 +1083,11 @@ begin
 
   cmbImgPreviewGridType.ItemIndex := Ord(loDot);
 
-  memVariables.Lines.Add('$Screen_Width$=' + IntToStr(Screen.Width));
-  memVariables.Lines.Add('$Screen_Height$=' + IntToStr(Screen.Height));
-  memVariables.Lines.Add('$Desktop_Width$=' + IntToStr(Screen.DesktopWidth));
-  memVariables.Lines.Add('$Desktop_Height$=' + IntToStr(Screen.DesktopHeight));
+  PopulateBuiltInVariables;
 
-  memVariables.Lines.Add('$Color_Highlight$=' + IntToHex(GetSysColor(COLOR_HIGHLIGHT), 6));
-  memVariables.Lines.Add('$Color_BtnFace$=' + IntToHex(GetSysColor(COLOR_BTNFACE), 6));
-  memVariables.Lines.Add('$Color_ActiveCaption$=' + IntToHex(GetSysColor(COLOR_ACTIVECAPTION), 6));
-  memVariables.Lines.Add('$Color_InactiveCaption$=' + IntToHex(GetSysColor(COLOR_INACTIVECAPTION), 6));
-  memVariables.Lines.Add('$Color_Window$=' + IntToHex(GetSysColor(COLOR_WINDOW), 6));
-  memVariables.Lines.Add('$Color_WindowText$=' + IntToHex(GetSysColor(COLOR_WINDOWTEXT), 6));
-  memVariables.Lines.Add('$Color_GrayText$=' + IntToHex(GetSysColor(COLOR_GRAYTEXT), 6));
-  memVariables.Lines.Add('$Color_GradientActiveCaption$=' + IntToHex(GetSysColor(COLOR_GRADIENTACTIVECAPTION), 6));
-  memVariables.Lines.Add('$Color_GradientInactiveCaption$=' + IntToHex(GetSysColor(COLOR_GRADIENTINACTIVECAPTION), 6));
-  memVariables.Lines.Add('$Color_ScrollBar$=' + IntToHex(GetSysColor(COLOR_SCROLLBAR), 6));
-  memVariables.Lines.Add('$Color_3DDkShadow$=' + IntToHex(GetSysColor(COLOR_3DDKSHADOW), 6));
-  memVariables.Lines.Add('$Color_3DLight$=' + IntToHex(GetSysColor(COLOR_3DLIGHT), 6));
-  memVariables.Lines.Add('$Color_WindowFrame$=' + IntToHex(GetSysColor(COLOR_WINDOWFRAME), 6));
-
-  {$IFDEF Windows}
-    //See MS docs for how to read Win32MajorVersion. It's not very reliable.
-    OSVerNumber := IntToStr(Win32MajorVersion) + '.' + IntToStr(Win32MinorVersion) + '.' + IntToStr(Win32BuildNumber);
-    OSVerStr := 'Unknown';
-
-    hmod := LoadLibraryEx(PChar(ParamStr(0)), 0, LOAD_LIBRARY_AS_DATAFILE);
-    try
-      if (hmod <> 0) and (FindResource(hmod, MakeIntResource(1), RT_MANIFEST) > 0) then
-      begin
-        //has manifest
-        if (Win32MajorVersion = 6) and (Win32MinorVersion = 3) then
-          OSVerStr := 'Win8.1';
-
-        if (Win32MajorVersion = 6) and (Win32MinorVersion = 2) then
-          OSVerStr := 'Win8';
-
-        if (Win32MajorVersion = 10) {and (Win32MinorVersion = 2)} then
-          OSVerStr := 'Win11';
-
-        if (Win32MajorVersion = 10) {and (Win32MinorVersion = 2)} then
-          OSVerStr := 'Win10';
-      end
-      else
-      begin
-        if (Win32MajorVersion = 6) and (Win32MinorVersion = 2) then
-          OSVerStr := 'Win8.1';  //or Win8 or 10  //returning Win8.1 as it may be found more often
-      end;
-
-      if (Win32MajorVersion = 6) and (Win32MinorVersion = 1) then
-        OSVerStr := 'Win7';
-
-      if (Win32MajorVersion = 6) and (Win32MinorVersion = 0) then
-        OSVerStr := 'WinVista';
-
-      if (Win32MajorVersion = 5) and ((Win32MinorVersion = 1) or (Win32MinorVersion = 2)) then
-        OSVerStr := 'WinXP';
-    finally
-      FreeLibrary(hmod);
-    end;
-  {$ELSE}
-    OSVerNumber := '?';
-    OSVerStr := 'unknown';  //probably Linux
-  {$ENDIF}
-
-  memVariables.Lines.Add('$OSVerNumber$=' + OSVerNumber);
-  memVariables.Lines.Add('$OSVer$=' + OSVerStr);
-  memVariables.Lines.Add('$ExitCode$=');
-  memVariables.Lines.Add('$AppDir$=' + ExtractFileDir(ParamStr(0)));
-  memVariables.Lines.Add('$TemplateDir$=' + FFullTemplatesDir);
-  memVariables.Lines.Add('$SelfTemplateDir$=' + frClickerActionsArrMain.FileName);   //frClickerActionsArrMain.FileName is empty here, because no template is being executed at this point
-
-  {$IFDEF CPU64}
-    memVariables.Lines.Add('$AppBitness$=x86_64');
-  {$ELSE}
-    memVariables.Lines.Add('$AppBitness$=i386');
-  {$ENDIF}
-
-  {$IFDEF Windows}
-    {$IFDEF CPU64}
-      memVariables.Lines.Add('$OSBitness$=win64');
-    {$ELSE}
-      memVariables.Lines.Add('$OSBitness$=win32');
-    {$ENDIF}
-  {$ENDIF}
-
-  memVariables.Lines.Add('$SelfActionName$=');
-  memVariables.Lines.Add('$SelfActionIndex$=-1');
-  memVariables.Lines.Add('$PluginPath$=');
-
-  frClickerActionsArrExperiment1.SetVariables(memVariables.Lines);
-  frClickerActionsArrExperiment2.SetVariables(memVariables.Lines);
-  frClickerActionsArrMain.SetVariables(memVariables.Lines);
+  frClickerActionsArrExperiment1.SetVariables(FBuiltInVariables);
+  frClickerActionsArrExperiment2.SetVariables(FBuiltInVariables);
+  frClickerActionsArrMain.SetVariables(FBuiltInVariables);
 
   frClickerActionsArrExperiment1.OnCallTemplate := nil;
   frClickerActionsArrExperiment2.OnCallTemplate := nil;
@@ -1109,9 +1133,9 @@ begin
   frClickerActionsArrExperiment2.OnExecuteRemoteActionAtIndex := nil;
   //frClickerActionsArrMain.OnExecuteRemoteActionAtIndex := frClickerActionsArrOnExecuteRemoteActionAtIndex;
 
-  frClickerActionsArrExperiment1.frClickerActions.PredefinedVarCount := memVariables.Lines.Count;
-  frClickerActionsArrExperiment2.frClickerActions.PredefinedVarCount := memVariables.Lines.Count;
-  frClickerActionsArrMain.frClickerActions.PredefinedVarCount := memVariables.Lines.Count;
+  frClickerActionsArrExperiment1.frClickerActions.PredefinedVarCount := FBuiltInVariables.Count;
+  frClickerActionsArrExperiment2.frClickerActions.PredefinedVarCount := FBuiltInVariables.Count;
+  frClickerActionsArrMain.frClickerActions.PredefinedVarCount := FBuiltInVariables.Count;
 
   frClickerActionsArrExperiment1.frClickerActions.PasteDebugValuesListFromMainExecutionList1.Enabled := True;
   frClickerActionsArrExperiment2.frClickerActions.PasteDebugValuesListFromMainExecutionList1.Enabled := True;
@@ -1356,6 +1380,8 @@ begin
   finally
     FreeAndNil(frClickerActionsArrMain);
   end;
+
+  FreeAndNil(FBuiltInVariables);
 end;
 
 
@@ -1972,7 +1998,7 @@ begin
         NewFrame.spdbtnPlaySelectedAction.Enabled := False;
         NewFrame.spdbtnPlayAllActions.Enabled := False;
         NewFrame.spdbtnStopPlaying.Enabled := True;
-        NewFrame.frClickerActions.PredefinedVarCount := memVariables.Lines.Count;
+        NewFrame.frClickerActions.PredefinedVarCount := FBuiltInVariables.Count;
 
         if TfrClickerActionsArr(Sender).chkEnableDebuggerKeys.Checked then
           NewFrame.chkEnableDebuggerKeys.Checked := True;

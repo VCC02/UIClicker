@@ -85,49 +85,10 @@ object frmClickerActions: TfrmClickerActions
         TabOrder = 1
         OnClick = btnBrowseActionTemplatesDirClick
       end
-      object grpVariables: TGroupBox
-        Left = 635
-        Height = 412
-        Top = 0
-        Width = 226
-        Anchors = [akTop, akRight, akBottom]
-        Caption = 'Available Variables / Replacements'
-        ClientHeight = 394
-        ClientWidth = 222
-        TabOrder = 2
-        object memVariables: TMemo
-          Left = 10
-          Height = 368
-          Top = 0
-          Width = 203
-          Anchors = [akTop, akLeft, akRight, akBottom]
-          Color = clBtnFace
-          Lines.Strings = (
-            '$Control_Text$='
-            '$Control_Class$='
-            '$Control_Handle$='
-            '$Control_Left$='
-            '$Control_Top$='
-            '$Control_Right$='
-            '$Control_Bottom$='
-            '$Control_Width$='
-            '$Control_Height$='
-            '$Half_Control_Width$='
-            '$Half_Control_Height$='
-            '$ExecAction_Err$='
-            '$LastAction_Status$='
-            '$LastAction_Skipped$='
-          )
-          ReadOnly = True
-          ScrollBars = ssBoth
-          TabOrder = 0
-          WordWrap = False
-        end
-      end
       object cmbExecMode: TComboBox
         Left = 8
         Height = 19
-        Hint = '[in work]'#13#10#13#10'Local - both Clicker and the target applications are running on the same machine.'#13#10'Client - this instance connects to a remote Clicker instance, which is running in server mode and it interacts with target applications.'#13#10'Server - this instance directly interacts with target applications, by receiving commands from a client instance.'#13#10#13#10'When changing mode from server to local or client, and the server module is active, it is automatically deactivated.'#13#10'When selecting client mode, a new thread is created, for polling the server for missing files (templates and bitmaps).'#13#10'This monitoring thread uses a separate connection and can work in "keep-alive" mode if the server allows it.'
+        Hint = 'Local - both Clicker and the target applications are running on the same machine.'#13#10'Client - this instance connects to a remote Clicker instance, which is running in server mode and it interacts with target applications.'#13#10'Server - this instance directly interacts with target applications, by receiving commands from a client instance.'#13#10#13#10'When changing mode from server to local or client, and the server module is active, it is automatically deactivated.'#13#10'When selecting client mode, a new thread is created, for polling the server for missing files (templates and bitmaps).'#13#10'This monitoring thread uses a separate connection and can work in "keep-alive" mode if the server allows it.'
         Top = 87
         Width = 84
         ItemHeight = 13
@@ -140,7 +101,7 @@ object frmClickerActions: TfrmClickerActions
         ParentShowHint = False
         ShowHint = True
         Style = csOwnerDrawFixed
-        TabOrder = 3
+        TabOrder = 2
         Text = 'Local'
         OnChange = cmbExecModeChange
       end
@@ -161,7 +122,7 @@ object frmClickerActions: TfrmClickerActions
         ParentShowHint = False
         ShowHint = True
         TabIndex = 0
-        TabOrder = 4
+        TabOrder = 3
         object TabSheetLocalMode: TTabSheet
           Caption = 'Local mode'
           ClientHeight = 118
@@ -371,7 +332,7 @@ object frmClickerActions: TfrmClickerActions
         Caption = 'Allowed file extensions for server'
         ClientHeight = 87
         ClientWidth = 181
-        TabOrder = 5
+        TabOrder = 4
         object memAllowedFileExtensionsForServer: TMemo
           Left = 8
           Height = 72
@@ -398,7 +359,7 @@ object frmClickerActions: TfrmClickerActions
         Caption = 'Allowed file directories for server'
         ClientHeight = 110
         ClientWidth = 268
-        TabOrder = 6
+        TabOrder = 5
         object memAllowedFileDirsForServer: TMemo
           Left = 8
           Height = 96
@@ -420,10 +381,11 @@ object frmClickerActions: TfrmClickerActions
         Caption = 'Missing files monitoring'
         ClientHeight = 40
         ClientWidth = 177
-        TabOrder = 7
+        TabOrder = 6
         object pnlMissingFilesRequest: TPanel
           Left = 8
           Height = 26
+          Hint = 'In client mode, it blinks when the "Missing files montoring" thread is active.'#13#10'In server mode, it blinks when it receives ""Missing files" requests from clients.'
           Top = 8
           Width = 66
           Caption = 'Request'
@@ -434,6 +396,8 @@ object frmClickerActions: TfrmClickerActions
           ParentBackground = False
           ParentColor = False
           ParentFont = False
+          ParentShowHint = False
+          ShowHint = True
           TabOrder = 0
         end
         object chkDisplayActivity: TCheckBox
@@ -449,64 +413,64 @@ object frmClickerActions: TfrmClickerActions
         end
       end
       object chkStayOnTop: TCheckBox
-        Left = 549
+        Left = 584
         Height = 17
         Top = 0
         Width = 74
         Anchors = [akTop, akRight]
         Caption = 'Stay on top'
-        TabOrder = 8
+        TabOrder = 7
         OnClick = chkStayOnTopClick
       end
       object chkAutoSwitchToExecutingTab: TCheckBox
-        Left = 635
+        Left = 584
         Height = 19
         Hint = 'When checked, the current execution tab is focused (current subtemplate).'#13#10'Not showing the current execution tab, may be a performance improvement when there is no GPU acceleration available (e.g. on VMs).'#13#10'There is also a performance gain when executing looped CallTemplate actions.'#13#10'Automatically switching tabs, is needed for debbugging, to display the current action.'
-        Top = 416
-        Width = 155
-        Anchors = [akRight, akBottom]
+        Top = 24
+        Width = 168
+        Anchors = [akTop, akRight]
         AutoSize = False
         Caption = 'Autoswitch to executing tab'
         Checked = True
         ParentShowHint = False
         ShowHint = True
         State = cbChecked
-        TabOrder = 9
+        TabOrder = 8
         OnChange = chkAutoSwitchToExecutingTabChange
       end
       object chkAutoEnableSwitchingTabsOnDebugging: TCheckBox
-        Left = 635
+        Left = 584
         Height = 19
         Hint = 'When enabled, the execution tabs are switched, even if autoswitching is off.'
-        Top = 440
-        Width = 214
-        Anchors = [akRight, akBottom]
+        Top = 48
+        Width = 230
+        Anchors = [akTop, akRight]
         AutoSize = False
         Caption = 'Autoenable switching tabs on debugging'
         Checked = True
         ParentShowHint = False
         ShowHint = True
         State = cbChecked
-        TabOrder = 10
+        TabOrder = 9
         OnChange = chkAutoEnableSwitchingTabsOnDebuggingChange
       end
       object cmbImgPreviewGridType: TComboBox
-        Left = 635
+        Left = 584
         Height = 19
-        Top = 495
+        Top = 103
         Width = 115
-        Anchors = [akRight, akBottom]
+        Anchors = [akTop, akRight]
         ItemHeight = 13
         Style = csOwnerDrawFixed
-        TabOrder = 11
+        TabOrder = 10
         OnChange = cmbImgPreviewGridTypeChange
       end
       object lblGridType: TLabel
-        Left = 635
+        Left = 584
         Height = 13
-        Top = 478
+        Top = 86
         Width = 92
-        Anchors = [akRight, akBottom]
+        Anchors = [akTop, akRight]
         Caption = 'Displayed grid type'
       end
       object grpSelectionColors: TGroupBox
@@ -517,7 +481,7 @@ object frmClickerActions: TfrmClickerActions
         Caption = 'Selection colors'
         ClientHeight = 166
         ClientWidth = 236
-        TabOrder = 12
+        TabOrder = 11
         object colcmbTopLeftValid: TColorBox
           Left = 104
           Height = 22
@@ -599,7 +563,7 @@ object frmClickerActions: TfrmClickerActions
         Caption = 'Text rendering in browser'
         ClientHeight = 34
         ClientWidth = 236
-        TabOrder = 13
+        TabOrder = 12
         object chkAutoClose: TCheckBox
           Left = 8
           Height = 17
@@ -623,7 +587,7 @@ object frmClickerActions: TfrmClickerActions
         Caption = 'Extra logging'
         ClientHeight = 87
         ClientWidth = 236
-        TabOrder = 14
+        TabOrder = 13
         object chkExtraLoggingFindControl: TCheckBox
           Left = 8
           Height = 17
@@ -707,8 +671,8 @@ object frmClickerActions: TfrmClickerActions
     end
   end
   object imglstMainPage: TImageList
-    Left = 596
-    Top = 88
+    Left = 504
+    Top = 8
     Bitmap = {
       4C7A070000001000000010000000550300000000000078DAED964B6B135114C7
       F3310AE2A2F61B74D585D975514AA074E322EDC2BD42BBEAA659F8C045A01444

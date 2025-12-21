@@ -91,6 +91,9 @@ type
     function GetFontQualityReplacement: string;
     procedure SetFontQualityReplacement(Value: string);
 
+    function GetFontQualityUsesReplacement: Boolean;
+    procedure SetFontQualityUsesReplacement(Value: Boolean);
+
     function GetMatchBitmapTextFontQualityIndex: Integer;
     procedure SetMatchBitmapTextFontQualityIndex(Value: Integer);
 
@@ -154,6 +157,7 @@ type
     property MatchBitmapTextFontName: string read GetMatchBitmapTextFontName write SetMatchBitmapTextFontName;
     property MatchBitmapTextSize: string read GetMatchBitmapTextSize write SetMatchBitmapTextSize;
     property FontQualityReplacement: string read GetFontQualityReplacement write SetFontQualityReplacement;  //this can be one of the available font qualities or it can be var/replacement
+    property FontQualityUsesReplacement: Boolean read GetFontQualityUsesReplacement write SetFontQualityUsesReplacement;
     property MatchBitmapTextFontQualityIndex: Integer read GetMatchBitmapTextFontQualityIndex write SetMatchBitmapTextFontQualityIndex;
     property Bold: Boolean read GetBold write SetBold;
     property Italic: Boolean read GetItalic write SetItalic;
@@ -861,6 +865,18 @@ end;
 procedure TFontProfile.SetFontQualityReplacement(Value: string);
 begin
   FFindControlMatchBitmapText^.FontQualityReplacement := Value
+end;
+
+
+function TFontProfile.GetFontQualityUsesReplacement: Boolean;
+begin
+  Result := FFindControlMatchBitmapText^.FontQualityUsesReplacement;
+end;
+
+
+procedure TFontProfile.SetFontQualityUsesReplacement(Value: Boolean);
+begin
+  FFindControlMatchBitmapText^.FontQualityUsesReplacement := Value;
 end;
 
 
@@ -1995,8 +2011,11 @@ begin
   //FBMPTextProfiles[n].BGColor := HexToInt(EvaluateReplacements(ANewProfile.BackgroundColor));
   FBMPTextProfiles[n].MatchBitmapTextFontName := ANewProfile.FontName;
   FBMPTextProfiles[n].MatchBitmapTextSize := IntToStr(ANewProfile.FontSize);
-  FBMPTextProfiles[n].FontQualityReplacement := ANewProfile.FontQualityReplacement;
+
   FBMPTextProfiles[n].MatchBitmapTextFontQualityIndex := Ord(ANewProfile.FontQuality);
+  FBMPTextProfiles[n].FontQualityUsesReplacement := ANewProfile.FontQualityUsesReplacement;
+  FBMPTextProfiles[n].FontQualityReplacement := ANewProfile.FontQualityReplacement;
+
   FBMPTextProfiles[n].Bold := ANewProfile.Bold;
   FBMPTextProfiles[n].Italic := ANewProfile.Italic;
   FBMPTextProfiles[n].Underline := ANewProfile.Underline;

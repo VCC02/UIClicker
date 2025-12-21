@@ -5910,7 +5910,7 @@ begin
       if Request > '' then
         Request := Request + #13#10;  //Add CRLF only if there are multiple selected actions.
 
-      Request := Request + GenerateClickerClientPascalRequestFromAction(FClkActions[Node^.Index], AllProperties, AllDebugging);
+      Request := Request + GenerateClickerClientPascalRequestFromAction(FClkActions[Node^.Index], AllProperties, AllDebugging, FFileName);
     end; //selected
 
     Node := Node^.NextSibling;
@@ -5971,7 +5971,7 @@ begin
       if Request > '' then
         Request := Request + #13#10;  //Add CRLF only if there are multiple selected actions.
 
-      Request := Request + GenerateClickerClientPythonRequestFromAction(FClkActions[Node^.Index], AllProperties, AllDebugging);
+      Request := Request + GenerateClickerClientPythonRequestFromAction(FClkActions[Node^.Index], AllProperties, AllDebugging, FFileName);
     end; //selected
 
     Node := Node^.NextSibling;

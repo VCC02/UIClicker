@@ -362,7 +362,7 @@ type
 
     FOnControlsModified: TNotifyEvent;
     FControlsModified: Boolean;
-    FPredefinedVarCount: Integer; //number of predefined variables from memVariables on form
+    FPredefinedVarCount: Integer; //number of predefined variables
     FDebuggingInfoAvailable: Boolean;
     FFullTemplatesDir: string;
     FSetVarContent_Vars: TStringList;

@@ -34,11 +34,11 @@ uses
 
 function GenerateHTTPRequestFromAction(var AAction: TClkActionRec; AWithAllProperties, AWithDebugging: Boolean; AListeningPort: Word): string;
 
-function GenerateClickerClientPascalRequestFromAction(var AAction: TClkActionRec; AWithAllProperties, AWithDebugging: Boolean): string;
+function GenerateClickerClientPascalRequestFromAction(var AAction: TClkActionRec; AWithAllProperties, AWithDebugging: Boolean; ATemplateName: string): string;
 function GenerateClickerClientPascalRequestCallFromAction(var AAction: TClkActionRec; AWithAllProperties, AWithDebugging: Boolean): string;
 function GenerateGetVarValueFromResponsePascalFunc: string;
 
-function GenerateClickerClientPythonRequestFromAction(var AAction: TClkActionRec; AWithAllProperties, AWithDebugging: Boolean): string;
+function GenerateClickerClientPythonRequestFromAction(var AAction: TClkActionRec; AWithAllProperties, AWithDebugging: Boolean; ATemplateName: string): string;
 function GenerateClickerClientPythonRequestCallFromAction(var AAction: TClkActionRec; AWithAllProperties, AWithDebugging: Boolean; AIncludeDllFuncsLoading: Boolean = False): string;
 function GenerateGetVarValueFromResponsePythonFunc: string;
 
@@ -293,7 +293,7 @@ begin
 end;
 
 
-function GenerateClickerClientPascalRequestFromAction(var AAction: TClkActionRec; AWithAllProperties, AWithDebugging: Boolean): string;
+function GenerateClickerClientPascalRequestFromAction(var AAction: TClkActionRec; AWithAllProperties, AWithDebugging: Boolean; ATemplateName: string): string;
 var
   ActionType: TClkAction;
   Request, Properties, PropertyDataTypes: string;
@@ -307,9 +307,12 @@ begin
   ActionType := AAction.ActionOptions.Action;
   ActionTypeStr := CClkActionStr[ActionType];
 
+  if ATemplateName > '' then
+    ATemplateName := ' from ' + ExtractFileName(ATemplateName);
+
   FuncName := FixFuncNameToValid(AAction.ActionOptions.ActionName);
   Request := '';
-  Request := Request + 'function ' + FuncName + ': string; // ' + AAction.ActionOptions.ActionName + #13#10;
+  Request := Request + 'function ' + FuncName + ': string; // ' + AAction.ActionOptions.ActionName + ATemplateName + #13#10;
   Request := Request + 'var' + #13#10;
   Request := Request + '  ' + ActionTypeStr + 'API: TClk' + ActionTypeStr + 'OptionsAPI;' + #13#10;
   Request := Request + '  ' + ActionTypeStr + ': TClk' + ActionTypeStr + 'Options;' + #13#10;
@@ -597,7 +600,7 @@ begin
 end;
 
 
-function GenerateClickerClientPythonRequestFromAction(var AAction: TClkActionRec; AWithAllProperties, AWithDebugging: Boolean): string;
+function GenerateClickerClientPythonRequestFromAction(var AAction: TClkActionRec; AWithAllProperties, AWithDebugging: Boolean; ATemplateName: string): string;
 var
   ActionType: TClkAction;
   Request, Properties, PropertyDataTypes: string;
@@ -611,9 +614,12 @@ begin
   ActionType := AAction.ActionOptions.Action;
   ActionTypeStr := CClkActionStr[ActionType];
 
+  if ATemplateName > '' then
+    ATemplateName := ' from ' + ExtractFileName(ATemplateName);
+
   FuncName := FixFuncNameToValid(AAction.ActionOptions.ActionName);
   Request := '';
-  Request := Request + 'def ' + FuncName + '(ADllFuncs): # ' + AAction.ActionOptions.ActionName + #13#10;
+  Request := Request + 'def ' + FuncName + '(ADllFuncs): # ' + AAction.ActionOptions.ActionName + ATemplateName + #13#10;
   Request := Request + '    #Python code in work...' + #13#10;
 
   Request := StringReplace(Request, #5#6, ' ', [rfReplaceAll]);
