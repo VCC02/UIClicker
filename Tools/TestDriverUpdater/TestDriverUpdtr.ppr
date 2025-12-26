@@ -75,7 +75,9 @@ end;
 var
   Content: TMemoryStream;
   SourceFileName, DestinationFileName: string;
+  ReturnError: Boolean;
 begin
+  ReturnError := False;
   Content := TMemoryStream.Create;
   try
     SourceFileName := ExtractFilePath(ParamStr(0)) + '..' + PathDelim + '..' + PathDelim + 'UIClicker' {$IFDEF Windows} + '.exe' {$ENDIF};
@@ -102,17 +104,20 @@ begin
 
     try
       Content.SaveToFile(DestinationFileName);
+      WriteLn('TestDriver UIClicker updated successfully.');
     except
       on E: Exception do
       begin
+        ReturnError := True;
         WriteLn('Error saving destination file: ' + ExpandFileName(DestinationFileName));
         WriteLn(E.Message);
       end;
     end;
-
-    WriteLn('TestDriver UIClicker updated successfully.');
   finally
     Content.Free;
   end;
+
+  if ReturnError then
+    Halt(1);
 end.
 
