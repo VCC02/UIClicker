@@ -419,6 +419,10 @@
         <Filename Value="ClickerActionsCodeGen.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
+      <Unit>
+        <Filename Value="ClickerUtils\ClickerCLUtils.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

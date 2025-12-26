@@ -36,7 +36,7 @@ uses
 type
   TOIMenuItemData = record
     OwnerMenu: TPopupMenu;
-    NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex: Integer;
+    NodeLevel, CategoryIndex, PropertyIndex, PropertyItemIndex, UserDataIndex: Integer;
     MenuItemCaption: string;
     TempEditingAction: PClkActionRec;
   end;

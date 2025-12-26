@@ -287,7 +287,14 @@ begin
             'RenderingInBrowserSettings.ActionForSendingRequest' + '=' + AFindSubControlOptions.RenderingInBrowserSettings.ActionForSendingRequest + '&' +
             'RenderingInBrowserSettings.UsePluginForReceivingBitmaps' + '=' + IntToStr(Ord(AFindSubControlOptions.RenderingInBrowserSettings.UsePluginForReceivingBitmaps)) + '&' +
             'RenderingInBrowserSettings.PluginActionForReceivingBitmaps' + '=' + AFindSubControlOptions.RenderingInBrowserSettings.PluginActionForReceivingBitmaps + '&' +
-            'RenderingInBrowserSettings.FontSizeUnit' + '=' + IntToStr(Ord(AFindSubControlOptions.RenderingInBrowserSettings.FontSizeUnit))
+            'RenderingInBrowserSettings.FontSizeUnit' + '=' + IntToStr(Ord(AFindSubControlOptions.RenderingInBrowserSettings.FontSizeUnit)) + '&' +
+
+            'GPUSettings.OpenCLPath' + '=' + AFindSubControlOptions.GPUSettings.OpenCLPath + '&' +
+            'GPUSettings.TargetPlatform' + '=' + AFindSubControlOptions.GPUSettings.TargetPlatform + '&' +
+            'GPUSettings.TargetDevice' + '=' + AFindSubControlOptions.GPUSettings.TargetDevice + '&' +
+            'GPUSettings.TargetPlatformIDType' + '=' + IntToStr(Ord(AFindSubControlOptions.GPUSettings.TargetPlatformIDType)) + '&' +
+            'GPUSettings.TargetDeviceIDType' + '=' + IntToStr(Ord(AFindSubControlOptions.GPUSettings.TargetDeviceIDType)) + '&' +
+            'GPUSettings.ExecutionAvailability' + '=' + IntToStr(Ord(AFindSubControlOptions.GPUSettings.ExecutionAvailability))
             ;
 end;
 
@@ -613,7 +620,14 @@ begin
             'RenderingInBrowserSettings.ActionForSendingRequest' + '=' + CDTString + '&' +
             'RenderingInBrowserSettings.UsePluginForReceivingBitmaps' + '=' + CDTBool + '&' +
             'RenderingInBrowserSettings.PluginActionForReceivingBitmaps' + '=' + CDTString + '&' +
-            'RenderingInBrowserSettings.FontSizeUnit' + '=' + CDTEnum
+            'RenderingInBrowserSettings.FontSizeUnit' + '=' + CDTEnum + '&' +
+
+            'GPUSettings.OpenCLPath' + '=' + CDTString + '&' +
+            'GPUSettings.TargetPlatform' + '=' + CDTString + '&' +
+            'GPUSettings.TargetDevice' + '=' + CDTString + '&' +
+            'GPUSettings.TargetPlatformIDType' + '=' + CDTEnum + '&' +
+            'GPUSettings.TargetDeviceIDType' + '=' + CDTEnum + '&' +
+            'GPUSettings.ExecutionAvailability' + '=' + CDTEnum
             ;
 end;
 
@@ -997,6 +1011,9 @@ var
   Temp_RenderingRequestType: Integer;
   Temp_ReceivingBitmapsTimeout: Integer;
   Temp_FontSizeUnit: Integer;
+  Temp_TargetPlatformIDType: Integer;
+  Temp_TargetDeviceIDType: Integer;
+  Temp_ExecutionAvailability: Integer;
   i: Integer;
   Prefix: string;
 begin
@@ -1161,6 +1178,33 @@ begin
     end;
   end;
 
+  Temp_TargetPlatformIDType := StrToIntDef(AListOfFindSubControlOptionsParams.Values['GPUSettings.TargetPlatformIDType'], 0);
+  if (Temp_TargetPlatformIDType < 0) or (Temp_TargetPlatformIDType > Ord(High(TTargetPlatformIDType))) then
+  begin
+    Result := 'TargetPlatformIDType is out of range.';
+    Exit;
+  end;
+
+  Temp_TargetPlatformIDType := StrToIntDef(AListOfFindSubControlOptionsParams.Values['GPUSettings.TargetPlatformIDType'], 0);
+  if (Temp_TargetPlatformIDType < 0) or (Temp_TargetPlatformIDType > Ord(High(TTargetPlatformIDType))) then
+  begin
+    Result := 'TargetPlatformIDType is out of range.';
+    Exit;
+  end;
+
+  Temp_TargetDeviceIDType := StrToIntDef(AListOfFindSubControlOptionsParams.Values['GPUSettings.TargetDeviceIDType'], 0);
+  if (Temp_TargetDeviceIDType < 0) or (Temp_TargetDeviceIDType > Ord(High(TTargetDeviceIDType))) then
+  begin
+    Result := 'TargetDeviceIDType is out of range.';
+    Exit;
+  end;
+
+  Temp_ExecutionAvailability := StrToIntDef(AListOfFindSubControlOptionsParams.Values['GPUSettings.ExecutionAvailability'], 0);
+  if (Temp_ExecutionAvailability < 0) or (Temp_ExecutionAvailability > Ord(High(TGPUExecutionAvailability))) then
+  begin
+    Result := 'ExecutionAvailability is out of range.';
+    Exit;
+  end;
 
   AFindSubControlOptions.MatchBitmapFiles := FastReplace_45ToReturn(AListOfFindSubControlOptionsParams.Values['MatchBitmapFiles']); //ListOfStrings
   AFindSubControlOptions.MatchBitmapAlgorithm := TMatchBitmapAlgorithm(Temp_MatchBitmapAlgorithm);
@@ -1239,6 +1283,13 @@ begin
   AFindSubControlOptions.RenderingInBrowserSettings.UsePluginForReceivingBitmaps := AListOfFindSubControlOptionsParams.Values['RenderingInBrowserSettings.UsePluginForReceivingBitmaps'] = '1';
   AFindSubControlOptions.RenderingInBrowserSettings.PluginActionForReceivingBitmaps := AListOfFindSubControlOptionsParams.Values['PluginActionForReceivingBitmaps.RenderingRequestType'];
   AFindSubControlOptions.RenderingInBrowserSettings.FontSizeUnit := TFontSizeUnit(Temp_FontSizeUnit);
+
+  AFindSubControlOptions.GPUSettings.OpenCLPath := AListOfFindSubControlOptionsParams.Values['GPUSettings.OpenCLPath'];
+  AFindSubControlOptions.GPUSettings.TargetPlatform := AListOfFindSubControlOptionsParams.Values['GPUSettings.TargetPlatform'];
+  AFindSubControlOptions.GPUSettings.TargetDevice := AListOfFindSubControlOptionsParams.Values['GPUSettings.TargetDevice'];
+  AFindSubControlOptions.GPUSettings.TargetPlatformIDType := TTargetPlatformIDType(Temp_TargetPlatformIDType);
+  AFindSubControlOptions.GPUSettings.TargetDeviceIDType := TTargetDeviceIDType(Temp_TargetDeviceIDType);
+  AFindSubControlOptions.GPUSettings.ExecutionAvailability := TGPUExecutionAvailability(Temp_ExecutionAvailability);
 
   AActionOptions.ActionName := AListOfFindSubControlOptionsParams.Values[CPropertyName_ActionName];
   AActionOptions.ActionTimeout := Temp_ActionTimeout;
@@ -1620,6 +1671,12 @@ begin
   AFindSubControlOptions.RenderingInBrowserSettings.UsePluginForReceivingBitmaps := False;
   AFindSubControlOptions.RenderingInBrowserSettings.PluginActionForReceivingBitmaps := '';
   AFindSubControlOptions.RenderingInBrowserSettings.FontSizeUnit := fsuPt;
+  AFindSubControlOptions.GPUSettings.OpenCLPath := '';
+  AFindSubControlOptions.GPUSettings.TargetPlatform := '';
+  AFindSubControlOptions.GPUSettings.TargetDevice := '';
+  AFindSubControlOptions.GPUSettings.TargetPlatformIDType := tpitIndex;
+  AFindSubControlOptions.GPUSettings.TargetDeviceIDType := tditIndex;
+  AFindSubControlOptions.GPUSettings.ExecutionAvailability := eaOpenCL3Only;
 
   SetLength(AFindSubControlOptions.MatchBitmapText, AFindSubControlProfilesCount);
 

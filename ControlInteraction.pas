@@ -76,6 +76,19 @@ type
     MatchByHistogramNumericSettings: TMatchByHistogramNumericSettings;
     CropFromScreenshot: Boolean;
     ThreadCount: Integer;
+
+    OpenCLPath: string;
+    GPUPlatformIndex: Integer;
+    GPUDeviceIndex: Integer;
+    GPUExecutionAvailability: TGPUExecutionAvailability;
+    GPUIncludeDashG: Boolean; //when True, clBuildProgram is called with an additional build option, "-g". In case of an error, this allows getting detailed info. Var: $GPUIncludeDashG$
+    GPUSlaveQueueFromDevice: Boolean; //when True, the SlaveQueue variable, from the SlideSearch kernel, is assigned in the kernel itself. Var: $SlaveQueueFromDevice$
+    GPUUseAllKernelsEvent: Boolean; //when True, the SlideSearch kernel uses AllKernelsEvent variable, instead of AllEvents variable. Var: $UseAllKernelsEvent$
+    GPUNdrangeNoLocalParam: Boolean; //when True, then ndrange_1D call is made with two arguments (Global). By default, it is called with (Global, Local). Var: $NdrangeNoLocalParam$
+    GPUUseEventsInEnqueueKernel: Boolean; //when True, enqueue_kernel is called with 3 additional arguments. By default, it is True, even if undefined. Var: $UseEventsInEnqueueKernel$
+    GPUWaitForAllKernelsToBeDone: Boolean; //when True, the main kernel waits for all "generated" kernels to be done. By default, it is True, even if undefined. Var: $WaitForAllKernelsToBeDone$
+    GPUReleaseFinalEventAtKernelEnd: Boolean; //when True, the release_event(FinalEvent) call, from the main kernel, is done once, at the end. Var: $ReleaseFinalEventAtKernelEnd$
+    GPUIgnoreExecutionAvailability: Boolean; //when True, the ExecutionAvailability property is ignored. If a feature required (at least) a specific OpenCL version, and it is not available, an error should be displayed. Var: $IgnoreExecutionAvailability$
   end;
 
 
@@ -846,6 +859,16 @@ function MatchByBitmap(Algorithm: TMatchBitmapAlgorithm;
                        AStopSearchOnMismatch: Boolean;
                        ACropFromScreenshot: Boolean;
                        AThreadCount: Integer;
+                       AGPUPlatformIndex, AGPUDeviceIndex: Integer;
+                       AGPUExecutionAvailability: TGPUExecutionAvailability;
+                       AGPUIncludeDashG: Boolean;
+                       AGPUSlaveQueueFromDevice: Boolean;
+                       AGPUUseAllKernelsEvent: Boolean;
+                       AGPUNdrangeNoLocalParam: Boolean;
+                       AGPUUseEventsInEnqueueKernel: Boolean;
+                       AGPUWaitForAllKernelsToBeDone: Boolean;
+                       AGPUReleaseFinalEventAtKernelEnd: Boolean;
+                       AGPUIgnoreExecutionAvailability: Boolean;
                        out AResultedErrorCount: Integer;
                        AStopAllActionsOnDemand: PBoolean): Boolean;
 var
@@ -930,6 +953,9 @@ begin
                     AOutsideTickCount,
                     APrecisionTimeout,
                     AThreadCount,
+                    AGPUPlatformIndex,
+                    AGPUDeviceIndex,
+                    AGPUIncludeDashG,
                     AResultedErrorCount,
                     AStopAllActionsOnDemand,
                     AStopSearchOnMismatch) then
@@ -1060,6 +1086,17 @@ begin
                                 InputData.StopSearchOnMismatch,
                                 InputData.CropFromScreenshot,
                                 InputData.ThreadCount,
+                                InputData.GPUPlatformIndex,
+                                InputData.GPUDeviceIndex,
+                                InputData.GPUExecutionAvailability,
+                                InputData.GPUIncludeDashG,
+                                InputData.GPUSlaveQueueFromDevice,
+                                InputData.GPUUseAllKernelsEvent,
+                                InputData.GPUNdrangeNoLocalParam,
+                                InputData.GPUUseEventsInEnqueueKernel,
+                                InputData.GPUWaitForAllKernelsToBeDone,
+                                InputData.GPUReleaseFinalEventAtKernelEnd,
+                                InputData.GPUIgnoreExecutionAvailability,
                                 AResultedErrorCount,
                                 AStopAllActionsOnDemand);
     except

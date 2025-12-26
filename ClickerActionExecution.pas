@@ -175,6 +175,7 @@ type
     function ExecuteFindControlAction(var AFindControlOptions: TClkFindControlOptions; var AActionOptions: TClkActionOptions; AOutsideTickCount: QWord): Boolean; //returns True if found
     function ExecuteFindSubControlAction(var AFindSubControlOptions: TClkFindSubControlOptions; var AActionOptions: TClkActionOptions; AOutsideTickCount: QWord): Boolean; //returns True if found
     function FillInFindControlInputData(var AFindControlOptions: TClkFindControlOptions; const AActionOptions: TClkActionOptions; out FindControlInputData: TFindControlInputData; out FontProfilesCount: Integer): Boolean;
+    function FillInFindSubControlInputDataForGPU(var AFindSubControlOptions: TClkFindSubControlOptions; var FindControlInputData: TFindControlInputData): Boolean;
     function FillInFindSubControlInputData(var AFindSubControlOptions: TClkFindSubControlOptions; var AActionOptions: TClkActionOptions; out FindControlInputData: TFindControlInputData; out FontProfilesCount: Integer): Boolean;
     procedure UpdateActionVarValuesFromControl(AControl: TCompRec; AUpdate_ResultedErrorCount: Boolean = False);
     procedure UpdateActionVarValuesFromResultedControlArr(var AResultedControlArr: TCompRecArr);
@@ -349,7 +350,7 @@ uses
   {$ENDIF}
   IdHTTP, ClickerPrimitivesCompositor, ClickerPrimitives, ClickerActionProperties,
   ClickerActionPluginLoader, ClickerActionPlugins, BitmapProcessing,
-  ClickerActionsClient, ClickerTemplates, Math;
+  ClickerActionsClient, ClickerTemplates, Math, CLHeaders, ClickerCLUtils;
 
 
 constructor TActionExecution.Create;
@@ -1737,6 +1738,237 @@ begin
 end;
 
 
+function TActionExecution.FillInFindSubControlInputDataForGPU(var AFindSubControlOptions: TClkFindSubControlOptions; var FindControlInputData: TFindControlInputData): Boolean;
+var
+  OpenCLDll: TOpenCL;
+  i, Error: Integer;
+  PlatformCount, DeviceCount: cl_uint;
+  PlatformIDs: ^cl_platform_id_arr;
+  DeviceIDs: ^cl_device_id_arr;
+  PlatformInfo, DeviceInfo: string;
+  TargetPlatformStr, TargetDeviceStr: string;
+  DevType: cl_device_type; //GPU
+  UseEventsInEnqueueKernel, WaitForAllKernelsToBeDone: string;
+begin
+  Result := True;
+  FindControlInputData.OpenCLPath := EvaluateReplacements(AFindSubControlOptions.GPUSettings.OpenCLPath);
+  OpenCLDll := TOpenCL.Create;
+  try
+    if FindControlInputData.OpenCLPath <> '' then
+      if OpenCLDll.ExpectedDllLocation <> FindControlInputData.OpenCLPath then
+      begin
+        OpenCLDll.ExpectedDllFileName := ExtractFileName(FindControlInputData.OpenCLPath);
+        OpenCLDll.ExpectedDllDir := ExtractFileDir(FindControlInputData.OpenCLPath);
+        OpenCLDll.LoadOpenCLLibrary;
+      end;
+
+    if not OpenCLDll.Loaded then
+    begin
+      AddToLog('OpenCL not available. The dll is expected to exist at ' + FindControlInputData.OpenCLPath);
+      SetActionVarValue('$ExecAction_Err$', 'OpenCL not available at ' + FindControlInputData.OpenCLPath);
+      Result := False;
+      Exit;
+    end;
+
+    Error := OpenCLDll.clGetPlatformIDs(0, nil, @PlatformCount);
+    if Error < CL_SUCCESS then
+    begin
+      SetActionVarValue('$ExecAction_Err$', 'Error getting GPU platforms count: ' + CLErrorToStr(Error));
+      Result := False;
+      Exit;
+    end;
+
+    GetMem(PlatformIDs, PlatformCount * SizeOf(cl_platform_id));
+    try
+      Error := OpenCLDll.clGetPlatformIDs(PlatformCount, Pcl_platform_id(PlatformIDs), nil);
+      if Error < CL_SUCCESS then
+      begin
+        SetActionVarValue('$ExecAction_Err$', 'Error getting GPU platforms IDs: ' + CLErrorToStr(Error));
+        Result := False;
+        Exit;
+      end;
+
+      TargetPlatformStr := EvaluateReplacements(AFindSubControlOptions.GPUSettings.TargetPlatform);
+      TargetDeviceStr := EvaluateReplacements(AFindSubControlOptions.GPUSettings.TargetDevice);
+      FindControlInputData.GPUPlatformIndex := -1;
+      FindControlInputData.GPUDeviceIndex := -1;
+      FindControlInputData.GPUExecutionAvailability := AFindSubControlOptions.GPUSettings.ExecutionAvailability;
+
+      PlatformInfo := '';
+      case AFindSubControlOptions.GPUSettings.TargetPlatformIDType of
+        tpitIndex:
+          FindControlInputData.GPUPlatformIndex := StrToIntDef(TargetPlatformStr, 0);
+
+        tpitFullNameMatchCase:
+        begin
+          for i := 0 to PlatformCount - 1 do
+          begin
+            PlatformInfo := GetGPUPlatformInfo(AddToLog, OpenCLDll, PlatformIDs[i], CL_PLATFORM_NAME);
+            if TargetPlatformStr = PlatformInfo then
+            begin
+              FindControlInputData.GPUPlatformIndex := i;
+              Break;
+            end;
+          end;
+        end;
+
+        tpitFullNameNoCase:
+        begin
+          TargetPlatformStr := UpperCase(TargetPlatformStr);
+          for i := 0 to PlatformCount - 1 do
+          begin
+            PlatformInfo := GetGPUPlatformInfo(AddToLog, OpenCLDll, PlatformIDs[i], CL_PLATFORM_NAME);
+            if TargetPlatformStr = UpperCase(PlatformInfo) then
+            begin
+              FindControlInputData.GPUPlatformIndex := i;
+              Break;
+            end;
+          end;
+        end;
+
+        tpitPartialNameMatchCase:
+        begin
+          for i := 0 to PlatformCount - 1 do
+          begin
+            PlatformInfo := GetGPUPlatformInfo(AddToLog, OpenCLDll, PlatformIDs[i], CL_PLATFORM_NAME);
+            if Pos(TargetPlatformStr, PlatformInfo) > 0 then
+            begin
+              FindControlInputData.GPUPlatformIndex := i;
+              Break;
+            end;
+          end;
+        end;
+
+        tpitPartialNameNoCase:
+        begin
+          TargetPlatformStr := UpperCase(TargetPlatformStr);
+          for i := 0 to PlatformCount - 1 do
+          begin
+            PlatformInfo := GetGPUPlatformInfo(AddToLog, OpenCLDll, PlatformIDs[i], CL_PLATFORM_NAME);
+            if Pos(TargetPlatformStr, UpperCase(PlatformInfo)) > 0 then
+            begin
+              FindControlInputData.GPUPlatformIndex := i;
+              Break;
+            end;
+          end;
+        end;
+      end; //case
+
+      if (FindControlInputData.GPUPlatformIndex < 0) or (FindControlInputData.GPUPlatformIndex > PlatformCount - 1) then
+      begin
+        SetActionVarValue('$ExecAction_Err$', 'GPU Platform out of range: ' + IntToStr(FindControlInputData.GPUPlatformIndex) + ' / [0..' + IntToStr(PlatformCount - 1) + ']');
+        Result := False;
+        Exit;
+      end;
+
+      DevType := CL_DEVICE_TYPE_GPU;
+      Error := OpenCLDll.clGetDeviceIDs(PlatformIDs[FindControlInputData.GPUPlatformIndex], DevType, 0, nil, @DeviceCount);
+      if Error < CL_SUCCESS then
+      begin
+        SetActionVarValue('$ExecAction_Err$', 'Error getting GPU devices count: ' + CLErrorToStr(Error));
+        Result := False;
+        Exit;
+      end;
+
+      GetMem(DeviceIDs, DeviceCount * SizeOf(cl_device_id));
+      try
+        Error := OpenCLDll.clGetDeviceIDs(PlatformIDs[FindControlInputData.GPUPlatformIndex], DevType, DeviceCount, Pcl_device_id(DeviceIDs), nil);
+        if Error < CL_SUCCESS then
+        begin
+          SetActionVarValue('$ExecAction_Err$', 'Error getting GPU device IDs: ' + CLErrorToStr(Error));
+          Result := False;
+          Exit;
+        end;
+
+        case AFindSubControlOptions.GPUSettings.TargetDeviceIDType of
+          tditIndex:
+            FindControlInputData.GPUDeviceIndex := StrToIntDef(TargetDeviceStr, 0);
+
+          tditFullNameMatchCase:
+          begin
+            for i := 0 to DeviceCount - 1 do
+            begin
+              DeviceInfo := GetGPUDeviceInfo(AddToLog, OpenCLDll, DeviceIDs[i], CL_DEVICE_NAME);
+              if TargetDeviceStr = DeviceInfo then
+              begin
+                FindControlInputData.GPUDeviceIndex := i;
+                Break;
+              end;
+            end;
+          end;
+
+          tditFullNameNoCase:
+          begin
+            TargetDeviceStr := UpperCase(TargetDeviceStr);
+            for i := 0 to DeviceCount - 1 do
+            begin
+              DeviceInfo := GetGPUDeviceInfo(AddToLog, OpenCLDll, DeviceIDs[i], CL_DEVICE_NAME);
+              if TargetDeviceStr = UpperCase(DeviceInfo) then
+              begin
+                FindControlInputData.GPUDeviceIndex := i;
+                Break;
+              end;
+            end;
+          end;
+
+          tditPartialNameMatchCase:
+          begin
+            for i := 0 to DeviceCount - 1 do
+            begin
+              DeviceInfo := GetGPUDeviceInfo(AddToLog, OpenCLDll, DeviceIDs[i], CL_DEVICE_NAME);
+              if Pos(TargetDeviceStr, DeviceInfo) > 0 then
+              begin
+                FindControlInputData.GPUDeviceIndex := i;
+                Break;
+              end;
+            end;
+          end;
+
+          tditPartialNameNoCase:
+          begin
+            TargetDeviceStr := UpperCase(TargetDeviceStr);
+            for i := 0 to DeviceCount - 1 do
+            begin
+              DeviceInfo := GetGPUDeviceInfo(AddToLog, OpenCLDll, DeviceIDs[i], CL_DEVICE_NAME);
+              if Pos(TargetDeviceStr, UpperCase(DeviceInfo)) > 0 then
+              begin
+                FindControlInputData.GPUDeviceIndex := i;
+                Break;
+              end;
+            end;
+          end;
+        end; //case
+
+        if (FindControlInputData.GPUDeviceIndex < 0) or (FindControlInputData.GPUDeviceIndex > DeviceCount - 1) then
+        begin
+          SetActionVarValue('$ExecAction_Err$', 'GPU Device out of range: ' + IntToStr(FindControlInputData.GPUDeviceIndex) + ' / [0..' + IntToStr(DeviceCount - 1) + ']');
+          Result := False;
+          Exit;
+        end;
+      finally
+        Freemem(DeviceIDs, DeviceCount * SizeOf(cl_device_id));
+      end;
+    finally
+      Freemem(PlatformIDs, PlatformCount * SizeOf(cl_platform_id));
+    end;
+  finally
+    OpenCLDll.Free;
+  end;
+
+  UseEventsInEnqueueKernel := EvaluateReplacements('$UseEventsInEnqueueKernel$');
+  WaitForAllKernelsToBeDone := EvaluateReplacements('$WaitForAllKernelsToBeDone$');
+
+  FindControlInputData.GPUIncludeDashG := EvaluateReplacements('$GPUIncludeDashG$') = 'True';
+  FindControlInputData.GPUSlaveQueueFromDevice := EvaluateReplacements('$SlaveQueueFromDevice$') = 'True';
+  FindControlInputData.GPUUseAllKernelsEvent := EvaluateReplacements('$UseAllKernelsEvent$') = 'True';
+  FindControlInputData.GPUNdrangeNoLocalParam := EvaluateReplacements('$NdrangeNoLocalParam$') = 'True';
+  FindControlInputData.GPUUseEventsInEnqueueKernel := (UseEventsInEnqueueKernel = '') or (UseEventsInEnqueueKernel = 'True');
+  FindControlInputData.GPUWaitForAllKernelsToBeDone := (WaitForAllKernelsToBeDone = '') or (WaitForAllKernelsToBeDone = 'True');
+  FindControlInputData.GPUReleaseFinalEventAtKernelEnd := EvaluateReplacements('$ReleaseFinalEventAtKernelEnd$') = 'True';
+  FindControlInputData.GPUIgnoreExecutionAvailability := EvaluateReplacements('$IgnoreExecutionAvailability$') = 'True';
+end;
+
+
 function TActionExecution.FillInFindSubControlInputData(var AFindSubControlOptions: TClkFindSubControlOptions; var AActionOptions: TClkActionOptions; out FindControlInputData: TFindControlInputData; out FontProfilesCount: Integer): Boolean;
   procedure IgnoredColorsStrToArr(AIgnoredColorsStr: string; var AIgnoredColorsArr: TColorArr);
   var
@@ -1950,6 +2182,9 @@ begin
 
   FindControlInputData.CropFromScreenshot := AFindSubControlOptions.CropFromScreenshot;
   FindControlInputData.ThreadCount := StrToIntDef(EvaluateReplacements(AFindSubControlOptions.ThreadCount), 0);
+
+  if AFindSubControlOptions.MatchBitmapAlgorithm = mbaBruteForceOnGPU then
+    Result := FillInFindSubControlInputDataForGPU(AFindSubControlOptions, FindControlInputData);
 end;
 
 

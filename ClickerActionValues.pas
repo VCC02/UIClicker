@@ -62,7 +62,7 @@ const
   CPropCount_Click = 26;
   CPropCount_ExecApp = 9;
   CPropCount_FindControl = 15;
-  CPropCount_FindSubControl = 33;
+  CPropCount_FindSubControl = 34;
   CPropCount_SetText = 4;
   CPropCount_CallTemplate = 4;
   CPropCount_Sleep = 1;
@@ -99,6 +99,7 @@ const
   CPropCount_FindSubControlInitialRectangle = 8;
   CPropCount_FindSubControlMatchByHistogramSettings = 3;
   CPropCount_FindSubControlRenderingInBrowserSettings = 6;
+  CPropCount_FindSubControlGPUSettings = 6;
 
   CPropCount_CallTemplateLoop = 7;
 
@@ -143,39 +144,40 @@ const
   CFindControl_PrecisionTimeout_PropIndex = 13;//28;  //to be removed
   CFindControl_EvaluateTextCount_PropIndex = 14;//31;
 
-  CFindSubControl_MatchCriteria_PropIndex = 0; //property index in FindControl structure
+  CFindSubControl_MatchCriteria_PropIndex = 0;
   CFindSubControl_AllowToFail_PropIndex = 1;
-  CFindSubControl_MatchText_PropIndex = 2;      //property index in FindControl structure
-  CFindSubControl_MatchBitmapText_PropIndex = 3;//6; //property index in FindControl structure
-  CFindSubControl_MatchBitmapFiles_PropIndex = 4;//7; //property index in FindControl structure   - list of files
-  CFindSubControl_MatchBitmapAlgorithm_PropIndex = 5;//8;
-  CFindSubControl_MatchBitmapAlgorithmSettings_PropIndex = 6;//9;
-  CFindSubControl_InitialRectangle_PropIndex = 7;//10;
-  CFindSubControl_UseWholeScreen_PropIndex = 8;//11;
-  CFindSubControl_ColorError_PropIndex = 9;//12;
-  CFindSubControl_AllowedColorErrorCount_PropIndex = 10;//13;
-  CFindSubControl_WaitForControlToGoAway_PropIndex = 11;//14;
-  CFindSubControl_StartSearchingWithCachedControl_PropIndex = 12;//15;
-  CFindSubControl_CachedControlLeft_PropIndex = 13;//16;
-  CFindSubControl_CachedControlTop_PropIndex = 14;//17;
-  CFindSubControl_MatchPrimitiveFiles_PropIndex = 15;//18; //property index in FindControl structure   - list of files
-  CFindSubControl_GetAllControls_PropIndex = 16;//19;
-  CFindSubControl_UseFastSearch_PropIndex = 17;//20;
-  CFindSubControl_FastSearchAllowedColorErrorCount_PropIndex = 18;//21;
-  CFindSubControl_IgnoredColors_PropIndex = 19;//22;
-  CFindSubControl_SleepySearch_PropIndex = 20;//23;
-  CFindSubControl_StopSearchOnMismatch_PropIndex = 21;//24;
-  CFindSubControl_ImageSource_PropIndex = 22;//25;
-  CFindSubControl_SourceFileName_PropIndex = 23;//26;
-  CFindSubControl_ImageSourceFileNameLocation_PropIndex = 24;//27;
-  CFindSubControl_PrecisionTimeout_PropIndex = 25;//28;
-  CFindSubControl_FullBackgroundImageInResult_PropIndex = 26;//29;
-  CFindSubControl_MatchByHistogramSettings_PropIndex = 27;//30;
-  CFindSubControl_EvaluateTextCount_PropIndex = 28;//31;
-  CFindSubControl_CropFromScreenshot_PropIndex = 29;//32;
-  CFindSubControl_ThreadCount_PropIndex = 30;//33;
+  CFindSubControl_MatchText_PropIndex = 2;
+  CFindSubControl_MatchBitmapText_PropIndex = 3;
+  CFindSubControl_MatchBitmapFiles_PropIndex = 4; //  - list of files
+  CFindSubControl_MatchBitmapAlgorithm_PropIndex = 5;
+  CFindSubControl_MatchBitmapAlgorithmSettings_PropIndex = 6;
+  CFindSubControl_InitialRectangle_PropIndex = 7;
+  CFindSubControl_UseWholeScreen_PropIndex = 8;
+  CFindSubControl_ColorError_PropIndex = 9;
+  CFindSubControl_AllowedColorErrorCount_PropIndex = 10;
+  CFindSubControl_WaitForControlToGoAway_PropIndex = 11;
+  CFindSubControl_StartSearchingWithCachedControl_PropIndex = 12;
+  CFindSubControl_CachedControlLeft_PropIndex = 13;
+  CFindSubControl_CachedControlTop_PropIndex = 14;
+  CFindSubControl_MatchPrimitiveFiles_PropIndex = 15; // - list of files
+  CFindSubControl_GetAllControls_PropIndex = 16;
+  CFindSubControl_UseFastSearch_PropIndex = 17;
+  CFindSubControl_FastSearchAllowedColorErrorCount_PropIndex = 18;
+  CFindSubControl_IgnoredColors_PropIndex = 19;
+  CFindSubControl_SleepySearch_PropIndex = 20;
+  CFindSubControl_StopSearchOnMismatch_PropIndex = 21;
+  CFindSubControl_ImageSource_PropIndex = 22;
+  CFindSubControl_SourceFileName_PropIndex = 23;
+  CFindSubControl_ImageSourceFileNameLocation_PropIndex = 24;
+  CFindSubControl_PrecisionTimeout_PropIndex = 25;
+  CFindSubControl_FullBackgroundImageInResult_PropIndex = 26;
+  CFindSubControl_MatchByHistogramSettings_PropIndex = 27;
+  CFindSubControl_EvaluateTextCount_PropIndex = 28;
+  CFindSubControl_CropFromScreenshot_PropIndex = 29;
+  CFindSubControl_ThreadCount_PropIndex = 30;
   CFindSubControl_UseTextRenderingInBrowser_PropIndex = 31;
   CFindSubControl_RenderingInBrowserSettings_PropIndex = 32;
+  CFindSubControl_GPUSettings_PropIndex = 33;
 
   CCallTemplate_TemplateFileName_PropIndex = 0; //property index in CallTemplate structure
   CCallTemplate_ListOfCustomVarsAndValues_PropIndex = 1;
@@ -245,6 +247,13 @@ const
   CFindSubControl_RenderingInBrowserSettings_UsePluginForReceivingBitmaps_PropItemIndex = 3;
   CFindSubControl_RenderingInBrowserSettings_PluginActionForReceivingBitmaps_PropItemIndex = 4;
   CFindSubControl_RenderingInBrowserSettings_FontSizeUnit_PropItemIndex = 5;
+
+  CFindSubControl_GPUSettings_OpenCLPath_PropItemIndex = 0;
+  CFindSubControl_GPUSettings_TargetPlatform_PropItemIndex = 1;
+  CFindSubControl_GPUSettings_TargetDevice_PropItemIndex = 2;
+  CFindSubControl_GPUSettings_TargetPlatformIDType_PropItemIndex = 3;
+  CFindSubControl_GPUSettings_TargetDeviceIDType_PropItemIndex = 4;
+  CFindSubControl_GPUSettings_ExecutionAvailability_PropItemIndex = 5;
 
   CSetVar_ListOfVarNamesValuesAndEvalBefore_PropItemIndex = 0;
   CSetVar_FailOnException_PropItemIndex = 1;
@@ -392,7 +401,8 @@ const
     (Name: 'CropFromScreenshot'; EditorType: etBooleanCombo; DataType: CDTBool),
     (Name: 'ThreadCount'; EditorType: etText; DataType: CDTString),
     (Name: 'UseTextRenderingInBrowser'; EditorType: etBooleanCombo; DataType: CDTBool),
-    (Name: 'RenderingInBrowserSettings'; EditorType: etNone; DataType: CDTStructure)
+    (Name: 'RenderingInBrowserSettings'; EditorType: etNone; DataType: CDTStructure),
+    (Name: 'GPUSettings'; EditorType: etNone; DataType: CDTStructure)
   );
 
   {$IFDEF SubProperties}
@@ -473,6 +483,15 @@ const
       (Name: 'UsePluginForReceivingBitmaps'; EditorType: etBooleanCombo; DataType: CDTBool),
       (Name: 'PluginActionForReceivingBitmaps'; EditorType: etTextWithArrow; DataType: CDTString),
       (Name: 'FontSizeUnit'; EditorType: etEnumCombo; DataType: CDTEnum)
+    );
+
+    CFindSubControl_GPUSettingsProperties: array[0..CPropCount_FindSubControlGPUSettings - 1] of TOIPropDef = (
+      (Name: 'OpenCLPath'; EditorType: etTextWithArrow; DataType: CDTString),
+      (Name: 'TargetPlatform'; EditorType: etTextWithArrow; DataType: CDTString),
+      (Name: 'TargetDevice'; EditorType: etTextWithArrow; DataType: CDTString),
+      (Name: 'TargetPlatformIDType'; EditorType: etEnumCombo; DataType: CDTEnum),
+      (Name: 'TargetDeviceIDType'; EditorType: etEnumCombo; DataType: CDTEnum),
+      (Name: 'ExecutionAvailability'; EditorType: etEnumCombo; DataType: CDTEnum)
     );
   {$ENDIF}
 
@@ -622,6 +641,7 @@ function GetActionValueStr_EditTemplate(AAction: PClkActionRec; APropertyIndex: 
   function GetActionValueStr_FindSubControl_InitialRectangle(AAction: PClkActionRec; APropertyIndex: Integer): string;
   function GetActionValueStr_FindSubControl_MatchByHistogramSettings(AAction: PClkActionRec; APropertyIndex: Integer): string;
   function GetActionValueStr_FindSubControl_RenderingInBrowserSettings(AAction: PClkActionRec; APropertyIndex: Integer): string;
+  function GetActionValueStr_FindSubControl_GPUSettings(AAction: PClkActionRec; APropertyIndex: Integer): string;
 
   function GetActionValueStr_CallTemplate_CallTemplateLoop(AAction: PClkActionRec; APropertyIndex: Integer): string;
 {$ENDIF}
@@ -652,6 +672,7 @@ procedure SetActionValueStr_EditTemplate(AAction: PClkActionRec; NewValue: strin
   procedure SetActionValueStr_FindSubControl_InitialRectangle(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
   procedure SetActionValueStr_FindSubControl_MatchByHistogramSettings(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
   procedure SetActionValueStr_FindSubControl_RenderingInBrowserSettings(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
+  procedure SetActionValueStr_FindSubControl_GPUSettings(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
 
   procedure SetActionValueStr_CallTemplate_CallTemplateLoop(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
 {$ENDIF}
@@ -741,7 +762,8 @@ const
     nil, //CropFromScreenshot
     nil, //ThreadCount
     nil, //UseTextRenderingInBrowser
-    GetActionValueStr_FindSubControl_RenderingInBrowserSettings  //RenderingInBrowserSettings
+    GetActionValueStr_FindSubControl_RenderingInBrowserSettings,  //RenderingInBrowserSettings
+    GetActionValueStr_FindSubControl_GPUSettings  //GPUSettings
   );
 
   CCallTemplateGetActionValueStrFunctions: TGetCallTemplateValueStrFuncArr = (
@@ -852,7 +874,8 @@ const
     0, //CropFromScreenshot
     0, //ThreadCount
     0, //UseTextRenderingInBrowser
-    0  //RenderingInBrowserSettings: TRenderingInBrowserSettings;
+    0, //RenderingInBrowserSettings: TRenderingInBrowserSettings;
+    0  //GPUSettings: TGPUSettings;
   );
 
 
@@ -980,6 +1003,15 @@ const
       Ord(High(TFontSizeUnit)) + 1  //FontSizeUnit: TFontSizeUnit;
     );
 
+    CFindSubControl_GPUSettingsEnumCounts: array[0..CPropCount_FindSubControlGPUSettings - 1] of Integer = (
+      0, //OpenCLPath: string;
+      0, //TargetPlatform: string;
+      0, //TargetDevice: string;
+      Ord(High(TTargetPlatformIDType)) + 1, //TargetPlatformIDType: TTargetPlatformIDType;
+      Ord(High(TTargetDeviceIDType)) + 1, //TargetDeviceIDType: TTargetDeviceIDType;
+      Ord(High(TGPUExecutionAvailability)) + 1  //ExecutionAvailability: TGPUExecutionAvailability;
+    );
+
     CCallTemplate_CallTemplateLoopEnumCounts: array[0..CPropCount_CallTemplateLoop - 1] of Integer = (
       0, //Enabled: Boolean; //When False, the CallTemplate action is executed once, as before. Else, it may be executed or not, based on loop settings.
       0, //Counter: string;
@@ -1091,7 +1123,8 @@ const
     nil, //CropFromScreenshot
     nil, //ThreadCount
     nil, //UseTextRenderingInBrowser
-    nil  //RenderingInBrowserSettings
+    nil, //RenderingInBrowserSettings
+    nil  //GPUSettings
   );
 
   CSetTextEnumStrings: array[0..CPropCount_SetText - 1] of PArrayOfString = (
@@ -1217,6 +1250,15 @@ const
       @CFontSizeUnitStr //FontSizeUnit: TFontSizeUnit;
     );
 
+    CFindControl_GPUSettingsEnumStrings: array[0..CPropCount_FindSubControlGPUSettings - 1] of PArrayOfString = (
+      nil, //OpenCLPath: string; //
+      nil, //TargetPlatform: string; //Can be platform index or platform name (full or partial name, case sensitive or not).
+      nil, //TargetDevice: string; //Can be device index or device name (full or partial name, case sensitive or not).
+      @CTargetPlatformIDTypeStr, //TargetPlatformIDType: TTargetPlatformIDType; //
+      @CTargetDeviceIDTypeStr, //TargetDeviceIDType: TTargetDeviceIDType; //
+      @CExecutionAvailabilityStr  //ExecutionAvailability: TGPUExecutionAvailability;
+    );
+
     CCallTemplate_CallTemplateLoopEnumStrings: array[0..CPropCount_CallTemplateLoop - 1] of PArrayOfString = (
       nil, //Enabled: Boolean; //When False, the CallTemplate action is executed once, as before. Else, it may be executed or not, based on loop settings.
       nil, //Counter: string;
@@ -1334,7 +1376,8 @@ const
     0, //CropFromScreenshot
     0, //ThreadCount
     0, //UseTextRenderingInBrowser
-    1  //RenderingInBrowserSettings: TRenderingInBrowserSettings;
+    1, //RenderingInBrowserSettings: TRenderingInBrowserSettings;
+    1  //GPUSettings: TGPUSettings;
   );
 
   CSetTextIsExp: array[0..CPropCount_SetText - 1] of Integer = (
@@ -1468,6 +1511,7 @@ function GetPropertyHint_FindControl_CropFromScreenshot: string;
 function GetPropertyHint_FindControl_ThreadCount: string;
 function GetPropertyHint_FindControl_UseTextRenderingInBrowser: string;
 function GetPropertyHint_FindControl_RenderingInBrowserSettings: string;
+function GetPropertyHint_FindControl_GPUSettings: string;
 
 {$IFDEF SubProperties}
   function GetPropertyHint_FindControl_MatchCriteria_WillMatchText: string;
@@ -1496,6 +1540,15 @@ function GetPropertyHint_FindControl_RenderingInBrowserSettings: string;
   function GetPropertyHint_FindSubControl_RenderingInBrowserSettings_UsePluginForReceivingBitmaps: string;
   function GetPropertyHint_FindSubControl_RenderingInBrowserSettings_PluginActionForReceivingBitmaps: string;
   function GetPropertyHint_FindSubControl_RenderingInBrowserSettings_FontSizeUnit: string;
+{$ENDIF}
+
+{$IFDEF SubProperties}
+  function GetPropertyHint_FindSubControl_GPUSettings_OpenCLPath: string;
+  function GetPropertyHint_FindSubControl_GPUSettings_TargetPlatform: string;
+  function GetPropertyHint_FindSubControl_GPUSettings_TargetDevice: string;
+  function GetPropertyHint_FindSubControl_GPUSettings_TargetPlatformIDType: string;
+  function GetPropertyHint_FindSubControl_GPUSettings_TargetDeviceIDType: string;
+  function GetPropertyHint_FindSubControl_GPUSettings_ExecutionAvailability: string;
 {$ENDIF}
 
 
@@ -1644,7 +1697,8 @@ const
     @GetPropertyHint_FindControl_CropFromScreenshot, //CropFromScreenshot: Boolean;
     @GetPropertyHint_FindControl_ThreadCount, //ThreadCount: string;
     @GetPropertyHint_FindControl_UseTextRenderingInBrowser, //UseTextRenderingInBrowser: string;
-    @GetPropertyHint_FindControl_RenderingInBrowserSettings //RenderingInBrowserSettings: TRenderingInBrowserSettings;
+    @GetPropertyHint_FindControl_RenderingInBrowserSettings, //RenderingInBrowserSettings: TRenderingInBrowserSettings;
+    @GetPropertyHint_FindControl_GPUSettings  //GPUSettings: TGPUSettings;
   );
 
 
@@ -1771,6 +1825,14 @@ const
     @GetPropertyHint_FindSubControl_RenderingInBrowserSettings_FontSizeUnit
   );
 
+  CGetPropertyHint_FindSubControlGPUSettings_Items: array[0..CPropCount_FindSubControlGPUSettings - 1] of TPropHintFunc = (
+    @GetPropertyHint_FindSubControl_GPUSettings_OpenCLPath,
+    @GetPropertyHint_FindSubControl_GPUSettings_TargetPlatform,
+    @GetPropertyHint_FindSubControl_GPUSettings_TargetDevice,
+    @GetPropertyHint_FindSubControl_GPUSettings_TargetPlatformIDType,
+    @GetPropertyHint_FindSubControl_GPUSettings_TargetDeviceIDType,
+    @GetPropertyHint_FindSubControl_GPUSettings_ExecutionAvailability
+  );
 
   CGetPropertyHint_CallTemplateLoop_Items: array[0..CPropCount_CallTemplateLoop - 1] of TPropHintFunc = (
     @GetPropertyHintNoHint, //Enabled: Boolean;
@@ -1949,7 +2011,8 @@ begin
     29: Result := BoolToStr(AAction^.FindSubControlOptions.CropFromScreenshot, True);
     30: Result := AAction^.FindSubControlOptions.ThreadCount;
     31: Result := BoolToStr(AAction^.FindSubControlOptions.UseTextRenderingInBrowser, True);
-    32: Result := '';
+    32: Result := '';  //RenderingInBrowserSettings
+    33: Result := '';  //GPUSettings
     else
       Result := 'unknown';
   end;
@@ -2161,6 +2224,21 @@ end;
       3: Result := BoolToStr(AAction^.FindSubControlOptions.RenderingInBrowserSettings.UsePluginForReceivingBitmaps, True);
       4: Result := AAction^.FindSubControlOptions.RenderingInBrowserSettings.PluginActionForReceivingBitmaps;
       5: Result := CFontSizeUnitStr[AAction^.FindSubControlOptions.RenderingInBrowserSettings.FontSizeUnit];
+      else
+        Result := 'unknown';
+    end;
+  end;
+
+
+  function GetActionValueStr_FindSubControl_GPUSettings(AAction: PClkActionRec; APropertyIndex: Integer): string;
+  begin
+    case APropertyIndex of
+      0: Result := AAction^.FindSubControlOptions.GPUSettings.OpenCLPath;
+      1: Result := AAction^.FindSubControlOptions.GPUSettings.TargetPlatform;
+      2: Result := AAction^.FindSubControlOptions.GPUSettings.TargetDevice;
+      3: Result := CTargetPlatformIDTypeStr[AAction^.FindSubControlOptions.GPUSettings.TargetPlatformIDType];
+      4: Result := CTargetDeviceIDTypeStr[AAction^.FindSubControlOptions.GPUSettings.TargetDeviceIDType];
+      5: Result := CExecutionAvailabilityStr[AAction^.FindSubControlOptions.GPUSettings.ExecutionAvailability];
       else
         Result := 'unknown';
     end;
@@ -2515,6 +2593,48 @@ begin
   Result := fsuPt;
   for i := Low(TFontSizeUnit) to High(TFontSizeUnit) do
     if CFontSizeUnitStr[i] = AFontSizeUnitAsString then
+    begin
+      Result := i;
+      Exit;
+    end;
+end;
+
+
+function TargetPlatformIDType_AsStringToValue(ATargetPlatformIDTypeAsString: string): TTargetPlatformIDType;
+var
+  i: TTargetPlatformIDType;
+begin
+  Result := tpitIndex;
+  for i := Low(TTargetPlatformIDType) to High(TTargetPlatformIDType) do
+    if CTargetPlatformIDTypeStr[i] = ATargetPlatformIDTypeAsString then
+    begin
+      Result := i;
+      Exit;
+    end;
+end;
+
+
+function TargetDeviceIDType_AsStringToValue(ATargetDeviceIDTypeAsString: string): TTargetDeviceIDType;
+var
+  i: TTargetDeviceIDType;
+begin
+  Result := tditIndex;
+  for i := Low(TTargetDeviceIDType) to High(TTargetDeviceIDType) do
+    if CTargetDeviceIDTypeStr[i] = ATargetDeviceIDTypeAsString then
+    begin
+      Result := i;
+      Exit;
+    end;
+end;
+
+
+function ExecutionAvailability_AsStringToValue(AExecutionAvailabilityAsString: string): TGPUExecutionAvailability;
+var
+  i: TGPUExecutionAvailability;
+begin
+  Result := eaOpenCL3Only;
+  for i := Low(TGPUExecutionAvailability) to High(TGPUExecutionAvailability) do
+    if CExecutionAvailabilityStr[i] = AExecutionAvailabilityAsString then
     begin
       Result := i;
       Exit;
@@ -2878,6 +2998,21 @@ end;
       3: AAction^.FindSubControlOptions.RenderingInBrowserSettings.UsePluginForReceivingBitmaps := StrToBool(NewValue);
       4: AAction^.FindSubControlOptions.RenderingInBrowserSettings.PluginActionForReceivingBitmaps := NewValue;
       5: AAction^.FindSubControlOptions.RenderingInBrowserSettings.FontSizeUnit := FontSizeUnit_AsStringToValue(NewValue);
+      else
+        ;
+    end;
+  end;
+
+
+  procedure SetActionValueStr_FindSubControl_GPUSettings(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
+  begin
+    case APropertyIndex of
+      0: AAction^.FindSubControlOptions.GPUSettings.OpenCLPath := NewValue;
+      1: AAction^.FindSubControlOptions.GPUSettings.TargetPlatform := NewValue;
+      2: AAction^.FindSubControlOptions.GPUSettings.TargetDevice := NewValue;
+      3: AAction^.FindSubControlOptions.GPUSettings.TargetPlatformIDType := TargetPlatformIDType_AsStringToValue(NewValue);
+      4: AAction^.FindSubControlOptions.GPUSettings.TargetDeviceIDType := TargetDeviceIDType_AsStringToValue(NewValue);
+      5: AAction^.FindSubControlOptions.GPUSettings.ExecutionAvailability := ExecutionAvailability_AsStringToValue(NewValue);
       else
         ;
     end;
@@ -3381,6 +3516,12 @@ begin
 end;
 
 
+function GetPropertyHint_FindControl_GPUSettings: string;
+begin
+  Result := 'Settings available when the MatchBitmapAlgorithm property is set to mbaBruteForceOnGPU.';
+end;
+
+
 function GetPropertyHint_FindControl_EvaluateTextCount: string;
 begin
   Result := 'When -1, the searched text is not evaluated either until no more variables are extracted from it, or a hardcoded number of iterations (e.g. 1000) is reached.' + #13#10 +
@@ -3577,6 +3718,57 @@ end;
   end;
 {$ENDIF}
 
+
+{$IFDEF SubProperties}
+  function GetPropertyHint_FindSubControl_GPUSettings_OpenCLPath: string;
+  begin
+    Result := 'Path to ' + {$IFDEF Windows} 'OpenCL.dll' {$ELSE} 'libOpenCL.so' {$ENDIF} +
+              '. If left empty, it points to ' + {$IFDEF Windows} 'C:\Windows\System32\OpenCL.dll' {$ELSE} '/usr/include/CL/libOpenCL.so' {$ENDIF} + '.';
+  end;
+
+
+  function GetPropertyHint_FindSubControl_GPUSettings_TargetPlatform: string;
+  begin
+    Result := 'Can be platform index or platform name (full or partial name, case sensitive or not, depending on TargetPlatformIDType).';
+  end;
+
+
+  function GetPropertyHint_FindSubControl_GPUSettings_TargetDevice: string;
+  begin
+    Result := 'Can be device index or device name (full or partial name, case sensitive or not, depending on TargetDeviceIDType).';
+  end;
+
+
+  function GetPropertyHint_FindSubControl_GPUSettings_TargetPlatformIDType: string;
+  begin
+    Result := 'This property controls how to interpret the value of the TargetPlatform property. It is intended to improve the template''s portability.' + #13#10 +
+              'When set to tpitIndex, TargetPlatform should be an integer value, from 0 to number of platforms - 1.' + #13#10 +
+              'When set to tpitFullNameMatchCase or tpitFullNameNoCase, TargetPlatform should be a string, matching the expected platform name (by case or not).' + #13#10 +
+              'When set to tpitPartialNameMatchCase or tpitPartialNameNoCase, TargetPlatform should be at least a substring, matching the expected platform name (by case or not).';
+  end;
+
+
+  function GetPropertyHint_FindSubControl_GPUSettings_TargetDeviceIDType: string;
+  begin
+    Result := 'This property controls how to interpret the value of the TargetDevice property. It is intended to improve the template''s portability.' + #13#10 +
+              'When set to tditIndex, TargetDevice should be an integer value, from 0 to number of devices - 1.' + #13#10 +
+              'When set to tditFullNameMatchCase or tditFullNameNoCase, TargetDevice should be a string, matching the expected device name (by case or not).' + #13#10 +
+              'When set to tditPartialNameMatchCase or tditPartialNameNoCase, TargetDevice should be at least a substring, matching the expected device name (by case or not).';
+  end;
+
+
+  function GetPropertyHint_FindSubControl_GPUSettings_ExecutionAvailability: string;
+  begin
+    Result := 'UIClicker provides two bitmap matching algorithms, one of each requiring OpenCL3.0 or later, for a faster execution.' + #13#10 +
+              'If the system, where UIClicker is running, does not provide OpenCL3.0 or later, UIClicker may attempt to run the slower algorithm, which requires only OpenCL1.2.' + #13#10 +
+              'When set to eaOpenCL3Only and the computer does not have OpenCL3.0 or later, then the action stops with an error.' + #13#10 +
+              'Similarly, when set to eaOpenCL1Only and the computer does not have OpenCL1.2 or later, then the action stops with an error.' + #13#10 +
+              'The other two are fallback-like options:' + #13#10 +
+              'When set to eaOpenCL3Then1, UIClicker verifies if OpenCL3.0 or later is available. If not, it attempts to run a less efficient algorithm, which should work on OpenCL1.2.' + #13#10 +
+              'If none of these two OpenCL versions are available, then the action stops with an error.' + #13#10 +
+              'When set to eaOpenCL3Then1ThenCPU, the behavior is similar to that of eaOpenCL3Then1, except that instead of stopping the action, the matching algorithm is run on CPU (as set by mbaBruteForce).';
+  end;
+{$ENDIF}
 
 function GetPropertyHint_SetText: string;
 begin

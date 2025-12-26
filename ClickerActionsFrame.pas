@@ -42,7 +42,7 @@ uses
   ClickerFindControlFrame, ClickerExecAppFrame, ClickerSetVarFrame,
   ClickerCallTemplateFrame, ClickerSleepFrame, ClickerPluginFrame,
   Types, InMemFileSystem, ObjectInspectorFrame,
-  ClickerPrimitiveUtils, ClickerIniFiles;
+  ClickerPrimitiveUtils, ClickerIniFiles, CLHeaders;
 
 {$IFnDEF Windows}
   {$UNDEF MemPlugins}
@@ -65,6 +65,7 @@ type
   TfrClickerActions = class(TFrame)
     chkDecodeVariables: TCheckBox;
     chkShowDebugGrid: TCheckBox;
+    imglstGPUSettings: TImageList;
     imglstRenderingInBrowserSettings: TImageList;
     imglstEditTemplateWhichTemplate: TImageList;
     imglstEditTemplateOperation: TImageList;
@@ -309,6 +310,8 @@ type
     procedure MenuItem_BrowseFileNameFromInMemPropertyListClick(Sender: TObject);
     procedure MenuItem_BrowseFileNameFromInMemPropertyListAddToBmpFilesClick(Sender: TObject);
     procedure MenuItem_SetPluginFileNameFromInMemPropertyListClick(Sender: TObject);
+    procedure MenuItem_SetGPUPlatformFromInMemPropertyListClick(Sender: TObject);
+    procedure MenuItem_SetGPUDeviceFromInMemPropertyListClick(Sender: TObject);
 
     procedure MenuItem_AddFontProfileToPropertyListClick(Sender: TObject);
     procedure MenuItem_AddFontProfileWithAntialiasedAndClearTypeToPropertyListClick(Sender: TObject);
@@ -681,6 +684,8 @@ type
 
     procedure HandleOnOIGetFileDialogSettings(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; var AFilter, AInitDir: string);
 
+    procedure AddGPUPlatformsAsMenuItems(AOIEditorMenu: TPopupMenu; AMenuHandler: TNotifyEvent; ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; AEditingAction: PClkActionRec);
+    procedure AddGPUDevicesAsMenuItems(AOIEditorMenu: TPopupMenu; AMenuHandler: TNotifyEvent; ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; AEditingAction: PClkActionRec);
     procedure OIArrowEditorClick_ActionSpecific(AEditingAction: PClkActionRec; ALiveEditingActionType: TClkAction; ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer);
     procedure HandleOnOIArrowEditorClick(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer);
 
@@ -848,7 +853,8 @@ implementation
 uses
   Clipbrd, ClickerActionValues, ClickerOIUtils, ClickerZoomPreviewForm,
   ClickerActionPluginLoader, ClickerActionPlugins, InMemFileSystemBrowserForm,
-  ClickerExtraUtils, ClickerActionProperties, ClickerTemplates, Math;
+  ClickerExtraUtils, ClickerActionProperties, ClickerTemplates, Math,
+  ClickerCLUtils;
 
 
 function ActionStatusStrToActionStatus(AString: string): TActionStatus;
@@ -4923,6 +4929,56 @@ begin
 end;
 
 
+procedure TfrClickerActions.MenuItem_SetGPUPlatformFromInMemPropertyListClick(Sender: TObject);
+var
+  MenuData: POIMenuItemData;
+  PlatformName: string;
+begin
+  MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
+  try
+    PlatformName := StringReplace(MenuData^.MenuItemCaption, '&', '', [rfReplaceAll]);
+
+    if MenuData^.TempEditingAction^.FindSubControlOptions.GPUSettings.TargetPlatformIDType = tpitIndex then
+      MenuData^.TempEditingAction^.FindSubControlOptions.GPUSettings.TargetPlatform := IntToStr(MenuData^.UserDataIndex)
+    else
+      MenuData^.TempEditingAction^.FindSubControlOptions.GPUSettings.TargetPlatform := PlatformName;
+
+    FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex, True);  //this closes the editor
+
+    FOIFrame.CancelCurrentEditing;
+    FOIFrame.Repaint;   //ideally, RepaintNodeByLevel
+    TriggerOnControlsModified;
+  finally
+    Dispose(MenuData);
+  end;
+end;
+
+
+procedure TfrClickerActions.MenuItem_SetGPUDeviceFromInMemPropertyListClick(Sender: TObject);
+var
+  MenuData: POIMenuItemData;
+  DeviceName: string;
+begin
+  MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
+  try
+    DeviceName := StringReplace(MenuData^.MenuItemCaption, '&', '', [rfReplaceAll]);
+
+    if MenuData^.TempEditingAction^.FindSubControlOptions.GPUSettings.TargetDeviceIDType = tditIndex then
+      MenuData^.TempEditingAction^.FindSubControlOptions.GPUSettings.TargetDevice := IntToStr(MenuData^.UserDataIndex)
+    else
+      MenuData^.TempEditingAction^.FindSubControlOptions.GPUSettings.TargetDevice := DeviceName;
+
+    FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex, True);  //this closes the editor
+
+    FOIFrame.CancelCurrentEditing;
+    FOIFrame.Repaint;   //ideally, RepaintNodeByLevel
+    TriggerOnControlsModified;
+  finally
+    Dispose(MenuData);
+  end;
+end;
+
+
 function TfrClickerActions.GetUniqueProfileName(n: Integer): string;
 var
   AttemptCount: Integer;
@@ -5903,6 +5959,9 @@ begin
         CFindSubControl_RenderingInBrowserSettings_PropIndex:
           Result := CPropCount_FindSubControlRenderingInBrowserSettings;
 
+        CFindSubControl_GPUSettings_PropIndex:
+          Result := CPropCount_FindSubControlGPUSettings;
+
         else
           Result := 0;
       end;
@@ -6028,6 +6087,9 @@ begin
 
         CFindSubControl_RenderingInBrowserSettings_PropIndex:
           Result := CFindSubControl_RenderingInBrowserSettingsProperties[AItemIndex].Name;
+
+        CFindSubControl_GPUSettings_PropIndex:
+          Result := CFindSubControl_GPUSettingsProperties[AItemIndex].Name;
 
         else
           Result := '';
@@ -6167,6 +6229,9 @@ begin
         CFindSubControl_RenderingInBrowserSettings_PropIndex:
           APropDef := CFindSubControl_RenderingInBrowserSettingsProperties[AItemIndex];
 
+        CFindSubControl_GPUSettings_PropIndex:
+          APropDef := CFindSubControl_GPUSettingsProperties[AItemIndex];
+
         else
           ;
       end;
@@ -6288,6 +6353,9 @@ begin
 
             CFindSubControl_RenderingInBrowserSettings_PropIndex:
               Result := CFindSubControl_RenderingInBrowserSettingsProperties[AItemIndex].DataType;
+
+            CFindSubControl_GPUSettings_PropIndex:
+              Result := CFindSubControl_GPUSettingsProperties[AItemIndex].DataType;
           end;
         end;
 
@@ -6437,6 +6505,9 @@ begin
 
               CFindSubControl_RenderingInBrowserSettings_PropIndex:
                 ImageList := imglstRenderingInBrowserSettings;
+
+              CFindSubControl_GPUSettings_PropIndex:
+                ImageList := imglstGPUSettings;
             end;
           end;
 
@@ -6826,6 +6897,14 @@ begin
         begin
           OldText := GetActionValueStr_FindSubControl_RenderingInBrowserSettings(AEditingAction, AItemIndex);
           SetActionValueStr_FindSubControl_RenderingInBrowserSettings(AEditingAction, ANewText, AItemIndex);
+          TriggerOnControlsModified(ANewText <> OldText);
+          Exit;
+        end;
+
+        CFindSubControl_GPUSettings_PropIndex:
+        begin
+          OldText := GetActionValueStr_FindSubControl_GPUSettings(AEditingAction, AItemIndex);
+          SetActionValueStr_FindSubControl_GPUSettings(AEditingAction, ANewText, AItemIndex);
           TriggerOnControlsModified(ANewText <> OldText);
           Exit;
         end;
@@ -7229,6 +7308,12 @@ begin
       Result := CFindSubControl_RenderingInBrowserSettingsEnumCounts[AItemIndex];
       Exit;
     end;
+
+    if APropertyIndex = CFindSubControl_GPUSettings_PropIndex then
+    begin
+      Result := CFindSubControl_GPUSettingsEnumCounts[AItemIndex];
+      Exit;
+    end;
   end;
 
   if ALiveEditingActionType = acCallTemplate then
@@ -7323,6 +7408,12 @@ begin
     if APropertyIndex = CFindSubControl_RenderingInBrowserSettings_PropIndex then
     begin
       AEnumItemName := CFindControl_RenderingInBrowserSettingsEnumStrings[AItemIndex]^[AEnumItemIndex];
+      Exit;
+    end;
+
+    if APropertyIndex = CFindSubControl_GPUSettings_PropIndex then
+    begin
+      AEnumItemName := CFindControl_GPUSettingsEnumStrings[AItemIndex]^[AEnumItemIndex];
       Exit;
     end;
   end;
@@ -7549,6 +7640,13 @@ begin
             TargetCanvas.Font.Color := clGray;
             Exit;
           end;
+      end;
+
+      if (APropertyIndex in [CFindSubControl_GPUSettings_PropIndex]) and
+         (AEditingAction^.FindSubControlOptions.MatchBitmapAlgorithm <> mbaBruteForceOnGPU) then
+      begin
+        TargetCanvas.Font.Color := clGray;
+        Exit;
       end;
     end; //acFindSubControl
 
@@ -8435,6 +8533,11 @@ begin
           begin
             AHint := CGetPropertyHint_FindSubControlRenderingInBrowserSettings_Items[AItemIndex];
           end;
+
+          CFindSubControl_GPUSettings_PropIndex:
+          begin
+            AHint := CGetPropertyHint_FindSubControlGPUSettings_Items[AItemIndex];
+          end;
         end; //case
       end; //FindControl
 
@@ -8581,6 +8684,158 @@ begin
           OIGetFileDialogSettings_ActionSpecific(FEditTemplateOptions_EditingAction.ActionOptions.Action, ACategoryIndex, APropertyIndex, AItemIndex, FBMPsDir, AFilter, AInitDir);
     end;
   except
+  end;
+end;
+
+
+procedure TfrClickerActions.AddGPUPlatformsAsMenuItems(AOIEditorMenu: TPopupMenu; AMenuHandler: TNotifyEvent; ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; AEditingAction: PClkActionRec);
+var
+  OpenCLDll: TOpenCL;
+  TempMenuItem: TMenuItem;
+  i, Error: Integer;
+  PlatformCount{, DeviceCount}: cl_uint;
+  PlatformIDs: ^cl_platform_id_arr;
+  //DeviceIDs: ^cl_device_id_arr;
+  PlatformInfo: string;
+begin
+  OpenCLDll := TOpenCL.Create;
+  try
+    if AEditingAction^.FindSubControlOptions.GPUSettings.OpenCLPath <> '' then
+      if OpenCLDll.ExpectedDllLocation <> AEditingAction^.FindSubControlOptions.GPUSettings.OpenCLPath then
+      begin
+        OpenCLDll.ExpectedDllFileName := ExtractFileName(AEditingAction^.FindSubControlOptions.GPUSettings.OpenCLPath);
+        OpenCLDll.ExpectedDllDir := ExtractFileDir(AEditingAction^.FindSubControlOptions.GPUSettings.OpenCLPath);
+        OpenCLDll.LoadOpenCLLibrary;
+      end;
+
+    if not OpenCLDll.Loaded then
+    begin
+      DoOnAddToLog('OpenCL not available. The dll is expected to exist at ' + AEditingAction^.FindSubControlOptions.GPUSettings.OpenCLPath);
+      TempMenuItem := AddMenuItemToPopupMenu(AOIEditorMenu, 'No platforms available', nil, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+      TempMenuItem.Enabled := False;
+      Exit;
+    end;
+
+    Error := OpenCLDll.clGetPlatformIDs(0, nil, @PlatformCount);
+    if Error < CL_SUCCESS then
+    begin
+      DoOnAddToLog('Error getting platforms count: ' + CLErrorToStr(Error));
+      Exit;
+    end;
+
+    GetMem(PlatformIDs, PlatformCount * SizeOf(cl_platform_id));
+    try
+      Error := OpenCLDll.clGetPlatformIDs(PlatformCount, Pcl_platform_id(PlatformIDs), nil);
+      if Error < CL_SUCCESS then
+      begin
+        DoOnAddToLog('Error getting platforms IDs: ' + CLErrorToStr(Error));
+        Exit;
+      end;
+
+      for i := 0 to PlatformCount - 1 do
+      begin
+        PlatformInfo := GetGPUPlatformInfo(DoOnAddToLog, OpenCLDll, PlatformIDs[i], CL_PLATFORM_NAME);
+        if AEditingAction^.FindSubControlOptions.GPUSettings.TargetPlatformIDType = tpitIndex then
+          PlatformInfo := '[' + IntToStr(i) + ']  ' + PlatformInfo;
+
+        TempMenuItem := AddMenuItemToPopupMenu(AOIEditorMenu, PlatformInfo, AMenuHandler, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+        POIMenuItemData(TempMenuItem.Tag)^.UserDataIndex := i; //this will be used by menu item handlers
+      end;
+    finally
+      Freemem(PlatformIDs, PlatformCount * SizeOf(cl_platform_id));
+    end;
+  finally
+    OpenCLDll.Free;
+  end;
+end;
+
+
+procedure TfrClickerActions.AddGPUDevicesAsMenuItems(AOIEditorMenu: TPopupMenu; AMenuHandler: TNotifyEvent; ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; AEditingAction: PClkActionRec);
+var
+  OpenCLDll: TOpenCL;
+  TempPlatformMenuItem, TempDeviceMenuItem: TMenuItem;
+  i, j, Error: Integer;
+  PlatformCount, DeviceCount: cl_uint;
+  PlatformIDs: ^cl_platform_id_arr;
+  DeviceIDs: ^cl_device_id_arr;
+  PlatformInfo, DeviceInfo: string;
+  DevType: cl_device_type; //GPU
+begin
+  OpenCLDll := TOpenCL.Create;
+  try
+    if AEditingAction^.FindSubControlOptions.GPUSettings.OpenCLPath <> '' then
+      if OpenCLDll.ExpectedDllLocation <> AEditingAction^.FindSubControlOptions.GPUSettings.OpenCLPath then
+      begin
+        OpenCLDll.ExpectedDllFileName := ExtractFileName(AEditingAction^.FindSubControlOptions.GPUSettings.OpenCLPath);
+        OpenCLDll.ExpectedDllDir := ExtractFileDir(AEditingAction^.FindSubControlOptions.GPUSettings.OpenCLPath);
+        OpenCLDll.LoadOpenCLLibrary;
+      end;
+
+    if not OpenCLDll.Loaded then
+    begin
+      DoOnAddToLog('OpenCL not available. The dll is expected to exist at ' + AEditingAction^.FindSubControlOptions.GPUSettings.OpenCLPath);
+      TempPlatformMenuItem := AddMenuItemToPopupMenu(AOIEditorMenu, 'No platforms available', nil, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+      TempPlatformMenuItem.Enabled := False;
+      Exit;
+    end;
+
+    Error := OpenCLDll.clGetPlatformIDs(0, nil, @PlatformCount);
+    if Error < CL_SUCCESS then
+    begin
+      DoOnAddToLog('Error getting platforms count: ' + CLErrorToStr(Error));
+      Exit;
+    end;
+
+    GetMem(PlatformIDs, PlatformCount * SizeOf(cl_platform_id));
+    try
+      Error := OpenCLDll.clGetPlatformIDs(PlatformCount, Pcl_platform_id(PlatformIDs), nil);
+      if Error < CL_SUCCESS then
+      begin
+        DoOnAddToLog('Error getting platforms IDs: ' + CLErrorToStr(Error));
+        Exit;
+      end;
+
+      for i := 0 to PlatformCount - 1 do
+      begin
+        PlatformInfo := GetGPUPlatformInfo(DoOnAddToLog, OpenCLDll, PlatformIDs[i], CL_PLATFORM_NAME);
+        if AEditingAction^.FindSubControlOptions.GPUSettings.TargetPlatformIDType = tpitIndex then
+          PlatformInfo := '[' + IntToStr(i) + ']  ' + PlatformInfo;
+
+        TempPlatformMenuItem := AddMenuItemToPopupMenu(AOIEditorMenu, PlatformInfo, nil, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+        POIMenuItemData(TempPlatformMenuItem.Tag)^.UserDataIndex := i; //not used here, because there is not handler for these items
+
+        DevType := CL_DEVICE_TYPE_GPU;
+        Error := OpenCLDll.clGetDeviceIDs(PlatformIDs[i], DevType, 0, nil, @DeviceCount);
+        if Error < CL_SUCCESS then
+        begin
+          DoOnAddToLog('Error getting devices count: ' + CLErrorToStr(Error));
+          Exit;
+        end;
+
+        GetMem(DeviceIDs, DeviceCount * SizeOf(cl_device_id));
+        try
+          Error := OpenCLDll.clGetDeviceIDs(PlatformIDs[i], DevType, DeviceCount, Pcl_device_id(DeviceIDs), nil);
+          if Error < CL_SUCCESS then
+          begin
+            DoOnAddToLog('Error getting device IDs: ' + CLErrorToStr(Error));
+            Exit;
+          end;
+
+          for j := 0 to DeviceCount - 1 do
+          begin
+            DeviceInfo := GetGPUDeviceInfo(DoOnAddToLog, OpenCLDll, DeviceIDs[j], CL_DEVICE_NAME);
+            TempDeviceMenuItem := AddMenuItemToAnotherMenuItem(AOIEditorMenu,TempPlatformMenuItem, DeviceInfo, AMenuHandler, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+            POIMenuItemData(TempDeviceMenuItem.Tag)^.UserDataIndex := j; //this will be used by menu item handlers
+          end;
+        finally
+          Freemem(DeviceIDs, DeviceCount * SizeOf(cl_device_id));
+        end;
+      end;
+    finally
+      Freemem(PlatformIDs, PlatformCount * SizeOf(cl_platform_id));
+    end;
+  finally
+    OpenCLDll.Free;
   end;
 end;
 
@@ -8914,6 +9169,26 @@ begin
             end;
 
             FPmLocalTemplates.PopUp;
+          end;
+
+        CFindSubControl_GPUSettings_PropIndex:
+          if ANodeLevel = CPropertyItemLevel then
+          begin
+            case AItemIndex of
+              CFindSubControl_GPUSettings_TargetPlatform_PropItemIndex:
+              begin
+                FOIEditorMenu.Items.Clear;
+                AddGPUPlatformsAsMenuItems(FOIEditorMenu, MenuItem_SetGPUPlatformFromInMemPropertyListClick, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+              end;
+
+              CFindSubControl_GPUSettings_TargetDevice_PropItemIndex:
+              begin
+                FOIEditorMenu.Items.Clear;
+                AddGPUDevicesAsMenuItems(FOIEditorMenu, MenuItem_SetGPUDeviceFromInMemPropertyListClick, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+              end;
+            end;
+
+            FOIEditorMenu.PopUp;
           end;
       end; //case APropertyIndex
     end; //FindControl, FindSubControl
@@ -9496,6 +9771,14 @@ begin
           SetActionValueStr_FindSubControl_RenderingInBrowserSettings(AEditingAction, ANewValue, AItemIndex);
           TriggerOnControlsModified(ANewValue <> OldValue);
         end;
+
+      CFindSubControl_GPUSettings_PropIndex:
+        ;//if AItemIndex in [CFindSubControl_GPUSettings_TargetPlatform_PropItemIndex] then
+        //begin
+        //  OldValue := GetActionValueStr_FindSubControl_GPUSettings(AEditingAction, AItemIndex);
+        //  SetActionValueStr_FindSubControl_GPUSettings(AEditingAction, ANewValue, AItemIndex);
+        //  TriggerOnControlsModified(ANewValue <> OldValue);
+        //end;
     end; //case
   end;
 end;
@@ -9758,6 +10041,9 @@ begin
 
         CFindSubControl_RenderingInBrowserSettings_PropIndex:
           Result := CFindSubControl_RenderingInBrowserSettingsProperties[AItemIndex].Name;
+
+        CFindSubControl_GPUSettings_PropIndex:
+          Result := CFindSubControl_GPUSettingsProperties[AItemIndex].Name;
 
         else
           Result := '';

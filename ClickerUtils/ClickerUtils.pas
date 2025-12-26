@@ -297,6 +297,19 @@ type
     FontSizeUnit: TFontSizeUnit;
   end;
 
+  TTargetPlatformIDType = (tpitIndex, tpitFullNameMatchCase, tpitFullNameNoCase, tpitPartialNameMatchCase, tpitPartialNameNoCase);
+  TTargetDeviceIDType = (tditIndex, tditFullNameMatchCase, tditFullNameNoCase, tditPartialNameMatchCase, tditPartialNameNoCase);
+  TGPUExecutionAvailability = (eaOpenCL3Only, eaOpenCL1Only, eaOpenCL3Then1, eaOpenCL3Then1ThenCPU);
+
+  TGPUSettings = record
+    OpenCLPath: string; // By default, the dll should be in C:\Windows\System32, but it may also be somewhere else, in a manufacturer specific dir. In addition to that, tests will require consisten results, so a mock dll may be provided.
+    TargetPlatform: string; //Can be platform index or platform name (full or partial name, case sensitive or not).
+    TargetDevice: string; //Can be device index or device name (full or partial name, case sensitive or not).
+    TargetPlatformIDType: TTargetPlatformIDType; //
+    TargetDeviceIDType: TTargetDeviceIDType; //
+    ExecutionAvailability: TGPUExecutionAvailability; //When set to eaOpenCL3Only and the computer does not have OpenCL3.0 or later, then it errors. Similarly for OpenCL2.1. The other two are fallback-like options.
+  end;
+
   TClkFindControlOptions = record
     MatchCriteria: TClkFindControlMatchCriteria;
     AllowToFail: Boolean;
@@ -350,6 +363,7 @@ type
     ThreadCount: string; //0 (and negative values) = use UI thread (old implementation). 1..255 = how many threads to use.
     UseTextRenderingInBrowser: Boolean; //If True, MatchBitmapText uses the Internet browser to render text, instead of internal (GDI) rendering.
     RenderingInBrowserSettings: TRenderingInBrowserSettings;
+    GPUSettings: TGPUSettings;
   end;
 
   TClkSetTextOptions = record
@@ -619,6 +633,9 @@ const
   CRenderingRequestTypeStr: array[TRenderingRequestType] of string = ('rrtShellExecute', 'rrtAction');
   CFontSizeUnitStr: array[TFontSizeUnit] of string = ('fsuPt', 'fsuPx');
   CFontSizeUnitNoPrefixStr: array[TFontSizeUnit] of string = ('pt', 'px'); //used in JS
+  CTargetPlatformIDTypeStr: array[TTargetPlatformIDType] of string = ('tpitIndex', 'tpitFullNameMatchCase', 'tpitFullNameNoCase', 'tpitPartialNameMatchCase', 'tpitPartialNameNoCase');
+  CTargetDeviceIDTypeStr: array[TTargetDeviceIDType] of string = ('tditIndex', 'tditFullNameMatchCase', 'tditFullNameNoCase', 'tditPartialNameMatchCase', 'tditPartialNameNoCase');
+  CExecutionAvailabilityStr: array[TGPUExecutionAvailability] of string = ('eaOpenCL3Only', 'eaOpenCL1Only', 'eaOpenCL3Then1', 'eaOpenCL3Then1ThenCPU');
   CClkSetTextControlTypeStr: array[TClkSetTextControlType] of string = ('stEditBox', 'stComboBox', 'stKeystrokes');
   CWindowOperationStr: array[TWindowOperation] of string = ('woBringToFront', 'woMoveResize', 'woClose', 'woFitIntoView');
   CSearchForControlModeStr: array[TSearchForControlMode] of string = ('sfcmGenGrid', 'sfcmEnumWindows', 'sfcmFindWindow');

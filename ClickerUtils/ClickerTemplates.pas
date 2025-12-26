@@ -256,6 +256,13 @@ begin
     ACustomActions[i].FindSubControlOptions.RenderingInBrowserSettings.PluginActionForReceivingBitmaps := '';
     ACustomActions[i].FindSubControlOptions.RenderingInBrowserSettings.FontSizeUnit := fsuPt;
 
+    ACustomActions[i].FindSubControlOptions.GPUSettings.OpenCLPath := '';
+    ACustomActions[i].FindSubControlOptions.GPUSettings.TargetPlatform := '';
+    ACustomActions[i].FindSubControlOptions.GPUSettings.TargetDevice := '';
+    ACustomActions[i].FindSubControlOptions.GPUSettings.TargetPlatformIDType := tpitIndex;
+    ACustomActions[i].FindSubControlOptions.GPUSettings.TargetDeviceIDType := tditIndex;
+    ACustomActions[i].FindSubControlOptions.GPUSettings.ExecutionAvailability := eaOpenCL3Only;
+
     ACustomActions[i].FindSubControlOptions.MatchCriteria.WillMatchBitmapText := Ini.ReadBool(SectionIndex, 'MatchCriteria.WillMatchBitmapText_' + IterationStr, False);
     ACustomActions[i].FindSubControlOptions.MatchCriteria.WillMatchBitmapFiles := Ini.ReadBool(SectionIndex, 'MatchCriteria.WillMatchBitmapFiles_' + IterationStr, False);
     ACustomActions[i].FindSubControlOptions.MatchCriteria.WillMatchPrimitiveFiles := Ini.ReadBool(SectionIndex, 'MatchCriteria.WillMatchPrimitiveFiles_' + IterationStr, False);
@@ -593,6 +600,13 @@ begin
   AFindSubControlOptions.RenderingInBrowserSettings.UsePluginForReceivingBitmaps := Ini.ReadBool(SectionIndex, 'RenderingInBrowserSettings.UsePluginForReceivingBitmaps', False);
   AFindSubControlOptions.RenderingInBrowserSettings.PluginActionForReceivingBitmaps := Ini.ReadString(SectionIndex, 'RenderingInBrowserSettings.PluginActionForReceivingBitmaps', '');
   AFindSubControlOptions.RenderingInBrowserSettings.FontSizeUnit := TFontSizeUnit(Ord(Ini.ReadInteger(SectionIndex, 'RenderingInBrowserSettings.FontSizeUnit', 0)));
+
+  AFindSubControlOptions.GPUSettings.OpenCLPath := Ini.ReadString(SectionIndex, 'GPUSettings.OpenCLPath', '');
+  AFindSubControlOptions.GPUSettings.TargetPlatform := Ini.ReadString(SectionIndex, 'GPUSettings.TargetPlatform', '');
+  AFindSubControlOptions.GPUSettings.TargetDevice := Ini.ReadString(SectionIndex, 'GPUSettings.TargetDevice', '');
+  AFindSubControlOptions.GPUSettings.TargetPlatformIDType := TTargetPlatformIDType(Ord(Ini.ReadInteger(SectionIndex, 'GPUSettings.TargetPlatformIDType', 0)));
+  AFindSubControlOptions.GPUSettings.TargetDeviceIDType := TTargetDeviceIDType(Ord(Ini.ReadInteger(SectionIndex, 'GPUSettings.TargetDeviceIDType', 0)));
+  AFindSubControlOptions.GPUSettings.ExecutionAvailability := TGPUExecutionAvailability(Ord(Ini.ReadInteger(SectionIndex, 'GPUSettings.ExecutionAvailability', 0)));
 end;
 
 
@@ -1106,6 +1120,13 @@ begin
   AStringList.Add('RenderingInBrowserSettings.UsePluginForReceivingBitmaps=' + IntToStr(Ord(AActionFindSubControlOptions.RenderingInBrowserSettings.UsePluginForReceivingBitmaps)));
   AStringList.Add('RenderingInBrowserSettings.PluginActionForReceivingBitmaps=' + AActionFindSubControlOptions.RenderingInBrowserSettings.PluginActionForReceivingBitmaps);
   AStringList.Add('RenderingInBrowserSettings.FontSizeUnit=' + IntToStr(Ord(AActionFindSubControlOptions.RenderingInBrowserSettings.FontSizeUnit)));
+
+  AStringList.Add('GPUSettings.OpenCLPath=' + AActionFindSubControlOptions.GPUSettings.OpenCLPath);
+  AStringList.Add('GPUSettings.TargetPlatform=' + AActionFindSubControlOptions.GPUSettings.TargetPlatform);
+  AStringList.Add('GPUSettings.TargetDevice=' + AActionFindSubControlOptions.GPUSettings.TargetDevice);
+  AStringList.Add('GPUSettings.TargetPlatformIDType=' + IntToStr(Ord(AActionFindSubControlOptions.GPUSettings.TargetPlatformIDType)));
+  AStringList.Add('GPUSettings.TargetDeviceIDType=' + IntToStr(Ord(AActionFindSubControlOptions.GPUSettings.TargetDeviceIDType)));
+  AStringList.Add('GPUSettings.ExecutionAvailability=' + IntToStr(Ord(AActionFindSubControlOptions.GPUSettings.ExecutionAvailability)));
 end;
 
 
@@ -1327,6 +1348,7 @@ begin
   ADest.ThreadCount := ASrc.ThreadCount;
   ADest.UseTextRenderingInBrowser := ASrc.UseTextRenderingInBrowser;
   ADest.RenderingInBrowserSettings := ASrc.RenderingInBrowserSettings;
+  ADest.GPUSettings := ASrc.GPUSettings;
 end;
 
 
