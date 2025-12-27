@@ -342,6 +342,8 @@ object frClickerSetVar: TfrClickerSetVar
         '$GetListOfFonts()$'
         '$UpperCase(<some_string>)$'
         '$LowerCase(<some_string>)$'
+        '$DisplayGPUVars()$'
+        '$DisplayOpenCLInfo([<CustomPathToOpenCL.dll>])$'
       )
       ParentShowHint = False
       ReadOnly = True

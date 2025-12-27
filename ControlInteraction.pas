@@ -859,6 +859,7 @@ function MatchByBitmap(Algorithm: TMatchBitmapAlgorithm;
                        AStopSearchOnMismatch: Boolean;
                        ACropFromScreenshot: Boolean;
                        AThreadCount: Integer;
+                       ACustomOpenCLPath: string;
                        AGPUPlatformIndex, AGPUDeviceIndex: Integer;
                        AGPUExecutionAvailability: TGPUExecutionAvailability;
                        AGPUIncludeDashG: Boolean;
@@ -953,6 +954,7 @@ begin
                     AOutsideTickCount,
                     APrecisionTimeout,
                     AThreadCount,
+                    ACustomOpenCLPath,
                     AGPUPlatformIndex,
                     AGPUDeviceIndex,
                     AGPUExecutionAvailability,
@@ -1094,6 +1096,7 @@ begin
                                 InputData.StopSearchOnMismatch,
                                 InputData.CropFromScreenshot,
                                 InputData.ThreadCount,
+                                InputData.OpenCLPath,
                                 InputData.GPUPlatformIndex,
                                 InputData.GPUDeviceIndex,
                                 InputData.GPUExecutionAvailability,
