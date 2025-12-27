@@ -92,7 +92,15 @@ function BitmapPosMatch(Algorithm: TMatchBitmapAlgorithm;
                         AOutsideTickCount, APrecisionTimeout: QWord;
                         AThreadCount: Integer;
                         AGPUPlatformIndex, AGPUDeviceIndex: Integer;
+                        AGPUExecutionAvailability: TGPUExecutionAvailability;
                         AGPUIncludeDashG: Boolean;
+                        AGPUSlaveQueueFromDevice: Boolean;
+                        AGPUUseAllKernelsEvent: Boolean;
+                        AGPUNdrangeNoLocalParam: Boolean;
+                        AGPUUseEventsInEnqueueKernel: Boolean;
+                        AGPUWaitForAllKernelsToBeDone: Boolean;
+                        AGPUReleaseFinalEventAtKernelEnd: Boolean;
+                        AGPUIgnoreExecutionAvailability: Boolean;
                         out AResultedErrorCount: Integer;
                         AStopSearchOnDemand: PBoolean = nil;
                         StopSearchOnMismatch: Boolean = True): Boolean;
@@ -1563,7 +1571,14 @@ begin      //int is 32-bit, long is 64-bit
 end;
 
 
-function GetKernelSrcRGB_SlideSearch(ASubBmpHeightStr: string): string; //ASubBmpHeightStr should have the same value as ASubBmpHeight argument.
+function GetKernelSrcRGB_SlideSearch(ASubBmpHeightStr: string;
+                                     AGPUSlaveQueueFromDevice: Boolean;
+                                     AGPUUseAllKernelsEvent: Boolean;
+                                     AGPUNdrangeNoLocalParam: Boolean;
+                                     AGPUUseEventsInEnqueueKernel: Boolean;
+                                     AGPUWaitForAllKernelsToBeDone: Boolean;
+                                     AGPUReleaseFinalEventAtKernelEnd: Boolean
+                                    ): string; //ASubBmpHeightStr should have the same value as ASubBmpHeight argument.
 begin
   Result :=
     #13#10 +
@@ -1581,15 +1596,27 @@ begin
     '  const uchar AColorError,                 ' + #13#10 +
     '  const long ASlaveQueue,                  ' + #13#10 +
     '  const unsigned int ATotalErrorCount)     ' + #13#10 +
-    '{                                          ' + #13#10 +
-    //'  queue_t SlaveQueue = get_default_queue();' + #13#10 +     //requires OpenCL >= 2.0 and __opencl_c_device_enqueue
-    '  queue_t SlaveQueue = (queue_t)ASlaveQueue;' + #13#10 +
-    //'  clk_event_t AllKernelsEvent;             ' + #13#10 +       //when using AllKernelsEvent
-    '  clk_event_t AllEvents[' + ASubBmpHeightStr + '];' + #13#10 +  //Constrained array of the same length as the 1D range, i.e. the sub BMP height.
+    '{                                          ' + #13#10;
+    if AGPUSlaveQueueFromDevice then
+      Result := Result + '  queue_t SlaveQueue = get_default_queue();' + #13#10     //requires OpenCL >= 2.0 and __opencl_c_device_enqueue
+    else
+      Result := Result + '  queue_t SlaveQueue = (queue_t)ASlaveQueue;' + #13#10;   //Default option of AGPUSlaveQueueFromDevice
+
+    if AGPUUseAllKernelsEvent then
+      Result := Result + '  clk_event_t AllKernelsEvent;             ' + #13#10       //when using AllKernelsEvent
+    else
+      Result := Result + '  clk_event_t AllEvents[' + ASubBmpHeightStr + '];' + #13#10 +  //Constrained array of the same length as the 1D range, i.e. the sub BMP height.
+
     '  clk_event_t FinalEvent;                  ' + #13#10 + //used as a return event, from enqueue_marker
     '                                           ' + #13#10 +
-    '                                           ' + #13#10 +
-    '  ndrange_t ndrange = ndrange_1D(1, ASubBmpHeight);' + #13#10 +
+    '                                           ' + #13#10;
+
+    if AGPUNdrangeNoLocalParam then
+      Result := Result + '  ndrange_t ndrange = ndrange_1D(ASubBmpHeight);' + #13#10
+    else
+      Result := Result + '  ndrange_t ndrange = ndrange_1D(1, ASubBmpHeight);' + #13#10;   //default
+
+    Result := Result +
     '  kernel_enqueue_flags_t MyFlags;          ' + #13#10 +
     '  MyFlags = CLK_ENQUEUE_FLAGS_NO_WAIT;     ' + #13#10 +
     '  int i, j, k = 0;                         ' + #13#10 +
@@ -1606,40 +1633,77 @@ begin
     '    {                                      ' + #13#10 +
     '      for (k = 0; k < ASubBmpHeight; k++)  ' + #13#10 +
     '        AKernelDone[k] = 0;                ' + #13#10 +
-    ''                                            + #13#10 +
-    '      for (k = 0; k < ASubBmpHeight; k++)  ' + #13#10 +    //this line is used only when calling with AllEvents,
-    '      EnqKrnErr = enqueue_kernel(          ' + #13#10 +    //and should not exist when calling with AllKernelsEvent
+    ''                                            + #13#10;
+
+    if not AGPUUseAllKernelsEvent then
+      Result := Result + '      for (k = 0; k < ASubBmpHeight; k++)  ' + #13#10;    //this line is used only when calling with AllEvents, and should not exist when calling with AllKernelsEvent
+
+    Result := Result +
+    '      EnqKrnErr = enqueue_kernel(          ' + #13#10 +
     '        SlaveQueue,                        ' + #13#10 +      //using SlaveQueue, instead of get_default_queue()
     '        MyFlags,                           ' + #13#10 +      //enqueue_kernel is commented, because using the default queue, messes up the object, so that the clFinish(SlaveCmdQueue) call returns an error.
-    '        ndrange,                           ' + #13#10 +
-    '        0,            //comment for err -10' + #13#10 +
-    '        NULL,         //comment for err -10' + #13#10 +
-    '        &AllEvents[k],//comment for err -10' + #13#10 +
-    //'        &AllKernelsEvent, //comment for err -10' + #13#10 +   //use either AllEvents[k] or AllKernelsEvent
-    '        ^{MatCmp(ABackgroundBmp, ASubBmp, AResultedErrCount, AKernelDone, ABackgroundWidth, ASubBmpWidth, ASubBmpHeight, i, j, AColorError, ASlaveQueue);});                  ' + #13#10 +
+    '        ndrange,                           ' + #13#10;
 
-    '      //wait for all kernels to be done    ' + #13#10 +
-    '      AllKernelsDone = false;              ' + #13#10 +
-    '      while (!AllKernelsDone)              ' + #13#10 +
-    '      {                                    ' + #13#10 +
-    '        AllKernelsDone = true;             ' + #13#10 +
-    '        for (k = 0; k < ASubBmpHeight; k++)' + #13#10 +
-    '          if (AKernelDone[k] == 0)         ' + #13#10 +
-    '          {                                ' + #13#10 +
-    '            AllKernelsDone = false;        ' + #13#10 +
-    '            break;                         ' + #13#10 +
-    '          }                                ' + #13#10 +
-    '        //it would be nice to have a sleep call here' + #13#10 +
-    '      } //while                            ' + #13#10 +
-    '      ADebuggingInfo[0] = EnqKrnErr;       ' + #13#10 +
+    if AGPUUseEventsInEnqueueKernel then
+    begin
+      Result := Result +
+      '        0,            //comment for err -10' + #13#10 +
+      '        NULL,         //comment for err -10' + #13#10;
 
-    '      EnqMrkErr = enqueue_marker(SlaveQueue, ASubBmpHeight, AllEvents, &FinalEvent);' + #13#10 +
-    //'      EnqMrkErr = enqueue_marker(SlaveQueue, 1, &AllKernelsEvent, &FinalEvent);' + #13#10 +    //when using AllKernelsEvent
-    '      ADebuggingInfo[1] = EnqMrkErr;       ' + #13#10 +
-    '      for (k = 0; k < ASubBmpHeight; k++)  ' + #13#10 +
-    '        release_event(AllEvents[k]);       ' + #13#10 +
-    //'        release_event(AllKernelsEvent);    ' + #13#10 +    //when using AllKernelsEvent
-    '      release_event(FinalEvent);           ' + #13#10 +
+      if AGPUUseAllKernelsEvent then
+        Result := Result + '        &AllKernelsEvent, //comment for err -10' + #13#10
+      else
+        Result := Result + '        &AllEvents[k], //comment for err -10' + #13#10;
+    end;
+
+    Result := Result +
+    '        ^{MatCmp(ABackgroundBmp, ASubBmp, AResultedErrCount, AKernelDone, ABackgroundWidth, ASubBmpWidth, ASubBmpHeight, i, j, AColorError, ASlaveQueue);});                  ' + #13#10;
+
+    if AGPUWaitForAllKernelsToBeDone then
+    begin
+      Result := Result +
+      '      //wait for all kernels to be done    ' + #13#10 +
+      '      AllKernelsDone = false;              ' + #13#10 +
+      '      while (!AllKernelsDone)              ' + #13#10 +
+      '      {                                    ' + #13#10 +
+      '        AllKernelsDone = true;             ' + #13#10 +
+      '        for (k = 0; k < ASubBmpHeight; k++)' + #13#10 +
+      '          if (AKernelDone[k] == 0)         ' + #13#10 +
+      '          {                                ' + #13#10 +
+      '            AllKernelsDone = false;        ' + #13#10 +
+      '            break;                         ' + #13#10 +
+      '          }                                ' + #13#10 +
+      '        //it would be nice to have a sleep call here' + #13#10 +
+      '      } //while                            ' + #13#10;
+    end;
+
+    Result := Result +
+      '      ADebuggingInfo[0] = EnqKrnErr;       ' + #13#10;
+
+    if AGPUUseAllKernelsEvent then
+      Result := Result + '      EnqMrkErr = enqueue_marker(SlaveQueue, 1, &AllKernelsEvent, &FinalEvent);' + #13#10    //when using AllKernelsEvent
+    else
+      Result := Result + '      EnqMrkErr = enqueue_marker(SlaveQueue, ASubBmpHeight, AllEvents, &FinalEvent);' + #13#10;
+
+    Result := Result +
+    //
+    '      ADebuggingInfo[1] = EnqMrkErr;       ' + #13#10;
+
+    if AGPUUseEventsInEnqueueKernel then
+    begin
+      if AGPUUseAllKernelsEvent then
+        Result := Result +'        release_event(AllKernelsEvent);    ' + #13#10    //when using AllKernelsEvent
+      else
+        Result := Result +
+          '      for (k = 0; k < ASubBmpHeight; k++)  ' + #13#10 +
+          '        release_event(AllEvents[k]);       ' + #13#10;
+
+      if not AGPUReleaseFinalEventAtKernelEnd then
+        Result := Result +
+        '      release_event(FinalEvent);           ' + #13#10;
+    end;
+
+    Result := Result +
     ''                                            + #13#10 +
     '      int DifferentCount = 0;              ' + #13#10 +     //collect the results from all slave kernels
     '      for (k = 0; k < ASubBmpHeight; k++)  ' + #13#10 +
@@ -1664,9 +1728,17 @@ begin
     '  ADebuggingInfo[7] = get_global_size(1);  ' + #13#10 +
     '  ADebuggingInfo[8] = get_local_size(1);   ' + #13#10 +
     '  ADebuggingInfo[9] = get_enqueued_local_size(1);' + #13#10 +
-    '  ADebuggingInfo[10] = ATotalErrorCount;   ' + #13#10 +
-    '  release_event(AllKernelsEvent);          ' + #13#10 +
-    '  release_event(FinalEvent);               ' + #13#10 +
+    '  ADebuggingInfo[10] = ATotalErrorCount;   ' + #13#10;
+
+    if AGPUUseEventsInEnqueueKernel then
+    begin
+      //'  release_event(AllKernelsEvent);          ' + #13#10;  //TBD
+
+      if AGPUReleaseFinalEventAtKernelEnd then
+        Result := Result + '  release_event(FinalEvent);               ' + #13#10;
+    end;
+
+    Result := Result +
     '}'                                           + #13#10
     ;
 end;
@@ -1910,7 +1982,15 @@ function BitmapPosMatch_BruteForceOnGPU(ASrcBmpData, ASubBmpData: Pointer;
                                         AOutsideTickCount, APrecisionTimeout: QWord;
                                         AThreadCount: Integer;
                                         AGPUPlatformIndex, AGPUDeviceIndex: Integer;
+                                        AGPUExecutionAvailability: TGPUExecutionAvailability;
                                         AGPUIncludeDashG: Boolean;
+                                        AGPUSlaveQueueFromDevice: Boolean;
+                                        AGPUUseAllKernelsEvent: Boolean;
+                                        AGPUNdrangeNoLocalParam: Boolean;
+                                        AGPUUseEventsInEnqueueKernel: Boolean;
+                                        AGPUWaitForAllKernelsToBeDone: Boolean;
+                                        AGPUReleaseFinalEventAtKernelEnd: Boolean;
+                                        AGPUIgnoreExecutionAvailability: Boolean;
                                         out AResultedErrorCount: Integer;
                                         AStopSearchOnDemand: PBoolean = nil;
                                         StopSearchOnMismatch: Boolean = True): Boolean;
@@ -1953,7 +2033,18 @@ begin
     Exit;
   end;
 
-  KernelSrc := GetKernelSrcRGB_MatCmp(ABytesPerPixelOnSrc, ABytesPerPixelOnSub);
+  KernelSrc := '';
+  //if AGPUExecutionAvailability in [eaOpenCL3Only, eaOpenCL3Then1, eaOpenCL3Then1ThenCPU] then
+  //  KernelSrc := GetKernelSrcRGB_SlideSearch(IntToStr(ASubBitmapHeight),
+  //                                           AGPUSlaveQueueFromDevice,
+  //                                           AGPUUseAllKernelsEvent,
+  //                                           AGPUNdrangeNoLocalParam,
+  //                                           AGPUUseEventsInEnqueueKernel,
+  //                                           AGPUWaitForAllKernelsToBeDone,
+  //                                           AGPUReleaseFinalEventAtKernelEnd);
+
+  KernelSrc := KernelSrc + GetKernelSrcRGB_MatCmp(ABytesPerPixelOnSrc, ABytesPerPixelOnSub);
+
   OpenCLDll := TOpenCL.Create;
   try
     if not OpenCLDll.Loaded then
@@ -2087,7 +2178,15 @@ function BitmapPosMatch(Algorithm: TMatchBitmapAlgorithm;
                         AOutsideTickCount, APrecisionTimeout: QWord;
                         AThreadCount: Integer;
                         AGPUPlatformIndex, AGPUDeviceIndex: Integer;
+                        AGPUExecutionAvailability: TGPUExecutionAvailability;
                         AGPUIncludeDashG: Boolean;
+                        AGPUSlaveQueueFromDevice: Boolean;
+                        AGPUUseAllKernelsEvent: Boolean;
+                        AGPUNdrangeNoLocalParam: Boolean;
+                        AGPUUseEventsInEnqueueKernel: Boolean;
+                        AGPUWaitForAllKernelsToBeDone: Boolean;
+                        AGPUReleaseFinalEventAtKernelEnd: Boolean;
+                        AGPUIgnoreExecutionAvailability: Boolean;
                         out AResultedErrorCount: Integer;
                         AStopSearchOnDemand: PBoolean = nil;
                         StopSearchOnMismatch: Boolean = True): Boolean;
@@ -2161,7 +2260,15 @@ begin
                                                AThreadCount,
                                                AGPUPlatformIndex,
                                                AGPUDeviceIndex,
+                                               AGPUExecutionAvailability,
                                                AGPUIncludeDashG,
+                                               AGPUSlaveQueueFromDevice,
+                                               AGPUUseAllKernelsEvent,
+                                               AGPUNdrangeNoLocalParam,
+                                               AGPUUseEventsInEnqueueKernel,
+                                               AGPUWaitForAllKernelsToBeDone,
+                                               AGPUReleaseFinalEventAtKernelEnd,
+                                               AGPUIgnoreExecutionAvailability,
                                                AResultedErrorCount,
                                                AStopSearchOnDemand,
                                                StopSearchOnMismatch);

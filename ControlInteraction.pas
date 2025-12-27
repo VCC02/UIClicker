@@ -84,7 +84,7 @@ type
     GPUIncludeDashG: Boolean; //when True, clBuildProgram is called with an additional build option, "-g". In case of an error, this allows getting detailed info. Var: $GPUIncludeDashG$
     GPUSlaveQueueFromDevice: Boolean; //when True, the SlaveQueue variable, from the SlideSearch kernel, is assigned in the kernel itself. Var: $SlaveQueueFromDevice$
     GPUUseAllKernelsEvent: Boolean; //when True, the SlideSearch kernel uses AllKernelsEvent variable, instead of AllEvents variable. Var: $UseAllKernelsEvent$
-    GPUNdrangeNoLocalParam: Boolean; //when True, then ndrange_1D call is made with two arguments (Global). By default, it is called with (Global, Local). Var: $NdrangeNoLocalParam$
+    GPUNdrangeNoLocalParam: Boolean; //when True, then ndrange_1D call is made with one argument (Global). By default, it is called with (Global, Local). Var: $NdrangeNoLocalParam$
     GPUUseEventsInEnqueueKernel: Boolean; //when True, enqueue_kernel is called with 3 additional arguments. By default, it is True, even if undefined. Var: $UseEventsInEnqueueKernel$
     GPUWaitForAllKernelsToBeDone: Boolean; //when True, the main kernel waits for all "generated" kernels to be done. By default, it is True, even if undefined. Var: $WaitForAllKernelsToBeDone$
     GPUReleaseFinalEventAtKernelEnd: Boolean; //when True, the release_event(FinalEvent) call, from the main kernel, is done once, at the end. Var: $ReleaseFinalEventAtKernelEnd$
@@ -955,7 +955,15 @@ begin
                     AThreadCount,
                     AGPUPlatformIndex,
                     AGPUDeviceIndex,
+                    AGPUExecutionAvailability,
                     AGPUIncludeDashG,
+                    AGPUSlaveQueueFromDevice,
+                    AGPUUseAllKernelsEvent,
+                    AGPUNdrangeNoLocalParam,
+                    AGPUUseEventsInEnqueueKernel,
+                    AGPUWaitForAllKernelsToBeDone,
+                    AGPUReleaseFinalEventAtKernelEnd,
+                    AGPUIgnoreExecutionAvailability,
                     AResultedErrorCount,
                     AStopAllActionsOnDemand,
                     AStopSearchOnMismatch) then
