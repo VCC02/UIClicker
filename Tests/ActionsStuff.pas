@@ -1659,6 +1659,12 @@ begin
   AFindSubControlOptions.RenderingInBrowserSettings.UsePluginForReceivingBitmaps := True;
   AFindSubControlOptions.RenderingInBrowserSettings.PluginActionForReceivingBitmaps := 'DummyAction';
   AFindSubControlOptions.RenderingInBrowserSettings.FontSizeUnit := fsuPx;
+  AFindSubControlOptions.GPUSettings.OpenCLPath := 'No path';
+  AFindSubControlOptions.GPUSettings.TargetPlatform := 'Fake platform';
+  AFindSubControlOptions.GPUSettings.TargetDevice := 'Fake device';
+  AFindSubControlOptions.GPUSettings.TargetPlatformIDType := tpitPartialNameNoCase;
+  AFindSubControlOptions.GPUSettings.TargetDeviceIDType := tditPartialNameNoCase;
+  AFindSubControlOptions.GPUSettings.ExecutionAvailability := eaOpenCL3Then1ThenCPU;
 
   SetLength(AFindSubControlOptions.MatchBitmapText, 2);
   //no need to call GetDefaultPropertyValues_FindControl_MatchBitmapText();
@@ -1765,7 +1771,14 @@ begin
             'RenderingInBrowserSettings.PluginActionForReceivingBitmaps' + '=' + 'NoAction' + '&' +
             'RenderingInBrowserSettings.UsePluginForReceivingBitmaps' + '=' + 'True' + '&' +
             'RenderingInBrowserSettings.PluginActionForReceivingBitmaps' + '=' + 'DummyAction' + '&' +
-            'RenderingInBrowserSettings.FontSizeUnit' + '=' + 'fsuPx'
+            'RenderingInBrowserSettings.FontSizeUnit' + '=' + 'fsuPx' +
+
+            'GPUSettings.OpenCLPath' + '=' + 'No path' + '&' +
+            'GPUSettings.TargetPlatform' + '=' + 'Fake platform' + '&' +
+            'GPUSettings.TargetDevice' + '=' + 'Fake device' + '&' +
+            'GPUSettings.TargetPlatformIDType' + '=' + 'tpitPartialNameNoCase' + '&' +
+            'GPUSettings.TargetDeviceIDType' + '=' + 'tpidPartialNameNoCase' + '&' +
+            'GPUSettings.ExecutionAvailability' + '=' + 'eaOpenCL3Then1ThenCPU'
             ;
 end;
 
