@@ -152,6 +152,22 @@ type
   end;
 
 
+  TGPUSettingsAPI = record
+    OpenCLPath: PWideChar; //
+    TargetPlatform: PWideChar; //
+    TargetDevice: PWideChar; //
+    TargetPlatformIDType: Byte; //TTargetPlatformIDType; //
+    TargetDeviceIDType: Byte; //TTargetDeviceIDType; //
+    ExecutionAvailability: Byte; //TGPUExecutionAvailability;
+  end;
+
+  TGPUSettingsAPIWS = record
+    OpenCLPath: WideString;
+    TargetPlatform: WideString;
+    TargetDevice: WideString;
+  end;
+
+
   TClkFindControlMatchBitmapTextAPI = record
     ForegroundColor: PWideChar;
     BackgroundColor: PWideChar;
@@ -286,6 +302,7 @@ type
     ThreadCount: PWideChar;
     UseTextRenderingInBrowser: Boolean;
     RenderingInBrowserSettings: TRenderingInBrowserSettingsAPI;
+    GPUSettings: TGPUSettingsAPI;
   end;
 
   PClkFindSubControlOptionsAPI = ^TClkFindSubControlOptionsAPI;
@@ -307,6 +324,7 @@ type
     EvaluateTextCount: WideString;
     ThreadCount: WideString;
     RenderingInBrowserSettings: TRenderingInBrowserSettingsAPIWS;
+    GPUSettings: TGPUSettingsAPIWS;
   end;
 
 
@@ -719,6 +737,13 @@ begin
   SetPointedContentToString(@string(PWideChar(AFindSubControlOptions^.RenderingInBrowserSettings.PluginActionForReceivingBitmaps))[1], ADestClkAction.FindSubControlOptions.RenderingInBrowserSettings.PluginActionForReceivingBitmaps);
   ADestClkAction.FindSubControlOptions.RenderingInBrowserSettings.FontSizeUnit := TFontSizeUnit(AFindSubControlOptions^.RenderingInBrowserSettings.FontSizeUnit);
 
+  SetPointedContentToString(@string(PWideChar(AFindSubControlOptions^.GPUSettings.OpenCLPath))[1], ADestClkAction.FindSubControlOptions.GPUSettings.OpenCLPath);
+  SetPointedContentToString(@string(PWideChar(AFindSubControlOptions^.GPUSettings.TargetPlatform))[1], ADestClkAction.FindSubControlOptions.GPUSettings.TargetPlatform);
+  SetPointedContentToString(@string(PWideChar(AFindSubControlOptions^.GPUSettings.TargetDevice))[1], ADestClkAction.FindSubControlOptions.GPUSettings.TargetDevice);
+  ADestClkAction.FindSubControlOptions.GPUSettings.TargetPlatformIDType := TTargetPlatformIDType(AFindSubControlOptions^.GPUSettings.TargetPlatformIDType);
+  ADestClkAction.FindSubControlOptions.GPUSettings.TargetDeviceIDType := TTargetDeviceIDType(AFindSubControlOptions^.GPUSettings.TargetDeviceIDType);
+  ADestClkAction.FindSubControlOptions.GPUSettings.ExecutionAvailability := TGPUExecutionAvailability(AFindSubControlOptions^.GPUSettings.ExecutionAvailability);
+
   if AFindSubControlOptions^.MatchBitmapText = nil then  //assume the caller sets this field to nil if not used
     Exit;
   //However, if the field is not nil, then it is either valid or an uninitialized pointer.
@@ -1073,6 +1098,13 @@ begin
   ADestFindSubControlOptions.RenderingInBrowserSettings.UsePluginForReceivingBitmaps := AFindSubControlOptions.RenderingInBrowserSettings.UsePluginForReceivingBitmaps;
   ATempFindSubControlOptionsAPIWS.RenderingInBrowserSettings.PluginActionForReceivingBitmaps := WideString(AFindSubControlOptions.RenderingInBrowserSettings.PluginActionForReceivingBitmaps);  ADestFindSubControlOptions.RenderingInBrowserSettings.PluginActionForReceivingBitmaps := @ATempFindSubControlOptionsAPIWS.RenderingInBrowserSettings.PluginActionForReceivingBitmaps[1];
   ADestFindSubControlOptions.RenderingInBrowserSettings.FontSizeUnit := Ord(AFindSubControlOptions.RenderingInBrowserSettings.FontSizeUnit);
+
+  ATempFindSubControlOptionsAPIWS.GPUSettings.OpenCLPath := WideString(AFindSubControlOptions.GPUSettings.OpenCLPath);  ADestFindSubControlOptions.GPUSettings.OpenCLPath := @ATempFindSubControlOptionsAPIWS.GPUSettings.OpenCLPath[1];
+  ATempFindSubControlOptionsAPIWS.GPUSettings.TargetPlatform := WideString(AFindSubControlOptions.GPUSettings.TargetPlatform);  ADestFindSubControlOptions.GPUSettings.TargetPlatform := @ATempFindSubControlOptionsAPIWS.GPUSettings.TargetPlatform[1];
+  ATempFindSubControlOptionsAPIWS.GPUSettings.TargetDevice := WideString(AFindSubControlOptions.GPUSettings.TargetDevice);  ADestFindSubControlOptions.GPUSettings.TargetDevice := @ATempFindSubControlOptionsAPIWS.GPUSettings.TargetDevice[1];
+  ADestFindSubControlOptions.GPUSettings.TargetPlatformIDType := Ord(AFindSubControlOptions.GPUSettings.TargetPlatformIDType);
+  ADestFindSubControlOptions.GPUSettings.TargetDeviceIDType := Ord(AFindSubControlOptions.GPUSettings.TargetDeviceIDType);
+  ADestFindSubControlOptions.GPUSettings.ExecutionAvailability := Ord(AFindSubControlOptions.GPUSettings.ExecutionAvailability);
 
   if Length(AFindSubControlOptions.MatchBitmapText) = 0 then
   begin
