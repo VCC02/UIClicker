@@ -124,6 +124,26 @@ class TFontSizeUnit: #(Enum):
     fsuPt = 0
     fsuPx = 1
 
+class TTargetPlatformIDType: #(Enum):
+    tpitIndex = 0
+    tpitFullNameMatchCase = 1
+    tpitFullNameNoCase = 2
+    tpitPartialNameMatchCase = 3
+    tpitPartialNameNoCase = 4
+
+class TTargetDeviceIDType: #(Enum):
+    tditIndex = 0
+    tditFullNameMatchCase = 1
+    tditFullNameNoCase = 2
+    tditPartialNameMatchCase = 3
+    tditPartialNameNoCase = 4
+
+class TGPUExecutionAvailability: #(Enum):
+    eaOpenCL3Only = 0
+    eaOpenCL1Only = 1
+    eaOpenCL3Then1 = 2
+    eaOpenCL3Then1ThenCPU = 3
+
 
 class TClkSetTextControlType: #(Enum):
     stEditBox = 0
@@ -293,7 +313,7 @@ class TMatchByHistogramSettings(Structure):
                ("MostSignificantColorCountInSubBmp", LPCWSTR),
                ("MostSignificantColorCountInBackgroundBmp", LPCWSTR)]
 
-               
+
 class TRenderingInBrowserSettings(Structure):
     _fields_ = [("RenderingRequestType", BYTE), #TRenderingRequestType
                ("ReceivingBitmapsTimeout", LONG),
@@ -301,6 +321,14 @@ class TRenderingInBrowserSettings(Structure):
                ("UsePluginForReceivingBitmaps", BOOLEAN),
                ("PluginActionForReceivingBitmaps", LPCWSTR),
                ("FontSizeUnit", BYTE)] #TFontSizeUnit
+
+class TGPUSettings(Structure):
+    _fields_ = [("OpenCLPath", LPCWSTR),
+               ("TargetPlatform", LPCWSTR),
+               ("TargetDevice", LPCWSTR),
+               ("TargetPlatformIDType", BYTE), #TTargetPlatformIDType
+               ("TargetDeviceIDType", BYTE), #TTargetDeviceIDType
+               ("ExecutionAvailability", BYTE)] #TGPUExecutionAvailability
 
 
 ###########/////////////////
@@ -474,7 +502,8 @@ class TFindSubControlOptions(Structure):
                ("CropFromScreenshot", BOOLEAN),
                ("ThreadCount", LPCWSTR),
                ("UseTextRenderingInBrowser", BOOLEAN),
-               ("RenderingInBrowserSettings", TRenderingInBrowserSettings)
+               ("RenderingInBrowserSettings", TRenderingInBrowserSettings),
+               ("GPUSettings", TGPUSettings)
                ]
 
 PFindSubControlOptions = ctypes.POINTER(TFindSubControlOptions)
@@ -540,7 +569,7 @@ def GetDefaultFindSubControlOptions():
     FindSubControlOptions.CropFromScreenshot = False
     FindSubControlOptions.ThreadCount = "2"
     FindSubControlOptions.UseTextRenderingInBrowser = False
-    
+
     FindSubControlOptions.RenderingInBrowserSettings = TRenderingInBrowserSettings()
     FindSubControlOptions.RenderingInBrowserSettings.RenderingRequestType = TRenderingRequestType.rrtShellExecute
     FindSubControlOptions.RenderingInBrowserSettings.ReceivingBitmapsTimeout = 3000
@@ -549,6 +578,13 @@ def GetDefaultFindSubControlOptions():
     FindSubControlOptions.RenderingInBrowserSettings.PluginActionForReceivingBitmaps = ''
     FindSubControlOptions.RenderingInBrowserSettings.FontSizeUnit = TFontSizeUnit.fsuPt
 
+    FindSubControlOptions.GPUSettings = TGPUSettings()
+    FindSubControlOptions.GPUSettings.OpenCLPath = ''
+    FindSubControlOptions.GPUSettings.TargetPlatform = 0
+    FindSubControlOptions.GPUSettings.TargetDevice = 0
+    FindSubControlOptions.GPUSettings.TargetPlatform = TTargetPlatformIDType.tpitIndex
+    FindSubControlOptions.GPUSettings.TargetDeviceIDType = TTargetDeviceIDType.tditIndex
+    FindSubControlOptions.GPUSettings.ExecutionAvailability = TGPUExecutionAvailability.eaOpenCL3Only
     return FindSubControlOptions
 
 
