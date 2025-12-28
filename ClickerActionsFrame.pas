@@ -312,6 +312,7 @@ type
     procedure MenuItem_SetPluginFileNameFromInMemPropertyListClick(Sender: TObject);
     procedure MenuItem_SetGPUPlatformFromInMemPropertyListClick(Sender: TObject);
     procedure MenuItem_SetGPUDeviceFromInMemPropertyListClick(Sender: TObject);
+    procedure MenuItem_BrowseOpenCLFileNameForPropertyListClick(Sender: TObject);
 
     procedure MenuItem_AddFontProfileToPropertyListClick(Sender: TObject);
     procedure MenuItem_AddFontProfileWithAntialiasedAndClearTypeToPropertyListClick(Sender: TObject);
@@ -633,6 +634,8 @@ type
     procedure HandleOnOIGetImageIndexEx(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; Kind: TVTImageKind;
       Column: TColumnIndex; var Ghosted: Boolean; var ImageIndex: Integer; var ImageList: TCustomImageList);
 
+    procedure UpdateGPUTargetPlatformByType(AOldText: string; AEditingAction: PClkActionRec; ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; ANewText: string);
+    procedure UpdateGPUTargetDeviceByType(AOldText: string; AEditingAction: PClkActionRec; ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; ANewText: string);
     procedure OIEditedText_ActionSpecific(AEditingAction: PClkActionRec; ALiveEditingActionType: TClkAction; ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; ANewText: string);
     procedure SetEmptyEditedActionByEditTemplateToDefault;
     procedure HandleOnOIEditedText(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; ANewText: string);
@@ -4979,6 +4982,27 @@ begin
 end;
 
 
+procedure TfrClickerActions.MenuItem_BrowseOpenCLFileNameForPropertyListClick(Sender: TObject);
+var
+  MenuData: POIMenuItemData;
+begin
+  MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
+  try
+    if not DoOnOpenDialogExecute({$IFDEF Windows} 'Dll files (*.dll)|*.dll|All files (*.*)|*.*' {$ELSE} 'Dll files (*.so)|*.so|All files (*.*)|*.*' {$ENDIF}) then
+      Exit;
+
+    MenuData^.TempEditingAction^.FindSubControlOptions.GPUSettings.OpenCLPath := DoOnGetOpenDialogFileName;
+    FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex, True);  //this closes the editor
+
+    FOIFrame.CancelCurrentEditing;
+    FOIFrame.Repaint;   //ideally, RepaintNodeByLevel
+    TriggerOnControlsModified;
+  finally
+    Dispose(MenuData);
+  end;
+end;
+
+
 function TfrClickerActions.GetUniqueProfileName(n: Integer): string;
 var
   AttemptCount: Integer;
@@ -6653,6 +6677,137 @@ begin  //
 end;
 
 
+procedure TfrClickerActions.UpdateGPUTargetPlatformByType(AOldText: string; AEditingAction: PClkActionRec; ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; ANewText: string);
+var
+  DummyPopupMenu: TPopupMenu;
+  TempCaption: string;
+  TempPlatformIndex: Integer;
+  i: Integer;
+begin
+  DummyPopupMenu := TPopupMenu.Create(nil);  //use a pop-up menu, to get the list of platforms:
+  try
+    AddGPUPlatformsAsMenuItems(DummyPopupMenu, nil, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+    if (AOldText <> CTargetPlatformIDTypeStr[tpitIndex]) and
+       (AEditingAction^.FindSubControlOptions.GPUSettings.TargetPlatformIDType = tpitIndex) then //from text to index
+    begin
+      DoOnAddToLog('Converting TargetPlatform from text to index..');
+      for i := 0 to DummyPopupMenu.Items.Count - 1 do
+      begin
+        TempCaption := StringReplace(DummyPopupMenu.Items[i].Caption, '&', '', [rfReplaceAll]);
+
+        if ((TempCaption = AEditingAction^.FindSubControlOptions.GPUSettings.TargetPlatform) and (AOldText = CTargetPlatformIDTypeStr[tpitFullNameMatchCase])) or
+           ((UpperCase(TempCaption) = UpperCase(AEditingAction^.FindSubControlOptions.GPUSettings.TargetPlatform)) and (AOldText = CTargetPlatformIDTypeStr[tpitFullNameNoCase])) or
+           ((Pos(AEditingAction^.FindSubControlOptions.GPUSettings.TargetPlatform, TempCaption) > 0) and (AOldText = CTargetPlatformIDTypeStr[tpitPartialNameMatchCase])) or
+           ((Pos(UpperCase(AEditingAction^.FindSubControlOptions.GPUSettings.TargetPlatform), UpperCase(TempCaption)) > 0) and (AOldText = CTargetPlatformIDTypeStr[tpitPartialNameNoCase])) then
+        begin
+          DoOnAddToLog('From ' + AEditingAction^.FindSubControlOptions.GPUSettings.TargetPlatform + ' to ' + IntToStr(i));
+          AEditingAction^.FindSubControlOptions.GPUSettings.TargetPlatform := IntToStr(i);
+          Break;
+        end;
+      end;
+    end;  //from text to index
+
+    if (AOldText = CTargetPlatformIDTypeStr[tpitIndex]) and
+       (AEditingAction^.FindSubControlOptions.GPUSettings.TargetPlatformIDType <> tpitIndex) then //from index to text
+    begin
+      DoOnAddToLog('Converting TargetPlatform from index to text..');
+      TempPlatformIndex := StrToIntDef(AEditingAction^.FindSubControlOptions.GPUSettings.TargetPlatform, -1);
+      if (TempPlatformIndex < 0) or (TempPlatformIndex > DummyPopupMenu.Items.Count - 1) then
+        TempPlatformIndex := -1; //even if Count may be 0
+
+      if (DummyPopupMenu.Items.Count > 0) and (TempPlatformIndex <> -1) then //in case of an empty menu, this will lead to AV
+      begin
+        TempCaption := StringReplace(DummyPopupMenu.Items[TempPlatformIndex].Caption, '&', '', [rfReplaceAll]);
+        DoOnAddToLog('From ' + IntToStr(TempPlatformIndex) + ' to ' + TempCaption);
+        AEditingAction^.FindSubControlOptions.GPUSettings.TargetPlatform := TempCaption;
+      end;
+    end;  //from index to text
+  finally
+    DummyPopupMenu.Free;
+  end;
+end;
+
+
+procedure TfrClickerActions.UpdateGPUTargetDeviceByType(AOldText: string; AEditingAction: PClkActionRec; ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; ANewText: string);
+var
+  DummyPopupMenu: TPopupMenu;
+  TempCaption: string;
+  TempPlatformIndex, TempDeviceIndex: Integer;
+  i, j: Integer;
+begin
+  DummyPopupMenu := TPopupMenu.Create(nil);  //use a pop-up menu, to get the list of platforms:
+  try
+    AddGPUDevicesAsMenuItems(DummyPopupMenu, nil, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+
+    //The proper TargetPlatform has to be identified, based on TargetPlatformIDType.
+    if AEditingAction^.FindSubControlOptions.GPUSettings.TargetPlatformIDType = tpitIndex then
+    begin
+      TempPlatformIndex := StrToIntDef(AEditingAction^.FindSubControlOptions.GPUSettings.TargetPlatform, -1);
+      if (TempPlatformIndex < 0) or (TempPlatformIndex > DummyPopupMenu.Items.Count - 1) then
+        TempPlatformIndex := -1; //even if Count may be 0
+    end
+    else
+    begin
+      TempPlatformIndex := -1;
+      for i := 0 to DummyPopupMenu.Items.Count - 1 do
+      begin
+        TempCaption := StringReplace(DummyPopupMenu.Items[i].Caption, '&', '', [rfReplaceAll]);
+
+        if ((TempCaption = AEditingAction^.FindSubControlOptions.GPUSettings.TargetPlatform) and (AEditingAction^.FindSubControlOptions.GPUSettings.TargetPlatformIDType = tpitFullNameMatchCase)) or
+           ((UpperCase(TempCaption) = UpperCase(AEditingAction^.FindSubControlOptions.GPUSettings.TargetPlatform)) and (AEditingAction^.FindSubControlOptions.GPUSettings.TargetPlatformIDType = tpitFullNameNoCase)) or
+           ((Pos(AEditingAction^.FindSubControlOptions.GPUSettings.TargetPlatform, TempCaption) > 0) and (AEditingAction^.FindSubControlOptions.GPUSettings.TargetPlatformIDType = tpitPartialNameMatchCase)) or
+           ((Pos(UpperCase(AEditingAction^.FindSubControlOptions.GPUSettings.TargetPlatform), UpperCase(TempCaption)) > 0) and (AEditingAction^.FindSubControlOptions.GPUSettings.TargetPlatformIDType = tpitPartialNameNoCase)) then
+        begin
+          TempPlatformIndex := i;
+          Break;
+        end;
+      end; //for
+    end; //text, not index
+
+    if (DummyPopupMenu.Items.Count > 0) and (TempPlatformIndex <> -1) then //in case of an empty menu, this will lead to AV
+    begin
+      if (AOldText <> CTargetDeviceIDTypeStr[tditIndex]) and
+         (AEditingAction^.FindSubControlOptions.GPUSettings.TargetDeviceIDType = tditIndex) then //from text to index
+      begin
+        DoOnAddToLog('Converting TargetDevice from text to index..');
+        for j := 0 to DummyPopupMenu.Items[TempPlatformIndex].Count - 1 do
+        begin
+          TempCaption := StringReplace(DummyPopupMenu.Items[TempPlatformIndex].Items[j].Caption, '&', '', [rfReplaceAll]);
+
+          if ((TempCaption = AEditingAction^.FindSubControlOptions.GPUSettings.TargetDevice) and (AOldText = CTargetDeviceIDTypeStr[tditFullNameMatchCase])) or
+             ((UpperCase(TempCaption) = UpperCase(AEditingAction^.FindSubControlOptions.GPUSettings.TargetDevice)) and (AOldText = CTargetDeviceIDTypeStr[tditFullNameNoCase])) or
+             ((Pos(AEditingAction^.FindSubControlOptions.GPUSettings.TargetDevice, TempCaption) > 0) and (AOldText = CTargetDeviceIDTypeStr[tditPartialNameMatchCase])) or
+             ((Pos(UpperCase(AEditingAction^.FindSubControlOptions.GPUSettings.TargetDevice), UpperCase(TempCaption)) > 0) and (AOldText = CTargetDeviceIDTypeStr[tditPartialNameNoCase])) then
+          begin
+            DoOnAddToLog('From ' + AEditingAction^.FindSubControlOptions.GPUSettings.TargetDevice + ' to ' + IntToStr(j));
+            AEditingAction^.FindSubControlOptions.GPUSettings.TargetDevice := IntToStr(j);
+            Break;
+          end;
+        end;
+      end;
+
+      if (AOldText = CTargetDeviceIDTypeStr[tditIndex]) and
+         (AEditingAction^.FindSubControlOptions.GPUSettings.TargetDeviceIDType <> tditIndex) then //from index to text
+      begin
+        DoOnAddToLog('Converting TargetDevice from index to text..');
+        TempDeviceIndex := StrToIntDef(AEditingAction^.FindSubControlOptions.GPUSettings.TargetDevice, -1);
+        if (TempDeviceIndex < 0) or (TempDeviceIndex > DummyPopupMenu.Items[TempPlatformIndex].Count - 1) then
+          TempDeviceIndex := -1; //even if Count may be 0
+
+        if (DummyPopupMenu.Items[TempPlatformIndex].Count > 0) and (TempDeviceIndex <> -1) then //in case of an empty menu, this will lead to AV
+        begin
+          TempCaption := StringReplace(DummyPopupMenu.Items[TempPlatformIndex].Items[TempDeviceIndex].Caption, '&', '', [rfReplaceAll]);
+          DoOnAddToLog('From ' + IntToStr(TempDeviceIndex) + ' to ' + TempCaption);
+          AEditingAction^.FindSubControlOptions.GPUSettings.TargetDevice := TempCaption;
+        end;
+      end;
+    end; //valid menu
+  finally
+    DummyPopupMenu.Free;
+  end;
+end;
+
+
 procedure TfrClickerActions.OIEditedText_ActionSpecific(AEditingAction: PClkActionRec; ALiveEditingActionType: TClkAction; ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; ANewText: string);
 var
   EditingActionType: Integer;
@@ -6906,8 +7061,20 @@ begin
           OldText := GetActionValueStr_FindSubControl_GPUSettings(AEditingAction, AItemIndex);
           SetActionValueStr_FindSubControl_GPUSettings(AEditingAction, ANewText, AItemIndex);
           TriggerOnControlsModified(ANewText <> OldText);
+
+          case AItemIndex of
+            CFindSubControl_GPUSettings_TargetPlatformIDType_PropItemIndex:
+              UpdateGPUTargetPlatformByType(OldText, AEditingAction, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, ANewText);
+
+            CFindSubControl_GPUSettings_TargetDeviceIDType_PropItemIndex:
+              UpdateGPUTargetDeviceByType(OldText, AEditingAction, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, ANewText);
+
+            else
+              ;
+          end; //case AItemIndex
+
           Exit;
-        end;
+        end;  //CFindSubControl_GPUSettings_PropIndex
 
         else
           ;
@@ -8735,7 +8902,7 @@ begin
       for i := 0 to PlatformCount - 1 do
       begin
         PlatformInfo := GetGPUPlatformInfo(DoOnAddToLog, OpenCLDll, PlatformIDs[i], CL_PLATFORM_NAME);
-        if AEditingAction^.FindSubControlOptions.GPUSettings.TargetPlatformIDType = tpitIndex then
+        if (AEditingAction^.FindSubControlOptions.GPUSettings.TargetPlatformIDType = tpitIndex) and Assigned(AMenuHandler) then //verify AMenuHandler, because this function is also used to get the list of platforms for something else
           PlatformInfo := '[' + IntToStr(i) + ']  ' + PlatformInfo;
 
         TempMenuItem := AddMenuItemToPopupMenu(AOIEditorMenu, PlatformInfo, AMenuHandler, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
@@ -8798,7 +8965,7 @@ begin
       for i := 0 to PlatformCount - 1 do
       begin
         PlatformInfo := GetGPUPlatformInfo(DoOnAddToLog, OpenCLDll, PlatformIDs[i], CL_PLATFORM_NAME);
-        if AEditingAction^.FindSubControlOptions.GPUSettings.TargetPlatformIDType = tpitIndex then
+        if (AEditingAction^.FindSubControlOptions.GPUSettings.TargetPlatformIDType = tpitIndex) and Assigned(AMenuHandler) then //verify AMenuHandler, because this function is also used to get the list of platforms for something else
           PlatformInfo := '[' + IntToStr(i) + ']  ' + PlatformInfo;
 
         TempPlatformMenuItem := AddMenuItemToPopupMenu(AOIEditorMenu, PlatformInfo, nil, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
@@ -9175,6 +9342,13 @@ begin
           if ANodeLevel = CPropertyItemLevel then
           begin
             case AItemIndex of
+              CFindSubControl_GPUSettings_OpenCLPath_PropItemIndex:
+              begin
+                FOIEditorMenu.Items.Clear;
+                AddMenuItemToPopupMenu(FOIEditorMenu, 'Browse for OpenCL.dll...', MenuItem_BrowseOpenCLFileNameForPropertyListClick,
+                  ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+              end;
+
               CFindSubControl_GPUSettings_TargetPlatform_PropItemIndex:
               begin
                 FOIEditorMenu.Items.Clear;
