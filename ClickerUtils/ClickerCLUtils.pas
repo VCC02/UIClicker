@@ -169,8 +169,6 @@ var
 var
   Error: Integer;
   PlatformCount, DeviceCount: cl_uint;
-  //PlatformIDs: Pcl_platform_id;
-  //DeviceIDs: Pcl_device_id;
   PlatformIDs: ^cl_platform_id_arr;
   DeviceIDs: ^cl_device_id_arr;
   i, j: Integer;
