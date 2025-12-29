@@ -84,11 +84,12 @@ type
     GPUIncludeDashG: Boolean; //when True, clBuildProgram is called with an additional build option, "-g". In case of an error, this allows getting detailed info. Var: $GPUIncludeDashG$
     GPUSlaveQueueFromDevice: Boolean; //when True, the SlaveQueue variable, from the SlideSearch kernel, is assigned in the kernel itself. Var: $SlaveQueueFromDevice$
     GPUUseAllKernelsEvent: Boolean; //when True, the SlideSearch kernel uses AllKernelsEvent variable, instead of AllEvents variable. Var: $UseAllKernelsEvent$
-    GPUNdrangeNoLocalParam: Boolean; //when True, then ndrange_1D call is made with one argument (Global). By default, it is called with (Global, Local). Var: $NdrangeNoLocalParam$
+    GPUNdrangeNoLocalParam: Boolean; //when True, the ndrange_1D call is made with one argument (Global). By default, it is called with (Global, Local). Var: $NdrangeNoLocalParam$
     GPUUseEventsInEnqueueKernel: Boolean; //when True, enqueue_kernel is called with 3 additional arguments. By default, it is True, even if undefined. Var: $UseEventsInEnqueueKernel$
     GPUWaitForAllKernelsToBeDone: Boolean; //when True, the main kernel waits for all "generated" kernels to be done. By default, it is True, even if undefined. Var: $WaitForAllKernelsToBeDone$
     GPUReleaseFinalEventAtKernelEnd: Boolean; //when True, the release_event(FinalEvent) call, from the main kernel, is done once, at the end. Var: $ReleaseFinalEventAtKernelEnd$
     GPUIgnoreExecutionAvailability: Boolean; //when True, the ExecutionAvailability property is ignored. If a feature required (at least) a specific OpenCL version, and it is not available, an error should be displayed. Var: $IgnoreExecutionAvailability$
+    GPUDbgBuffer: TIntArr; //debugging info / results
   end;
 
 
@@ -106,7 +107,7 @@ procedure CroppedFullScreenShot(ACompAtPoint: TCompRec; AFindControlInputData: T
 function MatchControlByBitmap(Algorithm: TMatchBitmapAlgorithm;
                               AlgorithmSettings: TMatchBitmapAlgorithmSettings;
                               CompAtPoint: TCompRec;
-                              InputData: TFindControlInputData;
+                              var InputData: TFindControlInputData;
                               out SubCnvXOffset, SubCnvYOffset, AResultedErrorCount: Integer;
                               var AFoundBitmaps: TCompRecArr;
                               AStopAllActionsOnDemand: PBoolean;
@@ -120,7 +121,7 @@ function FindControlOnScreen(InputData: TFindControlInputData;
 
 function FindSubControlOnScreen(Algorithm: TMatchBitmapAlgorithm;
                              AlgorithmSettings: TMatchBitmapAlgorithmSettings;
-                             InputData: TFindControlInputData;
+                             var InputData: TFindControlInputData;
                              AInitialTickCount: QWord;
                              AStopAllActionsOnDemand: PBoolean;
                              var AResultedControl: TCompRecArr;
@@ -870,6 +871,7 @@ function MatchByBitmap(Algorithm: TMatchBitmapAlgorithm;
                        AGPUWaitForAllKernelsToBeDone: Boolean;
                        AGPUReleaseFinalEventAtKernelEnd: Boolean;
                        AGPUIgnoreExecutionAvailability: Boolean;
+                       var AGPUDbgBuffer: TIntArr;
                        out AResultedErrorCount: Integer;
                        AStopAllActionsOnDemand: PBoolean): Boolean;
 var
@@ -966,6 +968,7 @@ begin
                     AGPUWaitForAllKernelsToBeDone,
                     AGPUReleaseFinalEventAtKernelEnd,
                     AGPUIgnoreExecutionAvailability,
+                    AGPUDbgBuffer,
                     AResultedErrorCount,
                     AStopAllActionsOnDemand,
                     AStopSearchOnMismatch) then
@@ -1032,7 +1035,7 @@ end;
 function MatchControlByBitmap(Algorithm: TMatchBitmapAlgorithm;
                               AlgorithmSettings: TMatchBitmapAlgorithmSettings;
                               CompAtPoint: TCompRec;
-                              InputData: TFindControlInputData;
+                              var InputData: TFindControlInputData;
                               out SubCnvXOffset, SubCnvYOffset, AResultedErrorCount: Integer;
                               var AFoundBitmaps: TCompRecArr;
                               AStopAllActionsOnDemand: PBoolean;
@@ -1108,6 +1111,7 @@ begin
                                 InputData.GPUWaitForAllKernelsToBeDone,
                                 InputData.GPUReleaseFinalEventAtKernelEnd,
                                 InputData.GPUIgnoreExecutionAvailability,
+                                InputData.GPUDbgBuffer,
                                 AResultedErrorCount,
                                 AStopAllActionsOnDemand);
     except
@@ -1176,7 +1180,7 @@ end;
 function MatchSubControl(var CompAtPoint: TCompRec;
                          Algorithm: TMatchBitmapAlgorithm;
                          AlgorithmSettings: TMatchBitmapAlgorithmSettings;
-                         InputData: TFindControlInputData;
+                         var InputData: TFindControlInputData;
                          AStopAllActionsOnDemand: PBoolean;
                          {var} AvailableControls: TCompRecArr; //Do not pass by reference. Let it create a copy, so that any modification will not affect "source" components (search area).
                          var AFoundSubControls: TCompRecArr; //used when searching with FindSubControl and InputData.GetAllHandles is True
@@ -1460,7 +1464,7 @@ end;
 
 function FindSubControlOnScreen(Algorithm: TMatchBitmapAlgorithm;
                                 AlgorithmSettings: TMatchBitmapAlgorithmSettings;
-                                InputData: TFindControlInputData;
+                                var InputData: TFindControlInputData;
                                 AInitialTickCount: QWord;
                                 AStopAllActionsOnDemand: PBoolean;
                                 var AResultedControl: TCompRecArr;
@@ -1532,6 +1536,10 @@ begin
       begin
         SetLength(AResultedControl, 1);
         AResultedControl[0] := CompAtPoint;
+
+        SetLength(InputData.GPUDbgBuffer, Length(InputDataForCaching.GPUDbgBuffer));
+        Move(InputDataForCaching.GPUDbgBuffer[0], InputData.GPUDbgBuffer[0], Length(InputData.GPUDbgBuffer) * SizeOf(InputData.GPUDbgBuffer[0]));
+
         Result := True;
 
         //MessageBox(0, PChar('Found by cache in ' + IntToStr(GetTickCount64 - AInitialTickCount)),

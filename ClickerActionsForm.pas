@@ -913,7 +913,6 @@ begin
 
   FBuiltInVariables.Add('$SelfActionName$=');
   FBuiltInVariables.Add('$SelfActionIndex$=-1');
-  FBuiltInVariables.Add('$PluginPath$=');
 end;
 
 

@@ -865,7 +865,8 @@ uses
   Math, ClickerTemplates, BitmapConv, BitmapProcessing, Clipbrd,
   ClickerConditionEditorForm, ClickerActionsClient, ClickerFileProviderUtils,
   ClickerTemplateNotesForm, AutoCompleteForm, ClickerVstUtils, ClickerActionsCodeGen,
-  ClickerActionPluginLoader, ClickerActionPlugins, ClickerActionProperties;
+  ClickerActionPluginLoader, ClickerActionPlugins, ClickerActionProperties,
+  ClickerCLUtils;
 
 
 const
@@ -876,20 +877,19 @@ const
 
 procedure TfrClickerActionsArr.FillInWithAllVars(AListOfVars: TStringList);
 const
-  CMissingVars: array[0..12] of string = (
-    '$ExitCode$',
-    '$frmUIClickerMainForm_Handle$',
-    '$frmClickerControlPreview_Handle$',
-    '$frmClickerActions_Handle$',
-    '$frmClickerWinInterp_Handle$',
-    '$frmClickerTemplateCallTree_Handle$',
-    '$frmClickerZoomPreview_Handle$',
-    '$ImageWidth$',
-    '$ImageHeight$',
-    '$ExtImageWidth$',
-    '$ExtImageHeight$',
-    '$SelfActionName$',
-    '$SelfActionIndex$'
+  CMissingVars: array[0..11] of string = (
+    '$PluginPath$=',
+    '$frmUIClickerMainForm_Handle$=',
+    '$frmClickerControlPreview_Handle$=',
+    '$frmClickerActions_Handle$=',
+    '$frmClickerWinInterp_Handle$=',
+    '$frmClickerTemplateCallTree_Handle$=',
+    '$frmClickerZoomPreview_Handle$=',
+    '$ImageWidth$=',
+    '$ImageHeight$=',
+    '$ExtImageWidth$=',
+    '$ExtImageHeight$=',
+    '$SetGPUDbgBuffer$='
   );
 var
   i: Integer;
@@ -899,12 +899,18 @@ begin
     if AListOfVars[0] = 'Variable' then
       AListOfVars.Delete(0);
 
-  if AListOfVars.IndexOf('$AppDir$') = -1 then
-    AListOfVars.Insert(0, '$AppDir$');
-
   for i := 0 to Length(CMissingVars) - 1 do
     if AListOfVars.IndexOf(CMissingVars[i]) = -1 then
       AListOfVars.Add(CMissingVars[i]);
+
+  AListOfVars.Add(CGPUDbgVar_GPUIncludeDashG + '=');
+  AListOfVars.Add(CGPUDbgVar_GPUSlaveQueueFromDevice + '=');
+  AListOfVars.Add(CGPUDbgVar_GPUUseAllKernelsEvent + '=');
+  AListOfVars.Add(CGPUDbgVar_GPUNdrangeNoLocalParam + '=');
+  AListOfVars.Add(CGPUDbgVar_GPUUseEventsInEnqueueKernel + '=');
+  AListOfVars.Add(CGPUDbgVar_GPUWaitForAllKernelsToBeDone + '=');
+  AListOfVars.Add(CGPUDbgVar_GPUReleaseFinalEventAtKernelEnd + '=');
+  AListOfVars.Add(CGPUDbgVar_GPUIgnoreExecutionAvailability + '=');
 end;
 
 
@@ -978,9 +984,18 @@ begin
     TempVarDescriptions.Add('$SelfActionName$=[String] Name of the action, which is currently being executed. A template can have multiple actions with the same name, so make sure they are uniquely named for a proper identification.');
     TempVarDescriptions.Add('$SelfActionIndex$=[Numeric] Index of the action, which is currently being executed.');
     TempVarDescriptions.Add('$PluginPath$=[String] Full path to the plugin, which is currently being executed.');
+    TempVarDescriptions.Add('$SetGPUDbgBuffer$=[String] If set to True, it causes the FindSubControl action to set the $GPUDbgBuffer.Len$ and $GPUDbgBuffer[0..<Len> - 1]$ variables to the resulted debugging variable of the bitmap searching algorithm, used on GPU.');
+    TempVarDescriptions.Add(CGPUDbgVar_GPUIncludeDashG + '=[String] If set to True, it passes the "-g" option to the clBuildProgram (for CL compiler).');
+    TempVarDescriptions.Add(CGPUDbgVar_GPUSlaveQueueFromDevice + '=[String] If set to True, the SlaveQueue variable, from the SlideSearch kernel, is assigned in the kernel itself.');
+    TempVarDescriptions.Add(CGPUDbgVar_GPUUseAllKernelsEvent + '=[String] If set to True, the SlideSearch kernel uses AllKernelsEvent variable, instead of AllEvents variable.');
+    TempVarDescriptions.Add(CGPUDbgVar_GPUNdrangeNoLocalParam + '=[String] If set to True, the ndrange_1D call is made with one argument (Global). By default, it is called with (Global, Local).');
+    TempVarDescriptions.Add(CGPUDbgVar_GPUUseEventsInEnqueueKernel + '=[String] If set to True, enqueue_kernel is called with 3 additional arguments. By default, it is True, even if undefined.');
+    TempVarDescriptions.Add(CGPUDbgVar_GPUWaitForAllKernelsToBeDone + '=[String] If set to True, the main kernel waits for all "generated" kernels to be done. By default, it is True, even if undefined.');
+    TempVarDescriptions.Add(CGPUDbgVar_GPUReleaseFinalEventAtKernelEnd + '=[String] If set to True, the release_event(FinalEvent) call, from the main kernel, is done once, at the end.');
+    TempVarDescriptions.Add(CGPUDbgVar_GPUIgnoreExecutionAvailability + '=[String] If set to True, the ExecutionAvailability property is ignored. If a feature required (at least) a specific OpenCL version, and it is not available, an error should be displayed.');
 
     for i := 0 to FVarDescriptions.Count - 1 do
-      FVarDescriptions.Strings[i] := TempVarDescriptions.Values[FVarDescriptions.Strings[i]];
+      FVarDescriptions.Strings[i] := TempVarDescriptions.Values[FVarDescriptions.Names[i]];
   finally
     TempVarDescriptions.Free;
   end;

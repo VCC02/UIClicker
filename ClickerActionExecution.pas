@@ -181,6 +181,7 @@ type
     procedure UpdateActionVarValuesFromControl(AControl: TCompRec; AUpdate_ResultedErrorCount: Boolean = False);
     procedure UpdateActionVarValuesFromResultedControlArr(var AResultedControlArr: TCompRecArr);
     procedure SetDbgImgPos(var AFindSubControlOptions: TClkFindSubControlOptions; AFindControlInputData: TFindControlInputData; AResultedControl: TCompRec; AFindControlOnScreen_Result: Boolean);
+    procedure GPUDbgBufferToVars(var AGPUDbgBuffer: TIntArr);
     procedure SetAllControl_Handles_FromResultedControlArr(var AResultedControlArr: TCompRecArr; AMatchSource, ADetailedMatchSource: string);
     procedure InitFindControlParams(var AActionOptions: TClkActionOptions; AOutsideTickCount: QWord; var AResultedControl: TCompRec; var AInitialTickCount, ATimeout: QWord; var AFindControlInputData: TFindControlInputData; out AStopAllActionsOnDemandAddr: Pointer);
 
@@ -1971,17 +1972,17 @@ begin
     OpenCLDll.Free;
   end;
 
-  UseEventsInEnqueueKernel := EvaluateReplacements('$UseEventsInEnqueueKernel$');
-  WaitForAllKernelsToBeDone := EvaluateReplacements('$WaitForAllKernelsToBeDone$');
+  UseEventsInEnqueueKernel := EvaluateReplacements(CGPUDbgVar_GPUUseEventsInEnqueueKernel);
+  WaitForAllKernelsToBeDone := EvaluateReplacements(CGPUDbgVar_GPUWaitForAllKernelsToBeDone);
 
-  FindControlInputData.GPUIncludeDashG := EvaluateReplacements('$GPUIncludeDashG$') = 'True';
-  FindControlInputData.GPUSlaveQueueFromDevice := EvaluateReplacements('$SlaveQueueFromDevice$') = 'True';
-  FindControlInputData.GPUUseAllKernelsEvent := EvaluateReplacements('$UseAllKernelsEvent$') = 'True';
-  FindControlInputData.GPUNdrangeNoLocalParam := EvaluateReplacements('$NdrangeNoLocalParam$') = 'True';
+  FindControlInputData.GPUIncludeDashG := EvaluateReplacements(CGPUDbgVar_GPUIncludeDashG) = 'True';
+  FindControlInputData.GPUSlaveQueueFromDevice := EvaluateReplacements(CGPUDbgVar_GPUSlaveQueueFromDevice) = 'True';
+  FindControlInputData.GPUUseAllKernelsEvent := EvaluateReplacements(CGPUDbgVar_GPUUseAllKernelsEvent) = 'True';
+  FindControlInputData.GPUNdrangeNoLocalParam := EvaluateReplacements(CGPUDbgVar_GPUNdrangeNoLocalParam) = 'True';
   FindControlInputData.GPUUseEventsInEnqueueKernel := (UseEventsInEnqueueKernel = '') or (UseEventsInEnqueueKernel = 'True');
   FindControlInputData.GPUWaitForAllKernelsToBeDone := (WaitForAllKernelsToBeDone = '') or (WaitForAllKernelsToBeDone = 'True');
-  FindControlInputData.GPUReleaseFinalEventAtKernelEnd := EvaluateReplacements('$ReleaseFinalEventAtKernelEnd$') = 'True';
-  FindControlInputData.GPUIgnoreExecutionAvailability := EvaluateReplacements('$IgnoreExecutionAvailability$') = 'True';
+  FindControlInputData.GPUReleaseFinalEventAtKernelEnd := EvaluateReplacements(CGPUDbgVar_GPUReleaseFinalEventAtKernelEnd) = 'True';
+  FindControlInputData.GPUIgnoreExecutionAvailability := EvaluateReplacements(CGPUDbgVar_GPUIgnoreExecutionAvailability) = 'True';
 end;
 
 
@@ -2329,6 +2330,19 @@ begin
       end;
     end; //case
   end
+end;
+
+
+procedure TActionExecution.GPUDbgBufferToVars(var AGPUDbgBuffer: TIntArr);
+var
+  i: Integer;
+begin
+  if GetActionVarValue('$SetGPUDbgBuffer$') = 'True' then
+  begin
+    SetActionVarValue('$GPUDbgBuffer.Len$', IntToStr(Length(AGPUDbgBuffer)));
+    for i := 0 to Length(AGPUDbgBuffer) - 1 do
+      SetActionVarValue('$GPUDbgBuffer[' + IntToStr(i) + ']$', IntToStr(AGPUDbgBuffer[i]));
+  end;
 end;
 
 
@@ -2838,6 +2852,7 @@ begin
                   ResultedControl := PartialResultedControlArr[0];  //ResultedControl has some fields, initialized before the search. If no result is found, then call SetDbgImgPos with those values.
 
                 SetDbgImgPos(AFindSubControlOptions, WorkFindControlInputData, ResultedControl, FindControlOnScreen_Result);
+                GPUDbgBufferToVars(WorkFindControlInputData.GPUDbgBuffer);
               end;
             end
             else  //mbaRenderTextOnly
@@ -2997,6 +3012,7 @@ begin
             ResultedControl := PartialResultedControlArr[0];
 
           SetDbgImgPos(AFindSubControlOptions, WorkFindControlInputData, ResultedControl, FindControlOnScreen_Result);
+          GPUDbgBufferToVars(WorkFindControlInputData.GPUDbgBuffer);
         end;
       finally
         FindControlInputData.BitmapToSearchFor.Free;
@@ -3180,6 +3196,7 @@ begin
             ResultedControl := PartialResultedControlArr[0];
 
           SetDbgImgPos(AFindSubControlOptions, WorkFindControlInputData, ResultedControl, FindControlOnScreen_Result);
+          GPUDbgBufferToVars(WorkFindControlInputData.GPUDbgBuffer);
         end;
       finally
         FindControlInputData.BitmapToSearchFor.Free;
@@ -4374,14 +4391,14 @@ begin
       begin
         VarName := ''; //Prevent creating a variable, named $DisplayGPUVars(...)$
         AddToLog('The following GPU vars have to be set to True, in order to enable their features: ');
-        AddToLog('$GPUIncludeDashG$: ' + EvaluateReplacements('$GPUIncludeDashG$'));
-        AddToLog('$SlaveQueueFromDevice$: ' + EvaluateReplacements('$SlaveQueueFromDevice$'));
-        AddToLog('$UseAllKernelsEvent$: ' + EvaluateReplacements('$UseAllKernelsEvent$'));
-        AddToLog('$NdrangeNoLocalParam$: ' + EvaluateReplacements('$NdrangeNoLocalParam$'));
-        AddToLog('$UseEventsInEnqueueKernel$: ' + EvaluateReplacements('$UseEventsInEnqueueKernel$'));
-        AddToLog('$WaitForAllKernelsToBeDone$: ' + EvaluateReplacements('$WaitForAllKernelsToBeDone$'));
-        AddToLog('$ReleaseFinalEventAtKernelEnd$: ' + EvaluateReplacements('$ReleaseFinalEventAtKernelEnd$'));
-        AddToLog('$IgnoreExecutionAvailability$: ' + EvaluateReplacements('$IgnoreExecutionAvailability$'));
+        AddToLog(CGPUDbgVar_GPUIncludeDashG + ': ' + EvaluateReplacements(CGPUDbgVar_GPUIncludeDashG));
+        AddToLog(CGPUDbgVar_GPUSlaveQueueFromDevice + ': ' + EvaluateReplacements(CGPUDbgVar_GPUSlaveQueueFromDevice));
+        AddToLog(CGPUDbgVar_GPUUseAllKernelsEvent + ': ' + EvaluateReplacements(CGPUDbgVar_GPUUseAllKernelsEvent));
+        AddToLog(CGPUDbgVar_GPUNdrangeNoLocalParam + ': ' + EvaluateReplacements(CGPUDbgVar_GPUNdrangeNoLocalParam));
+        AddToLog(CGPUDbgVar_GPUUseEventsInEnqueueKernel + ': ' + EvaluateReplacements(CGPUDbgVar_GPUUseEventsInEnqueueKernel));
+        AddToLog(CGPUDbgVar_GPUWaitForAllKernelsToBeDone + ': ' + EvaluateReplacements(CGPUDbgVar_GPUWaitForAllKernelsToBeDone));
+        AddToLog(CGPUDbgVar_GPUReleaseFinalEventAtKernelEnd + ': ' + EvaluateReplacements(CGPUDbgVar_GPUReleaseFinalEventAtKernelEnd));
+        AddToLog(CGPUDbgVar_GPUIgnoreExecutionAvailability + ': ' + EvaluateReplacements(CGPUDbgVar_GPUIgnoreExecutionAvailability));
       end;
 
       if (Pos('$DisplayOpenCLInfo(', VarName) = 1) and (VarName[Length(VarName)] = '$') and (VarName[Length(VarName) - 1] = ')') then

@@ -3760,7 +3760,8 @@ end;
 
   function GetPropertyHint_FindSubControl_GPUSettings_ExecutionAvailability: string;
   begin
-    Result := 'UIClicker provides two bitmap matching algorithms, one of each requiring OpenCL3.0 or later, for a faster execution.' + #13#10 +
+    Result := '[Feature in work] This property does not currently use priorities as described below. If set to eaOpenCL1Only, the execution is done on the old algorithm. Othwerise, it is done on the new one.' + #13#10 +
+              'UIClicker provides two bitmap matching algorithms, one of each requiring OpenCL3.0 or later, for a faster execution.' + #13#10 +
               'If the system, where UIClicker is running, does not provide OpenCL3.0 or later, UIClicker may attempt to run the slower algorithm, which requires only OpenCL1.2.' + #13#10 +
               'When set to eaOpenCL3Only and the computer does not have OpenCL3.0 or later, then the action stops with an error.' + #13#10 +
               'Similarly, when set to eaOpenCL1Only and the computer does not have OpenCL1.2 or later, then the action stops with an error.' + #13#10 +

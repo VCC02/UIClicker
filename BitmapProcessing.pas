@@ -102,6 +102,7 @@ function BitmapPosMatch(Algorithm: TMatchBitmapAlgorithm;
                         AGPUWaitForAllKernelsToBeDone: Boolean;
                         AGPUReleaseFinalEventAtKernelEnd: Boolean;
                         AGPUIgnoreExecutionAvailability: Boolean;
+                        var AGPUDbgBuffer: TIntArr;
                         out AResultedErrorCount: Integer;
                         AStopSearchOnDemand: PBoolean = nil;
                         StopSearchOnMismatch: Boolean = True): Boolean;
@@ -1606,8 +1607,9 @@ begin
     if AGPUUseAllKernelsEvent then
       Result := Result + '  clk_event_t AllKernelsEvent;             ' + #13#10       //when using AllKernelsEvent
     else
-      Result := Result + '  clk_event_t AllEvents[' + ASubBmpHeightStr + '];' + #13#10 +  //Constrained array of the same length as the 1D range, i.e. the sub BMP height.
+      Result := Result + '  clk_event_t AllEvents[' + ASubBmpHeightStr + '];' + #13#10;  //Constrained array of the same length as the 1D range, i.e. the sub BMP height.
 
+    Result := Result +
     '  clk_event_t FinalEvent;                  ' + #13#10 + //used as a return event, from enqueue_marker
     '                                           ' + #13#10 +
     '                                           ' + #13#10;
@@ -1792,6 +1794,7 @@ function BruteForceOnGPU_MatCmp(OpenCLDll: TOpenCL;
                                 out AResultedErrorCount: Integer;
                                 out SubCnvXOffset, SubCnvYOffset: Integer;
                                 var AFoundBitmaps: TCompRecArr;
+                                var ADbgBuffer: TIntArr;
                                 AStopSearchOnDemand: PBoolean = nil
                                ): Boolean;
 var
@@ -1819,6 +1822,7 @@ begin
   BackgroundBmpHeight := ASourceBitmapHeight;
   SubBmpWidth := ASubBitmapWidth;
   SubBmpHeight := ASubBitmapHeight;
+  SetLength(ADbgBuffer, 0);
 
   BackgroundBufferRef := OpenCLDll.clCreateBuffer(AContext, CL_MEM_READ_ONLY, csize_t(ABytesPerPixelOnSrc * BackgroundBmpWidth * BackgroundBmpHeight), nil, Error);
   try
@@ -1990,11 +1994,12 @@ function BruteForceOnGPU_SlideSearch(OpenCLDll: TOpenCL;
                                      out AResultedErrorCount: Integer;
                                      out SubCnvXOffset, SubCnvYOffset: Integer;
                                      var AFoundBitmaps: TCompRecArr;
+                                     var ADbgBuffer: TIntArr;
                                      AStopSearchOnDemand: PBoolean = nil
                                     ): Boolean;
 var
   Error: Integer;
-  DiffCntPerRow, DbgBuffer: array of LongInt;
+  DiffCntPerRow: TIntArr;//TIntArr is array of LongInt;
 
   BackgroundBufferRef: cl_mem;
   SubBufferRef: cl_mem;
@@ -2029,8 +2034,8 @@ begin
       try
         LogCallResult(Error, 'clCreateBuffer', 'Res buffer created.');
 
-        SetLength(DbgBuffer, 20);
-        DbgBufferRef := OpenCLDll.clCreateBuffer(AContext, CL_MEM_WRITE_ONLY, csize_t(SizeOf(LongInt) * Length(DbgBuffer)), nil, Error); //20 items
+        SetLength(ADbgBuffer, 20);
+        DbgBufferRef := OpenCLDll.clCreateBuffer(AContext, CL_MEM_WRITE_ONLY, csize_t(SizeOf(LongInt) * Length(ADbgBuffer)), nil, Error); //20 items
         try
           LogCallResult(Error, 'clCreateBuffer', 'Dbg buffer created.');
 
@@ -2097,7 +2102,7 @@ begin
             Error := OpenCLDll.clEnqueueNDRangeKernel(CmdQueue, CLKernel, 1, nil, @GlobalSizeWithDeviceEnqueue, nil, 0, nil, nil);
             LogCallResult(Error, 'clEnqueueNDRangeKernel CmdQueue', '');
 
-            Error := OpenCLDll.clFinish(CmdQueue);     //see also ResBufferRef := OpenCLDll.clCreateBuffer  - the buffer is created to items longer
+            Error := OpenCLDll.clFinish(CmdQueue);     //see also ResBufferRef := OpenCLDll.clCreateBuffer  - the buffer is created two items longer
             LogCallResult(Error, 'clFinish CmdQueue (Before clEnqueueReadBuffer)', '');
             SetLength(DiffCntPerRow, GlobalSize);
             Error := OpenCLDll.clEnqueueReadBuffer(CmdQueue, ResBufferRef, CL_TRUE, 0, csize_t(SizeOf(LongInt) * Length(DiffCntPerRow)), @DiffCntPerRow[0], 0, nil, nil);
@@ -2112,45 +2117,45 @@ begin
             //         '  ResultedErrCount[n - 2] = ' + IntToStr(DiffCntPerRow[Length(DiffCntPerRow) - 2]) + #13#10 +
             //         '  ResultedErrCount[n - 1] = ' + IntToStr(DiffCntPerRow[Length(DiffCntPerRow) - 1]));
 
-            FillChar(DbgBuffer[0], Length(DbgBuffer), SizeOf(DbgBuffer[0]));
-            Error := OpenCLDll.clEnqueueReadBuffer(CmdQueue, DbgBufferRef, CL_TRUE, 0, csize_t(SizeOf(LongInt) * Length(DbgBuffer)), @DbgBuffer[0], 0, nil, nil);
-            LogCallResult(Error, 'clEnqueueReadBuffer DbgBuffer', '', '  kernel enqueue err is ' + IntToStr(DbgBuffer[0]) + '  kernel enqueue_marker is ' + IntToStr(DiffCntPerRow[1]) + '  Length(DbgBuffer) = ' + IntToStr(Length(DbgBuffer)));
+            FillChar(ADbgBuffer[0], Length(ADbgBuffer), SizeOf(ADbgBuffer[0]));
+            Error := OpenCLDll.clEnqueueReadBuffer(CmdQueue, DbgBufferRef, CL_TRUE, 0, csize_t(SizeOf(LongInt) * Length(ADbgBuffer)), @ADbgBuffer[0], 0, nil, nil);
+            LogCallResult(Error, 'clEnqueueReadBuffer DbgBuffer', '', '  kernel enqueue err is ' + IntToStr(ADbgBuffer[0]) + '  kernel enqueue_marker is ' + IntToStr(DiffCntPerRow[1]) + '  Length(DbgBuffer) = ' + IntToStr(Length(ADbgBuffer)));
 
             //AddToLog('Misc info:' + #13#10 +
-            //         '  enqueue_kernel = ' + IntToStr(DbgBuffer[0]) + #13#10 +
-            //         '  enqueue_marker = ' + IntToStr(DbgBuffer[1]) + #13#10 +
-            //         '  i = ' + IntToStr(DbgBuffer[2]) + #13#10 +
-            //         '  j = ' + IntToStr(DbgBuffer[3]) + #13#10 +
-            //         '  DifferentCount = ' + IntToStr(DbgBuffer[4]) + #13#10 +
-            //         '  Found = ' + IntToStr(DbgBuffer[5]) + #13#10 +
-            //         '  get_work_dim on "SlideSearch" = ' + IntToStr(DbgBuffer[6]) + #13#10 +
-            //         '  get_global_size on "SlideSearch" = ' + IntToStr(DbgBuffer[7]) + #13#10 +
-            //         '  get_local_size on "SlideSearch" = ' + IntToStr(DbgBuffer[8]) + #13#10 +
-            //         '  get_enqueued_local_size on "SlideSearch" = ' + IntToStr(DbgBuffer[9]) + #13#10 +
-            //         '  TotalErrorCount = ' + IntToStr(DbgBuffer[10]) + #13#10 +
-            //         '  DbgBuffer[11] = ' + IntToStr(DbgBuffer[11]) + #13#10 +
-            //         '  DbgBuffer[12] = ' + IntToStr(DbgBuffer[12]) + #13#10 +
-            //         '  DbgBuffer[13] = ' + IntToStr(DbgBuffer[13]) + #13#10 +
-            //         '  DbgBuffer[14] = ' + IntToStr(DbgBuffer[14]) + #13#10 +
-            //         '  DbgBuffer[15] = ' + IntToStr(DbgBuffer[15]) + #13#10 +
-            //         '  DbgBuffer[16] = ' + IntToStr(DbgBuffer[16]) + #13#10 +
-            //         '  DbgBuffer[17] = ' + IntToStr(DbgBuffer[17]) + #13#10 +
-            //         '  DbgBuffer[18] = ' + IntToStr(DbgBuffer[18]) + #13#10 +
-            //         '  DbgBuffer[19] = ' + IntToStr(DbgBuffer[19]) + #13#10
+            //         '  enqueue_kernel = ' + IntToStr(ADbgBuffer[0]) + #13#10 +
+            //         '  enqueue_marker = ' + IntToStr(ADbgBuffer[1]) + #13#10 +
+            //         '  i = ' + IntToStr(ADbgBuffer[2]) + #13#10 +
+            //         '  j = ' + IntToStr(ADbgBuffer[3]) + #13#10 +
+            //         '  DifferentCount = ' + IntToStr(ADbgBuffer[4]) + #13#10 +
+            //         '  Found = ' + IntToStr(ADbgBuffer[5]) + #13#10 +
+            //         '  get_work_dim on "SlideSearch" = ' + IntToStr(ADbgBuffer[6]) + #13#10 +
+            //         '  get_global_size on "SlideSearch" = ' + IntToStr(ADbgBuffer[7]) + #13#10 +
+            //         '  get_local_size on "SlideSearch" = ' + IntToStr(ADbgBuffer[8]) + #13#10 +
+            //         '  get_enqueued_local_size on "SlideSearch" = ' + IntToStr(ADbgBuffer[9]) + #13#10 +
+            //         '  TotalErrorCount = ' + IntToStr(ADbgBuffer[10]) + #13#10 +
+            //         '  ADbgBuffer[11] = ' + IntToStr(ADbgBuffer[11]) + #13#10 +
+            //         '  ADbgBuffer[12] = ' + IntToStr(ADbgBuffer[12]) + #13#10 +
+            //         '  ADbgBuffer[13] = ' + IntToStr(ADbgBuffer[13]) + #13#10 +
+            //         '  ADbgBuffer[14] = ' + IntToStr(ADbgBuffer[14]) + #13#10 +
+            //         '  ADbgBuffer[15] = ' + IntToStr(ADbgBuffer[15]) + #13#10 +
+            //         '  ADbgBuffer[16] = ' + IntToStr(ADbgBuffer[16]) + #13#10 +
+            //         '  ADbgBuffer[17] = ' + IntToStr(ADbgBuffer[17]) + #13#10 +
+            //         '  ADbgBuffer[18] = ' + IntToStr(ADbgBuffer[18]) + #13#10 +
+            //         '  ADbgBuffer[19] = ' + IntToStr(ADbgBuffer[19]) + #13#10
             //        );
 
             //Error := OpenCLDll.clFinish(SlaveCmdQueue);                     //CL_INVALID_COMMAND_QUEUE if command_queue is not a valid host command-queue.
             //LogCallResult(Error, 'clFinish SlaveCmdQueue', '');
 
-            DifferentCount := DbgBuffer[4];
-            Found := DbgBuffer[5] > 0;
+            DifferentCount := ADbgBuffer[4];
+            Found := ADbgBuffer[5] > 0;
 
             if Found then
             begin
               Result := True;
               AResultedErrorCount := DifferentCount;
-              SubCnvXOffset := DbgBuffer[3];  //j   //old XOffset
-              SubCnvYOffset := DbgBuffer[2];  //i  //old YOffset
+              SubCnvXOffset := ADbgBuffer[3];  //j   //old XOffset
+              SubCnvYOffset := ADbgBuffer[2];  //i  //old YOffset
               SetLength(AFoundBitmaps, Length(AFoundBitmaps) + 1);
               AFoundBitmaps[Length(AFoundBitmaps) - 1].XOffsetFromParent := SubCnvXOffset; //old XOffset
               AFoundBitmaps[Length(AFoundBitmaps) - 1].YOffsetFromParent := SubCnvYOffset; //old YOffset
@@ -2198,6 +2203,7 @@ function BitmapPosMatch_BruteForceOnGPU(ASrcBmpData, ASubBmpData: Pointer;
                                         AGPUWaitForAllKernelsToBeDone: Boolean;
                                         AGPUReleaseFinalEventAtKernelEnd: Boolean;
                                         AGPUIgnoreExecutionAvailability: Boolean;
+                                        var AGPUDbgBuffer: TIntArr;
                                         out AResultedErrorCount: Integer;
                                         AStopSearchOnDemand: PBoolean = nil;
                                         StopSearchOnMismatch: Boolean = True): Boolean;
@@ -2282,7 +2288,6 @@ begin
       GetMem(DeviceIDs, DeviceCount * SizeOf(cl_device_id));
       try
         Error := OpenCLDll.clGetDeviceIDs(PlatformIDs[AGPUPlatformIndex], DevType, DeviceCount, Pcl_device_id(DeviceIDs), nil);
-
         LogCallResult(Error, 'clGetDeviceIDs', '');
 
         TempContext := OpenCLDll.clCreateContext(nil, 1, @DeviceIDs[AGPUDeviceIndex], nil, nil, Error);
@@ -2316,78 +2321,84 @@ begin
               LogCallResult(Error, 'clCreateCommandQueueWithProperties SlaveCmdQueue', '', 'Ex: ' + E.Message);
           end;
 
-          CLProgram := OpenCLDll.clCreateProgramWithSource(TempContext, 1, PPAnsiChar(@KernelSrc), nil, Error);
-          if CLProgram = nil then
-            LogCallResult(Error, 'clCreateProgramWithSource', '');
+          try
+            CLProgram := OpenCLDll.clCreateProgramWithSource(TempContext, 1, PPAnsiChar(@KernelSrc), nil, Error);
+            if CLProgram = nil then
+              LogCallResult(Error, 'clCreateProgramWithSource', '');
 
-          BuildOptions := '';
-          if AGPUIncludeDashG then
-            BuildOptions := '-g'; //Requires support for OpenCL 2.0 or higher (TBD).
+            try
+              BuildOptions := '';
+              if AGPUIncludeDashG then
+                BuildOptions := '-g'; //Requires support for OpenCL 2.0 or higher (TBD).
 
-          if BuildOptions <> '' then  //has -g
-            BuildOptions := BuildOptions + ' ';
+              if BuildOptions <> '' then  //has -g
+                BuildOptions := BuildOptions + ' ';
 
-          BuildOptions := BuildOptions + '-cl-kernel-arg-info';  //used for getting additional debugging info from enqueue_kernel.
+              BuildOptions := BuildOptions + '-cl-kernel-arg-info';  //used for getting additional debugging info from enqueue_kernel.
 
-          Error := OpenCLDll.clBuildProgram(CLProgram, 0, nil, @BuildOptions[1], nil, nil);
-          //LogCallResult(Error, 'clBuildProgram', 'Kernel code compiled.'); //commented, to allow the next call to clGetProgramBuildInfo
+              Error := OpenCLDll.clBuildProgram(CLProgram, 0, nil, @BuildOptions[1], nil, nil);
+              //LogCallResult(Error, 'clBuildProgram', 'Kernel code compiled.'); //commented, to allow the next call to clGetProgramBuildInfo
 
-          if Error < CL_SUCCESS then
-          begin
-            SetLength(Info, 32768);
-            SecondError := OpenCLDll.clGetProgramBuildInfo(CLProgram, DeviceIDs[AGPUDeviceIndex], CL_PROGRAM_BUILD_LOG, Length(Info), @Info[1], InfoLen);
-            SetLength(Info, InfoLen);
-            LogCallResult(SecondError, 'clGetProgramBuildInfo', 'Additional build info.');
+              if Error < CL_SUCCESS then
+              begin
+                SetLength(Info, 32768);
+                SecondError := OpenCLDll.clGetProgramBuildInfo(CLProgram, DeviceIDs[AGPUDeviceIndex], CL_PROGRAM_BUILD_LOG, Length(Info), @Info[1], InfoLen);
+                SetLength(Info, InfoLen);
+                LogCallResult(SecondError, 'clGetProgramBuildInfo', 'Additional build info.');
 
-            Info := StringReplace(Info, #13#10, '|', [rfReplaceAll]);
-            Info := StringReplace(Info, #10, '|', [rfReplaceAll]);
-            LogCallResult(Error, 'clBuildProgram', 'Kernel code compiled.', Info);
+                Info := StringReplace(Info, #13#10, '|', [rfReplaceAll]);
+                Info := StringReplace(Info, #10, '|', [rfReplaceAll]);
+                LogCallResult(Error, 'clBuildProgram', 'Kernel code compiled.', Info);
+              end;
+
+              if ShouldCall_SlideSearch then
+              begin
+                CLKernel := OpenCLDll.clCreateKernel(CLProgram, 'SlideSearch', Error);   //call SlideSearch
+                try
+                  LogCallResult(Error, 'clCreateKernel', 'Kernel allocated.');
+
+                  Error := OpenCLDll.clGetKernelWorkGroupInfo(CLKernel, DeviceIDs[AGPUDeviceIndex], CL_KERNEL_WORK_GROUP_SIZE, SizeOf(TempLocalSize), @TempLocalSize, InfoLen);
+                  LogCallResult(Error, 'clGetKernelWorkGroupInfo', 'Work group info obtained.');
+
+                  Result := BruteForceOnGPU_SlideSearch(OpenCLDll, CLKernel, TempContext, CmdQueue, SlaveCmdQueue,
+                                                        ASrcBmpData, ASubBmpData, ABytesPerPixelOnSrc, ABytesPerPixelOnSub,
+                                                        ASourceBitmapWidth, ASourceBitmapHeight, ASubBitmapWidth, ASubBitmapHeight,
+                                                        ColorErrorLevel, TotalErrorCount, FastSearchColorErrorCount, AUseFastSearch,
+                                                        AIgnoreBackgroundColor, AGetAllBitmaps, ASleepySearch,
+                                                        AOutsideTickCount, APrecisionTimeout,
+                                                        AResultedErrorCount, SubCnvXOffset, SubCnvYOffset, AFoundBitmaps, AGPUDbgBuffer, AStopSearchOnDemand);
+                finally  //clCreateKernel
+                  OpenCLDll.clReleaseKernel(CLKernel);
+                end;
+              end
+              else
+              begin
+                CLKernel := OpenCLDll.clCreateKernel(CLProgram, 'MatCmp', Error);    //call MatCmp
+                try
+                  LogCallResult(Error, 'clCreateKernel', 'Kernel allocated.');
+
+                  Error := OpenCLDll.clGetKernelWorkGroupInfo(CLKernel, DeviceIDs[AGPUDeviceIndex], CL_KERNEL_WORK_GROUP_SIZE, SizeOf(TempLocalSize), @TempLocalSize, InfoLen);
+                  LogCallResult(Error, 'clGetKernelWorkGroupInfo', 'Work group info obtained.');
+
+                  Result := BruteForceOnGPU_MatCmp(OpenCLDll, CLKernel, TempContext, CmdQueue, SlaveCmdQueue,
+                                                   ASrcBmpData, ASubBmpData, ABytesPerPixelOnSrc, ABytesPerPixelOnSub,
+                                                   ASourceBitmapWidth, ASourceBitmapHeight, ASubBitmapWidth, ASubBitmapHeight,
+                                                   ColorErrorLevel, TotalErrorCount, FastSearchColorErrorCount, AUseFastSearch,
+                                                   AIgnoreBackgroundColor, AGetAllBitmaps, ASleepySearch,
+                                                   AOutsideTickCount, APrecisionTimeout,
+                                                   AResultedErrorCount, SubCnvXOffset, SubCnvYOffset, AFoundBitmaps, AGPUDbgBuffer, AStopSearchOnDemand);
+                finally  //clCreateKernel
+                  OpenCLDll.clReleaseKernel(CLKernel);
+                end;
+              end; //ShouldCall_SlideSearch
+
+            finally
+              OpenCLDll.clReleaseProgram(CLProgram);
+            end; //clCreateProgramWithSource
+          finally
+            OpenCLDll.clReleaseCommandQueue(CmdQueue);
+            OpenCLDll.clReleaseCommandQueue(SlaveCmdQueue);   //used for slave kernels
           end;
-
-          if ShouldCall_SlideSearch then
-          begin
-            CLKernel := OpenCLDll.clCreateKernel(CLProgram, 'SlideSearch', Error);   //call SlideSearch
-            try
-              LogCallResult(Error, 'clCreateKernel', 'Kernel allocated.');
-
-              Error := OpenCLDll.clGetKernelWorkGroupInfo(CLKernel, DeviceIDs[AGPUDeviceIndex], CL_KERNEL_WORK_GROUP_SIZE, SizeOf(TempLocalSize), @TempLocalSize, InfoLen);
-              LogCallResult(Error, 'clGetKernelWorkGroupInfo', 'Work group info obtained.');
-
-              Result := BruteForceOnGPU_SlideSearch(OpenCLDll, CLKernel, TempContext, CmdQueue, SlaveCmdQueue,
-                                                    ASrcBmpData, ASubBmpData, ABytesPerPixelOnSrc, ABytesPerPixelOnSub,
-                                                    ASourceBitmapWidth, ASourceBitmapHeight, ASubBitmapWidth, ASubBitmapHeight,
-                                                    ColorErrorLevel, TotalErrorCount, FastSearchColorErrorCount, AUseFastSearch,
-                                                    AIgnoreBackgroundColor, AGetAllBitmaps, ASleepySearch,
-                                                    AOutsideTickCount, APrecisionTimeout,
-                                                    AResultedErrorCount, SubCnvXOffset, SubCnvYOffset, AFoundBitmaps, AStopSearchOnDemand);
-            finally  //clCreateKernel
-              OpenCLDll.clReleaseKernel(CLKernel);
-            end;
-          end
-          else
-          begin
-            CLKernel := OpenCLDll.clCreateKernel(CLProgram, 'MatCmp', Error);    //call MatCmp
-            try
-              LogCallResult(Error, 'clCreateKernel', 'Kernel allocated.');
-
-              Error := OpenCLDll.clGetKernelWorkGroupInfo(CLKernel, DeviceIDs[AGPUDeviceIndex], CL_KERNEL_WORK_GROUP_SIZE, SizeOf(TempLocalSize), @TempLocalSize, InfoLen);
-              LogCallResult(Error, 'clGetKernelWorkGroupInfo', 'Work group info obtained.');
-
-              Result := BruteForceOnGPU_MatCmp(OpenCLDll, CLKernel, TempContext, CmdQueue, SlaveCmdQueue,
-                                               ASrcBmpData, ASubBmpData, ABytesPerPixelOnSrc, ABytesPerPixelOnSub,
-                                               ASourceBitmapWidth, ASourceBitmapHeight, ASubBitmapWidth, ASubBitmapHeight,
-                                               ColorErrorLevel, TotalErrorCount, FastSearchColorErrorCount, AUseFastSearch,
-                                               AIgnoreBackgroundColor, AGetAllBitmaps, ASleepySearch,
-                                               AOutsideTickCount, APrecisionTimeout,
-                                               AResultedErrorCount, SubCnvXOffset, SubCnvYOffset, AFoundBitmaps, AStopSearchOnDemand);
-            finally  //clCreateKernel
-              OpenCLDll.clReleaseKernel(CLKernel);
-            end;
-          end; //ShouldCall_SlideSearch
-
-          OpenCLDll.clReleaseProgram(CLProgram);
-          OpenCLDll.clReleaseCommandQueue(CmdQueue);
-          //OpenCLDll.clReleaseCommandQueue(SlaveCmdQueue);   //used for slave kernels
         finally
           OpenCLDll.clReleaseContext(TempContext);
         end;
@@ -2428,6 +2439,7 @@ function BitmapPosMatch(Algorithm: TMatchBitmapAlgorithm;
                         AGPUWaitForAllKernelsToBeDone: Boolean;
                         AGPUReleaseFinalEventAtKernelEnd: Boolean;
                         AGPUIgnoreExecutionAvailability: Boolean;
+                        var AGPUDbgBuffer: TIntArr;
                         out AResultedErrorCount: Integer;
                         AStopSearchOnDemand: PBoolean = nil;
                         StopSearchOnMismatch: Boolean = True): Boolean;
@@ -2511,6 +2523,7 @@ begin
                                                AGPUWaitForAllKernelsToBeDone,
                                                AGPUReleaseFinalEventAtKernelEnd,
                                                AGPUIgnoreExecutionAvailability,
+                                               AGPUDbgBuffer,
                                                AResultedErrorCount,
                                                AStopSearchOnDemand,
                                                StopSearchOnMismatch);

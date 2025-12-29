@@ -37,6 +37,17 @@ function GetGPUDeviceInfo(AOnAddToLog: TOnAddToLog; AOpenCLDll: TOpenCL; ADevice
 procedure GetOpenCLInfo(AOnAddToLog: TOnAddToLog; ACustomOpenCLLocation: string = '');
 
 
+const
+  CGPUDbgVar_GPUIncludeDashG = '$GPUIncludeDashG$';
+  CGPUDbgVar_GPUSlaveQueueFromDevice = '$GPUSlaveQueueFromDevice$';
+  CGPUDbgVar_GPUUseAllKernelsEvent = '$GPUUseAllKernelsEvent$';
+  CGPUDbgVar_GPUNdrangeNoLocalParam = '$GPUNdrangeNoLocalParam$';
+  CGPUDbgVar_GPUUseEventsInEnqueueKernel = '$GPUUseEventsInEnqueueKernel$';
+  CGPUDbgVar_GPUWaitForAllKernelsToBeDone = '$GPUWaitForAllKernelsToBeDone$';
+  CGPUDbgVar_GPUReleaseFinalEventAtKernelEnd = '$GPUReleaseFinalEventAtKernelEnd$';
+  CGPUDbgVar_GPUIgnoreExecutionAvailability = '$GPUIgnoreExecutionAvailability$';
+
+
 implementation
 
 
