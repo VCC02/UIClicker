@@ -344,6 +344,7 @@ object frClickerSetVar: TfrClickerSetVar
         '$LowerCase(<some_string>)$'
         '$DisplayGPUVars()$'
         '$DisplayOpenCLInfo([<CustomPathToOpenCL.dll>])$'
+        '$OpenCLInfoToVars([<CustomPathToOpenCL.dll>])$'
       )
       ParentShowHint = False
       ReadOnly = True

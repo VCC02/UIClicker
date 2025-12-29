@@ -201,7 +201,7 @@ begin
 
       for i := 0 to PlatformCount - 1 do
       begin
-        AOnAddToLog('Platform[' + IntToStr(i) + ']:');
+        AOnAddToLog('Platform[' + IntToStr(i) + ']: ');  //Leave the ' ' after ':', because it is needed by a parser!
         AOnAddToLog('  ' + GetPlatformInfoStr(i, PlatformIDs[i], CL_PLATFORM_PROFILE, 'PlatformProfile'));
         AOnAddToLog('  ' + GetPlatformInfoStr(i, PlatformIDs[i], CL_PLATFORM_VERSION, 'PlatformVersion'));
         AOnAddToLog('  ' + GetPlatformInfoStr(i, PlatformIDs[i], CL_PLATFORM_NAME, 'PlatformName'));
@@ -220,7 +220,7 @@ begin
 
           for j := 0 to DeviceCount - 1 do
           begin
-            AOnAddToLog('  Device[' + IntToStr(j) + ']:');
+            AOnAddToLog('  Device[' + IntToStr(j) + ']: ');  //Leave the ' ' after ':', because it is needed by a parser!
             AOnAddToLog('    ' + GetDeviceInfoStr(i, j, DeviceIDs[j], CL_DEVICE_NAME, 'DeviceName'));
             AOnAddToLog('    ' + GetDeviceInfoStr(i, j, DeviceIDs[j], CL_DEVICE_VENDOR, 'DeviceVendor'));
             AOnAddToLog('    ' + GetDeviceInfoStr(i, j, DeviceIDs[j], CL_DEVICE_VERSION, 'DeviceVersion'));

@@ -1067,6 +1067,7 @@ begin
     TempFuncDescriptions.Add('$LowerCase(<some_string>)$=Returns the lower case version of the passed string.');
     TempFuncDescriptions.Add('$DisplayGPUVars()$=Prints the variables and their values, used for enabling various features of the bitmap searching algorithm, used on GPU. This function must be called from the left column of a SetVar action.');
     TempFuncDescriptions.Add('$DisplayOpenCLInfo([<CustomPathToOpenCL.dll>])$=Prints various information about the available OpenCL platforms and devices to log. This function must be called from the left column of a SetVar action and uses, with priority, the value from the right column. If that value is empty, it looks for an argument, like $DisplayOpenCLInfo(<argument>])$ and prints that on instead. It returns nothing.');
+    TempFuncDescriptions.Add('$OpenCLInfoToVars([<CustomPathToOpenCL.dll>])$=Sets multiple variables with various information about the available OpenCL platforms and devices. This function must be called from the left column of a SetVar action and uses, with priority, the value from the right column. If that value is empty, it looks for an argument, like $OpenCLInfoToVars(<argument>])$. It returns nothing.');
 
 
     for i := 0 to FFuncDescriptions.Count - 1 do

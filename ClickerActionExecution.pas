@@ -161,6 +161,7 @@ type
     function ResolveAllowedFileDirs(AAllowedFileDirsForServer: string): string;
 
     procedure AddToLog(s: string);
+    procedure OpenCLInfoToVars(s: string);
     function DoOnExecuteActionByName(AActionName: string): Boolean;
 
     function DoOnGetAllActions: PClkActionsRecArr;
@@ -724,6 +725,21 @@ begin
     raise Exception.Create('OnAddToLog not assigned.');
 
   FOnAddToLog(s);
+end;
+
+
+procedure TActionExecution.OpenCLInfoToVars(s: string);
+const
+  CSep: string = ': ';
+var
+  VarName, VarValue: string;
+begin
+  if Trim(s) = '' then
+    Exit;
+
+  VarName := 'CL.' + Trim(Copy(s, 1, Pos(CSep, s) - 1));   //using a prefix, in case there are other vars with similar names (e.g. DeviceCount)
+  VarValue := Trim(Copy(s, Pos(CSep, s) + Length(CSep), MaxInt));
+  SetActionVarValue(VarName, VarValue);
 end;
 
 
@@ -4381,6 +4397,21 @@ begin
 
         VarName := ''; //Prevent creating a variable, named $DisplayGPUVars(...)$
         GetOpenCLInfo(AddToLog, ConsoleArgs);
+      end;
+
+      if (Pos('$OpenCLInfoToVars(', VarName) = 1) and (VarName[Length(VarName)] = '$') and (VarName[Length(VarName) - 1] = ')') then
+      begin
+        if VarValue = '' then
+        begin
+          FuncArgs := Copy(VarName, Pos('(', VarName) + 1, MaxInt);
+          FuncArgs := Copy(FuncArgs, 1, Length(FuncArgs) - 2);
+          ConsoleArgs := EvaluateReplacements(FuncArgs);
+        end
+        else
+          ConsoleArgs := EvaluateReplacements(VarValue);
+
+        VarName := ''; //Prevent creating a variable, named $OpenCLInfoToVars(...)$
+        GetOpenCLInfo(OpenCLInfoToVars, ConsoleArgs);
       end;
 
       if VarName > '' then
