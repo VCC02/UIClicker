@@ -740,7 +740,7 @@ begin
 
   VarName := 'CL.' + Trim(Copy(s, 1, Pos(CSep, s) - 1));   //using a prefix, in case there are other vars with similar names (e.g. DeviceCount)
   VarValue := Trim(Copy(s, Pos(CSep, s) + Length(CSep), MaxInt));
-  SetActionVarValue(VarName, VarValue);
+  SetActionVarValue('$' + VarName + '$', VarValue);
 end;
 
 
