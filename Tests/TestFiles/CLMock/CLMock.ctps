@@ -1,0 +1,193 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectSession>
+    <PathDelim Value="\"/>
+    <Version Value="12"/>
+    <BuildModes Active="Default"/>
+    <Units>
+      <Unit>
+        <Filename Value="CLMock.ppr"/>
+        <FRMtype Value="0"/>
+        <IsPartOfProject Value="True"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="0"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="948"/>
+        <CursorPos X="56" Y="958"/>
+        <UsageCount Value="44"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\..\..\MiscUtils\CLHeaders.pas"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="2"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="109"/>
+        <CursorPos X="28" Y="113"/>
+        <UsageCount Value="30"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="CLKernelSource.pas"/>
+        <IsPartOfProject Value="True"/>
+        <EditorIndex Value="1"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="26"/>
+        <CursorPos X="23" Y="40"/>
+        <UsageCount Value="25"/>
+        <Loaded Value="True"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\MiscUtils\CLHeaders.pas"/>
+        <EditorIndex Value="-1"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="104"/>
+        <CursorPos X="53" Y="107"/>
+        <UsageCount Value="34"/>
+      </Unit>
+      <Unit>
+        <Filename Value="..\..\..\ClickerUtils\ClickerUtils.pas"/>
+        <EditorIndex Value="-1"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="27"/>
+        <CursorPos X="39" Y="40"/>
+        <UsageCount Value="20"/>
+      </Unit>
+      <Unit>
+        <Filename Value="C:\codetyphon\fpcsrc\rtl\inc\ctypes.pp"/>
+        <FRMtype Value="0"/>
+        <EditorIndex Value="-1"/>
+        <WindowIndex Value="0"/>
+        <TopLine Value="88"/>
+        <CursorPos X="56" Y="101"/>
+        <UsageCount Value="10"/>
+      </Unit>
+    </Units>
+    <JumpHistory HistoryIndex="29">
+      <Position>
+        <Filename Value="CLMock.ppr"/>
+        <Caret Line="791" Column="42" TopLine="780"/>
+      </Position>
+      <Position>
+        <Filename Value="CLMock.ppr"/>
+        <Caret Line="61" Column="21" TopLine="48"/>
+      </Position>
+      <Position>
+        <Filename Value="CLMock.ppr"/>
+        <Caret Line="153" Column="12" TopLine="140"/>
+      </Position>
+      <Position>
+        <Filename Value="CLMock.ppr"/>
+        <Caret Line="154" Column="17" TopLine="140"/>
+      </Position>
+      <Position>
+        <Filename Value="CLMock.ppr"/>
+        <Caret Line="155" Column="26" TopLine="142"/>
+      </Position>
+      <Position>
+        <Filename Value="CLMock.ppr"/>
+        <Caret Line="157" Column="31" TopLine="139"/>
+      </Position>
+      <Position>
+        <Filename Value="CLMock.ppr"/>
+        <Caret Line="828" Column="27" TopLine="821"/>
+      </Position>
+      <Position>
+        <Filename Value="CLMock.ppr"/>
+        <Caret Line="840" Column="36" TopLine="826"/>
+      </Position>
+      <Position>
+        <Filename Value="CLMock.ppr"/>
+        <Caret Line="841" Column="55" TopLine="821"/>
+      </Position>
+      <Position>
+        <Filename Value="CLMock.ppr"/>
+        <Caret Line="80" Column="21" TopLine="62"/>
+      </Position>
+      <Position>
+        <Filename Value="CLMock.ppr"/>
+        <Caret Line="215" Column="13" TopLine="194"/>
+      </Position>
+      <Position>
+        <Filename Value="CLMock.ppr"/>
+        <Caret Line="859" Column="53" TopLine="847"/>
+      </Position>
+      <Position>
+        <Filename Value="CLMock.ppr"/>
+        <Caret Line="81" Column="27" TopLine="61"/>
+      </Position>
+      <Position>
+        <Filename Value="CLMock.ppr"/>
+        <Caret Line="227" Column="43" TopLine="203"/>
+      </Position>
+      <Position>
+        <Filename Value="CLMock.ppr"/>
+        <Caret Line="223" Column="40" TopLine="207"/>
+      </Position>
+      <Position>
+        <Filename Value="CLMock.ppr"/>
+        <Caret Line="863" Column="42" TopLine="852"/>
+      </Position>
+      <Position>
+        <Filename Value="..\..\..\..\MiscUtils\CLHeaders.pas"/>
+        <Caret Line="213" Column="38" TopLine="200"/>
+      </Position>
+      <Position>
+        <Filename Value="CLMock.ppr"/>
+        <Caret Line="882" Column="28" TopLine="871"/>
+      </Position>
+      <Position>
+        <Filename Value="CLMock.ppr"/>
+        <Caret Line="880" Column="74" TopLine="864"/>
+      </Position>
+      <Position>
+        <Filename Value="CLMock.ppr"/>
+        <Caret Line="874" Column="46" TopLine="866"/>
+      </Position>
+      <Position>
+        <Filename Value="CLMock.ppr"/>
+        <Caret Line="221" Column="30" TopLine="211"/>
+      </Position>
+      <Position>
+        <Filename Value="CLMock.ppr"/>
+        <Caret Line="880" Column="82" TopLine="874"/>
+      </Position>
+      <Position>
+        <Filename Value="CLMock.ppr"/>
+        <Caret Line="82" Column="20" TopLine="62"/>
+      </Position>
+      <Position>
+        <Filename Value="CLMock.ppr"/>
+        <Caret Line="234" TopLine="220"/>
+      </Position>
+      <Position>
+        <Filename Value="CLMock.ppr"/>
+        <Caret Line="930" Column="32" TopLine="908"/>
+      </Position>
+      <Position>
+        <Filename Value="CLMock.ppr"/>
+        <Caret Line="929" Column="31" TopLine="914"/>
+      </Position>
+      <Position>
+        <Filename Value="CLMock.ppr"/>
+        <Caret Line="944" Column="38" TopLine="932"/>
+      </Position>
+      <Position>
+        <Filename Value="..\..\..\..\MiscUtils\CLHeaders.pas"/>
+        <Caret Line="215" Column="27" TopLine="200"/>
+      </Position>
+      <Position>
+        <Filename Value="CLMock.ppr"/>
+        <Caret Line="955" Column="13" TopLine="938"/>
+      </Position>
+      <Position>
+        <Filename Value="CLMock.ppr"/>
+        <Caret Line="957" Column="32" TopLine="938"/>
+      </Position>
+    </JumpHistory>
+    <RunParams>
+      <FormatVersion Value="2"/>
+      <Modes ActiveMode=""/>
+    </RunParams>
+  </ProjectSession>
+</CONFIG>

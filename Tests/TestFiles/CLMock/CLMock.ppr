@@ -1,0 +1,1521 @@
+{
+    Copyright (C) 2026 VCC
+    creation date: 26 Mar 2025
+    initial release date: 02 Jan 2026
+
+    author: VCC
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"),
+    to deal in the Software without restriction, including without limitation
+    the rights to use, copy, modify, merge, publish, distribute, sublicense,
+    and/or sell copies of the Software, and to permit persons to whom the
+    Software is furnished to do so, subject to the following conditions:
+    The above copyright notice and this permission notice shall be included
+    in all copies or substantial portions of the Software.
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+    IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+    DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+    TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
+    OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+}
+
+ 
+library CLMock;
+
+{$mode objfpc}{$H+}
+
+uses
+  Classes, Math, SysUtils, ctypes, CLHeaders, CLKernelSource;
+
+
+type
+  TQueueLocation = (qlHost, qlDevice);
+  TRawQueueProperties = array[0..0] of cl_command_queue_properties;
+  PRawQueueProperties = ^TRawQueueProperties;
+
+  THostDevCommandQueue = class
+  private
+    QueueLocation: TQueueLocation;
+    FProperties: cl_command_queue_properties; //for the old version of queues
+    FDevQueueSize: Integer; //predefined size
+    FIsOutOfOrder: Boolean;
+    FProfilingEnabled: Boolean;
+    FIsDefaultQueueOnDevice: Boolean;
+  end;
+
+  THostDevCommandQueueArr = array of THostDevCommandQueue;
+
+  //Datatypes from ClickerUtils:
+  TIntArr = array of Integer;
+
+  TCLProgram = class; //forward
+
+  TKernelArg = record
+    Arg: Pointer;
+    Size: DWord; //data size
+  end;
+
+  TKernelArgArr = array of TKernelArg;
+
+  TCLKernel = class
+  private
+    FKernelName: string;
+    FGPUDbgBuffer: TIntArr;
+    FParentProgram: TCLProgram;
+    FArguments: TKernelArgArr;
+
+    FName: string;
+    FRGBSizeStrOnBG: Byte;
+    FRGBSizeStrOnSub: Byte;
+  public
+    constructor Create(AArgumentCount: Integer);
+    destructor Destroy; override;
+    procedure Run;
+  end;
+
+  TCLKernelArr = array of TCLKernel;
+
+
+  TCLProgram = class
+    FCLKernels: TCLKernelArr; //array of TCLKernel, to allow multiple kernels to exist in the same program object
+    FSourceCode: TStringList;
+    FBuildOptions: string; //e.g. '-g'
+    FBuildResults: string;
+
+    FGPUSlaveQueueFromDevice: Boolean;
+    FGPUUseAllKernelsEvent: Boolean;
+    FGPUNdrangeNoLocalParam: Boolean;
+    FGPUUseEventsInEnqueueKernel: Boolean;
+    FGPUWaitForAllKernelsToBeDone: Boolean;
+    FGPUReleaseFinalEventAtKernelEnd: Boolean;
+
+    function GetKernelIndexByObject(ACLKernel: TCLKernel): Integer;
+  public
+    constructor Create;
+    destructor Destroy; override; //FSourceCode
+    procedure Build;  //There is not program building, just decoding kernel debugging options from the existing predefined source code.
+    function KernelNameExistsInSource(AName: string): Boolean;
+    function CreateNewKernel(AKernelName: string): TCLKernel;
+    function RemoveKernel(ACLKernel: TCLKernel): Boolean; //returns True if ACLKernel was found
+  end;
+
+
+  TCLBuffer = record
+    Data: Pointer;
+    Size: csize_t;
+  end;
+
+  TCLBufferArr = array of TCLBuffer;
+
+
+  TCLContext = class  //objects of this type are returned by clCreateContext
+  private
+    FHostDevCommandQueues: THostDevCommandQueueArr;
+    FProgram: TCLProgram;
+    FBuffers: TCLBufferArr;
+
+    function GetBufferIndexByObject(ABuffer: Pointer): Integer;
+    function GetQueueIndexByObject(AQueue: Pointer): Integer;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    function CreateBuffer(ASize: csize_t): Pointer;
+    function DestroyBuffer(ABuffer: Pointer): Boolean; //returns False if not found
+  end;
+
+  TCLContextArr = array of TCLContext;
+
+
+  TDevice = record
+    Name: string;
+    Version: string;
+    OpenCLCVersion: string;
+    Profile: string;
+    Vendor: string;
+    Extensions: string;
+    DevicePlatformVersion: string;
+    FCLContexts: TCLContextArr;
+  end;
+  PDevice = ^TDevice;
+
+  TPlatform = record
+    Name: string;
+    Version: string;
+    Profile: string;
+    Vendor: string;
+    Extensions: string;
+    Devices: array of cl_device_id; //should be used as array of PDevice
+  end;
+  PPlatform = ^TPlatform;
+
+
+const
+  CPlatformCount = 6;
+  CDeviceCount = 2;
+  CUndefinedParam = 'UndefinedParam';
+
+var
+  AllPlatforms: array[0..CPlatformCount - 1] of cl_platform_id;
+
+
+constructor TCLContext.Create;
+begin
+  inherited Create;
+  FProgram := nil;
+end;
+
+
+destructor TCLContext.Destroy;
+var
+  i: Integer;
+begin
+  for i := 0 to Length(FBuffers) - 1 do
+    Freemem(FBuffers[i].Data, FBuffers[i].Size);
+
+  SetLength(FBuffers, 0);
+
+  for i := 0 to Length(FHostDevCommandQueues) - 1 do
+    FHostDevCommandQueues[i].Destroy;
+
+  SetLength(FHostDevCommandQueues, 0);
+
+  FreeAndNil(FProgram);
+  inherited Destroy;
+end;
+
+
+function TCLContext.GetBufferIndexByObject(ABuffer: Pointer): Integer;
+var
+  i: Integer;
+begin
+  Result := -1;
+  for i := 0 to Length(FBuffers) - 1 do
+    if FBuffers[i].Data = ABuffer then
+    begin
+      Result := i;
+      Break;
+    end;
+end;
+
+
+function TCLContext.GetQueueIndexByObject(AQueue: Pointer): Integer;
+var
+  i: Integer;
+begin
+  Result := -1;
+  for i := 0 to Length(FHostDevCommandQueues) - 1 do
+    if FHostDevCommandQueues[i] = THostDevCommandQueue(AQueue) then
+    begin
+      Result := i;
+      Break;
+    end;
+end;
+
+
+function TCLContext.CreateBuffer(ASize: csize_t): Pointer;
+var
+  n: Integer;
+begin
+  n := Length(FBuffers);
+  SetLength(FBuffers, n + 1);
+  GetMem(FBuffers[n].Data, FBuffers[n].Size);
+  Result := FBuffers[n].Data;
+end;
+
+
+function TCLContext.DestroyBuffer(ABuffer: Pointer): Boolean; //returns False if not found
+var
+  i, Idx: Integer;
+begin
+  Result := False;
+  Idx := GetBufferIndexByObject(ABuffer);
+  if Idx = -1 then
+    Exit;
+
+  FreeMem(FBuffers[Idx].Data, FBuffers[Idx].Size);
+
+  for i := Idx to Length(FBuffers) - 2 do
+    FBuffers[i] := FBuffers[i + 1];
+
+  SetLength(FBuffers, Length(FBuffers) - 1);
+  Result := True;
+end;
+
+
+constructor TCLKernel.Create(AArgumentCount: Integer);
+begin
+  inherited Create;
+  SetLength(FArguments, AArgumentCount);
+  FName := '';
+  FRGBSizeStrOnBG := 3;
+  FRGBSizeStrOnSub := 3;
+end;
+
+
+destructor TCLKernel.Destroy;
+begin
+  SetLength(FArguments, 0);
+  inherited Create;
+end;
+
+
+procedure TCLKernel.Run;
+var
+  i, nd: Integer;
+  ABackgroundBmp, ASubBmp, AResultedErrCount, AKernelDone: PByteArray0;
+  ABackgroundWidth, ASubBmpWidth, ASubBmpHeight, AXOffset, AYOffset: DWord;
+  AColorError: Byte;
+  ASlaveQueue: LongInt;
+  Mat: TMatCmpSrc;
+begin
+  if FName = 'MatCmp' then
+  begin
+    nd := PDWord(FArguments[6].Arg)^; //ASubBmpHeight
+
+    ABackgroundBmp := PByteArray0(PPtrUInt(FArguments[0].Arg)^); //Arg is a pointer to a pointer to the first array element
+    ASubBmp := PByteArray0(PPtrUInt(FArguments[1].Arg)^);
+    AResultedErrCount := PByteArray0(PPtrUInt(FArguments[2].Arg)^);
+    AKernelDone := PByteArray0(PPtrUInt(FArguments[3].Arg)^);
+    ABackgroundWidth := PDWord(FArguments[4].Arg)^;
+    ASubBmpWidth := PDWord(FArguments[5].Arg)^;
+    ASubBmpHeight := PDWord(FArguments[6].Arg)^;
+    AXOffset := PDWord(FArguments[7].Arg)^;
+    AYOffset := PDWord(FArguments[8].Arg)^;
+    AColorError := PByte(FArguments[9].Arg)^;
+    ASlaveQueue := PDWord(FArguments[10].Arg)^;
+
+    for i := 0 to nd - 1 do    //in GPU, these run in parallel:
+    begin
+      Mat := TMatCmpSrc.Create;
+      try
+        Mat.InstanceIndex := i;
+        Mat.RGBSizeStrOnBG := FRGBSizeStrOnBG;
+        Mat.RGBSizeStrOnSub := FRGBSizeStrOnSub;
+
+        //ToDo:  this should have the host logic of SlideSearch here
+
+        Mat.MatCmp(ABackgroundBmp,
+                   ASubBmp,
+                   AResultedErrCount,
+                   AKernelDone,
+                   ABackgroundWidth,
+                   ASubBmpWidth,
+                   ASubBmpHeight,
+                   AXOffset,
+                   AYOffset,
+                   AColorError,
+                   ASlaveQueue);
+      finally
+        Mat.Free;
+      end;
+    end;
+  end
+  else
+    if FName = 'SlideSearch' then
+    begin
+      nd := PDWord(FArguments[7].Arg)^; //ASubBmpHeight
+      //set arguments
+      //call SlideSearch
+    end;
+end;
+
+
+constructor TCLProgram.Create;
+begin
+  inherited Create;
+  FSourceCode := TStringList.Create;
+  SetLength(FCLKernels, 0);
+end;
+
+
+destructor TCLProgram.Destroy;
+var
+  i: Integer;
+begin
+  for i := 0 to Length(FCLKernels) - 1 do
+    FreeAndNil(FCLKernels[i]);
+
+  SetLength(FCLKernels, 0);
+  FreeAndNil(FSourceCode);
+  inherited Destroy;
+end;
+
+
+procedure TCLProgram.Build;
+var
+  i: Integer;
+  s: string;
+begin
+  FBuildResults := ''; //set to an error if any
+
+  FGPUSlaveQueueFromDevice := False;
+  FGPUUseAllKernelsEvent := False;
+  FGPUNdrangeNoLocalParam := False;
+  FGPUUseEventsInEnqueueKernel := False;
+  FGPUWaitForAllKernelsToBeDone := False;
+  FGPUReleaseFinalEventAtKernelEnd := False;
+
+  for i := 15 to FSourceCode.Count - 1 do    //start at 15, because the options start there
+  begin
+    s := FSourceCode.Strings[i];
+    if not FGPUSlaveQueueFromDevice and (Pos('queue_t SlaveQueue = get_default_queue();', s) > 0) then
+      FGPUSlaveQueueFromDevice := True;
+
+    if not FGPUUseAllKernelsEvent and (Pos('clk_event_t AllKernelsEvent;', s) > 0) then
+      FGPUUseAllKernelsEvent := True;
+
+    if not FGPUNdrangeNoLocalParam and (Pos('ndrange_t ndrange = ndrange_1D(ASubBmpHeight);', s) > 0) then
+      FGPUNdrangeNoLocalParam := True;
+
+    if not FGPUUseEventsInEnqueueKernel and (Pos('NULL,', s) > 0) then
+      FGPUUseEventsInEnqueueKernel := True;
+
+    if not FGPUWaitForAllKernelsToBeDone and (Pos('while (!AllKernelsDone)', s) > 0) then
+      FGPUWaitForAllKernelsToBeDone := True;
+
+    if not FGPUReleaseFinalEventAtKernelEnd and (Pos('  release_event(FinalEvent);', s) > 0) then   //using the indent to determine the line location
+      FGPUReleaseFinalEventAtKernelEnd := True;
+  end;
+end;
+
+
+function TCLProgram.KernelNameExistsInSource(AName: string): Boolean;
+var
+  i: Integer;
+  ExpectedLine: string;
+begin
+  Result := False;
+  ExpectedLine := '__kernel void ' + AName + '(';
+
+  for i := 0 to FSourceCode.Count - 1 do
+    if Pos(ExpectedLine, FSourceCode.Strings[i]) = 1 then
+    begin
+      Result := True;
+      Break;
+    end;
+end;
+
+
+function TCLProgram.GetKernelIndexByObject(ACLKernel: TCLKernel): Integer;
+var
+  i: Integer;
+begin
+  Result := -1;
+  for i := 0 to Length(FCLKernels) - 1 do
+    if FCLKernels[i] = ACLKernel then
+    begin
+      Result := i;
+      Break;
+    end;
+end;
+
+
+function TCLProgram.CreateNewKernel(AKernelName: string): TCLKernel;
+var
+  n, ArgCnt, i: Integer;
+begin
+  ArgCnt := 0;
+  if AKernelName = 'MatCmp' then
+    ArgCnt := 11
+  else
+    if AKernelName = 'SlideSearch' then
+      ArgCnt := 13;
+
+  n := Length(FCLKernels);
+  SetLength(FCLKernels, n + 1);
+  FCLKernels[n] := TCLKernel.Create(ArgCnt);
+  FCLKernels[n].FKernelName := AKernelName;
+  FCLKernels[n].FParentProgram := Self;
+  FCLKernels[n].FName := AKernelName;
+  Result := FCLKernels[n];
+
+  for i := 0 to FSourceCode.Count - 1 do
+  begin
+    if Pos('AXOffset) * 3];', FSourceCode.Strings[i]) > 0 then
+    begin
+      Result.FRGBSizeStrOnBG := 3;
+      Break;
+    end
+    else
+      if Pos('AXOffset) * 4];', FSourceCode.Strings[i]) > 0 then
+      begin
+        Result.FRGBSizeStrOnBG := 4;
+        Break;
+      end;
+  end;
+
+  for i := 0 to FSourceCode.Count - 1 do
+  begin
+    if Pos('ASubBmpWidth) * 3];', FSourceCode.Strings[i]) > 0 then
+    begin
+      Result.FRGBSizeStrOnBG := 3;
+      Break;
+    end
+    else
+      if Pos('ASubBmpWidth) * 4];', FSourceCode.Strings[i]) > 0 then
+      begin
+        Result.FRGBSizeStrOnSub := 4;
+        Break;
+      end;
+  end;
+end;
+
+
+function TCLProgram.RemoveKernel(ACLKernel: TCLKernel): Boolean; //returns True if ACLKernel was found
+var
+  i, Idx: Integer;
+begin
+  Result := False;
+  Idx := GetKernelIndexByObject(ACLKernel);
+  if Idx = -1 then
+    Exit;
+
+  ACLKernel.Free;
+  for i := Idx to Length(FCLKernels) - 2 do
+    FCLKernels[i] := FCLKernels[i + 1];
+end;
+
+
+function clGetPlatformIDs(num_entries: cl_uint; platforms: Pcl_platform_id; num_platforms: pcl_uint): cl_int; {$IFDEF Windows} stdcall; {$ELSE} cdecl; {$ENDIF}
+begin
+  Result := CL_SUCCESS;
+
+  if (num_entries = 0) and (platforms <> nil) then
+  begin
+    Result := CL_INVALID_VALUE;
+    Exit;
+  end;
+
+  if (num_entries <= 0) and (platforms = nil) then
+  begin
+    num_platforms^ := CPlatformCount; //return number of platforms
+    Exit;
+  end;
+
+  if platforms = nil then
+  begin
+    Result := -1000;
+    Exit;
+  end;
+
+  Move(AllPlatforms, platforms^, CPlatformCount * SizeOf(cl_platform_id));
+end;
+
+
+function GetPlatformByID(APlatform: cl_platform_id): PPlatform; //this should be straight forward as typecasting, but it should be validated, first
+var
+  i: Integer;
+begin
+  Result := nil;
+  for i := 0 to Length(AllPlatforms) - 1 do
+    if AllPlatforms[i] = APlatform then
+    begin
+      Result := PPlatform(AllPlatforms[i]);
+      Break;
+    end;
+end;
+
+
+function GetDeviceByID(ADevice: cl_device_id): PDevice; //this should be straight forward as typecasting, but it should be validated, first
+var
+  i, j: Integer;
+  CurrentPlatform: PPlatform;
+begin
+  Result := nil;
+  for i := 0 to CPlatformCount - 1 do
+  begin
+    CurrentPlatform := PPlatform(AllPlatforms[i]);
+
+    for j := 0 to Length(CurrentPlatform^.Devices) - 1 do
+      if CurrentPlatform^.Devices[j] = ADevice then
+      begin
+        Result := PDevice(CurrentPlatform^.Devices[j]);
+        Break;
+      end;
+  end;
+end;
+
+
+function clGetPlatformInfo(_platform: cl_platform_id; param_name: cl_platform_info; param_value_size: size_t; param_value: Pointer; var param_value_size_ret: csize_t): cl_int; {$IFDEF Windows} stdcall; {$ELSE} cdecl; {$ENDIF}
+var
+  CurrentPlatform: PPlatform;
+begin
+  Result := CL_SUCCESS;
+  if _platform = nil then
+  begin
+    Result := CL_INVALID_PLATFORM; //implementation defined
+    Exit;
+  end;
+
+  CurrentPlatform := GetPlatformByID(_platform);
+  if CurrentPlatform = nil then
+  begin
+    Result := CL_INVALID_PLATFORM;
+    Exit;
+  end;
+
+  case param_name of
+    CL_PLATFORM_NAME:
+    begin
+      param_value_size_ret := Min(Length(CurrentPlatform^.Name) + 1, Integer(param_value_size));  //+1, to copy the null character
+      Move(CurrentPlatform^.Name[1], param_value^, param_value_size_ret);
+    end;
+
+    CL_PLATFORM_VERSION:
+    begin
+      param_value_size_ret := Min(Length(CurrentPlatform^.Version) + 1, Integer(param_value_size));
+      Move(CurrentPlatform^.Version[1], param_value^, param_value_size_ret);
+    end;
+
+    CL_PLATFORM_PROFILE:
+    begin
+      param_value_size_ret := Min(Length(CurrentPlatform^.Profile) + 1, Integer(param_value_size));
+      Move(CurrentPlatform^.Profile[1], param_value^, param_value_size_ret);
+    end;
+
+    CL_PLATFORM_VENDOR:
+    begin
+      param_value_size_ret := Min(Length(CurrentPlatform^.Vendor) + 1, Integer(param_value_size));
+      Move(CurrentPlatform^.Vendor[1], param_value^, param_value_size_ret);
+    end;
+
+    CL_PLATFORM_EXTENSIONS:
+    begin
+      param_value_size_ret := Min(Length(CurrentPlatform^.Extensions) + 1, Integer(param_value_size));
+      Move(CurrentPlatform^.Extensions[1], param_value^, param_value_size_ret);
+    end;
+
+    //CL_PLATFORM_VERSION:
+    //begin
+    //  ResDWord := 1;
+    //  param_value_size_ret := SizeOf(ResDWord);
+    //  Move(ResDWord, param_value^, param_value_size_ret);
+    //end;
+
+    else
+    begin
+      param_value_size_ret := Min(Length(CUndefinedParam) + 1, Integer(param_value_size));
+      Move(CUndefinedParam[1], param_value^, param_value_size_ret);
+    end;
+  end;
+end;
+
+
+function clGetDeviceIDs(_platform: cl_platform_id; device_type: cl_device_type; num_entries: cl_uint; devices: Pcl_device_id; num_devices: pcl_uint): cl_int; {$IFDEF Windows} stdcall; {$ELSE} cdecl; {$ENDIF}
+var
+  CurrentPlatform: PPlatform;
+begin
+  Result := CL_SUCCESS;
+
+  CurrentPlatform := GetPlatformByID(_platform);
+  if CurrentPlatform = nil then
+  begin
+    Result := CL_INVALID_PLATFORM;
+    Exit;
+  end;
+
+  if device_type <> CL_DEVICE_TYPE_GPU then
+  begin
+    Result := CL_DEVICE_NOT_FOUND; //TBD
+    Exit;
+  end;
+
+  //device stuff
+  if (num_entries = 0) and (devices <> nil) then
+  begin
+    Result := CL_INVALID_VALUE;
+    Exit;
+  end;
+
+  if (num_entries <= 0) and (devices = nil) then
+  begin
+    num_devices^ := CDeviceCount; //return number of devices
+    Exit;
+  end;
+
+  if devices = nil then
+  begin
+    Result := -1000;
+    Exit;
+  end;
+
+  //this should use CurrentPlatform, and get the device from the platform
+  Move(CurrentPlatform^.Devices[0], devices^, CDeviceCount * SizeOf(cl_device_id));  //src, dest, size
+end;
+
+
+function clGetDeviceInfo(device: cl_device_id; param_name: cl_device_info; param_value_size: size_t; param_value: Pointer; var param_value_size_ret: csize_t): cl_int; {$IFDEF Windows} stdcall; {$ELSE} cdecl; {$ENDIF}
+var
+  CurrentDevice: PDevice;
+  //ResDWord: DWord;
+begin
+  Result := CL_SUCCESS;
+  if device = nil then
+  begin
+    Result := CL_INVALID_DEVICE; //implementation defined
+    Exit;
+  end;
+
+  CurrentDevice := GetDeviceByID(device);
+  if CurrentDevice = nil then
+  begin
+    Result := CL_INVALID_DEVICE;
+    Exit;
+  end;
+
+  case param_name of
+    CL_DEVICE_NAME:
+    begin
+      param_value_size_ret := Min(Length(CurrentDevice^.Name) + 1, Integer(param_value_size));  //+1, to copy the null character
+      Move(CurrentDevice^.Name[1], param_value^, param_value_size_ret);
+    end;
+
+    CL_DEVICE_VERSION:
+    begin
+      param_value_size_ret := Min(Length(CurrentDevice^.Version) + 1, Integer(param_value_size));
+      Move(CurrentDevice^.Version[1], param_value^, param_value_size_ret);
+    end;
+
+    CL_DEVICE_OPENCL_C_VERSION:
+    begin
+      param_value_size_ret := Min(Length(CurrentDevice^.OpenCLCVersion) + 1, Integer(param_value_size));
+      Move(CurrentDevice^.OpenCLCVersion[1], param_value^, param_value_size_ret);
+    end;
+
+    CL_DEVICE_PROFILE:
+    begin
+      param_value_size_ret := Min(Length(CurrentDevice^.Profile) + 1, Integer(param_value_size));
+      Move(CurrentDevice^.Profile[1], param_value^, param_value_size_ret);
+    end;
+
+    CL_DEVICE_VENDOR:
+    begin
+      param_value_size_ret := Min(Length(CurrentDevice^.Vendor) + 1, Integer(param_value_size));
+      Move(CurrentDevice^.Vendor[1], param_value^, param_value_size_ret);
+    end;
+
+    CL_DEVICE_EXTENSIONS:
+    begin
+      param_value_size_ret := Min(Length(CurrentDevice^.Extensions) + 1, Integer(param_value_size));
+      Move(CurrentDevice^.Extensions[1], param_value^, param_value_size_ret);
+    end;
+
+    CL_DEVICE_PLATFORM_VERSION:
+    begin
+      param_value_size_ret := Min(Length(CurrentDevice^.DevicePlatformVersion) + 1, Integer(param_value_size));
+      Move(CurrentDevice^.DevicePlatformVersion[1], param_value^, param_value_size_ret);
+    end;
+
+
+    //CL_DEVICE_TYPE_INFO:
+    //begin
+    //  ResDWord := CL_DEVICE_TYPE_GPU;
+    //  param_value_size_ret := SizeOf(ResDWord);
+    //  Move(ResDWord, param_value^, param_value_size_ret);
+    //end;
+
+    else
+    begin
+      param_value_size_ret := Min(Length(CUndefinedParam) + 1, Integer(param_value_size));
+      Move(CUndefinedParam[1], param_value^, param_value_size_ret);
+    end;
+  end;
+end;
+
+
+function clCreateContext(properties: Pcl_context_properties; num_devices: cl_uint; devices: Pcl_device_id; pfn_notify: TContextNotify; user_data: Pointer; var errcode_ret: cl_int): cl_context; {$IFDEF Windows} stdcall; {$ELSE} cdecl; {$ENDIF}
+var
+  CurrentDevice: PDevice;
+  n: Integer;
+begin
+  CurrentDevice := GetDeviceByID(devices^);
+  if CurrentDevice = nil then
+  begin
+    errcode_ret := CL_INVALID_DEVICE;
+    Result := nil;
+    Exit;
+  end;
+
+  n := Length(CurrentDevice^.FCLContexts);
+  SetLength(CurrentDevice^.FCLContexts, n + 1);
+  CurrentDevice^.FCLContexts[n] := TCLContext.Create;
+  Result := cl_context(CurrentDevice^.FCLContexts[n]);
+end;
+
+
+procedure DeleteContextFromDevice(ADevice: PDevice; AContextIndex: Integer);
+var
+  i: Integer;
+begin
+  ADevice^.FCLContexts[AContextIndex].Destroy;
+
+  for i := AContextIndex to Length(ADevice^.FCLContexts) - 2 do
+    ADevice^.FCLContexts[i] := ADevice^.FCLContexts[i + 1];
+
+  SetLength(ADevice^.FCLContexts, Length(ADevice^.FCLContexts) - 1);
+end;
+
+
+function clReleaseContext(context: cl_context): cl_int; {$IFDEF Windows} stdcall; {$ELSE} cdecl; {$ENDIF}
+var
+  i, j, k: Integer;
+  CurrentPlatform: PPlatform;
+  CurrentDevice: PDevice;
+begin
+  Result := CL_INVALID_CONTEXT;
+  for i := 0 to Length(AllPlatforms) - 1 do
+  begin
+    CurrentPlatform := PPlatform(AllPlatforms[i]);
+
+    for j := 0 to Length(CurrentPlatform^.Devices) - 1 do
+    begin
+      CurrentDevice := PDevice(CurrentPlatform^.Devices[j]);
+
+      for k := 0 to Length(CurrentDevice^.FCLContexts) - 1 do
+        if CurrentDevice^.FCLContexts[k] = TCLContext(context) then
+        begin
+          DeleteContextFromDevice(CurrentDevice, k);
+          Result := CL_SUCCESS;
+          Exit;
+        end;
+    end;
+  end;
+end;
+
+
+function CreateQueueInContext(AContext: TCLContext; AProperties: cl_command_queue_properties): THostDevCommandQueue; overload;
+var
+  n: Integer;
+begin
+  Result := THostDevCommandQueue.Create;
+
+  n := Length(AContext.FHostDevCommandQueues);
+  SetLength(AContext.FHostDevCommandQueues, n + 1);
+  AContext.FHostDevCommandQueues[n] := Result;
+
+  Result.FProperties := AProperties;
+  Result.QueueLocation := qlHost;
+  Result.FIsOutOfOrder := False;
+  Result.FProfilingEnabled := False;
+  Result.FIsDefaultQueueOnDevice := False;
+  Result.FDevQueueSize := CL_DEVICE_QUEUE_ON_DEVICE_PREFERRED_SIZE;
+end;
+
+
+function CreateQueueInContext(AContext: TCLContext; AProperties: Pcl_queue_properties): THostDevCommandQueue; overload;
+var
+  n, i: Integer;
+  TempProperties: PRawQueueProperties;
+begin
+  Result := THostDevCommandQueue.Create;
+
+  n := Length(AContext.FHostDevCommandQueues);
+  SetLength(AContext.FHostDevCommandQueues, n + 1);
+  AContext.FHostDevCommandQueues[n] := Result;
+
+  TempProperties := PRawQueueProperties(AProperties);
+  Result.FProperties := 0;
+  Result.QueueLocation := qlHost;
+  Result.FIsOutOfOrder := False;
+  Result.FProfilingEnabled := False;
+  Result.FIsDefaultQueueOnDevice := False;
+  Result.FDevQueueSize := CL_DEVICE_QUEUE_ON_DEVICE_PREFERRED_SIZE;
+
+  i := 0;
+  repeat
+    if TempProperties^[i] = CL_QUEUE_PROPERTIES then
+    begin
+      Result.FProperties := Result.FProperties or TempProperties^[i + 1];
+
+      if TempProperties^[i + 1] and CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE = CL_QUEUE_OUT_OF_ORDER_EXEC_MODE_ENABLE then
+        Result.FIsOutOfOrder := True;
+
+      if TempProperties^[i + 1] and CL_QUEUE_PROFILING_ENABLE = CL_QUEUE_PROFILING_ENABLE then
+        Result.FProfilingEnabled := True;
+
+      if TempProperties^[i + 1] and CL_QUEUE_ON_DEVICE = CL_QUEUE_ON_DEVICE then
+      begin
+        Result.QueueLocation := qlDevice;
+        if TempProperties^[i + 1] and CL_QUEUE_ON_DEVICE_DEFAULT = CL_QUEUE_ON_DEVICE_DEFAULT then
+          Result.FIsDefaultQueueOnDevice := True;
+      end;
+    end;
+
+    if TempProperties^[i] = CL_QUEUE_SIZE then
+      if Result.QueueLocation = qlDevice then
+        if TempProperties^[i + 1] <= CL_DEVICE_QUEUE_ON_DEVICE_MAX_SIZE then
+          Result.FDevQueueSize := TempProperties^[i + 1];
+
+    Inc(i);
+  until (TempProperties^[i] = 0) or (i > 10); //limmit to 10 items, in case bad data will be passed
+end;
+
+
+procedure DeleteHostDevQueueFromContext(AContext: TCLContext; AQueueIndex: Integer);
+var
+  i: Integer;
+begin
+  AContext.FHostDevCommandQueues[AQueueIndex].Destroy;  //no FCommandQueues here
+
+  for i := AQueueIndex to Length(AContext.FHostDevCommandQueues) - 2 do
+    AContext.FHostDevCommandQueues[i] := AContext.FHostDevCommandQueues[i + 1];
+
+  SetLength(AContext.FHostDevCommandQueues, Length(AContext.FHostDevCommandQueues) - 1);
+end;
+
+
+function clCreateCommandQueue(context: cl_context; device: cl_device_id; properties: cl_command_queue_properties; var errcode_ret: cl_int): cl_command_queue; {$IFDEF Windows} stdcall; {$ELSE} cdecl; {$ENDIF}
+var
+  i: Integer;
+  CurrentDevice: PDevice;
+begin
+  Result := nil;
+  errcode_ret := CL_INVALID_CONTEXT;
+
+  if device = nil then
+  begin
+    errcode_ret := CL_INVALID_DEVICE; //implementation defined
+    Exit;
+  end;
+
+  CurrentDevice := GetDeviceByID(device);
+  if CurrentDevice = nil then
+  begin
+    errcode_ret := CL_INVALID_DEVICE;
+    Exit;
+  end;
+
+  for i := 0 to Length(CurrentDevice^.FCLContexts) - 1 do
+    if CurrentDevice^.FCLContexts[i] = TCLContext(context) then
+    begin
+      Result := cl_command_queue(CreateQueueInContext(CurrentDevice^.FCLContexts[i], properties));
+      errcode_ret := CL_SUCCESS;
+      Exit;
+    end;
+end;
+
+
+function clCreateCommandQueueWithProperties(context: cl_context; device: cl_device_id; properties: Pcl_queue_properties; var errcode_ret: cl_int): cl_command_queue; {$IFDEF Windows} stdcall; {$ELSE} cdecl; {$ENDIF}
+var
+  i: Integer;
+  CurrentDevice: PDevice;
+begin
+  Result := nil;
+  errcode_ret := CL_INVALID_CONTEXT;
+
+  if device = nil then
+  begin
+    errcode_ret := CL_INVALID_DEVICE; //implementation defined
+    Exit;
+  end;
+
+  CurrentDevice := GetDeviceByID(device);
+  if CurrentDevice = nil then
+  begin
+    errcode_ret := CL_INVALID_DEVICE;
+    Exit;
+  end;
+
+  for i := 0 to Length(CurrentDevice^.FCLContexts) - 1 do
+    if CurrentDevice^.FCLContexts[i] = TCLContext(context) then
+    begin
+      Result := cl_command_queue(CreateQueueInContext(CurrentDevice^.FCLContexts[i], properties));
+      errcode_ret := CL_SUCCESS;
+      Exit;
+    end;
+end;
+
+
+function clReleaseCommandQueue(command_queue: cl_command_queue): cl_int; {$IFDEF Windows} stdcall; {$ELSE} cdecl; {$ENDIF}
+var
+  i, j, k, t: Integer;
+  CurrentPlatform: PPlatform;
+  CurrentDevice: PDevice;
+  CurrentContext: TCLContext;
+begin
+  Result := CL_INVALID_COMMAND_QUEUE;
+  for i := 0 to Length(AllPlatforms) - 1 do
+  begin
+    CurrentPlatform := PPlatform(AllPlatforms[i]);
+
+    for j := 0 to Length(CurrentPlatform^.Devices) - 1 do
+    begin
+      CurrentDevice := PDevice(CurrentPlatform^.Devices[j]);
+
+      for k := 0 to Length(CurrentDevice^.FCLContexts) - 1 do
+      begin
+        CurrentContext := CurrentDevice^.FCLContexts[k];
+
+        for t := 0 to Length(CurrentContext.FHostDevCommandQueues) - 1 do
+          if CurrentContext.FHostDevCommandQueues[t] = THostDevCommandQueue(command_queue) then
+          begin
+            DeleteHostDevQueueFromContext(CurrentContext, t);
+            Result := CL_SUCCESS;
+            Exit;
+          end;
+      end;
+    end;
+  end;
+end;
+
+
+function clCreateProgramWithSource(context: cl_context; count: cl_uint; strings: PPAnsiChar; lengths: Pcsize_t; var errcode_ret: cl_int): cl_program; {$IFDEF Windows} stdcall; {$ELSE} cdecl; {$ENDIF}
+var
+  i, j, k: Integer;
+  CurrentPlatform: PPlatform;
+  CurrentDevice: PDevice;
+begin
+  if count <> 1 then  //1 is the only supported value in this implementation
+  begin
+    errcode_ret := CL_INVALID_VALUE;
+    Result := nil;
+  end;
+
+  Result := nil;
+  errcode_ret := CL_INVALID_CONTEXT;
+  for i := 0 to Length(AllPlatforms) - 1 do
+  begin
+    CurrentPlatform := PPlatform(AllPlatforms[i]);
+
+    for j := 0 to Length(CurrentPlatform^.Devices) - 1 do
+    begin
+      CurrentDevice := PDevice(CurrentPlatform^.Devices[j]);
+
+      for k := 0 to Length(CurrentDevice^.FCLContexts) - 1 do
+        if CurrentDevice^.FCLContexts[k] = TCLContext(context) then
+        begin
+          CurrentDevice^.FCLContexts[k].FProgram := TCLProgram.Create;
+          CurrentDevice^.FCLContexts[k].FProgram.FSourceCode.Text := string(strings^);
+          Result := cl_program(CurrentDevice^.FCLContexts[k].FProgram);
+          errcode_ret := CL_SUCCESS;
+          Exit;                 //maybe multiple devices can point to the same context, but not in this implementation
+        end;
+    end;
+  end;
+end;
+
+
+function clReleaseProgram(_program: cl_program): cl_int; {$IFDEF Windows} stdcall; {$ELSE} cdecl; {$ENDIF}
+var
+  i, j, k: Integer;
+  CurrentPlatform: PPlatform;
+  CurrentDevice: PDevice;
+begin
+  Result := CL_INVALID_PROGRAM;
+  for i := 0 to Length(AllPlatforms) - 1 do
+  begin
+    CurrentPlatform := PPlatform(AllPlatforms[i]);
+
+    for j := 0 to Length(CurrentPlatform^.Devices) - 1 do
+    begin
+      CurrentDevice := PDevice(CurrentPlatform^.Devices[j]);
+
+      for k := 0 to Length(CurrentDevice^.FCLContexts) - 1 do
+        if CurrentDevice^.FCLContexts[k].FProgram = TCLProgram(_program) then
+        begin
+          FreeAndNil(CurrentDevice^.FCLContexts[k].FProgram);
+          Result := CL_SUCCESS;
+          Exit;
+        end;
+    end;
+  end;
+end;
+
+
+function clBuildProgram(_program: cl_program; num_devices: cl_uint; device_list: Pcl_device_id; options: PAnsiChar; pfn_notify: TProgramNotify; user_data: Pointer): cl_int; {$IFDEF Windows} stdcall; {$ELSE} cdecl; {$ENDIF}
+var
+  i, j, k: Integer;
+  CurrentPlatform: PPlatform;
+  CurrentDevice: PDevice;
+begin
+  Result := CL_INVALID_PROGRAM;
+  for i := 0 to Length(AllPlatforms) - 1 do
+  begin
+    CurrentPlatform := PPlatform(AllPlatforms[i]);
+
+    for j := 0 to Length(CurrentPlatform^.Devices) - 1 do
+    begin
+      CurrentDevice := PDevice(CurrentPlatform^.Devices[j]);
+      if (device_list = nil) {or CurrentDevice in device_list of num_devices items} then
+        for k := 0 to Length(CurrentDevice^.FCLContexts) - 1 do
+          if CurrentDevice^.FCLContexts[k].FProgram = TCLProgram(_program) then
+          begin
+            CurrentDevice^.FCLContexts[k].FProgram.FBuildOptions := string(options);
+            CurrentDevice^.FCLContexts[k].FProgram.Build;
+            Result := CL_SUCCESS;
+            //Exit; //Do not exit. If multiple devices have the same program, then build for all.
+          end;
+    end;
+  end;
+end;
+
+
+function clGetProgramBuildInfo(_program: cl_program; device: cl_device_id; param_name: cl_program_build_info; param_value_size: csize_t; param_value: Pointer; var param_value_size_ret: csize_t): cl_int; {$IFDEF Windows} stdcall; {$ELSE} cdecl; {$ENDIF}
+var
+  k: Integer;
+  CurrentDevice: PDevice;
+  BuildRes: string;
+  MinLen: Integer;
+begin
+  CurrentDevice := GetDeviceByID(device);
+  if CurrentDevice = nil then
+  begin
+    Result := CL_INVALID_DEVICE;
+    Exit;
+  end;
+
+  Result := CL_INVALID_PROGRAM;
+
+  for k := 0 to Length(CurrentDevice^.FCLContexts) - 1 do
+    if CurrentDevice^.FCLContexts[k].FProgram = TCLProgram(_program) then
+    begin
+      case param_name of
+        CL_PROGRAM_BUILD_LOG:
+        begin
+          BuildRes := CurrentDevice^.FCLContexts[k].FProgram.FBuildResults;
+          MinLen := Min(param_value_size, Length(BuildRes));
+          Move(BuildRes[1], param_value, MinLen);
+          param_value_size_ret := MinLen;
+          Result := CL_SUCCESS;
+        end;
+        else
+          Result := CL_INVALID_VALUE; //so far, CL_PROGRAM_BUILD_LOG is the only supported param
+      end;
+
+      Exit;
+    end;
+end;
+
+
+function clCreateKernel(_program: cl_program; kernel_name: PAnsiChar; var errcode_ret: cl_int): cl_kernel; {$IFDEF Windows} stdcall; {$ELSE} cdecl; {$ENDIF}
+var
+  i, j, k: Integer;
+  CurrentPlatform: PPlatform;
+  CurrentDevice: PDevice;
+begin
+  Result := nil;
+  errcode_ret := CL_INVALID_PROGRAM;
+
+  if kernel_name = nil then
+  begin
+    errcode_ret := CL_INVALID_VALUE;
+    Exit;
+  end;
+
+  for i := 0 to Length(AllPlatforms) - 1 do
+  begin
+    CurrentPlatform := PPlatform(AllPlatforms[i]);
+
+    for j := 0 to Length(CurrentPlatform^.Devices) - 1 do
+    begin
+      CurrentDevice := PDevice(CurrentPlatform^.Devices[j]);
+      for k := 0 to Length(CurrentDevice^.FCLContexts) - 1 do
+        if CurrentDevice^.FCLContexts[k].FProgram = TCLProgram(_program) then
+        begin
+          if CurrentDevice^.FCLContexts[k].FProgram.KernelNameExistsInSource(string(kernel_name)) then
+          begin
+            Result := cl_kernel(CurrentDevice^.FCLContexts[k].FProgram.CreateNewKernel(string(kernel_name)));
+            errcode_ret := CL_SUCCESS;
+          end
+          else
+            errcode_ret := CL_INVALID_KERNEL_NAME;
+
+          Exit;
+        end;
+    end;
+  end;
+end;
+
+
+function clReleaseKernel(kernel: cl_kernel): cl_int; {$IFDEF Windows} stdcall; {$ELSE} cdecl; {$ENDIF}
+var
+  i, j, k: Integer;
+  CurrentPlatform: PPlatform;
+  CurrentDevice: PDevice;
+begin
+  Result := CL_INVALID_KERNEL;
+
+  for i := 0 to Length(AllPlatforms) - 1 do
+  begin
+    CurrentPlatform := PPlatform(AllPlatforms[i]);
+
+    for j := 0 to Length(CurrentPlatform^.Devices) - 1 do
+    begin
+      CurrentDevice := PDevice(CurrentPlatform^.Devices[j]);
+      for k := 0 to Length(CurrentDevice^.FCLContexts) - 1 do
+        if CurrentDevice^.FCLContexts[k].FProgram.GetKernelIndexByObject(TCLKernel(kernel)) <> -1 then
+        begin
+          if CurrentDevice^.FCLContexts[k].FProgram.RemoveKernel(TCLKernel(kernel)) then
+            Result := CL_SUCCESS;
+          Exit;
+        end;
+    end;
+  end;
+end;
+
+
+function clGetKernelWorkGroupInfo(kernel: cl_kernel; device: cl_device_id; param_name: cl_kernel_work_group_info; param_value_size: csize_t; param_value: Pointer; var param_value_size_ret: csize_t): cl_int; {$IFDEF Windows} stdcall; {$ELSE} cdecl; {$ENDIF}
+begin
+  Result := CL_SUCCESS;
+  if param_name = CL_KERNEL_WORK_GROUP_SIZE then
+    pcsize_t(param_value)^ := 1024; //TBD a valid value
+end;
+
+
+function clCreateBuffer(context: cl_context; flags: cl_mem_flags; size: csize_t; host_ptr: Pointer; var errcode_ret: cl_int): cl_mem; {$IFDEF Windows} stdcall; {$ELSE} cdecl; {$ENDIF}
+var
+  i, j, k: Integer;
+  CurrentPlatform: PPlatform;
+  CurrentDevice: PDevice;
+begin
+  Result := nil;
+  errcode_ret := CL_INVALID_CONTEXT;
+
+  if (((flags and CL_MEM_COPY_HOST_PTR = 0)                   and (flags and CL_MEM_USE_HOST_PTR = 0))                   and (host_ptr <> nil)) or
+     (((flags and CL_MEM_COPY_HOST_PTR = CL_MEM_COPY_HOST_PTR) or (flags and CL_MEM_USE_HOST_PTR = CL_MEM_USE_HOST_PTR)) and (host_ptr = nil)) then
+  begin
+    errcode_ret := CL_INVALID_HOST_PTR;
+    Exit;
+  end;
+
+  for i := 0 to Length(AllPlatforms) - 1 do
+  begin
+    CurrentPlatform := PPlatform(AllPlatforms[i]);
+
+    for j := 0 to Length(CurrentPlatform^.Devices) - 1 do
+    begin
+      CurrentDevice := PDevice(CurrentPlatform^.Devices[j]);
+      for k := 0 to Length(CurrentDevice^.FCLContexts) - 1 do
+        if CurrentDevice^.FCLContexts[k] = TCLContext(context) then
+        begin
+          Result := cl_mem(CurrentDevice^.FCLContexts[k].CreateBuffer(size));
+          errcode_ret := CL_SUCCESS;
+
+          if flags and CL_MEM_COPY_HOST_PTR = CL_MEM_COPY_HOST_PTR then
+            Move(host_ptr^, Result^, size);
+
+          Exit;
+        end;
+    end;
+  end;
+end;
+
+
+function clReleaseMemObject(memobj: cl_mem): cl_int; {$IFDEF Windows} stdcall; {$ELSE} cdecl; {$ENDIF}
+var
+  i, j, k: Integer;
+  CurrentPlatform: PPlatform;
+  CurrentDevice: PDevice;
+begin
+  Result := CL_INVALID_MEM_OBJECT;
+
+  for i := 0 to Length(AllPlatforms) - 1 do
+  begin
+    CurrentPlatform := PPlatform(AllPlatforms[i]);
+
+    for j := 0 to Length(CurrentPlatform^.Devices) - 1 do
+    begin
+      CurrentDevice := PDevice(CurrentPlatform^.Devices[j]);
+      for k := 0 to Length(CurrentDevice^.FCLContexts) - 1 do
+        if CurrentDevice^.FCLContexts[k].DestroyBuffer(memobj) then
+        begin
+          Result := CL_SUCCESS;
+          Exit;
+        end;
+    end;
+  end;
+end;
+
+
+function clEnqueueWriteBuffer(command_queue: cl_command_queue; buffer: cl_mem; blocking_write: cl_bool; offset, size: size_t; ptr: Pointer; num_events_in_wait_list: cl_uint; event_wait_list, event: Pcl_event): cl_int; {$IFDEF Windows} stdcall; {$ELSE} cdecl; {$ENDIF}
+var
+  i, j, k: Integer;
+  BufferIdx, QueueIdx: Integer;
+  CurrentPlatform: PPlatform;
+  CurrentDevice: PDevice;
+  DestBuffer: Pointer;
+begin
+  Result := CL_INVALID_MEM_OBJECT;
+
+  if ptr = nil then
+  begin
+    Result := CL_INVALID_VALUE;
+    Exit;
+  end;
+
+  for i := 0 to Length(AllPlatforms) - 1 do
+  begin
+    CurrentPlatform := PPlatform(AllPlatforms[i]);
+
+    for j := 0 to Length(CurrentPlatform^.Devices) - 1 do
+    begin
+      CurrentDevice := PDevice(CurrentPlatform^.Devices[j]);
+
+      for k := 0 to Length(CurrentDevice^.FCLContexts) - 1 do
+      begin
+        BufferIdx := CurrentDevice^.FCLContexts[k].GetBufferIndexByObject(buffer);
+        if BufferIdx > -1 then
+        begin
+          QueueIdx := CurrentDevice^.FCLContexts[k].GetQueueIndexByObject(command_queue);
+          if QueueIdx = -1 then
+          begin
+            Result := CL_INVALID_COMMAND_QUEUE;
+            Exit;
+          end;
+
+          DestBuffer := CurrentDevice^.FCLContexts[k].FBuffers[BufferIdx].Data;
+          if DestBuffer <> buffer then
+            Exit; //exit with CL_INVALID_MEM_OBJECT
+
+          if offset + size > CurrentDevice^.FCLContexts[k].FBuffers[BufferIdx].Size then
+          begin
+            Result := CL_INVALID_VALUE;
+            Exit;
+          end;
+
+          //Write here, instead of adding the operation to queue:
+          Move(ptr^, buffer^, size);   //from host (ptr) to device (buffer)
+          Result := CL_SUCCESS;
+          Exit;
+        end; ///BufferIdx > -1
+      end; //for k
+
+    end;
+  end;
+end;
+
+
+function clEnqueueReadBuffer(command_queue: cl_command_queue; buffer: cl_mem; blocking_read: cl_bool; offset, size: size_t; ptr: Pointer; num_events_in_wait_list: cl_uint; event_wait_list, event: Pcl_event): cl_int; {$IFDEF Windows} stdcall; {$ELSE} cdecl; {$ENDIF}
+var
+  i, j, k: Integer;
+  BufferIdx, QueueIdx: Integer;
+  CurrentPlatform: PPlatform;
+  CurrentDevice: PDevice;
+  SrcBuffer: Pointer;
+begin
+  Result := CL_INVALID_MEM_OBJECT;
+
+  if ptr = nil then
+  begin
+    Result := CL_INVALID_VALUE;
+    Exit;
+  end;
+
+  for i := 0 to Length(AllPlatforms) - 1 do
+  begin
+    CurrentPlatform := PPlatform(AllPlatforms[i]);
+
+    for j := 0 to Length(CurrentPlatform^.Devices) - 1 do
+    begin
+      CurrentDevice := PDevice(CurrentPlatform^.Devices[j]);
+
+      for k := 0 to Length(CurrentDevice^.FCLContexts) - 1 do
+      begin
+        BufferIdx := CurrentDevice^.FCLContexts[k].GetBufferIndexByObject(buffer);
+        if BufferIdx > -1 then
+        begin
+          QueueIdx := CurrentDevice^.FCLContexts[k].GetQueueIndexByObject(command_queue);
+          if QueueIdx = -1 then
+          begin
+            Result := CL_INVALID_COMMAND_QUEUE;
+            Exit;
+          end;
+
+          SrcBuffer := CurrentDevice^.FCLContexts[k].FBuffers[BufferIdx].Data;
+          if SrcBuffer <> buffer then
+            Exit; //exit with CL_INVALID_MEM_OBJECT
+
+          if offset + size > CurrentDevice^.FCLContexts[k].FBuffers[BufferIdx].Size then
+          begin
+            Result := CL_INVALID_VALUE;
+            Exit;
+          end;
+
+          //Write here, instead of adding the operation to queue:
+          Move(buffer^, ptr^, size);  //read from device (buffer), to host (ptr)
+          Result := CL_SUCCESS;
+          Exit;
+        end; ///BufferIdx > -1
+      end; //for k
+
+    end;
+  end;
+end;
+
+
+function clSetKernelArg(kernel: cl_kernel; arg_index: cl_uint; arg_size: csize_t; arg_value: Pointer): cl_int; {$IFDEF Windows} stdcall; {$ELSE} cdecl; {$ENDIF}
+var
+  i, j, k, Idx: Integer;
+  CurrentPlatform: PPlatform;
+  CurrentDevice: PDevice;
+begin
+  Result := CL_INVALID_MEM_OBJECT;
+
+  for i := 0 to Length(AllPlatforms) - 1 do
+  begin
+    CurrentPlatform := PPlatform(AllPlatforms[i]);
+
+    for j := 0 to Length(CurrentPlatform^.Devices) - 1 do
+    begin
+      CurrentDevice := PDevice(CurrentPlatform^.Devices[j]);
+      for k := 0 to Length(CurrentDevice^.FCLContexts) - 1 do
+      begin
+        Idx := CurrentDevice^.FCLContexts[k].FProgram.GetKernelIndexByObject(TCLKernel(kernel));
+        if Idx = -1 then
+        begin
+          Result := CL_INVALID_KERNEL;
+          Exit;
+        end;
+
+        if Integer(arg_index) > Length(TCLKernel(kernel).FArguments) - 1 then
+        begin
+          Result := CL_INVALID_ARG_INDEX;
+          Exit;
+        end;
+
+        TCLKernel(kernel).FArguments[Idx].Arg := arg_value; //This can be nil, in which case, the kernel should not dereference it.
+        TCLKernel(kernel).FArguments[Idx].Size := arg_size;
+
+        Result := CL_SUCCESS;
+        Exit;
+      end; //for k
+    end;
+  end;
+end;
+
+
+function clEnqueueNDRangeKernel(command_queue: cl_command_queue; kernel: cl_kernel; work_dim: cl_uint; global_work_offset, global_work_size, local_work_size: Pcsize_t; num_events_in_wait_list: cl_uint; event_wait_list, event: Pcl_event): cl_int; {$IFDEF Windows} stdcall; {$ELSE} cdecl; {$ENDIF}
+begin
+  Result := CL_INVALID_KERNEL;
+end;
+
+
+function clFinish(command_queue: cl_command_queue): cl_int; {$IFDEF Windows} stdcall; {$ELSE} cdecl; {$ENDIF}
+begin
+  Result := CL_INVALID_KERNEL;
+end;
+
+
+exports
+  clGetPlatformIDs,
+  clGetPlatformInfo,
+  clGetDeviceIDs,
+  clGetDeviceInfo,
+  clCreateContext,
+  clCreateCommandQueue,
+  clCreateCommandQueueWithProperties,
+  clCreateProgramWithSource,
+  clBuildProgram,
+  clGetProgramBuildInfo,
+  clGetKernelWorkGroupInfo,
+  clCreateKernel,
+  clCreateBuffer,
+  clEnqueueWriteBuffer,
+  clEnqueueReadBuffer,
+  clSetKernelArg,
+  clEnqueueNDRangeKernel,
+  clFinish,
+  clReleaseMemObject,
+  clReleaseKernel,
+  clReleaseCommandQueue,
+  clReleaseContext,
+  clReleaseProgram;
+
+var
+  i, j: Integer;
+
+initialization
+  for i := 0 to Length(AllPlatforms) - 1 do
+    New(PPlatform(AllPlatforms[i]));
+
+  SetLength(PPlatform(AllPlatforms[0])^.Devices, 1);
+  SetLength(PPlatform(AllPlatforms[1])^.Devices, 2);
+  SetLength(PPlatform(AllPlatforms[2])^.Devices, 3);
+  SetLength(PPlatform(AllPlatforms[3])^.Devices, 1);
+  SetLength(PPlatform(AllPlatforms[4])^.Devices, 1);
+  SetLength(PPlatform(AllPlatforms[5])^.Devices, 1);
+
+  PPlatform(AllPlatforms[0])^.Name := 'First';
+  PPlatform(AllPlatforms[1])^.Name := 'Second';
+  PPlatform(AllPlatforms[2])^.Name := 'Third';
+  PPlatform(AllPlatforms[3])^.Name := 'NVIDIA CUDA';
+  PPlatform(AllPlatforms[4])^.Name := 'INTEL(R) GRAPHICS';
+  PPlatform(AllPlatforms[5])^.Name := 'AMD GRAPHICS';  //TBD a "real" name
+
+  PPlatform(AllPlatforms[0])^.Version := '1.2';
+  PPlatform(AllPlatforms[1])^.Version := '2.0';
+  PPlatform(AllPlatforms[2])^.Version := '3.0';
+  PPlatform(AllPlatforms[3])^.Version := 'OpenCL 3.0 CUDA 9.1.84';
+  PPlatform(AllPlatforms[4])^.Version := 'OpenCL 3.0 1234';
+  PPlatform(AllPlatforms[5])^.Version := 'OpenCL 3.0 4567';
+
+  PPlatform(AllPlatforms[0])^.Profile := 'FULL_PROFILE';
+  PPlatform(AllPlatforms[1])^.Profile := 'ALMOST_FULL_PROFILE';
+  PPlatform(AllPlatforms[2])^.Profile := 'OVER_FULL_PROFILE';
+  PPlatform(AllPlatforms[3])^.Profile := 'FULL_PROFILE';
+  PPlatform(AllPlatforms[4])^.Profile := 'FULL_PROFILE';
+  PPlatform(AllPlatforms[5])^.Profile := 'FULL_PROFILE';
+
+  PPlatform(AllPlatforms[0])^.Vendor := 'FirstVendor';
+  PPlatform(AllPlatforms[1])^.Vendor := 'SecondVendor';
+  PPlatform(AllPlatforms[2])^.Vendor := 'ThirdVendor';
+  PPlatform(AllPlatforms[3])^.Vendor := 'NVIDIA Corporation';
+  PPlatform(AllPlatforms[4])^.Vendor := 'INTEL Corporation';
+  PPlatform(AllPlatforms[5])^.Vendor := 'AMD Corporation';
+
+  PPlatform(AllPlatforms[0])^.Extensions := 'cl_khr_global_int32_base_atomics cl_khr_global_int32_extended_atomics';
+  PPlatform(AllPlatforms[1])^.Extensions := 'cl_khr_global_int32_base_atomics cl_khr_global_int32_extended_atomics';
+  PPlatform(AllPlatforms[2])^.Extensions := 'cl_khr_global_int32_base_atomics cl_khr_global_int32_extended_atomics';
+  PPlatform(AllPlatforms[3])^.Extensions := 'cl_khr_global_int32_base_atomics cl_khr_global_int32_extended_atomics';
+  PPlatform(AllPlatforms[4])^.Extensions := 'cl_khr_global_int32_base_atomics cl_khr_global_int32_extended_atomics';
+  PPlatform(AllPlatforms[5])^.Extensions := 'cl_khr_global_int32_base_atomics cl_khr_global_int32_extended_atomics';
+
+  SetLength(PPlatform(AllPlatforms[0])^.Devices, CDeviceCount);
+  SetLength(PPlatform(AllPlatforms[1])^.Devices, CDeviceCount);
+  SetLength(PPlatform(AllPlatforms[2])^.Devices, CDeviceCount);
+  SetLength(PPlatform(AllPlatforms[3])^.Devices, CDeviceCount);
+  SetLength(PPlatform(AllPlatforms[4])^.Devices, CDeviceCount);
+  SetLength(PPlatform(AllPlatforms[5])^.Devices, CDeviceCount);
+
+  for i := 0 to Length(AllPlatforms) - 1 do
+    for j := 0 to Length(PPlatform(AllPlatforms[i])^.Devices) - 1 do
+      New(PDevice(PPlatform(AllPlatforms[i])^.Devices[j]));
+
+  for i := 0 to Length(AllPlatforms) - 1 do
+  begin
+    PDevice(PPlatform(AllPlatforms[i])^.Devices[0])^.Name := 'GPU0';
+    PDevice(PPlatform(AllPlatforms[i])^.Devices[1])^.Name := 'GPU1';
+
+    PDevice(PPlatform(AllPlatforms[i])^.Devices[0])^.Version := '9.1.84';  //driver version
+    PDevice(PPlatform(AllPlatforms[i])^.Devices[1])^.Version := '9.1.84';  //driver version
+
+    PDevice(PPlatform(AllPlatforms[i])^.Devices[0])^.OpenCLCVersion := '3.0';
+    PDevice(PPlatform(AllPlatforms[i])^.Devices[1])^.OpenCLCVersion := '4.0';
+
+    PDevice(PPlatform(AllPlatforms[i])^.Devices[0])^.Profile := 'FULL_PROFILE';
+    PDevice(PPlatform(AllPlatforms[i])^.Devices[1])^.Profile := 'FULL_PROFILE';
+
+    PDevice(PPlatform(AllPlatforms[i])^.Devices[0])^.Vendor := PPlatform(AllPlatforms[i])^.Vendor;
+    PDevice(PPlatform(AllPlatforms[i])^.Devices[1])^.Vendor := PPlatform(AllPlatforms[i])^.Vendor;
+
+    PDevice(PPlatform(AllPlatforms[i])^.Devices[0])^.Extensions := PPlatform(AllPlatforms[i])^.Extensions;
+    PDevice(PPlatform(AllPlatforms[i])^.Devices[1])^.Extensions := PPlatform(AllPlatforms[i])^.Extensions;
+
+    PDevice(PPlatform(AllPlatforms[i])^.Devices[0])^.DevicePlatformVersion := 'OpenCL 3.0 CUDA'; //same as PlatformVersion, but without driver version
+    PDevice(PPlatform(AllPlatforms[i])^.Devices[1])^.DevicePlatformVersion := 'OpenCL 4.0 CUDA'; //same as PlatformVersion, but without driver version
+  end;
+
+
+finalization
+  for i := 0 to Length(AllPlatforms) - 1 do
+    for j := 0 to Length(PPlatform(AllPlatforms[i])^.Devices) - 1 do
+      Dispose(PDevice(PPlatform(AllPlatforms[i])^.Devices[j]));
+
+  for i := 0 to Length(AllPlatforms) - 1 do
+    Dispose(PPlatform(AllPlatforms[i]));
+
+
+end.
+
