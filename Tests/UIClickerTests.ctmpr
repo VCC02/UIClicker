@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
   <MultiProject FileVersion="1">
-    <Elements Count="7">
+    <Elements Count="8">
       <Element0 FileName="..\Tools\TestDriverUpdater\TestDriverUpdtr.ctpr">
         <BuildModes Count="1"/>
         <Mode1 Name="Default"/>
@@ -30,6 +30,10 @@
         <BuildModes Count="1"/>
         <Mode1 Name="Default"/>
       </Element6>
+      <Element7 FileName="TestFiles\CLMock\CLMock.ctpr">
+        <BuildModes Count="1"/>
+        <Mode1 Name="Default"/>
+      </Element7>
     </Elements>
   </MultiProject>
 </CONFIG>
