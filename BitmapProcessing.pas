@@ -1886,8 +1886,8 @@ begin
           Error := OpenCLDll.clSetKernelArg(CLKernel, 9, SizeOf(Byte), @ColorError);
           LogCallResult(Error, 'clSetKernelArg', 'ColorError argument set.');
 
-          Error := OpenCLDll.clSetKernelArg(CLKernel, 10, SizeOf(cl_ulong), SlaveCmdQueue);  //using SizeOf(cl_ulong), because the parameter is a QWord on kernel
-          LogCallResult(Error, 'clSetKernelArg', 'SlaveCmdQueue argument set.');
+          Error := OpenCLDll.clSetKernelArg(CLKernel, 10, SizeOf(cl_ulong), @SlaveCmdQueue);  //using SizeOf(cl_ulong), because the parameter is a QWord on kernel
+          LogCallResult(Error, 'clSetKernelArg', 'SlaveCmdQueue argument set.');  //This was plain SlaveCmdQueue, instead of @SlaveCmdQueue.
 
           GlobalSize := SubBmpHeight;
           LogCallResult(Error, 'Matrix comparison', 'Starting...');
@@ -1922,7 +1922,8 @@ begin
 
               DifferentCount := 0;
               for k := 0 to GlobalSize - 1 do //results len
-                Inc(DifferentCount, DiffCntPerRow[k]);
+                if DiffCntPerRow[k] >= 0 then
+                  Inc(DifferentCount, DiffCntPerRow[k]);
 
               if DifferentCount < TotalErrorCount then
               begin
@@ -2090,7 +2091,7 @@ begin
             LogCallResult(Error, 'clSetKernelArg', 'ColorError argument set.');
 
             Error := OpenCLDll.clSetKernelArg(CLKernel, 11, SizeOf(cl_ulong), SlaveCmdQueue);  //using SizeOf(cl_ulong), because the parameter is a QWord on kernel
-            LogCallResult(Error, 'clSetKernelArg', 'SlaveCmdQueue argument set.');
+            LogCallResult(Error, 'clSetKernelArg', 'SlaveCmdQueue argument set.');  //This was plain SlaveCmdQueue, instead of @SlaveCmdQueue.
 
             Error := OpenCLDll.clSetKernelArg(CLKernel, 12, SizeOf(ATotalErrorCount), @ATotalErrorCount);
             LogCallResult(Error, 'clSetKernelArg', 'TotalErrorCount argument set.');
