@@ -221,6 +221,7 @@ begin
   n := Length(FBuffers);
   SetLength(FBuffers, n + 1);
   GetMem(FBuffers[n].Data, FBuffers[n].Size);
+  FBuffers[n].Size := ASize;
   Result := FBuffers[n].Data;
 end;
 
