@@ -69,21 +69,37 @@ type
     FName: string;
     FRGBSizeStrOnBG: Byte;
     FRGBSizeStrOnSub: Byte;
+
+    FGPUSlaveQueueFromDevice: Boolean;
+    FGPUUseAllKernelsEvent: Boolean;
+    FGPUNdrangeNoLocalParam: Boolean;
+    FGPUUseEventsInEnqueueKernel: Boolean;
+    FGPUWaitForAllKernelsToBeDone: Boolean;
+    FGPUReleaseFinalEventAtKernelEnd: Boolean;
   public
     constructor Create(AArgumentCount: Integer);
     destructor Destroy; override;
     procedure Run;
     function ArgumentsAreValid: Boolean;
+
+    property GPUSlaveQueueFromDevice: Boolean read FGPUSlaveQueueFromDevice write FGPUSlaveQueueFromDevice;
+    property GPUUseAllKernelsEvent: Boolean read FGPUUseAllKernelsEvent write FGPUUseAllKernelsEvent;
+    property GPUNdrangeNoLocalParam: Boolean read FGPUNdrangeNoLocalParam write FGPUNdrangeNoLocalParam;
+    property GPUUseEventsInEnqueueKernel: Boolean read FGPUUseEventsInEnqueueKernel write FGPUUseEventsInEnqueueKernel;
+    property GPUWaitForAllKernelsToBeDone: Boolean read FGPUWaitForAllKernelsToBeDone write FGPUWaitForAllKernelsToBeDone;
+    property GPUReleaseFinalEventAtKernelEnd: Boolean read FGPUReleaseFinalEventAtKernelEnd write FGPUReleaseFinalEventAtKernelEnd;
   end;
 
   TCLKernelArr = array of TCLKernel;
 
+  TCLContext = class; //forward
 
   TCLProgram = class
     FCLKernels: TCLKernelArr; //array of TCLKernel, to allow multiple kernels to exist in the same program object
     FSourceCode: TStringList;
     FBuildOptions: string; //e.g. '-g'
     FBuildResults: string;
+    FParentContext: TCLContext;
 
     FGPUSlaveQueueFromDevice: Boolean;
     FGPUUseAllKernelsEvent: Boolean;
@@ -124,6 +140,7 @@ type
     destructor Destroy; override;
     function CreateBuffer(ASize: csize_t): Pointer;
     function DestroyBuffer(ABuffer: Pointer): Boolean; //returns False if not found
+    function GetDefaultQueue: THostDevCommandQueue;
   end;
 
   TCLContextArr = array of TCLContext;
@@ -248,6 +265,20 @@ begin
 end;
 
 
+function TCLContext.GetDefaultQueue: THostDevCommandQueue;  //Returns first queue, marked as default.
+var
+  i: Integer;
+begin
+  Result := nil;
+  for i := 0 to Length(FHostDevCommandQueues) - 1 do
+    if FHostDevCommandQueues[i].FIsDefaultQueueOnDevice then
+    begin
+      Result := FHostDevCommandQueues[i];
+      Break;
+    end;
+end;
+
+
 constructor TCLKernel.Create(AArgumentCount: Integer);
 var
   i: Integer;
@@ -265,6 +296,13 @@ begin
   FName := '';
   FRGBSizeStrOnBG := 3;
   FRGBSizeStrOnSub := 3;
+
+  FGPUSlaveQueueFromDevice := False;
+  FGPUUseAllKernelsEvent := False;
+  FGPUNdrangeNoLocalParam := False;
+  FGPUUseEventsInEnqueueKernel := False;
+  FGPUWaitForAllKernelsToBeDone := False;
+  FGPUReleaseFinalEventAtKernelEnd := False;
 end;
 
 
@@ -279,11 +317,15 @@ end;
 procedure TCLKernel.Run;
 var
   i, nd: Integer;
-  ABackgroundBmp, ASubBmp, AResultedErrCount, AKernelDone: PByteArray0;
+  ABackgroundBmp, ASubBmp: PByteArray0;
+  AResultedErrCount, ADebuggingInfo: PIntArray0;
+  AKernelDone: PByteArray0;
   ABackgroundWidth, ASubBmpWidth, ASubBmpHeight, AXOffset, AYOffset: DWord;
   AColorError: Byte;
-  ASlaveQueue: LongInt;
+  ASlaveQueue: Pointer;
+  ATotalErrorCount: DWord;
   Mat: TMatCmpSrc;
+  SlideSearch: TSlideSearchSrc;
 begin
   if FName = 'MatCmp' then
   begin
@@ -291,7 +333,7 @@ begin
 
     ABackgroundBmp := PByteArray0(PPtrUInt(FArguments[0].Arg)^); //Arg is a pointer to a pointer to the first array element
     ASubBmp := PByteArray0(PPtrUInt(FArguments[1].Arg)^);
-    AResultedErrCount := PByteArray0(PPtrUInt(FArguments[2].Arg)^);
+    AResultedErrCount := PIntArray0(PPtrUInt(FArguments[2].Arg)^);
     AKernelDone := PByteArray0(PPtrUInt(FArguments[3].Arg)^);
     ABackgroundWidth := PDWord(FArguments[4].Arg)^;
     ASubBmpWidth := PDWord(FArguments[5].Arg)^;
@@ -299,7 +341,7 @@ begin
     AXOffset := PDWord(FArguments[7].Arg)^;
     AYOffset := PDWord(FArguments[8].Arg)^;
     AColorError := PByte(FArguments[9].Arg)^;
-    ASlaveQueue := PDWord(FArguments[10].Arg)^;
+    ASlaveQueue := PByteArray0(PPtrUInt(FArguments[10].Arg)^);
 
     for i := 0 to nd - 1 do    //in GPU, these run in parallel:
     begin
@@ -329,8 +371,51 @@ begin
     if FName = 'SlideSearch' then
     begin
       nd := PDWord(FArguments[7].Arg)^; //ASubBmpHeight
-      //set arguments
-      //call SlideSearch
+
+      ABackgroundBmp := PByteArray0(PPtrUInt(FArguments[0].Arg)^); //Arg is a pointer to a pointer to the first array element
+      ASubBmp := PByteArray0(PPtrUInt(FArguments[1].Arg)^);
+      AResultedErrCount := PIntArray0(PPtrUInt(FArguments[2].Arg)^);
+      ADebuggingInfo := PIntArray0(PPtrUInt(FArguments[3].Arg)^);
+      AKernelDone := PByteArray0(PPtrUInt(FArguments[4].Arg)^);
+      ABackgroundWidth := PDWord(FArguments[5].Arg)^;
+      ASubBmpWidth := PDWord(FArguments[6].Arg)^;
+      ASubBmpHeight := PDWord(FArguments[7].Arg)^;
+      AXOffset := PDWord(FArguments[8].Arg)^;
+      AYOffset := PDWord(FArguments[9].Arg)^;
+      AColorError := PByte(FArguments[10].Arg)^;
+      ASlaveQueue := PByteArray0(PPtrUInt(FArguments[11].Arg)^);
+      ATotalErrorCount := PDWord(FArguments[12].Arg)^;
+
+      SlideSearch := TSlideSearchSrc.Create;
+      try
+        if FParentProgram = nil then
+          raise Exception.Create('FParentProgram not assigned.');
+
+        SlideSearch.DefaultQueue := FParentProgram.FParentContext.GetDefaultQueue;
+
+        SlideSearch.GPUSlaveQueueFromDevice := FGPUSlaveQueueFromDevice;
+        SlideSearch.GPUUseAllKernelsEvent := FGPUUseAllKernelsEvent;
+        SlideSearch.GPUNdrangeNoLocalParam := FGPUNdrangeNoLocalParam;
+        SlideSearch.GPUUseEventsInEnqueueKernel := FGPUUseEventsInEnqueueKernel;
+        SlideSearch.GPUWaitForAllKernelsToBeDone := FGPUWaitForAllKernelsToBeDone;
+        SlideSearch.GPUReleaseFinalEventAtKernelEnd := FGPUReleaseFinalEventAtKernelEnd;
+
+        SlideSearch.SlideSearch(ABackgroundBmp,
+                                ASubBmp,
+                                AResultedErrCount,
+                                ADebuggingInfo,
+                                AKernelDone,
+                                ABackgroundWidth,
+                                ASubBmpWidth,
+                                ASubBmpHeight,
+                                AXOffset,
+                                AYOffset,
+                                AColorError,
+                                ASlaveQueue,
+                                ATotalErrorCount);
+      finally
+        SlideSearch.Free;
+      end;
     end;
 end;
 
@@ -357,6 +442,7 @@ begin
   inherited Create;
   FSourceCode := TStringList.Create;
   SetLength(FCLKernels, 0);
+  FParentContext := nil;
 end;
 
 
@@ -491,6 +577,13 @@ begin
         Break;
       end;
   end;
+
+  Result.GPUSlaveQueueFromDevice := FGPUSlaveQueueFromDevice;
+  Result.GPUUseAllKernelsEvent := FGPUUseAllKernelsEvent;
+  Result.GPUNdrangeNoLocalParam := FGPUNdrangeNoLocalParam;
+  Result.GPUUseEventsInEnqueueKernel := FGPUUseEventsInEnqueueKernel;
+  Result.GPUWaitForAllKernelsToBeDone := FGPUWaitForAllKernelsToBeDone;
+  Result.GPUReleaseFinalEventAtKernelEnd := FGPUReleaseFinalEventAtKernelEnd;
 end;
 
 
@@ -1021,6 +1114,7 @@ begin
         begin
           CurrentDevice^.FCLContexts[k].FProgram := TCLProgram.Create;
           CurrentDevice^.FCLContexts[k].FProgram.FSourceCode.Text := string(strings^);
+          CurrentDevice^.FCLContexts[k].FProgram.FParentContext := CurrentDevice^.FCLContexts[k];
           Result := cl_program(CurrentDevice^.FCLContexts[k].FProgram);
           errcode_ret := CL_SUCCESS;
           Exit;                 //maybe multiple devices can point to the same context, but not in this implementation
