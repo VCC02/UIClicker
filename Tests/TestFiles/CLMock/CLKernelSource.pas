@@ -29,7 +29,7 @@ unit CLKernelSource;
 interface
 
 uses
-  Classes, SysUtils;
+  Classes, SysUtils, ctypes;
 
 
 type
@@ -40,8 +40,14 @@ type
   PIntArray0 = ^TIntArray0;
 
   queue_t = Pointer;
-  clk_event_t = Pointer; //TBD
-  ndrange_t = Pointer; //TBD
+  clk_event_t = record
+    Waiting: Boolean; //TBD
+  end;
+
+  Pclk_event_t = ^clk_event_t;
+
+  ndrange_t = PtrUInt;
+  kernel_enqueue_flags_t = (CLK_ENQUEUE_FLAGS_NO_WAIT, CLK_ENQUEUE_FLAGS_WAIT_KERNEL, CLK_ENQUEUE_FLAGS_WAIT_WORK_GROUP);
 
   TMatCmpSrc = class
   private
@@ -65,6 +71,18 @@ type
   end;
 
 
+  TMatCmpParams = record
+    BackgroundBmp, SubBmp: PByteArray0;
+    ResultedErrCount: PIntArray0;
+    KernelDone: PByteArray0;
+    BackgroundWidth, SubBmpWidth, SubBmpHeight, XOffset, YOffset: DWord;
+    ColorError: Byte;
+    SlaveQueue: Pointer;
+  end;
+
+  PMatCmpParams = ^TMatCmpParams;
+
+
   TSlideSearchSrc = class
   private
     FGPUSlaveQueueFromDevice: Boolean;
@@ -77,6 +95,11 @@ type
     FDefaultQueue: queue_t;
 
     function get_default_queue: queue_t;
+    function ndrange_1D(AGlobalWorkSize: csize_t): ndrange_t; overload;
+    function ndrange_1D(AGlobalWorkSize, ALocalWorkSize: csize_t): ndrange_t; overload;
+
+    function enqueue_kernel(AQueue: queue_t; AFlags: kernel_enqueue_flags_t; ANdRange: ndrange_t; AMatCmpParams: PMatCmpParams): Integer; overload;
+    function enqueue_kernel(AQueue: queue_t; AFlags: kernel_enqueue_flags_t; ANdRange: ndrange_t; ANumEventsInWaitList: DWord; AEventWaitList: Pclk_event_t; var AEventRet: clk_event_t; AMatCmpParams: PMatCmpParams): Integer; overload;
   public
     constructor Create;
 
@@ -191,6 +214,55 @@ begin
 end;
 
 
+function TSlideSearchSrc.ndrange_1D(AGlobalWorkSize: csize_t): ndrange_t;
+begin
+  Result := AGlobalWorkSize;
+end;
+
+
+function TSlideSearchSrc.ndrange_1D(AGlobalWorkSize, ALocalWorkSize: csize_t): ndrange_t;
+begin
+  Result := ALocalWorkSize;
+end;
+
+
+function TSlideSearchSrc.enqueue_kernel(AQueue: queue_t; AFlags: kernel_enqueue_flags_t; ANdRange: ndrange_t; AMatCmpParams: PMatCmpParams): Integer;
+var
+  Mat: TMatCmpSrc;
+  i: Integer;
+begin
+  for i := 0 to ANdRange - 1 do
+  begin
+    Mat := TMatCmpSrc.Create;
+    try
+      Mat.InstanceIndex := i;
+      //Mat.RGBSizeStrOnBG := FRGBSizeStrOnBG;  //ToDo: implement this info
+      //Mat.RGBSizeStrOnSub := FRGBSizeStrOnSub;//ToDo: implement this info
+
+      Mat.MatCmp(AMatCmpParams^.BackgroundBmp,
+                 AMatCmpParams^.SubBmp,
+                 AMatCmpParams^.ResultedErrCount,
+                 AMatCmpParams^.KernelDone,
+                 AMatCmpParams^.BackgroundWidth,
+                 AMatCmpParams^.SubBmpWidth,
+                 AMatCmpParams^.SubBmpHeight,
+                 AMatCmpParams^.XOffset,
+                 AMatCmpParams^.YOffset,
+                 AMatCmpParams^.ColorError,
+                 AMatCmpParams^.SlaveQueue);
+    finally
+      Mat.Free;
+    end;
+  end;
+end;
+
+
+function TSlideSearchSrc.enqueue_kernel(AQueue: queue_t; AFlags: kernel_enqueue_flags_t; ANdRange: ndrange_t; ANumEventsInWaitList: DWord; AEventWaitList: Pclk_event_t; var AEventRet: clk_event_t; AMatCmpParams: PMatCmpParams): Integer;
+begin
+  enqueue_kernel(AQueue, AFlags, ANdRange, ANumEventsInWaitList, AEventWaitList, AEventRet, AMatCmpParams);
+end;
+
+
 procedure TSlideSearchSrc.SlideSearch(ABackgroundBmp, ASubBmp: PByteArray0;
                                       AResultedErrCount, ADebuggingInfo: PIntArray0;
                                       AKernelDone: PByteArray0;
@@ -204,6 +276,11 @@ var
   AllEvents: array of clk_event_t;
   FinalEvent: clk_event_t;
   ndrange: ndrange_t;
+  MyFlags: kernel_enqueue_flags_t;
+  i, j, k: Integer;
+  Found, AllKernelsDone: Boolean;
+  EnqKrnErr, EnqMrkErr, XOffset, YOffset, DifferentCount: Integer;
+  MatCmpParams: TMatCmpParams;
 begin
   if FGPUSlaveQueueFromDevice then
     SlaveQueue := get_default_queue    //requires OpenCL >= 2.0 and __opencl_c_device_enqueue
@@ -213,6 +290,71 @@ begin
   if not FGPUUseAllKernelsEvent then
     SetLength(AllEvents, ASubBmpHeight);
 
+  if FGPUNdrangeNoLocalParam then
+    ndrange := ndrange_1D(ASubBmpHeight)
+  else
+    ndrange := ndrange_1D(1, ASubBmpHeight);
+
+  MyFlags := CLK_ENQUEUE_FLAGS_NO_WAIT;
+
+  Found := False;
+  AllKernelsDone := False;
+
+  EnqKrnErr := -1234;
+  EnqMrkErr := -4567;
+  XOffset := AXOffset;
+  YOffset := AYOffset;
+  DifferentCount := 0;
+
+  for i := 0 to YOffset - 1 do
+  begin
+    for j := 0 to XOffset - 1 do
+    begin
+      for k := 0 to ASubBmpHeight - 1 do
+        AKernelDone^[k] := 0;
+
+      MatCmpParams.BackgroundBmp := ABackgroundBmp;
+      MatCmpParams.SubBmp := ASubBmp;
+      MatCmpParams.ResultedErrCount := AResultedErrCount;
+      MatCmpParams.KernelDone := AKernelDone;
+      MatCmpParams.BackgroundWidth := ABackgroundWidth;
+      MatCmpParams.SubBmpWidth := ASubBmpWidth;
+      MatCmpParams.SubBmpHeight := ASubBmpHeight;
+      MatCmpParams.XOffset := j;
+      MatCmpParams.YOffset := i;
+      MatCmpParams.ColorError := AColorError;
+      MatCmpParams.SlaveQueue := SlaveQueue;
+
+      if not FGPUUseAllKernelsEvent then
+      begin
+        if FGPUUseEventsInEnqueueKernel then
+        begin
+          for k := 0 to ASubBmpHeight - 1 do    //this line is used only when calling with AllEvents, and should not exist when calling with AllKernelsEvent
+            EnqKrnErr := enqueue_kernel(SlaveQueue, MyFlags, ndrange, 0, nil, AllEvents[k], @MatCmpParams);
+        end
+        else
+        begin
+          for k := 0 to ASubBmpHeight - 1 do    //this line is used only when calling with AllEvents, and should not exist when calling with AllKernelsEvent
+            EnqKrnErr := enqueue_kernel(SlaveQueue, MyFlags, ndrange, @MatCmpParams);
+        end;
+      end
+      else
+      begin
+        if FGPUUseEventsInEnqueueKernel then
+          EnqKrnErr := enqueue_kernel(SlaveQueue, MyFlags, ndrange, 0, nil, AllKernelsEvent, @MatCmpParams)
+        else
+          EnqKrnErr := enqueue_kernel(SlaveQueue, MyFlags, ndrange, @MatCmpParams);
+      end;
+
+      if EnqKrnErr < 0 then
+        Break;
+    end;
+
+    if Found or (EnqKrnErr < 0) then
+      Break;
+  end;
+
+  ;
   //...
 end;
 
