@@ -41,7 +41,7 @@ type
 
   queue_t = Pointer;
   clk_event_t = record
-    Waiting: Boolean; //TBD
+    Done: Byte; //ideally, using string, because it is auto-initialized to '', but a byte can be "indexed" easily
   end;
 
   Pclk_event_t = ^clk_event_t;
@@ -99,7 +99,10 @@ type
     function ndrange_1D(AGlobalWorkSize, ALocalWorkSize: csize_t): ndrange_t; overload;
 
     function enqueue_kernel(AQueue: queue_t; AFlags: kernel_enqueue_flags_t; ANdRange: ndrange_t; AMatCmpParams: PMatCmpParams): Integer; overload;
-    function enqueue_kernel(AQueue: queue_t; AFlags: kernel_enqueue_flags_t; ANdRange: ndrange_t; ANumEventsInWaitList: DWord; AEventWaitList: Pclk_event_t; var AEventRet: clk_event_t; AMatCmpParams: PMatCmpParams): Integer; overload;
+    function enqueue_kernel(AQueue: queue_t; AFlags: kernel_enqueue_flags_t; ANdRange: ndrange_t; ANumEventsInWaitList: DWord; AEventWaitList: Pclk_event_t; AEventRet: Pclk_event_t; AMatCmpParams: PMatCmpParams): Integer; overload;
+
+    function enqueue_marker(AQueue: queue_t; ANumEventsInWaitList: DWord; AEventWaitList: Pclk_event_t; AEventRet: Pclk_event_t): Integer;
+    procedure release_event(AEvent: clk_event_t);
   public
     constructor Create;
 
@@ -123,6 +126,10 @@ type
 
 
 implementation
+
+
+uses
+  CLHeaders;
 
 
 constructor TMatCmpSrc.Create;
@@ -231,7 +238,7 @@ var
   Mat: TMatCmpSrc;
   i: Integer;
 begin
-  for i := 0 to ANdRange - 1 do
+  for i := 0 to Integer(ANdRange) - 1 do
   begin
     Mat := TMatCmpSrc.Create;
     try
@@ -254,19 +261,124 @@ begin
       Mat.Free;
     end;
   end;
+
+  Result := CL_SUCCESS; //CLK_SUCCESS
 end;
 
 
-function TSlideSearchSrc.enqueue_kernel(AQueue: queue_t; AFlags: kernel_enqueue_flags_t; ANdRange: ndrange_t; ANumEventsInWaitList: DWord; AEventWaitList: Pclk_event_t; var AEventRet: clk_event_t; AMatCmpParams: PMatCmpParams): Integer;
+function TSlideSearchSrc.enqueue_kernel(AQueue: queue_t; AFlags: kernel_enqueue_flags_t; ANdRange: ndrange_t; ANumEventsInWaitList: DWord; AEventWaitList: Pclk_event_t; AEventRet: Pclk_event_t; AMatCmpParams: PMatCmpParams): Integer;
+var
+  TempDone: clk_event_t;
 begin
-  enqueue_kernel(AQueue, AFlags, ANdRange, ANumEventsInWaitList, AEventWaitList, AEventRet, AMatCmpParams);
+  Result := enqueue_kernel(AQueue, AFlags, ANdRange, AMatCmpParams);
+
+  //Not sure about the real implementation. Is enqueue_kernel returning a single element or ANdRange elements?
+  AEventRet^.Done := 1;
+  Move(TempDone, AEventRet^, ANdRange * SizeOf(clk_event_t));
+end;
+
+
+function TSlideSearchSrc.enqueue_marker(AQueue: queue_t; ANumEventsInWaitList: DWord; AEventWaitList: Pclk_event_t; AEventRet: Pclk_event_t): Integer;
+type
+  Tclk_event_ts = array[0..0] of clk_event_t;
+  Pclk_event_ts = ^Tclk_event_ts;
+var
+  i: Integer;
+  CurrentEvent: ^clk_event_t;
+  AllDone: Boolean;
+  tk: QWord;
+begin
+  Result := CL_SUCCESS; //CLK_SUCCESS
+
+  if AQueue = nil then
+  begin
+    Result := CLK_INVALID_QUEUE;
+    Exit;
+  end;
+
+  if AEventWaitList = nil then
+  begin
+    Result := CLK_INVALID_EVENT_WAIT_LIST;
+    Exit;
+  end;
+
+  if AEventRet = nil then
+    Exit; //nop
+
+  AEventRet^.Done := 0;
+  tk := GetTickCount64;
+  AllDone := True;
+  repeat
+    for i := 0 to Integer(ANumEventsInWaitList) - 1 do
+    begin
+      CurrentEvent := @Pclk_event_ts(AEventWaitList)^[i];
+      if CurrentEvent^.Done = 0 then
+        AllDone := False;
+    end;
+
+    if GetTickCount64 - tk > 6000 then  //a unique value of timeout
+    begin
+      Result := -200; //just a value for timeout
+      Exit;
+    end;
+  until AllDone;
+
+  AEventRet^.Done := 1;
+end;
+
+
+procedure TSlideSearchSrc.release_event(AEvent: clk_event_t);
+begin
+  //Do nothing for now. If clk_event_t is a pointer type, then release_event should free memory.
+end;
+
+
+function get_work_dim: Integer;
+begin
+  Result := 1; //TBD
+end;
+
+
+function get_global_size(ADimIndx: Integer): Integer;
+begin
+  if (ADimIndx < 0) or (ADimIndx > get_work_dim - 1) then
+  begin
+    Result := 1;
+    Exit;
+  end;
+
+  Result := 1; ///TBD   //the result should come from host
+end;
+
+
+function get_local_size(ADimIndx: Integer): Integer;
+begin
+  if (ADimIndx < 0) or (ADimIndx > get_work_dim - 1) then
+  begin
+    Result := 1;
+    Exit;
+  end;
+
+  Result := 1; ///TBD   //the result should come from host
+end;
+
+
+function get_enqueued_local_size(ADimIndx: Integer): Integer;
+begin
+  if (ADimIndx < 0) or (ADimIndx > get_work_dim - 1) then
+  begin
+    Result := 1;
+    Exit;
+  end;
+
+  Result := 1; ///TBD
 end;
 
 
 procedure TSlideSearchSrc.SlideSearch(ABackgroundBmp, ASubBmp: PByteArray0;
                                       AResultedErrCount, ADebuggingInfo: PIntArray0;
                                       AKernelDone: PByteArray0;
-                                      ABackgroundWidth, ASubBmpWidth, ASubBmpHeight, AXOffset, AYOffset: DWord;
+                                      ABackgroundWidth, ASubBmpWidth, ASubBmpHeight, AXOffset, AYOffset: DWord; //these should be eventually changed to signed (Integer)
                                       AColorError: Byte;
                                       ASlaveQueue: Pointer;
                                       ATotalErrorCount: DWord);
@@ -280,7 +392,10 @@ var
   i, j, k: Integer;
   Found, AllKernelsDone: Boolean;
   EnqKrnErr, EnqMrkErr, XOffset, YOffset, DifferentCount: Integer;
+  TotalErrorCount: Integer;
+
   MatCmpParams: TMatCmpParams;
+  tk: QWord;
 begin
   if FGPUSlaveQueueFromDevice then
     SlaveQueue := get_default_queue    //requires OpenCL >= 2.0 and __opencl_c_device_enqueue
@@ -329,33 +444,100 @@ begin
       begin
         if FGPUUseEventsInEnqueueKernel then
         begin
-          for k := 0 to ASubBmpHeight - 1 do    //this line is used only when calling with AllEvents, and should not exist when calling with AllKernelsEvent
-            EnqKrnErr := enqueue_kernel(SlaveQueue, MyFlags, ndrange, 0, nil, AllEvents[k], @MatCmpParams);
+          //for k := 0 to ASubBmpHeight - 1 do    //this line is used only when calling with AllEvents, and should not exist when calling with AllKernelsEvent
+            EnqKrnErr := enqueue_kernel(SlaveQueue, MyFlags, ndrange, 0, nil, @AllEvents[0]{[k]}, @MatCmpParams);  //by passing @AllEvents[0], enqueue_kernel can write multiple items
         end
         else
         begin
-          for k := 0 to ASubBmpHeight - 1 do    //this line is used only when calling with AllEvents, and should not exist when calling with AllKernelsEvent
+          //for k := 0 to ASubBmpHeight - 1 do    //this line is used only when calling with AllEvents, and should not exist when calling with AllKernelsEvent
             EnqKrnErr := enqueue_kernel(SlaveQueue, MyFlags, ndrange, @MatCmpParams);
         end;
       end
       else
       begin
         if FGPUUseEventsInEnqueueKernel then
-          EnqKrnErr := enqueue_kernel(SlaveQueue, MyFlags, ndrange, 0, nil, AllKernelsEvent, @MatCmpParams)
+          EnqKrnErr := enqueue_kernel(SlaveQueue, MyFlags, ndrange, 0, nil, @AllKernelsEvent, @MatCmpParams)
         else
           EnqKrnErr := enqueue_kernel(SlaveQueue, MyFlags, ndrange, @MatCmpParams);
       end;
 
+      tk := GetTickCount64;
+      //wait for all kernels to be done
+      AllKernelsDone := False;
+      while not AllKernelsDone do
+      begin
+        if GetTickCount64 - tk > 7000 then  //7s is a unique value, which can identify where timeout comes from
+          Break; //a safety mechanism, which is not in the original GPU code
+
+        AllKernelsDone := True;
+        for k := 0 to ASubBmpHeight - 1 do
+          if AKernelDone^[k] = 0 then
+          begin
+            AllKernelsDone := False;
+            Break;
+          end;
+        Sleep(1); //at least in here, if not in the real GPU code
+      end;
+
+      ADebuggingInfo^[0] := EnqKrnErr;
+
+      if FGPUUseAllKernelsEvent then
+        EnqMrkErr := enqueue_marker(SlaveQueue, 1, @AllKernelsEvent, @FinalEvent)  //when using AllKernelsEvent
+      else
+        EnqMrkErr := enqueue_marker(SlaveQueue, ASubBmpHeight, @AllEvents[0], @FinalEvent);
+
+      ADebuggingInfo^[1] := EnqMrkErr;
+
+      if FGPUUseEventsInEnqueueKernel then
+      begin
+        if FGPUUseAllKernelsEvent then
+          release_event(AllKernelsEvent)  //when using AllKernelsEvent
+        else
+          for k := 0 to ASubBmpHeight - 1 do
+            release_event(AllEvents[k]);
+
+        if not FGPUReleaseFinalEventAtKernelEnd then
+          release_event(FinalEvent);
+      end;
+
+      DifferentCount := 0;
+      for k := 0 to ASubBmpHeight - 1 do
+        Inc(DifferentCount, AResultedErrCount^[k]);
+
+      TotalErrorCount := ATotalErrorCount;
+      if DifferentCount < TotalErrorCount then
+      begin
+        Found := True;
+        Break;
+      end;
+
       if EnqKrnErr < 0 then
         Break;
-    end;
+    end;  //for j
 
     if Found or (EnqKrnErr < 0) then
       Break;
-  end;
+  end;  //for i
 
-  ;
-  //...
+  ADebuggingInfo^[2] := i;
+  ADebuggingInfo^[3] := j;
+  ADebuggingInfo^[4] := DifferentCount;
+  ADebuggingInfo^[5] := Integer(Found);
+  ADebuggingInfo^[6] := get_work_dim;
+  ADebuggingInfo^[7] := get_global_size(1);
+  ADebuggingInfo^[8] := get_local_size(1);
+  ADebuggingInfo^[9] := get_enqueued_local_size(1);
+  ADebuggingInfo^[10] := ATotalErrorCount;
+  ADebuggingInfo^[11] := Integer(EnqKrnErr);     //with typecast  - maybe it doesn't matter
+  ADebuggingInfo^[12] := Integer(AllKernelsDone);
+
+  if FGPUUseEventsInEnqueueKernel then
+  begin
+    //  release_event(AllKernelsEvent);         //TBD
+
+    if FGPUReleaseFinalEventAtKernelEnd then
+      release_event(FinalEvent);
+  end;
 end;
 
 end.
