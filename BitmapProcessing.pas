@@ -1540,7 +1540,7 @@ begin      //int is 32-bit, long is 64-bit
     '  const unsigned int AXOffset,             ' + #13#10 +
     '  const unsigned int AYOffset,             ' + #13#10 +
     '  const uchar AColorError,                 ' + #13#10 +
-    '  const long ASlaveQueue)                  ' + #13#10 +    //After setting MatCmp as a slave kernel: not needed in this kernel, it is here for compatibility only ...
+    '  const ulong ASlaveQueue)                 ' + #13#10 +    //After setting MatCmp as a slave kernel: not needed in this kernel, it is here for compatibility only ...
     '{                                          ' + #13#10 +
     '  int YIdx = get_global_id(0);             ' + #13#10 + //goes from 0 to SubBmpHeight - 1
     '  __global uchar const * BGRow = &ABackgroundBmp[((YIdx + AYOffset) * ABackgroundWidth + AXOffset) * ' + RGBSizeStrOnBG + '];' + #13#10 + //pointer to the current row, indexed by YIdx
@@ -1596,12 +1596,12 @@ begin
     '  const unsigned int AXOffset,             ' + #13#10 +
     '  const unsigned int AYOffset,             ' + #13#10 +
     '  const uchar AColorError,                 ' + #13#10 +
-    '  const long ASlaveQueue,                  ' + #13#10 +
+    '  const ulong ASlaveQueue,                 ' + #13#10 +
     '  const unsigned int ATotalErrorCount)     ' + #13#10 +
     '{                                          ' + #13#10;
     if AGPUSlaveQueueFromDevice then
       Result := Result + '  queue_t SlaveQueue = get_default_queue();' + #13#10     //requires OpenCL >= 2.0 and __opencl_c_device_enqueue
-    else
+    else                                         //get_default_queue can return nil if the default queue has not been created
       Result := Result + '  queue_t SlaveQueue = (queue_t)ASlaveQueue;' + #13#10;   //Default option of AGPUSlaveQueueFromDevice
 
     if AGPUUseAllKernelsEvent then
@@ -1660,7 +1660,7 @@ begin
     end;
 
     Result := Result +
-    '        ^{MatCmp(ABackgroundBmp, ASubBmp, AResultedErrCount, AKernelDone, ABackgroundWidth, ASubBmpWidth, ASubBmpHeight, i, j, AColorError, ASlaveQueue);});                  ' + #13#10;
+    '        ^{MatCmp(ABackgroundBmp, ASubBmp, AResultedErrCount, AKernelDone, ABackgroundWidth, ASubBmpWidth, ASubBmpHeight, j, i, AColorError, SlaveQueue);});                  ' + #13#10;
 
     if AGPUWaitForAllKernelsToBeDone then
     begin
@@ -2090,7 +2090,7 @@ begin
             Error := OpenCLDll.clSetKernelArg(CLKernel, 10, SizeOf(Byte), @ColorError);
             LogCallResult(Error, 'clSetKernelArg', 'ColorError argument set.');
 
-            Error := OpenCLDll.clSetKernelArg(CLKernel, 11, SizeOf(cl_ulong), SlaveCmdQueue);  //using SizeOf(cl_ulong), because the parameter is a QWord on kernel
+            Error := OpenCLDll.clSetKernelArg(CLKernel, 11, SizeOf(cl_ulong), @SlaveCmdQueue);  //using SizeOf(cl_ulong), because the parameter is a QWord on kernel
             LogCallResult(Error, 'clSetKernelArg', 'SlaveCmdQueue argument set.');  //This was plain SlaveCmdQueue, instead of @SlaveCmdQueue.
 
             Error := OpenCLDll.clSetKernelArg(CLKernel, 12, SizeOf(ATotalErrorCount), @ATotalErrorCount);
