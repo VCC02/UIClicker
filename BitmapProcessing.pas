@@ -1534,7 +1534,7 @@ begin      //int is 32-bit, long is 64-bit
     '  __global uchar* ASubBmp,                 ' + #13#10 +
     '  __global int* AResultedErrCount,         ' + #13#10 +
     '  __global uchar* AKernelDone,             ' + #13#10 +
-    '  const unsigned int ABackgroundWidth,     ' + #13#10 +
+    '  const unsigned int ABackgroundWidth,     ' + #13#10 +    //these should be eventually changed to signed (Integer)
     '  const unsigned int ASubBmpWidth,         ' + #13#10 +
     '  const unsigned int ASubBmpHeight,        ' + #13#10 +    //After setting MatCmp as a slave kernel: not needed in this kernel, it is here for compatibility only (to have a similar list of parameters, to be able to directly call this kernel from host, if needed)
     '  const unsigned int AXOffset,             ' + #13#10 +
@@ -1590,7 +1590,7 @@ begin
     '  __global int* AResultedErrCount,         ' + #13#10 +
     '  __global int* ADebuggingInfo,            ' + #13#10 +
     '  __global uchar* AKernelDone,             ' + #13#10 +
-    '  const unsigned int ABackgroundWidth,     ' + #13#10 +
+    '  const unsigned int ABackgroundWidth,     ' + #13#10 +   //these should be eventually changed to signed (Integer)
     '  const unsigned int ASubBmpWidth,         ' + #13#10 +
     '  const unsigned int ASubBmpHeight,        ' + #13#10 +
     '  const unsigned int AXOffset,             ' + #13#10 +
@@ -1638,8 +1638,8 @@ begin
     '        AKernelDone[k] = 0;                ' + #13#10 +
     ''                                            + #13#10;
 
-    if not AGPUUseAllKernelsEvent then
-      Result := Result + '      for (k = 0; k < ASubBmpHeight; k++)  ' + #13#10;    //this line is used only when calling with AllEvents, and should not exist when calling with AllKernelsEvent
+    //if not AGPUUseAllKernelsEvent then   //ndrange should return a ASubBmpHeight wide range. Then, it makes no sense to call enqueue_kernel multiple times.
+    //  Result := Result + '      for (k = 0; k < ASubBmpHeight; k++)  ' + #13#10;    //this line is used only when calling with AllEvents, and should not exist when calling with AllKernelsEvent
 
     Result := Result +
     '      EnqKrnErr = enqueue_kernel(          ' + #13#10 +
@@ -1656,7 +1656,8 @@ begin
       if AGPUUseAllKernelsEvent then
         Result := Result + '        &AllKernelsEvent, //comment for err -10' + #13#10
       else
-        Result := Result + '        &AllEvents[k], //comment for err -10' + #13#10;
+        //Result := Result + '        &AllEvents[k], //comment for err -10' + #13#10;
+      Result := Result + '        &AllEvents, //comment for err -10' + #13#10;
     end;
 
     Result := Result +
@@ -1684,7 +1685,7 @@ begin
       '      ADebuggingInfo[0] = EnqKrnErr;       ' + #13#10;
 
     if AGPUUseAllKernelsEvent then
-      Result := Result + '      EnqMrkErr = enqueue_marker(SlaveQueue, 1, &AllKernelsEvent, &FinalEvent);' + #13#10    //when using AllKernelsEvent
+      Result := Result + '      EnqMrkErr = enqueue_marker(SlaveQueue, 1, AllKernelsEvent, &FinalEvent);' + #13#10    //when using AllKernelsEvent
     else
       Result := Result + '      EnqMrkErr = enqueue_marker(SlaveQueue, ASubBmpHeight, AllEvents, &FinalEvent);' + #13#10;
 
@@ -1708,7 +1709,7 @@ begin
 
     Result := Result +
     ''                                            + #13#10 +
-    '      int DifferentCount = 0;              ' + #13#10 +     //collect the results from all slave kernels
+    '      DifferentCount = 0;              ' + #13#10 +     //collect the results from all slave kernels
     '      for (k = 0; k < ASubBmpHeight; k++)  ' + #13#10 +
     '        DifferentCount += AResultedErrCount[k];' + #13#10 +
     ''                                            + #13#10 +
