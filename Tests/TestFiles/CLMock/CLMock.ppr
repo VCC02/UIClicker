@@ -392,6 +392,8 @@ begin
           raise Exception.Create('FParentProgram not assigned.');
 
         SlideSearch.DefaultQueue := FParentProgram.FParentContext.GetDefaultQueue;
+        SlideSearch.RGBSizeStrOnBG := FRGBSizeStrOnBG;
+        SlideSearch.RGBSizeStrOnSub := FRGBSizeStrOnSub;
 
         SlideSearch.GPUSlaveQueueFromDevice := FGPUSlaveQueueFromDevice;
         SlideSearch.GPUUseAllKernelsEvent := FGPUUseAllKernelsEvent;

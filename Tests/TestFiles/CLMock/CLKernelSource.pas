@@ -93,6 +93,10 @@ type
     FGPUReleaseFinalEventAtKernelEnd: Boolean;
 
     FDefaultQueue: queue_t;
+    FRGBSizeStrOnBG: Byte;
+    FRGBSizeStrOnSub: Byte;
+
+    FCreatedKernels: array of Pointer; //using this array, for now, instead of a queue command/operation/item
 
     function get_default_queue: queue_t;
     function ndrange_1D(AGlobalWorkSize: csize_t): ndrange_t; overload;
@@ -101,10 +105,12 @@ type
     function enqueue_kernel(AQueue: queue_t; AFlags: kernel_enqueue_flags_t; ANdRange: ndrange_t; AMatCmpParams: PMatCmpParams): Integer; overload;
     function enqueue_kernel(AQueue: queue_t; AFlags: kernel_enqueue_flags_t; ANdRange: ndrange_t; ANumEventsInWaitList: DWord; AEventWaitList: Pclk_event_t; AEventRet: Pclk_event_t; AMatCmpParams: PMatCmpParams): Integer; overload;
 
+    function AllThreadsDone: Boolean;
     function enqueue_marker(AQueue: queue_t; ANumEventsInWaitList: DWord; AEventWaitList: Pclk_event_t; AEventRet: Pclk_event_t): Integer;
     procedure release_event(AEvent: clk_event_t);
   public
     constructor Create;
+    destructor Destroy; override;
 
     procedure SlideSearch(ABackgroundBmp, ASubBmp: PByteArray0;
                           AResultedErrCount, ADebuggingInfo: PIntArray0;
@@ -122,6 +128,8 @@ type
     property GPUReleaseFinalEventAtKernelEnd: Boolean read FGPUReleaseFinalEventAtKernelEnd write FGPUReleaseFinalEventAtKernelEnd;
 
     property DefaultQueue: queue_t write FDefaultQueue;
+    property RGBSizeStrOnBG: Byte read FRGBSizeStrOnBG write FRGBSizeStrOnBG;
+    property RGBSizeStrOnSub: Byte read FRGBSizeStrOnSub write FRGBSizeStrOnSub;
   end;
 
 
@@ -162,7 +170,7 @@ var
   ErrCount, x: LongInt;
   x0_BG, x1_BG, x2_BG: LongInt;
   x0_Sub, x1_Sub, x2_Sub: LongInt;
-  SubPxB, BGPxB, SubPxG, BGPxG, SubPxR, BGPxR: ShortInt;
+  SubPxB, BGPxB, SubPxG, BGPxG, SubPxR, BGPxR: SmallInt;
 begin
   YIdx := get_global_id(0);
 
@@ -183,11 +191,11 @@ begin
     x2_Sub := x * FRGBSizeStrOnSub + 2;
 
     SubPxB := SubRow^[x0_Sub];
-    BGPxB := SubRow^[x0_BG];
+    BGPxB := BGRow^[x0_BG];
     SubPxG := SubRow^[x1_Sub];
-    BGPxG := SubRow^[x1_BG];
+    BGPxG := BGRow^[x1_BG];
     SubPxR := SubRow^[x2_Sub];
-    BGPxR := SubRow^[x2_BG];
+    BGPxR := BGRow^[x2_BG];
 
     if ((abs(SubPxR - BGPxR) > AColorError) or
         (abs(SubPxG - BGPxG) > AColorError) or
@@ -197,6 +205,53 @@ begin
 
   AResultedErrCount^[YIdx] := ErrCount;
   AKernelDone^[YIdx] := 1;
+end;
+
+
+type
+  TRunMatCmpSrc = class(TThread)
+  private
+    FMatCmpParams: PMatCmpParams;
+    FInstanceIndex: Integer;
+    FRGBSizeStrOnBG: Byte;
+    FRGBSizeStrOnSub: Byte;
+    FDone: Boolean;
+  protected
+    procedure Execute; override;
+  end;
+
+
+procedure TRunMatCmpSrc.Execute;
+var
+  Mat: TMatCmpSrc;
+begin
+  try
+    try
+      Mat := TMatCmpSrc.Create;
+      try
+        Mat.InstanceIndex := FInstanceIndex;
+        Mat.RGBSizeStrOnBG := FRGBSizeStrOnBG;
+        Mat.RGBSizeStrOnSub := FRGBSizeStrOnSub;
+
+        Mat.MatCmp(FMatCmpParams^.BackgroundBmp,
+                   FMatCmpParams^.SubBmp,
+                   FMatCmpParams^.ResultedErrCount,
+                   FMatCmpParams^.KernelDone,
+                   FMatCmpParams^.BackgroundWidth,
+                   FMatCmpParams^.SubBmpWidth,
+                   FMatCmpParams^.SubBmpHeight,
+                   FMatCmpParams^.XOffset,
+                   FMatCmpParams^.YOffset,
+                   FMatCmpParams^.ColorError,
+                   FMatCmpParams^.SlaveQueue);
+      finally
+        Mat.Free;
+      end;
+    except
+    end;
+  finally
+    FDone := True;
+  end;
 end;
 
 
@@ -212,6 +267,21 @@ begin
   FGPUReleaseFinalEventAtKernelEnd := False;
 
   FDefaultQueue := nil;
+  FRGBSizeStrOnBG := 3;
+  FRGBSizeStrOnSub := 3;
+end;
+
+
+destructor TSlideSearchSrc.Destroy;
+var
+  i: Integer;
+begin
+  for i := 0 to Length(FCreatedKernels) - 1 do
+    TRunMatCmpSrc(FCreatedKernels[i]).Destroy;
+
+  SetLength(FCreatedKernels, 0);
+
+  inherited Destroy;
 end;
 
 
@@ -235,31 +305,43 @@ end;
 
 function TSlideSearchSrc.enqueue_kernel(AQueue: queue_t; AFlags: kernel_enqueue_flags_t; ANdRange: ndrange_t; AMatCmpParams: PMatCmpParams): Integer;
 var
-  Mat: TMatCmpSrc;
+  //Mat: TMatCmpSrc;
   i: Integer;
+  Th: TRunMatCmpSrc;
 begin
+  SetLength(FCreatedKernels, ANdRange);
   for i := 0 to Integer(ANdRange) - 1 do
   begin
-    Mat := TMatCmpSrc.Create;
-    try
-      Mat.InstanceIndex := i;
-      //Mat.RGBSizeStrOnBG := FRGBSizeStrOnBG;  //ToDo: implement this info
-      //Mat.RGBSizeStrOnSub := FRGBSizeStrOnSub;//ToDo: implement this info
+    //Mat := TMatCmpSrc.Create;               //The irony is that using muliple threads, results in slower execution.
+    //try
+    //  Mat.InstanceIndex := i;
+    //  Mat.RGBSizeStrOnBG := FRGBSizeStrOnBG;
+    //  Mat.RGBSizeStrOnSub := FRGBSizeStrOnSub;
+    //
+    //  Mat.MatCmp(AMatCmpParams^.BackgroundBmp,
+    //             AMatCmpParams^.SubBmp,
+    //             AMatCmpParams^.ResultedErrCount,
+    //             AMatCmpParams^.KernelDone,
+    //             AMatCmpParams^.BackgroundWidth,
+    //             AMatCmpParams^.SubBmpWidth,
+    //             AMatCmpParams^.SubBmpHeight,
+    //             AMatCmpParams^.XOffset,
+    //             AMatCmpParams^.YOffset,
+    //             AMatCmpParams^.ColorError,
+    //             AMatCmpParams^.SlaveQueue);
+    //finally
+    //  Mat.Free;
+    //end;
 
-      Mat.MatCmp(AMatCmpParams^.BackgroundBmp,
-                 AMatCmpParams^.SubBmp,
-                 AMatCmpParams^.ResultedErrCount,
-                 AMatCmpParams^.KernelDone,
-                 AMatCmpParams^.BackgroundWidth,
-                 AMatCmpParams^.SubBmpWidth,
-                 AMatCmpParams^.SubBmpHeight,
-                 AMatCmpParams^.XOffset,
-                 AMatCmpParams^.YOffset,
-                 AMatCmpParams^.ColorError,
-                 AMatCmpParams^.SlaveQueue);
-    finally
-      Mat.Free;
-    end;
+    Th := TRunMatCmpSrc.Create(True);
+    Th.FDone := False;
+    Th.FMatCmpParams := AMatCmpParams;
+    Th.FInstanceIndex := i;
+    Th.FRGBSizeStrOnBG := FRGBSizeStrOnBG;
+    Th.FRGBSizeStrOnSub := FRGBSizeStrOnSub;
+
+    TRunMatCmpSrc(FCreatedKernels[i]) := Th;
+    Th.Start;
   end;
 
   Result := CL_SUCCESS; //CLK_SUCCESS
@@ -267,14 +349,23 @@ end;
 
 
 function TSlideSearchSrc.enqueue_kernel(AQueue: queue_t; AFlags: kernel_enqueue_flags_t; ANdRange: ndrange_t; ANumEventsInWaitList: DWord; AEventWaitList: Pclk_event_t; AEventRet: Pclk_event_t; AMatCmpParams: PMatCmpParams): Integer;
-var
-  TempDone: clk_event_t;
 begin
   Result := enqueue_kernel(AQueue, AFlags, ANdRange, AMatCmpParams);
+  AEventRet^.Done := 1;  //most likely, a single event is returned
+end;
 
-  //Not sure about the real implementation. Is enqueue_kernel returning a single element or ANdRange elements?
-  AEventRet^.Done := 1;
-  Move(TempDone, AEventRet^, ANdRange * SizeOf(clk_event_t));
+
+function TSlideSearchSrc.AllThreadsDone: Boolean;
+var
+  i: Integer;
+begin
+  Result := True;
+  for i := 0 to Length(FCreatedKernels) - 1 do
+    if not TRunMatCmpSrc(FCreatedKernels[i]).FDone then
+    begin
+      Result := False;
+      Break;
+    end;
 end;
 
 
@@ -289,41 +380,55 @@ var
   tk: QWord;
 begin
   Result := CL_SUCCESS; //CLK_SUCCESS
-
-  if AQueue = nil then
-  begin
-    Result := CLK_INVALID_QUEUE;
-    Exit;
-  end;
-
-  if AEventWaitList = nil then
-  begin
-    Result := CLK_INVALID_EVENT_WAIT_LIST;
-    Exit;
-  end;
-
-  if AEventRet = nil then
-    Exit; //nop
-
-  AEventRet^.Done := 0;
-  tk := GetTickCount64;
-  AllDone := True;
-  repeat
-    for i := 0 to Integer(ANumEventsInWaitList) - 1 do
+  try
+    if AQueue = nil then
     begin
-      CurrentEvent := @Pclk_event_ts(AEventWaitList)^[i];
-      if CurrentEvent^.Done = 0 then
-        AllDone := False;
-    end;
-
-    if GetTickCount64 - tk > 6000 then  //a unique value of timeout
-    begin
-      Result := -200; //just a value for timeout
+      Result := CLK_INVALID_QUEUE;
       Exit;
     end;
-  until AllDone;
 
-  AEventRet^.Done := 1;
+    if AEventWaitList = nil then
+    begin
+      Result := CLK_INVALID_EVENT_WAIT_LIST;
+      Exit;
+    end;
+
+    if AEventRet = nil then
+      Exit; //nop
+
+    AEventRet^.Done := 0;
+
+    tk := GetTickCount64;
+    repeat
+      Sleep(1);
+
+      if GetTickCount64 - tk > 5000 then  //a unique value of timeout
+      begin
+        Result := -200; //just a value for timeout
+        Exit;
+      end;
+    until AllThreadsDone;
+
+                                    //uncomment the following code after implementing events which manage threads:
+    //tk := GetTickCount64;
+    //AllDone := True;
+    //repeat
+    //  for i := 0 to Integer(ANumEventsInWaitList) - 1 do
+    //  begin
+    //    CurrentEvent := @Pclk_event_ts(AEventWaitList)^[i];
+    //    if CurrentEvent^.Done = 0 then
+    //      AllDone := False;
+    //  end;
+    //
+    //  if GetTickCount64 - tk > 6000 then  //a unique value of timeout
+    //  begin
+    //    Result := -200; //just a value for timeout
+    //    Exit;
+    //  end;
+    //until AllDone;
+  finally
+    AEventRet^.Done := 1;
+  end;
 end;
 
 
@@ -403,7 +508,11 @@ begin
     SlaveQueue := queue_t(ASlaveQueue);  //Default option of AGPUSlaveQueueFromDevice
 
   if not FGPUUseAllKernelsEvent then
+  begin
     SetLength(AllEvents, ASubBmpHeight);
+    for k := 0 to Length(AllEvents) - 1 do
+      AllEvents[k].Done := 0; //this initialization does not exist in the GPU code, although it would be usefull to have something like this
+  end;
 
   if FGPUNdrangeNoLocalParam then
     ndrange := ndrange_1D(ASubBmpHeight)
@@ -440,7 +549,7 @@ begin
       MatCmpParams.ColorError := AColorError;
       MatCmpParams.SlaveQueue := SlaveQueue;
 
-      if not FGPUUseAllKernelsEvent then
+      if not FGPUUseAllKernelsEvent then         // $GPUUseAllKernelsEvent$ should be set to True in UIClicker, at least until enqueue_kernel is confirmed to set an entire array of events (like AllEvents in the code below)
       begin
         if FGPUUseEventsInEnqueueKernel then
         begin
