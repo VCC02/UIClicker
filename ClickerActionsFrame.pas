@@ -8500,12 +8500,12 @@ begin
     Exit;
 
   if ANodeLevel = CPropertyLevel then
-    begin
-      if (ALiveEditingActionType = acPlugin) and (APropertyIndex > CPlugin_FileName_PropIndex) then
-        AHint := 'Plugin-specific property'
-      else
-        AHint := CGetPropertyHint_Actions[ALiveEditingActionType]^[APropertyIndex];
-    end;
+  begin
+    if (ALiveEditingActionType = acPlugin) and (APropertyIndex > CPlugin_FileName_PropIndex) then
+      AHint := 'Plugin-specific property'
+    else
+      AHint := CGetPropertyHint_Actions[ALiveEditingActionType]^[APropertyIndex];
+  end;
 
     case ALiveEditingActionType of
       acExecApp:
@@ -8704,9 +8704,22 @@ begin
           CFindSubControl_GPUSettings_PropIndex:
           begin
             AHint := CGetPropertyHint_FindSubControlGPUSettings_Items[AItemIndex];
+            if ANodeLevel = CPropertyItemLevel then
+              if AItemIndex = CFindSubControl_GPUSettings_OpenCLPath_PropItemIndex then
+              begin
+                if Sender is TVTEdit then
+                  FLastClickedTVTEdit := Sender as TVTEdit
+                else
+                  FLastClickedTVTEdit := nil;
+
+                FLastClickedEdit := nil;
+                APopupMenu := pmPathReplacements;
+                AHint := AHint + #13#10;
+                AHint := '$AppDir$ replacement is available';
+              end;
           end;
         end; //case
-      end; //FindControl
+      end; //FindSubControl
 
       acCallTemplate:
       begin
@@ -8860,24 +8873,26 @@ var
   OpenCLDll: TOpenCL;
   TempMenuItem: TMenuItem;
   i, Error: Integer;
-  PlatformCount{, DeviceCount}: cl_uint;
+  PlatformCount: cl_uint;
   PlatformIDs: ^cl_platform_id_arr;
-  //DeviceIDs: ^cl_device_id_arr;
-  PlatformInfo: string;
+  PlatformInfo, PathFromAction: string;
 begin
   OpenCLDll := TOpenCL.Create;
   try
+    PathFromAction := EvaluateReplacements(ResolveTemplatePath(AEditingAction^.FindSubControlOptions.GPUSettings.OpenCLPath));
     if AEditingAction^.FindSubControlOptions.GPUSettings.OpenCLPath <> '' then
-      if OpenCLDll.ExpectedDllLocation <> AEditingAction^.FindSubControlOptions.GPUSettings.OpenCLPath then
+    begin
+      if OpenCLDll.ExpectedDllLocation <> PathFromAction then
       begin
-        OpenCLDll.ExpectedDllFileName := ExtractFileName(AEditingAction^.FindSubControlOptions.GPUSettings.OpenCLPath);
-        OpenCLDll.ExpectedDllDir := ExtractFileDir(AEditingAction^.FindSubControlOptions.GPUSettings.OpenCLPath);
+        OpenCLDll.ExpectedDllFileName := ExtractFileName(PathFromAction);
+        OpenCLDll.ExpectedDllDir := ExtractFileDir(PathFromAction);
         OpenCLDll.LoadOpenCLLibrary;
       end;
+    end;
 
     if not OpenCLDll.Loaded then
     begin
-      DoOnAddToLog('OpenCL not available. The dll is expected to exist at ' + AEditingAction^.FindSubControlOptions.GPUSettings.OpenCLPath);
+      DoOnAddToLog('OpenCL not available. The dll is expected to exist at ' + PathFromAction);
       TempMenuItem := AddMenuItemToPopupMenu(AOIEditorMenu, 'No platforms available', nil, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
       TempMenuItem.Enabled := False;
       Exit;
@@ -8925,22 +8940,23 @@ var
   PlatformCount, DeviceCount: cl_uint;
   PlatformIDs: ^cl_platform_id_arr;
   DeviceIDs: ^cl_device_id_arr;
-  PlatformInfo, DeviceInfo: string;
+  PlatformInfo, DeviceInfo, PathFromAction: string;
   DevType: cl_device_type; //GPU
 begin
   OpenCLDll := TOpenCL.Create;
   try
+    PathFromAction := EvaluateReplacements(ResolveTemplatePath(AEditingAction^.FindSubControlOptions.GPUSettings.OpenCLPath));
     if AEditingAction^.FindSubControlOptions.GPUSettings.OpenCLPath <> '' then
-      if OpenCLDll.ExpectedDllLocation <> AEditingAction^.FindSubControlOptions.GPUSettings.OpenCLPath then
+      if OpenCLDll.ExpectedDllLocation <> PathFromAction then
       begin
-        OpenCLDll.ExpectedDllFileName := ExtractFileName(AEditingAction^.FindSubControlOptions.GPUSettings.OpenCLPath);
-        OpenCLDll.ExpectedDllDir := ExtractFileDir(AEditingAction^.FindSubControlOptions.GPUSettings.OpenCLPath);
+        OpenCLDll.ExpectedDllFileName := ExtractFileName(PathFromAction);
+        OpenCLDll.ExpectedDllDir := ExtractFileDir(PathFromAction);
         OpenCLDll.LoadOpenCLLibrary;
       end;
 
     if not OpenCLDll.Loaded then
     begin
-      DoOnAddToLog('OpenCL not available. The dll is expected to exist at ' + AEditingAction^.FindSubControlOptions.GPUSettings.OpenCLPath);
+      DoOnAddToLog('OpenCL not available. The dll is expected to exist at ' + PathFromAction);
       TempPlatformMenuItem := AddMenuItemToPopupMenu(AOIEditorMenu, 'No platforms available', nil, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
       TempPlatformMenuItem.Enabled := False;
       Exit;

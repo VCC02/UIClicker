@@ -1765,13 +1765,13 @@ var
   PlatformInfo, DeviceInfo: string;
   TargetPlatformStr, TargetDeviceStr: string;
   DevType: cl_device_type; //GPU
-  UseEventsInEnqueueKernel, WaitForAllKernelsToBeDone: string;
+  UseAllKernelsEvent, UseEventsInEnqueueKernel, WaitForAllKernelsToBeDone: string;
 begin
   Result := True;
   FindControlInputData.OpenCLPath := EvaluateReplacements(AFindSubControlOptions.GPUSettings.OpenCLPath);
   OpenCLDll := TOpenCL.Create;
   try
-    if FindControlInputData.OpenCLPath <> '' then
+    if AFindSubControlOptions.GPUSettings.OpenCLPath <> '' then
       if OpenCLDll.ExpectedDllLocation <> FindControlInputData.OpenCLPath then
       begin
         OpenCLDll.ExpectedDllFileName := ExtractFileName(FindControlInputData.OpenCLPath);
@@ -1972,15 +1972,16 @@ begin
     OpenCLDll.Free;
   end;
 
+  UseAllKernelsEvent := EvaluateReplacements(CGPUDbgVar_GPUUseAllKernelsEvent);
   UseEventsInEnqueueKernel := EvaluateReplacements(CGPUDbgVar_GPUUseEventsInEnqueueKernel);
   WaitForAllKernelsToBeDone := EvaluateReplacements(CGPUDbgVar_GPUWaitForAllKernelsToBeDone);
 
   FindControlInputData.GPUIncludeDashG := EvaluateReplacements(CGPUDbgVar_GPUIncludeDashG) = 'True';
   FindControlInputData.GPUSlaveQueueFromDevice := EvaluateReplacements(CGPUDbgVar_GPUSlaveQueueFromDevice) = 'True';
-  FindControlInputData.GPUUseAllKernelsEvent := EvaluateReplacements(CGPUDbgVar_GPUUseAllKernelsEvent) = 'True';
+  FindControlInputData.GPUUseAllKernelsEvent := (UseAllKernelsEvent = CGPUDbgVar_GPUUseAllKernelsEvent) or (UseAllKernelsEvent = 'True');
   FindControlInputData.GPUNdrangeNoLocalParam := EvaluateReplacements(CGPUDbgVar_GPUNdrangeNoLocalParam) = 'True';
-  FindControlInputData.GPUUseEventsInEnqueueKernel := (UseEventsInEnqueueKernel = '') or (UseEventsInEnqueueKernel = 'True');
-  FindControlInputData.GPUWaitForAllKernelsToBeDone := (WaitForAllKernelsToBeDone = '') or (WaitForAllKernelsToBeDone = 'True');
+  FindControlInputData.GPUUseEventsInEnqueueKernel := (UseEventsInEnqueueKernel = CGPUDbgVar_GPUUseEventsInEnqueueKernel) or (UseEventsInEnqueueKernel = 'True');
+  FindControlInputData.GPUWaitForAllKernelsToBeDone := (WaitForAllKernelsToBeDone = CGPUDbgVar_GPUWaitForAllKernelsToBeDone) or (WaitForAllKernelsToBeDone = 'True');
   FindControlInputData.GPUReleaseFinalEventAtKernelEnd := EvaluateReplacements(CGPUDbgVar_GPUReleaseFinalEventAtKernelEnd) = 'True';
   FindControlInputData.GPUIgnoreExecutionAvailability := EvaluateReplacements(CGPUDbgVar_GPUIgnoreExecutionAvailability) = 'True';
 end;
