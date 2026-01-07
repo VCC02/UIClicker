@@ -39,12 +39,18 @@ type
   TIntArray0 = array[0..0] of Integer;
   PIntArray0 = ^TIntArray0;
 
-  queue_t = Pointer;
+  //queue_t_rec = record
+  //  Kernel: TThread; // the thread object   //to be converted to array
+  //end;
+
+  queue_t = Pointer; //^queue_t_rec;  //The problem, so far, is that a queue can be passed from host, as a pointer. If queue_t doesn't have the same structure, it ends up overwriting memory.
+
   clk_event_t = record
     Done: Byte; //ideally, using string, because it is auto-initialized to '', but a byte can be "indexed" easily
   end;
 
   Pclk_event_t = ^clk_event_t;
+  PPclk_event_t = ^Pclk_event_t;
 
   ndrange_t = PtrUInt;
   kernel_enqueue_flags_t = (CLK_ENQUEUE_FLAGS_NO_WAIT, CLK_ENQUEUE_FLAGS_WAIT_KERNEL, CLK_ENQUEUE_FLAGS_WAIT_WORK_GROUP);
@@ -61,7 +67,7 @@ type
     procedure MatCmp(ABackgroundBmp, ASubBmp: PByteArray0;
                      AResultedErrCount: PIntArray0;
                      AKernelDone: PByteArray0;
-                     ABackgroundWidth, ASubBmpWidth, ASubBmpHeight, AXOffset, AYOffset: DWord;
+                     ABackgroundWidth, ASubBmpWidth, ASubBmpHeight, AXOffset, AYOffset: Integer;
                      AColorError: Byte;
                      ASlaveQueue: Pointer);
 
@@ -75,7 +81,7 @@ type
     BackgroundBmp, SubBmp: PByteArray0;
     ResultedErrCount: PIntArray0;
     KernelDone: PByteArray0;
-    BackgroundWidth, SubBmpWidth, SubBmpHeight, XOffset, YOffset: DWord;
+    BackgroundWidth, SubBmpWidth, SubBmpHeight, XOffset, YOffset: Integer;
     ColorError: Byte;
     SlaveQueue: Pointer;
   end;
@@ -96,18 +102,18 @@ type
     FRGBSizeStrOnBG: Byte;
     FRGBSizeStrOnSub: Byte;
 
-    FCreatedKernels: array of Pointer; //using this array, for now, instead of a queue command/operation/item
+    FCreatedKernels: array of Pointer; //Using this array, for now, instead of a queue command/operation/item. This should be moved to the queue_t_rec structure.
 
     function get_default_queue: queue_t;
     function ndrange_1D(AGlobalWorkSize: csize_t): ndrange_t; overload;
     function ndrange_1D(AGlobalWorkSize, ALocalWorkSize: csize_t): ndrange_t; overload;
 
     function enqueue_kernel(AQueue: queue_t; AFlags: kernel_enqueue_flags_t; ANdRange: ndrange_t; AMatCmpParams: PMatCmpParams): Integer; overload;
-    function enqueue_kernel(AQueue: queue_t; AFlags: kernel_enqueue_flags_t; ANdRange: ndrange_t; ANumEventsInWaitList: DWord; AEventWaitList: Pclk_event_t; AEventRet: Pclk_event_t; AMatCmpParams: PMatCmpParams): Integer; overload;
+    function enqueue_kernel(AQueue: queue_t; AFlags: kernel_enqueue_flags_t; ANdRange: ndrange_t; ANumEventsInWaitList: DWord; AEventWaitList: Pclk_event_t; var AEventRet: Pclk_event_t; AMatCmpParams: PMatCmpParams): Integer; overload;
 
     function AllThreadsDone: Boolean;
-    function enqueue_marker(AQueue: queue_t; ANumEventsInWaitList: DWord; AEventWaitList: Pclk_event_t; AEventRet: Pclk_event_t): Integer;
-    procedure release_event(AEvent: clk_event_t);
+    function enqueue_marker(AQueue: queue_t; ANumEventsInWaitList: DWord; AEventWaitList: PPclk_event_t; AEventRet: PPclk_event_t): Integer;
+    procedure release_event(AEvent: Pclk_event_t);
   public
     constructor Create;
     destructor Destroy; override;
@@ -115,7 +121,7 @@ type
     procedure SlideSearch(ABackgroundBmp, ASubBmp: PByteArray0;
                           AResultedErrCount, ADebuggingInfo: PIntArray0;
                           AKernelDone: PByteArray0;
-                          ABackgroundWidth, ASubBmpWidth, ASubBmpHeight, AXOffset, AYOffset: DWord;
+                          ABackgroundWidth, ASubBmpWidth, ASubBmpHeight, AXOffset, AYOffset: Integer;
                           AColorError: Byte;
                           ASlaveQueue: Pointer;
                           ATotalErrorCount: DWord);
@@ -158,7 +164,7 @@ end;
 procedure TMatCmpSrc.MatCmp(ABackgroundBmp, ASubBmp: PByteArray0;
                             AResultedErrCount: PIntArray0;
                             AKernelDone: PByteArray0;
-                            ABackgroundWidth, ASubBmpWidth, ASubBmpHeight, AXOffset, AYOffset: DWord;
+                            ABackgroundWidth, ASubBmpWidth, ASubBmpHeight, AXOffset, AYOffset: Integer;
                             AColorError: Byte;
                             ASlaveQueue: Pointer);
 var
@@ -309,6 +315,12 @@ var
   i: Integer;
   Th: TRunMatCmpSrc;
 begin
+  if AQueue = nil then
+  begin
+    Result := CLK_INVALID_QUEUE;
+    Exit;
+  end;
+
   SetLength(FCreatedKernels, ANdRange);
   for i := 0 to Integer(ANdRange) - 1 do
   begin
@@ -339,19 +351,22 @@ begin
     Th.FInstanceIndex := i;
     Th.FRGBSizeStrOnBG := FRGBSizeStrOnBG;
     Th.FRGBSizeStrOnSub := FRGBSizeStrOnSub;
+    //Pass the event AEventRet to the Th object, and set it as AEventRet^.Done := 1; after done
 
     TRunMatCmpSrc(FCreatedKernels[i]) := Th;
     Th.Start;
   end;
 
+  //AQueue^.Kernel := Th;   //add to array
   Result := CL_SUCCESS; //CLK_SUCCESS
 end;
 
 
-function TSlideSearchSrc.enqueue_kernel(AQueue: queue_t; AFlags: kernel_enqueue_flags_t; ANdRange: ndrange_t; ANumEventsInWaitList: DWord; AEventWaitList: Pclk_event_t; AEventRet: Pclk_event_t; AMatCmpParams: PMatCmpParams): Integer;
+function TSlideSearchSrc.enqueue_kernel(AQueue: queue_t; AFlags: kernel_enqueue_flags_t; ANdRange: ndrange_t; ANumEventsInWaitList: DWord; AEventWaitList: Pclk_event_t; var AEventRet: Pclk_event_t; AMatCmpParams: PMatCmpParams): Integer;
 begin
   Result := enqueue_kernel(AQueue, AFlags, ANdRange, AMatCmpParams);
-  AEventRet^.Done := 1;  //most likely, a single event is returned
+  New(AEventRet);
+  AEventRet^.Done := 0;  //Most likely, a single event is returned. This should become 1 after finishing execution.
 end;
 
 
@@ -369,7 +384,7 @@ begin
 end;
 
 
-function TSlideSearchSrc.enqueue_marker(AQueue: queue_t; ANumEventsInWaitList: DWord; AEventWaitList: Pclk_event_t; AEventRet: Pclk_event_t): Integer;
+function TSlideSearchSrc.enqueue_marker(AQueue: queue_t; ANumEventsInWaitList: DWord; AEventWaitList: PPclk_event_t; AEventRet: PPclk_event_t): Integer;
 type
   Tclk_event_ts = array[0..0] of clk_event_t;
   Pclk_event_ts = ^Tclk_event_ts;
@@ -380,6 +395,7 @@ var
   tk: QWord;
 begin
   Result := CL_SUCCESS; //CLK_SUCCESS
+
   try
     if AQueue = nil then
     begin
@@ -396,11 +412,12 @@ begin
     if AEventRet = nil then
       Exit; //nop
 
-    AEventRet^.Done := 0;
+    New(AEventRet^);
+    AEventRet^^.Done := 0;
 
     tk := GetTickCount64;
     repeat
-      Sleep(1);
+      //Sleep(1);  //better leave commented
 
       if GetTickCount64 - tk > 5000 then  //a unique value of timeout
       begin
@@ -408,6 +425,9 @@ begin
         Exit;
       end;
     until AllThreadsDone;
+
+    //for i := 0 to Length(FCreatedKernels) - 1 do
+    AEventRet^^.Done := 1;  //based on all threads
 
                                     //uncomment the following code after implementing events which manage threads:
     //tk := GetTickCount64;
@@ -426,15 +446,18 @@ begin
     //    Exit;
     //  end;
     //until AllDone;
+
+    AEventRet^^.Done := 1;
   finally
-    AEventRet^.Done := 1;
+    //AEventRet^.Done := 1; //moved outside of the finally section, to be executed only if there is no timeout
   end;
 end;
 
 
-procedure TSlideSearchSrc.release_event(AEvent: clk_event_t);
+procedure TSlideSearchSrc.release_event(AEvent: Pclk_event_t);
 begin
   //Do nothing for now. If clk_event_t is a pointer type, then release_event should free memory.
+  Dispose(AEvent);
 end;
 
 
@@ -483,15 +506,15 @@ end;
 procedure TSlideSearchSrc.SlideSearch(ABackgroundBmp, ASubBmp: PByteArray0;
                                       AResultedErrCount, ADebuggingInfo: PIntArray0;
                                       AKernelDone: PByteArray0;
-                                      ABackgroundWidth, ASubBmpWidth, ASubBmpHeight, AXOffset, AYOffset: DWord; //these should be eventually changed to signed (Integer)
+                                      ABackgroundWidth, ASubBmpWidth, ASubBmpHeight, AXOffset, AYOffset: Integer; //these should be eventually changed to signed (Integer)
                                       AColorError: Byte;
                                       ASlaveQueue: Pointer;
                                       ATotalErrorCount: DWord);
 var
   SlaveQueue: queue_t;
-  AllKernelsEvent: clk_event_t;
-  AllEvents: array of clk_event_t;
-  FinalEvent: clk_event_t;
+  AllKernelsEvent: Pclk_event_t;
+  AllEvents: array of Pclk_event_t;  //array of pointers, to allow initializing every element to nil
+  FinalEvent: Pclk_event_t;
   ndrange: ndrange_t;
   MyFlags: kernel_enqueue_flags_t;
   i, j, k: Integer;
@@ -511,7 +534,7 @@ begin
   begin
     SetLength(AllEvents, ASubBmpHeight);
     for k := 0 to Length(AllEvents) - 1 do
-      AllEvents[k].Done := 0; //this initialization does not exist in the GPU code, although it would be usefull to have something like this
+      AllEvents[k] := nil;  //init here, so that enqueue_marker will return an error on null poiters instead of uninitialized pointers
   end;
 
   if FGPUNdrangeNoLocalParam then
@@ -554,7 +577,7 @@ begin
         if FGPUUseEventsInEnqueueKernel then
         begin
           //for k := 0 to ASubBmpHeight - 1 do    //this line is used only when calling with AllEvents, and should not exist when calling with AllKernelsEvent
-            EnqKrnErr := enqueue_kernel(SlaveQueue, MyFlags, ndrange, 0, nil, @AllEvents[0]{[k]}, @MatCmpParams);  //by passing @AllEvents[0], enqueue_kernel can write multiple items
+            EnqKrnErr := enqueue_kernel(SlaveQueue, MyFlags, ndrange, 0, nil, AllEvents[0]{[k]}, @MatCmpParams);  //by passing @AllEvents[0], enqueue_kernel can write multiple items
         end
         else
         begin
@@ -565,7 +588,7 @@ begin
       else
       begin
         if FGPUUseEventsInEnqueueKernel then
-          EnqKrnErr := enqueue_kernel(SlaveQueue, MyFlags, ndrange, 0, nil, @AllKernelsEvent, @MatCmpParams)
+          EnqKrnErr := enqueue_kernel(SlaveQueue, MyFlags, ndrange, 0, nil, AllKernelsEvent, @MatCmpParams)
         else
           EnqKrnErr := enqueue_kernel(SlaveQueue, MyFlags, ndrange, @MatCmpParams);
       end;
@@ -585,7 +608,7 @@ begin
             AllKernelsDone := False;
             Break;
           end;
-        Sleep(1); //at least in here, if not in the real GPU code
+        //Sleep(1); //At least in here, if not in the real GPU code. It seams that task switching is too expensive, so leave commented.
       end;
 
       ADebuggingInfo^[0] := EnqKrnErr;

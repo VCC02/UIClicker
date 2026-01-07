@@ -320,7 +320,7 @@ var
   ABackgroundBmp, ASubBmp: PByteArray0;
   AResultedErrCount, ADebuggingInfo: PIntArray0;
   AKernelDone: PByteArray0;
-  ABackgroundWidth, ASubBmpWidth, ASubBmpHeight, AXOffset, AYOffset: DWord;
+  ABackgroundWidth, ASubBmpWidth, ASubBmpHeight, AXOffset, AYOffset: Integer;
   AColorError: Byte;
   ASlaveQueue: Pointer;
   ATotalErrorCount: DWord;
@@ -494,7 +494,7 @@ begin
     if not FGPUWaitForAllKernelsToBeDone and (Pos('while (!AllKernelsDone)', s) > 0) then
       FGPUWaitForAllKernelsToBeDone := True;
 
-    if not FGPUReleaseFinalEventAtKernelEnd and (Pos('  release_event(FinalEvent);', s) > 0) then   //using the indent to determine the line location
+    if not FGPUReleaseFinalEventAtKernelEnd and (Pos('  release_event(FinalEvent);', s) = 1) then   //using the indent to determine the line location
       FGPUReleaseFinalEventAtKernelEnd := True;
   end;
 end;
@@ -1405,7 +1405,7 @@ begin
           end;
 
           //Write here, instead of adding the operation to queue:
-          Move(ptr^, buffer^, size);   //from host (ptr) to device (buffer)
+          Move(ptr^, Pointer(PtrUInt(buffer) + offset)^, size);   //from host (ptr) to device (buffer)
           Result := CL_SUCCESS;
           Exit;
         end; ///BufferIdx > -1
@@ -1463,7 +1463,7 @@ begin
           end;
 
           //Write here, instead of adding the operation to queue:
-          Move(buffer^, ptr^, size);  //read from device (buffer), to host (ptr)
+          Move(Pointer(PtrUInt(buffer) + offset)^, ptr^, size);  //read from device (buffer), to host (ptr)
           Result := CL_SUCCESS;
           Exit;
         end; ///BufferIdx > -1
