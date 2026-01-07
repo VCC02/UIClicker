@@ -39,11 +39,11 @@ type
   TIntArray0 = array[0..0] of Integer;
   PIntArray0 = ^TIntArray0;
 
-  //queue_t_rec = record
+  //THostDevCommandQueue = class  //move the definition from CLMock.dpr to here, then include a kernel info:
   //  Kernel: TThread; // the thread object   //to be converted to array
   //end;
 
-  queue_t = Pointer; //^queue_t_rec;  //The problem, so far, is that a queue can be passed from host, as a pointer. If queue_t doesn't have the same structure, it ends up overwriting memory.
+  queue_t = Pointer; //THostDevCommandQueue;  //this has to point to the same structure as used by host
 
   clk_event_t = record
     Done: Byte; //ideally, using string, because it is auto-initialized to '', but a byte can be "indexed" easily
@@ -456,7 +456,9 @@ end;
 
 procedure TSlideSearchSrc.release_event(AEvent: Pclk_event_t);
 begin
-  //Do nothing for now. If clk_event_t is a pointer type, then release_event should free memory.
+  if AEvent = nil then
+    raise Exception.Create('Attempting to free a nil event.');
+
   Dispose(AEvent);
 end;
 
@@ -534,7 +536,7 @@ begin
   begin
     SetLength(AllEvents, ASubBmpHeight);
     for k := 0 to Length(AllEvents) - 1 do
-      AllEvents[k] := nil;  //init here, so that enqueue_marker will return an error on null poiters instead of uninitialized pointers
+      AllEvents[k] := nil;  //init here, so that enqueue_marker will return an error on null pointers instead of uninitialized pointers
   end;
 
   if FGPUNdrangeNoLocalParam then
