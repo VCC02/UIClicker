@@ -1534,11 +1534,11 @@ begin      //int is 32-bit, long is 64-bit
     '  __global uchar* ASubBmp,                 ' + #13#10 +
     '  __global int* AResultedErrCount,         ' + #13#10 +
     '  __global uchar* AKernelDone,             ' + #13#10 +
-    '  const unsigned int ABackgroundWidth,     ' + #13#10 +    //these should be eventually changed to signed (Integer)
-    '  const unsigned int ASubBmpWidth,         ' + #13#10 +
-    '  const unsigned int ASubBmpHeight,        ' + #13#10 +    //After setting MatCmp as a slave kernel: not needed in this kernel, it is here for compatibility only (to have a similar list of parameters, to be able to directly call this kernel from host, if needed)
-    '  const unsigned int AXOffset,             ' + #13#10 +
-    '  const unsigned int AYOffset,             ' + #13#10 +
+    '  const int ABackgroundWidth,     ' + #13#10 +    //these should be eventually changed to signed (Integer)
+    '  const int ASubBmpWidth,         ' + #13#10 +
+    '  const int ASubBmpHeight,        ' + #13#10 +    //After setting MatCmp as a slave kernel: not needed in this kernel, it is here for compatibility only (to have a similar list of parameters, to be able to directly call this kernel from host, if needed)
+    '  const int AXOffset,             ' + #13#10 +
+    '  const int AYOffset,             ' + #13#10 +
     '  const uchar AColorError,                 ' + #13#10 +
     '  const ulong ASlaveQueue)                 ' + #13#10 +    //After setting MatCmp as a slave kernel: not needed in this kernel, it is here for compatibility only ...
     '{                                          ' + #13#10 +
@@ -1590,15 +1590,16 @@ begin
     '  __global int* AResultedErrCount,         ' + #13#10 +
     '  __global int* ADebuggingInfo,            ' + #13#10 +
     '  __global uchar* AKernelDone,             ' + #13#10 +
-    '  const unsigned int ABackgroundWidth,     ' + #13#10 +   //these should be eventually changed to signed (Integer)
-    '  const unsigned int ASubBmpWidth,         ' + #13#10 +
-    '  const unsigned int ASubBmpHeight,        ' + #13#10 +
-    '  const unsigned int AXOffset,             ' + #13#10 +
-    '  const unsigned int AYOffset,             ' + #13#10 +
+    '  const int ABackgroundWidth,     ' + #13#10 +   //these should be eventually changed to signed (Integer)
+    '  const int ASubBmpWidth,         ' + #13#10 +
+    '  const int ASubBmpHeight,        ' + #13#10 +
+    '  const int AXOffset,             ' + #13#10 +
+    '  const int AYOffset,             ' + #13#10 +
     '  const uchar AColorError,                 ' + #13#10 +
     '  const ulong ASlaveQueue,                 ' + #13#10 +
-    '  const unsigned int ATotalErrorCount)     ' + #13#10 +
+    '  const int ATotalErrorCount)     ' + #13#10 +
     '{                                          ' + #13#10;
+
     if AGPUSlaveQueueFromDevice then
       Result := Result + '  queue_t SlaveQueue = get_default_queue();' + #13#10     //requires OpenCL >= 2.0 and __opencl_c_device_enqueue
     else                                         //get_default_queue can return nil if the default queue has not been created
@@ -1611,8 +1612,14 @@ begin
 
     Result := Result +
     '  clk_event_t FinalEvent;                  ' + #13#10 + //used as a return event, from enqueue_marker
-    '                                           ' + #13#10 +
     '                                           ' + #13#10;
+
+    if not AGPUUseAllKernelsEvent then
+    begin
+      Result := Result +
+      '  for (k = 0; k < ASubBmpHeight; k++)      ' + #13#10 +
+      '    AllEvents[k] = NULL;                   ' + #13#10#13#10;   //init here, so that enqueue_marker will return an error on null poiters instead of uninitialized pointers
+    end;
 
     if AGPUNdrangeNoLocalParam then
       Result := Result + '  ndrange_t ndrange = ndrange_1D(ASubBmpHeight);' + #13#10
@@ -1746,7 +1753,7 @@ begin
       //'  release_event(AllKernelsEvent);          ' + #13#10;  //TBD
 
       if AGPUReleaseFinalEventAtKernelEnd then
-        Result := Result + '  release_event(FinalEvent);               ' + #13#10;
+        Result := Result + '  release_event(FinalEvent);               ' + #13#10;  //Don't change the indentation here. It is used by a test file, to get value of GPUReleaseFinalEventAtKernelEnd option.
     end;
 
     Result := Result +
@@ -1811,7 +1818,7 @@ var
   SubBmpWidth, SubBmpHeight: Integer;
   XOffset, YOffset: Integer;
   ColorError: Byte;
-  GlobalSize, GlobalSizeWithDeviceEnqueue: csize_t;
+  GlobalSize{, GlobalSizeWithDeviceEnqueue}: csize_t;
   ShouldStop: Boolean;
 
   DiffCntPerRow: array of LongInt;

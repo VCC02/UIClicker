@@ -987,7 +987,7 @@ begin
     TempVarDescriptions.Add('$SetGPUDbgBuffer$=[String] If set to True, it causes the FindSubControl action to set the $GPUDbgBuffer.Len$ and $GPUDbgBuffer[0..<Len> - 1]$ variables to the resulted debugging variable of the bitmap searching algorithm, used on GPU.');
     TempVarDescriptions.Add(CGPUDbgVar_GPUIncludeDashG + '=[String] If set to True, it passes the "-g" option to the clBuildProgram (for CL compiler).');
     TempVarDescriptions.Add(CGPUDbgVar_GPUSlaveQueueFromDevice + '=[String] If set to True, the SlaveQueue variable, from the SlideSearch kernel, is assigned in the kernel itself.');
-    TempVarDescriptions.Add(CGPUDbgVar_GPUUseAllKernelsEvent + '=[String] If set to True, the SlideSearch kernel uses AllKernelsEvent variable, instead of AllEvents variable.');
+    TempVarDescriptions.Add(CGPUDbgVar_GPUUseAllKernelsEvent + '=[String] If set to True, the SlideSearch kernel uses AllKernelsEvent variable, instead of AllEvents variable. By default, it is True, even if undefined.');
     TempVarDescriptions.Add(CGPUDbgVar_GPUNdrangeNoLocalParam + '=[String] If set to True, the ndrange_1D call is made with one argument (Global). By default, it is called with (Global, Local).');
     TempVarDescriptions.Add(CGPUDbgVar_GPUUseEventsInEnqueueKernel + '=[String] If set to True, enqueue_kernel is called with 3 additional arguments. By default, it is True, even if undefined.');
     TempVarDescriptions.Add(CGPUDbgVar_GPUWaitForAllKernelsToBeDone + '=[String] If set to True, the main kernel waits for all "generated" kernels to be done. By default, it is True, even if undefined.');
