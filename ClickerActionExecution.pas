@@ -1980,7 +1980,7 @@ begin
   FindControlInputData.GPUSlaveQueueFromDevice := EvaluateReplacements(CGPUDbgVar_GPUSlaveQueueFromDevice) = 'True';
   FindControlInputData.GPUUseAllKernelsEvent := (UseAllKernelsEvent = CGPUDbgVar_GPUUseAllKernelsEvent) or (UseAllKernelsEvent = 'True');
   FindControlInputData.GPUNdrangeNoLocalParam := EvaluateReplacements(CGPUDbgVar_GPUNdrangeNoLocalParam) = 'True';
-  FindControlInputData.GPUUseEventsInEnqueueKernel := (UseEventsInEnqueueKernel = CGPUDbgVar_GPUUseEventsInEnqueueKernel) or (UseEventsInEnqueueKernel = 'True');
+  FindControlInputData.GPUUseEventsInEnqueueKernel := {(UseEventsInEnqueueKernel = CGPUDbgVar_GPUUseEventsInEnqueueKernel) or} (UseEventsInEnqueueKernel = 'True');
   FindControlInputData.GPUWaitForAllKernelsToBeDone := (WaitForAllKernelsToBeDone = CGPUDbgVar_GPUWaitForAllKernelsToBeDone) or (WaitForAllKernelsToBeDone = 'True');
   FindControlInputData.GPUReleaseFinalEventAtKernelEnd := EvaluateReplacements(CGPUDbgVar_GPUReleaseFinalEventAtKernelEnd) = 'True';
   FindControlInputData.GPUIgnoreExecutionAvailability := EvaluateReplacements(CGPUDbgVar_GPUIgnoreExecutionAvailability) = 'True';

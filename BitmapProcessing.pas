@@ -1534,7 +1534,7 @@ begin      //int is 32-bit, long is 64-bit
     '  __global uchar* ASubBmp,                 ' + #13#10 +
     '  __global int* AResultedErrCount,         ' + #13#10 +
     '  __global uchar* AKernelDone,             ' + #13#10 +
-    '  const int ABackgroundWidth,     ' + #13#10 +    //these should be eventually changed to signed (Integer)
+    '  const int ABackgroundWidth,     ' + #13#10 +
     '  const int ASubBmpWidth,         ' + #13#10 +
     '  const int ASubBmpHeight,        ' + #13#10 +    //After setting MatCmp as a slave kernel: not needed in this kernel, it is here for compatibility only (to have a similar list of parameters, to be able to directly call this kernel from host, if needed)
     '  const int AXOffset,             ' + #13#10 +
@@ -1590,7 +1590,7 @@ begin
     '  __global int* AResultedErrCount,         ' + #13#10 +
     '  __global int* ADebuggingInfo,            ' + #13#10 +
     '  __global uchar* AKernelDone,             ' + #13#10 +
-    '  const int ABackgroundWidth,     ' + #13#10 +   //these should be eventually changed to signed (Integer)
+    '  const int ABackgroundWidth,     ' + #13#10 +
     '  const int ASubBmpWidth,         ' + #13#10 +
     '  const int ASubBmpHeight,        ' + #13#10 +
     '  const int AXOffset,             ' + #13#10 +
@@ -1637,6 +1637,7 @@ begin
     '  int XOffset = AXOffset;                  ' + #13#10 +
     '  int YOffset = AYOffset;                  ' + #13#10 +
     '  int DifferentCount = 0;                  ' + #13#10 +
+
     '  for (i = 0; i < AYOffset; i++)           ' + #13#10 +
     '  {                                        ' + #13#10 +
     '    for (j = 0; j < AXOffset; j++)         ' + #13#10 +
@@ -1654,7 +1655,7 @@ begin
     '        MyFlags,                           ' + #13#10 +      //enqueue_kernel is commented, because using the default queue, messes up the object, so that the clFinish(SlaveCmdQueue) call returns an error.
     '        ndrange,                           ' + #13#10;
 
-    if AGPUUseEventsInEnqueueKernel then
+    if AGPUUseEventsInEnqueueKernel then     //False by default
     begin
       Result := Result +
       '        0,            //comment for err -10' + #13#10 +
@@ -1673,34 +1674,40 @@ begin
     if AGPUWaitForAllKernelsToBeDone then
     begin
       Result := Result +
-      '      //wait for all kernels to be done    ' + #13#10 +
-      '      AllKernelsDone = false;              ' + #13#10 +
-      '      while (!AllKernelsDone)              ' + #13#10 +
+      '      if (EnqKrnErr == 0)                  ' + #13#10 +   //do not wait in case of an error
       '      {                                    ' + #13#10 +
-      '        AllKernelsDone = true;             ' + #13#10 +
-      '        for (k = 0; k < ASubBmpHeight; k++)' + #13#10 +
-      '          if (AKernelDone[k] == 0)         ' + #13#10 +
-      '          {                                ' + #13#10 +
-      '            AllKernelsDone = false;        ' + #13#10 +
-      '            break;                         ' + #13#10 +
-      '          }                                ' + #13#10 +
-      '        //it would be nice to have a sleep call here' + #13#10 +
-      '      } //while                            ' + #13#10;
+      '        //wait for all kernels to be done  ' + #13#10 +
+      '        AllKernelsDone = false;            ' + #13#10 +
+      '        while (!AllKernelsDone)            ' + #13#10 +
+      '        {                                  ' + #13#10 +
+      '          AllKernelsDone = true;           ' + #13#10 +
+      '          for (k = 0; k < ASubBmpHeight; k++)' + #13#10 +
+      '            if (AKernelDone[k] == 0)       ' + #13#10 +
+      '            {                              ' + #13#10 +
+      '              AllKernelsDone = false;      ' + #13#10 +
+      '              break;                       ' + #13#10 +
+      '            }                              ' + #13#10 +
+      '          //it would be nice to have a sleep call here' + #13#10 +
+      '        } //while                          ' + #13#10 +
+      '      } //if (EnqKrnErr == 0)              ' + #13#10;
     end;
 
     Result := Result +
       '      ADebuggingInfo[0] = EnqKrnErr;       ' + #13#10;
 
-    if AGPUUseAllKernelsEvent then
-      Result := Result + '      EnqMrkErr = enqueue_marker(SlaveQueue, 1, AllKernelsEvent, &FinalEvent);' + #13#10    //when using AllKernelsEvent
-    else
-      Result := Result + '      EnqMrkErr = enqueue_marker(SlaveQueue, ASubBmpHeight, AllEvents, &FinalEvent);' + #13#10;
+    if AGPUUseEventsInEnqueueKernel then     //False by default
+    begin
+      if AGPUUseAllKernelsEvent then
+        Result := Result + '      EnqMrkErr = enqueue_marker(SlaveQueue, 1, AllKernelsEvent, &FinalEvent);' + #13#10    //when using AllKernelsEvent
+      else
+        Result := Result + '      EnqMrkErr = enqueue_marker(SlaveQueue, ASubBmpHeight, AllEvents, &FinalEvent);' + #13#10;
+    end;
 
     Result := Result +
     //
     '      ADebuggingInfo[1] = EnqMrkErr;       ' + #13#10;
 
-    if AGPUUseEventsInEnqueueKernel then
+    if AGPUUseEventsInEnqueueKernel then      //False by default
     begin
       if AGPUUseAllKernelsEvent then
         Result := Result +'        release_event(AllKernelsEvent);    ' + #13#10    //when using AllKernelsEvent
@@ -1709,7 +1716,7 @@ begin
           '      for (k = 0; k < ASubBmpHeight; k++)  ' + #13#10 +
           '        release_event(AllEvents[k]);       ' + #13#10;
 
-      if not AGPUReleaseFinalEventAtKernelEnd then
+      if not AGPUReleaseFinalEventAtKernelEnd then    //False by default
         Result := Result +
         '      release_event(FinalEvent);           ' + #13#10;
     end;
@@ -1724,35 +1731,35 @@ begin
     '      if (DifferentCount < TotalErrorCount)' + #13#10 +
     '      {                                    ' + #13#10 +
     '        Found = true;                      ' + #13#10 +
-    '        break;'                              + #13#10 +
+    '        break;'                              + #13#10 +     //commented, together with for i, for j
     '      }'                                     + #13#10 +
     ''                                            + #13#10 +
-    '      if (EnqKrnErr < 0)                   ' + #13#10 +
+    '      if (EnqKrnErr < 0)                   ' + #13#10 +     //commented, together with for i, for j
     '      {                                    ' + #13#10 +
     '        break;'                              + #13#10 +
     '      }'                                     + #13#10 +
     '    }' + #13#10 + //for j
     '    if (Found || (EnqKrnErr < 0))          ' + #13#10 +
     '      break;'                                + #13#10 +
-    '  }' + #13#10 + //for i
+    '  }' + #13#10 + //for i                                     //commented, together with for i, for j
     ''                                            + #13#10 +
     '  ADebuggingInfo[2] = i;                   ' + #13#10 +
-    '  ADebuggingInfo[3] = j;                   ' + #13#10 +
-    '  ADebuggingInfo[4] = DifferentCount;      ' + #13#10 +
+    '  ADebuggingInfo[3] = j;                   ' + #13#10 +  //returns 1 when EnqKrnErr is -10. This means that the first "for j" iteration is ok, then it errors.
+    '  ADebuggingInfo[4] = DifferentCount;      ' + #13#10 +  //returns 97 for a single enqueue_kernel call, with i = 0 and j = 0 and waiting for all kernels to be done (with while loop).
     '  ADebuggingInfo[5] = (int)Found;          ' + #13#10 +
-    '  ADebuggingInfo[6] = get_work_dim();      ' + #13#10 +
-    '  ADebuggingInfo[7] = get_global_size(1);  ' + #13#10 +
-    '  ADebuggingInfo[8] = get_local_size(1);   ' + #13#10 +
-    '  ADebuggingInfo[9] = get_enqueued_local_size(1);' + #13#10 +
-    '  ADebuggingInfo[10] = ATotalErrorCount;   ' + #13#10 +
-    '  ADebuggingInfo[11] = (int)EnqKrnErr;     ' + #13#10 +  //with typecast  - maybe it doesn't matter
-    '  ADebuggingInfo[12] = (int)AllKernelsDone;' + #13#10;
+    '  ADebuggingInfo[6] = get_work_dim();      ' + #13#10 +  //returns 1
+    '  ADebuggingInfo[7] = get_global_size(1);  ' + #13#10 +  //returns 1
+    '  ADebuggingInfo[8] = get_local_size(1);   ' + #13#10 +  //returns 1
+    '  ADebuggingInfo[9] = get_enqueued_local_size(1);' + #13#10 +  //returns 1
+    '  ADebuggingInfo[10] = ATotalErrorCount;   ' + #13#10 +     //returns 30 for a single enqueue_kernel call, with i = 0 and j = 0.
+    '  ADebuggingInfo[11] = (int)EnqKrnErr + 3000;' + #13#10 +  //with typecast  - maybe it doesn't matter   //returns 3000, for a single enqueue_kernel call, without events and with/without clFinish call in host.  Returns 2990 (= -10 + 3000), when using for i, for j and waiting in while loop.
+    '  ADebuggingInfo[12] = (int)AllKernelsDone;' + #13#10;   //returns 1 for a single enqueue_kernel call, with i = 0 and j = 0 and waiting for all kernels to be done (with while loop).
 
-    if AGPUUseEventsInEnqueueKernel then
+    if AGPUUseEventsInEnqueueKernel then    //False by default
     begin
-      //'  release_event(AllKernelsEvent);          ' + #13#10;  //TBD
+      //Result := Result + '  release_event(AllKernelsEvent);          ' + #13#10;  //TBD
 
-      if AGPUReleaseFinalEventAtKernelEnd then
+      if AGPUReleaseFinalEventAtKernelEnd then   //False by default
         Result := Result + '  release_event(FinalEvent);               ' + #13#10;  //Don't change the indentation here. It is used by a test file, to get value of GPUReleaseFinalEventAtKernelEnd option.
     end;
 
@@ -1818,7 +1825,7 @@ var
   SubBmpWidth, SubBmpHeight: Integer;
   XOffset, YOffset: Integer;
   ColorError: Byte;
-  GlobalSize{, GlobalSizeWithDeviceEnqueue}: csize_t;
+  GlobalSize: csize_t;
   ShouldStop: Boolean;
 
   DiffCntPerRow: array of LongInt;
@@ -1899,10 +1906,6 @@ begin
 
           GlobalSize := SubBmpHeight;
           LogCallResult(Error, 'Matrix comparison', 'Starting...');
-
-          //GlobalSizeWithDeviceEnqueue := 1; //one master kernel, although not sure if Local should be 1  //the master kernel has only one intance
-          //Error := OpenCLDll.clEnqueueNDRangeKernel(CmdQueue, CLKernel, 1, nil, @GlobalSizeWithDeviceEnqueue, nil, 0, nil, nil);
-          //LogCallResult(Error, 'clEnqueueNDRangeKernel CmdQueue', '');
 
           ShouldStop := False;
           SetLength(DiffCntPerRow, GlobalSize);
@@ -2237,7 +2240,6 @@ var
   OpenCLDll: TOpenCL;
   ShouldCall_SlideSearch: Boolean;
 begin
-  //ToDo: - Implement another kernel code, which calls MatCmp with the two for loops (XOffset, YOffset). - Requires OpenCL version > 2.0.
   //ToDo: - Implement FastSearch property, which verifies a small rectangle (Top-Left), before going full bmp.
   //ToDo: - Implement ignored colors, using AIgnoredColorsArr.
   //ToDo: - Move the whole code to another (CPU) thread, to avoid blocking the UI.
@@ -2344,7 +2346,7 @@ begin
                 BuildOptions := BuildOptions + ' ';
 
               BuildOptions := BuildOptions + '-cl-kernel-arg-info';  //used for getting additional debugging info from enqueue_kernel.
-
+              BuildOptions := BuildOptions + ' -cl-std=CL2.0';
               Error := OpenCLDll.clBuildProgram(CLProgram, 0, nil, @BuildOptions[1], nil, nil);
               //LogCallResult(Error, 'clBuildProgram', 'Kernel code compiled.'); //commented, to allow the next call to clGetProgramBuildInfo
 

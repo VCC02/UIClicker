@@ -989,7 +989,7 @@ begin
     TempVarDescriptions.Add(CGPUDbgVar_GPUSlaveQueueFromDevice + '=[String] If set to True, the SlaveQueue variable, from the SlideSearch kernel, is assigned in the kernel itself.');
     TempVarDescriptions.Add(CGPUDbgVar_GPUUseAllKernelsEvent + '=[String] If set to True, the SlideSearch kernel uses AllKernelsEvent variable, instead of AllEvents variable. By default, it is True, even if undefined.');
     TempVarDescriptions.Add(CGPUDbgVar_GPUNdrangeNoLocalParam + '=[String] If set to True, the ndrange_1D call is made with one argument (Global). By default, it is called with (Global, Local).');
-    TempVarDescriptions.Add(CGPUDbgVar_GPUUseEventsInEnqueueKernel + '=[String] If set to True, enqueue_kernel is called with 3 additional arguments. By default, it is True, even if undefined.');
+    TempVarDescriptions.Add(CGPUDbgVar_GPUUseEventsInEnqueueKernel + '=[String] If set to True, enqueue_kernel is called with 3 additional arguments. By default, it is False.');
     TempVarDescriptions.Add(CGPUDbgVar_GPUWaitForAllKernelsToBeDone + '=[String] If set to True, the main kernel waits for all "generated" kernels to be done. By default, it is True, even if undefined.');
     TempVarDescriptions.Add(CGPUDbgVar_GPUReleaseFinalEventAtKernelEnd + '=[String] If set to True, the release_event(FinalEvent) call, from the main kernel, is done once, at the end.');
     TempVarDescriptions.Add(CGPUDbgVar_GPUIgnoreExecutionAvailability + '=[String] If set to True, the ExecutionAvailability property is ignored. If a feature required (at least) a specific OpenCL version, and it is not available, an error should be displayed.');
