@@ -1637,6 +1637,7 @@ begin
     '  int XOffset = AXOffset;                  ' + #13#10 +
     '  int YOffset = AYOffset;                  ' + #13#10 +
     '  int DifferentCount = 0;                  ' + #13#10 +
+    '  int WhileIterations = 0;                 ' + #13#10 +
 
     '  for (i = 0; i < AYOffset; i++)           ' + #13#10 +
     '  {                                        ' + #13#10 +
@@ -1678,8 +1679,10 @@ begin
       '      {                                    ' + #13#10 +
       '        //wait for all kernels to be done  ' + #13#10 +
       '        AllKernelsDone = false;            ' + #13#10 +
+      '        WhileIterations = 0;               ' + #13#10 +
       '        while (!AllKernelsDone)            ' + #13#10 +
       '        {                                  ' + #13#10 +
+      '          WhileIterations++;               ' + #13#10 +
       '          AllKernelsDone = true;           ' + #13#10 +
       '          for (k = 0; k < ASubBmpHeight; k++)' + #13#10 +
       '            if (AKernelDone[k] == 0)       ' + #13#10 +
@@ -1697,10 +1700,17 @@ begin
 
     if AGPUUseEventsInEnqueueKernel then     //False by default
     begin
+      Result := Result +
+      '      if (EnqKrnErr == 0)                  ' + #13#10 +   //do not wait in case of an error
+      '      {                                    ' + #13#10;
+
       if AGPUUseAllKernelsEvent then
-        Result := Result + '      EnqMrkErr = enqueue_marker(SlaveQueue, 1, AllKernelsEvent, &FinalEvent);' + #13#10    //when using AllKernelsEvent
+        Result := Result + '        EnqMrkErr = enqueue_marker(SlaveQueue, 1, AllKernelsEvent, &FinalEvent);' + #13#10    //when using AllKernelsEvent
       else
-        Result := Result + '      EnqMrkErr = enqueue_marker(SlaveQueue, ASubBmpHeight, AllEvents, &FinalEvent);' + #13#10;
+        Result := Result + '        EnqMrkErr = enqueue_marker(SlaveQueue, ASubBmpHeight, AllEvents, &FinalEvent);' + #13#10;
+
+      Result := Result +
+      '      } //if (EnqKrnErr == 0)              ' + #13#10;
     end;
 
     Result := Result +
@@ -1709,16 +1719,24 @@ begin
 
     if AGPUUseEventsInEnqueueKernel then      //False by default
     begin
+      Result := Result +
+      '      if (EnqKrnErr == 0)                  ' + #13#10 +   //do not release in case of an error
+      '      {                                    ' + #13#10;
+
       if AGPUUseAllKernelsEvent then
-        Result := Result +'        release_event(AllKernelsEvent);    ' + #13#10    //when using AllKernelsEvent
+        Result := Result +'          release_event(AllKernelsEvent);    ' + #13#10    //when using AllKernelsEvent
       else
         Result := Result +
-          '      for (k = 0; k < ASubBmpHeight; k++)  ' + #13#10 +
-          '        release_event(AllEvents[k]);       ' + #13#10;
+          '        for (k = 0; k < ASubBmpHeight; k++)  ' + #13#10 +
+          '          release_event(AllEvents[k]);       ' + #13#10;
 
       if not AGPUReleaseFinalEventAtKernelEnd then    //False by default
         Result := Result +
-        '      release_event(FinalEvent);           ' + #13#10;
+        '        if (EnqMrkErr == 0)                    ' + #13#10 +  //this is EnqMrkErr, for releasing FinalEvent
+        '          release_event(FinalEvent);           ' + #13#10;
+
+      Result := Result +
+      '      } //if (EnqKrnErr == 0)              ' + #13#10;
     end;
 
     Result := Result +
@@ -1753,14 +1771,26 @@ begin
     '  ADebuggingInfo[9] = get_enqueued_local_size(1);' + #13#10 +  //returns 1
     '  ADebuggingInfo[10] = ATotalErrorCount;   ' + #13#10 +     //returns 30 for a single enqueue_kernel call, with i = 0 and j = 0.
     '  ADebuggingInfo[11] = (int)EnqKrnErr + 3000;' + #13#10 +  //with typecast  - maybe it doesn't matter   //returns 3000, for a single enqueue_kernel call, without events and with/without clFinish call in host.  Returns 2990 (= -10 + 3000), when using for i, for j and waiting in while loop.
-    '  ADebuggingInfo[12] = (int)AllKernelsDone;' + #13#10;   //returns 1 for a single enqueue_kernel call, with i = 0 and j = 0 and waiting for all kernels to be done (with while loop).
+    '  ADebuggingInfo[12] = (int)AllKernelsDone;' + #13#10 +   //returns 1 for a single enqueue_kernel call, with i = 0 and j = 0 and waiting for all kernels to be done (with while loop).
+    '  ADebuggingInfo[13] = WhileIterations;    ' + #13#10;
 
     if AGPUUseEventsInEnqueueKernel then    //False by default
     begin
+      Result := Result +
+      '      if (EnqKrnErr == 0)                  ' + #13#10 +   //do not release in case of an error
+      '      {                                    ' + #13#10;
+
       //Result := Result + '  release_event(AllKernelsEvent);          ' + #13#10;  //TBD
 
       if AGPUReleaseFinalEventAtKernelEnd then   //False by default
+      begin
+        Result := Result +
+        '        if (EnqMrkErr == 0)                    ' + #13#10;  //this is EnqMrkErr, for releasing FinalEvent
         Result := Result + '  release_event(FinalEvent);               ' + #13#10;  //Don't change the indentation here. It is used by a test file, to get value of GPUReleaseFinalEventAtKernelEnd option.
+      end;
+
+      Result := Result +
+      '      } //if (EnqKrnErr == 0)              ' + #13#10;
     end;
 
     Result := Result +
@@ -2686,7 +2716,7 @@ begin
     DestBitmap.Canvas.Brush.Color := clWhite;
     DestBitmap.Canvas.Rectangle(0, 0, Width - 1, Height - 1);     //required, at least in FP, otherwise, the content is full black
 
-    BitBlt(destBitmap.Canvas.Handle,
+    BitBlt(DestBitmap.Canvas.Handle,
           0, //X   x-coord of destination upper-left corner
           0, //Y   y-coord of destination upper-left corner
           Width,   //src and dest width
@@ -2698,7 +2728,7 @@ begin
 
     {   //debug code
     if not FileExists(CDebugPath) then
-      destBitmap.SaveToFile(CDebugPath);
+      DestBitmap.SaveToFile(CDebugPath);
     }
   finally
     ReleaseDC(SrcHandle, DC);
