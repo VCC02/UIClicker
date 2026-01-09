@@ -523,6 +523,7 @@ var
   Found, AllKernelsDone: Boolean;
   EnqKrnErr, EnqMrkErr, XOffset, YOffset, DifferentCount: Integer;
   TotalErrorCount: Integer;
+  WhileIterations: Integer;
 
   MatCmpParams: TMatCmpParams;
   tk: QWord;
@@ -595,34 +596,42 @@ begin
           EnqKrnErr := enqueue_kernel(SlaveQueue, MyFlags, ndrange, @MatCmpParams);
       end;
 
-      tk := GetTickCount64;
-      //wait for all kernels to be done
-      AllKernelsDone := False;
-      while not AllKernelsDone do
+      if EnqKrnErr = 0 then
       begin
-        if GetTickCount64 - tk > 7000 then  //7s is a unique value, which can identify where timeout comes from
-          Break; //a safety mechanism, which is not in the original GPU code
+        tk := GetTickCount64;
+        //wait for all kernels to be done
+        AllKernelsDone := False;
+        WhileIterations := 0;
+        while not AllKernelsDone do
+        begin
+          Inc(WhileIterations);
+          if GetTickCount64 - tk > 7000 then  //7s is a unique value, which can identify where timeout comes from
+            Break; //a safety mechanism, which is not in the original GPU code
 
-        AllKernelsDone := True;
-        for k := 0 to ASubBmpHeight - 1 do
-          if AKernelDone^[k] = 0 then
-          begin
-            AllKernelsDone := False;
-            Break;
-          end;
-        //Sleep(1); //At least in here, if not in the real GPU code. It seams that task switching is too expensive, so leave commented.
+          AllKernelsDone := True;
+          for k := 0 to ASubBmpHeight - 1 do
+            if AKernelDone^[k] = 0 then
+            begin
+              AllKernelsDone := False;
+              Break;
+            end;
+          //Sleep(1); //At least in here, if not in the real GPU code. It seams that task switching is too expensive, so leave commented.
+        end;
       end;
 
       ADebuggingInfo^[0] := EnqKrnErr;
 
-      if FGPUUseAllKernelsEvent then
-        EnqMrkErr := enqueue_marker(SlaveQueue, 1, @AllKernelsEvent, @FinalEvent)  //when using AllKernelsEvent
-      else
-        EnqMrkErr := enqueue_marker(SlaveQueue, ASubBmpHeight, @AllEvents[0], @FinalEvent);
+      if EnqKrnErr = 0 then
+      begin
+        if FGPUUseAllKernelsEvent then
+          EnqMrkErr := enqueue_marker(SlaveQueue, 1, @AllKernelsEvent, @FinalEvent)  //when using AllKernelsEvent
+        else
+          EnqMrkErr := enqueue_marker(SlaveQueue, ASubBmpHeight, @AllEvents[0], @FinalEvent);
+      end;
 
       ADebuggingInfo^[1] := EnqMrkErr;
 
-      if FGPUUseEventsInEnqueueKernel then
+      if FGPUUseEventsInEnqueueKernel and (EnqKrnErr = 0) then
       begin
         if FGPUUseAllKernelsEvent then
           release_event(AllKernelsEvent)  //when using AllKernelsEvent
@@ -631,7 +640,8 @@ begin
             release_event(AllEvents[k]);
 
         if not FGPUReleaseFinalEventAtKernelEnd then
-          release_event(FinalEvent);
+          if EnqMrkErr = 0 then
+            release_event(FinalEvent);
       end;
 
       DifferentCount := 0;
@@ -664,13 +674,15 @@ begin
   ADebuggingInfo^[10] := ATotalErrorCount;
   ADebuggingInfo^[11] := Integer(EnqKrnErr);     //with typecast  - maybe it doesn't matter
   ADebuggingInfo^[12] := Integer(AllKernelsDone);
+  ADebuggingInfo^[13] := WhileIterations;
 
-  if FGPUUseEventsInEnqueueKernel then
+  if FGPUUseEventsInEnqueueKernel and (EnqKrnErr = 0) then
   begin
     //  release_event(AllKernelsEvent);         //TBD
 
     if FGPUReleaseFinalEventAtKernelEnd then
-      release_event(FinalEvent);
+      if EnqMrkErr = 0 then
+        release_event(FinalEvent);
   end;
 end;
 
