@@ -343,7 +343,7 @@ const
     (Name: 'ListOfParams'; EditorType: etUserEditor; DataType: CDTString),          //string items
     (Name: 'WaitForApp'; EditorType: etBooleanCombo; DataType: CDTBool),
     (Name: 'AppStdIn'; EditorType: etText; DataType: CDTString),                       //Description:  All #4#5 (a.k.a. 0x4:0x5) occurrences are replaced with CRLF (#13#10) before executing the application. Var/replacements are available. E.g.: $ExecAction_StdIn$  When this parameter is empty string, the executed application can run without inherited handles.
-    (Name: 'CurrentDir'; EditorType: etDirPath; DataType: CDTString),                  //Description:  Application current directory.  Replacements are avaialable.  Example: $ExtractFileDir($PathToMyFile$)$
+    (Name: 'CurrentDir'; EditorType: etDirPath; DataType: CDTString),                  //Description:  Application current directory.  Replacements are available.  Example: $ExtractFileDir($PathToMyFile$)$
     (Name: 'UseInheritHandles'; EditorType: etEnumCombo; DataType: CDTEnum),         //Description:  Required mostly when passing data through StdIn.
     (Name: 'NoConsole'; EditorType: etBooleanCombo; DataType: CDTBool),              //Description:  When checked, console applications are not displayed in a new window.  UI applications can create and display system consoles. For those applications, this option may cause problems if checked.
     (Name: 'VerifyFileExistence'; EditorType: etBooleanCombo; DataType: CDTBool),     //Description:  When checked, the executable is verified to exist on disk.
@@ -3268,7 +3268,7 @@ end;
 
 function GetPropertyHint_ExecApp_CurrentDir: string;
 begin
-  Result := 'Application current directory.  Replacements are avaialable.  Example: $ExtractFileDir($PathToMyFile$)$';
+  Result := 'Application current directory.  Replacements are available.  Example: $ExtractFileDir($PathToMyFile$)$';
 end;
 
 
@@ -3554,7 +3554,7 @@ function GetPropertyHint_FindControl_UseTextRenderingInBrowser: string;
 begin
   Result := 'When True, the text rendering is done in a web browser, instead of using the internal (GDI) rendering.' + #13#10 +
             'This is useful to match antialiasing pixels even closer, when a browser-rendered text is to be searched for.' + #13#10 +
-            'Font size, quality and other properties work differently on browser, or are not avaialable.';
+            'Font size, quality and other properties work differently on browser, or are not available.';
 end;
 
 

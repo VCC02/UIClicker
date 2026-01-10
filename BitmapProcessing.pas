@@ -110,6 +110,7 @@ function BitmapPosMatch(Algorithm: TMatchBitmapAlgorithm;
 function AvgTwoTrueColors(Color1, Color2: TColor): TColor;
 procedure AvgBitmapWithColor(ASrcBitmap, ADestBitmap: TBitmap; AColor: TColor; XOffset: Integer = -1; YOffset: Integer = -1; Width: Integer = -1; Height: Integer = -1); //if X, Y, W, H are specified, the function operates on that area only
 procedure AvgBitmapWithBitmap(ASrcABitmap, ASrcBBitmap, ADestBitmap: TBitmap; XOffset: Integer = -1; YOffset: Integer = -1; Width: Integer = -1; Height: Integer = -1);
+procedure ConvertBitmapToGrayscale(ASrcBitmap, ADestBitmap: TBitmap; XOffset: Integer = -1; YOffset: Integer = -1; Width: Integer = -1; Height: Integer = -1);
 function BitmapsAreEqual(ASrcABitmap, ASrcBBitmap: TBitmap; AWidth, AHeight: Integer): Boolean;
 procedure GenerateGradientColors(AStartColor, AEndColor: TColor; APointCount: Integer; var AResult: TColorArr);
 procedure MakeImageContentTransparent(AImg: TImage);
@@ -2900,6 +2901,63 @@ begin
     FreeMem(SrcBCanvasMat_R, SizeOfTCanvasMat);
     FreeMem(SrcBCanvasMat_G, SizeOfTCanvasMat);
     FreeMem(SrcBCanvasMat_B, SizeOfTCanvasMat);
+    FreeMem(DestCanvasMat_R, SizeOfTCanvasMat);
+    FreeMem(DestCanvasMat_G, SizeOfTCanvasMat);
+    FreeMem(DestCanvasMat_B, SizeOfTCanvasMat);
+  end;
+end;
+
+
+//This function expects that ADestBitmap is already loaded with a bitmap (likely the same one as ASrcBitmap) and it overwrites an area, specified by XOffset, YOffset, Width, Height.
+procedure ConvertBitmapToGrayscale(ASrcBitmap, ADestBitmap: TBitmap; XOffset: Integer = -1; YOffset: Integer = -1; Width: Integer = -1; Height: Integer = -1);
+var   // 6 * SizeOf(TCanvasMat) =  6 * 8388608 bytes = 48MB  somehow, TaskManager reports twice the size (i.e. 96MB)
+  SrcCanvasMat_R, DestCanvasMat_R: PCanvasMat;
+  SrcCanvasMat_G, DestCanvasMat_G: PCanvasMat;
+  SrcCanvasMat_B, DestCanvasMat_B: PCanvasMat;
+  x, y: Integer;
+  SrcIndex, Src_y_shl_11: Integer;
+  SizeOfTCanvasMat: Integer;
+  Avg: Word;
+begin
+  if (ASrcBitmap.Width = 0) or (ASrcBitmap.Height = 0) then
+    Exit;
+
+  SizeOfTCanvasMat := SizeOf(TCanvasMat);
+
+  GetMem(SrcCanvasMat_R, SizeOfTCanvasMat);
+  GetMem(SrcCanvasMat_G, SizeOfTCanvasMat);
+  GetMem(SrcCanvasMat_B, SizeOfTCanvasMat);
+  GetMem(DestCanvasMat_R, SizeOfTCanvasMat);
+  GetMem(DestCanvasMat_G, SizeOfTCanvasMat);
+  GetMem(DestCanvasMat_B, SizeOfTCanvasMat);
+  try
+    CanvasToMat(ASrcBitmap, SrcCanvasMat_R, SrcCanvasMat_G, SrcCanvasMat_B);
+    CanvasToMat(ADestBitmap, DestCanvasMat_R, DestCanvasMat_G, DestCanvasMat_B);
+
+    AdjustImgArea(XOffset, YOffset, Width, Height, ASrcBitmap);
+
+    for y := 0 to Height - 1 do
+    begin
+      Src_y_shl_11 := (y + YOffset) shl 11;      //shl 11 means that this algorithm expects the max matrix size to be 2048 * 2048
+
+      for x := 0 to Width - 1 do
+      begin
+        SrcIndex := Src_y_shl_11 + x + XOffset;
+
+        Avg := Word(SrcCanvasMat_R[SrcIndex]) + Word(SrcCanvasMat_G[SrcIndex]) + Word(SrcCanvasMat_B[SrcIndex]);  //no channel is enhanced
+        Avg := Avg div 3;
+
+        DestCanvasMat_R[SrcIndex] := Avg;
+        DestCanvasMat_G[SrcIndex] := Avg;
+        DestCanvasMat_B[SrcIndex] := Avg;
+      end;
+    end;
+
+    MatToCanvas(DestCanvasMat_R, DestCanvasMat_G, DestCanvasMat_B, ADestBitmap);
+  finally
+    FreeMem(SrcCanvasMat_R, SizeOfTCanvasMat);
+    FreeMem(SrcCanvasMat_G, SizeOfTCanvasMat);
+    FreeMem(SrcCanvasMat_B, SizeOfTCanvasMat);
     FreeMem(DestCanvasMat_R, SizeOfTCanvasMat);
     FreeMem(DestCanvasMat_G, SizeOfTCanvasMat);
     FreeMem(DestCanvasMat_B, SizeOfTCanvasMat);
