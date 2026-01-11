@@ -3424,6 +3424,15 @@ begin
                            '  MatchBitmapAlgorithm="' + CMatchBitmapAlgorithmStr[AFindSubControlOptions.MatchBitmapAlgorithm] + '"' +
                            '  ';
       PrependErrorMessageToActionVar(LogMsg);
+
+      if (AFindSubControlOptions.ImageSourceFileNameLocation = isflMem) and (AFindSubControlOptions.ImageSource = isFile) then
+        if (AFindSubControlOptions.InitialRectangle.Left = '$Control_Left$') and (AFindSubControlOptions.InitialRectangle.Top = '$Control_Top$') then
+        begin
+          AddToLog('Warning: Default search area detected for a non-screenshot background. It may be possible that this is why the control is not found.');
+          AddToLog('A non-screenshot background may require absolute values, or control depended size like 0, 0, $Control_Width$, $Control_Height$, for Left, Top, Right, Bottom, and 0, 0, 0, 0, for offsets.');
+          AddToLog('The above values can be adjusted to a smaller area.');
+        end;
+
       Break;
     end;
 
