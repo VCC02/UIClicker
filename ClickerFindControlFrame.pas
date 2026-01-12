@@ -205,6 +205,7 @@ type
     imgEraseImage: TImage;
     imgFindFontNameAndSize: TImage;
     imgCopyColorUnderMouseCursorImg: TImage;
+    imglstUsedMatchCriteriaSub: TImageList;
     imgScreenshot: TImage;
     imgStopFindFontNameAndSize: TImage;
     imgFindFontNameAndSizeSettings: TImage;
@@ -471,6 +472,7 @@ type
     procedure MenuItemLoadBmpTextToSearchedAreaClick(Sender: TObject);
     procedure MenuItemUnloadBmpTextFromSearchedAreaClick(Sender: TObject);
     procedure MenuItemGenericLoadBmpToSearchedAreaClick(Sender: TObject);
+    procedure MenuItemResetSearchedBmpPositionIntoSearchedAreaClick(Sender: TObject);
 
     procedure FSearchAreaScrBoxMouseWheel(Sender: TObject; Shift: TShiftState; WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
     procedure MenuSetGridType(Sender: TObject);
@@ -482,6 +484,7 @@ type
     function CalculateMinimumErrorToMatchBitmap(AMinInterval, AMaxInterval, AErrA, AErrB: Integer; ASearchedParamName: string; ACallback: TCalculateMinimumErrorCallback): Integer;
 
     function GetFontProfile(Value: Integer): TFontProfile;
+    procedure ResetImgSearchedBmpPosition;
 
     procedure CreateRemainingUIComponents;
     procedure CreateGridLineOptionMenu;
@@ -693,7 +696,7 @@ implementation
 
 uses
   BitmapProcessing, Clipbrd, ClickerZoomPreviewForm, ClickerFontFinderSettingsForm,
-  BitmapConv, Math;
+  BitmapConv, Math, ImgList;
 
 
 //const
@@ -2140,6 +2143,11 @@ begin
   MenuItem_Load := TMenuItem.Create(FSearchAreaDbgImgSearchedBmpMenu);
   MenuItem_Load.Caption := 'Load "Bmp Text" to searched area';
   MenuItem_Load.OnClick := nil;
+
+  MenuItem_Load.Bitmap := TBitmap.Create;
+  WipeBitmap(MenuItem_Load.Bitmap, imglstUsedMatchCriteriaSub.Width, imglstUsedMatchCriteriaSub.Height);
+  imglstUsedMatchCriteriaSub.Draw(MenuItem_Load.Bitmap.Canvas, 0, 0, 0, dsNormal, itImage);
+
   FSearchAreaDbgImgSearchedBmpMenu.Items.Add(MenuItem_Load);
 
   FindSubControlOptions := DoOnGetFindSubControlOptions;
@@ -2211,6 +2219,16 @@ begin
   MenuItem.Caption := 'Unload "Bmp Text" from searched area';
   MenuItem.OnClick := MenuItemUnloadBmpTextFromSearchedAreaClick;
   FSearchAreaDbgImgSearchedBmpMenu.Items.Add(MenuItem);
+
+  MenuItem := TMenuItem.Create(FSearchAreaDbgImgSearchedBmpMenu);
+  MenuItem.Caption := '-';
+  MenuItem.OnClick := nil;
+  FSearchAreaDbgImgSearchedBmpMenu.Items.Add(MenuItem);
+
+  MenuItem := TMenuItem.Create(FSearchAreaDbgImgSearchedBmpMenu);
+  MenuItem.Caption := 'Reset searched bmp preview position';
+  MenuItem.OnClick := MenuItemResetSearchedBmpPositionIntoSearchedAreaClick;
+  FSearchAreaDbgImgSearchedBmpMenu.Items.Add(MenuItem);
 end;
 
 
@@ -2238,7 +2256,13 @@ begin
         MenuItem := TMenuItem.Create(FSearchAreaDbgImgSearchedBmpMenu);
         MenuItem.Caption := lstMatchBitmapFiles.Items.Strings[i];
         MenuItem.OnClick := MenuItemGenericLoadBmpToSearchedAreaClick;
-        MenuItem.Enabled := DoOnFileExists(lstMatchBitmapFiles.Items.Strings[i]);
+
+        MenuItem.Enabled := DoOnFileExists(lstMatchBitmapFiles.Items.Strings[i]) or (Pos(CExtBmp_PrefixUpperCase, UpperCase(lstMatchBitmapFiles.Items.Strings[i])) = 1);
+
+        MenuItem.Bitmap := TBitmap.Create;
+        WipeBitmap(MenuItem.Bitmap, imglstUsedMatchCriteriaSub.Width, imglstUsedMatchCriteriaSub.Height);
+        imglstUsedMatchCriteriaSub.Draw(MenuItem.Bitmap.Canvas, 0, 0, 1, dsNormal, itImage);
+
         FSearchAreaDbgImgSearchedBmpMenu.Items.Add(MenuItem);
       end;
     end;
@@ -2260,6 +2284,11 @@ begin
         MenuItem.Caption := lstMatchPrimitiveFiles.Items.Strings[i];
         MenuItem.OnClick := MenuItemGenericLoadBmpToSearchedAreaClick;
         MenuItem.Enabled := DoOnFileExists(lstMatchPrimitiveFiles.Items.Strings[i]);
+
+        MenuItem.Bitmap := TBitmap.Create;
+        WipeBitmap(MenuItem.Bitmap, imglstUsedMatchCriteriaSub.Width, imglstUsedMatchCriteriaSub.Height);
+        imglstUsedMatchCriteriaSub.Draw(MenuItem.Bitmap.Canvas, 0, 0, 2, dsNormal, itImage);
+
         FSearchAreaDbgImgSearchedBmpMenu.Items.Add(MenuItem);
       end;
     end;
@@ -4513,6 +4542,7 @@ begin
     FBMPTextProfiles[FSearchAreaSearchedTextDbgImg.Tag].PreviewTextOnImage(FSearchAreaSearchedTextDbgImg);
 
   FSearchAreaSearchedTextDbgImg.Show;
+  ResetImgSearchedBmpPosition;
 end;
 
 
@@ -4526,14 +4556,29 @@ end;
 procedure TfrClickerFindControl.MenuItemGenericLoadBmpToSearchedAreaClick(Sender: TObject);
 var
   BmpPath: string;
+  TempExtBmp: TMemoryStream;
 begin
   BmpPath := StringReplace((Sender as TMenuItem).Caption, '&', '', [rfReplaceAll]);
   BmpPath := StringReplace(BmpPath, '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
 
-  if DoOnFileExists(BmpPath) then
+  if DoOnFileExists(BmpPath) or (Pos(CExtBmp_PrefixUpperCase, UpperCase(BmpPath)) = 1) and (ExtRenderingInMemFS.FileExistsInMem(BmpPath)) then
   begin
     FSearchAreaSearchedBmpDbgImg.AutoSize := True;  //should be set-reset when implementing zoom
-    DoOnLoadBitmap(FSearchAreaSearchedBmpDbgImg.Picture.Bitmap, BmpPath);
+
+    if Pos(CExtBmp_PrefixUpperCase, UpperCase(BmpPath)) = 1 then
+    begin
+      TempExtBmp := TMemoryStream.Create;
+      try
+        TempExtBmp.SetSize(ExtRenderingInMemFS.GetFileSize(BmpPath));
+        ExtRenderingInMemFS.LoadFileFromMem(BmpPath, TempExtBmp.Memory);
+        TempExtBmp.Position := 0;
+        FSearchAreaSearchedBmpDbgImg.Picture.Bitmap.LoadFromStream(TempExtBmp);
+      finally
+        TempExtBmp.Free;
+      end;
+    end
+    else
+      DoOnLoadBitmap(FSearchAreaSearchedBmpDbgImg.Picture.Bitmap, BmpPath);
 
     FSearchAreaSearchedBmpDbgImg.Width := FSearchAreaSearchedBmpDbgImg.Picture.Bitmap.Width;
     FSearchAreaSearchedBmpDbgImg.Height := FSearchAreaSearchedBmpDbgImg.Picture.Bitmap.Height;
@@ -4549,6 +4594,33 @@ begin
     FSearchAreaControlDbgImg.Canvas.TextOut(1, 1, 'Not');
     FSearchAreaControlDbgImg.Canvas.TextOut(1, 15, 'found.');
   end;
+
+  ResetImgSearchedBmpPosition;
+end;
+
+
+procedure TfrClickerFindControl.ResetImgSearchedBmpPosition;
+begin
+  if (FSearchAreaSearchedTextDbgImg.Left + FSearchAreaSearchedTextDbgImg.Width <= 0) or
+     (FSearchAreaSearchedTextDbgImg.Top + FSearchAreaSearchedTextDbgImg.Height <= 0) or
+     (FSearchAreaSearchedBmpDbgImg.Left + FSearchAreaSearchedBmpDbgImg.Width <= 0) or
+     (FSearchAreaSearchedBmpDbgImg.Top + FSearchAreaSearchedBmpDbgImg.Height <= 0) or
+     (FSearchAreaSearchedTextDbgImg.Left > FSearchAreaControlDbgImg.Width) or
+     (FSearchAreaSearchedTextDbgImg.Top > FSearchAreaControlDbgImg.Height) or
+     (FSearchAreaSearchedBmpDbgImg.Left > FSearchAreaControlDbgImg.Width) or
+     (FSearchAreaSearchedBmpDbgImg.Top > FSearchAreaControlDbgImg.Height) then
+  begin
+    FSearchAreaSearchedTextDbgImg.Left := 0;
+    FSearchAreaSearchedTextDbgImg.Top := 0;
+    FSearchAreaSearchedBmpDbgImg.Left := 0;
+    FSearchAreaSearchedBmpDbgImg.Top := 0;
+  end;
+end;
+
+
+procedure TfrClickerFindControl.MenuItemResetSearchedBmpPositionIntoSearchedAreaClick(Sender: TObject);
+begin
+  ResetImgSearchedBmpPosition;
 end;
 
 
