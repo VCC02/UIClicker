@@ -423,6 +423,13 @@
         <Filename Value="ClickerUtils\ClickerCLUtils.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
+      <Unit>
+        <Filename Value="ClickerIconsDM.pas"/>
+        <FRMtype Value="300"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="dmClickerIcons"/>
+        <ResourceBaseClass Value="DataModule"/>
+      </Unit>
     </Units>
   </ProjectOptions>
   <CompilerOptions>

@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2025 VCC
+    Copyright (C) 2026 VCC
     creation date: Dec 2019
     initial release date: 13 Sep 2022
 
@@ -65,40 +65,10 @@ type
   TfrClickerActions = class(TFrame)
     chkDecodeVariables: TCheckBox;
     chkShowDebugGrid: TCheckBox;
-    imglstGPUSettings: TImageList;
-    imglstRenderingInBrowserSettings: TImageList;
-    imglstEditTemplateWhichTemplate: TImageList;
-    imglstEditTemplateOperation: TImageList;
-    imglstFindSubControlProperties: TImageList;
-    imglstMatchByHistogramSettings: TImageList;
-    imglstEditTemplateProperties: TImageList;
-    imglstFSCMatchCriteriaProperties: TImageList;
-    imglstUsedMatchCriteria: TImageList;
-    imglstUsedMatchCriteriaSub: TImageList;
     imgPluginFileName: TImage;
     imgDebugBmp: TImage;
     imgDebugGrid: TImage;
-    imglstLoadSetVarFromFileProperties: TImageList;
-    imglstSaveSetVarToFileProperties: TImageList;
-    imglstMatchPrimitiveFilesProperties: TImageList;
     imgFontColorBuffer: TImage;
-    imglstFontColorProperties: TImageList;
-    imglstMatchBitmapTextProperties: TImageList;
-    imglstFCMatchCriteriaProperties: TImageList;
-    imglstInitialRectangleProperties: TImageList;
-    imglstMatchBitmapAlgorithmSettingsProperties: TImageList;
-    imglstActionProperties: TImageList;
-    imglstCallTemplateLoopProperties: TImageList;
-    imglstPluginProperties: TImageList;
-    imglstWindowOperationsProperties: TImageList;
-    imglstSleepProperties: TImageList;
-    imglstExecAppProperties: TImageList;
-    imglstSetTextProperties: TImageList;
-    imglstFindControlProperties: TImageList;
-    imglstActions16: TImageList;
-    imglstClickProperties: TImageList;
-    imglstCallTemplateProperties: TImageList;
-    imglstSetVarProperties: TImageList;
     imgPlugin: TImage;
     lblBitmaps: TLabel;
     lblDebugBitmapXMouseOffset: TLabel;
@@ -180,7 +150,6 @@ type
     RemoveCustomVarRow1: TMenuItem;
     MenuItemSavePreviewImage: TMenuItem;
     MenuItemCopyPreviewImage: TMenuItem;
-    imglstActions: TImageList;
     pmDebugVars: TPopupMenu;
     CopyDebugValuesListToClipboard1: TMenuItem;
     PasteDebugValuesListFromClipboard1: TMenuItem;
@@ -190,7 +159,6 @@ type
     TabSheetAction: TTabSheet;
     TabSheetCondition: TTabSheet;
     TabSheetDebugging: TTabSheet;
-    imglstActionExecution: TImageList;
     spdbtnCommonTimeouts: TSpeedButton;
     prbTimeout: TProgressBar;
     pmDebugImage: TPopupMenu;
@@ -857,7 +825,7 @@ uses
   Clipbrd, ClickerActionValues, ClickerOIUtils, ClickerZoomPreviewForm,
   ClickerActionPluginLoader, ClickerActionPlugins, InMemFileSystemBrowserForm,
   ClickerExtraUtils, ClickerActionProperties, ClickerTemplates, Math,
-  ClickerCLUtils;
+  ClickerCLUtils, ClickerIconsDM;
 
 
 function ActionStatusStrToActionStatus(AString: string): TActionStatus;
@@ -2540,7 +2508,7 @@ begin
       Bmp.Canvas.Pen.Color := clWhite;
       Bmp.Canvas.Brush.Color := clWhite;
       Bmp.Canvas.Rectangle(0, 0, 16, 16);
-      imglstActions16.Draw(bmp.Canvas, 0, 0, Integer(TClkAction(acSetVar)), dsNormal, itImage);
+      dmClickerIcons.imglstActions16.Draw(bmp.Canvas, 0, 0, Integer(TClkAction(acSetVar)), dsNormal, itImage);
       TempMenuItem.Bitmap := Bmp;
 
       FPmLocalTemplates.Items[0].Add(TempMenuItem);
@@ -2614,7 +2582,7 @@ begin
       Bmp.Canvas.Pen.Color := clWhite;
       Bmp.Canvas.Brush.Color := clWhite;
       Bmp.Canvas.Rectangle(0, 0, 16, 16);
-      imglstActions16.Draw(bmp.Canvas, 0, 0, ActionType, dsNormal, itImage);
+      dmClickerIcons.imglstActions16.Draw(bmp.Canvas, 0, 0, ActionType, dsNormal, itImage);
       TempMenuItem.Bitmap := Bmp;
 
       FPmLocalTemplates.Items[0].Add(TempMenuItem);
@@ -2689,7 +2657,7 @@ begin
       Bmp.Canvas.Pen.Color := clWhite;
       Bmp.Canvas.Brush.Color := clWhite;
       Bmp.Canvas.Rectangle(0, 0, 16, 16);
-      imglstActions16.Draw(bmp.Canvas, 0, 0, ActionType, dsNormal, itImage);
+      dmClickerIcons.imglstActions16.Draw(bmp.Canvas, 0, 0, ActionType, dsNormal, itImage);
       TempMenuItem.Bitmap := Bmp;
 
       FPmLocalTemplates.Items[0].Add(TempMenuItem);
@@ -2765,7 +2733,7 @@ begin
         Bmp.Canvas.Pen.Color := clWhite;
         Bmp.Canvas.Brush.Color := clWhite;
         Bmp.Canvas.Rectangle(0, 0, 16, 16);
-        imglstActions16.Draw(bmp.Canvas, 0, 0, ActionType, dsNormal, itImage);
+        dmClickerIcons.imglstActions16.Draw(bmp.Canvas, 0, 0, ActionType, dsNormal, itImage);
         TempMenuItem.Bitmap := Bmp;
 
         FPmLocalTemplates.Items[0].Add(TempMenuItem);
@@ -5598,7 +5566,7 @@ end;
 
 procedure TfrClickerActions.BuildFontColorIconsList;
 begin
-  BuildFontColorIcons(imglstFontColorProperties, GetEditingActionObjectByActionType^.FindSubControlOptions, EvaluateReplacements);
+  BuildFontColorIcons(dmClickerIcons.imglstFontColorProperties, GetEditingActionObjectByActionType^.FindSubControlOptions, EvaluateReplacements);
 end;
 
 
@@ -6435,7 +6403,7 @@ begin
     case ANodeLevel of
       CCategoryLevel:
       begin
-        ImageList := imglstActions16;
+        ImageList := dmClickerIcons.imglstActions16;
         ImageIndex := EditingActionType;
       end;
 
@@ -6445,47 +6413,47 @@ begin
 
         case EditingActionType of
           Ord(acClick):
-            ImageList := imglstClickProperties;
+            ImageList := dmClickerIcons.imglstClickProperties;
 
           Ord(acExecApp):
-            ImageList := imglstExecAppProperties;
+            ImageList := dmClickerIcons.imglstExecAppProperties;
 
           Ord(acFindControl):
-            ImageList := imglstFindControlProperties;
+            ImageList := dmClickerIcons.imglstFindControlProperties;
 
           Ord(acFindSubControl):
-            ImageList := imglstFindSubControlProperties;
+            ImageList := dmClickerIcons.imglstFindSubControlProperties;
 
           Ord(acSetControlText):
-            ImageList := imglstSetTextProperties;
+            ImageList := dmClickerIcons.imglstSetTextProperties;
 
           Ord(acCallTemplate):
-            ImageList := imglstCallTemplateProperties;
+            ImageList := dmClickerIcons.imglstCallTemplateProperties;
 
           Ord(acSleep):
-            ImageList := imglstSleepProperties;
+            ImageList := dmClickerIcons.imglstSleepProperties;
 
           Ord(acSetVar):
-            ImageList := imglstSetVarProperties;
+            ImageList := dmClickerIcons.imglstSetVarProperties;
 
           Ord(acWindowOperations):
-            ImageList := imglstWindowOperationsProperties;
+            ImageList := dmClickerIcons.imglstWindowOperationsProperties;
 
           Ord(acLoadSetVarFromFile):
-            ImageList := imglstLoadSetVarFromFileProperties;
+            ImageList := dmClickerIcons.imglstLoadSetVarFromFileProperties;
 
           Ord(acSaveSetVarToFile):
-            ImageList := imglstSaveSetVarToFileProperties;
+            ImageList := dmClickerIcons.imglstSaveSetVarToFileProperties;
 
           Ord(acPlugin):
           begin
-            ImageList := imglstPluginProperties;
+            ImageList := dmClickerIcons.imglstPluginProperties;
             //if APropertyIndex > CPlugin_FileName_PropIndex then
             //  ImageIndex := 1;
           end;
 
           Ord(acEditTemplate):
-            ImageList := imglstEditTemplateProperties;
+            ImageList := dmClickerIcons.imglstEditTemplateProperties;
         end;   //case
       end;
 
@@ -6498,10 +6466,10 @@ begin
           begin
             case APropertyIndex of
               CFindControl_MatchCriteria_PropIndex:
-                ImageList := imglstFCMatchCriteriaProperties;
+                ImageList := dmClickerIcons.imglstFCMatchCriteriaProperties;
 
               CFindControl_InitialRectangle_PropIndex:
-                ImageList := imglstInitialRectangleProperties;
+                ImageList := dmClickerIcons.imglstInitialRectangleProperties;
             end;
           end;
 
@@ -6509,34 +6477,34 @@ begin
           begin
             case APropertyIndex of
               CFindSubControl_MatchCriteria_PropIndex:
-                ImageList := imglstFSCMatchCriteriaProperties;
+                ImageList := dmClickerIcons.imglstFSCMatchCriteriaProperties;
 
               CFindSubControl_MatchBitmapText_PropIndex:
               begin
                 ItemIndexMod := AItemIndex mod CPropCount_FindSubControlMatchBitmapText;
                 ImageIndex := ItemIndexMod;
-                ImageList := imglstMatchBitmapTextProperties;
+                ImageList := dmClickerIcons.imglstMatchBitmapTextProperties;
               end;
 
               CFindSubControl_MatchBitmapAlgorithmSettings_PropIndex:
-                ImageList := imglstMatchBitmapAlgorithmSettingsProperties;
+                ImageList := dmClickerIcons.imglstMatchBitmapAlgorithmSettingsProperties;
 
               CFindSubControl_InitialRectangle_PropIndex:
-                ImageList := imglstInitialRectangleProperties;
+                ImageList := dmClickerIcons.imglstInitialRectangleProperties;
 
               CFindSubControl_MatchByHistogramSettings_PropIndex:
-                ImageList := imglstMatchByHistogramSettings;
+                ImageList := dmClickerIcons.imglstMatchByHistogramSettingsProperties;
 
               CFindSubControl_RenderingInBrowserSettings_PropIndex:
-                ImageList := imglstRenderingInBrowserSettings;
+                ImageList := dmClickerIcons.imglstRenderingInBrowserSettingsProperties;
 
               CFindSubControl_GPUSettings_PropIndex:
-                ImageList := imglstGPUSettings;
+                ImageList := dmClickerIcons.imglstGPUSettingsProperties;
             end;
           end;
 
           Ord(acCallTemplate):
-            ImageList := imglstCallTemplateLoopProperties;
+            ImageList := dmClickerIcons.imglstCallTemplateLoopProperties;
         end;
       end;
     end; //case
@@ -6554,10 +6522,10 @@ begin
 
           if ItemIndexMod in [CFindSubControl_MatchBitmapText_ForegroundColor_PropItemIndex, CFindSubControl_MatchBitmapText_BackgroundColor_PropItemIndex] then
           begin
-            ImageList := imglstFontColorProperties;
+            ImageList := dmClickerIcons.imglstFontColorProperties;
             ImageIndex := ItemIndexDiv shl 1 + ItemIndexMod;
 
-            if ImageIndex > imglstFontColorProperties.Count - 1 then
+            if ImageIndex > dmClickerIcons.imglstFontColorProperties.Count - 1 then
               BuildFontColorIconsList;
           end;
         end;
@@ -6571,7 +6539,7 @@ begin
         case APropertyIndex of
           CEditTemplate_EditedActionType_PropIndex:
           begin
-            ImageList := imglstActions16;
+            ImageList := dmClickerIcons.imglstActions16;
 
             case ACategoryIndex of
               CCategory_ActionSpecific:
@@ -6588,7 +6556,7 @@ begin
 
           CEditTemplate_Operation_PropIndex:
           begin
-            ImageList := imglstEditTemplateOperation;
+            ImageList := dmClickerIcons.imglstEditTemplateOperationProperties;
 
             case ACategoryIndex of
               CCategory_ActionSpecific:
@@ -6605,7 +6573,7 @@ begin
 
           CEditTemplate_WhichTemplate_PropIndex:
           begin
-            ImageList := imglstEditTemplateWhichTemplate;
+            ImageList := dmClickerIcons.imglstEditTemplateWhichTemplateProperties;
 
             case ACategoryIndex of
               CCategory_ActionSpecific:
@@ -6630,7 +6598,7 @@ begin
           if ((ACategoryIndex = CCategory_ActionSpecific) and FEditingAction^.CallTemplateOptions.CallTemplateLoop.Enabled) or
              ((ACategoryIndex = CCategory_EditedAction) and FEditTemplateOptions_EditingAction^.CallTemplateOptions.CallTemplateLoop.Enabled) then
           begin
-            ImageList := imglstCallTemplateLoopProperties;
+            ImageList := dmClickerIcons.imglstCallTemplateLoopProperties;
             ImageIndex := CCallTemplate_CallTemplateLoop_Enabled_PropItemIndex;
           end;
     end; //CPropertyLevel
@@ -6650,7 +6618,7 @@ begin  //
       CCategory_Common:
         if Column = 0 then
         begin
-          ImageList := imglstActionProperties;
+          ImageList := dmClickerIcons.imglstActionProperties;
           ImageIndex := APropertyIndex;
         end;
 
@@ -6876,10 +6844,10 @@ begin
                 imgFontColorBuffer.Canvas.Rectangle(0, 0, imgFontColorBuffer.Width, imgFontColorBuffer.Height);
 
                 ImageIndex := ItemIndexDiv shl 1 + ItemIndexMod;    //shl 1 means that there are two items / pair  (FG and BG)
-                if ImageIndex > imglstFontColorProperties.Count - 1 then
+                if ImageIndex > dmClickerIcons.imglstFontColorProperties.Count - 1 then
                   BuildFontColorIconsList;
 
-                imglstFontColorProperties.ReplaceMasked(ImageIndex, imgFontColorBuffer.Picture.Bitmap, 2);
+                dmClickerIcons.imglstFontColorProperties.ReplaceMasked(ImageIndex, imgFontColorBuffer.Picture.Bitmap, 2);
               end;
 
               CFindSubControl_MatchBitmapText_CropLeft_PropItemIndex:
@@ -7524,7 +7492,7 @@ begin
 end;
 
 
-procedure OIGetEnumConst_ActionSpecific(AEditingAction: PClkActionRec; ALiveEditingActionType: TClkAction; AfrClickerActions: TfrClickerActions; ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEnumItemIndex: Integer; var AEnumItemName: string; var AEnumImgItemIndex: Integer; var AImgLst: TImageList);
+procedure OIGetEnumConst_ActionSpecific(AEditingAction: PClkActionRec; ALiveEditingActionType: TClkAction; ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEnumItemIndex: Integer; var AEnumItemName: string; var AEnumImgItemIndex: Integer; var AImgLst: TImageList);
 var
   EditingActionType: Integer;
   ItemIndexMod: Integer;
@@ -7616,13 +7584,13 @@ begin
     AEnumImgItemIndex := AEnumItemIndex;
     case APropertyIndex of
       CEditTemplate_Operation_PropIndex:
-        AImgLst := AfrClickerActions.imglstEditTemplateOperation;
+        AImgLst := dmClickerIcons.imglstEditTemplateOperationProperties;
 
       CEditTemplate_WhichTemplate_PropIndex:
-        AImgLst := AfrClickerActions.imglstEditTemplateWhichTemplate;
+        AImgLst := dmClickerIcons.imglstEditTemplateWhichTemplateProperties;
 
       CEditTemplate_EditedActionType_PropIndex:
-        AImgLst := AfrClickerActions.imglstActions16;
+        AImgLst := dmClickerIcons.imglstActions16;
     end;
   end;
 end;
@@ -7638,11 +7606,11 @@ begin
         AEnumItemName := CActionEnumStrings[APropertyIndex]^[AEnumItemIndex];
 
       CCategory_ActionSpecific:
-        OIGetEnumConst_ActionSpecific(FEditingAction, CurrentlyEditingActionType, Self, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEnumItemIndex, AEnumItemName, AEnumImgItemIndex, AImgLst);
+        OIGetEnumConst_ActionSpecific(FEditingAction, CurrentlyEditingActionType, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEnumItemIndex, AEnumItemName, AEnumImgItemIndex, AImgLst);
 
       CCategory_EditedAction:
         if FEditTemplateOptions_EditingAction <> nil then
-          OIGetEnumConst_ActionSpecific(FEditTemplateOptions_EditingAction, FEditTemplateOptions_EditingAction.ActionOptions.Action, Self, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEnumItemIndex, AEnumItemName, AEnumImgItemIndex, AImgLst);
+          OIGetEnumConst_ActionSpecific(FEditTemplateOptions_EditingAction, FEditTemplateOptions_EditingAction.ActionOptions.Action, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEnumItemIndex, AEnumItemName, AEnumImgItemIndex, AImgLst);
 
       else
         AEnumItemName := '';
@@ -8043,9 +8011,9 @@ begin
       CCategory_ActionSpecific:
       begin
         if CurrentlyEditingActionType = acFindControl then
-          TempUsedMatchCriteriaIcons := imglstUsedMatchCriteria
+          TempUsedMatchCriteriaIcons := dmClickerIcons.imglstUsedMatchCriteria
         else
-          TempUsedMatchCriteriaIcons := imglstUsedMatchCriteriaSub;
+          TempUsedMatchCriteriaIcons := dmClickerIcons.imglstUsedMatchCriteriaSub;
 
         OIAfterCellPaint_ActionSpecific(FEditingAction, CurrentlyEditingActionType, ACategoryIndex, APropertyIndex, APropertyItemIndex, TargetCanvas, Column, CellRect, TempUsedMatchCriteriaIcons);
       end;
@@ -8053,9 +8021,9 @@ begin
       CCategory_EditedAction:
       begin
         if FEditTemplateOptions_EditingAction.ActionOptions.Action = acFindControl then
-          TempUsedMatchCriteriaIcons := imglstUsedMatchCriteria
+          TempUsedMatchCriteriaIcons := dmClickerIcons.imglstUsedMatchCriteria
         else
-          TempUsedMatchCriteriaIcons := imglstUsedMatchCriteriaSub;
+          TempUsedMatchCriteriaIcons := dmClickerIcons.imglstUsedMatchCriteriaSub;
 
         if FEditTemplateOptions_EditingAction <> nil then
           OIAfterCellPaint_ActionSpecific(FEditTemplateOptions_EditingAction, FEditTemplateOptions_EditingAction.ActionOptions.Action, ACategoryIndex, APropertyIndex, APropertyItemIndex, TargetCanvas, Column, CellRect, TempUsedMatchCriteriaIcons);
@@ -8715,7 +8683,7 @@ begin
                 FLastClickedEdit := nil;
                 APopupMenu := pmPathReplacements;
                 AHint := AHint + #13#10;
-                AHint := '$AppDir$ replacement is available';
+                AHint := AHint + '$AppDir$ replacement is available';
               end;
           end;
         end; //case
@@ -9166,13 +9134,13 @@ begin
                 if TempListOfExternallyRenderedImages.Count = 0 then
                 begin
                   AddMenuItemToAnotherMenuItem(FOIEditorMenu, BmpTempMenuItem, 'No files in externally rendered In-Mem file system', MenuItem_NoImageSourceInInMemPropertyListClick, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
-                  FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstFindControlProperties, CFindSubControl_ImageSourceFileNameLocation_PropIndex);
+                  FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(dmClickerIcons.imglstFindControlProperties, CFindSubControl_ImageSourceFileNameLocation_PropIndex);
                 end
                 else
                 begin
                   AddMenuItemToAnotherMenuItem(FOIEditorMenu, BmpTempMenuItem, 'Browse with preview...', MenuItem_BrowseFileNameFromInMemPropertyListAddToBmpFilesClick,
                     ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
-                  FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 0);
+                  FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(dmClickerIcons.imglstMatchPrimitiveFilesMenu, 0);
 
                   AddMenuItemToAnotherMenuItem(FOIEditorMenu, BmpTempMenuItem, '-', nil, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
 
@@ -9181,7 +9149,7 @@ begin
                     begin
                       AddMenuItemToAnotherMenuItem(FOIEditorMenu, BmpTempMenuItem, TempListOfExternallyRenderedImages.Strings[i], MenuItem_SetFileNameFromInMemPropertyListAddToBmpFilesClick,
                         ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
-                      FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstFindControlProperties, CFindSubControl_ImageSourceFileNameLocation_PropIndex);
+                      FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(dmClickerIcons.imglstFindControlProperties, CFindSubControl_ImageSourceFileNameLocation_PropIndex);
                     end;
                 end;
               finally
@@ -9198,19 +9166,19 @@ begin
 
               AddMenuItemToPopupMenu(FOIEditorMenu, 'Browse...', MenuItem_BrowseBMPFileFromPropertyListClick,
                 ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
-              FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 0);
+              FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(dmClickerIcons.imglstMatchPrimitiveFilesMenu, 0);
 
               AddMenuItemToPopupMenu(FOIEditorMenu, 'Remove file from list...', MenuItem_RemoveBMPFileFromPropertyListClick,
                 ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
-              FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 1);
+              FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(dmClickerIcons.imglstMatchPrimitiveFilesMenu, 1);
 
               AddMenuItemToPopupMenu(FOIEditorMenu, 'Move file up (one position)', MenuItem_MoveBMPFileUpInPropertyListClick,
                 ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
-              FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 2);
+              FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(dmClickerIcons.imglstMatchPrimitiveFilesMenu, 2);
 
               AddMenuItemToPopupMenu(FOIEditorMenu, 'Move file down (one position)', MenuItem_MoveBMPFileDownInPropertyListClick,
                 ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
-              FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 3);
+              FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(dmClickerIcons.imglstMatchPrimitiveFilesMenu, 3);
 
               GetCursorPos(tp);
               FOIEditorMenu.PopUp(tp.X, tp.Y);
@@ -9247,37 +9215,37 @@ begin
 
               AddMenuItemToPopupMenu(FOIEditorMenu, 'Browse...', MenuItem_BrowsePrimitiveFileFromPropertyListClick,
                 ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
-              FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 0);
+              FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(dmClickerIcons.imglstMatchPrimitiveFilesMenu, 0);
 
               AddMenuItemToPopupMenu(FOIEditorMenu, 'Remove file from list...', MenuItem_RemovePrimitiveFileFromPropertyListClick,
                 ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
-              FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 1);
+              FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(dmClickerIcons.imglstMatchPrimitiveFilesMenu, 1);
 
               AddMenuItemToPopupMenu(FOIEditorMenu, 'Move file up (one position)', MenuItem_MovePrimitiveFileUpInPropertyListClick,
                 ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
-              FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 2);
+              FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(dmClickerIcons.imglstMatchPrimitiveFilesMenu, 2);
 
               AddMenuItemToPopupMenu(FOIEditorMenu, 'Move file down (one position)', MenuItem_MovePrimitiveFileDownInPropertyListClick,
                 ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
-              FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 3);
+              FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(dmClickerIcons.imglstMatchPrimitiveFilesMenu, 3);
 
               AddMenuItemToPopupMenu(FOIEditorMenu, '-', nil,
                 ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
 
               AddMenuItemToPopupMenu(FOIEditorMenu, 'Save file', MenuItem_SavePrimitiveFileInPropertyListClick,
                 ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
-              FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 4);
+              FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(dmClickerIcons.imglstMatchPrimitiveFilesMenu, 4);
 
               AddMenuItemToPopupMenu(FOIEditorMenu, 'Save file as...', MenuItem_SavePrimitiveFileAsInPropertyListClick,
                 ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
-              FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 5);
+              FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(dmClickerIcons.imglstMatchPrimitiveFilesMenu, 5);
 
               AddMenuItemToPopupMenu(FOIEditorMenu, '-', nil,
                 ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
 
               AddMenuItemToPopupMenu(FOIEditorMenu, 'Discard changes and reload file...', MenuItem_DiscardChangesAndReloadPrimitiveFileInPropertyListClick,
                 ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
-              FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 6);
+              FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(dmClickerIcons.imglstMatchPrimitiveFilesMenu, 6);
 
               GetCursorPos(tp);
               FOIEditorMenu.PopUp(tp.X, tp.Y);
@@ -9299,7 +9267,7 @@ begin
               begin
                 AddMenuItemToPopupMenu(FOIEditorMenu, 'Browse...', MenuItem_BrowseImageSourceFromPropertyListClick,
                   ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
-                FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 0);
+                FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(dmClickerIcons.imglstMatchPrimitiveFilesMenu, 0);
               end;
 
               isflMem:
@@ -9312,13 +9280,13 @@ begin
                   if TempListOfExternallyRenderedImages.Count = 0 then
                   begin
                     AddMenuItemToPopupMenu(FOIEditorMenu, 'No files in externally rendered In-Mem file system', MenuItem_NoImageSourceInInMemPropertyListClick, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
-                    FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstFindControlProperties, CFindSubControl_ImageSourceFileNameLocation_PropIndex);
+                    FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(dmClickerIcons.imglstFindControlProperties, CFindSubControl_ImageSourceFileNameLocation_PropIndex);
                   end
                   else
                   begin
                     AddMenuItemToPopupMenu(FOIEditorMenu, 'Browse with preview...', MenuItem_BrowseFileNameFromInMemPropertyListClick,
                       ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
-                    FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 0);
+                    FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(dmClickerIcons.imglstMatchPrimitiveFilesMenu, 0);
 
                     AddMenuItemToPopupMenu(FOIEditorMenu, '-', nil, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
 
@@ -9326,7 +9294,7 @@ begin
                     begin
                       AddMenuItemToPopupMenu(FOIEditorMenu, TempListOfExternallyRenderedImages.Strings[i], MenuItem_SetFileNameFromInMemPropertyListClick,
                         ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
-                      FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(imglstFindControlProperties, CFindSubControl_ImageSourceFileNameLocation_PropIndex);
+                      FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(dmClickerIcons.imglstFindControlProperties, CFindSubControl_ImageSourceFileNameLocation_PropIndex);
                     end;
                   end;
                 finally
@@ -9433,13 +9401,13 @@ begin
           {$IFDEF MemPlugins}
             TempMenuItem := AddMenuItemToPopupMenu(FOIEditorMenu, 'Browse from disk...', MenuItem_BrowsePluginFileInPropertyListClick,
               ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
-            TempMenuItem.Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 0);
+            TempMenuItem.Bitmap := CreateBitmapForMenu(dmClickerIcons.imglstMatchPrimitiveFilesMenu, 0);
 
             AddMenuItemToPopupMenu(FOIEditorMenu, '-', nil, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
 
             TempMenuItem := AddMenuItemToPopupMenu(FOIEditorMenu, 'Browse Plugin In-Mem file system...', nil,
               ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
-            TempMenuItem.Bitmap := CreateBitmapForMenu(imglstMatchPrimitiveFilesProperties, 0);
+            TempMenuItem.Bitmap := CreateBitmapForMenu(dmClickerIcons.imglstMatchPrimitiveFilesMenu, 0);
 
             TempListOfMemPlugins := TStringList.Create;
             try
@@ -9456,14 +9424,14 @@ begin
                   PluginsFoundInInMemFS := True;
                   PluginMenuItem := AddMenuItemToAnotherMenuItem(FOIEditorMenu, TempMenuItem, PluginPath, MenuItem_SetPluginFileNameFromInMemPropertyListClick,
                     ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
-                  PluginMenuItem.Bitmap := CreateBitmapForMenu(imglstPluginProperties, CPlugin_FileName_PropIndex);
+                  PluginMenuItem.Bitmap := CreateBitmapForMenu(dmClickerIcons.imglstPluginProperties, CPlugin_FileName_PropIndex);
                 end;
               end;
 
               if not PluginsFoundInInMemFS then
               begin
                 PluginMenuItem := AddMenuItemToAnotherMenuItem(FOIEditorMenu, TempMenuItem, 'No plugins in In-Mem file system', MenuItem_NoPluginInInMemPropertyListClick, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
-                PluginMenuItem.Bitmap := CreateBitmapForMenu(imglstPluginProperties, CPlugin_FileName_PropIndex);
+                PluginMenuItem.Bitmap := CreateBitmapForMenu(dmClickerIcons.imglstPluginProperties, CPlugin_FileName_PropIndex);
               end;
             finally
               TempListOfMemPlugins.Free;
@@ -9473,7 +9441,7 @@ begin
 
             TempMenuItem := AddMenuItemToPopupMenu(FOIEditorMenu, 'Load plugin from disk to Plugin In-Mem file system...', MenuItem_LoadPluginFromDiskToPluginInMemFSInPropertyListClick,
               ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
-            TempMenuItem.Bitmap := CreateBitmapForMenu(imglstFindControlProperties, CFindSubControl_ImageSourceFileNameLocation_PropIndex);
+            TempMenuItem.Bitmap := CreateBitmapForMenu(dmClickerIcons.imglstFindControlProperties, CFindSubControl_ImageSourceFileNameLocation_PropIndex);
           {$ELSE}
             AddMenuItemToPopupMenu(FOIEditorMenu, 'Browse...', MenuItem_BrowsePluginFileInPropertyListClick,
               ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);

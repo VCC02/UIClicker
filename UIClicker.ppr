@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2023 VCC
+    Copyright (C) 2026 VCC
     creation date: Dec 2019
     initial release date: 13 Sep 2022
 
@@ -63,7 +63,7 @@ uses
     DynMemLib, //search for DynMemLib.pas on GitHub if not found
   {$ENDIF}
   ClickerFileProviderUtils, ClickerVstUtils, ClickerPluginArchive, DoubleList,
-  CLHeaders, ClickerActionsCodeGen, ClickerCLUtils;
+  CLHeaders, ClickerActionsCodeGen, ClickerCLUtils, ClickerIconsDM;
 
 {$R *.res}
 
@@ -287,6 +287,8 @@ begin
   FExHandler := TExHandler.Create;
   ExceptProc := @CatchUnhandledException;
   Application.OnException := @FExHandler.CustomExceptionHandler;
+
+  Application.CreateForm(TdmClickerIcons, dmClickerIcons);
   Application.CreateForm(TfrmUIClickerMainForm, frmUIClickerMainForm);
   Application.CreateForm(TfrmClickerControlPreview, frmClickerControlPreview);
   Application.CreateForm(TfrmClickerActions, frmClickerActions);
@@ -295,6 +297,7 @@ begin
   Application.CreateForm(TfrmClickerZoomPreview, frmClickerZoomPreview);
 
   frmUIClickerMainForm.AllFormsAreCreated := True; //allow loading settings
+
   Application.Run;
 end.
 

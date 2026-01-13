@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2025 VCC
+    Copyright (C) 2026 VCC
     creation date: Dec 2019
     initial release date: 13 Sep 2022
 
@@ -866,7 +866,7 @@ uses
   ClickerConditionEditorForm, ClickerActionsClient, ClickerFileProviderUtils,
   ClickerTemplateNotesForm, AutoCompleteForm, ClickerVstUtils, ClickerActionsCodeGen,
   ClickerActionPluginLoader, ClickerActionPlugins, ClickerActionProperties,
-  ClickerCLUtils;
+  ClickerCLUtils, ClickerIconsDM;
 
 
 const
@@ -1196,7 +1196,7 @@ begin
   vstActions.Header.Style := hsFlatButtons;
   //vstActions.Indent := 2;
   //vstActions.PopupMenu := pmVstActions; //the menu will be poped up by code
-  vstActions.StateImages := frClickerActions.imglstActions;
+  vstActions.StateImages := dmClickerIcons.imglstActions;
   vstActions.TabOrder := 0;
   vstActions.TreeOptions.AutoOptions := [toAutoDropExpand, toAutoScrollOnExpand, toAutoSort, toAutoTristateTracking, toAutoChangeScale, toDisableAutoscrollOnEdit];
   vstActions.TreeOptions.MiscOptions := [toAcceptOLEDrop, toEditable, toCheckSupport, toFullRepaintOnResize, toInitOnSave, toToggleOnDblClick, toWheelPanning];
@@ -3389,7 +3389,7 @@ begin
     Bmp.LoadFromStream(MemStream, AStreamSize);
 
     //MessageBox(Handle, PChar('Adding icon' + #13#10 + 'Of size: ' + IntToStr(AStreamSize) + '  ' + IntToStr(Bmp.Width) + ':' + IntToStr(Bmp.Height)), 'Arr', 0);
-    frClickerActions.imglstPluginProperties.AddMasked(Bmp, clFuchsia);
+    dmClickerIcons.imglstPluginProperties.AddMasked(Bmp, clFuchsia);
   finally
     MemStream.Free;
     Bmp.Free;
@@ -4045,8 +4045,8 @@ begin
 
   LoadingResult := False;
   try
-    frClickerActions.imglstPluginProperties.Clear;
-    frClickerActions.imglstPluginProperties.AddMasked(frClickerActions.imgPluginFileName.Picture.Bitmap, clFuchsia);
+    dmClickerIcons.imglstPluginProperties.Clear;
+    dmClickerIcons.imglstPluginProperties.AddMasked(frClickerActions.imgPluginFileName.Picture.Bitmap, clFuchsia);
 
     ActionPlugin.Loaded := False;
     LoadingResult := ActionPlugin.LoadToGetProperties(ResolvedPluginPath, DoOnLoadPluginFromInMemFS, DoOnUpdatePropertyIcons, AddToLog);
@@ -4054,7 +4054,7 @@ begin
     on E: Exception do
     begin
       AddToLog('Exception on loading plugin for getting properties: "' + E.Message + '". ' + SysErrorMessage(GetLastOSError));
-      frClickerActions.imglstPluginProperties.AddMasked(frClickerActions.imgPlugin.Picture.Bitmap, clFuchsia);
+      dmClickerIcons.imglstPluginProperties.AddMasked(frClickerActions.imgPlugin.Picture.Bitmap, clFuchsia);
     end;
   end;
 
@@ -4551,7 +4551,7 @@ begin
 
     1:  //action type
     begin
-      ImageList := frClickerActions.imglstActions;
+      ImageList := dmClickerIcons.imglstActions;
       ImageIndex := Ord(CurrentAction^.ActionOptions.Action);
     end;
 
@@ -4579,7 +4579,7 @@ begin
     begin
       if CurrentAction^.ActionOptions.Action = acEditTemplate then
       begin
-        ImageList := frClickerActions.imglstActions;
+        ImageList := dmClickerIcons.imglstActions;
         ImageIndex := Ord(CurrentAction^.EditTemplateOptions.EditedActionType);
       end;
     end;
@@ -6628,7 +6628,7 @@ begin
 
         Bmp := TBitmap.Create;
         WipeBitmap(Bmp, 16, 16);
-        frClickerActions.imglstActions16.Draw(Bmp.Canvas, 0, 0, Integer(k));
+        dmClickerIcons.imglstActions16.Draw(Bmp.Canvas, 0, 0, Integer(k));
         TempMenuItem.Bitmap := Bmp;
         FoundItems[j].Item.Insert(FoundItems[j].Item.Count, TempMenuItem);
       end;
@@ -7004,7 +7004,7 @@ begin
     FPalette.Width := pnlPalette.Width;
     FPalette.Height := pnlPalette.Height;
 
-    FPalette.Images := frClickerActions.imglstActions;
+    FPalette.Images := dmClickerIcons.imglstActions;
     FPalette.OwnerPanel := pnlPalette;
 
     ActionNames := TStringList.Create;

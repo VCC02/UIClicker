@@ -205,7 +205,6 @@ type
     imgEraseImage: TImage;
     imgFindFontNameAndSize: TImage;
     imgCopyColorUnderMouseCursorImg: TImage;
-    imglstUsedMatchCriteriaSub: TImageList;
     imgScreenshot: TImage;
     imgStopFindFontNameAndSize: TImage;
     imgFindFontNameAndSizeSettings: TImage;
@@ -696,7 +695,7 @@ implementation
 
 uses
   BitmapProcessing, Clipbrd, ClickerZoomPreviewForm, ClickerFontFinderSettingsForm,
-  BitmapConv, Math, ImgList;
+  BitmapConv, Math, ClickerExtraUtils, ClickerIconsDM;
 
 
 //const
@@ -2125,28 +2124,25 @@ var
   FindSubControlOptions: PClkFindSubControlOptions;
   Bmp: TBitmap;
 begin
-  for i := 0 to FSearchAreaDbgImgSearchedBmpMenu.Items.Count - 1 do
-    if FSearchAreaDbgImgSearchedBmpMenu.Items.Items[i].Bitmap <> nil then
-      if (FSearchAreaDbgImgSearchedBmpMenu.Items.Items[i].Bitmap.Width = 16) and  //extra verification of bitmap validity
-         (FSearchAreaDbgImgSearchedBmpMenu.Items.Items[i].Bitmap.Height = 16) then
-      begin
-        try
-          FSearchAreaDbgImgSearchedBmpMenu.Items.Items[i].Bitmap.Free;
-          FSearchAreaDbgImgSearchedBmpMenu.Items.Items[i].Bitmap := nil;
-        except
-          //double free
-        end;
-      end;
+  //for i := 0 to FSearchAreaDbgImgSearchedBmpMenu.Items.Count - 1 do
+  //  if FSearchAreaDbgImgSearchedBmpMenu.Items.Items[i].Bitmap <> nil then
+  //    if (FSearchAreaDbgImgSearchedBmpMenu.Items.Items[i].Bitmap.Width = 16) and  //extra verification of bitmap validity
+  //       (FSearchAreaDbgImgSearchedBmpMenu.Items.Items[i].Bitmap.Height = 16) then
+  //    begin
+  //      try
+  //        FSearchAreaDbgImgSearchedBmpMenu.Items.Items[i].Bitmap.Free;
+  //        FSearchAreaDbgImgSearchedBmpMenu.Items.Items[i].Bitmap := nil;
+  //      except
+  //        //double free
+  //      end;
+  //    end;
 
   FSearchAreaDbgImgSearchedBmpMenu.Items.Clear;
 
   MenuItem_Load := TMenuItem.Create(FSearchAreaDbgImgSearchedBmpMenu);
   MenuItem_Load.Caption := 'Load "Bmp Text" to searched area';
   MenuItem_Load.OnClick := nil;
-
-  MenuItem_Load.Bitmap := TBitmap.Create;
-  WipeBitmap(MenuItem_Load.Bitmap, imglstUsedMatchCriteriaSub.Width, imglstUsedMatchCriteriaSub.Height);
-  imglstUsedMatchCriteriaSub.Draw(MenuItem_Load.Bitmap.Canvas, 0, 0, 0, dsNormal, itImage);
+  MenuItem_Load.Bitmap := CreateBitmapForMenu(dmClickerIcons.imglstUsedMatchCriteriaSub, 0);
 
   FSearchAreaDbgImgSearchedBmpMenu.Items.Add(MenuItem_Load);
 
@@ -2258,10 +2254,7 @@ begin
         MenuItem.OnClick := MenuItemGenericLoadBmpToSearchedAreaClick;
 
         MenuItem.Enabled := DoOnFileExists(lstMatchBitmapFiles.Items.Strings[i]) or (Pos(CExtBmp_PrefixUpperCase, UpperCase(lstMatchBitmapFiles.Items.Strings[i])) = 1);
-
-        MenuItem.Bitmap := TBitmap.Create;
-        WipeBitmap(MenuItem.Bitmap, imglstUsedMatchCriteriaSub.Width, imglstUsedMatchCriteriaSub.Height);
-        imglstUsedMatchCriteriaSub.Draw(MenuItem.Bitmap.Canvas, 0, 0, 1, dsNormal, itImage);
+        MenuItem.Bitmap := CreateBitmapForMenu(dmClickerIcons.imglstUsedMatchCriteriaSub, 1);
 
         FSearchAreaDbgImgSearchedBmpMenu.Items.Add(MenuItem);
       end;
@@ -2284,10 +2277,7 @@ begin
         MenuItem.Caption := lstMatchPrimitiveFiles.Items.Strings[i];
         MenuItem.OnClick := MenuItemGenericLoadBmpToSearchedAreaClick;
         MenuItem.Enabled := DoOnFileExists(lstMatchPrimitiveFiles.Items.Strings[i]);
-
-        MenuItem.Bitmap := TBitmap.Create;
-        WipeBitmap(MenuItem.Bitmap, imglstUsedMatchCriteriaSub.Width, imglstUsedMatchCriteriaSub.Height);
-        imglstUsedMatchCriteriaSub.Draw(MenuItem.Bitmap.Canvas, 0, 0, 2, dsNormal, itImage);
+        MenuItem.Bitmap := CreateBitmapForMenu(dmClickerIcons.imglstUsedMatchCriteriaSub, 2);
 
         FSearchAreaDbgImgSearchedBmpMenu.Items.Add(MenuItem);
       end;
