@@ -428,7 +428,12 @@
         <FRMtype Value="300"/>
         <IsPartOfProject Value="True"/>
         <ComponentName Value="dmClickerIcons"/>
+        <HasResources Value="True"/>
         <ResourceBaseClass Value="DataModule"/>
+      </Unit>
+      <Unit>
+        <Filename Value="BitmapProcessingGPU.pas"/>
+        <IsPartOfProject Value="True"/>
       </Unit>
     </Units>
   </ProjectOptions>

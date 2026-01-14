@@ -552,6 +552,11 @@ type
   TGetAvoidedZoneException = class(Exception);
 
 
+  EBmpMatchTimeout = class(Exception)
+
+  end;
+
+
   TOnUpdateSearchAreaLimitsInOIFromDraggingLines = procedure(ALimitLabelsToUpdate: TLimitLabels; var AOffsets: TSimpleRectString) of object;
   TOnUpdateTextCroppingLimitsInOIFromDraggingLines = procedure(ALimitLabelsToUpdate: TLimitLabels; var AOffsets: TSimpleRectString; AFontProfileName: string) of object;
   TOnUpdateTextCroppingLimitsInOIFromDraggingLinesIdx = procedure(ALimitLabelsToUpdate: TLimitLabels; var AOffsets: TSimpleRectString; AFontProfileIndex: Integer) of object;
