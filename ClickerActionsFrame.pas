@@ -275,6 +275,7 @@ type
     procedure MenuItem_NoPluginInInMemPropertyListClick(Sender: TObject);
     procedure MenuItem_SetFileNameFromInMemPropertyListClick(Sender: TObject);
     procedure MenuItem_SetFileNameFromInMemPropertyListAddToBmpFilesClick(Sender: TObject);
+    procedure MenuItem_SetFileNameFromInMemPropertyListUpdateBmpFilesClick(Sender: TObject);
     procedure MenuItem_BrowseFileNameFromInMemPropertyListClick(Sender: TObject);
     procedure MenuItem_BrowseFileNameFromInMemPropertyListAddToBmpFilesClick(Sender: TObject);
     procedure MenuItem_SetPluginFileNameFromInMemPropertyListClick(Sender: TObject);
@@ -520,6 +521,7 @@ type
     procedure SetActionTimeoutToValue(AValue: Integer);
     function GetIndexOfFirstModifiedPmtvFile(AEditingAction: PClkActionRec): Integer;
     function GetIndexOfCurrentlyEditingPrimitivesFile: Integer;
+    procedure UpdateMatchBitmapFilesItem(AEditingAction: PClkActionRec; AFileIndex: Integer; ANewFileName: string);
 
     function AddFontProfileToActionFromMenu(AForegroundColor, ABackgroundColor, AFontName: string; AFontSize: Integer; AFontQuality: TFontQuality): Integer;
     function GetUniqueProfileName(n: Integer): string;
@@ -657,6 +659,7 @@ type
 
     procedure AddGPUPlatformsAsMenuItems(AOIEditorMenu: TPopupMenu; AMenuHandler: TNotifyEvent; ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; AEditingAction: PClkActionRec);
     procedure AddGPUDevicesAsMenuItems(AOIEditorMenu: TPopupMenu; AMenuHandler: TNotifyEvent; ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; AEditingAction: PClkActionRec);
+    procedure CreateMenuWithExtMemBitmaps(ABmpTempMenuItem: TMenuItem; ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; AEditingAction: PClkActionRec; ABmpItemHandler: TNotifyEvent);
     procedure OIArrowEditorClick_ActionSpecific(AEditingAction: PClkActionRec; ALiveEditingActionType: TClkAction; ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer);
     procedure HandleOnOIArrowEditorClick(ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer);
 
@@ -4209,10 +4212,25 @@ begin
 end;
 
 
+procedure TfrClickerActions.UpdateMatchBitmapFilesItem(AEditingAction: PClkActionRec; AFileIndex: Integer; ANewFileName: string);
+var
+  ListOfFiles: TStringList;
+begin
+  ListOfFiles := TStringList.Create;
+  try
+    ListOfFiles.LineBreak := #13#10;
+    ListOfFiles.Text := AEditingAction^.FindSubControlOptions.MatchBitmapFiles;
+    ListOfFiles.Strings[AFileIndex] := ANewFileName;
+    AEditingAction^.FindSubControlOptions.MatchBitmapFiles := ListOfFiles.Text;
+  finally
+    ListOfFiles.Free;
+  end;
+end;
+
+
 procedure TfrClickerActions.MenuItem_BrowseBMPFileFromPropertyListClick(Sender: TObject);
 var
   MenuData: POIMenuItemData;
-  ListOfFiles: TStringList;
 begin
   MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
   try
@@ -4220,20 +4238,11 @@ begin
     if not DoOnPictureOpenDialogExecute then
       Exit;
 
-    ListOfFiles := TStringList.Create;
-    try
-      ListOfFiles.LineBreak := #13#10;
-      ListOfFiles.Text := MenuData.TempEditingAction^.FindSubControlOptions.MatchBitmapFiles;
-      ListOfFiles.Strings[MenuData^.PropertyItemIndex] := DoOnGetPictureOpenDialogFileName;
-      MenuData.TempEditingAction^.FindSubControlOptions.MatchBitmapFiles := ListOfFiles.Text;
+    UpdateMatchBitmapFilesItem(MenuData.TempEditingAction, MenuData^.PropertyItemIndex, DoOnGetPictureOpenDialogFileName);
 
-      FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex, True);
-
-      TriggerOnControlsModified;
-      frClickerFindControl.UpdateListsOfSearchFiles(MenuData.TempEditingAction^.FindSubControlOptions.MatchBitmapFiles, MenuData.TempEditingAction^.FindSubControlOptions.MatchPrimitiveFiles);
-    finally
-      ListOfFiles.Free;
-    end;
+    FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex, True);
+    TriggerOnControlsModified;
+    frClickerFindControl.UpdateListsOfSearchFiles(MenuData.TempEditingAction^.FindSubControlOptions.MatchBitmapFiles, MenuData.TempEditingAction^.FindSubControlOptions.MatchPrimitiveFiles);
   finally
     Dispose(MenuData);
   end;
@@ -4811,13 +4820,35 @@ begin
       ListOfFiles.Text := MenuData.TempEditingAction^.FindSubControlOptions.MatchBitmapFiles;
       ListOfFiles.Text := ListOfFiles.Text + Fnm;
       MenuData.TempEditingAction^.FindSubControlOptions.MatchBitmapFiles := ListOfFiles.Text;
-
-      FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex);
-      TriggerOnControlsModified;
-      frClickerFindControl.UpdateListsOfSearchFiles(MenuData.TempEditingAction^.FindSubControlOptions.MatchBitmapFiles, MenuData.TempEditingAction^.FindSubControlOptions.MatchPrimitiveFiles);
     finally
       ListOfFiles.Free;
     end;
+
+    FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex);
+    TriggerOnControlsModified;
+    frClickerFindControl.UpdateListsOfSearchFiles(MenuData.TempEditingAction^.FindSubControlOptions.MatchBitmapFiles, MenuData.TempEditingAction^.FindSubControlOptions.MatchPrimitiveFiles);
+  finally
+    Dispose(MenuData);
+  end;
+end;
+
+
+procedure TfrClickerActions.MenuItem_SetFileNameFromInMemPropertyListUpdateBmpFilesClick(Sender: TObject);
+var
+  MenuData: POIMenuItemData;
+  Fnm: string;
+  ListOfFiles: TStringList;
+begin
+  MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
+  try
+    Fnm := StringReplace(MenuData.MenuItemCaption, '&', '', [rfReplaceAll]);
+    Fnm := Copy(Fnm, 1, Pos(#8#7, Fnm) - 1);
+
+    UpdateMatchBitmapFilesItem(MenuData.TempEditingAction, MenuData^.PropertyItemIndex, Fnm);
+
+    FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex);
+    TriggerOnControlsModified;
+    frClickerFindControl.UpdateListsOfSearchFiles(MenuData.TempEditingAction^.FindSubControlOptions.MatchBitmapFiles, MenuData.TempEditingAction^.FindSubControlOptions.MatchPrimitiveFiles);
   finally
     Dispose(MenuData);
   end;
@@ -8991,6 +9022,43 @@ begin
 end;
 
 
+procedure TfrClickerActions.CreateMenuWithExtMemBitmaps(ABmpTempMenuItem: TMenuItem; ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer; AEditingAction: PClkActionRec; ABmpItemHandler: TNotifyEvent);
+var
+  TempListOfExternallyRenderedImages: TStringList;
+  i: Integer;
+begin
+  TempListOfExternallyRenderedImages := TStringList.Create;
+  try
+    TempListOfExternallyRenderedImages.LineBreak := #13#10;
+    DoOnGetListOfExternallyRenderedImages(TempListOfExternallyRenderedImages);
+
+    if TempListOfExternallyRenderedImages.Count = 0 then
+    begin
+      AddMenuItemToAnotherMenuItem(FOIEditorMenu, ABmpTempMenuItem, 'No files in externally rendered In-Mem file system', MenuItem_NoImageSourceInInMemPropertyListClick, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+      FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(dmClickerIcons.imglstFindControlProperties, CFindSubControl_ImageSourceFileNameLocation_PropIndex);
+    end
+    else
+    begin
+      AddMenuItemToAnotherMenuItem(FOIEditorMenu, ABmpTempMenuItem, 'Browse with preview...', MenuItem_BrowseFileNameFromInMemPropertyListAddToBmpFilesClick,
+        ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+      FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(dmClickerIcons.imglstMatchPrimitiveFilesMenu, 0);
+
+      AddMenuItemToAnotherMenuItem(FOIEditorMenu, ABmpTempMenuItem, '-', nil, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+
+      for i := 0 to TempListOfExternallyRenderedImages.Count - 1 do
+        if Pos(CExtBmp_PrefixUpperCase, UpperCase(TempListOfExternallyRenderedImages.Strings[i])) = 1 then
+        begin
+          AddMenuItemToAnotherMenuItem(FOIEditorMenu, ABmpTempMenuItem, TempListOfExternallyRenderedImages.Strings[i], ABmpItemHandler,
+            ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+          FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(dmClickerIcons.imglstFindControlProperties, CFindSubControl_ImageSourceFileNameLocation_PropIndex);
+        end;
+    end;
+  finally
+    TempListOfExternallyRenderedImages.Free;
+  end;
+end;
+
+
 procedure TfrClickerActions.OIArrowEditorClick_ActionSpecific(AEditingAction: PClkActionRec; ALiveEditingActionType: TClkAction; ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex: Integer);
 var
   tp: TPoint;
@@ -9126,35 +9194,7 @@ begin
               // - This one does extra filtering for "ExtMem:" files.
               // - It places all menu items under another menu item.
               // - Different handlers are used, to add the new item to the proper property.
-              TempListOfExternallyRenderedImages := TStringList.Create;
-              try
-                TempListOfExternallyRenderedImages.LineBreak := #13#10;
-                DoOnGetListOfExternallyRenderedImages(TempListOfExternallyRenderedImages);
-
-                if TempListOfExternallyRenderedImages.Count = 0 then
-                begin
-                  AddMenuItemToAnotherMenuItem(FOIEditorMenu, BmpTempMenuItem, 'No files in externally rendered In-Mem file system', MenuItem_NoImageSourceInInMemPropertyListClick, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
-                  FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(dmClickerIcons.imglstFindControlProperties, CFindSubControl_ImageSourceFileNameLocation_PropIndex);
-                end
-                else
-                begin
-                  AddMenuItemToAnotherMenuItem(FOIEditorMenu, BmpTempMenuItem, 'Browse with preview...', MenuItem_BrowseFileNameFromInMemPropertyListAddToBmpFilesClick,
-                    ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
-                  FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(dmClickerIcons.imglstMatchPrimitiveFilesMenu, 0);
-
-                  AddMenuItemToAnotherMenuItem(FOIEditorMenu, BmpTempMenuItem, '-', nil, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
-
-                  for i := 0 to TempListOfExternallyRenderedImages.Count - 1 do
-                    if Pos(CExtBmp_PrefixUpperCase, UpperCase(TempListOfExternallyRenderedImages.Strings[i])) = 1 then
-                    begin
-                      AddMenuItemToAnotherMenuItem(FOIEditorMenu, BmpTempMenuItem, TempListOfExternallyRenderedImages.Strings[i], MenuItem_SetFileNameFromInMemPropertyListAddToBmpFilesClick,
-                        ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
-                      FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(dmClickerIcons.imglstFindControlProperties, CFindSubControl_ImageSourceFileNameLocation_PropIndex);
-                    end;
-                end;
-              finally
-                TempListOfExternallyRenderedImages.Free;
-              end;
+              CreateMenuWithExtMemBitmaps(BmpTempMenuItem, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction, MenuItem_SetFileNameFromInMemPropertyListAddToBmpFilesClick);
 
               GetCursorPos(tp);
               FOIEditorMenu.PopUp(tp.X, tp.Y);
@@ -9167,6 +9207,11 @@ begin
               AddMenuItemToPopupMenu(FOIEditorMenu, 'Browse...', MenuItem_BrowseBMPFileFromPropertyListClick,
                 ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
               FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(dmClickerIcons.imglstMatchPrimitiveFilesMenu, 0);
+
+              BmpTempMenuItem := AddMenuItemToPopupMenu(FOIEditorMenu, 'Browse externally rendered file(s) to this list...', nil {MenuItem_AddExtBMPFilesToPropertyListClick},
+                ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+              FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(dmClickerIcons.imglstMatchPrimitiveFilesMenu, 0);
+              CreateMenuWithExtMemBitmaps(BmpTempMenuItem, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction, MenuItem_SetFileNameFromInMemPropertyListUpdateBmpFilesClick);
 
               AddMenuItemToPopupMenu(FOIEditorMenu, 'Remove file from list...', MenuItem_RemoveBMPFileFromPropertyListClick,
                 ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
