@@ -110,6 +110,22 @@ try:
     FindControlOptions.EvaluateTextCount = "-17"
     FindControlOptions.CropFromScreenshot = True
     FindControlOptions.ThreadCount = "30"
+    
+    FindControlOptions.UseTextRenderingInBrowser = True
+    
+    FindControlOptions.RenderingInBrowserSettings.RenderingRequestType = TRenderingRequestType.rrtAction
+    FindControlOptions.RenderingInBrowserSettings.ReceivingBitmapsTimeout = 1234
+    FindControlOptions.RenderingInBrowserSettings.ActionForSendingRequest = 'SenderAction'
+    FindControlOptions.RenderingInBrowserSettings.UsePluginForReceivingBitmaps = True
+    FindControlOptions.RenderingInBrowserSettings.PluginActionForReceivingBitmaps = 'ReceiverAction'
+    FindControlOptions.RenderingInBrowserSettings.FontSizeUnit = TFontSizeUnit.fsuPx
+    
+    FindControlOptions.GPUSettings.OpenCLPath = 'C:\LocalPath\OpenCL.dll'
+    FindControlOptions.GPUSettings.TargetPlatform = 'ExtremeGraphics'
+    FindControlOptions.GPUSettings.TargetDevice = 'ExtremeGraphics KCore'
+    FindControlOptions.GPUSettings.TargetPlatformIDType = TTargetPlatformIDType.tpitFullNameMatchCase
+    FindControlOptions.GPUSettings.TargetDeviceIDType = TTargetDeviceIDType.tditFullNameMatchCase
+    FindControlOptions.GPUSettings.ExecutionAvailability = TGPUExecutionAvailability.eaOpenCL3Only
 
 
     TempMatchBitmapTextRec = TMatchBitmapTextRec(2)
