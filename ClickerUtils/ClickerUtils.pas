@@ -310,6 +310,13 @@ type
     ExecutionAvailability: TGPUExecutionAvailability; //When set to eaOpenCL3Only and the computer does not have OpenCL3.0 or later, then it errors. Similarly for OpenCL2.1. The other two are fallback-like options.
   end;
 
+  TImageEffect = (ieBlur4x, ieBlur8x, ieBlur_Reserved, ieGrayscale);
+
+  TImageEffectSettings = record
+    UseImageEffects: Boolean; //By default, no effects are applied before calling the bmp matching algorithm.
+    ImageEffect: TImageEffect;
+  end;
+
   TClkFindControlOptions = record
     MatchCriteria: TClkFindControlMatchCriteria;
     AllowToFail: Boolean;
@@ -364,6 +371,7 @@ type
     UseTextRenderingInBrowser: Boolean; //If True, MatchBitmapText uses the Internet browser to render text, instead of internal (GDI) rendering.
     RenderingInBrowserSettings: TRenderingInBrowserSettings;
     GPUSettings: TGPUSettings;
+    //ImageEffectSettings: TImageEffectSettings;
   end;
 
   TClkSetTextOptions = record
