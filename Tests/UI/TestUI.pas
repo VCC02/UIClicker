@@ -861,7 +861,7 @@ var
   FindSubControlOptions: TClkFindSubControlOptions;
 begin
   GetDefaultPropertyValues_FindSubControl(FindSubControlOptions);
-  ListOfSerializedPropertiesToOIInteractionData(GetFindSubControlActionProperties(FindSubControlOptions), @CFindSubControlProperties, CPropIsExp[acFindSubControl], CPropCount_FindControl, Properties);
+  ListOfSerializedPropertiesToOIInteractionData(GetFindSubControlActionProperties(FindSubControlOptions), @CFindSubControlProperties, CPropIsExp[acFindSubControl], CPropCount_FindSubControl, Properties);
 
   VerifyOIDefaultValues(CClkActionStr[acFindSubControl], Properties);
 end;
@@ -1105,7 +1105,6 @@ var
   Properties: TOIInteractionDataArr;
 begin
   ListOfSerializedPropertiesToOIInteractionData(GenerateDifferentThanDefault_FindSubControlStr, @CFindSubControlProperties, CPropIsExp[acFindSubControl], CPropCount_FindSubControl, Properties);
-
   VerifyOIDifferentThanDefaultValues(CClkActionStr[acFindSubControl], Properties);
 end;
 
