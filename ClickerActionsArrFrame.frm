@@ -42,8 +42,8 @@ object frClickerActionsArr: TfrClickerActionsArr
     end
     object memLogErr: TMemo
       Left = 3
-      Height = 111
-      Top = 260
+      Height = 109
+      Top = 262
       Width = 760
       Anchors = [akLeft, akRight, akBottom]
       ReadOnly = True

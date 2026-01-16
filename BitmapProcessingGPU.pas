@@ -770,6 +770,9 @@ begin
               AFoundBitmaps[Length(AFoundBitmaps) - 1].YOffsetFromParent := SubCnvYOffset; //old YOffset
               AFoundBitmaps[Length(AFoundBitmaps) - 1].ResultedErrorCount := AResultedErrorCount;
             end;
+
+            if (ADbgBuffer[0] <> CL_SUCCESS) or ((ADbgBuffer[1] <> CL_SUCCESS) and (ADbgBuffer[1] <> -4567)) then   //CLK_SUCCESS       -4567 is the initial value of ADbgBuffer[1]
+              Result := False;
           finally
             OpenCLDll.clReleaseMemObject(KernelDoneBufferRef);
           end;

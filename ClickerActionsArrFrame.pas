@@ -412,6 +412,7 @@ type
     FOnDeleteRenderedBitmap: TOnDeleteRenderedBitmap;
     FOnRenderBmpExternally: TOnRenderBmpExternally;
     FOnLoadRawPmtv: TOnLoadRawPmtv;
+    FOnGetListOfInMemFSFiles: TOnGetListOfExternallyRenderedImages;
     FOnGetListOfExternallyRenderedImages: TOnGetListOfExternallyRenderedImages;
 
     {$IFDEF MemPlugins}
@@ -484,6 +485,7 @@ type
     procedure HandleOnDeleteRenderedBitmap(AFileName: string);
     function HandleOnRenderBmpExternally(AFilename: string): string;
     function HandleOnLoadRawPmtv(APmtvFile: TMemoryStream; AFileName: string): Boolean;
+    procedure HandleOnGetListOfInMemFSFiles(AListOfInMemFSFiles: TStringList; Sender: TObject = nil);
     procedure HandleOnGetListOfExternallyRenderedImages(AListOfExternallyRenderedImages: TStringList; Sender: TObject = nil);
 
     {$IFDEF MemPlugins}
@@ -630,6 +632,7 @@ type
     procedure DoOnDeleteRenderedBitmap(AFileName: string);
     function DoOnRenderBmpExternally(AFilename: string): string;
     function DoOnLoadRawPmtv(APmtvFile: TMemoryStream; AFileName: string): Boolean;
+    procedure DoOnGetListOfInMemFSFiles(AListFiles: TStringList);
     procedure DoOnGetListOfExternallyRenderedImages(AListOfExternallyRenderedImages: TStringList);
 
     {$IFDEF MemPlugins}
@@ -804,6 +807,7 @@ type
     property OnDeleteRenderedBitmap: TOnDeleteRenderedBitmap write FOnDeleteRenderedBitmap;
     property OnRenderBmpExternally: TOnRenderBmpExternally read FOnRenderBmpExternally write FOnRenderBmpExternally;
     property OnLoadRawPmtv: TOnLoadRawPmtv read FOnLoadRawPmtv write FOnLoadRawPmtv;
+    property OnGetListOfInMemFSFiles: TOnGetListOfExternallyRenderedImages write FOnGetListOfInMemFSFiles;
     property OnGetListOfExternallyRenderedImages: TOnGetListOfExternallyRenderedImages write FOnGetListOfExternallyRenderedImages;
 
     {$IFDEF MemPlugins}
@@ -1080,10 +1084,11 @@ begin
     TempFuncDescriptions.Add('$GetListOfFonts()$=Returns a #4#5-separated list of available (intalled) fonts names. This list may be different on another machine, where UIClicker is running in server mode.');
     TempFuncDescriptions.Add('$UpperCase(<some_string>)$=Returns the upper case version of the passed string.');
     TempFuncDescriptions.Add('$LowerCase(<some_string>)$=Returns the lower case version of the passed string.');
-    TempFuncDescriptions.Add('$DisplayGPUVars()$=Prints the variables and their values, used for enabling various features of the bitmap searching algorithm, used on GPU. This function must be called from the left column of a SetVar action.');
+    TempFuncDescriptions.Add('$DisplayGPUVars()$=Prints to log the variables and their values, used for enabling various features of the bitmap searching algorithm, used on GPU. This function must be called from the left column of a SetVar action.');
     TempFuncDescriptions.Add('$DisplayOpenCLInfo([<CustomPathToOpenCL.dll>])$=Prints various information about the available OpenCL platforms and devices to log. This function must be called from the left column of a SetVar action and uses, with priority, the value from the right column. If that value is empty, it looks for an argument, like $DisplayOpenCLInfo(<argument>])$ and prints that on instead. It returns nothing.');
     TempFuncDescriptions.Add('$OpenCLInfoToVars([<CustomPathToOpenCL.dll>])$=Sets multiple variables with various information about the available OpenCL platforms and devices. This function must be called from the left column of a SetVar action and uses, with priority, the value from the right column. If that value is empty, it looks for an argument, like $OpenCLInfoToVars(<argument>])$. It returns nothing.');
-
+    TempFuncDescriptions.Add('$DisplayInMemFSFiles()$=Prints to log the available filenames from the (server''s) main in-mem file system. This function must be called from the left column of a SetVar action.');
+    TempFuncDescriptions.Add('$DisplayExtInMemFSFiles()$=Prints to log the available filenames from the externally rendered in-mem file system. This function must be called from the left column of a SetVar action.');
 
     for i := 0 to FFuncDescriptions.Count - 1 do
     begin
@@ -1338,6 +1343,8 @@ begin
   FActionExecution.OnWaitInDebuggingMode := HandleOnWaitInDebuggingMode;
   FActionExecution.OnGetPluginInMemFS := HandleOnGetPluginInMemFS;
   FActionExecution.OnGetListeningPort := HandleOnGetListeningPort;
+  FActionExecution.OnGetListOfInMemFSFiles := HandleOnGetListOfInMemFSFiles;
+  FActionExecution.OnGetListOfExternallyRenderedImages := HandleOnGetListOfExternallyRenderedImages;
 
   FCmdConsoleHistory := TStringList.Create;
   FCmdConsoleHistory.LineBreak := #13#10;
@@ -1355,6 +1362,7 @@ begin
   FOnSaveRenderedBitmap := nil;
   FOnRenderBmpExternally := nil;
   FOnLoadRawPmtv := nil;
+  FOnGetListOfInMemFSFiles := nil;
   FOnGetListOfExternallyRenderedImages := nil;
 
   {$IFDEF MemPlugins}
@@ -1604,6 +1612,12 @@ begin
       Result := @FClkActions[i];
       Break;
     end;
+end;
+
+
+procedure TfrClickerActionsArr.HandleOnGetListOfInMemFSFiles(AListOfInMemFSFiles: TStringList; Sender: TObject = nil);
+begin
+  DoOnGetListOfInMemFSFiles(AListOfInMemFSFiles);
 end;
 
 
@@ -3118,6 +3132,15 @@ begin
     Result := FOnLoadRawPmtv(APmtvFile, AFileName)
   else
     raise Exception.Create('OnLoadRawPmtv is not assigned.');
+end;
+
+
+procedure TfrClickerActionsArr.DoOnGetListOfInMemFSFiles(AListFiles: TStringList);
+begin
+  if not Assigned(FOnGetListOfInMemFSFiles) then
+    raise Exception.Create('OnGetListOfInMemFSFiles not assigned.')
+  else
+    FOnGetListOfInMemFSFiles(AListFiles, Self);
 end;
 
 
@@ -6693,7 +6716,10 @@ begin
 
   pnlVertSplitter.Width := Width - 3;   //these corrections are required, because the width anchors seem to be ignored right after setting top and height
   pnlActionsEditor.Width := Width - 3;
-  pnlActions.Width := Width - 3;
+
+  //Required on larger OS font settings.
+  pnlActions.Left := 1;
+  pnlActions.Width := Width - 2;
 end;
 
 

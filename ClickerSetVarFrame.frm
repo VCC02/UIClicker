@@ -345,6 +345,8 @@ object frClickerSetVar: TfrClickerSetVar
         '$DisplayGPUVars()$'
         '$DisplayOpenCLInfo([<CustomPathToOpenCL.dll>])$'
         '$OpenCLInfoToVars([<CustomPathToOpenCL.dll>])$'
+        '$DisplayInMemFSFiles()$'
+        '$DisplayExtInMemFSFiles()$'
       )
       ParentShowHint = False
       ReadOnly = True

@@ -2032,6 +2032,15 @@ begin
   pnlExtra.Left := pnlHorizSplitter.Left + pnlHorizSplitter.Width;
   pnlExtra.Width := TabSheetAction.Width - pnlExtra.Left;
   pnlvstOI.Width := pnlHorizSplitter.Left;
+  pnlvstOI.Left := 0;
+
+  //Code which should not be here, but it is required on larger OS font settings.
+  //There are race-conditions or other issues, which prevent setting the width/height of various components, before/after setting anchors.
+  FOIFrame.Left := 0;
+  FOIFrame.Top := 0;
+  FOIFrame.Width := pnlvstOI.Width;
+  FOIFrame.Height := pnlvstOI.Height;
+  FOIFrame.SetVSTOISize; //A small improvement by calling SetVSTOISize here, not just in its FrameResize handler.
 end;
 
 

@@ -327,6 +327,7 @@ type
     procedure HandleOnDeleteRenderedBitmap(AFileName: string);
     function HandleOnLoadRawPmtv(APmtvFile: TMemoryStream; AFileName: string): Boolean;
     function HandleOnLoadPluginFromInMemFS(APlugin: TMemoryStream; AFileName: string): Boolean;
+    procedure HandleOnGetListOfInMemFSFiles(AListOfFiles: TStringList; Sender: TObject = nil);
     procedure HandleOnGetListOfExternallyRenderedImages(AListOfExternallyRenderedImages: TStringList; Sender: TObject = nil);
 
     {$IFDEF MemPlugins}
@@ -1155,6 +1156,7 @@ begin
   frClickerActionsArrMain.OnDeleteRenderedBitmap := HandleOnDeleteRenderedBitmap;
   frClickerActionsArrMain.OnLoadRawPmtv := HandleOnLoadRawPmtv;
   frClickerActionsArrMain.OnLoadPluginFromInMemFS := HandleOnLoadPluginFromInMemFS;
+  frClickerActionsArrMain.OnGetListOfInMemFSFiles := HandleOnGetListOfInMemFSFiles;
   frClickerActionsArrMain.OnGetListOfExternallyRenderedImages := HandleOnGetListOfExternallyRenderedImages;
 
   {$IFDEF MemPlugins}
@@ -1226,6 +1228,8 @@ begin
   frClickerActionsArrExperiment2.OnLoadRawPmtv := HandleOnLoadRawPmtv;
   frClickerActionsArrExperiment1.OnLoadPluginFromInMemFS := HandleOnLoadPluginFromInMemFS;
   frClickerActionsArrExperiment2.OnLoadPluginFromInMemFS := HandleOnLoadPluginFromInMemFS;
+  frClickerActionsArrExperiment1.OnGetListOfInMemFSFiles := HandleOnGetListOfInMemFSFiles;
+  frClickerActionsArrExperiment2.OnGetListOfInMemFSFiles := HandleOnGetListOfInMemFSFiles;
   frClickerActionsArrExperiment1.OnGetListOfExternallyRenderedImages := HandleOnGetListOfExternallyRenderedImages;
   frClickerActionsArrExperiment2.OnGetListOfExternallyRenderedImages := HandleOnGetListOfExternallyRenderedImages;
 
@@ -1857,6 +1861,7 @@ begin
         NewFrame.OnDeleteRenderedBitmap := HandleOnDeleteRenderedBitmap;
         NewFrame.OnLoadRawPmtv := HandleOnLoadRawPmtv;
         NewFrame.OnLoadPluginFromInMemFS := HandleOnLoadPluginFromInMemFS;
+        NewFrame.OnGetListOfInMemFSFiles := HandleOnGetListOfInMemFSFiles;
         NewFrame.OnGetListOfExternallyRenderedImages := HandleOnGetListOfExternallyRenderedImages;
 
         {$IFDEF MemPlugins}
@@ -2365,6 +2370,12 @@ begin
   finally
     LeaveCriticalSection(FDecDecHashArrCritSec);
   end;
+end;
+
+
+procedure TfrmClickerActions.HandleOnGetListOfInMemFSFiles(AListOfFiles: TStringList; Sender: TObject = nil);
+begin
+  FInMemFileSystem.ListMemFiles(AListOfFiles);
 end;
 
 

@@ -150,6 +150,9 @@ type
     FOnGetPluginInMemFS: TOnGetPluginInMemFS;
     FOnGetListeningPort: TOnGetListeningPort;
 
+    FOnGetListOfInMemFSFiles: TOnGetListOfExternallyRenderedImages;
+    FOnGetListOfExternallyRenderedImages: TOnGetListOfExternallyRenderedImages;
+
     function GetActionVarValue(VarName: string): string;
     procedure SetActionVarValue(VarName, VarValue: string);
     function EvaluateReplacements(s: string; Recursive: Boolean = True; AEvalTextCount: Integer = -1): string;
@@ -182,6 +185,7 @@ type
     procedure UpdateActionVarValuesFromResultedControlArr(var AResultedControlArr: TCompRecArr);
     procedure SetDbgImgPos(var AFindSubControlOptions: TClkFindSubControlOptions; AFindControlInputData: TFindControlInputData; AResultedControl: TCompRec; AFindControlOnScreen_Result: Boolean);
     procedure GPUDbgBufferToVars(var AGPUDbgBuffer: TIntArr);
+    procedure DisplayExtraErrorMessageAboutGPURun(var AGPUDbgBuffer: TIntArr; ADisplayExtraMsgAboutDbgVars: Boolean = False);
     procedure SetAllControl_Handles_FromResultedControlArr(var AResultedControlArr: TCompRecArr; AMatchSource, ADetailedMatchSource: string);
     procedure InitFindControlParams(var AActionOptions: TClkActionOptions; AOutsideTickCount: QWord; var AResultedControl: TCompRec; var AInitialTickCount, ATimeout: QWord; var AFindControlInputData: TFindControlInputData; out AStopAllActionsOnDemandAddr: Pointer);
 
@@ -222,6 +226,9 @@ type
     procedure DoOnWaitInDebuggingMode(var ADebuggingAction: TClkActionRec; AActionAllowsSteppingInto: TAllowsSteppingInto);
     function DoOnGetPluginInMemFS: TInMemFileSystem;
     function DoOnGetListeningPort: Word;
+
+    procedure DoOnGetListOfInMemFSFiles(AListOfInMemFSFiles: TStringList);
+    procedure DoOnGetListOfExternallyRenderedImages(AListOfExternallyRenderedImages: TStringList);
 
     function HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     function HandleOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
@@ -337,6 +344,9 @@ type
     property OnWaitInDebuggingMode: TOnWaitInDebuggingMode write FOnWaitInDebuggingMode;
     property OnGetPluginInMemFS: TOnGetPluginInMemFS write FOnGetPluginInMemFS;
     property OnGetListeningPort: TOnGetListeningPort write FOnGetListeningPort;
+
+    property OnGetListOfInMemFSFiles: TOnGetListOfExternallyRenderedImages write FOnGetListOfInMemFSFiles;
+    property OnGetListOfExternallyRenderedImages: TOnGetListOfExternallyRenderedImages write FOnGetListOfExternallyRenderedImages;
   end;
 
 
@@ -429,6 +439,9 @@ begin
   FOnWaitInDebuggingMode := nil;
   FOnGetPluginInMemFS := nil;
   FOnGetListeningPort := nil;
+
+  FOnGetListOfInMemFSFiles := nil;
+  FOnGetListOfExternallyRenderedImages := nil;
 end;
 
 
@@ -1129,6 +1142,24 @@ begin
     raise Exception.Create('OnGetListeningPort is not assigned.')
   else
     Result := FOnGetListeningPort();
+end;
+
+
+procedure TActionExecution.DoOnGetListOfInMemFSFiles(AListOfInMemFSFiles: TStringList);
+begin
+  if not Assigned(FOnGetListOfInMemFSFiles) then
+    raise Exception.Create('OnGetListOfInMemFSFiles not assigned.')
+  else
+    FOnGetListOfInMemFSFiles(AListOfInMemFSFiles, Self);
+end;
+
+
+procedure TActionExecution.DoOnGetListOfExternallyRenderedImages(AListOfExternallyRenderedImages: TStringList);
+begin
+  if not Assigned(FOnGetListOfExternallyRenderedImages) then
+    raise Exception.Create('OnGetListOfExternallyRenderedImages not assigned.')
+  else
+    FOnGetListOfExternallyRenderedImages(AListOfExternallyRenderedImages, Self);
 end;
 
 
@@ -2347,6 +2378,21 @@ begin
 end;
 
 
+procedure TActionExecution.DisplayExtraErrorMessageAboutGPURun(var AGPUDbgBuffer: TIntArr; ADisplayExtraMsgAboutDbgVars: Boolean = False);
+var
+  ExtraMsg: string;
+begin
+  if (Length(AGPUDbgBuffer) > 0) and (AGPUDbgBuffer[0] <> CL_SUCCESS) then
+  begin
+    ExtraMsg := '';
+    if ADisplayExtraMsgAboutDbgVars then
+      ExtraMsg := ' You can set the $SetGPUDbgBuffer$ variable to True, before executing this FindSubControl action, to see other GPU debugging vars.';
+
+    AddToLog('enqueue_kernel returned ' + IntToStr(AGPUDbgBuffer[0]) + '.' + ExtraMsg);
+  end;
+end;
+
+
 procedure TActionExecution.SetAllControl_Handles_FromResultedControlArr(var AResultedControlArr: TCompRecArr; AMatchSource, ADetailedMatchSource: string);
 var
   i: Integer;
@@ -3228,7 +3274,10 @@ begin
           UpdateActionVarValuesFromResultedControlArr(ResultedControlArr);
         end;
       end;
-    end;
+    end
+    else
+      if AFindSubControlOptions.MatchBitmapAlgorithm = mbaBruteForceOnGPU then
+        DisplayExtraErrorMessageAboutGPURun(WorkFindControlInputData.GPUDbgBuffer, EvaluateReplacements('$SetGPUDbgBuffer$') <> 'True');
 
     SetLength(ResultedControlArr, 0);
     SetLength(PartialResultedControlArr, 0);
@@ -4062,6 +4111,7 @@ var
   TreeStep: Integer;
   TreeUseMouseSwipe: Boolean;
   ConsoleArgs: string;
+  ListOfFiles: TStringList;
 begin
   Result := False;
   TempListOfSetVarNames := TStringList.Create;
@@ -4440,6 +4490,36 @@ begin
         VarName := ''; //Prevent creating a variable, named $OpenCLInfoToVars(...)$
         GetOpenCLInfo(OpenCLInfoToVars, ConsoleArgs);
       end;
+
+      if (Pos('$DisplayInMemFSFiles(', VarName) = 1) and (VarName[Length(VarName)] = '$') and (VarName[Length(VarName) - 1] = ')') then
+      begin
+        VarName := ''; //Prevent creating a variable, named $DisplayInMemFSFiles(...)$
+        ListOfFiles := TStringList.Create;
+        try
+          DoOnGetListOfInMemFSFiles(ListOfFiles);
+          AddToLog('List of files in main InMem FS:');
+          for j := 0 to ListOfFiles.Count - 1 do
+            AddToLog('  ' + ListOfFiles.Strings[j]);
+        finally
+          ListOfFiles.Free;
+        end;
+      end;
+
+      if (Pos('$DisplayExtInMemFSFiles(', VarName) = 1) and (VarName[Length(VarName)] = '$') and (VarName[Length(VarName) - 1] = ')') then
+      begin
+        VarName := ''; //Prevent creating a variable, named $DisplayExtInMemFSFiles(...)$
+        //inmem
+        ListOfFiles := TStringList.Create;
+        try
+          DoOnGetListOfExternallyRenderedImages(ListOfFiles);
+          AddToLog('List of files in Ext InMem FS:');
+          for j := 0 to ListOfFiles.Count - 1 do
+            AddToLog('  ' + Copy(ListOfFiles.Strings[j], 1, Pos(#8#7, ListOfFiles.Strings[j]) - 1));
+        finally
+          ListOfFiles.Free;
+        end;
+      end;
+
 
       if VarName > '' then
         SetActionVarValue(VarName, VarValue);  //Do not move or delete this line. It is what SetVar does, it updates variables. VarName may be set to '', if a "Left-column" function is called.

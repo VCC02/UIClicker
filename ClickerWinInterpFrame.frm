@@ -20,6 +20,14 @@ object frClickerWinInterp: TfrClickerWinInterp
     ClientHeight = 503
     ClientWidth = 893
     TabOrder = 0
+    object pnlMouseCoordsOnScreenshot: TPanel
+      Left = 332
+      Height = 25
+      Top = 9
+      Width = 72
+      Caption = '0:0'
+      TabOrder = 2
+    end
     object pnlWinInterpSettings: TPanel
       Left = 425
       Height = 493
@@ -589,14 +597,6 @@ object frClickerWinInterp: TfrClickerWinInterp
       OnMouseDown = pnlDragMouseDown
       OnMouseMove = pnlDragMouseMove
       OnMouseUp = pnlDragMouseUp
-    end
-    object pnlMouseCoordsOnScreenshot: TPanel
-      Left = 332
-      Height = 25
-      Top = 9
-      Width = 72
-      Caption = '0:0'
-      TabOrder = 2
     end
     object scrboxScannedComponents: TScrollBox
       Left = 4
