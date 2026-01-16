@@ -311,10 +311,12 @@ type
   end;
 
   TImageEffect = (ieBlur4x, ieBlur8x, ieBlur_Reserved, ieGrayscale);
+  TWhereToApply = (wtaAll, wtaSearchedBitmapsOnly);  //wtaSearchedBitmapsOnly may be used when the effect is ieGrayscale the background is already grayscale, so it shouldn't be converted again
 
   TImageEffectSettings = record
     UseImageEffects: Boolean; //By default, no effects are applied before calling the bmp matching algorithm.
     ImageEffect: TImageEffect;
+    WhereToApply: TWhereToApply;
   end;
 
   TClkFindControlOptions = record
@@ -371,7 +373,7 @@ type
     UseTextRenderingInBrowser: Boolean; //If True, MatchBitmapText uses the Internet browser to render text, instead of internal (GDI) rendering.
     RenderingInBrowserSettings: TRenderingInBrowserSettings;
     GPUSettings: TGPUSettings;
-    //ImageEffectSettings: TImageEffectSettings;
+    ImageEffectSettings: TImageEffectSettings;
   end;
 
   TClkSetTextOptions = record
@@ -649,6 +651,8 @@ const
   CTargetPlatformIDTypeStr: array[TTargetPlatformIDType] of string = ('tpitIndex', 'tpitFullNameMatchCase', 'tpitFullNameNoCase', 'tpitPartialNameMatchCase', 'tpitPartialNameNoCase');
   CTargetDeviceIDTypeStr: array[TTargetDeviceIDType] of string = ('tditIndex', 'tditFullNameMatchCase', 'tditFullNameNoCase', 'tditPartialNameMatchCase', 'tditPartialNameNoCase');
   CExecutionAvailabilityStr: array[TGPUExecutionAvailability] of string = ('eaOpenCL3Only', 'eaOpenCL1Only', 'eaOpenCL3Then1', 'eaOpenCL3Then1ThenCPU');
+  CImageEffectStr: array[TImageEffect] of string = ('ieBlur4x', 'ieBlur8x', 'ieBlur_Reserved', 'ieGrayscale');
+  CWhereToApplyStr: array[TWhereToApply] of string = ('wtaAll', 'wtaSearchedBitmapsOnly');
   CClkSetTextControlTypeStr: array[TClkSetTextControlType] of string = ('stEditBox', 'stComboBox', 'stKeystrokes');
   CWindowOperationStr: array[TWindowOperation] of string = ('woBringToFront', 'woMoveResize', 'woClose', 'woFitIntoView');
   CSearchForControlModeStr: array[TSearchForControlMode] of string = ('sfcmGenGrid', 'sfcmEnumWindows', 'sfcmFindWindow');

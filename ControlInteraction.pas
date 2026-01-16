@@ -90,6 +90,7 @@ type
     GPUReleaseFinalEventAtKernelEnd: Boolean; //when True, the release_event(FinalEvent) call, from the main kernel, is done once, at the end. Var: $ReleaseFinalEventAtKernelEnd$
     GPUIgnoreExecutionAvailability: Boolean; //when True, the ExecutionAvailability property is ignored. If a feature required (at least) a specific OpenCL version, and it is not available, an error should be displayed. Var: $IgnoreExecutionAvailability$
     GPUDbgBuffer: TIntArr; //debugging info / results
+    ImageEffectSettings: TImageEffectSettings;
   end;
 
 
@@ -140,7 +141,7 @@ implementation
 
 
 uses
-  SysUtils, Classes, Forms, BinSearchValues, Math, BitmapConv
+  SysUtils, Classes, Forms, BinSearchValues, Math, BitmapConv, ClickerImageEffects
   , Clipbrd //for debugging only
   ;
 
@@ -872,6 +873,7 @@ function MatchByBitmap(Algorithm: TMatchBitmapAlgorithm;
                        AGPUReleaseFinalEventAtKernelEnd: Boolean;
                        AGPUIgnoreExecutionAvailability: Boolean;
                        var AGPUDbgBuffer: TIntArr;
+                       AImageEffectSettings: TImageEffectSettings;
                        out AResultedErrorCount: Integer;
                        AStopAllActionsOnDemand: PBoolean): Boolean;
 var
@@ -879,6 +881,7 @@ var
   SrcRect, DestRect: TRect;
   FullScreenBmp: TBitmap;
   hwc: TCompRec;
+  TempBitmap: TBitmap;
 begin
   Result := False;
                        //SrcCompSearchAreaBitmap is the cropped area, from where BitmapToSearchFor is searched for.
@@ -930,6 +933,60 @@ begin
     DestRect.Height := SrcRect.Height;
 
     SrcCompSearchAreaBitmap.Canvas.CopyRect(DestRect, BitmapToSearchOn.Canvas, SrcRect);
+  end;
+
+  if AImageEffectSettings.UseImageEffects then
+  begin
+    TempBitmap := TBitmap.Create;
+    try
+      case AImageEffectSettings.ImageEffect of
+        ieBlur4x:
+          Blur4px(BitmapToSearchFor, TempBitmap);
+
+        ieBlur8x:
+          Blur8px(BitmapToSearchFor, TempBitmap);
+
+        ieBlur_Reserved:
+          Blur8px(BitmapToSearchFor, TempBitmap);
+
+        ieGrayscale:
+        begin
+          WipeBitmap(TempBitmap, BitmapToSearchFor.Width, BitmapToSearchFor.Height);
+          ConvertBitmapToGrayscale(BitmapToSearchFor, TempBitmap);
+        end;
+      end;
+
+      BitmapToSearchFor.Assign(TempBitmap);
+    finally
+      TempBitmap.Free;
+    end;
+
+    TempBitmap := TBitmap.Create;
+    try
+      if AImageEffectSettings.WhereToApply = wtaAll then
+      begin
+        case AImageEffectSettings.ImageEffect of
+          ieBlur4x:
+            Blur4px(SrcCompSearchAreaBitmap, TempBitmap);
+
+          ieBlur8x:
+            Blur8px(SrcCompSearchAreaBitmap, TempBitmap);
+
+          ieBlur_Reserved:
+            Blur8px(SrcCompSearchAreaBitmap, TempBitmap);
+
+          ieGrayscale:
+          begin
+            WipeBitmap(TempBitmap, SrcCompSearchAreaBitmap.Width, SrcCompSearchAreaBitmap.Height);
+            ConvertBitmapToGrayscale(SrcCompSearchAreaBitmap, TempBitmap);
+          end;
+        end;
+
+        SrcCompSearchAreaBitmap.Assign(TempBitmap);
+      end;
+    finally
+      TempBitmap.Free;
+    end;
   end;
 
   //DbgSaveScreenshotContent(SrcCompSearchAreaBitmap);   ////////////////////// keep commented for production code, also a path has to be updated, see above
@@ -1112,6 +1169,7 @@ begin
                                 InputData.GPUReleaseFinalEventAtKernelEnd,
                                 InputData.GPUIgnoreExecutionAvailability,
                                 InputData.GPUDbgBuffer,
+                                InputData.ImageEffectSettings,
                                 AResultedErrorCount,
                                 AStopAllActionsOnDemand);
     except

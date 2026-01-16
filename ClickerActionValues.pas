@@ -62,7 +62,7 @@ const
   CPropCount_Click = 26;
   CPropCount_ExecApp = 9;
   CPropCount_FindControl = 15;
-  CPropCount_FindSubControl = 34;
+  CPropCount_FindSubControl = 35;
   CPropCount_SetText = 4;
   CPropCount_CallTemplate = 4;
   CPropCount_Sleep = 1;
@@ -100,6 +100,7 @@ const
   CPropCount_FindSubControlMatchByHistogramSettings = 3;
   CPropCount_FindSubControlRenderingInBrowserSettings = 6;
   CPropCount_FindSubControlGPUSettings = 6;
+  CPropCount_FindSubControlImageEffectSettings = 3;
 
   CPropCount_CallTemplateLoop = 7;
 
@@ -178,6 +179,7 @@ const
   CFindSubControl_UseTextRenderingInBrowser_PropIndex = 31;
   CFindSubControl_RenderingInBrowserSettings_PropIndex = 32;
   CFindSubControl_GPUSettings_PropIndex = 33;
+  CFindSubControl_ImageEffectSettings_PropIndex = 34;
 
   CCallTemplate_TemplateFileName_PropIndex = 0; //property index in CallTemplate structure
   CCallTemplate_ListOfCustomVarsAndValues_PropIndex = 1;
@@ -254,6 +256,10 @@ const
   CFindSubControl_GPUSettings_TargetPlatformIDType_PropItemIndex = 3;
   CFindSubControl_GPUSettings_TargetDeviceIDType_PropItemIndex = 4;
   CFindSubControl_GPUSettings_ExecutionAvailability_PropItemIndex = 5;
+
+  CFindSubControl_ImageEffectSettings_UseImageEffects_PropItemIndex = 0;
+  CFindSubControl_ImageEffectSettings_ImageEffect_PropItemIndex = 1;
+  CFindSubControl_ImageEffectSettings_WhereToApply_PropItemIndex = 2;
 
   CSetVar_ListOfVarNamesValuesAndEvalBefore_PropItemIndex = 0;
   CSetVar_FailOnException_PropItemIndex = 1;
@@ -402,7 +408,8 @@ const
     (Name: 'ThreadCount'; EditorType: etText; DataType: CDTString),
     (Name: 'UseTextRenderingInBrowser'; EditorType: etBooleanCombo; DataType: CDTBool),
     (Name: 'RenderingInBrowserSettings'; EditorType: etNone; DataType: CDTStructure),
-    (Name: 'GPUSettings'; EditorType: etNone; DataType: CDTStructure)
+    (Name: 'GPUSettings'; EditorType: etNone; DataType: CDTStructure),
+    (Name: 'ImageEffectSettings'; EditorType: etNone; DataType: CDTStructure)
   );
 
   {$IFDEF SubProperties}
@@ -492,6 +499,12 @@ const
       (Name: 'TargetPlatformIDType'; EditorType: etEnumCombo; DataType: CDTEnum),
       (Name: 'TargetDeviceIDType'; EditorType: etEnumCombo; DataType: CDTEnum),
       (Name: 'ExecutionAvailability'; EditorType: etEnumCombo; DataType: CDTEnum)
+    );
+
+    CFindSubControl_ImageEffectSettingsProperties: array[0..CPropCount_FindSubControlImageEffectSettings - 1] of TOIPropDef = (
+      (Name: 'UseImageEffects'; EditorType: etBooleanCombo; DataType: CDTBool),
+      (Name: 'ImageEffect'; EditorType: etEnumCombo; DataType: CDTEnum),
+      (Name: 'WhereToApply'; EditorType: etEnumCombo; DataType: CDTEnum)
     );
   {$ENDIF}
 
@@ -642,6 +655,7 @@ function GetActionValueStr_EditTemplate(AAction: PClkActionRec; APropertyIndex: 
   function GetActionValueStr_FindSubControl_MatchByHistogramSettings(AAction: PClkActionRec; APropertyIndex: Integer): string;
   function GetActionValueStr_FindSubControl_RenderingInBrowserSettings(AAction: PClkActionRec; APropertyIndex: Integer): string;
   function GetActionValueStr_FindSubControl_GPUSettings(AAction: PClkActionRec; APropertyIndex: Integer): string;
+  function GetActionValueStr_FindSubControl_ImageEffectSettings(AAction: PClkActionRec; APropertyIndex: Integer): string;
 
   function GetActionValueStr_CallTemplate_CallTemplateLoop(AAction: PClkActionRec; APropertyIndex: Integer): string;
 {$ENDIF}
@@ -673,6 +687,7 @@ procedure SetActionValueStr_EditTemplate(AAction: PClkActionRec; NewValue: strin
   procedure SetActionValueStr_FindSubControl_MatchByHistogramSettings(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
   procedure SetActionValueStr_FindSubControl_RenderingInBrowserSettings(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
   procedure SetActionValueStr_FindSubControl_GPUSettings(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
+  procedure SetActionValueStr_FindSubControl_ImageEffectSettings(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
 
   procedure SetActionValueStr_CallTemplate_CallTemplateLoop(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
 {$ENDIF}
@@ -763,7 +778,8 @@ const
     nil, //ThreadCount
     nil, //UseTextRenderingInBrowser
     GetActionValueStr_FindSubControl_RenderingInBrowserSettings,  //RenderingInBrowserSettings
-    GetActionValueStr_FindSubControl_GPUSettings  //GPUSettings
+    GetActionValueStr_FindSubControl_GPUSettings,  //GPUSettings
+    GetActionValueStr_FindSubControl_ImageEffectSettings  //ImageEffectSettings
   );
 
   CCallTemplateGetActionValueStrFunctions: TGetCallTemplateValueStrFuncArr = (
@@ -875,7 +891,8 @@ const
     0, //ThreadCount
     0, //UseTextRenderingInBrowser
     0, //RenderingInBrowserSettings: TRenderingInBrowserSettings;
-    0  //GPUSettings: TGPUSettings;
+    0, //GPUSettings: TGPUSettings;
+    0  //ImageEffectSettings: TImageEffectSettings;
   );
 
 
@@ -1012,6 +1029,12 @@ const
       Ord(High(TGPUExecutionAvailability)) + 1  //ExecutionAvailability: TGPUExecutionAvailability;
     );
 
+    CFindSubControl_ImageEffectSettingsEnumCounts: array[0..CPropCount_FindSubControlImageEffectSettings - 1] of Integer = (
+      0, //UseImageEffects: Boolean;
+      Ord(High(TImageEffect)) + 1, //ImageEffect: TImageEffect;
+      Ord(High(TWhereToApply)) + 1  //WhereToApply: TWhereToApply;
+    );
+
     CCallTemplate_CallTemplateLoopEnumCounts: array[0..CPropCount_CallTemplateLoop - 1] of Integer = (
       0, //Enabled: Boolean; //When False, the CallTemplate action is executed once, as before. Else, it may be executed or not, based on loop settings.
       0, //Counter: string;
@@ -1124,7 +1147,8 @@ const
     nil, //ThreadCount
     nil, //UseTextRenderingInBrowser
     nil, //RenderingInBrowserSettings
-    nil  //GPUSettings
+    nil, //GPUSettings
+    nil  //ImageEffectSettings
   );
 
   CSetTextEnumStrings: array[0..CPropCount_SetText - 1] of PArrayOfString = (
@@ -1259,6 +1283,12 @@ const
       @CExecutionAvailabilityStr  //ExecutionAvailability: TGPUExecutionAvailability;
     );
 
+    CFindControl_ImageEffectSettingsEnumStrings: array[0..CPropCount_FindSubControlImageEffectSettings - 1] of PArrayOfString = (
+      nil, //UseImageEffects: Boolean; //
+      @CImageEffectStr, //ImageEffect: TImageEffect; //
+      @CWhereToApplyStr  //WhereToApply: TWhereToApply;
+    );
+
     CCallTemplate_CallTemplateLoopEnumStrings: array[0..CPropCount_CallTemplateLoop - 1] of PArrayOfString = (
       nil, //Enabled: Boolean; //When False, the CallTemplate action is executed once, as before. Else, it may be executed or not, based on loop settings.
       nil, //Counter: string;
@@ -1347,7 +1377,7 @@ const
     1, //MatchCriteria: TClkFindSubControlMatchCriteria;
     0, //AllowToFail: Boolean;
     0, //MatchText: string;
-    2, //MatchBitmapText: TClkFindControlMatchBitmapTextArr;   //althoug unusable without items, the OI allows removing all items
+    2, //MatchBitmapText: TClkFindControlMatchBitmapTextArr;   //although unusable without items, the OI allows removing all items
     2, //MatchBitmapFiles: string; //ListOfStrings
     0, //TMatchBitmapAlgorithm
     1, //MatchBitmapAlgorithmSettings: TMatchBitmapAlgorithmSettings;
@@ -1377,7 +1407,8 @@ const
     0, //ThreadCount
     0, //UseTextRenderingInBrowser
     1, //RenderingInBrowserSettings: TRenderingInBrowserSettings;
-    1  //GPUSettings: TGPUSettings;
+    1, //GPUSettings: TGPUSettings;
+    1  //ImageEffectSettings: TImageEffectSettings;
   );
 
   CSetTextIsExp: array[0..CPropCount_SetText - 1] of Integer = (
@@ -1512,6 +1543,7 @@ function GetPropertyHint_FindControl_ThreadCount: string;
 function GetPropertyHint_FindControl_UseTextRenderingInBrowser: string;
 function GetPropertyHint_FindControl_RenderingInBrowserSettings: string;
 function GetPropertyHint_FindControl_GPUSettings: string;
+function GetPropertyHint_FindControl_ImageEffectSettings: string;
 
 {$IFDEF SubProperties}
   function GetPropertyHint_FindControl_MatchCriteria_WillMatchText: string;
@@ -1549,6 +1581,12 @@ function GetPropertyHint_FindControl_GPUSettings: string;
   function GetPropertyHint_FindSubControl_GPUSettings_TargetPlatformIDType: string;
   function GetPropertyHint_FindSubControl_GPUSettings_TargetDeviceIDType: string;
   function GetPropertyHint_FindSubControl_GPUSettings_ExecutionAvailability: string;
+{$ENDIF}
+
+{$IFDEF SubProperties}
+  function GetPropertyHint_FindSubControl_ImageEffectSettings_UseImageEffects: string;
+  function GetPropertyHint_FindSubControl_ImageEffectSettings_ImageEffect: string;
+  function GetPropertyHint_FindSubControl_ImageEffectSettings_WhereToApply: string;
 {$ENDIF}
 
 
@@ -1698,7 +1736,8 @@ const
     @GetPropertyHint_FindControl_ThreadCount, //ThreadCount: string;
     @GetPropertyHint_FindControl_UseTextRenderingInBrowser, //UseTextRenderingInBrowser: string;
     @GetPropertyHint_FindControl_RenderingInBrowserSettings, //RenderingInBrowserSettings: TRenderingInBrowserSettings;
-    @GetPropertyHint_FindControl_GPUSettings  //GPUSettings: TGPUSettings;
+    @GetPropertyHint_FindControl_GPUSettings,  //GPUSettings: TGPUSettings;
+    @GetPropertyHint_FindControl_ImageEffectSettings  //ImageEffectSettings: TImageEffectSettings;
   );
 
 
@@ -1832,6 +1871,12 @@ const
     @GetPropertyHint_FindSubControl_GPUSettings_TargetPlatformIDType,
     @GetPropertyHint_FindSubControl_GPUSettings_TargetDeviceIDType,
     @GetPropertyHint_FindSubControl_GPUSettings_ExecutionAvailability
+  );
+
+  CGetPropertyHint_FindSubControlImageEffectSettings_Items: array[0..CPropCount_FindSubControlImageEffectSettings - 1] of TPropHintFunc = (
+    @GetPropertyHint_FindSubControl_ImageEffectSettings_UseImageEffects,
+    @GetPropertyHint_FindSubControl_ImageEffectSettings_ImageEffect,
+    @GetPropertyHint_FindSubControl_ImageEffectSettings_WhereToApply
   );
 
   CGetPropertyHint_CallTemplateLoop_Items: array[0..CPropCount_CallTemplateLoop - 1] of TPropHintFunc = (
@@ -2013,6 +2058,7 @@ begin
     31: Result := BoolToStr(AAction^.FindSubControlOptions.UseTextRenderingInBrowser, True);
     32: Result := '';  //RenderingInBrowserSettings
     33: Result := '';  //GPUSettings
+    34: Result := '';  //ImageEffectSettings
     else
       Result := 'unknown';
   end;
@@ -2239,6 +2285,18 @@ end;
       3: Result := CTargetPlatformIDTypeStr[AAction^.FindSubControlOptions.GPUSettings.TargetPlatformIDType];
       4: Result := CTargetDeviceIDTypeStr[AAction^.FindSubControlOptions.GPUSettings.TargetDeviceIDType];
       5: Result := CExecutionAvailabilityStr[AAction^.FindSubControlOptions.GPUSettings.ExecutionAvailability];
+      else
+        Result := 'unknown';
+    end;
+  end;
+
+
+  function GetActionValueStr_FindSubControl_ImageEffectSettings(AAction: PClkActionRec; APropertyIndex: Integer): string;
+  begin
+    case APropertyIndex of
+      0: Result := BoolToStr(AAction^.FindSubControlOptions.ImageEffectSettings.UseImageEffects, True);
+      1: Result := CImageEffectStr[AAction^.FindSubControlOptions.ImageEffectSettings.ImageEffect];
+      2: Result := CWhereToApplyStr[AAction^.FindSubControlOptions.ImageEffectSettings.WhereToApply];
       else
         Result := 'unknown';
     end;
@@ -2642,6 +2700,34 @@ begin
 end;
 
 
+function ImageEffect_AsStringToValue(AImageEffectAsString: string): TImageEffect;
+var
+  i: TImageEffect;
+begin
+  Result := ieBlur4x;
+  for i := Low(TImageEffect) to High(TImageEffect) do
+    if CImageEffectStr[i] = AImageEffectAsString then
+    begin
+      Result := i;
+      Exit;
+    end;
+end;
+
+
+function WhereToApply_AsStringToValue(AWhereToApplyAsString: string): TWhereToApply;
+var
+  i: TWhereToApply;
+begin
+  Result := wtaAll;
+  for i := Low(TWhereToApply) to High(TWhereToApply) do
+    if CWhereToApplyStr[i] = AWhereToApplyAsString then
+    begin
+      Result := i;
+      Exit;
+    end;
+end;
+
+
 function ClkSetTextControlType_AsStringToValue(AClkSetTextControlTypeAsString: string): TClkSetTextControlType;
 var
   i: TClkSetTextControlType;
@@ -2867,6 +2953,8 @@ begin
     30: AAction^.FindSubControlOptions.ThreadCount := NewValue;
     31: AAction^.FindSubControlOptions.UseTextRenderingInBrowser := StrToBool(NewValue);
     32: ;  //RenderingInBrowserSettings
+    33: ;  //GPUSettings
+    34: ;  //ImageEffectSettings
     else
       ;
   end;
@@ -3013,6 +3101,18 @@ end;
       3: AAction^.FindSubControlOptions.GPUSettings.TargetPlatformIDType := TargetPlatformIDType_AsStringToValue(NewValue);
       4: AAction^.FindSubControlOptions.GPUSettings.TargetDeviceIDType := TargetDeviceIDType_AsStringToValue(NewValue);
       5: AAction^.FindSubControlOptions.GPUSettings.ExecutionAvailability := ExecutionAvailability_AsStringToValue(NewValue);
+      else
+        ;
+    end;
+  end;
+
+
+  procedure SetActionValueStr_FindSubControl_ImageEffectSettings(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
+  begin
+    case APropertyIndex of
+      0: AAction^.FindSubControlOptions.ImageEffectSettings.UseImageEffects := StrToBool(NewValue);
+      1: AAction^.FindSubControlOptions.ImageEffectSettings.ImageEffect := ImageEffect_AsStringToValue(NewValue);
+      2: AAction^.FindSubControlOptions.ImageEffectSettings.WhereToApply := WhereToApply_AsStringToValue(NewValue);
       else
         ;
     end;
@@ -3523,6 +3623,12 @@ begin
 end;
 
 
+function GetPropertyHint_FindControl_ImageEffectSettings: string;
+begin
+  Result := 'Settings used to apply an effect on the searched bitmap and (optionally) on the background, in order to bring their content closer.';
+end;
+
+
 function GetPropertyHint_FindControl_EvaluateTextCount: string;
 begin
   Result := 'When -1, the searched text is not evaluated either until no more variables are extracted from it, or a hardcoded number of iterations (e.g. 1000) is reached.' + #13#10 +
@@ -3771,6 +3877,30 @@ end;
               'When set to eaOpenCL3Then1ThenCPU, the behavior is similar to that of eaOpenCL3Then1, except that instead of stopping the action, the matching algorithm is run on CPU (as set by mbaBruteForce).';
   end;
 {$ENDIF}
+
+{$IFDEF SubProperties}
+  function GetPropertyHint_FindSubControl_ImageEffectSettings_UseImageEffects: string;
+  begin
+    Result := 'If True, it enables the image effect on the searched bitmap, and optionally on the background bitmap, before being compared.' + #13#10 +
+              'The searched bitmaps can be the result of rendering the text from the MatchBitmapText property,' + #13#10 +
+              'the bitmaps files from the MatchBitmapFiles property, or the rendered primitives files from the MatchPrimitiveFiles property.' + #13#10 +
+              'The background bitmap can be a screenshot or a loaded bitmap, depending on the ImageSourceProperty.';
+  end;
+
+  function GetPropertyHint_FindSubControl_ImageEffectSettings_ImageEffect: string;
+  begin
+    Result := 'The blur effects are useful when the antialiasing algorithms do not match between the searched bitmap(s) and the background.' + #13#10 +
+              'The grayscale effect is useful when the background is already a grascale image and the searched bitmaps have to be converted.';
+  end;
+
+  function GetPropertyHint_FindSubControl_ImageEffectSettings_WhereToApply: string;
+  begin
+    Result := 'If set to wtaAll, the selected effect is applied, both to the searched bitmaps and the background bitmap.' + #13#10 +
+              'If set to wtaSearchedBitmapsOnly, the selected effect is applied, to the searched bitmaps only, because the background doesn''t need it.';
+  end;
+{$ENDIF}
+
+
 
 function GetPropertyHint_SetText: string;
 begin

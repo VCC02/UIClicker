@@ -53,6 +53,7 @@ type
     imglstFontColorProperties: TImageList;
     imglstFSCMatchCriteriaProperties: TImageList;
     imglstGPUSettingsProperties: TImageList;
+    imglstImageEffectSettingsProperties: TImageList;
     imglstInitialRectangleProperties: TImageList;
     imglstLoadSetVarFromFileProperties: TImageList;
     imglstMatchBitmapAlgorithmSettingsProperties: TImageList;

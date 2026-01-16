@@ -6017,6 +6017,9 @@ begin
         CFindSubControl_GPUSettings_PropIndex:
           Result := CPropCount_FindSubControlGPUSettings;
 
+        CFindSubControl_ImageEffectSettings_PropIndex:
+          Result := CPropCount_FindSubControlImageEffectSettings;
+
         else
           Result := 0;
       end;
@@ -6145,6 +6148,9 @@ begin
 
         CFindSubControl_GPUSettings_PropIndex:
           Result := CFindSubControl_GPUSettingsProperties[AItemIndex].Name;
+
+        CFindSubControl_ImageEffectSettings_PropIndex:
+          Result := CFindSubControl_ImageEffectSettingsProperties[AItemIndex].Name;
 
         else
           Result := '';
@@ -6287,6 +6293,9 @@ begin
         CFindSubControl_GPUSettings_PropIndex:
           APropDef := CFindSubControl_GPUSettingsProperties[AItemIndex];
 
+        CFindSubControl_ImageEffectSettings_PropIndex:
+          APropDef := CFindSubControl_ImageEffectSettingsProperties[AItemIndex];
+
         else
           ;
       end;
@@ -6411,6 +6420,9 @@ begin
 
             CFindSubControl_GPUSettings_PropIndex:
               Result := CFindSubControl_GPUSettingsProperties[AItemIndex].DataType;
+
+            CFindSubControl_ImageEffectSettings_PropIndex:
+              Result := CFindSubControl_ImageEffectSettingsProperties[AItemIndex].DataType;
           end;
         end;
 
@@ -6563,6 +6575,9 @@ begin
 
               CFindSubControl_GPUSettings_PropIndex:
                 ImageList := dmClickerIcons.imglstGPUSettingsProperties;
+
+              CFindSubControl_ImageEffectSettings_PropIndex:
+                ImageList := dmClickerIcons.imglstImageEffectSettingsProperties;
             end;
           end;
 
@@ -7107,6 +7122,13 @@ begin
           Exit;
         end;  //CFindSubControl_GPUSettings_PropIndex
 
+        CFindSubControl_ImageEffectSettings_PropIndex:
+        begin
+          OldText := GetActionValueStr_FindSubControl_ImageEffectSettings(AEditingAction, AItemIndex);
+          SetActionValueStr_FindSubControl_ImageEffectSettings(AEditingAction, ANewText, AItemIndex);
+          TriggerOnControlsModified(ANewText <> OldText);
+        end
+
         else
           ;
       end;
@@ -7512,6 +7534,12 @@ begin
       Result := CFindSubControl_GPUSettingsEnumCounts[AItemIndex];
       Exit;
     end;
+
+    if APropertyIndex = CFindSubControl_ImageEffectSettings_PropIndex then
+    begin
+      Result := CFindSubControl_ImageEffectSettingsEnumCounts[AItemIndex];
+      Exit;
+    end;
   end;
 
   if ALiveEditingActionType = acCallTemplate then
@@ -7612,6 +7640,12 @@ begin
     if APropertyIndex = CFindSubControl_GPUSettings_PropIndex then
     begin
       AEnumItemName := CFindControl_GPUSettingsEnumStrings[AItemIndex]^[AEnumItemIndex];
+      Exit;
+    end;
+
+    if APropertyIndex = CFindSubControl_ImageEffectSettings_PropIndex then
+    begin
+      AEnumItemName := CFindControl_ImageEffectSettingsEnumStrings[AItemIndex]^[AEnumItemIndex];
       Exit;
     end;
   end;
@@ -7842,6 +7876,14 @@ begin
 
       if (APropertyIndex in [CFindSubControl_GPUSettings_PropIndex]) and
          (AEditingAction^.FindSubControlOptions.MatchBitmapAlgorithm <> mbaBruteForceOnGPU) then
+      begin
+        TargetCanvas.Font.Color := clGray;
+        Exit;
+      end;
+
+      if (APropertyIndex in [CFindSubControl_ImageEffectSettings_PropIndex]) and
+         not AEditingAction^.FindSubControlOptions.ImageEffectSettings.UseImageEffects then
+        if APropertyItemIndex in [CFindSubControl_ImageEffectSettings_ImageEffect_PropItemIndex, CFindSubControl_ImageEffectSettings_WhereToApply_PropItemIndex] then
       begin
         TargetCanvas.Font.Color := clGray;
         Exit;
@@ -8749,6 +8791,11 @@ begin
                 AHint := AHint + '$AppDir$ replacement is available';
               end;
           end;
+
+          CFindSubControl_ImageEffectSettings_PropIndex:
+          begin
+            AHint := CGetPropertyHint_FindSubControlImageEffectSettings_Items[AItemIndex];
+          end;
         end; //case
       end; //FindSubControl
 
@@ -9397,6 +9444,9 @@ begin
 
             FOIEditorMenu.PopUp;
           end;
+
+        CFindSubControl_ImageEffectSettings_PropIndex:
+          ;
       end; //case APropertyIndex
     end; //FindControl, FindSubControl
 
@@ -9986,6 +10036,9 @@ begin
         //  SetActionValueStr_FindSubControl_GPUSettings(AEditingAction, ANewValue, AItemIndex);
         //  TriggerOnControlsModified(ANewValue <> OldValue);
         //end;
+
+      CFindSubControl_ImageEffectSettings_PropIndex:
+        ;
     end; //case
   end;
 end;
@@ -10252,6 +10305,8 @@ begin
         CFindSubControl_GPUSettings_PropIndex:
           Result := CFindSubControl_GPUSettingsProperties[AItemIndex].Name;
 
+        CFindSubControl_ImageEffectSettings_PropIndex:
+          Result := CFindSubControl_ImageEffectSettingsProperties[AItemIndex].Name;
         else
           Result := '';
       end;

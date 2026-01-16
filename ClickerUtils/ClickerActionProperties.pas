@@ -294,7 +294,11 @@ begin
             'GPUSettings.TargetDevice' + '=' + AFindSubControlOptions.GPUSettings.TargetDevice + '&' +
             'GPUSettings.TargetPlatformIDType' + '=' + IntToStr(Ord(AFindSubControlOptions.GPUSettings.TargetPlatformIDType)) + '&' +
             'GPUSettings.TargetDeviceIDType' + '=' + IntToStr(Ord(AFindSubControlOptions.GPUSettings.TargetDeviceIDType)) + '&' +
-            'GPUSettings.ExecutionAvailability' + '=' + IntToStr(Ord(AFindSubControlOptions.GPUSettings.ExecutionAvailability))
+            'GPUSettings.ExecutionAvailability' + '=' + IntToStr(Ord(AFindSubControlOptions.GPUSettings.ExecutionAvailability)) + '&' +
+
+            'ImageEffectSettings.TargetPlatformIDType' + '=' + IntToStr(Ord(AFindSubControlOptions.ImageEffectSettings.UseImageEffects)) + '&' +
+            'ImageEffectSettings.TargetDeviceIDType' + '=' + IntToStr(Ord(AFindSubControlOptions.ImageEffectSettings.ImageEffect)) + '&' +
+            'ImageEffectSettings.ExecutionAvailability' + '=' + IntToStr(Ord(AFindSubControlOptions.ImageEffectSettings.WhereToApply))
             ;
 end;
 
@@ -627,7 +631,11 @@ begin
             'GPUSettings.TargetDevice' + '=' + CDTString + '&' +
             'GPUSettings.TargetPlatformIDType' + '=' + CDTEnum + '&' +
             'GPUSettings.TargetDeviceIDType' + '=' + CDTEnum + '&' +
-            'GPUSettings.ExecutionAvailability' + '=' + CDTEnum
+            'GPUSettings.ExecutionAvailability' + '=' + CDTEnum + '&' +
+
+            'ImageEffectSettings.UseImageEffects' + '=' + CDTBool + '&' +
+            'ImageEffectSettings.ImageEffect' + '=' + CDTEnum + '&' +
+            'ImageEffectSettings.WhereToApply' + '=' + CDTEnum
             ;
 end;
 
@@ -1014,6 +1022,8 @@ var
   Temp_TargetPlatformIDType: Integer;
   Temp_TargetDeviceIDType: Integer;
   Temp_ExecutionAvailability: Integer;
+  Temp_ImageEffect: Integer;
+  Temp_WhereToApply: Integer;
   i: Integer;
   Prefix: string;
 begin
@@ -1206,6 +1216,21 @@ begin
     Exit;
   end;
 
+  Temp_ImageEffect := StrToIntDef(AListOfFindSubControlOptionsParams.Values['ImageEffectSettings.ImageEffect'], 0);
+  if (Temp_ImageEffect < 0) or (Temp_ImageEffect > Ord(High(TImageEffect))) then
+  begin
+    Result := 'ImageEffect is out of range.';
+    Exit;
+  end;
+
+  Temp_WhereToApply := StrToIntDef(AListOfFindSubControlOptionsParams.Values['ImageEffectSettings.WhereToApply'], 0);
+  if (Temp_WhereToApply < 0) or (Temp_WhereToApply > Ord(High(TWhereToApply))) then
+  begin
+    Result := 'WhereToApply is out of range.';
+    Exit;
+  end;
+
+
   AFindSubControlOptions.MatchBitmapFiles := FastReplace_45ToReturn(AListOfFindSubControlOptionsParams.Values['MatchBitmapFiles']); //ListOfStrings
   AFindSubControlOptions.MatchBitmapAlgorithm := TMatchBitmapAlgorithm(Temp_MatchBitmapAlgorithm);
 
@@ -1290,6 +1315,10 @@ begin
   AFindSubControlOptions.GPUSettings.TargetPlatformIDType := TTargetPlatformIDType(Temp_TargetPlatformIDType);
   AFindSubControlOptions.GPUSettings.TargetDeviceIDType := TTargetDeviceIDType(Temp_TargetDeviceIDType);
   AFindSubControlOptions.GPUSettings.ExecutionAvailability := TGPUExecutionAvailability(Temp_ExecutionAvailability);
+
+  AFindSubControlOptions.ImageEffectSettings.UseImageEffects := AListOfFindSubControlOptionsParams.Values['UseImageEffects'] = '1';
+  AFindSubControlOptions.ImageEffectSettings.ImageEffect := TImageEffect(Temp_ImageEffect);
+  AFindSubControlOptions.ImageEffectSettings.WhereToApply := TWhereToApply(Temp_WhereToApply);
 
   AActionOptions.ActionName := AListOfFindSubControlOptionsParams.Values[CPropertyName_ActionName];
   AActionOptions.ActionTimeout := Temp_ActionTimeout;
@@ -1677,6 +1706,9 @@ begin
   AFindSubControlOptions.GPUSettings.TargetPlatformIDType := tpitIndex;
   AFindSubControlOptions.GPUSettings.TargetDeviceIDType := tditIndex;
   AFindSubControlOptions.GPUSettings.ExecutionAvailability := eaOpenCL3Only;
+  AFindSubControlOptions.ImageEffectSettings.UseImageEffects := False;
+  AFindSubControlOptions.ImageEffectSettings.ImageEffect := ieBlur4x;
+  AFindSubControlOptions.ImageEffectSettings.WhereToApply := wtaAll;
 
   SetLength(AFindSubControlOptions.MatchBitmapText, AFindSubControlProfilesCount);
 

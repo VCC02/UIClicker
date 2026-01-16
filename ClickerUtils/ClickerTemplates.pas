@@ -263,6 +263,10 @@ begin
     ACustomActions[i].FindSubControlOptions.GPUSettings.TargetDeviceIDType := tditIndex;
     ACustomActions[i].FindSubControlOptions.GPUSettings.ExecutionAvailability := eaOpenCL3Only;
 
+    ACustomActions[i].FindSubControlOptions.ImageEffectSettings.UseImageEffects := False;
+    ACustomActions[i].FindSubControlOptions.ImageEffectSettings.ImageEffect := ieBlur4x;
+    ACustomActions[i].FindSubControlOptions.ImageEffectSettings.WhereToApply := wtaAll;
+
     ACustomActions[i].FindSubControlOptions.MatchCriteria.WillMatchBitmapText := Ini.ReadBool(SectionIndex, 'MatchCriteria.WillMatchBitmapText_' + IterationStr, False);
     ACustomActions[i].FindSubControlOptions.MatchCriteria.WillMatchBitmapFiles := Ini.ReadBool(SectionIndex, 'MatchCriteria.WillMatchBitmapFiles_' + IterationStr, False);
     ACustomActions[i].FindSubControlOptions.MatchCriteria.WillMatchPrimitiveFiles := Ini.ReadBool(SectionIndex, 'MatchCriteria.WillMatchPrimitiveFiles_' + IterationStr, False);
@@ -607,6 +611,10 @@ begin
   AFindSubControlOptions.GPUSettings.TargetPlatformIDType := TTargetPlatformIDType(Ord(Ini.ReadInteger(SectionIndex, 'GPUSettings.TargetPlatformIDType', 0)));
   AFindSubControlOptions.GPUSettings.TargetDeviceIDType := TTargetDeviceIDType(Ord(Ini.ReadInteger(SectionIndex, 'GPUSettings.TargetDeviceIDType', 0)));
   AFindSubControlOptions.GPUSettings.ExecutionAvailability := TGPUExecutionAvailability(Ord(Ini.ReadInteger(SectionIndex, 'GPUSettings.ExecutionAvailability', 0)));
+
+  AFindSubControlOptions.ImageEffectSettings.UseImageEffects := Ini.ReadBool(SectionIndex, 'ImageEffectSettings.UseImageEffects', False);
+  AFindSubControlOptions.ImageEffectSettings.ImageEffect := TImageEffect(Ord(Ini.ReadInteger(SectionIndex, 'ImageEffectSettings.ImageEffect', 0)));
+  AFindSubControlOptions.ImageEffectSettings.WhereToApply := TWhereToApply(Ord(Ini.ReadInteger(SectionIndex, 'ImageEffectSettings.WhereToApply', 0)));
 end;
 
 
@@ -1127,6 +1135,10 @@ begin
   AStringList.Add('GPUSettings.TargetPlatformIDType=' + IntToStr(Ord(AActionFindSubControlOptions.GPUSettings.TargetPlatformIDType)));
   AStringList.Add('GPUSettings.TargetDeviceIDType=' + IntToStr(Ord(AActionFindSubControlOptions.GPUSettings.TargetDeviceIDType)));
   AStringList.Add('GPUSettings.ExecutionAvailability=' + IntToStr(Ord(AActionFindSubControlOptions.GPUSettings.ExecutionAvailability)));
+
+  AStringList.Add('ImageEffectSettings.UseImageEffects=' + IntToStr(Ord(AActionFindSubControlOptions.ImageEffectSettings.UseImageEffects)));
+  AStringList.Add('ImageEffectSettings.ImageEffect=' + IntToStr(Ord(AActionFindSubControlOptions.ImageEffectSettings.ImageEffect)));
+  AStringList.Add('ImageEffectSettings.WhereToApply=' + IntToStr(Ord(AActionFindSubControlOptions.ImageEffectSettings.WhereToApply)));
 end;
 
 
@@ -1349,6 +1361,7 @@ begin
   ADest.UseTextRenderingInBrowser := ASrc.UseTextRenderingInBrowser;
   ADest.RenderingInBrowserSettings := ASrc.RenderingInBrowserSettings;
   ADest.GPUSettings := ASrc.GPUSettings;
+  ADest.ImageEffectSettings := ASrc.ImageEffectSettings;
 end;
 
 

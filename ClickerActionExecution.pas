@@ -2234,6 +2234,8 @@ begin
 
   if AFindSubControlOptions.MatchBitmapAlgorithm = mbaBruteForceOnGPU then
     Result := FillInFindSubControlInputDataForGPU(AFindSubControlOptions, FindControlInputData);
+
+  FindControlInputData.ImageEffectSettings := AFindSubControlOptions.ImageEffectSettings;
 end;
 
 
