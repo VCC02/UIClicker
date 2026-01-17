@@ -168,6 +168,13 @@ type
   end;
 
 
+  TImageEffectSettingsAPI = record
+    UseImageEffects: Boolean; //
+    ImageEffect: Byte; //TImageEffect;
+    WhereToApply: Byte; //TWhereToApply;
+  end;
+
+
   TClkFindControlMatchBitmapTextAPI = record
     ForegroundColor: PWideChar;
     BackgroundColor: PWideChar;
@@ -303,6 +310,7 @@ type
     UseTextRenderingInBrowser: Boolean;
     RenderingInBrowserSettings: TRenderingInBrowserSettingsAPI;
     GPUSettings: TGPUSettingsAPI;
+    ImageEffectSettings: TImageEffectSettingsAPI;
   end;
 
   PClkFindSubControlOptionsAPI = ^TClkFindSubControlOptionsAPI;
@@ -744,6 +752,10 @@ begin
   ADestClkAction.FindSubControlOptions.GPUSettings.TargetDeviceIDType := TTargetDeviceIDType(AFindSubControlOptions^.GPUSettings.TargetDeviceIDType);
   ADestClkAction.FindSubControlOptions.GPUSettings.ExecutionAvailability := TGPUExecutionAvailability(AFindSubControlOptions^.GPUSettings.ExecutionAvailability);
 
+  ADestClkAction.FindSubControlOptions.ImageEffectSettings.UseImageEffects := AFindSubControlOptions^.ImageEffectSettings.UseImageEffects;
+  ADestClkAction.FindSubControlOptions.ImageEffectSettings.ImageEffect := TImageEffect(AFindSubControlOptions^.ImageEffectSettings.ImageEffect);
+  ADestClkAction.FindSubControlOptions.ImageEffectSettings.WhereToApply := TWhereToApply(AFindSubControlOptions^.ImageEffectSettings.WhereToApply);
+
   if AFindSubControlOptions^.MatchBitmapText = nil then  //assume the caller sets this field to nil if not used
     Exit;
   //However, if the field is not nil, then it is either valid or an uninitialized pointer.
@@ -1105,6 +1117,10 @@ begin
   ADestFindSubControlOptions.GPUSettings.TargetPlatformIDType := Ord(AFindSubControlOptions.GPUSettings.TargetPlatformIDType);
   ADestFindSubControlOptions.GPUSettings.TargetDeviceIDType := Ord(AFindSubControlOptions.GPUSettings.TargetDeviceIDType);
   ADestFindSubControlOptions.GPUSettings.ExecutionAvailability := Ord(AFindSubControlOptions.GPUSettings.ExecutionAvailability);
+
+  ADestFindSubControlOptions.ImageEffectSettings.UseImageEffects := AFindSubControlOptions.ImageEffectSettings.UseImageEffects;
+  ADestFindSubControlOptions.ImageEffectSettings.ImageEffect := Ord(AFindSubControlOptions.ImageEffectSettings.ImageEffect);
+  ADestFindSubControlOptions.ImageEffectSettings.WhereToApply := Ord(AFindSubControlOptions.ImageEffectSettings.WhereToApply);
 
   if Length(AFindSubControlOptions.MatchBitmapText) = 0 then
   begin
