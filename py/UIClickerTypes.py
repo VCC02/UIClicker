@@ -144,6 +144,16 @@ class TGPUExecutionAvailability: #(Enum):
     eaOpenCL3Then1 = 2
     eaOpenCL3Then1ThenCPU = 3
 
+class TImageEffect: #(Enum):
+    ieBlur4x = 0
+    ieBlur8x = 1
+    ieBlur_Reserved = 2
+    ieGrayscale = 3
+
+class TWhereToApply: #(Enum):
+    wtaAll = 0
+    wtaSearchedBitmapsOnly = 1
+
 
 class TClkSetTextControlType: #(Enum):
     stEditBox = 0
@@ -330,6 +340,11 @@ class TGPUSettings(Structure):
                ("TargetDeviceIDType", BYTE), #TTargetDeviceIDType
                ("ExecutionAvailability", BYTE)] #TGPUExecutionAvailability
 
+class TImageEffectSettings(Structure):
+    _fields_ = [("UseImageEffects", BOOLEAN),
+               ("ImageEffect", BYTE), #TImageEffect
+               ("WhereToApply", BYTE)] #TWhereToApply
+
 
 ###########/////////////////
 
@@ -503,7 +518,8 @@ class TFindSubControlOptions(Structure):
                ("ThreadCount", LPCWSTR),
                ("UseTextRenderingInBrowser", BOOLEAN),
                ("RenderingInBrowserSettings", TRenderingInBrowserSettings),
-               ("GPUSettings", TGPUSettings)
+               ("GPUSettings", TGPUSettings),
+               ("ImageEffectSettings", TImageEffectSettings)
                ]
 
 PFindSubControlOptions = ctypes.POINTER(TFindSubControlOptions)
@@ -585,6 +601,10 @@ def GetDefaultFindSubControlOptions():
     FindSubControlOptions.GPUSettings.TargetPlatform = TTargetPlatformIDType.tpitIndex
     FindSubControlOptions.GPUSettings.TargetDeviceIDType = TTargetDeviceIDType.tditIndex
     FindSubControlOptions.GPUSettings.ExecutionAvailability = TGPUExecutionAvailability.eaOpenCL3Only
+    
+    FindSubControlOptions.ImageEffectSettings.UseImageEffects = False
+    FindSubControlOptions.ImageEffectSettings.ImageEffect = TImageEffect.ieBlur4x
+    FindSubControlOptions.ImageEffectSettings.WhereToApply = TWhereToApply.wtaAll
     return FindSubControlOptions
 
 

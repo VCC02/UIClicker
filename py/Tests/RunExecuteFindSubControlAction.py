@@ -126,6 +126,10 @@ try:
     FindControlOptions.GPUSettings.TargetPlatformIDType = TTargetPlatformIDType.tpitFullNameMatchCase
     FindControlOptions.GPUSettings.TargetDeviceIDType = TTargetDeviceIDType.tditFullNameMatchCase
     FindControlOptions.GPUSettings.ExecutionAvailability = TGPUExecutionAvailability.eaOpenCL3Only
+    
+    FindControlOptions.ImageEffectSettings.UseImageEffects = True
+    FindControlOptions.ImageEffectSettings.ImageEffect = TImageEffect.ieBlur8x
+    FindControlOptions.ImageEffectSettings.WhereToApply = TWhereToApply.wtaSearchedBitmapsOnly
 
 
     TempMatchBitmapTextRec = TMatchBitmapTextRec(2)
