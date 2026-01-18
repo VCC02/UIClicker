@@ -296,9 +296,9 @@ begin
             'GPUSettings.TargetDeviceIDType' + '=' + IntToStr(Ord(AFindSubControlOptions.GPUSettings.TargetDeviceIDType)) + '&' +
             'GPUSettings.ExecutionAvailability' + '=' + IntToStr(Ord(AFindSubControlOptions.GPUSettings.ExecutionAvailability)) + '&' +
 
-            'ImageEffectSettings.TargetPlatformIDType' + '=' + IntToStr(Ord(AFindSubControlOptions.ImageEffectSettings.UseImageEffects)) + '&' +
-            'ImageEffectSettings.TargetDeviceIDType' + '=' + IntToStr(Ord(AFindSubControlOptions.ImageEffectSettings.ImageEffect)) + '&' +
-            'ImageEffectSettings.ExecutionAvailability' + '=' + IntToStr(Ord(AFindSubControlOptions.ImageEffectSettings.WhereToApply))
+            'ImageEffectSettings.UseImageEffects' + '=' + IntToStr(Ord(AFindSubControlOptions.ImageEffectSettings.UseImageEffects)) + '&' +
+            'ImageEffectSettings.ImageEffect' + '=' + IntToStr(Ord(AFindSubControlOptions.ImageEffectSettings.ImageEffect)) + '&' +
+            'ImageEffectSettings.WhereToApply' + '=' + IntToStr(Ord(AFindSubControlOptions.ImageEffectSettings.WhereToApply))
             ;
 end;
 
@@ -1316,7 +1316,7 @@ begin
   AFindSubControlOptions.GPUSettings.TargetDeviceIDType := TTargetDeviceIDType(Temp_TargetDeviceIDType);
   AFindSubControlOptions.GPUSettings.ExecutionAvailability := TGPUExecutionAvailability(Temp_ExecutionAvailability);
 
-  AFindSubControlOptions.ImageEffectSettings.UseImageEffects := AListOfFindSubControlOptionsParams.Values['UseImageEffects'] = '1';
+  AFindSubControlOptions.ImageEffectSettings.UseImageEffects := AListOfFindSubControlOptionsParams.Values['ImageEffectSettings.UseImageEffects'] = '1';
   AFindSubControlOptions.ImageEffectSettings.ImageEffect := TImageEffect(Temp_ImageEffect);
   AFindSubControlOptions.ImageEffectSettings.WhereToApply := TWhereToApply(Temp_WhereToApply);
 
