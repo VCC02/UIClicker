@@ -2583,6 +2583,7 @@ function TActionExecution.ExecuteFindSubControlAction(var AFindSubControlOptions
   var
     Res: Boolean;
     Fnm: string;
+    TempList: TStringList;
   begin
     if AFindSubControlOptions.ImageSource = isFile then
     begin
@@ -2591,7 +2592,23 @@ function TActionExecution.ExecuteFindSubControlAction(var AFindSubControlOptions
 
       case AFindSubControlOptions.ImageSourceFileNameLocation of
         isflDisk:
+        begin
           Res := DoOnLoadBitmap(AFindControlInputData.BitmapToSearchOn, Fnm);
+          if not Res then
+          begin
+            AddToLog('Might wait for the background bitmap file to be present in memory..');
+
+            TempList := TStringList.Create;
+            try
+              TempList.Text := Fnm;
+              DoOnWaitForBitmapsAvailability(TempList);
+            finally
+              TempList.Free;
+            end;
+
+            Res := DoOnLoadBitmap(AFindControlInputData.BitmapToSearchOn, Fnm);
+          end;
+        end;
 
         isflMem:
           Res := DoOnLoadRenderedBitmap(AFindControlInputData.BitmapToSearchOn, Fnm);
