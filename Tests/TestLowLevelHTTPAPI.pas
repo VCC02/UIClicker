@@ -101,6 +101,8 @@ type
     procedure Test_ExecuteFindSubControlAction_RenderingServer_MultiTextWithTwoProfilesAndTextAndOneBmpAndOnePmtv;
     procedure Test_ExecuteFindSubControlAction_RenderingServer_MultiTextWithTwoProfilesAndTextAndPmtvWithTwoOrders;
 
+    procedure Test_ExecuteFindSubControlAction_FindIconOnShowActionsWindowButtonGrayscale;
+
     procedure Test_FindSubControl_ExternalBackground_isflDisk;
     procedure Test_FindSubControl_ExternalBackground_isflMem;
 
@@ -150,7 +152,7 @@ implementation
 
 uses
   ClickerActionsClient, ActionsStuff, Controls, ClickerFileProviderClient, ClickerActionProperties,
-  Graphics, AsyncProcess, UITestUtils;
+  Graphics, AsyncProcess, UITestUtils, PitstopTestRunner;
 
 
 var
@@ -970,6 +972,66 @@ var
 begin
   GenerateCallTemplateOptions(CallTemplateOptions, CPathToCloseExternalRenderingServer, '', False);
   ExpectSuccessfulAction(FastReplace_87ToReturn(ExecuteCallTemplateAction(TestServerAddress, CallTemplateOptions, False, False, CREParam_FileLocation_ValueDisk, True)));
+end;
+
+
+procedure GenerateFindSubControlForGrayscaleEffect(var AFindSubControl: TClkFindSubControlOptions);
+begin
+  GetDefaultPropertyValues_FindSubControl(AFindSubControl);
+
+  AFindSubControl.MatchCriteria.WillMatchBitmapText := False;
+  AFindSubControl.MatchCriteria.WillMatchBitmapFiles := True;
+  SetLength(AFindSubControl.MatchBitmapText, 1);
+  AFindSubControl.MatchBitmapFiles := ExtractFileDir(ParamStr(0)) + '\TestFiles\ShowActionsWindowButtonIcon.bmp';  //'$AppDir$\Tests\TestFiles\ShowActionsWindowButtonIcon.bmp';
+  AFindSubControl.InitialRectangle.Left := '0';
+  AFindSubControl.InitialRectangle.Top := '0';
+  AFindSubControl.InitialRectangle.Right := '0';
+  AFindSubControl.InitialRectangle.Bottom := '0';
+  AFindSubControl.InitialRectangle.RightOffset := '100';
+  AFindSubControl.InitialRectangle.BottomOffset := '100';
+  AFindSubControl.ColorError := '3';
+  AFindSubControl.AllowedColorErrorCount := '3';
+  AFindSubControl.ImageSource := isFile;
+  AFindSubControl.SourceFileName := ExtractFileDir(ParamStr(0)) + '\TestFiles\ShowActionsWindowButton_Grayscale.bmp';   //'$AppDir$\Tests\TestFiles\ShowActionsWindowButton_Grayscale.bmp';
+  AFindSubControl.ImageSourceFileNameLocation := isflDisk;
+  AFindSubControl.ImageEffectSettings.ImageEffect := ieGrayscale;
+  AFindSubControl.ImageEffectSettings.WhereToApply := wtaSearchedBitmapsOnly;
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecuteFindSubControlAction_FindIconOnShowActionsWindowButtonGrayscale;
+const
+  CAllowedDirs = '$AppDir$\TestFiles\';
+  CAllowedExts = '.clktmpl'#13#10'.bmp';
+var
+  Response: string;
+  FindSubControl: TClkFindSubControlOptions;
+  FileProvider: TPollForMissingServerFiles;
+  FileProviderLog: TStringList;
+begin
+  SetupTargetWindowFor_FindSubControl;
+  GenerateFindSubControlForGrayscaleEffect(FindSubControl);
+
+  FileProvider := CreateFileProvider(CAllowedDirs, CAllowedExts, @HandleOnFileExists_Disk, @HandleOnLoadMissingFileContent_Disk);  //this one uses "Disk" handlers
+  try
+    FileProviderLog := TStringList.Create;
+    try
+      FileProvider.FullAppDir := ExtractFileDir(ParamStr(0));
+      FileProvider.OnLogMissingServerFile := @frmPitstopTestRunner.AddToLog;
+
+      Response := FastReplace_87ToReturn(ExecuteFindSubControlAction(TestServerAddress, FindSubControl, 'Find "Show Actions Window" icon - external background - color (should fail)', 3000, CREParam_FileLocation_ValueMem));
+      ExpectFailedAction(Response, 'Timeout at');
+
+      //Part2 - the same action, with grayscale applied on the searched bmp, to match the background:
+      FindSubControl.ImageEffectSettings.UseImageEffects := True;
+      Response := FastReplace_87ToReturn(ExecuteFindSubControlAction(TestServerAddress, FindSubControl, 'Find "Show Actions Window" icon - external background - grayscale', 3000, CREParam_FileLocation_ValueMem));
+      ExpectSuccessfulAction(Response, 'Should find the converted bmp to grayscale, on the already grayscaled background.');
+    finally
+      FileProviderLog.Free;
+    end;
+  finally
+    DestroyFileProvider(FileProvider);
+  end;
 end;
 
 

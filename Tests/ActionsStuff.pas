@@ -1665,6 +1665,9 @@ begin
   AFindSubControlOptions.GPUSettings.TargetPlatformIDType := tpitPartialNameNoCase;
   AFindSubControlOptions.GPUSettings.TargetDeviceIDType := tditPartialNameNoCase;
   AFindSubControlOptions.GPUSettings.ExecutionAvailability := eaOpenCL3Then1ThenCPU;
+  AFindSubControlOptions.ImageEffectSettings.UseImageEffects := True;
+  AFindSubControlOptions.ImageEffectSettings.ImageEffect := ieGrayscale;
+  AFindSubControlOptions.ImageEffectSettings.WhereToApply := wtaSearchedBitmapsOnly;
 
   SetLength(AFindSubControlOptions.MatchBitmapText, 2);
   //no need to call GetDefaultPropertyValues_FindControl_MatchBitmapText();
@@ -1778,7 +1781,11 @@ begin
             'GPUSettings.TargetDevice' + '=' + 'Fake device' + '&' +
             'GPUSettings.TargetPlatformIDType' + '=' + 'tpitPartialNameNoCase' + '&' +
             'GPUSettings.TargetDeviceIDType' + '=' + 'tpidPartialNameNoCase' + '&' +
-            'GPUSettings.ExecutionAvailability' + '=' + 'eaOpenCL3Then1ThenCPU'
+            'GPUSettings.ExecutionAvailability' + '=' + 'eaOpenCL3Then1ThenCPU' + '&' +
+
+            'ImageEffectSettings.UseImageEffects' + '=' + 'True' + '&' +
+            'ImageEffectSettings.ImageEffect' + '=' + 'ieGrayscale' + '&' +
+            'ImageEffectSettings.WhereToApply' + '=' + 'wtaSearchedBitmapsOnly'
             ;
 end;
 

@@ -123,7 +123,7 @@ implementation
 
 
 uses
-  ActionsStuff, ClickerActionProperties,
+  ActionsStuff, ClickerActionProperties, PitstopTestRunner,
   Controls, Forms;
 
 
@@ -534,8 +534,12 @@ end;
 
 
 function TTestHTTPAPI.HandleOnFileExists_Disk(const AFileName: string): Boolean;
+var
+  EvaluatedFileName: string;
 begin
-  Result := FileExists(AFileName);
+  EvaluatedFileName := StringReplace(AFileName, '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
+  Result := FileExists(EvaluatedFileName);
+  frmPitstopTestRunner.AddToLog('FP: File "' + EvaluatedFileName + '" ' + BoolToStr(Result, 'exists', 'does not exist.'));
 end;
 
 
@@ -547,12 +551,20 @@ end;
 
 procedure TTestHTTPAPI.HandleOnLoadMissingFileContent_Disk(AFileName: string; AFileContent: TMemoryStream);
 begin
+  AFileName := StringReplace(AFileName, '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
+
   AFileContent.LoadFromFile(AFileName);
   try
     AFileContent.LoadFromFile(AFileName);
   except
     Sleep(300); //maybe the file is in use by another thread, so wait a bit, then load again
-    AFileContent.LoadFromFile(AFileName);
+
+    try
+      AFileContent.LoadFromFile(AFileName);
+    except
+      on E: Exception do
+        frmPitstopTestRunner.AddToLog('FP: Ex on loading missing file: "' + AFileName + '"  ' + E.Message);
+    end;
   end;
 end;
 
@@ -566,6 +578,7 @@ end;
 procedure TTestHTTPAPI.HandleLogMissingServerFile(AMsg: string);
 begin
   //MessageBox(0, PChar(AMsg), 'Tests log: MissingServerFile', 0);
+  frmPitstopTestRunner.AddToLog(AMsg);
 end;
 
 
