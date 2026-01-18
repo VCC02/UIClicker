@@ -748,6 +748,8 @@ begin
 
     DebugBmp.Canvas.Brush.Style := bsSolid;
     DebugBmp.Canvas.Draw(DebugDrawingX, 30, BitmapToSearchFor);
+
+    DebugBmp.Canvas.Draw(DebugDrawingX, 30 + TempHeight + 100, SrcCompSearchAreaBitmap);
   end;
 
   if (mmBitmapFiles in AMatchingMethods) or
