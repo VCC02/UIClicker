@@ -102,6 +102,7 @@ type
     procedure Test_ExecuteFindSubControlAction_RenderingServer_MultiTextWithTwoProfilesAndTextAndPmtvWithTwoOrders;
 
     procedure Test_ExecuteFindSubControlAction_FindIconOnShowActionsWindowButtonGrayscale;
+    procedure Test_ExecuteFindSubControlAction_FindShowActionsWindowButtonTextBlur4x;
 
     procedure Test_FindSubControl_ExternalBackground_isflDisk;
     procedure Test_FindSubControl_ExternalBackground_isflMem;
@@ -1032,6 +1033,64 @@ begin
   finally
     DestroyFileProvider(FileProvider);
   end;
+end;
+
+
+procedure GenerateFindSubControlForBlur4xEffect(var AFindSubControl: TClkFindSubControlOptions);
+begin
+  GetDefaultPropertyValues_FindSubControl(AFindSubControl);
+
+  GetDefaultPropertyValues_FindSubControl(AFindSubControl);
+  AFindSubControl.MatchText := 'Show Actions Window';
+  SetLength(AFindSubControl.MatchBitmapText, 2);
+  AFindSubControl.MatchBitmapText[0].ForegroundColor := '$Color_WindowText$';
+  AFindSubControl.MatchBitmapText[0].BackgroundColor := 'EAEAEA';
+  AFindSubControl.MatchBitmapText[0].FontName := 'Segoe UI';
+  AFindSubControl.MatchBitmapText[0].FontSize := 9;
+  AFindSubControl.MatchBitmapText[0].FontQuality := fqAntialiased;
+  AFindSubControl.MatchBitmapText[1].ForegroundColor := '$Color_WindowText$';
+  AFindSubControl.MatchBitmapText[1].BackgroundColor := 'EAEAEA';
+  AFindSubControl.MatchBitmapText[1].FontName := 'Segoe UI';
+  AFindSubControl.MatchBitmapText[1].FontSize := 9;
+  AFindSubControl.MatchBitmapText[1].FontQuality := fqCleartype;
+  AFindSubControl.MatchBitmapText[1].ProfileName := 'Profile [1]';
+  AFindSubControl.InitialRectangle.Right := '$Control_Left$';
+  AFindSubControl.InitialRectangle.Bottom := '$Control_Top$';
+  AFindSubControl.InitialRectangle.LeftOffset := '41';
+  AFindSubControl.InitialRectangle.TopOffset := '55';
+  AFindSubControl.InitialRectangle.RightOffset := '278';
+  AFindSubControl.InitialRectangle.BottomOffset := '129';
+  AFindSubControl.ColorError := '4';
+  AFindSubControl.AllowedColorErrorCount := '4';
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecuteFindSubControlAction_FindShowActionsWindowButtonTextBlur4x;
+var
+  Response: string;
+  FindControl: TClkFindControlOptions;
+  WindowOperations: TClkWindowOperationsOptions;
+  FindSubControl: TClkFindSubControlOptions;
+begin
+  SetupTargetWindowFor_FindSubControl;
+
+  GetDefaultPropertyValues_FindControl(FindControl);
+  FindControl.MatchText := 'UI Clicker Main';
+  FindControl.MatchClassName := 'Window';
+  ExpectSuccessfulAction(FastReplace_87ToReturn(ExecuteFindControlAction(TestServerAddress, FindControl, 'Find Main UIClicker window', 3000, CREParam_FileLocation_ValueMem)));
+
+  GetDefaultPropertyValues_WindowOperations(WindowOperations);
+  ExpectSuccessfulAction(FastReplace_87ToReturn(ExecuteWindowOperationsAction(TestServerAddress, WindowOperations)));
+
+  GenerateFindSubControlForBlur4xEffect(FindSubControl);
+
+  Response := FastReplace_87ToReturn(ExecuteFindSubControlAction(TestServerAddress, FindSubControl, 'Find "Show Actions Window" text (should fail)', 3000, CREParam_FileLocation_ValueMem));
+  ExpectFailedAction(Response, 'Timeout at');
+
+  //Part2 - the same action, with blur applied on the searched bmp and background:
+  FindSubControl.ImageEffectSettings.UseImageEffects := True;
+  Response := FastReplace_87ToReturn(ExecuteFindSubControlAction(TestServerAddress, FindSubControl, 'Find "Show Actions Window" text', 3000, CREParam_FileLocation_ValueMem));
+  ExpectSuccessfulAction(Response, 'Should find the blurred bmp, on the blurred background.');
 end;
 
 
