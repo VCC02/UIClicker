@@ -4847,7 +4847,6 @@ procedure TfrClickerActions.MenuItem_SetFileNameFromInMemPropertyListUpdateBmpFi
 var
   MenuData: POIMenuItemData;
   Fnm: string;
-  ListOfFiles: TStringList;
 begin
   MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
   try
