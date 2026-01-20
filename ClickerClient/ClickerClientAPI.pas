@@ -342,6 +342,7 @@ type
     DelayBetweenKeyStrokes: PWideChar;
     Count: PWideChar;
   end;
+  TClkSetControlTextOptionsAPI = TClkSetTextOptionsAPI; //the proper name
 
   PClkSetTextOptionsAPI = ^TClkSetTextOptionsAPI;
 
@@ -350,6 +351,7 @@ type
     DelayBetweenKeyStrokes: WideString;
     Count: WideString;
   end;
+  TClkSetControlTextOptionsAPIWS = TClkSetTextOptionsAPIWS;  //the proper name
 
 
   TClkCallTemplateLoopOptionsAPI = record
