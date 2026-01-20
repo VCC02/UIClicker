@@ -56,6 +56,7 @@ function GetActionPropertiesByType(var AAction: TClkActionRec; AIncludeSpecialPr
 function GetDifferentThanDefaultActionPropertiesByType(var AAction: TClkActionRec; AIncludeSpecialProperties: Boolean = False): string;
 
 function GetActionPropertyDataTypesByType(var AAction: TClkActionRec; AIncludeSpecialProperties: Boolean = False): string;
+function GetActionPropertyValueByEnumType(AActionType: TClkAction; APropertyDataTypeName, APropertyValue: string): string;
 function GetDifferentThanDefaultActionPropertyDataTypesByType(var AAction: TClkActionRec; AIncludeSpecialProperties: Boolean = False): string;
 
 //The Set<ActionType>Properties functions return an error if any, or emptry string for success.
@@ -318,13 +319,13 @@ begin
             'ListOfCustomVarsAndValues' + '=' + FastReplace_ReturnTo45(ACallTemplateOptions.ListOfCustomVarsAndValues) + '&' +
             'EvaluateBeforeCalling' + '=' + IntToStr(Ord(ACallTemplateOptions.EvaluateBeforeCalling)) + '&' +
 
-            'Loop.Enabled' + '=' + IntToStr(Ord(ACallTemplateOptions.CallTemplateLoop.Enabled)) + '&' +
-            'Loop.Counter' + '=' + ACallTemplateOptions.CallTemplateLoop.Counter + '&' +
-            'Loop.InitValue' + '=' + ACallTemplateOptions.CallTemplateLoop.InitValue + '&' +
-            'Loop.EndValue' + '=' + ACallTemplateOptions.CallTemplateLoop.EndValue + '&' +
-            'Loop.Direction' + '=' + IntToStr(Ord(ACallTemplateOptions.CallTemplateLoop.Direction)) + '&' +
-            'Loop.BreakCondition' + '=' + FastReplace_ReturnTo45(ACallTemplateOptions.CallTemplateLoop.BreakCondition) + '&' +
-            'Loop.EvalBreakPosition' + '=' + IntToStr(Ord(ACallTemplateOptions.CallTemplateLoop.EvalBreakPosition));
+            'CallTemplateLoop.Enabled' + '=' + IntToStr(Ord(ACallTemplateOptions.CallTemplateLoop.Enabled)) + '&' +
+            'CallTemplateLoop.Counter' + '=' + ACallTemplateOptions.CallTemplateLoop.Counter + '&' +
+            'CallTemplateLoop.InitValue' + '=' + ACallTemplateOptions.CallTemplateLoop.InitValue + '&' +
+            'CallTemplateLoop.EndValue' + '=' + ACallTemplateOptions.CallTemplateLoop.EndValue + '&' +
+            'CallTemplateLoop.Direction' + '=' + IntToStr(Ord(ACallTemplateOptions.CallTemplateLoop.Direction)) + '&' +
+            'CallTemplateLoop.BreakCondition' + '=' + FastReplace_ReturnTo45(ACallTemplateOptions.CallTemplateLoop.BreakCondition) + '&' +
+            'CallTemplateLoop.EvalBreakPosition' + '=' + IntToStr(Ord(ACallTemplateOptions.CallTemplateLoop.EvalBreakPosition));
 end;
 
 
@@ -494,7 +495,7 @@ begin
             'WaitForApp' + '=' + CDTBool + '&' +
             'AppStdIn' + '=' + CDTString + '&' +
             'CurrentDir' + '=' + CDTString + '&' +
-            'UseInheritHandles' + '=' + CDTBool + '&' +
+            'UseInheritHandles' + '=' + CDTEnum + '.TExecAppUseInheritHandles' + '&' +
             'NoConsole' + '=' + CDTBool + '&' +
             'VerifyFileExistence' + '=' + CDTBool + '&' +
             'LeaveRunningAfterTimeout' + '=' + CDTBool;
@@ -557,7 +558,7 @@ function GetFindSubControlActionPropertyDataTypes(AMatchBitmapTextLen: Integer):
       Result := Result + Prefix + 'FontQualityReplacement' + '=' + CDTString + '&';
       Result := Result + Prefix + 'CharSet' + '=' + CDTInteger + '&';
       Result := Result + Prefix + 'Orientation' + '=' + CDTInteger + '&';
-      Result := Result + Prefix + 'Pitch' + '=' + CDTEnum + '.TPitch' + '&';
+      Result := Result + Prefix + 'Pitch' + '=' + CDTEnum + '.TFontPitch' + '&';
       Result := Result + Prefix + 'ProfileName' + '=' + CDTString + '&';
       Result := Result + Prefix + 'CropLeft' + '=' + CDTString + '&';
       Result := Result + Prefix + 'CropTop' + '=' + CDTString + '&';
@@ -619,23 +620,23 @@ begin
             'ThreadCount' + '=' + CDTString + '&' +
             'UseTextRenderingInBrowser' + '=' + CDTBool + '&' +
 
-            'RenderingInBrowserSettings.RenderingRequestType' + '=' + CDTEnum + '&' +
+            'RenderingInBrowserSettings.RenderingRequestType' + '=' + CDTEnum + '.TRenderingRequestType' + '&' +
             'RenderingInBrowserSettings.ReceivingBitmapsTimeout' + '=' + CDTInteger + '&' +
             'RenderingInBrowserSettings.ActionForSendingRequest' + '=' + CDTString + '&' +
             'RenderingInBrowserSettings.UsePluginForReceivingBitmaps' + '=' + CDTBool + '&' +
             'RenderingInBrowserSettings.PluginActionForReceivingBitmaps' + '=' + CDTString + '&' +
-            'RenderingInBrowserSettings.FontSizeUnit' + '=' + CDTEnum + '&' +
+            'RenderingInBrowserSettings.FontSizeUnit' + '=' + CDTEnum + '.TFontSizeUnit' + '&' +
 
             'GPUSettings.OpenCLPath' + '=' + CDTString + '&' +
             'GPUSettings.TargetPlatform' + '=' + CDTString + '&' +
             'GPUSettings.TargetDevice' + '=' + CDTString + '&' +
-            'GPUSettings.TargetPlatformIDType' + '=' + CDTEnum + '&' +
-            'GPUSettings.TargetDeviceIDType' + '=' + CDTEnum + '&' +
-            'GPUSettings.ExecutionAvailability' + '=' + CDTEnum + '&' +
+            'GPUSettings.TargetPlatformIDType' + '=' + CDTEnum + '.TTargetPlatformIDType' + '&' +
+            'GPUSettings.TargetDeviceIDType' + '=' + CDTEnum + '.TTargetDeviceIDType' + '&' +
+            'GPUSettings.ExecutionAvailability' + '=' + CDTEnum + '.TGPUExecutionAvailability' + '&' +
 
             'ImageEffectSettings.UseImageEffects' + '=' + CDTBool + '&' +
-            'ImageEffectSettings.ImageEffect' + '=' + CDTEnum + '&' +
-            'ImageEffectSettings.WhereToApply' + '=' + CDTEnum
+            'ImageEffectSettings.ImageEffect' + '=' + CDTEnum + '.TImageEffect' + '&' +
+            'ImageEffectSettings.WhereToApply' + '=' + CDTEnum + '.TWhereToApply'
             ;
 end;
 
@@ -655,13 +656,13 @@ begin
             'ListOfCustomVarsAndValues' + '=' + CDTString + '&' +
             'EvaluateBeforeCalling' + '=' + CDTBool + '&' +
 
-            'Loop.Enabled' + '=' + CDTBool + '&' +
-            'Loop.Counter' + '=' + CDTString + '&' +
-            'Loop.InitValue' + '=' + CDTString + '&' +
-            'Loop.EndValue' + '=' + CDTString + '&' +
-            'Loop.Direction' + '=' + CDTEnum + '.TLoopDirection' + '&' +
-            'Loop.BreakCondition' + '=' + CDTString + '&' +
-            'Loop.EvalBreakPosition' + '=' + CDTEnum + '.TLoopEvalBreakPosition';
+            'CallTemplateLoop.Enabled' + '=' + CDTBool + '&' +
+            'CallTemplateLoop.Counter' + '=' + CDTString + '&' +
+            'CallTemplateLoop.InitValue' + '=' + CDTString + '&' +
+            'CallTemplateLoop.EndValue' + '=' + CDTString + '&' +
+            'CallTemplateLoop.Direction' + '=' + CDTEnum + '.TLoopDirection' + '&' +
+            'CallTemplateLoop.BreakCondition' + '=' + CDTString + '&' +
+            'CallTemplateLoop.EvalBreakPosition' + '=' + CDTEnum + '.TLoopEvalBreakPosition';
 end;
 
 
@@ -750,6 +751,214 @@ begin
     acSaveSetVarToFile: Result := GetSaveSetVarToFileActionPropertyDataTypes;
     acPlugin: Result := GetPluginActionPropertyDataTypes;
     acEditTemplate: Result := GetEditTemplateActionPropertyDataTypes(AIncludeSpecialProperties);
+  end;
+end;
+
+
+function GetActionPropertyValueByEnumType(AActionType: TClkAction; APropertyDataTypeName, APropertyValue: string): string;
+var
+  PropertyValueInt: Integer;
+begin
+  Result := '';
+  PropertyValueInt := StrToIntDef(APropertyValue, 0);
+  if PropertyValueInt = -1 then
+    Exit;
+
+  try
+    //CPropEnumStrings[AActionType]^[APropertyIndex]^[PropertyValueInt]; //This does not work, because "APropertyIndex" indexes an expanded list of properties (which contains subproperties of structures)
+
+    case AActionType of
+      acClick:
+      begin
+        if APropertyDataTypeName = 'TXClickPointReference' then
+        begin
+          Result := CXClickPointReferenceStr[TXClickPointReference(PropertyValueInt)];
+          Exit;
+        end;
+
+        if APropertyDataTypeName = 'TYClickPointReference' then
+        begin
+          Result := CYClickPointReferenceStr[TYClickPointReference(PropertyValueInt)];
+          Exit;
+        end;
+
+        if APropertyDataTypeName = 'TMouseButton' then
+        begin
+          Result := CMouseButtonStr[TMouseButton(PropertyValueInt)];
+          Exit;
+        end;
+
+        if APropertyDataTypeName = 'TMouseWheelType' then
+        begin
+          Result := CMouseWheelTypeStr[TMouseWheelType(PropertyValueInt)];
+          Exit;
+        end;
+      end;
+
+      acExecApp:
+      begin
+        if APropertyDataTypeName = 'TExecAppUseInheritHandles' then
+        begin
+          Result := CExecAppUseInheritHandlesStr[TExecAppUseInheritHandles(PropertyValueInt)];
+          Exit;
+        end;
+      end;
+
+      acFindControl:
+      begin
+        if APropertyDataTypeName = 'TSearchForControlMode' then
+        begin
+          Result := CSearchForControlModeStr[TSearchForControlMode(PropertyValueInt)];
+          Exit;
+        end;
+      end;
+
+      acFindSubControl:
+      begin
+        if APropertyDataTypeName = 'TFontQuality' then
+        begin
+          Result := CFontQualityStr[TFontQuality(PropertyValueInt)];
+          Exit;
+        end;
+
+        if APropertyDataTypeName = 'TFontPitch' then
+        begin
+          Result := CFontPitchStr[TFontPitch(PropertyValueInt)];
+          Exit;
+        end;
+
+        if APropertyDataTypeName = 'TMatchBitmapAlgorithm' then
+        begin
+          Result := CMatchBitmapAlgorithmStr[TMatchBitmapAlgorithm(PropertyValueInt)];
+          Exit;
+        end;
+
+        if APropertyDataTypeName = 'TImageSource' then
+        begin
+          Result := CImageSourceStr[TImageSource(PropertyValueInt)];
+          Exit;
+        end;
+
+        if APropertyDataTypeName = 'TImageSourceFileNameLocation' then
+        begin
+          Result := CImageSourceFileNameLocationStr[TImageSourceFileNameLocation(PropertyValueInt)];
+          Exit;
+        end;
+
+        if APropertyDataTypeName = 'TRenderingRequestType' then
+        begin
+          Result := CRenderingRequestTypeStr[TRenderingRequestType(PropertyValueInt)];
+          Exit;
+        end;
+
+        if APropertyDataTypeName = 'TFontSizeUnit' then
+        begin
+          Result := CFontSizeUnitStr[TFontSizeUnit(PropertyValueInt)];
+          Exit;
+        end;
+
+        if APropertyDataTypeName = 'TTargetPlatformIDType' then
+        begin
+          Result := CTargetPlatformIDTypeStr[TTargetPlatformIDType(PropertyValueInt)];
+          Exit;
+        end;
+
+        if APropertyDataTypeName = 'TTargetDeviceIDType' then
+        begin
+          Result := CTargetDeviceIDTypeStr[TTargetDeviceIDType(PropertyValueInt)];
+          Exit;
+        end;
+
+        if APropertyDataTypeName = 'TGPUExecutionAvailability' then
+        begin
+          Result := CExecutionAvailabilityStr[TGPUExecutionAvailability(PropertyValueInt)];
+          Exit;
+        end;
+
+        if APropertyDataTypeName = 'TImageEffect' then
+        begin
+          Result := CImageEffectStr[TImageEffect(PropertyValueInt)];
+          Exit;
+        end;
+
+        if APropertyDataTypeName = 'TWhereToApply' then
+        begin
+          Result := CWhereToApplyStr[TWhereToApply(PropertyValueInt)];
+          Exit;
+        end;
+      end;
+
+      acSetControlText:
+      begin
+        if APropertyDataTypeName = 'TClkSetTextControlType' then
+        begin
+          Result := CClkSetTextControlTypeStr[TClkSetTextControlType(PropertyValueInt)];
+          Exit;
+        end;
+      end;
+
+      acCallTemplate:
+      begin
+        if APropertyDataTypeName = 'TLoopDirection' then
+        begin
+          Result := CLoopDirectionStr[TLoopDirection(PropertyValueInt)];
+          Exit;
+        end;
+
+        if APropertyDataTypeName = 'TLoopEvalBreakPosition' then
+        begin
+          Result := CLoopEvalBreakPositionStr[TLoopEvalBreakPosition(PropertyValueInt)];
+          Exit;
+        end;
+      end;
+
+      acSleep:
+        ;
+      acSetVar:
+        ;
+
+      acWindowOperations:
+      begin
+        if APropertyDataTypeName = 'TWindowOperation' then
+        begin
+          Result := CWindowOperationStr[TWindowOperation(PropertyValueInt)];
+          Exit;
+        end;
+      end;
+
+      acLoadSetVarFromFile:
+        ;
+
+      acSaveSetVarToFile:
+        ;
+
+      acPlugin:
+        ;
+
+      acEditTemplate:
+      begin
+        if APropertyDataTypeName = 'TEditTemplateOperation' then
+        begin
+          Result := CEditTemplateOperationStr[TEditTemplateOperation(PropertyValueInt)];
+          Exit;
+        end;
+
+        if APropertyDataTypeName = 'TEditTemplateWhichTemplate' then
+        begin
+          Result := CEditTemplateWhichTemplateStr[TEditTemplateWhichTemplate(PropertyValueInt)];
+          Exit;
+        end;
+
+        if APropertyDataTypeName = 'TClkAction' then
+        begin
+          Result := 'ac' + CClkActionStr[TClkAction(PropertyValueInt)];
+          Exit;
+        end;
+      end;
+    end;
+  except
+    on E: Exception do
+      Result := '"Enum value out of range: ' + APropertyValue + '".';
   end;
 end;
 
@@ -1353,17 +1562,17 @@ var
 begin
   Result := '';
 
-  Temp_LoopDirection := StrToIntDef(AListOfCallTemplateOptionsParams.Values['Loop.Direction'], 0);
+  Temp_LoopDirection := StrToIntDef(AListOfCallTemplateOptionsParams.Values['CallTemplateLoop.Direction'], 0);
   if (Temp_LoopDirection < 0) or (Temp_LoopDirection > Ord(High(TLoopDirection))) then
   begin
-    Result := 'Loop.Direction is out of range.';
+    Result := 'CallTemplateLoop.Direction is out of range.';
     Exit;
   end;
 
-  Temp_LoopEvalBreakPosition := StrToIntDef(AListOfCallTemplateOptionsParams.Values['Loop.EvalBreakPosition'], 0);
+  Temp_LoopEvalBreakPosition := StrToIntDef(AListOfCallTemplateOptionsParams.Values['CallTemplateLoop.EvalBreakPosition'], 0);
   if (Temp_LoopEvalBreakPosition < 0) or (Temp_LoopEvalBreakPosition > Ord(High(TLoopEvalBreakPosition))) then
   begin
-    Result := 'Loop.EvalBreakPosition is out of range.';
+    Result := 'CallTemplateLoop.EvalBreakPosition is out of range.';
     Exit;
   end;
 
@@ -1374,12 +1583,12 @@ begin
   ACallTemplateOptions.CallOnlyIfConditionVarValue := '';  //deprecated
   ACallTemplateOptions.EvaluateBeforeCalling := AListOfCallTemplateOptionsParams.Values['EvaluateBeforeCalling'] = '1';
 
-  ACallTemplateOptions.CallTemplateLoop.Enabled := AListOfCallTemplateOptionsParams.Values['Loop.Enabled'] = '1'; //When False, the CallTemplate action is executed once, as before. Else, it may be executed or not, based on loop settings.
-  ACallTemplateOptions.CallTemplateLoop.Counter := AListOfCallTemplateOptionsParams.Values['Loop.Counter'];
-  ACallTemplateOptions.CallTemplateLoop.InitValue := AListOfCallTemplateOptionsParams.Values['Loop.InitValue'];
-  ACallTemplateOptions.CallTemplateLoop.EndValue := AListOfCallTemplateOptionsParams.Values['Loop.EndValue'];
+  ACallTemplateOptions.CallTemplateLoop.Enabled := AListOfCallTemplateOptionsParams.Values['CallTemplateLoop.Enabled'] = '1'; //When False, the CallTemplate action is executed once, as before. Else, it may be executed or not, based on loop settings.
+  ACallTemplateOptions.CallTemplateLoop.Counter := AListOfCallTemplateOptionsParams.Values['CallTemplateLoop.Counter'];
+  ACallTemplateOptions.CallTemplateLoop.InitValue := AListOfCallTemplateOptionsParams.Values['CallTemplateLoop.InitValue'];
+  ACallTemplateOptions.CallTemplateLoop.EndValue := AListOfCallTemplateOptionsParams.Values['CallTemplateLoop.EndValue'];
   ACallTemplateOptions.CallTemplateLoop.Direction := TLoopDirection(Temp_LoopDirection);
-  ACallTemplateOptions.CallTemplateLoop.BreakCondition := FastReplace_45ToReturn(AListOfCallTemplateOptionsParams.Values['Loop.BreakCondition']); //uses the same format as TClkActionOptions.ActionCondition
+  ACallTemplateOptions.CallTemplateLoop.BreakCondition := FastReplace_45ToReturn(AListOfCallTemplateOptionsParams.Values['CallTemplateLoop.BreakCondition']); //uses the same format as TClkActionOptions.ActionCondition
   ACallTemplateOptions.CallTemplateLoop.EvalBreakPosition := TLoopEvalBreakPosition(Temp_LoopEvalBreakPosition);
 end;
 

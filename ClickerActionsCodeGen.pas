@@ -300,9 +300,10 @@ var
   ListOfProperties, ListOfPropertyDataTypes: TStringList;
   i: Integer;
   IsDbg, IsFileLoc, IsStepIntoDbg: string;
-  PropertyDataType: string;
+  PropertyDataType, PropertyValue, PropertyDataTypeName: string;
   FuncName: string;
   ActionTypeStr: string;
+  EnumPropertyValue: string;
 begin
   ActionType := AAction.ActionOptions.Action;
   ActionTypeStr := CClkActionStr[ActionType];
@@ -316,6 +317,7 @@ begin
   Request := Request + 'var' + #13#10;
   Request := Request + '  ' + ActionTypeStr + 'API: TClk' + ActionTypeStr + 'OptionsAPI;' + #13#10;
   Request := Request + '  ' + ActionTypeStr + ': TClk' + ActionTypeStr + 'Options;' + #13#10;
+  Request := Request + '  Temp' + ActionTypeStr + 'OptionsAPIWS: TClk' + ActionTypeStr + 'OptionsAPIWS;' + #13#10;
 
   case ActionType of
     acFindControl:
@@ -369,9 +371,11 @@ begin
     ListOfPropertyDataTypes.Text := StringReplace(PropertyDataTypes, '&', #13#10, [rfReplaceAll]);
     for i := 0 to ListOfProperties.Count - 1 do
     begin
+      PropertyValue := ListOfProperties.ValueFromIndex[i];
+
       if (ActionType = acFindSubControl) and (ListOfProperties.Names[i] = 'MatchBitmapText.Count') then
       begin
-        Request := Request + '  SetLength(' + ActionTypeStr + '.MatchBitmapText, ' + ListOfProperties.ValueFromIndex[i] + ');' + #13#10;
+        Request := Request + '  SetLength(' + ActionTypeStr + '.MatchBitmapText, ' + PropertyValue + ');' + #13#10;
         Continue;
       end;
 
@@ -382,30 +386,35 @@ begin
       end;
 
       if PropertyDataType = CDTString then
-        Request := Request + '  ' + ActionTypeStr + '.' + ListOfProperties.Names[i] + ' := ''' + ListOfProperties.ValueFromIndex[i] + ''';' + #13#10
+        Request := Request + '  ' + ActionTypeStr + '.' + ListOfProperties.Names[i] + ' := ''' + PropertyValue + ''';' + #13#10
       else
         if PropertyDataType = CDTInteger then
-          Request := Request + '  ' + ActionTypeStr + '.' + ListOfProperties.Names[i] + ' := ' + ListOfProperties.ValueFromIndex[i] + ';' + #13#10
+          Request := Request + '  ' + ActionTypeStr + '.' + ListOfProperties.Names[i] + ' := ' + PropertyValue + ';' + #13#10
         else
           if Pos(CDTEnum, PropertyDataType + '.') = 1 then     // CDTEnum + '.<EnumDataType>'
-            Request := Request + '  ' + ActionTypeStr + '.' + ListOfProperties.Names[i] + ' := ' + Copy(PropertyDataType, Length(CDTEnum) + 2, MaxInt) + '(' + ListOfProperties.ValueFromIndex[i] + ');' + #13#10
+          begin
+            PropertyDataTypeName := Copy(PropertyDataType, Length(CDTEnum) + 2, MaxInt);
+
+            EnumPropertyValue := GetActionPropertyValueByEnumType(AAction.ActionOptions.Action, PropertyDataTypeName, PropertyValue);
+            Request := Request + '  ' + ActionTypeStr + '.' + ListOfProperties.Names[i] + ' := ' + EnumPropertyValue + '; //' + PropertyDataTypeName + '(' + PropertyValue + ')' + #13#10
+          end
           else
             if PropertyDataType = CDTBool then
-              Request := Request + '  ' + ActionTypeStr + '.' + ListOfProperties.Names[i] + ' := ' + BoolToStr(ListOfProperties.ValueFromIndex[i] = '1', 'True', 'False') + ';' + #13#10
+              Request := Request + '  ' + ActionTypeStr + '.' + ListOfProperties.Names[i] + ' := ' + BoolToStr(PropertyValue = '1', 'True', 'False') + ';' + #13#10
             else  //structure or array
-              Request := Request + '  ' + ActionTypeStr + '.' + ListOfProperties.Names[i] + ' := ' + ListOfProperties.ValueFromIndex[i] + ';' + #13#10; //same as int
+              Request := Request + '  ' + ActionTypeStr + '.' + ListOfProperties.Names[i] + ' := ' + PropertyValue + ';' + #13#10; //same as int
     end;
 
     Request := Request + #13#10;
     case ActionType of
       acFindControl:
-        Request := Request + '  Set' + ActionTypeStr + 'OptionsToAPI(' + ActionTypeStr + ', ' + ActionTypeStr + 'API, DummyDestMatchBitmapTextRecAPI, DummyDestMatchBitmapTextArray);' + #13#10;
+        Request := Request + '  Set' + ActionTypeStr + 'OptionsToAPI(' + ActionTypeStr + ', ' + ActionTypeStr + 'API, DummyDestMatchBitmapTextRecAPI, DummyDestMatchBitmapTextArray, Temp' + ActionTypeStr + 'OptionsAPIWS' + ');' + #13#10;
 
       acFindSubControl:
-        Request := Request + '  Set' + ActionTypeStr + 'OptionsToAPI(' + ActionTypeStr + ', ' + ActionTypeStr + 'API, DestMatchBitmapTextRecAPI, DestMatchBitmapTextArray);' + #13#10;
+        Request := Request + '  Set' + ActionTypeStr + 'OptionsToAPI(' + ActionTypeStr + ', ' + ActionTypeStr + 'API, DestMatchBitmapTextRecAPI, DestMatchBitmapTextArray, Temp' + ActionTypeStr + 'OptionsAPIWS' + ');' + #13#10;
 
       else
-        Request := Request + '  Set' + ActionTypeStr + 'OptionsToAPI(' + ActionTypeStr + ', ' + ActionTypeStr + 'API);' + #13#10;
+        Request := Request + '  Set' + ActionTypeStr + 'OptionsToAPI(' + ActionTypeStr + ', ' + ActionTypeStr + 'API, Temp' + ActionTypeStr + 'OptionsAPIWS' + ');' + #13#10;
     end;
 
     Request := Request + #13#10;
@@ -607,9 +616,10 @@ var
   ListOfProperties, ListOfPropertyDataTypes: TStringList;
   i: Integer;
   IsDbg, IsFileLoc, IsStepIntoDbg: string;
-  PropertyDataType: string;
+  PropertyDataType, PropertyDataTypeName: string;
   FuncName: string;
   ActionTypeStr, ActionNameStr: string;
+  PropertyValue, EnumPropertyValue: string;
 begin
   ActionType := AAction.ActionOptions.Action;
   ActionTypeStr := CClkActionStr[ActionType];
@@ -667,6 +677,8 @@ begin
     ListOfPropertyDataTypes.Text := StringReplace(PropertyDataTypes, '&', #13#10, [rfReplaceAll]);
     for i := 0 to ListOfProperties.Count - 1 do
     begin
+      PropertyValue := ListOfProperties.ValueFromIndex[i];
+
       if (ActionType = acFindSubControl) and (ListOfProperties.Names[i] = 'MatchBitmapText.Count') then
       begin
         Request := Request + '    DestMatchBitmapTextArray = TMatchBitmapTextRec(' + ListOfProperties.ValueFromIndex[i] + ')' + #13#10;
@@ -693,7 +705,13 @@ begin
           Request := Request + '    ' + ActionNameStr + '.' + ListOfProperties.Names[i] + ' = ' + ListOfProperties.ValueFromIndex[i]  + #13#10
         else
           if Pos(CDTEnum, PropertyDataType + '.') = 1 then     // CDTEnum + '.<EnumDataType>'
-            Request := Request + '    ' + ActionNameStr + '.' + ListOfProperties.Names[i] + ' = ' + ListOfProperties.ValueFromIndex[i] + ' # ' + PropertyDataType + #13#10
+          begin
+            PropertyDataTypeName := Copy(PropertyDataType, Length(CDTEnum) + 2, MaxInt);
+            EnumPropertyValue := GetActionPropertyValueByEnumType(AAction.ActionOptions.Action, PropertyDataTypeName, PropertyValue);
+
+            Request := Request + '    ' + ActionNameStr + '.' + ListOfProperties.Names[i] + ' = ' + PropertyDataTypeName + '.' + EnumPropertyValue + ' # ' + ListOfProperties.ValueFromIndex[i] + #13#10
+
+          end
           else
             if PropertyDataType = CDTBool then
               Request := Request + '    ' + ActionNameStr + '.' + ListOfProperties.Names[i] + ' = ' + BoolToStr(ListOfProperties.ValueFromIndex[i] = '1', 'True', 'False') + #13#10

@@ -382,6 +382,7 @@ type
     DelayBetweenKeyStrokes: string; //Available on stKeystrokes only. It is measured in ms.
     Count: string;
   end;
+  TClkSetControlTextOptions = TClkSetTextOptions; //the proper name
 
   TLoopDirection = (ldInc, ldDec, ldAuto);
   TLoopEvalBreakPosition = (lebpAfterContent, lebpBeforeContent);
