@@ -9145,7 +9145,6 @@ var
   s: string;
   BMPTxt: TClkFindControlMatchBitmapText;
   ItemIndexMod, ItemIndexDiv: Integer;
-  TempListOfExternallyRenderedImages: TStringList;
   BmpTempMenuItem: TMenuItem;
   {$IFDEF MemPlugins}
     TempListOfMemPlugins: TStringList;
