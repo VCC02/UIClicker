@@ -52,6 +52,8 @@ function GetPluginActionProperties(PluginOptions: TClkPluginOptions): string;
 function GetEditTemplateActionProperties(AEditTemplateOptions: TClkEditTemplateOptions; AIncludeListOfEditedProperties: Boolean = False): string;
 //when adding new Get<ActionType>Properties functions, please update DoOnActionPlugin_GetActionContentByIndex_Callback from ClickerActionPluginLoader.pas
 
+function GetMatchBitmapTextContent(var AMatchBitmapText: TClkFindControlMatchBitmapTextArr): string;
+
 function GetActionPropertiesByType(var AAction: TClkActionRec; AIncludeSpecialProperties: Boolean = False): string;
 function GetDifferentThanDefaultActionPropertiesByType(var AAction: TClkActionRec; AIncludeSpecialProperties: Boolean = False): string;
 
@@ -73,6 +75,8 @@ function SetLoadSetVarFromFileActionProperties(AListOfLoadSetVarOptionsParams: T
 function SetSaveSetVarToFileActionProperties(AListOfSaveSetVarOptionsParams: TStrings; out ASaveSetVarToFileOptions: TClkSaveSetVarToFileOptions): string;
 function SetPluginActionProperties(APluginOptionsParams: TStrings; out APluginOptions: TClkPluginOptions): string;
 function SetEditTemplateActionProperties(AListOfEditTemplateOptionsParams: TStrings; out AEditTemplateOptions: TClkEditTemplateOptions; AIncludeListOfEditedProperties: Boolean = False): string;
+
+function SetMatchBitmapTextContent(AListOfFindSubControlOptionsParams: TStrings; var AMatchBitmapText: TClkFindControlMatchBitmapTextArr): string;
 
 function SetActionProperties(AListOfOptionsParams: TStrings; AActionType: TClkAction; var AActionOptions: TClkActionRec): string; overload; //it outputs only the options, without the action metadata
 function SetActionProperties(AListOfOptionsParams: string; AActionType: TClkAction; var AActionOptions: TClkActionRec): string; overload; //it outputs only the options, without the action metadata
@@ -198,38 +202,41 @@ begin
 end;
 
 
-function GetFindSubControlActionProperties(AFindSubControlOptions: TClkFindSubControlOptions): string;
-  function GetMatchBitmapTextContent(var AMatchBitmapText: TClkFindControlMatchBitmapTextArr): string;
-  var
-    i: Integer;
-    Prefix: string;
+function GetMatchBitmapTextContent(var AMatchBitmapText: TClkFindControlMatchBitmapTextArr): string;
+var
+  i: Integer;
+  Prefix: string;
+begin
+  Result := 'MatchBitmapText.Count' + '=' + IntToStr(Length(AMatchBitmapText)) + '&';
+
+  for i := 0 to Length(AMatchBitmapText) - 1 do
   begin
-    Result := '';
-    for i := 0 to Length(AMatchBitmapText) - 1 do
-    begin
-      Prefix := 'MatchBitmapText[' + IntToStr(i) + '].';
-      Result := Result + Prefix + 'ForegroundColor' + '=' + AMatchBitmapText[i].ForegroundColor + '&';
-      Result := Result + Prefix + 'BackgroundColor' + '=' + AMatchBitmapText[i].BackgroundColor + '&';
-      Result := Result + Prefix + 'FontName' + '=' + AMatchBitmapText[i].FontName + '&';
-      Result := Result + Prefix + 'FontSize' + '=' + IntToStr(AMatchBitmapText[i].FontSize) + '&';
-      Result := Result + Prefix + 'Bold' + '=' + IntToStr(Ord(AMatchBitmapText[i].Bold)) + '&';
-      Result := Result + Prefix + 'Italic' + '=' + IntToStr(Ord(AMatchBitmapText[i].Italic)) + '&';
-      Result := Result + Prefix + 'Underline' + '=' + IntToStr(Ord(AMatchBitmapText[i].Underline)) + '&';
-      Result := Result + Prefix + 'StrikeOut' + '=' + IntToStr(Ord(AMatchBitmapText[i].StrikeOut)) + '&';
-      Result := Result + Prefix + 'FontQuality' + '=' + IntToStr(Ord(AMatchBitmapText[i].FontQuality)) + '&';
-      Result := Result + Prefix + 'FontQualityUsesReplacement' + '=' + IntToStr(Ord(AMatchBitmapText[i].FontQualityUsesReplacement)) + '&';
-      Result := Result + Prefix + 'FontQualityReplacement' + '=' + AMatchBitmapText[i].FontQualityReplacement + '&';
-      Result := Result + Prefix + 'CharSet' + '=' + IntToStr(AMatchBitmapText[i].CharSet) + '&';
-      Result := Result + Prefix + 'Orientation' + '=' + IntToStr(AMatchBitmapText[i].Orientation) + '&';
-      Result := Result + Prefix + 'Pitch' + '=' + IntToStr(Ord(AMatchBitmapText[i].Pitch)) + '&';
-      Result := Result + Prefix + 'ProfileName' + '=' + AMatchBitmapText[i].ProfileName + '&';
-      Result := Result + Prefix + 'CropLeft' + '=' + AMatchBitmapText[i].CropLeft + '&';
-      Result := Result + Prefix + 'CropTop' + '=' + AMatchBitmapText[i].CropTop + '&';
-      Result := Result + Prefix + 'CropRight' + '=' + AMatchBitmapText[i].CropRight + '&';
-      Result := Result + Prefix + 'CropBottom' + '=' + AMatchBitmapText[i].CropBottom + '&';
-      Result := Result + Prefix + 'IgnoreBackgroundColor' + '=' + IntToStr(Ord(AMatchBitmapText[i].IgnoreBackgroundColor)) + '&';
-    end;
+    Prefix := 'MatchBitmapText[' + IntToStr(i) + '].';
+    Result := Result + Prefix + 'ForegroundColor' + '=' + AMatchBitmapText[i].ForegroundColor + '&';
+    Result := Result + Prefix + 'BackgroundColor' + '=' + AMatchBitmapText[i].BackgroundColor + '&';
+    Result := Result + Prefix + 'FontName' + '=' + AMatchBitmapText[i].FontName + '&';
+    Result := Result + Prefix + 'FontSize' + '=' + IntToStr(AMatchBitmapText[i].FontSize) + '&';
+    Result := Result + Prefix + 'Bold' + '=' + IntToStr(Ord(AMatchBitmapText[i].Bold)) + '&';
+    Result := Result + Prefix + 'Italic' + '=' + IntToStr(Ord(AMatchBitmapText[i].Italic)) + '&';
+    Result := Result + Prefix + 'Underline' + '=' + IntToStr(Ord(AMatchBitmapText[i].Underline)) + '&';
+    Result := Result + Prefix + 'StrikeOut' + '=' + IntToStr(Ord(AMatchBitmapText[i].StrikeOut)) + '&';
+    Result := Result + Prefix + 'FontQuality' + '=' + IntToStr(Ord(AMatchBitmapText[i].FontQuality)) + '&';
+    Result := Result + Prefix + 'FontQualityUsesReplacement' + '=' + IntToStr(Ord(AMatchBitmapText[i].FontQualityUsesReplacement)) + '&';
+    Result := Result + Prefix + 'FontQualityReplacement' + '=' + AMatchBitmapText[i].FontQualityReplacement + '&';
+    Result := Result + Prefix + 'CharSet' + '=' + IntToStr(AMatchBitmapText[i].CharSet) + '&';
+    Result := Result + Prefix + 'Orientation' + '=' + IntToStr(AMatchBitmapText[i].Orientation) + '&';
+    Result := Result + Prefix + 'Pitch' + '=' + IntToStr(Ord(AMatchBitmapText[i].Pitch)) + '&';
+    Result := Result + Prefix + 'ProfileName' + '=' + AMatchBitmapText[i].ProfileName + '&';
+    Result := Result + Prefix + 'CropLeft' + '=' + AMatchBitmapText[i].CropLeft + '&';
+    Result := Result + Prefix + 'CropTop' + '=' + AMatchBitmapText[i].CropTop + '&';
+    Result := Result + Prefix + 'CropRight' + '=' + AMatchBitmapText[i].CropRight + '&';
+    Result := Result + Prefix + 'CropBottom' + '=' + AMatchBitmapText[i].CropBottom + '&';
+    Result := Result + Prefix + 'IgnoreBackgroundColor' + '=' + IntToStr(Ord(AMatchBitmapText[i].IgnoreBackgroundColor)) + '&';
   end;
+end;
+
+
+function GetFindSubControlActionProperties(AFindSubControlOptions: TClkFindSubControlOptions): string;
 begin
   Result := 'MatchCriteria.WillMatchBitmapText' + '=' + IntToStr(Ord(AFindSubControlOptions.MatchCriteria.WillMatchBitmapText)) + '&' +
             'MatchCriteria.WillMatchBitmapFiles' + '=' + IntToStr(Ord(AFindSubControlOptions.MatchCriteria.WillMatchBitmapFiles)) + '&' +
@@ -238,7 +245,6 @@ begin
 
             'MatchText' + '=' + AFindSubControlOptions.MatchText + '&' +
 
-            'MatchBitmapText.Count' + '=' + IntToStr(Length(AFindSubControlOptions.MatchBitmapText)) + '&' +
             GetMatchBitmapTextContent(AFindSubControlOptions.MatchBitmapText) +
             'MatchBitmapFiles' + '=' + FastReplace_ReturnTo45(AFindSubControlOptions.MatchBitmapFiles) + '&' +
             'MatchBitmapAlgorithm' + '=' + IntToStr(Ord(AFindSubControlOptions.MatchBitmapAlgorithm)) + '&' +
@@ -1213,28 +1219,16 @@ begin
 end;
 
 
-function SetFindSubControlActionProperties(AListOfFindSubControlOptionsParams: TStrings; AOnAddToLog: TOnAddToLog; out AFindSubControlOptions: TClkFindSubControlOptions; out AActionOptions: TClkActionOptions): string; //AOnAddToLog can be set to nil if not used.
+function SetMatchBitmapTextContent(AListOfFindSubControlOptionsParams: TStrings; var AMatchBitmapText: TClkFindControlMatchBitmapTextArr): string;
 var
+  i: Integer;
+  Prefix: string;
   Temp_MatchBitmapTextCount: Integer;
-  Temp_MatchBitmapAlgorithm: Integer;
-  Temp_ImageSource: Integer;
-  Temp_ImageSourceFileNameLocation: Integer;
-  Temp_ActionTimeout: Int64;
   Temp_FontSize: Integer;
   Temp_FontQuality: Integer;
   Temp_CharSet: Integer;
   Temp_Pitch: Integer;
   Temp_CropLeft, Temp_CropTop, Temp_CropRight, Temp_CropBottom: string;
-  Temp_RenderingRequestType: Integer;
-  Temp_ReceivingBitmapsTimeout: Integer;
-  Temp_FontSizeUnit: Integer;
-  Temp_TargetPlatformIDType: Integer;
-  Temp_TargetDeviceIDType: Integer;
-  Temp_ExecutionAvailability: Integer;
-  Temp_ImageEffect: Integer;
-  Temp_WhereToApply: Integer;
-  i: Integer;
-  Prefix: string;
 begin
   Result := '';
 
@@ -1245,49 +1239,7 @@ begin
     Exit;
   end;
 
-  Temp_MatchBitmapAlgorithm := StrToIntDef(AListOfFindSubControlOptionsParams.Values['MatchBitmapAlgorithm'], 0);
-  if (Temp_MatchBitmapAlgorithm < 0) or (Temp_MatchBitmapAlgorithm > Ord(High(TMatchBitmapAlgorithm))) then
-  begin
-    Result := 'MatchBitmapAlgorithm is out of range.';
-    Exit;
-  end;
-
-  Temp_ActionTimeout := StrToIntDef(AListOfFindSubControlOptionsParams.Values[CPropertyName_ActionTimeout], 1000);
-  if (Temp_ActionTimeout < 0) or (Temp_ActionTimeout > 2147483647) then
-  begin
-    Result := 'ActionTimeout is out of range.';
-    Exit;
-  end;
-
-  Temp_ImageSource := StrToIntDef(AListOfFindSubControlOptionsParams.Values['ImageSource'], Ord(isScreenshot));
-  if (Temp_ImageSource < 0) or (Temp_ImageSource > Ord(High(TImageSource))) then
-  begin
-    Result := 'ImageSource is out of range.';
-
-    if Assigned(AOnAddToLog) then
-      AOnAddToLog('ImageSource is out of range.  ImageSource = ' + IntToStr(Temp_ImageSource));
-
-    Exit;
-  end;
-
-  Temp_ImageSourceFileNameLocation := StrToIntDef(AListOfFindSubControlOptionsParams.Values['ImageSourceFileNameLocation'], Ord(isflMem));
-  if (Temp_ImageSourceFileNameLocation < 0) or (Temp_ImageSourceFileNameLocation > Ord(High(TImageSourceFileNameLocation))) then
-  begin
-    Result := 'ImageSourceFileNameLocation is out of range.';
-
-    if Assigned(AOnAddToLog) then
-      AOnAddToLog('ImageSource is out of range.  ImageSourceFileNameLocation = ' + IntToStr(Temp_ImageSourceFileNameLocation));
-
-    Exit;
-  end;
-
-  AFindSubControlOptions.MatchCriteria.WillMatchBitmapText := AListOfFindSubControlOptionsParams.Values['MatchCriteria.WillMatchBitmapText'] <> '0';
-  AFindSubControlOptions.MatchCriteria.WillMatchBitmapFiles := AListOfFindSubControlOptionsParams.Values['MatchCriteria.WillMatchBitmapFiles'] = '1';
-  AFindSubControlOptions.MatchCriteria.WillMatchPrimitiveFiles := AListOfFindSubControlOptionsParams.Values['MatchCriteria.WillMatchPrimitiveFiles'] = '1';
-
-  AFindSubControlOptions.AllowToFail := AListOfFindSubControlOptionsParams.Values['AllowToFail'] = '1';
-  AFindSubControlOptions.MatchText := AListOfFindSubControlOptionsParams.Values['MatchText'];
-  SetLength(AFindSubControlOptions.MatchBitmapText, Temp_MatchBitmapTextCount);
+  SetLength(AMatchBitmapText, Temp_MatchBitmapTextCount);
 
   for i := 0 to Temp_MatchBitmapTextCount - 1 do
   begin
@@ -1350,51 +1302,113 @@ begin
       Exit;
     end;
 
-    AFindSubControlOptions.MatchBitmapText[i].ForegroundColor := AListOfFindSubControlOptionsParams.Values[Prefix + 'ForegroundColor'];
-    AFindSubControlOptions.MatchBitmapText[i].BackgroundColor := AListOfFindSubControlOptionsParams.Values[Prefix + 'BackgroundColor'];
-    AFindSubControlOptions.MatchBitmapText[i].FontName := AListOfFindSubControlOptionsParams.Values[Prefix + 'FontName'];
-    AFindSubControlOptions.MatchBitmapText[i].FontSize := Temp_FontSize;
-    AFindSubControlOptions.MatchBitmapText[i].Bold := AListOfFindSubControlOptionsParams.Values[Prefix + 'Bold'] = '1';
-    AFindSubControlOptions.MatchBitmapText[i].Italic := AListOfFindSubControlOptionsParams.Values[Prefix + 'Italic'] = '1';
-    AFindSubControlOptions.MatchBitmapText[i].Underline := AListOfFindSubControlOptionsParams.Values[Prefix + 'Underline'] = '1';
-    AFindSubControlOptions.MatchBitmapText[i].StrikeOut := AListOfFindSubControlOptionsParams.Values[Prefix + 'StrikeOut'] = '1';
-    AFindSubControlOptions.MatchBitmapText[i].FontQuality := TFontQuality(Temp_FontQuality);
-    AFindSubControlOptions.MatchBitmapText[i].FontQualityUsesReplacement := AListOfFindSubControlOptionsParams.Values[Prefix + 'FontQualityUsesReplacement'] = '1';
-    AFindSubControlOptions.MatchBitmapText[i].FontQualityReplacement := AListOfFindSubControlOptionsParams.Values[Prefix + 'FontQualityReplacement'];
-    AFindSubControlOptions.MatchBitmapText[i].CharSet := Temp_CharSet;
-    AFindSubControlOptions.MatchBitmapText[i].Orientation := StrToIntDef(AListOfFindSubControlOptionsParams.Values[Prefix + 'Orientation'], 0);
-    AFindSubControlOptions.MatchBitmapText[i].Pitch := TFontPitch(Temp_Pitch);
-    AFindSubControlOptions.MatchBitmapText[i].ProfileName := AListOfFindSubControlOptionsParams.Values[Prefix + 'ProfileName'];
-    AFindSubControlOptions.MatchBitmapText[i].CropLeft := Temp_CropLeft;
-    AFindSubControlOptions.MatchBitmapText[i].CropTop := Temp_CropTop;
-    AFindSubControlOptions.MatchBitmapText[i].CropRight := Temp_CropRight;
-    AFindSubControlOptions.MatchBitmapText[i].CropBottom := Temp_CropBottom;
-    AFindSubControlOptions.MatchBitmapText[i].IgnoreBackgroundColor := AListOfFindSubControlOptionsParams.Values[Prefix + 'IgnoreBackgroundColor'] = '1';
+    AMatchBitmapText[i].ForegroundColor := AListOfFindSubControlOptionsParams.Values[Prefix + 'ForegroundColor'];
+    AMatchBitmapText[i].BackgroundColor := AListOfFindSubControlOptionsParams.Values[Prefix + 'BackgroundColor'];
+    AMatchBitmapText[i].FontName := AListOfFindSubControlOptionsParams.Values[Prefix + 'FontName'];
+    AMatchBitmapText[i].FontSize := Temp_FontSize;
+    AMatchBitmapText[i].Bold := AListOfFindSubControlOptionsParams.Values[Prefix + 'Bold'] = '1';
+    AMatchBitmapText[i].Italic := AListOfFindSubControlOptionsParams.Values[Prefix + 'Italic'] = '1';
+    AMatchBitmapText[i].Underline := AListOfFindSubControlOptionsParams.Values[Prefix + 'Underline'] = '1';
+    AMatchBitmapText[i].StrikeOut := AListOfFindSubControlOptionsParams.Values[Prefix + 'StrikeOut'] = '1';
+    AMatchBitmapText[i].FontQuality := TFontQuality(Temp_FontQuality);
+    AMatchBitmapText[i].FontQualityUsesReplacement := AListOfFindSubControlOptionsParams.Values[Prefix + 'FontQualityUsesReplacement'] = '1';
+    AMatchBitmapText[i].FontQualityReplacement := AListOfFindSubControlOptionsParams.Values[Prefix + 'FontQualityReplacement'];
+    AMatchBitmapText[i].CharSet := Temp_CharSet;
+    AMatchBitmapText[i].Orientation := StrToIntDef(AListOfFindSubControlOptionsParams.Values[Prefix + 'Orientation'], 0);
+    AMatchBitmapText[i].Pitch := TFontPitch(Temp_Pitch);
+    AMatchBitmapText[i].ProfileName := AListOfFindSubControlOptionsParams.Values[Prefix + 'ProfileName'];
+    AMatchBitmapText[i].CropLeft := Temp_CropLeft;
+    AMatchBitmapText[i].CropTop := Temp_CropTop;
+    AMatchBitmapText[i].CropRight := Temp_CropRight;
+    AMatchBitmapText[i].CropBottom := Temp_CropBottom;
+    AMatchBitmapText[i].IgnoreBackgroundColor := AListOfFindSubControlOptionsParams.Values[Prefix + 'IgnoreBackgroundColor'] = '1';
+  end;
+end;
+
+
+function SetFindSubControlActionProperties(AListOfFindSubControlOptionsParams: TStrings; AOnAddToLog: TOnAddToLog; out AFindSubControlOptions: TClkFindSubControlOptions; out AActionOptions: TClkActionOptions): string; //AOnAddToLog can be set to nil if not used.
+var
+  Temp_ActionTimeout: Int64;
+  Temp_MatchBitmapAlgorithm: Integer;
+  Temp_ImageSource: Integer;
+  Temp_ImageSourceFileNameLocation: Integer;
+  Temp_RenderingRequestType: Integer;
+  Temp_ReceivingBitmapsTimeout: Integer;
+  Temp_FontSizeUnit: Integer;
+  Temp_TargetPlatformIDType: Integer;
+  Temp_TargetDeviceIDType: Integer;
+  Temp_ExecutionAvailability: Integer;
+  Temp_ImageEffect: Integer;
+  Temp_WhereToApply: Integer;
+begin
+  Result := '';
+
+  Temp_ActionTimeout := StrToIntDef(AListOfFindSubControlOptionsParams.Values[CPropertyName_ActionTimeout], 1000);
+  if (Temp_ActionTimeout < 0) or (Temp_ActionTimeout > 2147483647) then
+  begin
+    Result := 'ActionTimeout is out of range.';
+    Exit;
   end;
 
-  AFindSubControlOptions.UseTextRenderingInBrowser := AListOfFindSubControlOptionsParams.Values['UseTextRenderingInBrowser'] = '1'; //assigned here, so it can be used for the next validations
-  if AFindSubControlOptions.UseTextRenderingInBrowser then
+  Temp_MatchBitmapAlgorithm := StrToIntDef(AListOfFindSubControlOptionsParams.Values['MatchBitmapAlgorithm'], 0);
+  if (Temp_MatchBitmapAlgorithm < 0) or (Temp_MatchBitmapAlgorithm > Ord(High(TMatchBitmapAlgorithm))) then
   begin
-    Temp_RenderingRequestType := StrToIntDef(AListOfFindSubControlOptionsParams.Values['RenderingInBrowserSettings.RenderingRequestType'], 0);
-    if (Temp_RenderingRequestType < 0) or (Temp_RenderingRequestType > Ord(High(TRenderingRequestType))) then
-    begin
-      Result := 'RenderingRequestType is out of range.';
-      Exit;
-    end;
+    Result := 'MatchBitmapAlgorithm is out of range.';
+    Exit;
+  end;
 
-    Temp_ReceivingBitmapsTimeout := StrToIntDef(AListOfFindSubControlOptionsParams.Values['RenderingInBrowserSettings.ReceivingBitmapsTimeout'], 0);
-    if (Temp_ReceivingBitmapsTimeout < 0) or (Temp_ReceivingBitmapsTimeout > 3600000) then
-    begin
-      Result := 'ReceivingBitmapsTimeout is out of range.';
-      Exit;
-    end;
+  Temp_ImageSource := StrToIntDef(AListOfFindSubControlOptionsParams.Values['ImageSource'], Ord(isScreenshot));
+  if (Temp_ImageSource < 0) or (Temp_ImageSource > Ord(High(TImageSource))) then
+  begin
+    Result := 'ImageSource is out of range.';
 
-    Temp_FontSizeUnit := StrToIntDef(AListOfFindSubControlOptionsParams.Values['RenderingInBrowserSettings.FontSizeUnit'], 0);
-    if (Temp_FontSizeUnit < 0) or (Temp_FontSizeUnit > Ord(High(TFontSizeUnit))) then
-    begin
-      Result := 'FontSizeUnit is out of range.';
-      Exit;
-    end;
+    if Assigned(AOnAddToLog) then
+      AOnAddToLog('ImageSource is out of range.  ImageSource = ' + IntToStr(Temp_ImageSource));
+
+    Exit;
+  end;
+
+  Temp_ImageSourceFileNameLocation := StrToIntDef(AListOfFindSubControlOptionsParams.Values['ImageSourceFileNameLocation'], Ord(isflMem));
+  if (Temp_ImageSourceFileNameLocation < 0) or (Temp_ImageSourceFileNameLocation > Ord(High(TImageSourceFileNameLocation))) then
+  begin
+    Result := 'ImageSourceFileNameLocation is out of range.';
+
+    if Assigned(AOnAddToLog) then
+      AOnAddToLog('ImageSource is out of range.  ImageSourceFileNameLocation = ' + IntToStr(Temp_ImageSourceFileNameLocation));
+
+    Exit;
+  end;
+
+  AFindSubControlOptions.MatchCriteria.WillMatchBitmapText := AListOfFindSubControlOptionsParams.Values['MatchCriteria.WillMatchBitmapText'] <> '0';
+  AFindSubControlOptions.MatchCriteria.WillMatchBitmapFiles := AListOfFindSubControlOptionsParams.Values['MatchCriteria.WillMatchBitmapFiles'] = '1';
+  AFindSubControlOptions.MatchCriteria.WillMatchPrimitiveFiles := AListOfFindSubControlOptionsParams.Values['MatchCriteria.WillMatchPrimitiveFiles'] = '1';
+
+  AFindSubControlOptions.AllowToFail := AListOfFindSubControlOptionsParams.Values['AllowToFail'] = '1';
+  AFindSubControlOptions.MatchText := AListOfFindSubControlOptionsParams.Values['MatchText'];
+
+  Result := SetMatchBitmapTextContent(AListOfFindSubControlOptionsParams, AFindSubControlOptions.MatchBitmapText);
+  if Result <> '' then
+    Exit;
+
+  Temp_RenderingRequestType := StrToIntDef(AListOfFindSubControlOptionsParams.Values['RenderingInBrowserSettings.RenderingRequestType'], 0);
+  if (Temp_RenderingRequestType < 0) or (Temp_RenderingRequestType > Ord(High(TRenderingRequestType))) then
+  begin
+    Result := 'RenderingRequestType is out of range.';
+    Exit;
+  end;
+
+  Temp_ReceivingBitmapsTimeout := StrToIntDef(AListOfFindSubControlOptionsParams.Values['RenderingInBrowserSettings.ReceivingBitmapsTimeout'], 0);
+  if (Temp_ReceivingBitmapsTimeout < 0) or (Temp_ReceivingBitmapsTimeout > 3600000) then
+  begin
+    Result := 'ReceivingBitmapsTimeout is out of range.';
+    Exit;
+  end;
+
+  Temp_FontSizeUnit := StrToIntDef(AListOfFindSubControlOptionsParams.Values['RenderingInBrowserSettings.FontSizeUnit'], 0);
+  if (Temp_FontSizeUnit < 0) or (Temp_FontSizeUnit > Ord(High(TFontSizeUnit))) then
+  begin
+    Result := 'FontSizeUnit is out of range.';
+    Exit;
   end;
 
   Temp_TargetPlatformIDType := StrToIntDef(AListOfFindSubControlOptionsParams.Values['GPUSettings.TargetPlatformIDType'], 0);
@@ -1509,7 +1523,7 @@ begin
   AFindSubControlOptions.EvaluateTextCount := AListOfFindSubControlOptionsParams.Values['EvaluateTextCount'];
   AFindSubControlOptions.CropFromScreenshot := AListOfFindSubControlOptionsParams.Values['CropFromScreenshot'] = '1';
   AFindSubControlOptions.ThreadCount := AListOfFindSubControlOptionsParams.Values['ThreadCount'];
-  //AFindSubControlOptions.UseTextRenderingInBrowser := AListOfFindSubControlOptionsParams.Values['UseTextRenderingInBrowser'] = '1';  //assigned above
+  AFindSubControlOptions.UseTextRenderingInBrowser := AListOfFindSubControlOptionsParams.Values['UseTextRenderingInBrowser'] = '1';  //assigned above
 
   AFindSubControlOptions.RenderingInBrowserSettings.RenderingRequestType := TRenderingRequestType(Temp_RenderingRequestType);
   AFindSubControlOptions.RenderingInBrowserSettings.ReceivingBitmapsTimeout := StrToIntDef(AListOfFindSubControlOptionsParams.Values['RenderingInBrowserSettings.ReceivingBitmapsTimeout'], 3000);
