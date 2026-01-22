@@ -1330,6 +1330,13 @@ object frClickerActionsArr: TfrClickerActionsArr
     object N1: TMenuItem
       Caption = '-'
     end
+    object MenuItemCutSelectedActionsToClipboard: TMenuItem
+      Caption = 'Cut selected actions to clipboard'
+      OnClick = MenuItemCutSelectedActionsToClipboardClick
+    end
+    object N6: TMenuItem
+      Caption = '-'
+    end
     object MenuItemCopySelectedActionsToClipboard: TMenuItem
       Caption = 'Copy selected actions to clipboard'
       OnClick = MenuItemCopySelectedActionsToClipboardClick

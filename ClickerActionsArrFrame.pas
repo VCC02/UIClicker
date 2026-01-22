@@ -87,6 +87,8 @@ type
     lbeSearchAction: TLabeledEdit;
     lblModifiedStatus: TLabel;
     memLogErr: TMemo;
+    MenuItemCutSelectedActionsToClipboard: TMenuItem;
+    N6: TMenuItem;
     MenuItem_IncludeActionCalls_Python: TMenuItem;
     MenuItem_IncludeActionCalls_Pascal: TMenuItem;
     MenuItem_GenerateGetVarValueFromResponsePythonFunc: TMenuItem;
@@ -208,6 +210,7 @@ type
       Shift: TShiftState);
     procedure FrameResize(Sender: TObject);
     procedure MenuItemCopySelectedActionsToClipboardClick(Sender: TObject);
+    procedure MenuItemCutSelectedActionsToClipboardClick(Sender: TObject);
     procedure MenuItemEnableDisableBreakPointClick(Sender: TObject);
     procedure MenuItemPasteActionsFromClipboardAfterTheFirstSelectedClick(
       Sender: TObject);
@@ -599,6 +602,7 @@ type
 
     procedure UpdateNodesCheckStateFromActions;
     procedure RemoveAction(ActionIndex: Integer; AClearSelectionAfterRemoving: Boolean = True; AUpdateRootNodeCount: Boolean = True);
+    procedure RemoveSelectedActionsWithoutAsking;
     procedure RemoveSelectedActions;
     procedure SetAFontFromClkActions(AFont: TFont; ActionIndex: Integer);
     procedure UpdateNodeCheckStateFromAction(Node: PVirtualNode);
@@ -693,6 +697,7 @@ type
 
     procedure CopySelectedActionsToClipboard;
     procedure PasteActionsFromClipboard(APasteIndex: Integer);
+    procedure CutSelectedActionsToClipboard;
 
     function EvaluateReplacements(s: string; Recursive: Boolean = True; AEvalTextCount: Integer = -1): string;
     function EvaluateHTTP(AValue: string): string;
@@ -5161,7 +5166,11 @@ begin
         end;
 
         PasteActionsFromClipboard(PasteIndex);
-      end
+      end;
+
+      Ord('X'):
+        CutSelectedActionsToClipboard;
+
       else
     end;
   end;
@@ -5645,6 +5654,13 @@ procedure TfrClickerActionsArr.MenuItemCopySelectedActionsToClipboardClick(
   Sender: TObject);
 begin
   CopySelectedActionsToClipboard;
+end;
+
+
+procedure TfrClickerActionsArr.MenuItemCutSelectedActionsToClipboardClick(
+  Sender: TObject);
+begin
+  CutSelectedActionsToClipboard;
 end;
 
 
@@ -6259,6 +6275,13 @@ begin
 
   Modified := True;
   StopGlowingUpdateButton;
+end;
+
+
+procedure TfrClickerActionsArr.CutSelectedActionsToClipboard;
+begin
+  CopySelectedActionsToClipboard;
+  RemoveSelectedActionsWithoutAsking;
 end;
 
 
@@ -7557,6 +7580,58 @@ begin
 end;
 
 
+procedure TfrClickerActionsArr.RemoveSelectedActionsWithoutAsking;
+var
+  Node: PVirtualNode;
+  IdxArr: TIntArr;
+  i: Integer;
+begin
+  Node := vstActions.GetFirstSelected;
+  if Node = nil then
+    Exit;
+
+  vstActions.BeginUpdate;
+  try
+    Node := vstActions.GetLast;
+
+    SetLength(IdxArr, 0);
+    repeat
+      if vstActions.Selected[Node] then
+      begin
+        SetLength(IdxArr, Length(IdxArr) + 1);
+        IdxArr[Length(IdxArr) - 1] := Node^.Index;
+      end;
+
+      Node := Node^.PrevSibling;
+    until Node = nil;
+  finally
+    vstActions.EndUpdate;
+  end;
+
+  if Length(IdxArr) > 0 then
+  begin
+    vstActions.ClearSelection;  //the selected actions will be deleted, so make sure they are not selected anymore
+
+    vstActions.BeginUpdate;
+    try
+      for i := 0 to Length(IdxArr) - 1 do
+        RemoveAction(IdxArr[i], False, True);
+
+      if Length(FClkActions) > 0 then
+        vstActions.RootNodeCount := Length(FClkActions);  //this should not be required if RemoveAction updates RootNodeCount
+    finally
+      SetLength(IdxArr, 0);
+      vstActions.EndUpdate;
+    end;
+
+    vstActions.Repaint;
+    Modified := True;
+    StopGlowingUpdateButton;
+    vstActions.ClearSelection;
+  end;
+end;
+
+
 procedure TfrClickerActionsArr.RemoveSelectedActions;
 var
   Node: PVirtualNode;
@@ -7571,47 +7646,8 @@ begin
     Exit;
   end;
 
-  Node := vstActions.GetLast;
   if MessageBox(Handle, 'Are you sure you want to remove the selected action(s) from list?', PChar(Caption), MB_ICONQUESTION + MB_YESNO) = ID_YES then
-  begin
-    vstActions.BeginUpdate;
-    try
-      SetLength(IdxArr, 0);
-      repeat
-        if vstActions.Selected[Node] then
-        begin
-          SetLength(IdxArr, Length(IdxArr) + 1);
-          IdxArr[Length(IdxArr) - 1] := Node^.Index;
-        end;
-
-        Node := Node^.PrevSibling;
-      until Node = nil;
-    finally
-      vstActions.EndUpdate;
-    end;
-
-    if Length(IdxArr) > 0 then
-    begin
-      vstActions.ClearSelection;  //the selected actions will be deleted, so make sure they are not selected anymore
-
-      vstActions.BeginUpdate;
-      try
-        for i := 0 to Length(IdxArr) - 1 do
-          RemoveAction(IdxArr[i], False, True);
-
-        if Length(FClkActions) > 0 then
-          vstActions.RootNodeCount := Length(FClkActions);  //this should not be required if RemoveAction updates RootNodeCount
-      finally
-        SetLength(IdxArr, 0);
-        vstActions.EndUpdate;
-      end;
-
-      vstActions.Repaint;
-      Modified := True;
-      StopGlowingUpdateButton;
-      vstActions.ClearSelection;
-    end;
-  end; //confirmation
+    RemoveSelectedActionsWithoutAsking;
 end;
 
 
