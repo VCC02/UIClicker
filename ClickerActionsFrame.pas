@@ -293,6 +293,9 @@ type
     procedure MenuItem_MoveFontProfileDownInPropertyListClick(Sender: TObject);
     procedure MenuItem_BrowseSystemFontsClick(Sender: TObject);
     procedure MenuItem_SelectFontFromVarClick(Sender: TObject);
+    procedure MenuItem_CopyAllFontProfilesToClipboardClick(Sender: TObject);
+    procedure MenuItem_PasteAllFontProfilesFromClipboardClick(Sender: TObject);
+    procedure MenuItem_ChangeFontProfilesOrderClick(Sender: TObject);
 
     procedure MenuItem_BrowseSetVarFileInPropertyListClick(Sender: TObject);
     procedure MenuItem_BrowsePluginFileInPropertyListClick(Sender: TObject);
@@ -5318,6 +5321,75 @@ begin
 end;
 
 
+procedure TfrClickerActions.MenuItem_CopyAllFontProfilesToClipboardClick(Sender: TObject);
+var
+  MenuData: POIMenuItemData;
+begin
+  MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
+  try
+    Clipboard.AsText := GetMatchBitmapTextContent(MenuData^.TempEditingAction.FindSubControlOptions.MatchBitmapText);
+  finally
+    Dispose(MenuData);
+  end;
+end;
+
+
+procedure TfrClickerActions.MenuItem_PasteAllFontProfilesFromClipboardClick(Sender: TObject);
+var
+  MenuData: POIMenuItemData;
+  FontProfiles: TStringList;
+  Res: string;
+  i: Integer;
+begin
+  MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
+  try
+    FontProfiles := TStringList.Create;
+    try
+      FontProfiles.LineBreak := #13#10;
+      FontProfiles.Text := StringReplace(Clipboard.AsText, '&', #13#10, [rfReplaceAll]);
+      Res := SetMatchBitmapTextContent(FontProfiles, MenuData^.TempEditingAction.FindSubControlOptions.MatchBitmapText);
+
+      if Res <> '' then
+      begin
+        MessageBox(Handle, PChar('Error processing font profiles.' + #13#10 + Res), 'Font profiles.', MB_ICONINFORMATION);
+        Exit;
+      end;
+    finally
+      FontProfiles.Free;
+    end;
+
+    FOIFrame.CancelCurrentEditing;
+    FOIFrame.Repaint;   //ideally, RepaintNodeByLevel
+    TriggerOnControlsModified;
+    FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex);
+
+    for i := frClickerFindControl.GetBMPTextFontProfilesCount - 1 downto 0 do
+      frClickerFindControl.RemoveFontProfileByIndex(i);
+
+    for i := 0 to Length(MenuData^.TempEditingAction.FindSubControlOptions.MatchBitmapText) - 1 do
+      frClickerFindControl.AddNewFontProfile(MenuData^.TempEditingAction^.FindSubControlOptions.MatchBitmapText[i]);
+
+    BuildFontColorIconsList;
+  finally
+    Dispose(MenuData);
+  end;
+  //: string;
+end;
+
+
+procedure TfrClickerActions.MenuItem_ChangeFontProfilesOrderClick(Sender: TObject);
+var
+  MenuData: POIMenuItemData;
+begin
+  MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
+  try
+    MessageBox(Handle, 'Please click the arrow button, from a font profile name, to move it up or down.', 'Font profiles.', MB_ICONINFORMATION);
+  finally
+    Dispose(MenuData);
+  end;
+end;
+
+
 procedure TfrClickerActions.MenuItem_BrowseSetVarFileInPropertyListClick(Sender: TObject);
 var
   MenuData: POIMenuItemData;
@@ -9197,6 +9269,17 @@ begin
                 ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
 
               AddMenuItemToPopupMenu(FOIEditorMenu, 'Add three commonly used font profiles (with NonAntialiased, Antialiased and ClearType)', MenuItem_AddFontProfileWithNonAntialiasedAndAntialiasedAndClearTypeToPropertyListClick,
+                ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+
+              AddMenuItemToPopupMenu(FOIEditorMenu, '-', nil, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+
+              AddMenuItemToPopupMenu(FOIEditorMenu, 'Copy all font profiles to clipboard', MenuItem_CopyAllFontProfilesToClipboardClick,
+                ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+
+              AddMenuItemToPopupMenu(FOIEditorMenu, 'Paste all font profiles from clipboard', MenuItem_PasteAllFontProfilesFromClipboardClick,
+                ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
+
+              AddMenuItemToPopupMenu(FOIEditorMenu, 'Change font profiles order...', MenuItem_ChangeFontProfilesOrderClick,
                 ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
 
               if Length(AEditingAction^.FindSubControlOptions.MatchBitmapText) > 0 then

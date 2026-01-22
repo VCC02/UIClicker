@@ -440,7 +440,7 @@ const
       (Name: 'CharSet'; EditorType: etEnumCombo; DataType: CDTEnum),
       (Name: 'Orientation'; EditorType: etSpinText; DataType: CDTInteger),
       (Name: 'Pitch'; EditorType: etEnumCombo; DataType: CDTEnum),
-      (Name: 'ProfileName'; EditorType: etText; DataType: CDTString),
+      (Name: 'ProfileName'; EditorType: etTextWithArrow; DataType: CDTString),
       (Name: 'CropLeft'; EditorType: etSpinText; DataType: CDTString),
       (Name: 'CropTop'; EditorType: etSpinText; DataType: CDTString),
       (Name: 'CropRight'; EditorType: etSpinText; DataType: CDTString),
