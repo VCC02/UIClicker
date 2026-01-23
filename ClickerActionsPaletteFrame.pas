@@ -29,6 +29,11 @@ unit ClickerActionsPaletteFrame;
 interface
 
 uses
+  {$IFDEF Windows}
+    Windows,
+  {$ELSE}
+    LCLIntf, LCLType,
+  {$ENDIF}
   Classes, SysUtils, Forms, Controls, VirtualTrees, ExtCtrls;
 
 type
@@ -50,6 +55,7 @@ type
     FActions: TStringList;
 
     FOwnerPanel: TPanel;
+    FTk: QWord;
 
     procedure SetImages(Value: TImageList);
     procedure HideOwnerPanel;
@@ -117,7 +123,7 @@ end;
 
 procedure TfrClickerActionsPalette.StartAutoHide;
 begin
-  tmrHide.Tag := 0;
+  FTk := GetTickCount64;
   tmrHide.Enabled := True;
 end;
 
@@ -125,15 +131,13 @@ end;
 procedure TfrClickerActionsPalette.ResetAutoHideTimer;
 begin
   tmrHide.Enabled := False;
-  tmrHide.Tag := 0;
+  FTk := GetTickCount64;
 end;
 
 
 procedure TfrClickerActionsPalette.tmrHideTimer(Sender: TObject);
 begin
-  tmrHide.Tag := tmrHide.Tag + 1;
-
-  if tmrHide.Tag >= 5 then
+  if (GetTickCount64 - FTk >= 5000) or {$IFDEF Windows} (GetAsyncKeyState(VK_ESCAPE) < 0) {$ELSE} (GetKeyState(VK_ESCAPE) < 0) {$ENDIF} then
   begin
     ResetAutoHideTimer;
     HideOwnerPanel;

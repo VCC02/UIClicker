@@ -31,6 +31,7 @@ object frClickerActionsPalette: TfrClickerActionsPalette
   end
   object tmrHide: TTimer
     Enabled = False
+    Interval = 1
     OnTimer = tmrHideTimer
     Left = 50
     Top = 24

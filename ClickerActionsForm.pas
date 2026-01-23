@@ -185,6 +185,8 @@ type
     procedure lbePathToTemplatesChange(Sender: TObject);
     procedure lbePathToTemplatesKeyUp(Sender: TObject; var Key: Word;
       Shift: TShiftState);
+    procedure PageControlMainChange(Sender: TObject);
+    procedure PageControlPlayerChange(Sender: TObject);
     procedure pmClientModeServerAddressPopup(Sender: TObject);
     procedure tmrDelayedShowTimer(Sender: TObject);
     procedure tmrDisplayMissingFilesRequestsTimer(Sender: TObject);
@@ -310,6 +312,7 @@ type
     procedure SetExecutionMode(AMode: Integer);
     procedure ProcessChangingExecutionMode;
     procedure UpdateGridType;
+    procedure SetActiveFrame;
 
     procedure HandleNewFrameRefreshButton(Sender: TObject);
     function frClickerActionsArrOnCallTemplate(Sender: TObject; AFileNameToCall: string; ListOfVariables: TStrings; DebugBitmap: TBitmap; DebugGridImage: TImage; IsDebugging, AShouldStopAtBreakPoint: Boolean; AStackLevel: Integer; AExecutesRemotely: Boolean): Boolean;
@@ -607,6 +610,7 @@ begin
 
   chkStayOnTop.Checked := AIni.ReadBool('ActionsWindow', 'StayOnTop', chkStayOnTop.Checked);
   PageControlMain.ActivePageIndex := AIni.ReadInteger('ActionsWindow', 'ActivePageIndex', PageControlMain.ActivePageIndex);
+  SetActiveFrame;
 
   frClickerActionsArrMain.frClickerActions.frClickerFindControl.chkDisplayCroppingLines.Checked := AIni.ReadBool('ActionsWindow', 'DisplayCroppingLines.Main', True);
   frClickerActionsArrExperiment1.frClickerActions.frClickerFindControl.chkDisplayCroppingLines.Checked := AIni.ReadBool('ActionsWindow', 'DisplayCroppingLines.Exp1', True);
@@ -1724,7 +1728,7 @@ begin
   TemplatePath := StringReplace(lbePathToTemplates.Text, '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]) + '\';
 
   if PageControlPlayer.ActivePageIndex = 0 then
-    begin
+  begin
     if ExtractFileName(frClickerActionsArrMain.FileName) = frClickerActionsArrMain.FileName then
       frClickerActionsArrExperiment2.LoadTemplate(TemplatePath + frClickerActionsArrMain.FileName)
     else
@@ -2015,7 +2019,14 @@ begin
             Exit;
           end;
 
-          Result := NewFrame.PlayAllActions(AFileNameToCall, ListOfVariables, IsDebugging);
+          TfrClickerActionsArr(Sender).FrameActive := False;
+          try
+            NewFrame.FrameActive := True;       //no need to call SetActiveFrame;
+            Result := NewFrame.PlayAllActions(AFileNameToCall, ListOfVariables, IsDebugging);
+          finally
+            NewFrame.FrameActive := False;
+            TfrClickerActionsArr(Sender).FrameActive := True;
+          end;
         finally
           DebugBitmap.Width := NewFrame.frClickerActions.imgDebugBmp.Picture.Bitmap.Width;
           DebugBitmap.Height := NewFrame.frClickerActions.imgDebugBmp.Picture.Bitmap.Height;
@@ -4139,6 +4150,55 @@ begin
   if FFullTemplatesDir > '' then
     if FFullTemplatesDir[Length(FFullTemplatesDir)] = '\' then
       FFullTemplatesDir := Copy(FFullTemplatesDir, 1, Length(FFullTemplatesDir) - 1);
+end;
+
+
+procedure TfrmClickerActions.SetActiveFrame;
+var
+  TempFrame: TfrClickerActionsArr;
+  i: Integer;
+begin
+  frClickerActionsArrMain.FrameActive := False;
+  frClickerActionsArrExperiment1.FrameActive := False;
+  frClickerActionsArrExperiment2.FrameActive := False;
+
+  for i := 0 to PageControlPlayer.PageCount - 1 do
+  begin
+    TempFrame := GetClickerActionsArrFrameByStackLevel(i);
+    TempFrame.FrameActive := False;
+  end;
+
+  case PageControlMain.ActivePageIndex of
+    0: ;
+    1:
+    begin
+      //frClickerActionsArrMain.FrameActive := True;    //is the first frame returned by GetClickerActionsArrFrameByStackLevel
+      for i := 0 to PageControlPlayer.PageCount - 1 do
+      begin
+        TempFrame := GetClickerActionsArrFrameByStackLevel(i);
+        if i = PageControlPlayer.ActivePageIndex then
+        begin
+          TempFrame.FrameActive := True;
+          Break;
+        end;
+      end;
+    end;
+
+    2: frClickerActionsArrExperiment1.FrameActive := True;
+    3: frClickerActionsArrExperiment2.FrameActive := True;
+  end;
+end;
+
+
+procedure TfrmClickerActions.PageControlMainChange(Sender: TObject);
+begin
+  SetActiveFrame;
+end;
+
+
+procedure TfrmClickerActions.PageControlPlayerChange(Sender: TObject);
+begin
+  SetActiveFrame;
 end;
 
 

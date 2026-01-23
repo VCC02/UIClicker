@@ -44,7 +44,7 @@ object frClickerFindControl: TfrClickerFindControl
         object pnlDrag: TPanel
           Left = 8
           Height = 26
-          Hint = 'Use this box to get the target component from another window.'
+          Hint = 'Use this box to get the target component from another window.'#13#10'The Ctrl-Shift-F5 keyboard shortcut can be used (if enabled) in debugging mode, for the same purpose.'
           Top = 0
           Width = 328
           Caption = 'Drag the mouse cursor, from this box to the target window'

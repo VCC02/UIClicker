@@ -190,6 +190,7 @@ type
     spdbtnAddAction: TSpeedButton;
     spdbtnRemoveAction: TSpeedButton;
     spdbtnNew: TSpeedButton;
+    tmrOtherShortcuts: TTimer;
     tmrWaitingForFilesAvailability: TTimer;
     tmrEditActionsVST: TTimer;
     tmrLogging: TTimer;
@@ -270,6 +271,7 @@ type
     procedure tmrEditActionsVSTTimer(Sender: TObject);
     procedure tmrExecActionFromSrvModuleTimer(Sender: TObject);
     procedure tmrLoggingTimer(Sender: TObject);
+    procedure tmrOtherShortcutsTimer(Sender: TObject);
     procedure tmrWaitingForFilesAvailabilityTimer(Sender: TObject);
     procedure vstActionsMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
@@ -369,10 +371,16 @@ type
     FFuncDescriptions: TStringList;
 
     F2_State: Byte;
+    F5_State: Byte;
     F6_State: Byte;
     F7_State: Byte;
     F8_State: Byte;
     F9_State: Byte;
+    FD_State: Byte;
+    FN_State: Byte;
+    FO_State: Byte;
+    FS_State: Byte;
+    FU_State: Byte;
 
     FFullTemplatesDir: string;
     FAllowedFileDirsForServer: string;
@@ -392,6 +400,7 @@ type
     FClosingTemplate: Boolean;  //set to true by ExitTemplateFromRemote when the template should be closed (after it stays open as called template)
     FPluginStepOver: Boolean;
     FPluginContinueAll: Boolean;
+    FFrameActive: Boolean;
 
     FRemoteAddress: string; //and port  //used as a client
 
@@ -570,6 +579,7 @@ type
 
     procedure SetGridDrawingOption(Value: TDisplayGridLineOption);
     procedure SetPreviewSelectionColors(Value: TSelectionColors);
+    procedure SetFrameActive(Value: Boolean);
 
     procedure FillInWithAllVars(AListOfVars: TStringList);
     procedure FillInWithAllFuncs(AListOfVars: TStringList);
@@ -765,6 +775,7 @@ type
 
     property Modified: Boolean read FModified write SetModified;
     property FileName: string read FFileName write FFileName;
+    property FrameActive: Boolean read FFrameActive write SetFrameActive;
     property StopAllActionsOnDemand: Boolean read FStopAllActionsOnDemand write FStopAllActionsOnDemand;
     property StopAllActionsOnDemandFromParent: PBoolean read FStopAllActionsOnDemandFromParent write FStopAllActionsOnDemandFromParent;
     //property Debugging: Boolean read FDebugging write FDebugging;
@@ -1426,6 +1437,7 @@ begin
   FRemoteAddress := 'http://127.0.0.1:5444/';
   FShouldStopAtBreakPoint := False;
   FPlayingAllActions := False;
+  FFrameActive := False;
 
   {$IFDEF MemPlugins}
     FMemPluginsInMemFS := nil;
@@ -7635,8 +7647,6 @@ end;
 procedure TfrClickerActionsArr.RemoveSelectedActions;
 var
   Node: PVirtualNode;
-  IdxArr: TIntArr;
-  i: Integer;
 begin
   Node := vstActions.GetFirstSelected;
 
@@ -7702,7 +7712,7 @@ begin
   tmrGlowUpdateButton.Enabled := True;
   spdbtnUpdateAction.Font.Style := [fsBold];
   spdbtnUpdateAction.Font.Size := 10;
-  spdbtnUpdateAction.Hint := 'At least one action property is changed. By clicking update, the new changes will be recorded to the list of actions.';
+  spdbtnUpdateAction.Hint := 'At least one action property is changed. By clicking update, the new changes will be recorded to the list of actions.' + #13#10 + 'Shorcut: Ctrl-U.';
 end;
 
 
@@ -7710,6 +7720,7 @@ end;
 procedure TfrClickerActionsArr.tmrDebugKeysTimer(Sender: TObject);
 var
   AState: TKeyboardState;
+  Node: PVirtualNode;
 begin
   //SendMessage(Handle, WM_MOUSEMOVE, 0, 0);  //GetKeyboardState requires WM_MOUSEMOVE events when the mouse is not hovering this window
   //GetKeyboardState(AState);
@@ -7719,6 +7730,11 @@ begin
       AState[VK_F2] := $80
     else
       AState[VK_F2] := 0;
+
+    if GetAsyncKeyState(VK_F5) < 0 then
+      AState[VK_F5] := $80
+    else
+      AState[VK_F5] := 0;
 
     if GetAsyncKeyState(VK_F6) < 0 then
       AState[VK_F6] := $80
@@ -7744,6 +7760,11 @@ begin
       AState[VK_F2] := $80
     else
       AState[VK_F2] := 0;
+
+    if GetKeyState(VK_F5) < 0 then
+      AState[VK_F5] := $80
+    else
+      AState[VK_F5] := 0;
 
     if GetKeyState(VK_F6) < 0 then
       AState[VK_F6] := $80
@@ -7781,6 +7802,19 @@ begin
         spdbtnStopPlaying.Click;
     end;
 
+    if (F5_State and $80 = 0) and (AState[VK_F5] and $80 = $80) and  //detected F5
+      {$IFDEF Windows}
+        (GetAsyncKeyState(VK_CONTROL) < 0) and (GetAsyncKeyState(VK_SHIFT) < 0) then
+      {$ELSE}
+        (GetKeyState(VK_CONTROL) < 0) and (GetKeyState(VK_SHIFT) < 0) then
+      {$ENDIF}  //detected Ctrl-Shift-F5
+    begin
+      Node := vstActions.GetFirstSelected;
+      if Node <> nil then
+        if FClkActions[Node^.Index].ActionOptions.Action in [acFindControl, acEditTemplate] then
+          frClickerActions.frClickerFindControl.ScanTargetControlWithOIUpdate;
+    end;
+
     if (F6_State and $80 = 0) and (AState[VK_F6] and $80 = $80) then  //detected F6
       frClickerActions.frClickerFindControl.btnDisplaySearchAreaDebuggingImage.Click;  /////////ToDo: call a method, not the handler
 
@@ -7814,6 +7848,7 @@ begin
       PlayAllActionsFromButton(True);
 
   F2_State := AState[VK_F2];
+  F5_State := AState[VK_F5];
   F6_State := AState[VK_F6];
   F7_State := AState[VK_F7];
   F8_State := AState[VK_F8];
@@ -7845,6 +7880,7 @@ begin
   spdbtnUpdateAction.Font.Style := [];
   spdbtnUpdateAction.Font.Size := 8;
   spdbtnUpdateAction.Repaint;
+  spdbtnUpdateAction.Hint := 'Updates the first selected action, with the current content from the action editor.' + #13#10 + 'Shorcut: Ctrl-U.';
 end;
 
 
@@ -7861,16 +7897,27 @@ begin
   FPreviousSelectedNode := nil;
 
   F2_State := 0;
+  F5_State := 0;
   F6_State := 0;
   F7_State := 0;
   F8_State := 0;
   F9_State := 0;
+  FD_State := 0;
+  FN_State := 0;
+  FO_State := 0;
+  FS_State := 0;
+  FU_State := 0;
 
-  chkEnableDebuggerKeys.Hint := 'F6 - Press "Display dbg img" button, from "Search Area" in "FindSubControl"' + #13#10 +
+  chkEnableDebuggerKeys.Hint := 'Ctrl-Shift-F5 - Update the "FindControl" local editor with the class, text and handle of the component under mouse cursor.' + #13#10 +
+                                'F6 - Press "Display dbg img" button, from "Search Area" in "FindSubControl".' + #13#10 +
                                 'F7 - Step Into' + #13#10 +
                                 'F8 - Step Over' + #13#10 +
                                 'F9 - Continue All  /  Play All in debugging mode' + #13#10 +
-                                'Ctrl-Shift-F2 - Stop  (always enabled for certain actions)';
+                                'Ctrl-Shift-F2 - Stop  (always enabled for certain actions)' + #13#10 +
+                                'Ctrl-U - Update the currently selected action with the content from Object Inspector (similar to Update button).' + #13#10 +
+                                #13#10 +
+                                'Key shortcuts, which are available even outside debugging:' + #13#10 +
+                                'Ctrl-Shift-D - Toggle the checked state of (this) ' + chkEnableDebuggerKeys.Caption + ' check box.';
 end;
 
 
@@ -7937,6 +7984,13 @@ end;
 procedure TfrClickerActionsArr.SetPreviewSelectionColors(Value: TSelectionColors);
 begin
   frClickerActions.PreviewSelectionColors := Value;
+end;
+
+
+procedure TfrClickerActionsArr.SetFrameActive(Value: Boolean);
+begin
+  FFrameActive := Value;
+  tmrOtherShortcuts.Enabled := Value;
 end;
 
 
@@ -8094,6 +8148,130 @@ begin
     on E: Exception do
       memLogErr.Lines.Add('Exception on adding to log: ' + E.Message);
   end;
+end;
+
+
+procedure TfrClickerActionsArr.tmrOtherShortcutsTimer(Sender: TObject);
+var
+  AState: TKeyboardState;
+  OldTimerEnabledState: Boolean;
+  Node: PVirtualNode;
+begin
+  {$IFDEF Windows}
+    if GetAsyncKeyState(Ord('D')) < 0 then
+      AState[Ord('D')] := $80
+    else
+      AState[Ord('D')] := 0;
+
+    if GetAsyncKeyState(Ord('N')) < 0 then
+      AState[Ord('N')] := $80
+    else
+      AState[Ord('N')] := 0;
+
+    if GetAsyncKeyState(Ord('O')) < 0 then
+      AState[Ord('O')] := $80
+    else
+      AState[Ord('O')] := 0;
+
+    if GetAsyncKeyState(Ord('S')) < 0 then
+      AState[Ord('S')] := $80
+    else
+      AState[Ord('S')] := 0;
+
+    if GetAsyncKeyState(Ord('U')) < 0 then
+      AState[Ord('U')] := $80
+    else
+      AState[Ord('U')] := 0;
+  {$ELSE}
+    if GetKeyState(Ord('D')) < 0 then
+      AState[Ord('D')] := $80
+    else
+      AState[Ord('D')] := 0;
+
+    if GetKeyState(Ord('N')) < 0 then
+      AState[Ord('N')] := $80
+    else
+      AState[Ord('N')] := 0;
+
+    if GetKeyState(Ord('O')) < 0 then
+      AState[Ord('O')] := $80
+    else
+      AState[Ord('O')] := 0;
+
+    if GetKeyState(Ord('S')) < 0 then
+      AState[Ord('S')] := $80
+    else
+      AState[Ord('S')] := 0;
+
+    if GetKeyState(Ord('U')) < 0 then
+      AState[Ord('U')] := $80
+    else
+      AState[Ord('U')] := 0;
+  {$ENDIF}
+
+  {$IFDEF Windows}
+    if (GetAsyncKeyState(VK_CONTROL) < 0) and (GetAsyncKeyState(VK_SHIFT) < 0) then
+  {$ELSE}
+    if (GetKeyState(VK_CONTROL) < 0) and (GetKeyState(VK_SHIFT) < 0) then
+  {$ENDIF}
+      if (FD_State and $80 = 0) and (AState[Ord('D')] and $80 = $80) then  //detected 'D'   //detected Ctrl-Shift-D
+        chkEnableDebuggerKeys.Checked := not chkEnableDebuggerKeys.Checked;
+
+  {$IFDEF Windows}
+    if GetAsyncKeyState(VK_CONTROL) < 0 then  //No shift key on Ctrl-N, Ctrl-O, Ctrl-S, Ctrl-U
+  {$ELSE}
+    if GetKeyState(VK_CONTROL) < 0 then       //No shift key on Ctrl-N, Ctrl-O, Ctrl-S, Ctrl-U
+  {$ENDIF}
+    begin
+      if Application.Active and FFrameActive then
+      begin
+        if (FN_State and $80 = 0) and (AState[Ord('N')] and $80 = $80) then  //detected 'N'   //detected Ctrl-N
+        begin
+          OldTimerEnabledState := tmrOtherShortcuts.Enabled; //use this, just in case the timer is already disabled
+          tmrOtherShortcuts.Enabled := False;
+          try
+            spdbtnNew.Click;
+          finally
+            tmrOtherShortcuts.Enabled := OldTimerEnabledState;
+          end;
+        end;  //N
+
+        if (FO_State and $80 = 0) and (AState[Ord('O')] and $80 = $80) then  //detected 'O'   //detected Ctrl-O
+        begin
+          OldTimerEnabledState := tmrOtherShortcuts.Enabled; //use this, just in case the timer is already disabled
+          tmrOtherShortcuts.Enabled := False;
+          try
+            spdbtnLoadTemplate.Click;
+          finally
+            tmrOtherShortcuts.Enabled := OldTimerEnabledState;
+          end;
+        end;  //O
+
+        if (FS_State and $80 = 0) and (AState[Ord('S')] and $80 = $80) then  //detected 'S'   //detected Ctrl-S
+        begin
+          OldTimerEnabledState := tmrOtherShortcuts.Enabled; //use this, just in case the timer is already disabled
+          tmrOtherShortcuts.Enabled := False;
+          try
+            spdbtnSaveTemplate.Click;
+          finally
+            tmrOtherShortcuts.Enabled := OldTimerEnabledState;
+          end;
+        end;  //S
+
+        if (FU_State and $80 = 0) and (AState[Ord('U')] and $80 = $80) then  //detected 'U'   //detected Ctrl-U
+        begin
+          Node := vstActions.GetFirstSelected;
+          if Node <> nil then
+            spdbtnUpdateAction.Click;
+        end;  //U
+      end;  //active
+    end; //Ctr-Shift
+
+  FD_State := AState[Ord('D')];
+  FN_State := AState[Ord('N')];
+  FO_State := AState[Ord('O')];
+  FS_State := AState[Ord('S')];
+  FU_State := AState[Ord('U')];
 end;
 
 

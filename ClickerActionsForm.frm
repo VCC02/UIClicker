@@ -50,11 +50,12 @@ object frmClickerActions: TfrmClickerActions
     Height = 712
     Top = 0
     Width = 872
-    ActivePage = TabSheetSettings
+    ActivePage = TabSheetTemplateExec
     Anchors = [akTop, akLeft, akBottom]
     Images = imglstMainPage
-    TabIndex = 0
+    TabIndex = 1
     TabOrder = 0
+    OnChange = PageControlMainChange
     object TabSheetSettings: TTabSheet
       Caption = 'Settings'
       ClientHeight = 685
@@ -617,6 +618,7 @@ object frmClickerActions: TfrmClickerActions
         Images = imglstCalledTemplates
         TabIndex = 0
         TabOrder = 0
+        OnChange = PageControlPlayerChange
         object TabSheetExecMainPlayer: TTabSheet
           Caption = 'Main Player'
           ClientHeight = 654

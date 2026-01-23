@@ -141,6 +141,7 @@ object frClickerActionsArr: TfrClickerActionsArr
     object spdbtnLoadTemplate: TSpeedButton
       Left = 302
       Height = 25
+      Hint = 'Shorcut: Ctrl-O.'
       Top = 207
       Width = 108
       Anchors = [akLeft, akBottom]
@@ -150,6 +151,7 @@ object frClickerActionsArr: TfrClickerActionsArr
     object spdbtnSaveTemplate: TSpeedButton
       Left = 440
       Height = 25
+      Hint = 'Shorcut: Ctrl-S.'
       Top = 207
       Width = 101
       Anchors = [akLeft, akBottom]
@@ -292,6 +294,7 @@ object frClickerActionsArr: TfrClickerActionsArr
       Hint = 'hint set on init'
       Top = 169
       Width = 137
+      HelpType = htKeyword
       Anchors = [akTop, akRight]
       AutoSize = False
       Caption = 'Enable Debugger Keys'
@@ -684,7 +687,7 @@ object frClickerActionsArr: TfrClickerActionsArr
     object spdbtnNew: TSpeedButton
       Left = 224
       Height = 25
-      Hint = 'Clear all actions and all controls'
+      Hint = 'Clear all actions and all controls.'#13#10'Shorcut: Ctrl-N.'
       Top = 207
       Width = 75
       Anchors = [akLeft, akBottom]
@@ -2147,5 +2150,12 @@ object frClickerActionsArr: TfrClickerActionsArr
     OnTimer = tmrWaitingForFilesAvailabilityTimer
     Left = 672
     Top = 248
+  end
+  object tmrOtherShortcuts: TTimer
+    Enabled = False
+    Interval = 100
+    OnTimer = tmrOtherShortcutsTimer
+    Left = 592
+    Top = 304
   end
 end

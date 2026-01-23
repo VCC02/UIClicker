@@ -616,6 +616,8 @@ type
     procedure UpdatePreviewIcons;
     procedure UpdateListsOfSearchFiles(AMatchBitmapFiles, AMatchPrimitiveFiles: string);
 
+    procedure ScanTargetControlWithOIUpdate;
+
     procedure CreateTransparentSelectionLabels;
     procedure DisplayDebuggingImage;
     procedure PreviewText; //called by ExecuteAction
@@ -1960,6 +1962,16 @@ begin
     end;
   except
   end;
+end;
+
+
+procedure TfrClickerFindControl.ScanTargetControlWithOIUpdate;  //called by keyboard shortcut
+begin
+  ScanTargetControl;
+  pnlDrag.Color := clYellow; //this was set in ScanTargetControl to green
+
+  if chkAutoCopyValuesToObjectInspector.Checked then
+    DoOnSetMatchTextAndClassToOI(lbeFoundControlText.Text, lbeFoundControlClass.Text);
 end;
 
 
