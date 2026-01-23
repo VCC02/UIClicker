@@ -32,6 +32,7 @@ unit UIClickerMainFormFP;
 interface
 
 uses
+  LCLIntf, LCLType,
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, StdCtrls, ExtCtrls,
   Buttons, ExtDlgs, ClickerIniFiles, ClickerPrimitiveUtils;
 
@@ -272,6 +273,13 @@ end;
 procedure TfrmUIClickerMainForm.FormClose(Sender: TObject;
   var CloseAction: TCloseAction);
 begin
+  if frmClickerActions.Modified then  //This doesn't verify spawned frames (i.e. called templates).
+    if MessageBox(Handle, 'There are modified templates. Do you want to close and discard the changes?', PChar(Caption), MB_ICONWARNING + MB_YESNO) = IDNO then
+    begin
+      CloseAction := caNone;
+      Exit;
+    end;
+
   GeneralClosingApp := True;  //Prevent waiting for response loops to keep going.
   SaveSettings;
   Enabled := False; //A simple solution to a race condition, caused by multi-clicking the "X" button of this window, while stopping the server module.

@@ -264,6 +264,7 @@ type
 
     function GetBMPsDir: string;
     procedure SetBMPsDir(Value: string);
+    function GetModified: Boolean;
 
     function GetConfiguredRemoteAddress: string;
     function GetActionExecution: TActionExecution;
@@ -417,6 +418,8 @@ type
 
     property RenderedInMemFileSystem: TInMemFileSystem read FRenderedInMemFileSystem;  //for externally rendered images
     property PluginsInMemFileSystem: TInMemFileSystem read FPluginsInMemFileSystem;    //for plugins
+
+    property Modified: Boolean read GetModified;
 
     property OnReLoadSettings: TOnReLoadSettings read FOnReLoadSettings write FOnReLoadSettings;
     property OnCopyControlTextAndClassFromMainWindow: TOnCopyControlTextAndClassFromMainWindow read FOnCopyControlTextAndClassFromMainWindow write FOnCopyControlTextAndClassFromMainWindow;
@@ -2695,6 +2698,14 @@ begin
     frClickerActionsArrExperiment2.frClickerActions.BMPsDir := FBMPsDir;
     frClickerActionsArrMain.frClickerActions.BMPsDir := FBMPsDir;
   end;
+end;
+
+
+function TfrmClickerActions.GetModified: Boolean;
+begin
+  Result := frClickerActionsArrMain.Modified or
+            frClickerActionsArrExperiment1.Modified or
+            frClickerActionsArrExperiment2.Modified;
 end;
 
 

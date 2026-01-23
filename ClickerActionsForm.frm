@@ -50,10 +50,10 @@ object frmClickerActions: TfrmClickerActions
     Height = 712
     Top = 0
     Width = 872
-    ActivePage = TabSheetTemplateExec
+    ActivePage = TabSheetSettings
     Anchors = [akTop, akLeft, akBottom]
     Images = imglstMainPage
-    TabIndex = 1
+    TabIndex = 0
     TabOrder = 0
     OnChange = PageControlMainChange
     object TabSheetSettings: TTabSheet
