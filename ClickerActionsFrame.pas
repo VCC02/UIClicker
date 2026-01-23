@@ -5247,6 +5247,7 @@ begin
       MenuData^.TempEditingAction^.FindSubControlOptions.MatchBitmapText[MenuData^.PropertyItemIndex - 1];
 
     MenuData^.TempEditingAction^.FindSubControlOptions.MatchBitmapText[MenuData^.PropertyItemIndex - 1] := TempProfile;
+    BuildFontColorIconsList;
 
     FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex);
     TriggerOnControlsModified;
@@ -5271,6 +5272,7 @@ begin
       MenuData^.TempEditingAction^.FindSubControlOptions.MatchBitmapText[MenuData^.PropertyItemIndex + 1];
 
     MenuData^.TempEditingAction^.FindSubControlOptions.MatchBitmapText[MenuData^.PropertyItemIndex + 1] := TempProfile;
+    BuildFontColorIconsList;
 
     FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex);
     TriggerOnControlsModified;
@@ -5383,7 +5385,7 @@ var
 begin
   MenuData := {%H-}POIMenuItemData((Sender as TMenuItem).Tag);
   try
-    MessageBox(Handle, 'Please click the arrow button, from a font profile name, to move it up or down.', 'Font profiles.', MB_ICONINFORMATION);
+    MessageBox(Handle, 'Please click the arrow button, from the ProfileName property, to move it up or down. At least two font profiles have to exist in order to open the menu.', 'Font profiles.', MB_ICONINFORMATION);
   finally
     Dispose(MenuData);
   end;
@@ -9291,6 +9293,7 @@ begin
                 s := '  Name: ' + BMPTxt.ProfileName + '  (' + BMPTxt.FontName + ', ' + IntToStr(BMPTxt.FontSize) + ', ' + BMPTxt.ForegroundColor + ', ' + BMPTxt.BackgroundColor + ')';
                 AddMenuItemToPopupMenu(FOIEditorMenu, 'Remove font profile[' + IntToStr(i) + ']  ' + s, MenuItem_RemoveFontProfileFromPropertyListClick,
                   ANodeLevel, ACategoryIndex, APropertyIndex, i, AEditingAction);  //ItemIndex is not the real one. It points to the profile index.
+                FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(dmClickerIcons.imglstMatchPrimitiveFilesMenu, 1);
               end;
 
               if Length(AEditingAction^.FindSubControlOptions.MatchBitmapText) > 0 then
@@ -9302,6 +9305,7 @@ begin
                 s := '  Name: ' + BMPTxt.ProfileName + '  (' + BMPTxt.FontName + ', ' + IntToStr(BMPTxt.FontSize) + ', ' + BMPTxt.ForegroundColor + ', ' + BMPTxt.BackgroundColor + ')';
                 AddMenuItemToPopupMenu(FOIEditorMenu, 'Duplicate font profile[' + IntToStr(i) + ']  ' + s, MenuItem_DuplicateFontProfileClick,
                   ANodeLevel, ACategoryIndex, APropertyIndex, i, AEditingAction);  //ItemIndex is not the real one. It points to the profile index.
+                FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(dmClickerIcons.imglstMatchBitmapTextProperties, 14);
               end;
 
               GetCursorPos(tp);
@@ -9320,9 +9324,11 @@ begin
 
                   AddMenuItemToPopupMenu(FOIEditorMenu, 'Move font profile up', MenuItem_MoveFontProfileUpInPropertyListClick,
                     ANodeLevel, ACategoryIndex, APropertyIndex, ItemIndexDiv, AEditingAction); //sending the profile index through item index arg
+                  FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(dmClickerIcons.imglstMatchPrimitiveFilesMenu, 2);
 
                   AddMenuItemToPopupMenu(FOIEditorMenu, 'Move font profile down', MenuItem_MoveFontProfileDownInPropertyListClick,
                     ANodeLevel, ACategoryIndex, APropertyIndex, ItemIndexDiv, AEditingAction); //sending the profile index through item index arg
+                  FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(dmClickerIcons.imglstMatchPrimitiveFilesMenu, 3);
 
                   GetCursorPos(tp);
                   FOIEditorMenu.PopUp(tp.X, tp.Y);
