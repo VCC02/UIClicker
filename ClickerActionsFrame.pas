@@ -6767,11 +6767,22 @@ begin  //
   try
     case ACategoryIndex of
       CCategory_Common:
-        if Column = 0 then
-        begin
-          ImageList := dmClickerIcons.imglstActionProperties;
-          ImageIndex := APropertyIndex;
+      begin
+        case Column of
+          0:
+          begin
+            ImageList := dmClickerIcons.imglstActionProperties;
+            ImageIndex := APropertyIndex;
+          end;
+
+          1:
+            if APropertyIndex = CMain_Action_PropIndex then
+            begin
+              ImageList := dmClickerIcons.imglstActions16;
+              ImageIndex := EditingActionType;
+            end;
         end;
+      end;
 
       CCategory_ActionSpecific:
       begin
@@ -7773,7 +7784,15 @@ begin
   try
     case ACategoryIndex of
       CCategory_Common:
+      begin
         AEnumItemName := CActionEnumStrings[APropertyIndex]^[AEnumItemIndex];
+
+        if APropertyIndex = CMain_Action_PropIndex then
+        begin
+          AImgLst := dmClickerIcons.imglstActions16;
+          AEnumImgItemIndex := AEnumItemIndex;
+        end;
+      end;
 
       CCategory_ActionSpecific:
         OIGetEnumConst_ActionSpecific(FEditingAction, CurrentlyEditingActionType, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEnumItemIndex, AEnumItemName, AEnumImgItemIndex, AImgLst);

@@ -2384,13 +2384,13 @@ procedure TActionExecution.DisplayExtraErrorMessageAboutGPURun(var AGPUDbgBuffer
 var
   ExtraMsg: string;
 begin
-  if (Length(AGPUDbgBuffer) > 0) and (AGPUDbgBuffer[0] <> CL_SUCCESS) then
+  if (Length(AGPUDbgBuffer) > 0) and (AGPUDbgBuffer[0] <> CLK_SUCCESS) then
   begin
     ExtraMsg := '';
     if ADisplayExtraMsgAboutDbgVars then
       ExtraMsg := ' You can set the $SetGPUDbgBuffer$ variable to True, before executing this FindSubControl action, to see other GPU debugging vars.';
 
-    AddToLog('enqueue_kernel returned ' + IntToStr(AGPUDbgBuffer[0]) + '.' + ExtraMsg);
+    AddToLog('enqueue_kernel returned ' + CLDeviceErrorToStr(AGPUDbgBuffer[0]) + '  (' + IntToStr(AGPUDbgBuffer[0]) + ').' + ExtraMsg);
   end;
 end;
 

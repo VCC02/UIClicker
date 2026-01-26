@@ -106,6 +106,7 @@ const
 
   //PropIndex consts
   CMain_ActionName_PropIndex = 0; //property index in Action structure
+  CMain_Action_PropIndex = 1; //property index in Action structure
   CMain_ActionTimeout_PropIndex = 2; //property index in Action structure
   CMain_ActionCondition_PropIndex = 3; //property index in Action structure
 
