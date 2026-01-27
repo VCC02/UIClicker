@@ -370,17 +370,19 @@ type
     FVarDescriptions: TStringList;
     FFuncDescriptions: TStringList;
 
-    F2_State: Byte;
-    F5_State: Byte;
-    F6_State: Byte;
-    F7_State: Byte;
-    F8_State: Byte;
-    F9_State: Byte;
-    FD_State: Byte;
-    FN_State: Byte;
-    FO_State: Byte;
-    FS_State: Byte;
-    FU_State: Byte;
+    FF2_State: Byte;  //F2
+    FF5_State: Byte;  //F5
+    FF6_State: Byte;  //F6
+    FF7_State: Byte;  //F7
+    FF8_State: Byte;  //F8
+    FF9_State: Byte;  //F9
+    FD_State: Byte;   //D
+    FN_State: Byte;   //N
+    FO_State: Byte;   //O
+    FS_State: Byte;   //S
+    FU_State: Byte;   //U
+    F1_State: Byte;   //1
+    F2_State: Byte;   //2
 
     FFullTemplatesDir: string;
     FAllowedFileDirsForServer: string;
@@ -5723,6 +5725,7 @@ begin
 
   InsertSetVar(InsertIndex + 1, 'Cache current control', NewAction);
   UpdateNodesCheckStateFromActions;
+  Modified := True;
 end;
 
 
@@ -5745,6 +5748,7 @@ begin
 
   InsertSetVar(InsertIndex + 1, 'Restore cached control', NewAction);
   UpdateNodesCheckStateFromActions;
+  Modified := True;
 end;
 
 
@@ -7755,6 +7759,16 @@ begin
       AState[VK_F9] := $80
     else
       AState[VK_F9] := 0;
+
+    if GetAsyncKeyState(VK_1) < 0 then
+      AState[VK_1] := $80
+    else
+      AState[VK_1] := 0;
+
+    if GetAsyncKeyState(VK_2) < 0 then
+      AState[VK_2] := $80
+    else
+      AState[VK_2] := 0;
   {$ELSE}
     if GetKeyState(VK_F2) < 0 then
       AState[VK_F2] := $80
@@ -7785,11 +7799,21 @@ begin
       AState[VK_F9] := $80
     else
       AState[VK_F9] := 0;
+
+    if GetKeyState(VK_1) < 0 then
+      AState[VK_1] := $80
+    else
+      AState[VK_1] := 0;
+
+    if GetKeyState(VK_2) < 0 then
+      AState[VK_2] := $80
+    else
+      AState[VK_2] := 0;
   {$ENDIF}
 
   if FDebugging then
   begin
-    if (F2_State and $80 = 0) and (AState[VK_F2] and $80 = $80) and
+    if (FF2_State and $80 = 0) and (AState[VK_F2] and $80 = $80) and
       {$IFDEF Windows}
         (GetAsyncKeyState(VK_CONTROL) < 0) and (GetAsyncKeyState(VK_SHIFT) < 0) then
       {$ELSE}
@@ -7802,7 +7826,7 @@ begin
         spdbtnStopPlaying.Click;
     end;
 
-    if (F5_State and $80 = 0) and (AState[VK_F5] and $80 = $80) and  //detected F5
+    if (FF5_State and $80 = 0) and (AState[VK_F5] and $80 = $80) and  //detected F5
       {$IFDEF Windows}
         (GetAsyncKeyState(VK_CONTROL) < 0) and (GetAsyncKeyState(VK_SHIFT) < 0) then
       {$ELSE}
@@ -7815,10 +7839,10 @@ begin
           frClickerActions.frClickerFindControl.ScanTargetControlWithOIUpdate;
     end;
 
-    if (F6_State and $80 = 0) and (AState[VK_F6] and $80 = $80) then  //detected F6
+    if (FF6_State and $80 = 0) and (AState[VK_F6] and $80 = $80) then  //detected F6
       frClickerActions.frClickerFindControl.btnDisplaySearchAreaDebuggingImage.Click;  /////////ToDo: call a method, not the handler
 
-    if (F7_State and $80 = 0) and (AState[VK_F7] and $80 = $80) then  //detected F7
+    if (FF7_State and $80 = 0) and (AState[VK_F7] and $80 = $80) then  //detected F7
     begin
       //Application.MainForm.Caption := 'F7';
       
@@ -7826,7 +7850,7 @@ begin
         FContinuePlayingBySteppingInto := True;
     end;
 
-    if (F8_State and $80 = 0) and (AState[VK_F8] and $80 = $80) then  //detected F8
+    if (FF8_State and $80 = 0) and (AState[VK_F8] and $80 = $80) then  //detected F8
     begin
       //Application.MainForm.Caption := 'F8';
 
@@ -7834,7 +7858,7 @@ begin
         FContinuePlayingNext := True;
     end;
 
-    if (F9_State and $80 = 0) and (AState[VK_F9] and $80 = $80) then  //detected F9
+    if (FF9_State and $80 = 0) and (AState[VK_F9] and $80 = $80) then  //detected F9
     begin
       //Application.MainForm.Caption := 'F9';
 
@@ -7843,16 +7867,31 @@ begin
     end;
   end;
 
-  if (F9_State and $80 = 0) and (AState[VK_F9] and $80 = $80) then  //detected F9
+  if (FF9_State and $80 = 0) and (AState[VK_F9] and $80 = $80) then  //detected F9
     if not FPlaying then
       PlayAllActionsFromButton(True);
 
-  F2_State := AState[VK_F2];
-  F5_State := AState[VK_F5];
-  F6_State := AState[VK_F6];
-  F7_State := AState[VK_F7];
-  F8_State := AState[VK_F8];
-  F9_State := AState[VK_F9];
+  {$IFDEF Windows}
+    if GetAsyncKeyState(VK_CONTROL) < 0 then      //Just Ctrl, without shift
+  {$ELSE}
+    if GetKeyState(VK_CONTROL) < 0 then
+  {$ENDIF}  //detected Ctrl-Shift-F5
+  begin
+    if (F1_State and $80 = 0) and (AState[VK_1] and $80 = $80) then  //detected 1
+      frClickerActions.frClickerFindControl.SetFirstSelectionPointFromRealCoordinates;
+
+    if (F2_State and $80 = 0) and (AState[VK_2] and $80 = $80) then  //detected 2
+      frClickerActions.frClickerFindControl.SetSecondSelectionPointFromRealCoordinates;
+  end;
+
+  FF2_State := AState[VK_F2];
+  FF5_State := AState[VK_F5];
+  FF6_State := AState[VK_F6];
+  FF7_State := AState[VK_F7];
+  FF8_State := AState[VK_F8];
+  FF9_State := AState[VK_F9];
+  F1_State := AState[VK_1];
+  F2_State := AState[VK_2];
 end;
 
 
@@ -7896,25 +7935,29 @@ begin
   frClickerActions.OnControlsModified := ClickerActionsFrameOnControlsModified;
   FPreviousSelectedNode := nil;
 
-  F2_State := 0;
-  F5_State := 0;
-  F6_State := 0;
-  F7_State := 0;
-  F8_State := 0;
-  F9_State := 0;
+  FF2_State := 0;
+  FF5_State := 0;
+  FF6_State := 0;
+  FF7_State := 0;
+  FF8_State := 0;
+  FF9_State := 0;
   FD_State := 0;
   FN_State := 0;
   FO_State := 0;
   FS_State := 0;
   FU_State := 0;
+  F1_State := 0;
+  F2_State := 0;
 
-  chkEnableDebuggerKeys.Hint := 'Ctrl-Shift-F5 - Update the "FindControl" local editor with the class, text and handle of the component under mouse cursor.' + #13#10 +
+  chkEnableDebuggerKeys.Hint := 'Ctrl-Shift-F5 - Update the "FindControl" local editor with the class and text of the component under mouse cursor. This sets the action to "Modified".' + #13#10 +
                                 'F6 - Press "Display dbg img" button, from "Search Area" in "FindSubControl".' + #13#10 +
                                 'F7 - Step Into' + #13#10 +
                                 'F8 - Step Over' + #13#10 +
                                 'F9 - Continue All  /  Play All in debugging mode' + #13#10 +
                                 'Ctrl-Shift-F2 - Stop  (always enabled for certain actions)' + #13#10 +
                                 'Ctrl-U - Update the currently selected action with the content from Object Inspector (similar to Update button).' + #13#10 +
+                                'Ctrl-1 - Set the first selection point (top-left) and a dummy second point (bot-right), of a search area, in a FindSubControl action. This sets the action to "Modified".' + #13#10 +
+                                'Ctrl-2 - Set the second selection point (bot-right), of a search area, in a FindSubControl action. This sets the action to "Modified".' + #13#10 +
                                 #13#10 +
                                 'Key shortcuts, which are available even outside debugging:' + #13#10 +
                                 'Ctrl-Shift-D - Toggle the checked state of (this) ' + chkEnableDebuggerKeys.Caption + ' check box.';
