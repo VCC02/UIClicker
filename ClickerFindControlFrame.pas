@@ -192,6 +192,7 @@ type
   TfrClickerFindControl = class(TFrame)
     btnCopyFoundValues: TButton;
     btnDisplaySearchAreaDebuggingImage: TButton;
+    chkShowMouseCoords: TCheckBox;
     chkShowZoom: TCheckBox;
     chkIncludeSearchedBmpInZoom: TCheckBox;
     chkAutoCopyValuesToObjectInspector: TCheckBox;
@@ -219,6 +220,9 @@ type
     imgUpdateLeftTopOffsets: TImage;
     imgCopyBkImg: TImage;
     imgUpdateLeftTopRightBottomOffsets: TImage;
+    lblGlobalMouseCoords: TLabel;
+    lblMouseOnControlCoords: TLabel;
+    lblMouseOnConfiguredFindSubControl: TLabel;
     lblPreviewSelectedControl: TLabel;
     lblColorUnderCursor: TLabel;
     lblColorUnderCursorPreview: TLabel;
@@ -262,6 +266,7 @@ type
     TabSheetActionFindSubControlBMPText: TTabSheet;
     TabSheetActionFindSubControlSearchArea: TTabSheet;
     TabSheetActionFindSubControlText: TTabSheet;
+    tmrScanByMouse: TTimer;
     tmrScan: TTimer;
     tmrHandleSelectionKeys: TTimer;
     tmrBlinkCalcErrLevel: TTimer;
@@ -270,6 +275,7 @@ type
     tmrUpdateSearchAreaOffsetEditBoxes: TTimer;
     procedure btnCopyFoundValuesClick(Sender: TObject);
     procedure chkDisplayCroppingLinesChange(Sender: TObject);
+    procedure chkShowMouseCoordsChange(Sender: TObject);
     procedure CopyTextAndClassFromPreviewWindowClick(Sender: TObject);
     procedure CopyTextAndClassFromWinInterpWindowClick(Sender: TObject);
     procedure btnDisplaySearchAreaDebuggingImageClick(Sender: TObject);
@@ -290,6 +296,7 @@ type
     procedure tmrBlinkCalcErrLevelTimer(Sender: TObject);
     procedure tmrDrawZoomTimer(Sender: TObject);
     procedure tmrHandleSelectionKeysTimer(Sender: TObject);
+    procedure tmrScanByMouseTimer(Sender: TObject);
     procedure tmrScanTimer(Sender: TObject);
     procedure tmrUpdateGridTimer(Sender: TObject);
     procedure tmrUpdateSearchAreaOffsetEditBoxesTimer(Sender: TObject);
@@ -1730,6 +1737,27 @@ begin
 end;
 
 
+procedure TfrClickerFindControl.tmrScanByMouseTimer(Sender: TObject);
+var
+  tp: TPoint;
+  Comp: TCompRec;
+  FindControlOptions: PClkFindControlOptions;
+  Same: Boolean;
+begin
+  GetCursorPos(tp);
+  Comp := GetWindowClassRec(tp);
+  lblGlobalMouseCoords.Caption := 'Global mouse: ' + IntToStr(tp.X) + ':' + IntToStr(tp.Y);
+  lblMouseOnControlCoords.Caption := 'Mouse on control: ' + IntToStr(Comp.MouseXOffset) + ':' + IntToStr(Comp.MouseYOffset);
+
+  if not DoOnGetIsFindSubControl then
+  begin
+    FindControlOptions := DoOnGetFindControlOptions;
+    Same := (FindControlOptions.MatchText = Comp.Text) and (FindControlOptions.MatchClassName = Comp.ClassName);
+    lblMouseOnConfiguredFindSubControl.Caption := 'Same control as action: ' + BoolToStr(Same, 'Yes', 'No');
+  end;
+end;
+
+
 procedure TfrClickerFindControl.tmrUpdateGridTimer(Sender: TObject);
 begin
   tmrUpdateGrid.Enabled := False;
@@ -2075,6 +2103,12 @@ var
 begin
   for i := 0 to Length(FBMPTextProfiles) - 1 do
     FBMPTextProfiles[i].ShowCroppingLines := chkDisplayCroppingLines.Checked;
+end;
+
+
+procedure TfrClickerFindControl.chkShowMouseCoordsChange(Sender: TObject);
+begin
+  tmrScanByMouse.Enabled := chkShowMouseCoords.Checked;
 end;
 
 

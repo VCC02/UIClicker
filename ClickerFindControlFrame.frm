@@ -15,7 +15,7 @@ object frClickerFindControl: TfrClickerFindControl
     Height = 250
     Top = 0
     Width = 877
-    ActivePage = TabSheetActionFindSubControlSearchArea
+    ActivePage = TabSheetActionFindSubControlText
     Anchors = [akTop, akLeft, akRight, akBottom]
     Constraints.MinHeight = 201
     Constraints.MinWidth = 250
@@ -24,7 +24,7 @@ object frClickerFindControl: TfrClickerFindControl
     Images = imglstFindCriteria
     ParentFont = False
     ParentShowHint = False
-    TabIndex = 2
+    TabIndex = 0
     TabOrder = 0
     OnChange = PageControlMatchChange
     object TabSheetActionFindSubControlText: TTabSheet
@@ -183,6 +183,45 @@ object frClickerFindControl: TfrClickerFindControl
         Top = 8
         Width = 38
         Caption = 'Preview'
+      end
+      object lblGlobalMouseCoords: TLabel
+        Left = 0
+        Height = 13
+        Hint = 'Displays the mouse global coordinates.'
+        Top = 172
+        Width = 67
+        Caption = 'Global mouse:'
+        ParentShowHint = False
+        ShowHint = True
+      end
+      object lblMouseOnControlCoords: TLabel
+        Left = 0
+        Height = 13
+        Hint = 'Displays the mouse coordinates over the control under mouse cursor.'
+        Top = 190
+        Width = 86
+        Caption = 'Mouse on control:'
+        ParentShowHint = False
+        ShowHint = True
+      end
+      object lblMouseOnConfiguredFindSubControl: TLabel
+        Left = 0
+        Height = 13
+        Hint = 'Displays whether the control under the mouse cursor is the same control as configured in the FindControl action.'
+        Top = 208
+        Width = 112
+        Caption = 'Same control as action:'
+        ParentShowHint = False
+        ShowHint = True
+      end
+      object chkShowMouseCoords: TCheckBox
+        Left = 192
+        Height = 17
+        Top = 172
+        Width = 137
+        Caption = 'Show mouse coordinates'
+        TabOrder = 2
+        OnChange = chkShowMouseCoordsChange
       end
     end
     object TabSheetActionFindSubControlBMPText: TTabSheet
@@ -898,14 +937,14 @@ object frClickerFindControl: TfrClickerFindControl
     Enabled = False
     Interval = 100
     OnTimer = tmrUpdateGridTimer
-    Left = 84
+    Left = 96
     Top = 206
   end
   object tmrDrawZoom: TTimer
     Enabled = False
     Interval = 50
     OnTimer = tmrDrawZoomTimer
-    Left = 152
+    Left = 168
     Top = 192
   end
   object tmrBlinkCalcErrLevel: TTimer
@@ -928,5 +967,12 @@ object frClickerFindControl: TfrClickerFindControl
     OnTimer = tmrScanTimer
     Left = 784
     Top = 176
+  end
+  object tmrScanByMouse: TTimer
+    Enabled = False
+    Interval = 100
+    OnTimer = tmrScanByMouseTimer
+    Left = 784
+    Top = 128
   end
 end
