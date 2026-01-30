@@ -27,19 +27,36 @@ program UIClickerHTTPTests;
 {$mode objfpc}{$H+}
 
 uses
-  Interfaces, Forms, GuiTestRunner, TestHTTPAPI, ClickerActionsClient,
+  Interfaces, Classes, SysUtils, Forms, {GuiTestRunner,} TestHTTPAPI, ClickerActionsClient,
   ClickerUtils, ClickerTemplates, ClickerFileProviderClient,
   ClickerActionProperties, InMemFileSystem, Expectations, MemArchive,
   ActionsStuff, TestMiscHTTPAPI, TestTemplateLevelHTTPAPI, TestLowLevelHTTPAPI,
   TestClickerClientHTTPAPI, TestClickerClientMemPlugins, UITestUtils, DllUtils,
-  ClickerClientAPI, ClickerClientIntf, PitstopTestRunner;
+  ClickerClientAPI, ClickerClientIntf, PitstopTestRunner, TestGPUSettings,
+  PitstopTestCommands;
 
 {$R *.res}
+
+var
+  UsingServer: Boolean;
 
 begin
   Application.Initialize;
   //Application.CreateForm(TGuiTestRunner, TestRunner);
   Application.CreateForm(TfrmPitstopTestRunner, frmPitstopTestRunner);
-  Application.Run;
+
+  UsingServer := False;
+  try
+    if ParamStr(1) = 'StartServer' then
+    begin
+      UsingServer := True;
+      CreatePitstopCommandServer;
+    end;
+
+    Application.Run;
+  finally
+    if UsingServer then
+      DestroyPitstopCommandServer;
+  end;
 end.
 

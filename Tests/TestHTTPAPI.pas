@@ -96,6 +96,7 @@ type
 
     function ExecTestTemplate(ATestServerAddress, ATemplateName: string): string;
     function AsyncExecTestTemplate(ATestServerAddress, ATemplateName: string): TClientThread;
+    procedure SendTestVarsToUIClickerUnderTest;
 
     function GetPluginBitnessDirName: string;
 
@@ -106,7 +107,8 @@ type
 
 
 const
-  CTestServerAddress = 'http://127.0.0.1:5444/';
+  CTestServerPort = '5444';
+  CTestServerAddress = 'http://127.0.0.1:' + CTestServerPort + '/';
   CTestTemplateFileName = 'TestTemplate.clktmpl';
   CEmptyTestTemplateFileName = 'EmptyTestTemplate.clktmpl';
   CExpectedBadStackLevelResponse: string = '[Server error] Stack level out of bounds: 10. This happens when there is no template loaded in a new tab (with the requested stack level), as a result of "call template" action. It is also possible that the template is loaded, then exited before being executed.';
@@ -123,7 +125,7 @@ implementation
 
 
 uses
-  ActionsStuff, ClickerActionProperties, PitstopTestRunner,
+  ActionsStuff, ClickerActionProperties, PitstopTestRunner, PitstopTestCommands,
   Controls, Forms;
 
 
@@ -669,6 +671,18 @@ begin
   AppBitness := GetVarValueFromServer('$AppBitness$');
   OSBitness := GetVarValueFromServer('$OSBitness$');
   Result := AppBitness + '-' + OSBitness;
+end;
+
+
+procedure TTestHTTPAPI.SendTestVarsToUIClickerUnderTest;
+var
+  i: Integer;
+begin
+  for i := 0 to TestVars.Count - 1 do
+  begin
+    frmPitstopTestRunner.AddToLog(TestVars.Strings[i]);
+    SetVariable(TestServerAddress, TestVars.Names[i], TestVars.ValueFromIndex[i], 0);
+  end;
 end;
 
 end.

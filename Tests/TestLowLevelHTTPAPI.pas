@@ -180,7 +180,7 @@ var
   CallTemplateOptions: TClkCallTemplateOptions;
 begin
   PathToTestUIClicker := ExpandFileName(ExtractFilePath(ParamStr(0)) + '..\UIClicker.exe');
-  TestUIClicker_Proc := CreateUIClickerProcess(PathToTestUIClicker, '--SetExecMode Server --ServerPort 5444');
+  TestUIClicker_Proc := CreateUIClickerProcess(PathToTestUIClicker, '--SetExecMode Server --ServerPort ' + CTestServerPort);
 
   GenerateCallTemplateOptions(CallTemplateOptions, '$AppDir$\Tests\TestFiles\OpenActionsWindowToTemplateExecution.clktmpl', '', False);
   Response := FastReplace_87ToReturn(ExecuteCallTemplateAction(TestServerAddress, CallTemplateOptions, False, False, CREParam_FileLocation_ValueDisk));
