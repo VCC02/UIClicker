@@ -47,6 +47,7 @@ const
   CGPUDbgVar_GPUReleaseFinalEventAtKernelEnd = '$GPUReleaseFinalEventAtKernelEnd$';
   CGPUDbgVar_GPUIgnoreExecutionAvailability = '$GPUIgnoreExecutionAvailability$';
 
+  CGPUDbgVar_AdditionalGPUInfo = '$AdditionalGPUInfo$';
 
 implementation
 

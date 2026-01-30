@@ -2382,7 +2382,7 @@ end;
 
 procedure TActionExecution.DisplayExtraErrorMessageAboutGPURun(var AGPUDbgBuffer: TIntArr; ADisplayExtraMsgAboutDbgVars: Boolean = False);
 var
-  ExtraMsg: string;
+  ErrMsg, ExtraMsg: string;
 begin
   if (Length(AGPUDbgBuffer) > 0) and (AGPUDbgBuffer[0] <> CLK_SUCCESS) then
   begin
@@ -2390,7 +2390,9 @@ begin
     if ADisplayExtraMsgAboutDbgVars then
       ExtraMsg := ' You can set the $SetGPUDbgBuffer$ variable to True, before executing this FindSubControl action, to see other GPU debugging vars.';
 
-    AddToLog('enqueue_kernel returned ' + CLDeviceErrorToStr(AGPUDbgBuffer[0]) + '  (' + IntToStr(AGPUDbgBuffer[0]) + ').' + ExtraMsg);
+    ErrMsg := 'enqueue_kernel returned ' + CLDeviceErrorToStr(AGPUDbgBuffer[0]) + '  (' + IntToStr(AGPUDbgBuffer[0]) + ').';
+    SetActionVarValue(CGPUDbgVar_AdditionalGPUInfo, ErrMsg);
+    AddToLog(ErrMsg + ExtraMsg);
   end;
 end;
 
@@ -2668,6 +2670,7 @@ begin
 
   frClickerActions.DebuggingInfoAvailable := False;
   SetActionVarValue('$ExecAction_Err$', '');
+  SetActionVarValue(CGPUDbgVar_AdditionalGPUInfo, '');
 
   if not FillInFindSubControlInputData(AFindSubControlOptions, AActionOptions, FindControlInputData, BmpTextProfileCount) then
     Exit;

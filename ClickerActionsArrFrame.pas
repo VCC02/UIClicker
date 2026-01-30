@@ -933,6 +933,7 @@ begin
   AListOfVars.Add(CGPUDbgVar_GPUWaitForAllKernelsToBeDone + '=');
   AListOfVars.Add(CGPUDbgVar_GPUReleaseFinalEventAtKernelEnd + '=');
   AListOfVars.Add(CGPUDbgVar_GPUIgnoreExecutionAvailability + '=');
+  AListOfVars.Add(CGPUDbgVar_AdditionalGPUInfo + '=');
 end;
 
 
@@ -1015,6 +1016,7 @@ begin
     TempVarDescriptions.Add(CGPUDbgVar_GPUWaitForAllKernelsToBeDone + '=[String] If set to True, the main kernel waits for all "generated" kernels to be done. By default, it is True, even if undefined.');
     TempVarDescriptions.Add(CGPUDbgVar_GPUReleaseFinalEventAtKernelEnd + '=[String] If set to True, the release_event(FinalEvent) call, from the main kernel, is done once, at the end.');
     TempVarDescriptions.Add(CGPUDbgVar_GPUIgnoreExecutionAvailability + '=[String] If set to True, the ExecutionAvailability property is ignored. If a feature required (at least) a specific OpenCL version, and it is not available, an error should be displayed.');
+    TempVarDescriptions.Add(CGPUDbgVar_AdditionalGPUInfo + '=[String] This variable contains extra information, if available, about what went wrong when a FindSubControl action failed to execute on GPU.');
 
     for i := 0 to FVarDescriptions.Count - 1 do
       FVarDescriptions.Strings[i] := TempVarDescriptions.Values[FVarDescriptions.Names[i]];
