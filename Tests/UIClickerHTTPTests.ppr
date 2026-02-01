@@ -33,7 +33,7 @@ uses
   ActionsStuff, TestMiscHTTPAPI, TestTemplateLevelHTTPAPI, TestLowLevelHTTPAPI,
   TestClickerClientHTTPAPI, TestClickerClientMemPlugins, UITestUtils, DllUtils,
   ClickerClientAPI, ClickerClientIntf, PitstopTestRunner, TestGPUSettings,
-  PitstopTestCommands;
+  PitstopTestCommands, GPUTestUtils;
 
 {$R *.res}
 

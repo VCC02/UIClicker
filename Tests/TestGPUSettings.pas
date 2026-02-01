@@ -29,36 +29,26 @@ unit TestGPUSettings;
 interface
 
 uses
-  Classes, SysUtils, Graphics, TestHTTPAPI;
+  Classes, SysUtils, Graphics, Menus, TestHTTPAPI;
 
 
 type
-  TDeviceInfo = record
-    DeviceName: string;
-    DeviceVersion: string;
-    DeviceOpenCLCVersion: string;
-    DevicePlatformVersion: string;
-    DeviceExtensions: string;
-  end;
-  TDeviceInfoArr = array of TDeviceInfo;
-
-  TPlatformInfo = record
-    PlatformName: string;
-    PlatformVersion: string;
-    PlatformExtensions: string;
-    Devices: TDeviceInfoArr;
-  end;
-  TPlatformInfoArr = array of TPlatformInfo;
-
   TTestGPUSettings = class(TTestHTTPAPI)
   private
     procedure ExpectSuccessfulActionWithExtraTestResult(AResponse: string; AMsgForSuccess: string = '');
 
-    procedure GetCLInfo(ACustomOpenCLPath: string = '');
+    function GetCLInfo(ACustomOpenCLPath: string = ''): string;
     procedure FindMainUIClickerWindow;
     procedure BringMainUIClickerWindowToFront;
     procedure FindDashBitOnMainUIClickerWindow(ATargetPlatform, ATargetDevice: Integer);
+    function FindDashBitOnMainUIClickerWindow_AllActionsWithInfo(ATargetPlatform, ATargetDevice: Integer; out AExFound: Boolean): string;
 
+    procedure SetPlatformAndDeviceFromPersistentSettings;
+    procedure SavePlatformAndDeviceToPersistentSettings;
+    procedure SetPlatformAndDeviceFromAvailableHardware;
+    procedure CreateGPUMenuSettings;
+
+    procedure GPUPlatformAndDeviceOnClick(Sender: TObject);
   public
     constructor Create; override;
     destructor Destroy; override;
@@ -71,20 +61,26 @@ type
     procedure AfterAll_AlwaysExecute;
   end;
 
+
 implementation
+
 
 uses
   PitstopTestRunner, PitstopTestCommands, Expectations, AsyncProcess, UITestUtils,
   ClickerUtils, ClickerCLUtils, ClickerActionsClient, ClickerActionProperties,
-  testregistry;
+  GPUTestUtils, testregistry;
 
 
 const
   CExtraCaption = 'Testing_GPU';
+  CGPUDeviceSettingsCategory = 'GPU';
 
 var
   TestUIClicker_Proc: TAsyncProcess;
   FGPUInfo: TPlatformInfoArr;
+  GPUMenuSettingsCreated: Boolean;
+  SelectedPlatorm: string;
+  SelectedDevice: string;
 
 
 constructor TTestGPUSettings.Create;
@@ -115,51 +111,25 @@ begin
 end;
 
 
-procedure TTestGPUSettings.GetCLInfo(ACustomOpenCLPath: string = '');
+function TTestGPUSettings.GetCLInfo(ACustomOpenCLPath: string = ''): string;
 var
   Response: string;
   SetVarOptions: TClkSetVarOptions;
-  ReturnedVars: TStringList;
-  PlatformIndexStr, DeviceIndexStr, PlatformAndDeviceIndexStr: string;
-  i, j: Integer;
   GPUFound: Boolean;
+  i: Integer;
 begin
   GetDefaultPropertyValues_SetVar(SetVarOptions);
   SetVarOptions.ListOfVarNames := '$OpenCLInfoToVars(' + ACustomOpenCLPath + ')$';   //this calls the GetOpenCLInfo function from ClickerCLUtils, through UIClicker
   SetVarOptions.ListOfVarValues := '';
   SetVarOptions.ListOfVarEvalBefore := '0';
 
-  Response := FastReplace_87ToReturn(ExecuteSetVarAction(TestServerAddress, SetVarOptions));
+  Result := ExecuteSetVarAction(TestServerAddress, SetVarOptions);
+  Response := FastReplace_87ToReturn(Result);
   ExpectSuccessfulActionWithExtraTestResult(Response, 'Received CL vars.');
+  DecodeCLInfoFromUIClickerVars(Response, FGPUInfo);
 
-  ReturnedVars := TStringList.Create;
-  try
-    ReturnedVars.Text := Response;
-
-    SetLength(FGPUInfo, StrToIntDef(ReturnedVars.Values['$CL.PlatformCount$'], 0));
-    for i := 0 to Length(FGPUInfo) - 1 do
-    begin
-      PlatformIndexStr := IntToStr(i);
-      FGPUInfo[i].PlatformName := ReturnedVars.Values['$CL.PlatformName[' + PlatformIndexStr + ']$'];
-      FGPUInfo[i].PlatformVersion := ReturnedVars.Values['$CL.PlatformVersion[' + PlatformIndexStr + ']$'];
-      FGPUInfo[i].PlatformExtensions := ReturnedVars.Values['$CL.PlatformExtensions[' + PlatformIndexStr + ']$'];
-
-      SetLength(FGPUInfo[i].Devices, StrToIntDef(ReturnedVars.Values['$CL.DeviceCount$'], 0));
-      for j := 0 to Length(FGPUInfo[i].Devices) - 1 do
-      begin
-        DeviceIndexStr := IntToStr(j);
-        PlatformAndDeviceIndexStr := PlatformIndexStr + ', ' + DeviceIndexStr;
-
-        FGPUInfo[i].Devices[j].DeviceName := ReturnedVars.Values['$CL.DeviceName[' + PlatformAndDeviceIndexStr + ']$'];
-        FGPUInfo[i].Devices[j].DeviceVersion := ReturnedVars.Values['$CL.DeviceVersion[' + PlatformAndDeviceIndexStr + ']$'];
-        FGPUInfo[i].Devices[j].DeviceOpenCLCVersion := ReturnedVars.Values['$CL.DeviceOpenCLCVersion[' + PlatformAndDeviceIndexStr + ']$'];
-        FGPUInfo[i].Devices[j].DevicePlatformVersion := ReturnedVars.Values['$CL.DevicePlatformVersion[' + PlatformAndDeviceIndexStr + ']$'];
-        FGPUInfo[i].Devices[j].DeviceExtensions := ReturnedVars.Values['$CL.DeviceExtensions[' + PlatformAndDeviceIndexStr + ']$'];
-      end;
-    end;
-  finally
-    ReturnedVars.Free;
-  end;
+  //SetLength(FGPUInfo[0].Devices, Length(FGPUInfo[0].Devices) + 1);  FGPUInfo[0].Devices[Length(FGPUInfo[0].Devices) - 1].DeviceName := 'NewDev';  //Dbg code, to display one more device
+  //SetLength(FGPUInfo[0].Devices, Length(FGPUInfo[0].Devices) + 1);  FGPUInfo[0].Devices[Length(FGPUInfo[0].Devices) - 1].DeviceName := 'LastDev';  //Dbg code, to display one more device
 
   Expect(Length(FGPUInfo)).ToBeGreaterThan(0, 'At least an OpenCL platform is required to run these tests.');
   GPUFound := False;
@@ -174,9 +144,108 @@ begin
 end;
 
 
+procedure TTestGPUSettings.SetPlatformAndDeviceFromPersistentSettings;
+var
+  TestSettings: TStringList;
+begin
+  TestSettings := TStringList.Create;
+  try
+    frmPitstopTestRunner.GetPersistentTestSettings(TestSettings);
+    SelectedPlatorm := TestSettings.Values['$SelectedPlatorm$'];
+    SelectedDevice := TestSettings.Values['$SelectedDevice$'];
+  finally
+    TestSettings.Free;
+  end;
+end;
+
+
+procedure TTestGPUSettings.SavePlatformAndDeviceToPersistentSettings;
+var
+  TestSettings: TStringList;
+begin
+  TestSettings := TStringList.Create;
+  try
+    frmPitstopTestRunner.GetPersistentTestSettings(TestSettings);
+    frmPitstopTestRunner.SetValueToPersistentTestSettings('$SelectedPlatorm$', SelectedPlatorm); //it should be ok if set to ''
+    frmPitstopTestRunner.SetValueToPersistentTestSettings('$SelectedDevice$', SelectedDevice);   //it should be ok if set to ''
+  finally
+    TestSettings.Free;
+  end;
+end;
+
+
+procedure TTestGPUSettings.SetPlatformAndDeviceFromAvailableHardware;
+var
+  PlatformIndex: Integer;
+begin
+  if SelectedPlatorm = '' then
+    if Length(FGPUInfo) > 0 then
+      SelectedPlatorm := FGPUInfo[0].PlatformName;
+
+  if SelectedDevice = '' then
+  begin
+    PlatformIndex := GetPlatformIndexByName(SelectedPlatorm, FGPUInfo);
+    if PlatformIndex > -1 then
+      if Length(FGPUInfo[PlatformIndex].Devices) > 0 then
+        SelectedDevice := FGPUInfo[PlatformIndex].Devices[0].DeviceName;
+  end;
+end;
+
+
+procedure SetPlatformAndDeviceByDeviceName(ADeviceName: string);
+var
+  i, j: Integer;
+begin
+  for i := 0 to Length(FGPUInfo) - 1 do
+    for j := 0 to Length(FGPUInfo[i].Devices) - 1 do
+      if FGPUInfo[i].Devices[j].DeviceName = ADeviceName then
+      begin
+        SelectedPlatorm := FGPUInfo[i].PlatformName;
+        SelectedDevice := FGPUInfo[i].Devices[j].DeviceName;
+        Exit;
+      end;
+end;
+
+
+procedure TTestGPUSettings.GPUPlatformAndDeviceOnClick(Sender: TObject);
+var
+  TempDeviceName: string;
+begin
+  TempDeviceName := (Sender as TMenuItem).Caption;
+  TempDeviceName := StringReplace(TempDeviceName, '&', '', [rfReplaceAll]);
+
+  SetPlatformAndDeviceByDeviceName(TempDeviceName);
+  SavePlatformAndDeviceToPersistentSettings;
+  frmPitstopTestRunner.UpdateTestSettingsItemCheckedState(CGPUDeviceSettingsCategory, SelectedPlatorm, SelectedDevice, True); //The menu item will be cleared, so it can't be used as: (Sender as TMenuItem).Checked := True;
+
+  frmPitstopTestRunner.AddToLog('Setting testing device to ' + TempDeviceName);
+end;
+
+
+procedure TTestGPUSettings.CreateGPUMenuSettings;
+var
+  i, j: Integer;
+begin
+  SetPlatformAndDeviceFromAvailableHardware;
+
+  for i := 0 to Length(FGPUInfo) - 1 do
+  begin
+    frmPitstopTestRunner.RegisterTestSettings(CGPUDeviceSettingsCategory, '', FGPUInfo[i].PlatformName, nil, False, False, False);
+
+    for j := 0 to Length(FGPUInfo[i].Devices) - 1 do
+      frmPitstopTestRunner.RegisterTestSettings(CGPUDeviceSettingsCategory, FGPUInfo[i].PlatformName, FGPUInfo[i].Devices[j].DeviceName, @GPUPlatformAndDeviceOnClick, False, True, FGPUInfo[i].Devices[j].DeviceName = SelectedDevice);
+  end;
+
+  frmPitstopTestRunner.RegisterTestSettings('-', '', '-', nil, False, False, False);
+
+  frmPitstopTestRunner.RegisterTestSettings('OpenCL dll', '', 'OpenCL.dll', nil, False, True, False);
+  frmPitstopTestRunner.RegisterTestSettings('OpenCL dll', '', 'CLMock.dll', nil, False, True, False);
+end;
+
+
 procedure TTestGPUSettings.BeforeAll_AlwaysExecute;
 var
-  PathToTestUIClicker: string;
+  PathToTestUIClicker, Info: string;
 begin
   PathToTestUIClicker := ExpandFileName(ExtractFilePath(ParamStr(0)) + '..\UIClicker.exe');
   TestUIClicker_Proc := CreateUIClickerProcess(PathToTestUIClicker, '--SetExecMode Server --ServerPort ' + CTestServerPort + ' --ExtraCaption ' + CExtraCaption);
@@ -185,8 +254,16 @@ begin
     CreatePitstopCommandServer;
     SendTestVarsToUIClickerUnderTest;
 
-    GetCLInfo;
-    frmPitstopTestRunner.SetExtraTestResult(Self, 'AlwaysOK');
+    //Info := GetCLInfo(ExtractFilePath(ParamStr(0)) + 'TestFiles\CLMock\lib\' + 'i386-win32' + 'CLMock.dll');
+    Info := GetCLInfo;
+    frmPitstopTestRunner.SetExtraTestResult(Self, Info);
+
+    if not GPUMenuSettingsCreated then
+    begin
+      SetPlatformAndDeviceFromPersistentSettings;
+      CreateGPUMenuSettings;
+      GPUMenuSettingsCreated := True;
+    end;
   except
     on E: Exception do
     begin
@@ -269,33 +346,48 @@ begin
 end;
 
 
+function TTestGPUSettings.FindDashBitOnMainUIClickerWindow_AllActionsWithInfo(ATargetPlatform, ATargetDevice: Integer; out AExFound: Boolean): string;
+begin
+  Result := '';
+  AExFound := False;
+
+  FindMainUIClickerWindow;
+  BringMainUIClickerWindowToFront;
+
+  try
+    FindDashBitOnMainUIClickerWindow(ATargetPlatform, ATargetDevice);
+  except
+    on E: Exception do
+    begin
+      Result  := Result + 'Err[' + IntToStr(ATargetPlatform) + ',' + IntToStr(ATargetDevice) + ']:' + E.Message + ' ';
+      AExFound := True;
+    end;
+  end;
+end;
+
+
 procedure TTestGPUSettings.Test_FindDashBitOnMainUIClickerWindow_HappyFlow;
 var
-  i, j: Integer;
   s: string;
   ExFound: Boolean;
+  i, j: Integer;
 begin
-  ExFound := False;
-  s := 'PlatformCount: ' + IntToStr(Length(FGPUInfo)) + ' ';
-  for i := 0 to Length(FGPUInfo) - 1 do
+  if TestVars.Values['$RunOnAllPlatformsAndDevices$'] = 'True' then
   begin
-    s := 'DeviceCount[' + IntToStr(i) + ']: ' + IntToStr(Length(FGPUInfo[i].Devices)) + ' ';
-
-    for j := 0 to Length(FGPUInfo[i].Devices) - 1 do
+    s := 'PlatformCount: ' + IntToStr(Length(FGPUInfo)) + ' ';
+    for i := 0 to Length(FGPUInfo) - 1 do
     begin
-      FindMainUIClickerWindow;
-      BringMainUIClickerWindowToFront;
+      s := s + 'DeviceCount[' + IntToStr(i) + ']: ' + IntToStr(Length(FGPUInfo[i].Devices)) + ' ';
 
-      try
-        FindDashBitOnMainUIClickerWindow(i, j); //get all platforms and devices, then iterate through them
-      except
-        on E: Exception do
-        begin
-          s := s + 'Err[' + IntToStr(i) + ',' + IntToStr(j) + ']:' + E.Message + ' ';
-          ExFound := True;
-        end;
-      end;
+      for j := 0 to Length(FGPUInfo[i].Devices) - 1 do
+        s := s + FindDashBitOnMainUIClickerWindow_AllActionsWithInfo(i, j, ExFound);
     end;
+  end
+  else
+  begin
+    s := 'PlatformCount: ' + IntToStr(Length(FGPUInfo)) + ' ';
+    s := s + 'DeviceCount[' + IntToStr(0) + ']: ' + IntToStr(Length(FGPUInfo[0].Devices)) + ' ';   //change 0 to configured platform
+    s := s + FindDashBitOnMainUIClickerWindow_AllActionsWithInfo(0, 0, ExFound);
   end;
 
   try
@@ -329,6 +421,9 @@ initialization
   RegisterTest(TTestGPUSettings);
   TestUIClicker_Proc := nil;
   SetLength(FGPUInfo, 0);
+  GPUMenuSettingsCreated := False;
+  SelectedPlatorm := '';
+  SelectedDevice := '';
 
 finalization
   for i := 0 to Length(FGPUInfo) - 1 do
