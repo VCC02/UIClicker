@@ -1677,8 +1677,8 @@ initialization
 
   for i := 0 to Length(AllPlatforms) - 1 do
   begin
-    PDevice(PPlatform(AllPlatforms[i])^.Devices[0])^.Name := 'GPU0';
-    PDevice(PPlatform(AllPlatforms[i])^.Devices[1])^.Name := 'GPU1';
+    PDevice(PPlatform(AllPlatforms[i])^.Devices[0])^.Name := 'GPU_A' + IntToStr(i);
+    PDevice(PPlatform(AllPlatforms[i])^.Devices[1])^.Name := 'GPU_B' + IntToStr(i);
 
     PDevice(PPlatform(AllPlatforms[i])^.Devices[0])^.Version := '9.1.84';  //driver version
     PDevice(PPlatform(AllPlatforms[i])^.Devices[1])^.Version := '9.1.84';  //driver version
