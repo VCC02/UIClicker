@@ -40,15 +40,21 @@ type
     function GetCLInfo(ACustomOpenCLPath: string = ''): string;
     procedure FindMainUIClickerWindow;
     procedure BringMainUIClickerWindowToFront;
+    procedure BringMainUIClickerWindowIntoFullView;
     procedure FindDashBitOnMainUIClickerWindow(ATargetPlatform, ATargetDevice: Integer);
     function FindDashBitOnMainUIClickerWindow_AllActionsWithInfo(ATargetPlatform, ATargetDevice: Integer; out AExFound: Boolean): string;
 
-    procedure SetPlatformAndDeviceFromPersistentSettings;
+    procedure GetPlatformAndDeviceFromPersistentSettings;
     procedure SavePlatformAndDeviceToPersistentSettings;
     procedure SetPlatformAndDeviceFromAvailableHardware;
+
+    procedure GetOpenCLDllFromPersistentSettings;
+    procedure SaveOpenCLDllToPersistentSettings;
+
     procedure CreateGPUMenuSettings;
 
     procedure GPUPlatformAndDeviceOnClick(Sender: TObject);
+    procedure OpenCLDllSelection(Sender: TObject);
   public
     constructor Create; override;
     destructor Destroy; override;
@@ -68,12 +74,16 @@ implementation
 uses
   PitstopTestRunner, PitstopTestCommands, Expectations, AsyncProcess, UITestUtils,
   ClickerUtils, ClickerCLUtils, ClickerActionsClient, ClickerActionProperties,
-  GPUTestUtils, testregistry;
+  GPUTestUtils, testregistry, Forms;
 
 
 const
   CExtraCaption = 'Testing_GPU';
   CGPUDeviceSettingsCategory = 'GPU';
+  COpenCLDllSettingsCategory = 'OpenCL dll';
+
+  COpenCLDll_Sys = 'OpenCL.dll (from System32)';
+  COpenCLDll_Mock = 'CLMock.dll (from UIClicker tests)';
 
 var
   TestUIClicker_Proc: TAsyncProcess;
@@ -81,6 +91,7 @@ var
   GPUMenuSettingsCreated: Boolean;
   SelectedPlatorm: string;
   SelectedDevice: string;
+  SelectedOpenCLDll: string;
 
 
 constructor TTestGPUSettings.Create;
@@ -144,7 +155,7 @@ begin
 end;
 
 
-procedure TTestGPUSettings.SetPlatformAndDeviceFromPersistentSettings;
+procedure TTestGPUSettings.GetPlatformAndDeviceFromPersistentSettings;
 var
   TestSettings: TStringList;
 begin
@@ -168,6 +179,34 @@ begin
     frmPitstopTestRunner.GetPersistentTestSettings(TestSettings);
     frmPitstopTestRunner.SetValueToPersistentTestSettings('$SelectedPlatorm$', SelectedPlatorm); //it should be ok if set to ''
     frmPitstopTestRunner.SetValueToPersistentTestSettings('$SelectedDevice$', SelectedDevice);   //it should be ok if set to ''
+  finally
+    TestSettings.Free;
+  end;
+end;
+
+
+procedure TTestGPUSettings.GetOpenCLDllFromPersistentSettings;
+var
+  TestSettings: TStringList;
+begin
+  TestSettings := TStringList.Create;
+  try
+    frmPitstopTestRunner.GetPersistentTestSettings(TestSettings);
+    SelectedOpenCLDll := TestSettings.Values['$OpenCLDll$'];
+  finally
+    TestSettings.Free;
+  end;
+end;
+
+
+procedure TTestGPUSettings.SaveOpenCLDllToPersistentSettings;
+var
+  TestSettings: TStringList;
+begin
+  TestSettings := TStringList.Create;
+  try
+    frmPitstopTestRunner.GetPersistentTestSettings(TestSettings);
+    frmPitstopTestRunner.SetValueToPersistentTestSettings('$OpenCLDll$', SelectedOpenCLDll);
   finally
     TestSettings.Free;
   end;
@@ -222,6 +261,19 @@ begin
 end;
 
 
+procedure TTestGPUSettings.OpenCLDllSelection(Sender: TObject);
+begin
+  SelectedOpenCLDll := (Sender as TMenuItem).Caption;
+  SelectedOpenCLDll := StringReplace(SelectedOpenCLDll, '&', '', [rfReplaceAll]);
+
+  SaveOpenCLDllToPersistentSettings;
+  frmPitstopTestRunner.UpdateTestSettingsItemCheckedState(COpenCLDllSettingsCategory, '', SelectedOpenCLDll, True);
+
+  frmPitstopTestRunner.AddToLog('Setting OpenCL dll to ' + SelectedOpenCLDll);
+  MessageBoxFunction('Please restart the test runner, to load the new settings.', PChar(Application.Title), 0);
+end;
+
+
 procedure TTestGPUSettings.CreateGPUMenuSettings;
 var
   i, j: Integer;
@@ -238,8 +290,19 @@ begin
 
   frmPitstopTestRunner.RegisterTestSettings('-', '', '-', nil, False, False, False);
 
-  frmPitstopTestRunner.RegisterTestSettings('OpenCL dll', '', 'OpenCL.dll', nil, False, True, False);
-  frmPitstopTestRunner.RegisterTestSettings('OpenCL dll', '', 'CLMock.dll', nil, False, True, False);
+  frmPitstopTestRunner.RegisterTestSettings(COpenCLDllSettingsCategory, '', COpenCLDll_Sys, @OpenCLDllSelection, False, True, SelectedOpenCLDll = COpenCLDll_Sys);
+  frmPitstopTestRunner.RegisterTestSettings(COpenCLDllSettingsCategory, '', COpenCLDll_Mock, @OpenCLDllSelection, False, True, SelectedOpenCLDll = COpenCLDll_Mock);
+end;
+
+
+function GetSelectedOpenCLDllPath: string;
+begin
+  Result := ''; //this will cause the loader to use System32
+  if SelectedOpenCLDll = COpenCLDll_Sys then
+    Exit;
+
+  if SelectedOpenCLDll = COpenCLDll_Mock then
+    Result := ExtractFilePath(ParamStr(0)) + 'TestFiles\CLMock\lib\' + 'i386-win32' + '\CLMock.dll';
 end;
 
 
@@ -254,13 +317,23 @@ begin
     CreatePitstopCommandServer;
     SendTestVarsToUIClickerUnderTest;
 
-    //Info := GetCLInfo(ExtractFilePath(ParamStr(0)) + 'TestFiles\CLMock\lib\' + 'i386-win32' + 'CLMock.dll');
-    Info := GetCLInfo;
+    GetOpenCLDllFromPersistentSettings;
+
+    if SelectedOpenCLDll = COpenCLDll_Sys then
+      Info := GetCLInfo
+    else
+      if SelectedOpenCLDll = COpenCLDll_Mock then
+        Info := GetCLInfo(GetSelectedOpenCLDllPath)
+      else
+        Info := 'Bad OpenCL dll selection.';
+
     frmPitstopTestRunner.SetExtraTestResult(Self, Info);
 
     if not GPUMenuSettingsCreated then
     begin
-      SetPlatformAndDeviceFromPersistentSettings;
+      GetPlatformAndDeviceFromPersistentSettings;
+      //GetOpenCLDllFromPersistentSettings;   //called above
+
       CreateGPUMenuSettings;
       GPUMenuSettingsCreated := True;
     end;
@@ -301,6 +374,19 @@ begin
 end;
 
 
+procedure TTestGPUSettings.BringMainUIClickerWindowIntoFullView;
+var
+  Response: string;
+  WindowOperationsOptions: TClkWindowOperationsOptions;
+begin
+  GetDefaultPropertyValues_WindowOperations(WindowOperationsOptions);
+  WindowOperationsOptions.Operation := woFitIntoView;
+  Response := FastReplace_87ToReturn(ExecuteWindowOperationsAction(TestServerAddress, WindowOperationsOptions));
+
+  ExpectSuccessfulActionWithExtraTestResult(Response, 'Main window is in full view.');
+end;
+
+
 procedure TTestGPUSettings.FindDashBitOnMainUIClickerWindow(ATargetPlatform, ATargetDevice: Integer);
 var
   Response: string;
@@ -328,6 +414,7 @@ begin
   FindSubControlOptions.InitialRectangle.BottomOffset := '-11';
   FindSubControlOptions.ColorError := '10';
   FindSubControlOptions.AllowedColorErrorCount := '30';
+  FindSubControlOptions.GPUSettings.OpenCLPath := GetSelectedOpenCLDllPath;
   FindSubControlOptions.GPUSettings.TargetPlatform := IntToStr(ATargetPlatform);
   FindSubControlOptions.GPUSettings.TargetDevice := IntToStr(ATargetDevice);
   //eventually, set ExecutionAvailability from params
@@ -353,6 +440,8 @@ begin
 
   FindMainUIClickerWindow;
   BringMainUIClickerWindowToFront;
+  BringMainUIClickerWindowIntoFullView;
+  FindMainUIClickerWindow; //call again, because bringing into view may imply moving the window
 
   try
     FindDashBitOnMainUIClickerWindow(ATargetPlatform, ATargetDevice);
@@ -424,6 +513,7 @@ initialization
   GPUMenuSettingsCreated := False;
   SelectedPlatorm := '';
   SelectedDevice := '';
+  SelectedOpenCLDll := COpenCLDll_Sys;
 
 finalization
   for i := 0 to Length(FGPUInfo) - 1 do
