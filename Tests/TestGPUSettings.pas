@@ -51,6 +51,7 @@ type
     procedure GetOpenCLDllFromPersistentSettings;
     procedure SaveOpenCLDllToPersistentSettings;
 
+    function GetSelectedOpenCLDllPath: string;
     procedure CreateGPUMenuSettings;
 
     procedure GPUPlatformAndDeviceOnClick(Sender: TObject);
@@ -92,6 +93,7 @@ var
   SelectedPlatorm: string;
   SelectedDevice: string;
   SelectedOpenCLDll: string;
+  UIClickerBitness: string;
 
 
 constructor TTestGPUSettings.Create;
@@ -295,14 +297,26 @@ begin
 end;
 
 
-function GetSelectedOpenCLDllPath: string;
+function TTestGPUSettings.GetSelectedOpenCLDllPath: string;
 begin
   Result := ''; //this will cause the loader to use System32
   if SelectedOpenCLDll = COpenCLDll_Sys then
     Exit;
 
   if SelectedOpenCLDll = COpenCLDll_Mock then
-    Result := ExtractFilePath(ParamStr(0)) + 'TestFiles\CLMock\lib\' + 'i386-win32' + '\CLMock.dll';
+  begin
+    if UIClickerBitness = '' then
+    begin
+      UIClickerBitness := GetVarValueFromServer('$AppBitness$') + '-' + GetVarValueFromServer('$OSBitness$');   //returns something like 'i386-win32'
+      if (UIClickerBitness <> 'i386-win32') and (UIClickerBitness <> 'x86_64-win64') then
+      begin
+        frmPitstopTestRunner.AddToLog('Unknown UIClicker bitness: "' + UIClickerBitness + '". Setting to default: i386-win32');
+        UIClickerBitness := 'i386-win32';
+      end;
+    end;
+
+    Result := ExtractFilePath(ParamStr(0)) + 'TestFiles\CLMock\lib\' + UIClickerBitness + '\CLMock.dll';
+  end;
 end;
 
 
@@ -514,6 +528,7 @@ initialization
   SelectedPlatorm := '';
   SelectedDevice := '';
   SelectedOpenCLDll := COpenCLDll_Sys;
+  UIClickerBitness := '';
 
 finalization
   for i := 0 to Length(FGPUInfo) - 1 do
