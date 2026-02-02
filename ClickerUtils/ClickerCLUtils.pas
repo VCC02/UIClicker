@@ -222,7 +222,7 @@ begin
 
         Error := OpenCLDll.clGetDeviceIDs(PlatformIDs[i], CL_DEVICE_TYPE_GPU, 0, nil, @DeviceCount);
         LogCallResult(Error, 'clGetDeviceIDs', 'DeviceCount: ' + IntToStr(DeviceCount));
-        AOnAddToLog('  ' + 'DeviceCount: ' + IntToStr(DeviceCount));
+        AOnAddToLog('  ' + 'DeviceCount[' + IntToStr(i) + ']: ' + IntToStr(DeviceCount));
 
 
         GetMem(DeviceIDs, DeviceCount * SizeOf(cl_device_id));
@@ -232,7 +232,7 @@ begin
 
           for j := 0 to DeviceCount - 1 do
           begin
-            AOnAddToLog('  Device[' + IntToStr(j) + ']: ');  //Leave the ' ' after ':', because it is needed by a parser!
+            AOnAddToLog('  Device[' + IntToStr(i) + ', ' + IntToStr(j) + ']: ');  //Leave the ' ' after ':', because it is needed by a parser!
             AOnAddToLog('    ' + GetDeviceInfoStr(i, j, DeviceIDs[j], CL_DEVICE_NAME, 'DeviceName'));
             AOnAddToLog('    ' + GetDeviceInfoStr(i, j, DeviceIDs[j], CL_DEVICE_VENDOR, 'DeviceVendor'));
             AOnAddToLog('    ' + GetDeviceInfoStr(i, j, DeviceIDs[j], CL_DEVICE_VERSION, 'DeviceVersion'));
