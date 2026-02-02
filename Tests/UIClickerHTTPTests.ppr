@@ -41,13 +41,19 @@ var
   UsingServer: Boolean;
 
 begin
+  if UpperCase(ParamStr(1)) = '--HELP' then
+  begin
+    MessageBoxFunction('Run as "UIClickerHTTPTests.exe --StartServer", to start the server module.', 'UIClickerHTTPTests', 0);
+    Exit;
+  end;
+
   Application.Initialize;
   //Application.CreateForm(TGuiTestRunner, TestRunner);
   Application.CreateForm(TfrmPitstopTestRunner, frmPitstopTestRunner);
 
   UsingServer := False;
   try
-    if ParamStr(1) = 'StartServer' then
+    if (ParamStr(1) = 'StartServer') or (ParamStr(1) = '--StartServer') then
     begin
       UsingServer := True;
       CreatePitstopCommandServer;

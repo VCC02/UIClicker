@@ -53,6 +53,8 @@ type
 
 procedure DecodeCLInfoFromUIClickerVars(AUIClickerVars: string; var AGPUInfo: TPlatformInfoArr);
 function GetPlatformIndexByName(AName: string; var AGPUInfo: TPlatformInfoArr): Integer;
+function GetDeviceIndexByName(APlatformIndex: Integer; ADeviceName: string; var AGPUInfo: TPlatformInfoArr): Integer; overload;
+function GetDeviceIndexByName(APlatformName, ADeviceName: string; var AGPUInfo: TPlatformInfoArr): Integer; overload;
 
 
 implementation
@@ -77,7 +79,7 @@ begin
       AGPUInfo[i].PlatformVersion := ReturnedVars.Values['$CL.PlatformVersion[' + PlatformIndexStr + ']$'];
       AGPUInfo[i].PlatformExtensions := ReturnedVars.Values['$CL.PlatformExtensions[' + PlatformIndexStr + ']$'];
 
-      SetLength(AGPUInfo[i].Devices, StrToIntDef(ReturnedVars.Values['$CL.DeviceCount$'], 0));
+      SetLength(AGPUInfo[i].Devices, StrToIntDef(ReturnedVars.Values['$CL.DeviceCount[' + IntToStr(i) + ']$'], 0));
       for j := 0 to Length(AGPUInfo[i].Devices) - 1 do
       begin
         DeviceIndexStr := IntToStr(j);
@@ -103,6 +105,41 @@ begin
   Result := -1;
   for i := 0 to Length(AGPUInfo) - 1 do
     if AGPUInfo[i].PlatformName = AName then
+    begin
+      Result := i;
+      Break;
+    end;
+end;
+
+
+function GetDeviceIndexByName(APlatformIndex: Integer; ADeviceName: string; var AGPUInfo: TPlatformInfoArr): Integer;
+var
+  i: Integer;
+begin
+  Result := -1;
+  if (APlatformIndex < 0) or (APlatformIndex > Length(AGPUInfo) - 1) then
+    Exit;
+
+  for i := 0 to Length(AGPUInfo[APlatformIndex].Devices) - 1 do
+    if AGPUInfo[APlatformIndex].Devices[i].DeviceName = ADeviceName then
+    begin
+      Result := i;
+      Break;
+    end;
+end;
+
+
+function GetDeviceIndexByName(APlatformName, ADeviceName: string; var AGPUInfo: TPlatformInfoArr): Integer;
+var
+  PlatformIndex, i: Integer;
+begin
+  Result := -1;
+  PlatformIndex := GetPlatformIndexByName(APlatformName, AGPUInfo);
+  if PlatformIndex = -1 then
+    Exit;
+
+  for i := 0 to Length(AGPUInfo[PlatformIndex].Devices) - 1 do
+    if AGPUInfo[PlatformIndex].Devices[i].DeviceName = ADeviceName then
     begin
       Result := i;
       Break;

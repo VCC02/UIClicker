@@ -678,6 +678,12 @@ procedure TTestHTTPAPI.SendTestVarsToUIClickerUnderTest;
 var
   i: Integer;
 begin
+  if TestVars = nil then
+  begin
+    frmPitstopTestRunner.AddToLog('No test vars available for UIClicker.');
+    Exit;
+  end;
+
   for i := 0 to TestVars.Count - 1 do
   begin
     frmPitstopTestRunner.AddToLog(TestVars.Strings[i]);
