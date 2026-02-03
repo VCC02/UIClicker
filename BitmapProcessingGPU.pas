@@ -181,13 +181,6 @@ begin
     '  clk_event_t FinalEvent;                  ' + #13#10 + //used as a return event, from enqueue_marker
     '                                           ' + #13#10;
 
-    if not AGPUUseAllKernelsEvent then
-    begin
-      Result := Result +
-      '  for (k = 0; k < ASubBmpHeight; k++)      ' + #13#10 +
-      '    AllEvents[k] = NULL;                   ' + #13#10#13#10;   //init here, so that enqueue_marker will return an error on null poiters instead of uninitialized pointers
-    end;
-
     if AGPUNdrangeNoLocalParam then
       Result := Result + '  ndrange_t ndrange = ndrange_1D(ASubBmpHeight);' + #13#10
     else
@@ -204,8 +197,16 @@ begin
     '  int XOffset = AXOffset;                  ' + #13#10 +
     '  int YOffset = AYOffset;                  ' + #13#10 +
     '  int DifferentCount = 0;                  ' + #13#10 +
-    '  int WhileIterations = 0;                 ' + #13#10 +
+    '  int WhileIterations = 0;                 ' + #13#10;
 
+    if not AGPUUseAllKernelsEvent then
+    begin
+      Result := Result +
+      '  for (k = 0; k < ASubBmpHeight; k++)      ' + #13#10 +
+      '    AllEvents[k] = NULL;                   ' + #13#10#13#10;   //init here, so that enqueue_marker will return an error on null poiters instead of uninitialized pointers
+    end;
+
+    Result := Result +
     '  for (i = 0; i < AYOffset; i++)           ' + #13#10 +
     '  {                                        ' + #13#10 +
     '    for (j = 0; j < AXOffset; j++)         ' + #13#10 +
