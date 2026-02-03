@@ -41,7 +41,7 @@ type
     procedure FindMainUIClickerWindow;
     procedure BringMainUIClickerWindowToFront;
     procedure BringMainUIClickerWindowIntoFullView;
-    procedure FindDashBitOnMainUIClickerWindow(ATargetPlatform, ATargetDevice: Integer);
+    function FindDashBitOnMainUIClickerWindow(ATargetPlatform, ATargetDevice: Integer): string;
     function FindDashBitOnMainUIClickerWindow_AllActionsWithInfo(ATargetPlatform, ATargetDevice: Integer; out AExFound: Boolean): string;
 
     procedure GetPlatformAndDeviceFromPersistentSettings;
@@ -87,9 +87,10 @@ implementation
 
 
 uses
-  PitstopTestRunner, PitstopTestCommands, Expectations, AsyncProcess, UITestUtils,
+  PitstopTestRunner, PitstopTestCommands, PitstopTestUtils,
+  Expectations, AsyncProcess, UITestUtils, GPUTestUtils,
   ClickerUtils, ClickerCLUtils, ClickerActionsClient, ClickerActionProperties,
-  GPUTestUtils, testregistry, Forms;
+  testregistry, Forms;
 
 
 const
@@ -355,7 +356,8 @@ begin
       else
         Info := 'Bad OpenCL dll selection.';
 
-    frmPitstopTestRunner.SetExtraTestResult(Self, Info);
+    if Self is TTestGPUSettingsInfo then  //return UIClicker vars when used as info only
+      frmPitstopTestRunner.SetExtraTestResult(Self, Info);
 
     if (TestVars <> nil) and (TestVars.Values['$SetPlatformsAndDevices$'] = 'True') then
     begin
@@ -431,7 +433,7 @@ begin
 end;
 
 
-procedure TTestGPUSettings.FindDashBitOnMainUIClickerWindow(ATargetPlatform, ATargetDevice: Integer);
+function TTestGPUSettings.FindDashBitOnMainUIClickerWindow(ATargetPlatform, ATargetDevice: Integer): string;
 var
   Response: string;
   FindSubControlOptions: TClkFindSubControlOptions;
@@ -463,7 +465,8 @@ begin
   FindSubControlOptions.GPUSettings.TargetDevice := IntToStr(ATargetDevice);
   //eventually, set ExecutionAvailability from params
 
-  Response := FastReplace_87ToReturn(ExecuteFindSubControlAction(TestServerAddress, FindSubControlOptions, 'Find bit', 2000, CREParam_FileLocation_ValueDisk));
+  Result := ExecuteFindSubControlAction(TestServerAddress, FindSubControlOptions, 'Find bit', 2000, CREParam_FileLocation_ValueDisk);
+  Response := FastReplace_87ToReturn(Result);
 
   try
     ExpectSuccessfulActionWithExtraTestResult(Response, '-bit found.');
@@ -488,7 +491,7 @@ begin
   FindMainUIClickerWindow; //call again, because bringing into view may imply moving the window
 
   try
-    FindDashBitOnMainUIClickerWindow(ATargetPlatform, ATargetDevice);
+    Result := FindDashBitOnMainUIClickerWindow(ATargetPlatform, ATargetDevice);
   except
     on E: Exception do
     begin
@@ -508,26 +511,20 @@ var
 begin
   if TestVars.Values['$RunOnAllPlatformsAndDevices$'] = 'True' then
   begin
-    s := '';//'PlatformCount: ' + IntToStr(Length(FGPUInfo)) + ' ';
+    s := CRunInfoPrefix;
     for i := 0 to Length(FGPUInfo) - 1 do
-    begin
-      //s := s + 'DeviceCount[' + IntToStr(i) + ']: ' + IntToStr(Length(FGPUInfo[i].Devices)) + ' ';
-
       for j := 0 to Length(FGPUInfo[i].Devices) - 1 do
         s := s + FindDashBitOnMainUIClickerWindow_AllActionsWithInfo(i, j, ExFound);
-    end;
   end
   else
   begin
     PlatformIndex := GetPlatformIndexByName(SelectedPlatorm, FGPUInfo);
     DeviceIndex := GetDeviceIndexByName(PlatformIndex, SelectedDevice, FGPUInfo);
-    s := '';//'PlatformCount: ' + IntToStr(Length(FGPUInfo)) + ' ';
-    //s := s + 'DeviceCount[' + IntToStr(PlatformIndex) + ']: ' + IntToStr(Length(FGPUInfo[PlatformIndex].Devices)) + ' ';
-    s := s + FindDashBitOnMainUIClickerWindow_AllActionsWithInfo(PlatformIndex, DeviceIndex, ExFound);
+    s := CRunInfoPrefix + FindDashBitOnMainUIClickerWindow_AllActionsWithInfo(PlatformIndex, DeviceIndex, ExFound);
   end;
 
   try
-    frmPitstopTestRunner.SetExtraTestResult(Self, GetVarValueFromServer(CGPUDbgVar_AdditionalGPUInfo) + {' ' + SelectedPlatorm + '.' + SelectedDevice +} ' Run info: ' + s);
+    frmPitstopTestRunner.SetExtraTestResult(Self, GetVarValueFromServer(CGPUDbgVar_AdditionalGPUInfo) + ' ' + s);
   except
     on E: Exception do
       frmPitstopTestRunner.SetExtraTestResult(Self, 'Cannot get extra info about GPU run: ' + E.Message);
