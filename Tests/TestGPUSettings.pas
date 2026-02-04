@@ -344,44 +344,45 @@ begin
   TestUIClicker_Proc := CreateUIClickerProcess(PathToTestUIClicker, '--SetExecMode Server --ServerPort ' + CTestServerPort + ' --ExtraCaption ' + CExtraCaption);
 
   try
-    SendTestVarsToUIClickerUnderTest;
+    try
+      SendTestVarsToUIClickerUnderTest;
+      GetOpenCLDllFromPersistentSettings;
 
-    GetOpenCLDllFromPersistentSettings;
-
-    if SelectedOpenCLDll = COpenCLDll_Sys then
-      Info := GetCLInfo
-    else
-      if SelectedOpenCLDll = COpenCLDll_Mock then
-        Info := GetCLInfo(GetSelectedOpenCLDllPath)
+      if SelectedOpenCLDll = COpenCLDll_Sys then
+        Info := GetCLInfo
       else
-        Info := 'Bad OpenCL dll selection.';
+        if SelectedOpenCLDll = COpenCLDll_Mock then
+          Info := GetCLInfo(GetSelectedOpenCLDllPath)
+        else
+          Info := 'Bad OpenCL dll selection.';
 
-    if Self is TTestGPUSettingsInfo then  //return UIClicker vars when used as info only
-      frmPitstopTestRunner.SetExtraTestResult(Self, Info);
+      if Self is TTestGPUSettingsInfo then  //return UIClicker vars when used as info only
+        frmPitstopTestRunner.SetExtraTestResult(Self, Info);
 
-    if (TestVars <> nil) and (TestVars.Values['$SetPlatformsAndDevices$'] = 'True') then
-    begin
-      SelectedPlatormIndex := StrToIntDef(TestVars.Values['$SelectedPlatorm$'], 0);
-      if (SelectedPlatormIndex > -1) and (SelectedPlatormIndex < Length(FGPUInfo)) then
+      if (TestVars <> nil) and (TestVars.Values['$SetPlatformsAndDevices$'] = 'True') then
       begin
-        SelectedPlatorm := FGPUInfo[SelectedPlatormIndex].PlatformName;
-
-        SelectedDeviceIndex := StrToIntDef(TestVars.Values['$SelectedDevice$'], 0);
-        if (SelectedDeviceIndex > -1) and (SelectedDeviceIndex < Length(FGPUInfo[SelectedPlatormIndex].Devices)) then
+        SelectedPlatormIndex := StrToIntDef(TestVars.Values['$SelectedPlatorm$'], 0);
+        if (SelectedPlatormIndex > -1) and (SelectedPlatormIndex < Length(FGPUInfo)) then
         begin
-          SelectedDevice := FGPUInfo[SelectedPlatormIndex].Devices[SelectedDeviceIndex].DeviceName;
-          frmPitstopTestRunner.AddToLog('Platform and device set from client, to ' + SelectedPlatorm + ' and ' + SelectedDevice);
+          SelectedPlatorm := FGPUInfo[SelectedPlatormIndex].PlatformName;
+
+          SelectedDeviceIndex := StrToIntDef(TestVars.Values['$SelectedDevice$'], 0);
+          if (SelectedDeviceIndex > -1) and (SelectedDeviceIndex < Length(FGPUInfo[SelectedPlatormIndex].Devices)) then
+          begin
+            SelectedDevice := FGPUInfo[SelectedPlatormIndex].Devices[SelectedDeviceIndex].DeviceName;
+            frmPitstopTestRunner.AddToLog('Platform and device set from client, to ' + SelectedPlatorm + ' and ' + SelectedDevice);
+          end;
         end;
       end;
-    end;
+    finally
+      if not GPUMenuSettingsCreated then        //This part has to be inside a "finally" section, because the above depend on requests to UIClicker, which if fail, may prevent the creation of the settings menu.
+      begin
+        GetPlatformAndDeviceFromPersistentSettings;
+        //GetOpenCLDllFromPersistentSettings;   //called above
 
-    if not GPUMenuSettingsCreated then
-    begin
-      GetPlatformAndDeviceFromPersistentSettings;
-      //GetOpenCLDllFromPersistentSettings;   //called above
-
-      CreateGPUMenuSettings;
-      GPUMenuSettingsCreated := True;
+        CreateGPUMenuSettings;
+        GPUMenuSettingsCreated := True;
+      end;
     end;
   except
     on E: Exception do
@@ -438,6 +439,7 @@ var
   Response: string;
   FindSubControlOptions: TClkFindSubControlOptions;
   i: Integer;
+  AllVars: TStringList;
 begin
   GetDefaultPropertyValues_FindSubControl(FindSubControlOptions, 2);
   FindSubControlOptions.MatchText := '-bit';
@@ -476,6 +478,17 @@ begin
         raise Exception.Create(Response)  //Response contains an error message, not the list of vars
       else
         raise;
+  end;
+
+  AllVars := TStringList.Create;
+  try
+    AllVars.LineBreak := #13#10;
+    AllVars.Text := Response;
+
+    Expect(AllVars.Values['$DebugVar_SubCnvXOffset$']).ToBe('28', 'Unexpected $DebugVar_SubCnvXOffset$');
+    Expect(AllVars.Values['$DebugVar_SubCnvYOffset$']).ToBe('245', 'Unexpected $DebugVar_SubCnvYOffset$');
+  finally
+    AllVars.Free;
   end;
 end;
 
