@@ -342,6 +342,8 @@ var
 begin
   PathToTestUIClicker := ExpandFileName(ExtractFilePath(ParamStr(0)) + '..\UIClicker.exe');
   TestUIClicker_Proc := CreateUIClickerProcess(PathToTestUIClicker, '--SetExecMode Server --ServerPort ' + CTestServerPort + ' --ExtraCaption ' + CExtraCaption);
+  GeneralConnectTimeout := 2000; //just a bit more than default
+  GeneralReadTimeout := 60000; //1min
 
   try
     try
