@@ -234,7 +234,7 @@ begin
         Result := Result + '        &AllKernelsEvent, //comment for err -10' + #13#10
       else
         //Result := Result + '        &AllEvents[k], //comment for err -10' + #13#10;
-      Result := Result + '        &AllEvents, //comment for err -10' + #13#10;
+      Result := Result + '        &AllEvents[0], //comment for err -10' + #13#10;
     end;
 
     Result := Result +
