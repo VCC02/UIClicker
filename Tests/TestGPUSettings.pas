@@ -41,8 +41,12 @@ type
     procedure FindMainUIClickerWindow;
     procedure BringMainUIClickerWindowToFront;
     procedure BringMainUIClickerWindowIntoFullView;
+
     function FindDashBitOnMainUIClickerWindow(ATargetPlatform, ATargetDevice: Integer): string;
+    function FindDashBitOnBMP(ATargetPlatform, ATargetDevice: Integer): string;
+
     function FindDashBitOnMainUIClickerWindow_AllActionsWithInfo(ATargetPlatform, ATargetDevice: Integer; out AExFound: Boolean): string;
+    function FindDashBitOnBMP_AllActionsWithInfo(ATargetPlatform, ATargetDevice: Integer; out AExFound: Boolean): string;
 
     procedure GetPlatformAndDeviceFromPersistentSettings;
     procedure SavePlatformAndDeviceToPersistentSettings;
@@ -62,6 +66,7 @@ type
 
     procedure BeforeAll_AlwaysExecute;
     procedure Test_FindDashBitOnMainUIClickerWindow_HappyFlow;
+    procedure Test_FindDashBitOnBMP_HappyFlow;
     procedure AfterAll_AlwaysExecute;
   end;
 
@@ -78,6 +83,16 @@ type
     procedure BeforeAll_AlwaysExecute;
 
     procedure Test_FindDashBitOnMainUIClickerWindow_HappyFlow;
+
+    procedure AfterAll_AlwaysExecute;
+  end;
+
+
+  TTestGPUSettingsByTargetWithSingleAction = class(TTestGPUSettings)   //can be run multiple times, with $SetPlatformsAndDevices$ set to True, for every platform and device
+  published
+    procedure BeforeAll_AlwaysExecute;
+
+    procedure Test_FindDashBitOnBMP_HappyFlow;
 
     procedure AfterAll_AlwaysExecute;
   end;
@@ -495,6 +510,59 @@ begin
 end;
 
 
+function TTestGPUSettings.FindDashBitOnBMP(ATargetPlatform, ATargetDevice: Integer): string;
+var
+  Response: string;
+  FindSubControlOptions: TClkFindSubControlOptions;
+  AllVars: TStringList;
+begin
+  GetDefaultPropertyValues_FindSubControl(FindSubControlOptions);
+  FindSubControlOptions.MatchCriteria.WillMatchBitmapText := False;
+  FindSubControlOptions.MatchCriteria.WillMatchBitmapFiles := True;
+  SetLength(FindSubControlOptions.MatchBitmapText, 1);
+  FindSubControlOptions.MatchBitmapFiles := '$AppDir$\Tests\TestFiles\DashBitRawAntialiased.bmp';
+  FindSubControlOptions.MatchBitmapAlgorithm := mbaBruteForceOnGPU; //TMatchBitmapAlgorithm(3)
+  FindSubControlOptions.InitialRectangle.Left := '0';
+  FindSubControlOptions.InitialRectangle.Top := '0';
+  FindSubControlOptions.InitialRectangle.Right := '0';
+  FindSubControlOptions.InitialRectangle.Bottom := '0';
+  FindSubControlOptions.InitialRectangle.RightOffset := '42';
+  FindSubControlOptions.InitialRectangle.BottomOffset := '31';
+  FindSubControlOptions.ColorError := '1';
+  FindSubControlOptions.AllowedColorErrorCount := '1';
+  FindSubControlOptions.ImageSource := isFile; //TImageSource(1)
+  FindSubControlOptions.SourceFileName := '$AppDir$\Tests\TestFiles\BG32DashBit.bmp';
+  FindSubControlOptions.ImageSourceFileNameLocation := isflDisk; //TImageSourceFileNameLocation(0)
+  FindSubControlOptions.GPUSettings.OpenCLPath := GetSelectedOpenCLDllPath;
+  FindSubControlOptions.GPUSettings.TargetPlatform := IntToStr(ATargetPlatform);
+  FindSubControlOptions.GPUSettings.TargetDevice := IntToStr(ATargetDevice);
+
+  Result := ExecuteFindSubControlAction(TestServerAddress, FindSubControlOptions, 'Find bit', 2000, CREParam_FileLocation_ValueDisk);
+  Response := FastReplace_87ToReturn(Result);
+
+  try
+    ExpectSuccessfulActionWithExtraTestResult(Response, '32-bit found.');
+  except
+    on E: Exception do
+      if Pos('Expected "$ExecAction_Err$" to be an item of list', E.Message) > 0 then
+        raise Exception.Create(Response)  //Response contains an error message, not the list of vars
+      else
+        raise;
+  end;
+
+  AllVars := TStringList.Create;
+  try
+    AllVars.LineBreak := #13#10;
+    AllVars.Text := Response;
+
+    Expect(AllVars.Values['$DebugVar_SubCnvXOffset$']).ToBe('14', 'Unexpected $DebugVar_SubCnvXOffset$');
+    Expect(AllVars.Values['$DebugVar_SubCnvYOffset$']).ToBe('8', 'Unexpected $DebugVar_SubCnvYOffset$');
+  finally
+    AllVars.Free;
+  end;
+end;
+
+
 function TTestGPUSettings.FindDashBitOnMainUIClickerWindow_AllActionsWithInfo(ATargetPlatform, ATargetDevice: Integer; out AExFound: Boolean): string;
 begin
   Result := '';
@@ -507,6 +575,23 @@ begin
 
   try
     Result := FindDashBitOnMainUIClickerWindow(ATargetPlatform, ATargetDevice);
+  except
+    on E: Exception do
+    begin
+      Result  := Result + 'Err[' + IntToStr(ATargetPlatform) + ',' + IntToStr(ATargetDevice) + ']:' + E.Message + ' ';
+      AExFound := True;
+    end;
+  end;
+end;
+
+
+function TTestGPUSettings.FindDashBitOnBMP_AllActionsWithInfo(ATargetPlatform, ATargetDevice: Integer; out AExFound: Boolean): string;
+begin
+  Result := '';
+  AExFound := False;
+
+  try
+    Result := FindDashBitOnBMP(ATargetPlatform, ATargetDevice);
   except
     on E: Exception do
     begin
@@ -536,6 +621,38 @@ begin
     PlatformIndex := GetPlatformIndexByName(SelectedPlatorm, FGPUInfo);
     DeviceIndex := GetDeviceIndexByName(PlatformIndex, SelectedDevice, FGPUInfo);
     s := CRunInfoPrefix + FindDashBitOnMainUIClickerWindow_AllActionsWithInfo(PlatformIndex, DeviceIndex, ExFound);
+  end;
+
+  try
+    frmPitstopTestRunner.SetExtraTestResult(Self, GetVarValueFromServer(CGPUDbgVar_AdditionalGPUInfo) + ' ' + s);
+  except
+    on E: Exception do
+      frmPitstopTestRunner.SetExtraTestResult(Self, 'Cannot get extra info about GPU run: ' + E.Message);
+  end;
+
+  Expect(ExFound).ToBe(False, 'Expected to find the subcontrol on all platforms and devices.');
+end;
+
+
+procedure TTestGPUSettings.Test_FindDashBitOnBMP_HappyFlow;             //ToDo: refactoring
+var
+  s: string;
+  ExFound: Boolean;
+  i, j: Integer;
+  PlatformIndex, DeviceIndex: Integer;
+begin
+  if TestVars.Values['$RunOnAllPlatformsAndDevices$'] = 'True' then
+  begin
+    s := CRunInfoPrefix;
+    for i := 0 to Length(FGPUInfo) - 1 do
+      for j := 0 to Length(FGPUInfo[i].Devices) - 1 do
+        s := s + FindDashBitOnBMP_AllActionsWithInfo(i, j, ExFound);    //different call than above
+  end
+  else
+  begin
+    PlatformIndex := GetPlatformIndexByName(SelectedPlatorm, FGPUInfo);
+    DeviceIndex := GetDeviceIndexByName(PlatformIndex, SelectedDevice, FGPUInfo);
+    s := CRunInfoPrefix + FindDashBitOnBMP_AllActionsWithInfo(PlatformIndex, DeviceIndex, ExFound);  //different call than above
   end;
 
   try
@@ -593,12 +710,32 @@ begin
 end;
 
 
+procedure TTestGPUSettingsByTargetWithSingleAction.BeforeAll_AlwaysExecute;
+begin
+  frmPitstopTestRunner.AddToLog('Running tests from TTestGPUSettingsByTargetWithSingleAction.');
+  inherited BeforeAll_AlwaysExecute;
+end;
+
+
+procedure TTestGPUSettingsByTargetWithSingleAction.Test_FindDashBitOnBMP_HappyFlow;
+begin
+  inherited Test_FindDashBitOnBMP_HappyFlow;
+end;
+
+
+procedure TTestGPUSettingsByTargetWithSingleAction.AfterAll_AlwaysExecute;
+begin
+  inherited AfterAll_AlwaysExecute;
+end;
+
+
 var
   i: Integer;
 
 initialization
   RegisterTest(TTestGPUSettingsInfo);
   RegisterTest(TTestGPUSettingsByTarget);
+  RegisterTest(TTestGPUSettingsByTargetWithSingleAction);
 
   TestUIClicker_Proc := nil;
   SetLength(FGPUInfo, 0);
