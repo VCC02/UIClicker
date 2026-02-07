@@ -33,6 +33,8 @@ uses
 
 
 type
+  TFindSubControlTestFunction = function(ATargetPlatform, ATargetDevice: Integer; out AExFound: Boolean): string of object;
+
   TTestGPUSettings = class(TTestHTTPAPI)
   private
     procedure ExpectSuccessfulActionWithExtraTestResult(AResponse: string; AMsgForSuccess: string = '');
@@ -47,6 +49,7 @@ type
 
     function FindDashBitOnMainUIClickerWindow_AllActionsWithInfo(ATargetPlatform, ATargetDevice: Integer; out AExFound: Boolean): string;
     function FindDashBitOnBMP_AllActionsWithInfo(ATargetPlatform, ATargetDevice: Integer; out AExFound: Boolean): string;
+    procedure Test_FindSubControl_HappyFlow(ATestFunction: TFindSubControlTestFunction);
 
     procedure GetPlatformAndDeviceFromPersistentSettings;
     procedure SavePlatformAndDeviceToPersistentSettings;
@@ -209,8 +212,8 @@ begin
   TestSettings := TStringList.Create;
   try
     frmPitstopTestRunner.GetPersistentTestSettings(TestSettings);
-    frmPitstopTestRunner.SetValueToPersistentTestSettings('$SelectedPlatorm$', SelectedPlatorm); //it should be ok if set to ''
-    frmPitstopTestRunner.SetValueToPersistentTestSettings('$SelectedDevice$', SelectedDevice);   //it should be ok if set to ''
+    frmPitstopTestRunner.SetValueToPersistentTestSettings('$SelectedPlatorm$', SelectedPlatorm, False); //it should be ok if set to ''  - first call can be without saving to disk
+    frmPitstopTestRunner.SetValueToPersistentTestSettings('$SelectedDevice$', SelectedDevice, True);   //it should be ok if set to ''
   finally
     TestSettings.Free;
   end;
@@ -238,7 +241,7 @@ begin
   TestSettings := TStringList.Create;
   try
     frmPitstopTestRunner.GetPersistentTestSettings(TestSettings);
-    frmPitstopTestRunner.SetValueToPersistentTestSettings('$OpenCLDll$', SelectedOpenCLDll);
+    frmPitstopTestRunner.SetValueToPersistentTestSettings('$OpenCLDll$', SelectedOpenCLDll, True);
   finally
     TestSettings.Free;
   end;
@@ -602,7 +605,7 @@ begin
 end;
 
 
-procedure TTestGPUSettings.Test_FindDashBitOnMainUIClickerWindow_HappyFlow;
+procedure TTestGPUSettings.Test_FindSubControl_HappyFlow(ATestFunction: TFindSubControlTestFunction);
 var
   s: string;
   ExFound: Boolean;
@@ -614,17 +617,17 @@ begin
     s := CRunInfoPrefix;
     for i := 0 to Length(FGPUInfo) - 1 do
       for j := 0 to Length(FGPUInfo[i].Devices) - 1 do
-        s := s + FindDashBitOnMainUIClickerWindow_AllActionsWithInfo(i, j, ExFound);
+        s := s + ATestFunction(i, j, ExFound);
   end
   else
   begin
     PlatformIndex := GetPlatformIndexByName(SelectedPlatorm, FGPUInfo);
     DeviceIndex := GetDeviceIndexByName(PlatformIndex, SelectedDevice, FGPUInfo);
-    s := CRunInfoPrefix + FindDashBitOnMainUIClickerWindow_AllActionsWithInfo(PlatformIndex, DeviceIndex, ExFound);
+    s := CRunInfoPrefix + ATestFunction(PlatformIndex, DeviceIndex, ExFound);
   end;
 
   try
-    frmPitstopTestRunner.SetExtraTestResult(Self, GetVarValueFromServer(CGPUDbgVar_AdditionalGPUInfo) + ' ' + s);
+    frmPitstopTestRunner.SetExtraTestResult(Self, CGPUDbgVar_AdditionalGPUInfo + '=' + GetVarValueFromServer(CGPUDbgVar_AdditionalGPUInfo) + ' ' + s);
   except
     on E: Exception do
       frmPitstopTestRunner.SetExtraTestResult(Self, 'Cannot get extra info about GPU run: ' + E.Message);
@@ -634,35 +637,15 @@ begin
 end;
 
 
-procedure TTestGPUSettings.Test_FindDashBitOnBMP_HappyFlow;             //ToDo: refactoring
-var
-  s: string;
-  ExFound: Boolean;
-  i, j: Integer;
-  PlatformIndex, DeviceIndex: Integer;
+procedure TTestGPUSettings.Test_FindDashBitOnMainUIClickerWindow_HappyFlow;
 begin
-  if TestVars.Values['$RunOnAllPlatformsAndDevices$'] = 'True' then
-  begin
-    s := CRunInfoPrefix;
-    for i := 0 to Length(FGPUInfo) - 1 do
-      for j := 0 to Length(FGPUInfo[i].Devices) - 1 do
-        s := s + FindDashBitOnBMP_AllActionsWithInfo(i, j, ExFound);    //different call than above
-  end
-  else
-  begin
-    PlatformIndex := GetPlatformIndexByName(SelectedPlatorm, FGPUInfo);
-    DeviceIndex := GetDeviceIndexByName(PlatformIndex, SelectedDevice, FGPUInfo);
-    s := CRunInfoPrefix + FindDashBitOnBMP_AllActionsWithInfo(PlatformIndex, DeviceIndex, ExFound);  //different call than above
-  end;
+  Test_FindSubControl_HappyFlow(@FindDashBitOnMainUIClickerWindow_AllActionsWithInfo);
+end;
 
-  try
-    frmPitstopTestRunner.SetExtraTestResult(Self, GetVarValueFromServer(CGPUDbgVar_AdditionalGPUInfo) + ' ' + s);
-  except
-    on E: Exception do
-      frmPitstopTestRunner.SetExtraTestResult(Self, 'Cannot get extra info about GPU run: ' + E.Message);
-  end;
 
-  Expect(ExFound).ToBe(False, 'Expected to find the subcontrol on all platforms and devices.');
+procedure TTestGPUSettings.Test_FindDashBitOnBMP_HappyFlow;
+begin
+  Test_FindSubControl_HappyFlow(@FindDashBitOnBMP_AllActionsWithInfo);
 end;
 
 
