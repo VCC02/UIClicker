@@ -482,12 +482,13 @@ begin
   FindSubControlOptions.InitialRectangle.BottomOffset := '-11';
   FindSubControlOptions.ColorError := '10';
   FindSubControlOptions.AllowedColorErrorCount := '30';
+  FindSubControlOptions.PrecisionTimeout := False; //avoid having multiple runs
   FindSubControlOptions.GPUSettings.OpenCLPath := GetSelectedOpenCLDllPath;
   FindSubControlOptions.GPUSettings.TargetPlatform := IntToStr(ATargetPlatform);
   FindSubControlOptions.GPUSettings.TargetDevice := IntToStr(ATargetDevice);
   //eventually, set ExecutionAvailability from params
 
-  Result := ExecuteFindSubControlAction(TestServerAddress, FindSubControlOptions, 'Find bit', 2000, CREParam_FileLocation_ValueDisk);
+  Result := ExecuteFindSubControlAction(TestServerAddress, FindSubControlOptions, 'Find bit', 1, CREParam_FileLocation_ValueDisk);  //the timeout is set to minimum, to avoid having multiple runs
   Response := FastReplace_87ToReturn(Result);
 
   try
@@ -536,11 +537,12 @@ begin
   FindSubControlOptions.ImageSource := isFile; //TImageSource(1)
   FindSubControlOptions.SourceFileName := '$AppDir$\Tests\TestFiles\BG32DashBit.bmp';
   FindSubControlOptions.ImageSourceFileNameLocation := isflDisk; //TImageSourceFileNameLocation(0)
+  FindSubControlOptions.PrecisionTimeout := False; //avoid having multiple runs
   FindSubControlOptions.GPUSettings.OpenCLPath := GetSelectedOpenCLDllPath;
   FindSubControlOptions.GPUSettings.TargetPlatform := IntToStr(ATargetPlatform);
   FindSubControlOptions.GPUSettings.TargetDevice := IntToStr(ATargetDevice);
 
-  Result := ExecuteFindSubControlAction(TestServerAddress, FindSubControlOptions, 'Find bit', 2000, CREParam_FileLocation_ValueDisk);
+  Result := ExecuteFindSubControlAction(TestServerAddress, FindSubControlOptions, 'Find bit', 1, CREParam_FileLocation_ValueDisk); //the timeout is set to minimum, to avoid having multiple runs
   Response := FastReplace_87ToReturn(Result);
 
   try
