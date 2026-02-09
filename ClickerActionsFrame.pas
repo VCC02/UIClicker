@@ -7840,56 +7840,60 @@ begin
     Exit;
 
   if (ANodeData.Level = CPropertyLevel) and (ALiveEditingActionType = acClick) then
+  begin
+    ClickTypeIsNotDrag := AEditingAction^.ClickOptions.ClickType <> CClickType_Drag;
+
+    if ((APropertyIndex = CClick_XClickPointVar_PropIndex) and (AEditingAction^.ClickOptions.XClickPointReference <> xrefVar)) or
+       ((APropertyIndex = CClick_YClickPointVar_PropIndex) and (AEditingAction^.ClickOptions.YClickPointReference <> yrefVar)) or
+       ((APropertyIndex = CClick_XClickPointReferenceDest_PropIndex) and ClickTypeIsNotDrag) or
+       ((APropertyIndex = CClick_YClickPointReferenceDest_PropIndex) and ClickTypeIsNotDrag) or
+       ((APropertyIndex = CClick_XClickPointVarDest_PropIndex) and ((AEditingAction^.ClickOptions.XClickPointReferenceDest <> xrefVar) or ClickTypeIsNotDrag)) or
+       ((APropertyIndex = CClick_YClickPointVarDest_PropIndex) and ((AEditingAction^.ClickOptions.YClickPointReferenceDest <> yrefVar) or ClickTypeIsNotDrag)) or
+       ((APropertyIndex = CClick_XOffsetDest_PropIndex) and ClickTypeIsNotDrag) or
+       ((APropertyIndex = CClick_YOffsetDest_PropIndex) and ClickTypeIsNotDrag) or
+       ((APropertyIndex = CClick_MouseWheelType_PropIndex) and (AEditingAction^.ClickOptions.ClickType <> CClickType_Wheel)) or
+       ((APropertyIndex = CClick_MouseWheelAmount_PropIndex) and (AEditingAction^.ClickOptions.ClickType <> CClickType_Wheel)) or
+       ((APropertyIndex = CClick_LeaveMouse_PropIndex) and (AEditingAction^.ClickOptions.ClickType in [CClickType_Drag, CClickType_Wheel])) or
+       ((APropertyIndex in [CClick_DelayAfterMovingToDestination_PropIndex .. CClick_MoveDuration_PropIndex]) and (AEditingAction^.ClickOptions.ClickType in [CClickType_ButtonDown, CClickType_ButtonUp, CClickType_Wheel])) then
     begin
-      ClickTypeIsNotDrag := AEditingAction^.ClickOptions.ClickType <> CClickType_Drag;
+      TargetCanvas.Font.Color := clGray;
+      Exit;
+    end;
+  end;  //acClick
 
-      if ((APropertyIndex = CClick_XClickPointVar_PropIndex) and (AEditingAction^.ClickOptions.XClickPointReference <> xrefVar)) or
-         ((APropertyIndex = CClick_YClickPointVar_PropIndex) and (AEditingAction^.ClickOptions.YClickPointReference <> yrefVar)) or
-         ((APropertyIndex = CClick_XClickPointReferenceDest_PropIndex) and ClickTypeIsNotDrag) or
-         ((APropertyIndex = CClick_YClickPointReferenceDest_PropIndex) and ClickTypeIsNotDrag) or
-         ((APropertyIndex = CClick_XClickPointVarDest_PropIndex) and ((AEditingAction^.ClickOptions.XClickPointReferenceDest <> xrefVar) or ClickTypeIsNotDrag)) or
-         ((APropertyIndex = CClick_YClickPointVarDest_PropIndex) and ((AEditingAction^.ClickOptions.YClickPointReferenceDest <> yrefVar) or ClickTypeIsNotDrag)) or
-         ((APropertyIndex = CClick_XOffsetDest_PropIndex) and ClickTypeIsNotDrag) or
-         ((APropertyIndex = CClick_YOffsetDest_PropIndex) and ClickTypeIsNotDrag) or
-         ((APropertyIndex = CClick_MouseWheelType_PropIndex) and (AEditingAction^.ClickOptions.ClickType <> CClickType_Wheel)) or
-         ((APropertyIndex = CClick_MouseWheelAmount_PropIndex) and (AEditingAction^.ClickOptions.ClickType <> CClickType_Wheel)) or
-         ((APropertyIndex = CClick_LeaveMouse_PropIndex) and (AEditingAction^.ClickOptions.ClickType in [CClickType_Drag, CClickType_Wheel])) or
-         ((APropertyIndex in [CClick_DelayAfterMovingToDestination_PropIndex .. CClick_MoveDuration_PropIndex]) and (AEditingAction^.ClickOptions.ClickType in [CClickType_ButtonDown, CClickType_ButtonUp, CClickType_Wheel])) then
-      begin
-        TargetCanvas.Font.Color := clGray;
-        Exit;
-      end;
-    end;  //acClick
-
-    if (ANodeData.Level = CPropertyLevel) and (ALiveEditingActionType = acFindSubControl) then
+  if (ANodeData.Level = CPropertyLevel) and (ALiveEditingActionType = acFindSubControl) then
+  begin
+    if (APropertyIndex in [CFindSubControl_MatchBitmapFiles_PropIndex, CFindSubControl_MatchPrimitiveFiles_PropIndex]) then
     begin
-      if (APropertyIndex in [CFindSubControl_MatchBitmapFiles_PropIndex, CFindSubControl_MatchPrimitiveFiles_PropIndex]) then
-      begin
-        TargetCanvas.Font.Style := [fsItalic];
-        //Exit;
-      end;
-
-      if ((APropertyIndex in [CFindSubControl_SourceFileName_PropIndex, CFindSubControl_ImageSourceFileNameLocation_PropIndex])
-         and (AEditingAction^.FindSubControlOptions.ImageSource = isScreenshot)) then
-      begin
-        TargetCanvas.Font.Color := clGray;
-        Exit;
-      end;
+      TargetCanvas.Font.Style := [fsItalic];
+      //Exit;
     end;
 
-    if (ANodeData.Level = CPropertyLevel) and (ALiveEditingActionType = acWindowOperations) then
-      if APropertyIndex in [CWindowOperations_NewX_PropItemIndex .. CWindowOperations_NewSizeEnabled_PropItemIndex] then
-        if (AEditingAction^.WindowOperationsOptions.Operation <> woMoveResize) or
-          (not AEditingAction^.WindowOperationsOptions.NewPositionEnabled) and (APropertyIndex in [CWindowOperations_NewX_PropItemIndex, CWindowOperations_NewY_PropItemIndex]) or
-          (not AEditingAction^.WindowOperationsOptions.NewSizeEnabled) and (APropertyIndex in [CWindowOperations_NewWidth_PropItemIndex, CWindowOperations_NewHeight_PropItemIndex]) then
-        begin
-          TargetCanvas.Font.Color := clGray;
-          Exit;
-        end;
-
-    if (ANodeData.Level = CPropertyItemLevel) and (ALiveEditingActionType = acFindSubControl) then
+    if ((APropertyIndex in [CFindSubControl_SourceFileName_PropIndex, CFindSubControl_ImageSourceFileNameLocation_PropIndex])
+       and (AEditingAction^.FindSubControlOptions.ImageSource = isScreenshot)) then
     begin
-      if APropertyIndex = CFindSubControl_MatchPrimitiveFiles_PropIndex then
+      TargetCanvas.Font.Color := clGray;
+      Exit;
+    end;
+  end;
+
+  if (ANodeData.Level = CPropertyLevel) and (ALiveEditingActionType = acWindowOperations) then
+    if APropertyIndex in [CWindowOperations_NewX_PropItemIndex .. CWindowOperations_NewSizeEnabled_PropItemIndex] then
+      if (AEditingAction^.WindowOperationsOptions.Operation <> woMoveResize) or
+        (not AEditingAction^.WindowOperationsOptions.NewPositionEnabled) and (APropertyIndex in [CWindowOperations_NewX_PropItemIndex, CWindowOperations_NewY_PropItemIndex]) or
+        (not AEditingAction^.WindowOperationsOptions.NewSizeEnabled) and (APropertyIndex in [CWindowOperations_NewWidth_PropItemIndex, CWindowOperations_NewHeight_PropItemIndex]) then
+      begin
+        TargetCanvas.Font.Color := clGray;
+        Exit;
+      end;
+
+  if (ANodeData.Level = CPropertyItemLevel) and (ALiveEditingActionType = acFindSubControl) then
+  begin
+    if APropertyIndex = CFindSubControl_MatchPrimitiveFiles_PropIndex then
+    begin
+      if not AEditingAction^.FindSubControlOptions.MatchCriteria.WillMatchPrimitiveFiles then
+        TargetCanvas.Font.Color := clGray
+      else
       begin
         if AEditingAction^.FindSubControlOptions.MatchPrimitiveFiles_Modified = '' then //this happens because this field should have been updated in FEditTemplateOptions_EditingAction, instead of FEditingAction
         begin
@@ -7926,89 +7930,94 @@ begin
             ListOfPrimitiveFiles_Modified.Free;
           end;
         end;
-      end; //primitives
+      end; //WillMatchPrimitiveFiles
+    end; //primitives
 
-      if (APropertyIndex in [CFindSubControl_MatchBitmapAlgorithmSettings_PropIndex]) and
-         (AEditingAction^.FindSubControlOptions.MatchBitmapAlgorithm <> mbaXYMultipleAndOffsets) then
-      begin
+    if APropertyIndex = CFindSubControl_MatchBitmapFiles_PropIndex then
+      if not AEditingAction^.FindSubControlOptions.MatchCriteria.WillMatchBitmapFiles then
         TargetCanvas.Font.Color := clGray;
-        Exit;
-      end;
 
-      if (APropertyIndex in [CFindSubControl_MatchByHistogramSettings_PropIndex]) and
-         (AEditingAction^.FindSubControlOptions.MatchBitmapAlgorithm <> mbaRawHistogramZones) then
-      begin
-        TargetCanvas.Font.Color := clGray;
-        Exit;
-      end;
-
-      if (APropertyIndex in [CFindSubControl_RenderingInBrowserSettings_PropIndex]) and
-         not AEditingAction^.FindSubControlOptions.UseTextRenderingInBrowser then
-      begin
-        TargetCanvas.Font.Color := clGray;
-        Exit;
-      end;
-
-      if (ANodeData.Level = CPropertyItemLevel) and (APropertyIndex in [CFindSubControl_RenderingInBrowserSettings_PropIndex]) then
-      begin
-        if APropertyItemIndex = CFindSubControl_RenderingInBrowserSettings_ActionForSendingRequest_PropItemIndex then
-          if AEditingAction^.FindSubControlOptions.RenderingInBrowserSettings.RenderingRequestType = rrtShellExecute then
-          begin
-            TargetCanvas.Font.Color := clGray;
-            Exit;
-          end;
-
-        if APropertyItemIndex = CFindSubControl_RenderingInBrowserSettings_PluginActionForReceivingBitmaps_PropItemIndex then
-          if not AEditingAction^.FindSubControlOptions.RenderingInBrowserSettings.UsePluginForReceivingBitmaps then
-          begin
-            TargetCanvas.Font.Color := clGray;
-            Exit;
-          end;
-      end;
-
-      if (APropertyIndex in [CFindSubControl_GPUSettings_PropIndex]) and
-         (AEditingAction^.FindSubControlOptions.MatchBitmapAlgorithm <> mbaBruteForceOnGPU) then
-      begin
-        TargetCanvas.Font.Color := clGray;
-        Exit;
-      end;
-
-      if (APropertyIndex in [CFindSubControl_ImageEffectSettings_PropIndex]) and
-         not AEditingAction^.FindSubControlOptions.ImageEffectSettings.UseImageEffects then
-        if APropertyItemIndex in [CFindSubControl_ImageEffectSettings_ImageEffect_PropItemIndex, CFindSubControl_ImageEffectSettings_WhereToApply_PropItemIndex] then
-      begin
-        TargetCanvas.Font.Color := clGray;
-        Exit;
-      end;
-    end; //acFindSubControl
-
-    if (ANodeData.Level = CPropertyItemLevel) and (ALiveEditingActionType = acCallTemplate) then
-      if APropertyIndex = CCallTemplate_CallTemplateLoop_PropIndex then
-        if APropertyItemIndex in [CCallTemplate_CallTemplateLoop_Counter_PropItemIndex .. CCallTemplate_CallTemplateLoop_EvalBreakPosition_PropItemIndex] then
-          if not AEditingAction^.CallTemplateOptions.CallTemplateLoop.Enabled then
-          begin
-            TargetCanvas.Font.Color := clGray;
-            Exit;
-          end;
-
-    if (ANodeData.Level = CPropertyLevel) and (ALiveEditingActionType = acPlugin) then
+    if (APropertyIndex in [CFindSubControl_MatchBitmapAlgorithmSettings_PropIndex]) and
+       (AEditingAction^.FindSubControlOptions.MatchBitmapAlgorithm <> mbaXYMultipleAndOffsets) then
     begin
-      PluginPropertyEnabled := GetPluginPropertyAttribute(AEditingAction.PluginOptions.ListOfPropertiesAndTypes, CPluginPropertyAttr_Enabled, APropertyIndex);
-      if PluginPropertyEnabled <> '' then
-      begin
-        try
-          PluginPropertyEnabled := PropertyValueReplace(PluginPropertyEnabled, AEditingAction.PluginOptions.ListOfPropertiesAndValues);
-        except
-          on E: Exception do
-            AOnAddToLog('Cannot evaluate plugin property value: ' + E.Message);
-        end;
-        if not ClickerUtils.EvaluateActionCondition(PluginPropertyEnabled, TfrClickerActions.DummyEvaluateReplacements) then
+      TargetCanvas.Font.Color := clGray;
+      Exit;
+    end;
+
+    if (APropertyIndex in [CFindSubControl_MatchByHistogramSettings_PropIndex]) and
+       (AEditingAction^.FindSubControlOptions.MatchBitmapAlgorithm <> mbaRawHistogramZones) then
+    begin
+      TargetCanvas.Font.Color := clGray;
+      Exit;
+    end;
+
+    if (APropertyIndex in [CFindSubControl_RenderingInBrowserSettings_PropIndex]) and
+       not AEditingAction^.FindSubControlOptions.UseTextRenderingInBrowser then
+    begin
+      TargetCanvas.Font.Color := clGray;
+      Exit;
+    end;
+
+    if (ANodeData.Level = CPropertyItemLevel) and (APropertyIndex in [CFindSubControl_RenderingInBrowserSettings_PropIndex]) then
+    begin
+      if APropertyItemIndex = CFindSubControl_RenderingInBrowserSettings_ActionForSendingRequest_PropItemIndex then
+        if AEditingAction^.FindSubControlOptions.RenderingInBrowserSettings.RenderingRequestType = rrtShellExecute then
         begin
           TargetCanvas.Font.Color := clGray;
           Exit;
         end;
+
+      if APropertyItemIndex = CFindSubControl_RenderingInBrowserSettings_PluginActionForReceivingBitmaps_PropItemIndex then
+        if not AEditingAction^.FindSubControlOptions.RenderingInBrowserSettings.UsePluginForReceivingBitmaps then
+        begin
+          TargetCanvas.Font.Color := clGray;
+          Exit;
+        end;
+    end;
+
+    if (APropertyIndex in [CFindSubControl_GPUSettings_PropIndex]) and
+       (AEditingAction^.FindSubControlOptions.MatchBitmapAlgorithm <> mbaBruteForceOnGPU) then
+    begin
+      TargetCanvas.Font.Color := clGray;
+      Exit;
+    end;
+
+    if (APropertyIndex in [CFindSubControl_ImageEffectSettings_PropIndex]) and
+       not AEditingAction^.FindSubControlOptions.ImageEffectSettings.UseImageEffects then
+      if APropertyItemIndex in [CFindSubControl_ImageEffectSettings_ImageEffect_PropItemIndex, CFindSubControl_ImageEffectSettings_WhereToApply_PropItemIndex] then
+    begin
+      TargetCanvas.Font.Color := clGray;
+      Exit;
+    end;
+  end; //acFindSubControl
+
+  if (ANodeData.Level = CPropertyItemLevel) and (ALiveEditingActionType = acCallTemplate) then
+    if APropertyIndex = CCallTemplate_CallTemplateLoop_PropIndex then
+      if APropertyItemIndex in [CCallTemplate_CallTemplateLoop_Counter_PropItemIndex .. CCallTemplate_CallTemplateLoop_EvalBreakPosition_PropItemIndex] then
+        if not AEditingAction^.CallTemplateOptions.CallTemplateLoop.Enabled then
+        begin
+          TargetCanvas.Font.Color := clGray;
+          Exit;
+        end;
+
+  if (ANodeData.Level = CPropertyLevel) and (ALiveEditingActionType = acPlugin) then
+  begin
+    PluginPropertyEnabled := GetPluginPropertyAttribute(AEditingAction.PluginOptions.ListOfPropertiesAndTypes, CPluginPropertyAttr_Enabled, APropertyIndex);
+    if PluginPropertyEnabled <> '' then
+    begin
+      try
+        PluginPropertyEnabled := PropertyValueReplace(PluginPropertyEnabled, AEditingAction.PluginOptions.ListOfPropertiesAndValues);
+      except
+        on E: Exception do
+          AOnAddToLog('Cannot evaluate plugin property value: ' + E.Message);
+      end;
+      if not ClickerUtils.EvaluateActionCondition(PluginPropertyEnabled, TfrClickerActions.DummyEvaluateReplacements) then
+      begin
+        TargetCanvas.Font.Color := clGray;
+        Exit;
       end;
     end;
+  end;
 
   if (ACategoryIndex = CCategory_EditedAction) and (AFEditingAction^.ActionOptions.Action = acEditTemplate) then   //do not replace with ALiveEditingActionType!. It is FEditingAction on purpose.
     if not (AFEditingAction^.EditTemplateOptions.Operation in [etoNewAction, etoUpdateAction, etoSetProperty, etoGetProperty]) then
