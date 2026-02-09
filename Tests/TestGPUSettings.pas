@@ -583,7 +583,7 @@ begin
   except
     on E: Exception do
     begin
-      Result  := Result + 'Err[' + IntToStr(ATargetPlatform) + ',' + IntToStr(ATargetDevice) + ']:' + E.Message + ' ';
+      Result := Result + 'Err[' + IntToStr(ATargetPlatform) + ',' + IntToStr(ATargetDevice) + ']:' + E.Message + ' ';
       AExFound := True;
     end;
   end;
@@ -600,7 +600,7 @@ begin
   except
     on E: Exception do
     begin
-      Result  := Result + 'Err[' + IntToStr(ATargetPlatform) + ',' + IntToStr(ATargetDevice) + ']:' + E.Message + ' ';
+      Result := Result + 'Err[' + IntToStr(ATargetPlatform) + ',' + IntToStr(ATargetDevice) + ']:' + E.Message + ' ';
       AExFound := True;
     end;
   end;
@@ -609,7 +609,7 @@ end;
 
 procedure TTestGPUSettings.Test_FindSubControl_HappyFlow(ATestFunction: TFindSubControlTestFunction);
 var
-  s: string;
+  s, ErrMsg: string;
   ExFound: Boolean;
   i, j: Integer;
   PlatformIndex, DeviceIndex: Integer;
@@ -635,7 +635,14 @@ begin
       frmPitstopTestRunner.SetExtraTestResult(Self, 'Cannot get extra info about GPU run: ' + E.Message);
   end;
 
-  Expect(ExFound).ToBe(False, 'Expected to find the subcontrol on all platforms and devices.');
+  if ExFound then
+  begin
+    ErrMsg := Copy(s, Pos('$ExecAction_Err$', s), MaxInt);
+    ErrMsg := Copy(ErrMsg, 1, Pos(#8#7, ErrMsg) - 1); //
+    ErrMsg := ' ###' + ErrMsg + '###';
+  end;
+
+  Expect(ExFound).ToBe(False, 'Expected to find the subcontrol on all platforms and devices.' + ErrMsg);
 end;
 
 
