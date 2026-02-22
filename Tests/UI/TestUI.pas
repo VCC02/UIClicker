@@ -57,16 +57,18 @@ type
 
     procedure ExpectVarFromClientUnderTest(AVarName, AExpectedValue: string; AExtraComment: string = '');
 
-    procedure DragAction_FromPosToPos(ASrcIdx, ADestIdx: Integer; const AActIdx: array of Byte);
-    procedure AutoCompleteTextInConsoleEditBox(ATypedEditBoxContent, AFunctionNameToDoubleClick, AExpectedResult: string);
-    procedure AddActionButton(AActionNameToSelect: string);
-
-    procedure VerifyOIDefaultValues(AActionToDrag: string; var AProperties: TOIInteractionDataArr);
-    procedure VerifyOIDifferentThanDefaultValues(AActionToDrag: string; var AProperties: TOIInteractionDataArr);
-    procedure VerifyPermissionsOnSendingFiles;
-    procedure EditOIPropertiesFromMenu(AActionToDrag, APropertyToEdit, ASubPropertyToEdit, AScrollCount, AMenuItemCaption, ANewPropertyValue: string);
   public
     constructor Create; override;
+    procedure BeforeAll_AlwaysExecute;
+    procedure AfterAll_AlwaysExecute;
+  end;
+
+
+  TTestUIActionExecution = class(TTestUI)
+  private
+    procedure DragAction_FromPosToPos(ASrcIdx, ADestIdx: Integer; const AActIdx: array of Byte);
+    procedure AddActionButton(AActionNameToSelect: string);
+
   published
     procedure BeforeAll_AlwaysExecute;
 
@@ -95,6 +97,19 @@ type
     procedure Test_ExecuteTemplateRemotelyWithDebugging_WithLoopedCall_AndStepIntoThenStop;
     procedure Test_ExecuteTemplateRemotelyWithDebugging_ToVerifyIfCallTemplateWorksAfterStopping;
 
+    procedure TestAddActionButton_HappyFlow;
+
+    procedure AfterAll_AlwaysExecute;
+  end;
+
+
+  TTestUIAutoComplete = class(TTestUI)
+  private
+    procedure AutoCompleteTextInConsoleEditBox(ATypedEditBoxContent, AFunctionNameToDoubleClick, AExpectedResult: string);
+
+  published
+    procedure BeforeAll_AlwaysExecute;
+
     procedure TestAutoComplete_EmptyEditBox;
     procedure TestAutoComplete_PartialFunctionNameOnly;
     procedure TestAutoComplete_FullFunctionNameOnly;
@@ -105,7 +120,18 @@ type
     procedure TestAutoComplete_VarAssignmentAndBlanksToPartialFunctionNameOnly;
     procedure TestAutoComplete_VarAssignmentAndBlanksToFullFunctionNameOnly;
 
-    procedure TestAddActionButton_HappyFlow;
+    procedure AfterAll_AlwaysExecute;
+  end;
+
+
+  TTestUIObjectInspector = class(TTestUI)
+  private
+    procedure VerifyOIDefaultValues(AActionToDrag: string; var AProperties: TOIInteractionDataArr);
+    procedure VerifyOIDifferentThanDefaultValues(AActionToDrag: string; var AProperties: TOIInteractionDataArr);
+    procedure EditOIPropertiesFromMenu(AActionToDrag, APropertyToEdit, ASubPropertyToEdit, AScrollCount, AMenuItemCaption, ANewPropertyValue: string);
+
+  published
+    procedure BeforeAll_AlwaysExecute;
 
     procedure TestVerifyOIDefaultValues_Click;
     procedure TestVerifyOIDefaultValues_ExecApp;
@@ -149,8 +175,29 @@ type
     procedure TestEditOIProperty_FindSubControl_MatchBitmapText_ForegroundColor_SetToValueFromMenu;
     procedure TestEditOIProperty_FindSubControl_MatchBitmapText_BackgroundColor_SetToValueFromMenu;
 
+    procedure AfterAll_AlwaysExecute;
+  end;
+
+
+  TTestUISendingPermissions = class(TTestUI)
+  private
+    procedure VerifyPermissionsOnSendingFiles;
+
+  published
+    procedure BeforeAll_AlwaysExecute;
+
     procedure TestVerifyPermissionsOnSendingFiles_SendingFileFromDeniedTestFiles;
     procedure TestVerifyPermissionsOnSendingFiles_ReSendingModifiedFileByEditTemplate;
+
+    procedure AfterAll_AlwaysExecute;
+  end;
+
+
+  TTestUIWebBrowser = class(TTestUI)
+  private
+
+  published
+    procedure BeforeAll_AlwaysExecute;
 
     procedure TestRenderTextOnWebBrowser_With_ShellExecute_RenderingRequest;
     procedure TestRenderTextOnWebBrowser_With_ExecApp_RenderingRequest;
@@ -159,6 +206,7 @@ type
 
     procedure AfterAll_AlwaysExecute;
   end;
+
 
 {
   This test application uses a second instance of UIClicker, called TestDriver, from TestDriver directory,
@@ -350,6 +398,21 @@ begin
 end;
 
 
+procedure TTestUI.AfterAll_AlwaysExecute;
+begin
+  //the following instances should be terminated in this specific order:
+  FClientAppUnderTest_Proc.Terminate(0);
+  FServerAppUnderTest_Proc.Terminate(0);
+  FTestDriverForClient_Proc.Terminate(0);
+  FTestDriverForServer_Proc.Terminate(0);
+
+  FreeAndNil(FClientAppUnderTest_Proc);
+  FreeAndNil(FServerAppUnderTest_Proc);
+  FreeAndNil(FTestDriverForClient_Proc);
+  FreeAndNil(FTestDriverForServer_Proc);
+end;
+
+
 procedure TTestUI.LoadTestTemplateInClickerUnderTest(ATestTemplate: string);
 begin
   SetVariableOnTestDriverClient('$TemplateToLoad$', FTemplatesDir + ATestTemplate);
@@ -424,7 +487,13 @@ begin
 end;
 
 
-procedure TTestUI.Test_ExecuteTemplateRemotely;
+procedure TTestUIActionExecution.BeforeAll_AlwaysExecute;
+begin
+  inherited BeforeAll_AlwaysExecute;
+end;
+
+
+procedure TTestUIActionExecution.Test_ExecuteTemplateRemotely;
 begin
   PrepareClickerUnderTestToClientMode;
 
@@ -437,7 +506,7 @@ begin
 end;
 
 
-procedure TTestUI.Test_ExecuteTemplateRemotely_WithLoopedCall;
+procedure TTestUIActionExecution.Test_ExecuteTemplateRemotely_WithLoopedCall;
 begin
   PrepareClickerUnderTestToClientMode;
 
@@ -450,7 +519,7 @@ begin
 end;
 
 
-procedure TTestUI.Test_ExecuteTemplateRemotelyWithDebugging;
+procedure TTestUIActionExecution.Test_ExecuteTemplateRemotelyWithDebugging;
 begin
   PrepareClickerUnderTestToClientMode;
 
@@ -463,7 +532,7 @@ begin
 end;
 
 
-procedure TTestUI.Test_ExecuteTemplateRemotelyWithDebugging_WithLoopedCall;
+procedure TTestUIActionExecution.Test_ExecuteTemplateRemotelyWithDebugging_WithLoopedCall;
 begin
   PrepareClickerUnderTestToClientMode;
 
@@ -476,7 +545,7 @@ begin
 end;
 
 
-procedure TTestUI.Test_ExecuteTemplateRemotelyWithDebugging_AndStepInto;
+procedure TTestUIActionExecution.Test_ExecuteTemplateRemotelyWithDebugging_AndStepInto;
 begin
   PrepareClickerUnderTestToClientMode;
 
@@ -489,7 +558,7 @@ begin
 end;
 
 
-procedure TTestUI.Test_ExecuteTemplateRemotelyWithDebugging_WithLoopedCall_AndStepInto;
+procedure TTestUIActionExecution.Test_ExecuteTemplateRemotelyWithDebugging_WithLoopedCall_AndStepInto;
 begin
   PrepareClickerUnderTestToClientMode;
 
@@ -502,7 +571,7 @@ begin
 end;
 
 
-procedure TTestUI.Test_ExecuteTemplateRemotelyWithDebugging_AndStepIntoThenStop;
+procedure TTestUIActionExecution.Test_ExecuteTemplateRemotelyWithDebugging_AndStepIntoThenStop;
 begin
   PrepareClickerUnderTestToClientMode;
 
@@ -515,7 +584,7 @@ begin
 end;
 
 
-procedure TTestUI.Test_ExecuteTemplateRemotelyWithDebugging_WithLoopedCall_AndStepIntoThenStop;
+procedure TTestUIActionExecution.Test_ExecuteTemplateRemotelyWithDebugging_WithLoopedCall_AndStepIntoThenStop;
 begin
   PrepareClickerUnderTestToClientMode;
 
@@ -528,7 +597,7 @@ begin
 end;
 
 
-procedure TTestUI.Test_ExecuteTemplateRemotelyWithDebugging_ToVerifyIfCallTemplateWorksAfterStopping;  //this is a combination of above AndStepIntoThenStop and WithLoopedCall_AndStepIntoThenStop
+procedure TTestUIActionExecution.Test_ExecuteTemplateRemotelyWithDebugging_ToVerifyIfCallTemplateWorksAfterStopping;  //this is a combination of above AndStepIntoThenStop and WithLoopedCall_AndStepIntoThenStop
 begin
   PrepareClickerUnderTestToClientMode;
 
@@ -542,7 +611,7 @@ begin
 end;
 
 
-procedure TTestUI.Test_FindColorErrorFromGradientOnServer_ErrorLevel_SuccessVerbose_NoUpdate;
+procedure TTestUIActionExecution.Test_FindColorErrorFromGradientOnServer_ErrorLevel_SuccessVerbose_NoUpdate;
 begin
   TestServerAddress := CTestDriverServerAddress_Client;
 
@@ -563,7 +632,7 @@ begin
 end;
 
 
-procedure TTestUI.Test_FindColorErrorFromGradientOnServer_ErrorCount_SuccessVerbose_NoUpdate;
+procedure TTestUIActionExecution.Test_FindColorErrorFromGradientOnServer_ErrorCount_SuccessVerbose_NoUpdate;
 begin
   TestServerAddress := CTestDriverServerAddress_Client;
 
@@ -584,7 +653,7 @@ begin
 end;
 
 
-//procedure TTestUI.Test_ExecuteTemplateRemotely_FindColorErrorFromGradientOnServer_ErrorLevel_SuccessVerbose_NoUpdate;
+//procedure TTestUIActionExecution.Test_ExecuteTemplateRemotely_FindColorErrorFromGradientOnServer_ErrorLevel_SuccessVerbose_NoUpdate;
 //begin
 //  TestServerAddress := CTestDriverServerAddress_Client;
 //  PrepareClickerUnderTestToClientMode;
@@ -605,7 +674,7 @@ end;
 //end;
 //
 //
-//procedure TTestUI.Test_ExecuteTemplateRemotely_FindColorErrorFromGradientOnServer_ErrorCount_SuccessVerbose_NoUpdate;
+//procedure TTestUIActionExecution.Test_ExecuteTemplateRemotely_FindColorErrorFromGradientOnServer_ErrorCount_SuccessVerbose_NoUpdate;
 //begin
 //  TestServerAddress := CTestDriverServerAddress_Client;
 //  PrepareClickerUnderTestToClientMode;
@@ -626,7 +695,7 @@ end;
 //end;
 
 
-procedure TTestUI.DragAction_FromPosToPos(ASrcIdx, ADestIdx: Integer; const AActIdx: array of Byte);
+procedure TTestUIActionExecution.DragAction_FromPosToPos(ASrcIdx, ADestIdx: Integer; const AActIdx: array of Byte);
 const
   CActionNamesToDrag: array[0..4] of string = ('"ExecApp"', '"FindControl"', '"FindSubControl"', '"SetControlText"', '"Sleep"');
 var
@@ -652,31 +721,68 @@ begin
 end;
 
 
-procedure TTestUI.Test_DragAction_FromPos0ToPos4;
+procedure TTestUIActionExecution.Test_DragAction_FromPos0ToPos4;
 begin
   DragAction_FromPosToPos(0, 4, [1, 2, 3, 4, 0]);
 end;
 
 
-procedure TTestUI.Test_DragAction_FromPos4ToPos0;
+procedure TTestUIActionExecution.Test_DragAction_FromPos4ToPos0;
 begin
   DragAction_FromPosToPos(4, 0, [4, 0, 1, 2, 3]);
 end;
 
 
-procedure TTestUI.Test_DragAction_FromPos1ToPos4;
+procedure TTestUIActionExecution.Test_DragAction_FromPos1ToPos4;
 begin
   DragAction_FromPosToPos(1, 4, [0, 2, 3, 4, 1]);
 end;
 
 
-procedure TTestUI.Test_DragAction_FromPos4ToPos1;
+procedure TTestUIActionExecution.Test_DragAction_FromPos4ToPos1;
 begin
   DragAction_FromPosToPos(4, 1, [0, 4, 1, 2, 3]);
 end;
 
 
-procedure TTestUI.AutoCompleteTextInConsoleEditBox(ATypedEditBoxContent, AFunctionNameToDoubleClick, AExpectedResult: string);
+procedure TTestUIActionExecution.AddActionButton(AActionNameToSelect: string);
+begin
+  TestServerAddress := CTestDriverServerAddress_Client;
+  LoadTestTemplateInClickerUnderTest('DuplicateActionFromAddActionButton.clktmpl');
+
+  PrepareClickerUnderTestToLocalMode;
+  SetVariableOnTestDriverClient('$ActionNameToSelect$', AActionNameToSelect);
+
+  ExecuteTemplateOnTestDriver(ExtractFilePath(ParamStr(0)) + '..\..\TestDriver\ActionTemplates\AddActionButtonOnAppUnderTest.clktmpl',
+                              CREParam_FileLocation_ValueDisk,
+                              '$LastAction_Status$',
+                              'Successful'
+                              );
+  PrepareClickerUnderTestToReadItsVars;
+end;
+
+
+procedure TTestUIActionExecution.TestAddActionButton_HappyFlow;
+begin
+  AddActionButton('GenerateAndSaveTree');
+end;
+
+
+procedure TTestUIActionExecution.AfterAll_AlwaysExecute;
+begin
+  inherited AfterAll_AlwaysExecute;
+end;
+
+
+
+procedure TTestUIAutoComplete.BeforeAll_AlwaysExecute;
+begin
+  inherited BeforeAll_AlwaysExecute;
+end;
+
+
+
+procedure TTestUIAutoComplete.AutoCompleteTextInConsoleEditBox(ATypedEditBoxContent, AFunctionNameToDoubleClick, AExpectedResult: string);
 begin
   TestServerAddress := CTestDriverServerAddress_Client;
 
@@ -704,84 +810,74 @@ begin
 end;
 
 
-procedure TTestUI.TestAutoComplete_EmptyEditBox;
+procedure TTestUIAutoComplete.TestAutoComplete_EmptyEditBox;
 begin
   AutoCompleteTextInConsoleEditBox('', 'ExtractFileName(<PathToFile>)', '$ExtractFileName(<PathToFile>)$');
 end;
 
 
-procedure TTestUI.TestAutoComplete_PartialFunctionNameOnly;
+procedure TTestUIAutoComplete.TestAutoComplete_PartialFunctionNameOnly;
 begin
   AutoCompleteTextInConsoleEditBox('Get', 'GetActionProperties()', '$GetActionProperties()$');
 end;
 
 
-procedure TTestUI.TestAutoComplete_FullFunctionNameOnly;
+procedure TTestUIAutoComplete.TestAutoComplete_FullFunctionNameOnly;
 begin
   AutoCompleteTextInConsoleEditBox('GetActionProperties', 'GetActionProperties()', '$GetActionProperties()$');
 end;
 
 
-procedure TTestUI.TestAutoComplete_VarAssignmentToPartialFunctionNameOnly;
+procedure TTestUIAutoComplete.TestAutoComplete_VarAssignmentToPartialFunctionNameOnly;
 begin
   AutoCompleteTextInConsoleEditBox('$a$=$Get', 'GetActionProperties()', '$a$=$GetActionProperties()$');
 end;
 
 
-procedure TTestUI.TestAutoComplete_VarAssignmentToFullFunctionNameOnly;
+procedure TTestUIAutoComplete.TestAutoComplete_VarAssignmentToFullFunctionNameOnly;
 begin
   AutoCompleteTextInConsoleEditBox('$a$=$GetActionProperties', 'GetActionProperties()', '$a$=$GetActionProperties()$');
 end;
 
 
-procedure TTestUI.TestAutoComplete_VarAssignmentToEmpty;
+procedure TTestUIAutoComplete.TestAutoComplete_VarAssignmentToEmpty;
 begin
   AutoCompleteTextInConsoleEditBox('$a$=', 'GetActionProperties()', '$a$=$GetActionProperties()$');
 end;
 
 
-procedure TTestUI.TestAutoComplete_VarAssignmentToNumericConstantAndThenDifferentSelection;
+procedure TTestUIAutoComplete.TestAutoComplete_VarAssignmentToNumericConstantAndThenDifferentSelection;
 begin
   AutoCompleteTextInConsoleEditBox('$Desktop_Width$=1920', 'Screen_Width$=1920', '$Desktop_Width$=1920$Screen_Width$=1920');
 end;
 
 
-procedure TTestUI.TestAutoComplete_VarAssignmentAndBlanksToPartialFunctionNameOnly;
+procedure TTestUIAutoComplete.TestAutoComplete_VarAssignmentAndBlanksToPartialFunctionNameOnly;
 begin
   AutoCompleteTextInConsoleEditBox('$a$ = $Get', 'GetActionProperties()', '$a$ = $GetActionProperties()$');
 end;
 
 
-procedure TTestUI.TestAutoComplete_VarAssignmentAndBlanksToFullFunctionNameOnly;
+procedure TTestUIAutoComplete.TestAutoComplete_VarAssignmentAndBlanksToFullFunctionNameOnly;
 begin
   AutoCompleteTextInConsoleEditBox('$a$ = $GetActionProperties', 'GetActionProperties()', '$a$ = $GetActionProperties()$');
 end;
 
 
-procedure TTestUI.AddActionButton(AActionNameToSelect: string);
+procedure TTestUIAutoComplete.AfterAll_AlwaysExecute;
 begin
-  TestServerAddress := CTestDriverServerAddress_Client;
-  LoadTestTemplateInClickerUnderTest('DuplicateActionFromAddActionButton.clktmpl');
-
-  PrepareClickerUnderTestToLocalMode;
-  SetVariableOnTestDriverClient('$ActionNameToSelect$', AActionNameToSelect);
-
-  ExecuteTemplateOnTestDriver(ExtractFilePath(ParamStr(0)) + '..\..\TestDriver\ActionTemplates\AddActionButtonOnAppUnderTest.clktmpl',
-                              CREParam_FileLocation_ValueDisk,
-                              '$LastAction_Status$',
-                              'Successful'
-                              );
-  PrepareClickerUnderTestToReadItsVars;
+  inherited AfterAll_AlwaysExecute;
 end;
 
 
-procedure TTestUI.TestAddActionButton_HappyFlow;
+
+procedure TTestUIObjectInspector.BeforeAll_AlwaysExecute;
 begin
-  AddActionButton('GenerateAndSaveTree');
+  inherited BeforeAll_AlwaysExecute;
 end;
 
 
-procedure TTestUI.VerifyOIDefaultValues(AActionToDrag: string; var AProperties: TOIInteractionDataArr);
+procedure TTestUIObjectInspector.VerifyOIDefaultValues(AActionToDrag: string; var AProperties: TOIInteractionDataArr);
 var
   i: Integer;
 begin
@@ -819,7 +915,7 @@ begin
 end;
 
 
-procedure TTestUI.TestVerifyOIDefaultValues_Click;
+procedure TTestUIObjectInspector.TestVerifyOIDefaultValues_Click;
 var
   Properties: TOIInteractionDataArr;
   ClickOptions: TClkClickOptions;
@@ -831,7 +927,7 @@ begin
 end;
 
 
-procedure TTestUI.TestVerifyOIDefaultValues_ExecApp;
+procedure TTestUIObjectInspector.TestVerifyOIDefaultValues_ExecApp;
 var
   Properties: TOIInteractionDataArr;
   ExecAppOptions: TClkExecAppOptions;
@@ -843,7 +939,7 @@ begin
 end;
 
 
-procedure TTestUI.TestVerifyOIDefaultValues_FindControl;
+procedure TTestUIObjectInspector.TestVerifyOIDefaultValues_FindControl;
 var
   Properties: TOIInteractionDataArr;
   FindControlOptions: TClkFindControlOptions;
@@ -855,7 +951,7 @@ begin
 end;
 
 
-procedure TTestUI.TestVerifyOIDefaultValues_FindSubControl;
+procedure TTestUIObjectInspector.TestVerifyOIDefaultValues_FindSubControl;
 var
   Properties: TOIInteractionDataArr;
   FindSubControlOptions: TClkFindSubControlOptions;
@@ -867,7 +963,7 @@ begin
 end;
 
 
-procedure TTestUI.TestVerifyOIDefaultValues_SetControlText;
+procedure TTestUIObjectInspector.TestVerifyOIDefaultValues_SetControlText;
 var
   Properties: TOIInteractionDataArr;
   SetControlTextOptions: TClkSetTextOptions;
@@ -879,7 +975,7 @@ begin
 end;
 
 
-procedure TTestUI.TestVerifyOIDefaultValues_CallTemplate;
+procedure TTestUIObjectInspector.TestVerifyOIDefaultValues_CallTemplate;
 var
   Properties: TOIInteractionDataArr;
   CallTemplateOptions: TClkCallTemplateOptions;
@@ -891,7 +987,7 @@ begin
 end;
 
 
-procedure TTestUI.TestVerifyOIDefaultValues_Sleep;
+procedure TTestUIObjectInspector.TestVerifyOIDefaultValues_Sleep;
 var
   Properties: TOIInteractionDataArr;
   SleepOptions: TClkSleepOptions;
@@ -903,7 +999,7 @@ begin
 end;
 
 
-procedure TTestUI.TestVerifyOIDefaultValues_SetVar;
+procedure TTestUIObjectInspector.TestVerifyOIDefaultValues_SetVar;
 var
   Properties: TOIInteractionDataArr;
   SetVarOptions: TClkSetVarOptions;
@@ -915,7 +1011,7 @@ begin
 end;
 
 
-procedure TTestUI.TestVerifyOIDefaultValues_WindowOperations;
+procedure TTestUIObjectInspector.TestVerifyOIDefaultValues_WindowOperations;
 var
   Properties: TOIInteractionDataArr;
   WindowOperationsOptions: TClkWindowOperationsOptions;
@@ -927,7 +1023,7 @@ begin
 end;
 
 
-procedure TTestUI.TestVerifyOIDefaultValues_LoadSetVarFromFile;
+procedure TTestUIObjectInspector.TestVerifyOIDefaultValues_LoadSetVarFromFile;
 var
   Properties: TOIInteractionDataArr;
   LoadSetVarFromFileOptions: TClkLoadSetVarFromFileOptions;
@@ -939,7 +1035,7 @@ begin
 end;
 
 
-procedure TTestUI.TestVerifyOIDefaultValues_SaveSetVarToFile;
+procedure TTestUIObjectInspector.TestVerifyOIDefaultValues_SaveSetVarToFile;
 var
   Properties: TOIInteractionDataArr;
   SaveSetVarToFileOptions: TClkSaveSetVarToFileOptions;
@@ -951,7 +1047,7 @@ begin
 end;
 
 
-procedure TTestUI.TestVerifyOIDefaultValues_Plugin;
+procedure TTestUIObjectInspector.TestVerifyOIDefaultValues_Plugin;
 var
   Properties: TOIInteractionDataArr;
   PluginOptions: TClkPluginOptions;
@@ -963,7 +1059,7 @@ begin
 end;
 
 
-procedure TTestUI.TestVerifyOIDefaultValues_EditTemplate;
+procedure TTestUIObjectInspector.TestVerifyOIDefaultValues_EditTemplate;
 var
   Properties: TOIInteractionDataArr;
   EditTemplateOptions: TClkEditTemplateOptions;
@@ -994,7 +1090,7 @@ end;
 
 
 
-procedure TTestUI.VerifyOIDifferentThanDefaultValues(AActionToDrag: string; var AProperties: TOIInteractionDataArr);
+procedure TTestUIObjectInspector.VerifyOIDifferentThanDefaultValues(AActionToDrag: string; var AProperties: TOIInteractionDataArr);
 var
   i: Integer;
   PyProc: TProcess;
@@ -1070,7 +1166,7 @@ begin
 end;
 
 
-procedure TTestUI.TestVerifyOIDifferentThanDefaultValues_Click;
+procedure TTestUIObjectInspector.TestVerifyOIDifferentThanDefaultValues_Click;
 var
   Properties: TOIInteractionDataArr;
 begin
@@ -1080,7 +1176,7 @@ begin
 end;
 
 
-procedure TTestUI.TestVerifyOIDifferentThanDefaultValues_ExecApp;
+procedure TTestUIObjectInspector.TestVerifyOIDifferentThanDefaultValues_ExecApp;
 var
   Properties: TOIInteractionDataArr;
 begin
@@ -1090,7 +1186,7 @@ begin
 end;
 
 
-procedure TTestUI.TestVerifyOIDifferentThanDefaultValues_FindControl;
+procedure TTestUIObjectInspector.TestVerifyOIDifferentThanDefaultValues_FindControl;
 var
   Properties: TOIInteractionDataArr;
 begin
@@ -1100,7 +1196,7 @@ begin
 end;
 
 
-procedure TTestUI.TestVerifyOIDifferentThanDefaultValues_FindSubControl;
+procedure TTestUIObjectInspector.TestVerifyOIDifferentThanDefaultValues_FindSubControl;
 var
   Properties: TOIInteractionDataArr;
 begin
@@ -1109,7 +1205,7 @@ begin
 end;
 
 
-procedure TTestUI.TestVerifyOIDifferentThanDefaultValues_FindSubControl_SubProperties;
+procedure TTestUIObjectInspector.TestVerifyOIDifferentThanDefaultValues_FindSubControl_SubProperties;
 var
   Properties: TOIInteractionDataArr;
   FindSubControlOptions: TClkFindSubControlOptions;
@@ -1123,7 +1219,7 @@ begin
 end;
 
 
-procedure TTestUI.TestVerifyOIDifferentThanDefaultValues_SetControlText;
+procedure TTestUIObjectInspector.TestVerifyOIDifferentThanDefaultValues_SetControlText;
 var
   Properties: TOIInteractionDataArr;
 begin
@@ -1133,7 +1229,7 @@ begin
 end;
 
 
-procedure TTestUI.TestVerifyOIDifferentThanDefaultValues_CallTemplate;
+procedure TTestUIObjectInspector.TestVerifyOIDifferentThanDefaultValues_CallTemplate;
 var
   Properties: TOIInteractionDataArr;
 begin
@@ -1143,7 +1239,7 @@ begin
 end;
 
 
-procedure TTestUI.TestVerifyOIDifferentThanDefaultValues_Sleep;
+procedure TTestUIObjectInspector.TestVerifyOIDifferentThanDefaultValues_Sleep;
 var
   Properties: TOIInteractionDataArr;
 begin
@@ -1153,7 +1249,7 @@ begin
 end;
 
 
-procedure TTestUI.TestVerifyOIDifferentThanDefaultValues_SetVar;
+procedure TTestUIObjectInspector.TestVerifyOIDifferentThanDefaultValues_SetVar;
 var
   Properties: TOIInteractionDataArr;
 begin
@@ -1163,7 +1259,7 @@ begin
 end;
 
 
-procedure TTestUI.TestVerifyOIDifferentThanDefaultValues_WindowOperations;
+procedure TTestUIObjectInspector.TestVerifyOIDifferentThanDefaultValues_WindowOperations;
 var
   Properties: TOIInteractionDataArr;
 begin
@@ -1173,7 +1269,7 @@ begin
 end;
 
 
-procedure TTestUI.TestVerifyOIDifferentThanDefaultValues_LoadSetVarFromFile;
+procedure TTestUIObjectInspector.TestVerifyOIDifferentThanDefaultValues_LoadSetVarFromFile;
 var
   Properties: TOIInteractionDataArr;
 begin
@@ -1183,7 +1279,7 @@ begin
 end;
 
 
-procedure TTestUI.TestVerifyOIDifferentThanDefaultValues_SaveSetVarToFile;
+procedure TTestUIObjectInspector.TestVerifyOIDifferentThanDefaultValues_SaveSetVarToFile;
 var
   Properties: TOIInteractionDataArr;
 begin
@@ -1193,7 +1289,7 @@ begin
 end;
 
 
-procedure TTestUI.TestVerifyOIDifferentThanDefaultValues_Plugin;
+procedure TTestUIObjectInspector.TestVerifyOIDifferentThanDefaultValues_Plugin;
 var
   Properties: TOIInteractionDataArr;
 begin
@@ -1203,7 +1299,7 @@ begin
 end;
 
 
-procedure TTestUI.TestVerifyOIDifferentThanDefaultValues_EditTemplate;
+procedure TTestUIObjectInspector.TestVerifyOIDifferentThanDefaultValues_EditTemplate;
 var
   Properties: TOIInteractionDataArr;
 begin
@@ -1213,7 +1309,7 @@ begin
 end;
 
 
-procedure TTestUI.EditOIPropertiesFromMenu(AActionToDrag, APropertyToEdit, ASubPropertyToEdit, AScrollCount, AMenuItemCaption, ANewPropertyValue: string);
+procedure TTestUIObjectInspector.EditOIPropertiesFromMenu(AActionToDrag, APropertyToEdit, ASubPropertyToEdit, AScrollCount, AMenuItemCaption, ANewPropertyValue: string);
 begin
   TestServerAddress := CTestDriverServerAddress_Client;
 
@@ -1250,68 +1346,82 @@ begin
 end;
 
 
-procedure TTestUI.TestEditOIProperty_FindControl_InitialRectangle_Left_SetToValueFromMenu;
+procedure TTestUIObjectInspector.TestEditOIProperty_FindControl_InitialRectangle_Left_SetToValueFromMenu;
 begin
   EditOIPropertiesFromMenu('FindControl', 'InitialRectangle', 'Left', '-5', '$Control_Right$', '$Control_Right$');
 end;
 
 
-procedure TTestUI.TestEditOIProperty_FindControl_InitialRectangle_Top_SetToValueFromMenu;
+procedure TTestUIObjectInspector.TestEditOIProperty_FindControl_InitialRectangle_Top_SetToValueFromMenu;
 begin
   EditOIPropertiesFromMenu('FindControl', 'InitialRectangle', 'Top', '-5', '$Control_Bottom$', '$Control_Bottom$');
 end;
 
 
-procedure TTestUI.TestEditOIProperty_FindControl_InitialRectangle_Right_SetToValueFromMenu;
+procedure TTestUIObjectInspector.TestEditOIProperty_FindControl_InitialRectangle_Right_SetToValueFromMenu;
 begin
   EditOIPropertiesFromMenu('FindControl', 'InitialRectangle', 'Right', '-5', '$Control_Left$', '$Control_Left$');
 end;
 
 
-procedure TTestUI.TestEditOIProperty_FindControl_InitialRectangle_Bottom_SetToValueFromMenu;
+procedure TTestUIObjectInspector.TestEditOIProperty_FindControl_InitialRectangle_Bottom_SetToValueFromMenu;
 begin
   EditOIPropertiesFromMenu('FindControl', 'InitialRectangle', 'Bottom', '-5', '$Control_Top$', '$Control_Top$');
 end;
 
 
-procedure TTestUI.TestEditOIProperty_FindSubControl_InitialRectangle_Left_SetToValueFromMenu;
+procedure TTestUIObjectInspector.TestEditOIProperty_FindSubControl_InitialRectangle_Left_SetToValueFromMenu;
 begin
   EditOIPropertiesFromMenu('FindSubControl', 'InitialRectangle', 'Left', '-4', '$Control_Right$', '$Control_Right$');
 end;
 
 
-procedure TTestUI.TestEditOIProperty_FindSubControl_InitialRectangle_Top_SetToValueFromMenu;
+procedure TTestUIObjectInspector.TestEditOIProperty_FindSubControl_InitialRectangle_Top_SetToValueFromMenu;
 begin
   EditOIPropertiesFromMenu('FindSubControl', 'InitialRectangle', 'Top', '-4', '$Control_Bottom$', '$Control_Bottom$');
 end;
 
 
-procedure TTestUI.TestEditOIProperty_FindSubControl_InitialRectangle_Right_SetToValueFromMenu;
+procedure TTestUIObjectInspector.TestEditOIProperty_FindSubControl_InitialRectangle_Right_SetToValueFromMenu;
 begin
   EditOIPropertiesFromMenu('FindSubControl', 'InitialRectangle', 'Right', '-4', '$Control_Left$', '$Control_Left$');
 end;
 
 
-procedure TTestUI.TestEditOIProperty_FindSubControl_InitialRectangle_Bottom_SetToValueFromMenu;
+procedure TTestUIObjectInspector.TestEditOIProperty_FindSubControl_InitialRectangle_Bottom_SetToValueFromMenu;
 begin
   EditOIPropertiesFromMenu('FindSubControl', 'InitialRectangle', 'Bottom', '-4', '$Control_Top$', '$Control_Top$');
 end;
 
 
-procedure TTestUI.TestEditOIProperty_FindSubControl_MatchBitmapText_ForegroundColor_SetToValueFromMenu;
+procedure TTestUIObjectInspector.TestEditOIProperty_FindSubControl_MatchBitmapText_ForegroundColor_SetToValueFromMenu;
 begin
   EditOIPropertiesFromMenu('FindSubControl', 'MatchBitmapText [0..0]', 'ForegroundColor', '-3', '$Color_ActiveCaption$', '$Color_ActiveCaption$');
 end;
 
 
-procedure TTestUI.TestEditOIProperty_FindSubControl_MatchBitmapText_BackgroundColor_SetToValueFromMenu;
+procedure TTestUIObjectInspector.TestEditOIProperty_FindSubControl_MatchBitmapText_BackgroundColor_SetToValueFromMenu;
 begin
   EditOIPropertiesFromMenu('FindSubControl', 'MatchBitmapText [0..0]', 'BackgroundColor', '-3', '$Color_WindowFrame$', '$Color_WindowFrame$');
 end;
 
+
+procedure TTestUIObjectInspector.AfterAll_AlwaysExecute;
+begin
+  inherited AfterAll_AlwaysExecute;
+end;
+
+
 ///////////////////////////////
 
-procedure TTestUI.VerifyPermissionsOnSendingFiles;
+
+procedure TTestUISendingPermissions.BeforeAll_AlwaysExecute;
+begin
+  inherited BeforeAll_AlwaysExecute;
+end;
+
+
+procedure TTestUISendingPermissions.VerifyPermissionsOnSendingFiles;
 var
   i: Integer;
   AllowedExtensions, AllowedDirs: string;
@@ -1355,7 +1465,7 @@ begin
 end;
 
 
-procedure TTestUI.TestVerifyPermissionsOnSendingFiles_SendingFileFromDeniedTestFiles;
+procedure TTestUISendingPermissions.TestVerifyPermissionsOnSendingFiles_SendingFileFromDeniedTestFiles;
 begin
   VerifyPermissionsOnSendingFiles;
 
@@ -1374,7 +1484,7 @@ begin
 end;
 
 
-procedure TTestUI.TestVerifyPermissionsOnSendingFiles_ReSendingModifiedFileByEditTemplate;
+procedure TTestUISendingPermissions.TestVerifyPermissionsOnSendingFiles_ReSendingModifiedFileByEditTemplate;
 begin
   VerifyPermissionsOnSendingFiles;
 
@@ -1399,7 +1509,20 @@ begin
 end;
 
 
-procedure TTestUI.TestRenderTextOnWebBrowser_With_ShellExecute_RenderingRequest;
+procedure TTestUISendingPermissions.AfterAll_AlwaysExecute;
+begin
+  inherited AfterAll_AlwaysExecute;
+end;
+
+
+
+procedure TTestUIWebBrowser.BeforeAll_AlwaysExecute;
+begin
+  inherited BeforeAll_AlwaysExecute;
+end;
+
+
+procedure TTestUIWebBrowser.TestRenderTextOnWebBrowser_With_ShellExecute_RenderingRequest;
 begin
   PrepareClickerUnderTestToReadItsVars;   //server mode
   CheckAutoCloseBrowser(CTestDriverServerAddress_Client, FTemplatesDir, False);
@@ -1412,7 +1535,7 @@ begin
 end;
 
 
-procedure TTestUI.TestRenderTextOnWebBrowser_With_ExecApp_RenderingRequest;
+procedure TTestUIWebBrowser.TestRenderTextOnWebBrowser_With_ExecApp_RenderingRequest;
 begin
   PrepareClickerUnderTestToReadItsVars;   //server mode
   CheckAutoCloseBrowser(CTestDriverServerAddress_Client, FTemplatesDir, False);
@@ -1425,7 +1548,7 @@ begin
 end;
 
 
-procedure TTestUI.TestRenderTextOnWebBrowser_With_LocalCallTemplate_RenderingRequest;
+procedure TTestUIWebBrowser.TestRenderTextOnWebBrowser_With_LocalCallTemplate_RenderingRequest;
 begin
   PrepareClickerUnderTestToReadItsVars;   //server mode
   CheckAutoCloseBrowser(CTestDriverServerAddress_Client, FTemplatesDir, False);
@@ -1437,7 +1560,7 @@ begin
 end;
 
 
-procedure TTestUI.TestRenderTextOnWebBrowser_With_ServerCallTemplate_RenderingRequest;
+procedure TTestUIWebBrowser.TestRenderTextOnWebBrowser_With_ServerCallTemplate_RenderingRequest;
 begin
   PrepareClickerUnderTestToReadItsVars;   //server mode
   CheckAutoCloseBrowser(CTestDriverServerAddress_Client, FTemplatesDir, False);
@@ -1452,23 +1575,19 @@ begin
 end;
 
 
-procedure TTestUI.AfterAll_AlwaysExecute;
+procedure TTestUIWebBrowser.AfterAll_AlwaysExecute;
 begin
-  //the following instances should be terminated in this specific order:
-  FClientAppUnderTest_Proc.Terminate(0);
-  FServerAppUnderTest_Proc.Terminate(0);
-  FTestDriverForClient_Proc.Terminate(0);
-  FTestDriverForServer_Proc.Terminate(0);
-
-  FreeAndNil(FClientAppUnderTest_Proc);
-  FreeAndNil(FServerAppUnderTest_Proc);
-  FreeAndNil(FTestDriverForClient_Proc);
-  FreeAndNil(FTestDriverForServer_Proc);
+  inherited AfterAll_AlwaysExecute;
 end;
 
 
 initialization
 
-  RegisterTest(TTestUI);
+  RegisterTest(TTestUIActionExecution);
+  RegisterTest(TTestUIAutoComplete);
+  RegisterTest(TTestUIObjectInspector);
+  RegisterTest(TTestUISendingPermissions);
+  RegisterTest(TTestUIWebBrowser);
+
 end.
 
