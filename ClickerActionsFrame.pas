@@ -65,6 +65,7 @@ type
   TfrClickerActions = class(TFrame)
     chkDecodeVariables: TCheckBox;
     chkShowDebugGrid: TCheckBox;
+    edtConsoleCommand: TEdit;
     imgPluginFileName: TImage;
     imgDebugBmp: TImage;
     imgDebugGrid: TImage;
@@ -78,6 +79,11 @@ type
     lblMouseOnExecDbgImgRR: TLabel;
     lblMouseOnExecDbgImg: TLabel;
     lblVarReplacements: TLabel;
+    memLogErr: TMemo;
+    MenuItem_TabPosRight: TMenuItem;
+    MenuItem_TabPosLeft: TMenuItem;
+    MenuItem_TabPosBottom: TMenuItem;
+    MenuItem_TabPosTop: TMenuItem;
     MenuItem_ReplaceWithSelfTemplateDir: TMenuItem;
     MenuItem_ReplaceWithTemplateDir: TMenuItem;
     MenuItem_ReplaceWithAppDir: TMenuItem;
@@ -140,7 +146,9 @@ type
     N01: TMenuItem;
     N300001: TMenuItem;
     pmPathReplacements: TPopupMenu;
+    pmTabPosition: TPopupMenu;
     scrboxDebugBmp: TScrollBox;
+    TabSheetLog: TTabSheet;
     tmrOnChangeEditTemplateEditingActionType: TTimer;
     tmrEditClkVariables: TTimer;
     tmrClkVariables: TTimer;
@@ -181,6 +189,7 @@ type
     procedure MenuItem_ReplaceWithTemplateDirClick(Sender: TObject);
     procedure MenuItem_SetFromControlLeftAndTopClick(Sender: TObject);
     procedure MenuItem_SetFromControlWidthAndHeightClick(Sender: TObject);
+    procedure MenuItem_TabPosClick(Sender: TObject);
     procedure pmStandardColorVariablesPopup(Sender: TObject);
     procedure pnlHorizSplitterMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
@@ -1972,6 +1981,13 @@ begin
 end;
 
 
+procedure TfrClickerActions.MenuItem_TabPosClick(Sender: TObject);
+begin
+  PageControlActionExecution.TabPosition := TTabPosition((Sender as TMenuItem).MenuIndex);
+  FrameResize(Self);
+end;
+
+
 procedure TfrClickerActions.pmStandardColorVariablesPopup(Sender: TObject);
 var
   i: Integer;
@@ -2003,20 +2019,24 @@ begin
 end;
 
 
+const
+  CWidthDiff = 160; //260
+
+
 procedure TfrClickerActions.FrameResize(Sender: TObject);
 var
   NewLeft: Integer;
 begin                                   //this method doesn't seem to be called before showing the owner window/frame
   NewLeft := pnlHorizSplitter.Left;     //that is why Width has its initial (small) value, causing NewLeft to adapt to it
 
-  if NewLeft > Width - 260 then
-    NewLeft := Width - 260;
+  if NewLeft > Width - CWidthDiff then
+    NewLeft := Width - CWidthDiff;
 
   ResizeFrameSectionsBySplitter(NewLeft);
 
   NewLeft := pnlHorizSplitterResults.Left;
-  if NewLeft > Width - 260 then
-    NewLeft := Width - 260;
+  if NewLeft > Width - CWidthDiff then
+    NewLeft := Width - CWidthDiff;
 
   ResizeFrameSectionsBySplitterResults(NewLeft);
 end;
@@ -2027,8 +2047,8 @@ begin
   if NewLeft < pnlvstOI.Constraints.MinWidth then
     NewLeft := pnlvstOI.Constraints.MinWidth;
 
-  if NewLeft > Width - 260 then
-    NewLeft := Width - 260;
+  if NewLeft > Width - CWidthDiff then
+    NewLeft := Width - CWidthDiff;
 
   pnlHorizSplitter.Left := NewLeft;
 
@@ -3030,9 +3050,10 @@ end;
 
 procedure TfrClickerActions.UpdatePageControlActionExecutionIcons;
 begin
-  PageControlActionExecution.Pages[0].ImageIndex := 0 + 3 * Ord(Integer(FEditingAction^.ActionOptions.Action) <> CClkUnsetAction);
-  PageControlActionExecution.Pages[1].ImageIndex := 1 + 3 * Ord(frClickerConditionEditor.ConditionsAvailable);
-  PageControlActionExecution.Pages[2].ImageIndex := 2 + 3 * Ord(FDebuggingInfoAvailable);
+  PageControlActionExecution.Pages[0].ImageIndex := 0 + 4 * Ord(Integer(FEditingAction^.ActionOptions.Action) <> CClkUnsetAction);
+  PageControlActionExecution.Pages[1].ImageIndex := 1 + 4 * Ord(frClickerConditionEditor.ConditionsAvailable);
+  PageControlActionExecution.Pages[2].ImageIndex := 2 + 4 * Ord(FDebuggingInfoAvailable);
+  PageControlActionExecution.Pages[3].ImageIndex := 3;       //Log
 end;
 
 

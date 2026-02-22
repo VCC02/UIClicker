@@ -22,50 +22,10 @@ object frClickerActionsArr: TfrClickerActionsArr
     Anchors = [akTop, akLeft, akRight, akBottom]
     BevelColor = clGreen
     BevelOuter = bvNone
-    ClientHeight = 396
-    ClientWidth = 765
-    Constraints.MinHeight = 396
+    Constraints.MinHeight = 100
     ParentBackground = False
     ParentColor = False
     TabOrder = 0
-    object pnlfrClickerActions: TPanel
-      Left = 3
-      Height = 254
-      Top = 0
-      Width = 685
-      Caption = 'pnlfrClickerActions'
-      Color = clYellow
-      ParentBackground = False
-      ParentColor = False
-      TabOrder = 0
-      Visible = False
-    end
-    object memLogErr: TMemo
-      Left = 3
-      Height = 109
-      Top = 262
-      Width = 760
-      Anchors = [akLeft, akRight, akBottom]
-      ReadOnly = True
-      ScrollBars = ssBoth
-      TabOrder = 1
-      WordWrap = False
-    end
-    object edtConsoleCommand: TEdit
-      Tag = -1
-      Left = 3
-      Height = 23
-      Hint = 'Type here one or more var/replacements, then hit enter, to be evaluated.'#13#10'Assigning values to vars is also possible, using the format: "$MyVar$ = Value" or "$MyVar$ = $Value$". The right side is evaluated automatically.'
-      Top = 371
-      Width = 760
-      Anchors = [akLeft, akRight, akBottom]
-      ParentShowHint = False
-      ShowHint = True
-      TabOrder = 2
-      OnExit = edtConsoleCommandExit
-      OnKeyDown = edtConsoleCommandKeyDown
-      OnKeyUp = edtConsoleCommandKeyUp
-    end
   end
   object pnlActions: TPanel
     Left = 1

@@ -6,7 +6,7 @@ object frClickerActions: TfrClickerActions
   Anchors = [akTop, akLeft, akRight, akBottom]
   ClientHeight = 280
   ClientWidth = 1056
-  Constraints.MinHeight = 260
+  Constraints.MinHeight = 100
   Constraints.MinWidth = 688
   TabOrder = 0
   TabStop = True
@@ -26,13 +26,14 @@ object frClickerActions: TfrClickerActions
     Font.Style = [fsBold]
     Images = dmClickerIcons.imglstActionExecution
     ParentFont = False
+    PopupMenu = pmTabPosition
     TabIndex = 0
     TabOrder = 0
-    TabPosition = tpLeft
+    TabPosition = tpBottom
     object TabSheetAction: TTabSheet
       Caption = 'Action'
-      ClientHeight = 268
-      ClientWidth = 1024
+      ClientHeight = 249
+      ClientWidth = 1044
       Font.Color = clWindowText
       Font.Height = -11
       Font.Name = 'Tahoma'
@@ -40,16 +41,16 @@ object frClickerActions: TfrClickerActions
       ParentFont = False
       object pnlvstOI: TPanel
         Left = 0
-        Height = 256
+        Height = 237
         Top = 0
         Width = 440
         Anchors = [akTop, akLeft, akBottom]
         BevelOuter = bvNone
         Caption = 'pnlvstOI'
-        ClientHeight = 256
+        ClientHeight = 237
         ClientWidth = 440
         Color = 13500339
-        Constraints.MinHeight = 208
+        Constraints.MinHeight = 108
         Constraints.MinWidth = 350
         Font.Color = clWindowText
         Font.Height = -11
@@ -120,19 +121,19 @@ object frClickerActions: TfrClickerActions
       object prbTimeout: TProgressBar
         Left = 2
         Height = 8
-        Top = 258
+        Top = 239
         Width = 137
         Anchors = [akLeft, akBottom]
         Smooth = True
         TabOrder = 0
       end
       object pnlExtra: TPanel
-        Left = 452
-        Height = 266
+        Left = 472
+        Height = 247
         Top = 0
         Width = 570
         Anchors = [akTop, akRight, akBottom]
-        ClientHeight = 266
+        ClientHeight = 247
         ClientWidth = 570
         ParentColor = False
         TabOrder = 2
@@ -148,7 +149,7 @@ object frClickerActions: TfrClickerActions
       object pnlHorizSplitter: TPanel
         Cursor = crHSplit
         Left = 441
-        Height = 266
+        Height = 247
         Top = 0
         Width = 10
         Anchors = [akTop, akLeft, akBottom]
@@ -168,8 +169,8 @@ object frClickerActions: TfrClickerActions
     end
     object TabSheetCondition: TTabSheet
       Caption = 'Condition'
-      ClientHeight = 268
-      ClientWidth = 1024
+      ClientHeight = 249
+      ClientWidth = 1044
       Font.Color = clWindowText
       Font.Height = -11
       Font.Name = 'Tahoma'
@@ -177,18 +178,18 @@ object frClickerActions: TfrClickerActions
       ParentFont = False
       object pnlActionConditions: TPanel
         Left = 0
-        Height = 272
+        Height = 253
         Top = 0
-        Width = 1042
+        Width = 1062
         Anchors = [akTop, akLeft, akRight, akBottom]
         ParentColor = False
         TabOrder = 0
       end
     end
     object TabSheetDebugging: TTabSheet
-      Caption = 'Debugging'
-      ClientHeight = 268
-      ClientWidth = 1024
+      Caption = 'Variables / Results'
+      ClientHeight = 249
+      ClientWidth = 1044
       Font.Color = clWindowText
       Font.Height = -11
       Font.Name = 'Tahoma'
@@ -196,12 +197,12 @@ object frClickerActions: TfrClickerActions
       ParentFont = False
       object pnlVars: TPanel
         Left = 0
-        Height = 268
+        Height = 249
         Top = 0
         Width = 336
         Anchors = [akTop, akLeft, akBottom]
         BevelOuter = bvNone
-        ClientHeight = 268
+        ClientHeight = 249
         ClientWidth = 336
         Constraints.MinHeight = 208
         Constraints.MinWidth = 336
@@ -215,7 +216,7 @@ object frClickerActions: TfrClickerActions
         end
         object vstVariables: TVirtualStringTree
           Left = 3
-          Height = 253
+          Height = 234
           Hint = 'These variables can be manually edited in place for every action. They are reset when playing all actions. Right-click for options.'
           Top = 18
           Width = 331
@@ -270,13 +271,13 @@ object frClickerActions: TfrClickerActions
       end
       object pnlResults: TPanel
         Left = 347
-        Height = 268
+        Height = 249
         Top = 0
-        Width = 677
+        Width = 697
         Anchors = [akTop, akLeft, akRight, akBottom]
         Caption = 'pnlResults'
-        ClientHeight = 268
-        ClientWidth = 677
+        ClientHeight = 249
+        ClientWidth = 697
         TabOrder = 1
         object lblBitmaps: TLabel
           Left = 2
@@ -343,9 +344,9 @@ object frClickerActions: TfrClickerActions
         end
         object scrboxDebugBmp: TScrollBox
           Left = 2
-          Height = 246
+          Height = 227
           Top = 18
-          Width = 672
+          Width = 692
           HorzScrollBar.Page = 87
           HorzScrollBar.Smooth = True
           HorzScrollBar.Tracking = True
@@ -353,8 +354,8 @@ object frClickerActions: TfrClickerActions
           VertScrollBar.Smooth = True
           VertScrollBar.Tracking = True
           Anchors = [akTop, akLeft, akRight, akBottom]
-          ClientHeight = 242
-          ClientWidth = 668
+          ClientHeight = 223
+          ClientWidth = 688
           Color = clWindow
           ParentBackground = False
           ParentColor = False
@@ -469,7 +470,7 @@ object frClickerActions: TfrClickerActions
       object pnlHorizSplitterResults: TPanel
         Cursor = crHSplit
         Left = 337
-        Height = 268
+        Height = 249
         Top = 0
         Width = 10
         Anchors = [akTop, akLeft, akBottom]
@@ -487,10 +488,43 @@ object frClickerActions: TfrClickerActions
         OnMouseUp = pnlHorizSplitterResultsMouseUp
       end
     end
+    object TabSheetLog: TTabSheet
+      Caption = 'Log'
+      ClientHeight = 249
+      ClientWidth = 1044
+      Font.Color = clWindowText
+      Font.Height = -11
+      Font.Name = 'Tahoma'
+      ImageIndex = 3
+      ParentFont = False
+      object memLogErr: TMemo
+        Left = 0
+        Height = 248
+        Top = 0
+        Width = 1040
+        Anchors = [akTop, akLeft, akRight, akBottom]
+        ReadOnly = True
+        ScrollBars = ssBoth
+        TabOrder = 0
+        WordWrap = False
+      end
+      object edtConsoleCommand: TEdit
+        Tag = -1
+        Left = 0
+        Height = 21
+        Hint = 'Type here one or more var/replacements, then hit enter, to be evaluated.'#13#10'Assigning values to vars is also possible, using the format: "$MyVar$ = Value" or "$MyVar$ = $Value$". The right side is evaluated automatically.'
+        Top = 227
+        Width = 1040
+        Anchors = [akLeft, akRight, akBottom]
+        ParentShowHint = False
+        ShowHint = True
+        TabOrder = 1
+      end
+    end
   end
   object pmDebugVars: TPopupMenu
     Left = 224
-    Top = 224
+    Top = 192
     object CopyDebugValuesListToClipboard1: TMenuItem
       Caption = 'Copy debug values list to clipboard'
       OnClick = CopyDebugValuesListToClipboard1Click
@@ -546,7 +580,7 @@ object frClickerActions: TfrClickerActions
   end
   object pmDebugImage: TPopupMenu
     Left = 320
-    Top = 224
+    Top = 192
     object MenuItemSaveDebugImage: TMenuItem
       Caption = 'Save Debug Image As Bmp...'
       OnClick = MenuItemSaveDebugImageClick
@@ -800,7 +834,7 @@ object frClickerActions: TfrClickerActions
     Interval = 50
     OnTimer = tmrDrawZoomTimer
     Left = 408
-    Top = 224
+    Top = 192
   end
   object pmPathReplacements: TPopupMenu
     Left = 631
@@ -838,5 +872,34 @@ object frClickerActions: TfrClickerActions
     OnTimer = tmrOnChangeEditTemplateEditingActionTypeTimer
     Left = 828
     Top = 120
+  end
+  object pmTabPosition: TPopupMenu
+    Left = 488
+    Top = 147
+    object MenuItem_TabPosTop: TMenuItem
+      AutoCheck = True
+      Caption = 'Top'
+      RadioItem = True
+      OnClick = MenuItem_TabPosClick
+    end
+    object MenuItem_TabPosBottom: TMenuItem
+      AutoCheck = True
+      Caption = 'Bottom'
+      Checked = True
+      RadioItem = True
+      OnClick = MenuItem_TabPosClick
+    end
+    object MenuItem_TabPosLeft: TMenuItem
+      AutoCheck = True
+      Caption = 'Left'
+      RadioItem = True
+      OnClick = MenuItem_TabPosClick
+    end
+    object MenuItem_TabPosRight: TMenuItem
+      AutoCheck = True
+      Caption = 'Right'
+      RadioItem = True
+      OnClick = MenuItem_TabPosClick
+    end
   end
 end

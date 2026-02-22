@@ -74,7 +74,6 @@ type
     chkEnableDebuggerKeys: TCheckBox;
     chkResetVarsOnPlayAll: TCheckBox;
     chkShowActionNumber: TCheckBox;
-    edtConsoleCommand: TEdit;
     imglstWaitingForFilesAvailability: TImageList;
     imgTemplateIcon: TImage;
     imgWaitingInDebuggingMode: TImage;
@@ -86,7 +85,6 @@ type
     imgWaitingForFilesAvailability: TImage;
     lbeSearchAction: TLabeledEdit;
     lblModifiedStatus: TLabel;
-    memLogErr: TMemo;
     MenuItemCutSelectedActionsToClipboard: TMenuItem;
     N6: TMenuItem;
     MenuItem_IncludeActionCalls_Python: TMenuItem;
@@ -150,7 +148,6 @@ type
     pnlActionsEditor: TPanel;
     pmVstActions: TPopupMenu;
     pmBreakPoint: TPopupMenu;
-    pnlfrClickerActions: TPanel;
     pmExtraRemove: TPopupMenu;
     pnlvstActions: TPanel;
     pmExtraPlayAction: TPopupMenu;
@@ -1129,11 +1126,11 @@ begin
   frClickerActions := TfrClickerActions.Create(Self);
   frClickerActions.Parent := pnlActionsEditor;
   frClickerActions.Left := 3;
-  frClickerActions.Top := pnlfrClickerActions.Top;
-  frClickerActions.Width := 686 + 80;
-  frClickerActions.Height := 259;
+  frClickerActions.Top := 0;
+  frClickerActions.Width := pnlActionsEditor.Width;
+  frClickerActions.Height := pnlActionsEditor.Height;
   frClickerActions.Constraints.MinWidth := frClickerActions.Width;
-  frClickerActions.Constraints.MinHeight := frClickerActions.Height;
+  frClickerActions.Constraints.MinHeight := 100;
   frClickerActions.Anchors := [akBottom, akLeft, akRight, akTop];
   frClickerActions.Color := clCream;
   frClickerActions.ParentColor := False;
@@ -1489,6 +1486,16 @@ begin
     vstActions.Header.Columns.Items[i].Width := AIni.ReadInteger(ASection, Indent, vstActions.Header.Columns.Items[i].Width);
   end;
 
+  frClickerActions.PageControlActionExecution.TabPosition := TTabPosition(AIni.ReadInteger(ASection, 'ActionsEditorTabPosition.' + AIndentSuffix, Ord(frClickerActions.PageControlActionExecution.TabPosition)));
+  frClickerActions.PageControlActionExecution.Show; //this is required to properly set vst size
+
+  case frClickerActions.PageControlActionExecution.TabPosition of
+    tpTop:    frClickerActions.MenuItem_TabPosTop.Checked := True;
+    tpBottom: frClickerActions.MenuItem_TabPosBottom.Checked := True;
+    tpLeft:   frClickerActions.MenuItem_TabPosLeft.Checked := True;
+    tpRight:  frClickerActions.MenuItem_TabPosRight.Checked := True;
+  end;
+
   SplitterTop := AIni.ReadInteger(ASection, 'VertSplitterTop.' + AIndentSuffix, pnlVertSplitter.Top);
   ResizeFrameSectionsBySplitter(SplitterTop);
 
@@ -1522,6 +1529,8 @@ begin
     Indent := 'ColWidth_' + IntToStr(i) + '.' + AIndentSuffix;
     AIni.WriteInteger(ASection, Indent, vstActions.Header.Columns.Items[i].Width);
   end;
+
+  AIni.WriteInteger(ASection, 'ActionsEditorTabPosition.' + AIndentSuffix, Ord(frClickerActions.PageControlActionExecution.TabPosition));
 
   AIni.WriteInteger(ASection, 'VertSplitterTop.' + AIndentSuffix, pnlVertSplitter.Top);
   AIni.WriteInteger(ASection, 'HorizSplitterLeft.' + AIndentSuffix, frClickerActions.pnlHorizSplitter.Left);
@@ -5480,8 +5489,8 @@ end;
 
 procedure TfrClickerActionsArr.DisplayDefaultEvalConsoleEditBox;
 begin
-  AddToLog('>> ' + edtConsoleCommand.Text);
-  AddToLog('<- ' + EvaluateReplacements(edtConsoleCommand.Text));
+  AddToLog('>> ' + frClickerActions.edtConsoleCommand.Text);
+  AddToLog('<- ' + EvaluateReplacements(frClickerActions.edtConsoleCommand.Text));
 end;
 
 
@@ -5505,7 +5514,7 @@ var
 begin
   Result := False;
 
-  s := edtConsoleCommand.Text;
+  s := frClickerActions.edtConsoleCommand.Text;
   PosEq := Pos('=', s);
   PosParanth := Pos('(', s);
   PosCrop := PosEq;
@@ -5541,7 +5550,7 @@ begin
 
   SetActionVarValue(LeftSide, Value);
 
-  AddToLog('>> ' + edtConsoleCommand.Text);
+  AddToLog('>> ' + frClickerActions.edtConsoleCommand.Text);
   AddToLog('<- ' + Value);
 
   Result := True;
@@ -5556,15 +5565,15 @@ begin
   case Key of
     VK_RETURN:
     begin
-      if Trim(edtConsoleCommand.Text) = '' then
+      if Trim(frClickerActions.edtConsoleCommand.Text) = '' then
         Exit;
 
-      if not ((Pos('=', edtConsoleCommand.Text) > 0) and EvaluateAssignmentExpression) then
+      if not ((Pos('=', frClickerActions.edtConsoleCommand.Text) > 0) and EvaluateAssignmentExpression) then
         DisplayDefaultEvalConsoleEditBox;
 
-      FCmdConsoleHistory.Add(edtConsoleCommand.Text);
-      edtConsoleCommand.Text := '';
-      edtConsoleCommand.Tag := FCmdConsoleHistory.Count; //without -1, to allow decrementing when pressing VK_UP;
+      FCmdConsoleHistory.Add(frClickerActions.edtConsoleCommand.Text);
+      frClickerActions.edtConsoleCommand.Text := '';
+      frClickerActions.edtConsoleCommand.Tag := FCmdConsoleHistory.Count; //without -1, to allow decrementing when pressing VK_UP;
     end;
 
     VK_UP:
@@ -5575,19 +5584,19 @@ begin
         Exit;
       end;
 
-      edtConsoleCommand.Tag := edtConsoleCommand.Tag - 1;
+      frClickerActions.edtConsoleCommand.Tag := frClickerActions.edtConsoleCommand.Tag - 1;
 
-      if edtConsoleCommand.Tag < 0 then
-        edtConsoleCommand.Tag := 0;
+      if frClickerActions.edtConsoleCommand.Tag < 0 then
+        frClickerActions.edtConsoleCommand.Tag := 0;
 
-      if edtConsoleCommand.Tag > FCmdConsoleHistory.Count - 1 then
-        edtConsoleCommand.Text := ''
+      if frClickerActions.edtConsoleCommand.Tag > FCmdConsoleHistory.Count - 1 then
+        frClickerActions.edtConsoleCommand.Text := ''
       else
-        edtConsoleCommand.Text := FCmdConsoleHistory.Strings[edtConsoleCommand.Tag];
+        frClickerActions.edtConsoleCommand.Text := FCmdConsoleHistory.Strings[frClickerActions.edtConsoleCommand.Tag];
 
-      tp := edtConsoleCommand.CaretPos;
-      tp.X := edtConsoleCommand.ClientRect.Right;
-      edtConsoleCommand.CaretPos := tp;
+      tp := frClickerActions.edtConsoleCommand.CaretPos;
+      tp.X := frClickerActions.edtConsoleCommand.ClientRect.Right;
+      frClickerActions.edtConsoleCommand.CaretPos := tp;
 
       Key := 0;
     end;
@@ -5600,14 +5609,14 @@ begin
         Exit;
       end;
 
-      edtConsoleCommand.Tag := edtConsoleCommand.Tag + 1;
-      if edtConsoleCommand.Tag > FCmdConsoleHistory.Count then  //without - 1
-        edtConsoleCommand.Tag := FCmdConsoleHistory.Count;      //this will make Tag, at most equal to FCmdConsoleHistory.Count (outside of list), to clear the editbox
+      frClickerActions.edtConsoleCommand.Tag := frClickerActions.edtConsoleCommand.Tag + 1;
+      if frClickerActions.edtConsoleCommand.Tag > FCmdConsoleHistory.Count then  //without - 1
+        frClickerActions.edtConsoleCommand.Tag := FCmdConsoleHistory.Count;      //this will make Tag, at most equal to FCmdConsoleHistory.Count (outside of list), to clear the editbox
 
-      if edtConsoleCommand.Tag > FCmdConsoleHistory.Count - 1 then
-        edtConsoleCommand.Text := ''
+      if frClickerActions.edtConsoleCommand.Tag > FCmdConsoleHistory.Count - 1 then
+        frClickerActions.edtConsoleCommand.Text := ''
       else
-        edtConsoleCommand.Text := FCmdConsoleHistory.Strings[edtConsoleCommand.Tag];
+        frClickerActions.edtConsoleCommand.Text := FCmdConsoleHistory.Strings[frClickerActions.edtConsoleCommand.Tag];
 
       Key := 0;
     end;
@@ -5658,11 +5667,11 @@ begin
     if ssCtrl in Shift then
     begin
       Key := 0;
-      ShowAutoCompleteWindow(edtConsoleCommand);
+      ShowAutoCompleteWindow(frClickerActions.edtConsoleCommand);
     end;
 
   if AutoCompleteVisible then
-    UpdateAutoComplete(edtConsoleCommand);
+    UpdateAutoComplete(frClickerActions.edtConsoleCommand);
 end;
 
 
@@ -6729,14 +6738,17 @@ begin
 end;
 
 
+const
+  CHeightDiff = 130; //230
+
 procedure TfrClickerActionsArr.FrameResize(Sender: TObject);
 var
   NewTop: Integer;
 begin
   NewTop := pnlVertSplitter.Top;
 
-  if NewTop > Height - 230 then
-    NewTop := Height - 230;
+  if NewTop > Height - CHeightDiff then
+    NewTop := Height - CHeightDiff;
 
   ResizeFrameSectionsBySplitter(NewTop);
 end;
@@ -6747,12 +6759,13 @@ begin
   if NewTop < pnlActions.Constraints.MinHeight then
     NewTop := pnlActions.Constraints.MinHeight;
 
-  if NewTop > Height - 230 then
-    NewTop := Height - 230;
+  if NewTop > Height - CHeightDiff then
+    NewTop := Height - CHeightDiff;
 
   pnlVertSplitter.Top := NewTop;
 
   pnlActionsEditor.Top := pnlVertSplitter.Top + pnlVertSplitter.Height;
+  pnlActionsEditor.Height := Height - pnlActionsEditor.Top - 2;
   pnlActions.Height := pnlVertSplitter.Top;
 
   pnlVertSplitter.Width := Width - 3;   //these corrections are required, because the width anchors seem to be ignored right after setting top and height
@@ -8185,13 +8198,13 @@ begin
       FLoggingFIFO.PopAll(TempStrings);
 
       for i:= 0 to TempStrings.Count - 1 do
-        memLogErr.Lines.Add(TempStrings[i]);  //adding lines, one by one, instead of calling AddStrings, to leave the focus to the last line
+        frClickerActions.memLogErr.Lines.Add(TempStrings[i]);  //adding lines, one by one, instead of calling AddStrings, to leave the focus to the last line
     finally
       TempStrings.Free;
     end;
   except
     on E: Exception do
-      memLogErr.Lines.Add('Exception on adding to log: ' + E.Message);
+      frClickerActions.memLogErr.Lines.Add('Exception on adding to log: ' + E.Message);
   end;
 end;
 
