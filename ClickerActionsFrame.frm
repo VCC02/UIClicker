@@ -519,6 +519,9 @@ object frClickerActions: TfrClickerActions
         ParentShowHint = False
         ShowHint = True
         TabOrder = 1
+        OnExit = edtConsoleCommandExit
+        OnKeyDown = edtConsoleCommandKeyDown
+        OnKeyUp = edtConsoleCommandKeyUp
       end
     end
   end

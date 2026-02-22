@@ -201,11 +201,6 @@ type
     procedure btnAddActionClick(Sender: TObject);
     procedure btnNewClick(Sender: TObject);
     procedure chkDisplayCalledTemplatesChange(Sender: TObject);
-    procedure edtConsoleCommandExit(Sender: TObject);
-    procedure edtConsoleCommandKeyDown(Sender: TObject; var Key: Word;
-      Shift: TShiftState);
-    procedure edtConsoleCommandKeyUp(Sender: TObject; var Key: Word;
-      Shift: TShiftState);
     procedure FrameResize(Sender: TObject);
     procedure MenuItemCopySelectedActionsToClipboardClick(Sender: TObject);
     procedure MenuItemCutSelectedActionsToClipboardClick(Sender: TObject);
@@ -384,7 +379,6 @@ type
     FFullTemplatesDir: string;
     FAllowedFileDirsForServer: string;
     FAllowedFileExtensionsForServer: string;
-    FCmdConsoleHistory: TStringList;
 
     FExecutesRemotely: Boolean;
     FStackLevel: Integer;
@@ -528,6 +522,8 @@ type
 
     function HandleOnExecuteFindSubControlAction(AErrorLevel, AErrorCount, AFastSearchErrorCount: Integer; AFontName: string; AFontSize: Integer; out AFoundArea: TRect): Boolean;
     procedure HandleOnAddToLog(s: string);
+    procedure HandleOnSetVar(AVarName, AVarValue: string);
+    procedure HandleOnShowAutoCompleteWindow(AEdit: TEdit);
     procedure HandleOnGetFontFinderSettings(var AFontFinderSettings: TFontFinderSettings);
     procedure HandleOnSetFontFinderSettings(var AFontFinderSettings: TFontFinderSettings);
 
@@ -624,8 +620,6 @@ type
     procedure SaveTemplateWithCustomActions_V2(Fnm: string; var ACustomClkActions: TClkActionsRecArr; ANotes, ATemplateIconPath: string);
     procedure SaveTemplate(Fnm: string);
 
-    procedure DisplayDefaultEvalConsoleEditBox;
-    function EvaluateAssignmentExpression: Boolean;
     function EvaluateActionCondition(ActionIndex: Integer): Boolean;
     function EncodeTemplatePath(APath: string): string;
 
@@ -1172,6 +1166,8 @@ begin
 
   frClickerActions.OnExecuteFindSubControlAction := HandleOnExecuteFindSubControlAction;
   frClickerActions.OnAddToLog := HandleOnAddToLog;
+  frClickerActions.OnSetVar := HandleOnSetVar;
+  frClickerActions.OnShowAutoCompleteWindow := HandleOnShowAutoCompleteWindow;
   frClickerActions.OnGetFontFinderSettings := HandleOnGetFontFinderSettings;
   frClickerActions.OnSetFontFinderSettings := HandleOnSetFontFinderSettings;
 
@@ -1363,8 +1359,6 @@ begin
   FActionExecution.OnGetListOfInMemFSFiles := HandleOnGetListOfInMemFSFiles;
   FActionExecution.OnGetListOfExternallyRenderedImages := HandleOnGetListOfExternallyRenderedImages;
 
-  FCmdConsoleHistory := TStringList.Create;
-  FCmdConsoleHistory.LineBreak := #13#10;
   FOnExecuteRemoteActionAtIndex := nil;
   FOnCopyControlTextAndClassFromMainWindow := nil;
   FOnGetExtraSearchAreaDebuggingImageWithStackLevel := nil;
@@ -1464,7 +1458,6 @@ end;
 
 destructor TfrClickerActionsArr.Destroy;
 begin
-  FCmdConsoleHistory.Free;
   FActionExecution.Free;
   FLoggingFIFO.Free;
   FVarDescriptions.Free;
@@ -1927,6 +1920,18 @@ end;
 procedure TfrClickerActionsArr.HandleOnAddToLog(s: string);
 begin
   AddToLog(s);
+end;
+
+
+procedure TfrClickerActionsArr.HandleOnSetVar(AVarName, AVarValue: string);
+begin
+  SetActionVarValue(AVarName, AVarValue);
+end;
+
+
+procedure TfrClickerActionsArr.HandleOnShowAutoCompleteWindow(AEdit: TEdit);
+begin
+  ShowAutoCompleteWindow(AEdit);
 end;
 
 
@@ -5480,161 +5485,6 @@ begin
 end;
 
 
-procedure TfrClickerActionsArr.edtConsoleCommandExit(Sender: TObject);
-begin
-  if Assigned(frmAutoComplete) and not frmAutoComplete.Focused and frmAutoComplete.Visible then
-    CloseAutoComplete;
-end;
-
-
-procedure TfrClickerActionsArr.DisplayDefaultEvalConsoleEditBox;
-begin
-  AddToLog('>> ' + frClickerActions.edtConsoleCommand.Text);
-  AddToLog('<- ' + EvaluateReplacements(frClickerActions.edtConsoleCommand.Text));
-end;
-
-
-function CharCount(AChar: Char; s: string; AMaxIndex: Integer): Integer;
-var
-  i: Integer;
-begin
-  Result := 0;
-  for i := 1 to Min(AMaxIndex, Length(s)) do
-    if s[i] = AChar then
-      Inc(Result);
-end;
-
-
-function TfrClickerActionsArr.EvaluateAssignmentExpression: Boolean;
-var
-  PosEq, PosParanth, PosCrop: Integer;
-  PosVar, PosEndVar: Integer;
-  s: string;
-  LeftSide, RightSide, Value: string;
-begin
-  Result := False;
-
-  s := frClickerActions.edtConsoleCommand.Text;
-  PosEq := Pos('=', s);
-  PosParanth := Pos('(', s);
-  PosCrop := PosEq;
-
-  if PosParanth < PosEq then
-  begin
-    if CharCount('$', s, PosParanth) = 1 then     //e.g.:  $func(value=337770)$
-      PosCrop := PosParanth;
-  end
-  else
-    if PosParanth > PosEq then
-      if CharCount('$', s, PosEq) > 1 then        //e.g.   $var$=$func(abc)$
-        PosCrop := PosEq;
-
-  LeftSide := Trim(Copy(s, 1, PosCrop - 1));
-
-  PosVar := Pos('$', LeftSide);
-  //PosEndVar := Pos('$', LeftSide, PosVar + 1);
-  PosEndVar := RevPos('$', LeftSide, PosVar + 1);
-
-  if (PosVar = 0) or (PosEndVar = 0) then
-  begin
-    DisplayDefaultEvalConsoleEditBox;
-    Exit;
-  end;
-
-  RightSide := TrimLeft(Copy(s, PosCrop + 1, MaxInt));
-
-  if (Length(RightSide) > 2) and (RightSide[1] = '"') and (RightSide[Length(RightSide)] = '"') then
-    Value := Copy(RightSide, 2, Length(RightSide) - 2)
-  else
-    Value := EvaluateReplacements(RightSide);
-
-  SetActionVarValue(LeftSide, Value);
-
-  AddToLog('>> ' + frClickerActions.edtConsoleCommand.Text);
-  AddToLog('<- ' + Value);
-
-  Result := True;
-end;
-
-
-procedure TfrClickerActionsArr.edtConsoleCommandKeyDown(Sender: TObject;
-  var Key: Word; Shift: TShiftState);
-var
-  tp: TPoint;
-begin
-  case Key of
-    VK_RETURN:
-    begin
-      if Trim(frClickerActions.edtConsoleCommand.Text) = '' then
-        Exit;
-
-      if not ((Pos('=', frClickerActions.edtConsoleCommand.Text) > 0) and EvaluateAssignmentExpression) then
-        DisplayDefaultEvalConsoleEditBox;
-
-      FCmdConsoleHistory.Add(frClickerActions.edtConsoleCommand.Text);
-      frClickerActions.edtConsoleCommand.Text := '';
-      frClickerActions.edtConsoleCommand.Tag := FCmdConsoleHistory.Count; //without -1, to allow decrementing when pressing VK_UP;
-    end;
-
-    VK_UP:
-    begin
-      if AutoCompleteVisible then
-      begin
-        frmAutoComplete.SetFocus;
-        Exit;
-      end;
-
-      frClickerActions.edtConsoleCommand.Tag := frClickerActions.edtConsoleCommand.Tag - 1;
-
-      if frClickerActions.edtConsoleCommand.Tag < 0 then
-        frClickerActions.edtConsoleCommand.Tag := 0;
-
-      if frClickerActions.edtConsoleCommand.Tag > FCmdConsoleHistory.Count - 1 then
-        frClickerActions.edtConsoleCommand.Text := ''
-      else
-        frClickerActions.edtConsoleCommand.Text := FCmdConsoleHistory.Strings[frClickerActions.edtConsoleCommand.Tag];
-
-      tp := frClickerActions.edtConsoleCommand.CaretPos;
-      tp.X := frClickerActions.edtConsoleCommand.ClientRect.Right;
-      frClickerActions.edtConsoleCommand.CaretPos := tp;
-
-      Key := 0;
-    end;
-
-    VK_DOWN:
-    begin
-      if AutoCompleteVisible then
-      begin
-        frmAutoComplete.SetFocus;
-        Exit;
-      end;
-
-      frClickerActions.edtConsoleCommand.Tag := frClickerActions.edtConsoleCommand.Tag + 1;
-      if frClickerActions.edtConsoleCommand.Tag > FCmdConsoleHistory.Count then  //without - 1
-        frClickerActions.edtConsoleCommand.Tag := FCmdConsoleHistory.Count;      //this will make Tag, at most equal to FCmdConsoleHistory.Count (outside of list), to clear the editbox
-
-      if frClickerActions.edtConsoleCommand.Tag > FCmdConsoleHistory.Count - 1 then
-        frClickerActions.edtConsoleCommand.Text := ''
-      else
-        frClickerActions.edtConsoleCommand.Text := FCmdConsoleHistory.Strings[frClickerActions.edtConsoleCommand.Tag];
-
-      Key := 0;
-    end;
-  end; //case
-
-  if Key = VK_SPACE then
-    if ssCtrl in Shift then
-    begin
-      Key := 0;
-      Exit;
-    end;
-
-  if Key in [VK_RETURN, VK_ESCAPE] then
-    if AutoCompleteVisible then
-      CloseAutoComplete;
-end;
-
-
 procedure TfrClickerActionsArr.ShowAutoCompleteWindow(AEdit: TEdit);
 var
   TempVars: TStringList;
@@ -5657,21 +5507,6 @@ begin
 
   if AutoCompleteVisible then
     ShowAutoComplete(AEdit, nil, nil, FVarDescriptions, FFuncDescriptions);
-end;
-
-
-procedure TfrClickerActionsArr.edtConsoleCommandKeyUp(Sender: TObject;
-  var Key: Word; Shift: TShiftState);
-begin
-  if Key = VK_SPACE then
-    if ssCtrl in Shift then
-    begin
-      Key := 0;
-      ShowAutoCompleteWindow(frClickerActions.edtConsoleCommand);
-    end;
-
-  if AutoCompleteVisible then
-    UpdateAutoComplete(frClickerActions.edtConsoleCommand);
 end;
 
 

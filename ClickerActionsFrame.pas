@@ -59,6 +59,7 @@ type
   TOnChangeEditTemplateEditingActionType = procedure of object;
 
   TOnGetPluginInMemFS = function: TInMemFileSystem of object;
+  TOnShowAutoCompleteWindow = procedure(AEdit: TEdit) of object;
 
   { TfrClickerActions }
 
@@ -181,6 +182,11 @@ type
     vstVariables: TVirtualStringTree;
     procedure chkDecodeVariablesChange(Sender: TObject);
     procedure chkWaitForControlToGoAwayChange(Sender: TObject);
+    procedure edtConsoleCommandExit(Sender: TObject);
+    procedure edtConsoleCommandKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
+    procedure edtConsoleCommandKeyUp(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
     procedure FrameResize(Sender: TObject);
     procedure lbeFindCachedControlLeftChange(Sender: TObject);
     procedure lbeFindCachedControlTopChange(Sender: TObject);
@@ -368,6 +374,7 @@ type
     FLastClickedEdit: TEdit;
 
     FClkVariables: TStringList;
+    FCmdConsoleHistory: TStringList;
 
     FlblResultSelLeft: TLabel;
     FlblResultSelTop: TLabel;
@@ -413,6 +420,8 @@ type
 
     FOnExecuteFindSubControlAction: TOnExecuteFindSubControlAction;
     FOnAddToLog: TOnAddToLog;
+    FOnSetVar: TOnSetVar;
+    FOnShowAutoCompleteWindow: TOnShowAutoCompleteWindow;
     FOnGetFontFinderSettings: TOnRWFontFinderSettings;
     FOnSetFontFinderSettings: TOnRWFontFinderSettings;
 
@@ -476,6 +485,8 @@ type
 
     function DoOnExecuteFindSubControlAction(AErrorLevel, AErrorCount, AFastSearchErrorCount: Integer; AFontName: string; AFontSize: Integer; out AFoundArea: TRect): Boolean;
     procedure DoOnAddToLog(s: string);
+    procedure DoOnSetVar(AVarName, AVarValue: string);
+    procedure DoOnShowAutoCompleteWindow(AEdit: TEdit);
     procedure DoOnGetFontFinderSettings(var AFontFinderSettings: TFontFinderSettings);
     procedure DoOnSetFontFinderSettings(var AFontFinderSettings: TFontFinderSettings);
 
@@ -518,6 +529,9 @@ type
     procedure SetPreviewSelectionColors(Value: TSelectionColors);
     function GetModifiedPmtvFiles: Boolean;
     function GetEditingActionObjectByActionType: PClkActionRec;
+
+    procedure DisplayDefaultEvalConsoleEditBox;
+    function EvaluateAssignmentExpression: Boolean;
 
     procedure LocalTemplatesClick(Sender: TObject);
     procedure AvailableSetVarClick(Sender: TObject);
@@ -791,6 +805,8 @@ type
 
     property OnExecuteFindSubControlAction: TOnExecuteFindSubControlAction write FOnExecuteFindSubControlAction;
     property OnAddToLog: TOnAddToLog write FOnAddToLog;
+    property OnSetVar: TOnSetVar write FOnSetVar;
+    property OnShowAutoCompleteWindow: TOnShowAutoCompleteWindow write FOnShowAutoCompleteWindow;
     property OnGetFontFinderSettings: TOnRWFontFinderSettings write FOnGetFontFinderSettings;
     property OnSetFontFinderSettings: TOnRWFontFinderSettings write FOnSetFontFinderSettings;
 
@@ -841,7 +857,7 @@ uses
   Clipbrd, ClickerActionValues, ClickerOIUtils, ClickerZoomPreviewForm,
   ClickerActionPluginLoader, ClickerActionPlugins, InMemFileSystemBrowserForm,
   ClickerExtraUtils, ClickerActionProperties, ClickerTemplates, Math,
-  ClickerCLUtils, ClickerIconsDM;
+  ClickerCLUtils, ClickerIconsDM, AutoCompleteForm;
 
 
 function ActionStatusStrToActionStatus(AString: string): TActionStatus;
@@ -1063,6 +1079,9 @@ begin
   FSetVarContent_EvalBefore.LineBreak := #13#10;
   FClkVariables.LineBreak := #13#10;
 
+  FCmdConsoleHistory := TStringList.Create;
+  FCmdConsoleHistory.LineBreak := #13#10;
+
   FlblResultSelLeft := nil;
   FlblResultSelTop := nil;
   FlblResultSelRight := nil;
@@ -1103,6 +1122,8 @@ begin
 
   FOnExecuteFindSubControlAction := nil;
   FOnAddToLog := nil;
+  FOnSetVar := nil;
+  FOnShowAutoCompleteWindow := nil;
   FOnGetFontFinderSettings := nil;
   FOnSetFontFinderSettings := nil;
 
@@ -1142,6 +1163,7 @@ begin
   FSetVarContent_EvalBefore.Free;
   FOIEditorMenu.Free;
   FreeAndNil(FClkVariables);
+  FCmdConsoleHistory.Free;
 
   inherited Destroy;
 end;
@@ -1510,6 +1532,176 @@ end;
 procedure TfrClickerActions.chkWaitForControlToGoAwayChange(Sender: TObject);
 begin
   TriggerOnControlsModified;
+end;
+
+
+procedure TfrClickerActions.DisplayDefaultEvalConsoleEditBox;
+begin
+  DoOnAddToLog('>> ' + edtConsoleCommand.Text);
+  DoOnAddToLog('<- ' + EvaluateReplacements(edtConsoleCommand.Text));
+end;
+
+
+function CharCount(AChar: Char; s: string; AMaxIndex: Integer): Integer;
+var
+  i: Integer;
+begin
+  Result := 0;
+  for i := 1 to Min(AMaxIndex, Length(s)) do
+    if s[i] = AChar then
+      Inc(Result);
+end;
+
+
+function TfrClickerActions.EvaluateAssignmentExpression: Boolean;
+var
+  PosEq, PosParanth, PosCrop: Integer;
+  PosVar, PosEndVar: Integer;
+  s: string;
+  LeftSide, RightSide, Value: string;
+begin
+  Result := False;
+
+  s := edtConsoleCommand.Text;
+  PosEq := Pos('=', s);
+  PosParanth := Pos('(', s);
+  PosCrop := PosEq;
+
+  if PosParanth < PosEq then
+  begin
+    if CharCount('$', s, PosParanth) = 1 then     //e.g.:  $func(value=337770)$
+      PosCrop := PosParanth;
+  end
+  else
+    if PosParanth > PosEq then
+      if CharCount('$', s, PosEq) > 1 then        //e.g.   $var$=$func(abc)$
+        PosCrop := PosEq;
+
+  LeftSide := Trim(Copy(s, 1, PosCrop - 1));
+
+  PosVar := Pos('$', LeftSide);
+  //PosEndVar := Pos('$', LeftSide, PosVar + 1);
+  PosEndVar := RevPos('$', LeftSide, PosVar + 1);
+
+  if (PosVar = 0) or (PosEndVar = 0) then
+  begin
+    DisplayDefaultEvalConsoleEditBox;
+    Exit;
+  end;
+
+  RightSide := TrimLeft(Copy(s, PosCrop + 1, MaxInt));
+
+  if (Length(RightSide) > 2) and (RightSide[1] = '"') and (RightSide[Length(RightSide)] = '"') then
+    Value := Copy(RightSide, 2, Length(RightSide) - 2)
+  else
+    Value := EvaluateReplacements(RightSide);
+
+  DoOnSetVar(LeftSide, Value);
+
+  DoOnAddToLog('>> ' + edtConsoleCommand.Text);
+  DoOnAddToLog('<- ' + Value);
+
+  Result := True;
+end;
+
+
+procedure TfrClickerActions.edtConsoleCommandExit(Sender: TObject);
+begin
+  if Assigned(frmAutoComplete) and not frmAutoComplete.Focused and frmAutoComplete.Visible then
+    CloseAutoComplete;
+end;
+
+
+procedure TfrClickerActions.edtConsoleCommandKeyDown(Sender: TObject;
+  var Key: Word; Shift: TShiftState);
+var
+  tp: TPoint;
+begin
+  case Key of
+    VK_RETURN:
+    begin
+      if Trim(edtConsoleCommand.Text) = '' then
+        Exit;
+
+      if not ((Pos('=', edtConsoleCommand.Text) > 0) and EvaluateAssignmentExpression) then
+        DisplayDefaultEvalConsoleEditBox;
+
+      FCmdConsoleHistory.Add(edtConsoleCommand.Text);
+      edtConsoleCommand.Text := '';
+      edtConsoleCommand.Tag := FCmdConsoleHistory.Count; //without -1, to allow decrementing when pressing VK_UP;
+    end;
+
+    VK_UP:
+    begin
+      if AutoCompleteVisible then
+      begin
+        frmAutoComplete.SetFocus;
+        Exit;
+      end;
+
+      edtConsoleCommand.Tag := edtConsoleCommand.Tag - 1;
+
+      if edtConsoleCommand.Tag < 0 then
+        edtConsoleCommand.Tag := 0;
+
+      if edtConsoleCommand.Tag > FCmdConsoleHistory.Count - 1 then
+        edtConsoleCommand.Text := ''
+      else
+        edtConsoleCommand.Text := FCmdConsoleHistory.Strings[edtConsoleCommand.Tag];
+
+      tp := edtConsoleCommand.CaretPos;
+      tp.X := edtConsoleCommand.ClientRect.Right;
+      edtConsoleCommand.CaretPos := tp;
+
+      Key := 0;
+    end;
+
+    VK_DOWN:
+    begin
+      if AutoCompleteVisible then
+      begin
+        frmAutoComplete.SetFocus;
+        Exit;
+      end;
+
+      edtConsoleCommand.Tag := edtConsoleCommand.Tag + 1;
+      if edtConsoleCommand.Tag > FCmdConsoleHistory.Count then  //without - 1
+        edtConsoleCommand.Tag := FCmdConsoleHistory.Count;      //this will make Tag, at most equal to FCmdConsoleHistory.Count (outside of list), to clear the editbox
+
+      if edtConsoleCommand.Tag > FCmdConsoleHistory.Count - 1 then
+        edtConsoleCommand.Text := ''
+      else
+        edtConsoleCommand.Text := FCmdConsoleHistory.Strings[edtConsoleCommand.Tag];
+
+      Key := 0;
+    end;
+  end; //case
+
+  if Key = VK_SPACE then
+    if ssCtrl in Shift then
+    begin
+      Key := 0;
+      Exit;
+    end;
+
+  if Key in [VK_RETURN, VK_ESCAPE] then
+    if AutoCompleteVisible then
+      CloseAutoComplete;
+end;
+
+
+procedure TfrClickerActions.edtConsoleCommandKeyUp(Sender: TObject;
+  var Key: Word; Shift: TShiftState);
+begin
+  if Key = VK_SPACE then
+    if ssCtrl in Shift then
+    begin
+      Key := 0;
+      DoOnShowAutoCompleteWindow(edtConsoleCommand);
+    end;
+
+  if AutoCompleteVisible then
+    UpdateAutoComplete(edtConsoleCommand);
 end;
 
 
@@ -3745,6 +3937,24 @@ begin
     raise Exception.Create('OnAddToLog not assigned.')
   else
     FOnAddToLog(s);
+end;
+
+
+procedure TfrClickerActions.DoOnSetVar(AVarName, AVarValue: string);
+begin
+  if not Assigned(FOnSetVar) then
+    raise Exception.Create('OnSetVar not assigned.')
+  else
+    FOnSetVar(AVarName, AVarValue);
+end;
+
+
+procedure TfrClickerActions.DoOnShowAutoCompleteWindow(AEdit: TEdit);
+begin
+  if not Assigned(FOnShowAutoCompleteWindow) then
+    raise Exception.Create('OnShowAutoCompleteWindow not assigned.')
+  else
+    FOnShowAutoCompleteWindow(AEdit);
 end;
 
 
