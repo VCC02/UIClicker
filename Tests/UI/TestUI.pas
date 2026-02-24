@@ -54,9 +54,9 @@ type
     procedure PrepareClickerUnderTestToReadItsVars;
     procedure PrepareClickerUnderTestToLocalMode;
     procedure PrepareClickerUnderTestToClientMode;
+    procedure PrepareActionPage(ATabName: string);
 
     procedure ExpectVarFromClientUnderTest(AVarName, AExpectedValue: string; AExtraComment: string = '');
-
   public
     constructor Create; override;
     procedure BeforeAll_AlwaysExecute;
@@ -475,6 +475,13 @@ begin
 end;
 
 
+procedure TTestUI.PrepareActionPage(ATabName: string);
+begin
+  SetVariableOnTestDriverClient('$ActionExecutionTab$', ATabName);
+  ExecuteTemplateOnTestDriver(ExtractFilePath(ParamStr(0)) + '..\..\TestDriver\ActionTemplates\SwitchActionPage.clktmpl', CREParam_FileLocation_ValueDisk);
+end;
+
+
 procedure TTestUI.ExpectVarFromClientUnderTest(AVarName, AExpectedValue: string; AExtraComment: string = '');
 begin
   TestServerAddress := CTestClientAddress;
@@ -490,6 +497,7 @@ end;
 procedure TTestUIActionExecution.BeforeAll_AlwaysExecute;
 begin
   inherited BeforeAll_AlwaysExecute;
+  PrepareActionPage('Action');
 end;
 
 
@@ -778,6 +786,7 @@ end;
 procedure TTestUIAutoComplete.BeforeAll_AlwaysExecute;
 begin
   inherited BeforeAll_AlwaysExecute;
+  PrepareActionPage('Log');
 end;
 
 
@@ -874,6 +883,7 @@ end;
 procedure TTestUIObjectInspector.BeforeAll_AlwaysExecute;
 begin
   inherited BeforeAll_AlwaysExecute;
+  PrepareActionPage('Action');
 end;
 
 
@@ -1418,6 +1428,7 @@ end;
 procedure TTestUISendingPermissions.BeforeAll_AlwaysExecute;
 begin
   inherited BeforeAll_AlwaysExecute;
+  PrepareActionPage('Action');
 end;
 
 
@@ -1519,6 +1530,7 @@ end;
 procedure TTestUIWebBrowser.BeforeAll_AlwaysExecute;
 begin
   inherited BeforeAll_AlwaysExecute;
+  PrepareActionPage('Action');
 end;
 
 
