@@ -1,5 +1,5 @@
 [Actions]
-Count=8
+Count=15
 Version=2
 
 [Action_0]
@@ -88,6 +88,20 @@ BreakpointCondition=
 Value=1000
 
 [Action_4]
+ActionName=Reset EditNotFound
+Action=SetVar
+ActionTimeout=0
+ActionEnabled=1
+ActionCondition=
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+ListOfVarNames=$EditNotFound$
+ListOfVarValues=False
+ListOfVarEvalBefore=0
+FailOnException=0
+
+[Action_5]
 ActionName=Find Actions Window
 Action=FindControl
 ActionTimeout=10000
@@ -121,7 +135,7 @@ GetAllControls=0
 PrecisionTimeout=0
 EvaluateTextCount=-1
 
-[Action_5]
+[Action_6]
 ActionName=Find target editbox
 Action=FindControl
 ActionTimeout=3000
@@ -137,7 +151,7 @@ MatchText=
 MatchClassName=Edit
 MatchTextSeparator=
 MatchClassNameSeparator=
-AllowToFail=0
+AllowToFail=1
 WaitForControlToGoAway=0
 InitialRectangle.Left=$Control_Left$
 InitialRectangle.Top=$Control_Bottom$
@@ -145,9 +159,80 @@ InitialRectangle.Right=$Control_Left$
 InitialRectangle.Bottom=$Control_Bottom$
 UseWholeScreen=0
 InitialRectangle.LeftOffset=17
-InitialRectangle.TopOffset=-68
+InitialRectangle.TopOffset=-108
 InitialRectangle.RightOffset=166
 InitialRectangle.BottomOffset=-41
+StartSearchingWithCachedControl=0
+CachedControlLeft=
+CachedControlTop=
+GetAllControls=1
+PrecisionTimeout=0
+EvaluateTextCount=-1
+
+[Action_7]
+ActionName=Set as not found
+Action=SetVar
+ActionTimeout=0
+ActionEnabled=1
+ActionCondition=
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+ListOfVarNames=$EditNotFound$
+ListOfVarValues=True
+ListOfVarEvalBefore=0
+FailOnException=0
+
+[Action_8]
+ActionName=Switch action page
+Action=CallTemplate
+ActionTimeout=0
+ActionEnabled=1
+ActionCondition=
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+TemplateFileName=$SelfTemplateDir$\SwitchActionPage.clktmpl
+ListOfCustomVarsAndValues=
+CallOnlyIfCondition=0
+CallOnlyIfConditionVarName=
+CallOnlyIfConditionVarValue=
+EvaluateBeforeCalling=0
+Loop.Enabled=0
+Loop.Counter=
+Loop.InitValue=
+Loop.EndValue=
+Loop.Direction=0
+Loop.BreakCondition=
+Loop.EvalBreakPosition=1
+
+[Action_9]
+ActionName=Find Actions Window after tab click
+Action=FindControl
+ActionTimeout=10000
+ActionEnabled=1
+ActionCondition=
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+MatchCriteria.WillMatchText=1
+MatchCriteria.WillMatchClassName=1
+MatchCriteria.SearchForControlMode=2
+MatchText=UI Clicker Actions$IsAdminOnWine$ - ClientUnderTest
+MatchClassName=Window
+MatchTextSeparator=
+MatchClassNameSeparator=
+AllowToFail=0
+WaitForControlToGoAway=0
+InitialRectangle.Left=$Control_Left$
+InitialRectangle.Top=$Control_Top$
+InitialRectangle.Right=$Control_Right$
+InitialRectangle.Bottom=$Control_Bottom$
+UseWholeScreen=1
+InitialRectangle.LeftOffset=0
+InitialRectangle.TopOffset=0
+InitialRectangle.RightOffset=0
+InitialRectangle.BottomOffset=0
 StartSearchingWithCachedControl=0
 CachedControlLeft=
 CachedControlTop=
@@ -155,21 +240,83 @@ GetAllControls=0
 PrecisionTimeout=0
 EvaluateTextCount=-1
 
-[Action_6]
+[Action_10]
+ActionName=Find target editbox after tab click
+Action=FindControl
+ActionTimeout=3000
+ActionEnabled=1
+ActionCondition=
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+MatchCriteria.WillMatchText=0
+MatchCriteria.WillMatchClassName=1
+MatchCriteria.SearchForControlMode=0
+MatchText=
+MatchClassName=Edit
+MatchTextSeparator=
+MatchClassNameSeparator=
+AllowToFail=1
+WaitForControlToGoAway=0
+InitialRectangle.Left=$Control_Left$
+InitialRectangle.Top=$Control_Bottom$
+InitialRectangle.Right=$Control_Left$
+InitialRectangle.Bottom=$Control_Bottom$
+UseWholeScreen=0
+InitialRectangle.LeftOffset=17
+InitialRectangle.TopOffset=-85
+InitialRectangle.RightOffset=166
+InitialRectangle.BottomOffset=-41
+StartSearchingWithCachedControl=0
+CachedControlLeft=
+CachedControlTop=
+GetAllControls=1
+PrecisionTimeout=0
+EvaluateTextCount=-1
+
+[Action_11]
+ActionName=Set first control as target editbox
+Action=SetVar
+ActionTimeout=0
+ActionEnabled=1
+ActionCondition=$AllControl_Count$2$GetTextItem($AllControl_Heights$,0)$?30
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+ListOfVarNames=$Res$$OutRes$
+ListOfVarValues=$GetTextItem($AllControl_Handles$,0)$$UpdateControlInfo($Res$)$
+ListOfVarEvalBefore=11
+FailOnException=0
+
+[Action_12]
+ActionName=Set second control as target editbox
+Action=SetVar
+ActionTimeout=0
+ActionEnabled=1
+ActionCondition=$AllControl_Count$2$GetTextItem($AllControl_Heights$,1)$?30
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+ListOfVarNames=$Res$$OutRes$
+ListOfVarValues=$GetTextItem($AllControl_Handles$,1)$$UpdateControlInfo($Res$)$
+ListOfVarEvalBefore=11
+FailOnException=0
+
+[Action_13]
 ActionName=Verify if the right editbox is found
 Action=SetVar
 ActionTimeout=0
 ActionEnabled=1
-ActionCondition=$Control_Height$>?30
+ActionCondition=$Control_Height$?30
 BreakpointExists=0
 BreakpointEnabled=0
 BreakpointCondition=
 ListOfVarNames=$Exit(Found the wrong editbox)$
 ListOfVarValues=
-ListOfVarEvalBefore=
+ListOfVarEvalBefore=0
 FailOnException=0
 
-[Action_7]
+[Action_14]
 ActionName=Cache current editbox
 Action=SetVar
 ActionTimeout=0
