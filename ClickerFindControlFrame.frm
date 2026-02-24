@@ -332,7 +332,7 @@ object frClickerFindControl: TfrClickerFindControl
         Left = 0
         Height = 149
         Top = 72
-        Width = 553
+        Width = 864
         Anchors = [akTop, akLeft, akRight, akBottom]
         AutoSize = False
         Caption = 'Reserved space'#13#10'for DbgImg'
@@ -771,9 +771,9 @@ object frClickerFindControl: TfrClickerFindControl
         Left = 0
         Height = 23
         Top = 48
-        Width = 553
+        Width = 865
         ClientHeight = 23
-        ClientWidth = 553
+        ClientWidth = 865
         TabOrder = 9
         object lblSelectionLine_Left: TLabel
           Left = 4

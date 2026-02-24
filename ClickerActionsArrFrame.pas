@@ -74,7 +74,6 @@ type
     chkEnableDebuggerKeys: TCheckBox;
     chkResetVarsOnPlayAll: TCheckBox;
     chkShowActionNumber: TCheckBox;
-    edtConsoleCommand: TEdit;
     imglstWaitingForFilesAvailability: TImageList;
     imgTemplateIcon: TImage;
     imgWaitingInDebuggingMode: TImage;
@@ -86,7 +85,6 @@ type
     imgWaitingForFilesAvailability: TImage;
     lbeSearchAction: TLabeledEdit;
     lblModifiedStatus: TLabel;
-    memLogErr: TMemo;
     MenuItemCutSelectedActionsToClipboard: TMenuItem;
     N6: TMenuItem;
     MenuItem_IncludeActionCalls_Python: TMenuItem;
@@ -150,7 +148,6 @@ type
     pnlActionsEditor: TPanel;
     pmVstActions: TPopupMenu;
     pmBreakPoint: TPopupMenu;
-    pnlfrClickerActions: TPanel;
     pmExtraRemove: TPopupMenu;
     pnlvstActions: TPanel;
     pmExtraPlayAction: TPopupMenu;
@@ -204,11 +201,6 @@ type
     procedure btnAddActionClick(Sender: TObject);
     procedure btnNewClick(Sender: TObject);
     procedure chkDisplayCalledTemplatesChange(Sender: TObject);
-    procedure edtConsoleCommandExit(Sender: TObject);
-    procedure edtConsoleCommandKeyDown(Sender: TObject; var Key: Word;
-      Shift: TShiftState);
-    procedure edtConsoleCommandKeyUp(Sender: TObject; var Key: Word;
-      Shift: TShiftState);
     procedure FrameResize(Sender: TObject);
     procedure MenuItemCopySelectedActionsToClipboardClick(Sender: TObject);
     procedure MenuItemCutSelectedActionsToClipboardClick(Sender: TObject);
@@ -387,7 +379,6 @@ type
     FFullTemplatesDir: string;
     FAllowedFileDirsForServer: string;
     FAllowedFileExtensionsForServer: string;
-    FCmdConsoleHistory: TStringList;
 
     FExecutesRemotely: Boolean;
     FStackLevel: Integer;
@@ -531,6 +522,8 @@ type
 
     function HandleOnExecuteFindSubControlAction(AErrorLevel, AErrorCount, AFastSearchErrorCount: Integer; AFontName: string; AFontSize: Integer; out AFoundArea: TRect): Boolean;
     procedure HandleOnAddToLog(s: string);
+    procedure HandleOnSetVar(AVarName, AVarValue: string);
+    procedure HandleOnShowAutoCompleteWindow(AEdit: TEdit);
     procedure HandleOnGetFontFinderSettings(var AFontFinderSettings: TFontFinderSettings);
     procedure HandleOnSetFontFinderSettings(var AFontFinderSettings: TFontFinderSettings);
 
@@ -627,8 +620,6 @@ type
     procedure SaveTemplateWithCustomActions_V2(Fnm: string; var ACustomClkActions: TClkActionsRecArr; ANotes, ATemplateIconPath: string);
     procedure SaveTemplate(Fnm: string);
 
-    procedure DisplayDefaultEvalConsoleEditBox;
-    function EvaluateAssignmentExpression: Boolean;
     function EvaluateActionCondition(ActionIndex: Integer): Boolean;
     function EncodeTemplatePath(APath: string): string;
 
@@ -1129,11 +1120,11 @@ begin
   frClickerActions := TfrClickerActions.Create(Self);
   frClickerActions.Parent := pnlActionsEditor;
   frClickerActions.Left := 3;
-  frClickerActions.Top := pnlfrClickerActions.Top;
-  frClickerActions.Width := 686 + 80;
-  frClickerActions.Height := 259;
+  frClickerActions.Top := 0;
+  frClickerActions.Width := pnlActionsEditor.Width;
+  frClickerActions.Height := pnlActionsEditor.Height;
   frClickerActions.Constraints.MinWidth := frClickerActions.Width;
-  frClickerActions.Constraints.MinHeight := frClickerActions.Height;
+  frClickerActions.Constraints.MinHeight := 100;
   frClickerActions.Anchors := [akBottom, akLeft, akRight, akTop];
   frClickerActions.Color := clCream;
   frClickerActions.ParentColor := False;
@@ -1175,6 +1166,8 @@ begin
 
   frClickerActions.OnExecuteFindSubControlAction := HandleOnExecuteFindSubControlAction;
   frClickerActions.OnAddToLog := HandleOnAddToLog;
+  frClickerActions.OnSetVar := HandleOnSetVar;
+  frClickerActions.OnShowAutoCompleteWindow := HandleOnShowAutoCompleteWindow;
   frClickerActions.OnGetFontFinderSettings := HandleOnGetFontFinderSettings;
   frClickerActions.OnSetFontFinderSettings := HandleOnSetFontFinderSettings;
 
@@ -1366,8 +1359,6 @@ begin
   FActionExecution.OnGetListOfInMemFSFiles := HandleOnGetListOfInMemFSFiles;
   FActionExecution.OnGetListOfExternallyRenderedImages := HandleOnGetListOfExternallyRenderedImages;
 
-  FCmdConsoleHistory := TStringList.Create;
-  FCmdConsoleHistory.LineBreak := #13#10;
   FOnExecuteRemoteActionAtIndex := nil;
   FOnCopyControlTextAndClassFromMainWindow := nil;
   FOnGetExtraSearchAreaDebuggingImageWithStackLevel := nil;
@@ -1467,7 +1458,6 @@ end;
 
 destructor TfrClickerActionsArr.Destroy;
 begin
-  FCmdConsoleHistory.Free;
   FActionExecution.Free;
   FLoggingFIFO.Free;
   FVarDescriptions.Free;
@@ -1487,6 +1477,16 @@ begin
   begin
     Indent := 'ColWidth_' + IntToStr(i) + '.' + AIndentSuffix;
     vstActions.Header.Columns.Items[i].Width := AIni.ReadInteger(ASection, Indent, vstActions.Header.Columns.Items[i].Width);
+  end;
+
+  frClickerActions.PageControlActionExecution.TabPosition := TTabPosition(AIni.ReadInteger(ASection, 'ActionsEditorTabPosition.' + AIndentSuffix, Ord(frClickerActions.PageControlActionExecution.TabPosition)));
+  frClickerActions.PageControlActionExecution.Show; //this is required to properly set vst size
+
+  case frClickerActions.PageControlActionExecution.TabPosition of
+    tpTop:    frClickerActions.MenuItem_TabPosTop.Checked := True;
+    tpBottom: frClickerActions.MenuItem_TabPosBottom.Checked := True;
+    tpLeft:   frClickerActions.MenuItem_TabPosLeft.Checked := True;
+    tpRight:  frClickerActions.MenuItem_TabPosRight.Checked := True;
   end;
 
   SplitterTop := AIni.ReadInteger(ASection, 'VertSplitterTop.' + AIndentSuffix, pnlVertSplitter.Top);
@@ -1522,6 +1522,8 @@ begin
     Indent := 'ColWidth_' + IntToStr(i) + '.' + AIndentSuffix;
     AIni.WriteInteger(ASection, Indent, vstActions.Header.Columns.Items[i].Width);
   end;
+
+  AIni.WriteInteger(ASection, 'ActionsEditorTabPosition.' + AIndentSuffix, Ord(frClickerActions.PageControlActionExecution.TabPosition));
 
   AIni.WriteInteger(ASection, 'VertSplitterTop.' + AIndentSuffix, pnlVertSplitter.Top);
   AIni.WriteInteger(ASection, 'HorizSplitterLeft.' + AIndentSuffix, frClickerActions.pnlHorizSplitter.Left);
@@ -1918,6 +1920,18 @@ end;
 procedure TfrClickerActionsArr.HandleOnAddToLog(s: string);
 begin
   AddToLog(s);
+end;
+
+
+procedure TfrClickerActionsArr.HandleOnSetVar(AVarName, AVarValue: string);
+begin
+  SetActionVarValue(AVarName, AVarValue);
+end;
+
+
+procedure TfrClickerActionsArr.HandleOnShowAutoCompleteWindow(AEdit: TEdit);
+begin
+  ShowAutoCompleteWindow(AEdit);
 end;
 
 
@@ -5471,161 +5485,6 @@ begin
 end;
 
 
-procedure TfrClickerActionsArr.edtConsoleCommandExit(Sender: TObject);
-begin
-  if Assigned(frmAutoComplete) and not frmAutoComplete.Focused and frmAutoComplete.Visible then
-    CloseAutoComplete;
-end;
-
-
-procedure TfrClickerActionsArr.DisplayDefaultEvalConsoleEditBox;
-begin
-  AddToLog('>> ' + edtConsoleCommand.Text);
-  AddToLog('<- ' + EvaluateReplacements(edtConsoleCommand.Text));
-end;
-
-
-function CharCount(AChar: Char; s: string; AMaxIndex: Integer): Integer;
-var
-  i: Integer;
-begin
-  Result := 0;
-  for i := 1 to Min(AMaxIndex, Length(s)) do
-    if s[i] = AChar then
-      Inc(Result);
-end;
-
-
-function TfrClickerActionsArr.EvaluateAssignmentExpression: Boolean;
-var
-  PosEq, PosParanth, PosCrop: Integer;
-  PosVar, PosEndVar: Integer;
-  s: string;
-  LeftSide, RightSide, Value: string;
-begin
-  Result := False;
-
-  s := edtConsoleCommand.Text;
-  PosEq := Pos('=', s);
-  PosParanth := Pos('(', s);
-  PosCrop := PosEq;
-
-  if PosParanth < PosEq then
-  begin
-    if CharCount('$', s, PosParanth) = 1 then     //e.g.:  $func(value=337770)$
-      PosCrop := PosParanth;
-  end
-  else
-    if PosParanth > PosEq then
-      if CharCount('$', s, PosEq) > 1 then        //e.g.   $var$=$func(abc)$
-        PosCrop := PosEq;
-
-  LeftSide := Trim(Copy(s, 1, PosCrop - 1));
-
-  PosVar := Pos('$', LeftSide);
-  //PosEndVar := Pos('$', LeftSide, PosVar + 1);
-  PosEndVar := RevPos('$', LeftSide, PosVar + 1);
-
-  if (PosVar = 0) or (PosEndVar = 0) then
-  begin
-    DisplayDefaultEvalConsoleEditBox;
-    Exit;
-  end;
-
-  RightSide := TrimLeft(Copy(s, PosCrop + 1, MaxInt));
-
-  if (Length(RightSide) > 2) and (RightSide[1] = '"') and (RightSide[Length(RightSide)] = '"') then
-    Value := Copy(RightSide, 2, Length(RightSide) - 2)
-  else
-    Value := EvaluateReplacements(RightSide);
-
-  SetActionVarValue(LeftSide, Value);
-
-  AddToLog('>> ' + edtConsoleCommand.Text);
-  AddToLog('<- ' + Value);
-
-  Result := True;
-end;
-
-
-procedure TfrClickerActionsArr.edtConsoleCommandKeyDown(Sender: TObject;
-  var Key: Word; Shift: TShiftState);
-var
-  tp: TPoint;
-begin
-  case Key of
-    VK_RETURN:
-    begin
-      if Trim(edtConsoleCommand.Text) = '' then
-        Exit;
-
-      if not ((Pos('=', edtConsoleCommand.Text) > 0) and EvaluateAssignmentExpression) then
-        DisplayDefaultEvalConsoleEditBox;
-
-      FCmdConsoleHistory.Add(edtConsoleCommand.Text);
-      edtConsoleCommand.Text := '';
-      edtConsoleCommand.Tag := FCmdConsoleHistory.Count; //without -1, to allow decrementing when pressing VK_UP;
-    end;
-
-    VK_UP:
-    begin
-      if AutoCompleteVisible then
-      begin
-        frmAutoComplete.SetFocus;
-        Exit;
-      end;
-
-      edtConsoleCommand.Tag := edtConsoleCommand.Tag - 1;
-
-      if edtConsoleCommand.Tag < 0 then
-        edtConsoleCommand.Tag := 0;
-
-      if edtConsoleCommand.Tag > FCmdConsoleHistory.Count - 1 then
-        edtConsoleCommand.Text := ''
-      else
-        edtConsoleCommand.Text := FCmdConsoleHistory.Strings[edtConsoleCommand.Tag];
-
-      tp := edtConsoleCommand.CaretPos;
-      tp.X := edtConsoleCommand.ClientRect.Right;
-      edtConsoleCommand.CaretPos := tp;
-
-      Key := 0;
-    end;
-
-    VK_DOWN:
-    begin
-      if AutoCompleteVisible then
-      begin
-        frmAutoComplete.SetFocus;
-        Exit;
-      end;
-
-      edtConsoleCommand.Tag := edtConsoleCommand.Tag + 1;
-      if edtConsoleCommand.Tag > FCmdConsoleHistory.Count then  //without - 1
-        edtConsoleCommand.Tag := FCmdConsoleHistory.Count;      //this will make Tag, at most equal to FCmdConsoleHistory.Count (outside of list), to clear the editbox
-
-      if edtConsoleCommand.Tag > FCmdConsoleHistory.Count - 1 then
-        edtConsoleCommand.Text := ''
-      else
-        edtConsoleCommand.Text := FCmdConsoleHistory.Strings[edtConsoleCommand.Tag];
-
-      Key := 0;
-    end;
-  end; //case
-
-  if Key = VK_SPACE then
-    if ssCtrl in Shift then
-    begin
-      Key := 0;
-      Exit;
-    end;
-
-  if Key in [VK_RETURN, VK_ESCAPE] then
-    if AutoCompleteVisible then
-      CloseAutoComplete;
-end;
-
-
 procedure TfrClickerActionsArr.ShowAutoCompleteWindow(AEdit: TEdit);
 var
   TempVars: TStringList;
@@ -5648,21 +5507,6 @@ begin
 
   if AutoCompleteVisible then
     ShowAutoComplete(AEdit, nil, nil, FVarDescriptions, FFuncDescriptions);
-end;
-
-
-procedure TfrClickerActionsArr.edtConsoleCommandKeyUp(Sender: TObject;
-  var Key: Word; Shift: TShiftState);
-begin
-  if Key = VK_SPACE then
-    if ssCtrl in Shift then
-    begin
-      Key := 0;
-      ShowAutoCompleteWindow(edtConsoleCommand);
-    end;
-
-  if AutoCompleteVisible then
-    UpdateAutoComplete(edtConsoleCommand);
 end;
 
 
@@ -6729,14 +6573,17 @@ begin
 end;
 
 
+const
+  CHeightDiff = 130; //230
+
 procedure TfrClickerActionsArr.FrameResize(Sender: TObject);
 var
   NewTop: Integer;
 begin
   NewTop := pnlVertSplitter.Top;
 
-  if NewTop > Height - 230 then
-    NewTop := Height - 230;
+  if NewTop > Height - CHeightDiff then
+    NewTop := Height - CHeightDiff;
 
   ResizeFrameSectionsBySplitter(NewTop);
 end;
@@ -6747,12 +6594,13 @@ begin
   if NewTop < pnlActions.Constraints.MinHeight then
     NewTop := pnlActions.Constraints.MinHeight;
 
-  if NewTop > Height - 230 then
-    NewTop := Height - 230;
+  if NewTop > Height - CHeightDiff then
+    NewTop := Height - CHeightDiff;
 
   pnlVertSplitter.Top := NewTop;
 
   pnlActionsEditor.Top := pnlVertSplitter.Top + pnlVertSplitter.Height;
+  pnlActionsEditor.Height := Height - pnlActionsEditor.Top - 2;
   pnlActions.Height := pnlVertSplitter.Top;
 
   pnlVertSplitter.Width := Width - 3;   //these corrections are required, because the width anchors seem to be ignored right after setting top and height
@@ -8185,13 +8033,13 @@ begin
       FLoggingFIFO.PopAll(TempStrings);
 
       for i:= 0 to TempStrings.Count - 1 do
-        memLogErr.Lines.Add(TempStrings[i]);  //adding lines, one by one, instead of calling AddStrings, to leave the focus to the last line
+        frClickerActions.memLogErr.Lines.Add(TempStrings[i]);  //adding lines, one by one, instead of calling AddStrings, to leave the focus to the last line
     finally
       TempStrings.Free;
     end;
   except
     on E: Exception do
-      memLogErr.Lines.Add('Exception on adding to log: ' + E.Message);
+      frClickerActions.memLogErr.Lines.Add('Exception on adding to log: ' + E.Message);
   end;
 end;
 

@@ -2435,7 +2435,7 @@ begin
       FSearchAreaScrBox.OnMouseWheel := FSearchAreaScrBoxMouseWheel;
       FSearchAreaScrBox.ShowHint := False;
       FSearchAreaScrBox.ParentShowHint := False;
-      pnlSelectionLinesInfo.Anchors := [akRight, akTop];
+      //pnlSelectionLinesInfo.Anchors := [akRight, akTop];
     end
     else
       btnDisplaySearchAreaDebuggingImage.Caption := 'Re-display dbg img';

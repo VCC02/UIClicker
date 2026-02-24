@@ -684,6 +684,10 @@ begin
   frClickerActionsArrExperiment1.LoadSettings(AIni, 'ActionsWindow', 'Exp1');
   frClickerActionsArrExperiment2.LoadSettings(AIni, 'ActionsWindow', 'Exp2');
 
+  //call again after calling frClickerActionsArr<inst>.LoadSettings, which calls Show
+  PageControlMain.ActivePageIndex := AIni.ReadInteger('ActionsWindow', 'ActivePageIndex', PageControlMain.ActivePageIndex);
+  SetActiveFrame;
+
   colcmbTopLeftValid.Selected := FPreviewSelectionColors.TopLeft_Valid;
   colcmbBotRightValid.Selected := FPreviewSelectionColors.BotRight_Valid;
   colcmbTopLeftInvalid.Selected := FPreviewSelectionColors.TopLeft_Invalid;
@@ -1072,7 +1076,7 @@ begin
   frClickerActionsArrMain.Width := scrboxMain.Width - 4;
   frClickerActionsArrMain.Height := scrboxMain.Height;
   frClickerActionsArrMain.Constraints.MinWidth := frClickerActionsArrMain.Width;
-  frClickerActionsArrMain.Constraints.MinHeight := frClickerActionsArrMain.Height;
+  frClickerActionsArrMain.Constraints.MinHeight := 400;//frClickerActionsArrMain.Height;
   frClickerActionsArrMain.Anchors := [akLeft, akTop, akRight, akBottom];
   frClickerActionsArrMain.StackLevel := 0;
 
