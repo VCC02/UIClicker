@@ -499,7 +499,7 @@ object frClickerActions: TfrClickerActions
       ParentFont = False
       object memLogErr: TMemo
         Left = 0
-        Height = 248
+        Height = 226
         Top = 0
         Width = 1040
         Anchors = [akTop, akLeft, akRight, akBottom]
