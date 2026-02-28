@@ -1507,6 +1507,8 @@ begin
     frClickerActions.frClickerConditionEditor.ColumnWidths[i] := AIni.ReadInteger(ASection, Indent, 100);
   end;
 
+  frClickerActions.frClickerFindControl.EditorTabsVisibleByActionType := AIni.ReadBool(ASection, 'EditorTabsVisibleByActionType.' + AIndentSuffix, frClickerActions.frClickerFindControl.EditorTabsVisibleByActionType);
+
   MenuItem_IncludeActionCalls_Pascal.Checked := AIni.ReadBool(ASection, 'IncludeActionCalls_Pascal.' + AIndentSuffix, MenuItem_IncludeActionCalls_Pascal.Checked);
   MenuItem_IncludeActionCalls_Python.Checked := AIni.ReadBool(ASection, 'IncludeActionCalls_Python.' + AIndentSuffix, MenuItem_IncludeActionCalls_Python.Checked);
 end;
@@ -1537,6 +1539,8 @@ begin
     Indent := 'ActionCond.ColWidth_' + IntToStr(i) + '.' + AIndentSuffix;
     AIni.WriteInteger(ASection, Indent, frClickerActions.frClickerConditionEditor.ColumnWidths[i]);
   end;
+
+  AIni.WriteBool(ASection, 'EditorTabsVisibleByActionType.' + AIndentSuffix, frClickerActions.frClickerFindControl.EditorTabsVisibleByActionType);
 
   AIni.WriteBool(ASection, 'IncludeActionCalls_Pascal.' + AIndentSuffix, MenuItem_IncludeActionCalls_Pascal.Checked);
   AIni.WriteBool(ASection, 'IncludeActionCalls_Python.' + AIndentSuffix, MenuItem_IncludeActionCalls_Python.Checked);
@@ -5141,6 +5145,9 @@ begin
       frClickerActions.CurrentlyEditingActionType := {%H-}TClkAction(CClkUnsetAction); //use an invalid value, to hide all editors
       StopGlowingUpdateButton;
       frClickerActions.UpdatePageControlActionExecutionIcons;
+
+      if frClickerActions.CurrentlyEditingActionType in [acFindControl, acFindSubControl] then
+        frClickerActions.frClickerFindControl.UpdateTabsVisibility;
     end;
 
     Exit;
@@ -5161,6 +5168,9 @@ begin
   UpdateControlsFromActionsArr(Node^.Index);
   StopGlowingUpdateButton;
   frClickerActions.UpdatePageControlActionExecutionIcons;
+
+  if frClickerActions.CurrentlyEditingActionType in [acFindControl, acFindSubControl] then
+    frClickerActions.frClickerFindControl.UpdateTabsVisibility;
 end;
 
 
@@ -6891,6 +6901,9 @@ begin
       LoadActionIntoEditorByIndex(n);  //calls UpdateControlsFromActionsArr(Node^.Index);  which copies from FClkActions[ActionIndex] to frClickerActions.EditingAction^
       StopGlowingUpdateButton;
     end;
+
+    if frClickerActions.CurrentlyEditingActionType in [acFindControl, acFindSubControl] then
+      frClickerActions.frClickerFindControl.UpdateTabsVisibility;
 
     Modified := True;
   end;

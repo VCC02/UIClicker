@@ -148,6 +148,7 @@ type
     N300001: TMenuItem;
     pmPathReplacements: TPopupMenu;
     pmTabPosition: TPopupMenu;
+    pmEmpty: TPopupMenu;
     scrboxDebugBmp: TScrollBox;
     TabSheetLog: TTabSheet;
     tmrOnChangeEditTemplateEditingActionType: TTimer;
@@ -1053,6 +1054,8 @@ end;
 
 
 constructor TfrClickerActions.Create(AOwner: TComponent);
+var
+  i: Integer;
 begin
   inherited Create(AOwner);
   CreateRemainingUIComponents;
@@ -1153,6 +1156,9 @@ begin
 
   PageControlActionExecution.ActivePageIndex := 0;
   PageControlActionExecution.Caption := 'ActionExecution';
+
+  for i := 0 to PageControlActionExecution.PageCount - 1 do
+    PageControlActionExecution.Pages[i].PopupMenu := pmEmpty;
 end;
 
 

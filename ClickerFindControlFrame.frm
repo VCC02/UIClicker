@@ -24,6 +24,7 @@ object frClickerFindControl: TfrClickerFindControl
     Images = imglstFindCriteria
     ParentFont = False
     ParentShowHint = False
+    PopupMenu = pmFindControlTabVisibility
     TabIndex = 0
     TabOrder = 0
     OnChange = PageControlMatchChange
@@ -974,5 +975,16 @@ object frClickerFindControl: TfrClickerFindControl
     OnTimer = tmrScanByMouseTimer
     Left = 784
     Top = 128
+  end
+  object pmFindControlTabVisibility: TPopupMenu
+    Left = 472
+    object MenuItem_TabsVisibleByActionType: TMenuItem
+      AutoCheck = True
+      Caption = 'Tabs are visible by action type'
+      OnClick = MenuItem_TabsVisibleByActionTypeClick
+    end
+  end
+  object pmEmpty: TPopupMenu
+    Left = 616
   end
 end

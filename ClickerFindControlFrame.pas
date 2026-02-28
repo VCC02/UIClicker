@@ -242,6 +242,7 @@ type
     lblSelectionLine_Top: TLabel;
     lstMatchBitmapFiles: TListBox;
     lstMatchPrimitiveFiles: TListBox;
+    MenuItem_TabsVisibleByActionType: TMenuItem;
     MenuItemSetToSystemMenu: TMenuItem;
     MenuItem_CopyTextAndClassFromWinInterpWindow: TMenuItem;
     MenuItem_CopyTextAndClassFromPreviewWindow: TMenuItem;
@@ -258,6 +259,8 @@ type
     pnlUseWholeScreen: TPanel;
     pnlDrag: TPanel;
     pmExtraCopyValueWindows: TPopupMenu;
+    pmFindControlTabVisibility: TPopupMenu;
+    pmEmpty: TPopupMenu;
     scrboxScreenshot: TScrollBox;
     spdbtnDisplaySearchAreaDbgImgMenu: TSpeedButton;
     spdbtnExtraCopyValueWindows: TSpeedButton;
@@ -283,6 +286,7 @@ type
     procedure chkShowBMPTextDbgImgClick(Sender: TObject);
     procedure chkShowGridOnBMPPreviewChange(Sender: TObject);
     procedure MenuItemSetToSystemMenuClick(Sender: TObject);
+    procedure MenuItem_TabsVisibleByActionTypeClick(Sender: TObject);
     procedure PageControlMatchChange(Sender: TObject);
     procedure pnlDragMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
@@ -356,6 +360,7 @@ type
 
     FGridDrawingOption: TDisplayGridLineOption;
     FPreviewSelectionColors: TSelectionColors;
+    FEditorTabsVisibleByActionType: Boolean;
 
     FBMPTextProfiles: TFontProfileArr;
     FInMemFS: TInMemFileSystem; //not created in this unit, set from outside as an existing instance
@@ -555,6 +560,7 @@ type
 
     procedure SetGridDrawingOption(Value: TDisplayGridLineOption);
     procedure SetPreviewSelectionColors(Value: TSelectionColors);
+    procedure SetEditorTabsVisibleByActionType(Value: Boolean);
 
     ///////OI
     function GetSearch_LeftLeft_Ref_FromInitRect(AInitialRectange: TRectString): Integer;    //Left
@@ -648,6 +654,7 @@ type
     procedure UpdateOnTextCroppingBottomMouseDown(var AMatchBMP: TClkFindControlMatchBitmapText; AEditBox: TVTEdit; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure UpdateOnTextCroppingBottomMouseMove(var AMatchBMP: TClkFindControlMatchBitmapText; AEditBox: TVTEdit; Shift: TShiftState; X, Y, AProfileIndex: Integer);
     procedure UpdateOnTextPropeties;
+    procedure UpdateTabsVisibility;
 
     procedure AddNewFontProfile(ANewProfile: TClkFindControlMatchBitmapText);
     procedure UpdateFontProfileName(AProfileIndex: Integer; ANewName: string);
@@ -667,6 +674,7 @@ type
     property frClickerPrimitives: TfrClickerPrimitives read FfrClickerPrimitives;
     property GridDrawingOption: TDisplayGridLineOption read FGridDrawingOption write SetGridDrawingOption;
     property PreviewSelectionColors: TSelectionColors read FPreviewSelectionColors write SetPreviewSelectionColors;
+    property EditorTabsVisibleByActionType: Boolean read FEditorTabsVisibleByActionType write SetEditorTabsVisibleByActionType;
 
     property OnTriggerOnControlsModified: TOnTriggerOnControlsModified read FOnTriggerOnControlsModified write FOnTriggerOnControlsModified;
     property OnEvaluateReplacements: TOnEvaluateReplacements read FOnEvaluateReplacements write FOnEvaluateReplacements;
@@ -1126,6 +1134,8 @@ end;
 
 
 constructor TfrClickerFindControl.Create(AOwner: TComponent);
+var
+  i: Integer;
 begin
   inherited Create(AOwner);
 
@@ -1184,6 +1194,7 @@ begin
   FPreviewSelectionColors.TopLeft_Invalid := clRed;
   FPreviewSelectionColors.BotRight_Invalid := clMaroon;
 
+  FEditorTabsVisibleByActionType := False;
   FManuallyStopSearching := False;
   FExpectedErrLevel_TopLeft.X := -1;
   FExpectedErrLevel_TopLeft.Y := -1;
@@ -1192,6 +1203,9 @@ begin
 
   PageControlMatch.ActivePageIndex := 0;
   PageControlMatch.Caption := 'Match';
+
+  for i := 0 to PageControlMatch.PageCount - 1 do
+    PageControlMatch.Pages[i].PopupMenu := pmEmpty;
 end;
 
 
@@ -2146,6 +2160,13 @@ begin
 end;
 
 
+procedure TfrClickerFindControl.MenuItem_TabsVisibleByActionTypeClick(
+  Sender: TObject);
+begin
+  EditorTabsVisibleByActionType := MenuItem_TabsVisibleByActionType.Checked;
+end;
+
+
 procedure TfrClickerFindControl.FSearchAreaScrBoxMouseWheel(
   Sender: TObject; Shift: TShiftState; WheelDelta: Integer; MousePos: TPoint;
   var Handled: Boolean);
@@ -2975,6 +2996,46 @@ begin
   begin
     FPreviewSelectionColors := Value;
     UpdateSearchAreaLabelColorsFromTheirPosition;
+  end;
+end;
+
+
+procedure TfrClickerFindControl.UpdateTabsVisibility;
+begin
+  if FEditorTabsVisibleByActionType then
+  begin
+    if not DoOnGetIsFindSubControl then
+    begin                                  //FindControl
+      TabSheetActionFindSubControlText.TabVisible := True;
+      TabSheetActionFindSubControlBMPText.TabVisible := False;
+      TabSheetActionFindSubControlSearchArea.TabVisible := True;
+      TabSheetActionFindSubControlPrimitives.TabVisible := False;
+    end
+    else
+    begin                                  //FindSubControl
+      TabSheetActionFindSubControlText.TabVisible := False;
+      TabSheetActionFindSubControlBMPText.TabVisible := True;
+      TabSheetActionFindSubControlSearchArea.TabVisible := True;
+      TabSheetActionFindSubControlPrimitives.TabVisible := True;
+    end;
+  end
+  else
+  begin
+    TabSheetActionFindSubControlText.TabVisible := True;
+    TabSheetActionFindSubControlBMPText.TabVisible := True;
+    TabSheetActionFindSubControlSearchArea.TabVisible := True;
+    TabSheetActionFindSubControlPrimitives.TabVisible := True;
+  end;
+end;
+
+
+procedure TfrClickerFindControl.SetEditorTabsVisibleByActionType(Value: Boolean);
+begin
+  //if FEditorTabsVisibleByActionType <> Value then  //leave this commented, to allow updating the visibility also on action type change
+  begin
+    FEditorTabsVisibleByActionType := Value;
+    MenuItem_TabsVisibleByActionType.Checked := FEditorTabsVisibleByActionType;
+    UpdateTabsVisibility;
   end;
 end;
 

@@ -905,4 +905,8 @@ object frClickerActions: TfrClickerActions
       OnClick = MenuItem_TabPosClick
     end
   end
+  object pmEmpty: TPopupMenu
+    Left = 576
+    Top = 151
+  end
 end
