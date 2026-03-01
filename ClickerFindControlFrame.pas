@@ -346,6 +346,9 @@ type
     FMouseDownSelPos: TPoint;
     FLatestMovedSelectionLine: Integer;
 
+    FOldFindControlActivePageIndex: Integer;
+    FOldFindSubControlActivePageIndex: Integer;
+
     FMouseDownGlobalPos: TPoint;
     FMouseDownComponentPos: TPoint;
     FDbgImgHold: Boolean;
@@ -1206,6 +1209,9 @@ begin
 
   for i := 0 to PageControlMatch.PageCount - 1 do
     PageControlMatch.Pages[i].PopupMenu := pmEmpty;
+
+  FOldFindControlActivePageIndex := -1;
+  FOldFindSubControlActivePageIndex := -1;
 end;
 
 
@@ -1951,6 +1957,11 @@ begin
       for i := 0 to Length(FBMPTextProfiles) - 1 do
         FBMPTextProfiles[i].PreviewTextOnImage(FSearchAreaSearchedTextDbgImg);
   end;
+
+  if not DoOnGetIsFindSubControl then
+    FOldFindControlActivePageIndex := PageControlMatch.ActivePageIndex
+  else
+    FOldFindSubControlActivePageIndex := PageControlMatch.ActivePageIndex;
 end;
 
 
@@ -3010,6 +3021,14 @@ begin
       TabSheetActionFindSubControlBMPText.TabVisible := False;
       TabSheetActionFindSubControlSearchArea.TabVisible := True;
       TabSheetActionFindSubControlPrimitives.TabVisible := False;
+
+      if FOldFindControlActivePageIndex = -1 then
+      begin
+        PageControlMatch.ActivePageIndex := 0; //Text
+        FOldFindControlActivePageIndex := 0;
+      end
+      else
+        PageControlMatch.ActivePageIndex := FOldFindControlActivePageIndex;
     end
     else
     begin                                  //FindSubControl
@@ -3017,6 +3036,14 @@ begin
       TabSheetActionFindSubControlBMPText.TabVisible := True;
       TabSheetActionFindSubControlSearchArea.TabVisible := True;
       TabSheetActionFindSubControlPrimitives.TabVisible := True;
+
+      if FOldFindSubControlActivePageIndex = -1 then
+      begin
+        PageControlMatch.ActivePageIndex := 2;    //Search Area
+        FOldFindSubControlActivePageIndex := 2;   //Search Area
+      end
+      else
+        PageControlMatch.ActivePageIndex := FOldFindSubControlActivePageIndex;
     end;
   end
   else
@@ -3452,9 +3479,15 @@ begin
   ColorStr := BB + GG + RR;
   VarName := ReverseEvaluateReplacements(ColorStr);
   if VarName = '' then
-    lblColorUnderCursor.Caption := 'Unknown color'
+  begin
+    lblColorUnderCursor.Caption := 'Unknown color';
+    lblColorUnderCursor.Hint := '"' + lblColorUnderCursor.Caption + '" means that none of the existing variables hold this value.';
+  end
   else
+  begin
     lblColorUnderCursor.Caption := VarName;
+    lblColorUnderCursor.Hint := '';
+  end;
 
   lblColorUnderCursorPreview.Color := APixelColor;
 end;
@@ -5485,41 +5518,4 @@ begin
 
   if (FSearchAreaSearchedTextDbgImg.Tag > -1) and
      (FSearchAreaSearchedTextDbgImg.Tag < Length(FBMPTextProfiles)) then
-    FBMPTextProfiles[FSearchAreaSearchedTextDbgImg.Tag].PreviewTextOnImage(FSearchAreaSearchedTextDbgImg);
-end;
-
-
-procedure TfrClickerFindControl.SetFirstSelectionPointFromRealCoordinates;   //while a preview component screnshot (taken with F6) is available, this sets the top-left selection point, based on the mouse cursor position over the real component
-var
-  tp: TPoint;
-  hwc: TCompRec;
-begin
-  btnDisplaySearchAreaDebuggingImage.Click;   //required, to avoid an AV
-  DoOnAddToLog('Setting the first selection point.');
-
-  GetCursorPos(tp);
-  hwc := GetWindowClassRec(tp);
-
-  FSelectingXStart := hwc.MouseXOffset;
-  FSelectingYStart := hwc.MouseYOffset;
-  SelectDbgImgByRectangle(FSelectingXStart + 15, FSelectingYStart + 15);
-  DoOnTriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerFindControl.SetSecondSelectionPointFromRealCoordinates;
-var
-  tp: TPoint;
-  hwc: TCompRec;
-begin
-  btnDisplaySearchAreaDebuggingImage.Click;   //required, to avoid an AV
-  DoOnAddToLog('Setting the second selection point.');
-
-  GetCursorPos(tp);
-  hwc := GetWindowClassRec(tp);
-
-  SelectDbgImgByRectangle(hwc.MouseXOffset, hwc.MouseYOffset);
-  DoOnTriggerOnControlsModified;
-end;
-
-end.
+    FBMPTextProfiles[FSearchAreaSearchedTextDbgImg.Tag].Preview

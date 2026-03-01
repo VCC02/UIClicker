@@ -589,6 +589,8 @@ object frClickerFindControl: TfrClickerFindControl
         Top = 28
         Width = 69
         Caption = 'UnknownColor'
+        ParentShowHint = False
+        ShowHint = True
       end
       object lblColorUnderCursorPreview: TLabel
         Left = 246
