@@ -5518,4 +5518,41 @@ begin
 
   if (FSearchAreaSearchedTextDbgImg.Tag > -1) and
      (FSearchAreaSearchedTextDbgImg.Tag < Length(FBMPTextProfiles)) then
-    FBMPTextProfiles[FSearchAreaSearchedTextDbgImg.Tag].Preview
+    FBMPTextProfiles[FSearchAreaSearchedTextDbgImg.Tag].PreviewTextOnImage(FSearchAreaSearchedTextDbgImg);
+end;
+
+
+procedure TfrClickerFindControl.SetFirstSelectionPointFromRealCoordinates;   //while a preview component screnshot (taken with F6) is available, this sets the top-left selection point, based on the mouse cursor position over the real component
+var
+  tp: TPoint;
+  hwc: TCompRec;
+begin
+  btnDisplaySearchAreaDebuggingImage.Click;   //required, to avoid an AV
+  DoOnAddToLog('Setting the first selection point.');
+
+  GetCursorPos(tp);
+  hwc := GetWindowClassRec(tp);
+
+  FSelectingXStart := hwc.MouseXOffset;
+  FSelectingYStart := hwc.MouseYOffset;
+  SelectDbgImgByRectangle(FSelectingXStart + 15, FSelectingYStart + 15);
+  DoOnTriggerOnControlsModified;
+end;
+
+
+procedure TfrClickerFindControl.SetSecondSelectionPointFromRealCoordinates;
+var
+  tp: TPoint;
+  hwc: TCompRec;
+begin
+  btnDisplaySearchAreaDebuggingImage.Click;   //required, to avoid an AV
+  DoOnAddToLog('Setting the second selection point.');
+
+  GetCursorPos(tp);
+  hwc := GetWindowClassRec(tp);
+
+  SelectDbgImgByRectangle(hwc.MouseXOffset, hwc.MouseYOffset);
+  DoOnTriggerOnControlsModified;
+end;
+
+end.
