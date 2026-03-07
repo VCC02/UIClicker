@@ -385,6 +385,10 @@ type
     FOnLoadBitmap: TOnLoadBitmap;
     FOnFileExists: TOnFileExists;
 
+    FOnSaveDialogExecute: TOnOpenDialogExecute;
+    FOnGetSaveDialogFileName: TOnGetOpenDialogFileName;
+    FOnSetSaveDialogFileName: TOnSetOpenDialogFileName;
+
     FOnSetPictureOpenDialogInitialDir: TOnSetPictureOpenDialogInitialDir;
     FOnPictureOpenDialogExecute: TOnPictureOpenDialogExecute;
     FOnGetPictureOpenDialogFileName: TOnGetPictureOpenDialogFileName;
@@ -464,6 +468,8 @@ type
     procedure MenuItemCopySearchAreaSearchBmpImgToClipboardClick(Sender: TObject);
     procedure MenuItemCopySearchAreaSearchTextImgToClipboardClick(Sender: TObject);
 
+    procedure GetSelectedSearchBitmapFromBk(ADestBmp: TBitmap);
+    function SaveSearchAreaSelectedAreaFromBkToDisk: string;
     procedure MenuItemCopySearchAreaAllToClipboardClick(Sender: TObject);
     procedure MenuItemCopySearchAreaSelectedAreaFromBkToClipboardClick(Sender: TObject);
     procedure MenuItemCopyColorUnderMouseCursorToClipboardClick(Sender: TObject);
@@ -507,6 +513,10 @@ type
 
     function DoOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     function DoOnFileExists(const AFileName: string): Boolean;
+
+    function DoOnSaveDialogExecute(AFilter: string): Boolean;
+    function DoOnGetSaveDialogFileName: string;
+    procedure DoOnSetSaveDialogFileName(AFileName: string);
 
     procedure DoOnSetPictureOpenDialogInitialDir(AInitialDir: string);
     function DoOnPictureOpenDialogExecute: Boolean;
@@ -688,6 +698,11 @@ type
 
     property OnLoadBitmap: TOnLoadBitmap write FOnLoadBitmap;
     property OnFileExists: TOnFileExists write FOnFileExists;
+
+    property OnSaveDialogExecute: TOnOpenDialogExecute write FOnSaveDialogExecute;
+    property OnGetSaveDialogFileName: TOnGetOpenDialogFileName write FOnGetSaveDialogFileName;
+    property OnSetSaveDialogFileName: TOnSetOpenDialogFileName write FOnSetSaveDialogFileName;
+
     property OnSetPictureOpenDialogInitialDir: TOnSetPictureOpenDialogInitialDir write FOnSetPictureOpenDialogInitialDir;
     property OnPictureOpenDialogExecute: TOnPictureOpenDialogExecute write FOnPictureOpenDialogExecute;
     property OnGetPictureOpenDialogFileName: TOnGetPictureOpenDialogFileName write FOnGetPictureOpenDialogFileName;
@@ -1151,6 +1166,11 @@ begin
 
   FOnLoadBitmap := nil;
   FOnFileExists := nil;
+
+  FOnSaveDialogExecute := nil;
+  FOnGetSaveDialogFileName := nil;
+  FOnSetSaveDialogFileName := nil;
+
   FOnSetPictureOpenDialogInitialDir := nil;
   FOnPictureOpenDialogExecute := nil;
   FOnGetPictureOpenDialogFileName := nil;
@@ -1271,6 +1291,33 @@ begin
     raise Exception.Create('OnFileExists is not assigned.')
   else
     Result := FOnFileExists(AFileName);
+end;
+
+
+function TfrClickerFindControl.DoOnSaveDialogExecute(AFilter: string): Boolean;
+begin
+  if not Assigned(FOnSaveDialogExecute) then
+    raise Exception.Create('OnSaveDialogExecute is not assigned.')
+  else
+    Result := FOnSaveDialogExecute(AFilter);
+end;
+
+
+function TfrClickerFindControl.DoOnGetSaveDialogFileName: string;
+begin
+  if not Assigned(FOnGetSaveDialogFileName) then
+    raise Exception.Create('OnGetSaveDialogFileName is not assigned.')
+  else
+    Result := FOnGetSaveDialogFileName;
+end;
+
+
+procedure TfrClickerFindControl.DoOnSetSaveDialogFileName(AFileName: string);
+begin
+  if not Assigned(FOnSetSaveDialogFileName) then
+    raise Exception.Create('OnSetSaveDialogFileName is not assigned.')
+  else
+    FOnSetSaveDialogFileName(AFileName);
 end;
 
 
@@ -2644,7 +2691,6 @@ begin
       MenuItem.Bitmap := imgEraseImage.Picture.Bitmap;
       FSearchAreaMenu.Items.Add(MenuItem);
 
-
       MenuItem := TMenuItem.Create(FSearchAreaMenu);
       MenuItem.Caption := '-';
       FSearchAreaMenu.Items.Add(MenuItem);
@@ -3927,11 +3973,36 @@ begin
 end;
 
 
+procedure TfrClickerFindControl.GetSelectedSearchBitmapFromBk(ADestBmp: TBitmap);
+var
+  CropLeft, CropRight, CropTop, CropBottom: Integer;
+  SrcRect, DestRect: TRect;
+begin
+  GetOffsetArea(CropLeft, CropRight, CropTop, CropBottom);
+
+  ADestBmp.Width := CropRight - CropLeft;
+  ADestBmp.Height := CropBottom - CropTop;
+  ADestBmp.Canvas.Pen.Color := clWhite;
+  ADestBmp.Canvas.Brush.Color := ADestBmp.Canvas.Pen.Color;
+  ADestBmp.Canvas.Rectangle(0, 0, ADestBmp.Width, ADestBmp.Height);   // -1
+
+  SrcRect.Left := CropLeft;
+  SrcRect.Right := CropRight;
+  SrcRect.Top := CropTop;
+  SrcRect.Bottom := CropBottom;
+
+  DestRect.Left := 0;
+  DestRect.Top := 0;
+  DestRect.Width := ADestBmp.Width;
+  DestRect.Height := ADestBmp.Height;
+
+  ADestBmp.Canvas.CopyRect(DestRect, FSearchAreaControlDbgImg.Canvas, SrcRect);
+end;
+
+
 procedure TfrClickerFindControl.MenuItemCopySearchAreaSelectedAreaFromBkToClipboardClick(Sender: TObject);
 var
   TempBmp: TBitmap;
-  CropLeft, CropRight, CropTop, CropBottom: Integer;
-  SrcRect, DestRect: TRect;
 begin
   if FSearchAreaControlDbgImg = nil then
   begin
@@ -3939,27 +4010,9 @@ begin
     Exit;
   end;
 
-  GetOffsetArea(CropLeft, CropRight, CropTop, CropBottom);
-
   TempBmp := TBitmap.Create;
   try
-    TempBmp.Width := CropRight - CropLeft;
-    TempBmp.Height := CropBottom - CropTop;
-    TempBmp.Canvas.Pen.Color := clWhite;
-    TempBmp.Canvas.Brush.Color := TempBmp.Canvas.Pen.Color;
-    TempBmp.Canvas.Rectangle(0, 0, TempBmp.Width, TempBmp.Height);   // -1
-
-    SrcRect.Left := CropLeft;
-    SrcRect.Right := CropRight;
-    SrcRect.Top := CropTop;
-    SrcRect.Bottom := CropBottom;
-
-    DestRect.Left := 0;
-    DestRect.Top := 0;
-    DestRect.Width := TempBmp.Width;
-    DestRect.Height := TempBmp.Height;
-
-    TempBmp.Canvas.CopyRect(DestRect, FSearchAreaControlDbgImg.Canvas, SrcRect);
+    GetSelectedSearchBitmapFromBk(TempBmp);
 
     Clipboard.Assign(TempBmp);
   finally
@@ -3980,6 +4033,37 @@ begin
     Exit;
 
   WipeImage(FSearchAreaControlDbgImg, FSearchAreaControlDbgImg.Width, FSearchAreaControlDbgImg.Height);
+end;
+
+
+function TfrClickerFindControl.SaveSearchAreaSelectedAreaFromBkToDisk: string;
+var
+  TempBmp: TBitmap;
+  Fnm: string;
+begin
+  TempBmp := TBitmap.Create;
+  try
+    GetSelectedSearchBitmapFromBk(TempBmp);
+
+    if not DoOnSaveDialogExecute(CBitmapsDialogFilter) then
+      Exit;
+
+    Fnm := DoOnGetSaveDialogFileName;
+
+    if ExtractFileExt(Fnm) = '' then
+      Fnm := Fnm + '.bmp';
+
+    if DoOnFileExists(Fnm) then
+      if MessageBox(Handle, 'File already exists. Do you want to overwrite it?', PChar(Application.Title), MB_ICONWARNING + MB_YESNO) = IDNO then
+        Exit;
+
+    DoOnSetSaveDialogFileName(Fnm);  //Not needed if exiting above. It is useful if letting the user select a file in a loop
+    TempBmp.SaveToFile(Fnm);         //ToDo: this call has to be replaced with a DoOnSaveBitmapToDisk call
+
+    Result := Fnm;
+  finally
+    TempBmp.Free;
+  end;
 end;
 
 

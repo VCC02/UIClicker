@@ -567,6 +567,11 @@ type
     function HandleOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     procedure HandleOnGetListOfExternallyRenderedImages(AListOfExternallyRenderedImages: TStringList; Sender: TObject = nil);
     function HandleOnFileExists(const AFileName: string): Boolean;
+
+    function HandleOnSaveDialogExecute(AFilter: string): Boolean;
+    function HandleOnGetSaveDialogFileName: string;
+    procedure HandleOnSetSaveDialogFileName(AFileName: string);
+
     procedure HandleOnSetPictureOpenDialogInitialDir(AInitialDir: string);
     function HandleOnPictureOpenDialogExecute: Boolean;
     function HandleOnGetPictureOpenDialogFileName: string;
@@ -901,6 +906,9 @@ begin
   frClickerFindControl.OnLoadBitmap := HandleOnLoadBitmap;
   //frClickerFindControl.OnLoadRenderedBitmap := HandleOnLoadRenderedBitmap;
   frClickerFindControl.OnFileExists := HandleOnFileExists;
+  frClickerFindControl.OnSaveDialogExecute := HandleOnSaveDialogExecute;
+  frClickerFindControl.OnGetSaveDialogFileName := HandleOnGetSaveDialogFileName;
+  frClickerFindControl.OnSetSaveDialogFileName := HandleOnSetSaveDialogFileName;
   frClickerFindControl.OnSetPictureOpenDialogInitialDir := HandleOnSetPictureOpenDialogInitialDir;
   frClickerFindControl.OnPictureOpenDialogExecute := HandleOnPictureOpenDialogExecute;
   frClickerFindControl.OnGetPictureOpenDialogFileName := HandleOnGetPictureOpenDialogFileName;
@@ -3337,6 +3345,24 @@ end;
 function TfrClickerActions.HandleOnFileExists(const AFileName: string): Boolean;
 begin
   Result := DoOnFileExists(AFileName);
+end;
+
+
+function TfrClickerActions.HandleOnSaveDialogExecute(AFilter: string): Boolean;
+begin
+  Result := DoOnSaveDialogExecute(AFilter);
+end;
+
+
+function TfrClickerActions.HandleOnGetSaveDialogFileName: string;
+begin
+  Result := DoOnGetSaveDialogFileName;
+end;
+
+
+procedure TfrClickerActions.HandleOnSetSaveDialogFileName(AFileName: string);
+begin
+  DoOnSetSaveDialogFileName(AFileName);
 end;
 
 
