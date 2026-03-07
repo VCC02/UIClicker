@@ -637,6 +637,7 @@ const
   CDefaultFontProfileName = 'Profile [0]';
   CTemplateDialogFilter = 'Clicker Action Templates (*.clktmpl)|*.clktmpl|All Files (*.*)|*.*';
   CPrimitivesDialogFilter = 'Clicker Primitives (*.pmtv)|*.pmtv|All Files (*.*)|*.*';
+  CBitmapsDialogFilter = 'Bitmap files (*.bmp)|*.bmp|All Files (*.*)|*.*';
 
   CXClickPointReferenceStr: array[TXClickPointReference] of string = ('xrefLeft', 'xrefRight', 'xrefWidth', 'xrefVar', 'xrefAbsolute');
   CYClickPointReferenceStr: array[TYClickPointReference] of string = ('yrefTop', 'yrefBottom', 'yrefHeight', 'yrefVar', 'yrefAbsolute');
