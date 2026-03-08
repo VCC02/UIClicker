@@ -1,5 +1,5 @@
 [Actions]
-Count=7
+Count=8
 Version=2
 
 [Action_0]
@@ -85,6 +85,29 @@ NewPositionEnabled=0
 NewSizeEnabled=0
 
 [Action_4]
+ActionName=GoToActionPlayer
+Action=CallTemplate
+ActionTimeout=0
+ActionEnabled=1
+ActionCondition=
+BreakpointExists=0
+BreakpointEnabled=0
+BreakpointCondition=
+TemplateFileName=$SelfTemplateDir$\GoToActionPlayer.clktmpl
+ListOfCustomVarsAndValues=
+CallOnlyIfCondition=0
+CallOnlyIfConditionVarName=
+CallOnlyIfConditionVarValue=
+EvaluateBeforeCalling=0
+Loop.Enabled=0
+Loop.Counter=
+Loop.InitValue=
+Loop.EndValue=
+Loop.Direction=0
+Loop.BreakCondition=
+Loop.EvalBreakPosition=1
+
+[Action_5]
 ActionName=Find ActionExecution page control
 Action=FindControl
 ActionTimeout=3000
@@ -118,7 +141,7 @@ GetAllControls=0
 PrecisionTimeout=0
 EvaluateTextCount=-1
 
-[Action_5]
+[Action_6]
 ActionName=Find ActionExecution tab button
 Action=FindSubControl
 ActionTimeout=1000
@@ -310,7 +333,7 @@ ImageEffectSettings.UseImageEffects=0
 ImageEffectSettings.ImageEffect=0
 ImageEffectSettings.WhereToApply=0
 
-[Action_6]
+[Action_7]
 ActionName="Click"
 Action=Click
 ActionTimeout=0
