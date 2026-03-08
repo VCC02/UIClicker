@@ -112,7 +112,11 @@ begin
       ExceptionLog.Add('This file was saved as: ' + LogPath);
 
       try
-        ExceptionLog.Add('MainForm.Caption: ' + Application.MainForm.Caption);
+        if Application <> nil then
+          ExceptionLog.Add('MainForm.Caption: ' + Application.MainForm.Caption);
+
+        if FPollForMissingServerFilesThreadStillRunning then
+          ExceptionLog.Add('FPollForMissingServerFilesThreadStillRunning is True.');
       except
       end;
 
@@ -169,7 +173,11 @@ begin
       ExceptionLog.Add('This file was saved as: ' + LogPath);
 
       try
-        ExceptionLog.Add('MainForm.Caption: ' + Application.MainForm.Caption);
+        if Application <> nil then
+          ExceptionLog.Add('MainForm.Caption: ' + Application.MainForm.Caption);
+
+        if FPollForMissingServerFilesThreadStillRunning then
+          ExceptionLog.Add('FPollForMissingServerFilesThreadStillRunning is True.');
       except
       end;
 
@@ -299,6 +307,10 @@ begin
 
   frmUIClickerMainForm.AllFormsAreCreated := True; //allow loading settings
 
-  Application.Run;
+  try
+    Application.Run;
+  finally
+    Application := nil;
+  end;
 end.
 

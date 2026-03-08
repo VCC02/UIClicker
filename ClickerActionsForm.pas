@@ -457,6 +457,8 @@ type
 
 var
   frmClickerActions: TfrmClickerActions;
+  FPollForMissingServerFilesThreadStillRunning: Boolean;
+
 
 implementation
 
@@ -1341,7 +1343,9 @@ begin
 
       tk := GetTickCount64;
       repeat
-        Application.ProcessMessages;
+        if Application <> nil then    //it is still possible to have a race condition
+          Application.ProcessMessages;
+
         Sleep(1);
       until (GetTickCount64 - tk > 2000) or not IdHTTPServer1.Active;
     end;
@@ -1357,25 +1361,19 @@ begin
         if FPollForMissingServerFiles.Done then    //client mode
           Break;
 
-        Application.ProcessMessages;
+        if Application <> nil then    //it is still possible to have a race condition
+          Application.ProcessMessages;
         Sleep(1);
-      until GetTickCount64 - tk > 2000;
 
-      FPollForMissingServerFiles.Free;
-    end;
-  except
-  end;
-
-  try   //wait 300ms more, for any other loop that might be using this flag
-    tk := GetTickCount64;
-    repeat
-      if FPollForMissingServerFiles <> nil then
-        if FPollForMissingServerFiles.Done then    //client mode
+        if GetTickCount64 - tk > 2000 then
+        begin
+          FPollForMissingServerFilesThreadStillRunning := True; //used to display this info in case of an AV
           Break;
+        end;
+      until False;
 
-      Application.ProcessMessages;
-      Sleep(1);
-    until GetTickCount64 - tk > 300;
+      FreeAndNil(FPollForMissingServerFiles);
+    end;
   except
   end;
 
@@ -1392,7 +1390,7 @@ begin
     frClickerActionsArrExperiment1.frClickerActions.frClickerConditionEditor.ClearActionConditionPreview;
     frClickerActionsArrExperiment2.frClickerActions.frClickerConditionEditor.ClearActionConditionPreview;
   finally
-    FreeAndNil(frClickerActionsArrMain);
+    FreeAndNil(frClickerActionsArrMain);  //not sure why the other two frames are not destroyed here
   end;
 
   FreeAndNil(FBuiltInVariables);
@@ -5128,6 +5126,7 @@ end;
 
 initialization
   frmClickerActions := nil;
+  FPollForMissingServerFilesThreadStillRunning := False;
 
 end.
 
