@@ -36,6 +36,7 @@ type
   { TdmClickerIcons }
 
   TdmClickerIcons = class(TDataModule)
+    imgLstMisc: TImageList;
     imglstActionExecution: TImageList;
     imglstActionProperties: TImageList;
     imglstActions: TImageList;

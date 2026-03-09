@@ -6942,6 +6942,12 @@ begin
             if ImageIndex > dmClickerIcons.imglstFontColorProperties.Count - 1 then
               BuildFontColorIconsList;
           end;
+
+          if ItemIndexMod = CFindSubControl_MatchBitmapText_ProfileName_PropItemIndex then
+          begin
+            ImageList := dmClickerIcons.imgLstMisc;
+            ImageIndex := 0; //Pop-up menu icon
+          end;
         end;
     end;
 
@@ -9041,6 +9047,7 @@ begin
               CFindSubControl_MatchBitmapText_FontName_PropItemIndex:
                 AHint := 'Use the "..." button, to browse system fonts, or fonts mentioned in a variable with #4#5-separated list of fonts.' + #13#10 +
                          'The variable with list of fonts, can be set by the $GetListOfFonts()$ function.' + #13#10 +
+                         'If none of the existing variables contain #4#5-separated strings, then the ''Select font from "list of fonts" variables'' menu item is disabled.' + #13#10 +
                          'This is useful when getting a different list of fonts from another machine, where UIClicker is running in server mode.';
 
               CFindSubControl_MatchBitmapText_IgnoreBackgroundColor_PropItemIndex:
@@ -9609,10 +9616,11 @@ begin
               ItemIndexDiv := AItemIndex div CPropCount_FindSubControlMatchBitmapText;
 
               if ItemIndexMod = CFindSubControl_MatchBitmapText_ProfileName_PropItemIndex then
+              begin
+                FOIEditorMenu.Items.Clear;
+
                 if Length(AEditingAction^.FindSubControlOptions.MatchBitmapText) > 1 then  //add only if there are at least two profiles
                 begin
-                  FOIEditorMenu.Items.Clear;
-
                   AddMenuItemToPopupMenu(FOIEditorMenu, 'Move font profile up', MenuItem_MoveFontProfileUpInPropertyListClick,
                     ANodeLevel, ACategoryIndex, APropertyIndex, ItemIndexDiv, AEditingAction); //sending the profile index through item index arg
                   FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(dmClickerIcons.imglstMatchPrimitiveFilesMenu, 2);
@@ -9621,9 +9629,21 @@ begin
                     ANodeLevel, ACategoryIndex, APropertyIndex, ItemIndexDiv, AEditingAction); //sending the profile index through item index arg
                   FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(dmClickerIcons.imglstMatchPrimitiveFilesMenu, 3);
 
-                  GetCursorPos(tp);
-                  FOIEditorMenu.PopUp(tp.X, tp.Y);
+                  AddMenuItemToPopupMenu(FOIEditorMenu, '-', nil, ANodeLevel, ACategoryIndex, APropertyIndex, ItemIndexDiv, AEditingAction);
                 end;
+
+                AddMenuItemToPopupMenu(FOIEditorMenu, 'Remove font profile', MenuItem_RemoveFontProfileFromPropertyListClick,
+                ANodeLevel, ACategoryIndex, APropertyIndex, ItemIndexDiv, AEditingAction); //sending the profile index through item index arg
+                FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(dmClickerIcons.imglstMatchPrimitiveFilesMenu, 1);
+
+                AddMenuItemToPopupMenu(FOIEditorMenu, 'Duplicate font profile', MenuItem_DuplicateFontProfileClick,
+                ANodeLevel, ACategoryIndex, APropertyIndex, ItemIndexDiv, AEditingAction); //sending the profile index through item index arg
+                FOIEditorMenu.Items.Items[FOIEditorMenu.Items.Count - 1].Bitmap := CreateBitmapForMenu(dmClickerIcons.imglstMatchBitmapTextProperties, CFindSubControl_MatchBitmapText_ProfileName_PropItemIndex);
+
+
+                GetCursorPos(tp);
+                FOIEditorMenu.PopUp(tp.X, tp.Y);
+              end;  //font profile name
             end;
           end; //case
 
