@@ -81,6 +81,7 @@ type
     procedure RecordWithMouseSwipe(AInterprettedHandle: THandle; AStep: Integer = 1);
     procedure GetCurrentlyRecordedScreenShotImage(ABmp: TBitmap);
     procedure SaveImages(ABasePath: string);
+    procedure SetFocusToPageControl;
 
     property SelectedComponentText: string read GetSelectedComponentText;
     property SelectedComponentClassName: string read GetSelectedComponentClassName;
@@ -313,6 +314,11 @@ begin
   FWinInterpFrame.SaveImages(ABasePath);
 end;
 
+
+procedure TfrmClickerWinInterp.SetFocusToPageControl;
+begin
+  FWinInterpFrame.PageControlWinInterp.SetFocus;
+end;
 
 end.
 

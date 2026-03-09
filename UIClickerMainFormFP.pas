@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2023 VCC
+    Copyright (C) 2026 VCC
     creation date: Dec 2019
     initial release date: 13 Sep 2022
 
@@ -279,6 +279,24 @@ begin
       CloseAction := caNone;
       Exit;
     end;
+
+  if frmClickerActions.Visible then
+  begin
+    frmClickerActions.PageControlMain.SetFocus;   //This is required, in case a combo box is left focused. There is a painting bug, which causes an AV in LCL when closing with a focused combo box.
+    Application.ProcessMessages;
+  end;
+
+  if frmClickerWinInterp.Visible then
+  begin
+    frmClickerWinInterp.SetFocusToPageControl;   //This is required, in case a combo box is left focused. There is a painting bug, which causes an AV in LCL when closing with a focused combo box.
+    Application.ProcessMessages;
+  end;
+
+  if frmClickerTemplateCallTree.Visible then
+  begin
+    frmClickerTemplateCallTree.memTemplates.SetFocus;   //This is required, in case a combo box is left focused. There is a painting bug, which causes an AV in LCL when closing with a focused combo box.
+    Application.ProcessMessages;
+  end;
 
   GeneralClosingApp := True;  //Prevent waiting for response loops to keep going.
   SaveSettings;

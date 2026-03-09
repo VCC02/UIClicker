@@ -68,6 +68,7 @@ uses
 
 {$R *.res}
 
+
 type
   TExHandler = class
     procedure CustomExceptionHandler(Sender: TObject; E: Exception);
