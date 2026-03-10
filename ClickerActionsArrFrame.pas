@@ -265,8 +265,11 @@ type
     procedure tmrLoggingTimer(Sender: TObject);
     procedure tmrOtherShortcutsTimer(Sender: TObject);
     procedure tmrWaitingForFilesAvailabilityTimer(Sender: TObject);
+    procedure vstActionsMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
     procedure vstActionsMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
+    procedure vstActionsMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
     procedure vstActionsKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
     procedure vstActionsKeyUp(Sender: TObject; var Key: Word;
@@ -318,8 +321,6 @@ type
     procedure spdbtnStepOverClick(Sender: TObject);
     procedure spdbtnStepIntoClick(Sender: TObject);
     procedure tmrGlowUpdateButtonTimer(Sender: TObject);
-    procedure vstActionsMouseDown(Sender: TObject; Button: TMouseButton;
-      Shift: TShiftState; X, Y: Integer);
     procedure vstActionsDragAllowed(Sender: TBaseVirtualTree;
       Node: PVirtualNode; Column: TColumnIndex; var Allowed: Boolean);
     procedure vstActionsDragOver(Sender: TBaseVirtualTree;
@@ -1235,6 +1236,7 @@ begin
   vstActions.OnInitNode := vstActionsInitNode;
   vstActions.OnMouseDown := vstActionsMouseDown;
   vstActions.OnMouseUp := vstActionsMouseUp;
+  vstActions.OnMouseMove := vstActionsMouseMove;
   vstActions.OnKeyDown := vstActionsKeyDown;
   vstActions.OnKeyUp := vstActionsKeyUp;
   vstActions.OnDragAllowed := vstActionsDragAllowed;
@@ -5179,6 +5181,54 @@ procedure TfrClickerActionsArr.vstActionsMouseUp(Sender: TObject;
 begin
   if GetTickCount64 - FActionsHitTimeStamp < 500 then  //This check is required, when double-clicking a file, in an OpenDialog, over vstActions.
     HandleActionSelection;                             //The dialog closes at the second MouseDown event of the double-click action, while the second MouseUp triggers this (vstActionsMouseUp) handler.
+end;
+
+
+procedure TfrClickerActionsArr.vstActionsMouseMove(Sender: TObject; Shift: TShiftState; X, Y: Integer);
+//const
+//  CEnableDisableText: array[Boolean] of string = ('Disable', 'Enable');
+//var
+//  tp: TPoint;
+//  ColumnOffSet: Integer;
+//  MinImgX, MaxImgX: Integer;
+//  NodeLevel, Indent: Integer;
+//  CurrentAction: PClkActionRec;
+//  NodeData: PActionNodeRec;
+//  TempActionsHitInfo: THitInfo;
+begin
+  //vstActions.GetHitTestInfoAt(X, Y, True, TempActionsHitInfo);
+  //
+  //ColumnOffSet := vstActions.Header.Columns.Items[6].Width * Ord(coVisible in vstActions.Header.Columns.Items[6].Options);
+  //
+  //Indent := vstActions.Indent;
+  //MinImgX := 24 + ColumnOffSet + Indent;
+  //MaxImgX := 48 + ColumnOffSet + Indent;
+  //NodeLevel := 0;
+  //if TempActionsHitInfo.HitNode <> nil then
+  //begin
+  //  NodeLevel := vstActions.GetNodeLevel(TempActionsHitInfo.HitNode);
+  //  Inc(MinImgX, NodeLevel * Indent);
+  //  Inc(MaxImgX, NodeLevel * Indent);
+  //end;
+  //
+  //if (TempActionsHitInfo.HitColumn = 0) and (TempActionsHitInfo.HitNode <> nil) and {(X >= MinImgX) and} (X > MaxImgX) then
+  //begin
+  //  if TempActionsHitInfo.HitNode^.Parent = vstActions.RootNode then
+  //    CurrentAction := @FClkActions[TempActionsHitInfo.HitNode^.Index]
+  //  else
+  //  begin
+  //    NodeData := vstActions.GetNodeData(TempActionsHitInfo.HitNode);
+  //    if not Assigned(NodeData) then
+  //      Exit;
+  //
+  //    CurrentAction := @NodeData^.Action;
+  //  end;
+  //
+  //  if X > MaxImgX + vstActions.Canvas.TextWidth(CurrentAction^.ActionOptions.ActionName) then
+  //    vstActions.Cursor := crCross //This system cursor is ugly and hard to find over a selected/highlighted action. A custom one has to be made.
+  //  else
+  //    vstActions.Cursor := crDefault;
+  //end;
 end;
 
 

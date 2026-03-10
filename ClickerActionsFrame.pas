@@ -7013,6 +7013,24 @@ begin
         end; //case
       end; /// EditTemplate icons
 
+      if ALiveEditingActionType = acFindControl then
+        if APropertyIndex = CFindControl_UseWholeScreen_PropIndex then
+          if ((FEditingAction^.ActionOptions.Action = acFindControl) and FEditingAction^.FindControlOptions.UseWholeScreen) or
+             ((FEditingAction^.ActionOptions.Action = acEditTemplate) and FEditTemplateOptions_EditingAction^.FindControlOptions.UseWholeScreen) then
+          begin
+            ImageList := dmClickerIcons.imglstFindControlProperties;
+            ImageIndex := CFindControl_UseWholeScreen_PropIndex;
+          end;
+
+      if ALiveEditingActionType = acFindSubControl then
+        if APropertyIndex = CFindSubControl_UseWholeScreen_PropIndex then
+          if ((FEditingAction^.ActionOptions.Action = acFindSubControl) and FEditingAction^.FindSubControlOptions.UseWholeScreen) or
+             ((FEditingAction^.ActionOptions.Action = acEditTemplate) and FEditTemplateOptions_EditingAction^.FindSubControlOptions.UseWholeScreen) then
+          begin
+            ImageList := dmClickerIcons.imglstFindSubControlProperties;
+            ImageIndex := CFindSubControl_UseWholeScreen_PropIndex;
+          end;
+
       if ALiveEditingActionType = acCallTemplate then
         if APropertyIndex = CCallTemplate_CallTemplateLoop_PropIndex then
           if ((ACategoryIndex = CCategory_ActionSpecific) and FEditingAction^.CallTemplateOptions.CallTemplateLoop.Enabled) or

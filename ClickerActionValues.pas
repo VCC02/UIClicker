@@ -4219,7 +4219,7 @@ begin
   Result := '#18-separated list of PropertyName=PropertyValue items. This is a serialized version of the new/updated action.' + #13#10 +
             'When needed for editing, the #18 characters can be obtained from the "ListOfEditedProperties" property, under the "' + CCategory_Name_ActionSpecific + '" category.' + #13#10 +
             'When editing this property, the content can be copied from the "' + CCategory_Name_ActionSpecific + '" category, then edited using a text editor, then pasted under the "' + CCategory_Name_EditedAction + '" category.' + #13#10 +
-            'One of the items is "ListOfEnabledProperties", which contains a #4#5 separated list of property names. All the names, present in this list will control which propertie are going to be checked in the new/updated action.' + #13#10 +
+            'One of the items is "ListOfEnabledProperties", which contains a #4#5 separated list of property names. All the names, present in this list will control which properties are going to be checked in the new/updated action.' + #13#10 +
             'Please make sure you don''t set out of range values, because they are not validated and may lead to bad/unusable settings.' + #13#10#13#10 +
             'Example of creating/updating an EditTemplate action, with #18 replaced by #13#10 (i.e. "" replaced by Return):' + #13#10#13#10 +
             'Operation=3' + #13#10 +
