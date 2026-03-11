@@ -65,6 +65,7 @@ type
     procedure SetActionNames(AListOfActions: TStringList);
     procedure StartAutoHide;
     procedure ResetAutoHideTimer;
+    procedure ResetAutoHideTimeout;
 
     property Images: TImageList read FImages write SetImages;
     property OwnerPanel: TPanel write FOwnerPanel;
@@ -131,6 +132,12 @@ end;
 procedure TfrClickerActionsPalette.ResetAutoHideTimer;
 begin
   tmrHide.Enabled := False;
+  FTk := GetTickCount64;
+end;
+
+
+procedure TfrClickerActionsPalette.ResetAutoHideTimeout;
+begin
   FTk := GetTickCount64;
 end;
 

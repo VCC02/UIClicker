@@ -6837,7 +6837,9 @@ var
 begin
   FPalette.tmrHide.Tag := 0;
 
-  if FPalette.vstActionsPalette.Tag <> 1 then
+  FPalette.ResetAutoHideTimeout;
+
+  if FPalette.vstActionsPalette.Tag <> 1 then   //dragging
     Exit;
 
   Node := FPalette.vstActionsPalette.GetFirstSelected;
