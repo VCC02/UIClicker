@@ -57,6 +57,7 @@ type
     OnScreenshotByActionName: TOnScreenshotByActionName;
     OnUpdatePropertyIcons: TOnUpdatePropertyIcons;
     //OnUpdatePropertyDetails: TOnUpdatePropertyDetails;
+    OnFileExists: TOnFileExists;
 
     FIsDebugging, FShouldStopAtBreakPoint: Boolean;
     FStopAllActionsOnDemandFromParent, FPluginContinueAll: PBoolean;
@@ -72,6 +73,7 @@ type
     ResultBmp: TBitmap;
     AllActions: PClkActionsRecArr;
     AllVars: TStringList;
+    IsLoadedWithMemLoader: Boolean;
 
     Func: TActionPluginFunc;
     function DoOnLoadPluginFromInMemFS(APlugin: TMemoryStream; AFileName: string): Boolean;
@@ -80,6 +82,7 @@ type
     procedure DoSetVar(AVarName, AVarValue: string);
     procedure DoSetDebugPoint(ADebugPoint: string);
     function DoIsAtBreakPoint(ADebugPoint: string): Boolean;
+    function DoOnFileExists(const AFileName: string): Boolean;
   public
     Path: string;
     Loaded: Boolean;
@@ -98,6 +101,7 @@ type
                            AOnLoadRawPmtv: TOnLoadRawPmtv;
                            AOnSaveFileToExtRenderingInMemFS: TOnSaveFileToExtRenderingInMemFS;
                            AOnScreenshotByActionName: TOnScreenshotByActionName;
+                           AOnFileExists: TOnFileExists;
                            IsDebugging,
                            AShouldStopAtBreakPoint: Boolean;
                            AStopAllActionsOnDemandFromParent,
@@ -114,12 +118,16 @@ type
     function LoadToGetProperties(APath: string;
                                  AOnLoadPluginFromInMemFS: TOnLoadPluginFromInMemFS;
                                  AOnUpdatePropertyIcons: TOnUpdatePropertyIcons;
-                                 AOnAddToLog: TOnAddToLog): Boolean;
+                                 AOnAddToLog: TOnAddToLog;
+                                 AOnFileExists: TOnFileExists;
+                                 AOnLoadRawPmtv: TOnLoadRawPmtv): Boolean;
 
     function LoadToEditProperty(APath: string;
                                 AInMemFS: TInMemFileSystem;
                                 AOnLoadPluginFromInMemFS: TOnLoadPluginFromInMemFS;
-                                AOnAddToLog: TOnAddToLog): Boolean;
+                                AOnAddToLog: TOnAddToLog;
+                                AOnFileExists: TOnFileExists;
+                                AOnLoadRawPmtv: TOnLoadRawPmtv): Boolean;
 
     function Unload(AOnAddToLog: TOnAddToLog): Boolean;
 
@@ -739,6 +747,18 @@ begin
 end;
 
 
+function TActionPlugin.DoOnFileExists(const AFileName: string): Boolean;
+begin
+  if Assigned(OnFileExists) then
+    Result := OnFileExists(AFileName)
+  else
+  begin
+    Result := False;
+    DoAddToLog('OnFileExists is not assigned.');
+  end;
+end;
+
+
 procedure AddPluginHandleToList(APluginHandle: UInt64);
 var
   PluginHandleStr: string;
@@ -788,6 +808,7 @@ function TActionPlugin.LoadToExecute(APath: string;
                                      AOnLoadRawPmtv: TOnLoadRawPmtv;
                                      AOnSaveFileToExtRenderingInMemFS: TOnSaveFileToExtRenderingInMemFS;
                                      AOnScreenshotByActionName: TOnScreenshotByActionName;
+                                     AOnFileExists: TOnFileExists;
                                      IsDebugging,
                                      AShouldStopAtBreakPoint: Boolean;
                                      AStopAllActionsOnDemandFromParent,
@@ -826,6 +847,7 @@ begin
   OnLoadRawPmtv := AOnLoadRawPmtv;
   OnSaveFileToExtRenderingInMemFS := AOnSaveFileToExtRenderingInMemFS;
   OnScreenshotByActionName := AOnScreenshotByActionName;
+  OnFileExists := AOnFileExists;
 
   FIsDebugging := IsDebugging;
   FShouldStopAtBreakPoint := AShouldStopAtBreakPoint;
@@ -841,6 +863,7 @@ begin
 
   AllActions := AAllActions;
   AllVars := AAllVars;
+  IsLoadedWithMemLoader := False;
 
   DoAddToLog('Loading plugin for execute...');
 
@@ -876,7 +899,7 @@ begin
     end
     else
     begin
-      if not FileExists(Path) then
+      if not DoOnFileExists(Path) then
       begin
         Err := 'Plugin not found at: "' + Path + '".';
         Exit;
@@ -884,6 +907,39 @@ begin
 
       PluginHandle := Windows.LoadLibrary(PChar(Path)); //LoadLibraryA(Path);
       Loaded := PluginHandle > 0;
+
+      if not Loaded then
+      begin   //attempt to load with mem loader if the standard one doesn't work
+        MemLoader := TDynMemLib.Create;
+        PluginHandle := UInt64(MemLoader);
+
+        LibStream := TMemoryStream.Create;
+        try
+          try
+            OnLoadRawPmtv(LibStream, Path);
+
+            try
+              LibStream.Position := 0;
+              Loaded := MemLoader.MemLoadLibrary(LibStream.Memory);
+              IsLoadedWithMemLoader := True;
+            except
+              on E: Exception do
+              begin
+                Loaded := False;
+                OnAddToLog('Cannot load plugin from memory. ' + E.Message);
+              end;
+            end;
+          except
+            on E: Exception do
+            begin
+              OnAddToLog('Plugin is not loadable from: ' + Path + ' Ex: ' + E.Message);
+              Loaded := False;
+            end;
+          end;
+        finally
+          LibStream.Free;
+        end;
+      end;  //if not Loaded then
     end;
   {$ELSE}
     {$IFDEF Windows}
@@ -900,7 +956,7 @@ begin
     DoAddToLog('Plugin loaded, with handle ' + IntToStr(PluginHandle));
 
     {$IFDEF MemPlugins}
-      if IsMemPluginPath(Path) then
+      if IsMemPluginPath(Path) or IsLoadedWithMemLoader then
         Func.ExecutePluginFunc := MemLoader.MemGetProcAddress('ExecutePlugin')
       else
         Func.ExecutePluginFunc := GetProcedureAddress(PluginHandle, 'ExecutePlugin');
@@ -916,7 +972,7 @@ begin
     end;
 
     {$IFDEF MemPlugins}
-      if IsMemPluginPath(Path) then
+      if IsMemPluginPath(Path) or IsLoadedWithMemLoader then
         Func.GetAPIVersionFunc := MemLoader.MemGetProcAddress('GetAPIVersion')
       else
         Func.GetAPIVersionFunc := GetProcedureAddress(PluginHandle, 'GetAPIVersion');
@@ -966,7 +1022,9 @@ end;
 function TActionPlugin.LoadToGetProperties(APath: string;
                                            AOnLoadPluginFromInMemFS: TOnLoadPluginFromInMemFS;
                                            AOnUpdatePropertyIcons: TOnUpdatePropertyIcons;
-                                           AOnAddToLog: TOnAddToLog): Boolean;
+                                           AOnAddToLog: TOnAddToLog;
+                                           AOnFileExists: TOnFileExists;
+                                           AOnLoadRawPmtv: TOnLoadRawPmtv): Boolean;
 var
   PluginLocationInfo: string;
 
@@ -978,6 +1036,9 @@ begin
   Result := False;
   OnLoadPluginFromInMemFS := AOnLoadPluginFromInMemFS;
   OnAddToLog := AOnAddToLog;
+  OnFileExists := AOnFileExists;
+  OnLoadRawPmtv := AOnLoadRawPmtv;
+  IsLoadedWithMemLoader := False;
 
   if Loaded then
     Unload(AOnAddToLog);
@@ -1024,6 +1085,39 @@ begin
       PluginHandle := Windows.LoadLibrary(PChar(Path));  //LoadLibraryA
       Loaded := PluginHandle > 0;
       PluginLocationInfo := ' from disk';
+
+      if not Loaded then
+      begin   //attempt to load with mem loader if the standard one doesn't work
+        MemLoader := TDynMemLib.Create;
+        PluginHandle := UInt64(MemLoader);
+
+        LibStream := TMemoryStream.Create;
+        try
+          try
+            OnLoadRawPmtv(LibStream, Path);
+
+            try
+              LibStream.Position := 0;
+              Loaded := MemLoader.MemLoadLibrary(LibStream.Memory);
+              IsLoadedWithMemLoader := True;
+            except
+              on E: Exception do
+              begin
+                Loaded := False;
+                OnAddToLog('Cannot load plugin from memory. ' + E.Message);
+              end;
+            end;
+          except
+            on E: Exception do
+            begin
+              OnAddToLog('Plugin is not loadable from: ' + Path + ' Ex: ' + E.Message);
+              Loaded := False;
+            end;
+          end;
+        finally
+          LibStream.Free;
+        end;
+      end;  //if not Loaded then
     end;
   {$ELSE}
     {$IFDEF Windows}
@@ -1041,7 +1135,7 @@ begin
     DoAddToLog('Plugin loaded' + PluginLocationInfo + ', with handle ' + IntToStr(PluginHandle) + ' and path: ' + Path);
 
     {$IFDEF MemPlugins}
-      if IsMemPluginPath(APath) then
+      if IsMemPluginPath(APath) or IsLoadedWithMemLoader then
         Func.GetListOfPropertiesProc := MemLoader.MemGetProcAddress('GetListOfProperties')
       else
         Func.GetListOfPropertiesProc := GetProcedureAddress(PluginHandle, 'GetListOfProperties');
@@ -1057,7 +1151,7 @@ begin
     end;
 
     {$IFDEF MemPlugins}
-      if IsMemPluginPath(APath) then
+      if IsMemPluginPath(APath) or IsLoadedWithMemLoader then
         Func.GetAPIVersionFunc := MemLoader.MemGetProcAddress('GetAPIVersion')
       else
         Func.GetAPIVersionFunc := GetProcedureAddress(PluginHandle, 'GetAPIVersion');
@@ -1097,7 +1191,9 @@ end;
 function TActionPlugin.LoadToEditProperty(APath: string;
                                           AInMemFS: TInMemFileSystem;
                                           AOnLoadPluginFromInMemFS: TOnLoadPluginFromInMemFS;
-                                          AOnAddToLog: TOnAddToLog): Boolean;
+                                          AOnAddToLog: TOnAddToLog;
+                                          AOnFileExists: TOnFileExists;
+                                          AOnLoadRawPmtv: TOnLoadRawPmtv): Boolean;
 var
   PluginLocationInfo: string;
 
@@ -1109,6 +1205,9 @@ begin
   Result := False;
   OnLoadPluginFromInMemFS := AOnLoadPluginFromInMemFS;
   OnAddToLog := AOnAddToLog;
+  OnFileExists := AOnFileExists;
+  OnLoadRawPmtv := AOnLoadRawPmtv;
+  IsLoadedWithMemLoader := False;
 
   if Loaded then
     Unload(AOnAddToLog);
@@ -1156,6 +1255,39 @@ begin
       PluginHandle := Windows.LoadLibrary(PChar(Path));  //LoadLibraryA
       Loaded := PluginHandle > 0;
       PluginLocationInfo := ' from disk';
+
+      if not Loaded then
+      begin   //attempt to load with mem loader if the standard one doesn't work
+        MemLoader := TDynMemLib.Create;
+        PluginHandle := UInt64(MemLoader);
+
+        LibStream := TMemoryStream.Create;
+        try
+          try
+            OnLoadRawPmtv(LibStream, Path);
+
+            try
+              LibStream.Position := 0;
+              Loaded := MemLoader.MemLoadLibrary(LibStream.Memory);
+              IsLoadedWithMemLoader := True;
+            except
+              on E: Exception do
+              begin
+                Loaded := False;
+                OnAddToLog('Cannot load plugin from memory. ' + E.Message);
+              end;
+            end;
+          except
+            on E: Exception do
+            begin
+              OnAddToLog('Plugin is not loadable from: ' + Path + ' Ex: ' + E.Message);
+              Loaded := False;
+            end;
+          end;
+        finally
+          LibStream.Free;
+        end;
+      end;  //if not Loaded then
     end;
   {$ELSE}
     {$IFDEF Windows}
@@ -1173,7 +1305,7 @@ begin
     DoAddToLog('Plugin loaded' + PluginLocationInfo + ', with handle ' + IntToStr(PluginHandle) + ' and path: ' + Path);
 
     {$IFDEF MemPlugins}
-      if IsMemPluginPath(APath) then
+      if IsMemPluginPath(APath) or IsLoadedWithMemLoader then
         Func.EditPropertyFunc := MemLoader.MemGetProcAddress('EditProperty')
       else
         Func.EditPropertyFunc := GetProcedureAddress(PluginHandle, 'EditProperty');
@@ -1189,7 +1321,7 @@ begin
     end;
 
     {$IFDEF MemPlugins}
-      if IsMemPluginPath(APath) then
+      if IsMemPluginPath(APath) or IsLoadedWithMemLoader then
         Func.GetAPIVersionFunc := MemLoader.MemGetProcAddress('GetAPIVersion')
       else
         Func.GetAPIVersionFunc := GetProcedureAddress(PluginHandle, 'GetAPIVersion');
@@ -1255,14 +1387,30 @@ begin
       end
       else
       begin
-        //if not UnloadLibrary(PluginHandle) then
-        if not Windows.FreeLibrary(PluginHandle) then
+        if IsLoadedWithMemLoader then
         begin
-          Err := SysErrorMessage(GetLastOSError);
-          Exit;
+          MemLoader := TDynMemLib(PluginHandle);
+          try
+            MemLoader.MemFreeLibrary;
+          except
+            on E: Exception do
+            begin
+              Err := E.Message;
+              Exit;
+            end;
+          end;
         end
         else
-          DoAddToLog('Plugin unloaded...');
+        begin
+          //if not UnloadLibrary(PluginHandle) then
+          if not Windows.FreeLibrary(PluginHandle) then
+          begin
+            Err := SysErrorMessage(GetLastOSError);
+            Exit;
+          end
+          else
+            DoAddToLog('Plugin unloaded...');
+        end;
       end;
     {$ELSE}
       //if not UnloadLibrary(PluginHandle) then

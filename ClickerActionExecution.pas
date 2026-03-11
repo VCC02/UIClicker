@@ -4847,6 +4847,7 @@ begin
                                       FOnLoadRawPmtv,
                                       HandleOnSaveFileToExtRenderingInMemFS,
                                       HandleOnScreenshotByActionName,
+                                      FOnFileExists,
                                       IsDebugging,
                                       AShouldStopAtBreakPoint,
                                       FStopAllActionsOnDemand{FromParent},

@@ -404,6 +404,7 @@ type
     FOnLoadPrimitivesFile: TOnLoadPrimitivesFile;
     FOnSavePrimitivesFile: TOnSavePrimitivesFile;
     FOnFileExists: TOnFileExists;
+    FOnLoadRawPmtv: TOnLoadRawPmtv;
 
     FOnSetOpenDialogMultiSelect: TOnSetOpenDialogMultiSelect;
     FOnSetOpenDialogInitialDir: TOnSetOpenDialogInitialDir;
@@ -469,6 +470,7 @@ type
     procedure DoOnLoadPrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
     procedure DoOnSavePrimitivesFile(AFileName: string; var APrimitives: TPrimitiveRecArr; var AOrders: TCompositionOrderArr; var ASettings: TPrimitiveSettings);
     function DoOnFileExists(const AFileName: string): Boolean;
+    function DoOnLoadRawPmtv(APmtvFile: TMemoryStream; AFileName: string): Boolean;
 
     procedure DoOnSetOpenDialogMultiSelect;
     procedure DoOnSetOpenDialogInitialDir(AInitialDir: string);
@@ -567,6 +569,7 @@ type
     function HandleOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     procedure HandleOnGetListOfExternallyRenderedImages(AListOfExternallyRenderedImages: TStringList; Sender: TObject = nil);
     function HandleOnFileExists(const AFileName: string): Boolean;
+    function HandleOnLoadRawPmtv(APmtvFile: TMemoryStream; AFileName: string): Boolean;
 
     function HandleOnSaveDialogExecute(AFilter: string): Boolean;
     function HandleOnGetSaveDialogFileName: string;
@@ -794,6 +797,7 @@ type
     property OnLoadPrimitivesFile: TOnLoadPrimitivesFile write FOnLoadPrimitivesFile;
     property OnSavePrimitivesFile: TOnSavePrimitivesFile write FOnSavePrimitivesFile;
     property OnFileExists: TOnFileExists write FOnFileExists;
+    property OnLoadRawPmtv: TOnLoadRawPmtv write FOnLoadRawPmtv;
 
     property OnSetOpenDialogMultiSelect: TOnSetOpenDialogMultiSelect write FOnSetOpenDialogMultiSelect;
     property OnSetOpenDialogInitialDir: TOnSetOpenDialogInitialDir write FOnSetOpenDialogInitialDir;
@@ -1116,6 +1120,7 @@ begin
   FOnLoadPrimitivesFile := nil;
   FOnSavePrimitivesFile := nil;
   FOnFileExists := nil;
+  FOnLoadRawPmtv := nil;
 
   FOnSetOpenDialogMultiSelect := nil;
   FOnSetOpenDialogInitialDir := nil;
@@ -3348,6 +3353,13 @@ begin
 end;
 
 
+function TfrClickerActions.HandleOnLoadRawPmtv(APmtvFile: TMemoryStream; AFileName: string): Boolean;
+begin
+  Result := DoOnLoadRawPmtv(APmtvFile, AFileName);
+end;
+
+
+
 function TfrClickerActions.HandleOnSaveDialogExecute(AFilter: string): Boolean;
 begin
   Result := DoOnSaveDialogExecute(AFilter);
@@ -3843,6 +3855,15 @@ begin
     raise Exception.Create('OnFileExists is not assigned.')
   else
     Result := FOnFileExists(AFileName);
+end;
+
+
+function TfrClickerActions.DoOnLoadRawPmtv(APmtvFile: TMemoryStream; AFileName: string): Boolean;
+begin
+  if not Assigned(FOnLoadRawPmtv) then
+    raise Exception.Create('OnLoadRawPmtv is not assigned.')
+  else
+    Result := FOnLoadRawPmtv(APmtvFile, AFileName);
 end;
 
 
@@ -10141,7 +10162,7 @@ begin
 
         ActionPlugin.Loaded := False;
         try
-          if not ActionPlugin.LoadToEditProperty(ResolvedPluginPath, DoOnGetPluginInMemFS, {$IFDEF MemPlugins} DoOnLoadPluginFromInMemFS {$ELSE} nil {$ENDIF}, FOnAddToLog) then
+          if not ActionPlugin.LoadToEditProperty(ResolvedPluginPath, DoOnGetPluginInMemFS, {$IFDEF MemPlugins} DoOnLoadPluginFromInMemFS {$ELSE} nil {$ENDIF}, FOnAddToLog, DoOnFileExists, HandleOnLoadRawPmtv) then
             DoOnAddToLog('Error loading plugin for editing property.')
           else
           begin

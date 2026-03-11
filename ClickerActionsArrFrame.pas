@@ -4113,7 +4113,7 @@ begin
     dmClickerIcons.imglstPluginProperties.AddMasked(frClickerActions.imgPluginFileName.Picture.Bitmap, clFuchsia);
 
     ActionPlugin.Loaded := False;
-    LoadingResult := ActionPlugin.LoadToGetProperties(ResolvedPluginPath, DoOnLoadPluginFromInMemFS, DoOnUpdatePropertyIcons, AddToLog);
+    LoadingResult := ActionPlugin.LoadToGetProperties(ResolvedPluginPath, DoOnLoadPluginFromInMemFS, DoOnUpdatePropertyIcons, AddToLog, FOnFileExists, HandleOnLoadRawPmtv);
   except
     on E: Exception do
     begin
