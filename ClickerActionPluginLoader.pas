@@ -26,7 +26,7 @@ unit ClickerActionPluginLoader;
 
 {$H+}
 {$IFDEF FPC}
-  //{$MODE Delphi}
+  {$MODE Delphi}
 {$ENDIF}
 
 interface

@@ -4161,8 +4161,8 @@ procedure TfrmClickerActions.lbePathToTemplatesKeyUp(Sender: TObject;
 begin
   FullTemplatesDir := lbePathToTemplates.Text;
   if FFullTemplatesDir > '' then
-    if FFullTemplatesDir[Length(FFullTemplatesDir)] = '\' then
-      FFullTemplatesDir := Copy(FFullTemplatesDir, 1, Length(FFullTemplatesDir) - 1);
+    if FFullTemplatesDir[Length(FFullTemplatesDir)] = PathDelim then
+      FullTemplatesDir := Copy(FFullTemplatesDir, 1, Length(FFullTemplatesDir) - 1);
 end;
 
 

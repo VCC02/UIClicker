@@ -298,8 +298,8 @@ begin
   ExceptProc := @CatchUnhandledException;
   Application.OnException := @FExHandler.CustomExceptionHandler;
 
-  Application.CreateForm(TdmClickerIcons, dmClickerIcons);
   Application.CreateForm(TfrmUIClickerMainForm, frmUIClickerMainForm);
+  Application.CreateForm(TdmClickerIcons, dmClickerIcons);
   Application.CreateForm(TfrmClickerControlPreview, frmClickerControlPreview);
   Application.CreateForm(TfrmClickerActions, frmClickerActions);
   Application.CreateForm(TfrmClickerWinInterp, frmClickerWinInterp);
@@ -308,10 +308,7 @@ begin
 
   frmUIClickerMainForm.AllFormsAreCreated := True; //allow loading settings
 
-  try
-    Application.Run;
-  finally
-    Application := nil;
-  end;
+  Application.Run;
+  //Do not set "Application := nil;", because the OnDestroy handlers of all created forms and frames, will not be called.
 end.
 

@@ -2630,6 +2630,7 @@ begin
     FFullTemplatesDir := Value;
     frClickerActions.FullTemplatesDir := Value; //this is how the frame gets the path to templates
     AddToLog('Setting templates dir to "' + Value + '"');
+    SetActionVarValue('$TemplateDir$', Value);
   end;
 end;
 
