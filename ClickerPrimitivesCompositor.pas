@@ -748,7 +748,18 @@ begin
           Result := X;
       end;
 
-      CClkGradientFill: // = 7;
+      CClkRoundedRectPrimitiveCmdIdx: // = 7;
+      begin
+        X := StrToIntDef(DoOnEvaluateReplacementsFunc(APrimitives[i].ClkRoundedRect.X1), 10);
+        if Result < X then
+          Result := X;
+
+        X := StrToIntDef(DoOnEvaluateReplacementsFunc(APrimitives[i].ClkRoundedRect.X2), 30);
+        if Result < X then
+          Result := X;
+      end;
+
+      CClkGradientFill: // = 8;
       begin
         X := StrToIntDef(DoOnEvaluateReplacementsFunc(APrimitives[i].ClkGradientFill.X1), 10);
         if Result < X then
@@ -759,7 +770,7 @@ begin
           Result := X;
       end;
 
-      CClkText: // = 8;
+      CClkText: // = 9;
       begin
         X := StrToIntDef(DoOnEvaluateReplacementsFunc(APrimitives[i].ClkText.X), 10);
 
@@ -778,7 +789,7 @@ begin
           Result := X;
       end;
 
-      CClkDonutSector: // = 9
+      CClkDonutSector: // = 10
       begin
         X := StrToIntDef(DoOnEvaluateReplacementsFunc(APrimitives[i].ClkDonutSector.Cx), 10);
         W := StrToIntDef(DoOnEvaluateReplacementsFunc(APrimitives[i].ClkDonutSector.Radius1), 30);
@@ -893,7 +904,18 @@ begin
           Result := Y;
       end;
 
-      CClkGradientFill: // = 7;
+      CClkRoundedRectPrimitiveCmdIdx: // = 7;
+      begin
+        Y := StrToIntDef(DoOnEvaluateReplacementsFunc(APrimitives[i].ClkRoundedRect.Y1), 10);
+        if Result < Y then
+          Result := Y;
+
+        Y := StrToIntDef(DoOnEvaluateReplacementsFunc(APrimitives[i].ClkRoundedRect.Y2), 30);
+        if Result < Y then
+          Result := Y;
+      end;
+
+      CClkGradientFill: // = 8;
       begin
         Y := StrToIntDef(DoOnEvaluateReplacementsFunc(APrimitives[i].ClkGradientFill.Y1), 10);
         if Result < Y then
@@ -904,7 +926,7 @@ begin
           Result := Y;
       end;
 
-      CClkText: // = 8;
+      CClkText: // = 9;
       begin
         Y := StrToIntDef(DoOnEvaluateReplacementsFunc(APrimitives[i].ClkText.Y), 10);
 
@@ -923,7 +945,7 @@ begin
           Result := Y;
       end;
 
-      CClkDonutSector: // = 9
+      CClkDonutSector: // = 10
       begin
         Y := StrToIntDef(DoOnEvaluateReplacementsFunc(APrimitives[i].ClkDonutSector.Cy), 10);
         H := StrToIntDef(DoOnEvaluateReplacementsFunc(APrimitives[i].ClkDonutSector.Radius1), 30);
