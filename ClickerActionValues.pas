@@ -56,7 +56,7 @@ const
   CCategory_Name_EditedAction = 'Edited action';
 
   CCategories: array[0..CCategoryCount - 1] of string = (CCategory_Name_Common, CCategory_Name_ActionSpecific);
-  CPropCount_Common = 4;  //Action name, Action type, Action Timeout, StopOnError
+  CPropCount_Common = 5;  //Action name, Action type, Action Timeout, StopOnError
 
   //Properties (counts)
   CPropCount_Click = 26;
@@ -109,6 +109,7 @@ const
   CMain_Action_PropIndex = 1; //property index in Action structure
   CMain_ActionTimeout_PropIndex = 2; //property index in Action structure
   CMain_ActionCondition_PropIndex = 3; //property index in Action structure
+  CMain_ActionScreenshots_PropIndex = 4; //property index in Action structure
 
   CClick_XClickPointVar_PropIndex = 2;
   CClick_YClickPointVar_PropIndex = 3;
@@ -312,7 +313,8 @@ const
     (Name: 'ActionName'; EditorType: etText; DataType: CDTString),
     (Name: 'Action'; EditorType: etEnumCombo; DataType: CDTEnum),    //readonly, to avoid changing the OI tree structure
     (Name: 'ActionTimeout'; EditorType: etTextWithArrow; DataType: CDTInteger),
-    (Name: 'ActionCondition'; EditorType: etUserEditor; DataType: CDTString)
+    (Name: 'ActionCondition'; EditorType: etUserEditor; DataType: CDTString),
+    (Name: 'ActionScreenshots'; EditorType: etNone; DataType: CDTStructure)
   );
 
   //Action specific properties
@@ -796,6 +798,7 @@ const
     0,
     Ord(High(TClkAction)) + 1,
     0,
+    0,
     0
   );
 
@@ -1051,6 +1054,7 @@ const
   CActionEnumStrings: array[0..CPropCount_Common - 1] of PArrayOfString = (
     nil,
     @CClkActionStr,
+    nil,
     nil,
     nil
   );
@@ -1312,7 +1316,8 @@ const
     0,
     0, //TClkAction
     0,
-    0
+    0,
+    1
   );
 
   CClickIsExp: array[0..CPropCount_Click - 1] of Integer = (
@@ -1915,10 +1920,11 @@ begin
   end;
 
   case APropertyIndex of
-    0: Result := AAction^.ActionOptions.ActionName;
-    1: Result := CClkActionStr[AAction^.ActionOptions.Action];
-    2: Result := IntToStr(AAction^.ActionOptions.ActionTimeout);
-    3: Result := AAction^.ActionOptions.ActionCondition;
+    CMain_ActionName_PropIndex: Result := AAction^.ActionOptions.ActionName;
+    CMain_Action_PropIndex: Result := CClkActionStr[AAction^.ActionOptions.Action];
+    CMain_ActionTimeout_PropIndex: Result := IntToStr(AAction^.ActionOptions.ActionTimeout);
+    CMain_ActionCondition_PropIndex: Result := AAction^.ActionOptions.ActionCondition;
+    CMain_ActionScreenshots_PropIndex: Result := '';
     else
       Result := 'unknown';
   end;
@@ -2830,10 +2836,11 @@ end;
 procedure SetActionValueStr_Action(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
 begin
   case APropertyIndex of
-    0: AAction^.ActionOptions.ActionName := NewValue;
-    1: AAction^.ActionOptions.Action := ActionAsStringToTClkAction(NewValue);
-    2: AAction^.ActionOptions.ActionTimeout := StrToIntDef(NewValue, 1000);
-    3: AAction^.ActionOptions.ActionCondition := NewValue;
+    CMain_ActionName_PropIndex: AAction^.ActionOptions.ActionName := NewValue;
+    CMain_Action_PropIndex: AAction^.ActionOptions.Action := ActionAsStringToTClkAction(NewValue);
+    CMain_ActionTimeout_PropIndex: AAction^.ActionOptions.ActionTimeout := StrToIntDef(NewValue, 1000);
+    CMain_ActionCondition_PropIndex: AAction^.ActionOptions.ActionCondition := NewValue;
+    CMain_ActionScreenshots_PropIndex: ;
     else
       ;
   end;

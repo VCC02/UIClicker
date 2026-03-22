@@ -386,6 +386,13 @@ begin
   AActionOptions.ActionTimeout := Ini.ReadInteger(SectionIndex, 'ActionTimeout', 0);
   AActionOptions.ActionEnabled := Ini.ReadBool(SectionIndex, 'ActionEnabled', True);
   AActionOptions.ActionCondition := FastReplace_45ToReturn(Ini.ReadString(SectionIndex, 'ActionCondition', ''));
+
+  AActionOptions.ScreenshotOptions.ScreenshotEnabled := Ini.ReadBool(SectionIndex, 'ScreenshotOptions.ScreenshotEnabled', True);
+  AActionOptions.ScreenshotOptions.ScreenshotPath := Ini.ReadString(SectionIndex, 'ScreenshotOptions.ScreenshotPath', ''); //The default is '', because it is set by Arr frame to GenerateActionScreenshotPath, which requires the template name.
+  AActionOptions.ScreenshotOptions.OverwriteExistingFile := Ini.ReadBool(SectionIndex, 'ScreenshotOptions.OverwriteExistingFile', True);
+  AActionOptions.ScreenshotOptions.DisplaySearchArea := Ini.ReadBool(SectionIndex, 'ScreenshotOptions.DisplaySearchArea', True);
+  AActionOptions.ScreenshotOptions.DisplayAsPartOfParentControl := Ini.ReadBool(SectionIndex, 'ScreenshotOptions.DisplayAsPartOfParentControl', False);
+  AActionOptions.ScreenshotOptions.CropFromScreenshot := Ini.ReadBool(SectionIndex, 'ScreenshotOptions.CropFromScreenshot', False);
 end;
 
 
@@ -938,6 +945,13 @@ begin
   AStringList.Add('ActionTimeout=' + IntToStr(AActionOptions.ActionTimeout));
   AStringList.Add('ActionEnabled=' + IntToStr(Ord(AActionOptions.ActionEnabled)));
   AStringList.Add('ActionCondition=' + FastReplace_ReturnTo45(AActionOptions.ActionCondition));
+
+  AStringList.Add('ScreenshotOptions.ScreenshotEnabled=' + IntToStr(Ord(AActionOptions.ScreenshotOptions.ScreenshotEnabled)));
+  AStringList.Add('ScreenshotOptions.ScreenshotPath=' + AActionOptions.ScreenshotOptions.ScreenshotPath);
+  AStringList.Add('ScreenshotOptions.OverwriteExistingFile=' + IntToStr(Ord(AActionOptions.ScreenshotOptions.OverwriteExistingFile)));
+  AStringList.Add('ScreenshotOptions.DisplaySearchArea=' + IntToStr(Ord(AActionOptions.ScreenshotOptions.DisplaySearchArea)));
+  AStringList.Add('ScreenshotOptions.DisplayAsPartOfParentControl=' + IntToStr(Ord(AActionOptions.ScreenshotOptions.DisplayAsPartOfParentControl)));
+  AStringList.Add('ScreenshotOptions.CropFromScreenshot=' + IntToStr(Ord(AActionOptions.ScreenshotOptions.CropFromScreenshot)));
 end;
 
 

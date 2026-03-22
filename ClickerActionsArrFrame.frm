@@ -559,10 +559,10 @@ object frClickerActionsArr: TfrClickerActionsArr
       OnClick = spdbtnPaletteClick
     end
     object pnlPalette: TPanel
-      Left = 576
+      Left = 704
       Height = 15
       Top = 192
-      Width = 187
+      Width = 59
       Caption = 'pnlPalette'
       ParentBackground = False
       TabOrder = 5
@@ -836,6 +836,17 @@ object frClickerActionsArr: TfrClickerActionsArr
       }
       ShowHint = True
       Visible = False
+    end
+    object chkRecording: TCheckBox
+      Left = 627
+      Height = 19
+      Hint = 'Take screenshots of controls and subcontrols after successful action execution.'
+      Top = 189
+      Width = 88
+      Anchors = [akTop, akRight]
+      AutoSize = False
+      Caption = 'Recording'
+      TabOrder = 7
     end
   end
   object pnlVertSplitter: TPanel
@@ -1993,7 +2004,7 @@ object frClickerActionsArr: TfrClickerActionsArr
   end
   object imglstWaitingForFilesAvailability: TImageList
     Left = 592
-    Top = 192
+    Top = 360
     Bitmap = {
       4C7A0600000010000000100000003C0D00000000000078DA85987958946517C6
       FB27DB572BCB32DBCB4ACBD4165B6D51B3345BD4CC32B3D25C525B34A8B41471

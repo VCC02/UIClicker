@@ -70,6 +70,7 @@ type
   { TfrClickerActionsArr }
 
   TfrClickerActionsArr = class(TFrame)
+    chkRecording: TCheckBox;
     chkDisplayCalledTemplates: TCheckBox;
     chkEnableDebuggerKeys: TCheckBox;
     chkResetVarsOnPlayAll: TCheckBox;
@@ -567,6 +568,8 @@ type
     procedure HandleOnWaitInDebuggingMode(var ADebuggingAction: TClkActionRec; AActionAllowsSteppingInto: TAllowsSteppingInto);
     function HandleOnGetPluginInMemFS: TInMemFileSystem;
     function HandleOnGetListeningPort: Word;
+
+    function HandleOnIsRecordingScreenshots: Boolean;
 
     function GetInMemFS: TInMemFileSystem;
     procedure SetInMemFS(Value: TInMemFileSystem);
@@ -1358,6 +1361,7 @@ begin
   FActionExecution.OnWaitInDebuggingMode := HandleOnWaitInDebuggingMode;
   FActionExecution.OnGetPluginInMemFS := HandleOnGetPluginInMemFS;
   FActionExecution.OnGetListeningPort := HandleOnGetListeningPort;
+  FActionExecution.OnIsRecordingScreenshots := HandleOnIsRecordingScreenshots;
   FActionExecution.OnGetListOfInMemFSFiles := HandleOnGetListOfInMemFSFiles;
   FActionExecution.OnGetListOfExternallyRenderedImages := HandleOnGetListOfExternallyRenderedImages;
 
@@ -2414,6 +2418,12 @@ end;
 function TfrClickerActionsArr.HandleOnGetListeningPort: Word;
 begin
   Result := DoOnGetListeningPort;
+end;
+
+
+function TfrClickerActionsArr.HandleOnIsRecordingScreenshots: Boolean;
+begin
+  Result := chkRecording.Checked;
 end;
 
 
@@ -4164,6 +4174,18 @@ begin
 end;
 
 
+function GenerateActionScreenshotPath(ATemplateFileName: string; var AAction: TClkActionRec): string;  //If the action name is changed, this function returns the updated path.
+var
+  Fnm: string;
+begin
+  Fnm := ExtractFileNameNoExt(ATemplateFileName);
+  if Fnm = '' then
+    Fnm := 'NoTemplate';
+
+  Result := '$SelfTemplateDir$\Screenshots\' + Fnm + '\' + CClkActionStr[AAction.ActionOptions.Action] + '.png';
+end;
+
+
 procedure TfrClickerActionsArr.LoadTemplate_V1(Ini: TClkIniReadonlyFile);
 begin
   LoadTemplateToCustomActions_V1(Ini, FClkActions);
@@ -4171,9 +4193,15 @@ end;
 
 
 procedure TfrClickerActionsArr.LoadTemplate_V2(Ini: TClkIniReadonlyFile);
+var
+  i: Integer;
 begin
   LoadTemplateToCustomActions_V2(Ini, FClkActions, FTemplateNotes, FTemplateIconPath);
   SetPropertiesFromPlugins;
+
+  for i := 0 to Length(FClkActions) - 1 do
+    if FClkActions[i].ActionOptions.ScreenshotOptions.ScreenshotPath = '' then
+      FClkActions[i].ActionOptions.ScreenshotOptions.ScreenshotPath := GenerateActionScreenshotPath(FFileName, FClkActions[i]);
 end;
 
 
@@ -6882,6 +6910,13 @@ begin
   if AAction.ActionOptions.Action = acFindControl then
     AAction.ActionOptions.ActionTimeout := 3000;
 
+  AAction.ActionOptions.ScreenshotOptions.ScreenshotEnabled := True;
+  AAction.ActionOptions.ScreenshotOptions.ScreenshotPath := GenerateActionScreenshotPath(FFileName, AAction);
+  AAction.ActionOptions.ScreenshotOptions.OverwriteExistingFile := True;
+  AAction.ActionOptions.ScreenshotOptions.DisplaySearchArea := True;
+  AAction.ActionOptions.ScreenshotOptions.DisplayAsPartOfParentControl := False; //this includes result selection lines
+  AAction.ActionOptions.ScreenshotOptions.CropFromScreenshot := False;
+
   GetDefaultPropertyValues_Click(AAction.ClickOptions);
   GetDefaultPropertyValues_ExecApp(AAction.ExecAppOptions);
   GetDefaultPropertyValues_FindControl(AAction.FindControlOptions);
@@ -6973,6 +7008,7 @@ begin
   pnlPalette.Left := vstActions.Left + vstActions.Width + 2;
   pnlPalette.Top := 0;
   pnlPalette.Caption := '';
+  pnlPalette.Width := 187;
   pnlPalette.Height := spdbtnPalette.Top;
   pnlPalette.Anchors := [akRight, akTop];
 

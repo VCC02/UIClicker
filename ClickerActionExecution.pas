@@ -152,6 +152,7 @@ type
 
     FOnGetListOfInMemFSFiles: TOnGetListOfExternallyRenderedImages;
     FOnGetListOfExternallyRenderedImages: TOnGetListOfExternallyRenderedImages;
+    FOnIsRecordingScreenshots: TOnIsRecordingScreenshots;
 
     function GetActionVarValue(VarName: string): string;
     procedure SetActionVarValue(VarName, VarValue: string);
@@ -188,6 +189,10 @@ type
     procedure DisplayExtraErrorMessageAboutGPURun(var AGPUDbgBuffer: TIntArr; ADisplayExtraMsgAboutDbgVars: Boolean = False);
     procedure SetAllControl_Handles_FromResultedControlArr(var AResultedControlArr: TCompRecArr; AMatchSource, ADetailedMatchSource: string);
     procedure InitFindControlParams(var AActionOptions: TClkActionOptions; AOutsideTickCount: QWord; var AResultedControl: TCompRec; var AInitialTickCount, ATimeout: QWord; var AFindControlInputData: TFindControlInputData; out AStopAllActionsOnDemandAddr: Pointer);
+
+    procedure SaveActionScreenshotFile(AScreenshotContent: TBitmap; AScreenshotPath: string);
+    procedure SaveActionScreenshot(AScreenshotOptions: TScreenshotOptions);
+    procedure SaveFindSubControlResultAsActionScreenshot(AScreenshotOptions: TScreenshotOptions);
 
     procedure DoOnSetEditorEnabledState(AEnabled: Boolean);
     procedure DoOnSetEditorTimeoutProgressBarMax(AMaxValue: Integer);
@@ -229,6 +234,7 @@ type
 
     procedure DoOnGetListOfInMemFSFiles(AListOfInMemFSFiles: TStringList);
     procedure DoOnGetListOfExternallyRenderedImages(AListOfExternallyRenderedImages: TStringList);
+    function DoOnIsRecordingScreenshots: Boolean;
 
     function HandleOnLoadBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
     function HandleOnLoadRenderedBitmap(ABitmap: TBitmap; AFileName: string): Boolean;
@@ -347,6 +353,7 @@ type
 
     property OnGetListOfInMemFSFiles: TOnGetListOfExternallyRenderedImages write FOnGetListOfInMemFSFiles;
     property OnGetListOfExternallyRenderedImages: TOnGetListOfExternallyRenderedImages write FOnGetListOfExternallyRenderedImages;
+    property OnIsRecordingScreenshots: TOnIsRecordingScreenshots write FOnIsRecordingScreenshots;
   end;
 
 
@@ -442,6 +449,7 @@ begin
 
   FOnGetListOfInMemFSFiles := nil;
   FOnGetListOfExternallyRenderedImages := nil;
+  FOnIsRecordingScreenshots := nil;
 end;
 
 
@@ -1160,6 +1168,15 @@ begin
     raise Exception.Create('OnGetListOfExternallyRenderedImages not assigned.')
   else
     FOnGetListOfExternallyRenderedImages(AListOfExternallyRenderedImages, Self);
+end;
+
+
+function TActionExecution.DoOnIsRecordingScreenshots: Boolean;
+begin
+  if not Assigned(FOnIsRecordingScreenshots) then
+    raise Exception.Create('OnIsRecordingScreenshots not assigned.')
+  else
+    Result := FOnIsRecordingScreenshots();
 end;
 
 
@@ -3405,6 +3422,9 @@ begin
   until False;
 
   frClickerActions.prbTimeout.Position := 0;
+
+  if Result then
+    SaveActionScreenshot(AActionOptions.ScreenshotOptions);
 end;
 
 
@@ -3511,6 +3531,9 @@ begin
   until False;
 
   frClickerActions.prbTimeout.Position := 0;
+
+  if Result then
+    SaveFindSubControlResultAsActionScreenshot(AActionOptions.ScreenshotOptions);
 end;
 
 
@@ -6212,6 +6235,114 @@ begin
   finally
     LeaveCriticalSection(FBrowserRenderingText.CritSec);
   end;
+end;
+
+
+procedure TActionExecution.SaveActionScreenshotFile(AScreenshotContent: TBitmap; AScreenshotPath: string);
+var
+  ResolvedPath: string;
+  Png: TPNGImage;
+begin
+  ResolvedPath := DoOnResolveTemplatePath(AScreenshotPath);
+  if ResolvedPath > '' then
+    if ResolvedPath[1] = PathDelim then
+      ResolvedPath := ExtractFileDir(ParamStr(0)) + ResolvedPath; //create the Screenshots dir near the exe
+
+  CreateDirWithSubDirs(ExtractFileDir(ResolvedPath));
+
+  Png := TPNGImage.Create;
+  try
+    Png.SetSize(AScreenshotContent.Width, AScreenshotContent.Height);
+    Png.PixelFormat := pf24bit;
+    Png.Transparent := False;
+    Png.Canvas.Draw(0, 0, AScreenshotContent);
+    Png.SaveToFile(ResolvedPath);
+  finally
+    Png.Free;
+  end;
+end;
+
+
+procedure TActionExecution.SaveActionScreenshot(AScreenshotOptions: TScreenshotOptions);
+var
+  CurrentControlHandle: THandle;
+  ScreenshotContent, FullScreenBmp: TBitmap;
+  Comp: TCompRec;
+  CompWidth, CompHeight: Integer;
+  SrcRect, DestRect: TRect;
+begin
+  if not AScreenshotOptions.ScreenshotEnabled then
+  begin
+    AddToLog('No action screenshot.');
+    Exit;
+  end;
+
+  if not DoOnIsRecordingScreenshots then
+    Exit;
+
+  CurrentControlHandle := StrToIntDef(EvaluateReplacements('$Control_Handle$'), 0);
+  if CurrentControlHandle = 0 then
+  begin
+    AddToLog('$Control_Handle$ is 0 after action execution. No screenshot available.');
+    Exit;
+  end;
+
+  Comp := GetWindowClassRec(CurrentControlHandle);
+  CompWidth := Comp.ComponentRectangle.Right - Comp.ComponentRectangle.Left;
+  CompHeight := Comp.ComponentRectangle.Bottom - Comp.ComponentRectangle.Top;
+
+  if CompWidth > 16383 then
+    CompWidth := 16383;
+
+  if CompHeight > 16383 then
+    CompHeight := 16383;
+
+  ScreenshotContent := TBitmap.Create;
+  try
+    try
+      ScreenShot(Comp.Handle, ScreenshotContent, 0, 0, CompWidth, CompHeight);
+
+      if AScreenshotOptions.CropFromScreenshot then
+      begin
+        SrcRect := Comp.ComponentRectangle;
+
+        DestRect.Left := 0;
+        DestRect.Top := 0;
+        DestRect.Width := Comp.ComponentRectangle.Width;
+        DestRect.Height := Comp.ComponentRectangle.Height;
+
+        FullScreenBmp := TBitmap.Create;
+        try
+          ScreenShot(0, FullScreenBmp, 0, 0, Screen.Width, Screen.Height);
+          ScreenshotContent.Canvas.CopyRect(DestRect, FullScreenBmp.Canvas, SrcRect);
+        finally
+          FullScreenBmp.Free;
+        end;
+      end;
+
+      SaveActionScreenshotFile(ScreenshotContent, AScreenshotOptions.ScreenshotPath);
+    except
+      on E: Exception do
+        AddToLog('Ex on taking screenshot for recording: ' + E.Message);
+    end;
+  finally
+    ScreenshotContent.Free;
+  end;
+end;
+
+
+procedure TActionExecution.SaveFindSubControlResultAsActionScreenshot(AScreenshotOptions: TScreenshotOptions);
+begin
+  if not AScreenshotOptions.ScreenshotEnabled then
+  begin
+    AddToLog('No action screenshot.');
+    Exit;
+  end;
+
+  if not DoOnIsRecordingScreenshots then
+    Exit;
+
+  SaveActionScreenshotFile(frClickerActions.imgDebugBmp.Picture.Bitmap, AScreenshotOptions.ScreenshotPath);
 end;
 
 

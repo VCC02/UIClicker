@@ -57,6 +57,15 @@ type
   TLimitLabel = (llLeft, llTop, llRight, llBottom);
   TLimitLabels = set of TLimitLabel;
 
+  TScreenshotOptions = record
+    ScreenshotEnabled: Boolean;   //True by default when creating an action.
+    ScreenshotPath: string;
+    OverwriteExistingFile: Boolean;
+    DisplaySearchArea: Boolean;
+    DisplayAsPartOfParentControl: Boolean; //this includes result selection lines
+    CropFromScreenshot: Boolean; // same as FindSubControl CropFromScreenshot feature
+  end;
+
   TOnAddToLog = procedure(s: string) of object;
 
   TEvaluateReplacementsFunc = function(s: string; Recursive: Boolean = True; AEvalTextCount: Integer = -1): string of object;
@@ -123,6 +132,8 @@ type
   TOnLoadFileFromStream = procedure(AFileName: string; AStream: TMemoryStream) of object;
   TOnGetListeningPort = function: Word of object;
 
+  TOnIsRecordingScreenshots = function: Boolean of object; //Returns the state of the Recording checkbox.
+
 const
   CClkActionStr: array[TClkAction] of string = ('Click', 'ExecApp', 'FindControl', 'FindSubControl',
                                                 'SetControlText', 'CallTemplate', 'Sleep', 'SetVar', 'WindowOperations',
@@ -167,6 +178,7 @@ type
     ActionEnabled: Boolean;
     ActionCondition: string;
     ExecutionIndex: string; //Used while executing an action, to identify the action in a list of actions.  When no list is used, this field should stay ''.
+    ScreenshotOptions: TScreenshotOptions; //Screenshot of a control, subcontrol or action execution target (click, set control text, etc), taken after successfully executing the action (if recording).
   end;
 
   TXClickPointReference = (xrefLeft, xrefRight, xrefWidth, xrefVar, xrefAbsolute);    //see CXOffsetReference below if modified
