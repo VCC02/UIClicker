@@ -6399,13 +6399,12 @@ end;
 function TfrClickerActions.HandleOnOIGetListPropertyItemCount(ACategoryIndex, APropertyIndex: Integer): Integer;
 begin
   Result := 0;
-  if ACategoryIndex = CCategory_Common then
-    Exit; //no subproperties here
 
   try
     case ACategoryIndex of
       CCategory_Common:
-        ;
+        if APropertyIndex = CMain_ActionScreenshots_PropIndex then
+          Result := CPropCount_Common;
 
       CCategory_ActionSpecific:
         Result := OIGetListPropertyItemCount_ActionSpecific(FEditingAction, CurrentlyEditingActionType, ACategoryIndex, APropertyIndex);
@@ -6536,7 +6535,8 @@ begin
   try
     case ACategoryIndex of
       CCategory_Common:
-        ;
+        if APropertyIndex = CMain_ActionScreenshots_PropIndex then
+          Result := CMain_ActionScreenshotsProperties[AItemIndex].Name;
 
       CCategory_ActionSpecific:
         Result := OIGetListPropertyItemName_ActionSpecific(FEditingAction, CurrentlyEditingActionType, ACategoryIndex, APropertyIndex, AItemIndex);
@@ -6686,7 +6686,11 @@ begin
   try
     case ACategoryIndex of
       CCategory_Common:
-        ;
+        if APropertyIndex = CMain_ActionScreenshots_PropIndex then
+        begin
+          PropDef := CMain_ActionScreenshotsProperties[AItemIndex];
+          Result := CCommonGetActionValueStrFunctions[APropertyIndex](FEditingAction, AItemIndex);
+        end;
 
       CCategory_ActionSpecific:
         Result := OIGetListPropertyItemValue_ActionSpecific(FEditingAction, CurrentlyEditingActionType, ACategoryIndex, APropertyIndex, AItemIndex, {AEditorType,} PropDef);
@@ -7076,20 +7080,31 @@ begin  //
     case ACategoryIndex of
       CCategory_Common:
       begin
-        case Column of
-          0:
-          begin
-            ImageList := dmClickerIcons.imglstActionProperties;
-            ImageIndex := APropertyIndex;
-          end;
+        case ANodeLevel of
+          CPropertyLevel:
+            case Column of
+              0:
+              begin
+                ImageList := dmClickerIcons.imglstActionProperties;
+                ImageIndex := APropertyIndex;
+              end;
 
-          1:
-            if APropertyIndex = CMain_Action_PropIndex then
-            begin
-              ImageList := dmClickerIcons.imglstActions16;
-              ImageIndex := EditingActionType;
+              1:
+                if APropertyIndex = CMain_Action_PropIndex then
+                begin
+                  ImageList := dmClickerIcons.imglstActions16;
+                  ImageIndex := EditingActionType;
+                end;
             end;
-        end;
+
+          CPropertyItemLevel:
+            if Column = 0 then
+              if APropertyIndex = CMain_ActionScreenshots_PropIndex then
+              begin
+                ImageList := dmClickerIcons.imglstScreenshotOptionsProperties;
+                ImageIndex := AItemIndex;
+              end;
+        end; //case
       end;
 
       CCategory_ActionSpecific:
@@ -7667,14 +7682,27 @@ begin
     case ACategoryIndex of
       CCategory_Common:
       begin
-        OldText := GetActionValueStr_Action(FEditingAction, APropertyIndex);
-        SetActionValueStr_Action(FEditingAction, ANewText, APropertyIndex);
-        FCurrentlyEditingActionType := Ord(FEditingAction^.ActionOptions.Action);
+        case ANodeLevel of
+          CPropertyLevel:
+          begin
+            OldText := GetActionValueStr_Action(FEditingAction, APropertyIndex);
+            SetActionValueStr_Action(FEditingAction, ANewText, APropertyIndex);
 
-        CurrentlyEditingActionType := FEditingAction^.ActionOptions.Action;
+            FCurrentlyEditingActionType := Ord(FEditingAction^.ActionOptions.Action);
+            CurrentlyEditingActionType := FEditingAction^.ActionOptions.Action;
 
-        TriggerOnControlsModified(ANewText <> OldText);
-        tmrReloadOIContent.Enabled := True;
+            TriggerOnControlsModified(ANewText <> OldText);
+            tmrReloadOIContent.Enabled := True;
+          end;
+
+          CPropertyItemLevel:
+          if APropertyIndex = CMain_ActionScreenshots_PropIndex then
+          begin
+            OldText := CCommonGetActionValueStrFunctions[APropertyIndex](FEditingAction, AItemIndex);
+            SetActionValueStr_Main_ActionScreenshots(FEditingAction, ANewText, AItemIndex);
+            TriggerOnControlsModified(ANewText <> OldText);
+          end;
+        end;
       end;
 
       CCategory_ActionSpecific:

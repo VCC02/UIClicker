@@ -56,7 +56,7 @@ const
   CCategory_Name_EditedAction = 'Edited action';
 
   CCategories: array[0..CCategoryCount - 1] of string = (CCategory_Name_Common, CCategory_Name_ActionSpecific);
-  CPropCount_Common = 5;  //Action name, Action type, Action Timeout, StopOnError
+  CPropCount_Common = 5;  //Action name, Action type, Action Timeout, ActionScreenshots
 
   //Properties (counts)
   CPropCount_Click = 26;
@@ -90,6 +90,8 @@ const
   );
 
   //Sub properties (counts)
+  CPropCount_CommonActionScreenshots = 6;
+
   CPropCount_FindControlMatchCriteria = 3;
   CPropCount_FindControlInitialRectangle = 8;
 
@@ -416,6 +418,15 @@ const
   );
 
   {$IFDEF SubProperties}
+    CMain_ActionScreenshotsProperties: array[0..CPropCount_CommonActionScreenshots - 1] of TOIPropDef = (
+      (Name: 'ScreenshotEnabled'; EditorType: etBooleanCombo; DataType: CDTBool),
+      (Name: 'ScreenshotPath'; EditorType: etTextWithArrow; DataType: CDTString),
+      (Name: 'OverwriteExistingFile'; EditorType: etBooleanCombo; DataType: CDTBool),
+      (Name: 'DisplaySearchArea'; EditorType: etBooleanCombo; DataType: CDTBool),
+      (Name: 'DisplayAsPartOfParentControl'; EditorType: etBooleanCombo; DataType: CDTBool),
+      (Name: 'CropFromScreenshot'; EditorType: etBooleanCombo; DataType: CDTBool)
+    );
+
     CFindControl_MatchCriteriaProperties: array[0..CPropCount_FindControlMatchCriteria - 1] of TOIPropDef = (
       (Name: 'WillMatchText'; EditorType: etBooleanCombo; DataType: CDTBool),
       (Name: 'WillMatchClassName'; EditorType: etBooleanCombo; DataType: CDTBool),
@@ -591,6 +602,8 @@ type
 
   TGetActionValueStrFunc = function(AAction: PClkActionRec; APropertyIndex: Integer): string;
   TGetActionValueStrFuncArr = array[TClkAction] of TGetActionValueStrFunc;
+
+  TGetMainValueStrFuncArr = array[0..CPropCount_Common - 1] of TGetActionValueStrFunc;
   TGetFindControlValueStrFuncArr = array[0..CPropCount_FindControl - 1] of TGetActionValueStrFunc;
   TGetFindSubControlValueStrFuncArr = array[0..CPropCount_FindSubControl - 1] of TGetActionValueStrFunc;
   TGetCallTemplateValueStrFuncArr = array[0..CPropCount_CallTemplate - 1] of TGetActionValueStrFunc;
@@ -649,6 +662,7 @@ function GetActionValueStr_Plugin(AAction: PClkActionRec; APropertyIndex: Intege
 function GetActionValueStr_EditTemplate(AAction: PClkActionRec; APropertyIndex: Integer): string;
 
 {$IFDEF SubProperties}
+  function GetActionValueStr_Main_ActionScreenshots(AAction: PClkActionRec; APropertyIndex: Integer): string;
   function GetActionValueStr_FindControl_MatchCriteria(AAction: PClkActionRec; APropertyIndex: Integer): string;
   function GetActionValueStr_FindSubControl_MatchCriteria(AAction: PClkActionRec; APropertyIndex: Integer): string;
   function GetActionValueStr_FindSubControl_MatchBitmapText(AAction: PClkActionRec; APropertyIndex: Integer): string;
@@ -681,6 +695,7 @@ procedure SetActionValueStr_Plugin(AAction: PClkActionRec; NewValue: string; APr
 procedure SetActionValueStr_EditTemplate(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
 
 {$IFDEF SubProperties}
+  procedure SetActionValueStr_Main_ActionScreenshots(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
   procedure SetActionValueStr_FindControl_MatchCriteria(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
   procedure SetActionValueStr_FindSubControl_MatchCriteria(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
   procedure SetActionValueStr_FindSubControl_MatchBitmapText(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
@@ -727,6 +742,15 @@ const
     SetActionValueStr_SaveSetVarToFile,
     SetActionValueStr_Plugin,
     SetActionValueStr_EditTemplate
+  );
+
+
+  CCommonGetActionValueStrFunctions: TGetMainValueStrFuncArr = (
+    nil,
+    nil,
+    nil,
+    nil,
+    GetActionValueStr_Main_ActionScreenshots   //ActionScreenshots
   );
 
   CFindControlGetActionValueStrFunctions: TGetFindControlValueStrFuncArr = (
@@ -2147,6 +2171,20 @@ begin
 end;
 
 {$IFDEF SubProperties}
+  function GetActionValueStr_Main_ActionScreenshots(AAction: PClkActionRec; APropertyIndex: Integer): string;
+  begin
+    case APropertyIndex of
+      0: Result := BoolToStr(AAction^.ActionOptions.ScreenshotOptions.ScreenshotEnabled, True);
+      1: Result := AAction^.ActionOptions.ScreenshotOptions.ScreenshotPath;
+      2: Result := BoolToStr(AAction^.ActionOptions.ScreenshotOptions.OverwriteExistingFile, True);
+      3: Result := BoolToStr(AAction^.ActionOptions.ScreenshotOptions.DisplaySearchArea, True);
+      4: Result := BoolToStr(AAction^.ActionOptions.ScreenshotOptions.DisplayAsPartOfParentControl, True);
+      5: Result := BoolToStr(AAction^.ActionOptions.ScreenshotOptions.CropFromScreenshot, True);
+      else
+        Result := 'unknown';
+    end;
+  end;
+
   function GetActionValueStr_FindControl_MatchCriteria(AAction: PClkActionRec; APropertyIndex: Integer): string;
   begin
     case APropertyIndex of
@@ -2970,6 +3008,21 @@ end;
 
 
 {$IFDEF SubProperties}
+  procedure SetActionValueStr_Main_ActionScreenshots(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
+  begin
+    case APropertyIndex of
+      0: AAction^.ActionOptions.ScreenshotOptions.ScreenshotEnabled := StrToBool(NewValue);
+      1: AAction^.ActionOptions.ScreenshotOptions.ScreenshotPath := NewValue;
+      2: AAction^.ActionOptions.ScreenshotOptions.OverwriteExistingFile := StrToBool(NewValue);
+      3: AAction^.ActionOptions.ScreenshotOptions.DisplaySearchArea := StrToBool(NewValue);
+      4: AAction^.ActionOptions.ScreenshotOptions.DisplayAsPartOfParentControl := StrToBool(NewValue);
+      5: AAction^.ActionOptions.ScreenshotOptions.CropFromScreenshot := StrToBool(NewValue);
+      else
+        ;
+    end;
+  end;
+
+
   procedure SetActionValueStr_FindControl_MatchCriteria(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
   begin
     case APropertyIndex of
