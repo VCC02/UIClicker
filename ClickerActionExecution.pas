@@ -190,7 +190,7 @@ type
     procedure SetAllControl_Handles_FromResultedControlArr(var AResultedControlArr: TCompRecArr; AMatchSource, ADetailedMatchSource: string);
     procedure InitFindControlParams(var AActionOptions: TClkActionOptions; AOutsideTickCount: QWord; var AResultedControl: TCompRec; var AInitialTickCount, ATimeout: QWord; var AFindControlInputData: TFindControlInputData; out AStopAllActionsOnDemandAddr: Pointer);
 
-    procedure SaveActionScreenshotFile(AScreenshotContent: TBitmap; AScreenshotPath: string);
+    procedure SaveActionScreenshotFile(AScreenshotContent: TBitmap; AScreenshotPath: string; AOverwriteExistingFile: Boolean);
     procedure SaveActionScreenshot(AScreenshotOptions: TScreenshotOptions);
     procedure SaveFindSubControlResultAsActionScreenshot(AScreenshotOptions: TScreenshotOptions);
 
@@ -368,7 +368,7 @@ uses
     Process,
   {$ENDIF}
   IdHTTP, ClickerPrimitivesCompositor, ClickerPrimitives, ClickerActionProperties,
-  ClickerActionPluginLoader, ClickerActionPlugins, BitmapProcessing,
+  ClickerActionPluginLoader, ClickerActionPlugins, BitmapProcessing, BitmapConv,
   ClickerActionsClient, ClickerTemplates, Math, CLHeaders, ClickerCLUtils;
 
 
@@ -6238,7 +6238,7 @@ begin
 end;
 
 
-procedure TActionExecution.SaveActionScreenshotFile(AScreenshotContent: TBitmap; AScreenshotPath: string);
+procedure TActionExecution.SaveActionScreenshotFile(AScreenshotContent: TBitmap; AScreenshotPath: string; AOverwriteExistingFile: Boolean);
 var
   ResolvedPath: string;
   Png: TPNGImage;
@@ -6247,6 +6247,12 @@ begin
   if ResolvedPath > '' then
     if ResolvedPath[1] = PathDelim then
       ResolvedPath := ExtractFileDir(ParamStr(0)) + ResolvedPath; //create the Screenshots dir near the exe
+
+  if not AOverwriteExistingFile and FileExists(ResolvedPath) then
+  begin
+    AddToLog('The screenshot will not be saved: "' + ResolvedPath + '", because its "overwrite" option is set to False.');
+    Exit;
+  end;
 
   CreateDirWithSubDirs(ExtractFileDir(ResolvedPath));
 
@@ -6320,7 +6326,7 @@ begin
         end;
       end;
 
-      SaveActionScreenshotFile(ScreenshotContent, AScreenshotOptions.ScreenshotPath);
+      SaveActionScreenshotFile(ScreenshotContent, AScreenshotOptions.ScreenshotPath, AScreenshotOptions.OverwriteExistingFile);
     except
       on E: Exception do
         AddToLog('Ex on taking screenshot for recording: ' + E.Message);
@@ -6332,6 +6338,11 @@ end;
 
 
 procedure TActionExecution.SaveFindSubControlResultAsActionScreenshot(AScreenshotOptions: TScreenshotOptions);
+var
+  FoundBmp: TBitmap;
+  FoundWidth, FoundHeight: Integer;
+  FoundXOffset, FoundYOffset: Integer;
+  SrcRect, DestRect: TRect;
 begin
   if not AScreenshotOptions.ScreenshotEnabled then
   begin
@@ -6342,7 +6353,40 @@ begin
   if not DoOnIsRecordingScreenshots then
     Exit;
 
-  SaveActionScreenshotFile(frClickerActions.imgDebugBmp.Picture.Bitmap, AScreenshotOptions.ScreenshotPath);
+  if AScreenshotOptions.DisplayAsPartOfParentControl then
+    SaveActionScreenshotFile(frClickerActions.imgDebugBmp.Picture.Bitmap, AScreenshotOptions.ScreenshotPath, AScreenshotOptions.OverwriteExistingFile)
+  else
+  begin
+    FoundWidth := StrToIntDef(EvaluateReplacements('$Control_Width$'), 0);
+    FoundHeight := StrToIntDef(EvaluateReplacements('$Control_Height$'), 0);
+    FoundXOffset := StrToIntDef(EvaluateReplacements('$DebugVar_SubCnvXOffset$'), 0);
+    FoundYOffset := StrToIntDef(EvaluateReplacements('$DebugVar_SubCnvYOffset$'), 0);
+
+    if (FoundWidth < 1) or (FoundHeight < 1) then
+    begin
+      AddToLog('Invalid bitmap width or height when saving screenshot: ' + IntToStr(FoundWidth) + ':' + IntToStr(FoundHeight));
+      Exit;
+    end;
+
+    SrcRect.Left := FoundXOffset;
+    SrcRect.Top := FoundYOffset;
+    SrcRect.Width := FoundWidth;
+    SrcRect.Height := FoundHeight;
+
+    DestRect.Left := 0;
+    DestRect.Top := 0;
+    DestRect.Width := FoundWidth;
+    DestRect.Height := FoundHeight;
+
+    FoundBmp := TBitmap.Create;
+    try
+      WipeBitmap(FoundBmp, FoundWidth, FoundHeight);
+      FoundBmp.Canvas.CopyRect(DestRect, frClickerActions.imgDebugBmp.Picture.Bitmap.Canvas, SrcRect);
+      SaveActionScreenshotFile(FoundBmp, AScreenshotOptions.ScreenshotPath, AScreenshotOptions.OverwriteExistingFile);
+    finally
+      FoundBmp.Free;
+    end;
+  end;
 end;
 
 

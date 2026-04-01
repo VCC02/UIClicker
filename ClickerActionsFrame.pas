@@ -6404,7 +6404,7 @@ begin
     case ACategoryIndex of
       CCategory_Common:
         if APropertyIndex = CMain_ActionScreenshots_PropIndex then
-          Result := CPropCount_Common;
+          Result := CPropCount_CommonActionScreenshots;
 
       CCategory_ActionSpecific:
         Result := OIGetListPropertyItemCount_ActionSpecific(FEditingAction, CurrentlyEditingActionType, ACategoryIndex, APropertyIndex);
