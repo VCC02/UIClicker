@@ -80,6 +80,9 @@ function SetMatchBitmapTextContent(AListOfFindSubControlOptionsParams: TStrings;
 
 function SetActionProperties(AListOfOptionsParams: TStrings; AActionType: TClkAction; var AActionOptions: TClkActionRec): string; overload; //it outputs only the options, without the action metadata
 function SetActionProperties(AListOfOptionsParams: string; AActionType: TClkAction; var AActionOptions: TClkActionRec): string; overload; //it outputs only the options, without the action metadata
+function GenerateActionScreenshotPath(ATemplateFileName: string; var AAction: TClkAction): string;  //If the action name is changed, this function returns the updated path.
+
+procedure GetDefaultPropertyValues_ActionOptions(var AActionOptions: TClkActionOptions; ANewActionType: TClkAction; ATemplateFileName: string);
 
 procedure GetDefaultPropertyValues_Click(var AClickOptions: TClkClickOptions);
 procedure GetDefaultPropertyValues_ExecApp(var AExecAppOptions: TClkExecAppOptions);
@@ -1453,7 +1456,6 @@ begin
     Exit;
   end;
 
-
   AFindSubControlOptions.MatchBitmapFiles := FastReplace_45ToReturn(AListOfFindSubControlOptionsParams.Values['MatchBitmapFiles']); //ListOfStrings
   AFindSubControlOptions.MatchBitmapAlgorithm := TMatchBitmapAlgorithm(Temp_MatchBitmapAlgorithm);
 
@@ -1762,6 +1764,36 @@ begin
   finally
     SerProperties.Free;
   end;
+end;
+
+
+function GenerateActionScreenshotPath(ATemplateFileName: string; var AAction: TClkAction): string;  //If the action name is changed, this function returns the updated path.
+var
+  Fnm: string;
+begin
+  Fnm := ExtractFileNameNoExt(ATemplateFileName);
+  if Fnm = '' then
+    Fnm := 'NoTemplate';
+
+  Result := '$SelfTemplateDir$\Screenshots\' + Fnm + '\' + CClkActionStr[AAction] + '.png';
+end;
+
+
+procedure GetDefaultPropertyValues_ActionOptions(var AActionOptions: TClkActionOptions; ANewActionType: TClkAction; ATemplateFileName: string);
+begin
+  AActionOptions.Action := ANewActionType;
+  AActionOptions.ActionCondition := '';
+  AActionOptions.ActionEnabled := True;
+  AActionOptions.ActionName := '"' + CClkActionStr[AActionOptions.Action] + '"';
+  AActionOptions.ActionTimeout := 0;
+  AActionOptions.ExecutionIndex := '';
+
+  AActionOptions.ScreenshotOptions.ScreenshotEnabled := True;
+  AActionOptions.ScreenshotOptions.ScreenshotPath := GenerateActionScreenshotPath(ATemplateFileName, ANewActionType);
+  AActionOptions.ScreenshotOptions.OverwriteExistingFile := True;
+  AActionOptions.ScreenshotOptions.DisplaySearchArea := True;
+  AActionOptions.ScreenshotOptions.DisplayAsPartOfParentControl := False; //this includes result selection lines
+  AActionOptions.ScreenshotOptions.CropFromScreenshot := False;
 end;
 
 
