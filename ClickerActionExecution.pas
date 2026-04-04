@@ -5185,14 +5185,8 @@ begin
 end;
 
 
-procedure UpdateActionByEditTemplate(var AEditTemplateOptions: TClkEditTemplateOptions; AClkAction: PClkActionRec);
+procedure UpdateActionByEditTemplate(var AEditTemplateOptions: TClkEditTemplateOptions; AClkAction: PClkActionRec; ASelfTemplateFileName: string);
 begin
-  AClkAction.ActionOptions.ActionName := AEditTemplateOptions.EditedActionName;
-  AClkAction.ActionOptions.Action := AEditTemplateOptions.EditedActionType;
-  AClkAction.ActionOptions.ActionCondition := AEditTemplateOptions.EditedActionCondition;
-  AClkAction.ActionOptions.ActionTimeout := AEditTemplateOptions.EditedActionTimeout;
-  AClkAction.ActionOptions.ActionEnabled := True;
-  AClkAction.ActionOptions.ExecutionIndex := '';
   AClkAction.ActionStatus := asNotStarted;
   AClkAction.ActionSkipped := False;
   AClkAction.ActionDebuggingStatus := adsNone;
@@ -5215,7 +5209,17 @@ begin
     GetDefaultPropertyValues_SaveSetVarToFile(AClkAction.SaveSetVarToFileOptions);
     GetDefaultPropertyValues_Plugin(AClkAction.PluginOptions);
     GetDefaultPropertyValues_EditTemplate(AClkAction.EditTemplateOptions);
+
+    GetDefaultPropertyValues_ActionOptions(AClkAction.ActionOptions, AEditTemplateOptions.EditedActionType, ASelfTemplateFileName);
   end;
+
+  //moved the following section of setting ActionOptions, from above, because GetDefaultPropertyValues_ActionOptions initializes it to default values.
+  AClkAction.ActionOptions.ActionName := AEditTemplateOptions.EditedActionName;
+  AClkAction.ActionOptions.Action := AEditTemplateOptions.EditedActionType;
+  AClkAction.ActionOptions.ActionCondition := AEditTemplateOptions.EditedActionCondition;
+  AClkAction.ActionOptions.ActionTimeout := AEditTemplateOptions.EditedActionTimeout;
+  AClkAction.ActionOptions.ActionEnabled := True;
+  AClkAction.ActionOptions.ExecutionIndex := '';
 
   UpdateActionProperties(AEditTemplateOptions, AClkAction);
 end;
@@ -5437,14 +5441,14 @@ begin
       begin
         SetLength(ClkActions, Length(ClkActions) + 1);
         Idx := Length(ClkActions) - 1;
-        UpdateActionByEditTemplate(AEditTemplateOptions, @ClkActions[Idx]);
+        UpdateActionByEditTemplate(AEditTemplateOptions, @ClkActions[Idx], FSelfTemplateFileName^);
         ShouldUpdateUI := True;
         Result := True;
       end;
 
       etoUpdateAction:
       begin
-        UpdateActionByEditTemplate(AEditTemplateOptions, @ClkActions[Idx]);
+        UpdateActionByEditTemplate(AEditTemplateOptions, @ClkActions[Idx], FSelfTemplateFileName^);
         ShouldUpdateUI := True;
         Result := True;
       end;

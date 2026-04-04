@@ -4174,18 +4174,6 @@ begin
 end;
 
 
-function GenerateActionScreenshotPath(ATemplateFileName: string; var AAction: TClkActionRec): string;  //If the action name is changed, this function returns the updated path.
-var
-  Fnm: string;
-begin
-  Fnm := ExtractFileNameNoExt(ATemplateFileName);
-  if Fnm = '' then
-    Fnm := 'NoTemplate';
-
-  Result := '$SelfTemplateDir$\Screenshots\' + Fnm + '\' + CClkActionStr[AAction.ActionOptions.Action] + '.png';
-end;
-
-
 procedure TfrClickerActionsArr.LoadTemplate_V1(Ini: TClkIniReadonlyFile);
 begin
   LoadTemplateToCustomActions_V1(Ini, FClkActions);
@@ -4201,7 +4189,7 @@ begin
 
   for i := 0 to Length(FClkActions) - 1 do
     if FClkActions[i].ActionOptions.ScreenshotOptions.ScreenshotPath = '' then
-      FClkActions[i].ActionOptions.ScreenshotOptions.ScreenshotPath := GenerateActionScreenshotPath(FFileName, FClkActions[i]);
+      FClkActions[i].ActionOptions.ScreenshotOptions.ScreenshotPath := GenerateActionScreenshotPath(FFileName, FClkActions[i].ActionOptions.Action);
 end;
 
 
@@ -6891,12 +6879,8 @@ end;
 
 procedure TfrClickerActionsArr.SetActionToDefault(var AAction: TClkActionRec; ANewActionType: TClkAction);
 begin
-  AAction.ActionOptions.Action := ANewActionType;
-  AAction.ActionOptions.ActionCondition := '';
-  AAction.ActionOptions.ActionEnabled := True;
-  AAction.ActionOptions.ActionName := '"' + CClkActionStr[AAction.ActionOptions.Action] + '"';
-  AAction.ActionOptions.ActionTimeout := 0;
-  AAction.ActionOptions.ExecutionIndex := '';
+  GetDefaultPropertyValues_ActionOptions(AAction.ActionOptions, ANewActionType, FFileName);
+
   AAction.ActionStatus := asNotStarted;
   AAction.ActionSkipped := False;
   AAction.ActionBreakPoint.Condition := '';
@@ -6909,13 +6893,6 @@ begin
 
   if AAction.ActionOptions.Action = acFindControl then
     AAction.ActionOptions.ActionTimeout := 3000;
-
-  AAction.ActionOptions.ScreenshotOptions.ScreenshotEnabled := True;
-  AAction.ActionOptions.ScreenshotOptions.ScreenshotPath := GenerateActionScreenshotPath(FFileName, AAction);
-  AAction.ActionOptions.ScreenshotOptions.OverwriteExistingFile := True;
-  AAction.ActionOptions.ScreenshotOptions.DisplaySearchArea := True;
-  AAction.ActionOptions.ScreenshotOptions.DisplayAsPartOfParentControl := False; //this includes result selection lines
-  AAction.ActionOptions.ScreenshotOptions.CropFromScreenshot := False;
 
   GetDefaultPropertyValues_Click(AAction.ClickOptions);
   GetDefaultPropertyValues_ExecApp(AAction.ExecAppOptions);
