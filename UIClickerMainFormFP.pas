@@ -123,7 +123,7 @@ implementation
   - In ClickerTemplates.pas, add new field (Load and Save). If the action is FindControl or FindSubControl, the field has to be added to CopyActionContent, as well.
   - In ActionExecution.pas, handle the new field.
   - In ClickerActionProperties.pas, handle the new field.
-  - In ClickerActionsFrame.pas, add new icon to the "imglst*" image list for that field.
+  - In ClickerActionsDM.pas, add new icon to the "imglst*" image list for that field and maybe update code in ClickerActionsFrame.pas if needed.
   - In ClickerActionsFrame.pas, Add menu, hint, (and custom editors, if required). Some properties may have to be grayed-out depending on other properties (see HandleOnOIPaintText).
   - In ClickerClientAPI.pas and ClickerClientIntf.pas, add the new field (in structure(s) and function(s)), then recompile the dll (ClickerClient)
   - In ActionsStuff.pas, add the new field to GenerateDifferentThanDefault_<Action> functions.

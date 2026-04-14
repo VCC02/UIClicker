@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2024 VCC
+    Copyright (C) 2026 VCC
     creation date: Dec 2019
     initial release date: 13 Sep 2022
 
@@ -58,6 +58,7 @@ const
   CMouseWheelHorizWheel = 'HWheel';
   CMouseWheelAmount = 'WheelAmount'; //the values of this key are in 120 unit increments  (can also be negative)
   CMouseUseClipCursor = 'UseClipCursor';
+  CMouseRealisticMoving = 'RealisticMoving';
 
   //Same values are defined in ClickerUtils. They are redefined here, to avoid a dependency.
   CMouseClickType_Click = 0;
@@ -179,8 +180,8 @@ var
   IncXDist, IncYDist: Extended;
   IncCount, SleepDistance: Integer;
   MaxDiff, SleepAmount: Integer;
-  DurationDiv: Extended; //Integer;
-
+  DurationInc: Integer;
+  tk, OverallTk: QWord;
 begin
   if ADuration < 1 then
   begin
@@ -196,18 +197,17 @@ begin
   IncCount := 0;
   SleepDistance := MaxDiff shr 3;
 
-  SleepAmount := 1 shl CResolutionDiv;
-  DurationDiv := ADuration / CResolutionMul;
-  if DurationDiv = 0 then
-    DurationDiv := 1;
+  SleepAmount := CResolutionMul;
 
-  IncXDist := (DestTp.X - SrcTp.X) / DurationDiv;
-  IncYDist := (DestTp.Y - SrcTp.Y) / DurationDiv;
+  IncXDist := (DestTp.X - SrcTp.X) / SleepAmount;
+  IncYDist := (DestTp.Y - SrcTp.Y) / SleepAmount;
+  DurationInc := Trunc(ADuration / SleepAmount);
 
+  OverallTk := GetTickCount64;
   repeat
     IncX := IncX + IncXDist;
     IncY := IncY + IncYDist;
-    Inc(IncCount, SleepAmount);
+    Inc(IncCount);
 
     SetCursorPos(Round(IncX), Round(IncY));
     if AUseClipCursor then
@@ -217,18 +217,35 @@ begin
       if (SleepDistance > 0) and (IncCount mod SleepDistance = 0) then
         Application.ProcessMessages;
 
-    Sleep(SleepAmount);  //the loop will take a bit longer.
-  until IncCount >= ADuration;
+    tk := GetTickCount64;
+    repeat
+      if ACallAppProcMsg then
+        Application.ProcessMessages;  //this takes less than sleep
+    until GetTickCount64 - tk >= DurationInc;
+
+    if GetTickCount64 - OverallTk >= ADuration then
+      Break;
+  until IncCount >= SleepAmount - 1;
 
   //move mouse once again, to trigger MouseMove event   -  not sure if required or working
-  Sleep(1);
+  tk := GetTickCount64;
+  repeat
+    if ACallAppProcMsg then
+      Application.ProcessMessages;  //this takes less than sleep
+  until GetTickCount64 - tk >= 1;
+
   IncX := IncX + 1;
   SetCursorPos(Round(IncX), Round(IncY));
 
   if AUseClipCursor then
     ClipCursorToOnePixel(Round(IncX), Round(IncY));
 
-  Sleep(1);
+  tk := GetTickCount64;
+  repeat
+    if ACallAppProcMsg then
+      Application.ProcessMessages;  //this takes less than sleep
+  until GetTickCount64 - tk >= 1;
+
   SetCursorPos(DestTp.X, DestTp.Y);
 
   if AUseClipCursor then
@@ -340,6 +357,115 @@ begin
 end;
 
 
+type
+  TRMPoint = record
+    tp: TPoint;
+    MoveDuration: Extended;
+  end;
+
+  TRMPointArr = array of TRMPoint;
+
+
+procedure GeneratePointsForRealisticMoving(var ARealisticMovingPoints: TRMPointArr; ADestPoint: TPoint; ATotalMoveDuration: Integer);
+var
+  CurrentPoint: TPoint;
+  i: Integer;
+  AdjustingPointCount: Integer; //where the "user" would pause the natural movement and adust the mouse (e.g. better grip, or because of lack of space, or bad trajectory)
+  SmallDuration, CurrentOverallDuration, DurationAmountEx: Extended;
+  HalfSmallDuration: Integer;
+  DurationAmount: Integer;
+  X, X1, X2, Y, Y1, Y2, XAmount, YAmount, DivXAmount, DivYAmount: Extended;
+  tk: QWord;
+begin
+  GetCursorPos(CurrentPoint);
+  Randomize;
+  AdjustingPointCount := Random(6);
+  SetLength(ARealisticMovingPoints, 60 + Random(5) + AdjustingPointCount);   //must be greater than 0
+
+  if Length(ARealisticMovingPoints) < 2 then  //usually for debugging, because there is a minimum value above
+    SetLength(ARealisticMovingPoints, 2);
+
+  //Generate durations:
+  if Length(ARealisticMovingPoints) = 1 then
+    SmallDuration := ATotalMoveDuration
+  else
+    SmallDuration := ATotalMoveDuration / (Length(ARealisticMovingPoints) - 1);
+
+  for i := 0 to Length(ARealisticMovingPoints) - 1 do
+    ARealisticMovingPoints[i].MoveDuration := SmallDuration;
+
+  if SmallDuration > 5 then   //modify durations only if they can be perceived
+  begin
+    HalfSmallDuration := Round(SmallDuration) shr 1;
+    for i := 0 to Length(ARealisticMovingPoints) - 2 do
+      if Random(3) = 1 then
+      begin
+        DurationAmount := Max(3, 1 + Random(HalfSmallDuration));
+        ARealisticMovingPoints[i].MoveDuration := ARealisticMovingPoints[i].MoveDuration + DurationAmount;         //add to the current
+        ARealisticMovingPoints[i + 1].MoveDuration := ARealisticMovingPoints[i + 1].MoveDuration - DurationAmount; //and remove from the next
+      end;
+
+    CurrentOverallDuration := 0;
+    for i := 0 to Length(ARealisticMovingPoints) - 1 do
+      CurrentOverallDuration := CurrentOverallDuration + ARealisticMovingPoints[i].MoveDuration;
+
+    if CurrentOverallDuration > ATotalMoveDuration then //Added too much, so remove from all
+    begin
+      DurationAmountEx := (CurrentOverallDuration - ATotalMoveDuration) / (Length(ARealisticMovingPoints) - 1);
+      for i := 0 to Length(ARealisticMovingPoints) - 1 do
+      begin
+        ARealisticMovingPoints[i].MoveDuration := ARealisticMovingPoints[i].MoveDuration - DurationAmountEx;
+        if ARealisticMovingPoints[i].MoveDuration < 1 then
+          ARealisticMovingPoints[i].MoveDuration := 1;
+      end;
+    end;
+  end;
+
+  //Generate points on the line defined by endpoints (x1, y1) and (x2, y2):
+  // (x - x1) / (x2 - x1) = (y - y1) / (y2 - y1)
+
+  tk := GetTickCount64;
+  repeat
+    Application.ProcessMessages;
+  until GetTickCount64 - tk >= 1;
+
+  Randomize;
+
+  ARealisticMovingPoints[0].tp := CurrentPoint;
+  ARealisticMovingPoints[Length(ARealisticMovingPoints) - 1].tp := ADestPoint;
+
+  X1 := CurrentPoint.X;
+  X2 := ADestPoint.X;
+  Y1 := CurrentPoint.Y;
+  Y2 := ADestPoint.Y;
+
+  X := X1;
+  Y := Y1;
+  XAmount := (X2 - X1) / (Length(ARealisticMovingPoints) - 1);  //Length() points, Length() - 1 spaces between points
+  YAmount := (Y2 - Y1) / (Length(ARealisticMovingPoints) - 1);
+
+  DivXAmount := XAmount {* 1.5} / 1;//18;  //the added error should be less than this value
+  DivYAmount := YAmount {* 1.5} / 1;//18;
+
+  for i := 1 to Length(ARealisticMovingPoints) - 2 do
+  begin
+    X := X + XAmount;
+    Y := Y + YAmount;
+
+    if i < Length(ARealisticMovingPoints) - 1 then
+      if Random(3) > 0 then
+      begin
+        //using positive and negative offsets:
+        X := X + Random(Round(DivXAmount)) - Random(Round(DivXAmount));
+        Y := Y + Random(Round(DivYAmount)) - Random(Round(DivYAmount));
+      end;
+
+    ARealisticMovingPoints[i].tp.X := Round(X);
+    ARealisticMovingPoints[i].tp.Y := Round(Y);
+  end;
+end;
+
+
 procedure ClickTControl(AParams: TStringList);
 var
   X, Y, XDest, YDest: Integer;       //offsets
@@ -358,6 +484,9 @@ var
     DelayAfterMovingToDestination: Integer;
     DelayAfterMouseDown: Integer;
     MoveDuration: Integer;
+    i: Integer;
+    RealisticMovingPoints: TRMPointArr;
+    RealisticMoving: Boolean;
   begin
     ClickPoint.X := X;
     ClickPoint.Y := Y;
@@ -366,13 +495,26 @@ var
     DelayAfterMovingToDestination := Max(1, StrToIntDef(AParams.Values[CMouseDelayAfterMovingToDestination], 50));
     DelayAfterMouseDown := Max(1, StrToIntDef(AParams.Values[CMouseDelayAfterMouseDown], 200));
     MoveDuration := Max(-1, StrToIntDef(AParams.Values[CMouseMoveDuration], -1));
+    RealisticMoving := AParams.Values[CMouseRealisticMoving] = '1';
 
     if MoveDuration < 1 then
       MoveMouseCursor(ClickPoint, UseClipCursor, False)
     else
     begin
       if not IsDragging then
-        MoveMouseCursorWithDuration(ClickPoint, MoveDuration, UseClipCursor, MoveDuration > 5000);  //there will be race-conditions on client-server execution, if using App.ProcMsg
+      begin
+        if not RealisticMoving then
+          MoveMouseCursorWithDuration(ClickPoint, MoveDuration, UseClipCursor, MoveDuration > 5000)  //there will be race-conditions on client-server execution, if using App.ProcMsg
+        else
+        begin
+          GeneratePointsForRealisticMoving(RealisticMovingPoints, ClickPoint, MoveDuration);
+          for i := 0 to Length(RealisticMovingPoints) - 1 do
+          begin
+            MoveMouseCursorWithDuration(RealisticMovingPoints[i].tp, Round(RealisticMovingPoints[i].MoveDuration), UseClipCursor, MoveDuration > 5000);
+            Application.ProcessMessages; //Without this call, UIClicker "freezes" and it is not allowed to move the cursor. Because of this, the cursor doesn't end up at its destination.
+          end;
+        end;
+      end;
     end;
 
     if not MoveWithoutClick then
@@ -402,7 +544,15 @@ var
     begin
       DestPoint.X := XDest;
       DestPoint.Y := YDest;
-      MoveMouseCursorWithDuration(DestPoint, MoveDuration, UseClipCursor, MoveDuration > 5000);  //there will be race-conditions on client-server execution, if using App.ProcMsg
+
+      if not RealisticMoving then
+        MoveMouseCursorWithDuration(DestPoint, MoveDuration, UseClipCursor, MoveDuration > 5000)  //there will be race-conditions on client-server execution, if using App.ProcMsg
+      else
+      begin
+        GeneratePointsForRealisticMoving(RealisticMovingPoints, DestPoint, MoveDuration);
+        for i := 0 to Length(RealisticMovingPoints) - 1 do
+          MoveMouseCursorWithDuration(RealisticMovingPoints[i].tp, Round(RealisticMovingPoints[i].MoveDuration), UseClipCursor, MoveDuration > 5000);
+      end;
 
       SetBasicMouseInfo(AInputs, XDest, YDest);
 
