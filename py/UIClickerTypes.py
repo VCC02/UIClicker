@@ -1,4 +1,4 @@
-#   Copyright (C) 2022-2025 VCC
+#   Copyright (C) 2022-2026 VCC
 #   creation date: Aug 2022
 #   initial release date: 10 Aug 2022
 #
@@ -227,7 +227,8 @@ class TClickOptions(Structure):
                ("DelayAfterMovingToDestination", LPCWSTR),
                ("DelayAfterMouseDown", LPCWSTR),
                ("MoveDuration", LPCWSTR),
-               ("UseClipCursor", BOOLEAN)]
+               ("UseClipCursor", BOOLEAN),
+               ("RealisticMoving", BOOLEAN)]
 
 PClickOptions = ctypes.POINTER(TClickOptions)
 
@@ -260,6 +261,7 @@ def GetDefaultClickOptions():
     ClickOptions.DelayAfterMouseDown = '200'
     ClickOptions.MoveDuration = '-1'
     ClickOptions.UseClipCursor = False
+    ClickOptions.RealisticMoving = False
     return ClickOptions
 
 
