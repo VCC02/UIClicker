@@ -77,6 +77,7 @@ try:
     ClickOptions.DelayAfterMouseDown = '50'
     ClickOptions.MoveDuration = '60'
     ClickOptions.UseClipCursor = True
+    ClickOptions.RealisticMoving = True
 
     print("ExecuteClickAction: ", DllFuncs.ExecuteClickAction("Another Click", 100, ClickOptions, True))
 finally:
