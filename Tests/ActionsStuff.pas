@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2025 VCC
+    Copyright (C) 2026 VCC
     creation date: Aug 2022
     initial release date: 14 Aug 2022
 
@@ -637,6 +637,7 @@ begin
   AClickOptions.DelayAfterMouseDown := '200';
   AClickOptions.MoveDuration := '-1';
   AClickOptions.UseClipCursor := False;
+  AClickOptions.RealisticMoving := False;
 end;
 
 
@@ -1472,6 +1473,7 @@ begin
   AClickOptions.DelayAfterMouseDown := '50';
   AClickOptions.MoveDuration := '60';
   AClickOptions.UseClipCursor := True;
+  AClickOptions.RealisticMoving := True;
 end;
 
 
@@ -1503,7 +1505,9 @@ begin
             'DelayAfterMovingToDestination' + '=' + '40' + '&' +
             'DelayAfterMouseDown' + '=' + '50' + '&' +
             'MoveDuration' + '=' + '60' + '&' +
-            'UseClipCursor' + '=' + 'True';
+            'UseClipCursor' + '=' + 'True' + '&' +
+            'RealisticMoving' + '=' + 'True'
+            ;
 end;
 
 
