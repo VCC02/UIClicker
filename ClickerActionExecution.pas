@@ -1273,6 +1273,7 @@ begin
     MouseParams.Add(CMouseDelayAfterMouseDown + '=' + EvaluateReplacements(AClickOptions.DelayAfterMouseDown));
     MouseParams.Add(CMouseMoveDuration + '=' + EvaluateReplacements(AClickOptions.MoveDuration));
     MouseParams.Add(CMouseUseClipCursor + '=' + IntToStr(Ord(AClickOptions.UseClipCursor)));
+    MouseParams.Add(CMouseRealisticMoving + '=' + IntToStr(Ord(AClickOptions.RealisticMoving)));
 
     if AClickOptions.ClickType = CMouseClickType_Drag then  ///Dest
     begin

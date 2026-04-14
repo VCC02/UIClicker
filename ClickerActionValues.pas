@@ -59,7 +59,7 @@ const
   CPropCount_Common = 5;  //Action name, Action type, Action Timeout, ActionScreenshots
 
   //Properties (counts)
-  CPropCount_Click = 26;
+  CPropCount_Click = 27;
   CPropCount_ExecApp = 9;
   CPropCount_FindControl = 15;
   CPropCount_FindSubControl = 35;
@@ -128,6 +128,7 @@ const
   CClick_DelayAfterMouseDown_PropIndex = 23;
   CClick_MoveDuration_PropIndex = 24;
   CClick_UseClipCursor_PropIndex = 25;
+  CClick_RealisticMoving_PropIndex = 26;
 
   CExecApp_PathToApp_PropIndex = 0;     //property index in ExecApp structure
   CExecApp_ListOfParams_PropIndex = 1;  //property index in ExecApp structure
@@ -346,7 +347,8 @@ const
     (Name: 'DelayAfterMovingToDestination'; EditorType: etSpinText; DataType: CDTString),
     (Name: 'DelayAfterMouseDown'; EditorType: etSpinText; DataType: CDTString),
     (Name: 'MoveDuration'; EditorType: etSpinText; DataType: CDTString),
-    (Name: 'UseClipCursor'; EditorType: etBooleanCombo; DataType: CDTBool)
+    (Name: 'UseClipCursor'; EditorType: etBooleanCombo; DataType: CDTBool),
+    (Name: 'RealisticMoving'; EditorType: etBooleanCombo; DataType: CDTBool)
   );
 
   CExecAppProperties: array[0..CPropCount_ExecApp - 1] of TOIPropDef = (
@@ -852,7 +854,8 @@ const
     0, //DelayAfterMovingToDestination: string;
     0, //DelayAfterMouseDown: string;
     0, //MoveDuration: string;
-    0  //UseClipCursor
+    0, //UseClipCursor
+    0  //RealisticMoving
   );
 
   CExecAppEnumCounts: array[0..CPropCount_ExecApp - 1] of Integer = (
@@ -1109,7 +1112,8 @@ const
     nil, //DelayAfterMovingToDestination
     nil, //DelayAfterMouseDown
     nil, //MoveDuration
-    nil  //UseClipCursor
+    nil, //UseClipCursor
+    nil  //RealisticMoving
   );
 
   CExecAppEnumStrings: array[0..CPropCount_ExecApp - 1] of PArrayOfString = (
@@ -1370,7 +1374,8 @@ const
     0, //DelayAfterMovingToDestination: string;
     0, //DelayAfterMouseDown: string;
     0, //MoveDuration: string;
-    0  //UseClipCursor
+    0, //UseClipCursor
+    0  //RealisticMoving
   );
 
   CExecAppIsExp: array[0..CPropCount_ExecApp - 1] of Integer = (
@@ -1532,6 +1537,7 @@ function GetPropertyHint_Click_DelayAfterMouseDown: string;
 function GetPropertyHint_Click_MouseWheelAmount: string;
 function GetPropertyHint_Click_MoveDuration: string;
 function GetPropertyHint_Click_UseClipCursor: string;
+function GetPropertyHint_Click_RealisticMoving: string;
 
 function GetPropertyHint_ExecApp_PathToApp: string;
 function GetPropertyHint_ExecApp_WaitForApp: string;
@@ -1696,7 +1702,8 @@ const
     @GetPropertyHint_Click_DelayAfterMovingToDestination,
     @GetPropertyHint_Click_DelayAfterMouseDown,
     @GetPropertyHint_Click_MoveDuration,
-    @GetPropertyHint_Click_UseClipCursor
+    @GetPropertyHint_Click_UseClipCursor,
+    @GetPropertyHint_Click_RealisticMoving
   );
 
 
@@ -1985,6 +1992,7 @@ begin
     23: Result := AAction^.ClickOptions.DelayAfterMouseDown;
     24: Result := AAction^.ClickOptions.MoveDuration;
     25: Result := BoolToStr(AAction^.ClickOptions.UseClipCursor, True);
+    26: Result := BoolToStr(AAction^.ClickOptions.RealisticMoving, True);
     else
       Result := 'unknown';
   end;
@@ -2915,6 +2923,7 @@ begin
     23: AAction^.ClickOptions.DelayAfterMouseDown := NewValue;
     24: AAction^.ClickOptions.MoveDuration := NewValue;
     25: AAction^.ClickOptions.UseClipCursor := StrToBool(NewValue);
+    26: AAction^.ClickOptions.RealisticMoving := StrToBool(NewValue);
     else
       ;
   end;
@@ -3403,6 +3412,13 @@ function GetPropertyHint_Click_UseClipCursor: string;
 begin
   Result := 'If set to True, it ensures that the mouse cursor is kept at the specified coordinates, although the physical mouse generates other input.' + #13#10 +
             'This may be required, when the user can accidentally move the mouse, while UIClicker is running and setting other mouse cursor position.';
+end;
+
+
+function GetPropertyHint_Click_RealisticMoving: string;
+begin
+  Result := 'This is a pseudo-realistic moving of the mouse cursor from the current position to its destination.' + #13#10 +
+            'For now, it involves small deviations from a straight path and also various delays from one point to another.';
 end;
 
 
