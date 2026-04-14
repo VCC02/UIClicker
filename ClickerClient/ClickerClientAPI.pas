@@ -60,6 +60,7 @@ type
     DelayAfterMouseDown: PWideChar;
     MoveDuration: PWideChar;
     UseClipCursor: Boolean;
+    RealisticMoving: Boolean;
   end;
 
   PClkClickOptionsAPI = ^TClkClickOptionsAPI;
@@ -590,6 +591,7 @@ begin
   SetPointedContentToString(@string(PWideChar(AClickOptions^.DelayAfterMouseDown))[1], ADestClkAction.ClickOptions.DelayAfterMouseDown);
   SetPointedContentToString(@string(PWideChar(AClickOptions^.MoveDuration))[1], ADestClkAction.ClickOptions.MoveDuration);
   ADestClkAction.ClickOptions.UseClipCursor := AClickOptions^.UseClipCursor;
+  ADestClkAction.ClickOptions.RealisticMoving := AClickOptions^.RealisticMoving;
 end;
 
 
@@ -998,6 +1000,7 @@ begin
   ATempClickOptionsAPIWS.DelayAfterMouseDown := WideString(AClickOptions.DelayAfterMouseDown);  ADestClickOptions.DelayAfterMouseDown := @ATempClickOptionsAPIWS.DelayAfterMouseDown[1];// ADestClickOptions.DelayAfterMouseDown := @WideString(AClickOptions.DelayAfterMouseDown)[1];
   ATempClickOptionsAPIWS.MoveDuration := WideString(AClickOptions.MoveDuration);  ADestClickOptions.MoveDuration := @ATempClickOptionsAPIWS.MoveDuration[1];// ADestClickOptions.MoveDuration := @WideString(AClickOptions.MoveDuration)[1];
   ADestClickOptions.UseClipCursor := AClickOptions.UseClipCursor;
+  ADestClickOptions.RealisticMoving := AClickOptions.RealisticMoving;
 end;
 
 
