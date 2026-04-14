@@ -154,7 +154,9 @@ begin
             'DelayAfterMovingToDestination' + '=' + AClickOptions.DelayAfterMovingToDestination + '&' +
             'DelayAfterMouseDown' + '=' + AClickOptions.DelayAfterMouseDown + '&' +
             'MoveDuration' + '=' + AClickOptions.MoveDuration + '&' +
-            'UseClipCursor' + '=' + IntToStr(Ord(AClickOptions.UseClipCursor));
+            'UseClipCursor' + '=' + IntToStr(Ord(AClickOptions.UseClipCursor)) + '&' +
+            'RealisticMoving' + '=' + IntToStr(Ord(AClickOptions.RealisticMoving))
+            ;
 end;
 
 
@@ -493,7 +495,9 @@ begin
             'DelayAfterMovingToDestination' + '=' + CDTString + '&' +
             'DelayAfterMouseDown' + '=' + CDTString + '&' +
             'MoveDuration' + '=' + CDTString + '&' +
-            'UseClipCursor' + '=' + CDTBool;
+            'UseClipCursor' + '=' + CDTBool + '&' +
+            'RealisticMoving' + '=' + CDTBool
+            ;
 end;
 
 
@@ -1113,6 +1117,7 @@ begin
   AClickOptions.DelayAfterMouseDown := AListOfClickOptionsParams.Values['DelayAfterMouseDown'];
   AClickOptions.MoveDuration := AListOfClickOptionsParams.Values['MoveDuration'];
   AClickOptions.UseClipCursor := AListOfClickOptionsParams.Values['UseClipCursor'] = '1';
+  AClickOptions.RealisticMoving := AListOfClickOptionsParams.Values['RealisticMoving'] = '1';
 end;
 
 
@@ -1826,6 +1831,7 @@ begin
   AClickOptions.DelayAfterMouseDown := '200';
   AClickOptions.MoveDuration := '-1';
   AClickOptions.UseClipCursor := False;
+  AClickOptions.RealisticMoving := False;
 end;
 
 

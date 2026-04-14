@@ -132,6 +132,7 @@ begin
     ACustomActions[i].ClickOptions.DelayAfterMouseDown := '100';
     ACustomActions[i].ClickOptions.MoveDuration := '-1';
     ACustomActions[i].ClickOptions.UseClipCursor := False;
+    ACustomActions[i].ClickOptions.RealisticMoving := False;
 
     SectionIndex := Ini.GetSectionIndex('Actions.ExecAppOptions');
     ACustomActions[i].ExecAppOptions.PathToApp := Ini.ReadString(SectionIndex, 'PathToApp_' + IterationStr, '');
@@ -433,6 +434,7 @@ begin
   AClickOptions.DelayAfterMouseDown := Ini.ReadString(SectionIndex, 'DelayAfterMouseDown', '100');
   AClickOptions.MoveDuration := Ini.ReadString(SectionIndex, 'MoveDuration', '-1');
   AClickOptions.UseClipCursor := Ini.ReadBool(SectionIndex, 'UseClipCursor', False);
+  AClickOptions.RealisticMoving := Ini.ReadBool(SectionIndex, 'RealisticMoving', False);
 end;
 
 
@@ -995,6 +997,7 @@ begin
   AStringList.Add('DelayAfterMouseDown=' + AActionClickOptions.DelayAfterMouseDown);
   AStringList.Add('MoveDuration=' + AActionClickOptions.MoveDuration);
   AStringList.Add('UseClipCursor=' + IntToStr(Ord(AActionClickOptions.UseClipCursor)));
+  AStringList.Add('RealisticMoving=' + IntToStr(Ord(AActionClickOptions.RealisticMoving)));
 end;
 
 
