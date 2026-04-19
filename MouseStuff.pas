@@ -399,7 +399,7 @@ begin
   if Length(ARealisticMovingPoints) = 1 then
     SmallDuration := ATotalMoveDuration
   else
-    SmallDuration := (ATotalMoveDuration / (Length(ARealisticMovingPoints) - 1)) * CSlowdown;  //Multiplied by CSlowdown, because the overall duration will end up to much.
+    SmallDuration := (ATotalMoveDuration / (Length(ARealisticMovingPoints) - 1)) * CSlowdown;  //Multiplied by CSlowdown, because the overall duration will end up too much.
 
   for i := 0 to Length(ARealisticMovingPoints) - 1 do
     ARealisticMovingPoints[i].MoveDuration := SmallDuration;
