@@ -366,7 +366,9 @@ type
   TRMPointArr = array of TRMPoint;
 
 
-procedure GeneratePointsForRealisticMoving(var ARealisticMovingPoints: TRMPointArr; ADestPoint: TPoint; ATotalMoveDuration: Integer);
+procedure GeneratePointsForRealisticMoving(var ARealisticMovingPoints: TRMPointArr; ADestPoint: TPoint; ATotalMoveDuration: Integer; out ALineLength: Extended);
+const
+  CSlowdown = 0.3;
 var
   CurrentPoint: TPoint;
   i: Integer;
@@ -379,8 +381,16 @@ var
 begin
   GetCursorPos(CurrentPoint);
   Randomize;
-  AdjustingPointCount := Random(6);
-  SetLength(ARealisticMovingPoints, 60 + Random(5) + AdjustingPointCount);   //must be greater than 0
+
+  try
+    ALineLength := Sqrt(Sqr(CurrentPoint.X - ADestPoint.X) + Sqr(CurrentPoint.Y - ADestPoint.Y));
+    if ALineLength < 1 then
+      ALineLength := 30;
+  except
+  end;
+
+  AdjustingPointCount := Random(6);                    //approx 60 points for 1200px
+  SetLength(ARealisticMovingPoints, Round((ALineLength * 60) / 1200) + Random(5) + AdjustingPointCount);   //must be greater than 0
 
   if Length(ARealisticMovingPoints) < 2 then  //usually for debugging, because there is a minimum value above
     SetLength(ARealisticMovingPoints, 2);
@@ -389,7 +399,7 @@ begin
   if Length(ARealisticMovingPoints) = 1 then
     SmallDuration := ATotalMoveDuration
   else
-    SmallDuration := ATotalMoveDuration / (Length(ARealisticMovingPoints) - 1);
+    SmallDuration := (ATotalMoveDuration / (Length(ARealisticMovingPoints) - 1)) * CSlowdown;  //Multiplied by CSlowdown, because the overall duration will end up to much.
 
   for i := 0 to Length(ARealisticMovingPoints) - 1 do
     ARealisticMovingPoints[i].MoveDuration := SmallDuration;
@@ -456,7 +466,7 @@ begin
       if Random(3) > 0 then
       begin
         //using positive and negative offsets:
-        X := X + Random(Round(DivXAmount)) - Random(Round(DivXAmount));
+        X := X + Random(Round(DivXAmount * 1.2)) - Random(Round(DivXAmount * 1.2));
         Y := Y + Random(Round(DivYAmount)) - Random(Round(DivYAmount));
       end;
 
@@ -484,9 +494,10 @@ var
     DelayAfterMovingToDestination: Integer;
     DelayAfterMouseDown: Integer;
     MoveDuration: Integer;
-    i: Integer;
+    i, GripCount: Integer;
     RealisticMovingPoints: TRMPointArr;
     RealisticMoving: Boolean;
+    LineLength: Extended;
   begin
     ClickPoint.X := X;
     ClickPoint.Y := Y;
@@ -507,11 +518,23 @@ var
           MoveMouseCursorWithDuration(ClickPoint, MoveDuration, UseClipCursor, MoveDuration > 5000)  //there will be race-conditions on client-server execution, if using App.ProcMsg
         else
         begin
-          GeneratePointsForRealisticMoving(RealisticMovingPoints, ClickPoint, MoveDuration);
+          GeneratePointsForRealisticMoving(RealisticMovingPoints, ClickPoint, MoveDuration, LineLength);
+          Randomize;
+          GripCount := 0;
+
           for i := 0 to Length(RealisticMovingPoints) - 1 do
           begin
             MoveMouseCursorWithDuration(RealisticMovingPoints[i].tp, Round(RealisticMovingPoints[i].MoveDuration), UseClipCursor, MoveDuration > 5000);
             Application.ProcessMessages; //Without this call, UIClicker "freezes" and it is not allowed to move the cursor. Because of this, the cursor doesn't end up at its destination.
+
+            if (i > Length(RealisticMovingPoints) - 27) and  //i > .. means that this adjustment is made at the end of the movement
+               (i < Length(RealisticMovingPoints) - 6) and
+               (Random(10) = 8) and (GripCount < 2) and
+               (LineLength > 450) then //do not do this for short distances
+            begin
+              Sleep(200 + Random(200)); //"better grip"
+              Inc(GripCount);
+            end;
           end;
         end;
       end;
@@ -549,9 +572,22 @@ var
         MoveMouseCursorWithDuration(DestPoint, MoveDuration, UseClipCursor, MoveDuration > 5000)  //there will be race-conditions on client-server execution, if using App.ProcMsg
       else
       begin
-        GeneratePointsForRealisticMoving(RealisticMovingPoints, DestPoint, MoveDuration);
+        GeneratePointsForRealisticMoving(RealisticMovingPoints, DestPoint, MoveDuration, LineLength);
         for i := 0 to Length(RealisticMovingPoints) - 1 do
+        begin
           MoveMouseCursorWithDuration(RealisticMovingPoints[i].tp, Round(RealisticMovingPoints[i].MoveDuration), UseClipCursor, MoveDuration > 5000);
+          Application.ProcessMessages;
+
+          //Dragging will require further tweaking, because it is a precision operation.
+          if (i > Length(RealisticMovingPoints) - 27) and  //i > .. means that this adjustment is made at the end of the movement
+             (i < Length(RealisticMovingPoints) - 6) and
+             (Random(10) = 8) and (GripCount < 3) and
+             (LineLength > 450) then //do not do this for short distances
+          begin
+            Sleep(100 + Random(200)); //"better grip"
+            Inc(GripCount);
+          end;
+        end;
       end;
 
       SetBasicMouseInfo(AInputs, XDest, YDest);
