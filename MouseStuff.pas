@@ -366,6 +366,126 @@ type
   TRMPointArr = array of TRMPoint;
 
 
+procedure SecondGrip;
+var
+  CurrentPoint, NewPoint: TPoint;
+begin
+  GetCursorPos(CurrentPoint);
+
+  if Random(2) = 1 then
+    Exit;
+
+  NewPoint.X := Random(80) - 40 + CurrentPoint.X;
+  NewPoint.Y := Random(40) - 20 + CurrentPoint.Y;
+  SetCursorPos((CurrentPoint.X + NewPoint.X) shr 1 + Random(50), (CurrentPoint.Y + NewPoint.Y) shr 1 + Random(30));
+  Sleep(30 + Random(50));
+  Randomize;
+
+  SetCursorPos((CurrentPoint.X + NewPoint.X) shr 1 - Random(50), (CurrentPoint.Y + NewPoint.Y) shr 1 - Random(30));
+  Sleep(60 + Random(50));
+  Randomize;
+
+  if Random(3) = 1 then
+  begin
+    SetCursorPos((CurrentPoint.X + NewPoint.X * 3) shr 2 + Random(50), (CurrentPoint.Y + NewPoint.Y * 3) shr 2 + Random(10));
+    Sleep(20 + Random(40));
+    Randomize;
+
+    SetCursorPos((CurrentPoint.X + NewPoint.X * 3) shr 2 - Random(30), (CurrentPoint.Y + NewPoint.Y * 3) shr 2 - Random(10));
+    Sleep(40 + Random(30));
+    Randomize;
+  end;
+
+  if Random(3) = 1 then
+  begin
+    SetCursorPos((CurrentPoint.X + NewPoint.X * 3) shr 2 + Random(60), (CurrentPoint.Y + NewPoint.Y * 3) shr 2 + Random(10));
+    Sleep(30 + Random(60));
+    Randomize;
+
+    SetCursorPos((CurrentPoint.X + NewPoint.X * 3) shr 2 - Random(60), (CurrentPoint.Y + NewPoint.Y * 3) shr 2 - Random(10));
+    Sleep(50 + Random(50));
+    Randomize;
+  end;
+
+  if Random(3) = 1 then
+  begin
+    SetCursorPos((CurrentPoint.X + NewPoint.X * 3) shr 2 + Random(40), (CurrentPoint.Y + NewPoint.Y * 3) shr 2 + Random(30));
+    Sleep(30 + Random(60));
+    Randomize;
+
+    SetCursorPos((CurrentPoint.X + NewPoint.X * 3) shr 2 - Random(40), (CurrentPoint.Y + NewPoint.Y * 3) shr 2 - Random(30));
+    Sleep(50 + Random(50));
+    Randomize;
+  end;
+
+  if Random(2) = 1 then
+  begin
+    SetCursorPos((CurrentPoint.X + NewPoint.X * 7) shr 3 + Random(20), (CurrentPoint.Y + NewPoint.Y * 7) shr 3 + Random(10));
+    Sleep(40 + Random(70));
+    Randomize;
+
+    SetCursorPos((CurrentPoint.X + NewPoint.X * 7) shr 3 - Random(20), (CurrentPoint.Y + NewPoint.Y * 7) shr 3 - Random(10));
+    Sleep(60 + Random(70));
+    Randomize;
+  end;
+
+  SetCursorPos(NewPoint.X, NewPoint.Y);
+  Sleep(60 + Random(60));
+end;
+
+
+procedure FirstGrip;
+var
+  CurrentPoint, NewPoint: TPoint;
+  XDir, YDir: TValueSign;
+  i: Integer;
+begin
+  if Random(4) <> 1 then  //first grip
+    Exit;
+
+  GetCursorPos(CurrentPoint);
+  NewPoint := CurrentPoint;
+
+  Sleep(1);
+  Randomize;
+  if Random(2) = 1 then
+    XDir := 1
+  else
+    XDir := -1;
+
+  Sleep(1);
+  Randomize;
+  if Random(2) = 1 then
+    YDir := 1
+  else
+    YDir := -1;
+
+  for i := 0 to 15 + Random(20) do
+  begin
+    if Random(28) = 14 then
+    begin
+      Sleep(1);
+      Randomize;
+      XDir := -XDir;
+    end;
+
+    if Random(28) = 14 then
+    begin
+      Sleep(1);
+      Randomize;
+      YDir := -YDir;
+    end;
+
+    Inc(NewPoint.X, XDir * Random(5));
+    Inc(NewPoint.Y, YDir * Random(5));
+    SetCursorPos(NewPoint.X, NewPoint.Y);
+    Sleep(3 + Random(5));
+  end;
+
+  SecondGrip;
+end;
+
+
 procedure GeneratePointsForRealisticMoving(var ARealisticMovingPoints: TRMPointArr; ADestPoint: TPoint; ATotalMoveDuration: Integer; out ALineLength: Extended);
 const
   CSlowdown = 0.3;
@@ -399,7 +519,7 @@ begin
   if Length(ARealisticMovingPoints) = 1 then
     SmallDuration := ATotalMoveDuration
   else
-    SmallDuration := (ATotalMoveDuration / (Length(ARealisticMovingPoints) - 1)) * CSlowdown;  //Multiplied by CSlowdown, because the overall duration will end up too much.
+    SmallDuration := (ATotalMoveDuration / (Length(ARealisticMovingPoints) - 1)) * CSlowdown;  //Multiplied by CSlowdown, because the overall duration will end up to much.
 
   for i := 0 to Length(ARealisticMovingPoints) - 1 do
     ARealisticMovingPoints[i].MoveDuration := SmallDuration;
@@ -518,6 +638,7 @@ var
           MoveMouseCursorWithDuration(ClickPoint, MoveDuration, UseClipCursor, MoveDuration > 5000)  //there will be race-conditions on client-server execution, if using App.ProcMsg
         else
         begin
+          FirstGrip;
           GeneratePointsForRealisticMoving(RealisticMovingPoints, ClickPoint, MoveDuration, LineLength);
           Randomize;
           GripCount := 0;
@@ -572,7 +693,10 @@ var
         MoveMouseCursorWithDuration(DestPoint, MoveDuration, UseClipCursor, MoveDuration > 5000)  //there will be race-conditions on client-server execution, if using App.ProcMsg
       else
       begin
+        FirstGrip;
         GeneratePointsForRealisticMoving(RealisticMovingPoints, DestPoint, MoveDuration, LineLength);
+        Randomize;
+
         for i := 0 to Length(RealisticMovingPoints) - 1 do
         begin
           MoveMouseCursorWithDuration(RealisticMovingPoints[i].tp, Round(RealisticMovingPoints[i].MoveDuration), UseClipCursor, MoveDuration > 5000);
