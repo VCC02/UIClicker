@@ -488,7 +488,7 @@ end;
 
 procedure GeneratePointsForRealisticMoving(var ARealisticMovingPoints: TRMPointArr; ADestPoint: TPoint; ATotalMoveDuration: Integer; out ALineLength: Extended);
 const
-  CSlowdown = 0.3;
+  CSlowdown = 0.2;
 var
   CurrentPoint: TPoint;
   i: Integer;
@@ -519,7 +519,7 @@ begin
   if Length(ARealisticMovingPoints) = 1 then
     SmallDuration := ATotalMoveDuration
   else
-    SmallDuration := (ATotalMoveDuration / (Length(ARealisticMovingPoints) - 1)) * CSlowdown;  //Multiplied by CSlowdown, because the overall duration will end up to much.
+    SmallDuration := (ATotalMoveDuration / (Length(ARealisticMovingPoints) - 1)) * CSlowdown;  //Multiplied by CSlowdown, because the overall duration will end up too much.
 
   for i := 0 to Length(ARealisticMovingPoints) - 1 do
     ARealisticMovingPoints[i].MoveDuration := SmallDuration;
@@ -618,6 +618,7 @@ var
     RealisticMovingPoints: TRMPointArr;
     RealisticMoving: Boolean;
     LineLength: Extended;
+    BoxSize: Integer;
   begin
     ClickPoint.X := X;
     ClickPoint.Y := Y;
@@ -638,6 +639,14 @@ var
           MoveMouseCursorWithDuration(ClickPoint, MoveDuration, UseClipCursor, MoveDuration > 5000)  //there will be race-conditions on client-server execution, if using App.ProcMsg
         else
         begin
+          BoxSize := 60;
+          Randomize;
+          DestPoint := ClickPoint;
+          ClickPoint.X := ClickPoint.X + Random(BoxSize) - BoxSize shr 1;   //alter destination a bit
+          Sleep(1);
+          Randomize;
+          ClickPoint.Y := ClickPoint.Y + Random(BoxSize) - BoxSize shr 1;   //alter destination a bit
+
           FirstGrip;
           GeneratePointsForRealisticMoving(RealisticMovingPoints, ClickPoint, MoveDuration, LineLength);
           Randomize;
@@ -656,6 +665,14 @@ var
               Sleep(200 + Random(200)); //"better grip"
               Inc(GripCount);
             end;
+          end;
+
+          //Final adjustment
+          GeneratePointsForRealisticMoving(RealisticMovingPoints, DestPoint, 300, LineLength);
+          for i := 0 to Length(RealisticMovingPoints) - 1 do
+          begin
+            MoveMouseCursorWithDuration(RealisticMovingPoints[i].tp, Round(RealisticMovingPoints[i].MoveDuration), UseClipCursor, MoveDuration > 5000);
+            Application.ProcessMessages; //Without this call, UIClicker "freezes" and it is not allowed to move the cursor. Because of this, the cursor doesn't end up at its destination.
           end;
         end;
       end;
