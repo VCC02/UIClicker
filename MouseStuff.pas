@@ -372,7 +372,7 @@ var
 begin
   GetCursorPos(CurrentPoint);
 
-  if Random(2) = 1 then
+  if Random(3) = 1 then
     Exit;
 
   NewPoint.X := Random(80) - 40 + CurrentPoint.X;
@@ -440,7 +440,7 @@ var
   XDir, YDir: TValueSign;
   i: Integer;
 begin
-  if Random(4) <> 1 then  //first grip
+  if Random(6) <> 1 then  //first grip
     Exit;
 
   GetCursorPos(CurrentPoint);
@@ -509,8 +509,8 @@ begin
   except
   end;
 
-  AdjustingPointCount := Random(6);                    //approx 60 points for 1200px
-  SetLength(ARealisticMovingPoints, Round((ALineLength * 60) / 1200) + Random(5) + AdjustingPointCount);   //must be greater than 0
+  AdjustingPointCount := Random(6);                    //approx 80 points for 1200px
+  SetLength(ARealisticMovingPoints, Round((ALineLength * 80) / 1200) + Random(5) + AdjustingPointCount);   //must be greater than 0
 
   if Length(ARealisticMovingPoints) < 2 then  //usually for debugging, because there is a minimum value above
     SetLength(ARealisticMovingPoints, 2);
@@ -524,7 +524,7 @@ begin
   for i := 0 to Length(ARealisticMovingPoints) - 1 do
     ARealisticMovingPoints[i].MoveDuration := SmallDuration;
 
-  if SmallDuration > 5 then   //modify durations only if they can be perceived
+  if SmallDuration > 2 then   //modify durations only if they can be perceived
   begin
     HalfSmallDuration := Round(SmallDuration) shr 1;
     for i := 0 to Length(ARealisticMovingPoints) - 2 do
@@ -596,13 +596,73 @@ begin
 end;
 
 
+procedure DampedRinging(ASrcPoint: TPoint; ALineLength: Extended; AUseClipCursor: Boolean);
+const
+  CExtraLineLength: Extended = 30;   //[px] - in the direction of initial movement
+var
+  CurrentPoint, NewPoint, MirrorPoint, HalfNewPoint, HalfMirrorPoint: TPoint;
+  XL, YL, HalfXL, HalfYL: Extended;
+  TempLineLength, ExtraLineLength: Extended;
+  Points: TRMPointArr;
+  i: Integer;
+begin
+  GetCursorPos(CurrentPoint);
+
+  if Random(3) = 1 then
+    Exit;
+
+  if ALineLength < 1 then
+  begin
+    MessageBox(0, 'Length = 0', 'LL', 0);
+    Exit;
+  end;
+
+  Randomize;
+
+  //Lengths of the new piece of line (on x and y coordinates):
+  ExtraLineLength := CExtraLineLength + Random(20);
+  XL := ExtraLineLength * (CurrentPoint.X - ASrcPoint.X) / ALineLength;
+  YL := ExtraLineLength * (CurrentPoint.Y - ASrcPoint.Y) / ALineLength;
+  HalfXL := XL / 2;
+  HalfYL := YL / 2;
+
+  NewPoint.X := Round(CurrentPoint.X + XL);
+  NewPoint.Y := Round(CurrentPoint.Y + YL);
+
+  MirrorPoint.X := Round(CurrentPoint.X - XL * 0.75);
+  MirrorPoint.Y := Round(CurrentPoint.Y - YL * 0.75);
+
+  HalfNewPoint.X := Round(CurrentPoint.X + HalfXL);
+  HalfNewPoint.Y := Round(CurrentPoint.Y + HalfYL);
+
+  HalfMirrorPoint.X := Round(CurrentPoint.X - HalfXL / 2);
+  HalfMirrorPoint.Y := Round(CurrentPoint.Y - HalfYL / 2);
+
+  GeneratePointsForRealisticMoving(Points, NewPoint, 30, TempLineLength);
+  for i := 0 to Length(Points) - 1 do
+    MoveMouseCursorWithDuration(Points[i].tp, Round(Points[i].MoveDuration), AUseClipCursor, False);
+
+  GeneratePointsForRealisticMoving(Points, MirrorPoint, 30, TempLineLength);
+  for i := 0 to Length(Points) - 1 do
+    MoveMouseCursorWithDuration(Points[i].tp, Round(Points[i].MoveDuration), AUseClipCursor, False);
+
+  GeneratePointsForRealisticMoving(Points, HalfNewPoint, 15, TempLineLength);
+  for i := 0 to Length(Points) - 1 do
+    MoveMouseCursorWithDuration(Points[i].tp, Round(Points[i].MoveDuration), AUseClipCursor, False);
+
+  GeneratePointsForRealisticMoving(Points, HalfMirrorPoint, 15, TempLineLength);
+  for i := 0 to Length(Points) - 1 do
+    MoveMouseCursorWithDuration(Points[i].tp, Round(Points[i].MoveDuration), AUseClipCursor, False);
+end;
+
+
 procedure ClickTControl(AParams: TStringList);
 var
   X, Y, XDest, YDest: Integer;       //offsets
   IsDragging: Boolean;
   AShift: TShiftState;
   AButton: TMouseButton;
-  ClickPoint, DestPoint: TPoint;
+  ClickPoint, DestPoint, SrcPoint: TPoint;
   InitialPoint: TPoint;
   LeaveMouse, UseClipCursor: Boolean;
 
@@ -639,8 +699,9 @@ var
           MoveMouseCursorWithDuration(ClickPoint, MoveDuration, UseClipCursor, MoveDuration > 5000)  //there will be race-conditions on client-server execution, if using App.ProcMsg
         else
         begin
-          BoxSize := 60;
+          BoxSize := 40;
           Randomize;
+          GetCursorPos(SrcPoint);
           DestPoint := ClickPoint;
           ClickPoint.X := ClickPoint.X + Random(BoxSize) - BoxSize shr 1;   //alter destination a bit
           Sleep(1);
@@ -659,13 +720,15 @@ var
 
             if (i > Length(RealisticMovingPoints) - 27) and  //i > .. means that this adjustment is made at the end of the movement
                (i < Length(RealisticMovingPoints) - 6) and
-               (Random(10) = 8) and (GripCount < 2) and
+               (Random(20) = 8) and (GripCount < 2) and
                (LineLength > 450) then //do not do this for short distances
             begin
               Sleep(200 + Random(200)); //"better grip"
               Inc(GripCount);
             end;
           end;
+
+          DampedRinging(SrcPoint, LineLength, UseClipCursor);
 
           //Final adjustment
           GeneratePointsForRealisticMoving(RealisticMovingPoints, DestPoint, 300, LineLength);
@@ -722,7 +785,7 @@ var
           //Dragging will require further tweaking, because it is a precision operation.
           if (i > Length(RealisticMovingPoints) - 27) and  //i > .. means that this adjustment is made at the end of the movement
              (i < Length(RealisticMovingPoints) - 6) and
-             (Random(10) = 8) and (GripCount < 3) and
+             (Random(20) = 8) and (GripCount < 3) and
              (LineLength > 450) then //do not do this for short distances
           begin
             Sleep(100 + Random(200)); //"better grip"
