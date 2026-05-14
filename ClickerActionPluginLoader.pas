@@ -1046,6 +1046,12 @@ begin
   Path := APath;
   PluginLocationInfo := '';
 
+  if APath = '' then
+  begin
+    DoAddToLog('Plugin path not set yet.');
+    Exit;
+  end;
+
   DoAddToLog('Loading plugin for getting properties...');
 
   {$IFDEF MemPlugins}
