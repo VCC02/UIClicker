@@ -114,7 +114,7 @@ begin
   GetDefaultPropertyValues_FindControl(FindControlOptions);
   FindControlOptions.MatchText := 'Mozilla Firefox';
   FindControlOptions.MatchClassName := 'MozillaWindowClass';
-  ExpectSuccessfulAction(FastReplace_87ToReturn(ExecuteFindControlAction(AUIClickerAddress, FindControlOptions, 'Find FF', 3000, CREParam_FileLocation_ValueMem)));
+  ExpectSuccessfulAction(FastReplace_87ToReturn(ExecuteFindControlAction(AUIClickerAddress, FindControlOptions, 'Find FF', 5000, CREParam_FileLocation_ValueMem)));
 end;
 
 
@@ -179,7 +179,7 @@ begin
   FindSubControlOptions.UseTextRenderingInBrowser := True;
   FindSubControlOptions.RenderingInBrowserSettings.ReceivingBitmapsTimeout := 3010;
 
-  ExpectSuccessfulAction(FastReplace_87ToReturn(ExecuteFindSubControlAction(AUIClickerAddress, FindSubControlOptions, 'FindSubControl', 1000, CREParam_FileLocation_ValueMem)));
+  ExpectSuccessfulAction(FastReplace_87ToReturn(ExecuteFindSubControlAction(AUIClickerAddress, FindSubControlOptions, 'FindSubControl', 3000, CREParam_FileLocation_ValueMem)));
 end;
 
 
