@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2025 VCC
+    Copyright (C) 2026 VCC
     creation date: Feb 2023
     initial release date: 02 Feb 2023
 
@@ -3418,7 +3418,11 @@ end;
 function GetPropertyHint_Click_RealisticMoving: string;
 begin
   Result := 'This is a pseudo-realistic moving of the mouse cursor from the current position to its destination.' + #13#10 +
-            'For now, it involves small deviations from a straight path and also various delays from one point to another.';
+            'For now, it involves small deviations from a straight path and also various delays from one point to another.' + #13#10 +
+            'When True, it requires the MoveDuration property to have a positive value.' + #13#10 +
+            'Because of the current implementation limitations, the value set to MoveDuration should be lower than desired.' + #13#10 +
+            'In addition to the path deviations, at random times, there are other movements like "mouse gripping", "stuttering" or "destination overcoming.' + #13#10 +
+            'These additional movements are not accounted for by the the MoveDuration property.';
 end;
 
 
