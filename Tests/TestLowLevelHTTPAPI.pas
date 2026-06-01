@@ -153,7 +153,7 @@ implementation
 
 uses
   ClickerActionsClient, ActionsStuff, Controls, ClickerFileProviderClient, ClickerActionProperties,
-  Graphics, AsyncProcess, UITestUtils, PitstopTestRunner;
+  Graphics, AsyncProcess, UITestUtils, PitstopTestRunner, Forms;
 
 
 var
@@ -592,13 +592,34 @@ const
 var
   tk: QWord;
   FirstDuration, SecondDuration: QWord;
+  ThRef: TClientThread;
 begin                                         //This test should be modified, to execute in-mem actions, i.e. FindSubControl, via API. Only the FindSubControl execution time should be measured.
   tk := GetTickCount64;                       //It should generate some options with GenerateFindSubControlOptionsForMainUIClickerWindow_Bitness and modify them for this test.
-  ExecTestTemplate(TestServerAddress, '$AppDir$\Tests\TestFiles\FindBitOnMainNoFastSearchWithSleepySearch.clktmpl');
+  ThRef := AsyncExecTestTemplate(TestServerAddress, '$AppDir$\Tests\TestFiles\FindBitOnMainNoFastSearchWithSleepySearch.clktmpl');
+  try
+    frmPitstopTestRunner.SetTimeoutProgressBarMax(2 * 60000);
+    repeat
+      Application.ProcessMessages;
+      UpdateWaitingProgress(GetTickCount64 - tk);
+    until ThRef.Done or (GetTickCount64 - tk > 2 * 60000);
+  finally
+    ThRef.Free;
+  end;
+
   FirstDuration := GetTickCount64 - tk;
 
   tk := GetTickCount64;
-  ExecTestTemplate(TestServerAddress, '$AppDir$\Tests\TestFiles\FindBitOnMainWithFastSearchWithSleepySearch.clktmpl');
+  ThRef := AsyncExecTestTemplate(TestServerAddress, '$AppDir$\Tests\TestFiles\FindBitOnMainWithFastSearchWithSleepySearch.clktmpl');
+  try
+    frmPitstopTestRunner.SetTimeoutProgressBarMax(40000);
+    repeat
+      Application.ProcessMessages;
+      UpdateWaitingProgress(GetTickCount64 - tk);
+    until ThRef.Done or (GetTickCount64 - tk > 40000);
+  finally
+    ThRef.Free;
+  end;
+
   SecondDuration := GetTickCount64 - tk;
 
   Expect(DWord(FirstDuration)).ToBeGreaterThan(CExpectedMultiplier * SecondDuration, 'Expecting some performance gain.  ' + IntToStr(FirstDuration) + ' vs. ' + IntToStr(CExpectedMultiplier) + ' * ' + IntToStr(SecondDuration));
