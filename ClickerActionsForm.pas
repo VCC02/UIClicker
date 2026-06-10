@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2025 VCC
+    Copyright (C) 2026 VCC
     creation date: Dec 2019
     initial release date: 13 Sep 2022
 
@@ -61,6 +61,7 @@ type
   private
     FCmd: string;
     FParams: TStrings;
+    FFullCmd: string;
     FResult: string;
     FErrCode: Integer;
     FFrame: TfrClickerActionsArr;
@@ -2761,7 +2762,18 @@ begin
   if ASyncObj.FCmd = '/' + CRECmd_SetRenderedFileB64 then
     AddToLog('Request: ' + ASyncObj.FCmd + '  ' + Copy(FastReplace_ReturnToCSV(ASyncObj.FParams.Text), 1, 100) + '...')
   else
+  begin
     AddToLog('Request: ' + ASyncObj.FCmd + '  ' + FastReplace_ReturnToCSV(ASyncObj.FParams.Text));
+
+    if Length(ASyncObj.FCmd) = 0 then
+    begin
+      AddToLog('Request_FullCmd: ' + FastReplace_ReturnToCSV(FastReplace_0To1(ASyncObj.FFullCmd)) + '  CmdLength: ' + IntToStr(Length(ASyncObj.FFullCmd)) + '  ParamsCount: ' + IntToStr(ASyncObj.FParams.Count));
+      AddToLog('_______________');
+      Result := '[Server error] Received empty or bad command.';
+      ASyncObj.FErrCode := 1;
+      Exit;
+    end;
+  end;
 
   if ASyncObj.FFrame = nil then
   begin
@@ -3458,7 +3470,7 @@ begin
 end;
 
 
-function ProcessServerCommand(ACmd: string; AParams: TStrings; AOutBmp: TBitmap; AGPStream: TMemoryStream; ARenderedInMemFileSystem: TInMemFileSystem): string;
+function ProcessServerCommand(ACmd: string; AParams: TStrings; AFullCmd: string; AOutBmp: TBitmap; AGPStream: TMemoryStream; ARenderedInMemFileSystem: TInMemFileSystem): string;
 var
   SyncObj: TSyncHTTPCmd;
   Fnm: string;
@@ -3472,6 +3484,7 @@ begin
       try
         SyncObj.FCmd := ACmd;
         SyncObj.FParams := AParams; //it's ok to pass the pointer, however, it may not be ok to modify the list
+        SyncObj.FFullCmd := AFullCmd;
         SyncObj.FFrame := nil;  //will get assigned on the first sync call
         SyncObj.FErrCode := 0;
 
@@ -3546,6 +3559,7 @@ begin
     try
       SyncObj.FCmd := ACmd;
       SyncObj.FParams := AParams; //it's ok to pass the pointer, however, it may not be ok to modify the list
+      SyncObj.FFullCmd := AFullCmd;
       SyncObj.FFrame := nil;  //will get assigned on the first sync call
       SyncObj.FErrCode := 0;
       SyncObj.FBmp := AOutBmp;
@@ -3626,7 +3640,7 @@ begin
     GPStream := nil;
 
   try
-    AResponseInfo.ContentText := ProcessServerCommand(Cmd, ARequestInfo.Params, Bmp, GPStream, FRenderedInMemFileSystem);
+    AResponseInfo.ContentText := ProcessServerCommand(Cmd, ARequestInfo.Params, ARequestInfo.Command, Bmp, GPStream, FRenderedInMemFileSystem);
 
     if GettingImage then
     begin
