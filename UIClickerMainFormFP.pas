@@ -139,7 +139,9 @@ implementation
 uses
   ClickerPreviewForm, ClickerWinInterpForm, ClickerWinInterpFrame, ClickerTemplateCallTreeForm,
   ClickerActionsClient, IniFiles, ClickerFindControlFrame, BitmapConv,
-  ClickerUtils, ClickerPrimitives, ClickerActionsForm, ClickerPrimitivesCompositor, Math;
+  ClickerUtils, ClickerPrimitives, ClickerActionsForm, ClickerPrimitivesCompositor, Math
+  , VCCLogo
+  ;
 
 { TfrmUIClickerMainForm }
 
@@ -308,6 +310,7 @@ procedure TfrmUIClickerMainForm.FormCreate(Sender: TObject);
 begin
   FAllFormsAreCreated := False;
   tmrStartup.Enabled := True;
+  AddImgLogoToForm(Self);
 end;
 
 
