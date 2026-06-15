@@ -28,7 +28,12 @@ interface
 
 
 uses
-  Windows, Forms, StdCtrls, ExtCtrls;
+  {$IFDEF Windows}
+    Windows
+  {$ELSE}
+    LCLIntf, LCLType
+  {$ENDIF}
+  , Forms, StdCtrls, ExtCtrls;
 
 
 procedure AddImgLogoToForm(AForm: TForm; AAdditionalMemo: TMemo = nil);
@@ -95,7 +100,11 @@ var
   i: Integer;
   s: string;
 begin
-  if GetAsyncKeyState(VK_ESCAPE) < 0 then
+  {$IFDEF Windows}
+    if GetAsyncKeyState(VK_ESCAPE) < 0 then
+  {$ELSE}
+    if GetKeyState(VK_ESCAPE) < 0 then
+  {$ENDIF}
     if imgLogo = nil then
     begin
       imgLogo := TImage.Create(Handlers.FOwnerForm);
