@@ -60,11 +60,11 @@ uses
   ClickerFontFinderSettingsForm, BitmapConv, ClickerActionPlugins,
   ClickerActionPluginLoader, DllUtils, ClickerExtraUtils, ClickerPluginFrame,
   {$IFDEF MemPlugins}
-    DynMemLib, //search for DynMemLib.pas on GitHub if not found
+    DynLibMemLoader,
   {$ENDIF}
   ClickerFileProviderUtils, ClickerVstUtils, ClickerPluginArchive, DoubleList,
-  CLHeaders, ClickerActionsCodeGen, ClickerCLUtils, ClickerIconsDM, 
-  BitmapProcessingGPU;
+  CLHeaders, ClickerActionsCodeGen, ClickerCLUtils,
+  ClickerIconsDM, BitmapProcessingGPU;
 
 {$R *.res}
 

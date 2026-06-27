@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2025 VCC
+    Copyright (C) 2026 VCC
     creation date: 13 Jan 2024
     initial release date: 15 Jan 2024
 
@@ -171,7 +171,8 @@ uses
   DllUtils, Forms, ClickerActionsClient, ClickerActionProperties
   {$IFDEF MemPlugins}
     {$IFDEF Windows}
-      , DynMemLib    //search for DynMemLib.pas on GitHub if not found
+      //, DynMemLib    //search for DynMemLib.pas on GitHub if not found
+      , DynLibMemLoader
     {$ENDIF}
   {$ENDIF}
   ;
@@ -823,7 +824,7 @@ function TActionPlugin.LoadToExecute(APath: string;
                                      AAllVars: TStringList = nil): Boolean;
 {$IFDEF MemPlugins}
   var
-    MemLoader: TDynMemLib;
+    MemLoader: TDynLibMemLoader;
     LibStream: TMemoryStream;
 {$ENDIF}
 begin
@@ -870,7 +871,7 @@ begin
   {$IFDEF MemPlugins}
     if IsMemPluginPath(Path) then
     begin
-      MemLoader := TDynMemLib.Create;
+      MemLoader := TDynLibMemLoader.Create;
       PluginHandle := UInt64(MemLoader);
 
       LibStream := TMemoryStream.Create;
@@ -884,7 +885,7 @@ begin
         begin
           try
             LibStream.Position := 0;
-            Loaded := MemLoader.MemLoadLibrary(LibStream.Memory);
+            Loaded := MemLoader.LoadLibrary(LibStream.Memory);
           except
             on E: Exception do
             begin
@@ -910,7 +911,7 @@ begin
 
       if not Loaded then
       begin   //attempt to load with mem loader if the standard one doesn't work
-        MemLoader := TDynMemLib.Create;
+        MemLoader := TDynLibMemLoader.Create;
         PluginHandle := UInt64(MemLoader);
 
         LibStream := TMemoryStream.Create;
@@ -920,7 +921,7 @@ begin
 
             try
               LibStream.Position := 0;
-              Loaded := MemLoader.MemLoadLibrary(LibStream.Memory);
+              Loaded := MemLoader.LoadLibrary(LibStream.Memory);
               IsLoadedWithMemLoader := True;
             except
               on E: Exception do
@@ -957,7 +958,7 @@ begin
 
     {$IFDEF MemPlugins}
       if IsMemPluginPath(Path) or IsLoadedWithMemLoader then
-        Func.ExecutePluginFunc := MemLoader.MemGetProcAddress('ExecutePlugin')
+        Func.ExecutePluginFunc := MemLoader.GetProcAddress('ExecutePlugin')
       else
         Func.ExecutePluginFunc := GetProcedureAddress(PluginHandle, 'ExecutePlugin');
     {$ELSE}
@@ -973,7 +974,7 @@ begin
 
     {$IFDEF MemPlugins}
       if IsMemPluginPath(Path) or IsLoadedWithMemLoader then
-        Func.GetAPIVersionFunc := MemLoader.MemGetProcAddress('GetAPIVersion')
+        Func.GetAPIVersionFunc := MemLoader.GetProcAddress('GetAPIVersion')
       else
         Func.GetAPIVersionFunc := GetProcedureAddress(PluginHandle, 'GetAPIVersion');
     {$ELSE}
@@ -1029,7 +1030,7 @@ var
   PluginLocationInfo: string;
 
   {$IFDEF MemPlugins}
-    MemLoader: TDynMemLib;
+    MemLoader: TDynLibMemLoader;
     LibStream: TMemoryStream;
   {$ENDIF}
 begin
@@ -1057,7 +1058,7 @@ begin
   {$IFDEF MemPlugins}
     if IsMemPluginPath(Path) then
     begin
-      MemLoader := TDynMemLib.Create;
+      MemLoader := TDynLibMemLoader.Create;
       PluginHandle := UInt64(MemLoader);
 
       LibStream := TMemoryStream.Create;
@@ -1071,7 +1072,7 @@ begin
         begin
           try
             LibStream.Position := 0;
-            Loaded := MemLoader.MemLoadLibrary(LibStream.Memory);
+            Loaded := MemLoader.LoadLibrary(LibStream.Memory);
           except
             on E: Exception do
             begin
@@ -1094,7 +1095,7 @@ begin
 
       if not Loaded then
       begin   //attempt to load with mem loader if the standard one doesn't work
-        MemLoader := TDynMemLib.Create;
+        MemLoader := TDynLibMemLoader.Create;
         PluginHandle := UInt64(MemLoader);
 
         LibStream := TMemoryStream.Create;
@@ -1104,7 +1105,7 @@ begin
 
             try
               LibStream.Position := 0;
-              Loaded := MemLoader.MemLoadLibrary(LibStream.Memory);
+              Loaded := MemLoader.LoadLibrary(LibStream.Memory);
               IsLoadedWithMemLoader := True;
             except
               on E: Exception do
@@ -1142,7 +1143,7 @@ begin
 
     {$IFDEF MemPlugins}
       if IsMemPluginPath(APath) or IsLoadedWithMemLoader then
-        Func.GetListOfPropertiesProc := MemLoader.MemGetProcAddress('GetListOfProperties')
+        Func.GetListOfPropertiesProc := MemLoader.GetProcAddress('GetListOfProperties')
       else
         Func.GetListOfPropertiesProc := GetProcedureAddress(PluginHandle, 'GetListOfProperties');
     {$ELSE}
@@ -1158,7 +1159,7 @@ begin
 
     {$IFDEF MemPlugins}
       if IsMemPluginPath(APath) or IsLoadedWithMemLoader then
-        Func.GetAPIVersionFunc := MemLoader.MemGetProcAddress('GetAPIVersion')
+        Func.GetAPIVersionFunc := MemLoader.GetProcAddress('GetAPIVersion')
       else
         Func.GetAPIVersionFunc := GetProcedureAddress(PluginHandle, 'GetAPIVersion');
     {$ELSE}
@@ -1204,7 +1205,7 @@ var
   PluginLocationInfo: string;
 
   {$IFDEF MemPlugins}
-    MemLoader: TDynMemLib;
+    MemLoader: TDynLibMemLoader;
     LibStream: TMemoryStream;
   {$ENDIF}
 begin
@@ -1227,7 +1228,7 @@ begin
   {$IFDEF MemPlugins}
     if IsMemPluginPath(Path) then
     begin
-      MemLoader := TDynMemLib.Create;
+      MemLoader := TDynLibMemLoader.Create;
       PluginHandle := UInt64(MemLoader);
 
       LibStream := TMemoryStream.Create;
@@ -1241,7 +1242,7 @@ begin
         begin
           try
             LibStream.Position := 0;
-            Loaded := MemLoader.MemLoadLibrary(LibStream.Memory);
+            Loaded := MemLoader.LoadLibrary(LibStream.Memory);
           except
             on E: Exception do
             begin
@@ -1264,7 +1265,7 @@ begin
 
       if not Loaded then
       begin   //attempt to load with mem loader if the standard one doesn't work
-        MemLoader := TDynMemLib.Create;
+        MemLoader := TDynLibMemLoader.Create;
         PluginHandle := UInt64(MemLoader);
 
         LibStream := TMemoryStream.Create;
@@ -1274,7 +1275,7 @@ begin
 
             try
               LibStream.Position := 0;
-              Loaded := MemLoader.MemLoadLibrary(LibStream.Memory);
+              Loaded := MemLoader.LoadLibrary(LibStream.Memory);
               IsLoadedWithMemLoader := True;
             except
               on E: Exception do
@@ -1312,7 +1313,7 @@ begin
 
     {$IFDEF MemPlugins}
       if IsMemPluginPath(APath) or IsLoadedWithMemLoader then
-        Func.EditPropertyFunc := MemLoader.MemGetProcAddress('EditProperty')
+        Func.EditPropertyFunc := MemLoader.GetProcAddress('EditProperty')
       else
         Func.EditPropertyFunc := GetProcedureAddress(PluginHandle, 'EditProperty');
     {$ELSE}
@@ -1328,7 +1329,7 @@ begin
 
     {$IFDEF MemPlugins}
       if IsMemPluginPath(APath) or IsLoadedWithMemLoader then
-        Func.GetAPIVersionFunc := MemLoader.MemGetProcAddress('GetAPIVersion')
+        Func.GetAPIVersionFunc := MemLoader.GetProcAddress('GetAPIVersion')
       else
         Func.GetAPIVersionFunc := GetProcedureAddress(PluginHandle, 'GetAPIVersion');
     {$ELSE}
@@ -1367,7 +1368,7 @@ end;
 function TActionPlugin.Unload(AOnAddToLog: TOnAddToLog): Boolean;
 {$IFDEF MemPlugins}
   var
-    MemLoader: TDynMemLib;
+    MemLoader: TDynLibMemLoader;
 {$ENDIF}
 begin
   Result := False;
@@ -1380,9 +1381,9 @@ begin
     {$IFDEF MemPlugins}
       if IsMemPluginPath(Path) then
       begin
-        MemLoader := TDynMemLib(PluginHandle);
+        MemLoader := TDynLibMemLoader(PluginHandle);
         try
-          MemLoader.MemFreeLibrary;
+          MemLoader.FreeLibrary;
         except
           on E: Exception do
           begin
@@ -1395,9 +1396,9 @@ begin
       begin
         if IsLoadedWithMemLoader then
         begin
-          MemLoader := TDynMemLib(PluginHandle);
+          MemLoader := TDynLibMemLoader(PluginHandle);
           try
-            MemLoader.MemFreeLibrary;
+            MemLoader.FreeLibrary;
           except
             on E: Exception do
             begin

@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2025 VCC
+    Copyright (C) 2026 VCC
     creation date: 09 Jan 2025
     initial release date: 14 Jan 2025
 
@@ -117,7 +117,7 @@ implementation
 uses
   Math, DllUtils, ClickerActionPluginLoader
   {$IFDEF MemPlugins}
-    , DynMemLib
+    , DynLibMemLoader
   {$ENDIF}
   ;
 
@@ -262,7 +262,7 @@ procedure TClickerPluginArchive.HandleOnDecryptArchive(AArchiveStream: TMemorySt
   var
     PluginIdx: Integer;
     PluginInMemFS: TDecDecHashPluginInMemFS;
-    MemLoader: TDynMemLib;
+    MemLoader: TDynLibMemLoader;
     ConfigurePluginForMemoryContent: TConfigurePluginForMemoryContent_Proc;
     ProcessMemoryContent: TProcessMemoryContent_Proc;
     LibStream: TMemoryStream;
@@ -288,20 +288,20 @@ begin
     if not PluginInMemFS.InMemFS.FileExistsInMem(FDecryptionPluginName) then
       raise Exception.Create('Decryption plugin not found in InMemFS: ' + FDecryptionPluginName + '   Count = ' + IntToStr(PluginInMemFS.InMemFS.TotalFileCount));
 
-    MemLoader := TDynMemLib.Create;
+    MemLoader := TDynLibMemLoader.Create;
     try
       LibStream := TMemoryStream.Create;
       try
         LibStream.SetSize(PluginInMemFS.InMemFS.GetFileSize(FDecryptionPluginName));
         PluginInMemFS.InMemFS.LoadFileFromMem(FDecryptionPluginName, LibStream.Memory);
 
-        MemLoader.MemLoadLibrary(LibStream.Memory);
+        MemLoader.LoadLibrary(LibStream.Memory);
         try
-          @ConfigurePluginForMemoryContent := MemLoader.MemGetProcAddress('ConfigurePluginForMemoryContent');
+          @ConfigurePluginForMemoryContent := MemLoader.GetProcAddress('ConfigurePluginForMemoryContent');
           if @ConfigurePluginForMemoryContent = nil then
             raise Exception.Create('Invalid decryption plugin: ' + FDecryptionPluginName + '.  ConfigurePluginForMemoryContent function not found.');
 
-          @ProcessMemoryContent := MemLoader.MemGetProcAddress('ProcessMemoryContent');
+          @ProcessMemoryContent := MemLoader.GetProcAddress('ProcessMemoryContent');
           if @ProcessMemoryContent = nil then
             raise Exception.Create('Invalid decryption plugin: ' + FDecryptionPluginName + '.  ProcessMemoryContent function not found.');
 
@@ -329,7 +329,7 @@ begin
           end;
           DoOnAddToLog('Done decrypting archive..');
         finally
-          MemLoader.MemFreeLibrary;
+          MemLoader.FreeLibrary;
         end;
       finally
         LibStream.Free;
@@ -353,7 +353,7 @@ function TClickerPluginArchive.HandleOnDecompress(AArchiveStream, APlainStream: 
   var
     PluginIdx: Integer;
     PluginInMemFS: TDecDecHashPluginInMemFS;
-    MemLoader: TDynMemLib;
+    MemLoader: TDynLibMemLoader;
     ConfigurePluginForMemoryContent: TConfigurePluginForMemoryContent_Proc;
     ProcessMemoryContent: TProcessMemoryContent_Proc;
     LibStream: TMemoryStream;
@@ -380,20 +380,20 @@ begin
     if not PluginInMemFS.InMemFS.FileExistsInMem(FDecompressionPluginName) then
       raise Exception.Create('Decompression plugin not found in InMemFS: ' + FDecompressionPluginName + '   Count = ' + IntToStr(PluginInMemFS.InMemFS.TotalFileCount));
 
-    MemLoader := TDynMemLib.Create;
+    MemLoader := TDynLibMemLoader.Create;
     try
       LibStream := TMemoryStream.Create;
       try
         LibStream.SetSize(PluginInMemFS.InMemFS.GetFileSize(FDecompressionPluginName));
         PluginInMemFS.InMemFS.LoadFileFromMem(FDecompressionPluginName, LibStream.Memory);
 
-        MemLoader.MemLoadLibrary(LibStream.Memory);
+        MemLoader.LoadLibrary(LibStream.Memory);
         try
-          @ConfigurePluginForMemoryContent := MemLoader.MemGetProcAddress('ConfigurePluginForMemoryContent');
+          @ConfigurePluginForMemoryContent := MemLoader.GetProcAddress('ConfigurePluginForMemoryContent');
           if @ConfigurePluginForMemoryContent = nil then
             raise Exception.Create('Invalid decompression plugin: ' + FDecryptionPluginName + '.  ConfigurePluginForMemoryContent function not found.');
 
-          @ProcessMemoryContent := MemLoader.MemGetProcAddress('ProcessMemoryContent');
+          @ProcessMemoryContent := MemLoader.GetProcAddress('ProcessMemoryContent');
           if @ProcessMemoryContent = nil then
             raise Exception.Create('Invalid decompression plugin: ' + FDecompressionPluginName + '.  ProcessMemoryContent function not found.');
 
@@ -422,7 +422,7 @@ begin
           end;
           DoOnAddToLog('Done decompressing archive..  Decompressed size = ' + IntToStr(APlainStream.Size));
         finally
-          MemLoader.MemFreeLibrary;
+          MemLoader.FreeLibrary;
         end;
       finally
         LibStream.Free;
@@ -445,7 +445,7 @@ var
   {$IFDEF MemPlugins}
     PluginIdx: Integer;
     PluginInMemFS: TDecDecHashPluginInMemFS;
-    MemLoader: TDynMemLib;
+    MemLoader: TDynLibMemLoader;
     ConfigurePluginForMemoryContent: TConfigurePluginForMemoryContent_Proc;
     ProcessMemoryContent: TProcessMemoryContent_Proc;
     LibStream: TMemoryStream;
@@ -486,20 +486,20 @@ begin
     if not PluginInMemFS.InMemFS.FileExistsInMem(FHashingPluginName) then
       raise Exception.Create('Hashing plugin not found in InMemFS: ' + FHashingPluginName + '   Count = ' + IntToStr(PluginInMemFS.InMemFS.TotalFileCount));
 
-    MemLoader := TDynMemLib.Create;
+    MemLoader := TDynLibMemLoader.Create;
     try
       LibStream := TMemoryStream.Create;
       try
         LibStream.SetSize(PluginInMemFS.InMemFS.GetFileSize(FHashingPluginName));
         PluginInMemFS.InMemFS.LoadFileFromMem(FHashingPluginName, LibStream.Memory);
 
-        MemLoader.MemLoadLibrary(LibStream.Memory);
+        MemLoader.LoadLibrary(LibStream.Memory);
         try
-          @ConfigurePluginForMemoryContent := MemLoader.MemGetProcAddress('ConfigurePluginForMemoryContent');
+          @ConfigurePluginForMemoryContent := MemLoader.GetProcAddress('ConfigurePluginForMemoryContent');
           if @ConfigurePluginForMemoryContent = nil then
             raise Exception.Create('Invalid hashing plugin: ' + FDecryptionPluginName + '.  ConfigurePluginForMemoryContent function not found.');
 
-          @ProcessMemoryContent := MemLoader.MemGetProcAddress('ProcessMemoryContent');
+          @ProcessMemoryContent := MemLoader.GetProcAddress('ProcessMemoryContent');
           if @ProcessMemoryContent = nil then
             raise Exception.Create('Invalid hashing plugin: ' + FHashingPluginName + '.  ProcessMemoryContent function not found.');
 
@@ -517,7 +517,7 @@ begin
           FHashingResult := @AResultedHash;
           ProcessMemoryContent(AArchiveStream, AArchiveStreamSize, HandleOnFileContent_Hashing);
         finally
-          MemLoader.MemFreeLibrary;
+          MemLoader.FreeLibrary;
         end;
       finally
         LibStream.Free;

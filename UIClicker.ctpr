@@ -35,7 +35,7 @@
           </Target>
           <SearchPaths>
             <IncludeFiles Value="$(ProjOutDir)"/>
-            <OtherUnitFiles Value="ClickerUtils;..\MiscUtils;ClickerClient;..\DynMemLib"/>
+            <OtherUnitFiles Value="ClickerUtils;..\MiscUtils;ClickerClient"/>
             <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
           </SearchPaths>
           <Parsing>
@@ -396,10 +396,6 @@
         <ResourceBaseClass Value="Form"/>
       </Unit>
       <Unit>
-        <Filename Value="..\DynMemLib\DynMemLib.pas"/>
-        <IsPartOfProject Value="True"/>
-      </Unit>
-      <Unit>
         <Filename Value="..\MiscUtils\MemArchive.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
@@ -435,6 +431,10 @@
         <Filename Value="BitmapProcessingGPU.pas"/>
         <IsPartOfProject Value="True"/>
       </Unit>
+      <Unit>
+        <Filename Value="..\MiscUtils\DynLibMemLoader.pas"/>
+        <IsPartOfProject Value="True"/>
+      </Unit>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
@@ -445,7 +445,7 @@
     </Target>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
-      <OtherUnitFiles Value="ClickerUtils;..\MiscUtils;ClickerClient;..\DynMemLib"/>
+      <OtherUnitFiles Value="ClickerUtils;..\MiscUtils;ClickerClient"/>
       <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <Parsing>
