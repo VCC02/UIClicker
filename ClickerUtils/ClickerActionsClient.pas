@@ -69,7 +69,7 @@ const
   CREParam_UseServerDebugging = 'UseServerDebugging';  //different debugging mechanism (one action only, for Execute<ActionName>Action functions)
   CREParam_Grid = 'Grid';
   CREParam_FileName = 'FileName';
-  CREParam_FileLocation = 'FileLocation';
+  CREParam_FileLocation = 'FileLocation';    //e.g. CREParam_FileLocation_ValueDisk or CREParam_FileLocation_ValueMem
   CREParam_VerifyHashes = 'VerifyHashes';
   CREParam_Content = 'Content';
 

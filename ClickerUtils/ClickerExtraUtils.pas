@@ -33,7 +33,12 @@ interface
 
 uses
   Classes, SysUtils, Graphics, ImgList, Controls,
-  IdGlobal, DCPmd5;
+  //IdGlobal,
+  DCPmd5;
+
+
+type
+  TIdBytes = array of Byte;
 
 
 function ArrOfByteToHex(var AArr: TIdBytes): string;
