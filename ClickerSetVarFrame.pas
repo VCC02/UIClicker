@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2022 VCC
+    Copyright (C) 2026 VCC
     creation date: Feb 2023
     initial release date: 08 Feb 2023
 
@@ -42,7 +42,6 @@ type
   { TfrClickerSetVar }
 
   TfrClickerSetVar = class(TFrame)
-    imglstSetVar: TImageList;
     lblSetVarWarning: TLabel;
     lblAvailableFunctions: TLabel;
     lblSetVarToHttpInfo: TLabel;
@@ -303,11 +302,15 @@ procedure TfrClickerSetVar.tmrSetEditorTextColorTimer(Sender: TObject);
 begin
   tmrSetEditorTextColor.Enabled := False;
 
-  if Assigned(FTextEditorEditBox) then
-    if Pos(#4#5, FTextEditorEditBox.Text) > 0 then
-      FTextEditorEditBox.Font.Color := clRed
-    else
-      FTextEditorEditBox.Font.Color := clWindowText;
+  try
+    if Assigned(FTextEditorEditBox) then
+      if Pos(#4#5, FTextEditorEditBox.Text) > 0 then
+        FTextEditorEditBox.Font.Color := clRed
+      else
+        FTextEditorEditBox.Font.Color := clWindowText;
+  except
+    //in case of triple click on the VST line, outside the area where the editbox will be created, an AV is raised
+  end;
 end;
 
 
@@ -341,6 +344,10 @@ begin
   FTextEditorEditBox.OnExit := edtTextEditorExit;
   FTextEditorEditBox.OnKeyDown := edtTextEditorKeyDown;
   FTextEditorEditBox.OnKeyUp := edtTextEditorKeyUp;
+
+  FTextEditorEditBox.Font.Style := vstSetVar.Font.Style;
+  FTextEditorEditBox.Font.Name := vstSetVar.Font.Name;
+  FTextEditorEditBox.Font.Size := vstSetVar.Font.Size;
 
   FTextEditorEditBox.Show;
 

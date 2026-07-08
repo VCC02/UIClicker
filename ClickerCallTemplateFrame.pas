@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2022 VCC
+    Copyright (C) 2026 VCC
     creation date: Feb 2023
     initial release date: 13 Feb 2023
 
@@ -61,11 +61,16 @@ type
     procedure spdbtnNewVariableClick(Sender: TObject);
     procedure spdbtnRemoveSelectedVariableClick(Sender: TObject);
     procedure tmrEditCustomVarsTimer(Sender: TObject);
+    procedure vstCustomVariablesCreateEditor(Sender: TBaseVirtualTree;
+      Node: PVirtualNode; Column: TColumnIndex; out EditLink: IVTEditLink);
     procedure vstCustomVariablesDblClick(Sender: TObject);
     procedure vstCustomVariablesEdited(Sender: TBaseVirtualTree;
       Node: PVirtualNode; Column: TColumnIndex);
     procedure vstCustomVariablesEditing(Sender: TBaseVirtualTree;
       Node: PVirtualNode; Column: TColumnIndex; var Allowed: Boolean);
+    procedure vstCustomVariablesGetImageIndex(Sender: TBaseVirtualTree;
+      Node: PVirtualNode; Kind: TVTImageKind; Column: TColumnIndex;
+      var Ghosted: boolean; var ImageIndex: integer);
     procedure vstCustomVariablesGetText(Sender: TBaseVirtualTree;
       Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
       var CellText: String);
@@ -148,6 +153,24 @@ begin
     Exit;
 
   vstCustomVariables.EditNode(FCustomVarsMouseUpHitInfo.HitNode, FCustomVarsMouseUpHitInfo.HitColumn);
+end;
+
+
+procedure TfrClickerCallTemplate.vstCustomVariablesCreateEditor(
+  Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; out
+  EditLink: IVTEditLink);
+var
+  TempStringEditLink: TStringEditLink;
+  TempTextEditorEditBox: TEdit;
+begin
+  TempStringEditLink := TStringEditLink.Create;
+  EditLink := TempStringEditLink;
+
+  TempTextEditorEditBox := TEdit(TCustomEdit(TempStringEditLink.Edit));
+
+  TempTextEditorEditBox.Font.Style := vstCustomVariables.Font.Style;
+  TempTextEditorEditBox.Font.Name := vstCustomVariables.Font.Name;
+  TempTextEditorEditBox.Font.Size := vstCustomVariables.Font.Size;
 end;
 
 
@@ -319,6 +342,15 @@ procedure TfrClickerCallTemplate.vstCustomVariablesEditing(
 begin
   Allowed := Column < 2;
   FCustomVarsUpdatedVstText := False;
+end;
+
+
+procedure TfrClickerCallTemplate.vstCustomVariablesGetImageIndex(
+  Sender: TBaseVirtualTree; Node: PVirtualNode; Kind: TVTImageKind;
+  Column: TColumnIndex; var Ghosted: boolean; var ImageIndex: integer);
+begin
+  if Column = 0 then
+    ImageIndex := 0;
 end;
 
 

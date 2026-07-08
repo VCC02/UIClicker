@@ -73,7 +73,7 @@ object frClickerSetVar: TfrClickerSetVar
       Header.Style = hsFlatButtons
       Indent = 4
       PopupMenu = pmSetVars
-      StateImages = imglstSetVar
+      StateImages = dmClickerIcons.imglstSetVar
       TabOrder = 0
       TreeOptions.AutoOptions = [toAutoDropExpand, toAutoScrollOnExpand, toAutoTristateTracking, toAutoDeleteMovedNodes, toDisableAutoscrollOnFocus, toDisableAutoscrollOnEdit]
       TreeOptions.MiscOptions = [toAcceptOLEDrop, toCheckSupport, toEditable, toFullRepaintOnResize, toInitOnSave, toToggleOnDblClick, toWheelPanning, toEditOnClick]
@@ -447,16 +447,6 @@ object frClickerSetVar: TfrClickerSetVar
     OnTimer = tmrEditSetVarsTimer
     Left = 640
     Top = 216
-  end
-  object imglstSetVar: TImageList
-    Left = 728
-    Top = 216
-    Bitmap = {
-      4C7A010000001000000010000000630000000000000078DAFBFFFF3FC37F2A60
-      51868EFF304C888F2C0E93C3661E2E7BC81523248EEE2652CC459727D57E4AF4
-      E30A536C7E2064FF40605C6EC4954EF0F90B5BF811320F5FB89F5CF7FF3FA138
-      21360EF0E987D903A289751BBE70C496D7B0E90700985D9E01
-    }
   end
   object pmVarsEditor: TPopupMenu
     Left = 301

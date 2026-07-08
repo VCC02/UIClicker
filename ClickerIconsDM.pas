@@ -66,6 +66,7 @@ type
     imglstRenderingInBrowserSettingsProperties: TImageList;
     imglstSaveSetVarToFileProperties: TImageList;
     imglstSetTextProperties: TImageList;
+    imglstSetVar: TImageList;
     imglstSetVarProperties: TImageList;
     imglstSleepProperties: TImageList;
     imglstUsedMatchCriteria: TImageList;
