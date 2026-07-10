@@ -29,7 +29,7 @@ unit ClickerIconsDM;
 interface
 
 uses
-  Classes, SysUtils, Controls;
+  Classes, SysUtils, Controls, PopupNotifier;
 
 type
 
@@ -72,18 +72,52 @@ type
     imglstUsedMatchCriteria: TImageList;
     imglstUsedMatchCriteriaSub: TImageList;
     imglstWindowOperationsProperties: TImageList;
+    pnSetVarFormat: TPopupNotifier;
   private
 
   public
-
+    procedure DisplayVarFormatNotifier(AOverComponent: THandle);
   end;
 
 var
   dmClickerIcons: TdmClickerIcons;
 
+
+
 implementation
 
 {$R *.frm}
+
+
+uses
+  Forms, ClickerUtils;
+
+
+procedure TdmClickerIcons.DisplayVarFormatNotifier(AOverComponent: THandle);
+var
+  hwc: TCompRec;
+  NotifierFormRect: TRect;
+begin
+  hwc := GetWindowClassRec(AOverComponent);
+
+  pnSetVarFormat.vNotifierForm.BorderWidth := 1;
+  pnSetVarFormat.vNotifierForm.BorderStyle := bsSizeToolWin;
+  pnSetVarFormat.vNotifierForm.Width := 300;
+  pnSetVarFormat.vNotifierForm.Height := 50;
+
+  NotifierFormRect.Left := hwc.ComponentRectangle.Left;
+  NotifierFormRect.Top := hwc.ComponentRectangle.Bottom + 3;
+  NotifierFormRect.Width := pnSetVarFormat.vNotifierForm.Width;
+  NotifierFormRect.Height := pnSetVarFormat.vNotifierForm.Height;
+
+  if NotifierFormRect.Right > Screen.Width - 3 then
+    Dec(NotifierFormRect.Left, Screen.Width - 3 - NotifierFormRect.Right);
+
+  if NotifierFormRect.Bottom > Screen.Height then
+    NotifierFormRect.Top := hwc.ComponentRectangle.Top - NotifierFormRect.Height - 3;
+
+  pnSetVarFormat.ShowAtPos(NotifierFormRect.Left, NotifierFormRect.Top);
+end;
 
 end.
 

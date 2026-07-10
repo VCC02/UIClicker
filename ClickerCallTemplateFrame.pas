@@ -87,6 +87,7 @@ type
     FCustomVarsMouseUpHitInfo: THitInfo;
     FCustomVarsEditingText: string;
     FCustomVarsUpdatedVstText: Boolean;
+    FTextEditorEditBox: TEdit;  //pointer to the built-in editor
 
     FOnTriggerOnControlsModified: TOnTriggerOnControlsModified;
 
@@ -107,6 +108,9 @@ type
 implementation
 
 {$R *.frm}
+
+uses
+  ClickerIconsDM;
 
 { TfrClickerCallTemplate }
 
@@ -161,16 +165,15 @@ procedure TfrClickerCallTemplate.vstCustomVariablesCreateEditor(
   EditLink: IVTEditLink);
 var
   TempStringEditLink: TStringEditLink;
-  TempTextEditorEditBox: TEdit;
 begin
   TempStringEditLink := TStringEditLink.Create;
   EditLink := TempStringEditLink;
 
-  TempTextEditorEditBox := TEdit(TCustomEdit(TempStringEditLink.Edit));
+  FTextEditorEditBox := TEdit(TCustomEdit(TempStringEditLink.Edit));
 
-  TempTextEditorEditBox.Font.Style := vstCustomVariables.Font.Style;
-  TempTextEditorEditBox.Font.Name := vstCustomVariables.Font.Name;
-  TempTextEditorEditBox.Font.Size := vstCustomVariables.Font.Size;
+  FTextEditorEditBox.Font.Style := vstCustomVariables.Font.Style;
+  FTextEditorEditBox.Font.Name := vstCustomVariables.Font.Name;
+  FTextEditorEditBox.Font.Size := vstCustomVariables.Font.Size;
 end;
 
 
@@ -303,17 +306,11 @@ begin
   case Column of
     0:
     begin
-      if Trim(FCustomVarsEditingText) = '' then
-      begin
-        MessageBox(Handle, 'Variable name must not be empty.', PChar(Application.Title), MB_ICONERROR);
-        Exit;
-      end;
-
-      if (FCustomVarsEditingText[1] <> '$') or (FCustomVarsEditingText[Length(FCustomVarsEditingText)] <> '$') then
-      begin
-        MessageBox(Handle, 'Variable name must be enclosed by two "$" characters. E.g. "$my_var$" (without double quotes).', PChar(Application.Title), MB_ICONERROR);
-        Exit;
-      end;
+      if (Trim(FCustomVarsEditingText) = '') or
+         (Length(FCustomVarsEditingText) < 3) or
+         (FCustomVarsEditingText[1] <> '$') or
+         (FCustomVarsEditingText[Length(FCustomVarsEditingText)] <> '$') then
+        dmClickerIcons.DisplayVarFormatNotifier(FTextEditorEditBox.Handle);
 
       NewLine := FCustomVarsEditingText + '=' + vallstCustomVariables.Strings.ValueFromIndex[Node^.Index];
 

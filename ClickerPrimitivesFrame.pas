@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2025 VCC
+    Copyright (C) 2026 VCC
     creation date: Mar 2023
     initial release date: 11 Mar 2023
 
@@ -3257,6 +3257,7 @@ begin
       RebuildAllEditingPoints(1);
       FEditingPrimitivePoints.EditingPoints[0].Left := ALeftLimitLabel.Left - CEditingPointOffset;
       FEditingPrimitivePoints.EditingPoints[0].Top := ATopLimitLabel.Top - CEditingPointOffset;
+      FEditingPrimitivePoints.EditingPoints[0].Cursor := crSizeAll;
     end;
 
     CClkDonutSector:
@@ -3264,6 +3265,7 @@ begin
       RebuildAllEditingPoints(1);
       FEditingPrimitivePoints.EditingPoints[0].Left := (ALeftLimitLabel.Left + ARightLimitLabel.Left) shr 1 - CEditingPointOffset;
       FEditingPrimitivePoints.EditingPoints[0].Top := (ATopLimitLabel.Top + ABottomLimitLabel.Top) shr 1 - CEditingPointOffset;
+      FEditingPrimitivePoints.EditingPoints[0].Cursor := crSizeAll;
     end;
 
     CClkPolygon, CClkPolyBezier:
@@ -3274,6 +3276,7 @@ begin
       RebuildAllEditingPoints(1);
       FEditingPrimitivePoints.EditingPoints[0].Left := (ALeftLimitLabel.Left + ARightLimitLabel.Left) shr 1 - CEditingPointOffset;
       FEditingPrimitivePoints.EditingPoints[0].Top := (ATopLimitLabel.Top + ABottomLimitLabel.Top) shr 1 - CEditingPointOffset;
+      FEditingPrimitivePoints.EditingPoints[0].Cursor := crSizeAll;
     end;
   end; //case
 end;

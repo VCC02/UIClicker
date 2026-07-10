@@ -20,7 +20,7 @@ object frClickerExecApp: TfrClickerExecApp
     Height = 89
     Hint = 'Enter each parameter on a new line.'#13#10'Do not add quotes when running executables.'#13#10'(Double) quotes may be needed when opening a weblink.'#13#10'Replacements are available.'
     Top = 16
-    Width = 270
+    Width = 326
     Anchors = [akTop, akLeft, akRight, akBottom]
     ParentShowHint = False
     ScrollBars = ssBoth

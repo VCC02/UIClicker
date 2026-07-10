@@ -950,6 +950,7 @@ begin
   frClickerExecApp.Top := 3;
   frClickerExecApp.Width := pnlExtra.Width - 3;
   frClickerExecApp.Height := pnlExtra.Height - 3;
+  frClickerExecApp.Anchors := [akBottom, akLeft, akRight, akTop];
   frClickerExecApp.Visible := False;
 
   frClickerSetVar := TfrClickerSetVar.Create(Self);
