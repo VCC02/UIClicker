@@ -276,6 +276,7 @@ type
     tmrDrawZoom: TTimer;
     tmrUpdateGrid: TTimer;
     tmrUpdateSearchAreaOffsetEditBoxes: TTimer;
+    vstMainVars: TVirtualStringTree;
     procedure btnCopyFoundValuesClick(Sender: TObject);
     procedure chkDisplayCroppingLinesChange(Sender: TObject);
     procedure chkShowMouseCoordsChange(Sender: TObject);
@@ -304,6 +305,8 @@ type
     procedure tmrScanTimer(Sender: TObject);
     procedure tmrUpdateGridTimer(Sender: TObject);
     procedure tmrUpdateSearchAreaOffsetEditBoxesTimer(Sender: TObject);
+    procedure vstMainVarsGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
+      Column: TColumnIndex; TextType: TVSTTextType; var CellText: string);
 
   private
     FBMPsDir: string;
@@ -1846,6 +1849,44 @@ begin
   DoOnUpdateSearchAreaLimitsInOIFromDraggingLines([llLeft, llTop, llRight, llBottom], Offsets);
 
   tmrUpdateGrid.Enabled := True;
+end;
+
+
+procedure TfrClickerFindControl.vstMainVarsGetText(Sender: TBaseVirtualTree;
+  Node: PVirtualNode; Column: TColumnIndex; TextType: TVSTTextType;
+  var CellText: string);
+begin
+  case Column of
+    0:
+    begin
+      case Node^.Index of
+        0: CellText := '$Control_Handle$';
+        1: CellText := '$Control_Text$';
+        2: CellText := '$Control_Class$';
+        3: CellText := '$Control_Left$';
+        4: CellText := '$Control_Top$';
+        5: CellText := '$Control_Right$';
+        6: CellText := '$Control_Bottom$';
+        7: CellText := '$Control_Width$';
+        8: CellText := '$Control_Height$';
+      end;
+    end;
+
+    1:
+    begin
+      case Node^.Index of
+        0: CellText := EvaluateReplacements('$Control_Handle$');
+        1: CellText := EvaluateReplacements('$Control_Text$');
+        2: CellText := EvaluateReplacements('$Control_Class$');
+        3: CellText := EvaluateReplacements('$Control_Left$');
+        4: CellText := EvaluateReplacements('$Control_Top$');
+        5: CellText := EvaluateReplacements('$Control_Right$');
+        6: CellText := EvaluateReplacements('$Control_Bottom$');
+        7: CellText := EvaluateReplacements('$Control_Width$');
+        8: CellText := EvaluateReplacements('$Control_Height$');
+      end;
+    end;
+  end;
 end;
 
 

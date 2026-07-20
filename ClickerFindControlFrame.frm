@@ -224,6 +224,36 @@ object frClickerFindControl: TfrClickerFindControl
         TabOrder = 2
         OnChange = chkShowMouseCoordsChange
       end
+      object vstMainVars: TVirtualStringTree
+        Left = 0
+        Height = 2
+        Top = 224
+        Width = 344
+        Anchors = [akTop, akLeft, akBottom]
+        DefaultText = 'Node'
+        Header.AutoSizeIndex = 0
+        Header.Columns = <        
+          item
+            MinWidth = 150
+            Position = 0
+            Text = 'Variable'
+            Width = 150
+          end        
+          item
+            MinWidth = 400
+            Position = 1
+            Text = 'Value'
+            Width = 400
+          end>
+        Header.Height = 21
+        Header.Options = [hoColumnResize, hoDrag, hoShowSortGlyphs, hoVisible]
+        Indent = 4
+        RootNodeCount = 9
+        ScrollBarOptions.AlwaysVisible = True
+        TabOrder = 3
+        TreeOptions.SelectionOptions = [toFullRowSelect]
+        OnGetText = vstMainVarsGetText
+      end
     end
     object TabSheetActionFindSubControlBMPText: TTabSheet
       Caption = 'BMP Text'
