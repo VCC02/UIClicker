@@ -187,6 +187,18 @@ type
   TCalculateMinimumErrorCallback = procedure(ATestedError, AErrA, AErrB: Integer; out AFoundArea: TRect; out ARes: Boolean) of object;
 
 
+  TFindControlEditorMainControlParams = record
+    Control_Handle_Str: string;
+    Control_Text_Str: string;
+    Control_Class_Str: string;
+    Control_Left_Str: string;
+    Control_Top_Str: string;
+    Control_Right_Str: string;
+    Control_Bottom_Str: string;
+    Control_Width_Str: string;
+    Control_Height_Str: string;
+  end;
+
   { TfrClickerFindControl }
 
   TfrClickerFindControl = class(TFrame)
@@ -307,6 +319,9 @@ type
     procedure tmrUpdateSearchAreaOffsetEditBoxesTimer(Sender: TObject);
     procedure vstMainVarsGetText(Sender: TBaseVirtualTree; Node: PVirtualNode;
       Column: TColumnIndex; TextType: TVSTTextType; var CellText: string);
+    procedure vstMainVarsPaintText(Sender: TBaseVirtualTree;
+      const TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex;
+      TextType: TVSTTextType);
 
   private
     FBMPsDir: string;
@@ -356,6 +371,8 @@ type
     FMouseDownComponentPos: TPoint;
     FDbgImgHold: Boolean;
     FCurrentMousePosOnPreviewImg: TPoint;
+    FFindControlEditorMainControlParams: TFindControlEditorMainControlParams;
+    FFindControlOIMainControlParams: TFindControlEditorMainControlParams;
 
     FRectangleSelecting: Boolean;
     FSelectingXStart: Integer;
@@ -639,6 +656,7 @@ type
 
     procedure UpdateSearchAreaLabelsFromKeysOnInitRect(AInitialRectange: TRectString);  //must be called on OI Text editor - KeyUp
     procedure UpdateControlWidthHeightLabels;
+    procedure UpdateMainControlVarsVST;
     procedure UpdateUseWholeScreenLabel(AUseWholeScreen: Boolean);
     procedure ClearControls;
     procedure UpdateBitmapAlgorithmSettings;
@@ -1872,20 +1890,61 @@ begin
       end;
     end;
 
-    1:
+    1:   //OI
     begin
+      with FFindControlOIMainControlParams do
       case Node^.Index of
-        0: CellText := EvaluateReplacements('$Control_Handle$');
-        1: CellText := EvaluateReplacements('$Control_Text$');
-        2: CellText := EvaluateReplacements('$Control_Class$');
-        3: CellText := EvaluateReplacements('$Control_Left$');
-        4: CellText := EvaluateReplacements('$Control_Top$');
-        5: CellText := EvaluateReplacements('$Control_Right$');
-        6: CellText := EvaluateReplacements('$Control_Bottom$');
-        7: CellText := EvaluateReplacements('$Control_Width$');
-        8: CellText := EvaluateReplacements('$Control_Height$');
+        0: CellText := Control_Handle_Str;
+        1: CellText := Control_Text_Str;
+        2: CellText := Control_Class_Str;
+        3: CellText := Control_Left_Str;
+        4: CellText := Control_Top_Str;
+        5: CellText := Control_Right_Str;
+        6: CellText := Control_Bottom_Str;
+        7: CellText := Control_Width_Str;
+        8: CellText := Control_Height_Str;
       end;
     end;
+
+    2:
+    with FFindControlEditorMainControlParams do
+    begin
+      case Node^.Index of
+        0: CellText := Control_Handle_Str;
+        1: CellText := Control_Text_Str;
+        2: CellText := Control_Class_Str;
+        3: CellText := Control_Left_Str;
+        4: CellText := Control_Top_Str;
+        5: CellText := Control_Right_Str;
+        6: CellText := Control_Bottom_Str;
+        7: CellText := Control_Width_Str;
+        8: CellText := Control_Height_Str;
+      end;
+    end;
+  end;
+end;
+
+
+procedure TfrClickerFindControl.vstMainVarsPaintText(Sender: TBaseVirtualTree;
+  const TargetCanvas: TCanvas; Node: PVirtualNode; Column: TColumnIndex;
+  TextType: TVSTTextType);
+const
+  CEqColor: array[Boolean] of TColor = (clMaroon, clGreen);
+begin
+  if not vstMainVars.Selected[Node] then
+  begin
+    if Column = 2 then
+      case Node^.Index of
+        0: TargetCanvas.Font.Color := CEqColor[FFindControlOIMainControlParams.Control_Handle_Str = FFindControlEditorMainControlParams.Control_Handle_Str];
+        1: TargetCanvas.Font.Color := CEqColor[FFindControlOIMainControlParams.Control_Text_Str = FFindControlEditorMainControlParams.Control_Text_Str];
+        2: TargetCanvas.Font.Color := CEqColor[FFindControlOIMainControlParams.Control_Class_Str = FFindControlEditorMainControlParams.Control_Class_Str];
+        3: TargetCanvas.Font.Color := CEqColor[FFindControlOIMainControlParams.Control_Left_Str = FFindControlEditorMainControlParams.Control_Left_Str];
+        4: TargetCanvas.Font.Color := CEqColor[FFindControlOIMainControlParams.Control_Top_Str = FFindControlEditorMainControlParams.Control_Top_Str];
+        5: TargetCanvas.Font.Color := CEqColor[FFindControlOIMainControlParams.Control_Right_Str = FFindControlEditorMainControlParams.Control_Right_Str];
+        6: TargetCanvas.Font.Color := CEqColor[FFindControlOIMainControlParams.Control_Bottom_Str = FFindControlEditorMainControlParams.Control_Bottom_Str];
+        7: TargetCanvas.Font.Color := CEqColor[FFindControlOIMainControlParams.Control_Width_Str = FFindControlEditorMainControlParams.Control_Width_Str];
+        8: TargetCanvas.Font.Color := CEqColor[FFindControlOIMainControlParams.Control_Height_Str = FFindControlEditorMainControlParams.Control_Height_Str];
+      end;
   end;
 end;
 
@@ -2064,11 +2123,25 @@ begin
   GetCursorPos(tp);
   Comp := GetWindowClassRec(tp);
 
-  lbeFoundControlText.Text := Comp.Text;
-  lbeFoundControlClass.Text := Comp.ClassName;
-  edtFoundControlInfo.Text := 'Control info:  handle = ' + IntToStr(Comp.Handle) +
-                              '  x:y = ' + IntToStr(Comp.ComponentRectangle.Left) + ':' + IntToStr(Comp.ComponentRectangle.Top) +
-                              '  w:h = ' + IntToStr(Comp.ComponentRectangle.Width) + ':' + IntToStr(Comp.ComponentRectangle.Height);
+  FFindControlEditorMainControlParams.Control_Text_Str := Comp.Text;
+  FFindControlEditorMainControlParams.Control_Class_Str := Comp.ClassName;
+  FFindControlEditorMainControlParams.Control_Handle_Str := IntToStr(Comp.Handle);
+  FFindControlEditorMainControlParams.Control_Left_Str := IntToStr(Comp.ComponentRectangle.Left);
+  FFindControlEditorMainControlParams.Control_Top_Str := IntToStr(Comp.ComponentRectangle.Top);
+  FFindControlEditorMainControlParams.Control_Right_Str := IntToStr(Comp.ComponentRectangle.Right);
+  FFindControlEditorMainControlParams.Control_Bottom_Str := IntToStr(Comp.ComponentRectangle.Bottom);
+  FFindControlEditorMainControlParams.Control_Width_Str := IntToStr(Comp.ComponentRectangle.Width);
+  FFindControlEditorMainControlParams.Control_Height_Str := IntToStr(Comp.ComponentRectangle.Height);
+  vstMainVars.Repaint;
+
+  with FFindControlEditorMainControlParams do
+  begin
+    lbeFoundControlText.Text := Control_Text_Str;
+    lbeFoundControlClass.Text := Control_Class_Str;
+    edtFoundControlInfo.Text := 'Control info:  handle = ' + Control_Handle_Str +
+                                '  x:y = ' + Control_Left_Str + ':' + Control_Top_Str +
+                                '  w:h = ' + Control_Width_Str + ':' + Control_Height_Str;
+  end;
 
   if pnlDrag.Color <> clLime then
     pnlDrag.Color := clLime;
@@ -4897,6 +4970,25 @@ procedure TfrClickerFindControl.UpdateControlWidthHeightLabels;
 begin
   lblPreviewControl_Width.Caption := '$Control_Width$: ' + EvaluateReplacements('$Control_Width$');
   lblPreviewControl_Height.Caption := '$Control_Height$: ' + EvaluateReplacements('$Control_Height$');
+end;
+
+
+procedure TfrClickerFindControl.UpdateMainControlVarsVST;
+begin
+  with FFindControlOIMainControlParams do
+  begin
+    Control_Handle_Str := EvaluateReplacements('$Control_Handle$');
+    Control_Text_Str := EvaluateReplacements('$Control_Text$');
+    Control_Class_Str := EvaluateReplacements('$Control_Class$');
+    Control_Left_Str := EvaluateReplacements('$Control_Left$');
+    Control_Top_Str := EvaluateReplacements('$Control_Top$');
+    Control_Right_Str := EvaluateReplacements('$Control_Right$');
+    Control_Bottom_Str := EvaluateReplacements('$Control_Bottom$');
+    Control_Width_Str := EvaluateReplacements('$Control_Width$');
+    Control_Height_Str  := EvaluateReplacements('$Control_Height$');
+  end;
+
+  vstMainVars.Repaint;
 end;
 
 

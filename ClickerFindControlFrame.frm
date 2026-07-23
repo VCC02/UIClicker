@@ -234,16 +234,22 @@ object frClickerFindControl: TfrClickerFindControl
         Header.AutoSizeIndex = 0
         Header.Columns = <        
           item
-            MinWidth = 150
+            MinWidth = 110
             Position = 0
             Text = 'Variable'
-            Width = 150
+            Width = 110
           end        
           item
-            MinWidth = 400
+            MinWidth = 100
             Position = 1
-            Text = 'Value'
-            Width = 400
+            Text = 'Value [OI]'
+            Width = 100
+          end        
+          item
+            MinWidth = 120
+            Position = 2
+            Text = 'Value [This editor]'
+            Width = 120
           end>
         Header.Height = 21
         Header.Options = [hoColumnResize, hoDrag, hoShowSortGlyphs, hoVisible]
@@ -253,6 +259,7 @@ object frClickerFindControl: TfrClickerFindControl
         TabOrder = 3
         TreeOptions.SelectionOptions = [toFullRowSelect]
         OnGetText = vstMainVarsGetText
+        OnPaintText = vstMainVarsPaintText
       end
     end
     object TabSheetActionFindSubControlBMPText: TTabSheet

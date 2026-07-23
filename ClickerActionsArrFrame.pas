@@ -7322,6 +7322,9 @@ begin
     spdbtnStopPlaying.Enabled := False;
     FPlaying := False;
   end;
+
+  if FClkActions[Node^.Index].ActionOptions.Action = acFindControl then
+    frClickerActions.frClickerFindControl.UpdateMainControlVarsVST;
 end;
 
 
