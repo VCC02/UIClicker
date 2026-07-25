@@ -565,7 +565,7 @@ type
     function HandleOnGenerateAndSaveTreeWithWinInterp(AHandle: THandle; ATreeFileName: string; AStep: Integer; AUseMouseSwipe: Boolean): Boolean;
     function HandleOnSetWinInterpOption(AWinInterpOptionName, AWinInterpOptionValue: string): Boolean;
 
-    procedure HandleOnWaitInDebuggingMode(var ADebuggingAction: TClkActionRec; AActionAllowsSteppingInto: TAllowsSteppingInto);
+    function HandleOnWaitInDebuggingMode(var ADebuggingAction: TClkActionRec; AActionAllowsSteppingInto: TAllowsSteppingInto): Boolean;
     function HandleOnGetPluginInMemFS: TInMemFileSystem;
     function HandleOnGetListeningPort: Word;
 
@@ -2333,7 +2333,7 @@ begin
 end;
 
 
-procedure TfrClickerActionsArr.HandleOnWaitInDebuggingMode(var ADebuggingAction: TClkActionRec; AActionAllowsSteppingInto: TAllowsSteppingInto);
+function TfrClickerActionsArr.HandleOnWaitInDebuggingMode(var ADebuggingAction: TClkActionRec; AActionAllowsSteppingInto: TAllowsSteppingInto): Boolean;
 var
   IndexBeforeEditing: Integer;
 begin
@@ -2361,7 +2361,10 @@ begin
 
   if ADebuggingAction.ActionOptions.Action = acPlugin then
     if AActionAllowsSteppingInto = asiYes then
+    begin
       spdbtnStepInto.Enabled := True;
+      //this should also display the plugin debugging frame
+    end;
 
   try
     SetLength(FClkActions, Length(FClkActions) + 1);  //add a debugging action
@@ -2382,7 +2385,22 @@ begin
 
     AddToLog('Entering debugging mode.. Waiting for user to step over or continue debugging..');
     WaitInDebuggingMode;
+
+    if FContinuePlayingBySteppingInto {AIsDebugging} then
+      if FClkActions[IndexBeforeEditing].ActionOptions.Action = acPlugin then
+      begin
+        try
+          AddToLog('Entering plugin debugging...');
+          frClickerActions.frClickerPlugin.EnableRequestLineNumber;
+          frClickerActions.frClickerPlugin.SelectLineByContent(CBeforePluginExecution_DbgLineContent);
+          frClickerActions.frClickerPlugin.DisplayDebuggingButtons; //call this manually, in case SelectLineByContent won't display the buttons, because of no debugging info
+        except
+          on E: Exception do
+            AddToLog('Ex on displaying plugin content for debugging: ' + E.Message);
+        end;
+      end;
   finally
+    Result := FContinuePlayingBySteppingInto;
     AddToLog('Exiting debugging mode..');
     spdbtnContinuePlayingAll.Enabled := False;
     spdbtnStepOver.Enabled := False;

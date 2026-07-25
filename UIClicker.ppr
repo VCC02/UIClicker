@@ -69,133 +69,135 @@ uses
 {$R *.res}
 
 
-type
-  TExHandler = class
-    procedure CustomExceptionHandler(Sender: TObject; E: Exception);
-  end;
-
-var
-  FExHandler: TExHandler;
-
-
-//see https://wiki.freepascal.org/Logging_exceptions
-procedure TExHandler.CustomExceptionHandler(Sender: TObject; E: Exception);
-var
-  ClName, EMsg: string;
-  ExceptionLog: TStringList;
-  LogPath: string;
-begin
-  try
-    ClName := Sender.ClassName;
-  except
-    ClName := '';
-  end;
-
-  try
-    EMsg := E.Message;
-  except
-    EMsg := '';
-  end;
-
-  try
-    {$IFDEF TestBuild}
-      if GetCmdLineOptionValue('--EnableSavingExceptionToFile') = 'No' then
-        Exit;
-    {$ENDIF}
-
-    ExceptionLog := TStringList.Create;
-    try
-      ExceptionLog.Add(DateTimeToStr(Now));
-      ExceptionLog.Add('Custom exception: ' + EMsg);
-      ExceptionLog.Add('Class: ' + ClName);
-
-      LogPath := ExtractFilePath(ParamStr(0)) + 'ClickerExceptions.txt';
-      ExceptionLog.Add('This file was saved as: ' + LogPath);
-
-      try
-        if Application <> nil then
-          ExceptionLog.Add('MainForm.Caption: ' + Application.MainForm.Caption);
-
-        if FPollForMissingServerFilesThreadStillRunning then
-          ExceptionLog.Add('FPollForMissingServerFilesThreadStillRunning is True.');
-      except
-      end;
-
-      ExceptionLog.SaveToFile(LogPath);
-
-      LogPath := '"' + LogPath + '"';
-      {$IFDEF Windows}
-        ShellExecute(0, 'open', 'C:\Windows\Notepad.exe', PChar(LogPath), '', SW_SHOW);  //nothing opens if Windows is installed somewhere else
-      {$ENDIF}
-      //MessageBox(0, PChar(ExceptionLog.Text), 'Clicker', MB_ICONERROR);  //the application crashes after displaying the MessageBox, so the MessageBox is closed
-    finally
-      ExceptionLog.Free;
+{$IFDEF CustomExceptionHandling}
+  type
+    TExHandler = class
+      procedure CustomExceptionHandler(Sender: TObject; E: Exception);
     end;
-  except
-    on EE: Exception do
-      MessageBox(0, PChar('Ex on custom exception: ' + EE.Message), 'Clicker', MB_ICONERROR);
-  end;
-end;
+
+  var
+    FExHandler: TExHandler;
 
 
-//see https://wiki.freepascal.org/Logging_exceptions
-procedure CatchUnhandledException(Obj: TObject; Addr: Pointer; FrameCount: LongInt; Frames: PPointer);
-var
-  Msg: string;
-  i: Integer;
-  ExceptionLog: TStringList;
-  LogPath: string;
-begin
-  try //use another try..except, just in case parsing the stack would raise more exceptions
-    {$IFDEF TestBuild}
-      if GetCmdLineOptionValue('--EnableSavingExceptionToFile') = 'No' then
-        Exit;
-    {$ENDIF}
-
-    Msg := 'Unhandled exception at adddr $' + SysBacktraceStr(Addr) + ':' + #13#10;
-
-    if Obj is Exception then
-      Msg := Msg + Exception(Obj).ClassName + ' : ' + Exception(Obj).Message
-    else
-      Msg := Msg + 'Exception object '  + Exception(Obj).ClassName + ' is not class Exception.';
-
-    Msg := Msg + #13#10;
-    Msg := Msg + BacktraceStrFunc(Addr) + #13#10;
-
-    for i := 0 to FrameCount - 1 do
-      Msg := Msg + BacktraceStrFunc(Frames[i]) + #13#10;
-
-    ExceptionLog := TStringList.Create;
+  //see https://wiki.freepascal.org/Logging_exceptions
+  procedure TExHandler.CustomExceptionHandler(Sender: TObject; E: Exception);
+  var
+    ClName, EMsg: string;
+    ExceptionLog: TStringList;
+    LogPath: string;
+  begin
     try
-      ExceptionLog.Add(DateTimeToStr(Now));
-      ExceptionLog.Add('Unhandled exception: ' + Msg);
+      ClName := Sender.ClassName;
+    except
+      ClName := '';
+    end;
 
-      LogPath := ExtractFilePath(ParamStr(0)) + 'ClickerUnhandledExceptions.txt';
-      ExceptionLog.Add('This file was saved as: ' + LogPath);
+    try
+      EMsg := E.Message;
+    except
+      EMsg := '';
+    end;
 
-      try
-        if Application <> nil then
-          ExceptionLog.Add('MainForm.Caption: ' + Application.MainForm.Caption);
-
-        if FPollForMissingServerFilesThreadStillRunning then
-          ExceptionLog.Add('FPollForMissingServerFilesThreadStillRunning is True.');
-      except
-      end;
-
-      ExceptionLog.SaveToFile(LogPath);
-
-      LogPath := '"' + LogPath + '"';
-      {$IFDEF Windows}
-        ShellExecute(0, 'open', 'C:\Windows\Notepad.exe', PChar(LogPath), '', SW_SHOW);   //nothing opens if Windows is installed somewhere else
+    try
+      {$IFDEF TestBuild}
+        if GetCmdLineOptionValue('--EnableSavingExceptionToFile') = 'No' then
+          Exit;
       {$ENDIF}
 
-      //MessageBox(0, PChar(Msg), 'Clicker', MB_ICONERROR);
-    finally
-      ExceptionLog.Free;
+      ExceptionLog := TStringList.Create;
+      try
+        ExceptionLog.Add(DateTimeToStr(Now));
+        ExceptionLog.Add('Custom exception: ' + EMsg);
+        ExceptionLog.Add('Class: ' + ClName);
+
+        LogPath := ExtractFilePath(ParamStr(0)) + 'ClickerExceptions.txt';
+        ExceptionLog.Add('This file was saved as: ' + LogPath);
+
+        try
+          if Application <> nil then
+            ExceptionLog.Add('MainForm.Caption: ' + Application.MainForm.Caption);
+
+          if FPollForMissingServerFilesThreadStillRunning then
+            ExceptionLog.Add('FPollForMissingServerFilesThreadStillRunning is True.');
+        except
+        end;
+
+        ExceptionLog.SaveToFile(LogPath);
+
+        LogPath := '"' + LogPath + '"';
+        {$IFDEF Windows}
+          ShellExecute(0, 'open', 'C:\Windows\Notepad.exe', PChar(LogPath), '', SW_SHOW);  //nothing opens if Windows is installed somewhere else
+        {$ENDIF}
+        //MessageBox(0, PChar(ExceptionLog.Text), 'Clicker', MB_ICONERROR);  //the application crashes after displaying the MessageBox, so the MessageBox is closed
+      finally
+        ExceptionLog.Free;
+      end;
+    except
+      on EE: Exception do
+        MessageBox(0, PChar('Ex on custom exception: ' + EE.Message), 'Clicker', MB_ICONERROR);
     end;
-  except
   end;
-end;
+
+
+  //see https://wiki.freepascal.org/Logging_exceptions
+  procedure CatchUnhandledException(Obj: TObject; Addr: Pointer; FrameCount: LongInt; Frames: PPointer);
+  var
+    Msg: string;
+    i: Integer;
+    ExceptionLog: TStringList;
+    LogPath: string;
+  begin
+    try //use another try..except, just in case parsing the stack would raise more exceptions
+      {$IFDEF TestBuild}
+        if GetCmdLineOptionValue('--EnableSavingExceptionToFile') = 'No' then
+          Exit;
+      {$ENDIF}
+
+      Msg := 'Unhandled exception at adddr $' + SysBacktraceStr(Addr) + ':' + #13#10;
+
+      if Obj is Exception then
+        Msg := Msg + Exception(Obj).ClassName + ' : ' + Exception(Obj).Message
+      else
+        Msg := Msg + 'Exception object '  + Exception(Obj).ClassName + ' is not class Exception.';
+
+      Msg := Msg + #13#10;
+      Msg := Msg + BacktraceStrFunc(Addr) + #13#10;
+
+      for i := 0 to FrameCount - 1 do
+        Msg := Msg + BacktraceStrFunc(Frames[i]) + #13#10;
+
+      ExceptionLog := TStringList.Create;
+      try
+        ExceptionLog.Add(DateTimeToStr(Now));
+        ExceptionLog.Add('Unhandled exception: ' + Msg);
+
+        LogPath := ExtractFilePath(ParamStr(0)) + 'ClickerUnhandledExceptions.txt';
+        ExceptionLog.Add('This file was saved as: ' + LogPath);
+
+        try
+          if Application <> nil then
+            ExceptionLog.Add('MainForm.Caption: ' + Application.MainForm.Caption);
+
+          if FPollForMissingServerFilesThreadStillRunning then
+            ExceptionLog.Add('FPollForMissingServerFilesThreadStillRunning is True.');
+        except
+        end;
+
+        ExceptionLog.SaveToFile(LogPath);
+
+        LogPath := '"' + LogPath + '"';
+        {$IFDEF Windows}
+          ShellExecute(0, 'open', 'C:\Windows\Notepad.exe', PChar(LogPath), '', SW_SHOW);   //nothing opens if Windows is installed somewhere else
+        {$ENDIF}
+
+        //MessageBox(0, PChar(Msg), 'Clicker', MB_ICONERROR);
+      finally
+        ExceptionLog.Free;
+      end;
+    except
+    end;
+  end;
+{$ENDIF}
 
 
 var
@@ -294,9 +296,11 @@ begin
   Application.Scaled:=True;
   Application.Initialize;
 
-  FExHandler := TExHandler.Create;
-  ExceptProc := @CatchUnhandledException;
-  Application.OnException := @FExHandler.CustomExceptionHandler;
+  {$IFDEF CustomExceptionHandling}
+    FExHandler := TExHandler.Create;
+    ExceptProc := @CatchUnhandledException;
+    Application.OnException := @FExHandler.CustomExceptionHandler;
+  {$ENDIF}
 
   Application.CreateForm(TfrmUIClickerMainForm, frmUIClickerMainForm);
   Application.CreateForm(TdmClickerIcons, dmClickerIcons);

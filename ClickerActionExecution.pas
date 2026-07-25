@@ -64,7 +64,7 @@ type
   TOnLoadTemplateToActions = function(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; out ANotes, AIconPath: string; AWaitForFileAvailability: Boolean = False): string of object;
   TOnSaveCompleteTemplateToFile = function(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; ANotes, AIconPath: string; AUpdateUI, AShouldSaveSelfTemplate: Boolean): string of object;
 
-  TOnWaitInDebuggingMode = procedure(var ADebuggingAction: TClkActionRec; AActionAllowsSteppingInto: TAllowsSteppingInto) of object;
+  TOnWaitInDebuggingMode = function(var ADebuggingAction: TClkActionRec; AActionAllowsSteppingInto: TAllowsSteppingInto): Boolean of object;
 
   TBrowserRenderingText = record
     Txt: string;
@@ -228,7 +228,7 @@ type
     function DoOnLoadTemplateToActions(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; out ANotes, AIconPath: string; AWaitForFileAvailability: Boolean = False): string;
     function DoOnSaveCompleteTemplateToFile(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; ANotes, AIconPath: string; AUpdateUI, AShouldSaveSelfTemplate: Boolean): string;
 
-    procedure DoOnWaitInDebuggingMode(var ADebuggingAction: TClkActionRec; AActionAllowsSteppingInto: TAllowsSteppingInto);
+    function DoOnWaitInDebuggingMode(var ADebuggingAction: TClkActionRec; AActionAllowsSteppingInto: TAllowsSteppingInto): Boolean;
     function DoOnGetPluginInMemFS: TInMemFileSystem;
     function DoOnGetListeningPort: Word;
 
@@ -1126,12 +1126,12 @@ begin
 end;
 
 
-procedure TActionExecution.DoOnWaitInDebuggingMode(var ADebuggingAction: TClkActionRec; AActionAllowsSteppingInto: TAllowsSteppingInto);
+function TActionExecution.DoOnWaitInDebuggingMode(var ADebuggingAction: TClkActionRec; AActionAllowsSteppingInto: TAllowsSteppingInto): Boolean;
 begin
   if not Assigned(FOnWaitInDebuggingMode) then
     raise Exception.Create('OnWaitInDebuggingMode is not assigned.')
   else
-    FOnWaitInDebuggingMode(ADebuggingAction, AActionAllowsSteppingInto);
+    Result := FOnWaitInDebuggingMode(ADebuggingAction, AActionAllowsSteppingInto);
 end;
 
 
@@ -5959,7 +5959,7 @@ var
   WorkAction: TClkActionRec;
   TempAllActions: PClkActionsRecArr;
   TempListOfAllVars: TStringList;
-  IsDebugging: Boolean;
+  IsDebugging, TempContinuePlayingBySteppingInto: Boolean;
   Err: string;
 begin
   Result := False;
@@ -5973,6 +5973,7 @@ begin
     end;
 
     IsDebugging := AListOfPluginOptionsParams.Values[CREParam_IsDebugging] = '1';  //this is plugin debugging, which is different than UseServerDebugging
+    TempContinuePlayingBySteppingInto := False;
     TempAllActions := DoOnGetAllActions;
 
     if IsDebugging then
@@ -5989,14 +5990,14 @@ begin
                              //The "Step into" button is enabled by this flag, so the execution should not get to that "invisible" loop.
       GetActionOptionsFromParams(AListOfPluginOptionsParams, WorkAction);
       WorkAction.ActionOptions.Action := acPlugin;
-      DoOnWaitInDebuggingMode(WorkAction, TAllowsSteppingInto(Ord(IsDebugging)));
+      TempContinuePlayingBySteppingInto := DoOnWaitInDebuggingMode(WorkAction, TAllowsSteppingInto(Ord(IsDebugging)));
     end;
 
     TempListOfAllVars := TStringList.Create;
     try
       TempListOfAllVars.LineBreak := #13#10;
       DoOnBackupVars(TempListOfAllVars);
-      Result := ExecutePluginAction(WorkAction.PluginOptions, TempAllActions, TempListOfAllVars, DoOnResolveTemplatePath(WorkAction.PluginOptions.FileName), IsDebugging, IsDebugging); //passing two IsDebugging params. ToDo:  review the logic
+      Result := ExecutePluginAction(WorkAction.PluginOptions, TempAllActions, TempListOfAllVars, DoOnResolveTemplatePath(WorkAction.PluginOptions.FileName), IsDebugging and TempContinuePlayingBySteppingInto, IsDebugging); //passing two IsDebugging params. ToDo:  review the logic
     finally
       TempListOfAllVars.Free;
     end;

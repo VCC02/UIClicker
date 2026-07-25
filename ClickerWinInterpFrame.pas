@@ -260,6 +260,8 @@ type
     procedure vstComponentsDblClick(Sender: TObject);
     procedure vstComponentsEdited(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex);
     procedure vstComponentsEditing(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; var Allowed: Boolean);
+    procedure vstComponentsCreateEditor(Sender: TBaseVirtualTree;
+      Node: PVirtualNode; Column: TColumnIndex; out EditLink: IVTEditLink);
     procedure vstComponentsNewText(Sender: TBaseVirtualTree; Node: PVirtualNode; Column: TColumnIndex; const NewText: String);
     procedure vstComponentsMouseUp(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
@@ -890,6 +892,10 @@ begin
   //FTextEditorEditBox.OnKeyDown := edtTextEditorKeyDown;
   //FTextEditorEditBox.OnKeyUp := edtTextEditorKeyUp;
 
+  FTextEditorEditBox.Font.Style := vstAvoidedZones.Font.Style;
+  FTextEditorEditBox.Font.Name := vstAvoidedZones.Font.Name;
+  FTextEditorEditBox.Font.Size := vstAvoidedZones.Font.Size;
+
   FTextEditorEditBox.Hint := 'Right-click for available var/replacements.';
 
   NodeData := vstAvoidedZones.GetNodeData(Node);
@@ -915,6 +921,29 @@ begin
   FTextEditorEditBox.ShowHint := True;
 
   FillInAvoidedZonesEditorMenu;
+  FTextEditorEditBox.Show;
+
+  Application.ProcessMessages;
+  FTextEditorEditBox.SetFocus;
+end;
+
+
+procedure TfrClickerWinInterp.vstComponentsCreateEditor(Sender: TBaseVirtualTree;
+  Node: PVirtualNode; Column: TColumnIndex; out EditLink: IVTEditLink);
+var
+  TempStringEditLink: TStringEditLink;
+begin
+  TempStringEditLink := TStringEditLink.Create;
+  EditLink := TempStringEditLink;
+
+  FTextEditorEditBox := TEdit(TCustomEdit(TempStringEditLink.Edit));
+
+  FTextEditorEditBox.PopupMenu := nil;
+
+  FTextEditorEditBox.Font.Style := vstAvoidedZones.Font.Style;
+  FTextEditorEditBox.Font.Name := vstAvoidedZones.Font.Name;
+  FTextEditorEditBox.Font.Size := vstAvoidedZones.Font.Size;
+
   FTextEditorEditBox.Show;
 
   Application.ProcessMessages;
@@ -1287,6 +1316,7 @@ begin
   vstComponents.OnDblClick := @vstComponentsDblClick;
   vstComponents.OnEdited := @vstComponentsEdited;
   vstComponents.OnEditing := @vstComponentsEditing;
+  vstComponents.OnCreateEditor := @vstComponentsCreateEditor;
   vstComponents.OnNewText := @vstComponentsNewText;
   vstComponents.OnMouseUp := @vstComponentsMouseUp;
   vstComponents.OnGetText := @vstComponentsGetText;

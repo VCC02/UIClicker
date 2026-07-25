@@ -464,7 +464,8 @@
       </CompilerMessages>
       <CustomOptions Value="-dTestBuild
 -dMemPlugins
--dPluginTesting"/>
+-dPluginTesting
+-d_CustomExceptionHandling"/>
       <ExecuteAfter>
         <Command Value="&quot;$(ProjPath)\Tools\TestDriverUpdater\TestDriverUpdtr.exe&quot;"/>
         <CompileReasons Run="False"/>

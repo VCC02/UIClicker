@@ -1684,6 +1684,9 @@ begin
 
   APluginOptions.FileName := APluginOptionsParams.Values['FileName'];
   APluginOptions.ListOfPropertiesAndValues := FastReplace_45ToReturn(APluginOptionsParams.Values['ListOfPropertiesAndValues']);
+  APluginOptions.ListOfPropertiesAndTypes := '';
+  APluginOptions.ListOfInitValues := '';
+  APluginOptions.CachedCount := 0;
 end;
 
 

@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2024 VCC
+    Copyright (C) 2026 VCC
     creation date: 22 Jan 2024
     initial release date: 23 Jan 2024
 
@@ -145,6 +145,7 @@ type
     destructor Destroy; override;
 
     procedure LoadDebugSymbols(ADbgSymFnm: string);
+    procedure DisplayDebuggingButtons;
     procedure SelectLineByContent(ALineContent: string);
     function IsAtBreakPoint(ADebugPoint: string): Boolean;
     procedure DoneDebuging; //clears vst and disables buttons
@@ -837,6 +838,14 @@ begin
 end;
 
 
+procedure TfrClickerPlugin.DisplayDebuggingButtons;
+begin
+  spdbtnStopPlaying.Visible := True;
+  spdbtnContinuePlayingAll.Visible := True;
+  spdbtnStepOver.Visible := True;
+end;
+
+
 procedure TfrClickerPlugin.SelectLineByContent(ALineContent: string);
 begin
   vstPluginDebugging.RootNodeCount := 0;
@@ -868,9 +877,7 @@ begin
       UpdateMsgLabel('File: ' + FSourceFiles[FSelectedSourceFileIndex].Fnm);
       lblMsg.Hint := lblMsg.Hint + #13#10 + 'Line: ' + IntToStr(FSelectedLine + 1);
 
-      spdbtnStopPlaying.Visible := True;
-      spdbtnContinuePlayingAll.Visible := True;
-      spdbtnStepOver.Visible := True;
+      DisplayDebuggingButtons;
     end;
 
     Exit;
@@ -898,9 +905,7 @@ begin
   except
   end;
 
-  spdbtnStopPlaying.Visible := True;
-  spdbtnContinuePlayingAll.Visible := True;
-  spdbtnStepOver.Visible := True;
+  DisplayDebuggingButtons;
 end;
 
 
