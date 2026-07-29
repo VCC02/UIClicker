@@ -804,7 +804,7 @@ object frClickerActionsArr: TfrClickerActionsArr
     object imgWaitingForFilesAvailability: TImage
       Left = 600
       Height = 16
-      Hint = 'Waiting for files availability.'#13#10'This can be stopped from the arrow button, next to the Stop button.'
+      Hint = 'Waiting for files availability. See the log for details.'#13#10'This can be stopped from the arrow button, next to the Stop button.'
       Top = 168
       Width = 16
       Anchors = [akTop, akRight]

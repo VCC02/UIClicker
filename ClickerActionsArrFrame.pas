@@ -4232,13 +4232,18 @@ var
   FormatVersion: string;
   ActionCount: Integer;
   ErrMsg, WaitingMsg: string;
+  DisplayedFnm: string;
 begin
   vstActions.Clear; //to reset the node checkboxes
 
   Fnm := ResolveTemplatePath(Fnm);
   Fnm := EvaluateReplacements(Fnm);
 
-  WaitingMsg := 'Waiting for file availability: ' + Fnm + '   Timeout: ' + IntToStr(CWaitForFileAvailabilityTimeout div 1000) + 's.';
+  DisplayedFnm := Fnm;
+  if DisplayedFnm = '' then
+    DisplayedFnm := '<No file name set.>';
+
+  WaitingMsg := 'Waiting for file availability: ' + DisplayedFnm + '   Timeout: ' + IntToStr(CWaitForFileAvailabilityTimeout div 1000) + 's.';
   WaitingMsg := WaitingMsg + #13#10 + 'There is a "stop waiting" button, next to the "Stop action" button.';
 
   try
@@ -4361,6 +4366,7 @@ var
   FormatVersion: string;
   ActionCount: Integer;
   WaitingMsg: string;
+  DisplayedFnm: string;
 begin
   Result := '';  // '' means no error
   Fnm := ResolveTemplatePath(Fnm);
@@ -4369,7 +4375,11 @@ begin
   ANotes := '';
   AIconPath := '';
 
-  WaitingMsg := 'Waiting for file availability: ' + Fnm + '   Timeout: ' + IntToStr(CWaitForFileAvailabilityTimeout div 1000) + 's.';
+  DisplayedFnm := Fnm;
+  if DisplayedFnm = '' then
+    DisplayedFnm := '<No file name set.>';
+
+  WaitingMsg := 'Waiting for file availability: ' + DisplayedFnm + '   Timeout: ' + IntToStr(CWaitForFileAvailabilityTimeout div 1000) + 's.';
   WaitingMsg := WaitingMsg + #13#10 + 'There is a "stop waiting" button, next to the "Stop action" button.';
 
   try
@@ -7312,6 +7322,7 @@ begin
   if Node = nil then
   begin
     MessageBox(Handle, 'Please select an action to play.', PChar(Caption), MB_ICONINFORMATION);
+    spdbtnStopPlaying.Enabled := False;
     Exit;
   end;
 
