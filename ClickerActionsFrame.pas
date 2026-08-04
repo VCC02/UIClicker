@@ -182,15 +182,12 @@ type
     RemoveVariable1: TMenuItem;
     vstVariables: TVirtualStringTree;
     procedure chkDecodeVariablesChange(Sender: TObject);
-    procedure chkWaitForControlToGoAwayChange(Sender: TObject);
     procedure edtConsoleCommandExit(Sender: TObject);
     procedure edtConsoleCommandKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
     procedure edtConsoleCommandKeyUp(Sender: TObject; var Key: Word;
       Shift: TShiftState);
     procedure FrameResize(Sender: TObject);
-    procedure lbeFindCachedControlLeftChange(Sender: TObject);
-    procedure lbeFindCachedControlTopChange(Sender: TObject);
     procedure MenuItem_ReplaceWithAppDirClick(Sender: TObject);
     procedure MenuItem_ReplaceWithSelfTemplateDirClick(Sender: TObject);
     procedure MenuItem_ReplaceWithTemplateDirClick(Sender: TObject);
@@ -241,22 +238,8 @@ type
     procedure MenuItemCopyDebugImageClick(Sender: TObject);
     procedure MenuItemEraseDebugImageClick(Sender: TObject);
 
-    procedure lbeSearchRectLeftChange(Sender: TObject);
-    procedure lbeSearchRectTopChange(Sender: TObject);
-    procedure lbeSearchRectRightChange(Sender: TObject);
-    procedure lbeSearchRectBottomChange(Sender: TObject);
-    procedure lbeSearchRectLeftOffsetChange(Sender: TObject);
-    procedure lbeSearchRectTopOffsetChange(Sender: TObject);
-    procedure lbeSearchRectRightOffsetChange(Sender: TObject);
-    procedure lbeSearchRectBottomOffsetChange(Sender: TObject);
-    procedure rdgrpSearchForControlModeClick(Sender: TObject);
-    procedure vallstVariablesValidate(Sender: TObject; ACol, ARow: Integer;
-      const KeyName, KeyValue: string);
     procedure AddVariable1Click(Sender: TObject);
     procedure RemoveVariable1Click(Sender: TObject);
-    procedure lbeMatchClassNameChange(Sender: TObject);
-    procedure lbeMatchTextSeparatorChange(Sender: TObject);
-    procedure lbeMatchClassNameSeparatorChange(Sender: TObject);
 
     ///////////////////////////// OI
     procedure MenuItem_SetActionTimeoutFromOI(Sender: TObject);
@@ -1346,12 +1329,6 @@ begin
 end;
 
 
-procedure TfrClickerActions.rdgrpSearchForControlModeClick(Sender: TObject);
-begin
-  TriggerOnControlsModified;
-end;
-
-
 procedure TfrClickerActions.ClkVariablesOnChange(Sender: TObject);
 begin
   tmrClkVariables.Enabled := True;
@@ -1462,60 +1439,6 @@ begin
 end;
 
 
-procedure TfrClickerActions.lbeMatchTextSeparatorChange(Sender: TObject);
-begin
-  TriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerActions.lbeSearchRectBottomChange(Sender: TObject);
-begin
-  TriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerActions.lbeSearchRectBottomOffsetChange(Sender: TObject);
-begin
-  TriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerActions.lbeSearchRectLeftChange(Sender: TObject);
-begin
-  TriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerActions.lbeSearchRectLeftOffsetChange(Sender: TObject);
-begin
-  TriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerActions.lbeSearchRectRightChange(Sender: TObject);
-begin
-  TriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerActions.lbeSearchRectRightOffsetChange(Sender: TObject);
-begin
-  TriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerActions.lbeSearchRectTopChange(Sender: TObject);
-begin
-  TriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerActions.lbeSearchRectTopOffsetChange(Sender: TObject);
-begin
-  TriggerOnControlsModified;
-end;
-
-
 function TfrClickerActions.GetListOfCustomVariables: string;
 begin
   Result := frClickerCallTemplate.GetListOfCustomVariables;
@@ -1528,30 +1451,12 @@ begin
 end;
 
 
-procedure TfrClickerActions.lbeMatchClassNameChange(Sender: TObject);
-begin
-  TriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerActions.lbeMatchClassNameSeparatorChange(Sender: TObject);
-begin
-  TriggerOnControlsModified;
-end;
-
-
 procedure TfrClickerActions.SetLabelsFromMouseOverExecDbgImgPixelColor(APixelColor: TColor);
 begin
   lblMouseOnExecDbgImgRR.Caption := IntToHex(APixelColor and $FF, 2);
   lblMouseOnExecDbgImgGG.Caption := IntToHex(APixelColor shr 8 and $FF, 2);
   lblMouseOnExecDbgImgBB.Caption := IntToHex(APixelColor shr 16 and $FF, 2);
   lblMouseOnExecDbgImg.Color := APixelColor;
-end;
-
-
-procedure TfrClickerActions.chkWaitForControlToGoAwayChange(Sender: TObject);
-begin
-  TriggerOnControlsModified;
 end;
 
 
@@ -2055,18 +1960,6 @@ begin
 end;
 
 
-procedure TfrClickerActions.lbeFindCachedControlLeftChange(Sender: TObject);
-begin
-  TriggerOnControlsModified;
-end;
-
-
-procedure TfrClickerActions.lbeFindCachedControlTopChange(Sender: TObject);
-begin
-  TriggerOnControlsModified;
-end;
-
-
 procedure TfrClickerActions.MenuItem_ReplaceWithAppDirClick(Sender: TObject);
 var
   PathToFileName: string;
@@ -2397,21 +2290,6 @@ procedure TfrClickerActions.pnlHorizSplitterResultsMouseUp(Sender: TObject;
   Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
   FHoldResults := False;
-end;
-
-
-procedure TfrClickerActions.vallstVariablesValidate(Sender: TObject; ACol,
-  ARow: Integer; const KeyName, KeyValue: string);
-begin
-  if ACol = 0 then
-  begin
-    if KeyName > '' then
-      if {(Length(KeyName) < 2) or} (KeyName[1] <> '$') or (KeyName[Length(KeyName)] <> '$') then
-        raise Exception.Create('Variable name must be enclosed by two "$" characters. E.g. "$my_var$" (without double quotes).');
-
-    if ARow - 1 < FPredefinedVarCount then
-      raise Exception.Create('Predefined variables should not be edited. Press Esc to revert.');
-  end;
 end;
 
 
@@ -5026,7 +4904,7 @@ begin
       MenuData^.TempEditingAction^.FindSubControlOptions.MatchPrimitiveFiles_Modified := ListOfFiles_Modified.Text;
 
       FOIFrame.ReloadPropertyItems(MenuData^.CategoryIndex, MenuData^.PropertyIndex, True);
-      //TriggerOnControlsModified;  //commented, because the template is not modified by this action
+      TriggerOnControlsModified;  //was commented, because the template is not modified by this action, but it caused other problems
     finally
       ListOfFiles.Free;
       ListOfFiles_Modified.Free;
@@ -10570,6 +10448,9 @@ begin
         end;
 
         FPrevSelectedPrimitiveNode := PropertyItemIndex;
+
+        frClickerFindControl.PageControlMatch.ActivePage := frClickerFindControl.TabSheetActionFindSubControlPrimitives;
+        Application.ProcessMessages;
 
         frClickerFindControl.CreateClickerPrimitivesFrame;
         frClickerFindControl.frClickerPrimitives.FileIndex := PropertyItemIndex;

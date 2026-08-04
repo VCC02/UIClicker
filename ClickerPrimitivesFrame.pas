@@ -341,8 +341,19 @@ begin
   Canvas.Pen.Color := clRed;
   Canvas.MoveTo(1, 1);
   Canvas.LineTo(Width, Height);
-  Canvas.MoveTo(0, Height);
-  Canvas.LineTo(Width, 0);
+  Canvas.MoveTo(Width, 0);
+  Canvas.LineTo(0, Height);
+
+  Canvas.Pen.Color := $CCCCFF;
+  Canvas.MoveTo(2, 1);
+  Canvas.LineTo(Width, Height - 1);
+  Canvas.MoveTo(Width - 2, 1);
+  Canvas.LineTo(0, Height - 1);
+
+  Canvas.MoveTo(1, 2);
+  Canvas.LineTo(Width - 1, Height);
+  Canvas.MoveTo(Width, 1);
+  Canvas.LineTo(1, Height);
 end;
 
 

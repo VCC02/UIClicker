@@ -5177,7 +5177,12 @@ const
         Result := True;
       end
       else
+      begin
         frClickerActions.ResetAllPmtvModifiedFlags;  //reset the flags, so that next time this action is selected, the files won't appear as modified
+        //Update FClkActions here, because UpdateControlsFromActionsArr is called later, which resets the state, set by ResetAllPmtvModifiedFlags:
+        if FPreviousSelectedNode <> nil then
+          FClkActions[FPreviousSelectedNode^.Index].FindSubControlOptions.MatchPrimitiveFiles_Modified := frClickerActions.EditingAction^.FindSubControlOptions.MatchPrimitiveFiles_Modified;
+      end;
   end;
 
 var

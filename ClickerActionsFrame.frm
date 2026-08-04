@@ -605,8 +605,8 @@ object frClickerActions: TfrClickerActions
     Top = 233
   end
   object pmWindowOperationsEditors: TPopupMenu
-    Left = 136
-    Top = 112
+    Left = 168
+    Top = 104
     object MenuItem_SetFromControlLeftAndTop: TMenuItem
       Caption = 'Set from $Control_Left/Top$'
       Enabled = False
