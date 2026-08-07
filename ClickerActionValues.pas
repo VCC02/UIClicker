@@ -61,8 +61,8 @@ const
   //Properties (counts)
   CPropCount_Click = 27;
   CPropCount_ExecApp = 9;
-  CPropCount_FindControl = 15;
-  CPropCount_FindSubControl = 35;
+  CPropCount_FindControl = 16;
+  CPropCount_FindSubControl = 36;
   CPropCount_SetText = 4;
   CPropCount_CallTemplate = 4;
   CPropCount_Sleep = 1;
@@ -149,6 +149,7 @@ const
   CFindControl_GetAllControls_PropIndex = 12;//19;
   CFindControl_PrecisionTimeout_PropIndex = 13;//28;  //to be removed
   CFindControl_EvaluateTextCount_PropIndex = 14;//31;
+  CFindControl_AttemptCount_PropIndex = 15;
 
   CFindSubControl_MatchCriteria_PropIndex = 0;
   CFindSubControl_AllowToFail_PropIndex = 1;
@@ -185,6 +186,7 @@ const
   CFindSubControl_RenderingInBrowserSettings_PropIndex = 32;
   CFindSubControl_GPUSettings_PropIndex = 33;
   CFindSubControl_ImageEffectSettings_PropIndex = 34;
+  CFindSubControl_AttemptCount_PropIndex = 35;
 
   CCallTemplate_TemplateFileName_PropIndex = 0; //property index in CallTemplate structure
   CCallTemplate_ListOfCustomVarsAndValues_PropIndex = 1;
@@ -378,7 +380,8 @@ const
     (Name: 'CachedControlTop'; EditorType: etText; DataType: CDTString),
     (Name: 'GetAllControls'; EditorType: etBooleanCombo; DataType: CDTBool),
     (Name: 'PrecisionTimeout'; EditorType: etBooleanCombo; DataType: CDTBool),
-    (Name: 'EvaluateTextCount'; EditorType: etSpinText; DataType: CDTString)//,
+    (Name: 'EvaluateTextCount'; EditorType: etSpinText; DataType: CDTString),
+    (Name: 'AttemptCount'; EditorType: etEnumCombo; DataType: CDTEnum)
   );
 
   CFindSubControlProperties: array[0..CPropCount_FindSubControl - 1] of TOIPropDef = (
@@ -416,7 +419,8 @@ const
     (Name: 'UseTextRenderingInBrowser'; EditorType: etBooleanCombo; DataType: CDTBool),
     (Name: 'RenderingInBrowserSettings'; EditorType: etNone; DataType: CDTStructure),
     (Name: 'GPUSettings'; EditorType: etNone; DataType: CDTStructure),
-    (Name: 'ImageEffectSettings'; EditorType: etNone; DataType: CDTStructure)
+    (Name: 'ImageEffectSettings'; EditorType: etNone; DataType: CDTStructure),
+    (Name: 'AttemptCount'; EditorType: etEnumCombo; DataType: CDTEnum)
   );
 
   {$IFDEF SubProperties}
@@ -770,7 +774,8 @@ const
     nil, //CachedControlTop
     nil, //GetAllControls
     nil, //PrecisionTimeout
-    nil//, //EvaluateTextCount
+    nil, //EvaluateTextCount
+    nil  //AttemptCount
   );
 
   CFindSubControlGetActionValueStrFunctions: TGetFindSubControlValueStrFuncArr = (
@@ -808,7 +813,8 @@ const
     nil, //UseTextRenderingInBrowser
     GetActionValueStr_FindSubControl_RenderingInBrowserSettings,  //RenderingInBrowserSettings
     GetActionValueStr_FindSubControl_GPUSettings,  //GPUSettings
-    GetActionValueStr_FindSubControl_ImageEffectSettings  //ImageEffectSettings
+    GetActionValueStr_FindSubControl_ImageEffectSettings,  //ImageEffectSettings
+    nil  //AttemptCount
   );
 
   CCallTemplateGetActionValueStrFunctions: TGetCallTemplateValueStrFuncArr = (
@@ -885,7 +891,8 @@ const
     0, //CachedControlTop: string;
     0, //GetAllControls: Boolean;
     0, //PrecisionTimeout: Boolean;
-    0//, //EvaluateTextCount
+    0, //EvaluateTextCount
+    Ord(High(TAttemptCount)) + 1
   );
 
   CFindSubControlEnumCounts: array[0..CPropCount_FindSubControl - 1] of Integer = (
@@ -923,7 +930,8 @@ const
     0, //UseTextRenderingInBrowser
     0, //RenderingInBrowserSettings: TRenderingInBrowserSettings;
     0, //GPUSettings: TGPUSettings;
-    0  //ImageEffectSettings: TImageEffectSettings;
+    0, //ImageEffectSettings: TImageEffectSettings;
+    Ord(High(TAttemptCount)) + 1
   );
 
 
@@ -1143,7 +1151,8 @@ const
     nil, //CachedControlTop: string;
     nil, //GetAllControls
     nil, //PrecisionTimeout
-    nil//, //EvaluateTextCount
+    nil, //EvaluateTextCount
+    @CAttemptCountStr
   );
 
   CFindSubControlEnumStrings: array[0..CPropCount_FindSubControl - 1] of PArrayOfString = (
@@ -1181,7 +1190,8 @@ const
     nil, //UseTextRenderingInBrowser
     nil, //RenderingInBrowserSettings
     nil, //GPUSettings
-    nil  //ImageEffectSettings
+    nil, //ImageEffectSettings
+    @CAttemptCountStr
   );
 
   CSetTextEnumStrings: array[0..CPropCount_SetText - 1] of PArrayOfString = (
@@ -1405,7 +1415,8 @@ const
     0, //CachedControlTop: string;
     0, //GetAllControls: Boolean;
     0, //PrecisionTimeout: Boolean;
-    0//, //EvaluateTextCount
+    0, //EvaluateTextCount
+    0  //AttemptCount
   );
 
   CFindSubControlIsExp: array[0..CPropCount_FindSubControl - 1] of Integer = (
@@ -1443,7 +1454,8 @@ const
     0, //UseTextRenderingInBrowser
     1, //RenderingInBrowserSettings: TRenderingInBrowserSettings;
     1, //GPUSettings: TGPUSettings;
-    1  //ImageEffectSettings: TImageEffectSettings;
+    1, //ImageEffectSettings: TImageEffectSettings;
+    0  //AttemptCount
   );
 
   CSetTextIsExp: array[0..CPropCount_SetText - 1] of Integer = (
@@ -1580,6 +1592,7 @@ function GetPropertyHint_FindControl_UseTextRenderingInBrowser: string;
 function GetPropertyHint_FindControl_RenderingInBrowserSettings: string;
 function GetPropertyHint_FindControl_GPUSettings: string;
 function GetPropertyHint_FindControl_ImageEffectSettings: string;
+function GetPropertyHint_FindControl_AttemptCount: string;
 
 {$IFDEF SubProperties}
   function GetPropertyHint_FindControl_MatchCriteria_WillMatchText: string;
@@ -1735,7 +1748,8 @@ const
     @GetPropertyHint_FindControl_CachedControlLeftTop, // CachedControlTop: string;
     @GetPropertyHint_FindControl_GetAllControls, // GetAllControls: Boolean;
     @GetPropertyHint_FindControl_PrecisionTimeout, //PrecisionTimeout: Boolean
-    @GetPropertyHint_FindControl_EvaluateTextCount//, //EvaluateTextCount: string;
+    @GetPropertyHint_FindControl_EvaluateTextCount, //EvaluateTextCount: string;
+    @GetPropertyHint_FindControl_AttemptCount //AttemptCount: TAttemptCount;
   );
 
 
@@ -1774,7 +1788,8 @@ const
     @GetPropertyHint_FindControl_UseTextRenderingInBrowser, //UseTextRenderingInBrowser: string;
     @GetPropertyHint_FindControl_RenderingInBrowserSettings, //RenderingInBrowserSettings: TRenderingInBrowserSettings;
     @GetPropertyHint_FindControl_GPUSettings,  //GPUSettings: TGPUSettings;
-    @GetPropertyHint_FindControl_ImageEffectSettings  //ImageEffectSettings: TImageEffectSettings;
+    @GetPropertyHint_FindControl_ImageEffectSettings,  //ImageEffectSettings: TImageEffectSettings;
+    @GetPropertyHint_FindControl_AttemptCount //AttemptCount: TAttemptCount;
   );
 
 
@@ -2043,6 +2058,7 @@ begin
     12: Result := BoolToStr(AAction^.FindControlOptions.GetAllControls, True);
     13: Result := BoolToStr(AAction^.FindControlOptions.PrecisionTimeout, True);
     14: Result := AAction^.FindControlOptions.EvaluateTextCount;
+    15: Result := CAttemptCountStr[AAction^.FindControlOptions.AttemptCount];
     else
       Result := 'unknown';
   end;
@@ -2098,6 +2114,7 @@ begin
     32: Result := '';  //RenderingInBrowserSettings
     33: Result := '';  //GPUSettings
     34: Result := '';  //ImageEffectSettings
+    35: Result := CAttemptCountStr[AAction^.FindSubControlOptions.AttemptCount];
     else
       Result := 'unknown';
   end;
@@ -2655,6 +2672,20 @@ begin
 end;
 
 
+function AttemptCount_AsStringToValue(AAttemptCountAsString: string): TAttemptCount;
+var
+  i: TAttemptCount;
+begin
+  Result := acOnce;
+  for i := Low(TAttemptCount) to High(TAttemptCount) do
+    if CAttemptCountStr[i] = AAttemptCountAsString then
+    begin
+      Result := i;
+      Exit;
+    end;
+end;
+
+
 function FontQuality_AsStringToValue(AFontQualityAsString: string): TFontQuality;
 var
   i: TFontQuality;
@@ -2966,6 +2997,7 @@ begin
     12: AAction^.FindControlOptions.GetAllControls := StrToBool(NewValue);
     13: AAction^.FindControlOptions.PrecisionTimeout := StrToBool(NewValue);
     14: AAction^.FindControlOptions.EvaluateTextCount := NewValue;
+    15: AAction^.FindControlOptions.AttemptCount := AttemptCount_AsStringToValue(NewValue);
     else
       ;
   end;
@@ -3010,6 +3042,7 @@ begin
     32: ;  //RenderingInBrowserSettings
     33: ;  //GPUSettings
     34: ;  //ImageEffectSettings
+    35: AAction^.FindSubControlOptions.AttemptCount := AttemptCount_AsStringToValue(NewValue);
     else
       ;
   end;
@@ -3745,6 +3778,13 @@ begin
 end;
 
 
+function GetPropertyHint_FindControl_AttemptCount: string;
+begin
+  Result := 'When set to acOnce, the search stops after one failed attempt.' + #13#10 +
+            'When set to acMultiple, the search stops when found, or on timeout.';
+end;
+
+
 {$IFDEF SubProperties}
   function GetPropertyHint_FindControl_MatchCriteria_WillMatchText: string;
   begin
@@ -3971,7 +4011,7 @@ end;
   function GetPropertyHint_FindSubControl_ImageEffectSettings_ImageEffect: string;
   begin
     Result := 'The blur effects are useful when the antialiasing algorithms do not match between the searched bitmap(s) and the background.' + #13#10 +
-              'The grayscale effect is useful when the background is already a grascale image and the searched bitmaps have to be converted.';
+              'The grayscale effect is useful when the background is already a grayscale image and the searched bitmaps have to be converted.';
   end;
 
   function GetPropertyHint_FindSubControl_ImageEffectSettings_WhereToApply: string;

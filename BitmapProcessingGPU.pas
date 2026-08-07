@@ -115,12 +115,14 @@ begin      //int is 32-bit, long is 64-bit
     '  int ErrCount = 0;                             ' + #13#10 +
     '  for (int x = 0; x < ASubBmpWidth; x++)        ' + #13#10 +
     '  {                                             ' + #13#10 +
-    '     int x0_BG = x * ' + RGBSizeStrOnBG + ' + 0;                        ' + #13#10 +
-    '     int x1_BG = x * ' + RGBSizeStrOnBG + ' + 1;                        ' + #13#10 +
-    '     int x2_BG = x * ' + RGBSizeStrOnBG + ' + 2;                        ' + #13#10 +
-    '     int x0_Sub = x * ' + RGBSizeStrOnSub + ' + 0;                        ' + #13#10 +
-    '     int x1_Sub = x * ' + RGBSizeStrOnSub + ' + 1;                        ' + #13#10 +
-    '     int x2_Sub = x * ' + RGBSizeStrOnSub + ' + 2;                        ' + #13#10 +
+    '     int x_BG = x * ' + RGBSizeStrOnBG + ';     ' + #13#10 +
+    '     int x_Sub = x * ' + RGBSizeStrOnSub + ';   ' + #13#10 +
+    '     int x0_BG = x_BG + 0;'                       + #13#10 +
+    '     int x1_BG = x_BG + 1;'                       + #13#10 +
+    '     int x2_BG = x_BG + 2;'                       + #13#10 +
+    '     int x0_Sub = x_Sub + 0;'                     + #13#10 +
+    '     int x1_Sub = x_Sub + 1;'                     + #13#10 +
+    '     int x2_Sub = x_Sub + 2;'                     + #13#10 +
     '     short SubPxB = SubRow[x0_Sub];             ' + #13#10 +
     '     short BGPxB = BGRow[x0_BG];                ' + #13#10 +
     '     short SubPxG = SubRow[x1_Sub];             ' + #13#10 +
@@ -135,6 +137,7 @@ begin      //int is 32-bit, long is 64-bit
     '     }  //if                                    ' + #13#10 +
     '  }  //for                                      ' + #13#10 +
     '  AResultedErrCount[YIdx] = ErrCount;           ' + #13#10 +
+    //calling barrier or mem_fence(CLK_GLOBAL_MEM_FENCE) here is useless
     '  AKernelDone[YIdx] = 1;                        ' + #13#10 +
     '}';
 end;
@@ -158,10 +161,9 @@ begin
     '  __global int* ADebuggingInfo,            ' + #13#10 +
     '  __global uchar* AKernelDone,             ' + #13#10 +
     '  const int ABackgroundWidth,     ' + #13#10 +
+    '  const int ABackgroundHeight,    ' + #13#10 +
     '  const int ASubBmpWidth,         ' + #13#10 +
     '  const int ASubBmpHeight,        ' + #13#10 +
-    '  const int AXOffset,             ' + #13#10 +
-    '  const int AYOffset,             ' + #13#10 +
     '  const uchar AColorError,                 ' + #13#10 +
     '  const ulong ASlaveQueue,                 ' + #13#10 +
     '  const int ATotalErrorCount)     ' + #13#10 +
@@ -189,13 +191,13 @@ begin
     Result := Result +
     '  kernel_enqueue_flags_t MyFlags;          ' + #13#10 +
     '  MyFlags = CLK_ENQUEUE_FLAGS_NO_WAIT;     ' + #13#10 +
-    '  int i, j, k = 0;                         ' + #13#10 +
+    '  int x, y, k = 0;                         ' + #13#10 +
     '  bool Found = false;                      ' + #13#10 +
     '  bool AllKernelsDone = false;             ' + #13#10 +
     '  int EnqKrnErr = -1234;                   ' + #13#10 +
     '  int EnqMrkErr = -4567;                   ' + #13#10 +
-    '  int XOffset = AXOffset;                  ' + #13#10 +
-    '  int YOffset = AYOffset;                  ' + #13#10 +
+    '  int SlideWidth = ABackgroundWidth - ASubBmpWidth;' + #13#10 +
+    '  int SlideHeight = ABackgroundHeight - ASubBmpHeight;' + #13#10 +
     '  int DifferentCount = 0;                  ' + #13#10 +
     '  int WhileIterations = 0;                 ' + #13#10;
 
@@ -207,9 +209,9 @@ begin
     end;
 
     Result := Result +
-    '  for (i = 0; i < AYOffset; i++)           ' + #13#10 +
+    '  for (y = 0; y < SlideHeight; y++)        ' + #13#10 +
     '  {                                        ' + #13#10 +
-    '    for (j = 0; j < AXOffset; j++)         ' + #13#10 +
+    '    for (x = 0; x < SlideWidth; x++)       ' + #13#10 +
     '    {                                      ' + #13#10 +
     '      for (k = 0; k < ASubBmpHeight; k++)  ' + #13#10 +
     '        AKernelDone[k] = 0;                ' + #13#10 +
@@ -238,7 +240,7 @@ begin
     end;
 
     Result := Result +
-    '        ^{MatCmp(ABackgroundBmp, ASubBmp, AResultedErrCount, AKernelDone, ABackgroundWidth, ASubBmpWidth, ASubBmpHeight, j, i, AColorError, SlaveQueue);});                  ' + #13#10;
+    '        ^{MatCmp(ABackgroundBmp, ASubBmp, AResultedErrCount, AKernelDone, ABackgroundWidth, ASubBmpWidth, ASubBmpHeight, x, y, AColorError, SlaveQueue);});                  ' + #13#10;
 
     if AGPUWaitForAllKernelsToBeDone then
     begin
@@ -317,29 +319,29 @@ begin
     '      if (DifferentCount < TotalErrorCount)' + #13#10 +
     '      {                                    ' + #13#10 +
     '        Found = true;                      ' + #13#10 +
-    '        break;'                              + #13#10 +     //commented, together with for i, for j
+    '        break;'                              + #13#10 +     //commented, together with for y, for x
     '      }'                                     + #13#10 +
     ''                                            + #13#10 +
-    '      if (EnqKrnErr < 0)                   ' + #13#10 +     //commented, together with for i, for j
+    '      if (EnqKrnErr < 0)                   ' + #13#10 +     //commented, together with for y, for x
     '      {                                    ' + #13#10 +
     '        break;'                              + #13#10 +
     '      }'                                     + #13#10 +
-    '    }' + #13#10 + //for j
+    '    }' + #13#10 + //for x
     '    if (Found || (EnqKrnErr < 0))          ' + #13#10 +
     '      break;'                                + #13#10 +
-    '  }' + #13#10 + //for i                                     //commented, together with for i, for j
+    '  }' + #13#10 + //for y                                     //commented, together with for y, for x
     ''                                            + #13#10 +
-    '  ADebuggingInfo[2] = i;                   ' + #13#10 +
-    '  ADebuggingInfo[3] = j;                   ' + #13#10 +  //returns 1 when EnqKrnErr is -10. This means that the first "for j" iteration is ok, then it errors.
-    '  ADebuggingInfo[4] = DifferentCount;      ' + #13#10 +  //returns 97 for a single enqueue_kernel call, with i = 0 and j = 0 and waiting for all kernels to be done (with while loop).
+    '  ADebuggingInfo[2] = y;                   ' + #13#10 +
+    '  ADebuggingInfo[3] = x;                   ' + #13#10 +  //returns 1 when EnqKrnErr is -10. This means that the first "for x" iteration is ok, then it errors.
+    '  ADebuggingInfo[4] = DifferentCount;      ' + #13#10 +  //returns 97 for a single enqueue_kernel call, with y = 0 and x = 0 and waiting for all kernels to be done (with while loop).
     '  ADebuggingInfo[5] = (int)Found;          ' + #13#10 +
     '  ADebuggingInfo[6] = get_work_dim();      ' + #13#10 +  //returns 1
     '  ADebuggingInfo[7] = get_global_size(1);  ' + #13#10 +  //returns 1
     '  ADebuggingInfo[8] = get_local_size(1);   ' + #13#10 +  //returns 1
     '  ADebuggingInfo[9] = get_enqueued_local_size(1);' + #13#10 +  //returns 1
-    '  ADebuggingInfo[10] = ATotalErrorCount;   ' + #13#10 +     //returns 30 for a single enqueue_kernel call, with i = 0 and j = 0.
-    '  ADebuggingInfo[11] = (int)EnqKrnErr + 3000;' + #13#10 +  //with typecast  - maybe it doesn't matter   //returns 3000, for a single enqueue_kernel call, without events and with/without clFinish call in host.  Returns 2990 (= -10 + 3000), when using for i, for j and waiting in while loop.
-    '  ADebuggingInfo[12] = (int)AllKernelsDone;' + #13#10 +   //returns 1 for a single enqueue_kernel call, with i = 0 and j = 0 and waiting for all kernels to be done (with while loop).
+    '  ADebuggingInfo[10] = ATotalErrorCount;   ' + #13#10 +     //returns 30 for a single enqueue_kernel call, with y = 0 and x = 0.
+    '  ADebuggingInfo[11] = (int)EnqKrnErr + 3000;' + #13#10 +  //with typecast  - maybe it doesn't matter   //returns 3000, for a single enqueue_kernel call, without events and with/without clFinish call in host.  Returns 2990 (= -10 + 3000), when using for y, for x and waiting in while loop.
+    '  ADebuggingInfo[12] = (int)AllKernelsDone;' + #13#10 +   //returns 1 for a single enqueue_kernel call, with y = 0 and x = 0 and waiting for all kernels to be done (with while loop).
     '  ADebuggingInfo[13] = WhileIterations;    ' + #13#10;
 
     if AGPUUseEventsInEnqueueKernel then    //False by default
@@ -531,7 +533,7 @@ begin
 
               DifferentCount := 0;
               for k := 0 to GlobalSize - 1 do //results len
-                if DiffCntPerRow[k] >= 0 then
+                if DiffCntPerRow[k] > 0 then
                   Inc(DifferentCount, DiffCntPerRow[k]);
 
               if DifferentCount < TotalErrorCount then
@@ -619,7 +621,6 @@ var
 
   BackgroundBmpWidth, BackgroundBmpHeight: Integer;
   SubBmpWidth, SubBmpHeight: Integer;
-  XOffset, YOffset: Integer;
   ColorError: Byte;
   GlobalSize, GlobalSizeWithDeviceEnqueue: csize_t;
   DifferentCount: LongInt; //same type as DbgBuffer items
@@ -659,10 +660,7 @@ begin
             Error := OpenCLDll.clEnqueueWriteBuffer(CmdQueue, SubBufferRef, CL_TRUE, 0, csize_t(ABytesPerPixelOnSub * SubBmpWidth * SubBmpHeight), ASubBmpData, 0, nil, nil);
             LogCallResult(Error, 'clEnqueueWriteBuffer', 'Sub buffer written.');
 
-            XOffset := 0;
-            YOffset := 0;
             ColorError := AColorErrorLevel;
-
 
             Error := OpenCLDll.clSetKernelArg(CLKernel, 0, SizeOf(cl_mem), @BackgroundBufferRef); //sizeof(cl_mem)  is SizeOf(Pointer), which can be 4 or 8
             LogCallResult(Error, 'clSetKernelArg', 'BackgroundBufferRef argument set.');
@@ -682,27 +680,22 @@ begin
             Error := OpenCLDll.clSetKernelArg(CLKernel, 5, SizeOf(LongInt), @BackgroundBmpWidth);
             LogCallResult(Error, 'clSetKernelArg', 'ABackgroundWidth argument set.');
 
-            Error := OpenCLDll.clSetKernelArg(CLKernel, 6, SizeOf(LongInt), @SubBmpWidth);
+            Error := OpenCLDll.clSetKernelArg(CLKernel, 6, SizeOf(LongInt), @BackgroundBmpHeight);
+            LogCallResult(Error, 'clSetKernelArg', 'ABackgroundWidth argument set.');
+
+            Error := OpenCLDll.clSetKernelArg(CLKernel, 7, SizeOf(LongInt), @SubBmpWidth);
             LogCallResult(Error, 'clSetKernelArg', 'ASubBmpWidth argument set.');
 
-            Error := OpenCLDll.clSetKernelArg(CLKernel, 7, SizeOf(LongInt), @SubBmpHeight);
+            Error := OpenCLDll.clSetKernelArg(CLKernel, 8, SizeOf(LongInt), @SubBmpHeight);
             LogCallResult(Error, 'clSetKernelArg', 'SubBmpHeight argument set.');
 
-            XOffset := BackgroundBmpWidth - SubBmpWidth - 1;
-            Error := OpenCLDll.clSetKernelArg(CLKernel, 8, SizeOf(LongInt), @XOffset);
-            LogCallResult(Error, 'clSetKernelArg', 'XOffset argument set.');
-
-            YOffset := BackgroundBmpHeight - SubBmpHeight - 1;
-            Error := OpenCLDll.clSetKernelArg(CLKernel, 9, SizeOf(LongInt), @YOffset);
-            LogCallResult(Error, 'clSetKernelArg', 'YOffset argument set.');
-
-            Error := OpenCLDll.clSetKernelArg(CLKernel, 10, SizeOf(Byte), @ColorError);
+            Error := OpenCLDll.clSetKernelArg(CLKernel, 9, SizeOf(Byte), @ColorError);
             LogCallResult(Error, 'clSetKernelArg', 'ColorError argument set.');
 
-            Error := OpenCLDll.clSetKernelArg(CLKernel, 11, SizeOf(cl_ulong), @SlaveCmdQueue);  //using SizeOf(cl_ulong), because the parameter is a QWord on kernel
+            Error := OpenCLDll.clSetKernelArg(CLKernel, 10, SizeOf(cl_ulong), @SlaveCmdQueue);  //using SizeOf(cl_ulong), because the parameter is a QWord on kernel
             LogCallResult(Error, 'clSetKernelArg', 'SlaveCmdQueue argument set.');  //This was plain SlaveCmdQueue, instead of @SlaveCmdQueue.
 
-            Error := OpenCLDll.clSetKernelArg(CLKernel, 12, SizeOf(ATotalErrorCount), @ATotalErrorCount);
+            Error := OpenCLDll.clSetKernelArg(CLKernel, 11, SizeOf(ATotalErrorCount), @ATotalErrorCount);
             LogCallResult(Error, 'clSetKernelArg', 'TotalErrorCount argument set.');
 
             GlobalSize := SubBmpHeight;

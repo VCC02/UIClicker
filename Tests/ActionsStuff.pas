@@ -1569,6 +1569,7 @@ begin
   AFindControlOptions.GetAllControls := True;
   AFindControlOptions.PrecisionTimeout := True;
   AFindControlOptions.EvaluateTextCount := '-17';
+  AFindControlOptions.AttemptCount := acOnce;
 end;
 
 
@@ -1602,7 +1603,8 @@ begin
             'GetAllControls' + '=' + 'True' + '&' +
             'PrecisionTimeout' + '=' + 'True' + '&' +
 
-            'EvaluateTextCount' + '=' + '-17'
+            'EvaluateTextCount' + '=' + '-17' + '&' +
+            'AttemptCount' + '=' + 'acOnce'
             ;
 end;
 
@@ -1672,6 +1674,7 @@ begin
   AFindSubControlOptions.ImageEffectSettings.UseImageEffects := True;
   AFindSubControlOptions.ImageEffectSettings.ImageEffect := ieGrayscale;
   AFindSubControlOptions.ImageEffectSettings.WhereToApply := wtaSearchedBitmapsOnly;
+  AFindSubControlOptions.AttemptCount := acOnce;
 
   SetLength(AFindSubControlOptions.MatchBitmapText, 2);
   //no need to call GetDefaultPropertyValues_FindControl_MatchBitmapText();
@@ -1789,7 +1792,9 @@ begin
 
             'ImageEffectSettings.UseImageEffects' + '=' + 'True' + '&' +
             'ImageEffectSettings.ImageEffect' + '=' + 'ieGrayscale' + '&' +
-            'ImageEffectSettings.WhereToApply' + '=' + 'wtaSearchedBitmapsOnly'
+            'ImageEffectSettings.WhereToApply' + '=' + 'wtaSearchedBitmapsOnly' + '&' +
+
+            'AttemptCount' + '=' + 'acOnce'
             ;
 end;
 

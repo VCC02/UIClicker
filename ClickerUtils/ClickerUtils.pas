@@ -332,6 +332,8 @@ type
     WhereToApply: TWhereToApply;
   end;
 
+  TAttemptCount = (acOnce, acMultiple);
+
   TClkFindControlOptions = record
     MatchCriteria: TClkFindControlMatchCriteria;
     AllowToFail: Boolean;
@@ -348,6 +350,7 @@ type
     GetAllControls: Boolean; //When True, the FindControl algorithm does not stop on the first found control. It keeps adding found handles to a list.
     PrecisionTimeout: Boolean;  //When True, the bitmap searching algorithm verifies the timeout. This is a bit of extra overhead, which may slow down the search.
     EvaluateTextCount: string; //-1 = default (1000 "recursive" evaluations), 0 = no evaluations, >1 = EvaluateTextCount "recursive" evaluations
+    AttemptCount: TAttemptCount; //When set to acOnce, the search stops after one attempt, else it stops when found or on timeout.
   end;
 
   TClkFindSubControlOptions = record
@@ -387,6 +390,7 @@ type
     RenderingInBrowserSettings: TRenderingInBrowserSettings;
     GPUSettings: TGPUSettings;
     ImageEffectSettings: TImageEffectSettings;
+    AttemptCount: TAttemptCount; //When set to acOnce, the search stops after one attempt, else it stops when found or on timeout.
   end;
 
   TClkSetTextOptions = record
@@ -678,6 +682,7 @@ const
   CLoopEvalBreakPositionStr: array[TLoopEvalBreakPosition] of string = ('lebpAfterContent', 'lebpBeforeContent');
   CEditTemplateOperationStr: array[TEditTemplateOperation] of string = ('etoNewAction', 'etoUpdateAction', 'etoMoveAction', 'etoDeleteAction', 'etoDuplicateAction', 'etoRenameAction', 'etoEnableAction', 'etoDisableAction', 'etoGetProperty', 'etoSetProperty', 'etoSetCondition', 'etoSetTimeout', 'etoExecuteAction', 'etoSaveTemplate');
   CEditTemplateWhichTemplateStr: array[TEditTemplateWhichTemplate] of string = ('etwtSelf', 'etwtOther');
+  CAttemptCountStr: array[TAttemptCount] of string = ('acOnce', 'acMultiple');
 
 
 type

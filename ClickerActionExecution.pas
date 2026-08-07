@@ -3419,6 +3419,12 @@ begin
       Break;
     end;
 
+    if AFindControlOptions.AttemptCount = acOnce then
+    begin
+      PrependErrorMessageToActionVar('Action AttemptCount is set to acOnce, to force the search to stop after one attempt.  Duration=' + IntToStr(CurrentActionElapsedTime));
+      Break;
+    end;
+
     Sleep(2);
   until False;
 
@@ -3525,6 +3531,12 @@ begin
           AddToLog('The above values can be adjusted to a smaller area.');
         end;
 
+      Break;
+    end;
+
+    if AFindSubControlOptions.AttemptCount = acOnce then
+    begin
+      PrependErrorMessageToActionVar('Action AttemptCount is set to acOnce, to force the search to stop after one attempt.  Duration=' + IntToStr(CurrentActionElapsedTime));
       Break;
     end;
 

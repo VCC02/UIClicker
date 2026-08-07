@@ -1,4 +1,4 @@
-#   Copyright (C) 2024 VCC
+#   Copyright (C) 2026 VCC
 #   creation date: 19 Dec 2024
 #   initial release date: 19 Dec 2024
 #
@@ -49,18 +49,12 @@ try:
 
 
     FindControlOptions = GetDefaultFindSubControlOptions()
-    #FindControlOptions.MatchCriteria.WillMatchText = False
-    #FindControlOptions.MatchCriteria.WillMatchClassName = False
     FindControlOptions.MatchCriteria.WillMatchBitmapText = True
     FindControlOptions.MatchCriteria.WillMatchBitmapFiles = True
     FindControlOptions.MatchCriteria.WillMatchPrimitiveFiles = True
-    #FindControlOptions.MatchCriteria.SearchForControlMode = TSearchForControlMode.sfcmEnumWindows
 
     FindControlOptions.AllowToFail = True
     FindControlOptions.MatchText = 'some text'
-    #FindControlOptions.MatchClassName = 'some class'
-    #FindControlOptions.MatchTextSeparator = 'txt sep'
-    #FindControlOptions.MatchClassNameSeparator = 'class sep'
     FindControlOptions.MatchBitmapText = ()  #(The content is updated separately. See TClkFindControlMatchBitmapText)
     FindControlOptions.MatchBitmapFiles = 'bmp'
     FindControlOptions.MatchBitmapAlgorithm = TMatchBitmapAlgorithm.mbaRawHistogramZones
@@ -110,26 +104,28 @@ try:
     FindControlOptions.EvaluateTextCount = "-17"
     FindControlOptions.CropFromScreenshot = True
     FindControlOptions.ThreadCount = "30"
-    
+
     FindControlOptions.UseTextRenderingInBrowser = True
-    
+
     FindControlOptions.RenderingInBrowserSettings.RenderingRequestType = TRenderingRequestType.rrtAction
     FindControlOptions.RenderingInBrowserSettings.ReceivingBitmapsTimeout = 1234
     FindControlOptions.RenderingInBrowserSettings.ActionForSendingRequest = 'SenderAction'
     FindControlOptions.RenderingInBrowserSettings.UsePluginForReceivingBitmaps = True
     FindControlOptions.RenderingInBrowserSettings.PluginActionForReceivingBitmaps = 'ReceiverAction'
     FindControlOptions.RenderingInBrowserSettings.FontSizeUnit = TFontSizeUnit.fsuPx
-    
+
     FindControlOptions.GPUSettings.OpenCLPath = 'C:\LocalPath\OpenCL.dll'
     FindControlOptions.GPUSettings.TargetPlatform = 'ExtremeGraphics'
     FindControlOptions.GPUSettings.TargetDevice = 'ExtremeGraphics KCore'
     FindControlOptions.GPUSettings.TargetPlatformIDType = TTargetPlatformIDType.tpitFullNameMatchCase
     FindControlOptions.GPUSettings.TargetDeviceIDType = TTargetDeviceIDType.tditFullNameMatchCase
     FindControlOptions.GPUSettings.ExecutionAvailability = TGPUExecutionAvailability.eaOpenCL3Only
-    
+
     FindControlOptions.ImageEffectSettings.UseImageEffects = True
     FindControlOptions.ImageEffectSettings.ImageEffect = TImageEffect.ieBlur8x
     FindControlOptions.ImageEffectSettings.WhereToApply = TWhereToApply.wtaSearchedBitmapsOnly
+
+    FindControlOptions.AttemptCount = TAttemptCount.acOnce
 
 
     TempMatchBitmapTextRec = TMatchBitmapTextRec(2)

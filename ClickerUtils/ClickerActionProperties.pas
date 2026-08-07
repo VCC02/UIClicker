@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2025 VCC
+    Copyright (C) 2026 VCC
     creation date: Nov 2023
     initial release date: 19 Nov 2023
 
@@ -202,7 +202,8 @@ begin
             'GetAllControls' + '=' + IntToStr(Ord(AFindControlOptions.GetAllControls)) + '&' +
 
             'PrecisionTimeout' + '=' + IntToStr(Ord(AFindControlOptions.PrecisionTimeout)) + '&' +
-            'EvaluateTextCount' + '=' + AFindControlOptions.EvaluateTextCount //+ '&' +
+            'EvaluateTextCount' + '=' + AFindControlOptions.EvaluateTextCount + '&' +
+            'AttemptCount' + '=' + IntToStr(Ord(AFindControlOptions.AttemptCount)) // + '&' +
             ;
 end;
 
@@ -310,7 +311,9 @@ begin
 
             'ImageEffectSettings.UseImageEffects' + '=' + IntToStr(Ord(AFindSubControlOptions.ImageEffectSettings.UseImageEffects)) + '&' +
             'ImageEffectSettings.ImageEffect' + '=' + IntToStr(Ord(AFindSubControlOptions.ImageEffectSettings.ImageEffect)) + '&' +
-            'ImageEffectSettings.WhereToApply' + '=' + IntToStr(Ord(AFindSubControlOptions.ImageEffectSettings.WhereToApply))
+            'ImageEffectSettings.WhereToApply' + '=' + IntToStr(Ord(AFindSubControlOptions.ImageEffectSettings.WhereToApply)) + '&' +
+
+            'AttemptCount' + '=' + IntToStr(Ord(AFindSubControlOptions.AttemptCount)) // + '&' +
             ;
 end;
 
@@ -543,7 +546,8 @@ begin
             'GetAllControls' + '=' + CDTBool + '&' +
 
             'PrecisionTimeout' + '=' + CDTBool + '&' +
-            'EvaluateTextCount' + '=' + CDTString //+ '&' +
+            'EvaluateTextCount' + '=' + CDTString + '&' +
+            'AttemptCount' + '=' + CDTEnum + '.TAttemptCount' //+ '&' +
             ;
 end;
 
@@ -649,7 +653,9 @@ begin
 
             'ImageEffectSettings.UseImageEffects' + '=' + CDTBool + '&' +
             'ImageEffectSettings.ImageEffect' + '=' + CDTEnum + '.TImageEffect' + '&' +
-            'ImageEffectSettings.WhereToApply' + '=' + CDTEnum + '.TWhereToApply'
+            'ImageEffectSettings.WhereToApply' + '=' + CDTEnum + '.TWhereToApply' + '&' +
+
+            'AttemptCount' + '=' + CDTEnum + '.TAttemptCount' //+ '&' +
             ;
 end;
 
@@ -1162,6 +1168,7 @@ function SetFindControlActionProperties(AListOfFindControlOptionsParams: TString
 var
   Temp_SearchForControlMode: Integer;
   Temp_ActionTimeout: Int64;
+  Temp_AttemptCount: Integer;
 begin
   Result := '';
 
@@ -1176,6 +1183,13 @@ begin
   if (Temp_ActionTimeout < 0) or (Temp_ActionTimeout > 2147483647) then
   begin
     Result := 'ActionTimeout is out of range.';
+    Exit;
+  end;
+
+  Temp_AttemptCount := StrToIntDef(AListOfFindControlOptionsParams.Values['AttemptCount'], Ord(acMultiple));
+  if (Temp_AttemptCount < 0) or (Temp_AttemptCount > Ord(High(TAttemptCount))) then
+  begin
+    Result := 'AttemptCount is out of range.';
     Exit;
   end;
 
@@ -1220,6 +1234,7 @@ begin
 
   AFindControlOptions.PrecisionTimeout := AListOfFindControlOptionsParams.Values['PrecisionTimeout'] = '1';
   AFindControlOptions.EvaluateTextCount := AListOfFindControlOptionsParams.Values['EvaluateTextCount'];
+  AFindControlOptions.AttemptCount := TAttemptCount(Temp_AttemptCount);
 
   AActionOptions.ActionName := AListOfFindControlOptionsParams.Values[CPropertyName_ActionName];
   AActionOptions.ActionTimeout := Temp_ActionTimeout;
@@ -1348,6 +1363,7 @@ var
   Temp_ExecutionAvailability: Integer;
   Temp_ImageEffect: Integer;
   Temp_WhereToApply: Integer;
+  Temp_AttemptCount: Integer;
 begin
   Result := '';
 
@@ -1461,6 +1477,13 @@ begin
     Exit;
   end;
 
+  Temp_AttemptCount := StrToIntDef(AListOfFindSubControlOptionsParams.Values['AttemptCount'], Ord(acMultiple));
+  if (Temp_AttemptCount < 0) or (Temp_AttemptCount > Ord(High(TAttemptCount))) then
+  begin
+    Result := 'AttemptCount is out of range.';
+    Exit;
+  end;
+
   AFindSubControlOptions.MatchBitmapFiles := FastReplace_45ToReturn(AListOfFindSubControlOptionsParams.Values['MatchBitmapFiles']); //ListOfStrings
   AFindSubControlOptions.MatchBitmapAlgorithm := TMatchBitmapAlgorithm(Temp_MatchBitmapAlgorithm);
 
@@ -1549,6 +1572,8 @@ begin
   AFindSubControlOptions.ImageEffectSettings.UseImageEffects := AListOfFindSubControlOptionsParams.Values['ImageEffectSettings.UseImageEffects'] = '1';
   AFindSubControlOptions.ImageEffectSettings.ImageEffect := TImageEffect(Temp_ImageEffect);
   AFindSubControlOptions.ImageEffectSettings.WhereToApply := TWhereToApply(Temp_WhereToApply);
+
+  AFindSubControlOptions.AttemptCount := TAttemptCount(Temp_AttemptCount);
 
   AActionOptions.ActionName := AListOfFindSubControlOptionsParams.Values[CPropertyName_ActionName];
   AActionOptions.ActionTimeout := Temp_ActionTimeout;
@@ -1905,6 +1930,7 @@ begin
 
   AFindControlOptions.PrecisionTimeout := False;
   AFindControlOptions.EvaluateTextCount := '-1';
+  AFindControlOptions.AttemptCount := acMultiple;
 end;
 
 
@@ -1973,6 +1999,7 @@ begin
   AFindSubControlOptions.ImageEffectSettings.UseImageEffects := False;
   AFindSubControlOptions.ImageEffectSettings.ImageEffect := ieBlur4x;
   AFindSubControlOptions.ImageEffectSettings.WhereToApply := wtaAll;
+  AFindSubControlOptions.AttemptCount := acMultiple;
 
   SetLength(AFindSubControlOptions.MatchBitmapText, AFindSubControlProfilesCount);
 

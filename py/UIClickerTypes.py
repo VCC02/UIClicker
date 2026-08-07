@@ -154,6 +154,10 @@ class TWhereToApply: #(Enum):
     wtaAll = 0
     wtaSearchedBitmapsOnly = 1
 
+class TAttemptCount: #(Enum):
+    acOnce = 0
+    acMultiple = 1
+
 
 class TClkSetTextControlType: #(Enum):
     stEditBox = 0
@@ -431,7 +435,8 @@ class TFindControlOptions(Structure):
                ("CachedControlTop", LPCWSTR),
                ("GetAllControls", BOOLEAN),
                ("PrecisionTimeout", BOOLEAN),
-               ("EvaluateTextCount", LPCWSTR)
+               ("EvaluateTextCount", LPCWSTR),
+               ("AttemptCount", TAttemptCount)
                ]
 
 PFindControlOptions = ctypes.POINTER(TFindControlOptions)
@@ -469,6 +474,8 @@ def GetDefaultFindControlOptions():
 
     FindControlOptions.PrecisionTimeout = False
     FindControlOptions.EvaluateTextCount = "-1"
+    
+    FindControlOptions.AttemptCount = TAttemptCount.acMultiple
 
     return FindControlOptions
 
@@ -521,7 +528,8 @@ class TFindSubControlOptions(Structure):
                ("UseTextRenderingInBrowser", BOOLEAN),
                ("RenderingInBrowserSettings", TRenderingInBrowserSettings),
                ("GPUSettings", TGPUSettings),
-               ("ImageEffectSettings", TImageEffectSettings)
+               ("ImageEffectSettings", TImageEffectSettings),
+               ("AttemptCount", TAttemptCount)
                ]
 
 PFindSubControlOptions = ctypes.POINTER(TFindSubControlOptions)
@@ -607,6 +615,8 @@ def GetDefaultFindSubControlOptions():
     FindSubControlOptions.ImageEffectSettings.UseImageEffects = False
     FindSubControlOptions.ImageEffectSettings.ImageEffect = TImageEffect.ieBlur4x
     FindSubControlOptions.ImageEffectSettings.WhereToApply = TWhereToApply.wtaAll
+    
+    FindSubControlOptions.AttemptCount = TAttemptCount.acMultiple
     return FindSubControlOptions
 
 

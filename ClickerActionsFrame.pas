@@ -210,7 +210,6 @@ type
 
     procedure scrboxDebugBmpMouseWheel(Sender: TObject; Shift: TShiftState;
       WheelDelta: Integer; MousePos: TPoint; var Handled: Boolean);
-    procedure spdbtnDisplaySearchAreaDbgImgMenuClick(Sender: TObject);
     procedure tmrClkVariablesTimer(Sender: TObject);
     procedure tmrDrawZoomTimer(Sender: TObject);
     procedure tmrEditClkVariablesTimer(Sender: TObject);
@@ -1940,15 +1939,6 @@ end;
 procedure TfrClickerActions.UpdateUseWholeScreenLabel(AUseWholeScreen: Boolean);
 begin
   frClickerFindControl.UpdateUseWholeScreenLabel(AUseWholeScreen);
-end;
-
-
-procedure TfrClickerActions.spdbtnDisplaySearchAreaDbgImgMenuClick(Sender: TObject);
-var
-  tp: TPoint;
-begin
-  GetCursorPos(tp);
-  FSearchAreaDbgImgSearchedBmpMenu.PopUp(tp.X, tp.Y);
 end;
 
 

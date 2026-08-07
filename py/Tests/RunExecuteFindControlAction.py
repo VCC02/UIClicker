@@ -1,4 +1,4 @@
-#   Copyright (C) 2024 VCC
+#   Copyright (C) 2026 VCC
 #   creation date: 19 Dec 2024
 #   initial release date: 19 Dec 2024
 #
@@ -51,9 +51,6 @@ try:
     FindControlOptions = GetDefaultFindControlOptions()
     FindControlOptions.MatchCriteria.WillMatchText = False
     FindControlOptions.MatchCriteria.WillMatchClassName = False
-    #FindControlOptions.MatchCriteria.WillMatchBitmapText = True
-    #FindControlOptions.MatchCriteria.WillMatchBitmapFiles = True
-    #FindControlOptions.MatchCriteria.WillMatchPrimitiveFiles = True
     FindControlOptions.MatchCriteria.SearchForControlMode = TSearchForControlMode.sfcmEnumWindows
 
     FindControlOptions.AllowToFail = True
@@ -61,14 +58,6 @@ try:
     FindControlOptions.MatchClassName = 'some class'
     FindControlOptions.MatchTextSeparator = 'txt sep'
     FindControlOptions.MatchClassNameSeparator = 'class sep'
-    #FindControlOptions.MatchBitmapText = ()  #(The content is updated separately. See TClkFindControlMatchBitmapText)
-    #FindControlOptions.MatchBitmapFiles = 'bmp'
-    #FindControlOptions.MatchBitmapAlgorithm = TMatchBitmapAlgorithm.mbaRawHistogramZones
-
-    #FindControlOptions.MatchBitmapAlgorithmSettings.XMultipleOf = 3
-    #FindControlOptions.MatchBitmapAlgorithmSettings.YMultipleOf = 4
-    #FindControlOptions.MatchBitmapAlgorithmSettings.XOffset = 5
-    #FindControlOptions.MatchBitmapAlgorithmSettings.YOffset = 6
 
     FindControlOptions.InitialRectangle.Left = '$Control_L$'
     FindControlOptions.InitialRectangle.Top = '$Control_T$'
@@ -80,36 +69,20 @@ try:
     FindControlOptions.InitialRectangle.BottomOffset = '60'
 
     FindControlOptions.UseWholeScreen = False  #usually True for finding a window, and False, for finding a (sub)control on a window or another control.  
-    #FindControlOptions.ColorError = '70'
-    #FindControlOptions.AllowedColorErrorCount = '80'
+
     FindControlOptions.WaitForControlToGoAway = True
     FindControlOptions.StartSearchingWithCachedControl = True
     FindControlOptions.CachedControlLeft = '90'
     FindControlOptions.CachedControlTop = '100'
 
-    #FindControlOptions.MatchPrimitiveFiles = 'pmtv' #'FileExample1.pmtv\r\nFileExample2.pmtv\r\nFileExample3.pmtv'
     FindControlOptions.GetAllControls = True
 
     #FindControlOptions.UseFastSearch = False
-    #FindControlOptions.FastSearchAllowedColorErrorCount = '700'
-    #FindControlOptions.IgnoredColors = '800'
-    #FindControlOptions.SleepySearch = True
-    #FindControlOptions.StopSearchOnMismatch = True
-
-    #FindControlOptions.ImageSource = TImageSource.isFile
-    #FindControlOptions.SourceFileName = 'Fnm'
-    #FindControlOptions.ImageSourceFileNameLocation = TImageSourceFileNameLocation.isflDisk
 
     FindControlOptions.PrecisionTimeout = True
-    #FindControlOptions.FullBackgroundImageInResult = False
-
-    #FindControlOptions.MatchByHistogramSettings.MinPercentColorMatch = '250'
-    #FindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInSubBmp = '310'
-    #FindControlOptions.MatchByHistogramSettings.MostSignificantColorCountInBackgroundBmp = '415'
 
     FindControlOptions.EvaluateTextCount = "-17"
-    #FindControlOptions.CropFromScreenshot = True
-    #FindControlOptions.ThreadCount = "30"
+    FindControlOptions.AttemptCount = TAttemptCount.acOnce
 
 
     print("ExecuteFindControlAction: ", DllFuncs.ExecuteFindControlAction("Another FindControl", 100, FindControlOptions, True, 'Mem'))

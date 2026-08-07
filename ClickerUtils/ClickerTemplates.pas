@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2025 VCC
+    Copyright (C) 2026 VCC
     creation date: Dec 2019
     initial release date: 26 Jul 2022
 
@@ -176,6 +176,7 @@ begin
     ACustomActions[i].FindControlOptions.PrecisionTimeout := False;
 
     ACustomActions[i].FindControlOptions.EvaluateTextCount := '-1';
+    ACustomActions[i].FindControlOptions.AttemptCount := acMultiple;
 
     ACustomActions[i].FindSubControlOptions.MatchCriteria.WillMatchBitmapText := Ini.ReadBool(SectionIndex, 'MatchCriteria.WillMatchBitmapText_' + IterationStr, False);
     ACustomActions[i].FindSubControlOptions.MatchCriteria.WillMatchBitmapFiles := Ini.ReadBool(SectionIndex, 'MatchCriteria.WillMatchBitmapFiles_' + IterationStr, False);
@@ -331,6 +332,7 @@ begin
     ACustomActions[i].FindSubControlOptions.ImageSourceFileNameLocation := isflMem;
     ACustomActions[i].FindSubControlOptions.PrecisionTimeout := False;
     ACustomActions[i].FindSubControlOptions.FullBackgroundImageInResult := True;
+    ACustomActions[i].FindSubControlOptions.AttemptCount := acMultiple;
 
     SectionIndex := Ini.GetSectionIndex('Actions.SetTextOptions');
     ACustomActions[i].SetTextOptions.Text := Ini.ReadString(SectionIndex, 'Text_' + IterationStr, '');
@@ -484,6 +486,7 @@ begin
   AFindControlOptions.PrecisionTimeout := Ini.ReadBool(SectionIndex, 'PrecisionTimeout', False);
 
   AFindControlOptions.EvaluateTextCount := Ini.ReadString(SectionIndex, 'EvaluateTextCount', '-1');
+  AFindControlOptions.AttemptCount := TAttemptCount(Min(Ini.ReadInteger(SectionIndex, 'AttemptCount', Integer(acMultiple)), Integer(High(TAttemptCount))));
 end;
 
 
@@ -624,6 +627,8 @@ begin
   AFindSubControlOptions.ImageEffectSettings.UseImageEffects := Ini.ReadBool(SectionIndex, 'ImageEffectSettings.UseImageEffects', False);
   AFindSubControlOptions.ImageEffectSettings.ImageEffect := TImageEffect(Ord(Ini.ReadInteger(SectionIndex, 'ImageEffectSettings.ImageEffect', 0)));
   AFindSubControlOptions.ImageEffectSettings.WhereToApply := TWhereToApply(Ord(Ini.ReadInteger(SectionIndex, 'ImageEffectSettings.WhereToApply', 0)));
+
+  AFindSubControlOptions.AttemptCount := TAttemptCount(Min(Ini.ReadInteger(SectionIndex, 'AttemptCount', Integer(acMultiple)), Integer(High(TAttemptCount))));
 end;
 
 
@@ -1045,6 +1050,7 @@ begin
   AStringList.Add('PrecisionTimeout=' + IntToStr(Ord(AActionFindControlOptions.PrecisionTimeout)));
 
   AStringList.Add('EvaluateTextCount=' + AActionFindControlOptions.EvaluateTextCount);
+  AStringList.Add('AttemptCount=' + IntToStr(Ord(AActionFindControlOptions.AttemptCount)));
 end;
 
 
@@ -1156,6 +1162,8 @@ begin
   AStringList.Add('ImageEffectSettings.UseImageEffects=' + IntToStr(Ord(AActionFindSubControlOptions.ImageEffectSettings.UseImageEffects)));
   AStringList.Add('ImageEffectSettings.ImageEffect=' + IntToStr(Ord(AActionFindSubControlOptions.ImageEffectSettings.ImageEffect)));
   AStringList.Add('ImageEffectSettings.WhereToApply=' + IntToStr(Ord(AActionFindSubControlOptions.ImageEffectSettings.WhereToApply)));
+
+  AStringList.Add('AttemptCount=' + IntToStr(Ord(AActionFindSubControlOptions.AttemptCount)));
 end;
 
 
@@ -1324,6 +1332,7 @@ begin
   ADest.GetAllControls := ASrc.GetAllControls;
   ADest.PrecisionTimeout := ASrc.PrecisionTimeout;
   ADest.EvaluateTextCount := ASrc.EvaluateTextCount;
+  ADest.AttemptCount := ASrc.AttemptCount;
 end;
 
 
@@ -1379,6 +1388,7 @@ begin
   ADest.RenderingInBrowserSettings := ASrc.RenderingInBrowserSettings;
   ADest.GPUSettings := ASrc.GPUSettings;
   ADest.ImageEffectSettings := ASrc.ImageEffectSettings;
+  ADest.AttemptCount := ASrc.AttemptCount;
 end;
 
 
