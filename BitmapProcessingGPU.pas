@@ -82,7 +82,7 @@ begin
 end;
 
 
-function GetKernelSrcRGB_MatCmp(ARGBSizeOnBG, ARGBSizeOnSub: Byte): string;
+function GetKernelSrcRGB_MatCmp(ARGBSizeOnBG, ARGBSizeOnSub: Byte; AUsingAtomics: Boolean): string;
 var
   RGBSizeStrOnBG, RGBSizeStrOnSub: string;
 begin      //int is 32-bit, long is 64-bit
@@ -99,8 +99,14 @@ begin      //int is 32-bit, long is 64-bit
     '__kernel void MatCmp(                      ' + #13#10 +
     '  __global uchar* ABackgroundBmp,          ' + #13#10 +
     '  __global uchar* ASubBmp,                 ' + #13#10 +
-    '  __global int* AResultedErrCount,         ' + #13#10 +
-    '  __global uchar* AKernelDone,             ' + #13#10 +
+    '  __global int* AResultedErrCount,         ' + #13#10;
+
+  if AUsingAtomics then
+    Result := Result + '  __global atomic_int* AKernelDone,             ' + #13#10   //called by SlideSearch kernel
+  else
+    Result := Result + '  __global int* AKernelDone,             ' + #13#10;         //called by host
+
+  Result := Result +
     '  const int ABackgroundWidth,     ' + #13#10 +
     '  const int ASubBmpWidth,         ' + #13#10 +
     '  const int ASubBmpHeight,        ' + #13#10 +    //After setting MatCmp as a slave kernel: not needed in this kernel, it is here for compatibility only (to have a similar list of parameters, to be able to directly call this kernel from host, if needed)
@@ -136,9 +142,15 @@ begin      //int is 32-bit, long is 64-bit
     '       ErrCount++;                              ' + #13#10 +
     '     }  //if                                    ' + #13#10 +
     '  }  //for                                      ' + #13#10 +
-    '  AResultedErrCount[YIdx] = ErrCount;           ' + #13#10 +
+    '  AResultedErrCount[YIdx] = ErrCount;           ' + #13#10;
     //calling barrier or mem_fence(CLK_GLOBAL_MEM_FENCE) here is useless
-    '  AKernelDone[YIdx] = 1;                        ' + #13#10 +
+
+  if AUsingAtomics then
+    Result := Result + '    atomic_store_explicit(&AKernelDone[YIdx], 1, memory_order_release);' + #13#10
+  else
+    Result := Result + '  AKernelDone[YIdx] = 1;                        ' + #13#10;
+
+  Result := Result +
     '}';
 end;
 
@@ -159,7 +171,7 @@ begin
     '  __global uchar* ASubBmp,                 ' + #13#10 +
     '  __global int* AResultedErrCount,         ' + #13#10 +
     '  __global int* ADebuggingInfo,            ' + #13#10 +
-    '  __global uchar* AKernelDone,             ' + #13#10 +
+    '  __global atomic_int* AKernelDone,             ' + #13#10 +
     '  const int ABackgroundWidth,     ' + #13#10 +
     '  const int ABackgroundHeight,    ' + #13#10 +
     '  const int ASubBmpWidth,         ' + #13#10 +
@@ -214,7 +226,7 @@ begin
     '    for (x = 0; x < SlideWidth; x++)       ' + #13#10 +
     '    {                                      ' + #13#10 +
     '      for (k = 0; k < ASubBmpHeight; k++)  ' + #13#10 +
-    '        AKernelDone[k] = 0;                ' + #13#10 +
+    'atomic_store_explicit(&AKernelDone[k], 0, memory_order_release);' + #13#10 +  //'        AKernelDone[k] = 0;                ' + #13#10 +
     ''                                            + #13#10;
 
     //if not AGPUUseAllKernelsEvent then   //ndrange should return a ASubBmpHeight wide range. Then, it makes no sense to call enqueue_kernel multiple times.
@@ -255,7 +267,7 @@ begin
       '          WhileIterations++;               ' + #13#10 +
       '          AllKernelsDone = true;           ' + #13#10 +
       '          for (k = 0; k < ASubBmpHeight; k++)' + #13#10 +
-      '            if (AKernelDone[k] == 0)       ' + #13#10 +
+      '            if (atomic_load_explicit(&AKernelDone[k], memory_order_acquire) == 0)' + #13#10 + //'            if (AKernelDone[k] == 0)       ' + #13#10 +
       '            {                              ' + #13#10 +
       '              AllKernelsDone = false;      ' + #13#10 +
       '              break;                       ' + #13#10 +
@@ -650,7 +662,7 @@ begin
         try
           LogCallResult(Error, 'clCreateBuffer', 'Dbg buffer created.');
 
-          KernelDoneBufferRef := OpenCLDll.clCreateBuffer(AContext, CL_MEM_WRITE_ONLY, csize_t(SubBmpHeight), nil, Error);
+          KernelDoneBufferRef := OpenCLDll.clCreateBuffer(AContext, CL_MEM_WRITE_ONLY, csize_t(SizeOf(LongInt) * SubBmpHeight), nil, Error);
           try
             LogCallResult(Error, 'clCreateBuffer', 'KernelDoneBufferRef buffer created.');
 
@@ -852,9 +864,8 @@ begin
     Exit;
   end;
 
-  KernelSrc := GetKernelSrcRGB_MatCmp(ABytesPerPixelOnSrc, ABytesPerPixelOnSub);
-
   ShouldCall_SlideSearch := AGPUExecutionAvailability in [eaOpenCL3Only, eaOpenCL3Then1, eaOpenCL3Then1ThenCPU];
+  KernelSrc := GetKernelSrcRGB_MatCmp(ABytesPerPixelOnSrc, ABytesPerPixelOnSub, ShouldCall_SlideSearch);
 
   if ShouldCall_SlideSearch then
     KernelSrc := KernelSrc + GetKernelSrcRGB_SlideSearch(IntToStr(ASubBitmapHeight),
