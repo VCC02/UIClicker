@@ -226,7 +226,7 @@ begin
     '    for (x = 0; x < SlideWidth; x++)       ' + #13#10 +
     '    {                                      ' + #13#10 +
     '      for (k = 0; k < ASubBmpHeight; k++)  ' + #13#10 +
-    'atomic_store_explicit(&AKernelDone[k], 0, memory_order_release);' + #13#10 +  //'        AKernelDone[k] = 0;                ' + #13#10 +
+    '        atomic_store_explicit(&AKernelDone[k], 0, memory_order_release);' + #13#10 +  //'        AKernelDone[k] = 0;                ' + #13#10 +
     ''                                            + #13#10;
 
     //if not AGPUUseAllKernelsEvent then   //ndrange should return a ASubBmpHeight wide range. Then, it makes no sense to call enqueue_kernel multiple times.
@@ -662,7 +662,7 @@ begin
         try
           LogCallResult(Error, 'clCreateBuffer', 'Dbg buffer created.');
 
-          KernelDoneBufferRef := OpenCLDll.clCreateBuffer(AContext, CL_MEM_WRITE_ONLY, csize_t(SizeOf(LongInt) * SubBmpHeight), nil, Error);
+          KernelDoneBufferRef := OpenCLDll.clCreateBuffer(AContext, CL_MEM_READ_WRITE, csize_t(SizeOf(LongInt) * SubBmpHeight), nil, Error);
           try
             LogCallResult(Error, 'clCreateBuffer', 'KernelDoneBufferRef buffer created.');
 
