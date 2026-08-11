@@ -319,8 +319,8 @@ var
   i, nd: Integer;
   ABackgroundBmp, ASubBmp: PByteArray0;
   AResultedErrCount, ADebuggingInfo: PIntArray0;
-  AKernelDone: PByteArray0;
-  ABackgroundWidth, ASubBmpWidth, ASubBmpHeight, AXOffset, AYOffset: Integer;
+  AKernelDone: PIntArray0;
+  ABackgroundWidth, ABackgroundHeight, ASubBmpWidth, ASubBmpHeight, AXOffset, AYOffset: Integer;
   AColorError: Byte;
   ASlaveQueue: Pointer;
   ATotalErrorCount: DWord;
@@ -334,7 +334,7 @@ begin
     ABackgroundBmp := PByteArray0(PPtrUInt(FArguments[0].Arg)^); //Arg is a pointer to a pointer to the first array element
     ASubBmp := PByteArray0(PPtrUInt(FArguments[1].Arg)^);
     AResultedErrCount := PIntArray0(PPtrUInt(FArguments[2].Arg)^);
-    AKernelDone := PByteArray0(PPtrUInt(FArguments[3].Arg)^);
+    AKernelDone := PIntArray0(PPtrUInt(FArguments[3].Arg)^);
     ABackgroundWidth := PDWord(FArguments[4].Arg)^;
     ASubBmpWidth := PDWord(FArguments[5].Arg)^;
     ASubBmpHeight := PDWord(FArguments[6].Arg)^;
@@ -376,15 +376,14 @@ begin
       ASubBmp := PByteArray0(PPtrUInt(FArguments[1].Arg)^);
       AResultedErrCount := PIntArray0(PPtrUInt(FArguments[2].Arg)^);
       ADebuggingInfo := PIntArray0(PPtrUInt(FArguments[3].Arg)^);
-      AKernelDone := PByteArray0(PPtrUInt(FArguments[4].Arg)^);
+      AKernelDone := PIntArray0(PPtrUInt(FArguments[4].Arg)^);
       ABackgroundWidth := PDWord(FArguments[5].Arg)^;
-      ASubBmpWidth := PDWord(FArguments[6].Arg)^;
-      ASubBmpHeight := PDWord(FArguments[7].Arg)^;
-      AXOffset := PDWord(FArguments[8].Arg)^;
-      AYOffset := PDWord(FArguments[9].Arg)^;
-      AColorError := PByte(FArguments[10].Arg)^;
-      ASlaveQueue := PByteArray0(PPtrUInt(FArguments[11].Arg)^);
-      ATotalErrorCount := PDWord(FArguments[12].Arg)^;
+      ABackgroundHeight := PDWord(FArguments[6].Arg)^;
+      ASubBmpWidth := PDWord(FArguments[7].Arg)^;
+      ASubBmpHeight := PDWord(FArguments[8].Arg)^;
+      AColorError := PByte(FArguments[9].Arg)^;
+      ASlaveQueue := PByteArray0(PPtrUInt(FArguments[10].Arg)^);
+      ATotalErrorCount := PDWord(FArguments[11].Arg)^;
 
       SlideSearch := TSlideSearchSrc.Create;
       try
@@ -408,10 +407,9 @@ begin
                                 ADebuggingInfo,
                                 AKernelDone,
                                 ABackgroundWidth,
+                                ABackgroundHeight,
                                 ASubBmpWidth,
                                 ASubBmpHeight,
-                                AXOffset,
-                                AYOffset,
                                 AColorError,
                                 ASlaveQueue,
                                 ATotalErrorCount);

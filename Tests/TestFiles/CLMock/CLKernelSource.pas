@@ -66,7 +66,7 @@ type
     constructor Create;
     procedure MatCmp(ABackgroundBmp, ASubBmp: PByteArray0;
                      AResultedErrCount: PIntArray0;
-                     AKernelDone: PByteArray0;
+                     AKernelDone: PIntArray0;
                      ABackgroundWidth, ASubBmpWidth, ASubBmpHeight, AXOffset, AYOffset: Integer;
                      AColorError: Byte;
                      ASlaveQueue: Pointer);
@@ -80,7 +80,7 @@ type
   TMatCmpParams = record
     BackgroundBmp, SubBmp: PByteArray0;
     ResultedErrCount: PIntArray0;
-    KernelDone: PByteArray0;
+    KernelDone: PIntArray0;
     BackgroundWidth, SubBmpWidth, SubBmpHeight, XOffset, YOffset: Integer;
     ColorError: Byte;
     SlaveQueue: Pointer;
@@ -120,8 +120,8 @@ type
 
     procedure SlideSearch(ABackgroundBmp, ASubBmp: PByteArray0;
                           AResultedErrCount, ADebuggingInfo: PIntArray0;
-                          AKernelDone: PByteArray0;
-                          ABackgroundWidth, ASubBmpWidth, ASubBmpHeight, AXOffset, AYOffset: Integer;
+                          AKernelDone: PIntArray0;
+                          ABackgroundWidth, ABackgroundHeight, ASubBmpWidth, ASubBmpHeight: Integer;
                           AColorError: Byte;
                           ASlaveQueue: Pointer;
                           ATotalErrorCount: DWord);
@@ -163,7 +163,7 @@ end;
 
 procedure TMatCmpSrc.MatCmp(ABackgroundBmp, ASubBmp: PByteArray0;
                             AResultedErrCount: PIntArray0;
-                            AKernelDone: PByteArray0;
+                            AKernelDone: PIntArray0;
                             ABackgroundWidth, ASubBmpWidth, ASubBmpHeight, AXOffset, AYOffset: Integer;
                             AColorError: Byte;
                             ASlaveQueue: Pointer);
@@ -507,8 +507,8 @@ end;
 
 procedure TSlideSearchSrc.SlideSearch(ABackgroundBmp, ASubBmp: PByteArray0;
                                       AResultedErrCount, ADebuggingInfo: PIntArray0;
-                                      AKernelDone: PByteArray0;
-                                      ABackgroundWidth, ASubBmpWidth, ASubBmpHeight, AXOffset, AYOffset: Integer; //these should be eventually changed to signed (Integer)
+                                      AKernelDone: PIntArray0;
+                                      ABackgroundWidth, ABackgroundHeight, ASubBmpWidth, ASubBmpHeight: Integer; //these should be eventually changed to signed (Integer)
                                       AColorError: Byte;
                                       ASlaveQueue: Pointer;
                                       ATotalErrorCount: DWord);
@@ -519,9 +519,9 @@ var
   FinalEvent: Pclk_event_t;
   ndrange: ndrange_t;
   MyFlags: kernel_enqueue_flags_t;
-  i, j, k: Integer;
+  y, x, k: Integer;
   Found, AllKernelsDone: Boolean;
-  EnqKrnErr, EnqMrkErr, XOffset, YOffset, DifferentCount: Integer;
+  EnqKrnErr, EnqMrkErr, SlideWidth, SlideHeight, DifferentCount: Integer;
   TotalErrorCount: Integer;
   WhileIterations: Integer;
 
@@ -552,13 +552,14 @@ begin
 
   EnqKrnErr := -1234;
   EnqMrkErr := -4567;
-  XOffset := AXOffset;
-  YOffset := AYOffset;
+  SlideWidth := ABackgroundWidth - ASubBmpWidth;
+  SlideHeight := ABackgroundHeight - ASubBmpHeight;
+
   DifferentCount := 0;
 
-  for i := 0 to YOffset - 1 do
+  for y := 0 to SlideHeight - 1 do
   begin
-    for j := 0 to XOffset - 1 do
+    for x := 0 to SlideWidth - 1 do
     begin
       for k := 0 to ASubBmpHeight - 1 do
         AKernelDone^[k] := 0;
@@ -570,8 +571,8 @@ begin
       MatCmpParams.BackgroundWidth := ABackgroundWidth;
       MatCmpParams.SubBmpWidth := ASubBmpWidth;
       MatCmpParams.SubBmpHeight := ASubBmpHeight;
-      MatCmpParams.XOffset := j;
-      MatCmpParams.YOffset := i;
+      MatCmpParams.XOffset := x;
+      MatCmpParams.YOffset := y;
       MatCmpParams.ColorError := AColorError;
       MatCmpParams.SlaveQueue := SlaveQueue;
 
@@ -657,14 +658,14 @@ begin
 
       if EnqKrnErr < 0 then
         Break;
-    end;  //for j
+    end;  //for x
 
     if Found or (EnqKrnErr < 0) then
       Break;
-  end;  //for i
+  end;  //for y
 
-  ADebuggingInfo^[2] := i;
-  ADebuggingInfo^[3] := j;
+  ADebuggingInfo^[2] := y;
+  ADebuggingInfo^[3] := x;
   ADebuggingInfo^[4] := DifferentCount;
   ADebuggingInfo^[5] := Integer(Found);
   ADebuggingInfo^[6] := get_work_dim;
