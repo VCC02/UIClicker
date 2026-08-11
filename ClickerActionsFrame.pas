@@ -326,6 +326,9 @@ type
     FSplitterMouseDownGlobalPos: TPoint;
     FSplitterMouseDownImagePos: TPoint;
 
+    FMatchBitmapTextFirstColor: TColor;
+    FMatchBitmapTextSecondColor: TColor;
+
     FOIEditorMenuClosed: Boolean;
     FTempNewItems: string;
 
@@ -642,6 +645,9 @@ type
     procedure HandleOnOIPaintText(ANodeData: TNodeDataPropertyRec; ACategoryIndex, APropertyIndex, APropertyItemIndex: Integer;
       const TargetCanvas: TCanvas; Column: TColumnIndex; var TextType: TVSTTextType);
 
+    procedure OIBeforeCellPaint_ActionSpecific(ALiveEditingActionType: TClkAction; ACategoryIndex, APropertyIndex, APropertyItemIndex: Integer;
+      TargetCanvas: TCanvas; Column: TColumnIndex; CellRect: TRect; ASelectedBMPTextTabIdx: Integer);
+
     procedure HandleOnOIBeforeCellPaint(ANodeData: TNodeDataPropertyRec; ACategoryIndex, APropertyIndex, APropertyItemIndex: Integer;
       TargetCanvas: TCanvas; Column: TColumnIndex; CellPaintMode: TVTCellPaintMode; CellRect: TRect; var ContentRect: TRect);
 
@@ -758,6 +764,9 @@ type
     property GridDrawingOption: TDisplayGridLineOption write SetGridDrawingOption;
     property PreviewSelectionColors: TSelectionColors write SetPreviewSelectionColors;
     property ModifiedPmtvFiles: Boolean read GetModifiedPmtvFiles;
+
+    property MatchBitmapTextFirstColor: TColor read FMatchBitmapTextFirstColor write FMatchBitmapTextFirstColor;
+    property MatchBitmapTextSecondColor: TColor read FMatchBitmapTextSecondColor write FMatchBitmapTextSecondColor;
 
     property ClkVariables: TStringList read FClkVariables;
 
@@ -1084,6 +1093,9 @@ begin
   FlblResultSelTop := nil;
   FlblResultSelRight := nil;
   FlblResultSelBottom := nil;
+
+  FMatchBitmapTextFirstColor := $E0FFE0;    //light green
+  FMatchBitmapTextSecondColor := $97E0FF;   //light orange
 
   FOnCopyControlTextAndClassFromMainWindow := nil;
   FOnGetExtraSearchAreaDebuggingImage := nil;
@@ -8308,7 +8320,7 @@ begin  //
 end;
 
 
-procedure OIBeforeCellPaint_ActionSpecific(ALiveEditingActionType: TClkAction; ACategoryIndex, APropertyIndex, APropertyItemIndex: Integer;
+procedure TfrClickerActions.OIBeforeCellPaint_ActionSpecific(ALiveEditingActionType: TClkAction; ACategoryIndex, APropertyIndex, APropertyItemIndex: Integer;
   TargetCanvas: TCanvas; Column: TColumnIndex; CellRect: TRect; ASelectedBMPTextTabIdx: Integer);
 var
   ItemIndexDiv: Integer;
@@ -8320,9 +8332,9 @@ begin
       ItemIndexDiv := APropertyItemIndex div CPropCount_FindSubControlMatchBitmapText;
 
       if ItemIndexDiv and 1 = 0 then
-        NewColor := $E0FFE0   //light green
+        NewColor := FMatchBitmapTextFirstColor   //light green
       else
-        NewColor := $97E0FF;   //light orange
+        NewColor := FMatchBitmapTextSecondColor;   //light orange
 
       if ItemIndexDiv = ASelectedBMPTextTabIdx then
         NewColor := ModifyBrightness(NewColor, 30, boDec);

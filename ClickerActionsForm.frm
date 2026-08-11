@@ -602,6 +602,85 @@ object frmClickerActions: TfrmClickerActions
           OnChange = chkExtraLoggingFindControlChange
         end
       end
+      object grpMatchBitmapTextColors: TGroupBox
+        Left = 584
+        Height = 136
+        Top = 128
+        Width = 185
+        Anchors = [akTop, akRight]
+        Caption = 'MatchBitmapText colors'
+        ClientHeight = 118
+        ClientWidth = 181
+        TabOrder = 14
+        object lblMatchBitmapTextFirstColor: TLabel
+          Left = 8
+          Height = 13
+          Top = 19
+          Width = 47
+          Caption = 'First color'
+        end
+        object colcmbMatchBitmapTextFirstColor: TColorBox
+          Left = 72
+          Height = 22
+          Top = 13
+          Width = 99
+          Selected = 14745568
+          Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbCustomColor, cbCustomColors]
+          ItemHeight = 16
+          TabOrder = 0
+          OnChange = colcmbMatchBitmapTextFirstColorChange
+        end
+        object lblMatchBitmapTextSecondColor: TLabel
+          Left = 8
+          Height = 13
+          Top = 61
+          Width = 61
+          Caption = 'Second color'
+        end
+        object colcmbMatchBitmapTextSecondColor: TColorBox
+          Left = 72
+          Height = 22
+          Top = 56
+          Width = 99
+          Selected = 9953535
+          Style = [cbStandardColors, cbExtendedColors, cbSystemColors, cbCustomColor, cbCustomColors]
+          ItemHeight = 16
+          TabOrder = 1
+          OnChange = colcmbMatchBitmapTextSecondColorChange
+        end
+      end
+      object grpLoggingFont: TGroupBox
+        Left = 584
+        Height = 105
+        Top = 280
+        Width = 185
+        Caption = 'Logging font'
+        ClientHeight = 87
+        ClientWidth = 181
+        TabOrder = 15
+        object spdbtnLogFont: TSpeedButton
+          Left = 8
+          Height = 24
+          Hint = 'Log box font'
+          Top = 8
+          Width = 88
+          Caption = 'Log font...'
+          ShowHint = True
+          ParentShowHint = False
+          OnClick = spdbtnLogFontClick
+        end
+        object spdbtnCmdEditBoxFont: TSpeedButton
+          Left = 8
+          Height = 24
+          Hint = 'Command editbox font'
+          Top = 48
+          Width = 88
+          Caption = 'Cmd font...'
+          ShowHint = True
+          ParentShowHint = False
+          OnClick = spdbtnCmdEditBoxFontClick
+        end
+      end
     end
     object TabSheetTemplateExec: TTabSheet
       Caption = 'Template Execution'
@@ -775,15 +854,15 @@ object frmClickerActions: TfrmClickerActions
     Enabled = False
     Interval = 100
     OnTimer = tmrUpdateColorsTimer
-    Left = 600
-    Top = 144
+    Left = 664
+    Top = 400
   end
   object tmrUpdateSelectionColorsFromColorBoxes: TTimer
     Enabled = False
     Interval = 50
     OnTimer = tmrUpdateSelectionColorsFromColorBoxesTimer
-    Left = 592
-    Top = 344
+    Left = 664
+    Top = 448
   end
   object tmrDelayedShow: TTimer
     Enabled = False

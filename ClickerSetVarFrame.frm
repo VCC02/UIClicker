@@ -45,6 +45,7 @@ object frClickerSetVar: TfrClickerSetVar
       CheckImageKind = ckXP
       Colors.UnfocusedColor = clMedGray
       Colors.UnfocusedSelectionColor = clGradientInactiveCaption
+      DefaultNodeHeight = 22
       DefaultText = 'Node'
       Header.AutoSizeIndex = 0
       Header.Columns = <      

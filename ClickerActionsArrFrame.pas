@@ -578,6 +578,12 @@ type
 
     procedure SetGridDrawingOption(Value: TDisplayGridLineOption);
     procedure SetPreviewSelectionColors(Value: TSelectionColors);
+
+    function GetConsoleLogFont: TFont;
+    function GetConsoleCmdBoxFont: TFont;
+    procedure SetConsoleLogFont(Value: TFont);
+    procedure SetConsoleCmdBoxFont(Value: TFont);
+
     procedure SetFrameActive(Value: Boolean);
 
     procedure FillInWithAllVars(AListOfVars: TStringList);
@@ -800,6 +806,9 @@ type
 
     property GridDrawingOption: TDisplayGridLineOption write SetGridDrawingOption;
     property PreviewSelectionColors: TSelectionColors write SetPreviewSelectionColors;
+    property ConsoleLogFont: TFont read GetConsoleLogFont write SetConsoleLogFont;
+    property ConsoleCmdBoxFont: TFont read GetConsoleCmdBoxFont write SetConsoleCmdBoxFont;
+
     property PlayingAllActions: Boolean read FPlayingAllActions;
 
     property PluginContinueAll: Boolean write FPluginContinueAll;
@@ -7993,6 +8002,36 @@ end;
 procedure TfrClickerActionsArr.SetPreviewSelectionColors(Value: TSelectionColors);
 begin
   frClickerActions.PreviewSelectionColors := Value;
+end;
+
+
+function TfrClickerActionsArr.GetConsoleLogFont: TFont;
+begin
+  Result := frClickerActions.memLogErr.Font;
+end;
+
+
+function TfrClickerActionsArr.GetConsoleCmdBoxFont: TFont;
+begin
+  Result := frClickerActions.edtConsoleCommand.Font;
+end;
+
+
+procedure TfrClickerActionsArr.SetConsoleLogFont(Value: TFont);
+begin
+  frClickerActions.memLogErr.Font.Name := Value.Name;
+  frClickerActions.memLogErr.Font.Size := Value.Size;
+  frClickerActions.memLogErr.Font.Style := Value.Style;
+  frClickerActions.memLogErr.Font.Color := Value.Color;
+end;
+
+
+procedure TfrClickerActionsArr.SetConsoleCmdBoxFont(Value: TFont);
+begin
+  frClickerActions.edtConsoleCommand.Font.Name := Value.Name;
+  frClickerActions.edtConsoleCommand.Font.Size := Value.Size;
+  frClickerActions.edtConsoleCommand.Font.Style := Value.Style;
+  frClickerActions.edtConsoleCommand.Font.Color := Value.Color;
 end;
 
 

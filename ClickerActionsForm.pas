@@ -38,11 +38,12 @@ uses
   {$ELSE}
     LCLIntf, LCLType, Types,
   {$ENDIF}
-  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ComCtrls,
-  StdCtrls, ExtCtrls, Menus, ColorBox, ClickerActionsArrFrame, InMemFileSystem,
-  IdHTTPServer, IdSchedulerOfThreadPool, IdCustomHTTPServer, IdContext, IdSync, IdGlobal,
-  PollingFIFO, ClickerFileProviderClient, IniFiles, ClickerUtils, ClickerActionExecution,
-  ClickerIniFiles, ClickerPrimitiveUtils, ClickerPluginArchive;
+  Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ComCtrls, StdCtrls,
+  ExtCtrls, Menus, ColorBox, Buttons, ClickerActionsArrFrame, InMemFileSystem,
+  IdHTTPServer, IdSchedulerOfThreadPool, IdCustomHTTPServer, IdContext, IdSync,
+  IdGlobal, PollingFIFO, ClickerFileProviderClient, IniFiles, ClickerUtils,
+  ClickerActionExecution, ClickerIniFiles, ClickerPrimitiveUtils,
+  ClickerPluginArchive;
 
 {$IFnDEF Windows}
   {$UNDEF MemPlugins}
@@ -102,11 +103,15 @@ type
     cmbExecMode: TComboBox;
     cmbFilesExistence: TComboBox;
     cmbImgPreviewGridType: TComboBox;
+    colcmbMatchBitmapTextSecondColor: TColorBox;
     colcmbTopLeftValid: TColorBox;
     colcmbBotRightValid: TColorBox;
     colcmbTopLeftInvalid: TColorBox;
     colcmbBotRightInvalid: TColorBox;
     cmbClientModeServerAddress: TComboBox;
+    colcmbMatchBitmapTextFirstColor: TColorBox;
+    grpLoggingFont: TGroupBox;
+    grpMatchBitmapTextColors: TGroupBox;
     grpExtraLogging: TGroupBox;
     grpTextRenderingInBrowser: TGroupBox;
     grpSelectionColors: TGroupBox;
@@ -117,6 +122,7 @@ type
     IdSchedulerOfThreadPool1: TIdSchedulerOfThreadPool;
     imglstCalledTemplates: TImageList;
     imglstMainPage: TImageList;
+    lblMatchBitmapTextSecondColor: TLabel;
     lblServerAddress: TLabel;
     lblBotRightInvalidColor: TLabel;
     lblTopLeftValidColor: TLabel;
@@ -136,6 +142,7 @@ type
     lblExecMode: TLabel;
     lblBotRightValidColor: TLabel;
     lblTopLeftInvalidColor: TLabel;
+    lblMatchBitmapTextFirstColor: TLabel;
     memAllowedFileExtensionsForServer: TMemo;
     memAllowedFileDirsForServer: TMemo;
     MenuItem_RemoveServerAddress: TMenuItem;
@@ -145,6 +152,8 @@ type
     pnlMissingFilesRequest: TPanel;
     pmClientModeServerAddress: TPopupMenu;
     scrboxMain: TScrollBox;
+    spdbtnLogFont: TSpeedButton;
+    spdbtnCmdEditBoxFont: TSpeedButton;
     TabSheetLocalMode: TTabSheet;
     TabSheetClientMode: TTabSheet;
     TabSheetServerMode: TTabSheet;
@@ -171,6 +180,8 @@ type
     procedure cmbImgPreviewGridTypeChange(Sender: TObject);
     procedure colcmbBotRightInvalidChange(Sender: TObject);
     procedure colcmbBotRightValidChange(Sender: TObject);
+    procedure colcmbMatchBitmapTextFirstColorChange(Sender: TObject);
+    procedure colcmbMatchBitmapTextSecondColorChange(Sender: TObject);
     procedure colcmbTopLeftInvalidChange(Sender: TObject);
     procedure colcmbTopLeftValidChange(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -189,6 +200,8 @@ type
     procedure PageControlMainChange(Sender: TObject);
     procedure PageControlPlayerChange(Sender: TObject);
     procedure pmClientModeServerAddressPopup(Sender: TObject);
+    procedure spdbtnCmdEditBoxFontClick(Sender: TObject);
+    procedure spdbtnLogFontClick(Sender: TObject);
     procedure tmrDelayedShowTimer(Sender: TObject);
     procedure tmrDisplayMissingFilesRequestsTimer(Sender: TObject);
     procedure tmrStartupTimer(Sender: TObject);
@@ -315,6 +328,11 @@ type
     procedure ProcessChangingExecutionMode;
     procedure UpdateGridType;
     procedure SetActiveFrame;
+
+    procedure GetConsoleCmdBoxFont(AOutTFont: TFont);
+    procedure GetConsoleLogFont(AOutTFont: TFont);
+    procedure SetConsoleCmdBoxFont(AFont: TFont);
+    procedure SetConsoleLogFont(AFont: TFont);
 
     procedure HandleNewFrameRefreshButton(Sender: TObject);
     function frClickerActionsArrOnCallTemplate(Sender: TObject; AFileNameToCall: string; ListOfVariables: TStrings; DebugBitmap: TBitmap; DebugGridImage: TImage; IsDebugging, AShouldStopAtBreakPoint: Boolean; AStackLevel: Integer; AExecutesRemotely: Boolean): Boolean;
@@ -608,6 +626,7 @@ end;
 procedure TfrmClickerActions.LoadSettings(AIni: TMemIniFile);
 var
   i, n: Integer;
+  TempFont: TFont;
 begin
   Left := AIni.ReadInteger('ActionsWindow', 'Left', Min(Left, Screen.DesktopWidth - 60));
   Top := AIni.ReadInteger('ActionsWindow', 'Top', Min(Top, Screen.DesktopHeight - 60));
@@ -725,12 +744,48 @@ begin
   n := AIni.ReadInteger('RecentFiles', 'Count', 0);       //AIni.ReadSection('RecentFiles', FRecentTemplates); would be better, because it doesn't require every item to have its own key. That may be available after replacing TMemIniFile with UIClicker's ini.
   for i := 0 to n - 1 do
     FRecentTemplates.Add(AIni.ReadString('RecentFiles', 'File_' + IntToStr(i), ''));
+
+  TempFont := TFont.Create;
+  try
+    GetConsoleCmdBoxFont(TempFont);
+    TempFont.Name := AIni.ReadString('ActionsWindow', 'ConsoleCmdBoxFont.Name', 'Courier New');
+    TempFont.Size := AIni.ReadInteger('ActionsWindow', 'ConsoleCmdBoxFont.Size', 10);
+    TempFont.Bold := AIni.ReadBool('ActionsWindow', 'ConsoleCmdBoxFont.Style.Bold', False);
+    TempFont.Italic := AIni.ReadBool('ActionsWindow', 'ConsoleCmdBoxFont.Style.Italic', False);
+    TempFont.Underline := AIni.ReadBool('ActionsWindow', 'ConsoleCmdBoxFont.Style.Underline', False);
+    TempFont.StrikeThrough := AIni.ReadBool('ActionsWindow', 'ConsoleCmdBoxFont.Style.StrikeThrough', False);
+    TempFont.Color := AIni.ReadInteger('ActionsWindow', 'ConsoleCmdBoxFont.Color', clDefault);
+    SetConsoleCmdBoxFont(TempFont);
+
+    GetConsoleLogFont(TempFont);
+    TempFont.Name := AIni.ReadString('ActionsWindow', 'ConsoleLogFont.Name', 'Courier New');
+    TempFont.Size := AIni.ReadInteger('ActionsWindow', 'ConsoleLogFont.Size', 10);
+    TempFont.Bold := AIni.ReadBool('ActionsWindow', 'ConsoleLogFont.Style.Bold', False);
+    TempFont.Italic := AIni.ReadBool('ActionsWindow', 'ConsoleLogFont.Style.Italic', False);
+    TempFont.Underline := AIni.ReadBool('ActionsWindow', 'ConsoleLogFont.Style.Underline', False);
+    TempFont.StrikeThrough := AIni.ReadBool('ActionsWindow', 'ConsoleLogFont.Style.StrikeThrough', False);
+    TempFont.Color := AIni.ReadInteger('ActionsWindow', 'ConsoleLogFont.Color', clDefault);
+    SetConsoleLogFont(TempFont);
+  finally
+    TempFont.Free;
+  end;
+
+  frClickerActionsArrExperiment1.frClickerActions.MatchBitmapTextFirstColor := AIni.ReadInteger('ActionsWindow', 'MatchBitmapTextFirstColor', $E0FFE0);
+  frClickerActionsArrExperiment2.frClickerActions.MatchBitmapTextFirstColor := AIni.ReadInteger('ActionsWindow', 'MatchBitmapTextFirstColor', $E0FFE0);
+  frClickerActionsArrMain.frClickerActions.MatchBitmapTextFirstColor := AIni.ReadInteger('ActionsWindow', 'MatchBitmapTextFirstColor', $E0FFE0);
+  frClickerActionsArrExperiment1.frClickerActions.MatchBitmapTextSecondColor := AIni.ReadInteger('ActionsWindow', 'MatchBitmapTextSecondColor', $97E0FF);
+  frClickerActionsArrExperiment2.frClickerActions.MatchBitmapTextSecondColor := AIni.ReadInteger('ActionsWindow', 'MatchBitmapTextSecondColor', $97E0FF);
+  frClickerActionsArrMain.frClickerActions.MatchBitmapTextSecondColor := AIni.ReadInteger('ActionsWindow', 'MatchBitmapTextSecondColor', $97E0FF);
+
+  colcmbMatchBitmapTextFirstColor.Selected := frClickerActionsArrMain.frClickerActions.MatchBitmapTextFirstColor;
+  colcmbMatchBitmapTextSecondColor.Selected := frClickerActionsArrMain.frClickerActions.MatchBitmapTextSecondColor;
 end;
 
 
 procedure TfrmClickerActions.SaveSettings(AIni: TMemIniFile);
 var
   i, n: Integer;
+  TempFont: TFont;
 begin
   AIni.WriteInteger('ActionsWindow', 'Left', Min(Left, Screen.DesktopWidth - 60));
   AIni.WriteInteger('ActionsWindow', 'Top', Min(Top, Screen.DesktopHeight - 60));
@@ -810,6 +865,36 @@ begin
   AIni.WriteInteger('RecentFiles', 'Count', n);       //AIni.ReadSection('RecentFiles', FRecentTemplates); would be better, because it doesn't require every item to have its own key. That may be available after replacing TMemIniFile with UIClicker's ini.
   for i := 0 to n - 1 do
     AIni.WriteString('RecentFiles', 'File_' + IntToStr(i), FRecentTemplates.Strings[i]);
+
+  TempFont := TFont.Create;
+  try
+    GetConsoleCmdBoxFont(TempFont);
+    AIni.WriteString('ActionsWindow', 'ConsoleCmdBoxFont.Name', TempFont.Name);
+    AIni.WriteInteger('ActionsWindow', 'ConsoleCmdBoxFont.Size', TempFont.Size);
+    AIni.WriteBool('ActionsWindow', 'ConsoleCmdBoxFont.Style.Bold', TempFont.Bold);
+    AIni.WriteBool('ActionsWindow', 'ConsoleCmdBoxFont.Style.Italic', TempFont.Italic);
+    AIni.WriteBool('ActionsWindow', 'ConsoleCmdBoxFont.Style.Underline', TempFont.Underline);
+    AIni.WriteBool('ActionsWindow', 'ConsoleCmdBoxFont.Style.StrikeThrough', TempFont.StrikeThrough);
+    AIni.WriteInteger('ActionsWindow', 'ConsoleCmdBoxFont.Color', TempFont.Color);
+
+    GetConsoleLogFont(TempFont);
+    AIni.WriteString('ActionsWindow', 'ConsoleLogFont.Name', TempFont.Name);
+    AIni.WriteInteger('ActionsWindow', 'ConsoleLogFont.Size', TempFont.Size);
+    AIni.WriteBool('ActionsWindow', 'ConsoleLogFont.Style.Bold', TempFont.Bold);
+    AIni.WriteBool('ActionsWindow', 'ConsoleLogFont.Style.Italic', TempFont.Italic);
+    AIni.WriteBool('ActionsWindow', 'ConsoleLogFont.Style.Underline', TempFont.Underline);
+    AIni.WriteBool('ActionsWindow', 'ConsoleLogFont.Style.StrikeThrough', TempFont.StrikeThrough);
+    AIni.WriteInteger('ActionsWindow', 'ConsoleLogFont.Color', TempFont.Color);
+  finally
+    TempFont.Free;
+  end;
+
+  AIni.WriteInteger('ActionsWindow', 'MatchBitmapTextFirstColor', frClickerActionsArrExperiment1.frClickerActions.MatchBitmapTextFirstColor);
+  AIni.WriteInteger('ActionsWindow', 'MatchBitmapTextFirstColor', frClickerActionsArrExperiment2.frClickerActions.MatchBitmapTextFirstColor);
+  AIni.WriteInteger('ActionsWindow', 'MatchBitmapTextFirstColor', frClickerActionsArrMain.frClickerActions.MatchBitmapTextFirstColor);
+  AIni.WriteInteger('ActionsWindow', 'MatchBitmapTextSecondColor', frClickerActionsArrExperiment1.frClickerActions.MatchBitmapTextSecondColor);
+  AIni.WriteInteger('ActionsWindow', 'MatchBitmapTextSecondColor', frClickerActionsArrExperiment2.frClickerActions.MatchBitmapTextSecondColor);
+  AIni.WriteInteger('ActionsWindow', 'MatchBitmapTextSecondColor', frClickerActionsArrMain.frClickerActions.MatchBitmapTextSecondColor);
 end;
 
 
@@ -4247,6 +4332,104 @@ begin
 end;
 
 
+procedure TfrmClickerActions.GetConsoleCmdBoxFont(AOutTFont: TFont);
+begin
+  try
+    AOutTFont.Name := frClickerActionsArrMain.ConsoleCmdBoxFont.Name;
+    AOutTFont.Size := frClickerActionsArrMain.ConsoleCmdBoxFont.Size;
+    AOutTFont.Style := frClickerActionsArrMain.ConsoleCmdBoxFont.Style;
+    AOutTFont.Color := frClickerActionsArrMain.ConsoleCmdBoxFont.Color;
+  except
+  end;
+end;
+
+
+procedure TfrmClickerActions.GetConsoleLogFont(AOutTFont: TFont);
+begin
+  try
+    AOutTFont.Name := frClickerActionsArrMain.ConsoleLogFont.Name;
+    AOutTFont.Size := frClickerActionsArrMain.ConsoleLogFont.Size;
+    AOutTFont.Style := frClickerActionsArrMain.ConsoleLogFont.Style;
+    AOutTFont.Color := frClickerActionsArrMain.ConsoleLogFont.Color;
+  except
+  end;
+end;
+
+
+procedure TfrmClickerActions.SetConsoleCmdBoxFont(AFont: TFont);
+begin
+  try
+    frClickerActionsArrMain.ConsoleCmdBoxFont := AFont;
+  except
+  end;
+
+  try
+    frClickerActionsArrExperiment1.ConsoleCmdBoxFont := AFont;
+  except
+  end;
+
+  try
+    frClickerActionsArrExperiment2.ConsoleCmdBoxFont := AFont;
+  except
+  end;
+end;
+
+
+procedure TfrmClickerActions.SetConsoleLogFont(AFont: TFont);
+begin
+  try
+    frClickerActionsArrMain.ConsoleLogFont := AFont;
+  except
+  end;
+
+  try
+    frClickerActionsArrExperiment1.ConsoleLogFont := AFont;
+  except
+  end;
+
+  try
+    frClickerActionsArrExperiment2.ConsoleLogFont := AFont;
+  except
+  end;
+end;
+
+
+procedure TfrmClickerActions.spdbtnCmdEditBoxFontClick(Sender: TObject);
+var
+  TempFontDialog: TFontDialog;
+begin
+  TempFontDialog := TFontDialog.Create(nil);
+  try
+    GetConsoleCmdBoxFont(TempFontDialog.Font);
+
+    if not TempFontDialog.Execute then
+      Exit;
+
+    SetConsoleCmdBoxFont(TempFontDialog.Font);
+  finally
+    TempFontDialog.Free;
+  end;
+end;
+
+
+procedure TfrmClickerActions.spdbtnLogFontClick(Sender: TObject);
+var
+  TempFontDialog: TFontDialog;
+begin
+  TempFontDialog := TFontDialog.Create(nil);
+  try
+    GetConsoleLogFont(TempFontDialog.Font);
+
+    if not TempFontDialog.Execute then
+      Exit;
+
+    SetConsoleLogFont(TempFontDialog.Font);
+  finally
+    TempFontDialog.Free;
+  end;
+end;
+
+
 procedure TfrmClickerActions.HandleOnRemoveServerAddressClick(Sender: TObject);
 var
   s: string;
@@ -4700,6 +4883,30 @@ end;
 procedure TfrmClickerActions.colcmbBotRightInvalidChange(Sender: TObject);
 begin
   UpdatePreviewSelectionColorsFromColorBoxes;
+end;
+
+
+procedure TfrmClickerActions.colcmbMatchBitmapTextFirstColorChange(Sender: TObject);
+begin
+  try
+    frClickerActionsArrExperiment1.frClickerActions.MatchBitmapTextFirstColor := colcmbMatchBitmapTextFirstColor.Selected;
+    frClickerActionsArrExperiment2.frClickerActions.MatchBitmapTextFirstColor := colcmbMatchBitmapTextFirstColor.Selected;
+    frClickerActionsArrMain.frClickerActions.MatchBitmapTextFirstColor := colcmbMatchBitmapTextFirstColor.Selected;
+  except
+    //if the frames are not ready, then this should be executed from a timer
+  end;
+end;
+
+
+procedure TfrmClickerActions.colcmbMatchBitmapTextSecondColorChange(Sender: TObject);
+begin
+  try
+    frClickerActionsArrExperiment1.frClickerActions.MatchBitmapTextSecondColor := colcmbMatchBitmapTextSecondColor.Selected;
+    frClickerActionsArrExperiment2.frClickerActions.MatchBitmapTextSecondColor := colcmbMatchBitmapTextSecondColor.Selected;
+    frClickerActionsArrMain.frClickerActions.MatchBitmapTextSecondColor := colcmbMatchBitmapTextSecondColor.Selected;
+  except
+    //if the frames are not ready, then this should be executed from a timer
+  end;
 end;
 
 

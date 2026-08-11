@@ -27,7 +27,7 @@ object frClickerCallTemplate: TfrClickerCallTemplate
     Anchors = [akTop, akLeft, akRight, akBottom]
     Colors.UnfocusedColor = clMedGray
     Colors.UnfocusedSelectionColor = clGradientInactiveCaption
-    DefaultNodeHeight = 21
+    DefaultNodeHeight = 22
     DefaultText = 'Node'
     Header.AutoSizeIndex = 0
     Header.Columns = <    

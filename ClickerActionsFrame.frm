@@ -503,6 +503,13 @@ object frClickerActions: TfrClickerActions
         Top = 0
         Width = 1040
         Anchors = [akTop, akLeft, akRight, akBottom]
+        Font.CharSet = ANSI_CHARSET
+        Font.Color = clBlack
+        Font.Height = -13
+        Font.Name = 'Courier New'
+        Font.Pitch = fpFixed
+        Font.Quality = fqDraft
+        ParentFont = False
         ReadOnly = True
         ScrollBars = ssBoth
         TabOrder = 0
@@ -511,11 +518,18 @@ object frClickerActions: TfrClickerActions
       object edtConsoleCommand: TEdit
         Tag = -1
         Left = 0
-        Height = 21
+        Height = 24
         Hint = 'Type here one or more var/replacements, then hit enter, to be evaluated.'#13#10'Assigning values to vars is also possible, using the format: "$MyVar$ = Value" or "$MyVar$ = $Value$". The right side is evaluated automatically.'
-        Top = 227
+        Top = 224
         Width = 1040
         Anchors = [akLeft, akRight, akBottom]
+        Font.CharSet = ANSI_CHARSET
+        Font.Color = clBlack
+        Font.Height = -13
+        Font.Name = 'Courier New'
+        Font.Pitch = fpFixed
+        Font.Quality = fqDraft
+        ParentFont = False
         ParentShowHint = False
         ShowHint = True
         TabOrder = 1
