@@ -7552,6 +7552,12 @@ begin
 
   if IsActionEmpty_EditTemplate(FClkEditedActionByEditTemplate.EditTemplateOptions) then
     GetDefaultPropertyValues_EditTemplate(FClkEditedActionByEditTemplate.EditTemplateOptions);
+
+  if IsActionEmpty_LoadSetVarFromIniFile(FClkEditedActionByEditTemplate.LoadSetVarFromIniFileOptions) then
+    GetDefaultPropertyValues_LoadSetVarFromIniFile(FClkEditedActionByEditTemplate.LoadSetVarFromIniFileOptions);
+
+  if IsActionEmpty_SaveSetVarToIniFile(FClkEditedActionByEditTemplate.SaveSetVarToIniFileOptions) then
+    GetDefaultPropertyValues_SaveSetVarToIniFile(FClkEditedActionByEditTemplate.SaveSetVarToIniFileOptions);
 end;
 
 

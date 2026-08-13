@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2025 VCC
+    Copyright (C) 2026 VCC
     creation date: Dec 2019
     initial release date: 26 Jul 2022
 
@@ -43,7 +43,8 @@ uses
 type
   TClkAction = (acClick, acExecApp, acFindControl, acFindSubControl,
                 acSetControlText, acCallTemplate, acSleep, acSetVar, acWindowOperations,
-                acLoadSetVarFromFile, acSaveSetVarToFile, acPlugin, acEditTemplate);     //please update CInsertActionOffset constant in ClickerActionsArrFrame, if there will be more than 30 action types
+                acLoadSetVarFromFile, acSaveSetVarToFile, acPlugin, acEditTemplate,
+                acLoadSetVarFromIniFile, acSaveSetVarToIniFile);     //please update CInsertActionOffset constant in ClickerActionsArrFrame, if there will be more than 30 action types
   TClkActions = set of TClkAction;
 
   TClkSetTextControlType = (stEditBox, stComboBox, stKeystrokes);
@@ -137,7 +138,8 @@ type
 const
   CClkActionStr: array[TClkAction] of string = ('Click', 'ExecApp', 'FindControl', 'FindSubControl',
                                                 'SetControlText', 'CallTemplate', 'Sleep', 'SetVar', 'WindowOperations',
-                                                'LoadSetVarFromFile', 'SaveSetVarToFile', 'Plugin', 'EditTemplate');
+                                                'LoadSetVarFromFile', 'SaveSetVarToFile', 'Plugin', 'EditTemplate',
+                                                'LoadSetVarFromIniFile', 'SaveSetVarToIniFile');
   CClkUnsetAction = 255; //TClkAction(255);
 
   //These constants are used to index an array, similar to enum values.  Please update TClickTypeStr if adding more constants to this "type".
@@ -484,6 +486,25 @@ type
     ListOfEnabledProperties_ET: string;   //same as ListOfEnabledProperties, but used when creating/editing an EditTemplate action - this should be displayed/edited by OI in that case
   end;
 
+
+  TVarListFormat = (vlfSetVarAction, vlfPattern);
+  TVarDataType = (vdtString, vdtInteger, vdtBoolean);
+  TCounterType = (ctVar, ctIdent);
+
+  TClkLoadSetVarFromIniFileOptions = record
+    FileName: string;                 //Path to the ini file.
+    SetVarActionName: string;         //Name of the SetVar action, which is used as source or destination for var names and values.
+    VarListFormat: TVarListFormat;    //When set to vlfSetVarAction, the SetVar action is a fixed list of vars. When set to vlfPattern, the items in the ini file depend on a counter (e.g. Item_0, Item_1, Item2... Item_n-1).
+    SectionName: string;              //Name of the section in the ini file, where the keys/values are found.
+    RemoveDollarFromVarName: Boolean; //The var names in a SetVar action, are expected to be of the $VarName$ format. Ini files don't usually have idents (keys) starting and ending in '$'.
+    IdentPattern: string;             //A string, in which UIClicker replaces '<counter>' with the actual counter value for that item. Example: Item_<counter>   The idents in the ini file would then be Item_0, Item_1, Item2... Item_n-1, because the counter is expected to be in the [0..n-1] range.
+    VarDataType: TVarDataType;        //How to read/write the value from/to the ini file.
+    CounterType: TCounterType;        //The counter type for the items. When set to ctVar, the Counter property has to be set to a valid UIClicker var (e.g. $n$). When set to ctIdent, the counter is read/written from/to the ini file. This is used if VarListFormat is vlfPattern.
+    Counter: string;                  //Either a var name (available on run-time in the template context) or an ident name (found in ini). This is used if VarListFormat is vlfPattern.
+  end;
+
+  TClkSaveSetVarToIniFileOptions = TClkLoadSetVarFromIniFileOptions; //for now, it has the same list of vars as the load action
+
   TActionBreakPoint = record
     Exists: Boolean; //when False, the action has no breakpoint
     Enabled: Boolean;
@@ -511,6 +532,8 @@ type
     SaveSetVarToFileOptions: TClkSaveSetVarToFileOptions;
     PluginOptions: TClkPluginOptions;
     EditTemplateOptions: TClkEditTemplateOptions;
+    LoadSetVarFromIniFileOptions: TClkLoadSetVarFromIniFileOptions;
+    SaveSetVarToIniFileOptions: TClkSaveSetVarToIniFileOptions;
   end;
 
 
@@ -683,7 +706,9 @@ const
   CEditTemplateOperationStr: array[TEditTemplateOperation] of string = ('etoNewAction', 'etoUpdateAction', 'etoMoveAction', 'etoDeleteAction', 'etoDuplicateAction', 'etoRenameAction', 'etoEnableAction', 'etoDisableAction', 'etoGetProperty', 'etoSetProperty', 'etoSetCondition', 'etoSetTimeout', 'etoExecuteAction', 'etoSaveTemplate');
   CEditTemplateWhichTemplateStr: array[TEditTemplateWhichTemplate] of string = ('etwtSelf', 'etwtOther');
   CAttemptCountStr: array[TAttemptCount] of string = ('acOnce', 'acMultiple');
-
+  CVarListFormatStr: array[TVarListFormat] of string = ('vlfSetVarAction', 'vlfPattern');
+  CVarDataTypeStr: array[TVarDataType] of string = ('vdtString', 'vdtInteger', 'vdtBoolean');
+  CCounterTypeStr: array[TCounterType] of string = ('ctVar', 'ctIdent');
 
 type
   TKeyAction = (kaDownUp, kaDown, kaUp);

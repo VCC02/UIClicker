@@ -320,6 +320,12 @@ begin
       acEditTemplate:
         ActionContentStr := GetEditTemplateActionProperties(ActionPlugin^.AllActions^[AIndex].EditTemplateOptions);
 
+      acLoadSetVarFromIniFile:
+        ActionContentStr := GetLoadSetVarFromIniFileActionProperties(ActionPlugin^.AllActions^[AIndex].LoadSetVarFromIniFileOptions);
+
+      acSaveSetVarToIniFile:
+        ActionContentStr := GetSaveSetVarToIniFileActionProperties(ActionPlugin^.AllActions^[AIndex].SaveSetVarToIniFileOptions);
+
       else
         ActionContentStr := 'Not implemented';
     end;

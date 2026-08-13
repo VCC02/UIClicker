@@ -2842,6 +2842,8 @@ begin
     acSaveSetVarToFile: Result := FActionExecution.ExecuteSaveSetVarToFileAction(AAllActions[AActionIndex].SaveSetVarToFileOptions);
     acPlugin: Result := FActionExecution.ExecutePluginAction(AAllActions[AActionIndex].PluginOptions, @AAllActions, frClickerActions.ClkVariables, ResolveTemplatePath(AAllActions[AActionIndex].PluginOptions.FileName), FContinuePlayingBySteppingInto, {FShouldStopAtBreakPoint replaced by FDebugging} FDebugging);
     acEditTemplate: Result := FActionExecution.ExecuteEditTemplateAction(AAllActions[AActionIndex].EditTemplateOptions);
+    acLoadSetVarFromIniFile: Result := FActionExecution.ExecuteLoadSetVarFromIniFileAction(AAllActions[AActionIndex].LoadSetVarFromIniFileOptions);
+    acSaveSetVarToIniFile: Result := FActionExecution.ExecuteSaveSetVarToIniFileAction(AAllActions[AActionIndex].SaveSetVarToIniFileOptions);
   end;  //case
 end;
 
@@ -6949,6 +6951,8 @@ begin
   GetDefaultPropertyValues_SaveSetVarToFile(AAction.SaveSetVarToFileOptions);
   GetDefaultPropertyValues_Plugin(AAction.PluginOptions);
   GetDefaultPropertyValues_EditTemplate(AAction.EditTemplateOptions);
+  GetDefaultPropertyValues_LoadSetVarFromIniFile(AAction.LoadSetVarFromIniFileOptions);
+  GetDefaultPropertyValues_SaveSetVarToIniFile(AAction.SaveSetVarToIniFileOptions);
 end;
 
 
