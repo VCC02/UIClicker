@@ -5089,7 +5089,7 @@ var
   tp: TPoint;
   ColumnOffSet: Integer;
   MinImgX, MaxImgX: Integer;
-  NodeLevel, Ident: Integer;
+  NodeLevel, Indent: Integer;
   CurrentAction: PClkActionRec;
   NodeData: PActionNodeRec;
 begin
@@ -5100,15 +5100,15 @@ begin
 
   ColumnOffSet := vstActions.Header.Columns.Items[6].Width * Ord(coVisible in vstActions.Header.Columns.Items[6].Options);
 
-  Ident := vstActions.Ident;
-  MinImgX := 24 + ColumnOffSet + Ident;
-  MaxImgX := 48 + ColumnOffSet + Ident;
+  Indent := vstActions.Indent;
+  MinImgX := 24 + ColumnOffSet + Indent;
+  MaxImgX := 48 + ColumnOffSet + Indent;
   NodeLevel := 0;
   if FActionsHitInfo.HitNode <> nil then
   begin
     NodeLevel := vstActions.GetNodeLevel(FActionsHitInfo.HitNode);
-    Inc(MinImgX, NodeLevel * Ident);
-    Inc(MaxImgX, NodeLevel * Ident);
+    Inc(MinImgX, NodeLevel * Indent);
+    Inc(MaxImgX, NodeLevel * Indent);
   end;
 
   if (FActionsHitInfo.HitColumn = 0) and (FActionsHitInfo.HitNode <> nil) and (X >= MinImgX) and (X < MaxImgX) then
