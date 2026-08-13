@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2025 VCC
+    Copyright (C) 2026 VCC
     creation date: Dec 2019
     initial release date: 26 Jul 2022
 
@@ -226,7 +226,7 @@ begin
 end;
 
 
-function GetIndentPairValue(ASection: TStringList; Ident: string; out Value: string): Integer;   //returns line index if found
+function GetIdentPairValue(ASection: TStringList; Ident: string; out Value: string): Integer;   //returns line index if found
 var
   i, PosEqual: Integer;
   KeyValue, Key: string;
@@ -260,7 +260,7 @@ begin
     Exit;
   end;
 
-  if GetIndentPairValue(FSectionContents[SectionIndex], Ident, Value) > -1 then
+  if GetIdentPairValue(FSectionContents[SectionIndex], Ident, Value) > -1 then
     Result := Value
   else
     Result := Default;
@@ -289,7 +289,7 @@ begin
     Exit;
   end;
   
-  if GetIndentPairValue(FSectionContents[SectionIndex], Ident, Value) > -1 then
+  if GetIdentPairValue(FSectionContents[SectionIndex], Ident, Value) > -1 then
     Result := Value
   else
     Result := Default;
@@ -447,7 +447,7 @@ begin
     SectionIndex := FSections.Count - 1;
   end;
 
-  LineIndex := GetIndentPairValue(FSectionContents[SectionIndex], Ident, OldValue);
+  LineIndex := GetIdentPairValue(FSectionContents[SectionIndex], Ident, OldValue);
   if LineIndex > -1 then
     FSectionContents[SectionIndex].Strings[LineIndex] := Ident + '=' + Value
   else
@@ -481,7 +481,7 @@ begin
     SectionIndex := Length(FSectionContents) - 1;
   end;
 
-  LineIndex := GetIndentPairValue(FSectionContents[SectionIndex], Ident, OldValue);
+  LineIndex := GetIdentPairValue(FSectionContents[SectionIndex], Ident, OldValue);
   if LineIndex > -1 then
     FSectionContents[SectionIndex].Strings[LineIndex] := Ident + '=' + Value
   else

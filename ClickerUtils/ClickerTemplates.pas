@@ -493,7 +493,7 @@ end;
 procedure LoadAction_FindSubControl(Ini: TClkIniReadonlyFile; SectionIndex: Integer; var AFindSubControlOptions: TClkFindSubControlOptions);
 var
   i, n: Integer;
-  Indent: string;
+  Ident: string;
 begin
   AFindSubControlOptions.MatchCriteria.WillMatchBitmapText := Ini.ReadBool(SectionIndex, 'MatchCriteria.WillMatchBitmapText', False);
   AFindSubControlOptions.MatchCriteria.WillMatchBitmapFiles := Ini.ReadBool(SectionIndex, 'MatchCriteria.WillMatchBitmapFiles', False);
@@ -511,28 +511,28 @@ begin
 
     for i := 0 to n - 1 do
     begin
-      Indent := 'MatchBitmapText[' + IntToStr(i) + '].';
+      Ident := 'MatchBitmapText[' + IntToStr(i) + '].';
 
-      AFindSubControlOptions.MatchBitmapText[i].ForegroundColor := Ini.ReadString(SectionIndex, Indent + 'ForegroundColor', '000000');
-      AFindSubControlOptions.MatchBitmapText[i].BackgroundColor := Ini.ReadString(SectionIndex, Indent + 'BackgroundColor', 'FFFFFF');
-      AFindSubControlOptions.MatchBitmapText[i].FontName := Ini.ReadString(SectionIndex, Indent + 'FontName', 'Tahoma');
-      AFindSubControlOptions.MatchBitmapText[i].FontSize := Ini.ReadInteger(SectionIndex, Indent + 'FontSize', 8);
-      AFindSubControlOptions.MatchBitmapText[i].Bold := Ini.ReadBool(SectionIndex, Indent + 'Bold', False);
-      AFindSubControlOptions.MatchBitmapText[i].Italic := Ini.ReadBool(SectionIndex, Indent + 'Italic', False);
-      AFindSubControlOptions.MatchBitmapText[i].Underline := Ini.ReadBool(SectionIndex, Indent + 'Underline', False);
-      AFindSubControlOptions.MatchBitmapText[i].StrikeOut := Ini.ReadBool(SectionIndex, Indent + 'StrikeOut', False);
-      AFindSubControlOptions.MatchBitmapText[i].FontQuality := TFontQuality(Min(Ini.ReadInteger(SectionIndex, Indent + 'FontQuality', Integer(fqDefault)), Integer(High(TFontQuality))));
-      AFindSubControlOptions.MatchBitmapText[i].FontQualityUsesReplacement := Ini.ReadBool(SectionIndex, Indent + 'FontQualityUsesReplacement', False);
-      AFindSubControlOptions.MatchBitmapText[i].FontQualityReplacement := Ini.ReadString(SectionIndex, Indent + 'FontQualityReplacement', '$MyFontQuality$');
-      AFindSubControlOptions.MatchBitmapText[i].CharSet := Ini.ReadInteger(SectionIndex, Indent + 'CharSet', 1);
-      AFindSubControlOptions.MatchBitmapText[i].Orientation := Ini.ReadInteger(SectionIndex, Indent + 'Orientation', 0);
-      AFindSubControlOptions.MatchBitmapText[i].Pitch := TFontPitch(Min(Ini.ReadInteger(SectionIndex, Indent + 'Pitch', Integer(fpDefault)), Integer(High(TFontPitch))));
-      AFindSubControlOptions.MatchBitmapText[i].ProfileName := Ini.ReadString(SectionIndex, Indent + 'ProfileName', 'Default');
-      AFindSubControlOptions.MatchBitmapText[i].CropLeft := Ini.ReadString(SectionIndex, Indent + 'CropLeft', '0');
-      AFindSubControlOptions.MatchBitmapText[i].CropTop := Ini.ReadString(SectionIndex, Indent + 'CropTop', '0');
-      AFindSubControlOptions.MatchBitmapText[i].CropRight := Ini.ReadString(SectionIndex, Indent + 'CropRight', '0');
-      AFindSubControlOptions.MatchBitmapText[i].CropBottom := Ini.ReadString(SectionIndex, Indent + 'CropBottom', '0');
-      AFindSubControlOptions.MatchBitmapText[i].IgnoreBackgroundColor := Ini.ReadBool(SectionIndex, Indent + 'IgnoreBackgroundColor', False);
+      AFindSubControlOptions.MatchBitmapText[i].ForegroundColor := Ini.ReadString(SectionIndex, Ident + 'ForegroundColor', '000000');
+      AFindSubControlOptions.MatchBitmapText[i].BackgroundColor := Ini.ReadString(SectionIndex, Ident + 'BackgroundColor', 'FFFFFF');
+      AFindSubControlOptions.MatchBitmapText[i].FontName := Ini.ReadString(SectionIndex, Ident + 'FontName', 'Tahoma');
+      AFindSubControlOptions.MatchBitmapText[i].FontSize := Ini.ReadInteger(SectionIndex, Ident + 'FontSize', 8);
+      AFindSubControlOptions.MatchBitmapText[i].Bold := Ini.ReadBool(SectionIndex, Ident + 'Bold', False);
+      AFindSubControlOptions.MatchBitmapText[i].Italic := Ini.ReadBool(SectionIndex, Ident + 'Italic', False);
+      AFindSubControlOptions.MatchBitmapText[i].Underline := Ini.ReadBool(SectionIndex, Ident + 'Underline', False);
+      AFindSubControlOptions.MatchBitmapText[i].StrikeOut := Ini.ReadBool(SectionIndex, Ident + 'StrikeOut', False);
+      AFindSubControlOptions.MatchBitmapText[i].FontQuality := TFontQuality(Min(Ini.ReadInteger(SectionIndex, Ident + 'FontQuality', Integer(fqDefault)), Integer(High(TFontQuality))));
+      AFindSubControlOptions.MatchBitmapText[i].FontQualityUsesReplacement := Ini.ReadBool(SectionIndex, Ident + 'FontQualityUsesReplacement', False);
+      AFindSubControlOptions.MatchBitmapText[i].FontQualityReplacement := Ini.ReadString(SectionIndex, Ident + 'FontQualityReplacement', '$MyFontQuality$');
+      AFindSubControlOptions.MatchBitmapText[i].CharSet := Ini.ReadInteger(SectionIndex, Ident + 'CharSet', 1);
+      AFindSubControlOptions.MatchBitmapText[i].Orientation := Ini.ReadInteger(SectionIndex, Ident + 'Orientation', 0);
+      AFindSubControlOptions.MatchBitmapText[i].Pitch := TFontPitch(Min(Ini.ReadInteger(SectionIndex, Ident + 'Pitch', Integer(fpDefault)), Integer(High(TFontPitch))));
+      AFindSubControlOptions.MatchBitmapText[i].ProfileName := Ini.ReadString(SectionIndex, Ident + 'ProfileName', 'Default');
+      AFindSubControlOptions.MatchBitmapText[i].CropLeft := Ini.ReadString(SectionIndex, Ident + 'CropLeft', '0');
+      AFindSubControlOptions.MatchBitmapText[i].CropTop := Ini.ReadString(SectionIndex, Ident + 'CropTop', '0');
+      AFindSubControlOptions.MatchBitmapText[i].CropRight := Ini.ReadString(SectionIndex, Ident + 'CropRight', '0');
+      AFindSubControlOptions.MatchBitmapText[i].CropBottom := Ini.ReadString(SectionIndex, Ident + 'CropBottom', '0');
+      AFindSubControlOptions.MatchBitmapText[i].IgnoreBackgroundColor := Ini.ReadBool(SectionIndex, Ident + 'IgnoreBackgroundColor', False);
     end;
   end
   else
@@ -1057,7 +1057,7 @@ end;
 procedure AddAction_FindSubControlToStringList(var AActionFindSubControlOptions: TClkFindSubControlOptions; AStringList: TStringList);
 var
   i: Integer;
-  Indent: string;
+  Ident: string;
 begin
   AStringList.Add('MatchCriteria.WillMatchBitmapText=' + IntToStr(Ord(AActionFindSubControlOptions.MatchCriteria.WillMatchBitmapText)));
   AStringList.Add('MatchCriteria.WillMatchBitmapFiles=' + IntToStr(Ord(AActionFindSubControlOptions.MatchCriteria.WillMatchBitmapFiles)));
@@ -1071,28 +1071,28 @@ begin
 
   for i := 0 to Length(AActionFindSubControlOptions.MatchBitmapText) - 1 do
   begin
-    Indent := 'MatchBitmapText[' + IntToStr(i) + '].';
+    Ident := 'MatchBitmapText[' + IntToStr(i) + '].';
 
-    AStringList.Add(Indent + 'ForegroundColor=' + AActionFindSubControlOptions.MatchBitmapText[i].ForegroundColor);
-    AStringList.Add(Indent + 'BackgroundColor=' + AActionFindSubControlOptions.MatchBitmapText[i].BackgroundColor);
-    AStringList.Add(Indent + 'FontName=' + AActionFindSubControlOptions.MatchBitmapText[i].FontName);
-    AStringList.Add(Indent + 'FontSize=' + IntToStr(AActionFindSubControlOptions.MatchBitmapText[i].FontSize));
-    AStringList.Add(Indent + 'Bold=' + IntToStr(Ord(AActionFindSubControlOptions.MatchBitmapText[i].Bold)));
-    AStringList.Add(Indent + 'Italic=' + IntToStr(Ord(AActionFindSubControlOptions.MatchBitmapText[i].Italic)));
-    AStringList.Add(Indent + 'Underline=' + IntToStr(Ord(AActionFindSubControlOptions.MatchBitmapText[i].Underline)));
-    AStringList.Add(Indent + 'StrikeOut=' + IntToStr(Ord(AActionFindSubControlOptions.MatchBitmapText[i].StrikeOut)));
-    AStringList.Add(Indent + 'FontQuality=' + IntToStr(Ord(AActionFindSubControlOptions.MatchBitmapText[i].FontQuality)));
-    AStringList.Add(Indent + 'FontQualityUsesReplacement=' + IntToStr(Ord(AActionFindSubControlOptions.MatchBitmapText[i].FontQualityUsesReplacement)));
-    AStringList.Add(Indent + 'FontQualityReplacement=' + AActionFindSubControlOptions.MatchBitmapText[i].FontQualityReplacement);
-    AStringList.Add(Indent + 'CharSet=' + IntToStr(AActionFindSubControlOptions.MatchBitmapText[i].CharSet));
-    AStringList.Add(Indent + 'Orientation=' + IntToStr(AActionFindSubControlOptions.MatchBitmapText[i].Orientation));
-    AStringList.Add(Indent + 'Pitch=' + IntToStr(Ord(AActionFindSubControlOptions.MatchBitmapText[i].Pitch)));
-    AStringList.Add(Indent + 'ProfileName=' + AActionFindSubControlOptions.MatchBitmapText[i].ProfileName);
-    AStringList.Add(Indent + 'CropLeft=' + AActionFindSubControlOptions.MatchBitmapText[i].CropLeft);
-    AStringList.Add(Indent + 'CropTop=' + AActionFindSubControlOptions.MatchBitmapText[i].CropTop);
-    AStringList.Add(Indent + 'CropRight=' + AActionFindSubControlOptions.MatchBitmapText[i].CropRight);
-    AStringList.Add(Indent + 'CropBottom=' + AActionFindSubControlOptions.MatchBitmapText[i].CropBottom);
-    AStringList.Add(Indent + 'IgnoreBackgroundColor=' + IntToStr(Ord(AActionFindSubControlOptions.MatchBitmapText[i].IgnoreBackgroundColor)));
+    AStringList.Add(Ident + 'ForegroundColor=' + AActionFindSubControlOptions.MatchBitmapText[i].ForegroundColor);
+    AStringList.Add(Ident + 'BackgroundColor=' + AActionFindSubControlOptions.MatchBitmapText[i].BackgroundColor);
+    AStringList.Add(Ident + 'FontName=' + AActionFindSubControlOptions.MatchBitmapText[i].FontName);
+    AStringList.Add(Ident + 'FontSize=' + IntToStr(AActionFindSubControlOptions.MatchBitmapText[i].FontSize));
+    AStringList.Add(Ident + 'Bold=' + IntToStr(Ord(AActionFindSubControlOptions.MatchBitmapText[i].Bold)));
+    AStringList.Add(Ident + 'Italic=' + IntToStr(Ord(AActionFindSubControlOptions.MatchBitmapText[i].Italic)));
+    AStringList.Add(Ident + 'Underline=' + IntToStr(Ord(AActionFindSubControlOptions.MatchBitmapText[i].Underline)));
+    AStringList.Add(Ident + 'StrikeOut=' + IntToStr(Ord(AActionFindSubControlOptions.MatchBitmapText[i].StrikeOut)));
+    AStringList.Add(Ident + 'FontQuality=' + IntToStr(Ord(AActionFindSubControlOptions.MatchBitmapText[i].FontQuality)));
+    AStringList.Add(Ident + 'FontQualityUsesReplacement=' + IntToStr(Ord(AActionFindSubControlOptions.MatchBitmapText[i].FontQualityUsesReplacement)));
+    AStringList.Add(Ident + 'FontQualityReplacement=' + AActionFindSubControlOptions.MatchBitmapText[i].FontQualityReplacement);
+    AStringList.Add(Ident + 'CharSet=' + IntToStr(AActionFindSubControlOptions.MatchBitmapText[i].CharSet));
+    AStringList.Add(Ident + 'Orientation=' + IntToStr(AActionFindSubControlOptions.MatchBitmapText[i].Orientation));
+    AStringList.Add(Ident + 'Pitch=' + IntToStr(Ord(AActionFindSubControlOptions.MatchBitmapText[i].Pitch)));
+    AStringList.Add(Ident + 'ProfileName=' + AActionFindSubControlOptions.MatchBitmapText[i].ProfileName);
+    AStringList.Add(Ident + 'CropLeft=' + AActionFindSubControlOptions.MatchBitmapText[i].CropLeft);
+    AStringList.Add(Ident + 'CropTop=' + AActionFindSubControlOptions.MatchBitmapText[i].CropTop);
+    AStringList.Add(Ident + 'CropRight=' + AActionFindSubControlOptions.MatchBitmapText[i].CropRight);
+    AStringList.Add(Ident + 'CropBottom=' + AActionFindSubControlOptions.MatchBitmapText[i].CropBottom);
+    AStringList.Add(Ident + 'IgnoreBackgroundColor=' + IntToStr(Ord(AActionFindSubControlOptions.MatchBitmapText[i].IgnoreBackgroundColor)));
   end;
 
   AStringList.Add('MatchBitmapFiles=' + FastReplace_ReturnTo45(AActionFindSubControlOptions.MatchBitmapFiles));

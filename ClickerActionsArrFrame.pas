@@ -743,8 +743,8 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
 
-    procedure LoadSettings(AIni: TMemIniFile; ASection, AIndentSuffix: string);
-    procedure SaveSettings(AIni: TMemIniFile; ASection, AIndentSuffix: string);
+    procedure LoadSettings(AIni: TMemIniFile; ASection, AIdentSuffix: string);
+    procedure SaveSettings(AIni: TMemIniFile; ASection, AIdentSuffix: string);
 
     function CreateIniReadonlyFileFromInMemFileSystem(AFnm: string; AInMemFileSystem: TInMemFileSystem): TClkIniReadonlyFile;
     procedure LoadTemplate(Fnm: string; AFileLocation: TFileLocation = flDisk; AInMemFileSystem: TInMemFileSystem = nil);
@@ -1482,19 +1482,19 @@ begin
 end;
 
 
-procedure TfrClickerActionsArr.LoadSettings(AIni: TMemIniFile; ASection, AIndentSuffix: string);
+procedure TfrClickerActionsArr.LoadSettings(AIni: TMemIniFile; ASection, AIdentSuffix: string);
 var
   i: Integer;
-  Indent: string;
+  Ident: string;
   SplitterTop, SplitterLeft: Integer;
 begin
   for i := 0 to vstActions.Header.Columns.Count - 1 do
   begin
-    Indent := 'ColWidth_' + IntToStr(i) + '.' + AIndentSuffix;
-    vstActions.Header.Columns.Items[i].Width := AIni.ReadInteger(ASection, Indent, vstActions.Header.Columns.Items[i].Width);
+    Ident := 'ColWidth_' + IntToStr(i) + '.' + AIdentSuffix;
+    vstActions.Header.Columns.Items[i].Width := AIni.ReadInteger(ASection, Ident, vstActions.Header.Columns.Items[i].Width);
   end;
 
-  frClickerActions.PageControlActionExecution.TabPosition := TTabPosition(AIni.ReadInteger(ASection, 'ActionsEditorTabPosition.' + AIndentSuffix, Ord(frClickerActions.PageControlActionExecution.TabPosition)));
+  frClickerActions.PageControlActionExecution.TabPosition := TTabPosition(AIni.ReadInteger(ASection, 'ActionsEditorTabPosition.' + AIdentSuffix, Ord(frClickerActions.PageControlActionExecution.TabPosition)));
   frClickerActions.PageControlActionExecution.Show; //this is required to properly set vst size
 
   case frClickerActions.PageControlActionExecution.TabPosition of
@@ -1504,61 +1504,61 @@ begin
     tpRight:  frClickerActions.MenuItem_TabPosRight.Checked := True;
   end;
 
-  SplitterTop := AIni.ReadInteger(ASection, 'VertSplitterTop.' + AIndentSuffix, pnlVertSplitter.Top);
+  SplitterTop := AIni.ReadInteger(ASection, 'VertSplitterTop.' + AIdentSuffix, pnlVertSplitter.Top);
   ResizeFrameSectionsBySplitter(SplitterTop);
 
-  SplitterLeft := AIni.ReadInteger(ASection, 'HorizSplitterLeft.' + AIndentSuffix, frClickerActions.pnlHorizSplitter.Left);
+  SplitterLeft := AIni.ReadInteger(ASection, 'HorizSplitterLeft.' + AIdentSuffix, frClickerActions.pnlHorizSplitter.Left);
   frClickerActions.ResizeFrameSectionsBySplitter(SplitterLeft);
 
-  SplitterLeft := AIni.ReadInteger(ASection, 'HorizSplitterLeftResults.' + AIndentSuffix, frClickerActions.pnlHorizSplitterResults.Left);
+  SplitterLeft := AIni.ReadInteger(ASection, 'HorizSplitterLeftResults.' + AIdentSuffix, frClickerActions.pnlHorizSplitterResults.Left);
   frClickerActions.ResizeFrameSectionsBySplitterResults(SplitterLeft);
 
-  frClickerActions.vstVariables.Header.Columns.Items[0].Width := AIni.ReadInteger(ASection, 'Variables_0.' + AIndentSuffix, frClickerActions.vstVariables.Header.Columns.Items[0].Width);
-  frClickerActions.vstVariables.Header.Columns.Items[1].Width := AIni.ReadInteger(ASection, 'Variables_1.' + AIndentSuffix, frClickerActions.vstVariables.Header.Columns.Items[1].Width);
+  frClickerActions.vstVariables.Header.Columns.Items[0].Width := AIni.ReadInteger(ASection, 'Variables_0.' + AIdentSuffix, frClickerActions.vstVariables.Header.Columns.Items[0].Width);
+  frClickerActions.vstVariables.Header.Columns.Items[1].Width := AIni.ReadInteger(ASection, 'Variables_1.' + AIdentSuffix, frClickerActions.vstVariables.Header.Columns.Items[1].Width);
 
   for i := 0 to 20 - 1 do
   begin
-    Indent := 'ActionCond.ColWidth_' + IntToStr(i) + '.' + AIndentSuffix;
-    frClickerActions.frClickerConditionEditor.ColumnWidths[i] := AIni.ReadInteger(ASection, Indent, 100);
+    Ident := 'ActionCond.ColWidth_' + IntToStr(i) + '.' + AIdentSuffix;
+    frClickerActions.frClickerConditionEditor.ColumnWidths[i] := AIni.ReadInteger(ASection, Ident, 100);
   end;
 
-  frClickerActions.frClickerFindControl.EditorTabsVisibleByActionType := AIni.ReadBool(ASection, 'EditorTabsVisibleByActionType.' + AIndentSuffix, frClickerActions.frClickerFindControl.EditorTabsVisibleByActionType);
+  frClickerActions.frClickerFindControl.EditorTabsVisibleByActionType := AIni.ReadBool(ASection, 'EditorTabsVisibleByActionType.' + AIdentSuffix, frClickerActions.frClickerFindControl.EditorTabsVisibleByActionType);
 
-  MenuItem_IncludeActionCalls_Pascal.Checked := AIni.ReadBool(ASection, 'IncludeActionCalls_Pascal.' + AIndentSuffix, MenuItem_IncludeActionCalls_Pascal.Checked);
-  MenuItem_IncludeActionCalls_Python.Checked := AIni.ReadBool(ASection, 'IncludeActionCalls_Python.' + AIndentSuffix, MenuItem_IncludeActionCalls_Python.Checked);
+  MenuItem_IncludeActionCalls_Pascal.Checked := AIni.ReadBool(ASection, 'IncludeActionCalls_Pascal.' + AIdentSuffix, MenuItem_IncludeActionCalls_Pascal.Checked);
+  MenuItem_IncludeActionCalls_Python.Checked := AIni.ReadBool(ASection, 'IncludeActionCalls_Python.' + AIdentSuffix, MenuItem_IncludeActionCalls_Python.Checked);
 end;
 
 
-procedure TfrClickerActionsArr.SaveSettings(AIni: TMemIniFile; ASection, AIndentSuffix: string);
+procedure TfrClickerActionsArr.SaveSettings(AIni: TMemIniFile; ASection, AIdentSuffix: string);
 var
   i: Integer;
-  Indent: string;
+  Ident: string;
 begin
   for i := 0 to vstActions.Header.Columns.Count - 1 do
   begin
-    Indent := 'ColWidth_' + IntToStr(i) + '.' + AIndentSuffix;
-    AIni.WriteInteger(ASection, Indent, vstActions.Header.Columns.Items[i].Width);
+    Ident := 'ColWidth_' + IntToStr(i) + '.' + AIdentSuffix;
+    AIni.WriteInteger(ASection, Ident, vstActions.Header.Columns.Items[i].Width);
   end;
 
-  AIni.WriteInteger(ASection, 'ActionsEditorTabPosition.' + AIndentSuffix, Ord(frClickerActions.PageControlActionExecution.TabPosition));
+  AIni.WriteInteger(ASection, 'ActionsEditorTabPosition.' + AIdentSuffix, Ord(frClickerActions.PageControlActionExecution.TabPosition));
 
-  AIni.WriteInteger(ASection, 'VertSplitterTop.' + AIndentSuffix, pnlVertSplitter.Top);
-  AIni.WriteInteger(ASection, 'HorizSplitterLeft.' + AIndentSuffix, frClickerActions.pnlHorizSplitter.Left);
-  AIni.WriteInteger(ASection, 'HorizSplitterLeftResults.' + AIndentSuffix, frClickerActions.pnlHorizSplitterResults.Left);
+  AIni.WriteInteger(ASection, 'VertSplitterTop.' + AIdentSuffix, pnlVertSplitter.Top);
+  AIni.WriteInteger(ASection, 'HorizSplitterLeft.' + AIdentSuffix, frClickerActions.pnlHorizSplitter.Left);
+  AIni.WriteInteger(ASection, 'HorizSplitterLeftResults.' + AIdentSuffix, frClickerActions.pnlHorizSplitterResults.Left);
 
-  AIni.WriteInteger(ASection, 'Variables_0.' + AIndentSuffix, frClickerActions.vstVariables.Header.Columns.Items[0].Width);
-  AIni.WriteInteger(ASection, 'Variables_1.' + AIndentSuffix, frClickerActions.vstVariables.Header.Columns.Items[1].Width);
+  AIni.WriteInteger(ASection, 'Variables_0.' + AIdentSuffix, frClickerActions.vstVariables.Header.Columns.Items[0].Width);
+  AIni.WriteInteger(ASection, 'Variables_1.' + AIdentSuffix, frClickerActions.vstVariables.Header.Columns.Items[1].Width);
 
   for i := 0 to 20 - 1 do
   begin
-    Indent := 'ActionCond.ColWidth_' + IntToStr(i) + '.' + AIndentSuffix;
-    AIni.WriteInteger(ASection, Indent, frClickerActions.frClickerConditionEditor.ColumnWidths[i]);
+    Ident := 'ActionCond.ColWidth_' + IntToStr(i) + '.' + AIdentSuffix;
+    AIni.WriteInteger(ASection, Ident, frClickerActions.frClickerConditionEditor.ColumnWidths[i]);
   end;
 
-  AIni.WriteBool(ASection, 'EditorTabsVisibleByActionType.' + AIndentSuffix, frClickerActions.frClickerFindControl.EditorTabsVisibleByActionType);
+  AIni.WriteBool(ASection, 'EditorTabsVisibleByActionType.' + AIdentSuffix, frClickerActions.frClickerFindControl.EditorTabsVisibleByActionType);
 
-  AIni.WriteBool(ASection, 'IncludeActionCalls_Pascal.' + AIndentSuffix, MenuItem_IncludeActionCalls_Pascal.Checked);
-  AIni.WriteBool(ASection, 'IncludeActionCalls_Python.' + AIndentSuffix, MenuItem_IncludeActionCalls_Python.Checked);
+  AIni.WriteBool(ASection, 'IncludeActionCalls_Pascal.' + AIdentSuffix, MenuItem_IncludeActionCalls_Pascal.Checked);
+  AIni.WriteBool(ASection, 'IncludeActionCalls_Python.' + AIdentSuffix, MenuItem_IncludeActionCalls_Python.Checked);
 end;
 
 
@@ -5089,7 +5089,7 @@ var
   tp: TPoint;
   ColumnOffSet: Integer;
   MinImgX, MaxImgX: Integer;
-  NodeLevel, Indent: Integer;
+  NodeLevel, Ident: Integer;
   CurrentAction: PClkActionRec;
   NodeData: PActionNodeRec;
 begin
@@ -5100,15 +5100,15 @@ begin
 
   ColumnOffSet := vstActions.Header.Columns.Items[6].Width * Ord(coVisible in vstActions.Header.Columns.Items[6].Options);
 
-  Indent := vstActions.Indent;
-  MinImgX := 24 + ColumnOffSet + Indent;
-  MaxImgX := 48 + ColumnOffSet + Indent;
+  Ident := vstActions.Ident;
+  MinImgX := 24 + ColumnOffSet + Ident;
+  MaxImgX := 48 + ColumnOffSet + Ident;
   NodeLevel := 0;
   if FActionsHitInfo.HitNode <> nil then
   begin
     NodeLevel := vstActions.GetNodeLevel(FActionsHitInfo.HitNode);
-    Inc(MinImgX, NodeLevel * Indent);
-    Inc(MaxImgX, NodeLevel * Indent);
+    Inc(MinImgX, NodeLevel * Ident);
+    Inc(MaxImgX, NodeLevel * Ident);
   end;
 
   if (FActionsHitInfo.HitColumn = 0) and (FActionsHitInfo.HitNode <> nil) and (X >= MinImgX) and (X < MaxImgX) then
@@ -5250,7 +5250,7 @@ procedure TfrClickerActionsArr.vstActionsMouseMove(Sender: TObject; Shift: TShif
 //  tp: TPoint;
 //  ColumnOffSet: Integer;
 //  MinImgX, MaxImgX: Integer;
-//  NodeLevel, Indent: Integer;
+//  NodeLevel, Ident: Integer;
 //  CurrentAction: PClkActionRec;
 //  NodeData: PActionNodeRec;
 //  TempActionsHitInfo: THitInfo;
@@ -5259,15 +5259,15 @@ begin
   //
   //ColumnOffSet := vstActions.Header.Columns.Items[6].Width * Ord(coVisible in vstActions.Header.Columns.Items[6].Options);
   //
-  //Indent := vstActions.Indent;
-  //MinImgX := 24 + ColumnOffSet + Indent;
-  //MaxImgX := 48 + ColumnOffSet + Indent;
+  //Ident := vstActions.Ident;
+  //MinImgX := 24 + ColumnOffSet + Ident;
+  //MaxImgX := 48 + ColumnOffSet + Ident;
   //NodeLevel := 0;
   //if TempActionsHitInfo.HitNode <> nil then
   //begin
   //  NodeLevel := vstActions.GetNodeLevel(TempActionsHitInfo.HitNode);
-  //  Inc(MinImgX, NodeLevel * Indent);
-  //  Inc(MaxImgX, NodeLevel * Indent);
+  //  Inc(MinImgX, NodeLevel * Ident);
+  //  Inc(MaxImgX, NodeLevel * Ident);
   //end;
   //
   //if (TempActionsHitInfo.HitColumn = 0) and (TempActionsHitInfo.HitNode <> nil) and {(X >= MinImgX) and} (X > MaxImgX) then
