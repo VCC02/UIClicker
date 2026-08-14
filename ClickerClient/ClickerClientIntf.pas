@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2024 VCC
+    Copyright (C) 2026 VCC
     creation date: 18 Dec 2024
     initial release date: 18 Dec 2024
 
@@ -123,6 +123,17 @@ type
                                              AUseServerDebugging: Boolean;
                                              AResultStr: Pointer): LongInt; cdecl;
 
+  TExecuteLoadSetVarFromIniFileAction_Proc = function(AActionName: Pointer;
+                                                      AActionTimeout: LongInt; //ms
+                                                      ALoadSetVarFromIniFileOptions: PClkLoadSetVarFromIniFileOptionsAPI;
+                                                      AUseServerDebugging: Boolean;
+                                                      AResultStr: Pointer): LongInt; cdecl;
+
+  TExecuteSaveSetVarToIniFileAction_Proc = function(AActionName: Pointer;
+                                                    AActionTimeout: LongInt; //ms
+                                                    ASaveSetVarToIniFileOptions: PClkSaveSetVarToIniFileOptionsAPI;
+                                                    AUseServerDebugging: Boolean;
+                                                    AResultStr: Pointer): LongInt; cdecl;
 
 
   TAddClickActionToTemplate_Proc = function(ATemplateFileName: Pointer;
@@ -230,6 +241,22 @@ type
                                                    AEditTemplateOptions: PClkEditTemplateOptionsAPI
                                                   ): LongInt; cdecl;
 
+  TAddLoadSetVarFromIniFileActionToTemplate_Proc = function(ATemplateFileName: Pointer;
+                                                            AActionName: Pointer;
+                                                            AActionTimeout: LongInt; //ms
+                                                            AActionEnabled: Boolean;
+                                                            AActionCondition: Pointer;
+                                                            ALoadSetVarFromIniFileOptions: PClkLoadSetVarFromIniFileOptionsAPI
+                                                           ): LongInt; cdecl;
+
+  TAddSaveSetVarToIniFileActionToTemplate_Proc = function(ATemplateFileName: Pointer;
+                                                          AActionName: Pointer;
+                                                          AActionTimeout: LongInt; //ms
+                                                          AActionEnabled: Boolean;
+                                                          AActionCondition: Pointer;
+                                                          ASaveSetVarToIniFileOptions: PClkSaveSetVarToIniFileOptionsAPI
+                                                         ): LongInt; cdecl;
+
 var
   InitClickerClient: TInitClickerClient_Proc;
   DoneClickerClient: TDoneClickerClient_Proc;
@@ -259,6 +286,8 @@ var
   ExecuteSaveSetVarToFileAction: TExecuteSaveSetVarToFileAction_Proc;
   ExecutePluginAction: TExecutePluginAction_Proc;
   ExecuteEditTemplateAction: TExecuteEditTemplateAction_Proc;
+  ExecuteLoadSetVarFromIniFileAction: TExecuteLoadSetVarFromIniFileAction_Proc;
+  ExecuteSaveSetVarToIniFileAction: TExecuteSaveSetVarToIniFileAction_Proc;
 
 
   AddClickActionToTemplate: TAddClickActionToTemplate_Proc;
@@ -274,6 +303,8 @@ var
   AddSaveSetVarToFileActionToTemplate: TAddSaveSetVarToFileActionToTemplate_Proc;
   AddPluginActionToTemplate: TAddPluginActionToTemplate_Proc;
   AddEditTemplateActionToTemplate: TAddEditTemplateActionToTemplate_Proc;
+  AddLoadSetVarFromIniFileActionToTemplate: TAddLoadSetVarFromIniFileActionToTemplate_Proc;
+  AddSaveSetVarToIniFileActionToTemplate: TAddSaveSetVarToIniFileActionToTemplate_Proc;
 
 
 function LoadClickerClient(ADllPath: string): Boolean; //returns True if successful
@@ -319,6 +350,8 @@ begin
   @ExecuteSaveSetVarToFileAction := GetProcAddress(FClickerClientDllHandle, 'ExecuteSaveSetVarToFileAction');
   @ExecutePluginAction := GetProcAddress(FClickerClientDllHandle, 'ExecutePluginAction');
   @ExecuteEditTemplateAction := GetProcAddress(FClickerClientDllHandle, 'ExecuteEditTemplateAction');
+  @ExecuteLoadSetVarFromIniFileAction := GetProcAddress(FClickerClientDllHandle, 'ExecuteLoadSetVarFromIniFileAction');
+  @ExecuteSaveSetVarToIniFileAction := GetProcAddress(FClickerClientDllHandle, 'ExecuteSaveSetVarToIniFileAction');
 
   @AddClickActionToTemplate := GetProcAddress(FClickerClientDllHandle, 'AddClickActionToTemplate');
   @AddExecAppActionToTemplate := GetProcAddress(FClickerClientDllHandle, 'AddExecAppActionToTemplate');
@@ -333,6 +366,8 @@ begin
   @AddSaveSetVarToFileActionToTemplate := GetProcAddress(FClickerClientDllHandle, 'AddSaveSetVarToFileActionToTemplate');
   @AddPluginActionToTemplate := GetProcAddress(FClickerClientDllHandle, 'AddPluginActionToTemplate');
   @AddEditTemplateActionToTemplate := GetProcAddress(FClickerClientDllHandle, 'AddEditTemplateActionToTemplate');
+  @AddLoadSetVarFromIniFileActionToTemplate := GetProcAddress(FClickerClientDllHandle, 'AddLoadSetVarFromIniFileActionToTemplate');
+  @AddSaveSetVarToIniFileActionToTemplate := GetProcAddress(FClickerClientDllHandle, 'AddSaveSetVarToIniFileActionToTemplate');
 end;
 
 

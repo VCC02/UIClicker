@@ -3323,6 +3323,20 @@ begin
     Exit;
   end;
 
+  if ASyncObj.FCmd = '/' + CRECmd_ExecuteLoadSetVarFromIniFileAction then
+  begin
+    Result := CREResp_RemoteExecResponseVar + '=' + IntToStr(Ord(frClickerActionsArrMain.ActionExecution.ExecuteLoadSetVarFromIniFileActionAsString(ASyncObj.FParams)));
+    Result := Result + #8#7 + GetClkVariables87;
+    Exit;
+  end;
+
+  if ASyncObj.FCmd = '/' + CRECmd_ExecuteSaveSetVarToIniFileAction then
+  begin
+    Result := CREResp_RemoteExecResponseVar + '=' + IntToStr(Ord(frClickerActionsArrMain.ActionExecution.ExecuteSaveSetVarToIniFileActionAsString(ASyncObj.FParams)));
+    Result := Result + #8#7 + GetClkVariables87;
+    Exit;
+  end;
+
   if ASyncObj.FCmd = '/' + CRECmd_GetTextRenderingPage then   //requires StackLevel=0 param
   begin
     AddToLog('GetTextRenderingPage...');

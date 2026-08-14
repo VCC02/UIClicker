@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2025 VCC
+    Copyright (C) 2026 VCC
     creation date: Jul 2022
     initial release date: 26 Jul 2022
 
@@ -753,6 +753,62 @@ begin
 end;
 
 
+function AddLoadSetVarFromIniFileActionToTemplate(ATemplateFileName: Pointer;
+
+                                                  AActionName: Pointer;
+                                                  AActionTimeout: LongInt; //ms
+                                                  AActionEnabled: Boolean;
+                                                  AActionCondition: Pointer;
+
+                                                  ALoadSetVarFromIniFileOptions: PClkLoadSetVarFromIniFileOptionsAPI
+
+                                                 ): LongInt; cdecl;
+var
+  TemplateFileName: string;
+  TempAction: TClkActionRec;
+begin
+  if InMemFS = nil then
+  begin
+    Result := -1;
+    Exit;
+  end;
+
+  SetBasicActionOptions(ATemplateFileName, AActionName, acLoadSetVarFromIniFile, AActionTimeout, AActionEnabled, AActionCondition, TempAction, TemplateFileName);
+  GetLoadSetVarFromIniFileOptionsFromAPI(ALoadSetVarFromIniFileOptions, TempAction);
+
+  AddActionToTemplate(TemplateFileName, TempAction);
+  Result := 0;
+end;
+
+
+function AddSaveSetVarToIniFileActionToTemplate(ATemplateFileName: Pointer;
+
+                                                AActionName: Pointer;
+                                                AActionTimeout: LongInt; //ms
+                                                AActionEnabled: Boolean;
+                                                AActionCondition: Pointer;
+
+                                                ASaveSetVarToIniFileOptions: PClkSaveSetVarToIniFileOptionsAPI
+
+                                               ): LongInt; cdecl;
+var
+  TemplateFileName: string;
+  TempAction: TClkActionRec;
+begin
+  if InMemFS = nil then
+  begin
+    Result := -1;
+    Exit;
+  end;
+
+  SetBasicActionOptions(ATemplateFileName, AActionName, acSaveSetVarToIniFile, AActionTimeout, AActionEnabled, AActionCondition, TempAction, TemplateFileName);
+  GetSaveSetVarToIniFileOptionsFromAPI(ASaveSetVarToIniFileOptions, TempAction);
+
+  AddActionToTemplate(TemplateFileName, TempAction);
+  Result := 0;
+end;
+
+
 function AddFontProfileToFindSubControlActionInTemplate(ATemplateFileName: string; ActionIndex: Integer; AFindSubControlMatchBitmapText: TClkFindControlMatchBitmapText): Integer;
 var
   ClkActions: TClkActionsRecArr;
@@ -1351,6 +1407,40 @@ begin
 end;
 
 
+function ExecuteLoadSetVarFromIniFileAction(AActionName: Pointer;
+                                            AActionTimeout: LongInt; //ms
+                                            ALoadSetVarFromIniFileOptions: PClkLoadSetVarFromIniFileOptionsAPI;
+                                            AUseServerDebugging: Boolean;
+                                            AResultStr: Pointer): LongInt; cdecl;
+var
+  TempClkAction: TClkActionRec;
+  Res: string;
+  ActionName: string;
+begin
+  GetLoadSetVarFromIniFileOptionsFromAPI(ALoadSetVarFromIniFileOptions, TempClkAction);
+  SetPointedContentToString(@string(PWideChar(AActionName))[1], ActionName);
+  Res := ClickerActionsClient.ExecuteLoadSetVarFromIniFileAction(FRemoteAddress, TempClkAction.LoadSetVarFromIniFileOptions, True, AUseServerDebugging);
+  Result := SetPointedContentFromString(Res, AResultStr);
+end;
+
+
+function ExecuteSaveSetVarToIniFileAction(AActionName: Pointer;
+                                          AActionTimeout: LongInt; //ms
+                                          ASaveSetVarToIniFileOptions: PClkSaveSetVarToIniFileOptionsAPI;
+                                          AUseServerDebugging: Boolean;
+                                          AResultStr: Pointer): LongInt; cdecl;
+var
+  TempClkAction: TClkActionRec;
+  Res: string;
+  ActionName: string;
+begin
+  GetSaveSetVarToIniFileOptionsFromAPI(ASaveSetVarToIniFileOptions, TempClkAction);
+  SetPointedContentToString(@string(PWideChar(AActionName))[1], ActionName);
+  Res := ClickerActionsClient.ExecuteSaveSetVarToIniFileAction(FRemoteAddress, TempClkAction.SaveSetVarToIniFileOptions, True, AUseServerDebugging);
+  Result := SetPointedContentFromString(Res, AResultStr);
+end;
+
+
 exports
   InitClickerClient,
   DoneClickerClient,
@@ -1378,6 +1468,8 @@ exports
   AddSaveSetVarToFileActionToTemplate,
   AddPluginActionToTemplate,
   AddEditTemplateActionToTemplate,
+  AddLoadSetVarFromIniFileActionToTemplate,
+  AddSaveSetVarToIniFileActionToTemplate,
 
   AddFontProfileToFindSubControlAction,
 
@@ -1411,7 +1503,9 @@ exports
   ExecuteLoadSetVarFromFileAction,
   ExecuteSaveSetVarToFileAction,
   ExecutePluginAction,
-  ExecuteEditTemplateAction;
+  ExecuteEditTemplateAction,
+  ExecuteLoadSetVarFromIniFileAction,
+  ExecuteSaveSetVarToIniFileAction;
 begin
   ClientLastError := '';
   frmClickerClientLogging := nil;
