@@ -1352,6 +1352,7 @@ begin
   FActionExecution.OnGetSetVarActionByName := HandleOnGetSetVarActionByName;
   FActionExecution.OnUpdateSetVarActionByName := HandleOnUpdateSetVarActionByName;
   FActionExecution.OnTClkIniReadonlyFileCreate := HandleOnTClkIniReadonlyFileCreate;
+  FActionExecution.OnTClkIniFileCreate := HandleOnTClkIniFileCreate;
   FActionExecution.OnSaveStringListToFile := HandleOnSaveStringListToFile;
   FActionExecution.OnBackupVars := HandleOnBackupVars;
   FActionExecution.OnExecuteActionByName := HandleOnExecuteActionByName;

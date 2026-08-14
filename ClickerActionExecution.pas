@@ -128,6 +128,7 @@ type
     FOnGetSetVarActionByName: TOnGetSetVarActionByName;
     FOnUpdateSetVarActionByName: TOnUpdateSetVarActionByName;
     FOnTClkIniReadonlyFileCreate: TOnTClkIniReadonlyFileCreate;
+    FOnTClkIniFileCreate: TOnTClkIniFileCreate;
     FOnSaveStringListToFile: TOnSaveTemplateToFile;
     FOnBackupVars: TOnBackupVars;
     //FOnRestoreVars: TOnRestoreVars;
@@ -216,6 +217,7 @@ type
     function DoOnGetSetVarActionByName(var AClkSetVarOptions: TClkSetVarOptions; AActionName: string): Boolean;
     function DoOnUpdateSetVarActionByName(AClkSetVarOptions: TClkSetVarOptions; AActionName: string): Boolean;
     function DoOnTClkIniReadonlyFileCreate(AFileName: string): TClkIniReadonlyFile;
+    function DoOnTClkIniFileCreate(AFileName: string): TClkIniFile;
     procedure DoOnSaveStringListToFile(AStringList: TStringList; const AFileName: string);
     procedure DoOnBackupVars(AAllVars: TStringList);
     procedure DoOnSaveFileToExtRenderingInMemFS(AFileName: string; AContent: Pointer; AFileSize: Int64);
@@ -333,6 +335,7 @@ type
     property OnGetSetVarActionByName: TOnGetSetVarActionByName write FOnGetSetVarActionByName;
     property OnUpdateSetVarActionByName: TOnUpdateSetVarActionByName write FOnUpdateSetVarActionByName;
     property OnTClkIniReadonlyFileCreate: TOnTClkIniReadonlyFileCreate write FOnTClkIniReadonlyFileCreate;
+    property OnTClkIniFileCreate: TOnTClkIniFileCreate write FOnTClkIniFileCreate;
     property OnSaveStringListToFile: TOnSaveTemplateToFile write FOnSaveStringListToFile;
     property OnBackupVars: TOnBackupVars write FOnBackupVars;
     //property OnRestoreVars: TOnRestoreVars write FOnRestoreVars;
@@ -429,6 +432,7 @@ begin
   FOnGetSetVarActionByName := nil;
   FOnUpdateSetVarActionByName := nil;
   FOnTClkIniReadonlyFileCreate := nil;
+  FOnTClkIniFileCreate := nil;
   FOnSaveStringListToFile := nil;
   FOnBackupVars := nil;
   //FOnRestoreVars := nil;
@@ -989,6 +993,15 @@ begin
     raise Exception.Create('OnTClkIniReadonlyFileCreate not assigned.')
   else
     Result := FOnTClkIniReadonlyFileCreate(AFileName);
+end;
+
+
+function TActionExecution.DoOnTClkIniFileCreate(AFileName: string): TClkIniFile;
+begin
+  if not Assigned(FOnTClkIniFileCreate) then
+    raise Exception.Create('OnTClkIniFileCreate not assigned.')
+  else
+    Result := FOnTClkIniFileCreate(AFileName);
 end;
 
 
@@ -5721,11 +5734,11 @@ begin
 
   AddToLog('SaveSetVarToIniFile action: to be implemented.');
 
-  //Ini := DoOnTClkIniReadonlyFileCreate(ALoadSetVarFromIniFileOptions.FileName);
+  Ini := DoOnTClkIniFileCreate(ASaveSetVarToIniFileOptions.FileName);
   //LoadedListOfVarNames := TStringList.Create;
   //LoadedListOfVarValues := TStringList.Create;
   //VarNamesToBeUpdated := TStringList.Create;
-  //try
+  try
   //  LoadedListOfVarNames.LineBreak := #13#10;
   //  LoadedListOfVarValues.LineBreak := #13#10;
   //  VarNamesToBeUpdated.LineBreak := #13#10;
@@ -5792,13 +5805,13 @@ begin
   //    SetActionVarValue(CurrentVarName, CurrentVarValue);
   //  end;
   //
-  //  Result := True;
-  //finally
-  //  Ini.Free;
+    Result := True;
+  finally
+    Ini.Free;
   //  LoadedListOfVarNames.Free;
   //  LoadedListOfVarValues.Free;
   //  VarNamesToBeUpdated.Free;
-  //end;
+  end;
 end;
 
 
