@@ -1316,7 +1316,7 @@ procedure AddAction_LoadSetVarFromIniFileToStringList(var AActionLoadSetVarFromI
 begin
   AStringList.Add('FileName=' + AActionLoadSetVarFromIniFileOptions.FileName);
   AStringList.Add('SetVarActionName=' + AActionLoadSetVarFromIniFileOptions.SetVarActionName);
-  AStringList.Add('SetVarActionName=' + IntToStr(Ord(AActionLoadSetVarFromIniFileOptions.VarListFormat)));
+  AStringList.Add('VarListFormat=' + IntToStr(Ord(AActionLoadSetVarFromIniFileOptions.VarListFormat)));
   AStringList.Add('SectionName=' + AActionLoadSetVarFromIniFileOptions.SectionName);
   AStringList.Add('RemoveDollarFromVarName=' + IntToStr(Ord(AActionLoadSetVarFromIniFileOptions.RemoveDollarFromVarName)));
   AStringList.Add('IdentPattern=' + AActionLoadSetVarFromIniFileOptions.IdentPattern);
@@ -1330,7 +1330,7 @@ procedure AddAction_SaveSetVarToIniFileToStringList(var AActionSaveSetVarToIniFi
 begin
   AStringList.Add('FileName=' + AActionSaveSetVarToIniFileOptions.FileName);
   AStringList.Add('SetVarActionName=' + AActionSaveSetVarToIniFileOptions.SetVarActionName);
-  AStringList.Add('SetVarActionName=' + IntToStr(Ord(AActionSaveSetVarToIniFileOptions.VarListFormat)));
+  AStringList.Add('VarListFormat=' + IntToStr(Ord(AActionSaveSetVarToIniFileOptions.VarListFormat)));
   AStringList.Add('SectionName=' + AActionSaveSetVarToIniFileOptions.SectionName);
   AStringList.Add('RemoveDollarFromVarName=' + IntToStr(Ord(AActionSaveSetVarToIniFileOptions.RemoveDollarFromVarName)));
   AStringList.Add('IdentPattern=' + AActionSaveSetVarToIniFileOptions.IdentPattern);

@@ -4657,33 +4657,34 @@ end;
 function GetPropertyHint_LoadSetVarFromIniFile_SetVarActionName: string;
 begin
   Result := 'Name of the SetVar action, in the current action template, used for specifying the vars to be loaded from file.' + #13#10 +
-            'When VarListFormat is set to vlfSetVarAction, only the left column of SetVar action is required.' + #13#10 +
+            'When VarListFormat is set to vlfSetVarAction, only the left column of SetVar action is required, otherwise, none of it.' + #13#10 +
             'Usually, the SetVar action should be disabled, to avoid being executed automatically.';
 end;
 
 
 function VarListFormat_Common1: string;
 begin
-  Result := 'When set to vlfSetVarAction, the SetVar action is a fixed list of variables.' + #13#10 +
-            'Every variable name is used as an ident (key) in the ini file.' + #13#10 +
-            'If the ident is not found in the ini file, the variable is set to empty string.' + #13#10 +
+  Result := 'When set to vlfSetVarAction:' + #13#10 +
+            ' - The SetVar action is a fixed list of variables.' + #13#10 +
+            ' - Every variable name is used as an ident (key) in the ini file.' + #13#10 +
+            ' - If the ident is not found in the ini file, the variable is set to empty string.' + #13#10 +
             #13#10 +
-            'When set to vlfPattern, the items in the ini file depend on a counter (e.g. Item_0, Item_1, Item2... Item_n-1).' + #13#10 +
-            'In this case, the list of variables from the SetVar action is overwritten with the number of items, specified by a counter (the Counter property).' + #13#10;
+            'When set to vlfPattern:' + #13#10 +
+            ' - The SetVar action is ignored.' + #13#10 +
+            ' - The items in the ini file depend on a counter (e.g. Item_0, Item_1, Item2... Item_n-1).' + #13#10;
 end;
 
 
 function VarListFormat_Common2: string;
 begin
-  Result := 'The ident names, used for the ini file, are not read from the SetVar action, but instead they are obtained from the IdentPattern property.';
-
+  Result := ' - The ident names, used for the ini file, are not read from the SetVar action, but instead they are obtained from the IdentPattern property.';
 end;
 
 
 function GetPropertyHint_LoadSetVarFromIniFile_VarListFormat: string;
 begin
   Result := VarListFormat_Common1 +
-            'If the SetVar action has less items than the value specified by the counter variable, then new items are added to the action.' + #13#10 +
+            ' - If the CounterType property is set to ctIdent, the number of items is read from the ini file, otherwise from the Counter property.' + #13#10 +
             VarListFormat_Common2;
 end;
 
@@ -4744,17 +4745,14 @@ end;
 
 function GetPropertyHint_SaveSetVarToIniFile_SetVarActionName: string;
 begin
-  Result := 'Name of the SetVar action, in the current action template, used for specifying the vars to be saved to file.' + #13#10 +
-            'When VarListFormat is set to vlfSetVarAction, only the left column of SetVar action is required.' + #13#10 +
-            'The saved values come from the right column. Empty strings are converted to 0 (also implemented for False), if set to Integer or Boolean.' + #13#10 +
-            'Usually, the SetVar action should be disabled, to avoid being executed automatically.';
+  Result := StringReplace(GetPropertyHint_LoadSetVarFromIniFile_SetVarActionName, 'loaded from file', 'saved to file', [rfReplaceAll]);
 end;
 
 
 function GetPropertyHint_SaveSetVarToIniFile_VarListFormat: string;
 begin
   Result := VarListFormat_Common1 +
-            'If the SetVar action has less items than the value specified by the counter variable, then new items are added to the ini file.' + #13#10 +
+            ' - The number of items (the Counter property) is updated to the ini file, if the CounterType is set to ctVar, otherwise it remains the same.' + #13#10 +
             VarListFormat_Common2;
 end;
 
@@ -4773,7 +4771,9 @@ end;
 
 function GetPropertyHint_SaveSetVarToIniFile_IdentPattern: string;
 begin
-  Result := StringReplace(GetPropertyHint_LoadSetVarFromIniFile_IdentPattern, 'LoadSetVarFromIniFile', 'SaveSetVarToIniFile', [rfReplaceAll]);
+  Result := StringReplace(GetPropertyHint_LoadSetVarFromIniFile_IdentPattern, 'LoadSetVarFromIniFile', 'SaveSetVarToIniFile', [rfReplaceAll]) + #13#10 +
+            'The value of IdentPattern is used to generate the variable names, which are looked-up in the list of variables.' + #13#10 +
+            'IdentPattern doesn''t have to contain ''$'' before and after its value, regardless of the RemoveDollarFromVarName property value.';
 end;
 
 
@@ -4785,7 +4785,7 @@ end;
 
 function GetPropertyHint_SaveSetVarToIniFile_CounterType: string;
 begin
-  Result := StringReplace(GetPropertyHint_LoadSetVarFromIniFile_CounterType, 'is read from', 'is updated to', [rfReplaceAll]);
+  Result := StringReplace(GetPropertyHint_LoadSetVarFromIniFile_CounterType, '(e.g. $n$).', '(e.g. $n$), and it is updated to the ini file.', [rfReplaceAll]);
 end;
 
 

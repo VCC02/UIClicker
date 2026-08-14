@@ -493,7 +493,7 @@ type
 
   TClkLoadSetVarFromIniFileOptions = record
     FileName: string;                 //Path to the ini file.
-    SetVarActionName: string;         //Name of the SetVar action, which is used as source or destination for var names and values.
+    SetVarActionName: string;         //Name of the SetVar action, which is used as source of var names.
     VarListFormat: TVarListFormat;    //When set to vlfSetVarAction, the SetVar action is a fixed list of vars. When set to vlfPattern, the items in the ini file depend on a counter (e.g. Item_0, Item_1, Item2... Item_n-1).
     SectionName: string;              //Name of the section in the ini file, where the keys/values are found.
     RemoveDollarFromVarName: Boolean; //The var names in a SetVar action, are expected to be of the $VarName$ format. Ini files don't usually have idents (keys) starting and ending in '$'.

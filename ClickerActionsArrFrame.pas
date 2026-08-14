@@ -4775,6 +4775,8 @@ begin
           acSaveSetVarToFile: CellText := CurrentAction.SaveSetVarToFileOptions.SetVarActionName + '  from "' + CurrentAction.SaveSetVarToFileOptions.FileName + '"';
           acPlugin: CellText := CurrentAction.PluginOptions.FileName;
           acEditTemplate: CellText := CEditTemplateOperationStr[CurrentAction.EditTemplateOptions.Operation] + ' (' + CEditTemplateWhichTemplateStr[CurrentAction.EditTemplateOptions.WhichTemplate] + ')';
+          acLoadSetVarFromIniFile: CellText := CurrentAction.LoadSetVarFromIniFileOptions.SetVarActionName + '  from "' + CurrentAction.LoadSetVarFromIniFileOptions.FileName + '"';
+          acSaveSetVarToIniFile: CellText := CurrentAction.SaveSetVarToIniFileOptions.SetVarActionName + '  from "' + CurrentAction.SaveSetVarToIniFileOptions.FileName + '"';
         end;
       end;
       5: CellText := StringReplace(CurrentAction.FindSubControlOptions.MatchBitmapFiles, #13#10, ', ', [rfReplaceAll]);

@@ -5645,9 +5645,30 @@ var
   CurrentVarName, CurrentVarNameNoDollar, CurrentVarValue: string;
 begin
   Result := False;
-  if not DoOnGetSetVarActionByName(SetVarActionToBeUpdated, ALoadSetVarFromIniFileOptions.SetVarActionName) then
+
+  if ALoadSetVarFromIniFileOptions.FileName = '' then
   begin
-    SetActionVarValue('$ExecAction_Err$', 'Error: SetVar action not found when executing LoadSetVarFromIniFile: "' + ALoadSetVarFromIniFileOptions.SetVarActionName + '".');
+    SetActionVarValue('$ExecAction_Err$', 'Error: FileName is empty when executing LoadSetVarFromIniFile.');
+    Exit;
+  end;
+
+  if ALoadSetVarFromIniFileOptions.VarListFormat = vlfSetVarAction then
+    if not DoOnGetSetVarActionByName(SetVarActionToBeUpdated, ALoadSetVarFromIniFileOptions.SetVarActionName) then
+    begin
+      SetActionVarValue('$ExecAction_Err$', 'Error: SetVar action not found when executing LoadSetVarFromIniFile: "' + ALoadSetVarFromIniFileOptions.SetVarActionName + '".');
+      Exit;
+    end;
+
+  if ALoadSetVarFromIniFileOptions.VarListFormat = vlfPattern then
+    if ALoadSetVarFromIniFileOptions.IdentPattern = '' then
+    begin
+      SetActionVarValue('$ExecAction_Err$', 'Error: IdentPattern is empty when executing LoadSetVarFromIniFile.');
+      Exit;
+    end;
+
+  if ALoadSetVarFromIniFileOptions.SectionName = '' then
+  begin
+    SetActionVarValue('$ExecAction_Err$', 'Error: SectionName is empty when executing LoadSetVarFromIniFile.');
     Exit;
   end;
 
@@ -5678,10 +5699,7 @@ begin
       case ALoadSetVarFromIniFileOptions.VarListFormat of
         vlfSetVarAction:
         begin
-          if i < VarNamesToBeUpdated.Count then   //this allow n to be less than VarNamesToBeUpdated.Count
-            CurrentVarName := VarNamesToBeUpdated.Strings[i]
-          else
-            CurrentVarName := 'Item_' + IntToStr(i); //a default
+          CurrentVarName := VarNamesToBeUpdated.Strings[i];
 
           CurrentVarNameNoDollar := CurrentVarName;
           if ALoadSetVarFromIniFileOptions.RemoveDollarFromVarName then
@@ -5720,97 +5738,122 @@ end;
 function TActionExecution.ExecuteSaveSetVarToIniFileAction(var ASaveSetVarToIniFileOptions: TClkSaveSetVarToIniFileOptions): Boolean;
 var
   Ini: TClkIniFile;
-  LoadedListOfVarNames, LoadedListOfVarValues, VarNamesToBeUpdated: TStringList;
+  ListOfVarValues: TStringList;
+  VarName, CounterIdent: string;
+  Bkp, VarNamesToBeSaved: TStringList;
   i, n: Integer;
-  SetVarActionToBeUpdated: TClkSetVarOptions;
+  SetVarActionToBeSaved: TClkSetVarOptions;
   CurrentVarName, CurrentVarNameNoDollar, CurrentVarValue: string;
 begin
   Result := False;
-  if not DoOnGetSetVarActionByName(SetVarActionToBeUpdated, ASaveSetVarToIniFileOptions.SetVarActionName) then
+
+  if ASaveSetVarToIniFileOptions.FileName = '' then
   begin
-    SetActionVarValue('$ExecAction_Err$', 'Error: SetVar action not found when executing SaveSetVarToIniFile: "' + ASaveSetVarToIniFileOptions.SetVarActionName + '".');
+    SetActionVarValue('$ExecAction_Err$', 'Error: FileName is empty when executing SaveSetVarToIniFile.');
     Exit;
   end;
 
-  AddToLog('SaveSetVarToIniFile action: to be implemented.');
+  if ASaveSetVarToIniFileOptions.VarListFormat = vlfSetVarAction then
+    if not DoOnGetSetVarActionByName(SetVarActionToBeSaved, ASaveSetVarToIniFileOptions.SetVarActionName) then
+    begin
+      SetActionVarValue('$ExecAction_Err$', 'Error: SetVar action not found when executing SaveSetVarToIniFile: "' + ASaveSetVarToIniFileOptions.SetVarActionName + '".');
+      Exit;
+    end;
 
-  Ini := DoOnTClkIniFileCreate(ASaveSetVarToIniFileOptions.FileName);
-  //LoadedListOfVarNames := TStringList.Create;
-  //LoadedListOfVarValues := TStringList.Create;
-  //VarNamesToBeUpdated := TStringList.Create;
+  if ASaveSetVarToIniFileOptions.VarListFormat = vlfPattern then
+    if ASaveSetVarToIniFileOptions.IdentPattern = '' then
+    begin
+      SetActionVarValue('$ExecAction_Err$', 'Error: IdentPattern is empty when executing SaveSetVarToIniFile.');
+      Exit;
+    end;
+
+  if ASaveSetVarToIniFileOptions.SectionName = '' then
+  begin
+    SetActionVarValue('$ExecAction_Err$', 'Error: SectionName is empty when executing SaveSetVarToIniFile.');
+    Exit;
+  end;
+
+  Ini := DoOnTClkIniFileCreate(EvaluateReplacements(ASaveSetVarToIniFileOptions.FileName));
+  Bkp := TStringList.Create;
+  VarNamesToBeSaved := TStringList.Create;
+  ListOfVarValues := TStringList.Create;
   try
-  //  LoadedListOfVarNames.LineBreak := #13#10;
-  //  LoadedListOfVarValues.LineBreak := #13#10;
-  //  VarNamesToBeUpdated.LineBreak := #13#10;
-  //  LoadedListOfVarNames.Text := FastReplace_45ToReturn(Ini.ReadString('Vars', 'ListOfVarNames', ''));
-  //  LoadedListOfVarValues.Text := FastReplace_45ToReturn(Ini.ReadString('Vars', 'ListOfVarValues', ''));
-  //
-  //  if LoadedListOfVarNames.Count <> LoadedListOfVarValues.Count then
-  //  begin
-  //    SetActionVarValue('$ExecAction_Err$', 'Error: Loaded SetVar action has a different number of var names than var values: ' + IntToStr(LoadedListOfVarNames.Count) + ' vs. ' + IntToStr(LoadedListOfVarValues.Count));
-  //    Exit;
-  //  end;
-  //
-  //  VarNamesToBeUpdated.Text := SetVarActionToBeUpdated.ListOfVarNames;
-  //
-  //  case ALoadSetVarFromIniFileOptions.VarListFormat of
-  //    vlfSetVarAction:
-  //      n := VarNamesToBeUpdated.Count;
-  //
-  //    vlfPattern:
-  //    begin
-  //      case ALoadSetVarFromIniFileOptions.CounterType of
-  //        ctVar:
-  //          n := StrToIntDef(GetActionVarValue(ALoadSetVarFromIniFileOptions.Counter), 0);
-  //
-  //        ctIdent:
-  //          n := Ini.ReadInteger(ALoadSetVarFromIniFileOptions.SectionName, ALoadSetVarFromIniFileOptions.Counter, 0);
-  //      end;
-  //    end;
-  //  end;
-  //
-  //  for i := 0 to n - 1 do
-  //  begin
-  //    case ALoadSetVarFromIniFileOptions.VarListFormat of
-  //      vlfSetVarAction:
-  //      begin
-  //        if i < VarNamesToBeUpdated.Count then   //this allow n to be less than VarNamesToBeUpdated.Count
-  //          CurrentVarName := VarNamesToBeUpdated.Strings[i]
-  //        else
-  //          CurrentVarName := 'Item_' + IntToStr(i); //a default
-  //
-  //        CurrentVarNameNoDollar := CurrentVarName;
-  //        if ALoadSetVarFromIniFileOptions.RemoveDollarFromVarName then
-  //          CurrentVarNameNoDollar := StringReplace(CurrentVarName, '$', '', [rfReplaceAll]);
-  //      end;
-  //
-  //      vlfPattern:
-  //      begin
-  //        CurrentVarName := StringReplace(ALoadSetVarFromIniFileOptions.IdentPattern, '<counter>', IntToStr(i), [rfReplaceAll]);
-  //        CurrentVarNameNoDollar := CurrentVarName;
-  //      end;
-  //    end;  //VarListFormat
-  //
-  //    case ALoadSetVarFromIniFileOptions.VarDataType of
-  //      vdtString:
-  //        CurrentVarValue := Ini.ReadString(ALoadSetVarFromIniFileOptions.SectionName, CurrentVarNameNoDollar, '');
-  //
-  //      vdtInteger:
-  //        CurrentVarValue := IntToStr(Ini.ReadInteger(ALoadSetVarFromIniFileOptions.SectionName, CurrentVarNameNoDollar, 0));
-  //
-  //      vdtBoolean:
-  //        CurrentVarValue := BoolToStr(Ini.ReadBool(ALoadSetVarFromIniFileOptions.SectionName, CurrentVarNameNoDollar, False), True);
-  //    end;
-  //
-  //    SetActionVarValue(CurrentVarName, CurrentVarValue);
-  //  end;
-  //
+    Bkp.LineBreak := #13#10;
+    VarNamesToBeSaved.LineBreak := #13#10;
+    ListOfVarValues.LineBreak := #13#10;
+
+    DoOnBackupVars(Bkp);
+
+    case ASaveSetVarToIniFileOptions.VarListFormat of
+      vlfSetVarAction:
+      begin
+        VarNamesToBeSaved.Text := SetVarActionToBeSaved.ListOfVarNames;
+        for i := 0 to VarNamesToBeSaved.Count - 1 do
+        begin
+          VarName := VarNamesToBeSaved.Strings[i];
+          ListOfVarValues.Add(Bkp.Values[VarName]);
+        end;
+
+        n := VarNamesToBeSaved.Count;
+      end;
+
+      vlfPattern:
+      begin
+        CounterIdent := StringReplace(ASaveSetVarToIniFileOptions.Counter, '$', '', [rfReplaceAll]);
+        case ASaveSetVarToIniFileOptions.CounterType of
+          ctVar:  //the counter is updated to ini
+          begin
+            n := StrToIntDef(GetActionVarValue(ASaveSetVarToIniFileOptions.Counter), 0);
+            Ini.WriteInteger(ASaveSetVarToIniFileOptions.SectionName, CounterIdent, n);
+          end;
+
+          ctIdent: //the counter stays the same
+            n := Ini.ReadInteger(ASaveSetVarToIniFileOptions.SectionName, CounterIdent, 0);  //yes, n is read from the ini file, i.e. it remains the same
+        end;
+      end;
+    end;
+
+    for i := 0 to n - 1 do
+    begin
+      case ASaveSetVarToIniFileOptions.VarListFormat of
+        vlfSetVarAction:
+          CurrentVarName := VarNamesToBeSaved.Strings[i];
+
+        vlfPattern:
+          CurrentVarName := StringReplace(ASaveSetVarToIniFileOptions.IdentPattern, '<counter>', IntToStr(i), [rfReplaceAll]);
+      end;  //VarListFormat
+
+      CurrentVarNameNoDollar := CurrentVarName;
+      if ASaveSetVarToIniFileOptions.RemoveDollarFromVarName then
+        CurrentVarNameNoDollar := StringReplace(CurrentVarName, '$', '', [rfReplaceAll]);
+
+      if CurrentVarName <> '' then
+        if (CurrentVarName[1] <> '$') and (CurrentVarName[Length(CurrentVarName)] <> '$') then
+          CurrentVarName := '$' + CurrentVarName + '$'; //add '$' to var name, to be able to loop it up
+
+      CurrentVarValue := Bkp.Values[CurrentVarName];
+
+      case ASaveSetVarToIniFileOptions.VarDataType of
+        vdtString:
+          Ini.WriteString(ASaveSetVarToIniFileOptions.SectionName, CurrentVarNameNoDollar, CurrentVarValue);
+
+        vdtInteger:
+          Ini.WriteInteger(ASaveSetVarToIniFileOptions.SectionName, CurrentVarNameNoDollar, StrToIntDef(CurrentVarValue, 0));
+
+        vdtBoolean:
+          Ini.WriteBool(ASaveSetVarToIniFileOptions.SectionName, CurrentVarNameNoDollar, CurrentVarValue = 'True');
+      end;
+    end; //for
+
+    Ini.UpdateStream; //Call both UpdateStream and UpdateFile, then let the Ini object decide how to update the file, based on how it was created.
+    Ini.UpdateFile;
+
     Result := True;
   finally
     Ini.Free;
-  //  LoadedListOfVarNames.Free;
-  //  LoadedListOfVarValues.Free;
-  //  VarNamesToBeUpdated.Free;
+    VarNamesToBeSaved.Free;
+    ListOfVarValues.Free;
+    Bkp.Free;
   end;
 end;
 
