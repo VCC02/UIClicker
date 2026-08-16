@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2025 VCC
+    Copyright (C) 2026 VCC
     creation date: Aug 2022
     initial release date: 25 Aug 2022
 
@@ -143,6 +143,10 @@ type
     procedure Test_ExecuteEditTemplate_UpdateAction_Plugin_HappyFlow;
     procedure Test_ExecuteEditTemplate_UpdateAction_TwoUpdatedPlugins_HappyFlow;
     procedure Test_ExecuteEditTemplate_UpdateAction_EditTemplate_HappyFlow;
+    procedure Test_ExecuteEditTemplate_UpdateAction_LoadSetVarFromIniFile_HappyFlow;
+    procedure Test_ExecuteEditTemplate_UpdateAction_SaveSetVarToIniFile_HappyFlow;
+
+    procedure Test_ExecuteLoadSetVarFromIniFile_HappyFlow_SetVar;
 
     procedure AfterAll_AlwaysExecute;
   end;
@@ -1868,6 +1872,67 @@ begin
   ExpectedValues[2] := '$PathToTemplate$';
   ExpectedValues[3] := 'Act';
   Test_ExecuteEditTemplate(acEditTemplate, etoUpdateAction, ExpectedValues);
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecuteEditTemplate_UpdateAction_LoadSetVarFromIniFile_HappyFlow;
+var
+  ExpectedValues: TStringArray;
+begin
+  CreateTestTemplateWithAllActionsInMem(CTestEditTemplateFileName);
+  SendTemplateFromInMemToServer(CTestEditTemplateFileName);
+
+  SetLength(ExpectedValues, 2);
+  ExpectedValues[0] := '$PathToFile$';
+  ExpectedValues[1] := '$Action$';
+  Test_ExecuteEditTemplate(acLoadSetVarFromIniFile, etoUpdateAction, ExpectedValues);
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecuteEditTemplate_UpdateAction_SaveSetVarToIniFile_HappyFlow;
+var
+  ExpectedValues: TStringArray;
+begin
+  CreateTestTemplateWithAllActionsInMem(CTestEditTemplateFileName);
+  SendTemplateFromInMemToServer(CTestEditTemplateFileName);
+
+  SetLength(ExpectedValues, 2);
+  ExpectedValues[0] := '$PathToAnotherFile$';
+  ExpectedValues[1] := '$AnotherAction$';
+  Test_ExecuteEditTemplate(acSaveSetVarToIniFile, etoUpdateAction, ExpectedValues);
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecuteLoadSetVarFromIniFile_HappyFlow_SetVar;
+const
+  //CVarName = '$MyVar$';
+  //CVarInitValue = 'init';
+  //CVarNewValue = 'some value';
+  CTemplateFnm = 'LoadSetVarFromIniFile_SetVar.clktmpl';
+  CSetVarActionName = 'MySetVar';
+  CLoadSetVarFromIniFileActionName = 'MyLoadSetVarFromIniFile';
+var
+  SetVarOptions: TClkSetVarOptions;
+  LoadSetVarFromIniFileOptions: TClkLoadSetVarFromIniFileOptions;
+  Response: string;
+begin
+  //Expect(SetVariable(TestServerAddress, CVarName, CVarInitValue, 0)).ToBe(CREResp_Done);
+  //Expect(GetVarValueFromServer(CVarName)).ToBe(CVarInitValue);
+  GenerateSetVarOptions_ThreeVarsForIni(SetVarOptions);
+  AddSetVarActionToTemplate(CTemplateFnm, CSetVarActionName, 0, False, '', SetVarOptions, InMemFS);
+
+  GetDefaultPropertyValues_LoadSetVarFromIniFile(LoadSetVarFromIniFileOptions);
+  LoadSetVarFromIniFileOptions.FileName := 'non-existent';
+  LoadSetVarFromIniFileOptions.SetVarActionName := CSetVarActionName;
+  LoadSetVarFromIniFileOptions.SectionName := 'Settings';
+  AddLoadSetVarFromIniFileActionToTemplate(CTemplateFnm, CLoadSetVarFromIniFileActionName, 0, True, '', LoadSetVarFromIniFileOptions, InMemFS);
+
+  SendTemplateFromInMemToServerThenLoad(CTemplateFnm);
+  //Response := FastReplace_87ToReturn(Send_ExecuteCommandAtIndex_ToServer(1, 0));
+  Response := FastReplace_87ToReturn(ExecuteLoadSetVarFromIniFileAction(TestServerAddress, LoadSetVarFromIniFileOptions));
+
+  ExpectSuccessfulAction(Response);
+  //Expect(GetVarValueFromServer(CVarName)).ToBe(CVarNewValue);
 end;
 
 

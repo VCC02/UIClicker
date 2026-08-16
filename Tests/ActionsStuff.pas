@@ -187,6 +187,29 @@ function AddEditTemplateActionToTemplate(ATemplateFileName: string;
                                          ): LongInt;
 
 
+function AddLoadSetVarFromIniFileActionToTemplate(ATemplateFileName: string;
+
+                                                  AActionName: string;
+                                                  AActionTimeout: LongInt; //ms
+                                                  AActionEnabled: Boolean;
+                                                  AActionCondition: string;
+
+                                                  ALoadSetVarFromIniFileOptions: TClkLoadSetVarFromIniFileOptions;
+                                                  AInMemFS: TInMemFileSystem
+                                                  ): LongInt;
+
+function AddSaveSetVarToIniFileActionToTemplate(ATemplateFileName: string;
+
+                                                AActionName: string;
+                                                AActionTimeout: LongInt; //ms
+                                                AActionEnabled: Boolean;
+                                                AActionCondition: string;
+
+                                                ASaveSetVarToIniFileOptions: TClkSaveSetVarToIniFileOptions;
+                                                AInMemFS: TInMemFileSystem
+                                                ): LongInt;
+
+
 procedure GetDefaultClickOptions(var AClickOptions: TClkClickOptions);
 procedure GenerateClickOptionsForLeaveMouse(X, Y: Integer; var AClickOptions: TClkClickOptions);
 procedure GenerateClickOptionsForMouseWheel(AWheelType: TMouseWheelType; AAmount: Integer; var AClickOptions: TClkClickOptions);
@@ -204,6 +227,7 @@ procedure GenerateSetControlTextOptions(var ASetTextOptions: TClkSetTextOptions;
 procedure GenerateCallTemplateOptions(var ACallTemplateOptions: TClkCallTemplateOptions; ATemplateFileName, AListOfVarsAndValues: string; AEvalBefore: Boolean);
 procedure GenerateSleepOptions(var ASleepOptions: TClkSleepOptions; AValue: string);
 procedure GenerateSetVarOptions_OneVar(var ASetVarOptions: TClkSetVarOptions; AVar, AValue: string; AEvalBefore: Boolean = False);
+procedure GenerateSetVarOptions_ThreeVarsForIni(var ASetVarOptions: TClkSetVarOptions);
 procedure GenerateWindowOperationsOptionsForFindControlSetup(var AWindowOperationsOptions: TClkWindowOperationsOptions; AOperation: TWindowOperation);
 procedure GenerateWindowOperationsOptionsForMouseWheelSetup(var AWindowOperationsOptions: TClkWindowOperationsOptions; AOperation: TWindowOperation);
 procedure GeneratePluginOptions(var APluginOptions: TClkPluginOptions; AFileName, AListOfPropertiesAndValues: string);
@@ -586,6 +610,52 @@ begin
 
   //EditTemplate stuff
   TempAction.EditTemplateOptions := AEditTemplateOptions;
+
+  AddActionToTemplate(ATemplateFileName, TempAction, AInMemFS);
+  Result := 0;
+end;
+
+
+function AddLoadSetVarFromIniFileActionToTemplate(ATemplateFileName: string;
+
+                                                  AActionName: string;
+                                                  AActionTimeout: LongInt; //ms
+                                                  AActionEnabled: Boolean;
+                                                  AActionCondition: string;
+
+                                                  ALoadSetVarFromIniFileOptions: TClkLoadSetVarFromIniFileOptions;
+                                                  AInMemFS: TInMemFileSystem
+                                                  ): LongInt;
+var
+  TempAction: TClkActionRec;
+begin
+  SetBasicActionOptions(ATemplateFileName, AActionName, acLoadSetVarFromIniFile, AActionTimeout, AActionEnabled, AActionCondition, TempAction);
+
+  //LoadSetVarFromIniFile stuff
+  TempAction.LoadSetVarFromIniFileOptions := ALoadSetVarFromIniFileOptions;
+
+  AddActionToTemplate(ATemplateFileName, TempAction, AInMemFS);
+  Result := 0;
+end;
+
+
+function AddSaveSetVarToIniFileActionToTemplate(ATemplateFileName: string;
+
+                                                AActionName: string;
+                                                AActionTimeout: LongInt; //ms
+                                                AActionEnabled: Boolean;
+                                                AActionCondition: string;
+
+                                                ASaveSetVarToIniFileOptions: TClkSaveSetVarToIniFileOptions;
+                                                AInMemFS: TInMemFileSystem
+                                                ): LongInt;
+var
+  TempAction: TClkActionRec;
+begin
+  SetBasicActionOptions(ATemplateFileName, AActionName, acSaveSetVarToIniFile, AActionTimeout, AActionEnabled, AActionCondition, TempAction);
+
+  //SaveSetVarToIniFile stuff
+  TempAction.SaveSetVarToIniFileOptions := ASaveSetVarToIniFileOptions;
 
   AddActionToTemplate(ATemplateFileName, TempAction, AInMemFS);
   Result := 0;
@@ -1081,6 +1151,15 @@ begin
 end;
 
 
+procedure GenerateSetVarOptions_ThreeVarsForIni(var ASetVarOptions: TClkSetVarOptions);
+begin
+  ASetVarOptions.ListOfVarNames := '$One$' + #13#10 + '$Two$' + #13#10 + '$Three$' + #13#10;
+  ASetVarOptions.ListOfVarValues := #13#10#13#10#13#10;
+  ASetVarOptions.ListOfVarEvalBefore := '000';
+  ASetVarOptions.FailOnException := False;
+end;
+
+
 procedure GenerateWindowOperationsOptionsForFindControlSetup(var AWindowOperationsOptions: TClkWindowOperationsOptions; AOperation: TWindowOperation);
 begin
   GetDefaultPropertyValues_WindowOperations(AWindowOperationsOptions);
@@ -1437,6 +1516,46 @@ begin
                                                       'WhichTemplate' + #13#10 +
                                                       'TemplateFileName' + #13#10 +
                                                       'EditedActionName';
+    end;
+
+    acLoadSetVarFromIniFile:
+    begin
+      GetDefaultPropertyValues_LoadSetVarFromIniFile(TempAction.LoadSetVarFromIniFileOptions);
+
+      if AOperation in [etoNewAction, etoUpdateAction] then
+      begin
+        TempAction.LoadSetVarFromIniFileOptions.FileName := '$PathToFile$';
+        TempAction.LoadSetVarFromIniFileOptions.SetVarActionName := '$Action$';
+      end
+      else
+      begin                                                             //use some predefined values, which should be returned in case of error
+        TempAction.LoadSetVarFromIniFileOptions.FileName := '$NoPath$';
+        TempAction.LoadSetVarFromIniFileOptions.SetVarActionName := 'Empty';
+      end;
+
+      AEditTemplateOptions.ListOfEditedProperties := GetLoadSetVarFromIniFileActionProperties(TempAction.LoadSetVarFromIniFileOptions);
+      AEditTemplateOptions.ListOfEnabledProperties := 'FileName' + #13#10 +
+                                                      'SetVarActionName';
+    end;
+
+    acSaveSetVarToIniFile:
+    begin
+      GetDefaultPropertyValues_SaveSetVarToIniFile(TempAction.SaveSetVarToIniFileOptions);
+
+      if AOperation in [etoNewAction, etoUpdateAction] then
+      begin
+        TempAction.SaveSetVarToIniFileOptions.FileName := '$PathToAnotherFile$';
+        TempAction.SaveSetVarToIniFileOptions.SetVarActionName := '$AnotherAction$';
+      end
+      else
+      begin                                                             //use some predefined values, which should be returned in case of error
+        TempAction.SaveSetVarToIniFileOptions.FileName := '$NoPath$';
+        TempAction.SaveSetVarToIniFileOptions.SetVarActionName := 'Empty';
+      end;
+
+      AEditTemplateOptions.ListOfEditedProperties := GetSaveSetVarToIniFileActionProperties(TempAction.SaveSetVarToIniFileOptions);
+      AEditTemplateOptions.ListOfEnabledProperties := 'FileName' + #13#10 +
+                                                      'SetVarActionName';
     end;
   end; //case
 end;

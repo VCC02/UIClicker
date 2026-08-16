@@ -533,6 +533,9 @@ type
     function HandleOnUpdateSetVarActionByName(AClkSetVarOptions: TClkSetVarOptions; AActionName: string): Boolean;
     function HandleOnTClkIniReadonlyFileCreate(AFileName: string): TClkIniReadonlyFile;
     function HandleOnTClkIniFileCreate(AFileName: string): TClkIniFile;
+    function HandleOnTClkIniReadonlyFileCreateWithMemStream(AFileName: string; AWorkMemStream: TMemoryStream): TClkIniReadonlyFile;
+    function HandleOnTClkIniFileCreateWithMemStream(AFileName: string; AWorkMemStream: TMemoryStream): TClkIniFile;
+    procedure HandleOnSaveTClkIniFile(AFileName: string; AIniFile: TClkIniFile; AWorkMemStream: TMemoryStream);
     procedure HandleOnSaveStringListToFile(AStringList: TStringList; const AFileName: string);
     function HandleOnExecuteActionByContent(var AAllActions: TClkActionsRecArr; AActionIndex: Integer): Boolean;
     function HandleOnLoadTemplateToActions(Fnm: string; var AActions: TClkActionsRecArr; AWhichTemplate: TEditTemplateWhichTemplate; out ANotes, AIconPath: string; AWaitForFileAvailability: Boolean = False): string;
@@ -1352,7 +1355,9 @@ begin
   FActionExecution.OnGetSetVarActionByName := HandleOnGetSetVarActionByName;
   FActionExecution.OnUpdateSetVarActionByName := HandleOnUpdateSetVarActionByName;
   FActionExecution.OnTClkIniReadonlyFileCreate := HandleOnTClkIniReadonlyFileCreate;
-  FActionExecution.OnTClkIniFileCreate := HandleOnTClkIniFileCreate;
+  FActionExecution.OnTClkIniReadonlyFileCreateWithMemStream := HandleOnTClkIniReadonlyFileCreateWithMemStream;
+  FActionExecution.OnTClkIniFileCreateWithMemStream := HandleOnTClkIniFileCreateWithMemStream;
+  FActionExecution.OnSaveTClkIniFile := HandleOnSaveTClkIniFile;
   FActionExecution.OnSaveStringListToFile := HandleOnSaveStringListToFile;
   FActionExecution.OnBackupVars := HandleOnBackupVars;
   FActionExecution.OnExecuteActionByName := HandleOnExecuteActionByName;
@@ -2008,6 +2013,112 @@ end;
 function TfrClickerActionsArr.HandleOnTClkIniFileCreate(AFileName: string): TClkIniFile;
 begin
   Result := DoOnTClkIniFileCreate(AFileName);
+end;
+
+
+function TfrClickerActionsArr.HandleOnTClkIniReadonlyFileCreateWithMemStream(AFileName: string; AWorkMemStream: TMemoryStream): TClkIniReadonlyFile;
+var
+  TempInMemFS: TInMemFileSystem;
+
+  procedure LoadFromMem;
+  begin
+    if TempInMemFS.FileExistsInMem(AFileName) then
+      TempInMemFS.LoadFileFromMemToStream(AFileName, AWorkMemStream);
+
+    Result := TClkIniReadonlyFile.Create(AWorkMemStream);
+  end;
+
+begin
+  AFileName := ResolveTemplatePath(AFileName);
+  AFileName := EvaluateReplacements(AFileName);
+
+  if Pos(CMemPluginLocationPrefix, AFileName) = 1 then
+  begin
+    TempInMemFS := HandleOnGetPluginInMemFS;
+    if TempInMemFS = nil then
+      raise Exception.Create('In-Mem FS for plugins is not available.');
+
+    LoadFromMem;
+  end
+  else
+  begin
+    if ExecutingActionFromRemote then
+    begin
+      //using main In-Mem FS
+      TempInMemFS := InMemFS;
+      LoadFromMem;
+    end
+    else
+      Result := DoOnTClkIniReadonlyFileCreate(AFileName);
+  end;
+end;
+
+
+function TfrClickerActionsArr.HandleOnTClkIniFileCreateWithMemStream(AFileName: string; AWorkMemStream: TMemoryStream): TClkIniFile;
+var
+  TempInMemFS: TInMemFileSystem;
+
+  procedure LoadFromMem;
+  begin
+    if TempInMemFS.FileExistsInMem(AFileName) then
+      TempInMemFS.LoadFileFromMemToStream(AFileName, AWorkMemStream);
+
+    Result := TClkIniFile.Create(AWorkMemStream);
+  end;
+
+begin
+  AFileName := ResolveTemplatePath(AFileName);
+  AFileName := EvaluateReplacements(AFileName);
+
+  if Pos(CMemPluginLocationPrefix, AFileName) = 1 then
+  begin
+    TempInMemFS := HandleOnGetPluginInMemFS;
+    if TempInMemFS = nil then
+      raise Exception.Create('In-Mem FS for plugins is not available.');
+
+    LoadFromMem;
+  end
+  else
+  begin
+    if ExecutingActionFromRemote then
+    begin
+      //using main In-Mem FS
+      TempInMemFS := InMemFS;
+      LoadFromMem;
+    end
+    else
+      Result := DoOnTClkIniFileCreate(AFileName);
+  end;
+end;
+
+
+procedure TfrClickerActionsArr.HandleOnSaveTClkIniFile(AFileName: string; AIniFile: TClkIniFile; AWorkMemStream: TMemoryStream);
+var
+  TempInMemFS: TInMemFileSystem;
+begin
+  AFileName := ResolveTemplatePath(AFileName);
+  AFileName := EvaluateReplacements(AFileName);
+
+  if Pos(CMemPluginLocationPrefix, AFileName) = 1 then
+  begin
+    TempInMemFS := HandleOnGetPluginInMemFS;
+    if TempInMemFS = nil then
+      raise Exception.Create('In-Mem FS for plugins is not available.');
+
+    AIniFile.UpdateStream;
+    TempInMemFS.SaveFileToMem(AFileName, AWorkMemStream.Memory, AWorkMemStream.Size);
+  end
+  else
+  begin
+    if ExecutingActionFromRemote then
+    begin
+      TempInMemFS := InMemFS; //using main In-Mem FS
+      AIniFile.UpdateStream;
+      TempInMemFS.SaveFileToMem(AFileName, AWorkMemStream.Memory, AWorkMemStream.Size);
+    end
+    else
+      AIniFile.UpdateFile; //using disk
+  end;
 end;
 
 

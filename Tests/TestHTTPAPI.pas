@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2024 VCC
+    Copyright (C) 2026 VCC
     creation date: Aug 2022
     initial release date: 14 Aug 2022
 
@@ -389,6 +389,12 @@ begin
 
   GetDefaultPropertyValues_EditTemplate(TempAction.EditTemplateOptions);
   AddEditTemplateActionToTemplate(ATestTemplateFileName, 'TestEditTemplate', 0, True, '', TempAction.EditTemplateOptions, FInMemFS);
+
+  GetDefaultPropertyValues_LoadSetVarFromIniFile(TempAction.LoadSetVarFromIniFileOptions);
+  AddLoadSetVarFromIniFileActionToTemplate(ATestTemplateFileName, 'TestLoadSetVarFromIniFile', 0, True, '', TempAction.LoadSetVarFromIniFileOptions, FInMemFS);
+
+  GetDefaultPropertyValues_SaveSetVarToIniFile(TempAction.SaveSetVarToIniFileOptions);
+  AddSaveSetVarToIniFileActionToTemplate(ATestTemplateFileName, 'TestSaveSetVarToIniFile', 0, True, '', TempAction.SaveSetVarToIniFileOptions, FInMemFS);
 end;
 
 

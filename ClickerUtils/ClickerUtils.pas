@@ -97,7 +97,10 @@ type
 
   TOnFileExists = function(const AFileName: string): Boolean of object;
   TOnTClkIniReadonlyFileCreate = function(AFileName: string): TClkIniReadonlyFile of object;
+  TOnTClkIniReadonlyFileCreateWithMemStream = function(AFileName: string; AWorkMemStream: TMemoryStream): TClkIniReadonlyFile of object;
   TOnTClkIniFileCreate = function(AFileName: string): TClkIniFile of object;
+  TOnTClkIniFileCreateWithMemStream = function(AFileName: string; AWorkMemStream: TMemoryStream): TClkIniFile of object;
+  TOnSaveTClkIniFile = procedure(AFileName: string; AIniFile: TClkIniFile; AWorkMemStream: TMemoryStream) of object;
   TOnSaveTemplateToFile = procedure(AStringList: TStringList; const AFileName: string) of object;
   TOnSaveFileToExtRenderingInMemFS = procedure(AFileName: string; AContent: Pointer; AFileSize: Int64) of object;
 

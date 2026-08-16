@@ -4648,9 +4648,16 @@ begin
 end;
 
 
+function IniFile_FileName_Common: string;
+begin
+  Result := 'If the path starts with "' + CMemPluginLocationPrefix + PathDelim + '" (no quotes), the file is used from the In-Mem FS for plugins.';
+end;
+
+
 function GetPropertyHint_LoadSetVarFromIniFile_FileName: string;
 begin
-  Result := 'Filename to load var values from, for SetVar action.';
+  Result := 'Filename to load var values from, for SetVar action.' + #13#10 +
+             IniFile_FileName_Common;
 end;
 
 
@@ -4739,7 +4746,8 @@ end;
 
 function GetPropertyHint_SaveSetVarToIniFile_FileName: string;
 begin
-  Result := 'Filename to save var values to, from SetVar action.';
+  Result := 'Filename to save var values to, from SetVar action.' + #13#10 +
+             IniFile_FileName_Common;
 end;
 
 

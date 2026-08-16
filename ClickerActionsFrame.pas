@@ -6771,6 +6771,9 @@ begin
 
           Ord(acEditTemplate):
             ImageList := dmClickerIcons.imglstEditTemplateProperties;
+
+          Ord(acLoadSetVarFromIniFile), Ord(acSaveSetVarToIniFile):
+            ImageList := dmClickerIcons.imglstLoadSetVarFromIniFileProperties;
         end;   //case
       end;
 
