@@ -170,9 +170,7 @@ const
   CExtBmp_Prefix = 'ExtMem:';
   CExtBmp_PrefixUpperCase = 'EXTMEM:';
 
-  {$IFDEF MemPlugins}
-    CMemPluginLocationPrefix = 'Mem:';  //If a plugin path starts with this prefix, then UIClicker expects the plugin to exist in memory.
-  {$ENDIF}
+  CMemPluginLocationPrefix = 'Mem:';  //If a plugin path starts with this prefix, then UIClicker expects the plugin to exist in memory.
 
 
 type

@@ -1,4 +1,4 @@
-#   Copyright (C) 2022-2025 VCC
+#   Copyright (C) 2022-2026 VCC
 #   creation date: Dec 2024  (most content moved here from wrapper.py)
 #   initial release date: 09 Dec 2024
 #
@@ -214,6 +214,20 @@ class TDllFunctionAddresses:
         AddEditTemplateActionToTemplateParams = (1, "ATemplateFileName", 0), (1, "AActionName", 0), (1, "AActionTimeout", 0), (1, "AActionEnabled", 0), (1, "AActionCondition", 0), (1, "AEditTemplateOptions", 0),
         AddEditTemplateActionToTemplateFuncRes = AddEditTemplateActionToTemplateProto(("AddEditTemplateActionToTemplate", self.DllHandle), AddEditTemplateActionToTemplateParams)
         return AddEditTemplateActionToTemplateFuncRes
+
+
+    def GetAddLoadSetVarFromIniFileActionToTemplate(self):
+        AddLoadSetVarFromIniFileActionToTemplateProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, LPCWSTR, LONG, BOOLEAN, LPCWSTR, PLoadSetVarFromIniFileOptions)
+        AddLoadSetVarFromIniFileActionToTemplateParams = (1, "ATemplateFileName", 0), (1, "AActionName", 0), (1, "AActionTimeout", 0), (1, "AActionEnabled", 0), (1, "AActionCondition", 0), (1, "ALoadSetVarFromIniFileOptions", 0),
+        AddLoadSetVarFromIniFileActionToTemplateFuncRes = AddLoadSetVarFromIniFileActionToTemplateProto(("AddLoadSetVarFromIniFileActionToTemplate", self.DllHandle), AddLoadSetVarFromIniFileActionToTemplateParams)
+        return AddLoadSetVarFromIniFileActionToTemplateFuncRes
+
+
+    def GetAddSaveSetVarToIniFileActionToTemplate(self):
+        AddSaveSetVarToIniFileActionToTemplateProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, LPCWSTR, LONG, BOOLEAN, LPCWSTR, PSaveSetVarToIniFileOptions)
+        AddSaveSetVarToIniFileActionToTemplateParams = (1, "ATemplateFileName", 0), (1, "AActionName", 0), (1, "AActionTimeout", 0), (1, "AActionEnabled", 0), (1, "AActionCondition", 0), (1, "ASaveSetVarToIniFileOptions", 0),
+        AddSaveSetVarToIniFileActionToTemplateFuncRes = AddSaveSetVarToIniFileActionToTemplateProto(("AddSaveSetVarToIniFileActionToTemplate", self.DllHandle), AddSaveSetVarToIniFileActionToTemplateParams)
+        return AddSaveSetVarToIniFileActionToTemplateFuncRes
     
     
     def GetAddFontProfileToFindSubControlAction(self):
@@ -407,6 +421,20 @@ class TDllFunctionAddresses:
         return ExecuteEditTemplateActionFuncRes
 
 
+    def GetExecuteLoadSetVarFromIniFileAction(self):
+        ExecuteLoadSetVarFromIniFileActionProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, LONG, PLoadSetVarFromIniFileOptions, BOOLEAN, ctypes.c_char_p)
+        ExecuteLoadSetVarFromIniFileActionParams = (1, "AActionName", 0), (1, "AActionTimeout", 0), (1, "ALoadSetVarFromIniFileOptions", 0), (1, "AUseServerDebugging", 0), (1, "AResultStr", 0),
+        ExecuteLoadSetVarFromIniFileActionFuncRes = ExecuteLoadSetVarFromIniFileActionProto(("ExecuteLoadSetVarFromIniFileAction", self.DllHandle), ExecuteLoadSetVarFromIniFileActionParams)
+        return ExecuteLoadSetVarFromIniFileActionFuncRes
+
+
+    def GetExecuteSaveSetVarToIniFileAction(self):
+        ExecuteSaveSetVarToIniFileActionProto = ctypes.CFUNCTYPE(LONG, LPCWSTR, LONG, PSaveSetVarToIniFileOptions, BOOLEAN, ctypes.c_char_p)
+        ExecuteSaveSetVarToIniFileActionParams = (1, "AActionName", 0), (1, "AActionTimeout", 0), (1, "ASaveSetVarToIniFileOptions", 0), (1, "AUseServerDebugging", 0), (1, "AResultStr", 0),
+        ExecuteSaveSetVarToIniFileActionFuncRes = ExecuteSaveSetVarToIniFileActionProto(("ExecuteSaveSetVarToIniFileAction", self.DllHandle), ExecuteSaveSetVarToIniFileActionParams)
+        return ExecuteSaveSetVarToIniFileActionFuncRes
+
+
 class TDllFunctions:
     def __init__(self):
         self.Addresses = TDllFunctionAddresses()
@@ -437,6 +465,8 @@ class TDllFunctions:
         self.AddSaveSetVarToFileActionToTemplateFunc = self.Addresses.GetAddSaveSetVarToFileActionToTemplate()
         self.AddPluginActionToTemplateFunc = self.Addresses.GetAddPluginActionToTemplate()
         self.AddEditTemplateActionToTemplateFunc = self.Addresses.GetAddEditTemplateActionToTemplate()
+        self.AddLoadSetVarFromIniFileActionToTemplateFunc = self.Addresses.GetAddLoadSetVarFromIniFileActionToTemplate()
+        self.AddSaveSetVarToIniFileActionToTemplateFunc = self.Addresses.GetAddSaveSetVarToIniFileActionToTemplate()
         
         self.AddFontProfileToFindSubControlActionFunc = self.Addresses.GetAddFontProfileToFindSubControlAction()
         
@@ -469,6 +499,8 @@ class TDllFunctions:
         self.ExecuteSaveSetVarToFileActionFunc = self.Addresses.GetExecuteSaveSetVarToFileAction()
         self.ExecutePluginActionFunc = self.Addresses.GetExecutePluginAction()
         self.ExecuteEditTemplateActionFunc = self.Addresses.GetExecuteEditTemplateAction()
+        self.ExecuteLoadSetVarFromIniFileActionFunc = self.Addresses.GetExecuteLoadSetVarFromIniFileAction()
+        self.ExecuteSaveSetVarToIniFileActionFunc = self.Addresses.GetExecuteSaveSetVarToIniFileAction()
         
     def InitClickerClient(self):
         try:
@@ -677,6 +709,22 @@ class TDllFunctions:
             return AddEditTemplateActionToTemplateResult
         except:
             return 'AV on AddEditTemplateActionToTemplate'
+
+
+    def AddLoadSetVarFromIniFileActionToTemplate(self, ATemplateFileName, AActionName, AActionTimeout, AActionEnabled, AActionCondition, ALoadSetVarFromIniFileOptions):
+        try:
+            AddLoadSetVarFromIniFileActionToTemplateResult = self.AddLoadSetVarFromIniFileActionToTemplateFunc(ATemplateFileName, AActionName, AActionTimeout, AActionEnabled, AActionCondition, ALoadSetVarFromIniFileOptions)  #sending PWideChar, and converting to ANSI at dll
+            return AddLoadSetVarFromIniFileActionToTemplateResult
+        except:
+            return 'AV on AddLoadSetVarFromIniFileActionToTemplate'
+
+
+    def AddSaveSetVarToIniFileActionToTemplate(self, ATemplateFileName, AActionName, AActionTimeout, AActionEnabled, AActionCondition, ASaveSetVarToIniFileOptions):
+        try:
+            AddSaveSetVarToIniFileActionToTemplateResult = self.AddSaveSetVarToIniFileActionToTemplateFunc(ATemplateFileName, AActionName, AActionTimeout, AActionEnabled, AActionCondition, ASaveSetVarToIniFileOptions)  #sending PWideChar, and converting to ANSI at dll
+            return AddSaveSetVarToIniFileActionToTemplateResult
+        except:
+            return 'AV on AddSaveSetVarToIniFileActionToTemplate'
 
 
     def AddFontProfileToFindSubControlAction(self, ATemplateFileName, AActionIndex, AFindControlMatchBitmapText):
@@ -966,6 +1014,30 @@ class TDllFunctions:
             return 'AV on ExecuteEditTemplateAction'
 
 
+    def ExecuteLoadSetVarFromIniFileAction(self, AActionName, AActionTimeout, ALoadSetVarFromIniFileOptions, AUseServerDebugging):
+        try:
+            buffer = ctypes.create_string_buffer(10 * 1048576) # #(CMaxSharedStringLength)
+            ResponsePtr = buffer[0] #ctypes.c_char_p(buffer[0])  #address of first byte in the buffer
+            RespLen = self.ExecuteLoadSetVarFromIniFileActionFunc(AActionName, AActionTimeout, ALoadSetVarFromIniFileOptions, AUseServerDebugging, ResponsePtr)
+
+            Response = ctypes.string_at(ResponsePtr, RespLen)
+            return Response.decode('utf-8') #Returns the list of variables, separated by ASCII8 ASCII7  (i.e. #8#7)
+        except:
+            return 'AV on ExecuteLoadSetVarFromIniFileAction'
+
+
+    def ExecuteSaveSetVarToIniFileAction(self, AActionName, AActionTimeout, ASaveSetVarToIniFileOptions, AUseServerDebugging):
+        try:
+            buffer = ctypes.create_string_buffer(10 * 1048576) # #(CMaxSharedStringLength)
+            ResponsePtr = buffer[0] #ctypes.c_char_p(buffer[0])  #address of first byte in the buffer
+            RespLen = self.ExecuteSaveSetVarToIniFileActionFunc(AActionName, AActionTimeout, ASaveSetVarToIniFileOptions, AUseServerDebugging, ResponsePtr)
+
+            Response = ctypes.string_at(ResponsePtr, RespLen)
+            return Response.decode('utf-8') #Returns the list of variables, separated by ASCII8 ASCII7  (i.e. #8#7)
+        except:
+            return 'AV on ExecuteSaveSetVarToIniFileAction'
+
+
     def GetPluginBitnessDirName(self):
         SleepOptions = GetDefaultSleepOptions()
         SleepOptions.Value = '1'
@@ -1084,6 +1156,14 @@ class TUIClickerDllFunctions:
 
     def AddEditTemplateActionToTemplate(self, ATemplateFileName, AActionName, AActionTimeout, AActionEnabled, AActionCondition, AEditTemplateOptions):
         return self.DllFuncs.AddEditTemplateActionToTemplate(ATemplateFileName, AActionName, AActionTimeout, AActionEnabled, AActionCondition, AEditTemplateOptions) == 0  #sending PWideChar, and converting to ANSI at dll
+
+
+    def AddLoadSetVarFromIniFileActionToTemplate(self, ATemplateFileName, AActionName, AActionTimeout, AActionEnabled, AActionCondition, ALoadSetVarFromIniFileOptions):
+        return self.DllFuncs.AddLoadSetVarFromIniFileActionToTemplate(ATemplateFileName, AActionName, AActionTimeout, AActionEnabled, AActionCondition, ALoadSetVarFromIniFileOptions) == 0  #sending PWideChar, and converting to ANSI at dll
+
+
+    def AddSaveSetVarToIniFileActionToTemplate(self, ATemplateFileName, AActionName, AActionTimeout, AActionEnabled, AActionCondition, ASaveSetVarToIniFileOptions):
+        return self.DllFuncs.AddSaveSetVarToIniFileActionToTemplate(ATemplateFileName, AActionName, AActionTimeout, AActionEnabled, AActionCondition, ASaveSetVarToIniFileOptions) == 0  #sending PWideChar, and converting to ANSI at dll
 
 
     def AddFontProfileToFindSubControlAction(self, ATemplateFileName, AActionIndex, AFindControlMatchBitmapText):
@@ -1206,6 +1286,15 @@ class TUIClickerDllFunctions:
         Res = self.DllFuncs.ExecuteEditTemplateAction(AActionName, AActionTimeout, AEditTemplateOptions, AUseServerDebugging)  #sending PWideChar, and converting to ANSI at dll
         return Res.find("Client exception: ") == -1
 
+
+    def ExecuteLoadSetVarFromIniFileAction(self, AActionName, AActionTimeout, ALoadSetVarFromIniFileOptions, AUseServerDebugging):
+        Res = self.DllFuncs.ExecuteLoadSetVarFromIniFileAction(AActionName, AActionTimeout, ALoadSetVarFromIniFileOptions, AUseServerDebugging)  #sending PWideChar, and converting to ANSI at dll
+        return Res.find("Client exception: ") == -1
+
+
+    def ExecuteSaveSetVarToIniFileAction(self, AActionName, AActionTimeout, ASaveSetVarToIniFileOptions, AUseServerDebugging):
+        Res = self.DllFuncs.ExecuteSaveSetVarToIniFileAction(AActionName, AActionTimeout, ASaveSetVarToIniFileOptions, AUseServerDebugging)  #sending PWideChar, and converting to ANSI at dll
+        return Res.find("Client exception: ") == -1
 
     def GetPluginBitnessDirName(self):
         return self.DllFuncs.GetPluginBitnessDirName()

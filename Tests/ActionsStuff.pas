@@ -247,6 +247,8 @@ procedure GenerateDifferentThanDefault_LoadSetVarFromFile(var ALoadSetVarFromFil
 procedure GenerateDifferentThanDefault_SaveSetVarToFile(var ASaveSetVarToFileOptions: TClkSaveSetVarToFileOptions);
 procedure GenerateDifferentThanDefault_Plugin(var APluginOptions: TClkPluginOptions);
 procedure GenerateDifferentThanDefault_EditTemplate(var AEditTemplateOptions: TClkEditTemplateOptions);
+procedure GenerateDifferentThanDefault_LoadSetVarFromIniFile(var ALoadSetVarFromIniFileOptions: TClkLoadSetVarFromIniFileOptions);
+procedure GenerateDifferentThanDefault_SaveSetVarToIniFile(var ASaveSetVarToIniFileOptions: TClkSaveSetVarToIniFileOptions);
 
 
 function GenerateDifferentThanDefault_ClickStr: string;
@@ -262,6 +264,8 @@ function GenerateDifferentThanDefault_LoadSetVarFromFileStr: string;
 function GenerateDifferentThanDefault_SaveSetVarToFileStr: string;
 function GenerateDifferentThanDefault_PluginStr: string;
 function GenerateDifferentThanDefault_EditTemplateStr: string;
+function GenerateDifferentThanDefault_LoadSetVarFromIniFileStr: string;
+function GenerateDifferentThanDefault_SaveSetVarToIniFileStr: string;
 
 
 implementation
@@ -2123,6 +2127,66 @@ begin
             'EditedActionTimeout' + '=' + '2000' + '&' +
             'NewActionName' + '=' + 'Generic' + '&' +
             'ShouldSaveTemplate' + '=' + 'False';
+end;
+
+
+procedure GenerateDifferentThanDefault_LoadSetVarFromIniFile(var ALoadSetVarFromIniFileOptions: TClkLoadSetVarFromIniFileOptions);
+begin
+  GetDefaultPropertyValues_LoadSetVarFromIniFile(ALoadSetVarFromIniFileOptions);
+
+  ALoadSetVarFromIniFileOptions.FileName := 'UnknownLoadedFile';
+  ALoadSetVarFromIniFileOptions.SetVarActionName := '$SetVarNewName$';
+  ALoadSetVarFromIniFileOptions.VarListFormat := vlfPattern;
+  ALoadSetVarFromIniFileOptions.SectionName := 'MainSection';
+  ALoadSetVarFromIniFileOptions.RemoveDollarFromVarName := False;
+  ALoadSetVarFromIniFileOptions.IdentPattern := 'no pattern <counter>';
+  ALoadSetVarFromIniFileOptions.VarDataType := vdtBoolean;
+  ALoadSetVarFromIniFileOptions.CounterType := ctVar;
+  ALoadSetVarFromIniFileOptions.Counter := '$TheCounter$';
+end;
+
+
+function GenerateDifferentThanDefault_LoadSetVarFromIniFileStr: string;
+begin
+  Result := 'FileName' + '=' + 'UnknownLoadedFile' + '&' +
+            'SetVarActionName' + '=' + '$SetVarNewName$' +
+            'VarListFormat' + '=' + '1' + '&' +
+            'SectionName' + '=' + 'MainSection' + '&' +
+            'RemoveDollarFromVarName' + '=' + '0' + '&' +
+            'IdentPattern' + '=' + 'no pattern <counter>' + '&' +
+            'VarDataType' + '=' + '2' + '&' +
+            'CounterType' + '=' + '0' + '&' +
+            'Counter' + '=' + '$TheCounter$';
+end;
+
+
+procedure GenerateDifferentThanDefault_SaveSetVarToIniFile(var ASaveSetVarToIniFileOptions: TClkSaveSetVarToIniFileOptions);
+begin
+  GetDefaultPropertyValues_SaveSetVarToIniFile(ASaveSetVarToIniFileOptions);
+
+  ASaveSetVarToIniFileOptions.FileName := 'UnknownSavedFile';
+  ASaveSetVarToIniFileOptions.SetVarActionName := '$SetVarOldName$';
+  ASaveSetVarToIniFileOptions.VarListFormat := vlfPattern;
+  ASaveSetVarToIniFileOptions.SectionName := 'MainSection';
+  ASaveSetVarToIniFileOptions.RemoveDollarFromVarName := False;
+  ASaveSetVarToIniFileOptions.IdentPattern := 'no pattern <counter>';
+  ASaveSetVarToIniFileOptions.VarDataType := vdtBoolean;
+  ASaveSetVarToIniFileOptions.CounterType := ctVar;
+  ASaveSetVarToIniFileOptions.Counter := '$TheCounter$';
+end;
+
+
+function GenerateDifferentThanDefault_SaveSetVarToIniFileStr: string;
+begin
+  Result := 'FileName' + '=' + 'UnknownSavedFile' + '&' +
+            'SetVarActionName' + '=' + '$SetVarOldName$' +
+            'VarListFormat' + '=' + '1' + '&' +
+            'SectionName' + '=' + 'MainSection' + '&' +
+            'RemoveDollarFromVarName' + '=' + '0' + '&' +
+            'IdentPattern' + '=' + 'no pattern <counter>' + '&' +
+            'VarDataType' + '=' + '2' + '&' +
+            'CounterType' + '=' + '0' + '&' +
+            'Counter' + '=' + '$TheCounter$';
 end;
 
 
