@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2025 VCC
+    Copyright (C) 2026 VCC
     creation date: 14 Dec 2024
     initial release date: 14 Dec 2024
 
@@ -494,6 +494,33 @@ type
   end;
 
 
+  TClkLoadSetVarFromIniFileOptionsAPI = record
+    FileName: PWideChar;
+    SetVarActionName: PWideChar;
+    VarListFormat: Byte; //TVarListFormat;
+    SectionName: PWideChar;
+    RemoveDollarFromVarName: Boolean;
+    IdentPattern: PWideChar;
+    VarDataType: Byte; //TTVarDataType;
+    CounterType: Byte; //TTCounterType;
+    Counter: PWideChar;
+  end;
+
+  PClkLoadSetVarFromIniFileOptionsAPI = ^TClkLoadSetVarFromIniFileOptionsAPI;
+
+  TClkLoadSetVarFromIniFileOptionsAPIWS = record
+    FileName: WideString;
+    SetVarActionName: WideString;
+    SectionName: WideString;
+    IdentPattern: WideString;
+    Counter: WideString;
+  end;
+
+  TClkSaveSetVarToIniFileOptionsAPI = TClkLoadSetVarFromIniFileOptionsAPI;
+  PClkSaveSetVarToIniFileOptionsAPI = ^TClkSaveSetVarToIniFileOptionsAPI;
+  TClkSaveSetVarToIniFileOptionsAPIWS = TClkLoadSetVarFromIniFileOptionsAPIWS;
+
+
 procedure GetMatchBitmapTextFromAPI(AFindControlMatchBitmapText: PClkFindControlMatchBitmapTextAPI; var ADestMatchBitmapText: TClkFindControlMatchBitmapText);
 
 procedure GetClickOptionsFromAPI(AClickOptions: PClkClickOptionsAPI; var ADestClkAction: TClkActionRec);
@@ -509,6 +536,8 @@ procedure GetLoadSetVarFromFileOptionsFromAPI(ALoadSetVarFromFileOptions: PClkLo
 procedure GetSaveSetVarToFileOptionsFromAPI(ASaveSetVarToFileOptions: PClkSaveSetVarToFileOptionsAPI; var ADestClkAction: TClkActionRec);
 procedure GetPluginOptionsFromAPI(APluginOptions: PClkPluginOptionsAPI; var ADestClkAction: TClkActionRec);
 procedure GetEditTemplateOptionsFromAPI(AEditTemplateOptions: PClkEditTemplateOptionsAPI; var ADestClkAction: TClkActionRec);
+procedure GetLoadSetVarFromIniFileOptionsFromAPI(ALoadSetVarFromIniFileOptions: PClkLoadSetVarFromIniFileOptionsAPI; var ADestClkAction: TClkActionRec);
+procedure GetSaveSetVarToIniFileOptionsFromAPI(ASaveSetVarToIniFileOptions: PClkSaveSetVarToIniFileOptionsAPI; var ADestClkAction: TClkActionRec);
 
 procedure SetMatchBitmapTextToAPI(var AMatchBitmapText: TClkFindControlMatchBitmapText; var ADestMatchBitmapText: TClkFindControlMatchBitmapTextAPI; var ATempDestWideStr: TClkFindControlMatchBitmapTextWideString);
 
@@ -525,6 +554,8 @@ procedure SetLoadSetVarFromFileOptionsToAPI(var ALoadSetVarFromFileOptions: TClk
 procedure SetSaveSetVarToFileOptionsToAPI(var ASaveSetVarToFileOptions: TClkSaveSetVarToFileOptions; var ADestSaveSetVarToFileOptions: TClkSaveSetVarToFileOptionsAPI; var ATempSaveSetVarToFileOptionsAPIWS: TClkSaveSetVarToFileOptionsAPIWS);
 procedure SetPluginOptionsToAPI(var APluginOptions: TClkPluginOptions; var ADestPluginOptions: TClkPluginOptionsAPI; var ATempPluginOptionsAPIWS: TClkPluginOptionsAPIWS);
 procedure SetEditTemplateOptionsToAPI(var AEditTemplateOptions: TClkEditTemplateOptions; var ADestEditTemplateOptions: TClkEditTemplateOptionsAPI; var ATempTClkEditTemplateOptionsAPIWS: TClkEditTemplateOptionsAPIWS);
+procedure SetLoadSetVarFromIniFileOptionsToAPI(var ALoadSetVarFromIniFileOptions: TClkLoadSetVarFromIniFileOptions; var ADestLoadSetVarFromIniFileOptions: TClkLoadSetVarFromIniFileOptionsAPI; var ATempLoadSetVarFromIniFileOptionsAPIWS: TClkLoadSetVarFromIniFileOptionsAPIWS);
+procedure SetSaveSetVarToIniFileOptionsToAPI(var ASaveSetVarToIniFileOptions: TClkSaveSetVarToIniFileOptions; var ADestSaveSetVarToIniFileOptions: TClkSaveSetVarToIniFileOptionsAPI; var ATempSaveSetVarToIniFileOptionsAPIWS: TClkSaveSetVarToIniFileOptionsAPIWS);
 
 
 implementation
@@ -886,6 +917,36 @@ begin
 end;
 
 
+procedure GetLoadSetVarFromIniFileOptionsFromAPI(ALoadSetVarFromIniFileOptions: PClkLoadSetVarFromIniFileOptionsAPI; var ADestClkAction: TClkActionRec);
+begin
+  //LoadSetVarFromIniFile stuff
+  SetPointedContentToString(@string(PWideChar(ALoadSetVarFromIniFileOptions^.FileName))[1], ADestClkAction.LoadSetVarFromIniFileOptions.FileName);
+  SetPointedContentToString(@string(PWideChar(ALoadSetVarFromIniFileOptions^.SetVarActionName))[1], ADestClkAction.LoadSetVarFromIniFileOptions.SetVarActionName);
+  ADestClkAction.LoadSetVarFromIniFileOptions.VarListFormat := TVarListFormat(ALoadSetVarFromIniFileOptions^.VarListFormat);
+  SetPointedContentToString(@string(PWideChar(ALoadSetVarFromIniFileOptions^.SectionName))[1], ADestClkAction.LoadSetVarFromIniFileOptions.SectionName);
+  ADestClkAction.LoadSetVarFromIniFileOptions.RemoveDollarFromVarName := ALoadSetVarFromIniFileOptions^.RemoveDollarFromVarName;
+  SetPointedContentToString(@string(PWideChar(ALoadSetVarFromIniFileOptions^.IdentPattern))[1], ADestClkAction.LoadSetVarFromIniFileOptions.IdentPattern);
+  ADestClkAction.LoadSetVarFromIniFileOptions.VarDataType := TVarDataType(ALoadSetVarFromIniFileOptions^.VarDataType);
+  ADestClkAction.LoadSetVarFromIniFileOptions.CounterType := TCounterType(ALoadSetVarFromIniFileOptions^.CounterType);
+  SetPointedContentToString(@string(PWideChar(ALoadSetVarFromIniFileOptions^.Counter))[1], ADestClkAction.LoadSetVarFromIniFileOptions.Counter);
+end;
+
+
+procedure GetSaveSetVarToIniFileOptionsFromAPI(ASaveSetVarToIniFileOptions: PClkSaveSetVarToIniFileOptionsAPI; var ADestClkAction: TClkActionRec);
+begin
+  //SaveSetVarToIniFile stuff
+  SetPointedContentToString(@string(PWideChar(ASaveSetVarToIniFileOptions^.FileName))[1], ADestClkAction.SaveSetVarToIniFileOptions.FileName);
+  SetPointedContentToString(@string(PWideChar(ASaveSetVarToIniFileOptions^.SetVarActionName))[1], ADestClkAction.SaveSetVarToIniFileOptions.SetVarActionName);
+  ADestClkAction.SaveSetVarToIniFileOptions.VarListFormat := TVarListFormat(ASaveSetVarToIniFileOptions^.VarListFormat);
+  SetPointedContentToString(@string(PWideChar(ASaveSetVarToIniFileOptions^.SectionName))[1], ADestClkAction.SaveSetVarToIniFileOptions.SectionName);
+  ADestClkAction.SaveSetVarToIniFileOptions.RemoveDollarFromVarName := ASaveSetVarToIniFileOptions^.RemoveDollarFromVarName;
+  SetPointedContentToString(@string(PWideChar(ASaveSetVarToIniFileOptions^.IdentPattern))[1], ADestClkAction.SaveSetVarToIniFileOptions.IdentPattern);
+  ADestClkAction.SaveSetVarToIniFileOptions.VarDataType := TVarDataType(ASaveSetVarToIniFileOptions^.VarDataType);
+  ADestClkAction.SaveSetVarToIniFileOptions.CounterType := TCounterType(ASaveSetVarToIniFileOptions^.CounterType);
+  SetPointedContentToString(@string(PWideChar(ASaveSetVarToIniFileOptions^.Counter))[1], ADestClkAction.SaveSetVarToIniFileOptions.Counter);
+end;
+
+
 //
 
 
@@ -1205,6 +1266,34 @@ begin
   ADestEditTemplateOptions.EditedActionTimeout := AEditTemplateOptions.EditedActionTimeout;
   ATempTClkEditTemplateOptionsAPIWS.NewActionName := WideString(AEditTemplateOptions.NewActionName);  ADestEditTemplateOptions.NewActionName := @ATempTClkEditTemplateOptionsAPIWS.NewActionName[1];// ADestEditTemplateOptions.NewActionName := @WideString(AEditTemplateOptions.NewActionName)[1];
   ADestEditTemplateOptions.ShouldSaveTemplate := AEditTemplateOptions.ShouldSaveTemplate;
+end;
+
+
+procedure SetLoadSetVarFromIniFileOptionsToAPI(var ALoadSetVarFromIniFileOptions: TClkLoadSetVarFromIniFileOptions; var ADestLoadSetVarFromIniFileOptions: TClkLoadSetVarFromIniFileOptionsAPI; var ATempLoadSetVarFromIniFileOptionsAPIWS: TClkLoadSetVarFromIniFileOptionsAPIWS);
+begin
+  ATempLoadSetVarFromIniFileOptionsAPIWS.FileName := WideString(ALoadSetVarFromIniFileOptions.FileName);  ADestLoadSetVarFromIniFileOptions.FileName := @ATempLoadSetVarFromIniFileOptionsAPIWS.FileName[1];// ADestLoadSetVarFromIniFileOptions.FileName := @WideString(ALoadSetVarFromIniFileOptions.FileName)[1];
+  ATempLoadSetVarFromIniFileOptionsAPIWS.SetVarActionName := WideString(ALoadSetVarFromIniFileOptions.SetVarActionName);  ADestLoadSetVarFromIniFileOptions.SetVarActionName := @ATempLoadSetVarFromIniFileOptionsAPIWS.SetVarActionName[1];// ADestLoadSetVarFromIniFileOptions.SetVarActionName := @WideString(ALoadSetVarFromIniFileOptions.SetVarActionName)[1];
+  ADestLoadSetVarFromIniFileOptions.VarListFormat := Byte(ALoadSetVarFromIniFileOptions.VarListFormat);
+  ATempLoadSetVarFromIniFileOptionsAPIWS.SectionName := WideString(ALoadSetVarFromIniFileOptions.SectionName);  ADestLoadSetVarFromIniFileOptions.SectionName := @ATempLoadSetVarFromIniFileOptionsAPIWS.SectionName[1];// ADestLoadSetVarFromIniFileOptions.SectionName := @WideString(ALoadSetVarFromIniFileOptions.SectionName)[1];
+  ADestLoadSetVarFromIniFileOptions.RemoveDollarFromVarName := ALoadSetVarFromIniFileOptions.RemoveDollarFromVarName;
+  ATempLoadSetVarFromIniFileOptionsAPIWS.IdentPattern := WideString(ALoadSetVarFromIniFileOptions.IdentPattern);  ADestLoadSetVarFromIniFileOptions.IdentPattern := @ATempLoadSetVarFromIniFileOptionsAPIWS.IdentPattern[1];// ADestLoadSetVarFromIniFileOptions.IdentPattern := @WideString(ALoadSetVarFromIniFileOptions.IdentPattern)[1];
+  ADestLoadSetVarFromIniFileOptions.VarDataType := Byte(ALoadSetVarFromIniFileOptions.VarDataType);
+  ADestLoadSetVarFromIniFileOptions.CounterType := Byte(ALoadSetVarFromIniFileOptions.CounterType);
+  ATempLoadSetVarFromIniFileOptionsAPIWS.Counter := WideString(ALoadSetVarFromIniFileOptions.Counter);  ADestLoadSetVarFromIniFileOptions.Counter := @ATempLoadSetVarFromIniFileOptionsAPIWS.Counter[1];// ADestLoadSetVarFromIniFileOptions.Counter := @WideString(ALoadSetVarFromIniFileOptions.Counter)[1];
+end;
+
+
+procedure SetSaveSetVarToIniFileOptionsToAPI(var ASaveSetVarToIniFileOptions: TClkSaveSetVarToIniFileOptions; var ADestSaveSetVarToIniFileOptions: TClkSaveSetVarToIniFileOptionsAPI; var ATempSaveSetVarToIniFileOptionsAPIWS: TClkSaveSetVarToIniFileOptionsAPIWS);
+begin
+  ATempSaveSetVarToIniFileOptionsAPIWS.FileName := WideString(ASaveSetVarToIniFileOptions.FileName);  ADestSaveSetVarToIniFileOptions.FileName := @ATempSaveSetVarToIniFileOptionsAPIWS.FileName[1];// ADestSaveSetVarToIniFileOptions.FileName := @WideString(ASaveSetVarToIniFileOptions.FileName)[1];
+  ATempSaveSetVarToIniFileOptionsAPIWS.SetVarActionName := WideString(ASaveSetVarToIniFileOptions.SetVarActionName);  ADestSaveSetVarToIniFileOptions.SetVarActionName := @ATempSaveSetVarToIniFileOptionsAPIWS.SetVarActionName[1];// ADestSaveSetVarToIniFileOptions.SetVarActionName := @WideString(ASaveSetVarToIniFileOptions.SetVarActionName)[1];
+  ADestSaveSetVarToIniFileOptions.VarListFormat := Byte(ASaveSetVarToIniFileOptions.VarListFormat);
+  ATempSaveSetVarToIniFileOptionsAPIWS.SectionName := WideString(ASaveSetVarToIniFileOptions.SectionName);  ADestSaveSetVarToIniFileOptions.SectionName := @ATempSaveSetVarToIniFileOptionsAPIWS.SectionName[1];// ADestSaveSetVarToIniFileOptions.SectionName := @WideString(ASaveSetVarToIniFileOptions.SectionName)[1];
+  ADestSaveSetVarToIniFileOptions.RemoveDollarFromVarName := ASaveSetVarToIniFileOptions.RemoveDollarFromVarName;
+  ATempSaveSetVarToIniFileOptionsAPIWS.IdentPattern := WideString(ASaveSetVarToIniFileOptions.IdentPattern);  ADestSaveSetVarToIniFileOptions.IdentPattern := @ATempSaveSetVarToIniFileOptionsAPIWS.IdentPattern[1];// ADestSaveSetVarToIniFileOptions.IdentPattern := @WideString(ASaveSetVarToIniFileOptions.IdentPattern)[1];
+  ADestSaveSetVarToIniFileOptions.VarDataType := Byte(ASaveSetVarToIniFileOptions.VarDataType);
+  ADestSaveSetVarToIniFileOptions.CounterType := Byte(ASaveSetVarToIniFileOptions.CounterType);
+  ATempSaveSetVarToIniFileOptionsAPIWS.Counter := WideString(ASaveSetVarToIniFileOptions.Counter);  ADestSaveSetVarToIniFileOptions.Counter := @ATempSaveSetVarToIniFileOptionsAPIWS.Counter[1];// ADestSaveSetVarToIniFileOptions.Counter := @WideString(ASaveSetVarToIniFileOptions.Counter)[1];
 end;
 
 end.

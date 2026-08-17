@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2025 VCC
+    Copyright (C) 2026 VCC
     creation date: Dec 2024
     initial release date: 14 Dec 2024
 
@@ -61,6 +61,8 @@ type
     procedure Test_ExecuteSaveSetVarToFileAction_With_UseServerDebugging;
     procedure Test_ExecutePluginAction_With_UseServerDebugging;
     procedure Test_ExecuteEditTemplateAction_With_UseServerDebugging;
+    procedure Test_ExecuteLoadSetVarFromIniFileAction_With_UseServerDebugging;
+    procedure Test_ExecuteSaveSetVarToIniFileAction_With_UseServerDebugging;
 
     procedure Test_AddClickActionToTemplate_HappyFlow;
     procedure Test_AddExecAppActionToTemplate_HappyFlow;
@@ -75,6 +77,8 @@ type
     procedure Test_AddSaveSetVarToFileActionToTemplate_HappyFlow;
     procedure Test_AddPluginActionToTemplate_HappyFlow;
     procedure Test_AddEditTemplateActionToTemplate_HappyFlow;
+    procedure Test_AddLoadSetVarFromIniFileActionToTemplate_HappyFlow;
+    procedure Test_AddSaveSetVarToIniFileActionToTemplate_HappyFlow;
 
     procedure AfterAll_AlwaysExecute;
   end;
@@ -547,6 +551,57 @@ begin
 end;
 
 
+procedure TTestClickerClientHTTPAPI.Test_ExecuteLoadSetVarFromIniFileAction_With_UseServerDebugging;
+var
+  LoadSetVarFromIniFileOptions: TClkLoadSetVarFromIniFileOptions;
+  LoadSetVarFromIniFileOptionsAPI: TClkLoadSetVarFromIniFileOptionsAPI;
+  TempLoadSetVarFromIniFileOptionsAPIWS: TClkLoadSetVarFromIniFileOptionsAPIWS;
+  ActionName: WideString;
+  Response: string;
+  Th: TClientThread;
+begin
+  GetDefaultPropertyValues_LoadSetVarFromIniFile(LoadSetVarFromIniFileOptions);
+  SetLength(Response, CMaxSharedStringLength);
+
+  ActionName := 'My LoadSetVarFromIniFile action';
+
+  Th := AsyncExecTestTemplate(CTestDriverAddress, '$AppDir$\..\Tests\TestFiles\ClickDebuggingButton.clktmpl');
+  try
+    SetLoadSetVarFromIniFileOptionsToAPI(LoadSetVarFromIniFileOptions, LoadSetVarFromIniFileOptionsAPI, TempLoadSetVarFromIniFileOptionsAPIWS);
+    ExecuteLoadSetVarFromIniFileAction(@ActionName[1], 100, @LoadSetVarFromIniFileOptionsAPI, True, @Response[1]);
+    WaitForDebuggingActionToFinish(Response, Th);
+  finally
+    Th.Free;
+  end;
+end;
+
+
+
+procedure TTestClickerClientHTTPAPI.Test_ExecuteSaveSetVarToIniFileAction_With_UseServerDebugging;
+var
+  SaveSetVarToIniFileOptions: TClkSaveSetVarToIniFileOptions;
+  SaveSetVarToIniFileOptionsAPI: TClkSaveSetVarToIniFileOptionsAPI;
+  TempSaveSetVarToIniFileOptionsAPIWS: TClkSaveSetVarToIniFileOptionsAPIWS;
+  ActionName: WideString;
+  Response: string;
+  Th: TClientThread;
+begin
+  GetDefaultPropertyValues_SaveSetVarToIniFile(SaveSetVarToIniFileOptions);
+  SetLength(Response, CMaxSharedStringLength);
+
+  ActionName := 'My SaveSetVarToIniFile action';
+
+  Th := AsyncExecTestTemplate(CTestDriverAddress, '$AppDir$\..\Tests\TestFiles\ClickDebuggingButton.clktmpl');
+  try
+    SetSaveSetVarToIniFileOptionsToAPI(SaveSetVarToIniFileOptions, SaveSetVarToIniFileOptionsAPI, TempSaveSetVarToIniFileOptionsAPIWS);
+    ExecuteSaveSetVarToIniFileAction(@ActionName[1], 100, @SaveSetVarToIniFileOptionsAPI, True, @Response[1]);
+    WaitForDebuggingActionToFinish(Response, Th);
+  finally
+    Th.Free;
+  end;
+end;
+
+
 const
   CAddActionsTemplateFnm = 'TestAddActionsViaClickerClient.clktmpl';
 
@@ -967,6 +1022,68 @@ begin
     SetEditTemplateOptionsToAPI(EditTemplateOptions, EditTemplateOptionsAPI, TempTClkEditTemplateOptionsAPIWS);
     EditTemplateOptionsAPI.WhichTemplate := Byte(etwtSelf);  //remote execution of EditTemplate, with etwtOther expects a valid file (for 5min) to be sent
     Expect(AddEditTemplateActionToTemplate(@AddActionsTemplateFnm[1], @ActionName[1], 1000, True, nil, @EditTemplateOptionsAPI)).ToBe(0);
+
+    SetLength(Response, PrepareFilesInServer(@AddActionsTemplateFnm[1], @Response[1]));
+    Expect(Response).ToBe(GetStandardResponseFrom_PrepareFilesInServer, 'Response from PrepareFilesInServer');
+    //ToDo: execute a template in TestDriver, which clicks the action (to be selected), then starts action execution in debugging mode.
+    //WaitForDebuggingActionToFinish('$RemoteExecResponse$=', Th);
+  finally
+    //Th.Free;
+  end;
+end;
+
+
+procedure TTestClickerClientHTTPAPI.Test_AddLoadSetVarFromIniFileActionToTemplate_HappyFlow;
+var
+  AddActionsTemplateFnm: WideString;
+  ActionName: WideString;
+  Response: string;
+  LoadSetVarFromIniFileOptions: TClkLoadSetVarFromIniFileOptions;
+  LoadSetVarFromIniFileOptionsAPI: TClkLoadSetVarFromIniFileOptionsAPI;
+  TempLoadSetVarFromIniFileOptionsAPIWS: TClkLoadSetVarFromIniFileOptionsAPIWS;
+  //Th: TClientThread;
+begin
+  GetDefaultPropertyValues_LoadSetVarFromIniFile(LoadSetVarFromIniFileOptions);
+  SetLength(Response, CMaxSharedStringLength);
+
+  AddActionsTemplateFnm := CAddActionsTemplateFnm;
+  ActionName := 'ClientLoadSetVarFromIniFile';
+
+  //Th := AsyncExecTestTemplate(CTestDriverAddress, '$AppDir$\..\Tests\TestFiles\ClickDebuggingButton.clktmpl');
+  try
+    SetLoadSetVarFromIniFileOptionsToAPI(LoadSetVarFromIniFileOptions, LoadSetVarFromIniFileOptionsAPI, TempLoadSetVarFromIniFileOptionsAPIWS);
+    Expect(AddLoadSetVarFromIniFileActionToTemplate(@AddActionsTemplateFnm[1], @ActionName[1], 1000, True, nil, @LoadSetVarFromIniFileOptionsAPI)).ToBe(0);
+
+    SetLength(Response, PrepareFilesInServer(@AddActionsTemplateFnm[1], @Response[1]));
+    Expect(Response).ToBe(GetStandardResponseFrom_PrepareFilesInServer, 'Response from PrepareFilesInServer');
+    //ToDo: execute a template in TestDriver, which clicks the action (to be selected), then starts action execution in debugging mode.
+    //WaitForDebuggingActionToFinish('$RemoteExecResponse$=', Th);
+  finally
+    //Th.Free;
+  end;
+end;
+
+
+procedure TTestClickerClientHTTPAPI.Test_AddSaveSetVarToIniFileActionToTemplate_HappyFlow;
+var
+  AddActionsTemplateFnm: WideString;
+  ActionName: WideString;
+  Response: string;
+  SaveSetVarToIniFileOptions: TClkSaveSetVarToIniFileOptions;
+  SaveSetVarToIniFileOptionsAPI: TClkSaveSetVarToIniFileOptionsAPI;
+  TempSaveSetVarToIniFileOptionsAPIWS: TClkSaveSetVarToIniFileOptionsAPIWS;
+  //Th: TClientThread;
+begin
+  GetDefaultPropertyValues_SaveSetVarToIniFile(SaveSetVarToIniFileOptions);
+  SetLength(Response, CMaxSharedStringLength);
+
+  AddActionsTemplateFnm := CAddActionsTemplateFnm;
+  ActionName := 'ClientSaveSetVarToIniFile';
+
+  //Th := AsyncExecTestTemplate(CTestDriverAddress, '$AppDir$\..\Tests\TestFiles\ClickDebuggingButton.clktmpl');
+  try
+    SetSaveSetVarToIniFileOptionsToAPI(SaveSetVarToIniFileOptions, SaveSetVarToIniFileOptionsAPI, TempSaveSetVarToIniFileOptionsAPIWS);
+    Expect(AddSaveSetVarToIniFileActionToTemplate(@AddActionsTemplateFnm[1], @ActionName[1], 1000, True, nil, @SaveSetVarToIniFileOptionsAPI)).ToBe(0);
 
     SetLength(Response, PrepareFilesInServer(@AddActionsTemplateFnm[1], @Response[1]));
     Expect(Response).ToBe(GetStandardResponseFrom_PrepareFilesInServer, 'Response from PrepareFilesInServer');

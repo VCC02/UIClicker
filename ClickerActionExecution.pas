@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2025 VCC
+    Copyright (C) 2026 VCC
     creation date: Dec 2019
     initial release date: 13 Sep 2022
 
@@ -128,6 +128,9 @@ type
     FOnGetSetVarActionByName: TOnGetSetVarActionByName;
     FOnUpdateSetVarActionByName: TOnUpdateSetVarActionByName;
     FOnTClkIniReadonlyFileCreate: TOnTClkIniReadonlyFileCreate;
+    FOnTClkIniReadonlyFileCreateWithMemStream: TOnTClkIniReadonlyFileCreateWithMemStream;
+    FOnTClkIniFileCreateWithMemStream: TOnTClkIniFileCreateWithMemStream;
+    FOnSaveTClkIniFile: TOnSaveTClkIniFile;
     FOnSaveStringListToFile: TOnSaveTemplateToFile;
     FOnBackupVars: TOnBackupVars;
     //FOnRestoreVars: TOnRestoreVars;
@@ -215,7 +218,12 @@ type
 
     function DoOnGetSetVarActionByName(var AClkSetVarOptions: TClkSetVarOptions; AActionName: string): Boolean;
     function DoOnUpdateSetVarActionByName(AClkSetVarOptions: TClkSetVarOptions; AActionName: string): Boolean;
+
     function DoOnTClkIniReadonlyFileCreate(AFileName: string): TClkIniReadonlyFile;
+    function DoOnTClkIniReadonlyFileCreateWithMemStream(AFileName: string; AWorkMemStream: TMemoryStream): TClkIniReadonlyFile;
+    function DoOnTClkIniFileCreateWithMemStream(AFileName: string; AWorkMemStream: TMemoryStream): TClkIniFile;
+    procedure DoOnSaveTClkIniFile(AFileName: string; AIniFile: TClkIniFile; AWorkMemStream: TMemoryStream);
+
     procedure DoOnSaveStringListToFile(AStringList: TStringList; const AFileName: string);
     procedure DoOnBackupVars(AAllVars: TStringList);
     procedure DoOnSaveFileToExtRenderingInMemFS(AFileName: string; AContent: Pointer; AFileSize: Int64);
@@ -263,6 +271,8 @@ type
     function ExecuteSaveSetVarToFileAction(var ASaveSetVarToFileOptions: TClkSaveSetVarToFileOptions): Boolean;
     function ExecutePluginAction(var APluginOptions: TClkPluginOptions; AAllActions: PClkActionsRecArr; AListOfAllVars: TStringList; AResolvedPluginPath: string; IsDebugging, AShouldStopAtBreakPoint: Boolean): Boolean;
     function ExecuteEditTemplateAction(var AEditTemplateOptions: TClkEditTemplateOptions): Boolean;
+    function ExecuteLoadSetVarFromIniFileAction(var ALoadSetVarFromIniFileOptions: TClkLoadSetVarFromIniFileOptions): Boolean;
+    function ExecuteSaveSetVarToIniFileAction(var ASaveSetVarToIniFileOptions: TClkSaveSetVarToIniFileOptions): Boolean;
 
     function ExecuteClickActionAsString(AListOfClickOptionsParams: TStrings): Boolean;
     function ExecuteExecAppActionAsString(AListOfExecAppOptionsParams: TStrings): Boolean;
@@ -277,6 +287,8 @@ type
     function ExecuteSaveSetVarToFileActionAsString(AListOfSaveSetVarOptionsParams: TStrings): Boolean;
     function ExecutePluginActionAsString(AListOfPluginOptionsParams: TStrings): Boolean;
     function ExecuteEditTemplateActionAsString(AListOfEditTemplateOptionsParams: TStrings): Boolean;
+    function ExecuteLoadSetVarFromIniFileActionAsString(AListOfLoadSetVarOptionsParams: TStrings): Boolean;
+    function ExecuteSaveSetVarToIniFileActionAsString(AListOfSaveSetVarOptionsParams: TStrings): Boolean;
 
     function GetTextRenderingPage(AHTTPParams: TStrings): string;
 
@@ -329,6 +341,10 @@ type
     property OnGetSetVarActionByName: TOnGetSetVarActionByName write FOnGetSetVarActionByName;
     property OnUpdateSetVarActionByName: TOnUpdateSetVarActionByName write FOnUpdateSetVarActionByName;
     property OnTClkIniReadonlyFileCreate: TOnTClkIniReadonlyFileCreate write FOnTClkIniReadonlyFileCreate;
+    property OnTClkIniReadonlyFileCreateWithMemStream: TOnTClkIniReadonlyFileCreateWithMemStream write FOnTClkIniReadonlyFileCreateWithMemStream;
+    property OnTClkIniFileCreateWithMemStream: TOnTClkIniFileCreateWithMemStream write FOnTClkIniFileCreateWithMemStream;
+    property OnSaveTClkIniFile: TOnSaveTClkIniFile write FOnSaveTClkIniFile;
+
     property OnSaveStringListToFile: TOnSaveTemplateToFile write FOnSaveStringListToFile;
     property OnBackupVars: TOnBackupVars write FOnBackupVars;
     //property OnRestoreVars: TOnRestoreVars write FOnRestoreVars;
@@ -425,6 +441,9 @@ begin
   FOnGetSetVarActionByName := nil;
   FOnUpdateSetVarActionByName := nil;
   FOnTClkIniReadonlyFileCreate := nil;
+  FOnTClkIniReadonlyFileCreateWithMemStream := nil;
+  FOnTClkIniFileCreateWithMemStream := nil;
+  FOnSaveTClkIniFile := nil;
   FOnSaveStringListToFile := nil;
   FOnBackupVars := nil;
   //FOnRestoreVars := nil;
@@ -737,6 +756,12 @@ begin
 
     acEditTemplate:
       Result := GetEditTemplateActionProperties(Action.EditTemplateOptions);
+
+    acLoadSetVarFromIniFile:
+      Result := GetLoadSetVarFromIniFileActionProperties(Action.LoadSetVarFromIniFileOptions);
+
+    acSaveSetVarToIniFile:
+      Result := GetSaveSetVarToIniFileActionProperties(Action.SaveSetVarToIniFileOptions);
   end;
 end;
 
@@ -979,6 +1004,33 @@ begin
     raise Exception.Create('OnTClkIniReadonlyFileCreate not assigned.')
   else
     Result := FOnTClkIniReadonlyFileCreate(AFileName);
+end;
+
+
+function TActionExecution.DoOnTClkIniReadonlyFileCreateWithMemStream(AFileName: string; AWorkMemStream: TMemoryStream): TClkIniReadonlyFile;
+begin
+  if not Assigned(FOnTClkIniReadonlyFileCreateWithMemStream) then
+    raise Exception.Create('OnTClkIniReadonlyFileCreateWithMemStream not assigned.')
+  else
+    Result := FOnTClkIniReadonlyFileCreateWithMemStream(AFileName, AWorkMemStream);
+end;
+
+
+function TActionExecution.DoOnTClkIniFileCreateWithMemStream(AFileName: string; AWorkMemStream: TMemoryStream): TClkIniFile;
+begin
+  if not Assigned(FOnTClkIniFileCreateWithMemStream) then
+    raise Exception.Create('OnTClkIniFileCreateWithMemStream not assigned.')
+  else
+    Result := FOnTClkIniFileCreateWithMemStream(AFileName, AWorkMemStream);
+end;
+
+
+procedure TActionExecution.DoOnSaveTClkIniFile(AFileName: string; AIniFile: TClkIniFile; AWorkMemStream: TMemoryStream);
+begin
+  if not Assigned(FOnSaveTClkIniFile) then
+    raise Exception.Create('OnSaveTClkIniFile not assigned.')
+  else
+    FOnSaveTClkIniFile(AFileName, AIniFile, AWorkMemStream);
 end;
 
 
@@ -5222,6 +5274,8 @@ begin
     GetDefaultPropertyValues_SaveSetVarToFile(AClkAction.SaveSetVarToFileOptions);
     GetDefaultPropertyValues_Plugin(AClkAction.PluginOptions);
     GetDefaultPropertyValues_EditTemplate(AClkAction.EditTemplateOptions);
+    GetDefaultPropertyValues_LoadSetVarFromIniFile(AClkAction.LoadSetVarFromIniFileOptions);
+    GetDefaultPropertyValues_SaveSetVarToIniFile(AClkAction.SaveSetVarToIniFileOptions);
 
     GetDefaultPropertyValues_ActionOptions(AClkAction.ActionOptions, AEditTemplateOptions.EditedActionType, ASelfTemplateFileName);
   end;
@@ -5607,6 +5661,243 @@ begin
       AddToLog(E.Message);
       raise;
     end;
+  end;
+end;
+
+
+function TActionExecution.ExecuteLoadSetVarFromIniFileAction(var ALoadSetVarFromIniFileOptions: TClkLoadSetVarFromIniFileOptions): Boolean;
+var
+  Ini: TClkIniReadonlyFile;
+  IniContent: TMemoryStream;
+  VarNamesToBeUpdated: TStringList;
+  i, n: Integer;
+  SetVarActionToBeUpdated: TClkSetVarOptions;
+  CurrentVarName, CurrentVarNameNoDollar, CurrentVarValue: string;
+begin
+  Result := False;
+
+  if ALoadSetVarFromIniFileOptions.FileName = '' then
+  begin
+    SetActionVarValue('$ExecAction_Err$', 'Error: FileName is empty when executing LoadSetVarFromIniFile.');
+    Exit;
+  end;
+
+  if ALoadSetVarFromIniFileOptions.VarListFormat = vlfSetVarAction then
+    if not DoOnGetSetVarActionByName(SetVarActionToBeUpdated, ALoadSetVarFromIniFileOptions.SetVarActionName) then
+    begin
+      SetActionVarValue('$ExecAction_Err$', 'Error: SetVar action not found when executing LoadSetVarFromIniFile: "' + ALoadSetVarFromIniFileOptions.SetVarActionName + '".');
+      Exit;
+    end;
+
+  if ALoadSetVarFromIniFileOptions.VarListFormat = vlfPattern then
+    if ALoadSetVarFromIniFileOptions.IdentPattern = '' then
+    begin
+      SetActionVarValue('$ExecAction_Err$', 'Error: IdentPattern is empty when executing LoadSetVarFromIniFile.');
+      Exit;
+    end;
+
+  if ALoadSetVarFromIniFileOptions.SectionName = '' then
+  begin
+    SetActionVarValue('$ExecAction_Err$', 'Error: SectionName is empty when executing LoadSetVarFromIniFile.');
+    Exit;
+  end;
+
+  IniContent := TMemoryStream.Create;
+  try
+    Ini := DoOnTClkIniReadonlyFileCreateWithMemStream(ALoadSetVarFromIniFileOptions.FileName, IniContent);
+    VarNamesToBeUpdated := TStringList.Create;
+    try
+      VarNamesToBeUpdated.LineBreak := #13#10;
+      VarNamesToBeUpdated.Text := SetVarActionToBeUpdated.ListOfVarNames;
+
+      case ALoadSetVarFromIniFileOptions.VarListFormat of
+        vlfSetVarAction:
+          n := VarNamesToBeUpdated.Count;
+
+        vlfPattern:
+        begin
+          case ALoadSetVarFromIniFileOptions.CounterType of
+            ctVar:
+              n := StrToIntDef(GetActionVarValue(ALoadSetVarFromIniFileOptions.Counter), 0);
+
+            ctIdent:
+              n := Ini.ReadInteger(ALoadSetVarFromIniFileOptions.SectionName, ALoadSetVarFromIniFileOptions.Counter, 0);
+          end;
+        end;
+      end;
+
+      for i := 0 to n - 1 do
+      begin
+        case ALoadSetVarFromIniFileOptions.VarListFormat of
+          vlfSetVarAction:
+          begin
+            CurrentVarName := VarNamesToBeUpdated.Strings[i];
+
+            CurrentVarNameNoDollar := CurrentVarName;
+            if ALoadSetVarFromIniFileOptions.RemoveDollarFromVarName then
+              CurrentVarNameNoDollar := StringReplace(CurrentVarName, '$', '', [rfReplaceAll]);
+          end;
+
+          vlfPattern:
+          begin
+            CurrentVarName := StringReplace(ALoadSetVarFromIniFileOptions.IdentPattern, '<counter>', IntToStr(i), [rfReplaceAll]);
+            CurrentVarNameNoDollar := CurrentVarName;
+          end;
+        end;  //VarListFormat
+
+        case ALoadSetVarFromIniFileOptions.VarDataType of
+          vdtString:
+            CurrentVarValue := Ini.ReadString(ALoadSetVarFromIniFileOptions.SectionName, CurrentVarNameNoDollar, '');
+
+          vdtInteger:
+            CurrentVarValue := IntToStr(Ini.ReadInteger(ALoadSetVarFromIniFileOptions.SectionName, CurrentVarNameNoDollar, 0));
+
+          vdtBoolean:
+            CurrentVarValue := BoolToStr(Ini.ReadBool(ALoadSetVarFromIniFileOptions.SectionName, CurrentVarNameNoDollar, False), True);
+        end;
+
+        SetActionVarValue(CurrentVarName, CurrentVarValue);
+      end;
+
+      Result := True;
+    finally
+      Ini.Free;
+      VarNamesToBeUpdated.Free;
+    end;
+  finally
+    IniContent.Free;
+  end;
+end;
+
+
+function TActionExecution.ExecuteSaveSetVarToIniFileAction(var ASaveSetVarToIniFileOptions: TClkSaveSetVarToIniFileOptions): Boolean;
+var
+  Ini: TClkIniFile;
+  IniContent: TMemoryStream;
+  ListOfVarValues: TStringList;
+  VarName, CounterIdent, IniFnm: string;
+  Bkp, VarNamesToBeSaved: TStringList;
+  i, n: Integer;
+  SetVarActionToBeSaved: TClkSetVarOptions;
+  CurrentVarName, CurrentVarNameNoDollar, CurrentVarValue: string;
+begin
+  Result := False;
+
+  if ASaveSetVarToIniFileOptions.FileName = '' then
+  begin
+    SetActionVarValue('$ExecAction_Err$', 'Error: FileName is empty when executing SaveSetVarToIniFile.');
+    Exit;
+  end;
+
+  if ASaveSetVarToIniFileOptions.VarListFormat = vlfSetVarAction then
+    if not DoOnGetSetVarActionByName(SetVarActionToBeSaved, ASaveSetVarToIniFileOptions.SetVarActionName) then
+    begin
+      SetActionVarValue('$ExecAction_Err$', 'Error: SetVar action not found when executing SaveSetVarToIniFile: "' + ASaveSetVarToIniFileOptions.SetVarActionName + '".');
+      Exit;
+    end;
+
+  if ASaveSetVarToIniFileOptions.VarListFormat = vlfPattern then
+    if ASaveSetVarToIniFileOptions.IdentPattern = '' then
+    begin
+      SetActionVarValue('$ExecAction_Err$', 'Error: IdentPattern is empty when executing SaveSetVarToIniFile.');
+      Exit;
+    end;
+
+  if ASaveSetVarToIniFileOptions.SectionName = '' then
+  begin
+    SetActionVarValue('$ExecAction_Err$', 'Error: SectionName is empty when executing SaveSetVarToIniFile.');
+    Exit;
+  end;
+
+  IniContent := TMemoryStream.Create;
+  try
+    IniFnm := EvaluateReplacements(ASaveSetVarToIniFileOptions.FileName);
+    Ini := DoOnTClkIniFileCreateWithMemStream(IniFnm, IniContent);
+    Bkp := TStringList.Create;
+    VarNamesToBeSaved := TStringList.Create;
+    ListOfVarValues := TStringList.Create;
+    try
+      Bkp.LineBreak := #13#10;
+      VarNamesToBeSaved.LineBreak := #13#10;
+      ListOfVarValues.LineBreak := #13#10;
+
+      DoOnBackupVars(Bkp);
+
+      case ASaveSetVarToIniFileOptions.VarListFormat of
+        vlfSetVarAction:
+        begin
+          VarNamesToBeSaved.Text := SetVarActionToBeSaved.ListOfVarNames;
+          for i := 0 to VarNamesToBeSaved.Count - 1 do
+          begin
+            VarName := VarNamesToBeSaved.Strings[i];
+            ListOfVarValues.Add(Bkp.Values[VarName]);
+          end;
+
+          n := VarNamesToBeSaved.Count;
+        end;
+
+        vlfPattern:
+        begin
+          CounterIdent := StringReplace(ASaveSetVarToIniFileOptions.Counter, '$', '', [rfReplaceAll]);
+          case ASaveSetVarToIniFileOptions.CounterType of
+            ctVar:  //the counter is updated to ini
+            begin
+              n := StrToIntDef(GetActionVarValue(ASaveSetVarToIniFileOptions.Counter), 0);
+              Ini.WriteInteger(ASaveSetVarToIniFileOptions.SectionName, CounterIdent, n);
+            end;
+
+            ctIdent: //the counter stays the same
+              n := Ini.ReadInteger(ASaveSetVarToIniFileOptions.SectionName, CounterIdent, 0);  //yes, n is read from the ini file, i.e. it remains the same
+          end;
+        end;
+      end;
+
+      for i := 0 to n - 1 do
+      begin
+        case ASaveSetVarToIniFileOptions.VarListFormat of
+          vlfSetVarAction:
+            CurrentVarName := VarNamesToBeSaved.Strings[i];
+
+          vlfPattern:
+            CurrentVarName := StringReplace(ASaveSetVarToIniFileOptions.IdentPattern, '<counter>', IntToStr(i), [rfReplaceAll]);
+        end;  //VarListFormat
+
+        CurrentVarNameNoDollar := CurrentVarName;
+        if ASaveSetVarToIniFileOptions.RemoveDollarFromVarName then
+          CurrentVarNameNoDollar := StringReplace(CurrentVarName, '$', '', [rfReplaceAll]);
+
+        if CurrentVarName <> '' then
+          if (CurrentVarName[1] <> '$') and (CurrentVarName[Length(CurrentVarName)] <> '$') then
+            CurrentVarName := '$' + CurrentVarName + '$'; //add '$' to var name, to be able to loop it up
+
+        CurrentVarValue := Bkp.Values[CurrentVarName];
+
+        case ASaveSetVarToIniFileOptions.VarDataType of
+          vdtString:
+            Ini.WriteString(ASaveSetVarToIniFileOptions.SectionName, CurrentVarNameNoDollar, CurrentVarValue);
+
+          vdtInteger:
+            Ini.WriteInteger(ASaveSetVarToIniFileOptions.SectionName, CurrentVarNameNoDollar, StrToIntDef(CurrentVarValue, 0));
+
+          vdtBoolean:
+            Ini.WriteBool(ASaveSetVarToIniFileOptions.SectionName, CurrentVarNameNoDollar, CurrentVarValue = 'True');
+        end;
+      end; //for
+
+      //Ini.UpdateStream; //Call both UpdateStream and UpdateFile, then let the Ini object decide how to update the file, based on how it was created.
+      //Ini.UpdateFile;
+
+      DoOnSaveTClkIniFile(IniFnm, Ini, IniContent); //IniContent is updated by the Ini.UpdateStream call. Then, DoOnSaveTClkIniFile saves it to the In-Mem FS.
+
+      Result := True;
+    finally
+      Ini.Free;
+      VarNamesToBeSaved.Free;
+      ListOfVarValues.Free;
+      Bkp.Free;
+    end;
+  finally
+    IniContent.Free;
   end;
 end;
 
@@ -6042,6 +6333,64 @@ begin
     end;
 
     Result := ExecuteEditTemplateAction(WorkAction.EditTemplateOptions);
+  finally
+    SetLastActionStatus(Result, False);
+  end;
+end;
+
+
+function TActionExecution.ExecuteLoadSetVarFromIniFileActionAsString(AListOfLoadSetVarOptionsParams: TStrings): Boolean;
+var
+  WorkAction: TClkActionRec;
+  Err: string;
+begin
+  Result := False;
+  SetActionVarValue('$ExecAction_Err$', '');
+  try
+    Err := SetLoadSetVarFromIniFileActionProperties(AListOfLoadSetVarOptionsParams, WorkAction.LoadSetVarFromIniFileOptions);
+    if Err <> '' then
+    begin
+      SetActionVarValue('$ExecAction_Err$', Err);
+      Exit;
+    end;
+
+    if AListOfLoadSetVarOptionsParams.Values[CREParam_UseServerDebugging] = '1' then
+    begin
+      GetActionOptionsFromParams(AListOfLoadSetVarOptionsParams, WorkAction);
+      WorkAction.ActionOptions.Action := acLoadSetVarFromIniFile;
+      DoOnWaitInDebuggingMode(WorkAction, asiNo);
+    end;
+
+    Result := ExecuteLoadSetVarFromIniFileAction(WorkAction.LoadSetVarFromIniFileOptions);
+  finally
+    SetLastActionStatus(Result, False);
+  end;
+end;
+
+
+function TActionExecution.ExecuteSaveSetVarToIniFileActionAsString(AListOfSaveSetVarOptionsParams: TStrings): Boolean;
+var
+  WorkAction: TClkActionRec;
+  Err: string;
+begin
+  Result := False;
+  SetActionVarValue('$ExecAction_Err$', '');
+  try
+    Err := SetSaveSetVarToIniFileActionProperties(AListOfSaveSetVarOptionsParams, WorkAction.SaveSetVarToIniFileOptions);
+    if Err <> '' then
+    begin
+      SetActionVarValue('$ExecAction_Err$', Err);
+      Exit;
+    end;
+
+    if AListOfSaveSetVarOptionsParams.Values[CREParam_UseServerDebugging] = '1' then
+    begin
+      GetActionOptionsFromParams(AListOfSaveSetVarOptionsParams, WorkAction);
+      WorkAction.ActionOptions.Action := acSaveSetVarToIniFile;
+      DoOnWaitInDebuggingMode(WorkAction, asiNo);
+    end;
+
+    Result := ExecuteSaveSetVarToIniFileAction(WorkAction.SaveSetVarToIniFileOptions);
   finally
     SetLastActionStatus(Result, False);
   end;

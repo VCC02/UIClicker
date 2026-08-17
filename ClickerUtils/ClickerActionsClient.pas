@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2025 VCC
+    Copyright (C) 2026 VCC
     creation date: Dec 2019
     initial release date: 26 Jul 2022
 
@@ -157,6 +157,8 @@ const
   CRECmd_ExecuteSaveSetVarToFile = 'ExecuteSaveSetVarToFile';        //constant misses "Action" suffix. Kept here for backwards compatibility.
   CRECmd_ExecutePlugin = 'ExecutePlugin';                            //constant misses "Action" suffix. Kept here for backwards compatibility.
   CRECmd_ExecuteEditTemplate = 'ExecuteEditTemplate';                //constant misses "Action" suffix. Kept here for backwards compatibility.
+  CRECmd_ExecuteLoadSetVarFromIniFileAction = 'ExecuteLoadSetVarFromIniFileAction';
+  CRECmd_ExecuteSaveSetVarToIniFileAction = 'ExecuteSaveSetVarToIniFileAction';
 
   CRECmd_ExecuteLoadSetVarFromFileAction = 'ExecuteLoadSetVarFromFileAction'; //fixed the missing "Action" suffix.
   CRECmd_ExecuteSaveSetVarToFileAction = 'ExecuteSaveSetVarToFileAction';     //fixed the missing "Action" suffix.
@@ -252,6 +254,8 @@ function ExecuteLoadSetVarFromFileAction(ARemoteAddress: string; ALoadSetVarFrom
 function ExecuteSaveSetVarToFileAction(ARemoteAddress: string; ASaveSetVarToFileOptions: TClkSaveSetVarToFileOptions; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
 function ExecutePluginAction(ARemoteAddress: string; APluginOptions: TClkPluginOptions; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False; AUseStepIntoDebugging: Boolean = False): string;
 function ExecuteEditTemplateAction(ARemoteAddress: string; AEditTemplateOptions: TClkEditTemplateOptions; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
+function ExecuteLoadSetVarFromIniFileAction(ARemoteAddress: string; ALoadSetVarFromIniFileOptions: TClkLoadSetVarFromIniFileOptions; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
+function ExecuteSaveSetVarToIniFileAction(ARemoteAddress: string; ASaveSetVarToIniFileOptions: TClkSaveSetVarToIniFileOptions; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
 
 procedure GetListOfUsedFilesFromLoadedTemplate(var AClkActions: TClkActionsRecArr; AListOfFiles: TStringList);
 function SendMissingFilesToServer(ARemoteAddress: string; var AClkActions: TClkActionsRecArr): string;
@@ -925,7 +929,7 @@ end;
 
 function ExecuteLoadSetVarFromFileAction(ARemoteAddress: string; ALoadSetVarFromFileOptions: TClkLoadSetVarFromFileOptions; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
 begin
-  Result := SendTextRequestToServer(ARemoteAddress + CRECmd_ExecuteLoadSetVarFromFile + '?' +
+  Result := SendTextRequestToServer(ARemoteAddress + CRECmd_ExecuteLoadSetVarFromFileAction + '?' +
                                     CREParam_StackLevel + '=0' + '&' +   //use the main editor
                                     CREParam_UseServerDebugging + '=' + IntToStr(Ord(AUseServerDebugging)) + '&' +
                                     GetLoadSetVarFromFileActionProperties(ALoadSetVarFromFileOptions),
@@ -936,7 +940,7 @@ end;
 
 function ExecuteSaveSetVarToFileAction(ARemoteAddress: string; ASaveSetVarToFileOptions: TClkSaveSetVarToFileOptions; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
 begin
-  Result := SendTextRequestToServer(ARemoteAddress + CRECmd_ExecuteSaveSetVarToFile + '?' +
+  Result := SendTextRequestToServer(ARemoteAddress + CRECmd_ExecuteSaveSetVarToFileAction + '?' +
                                     CREParam_StackLevel + '=0' + '&' +   //use the main editor
                                     CREParam_UseServerDebugging + '=' + IntToStr(Ord(AUseServerDebugging)) + '&' +
                                     GetSaveSetVarToFileActionProperties(ASaveSetVarToFileOptions),
@@ -947,7 +951,7 @@ end;
 
 function ExecutePluginAction(ARemoteAddress: string; APluginOptions: TClkPluginOptions; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False; AUseStepIntoDebugging: Boolean = False): string;
 begin
-  Result := SendTextRequestToServer(ARemoteAddress + CRECmd_ExecutePlugin + '?' +
+  Result := SendTextRequestToServer(ARemoteAddress + CRECmd_ExecutePluginAction + '?' +
                                     CREParam_StackLevel + '=0' + '&' +   //use the main editor
                                     CREParam_UseServerDebugging + '=' + IntToStr(Ord(AUseServerDebugging)) + '&' +
                                     CREParam_IsDebugging + '=' + IntToStr(Ord(AUseStepIntoDebugging)) + '&' +
@@ -959,10 +963,32 @@ end;
 
 function ExecuteEditTemplateAction(ARemoteAddress: string; AEditTemplateOptions: TClkEditTemplateOptions; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
 begin
-  Result := SendTextRequestToServer(ARemoteAddress + CRECmd_ExecuteEditTemplate + '?' +
+  Result := SendTextRequestToServer(ARemoteAddress + CRECmd_ExecuteEditTemplateAction + '?' +
                                     CREParam_StackLevel + '=0' + '&' +   //use the main editor
                                     CREParam_UseServerDebugging + '=' + IntToStr(Ord(AUseServerDebugging)) + '&' +
                                     GetEditTemplateActionProperties(AEditTemplateOptions, True),
+                                    ACallAppProcMsg
+                                    );
+end;
+
+
+function ExecuteLoadSetVarFromIniFileAction(ARemoteAddress: string; ALoadSetVarFromIniFileOptions: TClkLoadSetVarFromIniFileOptions; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
+begin
+  Result := SendTextRequestToServer(ARemoteAddress + CRECmd_ExecuteLoadSetVarFromIniFileAction + '?' +
+                                    CREParam_StackLevel + '=0' + '&' +   //use the main editor
+                                    CREParam_UseServerDebugging + '=' + IntToStr(Ord(AUseServerDebugging)) + '&' +
+                                    GetLoadSetVarFromIniFileActionProperties(ALoadSetVarFromIniFileOptions),
+                                    ACallAppProcMsg
+                                    );
+end;
+
+
+function ExecuteSaveSetVarToIniFileAction(ARemoteAddress: string; ASaveSetVarToIniFileOptions: TClkSaveSetVarToIniFileOptions; ACallAppProcMsg: Boolean = True; AUseServerDebugging: Boolean = False): string;
+begin
+  Result := SendTextRequestToServer(ARemoteAddress + CRECmd_ExecuteSaveSetVarToIniFileAction + '?' +
+                                    CREParam_StackLevel + '=0' + '&' +   //use the main editor
+                                    CREParam_UseServerDebugging + '=' + IntToStr(Ord(AUseServerDebugging)) + '&' +
+                                    GetSaveSetVarToIniFileActionProperties(ASaveSetVarToIniFileOptions),
                                     ACallAppProcMsg
                                     );
 end;

@@ -377,6 +377,26 @@ begin
     ACustomActions[i].EditTemplateOptions.ListOfEditedProperties_ET := '';
     ACustomActions[i].EditTemplateOptions.ListOfEnabledProperties_ET := '';
 
+    ACustomActions[i].LoadSetVarFromIniFileOptions.FileName := '';
+    ACustomActions[i].LoadSetVarFromIniFileOptions.SetVarActionName := '';
+    ACustomActions[i].LoadSetVarFromIniFileOptions.VarListFormat := vlfSetVarAction;
+    ACustomActions[i].LoadSetVarFromIniFileOptions.SectionName := '';
+    ACustomActions[i].LoadSetVarFromIniFileOptions.RemoveDollarFromVarName := True;
+    ACustomActions[i].LoadSetVarFromIniFileOptions.IdentPattern := '';
+    ACustomActions[i].LoadSetVarFromIniFileOptions.VarDataType := vdtString;
+    ACustomActions[i].LoadSetVarFromIniFileOptions.CounterType := ctIdent;
+    ACustomActions[i].LoadSetVarFromIniFileOptions.Counter := '';
+
+    ACustomActions[i].SaveSetVarToIniFileOptions.FileName := '';
+    ACustomActions[i].SaveSetVarToIniFileOptions.SetVarActionName := '';
+    ACustomActions[i].SaveSetVarToIniFileOptions.VarListFormat := vlfSetVarAction;
+    ACustomActions[i].SaveSetVarToIniFileOptions.SectionName := '';
+    ACustomActions[i].SaveSetVarToIniFileOptions.RemoveDollarFromVarName := True;
+    ACustomActions[i].SaveSetVarToIniFileOptions.IdentPattern := '';
+    ACustomActions[i].SaveSetVarToIniFileOptions.VarDataType := vdtString;
+    ACustomActions[i].SaveSetVarToIniFileOptions.CounterType := ctIdent;
+    ACustomActions[i].SaveSetVarToIniFileOptions.Counter := '';
+
     AdjustListOfVarEvalBeforeCount(ACustomActions[i].SetVarOptions);
   end;
 end;
@@ -728,6 +748,34 @@ begin
 end;
 
 
+procedure LoadAction_LoadSetVarFromIniFile(Ini: TClkIniReadonlyFile; SectionIndex: Integer; var ALoadSetVarFromIniFileOptions: TClkLoadSetVarFromIniFileOptions);
+begin
+  ALoadSetVarFromIniFileOptions.FileName := Ini.ReadString(SectionIndex, 'FileName', '');
+  ALoadSetVarFromIniFileOptions.SetVarActionName := Ini.ReadString(SectionIndex, 'SetVarActionName', '');
+  ALoadSetVarFromIniFileOptions.VarListFormat := TVarListFormat(Min(Ini.ReadInteger(SectionIndex, 'VarListFormat', Ord(vlfSetVarAction)), Integer(High(TVarListFormat))));
+  ALoadSetVarFromIniFileOptions.SectionName := Ini.ReadString(SectionIndex, 'SectionName', '');
+  ALoadSetVarFromIniFileOptions.RemoveDollarFromVarName := Ini.ReadBool(SectionIndex, 'RemoveDollarFromVarName', True);
+  ALoadSetVarFromIniFileOptions.IdentPattern := Ini.ReadString(SectionIndex, 'IdentPattern', '');
+  ALoadSetVarFromIniFileOptions.VarDataType := TVarDataType(Min(Ini.ReadInteger(SectionIndex, 'VarDataType', Ord(vdtString)), Integer(High(TVarDataType))));
+  ALoadSetVarFromIniFileOptions.CounterType := TCounterType(Min(Ini.ReadInteger(SectionIndex, 'CounterType', Ord(ctIdent)), Integer(High(TCounterType))));
+  ALoadSetVarFromIniFileOptions.Counter := Ini.ReadString(SectionIndex, 'Counter', '');
+end;
+
+
+procedure LoadAction_SaveSetVarToIniFile(Ini: TClkIniReadonlyFile; SectionIndex: Integer; var ASaveSetVarToIniFileOptions: TClkSaveSetVarToIniFileOptions);
+begin
+  ASaveSetVarToIniFileOptions.FileName := Ini.ReadString(SectionIndex, 'FileName', '');
+  ASaveSetVarToIniFileOptions.SetVarActionName := Ini.ReadString(SectionIndex, 'SetVarActionName', '');
+  ASaveSetVarToIniFileOptions.VarListFormat := TVarListFormat(Min(Ini.ReadInteger(SectionIndex, 'VarListFormat', Ord(vlfSetVarAction)), Integer(High(TVarListFormat))));
+  ASaveSetVarToIniFileOptions.SectionName := Ini.ReadString(SectionIndex, 'SectionName', '');
+  ASaveSetVarToIniFileOptions.RemoveDollarFromVarName := Ini.ReadBool(SectionIndex, 'RemoveDollarFromVarName', True);
+  ASaveSetVarToIniFileOptions.IdentPattern := Ini.ReadString(SectionIndex, 'IdentPattern', '');
+  ASaveSetVarToIniFileOptions.VarDataType := TVarDataType(Min(Ini.ReadInteger(SectionIndex, 'VarDataType', Ord(vdtString)), Integer(High(TVarDataType))));
+  ASaveSetVarToIniFileOptions.CounterType := TCounterType(Min(Ini.ReadInteger(SectionIndex, 'CounterType', Ord(ctIdent)), Integer(High(TCounterType))));
+  ASaveSetVarToIniFileOptions.Counter := Ini.ReadString(SectionIndex, 'Counter', '');
+end;
+
+
 procedure LoadTemplateToCustomActions_V2(Ini: TClkIniReadonlyFile; var ACustomActions: TClkActionsRecArr; var ANotes, ATemplateIconPath: string);
 var
   IterationStr: string;
@@ -759,6 +807,8 @@ begin
       acSaveSetVarToFile: LoadAction_SaveSetVarToFile(Ini, SectionIndex, ACustomActions[i].SaveSetVarToFileOptions);
       acPlugin: LoadAction_Plugin(Ini, SectionIndex, ACustomActions[i].PluginOptions);
       acEditTemplate: LoadAction_EditTemplate(Ini, SectionIndex, ACustomActions[i].EditTemplateOptions);
+      acLoadSetVarFromIniFile: LoadAction_LoadSetVarFromIniFile(Ini, SectionIndex, ACustomActions[i].LoadSetVarFromIniFileOptions);
+      acSaveSetVarToIniFile: LoadAction_SaveSetVarToIniFile(Ini, SectionIndex, ACustomActions[i].SaveSetVarToIniFileOptions);
     end;
   end;
 
@@ -1262,6 +1312,34 @@ begin
 end;
 
 
+procedure AddAction_LoadSetVarFromIniFileToStringList(var AActionLoadSetVarFromIniFileOptions: TClkLoadSetVarFromIniFileOptions; AStringList: TStringList);
+begin
+  AStringList.Add('FileName=' + AActionLoadSetVarFromIniFileOptions.FileName);
+  AStringList.Add('SetVarActionName=' + AActionLoadSetVarFromIniFileOptions.SetVarActionName);
+  AStringList.Add('VarListFormat=' + IntToStr(Ord(AActionLoadSetVarFromIniFileOptions.VarListFormat)));
+  AStringList.Add('SectionName=' + AActionLoadSetVarFromIniFileOptions.SectionName);
+  AStringList.Add('RemoveDollarFromVarName=' + IntToStr(Ord(AActionLoadSetVarFromIniFileOptions.RemoveDollarFromVarName)));
+  AStringList.Add('IdentPattern=' + AActionLoadSetVarFromIniFileOptions.IdentPattern);
+  AStringList.Add('VarDataType=' + IntToStr(Ord(AActionLoadSetVarFromIniFileOptions.VarDataType)));
+  AStringList.Add('CounterType=' + IntToStr(Ord(AActionLoadSetVarFromIniFileOptions.CounterType)));
+  AStringList.Add('Counter=' + AActionLoadSetVarFromIniFileOptions.Counter);
+end;
+
+
+procedure AddAction_SaveSetVarToIniFileToStringList(var AActionSaveSetVarToIniFileOptions: TClkSaveSetVarToIniFileOptions; AStringList: TStringList);
+begin
+  AStringList.Add('FileName=' + AActionSaveSetVarToIniFileOptions.FileName);
+  AStringList.Add('SetVarActionName=' + AActionSaveSetVarToIniFileOptions.SetVarActionName);
+  AStringList.Add('VarListFormat=' + IntToStr(Ord(AActionSaveSetVarToIniFileOptions.VarListFormat)));
+  AStringList.Add('SectionName=' + AActionSaveSetVarToIniFileOptions.SectionName);
+  AStringList.Add('RemoveDollarFromVarName=' + IntToStr(Ord(AActionSaveSetVarToIniFileOptions.RemoveDollarFromVarName)));
+  AStringList.Add('IdentPattern=' + AActionSaveSetVarToIniFileOptions.IdentPattern);
+  AStringList.Add('VarDataType=' + IntToStr(Ord(AActionSaveSetVarToIniFileOptions.VarDataType)));
+  AStringList.Add('CounterType=' + IntToStr(Ord(AActionSaveSetVarToIniFileOptions.CounterType)));
+  AStringList.Add('Counter=' + AActionSaveSetVarToIniFileOptions.Counter);
+end;
+
+
 procedure AddActionContentToStringList(var AAction: TClkActionRec; AStringList: TStringList);
 begin
   case AAction.ActionOptions.Action of
@@ -1278,6 +1356,8 @@ begin
     acSaveSetVarToFile: AddAction_SaveSetVarToFileToStringList(AAction.SaveSetVarToFileOptions, AStringList);
     acPlugin: AddAction_PluginToStringList(AAction.PluginOptions, AStringList);
     acEditTemplate: AddAction_EditTemplateToStringList(AAction.EditTemplateOptions, AStringList);
+    acLoadSetVarFromIniFile: AddAction_LoadSetVarFromIniFileToStringList(AAction.LoadSetVarFromIniFileOptions, AStringList);
+    acSaveSetVarToIniFile: AddAction_SaveSetVarToIniFileToStringList(AAction.SaveSetVarToIniFileOptions, AStringList);
   end;
 end;
 
@@ -1410,6 +1490,8 @@ begin             //Substructures, which do not contain pointers, can be directl
   ADest.SaveSetVarToFileOptions := ASrc.SaveSetVarToFileOptions;
   ADest.PluginOptions := ASrc.PluginOptions;
   ADest.EditTemplateOptions := ASrc.EditTemplateOptions;
+  ADest.LoadSetVarFromIniFileOptions := ASrc.LoadSetVarFromIniFileOptions;
+  ADest.SaveSetVarToIniFileOptions := ASrc.SaveSetVarToIniFileOptions;
 
   CopyFindControlActionContent(ASrc.FindControlOptions, ADest.FindControlOptions);
   CopyFindSubControlActionContent(ASrc.FindSubControlOptions, ADest.FindSubControlOptions);

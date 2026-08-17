@@ -204,6 +204,22 @@ class TEditTemplateWhichTemplate: #(Enum):
     etwtOther = 1
 
 
+class TVarListFormat: #(Enum):
+    vlfSetVarAction = 0
+    vlfPattern = 1
+
+
+class TVarDataType: #(Enum):
+    vdtString = 0
+    vdtInteger = 1
+    vdtBoolean = 2
+
+
+class TCounterType: #(Enum):
+    ctVar = 0
+    ctIdent = 1
+
+
 class TClickOptions(Structure):
     _fields_ = [("XClickPointReference", BYTE), #LONG), #TXClickPointReference
                ("YClickPointReference", BYTE), #LONG), #TYClickPointReference
@@ -792,5 +808,58 @@ def GetDefaultEditTemplateOptions():
     EditTemplateOptions.ShouldSaveTemplate = False
     return EditTemplateOptions
 
+
+class TClkLoadSetVarFromIniFileOptions(Structure):
+    _fields_ = [("FileName", LPCWSTR),
+               ("SetVarActionName", LPCWSTR),
+               ("VarListFormat", BYTE), #LONG),  #TVarListFormat
+               ("SectionName", LPCWSTR),
+               ("RemoveDollarFromVarName", BOOLEAN),
+               ("IdentPattern", LPCWSTR),
+               ("VarDataType", BYTE), #LONG),  #TVarDataType
+               ("CounterType", BYTE), #LONG),  #TCounterType
+               ("Counter", LPCWSTR)]
+
+PTClkLoadSetVarFromIniFileOptions = ctypes.POINTER(TClkLoadSetVarFromIniFileOptions)
+
+def GetDefaultLoadSetVarFromIniFileOptions():
+    LoadSetVarFromIniFileOptions = TLoadSetVarFromIniFileOptions()
+    LoadSetVarFromIniFileOptions.FileName = ''
+    LoadSetVarFromIniFileOptions.SetVarActionName = ''
+    LoadSetVarFromIniFileOptions.VarListFormat = TVarListFormat.vlfSetVarAction
+    LoadSetVarFromIniFileOptions.SectionName = ''
+    LoadSetVarFromIniFileOptions.RemoveDollarFromVarName = True
+    LoadSetVarFromIniFileOptions.IdentPattern = ''
+    LoadSetVarFromIniFileOptions.VarDataType = TVarDataType.vdtString
+    LoadSetVarFromIniFileOptions.CounterType = TCounterType.ctIdent
+    LoadSetVarFromIniFileOptions.Counter = ''
+    return LoadSetVarFromIniFileOptions
+
+
+class TSaveSetVarToIniFileOptions(Structure):
+    _fields_ = [("FileName", LPCWSTR),
+               ("SetVarActionName", LPCWSTR),
+               ("VarListFormat", BYTE), #LONG),  #TVarListFormat
+               ("SectionName", LPCWSTR),
+               ("RemoveDollarFromVarName", BOOLEAN),
+               ("IdentPattern", LPCWSTR),
+               ("VarDataType", BYTE), #LONG),  #TVarDataType
+               ("CounterType", BYTE), #LONG),  #TCounterType
+               ("Counter", LPCWSTR)]
+
+PSaveSetVarToIniFileOptions = ctypes.POINTER(TSaveSetVarToIniFileOptions)
+
+def GetDefaultSaveSetVarToIniFileOptions():
+    SaveSetVarToIniFileOptions = TSaveSetVarToIniFileOptions()
+    SaveSetVarToIniFileOptions.FileName = ''
+    SaveSetVarToIniFileOptions.SetVarActionName = ''
+    SaveSetVarToIniFileOptions.VarListFormat = TVarListFormat.vlfSetVarAction
+    SaveSetVarToIniFileOptions.SectionName = ''
+    SaveSetVarToIniFileOptions.RemoveDollarFromVarName = True
+    SaveSetVarToIniFileOptions.IdentPattern = ''
+    SaveSetVarToIniFileOptions.VarDataType = TVarDataType.vdtString
+    SaveSetVarToIniFileOptions.CounterType = TCounterType.ctIdent
+    SaveSetVarToIniFileOptions.Counter = ''
+    return SaveSetVarToIniFileOptions
 
 ########################

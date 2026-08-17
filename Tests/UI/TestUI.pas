@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2025 VCC
+    Copyright (C) 2026 VCC
     creation date: Oct 2022
     initial release date: 30 Oct 2022
 
@@ -146,6 +146,8 @@ type
     procedure TestVerifyOIDefaultValues_SaveSetVarToFile;
     procedure TestVerifyOIDefaultValues_Plugin;
     procedure TestVerifyOIDefaultValues_EditTemplate;
+    procedure TestVerifyOIDefaultValues_LoadSetVarFromIniFile;
+    procedure TestVerifyOIDefaultValues_SaveSetVarToIniFile;
 
     procedure TestVerifyOIDifferentThanDefaultValues_Click;
     procedure TestVerifyOIDifferentThanDefaultValues_ExecApp;
@@ -161,6 +163,8 @@ type
     procedure TestVerifyOIDifferentThanDefaultValues_SaveSetVarToFile;
     procedure TestVerifyOIDifferentThanDefaultValues_Plugin;
     procedure TestVerifyOIDifferentThanDefaultValues_EditTemplate;
+    procedure TestVerifyOIDifferentThanDefaultValues_LoadSetVarFromIniFile;
+    procedure TestVerifyOIDifferentThanDefaultValues_SaveSetVarToIniFile;
 
     procedure TestEditOIProperty_FindControl_InitialRectangle_Left_SetToValueFromMenu;
     procedure TestEditOIProperty_FindControl_InitialRectangle_Top_SetToValueFromMenu;
@@ -1081,6 +1085,30 @@ begin
 end;
 
 
+procedure TTestUIObjectInspector.TestVerifyOIDefaultValues_LoadSetVarFromIniFile;
+var
+  Properties: TOIInteractionDataArr;
+  LoadSetVarFromIniFileOptions: TClkLoadSetVarFromIniFileOptions;
+begin
+  GetDefaultPropertyValues_LoadSetVarFromIniFile(LoadSetVarFromIniFileOptions);
+  ListOfSerializedPropertiesToOIInteractionData(GetLoadSetVarFromIniFileActionProperties(LoadSetVarFromIniFileOptions), @CLoadSetVarFromIniFileProperties, CPropIsExp[acLoadSetVarFromIniFile], CPropCount_LoadSetVarFromIniFile, Properties);
+
+  VerifyOIDefaultValues(CClkActionStr[acLoadSetVarFromIniFile], Properties);
+end;
+
+
+procedure TTestUIObjectInspector.TestVerifyOIDefaultValues_SaveSetVarToIniFile;
+var
+  Properties: TOIInteractionDataArr;
+  SaveSetVarToIniFileOptions: TClkSaveSetVarToIniFileOptions;
+begin
+  GetDefaultPropertyValues_SaveSetVarToIniFile(SaveSetVarToIniFileOptions);
+  ListOfSerializedPropertiesToOIInteractionData(GetSaveSetVarToIniFileActionProperties(SaveSetVarToIniFileOptions), @CSaveSetVarToIniFileProperties, CPropIsExp[acSaveSetVarToIniFile], CPropCount_SaveSetVarToIniFile, Properties);
+
+  VerifyOIDefaultValues(CClkActionStr[acSaveSetVarToIniFile], Properties);
+end;
+
+
 ///////////////////////////////
 
 
@@ -1316,6 +1344,26 @@ begin
   ListOfSerializedPropertiesToOIInteractionData(GenerateDifferentThanDefault_EditTemplateStr, @CEditTemplateProperties, CPropIsExp[acEditTemplate], CPropCount_EditTemplate, Properties);
 
   VerifyOIDifferentThanDefaultValues(CClkActionStr[acEditTemplate], Properties);
+end;
+
+
+procedure TTestUIObjectInspector.TestVerifyOIDifferentThanDefaultValues_LoadSetVarFromIniFile;
+var
+  Properties: TOIInteractionDataArr;
+begin
+  ListOfSerializedPropertiesToOIInteractionData(GenerateDifferentThanDefault_LoadSetVarFromIniFileStr, @CLoadSetVarFromIniFileProperties, CPropIsExp[acLoadSetVarFromIniFile], CPropCount_LoadSetVarFromIniFile, Properties);
+
+  VerifyOIDifferentThanDefaultValues(CClkActionStr[acLoadSetVarFromIniFile], Properties);
+end;
+
+
+procedure TTestUIObjectInspector.TestVerifyOIDifferentThanDefaultValues_SaveSetVarToIniFile;
+var
+  Properties: TOIInteractionDataArr;
+begin
+  ListOfSerializedPropertiesToOIInteractionData(GenerateDifferentThanDefault_SaveSetVarToIniFileStr, @CSaveSetVarToIniFileProperties, CPropIsExp[acSaveSetVarToIniFile], CPropCount_SaveSetVarToIniFile, Properties);
+
+  VerifyOIDifferentThanDefaultValues(CClkActionStr[acSaveSetVarToIniFile], Properties);
 end;
 
 
