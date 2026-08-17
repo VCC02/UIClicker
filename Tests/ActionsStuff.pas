@@ -228,6 +228,7 @@ procedure GenerateCallTemplateOptions(var ACallTemplateOptions: TClkCallTemplate
 procedure GenerateSleepOptions(var ASleepOptions: TClkSleepOptions; AValue: string);
 procedure GenerateSetVarOptions_OneVar(var ASetVarOptions: TClkSetVarOptions; AVar, AValue: string; AEvalBefore: Boolean = False);
 procedure GenerateSetVarOptions_ThreeVarsForIni(var ASetVarOptions: TClkSetVarOptions);
+procedure GenerateSetVarOptions_FourVarsForIni(var ASetVarOptions: TClkSetVarOptions; AResetValues: Boolean);
 procedure GenerateWindowOperationsOptionsForFindControlSetup(var AWindowOperationsOptions: TClkWindowOperationsOptions; AOperation: TWindowOperation);
 procedure GenerateWindowOperationsOptionsForMouseWheelSetup(var AWindowOperationsOptions: TClkWindowOperationsOptions; AOperation: TWindowOperation);
 procedure GeneratePluginOptions(var APluginOptions: TClkPluginOptions; AFileName, AListOfPropertiesAndValues: string);
@@ -1160,6 +1161,21 @@ begin
   ASetVarOptions.ListOfVarNames := '$One$' + #13#10 + '$Two$' + #13#10 + '$Three$' + #13#10;
   ASetVarOptions.ListOfVarValues := #13#10#13#10#13#10;
   ASetVarOptions.ListOfVarEvalBefore := '000';
+  ASetVarOptions.FailOnException := False;
+end;
+
+
+procedure GenerateSetVarOptions_FourVarsForIni(var ASetVarOptions: TClkSetVarOptions; AResetValues: Boolean);
+var
+  Values: string;
+begin
+  Values := '1' + #13#10 + '2' + #13#10 + '3' + #13#10 + '4' + #13#10;
+  if AResetValues then
+    Values := #13#10#13#10#13#10#13#10;
+
+  ASetVarOptions.ListOfVarNames := '$One$' + #13#10 + '$Two$' + #13#10 + '$Three$' + #13#10 + '$Four$' + #13#10;
+  ASetVarOptions.ListOfVarValues := Values;
+  ASetVarOptions.ListOfVarEvalBefore := '0000';
   ASetVarOptions.FailOnException := False;
 end;
 

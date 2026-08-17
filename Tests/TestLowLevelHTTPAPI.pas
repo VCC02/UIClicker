@@ -45,6 +45,15 @@ type
     procedure Create_SaveTemplateButton_WithAndWithoutThreads_TestTemplateInMem(var FindControlOptions: TClkFindControlOptions; var WindowOperationsOptions: TClkWindowOperationsOptions; var FindSubControlOptions: TClkFindSubControlOptions);
     procedure Execute_UIClickerActions_SaveTemplateButton(AThreadCount, AThreadMessage: string; var FindControlOptions: TClkFindControlOptions; var WindowOperationsOptions: TClkWindowOperationsOptions; var FindSubControlOptions: TClkFindSubControlOptions);
 
+    procedure ValidateLoadSetVarFromIniFile(ASaveSetVarToIniFileOptions: TClkSaveSetVarToIniFileOptions;
+                                            ALoadSetVarFromIniFileOptions: TClkLoadSetVarFromIniFileOptions);
+    procedure Create_SaveSetVarToIniFile_ActionsForTemplate(AIniPath, ASetVarActionName, ASectionName: string;
+                                                            out ASaveSetVarToIniFileOptions: TClkSaveSetVarToIniFileOptions);
+    procedure Create_LoadSetVarFromIniFile_ActionsForTemplate(AIniPath, ASetVarActionName, ASectionName: string;
+                                                              out ALoadSetVarFromIniFileOptions: TClkLoadSetVarFromIniFileOptions);
+
+    procedure ExecuteSaveSetVarToIniFile_LoadSetVarFromIniFile_HappyFlow_SetVar(AIniPath: string);
+
     procedure Test_FindSubControl_RenderExternalBackground;
     procedure CloseRenderingServer;
   public
@@ -147,6 +156,8 @@ type
     procedure Test_ExecuteEditTemplate_UpdateAction_SaveSetVarToIniFile_HappyFlow;
 
     procedure Test_ExecuteLoadSetVarFromIniFile_HappyFlow_SetVar;
+    procedure Test_ExecuteSaveSetVarToIniFile_LoadSetVarFromIniFile_HappyFlow_SetVar_Disk;
+    procedure Test_ExecuteSaveSetVarToIniFile_LoadSetVarFromIniFile_HappyFlow_SetVar_Mem;
 
     procedure AfterAll_AlwaysExecute;
   end;
@@ -1905,19 +1916,12 @@ end;
 
 procedure TTestLowLevelHTTPAPI.Test_ExecuteLoadSetVarFromIniFile_HappyFlow_SetVar;
 const
-  //CVarName = '$MyVar$';
-  //CVarInitValue = 'init';
-  //CVarNewValue = 'some value';
   CTemplateFnm = 'LoadSetVarFromIniFile_SetVar.clktmpl';
   CSetVarActionName = 'MySetVar';
-  CLoadSetVarFromIniFileActionName = 'MyLoadSetVarFromIniFile';
 var
   SetVarOptions: TClkSetVarOptions;
   LoadSetVarFromIniFileOptions: TClkLoadSetVarFromIniFileOptions;
-  Response: string;
 begin
-  //Expect(SetVariable(TestServerAddress, CVarName, CVarInitValue, 0)).ToBe(CREResp_Done);
-  //Expect(GetVarValueFromServer(CVarName)).ToBe(CVarInitValue);
   GenerateSetVarOptions_ThreeVarsForIni(SetVarOptions);
   AddSetVarActionToTemplate(CTemplateFnm, CSetVarActionName, 0, False, '', SetVarOptions, InMemFS);
 
@@ -1925,14 +1929,97 @@ begin
   LoadSetVarFromIniFileOptions.FileName := 'non-existent';
   LoadSetVarFromIniFileOptions.SetVarActionName := CSetVarActionName;
   LoadSetVarFromIniFileOptions.SectionName := 'Settings';
-  AddLoadSetVarFromIniFileActionToTemplate(CTemplateFnm, CLoadSetVarFromIniFileActionName, 0, True, '', LoadSetVarFromIniFileOptions, InMemFS);
 
   SendTemplateFromInMemToServerThenLoad(CTemplateFnm);
-  //Response := FastReplace_87ToReturn(Send_ExecuteCommandAtIndex_ToServer(1, 0));
-  Response := FastReplace_87ToReturn(ExecuteLoadSetVarFromIniFileAction(TestServerAddress, LoadSetVarFromIniFileOptions));
+  ExpectSuccessfulAction(FastReplace_87ToReturn(ExecuteLoadSetVarFromIniFileAction(TestServerAddress, LoadSetVarFromIniFileOptions)));
+end;
 
-  ExpectSuccessfulAction(Response);
-  //Expect(GetVarValueFromServer(CVarName)).ToBe(CVarNewValue);
+
+procedure TTestLowLevelHTTPAPI.ValidateLoadSetVarFromIniFile(ASaveSetVarToIniFileOptions: TClkSaveSetVarToIniFileOptions;
+                                                             ALoadSetVarFromIniFileOptions: TClkLoadSetVarFromIniFileOptions);
+  procedure ExpectVarValues(AValue1, AValue2, AValue3, AValue4: string);
+  begin
+    Expect(GetVarValueFromServer('$One$')).ToBe(AValue1);
+    Expect(GetVarValueFromServer('$Two$')).ToBe(AValue2);
+    Expect(GetVarValueFromServer('$Three$')).ToBe(AValue3);
+    Expect(GetVarValueFromServer('$Four$')).ToBe(AValue4);
+  end;
+begin
+  //Clear values in ini file
+  ExpectSuccessfulAction(FastReplace_87ToReturn(Send_ExecuteCommandAtIndex_ToServer(0, 0))); //reset the values
+  ExpectSuccessfulAction(FastReplace_87ToReturn(ExecuteSaveSetVarToIniFileAction(TestServerAddress, ASaveSetVarToIniFileOptions)));
+  ExpectVarValues('', '', '', '');
+
+  //Update ini with test values
+  ExpectSuccessfulAction(FastReplace_87ToReturn(Send_ExecuteCommandAtIndex_ToServer(1, 0))); //set to test values
+  ExpectSuccessfulAction(FastReplace_87ToReturn(ExecuteSaveSetVarToIniFileAction(TestServerAddress, ASaveSetVarToIniFileOptions)));
+
+  //Clear values in UIClicker list of vars
+  ExpectSuccessfulAction(FastReplace_87ToReturn(Send_ExecuteCommandAtIndex_ToServer(0, 0)));
+  ExpectVarValues('', '', '', '');
+
+  //Load test values from ini
+  ExpectSuccessfulAction(FastReplace_87ToReturn(ExecuteLoadSetVarFromIniFileAction(TestServerAddress, ALoadSetVarFromIniFileOptions)));
+  ExpectVarValues('1', '2', '3', '4');
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Create_SaveSetVarToIniFile_ActionsForTemplate(AIniPath, ASetVarActionName, ASectionName: string;
+                                                                             out ASaveSetVarToIniFileOptions: TClkSaveSetVarToIniFileOptions);
+begin
+  ASaveSetVarToIniFileOptions.FileName := ''; //to stop warning
+  GetDefaultPropertyValues_SaveSetVarToIniFile(ASaveSetVarToIniFileOptions);
+  ASaveSetVarToIniFileOptions.FileName := AIniPath;
+  ASaveSetVarToIniFileOptions.SetVarActionName := ASetVarActionName;
+  ASaveSetVarToIniFileOptions.SectionName := ASectionName;
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Create_LoadSetVarFromIniFile_ActionsForTemplate(AIniPath, ASetVarActionName, ASectionName: string;
+                                                                               out ALoadSetVarFromIniFileOptions: TClkLoadSetVarFromIniFileOptions);
+begin
+  //load the vars from ini
+  ALoadSetVarFromIniFileOptions.FileName := ''; //to stop warning
+  GetDefaultPropertyValues_LoadSetVarFromIniFile(ALoadSetVarFromIniFileOptions);
+  ALoadSetVarFromIniFileOptions.FileName := AIniPath;
+  ALoadSetVarFromIniFileOptions.SetVarActionName := ASetVarActionName;
+  ALoadSetVarFromIniFileOptions.SectionName := ASectionName;
+end;
+
+
+procedure TTestLowLevelHTTPAPI.ExecuteSaveSetVarToIniFile_LoadSetVarFromIniFile_HappyFlow_SetVar(AIniPath: string);
+const
+  CTemplateFnm = 'IniFile_SetVar.clktmpl';
+  CSetVarActionName = 'MySetVar';
+  CSectionName = 'Settings';
+var
+  SetVarOptions_Content, SetVarOptions_Reset: TClkSetVarOptions;
+  LoadSetVarFromIniFileOptions: TClkLoadSetVarFromIniFileOptions;
+  SaveSetVarToIniFileOptions: TClkSaveSetVarToIniFileOptions;
+begin
+  GenerateSetVarOptions_FourVarsForIni(SetVarOptions_Reset, True);
+  AddSetVarActionToTemplate(CTemplateFnm, 'Reset vars', 0, True, '', SetVarOptions_Reset, InMemFS); //at index 0 - reset
+
+  GenerateSetVarOptions_FourVarsForIni(SetVarOptions_Content, False);
+  AddSetVarActionToTemplate(CTemplateFnm, CSetVarActionName, 0, False, '', SetVarOptions_Content, InMemFS); //at index 1 - set
+
+  Create_SaveSetVarToIniFile_ActionsForTemplate(AIniPath, CSetVarActionName, CSectionName, SaveSetVarToIniFileOptions);
+  Create_LoadSetVarFromIniFile_ActionsForTemplate(AIniPath, CSetVarActionName, CSectionName, LoadSetVarFromIniFileOptions);
+
+  SendTemplateFromInMemToServerThenLoad(CTemplateFnm);
+  ValidateLoadSetVarFromIniFile(SaveSetVarToIniFileOptions, LoadSetVarFromIniFileOptions);
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecuteSaveSetVarToIniFile_LoadSetVarFromIniFile_HappyFlow_SetVar_Disk;
+begin
+  ExecuteSaveSetVarToIniFile_LoadSetVarFromIniFile_HappyFlow_SetVar('$TemplateDir$\MyTestFile.ini');
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecuteSaveSetVarToIniFile_LoadSetVarFromIniFile_HappyFlow_SetVar_Mem;
+begin
+  ExecuteSaveSetVarToIniFile_LoadSetVarFromIniFile_HappyFlow_SetVar(CMemPluginLocationPrefix + '\MyTestFile.ini');
 end;
 
 
