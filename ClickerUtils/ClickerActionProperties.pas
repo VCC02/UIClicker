@@ -50,6 +50,8 @@ function GetLoadSetVarFromFileActionProperties(ALoadSetVarFromFileOptions: TClkL
 function GetSaveSetVarToFileActionProperties(ASaveSetVarToFileOptions: TClkSaveSetVarToFileOptions): string;
 function GetPluginActionProperties(PluginOptions: TClkPluginOptions): string;
 function GetEditTemplateActionProperties(AEditTemplateOptions: TClkEditTemplateOptions; AIncludeListOfEditedProperties: Boolean = False): string;
+function GetLoadSetVarFromIniFileActionProperties(ALoadSetVarFromIniFileOptions: TClkLoadSetVarFromIniFileOptions): string;
+function GetSaveSetVarToIniFileActionProperties(ASaveSetVarToIniFileOptions: TClkSaveSetVarToIniFileOptions): string;
 //when adding new Get<ActionType>Properties functions, please update DoOnActionPlugin_GetActionContentByIndex_Callback from ClickerActionPluginLoader.pas
 
 function GetMatchBitmapTextContent(var AMatchBitmapText: TClkFindControlMatchBitmapTextArr): string;
@@ -75,6 +77,8 @@ function SetLoadSetVarFromFileActionProperties(AListOfLoadSetVarOptionsParams: T
 function SetSaveSetVarToFileActionProperties(AListOfSaveSetVarOptionsParams: TStrings; out ASaveSetVarToFileOptions: TClkSaveSetVarToFileOptions): string;
 function SetPluginActionProperties(APluginOptionsParams: TStrings; out APluginOptions: TClkPluginOptions): string;
 function SetEditTemplateActionProperties(AListOfEditTemplateOptionsParams: TStrings; out AEditTemplateOptions: TClkEditTemplateOptions; AIncludeListOfEditedProperties: Boolean = False): string;
+function SetLoadSetVarFromIniFileActionProperties(AListOfLoadSetVarOptionsParams: TStrings; out ALoadSetVarFromIniFileOptions: TClkLoadSetVarFromIniFileOptions): string;
+function SetSaveSetVarToIniFileActionProperties(AListOfSaveSetVarOptionsParams: TStrings; out ASaveSetVarToIniFileOptions: TClkSaveSetVarToIniFileOptions): string;
 
 function SetMatchBitmapTextContent(AListOfFindSubControlOptionsParams: TStrings; var AMatchBitmapText: TClkFindControlMatchBitmapTextArr): string;
 
@@ -98,6 +102,8 @@ procedure GetDefaultPropertyValues_LoadSetVarFromFile(var ALoadSetVarFromFileOpt
 procedure GetDefaultPropertyValues_SaveSetVarToFile(var ASaveSetVarToFileOptions: TClkSaveSetVarToFileOptions);
 procedure GetDefaultPropertyValues_Plugin(var APluginOptions: TClkPluginOptions);
 procedure GetDefaultPropertyValues_EditTemplate(var AEditTemplateOptions: TClkEditTemplateOptions);
+procedure GetDefaultPropertyValues_LoadSetVarFromIniFile(var ALoadSetVarFromIniFileOptions: TClkLoadSetVarFromIniFileOptions);
+procedure GetDefaultPropertyValues_SaveSetVarToIniFile(var ASaveSetVarToIniFileOptions: TClkSaveSetVarToIniFileOptions);
 //if adding new action types, please update ClickerActionsFrame and ExecuteEditTemplateAction, which call all of the above
 
 procedure GetDefaultPropertyValuesByType(AActionType: TClkAction; var AAction: TClkActionRec; AFindSubControlProfilesCount: Integer = 1);
@@ -117,6 +123,8 @@ function IsActionEmpty_LoadSetVarFromFile(var ALoadSetVarFromFileOptions: TClkLo
 function IsActionEmpty_SaveSetVarToFile(var ASaveSetVarToFileOptions: TClkSaveSetVarToFileOptions): Boolean;
 function IsActionEmpty_Plugin(var APluginOptions: TClkPluginOptions): Boolean;
 function IsActionEmpty_EditTemplate(var AEditTemplateOptions: TClkEditTemplateOptions): Boolean;
+function IsActionEmpty_LoadSetVarFromIniFile(var ALoadSetVarFromIniFileOptions: TClkLoadSetVarFromIniFileOptions): Boolean;
+function IsActionEmpty_SaveSetVarToIniFile(var ASaveSetVarToIniFileOptions: TClkSaveSetVarToIniFileOptions): Boolean;
 //if adding new action types, please update ClickerActionsFrame, which calls all of the above
 
 implementation
@@ -411,6 +419,34 @@ begin
 end;
 
 
+function GetLoadSetVarFromIniFileActionProperties(ALoadSetVarFromIniFileOptions: TClkLoadSetVarFromIniFileOptions): string;
+begin
+  Result := 'FileName' + '=' + ALoadSetVarFromIniFileOptions.FileName + '&' +
+            'SetVarActionName' + '=' + ALoadSetVarFromIniFileOptions.SetVarActionName + '&' +
+            'VarListFormat' + '=' + IntToStr(Ord(ALoadSetVarFromIniFileOptions.VarListFormat)) + '&' +
+            'SectionName' + '=' + ALoadSetVarFromIniFileOptions.SectionName + '&' +
+            'RemoveDollarFromVarName' + '=' + IntToStr(Ord(ALoadSetVarFromIniFileOptions.RemoveDollarFromVarName)) + '&' +
+            'IdentPattern' + '=' + ALoadSetVarFromIniFileOptions.IdentPattern + '&' +
+            'VarDataType' + '=' + IntToStr(Ord(ALoadSetVarFromIniFileOptions.VarDataType)) + '&' +
+            'CounterType' + '=' + IntToStr(Ord(ALoadSetVarFromIniFileOptions.CounterType)) + '&' +
+            'Counter' + '=' + ALoadSetVarFromIniFileOptions.Counter;
+end;
+
+
+function GetSaveSetVarToIniFileActionProperties(ASaveSetVarToIniFileOptions: TClkSaveSetVarToIniFileOptions): string;
+begin
+  Result := 'FileName' + '=' + ASaveSetVarToIniFileOptions.FileName + '&' +
+            'SetVarActionName' + '=' + ASaveSetVarToIniFileOptions.SetVarActionName + '&' +
+            'VarListFormat' + '=' + IntToStr(Ord(ASaveSetVarToIniFileOptions.VarListFormat)) + '&' +
+            'SectionName' + '=' + ASaveSetVarToIniFileOptions.SectionName + '&' +
+            'RemoveDollarFromVarName' + '=' + IntToStr(Ord(ASaveSetVarToIniFileOptions.RemoveDollarFromVarName)) + '&' +
+            'IdentPattern' + '=' + ASaveSetVarToIniFileOptions.IdentPattern + '&' +
+            'VarDataType' + '=' + IntToStr(Ord(ASaveSetVarToIniFileOptions.VarDataType)) + '&' +
+            'CounterType' + '=' + IntToStr(Ord(ASaveSetVarToIniFileOptions.CounterType)) + '&' +
+            'Counter' + '=' + ASaveSetVarToIniFileOptions.Counter;
+end;
+
+
 function GetActionPropertiesByType(var AAction: TClkActionRec; AIncludeSpecialProperties: Boolean = False): string;
 begin
   Result := '';
@@ -428,6 +464,8 @@ begin
     acSaveSetVarToFile: Result := GetSaveSetVarToFileActionProperties(AAction.SaveSetVarToFileOptions);
     acPlugin: Result := GetPluginActionProperties(AAction.PluginOptions);
     acEditTemplate: Result := GetEditTemplateActionProperties(AAction.EditTemplateOptions, AIncludeSpecialProperties);
+    acLoadSetVarFromIniFile: Result := GetLoadSetVarFromIniFileActionProperties(AAction.LoadSetVarFromIniFileOptions);
+    acSaveSetVarToIniFile: Result := GetSaveSetVarToIniFileActionProperties(AAction.SaveSetVarToIniFileOptions);
   end;
 end;
 
@@ -753,6 +791,34 @@ begin
 end;
 
 
+function GetLoadSetVarFromIniFileActionPropertyDataTypes: string;
+begin
+  Result := 'FileName' + '=' + CDTString + '&' +
+            'SetVarActionName' + '=' + CDTString + '&' +
+            'VarListFormat' + '=' + CDTEnum + '.TVarListFormat' + '&' +
+            'SectionName' + '=' + CDTString + '&' +
+            'RemoveDollarFromVarName' + '=' + CDTBool + '&' +
+            'IdentPattern' + '=' + CDTString + '&' +
+            'VarDataType' + '=' + CDTEnum + '.TVarDataType' + '&' +
+            'CounterType' + '=' + CDTEnum + '.TCounterType' + '&' +
+            'Counter' + '=' + CDTString;
+end;
+
+
+function GetSaveSetVarToIniFileActionPropertyDataTypes: string;
+begin
+  Result := 'FileName' + '=' + CDTString + '&' +
+            'SetVarActionName' + '=' + CDTString + '&' +
+            'VarListFormat' + '=' + CDTEnum + '.TVarListFormat' + '&' +
+            'SectionName' + '=' + CDTString + '&' +
+            'RemoveDollarFromVarName' + '=' + CDTBool + '&' +
+            'IdentPattern' + '=' + CDTString + '&' +
+            'VarDataType' + '=' + CDTEnum + '.TVarDataType' + '&' +
+            'CounterType' + '=' + CDTEnum + '.TCounterType' + '&' +
+            'Counter' + '=' + CDTString;
+end;
+
+
 function GetActionPropertyDataTypesByType(var AAction: TClkActionRec; AIncludeSpecialProperties: Boolean = False): string;
 begin
   Result := '';
@@ -770,6 +836,8 @@ begin
     acSaveSetVarToFile: Result := GetSaveSetVarToFileActionPropertyDataTypes;
     acPlugin: Result := GetPluginActionPropertyDataTypes;
     acEditTemplate: Result := GetEditTemplateActionPropertyDataTypes(AIncludeSpecialProperties);
+    acLoadSetVarFromIniFile: Result := GetLoadSetVarFromIniFileActionPropertyDataTypes;
+    acSaveSetVarToIniFile: Result := GetSaveSetVarToIniFileActionPropertyDataTypes;
   end;
 end;
 
@@ -971,6 +1039,48 @@ begin
         if APropertyDataTypeName = 'TClkAction' then
         begin
           Result := 'ac' + CClkActionStr[TClkAction(PropertyValueInt)];
+          Exit;
+        end;
+      end;
+
+      acLoadSetVarFromIniFile:
+      begin
+        if APropertyDataTypeName = 'TVarListFormat' then
+        begin
+          Result := CVarListFormatStr[TVarListFormat(PropertyValueInt)];
+          Exit;
+        end;
+
+        if APropertyDataTypeName = 'TVarDataType' then
+        begin
+          Result := CVarDataTypeStr[TVarDataType(PropertyValueInt)];
+          Exit;
+        end;
+
+        if APropertyDataTypeName = 'TCounterType' then
+        begin
+          Result := CCounterTypeStr[TCounterType(PropertyValueInt)];
+          Exit;
+        end;
+      end;
+
+      acSaveSetVarToIniFile:
+      begin
+        if APropertyDataTypeName = 'TVarListFormat' then
+        begin
+          Result := CVarListFormatStr[TVarListFormat(PropertyValueInt)];
+          Exit;
+        end;
+
+        if APropertyDataTypeName = 'TVarDataType' then
+        begin
+          Result := CVarDataTypeStr[TVarDataType(PropertyValueInt)];
+          Exit;
+        end;
+
+        if APropertyDataTypeName = 'TCounterType' then
+        begin
+          Result := CCounterTypeStr[TCounterType(PropertyValueInt)];
           Exit;
         end;
       end;
@@ -1759,6 +1869,84 @@ begin
 end;
 
 
+function SetLoadSetVarFromIniFileActionProperties(AListOfLoadSetVarOptionsParams: TStrings; out ALoadSetVarFromIniFileOptions: TClkLoadSetVarFromIniFileOptions): string;
+var
+  Temp_VarListFormat, Temp_VarDataType, Temp_CounterType: Integer;
+begin
+  Result := '';
+
+  Temp_VarListFormat := StrToIntDef(AListOfLoadSetVarOptionsParams.Values['VarListFormat'], 0);
+  if (Temp_VarListFormat < 0) or (Temp_VarListFormat > Ord(High(TVarListFormat))) then
+  begin
+    Result := 'VarListFormat is out of range.';
+    Exit;
+  end;
+
+  Temp_VarDataType := StrToIntDef(AListOfLoadSetVarOptionsParams.Values['VarDataType'], 0);
+  if (Temp_VarDataType < 0) or (Temp_VarDataType > Ord(High(TVarDataType))) then
+  begin
+    Result := 'VarDataType is out of range.';
+    Exit;
+  end;
+
+  Temp_CounterType := StrToIntDef(AListOfLoadSetVarOptionsParams.Values['CounterType'], 1);
+  if (Temp_CounterType < 0) or (Temp_CounterType > Ord(High(TCounterType))) then
+  begin
+    Result := 'CounterType is out of range.';
+    Exit;
+  end;
+
+  ALoadSetVarFromIniFileOptions.FileName := AListOfLoadSetVarOptionsParams.Values['FileName'];
+  ALoadSetVarFromIniFileOptions.SetVarActionName := AListOfLoadSetVarOptionsParams.Values['SetVarActionName'];
+  ALoadSetVarFromIniFileOptions.VarListFormat := TVarListFormat(Temp_VarListFormat);
+  ALoadSetVarFromIniFileOptions.SectionName := AListOfLoadSetVarOptionsParams.Values['SectionName'];
+  ALoadSetVarFromIniFileOptions.RemoveDollarFromVarName := AListOfLoadSetVarOptionsParams.Values['RemoveDollarFromVarName'] <> '0';
+  ALoadSetVarFromIniFileOptions.IdentPattern := AListOfLoadSetVarOptionsParams.Values['IdentPattern'];
+  ALoadSetVarFromIniFileOptions.VarDataType := TVarDataType(Temp_VarDataType);
+  ALoadSetVarFromIniFileOptions.CounterType := TCounterType(Temp_CounterType);
+  ALoadSetVarFromIniFileOptions.Counter := AListOfLoadSetVarOptionsParams.Values['Counter'];
+end;
+
+
+function SetSaveSetVarToIniFileActionProperties(AListOfSaveSetVarOptionsParams: TStrings; out ASaveSetVarToIniFileOptions: TClkSaveSetVarToIniFileOptions): string;
+var
+  Temp_VarListFormat, Temp_VarDataType, Temp_CounterType: Integer;
+begin
+  Result := '';
+
+  Temp_VarListFormat := StrToIntDef(AListOfSaveSetVarOptionsParams.Values['VarListFormat'], 0);
+  if (Temp_VarListFormat < 0) or (Temp_VarListFormat > Ord(High(TVarListFormat))) then
+  begin
+    Result := 'VarListFormat is out of range.';
+    Exit;
+  end;
+
+  Temp_VarDataType := StrToIntDef(AListOfSaveSetVarOptionsParams.Values['VarDataType'], 0);
+  if (Temp_VarDataType < 0) or (Temp_VarDataType > Ord(High(TVarDataType))) then
+  begin
+    Result := 'VarDataType is out of range.';
+    Exit;
+  end;
+
+  Temp_CounterType := StrToIntDef(AListOfSaveSetVarOptionsParams.Values['CounterType'], 1);
+  if (Temp_CounterType < 0) or (Temp_CounterType > Ord(High(TCounterType))) then
+  begin
+    Result := 'CounterType is out of range.';
+    Exit;
+  end;
+
+  ASaveSetVarToIniFileOptions.FileName := AListOfSaveSetVarOptionsParams.Values['FileName'];
+  ASaveSetVarToIniFileOptions.SetVarActionName := AListOfSaveSetVarOptionsParams.Values['SetVarActionName'];
+  ASaveSetVarToIniFileOptions.VarListFormat := TVarListFormat(Temp_VarListFormat);
+  ASaveSetVarToIniFileOptions.SectionName := AListOfSaveSetVarOptionsParams.Values['SectionName'];
+  ASaveSetVarToIniFileOptions.RemoveDollarFromVarName := AListOfSaveSetVarOptionsParams.Values['RemoveDollarFromVarName'] <> '0';
+  ASaveSetVarToIniFileOptions.IdentPattern := AListOfSaveSetVarOptionsParams.Values['IdentPattern'];
+  ASaveSetVarToIniFileOptions.VarDataType := TVarDataType(Temp_VarDataType);
+  ASaveSetVarToIniFileOptions.CounterType := TCounterType(Temp_CounterType);
+  ASaveSetVarToIniFileOptions.Counter := AListOfSaveSetVarOptionsParams.Values['Counter'];
+end;
+
+
 function SetActionProperties(AListOfOptionsParams: TStrings; AActionType: TClkAction; var AActionOptions: TClkActionRec): string; overload; //it outputs only the options, without the action metadata
 var
   DummyActionOptions: TClkActionOptions;
@@ -1777,6 +1965,8 @@ begin
     acSaveSetVarToFile: Result := SetSaveSetVarToFileActionProperties(AListOfOptionsParams, AActionOptions.SaveSetVarToFileOptions);
     acPlugin: Result := SetPluginActionProperties(AListOfOptionsParams, AActionOptions.PluginOptions);
     acEditTemplate: Result := SetEditTemplateActionProperties(AListOfOptionsParams, AActionOptions.EditTemplateOptions, False);
+    acLoadSetVarFromIniFile: Result := SetLoadSetVarFromIniFileActionProperties(AListOfOptionsParams, AActionOptions.LoadSetVarFromIniFileOptions);
+    acSaveSetVarToIniFile: Result := SetSaveSetVarToIniFileActionProperties(AListOfOptionsParams, AActionOptions.SaveSetVarToIniFileOptions);
   end;
 
   AActionOptions.ActionOptions.Action := AActionType;  //uncomment if needed
@@ -2107,6 +2297,34 @@ begin
 end;
 
 
+procedure GetDefaultPropertyValues_LoadSetVarFromIniFile(var ALoadSetVarFromIniFileOptions: TClkLoadSetVarFromIniFileOptions);
+begin
+  ALoadSetVarFromIniFileOptions.FileName := '';
+  ALoadSetVarFromIniFileOptions.SetVarActionName := '';
+  ALoadSetVarFromIniFileOptions.VarListFormat := vlfSetVarAction;
+  ALoadSetVarFromIniFileOptions.SectionName := '';
+  ALoadSetVarFromIniFileOptions.RemoveDollarFromVarName := True;
+  ALoadSetVarFromIniFileOptions.IdentPattern := '';
+  ALoadSetVarFromIniFileOptions.VarDataType := vdtString;
+  ALoadSetVarFromIniFileOptions.CounterType := ctIdent;
+  ALoadSetVarFromIniFileOptions.Counter := '';
+end;
+
+
+procedure GetDefaultPropertyValues_SaveSetVarToIniFile(var ASaveSetVarToIniFileOptions: TClkSaveSetVarToIniFileOptions);
+begin
+  ASaveSetVarToIniFileOptions.FileName := '';
+  ASaveSetVarToIniFileOptions.SetVarActionName := '';
+  ASaveSetVarToIniFileOptions.VarListFormat := vlfSetVarAction;
+  ASaveSetVarToIniFileOptions.SectionName := '';
+  ASaveSetVarToIniFileOptions.RemoveDollarFromVarName := True;
+  ASaveSetVarToIniFileOptions.IdentPattern := '';
+  ASaveSetVarToIniFileOptions.VarDataType := vdtString;
+  ASaveSetVarToIniFileOptions.CounterType := ctIdent;
+  ASaveSetVarToIniFileOptions.Counter := '';
+end;
+
+
 procedure GetDefaultPropertyValuesByType(AActionType: TClkAction; var AAction: TClkActionRec; AFindSubControlProfilesCount: Integer = 1);
 begin
   case AActionType of
@@ -2123,6 +2341,8 @@ begin
     acSaveSetVarToFile: GetDefaultPropertyValues_SaveSetVarToFile(AAction.SaveSetVarToFileOptions);
     acPlugin: GetDefaultPropertyValues_Plugin(AAction.PluginOptions);
     acEditTemplate: GetDefaultPropertyValues_EditTemplate(AAction.EditTemplateOptions);
+    acLoadSetVarFromIniFile: GetDefaultPropertyValues_LoadSetVarFromIniFile(AAction.LoadSetVarFromIniFileOptions);
+    acSaveSetVarToIniFile: GetDefaultPropertyValues_SaveSetVarToIniFile(AAction.SaveSetVarToIniFileOptions);
   end;
 
   AAction.ActionOptions.Action := AActionType;
@@ -2230,6 +2450,18 @@ end;
 
 
 function IsActionEmpty_EditTemplate(var AEditTemplateOptions: TClkEditTemplateOptions): Boolean;
+begin
+  Result := False; //there is no default value, different than ''
+end;
+
+
+function IsActionEmpty_LoadSetVarFromIniFile(var ALoadSetVarFromIniFileOptions: TClkLoadSetVarFromIniFileOptions): Boolean;
+begin
+  Result := False; //there is no default value, different than ''
+end;
+
+
+function IsActionEmpty_SaveSetVarToIniFile(var ASaveSetVarToIniFileOptions: TClkSaveSetVarToIniFileOptions): Boolean;
 begin
   Result := False; //there is no default value, different than ''
 end;

@@ -72,6 +72,8 @@ const
   CPropCount_SaveSetVarToFile = 2;
   CPropCount_Plugin = 1;  //Static properties, defined here. A plugin can report additional properties, which are not counted by this constant.
   CPropCount_EditTemplate = 11;
+  CPropCount_LoadSetVarFromIniFile = 9;
+  CPropCount_SaveSetVarToIniFile = 9;
 
   CMainPropCounts: array[0..Ord(High(TClkAction))] of Integer = (
     CPropCount_Click,
@@ -86,7 +88,9 @@ const
     CPropCount_LoadSetVarFromFile,
     CPropCount_SaveSetVarToFile,
     CPropCount_Plugin,
-    CPropCount_EditTemplate
+    CPropCount_EditTemplate,
+    CPropCount_LoadSetVarFromIniFile,
+    CPropCount_SaveSetVarToIniFile
   );
 
   //Sub properties (counts)
@@ -303,6 +307,26 @@ const
   CEditTemplate_ListOfEditedProperties_PropIndex = 8;
   CEditTemplate_ListOfEnabledProperties_PropIndex = 9;
   CEditTemplate_ShouldSaveTemplate_PropIndex = 10;
+
+  CLoadSetVarFromIniFile_FileName_PropIndex = 0;
+  CLoadSetVarFromIniFile_SetVarActionName_PropIndex = 1;
+  CLoadSetVarFromIniFile_VarListFormat_PropIndex = 2;
+  CLoadSetVarFromIniFile_SectionName_PropIndex = 3;
+  CLoadSetVarFromIniFile_RemoveDollarFromVarName_PropIndex = 4;
+  CLoadSetVarFromIniFile_IdentPattern_PropIndex = 5;
+  CLoadSetVarFromIniFile_VarDataType_PropIndex = 6;
+  CLoadSetVarFromIniFile_CounterType_PropIndex = 7;
+  CLoadSetVarFromIniFile_Counter_PropIndex = 8;
+
+  CSaveSetVarToIniFile_FileName_PropIndex = 0;
+  CSaveSetVarToIniFile_SetVarActionName_PropIndex = 1;
+  CSaveSetVarToIniFile_VarListFormat_PropIndex = 2;
+  CSaveSetVarToIniFile_SectionName_PropIndex = 3;
+  CSaveSetVarToIniFile_RemoveDollarFromVarName_PropIndex = 4;
+  CSaveSetVarToIniFile_IdentPattern_PropIndex = 5;
+  CSaveSetVarToIniFile_VarDataType_PropIndex = 6;
+  CSaveSetVarToIniFile_CounterType_PropIndex = 7;
+  CSaveSetVarToIniFile_Counter_PropIndex = 8;
 
   //Moved to ClickerUtils
   //CDTString = 'String';
@@ -601,6 +625,30 @@ const
     (Name: 'ShouldSaveTemplate'; EditorType: etBooleanCombo; DataType: CDTBool)
   );
 
+  CLoadSetVarFromIniFileProperties: array[0..CPropCount_LoadSetVarFromIniFile - 1] of TOIPropDef = (
+    (Name: 'FileName'; EditorType: etTextWithArrow; DataType: CDTString),
+    (Name: 'SetVarActionName'; EditorType: etTextWithArrow; DataType: CDTString),
+    (Name: 'VarListFormat'; EditorType: etEnumCombo; DataType: CDTEnum),
+    (Name: 'SectionName'; EditorType: etTextWithArrow; DataType: CDTString),
+    (Name: 'RemoveDollarFromVarName'; EditorType: etBooleanCombo; DataType: CDTBool),
+    (Name: 'IdentPattern'; EditorType: etTextWithArrow; DataType: CDTString),
+    (Name: 'VarDataType'; EditorType: etEnumCombo; DataType: CDTEnum),
+    (Name: 'CounterType'; EditorType: etEnumCombo; DataType: CDTEnum),
+    (Name: 'Counter'; EditorType: etTextWithArrow; DataType: CDTString)
+  );
+
+  CSaveSetVarToIniFileProperties: array[0..CPropCount_SaveSetVarToIniFile - 1] of TOIPropDef = (
+    (Name: 'FileName'; EditorType: etTextWithArrow; DataType: CDTString),
+    (Name: 'SetVarActionName'; EditorType: etTextWithArrow; DataType: CDTString),
+    (Name: 'VarListFormat'; EditorType: etEnumCombo; DataType: CDTEnum),
+    (Name: 'SectionName'; EditorType: etTextWithArrow; DataType: CDTString),
+    (Name: 'RemoveDollarFromVarName'; EditorType: etBooleanCombo; DataType: CDTBool),
+    (Name: 'IdentPattern'; EditorType: etTextWithArrow; DataType: CDTString),
+    (Name: 'VarDataType'; EditorType: etEnumCombo; DataType: CDTEnum),
+    (Name: 'CounterType'; EditorType: etEnumCombo; DataType: CDTEnum),
+    (Name: 'Counter'; EditorType: etTextWithArrow; DataType: CDTString)
+  );
+
 type
   TArrayOfProperties = array[0..0] of TOIPropDef;
   PArrayOfProperties = ^TArrayOfProperties;
@@ -647,7 +695,9 @@ const
     @CLoadSetVarFromFileProperties,         //9
     @CSaveSetVarToFileProperties,           //10
     @CPluginProperties,                     //11
-    @CEditTemplateProperties                //12
+    @CEditTemplateProperties,               //12
+    @CLoadSetVarFromIniFileProperties,      //13
+    @CSaveSetVarToIniFileProperties         //14
   );
 
 
@@ -666,6 +716,8 @@ function GetActionValueStr_LoadSetVarFromFile(AAction: PClkActionRec; APropertyI
 function GetActionValueStr_SaveSetVarToFile(AAction: PClkActionRec; APropertyIndex: Integer): string;
 function GetActionValueStr_Plugin(AAction: PClkActionRec; APropertyIndex: Integer): string;
 function GetActionValueStr_EditTemplate(AAction: PClkActionRec; APropertyIndex: Integer): string;
+function GetActionValueStr_LoadSetVarFromIniFile(AAction: PClkActionRec; APropertyIndex: Integer): string;
+function GetActionValueStr_SaveSetVarToIniFile(AAction: PClkActionRec; APropertyIndex: Integer): string;
 
 {$IFDEF SubProperties}
   function GetActionValueStr_Main_ActionScreenshots(AAction: PClkActionRec; APropertyIndex: Integer): string;
@@ -699,6 +751,8 @@ procedure SetActionValueStr_LoadSetVarFromFile(AAction: PClkActionRec; NewValue:
 procedure SetActionValueStr_SaveSetVarToFile(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
 procedure SetActionValueStr_Plugin(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
 procedure SetActionValueStr_EditTemplate(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
+procedure SetActionValueStr_LoadSetVarFromIniFile(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
+procedure SetActionValueStr_SaveSetVarToIniFile(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
 
 {$IFDEF SubProperties}
   procedure SetActionValueStr_Main_ActionScreenshots(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
@@ -731,7 +785,9 @@ const
     GetActionValueStr_LoadSetVarFromFile,
     GetActionValueStr_SaveSetVarToFile,
     GetActionValueStr_Plugin,
-    GetActionValueStr_EditTemplate
+    GetActionValueStr_EditTemplate,
+    GetActionValueStr_LoadSetVarFromIniFile,
+    GetActionValueStr_SaveSetVarToIniFile
   );
 
   CMainSetActionValueStrFunctions: TSetActionValueStrProcArr = (
@@ -747,7 +803,9 @@ const
     SetActionValueStr_LoadSetVarFromFile,
     SetActionValueStr_SaveSetVarToFile,
     SetActionValueStr_Plugin,
-    SetActionValueStr_EditTemplate
+    SetActionValueStr_EditTemplate,
+    SetActionValueStr_LoadSetVarFromIniFile,
+    SetActionValueStr_SaveSetVarToIniFile
   );
 
 
@@ -996,6 +1054,30 @@ const
     0
   );
 
+  CLoadSetVarFromIniFileEnumCounts: array[0..CPropCount_LoadSetVarFromIniFile - 1] of Integer = (
+    0, //FileName
+    0, //SetVarActionName
+    Ord(High(TVarListFormat)) + 1,  //VarListFormat
+    0, //SectionName
+    0, //RemoveDollarFromVarName
+    0, //IdentPattern
+    Ord(High(TVarDataType)) + 1,  //VarDataType
+    Ord(High(TCounterType)) + 1,  //CounterType
+    0  //Counter
+  );
+
+  CSaveSetVarToIniFileEnumCounts: array[0..CPropCount_SaveSetVarToIniFile - 1] of Integer = (
+    0, //FileName
+    0, //SetVarActionName
+    Ord(High(TVarListFormat)) + 1,  //VarListFormat
+    0, //SectionName
+    0, //RemoveDollarFromVarName
+    0, //IdentPattern
+    Ord(High(TVarDataType)) + 1,  //VarDataType
+    Ord(High(TCounterType)) + 1,  //CounterType
+    0  //Counter
+  );
+
 
   CPropEnumCounts: array[TClkAction] of PArrayOfEnumCounts = (
     @CClickEnumCounts,
@@ -1010,7 +1092,9 @@ const
     @CLoadSetVarFromFileEnumCounts,
     @CSaveSetVarToFileEnumCounts,
     @CPluginEnumCounts,
-    @CEditTemplateEnumCounts
+    @CEditTemplateEnumCounts,
+    @CLoadSetVarFromIniFileEnumCounts,
+    @CSaveSetVarToIniFileEnumCounts
   );
 
 
@@ -1255,6 +1339,30 @@ const
     nil
   );
 
+  CLoadSetVarFromIniFileEnumStrings: array[0..CPropCount_LoadSetVarFromIniFile - 1] of PArrayOfString = (
+    nil, //FileName
+    nil, //SetVarActionName
+    @CVarListFormatStr,
+    nil, //SectionName
+    nil, //RemoveDollarFromVarName
+    nil, //IdentPattern
+    @CVarDataTypeStr,
+    @CCounterTypeStr,
+    nil  //Counter
+  );
+
+  CSaveSetVarToIniFileEnumStrings: array[0..CPropCount_SaveSetVarToIniFile - 1] of PArrayOfString = (
+    nil, //FileName
+    nil, //SetVarActionName
+    @CVarListFormatStr,
+    nil, //SectionName
+    nil, //RemoveDollarFromVarName
+    nil, //IdentPattern
+    @CVarDataTypeStr,
+    @CCounterTypeStr,
+    nil  //Counter
+  );
+
 
   CPropEnumStrings: array[TClkAction] of PArrayOfEnumStrings = (
     @CClickEnumStrings,
@@ -1269,7 +1377,9 @@ const
     @CLoadSetVarFromFileEnumStrings,
     @CSaveSetVarToFileEnumStrings,
     @CPluginEnumStrings,
-    @CEditTemplateEnumStrings
+    @CEditTemplateEnumStrings,
+    @CLoadSetVarFromIniFileEnumStrings,
+    @CSaveSetVarToIniFileEnumStrings
   );
 
   {$IFDEF SubProperties}
@@ -1519,6 +1629,30 @@ const
     0   //ShouldSaveTemplate
   );
 
+  CLoadSetVarFromIniFileIsExp: array[0..CPropCount_LoadSetVarFromIniFile - 1] of Integer = (
+    0, //FileName
+    0, //SetVarActionName
+    0, //VarListFormat
+    0, //SectionName
+    0, //RemoveDollarFromVarName
+    0, //IdentPattern
+    0, //VarDataType
+    0, //CounterType
+    0  //Counter
+  );
+
+  CSaveSetVarToIniFileIsExp: array[0..CPropCount_SaveSetVarToIniFile - 1] of Integer = (
+    0, //FileName
+    0, //SetVarActionName
+    0, //VarListFormat
+    0, //SectionName
+    0, //RemoveDollarFromVarName
+    0, //IdentPattern
+    0, //VarDataType
+    0, //CounterType
+    0  //Counter
+  );
+
 
   CPropIsExp: array[TClkAction] of PArrayOfEnumCounts = (
     @CClickIsExp,
@@ -1533,7 +1667,9 @@ const
     @CLoadSetVarFromFileIsExp,
     @CSaveSetVarToFileIsExp,
     @CPluginIsExp,
-    @CEditTemplateIsExp
+    @CEditTemplateIsExp,
+    @CLoadSetVarFromIniFileIsExp,
+    @CSaveSetVarToIniFileIsExp
   );
 
 
@@ -1687,6 +1823,27 @@ function GetPropertyHint_EditTemplate_NewActionName: string;
 function GetPropertyHint_EditTemplate_ListOfEditedProperties: string;
 function GetPropertyHint_EditTemplate_ListOfEnabledProperties: string;
 function GetPropertyHint_EditTemplate_ShouldSaveTemplate: string;
+
+function GetPropertyHint_LoadSetVarFromIniFile_FileName: string;
+function GetPropertyHint_LoadSetVarFromIniFile_SetVarActionName: string;
+function GetPropertyHint_LoadSetVarFromIniFile_VarListFormat: string;
+function GetPropertyHint_LoadSetVarFromIniFile_SectionName: string;
+function GetPropertyHint_LoadSetVarFromIniFile_RemoveDollarFromVarName: string;
+function GetPropertyHint_LoadSetVarFromIniFile_IdentPattern: string;
+function GetPropertyHint_LoadSetVarFromIniFile_VarDataType: string;
+function GetPropertyHint_LoadSetVarFromIniFile_CounterType: string;
+function GetPropertyHint_LoadSetVarFromIniFile_Counter: string;
+
+function GetPropertyHint_SaveSetVarToIniFile_FileName: string;
+function GetPropertyHint_SaveSetVarToIniFile_SetVarActionName: string;
+function GetPropertyHint_SaveSetVarToIniFile_VarListFormat: string;
+function GetPropertyHint_SaveSetVarToIniFile_SectionName: string;
+function GetPropertyHint_SaveSetVarToIniFile_RemoveDollarFromVarName: string;
+function GetPropertyHint_SaveSetVarToIniFile_IdentPattern: string;
+function GetPropertyHint_SaveSetVarToIniFile_VarDataType: string;
+function GetPropertyHint_SaveSetVarToIniFile_CounterType: string;
+function GetPropertyHint_SaveSetVarToIniFile_Counter: string;
+
 
 const
   CGetPropertyHint_Click: array[0..CPropCount_Click - 1] of TPropHintFunc = (
@@ -1860,6 +2017,30 @@ const
   );
 
 
+  CGetPropertyHint_LoadSetVarFromIniFile: array[0..CPropCount_LoadSetVarFromIniFile - 1] of TPropHintFunc = (
+    @GetPropertyHint_LoadSetVarFromIniFile_FileName, // FileName,
+    @GetPropertyHint_LoadSetVarFromIniFile_SetVarActionName,  // SetVarActionName
+    @GetPropertyHint_LoadSetVarFromIniFile_VarListFormat,
+    @GetPropertyHint_LoadSetVarFromIniFile_SectionName,
+    @GetPropertyHint_LoadSetVarFromIniFile_RemoveDollarFromVarName,
+    @GetPropertyHint_LoadSetVarFromIniFile_IdentPattern,
+    @GetPropertyHint_LoadSetVarFromIniFile_VarDataType,
+    @GetPropertyHint_LoadSetVarFromIniFile_CounterType,
+    @GetPropertyHint_LoadSetVarFromIniFile_Counter
+  );
+
+  CGetPropertyHint_SaveSetVarToIniFile: array[0..CPropCount_SaveSetVarToIniFile - 1] of TPropHintFunc = (
+    @GetPropertyHint_SaveSetVarToIniFile_FileName, // FileName,
+    @GetPropertyHint_SaveSetVarToIniFile_SetVarActionName,  // SetVarActionName
+    @GetPropertyHint_SaveSetVarToIniFile_VarListFormat,
+    @GetPropertyHint_SaveSetVarToIniFile_SectionName,
+    @GetPropertyHint_SaveSetVarToIniFile_RemoveDollarFromVarName,
+    @GetPropertyHint_SaveSetVarToIniFile_IdentPattern,
+    @GetPropertyHint_SaveSetVarToIniFile_VarDataType,
+    @GetPropertyHint_SaveSetVarToIniFile_CounterType,
+    @GetPropertyHint_SaveSetVarToIniFile_Counter
+  );
+
 
   CGetPropertyHint_Actions: TPropHintFuncActionArr = (
     @CGetPropertyHint_Click,
@@ -1874,7 +2055,9 @@ const
     @CGetPropertyHint_LoadSetVarFromFile,
     @CGetPropertyHint_SaveSetVarToFile,
     @CGetPropertyHint_Plugin,
-    @CGetPropertyHint_EditTemplate
+    @CGetPropertyHint_EditTemplate,
+    @CGetPropertyHint_LoadSetVarFromIniFile,
+    @CGetPropertyHint_SaveSetVarToIniFile
   );
 
 
@@ -2521,6 +2704,42 @@ begin
 end;
 
 
+function GetActionValueStr_LoadSetVarFromIniFile(AAction: PClkActionRec; APropertyIndex: Integer): string;
+begin
+  case APropertyIndex of
+    0: Result := AAction^.LoadSetVarFromIniFileOptions.FileName;
+    1: Result := AAction^.LoadSetVarFromIniFileOptions.SetVarActionName;
+    2: Result := CVarListFormatStr[AAction^.LoadSetVarFromIniFileOptions.VarListFormat];
+    3: Result := AAction^.LoadSetVarFromIniFileOptions.SectionName;
+    4: Result := BoolToStr(AAction^.LoadSetVarFromIniFileOptions.RemoveDollarFromVarName, True);
+    5: Result := AAction^.LoadSetVarFromIniFileOptions.IdentPattern;
+    6: Result := CVarDataTypeStr[AAction^.LoadSetVarFromIniFileOptions.VarDataType];
+    7: Result := CCounterTypeStr[AAction^.LoadSetVarFromIniFileOptions.CounterType];
+    8: Result := AAction^.LoadSetVarFromIniFileOptions.Counter;
+    else
+      Result := 'unknown';
+  end;
+end;
+
+
+function GetActionValueStr_SaveSetVarToIniFile(AAction: PClkActionRec; APropertyIndex: Integer): string;
+begin
+  case APropertyIndex of
+    0: Result := AAction^.SaveSetVarToIniFileOptions.FileName;
+    1: Result := AAction^.SaveSetVarToIniFileOptions.SetVarActionName;
+    2: Result := CVarListFormatStr[AAction^.SaveSetVarToIniFileOptions.VarListFormat];
+    3: Result := AAction^.SaveSetVarToIniFileOptions.SectionName;
+    4: Result := BoolToStr(AAction^.SaveSetVarToIniFileOptions.RemoveDollarFromVarName, True);
+    5: Result := AAction^.SaveSetVarToIniFileOptions.IdentPattern;
+    6: Result := CVarDataTypeStr[AAction^.SaveSetVarToIniFileOptions.VarDataType];
+    7: Result := CCounterTypeStr[AAction^.SaveSetVarToIniFileOptions.CounterType];
+    8: Result := AAction^.SaveSetVarToIniFileOptions.Counter;
+    else
+      Result := 'unknown';
+  end;
+end;
+
+
 //
 function XClickPointReference_AsStringToValue(AXClickPointReferenceAsString: string): TXClickPointReference;
 var
@@ -2903,6 +3122,48 @@ begin
   Result := acClick;
   for i := Low(TClkAction) to High(TClkAction) do
     if CClkActionStr[i] = AEditTemplateEditedActionType then
+    begin
+      Result := i;
+      Exit;
+    end;
+end;
+
+
+function LoadSetVarFromIniFileVarListFormat_AsStringToValue(AVarListFormat: string): TVarListFormat;
+var
+  i: TVarListFormat;
+begin
+  Result := vlfSetVarAction;
+  for i := Low(TVarListFormat) to High(TVarListFormat) do
+    if CVarListFormatStr[i] = AVarListFormat then
+    begin
+      Result := i;
+      Exit;
+    end;
+end;
+
+
+function LoadSetVarFromIniFileVarDataType_AsStringToValue(AVarDataType: string): TVarDataType;
+var
+  i: TVarDataType;
+begin
+  Result := vdtString;
+  for i := Low(TVarDataType) to High(TVarDataType) do
+    if CVarDataTypeStr[i] = AVarDataType then
+    begin
+      Result := i;
+      Exit;
+    end;
+end;
+
+
+function LoadSetVarFromIniFileCounterType_AsStringToValue(ACounterType: string): TCounterType;
+var
+  i: TCounterType;
+begin
+  Result := ctIdent;
+  for i := Low(TCounterType) to High(TCounterType) do
+    if CCounterTypeStr[i] = ACounterType then
     begin
       Result := i;
       Exit;
@@ -3369,6 +3630,42 @@ begin
     8: AAction^.EditTemplateOptions.ListOfEditedProperties := NewValue;
     9: AAction^.EditTemplateOptions.ListOfEnabledProperties := NewValue;
     10: AAction^.EditTemplateOptions.ShouldSaveTemplate := StrToBool(NewValue);
+    else
+      ;
+  end;
+end;
+
+
+procedure SetActionValueStr_LoadSetVarFromIniFile(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
+begin
+  case APropertyIndex of
+    0: AAction^.LoadSetVarFromIniFileOptions.FileName := NewValue;
+    1: AAction^.LoadSetVarFromIniFileOptions.SetVarActionName := NewValue;
+    2: AAction^.LoadSetVarFromIniFileOptions.VarListFormat := LoadSetVarFromIniFileVarListFormat_AsStringToValue(NewValue);
+    3: AAction^.LoadSetVarFromIniFileOptions.SectionName := NewValue;
+    4: AAction^.LoadSetVarFromIniFileOptions.RemoveDollarFromVarName := StrToBool(NewValue);
+    5: AAction^.LoadSetVarFromIniFileOptions.IdentPattern := NewValue;
+    6: AAction^.LoadSetVarFromIniFileOptions.VarDataType := LoadSetVarFromIniFileVarDataType_AsStringToValue(NewValue);
+    7: AAction^.LoadSetVarFromIniFileOptions.CounterType := LoadSetVarFromIniFileCounterType_AsStringToValue(NewValue);
+    8: AAction^.LoadSetVarFromIniFileOptions.Counter := NewValue;
+    else
+      ;
+  end;
+end;
+
+
+procedure SetActionValueStr_SaveSetVarToIniFile(AAction: PClkActionRec; NewValue: string; APropertyIndex: Integer);
+begin
+  case APropertyIndex of
+    0: AAction^.SaveSetVarToIniFileOptions.FileName := NewValue;
+    1: AAction^.SaveSetVarToIniFileOptions.SetVarActionName := NewValue;
+    2: AAction^.SaveSetVarToIniFileOptions.VarListFormat := LoadSetVarFromIniFileVarListFormat_AsStringToValue(NewValue);  //using Load
+    3: AAction^.SaveSetVarToIniFileOptions.SectionName := NewValue;
+    4: AAction^.SaveSetVarToIniFileOptions.RemoveDollarFromVarName := StrToBool(NewValue);
+    5: AAction^.SaveSetVarToIniFileOptions.IdentPattern := NewValue;
+    6: AAction^.SaveSetVarToIniFileOptions.VarDataType := LoadSetVarFromIniFileVarDataType_AsStringToValue(NewValue);      //using Load
+    7: AAction^.SaveSetVarToIniFileOptions.CounterType := LoadSetVarFromIniFileCounterType_AsStringToValue(NewValue);      //using Load
+    8: AAction^.SaveSetVarToIniFileOptions.Counter := NewValue;
     else
       ;
   end;
@@ -4369,6 +4666,163 @@ begin
             'If ShouldSaveTemplate is True and the template does not have a name, i.e. has never been saved, the action fails, because it won''t prompt the user for a filename.' + #13#10 +
             'This property does not affect the saving of a template which is already on disk (i.e. used when WhichTemplate is set to etwtOther). That template is attempted to be saved anyway.';
 end;
+
+
+function IniFile_FileName_Common: string;
+begin
+  Result := 'If the path starts with "' + CMemPluginLocationPrefix + PathDelim + '" (no quotes), the file is used from the In-Mem FS for plugins.';
+end;
+
+
+function GetPropertyHint_LoadSetVarFromIniFile_FileName: string;
+begin
+  Result := 'Filename to load var values from, for SetVar action.' + #13#10 +
+             IniFile_FileName_Common;
+end;
+
+
+function GetPropertyHint_LoadSetVarFromIniFile_SetVarActionName: string;
+begin
+  Result := 'Name of the SetVar action, in the current action template, used for specifying the vars to be loaded from file.' + #13#10 +
+            'When VarListFormat is set to vlfSetVarAction, only the left column of SetVar action is required, otherwise, none of it.' + #13#10 +
+            'Usually, the SetVar action should be disabled, to avoid being executed automatically.';
+end;
+
+
+function VarListFormat_Common1: string;
+begin
+  Result := 'When set to vlfSetVarAction:' + #13#10 +
+            ' - The SetVar action is a fixed list of variables.' + #13#10 +
+            ' - Every variable name is used as an ident (key) in the ini file.' + #13#10 +
+            ' - If the ident is not found in the ini file, the variable is set to empty string.' + #13#10 +
+            #13#10 +
+            'When set to vlfPattern:' + #13#10 +
+            ' - The SetVar action is ignored.' + #13#10 +
+            ' - The items in the ini file depend on a counter (e.g. Item_0, Item_1, Item2... Item_n-1).' + #13#10;
+end;
+
+
+function VarListFormat_Common2: string;
+begin
+  Result := ' - The ident names, used for the ini file, are not read from the SetVar action, but instead they are obtained from the IdentPattern property.';
+end;
+
+
+function GetPropertyHint_LoadSetVarFromIniFile_VarListFormat: string;
+begin
+  Result := VarListFormat_Common1 +
+            ' - If the CounterType property is set to ctIdent, the number of items is read from the ini file, otherwise from the Counter property.' + #13#10 +
+            VarListFormat_Common2;
+end;
+
+
+function GetPropertyHint_LoadSetVarFromIniFile_SectionName: string;
+begin
+  Result := 'Name of the section in the ini file, where the idents (keys) and their values are found.' + #13#10 +
+            'When using a counter, which should exist in the ini file, the same section is used as well.' + #13#10 +
+            'In order to use multiple sections of the ini file, different LoadSetVarFromIniFile actions are required.';
+end;
+
+
+function GetPropertyHint_LoadSetVarFromIniFile_RemoveDollarFromVarName: string;
+begin
+  Result := 'The var names in a SetVar action, are expected to be of the $VarName$ format.' + #13#10 +
+            'Ini files don''t usually have idents (keys) starting and ending in ''$''.' + #13#10 +
+            'In order to read those idents, the LoadSetVarFromIniFile can remove the ''$'' characters before and after variable names.';
+end;
+
+
+function GetPropertyHint_LoadSetVarFromIniFile_IdentPattern: string;
+begin
+  Result := 'This is used when VarListFormat is set to vlfPattern.' + #13#10 +
+            'It is a string, in which UIClicker replaces the string ''<counter>'' with the actual counter value for that item. Example: Item_<counter>' + #13#10 +
+            'The idents in the ini file would then be Item_0, Item_1, Item2... Item_n-1, because the counter is expected to be in the [0..n-1] range.' + #13#10 +
+            'As a limitation, only one counter and its set of items are supported per LoadSetVarFromIniFile action.';
+end;
+
+
+function GetPropertyHint_LoadSetVarFromIniFile_VarDataType: string;
+begin
+  Result := 'This sets how to read/write the value from/to the ini file.' + #13#10 +
+            'The current possible values are vdtString, vdtInteger, vdtBoolean, which are implemented as ReadString, ReadInteger, ReadBool.';
+end;
+
+
+function GetPropertyHint_LoadSetVarFromIniFile_CounterType: string;
+begin
+  Result := 'The counter type for the items.' + #13#10 +
+            'When set to ctVar, the Counter property has to be set to a valid UIClicker var (e.g. $n$).' + #13#10 +
+            'When set to ctIdent, the Counter property specifies an ident and the counter is read from the ini file.' + #13#10 +
+            'This property is used if VarListFormat is set to vlfPattern.';
+end;
+
+
+function GetPropertyHint_LoadSetVarFromIniFile_Counter: string;
+begin
+  Result := 'Either a variable name (available on run-time in the template context) or an ident name (found in ini), depending on CounterType.' + #13#10 +
+            'This property is used if VarListFormat is set to vlfPattern.';
+end;
+
+
+function GetPropertyHint_SaveSetVarToIniFile_FileName: string;
+begin
+  Result := 'Filename to save var values to, from SetVar action.' + #13#10 +
+             IniFile_FileName_Common;
+end;
+
+
+function GetPropertyHint_SaveSetVarToIniFile_SetVarActionName: string;
+begin
+  Result := StringReplace(GetPropertyHint_LoadSetVarFromIniFile_SetVarActionName, 'loaded from file', 'saved to file', [rfReplaceAll]);
+end;
+
+
+function GetPropertyHint_SaveSetVarToIniFile_VarListFormat: string;
+begin
+  Result := VarListFormat_Common1 +
+            ' - The number of items (the Counter property) is updated to the ini file, if the CounterType is set to ctVar, otherwise it remains the same.' + #13#10 +
+            VarListFormat_Common2;
+end;
+
+
+function GetPropertyHint_SaveSetVarToIniFile_SectionName: string;
+begin
+  Result := StringReplace(GetPropertyHint_LoadSetVarFromIniFile_SectionName, 'LoadSetVarFromIniFile', 'SaveSetVarToIniFile', [rfReplaceAll]);
+end;
+
+
+function GetPropertyHint_SaveSetVarToIniFile_RemoveDollarFromVarName: string;
+begin
+  Result := StringReplace(GetPropertyHint_LoadSetVarFromIniFile_RemoveDollarFromVarName, 'LoadSetVarFromIniFile', 'SaveSetVarToIniFile', [rfReplaceAll]);
+end;
+
+
+function GetPropertyHint_SaveSetVarToIniFile_IdentPattern: string;
+begin
+  Result := StringReplace(GetPropertyHint_LoadSetVarFromIniFile_IdentPattern, 'LoadSetVarFromIniFile', 'SaveSetVarToIniFile', [rfReplaceAll]) + #13#10 +
+            'The value of IdentPattern is used to generate the variable names, which are looked-up in the list of variables.' + #13#10 +
+            'IdentPattern doesn''t have to contain ''$'' before and after its value, regardless of the RemoveDollarFromVarName property value.';
+end;
+
+
+function GetPropertyHint_SaveSetVarToIniFile_VarDataType: string;
+begin
+  Result := StringReplace(GetPropertyHint_LoadSetVarFromIniFile_VarDataType, 'ReadString, ReadInteger, ReadBool', 'WriteString, WriteInteger, WriteBool', [rfReplaceAll]);
+end;
+
+
+function GetPropertyHint_SaveSetVarToIniFile_CounterType: string;
+begin
+  Result := StringReplace(GetPropertyHint_LoadSetVarFromIniFile_CounterType, '(e.g. $n$).', '(e.g. $n$), and it is updated to the ini file.', [rfReplaceAll]);
+end;
+
+
+function GetPropertyHint_SaveSetVarToIniFile_Counter: string;
+begin
+  Result := GetPropertyHint_LoadSetVarFromIniFile_Counter;
+end;
+
+
 
 end.
 
