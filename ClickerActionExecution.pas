@@ -6386,7 +6386,7 @@ begin
     if AListOfSaveSetVarOptionsParams.Values[CREParam_UseServerDebugging] = '1' then
     begin
       GetActionOptionsFromParams(AListOfSaveSetVarOptionsParams, WorkAction);
-      WorkAction.ActionOptions.Action := acSaveSetVarToFile;
+      WorkAction.ActionOptions.Action := acSaveSetVarToIniFile;
       DoOnWaitInDebuggingMode(WorkAction, asiNo);
     end;
 
