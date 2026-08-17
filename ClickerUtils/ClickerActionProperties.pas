@@ -795,12 +795,12 @@ function GetLoadSetVarFromIniFileActionPropertyDataTypes: string;
 begin
   Result := 'FileName' + '=' + CDTString + '&' +
             'SetVarActionName' + '=' + CDTString + '&' +
-            'VarListFormat' + '=' + CDTEnum + '&' +
+            'VarListFormat' + '=' + CDTEnum + '.TVarListFormat' + '&' +
             'SectionName' + '=' + CDTString + '&' +
             'RemoveDollarFromVarName' + '=' + CDTBool + '&' +
             'IdentPattern' + '=' + CDTString + '&' +
-            'VarDataType' + '=' + CDTEnum + '&' +
-            'CounterType' + '=' + CDTEnum + '&' +
+            'VarDataType' + '=' + CDTEnum + '.TVarDataType' + '&' +
+            'CounterType' + '=' + CDTEnum + '.TCounterType' + '&' +
             'Counter' + '=' + CDTString;
 end;
 
@@ -809,12 +809,12 @@ function GetSaveSetVarToIniFileActionPropertyDataTypes: string;
 begin
   Result := 'FileName' + '=' + CDTString + '&' +
             'SetVarActionName' + '=' + CDTString + '&' +
-            'VarListFormat' + '=' + CDTEnum + '&' +
+            'VarListFormat' + '=' + CDTEnum + '.TVarListFormat' + '&' +
             'SectionName' + '=' + CDTString + '&' +
             'RemoveDollarFromVarName' + '=' + CDTBool + '&' +
             'IdentPattern' + '=' + CDTString + '&' +
-            'VarDataType' + '=' + CDTEnum + '&' +
-            'CounterType' + '=' + CDTEnum + '&' +
+            'VarDataType' + '=' + CDTEnum + '.TVarDataType' + '&' +
+            'CounterType' + '=' + CDTEnum + '.TCounterType' + '&' +
             'Counter' + '=' + CDTString;
 end;
 

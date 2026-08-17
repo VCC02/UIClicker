@@ -308,6 +308,26 @@ const
   CEditTemplate_ListOfEnabledProperties_PropIndex = 9;
   CEditTemplate_ShouldSaveTemplate_PropIndex = 10;
 
+  CLoadSetVarFromIniFile_FileName_PropIndex = 0;
+  CLoadSetVarFromIniFile_SetVarActionName_PropIndex = 1;
+  CLoadSetVarFromIniFile_VarListFormat_PropIndex = 2;
+  CLoadSetVarFromIniFile_SectionName_PropIndex = 3;
+  CLoadSetVarFromIniFile_RemoveDollarFromVarName_PropIndex = 4;
+  CLoadSetVarFromIniFile_IdentPattern_PropIndex = 5;
+  CLoadSetVarFromIniFile_VarDataType_PropIndex = 6;
+  CLoadSetVarFromIniFile_CounterType_PropIndex = 7;
+  CLoadSetVarFromIniFile_Counter_PropIndex = 8;
+
+  CSaveSetVarToIniFile_FileName_PropIndex = 0;
+  CSaveSetVarToIniFile_SetVarActionName_PropIndex = 1;
+  CSaveSetVarToIniFile_VarListFormat_PropIndex = 2;
+  CSaveSetVarToIniFile_SectionName_PropIndex = 3;
+  CSaveSetVarToIniFile_RemoveDollarFromVarName_PropIndex = 4;
+  CSaveSetVarToIniFile_IdentPattern_PropIndex = 5;
+  CSaveSetVarToIniFile_VarDataType_PropIndex = 6;
+  CSaveSetVarToIniFile_CounterType_PropIndex = 7;
+  CSaveSetVarToIniFile_Counter_PropIndex = 8;
+
   //Moved to ClickerUtils
   //CDTString = 'String';
   //CDTEnum = 'Enum';

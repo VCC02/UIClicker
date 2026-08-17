@@ -2337,6 +2337,12 @@ begin
   if (CurrentlyEditingActionType = acSaveSetVarToFile) or ((CurrentlyEditingActionType = acEditTemplate) and (FEditingAction^.EditTemplateOptions.EditedActionType = acSaveSetVarToFile)) then
     GetEditingActionObjectByActionType^.SaveSetVarToFileOptions.SetVarActionName := SetVarName;
 
+  if (CurrentlyEditingActionType = acLoadSetVarFromIniFile) or ((CurrentlyEditingActionType = acEditTemplate) and (FEditingAction^.EditTemplateOptions.EditedActionType = acLoadSetVarFromIniFile)) then
+    GetEditingActionObjectByActionType^.LoadSetVarFromIniFileOptions.SetVarActionName := SetVarName;
+
+  if (CurrentlyEditingActionType = acSaveSetVarToIniFile) or ((CurrentlyEditingActionType = acEditTemplate) and (FEditingAction^.EditTemplateOptions.EditedActionType = acSaveSetVarToIniFile)) then
+    GetEditingActionObjectByActionType^.SaveSetVarToIniFileOptions.SetVarActionName := SetVarName;
+
   FOIFrame.CancelCurrentEditing;
   FOIFrame.Repaint;   //ideally, RepaintNodeByLevel
   TriggerOnControlsModified;
@@ -5579,9 +5585,34 @@ begin
       acSaveSetVarToFile:
         MenuData^.TempEditingAction^.SaveSetVarToFileOptions.FileName := PathToFileName;
 
+      acLoadSetVarFromIniFile:
+        MenuData^.TempEditingAction^.LoadSetVarFromIniFileOptions.FileName := PathToFileName;
+
+      acSaveSetVarToIniFile:
+        MenuData^.TempEditingAction^.SaveSetVarToIniFileOptions.FileName := PathToFileName;
+
+      acEditTemplate:
+      begin
+        case FEditingAction^.EditTemplateOptions.EditedActionType of
+          acLoadSetVarFromFile:
+            GetEditingActionObjectByActionType^.LoadSetVarFromFileOptions.FileName := PathToFileName;
+
+          acSaveSetVarToFile:
+            GetEditingActionObjectByActionType^.SaveSetVarToFileOptions.FileName := PathToFileName;
+
+          acLoadSetVarFromIniFile:
+            GetEditingActionObjectByActionType^.LoadSetVarFromIniFileOptions.FileName := PathToFileName;
+
+          acSaveSetVarToIniFile:
+            GetEditingActionObjectByActionType^.SaveSetVarToIniFileOptions.FileName := PathToFileName;
+
+          else
+            ;
+        end;
+      end  //acEditTemplate
       else
         ;
-    end;
+    end; //CurrentlyEditingActionType
 
     FOIFrame.CancelCurrentEditing;
     FOIFrame.Repaint;   //ideally, RepaintNodeByLevel
@@ -8296,7 +8327,65 @@ begin
       else
         ;
     end;  //case APropertyIndex
-  end;
+  end; //acEditTemplate
+
+  if (ANodeData.Level = CPropertyLevel) and (ALiveEditingActionType = acLoadSetVarFromIniFile) then
+  begin
+    case APropertyIndex of
+      CLoadSetVarFromIniFile_SetVarActionName_PropIndex:
+        if AEditingAction^.LoadSetVarFromIniFileOptions.VarListFormat = vlfPattern then
+        begin
+          TargetCanvas.Font.Color := clGray;
+          Exit;
+        end;
+
+      CLoadSetVarFromIniFile_IdentPattern_PropIndex, CLoadSetVarFromIniFile_CounterType_PropIndex:
+        if AEditingAction^.LoadSetVarFromIniFileOptions.VarListFormat = vlfSetVarAction then
+        begin
+          TargetCanvas.Font.Color := clGray;
+          Exit;
+        end;
+
+      CLoadSetVarFromIniFile_Counter_PropIndex:
+        if (AEditingAction^.LoadSetVarFromIniFileOptions.VarListFormat = vlfSetVarAction) or
+           ((AEditingAction^.LoadSetVarFromIniFileOptions.VarListFormat = vlfPattern) and (AEditingAction^.LoadSetVarFromIniFileOptions.CounterType = ctIdent)) then
+        begin
+          TargetCanvas.Font.Color := clGray;
+          Exit;
+        end;
+      else
+        ;
+    end;
+  end;  //acLoadSetVarFromIniFile
+
+  if (ANodeData.Level = CPropertyLevel) and (ALiveEditingActionType = acSaveSetVarToIniFile) then
+  begin
+    case APropertyIndex of
+      CSaveSetVarToIniFile_SetVarActionName_PropIndex:
+        if AEditingAction^.SaveSetVarToIniFileOptions.VarListFormat = vlfPattern then
+        begin
+          TargetCanvas.Font.Color := clGray;
+          Exit;
+        end;
+
+      CSaveSetVarToIniFile_IdentPattern_PropIndex, CSaveSetVarToIniFile_CounterType_PropIndex:
+        if AEditingAction^.SaveSetVarToIniFileOptions.VarListFormat = vlfSetVarAction then
+        begin
+          TargetCanvas.Font.Color := clGray;
+          Exit;
+        end;
+
+      CSaveSetVarToIniFile_Counter_PropIndex:
+        if (AEditingAction^.SaveSetVarToIniFileOptions.VarListFormat = vlfSetVarAction) or
+           ((AEditingAction^.SaveSetVarToIniFileOptions.VarListFormat = vlfPattern) and (AEditingAction^.SaveSetVarToIniFileOptions.CounterType = ctIdent)) then
+        begin
+          TargetCanvas.Font.Color := clGray;
+          Exit;
+        end;
+      else
+        ;
+    end;
+  end;  //acSaveSetVarToIniFile
 end;
 
 
@@ -9327,7 +9416,7 @@ begin
           PlatformInfo := '[' + IntToStr(i) + ']  ' + PlatformInfo;
 
         TempMenuItem := AddMenuItemToPopupMenu(AOIEditorMenu, PlatformInfo, AMenuHandler, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
-        POIMenuItemData(TempMenuItem.Tag)^.UserDataIndex := i; //this will be used by menu item handlers
+        {%H-}POIMenuItemData(TempMenuItem.Tag)^.UserDataIndex := i; //this will be used by menu item handlers
       end;
     finally
       Freemem(PlatformIDs, PlatformCount * SizeOf(cl_platform_id));
@@ -9391,7 +9480,7 @@ begin
           PlatformInfo := '[' + IntToStr(i) + ']  ' + PlatformInfo;
 
         TempPlatformMenuItem := AddMenuItemToPopupMenu(AOIEditorMenu, PlatformInfo, nil, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
-        POIMenuItemData(TempPlatformMenuItem.Tag)^.UserDataIndex := i; //not used here, because there is not handler for these items
+        {%H-}POIMenuItemData(TempPlatformMenuItem.Tag)^.UserDataIndex := i; //not used here, because there is not handler for these items
 
         DevType := CL_DEVICE_TYPE_GPU;
         Error := OpenCLDll.clGetDeviceIDs(PlatformIDs[i], DevType, 0, nil, @DeviceCount);
@@ -9414,7 +9503,7 @@ begin
           begin
             DeviceInfo := GetGPUDeviceInfo(DoOnAddToLog, OpenCLDll, DeviceIDs[j], CL_DEVICE_NAME);
             TempDeviceMenuItem := AddMenuItemToAnotherMenuItem(AOIEditorMenu,TempPlatformMenuItem, DeviceInfo, AMenuHandler, ANodeLevel, ACategoryIndex, APropertyIndex, AItemIndex, AEditingAction);
-            POIMenuItemData(TempDeviceMenuItem.Tag)^.UserDataIndex := j; //this will be used by menu item handlers
+            {%H-}POIMenuItemData(TempDeviceMenuItem.Tag)^.UserDataIndex := j; //this will be used by menu item handlers
           end;
         finally
           Freemem(DeviceIDs, DeviceCount * SizeOf(cl_device_id));
@@ -9817,10 +9906,10 @@ begin
       end;
     end;
 
-    acLoadSetVarFromFile, acSaveSetVarToFile:
+    acLoadSetVarFromFile, acSaveSetVarToFile, acLoadSetVarFromIniFile, acSaveSetVarToIniFile:
     begin
       case APropertyIndex of
-        CLoadSetVarFromFile_FileName_PropIndex:
+        CLoadSetVarFromFile_FileName_PropIndex:     //same as CLoadSetVarFromIniFile_FileName_PropIndex
         begin
           FOIEditorMenu.Items.Clear;
           AddMenuItemToPopupMenu(FOIEditorMenu, 'Browse...', MenuItem_BrowseSetVarFileInPropertyListClick,
@@ -9829,7 +9918,7 @@ begin
           FOIEditorMenu.PopUp;
         end;
 
-        CLoadSetVarFromFile_SetVarActionName_PropIndex:
+        CLoadSetVarFromFile_SetVarActionName_PropIndex:    //same as CLoadSetVarFromIniFile_SetVarActionName_PropIndex
         begin
           if AEditingAction = @FClkEditedActionByEditTemplate then
           begin
