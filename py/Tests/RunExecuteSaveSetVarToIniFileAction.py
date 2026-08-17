@@ -52,6 +52,13 @@ try:
     SaveSetVarToIniFileOptions = GetDefaultSaveSetVarToIniFileOptions()
     SaveSetVarToIniFileOptions.FileName = 'UnknownSavedFile'
     SaveSetVarToIniFileOptions.SetVarActionName = '$SetVarOldName$'
+    SaveSetVarToIniFileOptions.VarListFormat = TVarListFormat.vlfPattern
+    SaveSetVarToIniFileOptions.SectionName = 'MainSection'
+    SaveSetVarToIniFileOptions.RemoveDollarFromVarName = False
+    SaveSetVarToIniFileOptions.IdentPattern = 'no pattern <counter>'
+    SaveSetVarToIniFileOptions.VarDataType = TVarDataType.vdtBoolean
+    SaveSetVarToIniFileOptions.CounterType = TCounterType.ctVar
+    SaveSetVarToIniFileOptions.Counter = '$TheCounter$'
 
 
     print("ExecuteSaveSetVarToIniFileAction: ", DllFuncs.ExecuteSaveSetVarToIniFileAction("Another SaveSetVarToIniFile", 100, SaveSetVarToIniFileOptions, True))

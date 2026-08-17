@@ -52,7 +52,13 @@ try:
     LoadSetVarFromIniFileOptions = GetDefaultLoadSetVarFromIniFileOptions()
     LoadSetVarFromIniFileOptions.FileName = 'UnknownLoadedFile'
     LoadSetVarFromIniFileOptions.SetVarActionName = '$SetVarNewName$'
-
+    LoadSetVarFromIniFileOptions.VarListFormat = TVarListFormat.vlfPattern
+    LoadSetVarFromIniFileOptions.SectionName = 'MainSection'
+    LoadSetVarFromIniFileOptions.RemoveDollarFromVarName = False
+    LoadSetVarFromIniFileOptions.IdentPattern = 'no pattern <counter>'
+    LoadSetVarFromIniFileOptions.VarDataType = TVarDataType.vdtBoolean
+    LoadSetVarFromIniFileOptions.CounterType = TCounterType.ctVar
+    LoadSetVarFromIniFileOptions.Counter = '$TheCounter$'
 
     print("ExecuteLoadSetVarFromIniFileAction: ", DllFuncs.ExecuteLoadSetVarFromIniFileAction("Another LoadSetVarFromIniFile", 100, LoadSetVarFromIniFileOptions, True))
 finally:

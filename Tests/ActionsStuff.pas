@@ -2149,7 +2149,7 @@ end;
 function GenerateDifferentThanDefault_LoadSetVarFromIniFileStr: string;
 begin
   Result := 'FileName' + '=' + 'UnknownLoadedFile' + '&' +
-            'SetVarActionName' + '=' + '$SetVarNewName$' +
+            'SetVarActionName' + '=' + '$SetVarNewName$' + '&' +
             'VarListFormat' + '=' + '1' + '&' +
             'SectionName' + '=' + 'MainSection' + '&' +
             'RemoveDollarFromVarName' + '=' + '0' + '&' +
@@ -2179,7 +2179,7 @@ end;
 function GenerateDifferentThanDefault_SaveSetVarToIniFileStr: string;
 begin
   Result := 'FileName' + '=' + 'UnknownSavedFile' + '&' +
-            'SetVarActionName' + '=' + '$SetVarOldName$' +
+            'SetVarActionName' + '=' + '$SetVarOldName$' + '&' +
             'VarListFormat' + '=' + '1' + '&' +
             'SectionName' + '=' + 'MainSection' + '&' +
             'RemoveDollarFromVarName' + '=' + '0' + '&' +
