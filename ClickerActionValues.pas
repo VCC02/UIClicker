@@ -4737,7 +4737,9 @@ begin
   Result := 'This is used when VarListFormat is set to vlfPattern.' + #13#10 +
             'It is a string, in which UIClicker replaces the string ''<counter>'' with the actual counter value for that item. Example: Item_<counter>' + #13#10 +
             'The idents in the ini file would then be Item_0, Item_1, Item2... Item_n-1, because the counter is expected to be in the [0..n-1] range.' + #13#10 +
-            'As a limitation, only one counter and its set of items are supported per LoadSetVarFromIniFile action.';
+            'As a limitation, only one counter and its set of items are supported per LoadSetVarFromIniFile action.' + #13#10 +
+            'The value of IdentPattern is used to generate the variable names, which are looked-up in the list of variables.' + #13#10 +
+            'IdentPattern doesn''t have to contain ''$'' before and after its value, regardless of the RemoveDollarFromVarName property value.';
 end;
 
 
@@ -4799,9 +4801,7 @@ end;
 
 function GetPropertyHint_SaveSetVarToIniFile_IdentPattern: string;
 begin
-  Result := StringReplace(GetPropertyHint_LoadSetVarFromIniFile_IdentPattern, 'LoadSetVarFromIniFile', 'SaveSetVarToIniFile', [rfReplaceAll]) + #13#10 +
-            'The value of IdentPattern is used to generate the variable names, which are looked-up in the list of variables.' + #13#10 +
-            'IdentPattern doesn''t have to contain ''$'' before and after its value, regardless of the RemoveDollarFromVarName property value.';
+  Result := StringReplace(GetPropertyHint_LoadSetVarFromIniFile_IdentPattern, 'LoadSetVarFromIniFile', 'SaveSetVarToIniFile', [rfReplaceAll]);
 end;
 
 

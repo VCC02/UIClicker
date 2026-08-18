@@ -45,14 +45,18 @@ type
     procedure Create_SaveTemplateButton_WithAndWithoutThreads_TestTemplateInMem(var FindControlOptions: TClkFindControlOptions; var WindowOperationsOptions: TClkWindowOperationsOptions; var FindSubControlOptions: TClkFindSubControlOptions);
     procedure Execute_UIClickerActions_SaveTemplateButton(AThreadCount, AThreadMessage: string; var FindControlOptions: TClkFindControlOptions; var WindowOperationsOptions: TClkWindowOperationsOptions; var FindSubControlOptions: TClkFindSubControlOptions);
 
+    procedure SetExpectVarValues_IniPattern(AIsEmpty: Boolean);
     procedure ValidateLoadSetVarFromIniFile(ASaveSetVarToIniFileOptions: TClkSaveSetVarToIniFileOptions;
                                             ALoadSetVarFromIniFileOptions: TClkLoadSetVarFromIniFileOptions);
+    procedure ValidateLoadSetVarFromIniFile_Pattern(ASaveSetVarToIniFileOptions: TClkSaveSetVarToIniFileOptions;
+                                                    ALoadSetVarFromIniFileOptions: TClkLoadSetVarFromIniFileOptions);
     procedure Create_SaveSetVarToIniFile_ActionsForTemplate(AIniPath, ASetVarActionName, ASectionName: string;
                                                             out ASaveSetVarToIniFileOptions: TClkSaveSetVarToIniFileOptions);
     procedure Create_LoadSetVarFromIniFile_ActionsForTemplate(AIniPath, ASetVarActionName, ASectionName: string;
                                                               out ALoadSetVarFromIniFileOptions: TClkLoadSetVarFromIniFileOptions);
 
     procedure ExecuteSaveSetVarToIniFile_LoadSetVarFromIniFile_HappyFlow_SetVar(AIniPath: string);
+    procedure ExecuteSaveSetVarToIniFile_LoadSetVarFromIniFile_HappyFlow_PatternAndVarCounter(AIniPath: string);
 
     procedure Test_FindSubControl_RenderExternalBackground;
     procedure CloseRenderingServer;
@@ -158,6 +162,8 @@ type
     procedure Test_ExecuteLoadSetVarFromIniFile_HappyFlow_SetVar;
     procedure Test_ExecuteSaveSetVarToIniFile_LoadSetVarFromIniFile_HappyFlow_SetVar_Disk;
     procedure Test_ExecuteSaveSetVarToIniFile_LoadSetVarFromIniFile_HappyFlow_SetVar_Mem;
+    procedure Test_ExecuteSaveSetVarToIniFile_LoadSetVarFromIniFile_HappyFlow_PatternAndVarCounter_Disk;
+    procedure Test_ExecuteSaveSetVarToIniFile_LoadSetVarFromIniFile_HappyFlow_PatternAndVarCounter_Mem;
 
     procedure AfterAll_AlwaysExecute;
   end;
@@ -1939,10 +1945,10 @@ procedure TTestLowLevelHTTPAPI.ValidateLoadSetVarFromIniFile(ASaveSetVarToIniFil
                                                              ALoadSetVarFromIniFileOptions: TClkLoadSetVarFromIniFileOptions);
   procedure ExpectVarValues(AValue1, AValue2, AValue3, AValue4: string);
   begin
-    Expect(GetVarValueFromServer('$One$')).ToBe(AValue1);
-    Expect(GetVarValueFromServer('$Two$')).ToBe(AValue2);
-    Expect(GetVarValueFromServer('$Three$')).ToBe(AValue3);
-    Expect(GetVarValueFromServer('$Four$')).ToBe(AValue4);
+    Expect(GetVarValueFromServer('$One$')).ToBe(AValue1, '$One$ should be ' + AValue1);
+    Expect(GetVarValueFromServer('$Two$')).ToBe(AValue2, '$Two$ should be ' + AValue2);
+    Expect(GetVarValueFromServer('$Three$')).ToBe(AValue3, '$Three$ should be ' + AValue3);
+    Expect(GetVarValueFromServer('$Four$')).ToBe(AValue4, '$Four$ should be ' + AValue4);
   end;
 begin
   //Clear values in ini file
@@ -1955,12 +1961,64 @@ begin
   ExpectSuccessfulAction(FastReplace_87ToReturn(ExecuteSaveSetVarToIniFileAction(TestServerAddress, ASaveSetVarToIniFileOptions)));
 
   //Clear values in UIClicker list of vars
-  ExpectSuccessfulAction(FastReplace_87ToReturn(Send_ExecuteCommandAtIndex_ToServer(0, 0)));
+  ExpectSuccessfulAction(FastReplace_87ToReturn(Send_ExecuteCommandAtIndex_ToServer(0, 0))); //reset the values
   ExpectVarValues('', '', '', '');
 
   //Load test values from ini
   ExpectSuccessfulAction(FastReplace_87ToReturn(ExecuteLoadSetVarFromIniFileAction(TestServerAddress, ALoadSetVarFromIniFileOptions)));
   ExpectVarValues('1', '2', '3', '4');
+end;
+
+
+procedure TTestLowLevelHTTPAPI.SetExpectVarValues_IniPattern(AIsEmpty: Boolean);
+var
+  i: Integer;
+  ExpectedValue: string;
+begin
+  for i := 0 to 9 do
+  begin
+    ExpectedValue := IntToStr(i);
+    if AIsEmpty then
+      ExpectedValue := '';
+
+    Expect(SetVariable(TestServerAddress, '$MyItem_' + IntToStr(i) + '$', ExpectedValue, 0)).ToBe(CREResp_Done, 'Setting item value.');
+  end;
+end;
+
+
+procedure TTestLowLevelHTTPAPI.ValidateLoadSetVarFromIniFile_Pattern(ASaveSetVarToIniFileOptions: TClkSaveSetVarToIniFileOptions;
+                                                                     ALoadSetVarFromIniFileOptions: TClkLoadSetVarFromIniFileOptions);
+  procedure ExpectVarValues(AIsEmpty: Boolean);
+  var
+    i: Integer;
+    ExpectedValue: string;
+  begin
+    for i := 0 to 9 do
+    begin
+      ExpectedValue := IntToStr(i);
+      if AIsEmpty then
+        ExpectedValue := '';
+
+      Expect(GetVarValueFromServer('$MyItem_' + IntToStr(i) + '$')).ToBe(ExpectedValue, 'Item should be ' + ExpectedValue + '.');
+    end;
+  end;
+begin
+  //Clear values in ini file
+  SetExpectVarValues_IniPattern(True); //reset the values
+  ExpectSuccessfulAction(FastReplace_87ToReturn(ExecuteSaveSetVarToIniFileAction(TestServerAddress, ASaveSetVarToIniFileOptions)));
+  ExpectVarValues(True);
+
+  //Update ini with test values
+  SetExpectVarValues_IniPattern(False); //set to test values
+  ExpectSuccessfulAction(FastReplace_87ToReturn(ExecuteSaveSetVarToIniFileAction(TestServerAddress, ASaveSetVarToIniFileOptions)));
+
+  //Clear values in UIClicker list of vars
+  SetExpectVarValues_IniPattern(True); //reset the values
+  ExpectVarValues(True);
+
+  //Load test values from ini
+  ExpectSuccessfulAction(FastReplace_87ToReturn(ExecuteLoadSetVarFromIniFileAction(TestServerAddress, ALoadSetVarFromIniFileOptions)));
+  ExpectVarValues(False);
 end;
 
 
@@ -1972,6 +2030,16 @@ begin
   ASaveSetVarToIniFileOptions.FileName := AIniPath;
   ASaveSetVarToIniFileOptions.SetVarActionName := ASetVarActionName;
   ASaveSetVarToIniFileOptions.SectionName := ASectionName;
+
+  if ASetVarActionName = '' then
+  begin
+    ASaveSetVarToIniFileOptions.VarListFormat := vlfPattern;
+    ASaveSetVarToIniFileOptions.RemoveDollarFromVarName := False;
+    ASaveSetVarToIniFileOptions.IdentPattern := 'MyItem_<counter>';  //saving without '$'
+    ASaveSetVarToIniFileOptions.VarDataType := vdtString;
+    ASaveSetVarToIniFileOptions.CounterType := ctVar;
+    ASaveSetVarToIniFileOptions.Counter := '$n$';
+  end;
 end;
 
 
@@ -1984,6 +2052,16 @@ begin
   ALoadSetVarFromIniFileOptions.FileName := AIniPath;
   ALoadSetVarFromIniFileOptions.SetVarActionName := ASetVarActionName;
   ALoadSetVarFromIniFileOptions.SectionName := ASectionName;
+
+  if ASetVarActionName = '' then
+  begin
+    ALoadSetVarFromIniFileOptions.VarListFormat := vlfPattern;
+    ALoadSetVarFromIniFileOptions.RemoveDollarFromVarName := True;      //removing '$' when loading from ini
+    ALoadSetVarFromIniFileOptions.IdentPattern := 'MyItem_<counter>';
+    ALoadSetVarFromIniFileOptions.VarDataType := vdtString;
+    ALoadSetVarFromIniFileOptions.CounterType := ctVar;
+    ALoadSetVarFromIniFileOptions.Counter := '$n$';
+  end;
 end;
 
 
@@ -2020,6 +2098,37 @@ end;
 procedure TTestLowLevelHTTPAPI.Test_ExecuteSaveSetVarToIniFile_LoadSetVarFromIniFile_HappyFlow_SetVar_Mem;
 begin
   ExecuteSaveSetVarToIniFile_LoadSetVarFromIniFile_HappyFlow_SetVar(CMemPluginLocationPrefix + '\MyTestFile.ini');
+end;
+
+
+procedure TTestLowLevelHTTPAPI.ExecuteSaveSetVarToIniFile_LoadSetVarFromIniFile_HappyFlow_PatternAndVarCounter(AIniPath: string);
+const
+  CSectionName = 'Settings';
+  CCounterVarName = '$n$';
+var
+  LoadSetVarFromIniFileOptions: TClkLoadSetVarFromIniFileOptions;
+  SaveSetVarToIniFileOptions: TClkSaveSetVarToIniFileOptions;
+begin
+  Create_SaveSetVarToIniFile_ActionsForTemplate(AIniPath, '', CSectionName, SaveSetVarToIniFileOptions);
+  Create_LoadSetVarFromIniFile_ActionsForTemplate(AIniPath, '', CSectionName, LoadSetVarFromIniFileOptions);
+
+  Expect(SetVariable(TestServerAddress, CCounterVarName, '10', 0)).ToBe(CREResp_Done, 'Setting counter to 10.');
+  Expect(GetVarValueFromServer(CCounterVarName)).ToBe('10', '$n$ should be 10.');
+
+  SetExpectVarValues_IniPattern(False);
+  ValidateLoadSetVarFromIniFile_Pattern(SaveSetVarToIniFileOptions, LoadSetVarFromIniFileOptions);
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecuteSaveSetVarToIniFile_LoadSetVarFromIniFile_HappyFlow_PatternAndVarCounter_Disk;
+begin
+  ExecuteSaveSetVarToIniFile_LoadSetVarFromIniFile_HappyFlow_PatternAndVarCounter('$TemplateDir$\MyTestFile.ini');
+end;
+
+
+procedure TTestLowLevelHTTPAPI.Test_ExecuteSaveSetVarToIniFile_LoadSetVarFromIniFile_HappyFlow_PatternAndVarCounter_Mem;
+begin
+  ExecuteSaveSetVarToIniFile_LoadSetVarFromIniFile_HappyFlow_PatternAndVarCounter(CMemPluginLocationPrefix + '\MyTestFile.ini');
 end;
 
 

@@ -5730,20 +5730,19 @@ begin
       begin
         case ALoadSetVarFromIniFileOptions.VarListFormat of
           vlfSetVarAction:
-          begin
             CurrentVarName := VarNamesToBeUpdated.Strings[i];
 
-            CurrentVarNameNoDollar := CurrentVarName;
-            if ALoadSetVarFromIniFileOptions.RemoveDollarFromVarName then
-              CurrentVarNameNoDollar := StringReplace(CurrentVarName, '$', '', [rfReplaceAll]);
-          end;
-
           vlfPattern:
-          begin
             CurrentVarName := StringReplace(ALoadSetVarFromIniFileOptions.IdentPattern, '<counter>', IntToStr(i), [rfReplaceAll]);
-            CurrentVarNameNoDollar := CurrentVarName;
-          end;
         end;  //VarListFormat
+
+        CurrentVarNameNoDollar := CurrentVarName;
+        if ALoadSetVarFromIniFileOptions.RemoveDollarFromVarName then
+          CurrentVarNameNoDollar := StringReplace(CurrentVarName, '$', '', [rfReplaceAll]);
+
+        if CurrentVarName <> '' then
+          if (CurrentVarName[1] <> '$') and (CurrentVarName[Length(CurrentVarName)] <> '$') then
+            CurrentVarName := '$' + CurrentVarName + '$'; //add '$' to var name, to be able to loop it up
 
         case ALoadSetVarFromIniFileOptions.VarDataType of
           vdtString:
