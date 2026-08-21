@@ -1116,6 +1116,7 @@ begin
     TempFuncDescriptions.Add('$OpenCLInfoToVars([<CustomPathToOpenCL.dll>])$=Sets multiple variables with various information about the available OpenCL platforms and devices. This function must be called from the left column of a SetVar action and uses, with priority, the value from the right column. If that value is empty, it looks for an argument, like $OpenCLInfoToVars(<argument>])$. It returns nothing.');
     TempFuncDescriptions.Add('$DisplayInMemFSFiles()$=Prints to log the available filenames from the (server''s) main in-mem file system. This function must be called from the left column of a SetVar action.');
     TempFuncDescriptions.Add('$DisplayExtInMemFSFiles()$=Prints to log the available filenames from the externally rendered in-mem file system. This function must be called from the left column of a SetVar action.');
+    TempFuncDescriptions.Add('$GetSetVarLength(<MySetVarAction>)$=Returns the number of lines of a SetVar action. This function must be called from the right column of a SetVar action. In this example, "MySetVarAction" is the action, from which the number of lines, is returned.');
 
     for i := 0 to FFuncDescriptions.Count - 1 do
     begin
