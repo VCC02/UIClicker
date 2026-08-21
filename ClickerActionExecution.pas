@@ -480,18 +480,43 @@ begin
 end;
 
 
+const
+  CErrMsg_ClickerVarsIsNotAssigned = 'ClickerVars is not assigned';
+
 function TActionExecution.GetActionVarValue(VarName: string): string;
 begin
   if FClickerVars = nil then
-    raise Exception.Create('ClickerVars is not assigned.');
+  begin
+    AddToLog(CErrMsg_ClickerVarsIsNotAssigned);
+    raise Exception.Create(CErrMsg_ClickerVarsIsNotAssigned);
+  end;
 
   Result := FClickerVars.Values[VarName];
 end;
 
 
 procedure TActionExecution.SetActionVarValue(VarName, VarValue: string);
+var
+  Idx: Integer;
+  NewLineStr: string;
 begin
-  FClickerVars.Values[VarName] := FastReplace_ReturnTo68(VarValue);  //Do not use EvaluateReplacements(VarValue) here, because there are calls which expect the value to be directly assigned !
+  if FClickerVars = nil then
+  begin
+    AddToLog(CErrMsg_ClickerVarsIsNotAssigned);
+    raise Exception.Create(CErrMsg_ClickerVarsIsNotAssigned);
+  end;
+
+  //if VarName = '$ExecAction_Err$' then
+  //  AddToLog(DateTimeToStr(Now) + '  ' + VarValue);
+
+  NewLineStr := VarName + '=' + FastReplace_ReturnTo68(VarValue); //FClickerVars.Values[VarName] := FastReplace_ReturnTo68(VarValue);  //Do not use EvaluateReplacements(VarValue) here, because there are calls which expect the value to be directly assigned !
+
+  Idx := FClickerVars.IndexOfName(VarName);
+
+  if Idx > -1 then
+    FClickerVars.Strings[Idx] := NewLineStr   //do not use FClickerVars[VarName] := ..
+  else
+    FClickerVars.Add(NewLineStr);
 
   if VarName = '$ExecAction_Err$' then
     AddToLog(DateTimeToStr(Now) + '  ' + VarValue);
@@ -4207,10 +4232,10 @@ var
   TempListOfSetVarNames: TStringList;
   TempListOfSetVarValues: TStringList;
   TempListOfSetVarEvalBefore: TStringList;
-  i, j: Integer;
+  i, j, FoundIdx: Integer;
   VarName, VarValue, FuncArgs: string;
   RenderBmpExternallyResult: string;
-  ListOfSelfHandles, ListOfConsoleItems: TStringList;
+  ListOfSelfHandles, ListOfConsoleItems, ListOfSetVarItems: TStringList;
   GeneratedException: Boolean;
   TempBmp: TBitmap;
   HistogramResult, HistogramColorCountsResult: TIntArr;
@@ -4222,6 +4247,7 @@ var
   TreeUseMouseSwipe: Boolean;
   ConsoleArgs: string;
   ListOfFiles: TStringList;
+  TempAllActions: PClkActionsRecArr;
 begin
   Result := False;
   TempListOfSetVarNames := TStringList.Create;
@@ -4629,6 +4655,43 @@ begin
           ListOfFiles.Free;
         end;
       end;
+
+      if (Pos('$GetSetVarLength(', VarValue) = 1) and (VarValue[Length(VarValue)] = '$') and (VarValue[Length(VarValue) - 1] = ')') then
+      begin                        //e.g. $GetSetVarLength(MySetVarAction)$
+        FuncArgs := Copy(VarValue, Pos('(', VarValue) + 1, MaxInt);
+        FuncArgs := Copy(FuncArgs, 1, Length(FuncArgs) - 2);
+        FuncArgs := EvaluateReplacements(FuncArgs);    //MySetVarAction
+
+        ListOfSetVarItems := TStringList.Create;
+        try
+          ListOfSetVarItems.LineBreak := #13#10;
+          TempAllActions := DoOnGetAllActions;
+          if TempAllActions = nil then
+            raise Exception.Create('No actions available.');
+
+          FoundIdx := -1;
+          for j := 0 to Length(TempAllActions^) - 1 do
+            if TempAllActions^[j].ActionOptions.ActionName = FuncArgs then
+            begin
+              FoundIdx := j;
+              Break;
+            end;
+
+          if FoundIdx > -1 then
+          begin
+            ListOfSetVarItems.Text := TempAllActions^[FoundIdx].SetVarOptions.ListOfVarNames;
+            VarValue := IntToStr(ListOfSetVarItems.Count);
+          end
+          else
+          begin
+            SetActionVarValue('$ExecAction_Err$', 'SetVar action not found.');
+            Result := False;
+            Exit;
+          end;
+        finally
+          ListOfSetVarItems.Free;
+        end;
+      end;  // $GetSetVarLength
 
 
       if VarName > '' then

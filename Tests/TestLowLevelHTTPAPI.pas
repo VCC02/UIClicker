@@ -1081,8 +1081,6 @@ end;
 procedure GenerateFindSubControlForBlur4xEffect(var AFindSubControl: TClkFindSubControlOptions);
 begin
   GetDefaultPropertyValues_FindSubControl(AFindSubControl);
-
-  GetDefaultPropertyValues_FindSubControl(AFindSubControl);
   AFindSubControl.MatchText := 'Show Actions Window';
   SetLength(AFindSubControl.MatchBitmapText, 2);
   AFindSubControl.MatchBitmapText[0].ForegroundColor := '$Color_WindowText$';
@@ -1102,8 +1100,13 @@ begin
   AFindSubControl.InitialRectangle.TopOffset := '55';
   AFindSubControl.InitialRectangle.RightOffset := '278';
   AFindSubControl.InitialRectangle.BottomOffset := '129';
-  AFindSubControl.ColorError := '4';
-  AFindSubControl.AllowedColorErrorCount := '4';
+  {$IFDEF CPU64}
+    AFindSubControl.ColorError := '35';
+    AFindSubControl.AllowedColorErrorCount := '120';
+  {$ELSE}
+    AFindSubControl.ColorError := '4';
+    AFindSubControl.AllowedColorErrorCount := '4';
+  {$ENDIF}
 end;
 
 

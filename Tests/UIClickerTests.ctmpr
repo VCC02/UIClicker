@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
   <MultiProject FileVersion="1">
-    <Elements Count="8">
+    <Elements Count="12">
       <Element0 FileName="..\Tools\TestDriverUpdater\TestDriverUpdtr.ctpr">
         <BuildModes Count="1"/>
         <Mode1 Name="Default"/>
@@ -34,6 +34,22 @@
         <BuildModes Count="1"/>
         <Mode1 Name="Default"/>
       </Element7>
+      <Element8 FileName="..\..\UIClickerDecompressionExamplePlugin\UIClickerDecompressionExample.ctpr">
+        <BuildModes Count="1"/>
+        <Mode1 Name="Default"/>
+      </Element8>
+      <Element9 FileName="..\..\UIClickerDecryptionExamplePlugin\UIClickerDecryptionExample.ctpr">
+        <BuildModes Count="1"/>
+        <Mode1 Name="Default"/>
+      </Element9>
+      <Element10 FileName="..\..\UIClickerHashingExamplePlugin\UIClickerHashingExample.ctpr">
+        <BuildModes Count="1"/>
+        <Mode1 Name="Default"/>
+      </Element10>
+      <Element11 FileName="..\..\UIClickerTypewriterPlugin\UIClickerTypewriter.ctpr">
+        <BuildModes Count="1"/>
+        <Mode1 Name="Default"/>
+      </Element11>
     </Elements>
   </MultiProject>
 </CONFIG>

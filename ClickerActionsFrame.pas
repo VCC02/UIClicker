@@ -352,7 +352,6 @@ type
     FSearchAreaScrBox: TScrollBox;
     FSearchAreaSearchedBmpDbgImg: TImage;
     FSearchAreaSearchedTextDbgImg: TImage;
-    FSearchAreaDbgImgSearchedBmpMenu: TPopupMenu;
 
     FCurrentlyEditingActionType: Integer;  //yes integer
     FCurrentlyEditingPrimitiveFileName: string;   //this is updated by OnLoad and OnSave handlers, which have the resolved file name

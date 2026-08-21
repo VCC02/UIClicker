@@ -131,7 +131,14 @@ uses
 
 procedure ExpectSuccessfulAction(AListOfVars: TStringList; AExtraMessage: string = '');
 begin
-  Expect(AListOfVars).WithItem('$ExecAction_Err$', 'list of vars').OfValue('', 'No error Allowed.');
+  try
+    Expect(AListOfVars).WithItem('$ExecAction_Err$', '$ExecAction_Err$ should be in the list of vars, read from UIClicker. AListOfVars.Count is ' + IntToStr(AListOfVars.Count)).OfValue('', 'No error Allowed.');
+  except
+    frmPitstopTestRunner.AddToLog('List of vars:');
+    frmPitstopTestRunner.AddToLog(AListOfVars.Text);
+    raise;
+  end;
+
   Expect(AListOfVars).WithItem(CREResp_RemoteExecResponseVar, 'list of vars').OfValue('1', 'Expected successful action.');
   Expect(AListOfVars).WithItem('$LastAction_Status$').OfValue('Successful', AExtraMessage);
 end;

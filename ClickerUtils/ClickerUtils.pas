@@ -2791,6 +2791,7 @@ function ReplaceGetWindowProcessId(AListOfVars: TStringList; s: string): string;
 var
   ItemArgs, InitialItemArgs: string;
   ProcID, Res: DWORD;
+  ErrVarIdx: Integer;
 begin
   ItemArgs := ExtractFuncArgs(CGetWindowProcessId_FuncName, s);
   InitialItemArgs := ItemArgs;
@@ -2805,7 +2806,10 @@ begin
     Result := StringReplace(s, CGetWindowProcessId_FuncName + InitialItemArgs + ')$', IntToStr(ProcID), [rfReplaceAll])
   else
   begin
-    AListOfVars.Values['$ExecAction_Err$'] := SysErrorMessage(GetLastOSError);
+    ErrVarIdx := AListOfVars.IndexOf('$ExecAction_Err$');
+    if ErrVarIdx > -1 then
+      AListOfVars.Strings[ErrVarIdx] := '$ExecAction_Err$' + '=' + SysErrorMessage(GetLastOSError); //Do not use: AListOfVars.Values['$ExecAction_Err$'] := SysErrorMessage(GetLastOSError);
+
     Result := '0';
   end;
 end;

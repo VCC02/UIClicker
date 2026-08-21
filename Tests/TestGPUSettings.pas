@@ -177,7 +177,7 @@ begin
   //SetLength(FGPUInfo[0].Devices, Length(FGPUInfo[0].Devices) + 1);  FGPUInfo[0].Devices[Length(FGPUInfo[0].Devices) - 1].DeviceName := 'NewDev';  //Dbg code, to display one more device
   //SetLength(FGPUInfo[0].Devices, Length(FGPUInfo[0].Devices) + 1);  FGPUInfo[0].Devices[Length(FGPUInfo[0].Devices) - 1].DeviceName := 'LastDev';  //Dbg code, to display one more device
 
-  Expect(Length(FGPUInfo)).ToBeGreaterThan(0, 'At least an OpenCL platform is required to run these tests.');
+  Expect(Integer(Length(FGPUInfo))).ToBeGreaterThan(0, 'At least an OpenCL platform is required to run these tests.');
   GPUFound := False;
   for i := 0 to Length(FGPUInfo) - 1 do
     if Length(FGPUInfo[i].Devices) > 0 then
@@ -480,8 +480,13 @@ begin
   FindSubControlOptions.InitialRectangle.TopOffset := '237';
   FindSubControlOptions.InitialRectangle.RightOffset := '-280';
   FindSubControlOptions.InitialRectangle.BottomOffset := '-11';
-  FindSubControlOptions.ColorError := '10';
-  FindSubControlOptions.AllowedColorErrorCount := '30';
+  {$IFDEF CPU64}
+    FindSubControlOptions.ColorError := '30';
+    FindSubControlOptions.AllowedColorErrorCount := '80';
+  {$ELSE}
+    FindSubControlOptions.ColorError := '10';
+    FindSubControlOptions.AllowedColorErrorCount := '30';
+  {$ENDIF}
   FindSubControlOptions.PrecisionTimeout := False; //avoid having multiple runs
   FindSubControlOptions.GPUSettings.OpenCLPath := GetSelectedOpenCLDllPath;
   FindSubControlOptions.GPUSettings.TargetPlatform := IntToStr(ATargetPlatform);

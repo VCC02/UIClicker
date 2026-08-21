@@ -2441,7 +2441,7 @@ begin
                 else                               //odd
                   Result := 'Y[' + IntToStr(IdxWithPropertyOffset) +  ']';
 
-                if ((AItemIndex - 1) shr 1) mod 3 in [1, 2] then
+                if Byte(((AItemIndex - 1) shr 1) mod 3) in [1, 2] then
                   Result := '  CtrlP.' + Result   //control point
                 else
                   Result := 'EndP.' + Result;     //end point

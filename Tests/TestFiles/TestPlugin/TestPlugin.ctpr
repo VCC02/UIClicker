@@ -64,7 +64,7 @@
     <PathDelim Value="\"/>
     <SearchPaths>
       <IncludeFiles Value="$(ProjOutDir)"/>
-      <OtherUnitFiles Value="..\..\..\ClickerUtils\;..\..\..\ClickerClient\"/>
+      <OtherUnitFiles Value="..\..\..\ClickerUtils;..\..\..\ClickerClient"/>
       <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
     </SearchPaths>
     <CodeGeneration>
@@ -78,6 +78,11 @@
         <ExecutableType Value="Library"/>
       </Options>
     </Linking>
+    <Other>
+      <ExecuteBefore>
+        <Command Value="&quot;$(ProjPath)..\..\..\..\UIClicker\Tools\ClkDbgSym\ClkDbgSym.exe&quot; &quot;$(ProjPath)lib\$(TargetCPU)-$(TargetOS)\$NameOnly($(ProjFile)).DbgSym&quot; &quot;$(ProjPath)$NameOnly($(ProjFile)).ppr&quot;"/>
+      </ExecuteBefore>
+    </Other>
   </CompilerOptions>
   <Debugging>
     <Exceptions>

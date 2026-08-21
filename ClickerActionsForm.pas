@@ -912,6 +912,7 @@ var
   OSVerNumber, OSVerStr: string;
   hmod: THandle;
 begin
+  FBuiltInVariables.LineBreak := #13#10;
   FBuiltInVariables.Add('$Control_Text$=');
   FBuiltInVariables.Add('$Control_Class$=');
   FBuiltInVariables.Add('$Control_Handle$=');
