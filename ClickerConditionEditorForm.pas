@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2022 VCC
+    Copyright (C) 2026 VCC
     creation date: Dec 2019
     initial release date: 13 Sep 2022
 
@@ -33,7 +33,7 @@ interface
 
 uses
   Classes, SysUtils, Forms, Controls, Graphics, Dialogs, ExtCtrls, StdCtrls,
-  ClickerConditionEditorFrame;
+  ClickerConditionEditorFrame, ClickerUtils;
 
 type
 
@@ -58,19 +58,23 @@ type
   end;
 
 
-function EditActionCondition(var AActionCondition: string): Boolean;
+function EditActionCondition(var AActionCondition: string; var AColWidths: TIntArr): Boolean;
 
 implementation
 
 {$R *.frm}
 
 
-function EditActionCondition(var AActionCondition: string): Boolean;
+function EditActionCondition(var AActionCondition: string; var AColWidths: TIntArr): Boolean;
 var
   frmClickerConditionEditor: TfrmClickerConditionEditor;
+  i: Integer;
 begin
   Result := False;
   Application.CreateForm(TfrmClickerConditionEditor, frmClickerConditionEditor);
+
+  for i := 0 to Length(AColWidths) - 1 do
+    frmClickerConditionEditor.FfrClickerConditionEditor.ColumnWidths[i] := AColWidths[i];
 
   frmClickerConditionEditor.FfrClickerConditionEditor.DisplayActionCondition(AActionCondition);
   frmClickerConditionEditor.ShowModal;
@@ -80,6 +84,9 @@ begin
     Result := True;
     AActionCondition := frmClickerConditionEditor.FfrClickerConditionEditor.GetActionCondition;
   end;
+
+  for i := 0 to Length(AColWidths) - 1 do
+    AColWidths[i] := frmClickerConditionEditor.FfrClickerConditionEditor.ColumnWidths[i];
 end;
 
 { TfrmClickerConditionEditor }

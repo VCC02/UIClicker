@@ -360,6 +360,7 @@ type
     FPreviousSelectedNode: PVirtualNode;
     FActionsHitInfo: THitInfo;
     FActionsHitTimeStamp: QWord; //required, to detect fake double-clicks
+    FCondColWidth: TIntArr;
 
     FVarDescriptions: TStringList;
     FFuncDescriptions: TStringList;
@@ -1315,6 +1316,7 @@ constructor TfrClickerActionsArr.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   FLoggingFIFO := TPollingFIFO.Create;
+  SetLength(FCondColWidth, 0);
   CreateRemainingUIComponents;
 
   FActionExecution := TActionExecution.Create;
@@ -1484,6 +1486,7 @@ begin
   FLoggingFIFO.Free;
   FVarDescriptions.Free;
   FFuncDescriptions.Free;
+  SetLength(FCondColWidth, 0);
 
   inherited Destroy;
 end;
@@ -1523,10 +1526,12 @@ begin
   frClickerActions.vstVariables.Header.Columns.Items[0].Width := AIni.ReadInteger(ASection, 'Variables_0.' + AIdentSuffix, frClickerActions.vstVariables.Header.Columns.Items[0].Width);
   frClickerActions.vstVariables.Header.Columns.Items[1].Width := AIni.ReadInteger(ASection, 'Variables_1.' + AIdentSuffix, frClickerActions.vstVariables.Header.Columns.Items[1].Width);
 
-  for i := 0 to 20 - 1 do
+  SetLength(FCondColWidth, 20);
+  for i := 0 to Length(FCondColWidth) - 1 do
   begin
     Ident := 'ActionCond.ColWidth_' + IntToStr(i) + '.' + AIdentSuffix;
-    frClickerActions.frClickerConditionEditor.ColumnWidths[i] := AIni.ReadInteger(ASection, Ident, 100);
+    FCondColWidth[i] := AIni.ReadInteger(ASection, Ident, 100);
+    frClickerActions.frClickerConditionEditor.ColumnWidths[i] := FCondColWidth[i];
   end;
 
   frClickerActions.frClickerFindControl.EditorTabsVisibleByActionType := AIni.ReadBool(ASection, 'EditorTabsVisibleByActionType.' + AIdentSuffix, frClickerActions.frClickerFindControl.EditorTabsVisibleByActionType);
@@ -1602,8 +1607,16 @@ end;
 
 
 function TfrClickerActionsArr.HandleOnEditCallTemplateBreakCondition(var AActionCondition: string): Boolean;
+var
+  i: Integer;
 begin
-  Result := EditActionCondition(AActionCondition);
+  for i := 0 to Length(FCondColWidth) - 1 do
+    FCondColWidth[i] := frClickerActions.frClickerConditionEditor.ColumnWidths[i];
+
+  Result := EditActionCondition(AActionCondition, FCondColWidth);
+
+  for i := 0 to Length(FCondColWidth) - 1 do
+    frClickerActions.frClickerConditionEditor.ColumnWidths[i] := FCondColWidth[i];
 end;
 
 
@@ -5959,6 +5972,8 @@ end;
 
 
 procedure TfrClickerActionsArr.MenuItem_EditBreakPointClick(Sender: TObject);
+var
+  i: Integer;
 begin
   if FActionsHitInfo.HitNode = nil then
   begin
@@ -5966,8 +5981,14 @@ begin
     Exit;
   end;
 
-  if EditActionCondition(FClkActions[FActionsHitInfo.HitNode^.Index].ActionBreakPoint.Condition) then
+  for i := 0 to Length(FCondColWidth) - 1 do
+    FCondColWidth[i] := frClickerActions.frClickerConditionEditor.ColumnWidths[i];
+
+  if EditActionCondition(FClkActions[FActionsHitInfo.HitNode^.Index].ActionBreakPoint.Condition, FCondColWidth) then
     Modified := True;
+
+  for i := 0 to Length(FCondColWidth) - 1 do
+    frClickerActions.frClickerConditionEditor.ColumnWidths[i] := FCondColWidth[i];
 end;
 
 
