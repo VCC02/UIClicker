@@ -506,6 +506,8 @@ end;
 
 
 procedure TTestUIActionExecution.Test_ExecuteTemplateRemotely;
+var
+  ErrMsg: string;
 begin
   PrepareClickerUnderTestToClientMode;
 
@@ -514,7 +516,24 @@ begin
   PrepareClickerUnderTestToReadItsVars;
 
   Sleep(500);
-  ExpectVarFromClientUnderTest('$VarToBeIncremented$', '1', 'This is VarToBeIncremented.');
+  try
+    ExpectVarFromClientUnderTest('$VarToBeIncremented$', '1', 'This is VarToBeIncremented.');
+  except
+    on E: Exception do
+    begin
+      TestServerAddress := CTestClientAddress;
+      try
+        ErrMsg := 'The template might not be sent to server. Please verify the list of allowed directories, on the Settings page.';
+
+        if GetVarValueFromServer('$ExtraDbgError$') = ErrMsg then
+          raise Exception.Create('It seems that the templates dir "' + FTemplatesDir + '", is not in the list of client''s allowed directories. Error message: ' + ErrMsg + #13#10 + 'In order to solve this, please manually restart the client under test (which will allow saving the configuration to ini), and add $AppDir$\TestDriver\ActionTemplates to the list of allowed directories, then close it again.')
+        else
+          raise Exception.Create(E.Message);
+      finally
+        TestServerAddress := CTestDriverServerAddress_Client; //restore
+      end;
+    end;
+  end;
 end;
 
 

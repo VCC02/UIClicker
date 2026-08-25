@@ -3667,7 +3667,7 @@ var
   DeletingActionIndex: Integer;  //used only when executing EditTemplate, which deletes actions
   DeletingSelfAction: Boolean;
   MovingActionSrcIndex, MovingActionDestIndex: Integer;    //used only when executing EditTemplate, which moves actions
-  DbgCurrentAction: string;
+  DbgCurrentAction, ExtraErrMsg: string;
 begin
   Result := True;
 
@@ -3728,7 +3728,11 @@ begin
             if Pos(CErr_CannotSelectActionToLoadValuesAtIndex, DbgCurrentAction) > 0 then
             begin
               if GetActionVarValue('$ExecAction_Err$') = CErr_EmptyTemplate then
-                AddToLog('The template might not be sent to server. Please verify the list of allowed directories, on the Settings page.')
+              begin
+                ExtraErrMsg := 'The template might not be sent to server. Please verify the list of allowed directories, on the Settings page.';
+                SetActionVarValue('$ExtraDbgError$', ExtraErrMsg);
+                AddToLog(ExtraErrMsg);
+              end
               else
                 AddToLog('The template might be out of date on server side and a non-existent action is attempted to be executed.');
             end
