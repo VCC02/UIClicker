@@ -8176,6 +8176,19 @@ begin
   frClickerActions.edtConsoleCommand.Font.Size := Value.Size;
   frClickerActions.edtConsoleCommand.Font.Style := Value.Style;
   frClickerActions.edtConsoleCommand.Font.Color := Value.Color;
+
+  try
+    frClickerActions.edtConsoleCommand.Repaint;
+  except
+    //in case it is not visible
+  end;
+
+  try
+    frClickerActions.memLogErr.Height := frClickerActions.edtConsoleCommand.Top + 2; //2 px overlap
+    frClickerActions.memLogErr.Repaint;
+  except
+    //in case it is not visible
+  end;
 end;
 
 

@@ -182,6 +182,7 @@ type
     RemoveVariable1: TMenuItem;
     vstVariables: TVirtualStringTree;
     procedure chkDecodeVariablesChange(Sender: TObject);
+    procedure edtConsoleCommandEnter(Sender: TObject);
     procedure edtConsoleCommandExit(Sender: TObject);
     procedure edtConsoleCommandKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
@@ -194,6 +195,7 @@ type
     procedure MenuItem_SetFromControlLeftAndTopClick(Sender: TObject);
     procedure MenuItem_SetFromControlWidthAndHeightClick(Sender: TObject);
     procedure MenuItem_TabPosClick(Sender: TObject);
+    procedure PageControlActionExecutionChange(Sender: TObject);
     procedure pmStandardColorVariablesPopup(Sender: TObject);
     procedure pnlHorizSplitterMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
@@ -1722,6 +1724,12 @@ begin
 end;
 
 
+procedure TfrClickerActions.edtConsoleCommandEnter(Sender: TObject);
+begin
+  memLogErr.Height := edtConsoleCommand.Top + 2; //2 px overlap
+end;
+
+
 procedure TfrClickerActions.CreateSelectionLabelsForResult;
 begin
   if FlblResultSelLeft = nil then
@@ -2091,6 +2099,15 @@ procedure TfrClickerActions.MenuItem_TabPosClick(Sender: TObject);
 begin
   PageControlActionExecution.TabPosition := TTabPosition((Sender as TMenuItem).MenuIndex);
   FrameResize(Self);
+end;
+
+
+procedure TfrClickerActions.PageControlActionExecutionChange(Sender: TObject);
+begin
+  try
+    memLogErr.Height := edtConsoleCommand.Top + 2; //2 px overlap
+  except
+  end;
 end;
 
 

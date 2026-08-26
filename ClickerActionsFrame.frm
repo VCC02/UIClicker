@@ -30,6 +30,7 @@ object frClickerActions: TfrClickerActions
     TabIndex = 0
     TabOrder = 0
     TabPosition = tpBottom
+    OnChange = PageControlActionExecutionChange
     object TabSheetAction: TTabSheet
       Caption = 'Action'
       ClientHeight = 249
@@ -533,6 +534,7 @@ object frClickerActions: TfrClickerActions
         ParentShowHint = False
         ShowHint = True
         TabOrder = 1
+        OnEnter = edtConsoleCommandEnter
         OnExit = edtConsoleCommandExit
         OnKeyDown = edtConsoleCommandKeyDown
         OnKeyUp = edtConsoleCommandKeyUp
