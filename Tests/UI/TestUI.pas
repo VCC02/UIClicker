@@ -119,6 +119,8 @@ type
     procedure TestAutoComplete_VarAssignmentToNumericConstantAndThenDifferentSelection;
     procedure TestAutoComplete_VarAssignmentAndBlanksToPartialFunctionNameOnly;
     procedure TestAutoComplete_VarAssignmentAndBlanksToFullFunctionNameOnly;
+    procedure TestAutoComplete_NonExistentMissingLastDollar;
+    procedure TestAutoComplete_NonExistentValidVarFormat;
 
     procedure AfterAll_AlwaysExecute;
   end;
@@ -880,7 +882,10 @@ end;
 
 procedure TTestUIAutoComplete.TestAutoComplete_VarAssignmentToNumericConstantAndThenDifferentSelection;
 begin
-  AutoCompleteTextInConsoleEditBox('$Desktop_Width$=1920', 'Screen_Width$=1920', '$Desktop_Width$=1920$Screen_Width$=1920');
+  //initial validation, which is not worth implementing:
+  //AutoCompleteTextInConsoleEditBox('$Desktop_Width$=1920', 'Screen_Width$=1920', '$Desktop_Width$=1920$Screen_Width$=1920');
+
+  AutoCompleteTextInConsoleEditBox('$Desktop_Width$=1920', 'Screen_Width$=1920', '$Desktop_Width$=$Screen_Width$=1920');
 end;
 
 
@@ -893,6 +898,18 @@ end;
 procedure TTestUIAutoComplete.TestAutoComplete_VarAssignmentAndBlanksToFullFunctionNameOnly;
 begin
   AutoCompleteTextInConsoleEditBox('$a$ = $GetActionProperties', 'GetActionProperties()', '$a$ = $GetActionProperties()$');
+end;
+
+
+procedure TTestUIAutoComplete.TestAutoComplete_NonExistentMissingLastDollar;
+begin
+  AutoCompleteTextInConsoleEditBox('$ALongNonExistentVariable', '        ', '$ALongNonExistentVariable');
+end;
+
+
+procedure TTestUIAutoComplete.TestAutoComplete_NonExistentValidVarFormat;
+begin
+  AutoCompleteTextInConsoleEditBox('$ALongNonExistentVariable$', '        ', '$ALongNonExistentVariable$');
 end;
 
 
