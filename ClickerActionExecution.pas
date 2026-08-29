@@ -1484,11 +1484,11 @@ begin
   else
   begin
     TemplateDir := ExtractFileDir(FSelfTemplateFileName^);
-    ACmd := StringReplace(ACmd, '$SelfTemplateDir$', TemplateDir, [rfReplaceAll]);
-    ACmd := StringReplace(ACmd, '$TemplateDir$', FFullTemplatesDir^, [rfReplaceAll]);
+    ACmd := StringReplace(ACmd, CSelfTemplateDir, TemplateDir, [rfReplaceAll]);
+    ACmd := StringReplace(ACmd, CTemplateDir, FFullTemplatesDir^, [rfReplaceAll]);
   end;
 
-  ACmd := StringReplace(ACmd, '$AppDir$', SelfAppDir, [rfReplaceAll]);
+  ACmd := StringReplace(ACmd, CAppDir, SelfAppDir, [rfReplaceAll]);
   ACmd := EvaluateReplacements(ACmd);  //this call has to stay here, because the $SelfTemplateDir$ replacement is ''
 
   Result := True;
@@ -1513,7 +1513,7 @@ begin
       for i := 0 to AllParams.Count - 1 do
       begin
         s := EvaluateReplacements(AllParams.Strings[i]);
-        s := StringReplace(s, '$AppDir$', SelfAppDir, [rfReplaceAll]);
+        s := StringReplace(s, CAppDir, SelfAppDir, [rfReplaceAll]);
         AParams := AParams + '"' + s + '" ';
       end;
 
@@ -1546,9 +1546,9 @@ begin
           for i := 0 to AllParams.Count - 1 do
           begin
             s := AllParams.Strings[i];
-            s := StringReplace(s, '$AppDir$', SelfAppDir, [rfReplaceAll]);
-            s := StringReplace(s, '$SelfTemplateDir$', TemplateDir, [rfReplaceAll]);
-            s := StringReplace(s, '$TemplateDir$', FFullTemplatesDir^, [rfReplaceAll]);
+            s := StringReplace(s, CAppDir, SelfAppDir, [rfReplaceAll]);
+            s := StringReplace(s, CSelfTemplateDir, TemplateDir, [rfReplaceAll]);
+            s := StringReplace(s, CTemplateDir, FFullTemplatesDir^, [rfReplaceAll]);
             s := EvaluateReplacements(s);
             AProcess.Parameters.Add(s);
           end;
@@ -3091,16 +3091,16 @@ begin
             TemplateDir := ExtractFileDir(FSelfTemplateFileName^);
 
           for i := 0 to ListOfBitmapFiles.Count - 1 do
-            ListOfBitmapFiles.Strings[i] := StringReplace(ListOfBitmapFiles.Strings[i], '$SelfTemplateDir$', TemplateDir, [rfReplaceAll]);
+            ListOfBitmapFiles.Strings[i] := StringReplace(ListOfBitmapFiles.Strings[i], CSelfTemplateDir, TemplateDir, [rfReplaceAll]);
 
           for i := 0 to ListOfBitmapFiles.Count - 1 do
-            ListOfBitmapFiles.Strings[i] := StringReplace(ListOfBitmapFiles.Strings[i], '$TemplateDir$', FFullTemplatesDir^, [rfReplaceAll]);
+            ListOfBitmapFiles.Strings[i] := StringReplace(ListOfBitmapFiles.Strings[i], CTemplateDir, FFullTemplatesDir^, [rfReplaceAll]);
 
           //Leave this section commented, it exists after the DoOnWaitForBitmapsAvailability call!
           //if not FExecutingActionFromRemote^ then
           //begin
           //  for i := 0 to ListOfBitmapFiles.Count - 1 do
-          //    ListOfBitmapFiles.Strings[i] := StringReplace(ListOfBitmapFiles.Strings[i], '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
+          //    ListOfBitmapFiles.Strings[i] := StringReplace(ListOfBitmapFiles.Strings[i], CAppDir, ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
           //end;
 
           if FExecutingActionFromRemote^ and FFileLocationOfDepsIsMem^ then
@@ -3111,7 +3111,7 @@ begin
 
           //resolving the $AppDir$ replacement after having all files available
           for i := 0 to ListOfBitmapFiles.Count - 1 do
-            ListOfBitmapFiles.Strings[i] := StringReplace(ListOfBitmapFiles.Strings[i], '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
+            ListOfBitmapFiles.Strings[i] := StringReplace(ListOfBitmapFiles.Strings[i], CAppDir, ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
 
           for i := 0 to ListOfBitmapFiles.Count - 1 do
           begin
@@ -3213,16 +3213,16 @@ begin
             TemplateDir := ExtractFileDir(FSelfTemplateFileName^);
 
           for i := 0 to ListOfPrimitiveFiles.Count - 1 do
-            ListOfPrimitiveFiles.Strings[i] := StringReplace(ListOfPrimitiveFiles.Strings[i], '$SelfTemplateDir$', TemplateDir, [rfReplaceAll]);
+            ListOfPrimitiveFiles.Strings[i] := StringReplace(ListOfPrimitiveFiles.Strings[i], CSelfTemplateDir, TemplateDir, [rfReplaceAll]);
 
           for i := 0 to ListOfPrimitiveFiles.Count - 1 do
-            ListOfPrimitiveFiles.Strings[i] := StringReplace(ListOfPrimitiveFiles.Strings[i], '$TemplateDir$', FFullTemplatesDir^, [rfReplaceAll]);
+            ListOfPrimitiveFiles.Strings[i] := StringReplace(ListOfPrimitiveFiles.Strings[i], CTemplateDir, FFullTemplatesDir^, [rfReplaceAll]);
 
           //Leave this section commented, it exists after the DoOnWaitForBitmapsAvailability call!
           //if not FExecutingActionFromRemote^ then   //files from client will not have the $AppDir$ replacement resolved here, because of requesting them with original name
           //begin
           //  for i := 0 to ListOfPrimitiveFiles.Count - 1 do
-          //    ListOfPrimitiveFiles.Strings[i] := StringReplace(ListOfPrimitiveFiles.Strings[i], '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
+          //    ListOfPrimitiveFiles.Strings[i] := StringReplace(ListOfPrimitiveFiles.Strings[i], CAppDir, ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
           //end;
 
           if FExecutingActionFromRemote^ and FFileLocationOfDepsIsMem^ then
@@ -3234,7 +3234,7 @@ begin
 
           //resolving the $AppDir$ replacement after having all files available
           for i := 0 to ListOfPrimitiveFiles.Count - 1 do
-            ListOfPrimitiveFiles.Strings[i] := StringReplace(ListOfPrimitiveFiles.Strings[i], '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
+            ListOfPrimitiveFiles.Strings[i] := StringReplace(ListOfPrimitiveFiles.Strings[i], CAppDir, ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
 
 
           for i := 0 to ListOfPrimitiveFiles.Count - 1 do
@@ -3249,8 +3249,8 @@ begin
 
             if Length(TempPrimitives) = 0 then
             begin
-              if FExecutingActionFromRemote^ and (Pos('$AppDir$', ListOfPrimitiveFiles.Strings[i]) > 0) then
-                AddToLog('Primitives file: "' + ExtractFileName(ListOfPrimitiveFiles.Strings[i]) + '" has no primitives because is is not loaded. It should have been received from client but it has an illegal path, which contains "$AppDir$".')
+              if FExecutingActionFromRemote^ and (Pos(CAppDir, ListOfPrimitiveFiles.Strings[i]) > 0) then
+                AddToLog('Primitives file: "' + ExtractFileName(ListOfPrimitiveFiles.Strings[i]) + '" has no primitives because is is not loaded. It should have been received from client but it has an illegal path, which contains "' + CAppDir + '".')
               else
                 AddToLog('Primitives file: "' + ExtractFileName(ListOfPrimitiveFiles.Strings[i]) + '" has no primitives.');
 
@@ -3958,14 +3958,14 @@ begin
   else
   begin
     TemplateDir := ExtractFileDir(FSelfTemplateFileName^);
-    Fnm := StringReplace(Fnm, '$SelfTemplateDir$', TemplateDir, [rfReplaceAll]);
-    Fnm := StringReplace(Fnm, '$TemplateDir$', FFullTemplatesDir^, [rfReplaceAll]);
+    Fnm := StringReplace(Fnm, CSelfTemplateDir, TemplateDir, [rfReplaceAll]);
+    Fnm := StringReplace(Fnm, CTemplateDir, FFullTemplatesDir^, [rfReplaceAll]);
     LocalSelfTemplateFileName := FSelfTemplateFileName^;
   end;
 
   // the FileExists verification has to be done after checking CallOnlyIfCondition, to allow failing the action based on condition
 
-  Fnm := StringReplace(Fnm, '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
+  Fnm := StringReplace(Fnm, CAppDir, ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
   Fnm := EvaluateReplacements(Fnm);  //this call has to stay here, after the $SelfTemplateDir$, $TemplateDir$ and $AppDir$ replacements, because $SelfTemplateDir$ will be evaluated to ''.
 
   if not FFileLocationOfDepsIsMem^ then
@@ -4177,7 +4177,7 @@ function TActionExecution.ExecuteSetVarAction(var ASetVarOptions: TClkSetVarOpti
     ListOfFuncArgs: TStringList;
     UseMouseSwipeStr: string;
   begin
-    ATreePath := '$TemplateDir$\DefaultTree.tree';
+    ATreePath := CTemplateDir + PathDelim + 'DefaultTree.tree';
     AStep := 1;
     AUseMouseSwipe := False;
 
@@ -4320,11 +4320,11 @@ begin
         else
         begin
           TemplateDir := ExtractFileDir(FSelfTemplateFileName^);
-          VarValue := StringReplace(VarValue, '$SelfTemplateDir$', TemplateDir, [rfReplaceAll]);
-          VarValue := StringReplace(VarValue, '$TemplateDir$', FFullTemplatesDir^, [rfReplaceAll]);
+          VarValue := StringReplace(VarValue, CSelfTemplateDir, TemplateDir, [rfReplaceAll]);
+          VarValue := StringReplace(VarValue, CTemplateDir, FFullTemplatesDir^, [rfReplaceAll]);
         end;
 
-        VarValue := StringReplace(VarValue, '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
+        VarValue := StringReplace(VarValue, CAppDir, ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
 
         VarValue := EvaluateReplacements(VarValue);
       end;
@@ -5561,6 +5561,7 @@ begin
     else
       if AEditTemplateOptions.Operation = etoNewAction then
       begin //the action should already exist
+        AddToLog(CREResp_ActionAlreadyExists + ' when creating "' + EvaluatedEditedActionName + '" at index "' + IntToStr(Idx) + '".');
         SetActionVarValue('$ExecAction_Err$', CREResp_ActionAlreadyExists);
         Exit;
       end;
@@ -5630,6 +5631,7 @@ begin
 
         if DestIdx > -1 then
         begin
+          AddToLog(CREResp_ActionAlreadyExists + ' when renaming "' + ClkActions[Idx].ActionOptions.ActionName + '" to "' + EvaluatedNewActionName + '".');
           SetActionVarValue('$ExecAction_Err$', CREResp_ActionAlreadyExists);
           Exit;
         end;

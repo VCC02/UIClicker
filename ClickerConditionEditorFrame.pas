@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2022 VCC
+    Copyright (C) 2026 VCC
     creation date: Dec 2019
     initial release date: 13 Sep 2022
 
@@ -48,6 +48,9 @@ type
   TfrClickerConditionEditor = class(TFrame)
     imglstComparisonOperators: TImageList;
     lblLastActionStatusValidValues: TLabel;
+    MenuItemAddAND: TMenuItem;
+    N7: TMenuItem;
+    MenuItemAddOR: TMenuItem;
     MenuItemAddStrLenMyVar: TMenuItem;
     MenuItemExtNotEqual: TMenuItem;
     MenuItemExtEqual: TMenuItem;
@@ -79,6 +82,8 @@ type
     spdbtnAddAND: TSpeedButton;
     spdbtnAddOR: TSpeedButton;
     tmrEditingCondition: TTimer;
+    procedure MenuItemAddANDClick(Sender: TObject);
+    procedure MenuItemAddORClick(Sender: TObject);
     procedure MenuItemAddStrLenMyVarClick(Sender: TObject);
     procedure MenuItemEqualClick(Sender: TObject);
     procedure MenuItemExtEqualClick(Sender: TObject);
@@ -145,6 +150,9 @@ type
     procedure AddExpressionColumns(IsLastColumn: Boolean);
     procedure SetConditionOperator(ANewOperator: string);
     function GetClickedConditionOperatorIndex: Integer;
+
+    procedure AddOR;
+    procedure AddAND;
   public
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
@@ -614,7 +622,7 @@ begin
 end;
 
 
-procedure TfrClickerConditionEditor.spdbtnAddORClick(Sender: TObject);   //new row
+procedure TfrClickerConditionEditor.AddOR;
 var
   i: Integer;
   s: string;
@@ -644,7 +652,7 @@ begin
 end;
 
 
-procedure TfrClickerConditionEditor.spdbtnAddANDClick(Sender: TObject);   //new set of columns
+procedure TfrClickerConditionEditor.AddAND;
 var
   i: Integer;
 begin
@@ -665,6 +673,18 @@ begin
   vstActionConditions.RootNodeCount := Length(FActionConditionForPreview);
 
   TriggerOnControlsModified;
+end;
+
+
+procedure TfrClickerConditionEditor.spdbtnAddORClick(Sender: TObject);   //new row
+begin
+  AddOR;
+end;
+
+
+procedure TfrClickerConditionEditor.spdbtnAddANDClick(Sender: TObject);   //new set of columns
+begin
+  AddAND;
 end;
 
 
@@ -786,6 +806,18 @@ begin
   vstActionConditions.Repaint;
 
   TriggerOnControlsModified;
+end;
+
+
+procedure TfrClickerConditionEditor.MenuItemAddORClick(Sender: TObject);
+begin
+  AddOR;
+end;
+
+
+procedure TfrClickerConditionEditor.MenuItemAddANDClick(Sender: TObject);
+begin
+  AddAND;
 end;
 
 

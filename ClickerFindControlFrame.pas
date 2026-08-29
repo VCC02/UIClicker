@@ -4890,7 +4890,7 @@ var
   TempExtBmp: TMemoryStream;
 begin
   BmpPath := StringReplace((Sender as TMenuItem).Caption, '&', '', [rfReplaceAll]);
-  BmpPath := StringReplace(BmpPath, '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
+  BmpPath := StringReplace(BmpPath, CAppDir, ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
 
   if DoOnFileExists(BmpPath) or (Pos(CExtBmp_PrefixUpperCase, UpperCase(BmpPath)) = 1) and (ExtRenderingInMemFS.FileExistsInMem(BmpPath)) then
   begin

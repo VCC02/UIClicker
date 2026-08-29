@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2024 VCC
+    Copyright (C) 2026 VCC
     creation date: 02 Apr 2024
     initial release date: 03 Apr 2024
 
@@ -54,6 +54,12 @@ type
 
 
 implementation
+
+
+const
+  CTemplateDirUp = '$TEMPLATEDIR$';
+  CAppDir = '$AppDir$';
+  CAppDirUp = '$APPDIR$';
 
 
 {TFileProvider}
@@ -114,13 +120,13 @@ begin
     Exit;
   end;
 
-  TempFullTemplatesDir := UpperCase(StringReplace(UpperCase(FFullTemplatesDir), '$APPDIR$', FFullAppDir, [rfReplaceAll]));
+  TempFullTemplatesDir := UpperCase(StringReplace(UpperCase(FFullTemplatesDir), CAppDirUp, FFullAppDir, [rfReplaceAll]));
 
   if (AFileName <> '') and (AFileName[1] = PathDelim) then   //resolve relative paths to TemplatesDir
     AFileName := UpperCase(TempFullTemplatesDir + AFileName);
 
-  AFileName := UpperCase(StringReplace(AFileName, '$APPDIR$', FFullAppDir, [rfReplaceAll]));
-  AFileName := UpperCase(StringReplace(AFileName, '$TEMPLATEDIR$', TempFullTemplatesDir, [rfReplaceAll]));
+  AFileName := UpperCase(StringReplace(AFileName, CAppDirUp, FFullAppDir, [rfReplaceAll]));
+  AFileName := UpperCase(StringReplace(AFileName, CTemplateDirUp, TempFullTemplatesDir, [rfReplaceAll]));
 
   if ExtractFileName(AFileName) = AFileName then //files without paths are expected to be found in $AppDir$\ActionTemplates
     AFileName := UpperCase(TempFullTemplatesDir + PathDelim + AFileName);
@@ -167,7 +173,7 @@ begin
   for i := 0 to AList.Count - 1 do
   begin
     CurrentItem := AList.Strings[i];
-    CurrentItem := StringReplace(CurrentItem, '$AppDir$', ExeDir, [rfReplaceAll]);
+    CurrentItem := StringReplace(CurrentItem, CAppDir, ExeDir, [rfReplaceAll]);
     FListOfAccessibleDirs.Add(UpperCase(CurrentItem));
   end;
 end;

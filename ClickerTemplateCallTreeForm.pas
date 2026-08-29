@@ -1,5 +1,5 @@
 {
-    Copyright (C) 2023 VCC
+    Copyright (C) 2026 VCC
     creation date: Dec 2019
     initial release date: 13 Sep 2022
 
@@ -824,9 +824,9 @@ begin
     NodeData := vstCallTree.GetNodeData(Node);
     if NodeData <> nil then
     begin
-      ResolvedPath := StringReplace(NodeData^.Template^.IconPath, '$TemplateDir$', FullTemplatesDir, [rfReplaceAll]);
-      ResolvedPath := StringReplace(ResolvedPath, '$SelfTemplateDir$', ExtractFileDir(NodeData^.Template^.FilePath), [rfReplaceAll]);
-      ResolvedPath := StringReplace(ResolvedPath, '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
+      ResolvedPath := StringReplace(NodeData^.Template^.IconPath, CTemplateDir, FullTemplatesDir, [rfReplaceAll]);
+      ResolvedPath := StringReplace(ResolvedPath, CSelfTemplateDir, ExtractFileDir(NodeData^.Template^.FilePath), [rfReplaceAll]);
+      ResolvedPath := StringReplace(ResolvedPath, CAppDir, ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
 
       Bmp := TBitmap.Create;
       try

@@ -154,6 +154,17 @@ object frClickerConditionEditor: TfrClickerConditionEditor
     object N6: TMenuItem
       Caption = '-'
     end
+    object MenuItemAddOR: TMenuItem
+      Caption = 'Add OR (add new line)'
+      OnClick = MenuItemAddORClick
+    end
+    object MenuItemAddAND: TMenuItem
+      Caption = 'Add AND (add new columns)'
+      OnClick = MenuItemAddANDClick
+    end
+    object N7: TMenuItem
+      Caption = '-'
+    end
     object MenuItem_AddLastActionStatusEqualsAllowedFailed: TMenuItem
       Caption = 'Add $LastAction_Status$ == "Allowed Failed"'
       OnClick = MenuItem_AddLastActionStatusEqualsAllowedFailedClick

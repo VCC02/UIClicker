@@ -614,7 +614,7 @@ procedure TfrClickerSetVar.MenuItem_ReplaceWithAppDirClick(Sender: TObject);
 var
   NewValue: string;
 begin
-  NewValue := StringReplace(FTextEditorEditBox.Text, ExtractFilePath(ParamStr(0)), '$AppDir$' + PathDelim, [rfReplaceAll]);
+  NewValue := StringReplace(FTextEditorEditBox.Text, ExtractFilePath(ParamStr(0)), CAppDir + PathDelim, [rfReplaceAll]);
   SetVSTEditBoxByTyping(NewValue);
 end;
 
@@ -623,7 +623,7 @@ procedure TfrClickerSetVar.MenuItem_ReplaceWithTemplateDirClick(Sender: TObject)
 var
   NewValue: string;
 begin
-  NewValue := StringReplace(FTextEditorEditBox.Text, DoOnGetFullTemplatesDir, '$TemplateDir$' {+ PathDelim}, [rfReplaceAll]);
+  NewValue := StringReplace(FTextEditorEditBox.Text, DoOnGetFullTemplatesDir, CTemplateDir {+ PathDelim}, [rfReplaceAll]);
   SetVSTEditBoxByTyping(NewValue);
 end;
 
@@ -633,7 +633,7 @@ procedure TfrClickerSetVar.MenuItem_ReplaceWithSelfTemplateDirClick(
 var
   NewValue: string;
 begin
-  NewValue := StringReplace(FTextEditorEditBox.Text, DoOnGetSelfTemplatesDir, '$SelfTemplateDir$' {+ PathDelim}, [rfReplaceAll]);
+  NewValue := StringReplace(FTextEditorEditBox.Text, DoOnGetSelfTemplatesDir, CSelfTemplateDir {+ PathDelim}, [rfReplaceAll]);
   SetVSTEditBoxByTyping(NewValue);
 end;
 

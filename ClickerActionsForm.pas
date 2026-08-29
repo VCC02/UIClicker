@@ -728,10 +728,10 @@ begin
   colcmbTopLeftInvalid.AutoSelect := True;
   colcmbBotRightInvalid.AutoSelect := True;
 
-  FullTemplatesDir := AIni.ReadString('Dirs', 'FullTemplatesDir', '$AppDir$\ActionTemplates');
+  FullTemplatesDir := AIni.ReadString('Dirs', 'FullTemplatesDir', CAppDir + '\ActionTemplates');
   BMPsDir := AIni.ReadString('Dirs', 'BMPsDir', '');
 
-  lbePathToTemplates.Text := StringReplace(FullTemplatesDir, ExtractFileDir(ParamStr(0)), '$AppDir$', [rfReplaceAll]);
+  lbePathToTemplates.Text := StringReplace(FullTemplatesDir, ExtractFileDir(ParamStr(0)), CAppDir, [rfReplaceAll]);
 
   frClickerActionsArrExperiment1.AllowedFileDirsForServer := memAllowedFileDirsForServer.Lines.Text;
   frClickerActionsArrExperiment2.AllowedFileDirsForServer := memAllowedFileDirsForServer.Lines.Text;
@@ -830,7 +830,7 @@ begin
   AIni.WriteInteger('ActionsWindow', 'GridType', cmbImgPreviewGridType.ItemIndex);
 
   AIni.WriteString('Dirs', 'BMPsDir', BMPsDir);
-  AIni.WriteString('Dirs', 'FullTemplatesDir', StringReplace(FullTemplatesDir, ExtractFileDir(ParamStr(0)), '$AppDir$', [rfReplaceAll]));
+  AIni.WriteString('Dirs', 'FullTemplatesDir', StringReplace(FullTemplatesDir, ExtractFileDir(ParamStr(0)), CAppDir, [rfReplaceAll]));
 
   AIni.WriteInteger('ActionsWindow', 'TopLeft_ValidColor', FPreviewSelectionColors.TopLeft_Valid);
   AIni.WriteInteger('ActionsWindow', 'BotRight_ValidColor', FPreviewSelectionColors.BotRight_Valid);
@@ -994,9 +994,9 @@ begin
   FBuiltInVariables.Add('$OSVerNumber$=' + OSVerNumber);
   FBuiltInVariables.Add('$OSVer$=' + OSVerStr);
   FBuiltInVariables.Add('$ExitCode$=');
-  FBuiltInVariables.Add('$AppDir$=' + ExtractFileDir(ParamStr(0)));
-  FBuiltInVariables.Add('$TemplateDir$=' + FFullTemplatesDir);
-  FBuiltInVariables.Add('$SelfTemplateDir$=' + frClickerActionsArrMain.FileName);   //frClickerActionsArrMain.FileName is empty here, because no template is being executed at this point
+  FBuiltInVariables.Add(CAppDir + '=' + ExtractFileDir(ParamStr(0)));
+  FBuiltInVariables.Add(CTemplateDir + '=' + FFullTemplatesDir);
+  FBuiltInVariables.Add(CSelfTemplateDir + '=' + frClickerActionsArrMain.FileName);   //frClickerActionsArrMain.FileName is empty here, because no template is being executed at this point
 
   {$IFDEF CPU64}
     FBuiltInVariables.Add('$AppBitness$=x86_64');
@@ -1080,7 +1080,7 @@ begin
   lblAdminStatus.Show;
 
   FBMPsDir := '';
-  FFullTemplatesDir := 'not set'; //'$AppDir$\ActionTemplates';
+  FFullTemplatesDir := 'not set'; //CAppDir + '\ActionTemplates';   s
   FBuiltInVariables := TStringList.Create;
 
   FInMemFileSystem := TInMemFileSystem.Create;
@@ -1772,7 +1772,7 @@ begin
     if MessageBox(Handle, 'There is a template already loaded. Continue?', PChar(Caption), MB_ICONQUESTION + MB_YESNO) = IDNO then
       Exit;
 
-  TemplatePath := StringReplace(lbePathToTemplates.Text, '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]) + '\';
+  TemplatePath := StringReplace(lbePathToTemplates.Text, CAppDir, ExtractFileDir(ParamStr(0)), [rfReplaceAll]) + '\';
 
   if PageControlPlayer.ActivePageIndex = 0 then
   begin
@@ -1817,7 +1817,7 @@ begin
     if MessageBox(Handle, 'There is a template already loaded. Continue?', PChar(Caption), MB_ICONQUESTION + MB_YESNO) = IDNO then
       Exit;
 
-  TemplatePath := StringReplace(lbePathToTemplates.Text, '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]) + '\';
+  TemplatePath := StringReplace(lbePathToTemplates.Text, CAppDir, ExtractFileDir(ParamStr(0)), [rfReplaceAll]) + '\';
 
   if PageControlPlayer.ActivePageIndex = 0 then
   begin
@@ -2032,7 +2032,7 @@ begin
               else
                 NewFrame.FileName := AFileNameToCall;
 
-              NewFrame.FileName := StringReplace(NewFrame.FileName, '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
+              NewFrame.FileName := StringReplace(NewFrame.FileName, CAppDir, ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
 
               frmClickerActions.AddToLog('[client] Sending template (" ' + NewFrame.FileName + ' ") and other missing files to server..');
               //frmClickerActions.AddToLog('[client response] ' + NewFrame.SetCurrentClientTemplateInServer(True)); //do not use SetCurrentClientTemplateInServer, because it sends files event if outside of permitted folders
@@ -2753,7 +2753,7 @@ procedure TfrmClickerActions.SetFullTemplatesDir(Value: string);
 begin
   if FFullTemplatesDir <> Value then
   begin
-    Value := StringReplace(Value, '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
+    Value := StringReplace(Value, CAppDir, ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
     FFullTemplatesDir := Value;
     frClickerActionsArrMain.FullTemplatesDir := Value;
     frClickerActionsArrExperiment1.FullTemplatesDir := Value;
@@ -4257,7 +4257,7 @@ end;
 
 procedure TfrmClickerActions.lbePathToTemplatesChange(Sender: TObject);
 begin
-  lbePathToTemplates.Hint := 'The $AppDir$ replacement is available.';
+  lbePathToTemplates.Hint := 'The ' + CAppDir + ' replacement is available.';
 
   if Pos('..', lbePathToTemplates.Text) > 0 then //there may be files or folder names with two dots which will not be allowed because of this
   begin
@@ -4562,11 +4562,11 @@ begin
   {$ENDIF}
 
   try
-    frClickerActionsArrMain.SetActionVarValue('$TemplateDir$', FFullTemplatesDir);
-    frClickerActionsArrExperiment1.SetActionVarValue('$TemplateDir$', FFullTemplatesDir);
-    frClickerActionsArrExperiment2.SetActionVarValue('$TemplateDir$', FFullTemplatesDir);
+    frClickerActionsArrMain.SetActionVarValue(CTemplateDir, FFullTemplatesDir);
+    frClickerActionsArrExperiment1.SetActionVarValue(CTemplateDir, FFullTemplatesDir);
+    frClickerActionsArrExperiment2.SetActionVarValue(CTemplateDir, FFullTemplatesDir);
 
-    //frClickerActionsArrMain.SetActionVarValue('$SelfTemplateDir$', frClickerActionsArrMain.FileName);  //FileName is still not available
+    //frClickerActionsArrMain.SetActionVarValue(CSelfTemplateDir, frClickerActionsArrMain.FileName);  //FileName is still not available
   except
     //AV in case the frames are not created
     AddToLog('Action frames are not created when setting $TemplateDir$');
@@ -5021,11 +5021,11 @@ begin
   AOpenDialog := TSelectDirectoryDialog.Create(nil);
   try
     AOpenDialog.Filter := 'Clicker template files (*.clktmpl)|*.clktmpl|All files (*.*)|*.*';
-    AOpenDialog.InitialDir := StringReplace(lbePathToTemplates.Text, '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
+    AOpenDialog.InitialDir := StringReplace(lbePathToTemplates.Text, CAppDir, ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
 
     if AOpenDialog.Execute then
     begin
-      lbePathToTemplates.Text := StringReplace(AOpenDialog.FileName, ExtractFileDir(ParamStr(0)), '$AppDir$', [rfReplaceAll]);
+      lbePathToTemplates.Text := StringReplace(AOpenDialog.FileName, ExtractFileDir(ParamStr(0)), CAppDir, [rfReplaceAll]);
       FullTemplatesDir := lbePathToTemplates.Text;
       if FullTemplatesDir > '' then
         if FullTemplatesDir[Length(FullTemplatesDir)] = '\' then
@@ -5078,9 +5078,9 @@ var
   TempFileName: string;
 begin
   TempFileName := FileName;
-  TempFileName := StringReplace(TempFileName, '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
-  TempFileName := StringReplace(TempFileName, '$TemplateDir$', FFullTemplatesDir, [rfReplaceAll]);
-  ////////////////////////////// '$SelfTemplateDir$' depends on the caller frame
+  TempFileName := StringReplace(TempFileName, CAppDir, ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
+  TempFileName := StringReplace(TempFileName, CTemplateDir, FFullTemplatesDir, [rfReplaceAll]);
+  ////////////////////////////// CSelfTemplateDir depends on the caller frame
 
   //Result := False;         //It seems that templates end up here without setting FileLocationOfDepsIsMem to flMem.
   //
@@ -5108,8 +5108,8 @@ end;
 
 procedure TfrmClickerActions.HandleOnLoadMissingFileContent(AFileName: string; AFileContent: TMemoryStream);
 begin
-  AFileName := StringReplace(AFileName, '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
-  AFileName := StringReplace(AFileName, '$TemplateDir$', FFullTemplatesDir, [rfReplaceAll]);
+  AFileName := StringReplace(AFileName, CAppDir, ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
+  AFileName := StringReplace(AFileName, CTemplateDir, FFullTemplatesDir, [rfReplaceAll]);
 
   AFileContent.LoadFromFile(AFileName);
   try

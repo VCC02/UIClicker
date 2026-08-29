@@ -1983,17 +1983,17 @@ begin
         PathToFileName := '';
 
     if ExtractFileDrive(ParamStr(0)) = ExtractFileDrive(PathToFileName) then
-      PathToFileName := '$AppDir$' + PathDelim + ExtractRelativePath(ExtractFilePath(ParamStr(0)), PathToFileName);
+      PathToFileName := CAppDir + PathDelim + ExtractRelativePath(ExtractFilePath(ParamStr(0)), PathToFileName);
 
     if Assigned(FLastClickedTVTEdit) then
     begin
-      FLastClickedTVTEdit.Text := PathToFileName; //StringReplace(FLastClickedTVTEdit.Text, ExtractFileDir(ParamStr(0)), '$AppDir$', [rfReplaceAll]);
+      FLastClickedTVTEdit.Text := PathToFileName; //StringReplace(FLastClickedTVTEdit.Text, ExtractFileDir(ParamStr(0)), CAppDir, [rfReplaceAll]);
       FOIFrame.EditingText := FLastClickedTVTEdit.Text;
     end;
 
     if Assigned(FLastClickedEdit) then
     begin
-      FLastClickedEdit.Text := PathToFileName; //StringReplace(FLastClickedEdit.Text, ExtractFileDir(ParamStr(0)), '$AppDir$', [rfReplaceAll]);
+      FLastClickedEdit.Text := PathToFileName; //StringReplace(FLastClickedEdit.Text, ExtractFileDir(ParamStr(0)), CAppDir, [rfReplaceAll]);
       if Assigned(FLastClickedEdit.OnChange) then
         FLastClickedEdit.OnChange(FLastClickedEdit);
     end;
@@ -2017,7 +2017,7 @@ begin
       else
         PathToFileName := '';
 
-    PathToFileName := StringReplace(PathToFileName, FFullTemplatesDir, '$TemplateDir$', [rfReplaceAll]);
+    PathToFileName := StringReplace(PathToFileName, FFullTemplatesDir, CTemplateDir, [rfReplaceAll]);
 
     if Assigned(FLastClickedTVTEdit) then
     begin
@@ -2052,7 +2052,7 @@ begin
       else
         PathToFileName := '';
                                                                     //path to template
-    PathToFileName := StringReplace(PathToFileName, ExtractFileDir(DoOnGetLoadedTemplateFileName), '$SelfTemplateDir$', [rfReplaceAll]);
+    PathToFileName := StringReplace(PathToFileName, ExtractFileDir(DoOnGetLoadedTemplateFileName), CSelfTemplateDir, [rfReplaceAll]);
 
     if Assigned(FLastClickedTVTEdit) then
     begin
@@ -3540,9 +3540,9 @@ begin
     for i := 0 to ListOfPrimitiveFiles.Count - 1 do
     begin
       ResolvedFileName := ListOfPrimitiveFiles.Strings[i];
-      ResolvedFileName := StringReplace(ResolvedFileName, '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
-      ResolvedFileName := StringReplace(ResolvedFileName, '$TemplateDir$', FFullTemplatesDir, [rfReplaceAll]);
-      ResolvedFileName := StringReplace(ResolvedFileName, '$SelfTemplateDir$', ExtractFileDir(DoOnGetLoadedTemplateFileName), [rfReplaceAll]);
+      ResolvedFileName := StringReplace(ResolvedFileName, CAppDir, ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
+      ResolvedFileName := StringReplace(ResolvedFileName, CTemplateDir, FFullTemplatesDir, [rfReplaceAll]);
+      ResolvedFileName := StringReplace(ResolvedFileName, CSelfTemplateDir, ExtractFileDir(DoOnGetLoadedTemplateFileName), [rfReplaceAll]);
       ResolvedFileName := EvaluateReplacements(ResolvedFileName);
 
       if UpperCase(ResolvedFileName) = UpperCaseName then     //this requires the list to have unique filenames
@@ -4819,9 +4819,9 @@ begin
     ListOfFiles.Text := AEditingAction^.FindSubControlOptions.MatchPrimitiveFiles;
 
     PmtvFnm := ListOfFiles.Strings[AFileIndex];
-    PmtvFnm := StringReplace(PmtvFnm, '$TemplateDir$', FFullTemplatesDir, [rfReplaceAll]);
-    PmtvFnm := StringReplace(PmtvFnm, '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
-    PmtvFnm := StringReplace(PmtvFnm, '$SelfTemplateDir$', ExtractFileDir(DoOnGetLoadedTemplateFileName), [rfReplaceAll]);
+    PmtvFnm := StringReplace(PmtvFnm, CTemplateDir, FFullTemplatesDir, [rfReplaceAll]);
+    PmtvFnm := StringReplace(PmtvFnm, CAppDir, ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
+    PmtvFnm := StringReplace(PmtvFnm, CSelfTemplateDir, ExtractFileDir(DoOnGetLoadedTemplateFileName), [rfReplaceAll]);
     PmtvFnm := EvaluateReplacements(PmtvFnm);
 
     DoOnAddToLog('Saving primitives file: "' + PmtvFnm + '"');
@@ -4871,9 +4871,9 @@ begin
       ListOfFiles.Text := MenuData^.TempEditingAction^.FindSubControlOptions.MatchPrimitiveFiles;
 
       PmtvFnm := ListOfFiles.Strings[MenuData^.PropertyItemIndex];
-      PmtvFnm := StringReplace(PmtvFnm, '$TemplateDir$', FFullTemplatesDir, [rfReplaceAll]);
-      PmtvFnm := StringReplace(PmtvFnm, '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
-      PmtvFnm := StringReplace(PmtvFnm, '$SelfTemplateDir$', ExtractFileDir(DoOnGetLoadedTemplateFileName), [rfReplaceAll]);
+      PmtvFnm := StringReplace(PmtvFnm, CTemplateDir, FFullTemplatesDir, [rfReplaceAll]);
+      PmtvFnm := StringReplace(PmtvFnm, CAppDir, ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
+      PmtvFnm := StringReplace(PmtvFnm, CSelfTemplateDir, ExtractFileDir(DoOnGetLoadedTemplateFileName), [rfReplaceAll]);
       PmtvFnm := EvaluateReplacements(PmtvFnm);
 
       DoOnSetSaveDialogInitialDir(ExtractFileDir(PmtvFnm));
@@ -5592,7 +5592,7 @@ begin
     PathToFileName := DoOnGetOpenDialogFileName;
 
     if ExtractFileDrive(ParamStr(0)) = ExtractFileDrive(PathToFileName) then
-      PathToFileName := '$AppDir$\' + ExtractRelativePath(ExtractFilePath(ParamStr(0)), PathToFileName);
+      PathToFileName := CAppDir + '\' + ExtractRelativePath(ExtractFilePath(ParamStr(0)), PathToFileName);
 
     case CurrentlyEditingActionType of
       acLoadSetVarFromFile:
@@ -5652,7 +5652,7 @@ begin
     PathToFileName := DoOnGetOpenDialogFileName;
 
     if ExtractFileDrive(ParamStr(0)) = ExtractFileDrive(PathToFileName) then
-      PathToFileName := '$AppDir$\' + ExtractRelativePath(ExtractFilePath(ParamStr(0)), PathToFileName);
+      PathToFileName := CAppDir + '\' + ExtractRelativePath(ExtractFilePath(ParamStr(0)), PathToFileName);
 
     MenuData^.TempEditingAction^.PluginOptions.FileName := PathToFileName;
 
@@ -5704,7 +5704,7 @@ begin
     PathToFileName := DoOnGetOpenDialogFileName;
 
     if ExtractFileDrive(ParamStr(0)) = ExtractFileDrive(PathToFileName) then
-      PathToFileName := '$AppDir$\' + ExtractRelativePath(ExtractFilePath(ParamStr(0)), PathToFileName);
+      PathToFileName := CAppDir + '\' + ExtractRelativePath(ExtractFilePath(ParamStr(0)), PathToFileName);
 
     MenuData^.TempEditingAction^.EditTemplateOptions.TemplateFileName := PathToFileName;
 
@@ -9032,7 +9032,7 @@ begin
               FLastClickedEdit := nil;
 
             APopupMenu := pmPathReplacements;
-            AHint := '$AppDir$ replacement is available';
+            AHint := CAppDir + ' replacement is available';
           end;
         end;
       end;
@@ -9180,7 +9180,7 @@ begin
             if (ANodeLevel = CPropertyItemLevel) and (APropertyIndex = CFindSubControl_MatchBitmapFiles_PropIndex) then
               AHint := 'If a file path starts with "' + CExtBmp_Prefix + '" (no quotes), the file must exist in the externally rendered in-mem file system.';
 
-            AHint := AHint + #13#10 + '$AppDir$ replacement is available';
+            AHint := AHint + #13#10 + CAppDir + ' replacement is available';
 
             if APropertyIndex = CFindSubControl_MatchPrimitiveFiles_PropIndex then
             begin
@@ -9221,7 +9221,7 @@ begin
                 FLastClickedEdit := nil;
                 APopupMenu := pmPathReplacements;
                 AHint := AHint + #13#10;
-                AHint := AHint + '$AppDir$ replacement is available';
+                AHint := AHint + CAppDir + ' replacement is available';
               end;
           end;
 
@@ -9244,7 +9244,7 @@ begin
 
             FLastClickedEdit := nil;
             APopupMenu := pmPathReplacements;
-            AHint := '$AppDir$ replacement is available';
+            AHint := CAppDir + ' replacement is available';
           end;
 
           CCallTemplate_CallTemplateLoop_PropIndex:
@@ -10104,17 +10104,17 @@ end;
 
 function TfrClickerActions.ResolveTemplatePath(APath: string; ACustomSelfTemplateDir: string = ''; ACustomAppDir: string = ''): string;
 begin
-  Result := StringReplace(APath, '$TemplateDir$', FFullTemplatesDir, [rfReplaceAll]);
+  Result := StringReplace(APath, CTemplateDir, FFullTemplatesDir, [rfReplaceAll]);
 
   //if ACustomSelfTemplateDir = '' then
-  //  Result := StringReplace(Result, '$SelfTemplateDir$', ExtractFileDir(FFileName), [rfReplaceAll])
+  //  Result := StringReplace(Result, CSelfTemplateDir, ExtractFileDir(FFileName), [rfReplaceAll])
   //else
-  //  Result := StringReplace(Result, '$SelfTemplateDir$', ACustomSelfTemplateDir, [rfReplaceAll]);
+  //  Result := StringReplace(Result, CSelfTemplateDir, ACustomSelfTemplateDir, [rfReplaceAll]);
 
   if ACustomAppDir = '' then
-    Result := StringReplace(Result, '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll])
+    Result := StringReplace(Result, CAppDir, ExtractFileDir(ParamStr(0)), [rfReplaceAll])
   else
-    Result := StringReplace(Result, '$AppDir$', ACustomAppDir, [rfReplaceAll]);
+    Result := StringReplace(Result, CAppDir, ACustomAppDir, [rfReplaceAll]);
 end;
 
 
@@ -10582,9 +10582,9 @@ begin
         frClickerFindControl.frClickerPrimitives.OnGetPictureOpenDialogFileName := HandleOnGetPictureOpenDialogFileName;
 
         PmtvFnm := PrimitiveFileNames.Strings[PropertyItemIndex];
-        PmtvFnm := StringReplace(PmtvFnm, '$TemplateDir$', FFullTemplatesDir, [rfReplaceAll]);
-        PmtvFnm := StringReplace(PmtvFnm, '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
-        PmtvFnm := StringReplace(PmtvFnm, '$SelfTemplateDir$', ExtractFileDir(DoOnGetLoadedTemplateFileName), [rfReplaceAll]);
+        PmtvFnm := StringReplace(PmtvFnm, CTemplateDir, FFullTemplatesDir, [rfReplaceAll]);
+        PmtvFnm := StringReplace(PmtvFnm, CAppDir, ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
+        PmtvFnm := StringReplace(PmtvFnm, CSelfTemplateDir, ExtractFileDir(DoOnGetLoadedTemplateFileName), [rfReplaceAll]);
         PmtvFnm := EvaluateReplacements(PmtvFnm);
 
         DoOnAddToLog('Loading primitives file: "' + ExpandFileName(PmtvFnm) + '".');

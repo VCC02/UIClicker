@@ -1727,7 +1727,7 @@ function TfrClickerActionsArr.HandleOnFileExists(const AFileName: string): Boole
 var
   ReplacedWithSelf: string;
 begin
-  ReplacedWithSelf := StringReplace(AFileName, '$SelfTemplateDir$', ExtractFileDir(FFileName), [rfReplaceAll]);  //required by DbgImg menu
+  ReplacedWithSelf := StringReplace(AFileName, CSelfTemplateDir, ExtractFileDir(FFileName), [rfReplaceAll]);  //required by DbgImg menu
   Result := DoOnFileExists(ReplacedWithSelf);
 end;
 
@@ -2789,11 +2789,11 @@ procedure TfrClickerActionsArr.SetFullTemplatesDir(Value: string);
 begin
   if FullTemplatesDir <> Value then
   begin
-    Value := StringReplace(Value, '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
+    Value := StringReplace(Value, CAppDir, ExtractFileDir(ParamStr(0)), [rfReplaceAll]);
     FFullTemplatesDir := Value;
     frClickerActions.FullTemplatesDir := Value; //this is how the frame gets the path to templates
     AddToLog('Setting templates dir to "' + Value + '"');
-    SetActionVarValue('$TemplateDir$', Value);
+    SetActionVarValue(CTemplateDir, Value);
   end;
 end;
 
@@ -5690,7 +5690,7 @@ begin
     if NodeData^.Action.ActionOptions.Action = acCallTemplate then
     begin
       CalledTemplateFileName := NodeData^.Action.CallTemplateOptions.TemplateFileName;
-      CalledTemplateFileName := StringReplace(CalledTemplateFileName, '$SelfTemplateDir$', ExtractFileDir(SelfFileName), [rfReplaceAll]);
+      CalledTemplateFileName := StringReplace(CalledTemplateFileName, CSelfTemplateDir, ExtractFileDir(SelfFileName), [rfReplaceAll]);
       AddCalledTemplateToNode(Node, CalledTemplateFileName, ATemplateDir, AAppDir, ARecursionLevel + 1);
     end;
 
@@ -5719,8 +5719,8 @@ begin
     Exit;
 
   Node := vstActions.GetFirst;
-  {if Pos('$SelfTemplateDir$', FFileName) > 0 then
-    TemplateDir := StringReplace(FFileName, '$SelfTemplateDir$', ExtractFileDir(FFileName), [rfReplaceAll])
+  {if Pos(CSelfTemplateDir, FFileName) > 0 then
+    TemplateDir := StringReplace(FFileName, CSelfTemplateDir, ExtractFileDir(FFileName), [rfReplaceAll])
   else}
     TemplateDir := ExtractFileDir(FFileName);
 
@@ -5729,7 +5729,7 @@ begin
     if FClkActions[Node^.Index].ActionOptions.Action = acCallTemplate then
     begin
       CalledTemplateFileName := FClkActions[Node^.Index].CallTemplateOptions.TemplateFileName;
-      CalledTemplateFileName := StringReplace(CalledTemplateFileName, '$SelfTemplateDir$', ExtractFileDir(FFileName), [rfReplaceAll]);
+      CalledTemplateFileName := StringReplace(CalledTemplateFileName, CSelfTemplateDir, ExtractFileDir(FFileName), [rfReplaceAll]);
       AddCalledTemplateToNode(Node, CalledTemplateFileName, TemplateDir, AppDir, 0);
     end;
 
@@ -6556,25 +6556,25 @@ end;
 
 function TfrClickerActionsArr.ResolveTemplatePath(APath: string; ACustomSelfTemplateDir: string = ''; ACustomAppDir: string = ''): string;
 begin
-  Result := StringReplace(APath, '$TemplateDir$', FFullTemplatesDir, [rfReplaceAll]);
+  Result := StringReplace(APath, CTemplateDir, FFullTemplatesDir, [rfReplaceAll]);
 
   if ACustomSelfTemplateDir = '' then
-    Result := StringReplace(Result, '$SelfTemplateDir$', ExtractFileDir(FFileName), [rfReplaceAll])
+    Result := StringReplace(Result, CSelfTemplateDir, ExtractFileDir(FFileName), [rfReplaceAll])
   else
-    Result := StringReplace(Result, '$SelfTemplateDir$', ACustomSelfTemplateDir, [rfReplaceAll]);
+    Result := StringReplace(Result, CSelfTemplateDir, ACustomSelfTemplateDir, [rfReplaceAll]);
 
   if ACustomAppDir = '' then
-    Result := StringReplace(Result, '$AppDir$', ExtractFileDir(ParamStr(0)), [rfReplaceAll])
+    Result := StringReplace(Result, CAppDir, ExtractFileDir(ParamStr(0)), [rfReplaceAll])
   else
-    Result := StringReplace(Result, '$AppDir$', ACustomAppDir, [rfReplaceAll]);
+    Result := StringReplace(Result, CAppDir, ACustomAppDir, [rfReplaceAll]);
 end;
 
 
 function TfrClickerActionsArr.EncodeTemplatePath(APath: string): string;
 begin
-  Result := StringReplace(APath, ExtractFileDir(FFileName), '$SelfTemplateDir$', [rfReplaceAll]);
-  Result := StringReplace(Result, FFullTemplatesDir, '$TemplateDir$', [rfReplaceAll]);
-  Result := StringReplace(Result, ExtractFileDir(ParamStr(0)), '$AppDir$', [rfReplaceAll])
+  Result := StringReplace(APath, ExtractFileDir(FFileName), CSelfTemplateDir, [rfReplaceAll]);
+  Result := StringReplace(Result, FFullTemplatesDir, CTemplateDir, [rfReplaceAll]);
+  Result := StringReplace(Result, ExtractFileDir(ParamStr(0)), CAppDir, [rfReplaceAll])
 end;
 
 
@@ -6584,7 +6584,7 @@ var
 begin
   ResolvedPath := ResolveTemplatePath(FTemplateIconPath);
 
-  FTemplateIconPath := StringReplace(ResolvedPath, ExtractFileDir(ParamStr(0)), '$AppDir$', [rfReplaceAll]);
+  FTemplateIconPath := StringReplace(ResolvedPath, ExtractFileDir(ParamStr(0)), CAppDir, [rfReplaceAll]);
   SetTemplateIconHint;
   Modified := True;
 end;
@@ -6597,7 +6597,7 @@ var
 begin
   ResolvedPath := ResolveTemplatePath(FTemplateIconPath);
 
-  FTemplateIconPath := StringReplace(ResolvedPath, ExtractFileDir(FFileName), '$SelfTemplateDir$', [rfReplaceAll]);
+  FTemplateIconPath := StringReplace(ResolvedPath, ExtractFileDir(FFileName), CSelfTemplateDir, [rfReplaceAll]);
   SetTemplateIconHint;
   Modified := True;
 end;
@@ -6610,7 +6610,7 @@ var
 begin
   ResolvedPath := ResolveTemplatePath(FTemplateIconPath);
 
-  FTemplateIconPath := StringReplace(ResolvedPath, FFullTemplatesDir, '$TemplateDir$', [rfReplaceAll]);
+  FTemplateIconPath := StringReplace(ResolvedPath, FFullTemplatesDir, CTemplateDir, [rfReplaceAll]);
   SetTemplateIconHint;
   Modified := True;
 end;
@@ -6974,7 +6974,7 @@ begin
     for i := 0 to ListOfRecentFiles.Count - 1 do
     begin
       MenuItem := TMenuItem.Create(Self);
-      MenuItem.Caption := StringReplace(ListOfRecentFiles.Strings[i], SelfExePath, '$AppDir$', [rfReplaceAll]);
+      MenuItem.Caption := StringReplace(ListOfRecentFiles.Strings[i], SelfExePath, CAppDir, [rfReplaceAll]);
       MenuItem.OnClick := ExtraLoadRecentFileClick;
       MenuItem.Bitmap := spdbtnPlaySelectedAction.Glyph;
       pmExtraLoad.Items[0].Add(MenuItem);

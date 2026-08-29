@@ -413,7 +413,7 @@ const
     (Name: 'AllowToFail'; EditorType: etBooleanCombo; DataType: CDTBool),            //Description:  When checked, the execution flow does not stop if the searched (sub)control is not found.  The "Allowed Failed" response can be used for conditional execution (call action).   When the action is allowed to fail and it fails, $LastAction_Status$ is set to "Allowed Failed".
     (Name: 'MatchText'; EditorType: etTextWithArrow; DataType: CDTString),             //Description:  Wildcards are available ("*"). Variable replacements are available. Used on matching text and BMP text.   For controls, which can have different text values (e.g. a window displaying a different title), these values can be e.g. comma separated. In that case, the text separator is a comma.  For example: a window can display "MyTitle" or "MyTitle (modified)". In that case, the "Match Text" editbox can contain "MyTitle,MyTitle (modified)", without quotes, by using the comma separator.
     (Name: 'MatchBitmapText'; EditorType: etFilePathWithArrow; DataType: CDTArray),  //array of other structure.  Count should be 0 for FindControl and >0 for FindSubControl
-    (Name: 'MatchBitmapFiles'; EditorType: etFilePathWithArrow; DataType: CDTString),  //Description:  Relative paths can be entered using the following format:' + #13#10 + '$TemplateDir$\<SomeBmp.bmp>
+    (Name: 'MatchBitmapFiles'; EditorType: etFilePathWithArrow; DataType: CDTString),  //Description:  Relative paths can be entered using the following format:' + #13#10 + CTemplateDir + '\<SomeBmp.bmp>
     (Name: 'MatchBitmapAlgorithm'; EditorType: etEnumCombo; DataType: CDTEnum),
     (Name: 'MatchBitmapAlgorithmSettings'; EditorType: etNone; DataType: CDTStructure),    //structure
     (Name: 'InitialRectangle'; EditorType: etNone; DataType: CDTStructure),                 //structure
@@ -3843,7 +3843,7 @@ end;
 
 function GetPropertyHint_FindControl_MatchBitmapFiles: string;
 begin
-  Result := 'Relative paths can be entered using the following format:' + #13#10 + '$TemplateDir$\<SomeBmp.bmp>';
+  Result := 'Relative paths can be entered using the following format:' + #13#10 + CTemplateDir + '\<SomeBmp.bmp>';
 end;
 
 
@@ -3918,7 +3918,7 @@ end;
 
 function GetPropertyHint_FindControl_MatchPrimitiveFiles: string;
 begin
-  Result := 'Relative paths can be entered using the following format:' + #13#10 + '$TemplateDir$\<SomeFile.pmtv>';
+  Result := 'Relative paths can be entered using the following format:' + #13#10 + CTemplateDir + '\<SomeFile.pmtv>';
 end;
 
 

@@ -172,6 +172,9 @@ const
 
   CMemPluginLocationPrefix = 'Mem:';  //If a plugin path starts with this prefix, then UIClicker expects the plugin to exist in memory.
 
+  CAppDir = '$AppDir$';
+  CTemplateDir = '$TemplateDir$';
+  CSelfTemplateDir = '$SelfTemplateDir$';
 
 type
   TClkActionOptions = record
