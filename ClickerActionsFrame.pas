@@ -8363,8 +8363,8 @@ begin
         end;
 
       CLoadSetVarFromIniFile_Counter_PropIndex:
-        if (AEditingAction^.LoadSetVarFromIniFileOptions.VarListFormat = vlfSetVarAction) or
-           ((AEditingAction^.LoadSetVarFromIniFileOptions.VarListFormat = vlfPattern) and (AEditingAction^.LoadSetVarFromIniFileOptions.CounterType = ctIdent)) then
+        if (AEditingAction^.LoadSetVarFromIniFileOptions.VarListFormat = vlfSetVarAction) {or
+           ((AEditingAction^.LoadSetVarFromIniFileOptions.VarListFormat = vlfPattern) and (AEditingAction^.LoadSetVarFromIniFileOptions.CounterType = ctIdent))} then
         begin
           TargetCanvas.Font.Color := clGray;
           Exit;
@@ -8392,8 +8392,8 @@ begin
         end;
 
       CSaveSetVarToIniFile_Counter_PropIndex:
-        if (AEditingAction^.SaveSetVarToIniFileOptions.VarListFormat = vlfSetVarAction) or
-           ((AEditingAction^.SaveSetVarToIniFileOptions.VarListFormat = vlfPattern) and (AEditingAction^.SaveSetVarToIniFileOptions.CounterType = ctIdent)) then
+        if (AEditingAction^.SaveSetVarToIniFileOptions.VarListFormat = vlfSetVarAction) {or
+           ((AEditingAction^.SaveSetVarToIniFileOptions.VarListFormat = vlfPattern) and (AEditingAction^.SaveSetVarToIniFileOptions.CounterType = ctIdent))} then
         begin
           TargetCanvas.Font.Color := clGray;
           Exit;
