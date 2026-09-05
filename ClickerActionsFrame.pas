@@ -7012,6 +7012,13 @@ begin  //
       CCategory_Common:
       begin
         case ANodeLevel of
+          CCategoryLevel:
+            if Column = 0 then
+            begin
+              ImageList := dmClickerIcons.imglstActionProperties;
+              ImageIndex := 0;
+            end;
+
           CPropertyLevel:
             case Column of
               0:
@@ -8419,7 +8426,13 @@ begin  //
     begin
       case ACategoryIndex of
         CCategory_Common:
-          ;
+          if (ANodeData.Level = CPropertyLevel) and (ACategoryIndex = CCategory_Common) then
+            if APropertyIndex = CMain_ActionTimeout_PropIndex then
+              if not (CurrentlyEditingActionType in [acExecApp, acFindControl, acFindSubControl]) then
+              begin
+                TargetCanvas.Font.Color := clGray;
+                Exit;
+              end;
 
         CCategory_ActionSpecific:
           OIPaintText_ActionSpecific(FEditingAction, FEditingAction, CurrentlyEditingActionType, ANodeData, ACategoryIndex, APropertyIndex, APropertyItemIndex, TargetCanvas, Column, TextType, DoOnAddToLog);
@@ -9280,6 +9293,28 @@ begin
       acPlugin:
         if APropertyIndex > CPlugin_FileName_PropIndex then
           AHint := FastReplace_45ToReturn(GetPluginPropertyAttribute(AEditingAction.PluginOptions.ListOfPropertiesAndTypes, CPluginPropertyAttr_Hint, APropertyIndex));
+
+      acLoadSetVarFromIniFile, acSaveSetVarToIniFile:
+      begin
+        if APropertyIndex = CLoadSetVarFromIniFile_FileName_PropIndex then
+        begin
+          FLastClickedTVTEdit := nil;
+          FLastClickedEdit := nil;
+
+          if Sender is TVTEdit then
+            FLastClickedTVTEdit := Sender as TVTEdit
+          else
+            FLastClickedTVTEdit := nil;
+
+          if Sender is TEdit then
+            FLastClickedEdit := Sender as TEdit
+          else
+            FLastClickedEdit := nil;
+
+          APopupMenu := pmPathReplacements;
+          AHint := CAppDir + ' replacement is available';
+        end
+      end;
 
       else
         ;
